@@ -416,9 +416,9 @@ void CAutoTuning::ComaFreeNextTask(int param)
 {
   float xFacs[4] = {-1., 1., 0., 0.};
   float yFacs[4] = {0., 0., -1., 1.};
-  float xx1[4], xx2[4], yy[4];
-  double xTiltFac, yTiltFac;
-  float scale, misAlignX = 0., misAlignY = 0.;
+  float xx1[8], xx2[4], yy[4];
+  double xTiltFac, yTiltFac, maxTerm = 0.;
+  float scale, diffSum = 0., diffMax = 0., misAlignX = 0., misAlignY = 0.;
   ComaCalib cal;
   CString mess, mess2;
   int calInd, ind, idir;
@@ -463,10 +463,37 @@ void CAutoTuning::ComaFreeNextTask(int param)
         cal.defocus = mCalComaFocus;
         if (calInd < 0)
           mComaCals.Add(cal);
-        else
+        else {
+
+          // First collect data on the difference from the last calibration
+          xx1[0] = (float)fabs(cal.comaXmat.xpx - mComaCals[calInd].comaXmat.xpx);
+          xx1[1] = (float)fabs(cal.comaXmat.xpy - mComaCals[calInd].comaXmat.xpy);
+          xx1[2] = (float)fabs(cal.comaXmat.ypx - mComaCals[calInd].comaXmat.ypx);
+          xx1[3] = (float)fabs(cal.comaXmat.ypy - mComaCals[calInd].comaXmat.ypy);
+          xx1[4] = (float)fabs(cal.comaYmat.xpx - mComaCals[calInd].comaYmat.xpx);
+          xx1[5] = (float)fabs(cal.comaYmat.xpy - mComaCals[calInd].comaYmat.xpy);
+          xx1[6] = (float)fabs(cal.comaYmat.ypx - mComaCals[calInd].comaYmat.ypx);
+          xx1[7] = (float)fabs(cal.comaYmat.ypy - mComaCals[calInd].comaYmat.ypy);
+          ACCUM_MAX(maxTerm, fabs(cal.comaXmat.xpx));
+          ACCUM_MAX(maxTerm, fabs(cal.comaXmat.xpy));
+          ACCUM_MAX(maxTerm, fabs(cal.comaXmat.ypx));
+          ACCUM_MAX(maxTerm, fabs(cal.comaXmat.ypy));
+          ACCUM_MAX(maxTerm, fabs(cal.comaYmat.xpx));
+          ACCUM_MAX(maxTerm, fabs(cal.comaYmat.xpy));
+          ACCUM_MAX(maxTerm, fabs(cal.comaYmat.ypx));
+          ACCUM_MAX(maxTerm, fabs(cal.comaYmat.ypy));
+          for (ind = 0; ind < 8; ind++) {
+            diffSum += xx1[ind];
+            ACCUM_MAX(diffMax, xx1[ind]);
+          }
           mComaCals[calInd] = cal;
+        }
         PrintMatrix(cal.comaXmat, "X beam tilt");
         PrintMatrix(cal.comaYmat, "Y beam tilt");
+        if (calInd >= 0)
+          PrintfToLog("Difference from previous calibration as percent of maximum term:"
+          "\r\n   mean %.1f%%  maximum %.1f%%", 100. * diffSum / (8. * maxTerm),
+          100. * diffMax / maxTerm);
       } else {
 
         // Solve for misalignment: load the arrays with data for fit
@@ -495,7 +522,7 @@ void CAutoTuning::ComaFreeNextTask(int param)
             misAlignY * scale);
           mess += mess2;
         } else
-          mess += "milliradians";
+          mess += " milliradians";
         mWinApp->AppendToLog(mess);
         if (mImposeChange)
           mScope->IncBeamTilt(-misAlignX, -misAlignY);

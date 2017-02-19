@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+2/19/17: Added report of difference from previous calibration when doing
+coma-free calibration (In 3.6).
+
 2/18/17: Switched to using standard API for Direct Electron camera instead of
 COM interface.  To use a DE camera, a small plugin, DEcamPlugin.dll, and the
 interface library, DeInterface.Win32.dll, must be put in the directory with
