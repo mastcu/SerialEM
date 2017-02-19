@@ -1,0 +1,73 @@
+// Created by Microsoft (R) C/C++ Compiler Version 12.00.8168.0 (8361888f).
+//
+// FSM_MEMORYLib.tlh
+//
+// C++ source equivalent of Win32 type library FSM_MEMORYLib.tlb
+// compiler-generated file created 06/21/07 at 15:35:34 - DO NOT EDIT!
+
+#pragma once
+#pragma pack(push, 8)
+
+#include <comdef.h>
+
+//
+// Forward references and typedefs
+//
+
+struct /* coclass */ FSM_MemoryObject;
+struct __declspec(uuid("d9f5a46d-4de5-47f7-aef9-c06fe4a621d8"))
+/* dual interface */ IFSM_MemoryObject;
+
+//
+// Smart pointer typedef declarations
+//
+
+_COM_SMARTPTR_TYPEDEF(IFSM_MemoryObject, __uuidof(IFSM_MemoryObject));
+
+//
+// Type library items
+//
+
+struct __declspec(uuid("3e87b249-8d5e-4096-8b20-95db61b2c87d"))
+FSM_MemoryObject;
+    // [ default ] interface IFSM_MemoryObject
+
+struct __declspec(uuid("d9f5a46d-4de5-47f7-aef9-c06fe4a621d8"))
+IFSM_MemoryObject : IDispatch
+{
+    //
+    // Raw methods provided by interface
+    //
+
+    virtual HRESULT __stdcall Allocate (
+        long lSize,
+        long lNumber ) = 0;
+    virtual HRESULT __stdcall Free ( ) = 0;
+    virtual HRESULT __stdcall GetDataPtr (
+        long lNumber,
+        unsigned char * * pbData ) = 0;
+    virtual HRESULT __stdcall get_NumOfBuffer (
+        long * pVal ) = 0;
+    virtual HRESULT __stdcall get_DataSize (
+        long * pVal ) = 0;
+    virtual HRESULT __stdcall AllocateShort (
+        long lSize,
+        long lNumber ) = 0;
+    virtual HRESULT __stdcall GetDataPtrShort (
+        long lNumber,
+        unsigned short * * psData ) = 0;
+    virtual HRESULT __stdcall FreeShort ( ) = 0;
+};
+
+//
+// Named GUID constants initializations
+//
+
+extern "C" const GUID __declspec(selectany) LIBID_FSM_MEMORYLIBLib =
+    {0xd912488d,0xd6bc,0x429e,{0xb6,0x76,0xea,0x3d,0xe2,0xb6,0xed,0x40}};
+extern "C" const GUID __declspec(selectany) CLSID_FSM_MemoryObject =
+    {0x3e87b249,0x8d5e,0x4096,{0x8b,0x20,0x95,0xdb,0x61,0xb2,0xc8,0x7d}};
+extern "C" const GUID __declspec(selectany) IID_IFSM_MemoryObject =
+    {0xd9f5a46d,0x4de5,0x47f7,{0xae,0xf9,0xc0,0x6f,0xe4,0xa6,0x21,0xd8}};
+
+#pragma pack(pop)

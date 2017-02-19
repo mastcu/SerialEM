@@ -1,0 +1,115 @@
+REM Check Windows Version
+ver | findstr /i "5\.0\." > nul
+IF %ERRORLEVEL% EQU 0 goto ver_2000
+ver | findstr /i "5\.1\." > nul
+IF %ERRORLEVEL% EQU 0 goto ver_XP
+ver | findstr /i "5\.2\." > nul
+IF %ERRORLEVEL% EQU 0 goto ver_2003
+ver | findstr /i "6\.0\." > nul
+IF %ERRORLEVEL% EQU 0 goto ver_Vista
+ver | findstr /i "6\.1\." > nul
+IF %ERRORLEVEL% EQU 0 goto ver_Win7
+goto warn_and_exit
+
+:ver_Win7
+:Run Windows 7 specific commands here
+REM echo OS Version: Windows 7 (debug line)
+goto end
+
+:ver_Vista
+:Run Windows Vista specific commands here
+REM echo OS Version: Windows Vista (debug line)
+goto end
+
+:ver_2003
+:Run Windows Server 2003 specific commands here
+REM echo OS Version: Windows Server 2003 (debug line)
+goto end
+
+:ver_XP
+:Run Windows XP specific commands here
+REM echo OS Version: Windows XP (debug line)
+goto end
+
+:ver_2000
+:Run Windows 2000 specific commands here
+REM echo OS Version: Windows 2000 (debug line)
+goto end
+
+:warn_and_exit
+echo Machine OS cannot be determined.
+
+:end
+
+Set RegQry=HKLM\Hardware\Description\System\CentralProcessor\0
+ 
+REG.exe Query %RegQry% > checkOS.txt
+ 
+Find /i "x86" < CheckOS.txt > StringCheck.txt
+ 
+If %ERRORLEVEL% == 0 (
+    Echo "This is 32 Bit Operating system"
+) ELSE (
+    Echo "This is 64 Bit Operating System"
+)
+
+C:
+   IF NOT EXIST C:\WIN\NUL GOTO NOWINDIR
+   CD \WIN
+   :NOWINDIR
+
+XCOPY /S /Y  copies directories and overwrites without prompt
+
+rmdir [Drive:]Path [/s] [/q]
+
+Parameters
+[ Drive : ] Path   : Specifies the location and name of the directory that you want to delete. 
+
+/s   : Removes the specified directory and all subdirectories including any files. Use /s to remove a tree. 
+
+/q   : Runs rmdir in quiet mode. Deletes directories without confirmation. 
+
+editing a file:
+Below is about the best you can do with Windows batch. I auto named the output as requested, doing one better - It automatically preserves the extension of the original name.
+
+@echo off
+SetLocal
+cd /d %~dp0
+Set "OldString=[HFloat(undefined),HFloat(undefined),HFloat(undefined)],"
+Set "NewString="
+set file="test.mpl"
+for %%F in (%file%) do set outFile="%%~nFCleaned%%~xF"
+pause
+(
+  for /f "skip=2 delims=" %%a in ('find /n /v "" %file%') do (
+    set "ln=%%a"
+    setlocal enableDelayedExpansion
+    set "ln=!ln:*]=!"
+    if defined ln set "ln=!ln:%OldString%=%NewString%!"
+    echo(!ln!
+    endlocal
+  )
+)>%outFile%
+Known limitations
+
+•limited to slightly under 8k per line, both before and after substitution
+•search string cannot include = or !, nor can it start with * or ~
+•replacement string cannot include !
+•search part of search and replace is case insensitive
+•last line will always end with newline <CR><LF> even if original did not
+
+Calling a function:
+:functionName
+Arguments are referred to as %1, %2 etc, or %~1 to strip off quotes
+ends in 
+goto:eof
+
+is called as 
+call :functionName arg1 arg2   (can have quotes, can use commas)
+
+We don't want to do this anyway in an installer
+
+
+set /p choice=Do you want to continue? [y/n]
+if /i '%choice%'=='Y' goto label1
+goto label2

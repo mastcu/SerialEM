@@ -1,0 +1,385 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+  <HEAD>
+    <TITLE>Image Acquisition</TITLE>
+    <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
+    <style type="text/css"> <!-- BODY { font-family:"Arial" } TD { font-size:16 } 
+  --></style>
+  </HEAD>
+  <BODY BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+    <P><A NAME="about_camera"></A><B><FONT size="3">Image Acquisition from CCD Cameras 
+      and Direct Electron Detectors</FONT></B></P>
+      <P>The first part of this section explains some features of CCD cameras.  Direct 
+      electron detectors have significantly different behavior and some of their features
+      are explained in <A href="#directDetectors">Direct Electron Detectors, Especially the Gatan K2</A>.&nbsp; 
+        Newer CMOS-based cameras also have different behavior, so this first section 
+        mostly applies to traditional, high-quality CCD cameras.</P>
+    <P>An image is captured from the CCD camera with a sequence of 3 steps: clearing 
+      the CCD chip, exposing the camera to the beam and integrating charges for some 
+      period of time, then reading the image off of the chip. The readout is done 
+      line by line, so it is often very time-consuming. The clearing time is also 
+      substantial because the chip is cleared by shifting accumulated charges to one 
+      edge. Clearing times are about 0.7 to 0.9 second for 2K Megascan or 4K 
+      single-port readout Ultrascan cameras, 0.25 second for a 4-port readout 
+      Ultrascan, or very short for some current 1K cameras. It is important not to 
+      have a beam on the camera during the clearing time, because then charges will 
+      build up as they are being removed, adding a ramp of intensity to the image 
+      that is subsequently acquired.</P>
+    <P>Many plastic-embedded specimens show a transient shift of the image when the 
+      beam is turned on to take an exposure; this drift produces a smeared image. To 
+      take good images, you need to use drift settling, which provides an initial 
+      exposure of the specimen to the beam just before the image is acquired. This 
+      initial shift is worse on slot grids than on mesh grids and tends to be worse 
+      at high tilts. It seems to depend on the total beam hitting the sample rather 
+      than the brightness of the beam in the area of interest. This means you should 
+      work with the largest spot size that gives you enough beam.</P>
+    <P>Exposing the specimen to the beam before the exposure without exposing the 
+      camera during its clearing time requires the use of at least two shutters, one 
+      below the specimen and one above. The traces below show how DigitalMicrograph 
+      manages the two shutters in standard shuttering mode with the alternate (beam) 
+      shutter normally closed. A trace goes high to indicate when a shutter is open 
+      or beam is on the camera. Although this shuttering provides some pre-exposure, 
+      there are two problems here. First, the amount of pre-exposure is fixed at the 
+      clear time, which could be too short or longer than needed. Second, the beam is 
+      left on the specimen during camera readout. (Note that this occurs only when 
+      using the shuttering mode that provides pre-exposure and does not happen if you 
+      are just using the beam shutter for low-dose exposures.)
+    </P>
+    <P><IMG SRC="../images/DMshutter.gif" ALT="" BORDER="0"></P>
+    <P>DigitalMicrograph does provide a way to increase the drift settling, but this 
+      has problems of its own. As shown in the following traces, the extra settling 
+      is implemented by keeping the beam on the CCD during the clear time. This 
+      introduces an intensity ramp in the image, which is eliminated by having the 
+      beam on for the equivalent time during the 'dark' reference. These ramps use up 
+      some of the dynamic range of the camera, but worse than that, the dark 
+      reference contains image features and will become invalid when exposure or 
+      specimen location changes.</P>
+    <P><IMG SRC="../images/DMdrift.gif" ALT="" BORDER="0"></P>
+    <P>To deal with these problems, SerialEM has implemented a shuttering method using 
+      the scripting beam-blanker, which operates separately from the camera shuttering. As indicated in the 
+      two sets of traces below, this extra shuttering can provide a flexible range of 
+      drift settling times and also eliminates the many seconds of exposure during 
+      camera readout.
+    </P>
+    <P><IMG SRC="../images/LessDrift.gif" ALT="" BORDER="0"></P>
+    <P><IMG SRC="../images/MoreDrift.gif" ALT="" BORDER="0"></P>
+    <P>Low-noise CCD cameras are inherently slow, so you should be aware of what 
+      governs image capture time and how to speed it up. The total capture time is 
+      the sum of: any drift settling time above the clearing time, the clearing time, 
+      the actual exposure time, time to read out the image, and time to process and 
+      display it. Drift settling of less than the clearing time is subsumed in the 
+      clearing time. Processing time is minimal, so you should always use gain 
+      normalization to remove intensity variations due to imperfections in the 
+      phosphor screen. Read-out time is proportional to the number of pixels of data 
+      being read out of the CCD chip. It is about 12 seconds for the 2K x 2K pixels 
+      through a single readout port, so binning, which is done on the chip before 
+      read-out, can speed up the read-out tremendously. The read-out time is actually 
+      dominated by the number of lines being read, so for a given number of pixels 
+      being read, the read-out is fastest if those pixels are in the fewest number of 
+      lines. This is the reason for the Wide Quarter and Wide Half areas provided by 
+      the buttons in the <A HREF="hidd_camerasetup.htm">Camera Setup dialog</A>. 
+      Their readouts are only somewhat longer than the readout for square images that 
+      are half as big, not twice as long.</P>
+      <P><B><A NAME="directDetectors">Direct Electron Detectors, Especially the Gatan K2</A></B></P>
+      
+    <p>
+      The first part of this section describes features common to direct detector 
+      cameras, but most of it is specific to the Gatan K2 camera.</p>
+    <p>
+      <b>Binning and summing of signals.</b>&nbsp; Binning and integration over time behave quite differently for direct 
+        detectors and other CMOS-based cameras than for CCD cameras.&nbsp; With a 
+        high-end cooled CCD, an image is accumulated on the chip for the whole exposure 
+        time, and pixels are binned before readout, so each binned pixel of the final 
+        image is read out once.&nbsp; This means that a very weak beam can be integrated 
+        for a long time and binned to make the readout noise small compared to the 
+        signal.&nbsp; With the CMOS-based cameras, the amount of charge that can be 
+        accumulated is limited so the chip has to be read out frequently, and readout 
+        happens at each pixel on the chip, so one unit of read-out noise is added to 
+        each pixel during each frame.&nbsp; Integrating frames over time and binning the 
+        pixels after readout will average out this noise but cannot reduce the amount of 
+        noise that has to get averaged, unlike with a CCD.&nbsp; With the K2 Summit, the 
+        readout is particularly fast to allow counting mode to be used, but the result 
+        is that linear mode images are quite impaired by noise at low dose rates.</p>
+    <p>
+      <b>Binning and anti-aliased image reduction with the K2 Camera</b>.&nbsp; This camera is intrinsically a 3.8K x 3.7K camera but can produce 7.6K x 7.4K images in 
+        super-resolution mode. SerialEM resolves this by treating the camera internally 
+        as 7.6K in all modes of operation, but doubling the binning values that are 
+        actually applied to acquire images.&nbsp; However, the user interface presents it as 
+        a 3.8K camera with the binning values that one is accustomed to seeing, with one 
+        exception: a 7.6K super-resolution&nbsp; image is referred to as having binning 0.5.</p>
+    <p>
+            Super-resolution mode has an advantage over counting mode only with no binning 
+            in DM, which yields a 7.6K image.&nbsp; For example, a super-resolution image 
+            taken with binning by 2 in DM will produce a 3.8K image that is identical to the 
+            3.8K image that could have been obtained with counting mode and no binning.&nbsp; 
+            To provide a useful alternative, SerialEM uses image reduction by antialias 
+            filtering, to remove the high-frequency noise that would be introduced by 
+            aliasing when images are binned.&nbsp; This method is used for super-resolution 
+            mode whenever a binning above 0.5 is selected.&nbsp; </p>
+    <p>
+            Antialiased reduction has a measurable advantage over binning with electron 
+            counting images.&nbsp; If pairs of super-resolution images are taken at a 
+            variety of doses and analyzed by Fourier ring correlation, the FRC past 
+            half-Nyquist is about 35% higher with antialiased reduction by 2 than with 
+            binning by 2, and about 50% higher with reduction by 4 rather than with binning 
+            by 4.</p>
+    <p>
+            Antialiased reduction is now used by default instead of true binning for all 
+            &quot;binned&quot; images in counting mode as well as super-resolution mode, and the 
+            reduction is now done by the SerialEMCCD plugin on the K2 computer, where it can 
+            run quickly.&nbsp; At the bottom of the <A HREF="hidd_camerasetup.htm">Camera Setup dialog</A>, 
+            there is a checkbox to turn off this behavior, followed by an indicator in bold 
+            about whether a reduction will use <b>Anti-aliasing</b> or <b>Binning</b>. </p>
+    <p>
+      <b>Scaling of electron counts.</b>&nbsp; In counting or super-resolution mode, 
+      DM produces images with the number of electrons, which is very different from 
+      the number of digitized counts produced in linear mode.&nbsp; Since many parts 
+      of SerialEM rely on there being a fixed relationship between beam intensity and 
+      image counts, the plugin scales electron counts up by a factor close to the 
+      number of counts per electron in linear mode, so that all modes produce 
+        approximately the same number of counts per unbinned pixel for a given exposure 
+        time and beam intensity.</p>
+    <p>
+      <b>Dose rate for effective electron counting.</b>&nbsp; Electron counting is effective only over a limited range of dose rates.&nbsp; 
+        It is best to keep the dose rate between 1 and 10 electrons per unbinned pixel 
+        per second; at some point (roughly around 20 e/ubpixel/sec) counting becomes 
+        less efficient than integrating in linear mode.&nbsp; There is a dose rate 
+      readout of the actual mean e/ubpixel/sec in an image at the upper left of the 
+      display window, plus you can Use Min/Max/Mean in the 
+        Process menu to obtain the dose rate.&nbsp; (There is 
+        also a dose rate estimate in the <A HREF="hidd_camerasetup.htm">Camera Setup dialog</A>, 
+      but it shows the dose incident on the sample, based on a dose calibration and on 
+      the change in intensity from the value at which dose was calibrated.) </p>
+    <p>
+      The number of electron counts 
+      produced per true electron drops by a factor of ~0.97 at 5 e/ubpixel/sec, ~0.94 at 7.5 e/ubpixel/sec, ~0.87 at 
+        10 e/ubpixel/sec, and ~0.6 at 20 e/ubpixel/sec.&nbsp; Unfortunately, even at 
+      low dose rates, the conversion efficiency is apparently only 0.87 counts per 
+      true electron (Li et al., 2013).&nbsp; In SerialEM 3.6, the dose rate outputs 
+      are all adjusted to compensate for both the nonlinearity and the loss of signal; 
+      they should match the dose rate readout in DigitalMicrograph.</p>
+    <p>
+      <b>Dose calibration. </b>&nbsp;Because of the adjustments just described, dose 
+      calibration with a counting mode image should be accurate for a fairly wide 
+      dose rate range.&nbsp; Dose calibration with linear mode images would also be 
+      accurate, as long as the property for counts per electron is 
+      set correctly.&nbsp;
+        <A href="setting_up_serialem.htm#setup_camera_gain">Measuring Camera Gain</A> describes a procedure 
+      for setting the counts per electron, and for setting a separate property to 
+      equalize the counts between linear and counting mode images at a particular dose rate.&nbsp; </p>
+    <p>
+      <b>Camera timing.</b> Camera timing is also unlike that of a CCD and is mostly independent of 
+        binning.&nbsp; Linear and counting mode shots take ~3 sec plus the exposure 
+        time.&nbsp; A super-resolution shot takes ~6 sec plus the exposure time, plus 
+        the time required to return the 7.6K image to SerialEM, which is generally at 
+        least 1.3 sec over a fast gigabit network.</p>
+    <p>
+      <b>Dark and gain correction.</b>&nbsp; Because of the complexity of the dark and gain corrections in DM, all gain 
+        normalization is done in DM instead of SerialEM, and it is not possible to take 
+        a gain reference in SerialEM.&nbsp; DM will keep one dark reference for each 
+        binning and camera mode combination, so when a new exposure time is used, DM has 
+        to prepare or obtain a new dark reference for that mode and binning.&nbsp; For 
+        linear mode, this takes ~2 sec plus the exposure time, whereas for counting and 
+        super-resolution mode it seems to take just ~0.6 sec regardless of exposure 
+        time.&nbsp; Thus, when setting up your different camera parameter sets for a 
+        tilt series, it is not very important to avoid lots of dark reference events if 
+        you are not using linear mode at all (which is advisable for low dose work).&nbsp; 
+        However, for higher dose work where linear mode is used, try to set up Record, 
+        Focus, and Trial so that they have different binnings to avoid frequent dark 
+        references when going between these image types.</p>
+    <p>
+      <b>Limitations in Dose Fractionation mode.</b>&nbsp; In Dose Fractionation mode, only unbinned images can be produced, 3.8K in linear 
+        or counting mode and 7.6K in super-resolution mode.&nbsp; When SerialEM receives these 
+        images, it will apply antialiased image reduction to achieve whatever smaller 
+        image size is selected (i.e., with binning higher than 1 for linear or counting 
+        mode, or binning higher than 0.5 for super-resolution mode).&nbsp; Also, in 
+      Dose Fractionation mode, only full-sized images are produced by DM.&nbsp; 
+      Although these limitations were removed in GMS 2.3.1, SerialEM has not yet been 
+      modified to take advantage of this change.</p>
+    <p>
+      <b>Saving frames from the plugin.</b>&nbsp; The ability to save frames in Dose 
+      Fractionation mode is implemented by having SerialEM's plugin to DM 
+        save subframes directly rather than passing them back to SerialEM.&nbsp; Only the 
+        final summed image produced by DM is passed back.&nbsp; The subframes for one image 
+        acquisition are saved either in a single MRC stack or as a numbered set of 
+        single-image MRC files inside of a newly created directory. The stack or 
+        directory is given a unique name based on the date and time; this name will be 
+        printed to the log window along with the number of subframes saved. This 
+      information is also 
+        saved in a &#39;.mdoc&#39; metadata file if the summed image is saved, or in a 
+      &#39;.mdoc&#39; file opened with <a href="menu_file.htm#hid_file_open_mdoc">Open .mdoc for Frames</a> 
+      in the File menu.&nbsp; The frames 
+        can be saved only on the computer hosting the K2 camera, or in file systems 
+        accessible to that computer.</p>
+    <p>
+      The scaling and mode of the saved frames depends on whether gain normalization 
+      is selected in SerialEM, which invokes software gain correction in DM for the 
+      individual frames.&nbsp; With the gain correction (which does some useful 
+      scaling to remove artifacts), DM passes the plugin floating point frames with 
+      fractional values in both modes.&nbsp; The plugin scales a super-resolution mode 
+      frame by 16 and stores it as bytes, or a counting mode frame by the regular 
+      scaling applied to summed images and stores it as integers.&nbsp; The title in 
+      the header of the MRC file includes the scaling applied to the images. Without 
+      the gain correction, DM passes the plugin frames with electron counts in integer 
+      or byte format in counting or super-resolution mode, respectively, and the 
+      plugin saves these data without scaling.&nbsp; The state of the <b>Pack 
+      unnormalized data</b> option in the <a href="hidd_k2_save_options.htm">K2 Frame 
+      File Options dialog</a> 
+      determines whether these raw counts are saved in a packed form.&nbsp; 
+      If this option is selected, the plugin truncates the integers in counting mode 
+      as bytes and packs the bytes in super-resolution mode so that two 4-bit numbers 
+      are stored in each byte.&nbsp; Otherwise, the plugin saves the integers or bytes 
+      that it received, respectively.&nbsp; The packed 4-bit data files will look like 
+      ordinary byte files, but with half the true size in X; thus other programs will 
+      be able to open them just like any other MRC file.&nbsp; The
+      <a href="hidd_k2_save_options.htm">K2 Frame File Options dialog</a> also allows you to save the data as TIFF files with LZW 
+      or ZIP compression; LZW is best for unnormalized data and is also much faster.&nbsp; 
+      If you save data as compressed TIFF files, the program &#39;tif2mrc&#39; in IMOD can be 
+      used to convert each file to MRC format before processing it; or, with version 
+      4.7 or higher, any IMOD program can be run directly on the TIFF files.<p>
+      To take 
+      advantage of this option, you can select either unprocessed or dark-subtracted instead of 
+      gain normalized images in the <A HREF="hidd_camerasetup.htm">Camera Setup dialog</A> 
+      (prior to SerialEM 3.6.0, Dec. 15, 2016, it was necessary to select 
+      dark-subtracted).&nbsp; There is actually no dark-subtraction involved, and 
+      these two selections now produce the same result.&nbsp; When frames are saved 
+      unnormalized, the plugin will return a gain-normalized sum of the frames even 
+      though the normalization is not selected, so that this image will not have artifacts 
+      that could impair cross-correlation alignment.<p>
+      <b>Signal loss from saving normalized frames as integers.</b>&nbsp; There is 
+      some concern that rounding the floating point frame values to integers will lose 
+      signal and reduce the efficiency of the camera.&nbsp; To explore this point, the image formation was 
+      modeled by 1) generating a Poisson deviate to represent a true electron count as 
+      the input signal; 2) adding a Gaussian deviate with a sigma of 0.05 times the 
+      electron count, which reproduces the histogram of spreads around integer counts 
+      in a normalized frame; 3) setting the output to zero for 0.13 of trials, to 
+      reproduce the typical signal loss in electron counting; 4) multiplying by 16, 
+      the smallest multiplier applied when saving frames; 5) taking this value as a 
+      floating point output, or rounding to the nearest integer for integer output.&nbsp; 
+      DQE was computed as the square of the ratio of the output SNR to the input SNR.&nbsp; 
+      The loss in DQE from rounding to integers depends on the number of electrons per 
+      saved pixel (not per unbinned pixel for super-resolution mode):<p>
+      &nbsp;&nbsp; Electrons per pixel&nbsp;&nbsp;&nbsp; Loss in DQE<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+      0.0005<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.5&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+      0.0004<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1.0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+      0.0003<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2.0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+      0.0002<p>
+      The reasons the loss is so small are that 1) the vast majority of normalized pixel 
+      values are close to integer values anyway; 2) the SNR is so low in the images.&nbsp; To put this loss in 
+      perspective, with a loss of 0.0005, you would need 10005 particles instead of 
+      10000 particles to reach a certain resolution.<p>
+      <b>Gain-normalizing frames during post-processing.</b>&nbsp; If you choose to 
+      save frames without software gain normalizing, the plugin will make sure that 
+      there is a valid copy of the appropriate gain reference in the folder where the 
+      frames are saved, provided that the plugin can find the gain reference.&nbsp; 
+      (This used to be done by specifying the full paths to the gain references in the SerialEM property file, 
+      but now a correct entry for the camera property DMGainReferenceName is 
+      sufficient.)&nbsp;&nbsp; In addition, since there is no defect 
+      correction in these images with GMS 2.3.1 or higher, the plugin will save a file 
+      &#39;defects...txt&#39; describing the defects that need to be corrected in 
+      post-processing. You can convert the gain reference to an MRC 
+      file with the IMOD program &#39;dm2mrc&#39; or, again, use it directly in any 
+      program with version 4.7 or higher.&nbsp; The gain reference will need to be rotated 
+      and/or flipped by the same operations described in the camera configuration in 
+      DM, unless the frames are saved without rotation and flipping as provided by an 
+      option in the
+      <a href="hidd_k2_save_options.htm">Frame File Options dialog</a>. Specifically, use the IMOD commands &#39;newstack -rot -angle&#39; to rotate, 
+      where &#39;-angle&#39; is the negative of the rotation angle in DM, followed by &#39;clip 
+      flipy&#39; to flip around the Y axis.&nbsp;
+      <p>
+        Once you have the reference in the right orientation, you can use the program 
+        &#39;clip&#39; in IMOD to apply gain normalization (with version 4.6.26 or 
+        higher) and defect correction (with version 4.8.6 or higher).&nbsp; In 
+        the following, &#39;scalingFactor&#39; is the regular scaling factor applied to summed 
+        images, &#39;fileWithFrames&#39; is the data file to normalize, &#39;gainReference.mrc&#39; 
+        is the reoriented gain reference, and &#39;normalizedFrames.mrc&#39; is the desired 
+        output file. The alternatives for GMS 2.3.0 or lower are:<ul>
+      <li><i>Counting mode, not packed:</i>&nbsp; The data need to be scaled to preserve 
+        precision after normalization.&nbsp; The command is<br />
+&nbsp;&nbsp;&nbsp;&nbsp; clip mult -n scalingFactor&nbsp; fileWithFrames.mrc&nbsp; 
+        gainReference.mrc&nbsp; normalizedFrames.mrc</li>
+      <li><i>Super-resolution mode, not packed:</i>&nbsp; The data need to be scaled to 
+        preserve precision after normalization.&nbsp; To have the same scaling by 16 
+        that the plugin would apply, the command is<br />
+&nbsp;&nbsp;&nbsp;&nbsp; clip mult -n 16&nbsp; fileWithFrames&nbsp; 
+        gainReference.mrc&nbsp; normalizedFrames.mrc<br />
+        but if you want to apply the regular scaling factor, the output will need to be 
+        integers and the command is<br />
+&nbsp;&nbsp;&nbsp;&nbsp; clip mult -n scalingFactor&nbsp; -m 1&nbsp; fileWithFrames&nbsp; 
+        gainReference.mrc&nbsp; normalizedFrames.mrc</li>
+      <li><i>Counting mode, packed as bytes:</i>&nbsp; The data need to be scaled to 
+        preserve precision and output as integers to preserve the range.&nbsp; The 
+        command is<br />
+&nbsp;&nbsp;&nbsp;&nbsp; clip mult -n scalingFactor&nbsp; -m 1&nbsp; fileWithFrames&nbsp; 
+        gainReference.mrc&nbsp; normalizedFrames.mrc</li>
+      <li><i>Super-resolution mode, packed as 4-bit numbers:</i> By default, the data 
+        will be scaled by 16 when unpacking with normalization, so the command to get 
+        this scaling is just<br />
+&nbsp;&nbsp;&nbsp;&nbsp; clip unpack&nbsp; fileWithFrames&nbsp; gainReference.mrc&nbsp; 
+        normalizedFrames.mrc<br />
+        but if you want to apply the regular scaling factor, the output will need to be 
+        integers and the command is<br />
+&nbsp;&nbsp;&nbsp;&nbsp; clip unpack -n scalingFactor&nbsp; -m 1&nbsp; 
+        fileWithFrames&nbsp; gainReference.mrc&nbsp; normalizedFrames.mrc<br />
+        It is also possible to remove extreme values from the data at the same time with 
+        the &#39;-h&#39; and &#39;-l&#39; options.&nbsp; For example, adding &#39;-h 6 -l 1&#39; after the 
+        &#39;unpack&#39; will replace all values above 6 with 1.</li>
+    </ul>
+      <p>
+        To apply defect correction to files from GMS 2.3.1 or higher, add &#39;-D 
+        defects...txt&#39; before &#39;fileWithFrames&#39; in the appropriate command, where 
+        &#39;defects...txt&#39; is the file saved by the plugin.</p>
+    <p>
+        In IMOD version 4.8.41 or higher, all programs can read 4-bit files directly.&nbsp; 
+        The &#39;clip unpack&#39; command has thus been changed so that it can be used for 
+        normalizing any kind of data, and it can also be invoked as either &#39;clip unpack&#39; 
+        or &#39;clip norm&#39;.&nbsp; A command that works for all of the above cases is<br />
+&nbsp;&nbsp;&nbsp; clip norm -n scalingFactor&nbsp; -m 1&nbsp; fileWithFrames&nbsp; gainReference.mrc 
+        normalizedFrames.mrc<br />
+        where the default scaling factor is 16, extreme values can be removed with &#39;-l&#39; 
+        and &#39;-h&#39; options,&nbsp; and &#39;-D defects...txt&#39; would be added for files from GMS 
+        2.3.1 or higher.</p>
+    <p>
+        In all of these situations, conversion to floating point can be used instead of, 
+        or in addition to, the scaling to guarantee absolutely no information loss from 
+        rounding to integers.&nbsp; To convert to float, use &quot;-m 2&quot; instead of &quot;-m 1&quot; or 
+        add &quot;-m 2&quot; to a command when the data are already integers.&nbsp; The extra 
+        storage required will not be an issue if the normalized data are only being used 
+        temporarily for alignment and averaging of frames.</p>
+      <p><b>Drift settling</b>&nbsp; Drift settling is implemented not by having two shutters but
+        by having a longer exposure in which readout
+        frames at the beginning are discarded.&nbsp; This is known to work correctly 
+        when there is only one shutter connected.&nbsp; If there are two shutters, it 
+        may work correctly only if the second shuttering option is selected, as was 
+        found to be the case for the OneView.</p>
+      <p><b>Constraints on timing.</b>&nbsp; There are several constraints on timing that are enforced both for the entries 
+        in the <A HREF="hidd_camerasetup.htm">Camera Setup dialog</A> and when taking an image:</li>
+        </p>
+         <ol>
+        <li> All times (exposure, drift settling, frame time in Dose Fractionation mode)
+          must be multiples of the readout interval, 2.5 ms.</li>
+        <li> When <i>not</i> doing Dose Fractionation, exposure time must be a multiple of
+          0.1 sec in linear or counting mode and a multiple of 0.5 sec in super-resolution mode (yes, 0.5
+          sec!).</li>
+        <li> In Dose Fractionation mode,&nbsp;exposure time must be a multiple of the frame 
+          time.</li>
+        </ol>
+     <p>
+      It is possible to overcome the constraints on exposure time in counting and 
+          super-resolution modes by turning on Dose Fractionation mode and setting the 
+          frame time equal to the exposure time, with no aligning or saving selected.&nbsp; 
+          Doing so will cost an extra 4 sec in counting mode or 5.5 sec in 
+          super-resolution mode.&nbsp; This equality between frame and exposure time will 
+          be retained when you use either of the two methods of changing exposure time 
+          during a tilt series, i.e., changing exposure time instead of intensity or 
+          changing exposure time at scheduled tilt angles.&nbsp; See the description of 
+          these options in <A HREF="hidd_tiltseries.htm#tss_beam_control">Beam Intensity Control</A> 
+          and <A HREF="hidd_tsvariations.htm">Tilt Series Scheduled Changes Dialog</A> for more details.</p>
+    </basefont>
+  </BODY>
+</HTML>

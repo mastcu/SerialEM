@@ -1,0 +1,366 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+  <HEAD>
+    <TITLE>Focus Menu Commands</TITLE>
+    <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
+    <style type="text/css"> <!-- BODY { font-family:"Arial" }
+  TD { font-size:16 }
+      .style1
+      {
+        width: 153px;
+      }
+  --></style>
+  </HEAD>
+  <BODY BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+      <P><A NAME="menu_focus"></A><B><FONT size="3">Focus/Tune menu commands</FONT></B></P>
+      <P>The Focus/Tune menu offers the following commands for controlling Autofocus and 
+        Autotuning:</P>
+      <TABLE BORDER cols="2">
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_focus_measuredefocus">Measure Defocus</A></TD>
+          <TD>Measure current defocus.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_focus_autofocus">Autofocus</A></TD>
+          <TD>Autofocus to the defined target value.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_focus_movecenter">Move Focus Center</A></TD>
+          <TD>Shift center of focus from display point to center of field.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_focus_checkautofocus">Check Autofocus</A></TD>
+          <TD>Assess ability to autofocus by measuring defocus at 3 levels.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_focus_reportshiftdrift">Report Shift &amp; Drift</A></TD>
+          <TD>Does focus detection and reports shift and drift.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_focus_reportonexisting">Report On Existing</A></TD>
+          <TD>Report shift and drift from pictures already present in buffers A-C.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_focus_showexistingcorr">Show Existing Corr</A></TD>
+          <TD>Show the cross-correlation from pictures already present in A-C.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><a href="#hid_focus_showexistingstretch">Show Image Stretch</a></TD>
+          <TD>For existing images, show the image that is stretched to compensate for 
+            specimen tilt.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_focus_settarget">Set Target</A></TD>
+          <TD>Enter target defocus to change to after autofocus.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_focus_setbeamtilt">Set Beam Tilt</A></TD>
+          <TD>Set amount of beam tilt for detecting defocus.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_focus_setoffset">Set Offset</A></TD>
+          <TD>Set focus offset to apply before measuring defocus.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_focus_setthreshold">Set Threshold</A></TD>
+          <TD>Set threshold focus change for reiterating the autofocus.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_focus_set_tilt_direction">Set Tilt Direction</A></TD>
+          <TD>Set the direction of beam tilt for autofocusing.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_focus_set_ddd_min_binning">Set Min Binning</A></TD>
+          <TD>Set minimum total binning for correlating autofocus images from a direct detector.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_focus_set_filter_cutoffs">Test Filter Cutoffs</A></TD>
+          <TD>Set trial parameters for filters in autofocus correlations.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_focus_driftprotection">Drift Protection</A></TD>
+          <TD>Use three autofocus pictures to protect against drift.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_focus_setabsoluteliimits">Set Absolute Limits</A></TD>
+          <TD>Set lower and upper absolute limits for autofocusing around eucentric focus.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_focus_useabsoluterange">Use Absolute Limits</A></TD>
+          <TD>Apply the lower and upper absolute limits when autofocusing</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_focus_testwhenusingoffset">Limit Offset Defocus</A></TD>
+          <TD>Keep the offset defocus used to find focus within limits also.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><a href="#hid_focus_correctastigmatism">Correct Astigmatism</a></TD>
+          <TD>Measure and correct for objective astigmatism.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><a href="#hid_focus_setastigbeamtilt">Set Astig Beam Tilt</a></TD>
+          <TD>Set beam tilt to use for astigmatism calibration and/or correction.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><a href="#hid_focus_coma">Coma-free Alignment</a></TD>
+          <TD>Measure and correct for beam-tilt misalignment.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><a href="#hid_focus_setcomabeamtilt">Set Coma Beam Tilt</a></TD>
+          <TD>Set the maximum beam tilt for coma-free alignment.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_focus_resetdefocus">Reset Defocus</A></TD>
+          <TD>Set the defocus shown in the microscope panel to zero.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_focus_verbose">Verbose</A></TD>
+          <TD>Output defocus shift and drift information to Log Window.</TD>
+        </TR>
+      </TABLE>
+      <BR>
+      <P><A NAME="hid_focus_measuredefocus"></A><B>Measure Defocus command (Focus menu)</B></P>
+      <P>This command is used to run the autofocus routine for measuring defocus, without 
+        changing to the target defocus. Upon completion, the program will inform you of 
+        the measured defocus and ask if you want to set the target defocus to this 
+        value. This procedure is typically used if one adjusts focus manually to give 
+        the desired image appearance, then measures defocus and uses the measured value 
+        to set the target.</P>
+      <P><A NAME="hid_focus_autofocus"></A><B>Autofocus command (Focus menu)</B></P>
+      <P>This command will run the autofocus routine to measure defocus and then change 
+        focus to achieve the target defocus. If the indicated change in focus is 
+        greater than a preset threshold, then the program will change focus by at most 
+        twice the threshold amount, and repeat the autofocus routine. This threshold is 
+        set with the Set Threshold command described below.</P>
+    <P>In STEM mode a completely different procedure is used, as described in the 
+      section on <b>Autofocus</b> in <a href="about_stem.htm">STEM Mode</a>, and the target for defocus is always 0.</P>
+      <P>Shortcut Key:CTRL+G</P>
+      <P><A NAME="hid_focus_movecenter"></A><B>Move Center command (Focus menu)</B></P>
+      <P>This command can be used at high tilt to change the focus so as to move the 
+        visible center of focus by a desired amount. First click the left mouse button 
+        to set a display point at a place in the image with the desired focus. Then 
+        select this command. The center of the field in the next acquired image should 
+        be at the desired focus level.</P>
+      <P><A NAME="hid_focus_checkautofocus"></A><B>Check Autofocus command (Focus menu)</B></P>
+      <P>This command can be used to assess how well autofocus will work. The program 
+        will measure defocus using the current parameters at the current defocus, and 
+        at +5 and -5 microns away from that defocus. It will then inform you of the 
+        measured defocus change as a fraction of the actual change in defocus in each 
+        direction. If these numbers are greater than 0.9, autofocusing will be fairly 
+        accurate even for relatively large changes. If the numbers are sufficiently 
+        large, autofocusing should work adequately during a tilt series; otherwise it 
+        will be unreliable.</P>
+      <P><A NAME="hid_focus_reportshiftdrift"></A><B>Report Shift &amp; Drift command (Focus 
+          menu)</B></P>
+      <P>Use this command to run the routine for measuring defocus and receive a report 
+        of the beam tilt-induced image shift plus the shift due to drift, all in pixels 
+        (unbinned pixels are reported if the images were binned). Drift protection must 
+        be selected to get a meaningful estimate of drift.</P>
+      <P><A NAME="hid_focus_reportonexisting"></A><B>Report on Existing command (Focus menu)</B></P>
+      <P>Use this command to measure the beam tilt-induced image shift and the shift due 
+        to drift from pictures that are already in buffers A-C from a previous 
+        autofocusing operation. If drift protection is off, only the shift between 
+        pictures in buffers A and B will be reported.</P>
+      <P><A NAME="hid_focus_showexistingcorr"></A><B>Show Existing Corr command (Focus menu)</B></P>
+      <P>Use this command to display the autofocus cross-correlation from pictures that 
+        are already in buffers A-C from a previous autofocusing operation. The 
+        correlation will be placed in buffer A and existing images will be rolled up 
+        one buffer.</P>
+    <P>In STEM mode, this command will probably fail to work right unless the property STEMFocusShowBestAtEnd 
+      is added to the Properties file and set to 0.</P>
+    <P><A NAME="hid_focus_showexistingstretch"></A><B>Show Image Stretch command (Focus menu)</B></P>
+    <P>Use this command to see the stretch that is used to compensate for specimen 
+      tilt above 5 degrees, for pictures that are already in buffers A-C from a 
+      previous autofocus operation.&nbsp; The second image of the autofocus series 
+      will be replaced with the stretched version and the original will be copied down 
+      two buffers if rolling is allowed into that buffer.&nbsp; If binning is being 
+      applied to direct detector images, the stretching occurs after binning, so the 
+      replaced image will be binned.&nbsp; The program also reports the matrix applied 
+      to do the stretch in the log.</P>
+      <P><A NAME="hid_focus_settarget"></A><B>Set Target command (Focus menu)</B></P>
+      <P>This command is used to enter a specific target defocus for autofocusing. After 
+        the autofocus routine measures a defocus, it will change the focus setting so 
+        as to achieve this target level. Selecting this command brings up a dialog box 
+        for entering the number; the default value shown is the current target. Enter a 
+        defocus in microns.</P>
+      <P><A NAME="hid_focus_setbeamtilt"></A><B>Set Beam Tilt command (Focus menu)</B></P>
+      <P>This command is used to set the beam tilt that is used for autofocusing. 
+        Selecting this command brings up a dialog box with a default value equal to the 
+        current beam tilt value. The units are milliradians (mrad).</P>
+      <P><A NAME="hid_focus_setoffset"></A><B>Set Offset command (Focus menu)</B></P>
+      <P>Use this command to set a focus offset that will be applied before any of the 
+        autofocusing operations invoked in the Focus menu. For example, if the offset 
+        is set to +5 &micro;m, then when you choose to measure defocus, the program will 
+        change defocus by +5 &micro;m, take pictures for measuring defocus, restore the 
+        defocus by -5 &micro;m, and subtract 5 &micro;m from the measured value to determine the 
+        current defocus. This option provides a way to autofocus to a target far from 
+        zero when the program is having difficulty autofocusing.</P>
+      <P><A NAME="hid_focus_setthreshold"></A><B>Set Threshold command (Focus menu)</B></P>
+      <P>Use this command to set the thresholds for repeating the autofocus procedure 
+        after a large change in defocus, and for applying the logic that can abort 
+        autofocus when iterations give inconsistent results. The current value of the threshold 
+        for repeating autofocus is the 
+        default value shown in the first dialog box. Whenever autofocusing changes the focus 
+        level by more than this amount, the program will repeat the autofocus 
+        operation.&nbsp; After entering this threshold, a second dialog box appears 
+        asking for the threshold for testing whether successive results are 
+        inconsistent.&nbsp; You can enter 0 to disable the tests for inconsistent 
+        autofocus.&nbsp; The testing will always be done for any non-zero value less 
+        than the threshold for repeating autofocus; values higher than the threshold for 
+        repeating will make the testing be skipped when changes are between the two 
+        threshold levels.&nbsp; The latter may be desirable when using very small 
+        thresholds for repeating.</P>
+      <P><A NAME="hid_focus_set_tilt_direction"></A><B>Set Tilt Direction command (Focus menu)</B></P>
+      <P>Use this command to set the direction that the beam will be tilted during all 
+        autofocusing operations.&nbsp; Enter a number between 0 and 3, where 0 
+        corresponds to tilting with the X coil only, 1 tilts with equal deflections on 
+        the X and Y coils, 2 tilts with the Y coil only, and 3 tilts with a negative 
+        deflection on X for a positive one on Y.&nbsp; Using a number different than 0, 
+        which was the only direction available before SerialEM 3.4, will cause the image 
+        to shift in different directions, at 45 degree increments from the shift at 
+        direction 0.&nbsp; Focus calibrations are specific to the current direction, so 
+        the calibration must be done at each direction to be used for autofocusing.</P>
+      <P><A NAME="hid_focus_set_ddd_min_binning"></A><B>Set Min Binning command (Focus menu)</B></P>
+      <P>Use this command to 
+        set a minimum total binning to apply when correlating autofocus images from a 
+        direct detector.&nbsp; The autofocus routine does not apply any binning to the 
+        images that it correlates by default, but it is recommended that the Focus 
+        images themselves be taken with some binning to reduce the effects of fixed 
+        noise in the images.&nbsp; It can be difficult to take images with the needed 
+        binning with direct detectors because their high gain values make binned images 
+        saturate easily.&nbsp; Thus, this command allows one to process autofocus images 
+        obtained with lower binning as if they had been taken with higher binning.&nbsp; 
+        Enter the desired total binning.&nbsp; When autofocusing, the program either 
+        applies additional binning to reach the specified binning, or reduces the cutoff 
+        and rolloff of the high-frequency filter to achieve an equivalent effect, or a 
+        combination of the two.&nbsp; For example, if the total minimum binning is set 
+        to 4, unbinned images will be binned by 4 for correlating, images with binning 2 
+        will be binned by 2 again, and images with binning 3 will be correlated with the 
+        filter parameters multiplied by 0.75.&nbsp; Although this feature currently is 
+        applied only for direct detectors, it could easily be provided for other cameras 
+        if the need arose.</P>
+      <P><A NAME="hid_focus_set_filter_cutoffs"></A><B>Test Filter Cutoffs command (Focus menu)</B></P>
+      <P>Use this command to 
+        set the cutoff and rolloff parameters for the low and high ferquency filters 
+        applied when correlating autofocus images.&nbsp; The &#39;Test&#39; in the name of the 
+        command refers to the fact that values are not retained between program 
+        sessions.&nbsp; If a filter change is needed, it should be set in the 
+        SerialEMproperties.txt file.&nbsp; First enter the frequency at which the 
+        high-frequency filter starts to cut off, in reciprocal pixels.&nbsp; Then enter 
+        the sigma value for the rolloff of the filter.&nbsp; In both cases, smaller 
+        numbers filter more.&nbsp; These parameters may need to be adjusted when there 
+        are severe problems with fixed noise in the correlation images.&nbsp; To change 
+        them in the properties file, add lines starting with &#39;FocusFilterRadius2&#39; and/or 
+        &#39;FocusFilterSigma2&#39;.&nbsp; The third property is the sigma for the low-frequency 
+        filter, an inverted Gaussian that is zero at zero frequency and rises to 1.&nbsp; 
+        Its property entry is &#39;FocusFilterSigma1&#39;, but the current default should be 
+        effective.</P>
+      <P><A NAME="hid_focus_driftprotection"></A><B>Drift Protection command (Focus menu)</B></P>
+      <P>Use this command to toggle between having two or three pictures taken for 
+        autofocusing. With three pictures, the program can separate shift due to drift 
+        from the beam tilt-induced image shift used to determine defocus. The measured 
+        defocus will thus be accurate if the drift is constant.</P>
+      <P><A NAME="hid_focus_setabsoluteliimits"></A><B>Set Absolute Limits command (Focus menu)</B></P>
+    <P>Use this command to set limits for the absolute focus that can be accessed 
+      during autofocusing.&nbsp; The main purpose of such limits would be to prevent 
+      failures in taking images due to the Falcon Dose Protector, but they might be 
+      useful in other situations.&nbsp; The first step is to set the microscope to 
+      eucentric focus, which you could do by pressing a Eucentric Focus button or by 
+      making the stage eucentric and focusing a specimen.&nbsp; After you confirm that 
+      the scope is at eucentric focus, the program asks you to enter the lower and 
+      upper limits for defocus relative to that point, in microns; these are assumed 
+      to be negative and positive, respectively.&nbsp; The program changes focus to 
+      each level and records the absolute focus value.&nbsp; The limits will not be 
+      applied unless you turn on the next option.</P>
+      <P><A NAME="hid_focus_useabsoluterange"></A><B>Use Absolute Limits command (Focus menu)</B></P>
+    <P>This command toggles whether the absolute focus limits entered with the 
+      previous command are applied during autofocusing.&nbsp; Autofocus will abort 
+      whenever changing the defocus to the target value would make focus exceed the 
+      limits.</P>
+      <P><A NAME="hid_focus_testwhenusingoffset"></A><B>Limit Offset Defocus command (Focus menu)</B></P>
+    <P>This command toggles whether a defocus offset for autofocusing will be included 
+      when determining whether an absolute focus limit is being exceeded.&nbsp; If it 
+      is included, the program will not attempt to measure defocus at a focus level 
+      exceeding the limits; if it is not included, the limits will apply only to a new 
+      focus needed to reach the target defocus.&nbsp; This option should be turned on 
+      for Falcon cameras but should not be needed in other situations.</P>
+    <P><A NAME="hid_focus_correctastigmatism"></A><B>Correct Astigmatism command (Focus menu)</B></P>
+    <P>Use this command to measure and correct for objective astigmatism.&nbsp; The 
+      procedure first measures defocus and changes to the focus used for the 
+      astigmatism calibration that fits the current conditions. It then measures 
+      beam-tilt induced image shift for beam tilts in three directions and uses this 
+      information to solve for the astigmatism.&nbsp; If the change in stigmator 
+      settings is large enough, it then repeats the procedure one or two times.</P>
+    <P>The beam tilt used is set with the <a href="#hid_focus_setastigbeamtilt">Set 
+      Astig Beam Tilt</a> command.&nbsp; It does not need to be the same as the beam 
+      tilt used for the calibration, which is recommended to be done at twice the beam 
+      tilt normally used for autofocusing.&nbsp; You may need to remove the objective 
+      aperture to run this operation with such a beam tilt, but it should be possible 
+      to get adequate results with the aperture in and a lower beam tilt, if 
+      necessary.&nbsp; Before running this command for the first time, you should use 
+      the&nbsp; <a href="menu_calibration.htm#hid_autofocusfocus_listcalibrations">List Calibrations</a> 
+      command in the Calibration - Focus &amp; Tuning menu to check what beam tilts and 
+      magnifications have been used for calibration.&nbsp; The calibrations are also 
+      specific to probe mode on an FEI scope or alpha on a JEOL, so if the Correct 
+      Astigmatism command is disabled, it may be because there is no calibration for 
+      your current conditions.</P>
+    <P>The Focus parameters are used, just as for autofocusing, so be sure that 
+      autofocusing is working well before running this routine.</P>
+    <P>This procedure will be more accurate at higher magnifications, but should work 
+      at magnifications where the pixel size for data acquisition is around 1 nm.&nbsp; 
+      The routine uses the calibration from the nearest calibrated magnification.</P>
+    <P><A NAME="hid_focus_setastigbeamtilt"></A><B>Set Astig Beam Tilt command (Focus menu)</B></P>
+    <P>Use this command to set the beam tilt that will be used either to calibrate 
+      astigatism or to correct it.&nbsp; On a non-FEI scope, the entry box will tell 
+      you the scaling from percent of full scale to milliradians, so that you can use 
+      a standardized value if desired.</P>
+    <P><A NAME="hid_focus_coma"></A><B>Coma-free Alignment command (Focus menu)</B></P>
+    <P>Use this command to measure and correct for beam-tilt misalignment (coma).&nbsp; 
+      The procedure measures focus, changes to the focus at which a coma calibration 
+      was done, and measures beam-tilt induced image shift for positive and negative 
+      beam tilts in X and Y directions.&nbsp; From the difference between 
+      displacements, it estimates the current beam tilt and adjusts for it.</P>
+    <P>The beam tilt used is determined by the value entered with the
+      <a href="#hid_focus_setastigbeamtilt">Set Coma Beam Tilt</a> command, which must 
+      match the value for an existing coma-free calibration.&nbsp; In fact, the beam 
+      tilt here is half of the maximum tilt used for the calibration.&nbsp; Before 
+      running this command for the first time, you should use the
+      <a href="menu_calibration.htm#hid_autofocusfocus_listcalibrations">List Calibrations</a> 
+      command in the Calibration - Focus &amp; Tuning menu to check what beam tilts have 
+      been used for calibration.&nbsp; These calibrations are specific to probe mode 
+      on an FEI scope or alpha on a JEOL.&nbsp; The Coma-free Alignment command is 
+      disabled unless there is a calibration at some magnification that matches the 
+      current conditions as well as the beam tilt setting.</P>
+    <P>The Focus parameters are used, just as for autofocusing, so be sure that 
+      autofocusing is working well before running this routine.&nbsp; Accurate 
+      measurement of displacement differences requires a high magnification as well as 
+      large beam tilts, so you may need to run the routine at whatever magnification 
+      is calibrated.</P>
+    <P>This command cannot be run in Low Dose mode, because the beam-tilt alignment is 
+      different at the shifted location of the Focus area.</P>
+    <P><A NAME="hid_focus_setcomabeamtilt"></A><B>Set Coma-free Beam Tilt command (Focus menu)</B></P>
+    <P>Use this command to set the maximum beam tilt for coma-free calibrations.&nbsp; 
+      That beam tilt will be used for doing a calibration, and the coma-free alignment 
+      can be done only with a beam tilt that matches what was used for a calibration.&nbsp; 
+      The entry box will list the beam tilts for all calibrations that match the 
+      current probe mode (on an FEI scope) or alpha (on a JEOL).&nbsp; If there are no 
+      such calibrations, for a non-FEI scope, the box will show the scaling from 
+      percent of full scale to milliradians, so that an appropriately large percentage 
+      value can be entered. </P>
+      <P><A NAME="hid_focus_resetdefocus"></A><B>Reset Defocus command (Focus menu)</B></P>
+      <P>Use this command to reset the defocus readout in the Microscope Status panel to 
+        zero, without actually changing microscope focus. On an FEI scope, this simply 
+        does the same thing as the Reset Defocus command in the Microscope User Interface. 
+        On a JEOL, the defocus readout is set to zero when the program starts and this is the 
+        only way to change it.</P>
+      <P><A NAME="hid_focus_verbose"></A><B>Verbose command (Focus menu)</B></P>
+      <P>This command toggles more complete output from focusing operations. With the 
+        option selected, the shift and drift information are printed in the Log window 
+        on every autofocus, as well as the cross-correlation coefficient between 
+        unfiltered images. With the option not selected, the measured defocus value and 
+        the use of a secondary peak will still be reported to the Log window, but only 
+        if it is already open.</P>
+    </basefont>
+  </BODY>
+</HTML>

@@ -1,0 +1,743 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+  <HEAD>
+    <TITLE>File Formats</TITLE>
+    <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
+    <style type="text/css"> <!-- BODY { font-family:"Arial" }
+  TD { font-size:16 }
+      .style1
+      {
+        width: 304px;
+      }
+      .style5
+      {
+        width: 445px;
+      }
+      .style6
+      {
+        width: 304px;
+        font-weight: bold;
+      }
+      .style7
+      {
+        width: 114px;
+        text-align: center;
+      }
+      .style8
+      {
+        width: 85px;
+      }
+      .style9
+      {
+        width: 343px;
+      }
+      .style10
+      {
+        width: 117px;
+      }
+      .style11
+      {
+        width: 343px;
+        font-weight: bold;
+      }
+      .style12
+      {
+        font-size: larger;
+        font-weight: bold;
+      }
+  --></style>
+  </HEAD>
+  <BODY BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+      <P><A NAME="about_formats"></A><span class="style12">File Formats</span></P>
+    <P><b>Image Metadata Files</b></P>
+      <P>SerialEM stores metadata about images in text files in the IMOD &quot;autodoc&quot; format.&nbsp; 
+        This format consists of keyword-value pairs organized into blocks called 
+        sections.&nbsp; These sections can be of different types with different kinds of 
+        data in them, although SerialEM&#39;s files use essentially only one kind of 
+        section.&nbsp; A section begins with a bracketed key-value pair:<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [sectionType = name]<br />
+        where the section &quot;name&quot; or value will typically be unique but is not required 
+        to be so by the IMOD autodoc reader.&nbsp; Lines below a section header of the 
+        form<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; key = value<br />
+        provide data associated with that section.&nbsp; In addition, key-value pairs 
+        can occur at the beginning of the file, before any section header, and these are 
+        referred to as global values.</P>
+    <P>Although all values are stored as text strings in the autodoc file, software 
+      that expects information of a particular kind will often convert these strings 
+      to or from one or more floating point or integer values.&nbsp; The autodoc 
+      module in the IMOD library libcfshr contains functions for storing or retrieving 
+      one, two, three, or many floating point or integer values in specified sections 
+      of the file.&nbsp; The autodoc format was chosen for SerialEM because of the 
+      ready availability of this library, the convenience of using such functions, and 
+      compatibility with the autodoc-reading capability in IMOD.</P>
+    <P>There are two kinds of image-associated autodoc files produced by SerialEM: </P>
+    <P>1) The &quot;.mdoc&quot; file provides data about an MRC file and has the same name as 
+      the image file, with the additional extension &quot;.mdoc&quot;.&nbsp; In these files, the 
+      section type is &quot;ZValue&quot; and the name for each section is the Z value of the 
+      image in the file, numbered from 0.</P>
+    <P>2) The &quot;.idoc&quot; file provides information that allows a series of single-image 
+      TIFF files to be treated interchangeably with MRC files.&nbsp; The section type 
+      here is &quot;Image&quot; and the name for each section is the name of the TIFF file.</P>
+    <P>Global data replicate some of the information that is in an MRC file header.&nbsp; 
+      In addition, the titles for an MRC file are stored in section headers of the 
+      type &quot;T&quot;.</P>
+      <TABLE cols="2" BORDER style="Z-INDEX: 0">
+        <TBODY>
+          <TR VALIGN="top">
+            <TD class="style6" colspan="2">Global Data</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">DataMode</TD>
+            <TD class="style5">MRC file mode</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">ImageSize</TD>
+            <TD class="style5">X and Y size of images</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">Montage</TD>
+            <TD class="style5">1 if the file is a montage</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">ImageSeries</TD>
+            <TD class="style5">1 for an .idoc file describing a series of single-image files</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">ImageFile</TD>
+            <TD class="style5">In a .mdoc file, contains the name of the image file</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">PixelSpacing</TD>
+            <TD class="style5">Pixel spacing in Angstroms that would be in MRC header</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style6" colspan="2">Section Data</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">TiltAngle</TD>
+            <TD class="style5">Tilt angle in degrees</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">PieceCoordinates</TD>
+            <TD class="style5">Pixel coordinates in X and Y and section Z value for montage 
+              piece</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">StagePosition</TD>
+            <TD class="style5">X and Y stage position in microns</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">StageZ</TD>
+            <TD class="style5">Z stage position in microns</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">Magnification</TD>
+            <TD class="style5">&quot;Film&quot; magnification value</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">MagIndex</TD>
+            <TD class="style5">Magnification index</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">Intensity</TD>
+            <TD class="style5">Raw intensity value between 0 and 1</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">SuperMontCoords</TD>
+            <TD class="style5">X and Y pixel coordinates of frame in a supermontage</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">PixelSpacing</TD>
+            <TD class="style5">Pixel spacing in Angstroms for individual image</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">ExposureDose</TD>
+            <TD class="style5">Dose on specimen during camera exposure</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">SpotSize</TD>
+            <TD class="style5">Microscope spot size</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">Defocus</TD>
+            <TD class="style5">Relative defocus readout from microscope (microns)</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">TargetDefocus</TD>
+            <TD class="style5">Current target for autofocus (microns)</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">ImageShift</TD>
+            <TD class="style5">X and Y image shift in basic units (close to microns)</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">RotationAngle</TD>
+            <TD class="style5">Rotation of image from having tilt axis along X axis (CCW +)</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">ExposureTime</TD>
+            <TD class="style5">Image exposure time</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">Binning</TD>
+            <TD class="style5">Image binning on the camera</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">CameraIndex</TD>
+            <TD class="style5">Index of the CameraProperties section for the camera used</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">DividedBy2</TD>
+            <TD class="style5">1 if image was divided by 2</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">MinMaxMean</TD>
+            <TD class="style5">Minimum, maximum, and mean value for this image</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">XedgeDxy</TD>
+            <TD class="style5">Edge displacement in X and Y for montage piece to the right of 
+              this piece</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">YedgeDxy</TD>
+            <TD class="style5">Edge displacement in X and Y for piece above this piece</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">XedgeDxyVS</TD>
+            <TD class="style5">Edge displacement for piece to right, computed with very sloppy 
+              option</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">YedgeDxyVS</TD>
+            <TD class="style5">Edge displacement for piece above, computed with very sloppy 
+              option</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">StageOffsets</TD>
+            <TD class="style5">When aligning montage pieces with image shift, this is the 
+              effective stage position (actual position plus the stage equivalent to the image 
+              shift adjustment) minus the nominal stage position of the piece.</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">SubFramePath</TD>
+            <TD class="style5">Directory or file in which subframes of exposure were stored</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">NumSubFrames</TD>
+            <TD class="style5">Number of subframes stored</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">DateTime</TD>
+            <TD class="style5">Time and date of image acquisition</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style6" colspan="2">Direct Electron Specific Data</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">DE12-ServerSoftwareVersion</TD>
+            <TD class="style5">Server software version</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">DE12-PreexposureTime(s)</TD>
+            <TD class="style5">Pre-exposure time</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">DE12-TotalNumberOfFrames</TD>
+            <TD class="style5">Total number of frames in acquisition</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">DE12-FramesPerSecond</TD>
+            <TD class="style5">Frame rate in frames per second</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">DE12-CameraPosition</TD>
+            <TD class="style5">Whether camera was retracted or inserted</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">DE12-ProtectionCoverMode</TD>
+            <TD class="style5">Whether protection cover is kept open or open and closed for 
+              this shot</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">DE12-ProtectionCoverOpenDelay(ms)</TD>
+            <TD class="style5">Delay after opening prtection cover</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">DE12-TemperatureDetector(C)</TD>
+            <TD class="style5">Detector temperature</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">DE12-FaradayPlatePeakReading(pA/cm2)</TD>
+            <TD class="style5">Current reading from Faraday plate during exposure</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">DE12-SensorModuleSerialNumber</TD>
+            <TD class="style5">Serial number of sensor</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">DE12-SensorReadoutDelay(ms)</TD>
+            <TD class="style5">Delay before starting to read out sensor during exposure</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">DE12-IgnoredFramesInSummedImage</TD>
+            <TD class="style5">Number of frames ignored in a summed image</TD>
+          </TR>
+    </TBODY></TABLE>
+    <p>
+      &nbsp;</p>
+    <p>
+      If an &quot;.idoc&quot; file is being constructed for a set of TIFF files, the essential 
+      elements are the &quot;DataMode&quot;, &quot;ImageSize&quot;, and &quot;ImageSeries&quot; entries, as well as 
+      a section header for each image.&nbsp; The global &quot;PixelSpacing&quot; may be helpful 
+      in some contexts.&nbsp; For a montage, the &quot;Montage&quot; entry must be present with 
+      the value 1, and there must be a &quot;PieceCoordinates&quot; entry in each section.&nbsp; 
+      The X and Y values must fall on a regularly spaced grid, so that the coordinates 
+      can be analyzed to deduce the spacing and overlap between pieces unambiguously.&nbsp; 
+      Not all pieces in a rectangle need to be present, and there need not be pieces 
+      at 0.&nbsp; Pixel coordinates are in a right-handed system despite the 
+      ubiquitous inversion of images in Y.</p>
+    <p>
+      If the alignment between montage pieces is known, this information can be placed 
+      in both the XedgeDxy/YedgeDxy and the XedgeDxyVS/YedgeDxyVS entries, so that the 
+      alignment can be used by SerialEM regardless of whether the Very Sloppy option 
+      is checked.&nbsp; The entries are the amount that an &quot;upper&quot; piece, i.e., one to 
+      the right (for X) or above (for Y), is displaced from being aligned in the 
+      overlap zone.&nbsp; This is the negative of the amount that the upper piece 
+      needs to be shifted to align the two pieces in the overlap zone.&nbsp; The program uses 
+      the IMOD library routine findPieceShifts to solve for the best shifts to be 
+      applied to each piece to bring all of them into best alignment.&nbsp; There is a 
+      fixed (but easily raised) limit to the size of montage for which this solution will be found, based 
+      on the nominal number of pieces in X and Y rather than the actual number.
+    </p>
+    <p>
+      <b>Navigator Files</b></p>
+    <p>
+      In SerialEM 3.6, the Navigator output was switched from one tab-delimited line 
+      per item to an autodoc format, with an option to output as XML instead.&nbsp; 
+      XML or autodoc files can be read back in, as well as the tab-delimited files 
+      from earlier versions.&nbsp; There is one line of global data,<br />
+&nbsp; AdocVersion = x.xx<br />
+      then every item is in a section of type 'Item' and with its label string as the 
+      value.&nbsp; The following table lists all of the keys that can occur in a 
+      section, the kind of value that is expected, and whether it is required, or if 
+      it is not required, what default value is set.</p>
+
+    <P>
+<TABLE cols="5" BORDER style="Z-INDEX: 0">
+  <TBODY>
+    <TR VALIGN="top">
+      <TD><b>Key</b></TD>
+      <TD class="style10"><b>Type of value</b></TD>
+      <TD class="style7"><b>Default value, or Required</b></TD>
+      <TD class="style8"><b>CMapDrawItem member(s)</b></TD>
+      <TD class="style11">Description</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>Color</TD>
+      <TD class="style10">Integer</TD>
+      <TD class="style7">Req</TD>
+      <TD class="style8">mColor</TD>
+      <TD class="style9">Color index (0-5)</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>StageXYZ</TD>
+      <TD class="style10">Three Floats</TD>
+      <TD class="style7">Req </TD>
+      <TD class="style8">mStageX/Y/Z</TD>
+      <TD class="style9">Stage position adjusted for current mag</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>NumPts</TD>
+      <TD class="style10">Integer</TD>
+      <TD class="style7">Req</TD>
+      <TD class="style8">mNumPoints</TD>
+      <TD class="style9">Number of points</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>Corner</TD>
+      <TD class="style10">Integer</TD>
+      <TD class="style7">0</TD>
+      <TD class="style8">mCorner</TD>
+      <TD class="style9">Flag for corner point</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>Draw</TD>
+      <TD class="style10">Integer</TD>
+      <TD class="style7">1</TD>
+      <TD class="style8">mDraw</TD>
+      <TD class="style9">Flag to draw</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>RegPt</TD>
+      <TD class="style10">Integer</TD>
+      <TD class="style7">0</TD>
+      <TD class="style8">mRegPoint</TD>
+      <TD class="style9">Registration point number</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>Regis</TD>
+      <TD class="style10">Integer</TD>
+      <TD class="style7">Req</TD>
+      <TD class="style8">mRegistration</TD>
+      <TD class="style9">Registration at which item exists</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>Type</TD>
+      <TD class="style10">Integer</TD>
+      <TD class="style7">Req</TD>
+      <TD class="style8">mType</TD>
+      <TD class="style9">Type: 0-2 for point, polygon, map</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>Note</TD>
+      <TD class="style10">String</TD>
+      <TD class="style7">blank</TD>
+      <TD class="style8">mNote</TD>
+      <TD class="style9">Note string</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>GroupID</TD>
+      <TD class="style10">Integer</TD>
+      <TD class="style7">0</TD>
+      <TD class="style8">mGroupID</TD>
+      <TD class="style9">ID of group thatitem belongs to</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>PolyID</TD>
+      <TD class="style10">Integer</TD>
+      <TD class="style7">0</TD>
+      <TD class="style8">mPolygonID</TD>
+      <TD class="style9">ID of polygon used to define supermon</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>Imported</TD>
+      <TD class="style10">Integer</TD>
+      <TD class="style7">0</TD>
+      <TD class="style8">mImported</TD>
+      <TD class="style9">Indicator of an imported map or point drawn on one</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>SuperMontXY</TD>
+      <TD class="style10">Two Integers</TD>
+      <TD class="style7">-1,-1</TD>
+      <TD class="style8">SuperMontX/Y</TD>
+      <TD class="style9">Camera coordinate of a montage in supermontage</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>OrigReg</TD>
+      <TD class="style10">Integer</TD>
+      <TD class="style7">Regis</TD>
+      <TD class="style8">mOriginalReg</TD>
+      <TD class="style9">Original registration (default is Registration)</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>DrawnID</TD>
+      <TD class="style10">Integer</TD>
+      <TD class="style7">0</TD>
+      <TD class="style8">mDrawnOnMapID</TD>
+      <TD class="style9">ID of map point/polygon was drawn on</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>BklshXY</TD>
+      <TD class="style10">Two Floats</TD>
+      <TD class="style7">0,0</TD>
+      <TD class="style8">mBacklashX/Y</TD>
+      <TD class="style9">Backlash when a montage was taken or associated with item</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>SamePosId</TD>
+      <TD class="style10">Integer</TD>
+      <TD class="style7">0</TD>
+      <TD class="style8">mAtSamePosID</TD>
+      <TD class="style9">Items with this matching were taken at same raw stage position</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>RawStageXY</TD>
+      <TD class="style10">Two Floats</TD>
+      <TD class="style7">-10000,-10000</TD>
+      <TD class="style8">mRawStageX/Y</TD>
+      <TD class="style9">Raw stage position before adjustments</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>Acquire</TD>
+      <TD class="style10">Integer</TD>
+      <TD class="style7">0</TD>
+      <TD class="style8">mAcquire</TD>
+      <TD class="style9">Flag for acquiring</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>PieceOn</TD>
+      <TD class="style10">Integer</TD>
+      <TD class="style7">-1</TD>
+      <TD class="style8">mPieceDrawnOn</TD>
+      <TD class="style9">Index of montage piece item was drawn on</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>MapFile</TD>
+      <TD class="style10">String</TD>
+      <TD class="style7">Req if Map</TD>
+      <TD class="style8">mMapFile</TD>
+      <TD class="style9">Full path of map file</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>MapID</TD>
+      <TD class="style10">Integer</TD>
+      <TD class="style7">Req if Map</TD>
+      <TD class="style8">mMapID</TD>
+      <TD class="style9">Unique ID (all items get one now)</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>MapMontage</TD>
+      <TD class="style10">Integer</TD>
+      <TD class="style7">Req if Map</TD>
+      <TD class="style8">mMapMontage</TD>
+      <TD class="style9">Flag that map is a montage</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>MapSection</TD>
+      <TD class="style10">Integer</TD>
+      <TD class="style7">Req if Map</TD>
+      <TD class="style8">mMapSection</TD>
+      <TD class="style9">Section number in file</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>MapBinning</TD>
+      <TD class="style10">Integer</TD>
+      <TD class="style7">Req if Map</TD>
+      <TD class="style8">mMapBinning</TD>
+      <TD class="style9">Binning at which map was taken or of initial map image</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>MapMagInd</TD>
+      <TD class="style10">Integer</TD>
+      <TD class="style7">Req if Map</TD>
+      <TD class="style8">mMapMagInd</TD>
+      <TD class="style9">Magnification index</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>MapCamera</TD>
+      <TD class="style10">Integer</TD>
+      <TD class="style7">Req if Map</TD>
+      <TD class="style8">mMapCamera</TD>
+      <TD class="style9">Camera index</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>MapScaleMat</TD>
+      <TD class="style10">Four Floats</TD>
+      <TD class="style7">Req if Map</TD>
+      <TD class="style8">mMapScaleMat</TD>
+      <TD class="style9">Scale matrix for drawing</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>MapWidthHeight</TD>
+      <TD class="style10">Two Integers</TD>
+      <TD class="style7">Req if Map</TD>
+      <TD class="style8">mMapWidth/Height</TD>
+      <TD class="style9">Size of image at which scale matrix was defined</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>MapMinMaxScale</TD>
+      <TD class="style10">Two Floats</TD>
+      <TD class="style7">0,0</TD>
+      <TD class="style8">mMapMin/MaxScale</TD>
+      <TD class="style9">Min and max scale values of image when map was defined</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>MapFramesXY</TD>
+      <TD class="style10">Two Integers</TD>
+      <TD class="style7">0,0</TD>
+      <TD class="style8">mMapFramesX/Y</TD>
+      <TD class="style9">Number of montage frames when acquired</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>MontBinning</TD>
+      <TD class="style10">Integer</TD>
+      <TD class="style7">0</TD>
+      <TD class="style8">mMontBinning</TD>
+      <TD class="style9">Actual binning of montage used to make the map</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>MapExposure</TD>
+      <TD class="style10">Float</TD>
+      <TD class="style7">0.</TD>
+      <TD class="style8">mMapExposure</TD>
+      <TD class="style9">Exposure time for original map images</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>MapSettling</TD>
+      <TD class="style10">Float</TD>
+      <TD class="style7">0.</TD>
+      <TD class="style8">mMapSettling</TD>
+      <TD class="style9">Drift settling</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>ShutterMode</TD>
+      <TD class="style10">Integer</TD>
+      <TD class="style7">-1</TD>
+      <TD class="style8">mShutterMode</TD>
+      <TD class="style9">Shutter mode</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>MapSpotSize</TD>
+      <TD class="style10">Integer</TD>
+      <TD class="style7">0</TD>
+      <TD class="style8">mMapSpotSize</TD>
+      <TD class="style9">Read mode for K2 camera</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>MapIntensity</TD>
+      <TD class="style10">Double</TD>
+      <TD class="style7">0</TD>
+      <TD class="style8">mMapIntensity</TD>
+      <TD class="style9">Intensity at which map was taken</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>MapSlitIn</TD>
+      <TD class="style10">Integer</TD>
+      <TD class="style7">0</TD>
+      <TD class="style8">mMapSlitIn</TD>
+      <TD class="style9">Filter slit state when map was taken</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>MapSlitWidth</TD>
+      <TD class="style10">Float</TD>
+      <TD class="style7">-1.</TD>
+      <TD class="style8">mMapSlitWidth</TD>
+      <TD class="style9">Filter slit width when map was taken</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>RotOnLoad</TD>
+      <TD class="style10">Integer</TD>
+      <TD class="style7">0</TD>
+      <TD class="style8">mRotOnLoad</TD>
+      <TD class="style9">Flag to rotate when load</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>RealignedID</TD>
+      <TD class="style10">Integer</TD>
+      <TD class="style7">0</TD>
+      <TD class="style8">mRealignedID</TD>
+      <TD class="style9">ID of lower mag map with nearby realign error</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>RealignErrXY</TD>
+      <TD class="style10">Two Floats</TD>
+      <TD class="style7">0,0</TD>
+      <TD class="style8">mRealignErrX/Y </TD>
+      <TD class="style9">Final stage error of that realign operation</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>LocalErrXY</TD>
+      <TD class="style10">Two Floats</TD>
+      <TD class="style7">0,0</TD>
+      <TD class="style8">mLocalRealiErrX/Y</TD>
+      <TD class="style9">Error in second round of realign operation</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>RealignReg</TD>
+      <TD class="style10">Integer</TD>
+      <TD class="style7">0</TD>
+      <TD class="style8">mRealignReg</TD>
+      <TD class="style9">Original registration of that realign</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>ImageType</TD>
+      <TD class="style10">Integer</TD>
+      <TD class="style7">0</TD>
+      <TD class="style8">mImageType</TD>
+      <TD class="style9">Map file type 0-3 for MRC, IMOD, TIFF, IDOC</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>MontUseStage</TD>
+      <TD class="style10">Integer</TD>
+      <TD class="style7">-1</TD>
+      <TD class="style8">mMontUseStage</TD>
+      <TD class="style9">1 if montage was taken with stage, 0 if not, -1 if unknown</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>DefocusOffset</TD>
+      <TD class="style10">Float</TD>
+      <TD class="style7">0.</TD>
+      <TD class="style8">mDefocusOffset</TD>
+      <TD class="style9">Defocus offset for map based on View images</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>K2ReadMode</TD>
+      <TD class="style10">Integer</TD>
+      <TD class="style7">0</TD>
+      <TD class="style8">mK2ReadMode</TD>
+      <TD class="style9">Read mode for K2 camera</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>NetViewShiftXY</TD>
+      <TD class="style10">Two Floats</TD>
+      <TD class="style7">0,0</TD>
+      <TD class="style8">mNetViewShiftX/Y</TD>
+      <TD class="style9">Net IS offset for a View image map</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>MapAlpha</TD>
+      <TD class="style10">Integer</TD>
+      <TD class="style7">-999</TD>
+      <TD class="style8">mMapAlpha</TD>
+      <TD class="style9">JEOL alpha value</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>ViewBeamShiftXY</TD>
+      <TD class="style10">Two Floats</TD>
+      <TD class="style7">0,0</TD>
+      <TD class="style8">mViewBeamShiftX/Y</TD>
+      <TD class="style9">Incremental beam shift to apply for a View map</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>ViewBeamTiltXY</TD>
+      <TD class="style10">Two Floats</TD>
+      <TD class="style7">0,0</TD>
+      <TD class="style8">mViewBeamTiltX/Y</TD>
+      <TD class="style9">Incremental beam tilt to apply for a View map</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>MapProbeMode</TD>
+      <TD class="style10">Integer</TD>
+      <TD class="style7">-1</TD>
+      <TD class="style8">mMapProbeMode</TD>
+      <TD class="style9">Probe mode (0 for nano, 1 for micro)</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>MapLDConSet</TD>
+      <TD class="style10">Integer</TD>
+      <TD class="style7">-1</TD>
+      <TD class="style8">mMapLowDoseConSet</TD>
+      <TD class="style9">Set # (0-4) used for map taken in low dose</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>MapTiltAngle</TD>
+      <TD class="style10">Float</TD>
+      <TD class="style7">-10000.</TD>
+      <TD class="style8">mMapTiltAngle</TD>
+      <TD class="style9">Tilt angle at which map was taken</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>PtsX</TD>
+      <TD class="style10">NumPts Floats</TD>
+      <TD class="style7">Req</TD>
+      <TD class="style8">mPtX</TD>
+      <TD class="style9">X stage cordinates of points</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>PtsY</TD>
+      <TD class="style10">NumPts Floats</TD>
+      <TD class="style7">Req</TD>
+      <TD class="style8">mPtY</TD>
+      <TD class="style9">Y stage cordinates of points</TD>
+    </TR>
+</TBODY></TABLE>
+
+    </P>
+    
+    </basefont>
+  </BODY>
+</HTML>

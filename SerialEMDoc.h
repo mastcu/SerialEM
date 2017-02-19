@@ -1,0 +1,326 @@
+// SerialEMDoc.h : interface of the CSerialEMDoc class
+//
+/////////////////////////////////////////////////////////////////////////////
+
+#if !defined(AFX_SERIALEMDOC_H__A0C8625F_02C5_4A68_9EAF_11F5AC5BA286__INCLUDED_)
+#define AFX_SERIALEMDOC_H__A0C8625F_02C5_4A68_9EAF_11F5AC5BA286__INCLUDED_
+
+#if _MSC_VER > 1000
+#pragma once
+#endif // _MSC_VER > 1000
+#include "FileOptions.h"
+
+class CReadFileDlg;
+
+enum {MRC_OPEN_NOERR = 0, MRC_OPEN_CANCEL, MRC_OPEN_ALREADY_OPEN,
+MRC_OPEN_ERROR, MRC_OPEN_NOTMRC, MRC_OPEN_ADOC};
+
+DLL_IM_EX const char *SEMDefaultSysPath(void);
+
+class DLL_IM_EX CSerialEMDoc : public CDocument
+{
+protected: // create from serialization only
+  CSerialEMDoc();
+  DECLARE_DYNCREATE(CSerialEMDoc)
+
+    // Attributes
+    public:
+
+  // Operations
+public:
+
+  // Overrides
+  // ClassWizard generated virtual function overrides
+  //{{AFX_VIRTUAL(CSerialEMDoc)
+public:
+  virtual BOOL OnNewDocument();
+  virtual void Serialize(CArchive& ar);
+  //}}AFX_VIRTUAL
+
+  // Implementation
+public:
+  MontParam * GetStoreMontParam(int which);
+	BOOL StoreIsMontage(int which);
+	KImageStore * GetStoreMRC(int which);
+	int LookupProtectedStore(int which);
+	int SaveBufferToFile(int bufNum, int fileNum, int inSect = -1);
+	int StoreIndexFromName(CString name);
+	void RestoreCurrentFile();
+	bool FileAlreadyOpen(CString filename, CString message);
+	void CloseAllStores();
+  GetMember(int, NumStores)
+  GetMember(int, CurrentStore)
+  int GetSaveOnNewMap() {return mCurrentStore < 0 ? 0 : mStoreList[mCurrentStore].saveOnNewMap;};
+  void SetSaveOnNewMap(int inVal);
+	int SetToProtectedStore(int which);
+	void EndStoreProtection(int which = -1);
+	void ProtectStore(int which);
+	void SetCurrentStore(int which);
+	void AddCurrentStore();
+	void SwitchToFile(int which);
+	void LeaveCurrentFile();
+	void ReadNewSettingsFile(CString newSettings);
+	void PostSettingsRead();
+	void PreSettingsRead();
+  GetMember(CTime, StartupTime)
+  GetMember(CString, OriginalCwd)
+  void SetShortTermNotSaved() {mShortTermNotSaved = true;};
+	void SaveShortTermCal();
+	void AppendToProgramLog(BOOL starting);
+  GetSetMember(BOOL, AutoSaveNav)
+  GetSetMember(BOOL, AutoSaveSettings)
+  GetSetMember(BOOL, IgnoreShortTerm)
+  SetMember(int, DefaultMontXpieces)
+  SetMember(int, DefaultMontYpieces)
+  SetMember(double, OverlapFraction)
+  GetMember(int, MaxMontagePieces)
+  GetMember(int, MinMontageOverlap)
+  GetMember(float, MaxOverlapFraction)
+  SetMember(int, STEMfileMode);
+  SetMember(int, STEMunsignOpt);
+
+	void AutoSaveFiles();
+	int AppendToLogBook(CString inString, CString title);
+  SetMember(CString, Title)
+  int DoOpenNewFile(CString filename = "");
+  void DoCloseFile();
+  void ManageExposure();
+  int GetMontageParamsAndFile(BOOL frameSet, int xNframes = -1, int yNframes = -1,
+                              CString filename = "");
+  void InitMontParamsForDialog(MontParam *param, BOOL frameSet, int xNframes = -1, 
+    int yNframes = -1, CString filename = "");
+  int OpenMontageDialog(BOOL locked);
+  FileOptions *GetDefFileOpt() {return &mDefFileOpt;};
+  FileOptions *GetFileOpt() {return &mFileOpt;};
+  int SaveSettingsOnExit();
+  void ManageBackupFile(CString strFile, BOOL &bBackedUp);
+  int OfferToSaveSettings(CString strWhy);
+  SetMember(CString, LogBook)
+  GetMember(CString, SystemPath);
+  void SetSystemPath(CString sysPath);
+  GetMember(CString, SysPathForSettings);
+  GetSetMember(CString, PluginPath)
+  GetMember(CString, FlybackName);
+  GetMember(int, DfltUseMdoc);
+  GetMember(int, FrameAdocIndex);
+  void SetDfltUseMdoc(int inval);
+  void ReadSetPropCalFiles();
+  void SaveActiveBuffer();
+  void SaveRegularBuffer();
+  int SettingsSaveAs();
+  void SetPointers(EMbufferManager *inManager, CEMbufferWindow *inWindow);
+  virtual ~CSerialEMDoc();
+#ifdef _DEBUG
+  virtual void AssertValid() const;
+  virtual void Dump(CDumpContext& dc) const;
+#endif
+  KImageStore * OpenSaveFile(FileOptions *fileOptp);
+  WINDOWPLACEMENT * GetReadDlgPlacement(void);
+
+  CReadFileDlg *mReadFileDlg;
+
+protected:
+
+  // Generated message map functions
+protected:
+  //{{AFX_MSG(CSerialEMDoc)
+  afx_msg void OnFileOpennew();
+  afx_msg void OnUpdateFileOpennew(CCmdUI* pCmdUI);
+  afx_msg void OnFileOpenold();
+  afx_msg void OnUpdateFileOpenold(CCmdUI* pCmdUI);
+  afx_msg void OnFileMontagesetup();
+  afx_msg void OnUpdateFileMontagesetup(CCmdUI* pCmdUI);
+  afx_msg void OnFileClose();
+  afx_msg void OnUpdateFileClose(CCmdUI* pCmdUI);
+  afx_msg void OnFileSave();
+  afx_msg void OnUpdateFileSave(CCmdUI* pCmdUI);
+  afx_msg void OnFileSaveactive();
+  afx_msg void OnUpdateFileSaveactive(CCmdUI* pCmdUI);
+  afx_msg void OnFileSaveother();
+  afx_msg void OnUpdateFileSaveother(CCmdUI* pCmdUI);
+  afx_msg void OnFileTruncation();
+  afx_msg void OnUpdateFileTruncation(CCmdUI* pCmdUI);
+  afx_msg void OnFileRead();
+  afx_msg void OnFileReadother();
+  afx_msg void OnUpdateFileReadother(CCmdUI* pCmdUI);
+  afx_msg void OnUpdateWindowNew(CCmdUI* pCmdUI);
+  afx_msg void OnUpdateFileRead(CCmdUI* pCmdUI);
+  afx_msg void OnSettingsOpen();
+  afx_msg void OnSettingsReadagain();
+  afx_msg void OnUpdateSettingsReadagain(CCmdUI* pCmdUI);
+  afx_msg void OnSettingsSave();
+  afx_msg void OnSettingsSaveas();
+  afx_msg void OnSettingsClose();
+  afx_msg void OnUpdateSettingsClose(CCmdUI* pCmdUI);
+  afx_msg void OnSettingsReaddefaults();
+  afx_msg void OnUpdateSettingsReaddefaults(CCmdUI* pCmdUI);
+  afx_msg void OnSettingsSavecalibrations();
+  afx_msg void OnFileReadpiece();
+  afx_msg void OnUpdateFileReadpiece(CCmdUI* pCmdUI);
+  afx_msg void OnFileOverwrite();
+  afx_msg void OnUpdateFileOverwrite(CCmdUI* pCmdUI);
+  afx_msg void OnUpdateSettingsSavecalibrations(CCmdUI* pCmdUI);
+  afx_msg void OnUpdateSettingsOpen(CCmdUI* pCmdUI);
+	afx_msg void OnFileSet16bitpolicy();
+	afx_msg void OnUpdateFileSet16bitpolicy(CCmdUI* pCmdUI);
+	afx_msg void OnSettingsAutosave();
+	afx_msg void OnUpdateSettingsAutosave(CCmdUI* pCmdUI);
+	afx_msg void OnFileSetsignedpolicy();
+	afx_msg void OnUpdateFileSetsignedpolicy(CCmdUI* pCmdUI);
+	afx_msg void OnFileNewmontage();
+	afx_msg void OnUpdateFileNewmontage(CCmdUI* pCmdUI);
+	//}}AFX_MSG
+  afx_msg void OnSettingsRecent(UINT nID);
+  afx_msg void OnUpdateSettingsRecent(CCmdUI* pCmdUI);
+  DECLARE_MESSAGE_MAP()
+
+private:
+  CEMbufferWindow * mBufferWindow;
+  EMbufferManager * mBufferManager;
+  CSerialEMApp * mWinApp;
+  CRecentFileList *mRecentSettings;
+  StoreData mStoreList[MAX_STORES];  // List of open stores (image files)
+  int mNumStores;                // Number of open stores
+  int mCurrentStore;             // Current one
+
+  FileOptions  mFileOpt;
+  FileOptions  mDefFileOpt;
+  FileOptions  mOtherFileOpt;    // File options for other file
+  int   mMaxTrunc;
+    
+  CParameterIO *mParamIO;
+  CString mSystemPath;           // Path for system settings & properties
+  CString mSysPathForSettings;   // String to rewrite into settnigs file
+  CString mSettingsName;         // Root name of default settings files
+  CString mSystemSettingsName;   // Root name of system settings file
+  CString mCurrentSettingsPath;  // Full name of current settings file
+  CString mPropertiesName;       // Root name of properties file
+  CString mCalibrationName;      // Root name of calibration file
+  CString mOriginalCwd;          // Original working directory
+  CString mTitle;                // Title string
+  CString mLogBook;              // Name of file to log tilt series in
+  CString mShortTermName;        // Name of file for short term calibrations (dose)
+  CString mPluginPath;           // Path name for plugins
+  CString mFlybackName;          // Name of flyback time file
+  BOOL mSettingsOpen;            // flag that settings file open
+  BOOL mSettingsReadable;        // flag that settings file is readable
+  BOOL mSysSettingsReadable;     // Flag that system file is rereadable
+  int  mTrueLDArea;              // Saved Low dose area when reading settings
+  BOOL mCalibBackedUp;           // Calibration file was backup in this session
+  BOOL mSettingsBackedUp;        // Current settings file was backed up this session
+  BOOL mAutoSaveSettings;        // Flag to autosave settings
+  BOOL mAutoSaveNav;             // Flag to do autosave of navigator
+  BOOL mShortTermBackedUp;       // Flag that short-term cal file is backed up
+  BOOL mShortTermNotSaved;       // Flag that there are unsaved changes
+  BOOL mIgnoreShortTerm;         // Flag not to read or write short-term cals
+  int mNumCalsDone[NUM_CAL_DONE_TYPES];  // Keep track of # of calibrations done
+  int mNumCalsAskThresh[NUM_CAL_DONE_TYPES];  // Threshold for each type for ask if save
+  BOOL mFlybackBackedUp;         // Flag to keep track if flyback file is backed up
+  int mMaxMontagePieces;         // Maximum pieces in one dimension
+  int mMinMontageOverlap;        // Minimum overlap
+  double mOverlapFraction;       // Fraction of larger dimension to overlap
+  int mDefaultMontXpieces;       // Default number of montage pieces
+  int mDefaultMontYpieces;
+  float mMaxOverlapFraction;     // Maximum allowed overlap as fraction of frame size
+  float mMinAnchorField;         // Default minimum field size for montage anchor images
+  CTime mStartupTime;            // Program start time
+  int mSTEMfileMode;             // STEM values for file properties
+  int mSTEMunsignOpt;
+  int mNonSTEMunsignOpt;       // Variables to save non-STEM values of file options
+  int mNonSTEMfileMode;
+  BOOL mSavedNonSTEMprops;       // Flag that they were saved
+  WINDOWPLACEMENT mReadDlgPlace;
+  int mFrameAdocIndex;            // Index for frame-saving .mdoc file
+  int mFrameSetIndex;             // Index for next set to save
+  CString mFrameFilename;         // Filename for frame mdoc
+  int mDfltUseMdoc;              // Default setting for whether to use mdoc
+  int mLastFrameSect;            // Index of last section in frame mdoc
+
+public:
+  KImageStore * OpenNewFileByName(CString cFilename, FileOptions * fileOptp);
+  int UserOpenOldMrcCFile(CFile ** file, CString &cFilename, bool imodOK);
+  int OpenOldMrcCFile(CFile **file, CString cFilename, bool imodOK);
+  int OpenOldFile(CFile *file, CString cFilename, int err);
+  KImageStore * GetStoreForSaving(int type);
+  int FilePropForSaveFile(FileOptions * fileOptp);
+  int FilenameForSaveFile(int fileType, LPCTSTR lpszFileName, CString & cFilename);
+  void ManageSaveSingle(void);
+  void SetFileOptsForSTEM(void);
+  void RestoreFileOptsFromSTEM(void);
+  void CopyMasterFileOpts(FileOptions * fileOptp, int fromTo);
+  void MontParamInitFromConSet(MontParam * param, int setNum);
+  CString DateTimeForFrameSaving(void);
+  void MakeSerialEMTitle(CString & titleStr, char * fullTitle);
+  int OpenNewReplaceCurrent(CString filename, bool useMdoc);
+  CString DateTimeForTitle(void);
+  afx_msg void OnFileOpenMdoc();
+  afx_msg void OnFileCloseMdoc();
+  afx_msg void OnUpdateFileCloseMdoc(CCmdUI *pCmdUI);
+  int SaveFrameDataInMdoc(KImage * image);
+  afx_msg void OnUpdateFileOpenMdoc(CCmdUI *pCmdUI);
+  int GetTextFileName(bool openOld, bool originalDir, CString &pathname, 
+    CString *filename = NULL);
+  void DateTimeComponents(CString & date, CString & time);
+  int AddValueToFrameMdoc(CString key, CString value);
+  int WriteFrameMdoc(void);
+  int UpdateLastMdocFrame(KImage * image);
+  void ComposeTitlebarLine(void);
+  void CalibrationWasDone(int type);
+};
+
+// FILE DIALOG CLASS and associated thread class and data
+
+struct MyFileDlgThreadData
+{
+  BOOL bOpenFileDialog;
+  LPCTSTR lpszDefExt;
+  LPCTSTR lpszFileName;
+  DWORD dwFlags;
+  LPCTSTR lpszFilter;
+  LPCTSTR lpstrInitialDir;
+  CString fileName;
+  CString pathName;
+  int retval;
+  BOOL done;
+};
+
+
+class MyFileDialog
+{
+public:
+  MyFileDialog(BOOL bOpenFileDialog, LPCTSTR lpszDefExt = NULL, 
+    LPCTSTR lpszFileName = NULL, DWORD dwFlags = OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
+    LPCTSTR lpszFilter = NULL, CWnd* pParentWnd = NULL);
+  ~MyFileDialog();
+  int DoModal();
+  CString GetFileName() {return mfdTD.fileName;};
+  CString GetPathName() {return mfdTD.pathName;};
+
+  MyFileDlgThreadData mfdTD;
+#ifndef USE_SDK_FILEDLG
+private:
+  CFileDialog *mFileDlg;
+#endif
+};
+
+#ifdef USE_SDK_FILEDLG
+#define USE_DUMMYDLG
+#define USE_THREAD
+int RunSdkFileDlg(MyFileDlgThreadData *mfdTDp);
+
+class MyFileDlgThread : public CWinThread
+{
+  DECLARE_DYNCREATE(MyFileDlgThread)
+public:
+  MyFileDlgThread() {}; 
+  BOOL InitInstance();
+  MyFileDlgThreadData *mfdTDp;
+};
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+
+//{{AFX_INSERT_LOCATION}}
+// Microsoft Visual C++ will insert additional declarations immediately before the previous line.
+
+#endif // !defined(AFX_SERIALEMDOC_H__A0C8625F_02C5_4A68_9EAF_11F5AC5BA286__INCLUDED_)

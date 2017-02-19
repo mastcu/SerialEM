@@ -1,0 +1,3392 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+  <HEAD>
+    <TITLE>Property File Entries</TITLE>
+    <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
+    <style type="text/css"> <!-- BODY { font-family:"Arial" }
+  TD { font-size:16 }
+    .style1
+      {
+        height: 21px;
+      }
+      .style2
+      {
+        width: 675px;
+      }
+      .style3
+      {
+        width: 206px;
+      }
+      .style4
+      {
+        width: 249px;
+      }
+    --></style>
+  </HEAD>
+  <BODY BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+      <H1><A NAME="about_properties"></A><FONT size="3">Property File Entries</FONT></H1>
+      <P>Many parameters can be set in SerialEM through the properties file. They all 
+        have default values in the program, and in most cases the values in the 
+        properties file are the defaults. A property is entered by having a line with a 
+        keyword followed by one or more values. As of SerialEM 2.6.0, the keywords are 
+        case-insensitive, but they are most readable when shown in the MixedCase form 
+        that used to be required. Values can be separated by any number of spaces or 
+        tabs.</P>
+    <P>The properties file can have comments starting with #.&nbsp; Any line starting 
+      with # will be ignored.&nbsp; A property containing numeric entries can have a 
+      comment after the numbers.&nbsp; <b>However, a property specifying a general 
+      string entry (for example, any path entry) cannot have a comment on the same 
+      line beause it will be considered part of the entry.</b></P>
+      <P><A HREF="#general_properties">General entries</A>
+        <BR>
+        <A HREF="#general_camera_properties">General camera control properties</A>
+        <BR>
+        <A HREF="#gif_properties">GIF properties</A>
+        <BR>
+        <A HREF="#per_camera_properties">Properties for one camera</A>
+        <BR>
+        <A HREF="#file_option_properties">File options</A>
+        <BR>
+        <A HREF="#microscope_properties">Microscope properties</A>
+        <BR>
+        <A HREF="#correlation_properties">Autofocus, autotuning, and autoalignment  
+        properties</A>
+        <BR>
+        <A HREF="#task_properties">Task and montage operation properties</A>
+        <BR>
+        <A HREF="#tsc_properties">Tilt Series Controller properties</A>
+        <BR>
+        <A HREF="#navigator_properties">Navigator properties</A>
+        <BR>
+        <A HREF="#beamcal_properties">Beam intensity calibration properties</A>
+        <BR>
+        <A HREF="#jeol_properties">JEOL properties</A>
+        <BR>
+        <A HREF="#hitachi_properties">Hitachi properties</A>
+        <BR>
+        <A HREF="#stem_properties">STEM properties</A>
+      <P>
+        <A NAME="general_properties"></A><B>General entries</B></P>
+      <TABLE cols="2" style="Z-INDEX: 0" BORDER>
+        <TR VALIGN="top">
+          <TD>SerialEMProperties</TD>
+          <TD>The file must start with this entry.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>ScopeIsFEI</TD>
+          <TD>This entry no longer has any effect.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>ScopeIsJEOL</TD>
+          <TD>This entry no longer has any effect.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>UseTEMScripting</TD>
+          <TD>On an FEI scope, set to 1 to try to create just a TEMScripting instrument 
+            object, or to -1 to try to create just a Tecnai instrument object. With the 
+            default of 0, the program will first try to create a Tecnai object then try to 
+            create a TEMScripting object if that fails. The object changed to TEMScripting 
+            in Tecnai version 3.1.1.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>SimulationMode</TD>
+          <TD>Set to 1 to indicate a microscope simulator is being used (enables some 
+            actions on JEOL and is needed to use an Eagle camera in simulation mode).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>NoScope</TD>
+          <TD>Set to 1 if there is no microscope, to avoid trying to connect with a scope.&nbsp; 
+            If there is an unsupported microscope, this can be set to the KV of the 
+            microscope to get rings and a defocus value when clicking on an FFT.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>GainReferencePath</TD>
+          <TD>The path to SerialEM's gain references, if it is not the system path.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>MRCHeaderTitle</TD>
+          <TD>Title to be placed in MRC files; full title is SERIALEM: 'your title' 
+            date-time . Your title is limited to 45 characters</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>LogBookPathName</TD>
+          <TD>Full path name of a text file in which tilt series information will be logged. 
+            The 'log book' contains tab-separated entries as follows: Date/time, image 
+            filename, starting Z value of tilt series, total number of Z values in the file, 
+            full image X size, Y size, file size in MB, starting angle, ending angle, tilt 
+            increment, COS for cosine increments or REG if not, minutes for tilt series, 
+            frames for montage or 1x1 for single-frame, camera name, nominal film mag, 
+            binning, pixel size in nm, LD for lowdose or ND if not, slit width if filtered 
+            or 0 if not, energy loss or 0 if not filtered.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>PluginPath</TD>
+          <TD>Alternative path from which to load plugins; the default path
+            'C:\Program Files\SerialEM\Plugins' is not searched.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>StartupMessage</TD>
+          <TD>This entry can be added to provide a message upon program startup. The entry 
+            must be all one line but the message can consist of multiple lines, separated by 
+            \n. The message is printed to the log window if it is reopened, otherwise to a 
+            message box.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>PrintStartupInfo</TD>
+          <TD>Set to 0 to stop program version, build time, and startup time information 
+            from being printed in the log window if it is open.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>WarnIfKVnotAt</TD>
+          <TD>Use this entry with a KV value (e.g., 200) to get a warning message box if the 
+            program is started with the microscope at a different voltage.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>ControlSetName # name</TD>
+          <TD>Use this entry to rename one of the camera control sets. Follow with the index 
+            (between 0 and 6; 0 to 4 are View to Preview) and the new name. The new name may 
+            not be substituted in all dialogs and message boxes and it may not all appear in 
+            a dialog if it is much longer than the name that it is replacing.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>SearchAreaName</TD>
+          <TD>Use this entry to rename the Search area in Low Dose mode.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>DisplayIsNot120DPI</TD>
+          <TD>The program detects the display resolution (DPI, dots per inch) when it starts 
+            and by default it modifies font sizes and some constants if it is not 120 DPI.&nbsp; Set this 
+            property to 0 to use the default font sizes and dialog scalings even if the 
+            detected DPI is different from 120.&nbsp; Set it to 1 if the detected DPI is 120 
+            and you enter a different value in the &#39;AssumeDPI&#39;&nbsp; property, so that both 
+            dialog and font scaling will occur.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>AssumeDPI</TD>
+          <TD>Follow with a DPI value to use in font and dialog scaling instead of the 
+            detected one, see previous property. </TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>PanelConstants</TD>
+          <TD>Follow with three numbers: the height of the title bar to assume when floating 
+            a control panel; the extra height to add to control panels; and the extra width 
+            to add to control panels.&nbsp; The defaults are 24, 5, and 8 for DPI &lt; 120, 24, 
+            0, and 0 for DPI = 120, and<br />
+            40, 6, and 10 for DPI &gt; 120.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>ExitOnBadScopeStartup</TD>
+          <TD>Set this to 1 to have the program exit if errors occur when connecting to the 
+            microscope.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>StartAsAdministrator</TD>
+          <TD>Set to 1 to turn on Administrator mode when starting the program.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>IgnoreShortTermCals</TD>
+          <TD>Set to 1 to prevent the program from reading in "Short term calibrations" when 
+            starting and from saving them when exiting. This might be useful when first 
+            setting up the program if there are troubles with image shift calibrations.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>MaxStackWindowSizeXY</TD>
+          <TD>This setting controls the maximum size of binned images that will be displayed 
+            in a separate window during a tilt series. Enter the maximum size for a square 
+            image; rectangular images will be binned to have no more pixels than a square 
+            image of this size. The default is 512.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>TotalMemoryLimitMB</TD>
+          <TD>Limit on the total memory that the program should use for image 
+            buffers and camera reference images, in megabytes. This limit is applied when 
+            the program is requesting memory for a montage overview image, acquisition 
+            image, or display buffer, the situations where the largest images can get 
+            created.&nbsp; If the computer has 2 GB or memory or less, set this to the highest 
+            amount of memory that the program can comfortably use without causing swapping 
+            (e.g., perhaps 1200 for a 1.5 GB system). For a 3 GB system or a 4 GB system 
+            without the /3GB boot parameter, a value near 1900 might be appropriate to keep 
+            the program from running into the 2 GB memory limit. For a 4 GB system with the 
+            /3GB boot option set, this entry may not be needed, but 2700 would probably be a 
+            good value.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>SkipGainRefWarning</TD>
+          <TD>Set to 1 to suppress the warning that the spot was normalized before starting 
+            to take a gain reference. This may be appropriate on a Tecnai F30.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>FFTCircleRadii
+          </TD>
+          <TD>Enter one or more values to customize the circles that can be drawn on a live 
+            FFT. The radius is expressed as fraction of the distance from the center to the 
+            edge of the FFT (Nyquist frequency). The default is one circle at 0.33.
+          </TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>FFTZeroParams</TD>
+          <TD>Parameters governing the display of circles at the expected zeros of the CTF 
+            when a point is clicked in an FFT.&nbsp; See
+            <a href="menu_process.htm#hid_process_fft">FFT command help</a> for details.&nbsp; 
+            For with 1, 2, or 3 values: the spherical aberration in mm, the number of 
+            circles to draw, and the amplitude contrast ratio (defaults 2, 5, and 0.07).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>GridLinesPerMM</TD>
+          <TD>Number of lines per mm in the cross-line replica grating being used to 
+            calibrate pixel sizes. The default is 2160.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>CatalaseAxisLengths</TD>
+          <TD>Distances along the short and long axes to assume for catalase crystal when 
+            finding pixel size.&nbsp; The defaults are 6.85 and 8.75.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>SMTPServer</TD>
+          <TD>Name of an SMTP server (of the form 'machine.domain.edu') that will accept and 
+            deliver email from SerialEM. To send email, this property and 'SendMailFrom' 
+            must be defined and an address to send to must be entered with 'Set Email 
+            Address' in the Tilt Series menu. There is a script command, 'SendEmail', that 
+            can be used to test this capability.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>SMTPPort</TD>
+          <TD>Port to use for sending to the SMTP server; a default port will be used if 
+            this is not specified</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>SendMailFrom</TD>
+          <TD>Sending address to use in emails, which can be in two forms: <U>
+            fixed_name@machine.domain.edu</U>
+            or just machine.domain.edu. In the first case emails for all users will come 
+            from the same name (which could be SerialEM); in the second case the user's name 
+            will be added to the sending address, so that it will appear to come from you. 
+            The address probably needs to look like a valid address but does not need to be 
+            valid.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>SocketServerIP</TD>
+          <TD>Socket ID and IP address of a server that SerialEM will connect to through 
+            its socket interface.&nbsp;&nbsp; The ID is an arbitrary positive number 
+            specific to a type of server.&nbsp; ID 0 is assigned to the interface to the 
+            SerialEMCCD plugin (so &#39;SocketServerIP 0 x.x.x.x&#39; has the same effect as 
+            &#39;GatanServerIP x.x.x.x&#39;) and ID 1 is assigned to the interface in the 
+            FEIScopePlugin that connects with a server on an FEI scope.&nbsp; Thus, use 
+            &#39;SocketServer 1 x.x.x.x&#39; to connect with an FEI scope through that server.&nbsp; 
+            ID 4 is assigned to JEOL camera server, 5 is assigned to the Tietz camera remote 
+            server, and 6 is assigned to the Hitachi remote shared memory server.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>SocketServerPort</TD>
+          <TD>Socket ID and port number for a server whose address is given in a 
+            &#39;SocketServerIP&#39; entry. </TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>SocketServerIPif64</TD>
+          <TD>Socket ID and IP address of a server to be used only if running a 64-bit 
+            version; be sure to enter the port with SocketServerPortIf64 and not with SocketServerPort.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>SocketServerPortIf64</TD>
+          <TD>Socket ID and port number of a server to be used only if running a 64-bit 
+            version.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>BackgroundSocketToFEI </TD>
+          <TD>Set to 1 to open a fourth socket connection to an FEI scope for tilting slowly 
+            while acquiring data.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>SmallFontsBad</TD>
+          <TD>This entry now has no effect.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>SingleTecnaiObject</TD>
+          <TD>This entry is disabled</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>DebugOutput</TD>
+          <TD>
+            <P style="Z-INDEX: 0">Set to 1 to obtain general debugging output in the Log 
+              Window. Set to a list of key letters (e.g., JTC) to obtain additional output 
+              corresponding to the particular key letters. Key letters are:
+              <BR>
+              A to autosave log on debug output (save file must already be defined)
+              <BR>
+              B for beam blanking<br />
+              C for focus calibration derivation<br />
+              D for &nbsp;Direct Electron camera<br />
+              E for eagle camera<BR>
+              G for verbose GIF and magnification lookups (during JEOL updates)<BR>
+              H for Hitachi<br />
+              I (upper case i) for intensity changes in state changes/autocentering<BR>
+              J for complete listing of JEOL calls<BR>
+              K for socket interface<BR>
+              L for more verbose low dose<BR>
+              M for Moran montaging time stamps<BR>
+              R for camera retraction<BR>
+              S for stage and montaging information<BR>
+              T for Tietz setup/reset time, camera coords, auotoalign time<BR>
+              V for vacuum gauge status output<br />
+              W for Winkler's bug/autoloader<BR>
+              a for alignment correlation coefficients<br />
+              b for beam shift<BR>
+              c for calibration and scale matrix derivation<BR>
+              d for reason why no electron dose<br />
+              e for JEOL event reports<br />
+              f for STEM autofocus<BR>
+              g for GIF and STEM state setting/tracking<br />
+              h for navHelper<br />
+              i for image shift-related items<BR>
+              j for JEOL camera<BR>
+              k for keystrokes<BR>
+              l (lower case L) for low dose<BR>
+              m to output all SEMMessageBox messages to log<br />
+              n&nbsp;for Navigator map transform and other items<BR>
+              r for gain and dark references<BR>
+              s for STEM in general<br />
+              t for exposure time changes in tasks and for continuous mode timing<BR>
+              u for update items when polling<BR>
+              y for reports when background saving starts and ends</P>
+          </TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>ExitWithUnsavedLog</TD>
+          <TD>Set to 1 to prevent being asked whether to save log before exiting.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>ContinuousSaveLog</TD>
+          <TD>Set to 1 to turn on continuous saving of the log.&nbsp; Use this if the 
+            program is crashing on startup and a crash log is not being saved; it will ask 
+            for a log filename on the first trace output and all log output will go into the 
+            file after that.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>TestGainFactors</TD>
+          <TD>Set to 1 to multiply simulation images by gain factors.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>NoExceptionHandler</TD>
+          <TD>By default, the program will intercept crashes and attempt to close valves or 
+            turn off the beam immediately if the user's settings specify that this should 
+            occur when a message box has been up for a period of time; and will then try to 
+            save the log.&nbsp; Set this to 1 to not set up the unhandled exception handler for 
+            this; or -1 to skip the Microsoft error&nbsp; report box that comes up after 
+            SerialEM's message box.</TD>
+        </TR>
+      </TABLE>
+      <BR>
+      <P><A NAME="general_camera_properties"></A><B>General camera control properties</B></P>
+    <P>(These properties are all entered outside of &#39;CameraProperties&#39; sections for 
+      individual cameras.)</P>
+      <TABLE BORDER cols="2">
+        <TR VALIGN="top">
+          <TD>NumberOfCameras</TD>
+          <TD>This property has been discontinued.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>ActiveCameraList</TD>
+          <TD>A list of all of the camera numbers for cameras that are active.&nbsp; Any Gatan 
+            cameras in this list must be in the same&nbsp;order here as the order&nbsp;in which they 
+            appear in DigitalMicrograph. The camera numbers can be from 0 to 5 and 
+            correspond to the numbers on the 'CameraProperties' lines.</TD>
+        </TR>
+        <TR>
+          <TD>GatanServerIP</TD>
+          <TD>IP address for connecting with DigitalMicrograph through a socket interface 
+            instead of with COM.&nbsp; This can be either the IP addess of a remote computer or 
+            127.0.0.1 for the computer running SerialEM.</TD>
+        </TR>
+        <TR>
+          <TD>GatanServerPort</TD>
+          <TD>Port number for the socket connection to the Gatan server.&nbsp; Any free port 
+            above 1024 can be used, 48890 is suggested.&nbsp; An environment variable, 
+            SERIALEMCCD_PORT, must be defined with this port number on the computer running 
+            DM.</TD>
+        </TR>
+        <TR>
+          <TD>IgnoreGatanCameras</TD>
+          <TD>A list of Gatan camera numbers to ignore out of the cameras identified by 
+            DigitalMicrograph, numbered from 0.&nbsp; For example, if DM identifies 3 cameras and 
+            you want SerialEM to access only the second one, enter '0 2'.&nbsp; This list applied 
+            only to cameras accessed via a COM interface.</TD>
+        </TR>
+        <TR>
+          <TD>IgnoreSocketCameras</TD>
+          <TD>A list of Gatan camera numbers to ignore out of the cameras identified by 
+            DigitalMicrograph accessed as a socket server, numbered from 0.</TD>
+        </TR>
+        <TR>
+          <TD>IgnoreAMTCameras</TD>
+          <TD>A list of AMT camera numbers to ignore out of the cameras identified by the 
+            AMT software, numbered from 0.&nbsp; </TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>OtherCamerasInTIA</TD>
+          <TD>Set to 1 if only one FEI camera is listed in these properties, but the 
+            microscope user interface allows selection of more than one camera.&nbsp; With this 
+            option, the program will allow you to reselect the listed camera in the 
+            microscope interface and use it from SerialEM.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>InitialCurrentCamera</TD>
+          <TD>The index on the CameraProperties line of the camera that should initially be set as the current camera. 
+            Without this entry, the program will start with the first camera in the active 
+            camera list, or the first nonGIF camera if that is a GIF camera.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>DefaultGIFCamera</TD>
+          <TD>The position in the ActiveCameraList (numbered from 0) of the camera that 
+            should be selected when entering EFTEM mode.&nbsp; If this is not set, the first 
+            GIF camera in the list will be used.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>DefaultRegularCamera</TD>
+          <TD>The position in the ActiveCameraList (numbered from 0) of the camera that 
+            should be selected when leaving EFTEM mode or STEM mode.&nbsp; If this is not 
+            set, the first regular camera in the list will be used.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>GainNormalizeInSerialEM</TD>
+          <TD>1 to perform gain normalization and dark subtraction in SerialEM or 0 to have 
+            all processing done in DigitalMicrograph or TIA. This is an initial, global 
+            setting that will be overridden by a setting for NormalizeInSerialEM in a 
+            specific camera's properties. It can also be changed by the user on each 
+            instance of the program.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>SeparateGainReferenceKVs</TD>
+          <TD>A list of KV values at which the program will automatically maintain a 
+            separate gain reference; e.g., '80 120' for a 200 KV scope. When the scope is 
+            close to one of these values, the program will attempt to access a gain 
+            reference file specific to that KV for gain normalization, and a new gain 
+            reference will be stored in a file specific to that KV. In addition, the program 
+            will not fall back to a DigitalMicrograph gain reference in the absence of a 
+            SerialEM reference. Do not include the standard operating KV of the scope in 
+            this list.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>ReferenceMemoryLimitMB</TD>
+          <TD>The total memory allocated for dark references in SerialEM. Needs to be large 
+            for a 4K camera, e.g., 160 MB.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>DarkRefAgeLimit</TD>
+          <TD>When gain normalization is done in SerialEM, a new dark reference will be 
+            taken if one is older than this time, in seconds.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>GainRefInactivityLimit</TD>
+          <TD>When gain normalization is done in SerialEM, SerialEM will examine whether 
+            there is a new gain reference in DM if no image has been taken for longer than 
+            the given number in seconds. If DM gain references are being used, the new one 
+            will be fetched; if SerialEM gain references are being used, the user will be 
+            asked whether to use the newer one from DM instead. This number should be set a 
+            little less than the shortest reasonable time that it would for a user to switch 
+            to DM and take a gain reference.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>DigitalMicrographReferencePath</TD>
+          <TD>The path to the folder where DM keeps gain references.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>RemoteDMReferencePath</TD>
+          <TD>The path to the folder where DM keeps gain references on a remote socket-based 
+            server.&nbsp; If a remote server is used, this path is needed for monitoring DM 
+            references there, unless it is the same as the 'DigitalMicrographReferencePath' 
+            entry, which is used if this path is not entered.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>InnerXRayBorderDistance</TD>
+          <TD>When removing X-rays from a dark reference, the mean of surrounding pixels 
+            will be computed from pixels that are at least this distance from all pixels 
+            above the criterion (default 1.2).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>OuterXRayBorderDistance</TD>
+          <TD>Pixels will be used to compute mean of surrounding pixels if they are no more 
+            than this distance from a pixel above the criterion (default 2.1).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>XRayCriterionIterations</TD>
+          <TD>If a patch of points above the basic criterion is too big, then criterion will 
+            be raised for up to this many iterations to try to get the brightest subset 
+            (default 3).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>XRayCriterionIncrease</TD>
+          <TD>On each such iteration, the criterion applied is the basic criterion times (1 
+            + iteration number x this value).&nbsp; Default is 1.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>GlobalExtraRotation</TD>
+          <TD>The angle to add to the rotation angle reported by an FEI scope (or more 
+          generally, the rotation angle in the magnification table), to get the 
+            actual image rotation, i.e., the rotation of the tilt axis from the X axis.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>RetractCameraOnEnteringEFTEM</TD>
+          <TD>1 to have an upper camera retract and the beam blanked during the retraction 
+            when EFTEM mode is turned on. This is necessary only if there is a pressure 
+            switch overriding the GIF's blanking of the beam, because there is a delay 
+            between the time when the upper camera unblanks the beam and the time when the 
+            pressure switch allows the GIF to blank it again.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>BlankWhenRetractingCamera</TD>
+          <TD>1 to have the beam blanked whenever any camera is retracted to unblock the 
+            path to a lower camera.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>DefaultActAfterExposures</TD>
+          <TD>Set the starting or default value for the <A HREF="menu_camera.htm#hid_camera_postactions">
+              Post-actions</A> setting that allows tilting and image shift to start during 
+            camera readout; i.e., 0 to disable post-exposure actions until the user enables 
+            them.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>DefaultCameraDivide16BitBy2</TD>
+          <TD>Set to 1 to have all images from 16-bit cameras divided by 2 as they acquired 
+            in SerialEM. This is a default behavior that can be changed by each user.</TD>
+        </TR>
+        <tr VALIGN="top">
+          <TD>UnsignedTruncationLimit</TD>
+          <TD>Sets the maximum fraction of pixels that can be truncating when saving 
+            unsigned data to a signed integer file; an error is generated when this fraction 
+            is exceeded.&nbsp; The default is 0.01.</TD>
+        </tr>
+        <TR VALIGN="top">
+          <TD>MinimumBlankingTime</TD>
+          <TD>The time that it takes to blank and unblank the beam, measured by the Camera 
+            Timing Calibration routine. This entry is needed if there is a Gatan camera with 
+            two shutters, and for measuring STEM flyback times.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>StartCameraInDebugMode</TD>
+          <TD>1 to turn on debug mode as soon as the connection to the camera is 
+            initialized. This will print all communication with the camera plugin to the DM 
+            Results window and also provide some verbose output to the SerialEM Log Window.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>TietzFilmShutterSwitchTime</TD>
+          <TD>Seconds to wait after switching the Tietz camera to film shutter mode; this 
+            time specifies the minimum pre-exposure time that will occur on the first 
+            acquisition after switching to film shutter.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>CameraTimeoutFactor</TD>
+          <TD>Factor by which to increase the time allowed for image acquisition before a 
+            timeout occurs. The default timeout is 5 seconds plus pre-exposure/exposure time 
+            plus readout time estimated from a readout rate of 0.15 megapixels/second.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>CameraRetries</TD>
+          <TD>Number of times to retry taking an image when a camera timeout occurs.&nbsp; Do not 
+            use this property except to find out if retrying will overcome the original 
+            problem.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>MakeFEIerrorBeTimeout</TD>
+          <TD>Set to 1 to convert a COM error from an FEI or Gatan camera into a timeout. 
+            (Yes, the same property works for Gatan cameras).&nbsp; Use this together with 
+            CameraRetries to see if trying again will overcome the original problem; use 
+            CameraTimeoutFactor with a number greater than 1 to increase the time delay between the 
+            retries.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>DarkRefMaxMeanOrSD</TD>
+          <TD>Maximum mean or SD value allowed for a dark reference, if a positive number is 
+            entered for either.&nbsp; If the mean or SD of the central 80% of a dark 
+            reference exceed one of these criteria, the reference will be retaken up to two 
+            times after toggling the beam blanker.&nbsp; Using the mean may be problematic 
+            so the safest entry may be 0 and a maximum SD.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>OneViewMinExposures</TD>
+          <TD>Minimum exposure times for OneView camera at each binning, in seconds.&nbsp; 
+            The defaults are 0.04, 0.01, 0.005, 0.005.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>OneViewDeltaExposures</TD>
+          <TD>Allowed increment in exposure times for OneView camera at each binning, in 
+            seconds.&nbsp; The defaults are 0.01, 0.01, 0.005, 0.005.&nbsp; Except for 
+            binning 1, these correspond to the times allowed in the basic user interface in 
+            DM.&nbsp; Increments of 0.001 appear to work for all binnings but may not be 
+            supported by Gatan over time. </TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>SmoothFocusExtraTime</TD>
+          <TD>Set the extra time in millisec for the focus ramp activated by the script 
+            command SmoothFocusNextShot.&nbsp; The ramp will start prior to the expected 
+            start of the exposure by half of this value.&nbsp; The default is 400.</TD>
+        </TR>
+       <TR VALIGN="top">
+          <TD><b>K2 General Properties</b></TD>
+          <TD>&nbsp;</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>ScalingForK2Counts</TD>
+          <TD>A scaling factor to be applied to images from the K2 camera in counting and 
+            super-resolution modes.&nbsp; This can be set to make the counts match those in 
+            linear mode in the middle of the range of useful dose rates for counting mode.&nbsp; 
+            If this property is not entered, the CountsPerElectron is used to scale counts, 
+            but this will make the modes match only at very low dose rates. <b>Do not set 
+            this property to 1.</b> Follow the instructions in 
+            <a href="setting_up_serialem.htm#setup_camera_gain">Measuring Camera Gain</a></TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>K2FilterName</TD>
+          <TD>The name of one filter that can be used for aligning K2 camera images in Dose 
+            Fractionation mode.&nbsp; The name must exactly match the name in DM, including 
+            '(Default)' if present, or DM may crash if the filter is used. </TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>NoK2SaveFolderBrowse</TD>
+          <TD>If the K2 camera is on another computer and there are no shared filesystems 
+            accessible from the both that computer and the one running SerialEM, set this to 1 to suppress the 
+            'Browse' button that appears in the dialog for entering the folder to save 
+            frames into.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>MinimumK2FrameTime</TD>
+          <TD>Minimum duration for a frame in Dose Fractionation mode on the K2 camera.&nbsp; 
+            The default is 0.025 sec if K2Type is 1 (for a K2 Summit camera) or 0.1138 sec 
+            if K2Type is 2 (for a K2 Base camera, or Summit in Base mode).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>K2ReadoutInterval</TD>
+          <TD>Value which exposure time is constrained to be a multiple of in Linear mode on 
+            the K2 camera.&nbsp; The default is 0.0025 sec if K2Type is 1 (for a K2 Summit 
+            camera) or 0.1138 sec if K2Type is 2 (for a K2 Base camera, or Summit in Base 
+            mode).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>K2BaseModeScaling</TD>
+          <TD>Scaling that the SerialEMCCD plugin will apply to images if K2Type is 2 (for a 
+            K2 Base camera, or Summit in Base mode).&nbsp; The default is 0.25.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>K2PackRawFramesDefault</TD>
+          <TD>Sets the default for how dose fractionation images taken without software gain 
+            normalization are saved: 0 for their original form, short integers for counting 
+            mode and bytes for super-resolution mode, or 1 for a packed form, bytes for 
+            counting mode and 4-bit data packed into bytes for super-resolution mode.&nbsp; 
+            This default is overridden by the user&#39;s setting, if it exists.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>K2SynchronousSaving</TD>
+          <TD>Set to 1 to save dose fractionation images after the stack is fully prepared, 
+            i.e., synchronously.&nbsp; The default is to save asynchronously, as soon as 
+            each image in the stack becomes available.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>K2MaxRamStackGB</TD>
+          <TD>Maximum number of GB available for keeping dose-fractionation frames in 
+            memory, including frames held within DM and within the SerialEMCCD plugin.&nbsp; 
+            This setting is relevant for GMS 2.31 and above.&nbsp; The default is 12.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>K2CountingReference</TD>
+          <TD>Full path and name of counting mode software gain reference on the K2 
+            computer, so that the reference can be saved along with data when taking dose 
+            fractionation images without gain normalization in counting mode.&nbsp; This 
+            property and the next one are no longer needed for a standard arrangement; if 
+            one of these properties is absent, the name is composed from the appropriate DM 
+            reference path property and the property &#39;DMGainReferenceName&#39; for the 
+            particular camera.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>K2SuperResReference</TD>
+          <TD>Full path and name of super-resolution mode software gain reference on the K2 
+            computer, so that the reference can be saved along with data when taking dose 
+            fractionation images without gain normalization in super-resolution mode.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>K2MinStartupDelay</TD>
+          <TD>Minimum StartupDelay for a K2 Summit camera in seconds; post-exposure actions 
+            will not be allowed if the StartupDelay property is less than this value.&nbsp; 
+            The default is 3.0.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>CalibTimingK2InitialStartup</TD>
+          <TD>Initial startup delay time when calibrating camera timing with a K2 Summit 
+            camera, in seconds.&nbsp; The default is 2.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD><b>Falcon General Properties</b></TD>
+          <TD>&nbsp;</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>FalconReadoutInterval</TD>
+          <TD>Value which intermediate frames are constrained to be a multiple of with 
+            Falcon camera.&nbsp; The default is 0.055771 sec, which works for a camera that reads out at 17.9 
+            FPS.&nbsp; It needs to be set to 0.058824 for a camera that reads out at 17 FPS.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>MaxFalconFrames</TD>
+          <TD>Maximum number of intermediate frames that can be saved for Falcon.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>FalconFrameConfigFile</TD>
+          <TD>Full path and name of the configuration file that controls the saving of 
+            intermediate frames.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>FalconConfigFile</TD>
+          <TD>Full path and name of FalconConfig.xml file that contains an entry for whether 
+            intermediate frame saving is turned on.&nbsp; By default,the program will look 
+            in the same directory as the file specified with &#39;FalconFrameConfigFile&#39;, so 
+            this entry is not needed unless these files are in different directories.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>SetModeInFalconConfig</TD>
+          <TD>Set to 1 or 0 if the intermediate frame saving mode can or cannot be 
+            controlled solely by modifying FalconConfig.xml.&nbsp; By default, the program 
+            assumes that editing this file is ineffective if the file contains text like 
+            &#39;&lt;FrameProcProgName&gt;Mode_4&#39; and is effective if the text is like 
+            &#39;AcquisitionMode=&quot;Normal&quot;&#39;, so this entry can be used to override that 
+            assumption.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>LocalFalconFramePath</TD>
+          <TD>Path to directory where intermediate frames should always be written 
+            initially.&nbsp; If this is not entered, frames will be written to whatever 
+            folder is chosen by the user.&nbsp;&nbsp; A local path should be supplied if 
+            users can choose remote directories that FEI software will not write to.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>FrameMdocForFalcon</TD>
+          <TD>Set to 1 or 2 to save metadata into a file opened with
+            <a href="menu_file.htm#hid_file_open_mdoc">Open .mdoc for Frames</a> in the File 
+            menu for Record images or all images from a Falcon camera, respectively.&nbsp; 
+            Use this property to get metadata saved when you are capturing frames from 
+            Falcon acquisitions by connecting to the internal transfer of frame data.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>FalconPostMagDelay</TD>
+          <TD>Delay in milliseconds for taking an image from a Falcon camera after a 
+            magnification change.&nbsp; This delay may be needed to keep the Dose Protector 
+            from blocking the shot because of transient conditions associated with the mag 
+            change.&nbsp; The default is 10 (effectively disabled).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD><b>DE General Properties</b></TD>
+          <TD>&nbsp;</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>DEProtectionCoverOpen</TD>
+          <TD>Set to 1 to have the program start with the protection cover mode set to being 
+            open during operation for a Direct Electron camera; the default
+            is for it to open and close for each single 
+            exposure, and be kept open during tasks.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>DEProtectionCoverDelay</TD>
+          <TD>Set to a delay for the protection cover opening, in msec.&nbsp; If this 
+            property is not entered, the delay value will come from the last value set in 
+            the server each time that SerialEM starts.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>DETemperatureSetpoint</TD>
+          <TD>Set to the desired temperature setpoint for a Direct Electron camera.&nbsp; It 
+            is recommended that 
+            this property not be entered and that the setpoint be set in the server 
+            configuration instead.</TD>
+        </TR>
+      </TABLE>
+      <BR>
+      <P><B>Energy filter properties</B></P>
+      <TABLE BORDER cols="2">
+        <TR VALIGN="top">
+          <TD>BiggestGIFApertureNumber</TD>
+          <TD>The number of the aperture that must be in place for imaging. You could image 
+            an aperture by entering its number here.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>MinLowMagSlitWidth</TD>
+          <TD>Minimum slit width when doing low mag tasks (default 25).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>SlitWideningSafetyFactor</TD>
+          <TD>When doing a low mag task, the slit will be opened if necessary to the minimum 
+            slit width, and intensity will be reduced by the ratio of original to new slit 
+            width times this additional safety factor (default 0.75).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>FilterPixelMatchingFactor</TD>
+          <TD>Factor by which to multiply the actual, calibrated pixel size on the GIF 
+            camera when matching pixel size upon a mag change. This can be used to match 
+            field of view instead of pixel size for two cameras with different CCD sizes; 
+            e.g. one would use a value of 2 with a 1K 794 before the GIF and a 2K 795 GIF 
+            camera. It can also be used to compensate for a difference in the binning 
+            definitions of the two cameras with similar CCD size; e.g., use a value of 0.5 
+            if there is 4K, 15-micron pixel camera before the GIF and a 2K, 30-micron pixel 
+            GIF camera.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>FilterSlitInOutDelay</TD>
+          <TD>Delay time in DM ticks (60th of second) with a GIF, or in msec with an omega 
+            filter, when inserting or retracting slit.&nbsp; Default is 18.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1">FilterOffsetDelayCriterion</TD>
+          <TD class="style1">For filter offset changes less or more than the criterion, delay time in ticks 
+            is computed as change * slope1 + base1 or change * slope2 + base2, respectively.&nbsp; 
+            Default is 40.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>FilterOffsetDelayBase1</TD>
+          <TD>Base delay (in ticks for GIF, msec for Omega filter) for offsets less than the criterion. 
+            Default is 10.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>FilterOffsetDelaySlope1</TD>
+          <TD>Additional delay per EV of offset for offsets less than the criterion.&nbsp; 
+            Default is 0.5.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>FilterOffsetDelayBase2</TD>
+          <TD>Base delay (in ticks for GIF, msec for Omega filter)) for offsets greater than the criterion.&nbsp; 
+            Default is 30.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>FilterOffsetDelaySlope2</TD>
+          <TD>Additional delay per EV of offset for offsets greater than the criterion.&nbsp; 
+            Default is 0.25.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>NoSpectrumOffset</TD>
+          <TD>Set to 1 to indicate that Spectrum Offset cannot be set and Energy Shift 
+            should be set instead.&nbsp; This is generally needed on JEOLs, and is needed 
+            with a Quantum Life Science energy filter that lacks spectroscopy mode.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>DMAlignZLPCriteria</TD>
+          <TD>Set the criteria for detecting whether the ZLP is being aligned in 
+            DigitalMicrograph.&nbsp; Follow with one or two numbers; the first is the number 
+            of energy shift changes over which it will look at the time interval between 
+            changes, the second is the maximum time interval between those changes in order 
+            for a Align ZLP to be assumed.&nbsp; The defaults are 3 and 5., which means that 
+            the program needs to see 3 changes within 5 seconds to detect the Align ZLP.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>AllowSpectroscopyImages</TD>
+          <TD>Set to 1 to allow images to be taken in spectroscopy mode.</TD>
+        </TR>
+      </TABLE>
+      <BR>
+      <P><A NAME="per_camera_properties"></A><B>Properties for one camera</B>
+      </P>
+      <P>(all times are in seconds)</P>
+    <P>(These properties are all entered inside of a &#39;CameraProperties&#39; sections for 
+      an individual camera.)</P>
+      <P>(For a Tietz camera, StartupDelay, MinimumDriftSettling and ExtraBeamTime are 
+        the only timing parameters that are relevant, and any other property that refers 
+        specifically to Gatan camera or DigitalMicrograph (DM) is not relevant.)</P>
+      <TABLE BORDER style="Z-INDEX: 0" cols="2">
+        <TR VALIGN="top">
+          <TD>CameraProperties</TD>
+          <TD>This entry, followed by a camera number from 0 to 3, signals the
+            <BR>
+            start of a section of properties for a camera, which can include any of the 
+            entries in this table.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>Name</TD>
+          <TD>The name of the camera, which will appear in the camera, montaging, and tilt 
+            series setup dialogs. Spaces are allowed.&nbsp; For an FEI camera, a required name 
+            must be entered here unless it is entered with 'DetectorName'.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>DetectorName</TD>
+          <TD>Use this entry to indicate the required name for an FEI CCD camera, if it is 
+            different from the entry given by 'Name'.&nbsp; Follow with 0 and the name.&nbsp; The name 
+            must be 'CCD' for Tecnai versions before 4.1, and names like 'BM-Eagle' and 
+            'BM-Falcon' thereafter.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>UseSocket</TD>
+          <TD>For a Gatan camera, set to 1 to connect with this camera through a socket 
+            instead of COM interface.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>TietzCameraType</TD>
+          <TD>0 for a non-Tietz camera<br />
+            1 for Tietz simulation camera<br />
+            2 for PXL camera 
+            (older F214, F224 with the PXL controller)<br />
+            3 for PVCam camera (older 
+            Tem-Cam-F0124, F214 with the Model 300 controller from Photometrics, also some 
+            4k F415MP multi-port readout)<br />
+            4 for FastScan F114 camera using MVTitan PCI 
+            frame grabber<br />
+            5 for SCX camera (F224HD, single-port F415 with SCX controller)<br />
+            6 for FastScan F114 camera using FireWire 1394 interface<br />
+            7 for ATC6 camera 
+            (very old F224)<br />
+            8 for old TemCam-F816 with Firewire controller, 9 for TemCam-F415MP (4k camera 
+            with multi port readout), 10 for FastScan-F214 with Firewire controller, 11 for 
+            TemCam-F416<br />
+            12 for TemCam-F216<br />
+            13 for new TemCam-F816<br />
+            Entries of 8, 11, 12, and 13 imply a 
+            RestrictedSizeType of 4. For these cameras, make CameraSizeX and Y be the full 
+            size of 8200, 4100, or 2050, respectively, not 8192, 4096, or 2048.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>AMTcameraType</TD>
+          <TD>1 for an AMT camera. AMT cameras can coexist with Gatan cameras after SerialEM 
+            3.2.3.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>FEIcameraType</TD>
+          <TD>1 for an FEI Eagle camera or FEI STEM, 2 for a Falcon camera, or 3 for another 
+            camera with no shuttering capabilities. This entry implies RestrictedSizeType 1. 
+            It also implies a MinimumExposure of 0.011, unless a different value is entered.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>DEcameraType</TD>
+          <TD>0 for a non-Direct Electron camera, 1 for a 4K LC1100, 2 for a DE_12, 3 for a 
+            DE_12_Survey, or 4 for a DE_LC1100.&nbsp; This entry implies RestrictedSizeType 3 for 
+            the LC1100 only.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>K2Type</TD>
+          <TD>Set to 1 for a Gatan K2 Summit camera or 2 for a Base camera or for a Summit 
+            booted into Base mode.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>OneViewType</TD>
+          <TD>Set to 1 for a OneView camera.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>RotationAndFlip</TD>
+          <TD>This entry is used for STEM cameras and K2 and Falcon cameras. For a STEM camera, use it 
+            to indicate whether to rotate and flip images after acquisition to make them 
+            match image orientation on the screen and other cameras.&nbsp; The value is the sum 
+            of 0-3 for the number of 90 degree rotations counterclockwise (e.g., 3 for 90 
+            degrees clockwise) plus 4 for flipping around the Y axis before the rotation.&nbsp; 
+            Set this before doing any calibrations that rely on image orientation. For a K2 
+            camera, this entry indicates operations to be applied to dose fractionation 
+            images returned to SerialEM and to frames saved from the plugin.&nbsp; For a 
+            Falcon camera, the indicated operation is applied to intermediate frames.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>DMRotationAndFlip</TD>
+          <TD>This entry can be used for any Gatan camera to indicate the setting for 
+            rotation and flipping around the Y axis in the camera configuration in DM.&nbsp; 
+            The value to enter is the rotation in the camera configuration divided by 90 (i.e., 0-3) plus 4 if there is 
+            flipping around the Y axis.&nbsp; By default, the program will set the camera to 
+            this configuration at startup and restore the original configuration when it 
+            exits, issuing a warning in the log.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>SetRestoreDMRotFlip</TD>
+          <TD>Use this entry to control what happens when a Gatan camera&#39;s configuration 
+            does not match the value in &#39;DMRotationAndFlip&#39;.&nbsp; Enter 0 to have it ask 
+            whether to change the configuration, or 1 to have it set the configuration 
+            automatically but not change it back upon exit.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>UseContinuousMode</TD>
+          <TD>The entry can enable use of a fast continuous acquisition mode for a Gatan 
+            camera where this mode is not enabled by default, or to modify or disable use of 
+            the mode if default parameters are available.&nbsp; Follow with up to 4 numbers: 
+            1 to use the mode or 0 not to; 1 to specify continuous readout or 0 not to; a 
+            quality level from 1 to 7 or 0 not to set quality; and 1 to balance intensity 
+            between two halves of the field.&nbsp; If no property is entered, the defaults are &#39;1 1 1 1&#39; for Orius 
+            cameras, &#39;1 1 0 0&#39; for K2, and &#39;1 0 0 0&#39; for US4000 and US1000 cameras, where the camera 
+            type is determined from the &#39;DMGainReferenceName&#39; property.&nbsp; If a 
+            property is entered for an Orius, be sure to include the fourth value to balance 
+            the two halves, unless using a quality level where it is not needed.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>BoundaryBetweenHalves</TD>
+          <TD>Specifies the location and orientation of the boundary when balancing 
+            intensity between two halves in continuous mode.&nbsp; By default, the boundary 
+            is assumed to be at the midpoint, and the orientation is determined by querying 
+            DM for the image orientation.&nbsp; Enter the unbinned pixel just above the 
+            boundary (numbered from 0) and optionally, enter 0 if the boundary is vertical 
+            or 1 if it is horizontal.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>RestrictedSizeType</TD>
+          <TD>Set to 1 if acquisitions are restricted to full, half and quarter centered 
+            images. Set to 2 if subarea acquisitions simply do not work; this will set 
+            SubareasAreBad to 2. Set to 3 if subareas must be centered. Set to 4 for Tietz 
+            cameras with 1024-block readout on 1025-pixel boundaries.  Set to 8 for DigiScan.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>TaskTargetSize</TD>
+          <TD>Target size to bin to for task images.&nbsp; Trial parameters are used as a 
+            basis, and binning is increased if necessary to make the image no bigger than 
+            the target size, with exposure time reduced to compensate. (This is not done for 
+            K2 cameras). The default is 512.&nbsp; Set this higher for a specific camera to 
+            allow less binned images to be used.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>TietzCanPreExpose</TD>
+          <TD>Set this entry to 0 or 1 to indicate whether a Tietz camera has a shuttering 
+            mode that allows pre-exposure of the specimen, using the film shutter and beam 
+            blanker. This setting works only if the EMShutter module is installed and an 
+            appropriate Tietz shutterbox is being used.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>TietzGainIndex</TD>
+          <TD>Gain index to use for a Tietz camera. This is not the gain itself but a number 
+            between 1 and the number of gains available. The default is 1.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>TietzImageGeometry</TD>
+          <TD>Sum of values to flip or rotate image from Tietz camera: 1 to mirror on X 
+            axis, 2 to mirror on Y axis, 4, 8, or 16 to rotate 90, 180, or 270 degrees 
+            counterclockwise.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>DMGainReferenceName</TD>
+          <TD>The full name of this camera's DM gain reference, including spaces and .dm3 or 
+            .dm4.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>CameraSizeX</TD>
+          <TD>Number of pixels in X.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>CameraSizeY</TD>
+          <TD>Number of pixels in Y</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>XMustBeMultipleOf</TD>
+          <TD>This entry constrains the size in X of images to be acquired to be a multiple 
+            of the given number. This entry is overridden by a RestrictedSizeType entry. 
+            This entry probably needs to be at least 2 because of some problems with image 
+            display.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>YMustBeMultipleOf</TD>
+          <TD>This entry constrains the size in Y of images to be acquired to be a multiple 
+            of the given number. This entry is overridden by a RestrictedSizeType entry.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>CoordsMustBeMultiple</TD>
+          <TD>Set this entry to 1 if the individual coordinates (left and right in X, top 
+            and bottom in Y) must also be a multiple of the values specified in 
+            XmustBeMultipleOf and YmustBeMultipleOf, respectively.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>GainRefXsizeEven</TD>
+          <TD>Set this entry to 1 if gain references being made in SerialEM must have a size 
+            in X that is a multiple of the value entered with XmustBeMultipleOf, or to 2 if 
+            in addition, gain references from DM are even in X. The setting of 1 may be 
+            needed if there is a failure making a gain reference; 2 may be needed if errors 
+            occur with references from DM not being the expected size.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>GainRefYsizeEven</TD>
+          <TD>Set this entry to 1 if gain references must be made to have a size in Y that 
+            is a multiple of the value entered with YmustBeMultipleOf, and 2 if references 
+            from DM have an even size in Y.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>SizeCheckSwapped</TD>
+          <TD>Set this entry to 1 if the X and Y sizes reported by a Tietz camera 
+            need to be swapped when checking camera size, or to -1 to skip the size check 
+            for a Gatan or Tietz camera.&nbsp; It is no longer needed for a Gatan camera 
+            where X and Y are swapped from their native sizes.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>HalfSizes</TD>
+          <TD>For an FEI camera (or camera of restructed size type 1), if the camera size 
+            does not divide evenly by subarea size and binning, this entry and the next can 
+            be used to enter the actual acquired image sizes at each binning.&nbsp; Enter the X 
+            and Y size of a center-half image at each binning (X at 1, Y at 1, X at 2, Y at 
+            2, etc).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>QuarterSizes</TD>
+          <TD>Similiarly to HalfSizes, enter the Xand Y size of a center-quarter image at 
+            each binning.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>FourPortReadout</TD>
+          <TD>Set this entry to 1 for a 4-port readout camera.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>BasicCorrections</TD>
+          <TD>This entry determines the corrections done for all image acquisitions in 
+            DigitalMicrograph. It can be the sum of 1 for defect correction, 16 for bias 
+            correction, and 32 for linearization. The default value if none is entered is 
+            -1, which means that default corrections will be done for the particular camera.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>MakesUnsignedImages</TD>
+          <TD>Set this entry to 1 for a 16-bit camera that produces unsigned 16-bit integer 
+            images.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>CountsPerElectron</TD>
+          <TD>The camera gain, i.e. the number of counts per primary electron. This entry is 
+            needed for dose estimates. It should be in counts before dividing by 2 for a 
+            16-bit camera.&nbsp; <b>For a K2 camera, set to the number of linear mode counts 
+            per electron, not to a value near 1.</b></TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>Binnings</TD>
+          <TD>A list of valid binnings for this camera. Up to 9 binnings may be listed and 
+            will appear in the camera setup dialog.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>BinningOffset</TD>
+          <TD>This entry may be needed to make gain normalization work well in binned images 
+            when gain normalization is being done in SerialEM. Follow the keyword with 4 
+            numbers: the binning of images being normalized, the binning of the gain 
+            reference (1 or 2), the offset in X (a small positive or negative number), and 
+            the offset in Y. Offsets may be needed for Tietz and Eagle cameras. The 
+            appropriate offsets will be set up automatically for 4-port readout cameras for 
+            binnings that are not a power of 2, but these entries could be used to override 
+            the assumed settings. To prevent the binned by 2 reference from being used with 
+            a higher even binning, enter a line with 'binning 2 999 999'.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>RelativeGainFactors</TD>
+          <TD>A list of relative camera gain values, one per binning listed on the Binnings 
+            line. This entry is needed for the Eagle camera, OneView camera, Tietz CMOS cameras, and for DE 
+            cameras configured to bin by averaging instead of summation. The factor should be 1 for the 
+            binning at which counts per electron is calibrated.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>ExtraGainReferences</TD>
+          <TD>Enter the number of binnings above 2 for which to allow separate gain 
+            references to be acquired. Up to 6 additional gain references may be saved, for 
+            the six binnings following 2 on the 'Binnings' line. These references may be 
+            useful if there are problems with quadrant correction on four-port cameras and 
+            if the imbalance between quadrants differs between binnings. They may also be 
+            needed if binning 1 is unusable.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>NormalizeInSerialEM</TD>
+          <TD>Initial setting (0 or 1) for whether images should be gain-normalized in 
+            SerialEM. A value for a specific camera overrides the global default value 
+            provided by GainNormalizeInSeriaEM.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>UsableArea</TD>
+          <TD>Specifies the coordinates of the usable area on the CCD, in Digital Micrograph 
+            coordinates numbered from 0. Follow the keyword with the top, left, bottom, and 
+            right coordinates of the last good column or row on the chip. This is needed if 
+            gain normalization is being done in SerialEM.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>SubareasAreBad</TD>
+          <TD>Set this entry to 1 for a Tietz camera if taking an image of a subarea makes 
+            the next image of the full camera area, or a much larger subarea, be bad. Set it 
+            to 2 if subareas are not allowed at all. This setting affects only the image 
+            sizes used for beam intensity calibration and gain reference acquisition.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>BadColumns</TD>
+          <TD>Specify a list of bad columns that will be replaced in all processed images 
+            (gain normalized or dark subtracted). List the columns in increasing order using coordinates numbered from 0. This is needed if gain normalization is being 
+            done in SerialEM.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>BadRows</TD>
+          <TD>Specify a list of bad rows that will be replaced in all processed images.&nbsp; 
+            List the rows in increasing order using coordinates numbered from 0 at the top.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>PartialBadColumn</TD>
+          <TD>Specify one or more adjacent columns needing correction over a limited extent 
+            in Y. Enter four numbers: the starting column number (numbered from 0), the 
+            number of columns, the top Y coordinate (numbered from 0 at the top of the 
+            image), and the bottom Y coordinate. Use multiple lines to enter multiple 
+            corrections.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>PartialBadRow</TD>
+          <TD>Specify one or more adjacent rows needing correction over a limited extent in 
+            X. Enter four numbers: the starting row number (numbered from 0 at the top), the 
+            number of rows, the left X coordinate (numbered from 0), and the right X 
+            coordinate.&nbsp; Multiple lines can be used.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>BadPixels</TD>
+          <TD>Specify a list of single pixels needing correction.&nbsp; Each pixel is 
+            specified by an X and a Y coordinate numbered from 0 at the top left.&nbsp; 
+            Multiple pixels (up to 19) can be entered on one line, and anunlimited number of 
+            pixels can be entered on multiple lines.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>HotPixels</TD>
+          <TD>Specify a list of hot pixels if X ray removal from dark references is going to 
+            be used, to prevent these pixels from being treated as X rays. Each pixel is 
+            specified by an X and a Y coordinate. Multiple pixels (up to 19) can be entered 
+            on one line, and multiple lines can be entered up to 400 pixels.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>HotPixelsAreImodCoords</TD>
+          <TD>Enter 0 or 1 if hot pixel coordinates are numbered from 0 (DM coordinates) or 
+            from 1 (IMOD/3dmod coordinates) respectively.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>HotColumns</TD>
+          <TD>Specify a list of hot columns which should not be analyzed for X rays, in DM 
+            coordinates numbered from 0. Include the bad columns if they are hot.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>DarkXRayAbsoluteCriterion</TD>
+          <TD>The absolute number of counts by which a pixel must exceed the mean of a dark 
+            reference to be treated as an X ray. These should be counts before division by 
+            2, if any, for a 16-bit camera.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>DarkXRaySDCriterion</TD>
+          <TD>The number of standard deviations above the mean that a pixel value must be to 
+            be treated as a dark reference X ray.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>DarkXRayRequireBothCriteria</TD>
+          <TD>Enter 1 if a pixel must exceed both the absolute and the standard deviation 
+            criterion to be treated as a dark reference X ray, or 0 if exceeding either 
+            criterion will do.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>MaximumXRayDiameter</TD>
+          <TD>The maximum diameter of an area that will be replaced as an X ray in a dark 
+            reference, in unbinned pixels.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>ShowRemoveXRaysBox</TD>
+          <TD>Set to 1 to enable the appearance of the 'Remove X-rays' checkbox in the 
+            camera setup dialog. This option should be enabled only if the particular camera 
+            generates images where X-rays can ruin the tracking.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>BeamBlankShutter</TD>
+          <TD>The shutter number of the beam blanking shutter (0 or 1; an FEI scope should be 
+            set up so that this is 1 when there are two shutters connected)</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>OnlyOneShutter</TD>
+          <TD>Set this entry to 1 if there is only one shutter driven by this camera.&nbsp; 
+            For an Eagle camera that does not work with the default &#39;Both&#39; shutter setting, 
+            set to 1 to use the pre-specimen shutter or -1 to use the post-specimen shutter.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>NoShutter</TD>
+          <TD>Set this entry to 1 or 2 if the camera has no shutter, to have SerialEM keep 
+            the beam blanked when the screen is up, except when taking an image.&nbsp; With a 
+            value of 1, the program will unblank before requesting an image and reblank 
+            after receiving one.&nbsp; With a value of 2, it will unblank just for the exposure 
+            time in a separate thread; this can be used if the camera has predictable timing 
+            and the beam unblanking/reblanking itself does not produce image artifacts.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>SetAlternateShutterNormallyClosed</TD>
+          <TD>1 to issue a command upon initialization to make sure that this camera is 
+            configured so that the beam shutter is normally closed and the film shutter is 
+            normally open.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>BuiltInSettling</TD>
+          <TD>The intrinsic pre-exposure time in seconds when using the regular shutter for 
+            a Gatan CCD camera; this seems to correspond to the clear time of the camera.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>StartupDelay</TD>
+          <TD>Average time in seconds between issuing a command to take a picture, and the 
+            start of the actual exposure sequence (clearing the CCD for a Gatan camera, or 
+            starting the exposure for a Tietz camera).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>MinimumDriftSettling</TD>
+          <TD>The smallest drift settling that SerialEM should try to produce. For a Gatan 
+            camera. it corresponds to half of the range of variability in the time that an 
+            exposure starts after image acquisition is requested by SerialEM. For a Tietz 
+            camera on a JEOL, this should be set to at least 0.1, or even 0.2, to prevent 
+            lower shutter exposure times less than 0.2; on an FEI scope it can be 0 or a small 
+            number like 0.01.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>ExtraBeamTime</TD>
+          <TD>The amount of time to allow after the expected end of the exposure before 
+            microscope actions can be taken and the beam can be blanked the beam to avoid 
+            beam exposure during the readout. For a Gatan camera, this should equal 
+            MinimumDriftSettling. For a Tietz camera, the sum of StartupDelay and this 
+            timing factor is used to control how soon microscope actions can be taken after 
+            readout should begin, but no beam blanking is needed.
+          </TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>ExtraOpenShutterTime</TD>
+          <TD>When the shutter is opened to provide a pre-exposure that exceeds the built-in 
+            settling (pre-exposure), the time specified by this entry is subtracted from the 
+            additional pre-exposure desired to keep the pre-exposure from exceeding the 
+            desired length.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>ShutterDeadTime</TD>
+          <TD>The amount of exposure time lost when the beam shutter is operated; an entry 
+            for this is needed on JEOLs and can be obtained by running the routine in the 
+            Calibration menu.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>MinimumExposure</TD>
+          <TD>Minimum exposure time that the camera will allow.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>PostBlankerDelay</TD>
+          <TD>Delay in seconds between operating scripting beam blanker and taking an image.&nbsp; 
+            This delay is applied in two situations: when beam is blanked before taking a 
+            dark reference, and when the beam is unblanked prior to an image, which happens 
+            after a dark reference, when in Low Dose mode, or with NoShutter set to 1.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>Retractable</TD>
+          <TD>Set to 1 to indicate that the camera is retractable</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>InsertionDelay</TD>
+          <TD>Delay in seconds after inserting the camera; this delay is imposed after the 
+            camera software returns from the insertion command, so the total delay will be 
+            the sum of any intrinsic delay in the camera software and this delay.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>RetractionDelay</TD>
+          <TD>Delay in seconds after retracting the camera; this delay is imposed after the 
+            camera software returns from the retraction command, so the total delay will be 
+            the sum of any intrinsic delay in the camera software and this delay.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>CheckStableTemperature</TD>
+          <TD>Set to 1 to check for whether the camera is at a stable temperature before 
+            trying to acquire. Once the camera passes the test, the program will not check 
+            again. (For Gatan camera of controller class 'PICM', such as Orius).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>SideMounted</TD>
+          <TD>Set to 1 for a side-mounted camera above the viewing screen, so that the 
+            program will not raise the screen before taking a picture.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>PixelMatchFactor</TD>
+          <TD>This factor controls the optional magnification change to match pixel size 
+            when switching between non-GIF cameras. For example, set to 2 to have unbinned 
+            pixels in another camera matched to binned pixels when switching to this camera. 
+            The value need not be an integer.
+          </TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>GIF</TD>
+          <TD>Set to 1 to indicate that this is a GIF camera</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>Order</TD>
+          <TD>An arbitrary number to indicate the order of the camera in the beam path; 
+            cameras with lower order can block the beam from reaching cameras with higher 
+            order.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>HasTVCamera</TD>
+          <TD>Set to 1 to indicate that this GIF has a TV camera.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>InsertTVToUnblank</TD>
+          <TD>Set to 1 to indicate that the TV camera must be inserted to keep this camera 
+            from blanking an upper camera. This setting is needed with a GIF unless you have 
+            some other means to keep the GIF from blanking when the upper camera is in use.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>FilmToCameraMagnification</TD>
+          <TD>Magnification ratio between the film plane and the camera. This is used to 
+            provide a fallback pixel size if pixel size is neither directly calibrated nor 
+            deducible from image shift calibrations.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>PixelSizeInMicrons</TD>
+          <TD>Actual size of unbinned pixels in the CCD chip.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>ExtraRotation</TD>
+          <TD>Number that needs to be added to the rotation angle in the magnification table 
+            and the global extra rotation angle to determine image rotations for this 
+            camera. Only relevant if rotations are not calibrated directly or indirectly.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>RotationAndPixel</TD>
+          <TD>This entry specifies a set of calibration values for a single magnification. 
+            It should contain the following numbers on the line:
+            <BR>
+            1) Magnification index<BR>
+            2) Change in image rotation from the next lower mag to this mag (in degrees, CCW 
+            positive), or 999 if this was not measured<BR>
+            3) The measured rotation from the X axis to the tilt axis (in degrees, CCW 
+            positive), i.e., the rotation angle solved for in Tiltalign plus 90 degrees; or 
+            999 if this was not measured.<BR>
+            4) The pixel size in nanometers, or 0 if this was not measured.
+          </TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>SpecialRelativeRotation</TD>
+          <TD>Relative rotation between two mags that are not adjacent. This entry will 
+            allow a rotation calibration to propagate across a gap in magnifications. Follow 
+            it with three numbers:
+            <BR>
+            1) Magnification index of starting mag<BR>
+            2) Magnification index of ending mag<BR>
+            3) Rotation of image going from starting to ending mag
+          </TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>RotationStretchXform</TD>
+          <TD>This entry of a linear transformation needed to align rotated images with each 
+            other allows the <A href="hidd_navrotalign.htm">Align with Rotation dialog</A> 
+            to compensate for stretch in images projected at this magnification.&nbsp; See
+            <A href="setting_up_serialem.htm#setup_stretches">Stage and Imaging Stretch</A> 
+            for details.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>DoseRateTable</TD>
+          <TD>Start of an alternative table for linearizing the counts in K2 electron 
+            counting images so that dose rate reports are correct.&nbsp; Follow with the 
+            number of lines to follow, and an optional scaling.&nbsp; Each following line 
+            should have a raw mean number of counts per unbinned pixel per second, then the 
+            corrected dose rate in electrons/unbinned pixel/sec. The raw mean counts will be 
+            divided by the scaling (1 by default), so if the mean counts are obtained from 
+            SerialEM, the scaling entered on the first line should be the scaling that was 
+            applied to the raw electron counts from DM.&nbsp; The default tables in SerialEM 
+            are based on the mean of images taken in DM and the dose rate readout in DM, 
+            recorded for 200 and 300 KV.&nbsp; Values are included for dose rate readouts 
+            around 1, 2, 3, 4, 6, 9, 13, 18, 26, 39, 56, 73, and 80 for 300 KV.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>EndCameraProperties</TD>
+          <TD>This entry indicates the end of the block of properties for a camera.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD><b>STEM camera properties</b></TD>
+          <TD>&nbsp;</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>STEMCamera</TD>
+          <TD>Set to 1 to indicate a STEM device.&nbsp; Set FeiCameraType to 1 for an FEI STEM 
+            unit; otherwise it is assumed to be a DigiScan</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>ChannelName</TD>
+          <TD>Use this entry once for each detector available to this camera; this is the 
+            name that will appear in the detector selection combo boxes in the camera setup 
+            dialog.&nbsp; Follow with the name of the detector.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>DetectorName</TD>
+          <TD>Use this entry to indicate the name by which a detector is accessed through 
+            FEI scripting, if it is different from the entry given by ChannelName.&nbsp; Follow 
+            with the detector # (numbered from 0) and the name.&nbsp; Available detector names 
+            will be printed on program startup if DebugOutput is set to 1 or any other 
+            letters.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>NeedShotToInsert</TD>
+          <TD>For an FEI, follow this with a list of the numbers (from zero) of detectors 
+            that are removed when going out of STEM and need to be inserted by taking a 
+            dummy exposure.&nbsp; The HAADF detector requires this.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>MinimumPixelTime</TD>
+          <TD>Set this to the minimum allowed pixel time in microseconds.&nbsp; The default is 
+            0.1; it needs to be set to 0.5 for DigiScan.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>AddedFlybackTime</TD>
+          <TD>Set to the added flyback time indicated after running the camera timing 
+            calibration procedure.&nbsp; On FEI it will be a large value that depends on the 
+            camera parameters used in the timing procedure; with DigiScan it should be small 
+            but may be needed to make acquisition times predictable enough to keep DM from 
+            crashing.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>ImageRotation</TD>
+          <TD>Set this entry to the sum of the actual rotation produced by the operation in 
+            RotationAndFlip plus 180 degrees, if necessary, to bring the tilt axis rotation 
+            angle output in the image file header to the correct value.</TD>
+        </TR>
+         <TR VALIGN="top">
+          <TD>InvertFocusRamp</TD>
+          <TD>Set to 1 if dynamic focus changes in the wrong direction.</TD>
+        </TR>
+       <TR VALIGN="top">
+          <TD>MaximumScanRate</TD>
+          <TD>Enter one or two numbers to indicate the highest scan rate that avoids 
+            distortion or excessive shift of the images.&nbsp; The first number is a maximum 
+            value that will be enforced when running lower-mag tasks and applied when 'Set 
+            to Maximum Scan Rate' is pressed in the camera setup dialog.&nbsp; The second number 
+            is an advisable scan rate, a lower value that might be preferable for having 
+            minimal distortion.&nbsp; If only one value is entered, the maximum and advisable 
+            scan rates will be set to this value.&nbsp; The camera setup dialog shows a single 
+            star after a scan rate that exceeds just the advisable rate, and three stars 
+            after a rate that exceeds the maximum.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>STEMsubareaInCorner</TD>
+          <TD>Set to 1 for FEI STEM until an FEI bug that causes subareas to be acquired in 
+            the lower right corner is fixed.&nbsp; This bug is present through Tecnai 4.2 
+            and is known to be gone in 4.6; for versions in between, experiment and let us 
+            know.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD><b>Plugin Camera Properties</b></TD>
+          <TD>&nbsp;</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>PluginName</TD>
+          <TD>Name by which the plugin identifies itself.&nbsp; When the program is started, it 
+            lists the names of loaded plugins.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>PluginCameraIndex</TD>
+          <TD>The index by which this camera is selected, if the plugin supports more than 
+            one camera.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>ShutterLabel1</TD>
+          <TD>A label to replace the text on the first shutter radio button in the Camera 
+            Setup Dialog.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>ShutterLabel2</TD>
+          <TD>A label to replace the text on the second shutter radio button in the Camera 
+            Setup Dialog; the line will be hidden if this entry is not made.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>ShutterLabel3</TD>
+          <TD>A label to replace the text on the third shutter radio button in the Camera 
+            Setup Dialog; the line will be hidden if this entry is not made.&nbsp; If this entry 
+            is present, ShutterLabel2 must be entered also. </TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>PluginCanProcess</TD>
+          <TD>Set to the sum of 1 if the plugin can return dark-subtracted images and 2 if 
+            it can return gain-normalized ones.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>PluginCanPreExpose</TD>
+          <TD>Set to 1 if the plugin can pre-expose for drift settling.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD><b>Direct Electron Cameras</b></TD>
+          <TD>&nbsp;</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>DECameraServerIP</TD>
+          <TD>Set to the IP address of the DE server computer, or 127.0.0.1 if the server is 
+            running on the same computer as SerialEM.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>DECameraReadPort</TD>
+          <TD>Set to a port number for reading from DE server, typically 48880.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>DECameraWritePort</TD>
+          <TD>Set to a port number for rwriting to DE server, typically 48879.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>DEImageRotation</TD>
+          <TD>Set to the negative of the angle ( a multiple of 90) that the image needs to 
+            be rotated after receiving it from the DE server; i.e., 90 for clockwise and -90 
+            or 270 for counterclockwise rotation; 180 is also allowed.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>DEImageInvertXAxis</TD>
+          <TD>Set to 1 to flip the image around the Y axis after the rotation, if any, 
+            specified by DEImageRotation.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>AlsoInsertCamera</TD>
+          <TD>Set to CameraParameterSet number of another camera that should be inserted 
+            whenever this camera is used.&nbsp; The entry needs to be set for both a DE-12 
+            and a DE-12 Survey camera.&nbsp; It can be used for other camera types.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>SamePhysicalCamera</TD>
+          <TD>Set to CameraParameterSet number of another detector that is part of the same 
+            camera and thus inserts/retracts together.&nbsp; The entry is needed on only one 
+            of the two cameras.&nbsp; It can be used for other camera types.</TD>
+        </TR>
+        </TABLE>
+      <BR>
+      <P><B>Obsolete camera options</B></P>
+      <TABLE BORDER cols="2">
+        <TR VALIGN="top">
+          <TD>CanDriveDMBeamShutter</TD>
+          <TD>Set this entry to 0 to indicate that the installed version of 
+            DigitalMicrograph cannot drive the alternate shutter via scripting, and to 
+            override the plugin's decision based on DM version number. This should be needed 
+            only if a 3.7.1 version below 3.7.1.6 is installed.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>CanUseDMOpenShutter</TD>
+          <TD>Set this entry to 0 or 1 to indicate that extra pre-exposure (drift settling) 
+            can or cannot be achieved by the DigitalMicrograph scripting command to open the 
+            shutter. This should not be needed.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>CanDriveDMDriftSettling</TD>
+          <TD>Set this entry to 0 to indicate that the installed version of 
+            DigitalMicrograph cannot specify a DM drift settling via scripting, and to 
+            override the plugin's decision based on DM version number. This should be needed 
+            only if a 3.7.1 version below 3.7.1.6 is installed.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>MinimumBlankedExposure</TD>
+          <TD>If the beam shutter cannot be controlled through scripting in 
+            DigitalMicrograph, SerialEM must request an exposure longer than the desired one 
+            using the regular shutter and unblank the beam for the desired exposure time 
+            during this longer exposure. This entry specifies the smallest extended exposure 
+            time that will be requested.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>ExtraUnblankTime</TD>
+          <TD>When SerialEM must produce an exposure by beam unblanking as just described, 
+            this entry is needed to specify how much time to subtract from the desired 
+            exposure time to make the actual unblanked time be correct on average.</TD>
+        </TR>
+      </TABLE>
+      <BR>
+      <P><A NAME="file_option_properties"></A><B>File Options</B></P>
+      <P>These properties determine the default options that are selected when the file 
+        properties dialog box is opened.&nbsp; For two options, the default depends on 
+        whether the microscope is in STEM mode or not.</P>
+      <TABLE BORDER cols="2">
+        <TR VALIGN="top">
+          <TD>FileOptionsMode</TD>
+          <TD>Mode for files opened when not in STEM mode: 0 for bytes, 1 for 16-bit signed 
+            integers, or 6 for 16-bit unsigned integers; the default is 1</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>STEMFileMode</TD>
+          <TD>Mode for files opened when in STEM mode, 0, 1, or 6; the default is 1.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>FileOptionsExtraFlags</TD>
+          <TD>The sum of 1 to store tilt angles, 4 to store stage position * 25, 8 to store 
+            magnification / 100, 16 to store intensity * 25000, and 32 to store exposure 
+            dose.&nbsp; The default is 17.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>FileOptionsMaxSections</TD>
+          <TD>Default value for the maximum number of sections, which determines the amount 
+            of space allocated for the extended header (default is 360, raised from 300 on 
+            12/31/16).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>FileOptionsPixelsTruncatedLo</TD>
+          <TD>Number of pixels that will be truncated at 0 when scaling integers to bytes 
+            (default is 40, raised from 10 on 12/31/16).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>FileOptionsPixelsTruncatedHi</TD>
+          <TD>Number of pixels that will be truncated at 255 when scaling to bytes (default 
+            is 40, raised from 10 on 12/31/16).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>FileOptionsUnsignedOption</TD>
+          <TD>Determines how 16-bit data will be stored as signed integers for files opened 
+            when not in STEM mode: 0 to truncate at 32767, 1 to divide by 2, 2 to subtract 
+            32768.&nbsp; The default is 0 for truncation.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>FileOptionsSignToUnsignOption</TD>
+          <TD>Determines how signed data are written to an unsigned integer file: 0 to 
+            truncate negative numbers at 0, or 1 to add 32768</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>STEMUnsignedOption</TD>
+          <TD>Determines how 16-bit data will be stored as signed integers for files opened 
+            when in STEM mode: 0 to truncate at 32767, 1 to divide by 2, 2 to subtract 
+            32768.&nbsp; The default is 2 to subtract 32768.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>FileOptionsFileType</TD>
+          <TD>0 for MRC file, 1 for a series of numbered TIFF files described in an image 
+            autodoc</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>FileOptionsSaveMdocFile</TD>
+          <TD>1 to have all available information (tilt angle, magnification, etc.) saved in 
+            a metadata autodoc file, 0 not to.&nbsp; This option is on by default if one of 
+            the cameras is a direct detector, in which case 0 would be needed to turn it 
+            off.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>MontageAutodocOptions</TD>
+          <TD>Set to non-zero to have the file type and metadata autodoc options be set to 
+            separate defaults and maintained as separate values for montages during a 
+            program run. Set to 1 to have the metadata option on by default for montages; 2 
+            to have the file type be numbered TIFFs for montages, 3 for both of these 
+            settings to be on, or 4 for neither to be on.&nbsp; The default is 1, to give .mdoc 
+            files for montages.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>BackgroundSaveToFile</TD>
+          <TD>Set to 1 to enable saving to file in a background thread, or 0 to disable it.&nbsp; 
+            This was turned on by default in version 3.4.0 beta, so 0 is needed to disable 
+            it.</TD>
+        </TR>
+      </TABLE>
+      <BR>
+      <P><A NAME="microscope_properties"></A><B>Microscope properties</B></P>
+      <TABLE BORDER cols="2">
+        <TR VALIGN="top">
+          <TD>DeltaZtoDefocusFactor</TD>
+          <TD>Factor needed to adjust for a discrepancy between the change in defocus 
+            reported by the microscope and the actual defocus change. Determined by 
+            calibrating autofocus, moving in Z and measuring defocus; the factor is (defocus 
+            change)/(change in Z height)</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>StandardLowMagFocus</TD>
+          <TD>A standard focus value for doing montages and calibrations in LM mode. On an 
+            FEI scope, a value of 0, representing 'eucentric focus', should be adequate, unless 
+            a different focus minimizes image movement when the beam is moved. With a value 
+            of -999, no standard focus is asserted when montaging or calibrating. The value 
+            for a particular focus setting can be determined with the ReportFocus script 
+            command. The default is 0 for an FEI scope and -999 for a JEOL or Hitachi. This entry is 
+            overridden by any calibrations made with <A HREF="menu_calibration.htm#hid_calibration_standardlmfocus">
+              Standard LM Focus</A> in the Calibrate menu.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>ScreenCurrentFactor</TD>
+          <TD>Factor needed to give a calibrated current in the screen meter</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>SmallScreenFactor</TD>
+          <TD>Additional factor needed to get the same current reading when switching 
+            between main screen and small current, with the beam filling the main screen</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>LensNormalizationDelay</TD>
+          <TD>Time delay after projector lens normalization, in milliseconds, to be added to 
+            a built-in 800 msec delay before exposure starts.&nbsp; The default is 2000.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>LowMagNormalizationDelay</TD>
+          <TD>Time delay after projector lens normalization in Low Mag mode, in 
+            milliseconds.&nbsp; The default is to use the &#39;LensNormalizationDelay&#39;.&nbsp; 
+            Some Krios&#39;s need a value around 10000.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>PostProbeDelay</TD>
+          <TD>Time delay in msec after changing TEM probe mode on an FEI scope before an 
+            exposure starts; default 3000.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>LowestMModeMagIndex</TD>
+          <TD>Index of the lowest magnification in M mode, needed to prevent the task 
+            routines or filter control from switching into LM mode, and to indicate that 
+            image shift calibrations are not congruent across the LM-M boundary</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>HighestLMindexToScan</TD>
+          <TD>If magnifications in LM are disabled above a certain point, add this property 
+            with the index of the highest enabled LM mag (i.e., the number of enabled LM 
+            mags) <i>before</i> running List Mags.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>LowestGIFModeMagIndex</TD>
+          <TD>Index of lowest magnification that should be used for tasks with the GIF 
+            camera. The default is to use the LowestMModeMagIndex.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>LowestSecondaryModeMag</TD>
+          <TD>Index of lowest magnification in a secondary mag range.&nbsp; On the JEOL, 
+            this is assumed to be SAMAG.&nbsp; The default is 0 for no secondary mag range; with a non-zero 
+            value, List Mags will list MAG mode then SAMAG mode and indicate the correct 
+            value.&nbsp; On a Hitachi, this property must be entered with the index of the 
+            first magnification in HR mode.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>NumberOfSpotSizes</TD>
+          <TD>Number of spot sizes on the microscope; default is 11.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>IntensityToC2Factor</TD>
+          <TD>This entry is no longer needed; instead, the factor is measured by a 
+            calibration procedure and stored in the Calibrations file</TD>
+        </TR>
+        <TR>
+          <TD>UseIlluminatedAreaForC2</TD>
+          <TD>This entry must be set to 1 on a Titan Krios in order to calibrate and 
+            manipulate intensities.&nbsp; It makes the program&nbsp;access illuminated area 
+            information instead of the ordinary C2 intensity setting.</TD>
+        </TR>
+        <TR>
+          <TD>IlluminatedAreaLimits</TD>
+          <TD>Lower and upper limits of the illuminated area readout in microns divided by 
+            100.&nbsp; When set, this range of illuminated area will be mapped internally to 
+            intensities of 0.1 to 0.9, thus preventing the program from seeing out-of-range 
+            intensity values.&nbsp; There is no default mapping.&nbsp; If this property is added, it 
+            will invalidate existing beam and spot intensity calibrations and the crossover 
+            calibration.</TD>
+        </TR>
+        <TR>
+          <TD>C2ApertureSizes</TD>
+          <TD>For a Titan, follow this with the list of available C2 apertures, without 
+            decimal points.</TD>
+        </TR>
+        <TR>
+          <TD>UseInvertedMagRange</TD>
+          <TD>Set to 1 to stay in the range of high magnifications where the order is 
+            inverted when doing various procedures that require a minimum field of view.&nbsp; 
+            By default, the program will ignore these mags when searching for the mag with a 
+            minimum field of view and go into the normal low end of nonLM mags.&nbsp; Script 
+            commands that step through mags will reverse direction in the inverted mag 
+            range, as will many mag spinners in dialogs.&nbsp; From the highest regular mag, 
+            an increase will step down into the highest inverted mag.&nbsp; From there, an 
+            increase steps back up to the highest mag and a decrease steps down as desired.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>TiltAxisOffset</TD>
+          <TD>Distance from the optical axis to the tilt axis, as indicated by the Refine 
+            Eucentricity routine. To determine this value, run the routine 3-5 times near 
+            (within 100 microns) of the center of the grid.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>StageLimits</TD>
+          <TD>Limiting coordinates for stage movement in microns: minimum and maximum X 
+            coordinate, and minimum and maximum Y coordinate. The default is +990 or -990 
+            microns for both FEI and JEOL scopes; a 0 may be entered to use the default.&nbsp; 
+            For access to the full range of motion on a JEOL, enter &#39;-1190 1190 -1190 1190&#39;.&nbsp; 
+            This is not the default for JEOL because the +/-990 limits were present for many 
+            years before anyone complained.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>MaximumTiltAngle</TD>
+          <TD>Set to the maximum angle that can be tilted to without generating an error.&nbsp; 
+            The default is 79.9; Titan needs 69.9.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>StageMoveDelay</TD>
+          <TD>Delay time in milliseconds from moving the stage to taking any kind of 
+            picture, to be added to a built-in 800 msec delay before exposure starts. 
+            Default is 2000.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>MinimumTiltDelay</TD>
+          <TD>Minimum delay time in milliseconds from tilting to taking a picture where the 
+            user's tilt delay is not ordinarily imposed, to be added to a built-in 800 msec 
+            delay before exposure starts. The default is 200.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>InvertStageXAxis</TD>
+          <TD>Set to 1 to indicate that the stage coordinate system is left-handed when 
+            projected onto the screen. The axes of this coordinate system are assessed by 
+            noting the direction that the image moves when stage coordinate is increased in 
+            X or Y; if the direction for X is 90 degrees counterclockwise from the direction 
+            for Y then this property is needed (and a global rotation of 180 degrees may 
+            also be needed.)</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>RotateHeaderAngleBy180</TD>
+          <TD>If the tilt axis rotation angle defined by these properties results in 
+            reconstructions with inverted handedness, set this entry to 1 to rotate the 
+            angle output to the image file header by 180 degrees and restore the handedness. 
+            This will probably be needed if InvertStageXAxis is set.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>FloatingCurrentMeterSmoothed</TD>
+          <TD>0 for no smoothing or 1 for smoothing of current readings when the floating 
+            current meter is opened</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>CurrentMeterLogBase</TD>
+          <TD>Base value added to screen current in nanoamps, before taking the log for 
+            smoothing. Adjust this to make the smoothing behave similarly for large and 
+            small currents (default 0.02).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>CurrentMeterSmootherThreshold1</TD>
+          <TD>Threshold change for a single value to trigger a change in the displayed, 
+            smoothed value (in log units, default 0.007).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>CurrentMeterSmootherThreshold2</TD>
+          <TD>Threshold change in the running mean that will trigger a change in the 
+            displayed value (in log units). Change these two thresholds together to adjust 
+            smoothing.&nbsp; Default is 0.0035.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>WatchGauge</TD>
+          <TD>Add a gauge to be watched for the VAC indicator in the microscope status 
+            panel. Follow this entry with the official name of the gauge (e.g., column 
+            vacuum IGP1 is P4 through Tecnai 3.0, but for Titan or Tecnai 4.0, it must be 
+            the name of the gauge in the user interface, IGP1 for Tecnai, IGPCl for 
+            Titan, IGPco for Talos), the threshold between a green and yellow reading, and the threshold 
+            between a yellow and red reading, in Pascals. A formula based on several 
+            simultaneous observations of Pascals and FEI log units for IGP is:
+            <P>Log reading = 26.2 * log(Pascal reading) + 135</P>
+            <P>Or, Pascals = 10 ** ((log reading - 135) /26.2)</P>
+          </TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>ShowIntensityCalStatus</TD>
+          <TD>Set to 0 to disable the color-coded background on the word 'Spot' in the 
+            microscope status panel, which indicates whether intensity is in a calibrated 
+            range.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>MicronsPerUnitImageShift</TD>
+          <TD>A parameter that is used in the initial calibration of image shift (or when 
+            calibrating 'from scratch'). The right value is needed to get shifts that are 
+            big enough, but not too big, in the first round of calibration. For an FEI 
+            scope, this may need to be set to something besides 1 ff image shift is not 
+            properly calibrated in the scope alignments. For JEOL, a value of 0.02 is needed 
+            at 200 KV; a value of 0.1 is needed at 300 KV.&nbsp; For Hitachi, a value other 
+            than 1 may be needed for calibrating HR mode.</TD>
+        </TR>
+        <tr>
+          <TD>LowMagMicronsPerUnitIS</TD>
+          <TD>Scaling factor needed for initial calibration of image shift in low mag mode. If 
+            this is omitted, the factor specified in MicronsPerUnitImageShift is used. For 
+            JEOL, a value 
+            of 1 is needed at 200 KV, 1.5 at 300 KV.&nbsp; For Hitachi, a value of 8 is 
+            needed.</TD>
+        </tr>
+        <TR VALIGN="top">
+          <TD>ImageShiftLimit</TD>
+          <TD>Limit on image shift at regular magnifications; image shifts are tested 
+            against this limit in some but not all situations. The default is 15 microns.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>LowMagShiftLimit</TD>
+          <TD>Limit on image shift in LM mode; image shifts are tested against this limit in 
+            some but not all situations. The default is 150 microns.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>MaxCalibrationImageShift</TD>
+          <TD>Maximum image shift change when calibrating image shift</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>MaxLMCalibrationImageShift</TD>
+          <TD>Maximum image shift change when calibrating image shift at LM-mode mags.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>ISoffsetCalStageLimit</TD>
+          <TD>Maximum stage shift allowed during calibration of image shift offsets between 
+            magnifications. The default is 0.025 micron.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>StageCalibrationBacklash</TD>
+          <TD>Microns of movement to adjust for backlash in the stage calibration procedure. 
+            The default is 5 microns for FEI scopes, 10 microns for JEOL, and 20 microns for 
+            Hitachi.&nbsp; This entry must be positive; a negative entry makes it use the 
+            default.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>StageCycleLengthX</TD>
+          <TD>Cycle length at which modulations in position error repeat for stage movements 
+            in X, which is used to control the extent of stage calibrations in X. 
+            Calibrations will traverse a multiple of this distance in X unless limited by 
+            the MaxStageCalExtent or by the possible number of steps. The default is 61 
+            microns on FEI scopes (found on two Tecnais), otherwise 40 microns.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>StageCycleLengthY</TD>
+          <TD>Cycle length of modulations in stage position error in Y, used to control the 
+            extent of stage calibrations in Y. The default is 42 microns on FEI scopes, 
+            otherwise 40 microns.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>MaxStageCalExtent</TD>
+          <TD>Maximum distance over which to do the stage calibration. If this is larger 
+            than the cycle lengths in X and Y, it will allow calibrations to go over one 
+            cycle length, but may limit the number of cycles traversed at very low mag. A 
+            value lower than a cycle length will keep the calibration from being done over a 
+            full cycle on that axis. The default is 140 microns, which limits the extent to 
+            2 cycles in X and 3 cycles in Y with the default cycle lengths.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>SamePositionTolerance</TD>
+          <TD>Maximum stage shift at which the program will still consider the stage to be 
+            at the same position as after it has moved the stage (used for keeping track of 
+            backlash).&nbsp; The default is 0.1 microns for FEI and 0.2 micron for JEOL.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>UseTrialSizeForShiftCal</TD>
+          <TD>Set to 1 to use the image size in the Trial control set for image and stage 
+            shift calibrations.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>UseTrialBinningForShiftCal</TD>
+          <TD>Set to 1 to use the binning in the Trial control set for image and stage shift 
+            calibrations.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>MagnificationTable
+          </TD>
+          <TD>A table of magnification index, film and screen magnifications, and the 
+            rotation angles reported on an FEI scope. The line with this entry must contain 
+            the number of table entries to follow, then there must be that many lines 
+            following. The form of each line is:&nbsp;<BR>
+            &nbsp;&nbsp;&nbsp; Index&nbsp;&nbsp; Film mag&nbsp;&nbsp;&nbsp; Rotation angle&nbsp;&nbsp;&nbsp; Screen mag<BR>
+            The first three entries can be obtained by selecting List Mags in the 
+            Calibration menu. The screen mag must be added by hand. On a JEOL or Hitachi, the third 
+            entry can be omitted unless there is a GIF, in which case a 0 should be entered. 
+            If there is a GIF, each line should have three more entries:<BR>
+            &nbsp;&nbsp;&nbsp; Mag with screen up&nbsp;&nbsp;&nbsp; Rotation angle&nbsp;&nbsp;&nbsp; Mag with screen down<BR>
+            Again, the third entry can be omitted on a JEOL.&nbsp; For Hitachi, this table 
+            must be constructed by hand, listing each mag in low mag, then HC mode, then HR 
+            mode, and numbering them sequentially from 1.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>CameraLengthTable</TD>
+          <TD>A table of camera lengths, needed on the JEOL to recognize diffraction mode 
+            and on Hitachi to manipulate camera length in diffraction mode. 
+            The line with this entry must contain the number of table entries to follow, 
+            then there must be that many lines following. The form of each line is:
+            <BR>
+            &nbsp;&nbsp;&nbsp; Index&nbsp;&nbsp;&nbsp; Camera length in mm<BR>
+            This table is obtained on a JEOL by selecting List Mags in the Calibration menu and 
+            appears after the magnification table. On Hitachi, it must be constructed by 
+            hand, listing each length found in HC mode</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>ImageShiftDelays</TD>
+          <TD>A table of delays to apply after an image shift. The delays are applied before 
+            taking an image, and they are scaled up or down in some situations. They are 
+            also adjusted up or down for camera startup and clearing times lower or higher 
+            than 0.8 seconds. The line with this entry must contain the number of entries to 
+            follow, then there must be that many lines of the following form:
+            <BR>
+            &nbsp;&nbsp;&nbsp; Distance in microns&nbsp;&nbsp;&nbsp;&nbsp; Delay in seconds
+          </TD>
+        </TR>
+        <TR>
+          <TD>ISdelayScaleFactor</TD>
+          <TD>Overall factor for scaling the delay to apply after an image shift.&nbsp; The 
+            default is 1.0.&nbsp;&nbsp;Use&nbsp;<A HREF="menu_calibration.htm#hid_calibration_set_is_delay_factor">
+              Set IS Delay Factor</A> in the Calibrate menu to assess the needed factor; 
+            see&nbsp;the instructions there.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>ExtraISdelayPerMagDoubling</TD>
+          <TD>This entry controls an increase in the image shift delay at magnifications 
+            where the pixel size of a Record image is smaller than 1 nm. With the default 
+            value of 0.25 second, 0.7 * 0.25 is added to the delay with a pixel size of 0.75 
+            nm, 0.25 is added for 0.5 nm, 1.4 * 0.25 for 0.375 nm, 0.5 is added for 0.25 nm, 
+            etc.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>LowDoseBeamNormDelay</TD>
+          <TD>In low dose mode, the condenser lenses can be normalized by passing through 
+            the intensity and spot size of the View area when changing areas (needed on some 
+            JEOL scopes). This value sets the delay in milliseconds after going to the View 
+            parameters (default 100 ms).</TD>
+        </TR>
+        <TR>
+          <TD>LowDoseBeamTiltShifts</TD>
+          <TD>Set to 1 to apply beam tilt changes when going between low dose areas; with 
+            this enabled, beam tilt changes will be recorded when the user sets up beam 
+            shift changes, just as for beam shifts.</TD>
+        </TR>
+        <TR>
+          <TD>MagChangeIntensityDelay</TD>
+          <TD>Delay time between changing magnification and changing intensity.&nbsp; The 
+            default is 200 msec on JEOL, 30 msec on Hitachi, and 0 on FEI.</TD>
+        </TR>
+        <TR>
+          <TD>FocusChangeDelay</TD>
+          <TD>Delay time in milliseconds after changing focus.&nbsp; Default is 0.</TD>
+        </TR>
+        <TR>
+          <TD>CheckPosOnScreenError</TD>
+          <TD>For an FEI scope only, set to 1 to have the program wait and see if the screen 
+            ends up in the desired position after an error occurs moving the screen.&nbsp; 
+            It will wait up to 15 seconds.</TD>
+        </TR>
+        <TR>
+          <TD>PiezoScaling # # # # #</TD>
+          <TD>Scaling and range information for a piezo drive controlled by a piezo plugin.&nbsp; 
+            Follow with 6 numbers: plugin number (numbered from 0); number (from 0) of the 
+            piezo driven by that plugin; 1 if this is the Z or only axis, or 0 if it a 
+            scaling for X/Y axes; minimum and maximum raw position values for that piezo; 
+            and the scaling from microns to raw units.&nbsp; Whenever a scaling is defined, 
+            the script commands for setting and reporting that piezo will use positions in 
+            microns.&nbsp; A negative scaling can be entered, in which case scaled positions 
+            will be negative.</TD>
+        </TR>
+        <TR>
+          <TD>UsePiezoForLDAxis # #</TD>
+          <TD>Use the Z or only position of a piezo to move&nbsp; the stage instead of using 
+            image shift to go between low dose areas.&nbsp; Follow with 2 numbers: plugin 
+            number (numbered from 0); number (from 0) of the piezo driven by that plugin. 
+            The &#39;PiezoScaling&#39; property must also be entered to use this feature; it may 
+            be necessary to enter a negative scaling there to make the direction of movement 
+            match that given by image shift.</TD>
+        </TR>
+        <TR>
+          <TD>PiezoFullDelay # [#] [#]</TD>
+          <TD>Delay time and optional factors after an on-axis movement in Low Dose; follow 
+            with the delay time for a full-range movement, in seconds (default 20); an 
+            optional factor by which to reduce the delay for Focus (default 0.6); and an 
+            optional factor by which to reduce the delay for Trial and View (default 0.3).</TD>
+        </TR>
+      </TABLE>
+      <BR>
+      <P><A NAME="correlation_properties"></A><B>Autofocus, Autotuning, and Autoalignment properties</B></P>
+      <TABLE BORDER cols="2">
+        <TR VALIGN="top">
+          <TD class="style4">AlignTrimFraction</TD>
+          <TD>Fraction to trim off edges of images for autoalignment correlations (default 
+            0.04).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style4">AlignTaperFraction</TD>
+          <TD>Fraction of image to taper to mean over for autoalignment correlations 
+            (default 0.1).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style4">AlignFilterSigma1</TD>
+          <TD>Sigma of inverted Gaussian that filters out low frequencies in autoalignment 
+            correlations (default 0.03)</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style4">AlignFilterSigma2</TD>
+          <TD>Sigma of Gaussian rolloff for filtering out high frequencies in autoalignment 
+            correlations (default 0.05)</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style4">AlignFilterRadius2</TD>
+          <TD>Radius at which high-frequency Gaussian rolloff starts (default 0.25).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style4">FocusPadFraction</TD>
+          <TD>Fraction to pad images for autofocus correlations (default 0.1).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style4">FocusTaperFraction</TD>
+          <TD>Fraction of image over which to taper to mean for autofocus correlations 
+            (default 0.1).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style4">FocusFilterSigma1</TD>
+          <TD>Sigma of inverted Gaussian that filters out low frequencies in autofocus 
+            correlations (default 0.04).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style4">FocusFilterSigma2</TD>
+          <TD>Sigma of Gaussian rolloff for filtering out high frequencies in autofocus 
+            correlations (default 0.05).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style4">FocusFilterRadius2</TD>
+          <TD>Radius at which high-frequency Gaussian rolloff starts (default 0.25)</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style4">FocusMaxPeakDistanceRatio</TD>
+          <TD>If the highest peak in the autofocus correlation is at 0,0, the program may 
+            reject this peak and use the second highest one, if the distance from target 
+            defocus implied by the second peak position is less than this ratio times the 
+            distance implied by the peak at 0,0. Smaller values make the peak rejection more 
+            conservative, 0 disables it. The default is 3.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style4">FocusPostTiltDelay</TD>
+          <TD>Delay time in msec between tilting the beam and starting to acquire the next 
+            image in a focus-detection sequence; the default is 0.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style4">FocusViewNormDelay</TD>
+          <TD>Delay time in msec between changing to View area in Low Dose and starting 
+            autofocus when the option to normalize through View is selected.&nbsp; The 
+            default is 500.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style4"><A name="AstigmatismParams"></A>AstigmatismParams B [A] [T] [F] [R]</TD>
+          <TD>Default beam tilt for astigmatism calibration and/or correction (default 3.2).&nbsp; 
+            A setting made through Focus - <a href="menu_focus.htm#hid_focus_setastigbeamtilt">Set Astig 
+        Beam Tilt</a> will be retained in the settings file and override this default.&nbsp; 
+            Additional entries are optional: &#39;A&#39; for stigmator values to apply (default 
+            0.1); &#39;T&#39; for threshold stigmator change above which the correction is iterated 
+            (default 0.015); &#39;F&#39; for middle focus value at which stigmators are varied 
+            (default -1 microns); &#39;R&#39; for focus range to assess (default 10 microns).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style4"><A name="ComaParams"></A>ComaParams B [F]</TD>
+          <TD>Default maximum beam tilt for coma-free calibration (default 10).&nbsp; A 
+            setting made through Focus - <a href="menu_focus.htm#hid_focus_setcomabeamtilt">
+            Set Coma 
+        Beam Tilt</a> will be retained in the settings file and override this default. The 
+            optional &#39;F&#39; entry is the focus at which coma-free operations are done (default 
+            -1).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style4"><A name="AstigmatismComaDelays"></A>AstigmatismComaDelays A [F] [B]</TD>
+          <TD>Settling time after changing astigmatism in msec; this delay is done through 
+            settling before taking an image, which always adds 800 msec, so the default of 
+            900 msec&nbsp; gives a delay of 1700 msec.&nbsp; The optional &#39;F&#39; is the delay 
+            after changing focus in the astigmatism or coma-free routines (default&nbsp; 500 
+            msec).&nbsp; The optional &#39;B&#39; is the delay after changing beam tilt for the 
+            coma-free routines (default 500 msec); it is applied only if it is larger than 
+            the delay set with PostBeamTiltDelay.</TD>
+        </TR>
+      </TABLE>
+      <BR>
+      <P><A NAME="task_properties"></A><B>Task and montage operation properties</B></P>
+      <TABLE BORDER cols="2">
+        <TR VALIGN="top">
+          <TD>LimitMontageToUsable</TD>
+          <TD>Set to 1 to limit montage frame size to the usable area of the camera and 
+            avoid gray borders in montage pieces.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>MontageInitialPieces</TD>
+          <TD>Number of pieces in X and Y to show initially in the montage setup dialog. The 
+            default is 1, 1.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>MontageOverlapFraction</TD>
+          <TD>Fraction of overlap to use when computing initial overlaps shown in the 
+            montage setup dialog when using image shift. The default is 0.1.</TD>
+        </TR>
+        <TR>
+          <TD>MontageDriftRepeatLimit</TD>
+          <TD>Maximum number of times to repeat autofocus until drift is below the selected 
+            rate.&nbsp; The default is 5.</TD>
+        </TR>
+        <TR>
+          <TD>MontageDriftRepeatDelay</TD>
+          <TD>Delay time in seconds before repeating autofocus.&nbsp; The default is 2.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>MontageDuplicateRetries</TD>
+          <TD>Maximum number of retries when a duplicate image is received from an Eagle 
+            camera when montaging. Set to -1 to disable testing for duplicates. The default 
+            is 3.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>MontageaAutosaveLog</TD>
+          <TD>Set to 1 to save the log window after every piece is saved.&nbsp; A new file will 
+            be created with a name based on the name of the montage image file, unless there 
+            is already a file open with such a name.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>StageMontageBacklash</TD>
+          <TD>Microns of movement to adjust for backlash when taking a montage with stage 
+            movement. Default is 5 microns for FEI, 10 microns for JEOL, and 20 microns for 
+            Hitachi.&nbsp; This entry must be positive; a negative entry makes it use the 
+            default.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>StageMontageMaxError
+          </TD>
+          <TD>Maximum error in stage position allowed when doing a stage montage, in 
+            microns, followed by a 1 to stop after trying to reach the stage position 3 
+            times, or a 0 to go on. The default, 0, means that the position will not be 
+            tested after a move. Errors up to 0.26 are normally seen with a JEOL.</TD>
+        </TR>
+        <TR>
+          <TD>MontageRealignToNearest</TD>
+          <TD>Set to 1 to have the periodic realignment to a nearby piece using stage shift 
+            align to the nearest piece instead of to a piece near the middle of the column.</TD>
+        </TR>
+        <TR>
+          <TD>MontageFilterR1R2S1S2</TD>
+          <TD>Primary filter settings for montage correlations, in cycles/pixel with the standard 
+            IMOD definitions: radius1 for correlations with very sloppy montages (the 
+            negative of the frequency at which the low frequency filter starts rising from 
+            0, so it should be negative or 0), radius2 (start of high frequency rolloff); 
+            sigma1 (sigma for rise of low frequency filter); sigma2 (sigma for falloff of 
+            high-frequeny filter).&nbsp; All four values must be entered.&nbsp; The default 
+            is -0.01 0.35 0.05 0.05.</TD>
+        </TR>
+        <TR>
+          <TD>MontFilterSet2R1R2S1S2</TD>
+          <TD>Second set of filter settings for montage correlations, in the same format as
+          for &#39;MontageFilterR1R2S1S2&#39;.&nbsp; All four values must be entered.&nbsp; The default 
+            is 0 0.35 0.05 0.05.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>CheckAutofocusChange</TD>
+          <TD>The change in defocus that will be applied in the positive and negative 
+            direction when the routine to check autofocus is run (default 5).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>ResetRealignMaxIterations</TD>
+          <TD>Maximum number of iterations when the routine to reset image shift and realign 
+            is run (default 2).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>ResetRealignIterationCriterion</TD>
+          <TD>If image shift exceeds this criterion after resetting the image shift and 
+            realigning, another iteration will be done, up to the maximum number of 
+            iterations (default 0.5).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>ResetRealignHigherMagCriterion</TD>
+          <TD>If image shift is less than this criterion when doing the reset and realign 
+            task, then the alignment pictures will be taken at one mag step higher than the 
+            default (default 1.7).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>WalkUpMaxInterval</TD>
+          <TD>Maximum tilt interval for the walk up task (default 8).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>WalkUpMinInterval</TD>
+          <TD>Minimum tilt interval for the walk up task. Intervals will initially be the 
+            maximum interval times the cosine of the tilt angle, but will not become smaller 
+            than this minimum (default 3).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>WalkUpShiftLimit</TD>
+          <TD>When image shift exceeds this limit during the walk up task, the reset and 
+            realign operation will be run.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>WalkUpLowDoseISLimit</TD>
+          <TD>A similar limit on image shift, applied when walking up in low dose mode.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>EucentricityBacklashZ</TD>
+          <TD>Amount to move in Z to correct for backlash when changing Z during the 
+            eucentricity routines (default -3).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>EucentricityCoarseInitialAngle</TD>
+          <TD>Starting tilt angle for the coarse eucentricity task (default -5).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>EucentricityCoarseInitialIncrement</TD>
+          <TD>Starting tilt increment for the coarse eucentricity task (default 0.6).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>EucentricityResetISThreshold</TD>
+          <TD>Image shift will be reset to zero, and the stage moved to compensate, if it 
+            exceeds this criterion before a eucentricity task (default 0.1).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>EucentricityCoarseMaxTilt</TD>
+          <TD>Maximum tilt angle for the coarse eucentricity task (default 10).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>EucentricityCoarseMaxIncrement</TD>
+          <TD>Maximum tilt increment for the coarse eucentricity task (default 8).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>EucentricityCoarseTargetShift</TD>
+          <TD>The coarse eucentricity routine will increase the tilt increment to try to 
+            make the image shift by this amount in microns (default 2).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>EucentricityCoarseMaxIncrementChange</TD>
+          <TD>Maximum factor by which the tilt increment will change from one trial to the 
+            next in the coarse eucentricity task (default 3).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>EucentricityFineIterationLimit</TD>
+          <TD>Maximum number of iterations for the fine eucentricity task (default 3).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>EucentricityMaxFineIS</TD>
+          <TD>Maximum image shift for the fine eucentricity task before it changes Z height 
+            and starts a new iteration (default 2).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>ResetRealignMinField</TD>
+          <TD>Minimum camera field of view, in microns, for resetting image shift and 
+            realigning, which determines the mag used. Default is 7.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>ReverseTiltMinField</TD>
+          <TD>Minimum camera field of view, in microns, for the reverse tilt task. Default 
+            is 4.5.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>EucentricityCoarseMinField</TD>
+          <TD>Minimum camera field of view, in microns, for the coarse eucentricity task. 
+            Default is 9.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>EucentricityFineMinField</TD>
+          <TD>Minimum camera field of view, in microns, for the fine eucentricity task. 
+            Default is 4.5.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>EucentricityFineAlignMinField</TD>
+          <TD>Minimum camera field of view, in microns, for doing fine eucentricity and 
+            maintaining image alignment. Default is 9.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>WalkUpMinField</TD>
+          <TD>Minimum camera field of view, in microns, for the walk up task. Default is 
+            1.5.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>TiltAfterMoveMinField</TD>
+          <TD>Minimum camera field of view, in microns, for realigning after a tilt 
+            following a stage move. If the value is non-zero, this task is invoked during 
+            walk up and tilt series on the tilt after an image shift reset. The default is 
+            0. for FEI scopes and 4.5 um for JEOL.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>BacklashAdjustMinField</TD>
+          <TD>Minimum camera field of view, in microns, for the X/Y backlash adjustment 
+            routine run by the Navigator. Default is 6.0.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>TiltBacklash</TD>
+          <TD>Amount to tilt to eliminate tilt backlash.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>MinTaskExposure</TD>
+          <TD>Minimum exposure time allowed, when it is necessary to reduce the exposure 
+            time upon going to a lower magnification (i.e., when intensity cannot be reduced 
+            enough). This minimum will apply both for tasks and for low magnification 
+            tracking in a tilt series. The default is 0.002, but a higher value may be 
+            needed if camera shuttering is slow and exposures of this duration give no image</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>RefineZLPStepSize</TD>
+          <TD>The step size in eV for the Refine ZLP procedure. Default is 2.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>RefineZLPSlitWidth</TD>
+          <TD>The slit width used for the Refine ZLP procedure. Default is 20 eV.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>RefineZLPMinimumExposure</TD>
+          <TD>The minimum exposure used in the refine ZLP procedure, in seconds. The 
+            procedure uses the Trial parameter set in normal mode and the Preview parameter 
+            set in Low Dose mode, with the exposure reduced by a factor of 10, but not below 
+            this minimum. The default is 0.005, but numbers as low as 0.002 can be used if 
+            the number of counts is consistent within a few percent from one exposure to the 
+            next.&nbsp; However, a higher value will be needed if camera shuttering is slow; 
+            values of 0.02 to 0.05 are often needed on JEOLs.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>RefineZLPMaxMeanRatio</TD>
+          <TD>The maximum ratio between the final and peak mean counts in the refine ZLP 
+            procedure, i.e. the counts after the slit is moved to the left of the ZLP must 
+            fall below the peak counts when the slit is over the ZLP by this ratio or less. 
+            Raise this ratio if the ZLP fails to be recognized. The default is 0.02.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>RefineZLPRedoInLowDose</TD>
+          <TD>Set to 1 to have the Refine ZLP procedure retry 10 eV below and 10 eV above 
+            the original energy upon failure in low dose mode, just as it does in regular 
+            mode. The default is to quit upon failure in low dose mode.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>EnergyShiftCalMinField</TD>
+          <TD>Minimum camera field size for the lowest mag that will be done when 
+            calibrating mag-dependent energy shifts. This should be set to the largest 
+            minimum field size for any of the tasks. The default is 8 microns.
+          </TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>CookerRealignMinField</TD>
+          <TD>Minimum camera field of view, in microns, for images used to realign after 
+            cooking a specimen. Default is 8.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>CookerISLimit</TD>
+          <TD>Limit on image shift for the specimen cooker: after it takes an image and 
+            realigns to it, it will reset image shift if it is above this limit and take a 
+            new image for realigning. Default is 2.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>CookerScreenTiltDelay</TD>
+          <TD>This property is no longer needed in SerialEM 3.6.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>DistortionStageDelay</TD>
+          <TD>Delay time between moving stage and taking an image for distortion pairs, in 
+            milliseconds.&nbsp; The default is 0, which means to use the time set by 
+            &#39;StageMoveDelay&#39;, whose default is 2000.</TD>
+        </TR>
+      </TABLE>
+      <BR>
+      <P><A NAME="tsc_properties"></A><B>Tilt series controller properties</B></P>
+      <TABLE BORDER style="Z-INDEX: 0" cols="2">
+        <TR VALIGN="top">
+          <TD>TSDefaultStartAngle</TD>
+          <TD>
+            <P>Default angle for starting and ending tilt series, when controller<BR>
+              is not invoked at high tilt</P>
+          </TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>TSMaxUsableAngleDiff</TD>
+          <TD>Maximum tilt angle difference between images that can be cross-correlated; 
+            this value is reduced by the cosine of the tilt angle in deciding whether an 
+            image is usable as a reference for alignment (default 10).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>TSBadShotCrit</TD>
+          <TD>The fraction of expected counts that an image must contain to be accepted and 
+            not considered a bad shot (default 0.2).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>TSBadLowMagCrit</TD>
+          <TD>The corresponding fraction for images obtained at a lower magnification, where 
+            intensities may not be set as accurately (default 0.1).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>TSMaxTiltError</TD>
+          <TD>Maximum error allowed in setting tilt angle before the TSC decides that a pole 
+            touch has occurred.&nbsp; The default is 0.1; it needs to be set to at least 0.2 
+            on a JEOL.&nbsp; This value also sets a minimum threshold for detecting whether 
+            tilting has reversed direction, for which the default is 0.1 on FEI and 0.2 on 
+            JEOL. </TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>TSMaxDelayAfterTilt</TD>
+          <TD>Maximum delay time after tilting allowed to be entered in the tilt series 
+            setup dialog, in seconds.&nbsp; The default is 15. </TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>TSBidirAnchorMinField</TD>
+          <TD>The first number entered sets an advisable minimum field size for the starting 
+            anchor image of a bidirectional series; below this level, the field size will be 
+            shown in bold with two stars in the setup dialog.&nbsp; The default is 8 
+            microns.&nbsp; An optional second number sets a size below which the field size 
+            is shown with four stars; the default is 6 microns.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>TSLowMagFieldFrac</TD>
+          <TD>When low mag tracking is enabled, it will be used if the error in the last 
+            prediction was bigger than this fraction of the field (default 0.3).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>TSStageMovedTolerance</TD>
+          <TD>When resuming from a stop, the user will be assumed to have moved the stage 
+            and disturbed predictability if any one of X, Y, or Z is bigger than this 
+            number (default 0.1).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>TSUserFocusChangeTol</TD>
+          <TD>When resuming from a stop, focus predictability is considered disturbed if the 
+            difference between microscope defocus and the autofocus target has changed by 
+            more than this amount (default 0.1).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>TSFitDropErrorRatio</TD>
+          <TD>When doing a fit, if the ratio of the standard error with all points included 
+            to the best error with the maximum number of points excluded is bigger than this 
+            value, points will be dropped (default 1.3).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>TSFitDropBackoffRatio</TD>
+          <TD>Once the decision is made to drop points, points will be dropped until the 
+            standard error falls below the minimum standard error times this ratio (default 
+            1.1).
+          </TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>TSMaxImageFailures</TD>
+          <TD>The maximum number of retries after a image is acquired that does not have 
+            enough counts (default 3).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>TSMaxPositionFailures</TD>
+          <TD>The maximum number of retries after a Record image is acquired that loses more 
+            than the desired fraction of necessary image area (default 3).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>TSMaxDisturbValidChange</TD>
+          <TD>Maximum number of disturbances to look past for valid changes to include in 
+            the fits. A bad idea - default is 0.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>TSMaxDropAsShiftDisturbed</TD>
+          <TD>Maximum number of points to drop routinely from the fits for X or Y after a 
+            disturbance in position (default 3).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>TSMaxDropAsFocusDisturbed</TD>
+          <TD>Maximum number of points to drop routinely from the fits for Z after a 
+            disturbance in focus (default 2).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>TSXFitInterval</TD>
+          <TD>Maximum angular interval over which to fit X coordinates (default 8).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>TSYFitInterval</TD>
+          <TD>Maximum angular interval over which to fit Y coordinates (default 12).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>TSZFitInterval</TD>
+          <TD>Maximum angular interval over which to fit Z coordinates (default 12).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>TSXMinForQuadratic</TD>
+          <TD>Minimum number of points to fit X coordinates to a quadratic curve rather than 
+            a line (default 4).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>TSYMinForQuadratic</TD>
+          <TD>Minimum number of points to fit Y coordinates to a quadratic curve rather than 
+            a line (default 4).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>TSMinFitXAfterDrop</TD>
+          <TD>Minimum number of points to retain in fit for X when dropping points (default 
+            5).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>TSMinFitYAfterDrop</TD>
+          <TD>Minimum number of points to retain in fit for Y when dropping points (default 
+            5).&nbsp; </TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>TSMinFitZAfterDrop</TD>
+          <TD>Minimum number of points to retain in fit for Z when dropping points (default 
+            4).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>TSEarlyK2RecordReturn</TD>
+          <TD>Set to 1 to have Record or Extra Record images on a K2 camera with saving of 
+            dose-fractionation frames return as soon as the full summed image is ready, with 
+            frame saving done asynchronously.&nbsp; This can allow tracking shots to be done 
+            earlier, the time difference is especially significant when saving 
+            super-resolution frames and/or compressed TIFF files.&nbsp; Works only with GMS 
+            2.3.1 or higher.</TD>
+        </TR>
+      </TABLE>
+      <BR>
+      <P><A NAME="navigator_properties"></A><B>Navigator properties</B></P>
+      <TABLE BORDER cols="2">
+        <TR VALIGN="top">
+          <TD>RealignItemMinMarginNeeded</TD>
+          <TD>When running Realign to Item, Navigator must find a map containing<BR>
+            the item with at least this much distance from the center of an image
+            <BR>
+            frame to the edge of the map. The default is 1.5 microns.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>RealignItemMaxMarginNeeded</TD>
+          <TD>When running Realign to Item, maps with a greater distance from the center of 
+            an image frame to the edge of the map will be preferred for the first round of 
+            aligning to a frame of the map; but all distances greater than the value here 
+            will be treated equally. The default is 10 microns.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>RealignItemMinMarginWanted</TD>
+          <TD>When running Realign to Item, a frame that is closer to the target will be 
+            preferred for the first round of alignment as long as the distance from the 
+            frame center to map edge is bigger than this value. The default is 5 microns.</TD>
+        </TR>
+        <TR>
+          <TD height="20">RealignItemMaxIS</TD>
+          <TD height="20">Maximum movement to target position in first round of realigning 
+            to an item that can be done with image shift instead of stage shift.&nbsp; Default&nbsp;is 
+            1 micron.</TD>
+        </TR>
+        <TR>
+          <TD height="20">RealignItemMaxLMField</TD>
+          <TD height="20">Maximum camera field of view to allow when considering whether to 
+            realign to an LM map.&nbsp; This can be set to about half the size of the 
+            smallest objective aperture that might be present during the realign operation.&nbsp; 
+            The default is 15 microns, suitable with a 30-micron aperture. </TD>
+        </TR>
+        <TR>
+          <TD height="20">RealignItemWeightCCCThresh</TD>
+          <TD height="20">Threshold distance for weighting the cross-correlation coefficient 
+            when correlating with multiple montage frames in Realign to Item.&nbsp; When the 
+            intial stage move error implied by the correlation position is greater than this 
+            threshold, the CCC is divided by the error distance.&nbsp; </TD>
+        </TR>
+        <TR>
+          <TD height="20">RealignItemWeightingSigma</TD>
+          <TD height="20">Sigma value for a Gaussian weighting by distance from zero shift 
+            for the correlation coefficient in the second round of Realign to Item, where 
+            the overlap between correlated images at zero shift is often less than 100%, and 
+            the shift is expected to be low.&nbsp; The default is 3 microns; a smaller value 
+            could be tried if correlations find the wrong hole in a regular hole pattern.</TD>
+        </TR>
+        <TR>
+          <TD height="20">RealignItemSkipCenTime</TD>
+          <TD height="20">The first round of alignment in Realign to Item is to the center 
+            of a map frame.&nbsp; This alignment will be skipped if the time in minutes is 
+            less than the amount entered here since the last alignment to that frame center.&nbsp; 
+            The default is 15 minutes; an entry of -1 would disable this feature.</TD>
+        </TR>
+        <TR>
+          <TD height="20">RealignItemSkipCenError</TD>
+          <TD height="20">In the second round of alignment, to the target position, the 
+            program will evaluate the error and disallow skipping the first round if it is 
+            greater than 1/6 of the image size.&nbsp; In addition, if a maximum error in 
+            microns is entered here, the program will disallow skipping when the error 
+            exceeds this amount AND it will extend the lifetime of the skipping capability 
+            when the error does not.&nbsp; This extension does not happen if this property 
+            is not entered.</TD>
+        </TR>
+        <TR>
+          <TD height="20">RealignItemUseBeamOffsets</TD>
+          <TD height="20">Set to 1 to apply the relative offsets between Record and View 
+            mode for beam shift (and beam tilt, if that is being recorded) when realigning 
+            to a map taken in Low Dose View mode.&nbsp; This adjustment is useful for JEOL 
+            scopes where View mode has a different alpha and has not been tested in other 
+            situations.</TD>
+        </TR>
+        <TR>
+          <TD height="20">RealignItemTiltTolerance</TD>
+          <TD height="20">Realign to Itrem will tilt to the angle at which the map was taken 
+            if it differs from the current tilt angle&nbsp; by more than this amount times 
+            the cosine of the tilt angle (or times 0.5 above 60 degrees).&nbsp; The default 
+            is 2 degrees.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>ImportStageToImage</TD>
+          <TD>Stage to image transformation for images imported as maps. Enter 4 numbers and 
+            an optional name; the values are the number of pixels in X per micron in X, 
+            pixels in X per micron in Y, pixels in Y per micron in X, and pixels in Y per 
+            micron in Y. Y coordinates are inverted; i.e. Y is 0 at the top of the image. If 
+            no name is entered, one will be synthesized from these values. Multiple 
+            transformations can be entered.
+          </TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>ImportTiffIDField</TD>
+          <TD>Use this entry to define a TIFF tag whose value can be used to uniquely 
+            identify which import transformation applies to an image. Follow with 5 values: 
+            1) the number of the import transformation, where the first transformation 
+            entered with 'ImportStageToImage' is numbered 1 and 0 refers to the 'None' 
+            transformation; 2) the TIFF tag (e.g., 282 for X resolution); 3) the type of 
+            tag: 1 or S for unsigned 16-bit integer, 2 or I for unsigned 32-bit integer, 3 
+            or F for float, 4 or D for double, 5 or C for character; 4) The element number, 
+            numbered from 1, if the tag contains an array, or 0 for a simple value tag; 5) 
+            the expected value of the tag.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>ImportTiffXField</TD>
+          <TD>Use this entry to define a TIFF tag from which the X stage coordinate of the 
+            image can be extracted. Follow with items 1) to 4) described for 
+            'ImportTiffIDField'</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>ImportTiffYField</TD>
+          <TD>Use this entry to define a TIFF tag from which the Y stage coordinate of the 
+            image can be extracted. Follow with items 1) to 4) described for 
+            'ImportTiffIDField'</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>ImportSubtractFromTIFFStage</TD>
+          <TD>Values to subtract from the X and Y stage coordinates extracted from a TIFF 
+            file.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>GridInPolygonBoxFraction</TD>
+          <TD>When a grid of points is added to fill a polygon, the program includes a point 
+            in the grid only if a square around the point is fully contained in the polygon. 
+            The size of this square is a fraction of the spacing between points. This entry 
+            can be used to change the fraction, whose default value is 0.75.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>NavigatorStageBacklash</TD>
+          <TD>Amount of backlash to apply in Navigator stage movements, in microns, to 
+            points where a backlash direction has not been otherwise defined, such as by 
+            being marked on a montage map.&nbsp;&nbsp; This setting would allow such points 
+            always to be approached from the same direction. The default is 0.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>NavigatorMaxMontageIS</TD>
+          <TD>The maximum amount of image shift allowed, in microns, when fitting a montage 
+            to a polygon in non-low mag; the montage will be constrained to stage movement 
+            if image shift exceeds this amount. The default is 7, which is generally too 
+            large for a Tecnai F30 and JEOLs with limited image shift, and may be too 
+            restrictive for other scopes. If needed image shift is above this limit when not 
+            fitting to a polygon, the Montage setup dialog asks the user if they want to 
+            change to stage movement.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>NavigatorMaxLMMontageIS</TD>
+          <TD>The maximum amount of image shift allowed, in microns, when fitting a montage 
+            to a polygon in low mag mode; the default is 35. If needed image shift is above 
+            this limit when not fitting to a polygon, the Montage setup dialog asks the user 
+            if they want to change to stage movement.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>FitMontageWithFullFrames</TD>
+          <TD>Set to a number between 1 and 2 to use the full frame size in montages fit to 
+            polygons.&nbsp; With 1, the overlap is unchanged and the captured area will be 
+            bigger; with 2, the overlap is increased as much as possible to keep the 
+            captured area the same.&nbsp; For a number between 1 and 2, the value minus 1 is the 
+            fraction of the extra area per frame used to increase overlap instead of 
+            captured area.</TD>
+        </TR>
+      </TABLE>
+      <BR>
+      <P><A NAME="beamcal_properties"></A><B>Beam intensity calibration properties</B></P>
+      <P>Note that these properties changed completely with the change to CCD-based 
+        calibration in SerialEM 2.4.1
+      </P>
+      <TABLE BORDER cols="2">
+        <TR VALIGN="top">
+          <TD>BeamCalMinExposure</TD>
+          <TD>Minimum exposure time for calibration images (default 0.1 sec)</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>BeamCalMaxExposure</TD>
+          <TD>Maximum exposure time for calibration images (default 3 sec)</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>BeamCalMinCounts</TD>
+          <TD>The minimum number of counts in a calibration image (unless exposure time is 
+            at the maximum), before division by 2 for 16-bit camera, if any. The default is 
+            100.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>BeamCalMaxCounts</TD>
+          <TD>The maximum number of counts in a calibration image, before division by 2 for 
+            a 16-bit camera, if any. This should be set to about 2/3 of your camera's 
+            saturation level. The default is 8000.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>BeamCalSpacingFactor</TD>
+          <TD>Spacing between brightnesses measured, as a multiplicative factor (default 
+            1.1)</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>BeamCalChangeDelay</TD>
+          <TD>Delay in milliseconds after setting a new beam intensity (default 400).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>BeamCalInitialIncrement</TD>
+          <TD>Initial change in C2 intensity value (default 0.0002).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>BeamCalMinField</TD>
+          <TD>The minimum camera field of view at which beam calibration will be needed; 
+            should correspond to the biggest minimum field size required for any of the 
+            tasks (default 8 microns)</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>BeamCalExtraRangeNeeded</TD>
+          <TD>Additional range in intensity to be calibrated beyond that needed to get the 
+            same intensity upon changing from the current mag to the lowest mag needed 
+            (default 10.)</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>BeamCalFavorMagChanges</TD>
+          <TD>Set to 1 to change magnification in favor of increasing exposure or spreading 
+            the beam much, as is done with the K2 camera.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>BeamCalUseTrialSettling</TD>
+          <TD>Set to 1 to use the drift settling time and the shuttering type specified in 
+            the Trial parameter set; otherwise settling will be 0 and beam shuttering will 
+            be used.</TD>
+        </TR>
+      </TABLE>
+      <BR>
+      <P><A NAME="jeol_properties"></A><B>JEOL properties</B></P>
+      <TABLE BORDER cols="2">
+        <TR VALIGN="top">
+          <TD>JeolUpdateByEvent</TD>
+          <TD>Set to 0 to disable updating by events if this screws up.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>UpdateSpectroscopyByEvent</TD>
+          <TD>Set to 1 if the JEOL interface makes the promised event call when changing 
+            between spectroscopy and imaging modes.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>InitializeJEOLDelay</TD>
+          <TD>The delay between initializing the JEOL COM object and the first attempt to 
+            call functions, in milliseconds, if events are not being used for update. 
+            Without this delay, errors occur.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>ScopeUpdateInterval</TD>
+          <TD>The interval in milliseconds between calls to the function that reads scope 
+            properties and updates the user interface. The default is 100. In the JEOL 
+            version, the update function does not normally access the microscope so this 
+            should be OK.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>JeolUpdateSleep</TD>
+          <TD>The sleep time, in milliseconds, between calls to the update function that 
+            actually queries the scope in a separate thread. If events are used for update, 
+            this function does one or two queries per call, taking up to 150 msec, so this 
+            interval must be long enough to leave substantial time for user interface 
+            handling, etc. If events are not used for update, the stage position and status 
+            calls take up to 300 msec.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>JEOLReportsSmallScreen</TD>
+          <TD>Set to 0 to indicate that the scope does not report the small screen position. 
+            Needed on 2100.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>JEOLReportsLargeScreen</TD>
+          <TD>Set to 0 or -1 to indicate that the scope does not report any detector at all 
+            representing the large screen position. If the large screen position is still 
+            reported by event but the call to read the screen position does not work, set to 
+            -1 to initialize the state as unknown; it should then be raised as needed for 
+            camera acquisition.&nbsp; If there are no such events set it to 0 and the state 
+            will be initialized as up; the program should then not try to raise the screen.&nbsp; 
+            Do not set this if an alternative 
+            main detector ID can be set.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>JeolMainDetectorID</TD>
+          <TD>Set this to indicate the ID of a detector whose position is reported and which 
+            needs to be retracted for camera imaging. The default ID is 13 for the main 
+            screen. Possible alternative IDs are 5 for upper TV camera and 17 for a lower TV 
+            camera.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>JeolControlsBeamValve</TD>
+          <TD>Set to 0 to indicate that the gun valve cannot be controlled (non-FEG).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>HasOmegaFilter</TD>
+          <TD>Set to 1 to indicate that the scope has an omega filter. The program will then 
+            enable the filter control panel but not do any of the mag changes, etc, involved 
+            in EFTEM mode.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>UseJeolGIFmodeCalls</TD>
+          <TD>Set to 1 to read GIF mode state directly from the microscope instead of 
+            deducing it from a string passed with magnification changes.&nbsp; Set to 2 to 
+            allow the program to try to control GIF mode.&nbsp; You can use the script 
+            commands &quot;ReportJeolGIF&quot; or &quot;SetJeolGIF #&quot; to assess whether the function calls 
+            for reading or changing the state work correctly. (Use a value of 0 or 1 to turn 
+            the mode off or on.)</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>PostJeolGIFdelay</TD>
+          <TD>Delay time in msec after changing GIF mode on a JEOL; the default is 3000.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>JeolHasNoAlpha</TD>
+          <TD>Set to 1 to indicate that this microscope has no alpha setting. This seems not 
+            to be necessary but could be set if errors are generated from attempts to read 
+            or set alpha. This setting is implied when Jeol1230 is set.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>Jeol1230</TD>
+          <TD>Set to 1 for a JEOL 1230; has many implications.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>FocusTickTable</TD>
+          <TD>Use this entry to start a table of the number of focus ticks for one click of 
+            the focus knob at various magnifications. Follow with the number of lines to 
+            follow. Then on each following line, put a mag index and the number of ticks. 
+            The default is 1 for any mag not entered here.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>JeolForceMDSmode</TD>
+          <TD>Set to -1 to turn off MDS mode and give a warning message upon program 
+            startup. 1 no longer forces the microscope into MDS mode on startup.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>JeolPostMagChangeDelay</TD>
+          <TD>Some versions of TEMCON generate errors when stage parameters are accessed too 
+            soon after a magnification change. In addition, when the program is updating 
+            scope status by receiving events, magnification changes generate many events 
+            that take significant time to be received. This entry can take one or two delay 
+            times in milliseconds. The first number specifies the delay for any scope 
+            accesses after the program changes mag. The second number provides for an 
+            additional time during which access to the stage will be deferred. If only one 
+            number is used, values of 2000 or more may be needed to prevent errors. With two 
+            numbers, values of 1000 and 3000 could be tried. The default is 1250 if updating 
+            by event, otherwise it is 0.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>JeolMagEventWait</TD>
+          <TD>Before changing the mag, the program will wait up to this amount of time since 
+            the previous mag change for its event to arrive. The default is 5000 msec, which 
+            should be quite generous.&nbsp; When mag is changed too often, event delivery 
+            can fall behind and image shift can get off; but if a much longer wait is 
+            needed, then the VME should be restarted.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>AlphaChangeDelay</TD>
+          <TD>Delay time in msec after changing alpha on a JEOL as part of low dose area or 
+            other state changes.&nbsp; The default is 500.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>MagChangeFixISdelay</TD>
+          <TD>If updating by event, the maximum possible interval from the time when a 
+            neutral image shift is reported to the time when the mag change responsible for 
+            the neutralization is reported. Default is 450 ms.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>OtherShiftBoundaries</TD>
+          <TD>List of mag indexes at which image or beam shift calibrations are not 
+            congruent with the next lower mag. Just like LowestMModeMagIndex, such an index 
+            indicates the start of a new mag range. Within a mag range, both the relation 
+            between image shift output and position on the specimen, and the relation 
+            between beam shift output and position on the specimen, should be constant.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>JeolIndexForMagMode</TD>
+          <TD>Set this to 3 to use the program with SAMAG instead of MAG mode; the default 
+            is 0 for MAG mode.&nbsp; To use the program in both modes requires a separate 
+            set of property and calibration files for each mode, just as when setting up the 
+            program to work at multiple voltages.&nbsp; See
+            <a href="setting_up_serialem.htm#separate_kv">Setting up for Separate Voltage</a> 
+            and follow the instructions about making a separate subfolder (e.g., SAMAG 
+            instead of 200KV) and making a second, modified shortcut to the program.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>JEOLStageMotorRounding</TD>
+          <TD>The value to which stage coordinates will be rounded before being used to 
+            drive the stage motors, in microns. Should be 0.001, which is the default. With 
+            the emulator 0.1 is needed; this will be set if SimulationMode is set to 1.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>JEOLStagePiezoRounding</TD>
+          <TD>If this value is non-zero, then after stage coordinates are rounded as 
+            indicated by JEOLStageMotorRounding, the remainder will be rounded by this value 
+            (in microns) and used to drive the piezoelectric positioners. With a value of 
+            zero, no piezo positioning will be done. Keep this at 0.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>JEOLObjectiveLensToMicrons</TD>
+          <TD>Scale factor for converting the objective lens fine digital readout to microns 
+            of defocus. The default is 0.0058, the value for 300 KV; it may need to be 
+            changed to make the defocus values in SerialEM match the values on the 
+            microscope display. For 200 KV the value should be 0.002.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>JEOLObjectiveMiniToMicrons</TD>
+          <TD>Scale factor for converting objective minilens values to microns in low mag 
+            mode. The default is 0.01 (measured on a 2100).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>JEOLBeamShiftToMicrons</TD>
+          <TD>Scale factor for rough conversion of beam shift values to microns. The default 
+            is 0.025, the value for 300 KV, which also works at 200 KV. It needs to be 
+            changed to get big enough spot movements in the first round of calibrating beam 
+            shift.
+          </TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>JEOLLowMagBeamShiftToMicrons</TD>
+          <TD>Scale factor needed for calibrating beam shift in low mag mode. If this is 
+            omitted, the factor specified in JEOLBeamShiftToMicrons is used. A value of 0.15 
+            works at 200 KV.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>MicronsPerUnitImageShift</TD>
+          <TD>See entry above in <a href="#microscope_properties">Microscope properties</a></TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>LowMagMicronsPerUnitIS</TD>
+          <TD>See entry above in <a href="#microscope_properties">Microscope properties</a></TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>JeolUseProjectorForIS</TD>
+          <TD>Set to 1 to substitute projector shift for image shift. Neutral value, image 
+            shift, and beam shift calibrations would need to be redone and kept in a 
+            separate calibration file when operating in this mode, and different values of 
+            the microns per unit image shift values may be needed.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>JeolMMperUnitProjector</TD>
+          <TD>When using projector shifts, this factor is used in the initial calibration of 
+            image shift; it specifies the approximate number of millimeters of shift on the 
+            camera per initially scaled unit of projector shift. The default is 1.5, based 
+            on scale matrices on a 2100 in which one unit of projector shift produced ~100 
+            15-micron pixels of shift.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>MessageBoxWhenClipIS</TD>
+          <TD>Set to 0 to avoid having a message box appear when image shift goes beyond 
+            range and gets clipped to its limiting values.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>ShootFilmIfMontageDark</TD>
+          <TD>Set to 1 to retry taking an image after talking a film picture when a montage 
+            frame falls below the minimum counts set by the user with <A HREF="menu_camera.htm#hid_camera_setcountlimit">
+              Set Minimum Counts</A> in the Camera menu. This action may unstick a stuck 
+            lower shutter.</TD>
+        </TR>
+      </TABLE>
+      <BR>
+      <P><A NAME="hitachi_properties"></A><B>Hitachi properties</B></P>
+      <TABLE BORDER cols="2">
+        <TR VALIGN="top">
+          <TD class="style3">HitachiIPaddress</TD>
+          <TD class="style2">IP address of Hitachi microscope server; the default is 
+            192.168.10.1 and simulator may need 127.0.01.&nbsp; </TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style3">HitachiPort</TD>
+          <TD class="style2">Port number of Hitachi microscope server; the default is 12050 
+            and simulator may need 12053.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style3">HitachiBeamBlankAxis</TD>
+          <TD class="style2">Coil and axis to use for beam blanking and shuttering: 0 or 1 
+            for X or Y axes of the gun shift coil or 2 or 3 for X or Y axes of the gun tilt 
+            coil.&nbsp; The default is 0.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style3">HitachiBeamBlankDelta</TD>
+          <TD class="style2">Amount to change coil to blank the beam, a value between -1 and 
+            1.&nbsp; The default is 0.5.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style3">HitachiPAforHRmodeIS</TD>
+          <TD class="style2">Set to 1 to use projector shift instead of intermediate lens 
+            shift for image shift in HR mode.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style3">HitachiTiltSpeed</TD>
+          <TD class="style2">A value between 40 and 127 that controls tilting speed; the 
+            default is 100.&nbsp; If it is 0, then the program will not set the tilt speed.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style3">HitachiStageSpeed</TD>
+          <TD class="style2">A value between 200 and 160000 that controls stage movement in 
+            X/Y nonlinearly.&nbsp; The default is 80000, which is about equivalent to the 
+            speed of 9 in the Hitachi user interface.&nbsp; If this value is 0, the program 
+            will not set stage speed.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style3">HitachiImageShiftToMicrons</TD>
+          <TD class="style2">Factor used by the plugin to scale image shift to approxiamte 
+            microns.&nbsp; The default is 50.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style3">HitachiBeamShiftToMicrons</TD>
+          <TD class="style2">Factor used by the plugin to scale beam shift to approximate 
+            microns.&nbsp; The default is 100.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style3">HitachiObjectiveToMicrons</TD>
+          <TD class="style2">Factor for scaling objective lens values to microns; the 
+            default is 10000.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style3">HitachiI1ToMicrons</TD>
+          <TD class="style2">Factor for scaling intermediate 1 lens values to microns in 
+            low-mag mode; the default is 10000.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style3">HitachiScreenArea</TD>
+          <TD class="style2">Factor for scaling current density value to current.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style3">HitachiZMicronsPerGroove</TD>
+          <TD class="style2">Number of microns of Z movement per groove on the Z knob.&nbsp; 
+            The default is 3.1.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style3">HitachiSpotStepDelay</TD>
+          <TD class="style2">Delay time between changing spots when the program drops down 
+            to spot 1 and steps up to a desired spot number instead of decreasing the spot 
+            size. The default is 120.</TD>
+        </TR>
+      </TABLE>
+      <BR>
+      <P><A NAME="stem_properties"></A><B>STEM properties</B></P>
+      <TABLE BORDER cols="2">
+        <TR VALIGN="top">
+          <TD>STEMMagTable</TD>
+          <TD>Start of magnification table for STEM.&nbsp; The number of magnifications appears 
+            on this entry, and each following line has one magnification index and 
+            magnification value, as output by <A HREF="menu_calibration.htm#hid_calibration_listmags">
+              List Mags</A> in the Calibration menu.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>LowestSTEMnonLMmag</TD>
+          <TD>Enter the index of the first STEM magnification not in Low Mag: one number for 
+            a JEOL, and two numbers for FEI, first for nanoprobe then for microprobe.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>LowestMicroSTEMmag</TD>
+          <TD>On an FEI, the index of the lowest microprobe magnification, as output by <A HREF="menu_calibration.htm#hid_calibration_listmags">
+              List Mags</A> in the Calibration menu.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>JeolSTEMmagUnitsAreX</TD>
+          <TD>Set to 1 if calls to determine magnification on a JEOL return units 'X' 
+            instead of 'ABC'.&nbsp; If the program fails to detect STEM mode, set DebugOutput to 
+            G and see if there are messages from LookupMagnification like 'JeolSTEM set but 
+            units X' and 'JeolSTEM state 1 does not match units X'.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>JeolSTEMdefocusFactor</TD>
+          <TD>Scaling factor needed to make changes in the defocus readout in SerialEM match 
+            changes in the JEOL interface.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>STEMdefocusToDeltaZ</TD>
+          <TD>Scaling factor to convert a defocus change to a difference in Z height, as 
+            output by <A HREF="menu_calibration.htm#hid_calibration_stemfocusvsz">
+              STEM Focus Vs. Z</A> in the Calibration menu.&nbsp; There can be two numbers 
+            on this line, the first for nanoprobe mode and the second for microprobe mode.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>STEMFocusVsZBacklash</TD>
+          <TD>Size of backlash correction in the <A HREF="menu_calibration.htm#hid_calibration_stemfocusvsz">
+              STEM Focus Vs. Z</A> routine in the Calibration menu. The default is 3 microns 
+            for FEI and 10 microns for JEOL.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>STEMCalFocusRange</TD>
+          <TD>Default defocus range over which to run autofocus calibration.&nbsp; The 
+            default is 8 microns; about 20 microns is needed on a JEOL 1400plus.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>STEMMicronsPerUnitImageShift</TD>
+          <TD>Rough scaling of image shift units to microns in STEM mode; by default it is 
+            set to value for MicronsPerUnitImageShift, but may need to be different 
+            (especially on JEOL) if there is not an appropriate initial image shift when 
+            calibrating image shift from scratch.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>JeolUseCLA2ForSTEM</TD>
+          <TD>Set to 1 to use CLA2 instead of CLA1 for STEM image shift on a JEOL.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>STEMFocusShowBestAtEnd</TD>
+          <TD>Set to 0 to keep the program from copying the best focused image to buffer A 
+            after autofocusing; this would be needed for 'Report on Existing' to work 
+            properly.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>DynamicFocusInterval</TD>
+          <TD>Interval in milliseconds for focus steps when using dynamic focus during an 
+            exposure.&nbsp; The default is 40 msec for FEI and 80 msec for JEOL.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>InitialDynamicFocusDelay</TD>
+          <TD>Time in milliseconds to wait after setting the focus for the start of an 
+            exposure with dynamic focus.&nbsp; The default is 100 for FEI and 250 for JEOL.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>ImageDetectorIDs</TD>
+          <TD>List of STEM detector IDs on a JEOL.&nbsp; These IDs can be determined by setting 
+            the debug output key letter to 'e' and watching for events when detectors are 
+            inserted or retracted.&nbsp; Detectors with IDs must be listed before ones without 
+            IDs in the Camera Properties section.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>MutuallyExcludeDetectors</TD>
+          <TD>Use this entry to indicate detectors that do not work together; follow with 
+            the numbers of the detectors (numbered from 0).&nbsp; The program will not allow you 
+            to select them together.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>MappedToDSchannel</TD>
+          <TD>On a JEOL, use this entry to indicate a mapping between one or more detectors 
+            and the channels in DigiScan.&nbsp; Follow with the number of the DigiScan channel 
+            then one or more detector numbers (all numbered from 0).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>DetectorBlocks</TD>
+          <TD>On a JEOL, use this entry to indicate that a detector with a JEOL ID blocks 
+            one or more other detectors when inserted.&nbsp; Follow with the detector number of 
+            the one that blocks, and the numbers of one or more detectors that are blocked.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>InsertJeolDetectorDelay</TD>
+          <TD>Delay time between inserting a detector and acquiring an image on the JEOL 
+            (default 700 ms)</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>SelectJeolDetectorDelay</TD>
+          <TD>Delay time between selecting a detector and acquiring an image on the JEOL 
+            (default 700 ms).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>ShotTimeToInsertDetector</TD>
+          <TD>Exposure time for the dummy image acquisition needed to insert detectors after 
+            entering STEM mode with FEI STEM.&nbsp; The default is 3 sec.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>DigiScanExtraShotDelay</TD>
+          <TD>As of SerialEM 3.1.1, this entry has two effects: 1) it is the delay time 
+            between stopping continuous acquisition and deleting the parameters; 2) if it is 
+            non-zero, single-shot DigiScan images will be taken asynchronously with a loop 
+            to check if they are done, but if it is 0, images will be taken synchronously.&nbsp; 
+            The latter will crash current versions of DM, but apparently not some future 
+            version.&nbsp; The default 
+            is 100 ms.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>DigiScanLineSyncWait</TD>
+          <TD>Number of microseconds of waiting time to add when the Line Sync option is on 
+            for taking DigiScan images.&nbsp; The pixel time will be constrained so that the 
+            pixel scanning time plus the flyback time plus this wait equals an integral 
+            number of line cycles.&nbsp; The default is 10 microsec.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>DigiScanFlipAndRotation</TD>
+          <TD>Use this entry to be warned about harmful changes in the DigiScan 
+            Configuration dialog.&nbsp; Follow with 2 numbers: 1 if Flip Horizontal Scan is 
+            checked or 0 if not, and the value that should be in the Rotation Offset field.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>DigiScanControlBeam</TD>
+          <TD>Follow with 1, 2, 4, or 8 to enable DigiScan to control beam position between 
+            shots and return it to a good position.&nbsp; This requires GMS 2.2 or later.&nbsp; 
+            With 1, it will move the beam to the safe position. With 2 or 4, it will move 
+            the beam to one-eighth of the field past the upper left or lower right corner of 
+            the image, respectively (as of November 2015, this requires a DigiScan patch to 
+            work).&nbsp; With 8, it will simply retain control without any explicit beam 
+            positioning command.&nbsp; Shots will be taken synchronously with a 17 ms delay 
+            at the end, regardless of the setting of DigiScanExtraShotDelay. </TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>JeolSTEMrotation</TD>
+          <TD>The rotation angle that should be set in the JEOL STEM user interface, a value 
+            from 0 to 359.&nbsp; The program will set this angle when starting if this entry 
+            exists.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>JeolSwitchSTEMsleep</TD>
+          <TD>Follow with one or two values. If one value, it is the milliseconds to wait 
+            (with updates suspended) right after switching STEM mode on or off on a JEOL. If 
+            two values, they are the delays for switching into and out of STEM, 
+            respectively.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>JeolSTEMPreMagDelay&nbsp;</TD>
+          <TD>Delay time in msec between the last image from a JEOL STEM camera and changing 
+            STEM magnification.&nbsp; The JEOL STEM can lock up on a mag change if the delay 
+            is not long enough.&nbsp; The default is 1500.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>LowerScreenForSTEM</TD>
+          <TD>Set this to 1 to have the screen <i>lowered</i> to override CCD camera 
+            blanking when trying to acquire an image in STEM, 2 to have the screen lowered 
+            immediately upon entering STEM mode, -1 to have the screen <i>raised</i> when 
+            acquiring an image in STEM, or -2 to have it raised immediately upon entering 
+            STEM mode.&nbsp; The default is 1.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>MustUnblankWithScreen</TD>
+          <TD>Set this to 1 and LowerScreenForSTEM &gt;= 0 if lowering the screen is the only 
+            way to override camera blanking.&nbsp; This will disable the 'Retract to stop camera 
+            blanking' button in the STEM control panel.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>RetractCameraOnEnteringSTEM</TD>
+          <TD>Set this to 1 and LowerScreenForSTEM &lt;= 0 to have cameras retracted with the 
+            beam blanked when STEM mode is entered.&nbsp; This can be used to protect a pre-GIF 
+            CCD camera if the microscope unblanks the beam in STEM mode with the screen up 
+            (e.g., for accessing detectors under the screen).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>InvertBrightField</TD>
+          <TD>Use this entry to control when images from a channel whose name starts with 
+            'Bright' have their contrast inverted.&nbsp; With the default value of 1, these 
+            images will be inverted whenever the 'Invert contrast of image data' in the STEM 
+            Control panel is checked.&nbsp; With a value of 0, they will never be inverted.&nbsp; With 
+            a value of -1, they will be inverted when the button is NOT checked, so that 
+            bright and dark field images will always have the same contrast polarity.</TD>
+        </TR>
+      </TABLE>
+      <BR>
+  </BODY>
+</HTML>

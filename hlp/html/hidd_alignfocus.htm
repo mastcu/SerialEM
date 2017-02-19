@@ -1,0 +1,115 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+  <HEAD>
+    <TITLE>Image Alignment & Focus Panel</TITLE>
+    <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
+    <style type="text/css"> <!-- BODY { font-family:"Arial" }
+  TD { font-size:16 }
+  --></style>
+  </HEAD>
+  <BODY BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+      <P><A NAME="hidd_alignfocus"></A><B><FONT size="3">Image Alignment &amp; Focus Panel</FONT></B></P>
+      <P><B>Align to</B></P>
+      <P>This button will align the image in buffer A to the image in the indicated 
+        buffer, using cross-correlation. The buffer holding the image being aligned to 
+        is called the autoalign buffer. This buffer is determined as follows:</P>
+      <P>When not in low dose mode, images will be aligned to the first buffer after the 
+        rolling buffers, unless the 'Align to B instead of to...' button in the <A HREF="hidd_buffercontrol.htm">
+          Buffer Control panel</A> is selected, in which B is the autoalign buffer.</P>
+      <P>When in low dose mode, there are actually two autoalign buffers: the first for 
+        images from the Record area, the second for images from the Trial or Focus 
+        area. These are the first and second buffers after the rolling buffers. 
+        However, if the 'Align to B instead of to...' button is selected, images of all 
+        types will simply be aligned to the image in B.</P>
+      <P><B>Autofocus</B></P>
+      <P>When not in Low Mag mode, this button will run the autofocus routine to measure 
+        specimen defocus (based on the amount of image displacement when the beam is 
+        tilted) then change the defocus to your chosen target value. In Low Mag mode, 
+        the button will simply set the focus to the standard focus for the current 
+        magnification.</P>
+      <P><B>Clear Alignment</B></P>
+      <P>This button will set the alignment shift of the image in the currently displayed 
+        buffer to zero. If this is buffer A, then microscope image shift will also be 
+        changed by an amount corresponding to the image alignment shift. Thus, this 
+        button can be used to undo a bad autoalignment.</P>
+      <P><B>Reset Image Shift</B></P>
+      <P>This button will reset the microscope image shift to zero and move the stage to 
+        compensate for the change in image shift. If the specimen is tilted, defocus 
+        will also be changed to compensate for the change in Z height of the feature in 
+        the center of the field.</P>
+      <P>Because of inaccuracies in stage movement, image features can end up 0.5 micron 
+        or more from their original positions. This button is useful for a quick reset 
+        when you are still moving around on the specimen. If you want to keep a feature 
+        of interest centered through the reset, then select the <A HREF="menu_tasks.htm#hidc_reset_realign">
+          Reset &amp; Realign command</A> in the Tasks menu.</P>
+      <P><B>Move Stage for Big Mouse Shifts</B></P>
+      <P>When this check box is selected, moving the image in Buffer A with the right 
+        mouse button will result in the stage being moved by the corresponding amount, 
+        provided that the move is bigger than a threshold that can be adjusted with the 
+        'Set Threshold Shift' button. Moves less than the threshold amount will cause 
+        the usual image shift instead. If you hold down the Shift key while shifting 
+        with the right mouse button, the stage will be moved regardless of the size of 
+        the move.</P>
+      <P><B>Set Threshold Shift</B></P>
+      <P>Use this button to set the thresholds for moving the stage instead of shifting 
+        the image with the right mouse button. First you will be asked to enter a 
+        relative threshold, expressed as a fraction of the size of the camera field. 
+        Then you will enter an absolute threshold in microns.</P>
+    <P><b>Correct Backlash in Stage Moves</b></P>
+    <P>When this check box is selected, backlash correction will be applied in stage 
+      movements initiated with the mouse and when resetting image shift.&nbsp; This 
+      should result in more consistent shifts in actual position when there is 
+      substantial backlash in the stage, particularly when reversing directions.&nbsp; 
+      If the stage is known to be in a backlash corrected state, then the movement 
+      will typically be done in two steps so that the final position is approached 
+      from the same direction as previously.&nbsp; The two steps are not needed when 
+      the movement is already the right direction.&nbsp; If the stage is not in a 
+      backlash corrected state, the backlash correction used in montaging at the 
+      current magnification will be applied.</P>
+      <P><B>Center Image Shift on Tilt Axis</B></P>
+      <P>When this check box is selected, SerialEM will move the origin for image shift 
+        laterally from the optic axis to the tilt axis. Resetting image shift will then 
+        set the image shift to a position on the tilt axis, and the IS readout in the 
+        Microscope Status panel will be 0.0 even though image shift is nonzero (as can 
+        be seen in the microscope interface). With this option enabled, lateral movement 
+        and focus changes will be minimized during a tilt series. However, turning the 
+        option on or off will misalign the objective aperture on the 300 KV Tecnai or Polara. 
+        When the option is selected, the program will move the image shift origin when 
+        it is started and reset the origin when it exits.</P>
+      <P><B>Adjust Image Shift between Mags</B></P>
+      <P>This check box will be enabled if the image shift offsets between magnifications 
+        have been calibrated. When it is selected, these offsets will be applied 
+        whenever you or the program changes magnification, and features should stay 
+        centered despite misalignments between magnifications. This can be particularly 
+        useful when going between LM and normal magnifications. Just as for the 'Center 
+        Image Shift on Tilt Axis' option, the IS readout in the Microscope Status panel 
+        will not reflect these offsets. Using this option may be disadvantageous in 
+        situations where image shift is limited by the objective aperture or by 
+        intrinsic limitations, since an unknown part of the image shift range may be 
+        consumed by the offsets.</P>
+      <P>Even when this option is off, the Navigator will use the calibrated offsets 
+        wherever appropriate to make features marked at one magnification appear to be 
+        at the same stage coordinates at another magnification. Thus, while calibration 
+        of the offsets is necessary for optimal performance of the Navigator, the use 
+        of this option is more of a convenience than a necessity.</P>
+      <P><B>Trim Dark Borders in Autoalign</B></P>
+      <P>When this check box is selected, SerialEM will always analyze each image being 
+        correlated in an autoalign and exclude dark regions that appear to be outside 
+        the area of the beam. Even when the option is not selected, this analysis is 
+        done in low dose mode, when performing tasks at lower magnification, and in the 
+        first round of the Realign to Item routine (where it is also useful for 
+        excluding grid bars).&nbsp; The Tasks menu command&nbsp;
+        <a href="menu_tasks.htm#hid_special_disable_dark_trim_in_align">Disable Dark 
+        Trim in Align</a> can be used prevent this automatic trimming operation in 
+        selected cases.</P>
+      <P><B>Set Autoalign Trim Fraction</B></P>
+      <P>Use this button to set the fraction to trim off each edge of the images that are 
+        being aligned. For example, with a fraction of 0.1, 100 pixels will be trimmed 
+        off each side of a 1K x 1K image. In rare cases, the default value of 0.04 will 
+        not be adequate and a larger fraction is needed to exclude peripheral parts of 
+        the image with strong contrast. Because this is needed so rarely, this value is 
+        not stored in the settings file between SerialEM sessions.</P>
+    </basefont>
+  </BODY>
+</HTML>

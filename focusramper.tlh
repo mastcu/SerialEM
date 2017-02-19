@@ -1,0 +1,95 @@
+﻿// Created by Microsoft (R) C/C++ Compiler Version 15.00.30729.01 (0a83cecc).
+//
+// c:\users\mast\documents\scope\serialem\release\focusramper.tlh
+//
+// C++ source equivalent of Win32 type library ..\FocusRamper\FocusRamper.tlb
+// compiler-generated file created 02/12/15 at 13:54:31 - DO NOT EDIT!
+
+#pragma once
+#pragma pack(push, 8)
+
+#include <comdef.h>
+
+//
+// Forward references and typedefs
+//
+
+struct __declspec(uuid("8776169a-60f7-46fd-897f-3532aeac4469"))
+/* LIBID */ __FOCUSRAMPERLib;
+struct /* coclass */ CoFocusRamper;
+struct __declspec(uuid("98ced320-d701-4825-90b9-d82ba1269313"))
+/* dual interface */ IFocusRamper;
+
+//
+// Smart pointer typedef declarations
+//
+
+_COM_SMARTPTR_TYPEDEF(IFocusRamper, __uuidof(IFocusRamper));
+
+//
+// Type library items
+//
+
+struct __declspec(uuid("02879e27-c2b6-4379-89dd-1f397f4801ca"))
+CoFocusRamper;
+    // [ default ] interface IFocusRamper
+
+struct __declspec(uuid("98ced320-d701-4825-90b9-d82ba1269313"))
+IFocusRamper : IDispatch
+{
+    //
+    // Property data
+    //
+
+    __declspec(property(get=GetLastComErrorString))
+    _bstr_t LastComErrorString;
+
+    //
+    // Wrapper methods for error-handling
+    //
+
+    HRESULT Initialize (
+        _bstr_t instrumentName );
+    HRESULT DoRamp (
+        long scanDelay,
+        long scanTime,
+        long focusInterval,
+        float rampTable[32],
+        double focusPerMs );
+    HRESULT FinishRamp (
+        long timeOut,
+        double * intMin,
+        double * intMax,
+        double * intMean,
+        double * intSD );
+    _bstr_t GetLastComErrorString ( );
+
+    //
+    // Raw methods provided by interface
+    //
+
+      virtual HRESULT __stdcall raw_Initialize (
+        /*[in]*/ BSTR instrumentName ) = 0;
+      virtual HRESULT __stdcall raw_DoRamp (
+        /*[in]*/ long scanDelay,
+        /*[in]*/ long scanTime,
+        /*[in]*/ long focusInterval,
+        /*[in]*/ float rampTable[32],
+        /*[in]*/ double focusPerMs ) = 0;
+      virtual HRESULT __stdcall raw_FinishRamp (
+        /*[in]*/ long timeOut,
+        /*[out]*/ double * intMin,
+        /*[out]*/ double * intMax,
+        /*[out]*/ double * intMean,
+        /*[out]*/ double * intSD ) = 0;
+      virtual HRESULT __stdcall get_LastComErrorString (
+        /*[out,retval]*/ BSTR * pVal ) = 0;
+};
+
+//
+// Wrapper method implementations
+//
+
+#include "focusramper.tli"
+
+#pragma pack(pop)

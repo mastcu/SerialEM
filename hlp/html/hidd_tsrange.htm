@@ -1,0 +1,64 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+  <HEAD>
+    <TITLE>Tilt Series Range Finder Dialog</TITLE>
+    <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
+    <style type="text/css"> <!-- BODY { font-family:"Arial" }
+  TD { font-size:16 }
+  --></style>
+  </HEAD>
+  <BODY BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+      <P><A NAME="hidd_tsrange"></A><B><FONT size="3">Tilt Series Range Finder Dialog</FONT></B></P>
+      <P>This dialog box allows you to acquire a series of images at high tilt in order 
+        to determine the usable range for a tilt series. After the series is acquired, 
+        you can examine the stack of images and use the <A HREF="hidd_tssetangle.htm">Tilt 
+          Series Range Viewer dialog</A> to pick which angles should be the limiting 
+        angles for a tilt series. Your chosen angles will then be imported into the <A HREF="hidd_tiltseries.htm">
+          Tilt Series Setup dialog</A> the next time that you open that dialog. There 
+        are diverse factors that govern a choice of highest tilt angle, including the 
+        quality of images, the proximity of a grid bar, etc. Rather than trying to make 
+        this choice for you, this dialog provides flexibility so that can acquire the 
+        images needed to make the choice rapidly in a particular situation. The routine 
+        that acquires the images does try to detect the highest suitable angle by 
+        examining the mean intensity in the central part of the images.</P>
+      <P>The program will maintain alignment to the position at which it starts. Thus, it 
+        will record a lower-magnification reference image at zero tilt before it 
+        starts, and then align to this at the end. If you choose to have series done at 
+        both positive and negative angles, it will also align to this position between 
+        the two series. If you choose the option to use the Warp Up procedure, the 
+        program maintains alignment to the same position at higher tilts.</P>
+      <P><B>Regular versus Low Dose mode</B></P>
+      <P>Separate parameters are stored for low dose and regular imaging modes. In 
+        addition, the two modes provide a different choice for the kinds of images to 
+        be acquired (see below).</P>
+      <P><B>Actions before taking image series</B></P>
+      <P>These check boxes select which operations to perform before acquiring the 
+        series:</P>
+      <OL>
+        <LI>
+          'Refine eucentricity' runs that routine before leaving zero tilt</LI>
+        <LI>
+          'Walk up' uses the Walk Up routine to maintain alignment to the starting 
+          position; otherwise the program will simply tilt the stage to the starting 
+          angle of the series. If this option is selected, the program will also align 
+          successive images of the series unless the image shift bcomes too high.</LI>
+        <LI>
+          'Autofocus' runs the focusing routine at the starting tilt angle.</LI></OL>
+      <P><B>Image series angles</B></P>
+      <P>Enter the starting and ending angle and increment of the series. Enter positive 
+        numbers; the negative of these values are used for a series in the minus 
+        direction. The program will stop the series before the ending angle if image 
+        intensity falls rapidly between a pair of images.</P>
+      <P><B>Directions to sample</B></P>
+      <P>Select 'Both' to have a series done on both sides of zero, 'Minus only' to have 
+        a series at negative angles only, or 'Plus only' to have a series at positive 
+        angles only.</P>
+      <P><B>Take image series with</B></P>
+      <P>Select the kind of images to be used for the series. In regular mode, the images 
+        can be Trial (for speed) or Record (to assess quality), while in Low Dose mode, 
+        the images can be View (to give a broader overview), Trial (useful if alignment 
+        is being maintained), or Preview (to see the Record area itself).</P>
+    </basefont>
+  </BODY>
+</HTML>

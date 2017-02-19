@@ -1,0 +1,41 @@
+
+= CVS Instructions =
+
+Download and extract http://splorg.org/people/tobin/projects/downing/serialem/igloobeta.zip
+
+Download and install ftp://bio3d.colorado.edu/pub/SSHSecureShellClient-3.2.5.exe
+
+Edit the following to reflect your configuration and save it in a batch file called cvs_setup.bat:
+
+SET PATH=%PATH%;e:\cvs\igloobeta
+SET CVS_RSH="e:\Program Files\SSH Communications Security\SSH Secure Shell\ssh2.exe"
+SET CVSROOT=:ext:tobin@simba.colorado.edu:/home/cvsroot
+
+Try running "%CVS_RSH% -v" and "cvs -v" from the command line to make sure both programs can be found.
+
+Extra credit: Install "GNU utilities for Win32"
+
+This can make the windows command prompt a whole lot more tolerable, giving you all the tools you expect, like "grep" and "less".
+
+Download and extract http://unxutils.sourceforge.net/UnxUtils.zip
+
+SET PATH=%PATH%;c:\usr\local\wbin
+
+== Checking out the Serial EM source ==
+
+You will have to email David Mastronarde to get access to the CVS server (access is restricted by IP address) and to get an account on it (simba.colorado.edu). 
+
+The following will generate and populate a subdirectory called SerialEM:
+
+   cvs co -r SEM_2-3-1_JEOL SerialEM
+
+== Committing changes to CVS repository ==
+
+Note that MSVC is picky about whitespace conventions.
+
+CVS remembers the branch that you checked out (via files in the CVS subdirectory), and your changes will be committed to the same branch.  You can commit your changes with a command like this:
+
+   cvs commit -m "Some text about what I changed" SerialEM
+   
+   
+= end of file =

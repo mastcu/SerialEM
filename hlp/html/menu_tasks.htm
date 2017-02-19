@@ -1,0 +1,494 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+  <HEAD>
+    <TITLE>Tasks Menu Commands</TITLE>
+    <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
+    <style type="text/css"> <!-- BODY { font-family:"Arial" }
+  TD { font-size:16 }
+      .style1
+      {
+        width: 193px;
+      }
+  --></style>
+  </HEAD>
+  <BODY BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+      <P><A NAME="menu_tasks"></A><B><FONT size="3">Tasks menu commands</FONT></B></P>
+      <P>The Tasks menu offers the following commands:</P>
+      <TABLE BORDER cols="2">
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_process_setintensity">Set Intensity</A></TD>
+          <TD>Sets beam intensity based on current image mean.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><a href="#hid_tasks_set_dose_rate">Set Dose Rate</a></TD>
+          <TD>Set beam intensity for a desired dose rate in electrons/unbinned pixel/sec</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_process_movebeam">Move Beam</A></TD>
+          <TD>Moves beam based on center marked by display point.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_tasks_centerbeam">Center Beam</A></TD>
+          <TD>Analyzes image for beam edges and tries to center beam.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_tasks_autocenterbeam">Autocenter Beam</A></TD>
+          <TD>Takes an image with condensed beam and uses it to center beam</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_tasks_setupautocenter">Setup Autocenter</A></TD>
+          <TD>Opens dialog to set up beam for autocentering</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_eucentricity_coarse">Eucentric - Rough</A></TD>
+          <TD>Finds eucentric point using coarse search only.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_eucentricity_fine">Eucentric - Fine</A></TD>
+          <TD>Refines eucentricity with pictures at a series of tilts.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_eucentricity_both">Eucentric - Both</A></TD>
+          <TD>Finds eucentric point with coarse search then refines it.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_tasks_finerealign">Refine &amp; Realign</A></TD>
+          <TD>Refines eucentricity and realign to original position.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_tasks_settiltaxisoffset">Set Tilt Axis Offset</A></TD>
+          <TD>Set offset to center image shift on tilt axis</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_tasks_trial_in_ld_refine">Use Trial in LD Refine</A></TD>
+          <TD>Use Trial area in Low Dose mode for Refine Eucentricity</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_tasks_walkup">Walk Up</A></TD>
+          <TD>Goes to high tilt in steps, tracking current position.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_tasks_walkupanchor">Walk Up &amp; Anchor</A></TD>
+          <TD>Goes to high tilt in steps, leaving an image at intermediate tilt.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_tasks_use_view_in_lowdose">Use View in LD</A></TD>
+          <TD>Use View area in Low Dose mode for Walkup operation.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_tasks_setincrements">Set Increments</A></TD>
+          <TD>Set minimum and maximum tilt increment for Walkup</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_tasks_setupcooker">Setup Cooker</A></TD>
+          <TD>Opens dialog to set conditions for pre-exposing specimen prior to tilt series</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_tasks_cookspecimen">Cook Specimen</A></TD>
+          <TD>Pre-exposes specimen for desired dose or time</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_tasks_assessanglerange">Assess Angle Range</A></TD>
+          <TD>Opens dialog to acquire small series of images at high tilt</TD>
+        </TR>
+          <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_tasks_assess_interset_shifts">Assess Interset 
+            Shifts</A></TD>
+          <TD>Measure shifts between Record and other acquisition types in STEM mode</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_tasks_revise_cancel">Revise/Cancel Shifts</A></TD>
+          <TD>Adjust the shift for the image in A relative to Record or disable use of 
+            interset shifts</TD>
+        </TR>
+      <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_reset_realign">Reset IS &amp; Realign</A></TD>
+          <TD>Resets Image Shift and realigns image position.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_tasks_setiterationlimit">Set Iteration Limit</A></TD>
+          <TD>Set minimum Image Shift for reiterating Reset &amp; Realign</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_tasks_usetrialinld">Use Trial In LD</A></TD>
+          <TD>Use Trial area in Low Dose mode for Reset &amp; Realign</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_reverse_tilt">Reverse Tilt</A></TD>
+          <TD>Reverses tilt direction and realigns image position.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_tasks_verbose">Verbose</A></TD>
+          <TD>Outputs progress and results of tasks to Log Window.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><b>Special Options</b></TD>
+          <TD>Specialized and experimental options for tasks, tilt series, Navigator, or Low 
+            Dose</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1">&nbsp; <a href="#hid_special_skip_beam_shift_in_ts">Skip Beam Shift 
+            in TS</a>&nbsp;</TD>
+          <TD>Skip beam shift when autoaligning with image shift in tilt series</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1">&nbsp; <a href="#hid_special_piezo_for_ld_axis_shift">Piezo for LD 
+            Axis Shift</a>&nbsp;</TD>
+          <TD>Use piezo-driven stage movement for on-axis shift between Low Dose areas</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1">&nbsp; <a href="#hid_special_disable_dark_trim_in_align">
+            Disable Dark Trim in Align</a></TD>
+          <TD>Disable automatic trimming of dark borders in Autoalign in some cases</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1">&nbsp; <a href="#hid_specialoptions_allowcontinuousintasks">Allow 
+            Continuous in TS</a>&nbsp;</TD>
+          <TD>Permit continuous mode acquisitions to be started during tilt series</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1">&nbsp; <a href="#hid_specialoptions_normalizeviaviewforau">Normalize 
+            Via View for Autofocus</a>&nbsp;</TD>
+          <TD>In Low Dose mode, go through View mode to normalize before autofocus</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1">&nbsp; <a href="#hid_specialoptions_adjustfocusonprobechange">
+            Adjust Focus on Probe Mode Change</a>&nbsp;&nbsp;</TD>
+          <TD>Maintain constant focus difference when switching between microprobe and 
+            nanoprobe</TD>
+        </TR>
+      </TABLE>
+      <BR>
+      <P><A NAME="hid_process_setintensity"></A><B>Set Intensity command (Tasks menu)</B></P>
+      <P>Use this command to change the beam intensity so as to achieve a desired mean 
+        level in images taken with Record parameters. When you select this command, the 
+        program first computes the zero-tilt mean (mean of the tilt-foreshortened area) 
+        of the image in buffer A. It then takes account of the exposure time and 
+        binning of that image to determine what the zero-tilt mean of a Record image 
+        would have been at the current beam intensity. The program presents a dialog 
+        box in which you can enter the new intensity; the default value in this box is 
+        the computed mean for a Record image at the current intensity. This value will 
+        give you some idea of how big a change you are requesting. If you accept this 
+        default, nothing will change. Enter the desired mean level.</P>
+      <P>Since the program changes intensity by condensing the beam, it is possible that 
+        the beam will become too small to cover the camera area. If you increase the 
+        intensity by a substantial amount, you should check whether the beam still 
+        covers the area before going on to tasks that rely on full exposures.</P>
+    <P><A NAME="hid_tasks_set_dose_rate"></A><B>Set Dose Rate command (Tasks menu)</B></P>
+    <P>Use this command to change the beam intensity to give a desired dose rate on 
+      the camera, in electrons per unbinned pixel per second, based on the counts in 
+      the image in buffer A.&nbsp; The mean of the tilt-foreshortened area will be 
+      used, as for the <a href="#hid_process_setintensity">Set Intensity</a> command.&nbsp; 
+      The programs presents a dialog box showing the dose rate in that image and 
+      asking for the new value.</P>
+      <P><A NAME="hid_process_movebeam"></A><B>Move Beam command (Tasks menu)</B></P>
+      <P>Use this command to move the beam by a controlled amount. You can use it to 
+        center the beam by first taking a picture with the beam condensed enough to 
+        show much of its boundaries. Then click the left mouse button to set a display 
+        marker point in the center of the beam. Next, select this command, and the 
+        center of the beam will be moved to the center of the field. In general, the 
+        beam will be moved by the amount that would move the marker point to the center 
+        of the field.</P>
+      <P>After you use this command, you need to take another picture to see the position 
+        of the beam.</P>
+      <P><A NAME="hid_tasks_centerbeam"></A><B>Center Beam command (Tasks menu)</B></P>
+      <P>You can use this command to center the beam if the edge of the beam is fairly 
+        sharp and appears in the currently active image. The program will analyze the 
+        image to find the beam edge then solve for a circle that fits the edge. It will 
+        then move the beam to move the center of that circle toward or to the center of 
+        the image. The solution will be most accurate if the beam edge appears in 3 or 
+        4 corners of the image, and will be fairly accurate when there is beam edge in 
+        two corners of the image. With an edge in only one quadrant, the program will 
+        be increasingly conservative in how much it moves the beam, the smaller the 
+        piece of edge is. When the edge occupies less than 20 degrees, the beam will 
+        simply be moved enough to get the edge out of the field, so do not expect the 
+        beam to be centered in such situations. This command will not work if the beam 
+        edge is not relatively sharp, so it will not work with some non-FEG scopes.</P>
+      <P><A NAME="hid_tasks_autocenterbeam"></A><B>Autocenter Beam command (Tasks menu)</B></P>
+      <P>You can use this command to center the beam automatically by taking an image 
+        with the beam condensed so that its position can be detected reliably either 
+        from the edges of the beam or from the average location of the beam in the 
+        image. You must first set up the beam intensity at the current or a nearby 
+        magnification and spot size, using the <A HREF="hidd_autocensetup.htm">Beam 
+          Autocenter Setup dialog box</A> . The program will condense the beam, take 
+        one or two images depending on the centering method, and restore the beam.</P>
+      <P><A NAME="hid_tasks_setupautocenter"></A><B>Setup Autocenter command (Tasks menu)</B></P>
+      <P>Use this command to open the <A HREF="hidd_autocensetup.htm">Beam Autocenter Setup 
+          dialog box</A> and set the beam intensity that will be used for 
+        autocentering.</P>
+      <P><A NAME="hid_eucentricity_coarse"></A><B>Eucentric - Rough command (Tasks menu)</B></P>
+      <P>This command can be used to adjust the Z height to the eucentric point when the 
+        Z height might be off by more than 5-10 microns, which can often be the case 
+        when the specimen rod has just been inserted. This procedure will find 
+        eucentricity to within about 0.5 micron. This is good enough for tuning the 
+        microscope but not as accurate as the adjustment provided by the Eucentric - 
+        Fine command, which should be run before starting a tilt series.</P>
+      <P>This procedure does not make any attempt to keep the starting specimen location 
+        in the field of view.</P>
+      <P>The rough eucentricity procedure first switches to a low magnification (or, in 
+        low dose mode, it uses the parameters of the View area). It takes pictures to 
+        determine how far the specimen moves laterally upon tilting, starting with a 
+        very small tilt increment and working up to a total increment of 8 degrees. It 
+        may adjust the Z height more than once before finishing.</P>
+      <P><A NAME="hid_eucentricity_fine"></A><B>Eucentric - Fine command (Tasks menu)</B></P>
+      <P>This command can be used to adjust the Z height to the eucentric point when it 
+        is already within 5-10 microns. It is thus a suitable procedure to use if you 
+        have moved to a new location on the specimen grid since the last time 
+        eucentricity was adjusted. It is recommended that you run this command before 
+        starting a tilt series.</P>
+      <P>This procedure does not make any attempt to keep the starting specimen location 
+        in the field of view. It can be run when not at zero tilt, and the program will 
+        return the stage to your pre-existing tilt at the end.</P>
+      <P>The fine eucentricity procedure first switches to a low magnification (or, in 
+        low dose mode, it uses the parameters of the View area). It then takes pictures 
+        at a set of tilts between -24 and + 24 degrees. From the image displacements 
+        during this series, it can compute both the distance in Z from the eucentric 
+        point and the lateral displacement of the tilt axis from the optical axis. If 
+        image displacements become too large, the program will adjust Z height then 
+        repeat the procedure from the beginning.</P>
+      <P><A NAME="hid_eucentricity_both"></A><B>Eucentric - Both command (Tasks menu)</B></P>
+      <P>Use this command to run the rough eucentricity procedure followed immediately by 
+        the fine eucentricity procedure. This sequence does make any attempt to keep 
+        the starting specimen location in the field of view.</P>
+      <P><A NAME="hid_tasks_finerealign"></A><B>Refine &amp; Realign command (Tasks menu)</B></P>
+      <P>Use this command to run the fine eucentricity procedure while retaining an item 
+        of interest centered in the field of view. The program will first take a 
+        low-magnification reference picture, then do the fine eucentricity procedure, 
+        then take another picture at the original tilt angle and use that to restore 
+        the alignment. In low dose mode, the reference picture will be taken of the 
+        View area. It is not necessary to be at zero tilt to run this command.</P>
+      <P><A NAME="hid_tasks_settiltaxisoffset"></A><B>Set Tilt Axis Offset command (Tasks 
+          menu)</B></P>
+      <P>Use this command to set the offset of the tilt axis from the optical axis, which 
+        is used to keep image shift centered on the optical axis. If the tilt axis is 
+        more than a micron from the optic axis, it is desirable to set this offset to 
+        minimize specimen movements in Y and Z during tilting. The offset should be set 
+        as a system-wide property. However, if this property setting is not adequate, 
+        or if the offset varies significantly from place to place, this command can be 
+        used to set the offset. It is placed in this menu because the lateral offset 
+        from the Refine Eucentricity procedure indicates how much the offset should be 
+        changed. When the command is selected, a dialog box comes up informing you of 
+        the current tilt axis offset, and the total offset implied by the lateral 
+        displacement reported in the last run of 
+        Refine Eucentricity, if any. The default value in the box is the implied total 
+        offset (or just the current offset, if Refine Eucentricity has not been run.) A 
+        tilt axis offset has an effect only if you have selected 'Center image shift on 
+        tilt axis' in the Image Alignment and Focus control panel.</P>
+      <P><A NAME="hid_tasks_trial_in_ld_refine"></A><B>Use Trial in LD Refine command (Tasks 
+          menu)</B></P>
+      <P>Use this command to select whether the Trial area rather than the View area will 
+        be used for the tilted images that are taken when refining eucentricity. The 
+        View area will still be used for the initial and final tracking images when the 
+        Refine and Realign procedure is used, and for the rough eucentricity procedure 
+        when both rough and fine procedures are run together. Using the Trial area will 
+        save a little dose but will reduce the range of Z heights over which the 
+        procedure can run reliably. Also, if the specimen is not relatively flat along 
+        the tilt axis, the Trial area rather than the Record area will be brought to 
+        the eucentric height.</P>
+      <P><A NAME="hid_tasks_walkup"></A><B>Walk Up command (Tasks menu)</B></P>
+      <P>Use this command to go from one tilt angle to another while retaining an item of 
+        interest centered in the field of view. Typically this would be used to go from 
+        zero tilt to a high tilt angle. After you select the command, you will 
+        encounter a dialog box in which to enter the destination tilt angle. This 
+        destination angle will be saved and will appear as the default angle the next 
+        time you invoke the command.</P>
+      <P>This procedure involves taking alignment pictures at a series of tilt angles, 
+        with a tilt interval that is quite coarse at low angles and finer at high 
+        angles. Image shift will be reset whenever it gets too high, but no 
+        autofocusing is done. The pictures are taken with the Trial parameter set and, 
+        if in low dose mode, the pictures are of the Trial area. If the magnification 
+        is too high for reliable tracking, the pictures will be taken at a lower 
+        magnification.</P>
+      <P>If you choose a destination angle that is in the opposite direction from the 
+        last direction of tilt, the routine will run the Reverse Tilt procedure first 
+        to avoid losing the area of interest.</P>
+      <P><A NAME="hid_tasks_walkupanchor"></A><B>Walk Up &amp; Anchor command (Tasks menu)</B></P>
+      <P>Use this command to do the same operation as in the Walk Up command but also 
+        leave an image behind at a specified intermediate tilt angle. The image will be 
+        left in the last image buffer and can be used as an 'anchor' for alignment 
+        during a tilt series. The angle for the anchor image will be saved as the 
+        default for the next use of this command and is the same as the angle that 
+        appears for an anchor image in the <A HREF="hidd_tiltseries.htm">Tilt Series Setup 
+          dialog box</A> .</P>
+      <P><A NAME="hid_tasks_use_view_in_lowdose"></A><B>Use View in LD command (Tasks menu)</B></P>
+      <P>Use this command to select whether the Walk Up routine will be run with the 
+        View area when in Low Dose mode.</P>
+      <P><A NAME="hid_tasks_setincrements"></A><B>Set Increments command (Tasks menu)</B></P>
+      <P>Use this command to set the minimum and maximum tilt increments for the Walk Up 
+        operation. The maximum increment is used at zero tilt, and the increment at any 
+        tilt angle is either this maximum times the cosine of the angle, or the minimum 
+        increment, whichever is greater. Your settings for these values are retained 
+        between sessions of SerialEM.</P>
+      <P><A NAME="hid_tasks_setupcooker"></A><B>Setup Cooker command (Tasks menu)</B></P>
+      <P>Use this command to open the <A HREF="hidd_cooksetup.htm">Specimen Cooking Setup 
+          dialog box</A> and set the magnification, spot size, and intensity to use 
+        for pre-exposing the specimen.</P>
+      <P><A NAME="hid_tasks_cookspecimen"></A><B>Cook Specimen command (Tasks menu)</B></P>
+      <P>Use this command to pre-expose the specimen for the desired electron dose or 
+        time, using the parameters set in the <A HREF="hidd_cooksetup.htm">Specimen Cooking 
+          Setup dialog box</A> . The program will lower the screen to expose the 
+        specimen, report in the log window as each tenth of the exposure is finished, 
+        and continually update the status bar with the expected time remaining.</P>
+      <P><A NAME="hid_tasks_assessanglerange"></A><B>Assess Angle Range command (Tasks menu)</B></P>
+      <P>Use this command to acquire a small series of images at high tilt in order to 
+        determine the limits of the tilt range for a tilt series. There are options 
+        that allow a series to be acquired as quickly as possible, or more slowly and 
+        carefully, depending on what you wish to see in the high tilt images. These 
+        options are set in the <A HREF="hidd_tsrange.htm">Tilt Series Range Finder 
+          dialog box</A>.</P>
+      <P><A NAME="hid_tasks_assess_interset_shifts"></A><B>Assess Interset Shifts command (Tasks menu)</B></P>
+      <P>In STEM mode, use this command to measure the shifts between Record and other 
+        images with current camera parameters.&nbsp; These shifts are compensated during 
+        tilt series acquisition to make sure that tracking and focusing images are 
+        centered on the Record area.&nbsp; The shifts are specific to the magnification 
+        and the image size and binning, and also depend on exposure time when the scan 
+        rate is relatively high.&nbsp; The shifts are not saved for different 
+        conditions, so this command needs to be run as part of the routine tasks before 
+        starting a tilt series, after camera parameters have been set up.&nbsp; The 
+        Record exposure time can be varied during the tilt series, but the other 
+        exposure times should be kept constant, or else the shifts will not be 
+        considered valid.</P>
+    <P>When not in Low Dose mode, the routine will measure the shift for a Trial image 
+      and for a Focus image relative to Record.&nbsp; When in Low Dose mode, the 
+      routine will always measure a shift for a Preview image.&nbsp; It will then 
+      measure a shift for a Trial if Trial area is centered on Record, and a shift for 
+      Focus if the Focus area is centered on Record.&nbsp; At the end, you should 
+      scroll through the images to make sure they are well-enough aligned.&nbsp; If 
+      the image in A is not aligned, you can align it with the right mouse button then 
+      use the <A HREF="#hid_tasks_revise_cancel">Revise/Cancel Shifts 
+          command</A>.&nbsp; If a different image is not aligned, you can try the command again 
+      with a new image area, or eliminate the shifts with the <A HREF="#hid_tasks_revise_cancel">Revise/Cancel Shifts 
+          command</A>.</P>
+      <P><A NAME="hid_tasks_revise_cancel"></A><B>Revise/Cancel Shifts command (Tasks menu)</B></P>
+      <P>Use this command either to indicate that an interset shift should be taken from 
+        the alignment of the image in buffer A, or to eliminate the last measured 
+        interset shifts.&nbsp; You will first be asked if you want the revise a shift 
+        based on the alignment of the image in A.&nbsp; If you answer No, you will then 
+        be asked if you want to eliminate the interset shifts.</P>
+      <P><A NAME="hid_reset_realign"></A><B>Reset IS &amp; Realign command (Tasks menu)</B></P>
+      <P>Use this command to reset the microscope image shift (IS) while retaining an
+         item of interest centered in the field of view. The program will take a
+         reference picture, reset the image shift to zero and move the stage to
+         compensate, then take another picture and align it to the reference picture. At
+         the end, image shift will no longer be zero because of this alignment; in fact,
+         it can be as much as one-quarter of the original image shift because of
+        inaccuracy in stage movement. The reference picture will be taken at low
+        magnification or, if in low dose mode, with the View parameters.</P>
+      <P>If you just want to reset image shift without having a feature stay centered, 
+        use the Reset Shifts button in the <A HREF="hidd_alignfocus.htm">Image Alignment 
+          &amp; Focus panel</A> .</P>
+      <P><A NAME="hid_tasks_setiterationlimit"></A><B>Set Iteration Limit command (Tasks 
+          menu)</B></P>
+      <P>Use this command to change the criterion that the Reset IS &amp; Realign 
+        procedure uses to decide whether to reset the shift and realign a second time. 
+        After resetting the shift, the program takes an image and aligns it to image 
+        taken before the reset. If image shift is still greater than this criterion, it 
+        will be reset again, and another image taken and aligned.</P>
+      <P><A NAME="hid_tasks_usetrialinld"></A><B>Use Trial in LD command (Tasks menu)</B></P>
+      <P>Toggle this entry to switch between using the View and Trial areas for the Reset 
+        IS &amp; Realign procedure. The View area is the default because the stage 
+        movement involved in resetting the shift is unpredictable, and the larger field 
+        of view of the View area is assumed to be needed to do the reset reliably. It 
+        may be safe to use the trial area if your limit for resetting image shift is 
+        small (~1 micron), if the field of view of the trial area is fairly large (2 
+        microns), and if your stage is adjusted so that stage movements are reliable at 
+        high tilt for the holder being used.</P>
+      <P><A NAME="hid_reverse_tilt"></A><B>Reverse Tilt command (Tasks menu)</B></P>
+      <P>Use this command to reverse the direction of tilting while retaining an item of 
+        interest centered in the field of view. For example, if you tilt up to a high 
+        angle, center your item of interest, then try to start a tilt series by just 
+        tilting back down, the specimen may move considerably because of backlash in 
+        the stage. This problem can be avoided by using this command. The program will 
+        take a reference picture, tilt far enough in the current direction to work out 
+        the backlash, tilt back to the starting angle, then take another picture and 
+        align it to the reference picture. The reference picture will be taken at low 
+        magnification or, if in low dose mode, with the View parameters.</P>
+      <P><A NAME="hid_tasks_verbose"></A><B>Verbose command (Tasks menu)</B></P>
+      <P>Use this command to toggle diagnostic output to the Log window from the various 
+        procedures run from the Tasks menu.</P>
+      <P><A NAME="hid_special_skip_beam_shift_in_ts"></A><B>Skip Beam Shift in TS 
+        command (Tasks - Special Option submenu)</B></P>
+    <P>When using a phase plate on a JEOL microscope, the beam shift that accompanies 
+      every image shift operation will change the centering of the phase plate.&nbsp; 
+      Turn on this entry to suppress the beam shift for the alignment operations 
+      involving image shift during a tilt series.</P>
+      <P><A NAME="hid_special_piezo_for_ld_axis_shift"></A><B>Piezo for LD Axis Shift 
+        command (Tasks&nbsp; - Special Option submenu)</B></P>
+    <p>
+      If there is a piezo plugin loaded that can provide stage movement along the tilt 
+      axis, and the properties file contains both an entry 'UsePiezoForLDAxis' 
+      specifying this piezo and an entry 'PiezoScale' defining the range and scaling 
+      of this piezo, this option can be turned on to use this piezo movement as a 
+      substitute for on-axis image shift between Record/View and Trial/Focus areas in 
+      Low Dose mode.&nbsp; The option can be toggled only when Low Dose mode is off.&nbsp; 
+      When Low Dose is turned on with this option enabled, the piezo is moved to the 
+      end of its range appropriate for the Record area.&nbsp; Several restrictions are 
+      also enforced: Focus and Trial are constrained to the same properties; 'Balance 
+      Shifts' is turned off; rotation of the interarea axis away from the tilt axis is 
+      turned off.&nbsp; The 'Position on tilt axis' entry can be negative or positive 
+      as needed, but the stage will be moved to the other end of its range when the 
+      sign is changed.</p>
+    <p>
+      <A NAME="hid_special_disable_dark_trim_in_align"></A><B>Disable Dark Trim in 
+      Align command (Tasks&nbsp; - Special Option submenu)</B></p>
+    <p>
+      Even when 'Trim dark borders in Autoalign' is not selected in the 
+      <a href="hidd_alignfocus.htm">Image 
+      Alignment &amp; Focus</a> control panel, this trimming happens automatically in three 
+      cases: when in Low Dose mode, when doing a task at a lower magnification, and 
+      when the Navigator does Realign to Item.&nbsp; This option allows the automatic 
+      trimming to be disabled in selected cases.&nbsp; Three dialog boxes will come 
+      up.&nbsp; The first controls the trimming in Low Dose mode; enter 1 if you want 
+      to disable it just when doing a tilt series, or 2 if you want to disable it 
+      always.&nbsp; The second entry controls the trimming when doing tasks; again, 
+      enter 1 if you want to disable it just when doing a tilt series, or 2 if you 
+      want to disable it always.&nbsp; The third entry allows you to disable the 
+      trimming when running Realign to Item.</p>
+    <p>
+      <A NAME="hid_specialoptions_allowcontinuousintasks"></A><B>Allow Continuous in TS command (Tasks&nbsp; - Special Option submenu)</B></p>
+    <p>
+      Ordinarily, the program will acquire images in single-frame mode for almost all 
+      automated operations, even when using a camera parameter set that has continuous 
+      mode set.&nbsp; If this option is selected, images acquired directly by the Tilt 
+      Series Controller will be allowed to be taken in continuous mode if that mode is 
+      set in the camera parameters.&nbsp; Such continuous acquisitions must be stopped 
+      manually by the user before the tilt series can go on.&nbsp; This exception does 
+      not apply to images taken when autofocusing or doing other tasks; all tasks 
+      enforce single-frame mode.&nbsp; Thus, it applies to Trial and Record, as well 
+      as to View and Preview images taken in Low Dose mode.</p>
+    <p>
+      <A NAME="hid_specialoptions_normalizeviaviewforau"></A><B>Normalize Via View 
+      for Autofocus command (Tasks&nbsp; - Special Option submenu)</B></p>
+    <p>
+      When this option is selected, the program will switch to the View area in Low 
+      Dose before going to the Focus area for autofocusing, unless it is currently in 
+      Focus and arrived there from View.&nbsp; When &#39;Keep Focus and Trial identical&#39; 
+      is selected in the Low Dose Control Panel, Trial and Focus are considered 
+      equivalent for the purpose of deciding whether this normalization needs to be 
+      done.</p>
+    <p>
+      <A NAME="hid_specialoptions_adjustfocusonprobechange"></A><B>Adjust Focus on Probe Mode Change command (Tasks&nbsp; - Special Option submenu)</B></p>
+    <p>
+      When changing between microprobe and nanoprobe TEM modes on FEI scopes, the 
+      scope will restore the defocus last seen in a mode when returning to that mode.&nbsp; 
+      With this option turned on, the program will try to maintain a constant 
+      difference between the focus levels in the two modes. It does this by tracking 
+      how much defocus changes during the time spent in one mode and imposing that 
+      focus change on the scope's restored focus value when switching to the other 
+      mode.&nbsp; This means that you can use autofocus in one mode and have the 
+      required focus change applied when returning to the other mode.&nbsp; </p>
+    <p>
+      The option needs to be turned off in order to impose a needed focus difference 
+      between the modes.&nbsp; However, in Low Dose mode, focus differences are always 
+      applied when changing between Low Dose areas and changing probe modes at the 
+      same time, regardless of this setting.&nbsp; To focus independently in the two 
+      modes while in Low Dose mode, change the probe mode first with a script or in the 
+      microscope interface, then change Low Dose mode.</p>
+    <p>
+      If you want to &quot;Reset Defocus&quot; while this option is on and have that change in 
+      focus readout ignored, use the entry in the Focus menu instead of a button in 
+      the microscope interface.</p>
+      </basefont>
+  </BODY>
+</HTML>

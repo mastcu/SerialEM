@@ -1,0 +1,64 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+  <HEAD>
+    <TITLE>Navigator Import Dialog</TITLE>
+    <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
+    <style type="text/css"> <!-- BODY { font-family:"Arial" } TD { font-size:16 } 
+  --></style>
+  </HEAD>
+  <BODY BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+    <P><A NAME="hidd_navimport"></A><B><FONT size="3">Navigator Import Dialog</FONT></B></P>
+    <P>This dialog opens when you want to import a map image from a source other than 
+      the microscope, such as a light microscope. This dialog allows the following 
+      entries:</P>
+    <P><B>Section number</B></P>
+    <P>This entry is essential if the file has multiple sections. Sections are numbered 
+      from 0; the label on this text box will indicate the range of section numbers.</P>
+    <P><B>Stage position</B></P>
+    <P>Enter the stage position if you are going to import more than one image from the 
+      same source and want to use registration points on multiple images to establish 
+      the transformation between these maps and maps taken in the EM.
+    </P>
+    <P><B>Registration number</B></P>
+    <P>This control allows you to select a registration number, as long as it is 
+      different from the registration number of any non-imported items. If you are 
+      importing more than one image from the same source, you would probably want 
+      them to have the same registration number.</P>
+    <P><B>Stage to Image transformation</B></P>
+    <P>This control allows you to select a transformation that relates stage 
+      coordinates in the light microscope to image coordinates, if any have been 
+      defined in the properties file. Having a correct transformation is important if 
+      you are using multiple imported images. Then transformation would allow points 
+      marked anywhere in the images to be assigned approximately correct stage 
+      coordinates.</P>
+    <P><B>Make color overlay with current map item</B></P>
+    <P>This checkbox is enabled if the current Navigator item is an imported map with 
+      the same size as the image now being imported. If you select it, then the 
+      program will combine the previous image with the new one to make a color 
+      overlay, with the colors determined by your entry in the <B>Images to use for red, 
+        green, blue</B> text box. This box requires 3 digits to be entered, one for 
+      each of the three colors. The digits must be 1 to use the current map item, 2 
+      to use the newly imported item, or 0 to use nothing for that color. For 
+      example, 120 will show the previous image in red and the new one in green; 121 
+      will show the previous in magenta and the new one in green. The program will 
+      read in each image, copy one to buffer A, then combine them just as for the <A HREF="menu_process.htm#hid_process_makecoloroverlay">
+        Make Color Overlay command</A> command in the Process menu. The complete 
+      list of color possibilities for the previous and new image are:</P>
+    <P>120&nbsp; Red - Green<BR>
+      102&nbsp; Red - Blue<BR>
+      210&nbsp; Green - Red<BR>
+      201&nbsp; Blue - Red<BR>
+      122&nbsp; Red - Cyan<BR>
+      211&nbsp; Cyan - Red<BR>
+      212&nbsp; Green - Magenta<BR>
+      121&nbsp; Magenta - Green<BR>
+      112&nbsp; Yellow - Blue<BR>
+      221&nbsp; Blue - Yellow<BR>
+      012&nbsp; Green - Blue<BR>
+      021&nbsp; Blue - Green<BR>
+      102&nbsp; Red - Blue<BR>
+      201&nbsp; Blue - Red</P>
+    </basefont>
+  </BODY>
+</HTML>

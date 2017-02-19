@@ -1,0 +1,20 @@
+The blanker thread goes through a sequence of optional time periods
+
+UnblankTime: if this is set, the beam is blanked immmediately and then
+unblanked after this time is up
+
+If there is beam scanning, it goes for ScanTime
+If there is drift compensation, it goes on for PostActionTime
+
+ReblankTime:  if this is set, it waits for this delay unless drift
+compensation was used, then the beam is reblanked then it goes on to
+post-actions
+
+Otherwise, if PostactionTime is set and there was not drift compensation,
+it waits for this amount of time and goes on to postactions.
+
+ShutterTime is set for a Gatan camera as the amount of extra open shutter time
+for the plugin to set up.  This is included in the reblank time.
+(If shutter can't be opened, it uses a dark reference (!) specified by
+PreDarkExposure and uses PreDarkBlankTime to blank out some of this if needed)
+

@@ -1,0 +1,177 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+  <HEAD>
+    <TITLE>Using and Troubleshooting Autofocus</TITLE>
+    <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
+    <style type="text/css"> <!-- BODY { font-family:"Arial" }
+  TD { font-size:16 }
+      --></style>
+  </HEAD>
+  <BODY BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+      <P><A NAME="about_autofocus"></A><B><FONT size="3">Using and Troubleshooting 
+        Autofocus</FONT></B></P>
+    <P>
+      This section provides an introduction to autofocusing in SerialEM then describes 
+      strategies for dealing with various kinds of autofocus problems.</P>
+    <P>
+      Autofocusing is done in SerialEM with the classic method of tilting the beam and 
+      measuring how much the image shifts.&nbsp; That operation is illustrated in this 
+      diagram.&nbsp; On the left, the specimen is in the object plane, and a particular 
+      point on the specimen always projects to the same point in the image plane 
+      regardless of the beam tilt, provided that the pivot points in the optical 
+      system are properly aligned to achieve this.&nbsp; On the right, with the 
+      specimen out of the object plane, differently tilted beams passing through the 
+      same point on the specimen project to different places in the image plane, and 
+      thus the image appears to shift when the beam is tilted.&nbsp; In the diagram, 
+      the image will shift by a distance proportional to the distance between the 
+      points where the two tilted beams cross the object plane.&nbsp; The amount of shift will 
+      thus be approximately proportional to the distance from 
+      focus, and also to the amount of beam tilt.</P>
+      <P align=center><IMG SRC="../images/beamTiltFocus.jpg" ALT="" BORDER="0"></P>
+    <p>
+      After the autofocus routine measures the current defocus, it changes the defocus 
+      by the amount needed to reach the target defocus that you have selected; 
+      typically a few tenths of microns of underfocus for stained samples and several 
+      microns for cryosamples (with negative numbers for underfocus).&nbsp; However, if 
+      the change is very large, the program will limit the change to a set amount (16 
+      microns by default) and repeat the operation.&nbsp; It may take several 
+      iterations to change focus, and the program may even abort the operation if inconsistent results 
+      are obtained during these iterations.</p>
+    <p>
+      Three variations on the autofocus operation, available in the Focus menu, are 
+      useful when setting up autofocus or diagnosing problems with it.&nbsp; None of 
+      them require an autofocus calibration to exist yet.</p>
+    <ul>
+      <li><a href="menu_focus.htm#hid_focus_reportshiftdrift">Report Shift &amp; Drift</a> 
+        : This command will take the three images, correlate them, and report its 
+        estimates of the shift induced by beam tilt and the amount of drift.</li>
+      <li><a href="menu_focus.htm#hid_focus_reportonexisting">Report On Existing</a> : 
+        This command works with three images already present in the A, B, and C buffers 
+        from an autofocus operation; it correlates them and reports the shift and drift.</li>
+      <li><a href="menu_focus.htm#hid_focus_showexistingcorr">Show Existing Corr</a> : 
+        This command also works with three existing images; after correlating them, it 
+        displays the cross-correlation between two of them.</li>
+    </ul>
+    <p>
+      There are several reasons why autofocus can be inaccurate or fail to work, 
+      addressed in the following sections.</p>
+      <P><B><FONT size="3">Specimen drift</FONT></B></P>
+    <p>Since we are 
+    measuring shifts between successive images, one source of inaccuracy is specimen 
+    drift.&nbsp; This inaccuracy can be reduced by taking three images, with a 
+    positive, negative, and positive beam tilt.&nbsp; The drift can be estimated by 
+    the shift between the first and last image and subtracted off to determine just 
+    the shift induced by the beam tilt. The option to take three images is set with 
+    the Drift Protection entry in the Focus menu and should be left on unless there 
+    is a good reason to turn it off.&nbsp; If the drift is constant over time, then 
+    this procedure will eliminate its effect.&nbsp; More likely, it declines between 
+    the first and second pair of pictures, such as when the stage settles from 
+    tilting, so there may still be some residual effect from drift.&nbsp; To reduce 
+    that effect, try to minimize the interval between images.&nbsp; With older 
+    styles of CCD 
+    camera, this is accomplished by taking a subarea with binning, as well as by 
+    having a fairly short exposure time.&nbsp; With a direct detector, it is more 
+    difficult to get fast images because the full chip is read out regardless, and 
+    binning and subarea extraction occur in software.&nbsp; With some newer CCD 
+    cameras, particularly fast-readout ones, using a subarea and binning make 
+    relatively little difference, but the images are fairly fast anyway. Nevertheless, there are 
+    other advantages in using smaller images that still apply with all cameras.</p>
+      <P><B><FONT size="3">Fixed pattern noise</FONT></B></P>
+    <p>
+      If the images contain sufficient fixed pattern noise from the camera, this noise 
+      can produce a strong peak in 
+    the cross-correlation at zero shift, obscuring the correct peak.&nbsp; This 
+    problem will show up particularly at low tilt, and it may even cause 
+    problems in calibrating autofocus.&nbsp; (At higher tilts, one image is stretched 
+      to compensate for stretching induced by the beam tilt, spreading out the noise 
+      peak and reducing the problem.)&nbsp; It is easy to recognize that fixed 
+    noise is a problem when more than one shift near 0,0 shows up during autofocus 
+      calibration, or when autofocus reports a defocus very near zero even though 
+    images are clearly shifted; however, sometimes the correlation fails only for 
+    one of the two pairs of images, giving an intermediate defocus value.&nbsp; The 
+      best way to diagnose this problem is to obtain images from an autofocus that 
+      fails and use the <A HREF="#hid_focus_showexistingcorr">Show Existing Corr</A> 
+      command.&nbsp; The solutions to pursue in order, are:</P>
+    <ul>
+      <li>Improve the gain-normalization of the camera images.&nbsp; Gain references 
+        should be taken with many tens of thousands of total counts in order to work 
+        optimally.&nbsp; If your practice is to take gain references at a low number of 
+        target counts per image to match the counts in typical low-dose images, then you 
+        need to take many more reference images to compensate (e.g., 50 instead of 10).</li>
+      <li>Increase the binning of the focus images, which will reduce the height of the 
+        shrap peak at 0,0 relative to that of the real correlation peak. For typical 
+        applications, binning to 2 or even 4 will probably not affect the accuracy of 
+        the focus measurement, because there is sub-pixel interpolation when measuring 
+        the shifts.&nbsp; However, the autofocus routine ordinarily does not apply 
+        binning to images that it receives, so it is necessary to apply the needed 
+        binning during acquisition.&nbsp; The exception to this situation is available 
+        in SerialEM 4.5: for direct detectors, where adequately binning may easily 
+        saturate a 16-bit image, the <A HREF="#hid_focus_set_ddd_min_binning">Set Min Binning</A> 
+        command can be used to make the autofocus routine apply binning before 
+        correlation when necessary.</li>
+      <li>Set program properties to apply a stronger high-frequency filter to the 
+        images.&nbsp; This filter can be controlled by entries in the file 
+        SerialEMproperties.txt: &#39;FocusFilterRadius2&#39; for the cutoff frequency (default 
+        0.25/pixel) and &#39;FocusFilterSigma2&#39; for the Gaussian rolloff of the filter to 
+        zero (default 0.05/pixel).&nbsp; Smaller values are used to apply more 
+        filtering.&nbsp; In SerialEM 4.5, the <A HREF="#hid_focus_set_filter_cutoffs">Test Filter Cutoffs</A> 
+        command can be used to experiment with different values.&nbsp; Thus, with this 
+        version, if you have the set of three images from a failed autofocus in buffers 
+        A, B, and C, you can adjust either the filter with this command or the minimum 
+        binning with <A HREF="#hid_focus_set_ddd_min_binning">Set Min Binning</A> then 
+        run <a href="menu_focus.htm#hid_focus_reportonexisting">Report On Existing</a> 
+        to see if it gives a correct result.</li>
+      <li>For target defocus near zero, use a negative &#39;autofocus offset&#39; to have the 
+        images taken at a defocus sufficiently different from zero.&nbsp; In that case, 
+        the program will reject a large correlation peak at 0,0 when there is another 
+        reasonable-sized peak closer to the expected defocus.&nbsp; This central peak 
+        rejection automatically takes care of moderate fixed-noise problems for low-dose 
+        imaging with a large enough negative defocus (below about -3 microns). This 
+        approach may reduce the absolute accuracy of the focus measurement but not 
+        necessarily its reproducibility.</li>
+    </ul>
+      <P><B><FONT size="3">Low beam-induced shift at high tilt</FONT></B></P>
+    <p>
+      Some specimens show low or virtually no shift between the beam-tilted images at 
+      the highest tilts, usually only above about 50 degrees.&nbsp; The sign of this 
+      problem is a measured defocus near zero even when the defocus is several microns 
+      or more, coupled with the absence of appropriate shifts between the autofocus 
+      images.&nbsp; If the target defocus is not also very near zero, then the program 
+      will repeatedly change the focus by the target value, resulting in a runaway 
+      focus.&nbsp; There is a procedure, <A HREF="#hid_focus_checkautofocus">Check Autofocus</A>, 
+      that can be run to check for this kind of problem; it measures defocus 5 microns 
+      above and below the current defocus and reports how much of the actual focus 
+      change it can detect.&nbsp; This routine can be run automatically at the start 
+      of a tilt series, which is useful when running tilt series in one direction from 
+      high tilt.&nbsp; There are two different strategies for dealing with the 
+      problem.</p>
+    <ul>
+      <li>Some users have found that the problem occurs mainly when the beam-induced 
+        shift is largely perpendicular to the tilt axis, and that it helps to choose a 
+        beam tilt direction that makes the image shift parallel to the tilt axis.&nbsp; 
+        In order to use this solution, you need to find this direction, then calibrate 
+        autofocus for that beam tilt direction.&nbsp; With the <A HREF="#hid_focus_set_tilt_direction">Set Tilt Direction</A> 
+        command, you can pick one of 4 directions, spaced 45 degrees apart.&nbsp; To 
+        find the right direction, select a direction, run <A HREF="#hid_focus_reportshiftdrift">Report 
+        Shift &amp; Drift</A>, and toggle through the images to visualize the direction 
+        of shift.&nbsp; Repeat for each direction and pick the one where the direction 
+        of shift is closest to parallel to the tilt axis.&nbsp; If you actually have a 
+        failure case at high tilt, you should also see whether that direction indeed 
+        gives the best shift.&nbsp; Calibrate autofocus with best direction selected, 
+        and use it thereafter.</li>
+      <li>Set an autofocus offset that is the negative of the target defocus; i.e., a 
+        positive offset for the typical negative target.&nbsp; This is not a very good 
+        solution; it will prevent runaway focus but not fix an incorrect defocus.&nbsp; 
+        When running a tilt series in one direction from high tilt, you need to get the 
+        focus right at high tilt before starting and hope that it does not get off very 
+        much before autofocus starts working better. The strategy should work better 
+        when running bidirectionally from zero tilt, because the specimen will be at the 
+        proper focus when it reaches the troublesome tilts, and the program can predict 
+        how focus should change as it goes through the final tilts.</li>
+    </ul>
+    <p>
+      &nbsp;</P>
+    </basefont>
+  </BODY>
+</HTML>

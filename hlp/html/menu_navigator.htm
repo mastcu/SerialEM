@@ -1,0 +1,756 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+  <HEAD>
+    <TITLE>Navigator Menu Commands</TITLE>
+    <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
+    <style type="text/css"> <!-- BODY { font-family:"Arial" }
+  TD { font-size:16 }
+      .style1
+      {
+        width: 191px;
+      }
+  --></style>
+  </HEAD>
+  <BODY BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2" style="Z-INDEX: 0">
+      <P><A NAME="menu_navigator"></A><B><FONT size="3">Navigator menu commands</FONT></B></P>
+      <P>The Navigator menu has commands for opening the Navigator window, operating on 
+        Navigator files, and performing less common Navigator operations.</P>
+      <TABLE BORDER cols="2">
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_tasks_navigator">Open</A></TD>
+          <TD>Open the Navigator window.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_load_nav_file">Read &amp; Open</A></TD>
+          <TD>Read a Navigator file and open Navigator window if it is not open.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><a href="#hid_navigator_mergefile">Merge File</a></TD>
+          <TD>Merge items from other Navigator file into current items, eliminating 
+            duplicates</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_save_nav_file">Save</A></TD>
+          <TD>Save current Navigator items to a file.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_saveas_nav_file">Save As</A></TD>
+          <TD>Save current Navigator items to a different file.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_navigator_close">Close</A></TD>
+          <TD>Close the Navigator window.</TD>
+        </TR>
+       <TR VALIGN="top">
+          <TD class="style1"><b>Montaging &amp; Grids</b></TD>
+          <TD>This submenu has operations for setting up montages, super montages, and grids 
+            of points</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_corner_montage">Setup Corner Montage</A></TD>
+          <TD>Define a montage that captures area inside corner points.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_polygon_montage">Setup Polygon Montage</A></TD>
+          <TD>Define a montage that captures area inside a polygon.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_navigator_setupfullmontage">Setup Full 
+              Montage</A></TD>
+          <TD>Define a montage to capture the full grid area.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_navigator_setgridlimits">Set Grid Limits</A></TD>
+          <TD>Set limits in X and Y for the full-grid montage.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_navigator_alignedsupermontage">Setup Super 
+              Montage</A></TD>
+          <TD>Add polygons representing overlapping montages aligned to camera axes.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_supermontaging_polygonsupermontage">Polygon 
+              Super Montage</A></TD>
+          <TD>Add polygons representing overlapping montages to fill the current polygon</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_navigator_addgridofpoints">Add Grid of 
+              Points</A></TD>
+          <TD>Add a set of points on a regular grid either filling a polygon or in a full 
+            rectangle.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1">&nbsp;&nbsp; <a href="#hid_montaginggrids_grouppointsingrid">
+            Divide 
+              Point into Groups</a></TD>
+          <TD>Place points in groups with a maximum radius from first point at the center</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1">&nbsp;&nbsp; <a href="#hid_montaginggrids_grouppointsingrid">Set 
+            Group Size</a></TD>
+          <TD>Set the maximum radius for groups of added points</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_navigator_addcirclepolygon">Add Circle 
+              Polygon</A></TD>
+          <TD>Add a polygon that is a circle of specified radius.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_navigator_polygon_from_corners">Polygon 
+              from Corners</A></TD>
+          <TD>Make a polygon from the current set of corner points.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><b>Options</b></TD>
+          <TD>The submenu has various options to control autosaving, file type, map loading 
+            behavior, and drawing of point labels.</TD>
+        </TR>
+         <TR VALIGN="top">
+          <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_options_setpointlabelthreshold">Set Point Label Threshold</A></TD>
+          <TD>Set maximum size of group for which point labels will be drawn</TD>
+        </TR>
+         <TR VALIGN="top">
+          <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_navigator_autosave">Autosave Nav File</A></TD>
+          <TD>Periodically save entries to file.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1">&nbsp;&nbsp; <a href="#hid_navigator_writeasxml">Write as XML</a></TD>
+          <TD>Write Navigator file as an XML file instead of in autodoc format</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_navigator_convertmapstobytes">Convert Maps to Bytes</A></TD>
+          <TD>Convert maps to bytes when creating or loading them to save memory.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_navigator_loadunbinned">Load Maps Unbinned</A></TD>
+          <TD>Always load maps with overview binning of 1.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_transform_pts">Transform Points</A></TD>
+          <TD>Transform items to the current registration.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_navigator_undotransformation">Undo Transformation</A></TD>
+          <TD>Undo the last transformation between registrations.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_navigator_changeregistration">Change Registration</A></TD>
+          <TD>Change registration of current item.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_navigator_shifttomarker">Shift to Marker</A></TD>
+          <TD>Shift items by distance from current item to marker point.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_navigator_undolastshift">Undo Last Shift</A></TD>
+          <TD>Undo the last shift to marker point.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_navigator_align_to_map">Align with Rotation</A></TD>
+          <TD>Align image to map taken before rotating specimen.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_new_map">New Map from Image</A></TD>
+          <TD>Make a new map from the current image.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_navigator_importmap">Import Map</A></TD>
+          <TD>Define an externally acquired image as a map.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_navigator_rotatemap">Rotate Map</A></TD>
+          <TD>Rotate a map to correct orientation at current registration and magnification.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_navigator_adjust_backlash">Adjust for Backlash</A></TD>
+          <TD>Adjust stage position of map so that it can be returned to with backlash correction.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_navigator_backlashsettings">Backlash Settings</A></TD>
+          <TD>Open dialog to control when program will adjust a new map for backlash.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_navigator_openstatedlg">Open State Dialog</A></TD>
+          <TD>Open dialog for saving and setting imaging states</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_navigator_setacquirestate">Set Map Acquire State</A></TD>
+          <TD>Set mag, beam, and Record parameters from current map</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_navigator_restorestate">Restore State</A></TD>
+          <TD>Restore mag, beam, and Record parameters from setting to map state</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_navigator_acquire">Acquire at Points</A></TD>
+          <TD>Acquire images or maps or run a tilt series or script at a sequence of areas 
+            automatically.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_navigator_endacquire">End Acquire</A></TD>
+          <TD>Stop automatic acquisition after item being worked on.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_montage_listfilestoopen">List Files/Series/States</A></TD>
+          <TD>List the tilt series to run, files to open, or states to set during an acquire</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_deleteitem">Delete Item</A></TD>
+          <TD>Delete the current item or group of items.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_navigator_aligntoitem">Realign to item</A></TD>
+          <TD>Use correlation to map(s) to center on the current item.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><a href="#hid_navigator_force_center_align">Force Center Align</a></TD>
+          <TD>Make Realign to Item align to center of map even if it has recently aligned to 
+            it.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_navigator_realign_scaling">Try Scaling in Realign</A></TD>
+          <TD>Find image scaling in first round of Realign to Item to adjust for shrinkage</TD>
+        </TR>
+      </TABLE>
+      <BR>
+      <P><A NAME="hid_tasks_navigator"></A><B>Open command (Navigator menu)</B></P>
+      <P>Use this command to open the Navigator window.</P>
+      <P><A NAME="hid_load_nav_file"></A><B>Read &amp; Open command (Navigator menu)</B></P>
+      <P>Use this command to read in a Navigator file as well as open the window if it is 
+        not already open. The file will become the current file for saving into.</P>
+      <P><A NAME="hid_navigator_mergefile"></A><B>Merge File command (Navigator menu)</B></P>
+      <P>Use this command to read in the items from another Navigator file and merge 
+        them in with the items currently present in the table.&nbsp; Duplicate items 
+        will be eliminated.&nbsp; If an item has a label that matches that of an 
+        existing item, it will be changed by adding &#39;-1&#39; to it (or &#39;-2&#39; if the label 
+        with &#39;-1&#39; on it exists, etc.).</P>
+      <P><A NAME="hid_save_nav_file0"></A><B>Save command (Navigator menu)</B></P>
+      <P>Use this command to save Navigator items to a file. The file is a simple 
+        tab-delimited text file with the properties of each item. If there is no 
+        current Navigator file, you will enter the <A HREF="afx_hidd_filesave.htm">Save As 
+          dialog box</A> to specify the file, which will have the default extension 
+        .nav. When you select this command again, the entries will be saved to this 
+        file.</P>
+      <P><A NAME="hid_saveas_nav_file"></A><B>Save As command (Navigator menu)</B></P>
+      <P>Use this command to save Navigator items to a file different from the current 
+        file. You will enter the <A HREF="afx_hidd_filesave.htm">Save As dialog box</A> 
+        to specify the file. The new file will become the current file for saving into.</P>
+      <P><A NAME="hid_navigator_close"></A><B>Close command (Navigator menu)</B></P>
+      <P>Use this command to close the Navigator window. If the contents of the window 
+        have changed since it was last saved, you will be asked if you want to save 
+        them to a file.</P>
+      <P><A NAME="hid_options_setpointlabelthreshold"></A><B>Set Point Label Threshold command (Navigator menu)</B></P>
+    <P>Use this command to set a threshold for skipping the drawing of most labels on 
+      points when they belong to groups bigger than the threshold.&nbsp; Enter the 
+      maximum group size for which all labels should appear, or 0 to draw labels 
+      regardless of group size.&nbsp; The labels of the first and last points in the 
+      group will be drawn in groups bigger than the threshold. Also, the label of up 
+      to five points around the currently selected point will still be drawn even if 
+      the selected point is in a group larger than the threshold.</P>
+      <P><A NAME="hid_navigator_autosave"></A><B>Autosave Nav File command (Navigator menu)</B></P>
+      <P>Toggle this menu item on to have the Navigator items saved to a file 
+        periodically if they have changed. If there is no currently open file, the 
+        program will save to a file named AUTOSAVEmmddhhmm.nav, where 'mmddhhmm' are 
+        two-digit values for month, day, hour, and minute. This file will be removed 
+        when you save to a file or when the program exits (if you elect not to save at 
+        that time). However, if the program crashes, you should find the file in the 
+        directory in which your SerialEM shortcut starts the program.</P>
+      <P><A NAME="hid_navigator_writeasxml"></A><B>Write as XML command (Navigator menu)</B></P>
+      <P>This command toggles an option to save the Navigator file as an XML file 
+        instead of in autodoc format.&nbsp; Either one can be read back in by SerialEM.&nbsp; 
+        The autodoc writing is significantly fast because it is optimized to write each 
+        line directly to file, whereas to write an the XML file the program builds an 
+        autodoc data structure, builds an XML structure from that, then writes out the 
+        XML.&nbsp; This will matter only for very large numbers of points, over 10,000.</P>
+      <P><A NAME="hid_navigator_convertmapstobytes"></A><B>Convert Maps to Bytes command 
+          (Navigator menu)</B></P>
+      <P>This command toggles an option to keep maps in memory as bytes. The option does 
+        not affect how maps are stored in the image file (typically as integers). Byte 
+        conversion will reduce memory usage by 2/3, so that the memory required is just 
+        one byte per pixel. The intensity scaling determined by the Black and White 
+        levels in the Image Display control panel will be associated with an image when 
+        a new map is created. This scaling is then applied to convert the image to 
+        bytes, both when the map is defined and when the map is reloaded from file. 
+        This scaling could make it impossible to see some light or dark image details. 
+        There are two ways to prevent such scaling problems. First, adjust the Black 
+        and White levels to avoid truncating image intensities before designating an 
+        image as a map. Second, use this menu entry to turn off the conversion option, 
+        load the map, adjust the Black and White levels as desired, and turn the option 
+        back on.</P>
+      <P><A NAME="hid_navigator_loadunbinned"></A><B>Load Maps Unbinned command (Navigator 
+          menu)</B></P>
+      <P>This command toggles an option to have montage maps always loaded unbinned, 
+        i.e., with overview binning of 1. This is almost always what one wants, but if 
+        you are short on memory and do not need to see a map at full resolution, you 
+        can turn off the option and set a higher overview binning in the <A HREF="hidd_montagecontrol.htm">
+          Montage Control panel</A> . However, if the map file is open, you must make 
+        it the current open file before setting the binning in the control panel.</P>
+      <P><A NAME="hid_corner_montage"></A><B>Setup Corner Montage command (Navigator - 
+          Montaging &amp; Grids sub-menu)</B></P>
+      <P>Use this command to set up a montage to capture the area within the current set 
+        of corner points. Be sure to go to the desired magnification before activating 
+        this command. You will be opening a new image file for the montage, so if there 
+        is already a file open the program will ask whether you want to close it. The 
+        program will compute the number of montage frames in X and Y required to 
+        capture the area, and decide whether the montage should be acquired with image 
+        shift or stage movements. If the area of the Record parameter set is 
+        substantially smaller than the camera field, you will be asked whether you want 
+        the frame size to be kept smaller than the current Record area. You might want 
+        this if the beam is too small to fill the whole camera field. Otherwise, the 
+        program will make the frames as large as possible. Unless there are too many 
+        frames, you will then go on to the <A HREF="hidd_montagesetup.htm">Montage Setup 
+          dialog box</A>, in which you will see the number of frames and their size 
+        and overlap. If the size of the montage is not reasonable (e.g., bigger than 
+        10K by 10K pixels), you can change the magnification to adjust the number of 
+        frames and achieve the desired image size. You can also adjust the percentage 
+        overlap, which may also change the number of frames needed to fit the desired 
+        area. Once you have set up a reasonable montage, go on to the <A HREF="hidd_fileproperties.htm">
+          File Properties dialog box</A> then the <A HREF="afx_hidd_filesave.htm">Save As 
+          dialog box</A>.</P>
+      <P>After the montage is defined, the program will compose a list of pieces that are 
+        not needed to capture the intended area. These pieces will be excluded when the 
+        montage is acquired.</P>
+      <P><A NAME="hid_polygon_montage"></A><B>Setup Polygon Montage command (Navigator - 
+          Montaging &amp; Grids sub-menu)</B></P>
+      <P>If the current Navigator item is a polygon, use this command to set up a montage 
+        to capture the area within the polygon. It works the same as the <A HREF="#hid_corner_montage">
+          Setup Corner Montage command </A>.&nbsp; Once the montage is set up to capture 
+        an area of a particular shape, it can be used to capture the same area at other 
+        locations without drawing a new polygon.</P>
+      <P><A NAME="hid_navigator_setupfullmontage"></A><B>Setup Full Montage command 
+          (Navigator - Montaging &amp; Grids sub-menu)</B></P>
+      <P>Use this command to set up a montage to capture the whole grid area. A set of 
+        points will be composed that contain the grid area. The command then works the 
+        same the <A HREF="#hid_corner_montage">Setup Corner Montage command </A>.</P>
+      <P><A NAME="hid_navigator_setgridlimits"></A><B>Set Grid Limits command (Navigator - 
+          Montaging &amp; Grids sub-menu)</B></P>
+      <P>Use this command to enter lower and upper limits in X and Y for the full grid 
+        montage. A dialog box will come up for each limit; enter the desired limit in 
+        microns or 0 to use the default limit that is shown.&nbsp; These defaults may be set 
+        with the &#39;StageLimits&#39; property in the SerialEMproperties.txt file to prevent the stage from moving beyond a usable range. If you 
+        enter a number bigger than one of the defaults, you may get farther out to the 
+        corners of the usable area, but the stage will still not be moved beyond that 
+        limit.&nbsp; If you want access to the full range of motion on a JEOL scope, you 
+        need to enter or change the &#39;StageLimits&#39; property to be &#39;-1190 1190 -1190 1190&#39; 
+        (or less extreme values if appropriate).</P>
+      <P><A NAME="hid_navigator_alignedsupermontage"></A><B>Setup Super Montage command 
+          (Navigator - Montaging &amp; Grids sub-menu)</B></P>
+      <P>Use this command to add a set of rectangles at the positions of overlapping 
+        montages, laid out on a rectangular grid that is aligned to the camera axes. 
+        First, you must have montaging set up with the desired number of pieces and 
+        magnification. Specify a center position in the active image by clicking with 
+        the left mouse button. Then select this command. You will be asked to enter the 
+        number of montages in X and in Y then the number of pixels of overlap in X and 
+        Y. A set of polygons will be created, numbered by their positions in the super 
+        montage. To try again with different parameters, just use the <B>Delete</B> button 
+        in the Navigator to delete the whole group of items.</P>
+      <P>To get fairly accurate overlaps between montages, use the following procedure. 
+        First take a montage that encompasses the whole needed area, at a lower 
+        magnification if necessary. On an FEI microscope, it is recommended that you use 
+        the option to realign with image shift (see <B>Acquiring High-Quality Montages of Large Areas </B>
+        in <a href="about_montaging.htm">Montaging</a> and the last paragraph of <i><b>
+        Returning to a Position Reliably</b></i> in <a href="about_navigator.htm">Using 
+        the Navigator</a> 
+        for details). Turn on 'Align pieces in Overview', and also have 
+        'Sloppy montage' on as well if this is needed to get the pieces properly 
+        aligned. Make this montage be a map. Then go to the working magnification for 
+        the supermontage and set up the montage file. After you answer the queries 
+        about number of montages and overlaps, you will be asked if you want the 
+        positions to be laid out at regularly spaced image positions rather than stage 
+        positions. Do not select this option unless the pieces are indeed properly 
+        aligned in the area covered by the supermontage (there can be errors in 
+        alignment elsewhere). Also, only select this option if you are going to use the 
+        'Realign to Item' routine at some point to get to individual montage positions. 
+        One approach would be to check 'Acquire' for each of the new montage position 
+        items and then run the <A HREF="#hid_navigator_acquire">Acquire at Points command</A>
+        with the option checked to 'Realign at item'. This will yield montages that can 
+        be blended and analyzed for overlap.</P>
+      <P>The Setup Super Montage command was originally called Aligned Super Montage, and 
+        there was also a Skewed Super Montage command to lay out montages on a grid 
+        that is aligned to the specimen axes. Such montages require more overlap to 
+        avoid gaps between montages, and the stitching programs in IMOD work well with 
+        the aligned supermontages, so the skew capability has no apparent merit.</P>
+      <P><A NAME="hid_supermontaging_polygonsupermontage"></A><B>Polygon Super Montage 
+          command (Navigator - Montaging &amp; Grids sub-menu)</B></P>
+      <P>Use this command to add a set of rectangles at the positions of overlapping 
+        montages that will fill a polygon. First, you must have montaging set up with 
+        the desired number of pieces and magnification, and the current Navigator item 
+        must be a polygon. After you select this command, specify whether the positions 
+        should be marked for acquisition. The supermontage will include any montage 
+        that is needed to cover the area within the polygon, with a little allowance 
+        for errors in positioning. You can then use the 'Skip pieces outside Navigator 
+        item' option in the <A HREF="hidd_montagesetup.htm">Montage Setup dialog box</A>, 
+        to have each individual montage include only the frames inside the polygon. If 
+        you use an entry of 0 there to specify the current Navigator item, be sure to 
+        reselect the polygon item after defining the supermontage.</P>
+      <P><A NAME="hid_navigator_addgridofpoints"></A><B>Add Grid of Points command (Navigator 
+          - Montaging &amp; Grids sub-menu)</B></P>
+      <P>Use this command to add a set of points on a regular rectangular lattice. Four 
+        different kinds of grids can be defined: points in a rectangle; points on a 
+        defined rectangular lattice to fill a polygon or map; points along a line, and 
+        points at a defined spacing to fill a polygon or map. For the first two kinds, 
+        the position of the lattice is specified by a group of 5 points, three at 
+        corners of a rectangle and two more adjacent to one of the corners. Here, holes 
+        that should be marked with a point are shown with 'X' and the rest of the holes 
+        are shown with 'o'.</P>
+      <P>X&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; o&nbsp;&nbsp;&nbsp;&nbsp; 
+        &nbsp;o&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;o&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;o</P>
+      <P>o&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; o&nbsp;&nbsp;&nbsp;&nbsp; 
+        &nbsp;o&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;o&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;o</P>
+      <P>o&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; o&nbsp;&nbsp;&nbsp;&nbsp; 
+        &nbsp;o&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;o&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;o</P>
+      <P>o&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; o&nbsp;&nbsp;&nbsp;&nbsp; 
+        &nbsp;o&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;o&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;o</P>
+      <P>X&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; o&nbsp;&nbsp;&nbsp;&nbsp; 
+        &nbsp;o&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;o&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;o</P>
+      <P>X&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+        X&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;o&nbsp;&nbsp;&nbsp;&nbsp; 
+        &nbsp;o&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;X</P>
+      <P>To make all of the points be in one group, press the 'Add points' button and 
+        mark all 5 points before pressing 'Stop Adding'. As long as one of the points 
+        is the current item, you can select this command. The program will then ask for 
+        the label of a polygon that you want to fill. If you leave the text box blank, 
+        it will create points for all positions in the rectangle indicated by the corners. 
+        If you enter a valid label for a polygon that contains the points 
+        (specifically, the centroid of the points), then it will add points to fill the 
+        polygon, extending the rectangle beyond the corners that you have marked if 
+        necessary.&nbsp; If you are filling an elongated region, you can reduce errors 
+        from extrapolation by marking the corner with two adjacent points near the 
+        middle of the region instead of near one end.</P>
+    <P>Once you have added a grid with a 5-point pattern like this, you can add a grid 
+      in a new area with the same spacing and orientation by simply adding a single 
+      point in the new area.&nbsp; It must be the only point in the group, so press 
+      'Add points', add the point, and press 'Stop Adding'.&nbsp; If you are not 
+      filling a polygon, the point should be at the same corner of the region to fill 
+      as the corner of the 5-point pattern with two adjacent points.&nbsp; If you are 
+      filling a polygon, put the point near the middle of the polygon to reduce 
+      extrapolation errors.</P>
+      <P>To add a line of points, simply add a group of three points to indicate the 
+        extent and spacing of the line, such as:</P>
+      <P>X&nbsp;&nbsp;&nbsp; X&nbsp;&nbsp;&nbsp; o&nbsp;&nbsp;&nbsp; o &nbsp;&nbsp; o 
+        &nbsp;&nbsp; o&nbsp; &nbsp; o &nbsp;&nbsp; o &nbsp;&nbsp; X</P>
+      <P>As long as one of these points is the current item, the command will be 
+        available and will add a line of points between the endpoints.</P>
+      <P>Finally, to add equally spaced points within a polygon or map but not on a 
+        defined lattice, simply make the polygon or map be the current item and select 
+        this command. Then enter the desired spacing in microns.</P>
+      <P>When adding points to fill a polygon or the rectangle of&nbsp;a map, the points 
+        will not be placed right up against the border of the polygon. Rather, a square 
+        box around each point is required to be fully within the polygon. The size of 
+        this box as a fraction of the spacing between points is controlled by the 
+        GridInPolygonBoxFraction property, whose default value is 0.75.</P>
+      <P>Grid points can be added in two different patterns. One is a zigzag pattern, 
+        which was the only pattern in SerialEM version 2.x, and was designed to 
+        minimize stage movement when moving between points. The other pattern goes in 
+        the same direction in each row and column, and proceeds in an overall direction 
+        away from the location of the Focus area in Low Dose mode. This pattern ensures 
+        that focusing is done in areas that have already been acquired from.&nbsp; 
+        However, this pattern is not used when added points are placed into separate 
+        groups.</P>
+      <P><A NAME="hid_montaginggrids_grouppointsingrid"></A><B>Divide Points into Groups command 
+          (Navigator - Montaging &amp; Grids sub-menu)</B></P>
+      <P>When this option is selected, the set of points added with the
+        <a href="#hid_navigator_addgridofpoints">Add Grid of Points</a> command will be 
+        divided into multiple groups.&nbsp; The middle point of the group will be the 
+        first point, and its distance to every other point in the group will be less 
+        than the maximum radius set with the <a href="#hid_montaginggrids_setgroupsize">
+        Set Group Radius</a> command.&nbsp; With this arrangement, you can use the 
+        option in the Acquire at Points dialog to focus only on the first point in a 
+        group, and other points will be within a certain distance of the location where 
+        focus was last done. </P>
+    <P>When points are divided into groups, the program will display the result, tell 
+      you the number of groups and points per group, and ask if you want to keep this 
+      grouping.&nbsp; If groups are too large or small, just press No and all the 
+      points will be removed.</P>
+      <P><A NAME="hid_montaginggrids_setgroupsize"></A><B>Set Group Radius command 
+          (Navigator - Montaging &amp; Grids sub-menu)</B></P>
+      <P>Use this command to set the maximum radius used for dividing points into groups 
+        as described above.&nbsp; Sometimes groups will be smaller than they could be 
+        for a particular radius, because the total extent in each direction of the grid 
+        gets divided into groups as evenly as possible.</P>
+      <P><A NAME="hid_navigator_addcirclepolygon"></A><B>Add Circle Polygon command 
+          (Navigator - Montaging &amp; Grids sub-menu)</B></P>
+      <P>Use this command to add a polygon that is a circle. First mark the desired 
+        center point by clicking in an image. Then select this command and enter the 
+        desired radius in microns.</P>
+      <P><A NAME="hid_navigator_polygon_from_corners"></A><B>Polygon from Corners command 
+          (Navigator - Montaging &amp; Grids sub-menu)</B></P>
+    <P>Use this command to make a polygon from the current set of points marked as 
+      corners.&nbsp; After the polygon is made, you will be asked whether you want to 
+      delete all of the corner points.&nbsp;If you answer No, they will be retained 
+      but no longer be marked as corners.&nbsp; With this command, you can use corner 
+      points to define one polygon after another, and then set up each polygon for 
+      automatic acquisition 
+      into a different montage file.</P>
+      <P><A NAME="hid_transform_pts"></A><B>Transform Points command (Navigator menu)</B></P>
+      <P>Use this command to transform items from one or more other registrations to the 
+        current registration. The program will find a transformation whose complexity 
+        depends on the number of registration points available. Just a shift will be 
+        found with 1 point, a rotation and shift with 2 points, rotation, scaling, and 
+        shift with 3 or 4 points, or a full linear transformation including stretching 
+        with 5 points. All items except the registration points will then be 
+        transformed and associated with the current registration. The program will give 
+        a message about how well the points fit the transformation equation. If the fit 
+        is very poor, you can undo the transformation with the command described next, 
+        fix the problem, and redo this command.</P>
+      <P>If stretch in the stage coordinate system has been calibrated with the <A HREF="menu_calibration.htm#hid_calibration_stagestretch">
+          Stage Stretch command</A> , then transformations based on 2 - 4 points will 
+        incorporate this stretch, and the report on the transformation in the log will 
+        include the text '(corrected for stage stretch)'. When transforming after a 
+        large specimen rotation, such transformations may not be very accurate in the 
+        absence of such a calibration, but the calibration allows reliable 
+        transformations with only two or three points.</P>
+      <P><A NAME="hid_navigator_undotransformation"></A><B>Undo Transformation command 
+          (Navigator menu)</B></P>
+      <P>Use this command to undo the last transformation done with the <A HREF="#hid_transform_pts">
+          Transform Points command</A> . Each item will be returned to its former 
+        registration, even if items were transformed from more than one registration. 
+        This is the only way to undo a transformation of imported items.</P>
+      <P><A NAME="hid_navigator_changeregistration"></A><B>Change Registration command 
+          (Navigator menu)</B></P>
+      <P>Use this command to change the registration of an existing item without changing 
+        the current registration. This is different from changing the registration 
+        point number, and in fact the command cannot be applied to registration points. 
+        If you need to change the registration of a registration point, turn off its 
+        the 'Registration point' button before changing the registration.</P>
+      <P><A NAME="hid_navigator_shifttomarker"></A><B>Shift to Marker command (Navigator 
+          menu)</B></P>
+      <P>This command provides a simple method of shifting items without having to make 
+        registration points. One way to use it is to add a single point at a 
+        recognizable feature on an existing map. Then take a new image, click on the 
+        feature with the left mouse button, select this command. You will be told what 
+        the shift is and asked to confirm the shift. All items at the registration of 
+        the image that was clicked on (typically the current registration) will be 
+        shifted by the same amount. Another way to use this command is to run the <A HREF="#hid_navigator_aligntoitem">
+          Realign to Item command </A>on a map or an item located in a map. When the 
+        procedure is done, take an image, click in the center of it, and select this 
+        command. Items will be shifted by error in stage position found in the 
+        procedure. Finally, the command can be used to shift registration points to fit 
+        imported items. Suppose you import a map, work out registration points, 
+        transform the map, and then import another map that is shifted in position. 
+        Then select one of the registration points, click on the corresponding point on 
+        the new imported map, and select this command. The registration points will be 
+        shifted but the map will not, so the points should appear at the right place in 
+        this map. This map can then be transformed into registration with EM maps.</P>
+      <P><A NAME="hid_navigator_undolastshift"></A><B>Undo Last Shift command (Navigator 
+          menu)</B></P>
+      <P>Use this command to undo the shift imposed by the 'Shift to Marker' command. It 
+        is disabled if the 'Transform Points' command is used.</P>
+      <P><A NAME="hid_navigator_align_to_map"></A><B>Align with Rotation command (Navigator 
+          menu)</B></P>
+      <P>This command opens the <A HREF="hidd_navrotalign.htm">Align with Rotation dialog box</A>
+        , which allows you to align a current image with a map taken prior to rotating 
+        the specimen. You can also use this alignment to transform items into the new 
+        registration, although this transformation is of limited accuracy at long 
+        distances from the point being aligned. In order to open this dialog, the map 
+        must be in the buffer that images are read into (i.e., just load the map), and 
+        there must be an image in buffer A at a different registration from that of the 
+        map. Thus, after rotating the specimen, increase the current registration in 
+        the Navigator, then take an image at the same magnification as the map.</P>
+      <P><A NAME="hid_new_map"></A><B>New Map from Image command (Navigator menu)</B></P>
+      <P>Use this command to define the current image as a map. It performs the same 
+        operation as the New Map button in the Navigator dialog; see the
+        <a href="hidd_navigator.htm#navab_newmap">help for New Map</a> for a full 
+        description.</P>
+      <P><A NAME="hid_navigator_importmap"></A><B>Import Map command (Navigator menu)</B></P>
+      <P>Use this command to define an image obtained elsewhere, such as on a light 
+        microscope, as a map. First, a dialog will open to allow you to select the 
+        file. You can select TIFF and DigitalMicrograph files (dm3 type) as well as MRC 
+        files, and you can use color images. Then the <A HREF="hidd_navimport.htm">Navigator 
+          Import dialog box</A> will open to allow you to specify the section number, 
+        a stage position, a registration number, and a transformation between stage and 
+        image coordinates. If you import a TIFF file, the stage position and the stage 
+        to image transformation may be automatically selected if there are tags in the 
+        file defined in the SerialEMproperties.txt file. The dialog will also allow you 
+        to make a color overlay of the selected file and the currently selected 
+        Navigator item, if the latter is an imported map of the same size. Imported 
+        maps are originally forced to have a registration number separate from those of 
+        non-imported items, so points marked on imported maps will not appear on other 
+        images, and vice-versa. However, once you transform the imported map into the 
+        same registration as the other images, then points marked on the imported map 
+        will appear on other images and can be used to move the stage to a desired 
+        location.</P>
+      <P><A NAME="hid_navigator_rotatemap"></A><B>Rotate Map command (Navigator menu)</B></P>
+      <P>Use this command to rotate the map in the active buffer into the correct 
+        orientation for the current magnification and registration, or to rotate an 
+        imported map by a desired angle. Specifically, the rotation may include two 
+        components: the relative rotation between the magnification at which the map 
+        was acquired and the current magnification; and whatever rotation and mirroring 
+        around the X axis resulted from any transformations that have been applied to 
+        the map item. Points will still display correctly on the rotated map, and new 
+        positions can be marked on it. A map can be rotated more than once, or it can 
+        be reloaded and rotated to a new orientation.</P>
+      <P>If a map is imported and has not yet been transformed into registration with 
+        native EM maps, then the program will ask you the angle by which to rotate the 
+        map (counterclockwise is positive).</P>
+      <P><A NAME="hid_navigator_adjust_backlash"></A><B>Adjust for Backlash command (Navigator menu)</B></P>
+      <P>With this command, the program will measure the stage backlash at the location 
+        of the current item and then adjust the item's stage position and record the 
+        backlash direction used.&nbsp; When stage backlash is substantial, this can 
+        improve the accuracy of returning to that location.&nbsp; The measurement 
+        involves dropping magnification if necessary, or going to the View area in Low 
+        Dose mode, taking an image, then moving away and back by the backlash amount, 
+        taking a new image, and aligning it.&nbsp; The stage position of the item will 
+        be adjusted by the alignment shift.&nbsp; The backlash used is the same as the 
+        backlash for a montage at the starting magnification.&nbsp; The command is 
+        available only for an item with a directly measured stage position (i.e., a map, 
+        or point created with <b>Add Stage Pos</b>), and only if the stage is still at 
+        the original position.</P>
+    <P>Note that whenever a map has a backlash recorded for it, the program will 
+      correct for backlash in the corresponding way when moving to a point marked on 
+      the map.&nbsp; Montages made with stage movement automatically have a backlash 
+      recorded, but other maps may require this backlash adjustment, unless they were 
+      taken at a location where the stage was in a known state with respect to 
+      backlash.</P>
+      <P><A NAME="hid_navigator_backlashsettings"></A><B>Backlash Settings command (Navigator menu)</B></P>
+      <P>Use this command to open a dialog box for settings that control whether the 
+        backlash adjustment routine described just above will be run when a new map is 
+        added.&nbsp; The dialog has a text box for specifying the minimum size of map 
+        for which the program should even consider running the routine.&nbsp; There are 
+        three choices:</P>
+    <ol>
+      <li>Do not run the adjustment routine automatically or ask whether it should be 
+        run.</li>
+      <li>Ask whether the adjustment routine should be run when making a new map larger 
+        than the minimum size.</li>
+      <li>Run the adjustment routine automatically when making a new map larger than the 
+        minimum size.</li>
+    </ol>
+    <p>
+      When you use the <b>Anchor Map</b> function, the program will automatically 
+      adjust for backlash, if necessary, unless you have chosen option 1.&nbsp; The 
+      higher magnification item that you are anchoring will also have its position 
+      adjusted, provided that the stage is still at the same location.</p>
+      <P><A NAME="hid_navigator_openstatedlg"></A><B>Open State Dialog command (Navigator 
+          menu)</B></P>
+      <P>Use this command to open the <A HREF="hidd_statedlg.htm">Imaging State dialog box</A>
+        , which can be used to store and set different states for image acquisition. 
+        Because the ability to manipulate microscope and imaging state is particularly 
+        helpful when using the Navigator, this dialog will open automatically along 
+        with the Navigator if it was open the last time that the Navigator was open. If 
+        you close the dialog before the Navigator, however, you need to use this 
+        command to reopen it. You can also use this command to open the dialog without 
+        opening the Navigator.</P>
+      <P><A NAME="hid_navigator_setacquirestate"></A><B>Set Map Acquire State command 
+          (Navigator menu)</B></P>
+      <P>Use this command to return to the conditions under which the currently selected 
+        map item was acquired, to facilitate acquiring another map in the same state. 
+        The microscope state includes magnification, intensity, spot size, and energy 
+        filter settings. The camera acquisition state includes the binning, exposure 
+        time, and drift settling of the Record parameter set. Low dose will be turned 
+        off if it is on. If the file containing the selected map is still open in 
+        SerialEM, it will be made the current file. If the file is not open, it will be 
+        reopened so that a new map can be saved into it. This command performs the same 
+        operation as the <B>Set Map Acquire State</B> button in the <A HREF="hidd_statedlg.htm">
+          Imaging State dialog box</A> .</P>
+      <P><A NAME="hid_navigator_restorestate"></A><B>Restore State command (Navigator menu)</B></P>
+      <P>This command will restore the microscope and camera acquisition state that was 
+        present before the last time that 'Set Map Acquire State' was run, or before 
+        the imaging state was set from the <A HREF="hidd_statedlg.htm">Imaging State dialog 
+          box</A> . If a file was opened when 'set Map Acquire State' was run, that 
+        file will be closed again. If the file that was current at that time is still 
+        open, it will be made the current file again. Low dose mode will be restored to 
+        its state prior to the state changes. This command does the same thing as the <B>Restore 
+          Prior State</B> button in the <A HREF="hidd_statedlg.htm">Imaging State dialog 
+          box</A> .</P>
+      <P><A NAME="hid_navigator_acquire"></A><B>Acquire at Points command (Navigator menu)</B></P>
+      <P>Use this command to acquire images or maps or run a script at a series of points 
+        marked for acquisition with the Acquire check box. There must be an image file 
+        open before the command can be used to acquire images or maps. If montaging is 
+        to be used, this means that the montaging must be set up already. Be sure to 
+        have magnification, intensity, and exposure times set before starting the 
+        acquisition. This command opens the <A HREF="hidd_navacquire.htm">Navigator Acquire 
+          dialog box</A>, which allows various options to be set.</P>
+      <P><A NAME="hid_navigator_endacquire"></A><B>End Acquire command (Navigator menu)</B></P>
+      <P>After starting an 'Acquire at Points', use this command to stop the Navigator 
+        from going on to the next item after finishing the current one.</P>
+      <P><A NAME="hid_montage_listfilestoopen"></A><B>List Files/Series/States command 
+          (Navigator menu)</B></P>
+      <P>Use this command to get a list in the Log window of everything that has been 
+        scheduled to happen in the course of running an 'Acquire at Points' operation. 
+        Specifically, the list will show the files that will be opened and their 
+        properties, the imaging states to be set when files are opened, and the tilt 
+        series that are set up to run.</P>
+      <P><A NAME="hid_deleteitem"></A><B>Delete Item command (Navigator menu)</B></P>
+      <P>Use this command to delete the current item from the list, or to delete the 
+        group of items summarized on the current line of the table if 'Collapse groups' 
+        is on. A group is created whenever a set of items are added in single 
+        operation: i.e., when adding a series of points by clicking on an image, when 
+        defining a supermontage, or when adding a grid of points. If the current table 
+        line summarizes a group, a message box will appear telling you how many items 
+        will be deleted and the range of their labels, and asking you to confirm the 
+        deletion.</P>
+      <P><A NAME="hid_navigator_aligntoitem"></A><B>Realign to Item command (Navigator menu)</B></P>
+      <P>This command can be used to return accurately to the position of an item by 
+        correlating with available map images. The item must be located within, or must 
+        itself be, a map whose extent is large enough to allow the position to be found 
+        reliably. Specifically, the map must be at least 3 microns in extent (or more, 
+        if the property file specifies a larger limit). Maps taken in LM mode will not 
+        be used for these correlations unless they are from a relatively high 
+        magnification in LM where images can be taken with the objective aperture in. There are basically three different situations 
+        in which this procedure can be used:</P>
+      <OL>
+        <LI>
+        The item is not a map, just a point or polygon. It must be located within a big 
+        enough map, but it can be very near the edge of the map. In this case, the 
+        program will first move the stage to the center of the map, or to the center of 
+        one frame of the map if it is a montage, then take an image and align it to 
+        determine the error in stage position. It will then move the stage to the 
+        position of the item, take a new image, and align it to work out the error from 
+        that small stage movement.
+        <LI>
+        The item is a map that is not located in a larger map, so it must itself be 
+        large enough for reliable localization. The program proceeds as just described, 
+        except that it ends up aligned to the center of the map.
+        <LI>
+          The item is a map located within a significantly larger map. In this case, the 
+          larger map must be the minimum required size, but the item being aligned to can 
+          be small. The program proceeds as above to find the item position by 
+          correlating with the larger map. Then it raises the magnification to that of 
+          the item itself, takes a new picture, and aligns it with the map item using 
+          image shift. This image shift should be relatively small provided that the 
+          position was found accurately at the lower magnification, and that the 
+          calibration of image shift offsets between magnifications is still accurate.</LI></OL>
+      <P>When a map is defined, the program stores the brightness, spot size, and 
+        exposure settings used to take the map images, as well as the state of the 
+        energy filter if appropriate, and these settings are used in this routine to 
+        take the images for correlation. The beam size and centering must be robust 
+        enough to work at the different magnifications. In other words, if the beam 
+        shifts between the different magnifications, it must be spread enough at one of 
+        the magnifications so that it still covers the field without being centered.</P>
+      <P>The previous state of the microscope is restored after the procedure when it is 
+        run with this command from the menu or the corresponding button in the Navigator 
+        window. When it is run from a script, the state may 
+        or may not be restored depending on what is specified in the script command.&nbsp; 
+        However, when the routine is called while in Low Dose mode, the state is always 
+        restored by going back to the previous Low Dose area after taking images in the 
+        same conditions as the map.</P>
+      <P>In most cases, the routine will adjust for misalignments between magnifications 
+      even if you have not selected the 'Adjust image shift between mags' option in 
+      the Alignment &amp; Focus control panel. Specifically, in situations 1) and 2) 
+      above, if the microscope state is being restored after the routine runs, then 
+      the feature being aligned to should appear centered at the restored 
+      magnification. In situation 3, the feature will be centered at the magnification 
+      of the map item being aligned to.</P>
+      <P><A NAME="#hid_navigator_force_center_align"></A><B>Force Center Align 
+        (Navigator menu)</B> &nbsp;</P>
+    <P>This command makes the Realign to Item routine forget previous information 
+      about a recent alignment to the center of the map and do the first round of 
+      alignment to the map center.&nbsp; By default, Realign to Item will skip that 
+      first round if the same map was aligned to recently and the alignment error was 
+      low enough.&nbsp; If the first round fails, it may be necessary to use this 
+      command to prevent the skipping on the next attempt.</P>
+      <P><A NAME="#hid_navigator_realign_scaling"></A><B>Try Scaling in Realign 
+        (Navigator menu)</B></P>
+      <P>This command toggles an option to try to adjust for specimen shrinkage when 
+        doing <A HREF="#hid_navigator_aligntoitem">
+          Realign to Item </A>.&nbsp; On the first round of the realignment, where an 
+        image is aligned to the center of a map frame, the program will search for the 
+        image scaling that makes it align best to the map frame.&nbsp; This scaling is 
+        then used to adjust the target position (which is not at the center) for the 
+        shrinkage that occurs.&nbsp; The scaling will not be done if the program is in 
+        Low Dose mode prior to the Realign operation.</P>
+    </basefont>
+  </BODY>
+</HTML>

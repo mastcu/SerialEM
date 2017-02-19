@@ -1,0 +1,1956 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+  <HEAD>
+    <TITLE>Script Commands</TITLE>
+    <META content="text/html; charset=Windows-1252" http-equiv="Content-Type">
+    <style type="text/css"> <!-- BODY { font-family:"Arial" }
+  TD { font-size:16 }
+      .style4
+      {
+        width: 241px;
+      }
+      .style5
+      {
+        width: 195px;
+      }
+      .style7
+      {
+        width: 231px;
+      }
+      .style8
+      {
+        width: 215px;
+      }
+      .style9
+      {
+        width: 227px;
+      }
+  --></style>
+  </HEAD>
+  <BODY bgColor="#ffffff" text="#000000">
+    <basefont size="2">
+      <P><A name="macro_commands"></A><B><FONT size="3">Script commands</FONT></B></P>
+      <P>The script processor is case-insensitive; you can enter commands as ALLCAPS or 
+        alllowercase, but for readability it is helpful to use MixedCase as in the 
+        table. Completing a command by typing tab or ` will convert it to MixedCase.</P>
+      <BR>
+      <A href="#macro_control_commands">Script Control Commands</A>
+      <BR>
+      &nbsp;&nbsp;&nbsp;&nbsp; <A href="#flow_control">Flow Control Commands</A><br>
+      &nbsp;&nbsp;&nbsp;&nbsp; <A href="#other_control">Other Script Operation Control Commands</A><br>
+      <A href="#camera_commands">Camera Commands</A>
+      <BR>
+      &nbsp;&nbsp;&nbsp;&nbsp; <A href="#acquisition_param">Acquisition and Parameter Commands</A><br>
+      &nbsp;&nbsp;&nbsp;&nbsp; <A href="#continuous_mode">Continuous Mode Control</A><br>
+      &nbsp;&nbsp;&nbsp;&nbsp; <A href="#other_camera">Other Camera Commands</A><br>
+      <A href="#buffer_file_commands">Buffer and File Commands</A>
+      <BR>
+      &nbsp;&nbsp;&nbsp;&nbsp; <A href="#buffer_image">Buffer and Image Commands</A><br>
+      &nbsp;&nbsp;&nbsp;&nbsp; <A href="#file_dir">File and Directory Commands</A><br>
+      <A href="#scope_filter_commands">Microscope and Filter Commands</A>
+      <BR>
+      &nbsp;&nbsp;&nbsp;&nbsp; <A href="#stage_commands">Stage-Related Commands</A><br>
+      &nbsp;&nbsp;&nbsp;&nbsp; <A href="#focus_commands">Focus-Related Commands</A><br>
+      &nbsp;&nbsp;&nbsp;&nbsp; <A href="#mag_commands">Magnification-Related Commands</A><br>
+      &nbsp;&nbsp;&nbsp;&nbsp; <A href="#beam_commands">Beam-Related Commands</A><br>
+      &nbsp;&nbsp;&nbsp;&nbsp; <A href="#image_shift">Image Shift-Related Commands</A><br>
+      &nbsp;&nbsp;&nbsp;&nbsp; <A href="#misc_scope">Miscellaneous Scope Commands</A><br>
+      &nbsp;&nbsp;&nbsp;&nbsp; <A href="#filter_commands">Energy Filter Commands</A><br>
+      &nbsp;&nbsp;&nbsp;&nbsp; <A href="#loader_vacuum">Autoloader, Refrigerant, and Vacuum Commands</A><br>
+      &nbsp;&nbsp;&nbsp;&nbsp; <A href="#piezo_commands">Piezo Drive Commands</A><br>
+      <A href="#high_level_operations">Higher Level Operations and Tasks</A>
+      <BR>
+      &nbsp;&nbsp;&nbsp;&nbsp; <A href="#autoalign">Autoalign-Related Commands</A><br>
+      &nbsp;&nbsp;&nbsp;&nbsp; <A href="#autofocus">Autofocus/Autotuning-Related Commands</A><br>
+      &nbsp;&nbsp;&nbsp;&nbsp; <A href="#low_dose">Low Dose Commands</A><br>
+      &nbsp;&nbsp;&nbsp;&nbsp; <A href="#task_commands">Task-Related Commands</A><br>
+      &nbsp;&nbsp;&nbsp;&nbsp; <A href="#navigator">Navigator-Related Commands</A><br>
+      <A href="#miscellaneous">Miscellaneous Commands</A>
+      
+    <P></P>
+      <P><A name="macro_control_commands"></A><B>Script Control Commands</B></P>
+      <TABLE border="1" cols="2">
+       <TR  vAlign="top">
+         <TD colspan="2"><A name="flow_control"></A><B>Flow Control Commands</B></TD>
+       </TR>
+        <TR vAlign="top">
+          <TD class="style4">Repeat</TD>
+          <TD>Place at end of script to repeat it</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style4">Loop # [variable]</TD>
+          <TD>Loop the given # of times until EndLoop; optionally set variable with index.&nbsp; 
+            As of SerialEM 3.7.0 beta, a loop count less than or equal to 0 is allowed and 
+            will cause the loop to be skipped.&nbsp; If a script relying on this is liable 
+            to run on earlier versions, it should include the line 'Require zeroloop'.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style4">EndLoop</TD>
+          <TD>Marks the end of the loop</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style4">DoScript #<br />
+            DoMacro #</TD>
+          <TD>Switches to given script #</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style4">CallScript #<br />
+            CallMacro #</TD>
+          <TD>Calls other script by # and returns</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style4">Call text</TD>
+          <TD>Calls other script by name. Names are case-sensitive and must match exactly,
+            including spaces</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style4">Function name [#n] [s] [args]</TD>
+          <TD>Defines a function with the given name (without embedded spaces).&nbsp; The
+            optional #n indicates the number of numeric arguments and s is non-zero to
+            indicate that a string argument occurs after the numeric ones.&nbsp; Optional 
+            variable names can be provided for the arguments.&nbsp; Functions
+            must be placed at the ends of scripts.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style4">EndFunction</TD>
+          <TD>Required ending to a function definition.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style4">CallFunction name [args]</TD>
+          <TD>Calls the function with the given name and supplies arguments for the function
+            to receive.&nbsp; If the name could occur in more than one script, it must be
+            qualified with a script number or name, i.e. &#39;5::GoodFunc&#39; or &#39;Func
+            Script::GoodFunc&#39;.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style4">If expression</TD>
+          <TD>Starts a block that is executed conditionally on the value of 'expression'</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style4">Endif</TD>
+          <TD>Ends a block started with If</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style4">Elseif expression</TD>
+          <TD>Inside of an If/Endif block, starts a block that is executed conditionally on
+            the value of 'expression' if the expressions in the starting If statement and
+            any preceding Elseif statements were not true.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style4">Else</TD>
+          <TD>Inside of an If/Endif block, starts a block that is executed if the expression
+            after the 'If' and any preceding 'Elseif' commands is false</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style4">Break</TD>
+          <TD>Stops execution of the innermost Loop containing this statement</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style4">KeyBreak [key]</TD>
+          <TD>If the user presses &#39;B&#39;, or the key given by the optional &#39;key&#39; entry, the
+            script breaks out of the innermost Loop containing this statement.&nbsp; &#39;key&#39;
+            should be a letter or number; the test for the key is case-insensitive.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style4">Continue</TD>
+          <TD>Skips the rest of the current iteration of the innermost Loop containing this
+            statement</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style4">SkipTo label</TD>
+          <TD>Skips forward to the line starting with the given label, where the label has a
+            colon (:) at the end of it and is the only item on the line.&nbsp; The colon is
+            not included in the label in the SkipTo statement.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style4">OnStopCallFunc name</TD>
+          <TD>Calls the function with the given name when the script is stopped by the user 
+            pressing STOP or by an error in a script operation or in an external routine.&nbsp; 
+            The function must not take any arguments, and it should not call other functions 
+            or scripts (such calls will be skipped).&nbsp; The function will be called only 
+            once, even if there is an error or STOP while it is running.&nbsp; The script 
+            will be aborted (not left in a resumable state) when the end of the function is 
+            reached.&nbsp; </TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style4">Return</TD>
+          <TD>Without executing to the end of the current script, returns to calling script or
+            ends execution if this is the top-level script</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style4">Exit</TD>
+          <TD>Ends execution unconditionally</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD colspan="2"><A name="other_control"></A><B>Other Script Operation
+          Control Commands</B></TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style4">ScriptName text<br />
+            MacroName text</TD>
+          <TD>Name the script to the given text, which can include spaces</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style4">LongName text</TD>
+          <TD>A longer name to appear in the Run submenu of the Script menu; if this name is
+            not defined, the regular name defined by ScriptName or MacroName appears there.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style4">Delay # [units]</TD>
+          <TD>Wait for given amount of time. The optional 'units' can be 'msec', 'sec', or
+            'min'. If no units are given, a # &lt;= 60 is taken to be seconds, and a # &gt;
+            60 is taken to be milliseconds</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style4">Echo [text]</TD>
+          <TD>Prints the text to the log window, or a blank line if there is no text.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style4">Pause [text]</TD>
+          <TD>Opens message box with optional text plus question of whether to proceed with
+            script</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style4">YesNoBox text</TD>
+          <TD>Opens a Yes-No message box with the given text, which should be a question that
+            can be answered with yes or no. Sets ReportedValue1 to 1 or 0 for a yes or no
+            answer.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style4">EnterOneNumber text</TD>
+          <TD>Opens a dialog box for the user to enter one floating point number, with the
+            given text as the prompt.&nbsp; Sets ReportedValue1 to the entered value.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style4">EnterDefaultedNumber #V #D text</TD>
+          <TD>Opens a dialog box for the user to enter one floating point or
+            integer value.&nbsp; Follow with the default value to show in the box, the
+            number of decimal places to show for a float entry or -1 for an integer entry,
+            and the prompt text on the rest of the line.&nbsp; Sets ReportedValue1 to the
+            entered value.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style4">FlashDisplay [#T] [#D]</TD>
+          <TD>Flashes between a yellow screen and normal image display
+            several times.&nbsp; The first optional entry, #T, sets the number of times to
+            flash (default 4) and the second optional entry, #D, sets the duration of each
+            state in seconds (default 0.3).&nbsp; Total duration may not exceed 6 seconds.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style4">Verbose #</TD>
+          <TD>Turns echoing of each script line on or off for # 1 or 0</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD width="210">SuppressReports</TD>
+          <TD>Do not print any of these reports, just assign the values to report variables</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style4">ErrorsToLog [#]</TD>
+          <TD>Makes most script error messages be duplicated in the log
+            window.&nbsp; Follow with a 0 to turn off the feature again.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style4">NoMessageBoxOnError [#]</TD>
+          <TD>Outputs an error message to the log instead of opening a message box.&nbsp; 
+            The script stops, but if it is being run from Navigator Aqcuire at Points, the 
+            Navigator is able to go to the next item.&nbsp; Follow with 0 to turn the 
+            feature off again.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style4">ClearPersistentVars</TD>
+          <TD>Removes all persistent variables defined with :=</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style4">IsVariableDefined Var</TD>
+          <TD>Reports whether a variable is defined, placing a 1 in
+            reportedValue1 if it is and a 0 if it is not.&nbsp; Follow with the variable
+            name without a $.&nbsp; Value can be assigned to a variable at end of commmand.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style4">LocalVar var [var] ...</TD>
+          <TD>Create the listed variables as variables local to the current script or 
+            function.&nbsp; They will not be accessible outside this script or function and 
+            will become undefined when returning from the script or function.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style4">LocalLoopIndexes</TD>
+          <TD>Make loop indexes local; this means that a called function or script cannot 
+            access the index value in the caller and is free to reuse the variable name as a 
+            loop index or other variable.&nbsp; If this feature is used, this command should 
+            be near the start of any script that may be started independently.&nbsp; Once 
+            the feature is invoked, it cannot be turned off.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style4">Require feature [feature] ...</TD>
+          <TD>This command tests whether the given script features are available in this 
+            version of SerialEM.&nbsp; Earlier versions will not generate an error when some 
+            newer features are used, so including this command is the only way to test 
+            whether the script will run correctly.&nbsp; The available features are: 1) &#39;variable1&#39;, which includes two capabilities: assigning reported values 
+            directly to variables listed after a command, and assigning function arguments 
+            directly to variables listed on the &#39;Function&#39; line.&nbsp; 2) &#39;arrays&#39;, 
+            which is the ability to define a variable with an indexable array of values.&nbsp; 
+            3) &#39;keepcase&#39;, which means that case will be preserved when assigning text to a 
+            variable.&nbsp; 4) 'zeroloop', which means that a non-positive loop count is 
+            allowed.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style4">Test expression</TD>
+          <TD>Evaluates a conditional expression (just as would be used for an IF statement) 
+            or a single number or variable value and stores whether the test passed (i.e., 
+            if the expression is true or if the number is non-zero) internally, as well as 
+            storing a 1 for success or 0 for failure in ReportedValue1 and a veariable 
+            TestResult</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style4">PauseIfFailed [text]</TD>
+          <TD>If the last &#39;Test&#39; command failed, this command opens a message box with the 
+            optional text plus the question of whether to proceed with the script, even if 
+            &#39;NoMessageBoxOnError&#39; is set.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style4">AbortIfFailed [text]</TD>
+          <TD>If the last &#39;Test&#39; command failed, this command opens a message box with the 
+            optional text (unless &#39;NoMessageBoxOnError&#39; is set) and aborts the script.</TD>
+        </TR>
+      </TABLE>
+      <BR>
+      <P><A name="camera_commands"></A><B>Camera Commands</B></P>
+      <TABLE border="1" cols="2">
+        <TR vAlign="top">
+          <TD colspan="2"><A name="acquisition_param"></A><B>Acquisition and
+          Parameter Commands</B></TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style8">V or View</TD>
+          <TD>Acquire image with 'view' parameters</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style8">F or Focus</TD>
+          <TD>Acquire image with 'focus' parameters</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style8">T or Trial</TD>
+          <TD>Acquire image with 'trial' parameters</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style8">R or Record</TD>
+          <TD>Acquire image with 'record' parameters</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style8">L or Preview</TD>
+          <TD>Acquire image with 'preview' parameters</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style8">M or Montage</TD>
+          <TD>Acquire montage</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style8">Search</TD>
+          <TD>In Low Dose mode, go to Search area conditions and acquire image with &#39;View&#39; 
+            camera parameters.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style8">PreCookMontage #</TD>
+          <TD>If montaging is enabled with stage movement, this command lowers the screen to
+            expose the specimen, then moves the stage to each piece position and waits there
+            for the number of seconds indicated by #, if the number is positive.&nbsp; If 
+            the number is negative, it skips pieces, with an interval given by the negative 
+            of the number: -2 will stop at every second piece, -3 at every third, etc.&nbsp; 
+            For&nbsp; convenience, -1 is equivalent to a large negative number and will make 
+            it stop only at the bottom and top of each column.</TD>
+        </TR>
+         <TR vAlign="top">
+          <TD class="style8"><b>Set Parameter Commands</b>&nbsp;</TD>
+          <TD>The following &#39;Set...&#39; commands change values in one of the camera parameter
+            sets.&nbsp; The set &#39;S&#39; can be specified as either V, F, T, R, P or 0, 1, 2, 3,
+            4 for view, focus, trial,
+            record, preview, respectively.&nbsp; Parameters will be restored whenever the
+            script ends or stops or when a different camera is selected.&nbsp; However, if
+            the script is suspended, any changed parameters will be set again when the script
+            resumes.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style8">&nbsp;&nbsp;&nbsp; SetExposure S #E [#D]</TD>
+          <TD>Set exposure and, optionally, drift settling for exposure set S&nbsp; to the given values E and D.&nbsp;&nbsp; If D is omitted, the existing
+            drift settling will be unchanged.&nbsp;</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style8">&nbsp;&nbsp;&nbsp; SetBinning S #B</TD>
+          <TD>Set binning for exposure set S to B.</TD>
+        </TR>
+        <TR>
+          <TD class="style8">&nbsp;&nbsp;&nbsp; SetCameraArea S L R T B</TD>
+          <TD>Set the acquisition area for exposure set S.&nbsp; Follow the set specifier S with
+            either 4 numbers for the unbinned left, right, top, and bottom coordinates (the
+            same kind of numbers as in the camera setup dialog) or with F, H, Q, WH or WQ
+            for full, half, quarter, wide half, or wide quarter.&nbsp; Values will be adjusted
+            for a legal area.&nbsp; </TD>
+        </TR>
+        <TR>
+          <TD class="style8">&nbsp;&nbsp;&nbsp; SetCenteredSize S #B # #</TD>
+          <TD>Set exposure set S for acquisition from a centered area.&nbsp; Follow the set
+            specifier S with 3 numbers: the binning B, the binned size in X, and the binned
+            size in Y.&nbsp; </TD>
+        </TR>
+        <TR>
+          <TD class="style8">&nbsp;&nbsp;&nbsp; SetContinuous S #</TD>
+          <TD>Set the acquisition mode for exposure set S for continuous if # is non-zero,
+            or single-frame if # is 0.</TD>
+        </TR>
+        <TR>
+          <TD class="style8">&nbsp;&nbsp;&nbsp; SetSTEMDetectors S #D...</TD>
+          <TD>Set the STEM detectors for each available channel of exposure set S.&nbsp;
+            Follow the set specifier S with a detector number for each channel, numbered
+            from 0, or -1 to select no detector for that channel.&nbsp; At least one actual
+            detector must be specified.</TD>
+        </TR>
+        <TR>
+          <TD class="style8">&nbsp;&nbsp; &nbsp;SetProcessing S #P</TD>
+          <TD>Set processing for exposure set S to the given value, which should be 0 for 
+            unporcessed, 1 for dark-subtracted, or 2 for gain-normalized.</TD>
+        </TR>
+        <TR>
+          <TD class="style8">&nbsp;&nbsp;&nbsp; SetK2ReadMode S #M&nbsp;</TD>
+          <TD>Set the K2 &#39;read mode&#39; for exposure set S to the given value, which should be 
+            0 for linear, 1 for counting, or 2 for super-resolution mode.</TD>
+        </TR>
+        <TR>
+          <TD class="style8">&nbsp;&nbsp;&nbsp; SetFrameTime &nbsp;S #F</TD>
+          <TD>Set the frame time for a K2 camera to the given number.</TD>
+        </TR>
+        <TR>
+          <TD class="style8">&nbsp;&nbsp;&nbsp; SetDoseFracParams S #D<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [#S] [#A] [#M] [#C]&nbsp;</TD>
+          <TD>Set dose fractionation parametes for exposure set S; follow with up to 5 
+            numbers: D non-zero for dose-fractionation mode on K2; S non-zero to save frames 
+            (not just for K2); A non-zero to align frames; M 0 to align in DM, 1 to align in 
+            plugin, or 2 to save a command file for alignframes; C non-zero to combine 
+            frames into sums.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style8">RestoreCameraSet [S]</TD>
+          <TD>Restore one or all camera parameter set(s) modified with the &#39;Set&#39; commands
+            above.&nbsp; If S is omitted, all modified sets will be restored.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD colspan="2"><A name="continuous_mode"></A><B>Continuous Mode Control</B></TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style8">StopContinuous</TD>
+          <TD>Stops continuous acquisition if it is running.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style8">ReportContinuous</TD>
+          <TD>Returns -1 if continuous acquisition is not running, or the camera parameter
+            set number being used if it is running, numbered from 0.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style8">UseContinuousFrames #</TD>
+          <TD>If # is non-zero, the script will keep executing commands (such as stage
+            movement and alignment) even when the camera is acquiring in continuous mode.&nbsp;
+            Use 0 to return to normal operation, in which the script will wait for continuous
+            acquisition to be ended by the user.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style8">WaitForNextFrame</TD>
+          <TD>After starting a continuous acquisition, use this command to wait until the
+            next image becomes available in buffer A.&nbsp; The program will wait until the exposure
+            time has elapsed so that the image is likely to be taken after completion of
+            previous operations. The &#39;UseContinuousFrames 1&#39; command must be used before the
+            acquisition is started.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style8">StartFrameWaitTimer</TD>
+          <TD>Sets the time from which the next &#39;WaitForNextFrame&#39; will require an exposure 
+            time to elapse.&nbsp; Without this command, the program will wait the full 
+            exposure time after the &#39;WaitNextFrameCommand&#39;. If this command is given just 
+            after getting a frame, and operations are done before waiting for the next 
+            frame, the next frame will be obtained sooner.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style8">SetLiveSettleFraction #</TD>
+          <TD>Set the fraction of the usual settling time to apply in continuous mode after
+            image shift or stage movement.&nbsp; By default, no settling is applied in
+            continuous mode (i.e., the fraction is 0), but some settling may be needed when
+            a script or other operation is using continuous frames.&nbsp; The fraction is
+            reset to zero when continuous mode ends.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD colspan="2"><A name="other_camera"></A><B>Other Camera Commands</B></TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style8">CameraProperties</TD>
+          <TD>Reports unbinned size in X and Y of current camera, and RotationAndFlip 
+            property.
+          &nbsp; Values can be assigned to variables at end of command.</TD>
+        </TR>
+        <TR>
+          <TD class="style8">SelectCamera #</TD>
+          <TD>Make the given camera (numbered from 1) be the active camera.&nbsp; Will switch
+            in and out of EFTEM mode or STEM mode if appropriate.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style8">RetractCamera</TD>
+          <TD>Retracts all retractable cameras</TD>
+        </TR>
+        <TR>
+          <TD class="style8">OppositeFocus</TD>
+          <TD>In low dose mode, acquire Focus image from area on opposite side of Record from
+            the defined&nbsp;Focus area.&nbsp; Opposite areas are not available if Balance
+            Shifts is turned on.</TD>
+        </TR>
+        <TR>
+          <TD class="style8">OppositeTrial</TD>
+          <TD>In low dose mode, acquire&nbsp;Trial image from area on opposite side of Record
+            from the&nbsp;defined&nbsp;Trial area.</TD>
+        </TR>
+        <TR>
+          <TD class="style8">StepFocusNextShot # # [# #]</TD>
+          <TD>Do one or two focus changes during the next exposure.&nbsp; Follow with 2 or 4
+            numbers: the time in seconds from start of the exposure to the first focus
+            change, the first focus change in microns, the time from start of the exposure
+            to the second focus change if any, and the second focus change relative to the
+            starting focus, not relative to the focus after the first change.&nbsp; The
+            command will have no effect if the exposure time is less than the time to the&nbsp;
+            first change, and the second change will not be done if the time for it is
+            greater than the exposure time.</TD>
+        </TR>
+        <TR>
+          <TD class="style8">SmoothFocusNextShot # #</TD>
+          <TD>Change focus linearly through next exposure.&nbsp; Follow with 2 numbers, the
+            starting and ending defocus relative to the current focus.&nbsp; This command
+            and StepFocusNextShot are enabled for Gatan, Falcon, and Tietz cameras.</TD>
+        </TR>
+        <TR>
+          <TD class="style8">EarlyReturnNextShot # [#]</TD>
+          <TD>Return as early as possible from the next acquisition, which must involve
+            either aligning or saving dose-fractionation frames from a K2 camera.&nbsp; Follow with the number
+            of frames to be summed in the returned image, 0 to return without any summed
+            image, or -1 to return with the full sum (the latter is available only on GMS
+            2.31 or higher).&nbsp; The second optional number should be 1 to make a deferred 
+            full sum when not aligning; this sum is always made when aligning.&nbsp; Single-shot and dose-fractionation images can be
+            requested without delay in the script.&nbsp; The single-shot images will be taken
+            as soon as possible (after the end of the exposure before GMS 2.31, after the
+            frame stack has been accessed in GMS 2.31 and higher).&nbsp; Another
+            dose-fractionation shot will be delayed until saving is finished for the current
+            shot.</TD>
+        </TR>
+        <TR>
+          <TD class="style8">GetDeferredSum</TD>
+          <TD>Acquire the deferred full sum that was saved as a result of 
+            &#39;EarlyReturnNextShot&#39;.</TD>
+        </TR>
+        <TR>
+          <TD class="style8">RecordAndTiltUp</TD>
+          <TD>Starts a Record acquisition and tilts the stage up by the current increment 
+            after the exposure is expected to be done.</TD>
+        </TR>
+        <TR>
+          <TD class="style8">RecordAndTiltDown</TD>
+          <TD>Starts a Record acquisition and tilts the stage down by the current increment 
+            after the exposure is expected to be done.</TD>
+        </TR>
+        <TR>
+          <TD class="style8">TiltDuringRecord #A #D [#S]</TD>
+          <TD>Starts a Record acquisition and starts the stage tilting to angle #A after the 
+            delay #D in milliseconds.&nbsp; On FEI scopes with recent enough versions of FEI 
+            scripting, #S can be added with a speed multiplier (&lt; 1 for slower, &gt; 1 for 
+            faster).&nbsp; On FEI scopes this command will freeze the user 
+            interface and prevent scope updates while the stage is tilting.</TD>
+        </TR>
+        <TR>
+          <TD class="style8">DeferStackingNextShot</TD>
+          <TD>Do not stack Falcon intermediate frames after the next exposure.&nbsp; To
+            stack frames from multiple exposures into one stack, use this command before
+            each exposure except the last one.</TD>
+        </TR>
+        <TR>
+          <TD class="style8">OpenDECameraCover</TD>
+          <TD>Opens the protection cover of the Direct Electron camera for the remainder of
+            the script, if it is the current camera.&nbsp; Without this command, the cover
+            will be opened and closed for each exposure except during tasks.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style8">UpdateHWDarkRef #</TD>
+          <TD>Updates the K2 hardware dark reference if the known interval since the last
+            update is longer than # in hours.&nbsp; If # is 0, the update is done
+            unconditionally; if # is negative (-1), it simply records the current time as
+            the time of the last update. </TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style8">ReportK2FileParams</TD>
+          <TD>Reports values selected in the Frame File Options dialog: 0 for MRC, 1 for 
+            TIFF LZW, or 2 for TIFF ZIP; sum of 1 to pack unnormalized data at all, plus 2 
+            to pack counting mode to bytes; 1 to save MRC files in 4-bit mode 101; 1 to save 
+            normalized data times 100; 1 to skip rotation and flip of frames; 1 for one file 
+            per frame. </TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style8">SetK2FileParams #T [#P]<br />
+&nbsp;&nbsp;&nbsp; [#M] [#N] [#R] [#O]</TD>
+          <TD>Set values to control K2 frame file saving.&nbsp; Follow with up to 6 values: 
+            T 0 for MRC, 1 for TIFF LZW, or 2 for TIFF ZIP; P as the sum of 1 to pack 
+            unnormalized data at all, plus 2 to pack counting mode to bytes; M non-zero to 
+            save MRC files in 4-bit mode 101; N non-zero to save normalized data times 100; 
+            R non-zero to skip rotation and flip of frames; O non-zero for one file per 
+            frame.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style8">ReportCountScaling</TD>
+          <TD>Reports two values of current camera: either the scaling being applied to 
+            counting/super-resolution mode images returned from a K2 camera, or the 
+            'CountsPerElectron' property; and whether division by 2 is.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style8">SetDivideBy2 #</TD>
+          <TD>Turns division by 2 for the current camera on or off if # is 1 or 0, 
+            respectively.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style8">ReportNumFramesSaved</TD>
+          <TD>Reports the number of frames saved, or beng saved, in the last acquisition 
+            that saved frames.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style8">ReportFrameAliParams</TD>
+          <TD>Reports six values for the frame alignment parameter set selected to be used 
+            for Record images: the binning for alignment, whether to keep precision for 
+            gain-normalized images when doing early returns, the strategy (0 to 3, 
+            corresponding to the radio buttons in the Frame Alignment dialog), the number of 
+            frames to align all pairs among, the number of iterations to refine (negative if 
+            refinement off), and the group size (negative if using groups is off).</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style8">SetFrameAliParams #B [#K]<br />
+&nbsp;&nbsp;&nbsp; [#S] [#A] [#R] [#G]</TD>
+          <TD>In the frame alignment parameter set selected to be used for Record images, 
+            sets the binning to B, and optionally sets whether to keep precision during 
+            early returns if K is 1, the strategy from S, the number of frames for all pairs 
+            from A, the number of refinement iterations from |R| and to do refinement if R 
+            is positive, and the group size from |G| and the whether to use groups if G is 
+            positive.&nbsp; </TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style8">ReportFrameAli2</TD>
+          <TD>Reports more values for frame alignment: whether GPU use is selected, and for 
+            the Record parameter set: truncation limit (negative if truncation is off), 
+            whether to use hybrid shifts, and the three flter radii.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style8">SetFrameAli2 #G [#T] [#H]<br />
+&nbsp;&nbsp;&nbsp; [#R1] [#R2] [#R3]</TD>
+          <TD>Sets whether to use GPU for frame alignment and, in the frame alignment 
+            parameters for Record, optionally sets truncation limit from |T| and to truncate 
+            if T is positive, whether to use hybrid shifts if H is 1, primary filter radius 
+            from R1, and second and third filter radii from R2 and R3 or 0 for either if R1 
+            is present and R2 or R3 is not.</TD>
+        </TR>
+      </TABLE>
+      <BR>
+      <P><A name="buffer_file_commands"></A><B>Buffer and File Commands</B></P>
+      <TABLE border="1" cols="2">
+        <TR vAlign="top">
+          <TD colspan="2"><A name="buffer_image"></A><B>Buffer and Image Commands</B></TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style7">Copy buf1 buf2</TD>
+          <TD>Copy from buf1 to buf2 (e.g., Copy C A)</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style7">Show buf</TD>
+          <TD>Display the given buffer (e.g., Show C)</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style7">CropImage buf x0 x1 y0 y1</TD>
+          <TD>Crop out a subarea of the given buffer from x0 to x1 in X and from y0 to y1 in
+            Y. Coordinates are numbered from 0 to size - 1 in each dimension and 0 in Y is
+            at the top.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style7">FFT buf [#B]</TD>
+          <TD>Takes the FFT of the image in the given buffer, optionally applying the 
+            binning given in #B.&nbsp; The FFT will appear in buffer A, or in the 
+            side-by-side FFT window if that option is on.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style7">ImageProperties [buf]</TD>
+          <TD>Report size in X and Y, binning, exposure, pixel size, and parameter set
+            used&nbsp;for the image in buffer A or in the buffer indicated by 'buf'.
+            &nbsp; Values can be assigned to variables after a buffer letter.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style7">ImageLowDoseSet [buf]</TD>
+          <TD>Report the parameter set that an image was taken with and whether it was taken
+            in Low Dose mode, for the image in buffer A or in the buffer indicated by 'buf'.&nbsp;
+            For one of the 5 standard parameter sets, it will report the set name.&nbsp; For
+            a montage image, it will report Record.&nbsp; For a tracking image, it will
+            report View if the mag matches that of View in Low Dose; if the mag matches
+            Record in Low Dose, it will report Record or Preview depending on which has an
+            closest exposure time closest to that of the image.
+            &nbsp; Values can be assigned to variables after a buffer letter.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style7">ReportMeanCounts [buf] [#]</TD>
+          <TD>Report the mean counts of the A buffer, or of the buffer indicated by 'buf';
+            add a 1 to get unbinned counts per second.
+            &nbsp; No optional assignment to variable.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style7">ElectronStats [buf]</TD>
+          <TD>Report the min, max, mean, and SD of the A buffer, or of the buffer indicated
+            by &#39;buf&#39;, scaled to electrons, and also report the electrons per unbinned pixel
+            per second.&nbsp; The camera must have a defined counts per electron.
+            &nbsp; Values can be assigned to variables after a buffer letter.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style7">SubareaMean x0 x1 y0 y1</TD>
+          <TD>Report the mean counts in a subarea of the A buffer from x0 to x1 in X and from
+            y0 to y1 in Y. Coordinates are numbered from 0 to size - 1 in each dimension
+            and 0 in Y is at the top.&nbsp; Value can be assigned to variable at end of command.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style7">QuadrantMeans [n] [f1] [f2]</TD>
+          <TD>Report means of strips along quadrant boundaries. Optional entries are 'n' for
+            the number of pixels between strip and boundary (default 2), 'f1' for the strip
+            width as a fraction of quadrant extent (default 0.1), and 'f2' for the fraction
+            of quadrant extent to trim off the length of the strip (default 0.1). Output is
+            labeled by quadrant number (1 to 4) and 'h' for horizontal strips or 'v' for
+            vertical strips.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD colspan="2"><A name="file_dir"></A><B>File and Directory Commands</B></TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style7">S or Save [buf] [file #]</TD>
+          <TD>Save image in A or in buf to current open file, or to the given file number</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style7">SetDirectory dir</TD>
+          <TD>Change the working directory to 'dir', which can contain spaces.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style7">ReportDirectory</TD>
+          <TD>Reports the current working directory, which is where a file will be created 
+            if it is opened from a script command without a full path.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style7">UserSetDirectory [prompt]</TD>
+          <TD>Open a directory chooser dialog to allow user to select or make a directory,
+            and change the working directory to it.&nbsp; If the optional prompt string is
+            not supplied, the dialog title is &#39;Choose a new current working directory&#39;.&nbsp;
+            The chosen directory is stored in ReportedValue1.</TD>
+        </TR>
+        <TR>
+          <TD class="style7">MakeDirectory dir</TD>
+          <TD>Create the directory 'dir' if it does not already exist.&nbsp; 'dir' can
+            contain spaces.&nbsp; The parent directory must already exist.</TD>
+        </TR>
+        <TR>
+          <TD class="style7">MakeDateTimeDir</TD>
+          <TD>Create a directory named by the date and time (e.g., Aug15_12.23.15) under the
+            current directory and change to this as the new working directory.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style7">SetNewFileType # [#]</TD>
+          <TD>Set to 0 to open files as MRC, or 1 to open files as a TIFF series described in
+            an image autodoc file. The optional second value sets whether to open montaged
+            files as MRC or as a TIFF series, but only if the property
+            MontageAutodocOptions is set.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style7">OpenNewFile file</TD>
+          <TD>Open a file with the given name, which can contain spaces. The file properties 
+            dialog will be bypassed. Since the current working directory can be 
+            unpredictable, depending on whether the user has opened a file with the file 
+            chooser, it is advisable either to specify an absolute path for the filename, 
+            use a &#39;SetDirectory&#39; with an absolute path, or use a filename in a variable set 
+            by &#39;ChooserForNewFile&#39;.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style7">OpenNewMontage #x #y file</TD>
+          <TD>Open a file with the given name for montaging, with the number of frames in X
+            and Y given by '#x' and '#y'. If either #x or #y is 0, the number of frames
+            will be taken from the last montage that was open. The file properties and
+            montage setup dialogs will be bypassed, and some properties like overlap and
+            whether to do a stage montage will be taken from the last montage that was
+            open.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style7">SetupWaffleMontage #B file</TD>
+          <TD>Open a montage file or adjust the current file&#39;s properties so that it will
+            hold an image of the cross-line (waffle) replica grating with at least #B blocks
+            in X and Y at the current magnification. Follow with the minimum # of blocks and
+            the name of the file to be opened if necessary.&nbsp; If montaging is not
+            needed, no changes are made.&nbsp; If there is an existing montage that is
+            adequate, its properties will be adjusted to work at the current mag.&nbsp; If a
+            new montage is needed, it will close the current file if it is a montage and
+            open a new one with the given name.&nbsp; Variables will be substituted, so the
+            name can contain the mag index, for example. It sets reportedValue1 to 1 or 0
+            depending on whether montaging is needed or not. </TD>
+        </TR>
+        <TR>
+          <TD class="style7">EnterNameOpenFile [prompt]</TD>
+          <TD>Get a filename through a dialog with a simple text box and open it as a new
+            file.&nbsp; If the optional prompt string is not supplied, the prompt is &quot;Enter
+            name for new file:&quot;.</TD>
+        </TR>
+        <TR>
+          <TD class="style7">ChooserForNewFile # var</TD>
+          <TD>Open a file chooser for the user to specify a new file; # should be 0 for an 
+            MRC file or non-zero for an .idoc file, and &#39;var&#39; must be the name of a variable 
+            to which the full filename will be assigned.&nbsp; Since the user will confirm 
+            the replacement of a file, the command also allows &#39;OpenNewFile&#39; and 
+            &#39;OpenNewMontage&#39; to overwrite an existing file.</TD>
+        </TR>
+        <TR>
+          <TD class="style7">OpenFrameSumFile suffix</TD>
+          <TD>Open a file whose name starts with the last name used for saving
+            frames from a K2 or Falcon camera, and ends with the string given in the command.&nbsp;
+            The string can contain spaces and variables. </TD>
+        </TR>
+        <TR>
+          <TD class="style7">AllowFileOverwrite #</TD>
+          <TD>Allow 'OpenNewFile' and 'OpenNewMontage' to overwrite an existing file if # is
+            1, or disallow it again if # is 0.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style7">OpenOldFile file</TD>
+          <TD>Open an existing MRC or ADOC file with the given name, which can contain
+            spaces.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style7">ReadFile # [buf]</TD>
+          <TD>Reads the given section # (numbered from 0) from the current open file into
+            the standard Read buffer, or into the buffer indicated by the optional &#39;buf&#39;</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style7">ReadOtherFile # buf file</TD>
+          <TD>Reads the given section # (numbered from 0) from a file into the given buffer 
+            buf and leaves the file closed; buf can be a buffer letter or -1 to use the 
+            standard Read buffer; end with filename.&nbsp; This command can read from a TIFF 
+            file, which cannot be opened otherwise.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style7">RetryReadOtherFile #</TD>
+          <TD>Sets the number of times to retry if there is an error in ReadOtherFile, 
+            with a 2-second wait between trials.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style7">CloseFile [e]</TD>
+          <TD>Close the current file. Enter optional 'e' to stop script if no file is open.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style7">SwitchToFile #</TD>
+          <TD>Make the given file number be the current open file.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style7">RemoveFile file</TD>
+          <TD>Removes the given file unconditionally, prints a warning if it cannot be 
+            removed.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style7">ReportFileZsize</TD>
+          <TD>Report the number of frames in currently open file</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style7">ReadTextFile var file</TD>
+          <TD>Reads the contents of the given text file, breaks it up by spaces or tabs, and 
+            stores the words or numbers as an array in the variable &#39;var&#39;.&nbsp; All lines 
+            will be read and combined into the one variable.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style7">SetMontageParams # [# # # # #]</TD>
+          <TD>Sets up to 6 montage parameters; enter a value or -1 to leave the parameter
+            unchanged. The entries are: 1 to use stage movement or 0 not to; overlap in X;
+            overlap in Y; frame size in X; frame size in Y, 1 to skip correlations or 0 not
+            to.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style7">AddToAutodoc key value</TD>
+          <TD>Adds a key-value pair to the last section of the autodoc associated with the
+            current open file, if any.&nbsp; The next word after the command is the key, and
+            the remainder of the text on the line is taken as the value.&nbsp; Variables are
+            substituted before using the text.&nbsp; After one or more additions to a
+            section of the autodoc, a WriteAutodoc command must be used to save the values
+            before closing the file or saving another image to it.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style7">WriteAutodoc</TD>
+          <TD>Writes the autodoc associated with the current open file.&nbsp; Use this
+            command once after adding one or more values to a section of the autodoc.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style7">AddToFrameMdoc key value</TD>
+          <TD>Adds a key-value pair to the last section of the autodoc opened with the
+            <a href="menu_file.htm#hid_file_open_mdoc">Open .mdoc for Frames</a> command.&nbsp; 
+            This works just like AddToAutodoc, but the WriteFrameMdoc command must be used 
+            instead after adding values.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style7">WriteFrameMdoc</TD>
+          <TD>Writes the frame autodoc file; use this command after adding one or more 
+            values to a section.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style7">ReportFrameMdocOpen</TD>
+          <TD>Reports whether a frame .mdoc file is open; sets ReportedValue1 to 1 if so.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style7">SaveLogOpenNew [newFile]</TD>
+          <TD>Closes the log window and opens a new one.&nbsp; If a log file has been saved, 
+            the log is automatically saved to it before closing.&nbsp; If there is no log 
+            file and the log has new contents since program startup, the program will ask 
+            the user whether to save to log first; if the user cancels, the script is 
+            aborted.&nbsp; If a filename (newFile) is added, the new log will be saved with 
+            that name.&nbsp; An extension in this name will be stripped off before adding 
+            '.log', so if you want to preserve extensions or other text after a period, add 
+            '.log' to the end of the name.&nbsp; If the file already exists, a number will 
+            be added to get a unique new name.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style7">ReportCurrentFilename [#]</TD>
+          <TD>Reports the full path and filename of the current open file and sets it into 
+            ReportedValue1; or if the optional # is entered with a 1, sets the root of the 
+            filename in ReportedValue1 and the extension (including the dot) in 
+            ReportedValue2.&nbsp; No optional assignment to variable.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style7">ReportLastFrameFile</TD>
+          <TD>Reports the full path and filename of the last frame file saved from a K2 or 
+            Falcon camera and sets it into ReporrtedValue1.</TD>
+        </TR>
+      </TABLE>
+      <BR>
+      <P><A name="scope_filter_commands"></A><B>Microscope and Filter Control Commands</B></P>
+      <TABLE style="Z-INDEX: 0" border="1" cols="2">
+        <TR vAlign="top">
+          <TD colspan="2"><A name="stage_commands"></A><B>Stage-Related Commands</B></TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">U or TiltUp</TD>
+          <TD>Tilt up by preset increment</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">D or TiltDown</TD>
+          <TD>Tilt down by preset increment</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">TiltTo #</TD>
+          <TD>Tilt to given angle</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">TiltBy #</TD>
+          <TD>Change tilt by the given amount</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">BackgroundTilt #A [#S]</TD>
+          <TD>Start tilting stage in the background; images can be taken and scripts can run 
+            during the tilt.&nbsp; Follow with #A, the angle to tilt to, and optionally with 
+            #S, a speed factor for FEI scopes (&lt; 1 for slower than normal tilting).</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">ReportTiltAngle</TD>
+          <TD>Report current tilt angle</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">MoveStage #X #Y #Z</TD>
+          <TD>Move stage by micron increments in X, Y, Z (Z optional)</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">MoveStageTo #X #Y #Z</TD>
+          <TD>Move stage to given position in microns. Z is optional and Z will not be
+            changed if it is omitted.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">ReportStageXYZ</TD>
+          <TD>Report current stage position</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">ReportStageBusy</TD>
+          <TD>Reports if the stage is busy and sets ReportedValue1 to 1 if so, 0 if not.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD colspan="2"><A name="focus_commands"></A><B>Focus-Related Commands</B></TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">ChangeFocus #</TD>
+          <TD>Change defocus by the given value in microns</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">SetDefocus #</TD>
+          <TD>Set the defocus to the given value in microns</TD>
+        </TR>
+        <TR>
+          <TD class="style9">SetAbsoluteFocus #</TD>
+          <TD>Set focus to a an absolute (standardized)&nbsp;value as reported earlier by
+            ReportAbsoluteFocus or ReportFocus</TD>
+        </TR>
+        <TR>
+          <TD class="style9">SetStandardFocus #</TD>
+          <TD>Same as &#39;SetAbsoluteFocus&#39;, which is preferred to avoid confusion with the
+            calibrated standard or eucentric focus value</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">SetObjFocus #</TD>
+          <TD>Calls SetObjFocus on JEOL with the given #, an integer increment, and reports
+            change in focus</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">ReportDefocus</TD>
+          <TD>Report current defocus readout in microns</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">ReportAbsoluteFocus</TD>
+          <TD>Report an absolute (standardized) value for the current focus setting</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">ReportFocus</TD>
+          <TD>Same as &#39;ReportAbsoluteFocus&#39;, which is a better description of the operation</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">SetEucentricFocus</TD>
+          <TD>If in low mag, sets to the standard focus for the current mag or nearest LM
+            mag if one has been set; otherwise on FEI it assumes standard focus is 0 and on
+            JEOL it stops with an error.&nbsp; If not in LM, sets to the standard focus for
+            the nearest nonLM mag if one has been set or stops with an an error if none were
+            set.&nbsp; On FEI scopes, it issues a warning if it is using a calibrated value
+            from a different mag.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">CalEucentricFocus</TD>
+          <TD>Stores the current standardized focus value as the standard focus for the
+            current mag, just as the Calibrate menu item
+            <a href="menu_calibration.htm#hid_calibration_standardlmfocus">Standard Focus</a>
+            does.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">SaveFocus</TD>
+          <TD>Saves the current focus; the focus will be restored to this value either by
+            RestoreFocus or when the script stops or exits.&nbsp; The script will not be
+            resumable if it stops.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">RestoreFocus</TD>
+          <TD>Restores the focus value when SaveFocus was run.&nbsp; After this is run, the
+            focus will not be restored again when the script ends.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">ResetDefocus</TD>
+          <TD>Sets the defocus readout to 0, just as
+            <a href="menu_focus.htm#hid_focus_resetdefocus">Reset Defocus</a> in Focus menu
+            does.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD colspan="2"><A name="mag_commands"></A><B>Magnification-Related Commands</B></TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">SetMag #</TD>
+          <TD>Set the mag to an actual film mag value</TD>
+        </TR>
+       <TR vAlign="top">
+          <TD class="style9">SetMagIndex #</TD>
+          <TD>Set the magnification index to the given value</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">ChangeMag #</TD>
+          <TD>Change mag by given number of mag steps, positive to increase mag index and 
+            negative to decrease it.&nbsp; If the property &#39;UseInvertedMagRange&#39; is set, 
+            positive and negative increase or decrease the mag rather than the mag index in 
+            the inverted range.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">ReportMag</TD>
+          <TD>Report the current mag; also set ReportedValue2 to 1 if low mag mode, 0 if not</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">ReportMagIndex</TD>
+          <TD>Report the current mag index; also set ReportedValue2 to 1 if low mag mode, 0
+            if not</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">SetCamLenIndex #</TD>
+          <TD>Set the camera length index to the given number; on an FEI scope, values higher
+            than 30 set the index to (# - 30) in LAD mode</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">SetMagAndIntensity #</TD>
+          <TD>Set the mag to the actual film mag value and change the beam to maintain the
+            same brightness. Two values are reported: the initial percent C2 value and the
+            remaining factor of intensity change needed if it was not possible to change
+            the intensity by the full amount needed. The C2 value should be used to restore
+            intensity when the mag is restored. The remaining intensity change could be
+            applied to the exposure time if necessary. The script will stop if there is an
+            error in the intensity change.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">ChangeMagAndIntensity #</TD>
+          <TD>Change mag by the given number of mag steps and change the beam to maintain the
+            same brightness. Behaves same as SetMagAndIntensity, and steps in the same way 
+            as ChangeMag.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">IncMagIfFoundPixel #</TD>
+          <TD>Increase or decrease mag by one step if the pixel size has been found at the
+            current mag with the <a href="menu_calibration.htm#hid_process_findpixelsize">Find Pixel Size</a>
+            routine, depending on whether # is positive or negative.&nbsp; Sets
+            reportedValue1 to 1 if the mag is changed, 0 otherwise.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD colspan="2"><A name="beam_commands"></A><B>Beam-Related Commands</B></TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">SetSpotSize #</TD>
+          <TD>Set the spot size to the given number</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">ReportSpotSize</TD>
+          <TD>Report the current spot size</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">SetPercentC2 #</TD>
+          <TD>Set the C2/C3 lens strength to the given percentage, or illuminated area on
+            Titan to given value in microns.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">IncPercentC2 #</TD>
+          <TD>Change the C2/C3 lens strength percentage or illuminated area in microns by the given amount</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">ReportPercentC2</TD>
+          <TD>Report the percent C2/C3 (on an FEI scope, this number matches the value in MUI)
+            and the fractional lens strength.&nbsp; On a Titan, if illuminated area is being
+            used for intensity, this reports the illuminated area value.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">ReportIlluminatedArea</TD>
+          <TD>Report the illuminated area on a Titan in the units from the scope, which are 
+            microns times 0.01.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">SetIlluminatedArea #</TD>
+          <TD>Set the illuminated area on a Titan to the given value, expressed in microns 
+            times 0.01.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">SetIntensityForMean #</TD>
+          <TD>Adjust beam intensity to yield the given number of counts, based on counts in
+            the tilt-foreshortened area of the image in A. In Low Dose mode, this operates
+            only on Record images and will change the intensity only of the Record area.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">SetExposureForMean #M [#K]</TD>
+          <TD>Adjust Record exposure time to yield the gven number of counts #M, based on 
+            counts in the tilt-foreshortened area of the image in A, which must be a Record 
+            image in Low Dose mode.&nbsp; For a K2 camera taking dose-fractionated images, a 
+            non-zero value can be given for the optional #K to modify frame time so as to 
+            keep the same number of frames.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">SetIntensityByLastTilt</TD>
+          <TD>Adjust beam intensity by the change in cosine of the tilt angle from the last
+            tilt change. In low dose mode, this changes the intensity only of the Record
+            area.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">ChangeIntensityBy #</TD>
+          <TD>Change beam intensity by the given factor using calibrations. In low dose mode
+            this changes the intensity of the current area.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">SetAlpha #</TD>
+          <TD>Sets alpha value on JEOL.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">ReportAlpha</TD>
+          <TD>Reports alpha value on JEOL.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">SetBeamShift #X #Y</TD>
+          <TD>Set the beam shift to the given values (nominal micron units)</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">ReportBeamShift</TD>
+          <TD>Report the beam shift in nominal micron units</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">SetBeamTilt #X #Y</TD>
+          <TD>Set the beam tilt to the given values (milliradians or % of full scale)</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">ReportBeamTilt</TD>
+          <TD>Reports the beam tilt in milliradians for FEI, % of full-scale value for JEOL</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">SetProbeMode #</TD>
+          <TD>Sets the mode to microprobe or nanoprobe on an FEI scope.&nbsp; Follow with 0 
+            or &quot;nano&quot; for nanoprobe, or 1 or &quot;micro&quot; for microprobe.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">ReportProbeMode</TD>
+          <TD>Reports whether an FEI scope is in nanoprobe or microprobe mode; sets first 
+            reported value to 0 or 1, respectively.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD colspan="2"><A name="image_shift"></A><B>Image Shift-Related Commands</B></TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">SetImageShift #X #Y [#D]</TD>
+          <TD>Set the image shift to the given values (image shift units).&nbsp; The values
+            correspond to the ones give by ReportImageShift, which are adjusted for tilt
+            axis offset, image shift offset, and low dose area shift.&nbsp; Add the optional 
+            #D to impose a settling time before the next camera image equal to&nbsp; D times 
+            the normal settling time (i.e., 1 for regular settling).</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">ImageShiftByPixels #X #Y [#D]</TD>
+          <TD>Change image shift by given # of pixels in camera X and Y; optional #D 
+            provides settling time as just described.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">ImageShiftByUnits #X #Y&nbsp; [#D]</TD>
+          <TD>Change image shift by given # of IS units in X &amp; Y; optional #D provides 
+            settling time as just described.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">ImageShiftByMicrons #X #Y [#D]</TD>
+          <TD>Change image shift by given distance on specimen (X is tilt axis); optional #D 
+            provides settling time as just described.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">ReportImageShift</TD>
+          <TD>Report the image shift in IS units, adjusted for tilt axis offset, image shift
+            offset, and low dose area shift; if image shift is calibrated, also report the equivalent shift in unbinned 
+            pixels on the current camera at the current magnification, and the amount the 
+            stage would need to be moved to compensate for resetting this image shift.&nbsp; Positive values of the 
+            camera shift will result from an image shift 
+            imposed by dragging an image to the upper right.</TD>
+        </TR>
+        <TR  vAlign="top">
+          <TD colspan="2"><A name="misc_scope"></A><B>Miscellaneous Scope Commands</B></TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">SetObjectiveStigmator #X #Y</TD>
+          <TD>Set the objective lens stigmator to the given values (between -1 and 1)</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">ReportObjectiveStigmator</TD>
+          <TD>Report the X and Y values of the objective stigmator, between -1 and 1</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">SetBeamBlank #</TD>
+          <TD>Blank beam if # is 1, unblank if # is 0</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">NormalizeLenses #</TD>
+          <TD>Normalize selected lenses on an FEI or Hitachi scope; # is the sum of 1 for projector, 2
+            for objective, 4 for condenser lenses</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">NormalizeAllLenses [#]</TD>
+          <TD>Normalize all lenses, or in a lens group, on an FEI scope.&nbsp; With # 0 or
+            not present, it normalizes all lenses in one call.&nbsp; Otherwise, # can be the
+            sum of 1 to normalize the illumination group (which includes condenser,
+            minicondenser, and objective lenses) and 2 to normalize the projection group (which includes objective and projector
+            lenses) in a separate call.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">ReportColumnOrGunValve</TD>
+          <TD>Reports 0 or 1 if column/gun valve is closed or open on FEG scopes, or if 
+            filament on JEOL is clearly off or on.&nbsp; Reports -1 if the filament current 
+            is inconsistent with the beam switch state.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">SetColumnOrGunValve #</TD>
+          <TD>Close column/gun valve on FEG scope or turn off filament on JEOL if # is 0; open valve if # is 1 
+            (turning on filament does not work).</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">ScreenUp</TD>
+          <TD>Raise the main screen</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">ScreenDown</TD>
+          <TD>Lower the main screen</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">ReportScreen</TD>
+          <TD>Report if screen is up or down; reportedValue1 is set to 0 or 1, respectively.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">ManualFilmExposure #</TD>
+          <TD>Film exposure time in seconds for manual exposures, or 0 for automatic exposure
+            (the default)</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">ExposeFilm</TD>
+          <TD>Take a film exposure</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">SpecialExposeFilm # [#] [#]</TD>
+          <TD>Expose film with special handling: the first # specifies a delay in seconds
+            after loading the plate; the second # specifies a pre-exposure of the specimen
+            before exposing the plate, in seconds. The third # suppresses dimming of the
+            screen if it is nonzero.  This command command does not raise the
+            screen if it is down. It requires the adaexp server to be installed.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">SetupMessageBox #B [#T] [text]</TD>
+          <TD>Sets properties for a message box to be shown on an FEI microscope computer 
+            with the next command.&nbsp; B specifies the type of buttons: 0 for OK, 1 for OK 
+            - Cancel, 2 for Yes - No, 3 for Yes - No - Cancel.&nbsp; The optional T sets the 
+            time interval between message box displays, or 0 to display it unconditionally 
+            or -1 just to set the time of display to the current time.&nbsp; The optional 
+            rest of the line specified the text inside the message.&nbsp; If you just want 
+            to specify an interval, enter &#39; 0 interval&#39;; if you just want to specify text 
+            for a box to be displayed unconditionally, enter &#39;0 0 text&#39;.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">ShowMessageOnScope title</TD>
+          <TD>Opens a message box on an FEI microscope computer with the given title, which 
+            can include spaces.&nbsp; The box is displayed with the &quot;long operation&quot; 
+            mechanism described below, so it is possible to have it displayed only after an 
+            interval has elapsed.&nbsp; If SetupMessageBox was not used, the default is for 
+            a box with an OK button, opened unconditionally, with the text &quot;SerialEM 
+            message&quot;.&nbsp; When the command is finished, reportedValue1 is set with 1 if 
+            the box was displayed or 0 if it was not, and reportedValue2 is set with the 
+            reply from the box: 2 for Yes or OK, 1 for No, 0 for Cancel, or -1 for an error.</TD>
+        </TR>
+        <TR  vAlign="top">
+          <TD colspan="2"><A name="filter_commands"></A><B>Energy Filter Commands</B></TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">SetSlitWidth #</TD>
+          <TD>Sets energy filter slit width in eV</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">SetSlitIn [#]</TD>
+          <TD>Inserts the slit; or if # is entered, inserts if 1 or retracts if 0</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">SetEnergyLoss #</TD>
+          <TD>Set sthe energy loss to the #</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">ChangeEnergyLoss #</TD>
+          <TD>Changes the energy loss by the #</TD>
+        </TR>
+        <TR>
+          <TD class="style9">ReportEnergyFilter</TD>
+          <TD>Reports the slit width, energy loss, and whether the slit is in or out (the
+            latter is placed in ReportedValue3 as a 1 or 0)</TD>
+        </TR>
+        <TR>
+          <TD class="style9">SetJeolGIF #</TD>
+          <TD>Calls JEOL function to set GIF mode on (if # is nonzero) or off.</TD>
+        </TR>
+        <TR>
+          <TD class="style9">ReportJeolGIF</TD>
+          <TD>Calls JEOL function to get whether GIF mode is on.</TD>
+        </TR>
+        <TR  vAlign="top">
+          <TD colspan="2"><A name="loader_vacuum"></A><B>Autoloader,
+          Refrigerant, and Vacuum Commands</B></TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">LoadCartridge #</TD>
+          <TD>Loads the cartridge from the given slot # (numbered from 1) if there is an
+            autoloader.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">UnloadCartridge</TD>
+          <TD>If there is an autoloader, unloads the cartridge.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">ReportSlotStatus #</TD>
+          <TD>Report the status of the cartridge slot given by # (numbered from 1) if there
+            is an autoloader.&nbsp; Status is -1 for an error, 0 for empty, and 1 for
+            occupied.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">AreDewarsFilling</TD>
+          <TD>Report whether any of the dewars in a temperature control system are busy
+            filling (reported value 1 is set to 0 or 1).
+            &nbsp; Value can be assigned to a variable at end of commmand.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">DewarsRemainingTime</TD>
+          <TD>Report the time remaining for until next automatic dewar filling, or -1 if
+            none is scheduled.&nbsp; Value can be assigned to a variable at end of commmand.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">RefrigerantLevel #</TD>
+          <TD>Report the refrigerant level of the given dewar: 1 for autoloader, 2 for
+            column, 3 for liquid helium. &nbsp; Value can be assigned to a variable at end of commmand.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">IsPVPRunning</TD>
+          <TD>Report whether the PVP is running on an FEI scope.&nbsp; Value can be assigned 
+          to a variable at end of commmand.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">LongOperation Op # [Op #...]</TD>
+          <TD>Starts one or more time-consuming operations: Buffer cycle (Bu), Refill
+            refrigerant (Re), Inventory cassettes (In), Loader buffer cycle (Lo), or Dark
+            reference update for K2 (Da).&nbsp; Operations are identified by the first two
+            letters of whatever full word you use (case insensitive).&nbsp; Each operation
+            except Inventory must be followed by an interval in hours (#).&nbsp; If # is &gt;
+            0, the operation is done only if the time since the last such operation is
+            greater than #; if # is 0, the operation is done unconditionally; if # is &lt; 0, it
+            simply records the current time as the time of the last operation.&nbsp;&nbsp; The scope operations will occur sequentially
+            and be started in &nbsp;the order that they are listed. The dark reference update
+            will be done simultaneously with scope operations.&nbsp; If an error occurs in a
+            scope operation, other operations will be finished and the error reported at the
+            end.&nbsp; Errors other than in refilling refrigerant will cause the script to
+            stop.&nbsp; The user
+            interface should not hang during long operations, and users will be asked to confirm that they want to
+            kill the operation threads if they press STOP or try to exit the program.&nbsp;
+            The consequences of killing these threads are uncertain.</TD>
+        </TR>
+        <TR  vAlign="top">
+          <TD colspan="2"><A name="piezo_commands"></A><B>Piezo Drive Commands</B></TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">SelectPiezo # #</TD>
+          <TD>Select a piezo drive for reports or movements, follow with the plugin number
+            (numbered from 0, enter 0 if there is only one plugin controlling piezos) and
+            the piezo number (numbered from 0).</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">ReportPiezoXY</TD>
+          <TD>Reports the X and Y position of the currently selected piezo</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">ReportPiezoZ</TD>
+          <TD>Reports the Z position, or the position of the only axis for a single-axis
+            piezo, of the currently selected piezo</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">MovePiezoXY #X #Y [#]</TD>
+          <TD>Sets the X and Y position of the currently selected piezo to #X, #Y, or if the
+            optional third # is non-zero, moves the piezo by #X, #Y</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">MovePiezoZ #Z [#]</TD>
+          <TD>Sets the Z position, or position of a single-axis piezo, to #Z for the
+            currently selected piezo, or if the optional second # is non-zero, moves the
+            piezo by #Z</TD>
+        </TR>
+      </TABLE>
+      <BR>
+      <P><A name="high_level_operations"></A><B>Higher Level Operations and Tasks</B></P>
+      <TABLE border="1" cols="2">
+        <TR  vAlign="top">
+          <TD colspan="2"><A name="autoalign"></A><B>Autoalign-Related Commands</B></TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style5">A or Autoalign</TD>
+          <TD>Align buffer A to autoalign buffer</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style5">AlignTo buffer_letter [noIS]</TD>
+          <TD>Align buffer A to given buffer (e.g. B). Optionally, enter 1 for 'noIS' to
+            avoid changing microscope image shift</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style5">ClearAlignment</TD>
+          <TD>Clear the alignment shift of the image in buffer A</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style5">ConicalAlignTo buf # [show]</TD>
+          <TD>Align buffer A to the given buffer 'buf' assuming a specimen rotation given by
+            #. Optionally, enter 1 for 'show' to show the cross-correlation.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style5">ReportAlignTrimming</TD>
+          <TD>Report the sum of left and right borders and the sum of top and bottom borders
+            in the last autoalign for the image in A and for the reference image.&nbsp; The
+            numbers are in pixels of the respective images before the additional binning
+            applied for correlation, and will thus differ from the binned values reported by
+            the autoalign routine.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style5">ReportAlignShift</TD>
+          <TD>Report the X and Y alignment shift of the current image in A in unbinned pixels
+            on image, in nanometers along the image shift axes, and in nanometers on the
+            specimen, where the tilt axis is along X.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style5">ReportShiftDiffFrom #</TD>
+          <TD>Report the difference between the alignment shift of the current image and the
+            given value in microns, as percentage of the value; the cumulative sum of
+            differences in microns, and the total sum of shifts in microns. For monitoring
+            variability in successive stage movements.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style5">ReportAccumShift</TD>
+          <TD>Report sum of shifts given by ReportAlignShift or ReportShiftDiffFrom</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style5">ResetAccumShift</TD>
+          <TD>Reset the sum of shifts given by ReportAlignShift to 0 or ReportShiftDiffFrom</TD>
+        </TR>
+        <TR  vAlign="top">
+          <TD colspan="2"><A name="autofocus"></A><B>Autofocus/Autotuning-Related Commands</B></TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style5">G or Autofocus [#] [#]</TD>
+          <TD>Autofocus; set optional first # to -2 to measure shift and drift, -1 to just measure defocus without changing,
+            or 1 for normal autofocus that changes focus to target; set optional second # to 1
+            or 2 to focus with View area in Low Dose mode. With&nbsp; &#39;-1 1&#39;, the measured 
+            defocus is that of the View area, i.e., not adjusted for View defocus offset; 
+            with &#39;-1 2&#39; the measured defocus is adjusted for the offset to give an estimate 
+            of defocus in the Record area. </TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style5">IncTargetDefocus #</TD>
+          <TD>Change the defocus target by #</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style5">SetTargetDefocus #</TD>
+          <TD>Set the defocus target to #</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style5">ReportAutofocusOffset</TD>
+          <TD>Report the current value of the defocus offset used for autofocusing</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style5">SetAutofocusOffset #</TD>
+          <TD>Set the defocus offset for autofocusing to the given #.&nbsp; The first time 
+            it is set, the current value is saved, and it will be restored automatically 
+            when the script ends.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style5">BeamTiltDirection #</TD>
+          <TD>Set beam tilt direction for autofocusing to # (a value from 0 to 3)</TD>
+        </TR>
+        <TR>
+          <TD class="style5">OppositeAutofocus [#]</TD>
+          <TD>In low dose mode, autofocus in area on opposite side of Record from the defined
+            Focus area; if optional # is -1, just measure defocus without changing.&nbsp;
+            Not available if Balance Shifts is on.</TD>
+        </TR>
+        <TR>
+          <TD class="style5">FocusChangeLimits # #</TD>
+          <TD>Set limits on the focus change during autofocus runs for the remainder of the
+            script; follow with a negative and a positive number for the limits in microns.&nbsp;
+            When an autofocus run exceeds a limit, it will abort and return to the starting
+            defocus.&nbsp; Enter with 0 0 to cancel these limits.</TD>
+        </TR>
+        <TR>
+          <TD class="style5">AbsoluteFocusLimits # #</TD>
+          <TD>Set limits on the absolute focus reached during autofocus runs.&nbsp; Follow
+            with a lower and a upper limit as given by ReportAbsoluteFocus, or 0 0 to cancel
+            these limits.&nbsp; Autofocus will abort when a limit is exceeded.&nbsp; These 
+            values will override the absolute limits that can be specificed through the 
+            Focus menu, but a 0 0 will not prevent those limits from being applied.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style5">ReportFocusDrift</TD>
+          <TD>Report the drift estimate from the last autofocus, if available</TD>
+        </TR>
+        <TR>
+          <TD class="style5">ReportAutofocus</TD>
+          <TD>Report measured defocus from last autofocus, or whether it failed.&nbsp; The 
+            defocus is placed into reportedValue1 and a failure code in reportedValue2 (1 
+            for inconsistent focus, 2 for absolute limits exceeded, 3 for focus change 
+            limits exceeded, or -1 for other error).</TD>
+        </TR>
+        <TR>
+          <TD class="style5">ReportTargetDefocus</TD>
+          <TD>Report the defocus target</TD>
+        </TR>
+        <TR>
+          <TD class="style5">CorrectAstigmatism [#]</TD>
+          <TD>Measure astigmatism, report the stigmator values, and correct for those values 
+            (or do not correct, if the optional # is -1)</TD>
+        </TR>
+        <TR>
+          <TD class="style5">CorrectComa [#]</TD>
+          <TD>Measure beam-tilt misalignment, report the estimated beam tilt, and correct to 
+            bring beam tilt to zero (or do not correct, if the optional # is -1)</TD>
+        </TR>
+        <TR  vAlign="top">
+          <TD colspan="2"><A name="low_dose"></A><B>Low Dose Commands</B></TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style5">GoToLowDoseArea area</TD>
+          <TD>Switches to the low dose area given by 'area', which must be one of V, F, T, R,
+            or S. This will not work if the screen is down.
+          </TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style5">SetLowDoseMode #</TD>
+          <TD>Turns low dose mode on for # nonzero or off for # 0; the previous state of low
+            dose is saved in ReportedValue1 as a 0 or 1.&nbsp; This value can be assigned 
+            to a variable at the end of the command.</TD>
+        </TR>
+        <TR>
+          <TD class="style5">ReportLowDose</TD>
+          <TD>Report whether low dose is on or not and the current area, if it is defined.&nbsp;
+            The number of the area (0 for V, etc.) is placed in ReportedValue2.</TD>
+        </TR>
+        <TR>
+          <TD class="style5">SetLDContinuousUpdate #</TD>
+          <TD>Turns &quot;Continuous update of Mag &amp; Beam&quot; in the Low Dose panel on if # is 
+            non-zero or off if # is 0.</TD>
+        </TR>
+        <TR>
+          <TD class="style5">SetAxisPosition F/T #D [#A]</TD>
+          <TD>Modifies the axis position, and optionally the rotation of the inter-area 
+            axis, for the Focus and/or Trial area.&nbsp; Follow with F or T to specify the 
+            area (both will be changed if Focus and Trial settings are being kept 
+            identical); with #D, the distance in microns; and optionally with #A, a rotation 
+            angle.&nbsp; If an angle is set, the option to apply the angle will be turned on 
+            in the Low Dose control panel.&nbsp; Low dose mode must be on to use this 
+            command.</TD>
+        </TR>
+        <TR  vAlign="top">
+          <TD colspan="2"><A name="task_commands"></A><B>Task-Related Commands</B></TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style5">ResetImageShift [1]</TD>
+          <TD>Reset image shift and move stage to compensate.&nbsp; Follow with an optional 
+            1 to move the stage so as to retain or impose backlash, even if the user has not 
+            selected the option to do so in the Image Alignment &amp; Focus control panel.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style5">ResetShiftIfAbove #</TD>
+          <TD>Reset image shift and realign image if image shift is greater than the given #
+            in microns</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style5">Eucentricity [#]</TD>
+          <TD>Refine eucentricity, or if optional # is entered, do rough eucentricity only
+            (1), refine only (2), both steps (3), or refine and realign (6)</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style5">ReportLastAxisOffset</TD>
+          <TD>Reports the total lateral offset of the tilt axis estimated from the last Refine 
+            Eucentricity run; aborts the script if no offset is available.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style5">WalkUpTo #</TD>
+          <TD>Tilt up to given angle in steps and track image position</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style5">ReverseTilt [#]</TD>
+          <TD>Work out backlash and realign image after reversing tilt direction; enter
+            optional 1 or -1 to specify a specific direction for further tilts</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style5">RefineZLP [#]</TD>
+          <TD>Report time of day and run Refine Zero Loss Peak procedure.&nbsp; If the 
+            optional # is entered with an interval in minutes, the procedure is not run if 
+            the time since the last run is less than that interval.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style5">AutocenterBeam</TD>
+          <TD>Start the Beam Autocenter routine</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style5">CookSpecimen</TD>
+          <TD>Run the Specimen Cooker routine</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style5">WaitForDose #d [#r]</TD>
+          <TD>Start accumulating dose and wait until it reaches the given #d in electrons per
+            square Angstrom. Enter the optional #r to set how many times it reports
+            progress while waiting (default is 10). Be sure that the screen is down and, if
+            in low dose, that the beam is unblanked.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style5">CenterBeamFromImage [#]</TD>
+          <TD>Center beam using the existing image in the active buffer by detecting the
+            edges of the beam, or from the centroid of the image intensities if # is
+            nonzero. In the latter case the beam should be completely within the camera
+            field.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style5">CalibrateImageShift [#]</TD>
+          <TD>Calibrate image shift at the current mag. Do the calibration from scratch if
+            the optional # is nonzero.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style5">ShiftCalSkipLensNorm [0]</TD>
+          <TD>Keeps projector lens normalization from being done before the next image or 
+            stage shift calibration provided that normalization was last done at the current 
+            magnification.&nbsp; Follow with an optional 0 to NOT skip normalization.</TD>
+        </TR>
+        <TR>
+          <TD class="style5">FindPixelSize</TD>
+          <TD>Run the routine to find the pixel size in an image of a cross-line grating.</TD>
+        </TR>
+        <TR>
+          <TD class="style5">QuickFlyback set# #e</TD>
+          <TD>Run the camera timing calibration routine in quick flyback mode for an FEI
+            STEM camera, where 'set#' specifies the camera parameter set and must be V, F,
+            T, R, or P, and #e is the exposure time to use.&nbsp; The routine will not ask for
+            confirmation before saving the resulting flyback time and startup delay in the
+            master list of flyback times.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style5">ShiftImageForDrift # # #</TD>
+          <TD>Apply image shift during the next exposure to compensate for a drift in X and Y
+            given by the first and second numbers; the third number should be 0 if the
+            drift is in unbinned pixels/sec and 1 if it is in nm/sec</TD>
+        </TR>
+        <TR  vAlign="top">
+          <TD colspan="2"><A name="navigator"></A><B>Navigator-Related Commands</B></TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style5">NewMap</TD>
+          <TD>Make the current image or montage a new Navigator map</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style5">MoveToNavItem [#]</TD>
+          <TD>Move the stage to a Navigator item; if no # is entered, move to the current
+            Navigator item or to the item that this script is being run on, otherwise move
+            to the item whose index in the table is # (numbered from 1)</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style5">RealignToNavItem #r [#c]</TD>
+          <TD>Realign to the current Navigator item, or to the item that this script is being
+            run on. For #r, enter 1 to restore the microscope state to the current state
+            after the procedure, or 0 not to.&nbsp; For optional #c, enter 1 to use
+            continuous acquisition mode and end it at end of procedure, or 2 to leave it
+            running if possible.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style5">RealignToOtherItem #i #r [#c]</TD>
+          <TD>Realign to the Navigator item whose index in the table is #i, numbered from 1.
+            For #r, enter 1 to restore the microscope state to the current state after the
+            procedure, or 0 not to.&nbsp; For optional #c, enter 1 to use continuous
+            acquisition mode and end it at end of procedure, or 2 to leave it running if
+            possible.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style5">ForceCenterRealign</TD>
+          <TD>Makes Realign to Item align to the map center instead of skipping the first
+            round because it was aligned to recently</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style5">ShiftItemsByAlignment</TD>
+          <TD>Shift items at the current registration by the alignment shift of the image in
+            buffer A. If rerun on the same image, it applied the change in shift between
+            the current and previous run.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style5">ShiftItemsByCurrentDiff #</TD>
+          <TD>Shift items at the current registration by the difference between the current 
+            stage position and the recorded position of the current Navigator item or the 
+            item that this script is being run on.&nbsp; The shift is done only if the 
+            difference is less than the # in microns.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style5">UpdateItemZ</TD>
+          <TD>Assign current stage Z value to the current Navigator item, or item that this
+            script is being run on.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style5">UpdateGroupZ</TD>
+          <TD>Assign current stage Z value to the whole group that the current Navigator
+            item, or item that this script is being run on, belongs to. The item must have a
+            non-zero group ID. If the group would show up on more than one line with
+            'Collapse groups' on, items on all lines will be updated, unlike with the
+            'Update Z' button.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style5">ReportNavItem</TD>
+          <TD>Report the index, stage X, Y, Z, label, and note string for the current 
+            Navigator item, or the item this script is being run on. The index and stage 
+            coordinates are placed in &#39;reportedValue&#39; variables as usual, and the item type 
+            is placed in &#39;reportedValue5&#39; (0 for point, 1 for polygon, 2 for map). In 
+            addition, variables &#39;navLabel&#39;, and &#39;navNote&#39; are set with the label and note 
+            strings, variables 'navIndex' and 'navIntLabel' are set with integer values
+            of the item index (numbered from 1) and of the label (up to any non-numeric characters), 
+            and variable &#39;navRegis&#39; is set with the item&#39;s registration value.
+            If the Navigator is currently acquiring at points, a variable &#39;navAcqIndex&#39; is
+            set with the number of items already acquired plus 1.&nbsp; Any of
+            these variables can then be used to make filenames, and the latter two can be
+            used in arithmetic and IF statements.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style5">ReportOtherItem #</TD>
+          <TD>Report similarly on the Navigator item whose index in the table is #, numbered
+            from 1.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style5">ReportGroupStatus</TD>
+          <TD>For the current Navigator item or the item this script is being run on, reports a code for whether the
+            item is first to be acquired in a group: -1 if Navigator not acquiring, 0 if
+            not in a group, 1 if first to be acquired in a group, 2 if later in the group.
+            If the group would show up on more than one line with 'Collapse groups' on, a
+            value of 1 is returned for the first item to be acquired in each subgroup.&nbsp;
+            It also reports the group ID of the item&nbsp; (ID is 0 for an item not in a
+            group).</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style5">ReportNumNavAcquire</TD>
+          <TD>Report the number of Navigator marked for Acquire and marked for Tilt Series 
+            as two values; return each as -1 if Navigator is not open.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style5">ItemIndexWithLabel str</TD>
+          <TD>Report the index in the Navigator table of the item whose label is the given 
+            string, or 0 if there is none.&nbsp; Sets reportedValue1 with the index.&nbsp; 
+            The string can contain spaces and the comparison is not case-sensitive.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style5">ItemIndexWithNote str</TD>
+          <TD>Report the Navigator index of the item whose note is the given string, 
+            otherwise just like ItemIndexWithLabel.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style5">SetNavRegistration #</TD>
+          <TD>Set the current registration of the Navigator window to the given number.&nbsp; 
+            No item registration values are changed.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style5">ItemForSuperCoord #</TD>
+          <TD>Set the item number that Navigator supplies supermontage coordinates from when
+            a montage image is acquired. Set the number to 0 to restore Navigator to using
+            coordinates from the item currently being acquired.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style5">SkipPiecesOutsideItem #</TD>
+          <TD>Sets the current montage to skip pieces outside the Navigator item whose
+            position in the table is # (numbered from 1). If # is 0, uses the current item.
+            If # is &lt; 0, disables the skipping of pieces.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style5">SuffixForExtraFile</TD>
+          <TD>Sets a suffix so that the Acquire at Points routine will open an extra file 
+            whenever it opens a regular file for output.&nbsp; The name of the extra file 
+            will be the root of the regular filename, plus the suffix, followed by the 
+            extension of the regular filename.&nbsp; The extra file will be opened before 
+            the regular file.&nbsp; It will be closed when the regular file is closed (at 
+            the end of acquisition or before opening a new file).</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style5">SkipAcquiringNavItem</TD>
+          <TD>Tells the Navigator to skip the current item and move on to the next.&nbsp; 
+            This command has an effect only when included in a script being run as a 
+            preliminary action before the main action.</TD>
+        </TR>
+      </TABLE>
+      <BR>
+      <P><A name="miscellaneous"></A><B>Miscellaneous Commands</B></P>
+      <TABLE border="1" cols="2">
+        <TR vAlign="top">
+          <TD width="210">CircleFromPoints x y x y x y</TD>
+          <TD>Report the X and Y center coordinate and the radius in microns for the circle
+            through three points whose coordinates are given on the line as x1 y1 x2 y2 x3
+            y3..&nbsp; Values can be assigned to variables at end of command.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD width="210">ReportClock</TD>
+          <TD>Report seconds elapsed since last ResetClock command</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD width="210">ResetClock</TD>
+          <TD>Reset the time reported by ReportClock to 0</TD>
+        </TR>
+         <TR vAlign="top">
+          <TD width="210">ReportMinuteTime</TD>
+          <TD>Report an absolute time in minutes, a large integer. The difference between
+           two such values will give an elapsed time in minutes.  If a variable name is
+           included after the command, the value will automatically be assigned to a 
+           persistent variable so that it is available across multiple runs of the macro.
+          </TD>
+        </TR>
+         <TR vAlign="top">
+          <TD width="210">ReportTickTime</TD>
+          <TD>Report the time in seconds since the program started, like the times that 
+            prefix program debug output. The difference between two such values will give an 
+            elapsed time in seconds with nominal millisecond precision, as long as the 
+            program has been running for fewer than 57 days. If a variable name is included 
+            after the command, the value will automatically be assigned to a persistent 
+            variable so that it is available across multiple runs of the macro.
+          </TD>
+        </TR>
+         <TR vAlign="top">
+          <TD width="210">ElapsedTickTime start</TD>
+          <TD>Report the time in seconds since the tick time given in &#39;start&#39;, which should 
+            be a variable assigned with the result from &#39;ReportTickTime&#39;.&nbsp; This command 
+            should be used to measure intervals between tick times if there is any chance 
+            that the program will run for more than 57 days.&nbsp; The value can be assigned 
+            to a variable at the end of the command.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD width="210">ProgramTimeStamps</TD>
+          <TD>Print the program version and build date, and the current date and time.</TD>
+        </TR>
+        <TR>
+          <TD width="207">Plugin name func [args]</TD>
+          <TD>Call&nbsp;the function 'func' in the plugin named 'name' with&nbsp;appropriate
+            list of arguments for that function.&nbsp; Arguments are entered as items
+            separated by spaces, except that a string argument at the end may consist of
+            multiple words.&nbsp; The return value of the function is reported and placed
+            into reportedValue1.</TD>
+        </TR>
+        <TR>
+          <TD width="210">ListPluginCalls</TD>
+          <TD>List the names of script-callable functions in all loaded plugins along with the
+            arguments that they expect, in parentheses.&nbsp; For each argument, there
+            should be one item provided on the command line calling the function, with all
+            items separated by spaces as usual.&nbsp; Two exceptions to this are: a string
+            argument at the end can include spaces; an argument listed as [out]double is a
+            returned value, assigned to reportedValue2 or higher.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD width="210">MailSubject text</TD>
+          <TD>Subject line for an email message (default is 'Message from SerialEM script').
+            The text can include variables to be substituted.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD width="210">SendEmail text</TD>
+          <TD>Send an email containing the given text, which can include variables to be
+            substituted. An SMTP server and address to send from must be defined in the
+            properties file, and recipient(s) must be defined using 'Set Email Address' in
+            the Tilt Series Menu.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD width="210">ErrorBoxSendEmail text</TD>
+          <TD>Send an email containing the given text if the script stops with a message box; 
+            the text can have variables to be substituted.&nbsp; Requirements are the same 
+            as for &#39;SendEmail&#39;.&nbsp; If the message box occurs during Navigator Acquire at 
+            Points and the user has selected to send emails there, two emails will be sent, 
+            thus allowing more specific information from the one specified here.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD width="210">RunInShell command</TD>
+          <TD>Run the given command with the system command processor.&nbsp; It appears that 
+            any command that will run in a Command Prompt window can be run.&nbsp; Thus 
+            commands can include: &#39;|&#39; to pipe from one program to another; &#39;&amp;&#39; to run 
+            successive programs unconditionally; &#39;&amp;&amp;&#39; or &#39;||&#39; to run successive programs 
+            conditionally; &#39;&gt; outfile&#39; to redirect standard output to a file, &#39;2&gt; errfile&#39; 
+            to redirect standard error output to a file, or &#39;&gt; outfile 2&gt;&amp;1&#39; to redirect 
+            both to one file.&nbsp; Single arguments like filenames that contain spaces 
+            should be enclosed in double quotes.&nbsp; The exit status of the command will 
+            be placed in ReportedValue1; if it is -1, this indicates an error in before 
+            running the command, and ReportedValue2 will be set with the following values: 1 
+            if argument list too big, 2 or 3 if command interpreter cannot be found or is 
+            not executable, 4 for insufficient memory or other meory problem, 5 for 
+            unidentified error.&nbsp; In any case, a non-zero exit status will not be 
+            considered a macro error, and you need to test for failure explicitly. These 
+            error codes are not very helpful - it seems that the exit status is 1 if the 
+            command cannot be found or cannot be started, so if you want to pass information 
+            back with the exit status, you cannot use a 1, and might want to use a value 
+            beside 1 for failure of the operation to distinguish it from failure to run the 
+            command.&nbsp;&nbsp; If STOP is used while the command is running, the script 
+            will stop and the thread that is running the command will be killed, but the 
+            command will keep running.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD width="210">SetProperty name value</TD>
+          <TD>Use this command to set the value of one program property.&nbsp; The command 
+            can be used with nearly all of the general (non-camera-specific) properties that 
+            contain just a single numeric entry and can be set by name in 
+            SerialEMproperties.txt.&nbsp; Follow with the full name of the property (case 
+            insensitive) and with its new value.&nbsp; An error will result if the name does 
+            not match one of the properties that can be set.</TD>
+        </TR>
+      </TABLE>
+    </basefont>
+  </BODY>
+</HTML>

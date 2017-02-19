@@ -1,0 +1,39 @@
+5/27/04:  Some notes about the JEOL branch
+
+The JEOL COM is quite picky.  It can't handle overlapped calls (such as from
+multiple threads), and it sometimes even gets irked if you call its functions
+too rapidly.  The result can be a simple complaint "Class is busy", or every-
+thing could go haywire in a nonrecoverable way with errors such as "Packet error."
+I believe I have it sufficiently pampered to be content and happy via the 
+following measures:
+
+ 1.  A mutex (CEMscope::mScopeMutexHandle) is used to guard all access to the
+     JEOL COM functions.  The mutex is acquired via ScopeMutexAcquire and
+	 released via ScopeMutexRelease.  You can call ScopeMutexAcquire multiple
+	 times from the same thread, so long as you call ScopeMutexRelease an
+	 equal number of times.  For debugging, you can enable TRACE_MUTEX to
+	 generate a transcript of mutex ownership.  The use of the mutex can be
+	 disabled entirely by setting USE_MUTEX to zero.
+
+ 2.  Each call to the JEOL COM is wrapped up in the macro JeolWrap, defined
+     in JeolWrap.h.  This macro checks for the "Class is busy" condition and,
+	 when encountered, delays by JEOL_RETRY_MS milliseconds and then retries.
+	 The return value of the JEOL COM call is saved in global variable
+	 _jeol_result, and is processed by a function JeolWrap2, which will 
+	 generate a textual description of the error and output it to the debugging
+	 console via a call to TRACE.
+
+ 3.  Finally, COM errors are caught via the C++ exception mechanism, as 
+     before.
+
+The JEOL COM is also much slower than the Tecnai COM.  As a result, the loop
+that queries the microscope status and updates the GUI runs too slow, bringing
+the GUI to a crawl or freezing it entirely.  As a result, I divided the update 
+loop (UpdateProc in EMscope.cpp) into two portions.  A separate thread,
+defined in JeolState.cpp, periodically queries the microscope status and saves
+the values into local variables.  When EMscope.cpp's UpdateProc runs, it now
+reads the stored values from JeolState rather than querying the microscope 
+directly.  The result is that the GUI is once again quite snappy and functional.
+
+-- Tobin Fricke <tobin@splorg.org> [ http://splorg.org/people/tobin/ ]
+

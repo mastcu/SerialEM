@@ -1,0 +1,35 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+  <HEAD>
+    <TITLE>Script Control Dialog</TITLE>
+    <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
+    <style type="text/css"> <!-- BODY { font-family:"Arial" } TD { font-size:16 } 
+  --></style>
+  </HEAD>
+  <BODY BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+    <P><A NAME="hidd_macrocontrol"></A><B><FONT size="3">Script Control Dialog</FONT></B></P>
+    <P>This dialog box allows you to specify conditions for stopping a script from 
+      looping. Each limiting condition is activated by a check box; once it is 
+      active, you can enter a limiting value in the associated text box.</P>
+    <P><B>Stop if tilting up above or down below</B></P>
+    <P>These two entries will set the limits for tilting in the positive or negative 
+      directions, respectively. The program will stop the script after executing a 
+      step that tilts beyond the given limit.</P>
+    <P><B>Stop if image level is below</B></P>
+    <P>This entry will cause the script to stop if images are too dark. The program will 
+      measure the mean counts of the image in buffer A after executing a command that 
+      acquires a single image or a montage or autofocuses.
+    </P>
+    <P><B>Stop if montage error exceeds</B></P>
+    <P>This entry will be compared to the mean displacement error after a montage 
+      acquisition, and the script will stop if the error is too high.</P>
+    <P><B>Limit number of script runs to</B></P>
+    <P>This entry can be used to limit the total number of times that a script will 
+      repeat automatically.</P>
+    <P><B>Stop if image shift exceeds</B></P>
+    <P>This entry will cause the script to stop whenever image shift exceeds the given 
+      value.</P>
+    </basefont>
+  </BODY>
+</HTML>

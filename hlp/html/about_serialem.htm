@@ -1,0 +1,82 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+  <HEAD>
+    <TITLE>Introduction to SerialEM</TITLE>
+    <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
+    <style type="text/css"> <!-- BODY { font-family:"Arial" } TD { font-size:16 } 
+  --></style>
+  </HEAD>
+  <BODY BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+    <P><A NAME="about_serialem"></A><B><FONT size="3">Introduction to SerialEM</FONT></B></P>
+    <P>SerialEM presents an integrated environment for image acquisition, display, and 
+      storage, as well as for the control of the microscope needed to acquire 
+      montaged images and tilt series. You can acquire images from a variety of cameras 
+      using parameters that you set from within SerialEM. Images can be zoomed, 
+      panned, and compared with each other using controls similar to those in Imod. 
+      Successive images are conveniently saved to a single MRC file, ready for 
+      display in Imod. The Tilt Series Controller will acquire a tilt series 
+      automatically using a prediction algorithm to minimize acquisition time and 
+      specimen exposure. A low dose mode can be used to perform focusing and tracking 
+      away from the area of interest. SerialEM can also automatically capture a 
+      montage of overlapping frames, and acquire a montaged tilt series. The program 
+      also contains a script feature for programming repetitive actions.</P>
+    <P><B><I>Controls:</I></B> SerialEM is controlled through its menus, control 
+      panels, and hotkeys. Menus contain commands related to a topic, as well as some 
+      entries to set parameters related to that topic. The control panels provide 
+      status information, buttons for performing all frequently used operations, and 
+      buttons for setting parameters related to the particular panel. Here is some 
+      general information about <A HREF="about_panels.htm">Control Panels</A>. 
+      Hotkeys are summarized in the section on <A HREF="about_mouse.htm">Mouse and 
+        Keyboard Controls</A>.</P>
+    <P><B><I>Buffers and display windows:</I></B> Images are initially displayed in a 
+      main image display window. Images are kept in a set of buffers, and the main 
+      display window can show an image from any one of these buffers. Similarly to 
+      Imod, you can riffle through the images with PageUp and PageDn. The buffers are 
+      referred to by letter. Images from the camera are always placed in buffer A, 
+      the first buffer. The program is typically set up to roll images through the 
+      first three buffers. In other words, when a new image comes in, the existing 
+      image in buffer A is moved to buffer B, the image previously in buffer B is 
+      moved to buffer C, and the image in buffer C is lost.</P>
+    <P>It is also possible to copy an image to a new, free-standing window, which could 
+      be useful if you want to look at two images side by side.</P>
+    <P><B><I>Camera control:</I></B> The camera controls are patterned after those 
+      available in DigitalMicrograph, but there are some important enhancements that 
+      provide more flexible control of the specimen exposure, make it easier to 
+      select subareas of the camera, and allow control of whether a dark reference is 
+      taken. General information about image capture is available in the section on <A HREF="about_camera.htm">
+        Image Acquisition</A>.</P>
+    <P><B><I>File storage:</I></B> When images are saved to a file, successive images 
+      are typically stacked into a single file in the MRC format. The pixel size is 
+      set in the header, and tilt angle and other information can be stored in the 
+      extended header area. The file header is maintained after every image is 
+      stored, so that the file will be readable if something goes wrong.</P>
+    <P><B><I>Image alignment:</I></B> Alignment of images is a key component of data 
+      collection. SerialEM provides a linkage between the shifting of an image in a 
+      window, which is referred to as an alignment shift, and the physical 
+      realization of this shift using the image shift feature of the microscope. This 
+      means that if you want to center a particular feature in the camera frame, you 
+      can impose an alignment shift on an image that has already been acquired, 
+      simply by dragging it with the right mouse button. The microscope image shift 
+      is then changed by the right amount so that the next image that you acquire 
+      appears in the desired place. Two images can also be aligned to each other by 
+      cross-correlation. This is referred to as autoaligning. The image in buffer A 
+      is correlated to a reference image in another buffer. Before doing this 
+      correlation, the program will stretch the image taken at a higher tilt angle to 
+      give a better match to the other image.</P>
+    <P><B><I>Autofocusing:</I></B> SerialEM determines the defocus of the specimen by 
+      the standard technique of measuring how much the image moves when the beam is 
+      tilted. When the specimen is in the focal plane, its image does not move; and 
+      the farther it is from focus, the bigger the beam-tilt induced movement. For 
+      this to work correctly, you need to align the beam tilt pivot points properly, 
+      a standard step in the Direct Alignments used to tune the microscope. Be sure 
+      that the specimen is at the eucentric height and at minimum contrast focus when 
+      you tune the pivot points. They do not need to be perfect, but do need to be 
+      close. Measurement of defocus is typically done by taking a picture with 
+      positive beam tilt, one with negative beam tilt, then another with positive 
+      beam tilt. Having three pictures allows the program to compensate for drift. 
+      Once the program has measured the defocus, it can change it to achieve the 
+      level of defocus that you specify. This procedure is called autofocusing.</P>
+    </basefont>
+  </BODY>
+</HTML>

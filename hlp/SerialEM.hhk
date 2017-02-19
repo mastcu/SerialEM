@@ -1,0 +1,90 @@
+<HTML>
+<!-- Sitemap 1.0 -->
+<OBJECT type="text/site properties">
+</OBJECT>
+<UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Keyword" value="exit">
+		<param name="Name" value="File Menu Commands">
+		<param name="Local" value="html/menu_file.htm#hid_app_exit">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Keyword" value="files">
+		<param name="See Also" value="files">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Keyword" value="managing">
+			<param name="Name" value="File Menu Commands">
+			<param name="Local" value="html/menu_file.htm">
+			<param name="Name" value="File Menu Commands">
+			<param name="Local" value="html/menu_file.htm#hidm_file_opennew">
+			<param name="Name" value="File Menu Commands">
+			<param name="Local" value="html/menu_file.htm#hidm_file_openold">
+			<param name="Name" value="File Menu Commands">
+			<param name="Local" value="html/menu_file.htm#hid_file_newmontage">
+			<param name="Name" value="File Menu Commands">
+			<param name="Local" value="html/menu_file.htm#hidm_file_montagesetup">
+			<param name="Name" value="File Menu Commands">
+			<param name="Local" value="html/menu_file.htm#hidm_file_close">
+			<param name="Name" value="File Menu Commands">
+			<param name="Local" value="html/menu_file.htm#hidm_file_save">
+			<param name="Name" value="File Menu Commands">
+			<param name="Local" value="html/menu_file.htm#hidm_file_saveactive">
+			<param name="Name" value="File Menu Commands">
+			<param name="Local" value="html/menu_file.htm#hid_file_overwrite">
+			<param name="Name" value="File Menu Commands">
+			<param name="Local" value="html/menu_file.htm#hidm_file_saveother">
+			<param name="Name" value="File Menu Commands">
+			<param name="Local" value="html/menu_file.htm#hidm_file_truncation">
+			<param name="Name" value="File Menu Commands">
+			<param name="Local" value="html/menu_file.htm#hid_file_set16bitpolicy">
+			<param name="Name" value="File Menu Commands">
+			<param name="Local" value="html/menu_file.htm#hid_file_setsignedpolicy">
+			<param name="Name" value="File Menu Commands">
+			<param name="Local" value="html/menu_file.htm#hidm_file_read">
+			<param name="Name" value="File Menu Commands">
+			<param name="Local" value="html/menu_file.htm#hidm_file_readother">
+			<param name="Name" value="File Menu Commands">
+			<param name="Local" value="html/menu_file.htm#hid_file_readpiece">
+			<param name="Name" value="File Menu Commands">
+			<param name="Local" value="html/menu_file.htm#hid_file_openlog">
+			<param name="Name" value="File Menu Commands">
+			<param name="Local" value="html/menu_file.htm#hid_file_savelog">
+			<param name="Name" value="File Menu Commands">
+			<param name="Local" value="html/menu_file.htm#hid_file_savelogas">
+			<param name="Name" value="File Menu Commands">
+			<param name="Local" value="html/menu_file.htm#hid_file_readappend">
+			<param name="Name" value="File Menu Commands">
+			<param name="Local" value="html/menu_file.htm#hid_file_continuoussave">
+			</OBJECT>
+	</UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Keyword" value="settings">
+		<param name="See Also" value="settings">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Keyword" value="managing">
+			<param name="Name" value="Settings Menu Commands">
+			<param name="Local" value="html/menu_settings.htm#hid_settings_open">
+			<param name="Name" value="Settings Menu Commands">
+			<param name="Local" value="html/menu_settings.htm#hid_settings_readagain">
+			<param name="Name" value="Settings Menu Commands">
+			<param name="Local" value="html/menu_settings.htm#hid_settings_save">
+			<param name="Name" value="Settings Menu Commands">
+			<param name="Local" value="html/menu_settings.htm#hid_settings_saveas">
+			<param name="Name" value="Settings Menu Commands">
+			<param name="Local" value="html/menu_settings.htm#hid_settings_close">
+			<param name="Name" value="Settings Menu Commands">
+			<param name="Local" value="html/menu_settings.htm#hid_settings_readdefaults">
+			<param name="Name" value="Settings Menu Commands">
+			<param name="Local" value="html/menu_settings.htm#hid_settings_autosave">
+			</OBJECT>
+	</UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Keyword" value="status bar">
+		<param name="Name" value="status bar">
+		<param name="Local" value="html/afx_hidw_status_bar.htm">
+		</OBJECT>
+</UL></HTML>

@@ -1,0 +1,51 @@
+// FSM_MemoryLib.idl : IDL source for FSM_MemoryLib.dll
+//
+
+// This file will be processed by the MIDL tool to
+// produce the type library (FSM_MemoryLib.tlb) and marshalling code.
+
+#ifndef __FSM_MEMORYCLIENTOBJ_IDL_
+#define __FSM_MEMORYCLIENTOBJ_IDL_
+
+import "oaidl.idl";
+import "ocidl.idl";
+	[
+		object,
+		uuid(D9F5A46D-4DE5-47F7-AEF9-C06FE4A621D8),
+		dual,
+		helpstring("IFSM_MemoryObject Interface"),
+		pointer_default(unique)
+	]
+	interface IFSM_MemoryObject : IDispatch
+	{
+		[id(1), helpstring("method Allocate")] HRESULT Allocate([in] long lSize, [in] long lNumber);
+		[id(2), helpstring("method Free")] HRESULT Free();
+		[id(3), helpstring("method GetDataPtr")] HRESULT GetDataPtr([in] long lNumber, [out] byte* *pbData);
+		[propget, id(4), helpstring("property NumOfBuffer")] HRESULT NumOfBuffer([out, retval] long *pVal);
+		[propget, id(5), helpstring("property DataSize")] HRESULT DataSize([out, retval] long *pVal);
+		[id(6), helpstring("method AllocateShort")] HRESULT AllocateShort([in]long lSize, [in]long lNumber);
+		[id(7), helpstring("method GetDataPtrShort")] HRESULT GetDataPtrShort([in]long lNumber, [out]unsigned short* *psData);
+		[id(8), helpstring("method FreeShort")] HRESULT FreeShort();
+	};
+
+[
+	uuid(D912488D-D6BC-429E-B676-EA3DE2B6ED40),
+	version(1.0),
+	helpstring("FSM_MemoryLib 1.0 Type Library")
+]
+library FSM_MEMORYLIBLib
+{
+	importlib("stdole32.tlb");
+	importlib("stdole2.tlb");
+
+	[
+		uuid(3E87B249-8D5E-4096-8B20-95DB61B2C87D),
+		helpstring("FSM_MemoryObject Class")
+	]
+	coclass FSM_MemoryObject
+	{
+		[default] interface IFSM_MemoryObject;
+	};
+};
+
+#endif

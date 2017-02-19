@@ -1,0 +1,398 @@
+<HTML>
+  <HEAD>
+    <TITLE>Frame Alignment Parameters Dialog</TITLE>
+    <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
+    <style type="text/css"> <!-- BODY { font-family:"Arial" }
+  TD { font-size:16 }
+      .style1
+      {
+        font-size: larger;
+        font-weight: bold;
+      }
+      .style2
+      {
+        font-weight: bold;
+      }
+  --></style>
+  </HEAD>
+  <BODY BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+    <P><A NAME="hidd_framealign"></A><span class="style1">Frame Alignment
+    Parameters Dialog</span></P>
+
+
+
+    <p>
+      This dialog allows you to set parameters to control alignment of frames taken 
+      from a K2 camera in Dose Fractionation mode.&nbsp; The alignment can be done in 
+      three different ways: with the native alignment procedures in DigitalMicrograph, 
+      with the &#39;framealign&#39; module in SerialEM&#39;s plugin to DM, or 
+      independently of SerialEM with the Alignframes 
+      program in IMOD, which incorporates the same &#39;framealign&#39; module and thus uses 
+      the same parameters.&nbsp; In the latter case, all that the plugin does is write 
+      a command file for running the alignment in IMOD after all of the frames have 
+      been saved.&nbsp; The Framewatcher program in IMOD can be used to process these 
+      command files as soon as they appear.</p>
+    <p class="style2">
+      Aligning in DigitalMicrograph</p>
+    <p>
+      The alignment in DM has only one parameter, the filter that is used in the 
+      alignment procedure.&nbsp; The combo box should show the same set of filters 
+      that are available in DM; if not, the SerialEMproperties file needs to be 
+      modified to list the correct filters.</p>
+    <p class="style2">
+      Aligning in the SerialEMCCD Plugin</p>
+    <p>
+      Alignment with the &#39;framealign&#39; module has many more parameters.&nbsp; Virtually 
+      all of the ones shown in this dialog correspond exactly to an Alignframes 
+      option, so the man page for that program can be consulted for more details about 
+      any particular option, as well as for general instructions and advice.&nbsp; The 
+      reason that there are so many parameters is that different settings are needed 
+      to obtain optimal results in fundamentally different situations.&nbsp; Still, it 
+      should be possible to set up a small selection of parameter sets that will work 
+      for your own data.&nbsp; SerialEM can store multiple parameter sets, and this 
+      dialog allows you to chose among them.&nbsp; The selection is stored as part of 
+      the individual camera parameter set.&nbsp; If you have no previously defined 
+      parameter sets, the program will add two sets suitable for use with counting 
+      mode and super-resolution frames.</p>
+    <p>
+      The dialog gives a choice among several alignment strategies.&nbsp; Which one is 
+      appropriate depends on the kind of data being taken and its noise level.&nbsp; 
+      One basic strategy is to find shifts for individual frames by fitting to 
+      measurements of shifts between many pairs of frames (the approach of the 
+      'motioncorr' program from UCSF). This method uses comparable amounts of 
+      information for all of the frames.&nbsp; The implementation here has two 
+      important features: 1) the fits can be done to pairwise shifts measured for 
+      subsets of frames, thus giving the benefits of the approach without requiring as 
+      many measurements; and 2) the fitting is done with 'robust regression', which 
+      weights measurements less the more they deviate from the fitted solution used, 
+      so that a few bad correlations can be effectively ignored.&nbsp;&nbsp; The 
+      different options in the dialog allow the fits to be done to a fixed number of 
+      frames, half the frames, or all the frames.&nbsp; The other basic strategy 
+      involves correlating each frame to a sum of previously aligned frames; this is 
+      not as reliable in general because it uses less information for finding the 
+      shift of the first few frames, and is more susceptible to fixed pattern noise.&nbsp; </p>
+    <p>
+      Both methods can be followed by a refinement step in which each frame is 
+      correlated with the aligned sum of all other frames (this is similar to what is 
+      done in the unblur program from Grigorieff's group).&nbsp; This step probably 
+      has no benefit if the errors from the initial fit are low.&nbsp; The Alignframes 
+      man page describes how to evaluate whether one particular parameter selection is 
+      better than another.</p>
+    <p>
+      The general advice about which approach to use is:</p>
+    <ul>
+      <li>Fitting to pairwise shifts of 7-9 frames at a time is good for typical tilt 
+        series data with 5-15 frames, because there are generally enough features in the 
+        field to provide a reasonable signal-to-noise ratio.</li>
+      <li>Fitting to pairwise shifts of half the frames at a time is generally good for 
+        single-particle images with long exposures, as it both saves some time and 
+        avoids correlating images that may differ due to specimen damage.</li>
+      <li>Fitting to pairwise shifts of all the frames may be needed for noisier data or 
+        to handle situations where there may be very little contrast in the field.</li>
+      <li>For even noisier data, aligning sums of successive frames, called grouping, 
+        may be needed in the initial alignment; but grouping may not work well for early 
+        frames if there are substantial shifts between frames, so refinement is a good 
+        idea.</li>
+      <li>Alignment to a cumulative reference should be used only if there is a 
+        relatively high signal-to-noise ratio, such as for a stained specimen. </li>
+    </ul>
+    <p>
+      Some other main points about the parameters:</p>
+    <ul>
+      <li>Low-pass filtering of low-dose images is essential.&nbsp; </li>
+      <li>The high degree of binning provides for both a speedup in alignment and the 
+        first level of filtering.</li>
+      <li>The second level of filtering is provided by a gaussian filter that starts at 
+        a specified cutoff filter and fall off with a sigma proportional to the cutoff.&nbsp; 
+        This is not like the traditional &quot;B-factor&quot; Gaussian filter that starts falling 
+        off from 0.</li>
+      <li>Filter cutoffs are in reciprocal pixels in the unbinned image (0.5 
+        cycles/pixel is the Nyquist, the highest frequency that can be represented, in 
+        the unbinned image).&nbsp; This means that their effect stays the same if you 
+        change binning.</li>
+      <li>A cutoff value of 0.06 is good for typical data; some super-resolution frames 
+        may require 0.05; most data can probably tolerate somewhat higher values, 
+        possibly up to 0.1.</li>
+      <li>The binning for alignment is independent of the binning for the returned 
+        image, which is what is specified in the Camera Setup dialog.</li>
+      <li>The term &quot;binning&quot; is a misnomer in both cases: the image is reduced for 
+        alignment with real-space anti-aliased reduction; the final image is reduced by 
+        Fourier cropping.</li>
+    </ul>
+    <p>
+      The plugin will do cross-correlations for each frame as soon as it available, 
+      and will do the final shift of a frame and its addition into the aligned sum as 
+      soon as allowed by the parameters. If the time taken for alignment is a 
+      consideration, then you should be aware of which options make it unable to do 
+      any final shifts until all frames are received: doing pairwise fits among ALL 
+      the frames; refining the initial alignment; doing spline smoothing of the 
+      estimated shifts; and testing more than one filter cutoff without selecting to 
+      use 'hybrid shifts', which are available before the end.&nbsp; However, you will 
+      probably find that using these options costs less than 0.1 second per frame.</p>
+    <p>
+      Frames can be acquired dark-subtracted or unprocessed instead of gain-normalized if they are 
+      also going to be saved as compressed TIFF files.&nbsp; The data will be 
+      normalized by the framealign module before being aligned, and the aligned sum 
+      will thus be gain-normalized.</p>
+    <p>
+      When an alignment is done, results may be printed to the log.&nbsp; In their 
+      full form, they look like this:</p>
+    <pre>Frame alignment results:          distance raw = 2.7 smoothed = 1.3
+Weighted resid mean = 0.16  max max = 0.32  Mean unweighted max = 0.57
+FRC crossings 0.5: 0.0335  0.25: 0.0468  0.125: 0.0898  is 0.1025 at 0.25/pix    </pre>
+    <ul>
+      <li><i>Distance raw:</i> the sum of all the measured shifts between successive 
+        frames, in unbinned pixels; measurement errors will make this number exceed the 
+        actual distance moved by the specimen.</li>
+      <li><i>Smoothed:</i> the sum of measured shifts between successive frames after 
+        whatever smoothing is applied to them.&nbsp; This is the best indicator of the 
+        total amount of drift.&nbsp; If the raw distance is much bigger, it can be a 
+        sign of inaccuracies in the shift measurements.</li>
+      <li><i>Weighted resid mean:</i> the single best measure of the quality of the 
+        alignment.&nbsp; A residual is the difference between a measured shift and the 
+        shift implied by a linear fit.&nbsp; A weighted mean residual is obtained for 
+        each individual robust linear fit and it appropriately ignores shifts with large 
+        errors just as they are ignored in obtaining the solution.&nbsp; The value here 
+        is this mean residual averaged over all of the fits.&nbsp; Values in the range 
+        of 0.1-0.4 indicate good fits overall.</li>
+      <li><i>Max max</i>: the maximum value of the weighted residual found in any of the 
+        fits, which indicates the error in the worst shift that is actually used.</li>
+      <li><i>Mean unweighted max:</i> This maximum residual is an unweighted one, the 
+        actual error between a measured shift and the one given by the fits.&nbsp; The 
+        value is the average of the maxima obtained in each of the fits.&nbsp; A high 
+        value is a sign that bad shifts are being measured between some pairs of frames; 
+        but if the &quot;Max max&quot; for weighted residuals is still fairly low, it means that 
+        the robust fitting successfully suppressed all of those bad shifts.</li>
+      <li><i>FRC crossings:</i> Odd and even frames can be summed separately and the 
+        Fourier ring correlation computed.&nbsp; The first three pairs of numbers are 
+        the frequencies (in unbinned reciprocal pixels) at which the FRC falls below 
+        particular levels.&nbsp; In the example, it falls below 0.5 at 0.034/pixel, 
+        below 0.25 at at 0.047/pixel, and below 0.125 at 0.090/pixel.</li>
+      <li>&nbsp;<i>FRC value at 0.25/pix:</i> The final value is the FRC at half-Nyquist 
+        in the unbinned image.</li>
+    </ul>
+    If there are not enough frames for robust fitting, the output will be somewhat 
+    simpler and reflect only actual residual errors, since no weighting is being 
+    done.&nbsp; The number of lines of output can be set by the
+    <a href="menu_camera.htm#hid_camera_setframealignlines">Set Frame Align Lines</a> 
+    command in the Camera menu.&nbsp; The default is to omit the FRC values since 
+    these are the most difficult to interpret and depend on the sample and dose.</p>
+    <p>
+      <b>Aligning in IMOD</b></p>
+    <p>
+      The same parameter settings are presented when writing command files for 
+      aligning with Alignframes as for aligning in the plugin.&nbsp; The principal 
+      difference is that one needs to select a folder where the command files will be 
+      written, and that one can align and stack an entire tilt series after 
+      completion.&nbsp; The files will actually have extension '.pcm' instead of 
+      '.com'.</p>
+    <p>
+      Time should not be an issue when doing alignments with this option, since the 
+      alignments are generally fast enough to be done well before the next set of 
+      frames needs aligning.&nbsp; Thus you can use refinement, smoothing, or multiple 
+      filters routinely without worrying about whether they are actually helping.</p>
+    <p>
+      Frames can be taken dark-subtracted in order to save efficiently in compressed 
+      TIFF files.&nbsp; The command file will contain options to apply 
+      gain-normalization, plus defect correction for GMS 2.31 and higher.</p>
+    <p class="style1">
+      Global Settings</p>
+    <p>
+      The upper part of the dialog, down to the box for <b>Parameter set name</b>, 
+      allows one to set a few &#39;global&#39; settings that apply to all alignments.&nbsp; 
+      The list box on the right shows the available parameter sets, which can be 
+      selected by clicking on one.</p>
+    <p>
+      <b>Use the GPU</b></p>
+    <p>
+      Select whether to use the GPU on an NVIDIA card for the frame alignment.&nbsp; 
+      This setting is kept track of separately for aligning in the plugin versus 
+      aligning in IMOD, because the latter could be done by any computer with access 
+      to the frame data.&nbsp; In fact, if there are two K2&#39;s, it is kept track of 
+      separately for each.&nbsp; When aligning in the plugin, the option should be 
+      enabled if NVIDIA drivers are installed, and the files FrameGPU.dll, 
+      cudart64_41_28.dll and cufft64_41_28.dll are in
+      C:\ProgramData\Gatan\Plugins along with the SEMCCD-GM2-64.dll plugin.</p>
+    <p>
+      <b>Align only whole tilt series</b></p>
+    <p>
+      This option is relevant when aligning in IMOD and only for a Record parameter 
+      set; when it is checked, a command file is not produced for individual Record 
+      images, only at the end of a tilt series.&nbsp; That command file will align all 
+      of the frame files for the tilt series and construct a new stack with 
+      appropriate header entries, using a copy of the .mdoc file for the original tilt 
+      series stack.</p>
+    <p>
+      <b>Set Folder for Align Com Files</b></p>
+    <p>
+      Press this button to select the folder where the command files will be written 
+      when aligning in IMOD.&nbsp; This folder must be on the same drive as the frame 
+      files, because the command file needs to be written with relative paths that 
+      would be meaningful if processing on another machine.&nbsp; If SerialEM is 
+      running on a microscope computer, then the folder name must be typed into the 
+      dialog box that comes up.&nbsp; If it is running on the K2 computer, then a 
+      folder chooser will come up just as it does for selecting the frame folder.</p>
+    <p>
+      <b>New Parameter Set</b></p>
+    <p>
+      Press this button to create a new set of parameters that start out as a copy of 
+      the currently selected one.</p>
+    <p>
+      <b>Delete</b></p>
+    <p>
+      Press this button to delete the currently selected set of parameters.&nbsp; This 
+      is possible only when there is more than one set, because the program always 
+      needs at least one set. If any other camera parameter sets have selected this 
+      set, their selection will be changed to the adjacent set; and if any of those 
+      have frame alignment enabled, the program will warn you about this change.</p>
+    <p>
+      <b>Parameter set name</b></p>
+    <p>
+      Here you can edit the name of the set that appears in the list box.</p>
+    <p class="style1">
+      Basic Alignment Parameters</p>
+    <p>
+      The parameters in the upper section are the ones most likely to need setting.</p>
+    <p>
+      <b>Truncate values above n electrons</b></p>
+    <p>
+      Select this option and set the number of electron counts to have values above 
+      that number replaced by the local mean.&nbsp; This is the number of electrons 
+      per acquired pixel, which cannot be higher than 15 for super-resolution frames. 
+      If your gain-normalized images have many extreme values, removing them from the 
+      frames may make the alignment more reliable, as well as making it easier to see 
+      the data in 3dmod.</p>
+    <p>
+      <b>Alignment strategy</b></p>
+    <p>
+      Here one can choose among the options described above.&nbsp; Here are a few 
+      points to note.&nbsp; If the number of frames in the first option is set higher 
+      than the actual number of frames, it will have the same effect as fitting to ALL 
+      pairwise shifts.&nbsp; The second option, to fit to pairwise shifts of HALF the 
+      frames, will actually fit to a minimum of 7 frames. If alignment to a cumulative 
+      reference is chosen, grouping of frames and testing of multiple filter cutoffs 
+      are not available.</p>
+    <p>
+      <b>Alignment binning</b></p>
+    <p>
+      Binning, actually antialiased image reduction, is one of the two most important 
+      parameters because it affects processing time as well as the accuracy of the 
+      fits.&nbsp; Binning should be set to bring images to a size of 1000 to 1250 
+      pixels; thus 3 or 4 for ~4K images and 6 or 8 for ~8K images.</p>
+    <p>
+      <b>Filter cutoff</b></p>
+    <p>
+      The filter cutoff is the most important parameter; it is expressed in cycles per 
+      pixel in the unbinned frame so that a value has about the same effect with 
+      different binnings.&nbsp; Optimal values are generally in the range of 0.05 to 
+      0.07.</p>
+    <p>
+      <b>Maximum shift between frames</b></p>
+    <p>
+      This entry sets the maximum shift that will be detectable from one frame to the 
+      next, in unbinned pixels.&nbsp; Larger shifts are allowed between more separated 
+      frames, but the shifts have to be in a range predicted by the relative shifts of 
+      the intervening frames.&nbsp; This parameter should probably not be in the basic 
+      section.&nbsp; The default in Alignframes is 20.</p>
+    <p>
+      <b>Group frames by n</b></p>
+    <p>
+      Select the checkbox to have successive frames summed together (without 
+      alignment) for the initial correlations.&nbsp; The spin box sets the number of 
+      frames to sum.&nbsp; When frames are very noisy, grouping by 2 or 3 can bring 
+      the correlation peak out of the noise.&nbsp; All possible sums of successive 
+      frames are formed, but correlations are done only between sums that do not 
+      overlap. This increases the number of frames required to use this approach, 
+      which is shown after the spin button.</p>
+    <p>
+      <b>Refine alignment with up to n iterations</b></p>
+    <p>
+      Select the checkbox to add a refinement step after all the initial correlation 
+      have been done.&nbsp; Even multiple iterations of refinement are relatively 
+      quick because all of the FFTs that need correlating are already available.&nbsp; 
+      The spinner sets the maximum number of iterations that will be run, but 
+      refinements often stop after fewer iterations because the changes have fallen 
+      below a threshold.&nbsp; Five iterations is generally sufficient unless refining 
+      with group sums.</p>
+    <p>
+      <b>Smooth shifts if at least n frames</b></p>
+    <p>
+      Select this checkbox to apply spline smoothing to the shifts if there are at 
+      least as many frames as selected in the spinner.&nbsp; This smoothing may have a 
+      very small benefit but should only be used if there are enough frames to give a 
+      good assessment of the smoothing that is needed.&nbsp; The default in 
+      Alignframes is to smooth shifts when there are at least 15 frames, but this is 
+      left as a choice here because smoothing is one of the options that prevents any 
+      frames from being summed until all have been aligned.</p>
+    <p class="style1">
+      More Advanced or Less Commonly Needed Parameters</p>
+    <p>
+      <b>Refine in groups</b></p>
+    <p>
+      When frames are exceedingly noisy, correlations between a single frame and an 
+      aligned sum may not be reliable enough, so this option is available to do the 
+      refinement with groups of aligned frames instead of single frames.&nbsp; The 
+      iterations for refinement should be set to 10 if this option is used.</p>
+    <p>
+      <b>Filter cutoff for refining</b></p>
+    <p>
+      In this box, you can enter an alternative cutoff radius in cycles/pixel to use 
+      for the refinement step; otherwise the same cutoff will be used as for the 
+      initial alignment.&nbsp; Large increases will impair the alignment, but an 
+      increase of ~25% might be beneficial.</p>
+    <p>
+      <b>Stop refining when changes are below n unbinned pixels</b></p>
+    <p>
+      This entry sets the threshold change in shifts for continuing to iterate the 
+      refinement of the initial alignment.&nbsp; The default in Alignframes is 0.1 
+      unbinned pixel.</p>
+    <p>
+      <b>Other filter cutoffs</b></p>
+    <p>
+      These two text boxes allow additional filter cutoffs to be tested at the same 
+      time as the main cutoff.</p>
+    <p>
+      <b>Use hybrid shifts</b></p>
+    <p>
+      When multiple filters are being tested, the default is to accumulate all the 
+      alignment results, then pick one filter as best and apply the shifts from it to 
+      form the aligned sum.&nbsp; If this option is checked, then a best filter will 
+      be picked after each individual fit to a set of pairwise shifts, and the shift 
+      implied by the fit with that filter will be used for the one image whose shift 
+      is being set after that fit.</p>
+    <p>
+      <b>Ratio of falloff sigma to filter cutoffs</b></p>
+    <p>
+      The ratio in this text box is used to scale the sigma of the Gaussian falloff of 
+      the high-frequency filter proportionally to the cutoff.&nbsp; Such scaling is 
+      done when using the '-vary' option in Alignframes, and the default ratio there 
+      (1/7) is based on the ratio of default values for cutoff and falloff.</p>
+    <p>
+      <b>Always process gain-normalized frames with full precision</b></p>
+    <p>
+      This option is available only when aligning in the plugin and only for GMS 2.31 
+      or higher.&nbsp; It is only relevant there when acquiring a gain-normalized 
+      image with an 'early return'.&nbsp; In all other cases, the plugin passes a 
+      gain-normalized image to the framealign module in its original floating point 
+      form, before possibly scaling it to integers.&nbsp; With an early return, the 
+      plugin has to fetch frames from DM as fast as possible and store them in a local 
+      stack.&nbsp; By default the stack is in a scaled form (byte for 
+      super-resolution, 2-byte integer for counting mode).&nbsp; With this option 
+      checked, counting mode frames will be saved in their floating point form, and 
+      super-resolution frames will be multiplied by 4096 and saved as 2-byte integers, 
+      so the precision will be fully preserved, but the stack will occupy twice the 
+      memory.&nbsp; Choosing this option may delay the early return unless there is 
+      enough memory.&nbsp; However, this option is overridden by the option to scale 
+      saved frames by an additional factor of 100; if there is an early return and 
+      frames are being saved with such scaling, the scaled frames will be passed to 
+      the framealign module.</p>
+    <p>
+      <b>Output aligned sums as floating point</b></p>
+    <p>
+      This option is available only when aligning in IMOD.&nbsp; Select the checkbox 
+      to have aligned sums output as floating point instead of 2-byte integer, which 
+      will preserve a very small of precision in the sums.&nbsp; The regular scaling 
+      will still be applied to them in this case.</p>
+</BODY>
+</HTML>

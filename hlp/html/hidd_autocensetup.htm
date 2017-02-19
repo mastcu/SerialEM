@@ -1,0 +1,96 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+  <HEAD>
+    <TITLE>Beam Autocenter Setup Dialog</TITLE>
+    <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
+    <style type="text/css"> <!-- BODY { font-family:"Arial" } TD { font-size:16 } 
+  --></style>
+  </HEAD>
+  <BODY BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+    <P><A NAME="hidd_autocensetup"></A><B><FONT size="3">Beam Autocenter Setup Dialog</FONT></B></P>
+    <P>This dialog box allows you to set the beam intensity, exposure time and binning 
+      that will be used to acquire an image for centering the beam automatically. 
+      Essentially, you need to set the beam to a size appropriate for the method of 
+      autocentering to be used, then you need adjust the exposure time and binning to 
+      avoid saturating the camera, where you can take pictures from within this 
+      dialog to check both of these adjustments. The autocentering routine can use 
+      two methods: finding the edges of the beam, as the <A HREF="menu_tasks.htm#hid_tasks_centerbeam">
+        Center Beam command</A> does, or simply measuring the average location 
+      (centroid) of all the counts in an image containing the whole beam. The 
+      edge-finding method is preferred unless the beam edges are not sharp enough for 
+      it to work, because the centroid method requires a greater intensity change and 
+      requires two images to avoid an error if part of the beam is out of the image. 
+      The centroid will also be off from the beam center if the sample causes large 
+      gradients in intensity.</P>
+    <P>To use the edge-finding method, adjust the beam so that you can see a majority 
+      of its edge, or until it is just inscribed in the camera field of view. There 
+      should be no need to make it smaller than that. To use to centroid method, you 
+      need to make the beam substantially smaller than the camera field, with the 
+      diameter perhaps half to two-thirds the size of the camera.</P>
+    <P>The program can store the settings to control the autocentering separately for 
+      each spot size, magnification, and camera. In addition, separate settings can 
+      be stored for intensities on either side of condenser crossover. This does not 
+      mean that you always need to set up parameters for every set of conditions. To 
+      a limited extent, the program will derive settings for a particular mag and 
+      spot size from the settings for a nearby mag and spot. However, it cannot 
+      transfer settings from one camera to another or from one side of crossover to 
+      another.</P>
+    <P>You can set up these parameters by adjusting the beam to a likely size on the 
+      viewing screen, then taking an image with 'Test Acquire'. Adjust the beam size 
+      as needed, and reduce the exposure time or binning to avoid camera saturation. 
+      These latter values are originally based on the Trial camera parameter set.</P>
+    <P>You can open this dialog while in Low Dose mode.&nbsp; In Low Dose, 
+      autocentering images will be taken with Trial area parameters, except with the 
+      intensity needed for autocentering.&nbsp; Thus, when you open the dialog, the 
+      program will set the area to show when the screen is down to Trial; this 
+      original area choice will be restored when you are done.&nbsp; The program will 
+      also turn off continuous update.&nbsp; If you drop the screen with the dialog 
+      open, the Trial area will be shown with the autocentering intensity.</P>
+    <P><B>Setup beam on scope and track scope state</B></P>
+    <P>This option links the settings shown in the dialog to the state of the 
+      microscope. Turn it on to have the state specified by the current parameters 
+      imposed on the scope, and to be able to adjust the intensity setting. With the 
+      option on, changing the spot size or magnification in the dialog will cause the 
+      corresponding change on the microscope, and vice versa. In addition, these 
+      changes will switch the dialog to a different parameter set, and scope 
+      intensity will be set to the intensity setting of the new parameter set. With 
+      the option off, you can change the mag or spot size selectors to look at 
+      different parameter sets without affecting the microscope; you can also change 
+      binning or exposure time but not intensity.</P>
+    <P><B>Spot size and Mag readouts and selectors</B></P>
+    <P>The controls let you see and change the current magnification and spot size of 
+      the dialog, which determine which parameter set is displayed.</P>
+    <P><B>Intensity readout</B></P>
+    <P>The intensity setting in the current parameter set is displayed but can only be 
+      modified when the 'Track scope state' option is on.</P>
+    <P><B>Smaller - Bigger</B></P>
+    <P>The buttons will decrease or increase the beam diameter by about 10%.</P>
+    <P><B>Binning</B></P>
+    <P>Use the spin buttons to set the binning of the exposure. Binning can be reduced 
+      to avoid saturation from a bright beam when exposure time is already as low as 
+      feasible.</P>
+    <P><B>Exposure</B></P>
+    <P>The exposure time is shown and can be changed in this text box.
+    </P>
+    <P><B>Beam centering method</B></P>
+    <P>These radio buttons allow you to choose between finding edges and using 
+      centroids, as described above.</P>
+    <P><B>Source of settings</B></P>
+    <P>This line reports whether the currently shown settings are stored values 
+      specific to this spot size and magnification, or whether they have been derived 
+      from a different spot size and/or magnification. If settings are derived, then 
+      as soon as you modify them in any way (i.e., change intensity, binning, 
+      exposure, or centering method), they will be stored and shown as directly set.</P>
+    <P><B>Test Acquire</B></P>
+    <P>Use this button to take an image with the current settings and see how large the 
+      beam is and whether it is saturating the camera. The dialog will close and 
+      reopen.&nbsp; The screen will be restored to its state before taking the picture 
+      unless you are in Low Dose mode.</P>
+    <P><B>Delete Settings</B></P>
+    <P>The button can be used to delete stored settings, which might be useful if you 
+      need to change settings substantially and want to start with one derived from 
+      another mag or spot size where you have already changed the settings.</P>
+    </basefont>
+  </BODY>
+</HTML>

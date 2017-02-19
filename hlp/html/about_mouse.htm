@@ -1,0 +1,405 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+  <HEAD>
+    <TITLE>Mouse and Keyboard Controls</TITLE>
+    <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
+    <style type="text/css"> <!-- BODY { font-family:"Arial" }
+  TD { font-size:16 }
+      .style1
+      {
+        width: 85%;
+        height: 225px;
+      }
+      .style2
+      {
+        width: 145px;
+      }
+      .style6
+      {
+        width: 163px;
+      }
+      .style9
+      {
+        width: 240px;
+      }
+      .style11
+      {
+        width: 226px;
+      }
+      .style12
+      {
+        width: 310px;
+      }
+      .style13
+      {
+        width: 145px;
+        font-weight: bold;
+      }
+      .style14
+      {
+        width: 226px;
+        font-weight: bold;
+      }
+      .style15
+      {
+        width: 310px;
+        font-weight: bold;
+      }
+      .style16
+      {
+        width: 240px;
+        font-weight: bold;
+      }
+      .style17
+      {
+        width: 163px;
+        font-weight: bold;
+      }
+  --></style>
+  </HEAD>
+  <BODY BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+      <P><A NAME="about_mouse"></A><B><FONT size="3">Mouse and Keyboard Controls</FONT></B></P>
+      <P><B>Mouse actions in the image display window:</B></P>
+      <P><B><I>Left mouse button click:</I></B> Place a marker point in the image and 
+        print the coordinates and value in the middle panel of the status bar. Several 
+        procedures make use of the position of a marker point.&nbsp; If the image is an 
+        FFT that shows Thon rings, you can click at the position of the first minimum, 
+        and the program will show the estimated defocus in the status bar and draw a set 
+        of circles at the corresponding zeros of the CTF.&nbsp; See the
+        <a href="menu_process.htm#hid_process_fft">FFT command help</a> for details.</P>
+      <P><B><I>Ctrl - middle mouse button click:</I></B> Zoom up around the clicked 
+        point.</P>
+      <P><B><I>Ctrl - right mouse button click:</I></B> Zoom down around the clicked 
+        point.</P>
+      <P><B><I>Left mouse button drag:</I></B> Holding the left button down and moving 
+        the mouse will pan the image, if it is zoomed bigger than will fit in the 
+        window.</P>
+      <P><B><I>Shift - left mouse button drag:</I></B> Draw a line for measuring 
+        a distance or angle. Press and hold the shift key, then press the left mouse button at the 
+        starting point of the line. Hold the button down and move the mouse to the 
+        desired endpoint of the line. The status bar will show a dynamic display of the 
+        line length and orientation as you move the endpoint, and the final values will be printed in 
+        the log window when you release the mouse button. You can crop out the image in 
+        a box around this line with the <A HREF="menu_process.htm#hid_process_cropimage">Crop 
+          Image</A> command in the Process menu.</P>
+      <P style="Z-INDEX: 0"><B><I>Ctrl - Shift - left mouse button drag:</I></B> Draw a 
+        box for measuring size or cropping. Press and hold the shift and Ctrl keys, 
+        then press the left mouse button at one corner of the box. Hold the button down 
+        and move the mouse to the desired position of the other corner. The status bar 
+        will show a dynamic display of the box size as you move the corner. You can 
+        crop out this image area with the <A HREF="menu_process.htm#hid_process_cropimage">Crop 
+          Image</A> command in the Process menu.&nbsp; You can get its statistics 
+        with the <A href="menu_process.htm#hid_process_minmaxmean">Min/Max/Mean</A> command 
+        in the Process menu.</P>
+      <P><B><I>Right mouse button drag:</I></B> Holding the right button down and moving 
+        the mouse will change the alignment shift of the image. If the image is in 
+        buffer A, this will also change microscope image shift so that the next image 
+        acquired will match the image with this alignment shift. If there is a marker 
+        point on the image being aligned to, its position will show up in red. There is 
+        an option available to have particularly large moves with the right mouse 
+        button move the stage instead of change the microscope image shift.</P>
+      <P><B><I>Shift - right mouse button drag:</I></B> Shifting the image in buffer A 
+        while holding the Shift key down will result in the stage being moved, rather 
+        than microscope image shift being changed.</P>
+    <P><i><b>Scroll wheel:</b></i> The scroll wheel will zoom the image up and down 
+      unless the Ctrl key is down.</P>
+    <P><b>When the Navigator window is open</b>, the mouse buttons have additional 
+      functions:</P>
+    <table class="style1" BORDER style="Z-INDEX: 0">
+      <tr>
+        <td class="style13">
+          Button clicked</td>
+        <td class="style14">
+          Default</td>
+        <td class="style15">
+          Edit Mode</td>
+        <td class="style16">
+          Adding Points/Polygon</td>
+        <td class="style17">
+          Moving Item</td>
+      </tr>
+      <tr>
+        <td class="style2">
+          Ctrl-Left</td>
+        <td class="style11">
+          Select nearest item</td>
+        <td class="style12">
+          Add nearest item to selection</td>
+        <td class="style9">
+          &nbsp;</td>
+        <td class="style6">
+          &nbsp;</td>
+      </tr>
+      <tr>
+        <td class="style2">
+          Left</td>
+        <td class="style11">
+          &nbsp;</td>
+        <td class="style12">
+          Select nearest item</td>
+        <td class="style9">
+          Add point</td>
+        <td class="style6">
+          Move item</td>
+      </tr>
+      <tr>
+        <td class="style2">
+          Left Double-click</td>
+        <td class="style11">
+          &nbsp;</td>
+        <td class="style12">
+          Delete current point if it is only selected item</td>
+        <td class="style9">
+          &nbsp;</td>
+        <td class="style6">
+          &nbsp;</td>
+      </tr>
+      <tr>
+        <td class="style2">
+          Middle</td>
+        <td class="style11">
+          &nbsp;</td>
+        <td class="style12">
+          Add point to current group</td>
+        <td class="style9">
+          Add point</td>
+        <td class="style6">
+          &nbsp;</td>
+      </tr>
+      <tr>
+        <td class="style2">
+          Right</td>
+        <td class="style11">
+          &nbsp;</td>
+        <td class="style12">
+          Move current point</td>
+        <td class="style9">
+          Move last added point</td>
+        <td class="style6">
+          Move item</td>
+      </tr>
+    </table>
+      <P>&nbsp;</P>
+    <P><B>Hotkeys:</B></P>
+      <TABLE cols="2" BORDER style="Z-INDEX: 0">
+        <TBODY>
+          <TR VALIGN="top">
+            <TD width="85">-/_</TD>
+            <TD>Zoom an image down</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD width="85">=/+</TD>
+            <TD>Zoom an image up around the current center of the image</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD width="85">A</TD>
+            <TD>Toggle Acquire setting of current Navigator item</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD width="85">Ctrl A</TD>
+            <TD>Autoalign</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD width="85">Ctrl B</TD>
+            <TD>Toggle 'Blank beam when screen down' in Low Dose control panel</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD width="85">Ctrl D</TD>
+            <TD>Tilt Down</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD width="85">Ctrl F</TD>
+            <TD>Acquire image with Focus parameters</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD width="85">Ctrl G</TD>
+            <TD>Autofocus, or set standard focus in low mag mode</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD width="85">Ctrl H</TD>
+            <TD>Halt camera acquisition</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD width="85">Ctrl I</TD>
+            <TD>Image information - min/max/mean and SD.</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD width="85">Ctrl L</TD>
+            <TD>Acquire image with Preview parameters</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD width="85">Ctrl M</TD>
+            <TD>Start a montage</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD width="85">Ctrl O</TD>
+            <TD>Open old image file</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD width="85">Ctrl P</TD>
+            <TD>Open camera parameter dialog box</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD width="85">Ctrl R</TD>
+            <TD>Acquire image with Record parameters</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD width="85">Ctrl S</TD>
+            <TD>Save image to file</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD width="85">Ctrl T</TD>
+            <TD>Acquire image with Trial parameters</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD width="85">Ctrl U</TD>
+            <TD>Tilt Up</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD width="85">Ctrl V</TD>
+            <TD>Acquire image with View parameters</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD width="85">Space bar</TD>
+            <TD>Stop or restart continuous image acquisition, or repeat last single image 
+              shot.</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD width="85">Esc</TD>
+            <TD>Stop camera acquisition and any running tasks.</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD width="85">F1</TD>
+            <TD>Open context-sensitive help when the mouse is over a menu item or a dialog box.</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD width="85">F11</TD>
+            <TD>Invert contrast of currently displayed image (does not change underlying 
+              data).</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD width="85">Shift-F1</TD>
+            <TD>Will allow you to click on an item and open help for it.</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD width="85">Ctrl F1</TD>
+            <TD>Run script 1</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD width="85">Ctrl Fn</TD>
+            <TD>Run script n, n = 1 to 10</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD width="85">Shift A</TD>
+            <TD>Toggle Acquire state of Navigator items between first and second press of Shift 
+              A</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD width="85">Ctrl-Shift A</TD>
+            <TD>Toggle Acquire state of all Navigator items</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD width="85">Shift B</TD>
+            <TD>Binned FFT</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD width="85">Shift C</TD>
+            <TD>Center beam by finding edges in current image</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD width="85">Shift D</TD>
+            <TD>Delete Navigator points between first and second press of Shift D</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD width="85">Shift E</TD>
+            <TD>Autocenter beam by taking an image using preset parameters</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD width="85">Shift F</TD>
+            <TD>FFT</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD width="85">Shift I</TD>
+            <TD>Set intensity</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD width="85">Shift L</TD>
+            <TD>Toggle live FFT (for continuously acquired images)</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD width="85">Shift M</TD>
+            <TD>Move beam to center marker point</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD width="85">Shift R</TD>
+            <TD>Read an image from file</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD width="85">Ctrl-Shift R</TD>
+            <TD>Resize the main image window to fill the SerialEM frame.</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD colSpan="2">&nbsp;&nbsp;&nbsp;&nbsp; The keys in the 6-key cluster above the 
+              arrow keys do the following:</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD width="85">PageUp</TD>
+            <TD>display the previous occupied buffer (a lower letter).</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD width="85">PageDn</TD>
+            <TD>display the next occupied buffer (a higher letter).</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD width="85">Home</TD>
+            <TD>display buffer A, or the first occupied buffer.</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD width="85">End</TD>
+            <TD>display the last occupied buffer (highest letter).</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD width="85">Insert</TD>
+            <TD>display the buffer that is being autoaligned to.</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD width="85">Delete</TD>
+            <TD>display the buffer that is being read into from file.</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD width="85">&lt;</TD>
+            <TD>Decrease step size for moving beam with Shift - arrow keys</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD width="85">&gt;</TD>
+            <TD>Increase step size for moving beam with Shift - arrow keys</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD width="85">Ctrl comma</TD>
+            <TD>Decrease increment for changing percent C2/C3/IA with Ctrl up/down arrows</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD width="85">Ctrl period</TD>
+            <TD>Increase increment for changing percent C2/C3/IA with Ctrl up/down arrows</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD colSpan="2">&nbsp;&nbsp; The four arrow keys will pan the image by small steps 
+              if it is zoomed bigger than the window.</TD>
+          </TR>
+    </basefont>
+          <TR VALIGN="top">
+            <TD colSpan="2">Shift and an arrow key will move the beam by a small step.</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD colSpan="2">Ctrl and up-arrow or down-arrow will increase or decrease percent 
+              C2/C3/IA by an increment.</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD colSpan="2">The increments and operations for intensity change and beam 
+              movements are the same as<br />
+              those applied through the <a href="hidd_remotecontrol.htm">Microscope Control Panel</a>.</TD>
+          </TR>
+    </TBODY></TABLE>
+  </BODY>
+</HTML>

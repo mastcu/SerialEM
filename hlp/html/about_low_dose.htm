@@ -1,0 +1,243 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+  <HEAD>
+    <TITLE>Low Dose Mode</TITLE>
+    <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
+    <style type="text/css"> <!-- BODY { font-family:"Arial" } TD { font-size:16 } 
+  --></style>
+  </HEAD>
+  <BODY BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+    <H1><A NAME="about_low_dose"></A><FONT size="3">About Low Dose Mode</FONT></H1>
+    <P>The essence of low dose mode is that focusing and tracking operations for a tilt 
+      series are done in a location separate from the area being recorded, to spare 
+      that area from unnecessary beam exposure. In order to provide accurate focusing 
+      and tracking, these separate areas must be displaced along the tilt axis from 
+      the center of the recording area. SerialEM's low dose mode provides five 
+      'areas' that can be defined to have different settings of magnification, spot 
+      size, and beam intensity, centered in up to 3 different locations. Four of them 
+      are named for a corresponding camera 
+      parameter set that is used to acquire images from them; the fifth provides a 
+      search mode that currently shares the View camera parameters. The areas are:</P>
+    <OL>
+      <LI>
+        Record area - the area where the region being recorded is located. The 
+        magnification and beam should be set up for the final image acquisition. Both 
+        Record and Preview capture images from this area; the Record camera parameters 
+        would be set up for the final acquisition, while Preview parameters would be 
+        set up for a highly binned, low exposure image.</LI>
+      <LI>
+        View area - this area is centered on the Record area. The magnification should 
+        be low for several reasons: to provide an overview of a larger area, to 
+        minimize specimen exposure, and to provide reliable tracking in the various 
+        SerialEM 'tasks' that require low magnification views. Taking an image with the 
+        View camera parameters will acquire from this area. View camera parameters 
+        should be set up for a binned, low exposure image.</LI>
+      <LI>
+        Focus area - this area is displaced along the tilt axis from the Record area. 
+        The beam must be set up so as not to intrude on the Record area. Taking an 
+        image with the Focus camera parameters will acquire from this area.</LI>
+      <LI>
+        Trial area - like the Focus area, this area is displaced along the tilt axis and 
+        the beam must be constricted. Taking an image with the Trial camera parameters 
+        will acquire from this area.</LI>
+      <LI>
+        Search area - this area allows one other set of 
+        microscope parameters; as 
+        of SerialEM 3.6, it can be acquired with the View camera parameters by using the 
+        'Search' button in the <a href="hidd_camera_macro.htm">Camera and Script control 
+        panel</a>, or with a 'Search' script command.</LI>
+    </OL>
+    <P align="center"><img  src="../images/lowDoseAreas.jpg" />&nbsp;</P>
+    <P>Although the Focus and Trial areas can be set up with completely independent 
+      parameters, it is most convenient to constrain them to be identical. This saves 
+      the effort of setting up the beam for both areas, avoids the image shift 
+      settling time required for getting between them, and minimizes the total range 
+      of image shift needed for low dose work. The latter factor is currently 
+      important on the 300 KV Tecnai or Polara because the objective aperture begins to occlude 
+      the image area for relatively small image shifts. Image shift is also quite 
+      limited on the JEOL 2100/2200 unless the scope has the high power image shift 
+      option, although projector shift is usually used for image shift to minimize 
+      this problem.</P>
+    <P><i>Microscope Parameters Stored. </i>&nbsp;The parameters that can be set separately for each low dose area are the 
+      magnification, spot size, beam brightness, filter settings if there is an 
+      energy filter. The latter include whether the slit is in, and the slit width 
+      and energy loss.&nbsp; On an FEI scope, the probe mode (nanoprobe versus 
+      microprobe) is also stored. On the JEOL, the alpha setting can also be set separately, 
+      although no more than two alpha settings can be used. 
+      Absolute beam position is not stored, but a relative beam shift between areas 
+      can be set. Diffraction mode can be used for any area, although it is likely to 
+      be useful only for the Search area. If diffraction is used, the camera length 
+      and diffraction focus are stored as parameters.</P>
+    <P><i>Special Features in Low Dose Mode.</i>&nbsp; In low dose mode, numerous features of SerialEM operate differently.    <UL>
+      <LI>
+        Tasks that use low magnification tracking (finding eucentricity, reversing 
+        tilt, and resetting image shifts) will automatically use View images. Walking 
+        up will use images of the Trial area.
+      </LI>
+      <LI>
+        Autoalignment operates with two autoalign buffers. A Record or Preview image 
+        will be aligned to the image in the first autoalign buffer, whereas a Trial or 
+        Focus image will be aligned to the second autoalign buffer. The 'Align to' 
+        button in the <A HREF="hidd_alignfocus.htm">Image Alignment &amp; Focus control 
+          panel</A> will indicate which are the two autoalign buffers.</LI>
+      <LI>
+        Autoalignment will work with the beam constricted inside the camera field 
+        because autoalign will detect dark areas in the corners of the image (namely, 
+        areas outside the beam) and use only the largest rectangle inside these areas 
+        for alignment.</LI>
+      <LI>
+        The Tilt Series Controller uses D and E as the two autoalign buffers. It uses 
+        images of the Trial area for tracking, but it also maintains a reference image 
+        from the Record area, so that each new Record image is aligned to that 
+        reference and then replaces it.</LI>
+      <LI>
+        If you choose to adjust intensities automatically during a tilt series, only 
+        the intensity of the Record area will be adjusted.</LI></UL>
+    <P><i>Setting Properties of Areas.</i>&nbsp; You can set the properties of a low dose area by making it be the current area 
+      then adjusting its features. The current area and its beam properties are 
+      displayed on the second line of the <A HREF="hidd_lowdose.htm">Low Dose control 
+        panel</A> . There are two ways to set the current area: take an image of 
+      the area, or select the area with the 'Go to area / show 
+      when screen down' radio buttons. As that label indicates, this radio button 
+      selection has two consequences: the area is changed when the selection is 
+      changed, and the selected area is also set when the screen is lowered. For the search area, there is also a button to 
+      press, since there is no image acquisition in this area. You can adjust most 
+      properties of the current area by turning on the 'Continuous update of mag 
+      &amp; beam' checkbox. With this option on, any changes in the magnification, 
+      spot size, condenser lens setting, or energy filter settings will change the 
+      defined properties of the area.&nbsp; However, beam position is still a global 
+      feature that applies to all low dose areas, so a change in beam position is not 
+      recorded with &#39;Continuous update&#39; on.&nbsp; (A relative beam position can be set 
+      for each area with a separate control.) If the option is 
+      off, you can change these features temporarily, but the stored properties of 
+      the area will be reimposed next time a picture is taken of the area.</P>
+    <P>If you want to make initial adjustments to the properties of an area with no 
+      exposure of the specimen at all, then select the area with a radio button and 
+      adjust its features.</P>
+    <P><i>Setting Positions of Trial/Focus Areas. </i>&nbsp;The positions of the Focus and Trial areas can be set by selecting the Focus or 
+      Trial radio buttons in the 'Define position of area' box. Once one of these 
+      buttons is selected, two pieces of information become available at the bottom 
+      of the <A HREF="hidd_lowdose.htm">Low Dose control panel</A> . One is a text 
+      box showing the distance along the tilt axis from the Record area to the area 
+      being defined, where negative and positive numbers reflect opposite directions 
+      along the axis. The other display shows essentially a safety factor for 
+      spillover of the beam from the area being defined into the Record area; it is 
+      the distance between a circle circumscribing the area being defined and the 
+      edge of the Record area.</P>
+    <P>There are several ways to adjust the position of the area being defined. In 
+      addition to simply typing in a distance in the text box, the most convenient is 
+      to take a picture of the View area. The position of the area being defined 
+      relative to the center of the View will be shown by a green cross, and you can 
+      click with the left mouse button to select a new position. On a View image, the 
+      Record area and the area being defined will also be shown with a box, with a 
+      circle circumscribing the area being defined.</P>
+    <P>
+      <i>Offsets.</i>&nbsp; Several different &quot;offsets&quot; can be set by different 
+      procedures:</P>
+    <ul>
+      <li>A defocus offset can be applied when going to the View area in order to 
+        increase contrast for the View images.&nbsp; The value can be set with a spinner 
+        in the 'Offsets for View' box of the <A HREF="hidd_lowdose.htm">Low Dose control panel</A>.</li>
+      <li>The View area can be centered on the Record area by recording a shift offset 
+        for the View area.&nbsp; This is done by centering a feature in Record, then 
+        taking a View image and shifting that feature to the center; see
+        <a href="hidd_lowdose.htm#viewShiftOffset">Shift offset for View</a> for 
+        details.</li>
+      <li>Beam shifts can be imposed to center the beam independently in each area using 
+        controls in the 'Additional beam shift' box.&nbsp; The procedure is to center 
+        the beam in the Record area then go to other areas and record the additional 
+        beam shift required to center the beam by checking and unchecking the 'Set' box.&nbsp;&nbsp; 
+        See <a href="hidd_lowdose.htm#addedBeamShift">
+        Additional beam shift</a> for details.</li>
+      <li>Added beam tilts can also be recorded at the same time as the beam shift, if 
+        this enabled by a property Setting.&nbsp; On an FEI scope, one can also impose a dark 
+        field beam tilt for the Trial and Focus areas, which might be a way to keep the 
+        beam from being occluded by the objective aperture.&nbsp;</li>
+    </ul>
+    <P><i>Balancing Shifts.</i>&nbsp; The final concept that needs explaining is that of balancing the shifts. On the 
+      300 KV Tecnai, one should think of the objective aperture as defining a circle 
+      within which the specimen can be imaged by means of image shift. If the Record 
+      area is in the middle of this circle, then the Focus and Trial areas will be 
+      displaced to near the edge of the circle, and there may not be much range of 
+      image shift left for tracking during the tilt series. Given these limitations, 
+      it is preferable to arrange the Record and Trial areas so that the center of 
+      the circle is midway between them, because then neither one will be as close to 
+      the edge of the usable circle as the Trial area is with the Record area in the 
+      center. This is accomplished by pressing the 'Balance Shifts' button. The 
+      change can be undone by pressing the 'Center Unshifted' button, so-called 
+      because it will recenter the areas that are considered unshifted (Record and 
+      View).</P>
+    <P>Your low dose parameters are saved to your settings file and will be restored 
+      when you restart SerialEM. If you have never started low dose before, the areas 
+      are undefined, and they will acquire the current microscope settings when they 
+      are first activated. Two sets of parameters are stored, one for a nonGIF camera 
+      and one for a GIF camera.</P>
+    <P><B>Steps for Initially Setting up Low Dose</B></P>
+    <P>It is somewhat difficult to get low dose set up initially, but following a set 
+      procedure may be helpful.</P>
+    <OL>
+      <LI>
+        Before going to low dose mode, set the magnification and beam strength that you 
+        will want for the View area.</LI>
+      <LI>
+        Turn on low dose mode and take a picture of the View area.</LI>
+      <LI>
+        Turn on 'Continuous update' to adjust the View area properties further. Be sure 
+        to set any View-area-specific GIF settings.</LI>
+      <LI>
+        Copy View properties to the Record area with the 'R' button in 'Copy current 
+        area mag &amp; beam' radio group.</LI>
+      <LI>
+        Take a Preview or Record picture to go to the Record area, then turn on 
+        'Continuous update'.</LI>
+      <LI>
+        Adjust the magnification for the Record area, and any specific filter settings.</LI>
+      <LI>
+        Adjust the beam strength by taking a Preview or Record and selecting 'Set 
+        intensity' in the Tasks menu. Enter the desired number of counts in a Record 
+        image. If there is a big change, this may take 2-3 iterations.</LI>
+      <LI>
+        If the beam is too small, reduce the spot size; if it is too large (i.e., you 
+        are concerned about extra exposure to the Trial/Focus areas), then increase the 
+        spot size.</LI>
+      <LI>
+        If you want to get the beam to be not much bigger than the camera field of 
+        view, you need to condense it so that you can see the whole beam, then expand 
+        by a controlled amount. See step 14.</LI>
+      <LI>
+        Make sure 'Keep Focus and Trial identical' is selected and copy Record 
+        properties to the Trial area with the 'T' copy button.</LI>
+      <LI>
+        Select the radio button to define the position of the Trial area.</LI>
+      <LI>
+        Take a View picture. Click with the left mouse button to define a position for 
+        the Trial area. Note the 'Maximum area separation' and click again to get a 
+        sufficiently positive separation, or just type in a position.</LI>
+      <LI>
+        Take a Trial picture. Adjust area-specific filter settings (e.g., slit out).</LI>
+      <LI>
+        Here it is essential to get the beam constricted to just the Trial area and 
+        centered on it. You can do this either by adjusting brightness and position 
+        blindly or by using the 'Set Intensity' and 'Move Beam' operations in the Tasks 
+        menu. When using 'Set Intensity', note that changing intensity by a certain 
+        factor should change beam diameter by the square root of that factor. Also note 
+        that your changes will not be accurate when the beam does not fill the camera 
+        field. In general, the procedure is:</LI></OL>
+    <UL>
+      <LI>
+        Constrict the beam enough so that you can see enough of its edge to be able to 
+        center it.</LI>
+      <LI>
+        Change spot size if necessary to get close to the desired intensity.</LI>
+      <LI>
+        Center the beam.</LI>
+      <LI>
+        Expand the beam until it just circumscribes the area.</LI></UL>
+    <P>If you are restarting with some existing parameters, you would not do all of 
+      these steps. You would probably take a View and adjust its properties if 
+      necessary (steps 2 and 3), take a Record and adjust its properties (steps 5-9), 
+      then adjust the Trial/Focus area (steps 11-14).</P>
+    </basefont>
+  </BODY>
+</HTML>

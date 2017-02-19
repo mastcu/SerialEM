@@ -1,0 +1,88 @@
+// Created by Microsoft (R) C/C++ Compiler Version 12.00.9782.0 (74f25e81).
+//
+// Remap8K.tlh
+//
+// C++ source equivalent of Win32 type library ..\Remap8K.tlb
+// compiler-generated file created 12/02/08 at 11:44:28 - DO NOT EDIT!
+
+//
+// Cross-referenced type libraries:
+//
+//  #import "C:\Documents and Settings\Tomas\Desktop\Projects\8k_remap_test\console_test\FSM_MemoryLib.dll"
+//  #import "C:\Documents and Settings\Tomas\Desktop\Projects\8k_remap_test\console_test\FSM_MultiImageObjectLib.dll"
+//
+
+#pragma once
+#pragma pack(push, 8)
+
+#include <comdef.h>
+
+//
+// Forward references and typedefs
+//
+
+struct /* coclass */ CoRemap8K;
+struct __declspec(uuid("cff3f956-c33e-40ee-92e2-359e85340288"))
+/* dual interface */ ICoRemap8K;
+
+//
+// Smart pointer typedef declarations
+//
+
+_COM_SMARTPTR_TYPEDEF(ICoRemap8K, __uuidof(ICoRemap8K));
+
+//
+// Type library items
+//
+
+struct __declspec(uuid("504e087e-618b-40f4-923f-a628398a17b6"))
+CoRemap8K;
+    // [ default ] interface ICoRemap8K
+
+struct __declspec(uuid("cff3f956-c33e-40ee-92e2-359e85340288"))
+ICoRemap8K : IDispatch
+{
+    //
+    // Raw methods provided by interface
+    //
+
+    virtual HRESULT __stdcall SetInitialFileName (
+        BSTR ImageFile,
+        short IndexNo ) = 0;
+    virtual HRESULT __stdcall Remap (
+        short CameraNo ) = 0;
+    virtual HRESULT __stdcall RemapAll ( ) = 0;
+    virtual HRESULT __stdcall SetCameraParam (
+        short CameraNo,
+        short XUL,
+        short YUL,
+        short XUR,
+        short YUR,
+        short XLL,
+        short YLL,
+        short XLR,
+        short YLR ) = 0;
+    virtual HRESULT __stdcall SetImageBuffer (
+        struct IFSM_MemoryObject * piMemObj ) = 0;
+    virtual HRESULT __stdcall RemapToFile (
+        short CameraNo ) = 0;
+    virtual HRESULT __stdcall RemapAllToFile ( ) = 0;
+    virtual HRESULT __stdcall SetRemapImageBuffer (
+        struct IImageObject * piImageObj ) = 0;
+    virtual HRESULT __stdcall SetSimpleImageBuffer (
+        short bufferNo,
+        struct ISimpleImage * piSimpleImage ) = 0;
+};
+
+//
+// Named GUID constants initializations
+//
+
+extern "C" const GUID __declspec(selectany) LIBID_REMAP8KLib =
+    {0x731e9078,0x9de7,0x423c,{0x8b,0x94,0x37,0xc9,0xbd,0x0f,0x3a,0xd9}};
+extern "C" const GUID __declspec(selectany) CLSID_CoRemap8K =
+    {0x504e087e,0x618b,0x40f4,{0x92,0x3f,0xa6,0x28,0x39,0x8a,0x17,0xb6}};
+extern "C" const GUID __declspec(selectany) IID_ICoRemap8K =
+    {0xcff3f956,0xc33e,0x40ee,{0x92,0xe2,0x35,0x9e,0x85,0x34,0x02,0x88}};
+
+#pragma pack(pop)

@@ -1,0 +1,40 @@
+SerialEM is copyright (C) 2003-2016 by the Regents of the University of
+Colorado.
+                                                                    
+The University of Colorado reserves the exclusive rights of preparing
+derivative works, distributing copies for sale, lease or lending and
+displaying this software and documentation.
+Users may reproduce the software and documentation for use in their
+own institution, as long as the copyright notice and other notices are
+preserved.                   
+Neither the software nor the documentation may be distributed for
+profit, either in original form or in derivative works.
+                                                                    
+THIS SOFTWARE AND/OR DOCUMENTATION IS PROVIDED WITH NO WARRANTY,    
+EXPRESS OR IMPLIED, INCLUDING, WITHOUT LIMITATION, WARRANTY OF      
+MERCHANTABILITY AND WARRANTY OF FITNESS FOR A PARTICULAR PURPOSE.   
+                                                                    
+SerialEM uses TIFF libraries which are Copyright (c) 1988-1997 Sam Leffler
+and Copyright (c) 1991-1997 Silicon Graphics, Inc.
+
+Because SerialEM uses the libjpeg library, this software is based in part on
+the work of the Independent JPEG Group.  SerialEM also uses the zlib library,
+which is Copyright (c) 1995-2010 by Jean-loup Gailly and Mark Adler.
+
+SerialEM uses FFTW libraries under a purchased licensed; those are Copyright
+(c) 1997--1999 Massachusetts Institute of Technology, written by Matteo Frigo
+and Steven G. Johnson.
+
+SerialEM also uses a Set dialog DPI helper class, Copyright (C) 2003 by George
+Yohng, and XFolderDialog by Hans Dietrich.
+
+The SerialEMCCD plugin is also copyright (C) 2003-2016 by the Regents of the
+University of Colorado.  It is open source under the General Public License
+(GPL) version 2.0, and may be modified and redistributed under the terms of
+this license.  A copy of this license is in the file GPL.txt in the
+SerialEMCCD source and the SerialEM binary distributions.
+The source can be found at
+http://bio3d.colorado.edu/SerialEM/SerialEMCCD
+
+This work was supported in the past by NIH P41 grants from NCRR and NIGMS to
+J. Richard McIntosh and Andreas Hoenger.

@@ -1,0 +1,114 @@
+﻿// Created by Microsoft (R) C/C++ Compiler Version 15.00.30729.01 (9a5e8dc7).
+//
+// c:\users\mast\documents\scope\serialem\release\amtcamera.tli
+//
+// Wrapper implementations for Win32 type library AmtCamera.tlb
+// compiler-generated file created 02/12/15 at 13:54:31 - DO NOT EDIT!
+
+#pragma once
+
+//
+// interface IAMTCamInterface wrapper method implementations
+//
+
+inline HRESULT IAMTCamInterface::GetTestArray ( long width, long height, long * retSize, short * array, long * time, unsigned long * receiptTime, unsigned long * returnTime ) {
+    HRESULT _hr = raw_GetTestArray(width, height, retSize, array, time, receiptTime, returnTime);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IAMTCamInterface::ExecuteScript ( long size, long * script, long selectCamera, double * retval ) {
+    HRESULT _hr = raw_ExecuteScript(size, script, selectCamera, retval);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IAMTCamInterface::SetDebugMode ( long debug ) {
+    HRESULT _hr = raw_SetDebugMode(debug);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IAMTCamInterface::SetDMVersion ( long version ) {
+    HRESULT _hr = raw_SetDMVersion(version);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IAMTCamInterface::SetCurrentCamera ( long camera ) {
+    HRESULT _hr = raw_SetCurrentCamera(camera);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IAMTCamInterface::QueueScript ( long size, long * script ) {
+    HRESULT _hr = raw_QueueScript(size, script);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IAMTCamInterface::GetAcquiredImage ( short * array, long * arrSize, long * width, long * height, long processing, double exposure, long binning, long top, long left, long bottom, long right, long shutter, double settling, long shutterDelay, long divideBy2, long corrections ) {
+    HRESULT _hr = raw_GetAcquiredImage(array, arrSize, width, height, processing, exposure, binning, top, left, bottom, right, shutter, settling, shutterDelay, divideBy2, corrections);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IAMTCamInterface::GetDarkReference ( short * array, long * arrSize, long * width, long * height, double exposure, long binning, long top, long left, long bottom, long right, long shutter, double settling, long divideBy2, long corrections ) {
+    HRESULT _hr = raw_GetDarkReference(array, arrSize, width, height, exposure, binning, top, left, bottom, right, shutter, settling, divideBy2, corrections);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IAMTCamInterface::GetGainReference ( float * array, long * arrSize, long * width, long * height, long binning ) {
+    HRESULT _hr = raw_GetGainReference(array, arrSize, width, height, binning);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IAMTCamInterface::selectCamera ( long camera ) {
+    HRESULT _hr = raw_selectCamera(camera);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IAMTCamInterface::GetNumberOfCameras ( long * numCameras ) {
+    HRESULT _hr = raw_GetNumberOfCameras(numCameras);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IAMTCamInterface::IsCameraInserted ( long camera, long * inserted ) {
+    HRESULT _hr = raw_IsCameraInserted(camera, inserted);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IAMTCamInterface::InsertCamera ( long camera, long state ) {
+    HRESULT _hr = raw_InsertCamera(camera, state);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IAMTCamInterface::GetDMVersion ( long * version ) {
+    HRESULT _hr = raw_GetDMVersion(version);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IAMTCamInterface::GetDMCapabilities ( long * canSelectShutter, long * canSetSettling, long * openShutterWorks ) {
+    HRESULT _hr = raw_GetDMCapabilities(canSelectShutter, canSetSettling, openShutterWorks);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IAMTCamInterface::SetShutterNormallyClosed ( long camera, long shutter ) {
+    HRESULT _hr = raw_SetShutterNormallyClosed(camera, shutter);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IAMTCamInterface::SetNoDMSettling ( long camera ) {
+    HRESULT _hr = raw_SetNoDMSettling(camera);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}

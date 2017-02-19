@@ -1,0 +1,111 @@
+<HTML>
+  <HEAD>
+    <TITLE>Falcon Frame Selector Dialog</TITLE>
+    <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
+    <style type="text/css"> <!-- BODY { font-family:"Arial" }
+  TD { font-size:16 }
+  --></style>
+  </HEAD>
+  <BODY BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+    <P><A NAME="hidd_falcon_frames"></A><B><FONT size="3">Frame Summing Selector Dialog</FONT></B></P>
+
+
+
+    <p>
+      This dialog allows you to control the saving of 
+      either intermediate frames from a 
+      Falcon camera or variably-sized sums of frames from a K2 camera.&nbsp; </p>
+    <p>
+      <i>For the Falcon camera</i>, an exposure consists of a certain number of 
+      readouts at a fixed interval, referred to here as camera frames.&nbsp; The intermediate frames that get 
+      saved are sums of successive sets of camera frames.&nbsp; The controls in this 
+      dialog let you select which camera frames are summed and saved, and this is the only 
+      way to set the exposure time integrated in the saved frames.</p>
+    <p>
+      <i>For the K2 camera</i>, the exposure time of the camera frames available for 
+      saving can be set in the main camera setup dialog, and this dialog is needed 
+      only if you want to save frames with different durations from a single exposure.&nbsp; In this case, 
+      the stack of images prepared by DigitalMicrograph at the selected frame time 
+      will be referred to as camera frames, and the sums saved by the SerialEMCCD plugin 
+      are referred to as summed frames.&nbsp; Note that DM&#39;s lengthy time to prepare the 
+      camera frames is proportional to the number of camera frames, so the total time for 
+      saving the data will reflect primarily this number rather than the number of 
+      summed frames saved.&nbsp; If you want to sum numerous camera frames from later in 
+      the exposure, it may be significantly faster to take two separate exposures with 
+      different frame times.</p>
+    <p>
+      An unequal distribution of 
+      camera frames among the summed frames, i.e., variable frame 
+      durations,&nbsp;is created by typing the actual distribution into the large box 
+      at the bottom. The box is formatted to hold a pair of numbers on each line.&nbsp; 
+      The first number of a pair is the number of successive summed frames of a particular 
+      duration; the second number is the number of camera frames in each of those 
+      summed frames.&nbsp; 
+      The program will remember whatever distribution is imposed when you enter such 
+      numbers or change the values in the list.&nbsp; Thereafter, when you change 
+      other items in the dialog, the program will reapportion camera frames among 
+      summed frames 
+      so as to maintain this distribution. In fact, even when this dialog is not open, 
+      changes in exposure time or frame time will cause the program to reapportion 
+      camera frames, provided that frame summing is enabled.&nbsp; Note that whenever a 
+      given number of camera frames does not divide equally among a set of summed frames, the 
+      extra camera frames will be added to the later summed frames in that set.</p>
+    <p>
+      <b>Exposure time</b></p>
+    <p>
+      This text box is initialized with the current exposure time for this parameter 
+      set, but the time can be changed here.&nbsp; The exposure is constrained to be a 
+      multiple of the camera frame time.&nbsp; <i>For the Falcon</i>, the total number of 
+      camera frames in the 
+      exposure is the sum of ones skipped at the beginning and end and the total 
+      included in the saved frames.&nbsp; When this time is changed, a new number of 
+      camera frames is distributed among the current number of summed frames.</p>
+    <p>
+      <b>Camera frame time</b></p>
+    <p>
+      <i>For the K2</i>, this text box contains the current frame time for the 
+      parameter set, which can be changed here.&nbsp; When the time is changed, the 
+      exposure is kept constant and a new number of camera frames is distributed among the 
+      current number of summed frames.</p>
+    <p>
+      <b>Number of frames to save</b></p>
+    <p>Use this spinner to select how many summed frames to save from the exposure.&nbsp; 
+      Changing this value will generally cause the same total camera frames being saved to 
+      be distributed among a different number of summed frames.</p>
+    <p>
+      <b>Skip before start</b></p>
+    <p>
+      <i>For the Falcon</i>, use this spinner to set whether to leave out any camera frames at the beginning of 
+      the exposure, which may have shuttering effects.&nbsp; Changing this value will 
+      change the exposure time.</p>
+    <p>
+      <b>Total to save</b></p>
+    <p>This spinner reflects the the total number of 
+      camera frames that will be included in 
+      the saved frames.&nbsp; Changing this value will increase the exposure time.</p>
+    <p>
+      <b>Skip after end</b></p>
+    <p>
+      <i>For the Falcon</i>, use this spinner to leave out camera frames at the end of the exposure; such 
+      camera frames may also have shuttering effects.&nbsp; Changing this value will 
+      change the exposure time.</p>
+    <p>
+      <b>List of frame sums</b></p>
+    <p>The format of this text box was explained above.&nbsp; 
+      Be aware of these points: 1) Type Tab or click elsewhere in the dialog to have 
+      the program read your changes.&nbsp; 2) There must be at least two numbers on 
+      each line, and numbers after the second one are ignored.&nbsp; 3) The program 
+      will rewrite the list into the box after you change it.&nbsp; 4) Thus you can 
+      simply add a new second value on a line without erasing the existing one 
+      yourself.&nbsp; 5) Changes here will affect exposure time and number of saved 
+      frames and camera frames.</p>
+    <p>
+      <b>Equalize</b></p>
+    <p>Use this button to eliminate whatever unequal distribution of 
+      camera frames has been 
+      imposed by typing into the list.&nbsp; This is useful for the Falcon, but for 
+      the K2, simply disable saving summed frames instead.</p>
+
+</BODY>
+</HTML>

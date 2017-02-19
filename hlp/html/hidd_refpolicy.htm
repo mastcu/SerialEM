@@ -1,0 +1,69 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+  <HEAD>
+    <TITLE>Gain Reference Policy Dialog</TITLE>
+    <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
+    <style type="text/css"> <!-- BODY { font-family:"Arial" } TD { font-size:16 } 
+  --></style>
+  </HEAD>
+  <BODY BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+    <P><A NAME="hidd_refpolicy"></A><B><FONT size="3">Gain Reference Policy Dialog</FONT></B></P>
+    <P>This dialog box allows you to set options for controlling which gain references 
+      are used in various cases where multiple references are available. Multiple 
+      references can be useful when the quadrant correction for a 4-port camera is 
+      imperfect, or if there or problems with fixed pattern noise in binned images 
+      even after adjusting the BinningOffset properties. Between the ability to make 
+      references in SerialEM for higher binnings, and the ability to pick between 
+      these references and DigitalMicrograph (DM) references for individual binnings, 
+      it should be possible to control these problems.</P>
+    <P>The default behavior of the program is: 1) If both unbinned and binned by 2 
+      SerialEM references exist, then the unbinned reference is used for all odd 
+      binnings, and the binned by 2 reference is used for even binnings, but only if 
+      it is newer than the unbinned reference. 2) If the DM reference is newer than 
+      the SerialEM reference, then the program will ask once whether you wish to use 
+      it instead; it will ask this question separately with regard to the unbinned 
+      and binned by 2 SerialEM reference.</P>
+    <P>Once the 'ExtraGainReference' property is set for a camera, this behavior is 
+      modified. For each binning where an extra reference is allowed, the program 
+      will use that reference if it exists, regardless of its age. If it does not 
+      exist, the program will use the unbinned or binned by 2 reference as just 
+      described. If a reference does exist but is older than the DM reference, then 
+      it will ask about whether you want to use the DM reference instead, 
+      specifically for that binning.</P>
+    <P>Note that whenever you leave this dialog by pressing 'OK' instead of 'Cancel', 
+      the program re-initializes the gain reference module and it will ask the 
+      questions about DM references all over again.</P>
+    <P><B>Do not use references with binning higher than 2</B></P>
+    <P>With this option selected, the program will not only ignore any existing 
+      references for binnings greater than 2, it will also behave the same is if such 
+      references were not allowed. It will not ask about using a DM reference 
+      specifically for such binnings.</P>
+    <P><B>Use binned by 2 reference even if older than unbinned reference</B></P>
+    <P>Select this option if you always want to use a binned by 2 reference if 
+      available, even if it is older than the unbinned reference. If you find that 
+      you generally need a separate reference for binned by 2 and unbinned images, 
+      you would use this option to avoid having to keep track of which one was done 
+      first.</P>
+    <P><B>Choosing DigitalMicrograph instead of SerialEM reference</B></P>
+    <P>These choices control the questions about whether to use a DM reference.
+    </P>
+    <OL>
+      <LI>
+        The first option represents the default behavior described above; questions are 
+        asked only when the DM reference is newer.
+      </LI>
+      <LI>
+        The second option is to have the question asked always, regardless of the 
+        relative ages of references. When this option is selected, the program will 
+        even ask about using a DM reference in place of a higher binned reference that 
+        does not exist. For example, if you set 'ExtraGainReferences' to 4 for a Gatan 
+        895 camera, this will enable gain references for binnings 3, 4, 6, and 8. Even 
+        if you do not make those references, the program will ask, for each of those 
+        binnings, whether you want to use the DM reference instead of deriving a 
+        reference from the unbinned or binned by 2 SerialEM reference.</LI>
+      <LI>
+        The last option is to never be asked about using DM references.</LI></OL>
+    </basefont>
+  </BODY>
+</HTML>

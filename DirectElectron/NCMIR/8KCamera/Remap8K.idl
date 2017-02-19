@@ -1,0 +1,48 @@
+// Remap8K.idl : IDL source for Remap8K.dll
+//
+
+// This file will be processed by the MIDL tool to
+// produce the type library (Remap8K.tlb) and marshalling code.
+
+import "oaidl.idl";
+import "ocidl.idl";
+import "FSM_MemoryLib.idl";
+import "FSM_MultiImageObjectLib.idl";
+	[
+		object,
+		uuid(CFF3F956-C33E-40EE-92E2-359E85340288),
+		dual,
+		helpstring("ICoRemap8K Interface"),
+		pointer_default(unique)
+	]
+	interface ICoRemap8K : IDispatch
+	{
+		[id(1), helpstring("method RemapAll")] HRESULT RemapAll();
+		[id(2), helpstring("method Remap")] HRESULT Remap([in] short CameraNo);
+		[id(3), helpstring("method SetImageBuffer")] HRESULT SetImageBuffer([in]IFSM_MemoryObject *piMemObj);
+		[id(4), helpstring("method SetSimpleImageBuffer")] HRESULT SetSimpleImageBuffer([in]short bufferNo, [in]ISimpleImage *piSimpleImage);
+		[id(5), helpstring("method SetCameraParam")] HRESULT SetSrcImageInformation([in]short cameraNo, [in]short XUL, [in]short YUL, [in]short XUR, [in]short YUR, [in]short XLL, [in]short YLL, [in]short XLR, [in]short YLR, short RefWidth, short RefHeight);
+		[id(6), helpstring("method SetImageSize")] HRESULT SetSrcImageSize([in]short SrcWidth, [in]short SrcHeight);
+	};
+
+[
+	uuid(731E9078-9DE7-423C-8B94-37C9BD0F3AD9),
+	version(1.0),
+	helpstring("Remap8K 1.0 Type Library")
+]
+library REMAP8KLib
+{
+	importlib("stdole32.tlb");
+	importlib("stdole2.tlb");
+	importlib("FSM_MemoryLib.tlb");
+	importlib("FSM_MultiImageObjectLib.tlb");
+
+	[
+		uuid(504E087E-618B-40F4-923F-A628398A17B6),
+		helpstring("CoRemap8K Class")
+	]
+	coclass CoRemap8K
+	{
+		[default] interface ICoRemap8K;
+	};
+};

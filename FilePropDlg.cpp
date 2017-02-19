@@ -1,0 +1,281 @@
+// FilePropDlg.cpp:      To set properties for saving images to files
+//
+// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
+// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Colorado.  See Copyright.txt for full notice of copyright and limitations.
+//
+// Author: David Mastronarde
+//
+
+#include "stdafx.h"
+#include "SerialEM.h"
+#include ".\FilePropDlg.h"
+#include "Image\KStoreMRC.h"
+
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
+#define SetFlag(a,b) \
+  if ((a)) \
+    mFileOpt.typext |= (b); \
+  else \
+    mFileOpt.typext &= ~(b);
+
+// Just change one to COMPRESS_JPEG to test it
+static int compressions[] = {COMPRESS_NONE, COMPRESS_ZIP, COMPRESS_LZW};
+
+/////////////////////////////////////////////////////////////////////////////
+// CFilePropDlg dialog
+
+
+CFilePropDlg::CFilePropDlg(CWnd* pParent /*=NULL*/)
+  : CBaseDlg(CFilePropDlg::IDD, pParent)
+  , m_bSaveMdoc(FALSE)
+{
+  //{{AFX_DATA_INIT(CFilePropDlg)
+  m_iMaxSects = 0;
+  m_iByteInt = 0;
+  m_bStagePos = FALSE;
+  m_bTiltAngle = FALSE;
+  m_bMag = FALSE;
+  m_iTruncBlack = 40;
+  m_iTruncWhite = 40;
+  m_iUnsignOpt = 0;
+	m_bIntensity = FALSE;
+  m_bExposure = FALSE;
+  m_iCompress = 0;
+  m_iFileType = 0;
+	//}}AFX_DATA_INIT
+}
+
+
+void CFilePropDlg::DoDataExchange(CDataExchange* pDX)
+{
+  CBaseDlg::DoDataExchange(pDX);
+  //{{AFX_DATA_MAP(CFilePropDlg)
+  DDX_Control(pDX, IDC_RTRUNCATE, m_butTruncate);
+  DDX_Control(pDX, IDC_RDIVIDE, m_butDivide);
+  DDX_Control(pDX, IDC_RSHIFTDOWN, m_butShiftDown);
+  DDX_Control(pDX, IDC_RUNSIGNED, m_butSaveUnsigned);
+  DDX_Control(pDX, IDC_STATSAVING16, m_groupSaving16);
+  DDX_Control(pDX, IDC_TRUNCWHITETEXT, m_statTruncWhite);
+  DDX_Control(pDX, IDC_TRUNCWHITEEDIT, m_editTruncWhite);
+  DDX_Control(pDX, IDC_TRUNCBLACKEDIT, m_editTruncBlack);
+  DDX_Control(pDX, IDC_TRUNCBLACKTEXT, m_statTruncBlack);
+  DDX_Control(pDX, IDC_TRUNCGROUP, m_groupTrunc);
+  DDX_Control(pDX, IDC_MAXSECTSEDIT, m_editMaxSect);
+  DDX_Control(pDX, IDC_MAXSECTSTEXT, m_statMaxSects);
+  DDX_Control(pDX, IDC_BEGENEROUS, m_statGenerous);
+  DDX_Text(pDX, IDC_MAXSECTSEDIT, m_iMaxSects);
+  DDV_MinMaxInt(pDX, m_iMaxSects, 1, 10000);
+  DDX_Radio(pDX, IDC_RBYTE, m_iByteInt);
+  DDX_Check(pDX, IDC_STAGEPOS, m_bStagePos);
+  DDX_Check(pDX, IDC_TILTANGLE, m_bTiltAngle);
+  DDX_Check(pDX, IDC_MAGNIFICATION, m_bMag);
+  DDX_Text(pDX, IDC_TRUNCBLACKEDIT, m_iTruncBlack);
+  DDV_MinMaxInt(pDX, m_iTruncBlack, 0, 10000);
+  DDX_Text(pDX, IDC_TRUNCWHITEEDIT, m_iTruncWhite);
+  DDV_MinMaxInt(pDX, m_iTruncWhite, 0, 10000);
+  DDX_Radio(pDX, IDC_RTRUNCATE, m_iUnsignOpt);
+  DDX_Radio(pDX, IDC_RNOCOMPRESS, m_iCompress);
+  DDX_Radio(pDX, IDC_RMRCFILE, m_iFileType);
+  DDX_Check(pDX, IDC_SAVE_INTENSITY, m_bIntensity);
+  DDX_Check(pDX, IDC_EXPOSURE_DOSE, m_bExposure);
+  //}}AFX_DATA_MAP
+  DDX_Control(pDX, IDC_STATCOMPRESS, m_statCompress);
+  DDX_Control(pDX, IDC_RNOCOMPRESS, m_butNoComp);
+  DDX_Control(pDX, IDC_RZIPCOMPRESS, m_butZIPComp);
+  DDX_Control(pDX, IDC_RLZWCOMPRESS, m_butLZWComp);
+  //DDX_Control(pDX, IDC_RJPEGCOMPRESS, m_butJPEGComp);
+  DDX_Control(pDX, IDC_RTIFFFILE, m_butTiffFile);
+  DDX_Control(pDX, IDC_EXTENDEDGROUP, m_statExtended);
+  DDX_Control(pDX, IDC_TILTANGLE, m_butTiltangle);
+  DDX_Control(pDX, IDC_SAVE_INTENSITY, m_butIntensity);
+  DDX_Control(pDX, IDC_STAGEPOS, m_butStagePos);
+  DDX_Control(pDX, IDC_MAGNIFICATION, m_butMagnification);
+  DDX_Control(pDX, IDC_EXPOSURE_DOSE, m_butExpDose);
+  DDX_Control(pDX, IDC_SAVEMDOC, m_butSaveMdoc);
+  DDX_Check(pDX, IDC_SAVEMDOC, m_bSaveMdoc);
+}
+
+
+BEGIN_MESSAGE_MAP(CFilePropDlg, CBaseDlg)
+  //{{AFX_MSG_MAP(CFilePropDlg)
+  ON_BN_CLICKED(IDC_RBYTE, OnRbyte)
+  ON_EN_KILLFOCUS(IDC_TRUNCBLACKEDIT, OnKillfocusTruncblackedit)
+  ON_EN_KILLFOCUS(IDC_TRUNCWHITEEDIT, OnKillfocusTruncwhiteedit)
+  ON_EN_KILLFOCUS(IDC_MAXSECTSEDIT, OnKillfocusMaxsectsedit)
+  ON_BN_CLICKED(IDC_RINTEGERS, OnRbyte)
+  ON_BN_CLICKED(IDC_TILTANGLE, OnRbyte)
+  ON_BN_CLICKED(IDC_STAGEPOS, OnRbyte)
+  ON_BN_CLICKED(IDC_MAGNIFICATION, OnRbyte)
+	ON_BN_CLICKED(IDC_SAVE_INTENSITY, OnRbyte)
+	ON_BN_CLICKED(IDC_EXPOSURE_DOSE, OnRbyte)
+	ON_BN_CLICKED(IDC_RUNSIGNED, OnRbyte)
+	ON_BN_CLICKED(IDC_RMRCFILE, OnRbyte)
+	ON_BN_CLICKED(IDC_RTIFFFILE, OnRbyte)
+	ON_BN_CLICKED(IDC_RADOCFILE, OnRbyte)
+	//}}AFX_MSG_MAP
+  ON_BN_CLICKED(IDC_SAVEMDOC, OnSaveMdoc)
+END_MESSAGE_MAP()
+
+/////////////////////////////////////////////////////////////////////////////
+// CFilePropDlg message handlers
+
+void CFilePropDlg::OnRbyte() 
+{
+  UpdateData(TRUE); 
+  ManageStates(); 
+}
+
+
+/*void CFilePropDlg::OnChangeMaxsectsedit() 
+{
+  UpdateData(TRUE); 
+}
+
+void CFilePropDlg::OnChangeTruncblackedit() 
+{
+  UpdateData(TRUE); 
+}
+
+void CFilePropDlg::OnChangeTruncwhiteedit() 
+{
+  UpdateData(TRUE); 
+}
+*/
+// Enable or disable various items based on byte versus int
+// or whether any extra header info is being selected
+void CFilePropDlg::ManageStates()
+{
+  BOOL bEnable = (m_iByteInt == 0);
+  m_groupTrunc.EnableWindow(bEnable);
+  m_statTruncWhite.EnableWindow(bEnable);
+  m_editTruncWhite.EnableWindow(bEnable);
+  m_statTruncBlack.EnableWindow(bEnable);
+  m_editTruncBlack.EnableWindow(bEnable);
+
+  bEnable = (mFileOpt.TIFFallowed && m_iFileType == 1) || m_iFileType == 2;
+  m_statCompress.EnableWindow(bEnable);
+  m_butNoComp.EnableWindow(bEnable);
+  m_butLZWComp.EnableWindow(bEnable);
+  m_butZIPComp.EnableWindow(bEnable);
+  //m_butJPEGComp.EnableWindow(bEnable);
+  bEnable = m_iFileType == 0;
+  m_statExtended.EnableWindow(bEnable);
+  m_butTiltangle.EnableWindow(bEnable);
+  m_butStagePos.EnableWindow(bEnable);
+  m_butIntensity.EnableWindow(bEnable);
+  m_butExpDose.EnableWindow(bEnable);
+  m_butMagnification.EnableWindow(bEnable);
+  //m_statExtended.SetWindowText(
+    //m_iFileType == 2 ? "Save in autodoc file" : "Save in extended header");
+
+  bEnable = !m_iFileType && (m_bStagePos || m_bTiltAngle || m_bMag || m_bExposure ||
+    m_bIntensity || (mFileOpt.typext & MONTAGE_MASK));
+  m_editMaxSect.EnableWindow(bEnable);
+  m_statMaxSects.EnableWindow(bEnable);
+  m_statGenerous.EnableWindow(bEnable);
+  m_butSaveMdoc.EnableWindow(!mFileOpt.montageInMdoc && !m_iFileType);
+
+  bEnable = m_iByteInt == 1 && mAny16Bit;
+  m_groupSaving16.EnableWindow(bEnable);
+  m_butTruncate.EnableWindow(bEnable);
+  m_butDivide.EnableWindow(bEnable);
+  m_butShiftDown.EnableWindow(bEnable);
+}
+
+BOOL CFilePropDlg::OnInitDialog() 
+{
+  CBaseDlg::OnInitDialog();
+
+  // Set the variables based on the FileOption structure
+  m_iByteInt = mFileOpt.mode < 2 ? mFileOpt.mode : 2;
+  m_iMaxSects = mFileOpt.maxSec;
+  m_iTruncBlack = mFileOpt.nTruncLo;
+  m_iTruncWhite = mFileOpt.nTruncHi;
+  m_bTiltAngle = ((mFileOpt.typext & TILT_MASK) != 0);
+  m_bStagePos = ((mFileOpt.typext & VOLT_XY_MASK) != 0);
+  m_bMag = ((mFileOpt.typext & MAG100_MASK) != 0);
+  m_bIntensity = ((mFileOpt.typext & INTENSITY_MASK) != 0);
+  m_bExposure = ((mFileOpt.typext & DOSE_MASK) != 0);
+  m_iUnsignOpt = mFileOpt.unsignOpt;
+  m_butSaveUnsigned.ShowWindow(mAny16Bit ? SW_SHOW : SW_HIDE);
+  m_bSaveMdoc = (mFileOpt.useMont() ? mFileOpt.montUseMdoc : mFileOpt.useMdoc) ||
+    mFileOpt.montageInMdoc;
+
+  // Originally TIFFallowed = 2 was meant to force a tiff, leave that aside with ADOC
+  m_butTiffFile.EnableWindow(mFileOpt.TIFFallowed);
+  if ((mFileOpt.fileType == STORE_TYPE_TIFF ||  mFileOpt.fileType == STORE_TYPE_ADOC) &&
+    mFileOpt.TIFFallowed)
+    m_iFileType = 1;
+  else if ((mFileOpt.useMont() ? mFileOpt.montFileType : mFileOpt.fileType) == 
+    STORE_TYPE_ADOC)
+    m_iFileType = 2;
+  m_iCompress = 0;
+  for (int i = 0; i < 3; i++)
+    if (mFileOpt.compression == compressions[i])
+      m_iCompress = i;
+
+  UpdateData(FALSE);
+  ManageStates();
+//  EnableToolTips(true);
+  
+  return TRUE;  // return TRUE unless you set the focus to a control
+                // EXCEPTION: OCX Property Pages should return FALSE
+}
+
+void CFilePropDlg::OnOK() 
+{
+  // Unload the data and then recode it into the FileOption
+  int filety = STORE_TYPE_MRC;
+  UpdateData(TRUE); 
+  mFileOpt.mode = m_iByteInt < 2 ? m_iByteInt : MRC_MODE_USHORT;
+  mFileOpt.maxSec = m_iMaxSects;
+  mFileOpt.nTruncLo = m_iTruncBlack;
+  mFileOpt.nTruncHi = m_iTruncWhite;
+  mFileOpt.unsignOpt = m_iUnsignOpt;
+  SetFlag(m_bTiltAngle, TILT_MASK);
+  SetFlag(m_bMag, MAG100_MASK);
+  SetFlag(m_bStagePos, VOLT_XY_MASK);
+  SetFlag(m_bIntensity, INTENSITY_MASK);
+  SetFlag(m_bExposure, DOSE_MASK);
+  if (!mFileOpt.montageInMdoc) {
+    if (mFileOpt.useMont())
+      mFileOpt.montUseMdoc = m_bSaveMdoc;
+    else
+      mFileOpt.useMdoc = m_bSaveMdoc;
+  }
+  if (m_iFileType == 1)
+    filety = STORE_TYPE_TIFF;
+  if (m_iFileType == 2)
+    filety = STORE_TYPE_ADOC;
+  if (mFileOpt.useMont())
+    mFileOpt.montFileType = filety;
+  else
+    mFileOpt.fileType = filety;
+  mFileOpt.compression = compressions[m_iCompress];
+  CDialog::OnOK();
+}
+
+void CFilePropDlg::OnKillfocusTruncblackedit() 
+{
+  UpdateData(TRUE);
+}
+
+void CFilePropDlg::OnKillfocusTruncwhiteedit() 
+{
+  UpdateData(TRUE);
+}
+
+void CFilePropDlg::OnKillfocusMaxsectsedit() 
+{
+  UpdateData(TRUE); 
+}
+
+void CFilePropDlg::OnSaveMdoc()
+{
+}

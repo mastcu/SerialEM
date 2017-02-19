@@ -1,0 +1,42 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+  <HEAD>
+    <TITLE>Tilt Series Backup Dialog</TITLE>
+    <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
+    <style type="text/css"> <!-- BODY { font-family:"Arial" } TD { font-size:16 } 
+  --></style>
+  </HEAD>
+  <BODY BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+    <P><A NAME="hidd_tsbackup"></A><B><FONT size="3">Tilt Series Back Up Dialog</FONT></B></P>
+    <P>This dialog box allows you to back up in the tilt series, assess the alignment 
+      or quality of images at previous tilts, and resume at a selected tilt angle. 
+      When you do that, new images will be taken at each tilt and used to overwrite 
+      the existing images until you reach the place that you backed up from. The 
+      dialog box presents a selection of tilts, listed by their Z values in the file 
+      and by their tilt angles. Select one and push the GO button to back up to that 
+      tilt.
+    </P>
+    <P>When you select an angle, the program will tilt back to that angle, compensating 
+      for backlash, read in the stored image for that tilt angle and place it in 
+      buffer A, and read in the stored image for the previous tilt angle and place it 
+      in buffer D (the autoalign buffer). If you resume from that point, the program 
+      will start with tracking and focusing at the new tilt angle, aligning images to 
+      the reference from the previous angle. If you are montaging, the program will 
+      recompose the center image for the selected angle and for the previous tilt.</P>
+    <P>If you tilt back too far, you can open this dialog box again and tilt forward 
+      again. You can only tilt forward to the last angle that was finished, not 
+      necessarily to the angle at which you stopped.</P>
+    <P>If you are in low dose mode, the program maintains a stash of tracking reference 
+      images which it can access to set up buffers appropriately when backing up. 
+      Specifically, it will place the stored image from the previous tilt in D and 
+      one of the tracking reference images in E. You can then autoalign either Trial 
+      or Record images at the new tilt angle. Your choice of angles to back up to may 
+      be constrained because of the limited number of tracking references available.</P>
+    <P>If you are working at a high magnification and need low mag tracking, you may 
+      have to get the specimen aligned manually after backing up, since there is not 
+      guaranteed to be an appropriate low mag reference in the second autoalign 
+      buffer.</P>
+    </basefont>
+  </BODY>
+</HTML>

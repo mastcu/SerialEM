@@ -1,0 +1,309 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+  <HEAD>
+    <TITLE>Acquiring Tilt Series</TITLE>
+    <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
+    <style type="text/css"> <!-- BODY { font-family:"Arial" } TD { font-size:16 } 
+  --></style>
+  </HEAD>
+  <BODY BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+    <P><A NAME="about_tilt_series"></A><B><FONT size="3">Acquiring Tilt Series</FONT></B></P>
+    <P>The basic steps involved in acquiring a tilt series are quite simple: tilt by an 
+      increment, adjust image position to keep features of interest centered, adjust 
+      focus to maintain a desired level of defocus, and acquire and save an image. 
+      However, several factors make this process considerably more complicated. 
+      First, it is highly desirable to skip some of these steps as often as possible, 
+      because of the time and specimen dose required to perform them on every tilt, 
+      yet it is not trivial to skip steps without jeopardizing the quality of the 
+      tilt series. Second, the need to track image position with a lower 
+      magnification image when working at a high magnification, or with an image away 
+      from the area of interest when trying to minimize dose, makes this operation 
+      more complex. Third, things do go wrong that require manual intervention, and 
+      the program must have the flexibility to allow for a variety of interventions.</P>
+    <P>The part of SerialEM that manages tilt series acquisition is called the Tilt 
+      Series Controller (TSC). It deserves to be thought of as an entity in its own 
+      right because it takes control of many aspects of program operation. For 
+      example, you will not be able to tilt, copy images to certain buffers, or save 
+      images directly while the TSC is in control - you can do these things only 
+      through the TSC.
+    </P>
+    <P>When the TSC is running, buffer usage is standardized as follows: images roll 
+      from buffer A through buffer C as new images are acquired; buffer D is the 
+      primary buffer for autoalignment, buffer E is a secondary buffer for aligning 
+      low magnification images or Trial images in low dose mode; and buffer F can be 
+      read into from a file. Copying to buffers E and F is disabled.</P>
+    <P>You can suspend a tilt series to change the image alignment or focus. See the 
+      help for the <A HREF="hidd_tsresume.htm">Tilt Series Resume dialog box</A> for 
+      more details on what options are available when you do this. You can also back 
+      up to previous tilt angles; see the help for the <A HREF="hidd_tsbackup.htm">Tilt 
+        Series Back Up dialog box</A> for more details on this process.</P>
+    <P><B>Minimizing tracking errors</B></P>
+    <P>Running a tilt series continuously from one extreme tilt to the other can result 
+      in the area of interest not being well centered at zero tilt. This can happen 
+      either because of inaccurate tracking from high to low tilt, or because it was 
+      difficult to recognize the correct center position at the starting tilt angle. 
+      SerialEM has several features that can help prevent this problem. One is the 
+      'Walk up' procedure, which allows one to start at zero tilt (or a higher tilt 
+      if desired) and tilt up to the starting angle in a series of coarse increments 
+      with tracking images that are successively aligned to each other. This could be 
+      particularly useful when it is hard to recognize the features of interest at 
+      high tilt. You can activate the 'Walk Up' procedure yourself (from the Tasks 
+      menu) before you start the TSC, or you can activate the TSC at a low tilt angle 
+      and have it walk up to the starting tilt angle.</P>
+    <P>The second feature that may help tracking is called a 'mid-tilt anchor'. This is an 
+      image taken at around 40 to 50 degrees that the TSC can use as a reference when 
+      the tilt series reaches that angle. The angle should be low enough so that 
+      tracking is likely to be accurate from that point downward, but high enough so 
+      that uncorrected Y-axis errors above that point are unlikely to cause data loss 
+      in the reconstruction. (Note that because the region of interest is 
+      foreshortened in the Y direction at high tilt, alignment errors can be quite 
+      high in Y without losing any of the region of interest.) Angles in the range of 
+      40-50 degrees should satisfy these criteria. If you are starting the TSC at a 
+      low tilt angle and having it walk up to the starting angle, you can have it 
+      leave an anchor at an appropriate angle. If you are going to high tilt before 
+      starting the TSC, you can also specify an angle to leave an anchor at when you 
+      use the 'Walkup &amp; Anchor' procedure.</P>
+    <P>The fallback feature for fixing a tracking error is manual intervention. Simply 
+      stop the series with the 'End' button. It will stop with a Record image in 
+      Buffer A. Shift this image to the desired alignment with the right mouse 
+      button. Then select the 'Resume' option, check the box 'Use image in buffer A 
+      as reference for alignments' in the <A HREF="hidd_tsresume.htm">Tilt Series Resume 
+        dialog box</A>, and push the 'GO' button.</P>
+    <P><b>Bidirectional tilt series</b></P>
+    <P>A different strategy, running the tilt series in both directions from zero 
+      tilt, can be used to avoiding problems in reaching an initial high tilt angle 
+      and in tracking accurately when coming down from a high angle.&nbsp; This 
+      strategy is most useful in two situations, running multiple tilt series with 
+      cryo-specimens automatically, or taking tilt series at very high magnifications, 
+      but it may also be preferred even for single tilt series with some cryo-samples.&nbsp; 
+      Its main disadvantage is that it introduces a discontinuity in the tilt series 
+      at the starting angle.&nbsp; Almost certainly, tilt angles will not be evenly 
+      spaced across this discontinuity because of backlash.&nbsp; Plastic sections 
+      will shrink in the first half of the series, causing a substantial size change 
+      between the zero-degree image and the starting image of the second half of the 
+      series.&nbsp; On a few microscopes, stage imperfections cause an apparent change 
+      in X-axis tilt between the two halves of the series.&nbsp; All of these problems 
+      can be accounted for when aligning the tilt series in IMOD.&nbsp; In version 
+      4.7, the eTomo user interface allows one to specify that a tilt series is 
+      bidirectional and sets some appropriate parameters automatically.&nbsp;&nbsp; 
+      The Scan Header function of Tomogram Setup also detects whether a series from 
+      SerialEM is bidirectional and sets the option appropriately, because the header 
+      of the output file has an entry in its second title line showing the starting 
+      angle after &#39;bidir = &#39;.</P>
+    <P>Although bidirectional series avoid some tracking difficulties, they involve a 
+      different challenging step, returning to the starting angle for the second half 
+      of the series.&nbsp; The program takes a lower magnification image at the 
+      starting angle, the &#39;bidirectional anchor&#39; image, and aligns to this image after 
+      returning to that angle for the second half of the series.&nbsp;&nbsp; However, 
+      this re-alignment occurs after a much bigger tilt angle change and longer time 
+      interval than any other alignment operation in a tilt series, so it may require 
+      an image with a larger field of view than in other operations.&nbsp; For 
+      example, in Low Dose mode, you may find that View images with a relatively small 
+      field of view work in all other aspects of the series but are inadequate for the 
+      anchor image.&nbsp; Because of this vulnerability, the <A HREF="hidd_tiltseries.htm">Tilt Series Setup dialog</A> 
+      shows the anchor&#39;s field of view in microns and highlights the value when a 
+      magnification is chosen that makes the value too small. </P>
+    <P>In order to produce output files in the proper order, SerialEM restacks the 
+      data from the first half of the series into a new file, in inverted order, 
+      before it adds images from the second half.&nbsp; This restacking is done in the 
+      background while the program is tilting back and realigning to the starting 
+      position.&nbsp; When those operations are done, it then finishes the restacking 
+      before tilting to the first angle of the second half.&nbsp; If a metadata 
+      autodoc (.mdoc) file is being written, a new file will also be produced in the 
+      proper order. </P>
+    <P><b>Control of specimen exposure</b></P>
+    <P>Because a sample becomes thicker in the direction of the beam when tilted, a 
+      smaller fraction of incident electrons reaches the camera at higher tilts.&nbsp; 
+      It is usually desirable to keep the signal-to-noise ratio in the acquired images 
+      roughly constant through the tilt series, which requires greater exposure to the 
+      specimen at higher tilts.&nbsp; The default (and original) method for increasing 
+      exposure at higher tilts is to increase the beam intensity by condensing the 
+      beam.&nbsp; The motivation for this approach is that beam-induced drift depends 
+      primarily on the total current hitting the sample rather than its local flux; 
+      condensing the beam thus tends not to increase this component of drift.&nbsp; 
+      However, it is also possible to increase exposure time instead of beam 
+      intensity, which is preferable in some cases.&nbsp; If you choose this approach, 
+      it is important to assess whether drift-free images can be obtained with the 
+      highest exposure time needed.</P>
+    <P>Whichever method you choose for increasing specimen exposure, there are two 
+      fundamentally different ways of controlling the change.&nbsp; One is to adjust 
+      the intensity or exposure time after each Record image so as to maintain a 
+      constant number of counts through the series.&nbsp; This method is generally 
+      suitable for plastic-embedded samples.&nbsp; The other method is to adjust 
+      intensity or exposure time by a formula based on the cosine of the tilt angle.&nbsp; 
+      This method is preferred for cryo-samples because the total dose and its 
+      relative distribution through the series can be determined accurately.</P>
+    <P><B>Starting a tilt series</B></P>
+    <P>When taking a tilt series in one direction, from one extreme angle to the 
+      other, the TSC can be started either at a low tilt angle or at the starting tilt angle. 
+      You can safely start at low tilt if you are fairly confident that:</P>
+    <UL>
+      <LI>
+        The camera parameters (exposure time and drift settling) are suitable for 
+        getting good pictures at high tilt.</LI>
+      <LI>
+        Autofocusing will work well enough to find focus at high tilt.</LI>
+      <LI>
+        Either the beam intensity or the exposure time can be adjusted automatically to give the desired counts in the image 
+        without incurring problems: i.e., without the beam becoming too small and 
+        encroaching on the camera area, or without a longer exposure time causing 
+        excessive drift in the images.</LI></UL>
+    <P>If you have doubts about any of these factors, you should go to high tilt before 
+      starting the TSC, and make sure that images look good, that the specimen is 
+      focused, and that the beam or exposure time can be adjusted properly. These conditions may be 
+      satisfied if you have already done one tilt series on the specimen, in which 
+      case letting the TSC start from low tilt would save some effort.</P>
+    <P>Here is a sequence of steps for starting a tilt series:</P>
+    <OL>
+      <LI>
+        Decide if you are going to start at low tilt or go to high tilt before starting 
+        the TSC.</LI>
+      <LI>
+        If you are going to high tilt before starting the TSC, refine eucentricity. 
+        Select the 'Refine and Realign' command if you have already centered your 
+        region of interest and plan to use the 'Walk Up' procedure; otherwise 'Fine 
+        Eucentricity' is sufficient unless the magnification is high enough that you 
+        might lose your selected area.</LI>
+      <LI>
+        Go to high tilt. Consider using 'Walkup &amp; Anchor' to save a mid-tilt anchor, as 
+        described above.</LI>
+      <LI>
+        Make sure that the exposure settings for Focus, Trial, and Record give images 
+        without drift.</LI>
+      <LI>
+        Do autofocus and see if it gives a well-focused Record image with the best 
+        focus in the center of the field. If not, you can use the <A HREF="menu_focus.htm#hid_focus_movecenter">
+          Move Focus Center command</A> in the Focus menu to move the center of focus 
+        to the middle of the field, or you can vary focus by hand. Once focus is found, 
+        you should run the <A HREF="menu_focus.htm#hid_focus_measuredefocus">Measure 
+          Defocus command</A> in the Focus menu and use the reported value to set the 
+        target defocus.</LI>
+      <LI>
+        Set the beam intensity to give the desired level of counts. You can do this by 
+        hand or use the <A HREF="menu_tasks.htm#hid_process_setintensity">Set Intensity 
+          command</A> in the Tasks menu. This can be done with either a Trial or a 
+        Record image in buffer A. When you select the command, the message in the 
+        dialog box will show the mean counts that a Record image would give with the 
+        present beam intensity. You can enter either a new number of counts, or a 
+        factor by which to change the intensity. If you change the number by much (more 
+        than 10-20%), you should take another image and look at the beam on the screen 
+        to make sure it is not too small. If you cannot comfortably achieve the desired 
+        value, just adjust the beam so it is large enough. You will be able to select 
+        an option to reach the desired target number of counts at a lower tilt angle, 
+        and the program will reach this target as fast as it can without making the 
+        beam smaller than this initial setting.</LI>
+      <LI>
+        Take a final Trial image and center the features of interest.</LI>
+      <LI>
+        Open the <A HREF="hidd_tiltseries.htm">Tilt Series Setup dialog box</A> in the 
+        Tilt Series menu and check the entries from top to bottom, paying particular 
+        attention to the following:</LI>
+      <LI>
+        Check the starting and ending angles and angular increment.</LI>
+      <LI>
+        Make sure the delay time after tilting is appropriate for the holder and tilt 
+        increment (small increments need less delay time; heavy holders need more).</LI>
+      <LI>
+        Decide whether you need low magnification tracking. This is recommended for 
+        magnifications above 50,000, and might be needed at a somewhat lower 
+        magnification if you are starting at a particularly high tilt angle (say, above 
+        70 degrees).</LI>
+      <LI>
+        Make sure the limit on image shift is appropriate for the objective aperture 
+        size and other conditions. On the 300 KV Tecnai or Polara, operating at a relatively low 
+        magnification, montaging, and using low dose may all require a smaller limit on 
+        image shift, perhaps as low as 1 micron. When the limit is reached, the TSC 
+        will automatically reset the image shifts, move the stage to compensate, and 
+        recover from the physical disturbance caused by this movement.</LI>
+      <LI>
+        Make entries for beam intensity control. Checking 'Do not increase intensity 
+        above value for first saved image' is almost always a good idea. If you are 
+        starting at high tilt and needed to set the beam to give less than the desired 
+        target number of counts, check 'Keep intensity below current value (use if 
+        intensity already set up)'. This will achieve that target as soon as possible 
+        without overconstricting the beam. On the other hand, if you are starting at 
+        zero tilt and know that you need to reduce the number of counts at high tilt, 
+        fill in the desired target number in the 'Set intensity to keep mean counts of 
+        Record images at' text box, check the 'Taper counts down to' option, and put 
+        your reduced target for the highest tilt in the text box there.</LI>
+      <LI>
+        If you have had difficulty with autofocus at high tilt, you can select the 
+        'Focus every time above' option and fill in the desired angle above which you 
+        want to focus on every tilt.</LI>
+      <LI>
+        If you have a centered image in buffer A, select the option to 'Align to image 
+        now in Buffer A'.</LI>
+      <LI>
+        If you are starting at zero tilt, you should select the option to 'Refine 
+        eucentricity first' unless you have already done this.</LI>
+      <LI>
+        If you are starting at high tilt and have acquired an anchor image on the way 
+        up, select the 'Use mid-tilt anchor' option and then use the up or down arrow 
+        if necessary to indicate which buffer contains the anchor (it should be in the 
+        right place if you used 'Walkup &amp; Anchor').</LI>
+      <LI>
+        Under 'Tracking control parameters', you typically need to consider only the 
+        first line, which controls whether Record images will be repeated if they are 
+        not centered well enough. If you never want this to happen, unselect the 
+        option. The percentage here will determine the width of the area near the edge 
+        of your reconstruction that is degraded because some images fail to contribute 
+        data to it. A value of 5% is probably reasonable for most uses. If the 
+        structures of interest nearly fill the camera frame at low tilt, then you might 
+        want to reduce this to 2.5-3%. If you are working at very high magnification, 
+        you might want to raise the value or unselect the option.</LI>
+      <LI>
+        If you are working at high magnification where tracking will be relatively less 
+        precise, you may need to increase the value for 'Get tracking image when error 
+        in X/Y prediction is &gt;' to avoid excessive tracking images. You may also 
+        need to increase the criterion for 'Get new track reference if Record alignment 
+        differs'.</LI></OL>
+    <P>After you start the tilt series, the TSC will perform a number of preliminary 
+      actions, which may include finding eucentricity, walking up, finding focus, 
+      getting a first reference image, and adjusting intensity. Also, the program 
+      will use the Reverse Tilt procedure to eliminate tilt backlash, so there is no 
+      need for you to do this yourself. This procedure involves tilting up and back 
+      by about 3 degrees, with lower magnification pictures taken before and after to 
+      track the potentially large shift in position that can occur. If there is 'pole 
+      touch' in this process, the program will try to compensate for this by taking 
+      lower magnification tracking images during the first few tilts, until the 
+      backlash is worked out.</P>
+    <P><B>How predictions work</B></P>
+    <P>The TSC minimizes the number of tracking and focusing positions by predicting 
+      where the specimen will be after each tilt. It predicts position separately in 
+      the X and Y directions (along and across the tilt axis) and uses image shift to 
+      compensate; it predicts the position in Z and changes focus to compensate. At 
+      the beginning of the tilt series, the information needed to make reliable 
+      predictions accumulates gradually. After two tilts, there is enough information 
+      to make simple extrapolations, but not to know how accurate they are. With data 
+      from three or more tilts, the program can assess the accuracy of a prediction 
+      from how well the positions fit a straight line. In addition, if predictions 
+      were made on the previous tilt, the program can determine how far off they 
+      were. Thus, at a given tilt angle, there are two kinds of prediction errors 
+      available: the computed error of the prediction for the next angle, and the 
+      actual error in the prediction for the current angle. Only when both of these 
+      errors are low enough will the TSC rely on a prediction and skip a tracking or 
+      focusing step.</P>
+    <P>The accuracy of the prediction generally increases as more data become 
+      available, but only as long as the positions change regularly. Because the 
+      specimen and stage do not behave ideally, it is necessary to restrict the 
+      positions used for the predictions to those from the most recent tilts. For 
+      each axis, there is a maximum tilt range over which positions will be fit (a 
+      parameter that can be set in the.) Moreover, the TSC may restrict the tilt 
+      range used for a particular fit even more if it substantially in increases the 
+      accuracy of the prediction. The number of points dropped from a prediction fit 
+      is reported as 'nDrop' in the line describing the prediction. These limitations 
+      are expressed in terms of tilt range rather than number of tilts because the 
+      deviations from ideal behavior that limit the quality of predictions probably 
+      occur over a certain range of motion independent of the number of steps. If you 
+      have smaller a tilt increment, the predictions should be good over a larger 
+      number of tilts.</P>
+    <P>Certain events are considered to disturb the predictability of the system and 
+      will cause the TSC to ignore some or all of the position data that are 
+      available. These events include resetting the image shift, tilting back to redo 
+      a Record image, and changing the alignment reference. If you stop then resume a 
+      tilt series, the TSC will try to determine whether you have done something that 
+      would jeopardize the predictions.</P>
+    </basefont>
+  </BODY>
+</HTML>

@@ -1,0 +1,40 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+  <HEAD>
+    <TITLE>Read Current File Dialog</TITLE>
+    <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
+    <style type="text/css"> <!-- BODY { font-family:"Arial" } TD { font-size:16 } 
+  --></style>
+  </HEAD>
+  <BODY BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+    <P><B><FONT size="3">Stage Move Tool</FONT></B></P>
+    <P>This floating tool, opened from the Window menu, allows you to move the stage 
+      in any direction and by a chosen multiple of the current camera field of view. 
+      Pressing the left mouse button anywhere outside the central gray circle and 
+      within the outer red circle will start a stage movement.&nbsp; The direction of 
+      movement will correspond to the direction from the center of the circles to the 
+      mouse position.&nbsp; The amount of movement depends on the distance of the 
+      mouse from the center:</P>
+    <P>Within the thick blue circle, the distance is proportional to the distance from 
+      the center, becoming equal to the camera field of view at the thick blue circle.
+    </P>
+    <P>Outside the thick blue circle, the distance changes faster, becoming equal to 
+      twice the camera field of view at red circle.
+    </P>
+    <P>If the mouse button is held down, the stage move will be repeated as soon as it 
+      ends.&nbsp; The same movement will occur even if the mouse is moved while the 
+      button is held down.</P>
+    <P>For a non-square camera, the amount moved is determined by the minimum of the X 
+      and Y size so that there will be some overlap between images after moving by 
+      less than a full field, regardless of direction.</P>
+    <P><b>Take Image after Move</b></P>
+    <P>If this checkbox is selected, the program will take an image of the indicated 
+      type when the move is finished, unless there is already a continuous acquisition 
+      underway.&nbsp; The image will be a View if in Low Dose mode, or a Trial if out 
+      of Low Dose.</P>
+    <P>&nbsp;</P>
+    <P>Development of this tool was funded by David Belnap at the University of Utah.</P>
+    </basefont>
+  </BODY>
+</HTML>

@@ -1,0 +1,75 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+  <HEAD>
+    <TITLE>Camera & Script Control Panel</TITLE>
+    <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
+    <style type="text/css"> <!-- BODY { font-family:"Arial" } TD { font-size:16 } 
+  --></style>
+  </HEAD>
+  <BODY BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+    <P><A NAME="hidd_camera_macro"></A><B><FONT size="3">Camera &amp; Script Control Panel</FONT></B></P>
+    <P>This panel has buttons for taking images and controlling scripts or actions 
+      during a tilt series. Several of the buttons will change when the Tilt Series 
+      Controller is activated and when data are being acquired at points through the 
+      Navigator.&nbsp; The three script buttons can be used not only to run the 
+      selected script but also to open an editor for an existing script, by holding down 
+      the Ctrl key while clicking on the button.</P>
+    <P><B>Setup</B></P>
+    <P>This button will open the <A HREF="hidd_camerasetup.htm">Camera Setup dialog box</A>
+      and allow you to set parameters like exposure time, field of view and binning 
+      for the 5 different exposure modes
+    </P>
+    <P><B>View</B></P>
+    <P><B>Focus</B></P>
+    <P><B>Trial</B></P>
+    <P><B>Record</B></P>
+    <P>These buttons will acquire an image using the View, Focus, Trial, or Record 
+      parameters.</P>
+    <P><B>Preview/Montage</B></P>
+    <P>Ordinarily, this button will acquire an image with the Preview parameter set. If 
+      montaging has been started, the button will acquire a montaged image.</P>
+    <P><B>End</B></P>
+    <P>This button has several uses for ending an operation in an orderly fashion, and 
+      its label sometimes changes accordingly. If a script is running, this button 
+      will end the script at the end of a loop or at the end of the script. If the Tilt 
+      Series Controller is active, the button will stop the series after completing 
+      all actions at the current tilt angle. If a script or tilt series was being run 
+      from the Navigator and was stopped, this button can also be used to terminate 
+      the script at the current position, or terminate the tilt series, and allow the 
+      Navigator to go on to the next position. Otherwise, when the Navigator is 
+      acquiring data, the button will signal the Navigator to end its acquisitions 
+      after finishing the current item.</P>
+    <P><B>Resume</B></P>
+    <P>If a script has been running, this button will resume the script at the next step. 
+      If the Tilt Series Controller is active, the button will open the <A HREF="hidd_tsresume.htm">
+        Tilt Series Resume dialog box</A>
+    </P>
+    <P><B>STOP</B></P>
+    <P>This is a general Stop button for image acquisition, autofocus, montaging, 
+      scripts, tasks, tilt series, or any other extended sequence of actions. It will 
+      generally stop the activity as soon as possible after the current action. When 
+      you are running a tilt series or a script from the Navigator, the Stop button 
+      acts on the lowest level of operation only.</P>
+    <P><B>Script/One Loop</B></P>
+    <P>If the Tilt Series Controller is not active, this button will execute the script 
+      shown on the button; otherwise it will execute one loop of the tilt series. The 
+      program will stop at the same place where the End button would stop it, after 
+      finishing all actions at a tilt angle.</P>
+    <P><B>Script/One Step</B></P>
+    <P>If the Tilt Series Controller is not active, this button will execute the script 
+      shown on the button; otherwise it will advance one step of the tilt series. 
+      There are many more steps in the loop of the Tilt Series Controller than actual 
+      actions under particular conditions, but it should generally stop after the next 
+      actual action.</P>
+    <P><B>Script/Back Up</B></P>
+    <P>If the Tilt Series Controller is not active, this button will execute the script 
+      shown on the button; otherwise it will open the <A HREF="hidd_tsbackup.htm">Tilt 
+        Series Back Up dialog box</A>
+    </P>
+    <P><B>Script Selector Spin Buttons</B></P>
+    <P>These spin buttons will change the script number activated by the associated 
+      Script button.</P>
+    </basefont>
+  </BODY>
+</HTML>

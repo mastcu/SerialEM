@@ -1,0 +1,93 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+  <HEAD>
+    <TITLE>Microscope Status Panel</TITLE>
+    <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
+    <style type="text/css"> <!-- BODY { font-family:"Arial" } TD { font-size:16 } 
+  --></style>
+  </HEAD>
+  <BODY BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+    <P><A NAME="hidd_scopestatus"></A><B><FONT size="3">Microscope Status Panel</FONT></B></P>
+    <P>This window displays critical microscope parameters so that a microscope user 
+      interface&nbsp; can be covered over by SerialEM.</P>
+    <P><B>Screen current (na) and Float button (FEI and JEOL only)</B></P>
+    <P>This readout shows the screen current in nanoamps (na). If the small focusing 
+      screen is in, then this is the amount of current that would be measured if the 
+      beam uniformly covered the whole large projection screen. If SerialEM thinks 
+      the small focusing screen is in it will display the label as na-fs. This 
+      readout has some smoothing to prevent jitter, so it may not respond to very 
+      small changes in screen current.</P>
+    <P>The Float button will launch a small window with the screen current readout. 
+      This window will stay on top of all other windows, so it can be seen even if 
+      other windows are brought on top of SerialEM. Smoothing is optional in this readout, so it 
+      may be more suitable for use when aligning gun tilt.</P>
+    <P><B>Dose button</B></P>
+    <P>The Dose button will launch a small window showing a cumulative dose in 
+      electrons per square Angstrom. Dose is added whenever the screen is down, and 
+      whenever a picture is taken, except that pictures of the Trial and Focus areas 
+      will be ignored in Low Dose mode. No dose is added when the beam intensity is 
+      outside a calibrated range. Press the Reset button to zero the cumulative dose.</P>
+    <P><B>Magnification (X)</B></P>
+    <P>This readout shows the current magnification, or camera length in diffraction mode.
+      On an FEI scope, it changes when the screen is
+      raised, so it should match the readout in the FEI interface.&nbsp; The X changes 
+      to LM in low mag mode, INV in an inverted mag range on a Titan, ST or SL in 
+      STEM, or the camera length units in diffraction mode.</P>
+    <P><B>Defocus (Def)</B></P>
+    <P>This readout shows the same defocus value as appears in an FEI interface. On 
+      a JEOL or Hitachi, it is initially a value relative to the defocus when the program was 
+      started. It will NOT be the same as the 'measured defocus' reported by the 
+      autofocus routine. The defocus value shown here is based on the current 
+      objective lens strength, and it is relative to the lens setting when you last 
+      selected 'Reset Defocus' in the FEI interface, or did a 'Reset Defocus' operation from within 
+      SerialEM. The 'measured defocus' is based on the amount of image displacement 
+      that occurs when the beam is tilted, and it should reflect how far the specimen 
+      is from zero defocus.</P>
+    <P><B>Reset button (JEOL and Hitachi only)</B></P>
+    <P>Reset the defocus readout to zero. This does not affect the actual focus setting 
+      of the microscope.</P>
+    <P><B>Image Shift (IS or PLA)</B></P>
+    <P>This readout shows the total image shift in microns. When a montage is being 
+      acquired, this value will briefly reflect the image shift of individual pieces. 
+      However, in low dose mode, it will show only the image shift used to select the 
+      field of view and will not show the additional image shift of the acquisition 
+      areas. On JEOL microscopes where projector shift is being used instead of the 
+      image shift coils, this field is labeled PLA, but the same kind of shift is 
+      referred to everywhere else in the program as image shift.</P>
+    <P><B>Objective Lens Strength (Obj)</B></P>
+    <P>This readout shows the objective lens strength in percent, and will match the 
+      value shown in the microscope interface on an FEI scope.</P>
+    <P><B>Vacuum Quality (VAC, FEI only)</B></P>
+    <P>This is an indicator of vacuum quality that may alert you to watch the actual 
+      vacuum readings in the FEI interface. It should be set up so that green means near perfect, 
+      yellow means adequate for working, and red means do not open the column values.</P>
+    <P><B>Spot</B></P>
+    <P>The numeric readout shows the spot size. Also, the label 'Spot' has a colored 
+      background indicating whether the current intensity is calibrated at this spot 
+      size: blue if intensity is in the calibrated range, orange if intensity is 
+      outside the range of a calibration, or magenta if there is no calibration on 
+      the current side of crossover. This feature can be disabled by adding a line 
+      'ShowIntensityCalStatus 0' to SerialEMproperties.txt.</P>
+    <p>
+      <b>+</b>&nbsp;&nbsp; <b>Opens an optional section with the following entries:</b></p>
+    <p>
+      <b>Stage X, Y and Z</b></p>
+    <p>
+      This readout shows the position in microns.</p>
+    <p>
+      <b>Intensity</b></p>
+    <p>
+      This readout shows the percent C2 or C3 value or the illuminated area in microns 
+      for a Titan.</p>
+    <p>
+      <b>Dose rate</b></p>
+    <p>
+      This readout appears when the current camera is a direct detector and shows the 
+      estimated dose rate incident on the specimen in electrons per unbinned pixel per 
+      second. The value is based on a dose calibration plus the change in beam 
+      intensity from that at which dose was calibrated, which is estimated from the 
+      beam and spot intensity calibrations.</p>
+    </basefont>
+  </BODY>
+</HTML>

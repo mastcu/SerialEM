@@ -1,0 +1,229 @@
+<HTML>
+  <HEAD>
+    <TITLE>K2 Frame File Options Dialog</TITLE>
+    <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
+    <style type="text/css"> <!-- BODY { font-family:"Arial" }
+  TD { font-size:16 }
+  --></style>
+  </HEAD>
+  <BODY BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+    <P><A NAME="hidd_k2_save_options"></A><B><FONT size="3">Frame File Options Dialog</FONT></B></P>
+
+
+
+    <p>
+      This dialog has two sections.&nbsp; The upper section, which appears only for 
+      K2 cameras, presents choices about the files produced when the SerialEM plugin 
+      to DigitalMicrograph saves subframes for a Dose Fractionation exposure.&nbsp; 
+      The lower section, which appears for K2, Falcon, and Direct Electron cameras, allows you to 
+      control the name of these files.&nbsp; For K2 and Falcon, you can also put subsets of the 
+      files into different 
+      folders automatically.&nbsp; These are global settings that apply to all camera parameter sets in which 
+      frames are saved.</p>
+    <p>
+      &nbsp;</p>
+    <p>
+      <i><b>K2 Camera Options</b></i></p>
+    <p>
+      <b>File type</b></p>
+    <p>
+      The choices here are files in MRC format, TIFF files with LZW compression, and 
+      TIFF files with ZIP compression.&nbsp; Both compressions are loss-less and can 
+      be read by programs in IMOD that read TIFF files.&nbsp; LZW is more effective, 
+      and much faster, than ZIP compression for unnormalized images.&nbsp; ZIP 
+      compresses normalized images more, but may still be considerably slower.&nbsp;As 
+      of SerialEM 3.6.0, compression is parallelized and should be much faster than 
+      previously, so ZIP compression may now take a reasonable amount of time. If you are saving normalized or linear mode images, you should assess both 
+      the compression factor and the acquisition time with the typical images for a 
+      project when deciding which form to use on a routine basis.&nbsp; The best way 
+      to assess acquisition time is to turn on Debug Mode in the Camera menu.&nbsp; 
+      With this on, the SerialEM log will show the total elapsed time for acquiring 
+      each image.&nbsp; Also, when frame-saving is complete, the Results window in DM 
+      will show a line reporting the time required to process and save all of the 
+      frames.&nbsp; Compression occurs as part of saving, so the saving time is the 
+      one that will change with these different options. </p>
+    <p>
+      <b>Use extension .mrcs</b></p>
+    <p>
+      When MRC output format is selected, this optin can be used to make the names of 
+      the frame stacks end in &#39;.mrcs&#39; instead of &#39;.mrc&#39;.&nbsp; Some other software 
+      requires the &#39;.mrcs&#39; extension to process frame stacks.</p>
+    <p>
+      <b>Save one frame per file</b></p>
+    <p>
+      Select this option to have each saved subframe written as a separate file 
+      instead of having all subframes for an acquisition written to one image stack.</p>
+    <p>
+      <b>Save unnormalized frames even if Gain Normalized is selected</b></p>
+    <p>
+      Select this option to have frames saved without gain normalization even when you 
+      have selected gain-normalized processing in the camera setup dialog.&nbsp; With 
+      this set, you can leave the processing for Record images as gain-normalized as 
+      you turn the saving of frames on and off.&nbsp; You will always get normalized 
+      images in SerialEM, and the frames will always be unprocessed.</p>
+    <p>
+      <b>Save normalized data as 16-bit with 100 times scaling of sum</b></p>
+    <p>
+      Select this option to have gain-normalized Dose Fractionation frames taken in 
+      counting or super-resolution mode saved with 100 times the scaling that is 
+      usually applied to a summed image returned to SerialEM.&nbsp; This extra scaling 
+      will eliminate the very small loss in camera efficiency (estimated to be only 
+      0.05%) that occurs when the 
+      mean counts are very low.&nbsp; For counting mode, be aware that counts above 
+      about ~16 electrons will be truncated with this extra scaling, for typical K2 
+      camera linear gains.&nbsp; Such counts are almost certainly hot pixels unless 
+      the mean of the image is over 2-3 electrons/pixel, but this extra scaling has 
+      no benefit at that exposure level anyway.&nbsp; For super-resolution 
+      mode, there is no truncation, but be aware that the files will be twice the size 
+      since the larger counts are stored in 2-byte integers instead of bytes.&nbsp; 
+      This option was added before simulations revealed that the efficiency loss from 
+      the regular conversion of scaled normalized values to integers was so small (see 
+      &#39;Signal loss from saving normalized frames as integers&#39; in
+      <a href="about_camera.htm#directDetectors">Direct Electron Detectors, Especially the Gatan K2</a>).</p>
+    <p>
+      <b>Pack unnormalized data as 4-bit (Super-Res) or 4/8-bit (Counting)</b></p>
+    <p>
+      This option determines whether Dose Fractionation frames taken without software 
+      gain normalization on the K2 camera are saved in the form in which they are 
+      received by the plugin to DigitalMicrograph (16-bit integer for counting mode and byte 
+      for super-resolution mode) or in a packed form.&nbsp; When this option is 
+      selected and not the one described next, counting mode images are truncated into bytes 
+      (maximum 255), and super-resolution 
+      mode images are stored with pairs of 4-bit integers (maximum 15) in each byte.&nbsp; (The 
+      left pixel in a pair is in the low 4 bits and the right pixel is in the high 4 
+      bits of a packed byte.) The data will 
+      be raw counts, rather than the scaled values that are saved otherwise (see <A href="about_camera.htm#directDetectors">Direct Electron Detectors,
+       Especially the Gatan K2</A>.)&nbsp; Raw super-resolution images are 
+      intrinsically only 4-bit, so there will be no truncation when saving them as 
+      4-bit.&nbsp; Packed 4-bit data can be unpacked with the 
+      &#39;unpack&#39; command to the &#39;clip&#39; program in IMOD (version 4.6.26 or higher); 
+      also, in IMOD 4.8.41 or higher, all programs can read these 4-bit data directly.&nbsp; 
+      Note that when writing compressed TIFF files, the packing of data is mostly 
+      redundant to the compression and may save little additional space, but it should 
+      be faster with packed 4-bit data because fewer bytes need to be compressed.</p>
+    <p>
+      <b>Pack unnormalized Counting mode data as 4-bit, not 8-bit</b></p>
+    <p>
+      This option allows counting mode data taken without gain normalization to be 
+      further truncated at 15 and packed into 4-bit integers, instead of into bytes.&nbsp; 
+      This option is enabled and relevant only when the first packing option is 
+      selected.&nbsp; If the mean of a frame is only a few electrons per pixel, then 
+      counts above 15 are probably spurious and can be safely truncated.&nbsp; 
+      Otherwise, this option is not appropriate, so <i>be sure that the mean of your 
+      frames is low enough before using it for data collection</i>.</p>
+    <p>
+      <b>Use non-standard mode 101 for 4-bit MRC files</b></p>
+    <p>
+      With this option on, MRC files with 4-bit data will be marked as mode 101 
+      instead of mode 0, and the X dimension will be the number of pixels in X instead 
+      of half of that.&nbsp; This is a new, non-standard mode supported by some 
+      software from UCSF and by IMOD as of version 4.8.41.&nbsp; <i>Be sure that you 
+      will be using software that can read these files before saving data in this mode</i>.</p>
+    <p>
+      <b>Save frames without rotation/flip to standard orientation</b></p>
+    <p>
+      This options controls whether the plugin saves frames in the raw orientation as 
+      read from the camera rather than rotating and flipping them, if necessary, into 
+      the standard orientation at which images are viewed in SerialEM.&nbsp; Image 
+      flipping alone does not take significant time, but rotation does: 0.05 seconds 
+      for counting mode frames and 0.2 seconds for super-resolution frames.&nbsp; If 
+      you do not care about preserving orientation in the saved frames, you can select 
+      this option to reduce frame processing time.&nbsp; However, handedness will be 
+      changed if a flipping operation is being skipped.&nbsp; This option is enabled 
+      only if the current camera has a nonzero RotationAndFlip property.</p>
+    <p>
+      If you are saving non-gain-normalized frames from GMS 2.3.1 or higher, the 
+      defect list written stored with the frames will be adjusted for the change in 
+      orientation.&nbsp; These defect lists always have a RotationFlip entry showing 
+      the orientation to which they apply, and the title in the image file shows the 
+      operation applied to the frames after &#39;r/f&#39;, which will be 0 with this option 
+      on.</p>
+    <p>
+      &nbsp;</p>
+    <p>
+      <i><b>Options for Controlling Folder and File Names</b></i></p>
+
+    <p>
+      By default, frames from one exposure are stacked into a file that is named with 
+      the date and time and placed in the directory specified when the <b>Set Folder</b> 
+      button is pressed in the <a href="#hidd_camerasetup.htm">Camera Setup dialog</a>.&nbsp; 
+      This section of the dialog allows you to control the names given to these files 
+      by selecting one or more components for the names.&nbsp; In addition, for the K2 
+      and Falcon cameras, you can 
+      select several of these components to use for naming of folders that are created 
+      under the specified main directory to hold subsets of the files.&nbsp; For the 
+      K2, if you select to save one frame per file in the first section of this 
+      dialog, then all the statements here about the name of the &quot;file&quot; refer to the 
+      name of the directory created to hold the single-frame images.</p>
+    <p>
+      Two common uses of these capabilities would be:</p>
+    <ol>
+      <li>Tilt series acquisition: Select the file name of the current file as a 
+        component of the folder name, and frames for each series will be stored in a 
+        separate folder.</li>
+      <li>Image acquisition for single-particle reconstruction: Select the label of the 
+        Navigator item as a component of the file name, and you will be able to link the 
+        frames with a specific location in your map.&nbsp; If you are storing summed 
+        images from SerialEM and have the Navigator open a new file periodically (e.g., 
+        for each grid square), you could also select the file name as a folder component 
+        and have frames stored in a separate folder for each summed image file.</li>
+    </ol>
+    <p>
+      <b>Base name</b></p>
+    <p>
+      The base name can be any text that you want (as long as it contains characters 
+      that are legal in filenames).&nbsp; It can be used in the name of a folder if 
+      you check the box in the left (&#39;Folder&#39;) column, and/or in the name of the files 
+      if you check the box in the right (&#39;File&#39;) column.&nbsp; If the text box is 
+      empty, nothing is added.</p>
+    <p>
+      <b>File name of current open file (minus extension)</b></p>
+    <p>
+      The root name of the current open file in SerialEM (i.e., name without 
+      extension) can be used in the name of a folder and/or in the name of the files, 
+      depending on which box you check.&nbsp; If there is no open file, nothing is 
+      added.</p>
+    <p>
+      <b>Label of Navigator item</b></p>
+    <p>
+      If the Navigator is open, the label of the current item or of the item being 
+      acquired can be included in the name of the folder and/or the name of the files, 
+      depending on which box you check.&nbsp; If the Navigator is not open, nothing is 
+      added.&nbsp; If <b>Only when Acquiring at Points</b> is checked, the label will 
+      be added only when the Acquire at Points procedure is running.</p>
+    <p>
+      <b>Sequential number</b></p>
+    <p>
+      If this box is checked, a number will be added to the file name, starting with 
+      the number set in the text box and incremented for each successive file saved to 
+      the same location.&nbsp; Use the spin button on the right to set whether the 
+      numbers should have 3, 4, or 5 digits.&nbsp; Numbers will have leading zeros so 
+      that all numbers have at least the selected number of digits.&nbsp; The number 
+      will be reset to the starting number when the folder name changes or when the 
+      parts of the filename (if any) in front of the number change.&nbsp; It will also 
+      be reset if you change the starting number to be higher than the last used 
+      number. The last used number and other information are saved in the settings 
+      file, so if you exit from SerialEM and restart with the same settings file, it 
+      will be able to resume saving with the next number in sequence. The 
+      hour-minute-second component of the name is optional if a sequential number is 
+      included.&nbsp; However, it is possible to generate duplicate names when using 
+      sequential numbers, so it is recommended that the time component be retained.&nbsp; </p>
+    <p>
+      <b>Tilt angle</b></p>
+    <p>
+      If this box is checked, the tilt angle will be added to the file name.</p>
+    <p>
+      <b>Month and day</b></p>
+    <p>
+      If this box is checked, the date will be added to the file name.&nbsp; This box 
+      and the next are not shown for Direct Electron cameras because the filename 
+      before the suffix being controlled here already has a date and a unique number.</p>
+    <p>
+      <b>Hour, minute, second</b></p>
+    <p>
+      If this box is checked, a final time stamp will be added to the file name.&nbsp; 
+      Unchecking this box will turn on the sequential number selection.</p>
+
+</BODY>
+</HTML>

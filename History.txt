@@ -1,0 +1,4433 @@
+This is a record of changes to SerialEM since it was first publicly released.
+
+* marks changes or enhancements noticeable to the user, or items of particular
+significance.
+============================================================================
+2/18/17: Switched to using standard API for Direct Electron camera instead of
+COM interface.  To use a DE camera, a small plugin, DEcamPlugin.dll, and the
+interface library, DeInterface.Win32.dll, must be put in the directory with
+SerialEM, but these are not required to run the program.
+
+2/18/17: Made it show a dose rate for K2 counting modes even when there is no
+counts per electron defined (In 3.6).
+
+2/17/17: When a click in an FFT indicates a low defocus where equations break
+down, it will no longer draw circles at invalid positions or report an invalid
+defocus (In 3.6).
+
+2/16/17: When changing mag or spot with scope control panel, it will show the
+target mag or spot immediately with -> in front of it, until the change is
+finished.  Increased multiple click interval to 0.35 sec.  Changed mag output
+to show K at 100K and above (In 3.6).
+
+2/10/17: Implemented local variables and local loop indexes that are defined
+and accessible only within one function or script.
+
+2/10/17: It is now allowed for script loop counts to be 0 or negative.
+
+2/9/17: Fixed error message when assigning to a loop index variable (In 3.6).
+
+2/8/17: SEM_3-6-2
+2/8/17: Fixed rejection of fixed pattern noise peak when measuring defocus to
+account for autofocus offset and View defocus properly and to work right on
+the second pair of images (In 3.6).
+
+2/8/17: Fixed autofocus with Low Dose View when there is a View defocus
+offset, modified script command when just measuring defocus to give either the
+defocus at the View area, as it always did, or the implied defocus of Record
+(In 3.6).
+
+2/5/17: Fixed LongOperation Da #, broken 12/18/16 (In 3.6).
+
+1/31/17: Added property to allow taking images in spectroscopy mode.
+
+1/31/17: Added SetMagIndex and SetNavRegistration script commands.
+
+1/31/17: Added property to allow use of inverted mag range on Titan for
+tasks and stepping through mags with script commands and mag spinners.
+
+1/27/17: SEM_3-6-1
+1/26/17: Fixed message when starting coma calibration on JEOL to show maximum
+coma beam tilt instead of astigmatism beam tilt (In 3.6).
+
+1/26/17: Fixed install.bat to copy Microsoft .dll's in Windows 2000 (in 3.5).
+
+1/16/17: Added property to use drift settling from Trial parameters in beam
+intensity calibration (In 3.6).
+
+1/12/17: Fixed possible vulnerability in the restoring of camera rotation/flip
+on exit (In 3.6).
+
+1/11/17: Fixed shifting coordinates of current item when Add Polygon is turned
+on then off without adding points (In 3.6).
+
+1/10/17: Fixed  buffer overrun when logging DE properties at startup (In 3.6).
+
+1/10/17: SEM_3-6-0
+1/10/17: Fixed defect correction in SEMCCD plugin when aligning and saving
+unnormalized frames.
+
+1/9/17: Fixed bad added rotations being set when calibrating pixel size.
+
+1/9/17: Added information lines to Navigator Acquire at Points dialog to
+indicate file images will be saved into and whether it is a montage.
+
+1/5/17: Fixed crash when starting astigmatism or coma calibration on JEOL;
+added checks for stigmator values out of range.
+
+1/4/17: Fixed plugin to avoid wrong number of frames K2 for some exposure
+times with frame times below 0.1 sec.
+
+1/3/17: Fixed trying to get dark field tilt if server version does not support
+it.
+
+* 1/3/17: Added option to save K2 frames without normalization while keeping
+gain normalization turned on in the camera setup dialog.
+
+1/3/17: Fixed enabling of Set additional beam shift button in Low Dose, which
+is now disabled in Record.
+
+* 1/2/17: Disabled drift settling for OneView with 2 shutters when Beam blank
+shutter is selected, since it doesn't seem to work.
+
+12/31/16: SEM_3-5-9
+* 12/29/16: Added option to tilt series setup to get an initial partial sum
+(early return) when saving or aligning frames and then get the full sum
+later.
+
+12/29/16: Added option in frame saving detup dialog to save MRC stacks with
+extension .mrcs.
+
+12/29/16: Stopped trying to do screen movement and tilting simultaneously in
+cooking routine.
+
+* 12/26/16: Changed script commands SetMag/SetMagAndIntensity to go to the
+nearest mag if the entered one is not in the middle third of range between two
+mags.
+
+* 12/26/16: Added message box replacement that can have custom button labels,
+switched to it for complicated Yes-No-Cancel and a few Yes-No choices, and
+formatted message text to refer to the button labels.
+
+12/26/16: Added property to set the delay after moving stage for acquiring
+distortion pairs.
+
+12/26/16: Added script command and Setting menu item to set value of a large
+subset of properties that consist of a single value.
+
+12/26/16: Added a default set of parameters for aligning Super-resolution
+frames, listed name of parameter set in Camera Setup dialog, and set the
+default for frame alignment to be in the plugin instead of DM.
+
+12/26/16: Added Camera menu item to control the number of lines of log output
+from frame alignment.
+
+12/23/16: Made Navigator stage movement skip backlash movement if the move is
+in the right direction and either preserves or is big enough to set the
+backlash.
+
+* 12/23/16: Made it possible to take images in Search mode with a button or
+script command, using the View camera parameters for now.
+
+12/22/16: Fixed initialization of axis offset when reading in states; it was
+putting bad axis position into low dose dialog when using the state (In 3.5).
+
+12/21/16: Fixed Add Grid of Points if an image other than the map image is
+being displayed (in 3.5).
+
+12/20/16: Added reminder to save calibrations on exit if not in administrator
+mode and enough calibrations have been done of certain types.
+
+12/20/16: Allowed camera/montage/tilt series dialogs to show 6 cameras.
+
+* 12/20/16: Added ability to store dark field tilt as Trial/Focus low dose
+properties on FEI scopes.
+
+12/19/16: Program can directly detect and control GIF mode on JEOL.
+
+12/19/16: Stored states now include camera processing and K2 frame alignment
+selections.
+
+12/19/16: Started keeping track of aperture size for dose calibrations.
+
+* 12/18/16: Stored information in montage mdoc file so that a map can be made
+just as well from a read-in image as from a newly acquired one.
+
+12/18/16: Added option to montage setup dialog to control whether OneView
+drift correction is turned off for stage montages.
+
+* 12/18/16: Added option to montage setup dialog to enable continuous mode and
+control settling time; eliminated script command.
+
+* 12/18/16: Made behavior when saving K2 electron counting frames be the same
+for unprocessed and dark-subtracted, since there is no dark subtraction.
+
+12/18/16: Detected when there is new K2 gain reference and updated the defect
+list.
+
+* 12/18/16: Added ability to show a message box on an FEI scope through the
+plugin and server, with a title and text controlled by script commands.
+
+12/18/16: Added ability to set height of script toolbar buttons then fixed
+DPI-related font and sizing problems with that and several other dialogs.
+
+12/18/16: When opening autocenter setup in Low Dose mode, it will insist that
+Trial area be set up already, show Trial mag and spot values and disable the
+two spinners, try to get existing parameters for that mag and spot (In 3.5).
+
+12/17/16: Fixed keeping track of time since last long operation (In 3.5).
+
+* 12/13/16: Added an offset entry to autofocus calibration range parameters
+and suggestions for limiting and offsetting the range for Falcon cameras.
+
+* 12/13/16: Added tilt series options to apply the absolute focus limit and/or
+limit focus changes from autofocus to a given amount.
+
+* 12/13/16: Added Focus menu options to define absolute limits for focus around
+the eucentric focus; the limits are applied when autofocusing.
+
+12/13/16: Set added rotation when storing results of Find Pixel Size based on
+rotations in mag table for an FEI scope.
+
+12/12/16: Fixed setting of positive limit in macro command FocusChangeLimits;
+only negative limit was being set (In 3.5).
+
+* 12/12/16: Made title bar show all the open files by file number after the
+current file.
+
+12/12/16: List Mags in EFTEM mode will now output the full mag table (In 3.5).
+
+12/12/16: Made mag energy shift calibration stop at proper mag if give the
+highest magnification and it is followed by declining mags on a Krios (In 3.5).
+
+12/12/16: Added script command to be used in the preliminary macro when
+acquiring at points to make it skip the point and go on; added way to test if
+autofocus failed in script.
+
+* 12/12/16: Added checkbox to Navigator to turn off all label drawing and made
+it draw only a few labels for points in groups above a threshold size.
+
+* 12/12/16: Added ability to select a range of Navigator points to delete by
+using Shift D twice.
+
+* 12/12/16: Changed script selectors in Acquire at Points to combo boxes.
+
+12/12/16: Removed fixed zoom/zoom step option from image level dialog and
+moved cross checkbox into main part of window.
+
+* 12/12/16: Added progress count and estimated time to completion to Navigator
+window during acquire.
+
+12/12/16: Fixed removing of IS and stage cals so they do not get saved with a
+0 X component (In 3.5).
+
+12/11/16: Fixed macro commands for limiting focus change and absolute focus
+during autofocus to test even when not doing another iteration (In 3.5).
+
+12/9/16: Stopped incorrect message about turning on "Use View in Low Dose"
+when fitting montage to a polygon (In 3.5).
+
+* 12/7/16: Allowed dummy instance to load map from file open in main instance.
+
+12/7/16: Added optional delay factors to script commands that change
+image shift to get settling before a camera shot.
+
+12/7/16: Added script command to get a filename through a file chooser.
+
+* 12/7/16: With a DMRotationAndFlip entry, the program will now change the
+camera configuration automatically and restore it on exit, unless a
+"SetRestoreDMRotFlip" property is set to do otherwise.  The size check now
+occurs after this.  SizeCheckSwapped no longer needed for Gatan cameras.
+
+* 12/7/16: Detected and corrected dark edges in drift-corrected images from
+OneView camera.
+
+12/7/16: Added script commands to report and set autofocus offset.
+
+** 12/7/16: Linearized the dose rates from K2 electron counting images so that
+they should match the linearized dose rate readout in DM.
+
+12/7/16: Made beam intensity calibration routine try to compensate for lens
+hysteresis.
+
+12/6/16: Disabled force dark reference buttons for OneView (In 3.5).
+
+12/2/16: Prevented problem with losing montage overview because of multiple
+accesses to the mdoc file during background saving - needed in 3.5 only.
+
+11/29/16: Made sure that when a new C2 aperture size is specified anywhere, it
+gets saved in short-term calibrations (In 3.5).
+
+** 11/27/16: Added an optional microscope control panel with mag, spot, beam,
+and beam valve or filament control.
+
+11/27/16: Added option to skip pieces instead of waiting at each piece when
+precooking a montage; also made it move in zigzag.
+
+* 11/27/16: Handled font changes properly for 144 DPI instead of imposing the
+same ones as for 96 DPI, so 144 DPI should work OK.
+
+11/22/16: Fixed crash if montage precooking is done when pieces are being
+skipped (In 3.5).
+
+11/22/16: Initialized the stage movement option in montage setup to ON if a
+2x2 montage would exceed the image shift limit.
+
+* 11/21/16: Enabled montage to be take with continuous mode images, added macro
+command for testing or use.
+
+11/21/16: Made camera timing routine do only startup delay for OneView (In
+3.5).
+
+* 11/16/16: Made it possible to use GIF on JEOL in LM; it no longer assumes
+that it is not in EFTEM mode when in LM; and the EFTEM mode checkbox is and
+enabled so the user can inform the program when the mode changes.
+
+* 11/16/16: Converted Navigator files to autodoc format with an option to save
+as XML instead.
+
+11/16/16: Made it possible to use maps taken tilted, with a property to
+control the allowed tilt angle difference before stage will be tilted to map
+angle.
+
+10/18/16: SEM_3-5-8
+10/16/16: Fixed a crash when saving K2 frames without rotation and defect list
+has adjacent bad pixels (In 3.5).
+
+10/14/16: Made all message boxes be modal so program cannot be used when
+they are up (In 3.5).
+
+10/13/16: Added property to make beam intensity calibration favor doing
+mag changes as is done with K2 camera (In 3.5).
+
+10/10/16: Increased maximum log size from 2.6MB to 25MB (In 3.5).
+
+10/7/16: Fixed Navigator looking for map file in same directory as Nav file
+if map is not at its original path - in 3.5 this failed if file chooser was
+used in another directory, in 3.6 it was fully broken by 9/11/16 change.
+
+10/4/16: Added a delay before a mag change after acquiring an image from JEOL
+STEM.
+
+* 10/2/16 Added a command to divert script error messages from a message box to
+the log, so that Navigator can go on to the next point automatically.
+
+10/1/16: Added macro commands to report a time in seconds with msec precision,
+to read from a text file into an array variable, and to run an external
+process in the command shell.
+
+9/30/16: Fixed saving of summed frames from K2 when there is more than one
+frame in first sum (In 3.5).
+
+9/26/16: Fixed several scripting bugs from starting to preserve case.
+
+9/26/16: Made it suppress error and wait until stage ready when very slow
+continuous tilting generates a COM error after 3 minutes.
+
+9/26/16: Enable OneView drift correction in continuous mode since it seems to
+work; fixed setting drift correction if BasicCorrections not defined (In 3.5).
+
+9/25/16: Allowed currently selected Navigator point to be deleted with a
+double click in Edit mode.
+
+9/20/16: Enabled multiple script commands to be run between each frame when
+using continuous mode in a script.
+
+* 9/16/16: Frame sums for Falcon or K2 are now adjusted when exposure time
+and number of frames change during a tilt series.
+
+* 9/16/16: Fixed pixel size/area in Camera Setup to be correct for the area in
+Low Dose mode.
+
+9/16/16: Added tilt series policy option to end or stop series at high tilt
+if intensity or exposure is being set for mean counts and gets too high.
+
+* 9/16/16: Started reading the FalconConfig.xml to determine if frame-saving is
+enabled, and changing it when that should work, thus eliminating the stupid
+checkbox in Camera Setup.
+
+* 9/16/16: Added Tilt Series menu option to keep number of saved frames
+  constant as exposure changes for K2 camera
+
+9/16/16: Added a script command SetExposureForMean, with an option to keep the
+number of K2 saved frames constant.
+
+* 9/11/16: Added a script command to start a tilt in the background and keep
+running the script; for FEI scopes this requires new plugin/server with 4
+socket connections and a temporary property setting, 'BackgroundSocketToFEI
+1', to activate the 4th socket.
+
+9/11/16: Made it restore the current working directory after a file chooser is
+used.
+
+* 9/11/16: Preserved case for all the text after the command in script
+commands, so that filenames can be assigned to variables; also added a new
+syntax (@=) for assigning text that may include spaces to variables.
+
+9/8/16: Fixed handling of brightness/contrast so it can be adjusted separately
+in the side-by-side FFT window (In 3.5).
+
+* 9/6/16: Added Process menu items to set a fixed defocus for the rings drawn
+in a live FFT, and to set a phase shift imposed by a phase plate, which will
+be taken into account when relating FFT radii to defocus.
+
+9/2/16: SEM_3-5-7
+9/2/16: Made program offer to fix DM camera configuration when it is wrong
+(In 3.5).
+
+8/29/16: Fixed deadlock in mdoc file access when montaging created by 7/4/16
+change.
+
+8/26/16: Fixed problem when a montage is opened with a camera other than the
+active one and program adjusts exposure time for a new binning (In 3.5).
+
+8/24/16: Allowed starting spot size to be selected for spot intensity
+calibration.
+
+* 8/24/16: Made FFT's be taken automatically of single-frame images when
+side-by-side windows is open; added menu option to control this.
+
+8/24/16: Enabled drift settling with OneView when there is only one shutter
+(In 3.5).
+
+8/3/16: Fixed crash when exiting with side-by-side FFT window open (In 3.5).
+
+8/3/16: Added ability to set stage speed to TiltDuringRecord command.  This
+requires the latest FEI plugin/server.
+
+8/2/16: Saved standard titles in single TIFF files and in first TIFF of an
+.idoc numbered series.
+
+* 7/28/16: Moved Tietz camera support to plugin.
+
+7/27/16: Made it reinitialize scope connection when changing to an FEI camera
+and there is more than one camera in TIA (In 3.5).
+
+7/25/16: Fixed treatment of extrapolation past the end of an intensity
+calibration (broken 3/7) and kept SetIntensity from going in the opposite
+direction when trying to go from extrapolated to uncalibrated range (In 3.5).
+
+7/18/16: SEM_3-5-6
+7/11/16: Fixed uninitialized variable for DE that prevented first image from
+being taken.  Added mag and focus value to output when use "autofocus" in LM
+(In 3.5).
+
+7/6/16: Fixed various places to handle images bigger than 2 GB or 2 gigapixel,
+including making a montage overview (In 3.5).
+
+7/4/16: Prevent accesses to autodoc files from multiple threads.
+
+7/4/16: Go to low dose area before recording starting beam tilt for autofocus
+when probe mode is changing (In 3.5).
+
+6/29/16: Added property to set post-blanking delay in some situations.
+
+6/29/16: In camera timing routine, added unblanking time to fitted value for
+startup delay for STEM to avoid negative delays and used the right estimate
+of startup delay when testing if reasonable.
+
+6/29/16: Fixed problems accessing a map file while saving to file in
+background when both are .idoc files (In 3.5).
+
+6/19/16: Prevent numbered tiff output for bidirectional series, give more
+output about blanking time and indicate to set property for STEM, fix
+FrameAli2 macro commands for socket case.
+
+5/26/16: Fixed astigmatism routine deciding that iteration did not improve the
+result enough when one axis was already small or the result is good enough for
+termination.
+
+* 5/26/16: Implemented a special scaling of FFTs controlled by two more
+parameters set with the Set Truncation button.
+
+5/23/16: Eliminated added scaling of FFT's when they are zoomed below 1
+(In 3.5).
+
+5/18/16: Added macro commands for getting the index of the Navigator item with
+a given label or note.
+
+5/18/16: Made sure first eighth-size image of gain reference procedure was a
+legal size for camera (In 3.5).
+
+5/13/16: Added macro command for getting state of gun valve.
+
+* 5/13/16: Moved JEOL support to new scope plugin.
+
+5/13/16: Added property DarkRefMaxMeanOrSD to retake a dark reference if it
+seems to have an image in it.
+
+5/13/16: Fixed management of dark reference buttons in camera setup (In 3.5).
+
+5/6/16: Fixed black images from non-K2 Gatan cameras with no countsPerElectron
+set.
+
+4/26/16: SEM_3-5-5
+4/24/16: Added optional name for new log file to command SaveLogOpenNew.
+
+4/24/16: Added script command to get an absolute time in minutes.
+
+* 4/22/16: Added array variables to scripting.
+
+4/22/16: Added more script capabilities for setting frame alignment parameters
+to support timing tests.
+
+4/22/16: Fixed loss of some changed text fields in Frame Alignment dialog when
+spin buttons or parameter set selection are changed.
+
+4/5/16: Added camera property TaskTargetSize to set the size that images will
+be binned to for task operations with the given camera.
+
+* 4/4/16: Macros are now referred to as scripts.
+
+4/1/16: Fixed GPU memory leak in K2 frame alignment.
+
+3/27/16: Removed support for FasTEM.
+
+3/25/16: Made "Skip autofocus" in tilt series always available (In 3.5).
+
+3/23/16: Built 64-bit version to work with 64-bit JEOL interface; requires
+that TemExternal64 be installed (In 3.5).
+
+3/15/16: Fixed two problem that could crash DM with K2 camera.
+
+* 3/15/16: In macros, Report... and some other commands can now assign reported
+values directly to named variables, and function arguments can be assigned
+directly to named variables.  Added 20 macro commands to support automated K2
+testing.
+
+3/15/16: Fixed uninitialized variable that could prevent DE camera startup
+(In 3.5).
+
+3/7/16: SEM_3-5-4
+* 3/7/16: Fixed taking K2 frames with binning when antialiasing is allowed in
+plugin and there is an early return with no partial sum (In 3.5).
+
+3/7/16: Made intensity calibration color indicator go orange when past end of
+calibration and extrapolation is not allowed (In 3.5).
+
+3/3/16: Prevented use of third shutter option with OneView camera (In 3.5).
+
+3/3/16: In SerialEMCCD plugin, prevented wraparound when scaling float values
+to integers and fixed rewriting of defect file when it is removed (in 3.5).
+
+3/3/16: Fixed balancing halves for Orius in fast Continuous mode when
+normalizing in DM (In 3.5).
+
+3/3/16: Fixed return with Walk-Up losing its changed setting when
+bidirectional anchor mag changed (In 3.5).
+
+3/2/16: Made program keep track of a fake mag index and screen position and
+display a mag in the scope status panel when running with NoScope set so that
+images can have correct pixel sizes.  If counts per electron are defined, it
+will also show dose at the camera in e/sq A in image display.
+
+3/2/16: Added macro commands to turn low dose continuous update on and off,
+and to send an email when a macro stops with an error.
+
+3/2/16: Made camera timing work more reliably for cameras with NoShutter set
+(In 3.5).
+
+* 3/2/16: In SerialEMCCD plugin, fixed orientation of gain reference when gain
+normalizing dark-subtracted summed images before returning them to SerialEM
+(In 3.5).
+
+2/26/16: Fixed crashes when DE COM module is not registered and when there are
+no cameras initialized (In 3.5).
+
+2/25/16: Made it select single TIFF file instead of series when saving single
+image and series is the default or previous selection.
+
+2/24/16: Added macro command to tilt during a Record shot.
+
+2/21/16: Added ability to suppress warnings about FEI server being out of date
+if changes are needed only for FEI cameras and there are none, or warning
+about DM plugin being out of data if changes are useful only for K2 cameras.
+
+2/21/16: Plugin to DM can save gain-normalized counting or super-resolution
+frames with 100 times the usual scaling to prevent loss from truncation to
+integers, which turned out to be tiny anyway.
+
+** 2/21/16: Plugin to DM can now align frames with the same module used by
+alignframes in IMOD, or write a command file for runnig alignframes in IMOD.
+
+1/26/16: SEM_3-5-3
+* 1/26/16: Fixed dynamic focus on JEOL, broken when SmoothFocusNextShot was
+added (In 3.5).
+
+12/24/15: Added ReportScreen macro command.
+
+12/22/15: Allowed more than 20-fold intensity change for extra Records
+(In 3.5).
+
+12/21/15: Removed Align on save and Copy on save options from Buffer Control
+panel; these were a trap for the unwary and can be done with macros (In 3.5).
+
+12/9/15: Fixed how the name of the K2 reference to copy is generated from the
+DMGainReferenceName entry when there is [kv] in the string (In 3.5).
+
+12/9/15: Added query after adding grid of points in groups about whether to
+keep the set of groups or try again.
+
+* 12/9/15: Added find button to macro editor.
+
+12/6/15: SEM_3-5-2
+12/6/15: Made it save the fifth copy to buffer selection in settings.
+
+12/6/15: Saved pixel size as resolution value in TIFF files.
+
+12/5/15: Increased number of buffers to 20, with maximum rolling buffers still
+at 14, to provide some protected buffers.
+
+* 11/30/15: Made Navigator Acquire at Points close only the files that it has
+opened, and close an opened file when it finishes.  Made it possible to have
+one file for extra output opened and closed for each tilt series, using a
+macro command.
+
+** 11/29/15: Added calibration of magnification change and rotation caused by
+being at a large underfocus, so that the stage calibration can be modified for
+View images with a large defocus offset.  Made montaging and Navigator
+operations use the modified stage calibration.
+
+11/29/15: Fixed mouse shifting of montage overview (In 3.5).
+
+* 11/27/15: Fixed handling of View shifts in Realign to Item (In 3.5).
+
+11/23/15: Made View defocus offset spinner change by 2 above 20, 5 above 50,
+and 10 above 100 (In 3.5).
+
+11/23/15: Fixed corruption of Navigator table by Go To Marker caused by
+preventing actions during stage moves (11/12/15 change) (In 3.5).
+
+* 11/18/15: Changed from sampling to binning in montage overview to give better
+image with noisy data.
+
+* 11/18/15: Added second set of montage overlap correlation filter parameters,
+a property to set them, and menu entries to select it unconditionally or only
+in Low Dose mode, to divide filter parameters by 2, and to set parameter
+values temporarily.
+
+11/18/15: Added macro command to shift Navigator items assuming the current
+one is centered.
+
+11/17/15: Increased maximum number of mags to 120 for Titan Halo (In 3.5).
+
+11/16/15: Fixed reading from montages with no .mdoc files (In 3.5).
+
+11/16/15: Made RefineZLP macro command take an entry so that Refine ZLP can be
+run only after an interval since the last time (In 3.5).
+
+11/14/15: Added property to set filter parameters for montage correlations
+(In 3.5).
+
+11/12/15: Stopped updating the energy filter after the first continuous mode
+shot (In 3.5).
+
+11/12/15: Prevented starting a montage, autofocusing, and some other actions
+whenever the stage is moving (In 3.5).
+
+* 11/12/15: Fixed direction of backlash movement in stage calibration (In 3.5).
+
+* 11/11/15: Added ability to run a macro at a defined point in a tilt series.
+
+** 10/28/15: Added routines for astigmatism correction and coma-free alignment.
+
+10/26/15: SEM_3-5-1
+10/26/15: Fixed Realign to Item hanging in stage access on JEOL, broken by
+nanoprobe changes 7/14/15 (In 3.5).
+
+* 10/23/15: Changed Falcon frame stacking to handle case where not all frames
+are there when the acquisition returns (i.e., support mode 40).
+
+* 10/23/15: Added support for 16-bit raw frame files from Falcon (In 3.5).
+
+10/21/15: Prevented user from opening montage setup in low dose mode if Record
+or View is not set up (In 3.5).
+
+10/21/15: Prevented montages from being taken with subarea frame sizes and K2
+dose fractionation on (In 3.5).
+
+10/14/15: Fixed crash when realigning to map made from image read from
+file (In 3.5).
+
+10/13/15: SEM_3-5-0
+10/12/15: Added macro command to set beam tilt; made ReportImageShift give
+unbinned image pixels.
+
+10/8/15: Shifted all stored window positions so that windows will come up
+fully on the current desktop.
+
+10/7/15: Beta11 packaged
+10/7/15: Fixed using wrong image to rotate by 90 degrees at end of
+bidirectional series.
+
+10/7/15: Fixed macro commands like SetExposure with a 0 for the set.
+
+10/6/15: Made the defocus estimate show up when using Live FFT.
+
+10/5/15: Beta10 packaged
+* 10/5/15: Revised instructions for calibrating image shift and pixel size.
+
+** 10/4/15: Made it give a defocus estimate and draw circles at CTF zeros when
+the marker point is set in an FFT.
+
+9/29/15: Prevented crash if background writing fails while montaging.
+
+9/29/15: Fixed a problem with continuous mode setting when loading states.
+
+9/29/15: Added macro menu item to list functions.
+
+9/29/15: Fixed problems with antialising in plugin after EarlyReturn 0.
+
+9/29/15: Fixed plugin reading gain reference after saving in mode 101.
+
+* 9/22/15: Made points picked near seams of a montage map be displayed at the
+locations clicked.
+
+* 9/17/15: Made autosaving of Navigator files be on by default, with a one-time
+message on startup when the option is turned off in an old settings file.
+
+* 9/17/15: Added K2 frame saving options for saving unnormalized counting
+frames as 4-bit and for using a new MRC mode 101 for 4-bit files.
+
+9/17/15: Fixed freeing of K2 gain references when there are two DMs.
+
+* 9/11/15: Added support for OneView camera, with fast continuous mode enabled
+and gain normalization only in DM.
+
+* 9/11/15: Fixed shutter not being kept open in continuous mode.
+
+9/11/15: Fixed brief unblanking/reblanking before shot with NoShutter = 2.
+
+9/11/15: Fixed focus screen chronically being considered in on JEOL scopes.
+
+9/11/15: Fixed SetEucentricFocus macro to directly access correct value;
+broken by probe mode addition.
+
+9/11/15: Made SetAxisPosition macro keep the base position and net image shift
+the same even when in Trial/Focus area.
+
+9/11/15: Added macro command to report tilt axis offset from last refine
+eucentricity.
+
+9/11/15: Added tilt series menu item to save an X/Y/Z file automatically.
+
+9/3/15: Made it copy alpha and beam shift and tilt offsets when copying one low
+dose area to another.
+
+8/30/15: Added separate lens normalization delay property for low mag, needed
+on some Krios's.  Made stage/image shift calibration skip lens normalization
+on second round and if macro command ShiftCalSkipLensNorm is given.
+
+8/30/15: No longer offer to modify other image shifts after a calibration if
+the change is large and either the old or new image shift calibration is very
+asymmetric.
+
+8/30/15: Prevent saving frames when doing a prescan montage.
+
+8/30/15: It will now load files matching *Plugin*.dll from executable
+directory so plugins can use VC90 libraries there; added command line argument
+to specify alternative plugin path.
+
+8/30/15: The blanker thread can now do post-actions as soon as an image is
+received if the startup delay is longer than needed, so there is little penalty
+for having an overly-long startup delay.
+
+* 8/30/15: Whether frames are to be saved and K2 frame time are now saved as
+part of an imaging state.
+
+8/26/15: Fixed copying of K2 gain reference from SEMCCD plugin, broken in
+beta8 version (8/7/15).
+
+8/26/15: Added property CheckPosOnScreenError as workaround to errors moving
+the screen on Titan.
+
+8/14/15: Added macro commands to change axis position of Trial/Focus area and
+to write to frame autodoc file.
+
+8/12/15: Added version number to FEI scope plugin/server and startup messages
+when this plugin or server, or SerialEMCCD plugin, need upgrading.
+
+* 8/12/15: Made "Area to show when screen down" buttons go to area when screen
+is up also.
+
+8/9/15: Fixed problem with saving extra Records from simultaneously acquired
+channels.
+
+* 8/7/15: When dark-subtracted frames are being saved from K2, the plugin will
+now return a gain normalized image.
+
+* 8/4/15: Made scroll wheel zoom image window.
+
+8/4/15: Fixed treatment of view shift offset in Realign to Item when staying
+in Low Dose mode, made offsets work better when realigning to View then Preview
+or Record maps, and relaxed requirements for staying in Low Dose, so that
+current beam and image shifts and other settings can be used instead of those
+used to take the map.
+
+* 8/4/15: Added Tilt Series menu item to save a text file with X, Y, Z
+positions during a tilt series.
+
+7/29/15: Fixed initialization of center coordinate when adding a grid of
+points inside a polygon at a specified spacing.
+
+7/29/15: Fixed copying of probe mode setting when copying Low Dose area.
+
+7/26/15: Added TietzCameraType 13 as new F816 type.
+
+7/23/15: Fixed problem with using DigiScan after K2 with antialiasing in
+plugin.
+
+7/22/15: Added property to set waiting time per line when using Line sync with
+DigiScan (In 3.4).
+
+7/19/15: Added .map to file filter for opening old image files.
+
+7/19/15: The K2 counting/super-res reference names no longer need to be set as
+properties as long as the DMGainReferenceName is set; this works with 2 K2's.
+
+7/19/15: Added macro command to save log and open a new log window.
+
+* 7/14/15: Added support for nanoprobe mode in TEM on FEI scopes.  Many
+calibrations are kept track of separately, and probe mode is stored as part of
+low dose, map, and imaging states.
+
+7/14/15: Added ability to specify cameras to drop from active list in command
+line in shortcut, and to combine /DUMMY or this with a subfolder.
+
+7/6/15: Fixed erroneous doubling of binning for tasks/lower mag camera
+parameters (broken 6/24).
+
+* 7/4/15: Added menu items to remove a single IS or stage calibration.  Added
+question about forgetting a stage calibration when the matrix is not symmetric
+enough.  Added a warning not to use whole image correlations at low mag if
+there are grid bars in the field.
+
+7/4/15: Changed default cycle length for stage calibrations to 40 microns for
+non-FEI scopes.
+
+* 7/4/15: Added an implicit forgetting of prior state when making an anchor map
+or doing Realign from Item with restoration of state, so that each returns to
+the existing set state instead of the prior state.
+
+7/4/15: Fixed use of -1 with LongOperation commands.
+
+6/29/15: Changed distortion pair acquisition routine to adjust stage move to
+average of last three positions predicted from errors.
+
+* 6/25/15: Added output of CCC values from image and stage shift calibrations,
+added a query about forgetting a bad calibration, and made the offer to change
+all other image shift matrices happen only once for a mag range.
+
+6/25/15: Allowed the Focus Ramper to be used with the DigiScan on an FEI
+scope.
+
+* 6/24/14: Made plugin to DM able to do antialias reduction of images to be
+passed back; added option to use antialias reduction for all binning, not just
+super-resolution and dose-fractionation sums.
+
+* 6/24/15: Added ability to save sums of frames of variable length from K2;
+rewrote Falcon Frame Selector dialog to work in both cases and handle
+specifications for many frames easily; tried to retain distribution of frames
+in sums as exposure time or frame time is changes.
+
+6/18/15: Fixed STOP button to work in continuous mode.
+
+6/18/15: Enabled Unblank button in low dose panel even when not in low dose.
+
+* 6/18/15: Realign to Item now stays in Low Dose if all map parameters match
+the current mode parameters.
+
+* 6/18/15: The axis position of the low dose focus area and the offset from
+center of the focus camera parameters are now stored in the imaging state that
+can be applied when opening a new file or starting a tilt series during
+Navigator acquire.  Thus the focus area can be set for individual tilt
+series.
+
+6/16/15: Added option to Tilt Series Extra Output dialog to retain the file
+with bidirectional anchor and add the image used to realign.
+
+6/16/15: SEM_3-4-9
+* 6/14/15: Made default extension for new files be .mrc, so it is not necessary
+to type in this extension; .mrc will not be added to filenames that end in .st
+or .map.
+
+6/14/15: In FEI scope plugins, fixed return type of function for reporting if
+scope is disconnected from server.
+
+* 6/12/15: Added dose rate at camera to top of main image window for a direct
+detector and and camera name if there are multiple cameras.  Added dose rate
+at specimen to scope status panel.
+
+* 6/12/15: Added side-by-side display of main window and FFT window (hot key
+Shift S to toggle); FFT window is a stack of 4 rolling buffers.
+
+6/12/15: Added ability to set number of digits in numbered frame filenames.
+
+6/12/15: Prevented checks of various conditions before saving an image from
+putting up message during a macro.
+
+6/12/15: Macros: added commands ElectronStats to give image statistics and dose
+rate in electrons, ErrorsToLog to make most error messages go to log and
+FlashDisplay to flash the display yellow; set a reported value from
+UserSetDirectory result.
+
+6/7/15: Added WriteAutodoc command to fix writing of added values.
+
+5/28/15: Fixed assignment of section numbers to montages broken on 5/25; fixed
+the output of # of frames being saved with early return.
+
+5/25/15: Enhancements to pixel size routine: added automatic setting of target
+binned size based on expect number of blocks in waffle grating image, with
+binned size going as low as 256; added analysis along line perpendicular to
+line from origin to peak to eliminate diagonals and false peaks; fixed
+over-trimming of binned images, especially for montages taken with
+overview binning of 1; made found pixel sizes and rotations be saved in short
+term calibrations with a lifetime of 24 hours; adjusted binning so block sizes
+match between image and autocorrelation.
+
+5/25/15: Made target binned size for image/stage shift calibrations be 1024
+instead of 512 for direct detectors.
+
+5/25/15: Fixed some display and other problems caused by using current
+scope/camera settings instead of properties in a read-in image.
+
+5/25/15: In Realign to Item, set spot size before instead of after intensity
+because intensity values at end of range may be legal at one spot size but not
+another on FEI scope.
+
+5/25/15: Stopped giving message on startup about ScalingForK2Counts being 0.
+
+5/24/15: Rewrote long operations to work properly with current plugin, do
+sequence of scope operations and finish other operations if one error occurs,
+and to ignore an error from refill refrigerant (provisionally).
+
+5/24/15: Add menu entries to select use of trial binning or size while
+running stage or image shift calibrations.
+
+5/24/15: Added macro commands to set up a montage for finding pixel size,
+to change mag if pixel size already found, and to reset defocus.  Fixed
+KeyBreak.
+
+5/15/15: Added macro commands to enter a number with given default value and
+to test if a variable is defined.
+
+5/13/15: Added NormalizeAllLenses macro command to call three different FEI
+functions for normalizing "All" (requires plugin/server update).
+
+5/12/15: Added macro command to add a key-value pair to last section of
+current autodoc.
+
+5/12/15: Fixed overwriting in .mdoc file when last section is overwritten,
+which also screwed up extended header in bidirectional series (In 3.4).
+
+5/11/15: Added message box on startup if K2 count scaling is near 1.
+
+5/11/15: Added threshold for testing whether to abort autofocus after
+inconsistent iterations, set with a second dialog box opened by Set Threshold
+in the Focus menu.  Both thresholds are now settings.
+
+5/11/15: Made camera controller tell AMT to turn on blanking when screen
+raising is finished instead of waiting for scope update to do it.
+
+5/7/15: Fixed file writing problem cause by adding MRC version number on
+5/2/15.
+
+5/7/15: Changed autofocus repeat above threshold so it happens for a threshold
+set to >= 0.1 instead of only if it is > 1.
+
+5/6/15: Fixed image shift calibration broken 3/25/15.
+
+5/5/15: Fixed "change from previous" output of Find Pixel Size for K2.
+
+4/29/15: Added macro command ReportAlignTrimming to get the borders applied in
+the last autoalign.
+
+* 4/29/15: Added macro command PreCookMontage to travel to each position of a
+stage montage with the screen down.
+
+4/28/15: Fixed SetPercentC2 and IncPercentC2 to work properly with illuminated
+area values on Titan.
+
+4/28/15: Made it restore mag index for read-in images instead of using current
+mag; added mag index to .mdoc file so it can be done unambiguously.
+
+4/28/15: Added property to make List Mags work right when there are disabled
+LM mags on a JEOL, and prevented attempted image shift compensations during
+List Mags.
+
+4/28/15: Fixed crash when autofocus is done on tilted specimen with internal
+binning for direct detectors.  Added menu item to see the image that is
+stretched to compensate for specimen tilt.  Fixed the equations for the
+stretch compensation.  Made all routines on existing focus images use
+parameters of read-in images instead of current scope conditions.
+
+* 4/18/15: Made it normalize condenser when going in and out of LM mode.  On
+FEI scope, changed function to normalize condenser so that it normalizes all
+condenser lenses, not just spot size.  THIS REQUIRES PLUGIN/SERVER UPDATE.
+
+4/15/15: Made it not put scope in STEM mode on JEOL if there is only a GIF
+camera and the scope is not in EFTEM mode.
+
+4/2/15: Improved division of added points into groups by making group
+boundaries aligned with the axes of the polygon.
+
+3/25/15: Added a weighting factor for the second round of Realign to Item that
+decreases with distance from zero shift, with a sigma of 3 microns; this is to
+avoid aligning to the wrong hole.
+
+* 3/25/15: Macros can now contain defined functions.
+
+3/21/15: Macro changes: Added a SkipTo command to jump forward to a labeled
+line; added parentheses in arithmetic, function, and IF expression evaluation,
+made command listing and completion work when typing command indented with
+spaces.  Added functions NEARINT, ROUND, POWER, ABS.
+
+3/20/15: Fixed minimum autofocus binning for K2 to use the value specified,
+not half of it.
+
+* 3/18/15: Made current or selected Navigator point items show up in a
+highlight color and allowed Draw to be used to toggle group draw on and off
+when groups are collapsed.
+
+3/18/15: Improved division of added points into groups by making first point
+really be in the middle of the actual points in the group.
+
+* 3/17/15: Turned on default file option to save .mdoc file if there is direct
+detector.
+
+* 3/13/15: Added ability to set suffix for files saved by the DE server with
+the frame saving properties dialog.
+
+3/13/15: For DE cameras, switched the HDF5 option to MRC if the server version
+supports it, switched to saving the sum of raw frames instead of all frames
+when the option is selected to do so when taking the gain reference.
+
+3/12/15: Turn off frame-saving for re-imaging a map area and make sure that
+this state and continuous mode are restored in whatever parameter set is used
+for that.
+
+3/11/15: Added properties to use a socket server only when running a 64-bit
+version.
+
+3/11/15: Modified install.bat to copy FEI scope plugin whenever FEI software
+is detected and ask about doing so when no scope software is detected.  The
+program installed this way from a 3.5 beta package will run through the plugin
+even on the FEI computer, but does not require the server in that case.
+
+* 3/10/15: Added section to the frame saving properties dialog to control
+folder and files names for saved frames from K2 or Falcon, with automatic new
+folder creation possible for each tilt series.  This requires a DM plugin
+upgrade via a beta installation package.
+
+* 3/12/15: Added ability to have points put into multiple groups with "Add Grid
+of Points", with the first one in the middle for focusing on.
+
+3/4/15: Added delay between starting screen movement and tilt in specimen
+cooker and property to adjust it.
+
+2/26/15: Prevented K2 frame saving setup from being called twice when there is
+settling.
+
+2/24/15: Added special option to make sure View area is passed through before
+autofocusing.
+
+2/22/15: Allowed Realign to Item to run with continuous mode images with a
+macro argument; added macro commands for reporting continuous mode and
+controlling settling time after shifts in continuous mode.
+
+2/16/15: Prevented continuous mode from being used for images taken in tasks
+and tilt series; added special setting in the Tasks menu to allow continuous
+acquisitions to be started in tilt series.
+
+2/16/15: Add macro commands for setting continuous mode and using continuously 
+acquired frames in a controlled way.  Also made all camera "Set" commands take
+parameter set letters as well as numbers and allowed multiple parameter sets
+to be modified and restored.
+
+* 2/9/15: Pixel sizes can be measured at very low mag from grid bar spacing,
+using a menu entry to set the grid mesh size.
+
+* 2/9/15: Hitachi HT7700 microscope is now supported through a plugin.
+
+* 2/9/15: Added a calibration of the beam shift needed to align spots,
+primarily for Hitachi, but it may be useful elsewhere.
+
+2/9/15: Fixed computation of fallback pixel size with K2 and listing of IS
+vectors using the fallback.
+
+* 2/8/15: Stage montages are now done in a zigzag pattern, up one column and
+down the next, if the overlap in Y is at least 20 microns.
+
+* 2/8/15: Many operations, including tasks and tilt series, can now be done
+on non-FEI scopes with Brightness Zoom or its equivalent turned on.
+
+2/8/15: SEM_3-4-8
+2/8/15: Fixed decision on whether image shift is too small to reset by
+using actual calibrated conversion to microns if possible (In 3.4).
+
+2/8/15: Transferred image metadata to processed images (In 3.4).
+
+1/31/15: Fixed some things that would not work correctly when running FEI
+through plugin, including using diffraction in LAD mode (In 3.4).
+
+1/25/15: Fixed uninitialized rotation angles.
+
+1/25/15: Added macro command ProgramTimeStamps to get a message like program
+startup message but with current time.
+
+1/19/15: On JEOLs updating by event, eliminated stage check before every image
+acquisition that was taking 0.25 second.
+
+1/19/15: Fixed keeping pixel time constant when changing STEM binning.
+
+* 1/19/15: Added Focus menu options for testing filter parameters, for
+setting a binning for processing autofocus images from direct detectors, and
+for listing calibrations.  Added introductory and troubleshooting page on
+autofocus.
+
+* 1/17/15: Implemented asynchronous stacking of Falcon frames, so other
+operations and non-frame images can proceed, and a frame can be read in and
+transferred from server while previous frame is being written.
+
+1/8/15: Made skip beam shift work for reset image shift in tilt series.
+
+* 1/4/15: Added option to save raw frames while acquiring the gain reference
+for a DE camera.
+
+1/4/15: Made it possible to convert a Gatan camera error into a timeout for
+retrying using same MakeFEIerrorBeTimeout property as for FEI cameras.
+
+* 12/24/14: Made new versions of plugin and server for accessing FEI
+microscopes with 3 socket connections; they support image acquisition from
+Eagle, Falcon, and STEM detectors and allow Falcon intermediate frames to be
+saved from a remote computer.  The plugin alone will also provide the sole
+route for accessing the scope when SerialEM is running on the scope computer.
+
+12/9/14: Added item to Tasks - Special Settings menu to disable automatic
+trimming of dark borders in selected cases.
+
+* 12/9/14: Kept the beam blanker open during fast continuous acquisition from a
+camera with NoShutter = 1 property, and fixed blanking on program startup with
+NoShutter set.
+
+12/9/14: SEM_3-4-7
+12/6/14: Made it give a message and not modify system path in settings file if
+it has to fall back to system properties file.
+
+12/6/14: Made sure binning is legal before taking image.
+
+12/6/14: Reduced a delay in turnaround with continuous acquisition.
+
+12/6/14: Error strings are now fetched from the remote FEI server and
+included in messages from SerialEM.
+
+* 12/6/14: Give just one good message when remote FEI server is closed before
+SerialEM and allow graceful exit; reconnecting also works.
+
+12/6/14: Fixed DM plugin for saving MRC files > 2 GB and for returning a DM
+gain reference after ending continuous acquire (In 3.4 package).
+
+11/27/14: Added macro command UserSetDirectory to let user pick a new current
+directory, also a command ReportBeamTilt.
+
+* 11/27/14: Added an optional section to scope status panel for intensity and
+stage position.
+
+11/27/14: Changed maximum GIF energy loss to 3000 (In 3.4).
+
+* 11/25/14: Made it possible to define two non-LM mag ranges for JEOL,
+controlled by property LowestSecondaryModeMag.
+
+11/23/14: Fixed bug in how a new mag image shift offset calibration is merged
+into previous calibrations at the bottom end (In 3.4).
+
+11/22/14: Modify 10/10/13 fix of Low Dose with projector shifts so that the
+image/beam shift is always done at the mag of a trial/focus area when leaving
+or going to one; otherwise it is done at the higher mag (In 3.4).
+
+11/21/14: Added Navigator menu item Force Center Align to keep Realign from
+Item from skipping the first round alignment to map center.
+
+11/16/14: Added macro command ReportEnergyFilter to get filter settings;
+and commands SetAbsoluteFocus and ReportAbsoluteFocus as clearer synonyms for
+SetFocus and ReportStandardFocus.
+
+11/12/14: Added PluginPath property to set directory for plugins.
+
+11/12/14: Added macro commands FocusChangeLimit and AbsoluteFocusLimit to set
+limits for autofocusing done in the macro.
+
+* 11/8/14: Made it possible to load a frame of the montage map that a point was
+drawn on by double-clicking the point or pressing the Load button.
+
+** 11/8/14: Added an Edit Mode to Navigator in which one can select, add and
+move points with the 3 mouse buttons as in 3dmod.
+
+* 11/8/14: Made it possible to reuse the spacing and orientation set by running
+Add Grid of Points with 5 points, and add a new grid with just one point.
+Also made grids be added at regularly spaced image rather than stage
+coordinates.
+
+11/7/14: SEM_3-4-6
+(Packages include new version of DM plugin to support fast continuous
+acquisition, compatible with 3.5 beta).
+
+11/6/14: Changed default tapering for correlation in autoalignment and
+autofocus to 0.1 (In 3.4).
+
+11/6/14: Excluded extra output stack from being considered the active window
+for Process menu operations (In 3.4).
+
+* 10/31/14: Added ability to select current Navigator item by clicking near it
+with the mouse (with Ctrl-Left click).
+
+10/31/14: Changed Ctrl-Left and Right mouse button to zoom up and down around
+the mouse position, and moved the zoom up to Ctrl-Middle.
+
+10/26/14: When displaying an image with antialias reduction, boost the contrast
+to give an SD of 40, since noisy images lose contrast.
+
+10/25/14: Switched to static build of FEI-SEMserver.exe so it runs without
+dependencies that are missing on some systems (In 3.4).
+
+10/25/14: Made plugin to DM able to save unaligned K2 frames when image
+alignment is selected in GMS 2.3.1, as it did previously.  Also fixed a
+problem that may have slowed down frame saving with early return (In 3.4).
+
+10/25/14: Fixed plugin to DM to set the right version number for GMS 2.0 and
+2.1, so that it would not run ancient camera commands (In 3.4).
+
+* 10/25/14: Added a stage move tool window that allows moving stage in any
+direction by a chosen multiple of the camera frame size; it can be opened from
+the Window menu.
+
+** 10/24/14: Added ability to have fast continuous mode acquisition from Gatan
+cameras.  It will be used by default for Orius and K2 (with good frame rates)
+and for US4000 and US1000 (with only a slight speedup), activated by property
+UseContinuousMode otherwise.
+
+10/19/14: Swapped meaning of "up" and "down" in macro editor so it matches
+the direction that macro moves in toolbar or menu.
+
+10/12/14: Made macro toolbar width adjust to fit names.
+
+10/12/14: Added macro command SetTargetDefocus.
+
+10/9/14: Disable "Align to image in buffer A" in tilt series if mag does not
+match series mag, or it is not a valid low dose area for aligning to.
+
+10/9/14: Added macro command SetCenteredSize to set a parameter set to a given
+binning and size; fixed problem with SetCameraArea for K2; added command
+ImageLowDoseSet to report what low dose set would match an image; added
+ForceCenterRealign to keep Realign to Item from skipping first round.  Also
+made ReadFile able to read to specific buffer.
+
+10/9/14: Added menu item to merge a Navigator file in with the current items.
+
+10/9/14: SEM_3-4-5
+10/9/14: Made bidirectional series return to starting angle with steps when
+first part ends on a dim image, even if Walk Up is selected.  Also made return
+steps larger for JEOL (10 degrees) (In 3.4).
+
+10/3/14: Fixed problems with using Skip Beam Shift on Align for bidirectional
+series, made it work for all reverse tilt operations during series.
+
+10/1/4: Added macro command to change STEM detectors.
+
+9/17/14: Changed montage piece alignment to use new routine shared with
+Blendmont, added 2-pixel border as is used there.
+
+9/12/14: Fixed SetExposure command so drift really is optional (In 3.4).
+
+9/12/14: Improved initial white level when displaying autocorrelations.
+
+* 9/12/14: Added ability to use pixel size routine with catalase crystals.
+
+9/11/14: Fixed loss of reference in bidirectional series with return by walkup
+and fixed problem with stopping during a walkup return (In 3.4).
+
+8/31/14: Added a delay after mag change for Falcon, controlled by property
+FalconPostMagDelay, to keep Dose Protector from responding to transient
+conditions.
+
+8/31/14: Fixed vulnerability of timeout system to tick clock wrapping around
+every 57 days.
+
+8/21/14: Had to switch the alpha change to happen first at higher mag, not
+higher alpha; there is still a vulnerability if two modes with different
+alpha are in a lower mag range.
+
+8/14/14: Made alpha change happen before mag change when going to lower
+alpha and after when going to higher, since scope may impose alpha-dependent
+beam shift during the mag change.
+
+8/14/14: SEM_3-4-4
+8/5/14: Made it able to use piezo positioner instead of image shift for shift
+to Trial/Focus area in Low Dose.
+
+* 7/22/14: Made it record alpha value for maps in low dose mode and change
+alpha and apply alpha-dependent beam shift/tilt calibration when realigning to
+such a map or using it for anchor map state.  Made it also able to apply the
+difference in the user's added beam shift and tilt between View and Record
+when aligning to a map taken in View mode; this is enabled by property 
+RealignItemUseBeamOffsets.
+
+7/21/14: Added general support for plugins controlling piezo positioners, and
+added macro commands for selecting, reporting, and moving piezos.
+
+7/21/14: Added macro command KeyBreak for breaking a loop on a key press.
+ 
+* 7/21/14: Made beam shift calibrations alpha-specific for JEOL.
+
+7/17/14: Fixed treatment of Falcon intermediate frame config file if the
+starting file gets everything onto one line and changed dummy directory for
+shots without frames to be on S:\ so the directory doesn't get created
+(In 3.4).
+
+7/15/14: Fixed plugins for GMS2 64-bit when there is no K2 camera (In 3.4).
+
+7/7/14: Allowed OnlyOneShutter property to be used to specify pre- or
+post-specimen shutter for Eagle camera (1 or -1).
+
+6/25/14: SEM_3-4-3
+6/25/14: Increased timeout on reset image shift (In 3.4).
+
+6/19/14: Fixed "Encountered an improper argument" error when starting tilt
+series from Acquire at Points with Realign to Item selected (In 3.4).
+
+6/17/14: SEM_3-4-2
+6/16/14: Increased wait for stage ready in reset image shift (In 3.4).
+
+6/13/14: Allowed Space key to turn off continuous acquire but not restart
+camera acquire during a task/tilt series (In 3.4).
+
+6/11/14: Prevented warning about SAMAG mode on JEOL when it is in STEM mode on
+startup (In 3.4).
+
+6/11/14: SEM_3-4-1
+6/10/14: In bidirectional series, saving of new image in second half fails if
+a large amount of file hasn't been copied yet, so switched to finishing the
+copy synchronously before tilting to the first angle (in 3.4).
+
+6/10/14: In plugin, fixed full-sized images being acquired when switching away
+from K2 to other camera and prevented failure of dose frac shots saving a
+single frame (In 3.4).
+
+6/9/14: Fixed disabling of anchor options in initial actions when
+bidirectional option is selected (In 3.4).
+
+6/8/14: Made it possible for plugin functions to be called at defined points
+in a tilt series.
+
+* 6/7/14: Added option to save K2 frames without rotation/flip (In 3.4).
+
+6/7/14: Had to send rotation/flip to plugin for K2 dose-frac shots that don't
+save frames for GMS 2.3.1, which requires new plugin version (In 3.4).
+
+6/7/14: When setting low dose area on FEI scope, set spot size again after
+setting mag in case it changes bwteen LM and nonLM (In 3.4).
+
+6/6/14: Fixed EFTEM mode being turned on due to initial camera setting before 
+pixel sizes/rotations are set up (In 3.4).
+
+6/4/14: Fix enabling Set C2 Factor, normalizing beam for calibrating dose with
+gain reference, and numerous STEM-related items to behave right for FEI scope
+accessed through plugin (In 3.4).
+ 
+6/3/14: Fix crash on Save Single with no image, disable menu item (In 3.4).
+
+5/29/14: SEM_3-4-0
+5/29/14: Added a property TSEarlyK2RecordReturn to allow tilt series Record
+images to return early, with a full sum, when saving K2 frames (only for 
+GMS 2.3.1 or higher).
+
+5/28/14: Made it restore beam tilt as well as beam shift when alpha changes
+between low dose areas on JEOL.  The Alpha beam shift calibration needs to be
+redone to record the proper beam tilt change.
+
+5/28/14: Fixed loss of images and jumbling of .mdoc when restacking of first
+part of bidirectional series in background.
+
+** 5/26/14: Changes for K2 support: For GM 2.3.1, modified plugin to use new
+API for dose-fractionation images and to make DM acquire frames into RAM when
+possible (as controlled by a SerialEM property K2MaxRAMStackGB).  For all GMS,
+made frame-saving run in a thread to provide truly asynchronous operation and
+not block the DM interface; added ability to return as soon as possible with
+no sum or a partial sum and take new images during frame-saving, accessed with
+the macro command EarlyReturnNextShot; linked with version 4 of libtiff in
+order to write TIFF files > 2 GB.
+
+5/26/14: Made List Relative Rotations give a line when there is no rotation.
+
+5/26/14: Made sure that corners would be reached properly in a full grid
+montage if the StageLimits property is set to access the full +/-1200 micron
+range on a JEOL; clarified help to indicate that the property is needed.
+
+5/23/14: Enabled setting added beam tilt for View as well as Trial/Focus.
+
+5/23/14: Kept track of whether mouse shifting moves the stage when setting a
+View offset and added a message box with instructions if this happens.
+
+5/23/14: Stopped turning off Low Dose mode when montaging is on and a camera
+is selected that can't be used to take a montage into that file.
+
+5/23/14: Fixed crash from showing montage overview with > 256 pieces, made it
+reduce overview binning correctly when memory is limited and not converting to
+bytes; fixed overview size so conversion to bytes does minimize memory use.
+
+5/14/14: Automatically detected if display is 120 DPI or not; DisplayIsNot120
+should no longer be needed.
+
+5/14/14: Fixed starting focus for step focus/dynamic focus with a plugin
+scope.
+
+5/11/14: Changed Realign to Item in Low Dose mode so that it aligns the
+feature for the mag of either View or Record, depending on whether View is
+being returned to, or if Acquire at Points is being run to capture a montage
+with View images.
+
+* 5/10/14: Added ability to fetch a pixel defect list from DM and merge it with
+defect list from properties; isolated defect-correction code so it can be
+shared with Clip in IMOD for post-processing defect correction.
+
+5/2/14: Made field of view output for bidirectional series show up in bold
+with stars when below a criterion size; added property TSBidirAnchorMinField
+to set thresholds for this; made output correct when using View in Low Dose.
+
+5/2/14: Made SetEucentricFocus use value for nearest calibrated mag in nonLM,
+and issue a warning on FEI scopes if the value is not for the current mag.
+
+5/1/14: Fixed setting dose rate with divide by 2 on and dose rate output in
+camera setup window for non-K2 camera.
+
+5/1/14: Changed absolute focus value on JEOL to range from 2 to 2050 in order
+to store and go back to the specific coarse and fine values; when using an old
+number between 0 and 1, set fine value near middle not bottom of range. 
+
+4/30/14: Fixed leakage of autocentering intensity into Focus parameters when
+in Low Dose.
+
+* 4/29/14: Macro changes: added menu items to save all macros to a file or to
+load multiple macros back from a file (which can be a settings file); added
+buttons to the macro editor to shift a macro up or down in the list of macros;
+made it possible to open an editor for an existing macro by Ctrl-clicking on
+its button in the macro toolbar or Camera & Macro Control panel; added line to
+editor showing some possible completions of a command as it is being typed.
+
+4/28/14: Fixed enabling of autocenter beam menu item in Low Dose mode.
+
+* 4/28/14: Added property FrameMdocForFalcon to allow saving metadata for
+Falcon images when frames are captured with the Falcon Hack.
+
+4/28/14: Made the Low Dose mode checkbox stay on during Realign to Item 
+and prevented beam from being unblanked when actually leaving low dose at
+start of procedure.
+
+4/15/14: SerialCCD plugin detects when there are two copies loaded and gives a
+big warning.
+
+* 4/15/14: Added File menu item to open an .mdoc file for saving metadata
+about every image acquisition that saves frames from a direct detector.
+
+4/13/14: Fixed crash in acquire at points when groups are collapsed and no
+file is open.
+
+* 4/12/14: Made Realign to Item keep track of parameters from first round
+alignment so it can skip it if same frame is aligned to within a time
+interval (see properties RealignItemSkipCenTime and RealignItemSkipCenError).
+
+* 4/12/14: Autofocus will now stop iterating and return to original focus 
+if it oscillates or behaves inconsistently.
+
+* 4/12/14: Added menu item to set dose rate for direct detectors.
+
+4/9/14: Fixed montager trying to rewrite .mdoc during background save.
+
+4/8/14: Added support for Tietz F216 camera, TietzCameraType 12.
+
+* 4/8/14: Report dose rate per unbinned pixel for all direct detectors.
+
+4/8/14: Allowed Terminate entry to be used to terminate first part of
+bidirectional series.
+
+3/25/14: Added check on JEOL for SAMAG versus MAG on startup.
+
+3/20/14: Fixed inappropriate timeouts of background saves.
+
+3/14/14: Allowed SmoothFocusNextShot to be used with Falcon.
+
+2/28/14: Added DateTime to .mdoc for each image.
+
+* 2/28/14: Turned on background saving by default, it can be disabled with
+property "BackgroundSaveToFile 0".
+
+2/27/14: Fixed using Walkup with View for tilt series and fixed angle at which
+walkup anchor is saved for Walkup with View with post-actions on (In 3.3).
+
+2/21/14: Fixed 64-bit DM plugin to write files bigger than 2 GB.
+
+* 2/15/14: Made extra Records be overwritten appropriately just as regular
+records are, so there will be no extra extra Records.
+
+2/15/14: Added BadPixels property for correcting single pixel defects.
+
+** 2/15/14: Added bidirectional tilt series from arbitrary starting angle.
+There is a new item in the batch tilt series policy dialog that controls
+whether the series will automatically quit one direction and start the other
+when an image is too dim at high tilt.
+
+2/5/14: Saved Acquire flag to Navigator file.
+
+* 2/5/14: Made new maps and Navigator items picked on images or maps have Z
+position of image instead of current Z.
+
+2/5/14: Added mdoc entries for stage Z and image divided by 2.
+
+2/4/14: Changes to autocenter setup in low dose mode, primarily to keep the
+intensity setting from being lost if the screen is dropped.
+
+2/4/14: SEM_3-3-2
+2/4/14: Install package has separate plugins for GMS 2.0-2.2 versus 2.3 and
+higher, and installer asks which is installed to copy the right one (In 3.3).
+
+2/4/14: Keep screen up when reopening autocenter setup dialog after test
+acquire in Low Dose mode to preserve intensity (In 3.3).
+
+1/26/14: Added SaveFocus and RestoreFocus macro commands to save a focus value
+that is restored when macro stops or ends.
+
+1/26/14: Added macro commands to start K2 hardware dark reference update and
+other long-running operations without hanging the user interface.
+
+1/26/14: Fixed enabling of macro buttons in control panel (In 3.3).
+
+1/24/14: Added property JeolIndexForMagMode to allow the program to be used in
+SAMAG instead of MAG mode.
+
+* 1/24/14: Added property DMRotationAndFlip to protect against the camera
+configuration not being correct.
+
+1/15/14: Added macro call IsPVPRunning.
+
+1/12/14: Added ability to start a second instance with no scope or camera
+initialization with the command line argument /DUMMY.
+
+1/12/14: Added macro command to report if low dose is on.
+
+1/12/14: Made DE camera keep protection cover open during continuous acquire.
+
+12/19/13: Disabled Set Intensity menu item in STEM mode (In 3.3).
+
+12/9/13: Avoid setting low dose area multiple times when autofocusing.
+
+12/9/13: Go to low dose area before starting autofocus on a scope with alpha
+since beam tilt can change  (In 3.3).
+
+* 12/7/13: Extra Record output from tilt series can now be montaged.
+
+* 12/6/13: Allowed maps in LM to be used for Realign to Item if the camera
+field of view is small enough; the limit is set by property
+RealignItemMaxLMField.
+
+12/5/13: Only turn off beam on JEOL if filament current is non-zero.
+
+12/5/13: Added property DMAlignZLPCriteria to set the criteria for detecting
+if Align ZLP is run in DM.
+
+12/4/13: Added macro command SmoothFocusNextShot to allow a focus ramp to be
+imposed during the next exposure.
+
+12/4/13: Added property K2SynchronousSaving to disable the new asynchronous
+frame saving.
+
+* 12/2/13: Reorganized the Calibrate menu with submenus, moved Find Pixel Size
+and associated entries from Process menu to a Calibrate submenu.
+
+12/2/13: Fixed crashes from opening new file at group in Navigator (In 3.3).
+
+11/30/13: Made Low Dose continuous update have no effect when omega filter
+is in spectroscopy mode.
+
+* 11/30/13: Switched stage and image shift calibrations to use the autoalign
+routine, evaluate many peaks, and reject a peak at 0,0.  Stage calibrations are
+done with whole image correlations by default to catch problems with rotation
+angles.
+
+* 11/30/13: Added some protections against image shift from scratch and stage
+calibrations being done with seriously incorrect pixel size estimates.
+
+11/30/13: Pixel size and relative rotation measurements are now kept track
+of separately for each camera, List Relative Rotations will output complete
+RotationAndPixel lines, and a menu entry can be used to adjust a relative
+rotation by a multiple of 90 degrees.
+
+11/30/13: Added menu entry to set cycle length for stage calibrations
+temporarily.
+
+* 11/30/13: Added ability to run preliminary macro in Acquire at Points for
+all kinds of acquisitions; keep track of this choice and email choice
+separately tilt series and other tasks.
+
+* 11/30/13: Put macro names in Macro menu, moved Run commands to a Run submenu,
+and added macros 11-20.  Added a command LongName to give a longer name
+that will show up here if defined; otherwise the regular name shows up.
+
+11/25/13: Allowed slit width to go to minimum value on JEOL (In 3.3).
+
+11/16/13: Fixed test for stage in same position as moved to on JEOL (In 3.3).
+
+* 11/13/13: Plugin to DM will now save K2 frames while stack is being prepared,
+saving ~0.75 sec/super-resolution frame.
+
+11/4/13: Fixed Falcon button showing up in DE panel and problems with the
+K2 frame-saving summary line.
+
+* 11/2/13: Made a new dialog for setting file saving options for K2 subframes;
+TIFF compression can be selected here, as well as saving raw frames packed;
+these are now both user settings.
+
+10/31/13: If area is undefined when going to an initial low dose area, beam
+shifts and view offsets are imposed as if coming from Record (In 3.3).
+
+10/30/13: Tested for whether a dose-fractionation image returned from K2 has
+the right size, prevented crash and added error message.
+
+10/24/13: Fixed saving of divide by 2 setting (In 3.3).
+
+10/23/13: Restored Load/UnloadCartridge macro commands.
+
+10/23/13: Fixed crash when changing Falcon exposure time and there are no
+subframes set up.
+
+10/23/13: Fixed blank line in log after every DE12 image.
+
+10/21/13: Added property for testing saving of K2 frames as compressed TIFF
+files.
+
+10/16/13: Fixed disappearence of "Save frames" button for K2.
+
+* 10/14/13: Made a plugin to SerialEM and a server to allow SerialEM to run on
+a 64-bit computer and connect to an FEI microscope.  Released a beta package
+with a 64-bit version of SerialEM and this plugin and server.
+
+10/14/13: Fixed memory leaks of strings in DE-12 code and when saving
+subframes with any camera type.
+
+10/13/13: Added experimental property TSSkipBeamShiftOnAlign to suppress the
+beam shifts that accompany image shifts during tilt series on JEOL (for phase
+plate work).
+
+10/10/13: Took account of constraints on exposure times with direct detectors
+when deciding whether to take a binned image with reduced exposure in tasks
+and tracking, and when reducing the exposure time for Refine ZLP.
+
+10/9/13: Constrained exposure time properly for DDD when deciding whether to
+increase binning for a task, amd when reducing exposure further for safety
+factor on mag change (In 3.3). 
+
+10/9/13: Fixed a test for whether Reverse Tilt is needed (In 3.3).
+
+10/9/13: When changing low dose area and using PLA for IS on the JEOL, do
+image shift for area offset at lower mag instead of higher to avoid setting
+out of range shifts (In 3.3).
+
+* 10/5/13: When there are two non-GIF cameras and "Match pixel size" is
+selected, it will now return to the initial camera before exiting so that the
+mag is appropriate when restarting.
+
+** 10/4/13: Many changes for DE camera: 
+ * fixed various bugs leading to crashes and some memory leaks and
+ standardized error handling;
+ * implemented divide by 2 when selected; 
+ * added camera property AlsoInsertCamera to insert another camera first to
+ blank beam properly;
+ * switched rotations to using fast rotate-flip routine;
+ * Moved selection of frame-saving to camera setup dialog, made it
+ independently selectable for each parameter set and saved as user settings;
+ * Integrated insertion/retraction into the regular logic used for all other
+ cameras, and added a camera property SamePhysicalCamera to specify that a
+ survey sensor is part of the same camera
+ * Revamped the Direct Electron control panel with much fewer stuff, almost
+ all of it in an Options section, and eliminated the separate dialog.  Made
+ all controls return focus to the main window so hot keys work, and disabled
+ items as appropriate
+ * It should work to configure the survey sensor as another camera
+ * Enabled drift settling for the DE-12 cameras as long as OnlyOneShutter is
+ not set.
+ * The frames per second for DE-12 and survey sensor and the file saving
+ format are now saved as user settings; the initial protection cover mode and
+ protection delay and temperature setpoint can be set as general properties
+ (DEProtectionCoverOpen, DEProtectionCoverDelay, DETemperatureSetpoint).
+ * Kept track of values sent to server and only sent values again when they
+ change, so repeated shots with the same parameters take about 600 ms less;
+ * Managed the protection cover so that it opens before all tasks and routines
+ that take images and closes at the end.  This is not done for macros unless a
+ command OpenDECameraCover is given.
+ * Saved selected metadata from the DE camera in the .mdoc file, as well as
+ the path and number of raw or summed frames saved
+ * Informed DE server when gain reference images are being taken so it can
+ save a copy
+ * Made it not get all properties on startup unless debug output D is on,
+ saving ~4 seconds.
+ * Subareas are no longer constrained to be centered
+ * Camera name is no longer fixed by the camera type but must match the name
+ configured in the server.
+
+9/29/13: Subareas are no longer constrained to be centered for Tietz cameras
+with geometry settings that specify a +/-90 degree rotation (untested).
+
+9/29/13: Modified rotation and flipping routine to use same speed trick as in
+the DM plugin for rotating K2 images, so rotations for STEM images and K2 dose
+fractionation images will be faster.
+
+10/4/13: Added property FocusPostTiltDelay to set a delay between tilting beam
+and taking next image.
+
+9/26/13: Added macro calls AreDewarsFilling, DewarsRemainingTime, and
+RefrigerantLevel to report states of a temperature control system.
+
+9/26/13: Added macro calls SetObjectiveStigmator and ReportObjectiveStigmator.
+
+* 9/6/13: Added macro command DeferStackingNextShot so that Falcon frames from
+multiple exposure can be accumulated into one stack.  General properties
+FalconFrameConfigFile and FalconFrameConfigFile enable and control the frame
+saving.
+
+9/3/13:  SEM_3-3-1
+9/3/13: Plugin to DM changed to take images reliably from DigiScan without big
+ExtraShotDelay; it also processes the data types produced by the K2 camera in
+all situations properly (In 3.3).
+
+* 9/1/13: Falcon frames are now written to an MRC stack and deleted.
+Normalization in SerialEM is disabled and images are normalized in FEI
+software when frame-saving is turned on.
+
+8/30/13: Added ability to specify full or partial bad rows to correct, just
+like columns.
+
+8/28/13: Fixed crash if Acquire button used in setup dialog, acquire fails,
+and there is no image in program yet (In 3.3).
+
+8/28/13: Added macro command OpenFrameSumFile to open a file whose name starts
+with the date-time used for the last frames saved from K2 camera.
+
+* 8/28/13: Added ability to control the saving of intermediate frames from the
+Falcon camera.
+
+* 8/28/13: Constrained exposure times for Falcon and DE-12 cameras to multiple
+of frame time; display constrained times (for K2 Base too) with rounding in
+setup dialog.
+
+* *8/25/13: Added ability to set the direction of tilt beam for autofocusing
+with Set Tilt Direction in Focus menu and macro command BeamTiltDirection.
+
+8/22/13: Made Try Again from Marker retain the black/white setting (In 3.3).
+
+* 8/22/13: Made it possible to run at multiple voltages with a single settings
+file by specifying the subfolder with the system files as an argument in the
+shortcut (In 3.3).
+
+8/20/13: The program can now start up with a plugin microscope and call
+functions from it in place of its regular calls to FEI or JEOL scopes.
+
+* 8/20/13: Add a macro command StepFocusNextShot to change focus during an
+exposure, for use with the K2.
+
+* 8/13/13: Added an option to save dose-fractionation frames without gain
+normalization from K2 as 4-bit data packed into bytes in super-resolution
+mode, or as bytes in counting mode, with a current gain reference saved with
+the data.  Also made all combinations of mode and processing be processed
+correctly by the plugin.
+
+8/3/13: Added a MODULO macro function (In 3.3).
+
+7/27/13: On JEOL, prevented different focus imposed by scope in View mode mag
+from being imposed on Focus/Record mags during a tilt series (In 3.3).
+
+7/27/13: Increased default threshold for detecting reversals in tilting to 0.2
+degress on JEOL and made TSMaxTiltError set a minimum for this threshold 
+(In 3.3).
+
+7/26/13: Fixes for JEOL EFTEM mode: different rough scale for IS calibration,
+separate beam shift cal, retain image shift when going in and out of mode,
+handle neutral values correctly (In 3.3).
+
+7/26/13: Made sure image shift reset at startup does not happen until JEOL
+state data are good (In 3.3).
+
+7/6/13: Made sure a GIF camera was selected when upper camera not marked as
+retractable (In 3.3).
+
+7/3/13: Prevented crash when insufficient memory for rotating K2 image
+(In 3.3).
+
+6/26/13: Fixed bug that made it impossible to enter an axis position in Low
+Dose panel when area is Undefined; made area undefined every time low dose is
+turned back on; disabled many computations in low dose if an image shift
+or other transformation matrix is not defined (In 3.3).
+
+6/21/13: SEM_3-3-0
+6/19/13: Made timout for DE12 and Falcon cameras not depend on binning.
+
+6/19/13: Made program try to restore original shutter setting for Eagle camera
+when exiting.
+
+6/19/13: Fixed displays of magnification when states are saved with different 
+Low Dose Record mags for multiple tilt series.
+
+6/3/13: Fixed size of dose-fractionation image displayed in SerialEM with
+counting mode binning 1 to be same as regular image.
+
+6/3/13: Fixed binning output by ImageProperties macro for K2.  Prevented small
+increments from being added to K2 exposure time for forcing dark reference.
+
+6/3/13: K2type 2 defined for Base camera; sets timing defaults and disables
+counting modes in dialog, set scaling to divide counts by 4.
+
+6/3/13: Stored binning and camera index in .mdoc file; when an image is read
+in, set binning from .mdoc, or from title of image file, before using logic
+based on size of current camera.
+
+5/31/13: Fixed crash on startup from uninitialized pointer.
+
+5/29/13: Fixed crash when reading in montage due to autosave log feature.
+
+5/28/13: Added separate neutral values for GIF mode on JEOL (untested).
+
+* 5/28/13: Made Realign to Item not change stage Z if it is run during Acquire
+at Points and rough eucentricity was run.
+
+5/28/13: Disable camera buttons during a general stage move; STOP button
+re-enables them without killing the stage move thread.
+
+5/28/13: Added stern warning when calibrating stage shift for higher mags.
+
+* 5/19/13: Made program keep scaled calibrations internally so that they work
+with the current aperture on the Titan; crossover, beam, and spot calibrations
+ask what the current aperture is; there is a menu entry for informing the
+program of the aperture; and the program reports the status of intensity
+calibrations on startup.
+
+5/19/13: Added check for duplicate property entries.
+
+5/8/13: Fixed frames saved from K2 to be full-sized, made images saved from
+SerialEM be exactly centered subsets on the saved frames, and made pixel size
+in saved frames be correct when low dose area is changing.
+
+* 5/6/13: Changed Realign to Item to do the first round with the image shift
+needed to align with final mag (incorporating the low dose View offset)
+instead of changing the target position being aligned to; this works
+much better with high View defocus and reduces confusion by leaving the
+aligned position in the middle of the display.
+
+* 5/6/13: Made setting of View shift offset take a new view shot and tell user
+to align and push set again if needed.
+
+5/5/13: Added general property NoK2SaveFolderBrowse to suppress Browse button
+when there are no filesystems mutually accessible to SerialEM and K2.
+
+* 5/5/13: Imposed all known constraints on exposure time and frame time for K2
+and made exposure time changing during tilt series obey these constraints;
+allowed scheduled changes in frame time.  Fixed treatment of drift settling.
+Fixed dose metadata to reflect constrained exposure time.
+
+4/28/13: Added properties DefaultRegularCamera and DefaultGIFCamera to define
+which camera to switch to when going out of or into EFTEM.
+
+4/27/13: Allowed software processing in K2 dose fractionation mode; it is no
+longer a problem and is appropriate.  Dose fractionation images saved from the
+plugin are scaled by 16 for super-resolution mode or by the same scaling
+applied to the image returned to SerialEM for counting mode.
+
+4/27/13: Fixed scaling of illuminated area output.
+
+4/18/13: Fixed autoloader slot numbering.
+
+4/18/13: Start a new log file when MontageAutosaveLog is on and filename does
+not match.
+
+4/18/13: Fixed dose rate output in min/max/mean if dividing by 2.
+
+4/4/13: Fixed rotation of gain references passed back by DM plugin for
+non-square camera.
+
+4/4/13: Fixed crash when going into EFTEM with "blanked removal", prevented
+filter setup from being called if camera busy. 
+
+4/3/13: Built with new FEI scripting includes, fixes autoloader calls.
+
+4/3/13: Fixed setup of file saving for a GIF K2 not marked as retractable.
+
+* 3/30/13: Added output of dose rate in electrons/unbinned pixel/sec for K2
+camera to camera setup dialog and min/max/mean report.
+
+3/29/13: Fixed bad problem with focus in low dose tilt series when a "tilt
+after reversal" has to be done and there is a View defocus offset.  Also fixed
+similar problem with "move focus center".
+
+* 3/29/13: Added a function to catch crashes (unhandled exceptions) and try
+to close valves, save log, and put up a message box.
+
+3/29/13: Added property MontageAutosaveLog to make log get autosaved just like
+in a tilt series when doing a montage.
+
+3/15/13: Fixed LoadCartridge macro command to not abort after loading.
+
+3/15/13: Fixed Save Single/to Other with background saving enabled.
+
+3/15/13: Added macro command EnterOneNumber to get a number from the user.
+
+3/15/13: Changed beam intensity calibration procedure to work with K2 as long
+as properties are set right for it.
+
+3/14/13: Made Realign to Item set binning of pieces it reads from maps to
+prevent problems correlating with a new image.
+
+3/12/13: Fixed many vulnerabilities in background saving.
+
+3/9/13: Added macro commands to report and set net image shift.
+
+3/6/13: For K2: fixed pixel size of saved frames in super-res mode, made
+lower-mag tasks not change the Trial exposure time and binning, and made
+images returned to SerialEM in dose-fractionation mode have same size as
+regular images.
+
+* 3/4/13: Implemented saving to file in a background thread; this is
+provisionally off by default and enabled with property BackgroundSaveToFile.
+
+3/1/13: Added a property FitMontageWithFullFrames so that montages fit to a
+polygon can be constrained to use full frames instead of subareas.
+
+3/1/13: Only open STEM panel if STEM camera is in active list.
+
+3/1/13: Added drift settling for K2, constrained to multiple of frame time.
+
+* 3/1/13: On Titan, illuminated area will be mapped internally to a range of
+0.1 to 0.9 if a property IlluminatedAreaLimits is entered with the approximate
+lowest and highest values.  C2 % readouts are now shown as IA um.
+
+2/28/13: Fixed crash on opening new file after Navigator Acquire opens new
+montage.
+
+2/28/13: Added option to high-quality stage montage to not blank beam during
+camera readout to provide extra pre-exposure for next area.
+
+2/7/13: Fixed crash when acquiring stage montage with IS realign and anchor.
+
+2/6/13: Allowed Calibrate-Standard LM Focus to be used to save a eucentric
+focus in nonLM mode and added macro command SetEucentricFocus to go to the
+standard focus in LM or nonLM.
+
+2/6/13: Fixed some problems with the controls for multiple gain references in
+the gain reference dialog.
+
+2/4/13: Disabled calibrate dose button in gain ref dialog if no camera gain
+available.
+
+1/31/13: Made it derive an image shift calibration by simply copying from the
+nearest mag when using PLA on the JEOL.
+
+1/28/13: Made sure drift settling is zero in parameter set when camera cannot
+pre-expose.
+
+1/28/13: Increased timeouts for K2 camera to account for dark reference in
+linear mode, or slow saving time when saving frames.
+
+1/28/13: Fixed show cross-correlation, broken by adding autocorrelation.
+
+1/24/13: Added debug output key d for electron dose failures.
+
+1/23/13: Added FindPixelSize macro command to run routine in Process menu.
+
+* 1/10/13: Added property to indicate that there is more than one camera in TIA
+so that the program will allow reselection of the current camera in MUI/TIA;
+also added properties to enter actual image sizes of FEI cameras when camera
+size is not evenly divisible by subarea size and binning.
+
+1/7/13: Made UseTrialBinningForShiftCal work in non-STEM and fixed
+documentation which had wrong name.
+
+12/13/12: Split up socket code used for K2 interface on FEI scopes so that
+more than one socket can be used.
+
+12/4/12: Stopped multiple message boxes and pathological behavior when image
+shift gets clipped on JEOL while changing low dose area or setting axis
+position.
+
+12/4/12: Added Process menu item for autocorrelation.
+
+* 11/27/12: Restored beam shift after alpha changes in low dose and added
+calibration routine so beam shift can be changed appropriately.
+
+11/27/12: Made fitting montage to polygon work with low dose View or Record.
+
+11/12/12: Improved accuracy of image location derived from mouse position.
+
+* 11/4/12: Enabled "Move Item" for a map, with confirmation required, and
+provided for a new raw stage position to be assigned if one clicks in the
+center of an image.
+
+* 11/4/12: Added a Navigator "color", NoRealign, that can be selected to keep a
+map from being used for Realign to Item.
+
+11/4/12: Fixed varying exposure time not getting fully restored at end of
+tilt series (in 3.2.3b).
+
+11/4/12: Made Navigator check whether autosave file from short-term cal exists
+before asking whether to recover it.
+
+* 11/3/12: Fixed inheritance of changes in TS params, file properties, or
+montage params to later items with the same set of params or properties, and
+put out various messages about when params are being inherited.
+
+* 11/3/12: Added sliders for black and white levels.
+
+11/2/12: Made array allocation for image acquisition and display not exceed
+the total memory limit and fixed problems with image display when arrays are
+not allocated.
+
+* 10/30/12: Added option to Align & Focus panel to do backlash in stage moves
+with mouse or when resetting image shift.
+
+* 10/30/12: Made sure full grid montage starts at defined center even if 
+stage is moved by user before starting.
+
+10/29/12: Fixed new exposure time getting lost when press Smaller or Larger in
+Autocen Setup dialog (in 3.2.3b).
+
+10/28/12: Forbid using HQ params for montage in Low Dose mode.
+
+10/28/12: Changed autoalign to evaluate correlation coefficients at
+alternative locations and at multiple peaks, instead of doing small 
+non-normalized correlations; it will always do a basic number of peaks and
+"evaluate multiple peaks" will make it evaluate many (up to 40).  Also
+returned to padding smaller area to size of larger.
+
+10/27/12: Improved non-centered trimming to start at centroid of image.
+
+* 10/27/12: Added option to do Walkup with View in Low Dose mode.
+
+* 10/24/12: Added checkbox to Navigator to show the current acquisition area
+(Record or montage area) around a marker point, and a button to add the marker
+position as a point.
+
+* 10/24/12: Stored View shift in Nav file so that it can be used in Realign
+to Item, where it is needed.  Also fixed the adjustment of the buffer image
+shift when there is a View shift in a new image.
+
+* 10/23/12: Added option to use View parameters for montage in Low Dose mode.
+
+* 10/23/12: Program and DM plugin now support K2 camera super-resolution mode,
+and dose fractionation with optional aligning of frames in DM and saving of
+frames to a stack or multiple files by the plugin.
+
+10/23/12: Cleaned up data array for error on DigiScan acquire, and when
+there is a camera timeout, so it now reports a timeout.
+
+10/20/12: Zero out pan of image after zooming back down.
+
+10/19/12: Fixed test X-ray removal from Process menu for non-square images.
+
+10/16/12: Fixed intensity to C2 scaling (broken in 3.2.0) (in 3.2.3a).
+
+10/14/12: Fixed two bugs in setting low dose View shift offset if one has
+been set already.
+
+10/8/12: Changed the way that Realign to Item evaluates correlations with
+multiple montage frames to use correlation coefficients, take account of
+whether several correlations imply equivalent positions, and weight the
+CCCs by the amount of area correlated and positional error.
+
+* 10/8/12: Made Realign to Item prefer a map at the same position over other
+maps for first round of realignment, so that it will use an anchor map in
+preference to an earlier montage.
+
+* 10/8/12: Added a routine to correct for X/Y backlash and return an adjusted
+stage position.  Navigator now keeps track of backlash for all items with
+stage in backlash-corrected state and whether two maps are at essentially the
+same position.  It will automatically run the backlash routine if needed when
+doing an anchor map, and either ask or automatically run it when a new map
+is added bigger than a set size.  All items considered at the same position
+as the current item are adjusted.
+
+10/8/12: Changed defaults for stage calibration and stage montage backlash
+from 3 to 5 microns for FEI scopes.
+
+10/5/12: Add word "rate" to dose calibration message and, for K2, output
+the dose rate per unbinned pixel.
+
+* 9/20/12: Made realign to item go to item's Z value and stay there, not
+go to the Z of map being aligned to (in 3.2.3a).
+
+* 9/20/12: Stored the defocus offset when a View mode image is saved as a map
+and applied this when realigning to it.
+
+9/20/12: Got K2 counting mode working properly and made program scale up 
+counting mode images to have same gain as linear mode.
+
+9/12/12: Implemented alternate pathway to DigitalMicrograph via sockets and
+changed camera code so that connections to one DM via COM, one DM via socket,
+and AMT cameras can co-exist.
+
+9/12/12: SEM_3-2-3
+9/10/12: Fixed uninitialized variable in insertion/retraction thread.
+
+9/10/12: Fixed multichannel STEM acquisition.
+
+6/28/12: Fixed to test insertion state for any camera with retractable
+property set.
+
+6/23/12: Added features for selecting counting mode with K2 camera.
+
+6/23/12: Set up structure for microscope plugin.
+
+6/5/12: SEM_3-2-2
+6/5/12: Fixed Navigator overwriting montage parameters of a remaining open
+file when opening new file, which made realign to item fail for second tilt
+series if medium and high mag map files were open when starting.
+
+6/5/12: Fixed problem with existing montage file being reopened with wrong
+overlap.
+
+6/1/12: SEM_3-2-1
+6/1/12: Enabled non-centered trimming in second round of Realign to Item,
+which helps some when there is a grid bar in the field.  Added backlash
+correction for Go To Marker when the marker is on a montage.
+
+5/29/12: Fixed wrong move in Realign to item for second round when first round
+ends up on different piece than intended; fixed stage position assigned by
+Navigator when a stage montage map made with IS realign is started with
+nonzero image shift; fixed imposed shift in change of 5/14/12.
+
+5/27/12: Added a custom regsvr32 for registering 32-bit plugins with GMS2;
+the system regvsr32 hangs in Windows 7.
+
+5/25/12: Added one-second delay between opening film shutter and beam blanker
+in special film exposure.
+
+5/25/12: Fixed crash when doing Navigator move to point marked on a
+single-frame map.
+
+5/24/12: Added property MakeFEIerrorBeTimeout to convert a COM error from FEI
+camera into a timeout that can be retried; the conversion (added about
+4/25/12) will no longer happen automatically.
+
+5/24/12: Fixed problem with focus ramper being called when calibrating camera
+timing with an FEI camera (which shouldn't be done anyway).
+
+5/24/12: Fixed exposure time shown in initial message box for camera timing
+calibration.
+
+5/24/12: Fixed use of DetectorName for giving FEI camera a separate name.
+
+5/24/12: Fixed initial reset image shift on JEOL to take account of neutral
+value again.
+
+5/18/20: Switched deflector used for STEM image shift to CLA1 on JEOL and
+added property JeolUseCLA2forSTEM to use CLA2 instead.
+
+5/14/12: When Realign to Item shifts to target with image shift, made it give
+report and shift the image too.
+
+5/10/12: Fixed return values from autoloader commands and made
+ReportSlotStatus not call function to see if autoloader is available.
+
+5/7/12: SEM_3-2-0
+*** Oct 2011 - April 2012: STEM tomography supported in SerialEM.
+
+5/7/12: Added macro commands for working with FEI autoloader.
+
+5/2/12: Added ability to name an FEI camera something other than the required
+name by entering the required name in a DetectorName property.
+
+5/2/12: Spot size and intensity for new map now come from values when image
+was taken instead of from current scope values.
+
+5/2/12: Made short-term calibrations be saved in system path location (where
+calibrations come from), not in common location.
+
+5/1/12: Made minor changes for Falcon cameras.
+
+* 5/1/12: Montaging will now store the stage error of each piece when
+realigning with image shift.  Moving to a navigator point marked on a montage,
+it will add an interpolated stage error.  Realign to item will also apply the
+exact stage error when going to a piece center and an interpolated error when
+going to the target position.
+
+5/1/12: Fixed overview display from a 1x1 montage.
+
+5/1/12: When montaging using realign with image shift, it will no longer nag
+about calibrating image shift if a 2.5% error in image shift would produce
+less than a 10% error in overlap.
+
+4/30/12: Fixed correction for shrinkage in realign to item.
+
+4/30/12: In Refine ZLP, stopped it from asking about starting at a loss
+setting when zero-loss is checked.
+
+4/25/12: Added spot size and camera number to second title line of file.
+
+* 4/23/12: When moving to a Navigator point that was marked on a montage, it
+will now use the same backlash correction used when taking the montage.
+
+4/23/12: Fixed autoalign when called for montage realign with image shift,
+broken by trimming/padding changes on 3/19.
+ 
+4/20/12: Made single-item queries come out in middle of SerialEM window not on
+first monitor.
+
+4/17/12: Fixed SEMRunLog.txt being written up one level.
+
+4/13/12: When using special film exposure, stopped beam from being unblanked
+early on when the camera is inserted (a good thing) and switched to using the
+beam blanker for the actual exposure when there is no pre-exposure (maybe not
+a good thing).
+
+4/13/12: Made an install.bat to clean up old files, copy just needed ones, and
+register the right plugin for the GMS version.
+
+4/12/12: Added ability to set a series of exposure times for extra Records
+instead of just one.
+
+* 4/12/12: Added property MaximumTiltAngle which defaults to 79.9; made Reverse
+Tilt not exceed this angle; limited tilt series range to this angle; when TSC
+detects that insufficient or no backlash correction occurred, it now calls the
+tilt after stage move routine with mag suitable for doing Reverse Tilt,
+instead of using "low mag tracking" that the user may not have set a mag for.
+
+4/12/12: Made several errors in camera controller not put up message boxes
+when doing multiple TS, including deferred message at end of acquire.
+
+* 3/29/12: Made line-drawing with Shift - left mouse drag report angle as well;
+changed length and box size output to be microns when >= 1 um.
+
+3/29/12: Fixed filter changes being lost in some cases, in particular when
+going out of low dose for Realign to Item on JEOL.
+
+3/29/12: Added NormalizeLenses macro command.
+
+3/27/12: Really fixed reading in of version 1.43 Navigator files and writing
+of 1.45 files.
+
+3/25/12: Added optional argument to AutoFocus macro command to focus with View
+in Low Dose.
+
+* 3/20/12: Added option to control whether tilt series stops for confirmation
+before retaking a Record in low dose mode.
+
+3/19/12: Switched Autoalign to trimming a larger area to match a smaller one
+instead of padding a small one and correlating with a larger one.  Made
+trimming in Autoalign able to trim to a non-centered area if there is no
+stretching between the two images.
+
+* 3/19/12: Added correction for shrinkage in first round of realign to item.
+
+3/12/12: Made autofocus routine go to low dose focus area before saving beam
+tilt value when beam tilt shifts are being set in low dose.
+
+2/28/12: Made it set new Record state parameters when a low dose stored state
+is selected while in Low Dose record mode.
+
+* 2/7/12: Made it set tool panel positions when loading a settings file.
+
+2/6/12: Fixed several problems with going to a mag other than that of the
+current low dose area on the JEOL that could make it impose a large image
+shift when PLA is used for IS.
+
+* 2/3/12: Made it draw the rectangle around a map as a fixed rectangle around
+the center instead of adjusting the coordinates of each corner independently.
+
+2/3/12: Fixed problem with zoom setting when the first image displayed is a
+loaded map.
+
+2/1/12: Made the test for needing low mag tracking after tilt reversal depend
+on the maximum tilt error so this tracking won't happen on JEOLs.
+
+2/1/12: Fixed TSC closing values every other time when one-loop is done
+repeatedly after end of series.
+
+2/1/12: Clarified that crossover calibration should be done at eucentric
+focus.
+
+* 2/1/12: Made it give an error if fraction of pixels truncated when saving
+unsigned data to a signed file with truncation is greater than a limit (1% by
+default).  Also documented that the default mode can be set to 6.
+
+1/23/12: Kept state dialog from trying to set imaging state with an
+unavailable camera.
+
+1/22/12: Fixed problem with skip autofocus being ignored if set after
+series starts and series is resumed other than through setup dialog.
+
+1/22/12: Fixed problem with adding extra record output after series starts,
+made it roll original Record back into A after saving an extra Record.
+
+1/22/12: Made it close the right file, not the current, when terminating TS.
+
+1/22/12: Made TSC ignore irrelevant tilt series variations (e.g., filter
+changes when there is no filter) and display NA for them in the dialog table.
+
+* 1/20/12: Made Tab work for completion in macro editor.
+
+1/19/12: Fixed problem with montage dialog changing frame sizes for an
+existing file, which crashed when reading from file, made it disable cameras
+when the frame sizes can't be achieved, and made it impossible to take
+new montage with such a camera.
+
+1/18/12: Fixed change in axis positions when turning EFTEM on or off
+with Low dose on.
+
+1/17/12: Made pixel size finding routine bin larger images to 1024 since the
+analysis does not work well with larger images.
+
+1/15/12: Fixed drawing of green cross after a box has been drawn.
+
+* 1/13/12: Added Navigator menu entry to convert a set of corner points to a
+polygon.
+
+12/28/11: Fixed assessment of sufficient counts during tilt series when the
+Focus area is shifted far away from the center of the Record area.
+
+12/15/11: Made autofocus clear its required mean count value after failing.
+
+12/9/11: Detected when trying to make a map from an image converted to bytes
+and made a message with instructions on how to fix scaling problems; also
+attached map stage coordinates to image when reading in as map, to make it
+easier to recreate an accidentally deleted map.
+
+12/4/11: Made protection against using peak at 0,0 due to fixed pattern noise
+work when calibrating and checking autofocus.
+
+12/1/11: Fixed closing of beam shutter after exposure in special film 
+exposure command.
+
+11/30/11: Made distortion pairs not apply image shift when aligning pairs.
+
+11/16/11: Fixed IncPercentC2 macro command.
+
+* 11/14/11: Added ability to shift beam with Shift arrow keys, change increment
+with < and >.
+
+10/28/11: Changed to handle insertion of cameras other than Gatans.
+
+10/28/11: Incorporated FasTEM code and converted to single executable and
+build for all microscopes.
+
+10/28/11: Fixed getting mean for testing montage piece having sufficient
+counts with unsigned images.
+
+10/20/11: Added macro command to turn low dose on and off.
+
+10/26/11: Fixed autofocus drift nm/sec output in verbose mode.
+
+10/16/11: Split realign to item disparity into two parts to adjust better for
+stage variability between center and edge of piece.
+
+10/16/11: Undo change to realign to item on 8/10/11 - it throws things off
+worse to not revise the disparity.  Fix bug in how it decides whether to
+assign a recent disparity to a new map.
+
+* 10/9/11: Added antialias filtering as in 3dmod when zoomed below 0.8.
+
+10/9/11: Added property to ignore a subset of Gatan cameras.
+
+* 10/9/11: The program will now read DM version 4 files, and display DM files
+right-side up.
+
+10/6/11: SEM_3-1-1
+* 10/5/11: Provided versions of DigitalMicrograph plugin for GMS 2.
+
+10/5/11: Made StageBusy check stage status for real and not rely on event
+status every 4 seconds on JEOL.
+
+10/3/11: Fixed problem with tilt angle getting set wrong if One-Step is used
+along with Resume at start of series.
+
+* 10/2/11: Added macro command to switch cameras.
+
+* 9/30/11: Removed option for periodic realign to piece with stage shift 
+in montage.
+
+9/30/11: Fixed montage with realignment going to wrong place on second piece.
+
+9/30/11: Fixed getting name for anchor realignment image when using an .idoc.
+
+9/30/11: Fixed crash when anchor realignment image is not found.
+
+9/5/11: Made a new camera control set when taking anchor realignment image in
+montage.
+
+* 8/10/11: In realign to item, no longer revise estimated stage disparity in
+second stage of alignment because an error in stage calibration will throw off
+the estimate from location not centered on a piece.
+
+6/20/11: Disabled "SingleTecnai" property which is obsolete and broken.
+
+6/17/11: Fixed problem with realign to item when user has no buffer rolling
+(in 3.0).
+
+6/16/11: In setting up full montage, limited the user's limits by the system
+limits, kept corners within limits, and tested for sufficient area left within
+limits.
+
+6/15/11: Added ability to set additional beam tilt as well as shift for Trial
+and Focus areas if property LowDoseBeamTiltShifts is set.
+
+6/15/11: Fixed montage reading to not move stage to montage center at end.
+
+6/15/11: When it fails to get vaccuum reading, it stops trying instead of
+continuing to screw up the update.
+
+5/19/11: In Low Dose, set new filter settings immediately on JEOL and then set
+intensity to protect against intensity change imposed by scope.
+
+5/18/11: Made TS Controller do a debug dump when a timeout occurrs.
+
+5/17/11: Stopped walkup from crashing program if image shift clipping error
+occurs.
+
+5/17/11: Tripled wait for stage ready in general stage move routine, increased
+timeouts when tilting in tilt series.
+
+4/26/11: Fixed uninitialized value of maximum image shift in realign to item
+(in 3.0).
+
+4/25/11: Fixed problem with exposure times being set to zero when changing
+exposure for intensity and limit to current value selected (in 3.0).
+
+4/21/11: Made realign to item pick map where target is most interior if
+two overlapping maps are otherwise equivalent.
+
+* 4/8/11: Implemented alignment to adjacent montage pieces using image shift
+instead of stage shift, with alignment occurring on every piece.  This can be
+used with or without an option to run the montage from the center outward and
+have an anchor image stored at the center.
+
+4/8/11: Added a property to scale the image shift delay, and a Calibrate menu
+item for setting the scaling in order to assess the needed value.
+
+* 4/8/11: Made non-verbose autofocus output include drift.
+
+* 4/7/11: Made the default be to create .mdoc files for montages.
+
+4/5/11: Fixed return values when getting tilt angle or stage position from
+an image buffer that lacks them (in 3.0).
+
+4/5/11: Fixed crash when taking prescans.
+
+* 4/4/11: Made it possible to resume and overwrite pieces in a completely done
+montage.
+
+4/4/11: Fixed filling of overview image when resuming.
+
+3/28/11: Enhanced test for a montage piece inside polygon to sample along sides
+of piece.
+
+3/4/11: Updated table and marked navigator data as changed when polygon
+gets its center updated with center for montage (in 3.0).
+
+3/4/11: Fixed several problems When realigning to previous piece in montage
+and added a test for stage at correct location (in 3.0).
+
+3/4/11: Fixed test for montage coordinates in a file where the starting
+coordinate is not zero (in 3.0).
+
+* 3/2/11: Added property UseIlluminatedAreaForC2 so that intensity control will
+work on Titan Krios.  Also added macro commands to set and read illuminated
+area when this property is not set.
+
+2/28/11: Fixed TS controller requiring an intensity calibration when varying
+exposure instead of intensity (in 3.0).
+
+2/17/11: Fixed output of Montage = 1 in .idoc file for large montage (in 3.0)
+
+2/15/11: Fixed allocation of header space for very large montages (in 3.0).
+
+2/15/11: Fixed crash bug if adding a Navigator item with collapse groups on
+and fixed using backspace to delete points with collapse on (in 3.0).
+
+* 2/14/11: Added SetCameraArea macro command.
+
+2/14/11: Added target defocus to .mdoc output.
+
+2/7/11: Fixed gain normalization for F416 with flipping around Y axis.
+
+2/4/11: Fixed SMTP port entry, which needed to be byte-swapped (in 3.0)
+
+2/1/11: Fixed radio buttons for area to show with screen down (in 3.0)
+
+1/28/11: Fixed crash bug if last navigator item is deleted with collapse 
+groups on (in 3.0)
+
+1/20/11: Fixed bug that ruined montage alignment with very sloppy off.
+
+1/12/11: Fixed tilt range assessor to not compare intensities of first tilt
+picture and zero-deg image unless image type is the same (in 3.0).
+
+1/3/11: Fixed Navigator test for valid macro when there are calls (in 3.0).
+
+* 1/2/10: Many changes that should improve alignment of montage pieces in maps,
+especially with very sloppy option on: adopted latest changes in Blendmont for
+computing CCC's; used robust fitting to avoid having alignment thrown off by
+outliers; also skipped edges based on extremely low CCC values; stored images
+for overview in untiled form and tiled them into place based on the alignment
+solution.  Also, if a .mdoc file is opened, edge displacements are saved there
+and can be used to tile read-in pieces directly into the correct location
+based on global solution.
+
+12/22/10: Fixed bug that crashed program or led to non-movement of montaging
+after switching Very Sloppy option on or off (in 3.0).
+
+12/19/10: Switched to build against static libraries libtiff 2.9.4, libjpeg
+8b, and zlib 1.2.5.
+
+* 12/19/10: Added ability to save a pair of trial images from opposite 
+low dose areas as "extra Records", with adjustable binning.
+
+12/19/10: Fixed setting of spot size for extra Records and file numbers in
+error messages (in 3.0).
+
+12/18/10: Grid of points can be added inside a map as well as polygon.
+
+12/18/10: Added macro command to set standardized focus.
+
+12/18/10: Navigator stops the acquisition if last macro run ended with an
+abort rather than a user end.
+
+12/18/10: Made Navigator test for a valid macro before starting acquires 
+(in 3.0).
+
+12/18/10: Made Navigator turn off acquire checkbox when current item's acquire
+is done (in 3.0).
+
+* 12/12/10: Added completion of macro commands in editor using ` key (above
+tab).
+
+12/11/10: Added a structure for SerialEM to load plugins, and for plugins to
+have functions callable from a macro.
+
+12/9/10: Fixed computation of largest image shift needed for montage (in 3.0).
+
+12/8/10: SEM_3-1-0 and branch to SEM_3-0-0 (branch tagged as SEM-0-00)
+12/6/10: Fixed pixel size output from ImageProperties command.
+
+* 12/3/10: Made Min/max/mean do subarea if a box is drawn on image.
+
+* 12/3/10: Added a policy option to allow automatic termination upon 3 dim
+images when otherwise stopping for errors.
+
+12/2/10: Stopped syncing of parameters (target defocus, etc) between TSC and
+other program modules when setting up batch series.
+
+12/2/10: Fixed importing of angles from range assessment to preserve the
+existing order.  Added Swap button to swap starting and ending angles.
+
+12/2/10: Made it able to save floating point images to files.
+
+12/1/10: Eliminated a bad assumption when getting focus value on JEOL.
+
+11/30/10: Fixed problem with it not taking a pending shot after camera
+removal upon switching into EFTEM mode.
+
+* 11/29/10: Added ability to take low-dose trial/focus images from opposite
+side of record area and macro commands for taking such images and
+autofocusing.
+ 
+11/29/10: Made tilt range routine stop if first picture at tilt is much less
+intense than the zero-degree picture.
+
+11/29/10: Fixed computation of lost fractions in tilt series, which would be
+way off in one direction with rotations near 45 degrees.
+
+11/23/10: SerialEM 3.0 beta 1
+11/23/10: Fixed blue drawing over top of control panel when it is floated and
+user has XP style.
+
+11/23/10: Made TS Controller test for termination due to error at top of
+action loop to prevent runaway actions.
+
+11/23/10: Fixed missing Go and One Loop buttons in tilt series setup when
+stopped while running from Navigator.
+
+11/23/10: Fixed changing defocus when tilt series is changing the target.
+
+11/23/10: Stop autofocusing properly when an error occurs.
+
+11/23/10: Retain extra data when converting map to bytes.
+
+11/23/10: Fixed JeolHasNoAlpha property so 1 instead of 0 means no alpha.
+
+* 11/23/10: Changing lowdose view defocus offset will now change defocus if
+already in view area.
+
+11/22/10: SerialEM 3.0 alpha 3
+11/22/10: Added macro commands to make a directory and to allow overwriting
+an existing file when opening a new one.
+
+11/22/10: Converted to HTML help in a .chm file.
+
+11/19/10: Added a YesNoBox macro command to get a yes/no answer as a value.
+
+* 11/19/10: Report min/max/mean of image after using Acquire button in camera
+setup. 
+
+11/18/10: Made camera controller check size of Gatan and Tietz cameras against
+size in properties file and issue warnings about a mismatch.
+
+* 11/18/10: Added pixel size to Process - min/max/mean output.
+
+11/18/10: Made a mag derive its rotation by relative rotation from the nearest
+calibrated mag, not the one below.
+
+11/18/10: Fixed the zeroing of image shift during beam autocenter routine to
+account for any applied offsets, and made it not happen in low dose mode.
+Also prevented Trial intensity from being changed if continuous update on.
+
+* 11/18/10: Added persistent variables, compound IF statements with AND and OR
+operators, and ELSEIF statements to macros.
+
+11/16/10: The cross-correlation coefficient of unfiltered autofocus images
+is now computed and reported in focusing Verbose output.
+
+11/14/10: SerialEM 3.0 alpha 2
+11/13/10: Prevented montage setup and gain reference policy dialogs from
+opening during image acquisition.
+
+11/13/10: Fixed bug in computation of expected gain reference size which was
+giving errors with binning 3 and/or 6.
+
+11/10/10: No longer apply image shift on scope if a processed image is mouse
+shifted.
+
+11/10/10: Based image shift when mouse shifting on camera image was taken on,
+not current camera.
+
+* 11/5/10: Added a way to calibrate the stretch in the stage coordinate system
+and made the transformations based on registration points and alignment of
+rotated images correct for this stretch.
+
+11/5/10: Added property containing a transformation so that rotation alignment
+could correct for imaging stretch.
+
+11/5/10: Fixed backup tilt series, which made it impossible to go on.
+
+11/4/10: Fixed problem with eucentricity tiltup starting before image shift
+reset routine fully done.
+
+* 11/3/10: Added ability to schedule changes in exposure time, drift settling,
+defocus target, or filter settings at defined angles during tilt series;
+changes can have fixed values or vary linearly between specified points.
+
+* 11/3/10: Added ability to modify exposure time instead of beam intensity
+during tilt series.
+
+* 11/2/10: Added an image cropping macro command and a Process menu item; area
+to crop is selected with drawn line or box (Shift or Ctrl-Shift left mouse).
+
+* 11/1/10: Made C key work to toggle corner point in Navigator.
+
+11/1/10: Fixed filter settings not going into log for omega filter.
+
+10/29/10: Added a periodic Read from vacuum gauge if status is invalid -
+needed for Tecnai 4.0.
+
+10/26/10: Fixed Low Dose Set View Shift being disabled for camera 0.
+
+10/25/10: Fixed deleting of dark references for 16-bit cameras when Divide by
+2 is toggled.
+
+* 10/25/10: Implemented interpolation of dark references so that small changes
+in exposure time do not require a new dark reference.
+
+* 10/22/10: Handled Tietz geometry settings correctly for non-centered subareas
+and handled strange restrictions on coordinates for F416/F816 cameras.
+
+10/22/10: Prevented double counting of pieces on skip lists, which was
+screwing up reading in montages too.
+
+10/19/10: Added procedure for aligning an image to a map with rotation and
+then transforming points into a new registration.
+
+* 10/17/10: Improved beam centering routine by changing fits to beam edges to
+use weighting by the image gradient and robust weighting.
+
+10/16/10: Fixed disabling of "Restore scope state" button in Nav Acquire when
+doing tilt series.
+
+10/16/10: Changed label from IS to PLA in scope status panel for JEOL scopes
+using PLA for image shift.
+
+10/14/10: Fixed disabling of shift-related buttons in montage panel with
+skip correlations on but HQ not.
+
+10/14/10: SerialEM 3.0 alpha executables available with these changes:
+
+Added Bigger/Smaller buttons to Beam Autocenter Setup and solved some
+problems with low dose.
+
+* Added ability to read/write a metadata file in autodoc format and made the
+associated data structures be the primary storage for this metadata; this now
+allows montages > 65536 pixels.
+
+Changed default extension for the autodoc file when making a TIFF series from
+.adoc to .idoc, and made all metadata, not just the items checked for extended
+header, be store in .idoc and .mdoc files.
+
+Made Camera & Macro Tools panel modify End button appropriately in various
+cases.
+
+* Added size output to camera setup dialog
+
+* Added tilt series range assessment dialog 
+
+Added check for duplicate images when montaging with Eagle camera
+
+Removed limits on number of montage pieces
+
+* The column/gun valves will be closed automatically when most message boxes
+have been up for a certain time; this behavior is controlled in the Tilt
+Series Batch Policies dialog.
+
+* An image shift can now be specified for the View area in Low Dose.
+
+* The axis between record and Trial/Focus in Low Dose can be rotated away from
+the tilt axis.
+
+* Added ability to schedule files to be opened when acquiring certain Navigator
+items, and incorporated the previous scheduling of files to be opened for
+groups into this capability.  A new montage can be fit to a polygon when
+defining a file to be opened.
+
+* Tilt series are now run from the Navigator.  All file and tilt series
+parameters are set in advance in the Navigator.  Tilt series can no longer be
+run from a macro, but it is possible to run a macro before a tilt series
+started from the Navigator.  Microscope and image acquisition states can also
+be set to be asserted for a particular tilt series.
+
+There is a menu item to list the files to be opened, tilt series to be run,
+and states to be set when doing Navigator Acquire.
+
+Rearranged the order of preliminary actions in Navigator Acquire.
+
+Output a message when Navigator Acquire saves an image.
+
+Made Navigator Acquire check in advance that suitable maps exist when Realign
+to Item is checked.
+
+New log files can be opened automatically when doing multiple tilt series, as
+controlled by option in Batch Policies dialog.
+
+* Implemented an imaging state dialog for saving and setting imaging states, 
+it can also be used to set map acquire state and check a state scheduled to be
+set during Navigator acquire.  These states are stored in user settings and
+the stock state file has been eliminated.
+
+* Added Update Z button to Navigator.
+
+* Added button to make it easy to acquire a medium-mag map at a location to be
+acquired, referred to as an anchor map.
+
+A grid of points can now be set up to be accessed in an order away from the
+low dose focus area instead of in a zigzag pattern.
+
+An Navigator autosave file left over from a crash will now be detected and can
+be selected for use. 
+
+* Added ability to summarize groups of points in Navigator list box and to do
+some operations on summarized groups.
+
+Navigator acquire has option to autofocus only on first item of group.
+
+Made cooker and beam autocenter startup use controlled message boxes, and made
+Navigator Acquire stop if they return with error.
+
+Cooking routine turns off low dose and restarts it and manages intensity
+correctly.
+
+* Changed Tilt Series setup dialog to present one section at a time in
+sequence, or left or right half, or traditional full dialog.
+
+* Added ability to have pixel and intensity matching when switching between
+nonGIF cameras, similar to when switching between GIF and nonGIF.
+
+Stopped program from opening minimized if it was closed minimized.
+
+Added warning for wrong gain reference name.
+
+Allowed scale bars on all but processed and FFT images.
+
+Defaulted JeolPostMagDelay to 1250 msec when updating by event, doubled the
+delay for mag mode changes.
+
+Sped up mouse shifting on JEOL when not updating by events.
+
+* Added ability to draw a line to measure distances (Shift - left click and
+drag)
+
+Increased time allowed for post-action stage move 2.5-fold.
+
+* Made colored indicator of whether intensity is in calibrated range,
+controlled by property ShowIntensityCalStatus
+
+Fixed bug in camera timing routine with Tietz camera.
+
+* Made map buffers keep separate pans just as they keep separate zooms.
+
+Added a way to set separate defaults for whether to make a metadata autodoc
+or a series of TIFFs when montaging versus opeing a single-frame file.
+
+* Renamed Save to Other to Save Single when there is no open file and enabled
+it to be used always to save to a single-image file.
+
+* Added option to use trial area images in low dose for refining eucentricity.
+
+Prevented Use Trial In LD setting for reset shift and realign from affecting
+parameter set used when not in low dose.
+
+* Montage improvements: added geometry management in dialog to eliminate empty
+space at top an open a new section of parameters for high-quality stage
+montages.  There are options for focusing the center of a block of pieces,
+realigning to an existing piece periodically and at the start of a column,
+setting a delay time after stage moves, and skipping correlations.  Added a
+text box for a minimum overlap in microns for stage montage.  Added a reset
+button for the overlap.
+
+Rationalized the treatment of image shift limits when setting up montages:
+properties NavigatorMaxMontageIS and NavigatorMaxLMMontageIS have new defaults
+of 7 and 35, they are hard limits for using image instead of stage shift when
+fitting to a polygon, and they trigger a message box to user otherwise asking
+if they want to use stage shift.
+
+7/14/10: Made autofocus go to standard LM focus in LM.
+
+* 7/10/10: Made program able to send email through an SMTP server (using code
+from Matthias Brunner).  Added a macro command for sending an email, an option
+in the Navigator Acquire dialog to send one at the end of acquisition, and an
+option in the Tilt Series menu to send one when tilt series ends or stops.
+
+* 7/9/10: Added option in Process menu to make a color overlay from two or
+three images, and an option in the Navigator Import dialog to make a map that
+is a color overlay of two imported maps.
+
+* 7/4/10: Made program able to read and write color (RGB) images in TIFF or MRC
+files.
+
+9/7/10: SEM_2-8-10
+9/7/10: Incorporated various small fixes introduced during development of 3.0:
+
+Fixed problem with automatic pixel size or mag matching being on when there is
+no non-GIF camera.
+
+Made scope stay in EFTEM mode if screen down and setting up autocenter beam.
+
+Disabled post-actions properly for Eagle camera.
+
+Made eucentricity wait for stage ready before restoring tilt angle on Stop.
+
+Made double stage moves in tasks wait for stage ready and stop other
+processing properly if it doesn't become ready.
+
+Fixed montage not doing correlations with more than 15 pieces (limit is 256).
+Disabled various montage panel buttons when number of pieces is above limit
+for correlations.
+
+Rebalanced shifts in low dose after defining area if balanced shifts on.
+
+Fixed computation of area separation in low dose, which was really bad for
+oblique axis angles.
+
+Disabled some buttons in Navigator during tasks and acquires.
+
+Prevented beam calibration from going through crossover and added messages
+about which side of crossover and whether existing cals will be replaced.
+
+7/12/10: Fixed the limiting of settling time after large tilts that was
+actually made worse by "fix" on 4/3/09, and fixed some of the delay time logic
+in tasks like walkup it will run as fast with post-actions as without.
+
+7/6/10: Switched to a version of TIFF libraries that can read TIFFs with JPEG
+compression, but it still cannot write with JPEG compression.
+
+7/4/10: Fixed crash when the first map read in is an imported TIFF.
+
+7/2/10: SEM_2-8-9
+7/2/10: Added option in Image Display panel to draw big centered cross all the
+time.
+
+5/25/10: Use dynamic limits for validating montage dialog size/overlap.
+
+4/23/10: Changed DM plugin to close lower shutter when opening beam shutter
+for extended pre-exposure to prevent camera exposure/saturation.
+
+4/9/10: Fixed warning messages about montage errors.
+
+4/8/10: Fixed crash bug rotating a large map.
+
+4/8/10: Fixed warning from autocenter beam and made it zero image shift for
+the beam-centering picture.
+
+4/8/10: Derated the montage error messages by square of cosine of tilt angle.
+
+3/29/10: Output a grid angle in pixel size finding routine.
+
+3/29/10: Fixed bugs in importing a map and showing cross-correlation that only
+showed up in debug mode.
+
+3/29/10: Added menu option and macro command to provide echoing of each macro
+line as it is encountered.
+
+3/29/10: Added macro command OpenOldFile to open an existing MRC or Adoc file.
+
+3/27/10: Added macro commands SetMagAndIntensity and ChangeMagAndIntensity to
+change magnification and change intensity to keep same screen brightness.
+
+3/26/10: Added menu option for continuous saving into log file for each line 
+of output to log window.
+
+2/22/10: SEM_2-8-8
+1/29/10: Disabled automatic retry of image acquisition on timeout (could be
+easily re-enabled with property if needed).  Deferred all message boxes from
+within image acquisition threads to final cleanup to avoid timeouts and
+lockups.
+
+1/29/10: Added properties GainRefXsizeEven and GainRefYsizeEven to indicate
+that references need to be taken at even sizes.
+
+1/29/10: Fixed many problems with gain references when there is no binning 1.
+
+1/17/10: Support for Direct Electron camera LC1100 (which was added at NCMIR)
+now includes pre-exposure control.
+
+12/10/09: Added ability to set a relative rotation between non-contiguous mags
+with property SpecialRelativeRotation.
+
+12/10/09: Fixed output of pixel size measurement and added camera number.
+
+12/10/09: Added macro for image shift calibration and camera number to output.
+
+* 12/10/09: Added property RefineZLPRedoInLowDose to control whether refine ZLP
+tries at multiple offsets in low dose.
+
+12/10/09: Made it test the Jeol scope directly before giving up when waiting
+for stage ready.
+
+12/1/09: Added ability to compensate for drift during an exposure, controlled
+by a macro call.
+
+9/7/09: Increased allowed number of montage panels but set a limit to the
+number where correlations would be done.
+
+8/13/09: Made low dose areas come out in different colors (is this good?)
+
+8/13/09: Fixed crash after trying to import a montage.
+
+8/12/09: SEM_2-8-7
+8/12/09: Added ability to analyze waffle grating automatically to determine
+pixel size, available in Process menu.
+
+8/4/09: Added a property CameraTimeoutFactor to increase timeouts for image
+acquisition.
+
+7/5/09: Modified plugin to DM to adapt to all possible modifications of the
+image (i.e., flipping and rotation).
+
+6/19/09: Added macro command to shift Navigator items by alignment shift of
+image in buffer A.
+
+6/18/09: Added some diagnostic output for a COM error during the scope update
+routine.
+
+6/9/09: Added TietzImageGeometry property for flipping or rotating image.
+
+6/9/09: Made spot size change before mag when changing low dose to avoid
+misleading event on JEOL.
+
+* 5/29/09: Changed sign of energy shift when it needs to be used in place of
+spectrum offset with GIF on JEOL.
+
+5/15/09: Issued proper timeout message from tilt series controller.
+
+5/15/09: Increased wait for stage to be ready in stage move call to account 
+for post-mag change delay.
+
+5/7/09: Added property to ignore short-term calibrations.
+
+5/7/09: Fixed problem with derived pixel size being used when calibrating
+from scratch.
+
+4/27/09: Added property to control whether Tietz camera beam blank mode is
+restored after each shot.
+
+4/22/09: SEM_2-8-6
+4/19/09: Montage overview read from file is now copied to the read buffer.
+
+* 4/19/09: Made free-standing dialog for reading sections from the current file
+with previous and next buttons.
+
+4/18/09: Fixed Copy from another camera button in camera setup dialog.
+
+* 4/18/09: Added new file type, an "autodoc" that describes a series of
+numbered TIFF files.  It can be used interchangeably with MRC stacks files.
+
+4/10/09: Implemented timeouts for all image acquisitions in the camera
+controller, and allowed for two retries upon timeout.
+
+* 4/4/09: Added button to the camera setup dialog to swap X and Y location and
+size.
+
+4/4/09: Made stage montage able to move stage during camera readout, including
+moves requiring backlash correction, and fixed backlash logic for montages
+that skip pieces at the start of a column.
+
+4/3/09: Added properties to set the initial number of pieces and initial 
+fractional overlap that show up in the montage setup dialog.
+
+4/3/09: Added a montage parameter settable by macro to skip the correlations
+for aligning pieces.
+
+4/3/09: Limited the increase in delay time after tilting by large angles when
+basic delay is large.
+
+4/3/09: Fixed images from Eagle camera always being divided by 2.
+
+4/1/09: Fixed TIFF's being read in upside down.
+
+* 4/1/09: Added ability to save single images to TIFF files with LZW or ZIP
+compression.
+
+* 4/1/09: Made it possible to change frame size and number of frames of a
+montage until frames are actually written to file, even after a prescan.
+
+4/1/09: Added a property LimitMontageToUsable to limit montage frames to the
+usable area of the camera.
+
+3/10/09: Added macro command ImageProperties to report size and other 
+properties
+
+2/21/09: Made exposure adjustment for changing binning in image/stage shift
+calibration pictures account for dead time and minimum exposure.
+
+2/20/09: Added a NoScope property to allow graceful startup when there is no
+scope; it prevents image shifts in autoalign and clear alignment.
+
+2/19/09: Made it drop the screen when switching to a sidemount camera if lower
+cameras might be inserted or are not retractable.
+
+1/24/09: SEM_2-8-5
+1/23/09: Fixed problem reading version 1.41 Navigator files (created by
+SerialEM 2.8.3 or 2.8.4).
+
+1/22/09: Stopped going to Record area in low dose when reading a montage in.
+
+1/22/09: Prevented read-in operations when an image is being acquired.
+
+1/14/09: Stopped updating exposure number in special film exposure, it seems
+to be done automatically.
+
+1/8/09: SEM_2-8-4
+* 12/22/08: Switched overlap zone cross-correlations when montaging from
+tapering inside to smoothing and tapering outside, and applied filtering to
+both images being used for computing correlation coefficients in real-space;
+both changes will make pieces align somewhat better.
+
+12/22/08: Stop drawing wrong scale bars on read-in images.
+
+* 12/22/08: Fixed initialization problem that will crash program or give weird
+result if reading from a map file that is not open.
+
+12/18/08: Fixed the routine that gets a control set for tasks to adjust
+for dead time and enforce minimum task exposure.
+
+12/13/08: Fixed the name for accessing shared data from Tietz F816.
+
+12/11/08: Changed the limits for the left, right etc text boxes in camera setup
+from 4096 to the actual camera size.
+
+12/3/08: SEM_2-8-3
+* 11/27/08: Added macro commands and checkboxes in the navigator acquire dialog
+for running the cooking and beam autocentering routines.
+
+* 11/27/08: Added entries in Task menu to run a routine to pre-expose the
+specimen and to open a dialog for setting the parameters for the pre-exposure.
+
+* 11/27/08: Added entries in Task menu to run a routine to capture an image
+with condensed beam and center the beam with this image, and to open a dialog
+for setting the parameters for autocentering.
+
+11/27/08: Allowed imported map to be rotated by a specified angle.
+
+11/27/08: Defined properties to specify fields in TIFF files so that when they
+are imported as maps, the program can find the stage coordinates and image
+scale.
+
+* 11/27/08: Added ability to read TIFF and DigitalMicrograph files, using the
+generic file reading library from IMOD.  Program must now be run with 3 DLLs.
+
+* 11/18/08: Added scale bar, controlled by option in Image Display control
+panel.
+
+11/18/08: Made main window resize to leave space on right whenever a new
+window is opened.
+
+11/17/08: Made it turn off beam when stopping in montage after failing to
+unstick shutter with film picture.
+
+11/17/08: Added macro command to set montage parameters (stage moving and
+overlap for now).
+
+* 11/17/08: Made Navigator items be displayed in a "New" window.
+
+* 11/18/08: Added SpecialExposeFilm macro command to use the adaexp server used
+by Leginon, which allows control of delay between loading and shooting, and
+allows a pre-exposure time.
+
+10/21/08: Tilt series controller will now derive an intensity criterion
+from the existing picture in A only if it is supposed to be aligned to and
+it is not being run automatically. 
+
+10/21/08: Fixed OpenNewMontage so that supplied frame numbers will work.
+
+10/17/08: SEM_2-8-2
+10/16/08: When using Eagle camera, shuttering mode is now switched to "Both"
+for exposures with and without drift settling, and left there.  This will
+change a setting in the Tecnai user interface but saves 1.1 seconds per
+picture.
+
+10/16/08: Shift to Marker now requires the registration of the marker point to
+match that of the current point, shifts points at that registration, and
+shifts points drawn on imported maps but not the imported maps themselves.
+
+10/11/08: Made stage movements stop being rounded to 0.1 micron by default
+on JEOL's - almost no installations have the property entry to prevent this, 
+and this change makes that entry unnecessary.
+
+10/11/08: Added a property for specifying maximum allowed error on stage
+position in a stage montage; if set, the program will try 3 times to get to
+the requested position.
+
+10/11/08: Added a menu item for specifying a minimum count level for each
+frame of a montage, and a property setting to take a film picture to try
+to unstick the shutter (!) when it falls below the limit.
+
+* 10/6/08: Added checkbox to montage setup to re-enable being asked whether to
+make a montage a map.  Fixed the problem with not being asked to make a map.
+
+10/5/08: When Shift-A is pressed in the Navigator, the title line above the
+list box is modified to tell the user what to do next.
+
+* 10/4/08: Added ability to add a set of points on a regular grid, either with
+a specified spacing or on a lattice defined by some points, and possibly
+constrained within a polygon.
+
+* 10/3/08: Added ability to define a file that will be opened when a group of
+points (e.g., a supermontage) is first encountered by the Navigator routine
+that acquires at points.
+
+* 10/2/08: Added ability to import a map for an external source such as a light
+microscope.  Imported items are kept at separate registrations until they are
+transformed into registration with maps in the EM.  Added an "Undo
+transformation" menu item so that transformation of imported items could be
+undone.
+
+* 10/1/08: Changed the way that registration number is assigned to added
+points.  If an image has a registration, then points clicked on an image are
+given the registration of that image, not the current registration.
+
+* 10/1/08: Navigator now keeps track of and allows operations on groups of
+items; a group is a set of items that were added in one operation.
+Supermontage deletion is now done by deleting a group.
+
+* 9/28/08: Increased number of macros to 20; added a menu entry to set the
+number of buttons to appearin the macro toolbar.
+
+9/27/08: Fixed polygon drawing at low zoom so it is not sensitive to small
+mouse movements.
+
+9/27/08: Made End button work for stopping Navigator acquire after the current
+item.
+
+9/26/08: Fixed zoom getting stuck at 0.01 using up/down arrows and used 3
+decimal places for zoom below 0.1.
+
+9/26/08: Fixed filling of overview image and made it fill with mean of first
+acquired frame.
+
+* 9/26/08: Moved all Navigator montaging and supermontaging menu items into
+a submenu.
+
+* 9/26/08: Added ability to set up a supermontage that fits inside a polygon.
+
+* 9/26/08: Added option to focus a stage montage at every frame.
+
+9/6/08: Increased number of tries and released mutex when waiting for stage
+not ready event.
+
+9/6/08: Fixed problem with control panel state not being updated after a
+stage montage (introduced sometime after June 23).
+
+9/6/08: Added menu item to delete all items of a supermontage.
+
+8/2x/08: Added calls to enable or disable AMT camera shuttering based on
+screen state.
+
+7/21/08: Fixed bug that failed to extrapolate from beam calibrations below
+crossover.
+
+7/21/08: Kept it from blinking "inserting camera" after it finds that
+camera temperature is not stable.
+
+6/24/08: Made macro processor evaluate image intensity from montage overview
+instead of center panel which can be missing.
+
+* 6/23/08: Added ability to skip montage pieces outside of an arbitrary
+Navigator polygon item.
+
+* 6/23/08: Added Navigator menu item to add a circle polygon of specified
+radius.
+
+6/22/08: Fixed crash when the header title is more than 45 characters.
+
+6/21/08: When a new montage is opened from a macro, it now inherits most
+properties of the last montage that was open (especially overlap and 
+stage vs. image shift).
+
+* 6/21/08: Added query to supermontage about whether to mark points as Acquire,
+and added hot keys A, Ctrl-Shift-A, and Shift-A for toggling Acquire state of
+one, all, or a range of Navigator items.
+
+* 6/21/08: Options to close valves will now turn off filament on nonFEG JEOLs.
+
+6/11/08: SEM_2-8-1
+6/11/08: Changed style of Navigator window so it can be minimized.
+
+6/11/08: Made ChangeIntensityBy macro change intensity for current low dose
+area, not Record area.
+
+* 6/9/08: Added macro command to move stage to Navigator item.
+
+* 6/8/08: Added macro commands for Return and Exit, SetDefocus, and
+ReportMagIndex.  ReportMag and ReportMagIndex will set ReportedValue2 to 1 if
+in low mag mode.
+
+* 6/8/08: Expanded initial error checking of macros to check all macros being
+called, to check for legal commands and for required number of entries after
+them, and to prevent some diabolical variable assigments and substitutions.
+
+6/6/08: On JEOL with Tietz camera and shutterbox allowing pre-exposure, made
+it reset to beam shutter mode to prevent long closing of film shutter.
+
+* 6/1/08: Added option to take View area pictures with higher underfocus.
+Rearranged low dose panel so that most people can close up option section.
+
+* 6/1/08: Added option to close valves at end of Navigator acquire at points.
+
+* 6/1/08: Macro report commands now define variables RepVal1, etc., as
+shorthand for ReportedValue1, etc.
+
+6/1/08: Defined RestrictedSizeType 2 to not allow any subareas in camera
+acquisition.
+
+4/30/08: Changed SubareasAreBad so a value of 2 keeps beam intensity
+calibration from using subareas completely. 
+
+4/1/08: Switched to new method of driving Eagle camera via TEMScripting
+component to allow control of pre-exposure; program will now work with either
+TEMScripting or Tecnai instruments.
+
+3/31/08: SEM_2-8-0
+* 3/28/08: Added entry to Navigator menu for reading in map items with stock
+acquisition states from a file separate from the current Navigator file.
+
+3/28/08: Fixed the way a previously read-from image file is put in the file
+chooser so that it goes to the right directory.
+
+3/26/08: In Windows XP, added a message to title bar of file open dialog to
+tell user to push Open after changing file filter.
+
+* 3/23/08: Added entries in Navigator menu for setting scope and Record
+parameters to the state used to acquire a map, and for restoring previous
+state.  Rearranged accelerator keys in Navigator menu to make them more useful.
+
+* 3/23/08: When Autosave is on in the Navigator menu, it will save a file
+AUTOSAVEmmddhhmm.nav and remove this when a save file is defined or the
+program exits.
+
+3/23/08: Added option to tilt series setup to recenter beam on tracking
+images, requested due to problems with nickel grids.
+
+3/23/08: Added Tasks menu entry for setting the minimum and maximum tilt
+increment for Walk Up.
+
+3/14/08: Macro run from Navigator Acquire can be suspended and resumed without
+Navigator going on to next point.
+
+3/14/08: Macro editor now remembers its size and position.
+
+* 3/14/08: Added option for drawing one or more circles on a live FFT.
+
+3/14/08: Added hot key Ctrl-B for toggling Low Dose mode 'Blank beam when
+screen down'.
+
+* 3/14/08: Added dialog for running 'Acquire at Points' from Navigator, which
+allows choice of initial actions before the acquisition and is a common path
+for making maps or running a macro.
+
+* 3/14/08: Added macro commands for opening, closing, and switching between
+files; reporting the label and position of the current or a given navigator
+item; realigning to a Navigator item other than the current one; waiting until
+a given dose accumulates; and calling the beam-centering routine.
+
+* 3/14/08: Added ability to start tilt series from a macro, which can in turn
+be run from Navigator.  Added a dialog to set policies for what action to take
+at certain choice points in a tilt series.
+
+2/24/08: Eliminated unnecessary mode-setting calls when changing mag on JEOL.
+
+2/24/08: Added IF/ELSE/ENDIF and BREAK and CONTINUE statements to macros.
+
+2/23/08: SEM_2-7-8
+2/19/08: Modified camera timing calibration to assess and allow for the time
+it takes to blank beam and tried to make it robust against some JEOL
+weirdness.
+
+2/19/08: Implemented option to constrain coordinates, not just sizes, to
+multiple of given number.
+
+2/19/08: Added property to be able to run stage and image shift calibrations
+with the subarea in the Trial set.
+
+* 2/19/08: For a non-square camera, the "A Bit Less" button in camera setup
+turns into a "Square" button to allow the current area to be trimmed to a
+square.
+
+2/19/08: Fixed camera area in camera setup dialog for non-square cameras.
+
+2/19/08: Added a property to specify whether to gain normalize in SerialEM
+for individual cameras and made menu entry set it camera-specific basis.
+
+2/19/08: Fixed resetting of selectable copy buffer to E after a tilt series.
+
+* 2/19/08: Added ability to have nested macro calls and loops in macros, to
+assign to and use variables, to assign reported values to variables, to have a
+loop index variable, and to do basic arithmetic in an assignment statement.
+
+* 2/19/08: Added a macro tool palette with buttons for all macros.
+
+2/11/08: Stopped trusting the events for determining whether a stage movement
+was done.
+  
+1/15/08: Fixed some more problems with events on with image shift occuring
+from internal mag or image shift changes.
+
+1/15/08: Modified "pole touch" logic when tilt series does not reach the
+expected angle, and added a "Reset Pole Angle" menu entry to let user recover
+if they answer the question wrong.
+
+12/27/07: Fixed tooltips for controls inside group boxes by deleting group box
+and undoing.
+
+* 12/27/07: Added property, RotateHeaderAngleBy180, to allow the tilt axis
+angle output to the file header to be rotated to correct the handedness of
+reconstructions.
+
+* 12/26/07: Added ability to take gain references at up to 4 more binnings, and
+to control whether DigitalMicrograph or SerialEM references are used for each
+binning.
+
+* 12/26/07: Implemented save and restore of image shift over various
+transitions on the JEOL and when going into and out of diffraction on the
+Tecnai with image shift offsets on.  This allows going into and out of search
+mode in low dose without image shift errors.
+
+12/26/07: Improved handling of image shift upon mag changes on the JEOL 
+with events on.
+
+* 12/26/07: Added ability to change intensity, spot size, or exposure time for
+extra Record images.
+
+12/17/07: Fixed quadrant numbering in "QuadrantMeans" macro and made
+horizontal and vertical strips come all the way to the same corner near middle.
+
+12/20/07: SEM_2-7-7
+* 12/20/07: Turned off continuous update when leaving low dose.
+
+12/16/07: Fixed problems with setup of image buffers in the extra stack which
+caused crash on taking FFT of an image there and hopefully other crashes.
+Fixed problem with saving image from a secondary window.
+
+* 12/15/07: Saved image shift and stage shift calibrations in short term cal.
+
+* 12/15/07: Added a property to skip the warning about checking the spot before
+starting a gain reference.
+
+12/15/07: Added relative gain factors for Eagle camera.
+
+12/11/07: Disabled mouse stage shifting button during mag IS offset cal.
+
+12/11/07: Fixed crash bug when making an image a map in a second nav file.
+
+12/11/07: Added periodic autosave of short-term calibrations independent of
+other autosaves.
+
+11/29/07: Fixed bug when reading Navigator map with conversion to bytes and
+X frame size is not a multiple of 4.
+
+11/29/07: Prevented crossover recalibration from shifting C2 values out of
+range.
+
+11/29/07: Fixed bug in reporting an angle near 180 degrees from stage
+calibration.
+
+* 11/16/07: Added a Reset Defocus button to the microscope panel for JEOL only.
+
+11/16/07: Made it treat stage movement with mouse like a task and prevent
+other actions like taking a picture.
+
+* 11/15/07: Added program information and starting time to log if it open; this
+can be turned off with 'PrintStartupInfo 0'.
+
+11/15/07: Added property to set lowest mag to be used for tasks in EFTEM mode.
+
+11/15/07: Fixed the way a new mag mode is handled with events on JEOL.
+
+* 11/8/07: Fixed handling of Z stage events on JEOL, which were clobbering Y
+position.
+
+11/2/07: Put in a confirmation message to prevent a user from taking a stage
+montage with Prescan.
+
+10/26/07: SEM_2-7-6
+10/26/07: Fixed usage in ShowWindow statements which made Remove X ray box
+in camera setup behave weirdly.
+
+10/16/07: Fixed recording of dose from camera shot in cumulative dose meter
+(broken 5/18/07).
+
+10/15/07: Protected against reading in an image while doing a task or reading
+a montage.
+
+* 10/14/07: Added a property, TotalMemoryLimitMB, to keep program from trying
+to access memory for montage overviews when it would cause swapping.
+ 
+* 10/8/07: The montage controller will now compose the overview image as bytes
+instead of integers when a map is being reloaded as bytes.  When there is not
+enough memory for an overview image, it will increase the overview binning
+until the reduced amount of memory is available.
+
+* 10/8/07: Added a memory usage indicator and a Delete button to the Buffer
+Control Panel to help manage memory.
+
+10/3/07: SEM_2-7-5
+* 9/24/07: Changed meaning of Verbose setting in Focus menu to mean that shift
+and drift are output on every autofocus; stored as a user setting.
+
+9/18/07: Fixed bug when taking a montage in low dose and coming from 
+trial/focus area, fixed similar problem when calibrating image shift.
+
+9/10/07: Prevented Refine ZLP from being screwed up by continuous or
+unprocessed acquisition parameters.
+
+9/7/07: Fixed updating of image shift on JEOL when using projector for image
+shift and updating by event. 
+
+8/15/07: Support for Eagle and AMT cameras added.
+
+8/14/07: Added test and minimally noxious warning message when the net energy
+filter offset goes negative on the JEOL.
+
+8/7/07: Fixed problem with fine focus going out of range on JEOL.
+
+7/20/07: Added a check for non-monotonic focus calibration curve.
+
+7/20/07: Fixed camera timing routine when incoming built-in-settling is very
+small.
+
+* 7/20/07: Added property to issue a warning on startup if the voltage is not
+at a particular value.
+
+* 7/20/07: Added ability to force MDS off on program startup with
+JEOLForceMDSmode -1.
+
+5/23/07: SEM_2-7-4
+* 5/18/07: Dose to specimen during camera exposure can now be saved in the
+extra header.  This requires IMOD 3.10.9 to extract correctly (3.10.8 will
+do it incorrectly).
+
+* 5/17/07: Low dose areas can have specific alpha settings on the JEOL.
+
+* 5/17/07: Low dose areas (e.g., Search) can now use diffraction mode;
+diffraction focus is saved and restored on the Tecnai but not the JEOL.
+
+5/16/07: Allowed post-tilt delays to be up to 4 times longer than the previous
+limit as long as they are reasonable given the user's tilt delay parameter.
+
+5/15/07: Fixed shift in navigator item display on images acquired on JEOL with
+IS offsets or shifting to tilt axis turned on.
+
+5/15/07: Increased default low mag shift limit to 150.
+
+5/15/07: Made routine to calibrate IS offsets not check for Z stage position
+changes, since it wobbles on the JEOL.  Enabled buffer copying and saving
+during the routine.
+
+5/15/07: Fixed list mags function on JEOL, which now throws an error when the
+end of a mag range is reached.
+
+5/15/07: Made verbose selection in tasks menu a retained setting.
+
+5/15/07: Fixed scope status window to show LM or M correctly when the mag
+doesn't change between the two.
+
+* 5/14/07: Camera length is now detected in diffraction mode and displayed in
+the scope status window.
+
+* 5/13/07: Added a menu entry to set limits for full grid map and saved this
+in user settings.
+
+5/13/07: Reset image shift will now wait for stage ready and returns an error
+if it is not ready soon.
+
+* 5/13/07: Made WalkUp and Walkup and Anchor use the same target angle, and
+stored this angle as a user setting.  Walkup and Anchor now uses and modifies
+the anchor angle shown in the tilt series setup dialog.
+
+5/11/07: Fixed frame number displayed in buffer status window for montage
+prescan frames.
+
+5/11/07: Made calibration of mag IS offsets work with projector shifts by
+allowing calibration of a contiguous block of mags that have IS calibrations.
+
+5/10/07: Made Reverse Tilt use TSMaxTiltError property to determine whether
+a previous reversal was sufficient to overcome backlash, to avoid two reverse
+tilts in a row on JEOL.
+
+* 4/8/07: Made the Clear Alignment button and the Insert and Delete hot keys
+work on the main image window even when another window has focus.
+
+* 3/29/07: Added macro command to go to a low dose area and mentioned the macro
+control dialog in the messages given when a macro stops due to a setting there.
+
+3/26/07: SEM_2-7-3
+* 3/26/07: Fixed bug reading in beam intensity calibrations that caused the
+intensity values to be destroyed when the crossover calibration was redone.
+All prior 2.7 versions should be abandoned due to this bug.
+
+3/22/07: Stopped trying to retract non-retractable cameras for film exposure.
+
+3/21/07: Fixed problem with beam being blanked during film exposure in low
+dose.
+
+3/20/07: SEM_2-7-2
+* 3/18/07: Added a Realign to Item button to Navigator window.
+
+* 3/18/07: When the very sloppy montage setting is selected, the overlap zones
+will be analyzed with real-space correlations that avoid edge artifacts at the
+shifts corresponding to the 10 highest peaks in the cross-correlation.
+Montages are now read in from the center outward so that piece alignment in
+the interior will not be thrown off by errors in the alignment of pieces on
+the edge.  These two changes should make whole-grid montages align better.
+
+* 3/18/07: Made montage reading able to be stopped with the STOP button, except
+when reading in from a tilt series.
+
+3/17/07: Added some lower zoom factors down to 0.05, and made panning work
+1:1 with displayed image at zooms below 1, as in 3dmod
+
+2/16/07: Fixed bug in the Realign to Item routine that crashed the program
+when aligning to a map that had more pieces in Y than in X.
+
+2/10/07: SEM_2-7-1
+* 2/10/07: Added a Navigator menu entry to read maps in unbinned regardless of
+the setting of overview binning in Montage Control; it starts out on by 
+default but is saved as a user setting.
+
+2/7/07: Stage movement calls will wait up to two seconds for stage to be ready
+instead of giving a stage not ready message, even when called from places
+where the stage is already supposed to be ready.
+
+2/7/07: Fixed a vulnerability in rough eucentricity routine that led to
+runaway negative tilts.
+
+2/7/07: Made JEOL calls throw errors the same way that Tecnai calls do; this
+will give a message box on error, or the message will go to the log if any
+debugging output flag is on.
+
+2/4/07: Set up a property to govern rough scaling of projector shift 
+during initial calibration on JEOL.
+
+2/1/07: Fixed test for using objective mini lens value in LM on JEOL.
+
+1/31/07: SEM_2-7-0
+* 1/23/07: Added a property to set a factor to use when matching pixel sizes
+between preGIF and GIF cameras, so a difference in binning or a difference in
+field of view can be accounted for.
+
+* 1/23/07: Added Navigator menu entry to shift items by the distance between
+the current item position and the position of a marker point on an image,
+which avoids having to set up registration points.  There is also a menu entry
+to undo this.
+
+* 1/07: If supermontaging is being set up on a montage overview with aligned
+pieces, the montage positions can be set up at regularly spaced image
+positions rather than stage positions, and "Realign and Acquire" then gives
+maps with fairly reliable amounts of overlap.
+
+* 1/07: Added a routine to realign to a Navigator item position by correlation
+with images in one or two maps.  This allows accurate return to a mapped point
+even if the stage positions have become somewhat inaccurate.  Added a macro
+routine to run this command on the current item or on the item that the macro
+is currently being run at.
+
+* 1/07: Made Navigator transformations work with an inversion (specimen
+reloaded upside down).  Changed criteria so 5 points are required to solve for
+a linear transformation.
+
+* 1/07: Added ability to rotate a map to match its orientation at the current
+magnification and the current registration.
+
+* 1/07: Montaging and image and stage shift calibrations in low mag mode are
+now done after asserting a standard focus, if one is defined.  This is
+eucentric focus on the Tecnai, but a value needs to measured and set in
+properties for a JEOL.  This is to give a standardized scaling and also to
+give more reproducible positions by going to a focus where image movement upon
+beam shift is minimal.
+
+* 1/07: When montaging is done with "Align pieces" on, the shifts for the
+pieces are stored and Navigator can use them to adjust stage positions for
+points clicked in an aligned image, so point positions will be independent of
+whether the overview is aligned or not.
+
+1/07: Added a property to control the criterion change in mean counts in
+the refine ZLP routine.
+
+* 12/31/06: When a montage is set up by fitting to a Navigator area, it will
+offer to make each montage a new map.
+
+12/31/06: Fixed crash when converting a new map to bytes if the primary buffer
+is a copy from another buffer.
+
+12/31/06: Added partial bad column correction.
+
+* 12/30/06: Added beam centering routine that detects beam edges in an image,
+and added hot keys for set intensity, center beam, and move beam.
+
+12/27/06: It now uses the stage calibration at the nearest mag instead of
+averaging all stage calibrations; this may give better low mag montages.
+
+* 12/26/06: Made stage calibration take multiple steps if necessary to span
+one stage cycle in each direction, or a multiple of the cycle length for low
+mags.  It now flashes image pairs to let user monitor alignment.  It reports a
+tilt axis rotation angle which seems accurate.
+
+12/26/06: Added macro command to make it easy to assess regular variation in
+stage movement.
+
+* 12/24/06: Added routine to calibrate image offsets between mags, ability to
+turn on and off adjustments by these offsets, and adjustments for these
+offsets in Navigator stage coordinates.
+
+12/24/06: It now resets image shift when moving the stage with the mouse.
+
+12/24/06: Added logic to increase image shift delay by an increment per
+two-fold decrease in pixel size of Record image below 1 nm.  Also made delays
+in general longer or shorter depending on startup time of camera relative to
+time for Gatan 795.
+
+* 12/21/06: Added Navigator menu item for changing registration of the current
+item.
+
+12/20/06: The autofocus routine will now reject a correlation peak at 0,0 if
+the second peak is not too much smaller and the resulting defocus estimate is
+not too much farther from the target defocus than the estimate from the 0,0
+peak.
+
+* 12/18/06: Added ability to have a separate window showing a stack of binned
+images during tilt series, either the saved Records or montage overviews.
+It is enabled through Extra Output dialog.
+
+* 12/16/06: Added accelerator keys for opening and reading a file and for the
+three FFT items.
+
+* 12/16/06: Made tilt series setup show a real dose estimate as well as dose at
+zero and starting tilt.
+
+12/15/06: Made Align To button show actual buffer to align to in low dose when
+there is an image in A.
+
+12/15/06: Added defocus target to Align & focus panel.  Added filename to
+buffer control panel.
+
+* 12/15/06: Added an Acquire button to camera setup, which brings dialog back
+up after taking a picture.  Dialog position is now remembered within a
+session.
+
+12/15/06: Implemented detection of GIF mode on JEOL and fixed pixel size
+matching to work when switching between EFTEM and non EFTEM.  Prevented double
+calls to the routine that changes program mode.
+
+* 12/15/06: During setup of a montage from Navigator, the montage setup will
+respond to changes in mag by refitting the montage to the desired area.  There
+is also a new percent overlap control in this mode which also refits to the
+area when changed.
+
+* 12/14/06: Added menu entry for showing cross-correlation of existing
+autofocus images.
+
+12/13/06: Added a settings file to the MRU when saved with Save As.
+
+12/13/06: Fixed problems with low dose parameters not being cleared when
+reading a settings file without any.  Fixed problems with image shift
+transfers to/from undefined areas.
+
+* 12/13/06: Eliminated imposed scope image shift and shift of displayed image
+when going between Balance Shifts and Center Unshifted, so you are still
+looking at the same spot but the IS readout changes.  Disabled these buttons
+unless all areas are defined.
+
+12/13/06: Prevented Shift-right mouse shifting from affecting axis offset when
+defining an area.  Made it display the cross in green when shifting an image
+of the area being defined.
+
+* 12/13/06: Implemented a low dose search area, not tied to camera acquisition,
+for low mag or fast camera scanning.
+
+12/12/06: Fixed camera timing calibration for Gatan camera with only one
+shutter, maybe for real this time.
+
+* 12/12/06: Added area labels to images in low dose mode.  Added a display of
+the Record area and area being defined, with a circle around the area (or
+the larger of trial and focus when they are tied).  Fixed synchronization of
+areas when the tie button is turned on.  
+
+12/12/06: Fixed labeling of single frame maps that have been converted to
+bytes in buffer status window.  
+
+* 12/11/06: Changed binned FFT to have target of 1024 and bin only up to 4.
+
+12/11/06: Beam intensity and spot calibration will now keep track of the
+calibrated crossover intensity, and when crossover is recalibrated (needed
+after some alignment steps on Tecnai), these calibrations will be adjusted
+by the change in crossover position.
+
+* 12/10/06: Added ability to run a macro at areas marked "Acquire" in
+Navigator.
+
+* 12/10/06: Macro changes: Added arrow buttons to switch between macros in one
+editing window, while retaining associations with files.  Added a MacroName
+command; the name will show up in the editing window title bar and in the
+camera/macro control panel buttons.  Added commands to retract cameras, take
+film pictures, image shift along specimen axes, move stage to absolute
+position, and open/close column valves.
+
+* 12/5/06: Added Live FFT entry in Process menu, to do automatic FFT on any
+image acquired in continuous mode.
+
+12/5/06: Rewrote code for getting pixel sizes and rotation angles so that
+values can be derived as much as possible from an absolute calibrated value,
+using image shift calibrations and relative rotation angles where present.
+The heirarchy of fallbacks was refined (hopefully improved) and should avoid
+discontinuities when going from derived to fallback values.
+
+12/4/06: SEM_2-6-3
+12/4/06: Fixed rotation put in header to subtract 90 instead of adding it.
+
+12/4/06: Fixed fatal montage bug; abandon 2.6.2 due to screwed up tagging.
+
+11/27/06: SEM_2-6-2
+11/27/06: Fixed bug in tilt angles used for fine eucentricity estimate which
+gave bad estimates for lateral displacement; broke when doing changes for JEOL.
+
+* 11/25/06: Made "Autosave log" save automatically to a log file whose name is
+based on the current tilt series name if no log file is open yet.
+
+* 11/24/06: Added ability to maintain separate gain references automatically
+at specified alternative KV settings (see property SeparateGainReferenceKVs).
+
+* 11/23/06: Added an "extra output" dialog to the Tilt Series menu to control
+two kinds of output to separate image files.  1) All of the trial, focus, and
+preview images taken by the TS controller can be selected for saving in
+separate files; 2) After a Record is saved, a focus series or a series of
+Record images with different filter settings can also be saved to a separate
+file.
+
+11/22/06: Fixed counting of retries of images too dim in a tilt series and
+made montaging only retry once.  Also, montaging now does not fail from dim
+images until over half of the frames are too dim.
+
+* 11/12/06: Montaging can now be done in low dose mode.
+
+* 11/8/06: Added ability to have multiple image files open and switch between
+them with a spin button in the Buffer Control panel.
+
+11/6/06: Stopped adjusting rotation angles put in header by 180 degrees to be
+within +/-90 so that polarity can be preserved.
+
+* 11/5/06: Added list of most recently used settings files to Settings menu to
+allow rapid switching between settings.
+
+10/x/06: Tietz pre-exposure now works, at least with Shutterbox II; it is
+implemented by calling the EMShutter module.
+
+8/28/06: SEM_2-6-1
+8/15/06: Changed exposure timing for Tietz camera with new shutter box so
+it is sum of pre-exposure and desired exposure; it may now work with new
+shutter box. 
+
+8/15/06: Added property to set gain index for Tietz camera.
+
+7/24/06: Added property to set the initial current camera and improved handling
+of properties and calibrations from inactive cameras.
+
+7/10/06: Do image shift at higher mag when going between low dose areas
+with different mags to prevent beam shift drift on JEOL.
+
+6/24/06: Fixed timeouts in gain reference maker when dark references are
+averaged.
+
+6/9/06: Made sure tilt series controller got a correct tilt angle on the first
+round when it figures out the actual starting angle.
+
+6/5/06: SEM_2-6-0
+5/27-6/2/06: 
+The variable specifying that the X axis is inverted was not being initialized,
+so stage calibrations would fail.  Released a 2.5.3a version with this fixed.
+
+For JEOL, added property to exit when there is a startup error.  Reported
+error when trying to close gun valve.  Made rough eucentricity routine use
+actual angles and step incrementally from actual starting angle.  Provided
+property to use objective mini lens for focus readout in low mag.  Renamed
+C2 to C3 in low dose panel and other output.  Fixed handling of forbidden
+negative energy shifts in both the mag energy shift calibration and the refine
+ZLP routines.
+
+Implemented a task to tilt and realign that would be applied on the tilt after
+image shift is reset during walk up or during a tilt series.  This should
+solve the major remaining tracking vulnerabiity on JEOLs.
+
+The energy offset adjustment (resulting from Refine ZLP and setting a slit
+offset on the JEOL) will now be remembered for up to 1 hour between sessions
+of the program.
+
+Added startup message option in properties file.
+
+Added property entry to start in Administrative mode.
+
+Made properties case insensitive.
+
+Turned off low dose continuous update when resuming a tilt series.
+
+Added Process menu entry to show cross-correlation from autoalign.
+
+Added Calibration menu entry to set debug output string.
+
+Separated low dose current area name from parameters so it is no longer grayed
+out with continuous update off.
+
+Changed DM plugin to set film shutter normally open when assrting beam shutter
+normally closed, to cancel the DM drift settling which can be inherited from
+the DM Record parameters, and to ignore bogus incoming divide by 2 values
+on Downing's scope.
+
+5/20-5/26/06:
+For JEOL, implemented fancier delay for stage access only after a mag change,
+provided option to use projector instead of image shift, and added a routine
+to keep out of raneg image shift values from being sent to scope.  Added
+periodic polling for all parameters when updating by event.  Changed the spot
+intensity calibration to save the intensity for each spot size.
+
+Used mean instead of min intensity to assign crossover to intensity tables.
+
+Stopped trying to adjust focus when resetting image shift in low mag.
+
+Substituted LM for X in scope status panel when in low mag.
+
+Added standard autoalign filtering to the correlations in image/stage shift
+calibration.
+
+Shifted image shift calibration images so alignment can be checked, but left
+it to user to set rolling buffers big enough.
+
+5/14/06: For JEOL, initialized small screen variable when scope does not
+report small screen.  Prevented image shift routine from using the value from
+memeory when updating by event if the value is not yet valid, which should
+prevent wild image shift resets on program startup.
+
+4/514/06: Made sure camera timing routine selects beam shutter if there is
+only one shutter.
+
+5/14/06: Subtracted dead time when computing dose for an exposure, made
+low-dose module call the right routine for getting an effective exposure time.
+
+5/14/06: Added procedure to measure camera dead time.
+
+5/14/06: Added menu entry to list stage calibrations as specimen to stage
+matrices.
+
+5/14/06: Fixed problem with low dose image shift transition across
+non-congruent mags.
+
+5/12/06: Shifted stage calibration images to provide visual check on 
+calibration.
+
+5/12/06: Added shutter dead time camera property so that exposures get
+scaled properly when going to lower mag if there is significant dead time.
+
+5/7/06: Made "pole touch" message angle dependent and made it output to the
+log also; made it wait and resample the angle in case there is some
+communication problem.
+
+5/7/06: Fixed problem with listing image shift vectors for low mag and rotated
+vectors by the scope or calibrated rotation angle, so vector angles really 
+should stay constant.
+
+5/7/06: Made option to remove X-rays appear in camera dialog only if enabled
+by a camera property or if turned on in any of the parameter sets for that
+camera.  This was done under the assumption that only Ken Downing's camera
+needs this option.
+
+5/7/06: Fixed reporting of Preview dose at end of tilt series.
+
+5/7/06: Changed routine that provides focus calibration for an uncalibrated
+mag so that it rotates a calibration using specimen rather than image shift
+coordinates unless image shift is calibrated at both mags and congruent
+between the two mags.
+
+5/7/06: Made low dose remember the previous area to show with screen down when
+starting to define an area, and restore that after turning off define area.
+
+5/7/06: Made low dose assert the filter settings for an omega filter when
+going to a new area with the screen down.
+
+5/7/06: Modified low dose module to use axis position and specimen coordinates
+instead of image shift values where appropriate to avoid problems from
+noncongruent image shifts on the JEOL.
+
+5/1/06: Activated option to close beam valve at end of tilt series for JEOL.
+
+5/1/06: SEM_2-5-3
+4/28/06: Added property to set a delay after changing mag in JEOL.
+
+4/27/06: Fixed adjustment for neutral IS value changes in routine that
+sets mag.
+
+4/26/06: Called ResetDefocus in JEOL startup to make sure the focus has been
+read before it gets manipulated.
+
+4/25/06: Made reassertion of image shift upon mag change more robust against
+multiple mag steps.
+
+4/24/06: Added option to remove X rays from selected image types to prevent
+tracking problems from big X-rays in low dose images.
+
+4/23/06: Added help button to Macro editor window; the macro command list can
+then be reached by clicking a link.
+
+4/23/06: Added menu entry to reopen and append to an existing log file.
+
+4/23/06: Made stage calibration routine always start with a fallback 1:1
+scaling between specimen and stage coordinates instead of averaging existing
+calibrations, to avoid being thrown off by bad calibrations.
+
+4/23/06: Added menu entry to list the image shift calibration vector lengths
+and angles, so that the accuracy of the calibrations and the existence of
+boundaries can be assessed more easily.
+
+4/23/06: Made failed calls to JEOL retry on more types of errors and limited
+it to 10 retries.
+
+4/5/06: Added property to specify minimum exposure time when exposure time
+needs to decreased upon going to a lower mag.  This applies to tasks and to 
+low mag tracking.
+
+4/5/06: Added trace routine for easy debugging output to Log Window, including
+from threads.
+
+4/5/06: SEM_2-5-2
+4/5/06: Changed registration number of loaded maps after transforming to a new
+registration.
+
+4/5/06: Set gain of Tietz camera to 1.
+
+4/5/06: Allowed reading of montages with entire rows or columns missing and
+modified navigator (and .nav file) to be able to draw items correctly on these
+maps after they are read back in.
+
+4/5/06: Fixed handling of input focus after user enters a number in axis offset
+field of low dose panel.
+
+3/21/06: Fixed bug in dark X-ray removal for images smaller than 100 pixels in
+X or Y. 
+
+3/20/06: Doubled the thresholds for the montage error reports to avoid bad
+messages at high tilt when error is ~2.
+
+3/19/06: Fixed very sloppy montage option so it would be applied when reading
+in from a file.
+
+3/19/06: Added ability to average dark references.
+
+3/19/06: Added menu items to Navigator to define an array of montages either
+square to the camera axes or square to the specimen axes.
+
+3/16/06: Defined one binning for default camera and added error message when
+a camera number is used twice.
+
+3/12/06: SEM_2-5-1
+3/10/06: Added -fs to the na label on the screen current when SerialEM thinks
+the focusing screen is in.  This happened because of confusion caused by
+incorrect reports that the screen was in after a reboot.
+
+2/23/06: Stopped scope calls from being issued twice on JEOL.
+
+2/x/06: Added properties to set a simulation mode, to specify that there is
+no spectrum offset, and to invert the X axis.
+
+2/1/06: Fixed problem of image shift not going back to starting position after
+the first round in the new calibration from scratch.
+
+1/20/06: SEM_2-5-0
+1/17/06: Made tilt series go no farther than 0.25 degree past the defined
+endpoint.
+
+1/5/06: Disabled intensity zoom during beam calibration.
+
+12/28/05: Added option for stopping after aligning the tracking shot so that
+position can be adjusted manually and automatically taken as the new reference
+position (requested by Dalaver Anjum).
+
+12/28/05: Added option to close column valves at end of tilt series (requested
+by Bryon Donohoe).
+
+12/28/05: Modified camera timing calibration routine to find best startup delay
+for testing timing automatically, even if the built in settling is set too
+long, and made it work for Tietz cameras.
+
+12/28/05: Fixed composition of montage overview to avoid crashes when pieces
+are displaced by very large amounts from nominal positions.  Implemented
+very sloppy montage correlation parameters matching those in Blendmont and
+added an option to montage control window, which is set when a montage is
+defined as being done with stage movement.  Also shifted overview so that the
+average offset of the pieces is zero.
+
+12/26/05: For JEOL, added calibration of image shift neutral values, and
+tracking of image shift values so that it can reassert an appropriate image
+shift after a mag change.   The program should not need to force the scope
+into MDS mode to preserve image shift during mag changes, and it should work
+with neutral values other than 8000,8000.
+
+12/26/05: It will try to preserve an actual image shift when mag changes across
+a boundary (other than LM-M) where image shifts are non-congruent.
+
+12/26/05: Made first round of image shift calibration from scratch use only 4
+pictures and made it avoid using any information from existing image shift
+calibrations.  After an image shift calibration, it will now offer to change
+all calibrations in the same mag range even when not in administrator mode.
+
+12/26/05: Added ability to have multiple beam shift calibrations.  This is
+needed for low mag versus mag mode, but also there can be one calibration per
+mag range defined by the image shift boundaries. 
+
+12/26/05: Implemented ability to specify boundaries where image shift behaves
+discontinuously, in addition to the low mag - mag mode boundary.  Image
+shift calibrations will not be transferred across these boundaries.  Beam shift
+calibration is not assumed to be the same across boundaries but is computed
+via specimen coordinates.
+
+12/26/05: Fixed bug in reading stage limits for whole grid montaging.
+
+12/24/05: Beam intensity calibration now normalizes the spot intensity.
+
+12/20/05: Added calibration of relative spot size intensities so that dose
+only needs to be calibrated at one spot size.  Dose calibration is now stored
+in a new short-term calibration file instead of the user's settings file.
+
+12/20/05: Added a cumulative dose meter, opened with a tiny button on the
+microscope setting panel.  It keeps track of all pictures (except trial/focus
+in low dose) and of dose while the screen is down.
+
+12/20/05: Dose will now be automatically calibrated for a spot size when a
+gain reference is taken.  There is a new option to normalize the spot before
+starting, which is needed to get an accurate calibration with spot 1 on the
+F20, at least.
+
+12/20/05: Converted X and Y piece coordinates to unsigned shorts so they can be
+bigger that 32767.
+
+12/20/05: Added ability to read and write unsigned 16-bit integer files (file
+mode 6).  The option to write in this mode will appear in the file properties
+dialog when there is a 16-bit camera with divide by 2 off, or when there is an
+unsigned image in the buffers.  The menu option for changing the 16-bit policy
+will be enabled under the same conditions.  There is also a new menu option
+for controlling how signed integer data are written to an unsigned file.
+
+12/19/05: Added a camera property to specify when taking a subarea image will
+make the next picture of the full area bad; this is used when taking again
+reference.
+
+12/19/05: Added a camera property to specify when there is only one shutter
+so that the camera setup dialog will disable shuttering options.
+
+12/19/05: Added confirmation message box for the Copy to V-F-T-R buttons in
+low dose.
+
+12/19/05: Made it possible to run a GIF on a JEOL scope, assuming that the
+user changes to an EFTEM-like lens mode by hand.
+
+9/2/05: Added a button to set trim fraction for autoalign.
+
+7/26/05: SEM_2-4-5
+7/26/05: Fixed error messages for errors writing to file.
+
+7/26/05: Made DM plugin affect only the 3 corrections for defect, bias, and
+linearization; in DM 3.9.3 it seemed to turn on an overscan mode otherwise.
+
+7/21/05: Fixed handling of Tietz cameras as 16-bit and implemented division
+by two if selected.  Fixed handling of shuttering so that drift settling is
+available only if the hardware pre-exposure is available.  Converted the JEOL
+beam shift calibration parameter to a property.  Converted the properties for
+specifying a minimum mag index for beam calibration and mag energy shift
+calibration to specifications of minimum field size, with defaults of 8.
+
+5/29/05: Fixed List Mags routine for JEOL with update by event enabled.
+
+5/24/05: SEM_2-4-4
+5/23/05: Added hysteresis correction for low-dose mode by passing through
+View intensity/spot size when changing between other areas.  Added independent
+beam offsets for each low dose area.
+
+5/19/05: Fixed bug in setting new binning for image shift calibration.
+
+5/18/05: Changed the way the JEOL class ID is specified.
+
+5/11/05: SEM_2-4-3
+4/25/05: Caught memory exceptions when starting montage, during image 
+acquisitions, and when creating pixmap, which should eliminate some crashes
+when running out of memory making and using big maps.
+
+4/25/05: Fixed  crashing when user pressed close button second time while
+dialog was up asking to save log/settings/etc.
+
+3/18/05: SEM_2-4-2
+3/18/05: Prevented stop signal from aborting the next image acquisition.
+
+3/18/05: Fixed problem in computation of tilt axis offset, which was only
+correct when already eucentric and with image shift at zero.
+
+2/7/05: Made new beam calibration procedure change mag when beam gets spread
+enough to do so safely, thus avoiding highly spread, unrealistic beam
+settings.
+
+1/13/05: SEM_2-4-1
+12/22/04: Implemented new beam calibration procedure that uses CCD camera
+instead of screen meter since the screen meter was hopeless on the JEOL; this
+works better anyway.
+
+12/17/04: Changes for JEOL: added a fix for bad font and dialog sizes when the
+display is not at 120 DPI; implemented structure to update scope variables
+using events from the JEOL COM object; eliminated all calls to the scope from
+the regular update function so that it can be called frequently; turned on MDS
+photo mode upon program startup and checked for it when doing tasks; added an
+easy way to set an energy offset for aligning the slit so that offsets can be
+adjusted both positive and negative.  This is in addition to minor bug fixes
+required when testing the program at Berkeley.
+
+12/16/04: Fixed 4 GB file size limit.
+
+11/12/04: Fixed mirroring of FFT (off by one pixel); made it remember to
+shift montage pieces in overview in settings.
+
+10/13/04: Increased timeouts for fine eucentricity, reduced maximum increase
+in basic tilt delay to a factor of 2, and added a button to specify autoalign
+to buffer B instead of having this depend on Copy on Save.
+
+10/6/04: SEM_2-4-0
+10/3/04: Added an option to stop tilt series if alignment shift is large.
+
+10/2/04: Reduced memory usage of maps by 2/3 by converting to bytes and making
+them the same size as the pixmap needed for display.  Removed unneeded pixmap
+in destination buffer when copying an image to a buffer, so that memory can
+be fully reclaimed by copying images over big maps.
+
+10/1/04: Added a four-port readout camera property, and made binning offsets
+be set automatically for 4-port readout.  Fixed bug in getting gain reference
+from DM for binnings 3 and 6 with 4-port readout camera.  Took binning offset
+properly into account when removing X-rays from dark reference.
+
+9/17/04: Fixed bug to keep periodic refine ZLP from stopping tilt series.
+
+9/15/04: Fixed bug to get periodic refine ZLP during tilt series working.
+
+9/14/04: Fixed bug in which setting camera in tilt series setup dialog had no
+effect.
+
+9/11/04: Added option to run reset image shift and realign with the trial
+parameter set in Low dose mode, and menu entry to set the minimum shift for
+reiterating this procedure.
+
+9/11/04: Fixed bug in which Refine ZLP routine replaced camera binning of
+2 with 8.  Also made camera setup dialog pick nearest binning when no binning
+in the camera parameters matches the binning in the parameter set.
+
+9/11/04: Merged JEOL changes; fixed bug in this version that caused a lens
+normalization delay before every shot in Low Dose mode.
+
+9/10/04: SEM_2-3-5
+9/9/04: Conditionally switched to using underlying file dialog directly from
+a thread; this fixes the problem of the MFC file dialog hanging on some systems
+(ones with IE6?).
+
+9/8/04: Allowed the refine zero loss peak to work from an initial offset if
+it is small.
+
+9/7/04: SEM_2-3-4
+9/7/04: Allowed buffers with maps to have independent zooms.
+
+9/6/04: Added routine to refine alignment of zero-loss peak that works even
+with very small zero-loss peaks, and added capability to run routine
+periodically during tilt series.  Also fixed a bug that led to display of
+wrong net offset value.
+
+9/5/04: Kept TSC from insisting that Record size equal file size if montaging.
+
+9/5/04: Fixed bug in which camera setup dialog was accessing wrong camera's 
+binning array.
+
+9/3/04: Kept TSC from asking whether to close a file with data and open a new
+file if it was a montage.
+
+9/3/04: Fixed problem with insufficient image intensity not being detected 
+for montaging; now only processed images are excluded from the spot mean
+function.
+
+9/3/04: Fixed problem with electron dose estimate in camera setup dialog
+not being based on master low dose parameters.
+
+9/2/04: Fixed problem with setting exposure in camera timing test.
+
+8/30/04: Initialized stage montage variable based on low versus regular mag
+when starting montage normally; made TSC set the mag for a montage based on
+montage parameter mag, allow it to be changed if not used yet, and sync a
+mag change back into montage parameters.
+
+8/26/04: SEM_2-3-3
+8/26/04: Changed default camera parameter setup to work better with different
+sized cameras so camera parameters can be omitted from distributed settings
+file.  Fiddled installation instructions.
+
+8/25/04: SEM_2-3-2
+8/25/04: Fixed problem with calibration file being saved to wrong place if
+system path is relative and an image file is saved first to another location.
+
+8/24/05: Fixed tapering over bad rows and columns to taper to a local mean
+instead of the mean of the whole edge.
+
+8/13/05: Implemented changes to deal with 16-bit camera, principally division
+by 2 in the plugin as a user selectable option.  This allows negative numbers
+to be retained for low-exposure images in case the dark reference wanders.
+Made plugin detect flipping about vertical axis and flip a DM gain reference
+before passing it to SerialEM.
+
+8/3/04: Fixed plugin to open the other shutter for extra pre-exposure, not
+just shutter 1.
+
+7/20/04: Prevented selections of zero camera area.
+
+6/11/04: Fixed a bug that crashed if tried to acquire areas in Navigator with
+no file open.
+
+6/6/04: Added ability to set tilt axis offset, using value from last refine
+eucentricity run if desired.
+
+5/7/04: Fixed bugs allowing read buffer to go past maximum buffer directly or
+when going into low dose mode.
+
+5/3/04: SEM_2-3-1
+
+4/5/04: Fixed crash when trying to save FFT with intensity saving selected.
+
+4/4/04: Added transforming of map, ability to display points from other
+registrations, and report of registration number for all items.  Added codes
+for prescan overview and center images, in order to prevent Navigator
+from making a map from a prescan.
+
+3/21/0/4: SEM_2-3-0
+
+Implemented ability to read a montage from "Other file", even if the currently
+open file is a montage.
+
+Made selectable binnings for the prescan and for the overview image, so that
+either can be viewed at any desired resolution up to that of the Record
+images.
+
+Implemented option to shift pieces into register when building an overview
+image.
+
+Added ability to do montage with stage movement instead of image shift.
+
+Added ability to skip pieces in a montage.  Montages with stage movement will
+exclude pieces outside the stage range.  Montages set up by Navigator will
+skip pieces not needed to capture the desired area.
+
+Fixed mouse shifting code to allow shifting of montage overview and added
+ability to shift an anchor image too.
+
+Changed image shift calibration to allow calibration of image shift in LM
+mode and to reduce the delays when calibrating the lowest M mode mags.
+
+Reduced image shift time delays in general for lower M mode mags.
+
+Prevented the transfer of image shift calibrations across the LM-M boundary
+and fixed the transfer of calibrations to estimate rotation angle from the
+known angle at another mag and the difference between Tecnai rotations at the
+two mags, instead of relying on Tecnai rotation itself.
+
+Implemented calibration of stage shift.
+
+Improved the treatment of limits for image shift in calibrating and actually
+using image shift; added properties MaxCalibrationImageShift and
+MaxLMCalibrationImageShift.
+
+Fiddled with idle time processing to prevent settling time delays from being
+extended and to sneak a processing cycle more often.
+
+Reduced boilerplate code for doing tasks by passing a task ID to the idle time
+processor.
+
+Created a new module for menu targets and moved code out of other modules.
+
+Fixed the conversion of Tecnai intensity to C2 values and provided a
+calibration routine to determine and save the conversion factor and an offset
+for each spot size.
+
+Intensity calibrations can now be saved for both sides of crossover, and there
+is a new calibration procedure to inform the program of crossover at each spot
+size.
+
+Added ability to save intensities in the extended header so that they can be
+used to correct for magnification gradients in tilted images (flag to make
+this the default is 16 in FileOptionsExtraFlags).
+
+Added a camera property, CountsPerElectron, a dose calibration procedure,
+reporting of dose in the low dose control panel and the camera setup dialog
+dialog, and summary of dose for a tilt series.
+
+The new Navigator window allows one to save and return to stage locations, set
+up montages to capture defined areas, build maps of large areas of a grid, go
+to selected locations on a map, acquire medium-scale maps from a series of
+locations automatically, and transform locations after moving the grid in the
+holder.
+
+Added a menu entry to do walkup and leave an anchor in buffer P.
+
+Made walkup able to lower the mag so that it is always reliable.
+
+Added two alignment steps to protect against drift at start of tilt series: an
+alignment to the image in buffer A when starting at zero tilt, and an
+alignment to the last image of a walkup.
+
+Activated automatic trimming of dark borders from images for autoalignment
+when doing low mag tasks, and added option to trim borders always, not just in
+low dose mode.
+
+Added property TiltAxisOffset to specify the lateral offset of the tilt axis
+and an option to center image shift on the tilt axis.
+
+Made the GIF slit get opened to a minimum width when doing low mag tasks to
+avoid shadows from slit in these tasks; added properties MinLowMagSlitWidth
+and SlitWideningSafetyFactor to indicate the minimum slit size and the extra
+amount to lower intensity when opening the slit to the minimum.
+
+When doing tilt series in low dose mode or with lower mag tracking, the
+low mag or tracking reference will now be shifted by the same amount as the
+Record image is off, eliminating the need to take a new reference because of
+reference conflicts.
+
+Made the tilt series setup dialog smarter about whether the series is starting
+at zero or at high tilt, reorganized the starting actions into one box, and
+made them be enabled only when relevant.
+
+Added an inverse power to the cosine intensity scaling during a tilt series,
+so that the variation in intensity could be moderated.
+
+Added relative dose summary information to the tilt series startup, which is
+particularly useful when doing cosine tilts and/or cosine intensity changes.
+
+Added more options for controlling intensity: an option to say that intensity
+is all set for high tilt and should not be increased above the current value;
+and an option to increase the intensity by the cosine factor before starting.
+
+Added a module to acquire pairs of overlapping images at zero image shift by
+moving the stage, used for solving for distortion field.
+
+Added an absolute threshold in microns for doing stage instead of image shift
+with right mouse button.
+
+Changed the intensity checking during tilt series to use a central spot,
+and gave the user an option to reset the criterion if it still fails on a 
+good image.  In properties files, need to change TSBadShotCrit to  0.2 and
+TSBadLowMagCrit to 0.1.
+
+
+
+1/2/04: Added check for unsaved calibrations on exit when in administrator
+mode.
+
+1/12/04: Made beam intensity calibration wipe out tables at all mags for
+a given spot size.
+
+1/11/04: Added buttons for shifting and recentering area to camera setup
+dialog, and an output for binned size.  Also made autofocus compensate for
+the location of an off-denter focusing box and report and set focus at the
+center of the field.
+
+11/22/03: SEM-2-2-4
+For Tietz camera, implemented an offset for binned pictures so that the 
+unbinned gain reference would work for binned pictures.
+
+Modified plugin to convert 32-bit signed images from 16-bit camera to
+16-bit unsigned by truncating at 0.
+
+11/13/03: SEM-2-2-3
+
+Fixed problem with camera parameters not getting copied to working set when
+reading in a settings file.
+
+Fixed problems with megabyte output to logbook.
+
+Fixed logic in display image shift so mouse shifting will only work on
+buffer A or an autoalign buffer.  Made autoalign shift montage overview along
+with montage center, and leave the overview displayed if appropriate.
+
+Fixed problem with the mapping between maximum error and report for montaging.
+
+Fixed undefined camera pointer when reading in a montaged image.
+
+Fixed logic for dealing with locked Tietz camera and names of file mapping
+areas.
+
+10/14/03: SEM_2-2-2
+
+Added workaround to DM 3.7.1.5 problem, by having SerialEM send a negative
+shutter index to the plugin to keep it from trying to set shutter index.  This
+version must be distributed with corresponding plugin version.
+
+Made the idle-time processor check for long intervals since the last idle
+time call and add these to any timeouts that are set, preventing timeouts if
+the computer goes out to lunch or if user opens a menu.
+
+Added LogBook output
+
+Set timeout even longer for Records in tilt series because the TS controller
+doesn't know when camera controller will take a new dark reference due to age.
+
+Added ability to drive Tietz cameras
+
+SEM_2-2-1 tagged before adding Tietz Camera capability
+Improved timeout settings for image capture from TSC so that a >2K camera
+would be given extra time, and a Record capture that is getting a dark
+reference would be given double the time.
+
+Fixed a bug in the new code for getting a track image just before a new low
+mag reference, which caused a crash with divide by 0.
+
+SEM_2-2-0 released

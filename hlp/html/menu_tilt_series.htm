@@ -1,0 +1,269 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+  <HEAD>
+    <TITLE>Tilt Series Menu Commands</TITLE>
+    <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
+    <style type="text/css"> <!-- BODY { font-family:"Arial" }
+  TD { font-size:16 }
+      .style1
+      {
+        width: 151px;
+      }
+  --></style>
+  </HEAD>
+  <BODY BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+      <P><A NAME="menu_tilt_series"></A><B><FONT size="3">Tilt Series menu commands</FONT></B></P>
+      <P>The Tilt Series menu offers the following commands:</P>
+      <TABLE BORDER cols="2">
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_tasks_tiltseries">Setup/Start</A></TD>
+          <TD>Opens dialog box to set parameters for a tilt series.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_tiltseries_terminate">Terminate</A></TD>
+          <TD>Ends tilt series and returns full program control to user.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_tiltseries_extraoutput">Extra Output</A></TD>
+          <TD>Opens dialog box to control extra output to other files.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_tiltseries_futurepolicies">Batch Policies</A></TD>
+          <TD>Opens dialog box to set policies for automatically started tilt series.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_tiltseries_resetpoleangle">Reset Pole Angle</A></TD>
+          <TD>Resets the 'pole touch' angle and allows tilt series to go on.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><a href="#hid_tiltseries_run_macro">Run Script in TS</a></TD>
+          <TD>Toggles running a script at one step in tilt series loop.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><a href="#hid_tiltseries_setmacrotorun">Set Script to Run</a></TD>
+          <TD>Sets the script number to run and the step in the tilt series.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><a href="#hid_tiltseries_call_ts_plugin">Call TS Plugins</a></TD>
+          <TD>Toggles calling tilt series plugin functions during series if any are available.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><a href="#hid_tiltseries_fixed_num_frames">Fixed # of K2 Frames</a></TD>
+          <TD>Toggles keeping number of frames constant as exposure time changes for 
+            K2 camera</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_tiltseries_sendemail">Send Email at End</A></TD>
+          <TD>Toggles sending email when tilt series stops or finishes.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_tiltseries_setaddress">Set Email Address</A></TD>
+          <TD>Opens dialog box to set address to send emails to.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_tiltseries_stop">Stop</A></TD>
+          <TD>Stops all actions as soon as possible.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_tiltseries_endloop">End Loop</A></TD>
+          <TD>Stops at end of loop.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_tiltseries_backup">Back Up</A></TD>
+          <TD>Opens dialog box to back up to a previous tilt angle.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_tiltseries_resume">Resume</A></TD>
+          <TD>Opens dialog box to resume series after potential changes.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_tiltseries_oneloop">One Loop</A></TD>
+          <TD>Does one loop of the tilt series.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_tiltseries_onestep">One Step</A></TD>
+          <TD>Does one step of the tilt series.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><a href="#hid_tiltseries_savex">Save X/Y/Z File</a></TD>
+          <TD>Save file with list of X, Y, Z positions for each tilt angle.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><a href="#hid_tiltseries_autosavex">Autosave X/Y/Z File</a></TD>
+          <TD>Save file with X, Y, Z positions automatically after each tilt series.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_tiltseries_verbose">Verbose</A></TD>
+          <TD>Outputs predictions and actions to Log window.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_tiltseries_autosavelog">Autosave Log</A></TD>
+          <TD>Toggles saving the Log Window to a file after every tilt.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_tiltseries_debugmode">Debug Mode</A></TD>
+          <TD>Toggles sending debugging output to Log Window.</TD>
+        </TR>
+      </TABLE>
+      <BR>
+      <P><A NAME="hid_tasks_tiltseries"></A><B>Setup/Start command (Tilt Series menu)</B></P>
+      <P>Use this command to open the <A HREF="hidd_tiltseries.htm">Tilt Series Setup dialog 
+          box</A> to set the parameters for a new tilt series and start the series, 
+        or to adjust the parameters of one that is running. If a tilt series is already 
+        running, you will have the option of resuming the series at the next step in 
+        its sequence, or of leaving the dialog box and resuming the tilt series at 
+        another point through the <A HREF="hidd_tsresume.htm">Tilt Series Resume dialog box</A>
+        .</P>
+      <P><A NAME="hid_tiltseries_terminate"></A><B>Terminate command (Tilt Series menu)</B></P>
+      <P>Use this command to terminate a tilt series and restore all program controls to 
+        their normal state. The Tilt Series Controller will no longer control the 
+        various buffer and saving options in the program. You will have the option of 
+        leaving your image file open or closing it. For a tilt series run in batch mode 
+        from the Navigator, the tilt series will be terminated, the file will be 
+        closed, and the Navigator will go on to the next tilt series.</P>
+      <P><A NAME="hid_tiltseries_extraoutput"></A><B>Extra Output command (Tilt Series menu)</B></P>
+      <P>Use this command to open the <A HREF="hidd_tsextrafile.htm">Tilt Series Extra Output 
+          dialog box</A> to control output of images to additional windows or image 
+        files. You can have a separate window that holds a buffer stack with binned 
+        down copies of the final Record or montage overviews during a tilt series. You 
+        can save each type of image shot by the Tilt Series Controller (autofocus, 
+        tracking, and preview in low dose mode) to a separate output file. You can also 
+        use this dialog to do a series of Record images at different focus settings or 
+        at different filter settings.</P>
+    <P><A NAME="hid_tiltseries_futurepolicies"></A><B>Batch Policies command (Tilt Series 
+          menu)</B></P>
+      <P>Use this command to open the <A HREF="hidd_tspolicies.htm">Tilt Series Batch Policy 
+          dialog box</A> to control how errors are handled during a tilt series 
+        started automatically from the Navigator. The most important choice is between 
+        having the series stop with a message box after an error to allow the usual 
+        kinds of interventions, versus having the series automatically terminated. If 
+        the latter is selected, other choices essentially answer the various message 
+        boxes that give the user a choice after an error.</P>
+      <P><A NAME="hid_tiltseries_resetpoleangle"></A><B>Reset Pole Angle command (Tilt Series 
+          menu)</B></P>
+      <P>When the program finds that the stage has not tilted as much as expected, it 
+        stops and asks if you want to stop the tilt series. If you answer yes, it sets 
+        this angle as an internal 'pole touch' angle beyond which it will not tilt. If 
+        you answer yes incorrectly, you will not be able to go on until you use this 
+        command to reset the 'pole touch' angle and remove this limitation.</P>
+      <P><A NAME="hid_tiltseries_run_macro"></A><B>Run Script in TS command (Tilt Series 
+          menu)</B></P>
+    <P>Use this command to run a chosen script before a selected step in the tilt series 
+      loop.&nbsp; 
+      The available steps are the tracking shot before autofocus, autofocus, the tracking shot after autofocus, and the Record or 
+      Montage.&nbsp; The script will be run on every loop of the tilt series, 
+      regardless of whether the chosen step is performed at that tilt angle or ever.&nbsp; 
+      This command is disabled until a script number is set with the following command.</P>
+    <P>Unlike when running scripts from the Navigator, there are no layers of control 
+      in this situation; if the script is stopped, this will stop the tilt series, and 
+      there will be no way to resume the script from the stopping point. The tilt 
+      series will also stop if there is an error in the script. It should be possible 
+      to make the script run again by selecting to go back to an earlier step when 
+      resuming the tilt series.&nbsp; The script can be edited, and the selections of 
+      which script and which step can be changed, whenever the tilt series is stopped.</P>
+    <P>There are no protections against running a script that interferes with the Tilt 
+      Series Controller's operations and controls in some way, such as by manipulating 
+      open files or copying buffers.&nbsp; Malfunctions or crashes would be expected 
+      in such cases.</P>
+    <P><A NAME="hid_tiltseries_setmacrotorun"></A><B>Set Script To Run command (Tilt Series 
+          menu)</B></P>
+    <P>Use this command to enter the script number of a script to be run during the 
+      series, then a number for the step in the series of actions at which to run the 
+      script.&nbsp; The entry box for the latter will list the available steps, 
+      numbered from one.</P>
+    <P><A NAME="hid_tiltseries_call_ts_plugin"></A><B>Call TS Plugins command (Tilt 
+      Series menu)</B></P>
+    <P>It is possible for SerialEM plugins to provide functions that can be called at 
+      defined points in the tilt series.&nbsp; If this entry is checked, those 
+      functions will be called.&nbsp; It is grayed out if there are no plugins loaded 
+      with such functions.</P>
+     <P><A NAME="hid_tiltseries_fixed_num_frames"></A><B>Fixed # of K2 Frames command (Tilt 
+      Series menu)</B></P>
+      <P>If this entry is checked, then if intensity is being changed during a tilt 
+        series with a K2 camera, the program will adjust the frame time to keep the 
+        number of frames constant.&nbsp; Aside from keeping the signal-to-noise ratio of 
+        the frames comparable, this may also result in finer changes in exposure time, 
+        which would otherwise be constrained to be a multiple of a fixed frame time.&nbsp; 
+        However, there may be increased drift within the early frames for the longer 
+        frame times.&nbsp; This adjustment will not be made if you have scheduled 
+        changes in frame time explicitly with the <a href="hidd_tsvariations.htm">Tilt 
+        Series Scheduled Changes</a> dialog.</P>
+     <P><A NAME="hid_tiltseries_sendemail"></A><B>Send Email at End command (Tilt 
+        Series menu) menu)</B></P>
+      <P>If this entry is checked, SerialEM will send an email when a tilt series reaches 
+        its end or stops in need of attention, except when the stop is immediately 
+        after an action that you have taken. To send email, an SMTP server and an 
+        address to send from must be defined in the SerialEM properties file, and you 
+        must enter an email address with the 'Set Email Address' command described 
+        next.</P>
+      <P><A NAME="hid_tiltseries_setaddress"></A><B>Set Email Address command (Tilt Series 
+          menu)</B></P>
+      <P>Use this command to set the address(es) to which emails from SerialEM will be 
+        sent. You can enter more than one address, separated by commas or spaces. The 
+        address entered here will be used for any emails sent from SerialEM; i.e., ones 
+        sent by the Navigator as well as ones after a tilt series stops.</P>
+      <P><A NAME="hid_tiltseries_stop"></A><B>Stop command (Tilt Series menu)</B></P>
+      <P>Use this command to stop a tilt series at the next logical step. The Tilt Series 
+        Controller will still be in control of the program. If you open the <A HREF="hidd_tsresume.htm">
+          Tilt Series Resume dialog box</A> you will be able to see exactly where the 
+        series stopped, because the dialog box contains a statement of the next action 
+        to be performed.</P>
+      <P><A NAME="hid_tiltseries_endloop"></A><B>End Loop command (Tilt Series menu)</B></P>
+      <P>Use this command to stop a tilt series after all actions have been completed at 
+        the current tilt angle. The Tilt Series Controller will still be in control of 
+        the program.</P>
+      <P><A NAME="hid_tiltseries_backup"></A><B>Back Up command (Tilt Series menu)</B></P>
+      <P>Use this command to open the <A HREF="hidd_tsresume.htm">Tilt Series Back Up dialog 
+          box</A> in order to back up to a previous tilt angle and redo operations 
+        from that point. You can use this procedure more than once, if necessary, 
+        before selecting the point from which you want to resume. When you back up, the 
+        Tilt Series Controller will try to set up an appropriate reference image for 
+        the new tilt angle.</P>
+      <P><A NAME="hid_tiltseries_resume"></A><B>Resume command (Tilt Series menu)</B></P>
+      <P>Use this command to open the <A HREF="hidd_tsresume.htm">Tilt Series Resume dialog 
+          box</A> . This dialog box will give you a chance to change the next action 
+        to be performed. You can choose to redo some actions at the current tilt angle, 
+        or, to a limited extent, you can skip some actions that you have performed 
+        manually.</P>
+      <P><A NAME="hid_tiltseries_oneloop"></A><B>One Loop command (Tilt Series menu)</B></P>
+      <P>Use this command to perform one loop of a tilt series. The Tilt Series 
+        Controller will resume from the point at which it was stopped and will go on 
+        until all operations are complete at a tilt angle.</P>
+      <P><A NAME="hid_tiltseries_onestep"></A><B>One Step command (Tilt Series menu)</B></P>
+      <P>Use this command to advance one step of the tilt series. There will be a 
+        message in the log saying which step is executed.</P>
+    <P><A NAME="hid_tiltseries_savex"></A><B>Save X/Y/Z File command (Tilt Series menu)</B></P>
+    <P>Use this command to save a text file with a list of tilt angles and X, Y, and Z 
+      positions in the order in which they occurred during the series.&nbsp; The file 
+      may be saved after the tilt series is finished, or a partial file can be saved 
+      any time that the series is stopped.&nbsp; The data are available for saving 
+      until the next tilt series is started.</P>
+    <P>With IMOD 4.7, a simple plot of the data can be generated with<br />
+&nbsp;&nbsp;&nbsp;&nbsp; onegenplot -col 1,2,3,4 filename.txt<br />
+      with other options available to embellish the plot if desired.&nbsp; With IMOD 
+      4.8.40 or later, a properly labeled plot with different colors can be produced 
+      with<br />
+&nbsp;&nbsp;&nbsp;&nbsp; tomodataplots -typ 14 filename.txt<br />
+      where the option '-con 1' can be used to add connecting lines between the 
+      points.</P>
+    <P><A NAME="hid_tiltseries_autosavex"></A><B>Autosave X/Y/Z File command (Tilt Series menu)</B></P>
+    <P>Use this command to toggle automatic saving of a text file with a list of tilt 
+      angles and X, Y, and Z positions at the end of each tilt series.&nbsp; If the 
+      output file name is 'imagefile.mrc', this file will have the name 
+      'imagefile_xyz.txt'</P>
+      <P><A NAME="hid_tiltseries_verbose"></A><B>Verbose command (Tilt Series menu)</B></P>
+      <P>Use this command to toggle output of tracking and prediction information and 
+        other status messages to the Log window during a tilt series. If this item is 
+        not checked, then only the summary information about each image saved will be 
+        printed.</P>
+      <P><A NAME="hid_tiltseries_autosavelog"></A><B>Autosave Log command (Tilt Series menu)</B></P>
+      <P>Use this command to toggle automatic saving of the Log Window to a file after 
+        every tilt. If the Log Window has not yet been saved to a file, a log file will 
+        be started with a name derived from the name of the tilt series output file.</P>
+      <P><A NAME="hid_tiltseries_debugmode"></A><B>Debug Mode command (Tilt Series menu)</B></P>
+      <P>Use this command to toggle output to the Log Window of numerous state variables 
+        in the Tilt Series Controller. The output will occur before each action.</P>
+    </basefont>
+  </BODY>
+</HTML>

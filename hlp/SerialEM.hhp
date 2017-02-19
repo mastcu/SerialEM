@@ -1,0 +1,115 @@
+[OPTIONS]
+Auto Index=Yes
+Binary Index=No
+Compatibility=1.1 or later
+Compiled file=SerialEM.chm
+Contents file=serialem.hhc
+Default Window=main
+Default topic=html\main_index.htm
+Display compile progress=No
+Full-text search=Yes
+Index file=SerialEM.hhk
+Language=0x409 English (United States)
+
+[WINDOWS]
+main="SerialEM","serialem.hhc","SerialEM.hhk","html\main_index.htm",,,,,,0x42520,230,0x300e,,,,,,,,0
+
+
+[FILES]
+html\main_index.htm
+html\about_serialem.htm
+html\about_mouse.htm
+html\about_camera.htm
+html\about_autofocus.htm
+html\about_tilt_series.htm
+html\about_multiple_series.htm
+html\about_montaging.htm
+html\about_low_dose.htm
+html\about_gif.htm
+html\about_navigator.htm
+html\setting_up_serialem.htm
+html\about_properties.htm
+html\about_formats.htm
+html\menu_file.htm
+html\menu_settings.htm
+html\menu_camera.htm
+html\menu_calibration.htm
+html\menu_focus.htm
+html\menu_macro.htm
+html\about_macros.htm
+html\macro_commands.htm
+html\menu_tasks.htm
+html\menu_tilt_series.htm
+html\menu_process.htm
+html\menu_navigator.htm
+html\menu_window.htm
+html\menu_help.htm
+html\afx_hidd_fileopen.htm
+html\afx_hidd_filesave.htm
+html\afx_hidw_status_bar.htm
+html\hid_ht_caption.htm
+html\scrollbars.htm
+html\hid_sc_size.htm
+html\hid_sc_move.htm
+html\hid_sc_minimize.htm
+html\hid_sc_maximize.htm
+html\hid_sc_nextwindow.htm
+html\hid_sc_prevwindow.htm
+html\hid_sc_close.htm
+html\hid_sc_restore.htm
+html\about_panels.htm
+html\hidd_bufferstatus.htm
+html\hidd_buffercontrol.htm
+html\hidd_imagelevel.htm
+html\hidd_scopestatus.htm
+html\hidd_tiltcontrol.htm
+html\hidd_camera_macro.htm
+html\hidd_alignfocus.htm
+html\hidd_lowdose.htm
+html\hidd_montagecontrol.htm
+html\hidd_filtercontrol.htm
+html\hidd_stemcontrol.htm
+html\hidd_camerasetup.htm
+html\hidd_falcon_frames.htm
+html\hidd_k2_save_options.htm
+html\hidd_framealign.htm
+html\hidd_gainreference.htm
+html\hidd_refpolicy.htm
+html\hidd_montagesetup.htm
+html\hidd_autocensetup.htm
+html\hidd_cooksetup.htm
+html\hidd_tsrange.htm
+html\hidd_tssetangle.htm
+html\hidd_macrocontrol.htm
+html\hidd_tiltseries.htm
+html\hidd_tsvariations.htm
+html\hidd_tsresume.htm
+html\hidd_tsbackup.htm
+html\hidd_tsextrafile.htm
+html\hidd_tspolicies.htm
+html\hidd_navigator.htm
+html\hidd_navacquire.htm
+html\hidd_navimport.htm
+html\hidd_navrotalign.htm
+html\hidd_statedlg.htm
+html\hidd_macro.htm
+html\hidd_fileproperties.htm
+html\hidd_readfiledlg.htm
+html\hidd_stagemovetool.htm
+html\hid_ht_nowhere.htm
+html\nohelp.htm
+html\hidd_detoolpanel.htm
+
+[ALIAS]
+HIDR_MAINFRAME = html\main_index.htm
+HID_HT_SIZE = html\hid_sc_size.htm
+HID_HT_HSCROLL = html\scrollbars.htm
+HID_HT_VSCROLL = html\scrollbars.htm
+HID_HT_MAXBUTTON = html\hid_sc_maximize.htm
+#include aliases.h
+
+[MAP]
+#include HTMLDefines.h
+
+[INFOTYPES]
+

@@ -1,0 +1,126 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+  <HEAD>
+    <TITLE>Settings Menu Commands</TITLE>
+    <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
+    <style type="text/css"> <!-- BODY { font-family:"Arial" }
+  TD { font-size:16 }
+  --></style>
+  </HEAD>
+  <BODY BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+      <P><A NAME="menu_settings"></A><B><FONT size="3">Settings menu commands</FONT></B></P>
+      <P>The Settings menu offers the following commands:</P>
+      <TABLE BORDER cols="2">
+        <TR VALIGN="top">
+          <TD width="104"><A HREF="#hid_settings_open">Open</A></TD>
+          <TD>Opens and reads a settings file.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="104"><A HREF="#hid_settings_readagain">Read Again</A></TD>
+          <TD>Rereads settings from the current file.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="104"><A HREF="#hid_settings_save">Save</A></TD>
+          <TD>Saves settings to file.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="104"><A HREF="#hid_settings_saveas">Save As</A></TD>
+          <TD>Saves settings to a new file.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="104"><A HREF="#hid_settings_close">Close</A></TD>
+          <TD>Closes settings file to prevent saving to it upon exit.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="104"><A HREF="#hid_settings_readdefaults">Read Defaults</A></TD>
+          <TD>Reads system default settings file.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="104"><A HREF="#hid_settings_autosave">Autosave</A></TD>
+          <TD>Periodically save settings to currently open file.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="104"><a href="#hid_settings_setaproperty">Set a Property</a></TD>
+          <TD>Changes the value of one program property setting.</TD>
+        </TR>
+      </TABLE>
+      <BR>
+      <P><A NAME="about_settings"></A><B>About Settings Files</B></P>
+      <P>Settings files are used to store just about every parameter that can be set by 
+        you in SerialEM. The main exceptions are program states such as Montaging, Low 
+        Dose mode, and Tilt Series mode, which need to be activated by you each time 
+        you run the program. By default, SerialEM will remember all of your parameters 
+        from one session to the next in a file called SerialEMsettings.txt in the 
+        directory where SerialEM was started. One can use the options in this menu to 
+        save settings into other files and retrieve settings from such files. The menu 
+        displays a list of recently used settings files so that you can switch between 
+        settings rapidly if necessary.</P>
+      <P>After parameters are read from a file, that file is left open, which has three 
+        implications: 1) Settings can be saved to that file via the entry in this menu; 
+        2) Settings can be restored from the file to the value that they had when they 
+        were last saved there; and 3) When you quit the program, settings will be saved 
+        into that file. To prevent settings from being saved into a file when you quit 
+        the program, just Close the file.</P>
+      <P>If your settings become too far from usable, you can restore them to default 
+        values by reading from a file called the System Default Settings file.</P>
+      <P>Scripts are also stored in settings files. When you read a file that contains 
+        scripts, the scripts in the file will replace the respective ones in the program, 
+        but any other scripts that you have defined will be retained.</P>
+      <P><A NAME="hid_settings_open"></A><B>Open command (Settings menu)</B></P>
+      <P>Use this command to open a file in which settings were stored previously. 
+        Ordinarily, your default settings file is open whenever you are running 
+        SerialEM. Thus, opening a new file will usually involve closing that file. If 
+        this is the case, you will be asked whether you want to save your current 
+        settings into the currently open file before closing it and opening a different 
+        one.</P>
+      <P>You will enter the <A HREF="afx_hidd_fileopen.htm">File Open dialog box</A> to 
+        select the file, which is a text file.
+      </P>
+      <P>Below the Open menu entry is a list of the most recently used settings files. 
+        Select one of these files to open it. In this case, the settings will 
+        automatically be saved to the current file first, without requiring your 
+        confirmation. To prevent this, you could close the current settings file first.</P>
+      <P><A NAME="hid_settings_readagain"></A><B>Read Again command (Settings menu)</B></P>
+      <P>Use this command to read parameter values from the currently open settings file. 
+        You would do this if you do not want to keep any parameter changes that you 
+        have made and want to restore your settings to the state saved in this file.</P>
+      <P><A NAME="hid_settings_save"></A><B>Save command (Settings menu)</B></P>
+      <P>Use this command to save settings to a file. If there is a settings file open, 
+        then the program state will be saved to this file. If not, you will enter the <A HREF="afx_hidd_filesave.htm">
+          Save As dialog box</A> to specify a new file to save values into. A file 
+        that has been saved into is left open; in other words, it will be saved to 
+        again when the program exits, unless you close it first.</P>
+      <P><A NAME="hid_settings_saveas"></A><B>Save As command (Settings menu)</B></P>
+      <P>Use this command to save settings to a file different from the one that is 
+        currently open. You will enter the <A HREF="afx_hidd_filesave.htm">Save As dialog 
+          box</A> to specify a file to save values into. Any previously open settings 
+        file will be closed, and the new one will be left open. This means that it will 
+        be saved to again when the program exits, unless you close it first.</P>
+      <P><A NAME="hid_settings_close"></A><B>Close command (Settings menu)</B></P>
+      <P>Use this command to close a settings file. This means that it will not be saved 
+        to when the program exits, which you might want to do if you are going to 
+        experiment with parameters that you will not want to save. You will be asked 
+        whether you want to save your current settings to the file before closing it.</P>
+      <P><A NAME="hid_settings_readdefaults"></A><B>Read Defaults command (Settings menu)</B></P>
+      <P>Use this command to read the System Defaults settings file. If there is a 
+        settings file currently open, you will be asked whether you want to save your 
+        settings to that file before overlaying them with the system defaults.</P>
+      <P><A NAME="hid_settings_autosave"></A><B>Autosave command (Settings menu)</B></P>
+      <P>Use this command to control whether settings will be saved to a file 
+        periodically (every 5 minutes, except during a tilt series). Autosaving is 
+        useful if you are doing things that present a risk of crashing the program. If 
+        no settings file is open when Autosave is on, then nothing will be saved.</P>
+      <P><A NAME="hid_settings_setaproperty"></A><B>Set a property command (Settings menu)</B></P>
+    <P>Use this command to set the value of one program property.&nbsp; The command 
+      can be used with nearly all of the general (non-camera-specific) properties that 
+      contain just a single numeric entry and can be set by name in 
+      SerialEMproperties.txt.&nbsp; First enter the full name of the property as 
+      listed in the properties file or the help file (but matching to this entry is 
+      case-insensitive, so case does not matter).&nbsp; If this does not match one of 
+      the properties that can be set, an error message is given.&nbsp; Otherwise, 
+      another dialog box opens for entering the property value.&nbsp; The existing 
+      value of the property is NOT shown in the box, just a 0.</P>
+    </basefont>
+  </BODY>
+</HTML>

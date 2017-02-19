@@ -1,0 +1,133 @@
+Error checks on all parameters that can be set from settings!
+
+Determining image shift and beam tilt limits
+
+Saving personal calibration of image shift with time stamp
+
+Autofocus at high tilt when far off
+
+The focus recalibration failed to offer to change all
+
+Recheck image shift delay need
+
+X File title as a property or setting
+
+X Modift the montage messages to depend on tilt
+
+TO TEST:
+
+? Resume when OK a macro that was running
+
+Backup when montaging
+
+What happens if a file is open with incompatible image size to TSC/Record settings?
+
+Controller issues:
+
+? Setting up a parameter set that is 512, full field; the latter is already done for complex 
+tasks too.
+
+X Allowing low dose area redefinitions and invalidating tracking reference
+
+X Preview button opening Montaging
+
+X Option to shift stage instead of image shift
+
+
+X Limit mag in walkup during tilt series
+
+X Add Preview command to macros
+
+X check out preview before new tracking ref in low dose mode
+
+check out low mag reference tracking
+
+
+X When there is a stage move error, think about suggestion to check stage
+X position at end of range  (mouse moving, reset image shift?)
+
+X Think about the resource not available error as an interaction between
+X mouse move and scope update loop, or multiple mouse evenets...
+
+X Add dose calibration via C2 setting and blank image, and estimate of
+X total dose in TS setup, and dose record in log
+
+X Option not to focus?
+
+Ability to store a Z change calibration and use it instead
+   - when walking up
+   - instead of autofocus
+
+X Cropping in alignment when at lower mag.
+X Cropping as a controllable option too.
+
+What about ability to analyze for beam center?
+
+X Add menu entry to set unsigned option
+
+JEOL TASKS:
+Coordinate systems and rotation - see if we can make specimen coords match stage coords!
+Map out coordinate system by moving to increased X and to increased Y - 
+when we increase stage X we see (center) a point along the positive stage X axis
+DONE: stuck with wierd inversion so stage fallback would be OK.
+
+Current density is based on fA/cm^2 and 300 cm^2 screen - this is supposed to be checked
+Can we calibrate current?
+DONE!
+
+Does the slit center shift when it is opened or is it stationary?  This is hard-coded parameter
+not a property.
+
+Image shift - Is it right to use image shift 1 not 2?  Does the beam shift work correctly?
+DONE - FINE
+
+Brightness: Does CL3 do the job as needed over the mag range?  Does intensity calibration
+work and how well does it work across mags?
+CL3 IS IT.  CAL Stinks
+
+Focus: Does reset defocus work OK?
+How about focus versus Z height?
+Beam tilt actually work with CLA2?  YES
+
+Stage: Are there piezo drive or not?
+Properties for stage rounding and piezo rounding: if no piezo, set rounding 0
+Is stage really quantized the way it is in emulator?  COntrolled by stage rounding
+Should JEOLstate skip the piezo update if there is none?
+
+MAG!  Currently it looks up a mag index from the given mag and ignores the mag mode
+Is this going to work?  Can they work with one mag mode?  Do there need to be separate
+calibrations, i.e. mapping of mode into index?  Are MAG1, MAG2, SAMAG interchangeable
+or would some be wanted in some cases, other one in other cases?
+Would need a table of starting indexes or # of mags in each mode
+15 16 17 15
+Then getmag would be given mag and mode for the lookup
+Mapping table would be hard-coded to put low mag on the bottom
+
+----------------------------------
+Pole touch situation still not clear - "Go on" really means take the record
+picture, while it then does not let you actually continue and says nothing.
+Huh?  It is supposed to GO ON when you say NO.  Check this.
+
+Besides which it should have some way to reset the pole angle!
+
+Potential desire for tracking at record area - it should somehow recognize 
+record reference as valid.
+
+Preview dose sum comes out zero when dose is .05 per picture and it did
+a lot of previews
+
+1x3 montage on F20 prescan is blurred (record exposure 1 sec - 0.8 sec drift)
+
+Assign crossovers needs to look at average of table not just one endpoint.
+
+* IntensityToC2factor coming out not 1 in JEOL cal file.
+
+*Montage should allow non-zero starting coordinate, but then the navigator
+* is screwed up.
+
+*Document: SimulationMode, NoSpectrumOffset, InvertStageXAxis
+
+* Tietz camera set gain to 1.
+
+* Navigator: change coordinates and registration of images in buffers (but
+check what this really means in practice)

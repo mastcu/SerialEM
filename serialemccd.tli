@@ -1,0 +1,234 @@
+﻿// Created by Microsoft (R) C/C++ Compiler Version 15.00.30729.01 (cb6b3867).
+//
+// c:\users\mast\documents\scope\serialem\release\serialemccd.tli
+//
+// Wrapper implementations for type library ..\SerialEMCCD\SerialEMCCD.tlb
+// compiler-generated file created 02/23/16 at 09:45:42 - DO NOT EDIT!
+
+#pragma once
+
+//
+// interface IDMCamera wrapper method implementations
+//
+
+inline HRESULT IDMCamera::GetTestArray ( long width, long height, long * retSize, short * array, long * time, unsigned long * receiptTime, unsigned long * returnTime ) {
+    HRESULT _hr = raw_GetTestArray(width, height, retSize, array, time, receiptTime, returnTime);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IDMCamera::ExecuteScript ( long size, long * script, long selectCamera, double * retval ) {
+    HRESULT _hr = raw_ExecuteScript(size, script, selectCamera, retval);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IDMCamera::SetDebugMode ( long debug ) {
+    HRESULT _hr = raw_SetDebugMode(debug);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IDMCamera::SetDMVersion ( long version ) {
+    HRESULT _hr = raw_SetDMVersion(version);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IDMCamera::SetCurrentCamera ( long camera ) {
+    HRESULT _hr = raw_SetCurrentCamera(camera);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IDMCamera::QueueScript ( long size, long * script ) {
+    HRESULT _hr = raw_QueueScript(size, script);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IDMCamera::GetAcquiredImage ( short * array, long * arrSize, long * width, long * height, long processing, double exposure, long binning, long top, long left, long bottom, long right, long shutter, double settling, long shutterDelay, long divideBy2, long corrections ) {
+    HRESULT _hr = raw_GetAcquiredImage(array, arrSize, width, height, processing, exposure, binning, top, left, bottom, right, shutter, settling, shutterDelay, divideBy2, corrections);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IDMCamera::GetDarkReference ( short * array, long * arrSize, long * width, long * height, double exposure, long binning, long top, long left, long bottom, long right, long shutter, double settling, long divideBy2, long corrections ) {
+    HRESULT _hr = raw_GetDarkReference(array, arrSize, width, height, exposure, binning, top, left, bottom, right, shutter, settling, divideBy2, corrections);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IDMCamera::GetGainReference ( float * array, long * arrSize, long * width, long * height, long binning ) {
+    HRESULT _hr = raw_GetGainReference(array, arrSize, width, height, binning);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IDMCamera::selectCamera ( long camera ) {
+    HRESULT _hr = raw_selectCamera(camera);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IDMCamera::GetNumberOfCameras ( long * numCameras ) {
+    HRESULT _hr = raw_GetNumberOfCameras(numCameras);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IDMCamera::IsCameraInserted ( long camera, long * inserted ) {
+    HRESULT _hr = raw_IsCameraInserted(camera, inserted);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IDMCamera::InsertCamera ( long camera, long state ) {
+    HRESULT _hr = raw_InsertCamera(camera, state);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IDMCamera::GetDMVersion ( long * version ) {
+    HRESULT _hr = raw_GetDMVersion(version);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IDMCamera::GetDMCapabilities ( long * canSelectShutter, long * canSetSettling, long * openShutterWorks ) {
+    HRESULT _hr = raw_GetDMCapabilities(canSelectShutter, canSetSettling, openShutterWorks);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IDMCamera::SetShutterNormallyClosed ( long camera, long shutter ) {
+    HRESULT _hr = raw_SetShutterNormallyClosed(camera, shutter);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IDMCamera::SetNoDMSettling ( long camera ) {
+    HRESULT _hr = raw_SetNoDMSettling(camera);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IDMCamera::GetDSProperties ( long timeout, double addedFlyback, double margin, double * flyback, double * lineFreq, double * rotOffset, long * doFlip ) {
+    HRESULT _hr = raw_GetDSProperties(timeout, addedFlyback, margin, flyback, lineFreq, rotOffset, doFlip);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IDMCamera::AcquireDSImage ( short * array, long * arrSize, long * width, long * height, double rotation, double pixelTime, long lineSync, long continuous, long numChan, long * channels, long divideBy2 ) {
+    HRESULT _hr = raw_AcquireDSImage(array, arrSize, width, height, rotation, pixelTime, lineSync, continuous, numChan, channels, divideBy2);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IDMCamera::ReturnDSChannel ( short * array, long * arrSize, long * width, long * height, long channel, long divideBy2 ) {
+    HRESULT _hr = raw_ReturnDSChannel(array, arrSize, width, height, channel, divideBy2);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IDMCamera::StopDSAcquisition ( ) {
+    HRESULT _hr = raw_StopDSAcquisition();
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IDMCamera::SetReadMode ( long mode, double scaling ) {
+    HRESULT _hr = raw_SetReadMode(mode, scaling);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IDMCamera::SetK2Parameters ( long mode, double scaling, long hardwareProc, long doseFrac, double frameTime, long alignFrames, long saveFrames, long filtSize, long * filter ) {
+    HRESULT _hr = raw_SetK2Parameters(mode, scaling, hardwareProc, doseFrac, frameTime, alignFrames, saveFrames, filtSize, filter);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IDMCamera::SetupFileSaving ( long rotationFlip, long filePerImage, double pixelSize, long nameSize, long * names, long * error ) {
+    HRESULT _hr = raw_SetupFileSaving(rotationFlip, filePerImage, pixelSize, nameSize, names, error);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IDMCamera::GetFileSaveResult ( long * numSaved, long * error ) {
+    HRESULT _hr = raw_GetFileSaveResult(numSaved, error);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IDMCamera::SetupFileSaving2 ( long rotationFlip, long filePerImage, double pixelSize, long flags, double dummy1, double dummy2, double dummy3, double dummy4, long nameSize, long * names, long * error ) {
+    HRESULT _hr = raw_SetupFileSaving2(rotationFlip, filePerImage, pixelSize, flags, dummy1, dummy2, dummy3, dummy4, nameSize, names, error);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IDMCamera::GetDefectList ( short * xyPairs, long * arrSize, long * numPoints, long * numTotal ) {
+    HRESULT _hr = raw_GetDefectList(xyPairs, arrSize, numPoints, numTotal);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IDMCamera::SetK2Parameters2 ( long mode, double scaling, long hardwareProc, long doseFrac, double frameTime, long alignFrames, long saveFrames, long rotationFlip, long flags, double dummy1, double dummy2, double dummy3, double dummy4, long filtSize, long * filter ) {
+    HRESULT _hr = raw_SetK2Parameters2(mode, scaling, hardwareProc, doseFrac, frameTime, alignFrames, saveFrames, rotationFlip, flags, dummy1, dummy2, dummy3, dummy4, filtSize, filter);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IDMCamera::StopContinuousCamera ( ) {
+    HRESULT _hr = raw_StopContinuousCamera();
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IDMCamera::GetPluginVersion ( long * version ) {
+    HRESULT _hr = raw_GetPluginVersion(version);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IDMCamera::GetLastError ( long * error ) {
+    HRESULT _hr = raw_GetLastError(error);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IDMCamera::FreeK2GainReference ( long which ) {
+    HRESULT _hr = raw_FreeK2GainReference(which);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IDMCamera::IsGpuAvailable ( long gpuNum, long * available, double * gpuMemory ) {
+    HRESULT _hr = raw_IsGpuAvailable(gpuNum, available, gpuMemory);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IDMCamera::SetupFrameAligning ( long aliBinning, double rad2Filt1, double rad2Filt2, double rad2Filt3, double sigma2Ratio, double truncLimit, long alignFlags, long gpuFlags, long numAllVsAll, long groupSize, long shiftLimit, long antialiasType, long refineIter, double stopIterBelow, double refRad2, long nSumandGrab, long dumInt1, long dumInt2, double dumDbl1, long stringSize, long * strings, long * error ) {
+    HRESULT _hr = raw_SetupFrameAligning(aliBinning, rad2Filt1, rad2Filt2, rad2Filt3, sigma2Ratio, truncLimit, alignFlags, gpuFlags, numAllVsAll, groupSize, shiftLimit, antialiasType, refineIter, stopIterBelow, refRad2, nSumandGrab, dumInt1, dumInt2, dumDbl1, stringSize, strings, error);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IDMCamera::FrameAlignResults ( double * rawDist, double * smoothDist, double * resMean, double * maxResMax, double * meanRawMax, double * maxRawMax, long * crossHalf, long * crossQuarter, long * crossEighth, long * halfNyq, long * dumInt1, double * dumDbl1, double * dumDbl2 ) {
+    HRESULT _hr = raw_FrameAlignResults(rawDist, smoothDist, resMean, maxResMax, meanRawMax, maxRawMax, crossHalf, crossQuarter, crossEighth, halfNyq, dumInt1, dumDbl1, dumDbl2);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IDMCamera::ReturnDeferredSum ( short * array, long * arrSize, long * width, long * height ) {
+    HRESULT _hr = raw_ReturnDeferredSum(array, arrSize, width, height);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IDMCamera::MakeAlignComFile ( long flags, long dumInt1, double dumDbl1, double dumDbl2, long stringSize, long * strings, long * error ) {
+    HRESULT _hr = raw_MakeAlignComFile(flags, dumInt1, dumDbl1, dumDbl2, stringSize, strings, error);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}

@@ -1,0 +1,477 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+  <HEAD>
+    <TITLE>Camera Menu Commands</TITLE>
+    <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
+    <style type="text/css"> <!-- BODY { font-family:"Arial" }
+  TD { font-size:16 }
+      .style1
+      {
+        width: 207px;
+      }
+  --></style>
+  </HEAD>
+  <BODY BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+      <P><A NAME="menu_camera"></A><B><FONT size="3">Camera menu commands</FONT></B></P>
+      <P>The Camera menu offers the following commands:</P>
+      <TABLE BORDER cols="2">
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_camera_parameters">Parameters</A></TD>
+          <TD>Opens dialog box to set parameters for image acquisition.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_camera_acquiregainref">Prepare Gain Ref</A></TD>
+          <TD>Opens dialog box to acquire a gain reference in SerialEM.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_camera_gainrefpolicy">Gain Ref Policy</A></TD>
+          <TD>Opens dialog box to set policies governing multiple gain references.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_camera_view">View</A></TD>
+          <TD>Acquires image with first parameter set.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_camera_focus">Focus</A></TD>
+          <TD>Acquires image with second parameter set.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_camera_trial">Trial</A></TD>
+          <TD>Acquires image with third parameter set.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_camera_record">Record</A></TD>
+          <TD>Acquires image with fourth parameter set.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_camera_preview">Preview</A></TD>
+          <TD>Acquires image with fifth parameter set.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_camera_montage">Montage</A></TD>
+          <TD>Starts montage acquisition to file.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_camera_montagetrial">Prescan</A></TD>
+          <TD>Acquires binned-down montage without saving.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_camera_setcountlimit">Set Minimum Counts</A></TD>
+          <TD>A submenu with settings to manipulate the filters used when correlating 
+            montage overlap zones.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1">&nbsp;&nbsp;&nbsp; 
+            <a href="#hid_correlationfilter_usefilterset2">Use Filter Set 2</a></TD>
+          <TD>Use the second set of filter parameters instead of the primary one.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1">&nbsp;&nbsp;&nbsp; 
+            <a href="#hid_correlationfilter_useset2inlowdose">Use Set 2 in Low Dose</a></TD>
+          <TD>Use the second set of filter parameters for montages taken in Low Dose mode.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1">&nbsp;&nbsp;&nbsp; <a href="#hid_correlationfilter_divideset1by2">
+            Divide Filter Set 1 by 2</a>&nbsp;</TD>
+          <TD>Divide each frequency of first set of filter parameters by 2.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1">&nbsp;&nbsp;&nbsp; <a href="#hid_correlationfilter_divideset2by2">
+            Divide Filter Set 2 by 2</a>&nbsp;</TD>
+          <TD>Divide each frequency of second set of filter parameters by 2.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1">&nbsp;&nbsp;&nbsp; 
+            <a href="#hid_correlationfilter_testset1values">Test Values for Set 1</a></TD>
+          <TD>Set values of first set of filter parameters for temporary use.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1">&nbsp;&nbsp;&nbsp; 
+            <a href="#hid_correlationfilter_testset2values">Test Values for Set 2</a></TD>
+          <TD>Set values of second set of filter parameters for temporary use.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1">&nbsp;&nbsp;&nbsp; 
+            <a href="#hid_correlationfilter_redocorrwhenread">Redo Corr when Read</a></TD>
+          <TD>Recompute correlations when reading a montage instead of using values from 
+            .mdoc file.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_camera_setcountlimit">Set Minimum Counts</A></TD>
+          <TD>Set the minimum required mean counts for a montage frame.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_camera_stopacquire">Stop Acquire</A></TD>
+          <TD>Stops image acquisition.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_camera_showgainref">Show Gain Ref</A></TD>
+          <TD>Shows the gain reference last used to normalize an image.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_camera_showdarkref">Show Dark Ref</A></TD>
+          <TD>Shows the dark reference last used.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_camera_postactions">Post-actions</A></TD>
+          <TD>Allows actions like tilt and image shift right after exposure.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_camera_divideby2">Divide 16-bit by 2</A></TD>
+          <TD>Divides data from 16-bit camera by 2 in camera plugin.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_camera_normalizehere">Normalize Here</A></TD>
+          <TD>Toggles gain normalization within SerialEM on and off.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_camera_interpolate_dark_refs">Interpolate Dark Refs</A></TD>
+          <TD>Interpolate between dark references at different exposures instead of taking 
+            one to match each exposure time.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><a href="#hid_camera_setframealignlines">Set Frame Align Lines</a></TD>
+          <TD>Set amount of detail (# of lines of output) in log from K2 frame alignment</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><b>Special Settings</b></TD>
+          <TD>A submenu with settings for test or specialized purposes.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1">&nbsp;&nbsp;&nbsp; <A HREF="#hid_camera_settiming">Set Timing</A></TD>
+          <TD>Set timing parameters for dual-shuttering mode.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1">&nbsp;&nbsp;&nbsp; <a href="#hid_camera_set_quality">Set 
+            Quality</a></TD>
+          <TD>Set quality value for continuous mode images.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1">&nbsp;&nbsp;&nbsp; <a href="#hid_camera_setscanning">Set 
+            Scanning</a></TD>
+          <TD>Set parameters for scanning with a slit beam.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1">&nbsp;&nbsp;&nbsp; <A HREF="#hid_camera_setdriftinterval">Set Drift Interval</A></TD>
+          <TD>Set interval for image shift changes when doing drift correction.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1">&nbsp;&nbsp;&nbsp; <A HREF="#hid_camera_setcorrections">Set Corrections</A></TD>
+          <TD>Set basic image corrections performed in DigitalMicrograph.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1">&nbsp;&nbsp;&nbsp; <A HREF="#hid_camera_screendown">Screen Down</A></TD>
+          <TD>Leaves screen down during image acquisition.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1">&nbsp;&nbsp;&nbsp; <A HREF="#hid_camera_nonormofdsdosefrac">No Norm of 
+            DS Dose Frac</A></TD>
+          <TD>Turn off normalization of unnormalized K2 dose-fractionated images.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1">&nbsp;&nbsp;&nbsp; <A HREF="#hid_camera_simulation">Simulation</A></TD>
+          <TD>Gets simulated images rather than acquiring from camera.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_camera_debugmode">Debug Mode</A></TD>
+          <TD>Outputs debugging information to Log Window and Digital Micrograph Results 
+            window.</TD>
+        </TR>
+      </TABLE>
+      <BR>
+      <P><A NAME="hid_camera_parameters"></A><B>Parameters command (Camera menu)</B></P>
+      <P>Use this command to open the <A HREF="hidd_camerasetup.htm">Camera Setup dialog box</A>
+        and set parameters like exposure time, field of view and binning for the 5 
+        different exposure modes.</P>
+      <P>Shortcut Key:CTRL+P</P>
+      <P><A NAME="hid_camera_acquiregainref"></A><B>Prepare Gain Ref command (Camera menu)</B></P>
+      <P>Use this command to open the <A HREF="hidd_gainreference.htm">Gain Reference dialog 
+          box</A> and acquire a gain reference that will be used for gain 
+        normalization within SerialEM.</P>
+      <P><A NAME="hid_camera_gainrefpolicy"></A><B>Gain Ref Policy command (Camera menu)</B></P>
+      <P>Use this command to open the <A HREF="hidd_refpolicy.htm">Gain Reference Policy 
+          dialog box</A> and set options controlling which gain reference is used for 
+        gain normalization within SerialEM when several are available.</P>
+      <P><A NAME="hid_camera_view"></A><B>View command (Camera menu)</B></P>
+      <P>This command acquires an image with the first camera parameter set. This would 
+        be a good parameter set to use for highly binned, continuous exposures, if 
+        continuous exposures worked reasonably well.</P>
+      <P>In Low Dose mode, images captured with these parameters are not shifted away 
+        from the center of the recording area. The View area is intended to be set up 
+        to give a low magnification, low exposure overview. The various procedures 
+        which would ordinarily lower the magnification to track positions, such as the 
+        eucentricity-finding routines, use View exposures in low dose mode. In other 
+        words, these routines rely on the parameter set giving adequate exposures for 
+        low-mag tracking in low dose mode.</P>
+      <P>Shortcut Key:CTRL+V</P>
+      <P><A NAME="hid_camera_focus"></A><B>Focus command (Camera menu)</B></P>
+      <P>This command acquires an image with the second camera parameter set. This 
+        parameter set is used by the Autofocus routine to acquire two or three images 
+        in quick succession, so it is typical to set it up for a small image that can 
+        be read out quickly, such as the central quarter of the field, with somewhat 
+        short exposure and drift settling times. It would be nice if one could also use 
+        this parameter set for visually assessing focus, but one usually wants a larger 
+        area for that purpose.</P>
+      <P>In Low Dose mode, images captured with these parameters can be, and typically 
+        are, shifted away from the center of the recording area.</P>
+      <P>Shortcut Key:CTRL+F</P>
+      <P><A NAME="hid_camera_trial"></A><B>Trial command (Camera menu)</B></P>
+      <P>This command acquires an image with the third camera parameter set. This 
+        parameter set is typically set up to acquire a full-frame image relatively 
+        quickly. It is used extensively by various routines that do tracking (e.g., 
+        eucentricity-finding routines). You should thus make sure that this parameter 
+        set gives an adequate exposure for tracking. Many of these routines actually 
+        compose a separate parameter set, changing the binning and exposure time if 
+        necessary so that binned images of no more than 512 pixels are acquired. 
+        However, when the tilt series controller acquires tracking images, it uses the 
+        Trial parameters without modification. It is recommended that you set these 
+        parameters to bin images binned down to no larger than 512 pixels, and that you 
+        acquire a full-frame image unless you have some specific reason not to.</P>
+      <P>In Low Dose mode, images captured with these parameters can be, and typically 
+        are, shifted away from the center of the recording area.</P>
+      <P>Shortcut Key:CTRL+T</P>
+      <P><A NAME="hid_camera_record"></A><B>Record command (Camera menu)</B></P>
+      <P>This command acquires an image with the fourth camera parameter set. This 
+        parameter set is intended to be used for final acquisition of images to be 
+        saved, and the Tilt Series Controller will rely on it being set up for that 
+        purpose. In addition, montaging is done by acquiring images with these 
+        parameters.</P>
+      <P>In Low Dose mode, images taken with these parameters define the center of the 
+        recording area and can be considered unshifted.</P>
+      <P>Shortcut Key:CTRL+R</P>
+      <P><A NAME="hid_camera_preview"></A><B>Preview command (Camera menu)</B></P>
+      <P>This command acquires an image with the fifth camera parameter set. This is 
+        probably useful only in Low Dose mode, where it acquires an image from the 
+        Record area, using the same magnification and beam settings as for Record 
+        images. It can be set up to provide a very low exposure image of the Record 
+        area.
+      </P>
+      <P>Shortcut Key:CTRL+L</P>
+      <P><A NAME="hid_camera_montage"></A><B>Montage command (Camera menu)</B></P>
+      <P>This command will start the acquisition of a montaged image, with the pieces 
+        saved to file. If there is not yet an open image file, you will first enter the <A HREF="hidd_montagesetup.htm">
+          Montage Setup dialog box</A>, which allows you to specify the number of 
+        frames, magnification, and binning. From there, you enter the <A HREF="hidd_fileproperties.htm">
+          File Properties dialog box</A> then the <A HREF="afx_hidd_filesave.htm">Save As 
+          dialog box</A>.</P>
+      <P>Shortcut Key:CTRL+M</P>
+      <P><A NAME="hid_camera_montagetrial"></A><B>Prescan command (Camera menu)</B></P>
+      <P>This command will acquire a binned-down montaged image, which allows a quicker 
+        assessment of the area that will be captured in an actual montage. The images 
+        are not saved to file. However, montaging needs to be set up first, which does 
+        entail defining an output file. If montaging has not been started yet, you will 
+        first enter the <A HREF="hidd_montagesetup.htm">Montage Setup dialog box</A>, 
+        then ensuing dialogs for opening a file.</P>
+      <P><A NAME="hid_correlationfilter_usefilterset2"></A><B>Use Filter Set 2 command (Camera - Correlation Filter submenu)</B></P>
+    <P>The Correlation Filter submenu has a set of commands for controlling the filter 
+      used when correlating montage overlap zones.&nbsp; There are two sets of filter 
+      parameters available.&nbsp; Each set has default values, but the defaults can be 
+      changed by adding entries for MontageFilterR1R2S1S2 or MontFilterSet2R1R2S1S2 to 
+      the SerialEM properties file.&nbsp; The only difference between the defaults is 
+      in the low frequency filtering applied when 'Treat as very sloppy montage' is 
+      checked in the Montage Control panel.&nbsp; Filter Set 1 has a strong 
+      low-frequency filter, which has been found to be important when there are 
+      strong, high-contrast features like grid bars in the overlaps zone.&nbsp; 
+      However, this amount of low-frequency filtering can be detrimental when aligning 
+      low-dose montages without many features beside the regularly spaced holes.&nbsp; 
+      Filter Set 2 eliminates the extra low frequency filter and may work better for 
+      such specimens.</P>
+    <P>Use this command to switch to Filter Set 2 unconditionally.&nbsp; If you change 
+      filters and want to see the effect on alignment of an existing montage, you need 
+      to turn on the <a href="#hid_correlationfilter_redocorrwhenread">Redo Corr when 
+      Read</a> option so that correlations are recomputed when the montage is read in.</P>
+      <P><A NAME="hid_correlationfilter_useset2inlowdose"></A><B>Use Set 2 in Low Dose command (Camera - Correlation Filter submenu)</B></P>
+    <P>Use this command to switch to the second set of filter parameters for 
+      correlating montage overlap zones only in Low Dose mode.&nbsp; A low 
+      magnification grid map, taken outside of Low Dose mode, would use Filter Set 1, 
+      which may work better for montages full of grid bars.</P>
+      <P><A NAME="hid_correlationfilter_divideset1by2"></A><B>Divide Set 1 by 2 command (Camera - Correlation Filter submenu)</B></P>
+      <P><A NAME="hid_correlationfilter_divideset2by2"></A><B>Divide Set 2 by 2 command (Camera - Correlation Filter submenu)</B></P>
+    <P>Use these commands to divide all of the parameters of the first or second 
+      filter set by 2.&nbsp; The filter parameters are tuned to work with a moderate 
+      amount of noise in the images. When montaging in Low Dose mode, these parameters 
+      will work if either the dose or the binning is high enough (typically 4 for 4K 
+      camera).&nbsp; If taking images with an optimal binning for this situation is 
+      not feasible or not desired, then the filter parameters can be divided by to 
+      achieve an equivalent effect to doubling the binning.&nbsp; If you change this 
+      selection and want to see the effect on alignment of an existing montage, you 
+      need to turn on the <a href="#hid_correlationfilter_redocorrwhenread">Redo Corr 
+      when Read</a> option so that correlations are recomputed when the montage is read in.</P>
+      <P><A NAME="hid_correlationfilter_testset1values"></A><B>Test Values for Set 1 command (Camera - Correlation Filter submenu)</B></P>
+      <P><A NAME="hid_correlationfilter_testset2values"></A><B>Test Values for Set 2 command (Camera - Correlation Filter submenu)</B></P>
+    <P>Use these commands to try different values of the filter parameters; your 
+      settings here will not be retained between sessions.&nbsp; Parameters are all 
+      expressed in cycles per pixel (Nyquist is 0.5).&nbsp; Entry boxes will come up 
+      for each of the four parameters in turn:<br />
+&nbsp;&nbsp; Radius 1: The <i>negative</i> of the frequency at which the low-frequency 
+      filter starts to rise from 0 when the 'Treat as very sloppy montage' option is 
+      on; all frequencies below this radius will be set to 0.&nbsp; Only a negative 
+      value should be entered.<br />
+&nbsp;&nbsp; Radius 2: The frequency at which high-frequency filtering starts.&nbsp; 
+      This may need to be lower for very noisy data.<br />
+&nbsp;&nbsp; Sigma 1: The sigma for the low-frequency filter, which is an inverted 
+      gaussian that rises from 0 to 1.<br />
+&nbsp;&nbsp; Sigma 2: The sigma for the gaussian falloff of the high-frequency filter.&nbsp; 
+      This should generally be changed proportionally if Radius 2 is changed.</P>
+    <P>If you want to see the effect of new settings on an existing montage, turn on 
+      the following option.</P>
+      <P><A NAME="hid_correlationfilter_redocorrwhenread"></A><B>Redo Corr when Read command (Camera - Correlation Filter submenu)</B></P>
+    <P>If you change any of the filter settings above and want to see how they work 
+      with an existing montage, you need to turn on this option so that the program 
+      will recompute the correlations with the new parameters when reading in the 
+      montage.&nbsp; Otherwise, it will use the shifts stored in the .mdoc file 
+      associated with the image file.&nbsp; In fact, with this option on, new shifts 
+      will be stored in the .mdoc file every time a montage is read in.</P>
+      <P><A NAME="hid_camera_setcountlimit"></A><B>Set Minimum Counts command (Camera menu)</B></P>
+      <P>Use this command to set a minimum required number of mean counts for each 
+        montage frame. When a frame is taken that falls below this limit, the program 
+        stops and gives you three choices: to retake the image and test it again 
+        against the limit, to save the image and go on, or to stop the montage. 
+        However, if the property ShootFilmIfMontageDark is set to 1, then the program 
+        will first take a film picture, which may unstick the lower shutter on a JEOL. 
+        Set the minimum counts back to 0 to disable this test.</P>
+      <P><A NAME="hid_camera_stopacquire"></A><B>Stop Acquire command (Camera menu)</B></P>
+      <P>This command will stop image acquisition if it is still in some intermediate 
+        state, such as raising the screen or acquiring a dark reference. However, once 
+        the request for an image has been issued, stopping will 
+        have no effect.</P>
+      <P><A NAME="hid_camera_showgainref"></A><B>Show Gain Ref command (Camera menu)</B></P>
+      <P>This command will place the gain reference that was last used to normalize an 
+        image into buffer A and roll the contents of A into B, etc., to the extent that 
+        buffer rolling is selected. The gain reference consists of real numbers around 
+        1.0 that are multiplied by the image to normalize it.
+      </P>
+      <P><A NAME="hid_camera_showdarkref"></A><B>Show Dark Ref command (Camera menu)</B></P>
+      <P>This command will place the last-used dark reference into buffer A and roll the 
+        contents of A into B, etc., to the extent that buffer rolling is selected.</P>
+      <P><A NAME="hid_camera_postactions"></A><B>Post-actions command (Camera menu)</B></P>
+      <P>This command toggles a mode in which various time-consuming actions are 
+        initiated immediately after camera exposure ends, at the beginning of the image 
+        readout. These actions can be magnification changes, image shift, and stage 
+        tilting. Stage tilting is the most noticeable action, because it means that 
+        when you stop the Tilt Series Controller, it will often have already gone on to 
+        the next tilt. If this behavior is problematic, you can disable it with this 
+        command.</P>
+      <P><A NAME="hid_camera_divideby2"></A><B>Divide 16-bit by 2 command (Camera menu)</B></P>
+      <P>This command toggles a mode in which all images from a 16-bit camera are divided 
+        by 2 in the camera plugin, prior to being received by SerialEM. In this mode, 
+        negative numbers in a dark-subtracted or gain-normalized image will be 
+        preserved instead of truncated at zero. This could be important for 
+        low-exposure images if the dark reference drifts downward. Another advantage of 
+        this mode is that the numbers shown in SerialEM will match those saved to a 
+        file. When this mode is selected, the options for treatment of 16-bit data in 
+        the <A HREF="hidd_fileproperties.htm">File Properties dialog box</A> will be 
+        disabled because they are no longer relevant. (The image has already been 
+        divided by 2 and will not be recognized as an unsigned 16-bit image.)</P>
+      <P><A NAME="hid_camera_normalizehere"></A><B>Normalize Here command (Camera menu)</B></P>
+      <P>This command toggles the processing (dark subtraction and gain normalization) of 
+        images within SerialEM. This setting is initially determined by the global 
+        'GainNormalizeInSerialEM' property or by the 'NormalizeInSerialEM' property for 
+        individual cameras. When it is off, processed images are acquired from 
+        DigitalMicrograph (or TIA for an Eagle camera). When it is on, raw images and 
+        dark references are acquired from DigitalMicrograph, and the processing is done 
+        in SerialEM. In the latter case, the gain reference could come from 
+        DigitalMicrograph or from one prepared in SerialEM, depending on which exists.</P>
+      <P><A NAME="hid_camera_interpolate_dark_refs"></A><B>Interpolate Dark Refs command 
+          (Camera menu)</B></P>
+      <P>This command toggles whether the program will compute a dark reference for a 
+        particular exposure time by interpolating between dark references for two other 
+        exposure times, instead of taking a dark reference to match each exposure. When 
+        this feature is enabled, interpolation is used if the desired exposure time is 
+        between the times for two existing references separated by no more than 0.2 
+        second. If such references do not exist, a new reference is taken either at the 
+        desired exposure time or at an interval of 0.2 seconds from a nearby reference; 
+        in the latter case interpolation can then be used. The interpolated dark 
+        reference will be at least as accurate as a reference taken to match a 
+        particular exposure, because interpolation averages over two estimates of the 
+        reference. Thus, it is not necessary to take averaged dark references to get 
+        good interpolated references, although averaging will improve the estimate 
+        further.</P>
+      <P>When exposure time is being varied automatically during a tilt series, the 
+        program activates interpolation if possible. However, this feature is available 
+        only when gain normalization is being done in SerialEM.</P>
+    <P><A NAME="hid_camera_setframealignlines"></A><B>Set Frame Align Lines command (Camera menu)</B></P>
+    <P>This command allows you to control how much detail is printed to the log window 
+      after K2 frame alignment done in the SerialEMCCD plugin to DM.&nbsp; The default 
+      is two lines of output: one with the raw and smoothed movement distance implied 
+      by the frame shifts; one with selected residual values.&nbsp; If enough frames 
+      are included when fitting the shifts to allow robust fitting, the residuals 
+      given are the average of the weighted mean residuals of the fits (an overall 
+      figure of merit), the maximum over the fits of the maximum weighted residuals in 
+      each fit (reflecting the worse frame alignment result), and the maximum of 
+      maximum unweighted residuals(reflecting the occurrence of bad alignments that 
+      could be discarded as outliers).&nbsp; With no robust fitting, it simply shows 
+      the overall mean residual and maximum of maximum residuals.</P>
+    <P>When you select to show one line, it will show the overall mean residual and 
+      maximum of maximum residuals, based on weighted values if there is robust 
+      fitting, plus the raw distance moved.</P>
+    <P>When you select to show three lines, it will compute the Fourier ring 
+      correlation (FRC) between sums of even and odd frames and report the frequencies 
+      values at which it falls below various levels, plus the FRC at half-Nyquist.</P>
+    <P><A NAME="hid_camera_settiming"></A><B>Set Timing command (Camera menu)</B></P>
+      <P>This command allows you to enter values for the startup delay, minimum drift 
+        settling, and extra beam time needed in the dual shuttering mode of operation. 
+        The option is enabled by being in Administrator mode.</P>
+    <P><A NAME="hid_camera_set_quality"></A><B>Set Quality command (Camera menu)</B></P>
+    <P>This command allows you to enter a value for the quality level to set when 
+      acquiring images in continuous mode from the current Gatan camera.&nbsp; Enter a 
+      number between 1 and 7 (most camaeras will not have that many quality levels), 
+      or enter 0 to have no quality value set.</P>
+    <P><A NAME="hid_camera_setscanning"></A><B>Set Scanning command (Camera menu)</B></P>
+    <P>This command was used to enter parameters to control beam movement and focus 
+      changes while scanning with a slit beam.</P>
+      <P><A NAME="hid_camera_setcorrections"></A><B>Set Corrections command (Camera menu)</B></P>
+      <P>This command allows you to enter a value for the basic corrections to be done 
+        when DigitalMicrograph acquires an image. This value may initially be set with 
+        the 'BasicCorrections' property, otherwise it is -1, meaning that default 
+        corrections will be done. The value should be the sum of 1 for defect 
+        correction, 16 for bias correction, and 32 for linearization. 0 will turn off 
+        all default corrections. This command is enabled by being in Administrator 
+        mode.</P>
+      <P><A NAME="hid_camera_setdriftinterval"></A><B>Set Drift Interval command (Camera 
+          menu)</B></P>
+      <P>It is possible for drift to be compensated during an exposure by using a script 
+        command to set the drift rate for the next exposure. This command is used to 
+        adjust the interval between changes in image shift during the exposure. The 
+        default is 100 ms, which may be too short on a JEOL.</P>
+      <P><A NAME="hid_camera_screendown"></A><B>Screen Down command (Camera menu)</B></P>
+      <P>This command is used to toggle a mode in which the screen is not raised before a 
+        camera exposure. This could be useful for looking at the beam during an 
+        exposure.</P>
+    <P><A NAME="hid_camera_nonormofdsdosefrac"></A><B>No Norm of DS Dose Frac command (Camera menu)</B></P>
+    <P>This command can be used to turn off the normalization of the summed image that 
+      is returned from a K2 dose fractionation shot taken without gain normalization.</P>
+      <P><A NAME="hid_camera_simulation"></A><B>Simulation command (Camera menu)</B></P>
+      <P>This command is used to toggle simulation mode, in which fake images are 
+        produced within SerialEM rather than acquired from DigitalMicrograph. It should 
+        not be needed for simulation if DigitalMicrograph is started with Ctrl and 
+        Shift held down to activate the Faux camera.</P>
+      <P><A NAME="hid_camera_debugmode"></A><B>Debug Mode command (Camera menu)</B></P>
+      <P>This command is used to toggle debug mode, in which the SerialEMCCD plugin will 
+        chronicle its transactions in the DigitalMicrograph Results window. The camera 
+        controller in SerialEM will also output some timing information in the Log 
+        Window. After turning on this mode, you can debug problems with taking a 
+        picture with the following procedure:</P>
+      <P style="Z-INDEX: 0">Be sure that the Results window is open in DigitalMicrograph.</P>
+      <P style="Z-INDEX: 0">Try to take an image of the kind that makes&nbsp;an error 
+        occur.
+      </P>
+      <P style="Z-INDEX: 0">Go to the DigitalMicrograph Results window. At the end will 
+        be the last script executed. Open a new script window with Ctrl-K. Copy from 
+        the Results window, starting at the line
+        <BR>
+        &nbsp;&nbsp; Object manager =...<BR>
+        after the last
+        <BR>
+        &nbsp;&nbsp; DMcamera executing script :<BR>
+        up to the line before
+        <BR>
+        &nbsp;&nbsp; Exit(retval)</P>
+      <P style="Z-INDEX: 0">Paste this into the script window. Run the script with 
+        Ctrl-Enter. It should give an error message with more details about what is 
+        bothering it.&nbsp; If the&nbsp;solution is not obvious, copy down the error 
+        message, save the Results window, and send them to David Mastronarde.</P>
+    </basefont>
+  </BODY>
+</HTML>

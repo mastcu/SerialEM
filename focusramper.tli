@@ -1,0 +1,37 @@
+﻿// Created by Microsoft (R) C/C++ Compiler Version 15.00.30729.01 (0a83cecc).
+//
+// c:\users\mast\documents\scope\serialem\release\focusramper.tli
+//
+// Wrapper implementations for Win32 type library ..\FocusRamper\FocusRamper.tlb
+// compiler-generated file created 02/12/15 at 13:54:31 - DO NOT EDIT!
+
+#pragma once
+
+//
+// interface IFocusRamper wrapper method implementations
+//
+
+inline HRESULT IFocusRamper::Initialize ( _bstr_t instrumentName ) {
+    HRESULT _hr = raw_Initialize(instrumentName);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IFocusRamper::DoRamp ( long scanDelay, long scanTime, long focusInterval, float rampTable[32], double focusPerMs ) {
+    HRESULT _hr = raw_DoRamp(scanDelay, scanTime, focusInterval, rampTable, focusPerMs);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IFocusRamper::FinishRamp ( long timeOut, double * intMin, double * intMax, double * intMean, double * intSD ) {
+    HRESULT _hr = raw_FinishRamp(timeOut, intMin, intMax, intMean, intSD);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline _bstr_t IFocusRamper::GetLastComErrorString ( ) {
+    BSTR _result = 0;
+    HRESULT _hr = get_LastComErrorString(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _bstr_t(_result, false);
+}

@@ -1,0 +1,372 @@
+<HTML>
+<!--Sitemap 1.0-->
+<OBJECT type="text/site properties">
+</OBJECT>
+<UL>
+	<LI><OBJECT type="text/sitemap">
+		<param name="Name" value="General Topics">
+		</OBJECT>
+	<UL>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Introduction to SerialEM">
+			<param name="Local" value="html/about_serialem.htm">
+			</OBJECT>
+			<A HREF="html/about_serialem.htm">Introduction to SerialEM</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Mouse and Keyboard Controls">
+			<param name="Local" value="html/about_mouse.htm">
+			</OBJECT>
+			<A HREF="html/about_mouse.htm">Mouse and Keyboard Controls</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Control Panels">
+			<param name="Local" value="html/about_panels.htm">
+			</OBJECT>
+			<A HREF="html/about_panels.htm">Control Panels</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Image Acquisition">
+			<param name="Local" value="html/about_camera.htm">
+			</OBJECT>
+			<A HREF="html/about_camera.htm">Image Acquisition</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Using and Troubleshooting Autofocus">
+			<param name="Local" value="html/about_autofocus.htm">
+			</OBJECT>
+			<A HREF="html/about_autofocus.htm">Using and Troubleshooting Autofocus</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Acquiring Tilt Series">
+			<param name="Local" value="html/about_tilt_series.htm">
+			</OBJECT>
+			<A HREF="html/about_tilt_series.htm">Acquiring Tilt Series</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Montaging">
+			<param name="Local" value="html/about_montaging.htm">
+			</OBJECT>
+			<A HREF="html/about_montaging.htm">Montaging</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Low Dose Mode">
+			<param name="Local" value="html/about_low_dose.htm">
+			</OBJECT>
+			<A HREF="html/about_low_dose.htm">Low Dose Mode</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Energy Filtering">
+			<param name="Local" value="html/about_gif.htm">
+			</OBJECT>
+			<A HREF="html/about_gif.htm">Energy Filtering</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="STEM Mode">
+			<param name="Local" value="html/about_stem.htm">
+			</OBJECT>
+			<A HREF="html/about_gif.htm">Energy Filtering</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Using the Navigator">
+			<param name="Local" value="html/about_navigator.htm">
+			</OBJECT>
+			<A HREF="html/about_navigator.htm">Using the Navigator</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Acquiring Multiple Tilt Series Automatically">
+			<param name="Local" value="html/about_multiple_series.htm">
+			</OBJECT>
+			<A HREF="html/about_multiple_series.htm">Acquiring Multiple Tilt Series Automatically</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Settings Files">
+			<param name="Local" value="html/menu_settings.htm#about_settings">
+			</OBJECT>
+			<A HREF="html/menu_settings.htm#about_settings">Settings Files</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Scripts">
+			<param name="Local" value="html/about_macros.htm">
+			</OBJECT>
+			<A HREF="html/about_macros.htm">Scripts</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Script Commands">
+			<param name="Local" value="html/macro_commands.htm">
+			</OBJECT>
+			<A HREF="html/macro_commands.htm">Script Commands</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Setting Up SerialEM">
+			<param name="Local" value="html/setting_up_serialem.htm">
+			</OBJECT>
+			<A HREF="html/setting_up_serialem.htm">Setting Up SerialEM</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Property File Entries">
+			<param name="Local" value="html/about_properties.htm">
+			</OBJECT>
+			<A HREF="html/about_properties.htm">Property File Entries</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="File Formats and Other Documentation">
+			<param name="Local" value="html/about_formats.htm">
+			</OBJECT>
+			<A HREF="html/about_formats.htm">File Formats and Other Documentation</A><BR>
+	</UL>
+	<LI><OBJECT type="text/sitemap">
+		<param name="Name" value="Menus">
+		</OBJECT>
+	<UL>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="File menu">
+			<param name="Local" value="html/menu_file.htm">
+			</OBJECT>
+			<A HREF="html/menu_file.htm">File menu</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Settings menu">
+			<param name="Local" value="html/menu_settings.htm">
+			</OBJECT>
+			<A HREF="html/menu_settings.htm">Settings menu</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Camera menu">
+			<param name="Local" value="html/menu_camera.htm">
+			</OBJECT>
+			<A HREF="html/menu_camera.htm">Camera menu</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Calibration menu">
+			<param name="Local" value="html/menu_calibration.htm">
+			</OBJECT>
+			<A HREF="html/menu_calibration.htm">Calibration menu</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Focus/Tune menu">
+			<param name="Local" value="html/menu_focus.htm">
+			</OBJECT>
+			<A HREF="html/menu_focus.htm">Focus/Tune menu</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Macro menu">
+			<param name="Local" value="html/menu_macro.htm">
+			</OBJECT>
+			<A HREF="html/menu_macro.htm">Macro menu</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Tasks menu">
+			<param name="Local" value="html/menu_tasks.htm">
+			</OBJECT>
+			<A HREF="html/menu_tasks.htm">Tasks menu</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Tilt Series menu">
+			<param name="Local" value="html/menu_tilt_series.htm">
+			</OBJECT>
+			<A HREF="html/menu_tilt_series.htm">Tilt Series menu</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Process menu">
+			<param name="Local" value="html/menu_process.htm">
+			</OBJECT>
+			<A HREF="html/menu_process.htm">Process menu</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Navigator menu">
+			<param name="Local" value="html/menu_navigator.htm">
+			</OBJECT>
+			<A HREF="html/menu_navigator.htm">Navigator menu</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Window menu">
+			<param name="Local" value="html/menu_window.htm">
+			</OBJECT>
+			<A HREF="html/menu_window.htm">Window menu</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Help menu">
+			<param name="Local" value="html/menu_help.htm">
+			</OBJECT>
+			<A HREF="html/menu_help.htm">Help menu</A><BR>
+	</UL>
+	<LI><OBJECT type="text/sitemap">
+		<param name="Name" value="Control Panels">
+		</OBJECT>
+	<UL>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Buffer Status panel">
+			<param name="Local" value="html/hidd_bufferstatus.htm">
+			</OBJECT>
+			<A HREF="html/hidd_bufferstatus.htm">Buffer Status panel</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Buffer Control Panel">
+			<param name="Local" value="html/hidd_buffercontrol.htm">
+			</OBJECT>
+			<A HREF="html/hidd_buffercontrol.htm">Buffer Control Panel</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Image Display Control panel">
+			<param name="Local" value="html/hidd_imagelevel.htm">
+			</OBJECT>
+			<A HREF="html/hidd_imagelevel.htm">Image Display Control panel</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Microscope Status panel">
+			<param name="Local" value="html/hidd_scopestatus.htm">
+			</OBJECT>
+			<A HREF="html/hidd_scopestatus.htm">Microscope Status panel</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Tilt Control panel">
+			<param name="Local" value="html/hidd_tiltcontrol.htm">
+			</OBJECT>
+			<A HREF="html/hidd_tiltcontrol.htm">Tilt Control panel</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Camera &amp; Macro Control panel">
+			<param name="Local" value="html/hidd_camera_macro.htm">
+			</OBJECT>
+			<A HREF="html/hidd_camera_macro.htm">Camera &amp; Macro Control panel</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Image Alignment &amp; Focus panel">
+			<param name="Local" value="html/hidd_alignfocus.htm">
+			</OBJECT>
+			<A HREF="html/hidd_alignfocus.htm">Image Alignment &amp; Focus panel</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Low Dose Control panel">
+			<param name="Local" value="html/hidd_lowdose.htm">
+			</OBJECT>
+			<A HREF="html/hidd_lowdose.htm">Low Dose Control panel</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Montage Control panel">
+			<param name="Local" value="html/hidd_montagecontrol.htm">
+			</OBJECT>
+			<A HREF="html/hidd_montagecontrol.htm">Montage Control panel</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Filter Control panel">
+			<param name="Local" value="html/hidd_filtercontrol.htm">
+			</OBJECT>
+			<A HREF="html/hidd_filtercontrol.htm">Filter Control panel</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="STEM Control panel">
+			<param name="Local" value="html/hidd_stemcontrol.htm">
+			</OBJECT>
+			<A HREF="html/hidd_stemcontrol.htm">STEM Control panel</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Direct Electron Camera Panel">
+			<param name="Local" value="html/hidd_detoolpanel.htm">
+			</OBJECT>
+			<A HREF="html/hidd_detoolpanel.htm">Direct Electron Camera Panel</A><BR>
+	</UL>
+	<LI><OBJECT type="text/sitemap">
+		<param name="Name" value="Dialog Boxes">
+		</OBJECT>
+	<UL>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="File Properties dialog">
+			<param name="Local" value="html/hidd_fileproperties.htm">
+			</OBJECT>
+			<A HREF="html/hidd_fileproperties.htm">File Properties dialog</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Read Current File dialog">
+			<param name="Local" value="html/hidd_readfiledlg.htm">
+			</OBJECT>
+			<A HREF="html/hidd_readfiledlg.htm">Read Current File dialog</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Camera Setup dialog">
+			<param name="Local" value="html/hidd_camerasetup.htm">
+			</OBJECT>
+			<A HREF="html/hidd_camerasetup.htm">Camera Setup dialog</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="K2 Frame File Options dialog">
+			<param name="Local" value="html/hidd_k2_save_options.htm">
+			</OBJECT>
+			<A HREF="html/hidd_k2_save_options.htm">K2 Frame File Options dialog</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Frame Alignment Parameters dialog">
+			<param name="Local" value="html/hidd_framealign.htm">
+			</OBJECT>
+			<A HREF="html/hidd_framealign.htm">Frame Alignment Parameters dialog</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Falcon Frame Selection dialog">
+			<param name="Local" value="html/hidd_falcon_frames.htm">
+			</OBJECT>
+			<A HREF="html/hidd_falcon_frames.htm">Falcon Frame Selection dialog</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Gain Reference dialog">
+			<param name="Local" value="html/hidd_gainreference.htm">
+			</OBJECT>
+			<A HREF="html/hidd_gainreference.htm">Gain Reference dialog</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Gain Reference Policy dialog">
+			<param name="Local" value="html/hidd_refpolicy.htm">
+			</OBJECT>
+			<A HREF="html/hidd_refpolicy.htm">Gain Reference Policy dialog</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Montage Setup dialog">
+			<param name="Local" value="html/hidd_montagesetup.htm">
+			</OBJECT>
+			<A HREF="html/hidd_montagesetup.htm">Montage Setup dialog</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Beam Autocentering Setup dialog">
+			<param name="Local" value="html/hidd_autocensetup.htm">
+			</OBJECT>
+			<A HREF="html/hidd_autocensetup.htm">Beam Autocentering Setup dialog</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Specimen Cooking Setup dialog">
+			<param name="Local" value="html/hidd_cooksetup.htm">
+			</OBJECT>
+			<A HREF="html/hidd_cooksetup.htm">Specimen Cooking Setup dialog</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Tilt Series Range Finder dialog">
+			<param name="Local" value="html/hidd_tsrange.htm">
+			</OBJECT>
+			<A HREF="html/hidd_tsrange.htm">Tilt Series Range Finder dialog</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Tilt Series Range Viewing dialog">
+			<param name="Local" value="html/hidd_tssetangle.htm">
+			</OBJECT>
+			<A HREF="html/hidd_tssetangle.htm">Tilt Series Range Viewing dialog</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Tilt Series Setup dialog">
+			<param name="Local" value="html/hidd_tiltseries.htm">
+			</OBJECT>
+			<A HREF="html/hidd_tiltseries.htm">Tilt Series Setup dialog</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Tilt Series Scheduled Changes dialog">
+			<param name="Local" value="html/hidd_tsvariations.htm">
+			</OBJECT>
+			<A HREF="html/hidd_tsvariations.htm">Tilt Series Scheduled Changes dialog</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Tilt Series Resume dialog">
+			<param name="Local" value="html/hidd_tsresume.htm">
+			</OBJECT>
+			<A HREF="html/hidd_tsresume.htm">Tilt Series Resume dialog</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Tilt Series Back Up dialog">
+			<param name="Local" value="html/hidd_tsbackup.htm">
+			</OBJECT>
+			<A HREF="html/hidd_tsbackup.htm">Tilt Series Back Up dialog</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Tilt Series Extra Output dialog">
+			<param name="Local" value="html/hidd_tsextrafile.htm">
+			</OBJECT>
+			<A HREF="html/hidd_tsextrafile.htm">Tilt Series Extra Output dialog</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Tilt Series Batch Policies dialog">
+			<param name="Local" value="html/hidd_tspolicies.htm">
+			</OBJECT>
+			<A HREF="html/hidd_tspolicies.htm">Tilt Series Batch Policies dialog</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Navigator Window">
+			<param name="Local" value="html/hidd_navigator.htm">
+			</OBJECT>
+			<A HREF="html/hidd_navigator.htm">Navigator Window</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Navigator Acquire dialog">
+			<param name="Local" value="html/hidd_navacquire.htm">
+			</OBJECT>
+			<A HREF="html/hidd_navacquire.htm">Navigator Acquire dialog</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Navigator Import dialog">
+			<param name="Local" value="html/hidd_navimport.htm">
+			</OBJECT>
+			<A HREF="html/hidd_navimport.htm">Navigator Import dialog</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Align with Rotation dialog">
+			<param name="Local" value="html/hidd_navrotalign.htm">
+			</OBJECT>
+			<A HREF="html/hidd_navrotalign.htm">Align with Rotation dialog</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Imaging State dialog">
+			<param name="Local" value="html/hidd_statedlg.htm">
+			</OBJECT>
+			<A HREF="html/hidd_statedlg.htm">Imaging State dialog</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Macro Control dialog">
+			<param name="Local" value="html/hidd_macrocontrol.htm">
+			</OBJECT>
+			<A HREF="html/hidd_macrocontrol.htm">Macro Control dialog</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Macro Editing window">
+			<param name="Local" value="html/hidd_macro.htm">
+			</OBJECT>
+			<A HREF="html/hidd_macro.htm">Macro Editing window</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Stage Move Tool">
+			<param name="Local" value="html/hidd_stagemovetool.htm">
+			</OBJECT>
+			<A HREF="html/hidd_readfiledlg.htm">Stage Move Tool</A><BR>
+	</UL>
+</UL>
+</HTML>

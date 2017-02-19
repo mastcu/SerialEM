@@ -1,0 +1,108 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+  <HEAD>
+    <TITLE>Tilt Series Scheduled Changes Dialog</TITLE>
+    <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
+    <style type="text/css"> <!-- BODY { font-family:"Arial" }
+  TD { font-size:16 }
+  --></style>
+  </HEAD>
+  <BODY BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+      <P><A NAME="hidd_tsvariations"></A><B><FONT size="3">Tilt Series Scheduled Changes Dialog</FONT></B></P>
+      <P>This dialog box allows you to specify changes in several parameters during a 
+        series: Record exposure time, Record drift settling, target defocus, energy 
+        filter settings, and the frame time for Dose Fractionation mode in a K2 camera. Each change is entered independently and appears as a separate 
+        line in the table at the bottom of the dialog. The upper section of the dialog 
+        contains controls for adjusting the change on the currently selected line of 
+        the table. The middle section has controls for adding or removing changes. The 
+        dialog may be resized to see more of the table.</P>
+      <P>Changes can be scheduled to happen on only one side of the tilt series, or a 
+        single entry can be used for a change that is to happen at both positive and 
+        negative angles. Changes can occur in either discrete steps or continuously, by 
+        changing linearly from one specified angle to another.
+      </P>
+      <P>When changes are in discrete steps, they apply at and above the specified tilt 
+        angle. In this case, the value before the tilt series starts is applied below 
+        the lowest angle for a scheduled change. For example, suppose two changes are 
+        entered for the defocus target,one to set it to -3 at 40&deg; and one to set it to 
+        -2 at 20&deg;, both to occur at positive and negative angles. If the target is -1 
+        before the tilt series starts, and the tilt increment is 1&deg;, then the target 
+        would have the following values during the series: -3 above and at 40&deg;, -2 from 
+        -39&deg; to -20&deg;, -1 from -19&deg; to 19&deg;, -2 from 20&deg; to 39&deg;, and -3 at and above 40&deg;.</P>
+      <P>When a parameter is set to change linearly in a particular entry, the situation 
+        is more complex:</P>
+      <OL>
+        <LI>
+          If there is a change set to occur at a higher angle, then the parameter will be 
+          changed linearly from the value at the given entry's angle to the value at the 
+          higher angle.</LI>
+        <LI>
+          If there is no change set to occur at a higher angle, the parameter will be 
+          fixed at the value for the given entry. If you want a linear change, you must 
+          specify a change at a higher angle, such as the highest angle of the series.</LI>
+        <LI>
+          If there is no change specified at a lower angle, the parameter will change 
+          linearly from its value before the tilt series starts at 0&deg; to the value at the 
+          given entry's angle. If you do not want a linear change, you must specify an 
+          entry for 0&deg; with a fixed value.</LI></OL>
+      <P>To apply this to the example, suppose that the defocus target is scheduled to be 
+        -3 at 40&deg; and -2 at 20&deg;, but with linear changes in each case. Then the target 
+        will be fixed at -3 above 40&deg;, change linearly from -3 to -2 between 40&deg; and 
+        20&deg;, respectively, and change linearly from -2 to -1 from 20&deg; to 0&deg;.</P>
+      <P><B>Setting the properties of a change</B></P>
+      <P>The currently selected itme in the table can be modified by entering a tilt 
+        angle and a value in the respective text boxes, selecting <b>Change at both plus 
+        and minus angles </b>to have the change occur at positive and negative angles, 
+        selecting a 'Set' radio button to set the type of parameter to change, and 
+        selecting <b>Use fixed value</b> or <b>Change linearly</b> depending on which is desired.</P>
+      <P><B>Adding and Removing Items</B></P>
+      <P>Press <B>Add Item</B> to add a new row to the table. The item will be a copy of 
+        the current item, if any; simply modify the controls in the top section as 
+        needed.</P>
+      <P>Press <B>Remove</B> to delete the currently selected row of the table.</P>
+      <P>Press <B>Add Series</B> to add a set of changes in Record exposure to the 
+        table, replacing any exposure time entries already in the table. The exposures 
+        will be proportional to the inverse cosine of the tilt angle to the selected 
+        power, just as for beam intensity or exposure control in the Tilt Series Setup 
+        dialog. The exposures will differ by the multiplicative factor given in the <b>Step 
+        factor </b>text box, so the number of exposure changes will depend on this factor 
+        as well as the highest angle of the tilt series. The changes will be marked as 
+        having fixed values, because linear changes would be redundant to what can be 
+        achieved using just the settings in the Tilt Series Setup dialog. This feature 
+        is intended to allow a hybrid control of specimen exposure, where major changes 
+        are accomplished by the scheduled steps in exposure time, while minor changes 
+        between steps are achieved with beam intensity changes. The latter intensity 
+        changes are limited to be no bigger than the step factor between exposure time 
+        changes. Such hybrid control should not be needed if continuously variable 
+        exposure times can be used with interpolation of dark references; but if for 
+        some reason the interpolation is not available, this hybrid method would 
+        require many fewer dark references.&nbsp; </P>
+    <P>The hybrid method is also needed when exposure time is constrained to be a 
+      multiple of a sizable number.&nbsp; The program imposes such 
+      constraints for all direct detectors and for the Gatan OneView, but the 
+      constraints are the most serious with a K2 camera; namely, exposure time must be a multiple of 0.1 
+      sec or 0.5 sec in counting or super-resolution mode without Dose Fractionation, 
+      or a multiple of the frame time with Dose Fractionation on.&nbsp; The program 
+      will take the constraints entailed by the current Record parameters into account 
+      when picking the exposure times after you press <b>Add Series</b>, and it will 
+      find the angles at which those exposure times should be selected.&nbsp; It is 
+      thus important that you select the camera and set the Record parameters prior 
+      to entering this dialog, and always check or replace the exposure series here 
+      prior to a tilt series if you might have changed parameters.&nbsp; Note that if 
+      the frame time is equal to the exposure time, this dialog knows that the Tilt 
+      Series Controller will keep this relationship as it changes exposure time, so it 
+      will get rid of any existing scheduled changes in frame time. </P>
+    <P>If you are doing Dose Fractionation for real, not just to allow fine-grained 
+      changes in exposure time, then the <b>Keep # of frames constant</b> checkbox 
+      becomes relevant.&nbsp; If this box is off, then exposure times will be picked 
+      that are a multiple of the current frame time.&nbsp; Since these times will work 
+      only if frame time is constant, existing scheduled changes in frame time will be 
+      eliminated.&nbsp; If this box is on, then it will schedule changes in frame time 
+      and exposure at each angle, replacing any existing frame times.&nbsp; The 
+      exposure times are generally constrained to be a multiple of a much smaller 
+      number in this case, so it should be possible to get relatively fine-grained 
+      changes in this way. </P>
+    </basefont>
+  </BODY>
+</HTML>

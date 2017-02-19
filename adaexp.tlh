@@ -1,0 +1,305 @@
+// Created by Microsoft (R) C/C++ Compiler Version 13.10.6030 (e2ad653b).
+//
+// c:\documents and settings\mast\scope\serialem\release\adaexp.tlh
+//
+// C++ source equivalent of Win32 type library ..\Packages\adaexp.exe
+// compiler-generated file created 11/16/08 at 07:00:12 - DO NOT EDIT!
+
+#pragma once
+#pragma pack(push, 8)
+
+#include <comdef.h>
+
+namespace adaExp {
+
+//
+// Forward references and typedefs
+//
+
+struct __declspec(uuid("7116a70d-7497-499c-8e59-d72cdb13f379"))
+/* LIBID */ __adaExp;
+struct __declspec(uuid("8d304182-1c3e-45a3-955d-3d81f7c82284"))
+/* dual interface */ ITAdaExp;
+struct __declspec(uuid("b0837cb1-2954-478c-bf84-541873bdfe58"))
+/* dispinterface */ ITAdaExpEvents;
+struct /* coclass */ TAdaExp;
+enum Valves;
+enum Tmp;
+enum Gun;
+enum Holder;
+
+//
+// Smart pointer typedef declarations
+//
+
+_COM_SMARTPTR_TYPEDEF(ITAdaExp, __uuidof(ITAdaExp));
+_COM_SMARTPTR_TYPEDEF(ITAdaExpEvents, __uuidof(ITAdaExpEvents));
+
+//
+// Type library items
+//
+
+struct __declspec(uuid("8d304182-1c3e-45a3-955d-3d81f7c82284"))
+ITAdaExp : IDispatch
+{
+    //
+    // Property data
+    //
+
+    __declspec(property(get=GetLoadPlate))
+    long LoadPlate;
+    __declspec(property(get=GetUnloadPlate))
+    long UnloadPlate;
+    __declspec(property(get=GetPlateLoadStatus))
+    long PlateLoadStatus;
+    __declspec(property(get=GetCloseShutter))
+    long CloseShutter;
+    __declspec(property(get=GetOpenShutter))
+    long OpenShutter;
+    __declspec(property(get=GetShutterStatus))
+    long ShutterStatus;
+    __declspec(property(get=GetDisconnectExternalShutter))
+    long DisconnectExternalShutter;
+    __declspec(property(get=GetConnectExternalShutter))
+    long ConnectExternalShutter;
+    __declspec(property(get=GetExternalShutterStatus))
+    long ExternalShutterStatus;
+    __declspec(property(get=GetExposePlateLabel))
+    long ExposePlateLabel;
+    __declspec(property(get=GetUpdateExposureNumber))
+    long UpdateExposureNumber;
+    __declspec(property(get=GetMainScreenUp))
+    long MainScreenUp;
+    __declspec(property(get=GetMainScreenDown))
+    long MainScreenDown;
+    __declspec(property(get=GetMainScreenStatus))
+    long MainScreenStatus;
+    __declspec(property(get=GetNumberOfSpecimenHolders))
+    long NumberOfSpecimenHolders;
+    __declspec(property(get=GetCurrentSpecimentHolder))
+    long CurrentSpecimentHolder;
+    __declspec(property(get=GetGetTmpStatus))
+    long GetTmpStatus;
+    __declspec(property(get=GetSetTmp))
+    long SetTmp[];
+    __declspec(property(get=GetGunType))
+    long GunType;
+    __declspec(property(get=GetSetCurrentSpecimenHolder))
+    long SetCurrentSpecimenHolder[];
+    __declspec(property(get=GetFilamentIndex))
+    long FilamentIndex;
+    __declspec(property(get=GetSpecimenHolderName))
+    _bstr_t SpecimenHolderName[];
+    __declspec(property(get=GetSetFilamentIndex))
+    long SetFilamentIndex[];
+    __declspec(property(get=GetWehneltIndex))
+    long WehneltIndex;
+    __declspec(property(get=GetSetWehneltIndex))
+    long SetWehneltIndex[];
+    __declspec(property(get=GetFilamentLimit))
+    long FilamentLimit;
+    __declspec(property(get=GetSetFilamentLimit))
+    long SetFilamentLimit[];
+    __declspec(property(get=GetFegExtractor))
+    double FegExtractor;
+    __declspec(property(get=GetSetFegExtractor))
+    long SetFegExtractor[];
+    __declspec(property(get=GetFegGunLens))
+    long FegGunLens;
+    __declspec(property(get=GetSetFegGunLens))
+    long SetFegGunLens[];
+    __declspec(property(get=GetGonioLedStatus))
+    long GonioLedStatus;
+    __declspec(property(get=GetSpecimenHolderInserted))
+    long SpecimenHolderInserted;
+    __declspec(property(get=GetCurrentSpecimenHolderName))
+    _bstr_t CurrentSpecimenHolderName;
+
+    //
+    // Wrapper methods for error-handling
+    //
+
+    long GetLoadPlate ( );
+    long GetUnloadPlate ( );
+    long GetPlateLoadStatus ( );
+    long GetCloseShutter ( );
+    long GetOpenShutter ( );
+    long GetShutterStatus ( );
+    long GetDisconnectExternalShutter ( );
+    long GetConnectExternalShutter ( );
+    long GetExternalShutterStatus ( );
+    long GetExposePlateLabel ( );
+    long GetUpdateExposureNumber ( );
+    long GetMainScreenUp ( );
+    long GetMainScreenDown ( );
+    long GetMainScreenStatus ( );
+    long GetGetTmpStatus ( );
+    long GetSetTmp (
+        long Val );
+    long GetGunType ( );
+    long GetFilamentIndex ( );
+    long GetSetFilamentIndex (
+        long Val );
+    long GetWehneltIndex ( );
+    long GetSetWehneltIndex (
+        long Val );
+    long GetFilamentLimit ( );
+    long GetSetFilamentLimit (
+        long Val );
+    double GetFegExtractor ( );
+    long GetSetFegExtractor (
+        double Val );
+    long GetFegGunLens ( );
+    long GetSetFegGunLens (
+        long Val );
+    long GetGonioLedStatus ( );
+    long GetSpecimenHolderInserted ( );
+    long GetNumberOfSpecimenHolders ( );
+    long GetCurrentSpecimentHolder ( );
+    long GetSetCurrentSpecimenHolder (
+        long Id );
+    _bstr_t GetSpecimenHolderName (
+        long Id );
+    _bstr_t GetCurrentSpecimenHolderName ( );
+
+    //
+    // Raw methods provided by interface
+    //
+
+      virtual HRESULT __stdcall get_LoadPlate (
+        /*[out,retval]*/ long * Value ) = 0;
+      virtual HRESULT __stdcall get_UnloadPlate (
+        /*[out,retval]*/ long * Value ) = 0;
+      virtual HRESULT __stdcall get_PlateLoadStatus (
+        /*[out,retval]*/ long * Value ) = 0;
+      virtual HRESULT __stdcall get_CloseShutter (
+        /*[out,retval]*/ long * Value ) = 0;
+      virtual HRESULT __stdcall get_OpenShutter (
+        /*[out,retval]*/ long * Value ) = 0;
+      virtual HRESULT __stdcall get_ShutterStatus (
+        /*[out,retval]*/ long * Value ) = 0;
+      virtual HRESULT __stdcall get_DisconnectExternalShutter (
+        /*[out,retval]*/ long * Value ) = 0;
+      virtual HRESULT __stdcall get_ConnectExternalShutter (
+        /*[out,retval]*/ long * Value ) = 0;
+      virtual HRESULT __stdcall get_ExternalShutterStatus (
+        /*[out,retval]*/ long * Value ) = 0;
+      virtual HRESULT __stdcall get_ExposePlateLabel (
+        /*[out,retval]*/ long * Value ) = 0;
+      virtual HRESULT __stdcall get_UpdateExposureNumber (
+        /*[out,retval]*/ long * Value ) = 0;
+      virtual HRESULT __stdcall get_MainScreenUp (
+        /*[out,retval]*/ long * Value ) = 0;
+      virtual HRESULT __stdcall get_MainScreenDown (
+        /*[out,retval]*/ long * Value ) = 0;
+      virtual HRESULT __stdcall get_MainScreenStatus (
+        /*[out,retval]*/ long * Value ) = 0;
+      virtual HRESULT __stdcall get_GetTmpStatus (
+        /*[out,retval]*/ long * Value ) = 0;
+      virtual HRESULT __stdcall get_SetTmp (
+        /*[in]*/ long Val,
+        /*[out,retval]*/ long * Value ) = 0;
+      virtual HRESULT __stdcall get_GunType (
+        /*[out,retval]*/ long * Value ) = 0;
+      virtual HRESULT __stdcall get_FilamentIndex (
+        /*[out,retval]*/ long * Value ) = 0;
+      virtual HRESULT __stdcall get_SetFilamentIndex (
+        /*[in]*/ long Val,
+        /*[out,retval]*/ long * Value ) = 0;
+      virtual HRESULT __stdcall get_WehneltIndex (
+        /*[out,retval]*/ long * Value ) = 0;
+      virtual HRESULT __stdcall get_SetWehneltIndex (
+        /*[in]*/ long Val,
+        /*[out,retval]*/ long * Value ) = 0;
+      virtual HRESULT __stdcall get_FilamentLimit (
+        /*[out,retval]*/ long * Value ) = 0;
+      virtual HRESULT __stdcall get_SetFilamentLimit (
+        /*[in]*/ long Val,
+        /*[out,retval]*/ long * Value ) = 0;
+      virtual HRESULT __stdcall get_FegExtractor (
+        /*[out,retval]*/ double * Value ) = 0;
+      virtual HRESULT __stdcall get_SetFegExtractor (
+        /*[in]*/ double Val,
+        /*[out,retval]*/ long * Value ) = 0;
+      virtual HRESULT __stdcall get_FegGunLens (
+        /*[out,retval]*/ long * Value ) = 0;
+      virtual HRESULT __stdcall get_SetFegGunLens (
+        /*[in]*/ long Val,
+        /*[out,retval]*/ long * Value ) = 0;
+      virtual HRESULT __stdcall get_GonioLedStatus (
+        /*[out,retval]*/ long * Value ) = 0;
+      virtual HRESULT __stdcall get_SpecimenHolderInserted (
+        /*[out,retval]*/ long * Value ) = 0;
+      virtual HRESULT __stdcall get_NumberOfSpecimenHolders (
+        /*[out,retval]*/ long * Value ) = 0;
+      virtual HRESULT __stdcall get_CurrentSpecimentHolder (
+        /*[out,retval]*/ long * Value ) = 0;
+      virtual HRESULT __stdcall get_SetCurrentSpecimenHolder (
+        /*[in]*/ long Id,
+        /*[out,retval]*/ long * Value ) = 0;
+      virtual HRESULT __stdcall get_SpecimenHolderName (
+        /*[in]*/ long Id,
+        /*[out,retval]*/ BSTR * Value ) = 0;
+      virtual HRESULT __stdcall get_CurrentSpecimenHolderName (
+        /*[out,retval]*/ BSTR * Value ) = 0;
+};
+
+struct __declspec(uuid("b0837cb1-2954-478c-bf84-541873bdfe58"))
+ITAdaExpEvents : IDispatch
+{};
+
+struct __declspec(uuid("549b8b80-8169-4908-b0e5-eafa51153561"))
+TAdaExp;
+    // [ default ] interface ITAdaExp
+    // [ default, source ] dispinterface ITAdaExpEvents
+
+enum __declspec(uuid("775a3495-0a5e-4223-852b-8bdfaf1b120d"))
+Valves
+{
+    eClosed = 0,
+    eOpen = 1
+};
+
+enum __declspec(uuid("3d0bd502-41f7-47a7-832a-8671c6f35f7c"))
+Tmp
+{
+    eOff = 0,
+    eOn = 1
+};
+
+enum __declspec(uuid("30b8418f-0f30-46e7-82f5-4a3a1f67fa73"))
+Gun
+{
+    eThermionic = 0,
+    eFeg = 1
+};
+
+enum __declspec(uuid("80adc3c8-b7b3-452d-89be-0d4b9ef9a2b4"))
+Holder
+{
+    eNotInserted = 0,
+    eInserted = 1
+};
+
+//
+// Named GUID constants initializations
+//
+
+extern "C" const GUID __declspec(selectany) LIBID_adaExp =
+    {0x7116a70d,0x7497,0x499c,{0x8e,0x59,0xd7,0x2c,0xdb,0x13,0xf3,0x79}};
+extern "C" const GUID __declspec(selectany) IID_ITAdaExp =
+    {0x8d304182,0x1c3e,0x45a3,{0x95,0x5d,0x3d,0x81,0xf7,0xc8,0x22,0x84}};
+extern "C" const GUID __declspec(selectany) DIID_ITAdaExpEvents =
+    {0xb0837cb1,0x2954,0x478c,{0xbf,0x84,0x54,0x18,0x73,0xbd,0xfe,0x58}};
+extern "C" const GUID __declspec(selectany) CLSID_TAdaExp =
+    {0x549b8b80,0x8169,0x4908,{0xb0,0xe5,0xea,0xfa,0x51,0x15,0x35,0x61}};
+
+//
+// Wrapper method implementations
+//
+
+#include "adaexp.tli"
+
+} // namespace adaExp
+
+#pragma pack(pop)

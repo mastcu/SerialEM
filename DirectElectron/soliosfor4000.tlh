@@ -1,0 +1,220 @@
+// Created by Microsoft (R) C/C++ Compiler Version 13.10.3077 (e471f8d8).
+//
+// c:\documents and settings\tomas\desktop\crbs_cvs_projects\serialem_ncmir\deversion\serialem_dmversion\debug\soliosfor4000.tlh
+//
+// C++ source equivalent of Win32 type library SoliosFor4000.tlb
+// compiler-generated file created 10/12/09 at 14:12:08 - DO NOT EDIT!
+
+//
+// Cross-referenced type libraries:
+//
+//  #import "C:\Documents and Settings\Tomas\Desktop\CRBS_CVS_Projects\SerialEM_NCMIR\DEVersion\SerialEM_2-8-6+\SerialEM\DirectElectron\FSM_MemoryLib.dll"
+//
+
+#pragma once
+#pragma pack(push, 8)
+
+#include <comdef.h>
+
+//
+// Forward references and typedefs
+//
+
+struct __declspec(uuid("86107afd-3905-47f5-b701-b62a0755338a"))
+/* LIBID */ __SOLIOSFOR4000Lib;
+struct __declspec(uuid("b76c4b89-9991-44e2-902c-d26aa65605e3"))
+/* dispinterface */ _ICoSoliosFor4000Events;
+struct /* coclass */ CoSoliosFor4000;
+struct __declspec(uuid("acc08f2e-96ec-4828-851f-705f09d5953d"))
+/* dual interface */ ICameraCtrl;
+struct __declspec(uuid("e53afd57-aa56-42c8-bfbf-5ebae725727a"))
+/* dual interface */ ISI1100_MIL_Link;
+struct /* coclass */ SI1100_MIL_Link;
+
+//
+// Smart pointer typedef declarations
+//
+
+_COM_SMARTPTR_TYPEDEF(_ICoSoliosFor4000Events, __uuidof(_ICoSoliosFor4000Events));
+_COM_SMARTPTR_TYPEDEF(ICameraCtrl, __uuidof(ICameraCtrl));
+_COM_SMARTPTR_TYPEDEF(ISI1100_MIL_Link, __uuidof(ISI1100_MIL_Link));
+
+//
+// Type library items
+//
+
+struct __declspec(uuid("b76c4b89-9991-44e2-902c-d26aa65605e3"))
+_ICoSoliosFor4000Events : IDispatch
+{};
+
+struct __declspec(uuid("0a4743dc-6345-4cd9-87c4-07e3cd206f50"))
+CoSoliosFor4000;
+    // [ default ] interface ICameraCtrl
+    // [ default, source ] dispinterface _ICoSoliosFor4000Events
+
+struct __declspec(uuid("acc08f2e-96ec-4828-851f-705f09d5953d"))
+ICameraCtrl : IDispatch
+{
+    //
+    // Raw methods provided by interface
+    //
+
+      virtual HRESULT __stdcall ShutterOpen ( ) = 0;
+      virtual HRESULT __stdcall ShutterClose ( ) = 0;
+      virtual HRESULT __stdcall GenerateTestImage ( ) = 0;
+      virtual HRESULT __stdcall CCD_ReadAndExpose ( ) = 0;
+      virtual HRESULT __stdcall CCD_ReadNoExpose ( ) = 0;
+      virtual HRESULT __stdcall ReadoutParam_RecAllFromHost ( ) = 0;
+      virtual HRESULT __stdcall ReadoutParam_RecOneFromHost (
+        /*[in]*/ short offset ) = 0;
+      virtual HRESULT __stdcall ReadoutParam_TransAllToHost ( ) = 0;
+      virtual HRESULT __stdcall Status_TransToHost ( ) = 0;
+      virtual HRESULT __stdcall ConfigParam_RecAllFromHost ( ) = 0;
+      virtual HRESULT __stdcall ConfigParam_RecOneFromHost ( ) = 0;
+      virtual HRESULT __stdcall ConfigParam_TransToHost ( ) = 0;
+      virtual HRESULT __stdcall ConfigTable_StoreInEEPROM ( ) = 0;
+      virtual HRESULT __stdcall RemainingExposureTime_SendToHost (
+        /*[out,retval]*/ long * pVal ) = 0;
+      virtual HRESULT __stdcall AbortReadout ( ) = 0;
+      virtual HRESULT __stdcall ConfigTable_ReadFromEEPROM ( ) = 0;
+      virtual HRESULT __stdcall RestartTheProgram ( ) = 0;
+      virtual HRESULT __stdcall ClearFrame ( ) = 0;
+      virtual HRESULT __stdcall ExternalRelayTurnOn ( ) = 0;
+      virtual HRESULT __stdcall ExternalRelayTurnOff ( ) = 0;
+      virtual HRESULT __stdcall ObtainTriggeredImage ( ) = 0;
+      virtual HRESULT __stdcall DSPCodeSave ( ) = 0;
+      virtual HRESULT __stdcall DSPCodeGet ( ) = 0;
+      virtual HRESULT __stdcall FixedLengthTDIModeReadout ( ) = 0;
+      virtual HRESULT __stdcall SetParamTablePath (
+        /*[in]*/ BSTR bstrFile,
+        /*[in]*/ BSTR bstrString ) = 0;
+      virtual HRESULT __stdcall SetConfigTablePath (
+        /*[in]*/ BSTR bstrFile,
+        /*[in]*/ BSTR bstrString ) = 0;
+      virtual HRESULT __stdcall get_ReadoutParam (
+        /*[in]*/ int paramNo,
+        /*[out,retval]*/ long * pVal ) = 0;
+      virtual HRESULT __stdcall put_ReadoutParam (
+        /*[in]*/ int paramNo,
+        /*[in]*/ long pVal ) = 0;
+      virtual HRESULT __stdcall get_ConfigParam (
+        /*[in]*/ int paramNo,
+        /*[out,retval]*/ long * pVal ) = 0;
+      virtual HRESULT __stdcall put_ConfigParam (
+        /*[in]*/ int paramNo,
+        /*[in]*/ long pVal ) = 0;
+      virtual HRESULT __stdcall get_StatusParam (
+        /*[in]*/ int paramNo,
+        /*[out,retval]*/ long * pVal ) = 0;
+      virtual HRESULT __stdcall put_StatusParam (
+        /*[in]*/ int paramNo,
+        /*[in]*/ long pVal ) = 0;
+      virtual HRESULT __stdcall get_COMPort (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_COMPort (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall ChangeReadoutSpeed (
+        /*[in]*/ int no ) = 0;
+      virtual HRESULT __stdcall get_AvailableReadoutSpeeds (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall get_SerialBinning (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_SerialBinning (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_ParallelBinning (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_ParallelBinning (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall SetBinning (
+        /*[in]*/ short SerialBinning,
+        /*[in]*/ short ParallelBinning ) = 0;
+      virtual HRESULT __stdcall get_ExposureTime (
+        /*[out,retval]*/ long * pVal ) = 0;
+      virtual HRESULT __stdcall put_ExposureTime (
+        /*[in]*/ long pVal ) = 0;
+      virtual HRESULT __stdcall get_SerialOrigin (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_SerialOrigin (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_ParallelOrigin (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_ParallelOrigin (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall SetOrigin (
+        /*[in]*/ short SerialOrigin,
+        /*[in]*/ short ParallelOrigin ) = 0;
+      virtual HRESULT __stdcall get_SerialLength (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_SerialLength (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_ParalleLength (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_ParalleLength (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall SetImageSize (
+        /*[in]*/ short SerialLength,
+        /*[in]*/ short ParallelLength ) = 0;
+      virtual HRESULT __stdcall get_SerialPostscanSize (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_SerialPostscanSize (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_ParallePostscanSize (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_ParallePostscanSize (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall SetPostscanSize (
+        /*[in]*/ short SerialPostscan,
+        /*[in]*/ short ParallelPostscan ) = 0;
+      virtual HRESULT __stdcall GetReadoutSpeed (
+        /*[in]*/ short no,
+        /*[out,retval]*/ long * speed ) = 0;
+      virtual HRESULT __stdcall SetReadoutSpeed (
+        /*[in]*/ short no ) = 0;
+      virtual HRESULT __stdcall StartStatusThread (
+        /*[in]*/ long SleepTime ) = 0;
+      virtual HRESULT __stdcall StopStatusThread ( ) = 0;
+      virtual HRESULT __stdcall SetDisplayMode (
+        /*[in]*/ short eMode ) = 0;
+      virtual HRESULT __stdcall OpenDemoDisplay ( ) = 0;
+      virtual HRESULT __stdcall CloseDemoDisplay ( ) = 0;
+      virtual HRESULT __stdcall SetImageBuffer (
+        /*[in]*/ struct IFSM_MemoryObject * piMemObj ) = 0;
+      virtual HRESULT __stdcall SetDCFPath (
+        /*[in]*/ short devNo,
+        /*[in]*/ short digNo,
+        /*[in]*/ BSTR bstrDCF ) = 0;
+};
+
+struct __declspec(uuid("e53afd57-aa56-42c8-bfbf-5ebae725727a"))
+ISI1100_MIL_Link : IDispatch
+{
+    //
+    // Raw methods provided by interface
+    //
+
+      virtual HRESULT __stdcall InitMilApp ( ) = 0;
+      virtual HRESULT __stdcall FreeMilApp ( ) = 0;
+};
+
+struct __declspec(uuid("e563b0f0-5dc2-47ce-ba4e-d7189ee18bc4"))
+SI1100_MIL_Link;
+    // [ default ] interface ISI1100_MIL_Link
+
+//
+// Named GUID constants initializations
+//
+
+extern "C" const GUID __declspec(selectany) LIBID_SOLIOSFOR4000Lib =
+    {0x86107afd,0x3905,0x47f5,{0xb7,0x01,0xb6,0x2a,0x07,0x55,0x33,0x8a}};
+extern "C" const GUID __declspec(selectany) DIID__ICoSoliosFor4000Events =
+    {0xb76c4b89,0x9991,0x44e2,{0x90,0x2c,0xd2,0x6a,0xa6,0x56,0x05,0xe3}};
+extern "C" const GUID __declspec(selectany) CLSID_CoSoliosFor4000 =
+    {0x0a4743dc,0x6345,0x4cd9,{0x87,0xc4,0x07,0xe3,0xcd,0x20,0x6f,0x50}};
+extern "C" const GUID __declspec(selectany) IID_ICameraCtrl =
+    {0xacc08f2e,0x96ec,0x4828,{0x85,0x1f,0x70,0x5f,0x09,0xd5,0x95,0x3d}};
+extern "C" const GUID __declspec(selectany) IID_ISI1100_MIL_Link =
+    {0xe53afd57,0xaa56,0x42c8,{0xbf,0xbf,0x5e,0xba,0xe7,0x25,0x72,0x7a}};
+extern "C" const GUID __declspec(selectany) CLSID_SI1100_MIL_Link =
+    {0xe563b0f0,0x5dc2,0x47ce,{0xba,0x4e,0xd7,0x18,0x9e,0xe1,0x8b,0xc4}};
+
+#pragma pack(pop)

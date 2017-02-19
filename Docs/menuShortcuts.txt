@@ -1,0 +1,240 @@
+niotAnd by the way, when you add a menu item to the help, you need to add the
+entry to aliases.h by hand.
+
+File:
+A
+C
+D
+E
+F
+G
+L
+M
+N
+O
+P
+R
+S
+V
+W
+X
+
+Camera:
+A
+B
+C
+D
+E
+F
+G
+H
+I
+L
+M
+N
+O
+P
+R
+S
+T
+V
+W
+
+Calibration:
+  Image&Stage shift
+  C
+  D
+  E
+  G
+  I
+  L
+  M
+  O
+  R
+  S
+  T
+  U
+  V
+  W
+  Pixel Size
+  9
+  A
+  B
+  L
+  P
+  Focus & Tuning
+  A
+  B
+  C
+  E
+  L
+  M
+  F
+  S
+  T
+  Z
+  Beam & Spot
+  A
+  B
+  C
+  E
+  P
+  R
+  S
+  2
+A
+B
+C
+D
+E
+F
+G
+H
+I
+L
+M
+N
+O
+P
+Q
+R
+S
+T
+U
+V
+Z
+
+Focus:
+A
+B
+C
+D
+E
+F
+G
+H
+I
+L
+M
+N
+O
+R
+S
+T
+U
+V
+W
+X
+
+Tasks:
+A
+B
+C
+D
+E
+F
+G
+H
+I
+K
+L
+M
+N
+O
+P
+R
+S
+T
+U
+V
+W
+
+Tilt series:
+A
+B
+C
+D
+E
+F
+G
+I
+L
+M
+N
+O
+P
+R
+S
+T
+U
+V
+X
+Y
+Z
+
+Process:
+A
+B
+C
+D
+E
+F
+H
+I
+K
+L
+M
+O
+P
+R
+S
+T
+U
+V
+X
+Z
+
+Navigator:
+A
+B
+C
+D
+E
+F
+G
+H
+I
+K
+L
+M
+N
+O
+P
+Q
+R
+S
+T
+U
+W
+
+
+  Montaging & Grids:
+A
+C
+D
+F
+G
+O
+P
+R
+S
+V
+Y
+
+  Options:
+A
+P
+U
+V
+X
+Y

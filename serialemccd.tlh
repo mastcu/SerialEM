@@ -1,0 +1,509 @@
+﻿// Created by Microsoft (R) C/C++ Compiler Version 15.00.30729.01 (cb6b3867).
+//
+// c:\users\mast\documents\scope\serialem\release\serialemccd.tlh
+//
+// C++ source equivalent of type library ..\SerialEMCCD\SerialEMCCD.tlb
+// compiler-generated file created 02/23/16 at 09:45:42 - DO NOT EDIT!
+
+#pragma once
+#pragma pack(push, 8)
+
+#include <comdef.h>
+
+//
+// Forward references and typedefs
+//
+
+struct __declspec(uuid("7f169544-cc69-45ad-8f60-7a73b2749980"))
+/* LIBID */ __SERIALEMCCDLib;
+struct /* coclass */ DMCamera;
+struct __declspec(uuid("e5453450-18b4-4b4c-a25e-81364f75a193"))
+/* dual interface */ IDMCamera;
+
+//
+// Smart pointer typedef declarations
+//
+
+_COM_SMARTPTR_TYPEDEF(IDMCamera, __uuidof(IDMCamera));
+
+//
+// Type library items
+//
+
+struct __declspec(uuid("e3c017ca-38f5-49d2-8d1f-55024c8038c2"))
+DMCamera;
+    // [ default ] interface IDMCamera
+
+struct __declspec(uuid("e5453450-18b4-4b4c-a25e-81364f75a193"))
+IDMCamera : IDispatch
+{
+    //
+    // Wrapper methods for error-handling
+    //
+
+    HRESULT GetTestArray (
+        long width,
+        long height,
+        long * retSize,
+        short * array,
+        long * time,
+        unsigned long * receiptTime,
+        unsigned long * returnTime );
+    HRESULT ExecuteScript (
+        long size,
+        long * script,
+        long selectCamera,
+        double * retval );
+    HRESULT SetDebugMode (
+        long debug );
+    HRESULT SetDMVersion (
+        long version );
+    HRESULT SetCurrentCamera (
+        long camera );
+    HRESULT QueueScript (
+        long size,
+        long * script );
+    HRESULT GetAcquiredImage (
+        short * array,
+        long * arrSize,
+        long * width,
+        long * height,
+        long processing,
+        double exposure,
+        long binning,
+        long top,
+        long left,
+        long bottom,
+        long right,
+        long shutter,
+        double settling,
+        long shutterDelay,
+        long divideBy2,
+        long corrections );
+    HRESULT GetDarkReference (
+        short * array,
+        long * arrSize,
+        long * width,
+        long * height,
+        double exposure,
+        long binning,
+        long top,
+        long left,
+        long bottom,
+        long right,
+        long shutter,
+        double settling,
+        long divideBy2,
+        long corrections );
+    HRESULT GetGainReference (
+        float * array,
+        long * arrSize,
+        long * width,
+        long * height,
+        long binning );
+    HRESULT selectCamera (
+        long camera );
+    HRESULT GetNumberOfCameras (
+        long * numCameras );
+    HRESULT IsCameraInserted (
+        long camera,
+        long * inserted );
+    HRESULT InsertCamera (
+        long camera,
+        long state );
+    HRESULT GetDMVersion (
+        long * version );
+    HRESULT GetDMCapabilities (
+        long * canSelectShutter,
+        long * canSetSettling,
+        long * openShutterWorks );
+    HRESULT SetShutterNormallyClosed (
+        long camera,
+        long shutter );
+    HRESULT SetNoDMSettling (
+        long camera );
+    HRESULT GetDSProperties (
+        long timeout,
+        double addedFlyback,
+        double margin,
+        double * flyback,
+        double * lineFreq,
+        double * rotOffset,
+        long * doFlip );
+    HRESULT AcquireDSImage (
+        short * array,
+        long * arrSize,
+        long * width,
+        long * height,
+        double rotation,
+        double pixelTime,
+        long lineSync,
+        long continuous,
+        long numChan,
+        long * channels,
+        long divideBy2 );
+    HRESULT ReturnDSChannel (
+        short * array,
+        long * arrSize,
+        long * width,
+        long * height,
+        long channel,
+        long divideBy2 );
+    HRESULT StopDSAcquisition ( );
+    HRESULT SetReadMode (
+        long mode,
+        double scaling );
+    HRESULT SetK2Parameters (
+        long mode,
+        double scaling,
+        long hardwareProc,
+        long doseFrac,
+        double frameTime,
+        long alignFrames,
+        long saveFrames,
+        long filtSize,
+        long * filter );
+    HRESULT SetupFileSaving (
+        long rotationFlip,
+        long filePerImage,
+        double pixelSize,
+        long nameSize,
+        long * names,
+        long * error );
+    HRESULT GetFileSaveResult (
+        long * numSaved,
+        long * error );
+    HRESULT SetupFileSaving2 (
+        long rotationFlip,
+        long filePerImage,
+        double pixelSize,
+        long flags,
+        double dummy1,
+        double dummy2,
+        double dummy3,
+        double dummy4,
+        long nameSize,
+        long * names,
+        long * error );
+    HRESULT GetDefectList (
+        short * xyPairs,
+        long * arrSize,
+        long * numPoints,
+        long * numTotal );
+    HRESULT SetK2Parameters2 (
+        long mode,
+        double scaling,
+        long hardwareProc,
+        long doseFrac,
+        double frameTime,
+        long alignFrames,
+        long saveFrames,
+        long rotationFlip,
+        long flags,
+        double dummy1,
+        double dummy2,
+        double dummy3,
+        double dummy4,
+        long filtSize,
+        long * filter );
+    HRESULT StopContinuousCamera ( );
+    HRESULT GetPluginVersion (
+        long * version );
+    HRESULT GetLastError (
+        long * error );
+    HRESULT FreeK2GainReference (
+        long which );
+    HRESULT IsGpuAvailable (
+        long gpuNum,
+        long * available,
+        double * gpuMemory );
+    HRESULT SetupFrameAligning (
+        long aliBinning,
+        double rad2Filt1,
+        double rad2Filt2,
+        double rad2Filt3,
+        double sigma2Ratio,
+        double truncLimit,
+        long alignFlags,
+        long gpuFlags,
+        long numAllVsAll,
+        long groupSize,
+        long shiftLimit,
+        long antialiasType,
+        long refineIter,
+        double stopIterBelow,
+        double refRad2,
+        long nSumandGrab,
+        long dumInt1,
+        long dumInt2,
+        double dumDbl1,
+        long stringSize,
+        long * strings,
+        long * error );
+    HRESULT FrameAlignResults (
+        double * rawDist,
+        double * smoothDist,
+        double * resMean,
+        double * maxResMax,
+        double * meanRawMax,
+        double * maxRawMax,
+        long * crossHalf,
+        long * crossQuarter,
+        long * crossEighth,
+        long * halfNyq,
+        long * dumInt1,
+        double * dumDbl1,
+        double * dumDbl2 );
+    HRESULT ReturnDeferredSum (
+        short * array,
+        long * arrSize,
+        long * width,
+        long * height );
+    HRESULT MakeAlignComFile (
+        long flags,
+        long dumInt1,
+        double dumDbl1,
+        double dumDbl2,
+        long stringSize,
+        long * strings,
+        long * error );
+
+    //
+    // Raw methods provided by interface
+    //
+
+      virtual HRESULT __stdcall raw_GetTestArray (
+        /*[in]*/ long width,
+        /*[in]*/ long height,
+        /*[in,out]*/ long * retSize,
+        /*[out]*/ short * array,
+        /*[out]*/ long * time,
+        /*[out]*/ unsigned long * receiptTime,
+        /*[out]*/ unsigned long * returnTime ) = 0;
+      virtual HRESULT __stdcall raw_ExecuteScript (
+        /*[in]*/ long size,
+        /*[in]*/ long * script,
+        /*[in]*/ long selectCamera,
+        /*[out]*/ double * retval ) = 0;
+      virtual HRESULT __stdcall raw_SetDebugMode (
+        /*[in]*/ long debug ) = 0;
+      virtual HRESULT __stdcall raw_SetDMVersion (
+        /*[in]*/ long version ) = 0;
+      virtual HRESULT __stdcall raw_SetCurrentCamera (
+        /*[in]*/ long camera ) = 0;
+      virtual HRESULT __stdcall raw_QueueScript (
+        /*[in]*/ long size,
+        /*[in]*/ long * script ) = 0;
+      virtual HRESULT __stdcall raw_GetAcquiredImage (
+        /*[out]*/ short * array,
+        /*[in,out]*/ long * arrSize,
+        /*[out]*/ long * width,
+        /*[out]*/ long * height,
+        /*[in]*/ long processing,
+        /*[in]*/ double exposure,
+        /*[in]*/ long binning,
+        /*[in]*/ long top,
+        /*[in]*/ long left,
+        /*[in]*/ long bottom,
+        /*[in]*/ long right,
+        /*[in]*/ long shutter,
+        /*[in]*/ double settling,
+        /*[in]*/ long shutterDelay,
+        /*[in]*/ long divideBy2,
+        /*[in]*/ long corrections ) = 0;
+      virtual HRESULT __stdcall raw_GetDarkReference (
+        /*[out]*/ short * array,
+        /*[in,out]*/ long * arrSize,
+        /*[out]*/ long * width,
+        /*[out]*/ long * height,
+        /*[in]*/ double exposure,
+        /*[in]*/ long binning,
+        /*[in]*/ long top,
+        /*[in]*/ long left,
+        /*[in]*/ long bottom,
+        /*[in]*/ long right,
+        /*[in]*/ long shutter,
+        /*[in]*/ double settling,
+        /*[in]*/ long divideBy2,
+        /*[in]*/ long corrections ) = 0;
+      virtual HRESULT __stdcall raw_GetGainReference (
+        /*[out]*/ float * array,
+        /*[in,out]*/ long * arrSize,
+        /*[out]*/ long * width,
+        /*[out]*/ long * height,
+        /*[in]*/ long binning ) = 0;
+      virtual HRESULT __stdcall raw_selectCamera (
+        /*[in]*/ long camera ) = 0;
+      virtual HRESULT __stdcall raw_GetNumberOfCameras (
+        /*[out]*/ long * numCameras ) = 0;
+      virtual HRESULT __stdcall raw_IsCameraInserted (
+        /*[in]*/ long camera,
+        /*[out]*/ long * inserted ) = 0;
+      virtual HRESULT __stdcall raw_InsertCamera (
+        /*[in]*/ long camera,
+        /*[in]*/ long state ) = 0;
+      virtual HRESULT __stdcall raw_GetDMVersion (
+        /*[out]*/ long * version ) = 0;
+      virtual HRESULT __stdcall raw_GetDMCapabilities (
+        /*[out]*/ long * canSelectShutter,
+        /*[out]*/ long * canSetSettling,
+        /*[out]*/ long * openShutterWorks ) = 0;
+      virtual HRESULT __stdcall raw_SetShutterNormallyClosed (
+        /*[in]*/ long camera,
+        /*[in]*/ long shutter ) = 0;
+      virtual HRESULT __stdcall raw_SetNoDMSettling (
+        /*[in]*/ long camera ) = 0;
+      virtual HRESULT __stdcall raw_GetDSProperties (
+        /*[in]*/ long timeout,
+        /*[in]*/ double addedFlyback,
+        /*[in]*/ double margin,
+        /*[out]*/ double * flyback,
+        /*[out]*/ double * lineFreq,
+        /*[out]*/ double * rotOffset,
+        /*[out]*/ long * doFlip ) = 0;
+      virtual HRESULT __stdcall raw_AcquireDSImage (
+        /*[out]*/ short * array,
+        /*[in,out]*/ long * arrSize,
+        /*[in,out]*/ long * width,
+        /*[in,out]*/ long * height,
+        /*[in]*/ double rotation,
+        /*[in]*/ double pixelTime,
+        /*[in]*/ long lineSync,
+        /*[in]*/ long continuous,
+        /*[in]*/ long numChan,
+        /*[in]*/ long * channels,
+        /*[in]*/ long divideBy2 ) = 0;
+      virtual HRESULT __stdcall raw_ReturnDSChannel (
+        /*[out]*/ short * array,
+        /*[in,out]*/ long * arrSize,
+        /*[in,out]*/ long * width,
+        /*[in,out]*/ long * height,
+        /*[in]*/ long channel,
+        /*[in]*/ long divideBy2 ) = 0;
+      virtual HRESULT __stdcall raw_StopDSAcquisition ( ) = 0;
+      virtual HRESULT __stdcall raw_SetReadMode (
+        /*[in]*/ long mode,
+        /*[in]*/ double scaling ) = 0;
+      virtual HRESULT __stdcall raw_SetK2Parameters (
+        /*[in]*/ long mode,
+        /*[in]*/ double scaling,
+        /*[in]*/ long hardwareProc,
+        /*[in]*/ long doseFrac,
+        /*[in]*/ double frameTime,
+        /*[in]*/ long alignFrames,
+        /*[in]*/ long saveFrames,
+        /*[in]*/ long filtSize,
+        /*[in]*/ long * filter ) = 0;
+      virtual HRESULT __stdcall raw_SetupFileSaving (
+        /*[in]*/ long rotationFlip,
+        /*[in]*/ long filePerImage,
+        /*[in]*/ double pixelSize,
+        /*[in]*/ long nameSize,
+        /*[in]*/ long * names,
+        /*[out]*/ long * error ) = 0;
+      virtual HRESULT __stdcall raw_GetFileSaveResult (
+        /*[out]*/ long * numSaved,
+        /*[out]*/ long * error ) = 0;
+      virtual HRESULT __stdcall raw_SetupFileSaving2 (
+        /*[in]*/ long rotationFlip,
+        /*[in]*/ long filePerImage,
+        /*[in]*/ double pixelSize,
+        /*[in]*/ long flags,
+        /*[in]*/ double dummy1,
+        /*[in]*/ double dummy2,
+        /*[in]*/ double dummy3,
+        /*[in]*/ double dummy4,
+        /*[in]*/ long nameSize,
+        /*[in]*/ long * names,
+        /*[out]*/ long * error ) = 0;
+      virtual HRESULT __stdcall raw_GetDefectList (
+        /*[out]*/ short * xyPairs,
+        /*[in,out]*/ long * arrSize,
+        /*[out]*/ long * numPoints,
+        /*[out]*/ long * numTotal ) = 0;
+      virtual HRESULT __stdcall raw_SetK2Parameters2 (
+        /*[in]*/ long mode,
+        /*[in]*/ double scaling,
+        /*[in]*/ long hardwareProc,
+        /*[in]*/ long doseFrac,
+        /*[in]*/ double frameTime,
+        /*[in]*/ long alignFrames,
+        /*[in]*/ long saveFrames,
+        /*[in]*/ long rotationFlip,
+        /*[in]*/ long flags,
+        /*[in]*/ double dummy1,
+        /*[in]*/ double dummy2,
+        /*[in]*/ double dummy3,
+        /*[in]*/ double dummy4,
+        /*[in]*/ long filtSize,
+        /*[in]*/ long * filter ) = 0;
+      virtual HRESULT __stdcall raw_StopContinuousCamera ( ) = 0;
+      virtual HRESULT __stdcall raw_GetPluginVersion (
+        /*[out]*/ long * version ) = 0;
+      virtual HRESULT __stdcall raw_GetLastError (
+        /*[out]*/ long * error ) = 0;
+      virtual HRESULT __stdcall raw_FreeK2GainReference (
+        /*[in]*/ long which ) = 0;
+      virtual HRESULT __stdcall raw_IsGpuAvailable (
+        /*[in]*/ long gpuNum,
+        /*[out]*/ long * available,
+        /*[out]*/ double * gpuMemory ) = 0;
+      virtual HRESULT __stdcall raw_SetupFrameAligning (
+        /*[in]*/ long aliBinning,
+        /*[in]*/ double rad2Filt1,
+        /*[in]*/ double rad2Filt2,
+        /*[in]*/ double rad2Filt3,
+        /*[in]*/ double sigma2Ratio,
+        /*[in]*/ double truncLimit,
+        /*[in]*/ long alignFlags,
+        /*[in]*/ long gpuFlags,
+        /*[in]*/ long numAllVsAll,
+        /*[in]*/ long groupSize,
+        /*[in]*/ long shiftLimit,
+        /*[in]*/ long antialiasType,
+        /*[in]*/ long refineIter,
+        /*[in]*/ double stopIterBelow,
+        /*[in]*/ double refRad2,
+        /*[in]*/ long nSumandGrab,
+        /*[in]*/ long dumInt1,
+        /*[in]*/ long dumInt2,
+        /*[in]*/ double dumDbl1,
+        /*[in]*/ long stringSize,
+        /*[in]*/ long * strings,
+        /*[out]*/ long * error ) = 0;
+      virtual HRESULT __stdcall raw_FrameAlignResults (
+        /*[out]*/ double * rawDist,
+        /*[out]*/ double * smoothDist,
+        /*[out]*/ double * resMean,
+        /*[out]*/ double * maxResMax,
+        /*[out]*/ double * meanRawMax,
+        /*[out]*/ double * maxRawMax,
+        /*[out]*/ long * crossHalf,
+        /*[out]*/ long * crossQuarter,
+        /*[out]*/ long * crossEighth,
+        /*[out]*/ long * halfNyq,
+        /*[out]*/ long * dumInt1,
+        /*[out]*/ double * dumDbl1,
+        /*[out]*/ double * dumDbl2 ) = 0;
+      virtual HRESULT __stdcall raw_ReturnDeferredSum (
+        /*[out]*/ short * array,
+        /*[in,out]*/ long * arrSize,
+        /*[in,out]*/ long * width,
+        /*[out]*/ long * height ) = 0;
+      virtual HRESULT __stdcall raw_MakeAlignComFile (
+        /*[in]*/ long flags,
+        /*[in]*/ long dumInt1,
+        /*[in]*/ double dumDbl1,
+        /*[in]*/ double dumDbl2,
+        /*[in]*/ long stringSize,
+        /*[in]*/ long * strings,
+        /*[out]*/ long * error ) = 0;
+};
+
+//
+// Wrapper method implementations
+//
+
+#include "serialemccd.tli"
+
+#pragma pack(pop)

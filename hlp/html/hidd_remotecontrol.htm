@@ -1,0 +1,100 @@
+<HTML>
+  <HEAD>
+    <TITLE>Microscope Control Panel</TITLE>
+    <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
+    <style type="text/css"> <!-- BODY { font-family:"Arial" }
+  TD { font-size:16 }
+      .style1
+      {
+        text-align: center;
+      }
+  --></style>
+  </HEAD>
+  <BODY BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+    <P class="style1"><A NAME="hidd_remotecontrol"></A><B><FONT size="3">Microscope Control Panel</FONT></B></P>
+
+    <p>
+      This panel contains various controls to minimize the need to access the 
+      microscope&#39;s user interface.&nbsp; Its primary use is to facilitate use of 
+      SerialEM via remote access, but it may be more generally useful for two reasons: 
+      it allows the elimination of some common scripts, and it provides a visual 
+      interface for beam operations available through obscure arrow key combinations.&nbsp; 
+      This panel is unique in that it can be completely eliminated from the set of 
+      tool panels if desired, using an entry in the Window menu.</p>
+    <p>
+      <b>Open/Close Valve(s)&nbsp; or&nbsp; Turn Beam On/Off</b></p>
+    <p>
+      This button allows one to toggle the state of the beam: it opens or closes the 
+      column valves on an FEI scope or the beam valve on a JEOL scope with a FEG, or 
+      it turns the filament on or off on other JEOL scopes.</p>
+    <p>
+      <b>Mag</b></p>
+    <p>
+      Use this spin button to increase or decrease the magnification.&nbsp;If you click the button multiple times with a small enough time (0.35 sec) 
+      between clicks, the program will go several steps with just one magnification 
+      change.&nbsp; The new magnification will be displayed in the
+      <a href="hidd_scopestatus.htm">Microscope Status</a> panel as soon as you click 
+      the button, prefixed by '-&gt;', so that you can know what magnification will be 
+      reached.&nbsp; The '-&gt;' will stay until the magnification change is achieved.</p>
+    <p>
+      <b>Intensity with Mag</b></p>
+    <p>
+      Select this option to have the program change intensity when you change 
+      magnification with the <b>Mag</b> spin button, so as to maintain a constant beam 
+      brightness.&nbsp; Intensity must be within the calibrated range for the current 
+      spot size for this option to have any effect.&nbsp; This option works regardless 
+      of whether an equivalent function is turned on in the microscope user interface 
+      (intensity zoom, brightness zoom).</p>
+    <p>
+      <b>Spot</b></p>
+    <p>
+      Use this spin button to increase or decrease the spot size number.&nbsp; 
+      If you click the button multiple times with a small enough time (0.35 sec) 
+      between clicks, the program will go several steps with just one spot size 
+      change.&nbsp; The new spot size will be displayed in the
+      <a href="hidd_scopestatus.htm">Microscope Status</a> panel as soon as you click 
+      the button, prefixed by '-&gt;', so that you can know what spot size will be 
+      reached.</p>
+    <p>
+      <b>Beam Up/Down, Left/Right</b></p>
+    <p>
+      Use these two spin buttons to move the beam in the indicated direction; the size 
+      of the step as a fraction of the camera field of view is indicated by the text 
+      below the buttons.&nbsp; For example, a step of 0.1 will move the beam by 
+      one-tenth of the field of view of the current camera.&nbsp; The same movements 
+      can be made with Shift and the Arrow keys, with the same step size.&nbsp; These 
+      controls require beam shift to be calibrated for the current magnification 
+      range.</p>
+    <p>
+      <b>C2/C3/IA</b></p>
+    <p>
+      Use this spin button to increase or decrease the value of the intensity lens 
+      setting: the illuminated area on an FEI Titan, C2 value on other FEI scopes and 
+      Hitachi scopes, C3 value on JEOL scopes.&nbsp; The size of the change is 
+      indicated by the value below the button, in units of percent C2 or C3 or microns 
+      of illuminated area.&nbsp; This control requires no calibrations.&nbsp; The same 
+      changes can be made with Ctrl and the Up and Down Arrow keys, with the same step 
+      size.</p>
+    <p>
+      <b>Nanoprobe/Microprobe (FEI only)</b></p>
+    <p>
+      Press this button to switch to the indicated illumination mode.</p>
+    <p>
+      <b>Beam step -/+</b></p>
+    <p>
+      Use these buttons to decrease or increase the step size for beam movement by a 
+      factor of 1.414.&nbsp; The same changes can be made with the &lt; and &gt; keys, and 
+      changes with those keys will appear in the size indicated here.</p>
+    <p>
+      <b>Intensity step -/+</b></p>
+    <p>
+      Use these buttons to decrease or increase the step size for changes in the 
+      intensity lens value.&nbsp; The same changes can be made with the Ctrl and the , 
+      (comma) or . (period) keys, and changes with those keys will appear in the size 
+      indicated here.</p>
+    <p>
+      &nbsp;</p>
+
+</BODY>
+</HTML>

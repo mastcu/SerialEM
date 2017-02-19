@@ -1,0 +1,193 @@
+    ConvertIStoStageIncrement
+For a given mag and camera, IS and stage position:
+it subtracts the mag offsets if they are not being applied by user
+it adds the tilt axis offset (if being applied) times specimen to stage matrix
+it adds the given IS times IS to stage matrix
+The increment can be used to get from an actual stage position to one that is 
+mag-independent
+
+    GetAdjustedStagePos
+Gets the current stage position and IS and calls ConvertIStoStageIncrement to
+adjust the stage to an absolute position
+
+    AdjustAndMoveStage
+It gets the LD centered shift and resets shift by applying negative of that
+It calls ConvertIStoStageIncrement with 0 IS and 0 stage to get an increment
+to the stage position implied by current settings of applying IS offsets and
+shifting to tilt axis.  This is SUBTRACTED from the stage position.  So this
+takes mag-independent stage coordinates and goes to right place under current
+conditions.
+
+    Recording realignment error in NewMap:
+mRealignErrX,Y is assigned to a new map from the last stage error for a
+realign to item if it is inside the bounding box of that item and within 10
+microns of point aligned in a montage.  mRealignedID is kept as the ID of that
+item.  This is a total error, and a new variable mLocalRealiErrX,Y stores the
+local error between the first and second round of realignment.
+
+    FindMapForRealigning
+It looks at all maps.
+To compute the target we need to go to at the mag of this map: start with the
+stageX,Y
+
+Compute an image shift offset that is needed to work at this mag if we know
+we are ending up at another mag, i.e. if it is a different map or we are
+restoring state or we are in low dose:
+Do this by computing a stage shift, starting unconditionally with the net
+view shift.
+find the stage increment at the mag of this map = incLow
+find the stage increment at the mag of the map being aligned to or the current
+stage increment if restoring state or the stage increment at the LD Record 
+mag = incHigh
+add incHigh - incLow to the stage shift; the sign is because these increments
+are backwards from the actual stage shift needed to align from high to low.
+Convert the total stage shift to a first round IS value
+
+Set flag if this map was realigned to at this registration and subtract the
+realign error from the target; this gets it back to the target position that
+was gone to in that realign operation.
+
+Then the target is checked for being inside the map box
+borderDist = minimum distance to the border of the map
+distMin = minimum distance from center of a frame to edge of map:
+          for single frame this is minimum half-size
+          for montage, get target coordinates in frame = imX,Y
+          for each piece, get the distance of center to target and to edge of
+          map
+          find two pieces: the one that the point is in that is closest to
+          target (final one), and the one that is closest to the target
+          provided it is far enough from the edge (safer one)
+          Assign final one as safer one if it is good enough or no safer one
+          was found
+          distMin is the the safer piece middle to edge distance
+
+But then distMin is reduced to mMaxMarginNeeded for purpose of comparing maps
+A map is better if it has bigger distMin or is at a higher mag or contains the
+point better for same distMin
+better map is taken if they have same aligned status (how could they???) and
+more complicated criteria are used for the one aligned, one not aligned to
+better map is taken if they have same drawn on status and
+more complicated criteria are used for the one drawn on, one not drawn on
+
+mRItargetX,Y is taken from the targetX,Y at the map.  All info about safer
+piece, etc are saved too.
+
+    RealignToItem:
+If the item was aligned to this map before and we are still at the original
+registration, assign
+mPreviousErrX,Y = mRealignErrX,Y - mLocalRealiErrX,Y - targetMontageErrX,Y   
+and ADD mPreviousErrX,Y to mRItargetX,Y
+(so indeed the change to mRItargetX,Y was partially temporary.)  This
+adjustment make all coordinates be adjusted for initial realignment error and
+keeps the target position corresponding to the position of the originally
+marked point in the map and makes the error be just the first-round error
+
+Set mPrevLocalErrX,Y from mLocalRealiErrX,Y also
+
+Then it adds mPreviousErrX,Y to the center stage position of the map
+But for a montage, first it evaluates if it should use montage center
+instead of the final piece
+Then it gets stage position of safer piece, which DOES add mPreviousErrX,Y
+Note that stage positions are based on montage map coordinate and the image to
+stage transformation matrix.
+
+Add net view shift to this center stage position because that shift was also
+in effect when this map was acquired but was not accounted for in the
+normalized stage position saved
+
+Launch the first move to this position and impose the first round image shift,
+subtracting this from the stage move.
+
+Shoot centered image
+
+For montage, align up to 9 pieces, saving the best shifts and getting the
+stage position including mPreviousErrX,Y
+   at the end reread the best one into B and set the shift of the image
+For a single frame, get the alignment shift and add mPreviousErrX,Y to stage
+Convert the shift to a stage displacement, report and save as mStageErrX,Y
+
+stageDelX = mStageErrX + mPrevLocalErrX + mRItargetX - stageX + (change in
+montage error)
+
+mStageErrX would get you to center of whatever piece you are in, and
+mRItargetX - stageX would take you to the target, with mPrevLocalErrX added if
+it is nonzero, and adjustment for changes in montage offsets
+
+Do this with image shift if possible: subtract the local error under
+assumption that it is from stage movement, multiply stageDelX,Y by stage to
+image shift matrix, shift , and convert this to a shift of the displayed
+image and set image to this PLUS a shift for net view shift!
+Start final round if any, but first revise the stage
+error to be the (current adjusted stage position minus net view shift) minus 
+(the original adjusted target position)
+
+Otherwise, set up the stage position of center of map or frame, adjusted
+by mPreviousErrX,Y
+mRItargetX,Y minus this center position times the stage to camera matrix
+gives the expected shift mExpectedXshift in the image
+This is the point we need to align the center of the next tracking shot on.
+If we do that then the map should be in the right place.
+
+move to stageX,Y + netViewShiftX,Y + stageDelX,Y = mStageErrX + mRItargetX + ?
+
+Shoot
+
+Align with the mExpectedXshift, applying the alignment image shift
+
+Revise the mStageErrX,Y so it is still the full error, using the current
+adjusted stage position and the original adjusted target, and compute the local
+error in this move to target.
+
+Start final round if any - remove the first round image shift
+
+The revised mStageErrX,Y  is actually correct: it is the difference between
+the original target point location and the new map location, so adjusting the
+map target by this does make the original target point coincide with the map
+target.  
+
+The logic of storing the two errors separately: the first error should give
+better return to the first centered location (especially for bad stage
+calibration).
+The target location would still be the marked location of the original point.
+The second component is added to the shift/stage move to take the
+picture at that point, but only if in same registration.
+
+On the first realign, here is the full sequence of errors:
+Final position = center pos + center montErr
+               + error in going to center
+               + target - center
+               + target montErr - center montErr
+               + local error
+
+Total error = final pos - target = center error + local error + target montErr
+And to get back to the original center error, need to subtract both local
+error and target montErr.
+               
+VIEW SHIFTS
+LowDoseDlg keeps track of mViewShiftX, mViewShiftY
+It adds this to an axis offset when converting axis position to IS
+It adds the full amount if Apply IS Offsets is off, otherwise it add net
+GetNetViewShift subtracts off the difference between the cal offset at View
+and the transferred cal offset from Record.
+This is all image shift units
+
+CNavHelper::GetViewOffsets calls GetNetViewShift then transforms it to stage
+shift with SimpleIStoStage
+
+CanStayInLowDose: when NOT staying in low dose, takes the full view offset,
+minus the net view shift, converts this with SimpleIStoStage, and adds this to
+item->mNetViewShift
+
+NewMap calls GetViewOffsets to get the offsets that are stored in
+item->mNetViewShift
+
+Realign to Item: When aligning to a Record map on second round, it calls
+GetViewOffsets and adds the shift from this to the target if staying in low
+dose, or adds the full view shift from CanStayInLowDose when not staying in low
+dose.
+
+The image buffer gets a raw image shift that includes the whole View offset,
+and for View, the net view offset is subtracted, leaving the component from
+the cal offset.  When the stage position is adjusted for image shift, this
+gets canceled out when offsets are not being applied and there is no
+adjustment.

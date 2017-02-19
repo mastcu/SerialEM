@@ -1,0 +1,294 @@
+// K2SaveOptionDlg.cpp : implementation file
+//
+
+#include "stdafx.h"
+#include "SerialEM.h"
+#include "SerialEMDoc.h"
+#include "K2SaveOptionDlg.h"
+
+
+// CK2SaveOptionDlg dialog
+
+static int idTable[] = {IDC_STAT_FILETYPE, IDC_SAVE_MRC, IDC_COMPRESSED_TIFF, 
+  IDC_TIFF_ZIP_COMPRESS, IDC_ONE_FRAME_PER_FILE, IDC_PACK_RAW_FRAME, IDC_SKIP_ROTFLIP, 
+  IDC_PACK_COUNTING_4BIT, IDC_USE_4BIT_MRC_MODE, IDC_SAVE_TIMES_100, PANEL_END, 
+  IDC_STAT_COMPTITLE, IDC_STAT_USE_COMP, IDC_STAT_FOLDER, IDC_STAT_FILE, IDC_STAT_EXAMPLE,
+  IDC_CHECK_ROOT_FOLDER, IDC_EDIT_BASENAME, IDC_CHECK_ROOT_FILE,
+  IDC_CHECK_SAVEFILE_FILE, IDC_CHECK_SAVEFILE_FOLDER, IDC_CHECK_NAVLABEL_FOLDER, 
+  IDC_CHECK_NAVLABEL_FILE, IDC_CHECK_NUMBER, IDC_EDIT_START_NUMBER, IDC_STAT_DIGITS,
+  IDC_SPIN_DIGITS, IDC_CHECK_TILT_ANGLE, IDC_CHECK_MONTHDAY, IDC_CHECK_HOUR_MIN_SEC,
+  IDC_CHECK_ONLY_ACQUIRE, IDC_STAT_MUST_EXIST, IDC_STAT_MUST_EXIST2, PANEL_END, 
+  IDOK, IDCANCEL, IDC_BUTHELP, PANEL_END, TABLE_END};
+
+static int topTable[sizeof(idTable) / sizeof(int)];
+static int leftTable[sizeof(idTable) / sizeof(int)];
+
+CK2SaveOptionDlg::CK2SaveOptionDlg(CWnd* pParent /*=NULL*/)
+	: CBaseDlg(CK2SaveOptionDlg::IDD, pParent)
+  , m_bOneFramePerFile(FALSE)
+  , m_iFileType(0)
+  , m_bPackRawFrames(FALSE)
+  , m_bSkipRotFlip(FALSE)
+  , m_strBasename(_T(""))
+  , m_bRootFolder(FALSE)
+  , m_bSavefileFolder(FALSE)
+  , m_bNavLabelFolder(FALSE)
+  , m_bNumber(FALSE)
+  , m_bMonthDay(FALSE)
+  , m_bHourMinSec(FALSE)
+  , m_strExample(_T(""))
+  , m_iStartNumber(0)
+  , m_bOnlyWhenAcquire(FALSE)
+  , m_bTiltAngle(FALSE)
+  , m_strDigits(_T(""))
+  , m_bPackCounting4Bit(FALSE)
+  , m_bUse4BitMode(FALSE)
+  , m_bSaveTimes100(FALSE)
+  , m_bUseExtensionMRCS(FALSE)
+  , m_bSaveUnnormalized(FALSE)
+{
+
+}
+
+CK2SaveOptionDlg::~CK2SaveOptionDlg()
+{
+}
+
+void CK2SaveOptionDlg::DoDataExchange(CDataExchange* pDX)
+{
+  CBaseDlg::DoDataExchange(pDX);
+  DDX_Check(pDX, IDC_ONE_FRAME_PER_FILE, m_bOneFramePerFile);
+  DDX_Radio(pDX, IDC_SAVE_MRC, m_iFileType);
+  DDX_Check(pDX, IDC_PACK_RAW_FRAME, m_bPackRawFrames);
+  DDX_Control(pDX, IDC_SKIP_ROTFLIP, m_butSkipRotFlip);
+  DDX_Check(pDX, IDC_SKIP_ROTFLIP, m_bSkipRotFlip);
+  DDX_Text(pDX, IDC_EDIT_BASENAME, m_strBasename);
+  DDV_MaxChars(pDX, m_strBasename, 32);
+  DDX_Check(pDX, IDC_CHECK_ROOT_FOLDER, m_bRootFolder);
+  DDX_Check(pDX, IDC_CHECK_SAVEFILE_FOLDER, m_bSavefileFolder);
+  DDX_Check(pDX, IDC_CHECK_NAVLABEL_FOLDER, m_bNavLabelFolder);
+  DDX_Check(pDX, IDC_CHECK_ROOT_FILE, m_bRootFile);
+  DDX_Check(pDX, IDC_CHECK_SAVEFILE_FILE, m_bSavefileFile);
+  DDX_Check(pDX, IDC_CHECK_NAVLABEL_FILE, m_bNavLabelFile);
+  DDX_Check(pDX, IDC_CHECK_NUMBER, m_bNumber);
+  DDX_Check(pDX, IDC_CHECK_MONTHDAY, m_bMonthDay);
+  DDX_Check(pDX, IDC_CHECK_HOUR_MIN_SEC, m_bHourMinSec);
+  DDX_Text(pDX, IDC_STAT_EXAMPLE, m_strExample);
+  DDX_Control(pDX, IDC_STAT_MUST_EXIST, m_statMustExist);
+  DDX_Control(pDX, IDC_STAT_MUST_EXIST2, m_statMustExist2);
+  DDX_Text(pDX, IDC_EDIT_START_NUMBER, m_iStartNumber);
+  DDV_MinMaxInt(pDX, m_iStartNumber, 0, 9999);
+  DDX_Check(pDX, IDC_CHECK_ONLY_ACQUIRE, m_bOnlyWhenAcquire);
+  DDX_Check(pDX, IDC_CHECK_TILT_ANGLE, m_bTiltAngle);
+  DDX_Control(pDX, IDC_CHECK_ROOT_FOLDER, m_butRootFolder);
+  DDX_Control(pDX, IDC_CHECK_SAVEFILE_FOLDER, m_butSaveFileFolder);
+  DDX_Control(pDX, IDC_CHECK_NAVLABEL_FOLDER, m_butNavlabelFolder);
+  DDX_Control(pDX, IDC_CHECK_MONTHDAY, m_butMonthDay);
+  DDX_Control(pDX, IDC_CHECK_HOUR_MIN_SEC, m_butHourMinSec);
+  DDX_Control(pDX, IDC_STAT_USE_COMP, m_statUseComp);
+  DDX_Control(pDX, IDC_STAT_FOLDER, m_statFolder);
+  DDX_Control(pDX, IDC_STAT_FILE, m_statFile);
+  DDX_Control(pDX, IDC_STAT_DIGITS, m_statDigits);
+  DDX_Text(pDX, IDC_STAT_DIGITS, m_strDigits);
+  DDX_Control(pDX, IDC_SPIN_DIGITS, m_sbcDigits);
+  DDX_Control(pDX, IDC_PACK_COUNTING_4BIT, m_butPackCounting4Bits);
+  DDX_Check(pDX, IDC_PACK_COUNTING_4BIT, m_bPackCounting4Bit);
+  DDX_Control(pDX, IDC_USE_4BIT_MRC_MODE, m_butUse4BitMode);
+  DDX_Check(pDX, IDC_USE_4BIT_MRC_MODE, m_bUse4BitMode);
+  DDX_Check(pDX, IDC_SAVE_TIMES_100, m_bSaveTimes100);
+  DDX_Control(pDX, IDC_USE_EXTENSION_MRCS, m_butUseExtensionMRCS);
+  DDX_Check(pDX, IDC_USE_EXTENSION_MRCS, m_bUseExtensionMRCS);
+  DDX_Control(pDX, IDC_SAVE_UNNORMALIZED, m_butSaveUnnormalized);
+  DDX_Check(pDX, IDC_SAVE_UNNORMALIZED, m_bSaveUnnormalized);
+  DDX_Control(pDX, IDC_PACK_RAW_FRAME, m_butPackRawFrame);
+  DDX_Control(pDX, IDC_SAVE_TIMES_100, m_butSavesTimes100);
+}
+
+
+BEGIN_MESSAGE_MAP(CK2SaveOptionDlg, CBaseDlg)
+  ON_EN_KILLFOCUS(IDC_EDIT_BASENAME, OnKillfocusEditBasename)
+  ON_BN_CLICKED(IDC_CHECK_ROOT_FOLDER, OnCheckComponent)
+  ON_BN_CLICKED(IDC_CHECK_SAVEFILE_FOLDER, OnCheckComponent)
+  ON_BN_CLICKED(IDC_CHECK_NAVLABEL_FOLDER, OnCheckComponent)
+  ON_BN_CLICKED(IDC_CHECK_NAVLABEL_FILE, OnCheckComponent)
+  ON_BN_CLICKED(IDC_CHECK_SAVEFILE_FILE, OnCheckComponent)
+  ON_BN_CLICKED(IDC_CHECK_ROOT_FILE, OnCheckComponent)
+  ON_BN_CLICKED(IDC_CHECK_NUMBER, OnCheckComponent)
+  ON_BN_CLICKED(IDC_CHECK_TILT_ANGLE, OnCheckComponent)
+  ON_BN_CLICKED(IDC_CHECK_MONTHDAY, OnCheckComponent)
+  ON_BN_CLICKED(IDC_CHECK_HOUR_MIN_SEC, OnCheckComponent)
+  ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_DIGITS, OnDeltaposSpinDigits)
+  ON_BN_CLICKED(IDC_PACK_RAW_FRAME, OnPackRawFrame)
+  ON_BN_CLICKED(IDC_SAVE_MRC, OnSaveMrc)
+  ON_BN_CLICKED(IDC_COMPRESSED_TIFF, OnSaveMrc)
+  ON_BN_CLICKED(IDC_TIFF_ZIP_COMPRESS, OnSaveMrc)
+  ON_BN_CLICKED(IDC_SAVE_UNNORMALIZED, OnSaveUnnormalized)
+END_MESSAGE_MAP()
+
+
+// CK2SaveOptionDlg message handlers
+BOOL CK2SaveOptionDlg::OnInitDialog()
+{
+  BOOL states[3] = {true, true, true};
+  int show = mDEtype ? SW_HIDE : SW_SHOW;
+  CBaseDlg::OnInitDialog();
+  m_butSkipRotFlip.EnableWindow(mEnableSkipRotFlip);
+  m_butSaveUnnormalized.EnableWindow(mCanGainNormSum);
+  SetupPanelTables(idTable, leftTable, topTable, mNumInPanel, mPanelStart);
+  states[0] = !mFalconType && !mDEtype;
+  AdjustPanels(states, idTable, leftTable, topTable, mNumInPanel, mPanelStart, 0);
+  m_bRootFolder = (mNameFormat & FRAME_FOLDER_ROOT) != 0;
+  m_bSavefileFolder = (mNameFormat & FRAME_FOLDER_SAVEFILE) != 0;
+  m_bNavLabelFolder = (mNameFormat & FRAME_FOLDER_NAVLABEL) != 0;
+  m_bRootFile = (mNameFormat & FRAME_FILE_ROOT) != 0;
+  m_bSavefileFile = (mNameFormat & FRAME_FILE_SAVEFILE) != 0;
+  m_bNavLabelFile = (mNameFormat & FRAME_FILE_NAVLABEL) != 0;
+  m_bNumber = (mNameFormat & FRAME_FILE_NUMBER) != 0;
+  m_bTiltAngle = (mNameFormat & FRAME_FILE_TILT_ANGLE) != 0;
+  m_bMonthDay = (mNameFormat & FRAME_FILE_MONTHDAY) != 0;
+  m_bHourMinSec = (mNameFormat & FRAME_FILE_HOUR_MIN_SEC) || !m_bNumber;
+  m_bOnlyWhenAcquire = (mNameFormat & FRAME_LABEL_IF_ACQUIRE) != 0;
+  if (!mCanCreateDir && !mDEtype)
+    SetDlgItemText(IDC_STAT_MUST_EXIST, 
+    "Plugin to DigitalMicrograph must be upgraded to create folders");
+  if (mDEtype)
+    SetDlgItemText(IDC_STAT_COMPTITLE, "Components for Filename Suffix");
+  m_sbcDigits.SetPos(50);
+  m_sbcDigits.SetRange(0, 100);
+  B3DCLAMP(mNumberDigits, 3, 5);
+  m_strDigits.Format("Digits: %d", mNumberDigits);
+  m_butRootFolder.EnableWindow(mCanCreateDir);
+  m_butSaveFileFolder.EnableWindow(mCanCreateDir);
+  m_butNavlabelFolder.EnableWindow(mCanCreateDir);
+  m_butRootFolder.ShowWindow(show);
+  m_butSaveFileFolder.ShowWindow(show);
+  m_butNavlabelFolder.ShowWindow(show);
+  m_butHourMinSec.ShowWindow(show);
+  m_butMonthDay.ShowWindow(show);
+  m_statUseComp.ShowWindow(show);
+  m_statFolder.ShowWindow(show);
+  m_statFile.ShowWindow(show);
+  UpdateFormat();
+  ManagePackOptions();
+  return TRUE;
+}
+
+void CK2SaveOptionDlg::OnOK()
+{
+  UpdateData(true);
+  if (!m_bNumber)
+    m_bHourMinSec = true;
+  mNameFormat = (m_bRootFolder ? FRAME_FOLDER_ROOT : 0) |
+    (m_bSavefileFolder ? FRAME_FOLDER_SAVEFILE : 0) |
+    (m_bNavLabelFolder ?FRAME_FOLDER_NAVLABEL : 0) |
+    (m_bRootFile ? FRAME_FILE_ROOT : 0) |
+    (m_bSavefileFile ? FRAME_FILE_SAVEFILE : 0) |
+    (m_bNavLabelFile ? FRAME_FILE_NAVLABEL : 0) |
+    (m_bNumber ? FRAME_FILE_NUMBER : 0) |
+    (m_bTiltAngle ? FRAME_FILE_TILT_ANGLE : 0) |
+    (m_bMonthDay ? FRAME_FILE_MONTHDAY : 0) |
+    (m_bHourMinSec ? FRAME_FILE_HOUR_MIN_SEC : 0) |
+    (m_bOnlyWhenAcquire ? FRAME_LABEL_IF_ACQUIRE : 0);
+  CBaseDlg::OnOK();
+}
+
+void CK2SaveOptionDlg::OnCancel()
+{
+  CBaseDlg::OnCancel();
+}
+
+void CK2SaveOptionDlg::OnKillfocusEditBasename()
+{
+  UpdateData(true);
+  UpdateFormat();
+}
+
+void CK2SaveOptionDlg::OnCheckComponent()
+{
+  BOOL numberBefore = m_bNumber;
+  BOOL hmsBefore = m_bHourMinSec;
+  UpdateData(true);
+  if (numberBefore && !m_bNumber && !m_bHourMinSec)
+    m_bHourMinSec = true;
+  else if (hmsBefore && !m_bHourMinSec && !m_bNumber)
+    m_bNumber = true;
+  UpdateFormat();
+}
+
+void CK2SaveOptionDlg::OnDeltaposSpinDigits(NMHDR *pNMHDR, LRESULT *pResult)
+{
+  if (NewSpinnerValue(pNMHDR, pResult, mNumberDigits, 3, 5, mNumberDigits))
+    return;
+  m_strDigits.Format("Digits: %d", mNumberDigits);
+  UpdateFormat();
+}
+
+void CK2SaveOptionDlg::UpdateFormat(void)
+{
+  CString date, time, filename;
+  char digHash[6] = "#####";
+  CTime ctDateTime = CTime::GetCurrentTime();
+  mWinApp->mDocWnd->DateTimeComponents(date, time);
+  m_strExample = (m_bRootFolder && !m_strBasename.IsEmpty() && mCanCreateDir) ? 
+    "Base" : "";
+  if (m_bSavefileFolder && mCanCreateDir) 
+    UtilAppendWithSeparator(m_strExample, "File", "_");
+  if (m_bNavLabelFolder && mCanCreateDir)
+    UtilAppendWithSeparator(m_strExample, "Label", "_");
+  if (!m_strExample.IsEmpty())
+    m_strExample += "\\";
+  m_statMustExist.ShowWindow(((m_strExample.IsEmpty() && mCanCreateDir) || mDEtype) 
+    ? SW_HIDE : SW_SHOW);
+  m_statMustExist2.ShowWindow((m_strExample.IsEmpty() || !mCanCreateDir) ? SW_HIDE : 
+    SW_SHOW);
+  if (m_bRootFile && !m_strBasename.IsEmpty())
+    filename = "Base";
+  if (m_bSavefileFile)
+    UtilAppendWithSeparator(filename, "File", "_");
+  if (m_bNavLabelFile) 
+    UtilAppendWithSeparator(filename, "Label", "_");
+  if (m_bNumber)
+    UtilAppendWithSeparator(filename, &digHash[5 - mNumberDigits], "_");
+  if (m_bTiltAngle)
+    UtilAppendWithSeparator(filename, "Tilt", "_");
+  if (m_bMonthDay && !mDEtype)
+    UtilAppendWithSeparator(filename, date, "_");
+  if (m_bHourMinSec && !mDEtype)
+    UtilAppendWithSeparator(filename, time, "_");
+  if (mDEtype)
+    m_strExample.Format("Format: %d%02d%02d_00001_%s_RawImages", ctDateTime.GetYear(),
+    ctDateTime.GetMonth(), ctDateTime.GetDay(), filename);
+  else
+    m_strExample = CString("Format: ") + m_strExample + filename;
+  UpdateData(false);
+}
+
+void CK2SaveOptionDlg::ManagePackOptions(void)
+{
+  bool unNormed = !mSetIsGainNormalized || (mCanGainNormSum && m_bSaveUnnormalized);
+  m_butPackRawFrame.EnableWindow(unNormed);
+  m_butPackCounting4Bits.EnableWindow(unNormed && m_bPackRawFrames && 
+    mCan4BitModeAndCounting);
+  m_butUse4BitMode.EnableWindow(unNormed && m_bPackRawFrames && !m_iFileType &&
+    mCan4BitModeAndCounting);
+  m_butSavesTimes100.EnableWindow(!unNormed && mCanSaveTimes100);
+  m_butUseExtensionMRCS.EnableWindow(!m_iFileType && mCanUseExtMRCS);
+}
+
+void CK2SaveOptionDlg::OnPackRawFrame()
+{
+  UpdateData(true);
+  ManagePackOptions();
+}
+
+void CK2SaveOptionDlg::OnSaveMrc()
+{
+  UpdateData(true);
+  ManagePackOptions();
+}
+
+void CK2SaveOptionDlg::OnSaveUnnormalized()
+{
+  UpdateData(true);
+  ManagePackOptions();
+}

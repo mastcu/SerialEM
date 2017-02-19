@@ -1,0 +1,156 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+  <HEAD>
+    <TITLE>File Properties Dialog</TITLE>
+    <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
+    <style type="text/css"> <!-- BODY { font-family:"Arial" } TD { font-size:16 } 
+  --></style>
+  </HEAD>
+  <BODY BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+    <P><A NAME="hidd_fileproperties"></A><B><FONT size="3">File Properties Dialog</FONT></B></P>
+    <P>This dialog box provides options for file storage. Most of them have to do with 
+      how to treat unsigned 16-bit integer data, produced by 16-bit cameras. 
+      According to the MRC standard, MRC files in integer mode store data as signed 
+      integers, ranging from -32768 to 32767. However, 16-bit cameras have the 
+      potential to produce numbers higher than 32767. SerialEM provides five (!) 
+      options for dealing with this possibility.</P>
+    <OL>
+      <LI>
+        Data can be saved in a non-standard unsigned integer mode (mode 6), which is 
+        supported in IMOD as of version 3.7 but may not be portable to other MRC file 
+        reading software.
+      </LI>
+      <LI>
+        Data can be saved in a standard integer file with truncation at 32767. If the 
+        counts in the images to be saved are not expected to be higher than 32767, this 
+        should not lose any data.
+      </LI>
+      <LI>
+        Data can be divided by 2 when saved to file. This will keep the data positive 
+        (and thus proportional to transmitted electrons through the specimen) but will 
+        lose one bit of precision. Since the Gatan 16-bit cameras simply amplify the 
+        signal from the CCD chip 4 times as much as the 14-bit cameras, dividing by 2 
+        probably just removes one bit of noise, which makes this an acceptable option 
+        for current US1000/US4000 cameras.
+      </LI>
+      <LI>
+        Subtracting 32768 and storing with the standard file mode will preserve the 
+        camera values completely, at the cost of producing negative values in the 
+        output file.</LI>
+      <LI>
+        Data can be divided by 2 as soon as they are acquired, by selecting <A HREF="menu_camera.htm#hid_camera_divideby2">
+          Divide 16-bit By 2</A> in the Camera menu. They will thus never appear to 
+        be unsigned integers, making the options for treatment of 16-bit data 
+        irrelevant. If the camera noise level is high enough to make this an acceptable 
+        procedure, then it has the additional advantage that it will preserve negative 
+        values in gain-normalized images. Such values can occur and be meaningful in 
+        images with very low counts if the bias of the camera drifts downwards after 
+        taking a dark reference.</LI></OL>
+    <P>Independent of these choices of how to treat the numeric values, this box 
+      provides three options for the format of the file in which data can be saved.</P>
+    <OL>
+      <LI>
+        MRC files, which can be processed in IMOD and some other software. These files 
+        can hold multiple images in a stack, and have both a header for standard 
+        information about the file and an extended header in which SerialEM stores 
+        additional information associated with each image, referred to as metadata.</LI>
+      <LI>
+        TIFF files for single images. This option is available only when saving an 
+        image (either when saving if there is no open file, or when using <A HREF="menu_file.htm#hidm_file_saveother">
+          Save Single/Save to other</A> in the File menu). The file is closed after 
+        writing one image.</LI>
+      <LI>
+        Series of single-image TIFF files listed in a text file. The text file uses the 
+        'autodoc' format from IMOD and is assigned the standard extension '.idoc', 
+        which stands for 'image autodoc'. This file will include all of the information 
+        about each image that would ordinarily be stored in the extended header of an 
+        MRC file plus additional metadata. This autodoc file allows a series of TIFF 
+        files to be used interchangeably with an MRC stack: images can be read back by 
+        section number or overwritten, the file can be reopened, and montaging can also 
+        be done with this file format. If you are just looking for an easy way to get a 
+        series of numbered TIFF files, you can ignore all these features and, when you 
+        get to the file chooser, think of it as asking for the root name of the series.</LI></OL>
+    <P>When saving to an MRC file, the dialog provides another option for saving 
+      metadata, into a file in the autodoc format. This file will be given the full 
+      name of the image stack plus the extension '.mdoc', which stands for 'metadata 
+      autodoc'. When you open or read from an existing MRC file, the program will 
+      automatically search for an associated '.mdoc' file and read metadata from the 
+      file whenever reading an image, thus restoring more information about the image 
+      (e.g., defocus) than would otherwise be available.
+    </P>
+    <P>Both kinds of autodoc files, image and metadata, contain identical information 
+      about each image. The files also have information at the top that replicates 
+      some of the information that would appear in an MRC header.&nbsp; This includes 
+      the &#39;Pixel spacing&#39;, which is the pixel size in Angstroms.&nbsp; The IMOD programs extracttilts and extractpieces can extract 
+      the same information from either type of file as they can from the extended 
+      header of the MRC file. Eventually IMOD may be able to handle this information 
+      appropriately, but currently it does not have any mechanisms for keeping it up 
+      to date as the image file is changed, so it important to continue to save the 
+      standard items in the extended header.</P>
+    <P><B>Save data as:</B></P>
+    <P>Allows data to be saved as bytes or 16-bit integers. If there is a 16-bit camera 
+      and values are not being divided by 2, or if there are any buffers with 
+      unsigned data in them, an option to save in the non-standard unsigned integer 
+      mode is also available.</P>
+    <P><B>When saving 16-bit data:</B></P>
+    <P>Controls the treatment of unsigned 16-bit integer data being saved to a signed 
+      integer file. The three options are to truncate at 32767, divide by 2, or 
+      subtract 32768, as described above.
+    </P>
+    <P><B>Number of pixels to truncate converting to bytes:</B></P>
+    <P>Controls the number of pixels that will be truncated as black (0) or white (255) 
+      when images are scaled to bytes.</P>
+    <P>Images are captured as 16-bit integers, and the default is to save them to file 
+      in this mode. Images can be saved as bytes (range 0 to 255), but this requires 
+      scaling of the intensity values into this limited range. To keep the scaling 
+      from being dominated by a few extreme values (e.g., from X-rays), which would 
+      compress the dynamic range for the rest of the image data, the program will 
+      find a scaling which truncates a certain number of extremely dark and light 
+      pixels at 0 and 255, respectively. Every image is scaled independently. If you 
+      select byte storage, you can control the number of pixels that will be 
+      truncated with these text boxes.</P>
+    <P><B>Save in extended header:</B></P>
+    <P>Select whether to save tilt angle, C2 intensity value, stage position, 
+      magnification, or dose in the header. The dose is referred to as 'exposure 
+      dose' because it is the dose incurred during the time when the camera is 
+      exposed to the beam, excluding any pre-exposure of the specimen. All of these 
+      values can be extracted from an MRC file with the IMOD program extracttilts 
+      (use 'extracttilts -h' to see options). Regardless of which items are selected, 
+      all of these values and more can be saved in a metadata autodoc file.</P>
+    <P><B>Maximum number of sections:</B></P>
+    <P>Indicate maximum number of sections that space is needed for.</P>
+    <P>The program can store various information for each picture in the 'extended 
+      header' of the MRC image file. The check boxes allow you to choose which 
+      information is stored; namely tilt angles, the stage position, and 
+      magnification. If you are montaging, piece coordinates are automatically stored 
+      in the header as well. Because these data are placed in the header, the program 
+      needs to know when first opening the file how much space to allocate for it. 
+      This is the reason for the text box where you specify 'Maximum number of 
+      sections'. The admonition is to be generous because if you run out of header 
+      space your only choice is to start a new file.</P>
+    <P><B>Save extra information in a '.mdoc' metadata file:</B></P>
+    <P>Select this option to have metadata saved in a text file with the name of the 
+      image file and extension '.mdoc', as described above. When a montage file is 
+      opened and the range of coordinates is too large to store in the extended 
+      header, a '.mdoc' file is created automatically.</P>
+    <P><B>Save images to:</B></P>
+    <P>Select whether to save data in an MRC file, a TIFF file holding a single image 
+      (not always available), or a series of TIFF files listed in an autodoc file, as 
+      explained above. When you select the latter option, the file chooser for 
+      specifying the file will attach the extension '.adoc' if you type in a root 
+      name without an extension. Thus, the autodoc will be named rootname.adoc, and 
+      the TIFF files will be named rootnameNNNN.tif, where 'NNNN' is a 4-digit number 
+      starting with 0000.</P>
+    <P><B>Type of compression in TIFF file:</B></P>
+    <P>Select whether TIFF files will be saved with no compression, the type of 
+      compression used in Zip and PNG files, or LZW (Lempel-Ziv-Welch) compression 
+      These are both loss-less compression methods that may not save much space. Your 
+      selection here will be saved in your settings file, whereas the default values 
+      for other options in this dialog are controlled by entries the 
+      SerialEMproperties.txt file.</P>
+    <P><B>Cancel:</B></P>
+    <P>Cancel file setup (and montaging, if setting that up).</P>
+    </basefont>
+  </BODY>
+</HTML>

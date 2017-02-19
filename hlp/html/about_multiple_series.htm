@@ -1,0 +1,268 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+  <HEAD>
+    <TITLE>Acquiring Multiple Tilt Series</TITLE>
+    <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
+    <style type="text/css"> <!-- BODY { font-family:"Arial" } TD { font-size:16 } 
+  --></style>
+  </HEAD>
+  <BODY BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+    <P><A NAME="about_multiple_series"></A><B><FONT size="3">Acquiring Multiple Tilt Series 
+          Automatically</FONT></B></P>
+    <P>Multiple tilt series can be run in a batch mode by using the Navigator to define 
+      positions where the series are to be taken, setting the parameters for the 
+      acquisition in advance as the positions are selected for tilt series in the 
+      Navigator, then starting the tilt series from the <A HREF="hidd_navacquire.htm">Navigator 
+        Acquire dialog box</A> .
+    </P>
+    <P><B><I>Points to consider:</I></B> There are various considerations for using 
+      this capability:</P>
+    <UL>
+      <LI>
+        <i>Maps.</i>
+        Each target position should be located within a medium-magnification Navigator 
+        map that is large enough to allow the position to be found reliably with the <A HREF="menu_navigator.htm#hid_navigator_aligntoitem">
+          Realign to Item command</A>. Such a map is referred to as an anchor map, 
+        and Navigator has features to simplify taking such maps. It is recommended that 
+        you also take a map at the magnification for the tilt series, and corresponding 
+        to a zero-degree view of the target area, as this map will allow more precise 
+        positioning, but this map is not essential.</LI>
+      <LI>
+        <i>Beam centering.</i>&nbsp;
+        You will probably want to use the beam autocentering task to protect against 
+        the beam position wandering during protracted data collection. To do so, you 
+        need to set up the task to work properly at the magnification where you are 
+        acquiring data, using the <A HREF="hidd_autocensetup.htm">Beam Autocenter Setup 
+          dialog box</A> . Once this is set up, you should test the task before data 
+        collection to see if its parameters need adjustment (run the <A HREF="menu_tasks.htm#hid_tasks_autocenterbeam">
+          Autocenter Beam</A> command in the Tasks menu or use the Shift-E hot key).</LI>
+      <LI>
+        <i>Cooking plastic sections.</i>&nbsp;
+        If you are working with plastic sections, you can make the pre-exposure of the 
+        specimen be part of the batch operations. To do so, you need to set up the 
+        specimen cooking task using the <A HREF="hidd_cooksetup.htm">Specimen Cooking Setup 
+          dialog box</A> . Once this is set up, you can run that dialog to check the 
+        parameters before data collection and make sure that they are appropriate for 
+        the extent of area being acquired.</LI>
+      <LI>
+        <i>Bidirectional series.</i>&nbsp; For reliable results, it may be necessary to 
+        take the tilt series in two directions from 0 tilt.&nbsp; This will usually be 
+        the case with cryo-samples, where the walk-up to a high starting angle or 
+        tracking down from it may fail.&nbsp; It may also be desirable to use a 
+        bidirectional series with other samples where there is difficulty focusing at 
+        high tilt, since it is generally easier to stay in focus as high tilt is 
+        approached in small steps from below than to establish good focus when starting 
+        the series at high tilt.</LI>
+      <LI>
+        <i>Finding tilt range.</i>&nbsp;
+        Often you need to set the tilt angle range separately for the individual tilt 
+        series, after assessing what range is feasible at each location. You may find 
+        the <A HREF="hidd_tsrange.htm">Tilt Series Range Finder</A> helpful for 
+        assessing the tilt range. If you use it and then select angles at the end of 
+        the range in the <A HREF="hidd_tssetangle.htm">Tilt Series Range Viewing dialog</A>, 
+        then you need to open the relevant tilt series parameters (using the TS 
+        Parameters button in the Navigator) to have the selected angles become the 
+        limiting angles for that series.&nbsp; Note that as of SerialEM 3.4.0, a batch 
+        tilt series is considered to be successful if an image that is too dim is 
+        encountered at a high enough angle, as specified by settings in the <A HREF="hidd_tspolicies.htm">Tilt 
+          Series Batch Policies dialog</A>. Thus, you may be able to skip assessing the 
+        ending angle.&nbsp; Since the same criteria are applied to terminate the first 
+        part of a bidirectional series upon a dim image, you may be able to skip 
+        assessing the tilt range completely for such series.</LI>
+      <LI>
+        <i>Eucentricity and Z height</i>.&nbsp;
+        As always, the tilt series will run much more smoothly if the eucentric height 
+        is set for the specific location. Moreover, if the specimen is going to be 
+        pre-exposed, then the final eucentricity setting should be done after cooking. 
+        This can be achieved by selecting to refine eucentricity either in the <A HREF="hidd_navacquire.htm">
+          Navigator Acquire dialog box</A> or the Tilt Series Setup dialog. However, 
+        this routine cannot run reliably unless the Z height is within ~10 microns of 
+        eucentric. There are two options for taking care of this: select the Rough 
+        Eucentricity task in the <A HREF="hidd_navacquire.htm">Navigator Acquire dialog box</A>, 
+        or set the eucentricity approximately by whatever means you prefer when you set 
+        up the series at each point. If you set the Z height after adding the Navigator 
+        item that is marked for a tilt series, select the item and change its Z height 
+        with the <b>Update Z</b> button in the Navigator.</LI>
+      <LI>
+        <i>Error handling.</i>&nbsp;
+        You need to make a basic choice of what should happen in case of an error: 
+        whether the tilt series should stop with a message or whether the Navigator 
+        should terminate it and go on to the next. The <A HREF="hidd_tspolicies.htm">Tilt 
+          Series Batch Policies dialog</A> has an option for this basic choice and 
+        some other options relevant to running tilt series or other automated 
+        operations. These include an option to have a separate log file for each 
+        series, and an option to control whether and when to close column/gun valves if 
+        a message box is open for a long time.</LI>
+      <LI>
+        <i>Email messages.</i>&nbsp;
+        Receiving email notification can be very helpful when running multiple series, 
+        especially if you select for a message box come up when there is an error. In such 
+        cases, an email will be sent before the box is opened. To send mail, the 
+        program needs to be able to contact an SMTP server and this server needs to be 
+        defined in the properties file. Once this has been configured, you will be able 
+        to enter an email address in the Tilt Series menu and select the option to have 
+        emails sent.</LI>
+      <LI>
+        <i>Imaging states.</i>&nbsp;
+        For each tilt series, you have the option to store an imaging state consisting 
+        of scope settings such as beam intensity (or, in Low Dose mode, the entire set 
+        of parameters for the record area), and Record parameters such as exposure 
+        time. In Low Dose mode, the axis position of the Focus area and an offset from 
+        center of a subarea selected in the Focus camera parameters is also stored.&nbsp; This capability is obviously useful if you want a different state for 
+        some tilt series, or a different Focus area in Low Dose mode; it can also be used for the first tilt series to guarantee 
+        that a particular state is set then.</LI></UL>
+    <P><B><I>Stopping and intervening:</I></B> When running tilt series from the 
+      Navigator, it is still possible to intervene manually, but the situation is 
+      somewhat complex because of the two layers of control involved. There are three 
+      distinct phases where the <b>End</b> and <b>STOP</b> buttons in the Camera and Script control 
+      panel have three different effects.</P>
+    <OL>
+      <LI>
+        During the actions run by the Navigator prior to the start of the tilt series, 
+        such as rough eucentricity, the <b>STOP</b> button will stop the action and stop the 
+        Navigator. The current item will still be marked for tilt series acquisition, 
+        and you can resume from the <A HREF="hidd_navacquire.htm">Navigator Acquire dialog 
+          box</A> . The <b>End</b> button (labeled <b>End Nav</b>) will signal the Navigator to end 
+        after this tilt series is finished.</LI>
+      <LI>
+        During the startup phase of the tilt series, before the first image of the 
+        series is acquired, the <b>STOP</b> button will end the current operation and put the 
+        TSC into a 'postponed' state. When resumed from this state, the TSC will go 
+        through the whole sequence of startup operations again. Pushing the <b>Resume</b> 
+        button will open the <A HREF="hidd_tiltseries.htm">Tilt Series Setup dialog box</A>
+        , from which you can restart the series. Alternatively, you can abandon this 
+        location and go on to the next tilt series by terminating the series, either 
+        from the Tilt Series menu or by pushing the <b>End</b> button (now labeled <b>End TS</b>). 
+        If you want to end all acquisitions, then select &#39;End Acquire' in the Navigator 
+        Menu BEFORE terminating the tilt series. During the startup phase, pressing the 
+        <b>End</b> button (labeled <b>End Loop</b>) will cause the TSC to stop after the saving the 
+        first image of the series.</LI>
+      <LI>
+        Once the tilt series is through the startup phase, <b>STOP</b> stops the current 
+        operation and <b>End</b> (labeled <b>End Loop</b>) stops it at the end of a loop. At this 
+        point everything works as in a manually started tilt series. The <b>Resume</b> and 
+        <b>Back Up</b> buttons function as usual, opening their respective dialogs. The <A HREF="hidd_tiltseries.htm">
+          Tilt Series Setup dialog box</A> can be opened to adjust parameters and 
+        resume from there. The tilt series can be terminated from the Tilt Series menu 
+        or with the <b>End</b> button (labeled <b>End TS</b>). Again, if you want to end all 
+        acquisitions, first select 'End Acquire' in the Navigator Menu.</LI></OL>
+    <P><B><I>Step-by-step Procedures:</I></B> There a several ways to use the various 
+      tools provided for setting up multiple tilt series; here is one variation.</P>
+    <OL>
+      <LI>
+        Make whatever maps are needed to locate your areas of interest. This could be 
+        just a low-mag map, or a low-mag map plus a series of medium-mag maps. The 
+        steps below for making anchor maps would not be needed if all points are 
+        located in medium-mag maps.</LI>
+      <LI>
+        Open a file for maps of the areas to be acquired.</LI>
+      <LI>
+        Locate the first area of interest. Run the Rough Eucentricity procedure or 
+        otherwise adjust the X height to be approximately the eucentric height.</LI>
+      <LI>
+        Go to the magnification required for the tilt series and acquire an image of 
+        exactly the area to be imaged.</LI>
+      <LI>
+        Save this image and make it a map.</LI>
+      <LI>
+        Go to a magnification where the camera field of view is 10-15 &micro;m (if you have a 
+        state set up for this in the Imaging State dialog, set this state there).</LI>
+      <LI>
+        Acquire an image and save it as a map.</LI>
+      <LI>
+        Check 'For anchor map' in the Navigator dialog.</LI>
+      <LI>
+        Return to the working magnification (use 'Restore Prior State' in the Imaging 
+        State dialog).</LI>
+      <LI>
+        Run the Tilt Series Range Finding procedure or otherwise determine the limits 
+        of the series.</LI>
+      <LI>
+        Select the first map again and check 'Tilt series' in the Navigator.</LI>
+      <LI>
+        Define file properties as needed then define tilt series properties.</LI>
+      <LI>
+        Go to the next area of interest, and adjust the eucentric height approximately 
+        if necessary.</LI>
+      <LI>
+        Acquire an image of the area to be acquired.</LI>
+      <LI>
+        Press the <B>Anchor Map </B>button. This will save the first image as a map and 
+        make a second map for an anchor.</LI>
+      <LI>
+        Determine the angular range for the series.</LI>
+      <LI>
+        Select the higher mag map again if necessary and check 'Tilt series'. This time 
+        no dialogs will open.</LI>
+      <LI>
+        Press the <B>TS Parameters</B> button to import an angular range determined 
+        with the Range Finder and to adjust any other parameters</LI>
+      <LI>
+        To adjust the automatically generated filename, press the <B>Filename</B> button.</LI>
+      <LI>
+        Continue with steps 13 to 19 for any other areas to be acquired.</LI>
+      <LI>
+        Check that beam autocentering is working correctly, if you plan to use it.</LI>
+      <LI>
+        If appropriate, check the parameters for specimen cooking.</LI>
+      <LI>
+        Select 'Acquire at Points' from the Navigator menu. Tilt series acquisition 
+        will be selected as the action to perform.</LI>
+      <LI>
+        Select 'Autocenter beam' if you are set up to use it; 'Cook specimen' if 
+        appropriate, and 'Fine Eucentricity if this operation is not selected in the 
+        tilt series parameters for each series</LI>
+      <LI>
+        Set 'Close valves at end' and 'Send email' as desired, then press the <B>GO</B> 
+        button.</LI></OL>
+    <P>The order of the steps can be varied. If you adjust eucentric height after 
+      making a map item, you can press the <B>Update Z</B> button in the Navigator to 
+      change the Z value of the map item. If you run the Range Finding procedure 
+      after setting other tilt series parameters, press <B>TS parameters </B>to get 
+      the new angular limits into the tilt series parameters.</P>
+    <P>If you are acquiring montaged tilt series, you may want to make the map at the 
+      working magnification be a montage of the same size, although this is not 
+      essential. In this case, you would have two files for the maps, one for these 
+      montages and one for the anchor maps. A procedure for doing this would be as 
+      follows:</P>
+    <OL>
+      <LI>
+        Open a montage file for the maps at the working magnification.</LI>
+      <LI>
+        Locate the first area for acquisition.</LI>
+      <LI>
+        Press <B>Prescan</B> in the Montage Control panel to take a trial montage 
+        rapidly.</LI>
+      <LI>
+        Shift the prescan with the right mouse button and take another if necessary.</LI>
+      <LI>
+        Take a full montage and make it a map.</LI>
+      <LI>
+        Open another file for single frame images.</LI>
+      <LI>
+        Go to a magnification appropriate for taking an anchor map.</LI>
+      <LI>
+        Take an image and save it as a map. Mark this item 'For anchor maps'.</LI>
+      <LI>
+        Return to the working magnification.</LI>
+      <LI>
+        Select the montage file to be the current file, or just close the second, 
+        single-image file.</LI>
+      <LI>
+        Perform other tasks for setting up a tilt series at this location, as above</LI>
+      <LI>
+        Locate the next area for acquisition.</LI>
+      <LI>
+        Use <B>Prescan</B> to localize the desired area, then take a full montage.</LI>
+      <LI>
+        Press <B>Anchor Map</B>.</LI>
+      <LI>
+        Perform other tasks for setting up a tilt series at this location.</LI>
+      <LI>
+        Repeat steps 13 to 15 for further areas to be acquired.</LI></OL>
+    <P>Note that the <B>Anchor Map</B> button becomes particularly convenient when maps 
+      are kept in multiple files.</P>
+    </basefont>
+  </BODY>
+</HTML>

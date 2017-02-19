@@ -1,0 +1,122 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+  <HEAD>
+    <TITLE>Navigator Acquire Dialog</TITLE>
+    <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
+    <style type="text/css"> <!-- BODY { font-family:"Arial" } TD { font-size:16 } 
+  --></style>
+  </HEAD>
+  <BODY BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+    <P><A NAME="hidd_navacquire"></A><B><FONT size="3">Navigator Acquire Dialog</FONT></B></P>
+    <P>This dialog opens when the 'Navigator-Acquire at Points' menu item is selected 
+      and lets you control what actions are taken at a series of Navigator items 
+      marked as 'Acquire' or 'Tilt Series'. For items marked as 'Acquire', the 
+      primary actions available are to take and save an image, take an image and save 
+      it as a map, or run a script at each point. If there are only items marked as 
+      'Acquire', the Tilt Series option is unavailable; if there are only items 
+      marked as 'Tilt Series', the other actions are unavailable. If there are both 
+      kinds of items marked, the dialog will open with the Tilt series option 
+      selected but the other options available; however, the selected action will be 
+      taken only on the appropriate kind of item ('Acquire' or 'Tilt Series') and 
+      items of the other kind will be skipped.
+    </P>
+    <P>Prior to the primary action are a series of optional steps that can be run after 
+      moving the stage to each item's position. They are shown in the order in which 
+      they would be run:</P>
+    <P><B>Rough eucentricity - </B>The rough eucentricity task should be selected if it 
+      is necessary that the specimen be eucentric and if the Z height might be off by 
+      more than 10 microns. It is run first because it does not retain alignment to a 
+      specimen position.</P>
+    <P><B>Autocenter beam</B> - This task will condense the beam and take a picture to 
+      determine how to recenter it. Beam autocentering must already be set up for the 
+      current magnification in the <A HREF="hidd_autocensetup.htm">Beam Autocentering 
+        Setup dialog box</A> .
+    </P>
+    <P><B>Realign to item - </B>This task will realign to a selected specimen feature, 
+      but requires that the item be located within a sufficiently large 
+      medium-magnification map, as described in <A HREF="menu_navigator.htm#hid_navigator_aligntoitem">
+        Realign to Item</A> .&nbsp; If rough eucentricity is <i>not</i> being run 
+      during the acquire sequence, then the realign operation will be done at the Z 
+      height of the item being aligned to, since changing Z after aligning would lose 
+      the alignment.&nbsp; However, if rough eucentricity <i>is</i> being run, then 
+      the Z height found during that operation is retained for the realign operation.&nbsp; 
+      Thus, a new map acquired at this position will have the right Z height.&nbsp; 
+      There will be some error in realigning to the map because of the Z height 
+      difference.&nbsp; This error will be recorded for the new map and taken into 
+      account when realigning to this pair of maps in the future.</P>
+    <P><B>Cook specimen</B> - This task will stabilize the specimen by pre-exposing it 
+      for a certain amount of time or to achieve a certain dose. The parameters for 
+      this operation must already be set up in the <A HREF="hidd_cooksetup.htm">Specimen 
+        Cooking Setup dialog box</A> .</P>
+    <P><B>Fine eucentricity -</B> This task can be selected if eucentricity needs to be 
+      found with the highest accuracy, but the Z height should be within 10 microns 
+      of eucentric before running this task. If 'Realign to item' was also selected, 
+      the task is run in a way that maintains alignment to the specimen position (the <A HREF="menu_tasks.htm#hid_tasks_finerealign">
+        Refine &amp; Realign command</A>).</P>
+    <P><B>Autofocus -</B> Select this option to run the autofocus routine prior to the 
+      main action. If 'Only at start of group' is checked, then autofocus is run only 
+      when the first item in a group is encountered, or when an item is not a member 
+      of a group. If the
+    </P>
+    <P><B>Run script</B> - This task is available as a preliminary action for all kinds 
+      of 
+      primary tasks.&nbsp; When the primary task is tilt series acquisition, the script 
+      should be used for quick actions such as opening secondary files; if extended 
+      tasks are performed, the script is responsible for maintaining alignment to the 
+      specimen position. Even if the script is stopped or fails to complete 
+      successfully, the program will go on to the primary task, unless the script runs 
+      the command &#39;SkipAcquiringNavItem&#39;.&nbsp; The program 
+      keeps track of the script choice separately for tilt series and other primary 
+      tasks.</P>
+    <P><B>Primary Task</B></P>
+    <P><B>Acquire map image </B>- The image file must already be opened before starting 
+      the operation, unless a new file is set to be opened when the first item is 
+      acquired. As each area is acquired, it will be added as a map item with a label 
+      based on the label of the point being acquired (e.g., 12-A for point 12). The 
+      original point will no longer be marked for acquisition and it will no longer 
+      be drawn, to reduce clutter. Once the acquisition is finished, you could delete 
+      the original points.</P>
+    <P><B>Just acquire and save image</B> - Again, the image file must be open before 
+      starting unless a file is set to be opened on the first item. This option is 
+      useful if you do not need to make maps of your acquired images.</P>
+    <P><B>Run script</B> - Select the script number to run. When the script completes or 
+      stops with an error that cannot be resumed from, the Navigator will go on to 
+      the next item. If there is an error that can be resumed from, or if you stop 
+      the script with 'End' or 'Stop' and it is then resumable, then the Navigator 
+      will not go on to the next item and the status bar will show 'STOPPED NAV 
+      SCRIPT'. At this point you can do three things: 1) Resume the script, 2) abandon 
+      this script and go on to the next item by using 'End', or 3) terminate the 
+      acquisition by selecting 'End Acquire' in the Navigator menu. These 'End' or 
+      'Stop' functions can be activated either from the Camera and Script control 
+      panel or from the Script menu.</P>
+    <P><B>Acquire tilt series</B> - All parameters and file properties should already 
+      be set up when you go to start the series.</P>
+    <P><B>Restore scope state after aligning to item</B></P>
+    <P>This option is enabled when you select 'Realign to item' as an initial task and 
+      are running a script. If it is checked, then the current magnification and beam 
+      settings will be restored after running 'Realign to item'. Usually, this is 
+      appropriate, which is why it happens by default when making maps or taking 
+      images. However, if you are realigning to a high-magnification map embedded in 
+      a medium magnification map, then you could turn off this option if the beam and 
+      magnification were already carefully adjusted before acquiring the 
+      high-magnification map. That way, you would not have to readjust these settings 
+      before starting the acquisition, and you would be protected against the scope 
+      being in an undesirable state before starting a particular realign operation.</P>
+    <P><B>Close column/gun valves at end</B></P>
+    <P>If this option is available, you can set it to have the column or gun valve 
+      closed at the end of the set of acquisitions. On a JEOL without a FEG, this 
+      option can be used to turn the filament off instead.
+    </P>
+    <P><B>Send email at end</B></P>
+    <P>If this option is enabled, you can select it to have an email sent to the 
+      address entered with <A HREF="menu_tilt_series.htm#hid_tiltseries_setaddress">Set 
+        Email Address</A> in the Tilt Series menu when the acquisition finishes. An 
+      email will be sent if the acquisition stops with an error, but not if you stop 
+      it yourself. For this option to be enabled, an SMTP server and address to mail 
+      from must be specified in the SerialEM properties file.&nbsp; The program keeps 
+      track of this option setting separately for tilt series and other kinds of 
+      primary tasks.</P>
+    </basefont>
+  </BODY>
+</HTML>

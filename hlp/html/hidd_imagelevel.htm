@@ -1,0 +1,105 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+  <HEAD>
+    <TITLE>Image Display Control Panel</TITLE>
+    <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
+    <style type="text/css"> <!-- BODY { font-family:"Arial" }
+  TD { font-size:16 }
+  --></style>
+  </HEAD>
+  <BODY BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+      <P><A NAME="hidd_imagelevel"></A><B><FONT size="3">Image Display Control Panel</FONT></B></P>
+      <P>This panel allows you to see and control how image intensities are displayed. 
+        When an image is acquired or read from a file, pixels are sampled over a 
+        particular area to determine how to scale the intensities for display. The 
+        program finds the lower and upper intensities beyond which only a certain small 
+        fraction of pixels have intensities, and stretches the contrast to map these 
+        limiting intensities to 0 and 255 in an intermediate byte image used for 
+        display. This byte image is displayed with a second mapping determined by the 
+        Brightness and Contrast sliders; 0 and 255 display as black and white on the screen 
+        when these sliders are in the middle position. These limiting values of the 
+        first mapping are shown 
+        in the Black and White text boxes. You can control the size of the area that 
+        will be analyzed, as well as the percent of pixels whose intensities will be 
+        saturated at each extreme. You can also simply change the black and white 
+        values directly. Nothing you do in this window will affect the pixel values 
+        that get saved to a file.</P>
+      <P><B>Black and White level sliders and text boxes</B></P>
+      <P>The text boxes show the image intensities that map to 0 and 255, and which then 
+        display to black and white 
+        on the screen with Brightness and Contrast in the middle position. The sliders 
+        are tied to these values, and the range of the sliders corresponds to minimum 
+        and maximum image intensities estimated by sampling the entire image.&nbsp; 
+        Because the sampling can miss bright pixels cause by X-rays, the latter values 
+        are typically not the same as the minimum and maximum intensities in the image, which you 
+        can determine with the <A HREF="menu_process.htm#hid_process_minmaxmean">Min/Max/Mean</A> 
+        command in the Process menu. You can adjust the sliders or enter new values in 
+        the boxes to control 
+        the degree of saturation at the extreme values in the image.&nbsp; You can enter 
+        values beyond the range of the sliders as well.</P>
+    <P>Note that these sliders do not correspond to the Black and White sliders in 
+      3dmod; rather, they are similar to the High and Low sliders that appear when 
+      3dmod is opened with the option to store values internally as 16-bit integers.</P>
+      <P><B>Brightness and Contrast sliders</B></P>
+      <P>Use these sliders to adjust the brightness and contrast settings of the display 
+        for the current image. Different images can have different brightness/contrast 
+        settings. A newly acquired image will inherit its settings from the previous 
+        image in the A buffer. If an image appears saturated at a uniform gray level 
+        after adjusting these sliders, you probably need to adjust the Black or White 
+        levels to see detail in these regions. If a bright area appears saturated, try 
+        raising the White level; if a dark area is saturated, lower the Black level.</P>
+      <P><B>Zoom</B></P>
+      <P>The text box displays the image zoom and allows a zoom value to be entered 
+        directly. The up and down arrows allow you to increase or decrease the zoom.&nbsp; 
+        The -/_ and =/+ hot keys and the mouse scroll wheel are more convenient for this 
+        purpose.</P>
+      <P><B>Cross</B></P>
+      <P>When this option is selected, the program will always draw a large red cross in 
+        the center of the display, not just when shifting with the mouse.</P>
+      <P><b>Invert</b></P>
+    <P>Use this button to invert the image contrast; the hot key F11 can also be used.</P>
+      <P><B>Set Truncation</B></P>
+      <P>Use this button to enter new values for the percent of pixels that will have 
+        their intensities truncated at the low and the high end of the intensity range, 
+        and new values controlling how FFTs are scaled. 
+        You will enter four dialog boxes for entering new values. The first two are for 
+        entering the percent of pixels truncated at the low and high end of the range.&nbsp; 
+        The next one is the mean gray level that FFTs shuold have at their edges when 
+        first displayed.&nbsp; Values in the range of 16 to 64 may be useful, although 
+        the actual perceived gray level will depend on how noisy the FFTs are.&nbsp; An 
+        entry of 0 here will disable the special scaling of FFTs. The final text box 
+        sets the relative diameter of a ring of pixels whose mean magnitude will be 
+        displayed as white.&nbsp; Useful values are in the range of 0.002 to 0.025, 
+        depending on whether there may be detail at the lowest frequencies that you want 
+        to appear in the display.&nbsp; If any of these parameters are changed, the current image will 
+        be re-analyzed and displayed with the new settings, which will apply for new images that are acquired.&nbsp; 
+        Note that all of these parameters affect the setting of&nbsp; the Black and 
+        White levels, which you can change if there is too much or not enough tuncation 
+        of extreme values.</P>
+      <P><B>Set Area Fraction</B></P>
+      <P>Use this button to enter a new value for the fraction of image to analyze when 
+        determining the Black and White levels. Enter a fraction of the linear extent 
+        of the image. For example, if you enter 0.5, then only pixels from 256 to 768 
+        in X and Y in a 1024 x 1024 pixel image will be analyzed, which is actually only 
+        one-quarter of the image area.</P>
+      <P><B>Scale Bars</B></P>
+      <P>Use this button to turn the display of scale bars on or off.</P>
+      <P><B>Autozoom</B></P>
+      <P>When this option is selected, the display zoom will change automatically when 
+        switching between images with different binning. This allows full-size and 
+        binned images to be compared easily.</P>
+      <P><STRONG>Antialias filtering for zoom &lt; 1</STRONG></P>
+      <P>This button controls whether images zoomed down below 0.8 are scaled with a 
+        filter that eliminates noise and artifacts from aliased information.&nbsp; 
+        Aliasing occurs when an image&nbsp;is zoomed down by simply sub-sampling the 
+        pixels; namely, information at frequencies higher than what can appear in the 
+        scaled-down image appears as noise at other frequencies in the sub-sampled 
+        image.&nbsp; The antialias filter removes frequencies above the new frequency 
+        limit in the process of making the scaled down image.&nbsp; This process can 
+        take several seconds for very large images; thus this option can be used to 
+        turn off the filter.&nbsp; The filter is temporarily turned off when panning an 
+        image with the left mouse button.</P>
+    </basefont>
+  </BODY>
+</HTML>

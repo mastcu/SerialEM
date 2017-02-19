@@ -1,0 +1,281 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+  <HEAD>
+    <TITLE>Process Menu Commands</TITLE>
+    <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
+    <style type="text/css"> <!-- BODY { font-family:"Arial" }
+  TD { font-size:16 }
+      .style1
+      {
+        width: 171px;
+      }
+  --></style>
+  </HEAD>
+  <BODY BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+      <P><A NAME="menu_process"></A><B><FONT size="3">Process menu commands</FONT></B></P>
+      <P>The Process menu offers the following commands:</P>
+      <TABLE BORDER cols="2">
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_process_minmaxmean">Min/Max/Mean</A></TD>
+          <TD>Computes min, max, mean and S.D. of active image or subarea.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_process_zerotiltmean">Zero-tilt mean</A></TD>
+          <TD>Computes mean of area foreshortened by tilting.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_process_fft">FFT</A></TD>
+          <TD>Computes full-sized Fourier Transform of image in active window</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_process_binnedfft">Binned FFT</A></TD>
+          <TD>Computes FFT of image binned to 1024 or binned by 2-4.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_process_livefft">Live FFT</A></TD>
+          <TD>Computes FFT of images taken in continuous acquisition mode.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><a href="#hid_process_side_by_side">Side by Side</a></TD>
+          <TD>Shows FFT in a window side-by-side with main window.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><a href="#hid_process_automaticffts">Automatic Single FFTs</a></TD>
+          <TD>Takes FFT of new single-frame images automatically if Side-by-side selected</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_process_circleonlivefft">Circle on Live FFT</A></TD>
+          <TD>Draws circle(s) on the Live FFT images</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_process_setdefocusforcircles">Set Defocus for Circles</A></TD>
+          <TD>Allows you enter a defocus to have circles drawn at corresponding CTF zeros</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_process_setphaseplateshift">Set Phase Plate Shift</A></TD>
+          <TD>Allows you to enter the phase shift from a phase plate</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_process_rotateleft">Rotate Left</A></TD>
+          <TD>Rotates image in active buffer counterclockwise.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_process_rotateright">Rotate Right</A></TD>
+          <TD>Rotates image in active buffer clockwise.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_process_cropimage">Crop Image</A></TD>
+          <TD>Crops out image inside drawn box or box around drawn line</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_process_makecoloroverlay">Make Color Overlay</A></TD>
+          <TD>Combines 2 or 3 gray-scale images into a single color image</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_process_showcrosscorr">Show Cross-corr</A></TD>
+          <TD>Shows cross-correlation from the current autoalignment</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><a href="#hid_process_autocorrelation">Autocorrelation</a></TD>
+          <TD>Computes autocorrelation of image in Buffer A</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_process_fixdarkxrays">Fix Dark X-rays</A></TD>
+          <TD>Removes X-rays from image in Buffer A using dark criteria</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_process_setdarkcriteria">Set Dark Criteria</A></TD>
+          <TD>Allows you to set criteria for dark X-ray removal</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_process_fiximagexrays">Fix Image X-rays</A></TD>
+          <TD>Removes X-rays from image in Buffer A using image criteria</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_process_setimagecriteria">Set Image Criteria</A></TD>
+          <TD>Allows you to set criteria for image X-ray removal</TD>
+        </TR>
+      </TABLE>
+      <br />
+    In the following, the &quot;active window&quot; means the current buffer in the main 
+    window or a single-image window if it is the active window; the stack of images 
+    created as extra output from a tilt series is excluded even if it is the active 
+    window.<BR>
+      <P><A NAME="hid_process_minmaxmean"></A><B>Min/Max/Mean command (Process menu)</B></P>
+      <P>Use this command to obtain the minimum, maximum, and mean values of the image 
+        in the active window or a subarea of it. The information will appear in a 
+        message box, or in the Log window if it is open. The computation is done on the 
+        active window, which may not be the main window. If there is a box drawn on 
+        this image (which you can do with Ctrl-Shift and the left mouse button), the 
+        statistics within the box are given, along with the size and location of teh 
+        box.&nbsp; If there is no box drawn, the program will also report the pixel 
+        size of the image.</P>
+      <P>Shortcut Key:CTRL+I</P>
+      <P><A NAME="hid_process_zerotiltmean"></A><B>Zero-tilt mean command (Process menu)</B></P>
+      <P>Use this command to obtain the mean value of the approximate area in the 
+        current buffer that corresponds to the full field at zero tilt. For example, if 
+        the tilt is 60 degrees, the magnification is such that the tilt axis is near 
+        vertical, and the image is 1024 pixels wide, then the mean will be taken of the 
+        central half of the image with X between 512 and 768. Note that the mean is 
+        taken of the current buffer in the main window, even if it is not the active 
+        window.</P>
+      <P>Shortcut Key:CTRL+Z</P>
+      <P><A NAME="hid_process_fft"></A><B>FFT command (Process menu)</B></P>
+      <P>Use this command to take a full-sized Fourier transform (FFT) of the image in 
+        the active window. The FFT will be placed into buffer A and existing images will be 
+        rolled to higher buffers to the extent specified in the Buffer Control Panel, 
+        just as when a new image is acquired.</P>
+    <P>If you have an FFT that shows Thon rings, you can click at the first minimum 
+      (the first zero of the CTF) to determine the defocus.&nbsp; The program will 
+      draw a circle through the clicked location and circles at the expected positions 
+      of several more minima (5 total by default).&nbsp; The estimated defocus will be 
+      displayed in the middle pane of the status bar.&nbsp; Once the circles are 
+      drawn, you can click again near any one of the circles to refine the fit to the 
+      minima in the FFT.&nbsp; For the inner circles, you have to avoid clicking 
+      midway between two circles or it will think you are picking a new first zero position; for 
+      the outer two circles it will always refine based on one of those two circles.&nbsp; 
+      Click in one of the corners or very near the middle of the FFT to remove the circles.</P>
+    <P>The defocus is computed using the voltage determined from the microscope, an 
+      objective lens spherical aberration value of 2 mm, and an amplitude contrast 
+      ratio of 0.07.&nbsp; The property &#39;FFTZeroParams&#39; can be used to modify these 
+      parameters or the number of circles drawn, but this is not essential.&nbsp; The 
+      estimated defocus is quite insensitive to the value of the spherical aberration.&nbsp; 
+      The amplitude contrast ratio affects mostly the position of the first circle, so 
+      an estimate refined from higher order circles will also be insensitive to this 
+      parameter.</P>
+    <P>The equations used currently give invalid results for higher-order zeros at a 
+      defocus smaller than about -0.3 and for the defocus itself at a defocus smaller 
+      than about -0.15, so fewer rings and eventually no rings at all will appear for 
+      small defocus values.</P>
+      <P>Shortcut Key:SHIFT+F</P>
+      <P><A NAME="hid_process_binnedfft"></A><B>Binned FFT command (Process menu)</B></P>
+      <P>Use this command to take a binned FFT of the image in the active window. Before taking 
+        the FFT, the image will be padded to be square and binned down by a factor of 
+        2, 3, or 4. The target size after binning is 1024 by 1024; a binning factor of 
+        2 will be used if the image is already this small, and a factor of 4 will be 
+        used if the image is larger than 4096 by 4096. The FFT will be placed into 
+        buffer A and existing images will be rolled to higher buffers to the extent 
+        specified in the Buffer Control Panel, just as when a new image is acquired.</P>
+      <P>Shortcut Key:SHIFT+B</P>
+      <P><A NAME="hid_process_livefft"></A><B>Live FFT command (Process menu)</B></P>
+      <P>Use this command to have FFTs computed automatically when images are taken in 
+        continuous acquisition mode. The FFT will replace the acquired image.</P>
+      <P>Shortcut Key:SHIFT+L</P>
+      <P><A NAME="hid_process_side_by_side"></A><B>Side by Side command (Process menu)</B></P>
+    <P>Use this command to have FFTs displayed in a window next to the main image 
+      display window.&nbsp; This window is a stack of 4 buffers that will roll to save 
+      up to three FFTs when a new single FFT is taken.&nbsp; For a live FFT in 
+      continuous mode, the top buffer will be continually replaced.&nbsp; After this 
+      option is turned on, the window will be created when an FFT is taken.&nbsp; You 
+      can close the window, and it will be reopened when another FFT is taken.&nbsp; 
+      The window is closed when the option is turned off.</P>
+    <P>Shortcut Key: SHIFT+S</P>
+      <P><A NAME="hid_process_automaticffts"></A><B>Automatic Single FFTs command (Process menu)</B></P>
+    <P>Use this command to have FFTs computed automatically for every new single-frame 
+      (non-continuous mode) image whenever the side-by-side FFT window is already 
+      open.</P>
+    <P><A NAME="hid_process_circleonlivefft"></A><B>Circle on Live FFT command (Process 
+          menu)</B></P>
+      <P>Use this command to have one or more circles drawn on the live FFT images. By 
+        default, one circle is drawn, but there are two options for getting more 
+        circles.&nbsp; First, a custom set of circle radii, in reciprocal pixels, can be defined 
+        with the FFTCircleRadii property.&nbsp; Second, the following command can be 
+        used to set a defocus for which circles will be drawn at the zeros of the CTF.</P>
+    <P>Note that if you have left-clicked on a live FFT and there are now circles in 
+      the FFT corresponding to a defocus readout in the status bar, you can return to 
+      the defined set of circles by clicking near the corner or very near the center 
+      of the FFT.</P>
+    <P><A NAME="hid_process_setdefocusforcircles"></A><B>Set Defocus for Circles command (Process 
+          menu)</B></P>
+      <P>Use this command to set a fixed defocus that defines where circles will be 
+        drawn on a live FFT, namely at the zeros of the CTF for that defocus.&nbsp; 
+        Underfocus is negative, as in all defocus readouts.</P>
+    <P><A NAME="hid_process_setphaseplateshift"></A><B>Set Phase Plate Shift command (Process 
+          menu)</B></P>
+      <P>Use this command to define the phase shift imposed by a phase plate (a positive 
+        value in degrees).&nbsp; This phase shift will be taken into account when 
+        circles are drawn on a live FFT for the fixed defocus defined by the previous 
+        command, or when a defocus is reported after left-clicking on an FFT.&nbsp; If a 
+        non-zero shift has been entered, the defocus in the status bar will be followed 
+        by &#39;(PP)&#39;.</P>
+      <P><A NAME="hid_process_rotateleft"></A><B>Rotate Left command (Process menu)</B></P>
+      <P><A NAME="hid_process_rotateright"></A><B>Rotate Right command (Process menu)</B></P>
+      <P>Use these commands to rotate the image in the active buffer counterclockwise 
+        (left) or clockwise (right) by 90 degrees. The rotated image will be placed 
+        into buffer A and existing images will be rolled to higher buffers to the 
+        extent specified in the Buffer Control Panel, just as when a new image is 
+        acquired.</P>
+      <P><A NAME="hid_process_cropimage"></A><B>Crop Image command (Process menu)</B></P>
+      <P>This command is available if you have drawn either a box or a line in the 
+        active image (with Ctrl-Shift-left mouse or Shift-left mouse, respectively). 
+        Use the command to crop out the image area inside a drawn box, or inside the 
+        box around a drawn line. The cropped image will be placed into buffer A and 
+        existing images will be rolled to higher buffers to the extent specified in the 
+        Buffer Control Panel, just as when a new image is acquired.</P>
+      <P><A NAME="hid_process_makecoloroverlay"></A><B>Make Color Overlay command 
+          (Process menu)</B></P>
+      <P>Use this command to overlay two or three images in any buffers into a single 
+        color image. A dialog will open, in which you specify which buffers to use for 
+        the red, green, and blue components of the image. You do this by entering three 
+        letters for the desired buffers, or a 0 if no image is desired for one 
+        component. For example, you can enter ABC to take red from the image in A, 
+        green from the image in B, and blue from the image in C; AB0 to make a 
+        red-green overlay of the images in A and B; ABA to make a magenta - green 
+        overlay of the images in A and B; AAB for a yellow-blue overlay; ABB for a 
+        red-cyan overlay, etc. The images will be scaled by whatever scaling is 
+        currently used to display them and will also be shifted by whatever shifts have 
+        been imposed by autoalignment or shifting with the right mouse button. (The 
+        latter feature could be made optional if users require it.) The color overlay 
+        image will be placed in buffer A and existing images will be rolled to higher 
+        buffers to the extent specified in the Buffer Control Panel, just as when a new 
+        image is acquired. The color image can be saved to an MRC or TIFF file.</P>
+      <P><A NAME="hid_process_showcrosscorr"></A><B>Show Cross-corr command (Process 
+          menu)</B></P>
+      <P>Use this command to show the cross-correlation used to autoalign the image in 
+        buffer A to the image in the autoalign buffer.&nbsp; The correlation will be 
+        placed into Buffer A and existing images will be rolled to higher buffers, just 
+        as when a new image is acquired.</P>
+      <P><A NAME="hid_process_autocorrelation"></A><B>Autocorrelation command (Process 
+          menu)</B></P>
+      <P>Use this command to compute the autocorrelation of the image in buffer A.&nbsp; 
+        The correlation will be placed into Buffer A and existing images will be rolled 
+        to higher buffers, just as when a new image is acquired.</P>
+      <P><A NAME="hid_process_fixdarkxrays"></A><B>Fix Dark X-rays command (Process menu)</B></P>
+      <P>Use this command to apply the X-ray removal routine to the image in the active 
+        window, 
+        using the criteria for removal of X-rays from dark references. The image with 
+        X-rays removed will be placed in Buffer A, and existing images will be rolled 
+        to higher buffers to the extent specified in the Buffer Control Panel, just as 
+        when a new image is acquired.</P>
+      <P><A NAME="hid_process_setdarkcriteria"></A><B>Set Dark Criteria command (Process 
+          menu)</B></P>
+      <P>Use this command to set the criteria for dark reference X-ray removal. First 
+        you will encounter a dialog box asking for a criterion for the absolute amount 
+        above the mean, then another dialog asking for a criterion for the number of 
+        standard deviations above the mean, then a final dialog asking whether a pixel 
+        must satisfy both criteria or just one of them. These criteria replace the ones 
+        specified in the property file and will apply only during this session of the 
+        program.</P>
+      <P><A NAME="hid_process_fiximagexrays"></A><B>Fix Image X-rays command (Process 
+          menu)</B></P>
+      <P>Use this command to apply the X-ray removal routine to the image in the active 
+        window, 
+        using the criteria for removal of X-rays from images. The image with X-rays 
+        removed will be placed in Buffer A, and existing images will be rolled to 
+        higher buffers to the extent specified in the Buffer Control Panel, just as 
+        when a new image is acquired.</P>
+      <P><A NAME="hid_process_setimagecriteria"></A><B>Set Image Criteria command 
+          (Process menu)</B></P>
+      <P>Use this command to set the criteria for X-ray removal from images, which is 
+        activated for a particular camera with the ShowRemoveXRaysBox property and for 
+        individual camera parameter sets with the <B>Remove X rays</B> checkbox in the <A HREF="hidd_camerasetup.htm">
+          Camera Setup dialog box</A>. First you will encounter a dialog box asking for 
+        a criterion for the absolute amount above the mean, then another dialog asking 
+        for a criterion for the number of standard deviations above the mean, then a 
+        final dialog asking whether a pixel must satisfy both criteria or just one of 
+        them. These criteria are camera-specific; they are stored in your settings file 
+        and will persist between sessions of the program.</P>
+    </basefont>
+  </BODY>
+</HTML>

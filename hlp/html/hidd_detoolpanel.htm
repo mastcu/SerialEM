@@ -1,0 +1,99 @@
+<HTML>
+<HEAD>
+    <TITLE>Direct Electron Cameras</TITLE>
+    <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
+    <style type="text/css"> <!-- BODY { font-family:"Arial" }
+  TD { font-size:16 }
+  --></style>
+  </HEAD>
+  <BODY BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+    <P><A NAME="hidd_direct_electron_cameras"></A><B><FONT size="3">Direct Electron 
+            Camera Panel</FONT></B></P>
+        <P>The Direct Electron control panel appears when a Direct Electron camera is 
+          included in the list of available cameras.&nbsp; Most of the controls here apply 
+          only to the direct detector cameras, not the LC1100 lens-coupled camera.&nbsp; 
+          In order for a direct detector camera to be accessed, the Direct Electron Camera 
+          Server must be running before SerialEM is started.&nbsp; </P>
+
+        <p>
+           <b>Name</b></p>
+        <p>
+            The name of the currently selected Direct Electron camera.&nbsp; The possibilities include 
+            the DE12 or DE20, the survey sensor for the 
+            DE12 or DE20, and the LC1100.&nbsp; This field will update when you 
+            select different Direct Electron cameras.</p>
+        <p>
+            <b>Detector (C)</b></p>
+        <p>
+            The current temperature of the camera.&nbsp; Normally for the camera to be 
+            properly cooled it must be in the -30 to -60 degree Celcius range.</p>
+        <p>
+            <b>Setpoint (C)</b></p>
+    <p>
+            The temperature to which the camera will be cooled when cooling is turned on.</p>
+        <p>
+            <b>Water line (C)</b></p>
+        <p>
+            The temperature of the water being used to cool the camera.</p>
+        <p>
+            <b>Cool camera</b></p>
+        <p>
+            This box will be checked if the camera is being cooled.&nbsp; Check it to turn 
+            cooling on, or uncheck it to warm the camera.</p>
+        <p>
+            <b>Camera inserted</b></p>
+        <p>
+            This box will be checked if the camera is inserted or is not retractable.&nbsp; 
+            It can be used to insert or retract the camera, but SerialEM does manage 
+            insertion and retraction when needed.&nbsp;</p>
+        <p>
+            <b>Auto save directory</b></p>
+        <p>
+            This line shows the directory on the Direct Electron server computer where in 
+            frames will be saved when autosaving is selected. </p>
+        <p>
+            <b>File format </b></p>
+    <p>
+            Use this box to select the file format in which autosaved frames will be stored; 
+            the choices are TIFF and HDF.&nbsp; This is a personal setting saved between 
+            sessions.</p>
+        <p>
+            <b>Frames/sec</b></p>
+        <p>
+            This text box shows the rate at which frames will be read out from the camera 
+            and allows you to set the rate to a level up to the maximum, shown to the right 
+            of the box.&nbsp; Frame rates are kept track of separately for the direct 
+            detector and the survey sensor.&nbsp; They are settings that are saved between 
+            sessions.</p>
+        <p>
+            <b>Protection cover delay</b></p>
+        <p>
+            The text box shows the delay after opening the protection cover, which is 
+            initially set to a value that will keep vibrations from affecting images.&nbsp; 
+            You can change this delay, but it will not be saved as a SerialEM setting 
+            between sessions.&nbsp; If there is an entry for the delay in the SerialEM 
+            properties file, that value will reappear when the program is restarted; 
+            otherwise, the delay value will persist in the Direct Electron Server between 
+            SerialEM sessions.</p>
+        <p>
+            <b>Protection cover mode</b></p>
+        <p>
+            The combo box provides two choices for the protection cover: open between all 
+            exposures, or opened and closed for each exposure that is not part of a task or 
+            tilt series.&nbsp; For extensive exploratory imaging, you may want to choose to 
+            leave the cover open.&nbsp; Leaving the cover open all the time is not safe if a 
+            Gatan camera needs to be inserted to have the beam blanked properly.&nbsp; If 
+            you change the choice here, it is not saved between sessions of SerialEM.</p>
+        <p>
+            &nbsp;</p>
+        <p>
+            &nbsp;</p>
+        <p>
+            &nbsp;</p>
+
+
+
+
+</BODY>
+</HTML>

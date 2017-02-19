@@ -1,0 +1,111 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+  <HEAD>
+    <TITLE>Tilt Series Autostart Policies Dialog</TITLE>
+    <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
+    <style type="text/css"> <!-- BODY { font-family:"Arial" }
+  TD { font-size:16 }
+  --></style>
+  </HEAD>
+  <BODY BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+      <P><A NAME="hidd_tspolicies"></A><B><FONT size="3">Tilt Series Batch Policies Dialog</FONT></B></P>
+      <P>This dialog is used to set how the tilt series controller responds to an error 
+        during a tilt series that is run in batch mode from the Navigator. It also has 
+        other settings particularly relevant running in the batch mode. An error is any 
+        condition in which the program would stop with a message. The first choice is 
+        the most critical one:</P>
+      <P><B>General response to error during the series</B></P>
+      <P>Here there are two choices:
+      </P>
+      <OL>
+        <LI>
+          The program can stop with the usual message box, which requires you to confirm 
+          the message box, take appropriate action, and resume or terminate the tilt 
+          series. If you have chosen to have emails sent when tilt series stop, then an 
+          email will generally be sent as well. Choose this option if you want to be sure 
+          to get through every selected tilt series, or if you are able to check progress 
+          periodically or respond to an email and intervene in a timely fashion. The one 
+          exception to&nbsp;stopping is&nbsp;given in the radio buttons immediately below 
+          this choice, the rest of the settings in this dialog are irrelevant.</LI>
+        <LI>
+          The program can automatically terminate the tilt series and go on to the next. 
+          Choose this option if you are running a long sequence of unattended series and 
+          want to continue the data collection even if some series fail. If you choose 
+          this option, then other choices in this dialog govern how the program responds 
+          when there is an error that would ordinarily require you to make a choice 
+          between several responses.</LI></OL>
+      <P><B>After 3 images too dim or one dim Record in Low Dose Mode</B></P>
+      <P>If you have chosen to have the program stop with a message box,&nbsp;this option 
+        allows you to&nbsp;have automatic termination of the tilt series when images 
+        are acquired that are too dim.&nbsp; The termination will occur at the point 
+        when a message box would usually appear: in Low Dose mode, after one Record 
+        that is too dim; otherwise, after three trials to obtain an adequate image.</P>
+      <P><B>After failure to tilt to expected angle</B></P>
+      <P>When the stage fails to tilt to the expected angle, the options are to terminate 
+        the tilt series or to continue with it. Termination is the default on an FEI scope 
+        because this condition usually arises from a pole touch; continuing is the 
+        default on the JEOL because the less precise tilting there can generate this 
+        failure when the tolerance property is not set high enough.</P>
+      <P><B>When Record image loses too much area in Low Dose mode</B></P>
+      <P>This decision point is reached in Low Dose mode when you have 'Repeat Record if 
+        percentage of field lost is more than' checked and the given limit is exceeded. 
+        The options are to take the Record again, continue with the existing Record 
+        image, or terminate the series.</P>
+      <P><B>When Record image is too dim in Low Dose mode</B></P>
+      <P>The program has an expectation of how many counts should be in Record images, 
+        and when there are too few counts, the behavior in regular mode is to retake 
+        the image, while in Low Dose mode the decision is left to the user. The options 
+        here are to take the Record again, continue with the existing Record image, or 
+        terminate the series. If the option to retake the image is selected, it will 
+        try to take it three time then terminate the series if the images are still too 
+        dim. If the option to continue is selected, this should not result in a runaway 
+        series of dark images, because it will still terminate the series if subsequent 
+        tracking or focusing images are too dim after three tries.</P>
+      <P><B>Autosave log and start new log for each tilt series</B></P>
+      <P>If this option is selected, then the program will start a new log file for each 
+        tilt series run from the Navigator, and will automatically keep the log file up 
+        to date during the series. The log file name will be based on the name of the 
+        output file of the series. If the file already exists, the program will make a 
+        numbered variation on this name rather than replace an existing file. New logs 
+        will be started automatically even if the <A HREF="menu_tilt_series.htm#hid_tiltseries_autosavelog">
+          Autosave Log</A> option is not selected in the Tilt Series menu.</P>
+    <P><b>Consider batch series successful or end first part of bidirectional series 
+      at high angles</b></P>
+    <P>This option can be selected to keep either dim images or a failure of autofocus 
+      from being treated as an error in some cases when the tilt angle is high enough.&nbsp; 
+      The angle is sufficiently high when it is either greater than the absolute angle 
+      in the &#39;above&#39; text box (default 55 degrees) or within the number of degrees of 
+      the ending angle in the &#39;within&#39; text box (default 5 degrees).&nbsp; This policy 
+      applies during a batch series when a dim image or autofocus failure occurs near 
+      the ending tilt angle of the series.&nbsp; It applies during any bidirectional 
+      tilt series, batch or manual, when a dim image or autofocus failure occurs near 
+      the &#39;Tilt to&#39; angle that is the high angle for the first part of the series.&nbsp; 
+      In the latter case, the program terminates the first part of the series and goes 
+      on to the second part automatically.</P>
+    <P><b>Do similar at high tilt if intensity/exposure set for mean exceeds X times 
+      its minimum value</b></P>
+    <P>With this option checked, if intensity or exposure time is being varied to 
+      achieve a target number of counts, the program will keep track of the cumulative 
+      changes in whichever parameter is being varied and test whether it has increased 
+      by more than the given factor from the lowest value that it has had in the tilt 
+      series.&nbsp; If it does, and the angle fits the criteria described for the 
+      previous option, the program will do one of three things: 1) end the first part 
+      of any bidirectional tilt series and go on to the second part; 2) terminate a 
+      batch tilt series and consider it successful; 3) stop with an error message when 
+      not running a batch series.&nbsp; The latter stop will happen only once, not 
+      again if you go on.</P>
+    <P>This feature will not work if intensity changes are combined with scheduled 
+      changes in exposure time.&nbsp; Also, if the tilt series is unidirectional, it 
+      provides protection only on the ending side of the series, since it does not 
+      start keeping track of changes until the first Record is saved.</P>
+      <P><B>Close column or gun valves after message box is open X minutes</B></P>
+      <P>Use this option to control whether the valves are closed (or filament turned 
+        off, in some cases) when a message box has been open for the length of time 
+        specified in the edit box. This setting will apply not just during batch tilt 
+        series, but any time that certain message boxes are opened, including all 
+        message boxes that could occur during a tilt series. If the valves do get 
+        closed, you will be notified about this when you close the message box.</P>
+    </basefont>
+  </BODY>
+</HTML>

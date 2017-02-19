@@ -1,0 +1,250 @@
+// Created by Microsoft (R) C/C++ Compiler Version 13.10.6030 (e2ad653b).
+//
+// c:\documents and settings\mast\scope\serialem\release\adaexp.tli
+//
+// Wrapper implementations for Win32 type library ..\Packages\adaexp.exe
+// compiler-generated file created 11/16/08 at 07:00:12 - DO NOT EDIT!
+
+#pragma once
+
+//
+// interface ITAdaExp wrapper method implementations
+//
+
+inline long ITAdaExp::GetLoadPlate ( ) {
+    long _result = 0;
+    HRESULT _hr = get_LoadPlate(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline long ITAdaExp::GetUnloadPlate ( ) {
+    long _result = 0;
+    HRESULT _hr = get_UnloadPlate(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline long ITAdaExp::GetPlateLoadStatus ( ) {
+    long _result = 0;
+    HRESULT _hr = get_PlateLoadStatus(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline long ITAdaExp::GetCloseShutter ( ) {
+    long _result = 0;
+    HRESULT _hr = get_CloseShutter(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline long ITAdaExp::GetOpenShutter ( ) {
+    long _result = 0;
+    HRESULT _hr = get_OpenShutter(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline long ITAdaExp::GetShutterStatus ( ) {
+    long _result = 0;
+    HRESULT _hr = get_ShutterStatus(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline long ITAdaExp::GetDisconnectExternalShutter ( ) {
+    long _result = 0;
+    HRESULT _hr = get_DisconnectExternalShutter(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline long ITAdaExp::GetConnectExternalShutter ( ) {
+    long _result = 0;
+    HRESULT _hr = get_ConnectExternalShutter(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline long ITAdaExp::GetExternalShutterStatus ( ) {
+    long _result = 0;
+    HRESULT _hr = get_ExternalShutterStatus(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline long ITAdaExp::GetExposePlateLabel ( ) {
+    long _result = 0;
+    HRESULT _hr = get_ExposePlateLabel(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline long ITAdaExp::GetUpdateExposureNumber ( ) {
+    long _result = 0;
+    HRESULT _hr = get_UpdateExposureNumber(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline long ITAdaExp::GetMainScreenUp ( ) {
+    long _result = 0;
+    HRESULT _hr = get_MainScreenUp(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline long ITAdaExp::GetMainScreenDown ( ) {
+    long _result = 0;
+    HRESULT _hr = get_MainScreenDown(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline long ITAdaExp::GetMainScreenStatus ( ) {
+    long _result = 0;
+    HRESULT _hr = get_MainScreenStatus(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline long ITAdaExp::GetGetTmpStatus ( ) {
+    long _result = 0;
+    HRESULT _hr = get_GetTmpStatus(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline long ITAdaExp::GetSetTmp ( long Val ) {
+    long _result = 0;
+    HRESULT _hr = get_SetTmp(Val, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline long ITAdaExp::GetGunType ( ) {
+    long _result = 0;
+    HRESULT _hr = get_GunType(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline long ITAdaExp::GetFilamentIndex ( ) {
+    long _result = 0;
+    HRESULT _hr = get_FilamentIndex(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline long ITAdaExp::GetSetFilamentIndex ( long Val ) {
+    long _result = 0;
+    HRESULT _hr = get_SetFilamentIndex(Val, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline long ITAdaExp::GetWehneltIndex ( ) {
+    long _result = 0;
+    HRESULT _hr = get_WehneltIndex(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline long ITAdaExp::GetSetWehneltIndex ( long Val ) {
+    long _result = 0;
+    HRESULT _hr = get_SetWehneltIndex(Val, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline long ITAdaExp::GetFilamentLimit ( ) {
+    long _result = 0;
+    HRESULT _hr = get_FilamentLimit(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline long ITAdaExp::GetSetFilamentLimit ( long Val ) {
+    long _result = 0;
+    HRESULT _hr = get_SetFilamentLimit(Val, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline double ITAdaExp::GetFegExtractor ( ) {
+    double _result = 0;
+    HRESULT _hr = get_FegExtractor(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline long ITAdaExp::GetSetFegExtractor ( double Val ) {
+    long _result = 0;
+    HRESULT _hr = get_SetFegExtractor(Val, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline long ITAdaExp::GetFegGunLens ( ) {
+    long _result = 0;
+    HRESULT _hr = get_FegGunLens(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline long ITAdaExp::GetSetFegGunLens ( long Val ) {
+    long _result = 0;
+    HRESULT _hr = get_SetFegGunLens(Val, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline long ITAdaExp::GetGonioLedStatus ( ) {
+    long _result = 0;
+    HRESULT _hr = get_GonioLedStatus(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline long ITAdaExp::GetSpecimenHolderInserted ( ) {
+    long _result = 0;
+    HRESULT _hr = get_SpecimenHolderInserted(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline long ITAdaExp::GetNumberOfSpecimenHolders ( ) {
+    long _result = 0;
+    HRESULT _hr = get_NumberOfSpecimenHolders(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline long ITAdaExp::GetCurrentSpecimentHolder ( ) {
+    long _result = 0;
+    HRESULT _hr = get_CurrentSpecimentHolder(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline long ITAdaExp::GetSetCurrentSpecimenHolder ( long Id ) {
+    long _result = 0;
+    HRESULT _hr = get_SetCurrentSpecimenHolder(Id, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _result;
+}
+
+inline _bstr_t ITAdaExp::GetSpecimenHolderName ( long Id ) {
+    BSTR _result = 0;
+    HRESULT _hr = get_SpecimenHolderName(Id, &_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _bstr_t(_result, false);
+}
+
+inline _bstr_t ITAdaExp::GetCurrentSpecimenHolderName ( ) {
+    BSTR _result = 0;
+    HRESULT _hr = get_CurrentSpecimenHolderName(&_result);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _bstr_t(_result, false);
+}

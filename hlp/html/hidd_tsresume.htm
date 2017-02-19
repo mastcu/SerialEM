@@ -1,0 +1,67 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+  <HEAD>
+    <TITLE>Tilt Series Resume Dialog</TITLE>
+    <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
+    <style type="text/css"> <!-- BODY { font-family:"Arial" } TD { font-size:16 } 
+  --></style>
+  </HEAD>
+  <BODY BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+    <P><A NAME="hidd_tsresume"></A><B><FONT size="3">Tilt Series Resume Dialog</FONT></B></P>
+    <P>This dialog box allows you to resume a tilt series that has stopped, and to 
+      control the point at which it will be resumed. It also lets you indicate that 
+      you have changed the image alignment.</P>
+    <P><B>Next action in sequence</B></P>
+    <P>The dialog box starts with a message describing what action will occur if you 
+      simply resume with the next action. Certain events will make the program back 
+      up and repeat steps that have already occurred at the current tilt. Such 
+      changes will already be reflected in this message.</P>
+    <P><B>Choose one option for continuing</B></P>
+    <P>This set of radio buttons presents the set of options for how the program will 
+      resume. Inappropriate options will be disabled. When montaging, the options 
+      will refer to taking a montage rather than taking a Record image. Depending 
+      upon where you are in the tit series loop, some of the options may involve 
+      going back and repeating steps, whereas others may skip steps that you have 
+      managed by hand. Any time that you select an option that will save a Record 
+      image, this image will overwrite any existing image at the current tilt angle.</P>
+    <OL>
+      <LI>
+        Resume with next action in sequence - This will be the action described in the 
+        message at the top of the dialog box</LI>
+      <LI>
+        Go on to next tilt - This option will not be available unless you have finished 
+        all actions at the current tilt angle. It could be used to prevent the program 
+        from taking a new Record image and overwriting the one in the file.</LI>
+      <LI>
+        Save the Record image in Buffer A - Use this option if you have taken a new 
+        Record image that you want saved.</LI>
+      <LI>
+        Take new Record image and save it - Use this option to have a new Record image 
+        taken for you and saved to file. The program will skip any scheduled tracking 
+        and focusing steps.</LI>
+      <LI>
+        Autofocus then take Record image - Use this option to start with the 
+        autofocusing step.</LI>
+      <LI>
+        Track, autofocus, and take Record image - Use this option to start with the 
+        tracking step.</LI>
+      <LI>
+        Low mag track, autofocus, and take Record image - If you have low magnification 
+        tracking enabled, this option is also available to let you resume with a low 
+        magnification tracking image.</LI></OL>
+    <P><B>Specify other conditions</B></P>
+    <P>Select the option 'Use image in buffer A as reference for alignments' if you 
+      have changed the alignment and taken an image at the new alignment. The program 
+      will move this image into the autoalign buffer (D) to replace the existing 
+      reference. In low dose mode, this new reference can be from either the Record 
+      area or the Trial area; the program will move it into the appropriate buffer (D 
+      or E) to replace the respective reference, and avoid using the image in the 
+      other alignment buffer for alignment.</P>
+    <P><B>Action Buttons</B></P>
+    <P>The GO button will resume te tilt series unconditionally; the One Loop button 
+      will make it stop after finishing all actions at one tilt; the One Step button 
+      will execute one step; and the Cancel button will just close the dialog box.</P>
+    </basefont>
+  </BODY>
+</HTML>

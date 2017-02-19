@@ -1,0 +1,61 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+  <HEAD>
+    <TITLE>Specimen Cooking Setup Dialog</TITLE>
+    <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
+    <style type="text/css"> <!-- BODY { font-family:"Arial" } TD { font-size:16 } 
+  --></style>
+  </HEAD>
+  <BODY BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+    <P><A NAME="hidd_cooksetup"></A><B><FONT size="3">Specimen Cooking Setup Dialog</FONT></B></P>
+    <P>This dialog box allows you to set the conditions for pre-exposing (cooking) a 
+      plastic section prior to a tilt series. If dose is calibrated for the selected 
+      conditions, then you can expose for a specified dose. Otherwise, you can simply 
+      set a time for the cooking. The general practice in Boulder to is to expose for 
+      about 2000 electrons per square Angstrom. Cooking with a well-spread beam 
+      should help to minimize warping of the section. Using the brightest spot for 
+      the cooking will reduce the time needed.</P>
+    <P><B>Setup mag and beam on scope</B></P>
+    <P>When this button is turned off, the dialog just shows the current parameter 
+      settings for the cooking. When the button is turned on, the microscope will be 
+      put into the specified state and the parameters can be adjusted simply by 
+      changing the magnification, spot size, and brightness on the scope.
+    </P>
+    <P><B>Mag/Spot size/Intensity/Dose displays</B></P>
+    <P>The mag, spot size, and intensity readouts show the currently set parameters for 
+      cooking, and are dynamically updated when 'Setup mag and beam on scope' is 
+      turned on. The dose rate is derived from the spot size and intensity values, 
+      and will show '-x-' when dose is not calibrated for those values.</P>
+    <P><B>Expose for dose of</B></P>
+    <P>Select this radio button to cook until a specific dose is accumulated, and set 
+      the desired dose with the text box and spin buttons. Cooking will work with 
+      this selection only if dose is calibrated at the particular spot size and 
+      intensity being used.</P>
+    <P><B>Expose for time of</B></P>
+    <P>Select this radio button to cook for a specific amount of time, and set the 
+      desired time with the text box and spin buttons. You can always use this method 
+      of cooking, even when dose is not calibrated</P>
+    <P><B>Total time/dose readout</B></P>
+    <P>This line shows the total time when cooking until a dose is reached, or the 
+      total dose when cooking for a specified time. In either case, it will show 
+      '-x-' if dose is not calibrated.</P>
+    <P><B>Tilt to X degrees for cooking</B></P>
+    <P>Select this option to have the scope tilt to the angle specified in the text box 
+      for the duration of the cooking. Cooking at high tilt should be just as 
+      effective in terms of the dose rate, while exposing a wider area. However, it 
+      is essential that the specimen be close to eucentric before starting, so that 
+      the area cooked at high tilt will actually contain the desired area.</P>
+    <P>Note that if this option is not selected, the cooking will occur at whatever the 
+      tilt angle is when the cooking routine is started.</P>
+    <P><B>Restore specimen position after cooking</B></P>
+    <P>With this option selected, the program will take a reference picture at an 
+      appropriate magnification before starting, then take another picture at the end 
+      and align the two. Since shrinkage might make it hard to align these pictures, 
+      the program will search for a scaling of the second picture that maximizes the 
+      correlation between the two. It reports this scaling as a shrinkage value.</P>
+    <P><B>GO</B></P>
+    <P>Use this button to close the dialog and start the cooking operation.</P>
+    </basefont>
+  </BODY>
+</HTML>

@@ -1,0 +1,219 @@
+﻿// Created by Microsoft (R) C/C++ Compiler Version 15.00.30729.01 (9a5e8dc7).
+//
+// c:\users\mast\documents\scope\serialem\release\amtcamera.tlh
+//
+// C++ source equivalent of Win32 type library AmtCamera.tlb
+// compiler-generated file created 02/12/15 at 13:54:31 - DO NOT EDIT!
+
+#pragma once
+#pragma pack(push, 8)
+
+#include <comdef.h>
+
+//
+// Forward references and typedefs
+//
+
+struct __declspec(uuid("a44ee91c-394c-40d7-a2f8-1e3a5c493c41"))
+/* LIBID */ __AmtCameraLib;
+struct /* coclass */ AMTCamInterface;
+struct __declspec(uuid("19b0d661-0385-4738-aabe-86dc4a6d601a"))
+/* dual interface */ IAMTCamInterface;
+
+//
+// Smart pointer typedef declarations
+//
+
+_COM_SMARTPTR_TYPEDEF(IAMTCamInterface, __uuidof(IAMTCamInterface));
+
+//
+// Type library items
+//
+
+struct __declspec(uuid("4524018d-bd1d-4c5c-9e56-515ebe2c466f"))
+AMTCamInterface;
+    // [ default ] interface IAMTCamInterface
+
+struct __declspec(uuid("19b0d661-0385-4738-aabe-86dc4a6d601a"))
+IAMTCamInterface : IDispatch
+{
+    //
+    // Wrapper methods for error-handling
+    //
+
+    HRESULT GetTestArray (
+        long width,
+        long height,
+        long * retSize,
+        short * array,
+        long * time,
+        unsigned long * receiptTime,
+        unsigned long * returnTime );
+    HRESULT ExecuteScript (
+        long size,
+        long * script,
+        long selectCamera,
+        double * retval );
+    HRESULT SetDebugMode (
+        long debug );
+    HRESULT SetDMVersion (
+        long version );
+    HRESULT SetCurrentCamera (
+        long camera );
+    HRESULT QueueScript (
+        long size,
+        long * script );
+    HRESULT GetAcquiredImage (
+        short * array,
+        long * arrSize,
+        long * width,
+        long * height,
+        long processing,
+        double exposure,
+        long binning,
+        long top,
+        long left,
+        long bottom,
+        long right,
+        long shutter,
+        double settling,
+        long shutterDelay,
+        long divideBy2,
+        long corrections );
+    HRESULT GetDarkReference (
+        short * array,
+        long * arrSize,
+        long * width,
+        long * height,
+        double exposure,
+        long binning,
+        long top,
+        long left,
+        long bottom,
+        long right,
+        long shutter,
+        double settling,
+        long divideBy2,
+        long corrections );
+    HRESULT GetGainReference (
+        float * array,
+        long * arrSize,
+        long * width,
+        long * height,
+        long binning );
+    HRESULT selectCamera (
+        long camera );
+    HRESULT GetNumberOfCameras (
+        long * numCameras );
+    HRESULT IsCameraInserted (
+        long camera,
+        long * inserted );
+    HRESULT InsertCamera (
+        long camera,
+        long state );
+    HRESULT GetDMVersion (
+        long * version );
+    HRESULT GetDMCapabilities (
+        long * canSelectShutter,
+        long * canSetSettling,
+        long * openShutterWorks );
+    HRESULT SetShutterNormallyClosed (
+        long camera,
+        long shutter );
+    HRESULT SetNoDMSettling (
+        long camera );
+
+    //
+    // Raw methods provided by interface
+    //
+
+      virtual HRESULT __stdcall raw_GetTestArray (
+        /*[in]*/ long width,
+        /*[in]*/ long height,
+        /*[in,out]*/ long * retSize,
+        /*[out]*/ short * array,
+        /*[out]*/ long * time,
+        /*[out]*/ unsigned long * receiptTime,
+        /*[out]*/ unsigned long * returnTime ) = 0;
+      virtual HRESULT __stdcall raw_ExecuteScript (
+        /*[in]*/ long size,
+        /*[in]*/ long * script,
+        /*[in]*/ long selectCamera,
+        /*[out]*/ double * retval ) = 0;
+      virtual HRESULT __stdcall raw_SetDebugMode (
+        /*[in]*/ long debug ) = 0;
+      virtual HRESULT __stdcall raw_SetDMVersion (
+        /*[in]*/ long version ) = 0;
+      virtual HRESULT __stdcall raw_SetCurrentCamera (
+        /*[in]*/ long camera ) = 0;
+      virtual HRESULT __stdcall raw_QueueScript (
+        /*[in]*/ long size,
+        /*[in]*/ long * script ) = 0;
+      virtual HRESULT __stdcall raw_GetAcquiredImage (
+        /*[out]*/ short * array,
+        /*[in,out]*/ long * arrSize,
+        /*[out]*/ long * width,
+        /*[out]*/ long * height,
+        /*[in]*/ long processing,
+        /*[in]*/ double exposure,
+        /*[in]*/ long binning,
+        /*[in]*/ long top,
+        /*[in]*/ long left,
+        /*[in]*/ long bottom,
+        /*[in]*/ long right,
+        /*[in]*/ long shutter,
+        /*[in]*/ double settling,
+        /*[in]*/ long shutterDelay,
+        /*[in]*/ long divideBy2,
+        /*[in]*/ long corrections ) = 0;
+      virtual HRESULT __stdcall raw_GetDarkReference (
+        /*[out]*/ short * array,
+        /*[in,out]*/ long * arrSize,
+        /*[out]*/ long * width,
+        /*[out]*/ long * height,
+        /*[in]*/ double exposure,
+        /*[in]*/ long binning,
+        /*[in]*/ long top,
+        /*[in]*/ long left,
+        /*[in]*/ long bottom,
+        /*[in]*/ long right,
+        /*[in]*/ long shutter,
+        /*[in]*/ double settling,
+        /*[in]*/ long divideBy2,
+        /*[in]*/ long corrections ) = 0;
+      virtual HRESULT __stdcall raw_GetGainReference (
+        /*[out]*/ float * array,
+        /*[in,out]*/ long * arrSize,
+        /*[out]*/ long * width,
+        /*[out]*/ long * height,
+        /*[in]*/ long binning ) = 0;
+      virtual HRESULT __stdcall raw_selectCamera (
+        /*[in]*/ long camera ) = 0;
+      virtual HRESULT __stdcall raw_GetNumberOfCameras (
+        /*[out]*/ long * numCameras ) = 0;
+      virtual HRESULT __stdcall raw_IsCameraInserted (
+        /*[in]*/ long camera,
+        /*[out]*/ long * inserted ) = 0;
+      virtual HRESULT __stdcall raw_InsertCamera (
+        /*[in]*/ long camera,
+        /*[in]*/ long state ) = 0;
+      virtual HRESULT __stdcall raw_GetDMVersion (
+        /*[out]*/ long * version ) = 0;
+      virtual HRESULT __stdcall raw_GetDMCapabilities (
+        /*[out]*/ long * canSelectShutter,
+        /*[out]*/ long * canSetSettling,
+        /*[out]*/ long * openShutterWorks ) = 0;
+      virtual HRESULT __stdcall raw_SetShutterNormallyClosed (
+        /*[in]*/ long camera,
+        /*[in]*/ long shutter ) = 0;
+      virtual HRESULT __stdcall raw_SetNoDMSettling (
+        /*[in]*/ long camera ) = 0;
+};
+
+//
+// Wrapper method implementations
+//
+
+#include "amtcamera.tli"
+
+#pragma pack(pop)

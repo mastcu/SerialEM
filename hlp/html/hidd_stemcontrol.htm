@@ -1,0 +1,107 @@
+<HTML>
+  <HEAD>
+    <TITLE>STEM Control Panel</TITLE>
+    <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
+    <style type="text/css"> <!-- BODY { font-family:"Arial" }
+  TD { font-size:16 }
+  --></style>
+  </HEAD>
+  <BODY BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+    <P><A NAME="hidd_stemcontrol"></A><B><FONT size="3">STEM Control Panel</FONT></B></P>
+
+
+
+    <p>
+      This panel contains options for controlling various aspects of program behavior 
+      in STEM mode.</p>
+    <p>
+      <b>STEM Mode</b></p>
+    <p>
+      The checkbox can be used to enter and leave STEM mode, and will also be checked 
+      when the microscope is put into STEM mode by other means.&nbsp; After the <b>
+      STEM mode</b> text appears an indicator, which is just OFF or ON on a JEOL, but 
+      is OFF, NANO, or MICRO on an FEI scope to indicate whether nanoprobe or 
+      microprobe mode is selected.&nbsp; The button will remain checked and the 
+      indicator will show the same state even if STEM mode is temporarily suspended by 
+      checking the <b>TEM mode when screen down</b> option.&nbsp; Thus, this button 
+      reflects whether the program, not the scope, is in STEM mode.</p>
+    <p>
+      <b>Unblank</b></p>
+    <p>
+      This button can be used to unblank the beam when it is being maintained in a 
+      blanked state by SerialEM.&nbsp; It will unblank both the blanking imposed by 
+      checking <b>BLANK BEAM in STEM mode</b> and the blanking managed by the SerialEM 
+      Low Dose module.&nbsp; It is enabled when the beam is blanked.</p>
+    <p>
+      <b>BLANK BEAM in STEM mode</b></p>
+    <p>
+      This option can be used to keep the beam blanked whenever the microscope itself 
+      is in STEM mode.&nbsp; The beam is, of course, unblanked for image acquisition, 
+      and will be unblanked if you press <b>Unblank</b>.&nbsp; This option would be 
+      needed to keep the beam blanked even if the program is in Low Dose mode, unless 
+      you keep the screen up or have <b>BLANK BEAM when screen down</b> checked in the 
+      Low Dose control panel.</p>
+    <p>
+      TEM mode when screen down</p>
+    <p>
+      When this option is checked, the program will place the microscope in TEM mode 
+      whenever the screen is down.&nbsp; The option is cleared by an image 
+      acquisition.&nbsp; This capability could be useful for checking the specimen on 
+      the screen, at least on FEI scopes.</p>
+    <p>
+      <b>Invert contrast</b></p>
+    <p>
+      When this box is checked, some or all STEM images will have their contrast 
+      inverted, which may reduce mental strain when one is used to looking at TEM 
+      images.&nbsp; The behavior, and the text of the button, depends on the setting 
+      for the property 'InvertBrightField'.&nbsp; If the property is 1 (the default 
+      value), the button reads <b>Invert contrast of image data</b> and all images 
+      will be inverted when the box is checked.&nbsp; If the property is set to 0 or 
+      -1, the text is <b>Invert contrast unless Bright Field</b> and Bright Field 
+      images will either never be inverted (for value 0) or be inverted when this 
+      option is NOT selected (for value -1).&nbsp; (More precisely, this behavior 
+      applies to images taken with a detector whose name starts with 'Bright'.)</p>
+    <p>
+      <b>Retract to stop camera blanking</b></p>
+    <p>
+      CCD cameras will typically blank the beam unless the screen is down.&nbsp; There 
+      are two ways to defeat this blanking in STEM mode: retracting the camera, and 
+      lowering the screen.&nbsp; This button can be used to specify that camera(s) 
+      should be retracted when taking a STEM picture, rather than lowering the screen.&nbsp; 
+      The default is for the program to lower the screen when necessary for taking an 
+      image, unless this option is selected.&nbsp; That behavior is controlled by a 
+      property, 'LowerScreenForSTEM', which can be set either to prevent the screen 
+      lowering or to make it happen when the scope enters STEM mode. Another property, 
+      'MustUnblankWithScreen', can be set to indicate that camera retraction cannot be 
+      used to defeat blanking (e.g., for a nonretractable camera), in which case the 
+      option here is disabled.</p>
+    <p>
+      <b>Match pixel size when switching</b></p>
+    <p>
+      Select this option to have the program change magnification when entering or 
+      leaving STEM mode so as to maintain approximately the same pixel size for STEM 
+      and CCD acquisition.&nbsp; A camera property, 'PixelMatchFactor', can be set to 
+      make binned pixels in one mode match unbinned pixels in the other, e.g., in 
+      order to match the field of view instead of the unbinned pixel sizes.</p>
+    <p>
+      <b>Added STEM rotation</b></p>
+    <p>
+      Entering a nonzero angle here will rotate the acquired image (counterclockwise 
+      for positive angles).&nbsp; This field is used during program setup and may be 
+      useful for isolated image acquisition.&nbsp; However, rotating the images will 
+      make image and stage shift calibrations inaccurate and move the scan away from 
+      parallel to the tilt axis, thus impairing dynamic focusing.</p>
+    <p>
+      <b>Set Zero of IS</b> (JEOL only)</p>
+    <p>
+      This button can be used to reset the zero of the image shift on a JEOL, which is 
+      actually a beam shift.&nbsp; It may be needed if the program fails to set the 
+      zero correctly the first time it sees STEM mode.&nbsp; It would also be used if 
+      the scope alignment is changed in a way that moves the center of the focused 
+      area.</p>
+
+
+
+</BODY>
+</HTML>

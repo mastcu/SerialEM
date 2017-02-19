@@ -1,0 +1,384 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+  <HEAD>
+    <TITLE>File Menu Commands</TITLE>
+    <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
+    <style type="text/css"> <!-- BODY { font-family:"Arial" }
+  TD { font-size:16 }
+  --></style>
+  </HEAD>
+  <BODY BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+      <OBJECT classid="clsid:1e2a7bd0-dab9-11d0-b93a-00c04fc99f9e" type="application/x-oleobject">
+        <PARAM NAME="Keyword" VALUE="files: managing">
+      </OBJECT>
+      <P><A NAME="menu_file"></A><B><FONT size="3">File menu commands</FONT></B></P>
+      <P>The File menu contains commands for opening, writing to, and reading from MRC 
+        image files, and for saving a Log Window:</P>
+      <TABLE BORDER cols="2">
+        <TR VALIGN="top">
+          <TD width="190"><A HREF="#hidm_file_opennew">Open New</A></TD>
+          <TD>Opens a new MRC file for saving single-frame images.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="190"><A HREF="#hidm_file_openold">Open Old</A></TD>
+          <TD>Opens an existing image file.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="190"><A HREF="#hid_file_newmontage">New Montage</A></TD>
+          <TD>Opens a new file for saving montaged images</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="190"><A HREF="#hidm_file_montagesetup">Montage Setup</A></TD>
+          <TD>Starts dialog for setting montage parameters.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="190"><A HREF="#hidm_file_close">Close</A></TD>
+          <TD>Closes an open image file.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="190"><A HREF="#hidm_file_save">Save A</A></TD>
+          <TD>Saves image in Buffer A to file.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="190"><A HREF="#hidm_file_saveactive">Save Active</A></TD>
+          <TD>Saves image in active window to file.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="190"><A HREF="#hid_file_overwrite">Overwrite</A></TD>
+          <TD>Saves image, overwriting a section in the file.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="190"><A HREF="#hidm_file_saveother">Save Single/Save to Other</A></TD>
+          <TD>Saves image in active window to a single-image file other than the open image 
+            file.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="190"><A HREF="#hidm_file_truncation">Set Truncation</A></TD>
+          <TD>Sets the amount of data that will be truncated if data are saved as bytes.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="190"><A HREF="#hid_file_set16bitpolicy">Set 16-bit Policy</A></TD>
+          <TD>Sets how 16-bit data will be treated when saved to file.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="190"><A HREF="#hid_file_setsignedpolicy">Set Signed Policy</A></TD>
+          <TD>Sets how signed data are treated when saved to unsigned mode file</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="190"><A HREF="#hidm_file_read">Read</A></TD>
+          <TD>Reads an image from a file.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="190"><A HREF="#hidm_file_readother">Read from Other</A></TD>
+          <TD>Reads an image from a file other than the open file.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="190"><A HREF="#hid_file_readpiece">Read Piece</A></TD>
+          <TD>Reads one piece from a montaged image file.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="190"><A HREF="#hid_file_openlog">Open Log</A></TD>
+          <TD>Opens a log window to record program messages.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="190"><A HREF="#hid_file_savelog">Save Log</A></TD>
+          <TD>Saves the log window to a file.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="190"><A HREF="#hid_file_savelogas">Save Log As</A></TD>
+          <TD>Saves the log window to a different file.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="190"><A HREF="#hid_file_readappend">Read &amp; Append</A></TD>
+          <TD>Reads from an existing log file and appends output to it.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="190"><A HREF="#hid_file_continuoussave">Continuous Save</A></TD>
+          <TD>Toggles saving to file after each line of output to log window.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="190"><a href="#hid_file_open_mdoc">Open .mdoc for Frames</a></TD>
+          <TD>Opens a file for saving metadata about saved camera movie frames</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="190"><a href="#hid_file_close_mdoc">Close Frames .mdoc</a></TD>
+          <TD>Closes the metadata file for saved movie frames</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="190"><A HREF="#hid_app_exit">Exit</A></TD>
+          <TD>Exits SerialEM.</TD>
+        </TR>
+      </TABLE>
+      <BR>
+      <OBJECT classid="clsid:1e2a7bd0-dab9-11d0-b93a-00c04fc99f9e" type="application/x-oleobject">
+        <PARAM NAME="Keyword" VALUE="files: managing">
+      </OBJECT>
+      <P><A NAME="hidm_file_opennew"></A><B>Open New command (File menu)</B></P>
+      <P>Use this command to open a new file for saving single-frame images. You will 
+        first encounter the File Properties dialog, then the standard <A HREF="afx_hidd_filesave.htm">
+          Save As dialog box</A>. If the file already exists, you will be asked to 
+        confirm that you want to replace it.&nbsp; If you are saving to an MRC file, the 
+        extension .mrc will be added automatically unless you put the extension on 
+        yourself, use an extension known to the system, or use the extension &#39;.st&#39; or 
+        &#39;.map&#39;.&nbsp; (In other words, if you enter &#39;file.st&#39; it will not make the name 
+        be &#39;file.st.mrc&#39;.)</P>
+      <P>You do not need to open a file before saving; if you choose the save command 
+        before a file is open you will go through the same sequences of steps to open a 
+        file.</P>
+      <P>You can use this command to open a new image file even if another file is 
+        already open. The newly opened file becomes the current file for reading and 
+        writing. The current file can be selected with a spin button in the <A HREF="hidd_buffercontrol.htm">
+          Buffer Control Panel</A>. The name of the current file is always displayed 
+        in the program's title bar</P>
+      <P>You can open an existing image file for reading and writing with the <A HREF="#hidm_file_openold">
+          Open Old command</A>. You can also read from a file without opening it, 
+        using the <A HREF="#hidm_file_readother">Read from Other command</A>.</P>
+      <P>Shortcut Key:CTRL+N</P>
+      <OBJECT classid="clsid:1e2a7bd0-dab9-11d0-b93a-00c04fc99f9e" type="application/x-oleobject">
+        <PARAM NAME="Keyword" VALUE="files: managing">
+      </OBJECT>
+      <P><A NAME="hidm_file_openold"></A><B>Open Old command (File menu)</B></P>
+      <P>Use this command to open an existing image file for reading images from and 
+        saving images to. You will enter the <A HREF="afx_hidd_fileopen.htm">File Open 
+          dialog box</A> to select a file. If the file is a montage, then montaging 
+        will be activated. You can use this command to open a file even when another 
+        file is open. The file that you open becomes the current file for reading and 
+        writing.</P>
+      <P>Shortcut Key:CTRL+O</P>
+      <OBJECT classid="clsid:1e2a7bd0-dab9-11d0-b93a-00c04fc99f9e" type="application/x-oleobject">
+        <PARAM NAME="Keyword" VALUE="files: managing">
+      </OBJECT>
+      <P><A NAME="hid_file_newmontage"></A><B>New Montage command (File menu)</B></P>
+      <P>Use this command to open a new MRC file for saving montages. You first enter the <A HREF="hidd_montagesetup.htm">
+          Montage Setup dialog box</A>, which allows you to specify the number of 
+        frames, magnification, and binning. From there, you enter the <A HREF="hidd_fileproperties.htm">
+          File Properties dialog box</A> then the <A HREF="afx_hidd_filesave.htm">Save As 
+          dialog box</A>. A new montage can be started even when there is already an 
+        open file; the new file becomes the current open file and montaging is 
+        activated with the parameters for this file.</P>
+      <OBJECT classid="clsid:1e2a7bd0-dab9-11d0-b93a-00c04fc99f9e" type="application/x-oleobject">
+        <PARAM NAME="Keyword" VALUE="files: managing">
+      </OBJECT>
+      <P><A NAME="hidm_file_montagesetup"></A><B>Montage Setup command (File menu)</B></P>
+      <P>Use this command to open a file for montaging, or to check parameters if the 
+        current open file is a montage. In either case, you first enter the <A HREF="hidd_montagesetup.htm">
+          Montage Setup dialog box</A>. If you are starting a new file, you then 
+        enter the <A HREF="hidd_fileproperties.htm">File Properties dialog box</A> then 
+        the <A HREF="afx_hidd_filesave.htm">Save As dialog box</A>.</P>
+      <OBJECT classid="clsid:1e2a7bd0-dab9-11d0-b93a-00c04fc99f9e" type="application/x-oleobject">
+        <PARAM NAME="Keyword" VALUE="files: managing">
+      </OBJECT>
+      <P><A NAME="hidm_file_close"></A><B>Close command (File menu)</B></P>
+      <P>Use this command to close the current open image file. If there is more than one 
+        file open, the file with the next lower number becomes the new current file. 
+        Montaging may be turned on, or terminated, depending on the type of that file.</P>
+      <OBJECT classid="clsid:1e2a7bd0-dab9-11d0-b93a-00c04fc99f9e" type="application/x-oleobject">
+        <PARAM NAME="Keyword" VALUE="files: managing">
+      </OBJECT>
+      <P><A NAME="hidm_file_save"></A><B>Save A command (File menu)</B></P>
+      <P>Use this command to save the image in Buffer A to the current open image file. 
+        If there is no image file open yet, you will first enter the <A HREF="hidd_fileproperties.htm">
+          File Properties</A> and <A HREF="afx_hidd_filesave.htm">Save As dialog boxes</A>
+        to specify a file. This file will become the open image file, available for 
+        further saving. However, only images of the same size can be saved in the same 
+        file.</P>
+      <P>Shortcut Key:CTRL+S</P>
+      <OBJECT classid="clsid:1e2a7bd0-dab9-11d0-b93a-00c04fc99f9e" type="application/x-oleobject">
+        <PARAM NAME="Keyword" VALUE="files: managing">
+      </OBJECT>
+      <P><A NAME="hidm_file_saveactive"></A><B>Save Active command (File menu)</B></P>
+      <P>Use this command to save the image in the active buffer to the current open 
+        image file. If the main window is active, then the buffer currently displayed 
+        in the main window will be saved. If some other window is active (has the input 
+        focus, with its title bar highlighted rather than gray), then its image will be 
+        saved.</P>
+      <P>If there is no image file open yet, you will first enter the <A HREF="hidd_fileproperties.htm">
+          File Properties</A> and <A HREF="afx_hidd_filesave.htm">Save As dialog boxes</A>
+        to specify a file. This file will become the open image file, available for 
+        further saving.</P>
+      <OBJECT classid="clsid:1e2a7bd0-dab9-11d0-b93a-00c04fc99f9e" type="application/x-oleobject">
+        <PARAM NAME="Keyword" VALUE="files: managing">
+      </OBJECT>
+      <P><A NAME="hid_file_overwrite"></A><B>Overwrite command (File menu)</B></P>
+      <P>Use this command to overwrite an existing image in the current open image file 
+        with the image in Buffer A. You will be prompted to enter the number of the 
+        section that you wish to overwrite; the default value offered to you is the 
+        number of the last section in the file. Sections are numbered from 0.</P>
+      <P>If you are montaging and need to overwrite a section, you will need to change 
+        the current Z value in the <A HREF="hidd_montagecontrol.htm">Montage Control Panel</A>. 
+        However, if a montage was partially acquired with stage movement and the 
+        program can resume it, then you can use this command (which appears as 
+        'Overwrite Pieces') to specify the number of pieces to be acquired again and 
+        overwritten in the file when resuming the montage.</P>
+      <OBJECT classid="clsid:1e2a7bd0-dab9-11d0-b93a-00c04fc99f9e" type="application/x-oleobject">
+        <PARAM NAME="Keyword" VALUE="files: managing">
+      </OBJECT>
+      <P><A NAME="hidm_file_saveother"></A><B>Save Single / Save to Other command (File menu)</B></P>
+      <P>Use this command to save the active image into a new file just for this one 
+        image. The file will be left closed when you are done. You will enter the <A HREF="hidd_fileproperties.htm">
+          File Properties</A> and <A HREF="afx_hidd_filesave.htm">Save As dialog boxes</A>, 
+        as usual. If you specify an existing file, it will be replaced. The menu item 
+        is 'Save Single' when there is no open file and 'Save to Other' when there is 
+        an open file, to indicate that the file is different from the open file.</P>
+      <OBJECT classid="clsid:1e2a7bd0-dab9-11d0-b93a-00c04fc99f9e" type="application/x-oleobject">
+        <PARAM NAME="Keyword" VALUE="files: managing">
+      </OBJECT>
+      <P><A NAME="hidm_file_truncation"></A><B>Set Truncation command (File menu)</B></P>
+      <P>Use this command to modify the truncation of the data when saving images as 
+        bytes. When one chooses to save bytes, then SerialEM can avoid compressing the 
+        dynamic range of the data by truncating the values of a relatively few pixels. 
+        The number of pixels to truncate at the black and white end of the range is 
+        initially specified in the File Properties dialog, but can be changed 
+        thereafter with this command. Using this command sets the values for the 
+        current open file and the default for newly opened files but does not affect 
+        any other open files.</P>
+      <OBJECT classid="clsid:1e2a7bd0-dab9-11d0-b93a-00c04fc99f9e" type="application/x-oleobject">
+        <PARAM NAME="Keyword" VALUE="files: managing">
+      </OBJECT>
+      <P><A NAME="hid_file_set16bitpolicy"></A><B>Set 16-bit Policy command (File menu)</B></P>
+      <P>Use this command to modify the way that data from a 16-bit camera will be 
+        treated when they are saved as integers in a signed data file. You will be 
+        asked to enter 0 to truncate the data at 32,767, which could give saturated 
+        images; 1 to divide the data by 2, which will discard probably useless 
+        precision; or 2 to subtract 32768, which will preserve the data in its entirety 
+        at the expense of having negative numbers. If a file is reopened, this is the 
+        way to set the treatment of the data to be different from the default. Using 
+        this command sets the policy for the current open file and the default for 
+        newly opened files but does not affect any other open files.</P>
+      <OBJECT classid="clsid:1e2a7bd0-dab9-11d0-b93a-00c04fc99f9e" type="application/x-oleobject">
+        <PARAM NAME="Keyword" VALUE="files: managing">
+      </OBJECT>
+      <P><A NAME="hid_file_setsignedpolicy"></A><B>Set Signed Policy command (File menu)</B></P>
+      <P>Use this command to modify the way that signed data are saved to a file that is 
+        in unsigned 16-bit integer mode. By default positive values are saved without 
+        modification, and negative values are truncated at zero. Enter 1 to have 32768 
+        added before values are saved, which will preserve negative values. Using this 
+        command sets the policy for the current open file and the default for newly 
+        opened files but does not affect any other open files.</P>
+      <OBJECT classid="clsid:1e2a7bd0-dab9-11d0-b93a-00c04fc99f9e" type="application/x-oleobject">
+        <PARAM NAME="Keyword" VALUE="files: managing">
+      </OBJECT>
+      <P><A NAME="hidm_file_read"></A><B>Read command (File menu)</B></P>
+      <P>Use this command to read an image from a file. If there is a currently open 
+        file, the image will be read from it; otherwise, you will enter the <A HREF="afx_hidd_fileopen.htm">
+          File Open dialog box</A> to select a file. In that case, the file will not 
+        remain open after reading from it. Also, in that case the file can be a TIFF or 
+        DigitalMicrograph (dm3) file as well as an MRC file or autodoc (adoc) file.</P>
+      <P>Unless there is only a single section in the file, you will be asked to enter 
+        the section number to read; the default value offered to you is the number of 
+        the last section in the file. Sections are numbered from 0.</P>
+      <P>If you are reading from the currently open file and there is more than one 
+        section in it, the <A HREF="hidd_readfiledlg.htm">Read Current File dialog box</A>
+        will open to allow you to select the section. This box can be left open so that 
+        it is convenient to read several images.</P>
+      <P>If you are reading from a regular file with single frames, the image will be 
+        read into the buffer selected in the <A HREF="hidd_buffercontrol.htm">Buffer 
+          Control Panel</A>. If the file that you are reading from is a montage, then 
+        SerialEM will read the entire section and leave a binned-down overview in that 
+        buffer as well as in Buffer B; it also leaves a full-scale image of the center 
+        of the area in Buffer A.</P>
+      <P>Shortcut Key:Shift+R</P>
+      <OBJECT classid="clsid:1e2a7bd0-dab9-11d0-b93a-00c04fc99f9e" type="application/x-oleobject">
+        <PARAM NAME="Keyword" VALUE="files: managing">
+      </OBJECT>
+      <P><A NAME="hidm_file_readother"></A><B>Read from Other command (File menu)</B></P>
+      <P>Use this command to read an image from a file other than the currently open 
+        image file. You will enter the <A HREF="afx_hidd_fileopen.htm">File Open dialog box</A>
+        to select a file. The file can be a TIFF or DigitalMicrograph (dm3) file as 
+        well as an MRC file. Then, unless there is only a single section in the file, 
+        you will be asked to enter the section number to read; the default value 
+        offered to you is the number of the last section in the file. Sections are 
+        numbered from 0.</P>
+      <P>The image will be read into the buffer selected in the <A HREF="hidd_buffercontrol.htm">
+          Buffer Control Panel</A> unless the file is a montage, in which case 
+        SerialEM will read the entire section and leave a binned-down overview in 
+        Buffer B and a full-scale image of the center of the area in Buffer A. It is 
+        possible to read from a montaged file even if montaging is currently activated 
+        with a different file open.</P>
+      <OBJECT classid="clsid:1e2a7bd0-dab9-11d0-b93a-00c04fc99f9e" type="application/x-oleobject">
+        <PARAM NAME="Keyword" VALUE="files: managing">
+      </OBJECT>
+      <P><A NAME="hid_file_readpiece"></A><B>Read Piece command (File menu)</B></P>
+      <P>Use this command to read in a single frame (piece) from an open montaged image 
+        file. Unless there is only a single section in the file, you will be asked to 
+        enter the section number to read; the default value offered to you is the 
+        number of the last section in the file. Sections are numbered from zero.</P>
+      <P>After specifying the section, you will be asked to enter the number of the piece 
+        in X and Y; pieces are numbered from 1. The image will be read into the buffer 
+        selected in the <A HREF="hidd_buffercontrol.htm">Buffer Control Panel</A>.
+      </P>
+      <OBJECT classid="clsid:1e2a7bd0-dab9-11d0-b93a-00c04fc99f9e" type="application/x-oleobject">
+        <PARAM NAME="Keyword" VALUE="files: managing">
+      </OBJECT>
+      <P><A NAME="hid_file_openlog"></A><B>Open Log command (File menu)</B></P>
+      <P>Use this command to open a Log Window for recording messages from the program. 
+        Once the window is open, some messages will be logged there instead of 
+        presented in message boxes. You can control how much output goes to the window 
+        by selecting Verbose in various menus (Focus, Tasks, Tilt Series).</P>
+      <OBJECT classid="clsid:1e2a7bd0-dab9-11d0-b93a-00c04fc99f9e" type="application/x-oleobject">
+        <PARAM NAME="Keyword" VALUE="files: managing">
+      </OBJECT>
+      <P><A NAME="hid_file_savelog"></A><B>Save Log command (File menu)</B></P>
+      <P>Use this command to save the contents of the Log Window to a file. You will 
+        enter the <A HREF="afx_hidd_filesave.htm">Save As dialog box</A> to specify the 
+        file, which will have the default extension .log. Once the window has been 
+        saved, selecting this command will save it again to the same file as the last 
+        time that it was saved.</P>
+      <OBJECT classid="clsid:1e2a7bd0-dab9-11d0-b93a-00c04fc99f9e" type="application/x-oleobject">
+        <PARAM NAME="Keyword" VALUE="files: managing">
+      </OBJECT>
+      <P><A NAME="hid_file_savelogas"></A><B>Save Log As command (File menu)</B></P>
+      <P>Use this command to save the contents of the Log Window to a different file from 
+        one already specified. You will enter the <A HREF="afx_hidd_filesave.htm">Save As 
+          dialog box</A> to specify the file, which will have the default extension 
+        .log. Once you save to a file with this command, using the Save Log command 
+        will save to this file.</P>
+      <OBJECT classid="clsid:1e2a7bd0-dab9-11d0-b93a-00c04fc99f9e" type="application/x-oleobject">
+        <PARAM NAME="Keyword" VALUE="files: managing">
+      </OBJECT>
+      <P><A NAME="hid_file_readappend"></A><B>Read &amp; Append command (File menu)</B></P>
+      <P>Use this command to append the contents of the Log Window to an existing log 
+        file. You will enter the <A HREF="afx_hidd_fileopen.htm">File Open dialog box</A>
+        to select a file. The program will then read in the contents of this file, 
+        place it before any text already in the Log Window, then write the window back 
+        out to the file.</P>
+      <OBJECT classid="clsid:1e2a7bd0-dab9-11d0-b93a-00c04fc99f9e" type="application/x-oleobject">
+        <PARAM NAME="Keyword" VALUE="files: managing">
+      </OBJECT>
+      <P><A NAME="hid_file_continuoussave"></A><B>Continuous Save command (File menu)</B></P>
+      <P>Use this command to control whether each line of output to the Log Window is 
+        saved immediately to a log file. If there is no log file open when you turn 
+        this on, you will be prompted to open one the next time output is sent to the 
+        log window.</P>
+      <P><A NAME="hid_file_open_mdoc"></A><B>Open .mdoc for Frames command (File menu)</B></P>
+      <P>Use this command to open a metadata autodoc file (.mdoc file) for saving 
+        information about every set of frames saved from a direct detector camera.&nbsp; 
+        The information will be virtually identical to that saved in the .mdoc file 
+        associated with an image file.&nbsp; This .mdoc file allows one to preserve 
+        information about saved frames without having to save the summed image in 
+        SerialEM into a file.&nbsp; The file will be opened every time new data are 
+        saved and closed again after saving, so it is always up to date.&nbsp; By 
+        setting the general property &#39;FrameMdocForFalcon&#39;, it is also possible to save 
+        metadata about acquisitions from a Falcon camera where frames are captured by 
+        connecting to the internal frame transfer.</P>
+      <P><A NAME="hid_file_close_mdoc"></A><B>Close Frames .mdoc command (File menu)</B></P>
+      <P>Use this command to close the file opened for saving metadata about saved 
+        frames with the previous command; more precisely, to stop saving metadata to 
+        this file.</P>
+      <OBJECT classid="clsid:1e2a7bd0-dab9-11d0-b93a-00c04fc99f9e" type="application/x-oleobject">
+        <PARAM NAME="Keyword" VALUE="exit">
+      </OBJECT>
+      <P><A NAME="hid_app_exit"></A><B>Exit command (File menu)</B></P>
+      <P>Use this command to end your SerialEM session. You can also use the Close 
+        command on the application Control menu. SerialEM prompts you to save a log 
+        window with unsaved changes or to save settings if you do not have an open 
+        settings file.</P>
+      <P><B>Shortcuts</B></P>
+      <P>Mouse:Double-click the application's Control menu button.</P>
+      <P><IMG SRC="../images/AppExit.gif" ALT="" BORDER="0"></P>
+      <P>Keys:ALT+F4</P>
+      <P></P>
+    </basefont>
+  </BODY>
+</HTML>

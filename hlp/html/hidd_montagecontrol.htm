@@ -1,0 +1,80 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+  <HEAD>
+    <TITLE>Montage Control Panel</TITLE>
+    <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
+    <style type="text/css"> <!-- BODY { font-family:"Arial" } TD { font-size:16 } 
+  --></style>
+  </HEAD>
+  <BODY BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+    <P><A NAME="hidd_montagecontrol"></A><B><FONT size="3">Montage Control Panel</FONT></B></P>
+    <P>This panel contains options for controlling montage acquisition. It opens when 
+      montaging is initiated and closes when a montaged file is closed.</P>
+    <P><B>Start</B></P>
+    <P>The button will start a montage acquisition.</P>
+    <P><B>Prescan</B></P>
+    <P>This button will start the relatively fast acquisition of binned down images 
+      that are used just to compose an overview of the region being montaged.</P>
+    <P><B>Current Z</B></P>
+    <P>The value shown in the text box is the Z or section number that will be used for 
+      the next montage acquisition. You can enter a new number or use the up or down 
+      arrows to increase or decrease the value by one. If you set the value to a 
+      section number that has already been acquired, you will overwrite the stored 
+      data for that section, which the program will ask you to confirm. If you 
+      increase the value you may leave a gap in Z values.</P>
+    <P><B>Bin Overview</B></P>
+    <P>Ordinarily, an overview image will be subsampled so as to make the overview size 
+      comparable to the size of a single frame image. This subsampling is referred to 
+      (inaccurately) as binning. You can adjust this binning to a lower number to see 
+      more detail when you zoom up the overview image. When the Navigator sets up a 
+      montage, the overview binning will be set to 1, under the assumption that you 
+      will want to see all the detail in a map montage.</P>
+    <P><B>Bin Prescan</B></P>
+    <P>By default, a prescan montage is taken at as high a binning as possible to take 
+      the least amount of time. You can set this binning to a lower value if you want 
+      to see more detail in the prescan. Note that the overview binning is always 1 
+      for a prescan montage, so you need not adjust that binning as well.</P>
+    <P><B>Correct Drift</B></P>
+    <P>If this option is selected, the program will use the misregistration between a 
+      pair of successive pieces to predict and correct for the error in position of 
+      the next acquired piece. When there is significant drift, this option can 
+      reduce the mean error before shifting pieces into registration, and it can 
+      prevent very large errors between successive columns of pieces.</P>
+    <P><B>Change Focus with Height</B></P>
+    <P>If this option is selected, focus will be changed for every piece that is 
+      acquired from a tilted specimen. This focus change will compensate for the 
+      differences in Z height at the centers of the pieces. If you are processing the 
+      data in IMOD and using corrections ofr magnification gradients, be sure to 
+      check the option that focus was adjusted between pieces on the eTomo setup 
+      page.</P>
+    <P><B>Show Overview at End</B></P>
+    <P>If this option is selected, the overview image in buffer B will be shown at the 
+      end of every montage acquisition.</P>
+    <P><B>Align Pieces in Overview</B></P>
+    <P>If this option is selected, each piece will be shifted into alignment with 
+      preceding pieces as it is added to the overview image, based on the shifts in 
+      the overlap zones that it shares with preceding pieces. This may give a 
+      seamless overview, or it may not if there are errors in measuring shifts in the 
+      overlap zones. When a montage is read from a file, the pieces are read in from 
+      the center outward so that interior pieces will not be misaligned by keep 
+      errors in the shifts between pieces at the edges of the montage.</P>
+    <P><B>Treat as Very Sloppy Montage</B></P>
+    <P>If this option is selected, SerialEM will analyze the overlap zones with the 
+      same parameters that are invoked by default with the VerySloppyMontage option 
+      in Blendmont. The large correlation areas and other parameter settings will 
+      give much better results with montages where the errors are large and where 
+      there may be strong edge effects from the edge of a cell or a grid bar. In 
+      addition, correlation coefficients will be computed in real space at the shifts 
+      corresponding to the ten highest peaks in the cross-correlation, thus 
+      eliminating the edge effects that contaminate Fourier-based correlation. The 
+      option is turned on or off depending on whether you choose to montage by moving 
+      the stage in the <A HREF="hidd_montagesetup.htm">Montage Setup dialog box</A> , 
+      but you can then toggle it as desired when reading in a montage from a file. 
+      This option is not the default for two reasons: there is significantly more 
+      computation time with the larger correlations, which will be noticeable when 
+      reading from a file; and there is very little experience with using these 
+      parameters for normal montages based on image shift that have less error.</P>
+    </basefont>
+  </BODY>
+</HTML>

@@ -1,0 +1,80 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+  <HEAD>
+    <TITLE>Buffer Control Panel</TITLE>
+    <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
+    <style type="text/css"> <!-- BODY { font-family:"Arial" } TD { font-size:16 } 
+  --></style>
+  </HEAD>
+  <BODY BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+    <P><A NAME="hidd_buffercontrol"></A><B><FONT size="3">Buffer Control Panel</FONT></B></P>
+    <P>This panel contains controls for copying images from one buffer to another, 
+      saving images to file, and setting options that govern how buffers are treated 
+      during image acquisition and storage.</P>
+    <P><B>Copy Active Image to Buffer</B></P>
+    <P>This row of buttons will copy the active image to another buffer. The active 
+      image is either the current image in the main window, or the image in a 
+      secondary window, if there is a secondary window that has the input focus 
+      (title bar highlighted rather than gray). The first four buttons from the left 
+      will copy to buffers A through D, respectively. The fifth button has a spin 
+      button control to allow you to dial up any other buffer in the program. The 
+      'New' button will copy the image into a new secondary image window.</P>
+    <P><B>SAVE A</B></P>
+    <P>This button will save the image in buffer A to a file. If there is no image file 
+      open yet, you will first enter the <A HREF="hidd_fileproperties.htm">File 
+        Properties</A> and <A HREF="afx_hidd_filesave.htm">Save As dialog boxes</A> 
+      to specify a file. This file will become the open image file, available for 
+      further saving.</P>
+    <P><B>Save Active Image</B></P>
+    <P>This button will save the active image to a file. The active image is either the 
+      current image in the main window, or the image in a secondary window, if there 
+      is a secondary window that has the input focus (title bar highlighted rather 
+      than gray). If there is no image file open yet, you will first enter the <A HREF="hidd_fileproperties.htm">
+        File Properties</A> and <A HREF="afx_hidd_filesave.htm">Save As dialog boxes</A>
+      to specify a file. This file will become the open image file, available for 
+      further saving.</P>
+    <P><B>To file # spin button</B></P>
+    <P>This control can be used to switch from one open image file to another. The name 
+      of the current file is always displayed in the program's title bar, and if there 
+      are multiple files open, their names will also be shown after their file numbers. Montaging 
+      will be activated or deactivated as appropriate for the file being switched to. 
+      If you switch between files when a tilt series is stopped, the correct file 
+      will be selected again when you resume.</P>
+    <P><B>Memory usage output</B></P>
+    <P>The line with 'Memory = xx MB' shows a summary of the program's memory usage for 
+      all image data, including viewable images in buffers and gain and dark 
+      references.</P>
+    <P><B>Roll Buffers spin button</B></P>
+    <P>This control governs how many images are preserved by being moved to higher 
+      buffers when a new image is acquired. For example, if the panel says 'Roll 
+      Buffers A -&gt; C', then when a new image is acquired, the image in A will be 
+      moved to B, the image in B moved to C, and the image in C deleted. (An 
+      exception to this occurs when the image in A was acquired in a continuous 
+      acquisition.) The up and down arrows will increase and decrease the number of 
+      images rolled through the buffers, respectively.</P>
+    <P><B>Delete</B></P>
+    <P>Use this button to delete the image in the current buffer when the main window 
+      is active. Deleting large images will help when the program begins to run out 
+      of memory.</P>
+    <P><B>Autoalign to B</B></P>
+    <P>Ordinarily, an image in buffer A is autoaligned to the image in the buffer after 
+      the last rolling buffer, which means that a reference image placed there will 
+      be preserved as new images are taken. With this option selected, images will be 
+      aligned to buffer B instead, which allows successive images to be aligned to 
+      each other without copying one to another buffer.</P>
+    <P><B>Read Buffer spin button</B></P>
+    <P>This control governs what buffer images are placed into when they are read from 
+      a file. If you never use this control, the Read Buffer will be maintained to be 
+      two buffers past the last rolling buffer, or three buffers when in low dose 
+      mode. Thus, changing the number of buffers to roll, or going into or out of low 
+      dose mode, will generally change the Read Buffer. However, if you select a 
+      different buffer to read into with this control, then these automatic changes 
+      may not occur.</P>
+    <P><B>Protect unsaved Record images</B></P>
+    <P>Selecting this option will protect images acquired with the Record parameter set 
+      from being deleted if they have not been saved to file. You will have to 
+      confirm that you want to delete such an image.</P>
+    </basefont>
+  </BODY>
+</HTML>

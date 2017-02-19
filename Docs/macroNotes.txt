@@ -1,0 +1,57 @@
+Calls, Loops, and Conditionals
+
+mCallLevel is the macro level in a calling sequence and starts at 0
+mLoopLevel is the level of loop and/or if block, starts  at -1 outside blocks
+mLoopDepths[mCallLevel] is maintained in tandem with mLoopLevel
+mLoopLimit[mLoopLevel] is the loop count to do, or 0 for an unsatisfied IF
+or -1 for a satisfied IF
+mLoopStart[mLoopLevel]  is the line index of a loop start
+mLoopCount[mLoopLevel] is current iteration # of the loop, starts at 1
+
+mCallMacro[mCallLevel] is the macro number being called at a call level
+mCallIndex[mCallLevel] is the line index of the CALL statement to be returned
+to
+
+When a LOOP is encountered, it increases mLoopLevel, assigns mLoopLimit,
+mLoopStart, and mLoopCount, and sets an optional variable
+
+ENDLOOP increases the count and goes back to starting index if not above the
+limit, otherwise it clears variables and drops the loop level
+
+When an IF or an ELSEIF in an unsatisfied IF is found, it evaluates the
+conditional and increases mLoopLevel for an IF
+Then if the condition is NOT satisfied it skips to an ELSE or ENDIF (or
+ELSEIF?) and leaves mLoopLimit at 0 to indicate unsatisfied.  If the condition
+is satisfied it set mLoopLimit to -1
+If it skipped to an ELSE it goes 1 past it so that it will execute, all other
+skips are to the point in question
+
+Skipping is done to the requested kind of end by keeping track of if and loop
+levels and making sure it matches the respective starting level
+
+Thus an ELSE or ELSEIF is encountered only when the IF is satisfied, and it
+unconditionally skips to an ENDIF
+
+BREAK or CONTINUE pop any IFs off the stack by testing for nonpositive
+mLoopLimit and decrementing mLoopLevel
+and it skips to the ENDLOOP.  BREAK is implemented just by setting the
+mLoopCount to mLoopLimit
+
+CALL just increases the mCallLevel after saving the current line index and
+saves the new macro number and sets the new loop depth to -1
+
+RETURN pops off any ifs/loops by clearing index variable at each level and
+decrementing mLoopLevel until mLoopDepths is -1
+
+Thus the mLoopLevel stack works across calls and returns and loop/if blocks
+are not kept track of per macro level.
+
+SKIPTO and labels work by finding the label, counting the net number of
+loop levels that it descends, then popping that many IFs/LOOPS.  The checking
+for this is hairy because it has to prevent jumps into different block
+sections, which are referred to as subblocks.  Every loop, and every component
+of IF - ELSEIF -ELSE -ENDIF, is counted as a different subblock at the given
+loop level.
+
+
+

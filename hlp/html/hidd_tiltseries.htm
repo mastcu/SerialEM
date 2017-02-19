@@ -1,0 +1,649 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+  <HEAD>
+    <TITLE>Tilt Series Setup Dialog</TITLE>
+    <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
+    <style type="text/css"> <!-- BODY { font-family:"Arial" }
+  TD { font-size:16 }
+  --></style>
+  </HEAD>
+  <BODY BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+      <P><A NAME="hidd_tiltseries"></A><B><FONT size="4">Tilt Series Setup Dialog</FONT></B></P>
+      <P>This complex dialog box allows you to set all of the parameters for a tilt 
+        series. Some of the parameters that can be changed here can also be set through 
+        other menu or control panel options. When you first open this dialog, the 
+        program makes some assumptions to set some initial values, but you are able to 
+        change all values. If you have already started a tilt series, many of the 
+        options will be disabled. For an overview and a list of steps commonly used in 
+        starting a tilt series, see the section on <A HREF="about_tilt_series.htm">Acquiring 
+          Tilt Series</A>. Differences in operation in STEM mode are all described in a 
+        section at the end, <A HREF="#tss_stem">Tilt Series in STEM Mode</A>.</P>
+        <P>The dialog entries are organized into the following groups:</P>
+      <TABLE BORDER style="Z-INDEX: 0" cols="2">
+        <TR VALIGN="top">
+          <TD width="256"><A HREF="#tss_tilt_angle">Tilt Angle Specifications</A></TD>
+          <TD>Control the starting and ending angles and angular increment, unidirectional 
+            versus bidirectional series, the delay time 
+            after tilting, and angle-dependent parameter changes</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="256"><A HREF="#tss_size_shift">Size and Image Shift Specifications</A></TD>
+          <TD>Control magnification, image shift resetting, beam centering, and zero-loss 
+            peak alignment.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="256"><A HREF="#tss_beam_control">Beam Intensity Control</A></TD>
+          <TD>Control beam intensity or exposure time changes.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="256"><A HREF="#tss_camera">Camera Selection and Options</A></TD>
+          <TD>Select the camera for the tilt series and set camera-related options</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="256"><A HREF="#tss_autofocus">Autofocus Control</A></TD>
+          <TD>Control autofocus behavior.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="256"><A HREF="#tss_initial_actions">Initial and Final Actions</A></TD>
+          <TD>Select options for startup phase of series.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="256"><A HREF="#tss_tracking_control">Tracking Control Parameters</A></TD>
+          <TD>Set parameters to control prediction and tracking behavior.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="256"><A HREF="#tss_action_buttons">Dialog Control and Action Buttons</A></TD>
+          <TD>Change appearance of dialog and select an action upon closing the dialog.</TD>
+        </TR>
+      </TABLE>
+      <BR>
+      <P>Each of the groups (except the buttons on the bottom) can be opened and closed 
+        independently with the small +/- button in the upper left corner. In addition, 
+        the dialog control buttons allow you to step from one group to the next or to 
+        show the left side, the right side, or the full dialog (see <A HREF="#tss_action_buttons">
+          Dialog Control and Action Buttons</A> ). Each time that you open the 
+        dialog, it will be appear in a form similar to way you last left it: with the 
+        full dialog if the full dialog was showing before; with the left half if one 
+        half was showing before, otherwise with the first group open.</P>
+      <P><i><A NAME="tss_tilt_angle"></A><B><FONT size="3">Tilt Angle Specifications</FONT></B></i></P>
+      <P>This grouping contains various controls related to tilting and tilt angle. The 
+        increment, delay time, and choice of cosine tilting duplicate the entries that 
+        can be made through the <A HREF="hidd_tiltcontrol.htm">Tilt Control panel</A> .</P>
+      <P><B>Start at</B></P>
+      <P>Enter the starting tilt angle in this text box. If you are already at high tilt 
+        when you first start the setup dialog, the box will show the current tilt 
+        angle; otherwise it will contain a default angle. After a tilt series is 
+        started, this value cannot be changed. The starting tilt angle can be positive 
+        or negative.</P>
+      <P><B>End at</B></P>
+      <P>Enter the ending tilt angle in this text box. When you first start the setup 
+        dialog, this box will contain the negative of the value in the starting tilt 
+        angle text box. The ending angle can be changed at any time.</P>
+      <P><STRONG>Swap</STRONG></P>
+      <P>Use this button to exchange the starting and ending tilt angles in the two text 
+        boxes.</P>
+      <P><B>Base Increment</B></P>
+      <P>Enter the basic tilt increment in this text box. If you have chosen to tilt with 
+        a fixed increment, this value will be that increment. If you have chosen to 
+        have increments proportional to the cosine of the angle, this value will be the 
+        increment at zero tilt, and the increment will be progressively smaller at 
+        higher angles.</P>
+      <P><B>Increment proportional to cosine of angle</B></P>
+      <P>Select this option to have tilt increments proportional to the cosine of the 
+        tilt angle. The increment would have its basic value at zero tilt, half of that 
+        at 60 degrees, and one-third of it at 70 degrees.</P>
+      <P><B>Total # of tilts</B></P>
+      <P>This status message will show the total number tilts for the given starting and 
+        ending angles, increment, and choice of regular or cosine tilting. If you make 
+        a change in one of the text boxes, this message will be updated when you leave 
+        the text box.</P>
+    <P> <b>Run series in two directions from</b></P>
+    <P>Turning on this option 
+      will result in a bidirectional series that starts at the angle indicated in the text box, 
+      tilts up to the angle in the <b>Start at</b> text box (now labeled <b>Tilt to</b>), returns to the 
+      starting angle, and tilts to the ending angle.&nbsp; If you want the series to 
+      start at an intermediate angle and go through zero degrees in the first segment, 
+      you must put an angle of the right sign in the text box (the same sign as the 
+      ending angle).&nbsp; The program will take a lower magnification &#39;anchor&#39; image 
+      at the starting angle before it starts, and then realign to this image when it 
+      returns to the starting angle. Another special feature of this acquisition 
+      method is that if an image that is too dim is encountered at a high tilt in the 
+      first part of the tilt series, the first part will be ended and the second part 
+      begun automatically.&nbsp; By default, this happens if the angle is at least 55 
+      degrees or within 5 degrees of the <b>Tilt to</b> angle, settings that can be 
+      adjusted in the <a href="hidd_tspolicies.htm">Tilt Series Batch 
+      Policies dialog box</a>. </P>
+    <P><b>Return with Walk Up</b></P>
+    <P>By default, the program will return to the starting angle of a bidirectional 
+      series by tilting back in steps and restoring the stage position and image shift 
+      at which the anchor was taken, with adjustments for backlash if possible.&nbsp; 
+      However, if Return with Walk Up is checked, it will use the Walk Up task to 
+      return instead, but it will still realign to the anchor.&nbsp; This option 
+      should be used only if necessary.&nbsp; Particularly in Low Dose mode, there is 
+      some risk of failed correlations in the Walk Up procedure, as well as a risk 
+      that the position has already gotten off in the last few tilts.&nbsp; In fact, 
+      when the first part of the series is ended because of a dim image, the program 
+      assumes that the position is compromised and returns with steps even if Walk Up 
+      was selected.&nbsp; The main reason for using Walk Up would be if it is too 
+      difficult to get an anchor image with a large enough field of view.</P>
+    <P> <b>Magnification for anchor</b></P>
+    <P>The magnification of the bidirectional anchor is selected with the spin 
+      button; the field of view at that magnification is shown to the right of the 
+      spin button.&nbsp; This magnification will be initialized to give at least an 8 
+      micron field of view. This large a field of view may be necessary because the 
+      realignment to the anchor occurs after a large tilt and a long time interval 
+      after the anchor was acquired. The field of view will be shown in bold with two 
+      stars if it falls below 8 microns, and with 4 stars if it falls below 6 microns.&nbsp; 
+      (The property &#39;TSBidirAnchorMinField&#39; can be used to set different criteria.) </P>
+    <P> <b>Use View for anchor</b></P>
+    <P>When this option is checked, a View image will be used for the bidirectional anchor 
+      in Low Dose mode.&nbsp; If it is unchecked, then the program will allow you to 
+      select a magnification for Low Dose mode that is less than that of a View image, 
+      and it will use View parameters as the basis for taking that image.&nbsp; Do not 
+      assume that a View image will be reliable for the anchor just because it works 
+      for other operations.</P>
+      <P><B>Delay time after tilting by basic increment</B></P>
+      <P>Enter a delay time in seconds in this text box. This delay will be applied 
+        before taking an image, but only under certain circumstances, i.e, when taking 
+        an image with the Record parameter set, when autofocusing, and when finding 
+        eucentricity.</P>
+      <P><B>Change some settings as a function of angle</B></P>
+      <P>Select this option if you want to make scheduled changes in some parameters at 
+        various points in the tilt series. The parameters that can be changed include 
+        Record exposure time and drift settling time, the target for autofocusing, and 
+        energy loss and slit width when using an energy filter. If you have already 
+        defined some changes, this option must be selected for them to be used during 
+        the series.</P>
+      <P><B>Set Changes</B></P>
+      <P>Once you have enabled the use of scheduled changes with the adjacent check box, 
+        use this button to set, adjust, or view the changes in the <A HREF="hidd_tsvariations.htm">
+          Tilt Series Scheduled Changes dialog box</A> .</P>
+      <P><A NAME="tss_size_shift"></A><i><B><FONT size="3">Size, Image Shift, and Recentering 
+            Specifications</FONT></B></i></P>
+      <P><B>Magnification</B></P>
+      <P>Use the up and down arrows to change the magnification at which the tilt series 
+        will be obtained. When you first start the setup dialog, the current microscope 
+        magnification will be shown. If you change microscope magnification after 
+        starting a tilt series (or indeed, after leaving this dialog box with a 
+        magnification value set), the Tilt Series Controller will automatically restore 
+        the magnification when it resumes operation. If you are montaging, the 
+        magnification cannot be changed through this dialog box, only through the <A HREF="hidd_montagesetup.htm">
+          Montage Setup dialog box</A> .</P>
+      <P><B>Binning</B></P>
+      <P>This control shows the current binning of the Record parameter set. You can use 
+        the up and down arrows to change the binning (unless you are montaging). If you 
+        do change the binning, the exposure time will be changed accordingly, but you 
+        will be offered the chance to check exposure and drift settings before starting 
+        the tilt series.</P>
+      <P><B>Pixel size</B></P>
+      <P>The status message shows the pixel size, given the magnification and binning.</P>
+      <P><B>Track at lower magnification when needed</B></P>
+      <P>Select this option to have tracking images taken at a lower magnification at the 
+        start of the tilt series, or at other times when the Tilt Series Controller 
+        thinks that tracking at the regular magnification might fail, such as after 
+        resetting image shift. With the option selected, you can adjust the 
+        magnification for the tracking images with the up and down arrows. Choose a 
+        magnification where tracking occurs reliably.</P>
+      <P><B>Limit image shift</B></P>
+      <P>Enter the maximum image shift that should be allowed to accumulate before the 
+        program resets image shifts.</P>
+      <P><B>Recenter beam from Low Dose tracking images</B></P>
+      <P>This option is available in Low Dose mode for keeping the beam centered during a 
+        tilt series. When the program takes a new track reference or a tracking image 
+        before a Record, it will call the beam centering routine used with the <A HREF="menu_tasks.htm#hid_tasks_centerbeam">
+          Center Beam command</A> . However, the beam will be moved only if the 
+        radius of the circle fit to detected beam edge is less than 90% of the diagonal 
+        distance from the center to a corner of the image, and if the error of the fit 
+        is less than 3% of this distance. These restrictions are an attempt to avoid 
+        mis-centering the beam when the edge of a grid bar is in the image. To use this 
+        option, you should set the intensity for the Trial area so the beam edges 
+        occupy all four corners; a size midway between those of the circumscribed and 
+        the inscribed circles should work.</P>
+      <P><B>Autocenter beam every X minutes</B></P>
+      <P>Select this option to have the beam autocentering routine that is used with the <A HREF="menu_tasks.htm#hid_tasks_autocenterbeam">
+          Autocenter Beam command</A> run periodically during a tilt series. The 
+        option is available if autocentering has been set up for the magnification and 
+        camera being used for the series. Enter the interval in minutes between 
+        autocentering runs in the adjacent text box. The first interval is counted from 
+        the beginning of the tilt series because it is assumed that the beam was 
+        centered either manually or with autocentering just before the series.</P>
+      <P><B>Autocenter beam in second half of series at X degrees</B></P>
+      <P>Select this option to have the beam autocentering routine run once when the tilt 
+        series crosses back above the angle specified in the text box. This option 
+        allows the beam to be centered before it becomes constricted at high angles. 
+        Enter a positive angle even if angles are negative the second half of the 
+        series.</P>
+      <P><B>Refine zero-loss peak</B></P>
+      <P>If you have an energy filter, this option is available to refine the alignment 
+        of the zero-loss peak periodically during the tilt series. After selecting the 
+        option, enter the interval in minutes between refinements. The refinement will 
+        be done with a series of highly binned, low-exposure pictures. In low-dose 
+        mode, the pictures are taken at the Record area and are based on the Preview 
+        parameters, but with even lower exposure if possible.</P>
+      <P><i><A NAME="tss_beam_control"></A><B><FONT size="3">Beam Intensity Control</FONT></B></i></P>
+      <P>This grouping controls how the specimen exposure will be changed during the tilt 
+        series. For a typical thick section, the transmitted intensity will decrease by 
+        a factor of 2-3 at the highest tilts unless the beam intensity is changed to 
+        compensate. Traditionally, SerialEM has used changes in beam intensity 
+        (brightness, C2 or illuminated area on FEI scopes, or C3 on JEOL) to 
+        compensate for changes in 
+        beam attenuation. It is now also possible to have exposure time changed 
+        instead. Changing exposure time only will leave the beam in a constant state, 
+        which would allow one to stay in parallel illumination. However, increasing 
+        exposure time may lead to drift in the images, and for plastic sections, it 
+        will generally require longer drift settling times.&nbsp; If you have a direct 
+        electron detector, changing exposure time presents additional complications 
+        because it may be constrained to be a multiple of a certain value.</P>
+      <P><B>Change Record exposure time instead of beam intensity</B></P>
+      <P>Select this option to vary the exposure time of Record images instead of beam 
+        intensity to achieve whatever control of specimen exposure is specified in the 
+        options below this. With this alternative, the program will use interpolation 
+        between dark references, if possible, to avoid having to take a new dark 
+        reference for each image. This is the same interpolation that can be activated 
+        with the <A HREF="menu_camera.htm#hid_camera_interpolate_dark_refs">Interpolate 
+          Dark Refs command</A> in the Camera menu, and the program will try to use 
+        this feature regardless of whether you have selected it in that menu. However, 
+        interpolation cannot be used if you are not gain-normalizing images in 
+        SerialEM, and in that case a dark reference will be taken for each Record image 
+        if this option is selected.
+      </P>
+      <P>This option is not available if you have scheduled changes in exposure time, 
+        which means that both exposure time and intensity might change during the 
+        series. Specifically, you might have a set of discrete exposure changes that 
+        occur at intervals during the series. Between those changes, the beam intensity 
+        will be changed to achieve whatever control of specimen exposure you have 
+        specified. When the exposure time changes, the beam intensity will be changed to 
+        compensate and maintain the desired specimen exposure.</P>
+    <P>If you have a K2 camera, this option is problematic because the exposure time 
+      is constrained to a multiple of 0.1 sec or 0.5 sec in counting or 
+      super-resolution mode without Dose Fractionation, or to a multiple of the frame 
+      time with Dose Fractionation on.&nbsp; With such constraints, the program will 
+      likely not be able to change exposure time at fine enough increments.&nbsp; It 
+      issues a warning whenever it cannot set the exposure time within 5% of the 
+      intended level.&nbsp; There are two realistic alternatives here.&nbsp; One is to 
+      set up scheduled changes in exposure time with the <A HREF="hidd_tsvariations.htm">Tilt Series Scheduled Changes Dialog</A>, 
+      which will pick exposure times that meet the constraint and angles at which 
+      those times should be set.&nbsp; The program would then change intensity between 
+      exposure time changes.&nbsp; The second alternative is a hidden workaround to 
+      the constraints: set the frame time equal to the exposure time and turn on Dose 
+      Fractionation mode without aligning or saving frames.&nbsp; The program will 
+      then change exposure time and frame time together in multiples of 2.5 ms.&nbsp; 
+      However, acquisition will take longer, 4 sec in counting mode or 5.5 sec in 
+      super-resolution.&nbsp; This alternative works only if you have not explicitly 
+      scheduled any changes in frame time. </P>
+      <P>All camera parameters that are varied during a tilt series are restored to their 
+        original values when the series is terminated.</P>
+      <P><B>Keep beam intensity constant</B></P>
+      <P>Select this option if you do not want the program to change beam intensity or 
+        exposure time during the series. Unless you are in low dose mode, the program 
+        will actually do nothing to keep the intensity or exposure time constant, and 
+        you are free to adjust it yourself.</P>
+      <P><B>Vary intensity as 1/cosine of angle to 1/n power</B></P>
+      <P>With a power of 1, this option would vary beam intensity or exposure time 
+        proportional to the effective thickness of the sample as it tilts. This would 
+        probably do a good job only if the fraction of electrons transmitted through 
+        the specimen and objective aperture is about 0.5 at zero tilt. With a higher 
+        power, the variation in specimen exposure will be less; for example, with a 
+        power of two the specimen exposure will vary by the square root of the inverse 
+        cosine and thus change by a factor of 1.41 from 0 to 60&deg;</P>
+      <P><B>Set intensity to keep mean counts constant</B></P>
+      <P>Select this option to have the beam or exposure time continually adjusted during 
+        the series so that Record images will have the mean value specified in the text 
+        box. Mean counts are measured in the tilt-foreshortened area of an image, i.e., 
+        the part that corresponds to what would be visible at zero tilt. The line 
+        following this option will report what a Record image would have at the current 
+        intensity, based upon the counts in the image in Buffer A.</P>
+      <P><B>Taper counts down at high tilt</B></P>
+      <P>If you have selected the last option to keep mean counts constant, then this 
+        option is available to reduce the target mean value at high tilts. This is 
+        useful if the beam cannot be condensed enough to give the desired number of 
+        counts without becoming smaller than the camera's field of view at the highest 
+        tilts (or, alternatively, if the exposure time cannot be increased above a 
+        certain point without getting too much drift in the image). When you select it, 
+        you can enter a number of counts in the first text box and an angle in the 
+        second box. Enter a positive angle; it will apply on both the positive and 
+        negative sides of the tilt series. The target value will change linearly from 
+        its standard value at this angle down to the reduced value at the extreme angle 
+        of the tilt series.</P>
+      <P><B>Keep intensity below current value (use if intensity already set up)</B></P>
+      <P>If you are starting at high tilt and have already set up the intensity or 
+        exposure time that you want at the starting tilt, use this option instead of 
+        specifying tapering of counts. This option will maintain the intensity or 
+        exposure time at the maximum amount until the target counts are reached at a 
+        lower tilt angle.</P>
+      <P><B>Do not increase intensity above value for first saved image</B></P>
+      <P>This option can be used to keep the beam from being condensed or the exposure to 
+        be increased any more than it was at the beginning of the tilt series. This 
+        would be useful if you end up going to higher tilts at the end of the series 
+        than at its start, and could also prevent over-condensing the beam during the 
+        range of angles where the intensity is tapered. The limiting intensity or 
+        exposure time is the value set just after saving the first image of the tilt 
+        series and adjusting the beam or exposure time to achieve the target number of 
+        counts.</P>
+      <P><B>Use current intensity at zero tilt (increase to start series)</B></P>
+      <P>This option is relevant and enabled if you have selected inverse cosine 
+        intensity changes and are starting at high tilt. Select the option if the 
+        intensity or exposure was set up to be appropriate at zero tilt. When the tilt 
+        series starts, intensity or exposure will be increased by the appropriate 
+        inverse cosine factor.</P>
+      <P><B>Dose Estimate</B></P>
+      <P>When constant or 1/cosine intensities are selected, information about the total 
+        dose will appear, based on the tilt angle range and increment and some of the 
+        other settings in this group, and on the current Record parameters and beam 
+        settings. If electron dose is calibrated, the line will show the expected dose 
+        at zero and high tilt and the total dose in electrons per square Angstrom. If 
+        dose is not calibrated, the line will show the dose as a multiple of the dose 
+        at zero and at high tilt.</P>
+      <P><B>Change other exposures proportional to Record change</B></P>
+      <P>This option is available when you have either scheduled changes in Record 
+        exposure times or chosen to change exposure time rather than beam intensity. 
+        Select it to have the exposure times for all the other camera parameter sets 
+        changed whenever the Record exposure is changed, by an amount proportional to 
+        the change in Record exposure. Note that if you stop the series, you are free 
+        to change these exposure times in the Camera Parameters dialog box, although 
+        you may be prevented from changing the record exposure time.</P>
+      <P><B>Change drift settling proportional to Record change</B></P>
+      <P>Select this option to have drift settling changed proportional to a change in 
+        exposure time whenever an exposure time is changed for a camera parameter set. 
+        The option is available if all exposures are being changed via the option just 
+        above, or if just Record exposure is being changed and there are no scheduled 
+        changes in Record drift settling. If there are such scheduled changes, they 
+        will control the Record drift settling regardless of whether this option is 
+        selected. If you stop the series, you are still free to change the settling 
+        times in the Camera Parameters dialog box.</P>
+      <H1><A NAME="tss_camera"></A><i><FONT size="3">Camera Selection and Options</FONT></i></H1>
+      <P>If you have multiple cameras, each available camera will be listed here so that 
+        you can specify or see what camera will be used for the series. The current 
+        camera will be the one initially selected. If you select a different camera, it 
+        will become the current camera when the series is started.</P>
+      <P><B>Average Record dark references</B></P>
+      <P>This checkbox is used to specify whether averaging should be used when getting 
+        the dark reference for Record images during the tilt series. Its setting 
+        overrides the state of the checkbox for averaging Record dark references in the 
+        Camera Parameters dialog box, so if you only want the averaging to occur for 
+        the one or two dark references used during a tilt series, select this option 
+        and leave the option in the Camera Parameters dialog unchecked. The dark 
+        reference will be averaged by the number of dark images specified for the 
+        Record parameter set in the Camera Parameters dialog.</P>
+    <P><b>If taking frames, get initial partial sum of N frames</b></P>
+    <P>This option is enabled for a K2 camera and allows an &quot;early return&quot; when either 
+      saving frames or aligning frames in the SEMCCD plugin to DM.&nbsp; An image with 
+      the sum of the selected number of frames will be returned as soon as those 
+      frames are available, and the program is free to go on to other tasks.&nbsp; The 
+      initial sum is used for alignment and is also saved to the output file as a 
+      placekeeper.&nbsp; The full sum is retrieved just before the next Record image 
+      and saved to the file.&nbsp; None of this will occur if there is extra Record 
+      output, when montaging, or if any other relevant camera parameters sets have 
+      dose-fractionation turned on.</P>
+    <P>This option may produce modest time savings if the frame operations are 
+      relatively time-consuming, such as by using super-resolution mode, taking many 
+      frames, or saving with compression, and if the program needs to do some 
+      operations between Record images.&nbsp; There may be no speedup with counting 
+      mode images.</P>
+      <P><i><A NAME="tss_autofocus"></A><B><FONT size="3">Autofocus Control</FONT></B></i></P>
+      <P><B>Defocus target</B></P>
+      <P>The target defocus value for autofocusing will appear in this text box and a new 
+        value can be entered.</P>
+      <P><B>Beam tilt</B></P>
+      <P>The amount of beam tilt used for autofocusing will appear in this text box and a 
+        new value can be entered.</P>
+      <P><B>Autofocus offset</B></P>
+      <P>The defocus change that will be applied before autofocusing will appear in this 
+        text box and a new value can be entered.</P>
+      <P><B>Skip autofocus</B></P>
+      <P>This option can be selected to skip autofocusing during the 
+        series, which can be useful if autofocusing is not reliable. The initial 
+        autofocus during the startup of the tilt series will also be skipped.</P>
+      <P><B>Do autofocus at certain interval</B></P>
+      <P>The Tilt Series Controller will skip autofocusing when the prediction for focus 
+        seems reliable enough; however, it will always do an autofocus when the tilt 
+        interval since the last time it was done is longer than the value entered in 
+        this text box.</P>
+      <P><B>Focus every time at high tilt</B></P>
+      <P>If this option is selected, the program will do autofocus at every tilt angle 
+        above the value entered in the text box. Enter a positive angle; it will apply 
+        on both the positive and negative sides of the tilt series.</P>
+      <P><B>Check autofocus and stop if inadequate</B></P>
+      <P>If this option is selected, the program will run a routine to check the accuracy 
+        of autofocus at high tilt, and stop the tilt series if the accuracy is not 
+        greater than the specified amount. The routine measures defocus at the current 
+        focus, and plus and minus 5 microns from that point, then reports what fraction 
+        of the actual change can be measured. If this fraction is less than the amount 
+        specified in the text box, then the tilt series is stopped and some 
+        recommendations are given for proceeding.</P>
+    <P><b>Stop if autofocus exceeds absolute limits</b></P>
+    <P>This is one of two options for limiting the focus changes that occur during a 
+      tilt series.&nbsp; This option causes autofocus to fail, original focus to be 
+      restored, and the tilt series to stop if focus exceeds the absolute limits 
+      around eucentric focus that are set with the
+      <a href="menu_focus.htm#hid_focus_setabsoluteliimits">Set Absolute Limits</a> command in the Focus menu.&nbsp; It is most suitable for preventing 
+      focus from being set in a range that would activate the Falcon Dose Protector.&nbsp; 
+      It applies to any autofocus done at the start or during the course of the 
+      series.</P>
+    <P><b>Stop if autofocus change exceeds X microns</b></P>
+    <P>This option can be used to protect against large changes in focus, such as when 
+      a grid bar or piece of contamination comes into the focusing area.&nbsp; If the 
+      focus change imposed by autofocusing would exceed the amount entered in the text 
+      box, the autofocus will fail, focus will be restored to its original value, and 
+      the tilt series will stop.&nbsp; This option also applies to any autofocus done 
+      at the start or during the course of the series.</P>
+      <P><i><A NAME="tss_initial_actions"></A><B><FONT size="3">Initial and Final Actions</FONT></B></i></P>
+      <P>The options in this group will be enabled as appropriate, depending on whether 
+        you are at zero tilt or at the starting tilt of the series.</P>
+      <P><B>Buffer A has image of desired area</B></P>
+      <P>Select this option if you have left an image in buffer A aligned on the desired 
+        area before opening the dialog box. If this option is not selected, the Tilt 
+        Series Controller will take its first reference for alignment as soon as 
+        possible, but the specimen may have drifted away from the desired position by 
+        then. Thus it is generally wise to ensure that there is a good reference before 
+        you start. This option is relevant when starting either at zero tilt or at high 
+        tilt.</P>
+      <P><B>Refine eucentricity</B></P>
+      <P>Select this option to have the eucentricity refined before going up to high 
+        tilt.</P>
+      <P><B>Leave mid-tilt anchor</B></P>
+      <P>Select this option to have the 'Walk Up' procedure leave an 'anchor' image near 
+        the angle specified in the text box. When the tilt series reaches that angle, 
+        the anchor will become the reference for alignment, and this will pull the 
+        series into alignment.</P>
+      <P><B>Use mid-tilt anchor</B></P>
+      <P>Select this option if you have taken an 'anchor' image at an intermediate tilt 
+        angle which you want the program to use for alignment when that angle is 
+        reached in the tilt series. Use the up or down arrows to select the buffer in 
+        which you left the image. If you obtained the anchor with the 'Walk Up &amp; 
+        Anchor' command in the Tasks menu, then it will be in the last image buffer, so 
+        this buffer is initially the default.</P>
+      <P><B>Close column valves at end of series</B></P>
+      <P>This option provides the final control of beam intensity by allowing you have 
+        the column or gun valves closed at the end of the series. If you open the 
+        valves again and take additional pictures one tilt at a time with the One Loop 
+        button, they will remain open. On a JEOL without a FEG, this option can be used 
+        to turn the filament off instead.</P>
+      <P><A NAME="tss_tracking_control"></A><i><B><FONT size="3">Tracking Control Parameters</FONT></B></i></P>
+      <P>This grouping contains various parameters that govern the Tilt Series 
+        Controller's behavior with regard to predictions for positional and focus 
+        changes. The typical user needs to pay attention to just the first three.</P>
+      <P><B>Repeat Record if certain percentage of field is lost</B></P>
+      <P>With this option selected, the program will repeat the acquisition of a Record 
+        image when its error in position is sufficiently high. The error is expressed 
+        as the percentage of the field of interest missing from the image. In computing 
+        this fraction, the program excludes areas far from the tilt axis that will not 
+        be needed for a reconstruction. Thus, at middle to high tilts, the errors in 
+        the Y direction (across the tilt axis) can be relatively high without 
+        triggering a reshoot. Errors in the X direction (along the tilt axis), or 
+        errors in either direction at low tilt, will be constrained to the percentage 
+        set in the text box.</P>
+      <P>There are several reasons why you might not select this option, or might enter a 
+        particularly high value: if you have no interest in what is contained in the 
+        periphery of the area being acquired; if you are working at a high 
+        magnification where errors are intrinsically higher; or if you are doing low 
+        dose work and cannot afford to repeat exposures. In low dose mode, the next 
+        option determines what happens if this option is selected.</P>
+    <P><b>Stop and ask before repeating Record in Low Dose Mode</b></P>
+    <P>With this option and the preceding one selected, the program will stop and ask 
+      for confirmation before repeating a Record image in low dose mode. This was the 
+      behavior before this checkbox was added.&nbsp; If this option is turned off, the 
+      program will retake the image up to three times even in low dose mode.&nbsp; 
+      This is useful if you are using low dose mode to get different magnifications 
+      for tracking or focusing and the extra exposure of the specimen is not an issue.</P>
+      <P><B>Stop when Autoalign gives a large shift</B></P>
+      <P>With this option selected, the program will examine all Autoalignments at the 
+        regular magnification and will stop the tilt series if the alignment shift 
+        exceeds the specified percentage of the size of the image being aligned. This 
+        may prevent the program from going astray on a wildly incorrect alignment. When 
+        the tilt series stops, you can revert to the previous specimen position by 
+        clearing the alignment using the button on the Image Alignment and Focus 
+        control panel. If the large image shift is correct, you can resume the tilt 
+        series instead.</P>
+      <P>Note that when montaging, the image size for this comparison will be that of the 
+        Montage Center, i.e., the size of a single frame, not of the whole montage.</P>
+      <P><B>Get tracking image when prediction error is high</B></P>
+      <P>This entry determines when the program will acquire a tracking image rather than 
+        relying on the prediction of the position on the next tilt. The criterion that 
+        is entered is expressed as a percentage of the size of the camera area that is 
+        being recorded. You may want to enter a larger value when working at high 
+        magnifications where errors are inherently larger. On every tilt, the program 
+        computes how far the Record image on the previous tilt was from its predicted 
+        position in X and in Y. It will choose to do tracking if the prediction error 
+        in either the X or the Y direction was greater than the criterion. In addition, 
+        it computes a predicted position at the current tilt and the standard error of 
+        the prediction in both X and Y. Tracking will occur if the square root of the 
+        sum of the squares of these two standard errors is higher than the criterion.</P>
+      <P><B>Track: Before - After - Before &amp; after Autofocusing</B></P>
+      <P>These radio buttons will control where tracking will occur in the sequence of 
+        operations at each tilt. The default is tracking before autofocusing, which 
+        will guarantee that focusing is done at the center of the field. However, when 
+        drift is bad, the Record image will then be displaced because of the time spent 
+        focusing. In this case, selecting tracking after autofocusing will keep the 
+        Record image from being off by much. When tracking occurs after autofocusing, 
+        SerialEM will adjust the focus as necessary to compensate for the lateral shift 
+        in position. If drift is really bad, one could select tracking both before and 
+        after focusing.</P>
+      <P><B>Stop after aligning tracking image</B></P>
+      <P>Selecting this option activates a manual tracking mode in which the program will 
+        stop after acquiring and aligning a tracking image. You can then adjust the 
+        alignment position manually and resume. When you resume with the One Loop 
+        button, the image in buffer A will automatically be taken as a new alignment 
+        reference. Thus, in this mode one can simply adjust the tracking position as 
+        necessary and push One Loop to go on. When manual tracking is no longer needed, 
+        turn off this option.</P>
+      <P><B>Align only with tracking images</B></P>
+      <P>This option is available in low dose mode, where the program will ordinarily 
+        align with tracking images in the Trial area when necessary, and refine the 
+        alignment on every tilt with images from the Record area. The alignments 
+        occurring in these two separate areas can diverge from each other. If this 
+        divergence is too much of a problem, this option can be used to disable 
+        alignment of the Record images. It will cause a Trial image to be taken on 
+        every tilt and used for tracking.</P>
+      <P><B>Align with Preview before getting new track reference</B></P>
+      <P>In low dose mode, it is sometimes necessary to take a new tracking reference 
+        after a Record image. If there is drift and time for acquiring the Record image 
+        is long, this reference will be in the wrong place. With this option selected, 
+        the program will always take a Preview image and align it to the existing 
+        Record reference just before acquiring a new tracking reference. Since the 
+        Preview should take less time to acquire, the track reference location will be 
+        more accurate. This presumes that Preview is set up to take a fast, binned 
+        image that will not contribute much to the dose on the Record area.</P>
+      <P><B>Get new track reference if Record alignment differs</B></P>
+      <P>The criterion entered in this text box comes into play both in low dose mode and 
+        when low magnification tracking is enabled. In both of these cases, it is 
+        possible for the alignment specified by the tracking images to diverge from the 
+        alignment of the Record images. When the program takes a tracking image and 
+        uses it for alignment, then finds that the position of the next Record image is 
+        in error by more than this criterion, it will take a tracking image after the 
+        Record on the next tilt and use this image as a new reference. This criterion 
+        should be set rather high, because minor misalignments are handled 
+        automatically by simply shifting the existing reference.</P>
+      <P><B>Repeat autofocus if error is high</B></P>
+      <P>When this option is selected, the program will repeat the autofocus procedure 
+        when the defocus measured by a first autofocus differs from the predicted value 
+        by more than the criterion entered in the text box. It does this even if the 
+        prediction had a high standard error and was likely to be in error itself.</P>
+      <P><B>Do autofocus when prediction error is high</B></P>
+      <P>This entry determines when the program will autofocus rather than relying on the 
+        prediction of the focus on the next tilt. This criterion is compared with two 
+        different errors. At every tilt, the program computes a predicted defocus and a 
+        standard error for this prediction. Autofocus will be done if twice this 
+        standard error is greater than the criterion. In addition, if autofocus was 
+        done at the previous tilt, there is an actual error, the difference between the 
+        measured defocus and the predicted value. Autofocus will be done if this actual 
+        error exceeded the criterion.</P>
+      <P><A NAME="tss_action_buttons"></A><i><B><FONT size="3">Dialog Control and Action Buttons</FONT></B></i></P>
+      <P><B>Previous - Next</B></P>
+      <P>Press these buttons to close up the last group of controls currently open and 
+        open up either the previous or the next group, respectively.</P>
+      <P><B>First Half - Second Half</B></P>
+      <P>Press these buttons to see the left or the right half of the full dialog, 
+        respectively. If you close the dialog in either of these states, it will reopen 
+        showing the left half.</P>
+      <P><B>Full</B></P>
+      <P>Press this button to see the full dialog as it appeared in earlier (2.x) 
+        versions of SerialEM. If you close the dialog in this state, it will reopen as 
+        a full dialog.</P>
+      <P><B>GO</B></P>
+      <P>This button will start or resume a tilt series. If a series was running and had 
+        been stopped, it will resume at the next logical step. This button is not 
+        present when the dialog is opened to set parameters for a series to be run from 
+        the Navigator.</P>
+      <P><B>Single Loop</B></P>
+      <P>If the tilt series has not been started yet, using this button to start it will 
+        make it run through all of the preliminary steps before starting its regular 
+        actions at the first tilt angle. This would then give you an opportunity to 
+        adjust specimen position or beam intensity. If a series was running and had 
+        been stopped, it will resume at the next logical step then go until all actions 
+        at one tilt angle are finished. This button is also not present when the dialog 
+        is opened from the Navigator.</P>
+      <P><B>Postpone/OK</B></P>
+      <P>When the dialog is opened from the menu, this button ('Postpone') will close the 
+        dialog box and save all parameter settings without starting or resuming the 
+        series. It is useful when you realize that you need to take some preliminary 
+        action before starting the series, such as ensuring the centering of the image 
+        or adjusting beam intensity. You could also use it if you need to change a 
+        control parameter during the tilt series and also need to resume at a step 
+        other than the current one. When the dialog is opened from the Navigator, this 
+        is an 'OK' button for closing the dialog and saving the parameters.</P>
+      <P><B>Cancel</B></P>
+      <P>This button will close the dialog box and discard any parameter changes that you 
+        have made.</P>
+        <A NAME="tss_stem"></A><i><B><FONT size="3">Tilt Series in STEM Mode</FONT></B></i>
+        <P>When 
+    the dialog is entered with the microscope in STEM mode, or if the STEM camera is 
+    selected, several features changes, reflecting intrinsic differences in tilt 
+    series acquisition from TEM mode.</P>
+      <p><i>Shift/Centering Options and Interset Shifts.</i>&nbsp; Options to control beam 
+        centering and energy filter alignment are disabled.&nbsp; In this section, a 
+        line is added to report whether image shifts exist to keep Trial and Focus 
+        images centered on the Record images.&nbsp; These shifts can be calibrated 
+        quickly before a tilt series, once the exposure times have been finalized.&nbsp; 
+        See <A HREF="menu_tasks.htm#hid_tasks_assess_interset_shifts">Assess Interset Shifts</A>
+        for details.</p>
+      <p><i>Exposure Time Changes Only.</i>&nbsp; It is not possible to change beam intensity 
+        continuously in STEM mode, so the Beam Intensity Control section allows changes 
+        only in exposure time.&nbsp; Moreover, image counts do not scale with exposure, 
+        so options for maintaining a constant number of counts are disabled.&nbsp; This 
+        just leaves the option for changing exposure as a function of the cosine of the 
+        tilt angle.&nbsp; There are two situations where this would not be appropriate.&nbsp; 
+        First, dark field signals may become stronger with increased sample thickness 
+        rather than weaker.&nbsp; Second, if you are using dynamic focusing with FEI 
+        STEM, you may need to use a discrete set of Record exposure times where the 
+        flyback time has been calibrated (see <A href="menu_calibration.htm#hid_calibration_quick_flyback_time">
+    Quick Flyback Time</A>), rather than allowing exposure time to vary 
+        continuously.&nbsp; The solution is to check 'Change some settings as a function 
+        of angle', press Set Changes, and enter the needed exposures in the
+         <A HREF="hidd_tsvariations.htm">
+          Tilt Series Scheduled Changes dialog box</A>.</p>
+        <P><i>Autofocus Differences</i>.&nbsp; The 'Skip Autofocus' checkbox is enabled in STEM 
+          mode, as in Low Dose mode, in case autofocus is not needed or does not work 
+          (e.g., in microprobe mode on an FEI).&nbsp; The option to check autofocus is 
+          disabled.</P>
+    <P><i>Separate Parameters</i>.&nbsp; For several parameters, separate values are 
+      maintained for TEM and nanoprobe STEM mode, and microprobe STEM mode (if 
+      present), and stored in your settings file.&nbsp; These parameters are the tilt 
+      series magnification, the magnification for low mag tracking, and the maximum 
+      focus prediction error allowed before autofocusing is needed.&nbsp; The latter 
+      is maintained separately because STEM imaging in nanoprobe mode probably 
+      requires a tighter tolerance on focus than TEM imaging.</P>
+    </basefont>
+  </BODY>
+</HTML>

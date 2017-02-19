@@ -1,0 +1,76 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+  <HEAD>
+    <TITLE>Align with Rotation Dialog</TITLE>
+    <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
+    <style type="text/css"> <!-- BODY { font-family:"Arial" } TD { font-size:16 } 
+  --></style>
+  </HEAD>
+  <BODY BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+    <P><A NAME="hidd_navrotalign"></A><B><FONT size="3">Align with Rotation Dialog</FONT></B></P>
+    <P>This dialog allows you to align two images taken before and after rotating the 
+      specimen. The microscope image shift can then be changed so that a new image 
+      will be centered on the reference image, just as when doing an ordinary 
+      autoalignment. You can also use this alignment to transform Navigator items 
+      into the new registration, although this transformation will be of limited 
+      accuracy because it is based on measurements at a single point. You may not be 
+      able to trust the transformation farther than ~500 &micro;m from the point being 
+      aligned, unless you have very large maps for realigning to (~30 &micro;m). It is more 
+      reliable to use a transformation based on registration points that span the 
+      area of interest; even one based on only two registration points. Thus, the 
+      main value of this procedure might to assist in accurately locating 
+      registration points after rotation. In tests on an F20 in Boulder, the main 
+      source of error (after accounting for both a stretch in the image and a stretch 
+      in the stage coordinate system) was that the image rotation was not a good 
+      enough estimate of the true grid rotation as measured by registration points.</P>
+    <P>To run this procedure, there must be a map in the buffer where images are read 
+      back from file, the current registration must differ from that of the map, and 
+      there must be either an image in buffer A or a montage overview in buffer B 
+      taken at the current registration. When the dialog opens, a single image is 
+      copied to buffer B, so that buffer B contains the original image regardless of 
+      its source. At this point, you should place the approximate rotation in the 
+      'Starting angle to rotate by' text box. This is the angle by which the image 
+      needs to be rotated to align with the map, which is the opposite of the amount 
+      by which the grid was rotated. Enter a positive angle if the image needs to be 
+      rotated counterclockwise to align with the map.</P>
+    <P>When you press <B>Align to Map</B>, the program will search a range of angles 
+      centered on the starting angle and with the total range given in the 'range of' 
+      text box (e.g., a range of 20&deg; will search to 10&deg; on either side of the 
+      starting angle). The program finds the rotation that gives the highest 
+      cross-correlation, makes a rotated copy of the image in buffer A and shifts it 
+      into alignment. You can assess the alignment by toggling between the rotated 
+      image and the map with the 'Home' and 'Delete' hot keys. You can also shift the 
+      image with the mouse at this point to improve the alignment, if necessary.</P>
+    <P>A message will be printed in the log window if the best correlation occurs at 
+      the end of the search range. If so, you should either change the starting angle 
+      or increase the search range, and press <B>Align to Map</B> again.</P>
+    <P>If the search fails to find the right rotation, you can turn off the 'Search 
+      angles over range of' check box and adjust the starting angle to give the 
+      proper alignment.</P>
+    <P>To have the microscope image shift adjusted to match the alignment of the image, 
+      press <B>Apply Image Shift on Scope</B>. You can then take a new image and 
+      align it to the map. In fact, you are always free to start with a new image in 
+      A or montage overview in B after repositioning the specimen.</P>
+    <P>Press <B>Transform</B> to compute a transformation from the rotation and shift 
+      used to align the image and the stage positions of the image and map, and to 
+      transform Navigator items from the old registration to the new one.</P>
+    <P>Two calibrations will make this procedure work better. First, if there is 
+      significant stretch along one axis in the imaging process, the rotated image 
+      will not line up well with the map unless this stretch is taken into account. 
+      The alignment routine will do so if there is a camera property entry 
+      'RotationStretchXform' from which the stretch can be derived. Second, if the 
+      stage axes are not precisely perpendicular or do not have the same scaling, 
+      then the transformation of positions will not be accurate unless this stretch 
+      in the stage coordinate system is taken into account. The transformation 
+      routine will do so if the stage stretch has been calibrated by doing a 
+      transformation with registration points then running the <A HREF="menu_calibration.htm#hid_calibration_stagestretch">
+        Stage Stretch command</A> in the Calibration menu. See <A HREF="setting_up_serialem.htm#setup_stretches">
+        Stage and Imaging Stretch</A> for instructions on these calibrations.</P>
+    <P>The transformation will also be more accurate if differences in image rotation 
+      between the map and the image being aligned are minimized by setting the 
+      eucuentric height and focusing at this location both before and after the 
+      rotation.</P>
+    </basefont>
+  </BODY>
+</HTML>

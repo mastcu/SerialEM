@@ -1,0 +1,153 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+  <HEAD>
+    <TITLE>Tilt Series Extra Output Dialog</TITLE>
+    <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
+    <style type="text/css"> <!-- BODY { font-family:"Arial" }
+  TD { font-size:16 }
+  --></style>
+  </HEAD>
+  <BODY BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+      <P><A NAME="hidd_tsextrafile"></A><B><FONT size="3">Tilt Series Extra Output Dialog</FONT></B></P>
+      <P>This dialog is used to control the saving of images to additional image buffers 
+        or files during a tilt series. The final Record or montage overview can be 
+        binned down and saved in buffers shown in a separate window. Four different 
+        types of images can be saved to files. First, the various tracking images taken 
+        by the Tilt Series Controller, and autofocus pictures, can be saved to files. 
+        Second, additional Record images can be saved at different defocus levels, or 
+        at different energy filter settings. These extra Record images are taken after 
+        the normal Record or montage is taken, and are saved to a separate file from 
+        the main tilt series to maintain the linkage between tilt and image number in 
+        the latter file. An entry will appear in the log for each image saved to an 
+        extra output file.&nbsp; Third, in Low Dose mode a pair of Trial images can be 
+        saved, one from the other side of the Record area.&nbsp; These images are taken 
+        like extra Record images, after the&nbsp;normal Record is taken, but they are 
+        not constrained to being at the same binning as regular Trial images.&nbsp; 
+        Fourth, in STEM mode, images from other detectors than the primary one can be 
+        saved into a file.</P>
+    <P>When acquiring multiple tilt series through the Navigator, it is possible to 
+      have one extra file opened for each tilt series and closed at the end of the 
+      series.&nbsp; Set up a script with the line<br />
+&nbsp;&nbsp;&nbsp; SuffixForExtraFile&nbsp; suffix<br />
+      where &#39;suffix&#39; will be added to the root of the filename of the regular tilt 
+      series output file.&nbsp; For example, if the regular filename is &#39;series1.mrc&#39; 
+      and the suffix is &#39;_trial&#39;, the extra file will be named &#39;series1_trial.mrc&#39;.&nbsp; 
+      In the
+      <A HREF="hidd_navacquire.htm">Navigator Acquire dialog</A>, turn on the option 
+      to run a script before the main action and select the script with this command.&nbsp; 
+      The extra file will be opened before the regular file, so set the file number 
+      for the extra output to 1 if there will be no other files open when the 
+      acquisition is started.&nbsp; If there will be other files open, set the file 
+      number to one past the number of the highest file that will be open.</P>
+    <P>It is also possible to save more than one kind of extra output during multiple 
+      tilt series, but only one kind of output will go into separate files as just 
+      described; all of the series will write into the same file for the other kinds 
+      of output.</P>
+      <P><B>Stack Record/Overview images in separate window</B></P>
+      <P>Select this check box to display binned down Record or montage overview images 
+        in a window separate from the main window. This window will initially be opened 
+        at half the size of the binned images, and its title will be the name of the 
+        tilt series output file. When the window is the active one, hot keys can be 
+        used as usual to scroll through and zoom the display. (It may be necessary to 
+        click inside the window with the mouse to make it active.) Images will be 
+        labeled by their number in the buffer stack and by the Z value of the 
+        corresponding image in the output file.</P>
+      <P>This option can be turned on and off at any time during a series. If the window 
+        is closed, a new window will be opened when the next image is ready to be 
+        shown, but the previous images will be gone. At the end of tilt series, the 
+        window will no longer accept new images but it will be left open until you 
+        close it. If you start a new tilt series, a new window will be opened for its 
+        images.</P>
+      <P><B>Bin to N KB/image</B></P>
+      <P>This spin button lets you control how much the images are binned by adjusting 
+        the maximum memory allowed for each image. The memory requirement is the 
+        primary concern when keeping a stack that may contain over 100 images; for this 
+        reason, the displayed images are converted to bytes as well as binned down. The 
+        kilobytes per image and the maximum size of a square image are shown as you 
+        change this setting. The maximum size is limited by default to 512 by 512 
+        pixels; this limit can be changed with a 'MaxStackWindowSizeXY' entry in the 
+        properties file.</P>
+      <P><B>View, Focus, Trial, Preview check boxes</B></P>
+      <P>These check boxes govern whether images of the particular type will be saved 
+        during the tilt series. You can change these selections at any point in the 
+        series.
+      </P>
+      <P><B>File # and Name spin buttons</B></P>
+      <P>The spin buttons allow you to select a file number in which each kind of image 
+        will be saved. They can be set to file numbers up to the maximum number of 
+        image files allowed. If there is already an open file at a file number, its 
+        name will be shown; otherwise the selector will show 'Not open yet'. When the 
+        tilt series is started or resumed, the program will check the validity of the 
+        indicated file for each of the kinds of images being saved. Basically, each 
+        file must be compatible with images of the given type, based on the current 
+        camera parameters for taking that type of image. You can save different kinds 
+        of images into the same file as long as they have the same dimensions. You may 
+        not save any extra images into the main tilt series output file.</P>
+    <P>Montaged files cannot be selected for saving anything except extra Record 
+      images in TEM mode (i.e., a montaged file is not allowed for saving opposite 
+      Trials or STEM mode).&nbsp; You will most likely want a montage that is the same 
+      size as the main output, but this is not required or done automatically by the 
+      program; you have to set up the montage of the needed size when you open the 
+      output file.</P>
+      <P><B>Extra Record/Trial radio buttons and text box</B></P>
+      <P style="Z-INDEX: 0">These buttons select whether one or more Record images are 
+        saved at different focus or filter settings or from different STEM detectors, or whether a pair of Trial images 
+        are taken. When&nbsp;a focus&nbsp;or filter series is selected, the text box is 
+        enabled and a series of entries can be made. Entries must be separated by 
+        spaces.</P>
+      <P>For a focus series, the values to enter are the change in focus from the current 
+        defocus target. Separate multiple values with spaces, e.g., '-2 -4 2'.</P>
+      <P>For a filter series, each entry consists of two values separated by a comma. The 
+        first value specifies the slit width: 0 to filter with the current width, -1 to 
+        take an image with the slit open, or a value greater than 0 to filter with the 
+        given width. The second value specifies the change in energy loss from the 
+        current value; positive and negative values are allowed. For example, if the 
+        regular Record image is set up to be zero-loss filtered with a slit width of 
+        20, then entries of '-1,0 0,40 50,20' would result in three extra Record 
+        images: an unfiltered image, one with the regular slit width of 20 eV and an 
+        energy loss of 40 eV, and one with a slit width of 50 eV and an energy loss of 
+        20 eV.</P>
+    <P>When you select the option to save images from multiple STEM detectors, the 
+      dialog will show a line listing the numbers of the detectors that will be 
+      acquired simultaneously with the main Record image, based on the current 
+      selection in the Record parameter set.&nbsp; Only three channels can be acquired 
+      from simultaneously during a tilt series, i.e., two extra ones.&nbsp; Separate 
+      acquisitions are needed to acquire from more than this number of detectors, or 
+      to acquire from ones that cannot be used simultaneously with the main Record 
+      detector.&nbsp; Enter a space-separated list of additional channels to acquire 
+      in separate acquisitions in the text box.</P>
+      <P><B>Changes for Extra Records/Trials</B></P>
+      <P>The options in this group allow you to change the beam or the camera acquisition 
+        parameters for the extra Record or Trial images. Redundant methods are provided 
+        because there may be problems with one or two of them in any given case. </P>
+    <ul>
+      <li>Enter 
+        a number different from 1 in 'Change intensity by factor of' to have the 
+        intensity changed by that factor and restored at the end. </li>
+      <li>Select the 'Change 
+        Spot size to' checkbox and set the spinner to the desired value to have the 
+        spot size changed. </li>
+      <li>Select the 'Set exposure to' checkbox to have the exposure 
+        time and drift settling set to the values in the text boxes. The drift settling 
+        will be applied only for if appropriate for the given camera and shuttering 
+        mode, even though the 'Drift settling' text box is not disabled in such cases.&nbsp; 
+        The exposure time entry can be one or more values separated by spaces, where a 0 
+        means to leave the exposure unchanged from the value for the previous image, and 
+        there do not need to be as many values as extra Records.&nbsp; For example, if 
+        you have a filter series with 5 extra Records, you can enter &#39;0. 3. 0. 7.&#39; and 
+        the exposure will be the same as a regular Record for the first extra Record, 3. 
+        for the second and third, and 7. for the fourth and fifth.</li>
+      <li>Finally, if you are doing a pair of Trial images, you can select 'Set Trial 
+        binning to' and set the binning for these images with the spinner.</li>
+    </ul>
+    <p>
+      <b>Keep file with bidirectional anchor images</b></p>
+    <p>
+      Normally, the program stores the initial anchor image for a bidirectional tilt 
+      series in a file and deletes the file at the end of the tilt series.&nbsp; If 
+      this option is selected, the image used to realign to the anchor is appended to 
+      the file and the file is not deleted.</p>
+    </basefont>
+  </BODY>
+</HTML>

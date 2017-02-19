@@ -1,0 +1,22 @@
+This file had some notes that I sent Tobin long ago - revised 1/17/12 for
+hypothetical compilation by others.
+
+1) DOS text file format.  DOS uses CR-LF (^M^A) to terminate lines and unix
+just uses LF. Be sure to use the DOS convention in the source files, otherwise
+things get terribly mixed up (not so any more, VC fixes it for you).
+
+2) Tabs.  I have tried to replace tabs in my source and avoid inserting
+new tabs, although some do creep in.  I removed tabs from your changes.
+For consistency, could you set your Visual C parameters to "Tab size 2"
+"Indent Size 2" (you already have this) and check "Insert spaces"?
+
+3) The external dependencies such as the JEOL and FEI scopes are included
+as .tli/.tlh files in the source code, so specific simulators are not needed
+to compile.  However, SerialEMCCD and FocusRamper are assumed to be in 
+adjacent directories to the SerialEM source.  That forces a recompile when I
+make a relevant change in either of these modules.  Specifically,
+CameraController.h does this:
+#import "..\SerialEMCCD\SerialEMCCD.tlb" no_namespace
+#import "..\FocusRamper\FocusRamper.tlb" no_namespace
+
+So to compile, you need copies of these .tlb's in the relevant directories.

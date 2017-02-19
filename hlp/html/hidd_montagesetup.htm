@@ -1,0 +1,242 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+  <HEAD>
+    <TITLE>Montage Setup Dialog</TITLE>
+    <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
+    <style type="text/css"> <!-- BODY { font-family:"Arial" }
+  TD { font-size:16 }
+  --></style>
+  </HEAD>
+  <BODY BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2" style="Z-INDEX: 0">
+      <P><A NAME="hidd_montagesetup"></A><B><FONT size="3">Montage Setup Dialog</FONT></B></P>
+      <P>This dialog box allows you to set the parameters for a montage, see the total 
+        area to be acquired, and view the parameters after montaging has been 
+        initiated. When this dialog is invoked by the Navigator to set up a montage 
+        that fits a defined area, it operates in a special mode, referred to as 
+        area-fitting mode. In this mode, you can adjust the number of frames and 
+        overlap between frames by changing the magnification or a percentage overlap 
+        factor. When one of these settings (or the binning or the selection of stage 
+        versus image shift) is changed, the dialog will maintain the fit to the 
+        selected area by having the Navigator recompute the number and size of frames 
+        and their overlap.</P>
+    <P>Montages can also be taken in Low Dose mode, with either the Record or View 
+      area imaging parameters.&nbsp; Whether a montage file can be acquired into in 
+      Low Dose depends solely on whether Low Dose was on when the montage was first 
+      set up.&nbsp; Thus, you need to turn on Low Dose mode before setting up a 
+      montage to be taken in Low Dose.&nbsp; Several parameters cannot be changed when 
+      in Low Dose mode.</P>
+      <P><B>Camera radio buttons</B></P>
+      <P>If you have multiple cameras, each available camera will be listed here so that 
+        you can specify or see what camera will be used for montaging. The current 
+        camera will be the one initially selected. If you select a different camera, it 
+        will become the current camera when a montage is started.&nbsp; The camera 
+        selection is fixed in Low Dose mode.</P>
+      <P><B>Magnification</B></P>
+      <P>When not in Low Dose mode, this setting is initially based on the current microscope magnification, but you 
+        can change the magnification if desired using the spin buttons. SerialEM will 
+        automatically switch to this magnification whenever acquiring a montage. You 
+        can also change the magnification after montaging has been started, but you 
+        will have to confirm this change the first time you do so. In area-fitting 
+        mode, changing magnification will change the number of frames and may change 
+        their size and overlap.&nbsp; In Low Dose mode, the magnification is simply that 
+        of the Record or View area and cannot be changed here.</P>
+      <P><B>Binning</B></P>
+      <P>This setting is initially based on the current value in the Record parameter 
+        set (or possibly the View set in Low Dose mode), but you can change the binning 
+        when setting up the montage. If you do so, the program will adjust the exposure 
+        time by the square of the change in binning, but you will also be warned to adjust the exposure and 
+        drift settling parameters yourself. If you have already started montaging, you 
+        may be able to change the binning if it is compatible with the size of the 
+        pieces. In area-fitting mode, changing the binning will cause the fit to be 
+        recomputed.</P>
+      <P><B>Pixel size</B></P>
+      <P>This value is based upon the magnification, the binning, and the calibrations in 
+        SerialEM.</P>
+      <P><B>Number of pieces in X and Y</B></P>
+      <P>You can set the number of frames of the montage in the X and Y directions by 
+        entering numbers in the text boxes or using the spin buttons. In area-fitting 
+        mode, changes here will be superseded if you change any of the settings that 
+        cause the fit to be recomputed.</P>
+      <P><B>Piece size in X and Y</B></P>
+      <P>You can set the size of each piece in X and Y by entering values in these text 
+        boxes. The default is the full size of the CCD camera. In area-fitting mode, 
+        changes here will be superseded if you change any of the settings that cause 
+        the fit to be recomputed.</P>
+      <P><B>Overlap in X and Y</B></P>
+      <P>You can set the amount of overlap between pieces by entering values in these 
+        text boxes. The default is 10% of the frame size of the CCD camera when doing a 
+        montage with image shift. When using stage movements, the overlaps are 
+        constrained by a minimum percentage and by a minimum absolute distance in 
+        microns. You can use the <B>Reset</B> button to restore the values to the 10% 
+        default for image shift or the minimum required for stage montages. These 
+        values may change when new piece sizes are entered.</P>
+      <P>In area-fitting mode, these fields are disabled and overlap is adjusted with the 
+        minimum overlap controls instead.</P>
+      <P><B>Minimum overlap factor (Montage with stage movement only)</B></P>
+      <P>These controls allow you to adjust the minimum amount of overlap required when 
+        doing a stage montage. At lower magnifications, a percentage is enough to 
+        guarantee enough overlap, but an absolute minimum amount of overlap is needed 
+        to get enough overlap at higher magnifications, because of the imprecision of 
+        stage movement. Use the spin buttons to adjust the minimum overlap between 
+        pieces as a percentage of the largest piece dimension, and enter a value in the 
+        text box to change the minimum overlap in microns. Overlaps will be increased 
+        to meet an increased minimum, but will not be decreased when you decrease a 
+        minimum until you press the <B>Reset</B> button.</P>
+      <P>In area-fitting mode, the overlap will change automatically not matter which 
+        direction the minimum is changed, and the number of frames may change to 
+        maintain the fit to the desired area.</P>
+      <P><B>Total area and Update</B></P>
+      <P>The total area is computed based on the pixel size, number of pieces, piece size 
+        and overlaps. It is recomputed whenever you push a button or leave a text box, 
+        but to be sure the value is current, just push the <B>Update</B> button.</P>
+      <P><B>Move Stage instead of Shifting Image</B></P>
+      <P>Select this option to have the montage acquired by moving the stage instead of 
+        using electronic image shift. Image shift is quite accurate but has a limited 
+        range at medium and high magnifications (generally less than ~15 microns, but less 
+        than ~3 microns on some microscopes such as 300 KV Tecnai/Polara). Stage shift 
+        can be used when these limits need to be exceeded. Note that in LM mode, image 
+        shift has a much higher range, so you may be able to use image shift instead of 
+        stage shift at the highest LM mode magnifications. In area-fitting mode, the 
+        fit will be recomputed and it may not be possible to change this setting.</P>
+      <P><B>Skip Pieces outside Navigator Item</B></P>
+      <P>With this option, it is possible to define a polygon in the Navigator and have 
+        each montage that is taken include only pieces that have some portion inside 
+        the polygon. This option is not needed when taking a montage that was fit to a 
+        polygon but would be useful when taking multiple montages in a region (e.g., 
+        supermontaging). After checking the option, enter the position of the desired 
+        polygon item in the Navigator table (numbered from 1), or enter 0 to use the 
+        current Navigator item or the polygon that was used to define the supermontage 
+        including the current item. In other words, the option is only needed when 
+        supermontaging, and the value just needs to be 0. The legality of the item 
+        number will not be checked until the montage is started. If the Navigator is 
+        not open at that time, this setting is ignored.</P>
+      <P><B>Do Full Rectangle; Ignore List of Pieces to Skip</B></P>
+      <P>When a montage is set up by the Navigator, it will compose a list of pieces that 
+        do not need to be acquired because they fall outside the polygon used to define 
+        the montage area. The option allows one to acquire the complete array of 
+        pieces, including ones on the list to skip.</P>
+      <P><B>Ask about Making Map after Each Montage</B></P>
+      <P>If this option is checked, then when you take a montage manually, the program 
+        will ask whether you want to make a Navigator map. It is available only when 
+        the Navigator is open. It is turned on when you set up a montage through the 
+        Navigator; otherwise it is off by default. If you answer with 'Cancel' by 
+        mistake when asked if you want to make a map, you can use this option to 
+        re-enable the offers to make a map.</P>
+    <P><b>Use continuous mode with settling factor</b></P>
+    <P>This option is enabled for Gatan cameras where continuous camera acquisition 
+      can be used through the SerialEMCCD plugin and allows a montage to be acquired 
+      by selecting from the stream of images taken in continuous mode.&nbsp; It is 
+      most effective for OneView cameras, where drift correction can be used in 
+      continuous mode to produce good-quality images even if there is some residual 
+      drift in the images.&nbsp; It could also be useful for taking good-quality 
+      montages with a K2 or Orius camera if the normal settling time after movement is 
+      used, or for taking maps with a reduced settling time.&nbsp; The settling factor 
+      is a multiplier applied to the normal settling time that is allowed to elapse 
+      after an image or stage shift before starting a regular image acquisition.&nbsp; 
+      In continuous mode, the program will allow the modified settling time to elapse 
+      before asking for the next image that comes from the camera.&nbsp; You will need 
+      to experiment with this factor to determine what value gives adequate quality 
+      for your application.&nbsp; Small values like 0.25 to 0.5, or even 0, may be 
+      acceptable with a OneView doing drift correction.</P>
+    <P><b>Turn off Drift Correction for stage montage</b></P>
+    <P>This option is enabled when a montage with stage movement is to be taken with a 
+      OneView camera.&nbsp; If it is turned on, the Drift Correction setting can be 
+      left on in the Record parameters but the correction will not be used when taking 
+      images for the montage.&nbsp; The reason this may be desirable is that the 
+      OneView discards frames that it fails to align, giving images with counts that 
+      are lower proportional to the number of lost frames.&nbsp; This can easily 
+      happen when taking maps of areas that contain some empty regions.&nbsp; The 
+      program keeps track of two settings of this option, one for regular and one for 
+      &quot;high-quality&quot; stage montages (described in the next section).&nbsp; The initial 
+      defaults are to have the option off for high-quality montages and on for regular 
+      ones.</P>
+      <P><B>Use settings for high-quality stage montage</B></P>
+      <P>Use this option to activate a collection of settings that are relevant only when 
+        doing large stage montages for acquisition of data to be analyzed, as opposed 
+        to maps. These options appear when the box is checked:</P>
+      <P><B>Autofocus at each piece</B></P>
+      <P>Select this option to have the autofocus routine run before acquiring each 
+        piece. This will have no effect in Low Mag mode. Turn this on will turn off 
+        'Autofocus in blocks', and vice versa.</P>
+      <P><STRONG>Repeat until drift is below a limit</STRONG></P>
+      <P style="Z-INDEX: 0">Select this option to have autofocus repeated if the drift, 
+        in nanometers per second, is above the limit that you enter in the text 
+        box.&nbsp; The option is available only when autofocusing at each piece.&nbsp; 
+        The program will repeat the autofocus up to five times if necessary, then go on 
+        to acquire the piece.&nbsp; You must have the <A href="#hid_focus_driftprotection">Drift 
+          Protection</A>&nbsp;option in the focus menu selected for 
+        this&nbsp;operation to work.</P>
+      <P><B>Autofocus in blocks of pieces</B></P>
+      <P>Select this option to acquire the montage in square blocks of a size selectable 
+        with the spin button, and to have the autofocus routine run at the center of 
+        each block before starting the block. This option radically changes the order 
+        of piece acquisition. Without blocks, pieces are acquired in columns (along the 
+        Y axis of the camera). With blocks, a whole block is acquired (in columns just 
+        like a montage of that size), then the next block is acquired in Y, etc. After 
+        finishing a column of blocks, the program shifts over by the block size in X to 
+        start the next column.</P>
+      <P><STRONG>Realign with image shift up to a limit</STRONG></P>
+      <P style="Z-INDEX: 0">This option can be used to deal with several problems with 
+        stage montages: irregular movements that produce variable amounts of overlap; 
+        long-term drift that results in overlaps between very long columns being 
+        inadequate because a long interval passes between successive passes up the 
+        column;&nbsp;and even some inaccuracy in the stage calibration.&nbsp; For every 
+        piece after the first one, the program picks an adjacent, 
+        already-acquired&nbsp;piece to align to, moves the stage to the target location 
+        of the piece to be acquired&nbsp;(based on the actual position at which the 
+        neighbor was acquired), autofocuses if that option is selected, then sets image 
+        shift in order to take an image that overlaps as much as possible with the one 
+        from the adjacent piece.&nbsp; The amount to shift is limited by the number in 
+        the text box, in microns.&nbsp; The image is aligned and image shift is then 
+        set to take a picture that is in exactly the right location relative to the 
+        neighbor. However, if the alignment shift is larger than the percentage 
+        indicated in the text box for <STRONG>Maximum alignment shift as % of piece</STRONG>, 
+        then it will be ignored.</P>
+      <P style="Z-INDEX: 0">
+        This option cannot be used together with focusing in blocks.&nbsp; Using image 
+        shift can be slow because of the settling time required after an image 
+        shift.&nbsp;&nbsp;If you are doing&nbsp;extensive acquisition with this option, 
+        you should see if you can reduce this delay time using the procedure described 
+        for&nbsp;<A href="menu_calibration.htm#hid_calibration_set_is_delay_factor">Set IS 
+          Delay Factor</A> in the Calibrate menu.</P>
+    <P style="Z-INDEX: 0">
+        With this option selected, the program will remind you to calibrate image shift 
+        for the current magnification, but only if the possible error in overlap caused 
+        by plausible errors in the current shift calibration is large enough.&nbsp; 
+        Large amounts of image shift as a fraction of the frame size, and narrow overlap 
+        zones, will trigger this reminder.</P>
+      <P style="Z-INDEX: 0"><STRONG>Go from center out; anchor at lower mag</STRONG></P>
+      <P>When using realignment with image shift, this option can be used to protect 
+        against the possibility of poor correlation alignments at the periphery of the 
+        area being acquired (e.g., due to grid bars or empty resin).&nbsp; Pieces will 
+        be acquired from the center outward: for each column, the program starts in the 
+        middle of the column and goes down then up; columns are done from the center 
+        leftward, then from the center rightward.&nbsp; In order to find the center 
+        again for the second half, an 'anchor' image will be taken at the 
+        magnification&nbsp;selected with&nbsp;the spinner and stored in a temporary 
+        file before the montage is started.&nbsp; The program will also use this image 
+        to estimate the backlash occurring between the two directions of 
+        movement.&nbsp; For reliable correlations, the image needs to have a field of 
+        view at least twice as big as the possible drift in stage position over the 
+        first half of the acquisition.&nbsp;&nbsp;Initially, the program will&nbsp;try 
+        to pick a&nbsp;magnification that gives a field of view of at least 20 microns 
+        as long as that is not in low mag; thereafter it will remember your 
+        setting.&nbsp; Be sure that images can be taken at the chosen magnification 
+        without the aperture occupying more than the corners of the image.</P>
+      <P><B>Delay time after moving stage</B></P>
+      <P>The value here sets the delay time between stage movement and the acquisition 
+        of an image. This delay may need to be longer than the default to give images without 
+        drift.&nbsp; Currently, the default of 2 seconds (or whatever is set in the 
+        properties file with &#39;StageMoveDelay&#39;) will be applied as a minimum delay and a 
+        value here of less than the default is ignored.</P>
+      <P><B>Skip correlations used to align pieces</B></P>
+      <P>The correlations that are usually used to assess how well pieces align can 
+        consume a significant fraction of the acquisition time, especially when the 
+        option is checked in the Montage Control Panel to treat the montage as 'Very 
+        sloppy'. Use this option to disable the correlations. Note that correlations 
+        will not be done for montages with more than 200 pieces, regardless of this 
+        setting.</P>
+    </basefont>
+  </BODY>
+</HTML>

@@ -1,0 +1,533 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+  <HEAD>
+    <TITLE>Navigator Window</TITLE>
+    <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
+    <style type="text/css"> <!-- BODY { font-family:"Arial" } TD { font-size:16 } 
+  --></style>
+  </HEAD>
+  <BODY BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+      <P><A NAME="hidd_navigator"></A><B><FONT size="3">Navigator Window</FONT></B></P>
+      <P>The Navigator window is used to keep track of stage positions and low 
+        magnification maps and can assist with locating positions on the grid after it 
+        has been rotated or repositioned in the holder. Each stage position and 
+        associated information is referred to as an item. The window has five kinds of 
+        controls; the table below has links to the controls with the most lengthy 
+        explanations:</P>
+      <TABLE BORDER style="Z-INDEX: 0" cols="2">
+        <TR VALIGN="top">
+          <TD width="256"><A HREF="#nav_current_item">Properties of Current Item</A></TD>
+          <TD>At the top, properties of the currently selected item.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="256"><A HREF="#nav_acquire_controls">Acquisition Controls</A></TD>
+          <TD>Between item properties and the horizontal line, controls to set the properties 
+          when acquiring data at the current item.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="256">&nbsp;&nbsp;&nbsp;&nbsp; <A HREF="#navac_acquire">Acquire</A></TD>
+          <TD>&nbsp;&nbsp; Mark items at which to acquire an image or map or run a script.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="256">&nbsp;&nbsp;&nbsp;&nbsp; <A HREF="#navac_tiltseries">Tilt series</A></TD>
+          <TD>&nbsp;&nbsp; Mark items at which to acquire tilt series.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="256">&nbsp;&nbsp;&nbsp;&nbsp; <A HREF="#navac_newfile">New file at item</A></TD>
+          <TD>&nbsp;&nbsp; Select to start a new file when acquiring the item.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="256">&nbsp;&nbsp;&nbsp;&nbsp; <A HREF="#navac_newfile_group">New file at group</A></TD>
+          <TD>&nbsp;&nbsp; Select to start a new file when this item's group is reached</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="256">&nbsp;&nbsp;&nbsp;&nbsp; <A HREF="#navac_fileprops">File Properties</A></TD>
+          <TD>&nbsp;&nbsp; Adjust properties or type of file being opened</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="256">&nbsp;&nbsp;&nbsp;&nbsp; <A HREF="#navac_imagestate">Image State</A></TD>
+          <TD>&nbsp;&nbsp; Store the current imaging state to be used for acquisition.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="256"><A HREF="#nav_general_behavior">Controls of General Behavior</A></TD>
+          <TD>Below the horizontal line, on the right, some controls governing overall behavior.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="256">&nbsp;&nbsp;&nbsp;&nbsp; <A HREF="#navgb_registration">Current Registration</A></TD>
+          <TD>&nbsp;&nbsp; Adjust the registration number for a repositioned grid.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="256">&nbsp;&nbsp;&nbsp;&nbsp; <A HREF="#navgb_collapse">Collapse Groups</A></TD>
+          <TD>&nbsp;&nbsp; Summarize groups of consecutive points with a single line in the
+          list box.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="256">&nbsp;&nbsp;&nbsp;&nbsp; <A HREF="#navgb_showacquire">Show Acquire Area</A></TD>
+          <TD>&nbsp;&nbsp; Display a box in the image representing area to be acquired.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="256">&nbsp;&nbsp;&nbsp;&nbsp; <A HREF="#navgb_editmode">Edit Mode</A></TD>
+          <TD>&nbsp;&nbsp; Toggle an editing mode to select, add, and move points with the mouse.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="256"><A HREF="#nav_action_buttons">Action Buttons</A></TD>
+          <TD>Below the line, on the left, pushbuttons for the most commonly used actions.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="256">&nbsp;&nbsp;&nbsp;&nbsp; <A HREF="#navab_newmap">New Map</A></TD>
+          <TD>&nbsp;&nbsp; Store the current image as a new map item.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="256">&nbsp;&nbsp;&nbsp;&nbsp; <A HREF="#navab_anchormap">Anchor Map</A></TD>
+          <TD>&nbsp;&nbsp; Make a lower-magnification map for realigning to the current item.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="256">&nbsp;&nbsp;&nbsp;&nbsp; <A HREF="#navab_realign">Realign to Item</A></TD>
+          <TD>&nbsp;&nbsp; Reposition at the current item by correlating with maps.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="256"><A HREF="#nav_list_box">Item List Box</A></TD>
+          <TD>In the lower right, a box containing a list of items and their properties.</TD>
+        </TR>
+      </TABLE>
+      <BR>
+
+      <P>The Navigator window can be resized to show more or less of the list box.</P>
+      <P><i><A NAME="nav_current_item"></A><B><FONT size="3">Properties of Current Item</FONT></B></i></P>
+      <P><B>Label</B></P>
+      <P>The label is a short identifier that will be drawn on the image. The Navigator 
+        will assign labels as sequential numbers but you are free to edit them to say 
+        something more meaningful.</P>
+      <P><B>Registration Point</B></P>
+      <P>Use this check box to mark a point as a registration point, which can be used to 
+        transform locations when the grid is repositioned in the holder. The first time 
+        that you set up a registration, you can use the spin buttons to select a unique 
+        point number (this should happen automatically). When you are adding 
+        corresponding points in a new registration, use the spin buttons to make each 
+        point number match the number of the corresponding point in the previous 
+        registration.</P>
+      <P><B>Corner Point</B></P>
+      <P>Use this check box to mark a point as a corner of an area for which you want to 
+        construct a montage.</P>
+      <P><B>Color</B></P>
+      <P>You can change the color of an item with this selector. By default, single 
+        points are red, drawn polygons are green, maps are blue, and supermontage 
+        polygons are yellow.&nbsp; You can also select &quot;NoRealign&quot; here to prevent a map 
+        from being used for the first stage of the the Realign to Item routine.&nbsp; 
+        The item will be drawn in dark blue in this case.&nbsp; When a point or map is 
+        marked for acquisition and still has its default color, it is shown in a 
+        brighter red or blue, respectively (not quite magenta or not quite cyan).&nbsp; 
+        A point that is the current item or that is one of multiple selected items is 
+        shown in orange-yellow.&nbsp; In both of these cases, the item still has the 
+        basic color shown in this box.</P>
+      <P><B>Draw</B></P>
+      <P>Use this check box to control whether an item is drawn on images that it falls 
+        within.&nbsp; When groups are collapsed and a group is selected in the table, 
+        this box is still available as long as all items summarized on that table line 
+        have the same drawing state, and it can be used to toggle the drawing on or off 
+        for all of those items.</P>
+      <P><B>Rotate when load</B></P>
+      <P>Turn on this check box to have a newly loaded map automatically rotated into the 
+        same orientation as images at the current magnification. Rotation can take many 
+        seconds for very large maps.</P>
+      <P><B>For anchor state</B></P>
+      <P>Use this check box to mark a map item as a template for acquiring further 
+        medium-magnification maps that will be suitable for realigning to. Only one map 
+        item can be marked as such a template, so if there is already a map marked for 
+        this, it will be unselected when you check the box for a new item. See <B>Anchor Map</B>
+        below for details.</P>
+      <P><B>Item #</B></P>
+      <P>To the left of the Note text box appears the number of the current item in the 
+        table, numbered from 1. When the current table line is a summary of a group of 
+        points, their range of item numbers is shown.</P>
+      <P><B>Note</B></P>
+      <P>This text box allows you enter an arbitrarily long note about the current item.</P>
+      <P><b><i><A NAME="nav_acquire_controls"></A>Acquisition Controls<B><FONT size="3"></FONT></B></i></b></P>
+      <P><B><A NAME="navac_acquire"></A>Acquire</B></P>
+      <P>Use this check box to mark an item as a position to be acquired automatically. 
+        After marking such items, you can use the <A HREF="menu_navigator.htm#hidc_navigator_acquire">
+          Acquire at Points command</A> to open the <A HREF="hidd_navacquire.htm">Navigator 
+          Acquire dialog box</A> and then acquire images at the sequence of locations 
+        and make each into a map, or perform other actions at each location. There are 
+        three hot keys that can be used to toggle this option on or off, provided that 
+        the main program window has the keyboard focus. The A key will just toggle the 
+        item currently selected in the list box. Ctrl-Shift-A will toggle all of the 
+        items. Shift-A can be used to toggle a selected range of items, but it has to 
+        be pressed twice to do so. First select the item at one end of the range with 
+        the mouse (or arrow keys) and press Shift-A. Then make the item at the other 
+        end of the range be the current item, and press Shift-A again. The Acquire 
+        state will be toggled for items between the first and second selection, except 
+        for items marked for tilt series.</P>
+      <P><B><A NAME="navac_tiltseries"></A>Tilt Series</B></P>
+      <P>Use this checkbox to set up a tilt series to be acquired at the current item's 
+        location. The first time that you select a tilt series, a series of dialogs 
+        will open:</P>
+      <OL>
+        <LI>
+          A small dialog allowing you to specify whether the tilt series is a single 
+          frame or a montage.
+        </LI>
+        <LI>
+          The <A HREF="hidd_montagesetup.htm">Montage Setup dialog box</A> , if you 
+          selected a montage.</LI>
+        <LI>
+          The <A HREF="hidd_fileproperties.htm">File Properties dialog box</A>
+        </LI>
+        <LI>
+          The <A HREF="afx_hidd_filesave.htm">Save As dialog box</A> for specifying the 
+          output file. The file will not be opened at this time, but the program will 
+          check whether this same filename is already scheduled to be used.</LI>
+        <LI>
+          The <A HREF="hidd_tiltseries.htm">Tilt Series Setup dialog box</A> , allowing 
+          you to set properties for this tilt series.
+        </LI>
+      </OL>
+      <P>If you cancel any of these dialogs, or the filename you select is already in 
+        use, the item will not be marked for a tilt series.</P>
+      <P>When you select a tilt series for an item and there is an item before it in the 
+        table already marked for a tilt series, no dialogs will open: all of the 
+        properties will be inherited from the preceding item, and a new filename will 
+        be generated by increasing a number, or adding one if there is no number in the 
+        previous name. However, you can change any of these properties by pressing the <B>File 
+          Properties</B>, <B>TS Parameters</B>, or <B>Filename</B> buttons, including 
+        whether the file is single-frame or montage.</P>
+    <P>When you use <B>TS Parameters</B> and leave the Tilt Series Setup dialog by 
+      pressing <b>OK</b>, the selected item will be given a new set of parameters if 
+      it is inheriting them from previous items.&nbsp; The new parameters will be 
+      inherited by any following items that shared these parameters and that have not 
+      been given their own parameters in this way.&nbsp; Similarly, when you use <B>File 
+          Properties</B> and leave the File Properties dialog with <b>OK</b>, the 
+      selected item will get its own parameters if they are being inherited from 
+      previous ones, and any following ones sharing these parameters will inherit the 
+      changes.&nbsp; Thus, the rule for both of these kinds of properties is that if 
+      you have never gone through the dialog for an item, the item will inherit the 
+      properties from the nearest previous item where you have gone through the 
+      dialog.&nbsp; The log window will show messages about these effects of changing 
+      parameters.</P>
+      <P>An imaging state will not be set for a tilt series unless you press the <B>
+        Imaging State</B> button; when no state is set, the tilt series starts
+        with whatever pre-existing state exists.  Press the button to save the
+        current state, which includes the current
+        camera and Record image size and exposure parameters and whether the
+        program is in Low Dose mode or not.  When not in low dose, the state includes the beam
+        intensity, spot size, and energy filter settings if any.  When in
+        low dose, the Record area parameters are saved as a whole, which
+        encompasses those same parameters plus the magnification.
+    <P><B><A NAME="navac_newfile"></A>New file at item</B></P>
+    <P>This checkbox allows you to open a new file
+       for the current item if it is marked as 'Acquire'.&nbsp; These dialogs will open 
+      the first time that you check this, and in some other cases:</P>
+      <OL>
+        <LI>
+          A small dialog allowing you to specify whether the tilt series is a single 
+          frame or a montage. If you select montage and the item is a polygon, then you 
+          also have the option to fit the montage to the polygon.</LI>
+        <LI>
+          The <A HREF="hidd_montagesetup.htm">Montage Setup dialog box</A> , if you 
+          selected a montage.</LI>
+        <LI>
+          The <A HREF="hidd_fileproperties.htm">File Properties dialog box</A>
+        </LI>
+        <LI>
+          The <A HREF="afx_hidd_filesave.htm">Save As dialog box</A> for specifying the 
+          output file. The file will not be opened at this time, but the program will 
+          check whether this same filename is already scheduled to be used.</LI></OL>
+      <P>If you cancel any of these dialogs, or the filename you select is already in 
+        use, the item will not be set for a new file.</P>
+      <P>Usually, if there is a file scheduled to open for a preceding item marked 
+        'Acquire', no dialogs will open: properties will be inherited from the 
+        preceding item, and a new filename will be generated by increasing a number, or 
+        adding one if there is no number in the previous name. These properties include 
+        the list of montage pieces needed to fit to a polygon; thus, if the preceding 
+        item has a montage fit to a polygon and the current item is a point, the new 
+        file will be a montage fitting the shape of that polygon but taken at the new 
+        location. You can then change the automatically inherited properties with the <B>File Properties</B> or <B>Filename</B> buttons, 
+        including whether the file is single-frame or montage. The exception to this is 
+        when the preceding item has a montage fit to a polygon and the current item is 
+        a polygon. In this case, the dialogs will open so that you can choose to fit a new 
+        montage to this polygon.</P>
+      <P><B><A NAME="navac_newfile_group"></A>New file at group</B></P>
+      <P>Use this checkbox to set up a new file to be opened when the first item in a 
+        group is about to be acquired. This option operates similarly to 'New file at 
+        item', except that the option to fit a montage is not enabled. It does not 
+        matter which item in the group is the current item, or whether the current line 
+        is a summarized group, when you select this option.</P>
+      <P>You will not be able to define a new file for a group if any item in the group 
+        is marked as 'Tilt Series' or is set to have a new file opened at it. 
+        Similarly, once a new file is scheduled for a group, the 'Tilt series' and 'New 
+        file at item' options are not available for any items in the group.</P>
+      <P><B><A NAME="navac_fileprops"></A>(Set) File Properties</B></P>
+      <P>Use this button to check or adjust the properties of a file that is scheduled to 
+        be opened for image or tilt series acquisition. The small dialog will open to 
+        allow you select montaging and fitting to a polygon if appropriate, then the <A HREF="hidd_montagesetup.htm">
+          Montage Setup dialog box</A> , if you selected a montage, then the <A HREF="hidd_fileproperties.htm">
+          File Properties dialog box</A> . If you cancel the latter box, changes made 
+        in the montaging properties will be retained.</P>
+      <P><B><A NAME="navac_imagestate"></A>(Set) Imaging State</B></P>
+      <P>Use this button to store the current imaging state (microscope settings and 
+        Record parameters) as a state to be set when the current item is about to be 
+        acquired.&nbsp; When in Low Dose mode, the state also includes the axis position 
+        of the Focus area and the amount that a subarea is displaced from the center in 
+        the Focus camera parameters.&nbsp; One or both of these settings can thus be 
+        varied between tilt series to focus on favorable locations.&nbsp; This button is enabled whenever there is a file set to be opened for 
+        the current item or group of items (including for a tilt series). The state is 
+        set when the Navigator first moves to the item position. Once you have a state 
+        set, the acquisition code in the item table (in the Acq column) will have an S 
+        at the end. To assess and modify the stored state for the current item, press <B>Scheduled 
+          State</B> in the <A HREF="hidd_statedlg.htm">Imaging State dialog box</A> , 
+        modify the state as desired, and press this <B>Imaging State</B> button to 
+        store the modified state.</P>
+      <P><B>(Set) TS Parameters</B></P>
+      <P>Use this button to check or adjust the parameters for the tilt series set to be 
+        acquired at the current item. The <A HREF="hidd_tiltseries.htm">Tilt Series Setup 
+          dialog box</A> will open, and new settings will be stored unless you Cancel 
+        out of the dialog.</P>
+      <P><B>(Set) Filename</B></P>
+      <P>Use this button to change the name of the file that is set to be opened for this 
+        item or group. The existing filename is shown just to the right of this button.</P>
+      <P><i><A NAME="nav_general_behavior"></A><B><FONT size="3">Controls of General Behavior</FONT></B></i></P>
+      <P><B><A NAME="navgb_registration"></A>Current Registration</B></P>
+      <P>The current registration starts at 1 and should be increased every time the grid 
+        is repositioned in the holder or the holder is replaced in the microscope. Use 
+        the spin button to change the current registration. An image is associated with 
+        the current registration when it is acquired. When items are created by marking 
+        on images, they are assigned the registration of the image, which is not 
+        necessarily the current registration.</P>
+      <P><B>(Draw:) All Reg.</B></P>
+      <P>Ordinarily the only items that will be drawn on an image are ones with the same 
+        registration as the image. Use this check box to turn on drawing of items from 
+        other registrations.</P>
+      <P><B>(Draw:) None</B></P>
+      <P>Use this check box to turn off drawing of all items.</P>
+    <P><b>(Draw:) Labels</b></P>
+    <P>Use this checkbox to turn on or off the drawing of labels.&nbsp; With it off, 
+      no labels will appear.&nbsp; With it on, labels will appear except for points in 
+      groups larger than a threshold size that can be set with the 
+      <A HREF="menu_navigator.htm#hid_options_setpointlabelthreshold">Set Point Label Threshold</A> command.</P>
+      <P><B><A NAME="navgb_collapse"></A>Collapse Groups</B></P>
+      <P>Items that are added together by various means are marked as belonging to a 
+        group with a unique ID number. Use this check box to have each group summarized 
+        by a single line in the table, showing the number of items in the group, the 
+        last 4 digits of the ID, the labels of the first and last points in the group, 
+        and whether some or all items in the group are marked for acquisition (Acq) or 
+        tilt series (TS). Several operations can be performed on all of the items 
+        summarized in a line: updating the Z coordinate, changing acquire status, and 
+        deleting. If you drag another item into the middle of a group, the items before 
+        and after that nonmember will be summarized on separate lines. In such a case, 
+        the operations just mentioned will be performed only on the items summarized on 
+        the selected line, not on the whole group.</P>
+      <P>When a summarized group is the current line, the 'Acquire' checkbox reflects 
+        whether the first item in the group is marked as 'Acquire'. Toggling the 
+        checkbox or typing 'A' will toggle the 'Acquire' status of the first item and 
+        set all the other items summarized on that line to the same status, except for 
+        items marked for tilt series.</P>
+      <P><B><A NAME="navgb_showacquire"></A>Show Acquire Area</B></P>
+      <P>Use this check box to turn on drawing of a yellow box representing the current 
+        acquisition area, centered on the marker point in the current image, which is 
+        placed by clicking with the left mouse button.&nbsp; The box will also be 
+        displayed around the endpoint of a drawn line; thus, you can hold down the Shift 
+        key and press and hold the left mouse button, and move the box around with the 
+        mouse.&nbsp; The acquisition area is defined by the size of a montage when 
+        montaging is on, otherwise by the size of a Record image at the current 
+        magnification or at the magnification of the Record area when in Low Dose mode.</P>
+    <P><B><A NAME="navgb_editmode"></A>Edit Mode</B></P>
+    <P>Use this button to turn on a mode in which the mouse can be used for editing 
+      points in a way similar to modeling mode in 3dmod.&nbsp; Ordinarily, Ctrl-left 
+      button click can be used to select the nearest point or polygon as the current 
+      item, which is drawn with thicker lines in the display.&nbsp; In Edit mode:</P>
+    <ul>
+      <li>Left button click will select the nearest point or polygon as the current 
+        item.</li>
+      <li>Ctrl-left button click will <b>add</b> the nearest point or polygon to a list 
+        of selected items, or remove it from the list if it is already 
+        selected.&nbsp; All selected items will be drawn with thicker lines.&nbsp; The
+        <b>Delete Item</b> button can then be used to delete all points at once.</li>
+      <li>Left button double-click will delete the nearest point if it is already the 
+        current item, it is the only item selected, and the Ctrl key is not down.&nbsp; 
+        To delete a point, you need to single-click to select it then double-click to 
+        delete it.</li>
+      <li>Middle button click will add a point to the group to which the current point 
+        belongs.</li>
+      <li>Right button click will move the currently selected point to a new position.</li>
+      <li>Backspace will delete the currently selected point.</li>
+      <li><b>Add Points</b>, <b>Add Polygon</b>, and <b>Move Item</b> can still be used 
+        in Edit mode, and the left button will no longer select a point during those 
+        operations.</li>
+    </ul>
+      <P><i><A NAME="nav_action_buttons"></A><B><FONT size="3">Action Buttons</FONT></B></i></P>
+      <P><B>Add Stage Pos</B></P>
+      <P>Use this button to add the current stage position as a point item. Note that the 
+        stage position will be adjusted by any image shift, so it may not match the 
+        current X/Y coordinates of the stage.</P>
+      <P><B>Add Points</B></P>
+      <P>Use this button to start adding one or more points by clicking in an image with 
+        the left or middle mouse button. Each point will become a separate item. Push 
+        the button again to stop adding points. While you are adding points, you can 
+        press backspace to delete the points backwards one by one, and you can use the 
+        right mouse button to adjust the position of the last added point. </P>
+      <P><B>Add Polygon</B></P>
+      <P>Use this button to start drawing a polygon by clicking points in an image with 
+        the left or middle mouse button. The polygon can then be used to define an area to be 
+        montaged. Push the button again when you are done adding points; the last point 
+        will then appear connected to the first. While you are adding points, you can 
+        press backspace to delete the points backwards one by one, and you can use the 
+        right mouse button to adjust the position of the last added point.</P>
+      <P><B>Add Marker</B></P>
+      <P>The marker is the green cross that is deposited on an image by clicking with the 
+        left mouse button. Use this button to add a point at the marker position in the currently active image.</P>
+      <P><B>Move Item</B></P>
+      <P>Use this button to reposition the current item by clicking a new center position 
+        for it in an image with the left or right mouse button. Push the button again to stop moving the item.&nbsp; 
+        If the item is a map, you will be asked to confirm the change.</P>
+      <P><B>Update Z</B></P>
+      <P>Use this button to change the Z value of the current item to the current Z 
+        position of the stage. If the current line in the table is a summarized group, 
+        all group members summarized there will be changed.</P>
+      <P><B>Go To XY</B></P>
+      <P>Use this button to move the stage to the position of the current item in X and 
+        Y, leaving Z unchanged. Image shift will be reset to zero when you move the 
+        stage.</P>
+      <P><B>Go To XYZ</B></P>
+      <P>Use this button to move the stage to the position of the current item in X, Y, 
+        and Z.</P>
+      <P><B>Go To Marker</B></P>
+      <P>The marker is the green cross that is deposited on an image by clicking with the 
+        left mouse button. Use this button to move the stage to the location 
+        corresponding to the marker position in the currently active image.</P>
+      <P><B>Load Map</B></P>
+      <P>Use this button to load in the image for a map, if the current item is a map. 
+        The image will be left in the buffer used for read-in images (typically E). If 
+        the map is a montage, the overview will be copied from B to this buffer. Maps 
+        can be loaded regardless of whether another file is open for saving images.&nbsp; 
+        If the current item is a point that was drawn on a montaged map, this button is 
+        relabeled Load Piece and it will load a frame containing this point.&nbsp; If 
+        the point is relatively near an edge or corner, the program will synthesize a 
+        frame from 2 or 4 overlapping pieces.</P>
+      <P><B><A NAME="navab_newmap"></A>New Map</B></P>
+      <P>Use this button to define the current image as a map. A map consists of an 
+        image that has been saved to a known file. There must be an open file to create 
+        a map. If the current open file has single frames, the image in buffer A must 
+        either have been saved to the file or be capable of being saved to it. If the 
+        file is a montage, the image in Buffer B must be an overview from a montage 
+        capture. It is possible to use an image or montage overview read in from a file 
+        to make a map.&nbsp; For a single image, not all information is kept track of 
+        when the image is saved and read back in, but it may work well enough if no 
+        conditions have changed since the image has taken.&nbsp; For a montage, all 
+        information needed for making a map is stored in the .mdoc file (as of SerialEM 
+        4.6.0, Dec. 19, 2016) and this will be used instead of any current settings.&nbsp; 
+        Thus, there should not be any problem making a map from a read-in montage, even 
+        if the file has been closed and reopened.</P>
+      <P>If the image in Buffer A has not yet been saved to a file, then the first time 
+        this occurs for a particular file, you will be asked whether you want images 
+        automatically saved to this file whenever you select this command. If you 
+        answer yes, then the image in question will be saved, and future images will 
+        also be saved provided that this file is the current file. If you answer no, 
+        then each time you try to make a map without saving an image, you will be asked 
+        if you want to save it to the file.</P>
+    <P>The binning of the montage overview used to define the map does not affect 
+      anything in the later use of the map.&nbsp; By default, montage maps are read 
+      back in unbinned if possible, and you will typically want to read a map back in 
+      before using it.</P>
+      <P><B><A NAME="navab_anchormap"></A>Anchor Map</B></P>
+      <P>This button conveniently makes an intermediate-magnification map for realigning 
+        to later, such as when starting a tilt series. The button is enabled when 'For 
+        anchor state' has been checked for a map that will provide a template for further 
+        anchor maps. It performs the following operations:</P>
+      <OL>
+        <LI>
+          Makes a map of the current image if that seems appropriate (it is not already a 
+          map, it was taken at a higher magnification than the anchor map will be taken, 
+          and it would be possible to press 'New Map' successfully). This is the item to 
+          mark for acquisition, so that when the program realigns to this item, it will 
+          align both to the anchor map and to this map image.</LI>
+        <LI>
+          Sets the imaging state to the state at which the item marked as 'For anchor 
+          state' was acquired, and makes the file in which that map was saved be the 
+          current file, opening it if necessary . This is equivalent to running <A HREF="menu_navigator.htm#hid_navigator_setacquirestate">
+            Set Map Acquire State</A> from the Navigator menu or the <A HREF="hidd_statedlg.htm">
+            Imaging State dialog box</A> .</LI>
+        <LI>
+          Acquires an image and makes it a map, prefixing its note with 'Anchor'.</LI>
+        <LI>
+          Restores the imaging state and the current file, closing the map file if it was 
+          opened. This is equivalent to running <A HREF="menu_navigator.htm#hid_navigator_restorestate">
+            Restore State</A> from the menu or the Imaging State dialog.</LI>
+        <LI>
+          Sets the current Navigator item back to the first new map that was created, or 
+          to the item that was current before starting the procedure.</LI>
+        <LI>
+          Runs the routine to adjust coordinates for backlash if the stage is still at the 
+          position of the current item and not in a known backlash-corrected state, and 
+          adjusts the coordinates of both that item and the anchor map.&nbsp; This is 
+          equivalent to running <A HREF="menu_navigator.htm#hid_navigator_adjust_backlash">
+            Adjust for Backlash</A> from the Navigator menu.  The routine will not be run 
+            if you select the option not to adjust or ask about adjusting for backlash by 
+            running <A HREF="menu_navigator.htm#hid_navigator_backlashsettings">
+            Backlash Settings</A> from the Navigator menu.</LI></OL>
+      <P><B><A NAME="navab_delete"></A>Delete Item</B></P>
+      <P>Use this button to delete an item from the list, a group of items summarized 
+        on the selected line, or multiple selected items. You will be asked to confirm deletion of a map because it 
+        would be hard to recreate. For a group of items, or if you have selected 
+        multiple points in Edit mode with Ctrl-left mouse button, you will be informed of how 
+        many items are to be deleted and asked to confirm the deletion.&nbsp; If you do 
+        select multiple points when groups are collapsed, the selected points will be 
+        deleted rather than the ones summarized on the selected line.&nbsp; </P>
+    <P>Another way to delete a contiguous set of points is by using Shift D twice.&nbsp; 
+      With &#39;Collapse groups&#39; turned off, click to select one end of the range and 
+      press Shift D.&nbsp; Then select the other end of the range and press Shift D 
+      again.&nbsp; You will be asked to confirm the deletion if there are more than 3 
+      points to be deleted.&nbsp; Only point items in the range will be deleted, not 
+      maps or polygons.</P>
+      <P><B><A NAME="navab_realign"></A>Realign to Item</B></P>
+      <P>This button will start a routine to return accurately to the position of the 
+        current item by cross-correlation with an appropriate map. See the <A HREF="menu_navigator.htm#hid_navigator_aligntoitem">
+          Realign to Item command </A>for details.</P>
+      <P><i><A NAME="nav_list_box"></A><B><FONT size="3">Item List Box</FONT></B></i></P>
+      <P>The list box shows all of the items and their properties. It can be scrolled to 
+        bring text into view, or the whole window can be made bigger if desired. The 
+        following actions can be done in the box:</P>
+      <UL>
+        <LI>
+          Single clicking on an item will make it the current item.</LI>
+        <LI>
+          Double clicking on a map will load and display the map.</LI>
+        <LI>
+          Double clicking on a point item drawn on a montage map will load the montage 
+          frame containing the point.</LI>
+        <LI>
+          Up and Down arrow keys will move the current selection up and down in the list, 
+          as long as the main program window has the keyboard focus. Ordinarily these 
+          arrow keys would pan an image up or down, but when the Navigator is open they 
+          will move the list box selection instead.</LI>
+        <LI>
+          Items can be reordered by drag and drop; click on an item and hold the left 
+          mouse button down while dragging the item to the desired place. This even works 
+          when groups are collapsed to a single line.</LI></UL>
+      <P>Although the box does not allow selection of multiple items by the usual Shift 
+        or Ctrl clicking, a range of points can be selected for deletion or toggling of 
+        the acquisition state by pressing Shift D or Shift A twice, once at each end of 
+        the range.&nbsp; See the description of these operations under <b>
+        <a href="#navab_delete">Delete Item</a></b> 
+        and <b><a href="#navac_acquire">Acquire</a></b>.</P>
+    <P>The properties shown for each item are the label, the color, the X, Y and Z 
+        coordinates, and the type of item (point, polygon, or map, 'Imp' for imported 
+        map, 'Anc' for item to use for anchor map state). Next is the registration number 
+        with which the item is associated. If the item is a registration point, the 
+        point number is shown as well, with an entry '#R#', where the first # is the 
+        registration number with which the point is associated, and the second # is the 
+        unique point number for this point. Next is a cryptic summary of the 
+        acquisition status of the item:</P>
+      <P>C: corner point<BR>
+        A: Acquire item<BR>
+        AF: Acquire item at which a file it set to be opened<BR>
+        AG: Acquire item and member of a group, where a new file is to be opened on the 
+        first point of the group<BR>
+        TS: Tilt series to be acquired<BR>
+        AFS, AGS, TSS: A stored state will be set when the file is opened, or earlier 
+        for a tilt series<BR>
+      </P>
+      <P>Finally, the note will appear at the end of the line.</P>
+    </basefont>
+  </BODY>
+</HTML>
