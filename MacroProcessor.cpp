@@ -711,6 +711,7 @@ int CMacroProcessor::TaskBusy()
         Sleep(10);
       return 1;
     }
+    mWinApp->SetStatusText(SIMPLE_PANE, "");
     mSleepTime = 0.;
   }
 
@@ -2298,6 +2299,8 @@ void CMacroProcessor::NextCommand()
     else
       mSleepTime = 1000. * delISX;
     mSleepStart = GetTickCount();
+    if (mSleepTime > 3000)
+      mWinApp->SetStatusText(SIMPLE_PANE, "WAITING FOR DELAY");
 
   } else if (CMD_IS(WAITFORDOSE)) {                         // WaitForDose
     mDoseTarget = itemDbl[1];
