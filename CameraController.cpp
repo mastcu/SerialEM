@@ -8924,8 +8924,9 @@ CString CCameraController::MakeFullDMRefName(CameraParameters *camP, const char 
   CString ref, root, ext;
   if (!camP->DMRefName.IsEmpty()) {
     ref = mWinApp->mGainRefMaker->GetDMRefPath();
-    if (camP->useSocket && CBaseSocket::ServerIsRemote(GATAN_SOCK_ID)) 
-      ref = mWinApp->mGainRefMaker->GetRemoteRefPath();
+    ext = mWinApp->mGainRefMaker->GetRemoteRefPath();
+    if (camP->useSocket && CBaseSocket::ServerIsRemote(GATAN_SOCK_ID) && !ext.IsEmpty()) 
+      ref = ext;
     if (!ref.IsEmpty()) {
       ref += "\\" + camP->DMRefName;
       for (int ind = 0; ind < 4; ind++) {

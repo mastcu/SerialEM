@@ -236,8 +236,7 @@
       <a href="hidd_k2_save_options.htm">K2 Frame File Options dialog</a> also allows you to save the data as TIFF files with LZW 
       or ZIP compression; LZW is best for unnormalized data and is also much faster.&nbsp; 
       If you save data as compressed TIFF files, the program &#39;tif2mrc&#39; in IMOD can be 
-      used to convert each file to MRC format before processing it; or, with version 
-      4.7 or higher, any IMOD program can be run directly on the TIFF files.<p>
+      used to convert each file to MRC format before processing it; or, in fact, any IMOD program can be run directly on the TIFF files.<p>
       To take 
       advantage of this option, you can select either unprocessed or dark-subtracted instead of 
       gain normalized images in the <A HREF="hidd_camerasetup.htm">Camera Setup dialog</A> 
@@ -284,17 +283,36 @@
       &#39;defects...txt&#39; describing the defects that need to be corrected in 
       post-processing. You can convert the gain reference to an MRC 
       file with the IMOD program &#39;dm2mrc&#39; or, again, use it directly in any 
-      program with version 4.7 or higher.&nbsp; The gain reference will need to be rotated 
+      program.&nbsp; The gain reference will need to be rotated 
       and/or flipped by the same operations described in the camera configuration in 
       DM, unless the frames are saved without rotation and flipping as provided by an 
       option in the
-      <a href="hidd_k2_save_options.htm">Frame File Options dialog</a>. Specifically, use the IMOD commands &#39;newstack -rot -angle&#39; to rotate, 
-      where &#39;-angle&#39; is the negative of the rotation angle in DM, followed by &#39;clip 
-      flipy&#39; to flip around the Y axis.&nbsp;
+      <a href="hidd_k2_save_options.htm">Frame File Options dialog</a>. There are 
+      several ways to handle this:<ol>
+      <li>In the general case, use the IMOD commands 
+        <br />
+&nbsp;&nbsp; newstack -near -rot -angle reference.dm4&nbsp; rotated.mrc<br />
+        to rotate, where &#39;-angle&#39; is the negative of the rotation angle in DM, followed 
+        by<br />
+&nbsp;&nbsp; clip flipy rotated.mrc rotFlipped.mrc<br />
+        to flip around the Y axis.</li>
+      <li>The header of the frame stacks will have a title line with the text &#39;r/f&#39; 
+        followed by a value corresponding to a RotationAndFlip entry in the SerialEM 
+        properties file.&nbsp; This value is the rotation counterclockwise divided by 90 
+        (i.e., 1, 2, or 3 for angles of 90, 180 or 270) plus 4 for a flip around the Y 
+        axis before the rotation.&nbsp; Thus for the general case you would need to do<br />
+&nbsp;&nbsp;&nbsp; clip flipy reference.dm4 flipped.mrc<br />
+        first for a value of 4-7, followed by
+        <br />
+&nbsp;&nbsp;&nbsp; newstack -near -rot angle flipped.mrc rotFlipped.mrc</li>
+      <li>With IMOD 4.9.2 or higher, or 4.10.1 or higher, the &#39;clip&#39; program can do the 
+        rotation with the universal &#39;norm&#39; command given below in the section starting &#39;<i>In IMOD version 4.8.41 or higher.</i>&#39;&nbsp; 
+        It must be given the &#39;-R&#39; option with either the SerialEM rotation/flip value 
+        applied to the frames, or -1 to read the r/f value from the frame stack header.</li>
+    </ol>
       <p>
         Once you have the reference in the right orientation, you can use the program 
-        &#39;clip&#39; in IMOD to apply gain normalization (with version 4.6.26 or 
-        higher) and defect correction (with version 4.8.6 or higher).&nbsp; In 
+        &#39;clip&#39; in IMOD to apply gain normalization (and defect correction with version 4.8.6 or higher).&nbsp; In 
         the following, &#39;scalingFactor&#39; is the regular scaling factor applied to summed 
         images, &#39;fileWithFrames&#39; is the data file to normalize, &#39;gainReference.mrc&#39; 
         is the reoriented gain reference, and &#39;normalizedFrames.mrc&#39; is the desired 
@@ -329,21 +347,22 @@
         It is also possible to remove extreme values from the data at the same time with 
         the &#39;-h&#39; and &#39;-l&#39; options.&nbsp; For example, adding &#39;-h 6 -l 1&#39; after the 
         &#39;unpack&#39; will replace all values above 6 with 1.</li>
-    </ul>
-      <p>
+        </ul>
+        <p>
         To apply defect correction to files from GMS 2.3.1 or higher, add &#39;-D 
         defects...txt&#39; before &#39;fileWithFrames&#39; in the appropriate command, where 
         &#39;defects...txt&#39; is the file saved by the plugin.</p>
     <p>
-        In IMOD version 4.8.41 or higher, all programs can read 4-bit files directly.&nbsp; 
+        <i>In IMOD version 4.8.41 or higher</i>, all programs can read 4-bit files directly.&nbsp; 
         The &#39;clip unpack&#39; command has thus been changed so that it can be used for 
         normalizing any kind of data, and it can also be invoked as either &#39;clip unpack&#39; 
         or &#39;clip norm&#39;.&nbsp; A command that works for all of the above cases is<br />
 &nbsp;&nbsp;&nbsp; clip norm -n scalingFactor&nbsp; -m 1&nbsp; fileWithFrames&nbsp; gainReference.mrc 
         normalizedFrames.mrc<br />
         where the default scaling factor is 16, extreme values can be removed with &#39;-l&#39; 
-        and &#39;-h&#39; options,&nbsp; and &#39;-D defects...txt&#39; would be added for files from GMS 
-        2.3.1 or higher.</p>
+        and &#39;-h&#39; options, and &#39;-D defects...txt&#39; would be added for files from GMS 
+        2.3.1 or higher.&nbsp; With IMOD 4.9.2/4.10.1 or higher, you can add add &#39;R -1&#39; 
+        and use the DM reference directly instead of a rotated reference.</p>
     <p>
         In all of these situations, conversion to floating point can be used instead of, 
         or in addition to, the scaling to guarantee absolutely no information loss from 

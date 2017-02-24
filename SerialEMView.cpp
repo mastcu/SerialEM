@@ -244,7 +244,7 @@ void CSerialEMView::DrawImage(void)
   int zoomFilters[] = {5, 4, 1, 0};  // lanczos3, 2, Blackman, box
   int numZoomFilt = sizeof(zoomFilters) / sizeof(int);
   int zoomWidthCrit = 20;
-  bool filtering = false;
+  bool bufferOK, filtering = false;
   CNavigatorDlg *navigator = mWinApp->mNavigator;
   FloatVec zeroRadii;
   CPoint point;
@@ -539,11 +539,15 @@ void CSerialEMView::DrawImage(void)
           cdc.TextOut(25, 10, letString);
       }
 
-      if (mMainWindow && imBuf->mCamera >= 0 && !imBuf->IsProcessed() && scaleCrit > 0 &&
-        imBuf->mCaptured > 0) {
+      bufferOK = !imBuf->IsProcessed() && (imBuf->mCaptured > 0 || 
+        imBuf->mCaptured == BUFFER_CALIBRATION || imBuf->mCaptured == BUFFER_TRACKING ||
+        imBuf->mCaptured == BUFFER_MONTAGE_CENTER || imBuf->mCaptured == BUFFER_ANCHOR ||
+        imBuf->mCaptured == BUFFER_MONTAGE_PIECE);
+      if (mMainWindow && imBuf->mCamera >= 0 && scaleCrit > 0 && (bufferOK ||
+        mWinApp->GetNumActiveCameras() > 1)) {
           cdc.SelectObject(&mLabelFont);
           CameraParameters *camP = mWinApp->GetCamParams() + imBuf->mCamera;
-          if (imBuf->mSampleMean > EXTRA_VALUE_TEST && 
+          if (imBuf->mSampleMean > EXTRA_VALUE_TEST && bufferOK &&
             !mWinApp->mProcessImage->DoseRateFromMean(imBuf, imBuf->mSampleMean, boost)) {
               if (mWinApp->mCamera->IsDirectDetector(camP)) {
                 letString.Format("%.2f e/ubpix/s at camera", boost);

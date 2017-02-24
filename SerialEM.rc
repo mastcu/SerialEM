@@ -836,7 +836,7 @@ BEGIN
     CONTROL         "Camera 6",IDC_RCAMERA6,"Button",BS_AUTORADIOBUTTON,226,11,43,10
     GROUPBOX        "Camera  --  Selects active camera",IDC_STATCAMERA,7,3,266,31,WS_GROUP
     CONTROL         "Continuous",IDC_RCONTINUOUS,"Button",BS_AUTORADIOBUTTON | WS_GROUP,11,81,49,10
-    CONTROL         "Single Frame",IDC_RSINGLE,"Button",BS_AUTORADIOBUTTON,11,91,56,10
+    CONTROL         "Single Image",IDC_RSINGLE,"Button",BS_AUTORADIOBUTTON,11,91,56,10
     GROUPBOX        "Acquisition",IDC_STATACQUIS,7,72,62,31,WS_GROUP
     CONTROL         "Unprocessed",IDC_RUNPROCESSED,"Button",BS_AUTORADIOBUTTON | WS_GROUP,11,115,57,10
     CONTROL         "Dark Subtracted",IDC_RDARKSUBTRACT,"Button",BS_AUTORADIOBUTTON,11,125,62,10
@@ -3667,7 +3667,7 @@ BEGIN
     IDC_RTRIAL              "Edit third parameter set"
     IDC_RRECORD             "Edit fourth parameter set"
     IDC_RPREVIEW            "Edit fifth parameter set"
-    IDC_RSINGLE             "Get one frame per acquisition request"
+    IDC_RSINGLE             "Get one image per acquisition request"
     IDC_RCONTINUOUS         "Acquire images one after another until stopped with Space Bar or Stop"
     IDC_RUNPROCESSED        "Acquire raw image from camera"
     IDC_RDARKSUBTRACT       "Acquire dark-subtracted image from camera"

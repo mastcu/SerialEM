@@ -339,6 +339,31 @@
       is calibrated.</P>
     <P>This command cannot be run in Low Dose mode, because the beam-tilt alignment is 
       different at the shifted location of the Focus area.</P>
+    <P>There is not a particularly good way to assess how good the coma-free alignment 
+      is.&nbsp; The precision of the routine can be assessed by running the script 
+      command &#39;CorrectComa -1&#39; several times in a row to find the misalignment without 
+      correcting it, which lets you see how much the reported misalignment varies.&nbsp; 
+      The adequacy of the alignment itself can be assessed by this tedious procedure:</P>
+    <ol>
+      <li>Increase Focus images to full size if necessary.</li>
+      <li>Set the focus to a good level for seeing astigmatism/coma in FFTs; perhaps in 
+        the range -0.5 to -1 micron for high magnifications.</li>
+      <li>Enable the side-by-side FFT window (e.g., hot key Shift-S) and take an FFT.</li>
+      <li>Turn off Drift Protection to obtain only two images per operation.</li>
+      <li>Set the beam tilt for autofocus to a sufficiently high value like 6 
+        milliradians.</li>
+      <li>Set the tilt direction for autofocus to 0.</li>
+      <li>Run Report Shift and Drift.</li>
+      <li>Repeat steps 6 and 7 for tilt directions of 1, 2, and 3.</li>
+      <li>Scroll through the FFT stack.&nbsp; With no coma, each pair of images from one 
+        tilt direction should match fairly well.</li>
+      <li>Restore beam tilt, Drift Protection</li>
+    </ol>
+    <p>
+      The alternative to this is to get a SerialEM 3.7 beta version, which has a menu 
+      option to make an array of such images (a Zemlin tableau).&nbsp; This version 
+      will also average results from successive runs of this routine to reduce its 
+      inherent inaccuracy.</p>
     <P><A NAME="hid_focus_setcomabeamtilt"></A><B>Set Coma-free Beam Tilt command (Focus menu)</B></P>
     <P>Use this command to set the maximum beam tilt for coma-free calibrations.&nbsp; 
       That beam tilt will be used for doing a calibration, and the coma-free alignment 

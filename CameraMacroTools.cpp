@@ -365,7 +365,7 @@ void CCameraMacroTools::Update()
   else if (postponed)
     SetDlgItemText(IDC_BUTEND, "End TS");
   else if (nav && nav->StartedMacro() && mMacProcessor->IsResumable())
-    SetDlgItemText(IDC_BUTEND, "End Mac");
+    SetDlgItemText(IDC_BUTEND, "End Script");
   else if (nav && !nav->StartedMacro() && nav->GetAcquiring() && !nav->GetStartedTS())
     SetDlgItemText(IDC_BUTEND, "End Nav");
   else if (!mWinApp->mMultiTSTasks->GetAssessingRange() && mWinApp->LowDoseMode()) {
