@@ -204,8 +204,8 @@ enum {CME_VIEW, CME_FOCUS, CME_TRIAL, CME_RECORD, CME_PREVIEW,
   CME_REPORTAUTOFOCUSOFFSET, CME_SETAUTOFOCUSOFFSET, CME_CHOOSERFORNEWFILE, 
   CME_SKIPACQUIRINGNAVITEM, CME_SHOWMESSAGEONSCOPE, CME_SETUPSCOPEMESSAGE, CME_SEARCH,
   CME_SETPROPERTY, CME_SETMAGINDEX, CME_SETNAVREGISTRATION, CME_LOCALVAR,
-  CME_LOCALLOOPINDEXES
-
+  CME_LOCALLOOPINDEXES, CME_ZEMLINTABLEAU, CME_WAITFORMIDNIGHT, CME_REPORTUSERSETTING,
+  CME_SETUSERSETTING
 };
 
 static CmdItem cmdList[] = {{NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0},
@@ -299,7 +299,8 @@ static CmdItem cmdList[] = {{NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0
 {"ReportAutofocusOffset", 0}, {"SetAutofocusOffset", 1}, {"ChooserForNewFile", 2}, 
 {"SkipAcquiringNavItem", 0}, {"ShowMessageOnScope", 1}, {"SetupScopeMessage", 1},
 {"Search", 0}, {"SetProperty", 2}, /* End in 3.6 */ {"SetMagIndex", 1},
-{"SetNavRegistration", 1}, {"LocalVar", 1}, {"LocalLoopIndexes", 0},
+{"SetNavRegistration", 1}, {"LocalVar", 1}, {"LocalLoopIndexes", 0}, {"ZemlinTableau", 1},
+{"WaitForMidnight", 0}, {"ReportUserSetting", 1}, {"SetUserSetting", 2}, 
 {NULL, 0, NULL}
 };
 
@@ -828,6 +829,8 @@ void CMacroProcessor::RunOrResume()
   mNumStatesToRestore = 0;
   mFocusToRestore = -999.;
   mFocusOffsetToRestore = -9999.;
+  mSavedSettingNames.clear();
+  mSavedSettingValues.clear();
   mKeyPressed = 0;
   if (mChangedConsets.size() > 0 && mCamWithChangedSets == mWinApp->GetCurrentCamera())
     for (int ind = 0; ind < (int)B3DMIN(mConsetNums.size(), mChangedConsets.size());ind++)
@@ -1674,8 +1677,20 @@ void CMacroProcessor::NextCommand()
       ABORT_NOLINE("There is no astigmatism calibration for the current settings");
 
   } else if (CMD_IS(CORRECTCOMA)) {                         // CorrectComa
-    if (mWinApp->mAutoTuning->ComaFreeAlignment(false, itemEmpty[1] || itemInt[1] >= 0))
+    index = COMA_INITIAL_ITERS;
+    if (!itemEmpty[1] && itemInt[1])
+      index = itemInt[1] > 0 ? COMA_ADD_ONE_ITER : COMA_JUST_MEASURE;
+    if (mWinApp->mAutoTuning->ComaFreeAlignment(false, index))
       AbortMacro();
+
+  } else if (CMD_IS(ZEMLINTABLEAU)) {                       // ZemlinTableau
+    index = 340;
+    index2 = 170;
+    if (!itemEmpty[2] && itemInt[2] > 10)
+      index = itemInt[2];
+    if (!itemEmpty[3] && itemInt[3] > 0)
+      index2 = itemInt[3];
+    mWinApp->mAutoTuning->MakeZemlinTableau((float)itemDbl[1], index, index2);
 
   } else if (CMD_IS(S) || CMD_IS(SAVE)) {                   // Save
     index2 = -1;
@@ -2094,6 +2109,25 @@ void CMacroProcessor::NextCommand()
     if (mWinApp->mParamIO->MacroSetProperty(strItems[1], itemDbl[2]))
       AbortMacro();
 
+  } else if (CMD_IS(REPORTUSERSETTING)) {                   // ReportUserSetting
+    if (mWinApp->mParamIO->MacroGetSetting(strItems[1], delX))
+      ABORT_LINE(strItems[1] + " is not a recognized setting or cannot be accessed by "
+      "script command in:\n\n");
+    SetReportedValues(&strItems[2], delX);
+    report.Format("Value of user setting %s is %f", strItems[1], delX);
+    mWinApp->AppendToLog(report, mLogAction);
+
+  } else if (CMD_IS(SETUSERSETTING)) {                      // SetUserSetting
+    if (mWinApp->mParamIO->MacroGetSetting(strItems[1], delX) || 
+      mWinApp->mParamIO->MacroSetSetting(strItems[1], itemDbl[2]))
+        ABORT_LINE(strItems[1] + " is not a recognized setting or cannot be set by "
+        "script command in:\n\n");
+    if (itemEmpty[3] || !itemInt[3]) {
+      mSavedSettingNames.push_back(std::string((LPCTSTR)strItems[1]));
+      mSavedSettingValues.push_back(delX);
+      mNumStatesToRestore++;
+    }
+
   } else if (CMD_IS(COPY)) {                                // Copy
     if (ConvertBufferLetter(strItems[1], -1, true, index, report))
       ABORT_LINE(report);
@@ -2302,6 +2336,40 @@ void CMacroProcessor::NextCommand()
     mSleepStart = GetTickCount();
     if (mSleepTime > 3000)
       mWinApp->SetStatusText(SIMPLE_PANE, "WAITING FOR DELAY");
+
+  } else if (CMD_IS(WAITFORMIDNIGHT)) {                     // WaitForMidnight
+     
+    // Get the times before and after the target time and the alternative target
+    delX = delY = 5.;
+    if (!itemEmpty[1])
+      delX = itemDbl[1];
+    if (!itemEmpty[2])
+      delY = itemDbl[2];
+    ix0 = 24;
+    ix1 = 0;
+    if (!itemEmpty[3] && !itemEmpty[4]) {
+      ix0 = itemInt[3]; 
+      ix1 = itemInt[4];
+    }
+
+    // Compute minutes into the day and the interval from now to the target
+    CTime time = CTime::GetCurrentTime();
+    delISX = time.GetHour() * 60 + time.GetMinute() + time.GetSecond() / 60.;
+    delISY = ix0 * 60 + ix1 - delISX;
+
+    // If wthin the window at all, set up the sleep
+    if (delISY + delY > 0 && delISY < delX) {
+      mSleepTime = 60000. * (delISY + delY);
+      mSleepStart = GetTickCount();
+      report.Format("Sleeping until %.1f minutes after ", delY);
+      strCopy = "midnight";
+      if (!itemEmpty[4])
+        strCopy.Format("%02d:%02d", ix0, ix1);
+      mWinApp->AppendToLog(report + strCopy, mLogAction);
+      strCopy.MakeUpper();
+      report.Format(" + %.0f", delY);
+      mWinApp->SetStatusText(SIMPLE_PANE, "WAIT TO " + strCopy);
+    }
 
   } else if (CMD_IS(WAITFORDOSE)) {                         // WaitForDose
     mDoseTarget = itemDbl[1];
@@ -4313,6 +4381,9 @@ void CMacroProcessor::SuspendMacro(BOOL abort)
         mScope->SetFocus(mFocusToRestore);
       if (mFocusOffsetToRestore > -9000.)
         mWinApp->mFocusManager->SetDefocusOffset(mFocusOffsetToRestore);
+      for (int ind = 0; ind < (int)mSavedSettingNames.size(); ind++)
+        mWinApp->mParamIO->MacroSetSetting(CString(mSavedSettingNames[ind].c_str()), 
+        mSavedSettingValues[ind]);
     }
   }
   RestoreCameraSet(-1, abort);

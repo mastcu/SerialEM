@@ -148,6 +148,8 @@ private:
   int mLogAction;         // Parameterized log argument for suppressing reports
   std::vector<ControlSet> mConsetsSaved; // COntrol sets saved from changes
   std::vector<ControlSet> mChangedConsets; // Modified Control sets if suspend
+  std::vector<std::string> mSavedSettingNames;   // Names and values of user settings that
+  std::vector<double> mSavedSettingValues;       // were changed and need restoring
   ShortVec mConsetNums;      // #'s of control sets saved
   int mCamWithChangedSets;   // Number of camera with changed sets on suspend
   double mSleepStart;  // Starting time to sleep from
