@@ -2091,7 +2091,8 @@ void CMacroProcessor::NextCommand()
     }
 
   } else if (CMD_IS(SETPROPERTY)) {                         // SetProperty
-    mWinApp->mParamIO->MacroSetProperty(strItems[1], itemDbl[2]);
+    if (mWinApp->mParamIO->MacroSetProperty(strItems[1], itemDbl[2]))
+      AbortMacro();
 
   } else if (CMD_IS(COPY)) {                                // Copy
     if (ConvertBufferLetter(strItems[1], -1, true, index, report))
