@@ -71,6 +71,8 @@ public:
   void StoreFloatsPerBinning(CString * strItems, const char * descrip, int iset, CString & strFileName, float * values);
   int MacroSetProperty(CString name, double value);
   void UserSetProperty(void);
+  int MacroSetSetting(CString name, double value);
+  int MacroGetSetting(CString name, double &value);
 };
 
 #endif // !defined(AFX_PARAMETERIO_H__A83A6CC0_40E1_4BDF_8FEF_53898673E513__INCLUDED_)

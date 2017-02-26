@@ -85,14 +85,37 @@ CParameterIO::~CParameterIO()
 
 }
 
+// Macros for setting variables from the settings values
+#define INT_SETT_GETSET(a, b, c) \
+  else if (strItems[0] == a) \
+    b##Set##c(itemInt[1]);
+#define BOOL_SETT_GETSET(a, b, c) \
+  else if (strItems[0] == a) \
+    b##Set##c(itemInt[1] != 0);
+#define FLOAT_SETT_GETSET(a, b, c) \
+  else if (strItems[0] == a)   \
+    b##Set##c((float)itemDbl[1]);
+#define DOUBLE_SETT_GETSET(a, b, c) \
+  else if (strItems[0] == a)   \
+    b##Set##c(itemDbl[1]);
+#define INT_SETT_ASSIGN(a, b) \
+  else if (strItems[0] == a) \
+    b = itemInt[1];
+#define BOOL_SETT_ASSIGN(a, b) \
+  else if (strItems[0] == a) \
+    b = itemInt[1] != 0;
+#define FLOAT_SETT_ASSIGN(a, b) \
+  else if (strItems[0] == a) \
+    b = (float)itemDbl[1];
 
 int CParameterIO::ReadSettings(CString strFileName)
 {
   int retval = 0;
   int err;
   int index, mag, spot, GIF;
-  BOOL bVal;
-
+#define SETTINGS_MODULES
+#include "SettingsTests.h"
+#undef SETTINGS_MODULES
   ControlSet *cs;
   CString strLine, strCopy, unrecognized = "";
   CString strItems[MAX_TOKENS];
@@ -100,10 +123,7 @@ int CParameterIO::ReadSettings(CString strFileName)
   int itemInt[MAX_TOKENS];
   double itemDbl[MAX_TOKENS];
   int nLines = 0;
-  CCameraController *camera = mWinApp->mCamera;
-  MontParam *montParam = mWinApp->GetMontParam();
   FileOptions *defFileOpt = mWinApp->mDocWnd->GetDefFileOpt();
-  MacroControl *macControl = mWinApp->GetMacControl();
   int *initialDlgState = mWinApp->GetInitialDlgState();
   int *macroButtonNumbers = mWinApp->mCameraMacroTools.GetMacroNumbers();
   float pctLo, pctHi;
@@ -284,33 +304,7 @@ int CParameterIO::ReadSettings(CString strFileName)
           break;
         }
 
-      } else if (NAME_IS("AreaFractionForScaling")) 
-        mWinApp->SetPctAreaFraction((float)itemDbl[1]);
-      else if (NAME_IS("FFTTruncDiameter")) 
-        mWinApp->SetTruncDiamOfFFT((float)itemDbl[1]);
-      else if (NAME_IS("FFTBackgroundGray")) 
-        mWinApp->SetBkgdGrayOfFFT(itemInt[1]);
-      else if (NAME_IS("OneK2FramePerFile"))
-        camera->SetOneK2FramePerFile(itemInt[1] != 0);
-      else if (NAME_IS("SkipK2FrameRotFlip"))
-        camera->SetSkipK2FrameRotFlip(itemInt[1] != 0);
-      else if (NAME_IS("SaveK2FramesAsTiff"))
-        camera->SetK2SaveAsTiff(itemInt[1]);
-      else if (NAME_IS("SaveRawPacked"))
-        camera->SetSaveRawPacked(itemInt[1]);
-      else if (NAME_IS("SaveTimes100"))
-        camera->SetSaveTimes100(itemInt[1]);
-      else if (NAME_IS("SaveUnnormedFrames"))
-        camera->SetSaveUnnormalizedFrames(itemInt[1] != 0);
-      else if (NAME_IS("Use4BitMRCMode"))
-        camera->SetUse4BitMrcMode(itemInt[1] != 0);
-      else if (NAME_IS("NameFramesAsMRCS"))
-        camera->SetNameFramesAsMRCS(itemInt[1] != 0);
-      else if (NAME_IS("AntialiasBinning"))
-        camera->SetAntialiasBinning(itemInt[1] != 0);
-      else if (NAME_IS("NumFrameAliLogLines"))
-        camera->SetNumFrameAliLogLines(itemInt[1]);
-      else if (NAME_IS("FrameNameData")) {
+      } else if (NAME_IS("FrameNameData")) {
         camera->SetFrameNameFormat(itemInt[1]);
         camera->SetFrameNumberStart(itemInt[2]);
         camera->SetLastFrameNumberStart(itemInt[3]);
@@ -329,11 +323,11 @@ int CParameterIO::ReadSettings(CString strFileName)
       } else if (NAME_IS("NumberedFrameFolder")) {
         StripItems(strLine, 1, strCopy);
         camera->SetNumberedFrameFolder(strCopy);
-      } else if (NAME_IS("DEAutosaveFormat"))
-        mWinApp->mDEToolDlg.SetFormatForAutoSave(itemInt[1]);
-      else if (NAME_IS("DE12FPS")) {
+      } else if (NAME_IS("DE12FPS")) {
         if (!itemEmpty[2] && itemInt[1] >= 0 && itemInt[1] < MAX_CAMERAS)
         mCamParam[itemInt[1]].DE_FramesPerSec = (float)itemDbl[2];
+      } else if (NAME_IS("DEAutosaveFormat")) {
+        mWinApp->mDEToolDlg.SetFormatForAutoSave(itemInt[1]);
       } else if (NAME_IS("PercentDisplayTruncationLo")) {
         mWinApp->GetDisplayTruncation(pctLo, pctHi);
         pctLo = (float)itemDbl[1];
@@ -343,220 +337,50 @@ int CParameterIO::ReadSettings(CString strFileName)
         pctHi = (float)itemDbl[1];
         mWinApp->SetDisplayTruncation(pctLo, pctHi);
       } else if (NAME_IS("CopyToBufferOnSave")) {
-      } else if (NAME_IS("BuffersToRollOnAcquire"))
-        mBufferManager->SetShiftsOnAcquire(itemInt[1]);
-      else if (NAME_IS("BufferToReadInto"))
-        mBufferManager->SetBufToReadInto(itemInt[1]);
-      else if (NAME_IS("FifthCopyToBuf"))
-        mBufferManager->SetFifthCopyToBuf(itemInt[1]);
-      else if (NAME_IS("ProtectRecordImages"))
+      } else if (NAME_IS("ProtectRecordImages")) {
         mBufferManager->SetConfirmBeforeDestroy(3, itemInt[1]);
-      else if (NAME_IS("AlignOnSave")) {
-      } else if (NAME_IS("AutoZoom"))
-        mBufferManager->SetAutoZoom(itemInt[1]);
-      else if (NAME_IS("Antialias"))
-        mBufferManager->SetAntialias(itemInt[1]);
-      else if (NAME_IS("FixedZoomSteps"))
-        mBufferManager->SetFixedZoomStep(itemInt[1]);
-      else if (NAME_IS("DrawScaleBar"))
-        mBufferManager->SetDrawScaleBar(itemInt[1]);
-      else if (NAME_IS("DrawCrosshairs"))
-        mBufferManager->SetDrawCrosshairs(itemInt[1] != 0);
-      else if (NAME_IS("CircleOnLiveFFT"))
-        mWinApp->mProcessImage->SetCircleOnLiveFFT(itemInt[1] != 0);
-      else if (NAME_IS("SideBySideFFT"))
-        mWinApp->mProcessImage->SetSideBySideFFT(itemInt[1] != 0);
-      else if (NAME_IS("AutoSingleFFT"))
-        mWinApp->mProcessImage->SetAutoSingleFFT(itemInt[1] != 0);
-      else if (NAME_IS("PhasePlateShift"))
-        mWinApp->mProcessImage->SetPlatePhase((float)itemDbl[1]);
-      else if (NAME_IS("FixedRingDefocus"))
-        mWinApp->mProcessImage->SetFixedRingDefocus((float)itemDbl[1]);
-      else if (NAME_IS("MontageCorrectDrift"))
-        montParam->correctDrift = itemInt[1] != 0;
-      else if (NAME_IS("MontageAdjustFocus"))
-        montParam->adjustFocus = itemInt[1] != 0;
-      else if (NAME_IS("MontageFocusAfterStage"))
-        montParam->focusAfterStage = itemInt[1] != 0;
-      else if (NAME_IS("MontageShowOverview"))
-        montParam->showOverview = itemInt[1] != 0;
-      else if (NAME_IS("MontageAlignPieces"))
-        montParam->shiftInOverview = itemInt[1] != 0;
-      else if (NAME_IS("MontageVerySloppy"))
-        montParam->verySloppy = itemInt[1] != 0;
-      else if (NAME_IS("MontageMinimumCounts"))
-        mWinApp->mMontageController->SetCountLimit(itemInt[1]);
-      else if (NAME_IS("MontageUseViewInLD"))
-        montParam->useViewInLowDose = itemInt[1] != 0;
-      else if (NAME_IS("MontageUseContinuous")) {
+      } else if (NAME_IS("AlignOnSave")) {
+      } else if (NAME_IS("MontageUseContinuous")) {
         montParam->useContinuousMode = itemInt[1] != 0;
         montParam->continDelayFactor = (float)itemDbl[2];
       } else if (NAME_IS("MontageNoDriftCorr")) {
         montParam->noDriftCorr = itemInt[1] != 0;
         montParam->noHQDriftCorr = itemInt[2] != 0;
-      } else if (NAME_IS("MontageUseHQparams"))
-        montParam->useHqParams = itemInt[1] != 0;
-      else if (NAME_IS("MontageFocusInBlocks"))
-        montParam->focusInBlocks = itemInt[1] != 0;
-      else if (NAME_IS("MontageRepeatFocus"))
-        montParam->repeatFocus = itemInt[1] != 0;
-      else if (NAME_IS("MontageDriftLimit"))
-        montParam->driftLimit = (float)itemDbl[1];
-      else if (NAME_IS("MontageRealign"))
-        montParam->realignToPiece = itemInt[1] != 0;
-      else if (NAME_IS("MontageISRealign"))
-        montParam->ISrealign = itemInt[1] != 0;
-      else if (NAME_IS("MontageMaxRealignIS"))
-        montParam->maxRealignIS = (float)itemDbl[1];
-      else if (NAME_IS("MontageUseAnchor"))
-        montParam->useAnchorWithIS = itemInt[1] != 0;
-      else if (NAME_IS("MontageAnchorMagInd"))
-        montParam->anchorMagInd = itemInt[1];
-      else if (NAME_IS("MontageSkipCorrelations"))
-        montParam->skipCorrelations = itemInt[1] != 0;
-      else if (NAME_IS("MontageSkipReblanks"))
-        montParam->skipRecReblanks = itemInt[1] != 0;
-      else if (NAME_IS("MontageFocusBlockSize"))
-        montParam->focusBlockSize = itemInt[1];
-      else if (NAME_IS("MontageRealignInterval"))
-        montParam->realignInterval = itemInt[1];
-      else if (NAME_IS("MontageMinOverlapFactor"))
-        montParam->minOverlapFactor = (float)itemDbl[1];
-      else if (NAME_IS("MontageMinMicronsOverlap"))
-        montParam->minMicronsOverlap = (float)itemDbl[1];
-      else if (NAME_IS("MontageHQdelayTime"))
-        montParam->hqDelayTime = (float)itemDbl[1];
-      else if (NAME_IS("MontageMaxAlignFrac"))
-        montParam->maxAlignFrac = (float)itemDbl[1];
-      else if (NAME_IS("MontageFilterOptions")) {
+      } else if (NAME_IS("MontageFilterOptions")) {
         mWinApp->mMontageController->SetUseFilterSet2(itemInt[1] != 0);
         mWinApp->mMontageController->SetUseSet2InLD(itemInt[2] != 0);
         mWinApp->mMontageController->SetDivFilterSet1By2(itemInt[3] != 0);
         mWinApp->mMontageController->SetDivFilterSet2By2(itemInt[4] != 0);
-      } else if (NAME_IS("TIFFcompression"))
+      } else if (NAME_IS("TIFFcompression")) {
         defFileOpt->compression = itemInt[1];
-      else if (NAME_IS("SelectedCameraParameterSet"))
-        mWinApp->SetSelectedConSet(itemInt[1]);
-      else if (NAME_IS("TargetDefocus"))
-        mWinApp->mFocusManager->SetTargetDefocus((float)itemDbl[1]);
-      else if (NAME_IS("AutofocusOffset"))
-        mWinApp->mFocusManager->SetDefocusOffset((float)itemDbl[1]);
-      else if (NAME_IS("AutofocusEucenAbsParams"))
+      } else if (NAME_IS("AutofocusEucenAbsParams")) {
         mWinApp->mFocusManager->SetEucenAbsFocusParams(itemDbl[1], itemDbl[2], 
         (float)itemDbl[3], (float)itemDbl[4], itemInt[5] != 0, itemInt[6] != 0);
-      else if (NAME_IS("RefocusThreshold"))
-        mWinApp->mFocusManager->SetRefocusThreshold((float)itemDbl[1]);
-      else if (NAME_IS("AbortThreshold"))
-        mWinApp->mFocusManager->SetAbortThreshold((float)itemDbl[1]);
-      else if (NAME_IS("AutofocusBeamTilt"))
-        mWinApp->mFocusManager->SetBeamTilt(itemDbl[1]);
-      else if (NAME_IS("BeamTiltDirection"))
-        mWinApp->mFocusManager->SetTiltDirection(itemInt[1]);
-      else if (NAME_IS("MinDDDfocusBinning"))
-        mWinApp->mFocusManager->SetDDDminBinning(itemInt[1]);
-      else if (NAME_IS("DriftProtection"))
-        mWinApp->mFocusManager->SetTripleMode(itemInt[1] != 0);
-      else if (NAME_IS("FocusVerbose"))
-        mWinApp->mFocusManager->SetVerbose(itemInt[1] != 0);
-      else if (NAME_IS("UsersAstigTilt"))
-        mWinApp->mAutoTuning->SetUsersAstigTilt((float)itemDbl[1]);
-      else if (NAME_IS("UsersComaTilt"))
-        mWinApp->mAutoTuning->SetUsersComaTilt((float)itemDbl[1]);
-      else if (NAME_IS("TiltIncrement"))
-        mWinApp->mScope->SetIncrement((float)itemDbl[1]);
-      else if (NAME_IS("CosineTilting")) {
-        bVal = itemInt[1] != 0;
-        mWinApp->mScope->SetCosineTilt(bVal);
       } else if (NAME_IS("AssessMultiplePeaksInAlign")) {
-      } else if (NAME_IS("ShiftToTiltAxis"))
-        mWinApp->mScope->SetShiftToTiltAxis(itemInt[1] != 0);
-      else if (NAME_IS("ApplyISoffset"))
-        mWinApp->mScope->SetApplyISoffset(itemInt[1] != 0);
-      else if (NAME_IS("UsePiezoForLDAxis"))
-        mWinApp->mScope->SetUsePiezoForLDaxis(itemInt[1] != 0);
-      else if (NAME_IS("AdjustFocusForProbe"))
-        mWinApp->mScope->SetAdjustFocusForProbe(itemInt[1] != 0);
-      else if (NAME_IS("NormAutofocusViaView"))
-        mWinApp->mFocusManager->SetNormalizeViaView(itemInt[1] != 0);
-      else if (NAME_IS("TrimBordersInAutoalign"))
-        mWinApp->mShiftManager->SetTrimDarkBorders(itemInt[1] != 0);
-      else if (NAME_IS("DisableAutoTrim"))
-        mWinApp->mShiftManager->SetDisableAutoTrim(itemInt[1]);
-      else if (NAME_IS("MoveStageOnBigMouseShift"))
-        mWinApp->mShiftManager->SetMouseMoveStage(itemInt[1] != 0);
-      else if (NAME_IS("BacklashMouseAndISR"))
-        mWinApp->mShiftManager->SetBacklashMouseAndISR(itemInt[1] != 0);
-      else if (NAME_IS("MouseStageThreshold"))
-        mWinApp->mShiftManager->SetMouseStageThresh((float)itemDbl[1]);
-      else if (NAME_IS("MouseStageAbsoluteThreshold"))
-        mWinApp->mShiftManager->SetMouseStageAbsThresh((float)itemDbl[1]);
-      else if (NAME_IS("TiltDelay"))
-        mWinApp->mShiftManager->SetTiltDelay((float)itemDbl[1]);
-      else if (NAME_IS("MacroLimitRuns"))
-        macControl->limitRuns = itemInt[1] != 0;
-      else if (NAME_IS("MacroLimitScaleMax"))
-        macControl->limitScaleMax = itemInt[1] != 0;
-      else if (NAME_IS("MacroLimitTiltUp"))
-        macControl->limitTiltUp = itemInt[1] != 0;
-      else if (NAME_IS("MacroLimitTiltDown"))
-        macControl->limitTiltDown = itemInt[1] != 0;
-      else if (NAME_IS("MacroLimitMontError"))
-        macControl->limitMontError = itemInt[1] != 0;
-      else if (NAME_IS("MacroLimitIS"))
-        macControl->limitIS = itemInt[1] != 0;
-      else if (NAME_IS("MacroRunLimit"))
-        macControl->runLimit = itemInt[1];
-      else if (NAME_IS("MacroScaleMaxLimit"))
-        macControl->scaleMaxLimit = itemInt[1];
-      else if (NAME_IS("MacroTiltUpLimit"))
-        macControl->tiltUpLimit = (float)itemDbl[1];
-      else if (NAME_IS("MacroTiltDownLimit"))
-        macControl->tiltDownLimit = (float)itemDbl[1];
-      else if (NAME_IS("MacroMontErrorLimit"))
-        macControl->montErrorLimit = (float)itemDbl[1];
-      else if (NAME_IS("MacroISLimit"))
-        macControl->ISlimit = (float)itemDbl[1];
+      } 
+#define SET_TEST_SECT1
+#include "SettingsTests.h"
+#undef SET_TEST_SECT1
       else
         recognized = false;
     
       if (recognized) {
       
-      } else if (NAME_IS("AutosaveSettings"))
-        mWinApp->mDocWnd->SetAutoSaveSettings(itemInt[1] != 0);
+      } 
+#define SET_TEST_SECT2
+#include "SettingsTests.h"
+#undef SET_TEST_SECT2
+        
       else if (NAME_IS("AutosaveNavigator")) {
         if (!itemInt[1])
           AfxMessageBox("It is now the default to autosave a Navigator file\n"
           "periodically.  If you do not want Navigator files to be\n"
           "saved automatically, turn this option off with the\n"
           "Navigator - Autosave Nav File menu item.", MB_OK | MB_ICONINFORMATION);
-      } else if (NAME_IS("AutosaveNavNew"))
-        mWinApp->mDocWnd->SetAutoSaveNav(itemInt[1] != 0);
-      else if (NAME_IS("AutosaveLog"))
-        mWinApp->mTSController->SetAutosaveLog(itemInt[1] != 0);
-      else if (NAME_IS("AutosaveXYZ"))
-        mWinApp->mTSController->SetAutosaveXYZ(itemInt[1] != 0);
-      else if (NAME_IS("StageMoveToolImage"))
-        mWinApp->SetImageWithStageToolMove(itemInt[1] != 0);
-      else if (NAME_IS("LoadMapsUnbinned"))
-        mWinApp->SetLoadMapsUnbinned(itemInt[1] != 0);
-      else if (NAME_IS("WriteNavAsXML"))
-        mWinApp->SetWriteNavAsXML(itemInt[1] != 0);
-      else if (NAME_IS("TryRealignScaling"))
-        mWinApp->SetTryRealignScaling(itemInt[1] != 0);
-      else if (NAME_IS("PointLabelDrawThresh"))
-        mWinApp->SetPointLabelDrawThresh(itemInt[1]);
-      else if (NAME_IS("AutoBacklashNewMap")) {
+      } else if (NAME_IS("AutoBacklashNewMap")) {
         mWinApp->SetAutoBacklashNewMap(itemInt[1]);
         mWinApp->SetAutoBacklashMinField((float)itemDbl[2]);
-      } else if (NAME_IS("RotAlignDoSearch"))
-        mWinApp->mNavHelper->SetSearchRotAlign(itemInt[1] != 0);
-      else if (NAME_IS("RotAlignRange"))
-        mWinApp->mNavHelper->SetRotAlignRange((float)itemDbl[1]);
-      else if (NAME_IS("GridGroupSize"))
-        mWinApp->mNavHelper->SetGridGroupSize((float)itemDbl[1]);
-      else if (NAME_IS("DivideGridIntoGroups"))
-        mWinApp->mNavHelper->SetDivideIntoGroups(itemInt[1] != 0);
-      else if (NAME_IS("NavigatorAcquireParams")) {
+      } else if (NAME_IS("NavigatorAcquireParams")) {
         navParams->acqAutofocus = itemInt[1] != 0;
         navParams->acqFineEucen = itemInt[2] != 0;
         navParams->acqRealign = itemInt[3] != 0;
@@ -614,22 +438,10 @@ int CParameterIO::ReadSettings(CString strFileName)
 
       } else if (NAME_IS("NavigatorStockFile"))
         StripItems(strLine, 1, navParams->stockFile);
-      else if (NAME_IS("ImportOverlayChannels"))
-        navParams->overlayChannels = strItems[1];
       else if (NAME_IS("ProcessOverlayChannels"))
         mWinApp->mProcessImage->SetOverlayChannels(strItems[1]);
-      else if (NAME_IS("CameraDivide16BitBy2"))
-        camera->SetDivideBy2(itemInt[1]);
-      else if (NAME_IS("InterpolateDarkRefs"))
-        camera->SetInterpDarkRefs(itemInt[1] != 0);
-      else if (NAME_IS("NoNormOfDSDoseFrac"))
-        camera->SetNoNormOfDSdoseFrac(itemInt[1] != 0);
-      else if (NAME_IS("IgnoreHigherGainRefs"))
-        mWinApp->mGainRefMaker->SetIgnoreHigherRefs(itemInt[1] != 0);
-      else if (NAME_IS("UseOlderBinned2Ref"))
-        mWinApp->mGainRefMaker->SetUseOlderBinned2(itemInt[1] != 0);
-      else if (NAME_IS("DMgainRefAskPolicy"))
-        mWinApp->mGainRefMaker->SetDMrefAskPolicy(itemInt[1]);
+      else if (NAME_IS("ImportOverlayChannels"))
+        navParams->overlayChannels = strItems[1];
       else if (NAME_IS("RemoteControlParams")) {
         mWinApp->SetShowRemoteControl(itemInt[1] != 0);
         mWinApp->mRemoteControl.SetBeamIncrement((float)itemDbl[2]);
@@ -861,124 +673,32 @@ int CParameterIO::ReadSettings(CString strFileName)
         for (index = 0; index < 4; index++)
           gridLim[index] = (float)atof(strItems[index + 1]);
 
-      } else if (NAME_IS("GainRefCalibrateDose"))
+      } else if (NAME_IS("GainRefNormalizeSpot")) {  // Obsolete or confused setting...
         mWinApp->mGainRefMaker->SetCalibrateDose(itemInt[1] != 0);
-      else if (NAME_IS("GainRefNormalizeSpot")) {  // Obsolete or confused setting...
-        mWinApp->mGainRefMaker->SetCalibrateDose(itemInt[1] != 0);
-      } else if (NAME_IS("LowDoseBlankWhenDown"))
-        mWinApp->mLowDoseDlg.m_bBlankWhenDown = itemInt[1] != 0;
-      else if (NAME_IS("LowDoseNormalizeBeam"))
-        mWinApp->mLowDoseDlg.m_bNormalizeBeam = itemInt[1] != 0;
-      else if (NAME_IS("LowDoseViewDefocus"))
-        mWinApp->mScope->SetLDViewDefocus((float)itemDbl[1]);
-      else if (NAME_IS("LowDoseAreaToShow"))
-        mWinApp->mLowDoseDlg.m_iShowArea = itemInt[1];
-      else if (NAME_IS("LowDoseTieFocusTrial"))
-        mWinApp->mLowDoseDlg.m_bTieFocusTrial = itemInt[1] != 0;
-      else if (NAME_IS("LowDoseViewShift")) {
+      } else if (NAME_IS("LowDoseViewShift")) {
         mWinApp->mLowDoseDlg.mViewShiftX = itemDbl[1];
         mWinApp->mLowDoseDlg.mViewShiftY = itemDbl[2];
-      } else if (NAME_IS("LowDoseRotateAxis"))
-        mWinApp->mLowDoseDlg.m_bRotateAxis = itemInt[1] != 0;
-      else if (NAME_IS("LowDoseAxisAngle"))
-        mWinApp->mLowDoseDlg.m_iAxisAngle = itemInt[1];
-      else if (NAME_IS("WalkUpTargetAngle"))
-        mWinApp->mComplexTasks->SetWalkTarget((float)itemDbl[1]);
-      else if (NAME_IS("WalkUpMaxInterval"))
-        mWinApp->mComplexTasks->SetMaxWalkInterval((float)itemDbl[1]);
-      else if (NAME_IS("WalkUpMinInterval"))
-        mWinApp->mComplexTasks->SetMinWalkInterval((float)itemDbl[1]);
-      else if (NAME_IS("ResetRealignIterationCriterion"))
+      } else if(NAME_IS("ResetRealignIterationCriterion")) {
         mWinApp->mComplexTasks->SetRSRAUserCriterion((float)itemDbl[1]);
-      else if (NAME_IS("ResetRealignUseTrialInLowDose"))
-        mWinApp->mComplexTasks->SetRSRAUseTrialInLDMode(itemInt[1] != 0);
-      else if (NAME_IS("FineEucenUseTrialInLowDose"))
-        mWinApp->mComplexTasks->SetFEUseTrialInLD(itemInt[1] != 0);
-      else if (NAME_IS("WalkupUseViewInLowDose"))
-        mWinApp->mComplexTasks->SetWalkUseViewInLD(itemInt[1] != 0);
-      else if (NAME_IS("ComplexTasksVerbose"))
-        mWinApp->mComplexTasks->SetVerbose(itemInt[1] != 0);
-      else
+      } else
         recognized2 = false;
+
       if (recognized || recognized2) {
 
-      } else if (NAME_IS("TiltSeriesLastStartingTilt"))
-        mTSParam->lastStartingTilt = (float)itemDbl[1];
+      }
+#define SET_TEST_SECT3
+#include "SettingsTests.h"
+#undef SET_TEST_SECT3
+
       else if (NAME_IS("TiltSeriesLowMagIndex")) {
         mTSParam->lowMagIndex[0] = itemInt[1];
         mTSParam->lowMagIndex[1] = itemInt[2];
         mTSParam->lowMagIndex[2] = itemInt[3];
-      } else if (NAME_IS("TiltSeriesTrackLowMag"))
-        mTSParam->trackLowMag = itemInt[1] != 0;
-      else if (NAME_IS("TiltSeriesTrackAfterFocus"))
-        mTSParam->trackAfterFocus = itemInt[1];
-      else if (NAME_IS("TiltSeriesBeamControl"))
-        mTSParam->beamControl = itemInt[1];
-      else if (NAME_IS("TiltSeriesMeanCounts"))
-        mTSParam->meanCounts = itemInt[1];
-      else if (NAME_IS("TiltSeriesCosinePower"))
-        mTSParam->cosinePower = itemInt[1];
-      else if (NAME_IS("TiltSeriesTaperCounts"))
-        mTSParam->taperCounts = itemInt[1] != 0;
-      else if (NAME_IS("TiltSeriesHighCounts"))
-        mTSParam->highCounts = itemInt[1];
-      else if (NAME_IS("TiltSeriesTaperAngle"))
-        mTSParam->taperAngle = (float)itemDbl[1];
-      else if (NAME_IS("TiltSeriesLimitIntensity"))
-        mTSParam->limitIntensity = itemInt[1] != 0;
-      else if (NAME_IS("TiltSeriesRefineEucentricity"))
-        mTSParam->refineEucen = itemInt[1] != 0;
-      else if (NAME_IS("TiltSeriesWalkLeaveAnchor"))
-        mTSParam->leaveAnchor = itemInt[1] != 0;
-      else if (NAME_IS("TiltSeriesWalkAnchorTilt"))
-        mTSParam->anchorTilt = (float)itemDbl[1];
-      else if (NAME_IS("TiltSeriesLeftAnchorBuffer"))
-        mTSParam->anchorBuffer = itemInt[1];
-      else if (NAME_IS("TiltSeriesImageShiftLimit"))
-        mTSParam->ISlimit = (float)itemDbl[1];
-      else if (NAME_IS("TiltSeriesFocusCheckInterval"))
-        mTSParam->focusCheckInterval = (float)itemDbl[1];
-      else if (NAME_IS("TiltSeriesRepeatRecord"))
-        mTSParam->repeatRecord = itemInt[1] != 0;
-      else if (NAME_IS("TiltSeriesConfirmLDRepeat"))
-        mTSParam->confirmLowDoseRepeat = itemInt[1] != 0;
-      else if (NAME_IS("TiltSeriesMaxRecordLoss"))
-        mTSParam->maxRecordShift = (float)itemDbl[1];
-      else if (NAME_IS("TiltSeriesStopOnBigShift"))
-        mTSParam->stopOnBigAlignShift = itemInt[1] != 0;
-      else if (NAME_IS("TiltSeriesMaxAlignShift"))
-        mTSParam->maxAlignShift = (float)itemDbl[1];
-      else if (NAME_IS("TiltSeriesRepeatAutofocus"))
-        mTSParam->repeatAutofocus = itemInt[1] != 0;
-      else if (NAME_IS("TiltSeriesMaxFocusDiff"))
-        mTSParam->maxFocusDiff = (float)itemDbl[1];
-      else if (NAME_IS("TiltSeriesAlwaysFocusAtHigh"))
-        mTSParam->alwaysFocusHigh = itemInt[1] != 0;
-      else if (NAME_IS("TiltSeriesAlwaysFocusAngle"))
-        mTSParam->alwaysFocusAngle = (float)itemDbl[1];
-      else if (NAME_IS("TiltSeriesSkipAutofocus"))
-        mTSParam->skipAutofocus = itemInt[1] != 0;
-      else if (NAME_IS("TiltSeriesCheckAutofocus"))
-        mTSParam->checkAutofocus = itemInt[1] != 0;
-      else if (NAME_IS("TSLimitFocusChange"))
-        mTSParam->limitDefocusChange = itemInt[1] != 0;
-      else if (NAME_IS("TSFocusChangeLimit"))
-        mTSParam->defocusChangeLimit = (float)itemDbl[1];
-      else if (NAME_IS("TiltSeriesMinFocusAccuracy"))
-        mTSParam->minFocusAccuracy = (float)itemDbl[1];
-      else if (NAME_IS("TiltSeriesRefineZLP"))
-        mTSParam->refineZLP = itemInt[1] != 0;
-      else if (NAME_IS("TiltSeriesZLPInterval"))
-        mTSParam->zlpInterval = itemInt[1];
-      else if (NAME_IS("TiltSeriesCenterBeam"))
-        mTSParam->centerBeamFromTrial = itemInt[1] != 0;
-      else if (NAME_IS("TiltSeriesCloseValvesAtEnd"))
-        mTSParam->closeValvesAtEnd = itemInt[1] != 0;
       
       // Retired 2/13/04 - moved to properties
       // Dose cal moved to short term cal 12/21/05
       // Retired shoot after autofocus 12/22/06
-      else if (NAME_IS("TiltSeriesXFitInterval") ||
+      } else if (NAME_IS("TiltSeriesXFitInterval") ||
         NAME_IS("TiltSeriesYFitInterval") ||
         NAME_IS("TiltSeriesZFitInterval") ||
         NAME_IS("TiltSeriesXMinForQuadratic") ||
@@ -986,50 +706,6 @@ int CParameterIO::ReadSettings(CString strFileName)
         NAME_IS("DoseCalibration") || NAME_IS("ShootAfterAutofocus"))
         err = 0;
 
-      else if (NAME_IS("TiltSeriesAlignTrackOnly"))
-        mTSParam->alignTrackOnly = itemInt[1] != 0;
-      else if (NAME_IS("TiltSeriesPreviewBeforeNewRef"))
-        mTSParam->previewBeforeNewRef = itemInt[1] != 0;
-      else if (NAME_IS("TiltSeriesMaxRefDisagreement"))
-        mTSParam->maxRefDisagreement = (float)itemDbl[1];
-      else if (NAME_IS("TiltSeriesMaxPredictErrorXY"))
-        mTSParam->maxPredictErrorXY = (float)itemDbl[1];
-      else if (NAME_IS("TiltSeriesMaxPredictErrorZ"))
-        mTSParam->maxPredictErrorZ[0] = (float)itemDbl[1];
-      else if (NAME_IS("TiltSeriesMaxPredictErrorZSN"))
-        mTSParam->maxPredictErrorZ[1] = (float)itemDbl[1];
-      else if (NAME_IS("TiltSeriesMaxPredictErrorZSM"))
-        mTSParam->maxPredictErrorZ[2] = (float)itemDbl[1];
-      else if (NAME_IS("TiltSeriesCenBeamPeriodically"))
-        mTSParam->cenBeamPeriodically = itemInt[1] != 0;
-      else if (NAME_IS("TiltSeriesCenBeamInterval"))
-        mTSParam->cenBeamInterval = itemInt[1];
-      else if (NAME_IS("TiltSeriesCenBeamAbove"))
-        mTSParam->cenBeamAbove = itemInt[1] != 0;
-      else if (NAME_IS("TiltSeriesCenBeamAngle"))
-        mTSParam->cenBeamAngle = (float)itemDbl[1];
-      else if (NAME_IS("TiltSeriesStackRecords"))
-        mTSParam->stackRecords = itemInt[1];
-      else if (NAME_IS("TSDoEarlyReturn"))
-        mTSParam->doEarlyReturn = itemInt[1] != 0;
-      else if (NAME_IS("TSNumEarlyFrames"))
-        mTSParam->earlyReturnNumFrames = itemInt[1];
-      else if (NAME_IS("TiltSeriesStackBinSize"))
-        mTSParam->stackBinSize = itemInt[1];
-      else if (NAME_IS("TiltSeriesExtraSetExposure"))
-        mTSParam->extraSetExposure = itemInt[1] != 0;
-      else if (NAME_IS("TiltSeriesExtraSetSpot"))
-        mTSParam->extraSetSpot = itemInt[1] != 0;
-      else if (NAME_IS("TiltSeriesExtraSpotSize"))
-        mTSParam->extraSpotSize = itemInt[1];
-      else if (NAME_IS("TiltSeriesExtraDeltaIntensity"))
-        mTSParam->extraDeltaIntensity = (float)itemDbl[1];
-      else if (NAME_IS("TiltSeriesExtraDrift"))
-        mTSParam->extraDrift = (float)itemDbl[1];
-      else if (NAME_IS("TiltSeriesExtraSetBinning"))
-        mTSParam->extraSetBinning = itemInt[1] != 0;
-      else if (NAME_IS("TiltSeriesExtraBinIndex"))
-        mTSParam->extraBinIndex = itemInt[1];
       else if (NAME_IS("TiltSeriesFocusSeries") || 
         NAME_IS("TiltSeriesFilterSeries") || NAME_IS("TiltSeriesExtraChannels") ||
         NAME_IS("TiltSeriesExtraExposure")) {
@@ -1050,19 +726,7 @@ int CParameterIO::ReadSettings(CString strFileName)
         if (index)
           AfxMessageBox("Extra Record series line badly formatted or too long in settings"
             " file " + strFileName + " :\n" + strLine, MB_EXCLAME);
-      } else if (NAME_IS("TiltSeriesDoVariations")) 
-        mTSParam->doVariations = itemInt[1] != 0;
-      else if (NAME_IS("TiltSeriesChangeRecExposure")) 
-        mTSParam->changeRecExposure = itemInt[1] != 0;
-      else if (NAME_IS("TiltSeriesChangeAllExposures")) 
-        mTSParam->changeAllExposures = itemInt[1] != 0;
-      else if (NAME_IS("TiltSeriesChangeSettling")) 
-        mTSParam->changeSettling = itemInt[1] != 0;
-      else if (NAME_IS("TiltSeriesExposureStep"))
-        mWinApp->mTSController->SetExpSeriesStep((float)itemDbl[1]);
-      else if (NAME_IS("ExposureSeriesFixNumFrames"))
-        mWinApp->mTSController->SetExpSeriesFixNumFrames(itemInt[1] != 0);
-      else if (NAME_IS("TiltSeriesVariation")) {
+      } else if (NAME_IS("TiltSeriesVariation")) {
         if (itemInt[4] < 0 || itemInt[4] >= MAX_VARY_TYPES || 
           mTSParam->numVaryItems >= MAX_TS_VARIES) {
           AfxMessageBox("Invalid type of change or too many changes for array in settings"
@@ -1084,77 +748,29 @@ int CParameterIO::ReadSettings(CString strFileName)
       } else if (NAME_IS("TiltSeriesBDAnchorMags")) {
         for (index = 0; index < 6; index++)
           mTSParam->bidirAnchorMagInd[index] = itemInt[index + 1];
-      } else if (NAME_IS("TiltSeriesTiltFailPolicy"))
-        mWinApp->mTSController->SetTiltFailPolicy(itemInt[1]);
-      else if (NAME_IS("TiltSeriesLDDimRecordPolicy"))
-        mWinApp->mTSController->SetLDDimRecordPolicy(itemInt[1]);
-      else if (NAME_IS("TiltSeriesTermNotAskOnDim"))
-        mWinApp->mTSController->SetTermNotAskOnDim(itemInt[1]);
-      else if (NAME_IS("TiltSeriesLDRecordLossPolicy"))
-        mWinApp->mTSController->SetLDRecordLossPolicy(itemInt[1]);
-      else if (NAME_IS("TiltSeriesAutoTerminatePolicy"))
-        mWinApp->mTSController->SetAutoTerminatePolicy(itemInt[1]);
-      else if (NAME_IS("TiltSeriesAutoSavePolicy"))
-        mWinApp->mTSController->SetAutoSavePolicy(itemInt[1] != 0);
-      else if (NAME_IS("TiltSeriesRunMacro")) {
+      } else if (NAME_IS("TiltSeriesRunMacro")) {
         mWinApp->mTSController->SetRunMacroInTS(itemInt[1] != 0);
         mWinApp->mTSController->SetMacroToRun(itemInt[2]), 
         mWinApp->mTSController->SetStepAfterMacro(itemInt[3]);
-      } else if (NAME_IS("TSCallPlugins"))
-        mWinApp->mTSController->SetCallTSplugins(itemInt[1] != 0);
-      else if (NAME_IS("TSFixedNumFrames"))
-        mWinApp->mTSController->SetFixedNumFrames(itemInt[1] != 0);
-      else if (NAME_IS("TSTermOnHighExposure")) {
+      } else if (NAME_IS("TSTermOnHighExposure")) {
         mWinApp->mTSController->SetTermOnHighExposure(itemInt[1] != 0);
         mWinApp->mTSController->SetMaxExposureIncrease((float)itemDbl[2]);
-      } else if (MatchNoCase("TSSkipBeamShiftOnAlign"))
-        mWinApp->mTSController->SetSkipBeamShiftOnAlign(itemInt[1] != 0);
-      else if (MatchNoCase("TSAllowContinuous"))
-        mWinApp->mTSController->SetAllowContinuous(itemInt[1] != 0);
-      else if (MatchNoCase("TiltSeriesBidirDimPolicy")) {
+      } else if (MatchNoCase("TiltSeriesBidirDimPolicy")) {
         mWinApp->mTSController->SetEndOnHighDimImage(itemInt[1] != 0);
         mWinApp->mTSController->SetDimEndsAbsAngle(itemInt[2]);
         mWinApp->mTSController->SetDimEndsAngleDiff(itemInt[3]);
       } else if (MatchNoCase("CloseValvesDuringMessageBox")) {
         mWinApp->mTSController->SetMessageBoxCloseValves(itemInt[1] != 0);
         mWinApp->mTSController->SetMessageBoxValveTime((float)itemDbl[2]);
-      } else if (NAME_IS("EmailAfterTiltSeries"))
-        mWinApp->mTSController->SetSendEmail(itemInt[1]);
-      else if (NAME_IS("EmailAddress")) {
+      } else if (NAME_IS("EmailAddress")) {
         StripItems(strLine, 1, strCopy);
         mWinApp->mMailer->SetSendTo(strCopy);
       } else if (NAME_IS("TSSetupPanelStates")) {
         for (index = 0; index < NUM_TSS_PANELS - 1; index++)
           tssPanelStates[index] = itemInt[index + 1];
-      } else if (NAME_IS("FilterSlitWidth"))
-        mFilterParam->slitWidth = (float)itemDbl[1];
-      else if (NAME_IS("FilterEnergyLoss"))
-        mFilterParam->energyLoss = (float)itemDbl[1];
-      else if (NAME_IS("FilterZeroLoss"))
-        mFilterParam->zeroLoss = itemInt[1] != 0;
-      else if (NAME_IS("FilterChangeMagWithScreen"))
-        mFilterParam->autoMag = itemInt[1] != 0;
-      else if (NAME_IS("FilterMatchPixel"))
-        mFilterParam->matchPixel = itemInt[1] != 0;
-      else if (NAME_IS("FilterMatchIntensity"))
-        mFilterParam->matchIntensity = itemInt[1] != 0;
-      else if (NAME_IS("FilterDoMagShifts"))
-        mFilterParam->doMagShifts = itemInt[1] != 0;
-      else if (NAME_IS("STEMmatchPixel"))
-        mWinApp->SetSTEMmatchPixel(itemInt[1] != 0);
-      else if (NAME_IS("ScreenSwitchSTEM"))
-        mWinApp->SetScreenSwitchSTEM(itemInt[1] != 0);
-      else if (NAME_IS("InvertSTEMimages"))
-        mWinApp->SetInvertSTEMimages(itemInt[1] != 0);
-      else if (NAME_IS("BlankBeamInSTEM"))
-        mWinApp->SetBlankBeamInSTEM(itemInt[1] != 0);
-      else if (NAME_IS("RetractToUnblankSTEM"))
-        mWinApp->SetRetractToUnblankSTEM(itemInt[1] != 0);
       /*else if (NAME_IS("AddedSTEMrotation"))
         mWinApp->SetAddedSTEMrotation((float)itemInt[1]); */
-      else if (NAME_IS("KeepPixelTime"))
-        mWinApp->SetKeepPixelTime(itemInt[1] != 0);
-      else if (NAME_IS("NonGIFMatchPixelIntensity")) {
+      } else if (NAME_IS("NonGIFMatchPixelIntensity")) {
         mWinApp->SetNonGIFMatchPixel(itemInt[1] != 0);
         mWinApp->SetNonGIFMatchIntensity(itemInt[2] != 0);
 
@@ -1270,16 +886,40 @@ int CParameterIO::ReadSettings(CString strFileName)
   return retval;
 }
 
+#undef INT_SETT_GETSET
+#undef BOOL_SETT_GETSET
+#undef FLOAT_SETT_GETSET
+#undef DOUBLE_SETT_GETSET
+#undef INT_SETT_ASSIGN
+#undef BOOL_SETT_ASSIGN
+#undef FLOAT_SETT_ASSIGN
+
+// Macros for writing each kind of variable
+#define INT_SETT_GETSET(a, b, c) \
+  WriteInt(a, b##Get##c());
+#define BOOL_SETT_GETSET(a, b, c) \
+  WriteInt(a, b##Get##c() ? 1 : 0);
+#define FLOAT_SETT_GETSET(a, b, c) \
+  WriteFloat(a, b##Get##c());
+#define DOUBLE_SETT_GETSET(a, b, c) \
+  WriteFloat(a, (float)b##Get##c());
+#define INT_SETT_ASSIGN(a, b) \
+  WriteInt(a, b);
+#define BOOL_SETT_ASSIGN(a, b) \
+  WriteInt(a, b ? 1 : 0);
+#define FLOAT_SETT_ASSIGN(a, b) \
+  WriteFloat(a, b);
+
 
 void CParameterIO::WriteSettings(CString strFileName)
 {
   ControlSet *cs;
   float pctLo, pctHi;
-  MontParam *montParam = mWinApp->GetMontParam();
   FileOptions *fileOpt = mWinApp->mDocWnd->GetFileOpt();
+#define SETTINGS_MODULES
+#include "SettingsTests.h"
+#undef SETTINGS_MODULES
   CString *macros = mWinApp->GetMacros();
-  CCameraController *camera = mWinApp->mCamera;
-  MacroControl *macControl = mWinApp->GetMacControl();
   DialogTable *dlgTable = mWinApp->GetDialogTable();
   int *dlgColorIndex = mWinApp->GetDlgColorIndex();
   CFocusManager *focusMan = mWinApp->mFocusManager;
@@ -1386,19 +1026,6 @@ void CParameterIO::WriteSettings(CString strFileName)
       }
     }
 
-    WriteFloat("AreaFractionForScaling", mWinApp->GetPctAreaFraction());
-    WriteFloat("FFTTruncDiameter",  mWinApp->GetTruncDiamOfFFT());
-    WriteInt("FFTBackgroundGray", mWinApp->GetBkgdGrayOfFFT());
-    WriteInt("OneK2FramePerFile", camera->GetOneK2FramePerFile() ? 1 : 0);
-    WriteInt("SkipK2FrameRotFlip", camera->GetSkipK2FrameRotFlip() ? 1 : 0);
-    WriteInt("SaveK2FramesAsTiff", camera->GetK2SaveAsTiff());
-    WriteInt("SaveRawPacked", camera->GetSaveRawPacked());
-    WriteInt("SaveTimes100", camera->GetSaveTimes100());
-    WriteInt("Use4BitMRCMode", camera->GetUse4BitMrcMode() ? 1 : 0);
-    WriteInt("SaveUnnormedFrames", camera->GetSaveUnnormalizedFrames() ? 1 : 0);
-    WriteInt("NameFramesAsMRCS", camera->GetNameFramesAsMRCS() ? 1 : 0);
-    WriteInt("AntialiasBinning", camera->GetAntialiasBinning() ? 1 : 0);
-    WriteInt("NumFrameAliLogLines", camera->GetNumFrameAliLogLines());
     oneState.Format("FrameNameData %d %d %d %d %d\n", camera->GetFrameNameFormat(),
         camera->GetFrameNumberStart(), camera->GetLastFrameNumberStart(),
         camera->GetLastUsedFrameNumber(), camera->GetDigitsForNumberedFrame());
@@ -1428,51 +1055,13 @@ void CParameterIO::WriteSettings(CString strFileName)
     mWinApp->GetDisplayTruncation(pctLo, pctHi);
     WriteFloat("PercentDisplayTruncationLo", pctLo);
     WriteFloat("PercentDisplayTruncationHi", pctHi);
-    WriteInt("BuffersToRollOnAcquire", mBufferManager->GetShiftsOnAcquire());
-    WriteInt("BufferToReadInto", mBufferManager->GetBufToReadInto());
-    WriteInt("FifthCopyToBuf", mBufferManager->GetFifthCopyToBuf());
     WriteInt("ProtectRecordImages", mBufferManager->GetConfirmBeforeDestroy(3));
-    WriteInt("AutoZoom", mBufferManager->GetAutoZoom());
-    WriteInt("Antialias", mBufferManager->GetAntialias());
-    WriteInt("FixedZoomSteps", mBufferManager->GetFixedZoomStep());
-    WriteInt("DrawScaleBar", mBufferManager->GetDrawScaleBar());
-    WriteInt("DrawCrosshairs", mBufferManager->GetDrawCrosshairs() ? 1 : 0);
-    WriteInt("CircleOnLiveFFT", mWinApp->mProcessImage->GetCircleOnLiveFFT() ? 1 : 0);
-    WriteInt("SideBySideFFT", mWinApp->mProcessImage->GetSideBySideFFT() ? 1 : 0);
-    WriteInt("AutoSingleFFT", mWinApp->mProcessImage->GetAutoSingleFFT() ? 1 : 0);
-    WriteFloat("PhasePlateShift",  mWinApp->mProcessImage->GetPlatePhase());
-    WriteFloat("FixedRingDefocus",  mWinApp->mProcessImage->GetFixedRingDefocus());
-    WriteInt("MontageCorrectDrift", montParam->correctDrift ? 1 : 0);
-    WriteInt("MontageAdjustFocus", montParam->adjustFocus ? 1 : 0);
-    WriteInt("MontageFocusAfterStage", montParam->focusAfterStage ? 1 : 0);
-    WriteInt("MontageShowOverview", montParam->showOverview ? 1 : 0);
-    WriteInt("MontageAlignPieces", montParam->shiftInOverview ? 1 : 0);
-    WriteInt("MontageVerySloppy", montParam->verySloppy ? 1 : 0);
-    WriteInt("MontageMinimumCounts", mWinApp->mMontageController->GetCountLimit());
-    WriteInt("MontageUseHQparams", montParam->useHqParams ? 1 : 0);
-    WriteInt("MontageUseViewInLD", montParam->useViewInLowDose ? 1 : 0);
     oneState.Format("MontageUseContinuous %d %f\n", montParam->useContinuousMode ? 1 : 0,
       montParam->continDelayFactor);
     mFile->WriteString(oneState);
     oneState.Format("MontageNoDriftCorr %d %d\n", montParam->noDriftCorr ? 1 : 0,
       montParam->noHQDriftCorr ? 1 : 0);
     mFile->WriteString(oneState);
-    WriteInt("MontageFocusInBlocks", montParam->focusInBlocks ? 1 : 0);
-    WriteInt("MontageRepeatFocus", montParam->repeatFocus ? 1 : 0);
-    WriteFloat("MontageDriftLimit", montParam->driftLimit);
-    WriteInt("MontageRealign", montParam->realignToPiece ? 1 : 0);
-    WriteInt("MontageISRealign", montParam->ISrealign ? 1 : 0);
-    WriteFloat("MontageMaxRealignIS", montParam->maxRealignIS);
-    WriteInt("MontageUseAnchor", montParam->useAnchorWithIS ? 1 : 0);
-    WriteInt("MontageAnchorMagInd", montParam->anchorMagInd);
-    WriteInt("MontageSkipCorrelations", montParam->skipCorrelations ? 1 : 0);
-    WriteInt("MontageSkipReblanks", montParam->skipRecReblanks ? 1 : 0);
-    WriteInt("MontageFocusBlockSize", montParam->focusBlockSize);
-    WriteInt("MontageRealignInterval", montParam->realignInterval);
-    WriteFloat("MontageMinOverlapFactor", montParam->minOverlapFactor);
-    WriteFloat("MontageMinMicronsOverlap", montParam->minMicronsOverlap);
-    WriteFloat("MontageHQdelayTime", montParam->hqDelayTime);
-    WriteFloat("MontageMaxAlignFrac", montParam->maxAlignFrac);
     oneState.Format("MontageFilterOptions %d %d %d %d\n", 
       mWinApp->mMontageController->GetUseFilterSet2() ? 1 : 0, 
       mWinApp->mMontageController->GetUseSet2InLD() ? 1 : 0, 
@@ -1480,79 +1069,26 @@ void CParameterIO::WriteSettings(CString strFileName)
       mWinApp->mMontageController->GetDivFilterSet2By2() ? 1 : 0);
     mFile->WriteString(oneState);
     WriteInt("TIFFcompression", fileOpt->compression);
-    WriteInt("SelectedCameraParameterSet",  mWinApp->GetSelectedConSet());
-    WriteFloat("TargetDefocus", focusMan->GetTargetDefocus());
-    WriteFloat("AutofocusOffset", focusMan->GetDefocusOffset());
     oneState.Format("AutofocusEucenAbsParams %f %f %f %f %d %d\n", 
       focusMan->GetEucenMinAbsFocus(), focusMan->GetEucenMaxAbsFocus(),
       focusMan->GetEucenMinDefocus(), focusMan->GetEucenMaxDefocus(),
       focusMan->GetUseEucenAbsLimits() ? 1 : 0, focusMan->GetTestOffsetEucenAbs() ? 1 :0);
     mFile->WriteString(oneState);
-    WriteFloat("RefocusThreshold", focusMan->GetRefocusThreshold());
-    WriteFloat("AbortThreshold", focusMan->GetAbortThreshold());
-    WriteInt("DriftProtection", focusMan->GetTripleMode() ? 1 : 0);
-    WriteInt("FocusVerbose", focusMan->GetVerbose() ? 1 : 0);
-    WriteFloat("TiltIncrement", mWinApp->mScope->GetBaseIncrement());
-    WriteInt("CosineTilting", mWinApp->mScope->GetCosineTilt() ? 1 : 0);
-    WriteFloat("TiltDelay", mWinApp->mShiftManager->GetTiltDelay());
-    WriteFloat("AutofocusBeamTilt", (float)focusMan->GetBeamTilt());
-    WriteInt("BeamTiltDirection", focusMan->GetTiltDirection());
-    WriteInt("MinDDDfocusBinning", focusMan->GetDDDminBinning());
-    WriteFloat("UsersAstigTilt", mWinApp->mAutoTuning->GetUsersAstigTilt());
-    WriteFloat("UsersComaTilt", mWinApp->mAutoTuning->GetUsersComaTilt());
-    WriteInt("MoveStageOnBigMouseShift", 
-      mWinApp->mShiftManager->GetMouseMoveStage() ? 1 : 0);
-    WriteInt("BacklashMouseAndISR", 
-      mWinApp->mShiftManager->GetBacklashMouseAndISR() ? 1 : 0);
-    WriteInt("TrimBordersInAutoalign", 
-      mWinApp->mShiftManager->GetTrimDarkBorders() ? 1 : 0);
-    WriteInt("DisableAutoTrim", mWinApp->mShiftManager->GetDisableAutoTrim());
-    WriteInt("ShiftToTiltAxis", mWinApp->mScope->GetShiftToTiltAxis() ? 1 : 0);
-    WriteInt("ApplyISoffset", mWinApp->mScope->GetApplyISoffset() ? 1 : 0);
-    WriteInt("UsePiezoForLDAxis", mWinApp->mScope->GetUsePiezoForLDaxis() ? 1 : 0);
-    WriteInt("AdjustFocusForProbe", mWinApp->mScope->GetAdjustFocusForProbe() ? 1 : 0);
-    WriteInt("NormAutofocusViaView", focusMan->GetNormalizeViaView() ?
-      1 : 0);
-    WriteFloat("MouseStageThreshold", mWinApp->mShiftManager->GetMouseStageThresh());
-    WriteFloat("MouseStageAbsoluteThreshold", 
-      mWinApp->mShiftManager->GetMouseStageAbsThresh());
-    WriteInt("IgnoreHigherGainRefs", 
-      mWinApp->mGainRefMaker->GetIgnoreHigherRefs() ? 1 : 0);
-    WriteInt("UseOlderBinned2Ref", mWinApp->mGainRefMaker->GetUseOlderBinned2() ? 1 : 0);
-    WriteInt("DMgainRefAskPolicy", mWinApp->mGainRefMaker->GetDMrefAskPolicy());
+#define SET_TEST_SECT1
+#include "SettingsTests.h"
+#undef SET_TEST_SECT1
+#define SET_TEST_SECT2
+#include "SettingsTests.h"
+#undef SET_TEST_SECT2
+#define SET_TEST_SECT3
+#include "SettingsTests.h"
+#undef SET_TEST_SECT3
+
     WriteAllMacros();
 
-    WriteInt("MacroLimitRuns", macControl->limitRuns ? 1 : 0);
-    WriteInt("MacroRunLimit", macControl->runLimit);
-    WriteInt("MacroLimitScaleMax", macControl->limitScaleMax ? 1 : 0);
-    WriteInt("MacroScaleMaxLimit", macControl->scaleMaxLimit);
-    WriteInt("MacroLimitTiltUp", macControl->limitTiltUp ? 1 : 0);
-    WriteFloat("MacroTiltUpLimit", macControl->tiltUpLimit);
-    WriteInt("MacroLimitTiltDown", macControl->limitTiltDown ? 1 : 0);
-    WriteFloat("MacroTiltDownLimit", macControl->tiltDownLimit);
-    WriteInt("MacroLimitMontError", macControl->limitMontError ? 1 : 0);
-    WriteFloat("MacroMontErrorLimit", macControl->montErrorLimit);
-    WriteInt("MacroLimitIS", macControl->limitIS ? 1 : 0);
-    WriteFloat("MacroISLimit", macControl->ISlimit);
-    WriteInt("AutosaveSettings", mWinApp->mDocWnd->GetAutoSaveSettings() ? 1 : 0);
-    WriteInt("AutosaveNavNew", mWinApp->mDocWnd->GetAutoSaveNav() ? 1 : 0);
-    WriteInt("AutosaveLog", mWinApp->mTSController->GetAutosaveLog() ? 1 : 0);
-    WriteInt("AutosaveXYZ", mWinApp->mTSController->GetAutosaveXYZ() ? 1 : 0);
-    WriteInt("StageMoveToolImage", mWinApp->GetImageWithStageToolMove() ? 1 : 0);
-    WriteInt("LoadMapsUnbinned", mWinApp->GetLoadMapsUnbinned() ? 1 : 0);
-    WriteInt("WriteNavAsXML", mWinApp->GetWriteNavAsXML() ? 1 : 0);
-    WriteInt("TryRealignScaling", mWinApp->GetTryRealignScaling() ? 1 : 0);
-    WriteInt("PointLabelDrawThresh", mWinApp->GetPointLabelDrawThresh());
     oneState.Format("AutoBacklashNewMap %d %f\n", mWinApp->GetAutoBacklashNewMap(),
       mWinApp->GetAutoBacklashMinField());
     mFile->WriteString(oneState);
-    WriteInt("CameraDivide16BitBy2", camera->GetDivideBy2());
-    WriteInt("InterpolateDarkRefs", camera->GetInterpDarkRefs() ? 1 : 0);
-    WriteInt("NoNormOfDSDoseFrac", camera->GetNoNormOfDSdoseFrac() ? 1 : 0);
-    WriteInt("RotAlignDoSearch", mWinApp->mNavHelper->GetSearchRotAlign() ? 1 : 0);
-    WriteFloat("RotAlignRange", mWinApp->mNavHelper->GetRotAlignRange());
-    WriteFloat("GridGroupSize", mWinApp->mNavHelper->GetGridGroupSize());
-    WriteInt("DivideGridIntoGroups", mWinApp->mNavHelper->GetDivideIntoGroups() ? 1 : 0);
     oneState.Format("NavigatorAcquireParams %d %d %d %d %d %d %d %d %d %d %d %d %d %d"
       " %d\n", navParams->acqAutofocus ? 1 : 0, navParams->acqFineEucen ? 1 : 0,
       navParams->acqRealign ? 1 : 0, navParams->acqRestoreOnRealign ? 1 : 0,
@@ -1720,90 +1256,17 @@ void CParameterIO::WriteSettings(CString strFileName)
         mFile->WriteString(oneState);
       }
     }
-    WriteInt("LowDoseBlankWhenDown", mWinApp->mLowDoseDlg.m_bBlankWhenDown ? 1 : 0);
-    WriteInt("LowDoseNormalizeBeam", mWinApp->mLowDoseDlg.m_bNormalizeBeam ? 1 : 0);
-    WriteFloat("LowDoseViewDefocus", mWinApp->mScope->GetLDViewDefocus());
-    WriteInt("LowDoseAreaToShow", mWinApp->mLowDoseDlg.m_iShowArea);
-    WriteInt("LowDoseTieFocusTrial", mWinApp->mLowDoseDlg.m_bTieFocusTrial ? 1 : 0);
     oneState.Format("LowDoseViewShift %f %f\n", mWinApp->mLowDoseDlg.mViewShiftX, 
       mWinApp->mLowDoseDlg.mViewShiftY); 
     mFile->WriteString(oneState);
-    WriteInt("LowDoseRotateAxis", mWinApp->mLowDoseDlg.m_bRotateAxis ? 1 : 0);
-    WriteInt("LowDoseAxisAngle", mWinApp->mLowDoseDlg.m_iAxisAngle);
-    WriteFloat("WalkUpTargetAngle", mWinApp->mComplexTasks->GetWalkTarget());
-    WriteFloat("WalkUpMinInterval", mWinApp->mComplexTasks->GetMinWalkInterval());
-    WriteFloat("WalkUpMaxInterval", mWinApp->mComplexTasks->GetMaxWalkInterval());
     pctLo = mWinApp->mComplexTasks->GetRSRAUserCriterion();
     if (pctLo >= 0.)
       WriteFloat("ResetRealignIterationCriterion", pctLo);
-    WriteInt("ResetRealignUseTrialInLowDose", 
-      mWinApp->mComplexTasks->GetRSRAUseTrialInLDMode() ? 1 : 0);
-    WriteInt("FineEucenUseTrialInLowDose", 
-      mWinApp->mComplexTasks->GetFEUseTrialInLD() ? 1 : 0);
-    WriteInt("WalkupUseViewInLowDose", 
-      mWinApp->mComplexTasks->GetWalkUseViewInLD() ? 1 : 0);
-    WriteInt("ComplexTasksVerbose", mWinApp->mComplexTasks->GetVerbose() ? 1 : 0);
 
     // Save Tilt Series Params
-    WriteFloat("TiltSeriesLastStartingTilt", mTSParam->lastStartingTilt);
-    WriteInt("TiltSeriesLeftAnchorBuffer", mTSParam->anchorBuffer);
     oneState.Format("TiltSeriesLowMagIndex %d %d %d\n", mTSParam->lowMagIndex[0], 
       mTSParam->lowMagIndex[1], mTSParam->lowMagIndex[2]);
     mFile->WriteString(oneState);
-    WriteInt("TiltSeriesTrackLowMag", mTSParam->trackLowMag ? 1 : 0);
-    WriteInt("TiltSeriesTrackAfterFocus", mTSParam->trackAfterFocus);
-    WriteInt("TiltSeriesBeamControl", mTSParam->beamControl);
-    WriteInt("TiltSeriesCosinePower", mTSParam->cosinePower);
-    WriteInt("TiltSeriesMeanCounts", mTSParam->meanCounts);
-    WriteInt("TiltSeriesTaperCounts", mTSParam->taperCounts ? 1 : 0);
-    WriteInt("TiltSeriesHighCounts", mTSParam->highCounts);
-    WriteFloat("TiltSeriesTaperAngle", mTSParam->taperAngle);
-    WriteInt("TiltSeriesLimitIntensity", mTSParam->limitIntensity ? 1 : 0);
-    WriteInt("TiltSeriesRefineEucentricity", mTSParam->refineEucen ? 1 : 0);
-    WriteInt("TiltSeriesWalkLeaveAnchor", mTSParam->leaveAnchor ? 1 : 0);
-    WriteFloat("TiltSeriesWalkAnchorTilt", mTSParam->anchorTilt);
-    WriteFloat("TiltSeriesImageShiftLimit", mTSParam->ISlimit);
-    WriteFloat("TiltSeriesFocusCheckInterval", mTSParam->focusCheckInterval);
-    WriteInt("TiltSeriesRepeatRecord", mTSParam->repeatRecord ? 1 : 0);
-    WriteInt("TiltSeriesConfirmLDRepeat", mTSParam->confirmLowDoseRepeat ? 1 : 0);
-    WriteFloat("TiltSeriesMaxRecordLoss", mTSParam->maxRecordShift);
-    WriteInt("TiltSeriesStopOnBigShift", mTSParam->stopOnBigAlignShift ? 1 : 0);
-    WriteFloat("TiltSeriesMaxAlignShift", mTSParam->maxAlignShift);
-    WriteInt("TiltSeriesRepeatAutofocus", mTSParam->repeatAutofocus ? 1 : 0);
-    WriteFloat("TiltSeriesMaxFocusDiff", mTSParam->maxFocusDiff);
-    WriteInt("TiltSeriesAlwaysFocusAtHigh", mTSParam->alwaysFocusHigh ? 1 : 0);
-    WriteFloat("TiltSeriesAlwaysFocusAngle", mTSParam->alwaysFocusAngle);
-    WriteInt("TiltSeriesSkipAutofocus", mTSParam->skipAutofocus ? 1 : 0);
-    WriteInt("TiltSeriesCheckAutofocus", mTSParam->checkAutofocus ? 1 : 0);
-    WriteInt("TSLimitFocusChange", mTSParam->limitDefocusChange ? 1 : 0);
-    WriteFloat("TSFocusChangeLimit", mTSParam->defocusChangeLimit);
-    WriteFloat("TiltSeriesMinFocusAccuracy", mTSParam->minFocusAccuracy);
-    WriteInt("TiltSeriesAlignTrackOnly", mTSParam->alignTrackOnly ? 1 : 0);
-    WriteInt("TiltSeriesPreviewBeforeNewRef", mTSParam->previewBeforeNewRef ? 1 : 0);
-    WriteFloat("TiltSeriesMaxRefDisagreement", mTSParam->maxRefDisagreement);
-    WriteFloat("TiltSeriesMaxPredictErrorXY", mTSParam->maxPredictErrorXY);
-    WriteFloat("TiltSeriesMaxPredictErrorZ", mTSParam->maxPredictErrorZ[0]);
-    WriteFloat("TiltSeriesMaxPredictErrorZSN", mTSParam->maxPredictErrorZ[1]);
-    WriteFloat("TiltSeriesMaxPredictErrorZSM", mTSParam->maxPredictErrorZ[2]);
-    WriteInt("TiltSeriesRefineZLP", mTSParam->refineZLP ? 1 : 0);
-    WriteInt("TiltSeriesZLPInterval", mTSParam->zlpInterval);
-    WriteInt("TiltSeriesCenterBeam", mTSParam->centerBeamFromTrial ? 1 : 0);
-    WriteInt("TiltSeriesCenBeamPeriodically", mTSParam->cenBeamPeriodically ? 1 : 0);
-    WriteInt("TiltSeriesCenBeamInterval", mTSParam->cenBeamInterval);
-    WriteInt("TiltSeriesCenBeamAbove", mTSParam->cenBeamAbove ? 1 : 0);
-    WriteFloat("TiltSeriesCenBeamAngle", mTSParam->cenBeamAngle);
-    WriteInt("TiltSeriesCloseValvesAtEnd", mTSParam->closeValvesAtEnd ? 1 : 0);
-    WriteInt("TiltSeriesStackRecords", mTSParam->stackRecords);
-    WriteInt("TiltSeriesStackBinSize", mTSParam->stackBinSize);
-    WriteInt("TSDoEarlyReturn", mTSParam->doEarlyReturn ? 1 : 0);
-    WriteInt("TSNumEarlyFrames", mTSParam->earlyReturnNumFrames);
-    WriteInt("TiltSeriesExtraSetExposure", mTSParam->extraSetExposure ? 1 : 0);
-    WriteInt("TiltSeriesExtraSetSpot", mTSParam->extraSetSpot ? 1 : 0);
-    WriteInt("TiltSeriesExtraSpotSize", mTSParam->extraSpotSize);
-    WriteFloat("TiltSeriesExtraDeltaIntensity", mTSParam->extraDeltaIntensity);
-    WriteFloat("TiltSeriesExtraDrift", mTSParam->extraDrift);
-    WriteInt("TiltSeriesExtraSetBinning", mTSParam->extraSetBinning ? 1 : 0);
-    WriteInt("TiltSeriesExtraBinIndex", mTSParam->extraBinIndex);
     if (mTSParam->numExtraFocus) {
       oneState = EntryListToString(1, 2, mTSParam->numExtraFocus, NULL, mTSParam->extraFocus);
       WriteString("TiltSeriesFocusSeries", oneState);
@@ -1823,13 +1286,6 @@ void CParameterIO::WriteSettings(CString strFileName)
         mTSParam->extraChannels, NULL);
       WriteString("TiltSeriesExtraChannels", oneState);
     }
-    WriteInt("TiltSeriesDoVariations", mTSParam->doVariations ? 1 : 0);
-    WriteInt("TiltSeriesChangeRecExposure", mTSParam->changeRecExposure ? 1 : 0);
-    WriteInt("TiltSeriesChangeAllExposures", mTSParam->changeAllExposures ? 1 : 0);
-    WriteInt("TiltSeriesChangeSettling", mTSParam->changeSettling ? 1 : 0);
-    WriteFloat("TiltSeriesExposureStep", mWinApp->mTSController->GetExpSeriesStep());
-    WriteInt("ExposureSeriesFixNumFrames", 
-      mWinApp->mTSController->GetExpSeriesFixNumFrames() ? 1 : 0);
     for (i = 0; i < mTSParam->numVaryItems; i++) {
       oneState.Format("TiltSeriesVariation %f %d %d %d %f\n", mTSParam->varyArray[i].angle,
         mTSParam->varyArray[i].plusMinus ? 1 : 0, mTSParam->varyArray[i].linear ? 1 : 0, 
@@ -1846,29 +1302,13 @@ void CParameterIO::WriteSettings(CString strFileName)
       oneState += macCopy;
     }
     WriteString("TiltSeriesBDAnchorMags", oneState);
-    WriteInt("TiltSeriesTiltFailPolicy", mWinApp->mTSController->GetTiltFailPolicy());
-    WriteInt("TiltSeriesLDRecordLossPolicy", 
-      mWinApp->mTSController->GetLDRecordLossPolicy());
-    WriteInt("TiltSeriesLDDimRecordPolicy", 
-      mWinApp->mTSController->GetLDDimRecordPolicy());
-    WriteInt("TiltSeriesTermNotAskOnDim", 
-      mWinApp->mTSController->GetTermNotAskOnDim());
-    WriteInt("TiltSeriesAutoTerminatePolicy", 
-      mWinApp->mTSController->GetAutoTerminatePolicy());
-    WriteInt("TiltSeriesAutoSavePolicy", 
-      mWinApp->mTSController->GetAutoSavePolicy() ? 1 : 0);
     oneState.Format("%d %d %d", mWinApp->mTSController->GetRunMacroInTS() ? 1 : 0,
       mWinApp->mTSController->GetMacroToRun(), 
       mWinApp->mTSController->GetStepAfterMacro());
     WriteString("TiltSeriesRunMacro", oneState);
-    WriteInt("TSCallPlugins", mWinApp->mTSController->GetCallTSplugins() ? 1 : 0);
-    WriteInt("TSFixedNumFrames", mWinApp->mTSController->GetFixedNumFrames() ? 1 : 0);
     oneState.Format("%d %f", mWinApp->mTSController->GetTermOnHighExposure() ? 1 : 0, 
       mWinApp->mTSController->GetMaxExposureIncrease());
     WriteString("TSTermOnHighExposure", oneState);
-    WriteInt("TSSkipBeamShiftOnAlign", mWinApp->mTSController->GetSkipBeamShiftOnAlign()
-      ? 1 : 0);
-    WriteInt("TSAllowContinuous", mWinApp->mTSController->GetAllowContinuous() ? 1 : 0);
     oneState.Format("%d %d %d", mWinApp->mTSController->GetEndOnHighDimImage() ? 1 : 0,
       mWinApp->mTSController->GetDimEndsAbsAngle(), 
       mWinApp->mTSController->GetDimEndsAngleDiff());
@@ -1877,7 +1317,6 @@ void CParameterIO::WriteSettings(CString strFileName)
       mWinApp->mTSController->GetMessageBoxCloseValves() ? 1 : 0,
       mWinApp->mTSController->GetMessageBoxValveTime());
     mFile->WriteString(oneState);
-    WriteInt("EmailAfterTiltSeries", mWinApp->mTSController->GetSendEmail());
     oneState = mWinApp->mMailer->GetSendTo();
     if (!oneState.IsEmpty())
       WriteString("EmailAddress", oneState);
@@ -1888,19 +1327,6 @@ void CParameterIO::WriteSettings(CString strFileName)
     }
     oneState += "\n";
     mFile->WriteString(oneState);
-    WriteFloat("FilterSlitWidth", mFilterParam->slitWidth);
-    WriteFloat("FilterEnergyLoss", mFilterParam->energyLoss);
-    WriteInt("FilterZeroLoss", mFilterParam->zeroLoss ? 1 : 0);
-    WriteInt("FilterChangeMagWithScreen", mFilterParam->autoMag ? 1 : 0);
-    WriteInt("FilterMatchPixel", mFilterParam->matchPixel ? 1 : 0);
-    WriteInt("FilterMatchIntensity", mFilterParam->matchIntensity ? 1 : 0);
-    WriteInt("FilterDoMagShifts", mFilterParam->doMagShifts ? 1 : 0);
-    WriteInt("STEMmatchPixel", mWinApp->GetSTEMmatchPixel() ? 1 : 0);
-    WriteInt("ScreenSwitchSTEM", mWinApp->GetScreenSwitchSTEM() ? 1 : 0);
-    WriteInt("InvertSTEMimages", mWinApp->GetInvertSTEMimages() ? 1 : 0);
-    WriteInt("KeepPixelTime", mWinApp->GetKeepPixelTime() ? 1 : 0);
-    WriteInt("BlankBeamInSTEM", mWinApp->GetBlankBeamInSTEM() ? 1 : 0);
-    WriteInt("RetractToUnblankSTEM", mWinApp->GetRetractToUnblankSTEM() ? 1 : 0);
     //WriteFloat("AddedSTEMrotation", mWinApp->GetAddedSTEMrotation());
     oneState.Format("NonGIFMatchPixelIntensity %d %d\n", 
       mWinApp->GetNonGIFMatchPixel(), mWinApp->GetNonGIFMatchIntensity());
@@ -1919,7 +1345,6 @@ void CParameterIO::WriteSettings(CString strFileName)
         mCamParam[i].imageXRayNumSDCrit, mCamParam[i].imageXRayBothCrit);
       mFile->WriteString(oneState);
     }
-    WriteInt("GainRefCalibrateDose", mWinApp->mGainRefMaker->GetCalibrateDose() ? 1 : 0);
     oneState.Format("GridMapLimits %f %f %f %f\n", gridLim[0], gridLim[1], gridLim[2], 
       gridLim[3]);
     mFile->WriteString(oneState);
@@ -1965,6 +1390,13 @@ void CParameterIO::WriteSettings(CString strFileName)
 
 
 }
+#undef INT_SETT_GETSET
+#undef BOOL_SETT_GETSET
+#undef FLOAT_SETT_GETSET
+#undef DOUBLE_SETT_GETSET
+#undef INT_SETT_ASSIGN
+#undef BOOL_SETT_ASSIGN
+#undef FLOAT_SETT_ASSIGN
 
 // Read macros from a file with the given name
 void CParameterIO::ReadMacrosFromFile(CString filename)
@@ -5150,7 +4582,7 @@ void CParameterIO::StoreFloatsPerBinning(CString *strItems, const char *descrip,
   }
 }
 
-// Functions for setting a property value from script or menu using C macros
+// Macros and Function for setting a property value from script
 #define INT_PROP_TEST(a, b, c) \
   else if (name.CompareNoCase(a) == 0) \
     b##Set##c(B3DNINT(value));
@@ -5209,6 +4641,8 @@ int CParameterIO::MacroSetProperty(CString name, double value)
 #undef BOOL_PROP_TEST
 #undef FLOAT_PROP_TEST
 #undef DBL_PROP_TEST
+
+// Macros and Function for setting a property value from menu
 #define INT_PROP_TEST(a, b, c) \
   else if (name.CompareNoCase(a) == 0) { \
     if (KGetOneInt(propStr + a, ival)) \
@@ -5277,3 +4711,138 @@ void CParameterIO::UserSetProperty(void)
       "command");
   }
 }
+#undef INT_PROP_TEST
+#undef BOOL_PROP_TEST
+#undef FLOAT_PROP_TEST
+#undef DBL_PROP_TEST
+
+// Macros and function for getting a user setting from a macro
+#define INT_SETT_GETSET(a, b, c) \
+  else if (name.CompareNoCase(a) == 0) \
+    value = b##Get##c();
+#define BOOL_SETT_GETSET(a, b, c) \
+  else if (name.CompareNoCase(a) == 0) \
+   value = b##Get##c() ? 1: 0;
+#define FLOAT_SETT_GETSET(a, b, c) \
+  else if (name.CompareNoCase(a) == 0)   \
+    value = b##Get##c();
+#define DOUBLE_SETT_GETSET(a, b, c) \
+  else if (name.CompareNoCase(a) == 0)   \
+    value = b##Get##c();
+#define INT_SETT_ASSIGN(a, b) \
+  else if (name.CompareNoCase(a) == 0) \
+    value = b;
+#define BOOL_SETT_ASSIGN(a, b) \
+  else if (name.CompareNoCase(a) == 0) \
+    value = (b != 0) ? 1. : 0.;
+#define FLOAT_SETT_ASSIGN(a, b) \
+  else if (name.CompareNoCase(a) == 0) \
+    value = b;
+
+int CParameterIO::MacroGetSetting(CString name, double &value)
+{
+#define SETTINGS_MODULES
+#include "SettingsTests.h"
+#undef SETTINGS_MODULES
+  bool recognized = true, recognized2 = true;
+  if (false) {
+  }
+#define SET_TEST_SECT1
+#include "SettingsTests.h"
+#undef SET_TEST_SECT1
+  else 
+    recognized = false;
+      
+  if (recognized) {
+  }
+#define SET_TEST_SECT2
+#include "SettingsTests.h"
+#undef SET_TEST_SECT2
+  else 
+    recognized2 = false;
+      
+  if (recognized || recognized2) {
+  }
+#define SET_TEST_SECT3
+#include "SettingsTests.h"
+#undef SET_TEST_SECT3
+  else {
+    return 1;
+  }
+  return 0;
+}
+#undef INT_SETT_GETSET
+#undef BOOL_SETT_GETSET
+#undef FLOAT_SETT_GETSET
+#undef DOUBLE_SETT_GETSET
+#undef INT_SETT_ASSIGN
+#undef BOOL_SETT_ASSIGN
+#undef FLOAT_SETT_ASSIGN
+
+
+// Macros and function for changing a user setting from a macro
+#define INT_SETT_GETSET(a, b, c) \
+  else if (name.CompareNoCase(a) == 0) \
+    b##Set##c(ival);
+#define BOOL_SETT_GETSET(a, b, c) \
+  else if (name.CompareNoCase(a) == 0) \
+    b##Set##c(ival != 0);
+#define FLOAT_SETT_GETSET(a, b, c) \
+  else if (name.CompareNoCase(a) == 0)   \
+    b##Set##c((float)value);
+#define DOUBLE_SETT_GETSET(a, b, c) \
+  else if (name.CompareNoCase(a) == 0)   \
+    b##Set##c(value);
+#define INT_SETT_ASSIGN(a, b) \
+  else if (name.CompareNoCase(a) == 0) \
+    b = ival;
+#define BOOL_SETT_ASSIGN(a, b) \
+  else if (name.CompareNoCase(a) == 0) \
+    b = ival != 0;
+#define FLOAT_SETT_ASSIGN(a, b) \
+  else if (name.CompareNoCase(a) == 0) \
+    b = (float)value;
+
+int CParameterIO::MacroSetSetting(CString name, double value)
+{
+#define SETTINGS_MODULES
+#include "SettingsTests.h"
+#undef SETTINGS_MODULES
+  int ival;
+  double valCopy = value;
+  B3DCLAMP(valCopy, 2.147e9, 2.147e9);
+  ival = B3DNINT(valCopy);
+  bool recognized = true, recognized2 = true;
+  if (false) {
+  }
+#define SET_TEST_SECT1
+#include "SettingsTests.h"
+#undef SET_TEST_SECT1
+  else 
+    recognized = false;
+      
+  if (recognized) {
+  }
+#define SET_TEST_SECT2
+#include "SettingsTests.h"
+#undef SET_TEST_SECT2
+  else 
+    recognized2 = false;
+      
+  if (recognized || recognized2) {
+  }
+#define SET_TEST_SECT3
+#include "SettingsTests.h"
+#undef SET_TEST_SECT3
+  else {
+    return 1;
+  }
+  return 0;
+}
+#undef INT_SETT_GETSET
+#undef BOOL_SETT_GETSET
+#undef FLOAT_SETT_GETSET
+#undef DOUBLE_SETT_GETSET
+#undef INT_SETT_ASSIGN
+#undef BOOL_SETT_ASSIGN
+#undef FLOAT_SETT_ASSIGN
