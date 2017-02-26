@@ -249,7 +249,7 @@ static CmdItem cmdList[] = {{NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0
 {"ClearPersistentVars", 0}, {"ElseIf", 3}, {"YesNoBox", 1}, {"MakeDirectory", 1},
 {"AllowFileOverwrite", 1}, {"OppositeTrial", 0}, {"OppositeFocus", 0},
 {"OppositeAutoFocus", 0}, {"ReportAutoFocus", 0}, {"ReportTargetDefocus", 0},
-{"Plugin", 2}, {"ListPluginCalls", 0}, {"SetStandardFocus", 1}, {"SetCameraArea", 5},
+{"Plugin", 2}, {"ListPluginCalls", 0}, {"SetStandardFocus", 1}, {"SetCameraArea", 2},
 {"SetIlluminatedArea", 1}, {"ReportIlluminatedArea", 0}, {"SelectCamera", 1},
 {"SetLowDoseMode", 1}, {"TestSTEMshift", 3}, {"QuickFlyback", 2}, {"NormalizeLenses", 1},
 {"ReportSlotStatus", 1}, {"LoadCartridge", 1}, {"UnloadCartridge", 0},
