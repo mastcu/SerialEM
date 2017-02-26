@@ -334,8 +334,12 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Corr&ect Astigmatism",        ID_FOCUS_CORRECTASTIGMATISM
         MENUITEM "Set Astig Beam Tilt",         ID_FOCUS_SETASTIGBEAMTILT
+        MENUITEM SEPARATOR
         MENUITEM "Coma-free A&lignment",        ID_FOCUS_COMA
         MENUITEM "Set Coma Beam Tilt",          ID_FOCUS_SETCOMABEAMTILT
+        MENUITEM "Set Coma Iterations",         ID_FOCUS_SETCOMAITERATIONS
+        MENUITEM "Run Another Iteration",       ID_FOCUS_RUNANOTHERITERATION
+        MENUITEM "Beam-tilted FFT Arra&y",      ID_FOCUS_MAKEZEMLINTABLEAU
         MENUITEM SEPARATOR
         MENUITEM "Re&set Defocus",              ID_FOCUS_RESETDEFOCUS
         MENUITEM "&Verbose",                    ID_FOCUS_VERBOSE
@@ -4708,6 +4712,12 @@ BEGIN
     ID_CAMERA_SETFRAMEALIGNLINES 
                             "Set # of lines of log output from frame alignment"
     ID_SETTINGS_SETAPROPERTY "Enter name of property and new value for it"
+    ID_FOCUS_RUNANOTHERITERATION 
+                            "Do an iteration and average with previous results"
+    ID_FOCUS_MAKEZEMLINTABLEAU 
+                            "Make array of FFTs (Zemlin tableau) from beam-tilted images"
+    ID_FOCUS_SETCOMAITERATIONS 
+                            "Set # of initial iterations for coma-free alignment"
 END
 
 STRINGTABLE

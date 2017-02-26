@@ -5,7 +5,9 @@
 #include "FocusManager.h"
 #include "ShiftManager.h"
 #include "ProcessImage.h"
+#include "CameraController.h"
 #include "Shared\b3dutil.h"
+#include "Utilities\XCorr.h"
 
 
 CAutoTuning::CAutoTuning(void)
@@ -29,6 +31,12 @@ CAutoTuning::CAutoTuning(void)
   mAstigIterationThresh = 0.015f;
   mMaxAstigIterations = 2;
   mComaMeanCritFac = 0.5f;
+  mZemlinIndex = -1;
+  mMontTableau = NULL;
+  mSpectrum = NULL;
+  mInitialComaIters = 2;
+  mNumComaItersDone = 0;
+  mMenuZemlinTilt = 6.;
 }
 
 
@@ -379,12 +387,17 @@ void CAutoTuning::FixAstigCleanup(int error)
 //////////////////////////////////////////////////////////////////////////
 
 // Routine to start the procedure; calibrate or not; impose change or just measure
-int CAutoTuning::ComaFreeAlignment(bool calibrate, bool imposeChange)
+int CAutoTuning::ComaFreeAlignment(bool calibrate, int actionType)
 {
+  int magInd = mScope->GetMagIndex();
+  int alpha = mScope->GetAlpha();
+  int probe = mScope->GetProbeMode();
+  CString str;
+  bool continuing = !calibrate && (actionType == COMA_CONTINUE_RUN ||
+    actionType == COMA_ADD_ONE_ITER);
   mCalibrateComa = calibrate;
 
-  if (!calibrate && LookupComaCal(mScope->GetProbeMode(), mScope->GetAlpha(), 
-    mScope->GetMagIndex()) < 0) {
+  if (!calibrate && LookupComaCal(probe, alpha, magInd) < 0) {
       SEMMessageBox("There is no coma calibration for the current conditions");
       return 1;
   }
@@ -393,20 +406,48 @@ int CAutoTuning::ComaFreeAlignment(bool calibrate, bool imposeChange)
     return 1;
   }
   if (calibrate) {
-    CString str = TuningCalMessageStart("Coma", "beam tilts up to", mMaxComaBeamTilt);
+    str = TuningCalMessageStart("Coma", "beam tilts up to", mMaxComaBeamTilt);
     str += "\n\nThe objective aperture must not be in for this procedure.\n\n"
       "Are you ready to proceed?";
     if (AfxMessageBox(str, MB_QUESTION) != IDYES)
       return 1;
   }
 
-  GeneralSetup();
+  if (continuing && !mNumComaItersDone) {
+    SEMMessageBox("You cannot iterate coma-free alignment;\n"
+      "there is no previous result to combine the new one with");
+    return 1;
+  }
+
+  if (continuing && (magInd != mLastComaMagInd || probe != mLastComaProbe || 
+    alpha != mLastComaAlpha)) {
+      str = probe != mLastComaProbe ? "probe mode" : "alpha setting";
+      if (magInd != mLastComaMagInd )
+        str = "magnification";
+      SEMMessageBox(CString("You cannot iterate coma-free alignment;\n"
+        "the ") + str + " has changed");
+      return 1;
+  }
+
+  if (actionType != COMA_CONTINUE_RUN)
+    GeneralSetup();
   mDirectionInd = 0;
   mDoingComaFree = true;
   mOperationInd = -1;
-  mImposeChange = imposeChange;
+  mComaActionType = actionType;
   mScope->SetLDCenteredShift(0., 0.);
-  mFocusManager->AutoFocusStart(-1);
+  if (!calibrate && actionType == COMA_INITIAL_ITERS) {
+    mMaxComaIters = mInitialComaIters;
+    mNumComaItersDone = 0;
+    mCumulTiltChangeX = mCumulTiltChangeY = 0.;
+    mLastComaAlpha = alpha;
+    mLastComaMagInd = magInd;
+    mLastComaProbe = probe;
+  } else if (!calibrate && actionType == COMA_ADD_ONE_ITER) {
+    mMaxComaIters++;
+  }
+  if (actionType != COMA_CONTINUE_RUN)
+    mFocusManager->AutoFocusStart(-1);
   mWinApp->AddIdleTask(TASK_COMA_FREE, 0, 0);
   return 0;
 }
@@ -417,10 +458,10 @@ void CAutoTuning::ComaFreeNextTask(int param)
   float xFacs[4] = {-1., 1., 0., 0.};
   float yFacs[4] = {0., 0., -1., 1.};
   float xx1[8], xx2[4], yy[4];
-  double xTiltFac, yTiltFac, maxTerm = 0.;
-  float scale, diffSum = 0., diffMax = 0., misAlignX = 0., misAlignY = 0.;
+  double xTiltFac, yTiltFac, delBSX, delBSY, maxTerm = 0.;
+  float diffSum = 0., diffMax = 0., misAlignX = 0., misAlignY = 0.;
   ComaCalib cal;
-  CString mess, mess2;
+  CString mess;
   int calInd, ind, idir;
   if (!mDoingComaFree)
     return;
@@ -431,7 +472,8 @@ void CAutoTuning::ComaFreeNextTask(int param)
   if (mDirectionInd == 1 && (mOperationInd == 7 || 
     (!mCalibrateComa && mOperationInd == 1))) {
 
-      // Finished: Compute displacement differences which are the basic unit of operation
+      // Finished: Compute displacement differences for the two sides (two operations) in
+      // the same tilt direction, which are the basic unit of operation
       if (mCalibrateComa)
         SEMTrace('c', "Oper dir displacement difference in nm");
       for (ind = 0; ind <= mOperationInd; ind += 2) {
@@ -515,17 +557,25 @@ void CAutoTuning::ComaFreeNextTask(int param)
         lsFit2(xx1, xx2, yy, 4, &misAlignX, &misAlignY, NULL);
         PrintfToLog("Displacement differences  %.2f  %.2f  %.2f  %.2f  nm", yy[0], yy[1],
           yy[2], yy[3]);
-        mess.Format("Solved misalignment = %.2f  %.2f", misAlignX, misAlignY);
-        if (!FEIscope) {
-          scale = mFocusManager->EstimatedBeamTiltScaling();
-          mess2.Format(" %%, about %.2f  %.2f  milliradians", misAlignX * scale, 
-            misAlignY * scale);
-          mess += mess2;
-        } else
-          mess += " milliradians";
-        mWinApp->AppendToLog(mess);
-        if (mImposeChange)
-          mScope->IncBeamTilt(-misAlignX, -misAlignY);
+        ReportMisalignment("Solved misalignment", misAlignX, misAlignY);
+        if (mComaActionType != COMA_JUST_MEASURE) {
+
+          // Average new result with previous ones, keep track of total change
+          mNumComaItersDone++;
+          delBSX = -misAlignX / mNumComaItersDone;
+          delBSY = -misAlignY / mNumComaItersDone;
+          mScope->IncBeamTilt(delBSY, delBSY);
+          mCumulTiltChangeX += delBSX;
+          mCumulTiltChangeY += delBSY;
+          if (mNumComaItersDone < mMaxComaIters) {
+            ComaFreeAlignment(false, COMA_CONTINUE_RUN);
+            return;
+          }
+          if (mNumComaItersDone > 1) {
+            mess.Format("Average misalignment from %d iterations", mNumComaItersDone);
+            ReportMisalignment((LPCTSTR)mess, -mCumulTiltChangeX, -mCumulTiltChangeY);
+          }
+        }
       }
       StopComaFree();
       return;
@@ -535,15 +585,20 @@ void CAutoTuning::ComaFreeNextTask(int param)
   if (mOperationInd < 0) {
 
     // First time, process the defocus measurement, set beam tilt and direction
-    if (SaveAndSetDefocus(mCalibrateComa ? mCalComaFocus : mComaCals[calInd].defocus)) {
+    if ((mCalibrateComa || mComaActionType != COMA_CONTINUE_RUN) && 
+      SaveAndSetDefocus(mCalibrateComa ? mCalComaFocus : mComaCals[calInd].defocus)) {
       mWinApp->ErrorOccurred(1);
       StopComaFree();
       return;
     }
     mFocusManager->SetBeamTilt(mMaxComaBeamTilt / 4.);
     mFocusManager->SetTiltDirection(0);
-    if (!mCalibrateComa)
-      mWinApp->SetStatusText(MEDIUM_PANE, "MEASURING COMA");
+    if (!mCalibrateComa) {
+      mess = "MEASURING COMA";
+      if (mMaxComaIters > 1)
+        mess.Format("MEASURING COMA - ITER %d", mNumComaItersDone + 1);
+      mWinApp->SetStatusText(MEDIUM_PANE, mess);
+    }
     mOperationInd = 0;
   } else if (!mDirectionInd) {
 
@@ -581,8 +636,8 @@ void CAutoTuning::ComaFreeNextTask(int param)
       mWinApp->SetStatusText(MEDIUM_PANE, mess);
     }
   }
-  //PrintfToLog("oper %d dir %d xtf %f  ytf %f  misX  %f  misY %f", mOperationInd, mDirectionInd, 
-   // xTiltFac, yTiltFac, misAlignX, misAlignY);
+  //PrintfToLog("oper %d dir %d xtf %f  ytf %f  misX  %f  misY %f", mOperationInd, 
+  //  mDirectionInd, xTiltFac, yTiltFac, misAlignX, misAlignY);
   mFocusManager->SetNextTiltOffset(misAlignX + xTiltFac * mMaxComaBeamTilt / 4.,
     misAlignY + yTiltFac * mMaxComaBeamTilt / 4.);
   mFocusManager->SetRequiredBWMean(mComaMeanCritFac * mFirstFocusMean);
@@ -699,7 +754,7 @@ void CAutoTuning::GeneralSetup(void)
   mSavedPostTiltDelay = mFocusManager->GetPostTiltDelay();
 }
 
-// Do commons tasks for stopping a routine
+// Do common tasks for stopping a routine
 void CAutoTuning::CommonStop(void)
 {
   mScope->SetDefocus(mSavedDefocus);
@@ -726,4 +781,164 @@ int CAutoTuning::SaveAndSetDefocus(float defocus)
   if (mSavedPostTiltDelay < mPostBeamTiltDelay)
     mFocusManager->SetPostTiltDelay(mPostBeamTiltDelay);
   return 0;
+}
+
+void CAutoTuning::ReportMisalignment(const char *prefix, double misAlignX, 
+  double misAlignY)
+{
+  CString mess, mess2;
+  mess.Format("%s = %.2f  %.2f", (LPCTSTR)prefix, misAlignX, misAlignY);
+  if (!FEIscope) {
+    float scale = mFocusManager->EstimatedBeamTiltScaling();
+    mess2.Format(" %%, about %.2f  %.2f  milliradians", misAlignX * scale, 
+      misAlignY * scale);
+    mess += mess2;
+  } else
+    mess += " milliradians";
+  mWinApp->AppendToLog(mess);
+}
+
+///////////////////////////////////////////////////////////////////
+// ZEMLIN TABLEAU ROUTINES
+///////////////////////////////////////////////////////////////////
+
+// Start making the tableau
+int CAutoTuning::MakeZemlinTableau(float beamTilt, int panelSize, int cropPix)
+{
+  mScope->GetBeamTilt(mBaseBeamTiltX, mBaseBeamTiltY);
+  if (mWinApp->LowDoseMode())
+    mScope->GotoLowDoseArea(FOCUS_CONSET);
+  mScope->SetImageShift(0., 0.);
+  mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, TASK_ZEMLIN, 0, 0);
+  mWinApp->SetStatusText(MEDIUM_PANE, "MAKING ZEMLIN TABLEAU");
+  mWinApp->mCamera->InitiateCapture(FOCUS_CONSET);
+  mWinApp->UpdateBufferWindows();
+  mZemlinIndex = 0;
+  mZemlinBeamTilt = beamTilt;
+  mPanelSize = panelSize;
+  mCropPix = cropPix;
+  return 0;
+}
+
+// All of the processing
+void CAutoTuning::ZemlinNextTask(int param)
+{
+  double xFactors[9] = {0., 1., 0.707, 0., -0.707, -1., -0.707, 0., 0.707};
+  double yFactors[9] = {0., 0., 0.707, 1., 0.707, 0., -0.707, -1., -0.707};
+  EMimageBuffer *imBufs = mWinApp->GetImBufs();
+  KImage *image = imBufs->mImage;
+  int nx, ny, err, iy, xStart, yStart, dirSave, dirTry, mag, probe;
+  double tiltX, tiltY, outX, outY, rotAngle = 0.;
+  FocusTable focCal;
+  CString str;
+  if (!image) {
+    StopZemlin();
+    return;
+  }
+  if (mZemlinIndex < 0)
+    return;
+  image->getSize(nx, ny);
+  if (!mZemlinIndex) {
+
+    // First time, when you know the image size, set up all the sizes and get the buffers
+    mPadSize = 2 * ((B3DMAX(nx, ny) + 1) / 2);
+    mPadSize = XCorrNiceFrame(mPadSize, 2, 19);
+    mSpecSize = B3DMIN(mPanelSize + mCropPix, mPadSize);
+    mSpecSize = 2 * (mSpecSize / 2);
+    mPanelSize = B3DMIN(mPanelSize, mSpecSize);
+    mPanelSize = 2 * (mPanelSize / 2);
+    mCropPix = mSpecSize - mPanelSize;
+    mTableauSize = 3 * mPanelSize;
+    NewArray(mMontTableau, short, mTableauSize * mTableauSize);
+    NewArray(mSpectrum, short, mSpecSize * mSpecSize);
+    if (!mMontTableau || !mSpectrum) {
+      SEMMessageBox("Failed to get memory for assembling Zemlin tableau");
+      StopZemlin();
+      return;
+    }
+  }
+
+  // Set index at which to copy the data
+  xStart = mPanelSize * (1 + B3DNINT(xFactors[mZemlinIndex]));
+  yStart = mPanelSize * (1 - B3DNINT(yFactors[mZemlinIndex]));
+
+  // Get the scaled spectrum
+  image->Lock();
+  err = spectrumScaled(image->getData(), image->getType(), nx, ny, mSpectrum, mPadSize, 
+    mSpecSize, 0, 0., 3, twoDfft);
+  image->UnLock();
+  if (err) {
+    str.Format("Error (%d) getting scaled spectrum for panel %d of Zemlin tableau", err,
+      mZemlinIndex);
+    SEMMessageBox(str);
+    StopZemlin();
+    return;
+  }
+
+  // Copy it with cropping
+  for (iy = 0; iy < mPanelSize; iy++)
+    memcpy(mMontTableau + (iy + yStart) * mTableauSize + xStart, 
+    mSpectrum + (iy + (mCropPix / 2)) * mSpecSize + mCropPix / 2, 
+    sizeof(short) * mPanelSize);
+
+  mZemlinIndex++;
+  if (mZemlinIndex < 9) {
+
+    // Try to get a focus calibration at any direction and rotate the beam tilt by
+    // the difference between the nominal direction and the image shift direction
+    mag = mScope->GetMagIndex();
+    probe = mScope->ReadProbeMode();
+    dirSave = mFocusManager->GetTiltDirection();
+    for (dirTry = 0; dirTry < 4; dirTry++) {
+      mFocusManager->SetTiltDirection(dirTry);
+      if (mFocusManager->GetFocusCal(mag, mWinApp->GetCurrentCamera(), probe, focCal)) {
+        rotAngle = (45. * dirTry - 90.) * DTOR - 
+          atan2((double)focCal.slopeY, (double)focCal.slopeX);
+        break;
+      }
+    }
+    mFocusManager->SetTiltDirection(dirSave);
+
+    // Set beam tilt for next round
+    tiltX = xFactors[mZemlinIndex] * mZemlinBeamTilt;
+    tiltY = yFactors[mZemlinIndex] * mZemlinBeamTilt;
+    outX = cos(rotAngle) * tiltX - sin(rotAngle) * tiltY;
+    outY = sin(rotAngle) * tiltX + cos(rotAngle) * tiltY;
+    mScope->SetBeamTilt(mBaseBeamTiltX + outX, mBaseBeamTiltY + outY);
+    if (mPostBeamTiltDelay > 0)
+      Sleep(mPostBeamTiltDelay);
+    mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, TASK_ZEMLIN, 0, 0);
+    mWinApp->mCamera->InitiateCapture(FOCUS_CONSET);
+    return;
+  }
+
+  // When done, set the image in to A
+  iy = B3DMAX(1, B3DNINT(mPadSize / (mPanelSize * 3.)));
+  mWinApp->mProcessImage->NewProcessedImage(imBufs, mMontTableau, kSHORT, mTableauSize,
+    mTableauSize, iy, BUFFER_FFT);
+  mMontTableau = NULL;
+  StopZemlin();
+}
+
+// Restore settings and clean up for normal or error stop
+void CAutoTuning::StopZemlin(void)
+{
+  if (mZemlinIndex < 0)
+    return;
+  mScope->SetBeamTilt(mBaseBeamTiltX, mBaseBeamTiltY);
+  mZemlinIndex = -1;
+  delete mMontTableau;
+  delete mSpectrum;
+  mMontTableau = NULL;
+  mSpectrum = NULL;
+  mWinApp->UpdateBufferWindows();
+  mWinApp->SetStatusText(MEDIUM_PANE, "");
+}
+
+void CAutoTuning::ZemlinCleanup(int error)
+{
+  if (error == IDLE_TIMEOUT_ERROR)
+    SEMMessageBox(_T("Timeout getting images for Zemlin tableau"));
+  StopComaFree();
+  mWinApp->ErrorOccurred(error);
 }

@@ -202,6 +202,13 @@
             60 is taken to be milliseconds</TD>
         </TR>
         <TR vAlign="top">
+          <TD class="style4">WaitForMidnight #B #A [Hr Min]</TD>
+          <TD>If the current time is between #B minutes before and #A minutes after 
+            midnight, or an alternative time specified by the optional entries Hr (the hour from 0 to 23) and 
+            Min (the minute from 0 to 59), the script will wait until #A minutes after 
+            midnigth or the given time.</TD>
+        </TR>
+        <TR vAlign="top">
           <TD class="style4">Echo [text]</TD>
           <TD>Prints the text to the log window, or a blank line if there is no text.</TD>
         </TR>
@@ -1567,7 +1574,19 @@
         <TR>
           <TD class="style5">CorrectComa [#]</TD>
           <TD>Measure beam-tilt misalignment, report the estimated beam tilt, and correct to 
-            bring beam tilt to zero (or do not correct, if the optional # is -1)</TD>
+            bring beam tilt to zero. If the optional # is -1, it will simply measure the 
+            misalignment once and report it without correcting it.&nbsp; If the # is 1, it 
+            will do another iteration of estimating beam tilt and average the result with 
+            the previous iterations.</TD>
+        </TR>
+        <TR>
+          <TD class="style5">ZemlinTableau #T [#S] [#C]</TD>
+          <TD>Make an array of 8 FFTs of beam-tilted images around a central FFT without 
+            beam tilt.&nbsp; The first value #T specifies the beam tilt to use, in 
+            milliradians on an FEI scope or percent of full scale on other scopes.&nbsp; The 
+            optional entry #S sets the cropped size of each FFT in the array (default 340) 
+            and #C sets the number of pixels to crop (default 170).&nbsp; See
+            <a href="menu_focus.htm#hid_focus_zemlintableau">Beam-Tilted FFT Array</a> for other details.</TD>
         </TR>
         <TR  vAlign="top">
           <TD colspan="2"><A name="low_dose"></A><B>Low Dose Commands</B></TD>
@@ -1948,7 +1967,27 @@
             contain just a single numeric entry and can be set by name in 
             SerialEMproperties.txt.&nbsp; Follow with the full name of the property (case 
             insensitive) and with its new value.&nbsp; An error will result if the name does 
-            not match one of the properties that can be set.</TD>
+            not match one of the properties that can be set.&nbsp; The list of available 
+            properties in the development version of SerialEM is in
+            <a href="http://bio3d.colorado.edu/ftp/SerialEM/Scripts/ScriptableProperties.txt">
+            http://bio3d.colorado.edu/ftp/SerialEM/Scripts/ScriptableProperties.txt</a></TD>
+        </TR>
+        <TR vAlign="top">
+          <TD width="210">ReportUserSetting name   <TD>Use this command to report the value of one user setting, using the name for 
+            it in SerialEMsettings.txt.&nbsp; The command can be used with nearly all of the 
+            general (non-camera-specific) settings that contain just a single numeric entry.&nbsp; 
+            Follow with the full name of the setting (case insensitive) and with an optional 
+            variable name for the value.&nbsp; An error will result if the name does not match 
+            one of the settings that can be set.&nbsp; The list of available settings in 
+          the development version of SerialEM is in
+          <a href="http://bio3d.colorado.edu/ftp/SerialEM/Scripts/ScriptableSettings.txt">http://bio3d.colorado.edu/ftp/SerialEM/Scripts/ScriptableSettings.txt</a></TD>
+        </TR>
+        <TR vAlign="top">
+          <TD width="210">SetUserSetting name val [#K]</TD>
+          <TD>Use this command to set the value of one user setting.&nbsp; This works just 
+            like &#39;ReportUserSetting&#39;.&nbsp; Follow with the name of the setting and its 
+            value.&nbsp; The original value is automatically restored when the script ends 
+            unless the optional entry K is non-zero to keep the setting.</TD>
         </TR>
       </TABLE>
     </basefont>

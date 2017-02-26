@@ -405,6 +405,12 @@ BEGIN_MESSAGE_MAP(CMenuTargets, CCmdTarget)
   ON_UPDATE_COMMAND_UI(ID_CAMERA_SETFRAMEALIGNLINES, OnUpdateNoTasks)
   ON_COMMAND(ID_SETTINGS_SETAPROPERTY, OnSettingsSetProperty)
   ON_UPDATE_COMMAND_UI(ID_SETTINGS_SETAPROPERTY, OnUpdateNoTasks)
+  ON_COMMAND(ID_FOCUS_SETCOMAITERATIONS, OnFocusSetComaIterations)
+  ON_UPDATE_COMMAND_UI(ID_FOCUS_SETCOMAITERATIONS, OnUpdateNoTasks)
+  ON_COMMAND(ID_FOCUS_RUNANOTHERITERATION, OnFocusRunAnotherIteration)
+  ON_UPDATE_COMMAND_UI(ID_FOCUS_RUNANOTHERITERATION, OnUpdateFocusRunAnotherIteration)
+  ON_COMMAND(ID_FOCUS_MAKEZEMLINTABLEAU, OnFocusMakeZemlinTableau)
+  ON_UPDATE_COMMAND_UI(ID_FOCUS_MAKEZEMLINTABLEAU, OnUpdateNoTasks)
   END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -2388,7 +2394,7 @@ void CMenuTargets::OnUpdateFocusCorrectAstigmatism(CCmdUI *pCmdUI)
 
 void CMenuTargets::OnFocusComaFree()
 {
-  mWinApp->mAutoTuning->ComaFreeAlignment(false, true);
+  mWinApp->mAutoTuning->ComaFreeAlignment(false, COMA_INITIAL_ITERS);
 }
 
 
@@ -2399,6 +2405,52 @@ void CMenuTargets::OnUpdateFocusComaFree(CCmdUI *pCmdUI)
     mScope->FastMagIndex()) >= 0 && CamToSpecimenExists() && !mWinApp->LowDoseMode());
 }
 
+void CMenuTargets::OnFocusSetComaIterations()
+{
+  int iters = mWinApp->mAutoTuning->GetInitialComaIters();
+  if (!KGetOneInt("Number of iterations in initial run of coma-free alignment:", iters))
+    return;
+  B3DCLAMP(iters, 1, 10);
+  mWinApp->mAutoTuning->SetInitialComaIters(iters);
+}
+
+
+void CMenuTargets::OnFocusRunAnotherIteration()
+{
+  mWinApp->mAutoTuning->ComaFreeAlignment(false, COMA_ADD_ONE_ITER);
+}
+
+
+void CMenuTargets::OnUpdateFocusRunAnotherIteration(CCmdUI *pCmdUI)
+{
+  int magInd = mScope->FastMagIndex();
+  int alpha = mScope->FastAlpha();
+  int probe = mScope->GetProbeMode();
+  pCmdUI->Enable(!mWinApp->DoingTasks() && !mWinApp->GetSTEMMode() && 
+    mWinApp->mAutoTuning->LookupComaCal(probe, alpha, magInd) >= 0 && 
+    CamToSpecimenExists() && !mWinApp->LowDoseMode() &&
+    mWinApp->mAutoTuning->GetNumComaItersDone() > 0 && 
+    magInd == mWinApp->mAutoTuning->GetLastComaMagInd() &&
+    probe == mWinApp->mAutoTuning->GetLastComaProbe() &&
+    alpha == mWinApp->mAutoTuning->GetLastComaAlpha());
+}
+
+
+void CMenuTargets::OnFocusMakeZemlinTableau()
+{
+  CString mess;
+  float tilt = mWinApp->mAutoTuning->GetMenuZemlinTilt();
+  mess = "Enter beam tilt for Zemlin tableau images ";
+  if (FEIscope)
+    mess += "in milliradians";
+  else
+    mess += "as percent of full range";
+  if (!KGetOneFloat("Images are taken with current Focus parameters", mess, tilt, 1))
+    return;
+  mWinApp->mAutoTuning->SetMenuZemlinTilt(tilt);
+  mWinApp->mAutoTuning->MakeZemlinTableau(tilt, 340, 170);
+}
+
 void CMenuTargets::OnUpdateCalibrateAstigmatism(CCmdUI *pCmdUI)
 {
   pCmdUI->Enable(!mWinApp->DoingTasks() && mWinApp->mFocusManager->FocusReady() &&
@@ -2407,7 +2459,7 @@ void CMenuTargets::OnUpdateCalibrateAstigmatism(CCmdUI *pCmdUI)
 
 void CMenuTargets::OnCalibrateComaFree()
 {
-  mWinApp->mAutoTuning->ComaFreeAlignment(true, false);
+  mWinApp->mAutoTuning->ComaFreeAlignment(true, COMA_JUST_MEASURE);
 }
 
 void CMenuTargets::OnUpdateCalibrateComaFree(CCmdUI *pCmdUI)

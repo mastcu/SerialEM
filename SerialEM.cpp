@@ -1921,6 +1921,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
           mAutoTuning->FixAstigNextTask(idc->param);
         else if (idc->source == TASK_COMA_FREE)
           mAutoTuning->ComaFreeNextTask(idc->param);
+        else if (idc->source == TASK_ZEMLIN)
+          mAutoTuning->ZemlinNextTask(idc->param);
 
       } else {
         if (busy > 0 && idc->timeOut && (idc->timeOut <= time))
@@ -1995,6 +1997,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
           mAutoTuning->FixAstigCleanup(idc->param);
         else if (idc->source == TASK_COMA_FREE)
           mAutoTuning->ComaFreeCleanup(idc->param);
+       else if (idc->source == TASK_ZEMLIN)
+          mAutoTuning->ZemlinCleanup(idc->param);
      }
 
       // Delete task from memory and drop index
@@ -2149,6 +2153,8 @@ void CSerialEMApp::ErrorOccurred(int error)
     mAutoTuning->StopFixAstig();
   if (mAutoTuning->GetDoingComaFree())
     mAutoTuning->StopComaFree();
+  if (mAutoTuning->DoingZemlin())
+    mAutoTuning->StopZemlin();
   if (mPlugStopFunc && mPlugDoingFunc && mPlugDoingFunc())
     mPlugStopFunc(error);
   mCamera->SetPreventUserToggle(0);

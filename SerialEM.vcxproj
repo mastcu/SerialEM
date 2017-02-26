@@ -724,6 +724,7 @@
     <ClInclude Include="NavAdocPuts.h" />
     <ClInclude Include="PropertyTests.h" />
     <ClInclude Include="RemoteControl.h" />
+    <ClInclude Include="SettingsTests.h" />
     <ClInclude Include="Shared\SEMCCDDefines.h" />
     <ClInclude Include="Shared\SharedJeolDefines.h" />
     <ClInclude Include="ThreeChoiceBox.h" />

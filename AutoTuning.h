@@ -1,5 +1,7 @@
 #pragma once
 
+enum {COMA_JUST_MEASURE = 0, COMA_INITIAL_ITERS, COMA_ADD_ONE_ITER, COMA_CONTINUE_RUN};
+
 struct AstigCalib {
   int probeMode;
   int alpha;
@@ -43,10 +45,18 @@ public:
   GetSetMember(float, AstigCenterFocus);
   GetSetMember(float, AstigFocusRange);
   SetMember(float, AstigIterationThresh);
+  GetSetMember(int, InitialComaIters);
+  GetMember(int, NumComaItersDone);
+  GetMember(int, LastComaMagInd);
+  GetMember(int, LastComaAlpha);
+  GetMember(int, LastComaProbe);
+  GetSetMember(float, MenuZemlinTilt);
   CArray <AstigCalib, AstigCalib> *GetAstigCals() {return &mAstigCals;};
   CArray <ComaCalib, ComaCalib> *GetComaCals() {return &mComaCals;};
 
-  bool DoingAutoTune() {return mDoingCalAstig || mDoingFixAstig || mDoingComaFree;};
+  bool DoingAutoTune() {return mDoingCalAstig || mDoingFixAstig || mDoingComaFree ||
+    mZemlinIndex >= 0;};
+  bool DoingZemlin() {return mZemlinIndex >= 0;};
 
 private:
   CSerialEMApp *mWinApp;
@@ -90,6 +100,26 @@ private:
   int mNumIterations;
   float mFirstFocusMean;
   float mComaMeanCritFac;
+  int mZemlinIndex;
+  float mZemlinBeamTilt;
+  int mPanelSize;
+  int mPadSize;
+  int mCropPix;
+  int  mSpecSize;
+  short *mMontTableau;
+  short *mSpectrum;
+  int mTableauSize;
+  double mBaseBeamTiltX, mBaseBeamTiltY;
+  int mComaActionType;
+  int mInitialComaIters;
+  int mMaxComaIters;
+  int mNumComaItersDone;
+  double mCumulTiltChangeX, mCumulTiltChangeY;
+  int mLastComaMagInd;
+  int mLastComaAlpha;
+  int mLastComaProbe;
+  float mMenuZemlinTilt;
+
 
 public:
   void CalibrateAstigmatism(void);
@@ -109,10 +139,15 @@ public:
   int LookupComaCal(int probeMode, int alpha, int magInd, bool matchMag = false);
   void PrintMatrix(ScaleMat mat, const char *descrip);
   void CommonStop(void);
-  int ComaFreeAlignment(bool calibrate, bool imposeChange);
+  int ComaFreeAlignment(bool calibrate, int actionType);
   int FixAstigmatism(bool imposeChange);
   int SaveAndSetDefocus(float defocus);
   CString TuningCalMessageStart(const char * procedure, const char *ofUpTo, float beamTilt);
   int TestAndSetStigmator(double stigX, double stigY, const char * descrip);
+  int MakeZemlinTableau(float beamTilt, int panelSize, int cropSize);
+  void ZemlinNextTask(int param);
+  void StopZemlin(void);
+  void ZemlinCleanup(int error);
+  void ReportMisalignment(const char *prefix, double misAlignX, double misAlignY);
 };
 

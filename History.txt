@@ -3,6 +3,18 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+2/26/17: Added script command to wait until a specified time after midnight or
+an alternative time.
+
+2/26/17: Added script commands to report and set the value of many user
+settings by the name used in the settings file.
+
+2/26/17: Made coma-free alignment routine average the estimated misalignment
+over multiple iterations, and added a menu option to run one more iteration.
+
+2/26/17: Added Focus menu option to make an array of FFTs of images with beam
+tilt in 8 different directions (a Zemlin tableau).
+
 2/26/17: Fixed SetCameraArea script command to take F, H, etc sizes (In 3.6).
 
 2/21/17: Changed message from SEMCCD plugin about two copies to refer to

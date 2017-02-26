@@ -334,6 +334,10 @@ public:
   afx_msg void OnSetPointLabelThreshold();
   afx_msg void OnCameraSetFrameAlignLines();
   afx_msg void OnSettingsSetProperty();
+  afx_msg void OnFocusSetComaIterations();
+  afx_msg void OnFocusRunAnotherIteration();
+  afx_msg void OnUpdateFocusRunAnotherIteration(CCmdUI *pCmdUI);
+  afx_msg void OnFocusMakeZemlinTableau();
 };
 
 /////////////////////////////////////////////////////////////////////////////
