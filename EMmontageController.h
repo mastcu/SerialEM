@@ -298,6 +298,7 @@ public:
   int MapParamsToAutodoc(void);
   void MapParamsToOverview(int sectInd);
   int AccessMontSectInAdoc(KImageStore *store, int secNum);
+  int StoreAlignedCoordsInAdoc(void);
 };
 
 #endif // !defined(AFX_EMMONTAGECONTROLLER_H__F50578E7_DA31_4D56_B16C_C01548ED89E2__INCLUDED_)

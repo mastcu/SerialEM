@@ -2402,6 +2402,12 @@ void EMmontageController::SavePiece()
           mBmat[i] = bMat1[i];
       }
 
+      // Save aligned piece coordinates for external use
+      if (!mAlreadyHaveShifts) {
+        if (StoreAlignedCoordsInAdoc())
+          PrintfToLog("WARNING: Error %d saving aligned piece coordinates into autodoc");
+      }
+
       // Save the center shifts
       for (isave = 0; isave < mNumCenterSaved; isave++)
         for (ixy = 0; ixy < 2; ixy++)
@@ -4172,7 +4178,7 @@ int EMmontageController::AutodocShiftStorage(bool write, float * upperShiftX,
   return retval;
 }
 
-
+// Read or write sttage offsets for one or all pieces
 int EMmontageController::AutodocStageOffsetIO(bool write, int pieceInd)
 {
   char *names[2] = {ADOC_ZVALUE, ADOC_IMAGE};
@@ -4209,6 +4215,41 @@ int EMmontageController::AutodocStageOffsetIO(bool write, int pieceInd)
     if (AdocWrite((char *)(LPCTSTR)store->getAdocName()) < 0)
       retval = 3;
   }
+  AdocReleaseMutex();
+  return retval;
+}
+
+// Save aligned coordinates in the autodoc
+int EMmontageController::StoreAlignedCoordsInAdoc(void)
+{
+  char *names[2] = {ADOC_ZVALUE, ADOC_IMAGE};
+  char *keys[2] = {ADOC_ALI_COORD, ADOC_ALI_COORDVS};
+  KImageStore *store = mReadingMontage ? mReadStoreMRC : mWinApp->mStoreMRC;
+  int ipc, keyInd, nameInd, retval = 0, iz, pcX, pcY, pcZ, varInd;
+  int adocInd = store->GetAdocIndex();
+  if (adocInd < 0)
+    return -1;
+  if (AdocGetMutexSetCurrent(adocInd) < 0)
+    return 1;
+  nameInd = store->getStoreType() == STORE_TYPE_ADOC ? 1 : 0;
+  keyInd = mVerySloppy ? 1 : 0;
+  for (ipc = 0; ipc < mNumPieces; ipc++) {
+    iz = mPieceSavedAt[ipc];
+    if (iz < 0)
+      continue;
+    varInd = mPieceToVar[ipc] * 2;
+    retval = AdocGetThreeIntegers(names[nameInd], iz, ADOC_PCOORD, &pcX, &pcY, &pcZ);
+    if (!retval)
+      retval = AdocSetThreeIntegers(names[nameInd], iz, keys[keyInd], 
+      pcX + B3DNINT(mBmat[varInd]), pcY + B3DNINT(mBmat[varInd + 1]), pcZ);
+    if (retval) {
+      AdocReleaseMutex();
+      return 2;
+    }
+  }
+
+  if (AdocWrite((char *)(LPCTSTR)store->getAdocName()) < 0)
+    retval = 3;
   AdocReleaseMutex();
   return retval;
 }
@@ -4501,4 +4542,3 @@ double EMmontageController::GetRemainingTime()
   mLastNumDoing = mNumDoing;
   return  interval * (numTot / (double)numDone - 1.);
 }
-
