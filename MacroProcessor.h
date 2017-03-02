@@ -150,6 +150,7 @@ private:
   std::vector<ControlSet> mChangedConsets; // Modified Control sets if suspend
   std::vector<std::string> mSavedSettingNames;   // Names and values of user settings that
   std::vector<double> mSavedSettingValues;       // were changed and need restoring
+  std::vector<double> mNewSettingValues;         // and value sthey were changed to
   ShortVec mConsetNums;      // #'s of control sets saved
   int mCamWithChangedSets;   // Number of camera with changed sets on suspend
   double mSleepStart;  // Starting time to sleep from

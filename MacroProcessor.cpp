@@ -786,6 +786,9 @@ void CMacroProcessor::Run(int which)
   mConsetNums.clear();
   mConsetsSaved.clear();
   mChangedConsets.clear();
+  mSavedSettingNames.clear();
+  mSavedSettingValues.clear();
+  mNewSettingValues.clear();
   ClearVariables();
   mUsingContinuous = false;
   mShowedScopeBox = false;
@@ -814,6 +817,7 @@ void CMacroProcessor::Run(int which)
 // Do all the common initializations for running or restarting a macro
 void CMacroProcessor::RunOrResume()
 {
+  int ind;
   mDoingMacro = true;
   mOpenDE12Cover = false;
   mStopAtEnd = false;
@@ -829,12 +833,13 @@ void CMacroProcessor::RunOrResume()
   mNumStatesToRestore = 0;
   mFocusToRestore = -999.;
   mFocusOffsetToRestore = -9999.;
-  mSavedSettingNames.clear();
-  mSavedSettingValues.clear();
   mKeyPressed = 0;
   if (mChangedConsets.size() > 0 && mCamWithChangedSets == mWinApp->GetCurrentCamera())
-    for (int ind = 0; ind < (int)B3DMIN(mConsetNums.size(), mChangedConsets.size());ind++)
+    for (ind = 0; ind < (int)B3DMIN(mConsetNums.size(), mChangedConsets.size());ind++)
       mConSets[mConsetNums[ind]] = mChangedConsets[ind];
+  for (ind = 0 ; ind < (int)mSavedSettingNames.size(); ind++)
+    mWinApp->mParamIO->MacroSetSetting(CString(mSavedSettingNames[ind].c_str()), 
+      mNewSettingValues[ind]);
   mStoppedContSetNum = mCamera->DoingContinuousAcquire() - 1;
   mWinApp->UpdateBufferWindows();
   SetComplexPane();
@@ -2122,10 +2127,31 @@ void CMacroProcessor::NextCommand()
       mWinApp->mParamIO->MacroSetSetting(strItems[1], itemDbl[2]))
         ABORT_LINE(strItems[1] + " is not a recognized setting or cannot be set by "
         "script command in:\n\n");
+
+    // See if property already saved
+    truth = false;
+    for (index = 0; index < (int)mSavedSettingNames.size(); index++) {
+      if (strItems[1].CompareNoCase(mSavedSettingNames[index].c_str()) == 0) {
+        truth = true;
+        break;
+      }
+    }
+
+    // If old value should be saved, either replace existing new value or push old and new
     if (itemEmpty[3] || !itemInt[3]) {
-      mSavedSettingNames.push_back(std::string((LPCTSTR)strItems[1]));
-      mSavedSettingValues.push_back(delX);
-      mNumStatesToRestore++;
+      if (truth) {
+        mNewSettingValues[index] = itemDbl[2];
+      } else {
+        mSavedSettingNames.push_back(std::string((LPCTSTR)strItems[1]));
+        mSavedSettingValues.push_back(delX);
+        mNewSettingValues.push_back(itemDbl[2]);
+      }
+    } else if (truth) {
+
+      // Otherwise get rid of a saved value if new value being kept
+      mSavedSettingNames.erase(mSavedSettingNames.begin() + index);
+      mSavedSettingValues.erase(mSavedSettingValues.begin() + index);
+      mNewSettingValues.erase(mNewSettingValues.begin() + index);
     }
 
   } else if (CMD_IS(COPY)) {                                // Copy
@@ -4373,6 +4399,13 @@ void CMacroProcessor::SuspendMacro(BOOL abort)
 {
   if (TestAndStartFuncOnStop())
     return;
+
+  // restore user settings
+  for (int ind = 0; ind < (int)mSavedSettingNames.size(); ind++)
+    mWinApp->mParamIO->MacroSetSetting(CString(mSavedSettingNames[ind].c_str()), 
+      mSavedSettingValues[ind]);
+
+  // Restore other things and make it non-resumable as they have no mechanism to resume
   if (abort || mNumStatesToRestore > 0) {
     mCurrentMacro = -1;
     mLastAborted = !mLastCompleted;
@@ -4381,13 +4414,15 @@ void CMacroProcessor::SuspendMacro(BOOL abort)
         mScope->SetFocus(mFocusToRestore);
       if (mFocusOffsetToRestore > -9000.)
         mWinApp->mFocusManager->SetDefocusOffset(mFocusOffsetToRestore);
-      for (int ind = 0; ind < (int)mSavedSettingNames.size(); ind++)
-        mWinApp->mParamIO->MacroSetSetting(CString(mSavedSettingNames[ind].c_str()), 
-        mSavedSettingValues[ind]);
     }
+    mSavedSettingNames.clear();
+    mSavedSettingValues.clear();
+    mNewSettingValues.clear();
   }
-  RestoreCameraSet(-1, abort);
-  if (abort && mUsingContinuous)
+
+  // restore camera sets, clear if non-resumable
+  RestoreCameraSet(-1, mCurrentMacro < 0);
+  if (mCurrentMacro < 0 && mUsingContinuous)
     mCamera->ChangePreventToggle(-1);
   mDoingMacro = false;
   if (mStoppedContSetNum >= 0)

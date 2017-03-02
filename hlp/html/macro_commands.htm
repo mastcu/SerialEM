@@ -1986,8 +1986,12 @@
           <TD width="210">SetUserSetting name val [#K]</TD>
           <TD>Use this command to set the value of one user setting.&nbsp; This works just 
             like &#39;ReportUserSetting&#39;.&nbsp; Follow with the name of the setting and its 
-            value.&nbsp; The original value is automatically restored when the script ends 
-            unless the optional entry K is non-zero to keep the setting.</TD>
+            value.&nbsp; The original value is automatically restored when the script stops 
+            unless the optional entry K is non-zero to keep the setting.&nbsp; If the script 
+            is suspended, the new value will be set again when it is resumed.&nbsp; Multiple 
+            changes in the same setting can be done; the original value or last kept new 
+            value will be restored when the script stops, and the latest new value will be 
+            set on resume.</TD>
         </TR>
       </TABLE>
     </basefont>
