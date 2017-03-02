@@ -6664,11 +6664,11 @@ BOOL CEMscope::NeedBeamBlanking(int screenPos, BOOL STEMmode, BOOL &goToLDarea)
   goToLDarea = false;
 
   // Don't blank if camera is acquiring unless it is being managed by the camera
-  // If screen is up blank in low dose or for shutterless
+  // If screen is up blank in low dose, while pretending to be in LD, or for shutterless
   if (mCameraAcquiring && mShutterlessCamera < 2)
     return false;
   if (screenPos == spUp)
-    return mLowDoseMode || mShutterlessCamera;
+    return mLowDoseMode || mWinApp->mLowDoseDlg.m_bLowDoseMode || mShutterlessCamera;
    
   // In Stem mode, when the screen is down, low dose rules the blanking and whether to
   // go to a low dose area unless the screen has to be down, in which case the
