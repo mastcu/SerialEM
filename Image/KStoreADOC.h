@@ -35,6 +35,8 @@
 #define ADOC_YEDGE "YedgeDxy"
 #define ADOC_XEDGEVS "XedgeDxyVS"
 #define ADOC_YEDGEVS "YedgeDxyVS"
+#define ADOC_ALI_COORD "AlignedPieceCoords"
+#define ADOC_ALI_COORDVS "AlignedPieceCoordsVS"
 #define ADOC_STAGEOFF "StageOffsets"
 #define ADOC_FRAME_PATH "SubFramePath"
 #define ADOC_NUM_FRAMES "NumSubFrames"
