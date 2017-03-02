@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+3/1/17: Make sure beam stays blanked except when acquiring for Realign to Item
+when it goes out of Low Dose (In 3.6).
+
 2/26/17: Added script command to wait until a specified time after midnight or
 an alternative time.
 
