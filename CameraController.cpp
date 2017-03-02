@@ -6508,12 +6508,15 @@ void CCameraController::AcquireCleanup(int error)
     // Restart capture up to 2 times on timeout
     if (error == IDLE_TIMEOUT_ERROR) {
       report.Format("Timeout occurred acquiring %s image", (LPCTSTR)CurrentSetName());
-      if (mNumRetries < mRetryLimit  && !mHalting && !mTD.GetDeferredSum) {
-        mNumRetries++;
-        ErrorCleanup(0);
-        mWinApp->AppendToLog(report + ", retrying", LOG_SWALLOW_IF_CLOSED);
-        Capture(mLastConSet, true);
-        return;
+      if ((mNumRetries < mRetryLimit || ((mTD.ProcessingPlus & CONTINUOUS_USE_THREAD) && 
+        !mNumRetries)) && !mHalting && !mTD.GetDeferredSum) {
+          mNumRetries++;
+          //StopContinuousSTEM();
+          ErrorCleanup(0);
+          //if (!(mTD.ProcessingPlus & CONTINUOUS_USE_THREAD) || mNumRetries)
+            mWinApp->AppendToLog(report + ", retrying", LOG_SWALLOW_IF_CLOSED);
+          Capture(mLastConSet, true);
+          return;
       } else {
         mWinApp->mTSController->TSMessageBox(report);
       }
