@@ -25,6 +25,15 @@
       {
         width: 227px;
       }
+      .style10
+      {
+        width: 227px;
+        height: 24px;
+      }
+      .style11
+      {
+        height: 24px;
+      }
   --></style>
   </HEAD>
   <BODY bgColor="#ffffff" text="#000000">
@@ -942,8 +951,8 @@
           <TD>Tilt down by preset increment</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">TiltTo #</TD>
-          <TD>Tilt to given angle</TD>
+          <TD class="style10">TiltTo #</TD>
+          <TD class="style11">Tilt to given angle</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style9">TiltBy #</TD>
@@ -953,7 +962,10 @@
           <TD class="style9">BackgroundTilt #A [#S]</TD>
           <TD>Start tilting stage in the background; images can be taken and scripts can run 
             during the tilt.&nbsp; Follow with #A, the angle to tilt to, and optionally with 
-            #S, a speed factor for FEI scopes (&lt; 1 for slower than normal tilting).</TD>
+            #S, a speed factor for FEI scopes (&lt; 1 for slower than normal tilting).&nbsp; 
+            On FEI scopes, background stage movement requires the property 
+            &#39;BackgroundSocketToFEI&#39; set to 1 so that the fourth socket for background stage 
+            operations is opened when the program starts.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style9">ReportTiltAngle</TD>

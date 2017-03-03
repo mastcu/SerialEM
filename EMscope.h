@@ -337,7 +337,7 @@ class DLL_IM_EX CEMscope
   int GetScreenPos();
   BOOL SetScreenPos(int inPos);
   int StageBusy(int ignoreOrTrustState = 0);
-  void MoveStage(StageMoveInfo info, BOOL doBacklash = false, BOOL useSpeed = false, 
+  BOOL MoveStage(StageMoveInfo info, BOOL doBacklash = false, BOOL useSpeed = false, 
     BOOL inBackground = false);
   void TiltTo(double inVal);
   void TiltDown();

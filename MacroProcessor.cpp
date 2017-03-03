@@ -2772,7 +2772,10 @@ void CMacroProcessor::NextCommand()
         smi.useSpeed = true;
       }
       smi.axisBits = axisA;
-      mScope->MoveStage(smi, false, smi.useSpeed, true);
+      if (!mScope->MoveStage(smi, false, smi.useSpeed, true)) {
+        AbortMacro();
+        return;
+      }
     }
 
   } else if (CMD_IS(REPORTSTAGEXYZ)) {                      // ReportStageXYZ

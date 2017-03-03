@@ -1807,7 +1807,7 @@ DWORD CEMscope::GetLastStageTime()
   return mLastStageTime;
 }
 
-void CEMscope::MoveStage(StageMoveInfo info, BOOL doBacklash, BOOL useSpeed, 
+BOOL CEMscope::MoveStage(StageMoveInfo info, BOOL doBacklash, BOOL useSpeed, 
   BOOL inBackground)
 {
   // This call is not supposed to happen unless stage is ready, so don't wait long
@@ -1820,9 +1820,15 @@ void CEMscope::MoveStage(StageMoveInfo info, BOOL doBacklash, BOOL useSpeed,
   }
   if (WaitForStageReady(waitTime)) {
     AfxMessageBox(_T("Stage not ready"));
-    return;
+    return false;
   }
-
+  if (inBackground && FEIscope && SEMNumFEIChannels() < 4) {
+    SEMMessageBox("The stage cannot be moved in the background.\n"
+      "You must have the property BackgroundSocketToFEI set to open\n"
+      "the socket connection for background stage movement when\nthe program starts.");
+    return false;
+  }
+  
   mMoveInfo = info;
   mMoveInfo.JeolSD = &mJeolSD;
   mMoveInfo.plugFuncs = mPlugFuncs;
@@ -1870,6 +1876,7 @@ void CEMscope::MoveStage(StageMoveInfo info, BOOL doBacklash, BOOL useSpeed,
   mWinApp->mTiltWindow.UpdateEnables();
   mWinApp->mAlignFocusWindow.Update();
   mWinApp->AddIdleTask(TaskStageBusy, TaskStageDone, TaskStageError, 0, 0);
+  return true;
 }
 
 int CEMscope::TaskStageBusy()

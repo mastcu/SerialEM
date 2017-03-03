@@ -2050,15 +2050,23 @@ int CSerialEMDoc::SaveSettingsOnExit()
 // Save the calibrations
 void CSerialEMDoc::OnSettingsSavecalibrations() 
 {
+  char *cwd = NULL;
+
   // Need to return to original directory because system path could be relative
-  if (!mOriginalCwd.IsEmpty())
+  if (!mOriginalCwd.IsEmpty()) {
+    cwd = _getcwd(NULL, _MAX_PATH);
     _chdir((LPCTSTR)mOriginalCwd);
+  }
   CString strSys = mSystemPath + "\\" + mCalibrationName;
   ManageBackupFile(strSys, mCalibBackedUp);
   mParamIO->WriteCalibration(strSys);
   mWinApp->SetCalibrationsNotSaved(false);
   SaveShortTermCal();
   CalibrationWasDone(CAL_DONE_CLEAR_ALL);
+  if (cwd) {
+    _chdir(cwd);
+    free(cwd);
+  }
 }
 
 
@@ -2165,6 +2173,7 @@ void CSerialEMDoc::AppendToProgramLog(BOOL starting)
 void CSerialEMDoc::SaveShortTermCal()
 {
   CString filename;
+  char *cwd = NULL;
 
   // Might as well save flybacks here too; it is called at good times
   if (mWinApp->mCalibTiming->GetNeedToSaveFlybacks()) {
@@ -2177,12 +2186,18 @@ void CSerialEMDoc::SaveShortTermCal()
   // 4/22/12: changed && to ||
   if (!mShortTermNotSaved || mIgnoreShortTerm)
     return;
-  if (!mOriginalCwd.IsEmpty())
+  if (!mOriginalCwd.IsEmpty()) {
+    cwd = _getcwd(NULL, _MAX_PATH);
     _chdir((LPCTSTR)mOriginalCwd);
+  }
   filename = mSystemPath + "\\" + mShortTermName;
   ManageBackupFile(filename, mShortTermBackedUp);
   mParamIO->WriteShortTermCal(filename);
   mShortTermNotSaved = false;
+  if (cwd) {
+    _chdir(cwd);
+    free(cwd);
+  }
 }
 
 //////////////////////////////////////////////
