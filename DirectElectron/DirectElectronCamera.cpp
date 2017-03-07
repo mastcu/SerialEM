@@ -84,7 +84,9 @@ static DirectElectronCamPanel *DE_panel = NULL;
 
 #endif
 
-
+static HANDLE sLiveMutex = NULL;
+#define LIVE_MUTEX_WAIT 2000
+static void CleanupLiveMode(LiveThreadData *td);
 
 ///////////////////////////////////////////////////////////////////
 // Constructor of the spectral camera controlling class.
@@ -126,6 +128,12 @@ DirectElectronCamera::DirectElectronCamera(int camType, int index)
   //client/server model
   mDeServer = NULL;
   mInitializingIndex = -1;
+
+  // DO some live thread initializations
+  mLiveThread = NULL;
+  sLiveMutex = CreateMutex(0, 0, 0);
+  mLiveTD.buffers[0] = mLiveTD.buffers[1] = mLiveTD.rotBuf = NULL;
+  mLiveTD.outBufInd = -2;
 
   /*Any Camera type that is greater than 2 represents that we are using the DE client
     server archietcture.  We just need one instance of the interface.  Then
@@ -176,6 +184,8 @@ void DirectElectronCamera::InitializeLastSettings()
   mLastExposureMode = -999;
   mLastExposureTime = -1.;
   mLastPreExposure = -1.;
+  mLastProcessing = -1;
+  mLastLiveMode = -1;
 }
 
 
@@ -759,9 +769,83 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, int imageSizeX,
     // Need to take the negative of the rotation because of Y inversion, 90 with the CImg
     // library was producing clockwise rotation of image
     int operation = OperationForRotateFlip(m_DE_ImageRot, m_DE_ImageInvertX);
-    int inSizeX, inSizeY, outX, outY;
+    int inSizeX, inSizeY, outX, outY, status;
+    bool startedThread = false;
     inSizeX = imageSizeX;
     inSizeY = imageSizeY;
+    if (mLastLiveMode > 1) {
+      if (mLiveTD.outBufInd == -1) {
+
+        // Setup the thread data and allocate buffers
+        mLiveTD.DeServer = mDeServer;
+        mLiveTD.operation = operation;
+        mLiveTD.divideBy2 = divideBy2;
+        mLiveTD.inSizeX = inSizeX;
+        mLiveTD.inSizeY = inSizeY;
+        mLiveTD.quitLiveMode = false;
+        mLiveTD.returnedImage[0] =  mLiveTD.returnedImage[1] = false;
+        NewArray(mLiveTD.buffers[0], unsigned short, imageSizeX * imageSizeY);
+        NewArray(mLiveTD.buffers[1], unsigned short, imageSizeX * imageSizeY);
+        if (operation)
+          NewArray(mLiveTD.rotBuf, unsigned short, imageSizeX * imageSizeY);
+        if (!mLiveTD.buffers[0] || !mLiveTD.buffers[1] || (operation && !mLiveTD.rotBuf)){
+          CleanupLiveMode(&mLiveTD);
+          SEMTrace('D', "Failed to get memory for live mode buffers");  
+          return 1;
+        }
+
+        // Start the thread as usual
+        mLiveThread = AfxBeginThread(LiveProc, &mLiveTD, THREAD_PRIORITY_NORMAL,
+          0, CREATE_SUSPENDED);
+        mLiveThread->m_bAutoDelete = false;
+        mLiveThread->ResumeThread();
+
+        // Loop until it has gotten an image: 
+        for (outX = 0; outX < 100; outX++) {
+          Sleep(100);
+          if (mLiveTD.outBufInd != -1)
+            break;
+        }
+        startedThread = true;
+      }
+
+      // Clean up if it didn't start correctly; or check status and error out
+      // if there is a problem
+      if (mLiveTD.outBufInd < 0) {
+        if (UtilThreadBusy(&mLiveThread) > 0)
+          UtilThreadCleanup(&mLiveThread);
+        status = -1;
+      } else
+        status = UtilThreadBusy(&mLiveThread);
+      if (status <= 0) {
+        if (mLiveTD.outBufInd == -1) {
+          SEMTrace('D', "Live mode did not get started in timely manner");
+        } else if (status < 0) {
+          ErrorTrace("ERROR: Live mode ended with an error");
+        } else if (startedThread) {
+          SEMTrace('D', "Live mode ended without error right after being started");
+        } else {
+          SEMTrace('D', "Live mode flag is set after thread was told to quit");
+        }
+        CleanupLiveMode(&mLiveTD);
+        return 1;
+      }
+
+      // Loop until the output buffer is new; let SEM kill this thread if it times out?
+      for (;;) {
+        WaitForSingleObject(sLiveMutex, LIVE_MUTEX_WAIT);
+        if (!mLiveTD.returnedImage[mLiveTD.outBufInd]) {
+          memcpy(image4k, mLiveTD.buffers[mLiveTD.outBufInd], 2 * inSizeX * inSizeY);
+          mLiveTD.returnedImage[mLiveTD.outBufInd] = true;
+          ReleaseMutex(sLiveMutex);
+          return 0;
+        }
+        ReleaseMutex(sLiveMutex);
+        Sleep(10);
+      }
+    }
+
+    // Resume code for normal single image acquisition
     unsigned short *useBuf = image4k;
     if (operation) {
       NewArray(useBuf, unsigned short, imageSizeX * imageSizeY);
@@ -779,7 +863,7 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, int imageSizeX,
         delete useBuf;
       return 1;
     }
-    SEMTrace('D', "Got something back from DE Server...");
+    SEMTrace('D', "Got something back from DE Server..");
 
     // Do the rotation/flip, free array, divide by 2 if needed
     if (operation) {
@@ -815,6 +899,64 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, int imageSizeX,
 #endif
 
   return 0;
+}
+
+/*
+ * Thread procedure for live mode
+ */
+UINT DirectElectronCamera::LiveProc(LPVOID pParam)
+{
+  LiveThreadData *td = (LiveThreadData *)pParam;
+  int newInd, outX, outY, retval = 0;
+  unsigned short *useBuf, *image4k;
+
+  while (!td->quitLiveMode) {
+
+    // Get the new index and buffer to place data into
+    newInd = B3DCHOICE(td->outBufInd < 0, 0, 1 - td->outBufInd);
+    image4k = td->buffers[newInd];
+    useBuf = td->operation ? td->rotBuf : image4k;
+    
+    // Get image
+    if (!td->DeServer->getImage(useBuf, td->inSizeX * td->inSizeY * 2)) {
+      retval = 1;
+      break;
+    }
+
+    // Process it if needed
+    if (td->operation)
+      ProcRotateFlip((short *)useBuf, kUSHORT, td->inSizeX, td->inSizeY, td->operation, 0, 
+        (short *)image4k, &outX, &outY);
+    if (td->divideBy2)
+      for (int i = 0; i < td->inSizeX * td->inSizeY; i++)
+        image4k[i] = image4k[i] >> 1;
+
+    // Get the mutex and place change the output buffer index, mark as not returned
+    WaitForSingleObject(sLiveMutex, LIVE_MUTEX_WAIT);
+    td->outBufInd = newInd;
+    td->returnedImage[newInd] = false;
+    ReleaseMutex(sLiveMutex);
+    Sleep(10);
+  }
+
+  // Shut down and clean up completely when done
+  WaitForSingleObject(sLiveMutex, LIVE_MUTEX_WAIT);
+  CleanupLiveMode(td);
+  ReleaseMutex(sLiveMutex);
+  return retval;
+}
+
+// Common place to turn off live mode and clear out the thread data
+static void CleanupLiveMode(LiveThreadData *td)
+{
+  td->DeServer->setLiveMode(false);
+  td->outBufInd = -2;
+  for (int outX = 0; outX < 2; outX++) {
+    delete td->buffers[0];
+    td->buffers[0] = NULL;
+  }
+  delete td->rotBuf;
+  td->rotBuf = NULL;
 }
 
 
@@ -1119,6 +1261,57 @@ int DirectElectronCamera::SetExposureTimeAndMode(float seconds, int mode)
   mLastExposureMode = mode;
   return 0;
 }
+
+// Toggle the live mode: 0 is off, 1 is on with no thread, 2 is with thread
+int DirectElectronCamera::SetLiveMode(int mode)
+{
+  CSingleLock slock(&m_mutex);
+  int status, ind;
+
+  // If the mutex failed (?!), just drop back to no thread
+  if (mode > 1 && !sLiveMutex)
+    mode = 1;
+
+  if (slock.Lock(1000)) {
+    if (mode != mLastLiveMode) {
+      if (mLastLiveMode > 1) {
+
+        // Turning off thread, make sure it is running and tell it to quit, then wait
+        status = UtilThreadBusy(&mLiveThread);
+        if (status > 0) {
+          mLiveTD.quitLiveMode = true;
+          for (ind = 0; ind < 100; ind++) {
+            Sleep(100);
+            status = UtilThreadBusy(&mLiveThread);
+            if (status <= 0)
+              break;
+          }
+          if (UtilThreadBusy(&mLiveThread) > 0) {
+            UtilThreadCleanup(&mLiveThread);
+            CleanupLiveMode(&mLiveTD);
+          }
+        }
+      } 
+      if (mode > 1) {
+
+        // Turning on thread live mode, set index, let the shot take care of the rest
+        mLiveTD.outBufInd = -1;
+      }
+
+      // Set the new mode.
+      if (!mDeServer->setLiveMode(mode > 0)) {
+        ErrorTrace("ERROR: Could NOT set the live mode %s.", mode ? "ON" : "OFF");
+        return 1;
+      } 
+      SEMTrace('D', "Live mode turned %s", mode ? "ON" : "OFF");
+      mLastLiveMode = mode;
+    }
+    return 0;
+  }
+  return 1;
+}
+
+
 
 ///////////////////////////////////////////////////////////////////
 //StopAcquistion() routine.  Function will stop the camera
@@ -1429,20 +1622,14 @@ HRESULT DirectElectronCamera::setCorrectionMode(int nIndex)
   CString str;
   if (nIndex < 0 || nIndex > 2) 
     return S_FALSE;
+  if (nIndex != mLastProcessing || !mTrustLastSettings) {
+    if (!mDeServer->setProperty("Correction Mode", corrections[nIndex])) {
 
-  if (!mDeServer->setProperty("Correction Mode", corrections[nIndex])) {
-
-    str = ErrorTrace("Could not set the Correction mode of the camera.");
-    AfxMessageBox(str);
-    return S_FALSE;
-  } else {
-    /*if(nIndex==DE_CORRECTED_DARK_MODE)
-      str.Format("Correction mode has been changed to pull Dark Corrected images from the server.");
-    else
-      str.Format("Correction mode has been changed to pull UnCorrected images from the server.");
-
-    AfxMessageBox(str); */
-
+      str = ErrorTrace("Could not set the Correction mode of the camera.");
+      AfxMessageBox(str);
+      return S_FALSE;
+    }
+    mLastProcessing = nIndex;
   }
 #endif
 

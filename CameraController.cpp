@@ -1103,6 +1103,10 @@ void CCameraController::InitializeDirectElectron(int *originalList, int numOrig)
           SEMTrace('D', "successfully initialized the camera: %s", mAllParams[i].name);
           mNumDECameras = mNumDECameras + 1;	
           mDEInitialized = true;
+          if (mAllParams[i].useContinuousMode < 0 && mAllParams[i].DE_camType >= 2) {
+            mAllParams[i].useContinuousMode = 1;
+            mAllParams[i].setContinuousReadout = 1;
+          }
         }	else {
           AfxMessageBox("FAILURE in Initializing Direct Electron camera", MB_EXCLAME);
           mAllParams[i].failedToInitialize = true;
@@ -1472,8 +1476,8 @@ BOOL CCameraController::GetInitialized()
 // Return whether processing is being done here
 BOOL CCameraController::GetProcessHere()
 {
-  return mProcessHere || mParam->TietzType || mParam->AMTtype || mParam->DE_camType ||
-    (mTD.plugFuncs && !mParam->canDoProcessing);
+  return mProcessHere || mParam->TietzType || mParam->AMTtype || mParam->DE_camType == 1
+    || (mTD.plugFuncs && !mParam->canDoProcessing);
 }
 
 // Set whether processing here from menu
@@ -2366,7 +2370,8 @@ void CCameraController::Capture(int inSet, bool retrying)
       // For continuous mode in the plugin, set all the flags in the processing variable
       // This variable will serve as the flag that the mode is on
       if (((mParam->GatanCam && !mParam->STEMcamera && !conSet.doseFrac) ||
-        (mTD.plugFuncs && mTD.plugFuncs->StopContinuous)) && 
+        (mTD.plugFuncs && mTD.plugFuncs->StopContinuous) || 
+        (mParam->DE_camType >= 2 && !conSet.saveFrames)) &&
         mParam->useContinuousMode > 0) {
           mTD.ProcessingPlus += CONTINUOUS_USE_THREAD + 
             (mParam->setContinuousReadout ? CONTINUOUS_SET_MODE : 0) +
@@ -4987,6 +4992,7 @@ UINT CCameraController::EnsureProc(LPVOID pParam)
         while (!imageFinished && !retval) {  
           //Here because of the way it works it will
           //take "small naps" and wait until it is finished
+          // DE12 etc do not work that way: this is the call that acquires image
           if(td->DE_Cam->isImageAcquistionDone()) {
             imageFinished = true;
             retval = td->DE_Cam->copyImageData((unsigned short*) ref->Array, 
@@ -5809,6 +5815,16 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
 
     // DNM: skip if there is a memory problem
     if (!retval) {
+
+      // Make sure live mode is off before setting up shot
+      if (td->DE_camType >= 2 && !(td->ProcessingPlus & CONTINUOUS_USE_THREAD))
+        retval = td->DE_Cam->SetLiveMode(0); 
+
+      // Set the processing
+      if (!retval && td->DE_camType >= 2 && 
+        td->DE_Cam->setCorrectionMode(td->ProcessingPlus & 3) != S_OK)
+          retval = 1;
+
       // Calculate proper Image size based on binning
       retval = td->DE_Cam->setBinning(td->Binning, td->Binning, td->CallSizeX, 
         td->CallSizeY);
@@ -5830,6 +5846,11 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
       if (!retval)
         retval = td->DE_Cam->AcquireImage((float)td->Exposure);	
 
+      // Turn on live mode if flag set
+      if (!retval && td->DE_camType >= 2 && 
+        (td->ProcessingPlus & CONTINUOUS_USE_THREAD))
+        retval = td->DE_Cam->SetLiveMode(1 + 
+          B3DCHOICE(td->ProcessingPlus & CONTINUOUS_SET_MODE, 1 , 0));
 
   	  bool imageFinished = false;
       while (!imageFinished && !retval) {
@@ -7211,7 +7232,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
     }
     
     // Get special data for DE camera
-    if (mParam->DE_camType >= 2) {
+    if (mParam->DE_camType >= 2 && !(mTD.ProcessingPlus & CONTINUOUS_USE_THREAD)) {
       mTD.DE_Cam->SetImageExtraData(extra);
       err = lastConSetp->saveFrames;
       if (err & (DE_SAVE_FRAMES | DE_SAVE_SUMS)) {
@@ -9070,10 +9091,20 @@ void CCameraController::StopContinuousSTEM(void)
     return;
   if (mScope->GetCameraAcquiring())
     mScope->SetCameraAcquiring(false);
+
+  // Plugin camera
   if (mTD.plugFuncs && mTD.plugFuncs->StopContinuous) {
     mTD.plugFuncs->StopContinuous();
     return;
   }
+
+  // DE camera
+  if (mParam->DE_camType >= 2) {
+    mTD.DE_Cam->SetLiveMode(0);
+    return;
+  }
+
+  // Gatan camera
   CreateDMCamera(mGatanCamera);
   if (FAILED(hr))
     return;

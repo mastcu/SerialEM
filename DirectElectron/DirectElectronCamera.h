@@ -36,6 +36,19 @@
 
 struct DEPluginFuncs;
 
+// Data for live mode thread
+struct LiveThreadData {
+  DEPluginFuncs *DeServer;
+  unsigned short *buffers[2];
+  unsigned short *rotBuf;
+  bool returnedImage[2];
+  int outBufInd;
+  int inSizeX, inSizeY;
+  int operation;
+  int divideBy2;
+  bool quitLiveMode;
+};
+
 
 //This was discovered to be the appropriate origin size for
 //when the camera was in bin 4 mode.  
@@ -149,6 +162,7 @@ public:
 	int initializeDECamera(CString camName);
   void FinishCameraSelection(bool initialCall);
 	int setROI(int offset_x, int offset_y, int xsize, int ysize);
+  int SetLiveMode(int mode);
 	void setCameraName(CString name);
 	int insertCamera();
 	int retractCamera();
@@ -224,6 +238,7 @@ private:
 	BSTR m_filename, m_tablefilename, m_dcf_file;
   CSerialEMApp *mWinApp;
   CameraParameters *mCamParams;
+  static UINT LiveProc(LPVOID pParam);
 
 #ifdef NCMIR_CAMERA
 	#ifdef NCMIR_8K
@@ -262,7 +277,8 @@ private:
 	//added for DE12 support
 	bool m_DE_CONNECTED;
 	CString m_DE_CurrentCamera;
-	VARIANT m_img;
+  CWinThread *mLiveThread;
+  LiveThreadData mLiveTD;
 
 	//DE settings.
 	CString mDE_SERVER_IP;
@@ -277,6 +293,8 @@ private:
   int mLastXbinning, mLastYbinning;
   int mLastExposureMode;
   float mLastExposureTime;
+  int mLastProcessing;
+  int mLastLiveMode;
   BOOL mTrustLastSettings;
   double mLastPreExposure;
   int mReadoutDelay;

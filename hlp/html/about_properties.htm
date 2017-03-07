@@ -947,8 +947,8 @@
         </TR>
         <TR VALIGN="top">
           <TD>DEcameraType</TD>
-          <TD>0 for a non-Direct Electron camera, 1 for a 4K LC1100, 2 for a DE_12, 3 for a 
-            DE_12_Survey, or 4 for a DE_LC1100.&nbsp; This entry implies RestrictedSizeType 3 for 
+          <TD>0 for a non-Direct Electron camera, 1 for a 4K LC1100, 2 for a DE12, DE16, DE20, or DE64, 3 for a 
+            DE12/16/20/64 Survey camera, or 4 for a DE_LC1100.&nbsp; This entry implies RestrictedSizeType 3 for 
             the LC1100 only.</TD>
         </TR>
         <TR VALIGN="top">
@@ -990,16 +990,20 @@
         </TR>
         <TR VALIGN="top">
           <TD>UseContinuousMode</TD>
-          <TD>The entry can enable use of a fast continuous acquisition mode for a Gatan 
+          <TD>The entry can enable use of a fast continuous acquisition mode for a Gatan or 
+            Direct Electron 
             camera where this mode is not enabled by default, or to modify or disable use of 
-            the mode if default parameters are available.&nbsp; Follow with up to 4 numbers: 
+            the mode if default parameters are available.&nbsp; For a Gatan camera, follow with up to 4 numbers: 
             1 to use the mode or 0 not to; 1 to specify continuous readout or 0 not to; a 
             quality level from 1 to 7 or 0 not to set quality; and 1 to balance intensity 
             between two halves of the field.&nbsp; If no property is entered, the defaults are &#39;1 1 1 1&#39; for Orius 
             cameras, &#39;1 1 0 0&#39; for K2, and &#39;1 0 0 0&#39; for US4000 and US1000 cameras, where the camera 
             type is determined from the &#39;DMGainReferenceName&#39; property.&nbsp; If a 
             property is entered for an Orius, be sure to include the fourth value to balance 
-            the two halves, unless using a quality level where it is not needed.</TD>
+            the two halves, unless using a quality level where it is not needed.&nbsp; For a 
+            DE camera, the use of live mode is specified by the first parameter, and the use 
+            of a separate thread that acquires in parallel with the display operations is 
+            specified by the second parameter; both values are set to 1 by default.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>BoundaryBetweenHalves</TD>

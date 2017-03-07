@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+3/6/17: Implemented use of live mode for continous acquisition from DE cameras
+and enabled acquisition of normalized images from server.
+
 3/5/17: Fixed taking tilt angle and stage position from buffer if available
 when making a montage map (In 3.6).
 
