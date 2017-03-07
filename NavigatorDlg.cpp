@@ -5121,14 +5121,14 @@ int CNavigatorDlg::NewMap(bool unsuitableOK)
     item->mRawStageX = stageX;
     item->mRawStageY = stageY;
   }
-  if (imBuf->GetStageZ(delX))
+  if (!imBuf->GetStageZ(delX))
     item->mStageZ = delX;
   CheckRawStageMatches();
   
   item->mMapBinning = imBuf->mBinning;
   item->mMapCamera = imBuf->mCamera;
   item->mMapMagInd = imBuf->mMagInd;
-  if (imBuf->GetTiltAngle(item->mMapTiltAngle))
+  if (!imBuf->GetTiltAngle(item->mMapTiltAngle))
     item->mMapTiltAngle = (float)mScope->GetTiltAngle();
   item->mMapMontage = mWinApp->Montaging();
   item->mMapFile = mWinApp->mStoreMRC->getName();

@@ -279,6 +279,8 @@ void CProcessImage::OnProcessBinnedfft()
 void CProcessImage::OnProcessLivefft()
 {
   mLiveFFT = !mLiveFFT;
+  if (mWinApp->mCamera->DoingContinuousAcquire())
+    mWinApp->SetStatusText(mLiveFFT ? MEDIUM_PANE : COMPLEX_PANE, "");
 }
 
 void CProcessImage::OnUpdateProcessLivefft(CCmdUI *pCmdUI)
