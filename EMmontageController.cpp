@@ -2404,8 +2404,10 @@ void EMmontageController::SavePiece()
 
       // Save aligned piece coordinates for external use
       if (!mAlreadyHaveShifts) {
-        if (StoreAlignedCoordsInAdoc())
-          PrintfToLog("WARNING: Error %d saving aligned piece coordinates into autodoc");
+        i = StoreAlignedCoordsInAdoc();
+        if (i > 0)
+          PrintfToLog("WARNING: Error %d saving aligned piece coordinates into autodoc", 
+          i);
       }
 
       // Save the center shifts
