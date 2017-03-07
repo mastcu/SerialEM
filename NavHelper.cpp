@@ -2070,10 +2070,15 @@ void CNavHelper::SimpleIStoStage(CMapDrawItem * item, double ISX, double ISY,
 // Get the stage to camera matrix for an item, adjusting for defocus
 ScaleMat CNavHelper::ItemStageToCamera(CMapDrawItem * item)
 {
+  ScaleMat aMat;
   if (item->mMapLowDoseConSet == VIEW_CONSET)
-    return mShiftManager->FocusAdjustedStageToCamera(item->mMapCamera, item->mMapMagInd,
-    item->mMapSpotSize, item->mMapProbeMode, item->mMapIntensity, item->mDefocusOffset);
-  return mShiftManager->StageToCamera(item->mMapCamera, item->mMapMagInd);
+    aMat = mShiftManager->FocusAdjustedStageToCamera(item->mMapCamera, item->mMapMagInd,
+      item->mMapSpotSize, item->mMapProbeMode, item->mMapIntensity, item->mDefocusOffset);
+  else
+    aMat = mShiftManager->StageToCamera(item->mMapCamera, item->mMapMagInd);
+  if (item->mMapTiltAngle > RAW_STAGE_TEST && fabs((double)item->mMapTiltAngle) > 1)
+    mShiftManager->AdjustStageToCameraForTilt(aMat, item->mMapTiltAngle);
+  return aMat;
 }
 
 // Get the coordinates for a camera set from the state parameters

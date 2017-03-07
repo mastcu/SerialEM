@@ -17,16 +17,6 @@
 
 
 // DNM: switch to include fixed tlh until the tlb can be updated properly
-#ifdef NCMIR_CAMERA
-	#ifdef NCMIR_8K
-		#include ".\NCMIR\8kCamera\NCMIR8kCamera.h"
-
-	#else
-		#include ".\NCMIR\4kCamera\NCMIR4kCamera.h"
-	#endif
-
-
-#else
 
 #include "soliosfor4000.tlh"
 //#import "SoliosFor4000.tlb" no_namespace named_guids raw_interfaces_only
@@ -109,7 +99,6 @@ struct LiveThreadData {
 #define DE_CAN_SAVE_MRC 1000715
 #define DE_SUFFIX_KEEPS_PT 9999999
 
-#endif
 //The following define the different
 //gain/dsi setting modes for the LC1100
 #define MODE_0 0
@@ -240,21 +229,12 @@ private:
   CameraParameters *mCamParams;
   static UINT LiveProc(LPVOID pParam);
 
-#ifdef NCMIR_CAMERA
-	#ifdef NCMIR_8K
-
-	#else
-		NCMIR4kCamera *m_CaptureInterface;
-	#endif
-
-#else
 	//DE properties
 	//added for client/server model.
   DEPluginFuncs *mDeServer;
 	ICameraCtrl *m_LCCaptureInterface;
 	IFSM_MemoryObject *m_FSMObject;
 	CLC1100CamSink* m_sink;
-#endif
 
 	int m_camera_port_number;
 	float m_camera_Temperature;

@@ -2688,6 +2688,7 @@ void CNavigatorDlg::ComputeStageToImage(EMimageBuffer *imBuf, float stageX, floa
   float defocus = 0.;
   int spot = 1;
   double intensity = 0.5;
+  float angle;
 
   // Convert any image shift of image into an additional stage shift
   if (needAddIS)
@@ -2708,6 +2709,10 @@ void CNavigatorDlg::ComputeStageToImage(EMimageBuffer *imBuf, float stageX, floa
   aMat.xpy /= imBuf->mBinning;
   aMat.ypx /= -imBuf->mBinning;
   aMat.ypy /= -imBuf->mBinning;
+
+  // If tilt angle is available and it makes more than 0.02% difference, adjust matrix
+  if (imBuf->GetTiltAngle(angle) && fabs((double)angle) > 1.)
+    mShiftManager->AdjustStageToCameraForTilt(aMat, angle);
   delX = imBuf->mImage->getWidth() / 2.f - aMat.xpx * stageX - aMat.xpy * stageY;
   delY = imBuf->mImage->getHeight() / 2.f - aMat.ypx * stageX - aMat.ypy * stageY;
 }
@@ -2716,7 +2721,7 @@ void CNavigatorDlg::ComputeStageToImage(EMimageBuffer *imBuf, float stageX, floa
 BOOL CNavigatorDlg::ConvertIStoStageIncrement(int magInd, int camera, double ISX, 
                                               double ISY, float &stageX, float &stageY)
 {
-  ScaleMat aMat;
+  ScaleMat aMat, bMat;
   
   // If scope did not already subtract mag offsets, do so now for given camera type
   if (!mScope->GetApplyISoffset()) {
@@ -2735,7 +2740,9 @@ BOOL CNavigatorDlg::ConvertIStoStageIncrement(int magInd, int camera, double ISX
   // Here the plus sign replicates the plus in image shift reset
   aMat = mShiftManager->IStoGivenCamera(magInd, camera);
   if (aMat.xpx) {
-    aMat = MatMul(aMat, MatInv(mShiftManager->StageToCamera(camera, magInd)));
+    bMat = MatInv(mShiftManager->StageToCamera(camera, magInd));
+    mShiftManager->AdjustCameraToStageForTilt(bMat, (float)mScope->FastTiltAngle());
+    aMat = MatMul(aMat, bMat);
     stageX += (float)(aMat.xpx * ISX + aMat.xpy * ISY);
     stageY += (float)(aMat.ypx * ISX + aMat.ypy * ISY);
     return true;
@@ -3056,6 +3063,7 @@ int CNavigatorDlg::SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg)
   // Store new center stage position in the temporary item for fixing polygon center
   // Go to center only if not defining for future
   aInv = MatInv(mShiftManager->StageToCamera(iCam, montParam->magIndex));
+  mShiftManager->AdjustCameraToStageForTilt(aInv, (float)mScope->FastTiltAngle());
   item->mStageX = aInv.xpx * mCamCenX + aInv.xpy * mCamCenY;
   item->mStageY = aInv.ypx * mCamCenX + aInv.ypy * mCamCenY;
   if (!montDlg) {

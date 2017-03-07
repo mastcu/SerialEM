@@ -42,21 +42,6 @@ using namespace std;
 #include "..\GainRefMaker.h"
 #include "..\Utilities\XCorr.h"
 
-#ifdef NCMIR_CAMERA
-
-#ifdef NCMIR_8K
-#include "./NCMIR/8KCamera/DialogPanelEightKCamera.h"
-//Dialog panel for the 4K camera
-static DialogPanelEightKCamera *NCMIR8K_panel = NULL;
-
-#else
-#include "./NCMIR/4KCamera/Spectral4kCameraDialog.h"
-//Dialog panel for the 4K camera
-static Spectral4kCameraDialog *NCMIR4K_panel = NULL;
-#endif
-
-#else
-
 #include "DirectElectronCamPanel.h"
 
 // Property strings used more than once
@@ -82,8 +67,6 @@ bool FIX_COLUMNS = false;
 //The dialog window that is specific to non-DDD cameras
 static DirectElectronCamPanel *DE_panel = NULL;
 
-#endif
-
 static HANDLE sLiveMutex = NULL;
 #define LIVE_MUTEX_WAIT 2000
 static void CleanupLiveMode(LiveThreadData *td);
@@ -107,16 +90,6 @@ DirectElectronCamera::DirectElectronCamera(int camType, int index)
   mTrustLastSettings = true;
 
   // DNM: need to initialize these because uninitialize is called by destructor
-#ifdef NCMIR_CAMERA
-#ifdef NCMIR_8K
-
-#else
-  m_CaptureInterface = new NCMIR4kCamera();
-  m_CaptureInterface->setCamType(mCamType);
-#endif
-
-#else
-
   m_sink = NULL;
   m_FSMObject = NULL;
   m_LCCaptureInterface = NULL;
@@ -164,10 +137,6 @@ DirectElectronCamera::DirectElectronCamera(int camType, int index)
   } else {
     m_DE_CLIENT_SERVER = false;
   }
-
-
-#endif
-
 }
 
 // Initialize all of the saved settings that will be used to reduce calls to server
@@ -206,16 +175,6 @@ DirectElectronCamera::~DirectElectronCamera(void)
 ///////////////////////////////////////////////////////////////////
 int DirectElectronCamera::unInitialize()
 {
-
-#ifdef NCMIR_CAMERA
-#ifdef NCMIR_8K
-
-#else
-  m_CaptureInterface->uninitialize();
-#endif
-#else
-
-
   if (m_DE_CLIENT_SERVER) {
     if (mDeServer) {
       if (m_DE_CONNECTED) {
@@ -243,11 +202,7 @@ int DirectElectronCamera::unInitialize()
     m_LCCaptureInterface = NULL;
 
   }
-
-#endif
-
   return 1;
-
 }
 
 
@@ -262,27 +217,6 @@ int DirectElectronCamera::unInitialize()
 ///////////////////////////////////////////////////////////////////
 int DirectElectronCamera::initialize(CString camName, int camIndex)
 {
-
-#ifdef NCMIR_CAMERA
-#ifdef NCMIR_8K
-  if (!NCMIR8K_panel) {
-    NCMIR8K_panel = new Spectral4kCameraDialog();
-    NCMIR8K_panel->setCameraReference(m_CaptureInterface);
-    NCMIR8K_panel->Create(IDD_8KDialog);
-    NCMIR8K_panel->ShowWindow(SW_SHOW);
-  }
-#else
-  m_CaptureInterface->initialize();
-
-  if (!NCMIR4K_panel) {
-    NCMIR4K_panel = new Spectral4kCameraDialog();
-    NCMIR4K_panel->setCameraReference(m_CaptureInterface);
-    NCMIR4K_panel->Create(IDD_NCMIR4K);
-    NCMIR4K_panel->ShowWindow(SW_SHOW);
-  }
-#endif
-
-#else
   if (m_DE_CLIENT_SERVER) {
 
     //pull the reference to the ToolDialog box for DE.
@@ -394,7 +328,6 @@ int DirectElectronCamera::initialize(CString camName, int camIndex)
     }
 
   }
-#endif
 
   return 1;
 }
@@ -405,10 +338,6 @@ int DirectElectronCamera::initialize(CString camName, int camIndex)
 ///////////////////////////////////////////////////////////////////
 int DirectElectronCamera::initDEServer()
 {
-#ifdef NCMIR_CAMERA
-
-#else
-
   CString token;
   int curpos = 0;
   if (!mDeServer) {
@@ -477,19 +406,14 @@ int DirectElectronCamera::initDEServer()
     AfxMessageBox(token);
   }
 
-#endif
   return 1;
-
 }
 
-
+// Initialize a particular DE camera
 int DirectElectronCamera::initializeDECamera(CString camName)
 {
   //read in a properties file to know how to assign
   //Read in the information as this is very critical
-#ifdef NCMIR_CAMERA
-
-#else
   if (m_DE_CONNECTED) {
     CString str;
     CString tmp;
@@ -545,8 +469,6 @@ int DirectElectronCamera::initializeDECamera(CString camName)
     FinishCameraSelection(true);
   }
 
-#endif
-
   return 1;
 }
 
@@ -557,19 +479,12 @@ int DirectElectronCamera::initializeDECamera(CString camName)
 // Returns the string for the camera insertion state
 CString DirectElectronCamera::getCameraInsertionState()
 {
-
-#ifdef NCMIR_CAMERA
-  return "NA";
-
-#else
   std::string camState = "";
   mDeServer->getProperty(psCamPosition, &camState);
 
   m_Camera_InsertionState = camState.c_str();
 
   return m_Camera_InsertionState;
-#endif
-
 }
 
 // Return 1 if the camera is inserted, 0 if not, and update the tool panel
@@ -587,10 +502,6 @@ int DirectElectronCamera::IsCameraInserted()
 ///////////////////////////////////////////////////////////////////
 void DirectElectronCamera::setCameraName(CString camName)
 {
-#ifdef NCMIR_CAMERA
-
-
-#else
 
   //Check to make sure we dont set camera name if its
   //already set.
@@ -627,7 +538,6 @@ void DirectElectronCamera::setCameraName(CString camName)
     }
 
   }
-#endif
 }
 
 // Common tasks when initializing or selecting a camera
@@ -711,10 +621,6 @@ int DirectElectronCamera::setPreExposureTime(double preExpMillisecs)
 
   if (slock.Lock(1000)) {
 
-#ifdef NCMIR_CAMERA
-
-#else
-
     if (m_DE_CLIENT_SERVER) {
       if (fabs(mLastPreExposure - preExpMillisecs) > 0.01 || !mTrustLastSettings) {
         if (!justSetDoubleProperty("Preexposure Time (seconds)", preExpMillisecs / 1000.))
@@ -731,7 +637,6 @@ int DirectElectronCamera::setPreExposureTime(double preExpMillisecs)
       m_LCCaptureInterface->ConfigParam_RecAllFromHost();
     }
 
-#endif
     return 0;
   }
   return 1;
@@ -753,17 +658,6 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, int imageSizeX,
     m_STOPPING_ACQUISITION = false;
     return -1;
   }
-
-#ifdef NCMIR_CAMERA
-#ifdef NCMIR_8K
-
-#else
-  m_CaptureInterface->copyImageData(image4k, imageSizeX, imageSizeY);
-#endif
-
-  return 0;
-#else
-
 
   if (m_DE_CLIENT_SERVER) {
     // Need to take the negative of the rotation because of Y inversion, 90 with the CImg
@@ -896,8 +790,6 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, int imageSizeX,
 
     // Removed hard-coded column defect correction which failed on subareas in 3.4
   }
-#endif
-
   return 0;
 }
 
@@ -970,19 +862,6 @@ int DirectElectronCamera::setBinning(int x, int y, int sizex, int sizey)
 
   if (slock.Lock(1000)) {
 
-#ifdef NCMIR_CAMERA
-#ifdef NCMIR_8K
-
-#else
-    m_CaptureInterface->setBinning(x, y, sizex, sizey);
-#endif
-
-
-    return 0;
-
-#else
-
-
     if (m_DE_CLIENT_SERVER) {
 
       // set binning if it does not match last value
@@ -1045,12 +924,9 @@ int DirectElectronCamera::setBinning(int x, int y, int sizex, int sizey)
 
     }
 
-#endif
-
     return 0;
   }
   return 1;
-
 }
 
 
@@ -1062,10 +938,6 @@ int DirectElectronCamera::setROI(int offset_x, int offset_y, int xsize, int ysiz
 
   if (slock.Lock(1000)) {
 
-
-#ifdef NCMIR_CAMERA
-    return 0;
-#else
     bool ret1 = true, ret2 = true;
     if (m_DE_CLIENT_SERVER) {
       if (offset_x != mLastXoffset || offset_y != mLastYoffset || !mTrustLastSettings) {
@@ -1088,7 +960,6 @@ int DirectElectronCamera::setROI(int offset_x, int offset_y, int xsize, int ysiz
       mLastROIsizeY = ysize;
     }
 
-#endif
     return 0;
   }
   return 1;
@@ -1097,17 +968,6 @@ int DirectElectronCamera::setROI(int offset_x, int offset_y, int xsize, int ysiz
 // Unused
 int DirectElectronCamera::setImageSize(int sizeX, int sizeY)
 {
-
-#ifdef NCMIR_CAMERA
-#ifdef NCMIR_8K
-
-#else
-  m_CaptureInterface->setImageSize(sizeX / 2, sizeY / 2);
-#endif
-
-  return 0;
-
-#else
 
   if (m_DE_CLIENT_SERVER) {
     if (sizeX != mLastXimageSize || sizeY != mLastYimageSize || !mTrustLastSettings) {
@@ -1125,7 +985,6 @@ int DirectElectronCamera::setImageSize(int sizeX, int sizeY)
     m_LCCaptureInterface->SetImageSize(sizeX, sizeY);
   }
 
-#endif
   return 0;
 }
 
@@ -1141,16 +1000,6 @@ int DirectElectronCamera::AcquireImage(float seconds)
   CSingleLock slock(&m_mutex);
 
   if (slock.Lock(1000)) {
-#ifdef NCMIR_CAMERA
-#ifdef NCMIR_8K
-
-#else
-    m_CaptureInterface->AcquireImage(seconds);
-#endif
-
-    return 0;
-#else
-
 
     if (m_DE_CLIENT_SERVER) {
       if (SetExposureTimeAndMode(seconds, 
@@ -1175,7 +1024,6 @@ int DirectElectronCamera::AcquireImage(float seconds)
         ;
 
     }
-#endif
   }
   return 0;
 }
@@ -1192,17 +1040,6 @@ int DirectElectronCamera::AcquireDarkImage(float seconds)
   CSingleLock slock(&m_mutex);
 
   if (slock.Lock(1000)) {
-
-#ifdef NCMIR_CAMERA
-#ifdef NCMIR_8K
-
-
-#else
-    m_CaptureInterface->AcquireDarkImage(seconds);
-#endif
-
-    return 0;
-#else
 
     if (m_DE_CLIENT_SERVER) {
       if (SetExposureTimeAndMode(seconds, DE_DARK_IMAGE))
@@ -1226,9 +1063,7 @@ int DirectElectronCamera::AcquireDarkImage(float seconds)
         ;
     }
 
-#endif
   }
-
   return 0;
 }
 
@@ -1320,25 +1155,12 @@ int DirectElectronCamera::SetLiveMode(int mode)
 ///////////////////////////////////////////////////////////////////
 void DirectElectronCamera::StopAcquistion()
 {
-
-#ifdef NCMIR_CAMERA
-#ifdef NCMIR_8K
-
-#else
-  m_CaptureInterface->StopAcquistion();
-#endif
-
-#else
-
   if (m_DE_CLIENT_SERVER) {
   } else {
     m_LCCaptureInterface->AbortReadout();
     m_LCCaptureInterface->ClearFrame();
     m_STOPPING_ACQUISITION = true;
   }
-
-#endif
-
 }
 
 
@@ -1349,16 +1171,6 @@ void DirectElectronCamera::StopAcquistion()
 ///////////////////////////////////////////////////////////////////
 bool DirectElectronCamera::isImageAcquistionDone()
 {
-
-#ifdef NCMIR_CAMERA
-#ifdef NCMIR_8K
-
-  return false;
-#else
-  return m_CaptureInterface->isImageAcquistionDone();
-#endif
-#else
-
   if (m_DE_CLIENT_SERVER) {
     return true;
 
@@ -1369,21 +1181,11 @@ bool DirectElectronCamera::isImageAcquistionDone()
       return m_sink->checkDataReady();
   }
 
-#endif
   return false;
 }
 
 int DirectElectronCamera::setDebugMode()
 {
-
-#ifdef NCMIR_CAMERA
-#ifdef NCMIR_8K
-
-#else
-  m_CaptureInterface->setDebugMode();
-#endif
-#endif
-
   m_debug_mode = 1;
   return 1;
 }
@@ -1400,13 +1202,6 @@ float DirectElectronCamera::getCameraTemp()
 
   if (slock.Lock(1000)) {
 
-#ifdef NCMIR_CAMERA
-#ifdef NCMIR_8K
-
-#else
-    return m_CaptureInterface->getCameraTemp();
-#endif
-#else
     if (m_DE_CLIENT_SERVER) {
       float temp = 10;
       if (!mDeServer->getFloatProperty("Temperature - Detector (Celsius)", &temp)) {
@@ -1421,11 +1216,9 @@ float DirectElectronCamera::getCameraTemp()
       m_LCCaptureInterface->get_StatusParam(CAMERA_TEMP, &param);
       m_camera_Temperature = (float)((param / 10) - 273.15);
     }
-#endif
 
   }
   return m_camera_Temperature;
-
 }
 
 
@@ -1434,8 +1227,6 @@ int DirectElectronCamera::insertCamera()
 {
   CSingleLock slock(&m_mutex);
   if (slock.Lock(1000)) {
-#ifdef NCMIR_CAMERA
-#else
 
     if (m_DE_CLIENT_SERVER) {
      if (!mDeServer->setProperty(psCamPosition, DE_CAM_STATE_INSERTED)) {
@@ -1447,7 +1238,6 @@ int DirectElectronCamera::insertCamera()
       }
     } else //LC1100 camera return
       return 0;
-#endif
   }
   return 1;
 }
@@ -1457,8 +1247,6 @@ int DirectElectronCamera::retractCamera()
 {
   CSingleLock slock(&m_mutex);
   if (slock.Lock(1000)) {
-#ifdef NCMIR_CAMERA
-#else
 
     if (!mDeServer->setProperty(psCamPosition, DE_CAM_STATE_RETRACTED)) {
       CString str = ErrorTrace("ERROR: Could NOT retract the DE camera ");
@@ -1467,7 +1255,6 @@ int DirectElectronCamera::retractCamera()
       WaitForInsertionState(DE_CAM_STATE_RETRACTED);
       return 0;
     }
-#endif
   }
   return 1;
 }
@@ -1491,11 +1278,6 @@ void DirectElectronCamera::WaitForInsertionState(const char *wantState)
 float DirectElectronCamera::getColdFingerTemp()
 {
   float temp;
-
-#ifdef NCMIR_CAMERA
-  return 0.0;
-#else
-
   CString str;
   if (!mDeServer->getFloatProperty("Temperature - Cold Finger (Celsius)", &temp)) {
 
@@ -1504,7 +1286,6 @@ float DirectElectronCamera::getColdFingerTemp()
   } else {
 
   }
-#endif
 
   return temp;
 }
@@ -1513,11 +1294,6 @@ float DirectElectronCamera::getColdFingerTemp()
 float DirectElectronCamera::getWaterLineTemp()
 {
   float temp = 0.;
-
-#ifdef NCMIR_CAMERA
-  return 0;
-#else
-
   CString str;
 
   if (!mDeServer->getFloatProperty("Temperature - Water Line (Celsius)", &temp)) {
@@ -1529,7 +1305,6 @@ float DirectElectronCamera::getWaterLineTemp()
 
   }
 
-#endif
   return temp;
 }
 
@@ -1537,11 +1312,6 @@ float DirectElectronCamera::getWaterLineTemp()
 float DirectElectronCamera::getTECValue()
 {
   float tec = 0.;
-
-#ifdef NCMIR_CAMERA
-  return 0;
-#else
-
   CString str;
   if (!mDeServer->getFloatProperty("Temperature - TEC current (Ampere)", &tec)) {
 
@@ -1551,7 +1321,6 @@ float DirectElectronCamera::getTECValue()
   } else {
 
   }
-#endif
   return tec;
 }
 
@@ -1563,10 +1332,6 @@ HRESULT DirectElectronCamera::WarmUPCamera()
 {
 
   HRESULT hr = S_OK;
-#ifdef NCMIR_CAMERA
-  return hr;
-#else
-
   CString str;
   if (!mDeServer->setProperty("Temperature Control", "Warm Up")) {
 
@@ -1578,8 +1343,6 @@ HRESULT DirectElectronCamera::WarmUPCamera()
     AfxMessageBox(str);
 
   }
-
-#endif
   return hr;
 }
 
@@ -1588,10 +1351,6 @@ HRESULT DirectElectronCamera::CoolDownCamera()
 {
 
   HRESULT hr = S_OK;
-#ifdef NCMIR_CAMERA
-  return hr;
-#else
-
   CString str;
 
   if (!mDeServer->setProperty("Temperature Control", "Cool Down")) {
@@ -1605,7 +1364,6 @@ HRESULT DirectElectronCamera::CoolDownCamera()
     AfxMessageBox(str);
 
   }
-#endif
   return hr;
 }
 
@@ -1615,9 +1373,6 @@ HRESULT DirectElectronCamera::setCorrectionMode(int nIndex)
   const char *corrections[3] = {"Uncorrected Raw", "Dark Corrected", 
     "Gain and Dark Corrected"};
   HRESULT hr = S_OK;
-#ifdef NCMIR_CAMERA
-  return hr;
-#else
 
   CString str;
   if (nIndex < 0 || nIndex > 2) 
@@ -1631,7 +1386,6 @@ HRESULT DirectElectronCamera::setCorrectionMode(int nIndex)
     }
     mLastProcessing = nIndex;
   }
-#endif
 
   return hr;
 }
@@ -1859,11 +1613,6 @@ void DirectElectronCamera::SetImageExtraData(EMimageExtra *extra)
 ///////////////////////////////////////////////////////////////////
 int DirectElectronCamera::readCameraProperties()
 {
-
-#ifdef NCMIR_CAMERA
-  return 1;
-
-#else
   if (m_DE_CLIENT_SERVER) {
   } else {
     string  camera_properties[NUM_OF_LINES];
@@ -1918,13 +1667,7 @@ int DirectElectronCamera::readCameraProperties()
 
 
   }
-
-
-#endif
   return 1;
-
-
-
 }
 
 // unused
@@ -1934,18 +1677,9 @@ int DirectElectronCamera::setOrigin(int x, int y)
 
   if (slock.Lock(1000)) {
 
-#ifdef NCMIR_CAMERA
-
-#ifdef NCMIR_8K
-
-#else
-    m_CaptureInterface->setOrigin(x, y);
-#endif
-#else
     if (m_DE_CLIENT_SERVER) {
     } else
       m_LCCaptureInterface->SetOrigin(x, y);
-#endif
   }
   return 1;
 }
@@ -1954,35 +1688,15 @@ int DirectElectronCamera::setOrigin(int x, int y)
 
 int DirectElectronCamera::reAllocateMemory(int mem)
 {
-
-#ifdef NCMIR_CAMERA
-#ifdef NCMIR_8K
-
-#else
-  m_CaptureInterface->reAllocateMemory(mem);
-#endif
-#else
   if (m_DE_CLIENT_SERVER) {
   } else
     m_FSMObject->AllocateShort(mem, 1);
-#endif
   return 1;
 }
 
 unsigned short *DirectElectronCamera::getImageData()
 {
-
-#ifdef NCMIR_CAMERA
-#ifdef NCMIR_8K
-
-  return NULL;
-#else
-  return m_CaptureInterface->getImageData();
-#endif
-#else
   return m_sink->getData();
-#endif
-
 }
 
 void DirectElectronCamera::setGainSetting(short index)
@@ -1998,16 +1712,6 @@ void DirectElectronCamera::setGainSetting(short index)
   CSingleLock slock(&m_mutex);
 
   if (slock.Lock(1000)) {
-
-#ifdef NCMIR_CAMERA
-#ifdef NCMIR_8K
-
-#else
-    m_CaptureInterface->setGainSetting(index);
-#endif
-
-    return;
-#else
 
     if (index == MODE_0) {
       m_LCCaptureInterface->put_ReadoutParam(ATTENUATION_PARAM, 0);
@@ -2039,7 +1743,6 @@ void DirectElectronCamera::setGainSetting(short index)
     m_LCCaptureInterface->get_ReadoutParam(DSI_TIME, &dsi_time);
 
     SEMTrace('D', "DE_CAMERA: after sending commands to the camera reading back these are the results for mode %d:  attenuation_param %d and DSI_TIME %d", index, atten, dsi_time);
-#endif
   }
 }
 
@@ -2053,15 +1756,6 @@ float DirectElectronCamera::getCameraBackplateTemp()
   CSingleLock slock(&m_mutex);
 
   if (slock.Lock(1000)) {
-
-#ifdef NCMIR_CAMERA
-#ifdef NCMIR_8K
-
-#else
-    return m_CaptureInterface->getCameraBackplateTemp();
-#endif
-
-#else
     if (m_DE_CLIENT_SERVER) {
 
     } else {
@@ -2069,14 +1763,9 @@ float DirectElectronCamera::getCameraBackplateTemp()
       m_camera_BackPlateTemp = (float)((param / 10) - 273.15);
     }
 
-#endif
   }
 
-
-
-
   return m_camera_BackPlateTemp;
-
 }
 
 
@@ -2089,13 +1778,6 @@ int DirectElectronCamera::getCameraPressure()
   CSingleLock slock(&m_mutex);
 
   if (slock.Lock(1000)) {
-#ifdef NCMIR_CAMERA
-#ifdef NCMIR_8K
-
-#else
-    return m_CaptureInterface->getCameraPressure();
-#endif
-#else
 
     if (m_DE_CLIENT_SERVER) {
 
@@ -2103,7 +1785,6 @@ int DirectElectronCamera::getCameraPressure()
       m_LCCaptureInterface->get_StatusParam(CAMERA_PRESSURE, &param);
       m_camera_Pressure = (long) param;
     }
-#endif
   }
 
   return m_camera_Pressure;
@@ -2124,8 +1805,6 @@ void DirectElectronCamera::readinTempandPressure()
 
   if (slock.Lock(1000)) {
 
-#ifdef NCMIR_CAMERA
-#else
     //read out the latest values from the camera
     m_LCCaptureInterface->ConfigParam_TransToHost();
     m_LCCaptureInterface->Status_TransToHost();
@@ -2141,13 +1820,9 @@ void DirectElectronCamera::readinTempandPressure()
     m_LCCaptureInterface->get_ConfigParam(SHUTTER_DELAY, &param);
     m_shutter_close_delay = (int)param;
 
-#endif
     //m_CaptureInterface->Status_TransToHost();
 
   }
-
-  return;
-
 }
 
 
@@ -2160,13 +1835,10 @@ long DirectElectronCamera::getValue(int i)
 
   if (slock.Lock(1000)) {
 
-#ifdef NCMIR_CAMERA
-#else
     if (m_DE_CLIENT_SERVER) {
 
     } else
       m_LCCaptureInterface->get_ConfigParam(i, &param);
-#endif
 
   }
 
@@ -2178,8 +1850,6 @@ void DirectElectronCamera::setShutterDelay(int delay)
   CSingleLock slock(&m_mutex);
 
   if (slock.Lock(1000)) {
-#ifdef NCMIR_CAMERA
-#else
     if (m_DE_CLIENT_SERVER) {
 
     } else {
@@ -2187,9 +1857,7 @@ void DirectElectronCamera::setShutterDelay(int delay)
       m_LCCaptureInterface->put_ConfigParam(SHUTTER_DELAY, delay);
       m_LCCaptureInterface->ConfigParam_RecAllFromHost();
     }
-#endif
   }
-
 }
 
 long DirectElectronCamera::getInstrumentModel()
@@ -2215,8 +1883,6 @@ long DirectElectronCamera::getPreExposureDelay()
 
   if (slock.Lock(1000)) {
 
-#ifdef NCMIR_CAMERA
-#else
     if (m_DE_CLIENT_SERVER) {
 
     } else {
@@ -2224,42 +1890,19 @@ long DirectElectronCamera::getPreExposureDelay()
       m_LCCaptureInterface->get_ConfigParam(PRE_EXPOSE_DELAY, &param);
       m_pre_expose_delay = param;
     }
-#endif
 
   }
   return m_pre_expose_delay;
-
-
 }
 
 float DirectElectronCamera::getCCDSetPoint()
 {
-
-#ifdef NCMIR_CAMERA
-#ifdef NCMIR_8K
-  return 0;
-
-#else
-  return m_CaptureInterface->getCCDSetPoint();
-#endif
-#else
   return m_ccd_temp_setPoint;
-#endif
 }
 
 long DirectElectronCamera::getWindowHeaterStatus()
 {
-
-#ifdef NCMIR_CAMERA
-#ifdef NCMIR_8K
-  return 1;
-
-#else
-  return m_CaptureInterface->getWindowHeaterStatus();
-#endif
-#else
   return m_window_heater;
-#endif
 }
 
 

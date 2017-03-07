@@ -1668,6 +1668,21 @@ ScaleMat CShiftManager::StageToCamera(int inCamera, int inMagInd)
   return prod;
 }
 
+// Modify a stage to camera matrix or its inverse  to work at the given tilt angle
+void CShiftManager::AdjustStageToCameraForTilt(ScaleMat &aMat, float angle)
+{
+  ScaleMat aInv = MatInv(aMat);
+  AdjustCameraToStageForTilt(aInv, angle);
+  aMat = MatInv(aInv);
+}
+
+void CShiftManager::AdjustCameraToStageForTilt(ScaleMat &aInv, float angle)
+{
+  float cosAng = (float)cos(DTOR * angle);
+  aInv.ypx /= cosAng;
+  aInv.ypy /= cosAng;
+}
+
 // Get the Specimen to Stage transformation, which should be mag and camera
 // independent.  So we use the average of available data
 ScaleMat CShiftManager::SpecimenToStage(double adjustX, double adjustY)

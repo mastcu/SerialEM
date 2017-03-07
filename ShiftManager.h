@@ -281,6 +281,8 @@ public:
   ScaleMat FocusAdjustedStageToCamera(int inCamera, int inMagInd, int spot, int probe,
      double intensity, float defocus);
   bool GetScaleAndRotationForFocus(EMimageBuffer * imBuf, float &scale, float &rotation);
+  void AdjustStageToCameraForTilt(ScaleMat & aMat, float angle);
+  void AdjustCameraToStageForTilt(ScaleMat & aMat, float angle);
 };
 
 #endif // !defined(AFX_SHIFTMANAGER_H__FF4BB03C_5BFC_4142_BD0F_9A1A257FABE9__INCLUDED_)
