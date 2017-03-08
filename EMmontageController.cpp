@@ -679,7 +679,8 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
           delISY += ISY;
         }
         mWinApp->mNavigator->ConvertIStoStageIncrement(mParam->magIndex, 
-          mWinApp->GetCurrentCamera(), delISX, delISY, stageX, stageY);
+          mWinApp->GetCurrentCamera(), delISX, delISY, (float)mScope->FastTiltAngle(),
+          stageX, stageY);
 
         // Check the 4 corners of the frame
         iy = 0;
@@ -4180,7 +4181,7 @@ int EMmontageController::AutodocShiftStorage(bool write, float * upperShiftX,
   return retval;
 }
 
-// Read or write sttage offsets for one or all pieces
+// Read or write stage offsets for one or all pieces
 int EMmontageController::AutodocStageOffsetIO(bool write, int pieceInd)
 {
   char *names[2] = {ADOC_ZVALUE, ADOC_IMAGE};
@@ -4231,6 +4232,10 @@ int EMmontageController::StoreAlignedCoordsInAdoc(void)
   int adocInd = store->GetAdocIndex();
   if (adocInd < 0)
     return -1;
+
+  // Have to finish the I/O or last section won't be there yet
+  if (mBufferManager->CheckAsyncSaving())
+    return 3;
   if (AdocGetMutexSetCurrent(adocInd) < 0)
     return 1;
   nameInd = store->getStoreType() == STORE_TYPE_ADOC ? 1 : 0;
