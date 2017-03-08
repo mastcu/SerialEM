@@ -2035,7 +2035,7 @@ void CNavigatorDlg::AdjustAndMoveStage(float stageX, float stageY, float stageZ,
   mScope->GetLDCenteredShift(shiftX, shiftY);
   mScope->IncImageShift(leaveISX - shiftX, leaveISY - shiftY);
   ConvertIStoStageIncrement(mScope->GetMagIndex(), mWinApp->GetCurrentCamera(), leaveISX,
-    leaveISY, stageDx, stageDy);
+    leaveISY, (float)mScope->FastTiltAngle(), stageDx, stageDy);
   smi.x = stageX - stageDx;
   smi.y = stageY - stageDy;
   smi.z = stageZ;
@@ -2543,6 +2543,7 @@ CArray<CMapDrawItem *, CMapDrawItem *> *CNavigatorDlg::GetMapDrawItems(
   EMimageBuffer *imBuf, ScaleMat &aMat, float &delX, float &delY, BOOL &drawAllReg, 
   CMapDrawItem **acquireBox)
 {
+  float angle;
   if (!SetCurrentItem())
     mItem = NULL;
   *acquireBox = NULL;
@@ -2583,6 +2584,8 @@ CArray<CMapDrawItem *, CMapDrawItem *> *CNavigatorDlg::GetMapDrawItems(
     s2c = mShiftManager->StageToCamera(camera, magInd);
     if (s2c.xpx) {
       c2s = MatInv(s2c);
+      if (imBuf->GetTiltAngle(angle) && fabs((double)angle) > 1.)
+        mShiftManager->AdjustCameraToStageForTilt(c2s, angle);
       CMapDrawItem *box = new CMapDrawItem;
       *acquireBox = box;
       MarkerStagePosition(imBuf, aMat, delX, delY, box->mStageX, box->mStageY,
@@ -2688,12 +2691,13 @@ void CNavigatorDlg::ComputeStageToImage(EMimageBuffer *imBuf, float stageX, floa
   float defocus = 0.;
   int spot = 1;
   double intensity = 0.5;
-  float angle;
+  float angle = RAW_STAGE_TEST - 1000.;
+  BOOL hasAngle = imBuf->GetTiltAngle(angle);
 
   // Convert any image shift of image into an additional stage shift
   if (needAddIS)
     ConvertIStoStageIncrement(imBuf->mMagInd, imBuf->mCamera, imBuf->mISX, imBuf->mISY,
-      stageX, stageY);
+      angle, stageX, stageY);
 
   if (imBuf->mConSetUsed == VIEW_CONSET && imBuf->mLowDoseArea) {
     defocus = imBuf->mViewDefocus;
@@ -2711,7 +2715,7 @@ void CNavigatorDlg::ComputeStageToImage(EMimageBuffer *imBuf, float stageX, floa
   aMat.ypy /= -imBuf->mBinning;
 
   // If tilt angle is available and it makes more than 0.02% difference, adjust matrix
-  if (imBuf->GetTiltAngle(angle) && fabs((double)angle) > 1.)
+  if (hasAngle && fabs((double)angle) > 1.)
     mShiftManager->AdjustStageToCameraForTilt(aMat, angle);
   delX = imBuf->mImage->getWidth() / 2.f - aMat.xpx * stageX - aMat.xpy * stageY;
   delY = imBuf->mImage->getHeight() / 2.f - aMat.ypx * stageX - aMat.ypy * stageY;
@@ -2719,7 +2723,7 @@ void CNavigatorDlg::ComputeStageToImage(EMimageBuffer *imBuf, float stageX, floa
 
 // If scaling exists, convert the image shift into additional stage shift
 BOOL CNavigatorDlg::ConvertIStoStageIncrement(int magInd, int camera, double ISX, 
-                                              double ISY, float &stageX, float &stageY)
+  double ISY, float angle, float &stageX, float &stageY)
 {
   ScaleMat aMat, bMat;
   
@@ -2741,7 +2745,8 @@ BOOL CNavigatorDlg::ConvertIStoStageIncrement(int magInd, int camera, double ISX
   aMat = mShiftManager->IStoGivenCamera(magInd, camera);
   if (aMat.xpx) {
     bMat = MatInv(mShiftManager->StageToCamera(camera, magInd));
-    mShiftManager->AdjustCameraToStageForTilt(bMat, (float)mScope->FastTiltAngle());
+    if (angle > RAW_STAGE_TEST && fabs((double)angle) > 1.)
+      mShiftManager->AdjustCameraToStageForTilt(bMat, angle);
     aMat = MatMul(aMat, bMat);
     stageX += (float)(aMat.xpx * ISX + aMat.xpy * ISY);
     stageY += (float)(aMat.ypx * ISX + aMat.ypy * ISY);
@@ -2988,6 +2993,9 @@ int CNavigatorDlg::SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg)
  	mMontItemCam = new CMapDrawItem;
   for (i = 0; i < item->mNumPoints; i++)
     mMontItemCam->AppendPoint(item->mPtX[i], item->mPtX[i]);
+  if (item->mMapTiltAngle <= RAW_STAGE_TEST)
+    item->mMapTiltAngle = (float)mScope->FastTiltAngle();
+  mMontItemCam->mMapTiltAngle = item->mMapTiltAngle;
   mMontItem = item;
 
   if (lowDose && !montParam->useViewInLowDose)
@@ -3063,7 +3071,7 @@ int CNavigatorDlg::SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg)
   // Store new center stage position in the temporary item for fixing polygon center
   // Go to center only if not defining for future
   aInv = MatInv(mShiftManager->StageToCamera(iCam, montParam->magIndex));
-  mShiftManager->AdjustCameraToStageForTilt(aInv, (float)mScope->FastTiltAngle());
+  mShiftManager->AdjustCameraToStageForTilt(aInv, item->mMapTiltAngle);
   item->mStageX = aInv.xpx * mCamCenX + aInv.xpy * mCamCenY;
   item->mStageY = aInv.ypx * mCamCenX + aInv.ypy * mCamCenY;
   if (!montDlg) {
@@ -3202,6 +3210,9 @@ void CNavigatorDlg::PolygonToCameraCoords(CMapDrawItem * item, int iCam, int mag
 {
   float xx, yy;
   ScaleMat aMat = mShiftManager->StageToCamera(iCam, magIndex);
+  if (item->mMapTiltAngle > RAW_STAGE_TEST && fabs((double)item->mMapTiltAngle) > 1)
+    mShiftManager->AdjustStageToCameraForTilt(aMat, item->mMapTiltAngle);
+
   xMin = yMin = 1.e10;
   xMax = yMax = -1.e10;
   for (int i = 0; i < item->mNumPoints; i++) {
@@ -4886,6 +4897,10 @@ int CNavigatorDlg::RotateMap(EMimageBuffer *imBuf, BOOL redraw)
   CMapDrawItem *item = FindItemWithMapID(imBuf->mMapID);
   if (!item && !imBuf->mStage2ImMat.xpx)
     return 1;
+  if (item->mMapTiltAngle > RAW_STAGE_TEST && fabs((double)item->mMapTiltAngle) > 2.5) {
+    SEMMessageBox("You cannot rotate a map taken at a tilt higher than 2.5 degrees");
+    return 1;
+  }
 
   if (item && item->mImported == 1) {
 
@@ -5267,7 +5282,7 @@ int CNavigatorDlg::NewMap(bool unsuitableOK)
   // when image was taken (which is already in the transformation)
   if (hasStage)
     ConvertIStoStageIncrement(imBuf->mMagInd, imBuf->mCamera, imBuf->mISX, imBuf->mISY, 
-      item->mStageX, item->mStageY);
+      item->mMapTiltAngle, item->mStageX, item->mStageY);
 
   // Switch image to current registration and give it the map ID, clear out rotation info
   // Loop on image buffer then read buffer, changing read buffer only if it matches
@@ -7617,7 +7632,7 @@ void CNavigatorDlg::GetAdjustedStagePos(float & stageX, float & stageY, float & 
   // Convert the current image shift into additional stage shift
   mScope->GetImageShift(ISX, ISY);
   ConvertIStoStageIncrement(mScope->GetMagIndex(), mWinApp->GetCurrentCamera(), ISX, ISY,
-    stageX, stageY);
+    (float)mScope->FastTiltAngle(), stageX, stageY);
 }
 
 // This is all that is needed for redraw
@@ -7791,6 +7806,8 @@ void CNavigatorDlg::MontErrForItem(CMapDrawItem *inItem, float &montErrX, float 
       item->mMapSection, pieceSavedAt);
 
   aMat = mShiftManager->StageToCamera(item->mMapCamera, item->mMapMagInd);
+  if (item->mMapTiltAngle > RAW_STAGE_TEST && fabs((double)item->mMapTiltAngle) > 1)
+    mShiftManager->AdjustStageToCameraForTilt(aMat, item->mMapTiltAngle);
 
   // Get stage then montage coordinate relative to center of the montage
   delX = inItem->mStageX - item->mStageX;

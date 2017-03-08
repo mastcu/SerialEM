@@ -4112,7 +4112,8 @@ void CMacroProcessor::NextCommand()
       delISY -= stageY;
     }
     navigator->ConvertIStoStageIncrement(mScope->FastMagIndex(), 
-        mWinApp->GetCurrentCamera(), delISX, delISY, shiftX, shiftY);
+        mWinApp->GetCurrentCamera(), delISX, delISY, (float)mScope->FastTiltAngle(), 
+        shiftX, shiftY);
     shiftX -= navItem->mStageX;
     shiftY -= navItem->mStageY;
     specDist = sqrt(shiftX * shiftX + shiftY * shiftY);

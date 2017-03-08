@@ -187,10 +187,10 @@ int CNavHelper::FindMapForRealigning(CMapDrawItem * inItem, BOOL restoreState)
       // map from the current item or we will be restoring state at the end or we are in
       // low dose
       mNav->ConvertIStoStageIncrement(item->mMapMagInd, item->mMapCamera, 0., 0.,
-        incLowX, incLowY);
+        item->mMapTiltAngle, incLowX, incLowY);
       if (differentMap)
         mNav->ConvertIStoStageIncrement(inItem->mMapMagInd, inItem->mMapCamera, 0., 0.,
-          incHighX, incHighY);
+          item->mMapTiltAngle, incHighX, incHighY);
       else {
         ix = magIndex;
 
@@ -202,7 +202,7 @@ int CNavHelper::FindMapForRealigning(CMapDrawItem * inItem, BOOL restoreState)
             ix = ldp[iy].magIndex;
         }
         mNav->ConvertIStoStageIncrement(ix, mWinApp->GetCurrentCamera(), 0., 0.,
-          incHighX, incHighY);
+          item->mMapTiltAngle, incHighX, incHighY);
       }
 
       firstDelX += incHighX - incLowX;
@@ -2055,13 +2055,15 @@ void CNavHelper::GetViewOffsets(CMapDrawItem * item, float &netShiftX,
 void CNavHelper::SimpleIStoStage(CMapDrawItem * item, double ISX, double ISY, 
   float &stageX, float &stageY)
 {
-  ScaleMat aMat;
+  ScaleMat aMat, bMat;
   stageX = stageY = 0.;
   aMat = mShiftManager->IStoGivenCamera(item->mMapMagInd, item->mMapCamera);
   if (aMat.xpx && (ISX || ISY)) {
     //aMat = MatMul(aMat, MatInv(ItemStageToCamera(item)));
-    aMat = MatMul(aMat, MatInv(mShiftManager->StageToCamera(item->mMapCamera, 
-      item->mMapMagInd)));
+    bMat = MatInv(mShiftManager->StageToCamera(item->mMapCamera, item->mMapMagInd));
+    if (item->mMapTiltAngle > RAW_STAGE_TEST && fabs((double)item->mMapTiltAngle) > 1)
+      mShiftManager->AdjustCameraToStageForTilt(bMat, item->mMapTiltAngle);
+    aMat = MatMul(aMat, bMat);
     stageX = (float)(aMat.xpx * ISX + aMat.xpy * ISY);
     stageY = (float)(aMat.ypx * ISX + aMat.ypy * ISY);
   }

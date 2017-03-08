@@ -57,7 +57,7 @@ public:
 	void FullMontage();
   void AutoSave();
 	BOOL ConvertIStoStageIncrement(int magInd, int camera, double ISX, double ISY, 
-    float &stageX, float &stageY);
+    float angle, float &stageX, float &stageY);
 	void MoveListSelection(int direction);
 	void SetupSkipList(MontParam * montParam);
 	int GotoNextAcquireArea();
