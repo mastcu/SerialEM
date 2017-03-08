@@ -488,6 +488,8 @@ public:
   GetSetMember(int, ToolExtraHeight);
   GetSetMember(int, ToolTitleHeight);
   GetSetMember(BOOL, ShowRemoteControl);
+  GetMember(bool, HasFEIcamera);
+  GetSetMember(BOOL, KeepEFTEMstate);
   int *GetDlgColorIndex() {return &mDlgColorIndex[0];};
   GetSetMember(bool, AbsoluteDlgIndex);
   CFont *GetLittleFont() {return &mLittleFont;};
@@ -722,6 +724,8 @@ private:
   int mToolTitleHeight;
   BOOL mShowRemoteControl;      // Flag to show remote control dialog
   CFont mLittleFont;            // Central place to get the right font
+  bool mHasFEIcamera;           // Flag that there is an FEI camera
+  BOOL mKeepEFTEMstate;         // Flag to stay in or out of EFTEM on startup/shutdown
 
 public:
   void UpdateAllEditers(void);

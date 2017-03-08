@@ -625,6 +625,8 @@ CSerialEMApp::CSerialEMApp()
   mAnyDirectDetectors = false;
   mFrameAlignMoreOpen = false;
   mShowRemoteControl = true;
+  mHasFEIcamera = false;
+  mKeepEFTEMstate = false;
   mIdleBaseCount = 0;
   SEMUtilInitialize();
   traceMutexHandle = CreateMutex(0, 0, 0);
@@ -931,6 +933,8 @@ BOOL CSerialEMApp::InitInstance()
     iCam = mActiveCameraList[iAct];
     if (mCamParams[iCam].STEMcamera)
       mScopeHasSTEM = true;
+    else if (mCamParams[iCam].FEItype)
+      mHasFEIcamera = true;
     if (mCamParams[iCam].K2Type) {
       iSet++;
       if (mCamParams[iCam].countsPerElectron > 0. && 
@@ -1211,6 +1215,12 @@ BOOL CSerialEMApp::InitInstance()
   // And if not, stay in STEM mode if in STEM
   else if (mScopeHasSTEM && mScope->GetInitialized() && mScope->GetSTEMmode())
     iCam = mFirstSTEMcamera;
+
+  // Or stay pick the camera that keeps the EFTEM state if flag set
+  else if (mScopeHasFilter && mScope->GetInitialized() && mScope->GetCanControlEFTEM() && 
+    mKeepEFTEMstate && mFilterParams.firstRegularCamera >= 0)
+    iCam = mScope->GetEFTEM() ? mFilterParams.firstGIFCamera : 
+      mFilterParams.firstRegularCamera;
   if (iCam < 0)
     iCam = 0;
 

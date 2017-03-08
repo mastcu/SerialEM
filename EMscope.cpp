@@ -321,6 +321,8 @@ CEMscope::CEMscope()
   mJeolMagEventWait = 5000;  // Actual times as long as 16 have been seen when VME broken
   mPostMagStageDelay = 0;
   mNoColumnValve = false;
+  mUpdateBeamBlank = -1;
+  mBlankTransients = false;
   mManualExposure = 0.;
   mWarnIfKVnotAt = 0.;
   mMainDetectorID = 13;    // Default for main screen
@@ -520,6 +522,8 @@ int CEMscope::Initialize()
         mBacklashTolerance = 0.1f;
       if (mNumSpotSizes <= 0)
         mNumSpotSizes = 11;
+      if (mUpdateBeamBlank < 0)
+        mUpdateBeamBlank = mWinApp->GetHasFEIcamera() ? 1 : 0;
     } else if (JEOLscope) {
 
       // JEOL: Also transfer values to structures before initialization
@@ -919,7 +923,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
   int magIndex, camLenIndex, indOldIS, oldOffCalInd, newOffCalInd;
   int spotSize, probe, tmpMag, toCam, oldNeutralInd, subMode;
   double intensity, objective, rawIntensity, ISX, ISY, current, defocus, cameraLength;
-  BOOL EFTEM, bReady, smallScreen, manageISonMagChg, gotoArea, restoreIS = false;
+  BOOL EFTEM, bReady, smallScreen, manageISonMagChg, gotoArea, blanked, restoreIS = false;
   int STEMmode, gunState = -1;
   bool newISseen = false;
   bool handleMagChange, temProbeChanged = false;
@@ -996,6 +1000,12 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
       // image shift for the mag that we then read
       mPlugFuncs->GetImageShift(&rawISX, &rawISY);
       STEMmode = (mWinApp->ScopeHasSTEM() && mPlugFuncs->GetSTEMMode() != 0) ? 1 : 0;
+      if (mUpdateBeamBlank > 0 && mPlugFuncs->GetBeamBlank) {
+        blanked = mPlugFuncs->GetBeamBlank();
+        if ((blanked ? 1 : 0) != (sBeamBlanked ? 1 : 0))
+          SEMTrace('B', "Update saw beam blank %s", blanked ? "ON" : "OFF");
+        sBeamBlanked = blanked;
+      }
 
       // Get probe mode or assign proper value based on STEM or not
       if (FEIscope) {
@@ -2970,9 +2980,10 @@ BOOL CEMscope::SetMagIndex(int inIndex)
   double tranISX, tranISY, focusStart, startTime, startISX, startISY, curISX, curISY;
   BOOL result = true;
   BOOL convertIS, restoreIS, ifSTEM;
-  bool focusChanged = false, ISchanged;
+  bool focusChanged = false, ISchanged, unblankAfter;
   int mode, newmode, lowestM, ticks;
   CameraParameters *camParam = mWinApp->GetActiveCamParam();
+  const char *routine = "SetMagIndex";
 
   if (mNoScope) {
     if (inIndex < 1 || inIndex > MAX_MAGS || !mMagTab[inIndex].mag)
@@ -2995,11 +3006,13 @@ BOOL CEMscope::SetMagIndex(int inIndex)
   if (FEIscope && ifSTEM && inIndex < lowestM)
     return false;
   convertIS = AssessMagISchange(currentIndex, inIndex, ifSTEM, tranISX, tranISY);
-  ScopeMutexAcquire("SetMagIndex", true);
+  ScopeMutexAcquire(routine, true);
   SaveISifNeeded(currentIndex, inIndex);
   if (!ifSTEM)
     restoreIS = AssessRestoreIS(currentIndex, inIndex, tranISX, tranISY);
   try {
+
+    unblankAfter = BlankTransientIfNeeded(routine);
     
     if (JEOLscope) { 
 
@@ -3081,6 +3094,7 @@ BOOL CEMscope::SetMagIndex(int inIndex)
 
       }
     }
+    UnblankAfterTransient(unblankAfter, routine);
     
     // set so that this is not detected as a user change
     SetMagChanged(inIndex);
@@ -3127,7 +3141,7 @@ BOOL CEMscope::SetMagIndex(int inIndex)
       SetImageShift(tranISX - axisISX, tranISY - axisISY);
     }
   }
-  ScopeMutexRelease("SetMagIndex");
+  ScopeMutexRelease(routine);
   return result;
 }
 
@@ -3679,20 +3693,28 @@ void CEMscope::SetISChanged(double inISX, double inISY)
   mLastISY = mPreviousISY = inISY;
 }
 
+/*
+ * NORMALIZATION FUNCTIONS: first projector
+ */
 BOOL CEMscope::NormalizeProjector()
 {
   BOOL result = true;
+  bool unblankAfter;
+  const char *routine = "NormalizeProjector";
 
   if (!sInitialized)
     return false;
 
-  ScopeMutexAcquire("NormalizeProjector", true);
+  ScopeMutexAcquire(routine, true);
 
   try {
     // What to do for JEOL? Keep the normalization time in case whatever evoked
     // this call needs some settling anyway
-    if (mPlugFuncs->NormalizeLens)
+    if (mPlugFuncs->NormalizeLens) {
+      unblankAfter = BlankTransientIfNeeded(routine);
       mPlugFuncs->NormalizeLens(pnmProjector);
+      UnblankAfterTransient(unblankAfter, routine);
+    }
     mMagChanged = false;
     mLastNormalization = GetTickCount();
     mLastNormMagIndex = FastMagIndex();
@@ -3702,7 +3724,7 @@ BOOL CEMscope::NormalizeProjector()
     result = false;
   }
 
-  ScopeMutexRelease("NormalizeProjector");
+  ScopeMutexRelease(routine);
   return result; 
 }
 
@@ -3710,22 +3732,27 @@ BOOL CEMscope::NormalizeProjector()
 BOOL CEMscope::NormalizeCondenser()
 {
   BOOL success = true;
+  bool unblankAfter;
+  const char *routine = "NormalizeCondenser";
 
   if (!sInitialized)
     return false;
 
-  ScopeMutexAcquire("NormalizeCondenser", true);
+  ScopeMutexAcquire(routine, true);
 
   try {
     // This is not available on the JEOL
-    if (mPlugFuncs->NormalizeLens)
+    if (mPlugFuncs->NormalizeLens) {
+      unblankAfter = BlankTransientIfNeeded(routine);
       mPlugFuncs->NormalizeLens(nmCondenser);
+      UnblankAfterTransient(unblankAfter, routine);
+    }
   }
   catch (_com_error E) {
     SEMReportCOMError(E, _T("normalizing condenser lenses "));
     success = false;
   }
-  ScopeMutexRelease("NormalizeCondenser");
+  ScopeMutexRelease(routine);
   return success;
 }
 
@@ -3733,21 +3760,26 @@ BOOL CEMscope::NormalizeCondenser()
 BOOL CEMscope::NormalizeObjective()
 {
   BOOL success = true;
+  bool unblankAfter;
+  const char *routine = "NormalizeObjective";
 
   if (!sInitialized)
     return false;
 
-  ScopeMutexAcquire("NormalizeObjective", true);
+  ScopeMutexAcquire(routine, true);
 
   try {
-    if (mPlugFuncs->NormalizeLens)
+    if (mPlugFuncs->NormalizeLens) {
+      unblankAfter = BlankTransientIfNeeded(routine);
       mPlugFuncs->NormalizeLens(pnmObjective);
+      UnblankAfterTransient(unblankAfter, routine);
+    }
   }
   catch (_com_error E) {
     SEMReportCOMError(E, _T("normalizing Objective lens "));
     success = false;
   }
-  ScopeMutexRelease("NormalizeObjective");
+  ScopeMutexRelease(routine);
   return success;
 }
 
@@ -3755,6 +3787,8 @@ BOOL CEMscope::NormalizeObjective()
 BOOL CEMscope::NormalizeAll(int illumProj)
 {
   BOOL success = true;
+  bool unblankAfter;
+  const char *routine = "NormalizeAll";
 
   if (!sInitialized)
     return false;
@@ -3763,9 +3797,10 @@ BOOL CEMscope::NormalizeAll(int illumProj)
     return false;
   }
 
-  ScopeMutexAcquire("NormalizeAll", true);
+  ScopeMutexAcquire(routine, true);
   try {
     if (mPlugFuncs->NormalizeLens) {
+      unblankAfter = BlankTransientIfNeeded(routine);
       if (!illumProj) {
         mPlugFuncs->NormalizeLens(ALL_INSTRUMENT_LENSES);
       } else {
@@ -3774,13 +3809,14 @@ BOOL CEMscope::NormalizeAll(int illumProj)
         if (illumProj & 2)
           mPlugFuncs->NormalizeLens(pnmAll);
       }
+      UnblankAfterTransient(unblankAfter, routine);
     }
   }
   catch (_com_error E) {
     SEMReportCOMError(E, _T("normalizing all lenses "));
     success = false;
   }
-  ScopeMutexRelease("NormalizeAll");
+  ScopeMutexRelease(routine);
   return success;
 }
 
@@ -4087,6 +4123,29 @@ void CEMscope::BlankBeam(BOOL inVal)
   mBeamBlankSet = inVal;
   sBeamBlanked = inVal;
   ScopeMutexRelease("BlankBeam");
+}
+
+// Blanks beam for a routine creating transients if the flag is set, returns if it did
+// This and the unblank function are to be called from with a try block
+bool CEMscope::BlankTransientIfNeeded(const char *routine)
+{   
+  if (mBlankTransients && !sBeamBlanked && mPlugFuncs->SetBeamBlank != NULL) {
+    mPlugFuncs->SetBeamBlank(*vTrue);
+    sBeamBlanked = true;
+    SEMTrace('B', "%s set beam blank ON", routine);
+    return true;
+  }
+  return false;
+}
+
+// Unlbank after procedure if it was blanked
+void CEMscope::UnblankAfterTransient(bool needUnblank, const char *routine)
+{
+  if (!needUnblank)
+    return;
+  mPlugFuncs->SetBeamBlank(*vFalse);
+  sBeamBlanked = false;
+  SEMTrace('B', "%s set beam blank OFF", routine);
 }
 
 // Change to a new low dose area
@@ -4649,8 +4708,9 @@ BOOL CEMscope::SetSpotSize(int inIndex, BOOL normalize)
 {
   BOOL result = true;
   int curSpot = -1;
-  bool fixBeam;
+  bool fixBeam, unblankAfter;
   double startTime, beamXorig, beamYorig, curBSX, curBSY, startBSX, startBSY;
+  const char *routine = "SetSpotSize";
 
   if (!sInitialized)
     return false;
@@ -4668,9 +4728,11 @@ BOOL CEMscope::SetSpotSize(int inIndex, BOOL normalize)
   if (fixBeam)
     GetBeamShift(beamXorig, beamYorig);
 
-  ScopeMutexAcquire("SetSpotSize", true);
+  ScopeMutexAcquire(routine, true);
 
   try {
+    unblankAfter = BlankTransientIfNeeded(routine);
+     
     // Change the spot size.  If normalization requested, disable autonorm,
     // then later normalize, and set normalization time to give some delay
     if (normalize)
@@ -4718,12 +4780,13 @@ BOOL CEMscope::SetSpotSize(int inIndex, BOOL normalize)
       AUTONORMALIZE_SET(*vTrue);
       mLastNormalization = GetTickCount();
     }
+    UnblankAfterTransient(unblankAfter, routine);
   }
   catch (_com_error E) {
     SEMReportCOMError(E, _T("setting spot size "));
     result = false;
   }
-  ScopeMutexRelease("SetSpotSize");
+  ScopeMutexRelease(routine);
 
   // Finally, call the routine to set the fixed beam shift
   if (result && fixBeam) {
@@ -5605,7 +5668,7 @@ void CEMscope::HandleNewMag(int inMag)
      http://www.livejournal.com/users/nibot_lab/21300.html
 */
 
-BOOL CEMscope::ScopeMutexAcquire(char *name, BOOL retry) {
+BOOL CEMscope::ScopeMutexAcquire(const char *name, BOOL retry) {
   DWORD mutex_status;
   
   if (!mScopeMutexHandle)
@@ -5660,7 +5723,7 @@ BOOL CEMscope::ScopeMutexAcquire(char *name, BOOL retry) {
 }
 
 
-BOOL CEMscope::ScopeMutexRelease(char *name) {
+BOOL CEMscope::ScopeMutexRelease(const char *name) {
   
   if (!mScopeMutexHandle)
     return true;

@@ -262,6 +262,8 @@ class DLL_IM_EX CEMscope
   SetMember(int, PostFocusChgDelay);
   GetSetMember(int, UseJeolGIFmodeCalls);
   SetMember(int, PostJeolGIFdelay);
+  SetMember(int, UpdateBeamBlank);
+  SetMember(BOOL, BlankTransients);
   void SetMessageBoxArgs(int type, CString &title, CString &message);
   int GetMessageBoxReturnValue(void);
   GetSetMember(BOOL, UseInvertedMagRange);
@@ -353,8 +355,8 @@ class DLL_IM_EX CEMscope
   CEMscope();
   virtual ~CEMscope();
 
-  static BOOL ScopeMutexAcquire(char *name, BOOL retry);
-  static BOOL ScopeMutexRelease(char *name); 
+  static BOOL ScopeMutexAcquire(const char *name, BOOL retry);
+  static BOOL ScopeMutexRelease(const char *name); 
   static float ConvertJEOLStage(double inMove, float &outRem);
   static int LookupMagnification(int magValue, CString units, int mode, CString name,
     int &camLenInd);
@@ -594,6 +596,8 @@ private:
   int mUseJeolGIFmodeCalls;   // 1 to rely on state from calls, 2 to change EFTEM with it
   int mPostJeolGIFdelay;      // Delay time after setting GIF mode
   BOOL mUseInvertedMagRange;  // Flag to step up in Titan inverted range to find mag
+  int mUpdateBeamBlank;       // Flag to update beam blanker
+  BOOL mBlankTransients;      // Flag to blank for mag/spot size changes & normalizations
   int mPluginVersion;         // Version of plugin or server
 
   // Old static variables from UpdateProc
@@ -702,6 +706,8 @@ public:
   void RemoteControlChanged(BOOL newState);
   void SetBacklashFromNextMove(double startX, double startY, float minMove) {
     mStartForMinMoveX = startX; mStartForMinMoveY = startY; mMinMoveForBacklash = minMove;};
+  bool BlankTransientIfNeeded(const char *routine);
+  void UnblankAfterTransient(bool needUnblank, const char *routine);
 };
 
 
