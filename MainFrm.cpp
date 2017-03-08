@@ -462,7 +462,7 @@ void CMainFrame::OnClose()
         mWinApp->mScope->WaitForStageReady(10000))
         AfxMessageBox("Timeout trying to reset image shifts while exiting", MB_EXCLAME);
     }
-    if (mWinApp->GetEFTEMMode())
+    if (mWinApp->GetEFTEMMode() && !mWinApp->GetKeepEFTEMstate())
       mWinApp->SetEFTEMMode(false);
     else
       mWinApp->RestoreCameraForExit();

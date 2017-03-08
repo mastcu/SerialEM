@@ -2140,6 +2140,8 @@ int CParameterIO::ReadProperties(CString strFileName)
         CBaseSocket::SetServerPort(itemInt[1], itemInt[2]);
       } else if (MatchNoCase("InitialCurrentCamera"))
         mWinApp->SetInitialCurrentCamera(itemInt[1]);
+      else if (MatchNoCase("KeepEFTEMstate"))
+        mWinApp->SetKeepEFTEMstate(itemInt[1] != 0);
       else if (MatchNoCase("NoCameras"))
         mWinApp->SetNoCameras(itemInt[1] != 0);
       else if (MatchNoCase("DebugOutput"))

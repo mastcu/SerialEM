@@ -525,7 +525,7 @@ void CSerialEMView::DrawImage(void)
   if (mImBufNumber > 1 || mImBufArraySize) {
     CFont *def_font = cdc.SelectObject(&mFont);
     int defMode = cdc.SetBkMode(TRANSPARENT);
-    COLORREF defColor = cdc.SetTextColor(RGB(255,0,0));
+    COLORREF defColor = cdc.SetTextColor(RGB(255, 0, 0));
     if (mMainWindow || mFFTWindow) {
       char letter = 'A' + mImBufIndex;
       letString = letter;
@@ -545,6 +545,7 @@ void CSerialEMView::DrawImage(void)
         imBuf->mCaptured == BUFFER_MONTAGE_PIECE);
       if (mMainWindow && imBuf->mCamera >= 0 && scaleCrit > 0 && (bufferOK ||
         mWinApp->GetNumActiveCameras() > 1)) {
+          cdc.SetTextColor(RGB(0, 255, 40));
           cdc.SelectObject(&mLabelFont);
           CameraParameters *camP = mWinApp->GetCamParams() + imBuf->mCamera;
           if (imBuf->mSampleMean > EXTRA_VALUE_TEST && bufferOK &&
@@ -647,7 +648,7 @@ void CSerialEMView::DrawImage(void)
     return;
 
   // Now draw navigator items
-  float ptX, ptY;
+  float ptX, ptY, lastStageX, lastStageY, labelDistThresh = 40.;
   int lastGroupID = -1, lastGroupSize, size;
   CArray<CMapDrawItem *,CMapDrawItem *> *itemArray = GetMapItemsForImageCoords
     (imBuf, false);
@@ -733,7 +734,9 @@ void CSerialEMView::DrawImage(void)
           lastGroupID = item->mGroupID;
         }
         draw = size <= groupThresh || item->mLabel == firstLabel || 
-          item->mLabel == lastLabel;
+          item->mLabel == lastLabel || 
+          (iDraw > 0 && sqrt(pow((double)lastStageX - item->mStageX, 2.) + 
+          pow((double)lastStageY - item->mStageY, 2.)) > labelDistThresh);
       }
       if (draw) {
         StageToImage(imBuf, item->mStageX, item->mStageY, ptX, ptY, item->mPieceDrawnOn);
@@ -748,6 +751,8 @@ void CSerialEMView::DrawImage(void)
         cdc.SetTextColor(defColor);
         cdc.SetBkMode(defMode);
       }
+      lastStageX = item->mStageX;
+      lastStageY = item->mStageY;
     }
   }
   delete mAcquireBox;

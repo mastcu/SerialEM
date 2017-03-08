@@ -3,6 +3,19 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+3/8/17: Added property BlankDuringTransients to make the program blank the
+beam during magnification and spot size changes and lens normalizations to
+keep the K2 from retracting due to beam transients (in 3.6).
+
+3/8/17: Added a property KeepEFTEMstate to avoid switching in or out of EFTEM
+when the program starts and exits (In 3.6).
+
+3/8/17: Changed color of dose rate and camera name labels to be visible on
+noise (In 3.6).
+
+3/8/17: Made it draw navigator label unconditionally if point is more than 40
+microns from previous one so labels still show up on low mag maps (In 3.6).
+
 3/6/17: Implemented use of live mode for continous acquisition from DE cameras
 and enabled acquisition of normalized images from server.
 
