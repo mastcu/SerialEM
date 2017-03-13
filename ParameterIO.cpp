@@ -2478,6 +2478,10 @@ int CParameterIO::ReadProperties(CString strFileName)
           camera->SetMinZLPAlignInterval((float)itemDbl[2]);
       } else if (MatchNoCase("FilterPixelMatchingFactor"))
         mFilterParam->binFactor = (float)itemDbl[1];
+      else if (MatchNoCase("MaximumSlitWidth"))
+        mFilterParam->maxWidth = (float)itemDbl[1];
+      else if (MatchNoCase("GIFadjustsForSlitWidth"))
+        mFilterParam->adjustForSlitWidth = itemInt[1] == 0;
       else if (MatchNoCase("EnergyShiftCalLowestMag"))
         err = 0;
       else if (MatchNoCase("PrintStartupInfo"))

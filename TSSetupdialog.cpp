@@ -290,7 +290,7 @@ void CTSSetupDialog::DoDataExchange(CDataExchange* pDX)
   DDX_Text(pDX, IDC_EDITTAPERANGLE, m_fTaperAngle);
   DDV_MinMaxFloat(pDX, m_fTaperAngle, 0.f, 90.f);
   DDX_Text(pDX, IDC_EDITTAPERCOUNTS, m_iTaperCounts);
-  DDV_MinMaxInt(pDX, m_iTaperCounts, 0, 30000);
+  DDV_MinMaxInt(pDX, m_iTaperCounts, 0, 60000);
   DDX_Text(pDX, IDC_EDITNEWTRACKDIFF, m_fNewTrackDiff);
   DDV_MinMaxFloat(pDX, m_fNewTrackDiff, 0.2f, 100.f);
   DDX_Check(pDX, IDC_ALIGNTRACKONLY, m_bAlignTrackOnly);

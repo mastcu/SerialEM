@@ -65,7 +65,7 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 #define VERSION_STRING  "SerialEM Version 3.7.0 beta"
-#define TAG_STRING      "(Tagged SEM_3-6-3, 3/2/17)"
+#define TAG_STRING      "(Tagged SEM_3-6-4, 3/13/17)"
 
 // Offsets for static window inside main frame
 #define STATIC_BORDER_TOP      0
@@ -1216,11 +1216,15 @@ BOOL CSerialEMApp::InitInstance()
   else if (mScopeHasSTEM && mScope->GetInitialized() && mScope->GetSTEMmode())
     iCam = mFirstSTEMcamera;
 
-  // Or stay pick the camera that keeps the EFTEM state if flag set
-  else if (mScopeHasFilter && mScope->GetInitialized() && mScope->GetCanControlEFTEM() && 
-    mKeepEFTEMstate && mFilterParams.firstRegularCamera >= 0)
-    iCam = mScope->GetEFTEM() ? mFilterParams.firstGIFCamera : 
-      mFilterParams.firstRegularCamera;
+  // Or pick the camera that keeps the EFTEM state if flag set
+  else if (mScopeHasFilter && mScope->GetInitialized() && mScope->GetCanControlEFTEM()) {
+    BOOL inState = mScope->GetEFTEM();
+    mScope->SetSelectedEFTEM(inState);
+    if (mKeepEFTEMstate && mFilterParams.firstRegularCamera >= 0) {
+      iCam = inState ? mFilterParams.firstGIFCamera : mFilterParams.firstRegularCamera;
+      mCurrentActiveCamera = iCam;
+    }
+  }
   if (iCam < 0)
     iCam = 0;
 

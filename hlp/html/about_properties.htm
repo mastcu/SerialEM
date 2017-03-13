@@ -871,13 +871,30 @@
             with a Quantum Life Science energy filter that lacks spectroscopy mode.</TD>
         </TR>
         <TR VALIGN="top">
+          <TD>MaximumSlitWidth</TD>
+          <TD>For a GIF,&nbsp; set the maximum slit width available.&nbsp; The default is 50 
+            eV.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>GIFadjustsForSlitWidth</TD>
+          <TD>Set to 1 if DM adjusts the GIF settings for changes in slit width so as to 
+            keep the ZLP in the middle of the slit.&nbsp; By default, SerialEM assumes that 
+            it needs to account for slit width changes in the &#39;Adjustments&#39; shown in the 
+            Filter Control panel.&nbsp; To see if this setting is needed, align the ZLP with 
+            a slit width of 20 and see if the image is lost as the slit width is stepped 
+            below 10 eV.</TD>
+        </TR>
+        <TR VALIGN="top">
           <TD>DMAlignZLPCriteria</TD>
           <TD>Set the criteria for detecting whether the ZLP is being aligned in 
             DigitalMicrograph.&nbsp; Follow with one or two numbers; the first is the number 
             of energy shift changes over which it will look at the time interval between 
             changes, the second is the maximum time interval between those changes in order 
-            for a Align ZLP to be assumed.&nbsp; The defaults are 3 and 5., which means that 
-            the program needs to see 3 changes within 5 seconds to detect the Align ZLP.</TD>
+            for a Align ZLP to be assumed.&nbsp; The defaults are 3 and 6., which means that 
+            the program needs to see 3 changes within 6 seconds to detect the Align ZLP.&nbsp; 
+            Turn on Debug Mode in the Camera menu to see what changes it detects and their 
+            intervals.&nbsp; Only one of the several &#39;3-change times&#39; needs to be reliably 
+            less than the maximum time interval set here. </TD>
         </TR>
         <TR VALIGN="top">
           <TD>AllowSpectroscopyImages</TD>

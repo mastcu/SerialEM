@@ -3,8 +3,20 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+3/13/17: Added properties MaximumSlitWidth to set the maximum width for a GIF
+and GIFadjustsForSlitWidth to indicate that SerialEM does not need to adjust
+energy shift for changes in slit width; also increased default time interval
+for detecting ZLP alignment in DM from 5 to 6 seconds. (In 3.6).
+
+3/9/17: Fixed wrong checkboxes showing up in file-saving option dialog for
+Falcon (In 3.6).
+
 3/8/17: Fixed transformations used in Navigator to account for tilted images;
 basic navigation, polygon montages, and Realign to Item seem to work.
+
+3/8/17: Made the program monitor the beam blanker state for external changes
+if there are any FEI cameras, and added a property UpdateBeamBlanker to enable
+this otherwise (In 3.6).
 
 3/8/17: Added property BlankDuringTransients to make the program blank the
 beam during magnification and spot size changes and lens normalizations to

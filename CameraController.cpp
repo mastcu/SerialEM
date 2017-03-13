@@ -228,7 +228,7 @@ CCameraController::CCameraController()
   mTD.blankerThread = NULL;
   mTD.startingFEIshutter = VALUE_NOT_SET;
   mNumZLPAlignChanges = 3;
-  mMinZLPAlignInterval = 5.;
+  mMinZLPAlignInterval = 6.;   // 3/13/17: Quantum K2 on Krios had some times just above 5
   mShiftTimeIndex = -1;
   mBlankWhenRetracting = false;
   for (int k = 0; k < 3; k++) {
@@ -7701,8 +7701,8 @@ int CCameraController::CheckFilterSettings()
       timeDiff = 0.001 * curTime - 0.001 * eShiftTimes[(mShiftTimeIndex + 
         MAX_ESHIFT_TIMES - mNumZLPAlignChanges) % MAX_ESHIFT_TIMES];
       if (mDebugMode) {
-        report.Format("Energy shift change to %.1f, %d-change time %.3f", eShift, 
-          mNumZLPAlignChanges, timeDiff);
+        report.Format("Energy shift change to %.1f at %.3f, %d-change time %.3f", 
+          eShift, 0.001 * (curTime % 3600000), mNumZLPAlignChanges, timeDiff);
       if (timeDiff > 0. && timeDiff <= mMinZLPAlignInterval)
         mWinApp->mFilterControl.AdjustForZLPAlign();
         mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);

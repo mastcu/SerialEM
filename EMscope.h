@@ -264,6 +264,7 @@ class DLL_IM_EX CEMscope
   SetMember(int, PostJeolGIFdelay);
   SetMember(int, UpdateBeamBlank);
   SetMember(BOOL, BlankTransients);
+  SetMember(BOOL, SelectedEFTEM);
   void SetMessageBoxArgs(int type, CString &title, CString &message);
   int GetMessageBoxReturnValue(void);
   GetSetMember(BOOL, UseInvertedMagRange);
