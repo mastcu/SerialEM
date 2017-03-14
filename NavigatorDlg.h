@@ -348,7 +348,8 @@ private:
 
 public:
   BOOL RegistrationChangeOK(void);
-  void ChangeItemRegistration(void);
+  int ChangeItemRegistration(void);
+  int ChangeItemRegistration(int index, int newReg, CString &str);
   void AdjustAndMoveStage(float stageX, float stageY, float stageZ, int axisbits, 
     float backX = -999., float backY = -999., double leaveISX = 0., double leaveISY = 0.,
     float tiltAngle = 0.);
@@ -364,7 +365,7 @@ public:
   void GetAdjustedStagePos(float & stageX, float & stageY, float & stageZ);
   void ShiftToMarker(void);
   void UndoShiftToMarker(void);
-  void ShiftItemsAtRegistration(float shiftX, float shiftY, int registration);
+  int ShiftItemsAtRegistration(float shiftX, float shiftY, int registration);
   void FinishLoadMap(void);
   void LoadMapCleanup(void);
   CButton m_butRealign;

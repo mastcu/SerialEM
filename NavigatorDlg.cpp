@@ -766,40 +766,51 @@ BOOL CNavigatorDlg::CurrentIsImported(void)
 }
 
 // Change the registration of an item
-void CNavigatorDlg::ChangeItemRegistration(void)
+int CNavigatorDlg::ChangeItemRegistration(void)
 {
   if (!SetCurrentItem())
-    return;
+    return 1;
   CString str;
   int reg = mItem->mRegistration;
-  int use, useold, regOld = reg;
   if (!KGetOneInt("New Registration number for current item:", reg))
-    return;
-  if (reg < 1 || reg > MAX_CURRENT_REG) {
-    str.Format("Registration number must be between 1 and %d", MAX_CURRENT_REG);
-    AfxMessageBox(str, MB_EXCLAME);
-    return;
+    return 1;
+  if (ChangeItemRegistration(mCurrentItem, reg, str)) {
+    AfxMessageBox(str);
+    return 1;
   }
-  use = RegistrationUseType(reg);
+  return 0;
+}
+
+// Change the registration for given item index, put errors in str
+int CNavigatorDlg::ChangeItemRegistration(int index, int newReg, CString &str)
+{
+  CMapDrawItem *item = mItemArray[index];
+  int use, useold, regOld = item->mRegistration;
+  if (newReg < 1 || newReg > MAX_CURRENT_REG) {
+    str.Format("Registration number must be between 1 and %d", MAX_CURRENT_REG);
+    return 1;
+  }
+  use = RegistrationUseType(newReg);
   useold = RegistrationUseType(regOld);
   if (use == NAVREG_IMPORT && useold == NAVREG_REGULAR) {
-    AfxMessageBox("You cannot change items from a regular registration to one used for"
-      " imported items", MB_EXCLAME);
-    return;
+    str.Format("You cannot change item %d from a regular registration to one used for"
+      " imported items (%d)", index, newReg);
+    return 1;
   }
   if (useold == NAVREG_IMPORT && use == NAVREG_REGULAR) {
-    AfxMessageBox("You cannot change items from a registration one used for"
-      " imported items to a regular registration", MB_EXCLAME);
-    return;
+    str.Format("You cannot change item %d from a registration one used for"
+      " imported items to a regular registration (%d)", index, newReg);
+    return 1;
   }
-  mItem->mRegistration = reg;
-  UpdateListString(mCurrentItem);
+  item->mRegistration = newReg;
+  UpdateListString(index);
   mChanged = true;
 
   // If it is a map look for buffers with this map loaded and change their registration
-  if (mItem->mType == ITEM_TYPE_MAP)
-    mHelper->ChangeAllBufferRegistrations(mItem->mMapID, regOld, reg);
+  if (item->mType == ITEM_TYPE_MAP)
+    mHelper->ChangeAllBufferRegistrations(item->mMapID, regOld, newReg);
   Redraw();
+  return 0;
 }
 
 // Invokes the realign routine for the current item, or for the item being acquired
@@ -1726,9 +1737,9 @@ void CNavigatorDlg::ShiftItemPoints(CMapDrawItem *item, float delX, float delY)
 }
 
 // Shift non-imported items at a registration
-void CNavigatorDlg::ShiftItemsAtRegistration(float shiftX, float shiftY, int reg)
+int CNavigatorDlg::ShiftItemsAtRegistration(float shiftX, float shiftY, int reg)
 {
-  int i;
+  int i, numShift = 0;
   CMapDrawItem *item;
   for (i = 0; i < mItemArray.GetSize(); i++) {
     item = mItemArray[i];
@@ -1738,10 +1749,12 @@ void CNavigatorDlg::ShiftItemsAtRegistration(float shiftX, float shiftY, int reg
       ShiftItemPoints(item, shiftX, shiftY);
       mChanged = true;
       UpdateListString(i);
+      numShift++;
     }
   }
   Update();
   Redraw();
+  return numShift;
 }
 
 

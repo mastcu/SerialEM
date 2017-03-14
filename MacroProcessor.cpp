@@ -205,7 +205,7 @@ enum {CME_VIEW, CME_FOCUS, CME_TRIAL, CME_RECORD, CME_PREVIEW,
   CME_SKIPACQUIRINGNAVITEM, CME_SHOWMESSAGEONSCOPE, CME_SETUPSCOPEMESSAGE, CME_SEARCH,
   CME_SETPROPERTY, CME_SETMAGINDEX, CME_SETNAVREGISTRATION, CME_LOCALVAR,
   CME_LOCALLOOPINDEXES, CME_ZEMLINTABLEAU, CME_WAITFORMIDNIGHT, CME_REPORTUSERSETTING,
-  CME_SETUSERSETTING
+  CME_SETUSERSETTING, CME_CHANGEITEMREGISTRATION, CME_SHIFTITEMSBYMICRONS
 };
 
 static CmdItem cmdList[] = {{NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0},
@@ -301,6 +301,7 @@ static CmdItem cmdList[] = {{NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0
 {"Search", 0}, {"SetProperty", 2}, /* End in 3.6 */ {"SetMagIndex", 1},
 {"SetNavRegistration", 1}, {"LocalVar", 1}, {"LocalLoopIndexes", 0}, {"ZemlinTableau", 1},
 {"WaitForMidnight", 0}, {"ReportUserSetting", 1}, {"SetUserSetting", 2}, 
+{"ChangeItemRegistration", 2}, {"ShiftItemsByMicrons", 2},
 {NULL, 0, NULL}
 };
 
@@ -3207,7 +3208,8 @@ void CMacroProcessor::NextCommand()
     }
 
   } else if (CMD_IS(CLEARALIGNMENT)) {                      // ClearAlignment
-    mShiftManager->SetAlignShifts(0., 0., false, mImBufs, !mScope->GetNoScope());
+    doShift = (itemEmpty[1] || !itemInt[1]) && !mScope->GetNoScope();
+    mShiftManager->SetAlignShifts(0., 0., false, mImBufs, doShift);
 
   } else if (CMD_IS(RESETIMAGESHIFT)) {                     // ResetImageShift
     truth = mShiftManager->GetBacklashMouseAndISR();
@@ -4036,6 +4038,21 @@ void CMacroProcessor::NextCommand()
       ABORT_LINE("New registration number is out of range or used for imported items "
       "in:\n\n");
 
+  } else if (CMD_IS(CHANGEITEMREGISTRATION)) {              // ChangeItemRegistration
+    ABORT_NONAV;
+    index = itemInt[1];
+    index2 = itemInt[2];
+    navItem = navigator->GetOtherNavItem(index - 1);
+    report.Format("The Navigator item index, %d, is out of range in:\n\n", index);
+    if (!navItem)
+      ABORT_LINE(report);
+    report.Format("The Navigator item with index %d is a registration point in:\n\n", 
+      index);
+    if (navItem->mRegPoint)
+      ABORT_LINE(report);
+    if (navigator->ChangeItemRegistration(index - 1, index2, report))
+      ABORT_LINE(report + " in line:\n\n");
+
   } else if (CMD_IS(SKIPACQUIRINGNAVITEM)) {                // SkipAcquiringNavItem
     ABORT_NONAV;
     if (!navigator->GetAcquiring())
@@ -4126,6 +4143,23 @@ void CMacroProcessor::NextCommand()
       PrintfToLog("Current stage position is too far from item position (%.2f microns);" 
         "nothing was shifted", specDist);
     }
+
+  } else if (CMD_IS(SHIFTITEMSBYMICRONS)) {                 // ShiftItemsByMicrons
+    ABORT_NONAV;
+    if (fabs(itemDbl[1]) > 100. || fabs(itemDbl[2]) > 100.)
+      ABORT_LINE("You cannot shift items by more than 100 microns in:\n\n");
+    index = navigator->GetCurrentRegistration();
+    if (!itemEmpty[3]) {
+      index = itemInt[3];
+      report.Format("Registration number %d is out of range in:\n\n", index);
+      if (index <= 0 || index > MAX_CURRENT_REG)
+        ABORT_LINE(report);
+    }
+    index2 = navigator->ShiftItemsAtRegistration((float)itemDbl[1], (float)itemDbl[2],
+      index);
+    report.Format("%d items at registration %d were shifted by %.2f, %.2f", index2, index,
+      itemDbl[1], itemDbl[2]);
+    mWinApp->AppendToLog(report, mLogAction);
 
   } else if (CMD_IS(FORCECENTERREALIGN)) {                  // ForceCenterRealign
     ABORT_NONAV;

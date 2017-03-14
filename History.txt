@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+3/13/17: Added script commands to change a Navigator item's registration and
+to shift items by a given number of microns.
+
 3/13/17: Added properties MaximumSlitWidth to set the maximum width for a GIF
 and GIFadjustsForSlitWidth to indicate that SerialEM does not need to adjust
 energy shift for changes in slit width; also increased default time interval
