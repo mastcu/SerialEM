@@ -1650,7 +1650,13 @@ void CNavHelper::SetStateFromParam(StateParams *param, ControlSet *conSet, int b
       mScope->SetLdsaParams(&ldsaParams);
       gotoArea = true;
     }
+    if (mWinApp->LowDoseMode())
+      ldp->axisPosition = mWinApp->mLowDoseDlg.ConvertOneIStoAxis(
+        ldp->magIndex, ldp->ISX, ldp->ISY);
+    param->ldParams.axisPosition = ldp->axisPosition;
     *ldp = param->ldParams;
+    mWinApp->mLowDoseDlg.ConvertOneAxisToIS(ldp->magIndex, ldp->axisPosition, ldp->ISX,
+      ldp->ISY);
     if (gotoArea)
       mScope->GotoLowDoseArea(RECORD_CONSET);
     else

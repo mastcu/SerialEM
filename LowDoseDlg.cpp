@@ -340,7 +340,8 @@ void CLowDoseDlg::TransferISonAxis(int fromMag, double fromX, double fromY, int 
   if (fromMag == toMag || mShiftManager->CanTransferIS(fromMag, toMag)) {
     toX = fromX;
     toY = fromY;
-    SEMTrace('L', "TransferISonAxis %d to %d direct copy", fromMag, toMag);
+    if (fromMag != toMag)
+      SEMTrace('L', "TransferISonAxis %d to %d direct copy", fromMag, toMag);
   } else {
     double axis = ConvertOneIStoAxis(fromMag, fromX, fromY);
     ConvertOneAxisToIS(toMag, axis, toX, toY);
