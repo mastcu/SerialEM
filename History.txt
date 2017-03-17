@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+3/17/17: Fix having it drop screen for STEM when leaving camera setup even
+when not going into STEM (In 3.6).
+
 3/15/17: Properly initialized image shift values when switching to a low dose
 imaging state (In 3.6).
 

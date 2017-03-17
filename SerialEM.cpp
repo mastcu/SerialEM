@@ -3272,10 +3272,12 @@ void CSerialEMApp::SetSTEMMode(BOOL inState)
   mScope->SetSTEM(mSTEMMode && 
     (mScope->GetScreenPos() == spUp || !DoSwitchSTEMwithScreen()));
   mSTEMcontrol.UpdateSTEMstate(mScope->GetProbeMode());
-  if (DoDropScreenForSTEM() > 1)
-    mScope->SetScreenPos(spDown);
-  else if (mCamera->GetLowerScreenForSTEM() < -1)
-    mScope->SetScreenPos(spUp);
+  if (mSTEMMode) {
+    if (DoDropScreenForSTEM() > 1)
+      mScope->SetScreenPos(spDown);
+    else if (mCamera->GetLowerScreenForSTEM() < -1)
+      mScope->SetScreenPos(spUp);
+  }
   mSettingSTEM = false;
 }
 
