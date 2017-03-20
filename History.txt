@@ -7,7 +7,7 @@ significance.
 when not going into STEM (In 3.6).
 
 3/15/17: Properly initialized image shift values when switching to a low dose
-imaging state (In 3.6).
+imaging state; zero out axis position values > 100 from settings (In 3.6).
 
 3/13/17: Added script commands to change a Navigator item's registration and
 to shift items by a given number of microns.

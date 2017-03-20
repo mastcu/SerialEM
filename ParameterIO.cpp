@@ -611,6 +611,8 @@ int CParameterIO::ReadSettings(CString strFileName)
           ldp->spotSize = spot;
           ldp->intensity = itemDbl[4];
           ldp->axisPosition = itemDbl[5];
+          if (fabs(ldp->axisPosition) > 100.)
+            ldp->axisPosition = 0.;
           ldp->probeMode = 1;
           if (!itemEmpty[6]) {
             ldp->slitIn = itemInt[7] != 0;
