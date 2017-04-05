@@ -6905,6 +6905,11 @@ void CCameraController::DisplayNewImage(BOOL acquired)
         ixoff = (mParam->halfBoundary - ix / 2) / mBinning + (ix / 2) / mBinning;
         ProcBalanceHalves(mTD.Array[chan], mTD.ImageType, mTD.DMSizeX, mTD.DMSizeY,
           mTop, mLeft, ixoff, mParam->ifHorizontalBoundary);
+      } else if (mTD.Processing == GAIN_NORMALIZED && mParam->DE_camType >= 2) {
+
+        // And correct defects for DE camera with normalized images
+        CorDefCorrectDefects(&mParam->defects, mTD.Array[chan], mTD.ImageType, 
+          mBinning, mTop, mLeft, mBottom, mRight);
       }
       if (mParam->OneViewType && mTD.Corrections > 0 && 
         (mTD.Corrections & OVW_DRIFT_CORR_FLAG) != 0) {
