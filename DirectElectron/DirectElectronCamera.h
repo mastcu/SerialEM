@@ -192,6 +192,7 @@ public:
   GetMember(int, CamType);
   GetMember(int, InitializingIndex);
   GetMember(int, ServerVersion);
+  GetMember(int, LastLiveMode);
   bool justSetDoubleProperty(const char * propName, double value);
   bool justSetIntProperty(const char * propName, int value);
   CString MakeErrorString(CString str);

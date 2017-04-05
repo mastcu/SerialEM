@@ -810,10 +810,13 @@ UINT DirectElectronCamera::LiveProc(LPVOID pParam)
     useBuf = td->operation ? td->rotBuf : image4k;
     
     // Get image
+    double start = GetTickCount();
     if (!td->DeServer->getImage(useBuf, td->inSizeX * td->inSizeY * 2)) {
       retval = 1;
       break;
     }
+    double getTime = SEMTickInterval(start);
+    start = GetTickCount();
 
     // Process it if needed
     if (td->operation)
@@ -822,12 +825,15 @@ UINT DirectElectronCamera::LiveProc(LPVOID pParam)
     if (td->divideBy2)
       for (int i = 0; i < td->inSizeX * td->inSizeY; i++)
         image4k[i] = image4k[i] >> 1;
-
+    double procTime = SEMTickInterval(start);
+    start = GetTickCount();
     // Get the mutex and place change the output buffer index, mark as not returned
     WaitForSingleObject(sLiveMutex, LIVE_MUTEX_WAIT);
     td->outBufInd = newInd;
     td->returnedImage[newInd] = false;
     ReleaseMutex(sLiveMutex);
+    SEMTrace('D', "Got frame - %.0f acquire, %.0f process, %.0f for mutex", getTime, 
+      procTime, SEMTickInterval(start));
     Sleep(10);
   }
 
@@ -1138,8 +1144,9 @@ int DirectElectronCamera::SetLiveMode(int mode)
         ErrorTrace("ERROR: Could NOT set the live mode %s.", mode ? "ON" : "OFF");
         return 1;
       } 
-      SEMTrace('D', "Live mode turned %s", mode ? "ON" : "OFF");
+      SEMTrace('D', "Live mode turned %s (%d)", mode ? "ON" : "OFF", mode);
       mLastLiveMode = mode;
+      mWinApp->mDEToolDlg.Update();
     }
     return 0;
   }
@@ -1384,6 +1391,7 @@ HRESULT DirectElectronCamera::setCorrectionMode(int nIndex)
       AfxMessageBox(str);
       return S_FALSE;
     }
+    SEMTrace('D', "Correction mode set to %s", corrections[nIndex]);
     mLastProcessing = nIndex;
   }
 
