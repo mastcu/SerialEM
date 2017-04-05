@@ -1164,6 +1164,7 @@ void ProcShiftInPlace(short int *array, int type, int nx, int ny, int shiftX, in
   int x, yin, yout;
   short int *inp, *outp;
   unsigned char *inbp, *outbp, *brray;
+  unsigned short *usArray = (unsigned short *)array;
   brray = (unsigned char *)array;
 
   if (shiftY > 0) {
@@ -1244,6 +1245,9 @@ void ProcShiftInPlace(short int *array, int type, int nx, int ny, int shiftX, in
     if (type == BYTE)
       for (x = 0; x < nx; x++)
         brray[yout * nx + x] = fill;
+    else if (type == UNSIGNED_SHORT)
+      for (x = 0; x < nx; x++)
+        usArray[yout * nx + x] = fill;
     else
       for (x = 0; x < nx; x++)
         array[yout * nx + x] = fill;

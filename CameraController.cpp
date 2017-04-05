@@ -7053,6 +7053,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       imBuf->mHasUserPt = false;
       imBuf->mHasUserLine = false;
       imBuf->mMapID = 0;
+      imBuf->mChangeWhenSaved = 0;
       imBuf->mStage2ImMat.xpx = 0.;
       imBuf->mRegistration = 0;
       imBuf->mZoom = 0.;

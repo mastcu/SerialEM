@@ -101,6 +101,8 @@ private:
   float mRIfirstStageY;
   double mRIfirstISX;           // IS to apply during first round and take away at end
   double mRIfirstISY;
+  double mRIleaveISX;           // And IS to leave if leaving LD with Balance Shifts
+  double mRIleaveISY;
   float mRImaximumIS;           // Maximum image shift to apply in first round
   float mRImaxLMfield;          // Maximum field of view for realigning to LM map
   bool mRItryScaling;           // Flag to do scaling in this realign
@@ -157,6 +159,7 @@ private:
   float mRIcalShiftY;
   int mRIconSetNum;
   bool mRIstayingInLD;
+  double mRIsavedLDintensity;
   BOOL mRIuseBeamOffsets;       // Flag for whether to use the offsets
   float mTestParams[4];         // Parameters that can be set from macro
   int mContinuousRealign;       // Flag to use continuous mode; > 1 to leave it running
@@ -253,9 +256,10 @@ public:
   void StartRealignCapture(bool useContinuous, int nextTask);
   void GetViewOffsets(CMapDrawItem * item, float & netShiftX, float & netShiftY, float & beamShiftX, float & beamShiftY, float & beamTiltX, float & beamTiltY);
   void StateCameraCoords(int camIndex, int xFrame, int yFrame, int binning, int &left, int &right, int &top, int &bottom);
-  bool CanStayInLowDose(CMapDrawItem * item, int xFrame, int yFrame, int binning, int & set, float & netShiftX, float & netShiftY);
+  bool CanStayInLowDose(CMapDrawItem * item, int xFrame, int yFrame, int binning, int & set, float & netShiftX, float & netShiftY, bool forReal);
   void SimpleIStoStage(CMapDrawItem * item, double ISX, double ISY, float &stageX, float &stageY);
   ScaleMat ItemStageToCamera(CMapDrawItem * item);
   void CountAcquireItems(int & numAcquire, int & numTS);
+  void RestoreLowDoseConset(void);
 };
 

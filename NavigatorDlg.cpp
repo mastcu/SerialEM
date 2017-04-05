@@ -5315,9 +5315,19 @@ int CNavigatorDlg::NewMap(bool unsuitableOK)
       break;
   }
 
-  // Save scaling values, convert to bytes if flag set
+  // Save scaling values, fixing them up for saved data, and convert to bytes if flag set
   item->mMapMinScale = imBuf->mImageScale->GetMinScale();
   item->mMapMaxScale = imBuf->mImageScale->GetMaxScale();
+  if (imBuf->mChangeWhenSaved == SHIFT_UNSIGNED) {
+    item->mMapMinScale -= 32768;
+    item->mMapMaxScale -= 32768;
+  } else if (imBuf->mChangeWhenSaved == SIGNED_SHIFTED) {
+    item->mMapMinScale += 32768;
+    item->mMapMaxScale += 32768;
+  } else if (imBuf->mChangeWhenSaved == DIVIDE_UNSIGNED) {
+    item->mMapMinScale /= 2.f;
+    item->mMapMaxScale /= 2.f;
+  }
   if (mWinApp->GetConvertMaps())
     imBuf->ConvertToByte(0., 0.);
 

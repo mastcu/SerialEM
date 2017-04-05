@@ -160,6 +160,7 @@ class EMmontageController
   int   mNumErrSum;               // Number added into sum
   short int *mMiniData;           // Array for mini view
   unsigned char *mMiniByte;
+  unsigned short *mMiniUshort;
   BOOL  mConvertMini;             // Convert to bytes for mini view
   int   mMiniZoom;                // Zoom factor
   int   mMiniFrameX, mMiniFrameY; // Size of one frame in mini view
@@ -278,7 +279,7 @@ public:
      float &bMean, float &bMax, float &aMean, float &aMax, float &wMean, float &wMax);
   int AutodocShiftStorage(bool write, float * upperShiftX, float * upperShiftY);
   void NextMiniZoomAndBorder(int &borderTry);
-  void RetilePieces();
+  void RetilePieces(int miniType);
   void SetAcquiredStagePos(int piece, double stageX, double stageY, double ISX, 
     double ISY);
   void FindAdjacentForISrealign(void);

@@ -90,6 +90,8 @@ public:
   virtual CString getAdocName(void);
   virtual int getImageShift(int inSect, double &outISX, double &outISY);
   virtual unsigned int getChecksum();
+  virtual int getUnsignOpt() {return mFileOpt.unsignOpt;};
+  virtual int getSignToUnsignOpt() {return mFileOpt.signToUnsignOpt;};
 };
 
 

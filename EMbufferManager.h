@@ -118,6 +118,7 @@ public:
     int toSection, bool synchronous);
   void StartAsyncThread(KImageStore *fromStore, KImageStore *store, int section, 
     bool synchronous);
+  EMimageExtra *SetChangeWhenSaved(EMimageBuffer *imBuf, KImageStore *inStore, int &oldDivided);
 };
 
 #endif

@@ -531,7 +531,8 @@ void CCameraSetupDlg::OnBinning()
 void CCameraSetupDlg::OnContSingle()
 {
   UpdateData(TRUE);
-  ManageIntegration();  
+  ManageIntegration();
+  ManageAntialias();
 }
 
 void CCameraSetupDlg::OnLinesync()

@@ -285,9 +285,10 @@ int EMbufferManager::CheckSaveConditions(KImageStore *inStoreMRC, EMimageBuffer 
 int EMbufferManager::SaveImageBuffer(KImageStore *inStore, bool skipCheck, int inSect)
 {
   KStoreIMOD *tiffStore;
+  EMimageExtra *extra;
   double axisRot;
   float axis, bidirAngle;
-  int spot, err, check, cam, mag;
+  int spot, err, check, cam, mag, oldDivided;
   EMimageBuffer *toBuf = GetSaveBuffer();
   if (!skipCheck) {
     check = CheckSaveConditions(inStore, toBuf);
@@ -335,6 +336,8 @@ int EMbufferManager::SaveImageBuffer(KImageStore *inStore, bool skipCheck, int i
   if (inStore == mWinApp->mStoreMRC)
     toBuf->mCurStoreChecksum = mWinApp->mStoreMRC->getChecksum();
 
+  // Set flags before saving so mDivided can be in the mdoc
+  extra = SetChangeWhenSaved(toBuf, inStore, oldDivided);
   if (inStore->getStoreType() != STORE_TYPE_IMOD) {
     err = 1;
     int secnum = inStore->getDepth();
@@ -349,24 +352,27 @@ int EMbufferManager::SaveImageBuffer(KImageStore *inStore, bool skipCheck, int i
         err = inStore->AppendImage(toBuf->mImage);
       else
         err = inStore->WriteSection(toBuf->mImage, inSect);
-      if (err) {
-        ReportError(err);
-        return 1;
-      }
 
       // flush buffers to protect from crashes
-      inStore->Flush();
+      if (!err)
+        inStore->Flush();
     }
-    toBuf->mSecNumber = inSect < 0 ? secnum : inSect;
+    if (!err)
+      toBuf->mSecNumber = inSect < 0 ? secnum : inSect;
   } else {
     tiffStore = (KStoreIMOD *)inStore;
     
     int err = tiffStore->WriteSection(toBuf->mImage);
-    if (err) {
-      ReportError(err);
-      return 1;
-    }
-    toBuf->mSecNumber = 0;
+    if (!err)
+      toBuf->mSecNumber = 0;
+  }
+
+  // Restore flag in extra; it is used for dose rates etc.
+  if (extra)
+    extra->mDividedBy2 = oldDivided;
+  if (err) {
+    ReportError(err);
+    return 1;
   }
 
   toBuf->NegateSaveCopy();
@@ -390,7 +396,9 @@ int EMbufferManager::SaveImageBuffer(KImageStore *inStore, bool skipCheck, int i
 
 int EMbufferManager::OverwriteImage(KImageStore *inStoreMRC, int inSect)
 {
+  EMimageExtra *extra;
   EMimageBuffer *toBuf = GetSaveBuffer();
+  int oldDivided;
   int check = CheckSaveConditions(inStoreMRC, toBuf);
   if (check)
     return check;
@@ -414,14 +422,16 @@ int EMbufferManager::OverwriteImage(KImageStore *inStoreMRC, int inSect)
     return -1;
   
   int err = 1;
+  extra = SetChangeWhenSaved(toBuf, inStoreMRC, oldDivided);
   if (mSaveAsynchronously && !mWinApp->SavingOther())
     err = StartAsyncSave(inStoreMRC, toBuf, number);
-  if (err) {
+  if (err)
     err = inStoreMRC->WriteSection(toBuf->mImage, number);
-    if (err) {
-      ReportError(err);
-      return 1;
-    }
+  if (extra)
+    extra->mDividedBy2 = oldDivided;
+  if (err) {
+    ReportError(err);
+    return 1;
   }
   toBuf->NegateSaveCopy();
   toBuf->mSecNumber = number;
@@ -429,6 +439,34 @@ int EMbufferManager::OverwriteImage(KImageStore *inStoreMRC, int inSect)
     CopyImageBuffer((int)(toBuf - mImBufsp), mCopyOnSave);
   mWinApp->UpdateBufferWindows();
   return 0;
+}
+
+// Set flag for type of modification that occurred to the data when saved
+// Returns an extra structure and previous value if mDividedBy2 was set
+EMimageExtra *EMbufferManager::SetChangeWhenSaved(EMimageBuffer *imBuf, 
+  KImageStore *inStore, int &oldDivided)
+{
+  EMimageExtra *extra = NULL;
+  imBuf->mChangeWhenSaved = 0;
+  if (inStore->getStoreType() != STORE_TYPE_MRC && 
+    inStore->getStoreType() != STORE_TYPE_IMOD)
+    return NULL;
+  if (imBuf->mImage->getType() == kSHORT && inStore->getMode() == MRC_MODE_USHORT && 
+    inStore->getSignToUnsignOpt() == SHIFT_SIGNED) {
+      imBuf->mChangeWhenSaved = SIGNED_SHIFTED;
+  } else if (imBuf->mImage->getType() == kUSHORT && inStore->getMode() == MRC_MODE_SHORT){
+    if (inStore->getUnsignOpt() == SHIFT_UNSIGNED)
+      imBuf->mChangeWhenSaved = SHIFT_UNSIGNED;
+    else if (inStore->getUnsignOpt() == DIVIDE_UNSIGNED) {
+      imBuf->mChangeWhenSaved = DIVIDE_UNSIGNED;
+      extra = imBuf->mImage->GetUserData();
+      if (extra) {
+        oldDivided = extra->mDividedBy2; 
+        extra->mDividedBy2 = 1;
+      }
+    }
+  }
+  return extra;
 }
 
 // Get Filename for reading other file
@@ -685,6 +723,7 @@ int EMbufferManager::ReadFromFile(KImageStore *inStore, int inSect, int inToBuf,
   toBuf->mHasUserPt = false;
   toBuf->mHasUserLine = false;
   toBuf->mTimeStamp = (float)0.001 * GetTickCount();
+  toBuf->mChangeWhenSaved = 0;
   toBuf->mMapID = 0;
   toBuf->mStage2ImMat.xpx = 0.;
   toBuf->mRegistration = 0;

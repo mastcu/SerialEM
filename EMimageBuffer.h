@@ -38,6 +38,7 @@ public:
   unsigned int mCurStoreChecksum;
   int *mSaveCopyp;
   int mSecNumber;
+  int mChangeWhenSaved;    // How the data were modified when saved
   int mConSetUsed;
   int mCaptured;
   int mBinning;

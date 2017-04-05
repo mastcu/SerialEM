@@ -3,6 +3,19 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+4/5/17: Fixed Realign to Item going out of Low Dose when realigning to a
+polygon map where frame sizes are not the same as the current image sizes;
+also enabled staying in Low Dose with change in intensity, exposure, or binning
+between the map and current Low Dose parameters (In 3.6).
+
+4/5/17: Prevented progressive change of IS when setting and restoring a state
+goes out of and into Low Dose with Balance Shifts on; also improved behavior
+of Realign to Item with  Balance Shifts on (In 3.6).
+
+4/5/17: Fixed doubling of values in montage overview from unsigned images,
+which solves wraparound of high values and bad scaling when loading maps as
+bytes; also fixed another source of bad scaling when loading maps (In 3.6).
+
 3/17/17: Fix having it drop screen for STEM when leaving camera setup even
 when not going into STEM (In 3.6).
 

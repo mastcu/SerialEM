@@ -554,6 +554,7 @@ void CLowDoseDlg::ChangeAllShifts(double delAxis)
     ShiftImageInA(delAxis);
     FixUserPoint(1);
   }*/
+  mWinApp->mNavHelper->ForceCenterRealign();
   mWinApp->RestoreViewFocus();  
   Update();
 }

@@ -86,6 +86,7 @@ CNavHelper::CNavHelper(void)
   mDivideIntoGroups = false;
   mEditReminderPrinted = false;
   mCollapseGroups = false;
+  mRIstayingInLD = false;
   mNav = NULL;
 }
 
@@ -242,7 +243,7 @@ int CNavHelper::FindMapForRealigning(CMapDrawItem * inItem, BOOL restoreState)
 
       // Now can determine net view shift and adjust initial stage delta
       stayInLD = CanStayInLowDose(item, xFrame, yFrame, binning, ix, netViewShiftX, 
-        netViewShiftY);
+        netViewShiftY, false);
 
       // If realigning to a second map at record mag, need to adjust the target by the
       // calibration shift unless staying in low dose, in which case need to clear out
@@ -683,7 +684,7 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState)
     mRIfirstStageX ,mRIfirstStageY, mRInetViewShiftX, mRInetViewShiftY, firstDelX, firstDelY);
   mNav->AdjustAndMoveStage(mRIfirstStageX + mRInetViewShiftX + firstDelX, 
     mRIfirstStageY + mRInetViewShiftY + firstDelY, inItem->mStageZ, axes,
-    itemBackX, itemBackY, mRIfirstISX, mRIfirstISY, mapAngle);
+    itemBackX, itemBackY, mRIfirstISX + mRIleaveISX, mRIfirstISY + mRIleaveISY, mapAngle);
 
   mWinApp->AddIdleTask(SEMStageCameraBusy, TASK_NAV_REALIGN, action, 30000);
   mWinApp->SetStatusText(MEDIUM_PANE, "REALIGNING TO ITEM");
@@ -938,7 +939,7 @@ void CNavHelper::RealignNextTask(int param)
       mNav->BacklashForItem(item, shiftX, shiftY);
       mNav->AdjustAndMoveStage(mRIfirstStageX + mRInetViewShiftX + stageDelX, 
         mRIfirstStageY + mRInetViewShiftY + stageDelY, 0., axisXY, shiftX, shiftY,
-        mRIfirstISX, mRIfirstISY);
+        mRIfirstISX + mRIleaveISX, mRIfirstISY + mRIleaveISY);
       mWinApp->AddIdleTask(CEMscope::TaskStageBusy, TASK_NAV_REALIGN, TASK_SECOND_MOVE,
         30000);
       return;
@@ -1084,6 +1085,7 @@ void CNavHelper::StopRealigning(void)
     delete mMapStore;
 
   // Restore state if saved
+  RestoreLowDoseConset();
   RestoreMapOffsets();
   RestoreSavedState();
   mCamera->ChangePreventToggle(-1);
@@ -1135,6 +1137,7 @@ void CNavHelper::StartSecondRound(void)
   mRIrMat = mNav->GetRotationMatrix(mRIrotAngle, mRIinverted);
 
   ControlSet *conSet = mWinApp->GetConSets() + TRACK_CONSET;
+  RestoreLowDoseConset();
   PrepareToReimageMap(item, mMapMontP, conSet, TRIAL_CONSET, TRUE);
   if (mRIstayingInLD)
     RestoreMapOffsets();
@@ -1184,12 +1187,17 @@ void CNavHelper::StartRealignCapture(bool useContinuous, int nextTask)
 void CNavHelper::PrepareToReimageMap(CMapDrawItem *item, MontParam *param, 
                                      ControlSet *conSet, int baseNum, BOOL hideLDoff) 
 {
-  int  binning, xFrame, yFrame;
+  ControlSet *conSets = mWinApp->GetConSets();
+  int  binning, xFrame, yFrame, area;
   StateParams stateParam;
+  LowDoseParams *ldp;
   CString *names = mWinApp->GetModeNames();
+  CameraParameters *camP = mWinApp->GetCamParams() + item->mMapCamera;
   StoreMapStateInParam(item, param, baseNum, &stateParam);
 
   // If coming from Realign to Item, see if we can STAY in low dose instead of hiding it
+  mRIstayingInLD = false;
+  mRIleaveISX = mRIleaveISY = 0.;
   if (hideLDoff) {
     if (item->mMapMontage) {
       xFrame = param->xFrame;
@@ -1201,16 +1209,38 @@ void CNavHelper::PrepareToReimageMap(CMapDrawItem *item, MontParam *param,
       binning = item->mMapBinning;
     }
     mRIstayingInLD = CanStayInLowDose(item, xFrame, yFrame, binning, mRIconSetNum,
-      mRInetViewShiftX, mRInetViewShiftY);
+      mRInetViewShiftX, mRInetViewShiftY, true);
 
     // If staying in low dose, go there now, so that the stage move will be adjusted at
     // the same mag as the anticipated adjustment was computed
     if (mRIstayingInLD) {
-      SEMTrace('1', "Map matches low dose %s; staying in low dose",
-        (LPCTSTR)names[mRIconSetNum]);
+      SEMTrace('1', "Map matches low dose %s; staying in low dose but with exp %.3f "
+        "intensity %.5f bin %f", (LPCTSTR)names[mRIconSetNum], item->mMapExposure, 
+        item->mMapIntensity, binning / (camP->K2Type ? 2. : 1.));
+
+      // Save the conSet and modify it to the map parameters
+      mSavedConset = conSets[mRIconSetNum];
+      StateCameraCoords(item->mMapCamera, xFrame, yFrame, binning, 
+        conSets[mRIconSetNum].left, conSets[mRIconSetNum].right, 
+        conSets[mRIconSetNum].top, conSets[mRIconSetNum].bottom);
+      conSets[mRIconSetNum].exposure = item->mMapExposure;
+      conSets[mRIconSetNum].binning = binning;
+      conSets[mRIconSetNum].saveFrames = 0;
+      conSets[mRIconSetNum].mode = SINGLE_FRAME;
+
+      // Also save the intensity and us map one
+      area = mCamera->ConSetToLDArea(item->mMapLowDoseConSet);
+      ldp = mWinApp->GetLowDoseParams() + area;
+      mRIsavedLDintensity = ldp->intensity;
+      ldp->intensity = item->mMapIntensity;
       mScope->GotoLowDoseArea(mRIconSetNum);
       return;
     }
+
+    // If leaving LD, set the base IS to leave on stage moves
+    ldp = mWinApp->GetLowDoseParams() + RECORD_CONSET;
+    mRIleaveISX = ldp->ISX;
+    mRIleaveISY = ldp->ISY;
   }
   SEMTrace('I', "PrepareToReimageMap set intensity to %.5f  %.3f%%", stateParam.intensity
     , mScope->GetC2Percent(stateParam.spotSize, stateParam.intensity));
@@ -1219,15 +1249,16 @@ void CNavHelper::PrepareToReimageMap(CMapDrawItem *item, MontParam *param,
 
 // Determine if the realign routine can stay in low dose
 bool CNavHelper::CanStayInLowDose(CMapDrawItem *item, int xFrame, int yFrame, int binning,
-  int &setNum, float &retShiftX, float &retShiftY)
+  int &setNum, float &retShiftX, float &retShiftY, bool forReal)
 {
-  int area, top, left, bottom, right, csTop, csLeft, csRight, csBottom, csSizeX, csSizeY;
-  int csBin, mapLDconSet = item->mMapLowDoseConSet;
-  double netX, netY, fullX, fullY, ratio;
+  int area;
+  int mapLDconSet = item->mMapLowDoseConSet;
+  double netX, netY, fullX, fullY;
   bool match = true;
   LowDoseParams *ldp;
-  ControlSet *checkSet;
   CameraParameters *camP = mWinApp->GetCamParams() + mWinApp->GetCurrentCamera();
+  bool hasAlpha = JEOLscope && !mScope->GetHasNoAlpha();
+  bool filtered = (camP->GIF || mScope->GetHasOmegaFilter()) && item->mMapSlitWidth > 0.;
   setNum = TRACK_CONSET;
   retShiftX = item->mNetViewShiftX;
   retShiftY = item->mNetViewShiftY;
@@ -1248,55 +1279,37 @@ bool CNavHelper::CanStayInLowDose(CMapDrawItem *item, int xFrame, int yFrame, in
   if (mWinApp->LowDoseMode() && mapLDconSet >= 0 && mapLDconSet <= PREVIEW_CONSET) {
     area = mCamera->ConSetToLDArea(mapLDconSet);
     ldp = mWinApp->GetLowDoseParams() + area;
-    checkSet = mWinApp->GetConSets() + mapLDconSet;
 
     // Check mag/spot/alpha and filter
     if (item->mMapCamera != mWinApp->GetCurrentCamera() || 
       item->mMapMagInd != ldp->magIndex || item->mMapSpotSize != ldp->spotSize ||
       (item->mMapProbeMode >= 0 && item->mMapProbeMode != ldp->probeMode) || 
-      ((item->mMapAlpha >= 0 || ldp->beamAlpha >= 0) && 
+      (hasAlpha && (item->mMapAlpha >= 0 || ldp->beamAlpha >= 0) &&  
       item->mMapAlpha != ldp->beamAlpha) ||
-      ((camP->GIF || mWinApp->ScopeHasFilter()) && item->mMapSlitWidth > 0. && 
-      ((item->mMapSlitIn ? 1 : 0 != ldp->slitIn ? 1 : 0) || 
-      fabs(item->mMapSlitWidth - ldp->slitWidth) > 6)) || item->mMapBinning <= 0)
+      (filtered && ((item->mMapSlitIn ? 1 : 0 != ldp->slitIn ? 1 : 0) || (ldp->slitIn &&
+      fabs(item->mMapSlitWidth - ldp->slitWidth) > 6))) || item->mMapBinning <= 0) {
+        if (forReal) {
+          SEMTrace('1', "Leaving LD, map bin %d map/LD cam %d/%d mag %d/%d spot %d/%d"
+            " probe %d/%d alpha %d/%.0f", item->mMapBinning, item->mMapCamera, 
+            mWinApp->GetCurrentCamera(), item->mMapMagInd, ldp->magIndex, 
+            item->mMapSpotSize, ldp->spotSize, item->mMapProbeMode >= 0 ? 
+            item->mMapProbeMode : -1, item->mMapProbeMode >= 0 ? ldp->probeMode : -1, 
+            hasAlpha ? item->mMapAlpha : -1, hasAlpha ? ldp->beamAlpha : -1.);
+          if (filtered)
+            SEMTrace('1', "   slit in %d/%d width %.1f/%.1f", item->mMapSlitIn ? 1 : 0,
+              ldp->slitIn ? 1 : 0, item->mMapSlitWidth, ldp->slitWidth, -1.);
+        }
         match = false;
-
-    // Check intensity either matches closely or represents less than 2-fold change
-    if (match && !camP->STEMcamera) {
-      ratio = mWinApp->mBeamAssessor->FindCurrentRatio(item->mMapIntensity, 
-        ldp->intensity, ldp->spotSize, 
-        mWinApp->mBeamAssessor->GetAboveCrossover(ldp->spotSize, ldp->intensity), 
-        ldp->probeMode);
-      if (fabs(item->mMapIntensity - ldp->intensity) > 1.e-4 && (ratio < 0.5 || 
-        ratio > 2.)) {
-          SEMTrace('1', "Leaving LD, intensity map %f  LD %f  spot %d  ratio %f  ac %d",
-            item->mMapIntensity, ldp->intensity, ldp->spotSize, ratio, 
-            mWinApp->mBeamAssessor->GetAboveCrossover(ldp->spotSize, ldp->intensity));
-          match = false;
-      }
     }
 
-    // Get the camera coordinates and the various view shifts
-    StateCameraCoords(item->mMapCamera, xFrame, yFrame, binning, left, right, top, 
-      bottom);
-
-    // Check camera settings and offsets match
-    csBin = checkSet->binning;
-    csLeft = checkSet->left / csBin;
-    csTop = checkSet->top / csBin;
-    csBottom = checkSet->bottom / csBin;
-    csRight = checkSet->right / csBin;
-    csSizeX = csRight - csLeft;
-    csSizeY = csBottom - csTop;
-    mCamera->AdjustSizes(csSizeX, camP->sizeX, camP->moduloX, csLeft, csRight, csSizeY, 
-      camP->sizeY, camP->moduloY, csTop, csBottom, csBin, item->mMapCamera);
-
-    if (match && (csBin != binning || csLeft * csBin != left ||
-      csRight * csBin != right || csTop * csBin != top || csBottom * csBin != bottom ||
-      checkSet->exposure / item->mMapExposure > 2. || 
-      checkSet->exposure / item->mMapExposure < 0.5 ||
-      fabs(item->mDefocusOffset - mScope->GetLDViewDefocus()) > 5.)) 
+    // Check for defocus offset change
+    if (match && item->mMapLowDoseConSet == VIEW_CONSET && 
+      fabs(item->mDefocusOffset - mScope->GetLDViewDefocus()) > 5.) {
+        if (forReal)
+          SEMTrace('1', "Leaving LD, defocus offset map %.1f  LD %.1f",
+            item->mDefocusOffset, mScope->GetLDViewDefocus());
         match = false;
+    }
 
     // Found a match!
     if (match) {
@@ -1367,8 +1380,8 @@ void CNavHelper::RestoreMapOffsets()
   mRIalphaSet = -999;
 
   // Restore beam shift/tilt
-  SEMTrace('b', "RestoreMapOffsets restore bs %f %f  bt %f %f", mRIbeamShiftSetX, mRIbeamShiftSetY,
-    mRIbeamTiltSetX, mRIbeamTiltSetY);
+  SEMTrace('b', "RestoreMapOffsets restore bs %f %f  bt %f %f", mRIbeamShiftSetX, 
+    mRIbeamShiftSetY, mRIbeamTiltSetX, mRIbeamTiltSetY);
   if (mRIbeamShiftSetX || mRIbeamShiftSetY)
     mScope->IncBeamShift(-mRIbeamShiftSetX, -mRIbeamShiftSetY);
   if (mRIbeamTiltSetX || mRIbeamTiltSetY)
@@ -1475,6 +1488,7 @@ int CNavHelper::RestoreFromMapState(void)
   ControlSet *masterSets = mWinApp->GetCamConSets();
   ControlSet *conSet = mWinApp->GetConSets() + RECORD_CONSET;
   int camera, store;
+  RestoreLowDoseConset();
   if (mTypeOfSavedState != STATE_MAP_ACQUIRE)
     return 1;
   RestoreSavedState();
@@ -1760,6 +1774,26 @@ void CNavHelper::SaveCurrentState(int type, bool saveLDfocusPos)
   SEMTrace('I', "SaveCurrentState saved intensity %.5f", mWinApp->LowDoseMode() ? 
     mSavedState.ldParams.intensity : mSavedState.intensity);
   mSavedLowDoseArea = mScope->GetLowDoseArea();
+}
+
+// If stayed in Low Dose for a map imaging instead of switching to a map state, restore
+// the saved conSet
+void CNavHelper::RestoreLowDoseConset(void)
+{
+  int area;
+  LowDoseParams *ldp;
+  ControlSet *workSets = mWinApp->GetConSets();
+  ControlSet *camSets = mWinApp->GetCamConSets();
+  if (!mRIstayingInLD)
+    return;
+  workSets[mRIconSetNum] = mSavedConset;
+  camSets[mWinApp->GetCurrentCamera() * MAX_CONSETS + mRIconSetNum] = mSavedConset;
+  area = mCamera->ConSetToLDArea(mRIconSetNum);
+  ldp = mWinApp->GetLowDoseParams() + area;
+  ldp->intensity = mRIsavedLDintensity;
+
+  // And be sure to turn flag off in case this is called from other situations
+  mRIstayingInLD = false;
 }
 
 /////////////////////////////////////////////////

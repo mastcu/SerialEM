@@ -16,6 +16,7 @@ class KImageStore;
 #define COMPRESS_ZIP 8
 #define COPY_FROM_MASTER 0
 #define COPY_TO_MASTER 1
+#define SIGNED_SHIFTED 3
 
 // File option structure
 // Remember to initialize new values in GainRefMaker if necessary

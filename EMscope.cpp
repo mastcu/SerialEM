@@ -4387,7 +4387,7 @@ void CEMscope::GotoLowDoseArea(int inArea)
 // Get change in image shift; set delay; tell low dose dialog to ignore this shift
 void CEMscope::DoISforLowDoseArea(int inArea, int curMag, double &delISX, double &delISY)
 {
-  double oldISX, oldISY;
+  double oldISX, oldISY, useISX, useISY;
   float delay;
   LowDoseParams *ldParams = mWinApp->GetLowDoseParams();
 
@@ -4399,10 +4399,18 @@ void CEMscope::DoISforLowDoseArea(int inArea, int curMag, double &delISX, double
 
   // Convert the image shift at the new area mag to the current mag unconditionally, 
   // or only for View area if using piezo
-  if (!inArea || !mUsePiezoForLDaxis)
-    mShiftManager->TransferGeneralIS(ldParams[inArea].magIndex,
-        mNextLDpolarity* ldParams[inArea].ISX, mNextLDpolarity * ldParams[inArea].ISY, 
-        curMag, delISX, delISY);
+  if (!inArea || !mUsePiezoForLDaxis) {
+    useISX = ldParams[inArea].ISX;
+    useISY = ldParams[inArea].ISY;
+
+    // If current area undefined, subtract off the Record IS to stay looking at same spot
+    if (mLowDoseSetArea < 0) {
+      useISX -= ldParams[RECORD_CONSET].ISX;
+      useISY -= ldParams[RECORD_CONSET].ISY;
+    }
+    mShiftManager->TransferGeneralIS(ldParams[inArea].magIndex, mNextLDpolarity * useISX,
+      mNextLDpolarity * useISY, curMag, delISX, delISY);
+  }
   if (mLowDoseSetArea >= 0 && (!mLowDoseSetArea || !mUsePiezoForLDaxis)) {
 
     // Also convert the existing image shift to the current mag (which is one or the 

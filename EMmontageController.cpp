@@ -1294,6 +1294,7 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
       } else
         NewArray(mMiniData, short int, mMiniArrayX * mMiniArrayY);
     }
+    mMiniUshort = (unsigned short *)mMiniData;
     if (!mMiniData) {
 
       // If failed, try again as long as size is still substantial
@@ -2290,7 +2291,7 @@ void EMmontageController::SavePiece()
         case kUSHORT:
           uShort = (unsigned short *)image->getRowData(outy * mMiniZoom + subZoomY);
           for (outx = xstrt; outx < xend; outx++) {
-            mMiniData[indout++] = uShort[indin] >> 1;
+            mMiniUshort[indout++] = uShort[indin];
             indin += mMiniZoom;
           }
           break;
@@ -2502,13 +2503,13 @@ void EMmontageController::SavePiece()
 
     // Do the deferred tiling
     if (mMiniBorderY) {
-      RetilePieces();
+      RetilePieces(miniType);
 
     // Or if pieces were shifted, find average shift and recenter image
     } else if (mParam->shiftInOverview && mNumErrSum > 1 && !mAlreadyHaveShifts) {
       shiftX = B3DNINT((mErrorSumX / mNumErrSum) / mMiniZoom);
       shiftY = -B3DNINT((mErrorSumY / mNumErrSum) / mMiniZoom);
-      ProcShiftInPlace(mMiniData, mConvertMini ? kUBYTE :kSHORT, mMiniSizeX, mMiniSizeY, 
+      ProcShiftInPlace(mMiniData, miniType, mMiniSizeX, mMiniSizeY, 
         shiftX, shiftY, mMiniFillVal);
       for (i = 0; i < mNumPieces; i++) {
         if (mMiniOffsets.offsetX[i] != MINI_NO_PIECE) {
@@ -2518,12 +2519,6 @@ void EMmontageController::SavePiece()
       }
     }
 
-    // Shift unsigned data back out
-    unsigned short int *uMini = (unsigned short int *)mMiniData;
-    if (miniType == kUSHORT) {
-      for (i = 0; i < mMiniSizeX * mMiniSizeY; i++)
-        uMini[i] = uMini[i] <<  1;
-    }
     if (mBufferManager->ReplaceImage((char *)mMiniData, miniType, mMiniSizeX, mMiniSizeY,
       1, mTrialMontage ? BUFFER_PRESCAN_OVERVIEW : BUFFER_MONTAGE_OVERVIEW, 
       MONTAGE_CONSET)) {
@@ -2555,6 +2550,7 @@ void EMmontageController::SavePiece()
         mImBufs[1].mCurStoreChecksum = 0;
       }
       mImBufs[1].mProbeMode = mImBufs[0].mProbeMode;
+      mImBufs[1].mChangeWhenSaved = mImBufs[0].mChangeWhenSaved;
 
       // Navigator is going to use this vs the setting below to distinguish if read-in
       mImBufs[1].mConSetUsed = MONTAGE_CONSET;
@@ -4380,7 +4376,7 @@ void EMmontageController::NextMiniZoomAndBorder(int &borderTry)
 }
 
 // Recompose the overview image from the stored sampled pieces
-void EMmontageController::RetilePieces()
+void EMmontageController::RetilePieces(int miniType)
 {
   int shiftY, outx, xstrt, xend, ystrt, yend, xtile, ytile, top, bottom, ix, iy;
   int ipc, ivar, unfilled, miniBaseX, miniBaseY, xofset, yofset;
@@ -4426,9 +4422,12 @@ void EMmontageController::RetilePieces()
       if (mConvertMini) {
         for (outx = 0; outx < mMiniSizeX; outx++)
           mMiniByte[outx + outy * mMiniSizeX] = (unsigned char)mMiniFillVal;
+      } else if (miniType == kUSHORT) {
+        for (outx = 0; outx < mMiniSizeX; outx++)
+          mMiniUshort[outx + outy * mMiniSizeX] = (unsigned short)mMiniFillVal;
       } else {
         for (outx = 0; outx < mMiniSizeX; outx++)
-          mMiniData[outx + outy * mMiniSizeX] = (unsigned short)mMiniFillVal;
+          mMiniData[outx + outy * mMiniSizeX] = (short)mMiniFillVal;
       }
     }
     unfilled = bottom;
