@@ -25,6 +25,9 @@ imaging state; zero out axis position values > 100 from settings (In 3.6).
 3/13/17: Added script commands to change a Navigator item's registration and
 to shift items by a given number of microns.
 
+3/2/17: Made it retry once when there is a timeout during fast continuous
+acquisition even if CameraRetries is 0 (In 3.6).
+
 3/13/17: SEM_3-6-4
 3/13/17: Added properties MaximumSlitWidth to set the maximum width for a GIF
 and GIFadjustsForSlitWidth to indicate that SerialEM does not need to adjust
@@ -69,9 +72,6 @@ short-term calibrations (In 3.6).
 3/2/17:SEM_3-6-3
 3/2/17: Made it retry opening Falcon frame files since they may still be
 locked for writing on the first attempt (In 3.6).
-
-3/2/17: Made it retry once when there is a timeout during fast continuous
-acquisition even if CameraRetries is 0.
 
 3/2/17: Added output of aligned piece coordinates in montage overview to mdoc
 file.
