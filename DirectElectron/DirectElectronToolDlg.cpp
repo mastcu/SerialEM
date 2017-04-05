@@ -303,7 +303,7 @@ void DirectElectronToolDlg::Update()
     mWinApp->mMacroProcessor->GetOpenDE12Cover())) && thisCamBusy) || 
     (mWinApp->mCamera->DoingContinuousAcquire() && camParam->DE_camType > 0))
     protCoverNeed = 0;
-  if (isDE12)
+  if (isDE12 && (!mDECamera->GetLastLiveMode() || !protCoverNeed))
     SetProtectionCoverMode(protCoverNeed);
 }
 
