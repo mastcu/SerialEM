@@ -216,6 +216,7 @@ struct CameraParameters {
   int DMrotationFlip;         // Rotation and flip that DM is supposed to be set for
   int setRestoreRotFlip;      // 2 to set Gatan/restore it at end, 1 just to set; 0 query
   int rotFlipToRestore;       // Actual value to restore on exit if not -1
+  int postActionsOK;          // Per-camera specification if post-actions allowed
   int taskTargetSize;         // Target size to bin to for tasks
   FloatVec doseTabCounts;     // Dose rate scaling table: mean electron counts 
   FloatVec doseTabRates;      // ... and dose rates

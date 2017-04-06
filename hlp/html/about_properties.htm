@@ -1330,9 +1330,16 @@
             starting the exposure for a Tietz camera).</TD>
         </TR>
         <TR VALIGN="top">
+          <TD>AllowPostActions</TD>
+          <TD>Set to 0 to disable Post-actions (scope actions during the readout and 
+            processing time) for a camera where they are ordinarily available.&nbsp; The 
+            default is 0 for a OneView camera, so enter 1 to enable post-actions for a 
+            OneView.</TD>
+        </TR>
+        <TR VALIGN="top">
           <TD>MinimumDriftSettling</TD>
           <TD>The smallest drift settling that SerialEM should try to produce. For a Gatan 
-            camera. it corresponds to half of the range of variability in the time that an 
+            camera, it corresponds to half of the range of variability in the time that an 
             exposure starts after image acquisition is requested by SerialEM. For a Tietz 
             camera on a JEOL, this should be set to at least 0.1, or even 0.2, to prevent 
             lower shutter exposure times less than 0.2; on an FEI scope it can be 0 or a small 

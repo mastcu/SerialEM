@@ -364,6 +364,7 @@ CSerialEMApp::CSerialEMApp()
     mCamParams[i].DMrotationFlip = -1;
     mCamParams[i].setRestoreRotFlip = 2;
     mCamParams[i].rotFlipToRestore = -1;
+    mCamParams[i].postActionsOK = -1;     // -1 = Unspecified and OK
     mCamParams[i].origDefects = NULL;
     mCamParams[i].defNameHasFrameFile = false;
     mCamParams[i].taskTargetSize = 512;

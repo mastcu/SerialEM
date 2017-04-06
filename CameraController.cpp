@@ -871,6 +871,10 @@ void CCameraController::InitializeDMcameras(int DMind, int *numDMListed,
                 }
               }
 
+              // Default post-actions disabled for OneView
+              if (mAllParams[i].OneViewType && mAllParams[i].postActionsOK < 0)
+                mAllParams[i].postActionsOK = 0;
+
               // Check the size
               CheckGatanSize(sel, i);
 
@@ -1492,7 +1496,7 @@ BOOL CCameraController::PostActionsOK(void)
 {
   return (!mParam->FEItype && !((mParam->K2Type > 1 && mParam->startupDelay < 1.46) ||
     (mParam->K2Type == 1 && mParam->startupDelay < mK2MinStartupDelay)) && 
-    mParam->DE_camType < 2 && 
+    mParam->postActionsOK && mParam->DE_camType < 2 && 
     !mParam->STEMcamera && mParam->noShutter != 1);
 }
 

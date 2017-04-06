@@ -1742,6 +1742,8 @@ int CParameterIO::ReadProperties(CString strFileName)
             camP->setRestoreRotFlip = itemInt[1];
           else if (MatchNoCase("TaskTargetSize"))
             camP->taskTargetSize = itemInt[1];
+          else if (MatchNoCase("AllowPostActions"))
+            camP->postActionsOK = itemInt[1];
           else if (MatchNoCase("ImageRotation"))
             camP->imageRotation = itemInt[1];
           else if (MatchNoCase("InvertFocusRamp"))

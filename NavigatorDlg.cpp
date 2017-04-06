@@ -2461,11 +2461,12 @@ BOOL CNavigatorDlg::UserMousePoint(EMimageBuffer *imBuf, float inX, float inY,
         indMin = ind;
     }
 
-    // In edit mode, if there is a single point point selected and it is clicked on,
-    // set flag and return
-    if (m_bEditMode && !ctrlKey && mSelectedItems.size() == 1 && indMin == mCurrentItem) {
-      mLastSelectWasCurrent = true;
-      return true;
+    // In edit mode, if there is a single point selected and it is clicked on,
+    // set flag and return: this occurs before double click comes through
+    if (m_bEditMode && !ctrlKey && mSelectedItems.size() == 1 && 
+      mSelectedItems.count(indMin)) {
+        mLastSelectWasCurrent = true;
+        return true;
     }
 
     // Switch to item
