@@ -2395,7 +2395,10 @@ int MyFileDialog::DoModal()
   int retval = (int)mFileDlg->DoModal();
   mfdTD.pathName = mFileDlg->GetPathName();
   mfdTD.fileName = mFileDlg->GetFileName();
-  _chdir(startDir);
+  if (startDir) {
+    _chdir(startDir);
+    free(startDir);
+  }
   return retval;
 #endif
 }

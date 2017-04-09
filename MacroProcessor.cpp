@@ -2017,7 +2017,11 @@ void CMacroProcessor::NextCommand()
     }
 
   } else if (CMD_IS(REPORTDIRECTORY)) {                     // ReportDirectory
-    strCopy = _getcwd(NULL, _MAX_PATH);
+    char *cwd =_getcwd(NULL, _MAX_PATH);
+    if (!cwd)
+      ABORT_LINE("Could not determine current directory for:\n\n");
+    strCopy = cwd;
+    free(cwd);
     mWinApp->AppendToLog("Current directory is " + strCopy, mLogAction);
     ClearVariables(VARTYPE_REPORT);
     SetVariable("REPORTEDVALUE1", strCopy, VARTYPE_REPORT, 1, true);
