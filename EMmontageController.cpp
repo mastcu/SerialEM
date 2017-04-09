@@ -1326,26 +1326,8 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
 
   // Put parameters in the mini offset structure; compute a base and delta for
   // getting boundaries midway in overlap zones
-  mMiniOffsets.xBase = mMiniOffsets.yBase = 0;
-  mMiniOffsets.xNframes = mParam->xNframes;
-  mMiniOffsets.xFrame = mMiniFrameX;
-  mMiniOffsets.xDelta = mMiniDeltaX;
-  if (mParam->xNframes == 1)
-    mMiniOffsets.xDelta = mMiniFrameX;
-  else if (mParam->xNframes == 2)
-    mMiniOffsets.xDelta = (mMiniFrameX + mMiniDeltaX) / 2;
-  else
-    mMiniOffsets.xBase = (mMiniFrameX - mMiniDeltaX) / 2;
-  mMiniOffsets.yNframes = mParam->yNframes;
-  mMiniOffsets.yFrame = mMiniFrameY;
-  mMiniOffsets.yDelta = mMiniDeltaY;
-  if (mParam->yNframes == 1)
-    mMiniOffsets.yDelta = mMiniFrameY;
-  else if (mParam->yNframes == 2)
-    mMiniOffsets.yDelta = (mMiniFrameY + mMiniDeltaY) / 2;
-  else
-    mMiniOffsets.yBase = (mMiniFrameY - mMiniDeltaY) / 2;
-
+  SetMiniOffsetsParams(mMiniOffsets, mParam->xNframes, mMiniFrameX, mMiniDeltaX,
+     mParam->yNframes, mMiniFrameY, mMiniDeltaY);
 
   // Clear out arrays if pieces are being skipped, or clear overview if shifting
   mNeedToFillMini = mMiniData && (mNumToSkip || mParam->shiftInOverview || 
@@ -3315,6 +3297,31 @@ void EMmontageController::SetFramesForCenterOnly(int indX1, int indX2, int indY1
   mCenterIndX2 = indX2;
   mCenterIndY1 = indY1;
   mCenterIndY2 = indY2;
+}
+
+// Set the values of the given minioffset structure
+void EMmontageController::SetMiniOffsetsParams(MiniOffsets &mini, int xNframes, 
+  int xFrame, int xDelta, int yNframes, int yFrame, int yDelta)
+{
+  mini.xBase = mini.yBase = 0;
+  mini.xNframes = xNframes;
+  mini.xFrame = xFrame;
+  mini.xDelta = xDelta;
+  if (xNframes == 1)
+    mini.xDelta = xFrame;
+  else if (xNframes == 2)
+    mini.xDelta = (xFrame + xDelta) / 2;
+  else
+    mini.xBase = (xFrame - xDelta) / 2;
+  mini.yNframes = yNframes;
+  mini.yFrame = yFrame;
+  mini.yDelta = yDelta;
+  if (yNframes == 1)
+    mini.yDelta = yFrame;
+  else if (yNframes == 2)
+    mini.yDelta = (yFrame + yDelta) / 2;
+  else
+    mini.yBase = (yFrame - yDelta) / 2;
 }
 
 //////////////////////////////////////////////
