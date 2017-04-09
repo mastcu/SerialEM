@@ -19,12 +19,19 @@ struct TiltSeriesParam;
 
 #define MAX_CURRENT_REG 99
 #define MAX_SAVED_REGXFORM 10
+#define MIN_INTERNAL_ID 100000
 enum NavAcquireTypes {ACQUIRE_TAKE_MAP = 0, ACQUIRE_IMAGE_ONLY, ACQUIRE_RUN_MACRO,
   ACQUIRE_DO_TS};
 enum NavRegTypes {NAVREG_UNUSED, NAVREG_REGULAR, NAVREG_IMPORT};
 enum NavNewFileTypes {NAVFILE_ITEM = 0, NAVFILE_GROUP, NAVFILE_TS};
 enum NavArrayTypes {NAVARRAY_FILEOPT, NAVARRAY_MONTPARAM, NAVARRAY_TSPARAM, 
   NAVARRAY_STATE};
+// DO NOT REARRANGE/RENUMBER
+enum NavExtTypes {NAVEXT_ON_MAP = 0, NAVEXT_ON_ALIMONT, NAVEXT_ON_VSMONT, 
+  NAVEXT_ON_PIECE};
+enum NavExtErrors {NEXERR_MULTIPLE_ENTRY = 0, NEXERR_NO_DRAWN_ON, NEXERR_NO_MAP_WITH_ID,
+  NEXERR_MAP_NOT_MONT, NEXERR_ACCESS_FILE, EXTERR_NO_PIECE_ON, EXTERR_NO_ALI_COORDS, 
+  EXTERR_NO_PC_COORD, EXTERR_NO_MDOC, EXTERR_BAD_MDOC_IND};
 
 struct ScheduledFile {
   CString filename;
@@ -249,6 +256,7 @@ private:
   CArray<StateParams *, StateParams *> mAcqStateArray;
   std::vector<int> mListToItem;
   std::vector<int> mItemToList;
+  std::set<int> mSetOfIDs;
   int mCurrentRegistration;
   int mCurrentItem;         // Current item
   int mCurListSel;          // Current list selection in collapsed mode
@@ -509,6 +517,7 @@ public:
   afx_msg void OnDrawLabels();
   void ManageNumDoneAcquired(void);
   int SetCurrentRegistration(int newReg);
+  int MakeUniqueID(void);
 };
 
 //{{AFX_INSERT_LOCATION}}

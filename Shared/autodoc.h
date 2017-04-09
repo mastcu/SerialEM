@@ -28,6 +28,7 @@ int AdocOpenImageMetadata(const char *filename, int addMdoc, int *montage,
                           int *numSect, int *sectType);
 int AdocGetImageMetaInfo(int *montage, int *numSect, int *sectType);
 int AdocNew();
+int AdocGetCurrentIndex();
 int AdocSetCurrent(int index);
 void AdocClear(int index);
 void AdocDone();

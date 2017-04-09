@@ -88,6 +88,7 @@ CNavHelper::CNavHelper(void)
   mCollapseGroups = false;
   mRIstayingInLD = false;
   mNav = NULL;
+  mExtDrawnOnID = 0;
 }
 
 CNavHelper::~CNavHelper(void)
@@ -3764,4 +3765,189 @@ void CNavHelper::LoadPieceContainingPoint(CMapDrawItem *ptItem, int mapIndex)
   if (mCurStoreInd < 0)
     delete mMapStore;
   mWinApp->SetCurrentBuffer(0);
+}
+
+//////////////////////////////////////////////////////
+// EXTERNAL ITEM PROCESSING
+//////////////////////////////////////////////////////
+
+// DO complete checks and conversions for the given item
+int CNavHelper::ProcessExternalItem(CMapDrawItem *item, int extType)
+{
+  int ind, retval, drawnOn, adocSave;
+  ScaleMat aMat;
+  mMapMontP = &mMapMontParam;
+  CMapDrawItem *mapItem;
+  if (!item->mDrawnOnMapID)
+    return NEXERR_NO_DRAWN_ON;
+  mapItem = mNav->FindItemWithMapID(item->mDrawnOnMapID, true);
+  if (!mapItem)
+    return NEXERR_NO_MAP_WITH_ID;
+  if (extType != NAVEXT_ON_MAP && !mapItem->mMapMontage)
+    return NEXERR_MAP_NOT_MONT;
+  if (item->mDrawnOnMapID != mExtDrawnOnID) {
+
+    // If the ID does not match, first handle previous file and ID
+    CleanupFromExternalFileAccess();
+
+    // Then access a montage or just get parameters from single-frame map
+    mCurStoreInd = 0;
+    if (mapItem->mMapMontage) {
+      adocSave = AdocGetCurrentIndex();
+      if (mNav->AccessMapFile(mapItem, mMapStore, mCurStoreInd, mMapMontP, 
+        mExtUseWidth, mExtUseHeight))
+        return NEXERR_ACCESS_FILE;
+      mExtDrawnOnID = item->mDrawnOnMapID;
+      mExtXframe = mMapMontP->xFrame;
+      mExtYframe = mMapMontP->yFrame;
+      mExtXspacing = mExtXframe - mMapMontP->xOverlap;
+      mExtYspacing = mExtYframe - mMapMontP->yOverlap;
+      mExtLoadWidth = (float)(4 * ((mExtXframe + (mMapMontP->xNframes - 1) * mExtXspacing
+        + 3) / 4));
+      mExtLoadHeight = (float)(mExtYframe + (mMapMontP->yNframes - 1) * mExtYspacing);
+      mExtTypeOfOffsets = -1;
+      if (adocSave >= 0)
+        AdocSetCurrent(adocSave);
+    } else {
+      mExtXframe = mapItem->mMapWidth;
+      mExtYframe = mapItem->mMapHeight;
+      mExtLoadWidth = mExtUseWidth = (float)mapItem->mMapWidth;
+      mExtLoadHeight = mExtUseHeight = (float)mapItem->mMapHeight;
+    }
+    mExtDrawnOnID = item->mDrawnOnMapID;
+
+    // Get transformation from image to stage coordinates
+    aMat = mapItem->mMapScaleMat;
+    aMat.xpx *= mExtLoadWidth / mExtUseWidth;
+    aMat.xpy *= mExtLoadWidth / mExtUseWidth;
+    aMat.ypx *= -mExtLoadHeight / mExtUseHeight;
+    aMat.ypy *= -mExtLoadHeight / mExtUseHeight;
+    mExtDelX = (mExtLoadWidth * mapItem->mMapWidth / mExtUseWidth) / 2.f - 
+      (aMat.xpx * mapItem->mStageX + aMat.xpy * mapItem->mStageY);
+    mExtDelY = (mExtLoadHeight * mapItem->mMapHeight / mExtUseHeight) / 2.f - 
+      (aMat.ypx * mapItem->mStageX + aMat.ypy * mapItem->mStageY);
+    mExtInv = MatInv(aMat);
+  }
+
+  // Transform the center stage position and all the points
+  retval = TransformExternalCoords(item, extType, mapItem, item->mStageX, item->mStageY,
+    item->mPieceDrawnOn);
+  if (retval)
+    return retval;
+  for (ind = 0; ind < item->mNumPoints; ind++) {
+    retval = TransformExternalCoords(item, extType, mapItem, item->mPtX[ind], 
+      item->mPtY[ind], drawnOn);
+    if (retval)
+      return retval;
+  }
+
+  return 0;
+}
+
+// Convert the pixel coordinates in fx, fy to stage coordinates for the item of the given
+// type on the given map; returns pieceDrawnOn for cases of aligned montages
+int CNavHelper::TransformExternalCoords(CMapDrawItem *item, int extType, 
+  CMapDrawItem *mapItem, float &fx, float &fy, int &pieceDrawnOn)
+{
+  int pcX, pcY, adocInd, adocSave, numPieces, xPiece, yPiece, ipc, nameInd, iz;
+  int pcZ, retval, adjX, adjY, adjZ;
+  float tempx;
+  char *names[2] = {ADOC_ZVALUE, ADOC_IMAGE};
+  char *keys[2] = {ADOC_ALI_COORD, ADOC_ALI_COORDVS};
+
+  // Convert piece coordinate to coordinate in full image
+  if (extType == NAVEXT_ON_PIECE) {
+    if (item->mPieceDrawnOn < 0)
+      return EXTERR_NO_PIECE_ON;
+    xPiece = item->mPieceDrawnOn / mMapMontP->yNframes;
+    yPiece = item->mPieceDrawnOn % mMapMontP->yNframes;
+    fx += (float)(xPiece * mExtXspacing);
+    fy += (float)(yPiece * mExtYspacing);
+
+  } else if (extType == NAVEXT_ON_ALIMONT || extType == NAVEXT_ON_VSMONT) {
+
+    numPieces = mMapMontP->xNframes * mMapMontP->yNframes;
+
+    // Need new offsets if they don't match
+    if (extType != mExtTypeOfOffsets) {
+
+      // First make sure there's an mdoc
+      adocInd = mMapStore->GetAdocIndex();
+      if (adocInd < 0)
+        return EXTERR_NO_MDOC;
+
+      // Get pieceSavedAt of montage if not loaded yet
+      if (mExtTypeOfOffsets < 0) {
+        mWinApp->mMontageController->ListMontagePieces(mMapStore, mMapMontP, 
+          mapItem->mMapSection, mPieceSavedAt);
+      }
+
+      // Get access to mdoc and get the offsets sized
+      adocSave = AdocGetCurrentIndex();
+      if (AdocSetCurrent(adocInd) < 0)
+        return EXTERR_BAD_MDOC_IND;
+      mExtTypeOfOffsets = 0;
+      CLEAR_RESIZE(mExtOffsets.offsetX, short int, numPieces);
+      CLEAR_RESIZE(mExtOffsets.offsetY, short int, numPieces);
+      nameInd = mMapStore->getStoreType() == STORE_TYPE_ADOC ? 1 : 0;
+
+      // loop on pieces
+      for (ipc = 0; ipc < numPieces; ipc++) {
+        iz = mPieceSavedAt[ipc];
+        if (iz < 0) {
+          mExtOffsets.offsetX[ipc] = MINI_NO_PIECE;
+          mExtOffsets.offsetY[ipc] = MINI_NO_PIECE;
+          continue;
+        }
+
+        // Get piece coordinate then adjusted coordinate, difference is offset but
+        // Y is inverted
+        retval = 0;
+        if (AdocGetThreeIntegers(names[nameInd], iz, ADOC_PCOORD, &pcX, &pcY, &pcZ))
+          retval = EXTERR_NO_PC_COORD;
+
+        if (!retval && AdocGetThreeIntegers(names[nameInd], iz, keys[extType - 1], 
+          &adjX, &adjY, &adjZ))
+          retval = EXTERR_NO_ALI_COORDS;
+        if (retval) 
+          break;
+        mExtOffsets.offsetX[ipc] = (short)(adjX - pcX);
+        mExtOffsets.offsetY[ipc] = (short)(pcY - adjY);
+      }
+
+      // Restore to nav autodoc
+      if (adocSave >= 0)
+        AdocSetCurrent(adocSave);
+      if (retval)
+        return retval;
+
+      // Finish setting up the offsets
+      mExtTypeOfOffsets = extType;
+      mExtOffsets.subsetLoaded = false;
+      mWinApp->mMontageController->SetMiniOffsetsParams(mExtOffsets, mMapMontP->xNframes,
+        mExtXframe, mExtXspacing, mMapMontP->yNframes, mExtYframe, mExtYspacing);
+    }
+
+    // Adjust the Y-inverted position and get piece it is on
+    fy = mExtLoadHeight - fy;
+    mNav->OffsetMontImagePos(&mExtOffsets, 0, mMapMontP->xNframes - 1, 0, 
+      mMapMontP->yNframes - 1, fx, fy, pieceDrawnOn);
+    fy = mExtLoadHeight - fy;
+  }
+
+  // Transform full image coordinate to stage
+  tempx = (float)((fx - mExtDelX) * mExtInv.xpx + (fy - mExtDelY) * mExtInv.xpy);
+  fy = (float)((fx - mExtDelX) * mExtInv.ypx + (fy - mExtDelY) * mExtInv.ypy);
+  fx = tempx;
+  return 0;
+}
+
+// Remove an open store if necessary
+void CNavHelper::CleanupFromExternalFileAccess()
+{
+  if (mExtDrawnOnID) {
+    if (mCurStoreInd < 0)
+      delete mMapStore;
+    mExtDrawnOnID = 0;
+  }
 }

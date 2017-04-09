@@ -191,3 +191,134 @@ and for View, the net view offset is subtracted, leaving the component from
 the cal offset.  When the stage position is adjusted for image shift, this
 gets canceled out when offsets are not being applied and there is no
 adjustment.
+
+STAGE-IMAGE COORDINATE TRANSFORMATIONS
+
+mMapWidth/Height is buffer image width/height when map was made
+mMapFramesX/Y is # of frames in X/Y in montage params when map was made
+The actual # of frames of the saved map may be lower.
+x/yFrame = unbinned frame size in X/Y
+x/yOverlap = unbinned frame size - frame spacing
+actualFullWidth = actualFramesX * xFrame - (actualFramesX - 1) * xOverlap
+mapFullWidth = mMapFramesX * xFrame - (mMapFramesX - 1) * xOverlap
+useWidth = mMapWidth * actualFullWidth / mapFullWidth
+similarly for height from Y, but the width of montage overviews is always
+round up to a multiple of 4, and this should be done when getting values for
+actualFullWidth and mapFullWidth.
+
+Stage to image transform for an unbinned image:
+aMat = mMapScaleMat, transform when map was made
+This was the stage to camera matrix adjusted for focus and tilt, divided by
+the buffer binning, and with the negative taken of ypx and ypy
+aMat.xpx, xpy are multiplied by
+          actualFullWidth / useWidth = mapFullWidth / mMapWidth
+aMat.ypx, ypy are multiplied by
+          actualFullHeight / useHeight = mapFullHeight / mMapHeight
+delX = (actualFullWidth * mMapWidth / useWidth) / 2 -
+           aMat.xpx * item->mStageX - aMat.xpy * item->mStageY
+     = mapFullWidth / 2. - aMat.xpx * item->mStageX - aMat.xpy * item->mStageY
+Which seems to assume that the stage coordinates are at the middle of
+theoretical full map of the acquisition params, which is probably correct.
+
+in the code, the image coordinates are inverted, so
+delY = actualFullHeight - mapFullHeight / 2. -
+        aMat.ypx * item->mStageX - aMat.ypy * item->mStageY
+
+For working with right-handed coordinates:
+1) Take the negative of ypx and ypy first
+2) use delY =  mapFullHeight / 2. -
+                  aMat.ypx * item->mStageX - aMat.ypy * item->mStageY
+
+Thus stage to image transformation is
+imageX = aMat.xpx * stageX + aMat.xpy * stageY + delX
+imageY = aMat.ypx * stageX + aMat.ypy * stageY + delY
+
+The best piece number, numbered from 0, will be
+px = (imageX - (xFrame - xOverlap) / 2) / (xFrame - xOverlap)
+py = (imageY - (yFrame - yOverlap) / 2) / (yFrame - yOverlap)
+with px clamped to the range 0 to # of pieces in X - 1 and similarly for py.
+
+To get from right-handed image coordinates to stage coordinates:
+
+Take the inverse aInv of aMat after negating ypx, ypy
+
+With right-handed coordinates, if a point is at ix, iy in piece px, py,
+its coordinates in full image are
+  fx = px * (xFrame - xOverlap) + ix
+  fy = py * (yFrame - yOverlap) + iy
+
+stageX = (fx - delX) * aInv.xpx + (fy - delY) * aInv.xpy
+stageY = (fx - delX) * aInv.ypx + (fy - delY) * aInv.ypy
+
+STATE CHANGING FOR REALIGN TO ITEM AND OTHERWISE
+
+SaveCurrentState calls
+  StoreCurrentStateInParam
+    which saves scope and acquire parameters of Record in state variables,
+    specifically exposure, drift, binning, and frame sizes.  Left/right etc
+    is not saved, except an offset IS saved for Focus on request
+
+StoreMapStateInParam
+  sets up a state param from a map item including the frame size and binning
+  from the item, or from mont params, or as a fallback, from a particular
+  master conSet
+
+SetToMapImagingState
+  Saves the current state if not already saved, using type STATE_MAP_ACQUIRE
+  Switches to or opens the necessary file
+  calls PrepareToReimageMap
+  Copies the conSet set up there is Record working and master sets
+
+PrepareToReimageMap
+  Calls StoreMapStateInParam with a local param
+  Gets the frame size and binning to be used
+  Calls CanStayInLowDose with these values
+  If NOT staying in LD, calls SetStateFromParam
+
+SetStateFromParam
+  If it is a low dose state and already in low dose, it assumes it is going to
+  use Record so it tell low dose to use these params, and set up to go to
+  Record
+  Otherwise (if not a low dose state) it turns off low dose and may hide that,
+  and sets scope state from the state param directly
+  Set the passed conSet (which can (will?) be an actual working one) to the
+  current working set of the given baseNum, then calls StateCameraCoords to
+  fill in l/r/t/b and sets binning, exposure, etc from the state param
+  Also handles focus set if there is a focus axis position in the param
+  Finally copies the working sets to the master sets
+
+RestoreSavedState
+  For all kinds of saved states, calls SetStateFromParam with the Record
+  conSet and the saved state
+
+RestoreFromMapState
+  calls RestoreSavedState
+  and for good measure, copies the working Record conSet to its master (?)
+  Restores the file state
+
+RealignToItem
+  after picking the map for first round, calls PrepareToReimageMap with the
+  TRACK conSet using Trial as the base conSet, first saving current state if
+  called with flag to restore state, using type STATE_MAP_ACQUIRE
+  Calls SetMapOffsetsIfAny
+  Does first shot if any, then second shot, then calls StartSecondRound
+  unconditionally
+
+StartSecondRound
+  if no second round map, calls StopRealigning
+  Otherwise, handles switching to new file
+  Calls PrepareToReimageMap again with TRACK conSet and Trial base
+  If staying in LD, calls RestoreMapOffsets, otherwise calls
+  SetMapOffsetsIfAny with new item
+  takes final shot, which leads to StopRealigning
+
+StopRealigning
+  handles file deletion
+  calls RestoreMapOffsets
+  calls RestoreSavedState
+
+So to restore anything set when staying in LD instead of setting a state, need
+to set from 3 places: RestoreFromMapState before returning if no saved state,
+StartSecondRound before calling PrepareToReimageMap, and StopRealigning.  The
+only problem is when RestoreFromMapState is called without setting a map
+state. Solution is to clear out stayingInLD flag when a restore occurs

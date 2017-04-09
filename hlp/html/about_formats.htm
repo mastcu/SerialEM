@@ -355,7 +355,7 @@
     <TR VALIGN="top">
       <TD>StageXYZ</TD>
       <TD class="style10">Three Floats</TD>
-      <TD class="style7">Req </TD>
+      <TD class="style7">Req&nbsp; (unless external)</TD>
       <TD class="style8">mStageX/Y/Z</TD>
       <TD class="style9">Stage position adjusted for current mag</TD>
     </TR>
@@ -745,8 +745,61 @@
       <TD class="style9">Y stage cordinates of points</TD>
     </TR>
 </TBODY></TABLE>
-
     </P>
+    <P><b>Importing Externally Defined Navigator Items</b></P>
+    <P>It is possible to add items to a Navigator file whose positions are specified 
+      by image coordinates in a map and have SerialEM do the conversion to stage 
+      coordinates.&nbsp; Instead of the StageXYZ entry, the item can have one of these 
+      entries:</P>
+    <ul>
+      <li>CoordsInMap - Pixel coordinate in the map image, which can be either a 
+        single-frame image or a montage with pieces at their regaulrly space, nominal 
+        piece coordinates.</li>
+      <li>CoordsInAliMont - Pixel coordinates in a montage map where the pieces are 
+        aligned without the Very Sloppy option, i.e., placed at the coordinates 
+        specified by AlignedPieceCoords in the .mdoc file. </li>
+      <li>CoordsInAliMontVS - Pixel coordinates in a montage map where the pieces are 
+        aligned with the Very Sloppy option, i.e., placed at the coordinates specified 
+        by AlignedPieceCoordsVS.</li>
+      <li>CoordsInPiece - Pixels coordinates within one piece of a montage, which must 
+        be specified with a PieceOn entry.</li>
+    </ul>
+    <P>The following points apply to externally defined items:</P>
+    <ul>
+      <li>Only one of the four entries or StageXYZ may be entered with for an item.</li>
+      <li>Each entry takes 3 numbers, the third being a stage Z coordinate, which will 
+        be used without modification.</li>
+      <li>Items must have a DrawnID entry specifying a map that appears before the 
+        external item in the Navigator file, or is already in the Navigator table 
+        merging in a file containing only externally defined items.</li>
+      <li>Pixel coordinates are right handed, with 0,0 at the lower left of the map.</li>
+      <li>Montage overview images are always displayed with the size in X rounded up to 
+        a multiple of 4.</li>
+      <li>With CoordsInAliMont or CoordsInAliMontVS, the map file must have an mdoc file 
+        with AlignedPieceCoords or AlignedPieceCoordsVS entries, respectively.</li>
+      <li>Either points or polygons may be entered externally.</li>
+      <li>Coordinates of the points, given by PtsX and PtsY, must also be pixel 
+        coordinates and will be converted in the same way as the main item stage 
+        position is.</li>
+      <li>Point coordinates in PtsX and PtsZ are optional for a point item having a 
+        NumPts entry of 0; if missing, they will be made identical to the main stage 
+        coordinates.</li>
+      <li>In addition to the entries mentioned already, every item must have a Color, 
+        Regis, and Type entry.</li>
+      <li>If an externally defined item does not have a MapID, a unique ID will be 
+        assigned.&nbsp; If you do assign IDs, it is important to make sure that they 
+        will not duplicate those of map items.&nbsp; The easiest way to do this is to 
+        assign IDs under 100000, since the program now generates IDs of &gt;= 100000.</li>
+      <li>Group IDs will not be assigned if they are missing.</li>
+    </ul>
+    <p>
+      Detailed error reporting is available for items that have been read in 
+      successfully from the Navigator file.&nbsp; A summary of the types of errors 
+      when processing the items is given in the log, and if Debug Output is set to 
+      &#39;n&#39;, then the type of error will be reported for each item, identified by its 
+      label.&nbsp; However, there is no detail when the item is initially rejected 
+      either because it lacked a required entry or because there was an error (such as 
+      too few values on a line) reading data from the autodoc.</p>
     
     </basefont>
   </BODY>

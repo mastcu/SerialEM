@@ -50,6 +50,7 @@ public:
   GetSetMember(bool, EditReminderPrinted);
   SetMember(float, RITiltTolerance);
   GetSetMember(BOOL, CollapseGroups);
+  SetMember(int, ExtDrawnOnID);
   void ForceCenterRealign() {mCenterSkipArray.RemoveAll();};
 
   CStateDlg *mStateDlg;
@@ -169,6 +170,15 @@ private:
   BOOL mDivideIntoGroups;       // Flag for whether to do it
   bool mEditReminderPrinted;     // Flag that reminder printed when edit mode turned on
   BOOL mCollapseGroups;         // To keep "collapse" setting for dialog
+  int mExtDrawnOnID;            // ID of current map for external points
+  float  mExtUseWidth, mExtUseHeight;    // Parameters of current map for external items
+  int mExtXframe, mExtYframe;
+  int mExtXspacing, mExtYspacing;
+  float mExtLoadWidth, mExtLoadHeight;
+  ScaleMat mExtInv;              // Image to stage coordinate transform
+  double mExtDelX, mExtDelY;
+  MiniOffsets mExtOffsets;       // Offset values for aligned montage map
+  int mExtTypeOfOffsets;         // Type of offsets loaded there
 
 
 public:
@@ -261,5 +271,9 @@ public:
   ScaleMat ItemStageToCamera(CMapDrawItem * item);
   void CountAcquireItems(int & numAcquire, int & numTS);
   void RestoreLowDoseConset(void);
+  int ProcessExternalItem(CMapDrawItem * item, int extType);
+  int TransformExternalCoords(CMapDrawItem *item, int extType, 
+     CMapDrawItem *mapItem, float &fx, float &fy, int &pieceDrawnOn);
+  void CleanupFromExternalFileAccess();
 };
 

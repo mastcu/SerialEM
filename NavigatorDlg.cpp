@@ -2183,7 +2183,7 @@ void CNavigatorDlg::OnDrawPoints()
   m_butDrawPts.SetWindowText(mAddingPoints ? "Add Points" : "Stop Adding");
   mAddingPoints = !mAddingPoints;
   mNumberBeforeAdd = (int)mItemArray.GetSize();
-  mAddPointID = GetTickCount() / 4;
+  mAddPointID = MakeUniqueID();
   if (mAddingPoints) {
     m_statListHeader.GetWindowText(mSavedListHeader);
     m_statListHeader.SetWindowText("Use Backspace to remove added points one by one");
@@ -3358,7 +3358,7 @@ void CNavigatorDlg::SetupSuperMontage(BOOL skewed)
   CMapDrawItem *item;
   BOOL adjust = false;
   BOOL acquire = false;
-  int superID = GetTickCount() / 4;
+  int superID = MakeUniqueID();
   int *activeList = mWinApp->GetActiveCameraList();
   int camInd = activeList[montP->cameraIndex];
   double stageZ;
@@ -3547,11 +3547,11 @@ void CNavigatorDlg::PolygonSupermontage(void)
 
   // Manage map and supermont IDs
   if (mItem->mMapID) {
-    superID = GetTickCount() / 4;
+    superID = MakeUniqueID();
     polyID = mItem->mMapID;
   } else {
-    mItem->mMapID = GetTickCount() / 4;
-    superID = mItem->mMapID + 1;
+    mItem->mMapID = MakeUniqueID();
+    superID = MakeUniqueID();
     polyID = mItem->mMapID;
   }
 
@@ -3763,7 +3763,7 @@ void CNavigatorDlg::AddGridOfPoints(void)
   drawnOnID = mItem->mDrawnOnMapID;
   groupExtent = mHelper->GetDivideIntoGroups() ? mHelper->GetGridGroupSize() : 0.f;
   poly = NULL;
-  groupID = GetTickCount() / 4;
+  groupID = MakeUniqueID();
   stageZ = mItem->mStageZ;
   xmin = ymin = 100000.;
   xmax = ymax = -100000.;
@@ -5171,7 +5171,6 @@ int CNavigatorDlg::NewMap(bool unsuitableOK)
   item->mMapFile = mWinApp->mStoreMRC->getName();
   trimCount = item->mMapFile.GetLength() - (item->mMapFile.ReverseFind('\\') + 1);
   item->mTrimmedName = item->mMapFile.Right(trimCount);
-  item->mMapID = GetTickCount() / 4;
   ComputeStageToImage(imBuf, item->mStageX, item->mStageY, hasStage, item->mMapScaleMat,
     delX, delY);
   item->mMapWidth = imBuf->mImage->getWidth();
@@ -5561,7 +5560,6 @@ void CNavigatorDlg::ImportMap(void)
       item->mMapFile = cFilename;
       trimCount = item->mMapFile.GetLength() - (item->mMapFile.ReverseFind('\\') + 1);
       item->mTrimmedName = item->mMapFile.Right(trimCount);
-      item->mMapID = GetTickCount() / 4;
       item->mMapScaleMat = mParam->importXform[lastXformNum];
       item->mMapWidth = imageStore->getWidth();
       item->mMapHeight = imageStore->getHeight();
@@ -5649,7 +5647,6 @@ void CNavigatorDlg::ImportMap(void)
           item->mMapFile = cFilename;
           trimCount = item->mMapFile.GetLength() - (item->mMapFile.ReverseFind('\\') + 1);
           item->mTrimmedName = item->mMapFile.Right(trimCount);
-          item->mMapID = GetTickCount() / 4 + 1;
           mImBufs->mMapID = item->mMapID;
           item->mMapSection = 0;
           item->mNote.Format("Overlay - %s", item->mTrimmedName);
@@ -6221,14 +6218,29 @@ void CNavigatorDlg::OpenAndWriteFile(bool autosave)
 // Loading a file
 void CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile) 
 {
-  CString str, name = "";
+  CString str, str2, name = "";
   CStdioFile *cFile = NULL;
   CFileStatus status;
-  BOOL retval;
+  int retval, externalErr;
+  bool hasStage;
   int numSect, numAdocErr, numLackRequired, sectInd = 0, adocIndex = -1;
-  int numToGet, numItemLack = 0, numItemErr = 0;
+  int numToGet, numItemLack = 0, numItemErr = 0, numExtErr = 0;
+  int extErrCounts[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+  const char *extErrMess[16] = {
+    "an entry for StageXYZ or more than one entry for a CoordsIn... key", 
+    "no map ID entry for DrawnOn", "no map matching the ID given in DrawnOn",
+    "a CoordsIn... key indicating a montage, but the DrawnOn map is not a montage",
+    "an error accessing the montage map file", 
+    "a CoordsInPiece entry but no PieceDrawnOn entry",
+    "a montage map missing aligned piece coordinates in the mdoc file",
+    "a montage map missing nominal piece coordinates in the mdoc file",
+    "a montage map file having no mdoc file",
+    "an error accessing the mdoc file by its autodoc index", "", "", "", ""};
   int index, i, numPoints, trimCount, ind1, ind2, numFuture = 0, addIndex, highestLabel;
   float xx, yy, fvals[4];
+  int numExternal, externalType;
+  const char *externalKeys[4] = {"CoordsInMap", "CoordsInAliMont", "CoordsInAliMontVS",
+    "CoordsInPiece"};
   char *adocStr;
   CMapDrawItem *item, *prev;
   int version = 100;
@@ -6337,14 +6349,16 @@ void CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile)
     // Clean up existing data
     if (!mergeFile) {
       mHelper->DeleteArrays();
+      mSetOfIDs.clear();
       mNewItemNum = 1;
       mDualMapID = -1;
     }
+    mHelper->SetExtDrawnOnID(0);
     addIndex = mergeFile ? (int)mItemArray.GetSize() : 0;
 
     // Loop on entries in either case
     for (;;) {
-      numAdocErr = numLackRequired = 0;
+      numAdocErr = numLackRequired = numExternal = externalErr = 0;
       if (adocIndex >= 0) {
 
         // Fetch values from autodoc until # of items satisfied
@@ -6354,8 +6368,22 @@ void CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile)
         ADOC_REQUIRED(AdocGetSectionName("Item", sectInd, &adocStr));
         ADOC_STR_ASSIGN(item->mLabel);
         ADOC_REQUIRED(AdocGetInteger("Item", sectInd, "Color", &item->mColor));
-        ADOC_REQUIRED(AdocGetThreeFloats("Item", sectInd, "StageXYZ", &item->mStageX,
+
+        // Get a stage coordinate or one of the four external pixel coordinate items
+        // Store them all in the same place; require at least one here
+        ADOC_OPTIONAL(AdocGetThreeFloats("Item", sectInd, "StageXYZ", &item->mStageX,
           &item->mStageY, &item->mStageZ));
+        hasStage = retval == 0;
+        for (i = 0; i < 4; i++) {
+          ADOC_OPTIONAL(AdocGetThreeFloats("Item", sectInd, externalKeys[i], 
+            &item->mStageX, &item->mStageY, &item->mStageZ));
+          if (retval == 0) {
+            numExternal++;
+            externalType = i;
+          }
+        }
+        if (!hasStage && numExternal == 0)
+          numLackRequired++;
         ADOC_REQUIRED(AdocGetInteger("Item", sectInd, "NumPts", &numPoints));
         ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "Corner", &index));
         ADOC_BOOL_ASSIGN(item->mCorner);
@@ -6480,7 +6508,7 @@ void CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile)
           ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "MapID", &item->mMapID));
         }
 
-        // Get all the points
+        // Get all the points: optional for external item
         if (numPoints > 0) {
           item->mPtX = new float[numPoints];
           item->mPtY = new float[numPoints];
@@ -6492,9 +6520,28 @@ void CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile)
           numToGet = numPoints;
           ADOC_REQUIRED(AdocGetFloatArray("Item", sectInd, "PtsY", &item->mPtY[0], 
             &numToGet, numPoints));
+        } else if (numExternal && item->mType == ITEM_TYPE_POINT) {
+          item->AppendPoint(item->mStageX, item->mStageY);
         } else {
           numLackRequired++;
         }
+
+        // Process an external item, first making sure there is only one entry
+        if (numExternal && !numLackRequired && !numAdocErr) {
+          if (hasStage || numExternal > 1) {
+            ind1 = NEXERR_MULTIPLE_ENTRY;
+          } else {
+            ind1 = mHelper->ProcessExternalItem(item, externalType);
+          }
+          if (ind1) {
+            extErrCounts[ind1]++;
+            externalErr = 1;
+            if (GetDebugOutput('n'))
+              PrintfToLog("Error for external item %s: has %s", (LPCTSTR)item->mLabel,
+                extErrMess[ind1]);
+          }
+        }
+
         sectInd++;
 
       } else {
@@ -6651,7 +6698,7 @@ void CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile)
         }
       }
 
-      if (numAdocErr + numLackRequired == 0) {
+      if (numAdocErr + numLackRequired + externalErr == 0) {
 
         // For merging, check that the map ID is not previously present or that point is not
         // at the same position
@@ -6684,9 +6731,15 @@ void CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile)
 
         // Add to array and get new item number past highest number in a label
         if (index) {
+          if (numExternal && !item->mMapID)
+            item->mMapID = MakeUniqueID();
           mItemArray.InsertAt(addIndex++, item);
           i = atoi((LPCTSTR)item->mLabel) + 1;
           mNewItemNum = B3DMAX(mNewItemNum, i);
+          if (item->mMapID)
+            mSetOfIDs.insert(item->mMapID);
+          if (item->mGroupID)
+            mSetOfIDs.insert(item->mGroupID);
         }
       } else {
 
@@ -6694,6 +6747,7 @@ void CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile)
         delete item;
         numItemErr += (numAdocErr ? 1 : 0);
         numItemLack += (numLackRequired ? 1 : 0);
+        numExtErr += externalErr;
       }
     }
   }
@@ -6709,11 +6763,27 @@ void CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile)
     cFile->Close();
     delete cFile;
   }
+  mHelper->CleanupFromExternalFileAccess();
 
-  if (numItemErr + numItemLack > 0) {
+  // Give error summaries
+  if (numItemErr + numItemLack + numExtErr > 0) {
     str.Format("%d items could not be read in from Navigator file:\r\n"
       "   %d items gave an error getting the data\r\n"
-      "   %d items were missing a required piece of data");
+      "   %d items were missing a required piece of data", numItemErr + numItemLack + 
+      numExtErr, numItemErr, numItemLack);
+    if (numExtErr > 0) {
+      str2.Format("\r\n   %d externally added items with a processing error (see log for"
+        " details)", numExtErr);
+      str += str2;
+      PrintfToLog("\r\nSummary of errors in processing externally added items:");
+      for (i = 0; i < 16; i++)
+        if (extErrCounts[i])
+          PrintfToLog("  %d item(s) with %s", extErrCounts[i], extErrMess[i]);
+      if (GetDebugOutput('n'))
+        PrintfToLog(" ");
+      else
+        PrintfToLog("Set Debug Output to \"n\" for details on each item\r\n");
+    } 
     AfxMessageBox(str, MB_EXCLAME);
   } 
 
@@ -7605,7 +7675,7 @@ CMapDrawItem *CNavigatorDlg::MakeNewItem(int groupID)
   item->mLabel.Format("%d", mNewItemNum++);
   item->mRegistration = mCurrentRegistration;
   item->mOriginalReg = mCurrentRegistration;
-  item->mMapID = GetTickCount() / 4 + rand();
+  item->mMapID = MakeUniqueID();
   item->mGroupID = groupID;
   mCurrentItem = (int)mItemArray.GetSize() - 1;
   mCurListSel = mCurrentItem;
@@ -7636,6 +7706,20 @@ CMapDrawItem *CNavigatorDlg::MakeNewItem(int groupID)
   mSelectedItems.insert(mCurrentItem);
   // No longer manage controls: caller must do it
   return item;
+}
+
+// Make an ID number based on two random numbers and higher than a minimum value and
+// not already in the set; add to set
+int CNavigatorDlg::MakeUniqueID(void)
+{
+  int randVal;
+  for (;;) {
+    randVal = (rand() | (rand() << 16)) & 0x7FFFFFFF;
+    if (randVal >= MIN_INTERNAL_ID && !mSetOfIDs.count(randVal))
+      break;
+  }
+  mSetOfIDs.insert(randVal);
+  return randVal;
 }
 
 // Set the current stage position into the given item
