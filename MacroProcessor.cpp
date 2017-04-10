@@ -4311,10 +4311,11 @@ void CMacroProcessor::NextCommand()
     }
 
   } else if (CMD_IS(UPDATEHWDARKREF)) {                     // UpdateHWDarkRef
-    if (mCamera->UpdateK2HWDarkRef((float)itemDbl[1] > 0)) {
-      AbortMacro();
-      return;
-    }
+    index = mCamera->UpdateK2HWDarkRef((float)itemDbl[1]);
+    if (index > 0)
+      ABORT_LINE("The thread is already busy for this operation:\n\n")
+    mStartedLongOp = !index;
+ 
 
   } else if (CMD_IS(LONGOPERATION)) {                       // LongOperation
     ix1 = 0;
