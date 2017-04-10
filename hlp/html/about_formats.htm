@@ -483,7 +483,8 @@
       <TD class="style10">Integer</TD>
       <TD class="style7">-1</TD>
       <TD class="style8">mPieceDrawnOn</TD>
-      <TD class="style9">Index of montage piece item was drawn on</TD>
+      <TD class="style9">Index of montage piece item was drawn on (piece_#_in_X * 
+        #_of_pieces_in_Y + piece_#_in_Y)</TD>
     </TR>
     <TR VALIGN="top">
       <TD>MapFile</TD>
@@ -762,11 +763,13 @@
         aligned with the Very Sloppy option, i.e., placed at the coordinates specified 
         by AlignedPieceCoordsVS.</li>
       <li>CoordsInPiece - Pixels coordinates within one piece of a montage, which must 
-        be specified with a PieceOn entry.</li>
+        be specified with a PieceOn entry.&nbsp; Pieces are numbered from 0 by their 
+        positions in a complete array; i.e., piece index = piece_#_in_X * 
+        #_of_pieces_in_Y + piece_#_in_Y, all numbered from 0.</li>
     </ul>
     <P>The following points apply to externally defined items:</P>
     <ul>
-      <li>Only one of the four entries or StageXYZ may be entered with for an item.</li>
+      <li>Only one of the four entries or StageXYZ may be entered for an item.</li>
       <li>Each entry takes 3 numbers, the third being a stage Z coordinate, which will 
         be used without modification.</li>
       <li>Items must have a DrawnID entry specifying a map that appears before the 
