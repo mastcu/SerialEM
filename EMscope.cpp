@@ -84,7 +84,7 @@ static double sProbeChangedTime = -1.;
 static double sDiffSeenTime = -1.;
 static BOOL sClippingIS = false;
 static CString sLongOpDescriptions[MAX_LONG_THREADS];
-static int sLongThreadMap[MAX_LONG_OPERATIONS] = {0, 0, 0, 0, 1};
+static int sLongThreadMap[MAX_LONG_OPERATIONS] = {0, 0, 0, 0, 0, 1};
 static int sJeolIndForMagMode = JEOL_MAG1_MODE;  // Index to use in mag mode for JEOL
 static int sJeolSecondaryModeInd = JEOL_SAMAG_MODE;  // Index to use for secondary mode
 static BOOL sCheckPosOnScreenError = false;
