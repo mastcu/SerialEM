@@ -6935,6 +6935,7 @@ int CEMscope::StartLongOperation(int *operations, float *hoursSinceLast, int num
     startedThread = true;
   }
   if (startedThread) {
+    mWinApp->SetStatusText(MEDIUM_PANE, "DOING LONG OPERATION");
     mWinApp->UpdateBufferWindows();
     mWinApp->AddIdleTask(TASK_LONG_OPERATION, 0, 0);
     return 0;
@@ -7016,7 +7017,7 @@ int CEMscope::LongOperationBusy(int index)
 { 
   int thread, op, longOp, busy, indStart, indEnd, retval = 0;
   int now = mWinApp->MinuteTimeStamp();
-  int errorOK[MAX_LONG_OPERATIONS] = {0, 1, 0, 0, 0};
+  int errorOK[MAX_LONG_OPERATIONS] = {0, 1, 0, 0, 0, 0};
   bool throwErr = false;
   indStart = B3DCHOICE(index < 0, 0, sLongThreadMap[index]);
   indEnd = B3DCHOICE(index < 0, MAX_LONG_THREADS - 1, sLongThreadMap[index]);
@@ -7051,6 +7052,7 @@ int CEMscope::LongOperationBusy(int index)
   // If all were checked and none are busy any more, clear flag and reenable interface
   if (index < 0 && retval <= 0) {
     mDoingLongOperation = false;
+    mWinApp->SetStatusText(MEDIUM_PANE, "");
     mWinApp->UpdateBufferWindows();
   }
   return retval;
