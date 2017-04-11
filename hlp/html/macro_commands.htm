@@ -1296,6 +1296,17 @@
           <TD>Report if screen is up or down; reportedValue1 is set to 0 or 1, respectively.</TD>
         </TR>
         <TR vAlign="top">
+          <TD class="style9">ReportLens name</TD>
+          <TD>For a Hitachi or JEOL scope, reports the lens value by its abbreviated name.&nbsp; 
+            For JEOL, allowed names are CL1, CL2, OM2, IL1, IL2, IL3, PL1, PL2, PL3, PL4, 
+            FLf, FLc, FLcomp1, FLcomp2.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">ReportDeflector</TD>
+          <TD>For a Hitachi scope, reports the X and Y values of deflector specified by its 
+            abbreviated name.</TD>
+        </TR>
+        <TR vAlign="top">
           <TD class="style9">ManualFilmExposure #</TD>
           <TD>Film exposure time in seconds for manual exposures, or 0 for automatic exposure
             (the default)</TD>
@@ -1373,11 +1384,11 @@
         <TR vAlign="top">
           <TD class="style9">LoadCartridge #</TD>
           <TD>Loads the cartridge from the given slot # (numbered from 1) if there is an
-            autoloader.</TD>
+            autoloader.  This command starts a long operation.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style9">UnloadCartridge</TD>
-          <TD>If there is an autoloader, unloads the cartridge.</TD>
+          <TD>If there is an autoloader, unloads the cartridge.  This command starts a long operation</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style9">ReportSlotStatus #</TD>
@@ -1409,10 +1420,11 @@
         <TR vAlign="top">
           <TD class="style9">LongOperation Op # [Op #...]</TD>
           <TD>Starts one or more time-consuming operations: Buffer cycle (Bu), Refill
-            refrigerant (Re), Inventory cassettes (In), Loader buffer cycle (Lo), or Dark
+            refrigerant (Re), Inventory cassettes (In), Loader buffer cycle (Lo), Unload 
+            cartridge (Un), or Dark
             reference update for K2 (Da).&nbsp; Operations are identified by the first two
             letters of whatever full word you use (case insensitive).&nbsp; Each operation
-            except Inventory must be followed by an interval in hours (#).&nbsp; If # is &gt;
+            except Inventory and Unload cartridge must be followed by an interval in hours (#).&nbsp; If # is &gt;
             0, the operation is done only if the time since the last such operation is
             greater than #; if # is 0, the operation is done unconditionally; if # is &lt; 0, it
             simply records the current time as the time of the last operation.&nbsp;&nbsp; The scope operations will occur sequentially

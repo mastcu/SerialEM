@@ -84,7 +84,7 @@ static double sProbeChangedTime = -1.;
 static double sDiffSeenTime = -1.;
 static BOOL sClippingIS = false;
 static CString sLongOpDescriptions[MAX_LONG_THREADS];
-static int sLongThreadMap[MAX_LONG_OPERATIONS] = {0, 0, 0, 0, 0, 1};
+static int sLongThreadMap[MAX_LONG_OPERATIONS];
 static int sJeolIndForMagMode = JEOL_MAG1_MODE;  // Index to use in mag mode for JEOL
 static int sJeolSecondaryModeInd = JEOL_SAMAG_MODE;  // Index to use for secondary mode
 static BOOL sCheckPosOnScreenError = false;
@@ -92,6 +92,7 @@ CString sMessageBoxTitle;   // Arguments for calling message box function
 CString sMessageBoxText;
 int sMessageBoxType;
 int sMessageBoxReturn;
+int sCartridgeToLoad = -1;
 
 // Parameters controlling whether to wait for stage ready if error on slow movement
 static float sStageErrSpeedThresh = 0.15f;  // For speed factors below this
@@ -162,8 +163,11 @@ CEMscope::CEMscope()
   mFilmThread = NULL;
   for (i = 0; i < MAX_LONG_THREADS; i++)
     mLongOpThreads[i] = NULL;
-  for (i = 0; i < MAX_LONG_OPERATIONS; i++)
+  for (i = 0; i < MAX_LONG_OPERATIONS; i++) {
     mLastLongOpTimes[i] = 0;
+    sLongThreadMap[i] = 0;
+  }
+  sLongThreadMap[LONG_OP_HW_DARK_REF] = 1;
   for (i = 0; i < MAX_GAUGE_WATCH; i++)
     mGaugeIndex[i] = -1;
   mDoingLongOperation = false;
@@ -4927,7 +4931,7 @@ BOOL CEMscope::GetColumnMode(int &mode, int &subMode)
   return result;
 }
 
-// Get any lens by name from Hitachi
+// Get any lens by name from Hitachi or JEOL
 BOOL CEMscope::GetLensByName(CString &name, double &value)
 {
   BOOL result = true;
@@ -4960,6 +4964,42 @@ BOOL CEMscope::GetDeflectorByName(CString &name, double &valueX, double &valueY)
     result = false;
   }
   ScopeMutexRelease("GetDeflectorByName");
+  return result;
+}
+
+// Set free lens control on or off on JEOL for one or all lenses
+BOOL CEMscope::SetFreeLensControl(int lens, bool state)
+{
+  BOOL result = true;
+  if (!sInitialized || !mPlugFuncs->SetFreeLensControl)
+    return false;
+  ScopeMutexAcquire("SetFreeLensControl", true);
+  try {
+    mPlugFuncs->SetFreeLensControl(lens, state ? 1 : 0);
+  }
+  catch (_com_error E) {
+    SEMReportCOMError(E, _T("setting state of free lens control "));
+    result = false;
+  }
+  ScopeMutexRelease("SetFreeLensControl");
+  return result;
+}
+
+// Set one lens that has had free lens control turned on
+BOOL CEMscope::SetLensWithFLC(int lens, double inVal, bool relative)
+{
+  BOOL result = true;
+  if (!sInitialized || !mPlugFuncs->SetLensWithFLC)
+    return false;
+  ScopeMutexAcquire("SetLensWithFLC", true);
+  try {
+    mPlugFuncs->SetLensWithFLC(lens, relative ? 1 : 0, inVal);
+  }
+  catch (_com_error E) {
+    SEMReportCOMError(E, _T("setting a lens under free lens control "));
+    result = false;
+  }
+  ScopeMutexRelease("SetLensWithFLC");
   return result;
 }
 
@@ -5077,34 +5117,25 @@ BOOL CEMscope::CassetteSlotStatus(int slot, int &status)
   return success;
 }
 
-BOOL CEMscope::LoadCartridge(int slot)
+int CEMscope::LoadCartridge(int slot)
 {
-  BOOL success = false;
+  int oper = LONG_OP_LOAD_CART;
+  float sinceLast = 0.;
   if (!sInitialized || !FEIscope)
-    return false;
-  try {
-    mPlugFuncs->LoadCartridge(slot);
-    success = true;
-  }
-  catch (_com_error E) {
-    SEMReportCOMError(E, _T("loading cartridge with autoloader "));
-  }
-  return success;
+    return 2;
+  if (slot <= 0)
+    return 2;
+  sCartridgeToLoad = slot;
+  return (StartLongOperation(&oper, &sinceLast, 1));
 }
 
-BOOL CEMscope::UnloadCartridge(void)
+int CEMscope::UnloadCartridge(void)
 {
-  BOOL success = false;
+  int oper = LONG_OP_UNLOAD_CART;
+  float sinceLast = 0.;
   if (!sInitialized || !FEIscope)
-    return false;
-  try {
-    mPlugFuncs->UnloadCartridge();
-    success = true;
-  }
-  catch (_com_error E) {
-    SEMReportCOMError(E, _T("unloading cartridge with autoloader "));
-  }
-  return success;
+    return 2;
+  return (StartLongOperation(&oper, &sinceLast, 1));
 }
 
 // Functions for dealing with temperature control
@@ -6863,9 +6894,10 @@ bool CEMscope::StageIsAtSamePos(double stageX, double stageY, float requestedX,
 }
 
 // Descriptions of the long-running operations
-static char *longOpDescription[] = {"running buffer cycle", "refilling refrigerant",
+static char *longOpDescription[MAX_LONG_OPERATIONS] = 
+{"running buffer cycle", "refilling refrigerant",
   "getting cassette inventory", "running autoloader buffer cycle", "showing message box",
-  "updating hardware dark reference"};
+  "updating hardware dark reference", "unloading a cartridge", "loading a cartridge"};
 
 // Start a thread for a long-running operation: returns 1 if thread busy, 
 // 2 if inappropriate in some other way, -1 if nothing was started
@@ -6990,13 +7022,20 @@ UINT CEMscope::LongOperationProc(LPVOID pParam)
             (LPCTSTR)sMessageBoxTitle, (LPCTSTR)sMessageBoxText);
         }
 
-        // Save an error in the error string and retval but continue
-        if (SEMTestHResult(hr, " " + CString(longOpDescription[longOp]), &lod->errString,
-          NULL, true))
-          retval = 1;
-        else
-          lod->finished[longOp] = true;
+        // Unload a cartridge
+        if (longOp == LONG_OP_UNLOAD_CART) {
+          lod->plugFuncs->UnloadCartridge();
+        }
+
+        // Load a cartridge
+        if (longOp == LONG_OP_LOAD_CART) {
+          lod->plugFuncs->LoadCartridge(sCartridgeToLoad);
+        }
+
+        lod->finished[longOp] = true;
       }
+
+      // Save an error in the error string and retval but continue in loop
       catch (_com_error E) {
         SEMReportCOMError(E, _T(longOpDescription[longOp]), &lod->errString, true);
         retval = 1;
@@ -7017,7 +7056,7 @@ int CEMscope::LongOperationBusy(int index)
 { 
   int thread, op, longOp, busy, indStart, indEnd, retval = 0;
   int now = mWinApp->MinuteTimeStamp();
-  int errorOK[MAX_LONG_OPERATIONS] = {0, 1, 0, 0, 0, 0};
+  int errorOK[MAX_LONG_OPERATIONS] = {0, 1, 0, 0, 0, 0, 0, 0};
   bool throwErr = false;
   indStart = B3DCHOICE(index < 0, 0, sLongThreadMap[index]);
   indEnd = B3DCHOICE(index < 0, MAX_LONG_THREADS - 1, sLongThreadMap[index]);

@@ -44,10 +44,10 @@ enum {lpRegular = 1, lpEFTEM};
 #define pmImaging 1
 #define psmLAD 5
 
-#define MAX_LONG_OPERATIONS 6
+#define MAX_LONG_OPERATIONS 8
 #define MAX_LONG_THREADS 2
 enum {LONG_OP_BUFFER = 0, LONG_OP_REFILL, LONG_OP_INVENTORY, LONG_OP_LOAD_CYCLE, 
-LONG_OP_MESSAGE_BOX, LONG_OP_HW_DARK_REF};
+LONG_OP_MESSAGE_BOX, LONG_OP_HW_DARK_REF, LONG_OP_UNLOAD_CART, LONG_OP_LOAD_CART,};
 
 // Standard conversions from signed real to nearest integer for JEOL calls
 #define NINT8000(a) (long)floor((a) + 0x8000 + 0.5)
@@ -675,8 +675,8 @@ public:
                                      double &rawIntensity, double &current, 
                                      double &defocus, double &objective, float &alpha);
   BOOL CassetteSlotStatus(int slot, int &status);
-  BOOL LoadCartridge(int slot);
-  BOOL UnloadCartridge(void);
+  int LoadCartridge(int slot);
+  int UnloadCartridge(void);
   static ScopePluginFuncs *GetPlugFuncs() {return mPlugFuncs;};
   void SetValidXYbacklash(StageMoveInfo * info);
   bool GetValidXYbacklash(double stageX, double stageY, float & backX, float & backY);
@@ -709,6 +709,8 @@ public:
     mStartForMinMoveX = startX; mStartForMinMoveY = startY; mMinMoveForBacklash = minMove;};
   bool BlankTransientIfNeeded(const char *routine);
   void UnblankAfterTransient(bool needUnblank, const char *routine);
+  BOOL SetFreeLensControl(int lens, bool state);
+  BOOL SetLensWithFLC(int lens, double inVal, bool relative);
 };
 
 

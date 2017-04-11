@@ -205,7 +205,8 @@ enum {CME_VIEW, CME_FOCUS, CME_TRIAL, CME_RECORD, CME_PREVIEW,
   CME_SKIPACQUIRINGNAVITEM, CME_SHOWMESSAGEONSCOPE, CME_SETUPSCOPEMESSAGE, CME_SEARCH,
   CME_SETPROPERTY, CME_SETMAGINDEX, CME_SETNAVREGISTRATION, CME_LOCALVAR,
   CME_LOCALLOOPINDEXES, CME_ZEMLINTABLEAU, CME_WAITFORMIDNIGHT, CME_REPORTUSERSETTING,
-  CME_SETUSERSETTING, CME_CHANGEITEMREGISTRATION, CME_SHIFTITEMSBYMICRONS
+  CME_SETUSERSETTING, CME_CHANGEITEMREGISTRATION, CME_SHIFTITEMSBYMICRONS,
+  CME_SETFREELENSCONTROL, CME_SETLENSWITHFLC
 };
 
 static CmdItem cmdList[] = {{NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0},
@@ -301,7 +302,8 @@ static CmdItem cmdList[] = {{NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0
 {"Search", 0}, {"SetProperty", 2}, /* End in 3.6 */ {"SetMagIndex", 1},
 {"SetNavRegistration", 1}, {"LocalVar", 1}, {"LocalLoopIndexes", 0}, {"ZemlinTableau", 1},
 {"WaitForMidnight", 0}, {"ReportUserSetting", 1}, {"SetUserSetting", 2}, 
-{"ChangeItemRegistration", 2}, {"ShiftItemsByMicrons", 2},
+{"ChangeItemRegistration", 2}, {"ShiftItemsByMicrons", 2}, {"SetFreeLensControl", 2},
+{"SetLensWithFLC", 2},
 {NULL, 0, NULL}
 };
 
@@ -958,8 +960,9 @@ void CMacroProcessor::NextCommand()
   BOOL recognized, recognized2;
 
   // Be sure to add an entry for longHasTime when adding long operation
-  const char *longKeys[] = {"BU", "RE", "IN", "LO", "$=", "DA"};
-  int longHasTime[] = {1, 1, 0, 1, 0, 1};
+  const char *longKeys[MAX_LONG_OPERATIONS] = {"BU", "RE", "IN", "LO", "$=", "DA", "UN", 
+    "$="};
+  int longHasTime[MAX_LONG_OPERATIONS] = {1, 1, 0, 1, 0, 1, 0, 0};
   mSleepTime = 0.;
   mDoseTarget = 0.;
   mMovedStage = false;
@@ -2906,6 +2909,14 @@ void CMacroProcessor::NextCommand()
     mWinApp->AppendToLog(report, mLogAction);
     SetReportedValues(&strItems[1], delX, delY);
 
+  } else if (CMD_IS(SETFREELENSCONTROL)) {                  // SetFreeLensControl
+    if (!mScope->SetFreeLensControl(itemInt[1], itemInt[2] != 0))
+      ABORT_LINE("Error trying to run:\n\n");
+
+  } else if (CMD_IS(SETLENSWITHFLC)) {                      // SetLensWithFLC
+    if (!mScope->SetLensWithFLC(itemInt[1], itemDbl[2], !itemEmpty[3] && itemInt[3] != 0))
+      ABORT_LINE("Error trying to run:\n\n");
+    
   } else if (CMD_IS(SETJEOLSTEMFLAGS)) {                    // SetJeolSTEMflags
     if (itemInt[1] < 0 || itemInt[1] > 0xFFFFFF || itemInt[2] < 0 || itemInt[2] > 15)
         ABORT_LINE("Entries must fit in 24 and 4 bits in: \n\n");
@@ -3414,17 +3425,15 @@ void CMacroProcessor::NextCommand()
     mWinApp->AppendToLog(report, mLogAction);
     SetReportedValues(&strItems[2], (double)index);
 
-  } else if (CMD_IS(LOADCARTRIDGE)) {                       // LoadCartridge
-    if (!mScope->LoadCartridge(itemInt[1])) {
-      AbortMacro();
-      return;
-    }
-
-  } else if (CMD_IS(UNLOADCARTRIDGE)) {                     // UnloadCartridge
-    if (!mScope->UnloadCartridge()) {
-      AbortMacro();
-      return;
-    }
+  } else if (CMD_IS(LOADCARTRIDGE) || CMD_IS(UNLOADCARTRIDGE)) { // Load/UnloadCartridge
+    if (CMD_IS(LOADCARTRIDGE))
+      index = mScope->LoadCartridge(itemInt[1]);
+    else
+      index = mScope->UnloadCartridge();
+    if (index)
+      ABORT_LINE(index == 1 ? "The thread is already busy for a long operation in:\n\n" :
+      "There was an error trying to run a long operation with:\n\n");
+    mStartedLongOp = true;
 
   } else if (CMD_IS(REFRIGERANTLEVEL)) {                    // RefrigerantLevel
     if (itemInt[1] < 1 || itemInt[1] > 3)
@@ -4319,7 +4328,7 @@ void CMacroProcessor::NextCommand()
 
   } else if (CMD_IS(LONGOPERATION)) {                       // LongOperation
     ix1 = 0;
-    int used[] = {0, 0, 0, 0, 0, 0, 0};
+    int used[] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
     int operations[MAX_LONG_OPERATIONS + 1];
     float intervals[MAX_LONG_OPERATIONS + 1];
     for (index = 1; index < MAX_TOKENS && !itemEmpty[index]; index++) {

@@ -3,6 +3,11 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+4/10/17: Made cartridge loading and unloading be long operations; unload can
+be run as one of the LongOperation entries.
+
+4/10/17: Added test code for controlling JEOL free lens control (undocumented).
+
 4/10/17: Fixed UpdateHardwareDarkRef command to treat its hours value properly
 and to keep script from plowing ahead after starting it (In 3.6).
 
