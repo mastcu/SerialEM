@@ -2133,7 +2133,7 @@ void CCameraSetupDlg::ManageDoseFrac(void)
     ((m_iK2Mode == COUNTING_MODE && !mParam->countingRefForK2.IsEmpty()) ||
     (m_iK2Mode == SUPERRES_MODE && !mParam->superResRefForK2.IsEmpty()));
   m_statNormDSDF.ShowWindow(enable ? SW_SHOW : SW_HIDE);
-  m_statWhereAlign.ShowWindow(m_bAlignDoseFrac ? SW_SHOW : SW_HIDE);
+  m_statWhereAlign.ShowWindow((m_bDoseFracMode && m_bAlignDoseFrac) ? SW_SHOW : SW_HIDE);
   if (!conSet->useFrameAlign)
     str = "Align in DM";
   else if (conSet->useFrameAlign == 1)
