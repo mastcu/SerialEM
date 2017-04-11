@@ -139,6 +139,8 @@ SCOPE_SAMENAME(ScopeSetInt, SetSlitIn);
 SCOPE_SAMENAME(ScopeSetInt, EnableEnergyShift);
 SCOPE_SAMENAME(ScopeSetInt, StartUpdates);
 SCOPE_SAMENAME(ScopeGetThreeDbl, GetFilterRanges);
+SCOPE_SAMENAME(ScopeSetTwoInt, SetFreeLensControl);
+SCOPE_SAMENAME(ScopeSetTwoIntDbl, SetLensWithFLC);
 SCOPE_SAMENAME(CamGetTwoInt, GetNumStartupErrors);
 SCOPE_SAMENAME(CamTwoInt, BeginThreadAccess);
 SCOPE_SAMENAME(ScopeSetInt, EndThreadAccess);
