@@ -4549,22 +4549,19 @@ void CParameterIO::OutputVector(const char *key, int size, ShortVec *shorts,
   FloatVec *floats)
 {
   CString oneState, entry;
-  int ldj, ldi, j, i;
+  int numLines, numWrite, numLeft, j, i, indOut = 0;
   if (!size)
     return;
-  ldj = (size + MAX_TOKENS - 3) / (MAX_TOKENS - 2);
-  ldi = 0;
-  for (j = 0; j < ldj; j++) {
+  numLines = (size + MAX_TOKENS - 3) / (MAX_TOKENS - 2);
+  for (j = 0; j < numLines; j++) {
     oneState = key;
-    ldi = size - ldj * (MAX_TOKENS - 2);
-    i = B3DMIN(MAX_TOKENS - 2, ldi);
-    for (i = 0; i < MAX_TOKENS - 2; i++) {
-      if (i >= size)
-        break;
+    numLeft = size - j * (MAX_TOKENS - 2);
+    numWrite = B3DMIN(MAX_TOKENS - 2, numLeft);
+    for (i = 0; i < numWrite; i++) {
       if (shorts)
-        entry.Format(" %d", shorts->at(i));
+        entry.Format(" %d", shorts->at(indOut++));
       else
-        entry.Format(" %f", floats->at(i));
+        entry.Format(" %f", floats->at(indOut++));
       oneState += entry;
     }
     mFile->WriteString(oneState + "\n");

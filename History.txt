@@ -3,6 +3,8 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+4/12/17: Fixed writing of long summed frame lists (In 3.6).
+
 4/11/17: SEM_3-6-5
 4/10/17: Made cartridge loading and unloading be long operations; unload can
 be run as one of the LongOperation entries.
