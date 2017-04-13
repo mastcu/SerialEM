@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -1601,15 +1601,15 @@ echo.
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MaxSpeed</Optimization>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</MultiProcessorCompilation>
-      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='JEOL Debug|Win32'">false</MultiProcessorCompilation>
-      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='JEOL Release|Win32'">false</MultiProcessorCompilation>
-      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='NoHang|Win32'">false</MultiProcessorCompilation>
-      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</MultiProcessorCompilation>
+      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</MultiProcessorCompilation>
+      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='JEOL Debug|Win32'">true</MultiProcessorCompilation>
+      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='JEOL Release|Win32'">true</MultiProcessorCompilation>
+      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='NoHang|Win32'">true</MultiProcessorCompilation>
+      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</MultiProcessorCompilation>
       <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Template|Win32'">false</MultiProcessorCompilation>
-      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</MultiProcessorCompilation>
-      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='JEOL Debug|x64'">false</MultiProcessorCompilation>
-      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='JEOL Release|x64'">false</MultiProcessorCompilation>
+      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</MultiProcessorCompilation>
+      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='JEOL Debug|x64'">true</MultiProcessorCompilation>
+      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='JEOL Release|x64'">true</MultiProcessorCompilation>
       <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='NoHang|x64'">false</MultiProcessorCompilation>
       <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</MultiProcessorCompilation>
       <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Template|x64'">false</MultiProcessorCompilation>
@@ -1726,43 +1726,43 @@ echo.
       </PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="DirectElectron\DirectElectronCamera.cpp">
-      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</MultiProcessorCompilation>
-      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='JEOL Debug|Win32'">false</MultiProcessorCompilation>
-      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='JEOL Release|Win32'">false</MultiProcessorCompilation>
-      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='NoHang|Win32'">false</MultiProcessorCompilation>
-      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</MultiProcessorCompilation>
+      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</MultiProcessorCompilation>
+      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='JEOL Debug|Win32'">true</MultiProcessorCompilation>
+      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='JEOL Release|Win32'">true</MultiProcessorCompilation>
+      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='NoHang|Win32'">true</MultiProcessorCompilation>
+      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</MultiProcessorCompilation>
       <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Template|Win32'">false</MultiProcessorCompilation>
-      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</MultiProcessorCompilation>
-      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='JEOL Debug|x64'">false</MultiProcessorCompilation>
-      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='JEOL Release|x64'">false</MultiProcessorCompilation>
+      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</MultiProcessorCompilation>
+      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='JEOL Debug|x64'">true</MultiProcessorCompilation>
+      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='JEOL Release|x64'">true</MultiProcessorCompilation>
       <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='NoHang|x64'">false</MultiProcessorCompilation>
       <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</MultiProcessorCompilation>
       <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Template|x64'">false</MultiProcessorCompilation>
     </ClCompile>
     <ClCompile Include="DirectElectron\DirectElectronCamPanel.cpp">
-      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</MultiProcessorCompilation>
-      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='JEOL Debug|Win32'">false</MultiProcessorCompilation>
-      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='JEOL Release|Win32'">false</MultiProcessorCompilation>
-      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='NoHang|Win32'">false</MultiProcessorCompilation>
-      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</MultiProcessorCompilation>
+      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</MultiProcessorCompilation>
+      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='JEOL Debug|Win32'">true</MultiProcessorCompilation>
+      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='JEOL Release|Win32'">true</MultiProcessorCompilation>
+      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='NoHang|Win32'">true</MultiProcessorCompilation>
+      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</MultiProcessorCompilation>
       <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Template|Win32'">false</MultiProcessorCompilation>
-      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</MultiProcessorCompilation>
-      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='JEOL Debug|x64'">false</MultiProcessorCompilation>
-      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='JEOL Release|x64'">false</MultiProcessorCompilation>
+      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</MultiProcessorCompilation>
+      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='JEOL Debug|x64'">true</MultiProcessorCompilation>
+      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='JEOL Release|x64'">true</MultiProcessorCompilation>
       <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='NoHang|x64'">false</MultiProcessorCompilation>
       <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</MultiProcessorCompilation>
       <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Template|x64'">false</MultiProcessorCompilation>
     </ClCompile>
     <ClCompile Include="DirectElectron\DirectElectronToolDlg.cpp">
-      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</MultiProcessorCompilation>
-      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='JEOL Debug|Win32'">false</MultiProcessorCompilation>
-      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='JEOL Release|Win32'">false</MultiProcessorCompilation>
-      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='NoHang|Win32'">false</MultiProcessorCompilation>
-      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</MultiProcessorCompilation>
+      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</MultiProcessorCompilation>
+      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='JEOL Debug|Win32'">true</MultiProcessorCompilation>
+      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='JEOL Release|Win32'">true</MultiProcessorCompilation>
+      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='NoHang|Win32'">true</MultiProcessorCompilation>
+      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</MultiProcessorCompilation>
       <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Template|Win32'">false</MultiProcessorCompilation>
-      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</MultiProcessorCompilation>
-      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='JEOL Debug|x64'">false</MultiProcessorCompilation>
-      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='JEOL Release|x64'">false</MultiProcessorCompilation>
+      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</MultiProcessorCompilation>
+      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='JEOL Debug|x64'">true</MultiProcessorCompilation>
+      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='JEOL Release|x64'">true</MultiProcessorCompilation>
       <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='NoHang|x64'">false</MultiProcessorCompilation>
       <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</MultiProcessorCompilation>
       <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Template|x64'">false</MultiProcessorCompilation>
