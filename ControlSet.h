@@ -223,6 +223,7 @@ struct CameraParameters {
   float doseTabBase;
   float doseTabScale;
   float doseTabConst;
+  float specToCamDoseFac;     // Last measured scaling from specimen to camera dose rate
   BOOL invertFocusRamp;       // Lazy way out: flag to invert direction of dynamic focus
   int numChannels;
   CString channelName[MAX_STEM_CHANNELS];  // Detector or official camera names for FEI,

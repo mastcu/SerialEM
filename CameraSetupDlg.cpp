@@ -1917,6 +1917,7 @@ void CCameraSetupDlg::ManageDose()
   int spotSize;
   double intensity, dose;
   int camera = mActiveCameraList[mCurrentCamera];
+  float doseFac = mParam->specToCamDoseFac;
   
   // Need to synchronize back to camera LDP since we are accessing them
   mWinApp->CopyCurrentToCameraLDP();
@@ -1936,8 +1937,9 @@ void CCameraSetupDlg::ManageDose()
       float pixel = 10000.f * (mParam->K2Type ? 2.f : 1.f ) * 
         mWinApp->mShiftManager->GetPixelSize(mActiveCameraList[mCurrentCamera], 
         mWinApp->mScope->FastMagIndex());
-      m_strDoseRate.Format("%.2f e/ub pixel/s at specimen", dose * pixel * pixel /
-        B3DMAX(0.0025, m_eExposure));
+      m_strDoseRate.Format("%.2f e/ub pixel/s at %s", (doseFac > 0. ? doseFac : 1.) *
+        dose * pixel * pixel /B3DMAX(0.0025, realExp), 
+        doseFac > 0 ? "camera" : "specimen");
     } else
       m_strDoseRate = "Dose rate: Not calibrated";
   } else

@@ -368,6 +368,7 @@ CSerialEMApp::CSerialEMApp()
     mCamParams[i].origDefects = NULL;
     mCamParams[i].defNameHasFrameFile = false;
     mCamParams[i].taskTargetSize = 512;
+    mCamParams[i].specToCamDoseFac = 0.;
     mCamParams[i].invertFocusRamp = false;
     mCamParams[i].numChannels = 0;
     mCamParams[i].maxChannels = 0;

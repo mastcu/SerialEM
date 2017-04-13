@@ -181,11 +181,12 @@
       estimated dose will be shown for the given exposure. This readout is refreshed 
       whenever you change parameter sets or when you press the Update Dose button, so 
       you can change brightness and use this button to see the effect of the change.&nbsp; 
-      For a K2 camera, there is also a line expressing the dose rate as electrons per 
+      For a direct detector camera, there is also a line expressing the dose rate as electrons per 
       unbinned pixel per second, which is the value that affects camera performance.&nbsp; 
-      However, this is still just a dose rate incident on the specimen; the camera 
-      will record only a fraction of these electrons because of attenuation by the 
-      objective aperture and energy filtering, if any.</P>
+      Initially, this will be a dose rate incident on the specimen; but once an image is taken with 
+      the camera, the program estimates the dose rate at the camera based on the apparent attenuation
+      in the dose rate from specimen to camera in the last image that was taken.
+      </P>
     <P><B>OK - Acquire - Cancel</B></P>
     <P>When you press the OK button, any changes in the current parameter set will be 
       saved; if you press Cancel, such changes will be discarded. Note that changes 

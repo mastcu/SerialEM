@@ -6684,7 +6684,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
   int spotSize, chan, i, err, ix, iy, invertCon, operation, ixoff, iyoff;
   int typext = 0, ldSet = 0;
   BOOL lowDoseMode, hasUserPtSave = false;
-  float axoff, ayoff;
+  float axoff, ayoff, specRate, camRate;
   double delay;
   CString message, str;
   KImage *image;
@@ -7056,6 +7056,8 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       if (mTD.NumAsyncSumFrames != 0)
         CorDefSampleMeanSD(image->getRowData(), image->getType(), image->getWidth(),
           image->getHeight(), &imBuf->mSampleMean, &imBuf->mSampleSD);
+      else
+        imBuf->mSampleMean = EXTRA_NO_VALUE;
       CUR_OR_DEFD_TO_BUF(mTimeStamp, mLastImageTime);
       imBuf->mStageShiftedByMouse = false;
       hasUserPtSave = imBuf->mHasUserPt;
@@ -7147,6 +7149,12 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       extra->mCamera = curCam;
       extra->mPixel = (float)(mBinning * 10000. * 
         mShiftManager->GetPixelSize(curCam, mMagBefore));
+      if (imBuf->mSampleMean > EXTRA_VALUE_TEST && IsDirectDetector(mParam) &&
+        !mWinApp->mProcessImage->DoseRateFromMean(imBuf, imBuf->mSampleMean, camRate)) {
+          specRate = extra->m_fDose * 
+            (float)pow((double)extra->mPixel / extra->mBinning, 2) / (float)mExposure;
+          mParam->specToCamDoseFac = camRate / specRate;
+      }
       if (mParam->STEMcamera)
         extra->mAxisAngle = mParam->imageRotation + mWinApp->GetAddedSTEMrotation();
       else
