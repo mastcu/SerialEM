@@ -195,8 +195,8 @@ void CMainFrame::InitializeOneDialog(DialogTable &inTable, int colorIndex,
   dlg->GetWindowRect(&rect);
   inTable.width = rect.Width();
   inTable.fullHeight = rect.Height();
-  if (colorIndex == SCOPE_PANEL_INDEX && !mWinApp->GetAnyDirectDetectors())
-    inTable.fullHeight -= ((CScopeStatusDlg *)dlg)->DoseHeightAdjustment();
+  /*if (colorIndex == SCOPE_PANEL_INDEX && !mWinApp->GetAnyDirectDetectors())
+    inTable.fullHeight -= ((CScopeStatusDlg *)dlg)->DoseHeightAdjustment();*/
   if (mWinApp->GetDisplayNot120DPI()) {
     inTable.width += mWinApp->GetToolExtraWidth();
     inTable.fullHeight += mWinApp->GetToolExtraHeight();

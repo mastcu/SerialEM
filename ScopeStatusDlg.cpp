@@ -392,12 +392,8 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
     mDefocus = inDefocus;
   }
 
-  if (mWinApp->mCamera->IsDirectDetector(camParam) && inMagInd > 0) {
+  if (inMagInd > 0)
     dose = mWinApp->mBeamAssessor->GetElectronDose(inSpot, rawIntensity, 1.);
-    pixel = 10000.f * (camParam->K2Type ? 2.f : 1.f ) * 
-        mWinApp->mShiftManager->GetPixelSize(camera, inMagInd);
-    dose *= pixel * pixel;
-  }
   if (B3DCHOICE(dose > 0., 1, 0) != B3DCHOICE(mShowedDose, 1, 0)) {
     mShowedDose = dose > 0.;
     m_statUbpix.ShowWindow(dose > 0. ? SW_SHOW : SW_HIDE);
