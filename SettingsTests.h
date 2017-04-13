@@ -96,6 +96,7 @@ FLOAT_SETT_ASSIGN("MacroTiltUpLimit", macControl->tiltUpLimit)
 FLOAT_SETT_ASSIGN("MacroTiltDownLimit", macControl->tiltDownLimit)
 FLOAT_SETT_ASSIGN("MacroMontErrorLimit", macControl->montErrorLimit)
 FLOAT_SETT_ASSIGN("MacroISLimit", macControl->ISlimit)
+INT_SETT_GETSET("ScriptIndentSize", mWinApp->mMacroProcessor->, AutoIndentSize)
 
 #endif
 #ifdef SET_TEST_SECT2

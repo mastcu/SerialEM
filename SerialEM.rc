@@ -393,6 +393,7 @@ BEGIN
         MENUITEM "&Load Many",                  ID_MACRO_READMANY
         MENUITEM "Save &All",                   ID_MACRO_WRITEALL
         MENUITEM "List &Functions",             ID_MACRO_LISTFUNCTIONS
+        MENUITEM "Set I&ndent Size",            ID_SCRIPT_SETINDENTSIZE
         MENUITEM "&Verbose",                    ID_MACRO_VERBOSE
     END
     POPUP "&Tasks"
@@ -1269,7 +1270,7 @@ BEGIN
     RTEXT           "-1200.99",IDC_STAT_STAGEY,75,46,30,10,SS_CENTERIMAGE
     RTEXT           "-1200.99",IDC_STAT_STAGEZ,75,56,30,10,SS_CENTERIMAGE
     RTEXT           "67.32",IDC_STAT_DOSERATE,14,66,31,10
-    LTEXT           "e/ubpix/s at specimen",IDC_STAT_UBPIX,47,67,67,8
+    LTEXT           "e/A2/s at specimen",IDC_STAT_UBPIX,47,67,59,8
 END
 
 IDD_TILTSERIES DIALOGEX 0, 0, 230, 764
@@ -4718,6 +4719,7 @@ BEGIN
                             "Make array of FFTs (Zemlin tableau) from beam-tilted images"
     ID_FOCUS_SETCOMAITERATIONS 
                             "Set # of initial iterations for coma-free alignment"
+    ID_SCRIPT_SETINDENTSIZE "Set # of spaces for automatic indentation with Tab/`"
 END
 
 STRINGTABLE

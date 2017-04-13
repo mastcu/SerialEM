@@ -69,6 +69,10 @@
           <TD class="style2">Lists all functions defined in scripts</TD>
         </TR>
         <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_macro_verbose">Set Indent Size</A></TD>
+          <TD class="style2">Set number of spaces for automatic indenting in editor</TD>
+        </TR>
+        <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_macro_verbose">Verbose</A></TD>
           <TD class="style2">Toggles echoing of each line at start of script.</TD>
         </TR>
@@ -145,8 +149,14 @@
     <P>Use this command to get a list in the log window of all functions defined in 
       all scripts.&nbsp; The function name will be followed by the number of 
       arguments and 0 or 1 for whether it takes a string argument.</P>
+    <P><A NAME="hid_script_setindentsize"></A><B>Set Indent Size command (Script menu)</B></P>
+    <p>Use this command to set the number of spaces that the script editor will use 
+      for auto-indenting when Tab or ` (the back-tick character) is typed.&nbsp; This 
+      spacing is added at the first line of a block starting with IF, LOOP, ELSE, or 
+      Function, and taken away when such a block ends.&nbsp; Enter 0 to prevent 
+      auto-indenting.</p>
     <P><A NAME="hid_macro_verbose"></A><B>Verbose command (Script menu)</B></P>
-   Use this command to set the initial value of the verbose option when a script is 
+   <P>Use this command to set the initial value of the verbose option when a script is 
         started. With this option on, each script command will be echoed to the log 
         before being executed. The option value can be changed by the Verbose command 
         within a script.</P>

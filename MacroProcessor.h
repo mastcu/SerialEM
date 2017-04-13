@@ -67,6 +67,7 @@ class CMacroProcessor : public CCmdTarget
   GetMember(BOOL, OpenDE12Cover);
   GetSetMember(int, NumToolButtons);
   GetSetMember(int, ToolButHeight);
+  GetSetMember(int, AutoIndentSize);
   SetMember(int, KeyPressed);
   GetSetMember(bool, WaitingForFrame);
   GetMember(bool, UsingContinuous);
@@ -198,6 +199,8 @@ private:
   int mBoxOnScopeType;
   int mShowedScopeBox;      // Flag so reply can be assigned to variable
   bool mLoopIndsAreLocal;      // Flag that loop indexes are local
+  int mAutoIndentSize;         // Number of spaces for autoindent of macro
+
 
 public:
   void GetNextLine(CString * macro, int & currentIndex, CString &strLine);
@@ -272,6 +275,7 @@ public:
   void FindValueAtIndex(Variable * var, int arrInd, int & beginInd, int & endInd);
   int ConvertArrayIndex(CString strItem, int leftInd, int rightInd, Variable * var, CString * errMess);
   static UINT RunInShellProc(LPVOID pParam);
+  afx_msg void OnScriptSetIndentSize();
 };
 
 #endif // !defined(AFX_MACROPROCESSOR_H__33178182_58A1_4F3A_B8F4_D41F94866517__INCLUDED_)

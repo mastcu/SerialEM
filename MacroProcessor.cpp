@@ -348,6 +348,7 @@ BEGIN_MESSAGE_MAP(CMacroProcessor, CCmdTarget)
   ON_UPDATE_COMMAND_UI(ID_MACRO_WRITEALL, OnUpdateMacroWriteAll)
   ON_COMMAND(ID_MACRO_LISTFUNCTIONS, OnMacroListFunctions)
   ON_UPDATE_COMMAND_UI(ID_MACRO_LISTFUNCTIONS, OnUpdateMacroWriteAll)
+  ON_COMMAND(ID_SCRIPT_SETINDENTSIZE, OnScriptSetIndentSize)
 END_MESSAGE_MAP()
 
 //////////////////////////////////////////////////////////////////////
@@ -384,6 +385,7 @@ CMacroProcessor::CMacroProcessor()
   mToolPlacement.rcNormalPosition.right = 0;
   mNumToolButtons = 10;
   mToolButHeight = 0;
+  mAutoIndentSize = 3;
   mEditerPlacement.rcNormalPosition.right = 0;
   mMailSubject = "Message from SerialEM script";
   for (i = 0; i < 5; i++)
@@ -487,6 +489,12 @@ void CMacroProcessor::OnMacroSetlength()
   mNumToolButtons = B3DMIN(MAX_MACROS, B3DMAX(5, num));
   if (mWinApp->mMacroToolbar)
     mWinApp->mMacroToolbar->SetLength(mNumToolButtons, mToolButHeight);
+}
+
+void CMacroProcessor::OnScriptSetIndentSize()
+{
+  KGetOneInt("Number of spaces for automatic indentation, or 0 to disable:", 
+    mAutoIndentSize);
 }
 
 void CMacroProcessor::OnMacroVerbose()

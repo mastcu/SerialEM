@@ -29,13 +29,20 @@
       &#39;down&#39; here refer to the vertical position of scripts in the menu and toolbar.&nbsp; The window will 
       stay with the current script and change its number.&nbsp; If the adjacent script 
       is also open in a editor, both windows will change.</P>
-    <P><b>Completions</b> - Below these buttons is a line of text that starts out with a reminder that you 
+    <P><b>Completions and Auto-indenting</b> - Below these buttons is a line of text that starts out with a reminder that you 
       can use Tab or ` (the back-tick character) to automatically complete a command 
       name (the first word on a line) as well as convert it to a standard mixed-case 
       form.&nbsp; Tab may not work on non-US keyboards, but ` always will.&nbsp; When 
       you start editing in a window, this line will list up to 10 possible completions 
       of the current text as you type a command.&nbsp; Only a few will show up at the 
       default window size; make the window wider to see more completions.&nbsp; </P>
+    <P>Another consequence of typing Tab or ` anywhere on the line is that the editor 
+      will set the indentation of the current line based on the indentation of the 
+      previous line, whether the previous line starts a block (i.e., with If, Else, 
+      Elseif, Loop, or Function), and whether the current line ends such a block.&nbsp; 
+      The amount of additional space in a block can be controlled with the
+      <a href="menu_macro.htm#hid_script_setindentsize">Set Indent Size</a> command in 
+      the Scipt menu.</P>
     <P>The buttons below the text area perform the following functions:</P>
     <P><B>Run button - </B>will save the script in program memory and run it.</P>
     <P><B>Cancel button - </B>will close the window without saving the most recent 

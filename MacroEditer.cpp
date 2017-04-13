@@ -513,19 +513,25 @@ void CMacroEditer::AdjustForNewNumber(int newNum)
 void CMacroEditer::OnEnChangeEditmacro()
 {
   int sel1, sel2, delStart, numDel, i, numCommands, lineStart, numMatch, saveStart;
+  int indentSize, prevStart, needIndent, curIndent, firstVis;
   int maxCompletions = 10;
   unsigned int lenMatch;
   char ch;
   short *matchList;
-  bool matched, atWordEnd, completing, hasSpace = false;
+  bool matched, atWordEnd, completing, foundText, hasSpace = false;
   CmdItem *cmdList;
   CString substr;
   const char *first, *other;
+  const char *prevKeys[] = {"LOOP", "IF", "ELSE", "ELSEIF", "FUNCTION"};
+  const char *curKeys[] = {"ENDLOOP", "ELSE", "ELSEIF", "ENDIF", "ENDFUNCTION"};
+  int numPrevKeys = sizeof(prevKeys) / sizeof(const char *);
+  int numCurKeys = sizeof(curKeys) / sizeof(const char *);
   UpdateData(true);
   m_editMacro.GetSel(sel1, sel2);
   if (sel2 <= 0)
     return;
   completing = m_strMacro.GetAt(sel2-1) == '`';
+  firstVis = m_editMacro.GetFirstVisibleLine();
 
   // Set up to delete this character
   numDel = 1;
@@ -572,6 +578,8 @@ void CMacroEditer::OnEnChangeEditmacro()
   numMatch = 0;
   if (m_strCompletions.Left(6).Compare("Tab or"))
     m_strCompletions = "";
+  if (lineStart >= 0 && m_strMacro.GetAt(lineStart) == '#')
+    lineStart = -1;
   while (lineStart >=0 && lineStart < delStart) {
 
     // Extract the string before this point, make upper case, and make a list of matches
@@ -656,8 +664,96 @@ void CMacroEditer::OnEnChangeEditmacro()
       m_strMacro.Insert(delStart, substr);
       sel2 += lenMatch;
     }
+
+    // Indentation: 
+    indentSize = mProcessor->GetAutoIndentSize();
+    if (indentSize > 0) {
+
+      // Find start of current line
+      for (lineStart = sel2; lineStart > 0; lineStart--) {
+        ch = m_strMacro.GetAt(lineStart - 1);
+        if (ch == '\n' || ch == '\r')
+          break;
+      }
+      
+      // Find start of previous line with text
+      foundText = false;
+      for (prevStart = lineStart; prevStart > 0; prevStart--) {
+        ch = m_strMacro.GetAt(prevStart - 1);
+        if (!foundText && !(ch == '\n' || ch == '\r' || ch == ' ' || ch == '\t'))
+          foundText = true;
+        if (foundText && (ch == '\n' || ch == '\r'))
+          break;
+      }
+
+      // Get the previous line indent and add if it matches a keyword
+      needIndent = 0;
+      if (foundText && FindIndentAndMatch(prevStart, lineStart, prevKeys, numPrevKeys,
+        needIndent))
+        needIndent += indentSize;
+
+      // Get the current line indent and subtract from needed indent if keyword matches
+      sel1 = m_strMacro.Find('\r', sel2);
+      i = m_strMacro.Find('\n', sel2);
+      if (sel1 < 0 && i < 0)
+        sel1 = m_strMacro.GetLength();
+      else
+        sel1 = B3DMAX(sel1, i);
+      if (FindIndentAndMatch(lineStart, sel1, curKeys, numCurKeys, curIndent))
+        needIndent = B3DMAX(0, needIndent - indentSize);
+
+      // Adjust by deletion or addition
+      numDel = curIndent - needIndent;
+      if (numDel > 0) {
+        m_strMacro.Delete(lineStart, numDel);
+      } else {
+        for (i = 0; i < -numDel; i++)
+          m_strMacro.Insert(lineStart, " ");
+      }
+      sel2 -=numDel;
+    }
+
     UpdateData(false);
     m_editMacro.SetSel(sel2, sel2);
+    sel2 = m_editMacro.GetFirstVisibleLine();
+    if (sel2 != firstVis)
+      m_editMacro.LineScroll(firstVis - sel2);
   }
   delete [] matchList;
+}
+
+// Finds the number of current spaces indenting the line at lineStart and looks for a
+// match of the first word with one of the keywords
+bool CMacroEditer::FindIndentAndMatch(int lineStart, int limit, const char **keywords, 
+  int numKeys, int &curIndent)
+{
+  char ch;
+  CString token;
+  int indStart, indEnd;
+
+  // Count spaces at start of line and get to start of whatever else
+  curIndent = 0;
+  for (indStart = lineStart; indStart < limit; indStart++) {
+    if (m_strMacro.GetAt(indStart) == ' ')
+      curIndent++;
+    else
+      break;
+  }
+
+  // Find end of token if any
+  for (indEnd = indStart; indEnd < limit; indEnd++) {
+    ch = m_strMacro.GetAt(indEnd);
+    if (ch == ' ' || ch == '\r' || ch == '\n')
+      break;
+  }
+  if (indEnd == indStart)
+    return false;
+
+  // Extract and test for match
+  token = m_strMacro.Mid(indStart, indEnd - indStart);
+  token.MakeUpper();
+  for (indEnd = 0; indEnd < numKeys; indEnd++) 
+    if (!token.Compare(keywords[indEnd]))
+      return true;
+  return false;
 }
