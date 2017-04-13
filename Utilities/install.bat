@@ -20,7 +20,7 @@ set HASJEOLPLUG=1
 IF NOT EXIST ..\JeolScopePlugin.dll IF NOT EXIST ../Plugins\JeolScopePlugin.dll SET HASJEOLPLUG=0
 
 rem # Clean up all existing and older files
-for %%A in (SerialEM.exe SERIALEM.HLP SerialEM.cnt SerialEM.chm FTComm.dll jpeg62.dll zlib1.dll libtiff3.dll b3dregsvr.exe b3dregsvr32.exe b3dregsvr64.exe MFC71.dll msvcp71.dll msvcr71.dll register.bat register-GMS1.bat register-GMS2-32.bat register-GMS2-64.bat SEMCCD-GMS2-32.dll SEMCCD-GMS2-64.dll SEMCCDps-GMS2-32.dll SEMCCDps-GMS2-64.dll SerialEMCCD.dll SerialEMCCDps.dll msvcp90.dll mfc90.dll msvcr90.dll vcomp90.dll FEIScopePlugin.dll Plugins\FEIScopePlugin.dll JeolScopePlugin.dll Plugins\JeolScopePlugin.dll TietzPlugin.dll Plugins\TietzPlugin.dll) DO (
+for %%A in (SerialEM.exe SERIALEM.HLP SerialEM.cnt SerialEM.chm FTComm.dll jpeg62.dll zlib1.dll libtiff3.dll b3dregsvr.exe b3dregsvr32.exe b3dregsvr64.exe MFC71.dll msvcp71.dll msvcr71.dll register.bat register-GMS1.bat register-GMS2-32.bat register-GMS2-64.bat SEMCCD-GMS2-32.dll SEMCCD-GMS2-64.dll SEMCCDps-GMS2-32.dll SEMCCDps-GMS2-64.dll SerialEMCCD.dll SerialEMCCDps.dll msvcp90.dll mfc90.dll msvcr90.dll vcomp90.dll FEIScopePlugin.dll Plugins\FEIScopePlugin.dll JeolScopePlugin.dll Plugins\JeolScopePlugin.dll TietzPlugin.dll Plugins\TietzPlugin.dll DEcamPlugin.dll Plugins\DEcamPlugin.dll DeInterface.Win32.dll Plugins\DeInterface.Win32.dll) DO (
   IF EXIST ..\%%A DEL ..\%%A
 )
 
@@ -49,9 +49,55 @@ IF %ERRORLEVEL% EQU 0 (
   )
 )
 
+Rem # Check properties file(s) for Tietz or DE cameras
+set SAWPROPS=0
+set NEEDTIETZ=0
+set NEEDDECAM=0
+IF EXIST "C:\Program Files\SerialEM\SerialEMproperties.txt" (
+   set SAWPROPS=1
+  findstr /I "^TietzCameraType" "C:\Program Files\SerialEM\SerialEMproperties.txt"
+
+  Rem # WOW! %ERRORLEVEL% COMES OUT AS 0 IN A BATCH FILE AND THIS IS THE ONLY
+  Rem # WAY TO TEST HERE
+  IF NOT ERRORLEVEL 1 set NEEDTIETZ=1
+  findstr /I "^DEcameraType" "C:\Program Files\SerialEM\SerialEMproperties.txt" 1> nul
+  IF NOT ERRORLEVEL 1 set NEEDDECAM=1
+)
+
+IF EXIST "C:\ProgramData\SerialEM\SerialEMproperties.txt" (
+   set SAWPROPS=1
+  findstr /I "^TietzCameraType" "C:\ProgramData\SerialEM\SerialEMproperties.txt" 1> nul
+  IF NOT ERRORLEVEL 1 set NEEDTIETZ=1
+  findstr /I "^DEcameraType" "C:\ProgramData\SerialEM\SerialEMproperties.txt" 1> nul
+  IF NOT ERRORLEVEL 1 set NEEDDECAM=1
+)
+
 COPY /Y SerialEM.exe ..
 COPY /Y SerialEM.chm ..
-COPY /Y TietzPlugin.dll ..
+
+Rem # If neither properties file seen, just copy them
+if %SAWPROPS% EQU 0 (
+  set NEEDTIETZ=1
+  set NEEDDECAM=1
+  echo.
+  echo Copying Tietz and Direct Electron plugins because no properties file was found
+)
+
+IF  %SAWPROPS% EQU 1 IF %NEEDTIETZ% EQU 1 (
+  echo.
+  echo Copying Tietz plugin because a Tietz camera is listed in a properties file
+)
+if %NEEDTIETZ% EQU 1 COPY /Y TietzPlugin.dll ..
+
+IF  %SAWPROPS% EQU 1 IF %NEEDDECAM% EQU 1 (
+  echo.
+  echo Copying DE plugin because a DE camera is listed in a properties file
+)
+if %NEEDDECAM% EQU 1 (
+  COPY /Y DEcamPlugin.dll ..
+  COPY /Y DeInterface.Win32.dll ..
+)
+
 IF EXIST FTComm.dll COPY /Y FTComm.dll ..
 
 Rem # New tests for different scope possibilities
