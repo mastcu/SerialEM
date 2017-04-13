@@ -362,7 +362,7 @@ int EMbufferManager::SaveImageBuffer(KImageStore *inStore, bool skipCheck, int i
   } else {
     tiffStore = (KStoreIMOD *)inStore;
     
-    int err = tiffStore->WriteSection(toBuf->mImage);
+    err = tiffStore->WriteSection(toBuf->mImage);
     if (!err)
       toBuf->mSecNumber = 0;
   }
