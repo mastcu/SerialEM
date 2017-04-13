@@ -3,6 +3,7 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+4/13/17: SEM-3-6-6
 4/13/17: Fix TIFF writing, broken 4/5/17 (In 3.6).
 
 4/13/17: Fixed writing of long summed frame lists (In 3.6).
