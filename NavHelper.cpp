@@ -3634,7 +3634,6 @@ void CNavHelper::OpenRotAlignDlg(void)
   mRotAlignDlg = new CNavRotAlignDlg();
   mRotAlignDlg->Create(IDD_NAVROTALIGN);
   mWinApp->SetPlacementFixSize(mRotAlignDlg, &mRotAlignPlace);
-  mRotAlignDlg->ShowWindow(SW_SHOW);
   mWinApp->RestoreViewFocus();
 }
 

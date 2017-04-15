@@ -440,6 +440,7 @@ void CMacroProcessor::OpenMacroEditor(int index)
   mMacroEditer[index]->m_strMacro = mMacros[index];
   mMacroEditer[index]->m_iMacroNumber = index;
   mMacroEditer[index]->Create(IDD_MACRO);
+  mMacroEditer[index]->ShowWindow(SW_SHOW);
   mWinApp->mCameraMacroTools.Update();
 }
 

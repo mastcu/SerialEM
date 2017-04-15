@@ -3403,6 +3403,7 @@ void CSerialEMApp::SetPlacementFixSize(CWnd *window, WINDOWPLACEMENT *lastPlacem
     setting->bottom = setting->top + orig->bottom - orig->top;
     window->SetWindowPlacement(lastPlacement);
   }
+  window->ShowWindow(SW_SHOW);
 }
 
 // Returns the number of mag ranges to consider for a camera and the index of the second

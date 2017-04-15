@@ -467,6 +467,7 @@ void CMenuTargets::OnTasksNavigator()
   mNavigator->Create(IDD_NAVIGATOR);
   if (placement->rcNormalPosition.right > 0)
     mNavigator->SetWindowPlacement(placement);
+  mNavigator->ShowWindow(SW_SHOW);
   if (mWinApp->GetOpenStateWithNav())
     mWinApp->mNavHelper->OpenStateDialog();
   if (!param->autosaveFile.IsEmpty())
