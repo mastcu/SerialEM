@@ -7150,6 +7150,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       extra->mPixel = (float)(mBinning * 10000. * 
         mShiftManager->GetPixelSize(curCam, mMagBefore));
       if (imBuf->mSampleMean > EXTRA_VALUE_TEST && IsDirectDetector(mParam) &&
+        extra->m_fDose > 0 &&
         !mWinApp->mProcessImage->DoseRateFromMean(imBuf, imBuf->mSampleMean, camRate)) {
           specRate = extra->m_fDose * 
             (float)pow((double)extra->mPixel / extra->mBinning, 2) / (float)mExposure;
