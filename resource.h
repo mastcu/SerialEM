@@ -1176,7 +1176,6 @@
 #define IDC_STAT_NORM_DSDF              2192
 #define IDC_PACK_COUNTING_4BIT          2193
 #define IDC_USE_4BIT_MRC_MODE           2194
-#define IDC_BUTTON1                     2195
 #define IDC_BUTMIDDLE                   2195
 #define IDC_BUT_NANO_MICRO              2196
 #define IDC_STAT_ALIGN_METHOD           2197
@@ -1268,10 +1267,8 @@
 #define IDC_STAT_DELTA_MICRONS          2285
 #define IDC_CHECK_NO_DRIFT_CORR         2286
 #define IDC_CHECK_CONTINUOUS_MODE       2287
-#define IDC_EDIT1                       2288
 #define IDC_EDIT_CONTIN_DELAY_FAC       2288
 #define IDC_RADIO2                      2291
-#define IDC_CHECK1                      2292
 #define IDC_SAVE_UNNORMALIZED           2292
 #define IDC_STAT_MESSAGE                2293
 #define IDC_STAT_GRAY_PANEL             2294
@@ -1284,6 +1281,7 @@
 #define IDC_STAT_SAVING_FATE            2301
 #define IDC_STAT_FILE_SAVING_INTO       2302
 #define IDC_STAT_EXPLANATION            2303
+#define IDC_RJPEGCOMPRESS               2304
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -1688,7 +1686,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        225
 #define _APS_NEXT_COMMAND_VALUE         33278
-#define _APS_NEXT_CONTROL_VALUE         2304
+#define _APS_NEXT_CONTROL_VALUE         2305
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

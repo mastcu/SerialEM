@@ -913,18 +913,53 @@ void CSerialEMDoc::OnUpdateFileOverwrite(CCmdUI* pCmdUI)
 // Save active view into another file
 void CSerialEMDoc::OnFileSaveother() 
 {
+  SaveToOtherFile(-1, -1, -1, NULL);
+}
+
+// Saves a single image in given buffer to a file of the specified type
+// Returns 1 on no image or async save error, 2 on fail to open, 3 on fail to write
+int CSerialEMDoc::SaveToOtherFile(int buffer, int fileType, int compression, 
+  CString *fileName)
+{
+  int compSave, typeSave, modeSave, err;
+  KImageStore *store;
   EMimageBuffer *imBuf = mWinApp->mActiveView->GetActiveImBuf();
-  int modeSave = mOtherFileOpt.mode;
+  if (buffer >= 0)
+    imBuf = mWinApp->GetImBufs() + buffer;
+  modeSave = mOtherFileOpt.mode;
+  typeSave = mOtherFileOpt.fileType;
+  compSave = mOtherFileOpt.compression;
   mOtherFileOpt.TIFFallowed = 1;
   if (mBufferManager->CheckAsyncSaving() || !imBuf->mImage)
-    return;
+    return 1;
+
+  // Save float buffer as float, copy in type and compression if specified
   if (imBuf->mImage->getType() == kFLOAT)
     mOtherFileOpt.mode = MRC_MODE_FLOAT;
-  KImageStore *store = OpenSaveFile(&mOtherFileOpt);
+  if (fileType >= 0)
+    mOtherFileOpt.fileType = fileType;
+  if (compression >= 0)
+    mOtherFileOpt.compression = compression;
+
+  // If filename passed in, turn an ADOC into a single tiff, open file and restore things
+  if (fileName) {
+   if (mOtherFileOpt.fileType == STORE_TYPE_ADOC)
+      mOtherFileOpt.fileType = STORE_TYPE_TIFF;
+    store = OpenNewFileByName(*fileName, &mOtherFileOpt);
+    mOtherFileOpt.fileType = typeSave;
+    mOtherFileOpt.compression = compSave;
+  } else {
+
+    // Otherwise, regular file options and file chooser route
+    store = OpenSaveFile(&mOtherFileOpt);
+  }
   if (imBuf->mImage->getType() == kFLOAT)
     mOtherFileOpt.mode = modeSave;
-  if (!store)
-    return;
+  if (!store || !store->FileOK()) {
+    delete store;
+    return 2;
+  }
+
   // Save and restore buffer to save and copy on save
   int bufOld = mBufferManager->GetBufToSave();
   int copyOld = mBufferManager->GetCopyOnSave();
@@ -932,12 +967,13 @@ void CSerialEMDoc::OnFileSaveother()
   mBufferManager->SetCopyOnSave(0);
   mWinApp->SetSavingOther(true);
 
-  mBufferManager->SaveImageBuffer(store);
+  err = mBufferManager->SaveImageBuffer(store);
   delete store;
   mWinApp->SetSavingOther(false);
   mBufferManager->SetBufToSave(bufOld);
   mBufferManager->SetCopyOnSave(copyOld);
   mWinApp->UpdateBufferWindows(); 
+  return err ? 3 : 0;
 }
 
 void CSerialEMDoc::OnUpdateFileSaveother(CCmdUI* pCmdUI) 

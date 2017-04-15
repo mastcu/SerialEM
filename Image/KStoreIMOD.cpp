@@ -32,6 +32,8 @@ KStoreIMOD::KStoreIMOD(CString inFilename , FileOptions inFileOpt)
   mFilename = inFilename;
   if (mFileOpt.fileType != STORE_TYPE_TIFF)
     return;
+  if (mFileOpt.compression == COMPRESS_JPEG)
+    mFileOpt.mode = MRC_MODE_BYTE;
   mIIfile = iiNew();
   if (!mIIfile)
     return;

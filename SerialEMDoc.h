@@ -266,6 +266,7 @@ public:
   int UpdateLastMdocFrame(KImage * image);
   void ComposeTitlebarLine(void);
   void CalibrationWasDone(int type);
+  int SaveToOtherFile(int buffer, int fileType, int compression, CString *filename);
 };
 
 // FILE DIALOG CLASS and associated thread class and data

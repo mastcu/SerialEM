@@ -24,8 +24,7 @@ static char THIS_FILE[] = __FILE__;
   else \
     mFileOpt.typext &= ~(b);
 
-// Just change one to COMPRESS_JPEG to test it
-static int compressions[] = {COMPRESS_NONE, COMPRESS_ZIP, COMPRESS_LZW};
+static int compressions[] = {COMPRESS_NONE, COMPRESS_ZIP, COMPRESS_LZW, COMPRESS_JPEG};
 
 /////////////////////////////////////////////////////////////////////////////
 // CFilePropDlg dialog
@@ -89,7 +88,7 @@ void CFilePropDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_RNOCOMPRESS, m_butNoComp);
   DDX_Control(pDX, IDC_RZIPCOMPRESS, m_butZIPComp);
   DDX_Control(pDX, IDC_RLZWCOMPRESS, m_butLZWComp);
-  //DDX_Control(pDX, IDC_RJPEGCOMPRESS, m_butJPEGComp);
+  DDX_Control(pDX, IDC_RJPEGCOMPRESS, m_butJPEGComp);
   DDX_Control(pDX, IDC_RTIFFFILE, m_butTiffFile);
   DDX_Control(pDX, IDC_EXTENDEDGROUP, m_statExtended);
   DDX_Control(pDX, IDC_TILTANGLE, m_butTiltangle);
@@ -99,6 +98,8 @@ void CFilePropDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_EXPOSURE_DOSE, m_butExpDose);
   DDX_Control(pDX, IDC_SAVEMDOC, m_butSaveMdoc);
   DDX_Check(pDX, IDC_SAVEMDOC, m_bSaveMdoc);
+  DDX_Control(pDX, IDC_RBYTE, m_butSaveByte);
+  DDX_Control(pDX, IDC_RINTEGERS, m_butSaveInteger);
 }
 
 
@@ -120,6 +121,10 @@ BEGIN_MESSAGE_MAP(CFilePropDlg, CBaseDlg)
 	ON_BN_CLICKED(IDC_RADOCFILE, OnRbyte)
 	//}}AFX_MSG_MAP
   ON_BN_CLICKED(IDC_SAVEMDOC, OnSaveMdoc)
+  ON_BN_CLICKED(IDC_RNOCOMPRESS, OnRNoCompress)
+  ON_BN_CLICKED(IDC_RLZWCOMPRESS, OnRNoCompress)
+  ON_BN_CLICKED(IDC_RZIPCOMPRESS, OnRNoCompress)
+  ON_BN_CLICKED(IDC_RJPEGCOMPRESS, OnRNoCompress)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -163,7 +168,11 @@ void CFilePropDlg::ManageStates()
   m_butNoComp.EnableWindow(bEnable);
   m_butLZWComp.EnableWindow(bEnable);
   m_butZIPComp.EnableWindow(bEnable);
-  //m_butJPEGComp.EnableWindow(bEnable);
+  m_butJPEGComp.EnableWindow(bEnable);
+  bEnable = !bEnable || compressions[m_iCompress] != COMPRESS_JPEG;
+  m_butSaveByte.EnableWindow(bEnable);
+  m_butSaveInteger.EnableWindow(bEnable);
+  m_butSaveUnsigned.EnableWindow(bEnable);
   bEnable = m_iFileType == 0;
   m_statExtended.EnableWindow(bEnable);
   m_butTiltangle.EnableWindow(bEnable);
@@ -216,7 +225,7 @@ BOOL CFilePropDlg::OnInitDialog()
     STORE_TYPE_ADOC)
     m_iFileType = 2;
   m_iCompress = 0;
-  for (int i = 0; i < 3; i++)
+  for (int i = 0; i < 4; i++)
     if (mFileOpt.compression == compressions[i])
       m_iCompress = i;
 
@@ -278,4 +287,11 @@ void CFilePropDlg::OnKillfocusMaxsectsedit()
 
 void CFilePropDlg::OnSaveMdoc()
 {
+}
+
+
+void CFilePropDlg::OnRNoCompress()
+{
+  UpdateData(TRUE);
+  ManageStates();
 }

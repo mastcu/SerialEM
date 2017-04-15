@@ -215,7 +215,6 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
   CString naSm = smallScreen ? "nA-fs" : "nA";
   double screenCurrent = inCurrent;
   int camera = mWinApp->GetCurrentCamera();
-  float pixel;
   int pendingSpot = -1, pendingMag = -1;
   bool needDraw = false;
   CameraParameters *camParam = mWinApp->GetCamParams() + camera;

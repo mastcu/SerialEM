@@ -40,7 +40,7 @@ public:
   CButton m_butNoComp;
   CButton m_butLZWComp;
   CButton m_butZIPComp;
-  //CButton m_butJPEGComp;
+  CButton m_butJPEGComp;
   CButton m_butTiffFile;
   int   m_iCompress;
 	int		m_iMaxSects;
@@ -90,6 +90,9 @@ public:
   CButton m_butSaveMdoc;
   BOOL m_bSaveMdoc;
   afx_msg void OnSaveMdoc();
+  afx_msg void OnRNoCompress();
+  CButton m_butSaveByte;
+  CButton m_butSaveInteger;
 };
 
 //{{AFX_INSERT_LOCATION}}

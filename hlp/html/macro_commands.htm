@@ -741,6 +741,10 @@
           <TD>Save image in A or in buf to current open file, or to the given file number</TD>
         </TR>
         <TR vAlign="top">
+          <TD class="style7">&nbsp;</TD>
+          <TD>&nbsp;</TD>
+        </TR>
+        <TR vAlign="top">
           <TD class="style7">SetDirectory dir</TD>
           <TD>Change the working directory to 'dir', which can contain spaces.</TD>
         </TR>
@@ -780,7 +784,8 @@
             unpredictable, depending on whether the user has opened a file with the file 
             chooser, it is advisable either to specify an absolute path for the filename, 
             use a &#39;SetDirectory&#39; with an absolute path, or use a filename in a variable set 
-            by &#39;ChooserForNewFile&#39;.</TD>
+            by &#39;ChooserForNewFile&#39;.&nbsp; The same advice applies for the following 
+            commands that open files as well.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style7">OpenNewMontage #x #y file</TD>
@@ -803,6 +808,17 @@
             open a new one with the given name.&nbsp; Variables will be substituted, so the
             name can contain the mag index, for example. It sets reportedValue1 to 1 or 0
             depending on whether montaging is needed or not. </TD>
+        </TR>
+        <TR>
+          <TD class="style7">SaveToOtherFile buf typ cmp file</TD>
+          <TD>Saves one image in the given buffer to the file with the given name and closes 
+            the file.&nbsp; &#39;typ&#39; specifes the type of file and can be MRC, TIF, TIFF, CUR, 
+            or -1 (case insensitive), where CUR or -1 means use the current file type for 
+            the File menu entry Save Single/Save to Other.&nbsp; If that type is a series of 
+            TIFF files, a single TIFF will be written with the given name instead. &#39;cmp&#39; 
+            specifies the compression for a TIFF file and can be NONE,&nbsp; LZW, ZIP, JPG, 
+            JPEG, CUR, or -1 (case insensitive), where CUR or -1 means use the current 
+            compression for Save Single/Save to Other.</TD>
         </TR>
         <TR>
           <TD class="style7">EnterNameOpenFile [prompt]</TD>

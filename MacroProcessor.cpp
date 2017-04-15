@@ -206,7 +206,7 @@ enum {CME_VIEW, CME_FOCUS, CME_TRIAL, CME_RECORD, CME_PREVIEW,
   CME_SETPROPERTY, CME_SETMAGINDEX, CME_SETNAVREGISTRATION, CME_LOCALVAR,
   CME_LOCALLOOPINDEXES, CME_ZEMLINTABLEAU, CME_WAITFORMIDNIGHT, CME_REPORTUSERSETTING,
   CME_SETUSERSETTING, CME_CHANGEITEMREGISTRATION, CME_SHIFTITEMSBYMICRONS,
-  CME_SETFREELENSCONTROL, CME_SETLENSWITHFLC
+  CME_SETFREELENSCONTROL, CME_SETLENSWITHFLC, CME_SAVETOOTHERFILE
 };
 
 static CmdItem cmdList[] = {{NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0},
@@ -303,7 +303,7 @@ static CmdItem cmdList[] = {{NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0
 {"SetNavRegistration", 1}, {"LocalVar", 1}, {"LocalLoopIndexes", 0}, {"ZemlinTableau", 1},
 {"WaitForMidnight", 0}, {"ReportUserSetting", 1}, {"SetUserSetting", 2}, 
 {"ChangeItemRegistration", 2}, {"ShiftItemsByMicrons", 2}, {"SetFreeLensControl", 2},
-{"SetLensWithFLC", 2},
+{"SetLensWithFLC", 2}, {"SaveToOtherFile", 4},
 {NULL, 0, NULL}
 };
 
@@ -1783,12 +1783,44 @@ void CMacroProcessor::NextCommand()
     }
     mBufferManager->SetBufToReadInto(iy0);
     if (index2)
-      ABORT_NOLINE("Script stopped because of error reading from other file:\n" + strCopy);
+      ABORT_NOLINE("Script stopped because of error reading from other file:\n" + 
+      strCopy);
 
   } else if (CMD_IS(RETRYREADOTHERFILE)) {                  // RetryReadOtherFile
     mRetryReadOther = B3DMAX(0, itemInt[1]);
 
-                                        // OpenNewFile, OpenNewMontage, OpenFrameSumFile
+  } else if (CMD_IS(SAVETOOTHERFILE)) {                     // SaveToOtherFile
+    if (ConvertBufferLetter(strItems[1], -1, true, index, report))
+      ABORT_LINE(report);
+    index2 = -1;
+    if (strItems[2] == "MRC")
+      index2 = STORE_TYPE_MRC;
+    else if (strItems[2] == "TIF" || strItems[2] == "TIFF")
+      index2 = STORE_TYPE_TIFF;
+    else if (strItems[2] != "CUR" && strItems[2] != "-1")
+      ABORT_LINE("Second entry must be MRC, TIF, TIFF, CUR, or -1 in line:\n\n");
+    ix1 = -1;
+    if (strItems[3] == "NONE")
+      ix1 = COMPRESS_NONE;
+    else if (strItems[3] == "LZW")
+      ix1 = COMPRESS_LZW;
+    else if (strItems[3] == "ZIP")
+      ix1 = COMPRESS_ZIP;
+    else if (strItems[3] == "JPG" || strItems[3] == "JPEG")
+      ix1 = COMPRESS_JPEG;
+    else if (strItems[3] != "CUR" && strItems[3] != "-1")
+      ABORT_LINE("Third entry must be NONE, LZW, ZIP, JPG, JPEG, CUR, or -1 in line:"
+      "\n\n");
+    if (CheckConvertFilename(strItems, strLine, 4, report))
+      return;
+    iy1 = mWinApp->mDocWnd->SaveToOtherFile(index, index2, ix1, &report);
+    if (iy1 == 1)
+      return;
+    if (iy1) {
+      report.Format("Error %s file for line:\n\n", iy1 == 2 ? "opening" : "saving to");
+      ABORT_LINE(report);
+    }
+                                          // OpenNewFile, OpenNewMontage, OpenFrameSumFile
   } else if (CMD_IS(OPENNEWFILE) || CMD_IS(OPENNEWMONTAGE) || CMD_IS(OPENFRAMESUMFILE)) {
     index = 1;
     if (CMD_IS(OPENNEWMONTAGE)) { 

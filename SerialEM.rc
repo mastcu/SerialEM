@@ -753,6 +753,17 @@ BEGIN
     CONTROL         "Divide by 2",IDC_RDIVIDE,"Button",BS_AUTORADIOBUTTON,93,31,50,10
     CONTROL         "Subtract 32768",IDC_RSHIFTDOWN,"Button",BS_AUTORADIOBUTTON,93,42,60,10
     GROUPBOX        "When saving 16 bit data",IDC_STATSAVING16,88,9,89,49,WS_GROUP
+    CONTROL         "MRC stack file",IDC_RMRCFILE,"Button",BS_AUTORADIOBUTTON | WS_GROUP,20,218,59,10
+    CONTROL         "TIFF file (one image per file)",IDC_RTIFFFILE,"Button",BS_AUTORADIOBUTTON,20,229,99,10
+    CONTROL         "Series of TIFF files listed in an Autodoc file",IDC_RADOCFILE,
+                    "Button",BS_AUTORADIOBUTTON,20,240,141,10
+    CONTROL         "Save extra information in a '.mdoc' metadata file",IDC_SAVEMDOC,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,194,157,10
+    CONTROL         "None",IDC_RNOCOMPRESS,"Button",BS_AUTORADIOBUTTON | WS_GROUP,23,272,33,10
+    CONTROL         "ZIP",IDC_RZIPCOMPRESS,"Button",BS_AUTORADIOBUTTON,59,272,33,10
+    CONTROL         "LZW",IDC_RLZWCOMPRESS,"Button",BS_AUTORADIOBUTTON,95,272,33,10
+    CONTROL         "JPEG",IDC_RJPEGCOMPRESS,"Button",BS_AUTORADIOBUTTON,131,272,34,10
+    GROUPBOX        "Type of compression in TIFF file",IDC_STATCOMPRESS,15,262,153,25,WS_GROUP
     GROUPBOX        "Number of pixels to truncate converting to bytes",IDC_TRUNCGROUP,10,65,160,30
     LTEXT           "As black (0):",IDC_TRUNCBLACKTEXT,16,78,38,8
     EDITTEXT        IDC_TRUNCBLACKEDIT,55,76,24,14,ES_AUTOHSCROLL
@@ -767,20 +778,10 @@ BEGIN
     LTEXT           "Maximum number of sections:",IDC_MAXSECTSTEXT,31,173,89,8
     LTEXT           "(Be generous)",IDC_BEGENEROUS,51,182,44,8
     EDITTEXT        IDC_MAXSECTSEDIT,122,174,27,14,ES_AUTOHSCROLL
-    CONTROL         "MRC stack file",IDC_RMRCFILE,"Button",BS_AUTORADIOBUTTON | WS_GROUP,20,218,59,10
-    CONTROL         "TIFF file (one image per file)",IDC_RTIFFFILE,"Button",BS_AUTORADIOBUTTON,20,229,99,10
-    CONTROL         "Series of TIFF files listed in an Autodoc file",IDC_RADOCFILE,
-                    "Button",BS_AUTORADIOBUTTON,20,240,141,10
     GROUPBOX        "Save images to",IDC_STATIC,15,207,153,49,WS_GROUP
-    CONTROL         "None",IDC_RNOCOMPRESS,"Button",BS_AUTORADIOBUTTON | WS_GROUP,31,272,33,10
-    CONTROL         "ZIP",IDC_RZIPCOMPRESS,"Button",BS_AUTORADIOBUTTON,74,272,33,10
-    CONTROL         "LZW",IDC_RLZWCOMPRESS,"Button",BS_AUTORADIOBUTTON,116,272,33,10
-    GROUPBOX        "Type of compression in TIFF file",IDC_STATCOMPRESS,19,262,142,25,WS_GROUP
     DEFPUSHBUTTON   "OK",IDOK,32,294,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,98,294,50,14
     PUSHBUTTON      "?",IDC_BUTHELP,165,298,10,10
-    CONTROL         "Save extra information in a '.mdoc' metadata file",IDC_SAVEMDOC,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,194,157,10
 END
 
 IDD_BUFFERSTATUS DIALOGEX 0, 0, 119, 58
@@ -4081,7 +4082,8 @@ BEGIN
     IDC_NA_CENTERBEAM       "Run beam autocentering routine"
     IDC_RNOCOMPRESS         "Save TIFF file without compression"
     IDC_RZIPCOMPRESS        "Save TIFF file with Zip (deflate) compression"
-    IDC_RZLWCOMPRESS        "Save TIFF file with Zempel-Liv compression"
+    IDC_RLZWCOMPRESS        "Save TIFF file with Zempel-Liv compression"
+    IDC_RJPEGCOMPRESS       "Save TIFF file with JPEG compression"
     IDC_BUTSWAPXY           "Exchange X and Y coordinates"
     IDC_RMRCFILE            "Save to MRC file that can hold multiple images"
     IDC_RTIFFFILE           "Save image in TIFF file and close file"

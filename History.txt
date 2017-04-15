@@ -3,6 +3,11 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+4/15/17: Added script command for writing a single-image file of specified
+type and compression.
+
+4/15/17: Added option for saving TIFF files with JPEG compression.
+
 4/13/17: SEM-3-6-6
 4/13/17: Fix TIFF writing, broken 4/5/17 (In 3.6).
 
