@@ -142,6 +142,7 @@ public:
   SetMember(CString, ExtraFileSuffix);
   GetMember(int, FoundItem);
   SetMember(bool, SkipAcquiringItem);
+  SetMember(int, GroupIDtoSkip);
   BOOL InEditMode() {return m_bEditMode;};
   BOOL TakingMousePoints() {return m_bEditMode || mAddingPoints || mAddingPoly || mMovingItem;};
   std::set<int> *GetSelectedItems() {return &mSelectedItems;};
@@ -353,6 +354,7 @@ private:
   bool mSkipAcquiringItem;  // Flag pre-macro can set to skip the item
   double mLastMontLeft;     // Last remaining montage time
   double mLastTimePerItem;  // Last time per item for that montage time
+  int mGroupIDtoSkip;       // ID for skipping a group during acquire
 
 public:
   BOOL RegistrationChangeOK(void);

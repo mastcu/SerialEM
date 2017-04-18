@@ -206,7 +206,7 @@ enum {CME_VIEW, CME_FOCUS, CME_TRIAL, CME_RECORD, CME_PREVIEW,
   CME_SETPROPERTY, CME_SETMAGINDEX, CME_SETNAVREGISTRATION, CME_LOCALVAR,
   CME_LOCALLOOPINDEXES, CME_ZEMLINTABLEAU, CME_WAITFORMIDNIGHT, CME_REPORTUSERSETTING,
   CME_SETUSERSETTING, CME_CHANGEITEMREGISTRATION, CME_SHIFTITEMSBYMICRONS,
-  CME_SETFREELENSCONTROL, CME_SETLENSWITHFLC, CME_SAVETOOTHERFILE
+  CME_SETFREELENSCONTROL, CME_SETLENSWITHFLC, CME_SAVETOOTHERFILE, CME_SKIPACQUIRINGGROUP
 };
 
 static CmdItem cmdList[] = {{NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0},
@@ -303,7 +303,7 @@ static CmdItem cmdList[] = {{NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0
 {"SetNavRegistration", 1}, {"LocalVar", 1}, {"LocalLoopIndexes", 0}, {"ZemlinTableau", 1},
 {"WaitForMidnight", 0}, {"ReportUserSetting", 1}, {"SetUserSetting", 2}, 
 {"ChangeItemRegistration", 2}, {"ShiftItemsByMicrons", 2}, {"SetFreeLensControl", 2},
-{"SetLensWithFLC", 2}, {"SaveToOtherFile", 4},
+{"SetLensWithFLC", 2}, {"SaveToOtherFile", 4}, {"SkipAcquiringGroup", 0},
 {NULL, 0, NULL}
 };
 
@@ -4113,6 +4113,18 @@ void CMacroProcessor::NextCommand()
       mWinApp->AppendToLog("SkipAcquiringNavItem has no effect except from a\r\n"
       "    pre-macro when acquiring Navigator items", mLogAction);
     navigator->SetSkipAcquiringItem(itemEmpty[1] || itemInt[1] != 0);
+
+  } else if (CMD_IS(SKIPACQUIRINGGROUP)) {                  // SkipAcquiringGroup
+    ABORT_NONAV;
+    if (!navigator->GetAcquiring())
+      ABORT_NOLINE("The navigator must be acquiring to set a group ID to skip");
+    if (itemEmpty[1]) {
+      index2 = navigator->GetCurrentOrAcquireItem(navItem);
+      index = navItem->mGroupID;
+    } else {
+      index = itemInt[1];
+    }
+    navigator->SetGroupIDtoSkip(index);
 
   } else if (CMD_IS(SUFFIXFOREXTRAFILE)) {                  // SuffixForExtraFile
     ABORT_NONAV;

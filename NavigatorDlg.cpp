@@ -6988,6 +6988,7 @@ void CNavigatorDlg::AcquireAreas()
   mAcquireEnded = false;
   mEmailWasSent = false;
   mLastGroupID = 0;
+  mGroupIDtoSkip = 0;
   mSelectedItems.clear();
   mSaveCollapsed = m_bCollapseGroups;
   SetCollapsing(false);
@@ -7360,62 +7361,69 @@ int CNavigatorDlg::GotoNextAcquireArea()
 {
   CMapDrawItem *item;
   int i, err;
+  bool skippedGroup = false;
   for (i = mAcquireIndex; i < mItemArray.GetSize(); i++) {
     item = mItemArray[i];
     if (item->mRegistration == mCurrentRegistration && 
       ((item->mAcquire && mParam->acquireType != ACQUIRE_DO_TS) || 
       (item->mTSparamIndex >= 0 && mParam->acquireType == ACQUIRE_DO_TS))) {
-
-      // Skip maps and remove the mark if acquiring map, but not if doing macro???
-        // But what if they want a different mag map?  This should go 
-      /*if (item->mType == ITEM_TYPE_MAP && mParam->acquireType == ACQUIRE_TAKE_MAP) {
-        item->mAcquire = false;
-        UpdateListString(i);
-        continue;
-      } */
-      SEMTrace('M', "Navigator Stage Start");
-
-      // Set the current item for the stage move!
-      mItem = item;
-      err = MoveStage(axisXY | axisZ);
-      if (err > 0)
-        return 1;
-      if (err < 0) {
-        item->mAcquire = false;
-        UpdateListString(i);
-        if (i == mCurrentItem)
-          ManageCurrentControls();
-        mWinApp->AppendToLog("Item " + item->mLabel + " is being skipped because it is "
-          "outside the limits for stage movement", LOG_MESSAGE_IF_CLOSED);
-        continue;
-      }
-      mAcquireIndex = i;
-
-      // Set state now
-      err = OpenFileIfNeeded(item, true);
-      if (err)
-        return err;
-
-      // Update the log file for tilt series with autosave policy
-      if (mParam->acquireType == ACQUIRE_DO_TS && 
-        mWinApp->mTSController->GetAutoSavePolicy()) {
-        if (mWinApp->mLogWindow && 
-          mWinApp->mLogWindow->SaveFileNotOnStack(item->mFileToOpen)) {
-          mWinApp->mLogWindow->DoSave();
-          mWinApp->mLogWindow->CloseLog();
+        if (item->mGroupID && item->mGroupID == mGroupIDtoSkip) {
+          if (!skippedGroup)
+            PrintfToLog("Skipping point(s) with group ID %d", mGroupIDtoSkip);
+          skippedGroup = true;
+          continue;
         }
-        mWinApp->AppendToLog("", LOG_OPEN_IF_CLOSED);
-        mWinApp->mLogWindow->UpdateSaveFile(true, item->mFileToOpen);
-      }
 
-      // Set flag for first in group and maintain last group ID
-      mFirstInGroup = item->mGroupID > 0 && item->mGroupID != mLastGroupID;
-      mLastGroupID = item->mGroupID;
+        // Skip maps and remove the mark if acquiring map, but not if doing macro???
+        // But what if they want a different mag map?  This should go 
+        /*if (item->mType == ITEM_TYPE_MAP && mParam->acquireType == ACQUIRE_TAKE_MAP) {
+        item->mAcquire = false;
+        UpdateListString(i);
+        continue;
+        } */
+        SEMTrace('M', "Navigator Stage Start");
 
-      UpdateListString(i);
-      mMovingStage = true;
-      mWinApp->AddIdleTask(TASK_NAVIGATOR_ACQUIRE, 0, 60000);
-      return 0;
+        // Set the current item for the stage move!
+        mItem = item;
+        err = MoveStage(axisXY | axisZ);
+        if (err > 0)
+          return 1;
+        if (err < 0) {
+          item->mAcquire = false;
+          UpdateListString(i);
+          if (i == mCurrentItem)
+            ManageCurrentControls();
+          mWinApp->AppendToLog("Item " + item->mLabel + " is being skipped because it is "
+            "outside the limits for stage movement", LOG_MESSAGE_IF_CLOSED);
+          continue;
+        }
+        mAcquireIndex = i;
+
+        // Set state now
+        err = OpenFileIfNeeded(item, true);
+        if (err)
+          return err;
+
+        // Update the log file for tilt series with autosave policy
+        if (mParam->acquireType == ACQUIRE_DO_TS && 
+          mWinApp->mTSController->GetAutoSavePolicy()) {
+            if (mWinApp->mLogWindow && 
+              mWinApp->mLogWindow->SaveFileNotOnStack(item->mFileToOpen)) {
+                mWinApp->mLogWindow->DoSave();
+                mWinApp->mLogWindow->CloseLog();
+            }
+            mWinApp->AppendToLog("", LOG_OPEN_IF_CLOSED);
+            mWinApp->mLogWindow->UpdateSaveFile(true, item->mFileToOpen);
+        }
+
+        // Set flag for first in group and maintain last group ID
+        mFirstInGroup = item->mGroupID > 0 && item->mGroupID != mLastGroupID;
+        mLastGroupID = item->mGroupID;
+
+        UpdateListString(i);
+        mMovingStage = true;
+        mWinApp->AddIdleTask(TASK_NAVIGATOR_ACQUIRE, 0, 60000);
+        return 0;
     }
   }
   mAcquireEnded = true;
