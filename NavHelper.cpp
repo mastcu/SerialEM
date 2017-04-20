@@ -1287,11 +1287,12 @@ bool CNavHelper::CanStayInLowDose(CMapDrawItem *item, int xFrame, int yFrame, in
       (item->mMapProbeMode >= 0 && item->mMapProbeMode != ldp->probeMode) || 
       (hasAlpha && (item->mMapAlpha >= 0 || ldp->beamAlpha >= 0) &&  
       item->mMapAlpha != ldp->beamAlpha) ||
-      (filtered && ((item->mMapSlitIn ? 1 : 0 != ldp->slitIn ? 1 : 0) || (ldp->slitIn &&
-      fabs(item->mMapSlitWidth - ldp->slitWidth) > 6))) || item->mMapBinning <= 0) {
+      (filtered && (((item->mMapSlitIn ? 1 : 0) != (ldp->slitIn ? 1 : 0)) || (ldp->slitIn
+      && fabs(item->mMapSlitWidth - ldp->slitWidth) > 6))) || item->mMapBinning <= 0) {
         if (forReal) {
           SEMTrace('1', "Leaving LD, map bin %d map/LD cam %d/%d mag %d/%d spot %d/%d"
-            " probe %d/%d alpha %d/%.0f", item->mMapBinning, item->mMapCamera, 
+            " probe %d/%d alpha %d/%.0f", 
+            item->mMapMontage ? item->mMontBinning : item->mMapBinning, item->mMapCamera, 
             mWinApp->GetCurrentCamera(), item->mMapMagInd, ldp->magIndex, 
             item->mMapSpotSize, ldp->spotSize, item->mMapProbeMode >= 0 ? 
             item->mMapProbeMode : -1, item->mMapProbeMode >= 0 ? ldp->probeMode : -1, 
