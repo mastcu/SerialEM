@@ -798,8 +798,13 @@ public:
   int RotateAndReplaceArray(int chan, int operation, int invertCon);
   int CapSetupSTEMChannelsDetectors(ControlSet & conSet, int inSet, BOOL retracting);
   int CapManageScreen(int inSet, BOOL retracting, int numActive);
-  int CapManageInsertTempK2Saving(ControlSet & conSet, int inSet, BOOL retracting, 
+
+  // ControlSet is const here because the routine is called only the first time when
+  // there is settling, so changes would be lost in that case
+  int CapManageInsertTempK2Saving(const ControlSet &conSet, int inSet, BOOL retracting, 
     int numActive);
+  int SetupK2SavingAligning(const ControlSet & conSet, int inSet, bool saving, bool aligning,
+    CString *aliComRoot);
   int CapSetLDAreaFilterSettling(int inSet);
   void CapManageCoordinates(ControlSet &conSet, int &gainXoffset, int &gainYoffset);
   void CapSetupShutteringTiming(ControlSet & conSet, int inSet, BOOL &bEnsureDark);
@@ -835,8 +840,6 @@ void RollBuffers(int nRoll, int keepIndexCurrent);
 bool HasNewK2API(CameraParameters * param);
 void SetFrameAliDefaults(FrameAliParams & faParam, const char *name,
   int binning, float filt1);
-int SetupK2SavingAligning(ControlSet & conSet, int inSet, bool saving, bool aligning,
-  CString *aliComRoot);
 int MakeMdocFrameAlignCom(void);
 int QueueTiltDuringShot(double angle, int delayToStart, double speed);
 void RetractAllCameras(void);

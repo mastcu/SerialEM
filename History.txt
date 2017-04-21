@@ -3,6 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+4/20/17: Fixed option for saving raw K2 frames with "Gain normalized" selected
+in camera setup, which failed when there was settling (In 3.6).
+
+4/20/17: Fixed test that would make Realign to Item go out of Low Dose when
+there is an energy filter (In 3.6).
+
 4/17/17: Added script command to skip points in the current group.
 
 4/15/17: Added script command for writing a single-image file of specified

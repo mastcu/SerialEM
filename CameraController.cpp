@@ -2091,6 +2091,13 @@ void CCameraController::Capture(int inSet, bool retrying)
   // For JEOL, need a reliable value of tilt.  Tilt is needed before frame saving setups
   mTiltBefore = (float)mScope->GetTiltAngle();
 
+  // First manage switching to dark-subtracted if saving frames and they are
+  // supposed to be unnormalized.
+  if (mParam->K2Type && conSet.doseFrac && conSet.saveFrames && 
+    conSet.processing == GAIN_NORMALIZED && 
+    mSaveUnnormalizedFrames && GetPluginVersion(mParam) >= PLUGIN_CAN_GAIN_NORM)
+      conSet.processing = DARK_SUBTRACTED;
+
   // Make sure camera is inserted, blocking cameras are retracted, check temperature, and
   // set up saving from K2 camera;  Again clear low dose area flag to be safe
   // Only do this once, not if come back in from settling
@@ -2607,7 +2614,7 @@ int CCameraController::CapManageScreen(int inSet, BOOL retracting, int numActive
 
 // Take care of insertion and retract of other cameras, checking temperature, and setting
 // the saving of frames from K2.  These are the things that need a camera instance
-int CCameraController::CapManageInsertTempK2Saving(ControlSet &conSet, int inSet, 
+int CCameraController::CapManageInsertTempK2Saving(const ControlSet &conSet, int inSet, 
                                                    BOOL retracting, int numActive)
 {
   BOOL blockable, STEMretract, insertingOther;
@@ -2799,12 +2806,6 @@ int CCameraController::CapManageInsertTempK2Saving(ControlSet &conSet, int inSet
         GetPluginVersion(mParam) >= PLUGIN_CAN_ALIGN_FRAMES;
       if (!justReturn && mParam->K2Type && conSet.doseFrac && 
         (conSet.saveFrames || aligning)) {
-
-          // First manage switching to dark-subtracted if saving frames and they are
-          // supposed to be unnormalized.
-          if (conSet.saveFrames && conSet.processing == GAIN_NORMALIZED && 
-            mSaveUnnormalizedFrames && GetPluginVersion(mParam) >= PLUGIN_CAN_GAIN_NORM)
-            conSet.processing = DARK_SUBTRACTED;
           if (SetupK2SavingAligning(conSet, inSet, conSet.saveFrames != 0, aligning,
             NULL)) {
               justReturn = true;
@@ -2822,11 +2823,11 @@ int CCameraController::CapManageInsertTempK2Saving(ControlSet &conSet, int inSet
 
 // Routine that sets up K2 saving or aligning or writing of a COM file after saving;
 // it must be called after creating a camera object
-int CCameraController::SetupK2SavingAligning(ControlSet & conSet, int inSet, bool saving,
-  bool aligning, CString *aliComRoot)
+int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet, 
+  bool saving, bool aligning, CString *aliComRoot)
 {
   int ldArea, magIndex, sizeX, sizeY, numAllVsAll, refineIter, groupSize, doSpline;
-  int numGroups, numFilt = 1, deferGpuSum = 0, flags = 0;
+  int numGroups, faInd, numFilt = 1, deferGpuSum = 0, flags = 0;
   int DMind = CAMP_DM_INDEX(mParam);
   double maxMemory = pow(1024., 3.) * mK2MaxRamStackGB;
   LowDoseParams *ldParam = mWinApp->GetLowDoseParams();
@@ -2834,8 +2835,9 @@ int CCameraController::SetupK2SavingAligning(ControlSet & conSet, int inSet, boo
   bool bdum, sumWithAlign, isSuperRes = conSet.K2ReadMode == SUPERRES_MODE;
   bool trulyAligning = aligning && conSet.useFrameAlign == 1;
   if (aligning) {
-    B3DCLAMP(conSet.faParamSetInd, 0, (int)mFrameAliParams.GetSize() - 1);
-    faParam = mFrameAliParams[conSet.faParamSetInd];
+    faInd = conSet.faParamSetInd;
+    B3DCLAMP(faInd, 0, (int)mFrameAliParams.GetSize() - 1);
+    faParam = mFrameAliParams[faInd];
   }
 
   // Get pixel size from mag we are going to be in after changing low dose area
