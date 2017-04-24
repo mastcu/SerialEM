@@ -2116,6 +2116,7 @@ void CMacroProcessor::NextCommand()
       AdocReleaseMutex();
       ABORT_NOLINE("Error writing to autodoc file");
     }
+    AdocReleaseMutex();
   
     // AddToFrameMdoc, WriteFrameMdoc
   } else if (CMD_IS(ADDTOFRAMEMDOC) || CMD_IS(WRITEFRAMEMDOC)) {
