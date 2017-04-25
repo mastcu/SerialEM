@@ -411,6 +411,7 @@ class DLL_IM_EX CCameraController
   GetSetMember(int, NumFrameAliLogLines);
   GetMember(bool, DeferredSumFailed);
   SetMember(BOOL, AllowSpectroscopyImages);
+  GetMember(bool, AskedDeferredSum);
 
   int GetNumFramesSaved() {return mTD.NumFramesSaved;};
   BOOL *GetUseGPUforK2Align() {return &mUseGPUforK2Align[0];};
