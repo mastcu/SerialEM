@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+4/23/17: Fixed storage of last time done when hardware dark reference is
+updated (In 3.6).
+
 4/23/17: Fixed AddToAutodoc command to release autodoc mutex (In 3.6).
 
 4/20/17: SEM_3-6-7

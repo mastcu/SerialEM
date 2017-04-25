@@ -7032,7 +7032,7 @@ UINT CEMscope::LongOperationProc(LPVOID pParam)
           lod->plugFuncs->LoadCartridge(sCartridgeToLoad);
         }
 
-        lod->finished[longOp] = true;
+        lod->finished[ind] = true;
       }
 
       // Save an error in the error string and retval but continue in loop
@@ -7075,7 +7075,7 @@ int CEMscope::LongOperationBusy(int index)
         (busy ? " ended with error" : " finished successfully"));
       for (op = 0; op < mLongOpData[thread].numOperations; op++) {
         longOp = mLongOpData[thread].operations[op];
-        if (mLongOpData[thread].finished[longOp]) {
+        if (mLongOpData[thread].finished[op]) {
           mLastLongOpTimes[longOp] = now;
           mWinApp->mDocWnd->SetShortTermNotSaved();
         } else if (busy < 0 && !errorOK[longOp])

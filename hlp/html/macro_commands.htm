@@ -591,7 +591,9 @@
           <TD>Updates the K2 hardware dark reference if the known interval since the last
             update is longer than # in hours.&nbsp; If # is 0, the update is done
             unconditionally; if # is negative (-1), it simply records the current time as
-            the time of the last update. </TD>
+            the time of the last update.&nbsp; In order for the time interval to be kept 
+            track of between runs of the program, the property IgnoreShortTermCals must not 
+            be set.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style8">ReportK2FileParams</TD>
@@ -1451,7 +1453,9 @@
             stop.&nbsp; The user
             interface should not hang during long operations, and users will be asked to confirm that they want to
             kill the operation threads if they press STOP or try to exit the program.&nbsp;
-            The consequences of killing these threads are uncertain.</TD>
+            The consequences of killing these threads are uncertain.&nbsp; In order for time 
+            intervals to be kept track of between runs of the program, the property 
+            IgnoreShortTermCals must not be set.</TD>
         </TR>
         <TR  vAlign="top">
           <TD colspan="2"><A name="piezo_commands"></A><B>Piezo Drive Commands</B></TD>

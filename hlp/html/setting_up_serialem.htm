@@ -753,8 +753,9 @@
         Ordinarily SerialEM's 
         FEI scope plugin interacts with an FEI microscope using a COM connection to the 
         FEI scripting adapter, but this is not possible when running SerialEM on a 
-        64-bit computer, such as a Gatan K2 or Direct Electron camera computer or a 
-        64-bit FEI system.&nbsp; A 
+        separate 64-bit computer, such as a Gatan K2 or Direct Electron camera computer, or 
+        on older 
+        64-bit FEI systems.&nbsp; A 
         connection is possible in these cases by using a network socket connection to a small server 
         (<nobr>FEI-SEMserver.exe</nobr>) on the FEI computer.&nbsp; This server makes a 
         COM connection to the scripting adapter.&nbsp; The server needs to be started 
@@ -762,7 +763,8 @@
         the FEI microscope, including acquisition from FEI cameras (Eagle, Falcon, Ceta) and from STEM detectors.&nbsp; 
         It uses three or four consecutive ports for communications.&nbsp; The server can 
         also be used to run a 64-bit version of SerialEM on 64-bit microscope 
-        computers.&nbsp; </p>
+        computers with older versions of FEI software where a direct connection did not 
+        work.&nbsp; </p>
     <p>
         <a name="needNetwork"><i>Yes, You Need a Network Connection between the Computers</i></a>.&nbsp; SerialEM 
         does not use DigitalMicrograph&#39;s serial-port based communication with the scope; 
@@ -882,7 +884,9 @@
       ports.</p>
     <p>
       <a name="run64bitFEI"><i>Running 64-bit SerialEM on a 64-bit FEI Computer</i></a>.&nbsp; This is more 
-      straightforward.</p>
+      straightforward.&nbsp; With a new system, first try to run the 64-bit version of 
+      SerialEM without the server.&nbsp; If you get a message about the &#39;dark field 
+      element&#39;, use the server with these steps:</p>
     <ul>
       <li>Make sure that FEI-SEMserver.exe is in the upper SerialEM folder (the 
         installer should copy it there on a 64-bit system).</li>
