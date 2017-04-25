@@ -160,7 +160,7 @@ private:
   float mRIcalShiftY;
   int mRIconSetNum;
   bool mRIstayingInLD;
-  double mRIsavedLDintensity;
+  LowDoseParams mRIsavedLDparam;
   BOOL mRIuseBeamOffsets;       // Flag for whether to use the offsets
   float mTestParams[4];         // Parameters that can be set from macro
   int mContinuousRealign;       // Flag to use continuous mode; > 1 to leave it running

@@ -1194,6 +1194,7 @@ void CNavHelper::PrepareToReimageMap(CMapDrawItem *item, MontParam *param,
   LowDoseParams *ldp;
   CString *names = mWinApp->GetModeNames();
   CameraParameters *camP = mWinApp->GetCamParams() + item->mMapCamera;
+  bool filtered = (camP->GIF || mScope->GetHasOmegaFilter()) && item->mMapSlitWidth > 0.;
   StoreMapStateInParam(item, param, baseNum, &stateParam);
 
   // If coming from Realign to Item, see if we can STAY in low dose instead of hiding it
@@ -1229,11 +1230,16 @@ void CNavHelper::PrepareToReimageMap(CMapDrawItem *item, MontParam *param,
       conSets[mRIconSetNum].saveFrames = 0;
       conSets[mRIconSetNum].mode = SINGLE_FRAME;
 
-      // Also save the intensity and us map one
+      // Also save the low dose params and use map beam and slit conditions
       area = mCamera->ConSetToLDArea(item->mMapLowDoseConSet);
       ldp = mWinApp->GetLowDoseParams() + area;
-      mRIsavedLDintensity = ldp->intensity;
+      mRIsavedLDparam = *ldp;
       ldp->intensity = item->mMapIntensity;
+      ldp->spotSize = item->mMapSpotSize;
+      if (filtered) {
+        ldp->slitIn = item->mMapSlitIn;
+        ldp->slitWidth = item->mMapSlitWidth;
+      }
       mScope->GotoLowDoseArea(mRIconSetNum);
       return;
     }
@@ -1259,7 +1265,6 @@ bool CNavHelper::CanStayInLowDose(CMapDrawItem *item, int xFrame, int yFrame, in
   LowDoseParams *ldp;
   CameraParameters *camP = mWinApp->GetCamParams() + mWinApp->GetCurrentCamera();
   bool hasAlpha = JEOLscope && !mScope->GetHasNoAlpha();
-  bool filtered = (camP->GIF || mScope->GetHasOmegaFilter()) && item->mMapSlitWidth > 0.;
   setNum = TRACK_CONSET;
   retShiftX = item->mNetViewShiftX;
   retShiftY = item->mNetViewShiftY;
@@ -1283,30 +1288,24 @@ bool CNavHelper::CanStayInLowDose(CMapDrawItem *item, int xFrame, int yFrame, in
 
     // Check mag/spot/alpha and filter
     if (item->mMapCamera != mWinApp->GetCurrentCamera() || 
-      item->mMapMagInd != ldp->magIndex || item->mMapSpotSize != ldp->spotSize ||
+      item->mMapMagInd != ldp->magIndex || 
       (item->mMapProbeMode >= 0 && item->mMapProbeMode != ldp->probeMode) || 
       (hasAlpha && (item->mMapAlpha >= 0 || ldp->beamAlpha >= 0) &&  
-      item->mMapAlpha != ldp->beamAlpha) ||
-      (filtered && (((item->mMapSlitIn ? 1 : 0) != (ldp->slitIn ? 1 : 0)) || (ldp->slitIn
-      && fabs(item->mMapSlitWidth - ldp->slitWidth) > 6))) || item->mMapBinning <= 0) {
-        if (forReal) {
-          SEMTrace('1', "Leaving LD, map bin %d map/LD cam %d/%d mag %d/%d spot %d/%d"
+      item->mMapAlpha != ldp->beamAlpha) || item->mMapBinning <= 0) {
+        if (forReal)
+          SEMTrace('1', "Leaving LD, map bin %d map/LD cam %d/%d mag %d/%d"
             " probe %d/%d alpha %d/%.0f", 
             item->mMapMontage ? item->mMontBinning : item->mMapBinning, item->mMapCamera, 
             mWinApp->GetCurrentCamera(), item->mMapMagInd, ldp->magIndex, 
-            item->mMapSpotSize, ldp->spotSize, item->mMapProbeMode >= 0 ? 
-            item->mMapProbeMode : -1, item->mMapProbeMode >= 0 ? ldp->probeMode : -1, 
+            item->mMapProbeMode >= 0 ? item->mMapProbeMode : -1, 
+            item->mMapProbeMode >= 0 ? ldp->probeMode : -1, 
             hasAlpha ? item->mMapAlpha : -1, hasAlpha ? ldp->beamAlpha : -1.);
-          if (filtered)
-            SEMTrace('1', "   slit in %d/%d width %.1f/%.1f", item->mMapSlitIn ? 1 : 0,
-              ldp->slitIn ? 1 : 0, item->mMapSlitWidth, ldp->slitWidth, -1.);
-        }
         match = false;
     }
 
     // Check for defocus offset change
     if (match && item->mMapLowDoseConSet == VIEW_CONSET && 
-      fabs(item->mDefocusOffset - mScope->GetLDViewDefocus()) > 5.) {
+      fabs(item->mDefocusOffset - mScope->GetLDViewDefocus()) > 20.) {
         if (forReal)
           SEMTrace('1', "Leaving LD, defocus offset map %.1f  LD %.1f",
             item->mDefocusOffset, mScope->GetLDViewDefocus());
@@ -1792,7 +1791,7 @@ void CNavHelper::RestoreLowDoseConset(void)
   camSets[mWinApp->GetCurrentCamera() * MAX_CONSETS + mRIconSetNum] = mSavedConset;
   area = mCamera->ConSetToLDArea(mRIconSetNum);
   ldp = mWinApp->GetLowDoseParams() + area;
-  ldp->intensity = mRIsavedLDintensity;
+  *ldp = mRIsavedLDparam;
 
   // And be sure to turn flag off in case this is called from other situations
   mRIstayingInLD = false;
