@@ -3,9 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+4/25/17: SEM_3-6-8
 4/24/17: Realign to Item stays in Low Dose even if spot size or filter
-settings change; the map settings are still applied.  Also allowed View
-defocus offset to change by up to 20 microns. (In 3.6).
+settings change; the map settings are still applied.  Also it stays in Low
+Dose if View defocus offset changes by up to 20 microns. (In 3.6).
 
 4/23/17: Fixed storage of last time done when hardware dark reference is
 updated (In 3.6).
