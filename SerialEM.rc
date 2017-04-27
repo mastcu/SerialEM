@@ -1603,7 +1603,7 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,97,0,6,6,NOT WS_VISIBLE | WS_DISABLED
     CTEXT           "Filter Control",IDC_STATTOPLINE,39,0,55,8
     CONTROL         "EFTEM Mode",IDC_EFTEMMODE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,9,55,10
-    CONTROL         "Regular mag with screen down",IDC_AUTOMAG,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,19,107,10
+    CONTROL         "TEM mode with screen down",IDC_AUTOMAG,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,19,107,10
     LTEXT           "OFF",IDC_STATONOFF,60,8,16,10,SS_CENTERIMAGE
     CONTROL         "Filter (slit in)",IDC_SLITIN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,30,45,10
     RTEXT           "Slit width",IDC_STATIC,49,31,29,8
