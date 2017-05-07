@@ -748,7 +748,7 @@ void CCameraSetupDlg::UnloadConSet()
   m_fFrameTime = conSet->frameTime;
   m_bAlignDoseFrac = conSet->alignFrames > 0 || 
     (mCurrentSet == RECORD_CONSET && mWinApp->mTSController->GetFrameAlignInIMOD());
-  m_bSaveFrames = conSet->saveFrames > 0;
+  mUserSaveFrames = m_bSaveFrames = conSet->saveFrames > 0;
   m_bSaveK2Sums = conSet->sumK2Frames > 0 && 
     mCamera->GetPluginVersion(mParam) >= PLUGIN_CAN_SUM_FRAMES;
   if (mParam->K2Type > 1)
@@ -931,7 +931,7 @@ void CCameraSetupDlg::LoadConSet()
   conSet->frameTime = m_fFrameTime;
   if (!(mCurrentSet == RECORD_CONSET && mWinApp->mTSController->GetFrameAlignInIMOD()))
     conSet->alignFrames = m_bAlignDoseFrac ? 1 : 0;
-  conSet->saveFrames = m_bSaveFrames ? 1 : 0;
+  conSet->saveFrames = mUserSaveFrames ? 1 : 0;
   conSet->sumK2Frames = m_bSaveK2Sums ? 1 : 0;
   conSet->summedFrameList = mSummedFrameList;
   conSet->numSkipBefore = mNumSkipBefore;
@@ -2109,6 +2109,13 @@ void CCameraSetupDlg::ManageDoseFrac(void)
   FrameAliParams fap;
   ControlSet *conSet = &mConSets[mCurrentSet + mActiveCameraList[mCurrentCamera] *
     MAX_CONSETS];
+  bool forceSaving = m_bDoseFracMode && m_bAlignDoseFrac && conSet->useFrameAlign > 1 &&
+    mCamera->GetPluginVersion(mParam) >= PLUGIN_CAN_ALIGN_FRAMES;
+  if ((forceSaving && !m_bSaveFrames) || (!forceSaving && !BOOL_EQUIV(m_bSaveFrames,
+    mUserSaveFrames))) {
+    m_bSaveFrames = B3DCHOICE(forceSaving, true, mUserSaveFrames);
+    UpdateData(false);
+  }
   bool enable = m_bSaveFrames && m_bDoseFracMode && 
     mCamera->GetPluginVersion(mParam) >= PLUGIN_CAN_SUM_FRAMES;
   m_statFrameTime.EnableWindow(m_bDoseFracMode);
@@ -2116,7 +2123,7 @@ void CCameraSetupDlg::ManageDoseFrac(void)
   m_editFrameTime.EnableWindow(m_bDoseFracMode);
   m_butAlignDoseFrac.EnableWindow(m_bDoseFracMode && 
     !(mCurrentSet == RECORD_CONSET && mWinApp->mTSController->GetFrameAlignInIMOD()));
-  m_butSaveFrames.EnableWindow(m_bDoseFracMode);
+  m_butSaveFrames.EnableWindow(m_bDoseFracMode && !forceSaving);
   m_butSetupAlign.EnableWindow(m_bDoseFracMode && m_bAlignDoseFrac);
   m_butSetSaveFolder.EnableWindow(m_bSaveFrames && m_bDoseFracMode); 
   m_butFileOptions.EnableWindow(m_bSaveFrames && m_bDoseFracMode);
@@ -2159,11 +2166,12 @@ void CCameraSetupDlg::ManageDoseFrac(void)
 void CCameraSetupDlg::OnSaveFrames()
 {
   UpdateData(true);
+  mUserSaveFrames = m_bSaveFrames;
   if (mFalconCanSave && m_bSaveFrames) {
     if (!mSummedFrameList.size())
       OnSetupFalconFrames();
     if (!mSummedFrameList.size()) {
-      m_bSaveFrames = false;
+      mUserSaveFrames = m_bSaveFrames = false;
       UpdateData(false);
     } else {
       mWinApp->mFalconHelper->AdjustForExposure(mSummedFrameList, mNumSkipBefore,

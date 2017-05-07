@@ -67,6 +67,7 @@ public:
   BOOL mAcquireAndReopen;
   BOOL mClosing;
   WINDOWPLACEMENT mPlacement;
+  BOOL mUserSaveFrames;
 
     
 

@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+5/6/17: When "Align in IMOD" is selected for K2 frames, it will automatically
+turn on frame saving but retain the user's setting for this (In 3.6).
+
 4/25/17: SEM_3-6-8
 4/24/17: Realign to Item stays in Low Dose even if spot size or filter
 settings change; the map settings are still applied.  Also it stays in Low

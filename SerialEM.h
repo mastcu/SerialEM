@@ -221,6 +221,7 @@ typedef bool (*PlugDoingFunc)(void);
 #define B3DCHOICE(a,b,c) ((a) ? (b) : (c))
 #define B3DABS(a) ((a) >= 0 ? (a) : -(a))
 #define B3DSWAP(a,b,c) {c = (a); a = (b); b = c;}
+#define BOOL_EQUIV(a, b) (((a) ? 1 : 0) == ((b) ? 1 : 0))
 #define MB_EXCLAME (MB_OK | MB_ICONEXCLAMATION)
 #define MB_QUESTION (MB_YESNO | MB_ICONQUESTION)
 

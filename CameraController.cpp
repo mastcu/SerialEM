@@ -2091,12 +2091,17 @@ void CCameraController::Capture(int inSet, bool retrying)
   // For JEOL, need a reliable value of tilt.  Tilt is needed before frame saving setups
   mTiltBefore = (float)mScope->GetTiltAngle();
 
-  // First manage switching to dark-subtracted if saving frames and they are
+  // First manage 1) Turning on frame-saving if it is supposed to align frames in IMOD
+  // 2) switching to dark-subtracted if saving frames and they are
   // supposed to be unnormalized.
-  if (mParam->K2Type && conSet.doseFrac && conSet.saveFrames && 
-    conSet.processing == GAIN_NORMALIZED && 
-    mSaveUnnormalizedFrames && GetPluginVersion(mParam) >= PLUGIN_CAN_GAIN_NORM)
-      conSet.processing = DARK_SUBTRACTED;
+  if (mParam->K2Type && conSet.doseFrac) {
+    if (conSet.alignFrames && GetPluginVersion(mParam) >= PLUGIN_CAN_ALIGN_FRAMES &&
+      conSet.useFrameAlign > 1 && !conSet.saveFrames)
+        conSet.saveFrames = 1;
+    if (conSet.saveFrames && conSet.processing == GAIN_NORMALIZED && 
+      mSaveUnnormalizedFrames && GetPluginVersion(mParam) >= PLUGIN_CAN_GAIN_NORM)
+        conSet.processing = DARK_SUBTRACTED;
+  }
 
   // Make sure camera is inserted, blocking cameras are retracted, check temperature, and
   // set up saving from K2 camera;  Again clear low dose area flag to be safe
