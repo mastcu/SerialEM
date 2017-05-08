@@ -564,7 +564,7 @@ void CAutoTuning::ComaFreeNextTask(int param)
           mNumComaItersDone++;
           delBSX = -misAlignX / mNumComaItersDone;
           delBSY = -misAlignY / mNumComaItersDone;
-          mScope->IncBeamTilt(delBSY, delBSY);
+          mScope->IncBeamTilt(delBSX, delBSY);
           mCumulTiltChangeX += delBSX;
           mCumulTiltChangeY += delBSY;
           if (mNumComaItersDone < mMaxComaIters) {
