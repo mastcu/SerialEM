@@ -1170,6 +1170,17 @@
           <TD>Set the illuminated area on a Titan to the given value, expressed in microns 
             times 0.01.</TD>
         </TR>
+       <TR vAlign="top">
+          <TD class="style9">ReportImageDistanceOffset</TD>
+          <TD>Report the offset of the distance from the condenser plane to the image plane
+           on a Titan in the units from the scope.  Older versions of the scripting software
+           do not have this function, and with them, this command and the next one will crash SerialEM or FEI-SEMserver.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style9">SetImageDistanceOffset #</TD>
+          <TD>Set the offset of the distance from the condenser plane to the image plane
+           on a Titan; the allowed range is +/- 0.02.</TD>
+        </TR>
         <TR vAlign="top">
           <TD class="style9">SetIntensityForMean #</TD>
           <TD>Adjust beam intensity to yield the given number of counts, based on counts in

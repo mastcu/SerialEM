@@ -4682,6 +4682,39 @@ double CEMscope::IntensityAfterApertureChange(double intensity, int oldAper, int
   return IllumAreaToIntensity((newAper * IntensityToIllumArea(intensity)) / oldAper);
 }
 
+// Get the C3 - Image plane distance offset on Titan, return -999 for error
+double CEMscope::GetImageDistanceOffset()
+{
+  double result = -999.;
+  if (!sInitialized || !FEIscope)
+    return -999.;
+  try {
+    PLUGSCOPE_GET(ImageDistanceOffset, result, 1.e4);
+  }
+  catch (_com_error E) {
+    SEMReportCOMError(E, _T("getting image distance offset "));
+    result = -999.;
+  }
+  return result;
+}
+
+// Set the C3 - Image plane distance offset on a Titan
+BOOL CEMscope::SetImageDistanceOffset(double inVal)
+{
+  BOOL result = false;
+  if (!sInitialized || !FEIscope)
+    return false;
+  try {
+    PLUGSCOPE_SET(ImageDistanceOffset, 1.e-4 * inVal);
+    result = true;
+  }
+  catch (_com_error E) {
+    SEMReportCOMError(E, _T("setting image distance offset "));
+    result = false;
+  }
+  return result;
+}
+
 
 // Get the spot size index
 int CEMscope::GetSpotSize()
@@ -4968,17 +5001,17 @@ BOOL CEMscope::GetDeflectorByName(CString &name, double &valueX, double &valueY)
 }
 
 // Set free lens control on or off on JEOL for one or all lenses
-BOOL CEMscope::SetFreeLensControl(int lens, bool state)
+BOOL CEMscope::SetFreeLensControl(int lens, int arg)
 {
   BOOL result = true;
   if (!sInitialized || !mPlugFuncs->SetFreeLensControl)
     return false;
   ScopeMutexAcquire("SetFreeLensControl", true);
   try {
-    mPlugFuncs->SetFreeLensControl(lens, state ? 1 : 0);
+    mPlugFuncs->SetFreeLensControl(lens, arg);
   }
   catch (_com_error E) {
-    SEMReportCOMError(E, _T("setting state of free lens control "));
+    SEMReportCOMError(E, _T("setting state/value of free lens control "));
     result = false;
   }
   ScopeMutexRelease("SetFreeLensControl");

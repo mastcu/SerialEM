@@ -202,6 +202,8 @@ class DLL_IM_EX CEMscope
   BOOL SetIntensity(double inVal);
   BOOL DelayedSetIntensity(double inVal, DWORD startTime);
   BOOL SetIlluminatedArea(double inVal);
+  double GetImageDistanceOffset();
+  BOOL SetImageDistanceOffset(double inVal);
   BOOL SetIntensityZoom(BOOL inVal);
   BOOL GetIntensityZoom();
   GetSetMember(float, SmallScreenFactor)
@@ -709,7 +711,7 @@ public:
     mStartForMinMoveX = startX; mStartForMinMoveY = startY; mMinMoveForBacklash = minMove;};
   bool BlankTransientIfNeeded(const char *routine);
   void UnblankAfterTransient(bool needUnblank, const char *routine);
-  BOOL SetFreeLensControl(int lens, bool state);
+  BOOL SetFreeLensControl(int lens, int arg);
   BOOL SetLensWithFLC(int lens, double inVal, bool relative);
 };
 

@@ -206,7 +206,8 @@ enum {CME_VIEW, CME_FOCUS, CME_TRIAL, CME_RECORD, CME_PREVIEW,
   CME_SETPROPERTY, CME_SETMAGINDEX, CME_SETNAVREGISTRATION, CME_LOCALVAR,
   CME_LOCALLOOPINDEXES, CME_ZEMLINTABLEAU, CME_WAITFORMIDNIGHT, CME_REPORTUSERSETTING,
   CME_SETUSERSETTING, CME_CHANGEITEMREGISTRATION, CME_SHIFTITEMSBYMICRONS,
-  CME_SETFREELENSCONTROL, CME_SETLENSWITHFLC, CME_SAVETOOTHERFILE, CME_SKIPACQUIRINGGROUP
+  CME_SETFREELENSCONTROL, CME_SETLENSWITHFLC, CME_SAVETOOTHERFILE, CME_SKIPACQUIRINGGROUP,
+  CME_REPORTIMAGEDISTANCEOFFSET, CME_SETIMAGEDISTANCEOFFSET
 };
 
 static CmdItem cmdList[] = {{NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0},
@@ -304,6 +305,7 @@ static CmdItem cmdList[] = {{NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0
 {"WaitForMidnight", 0}, {"ReportUserSetting", 1}, {"SetUserSetting", 2}, 
 {"ChangeItemRegistration", 2}, {"ShiftItemsByMicrons", 2}, {"SetFreeLensControl", 2},
 {"SetLensWithFLC", 2}, {"SaveToOtherFile", 4}, {"SkipAcquiringGroup", 0},
+{"ReportImageDistanceOffset", 0}, {"SetImageDistanceOffset", 1},
 {NULL, 0, NULL}
 };
 
@@ -2891,6 +2893,12 @@ void CMacroProcessor::NextCommand()
     mWinApp->AppendToLog(report, mLogAction);
     SetReportedValues(&strItems[1], delX);
 
+  } else if (CMD_IS(REPORTIMAGEDISTANCEOFFSET)) {           // ReportImageDistanceOffset
+    delX = mScope->GetImageDistanceOffset();
+    report.Format("Image distance offset %f", delX);
+    mWinApp->AppendToLog(report, mLogAction);
+    SetReportedValues(&strItems[1], delX);
+
   } else if (CMD_IS(REPORTALPHA)) {                         // ReportAlpha
     index = mScope->GetAlpha() + 1;
     report.Format("Alpha = %d", index);
@@ -2952,7 +2960,7 @@ void CMacroProcessor::NextCommand()
     SetReportedValues(&strItems[1], delX, delY);
 
   } else if (CMD_IS(SETFREELENSCONTROL)) {                  // SetFreeLensControl
-    if (!mScope->SetFreeLensControl(itemInt[1], itemInt[2] != 0))
+    if (!mScope->SetFreeLensControl(itemInt[1], itemInt[2]))
       ABORT_LINE("Error trying to run:\n\n");
 
   } else if (CMD_IS(SETLENSWITHFLC)) {                      // SetLensWithFLC
@@ -3413,6 +3421,12 @@ void CMacroProcessor::NextCommand()
 
   } else if (CMD_IS(SETILLUMINATEDAREA)) {                  // SetIlluminatedArea
     if (!mScope->SetIlluminatedArea(itemDbl[1])) {
+      AbortMacro();
+      return;
+    }
+
+  } else if (CMD_IS(SETIMAGEDISTANCEOFFSET)) {              // SetImageDistanceOffset
+    if (!mScope->SetImageDistanceOffset(itemDbl[1])) {
       AbortMacro();
       return;
     }
