@@ -53,7 +53,6 @@ CGainRefMaker::CGainRefMaker()
   mStoreMRC = NULL;
   mArray = NULL;
   mNumRefKVs = 0;
-  mKVTime = -KV_CHECK_SECONDS;
   mHTValue = 0;
   mDMrefAskPolicy = DMREF_ASK_IF_NEWER;
   mIgnoreHigherRefs = false;
@@ -1102,31 +1101,32 @@ void CGainRefMaker::CheckChangedKV(void)
 {
   // If there is a list of KVs at which to keep a separate gain reference, 
   // First get a KV value if interval has expired, then check if close to one on list
-  double curTime = 0.001 * GetTickCount();
   double curKV;
   int newHT;
+  bool wasRead;
   mCamera = mWinApp->mCamera;
-  if (mNumRefKVs > 0 && (curTime < mKVTime || curTime - mKVTime > KV_CHECK_SECONDS)) {
-    SEMTrace('r', "Checking for change in KV");
-    curKV = mWinApp->mScope->GetHTValue();
-    mKVTime = curTime;
+  if (mNumRefKVs > 0) {
+    curKV = mWinApp->mProcessImage->GetRecentVoltage(&wasRead);
+    if (wasRead) {
+      SEMTrace('r', "Checking for change in KV");
 
-    // Evaluate whether at separate KV value, and get non-zero value if so
-    newHT = 0;
-    for (int i = 0; i < mNumRefKVs; i++) {
-      if (mRefKVList[i] > 0 && fabs(curKV - mRefKVList[i]) / mRefKVList[i] < 0.025) {
-        newHT = mRefKVList[i];
-        break;
+      // Evaluate whether at separate KV value, and get non-zero value if so
+      newHT = 0;
+      for (int i = 0; i < mNumRefKVs; i++) {
+        if (mRefKVList[i] > 0 && fabs(curKV - mRefKVList[i]) / mRefKVList[i] < 0.025) {
+          newHT = mRefKVList[i];
+          break;
+        }
       }
-    }
 
-    // If the distinct KV value has changed, clear out all reference information
-    if (mHTValue != newHT) {
-      SEMTrace('r', "Clearing out references for KV change");
-      mHTValue = newHT;
-      DeleteReferences();
-      InitializeRefArrays();
-      mCamera->DeleteReferences(GAIN_REFERENCE, false);
+      // If the distinct KV value has changed, clear out all reference information
+      if (mHTValue != newHT) {
+        SEMTrace('r', "Clearing out references for KV change");
+        mHTValue = newHT;
+        DeleteReferences();
+        InitializeRefArrays();
+        mCamera->DeleteReferences(GAIN_REFERENCE, false);
+      }
     }
   }
 }

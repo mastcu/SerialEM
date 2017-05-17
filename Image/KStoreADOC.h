@@ -68,6 +68,7 @@
 #define ADOC_VIEW_BEAM_TILT "ViewBeamTilts"
 #define ADOC_ALPHA "Alpha"
 #define ADOC_FILTER "FilterState"
+#define ADOC_VOLTAGE "Voltage"
 
 class KStoreADOC :
   public KImageStore

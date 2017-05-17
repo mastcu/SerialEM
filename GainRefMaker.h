@@ -107,7 +107,6 @@ private:
   BOOL mCalibrateDose;              // Flag to calibrate electron dose
   int mRefKVList[MAX_GAINREF_KVS];  // List of KVs at which to keep separate gain references
   int mNumRefKVs;
-  double mKVTime;                   // Time when KV was last checked, in seconds
   int mHTValue;                     // KV value if at on of the separate KVs, otherwise 0
   int mDMrefAskPolicy;              // Whether and when to ask about using DM ref
   BOOL mIgnoreHigherRefs;           // Ignore refs above binning 2

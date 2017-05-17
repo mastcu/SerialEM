@@ -47,6 +47,7 @@ public:
   int mMagIndex;
   float mMin, mMax, mMean;
   float mTargetDefocus;
+  float mVoltage;
   CString mSubFramePath;
   int mNumSubFrames;
   CString mDateTime;

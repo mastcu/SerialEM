@@ -389,6 +389,9 @@ int KStoreADOC::SetValuesFromExtra(KImage *inImage, char *sectName, int index)
   if (extra->mTargetDefocus > EXTRA_VALUE_TEST &&
     AdocSetFloat(sectName, index, ADOC_TARGET, extra->mTargetDefocus))
     return 1;
+  if (extra->mVoltage >= 0. &&
+    AdocSetFloat(sectName, index, ADOC_VOLTAGE, extra->mVoltage))
+    return 1;
   if (!extra->mSubFramePath.IsEmpty() && AdocSetKeyValue(sectName, index, ADOC_FRAME_PATH, 
     (LPCTSTR)extra->mSubFramePath))
     return 1;
@@ -489,6 +492,7 @@ int KStoreADOC::LoadExtraFromValues(EMimageExtra *extra, int &typext, char *sect
   AdocGetThreeFloats(sectName, index, ADOC_MINMAXMEAN, &extra->mMin, &extra->mMax,
     &extra->mMean);
   AdocGetFloat(sectName, index, ADOC_TARGET, &extra->mTargetDefocus);
+  AdocGetFloat(sectName, index, ADOC_VOLTAGE, &extra->mVoltage);
   if (AdocGetString(sectName, index, ADOC_FRAME_PATH, &frameDir) == 0) {
     extra->mSubFramePath = frameDir;
     free(frameDir);

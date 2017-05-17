@@ -2684,10 +2684,7 @@ bool CProcessImage::DefocusFromPointAndZeros(double pointRad, int zeroNum, float
   double wavelength, csOne, csTwo, ampAngle, theta, thetaNew, delz, rootTemp;
   int ind;
   double PI = 3.1415926535;
-  if (mKVTime < 0 || SEMTickInterval(mKVTime) > 1000 * KV_CHECK_SECONDS) {
-    mKVTime = GetTickCount();
-    mVoltage = mWinApp->mScope->GetHTValue();
-  }
+  GetRecentVoltage();
   if (radii)
     radii->clear();
 
@@ -2720,6 +2717,20 @@ bool CProcessImage::DefocusFromPointAndZeros(double pointRad, int zeroNum, float
     radii->push_back((float)(thetaNew * pixel * 2.0 / (wavelength * csTwo)));
   }
   return true;
+}
+
+// Returns microscope voltage, reading it only sparingly from scope
+double CProcessImage::GetRecentVoltage(bool *valueWasRead)
+{
+  if (valueWasRead)
+    *valueWasRead = false;
+  if (mKVTime < 0 || SEMTickInterval(mKVTime) > 1000 * KV_CHECK_SECONDS) {
+    mKVTime = GetTickCount();
+    mVoltage = mWinApp->mScope->GetHTValue();
+    if (valueWasRead)
+      *valueWasRead = true;
+  }
+  return mVoltage;
 }
 
 // Return a dose rate in electrons per unbinned pixel per second given the mean value
@@ -2918,5 +2929,3 @@ int CProcessImage::FindDoseRate(float countVal, float *counts, float *rates, int
   doseRate = countVal / ratioBest;
   return err;
 }
-
-

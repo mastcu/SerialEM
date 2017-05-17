@@ -7107,6 +7107,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       extra->mDefocus = defocus;
       if (!mParam->STEMcamera)
         extra->mTargetDefocus = mWinApp->mFocusManager->GetTargetDefocus();
+      extra->mVoltage = (float)mWinApp->mProcessImage->GetRecentVoltage();
       stZ = mScope->FastIntensity();
       extra->m_fIntensity = (float)stZ;
       extra->mStageX = (float)mStageXbefore;
