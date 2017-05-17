@@ -462,7 +462,10 @@
 &nbsp;&nbsp;&nbsp; CallFunction 15::AlignWithBuffer $ifNeedImage $buffer<br />
       or<br />
 &nbsp;&nbsp;&nbsp; CallFunction Many Funcs::AlignWithBuffer $ifNeedImage $buffer<br />
-      Notice that it can handle spaces in the script name but not the function name.</P>
+      Notice that it can handle spaces in the script name but not the function name.&nbsp; 
+      However, as of SerialEM 3.7 (May 17, 2017), if a function occurs in the current 
+      script as well as in other ones, the function in the current script will be used 
+      when there is no script number or name in front of the function name.</P>
     <P>Inside the function, the arguments are defined as regular variables: either the 
       variables listed at the start of the function, or &#39;argVal1&#39;, 
       &#39;argVal2&#39;, etc.&nbsp; If you listed fewer variable names than arguments, 

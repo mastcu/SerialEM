@@ -263,7 +263,7 @@ public:
   int CheckBalancedParentheses(CString * strItems, int maxItems, CString &strLine, CString &errmess);
   int SeparateParentheses(CString * strItems, int maxItems);
   void ClearFunctionArray(int index);
-  MacroFunction * FindCalledFunction(CString strLine, bool scanning, int &macroNum, int &argInd);
+  MacroFunction * FindCalledFunction(CString strLine, bool scanning, int &macroNum, int &argInd, int currentMac = -1);
   void ScanMacroIfNeeded(int index, bool scanning);
   void TrimTrailingZeros(CString & str);
   int PiecesForMinimumSize(float minMicrons, int camSize, float fracOverlap);

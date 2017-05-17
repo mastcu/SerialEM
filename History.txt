@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+5/17/17: Script processor now searches in current script first for a
+function with no script name in front of it, thus allowing duplicate
+function names in other scripts.
+
 5/16/17: Fixed initial script checking to allow calling a function from both
 another script and the script it is in (In 3.6).
 
