@@ -5731,14 +5731,18 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel)
           }
 
           // For calling a macro, check that it is not too deep and that it's not circular
+          // There is no good way to check circular function calls, so this relies on 
+          // run-time testing
           if (!(CMD_IS(DOMACRO) || CMD_IS(DOSCRIPT))) {
             mCallLevel++;
             if (mCallLevel >= MAX_CALL_DEPTH)
               FAIL_CHECK_LINE("Too many nested script calls");
-            for (i = 0; i < mCallLevel; i++) {
-              if (mCallMacro[i] == index && mCallFunction[i] == func)
-                FAIL_CHECK_LINE("Trying to call a script that is already calling a "
-                "script");
+            if (!CMD_IS(CALLFUNCTION)) {
+              for (i = 0; i < mCallLevel; i++) {
+                if (mCallMacro[i] == index && mCallFunction[i] == func)
+                  FAIL_CHECK_LINE("Trying to call a script that is already calling a "
+                  "script");
+              }
             }
 
             mCallMacro[mCallLevel] = index;

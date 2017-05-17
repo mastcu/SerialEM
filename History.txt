@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+5/16/17: Fixed initial script checking to allow calling a function from both
+another script and the script it is in (In 3.6).
+
 5/7/17: Added script commands for getting and setting condenser-image plane
 distance offset on Titan.
 
