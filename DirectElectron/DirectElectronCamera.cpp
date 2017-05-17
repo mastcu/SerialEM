@@ -435,6 +435,8 @@ int DirectElectronCamera::initializeDECamera(CString camName)
     setStringProperty("Autosave Raw Frames - Save Correction", "Disable");
     setStringProperty("Autosave Sum Frames - Save Correction", "Disable");
     setIntProperty("Autosave Sum Frames - Ignored Frames", 0);
+    if (mServerVersion >= DE_HAS_REPEAT_REF)
+      setStringProperty("Auto Repeat Reference - Multiple Acquisitions", "Disable");
 
     if (GetDebugOutput('D')) {
       double startTime = GetTickCount();
@@ -1114,6 +1116,8 @@ int DirectElectronCamera::SetLiveMode(int mode)
     mode = 1;
 
   if (slock.Lock(1000)) {
+    if ((mLastLiveMode < 0 || !mTrustLastSettings) && mDeServer->getIsInLiveMode)
+      mLastLiveMode = mDeServer->getIsInLiveMode() ? 1 : 0;
     if (mode != mLastLiveMode) {
       if (mLastLiveMode > 1) {
 

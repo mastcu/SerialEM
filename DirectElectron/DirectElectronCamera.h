@@ -97,6 +97,7 @@ struct LiveThreadData {
 #define DE_OPEN_CLOSE_COVER "Open/Close During Each Exposure"
 
 #define DE_CAN_SAVE_MRC 1000715
+#define DE_HAS_REPEAT_REF 1000768
 #define DE_SUFFIX_KEEPS_PT 9999999
 
 //The following define the different

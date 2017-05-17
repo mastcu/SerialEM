@@ -253,8 +253,10 @@ int CPluginManager::LoadPlugins(void)
           DECAM_PROC(DEgetInt, getIntProperty);
           DECAM_PROC(DEgetString, getProperty);
           DECAM_PROC(DEsetMode, setLiveMode);
+          mDEcamFuncs.getIsInLiveMode = (DEnoArg)GetProcAddress(module, "getIsInLiveMode");
           DECAM_PROC(CamNoArg, getLastErrorCode);
           DECAM_PROC(DEerrString, getLastErrorDescription);
+
           if (i)
             mess.Format("Tried to load %s as a plugin for the DE camera interface but\r\n"
             "   could not resolve some required functions; this plugin is not up to date",

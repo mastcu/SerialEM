@@ -148,6 +148,7 @@ struct DEPluginFuncs {
   DEgetInt getIntProperty;
   DEgetString getProperty;
   DEsetMode setLiveMode;
+  DEnoArg getIsInLiveMode;
   CamNoArg getLastErrorCode;
   DEerrString getLastErrorDescription;
 };
