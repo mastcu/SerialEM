@@ -207,7 +207,7 @@ enum {CME_VIEW, CME_FOCUS, CME_TRIAL, CME_RECORD, CME_PREVIEW,
   CME_LOCALLOOPINDEXES, CME_ZEMLINTABLEAU, CME_WAITFORMIDNIGHT, CME_REPORTUSERSETTING,
   CME_SETUSERSETTING, CME_CHANGEITEMREGISTRATION, CME_SHIFTITEMSBYMICRONS,
   CME_SETFREELENSCONTROL, CME_SETLENSWITHFLC, CME_SAVETOOTHERFILE, CME_SKIPACQUIRINGGROUP,
-  CME_REPORTIMAGEDISTANCEOFFSET, CME_SETIMAGEDISTANCEOFFSET
+  CME_REPORTIMAGEDISTANCEOFFSET, CME_SETIMAGEDISTANCEOFFSET, CME_REPORTCAMERALENGTH
 };
 
 static CmdItem cmdList[] = {{NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0},
@@ -305,7 +305,8 @@ static CmdItem cmdList[] = {{NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0
 {"WaitForMidnight", 0}, {"ReportUserSetting", 1}, {"SetUserSetting", 2}, 
 {"ChangeItemRegistration", 2}, {"ShiftItemsByMicrons", 2}, {"SetFreeLensControl", 2},
 {"SetLensWithFLC", 2}, {"SaveToOtherFile", 4}, {"SkipAcquiringGroup", 0},
-{"ReportImageDistanceOffset", 0}, {"SetImageDistanceOffset", 1},
+{"ReportImageDistanceOffset", 0}, {"SetImageDistanceOffset", 1}, 
+{"ReportCameraLength", 0},
 {NULL, 0, NULL}
 };
 
@@ -957,6 +958,7 @@ void CMacroProcessor::NextCommand()
   int index, index2, i, ix0, ix1, iy0, iy1, sizeX, sizeY, mag;
   float backlashX, backlashY, bmin, bmax, bmean, bSD, cpe, shiftX, shiftY;
   FilterParams *filtParam = mWinApp->GetFilterParams();
+  int *activeList = mWinApp->GetActiveCameraList();
   CameraParameters *camParams = mWinApp->GetCamParams() + mWinApp->GetCurrentCamera();
   MontParam *montP = mWinApp->GetMontParam();
   LowDoseParams *ldParam = mWinApp->GetLowDoseParams();
@@ -2867,6 +2869,15 @@ void CMacroProcessor::NextCommand()
     SetReportedValues(&strItems[1], (double)index, 
       index < mScope->GetLowestNonLMmag() ? 1. : 0.);
 
+  } else if (CMD_IS(REPORTCAMERALENGTH)) {                  // ReportCameraLength
+    delX = 0;
+    if (!mScope->GetMagIndex())
+      delX = mScope->GetLastCameraLength();
+    report.Format("%s %g%s", delX ? "Camera length is " : "Not in diffraction mode - (",
+      delX, delX ? " m" : ")");
+    mWinApp->AppendToLog(report, mLogAction);
+    SetReportedValues(&strItems[1],  delX);
+
   } else if (CMD_IS(REPORTDEFOCUS)) {                       // ReportDefocus
     delX = mScope->GetDefocus();
     report.Format("Defocus = %.3f um", delX);
@@ -3965,13 +3976,20 @@ void CMacroProcessor::NextCommand()
 
 
   } else if (CMD_IS(CAMERAPROPERTIES)) {                    // CameraProperties
-    index = camParams->sizeX / (camParams->K2Type ? 2 : 1);
-    index2 = camParams->sizeY / (camParams->K2Type ? 2 : 1);
-    report.Format("Camera size %d x %d    rotation/flip %d", index, index2,
-      camParams->rotationFlip);
+    if (!itemEmpty[1]) {
+      if (itemInt[1] < 1 || itemInt[1] > mWinApp->GetActiveCamListSize())
+        ABORT_LINE("Active camera number is out of range in:\n\n")
+      camParams = mWinApp->GetCamParams() + activeList[itemInt[1] - 1];
+    }
+    ix1 = camParams->K2Type ? 2 : 1;
+    index = camParams->sizeX / ix1;
+    index2 = camParams->sizeY / ix1;
+    report.Format("%s: size %d x %d    rotation/flip %d   physical pixel %.1f", 
+      (LPCSTR)camParams->name, index, index2, camParams->rotationFlip, 
+      camParams->pixelMicrons * ix1);
     mWinApp->AppendToLog(report, mLogAction);
     SetReportedValues(&strItems[1], (double)index, (double)index2, 
-      (double)camParams->rotationFlip);
+      (double)camParams->rotationFlip, camParams->pixelMicrons * ix1);
 
   } else if (CMD_IS(REPORTCOLUMNORGUNVALVE)) {              // ReportColumnOrGunValve
     index = mScope->GetColumnValvesOpen();
@@ -4686,13 +4704,15 @@ void CMacroProcessor::ScanMacroIfNeeded(int index, bool scanning)
 // Given the parsed line that calls a function, find the macro it is in and the function
 // structure in that macro's array, and index of first argument if any
 MacroFunction *CMacroProcessor::FindCalledFunction(CString strLine, bool scanning, 
-                                                   int &macroNum, int &argInd)
+  int &macroNum, int &argInd, int currentMac)
 {
   int colonLineInd = strLine.Find("::");
-  int num, mac, ind, colonItemInd, start = 0, end = MAX_MACROS - 1;
+  int num, mac, ind, loop, colonItemInd, start = 0, end = MAX_MACROS - 1;
   CString funcName, macName, strItems[MAX_TOKENS];
   MacroFunction *func, *retFunc = NULL;
   macroNum = -1;
+  if (currentMac < 0)
+    currentMac = mCurrentMacro;
 
   // Reparse the line so everthing is original case
   mWinApp->mParamIO->ParseString(strLine, strItems, MAX_TOKENS);
@@ -4745,25 +4765,31 @@ MacroFunction *CMacroProcessor::FindCalledFunction(CString strLine, bool scannin
   }
 
   // Now search one or all function arrays for the function name, make sure only one
-  for (mac = start; mac <= end; mac++) {
-    if (colonLineInd < 0)
-      ScanMacroIfNeeded(mac, scanning);
-    for (ind = 0; ind < mFuncArray[mac].GetSize(); ind++) {
-      func = mFuncArray[mac].GetAt(ind);
-      if (func->name == funcName) {
-        if (retFunc) {
-          if (macroNum == mac)
-            AfxMessageBox("Two functions in a script have the same name for this call:\n\n"
-            + strLine,  MB_EXCLAME);
-          else
-            AfxMessageBox("Two functions have the same name and you need \nto specify the"
-              " script name or number for this call:\n\n" + strLine,  MB_EXCLAME);
-          return NULL;
+  // Search current macro first if there is no colon
+  for (loop = (colonLineInd < 0 ? 0 : 1); loop < 2; loop++) {
+    for (mac = (loop ? start : currentMac); mac <= (loop ? end : currentMac); mac++)
+    {
+      if (colonLineInd < 0 || !loop)
+        ScanMacroIfNeeded(mac, scanning);
+      for (ind = 0; ind < mFuncArray[mac].GetSize(); ind++) {
+        func = mFuncArray[mac].GetAt(ind);
+        if (func->name == funcName) {
+          if (retFunc) {
+            if (macroNum == mac)
+              AfxMessageBox("Two functions in a script have the same name for this "
+              "call:\n\n" + strLine,  MB_EXCLAME);
+            else
+              AfxMessageBox("Two functions have the same name and you need \nto specify "
+              "the script name or number for this call:\n\n" + strLine,  MB_EXCLAME);
+            return NULL;
+          }
+          retFunc = func;
+          macroNum = mac;
         }
-        retFunc = func;
-        macroNum = mac;
       }
     }
+    if (!loop && retFunc)
+      break;
   }
   if (!retFunc) 
     AfxMessageBox("No function has a matching name for this call:\n\n" + strLine,
@@ -5715,7 +5741,7 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel)
             if (index < 0)
               return 12;
           } else if (CMD_IS(CALLFUNCTION)) {
-            func = FindCalledFunction(strLine, true, index, i);
+            func = FindCalledFunction(strLine, true, index, i, macroNum);
             if (!func)
               return 12;
           } else {
