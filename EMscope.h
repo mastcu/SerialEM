@@ -267,6 +267,7 @@ class DLL_IM_EX CEMscope
   SetMember(int, UpdateBeamBlank);
   SetMember(BOOL, BlankTransients);
   SetMember(BOOL, SelectedEFTEM);
+  GetMember(double, LastCameraLength);
   void SetMessageBoxArgs(int type, CString &title, CString &message);
   int GetMessageBoxReturnValue(void);
   GetSetMember(BOOL, UseInvertedMagRange);
@@ -601,6 +602,7 @@ private:
   BOOL mUseInvertedMagRange;  // Flag to step up in Titan inverted range to find mag
   int mUpdateBeamBlank;       // Flag to update beam blanker
   BOOL mBlankTransients;      // Flag to blank for mag/spot size changes & normalizations
+  double mLastCameraLength;   // Camera length in last update: valid only in diff mode
   int mPluginVersion;         // Version of plugin or server
 
   // Old static variables from UpdateProc

@@ -926,7 +926,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
   int screenPos;
   int magIndex, camLenIndex, indOldIS, oldOffCalInd, newOffCalInd;
   int spotSize, probe, tmpMag, toCam, oldNeutralInd, subMode;
-  double intensity, objective, rawIntensity, ISX, ISY, current, defocus, cameraLength;
+  double intensity, objective, rawIntensity, ISX, ISY, current, defocus;
   BOOL EFTEM, bReady, smallScreen, manageISonMagChg, gotoArea, blanked, restoreIS = false;
   int STEMmode, gunState = -1;
   bool newISseen = false;
@@ -991,7 +991,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
         magIndex = GetMagIndex();
       else
         magIndex = mJeolSD.magIndex;
-      cameraLength = mJeolSD.camLenValue;
+      mLastCameraLength = mJeolSD.camLenValue;
       camLenIndex = mJeolSD.camLenIndex;
       STEMmode = mJeolSD.JeolSTEM ? 1 : 0;
       if (STEMmode && mNeedSTEMneutral && mLastSTEMmag)
@@ -1113,7 +1113,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
 
       // Diffraction
       if (!magIndex) {
-        PLUGSCOPE_GET(CameraLength, cameraLength, 1);
+        PLUGSCOPE_GET(CameraLength, mLastCameraLength, 1);
         PLUGSCOPE_GET(CameraLengthIndex, camLenIndex, 1);
         if (FEIscope) {
           PLUGSCOPE_GET(SubMode, subMode, 1);
@@ -1372,7 +1372,8 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
     }
     mWinApp->mScopeStatus.Update(current, magIndex, defocus, ISX, ISY, stageX, stageY,
       stageZ, screenPos == spUp, smallScreen != 0, sBeamBlanked, EFTEM, STEMmode,spotSize, 
-      rawIntensity, intensity, objective, vacStatus, cameraLength, mProbeMode, gunState);
+      rawIntensity, intensity, objective, vacStatus, mLastCameraLength, mProbeMode, 
+      gunState);
 
     if (mWinApp->mStageMoveTool)
       mWinApp->mStageMoveTool->UpdateStage(stageX, stageY);
@@ -3542,6 +3543,7 @@ BOOL CEMscope::SetCamLenIndex(int inIndex)
         mPlugFuncs->SetImagingMode(pmDiffraction);
       mPlugFuncs->SetCameraLengthIndex(inIndex);
     }
+    PLUGSCOPE_GET(CameraLength, mLastCameraLength, 1.);
   }
   catch (_com_error E) {
     SEMReportCOMError(E, _T("setting camera length index "));
