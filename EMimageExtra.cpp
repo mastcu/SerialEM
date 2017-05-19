@@ -33,7 +33,6 @@ EMimageExtra::EMimageExtra()
   mMagIndex = -1;
   mMin = mMax = mMean = EXTRA_NO_VALUE;
   mTargetDefocus = EXTRA_NO_VALUE;
-  mVoltage = -1.;
   mSubFramePath = "";
   mNumSubFrames = -1;
   mDE12Version = "";

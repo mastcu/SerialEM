@@ -24,10 +24,12 @@
 #include "ShiftManager.h"
 #include "NavigatorDlg.h"
 #include "MacroProcessor.h"
+#include "ProcessImage.h"
 #include "CameraController.h"
 #include "TSController.h"
 #include "Utilities\XCorr.h"
 #include "Shared\iimage.h"
+#include "Shared\autodoc.h"
 
 
 EMbufferManager::EMbufferManager(CString *inModeNamep, EMimageBuffer *inImBufs)
@@ -331,6 +333,13 @@ int EMbufferManager::SaveImageBuffer(KImageStore *inStore, bool skipCheck, int i
     }
     sprintf(title, "%s", (LPCTSTR)str); 
     inStore->AddTitle(title);
+
+    cam = inStore->GetAdocIndex();
+    if (cam >= 0 && !CheckAsyncSaving() && !AdocGetMutexSetCurrent(cam)) {
+      AdocSetFloat(ADOC_GLOBAL, 0, ADOC_VOLTAGE, 
+        (float)mWinApp->mProcessImage->GetRecentVoltage());
+      AdocReleaseMutex();
+    }
   }
   toBuf->mCurStoreChecksum = 0;
   if (inStore == mWinApp->mStoreMRC)
