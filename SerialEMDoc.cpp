@@ -2336,11 +2336,10 @@ int CSerialEMDoc::AddValueToFrameMdoc(CString key, CString value)
   int retval = 0;
   if (mFrameAdocIndex < 0)
     return 1;
-  if (mLastFrameSect < 0)
-    return 3;
   if (AdocGetMutexSetCurrent(mFrameAdocIndex) < 0)
     return 2;
-  if (AdocSetKeyValue("FrameSet", mLastFrameSect, (LPCTSTR)key, (LPCTSTR)value))
+  if (AdocSetKeyValue(mLastFrameSect < 0 ? ADOC_GLOBAL : "FrameSet", 
+    mLastFrameSect < 0 ? 0 : mLastFrameSect, (LPCTSTR)key, (LPCTSTR)value))
     retval = 4;
   AdocReleaseMutex();
   return retval;
@@ -2354,7 +2353,7 @@ int CSerialEMDoc::WriteFrameMdoc(void)
     return 1;
   if (AdocGetMutexSetCurrent(mFrameAdocIndex) < 0)
     return 2;
-  if (AdocWrite((LPCTSTR)mFrameFilename))
+  if (AdocWrite((LPCTSTR)mFrameFilename) < 0)
     retval = 5;
   AdocReleaseMutex();
   return retval;

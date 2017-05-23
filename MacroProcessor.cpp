@@ -2102,8 +2102,6 @@ void CMacroProcessor::NextCommand()
     index2 = mWinApp->mStoreMRC->getDepth();
     if (index < 0)
       ABORT_LINE("There is no .mdoc file for the current image file for: \n\n");
-    if (!index2)
-      ABORT_LINE("There are no images saved in the current image file for: \n\n");
     if (AdocGetMutexSetCurrent(index) < 0)
       ABORT_LINE("Error making autodoc be the current one for: \n\n");
     if (CMD_IS(ADDTOAUTODOC)) {
@@ -2111,8 +2109,9 @@ void CMacroProcessor::NextCommand()
       mWinApp->mParamIO->StripItems(strLine, 2, strCopy);
       mWinApp->mParamIO->ParseString(strLine, strItems, MAX_TOKENS);
       if (AdocSetKeyValue(
-        mWinApp->mStoreMRC->getStoreType() == STORE_TYPE_ADOC ? ADOC_IMAGE : ADOC_ZVALUE,
-        index2 - 1, (LPCTSTR)strItems[1], (LPCTSTR)strCopy)) {
+        index2 ? B3DCHOICE(mWinApp->mStoreMRC->getStoreType() == STORE_TYPE_ADOC,
+        ADOC_IMAGE, ADOC_ZVALUE) : ADOC_GLOBAL, 
+        index2 ? index2 - 1 : 0, (LPCTSTR)strItems[1], (LPCTSTR)strCopy)) {
           AdocReleaseMutex();
           ABORT_LINE("Error adding string to autodoc file for: \n\n");
       }
@@ -2181,7 +2180,8 @@ void CMacroProcessor::NextCommand()
       mWinApp->mParamIO->MacroSetSetting(strItems[1], itemDbl[2]))
         ABORT_LINE(strItems[1] + " is not a recognized setting or cannot be set by "
         "script command in:\n\n");
-
+    mWinApp->UpdateWindowSettings();
+  
     // See if property already saved
     truth = false;
     for (index = 0; index < (int)mSavedSettingNames.size(); index++) {
@@ -4542,6 +4542,8 @@ void CMacroProcessor::SuspendMacro(BOOL abort)
   for (int ind = 0; ind < (int)mSavedSettingNames.size(); ind++)
     mWinApp->mParamIO->MacroSetSetting(CString(mSavedSettingNames[ind].c_str()), 
       mSavedSettingValues[ind]);
+  if (mSavedSettingNames.size())
+    mWinApp->UpdateWindowSettings();
 
   // Restore other things and make it non-resumable as they have no mechanism to resume
   if (abort || mNumStatesToRestore > 0) {

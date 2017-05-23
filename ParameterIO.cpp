@@ -4817,7 +4817,7 @@ int CParameterIO::MacroSetSetting(CString name, double value)
 #undef SETTINGS_MODULES
   int ival;
   double valCopy = value;
-  B3DCLAMP(valCopy, 2.147e9, 2.147e9);
+  B3DCLAMP(valCopy, -2.147e9, 2.147e9);
   ival = B3DNINT(valCopy);
   bool recognized = true, recognized2 = true;
   if (false) {

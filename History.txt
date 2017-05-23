@@ -3,6 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+5/23/17: Script commands writing to an autodoc can write to global section if
+there are no images yet.
+
+5/23/17: Fixed SetUserSetting command for integer value, added update call
+after this command so changes propagate through system.
+
 5/17/17: Script processor now searches in current script first for a
 function with no script name in front of it, thus allowing duplicate
 function names in other scripts.

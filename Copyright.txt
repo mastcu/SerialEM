@@ -1,6 +1,15 @@
-SerialEM is copyright (C) 2003-2016 by the Regents of the University of
+SerialEM is copyright (C) 2003-2017 by the Regents of the University of
 Colorado.
-                                                                    
+
+The SerialEM executable is open source under the
+General Public License (GPL) version 2.0, except for components noted below.  A copy of this license is in the
+file GPL.txt.  SerialEM may be modified and redistributed under the terms of
+this license.  In addition, an exception to the GPL license is granted to
+allow non-open source plugins to be loaded by the program.  Additional GPL
+components can be added to the SerialEM executable only if the developers of
+such components similarly grant an excepton to allow non-open source plugins
+to be loaded, or if the program is run without such plugins.
+
 The University of Colorado reserves the exclusive rights of preparing
 derivative works, distributing copies for sale, lease or lending and
 displaying this software and documentation.
@@ -20,6 +29,9 @@ and Copyright (c) 1991-1997 Silicon Graphics, Inc.
 Because SerialEM uses the libjpeg library, this software is based in part on
 the work of the Independent JPEG Group.  SerialEM also uses the zlib library,
 which is Copyright (c) 1995-2010 by Jean-loup Gailly and Mark Adler.
+
+IMOD includes a copy of the Mini-XML library which is Copyright 2003-2016 by
+Michael R. Sweet and is covered by the modified Library GPL in Mini-XML.txt
 
 SerialEM uses FFTW libraries under a purchased licensed; those are Copyright
 (c) 1997--1999 Massachusetts Institute of Technology, written by Matteo Frigo

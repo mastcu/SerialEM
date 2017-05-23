@@ -300,8 +300,8 @@ int EMbufferManager::SaveImageBuffer(KImageStore *inStore, bool skipCheck, int i
 
 
   // First time, set pixel in Angstroms, add a title with tilt axis rotation
-  if (!inStore->getDepth() && toBuf->mMagInd && toBuf->mBinning) {
-    if (inStore->getStoreType() != STORE_TYPE_IMOD) {
+  if (!inStore->getDepth()) {
+    if (inStore->getStoreType() != STORE_TYPE_IMOD && toBuf->mMagInd && toBuf->mBinning) {
       cam = toBuf->mCamera >= 0 ? toBuf->mCamera : mWinApp->GetCurrentCamera();
       mag = toBuf->mMagInd ? toBuf->mMagInd : mWinApp->mScope->FastMagIndex();
       float pixel = mWinApp->mShiftManager->GetPixelSize(cam, mag);
@@ -338,6 +338,7 @@ int EMbufferManager::SaveImageBuffer(KImageStore *inStore, bool skipCheck, int i
     if (cam >= 0 && !CheckAsyncSaving() && !AdocGetMutexSetCurrent(cam)) {
       AdocSetFloat(ADOC_GLOBAL, 0, ADOC_VOLTAGE, 
         (float)mWinApp->mProcessImage->GetRecentVoltage());
+      AdocWrite((char *)(LPCTSTR)mWinApp->mStoreMRC->getAdocName());
       AdocReleaseMutex();
     }
   }
