@@ -3,6 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+5/25/17: Fixed reporting of frames saved and writing to frame mdoc when frame
+saving is turned on for aligning in IMOD (In 3.6).
+
+5/25/17: Made it restore the correct focus when autofocus is aborted after
+starting from Low Dose View mode (In 3.6).
+
 5/23/17: Script commands writing to an autodoc can write to global section if
 there are no images yet.
 

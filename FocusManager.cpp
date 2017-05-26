@@ -908,7 +908,6 @@ void CFocusManager::AutoFocusStart(int inChange, int useViewInLD, int iterNum)
       return;
     }
     if (iterNum == 1) {
-      mOriginalDefocus = mScope->GetDefocus();
       mLastWasOpposite = false;
     }
   } else {
@@ -1033,9 +1032,9 @@ void CFocusManager::AutoFocusData(float inX, float inY)
         mLastAborted = abort;
         mScope->SetDefocus(mOriginalDefocus);
         report.Format("WARNING: Autofocus aborted after %d iterations and focus returned "
-          "to starting value\r\n  because %s. Check focus "
+          "to starting value (%.2f)\r\n  because %s. Check focus "
           "calibration\r\n  and/or scope alignment if images and specimen look OK",
-          mAutofocusIterNum, (LPCTSTR)addon);
+          mAutofocusIterNum, mOriginalDefocus, (LPCTSTR)addon);
         mWinApp->AppendToLog(report);
       } else if (refocus) {
         AutoFocusStart(FOCUS_AUTOFOCUS, mFocusSetNum == VIEW_CONSET, mAutofocusIterNum +
@@ -1160,14 +1159,18 @@ void CFocusManager::DetectFocus(int inWhere, int useViewInLD)
   }
 
   // Go to focus area now if in low dose and adjusting beam tilt too; also if alpha could
-  // change and that could change beam tilt
-  if (!mUsingExisting && mWinApp->LowDoseMode() && 
+  // change and that could change beam tilt; also if not in area!  Gave up on this on
+  // 5/25/17 because original focus has to be recorded after getting out of View
+  if (!mUsingExisting && mWinApp->LowDoseMode() && mAutofocusIterNum == 1 &&
     (mScope->GetLDBeamTiltShifts() || !mScope->GetHasNoAlpha() || 
-    mScope->GetProbeMode() != mFocusProbe)) {
+    mScope->GetProbeMode() != mFocusProbe || 
+    !mWinApp->mLowDoseDlg.SameAsFocusArea(mScope->GetLowDoseArea()))) {
       mScope->GotoLowDoseArea(mFocusSetNum);
       setLowDose = !mUseOppositeLDArea;
   }
-
+  if (mAutofocusIterNum == 1)
+    mOriginalDefocus = mScope->GetDefocus();
+  
   // Apply offset if nonzero and not calibrating: then test against absolute limits if
   // flag set for that
   mAppliedOffset = 0.;
@@ -1177,12 +1180,12 @@ void CFocusManager::DetectFocus(int inWhere, int useViewInLD)
     if (mUseEucenAbsLimits && mTestOffsetEucenAbs) {
       focus = mScope->GetFocus();
       if ((mUseMinAbsFocus != 0. && focus < mUseMinAbsFocus) ||
-        (mUseMinAbsFocus != 0. && focus > mUseMaxAbsFocus)) {
+        (mUseMaxAbsFocus != 0. && focus > mUseMaxAbsFocus)) {
           mScope->SetDefocus(mOriginalDefocus);
           str.Format("WARNING: Autofocus aborted before iteration %d and focus returned "
-            "to starting value because\r\n  absolute focus would exceed limits with the"
+            "to starting value (%.2f) because\r\n  absolute focus would exceed limits with the"
             " %.1f micron offset applied for measuring defocus",
-          mAutofocusIterNum, mAppliedOffset);
+          mAutofocusIterNum, mOriginalDefocus, mAppliedOffset);
           mWinApp->AppendToLog(str);
           mAppliedOffset = 0.;
           mLastAborted = FOCUS_ABORT_ABS_LIMIT;

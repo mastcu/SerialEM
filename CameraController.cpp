@@ -7197,7 +7197,9 @@ void CCameraController::DisplayNewImage(BOOL acquired)
     }
 
     // Report the fate of frame-saving
-    if ((mParam->K2Type && lastConSetp->doseFrac && lastConSetp->saveFrames) || 
+    if ((mParam->K2Type && lastConSetp->doseFrac && (lastConSetp->saveFrames ||
+      (lastConSetp->alignFrames && GetPluginVersion(mParam) >= PLUGIN_CAN_ALIGN_FRAMES &&
+      lastConSetp->useFrameAlign > 1))) || 
       (mSavingFalconFrames && !mDeferStackingFrames)) {
         if (mTD.NumAsyncSumFrames >= 0) {
           mTD.NumFramesSaved = B3DNINT(mExposure / mTD.FrameTime);
