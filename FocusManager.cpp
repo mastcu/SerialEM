@@ -1183,8 +1183,8 @@ void CFocusManager::DetectFocus(int inWhere, int useViewInLD)
         (mUseMaxAbsFocus != 0. && focus > mUseMaxAbsFocus)) {
           mScope->SetDefocus(mOriginalDefocus);
           str.Format("WARNING: Autofocus aborted before iteration %d and focus returned "
-            "to starting value (%.2f) because\r\n  absolute focus would exceed limits with the"
-            " %.1f micron offset applied for measuring defocus",
+            "to starting value (%.2f) because\r\n  absolute focus would exceed limits "
+            "with the %.1f micron offset applied for measuring defocus",
           mAutofocusIterNum, mOriginalDefocus, mAppliedOffset);
           mWinApp->AppendToLog(str);
           mAppliedOffset = 0.;

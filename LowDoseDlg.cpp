@@ -27,7 +27,7 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 #define MAX_VIEW_DEFOCUS  0
-#define MIN_VIEW_DEFOCUS  -300
+#define MIN_VIEW_DEFOCUS  -400
 
 
 /////////////////////////////////////////////////////////////////////////////

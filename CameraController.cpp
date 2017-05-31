@@ -3227,9 +3227,10 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
 
     // Do asynchronous to RAM if it fits and if the frame time meets the 
     // minimum
-    if (conSet.frameTime >= mK2MinFrameForRAM - 0.001 && numFrames <= maxInRAM) 
+    if (conSet.frameTime >= mK2MinFrameForRAM - 0.001 && numFrames <= maxInRAM) {
       flags |= K2_ASYNC_IN_RAM;
-    else
+      alignFlags |= K2_ASYNC_IN_RAM;
+    } else
       frameInRAM = 0.;
     if (mNextAsyncSumFrames >= 0) {
       numGrab = B3DMIN(numFrames, maxInRAM);
