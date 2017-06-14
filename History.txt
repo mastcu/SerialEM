@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+6/14/17: Fixed setting of drift settling for Eagle through plugin/server
+(In 3.6).
+
 6/9/17: SEM_3-6-9
 6/2/17: Fixed use of K2 asynchronous readout to RAM when frame alignment is
 selected (In 3.6).
