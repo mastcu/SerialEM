@@ -113,6 +113,7 @@ public:
   SetMember(CString, TCBoxNoText);
   SetMember(CString, TCBoxCancelText);
   SetMember(int, TCBoxDefault);
+  SetMember(float, TrialCenterMaxRadFrac);
 
   bool GetBidirStartAngle(float &outVal) {outVal = mTSParam.bidirAngle; return mStartedTS && mTSParam.doBidirectional;};
 
@@ -481,6 +482,7 @@ private:
   CString mTCBoxNoText;
   CString mTCBoxCancelText;
   int mTCBoxDefault;           // Default button
+  float mTrialCenterMaxRadFrac; // Maximum radius as fraction of diagonal to center with T
   
 public:
 	void CenterBeamWithTrial();

@@ -318,6 +318,7 @@ CTSController::CTSController()
   mMinFitZAfterDrop = 4;
   mFitDropErrorRatio = 1.3f;
   mFitDropBackoffRatio = 1.1f;
+  mTrialCenterMaxRadFrac = 0.45f;
   mBeamShutterError = 0.03f;
   mIntensityPolarity = 0;
   mExpSeriesStep = 1.2f;
@@ -3577,7 +3578,7 @@ BOOL CTSController::AutoAlignAndTest(int bufNum, int smallPad, char *shotName,
   return true;
 }
 
-// Center beam if flag set, require fitted radius to be 90% of diagonal
+// Center beam if flag set, require fitted radius to be 90% of half-diagonal
 void CTSController::CenterBeamWithTrial()
 {
   int nx, ny;
@@ -3585,7 +3586,7 @@ void CTSController::CenterBeamWithTrial()
   if (!mTSParam.centerBeamFromTrial)
     return;
   mImBufs->mImage->getSize(nx, ny);
-  minRadius = 0.45 * sqrt((double)(nx *nx + ny * ny));
+  minRadius = mTrialCenterMaxRadFrac * sqrt((double)(nx *nx + ny * ny));
   if (mWinApp->GetImBufIndex())
     mWinApp->SetCurrentBuffer(0);
 
