@@ -1683,7 +1683,7 @@ int CParameterIO::ReadProperties(CString strFileName)
           else if(MatchNoCase("DEImageInvertXAxis"))
             camP->DE_ImageInvertX = itemInt[1]; 
           else if(MatchNoCase("DECameraServerIP"))
-            StripItems(strLine, 1,  camP->DEServerIP);
+            camP->DEServerIP = strItems[1];
           else if(MatchNoCase("DECameraReadPort"))
             camP->DE_ServerReadPort = itemInt[1]; 
           else if(MatchNoCase("DECameraWritePort"))
