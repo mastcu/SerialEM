@@ -126,6 +126,14 @@ void CBaseDlg::EnableDlgItem(int nID, BOOL enable)
     but->EnableWindow(enable);
 }
 
+// For showing/hiding dialog item by ID
+void CBaseDlg::ShowDlgItem(int nID, bool show)
+{
+  CWnd *but = GetDlgItem(nID);
+  if (but)
+    but->ShowWindow(show ? SW_SHOW : SW_HIDE);
+}
+
 // If nonModal, capture all the stray mouse events not on a control and yield focus
 void CBaseDlg::OnLButtonDown(UINT nFlags, CPoint point) 
 {

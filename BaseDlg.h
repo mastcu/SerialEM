@@ -76,6 +76,7 @@ public:
   void AdjustPanels(BOOL *states, int *idTable, int *leftTable, int *topTable, 
                                 int *numInPanel, int *panelStart, int numCameras);
   void EnableDlgItem(int nID, BOOL enable);
+  void ShowDlgItem(int nID, bool show);
 };
 
 //{{AFX_INSERT_LOCATION}}
