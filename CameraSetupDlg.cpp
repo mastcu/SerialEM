@@ -718,7 +718,7 @@ static int binVals[MAX_BINNINGS] = {1, 2, 3, 4, 6, 8};
 void CCameraSetupDlg::UnloadConSet()
 {
   int i, indMin, binning, showProc, lockSet;
-  bool noDark, noGain, alwaysAdjust;
+  bool noDark, noGain, alwaysAdjust, noRaw;
   CButton *radio;
   ControlSet *conSet = &mConSets[mCurrentSet + mActiveCameraList[mCurrentCamera] *
     MAX_CONSETS];
@@ -743,8 +743,8 @@ void CCameraSetupDlg::UnloadConSet()
   m_eRight = conSet->right / mCoordScaling;
   m_eTop = conSet->top / mCoordScaling;
   m_eBottom = conSet->bottom / mCoordScaling;
-  m_bDoseFracMode = mParam->K2Type ? (conSet->doseFrac > 0) : 
-    mCamera->GetFrameSavingEnabled();
+  m_bDoseFracMode = B3DCHOICE(mParam->K2Type, conSet->doseFrac > 0, 
+    mCamera->GetFrameSavingEnabled() || (FCAM_ADVANCED(mParam)&&IS_FALCON2_OR_3(mParam)));
   m_fFrameTime = conSet->frameTime;
   m_bAlignDoseFrac = conSet->alignFrames > 0 || 
     (mCurrentSet == RECORD_CONSET && mWinApp->mTSController->GetFrameAlignInIMOD());
@@ -843,8 +843,10 @@ void CCameraSetupDlg::UnloadConSet()
     m_iProcessing = conSet->processing;
     m_bRemoveXrays = conSet->removeXrays > 0;
     noDark = mFEItype || (mPluginType && mCanProcess && !(mCanProcess & DARK_SUBTRACTED));
-    m_butDarkSubtract.EnableWindow(mParam->processHere || !noDark);
-    if (noDark && !mParam->processHere && m_iProcessing == DARK_SUBTRACTED)
+    m_butDarkSubtract.EnableWindow(mParam->processHere && !noDark);
+    noRaw = mFEItype && FCAM_ADVANCED(mParam);
+    m_butUnprocessed.EnableWindow(!noRaw);
+    if ((noDark && !mParam->processHere && m_iProcessing == DARK_SUBTRACTED) || noRaw)
       m_iProcessing = conSet->processing = GAIN_NORMALIZED;
 
     // Do same for plugin with no gain normalization, demote to DS
@@ -1141,7 +1143,8 @@ void CCameraSetupDlg::ManageCamera()
   CRect rect;
   ControlSet *conSets = &mConSets[mActiveCameraList[mCurrentCamera] * MAX_CONSETS];
   CString title = "Camera Parameters   --   " + mParam->name;
-  mFalconCanSave = mParam->FEItype == 2 && mCamera->GetMaxFalconFrames();
+  mFalconCanSave = (IS_BASIC_FALCON2(mParam) && mCamera->GetMaxFalconFrames(mParam)) ||
+    (IS_FALCON2_OR_3(mParam) && FCAM_CAN_FRAME(mParam));
   states[0] = mNumCameras > 1;
   states[2] = !mParam->STEMcamera;
   states[3] = mParam->STEMcamera;
@@ -1247,7 +1250,7 @@ void CCameraSetupDlg::ManageCamera()
   radio = (CButton *)GetDlgItem(IDC_RBEAMONLY);
   radio->EnableWindow(mDMbeamShutterOK);
   SetDlgItemText(IDC_RBEAMONLY, B3DCHOICE(((mTietzType && mTietzCanPreExpose) || mAMTtype
-    || (mFEItype && mFEItype != 2)) && !mParam->noShutter, 
+    || mFEItype == EAGLE_TYPE) && !mParam->noShutter, 
     "Chosen based on drift settling", "Beam blanking only"));
 
   // Set film shutter text for camera type, and show dual shuttering for Gatan
@@ -1278,6 +1281,17 @@ void CCameraSetupDlg::ManageCamera()
   }
   m_butSetupFalconFrames.ShowWindow(mFalconCanSave ? SW_SHOW : SW_HIDE);
   canConfig = mFalconCanSave ? mCamera->GetCanUseFalconConfig() : -1;
+  if (mFalconCanSave && FCAM_ADVANCED(mParam)) {
+    canConfig = -2;
+    m_bDoseFracMode = true;
+    if (FCAM_CAN_COUNT(mParam)) {
+      ShowDlgItem(IDC_STAT_K2MODE, true);
+      ShowDlgItem(IDC_RLINEAR, true);
+      ShowDlgItem(IDC_RCOUNTING, true);
+    }
+    if (FCAM_CAN_ALIGN(mParam))
+      m_butAlignDoseFrac.ShowWindow(SW_SHOW);
+  }
   if (!canConfig) {
     err = mWinApp->mFalconHelper->CheckFalconConfig(-1, state, "The config file will no "
       "longer be checked;\nyou will have to use the stupid checkbox");
@@ -1293,8 +1307,9 @@ void CCameraSetupDlg::ManageCamera()
     UpdateData(false);
   }
   m_statIntermediateOnOff.ShowWindow(canConfig ? SW_HIDE : SW_SHOW);
-  m_butDoseFracMode.ShowWindow((mParam->K2Type || (mFalconCanSave && canConfig < 0)) ?
+  m_butDoseFracMode.ShowWindow((mParam->K2Type || (mFalconCanSave && canConfig == -1)) ?
     SW_SHOW : SW_HIDE);
+  SetDlgItemText(IDC_RCOUNTING, mParam->K2Type ? "Counting" : "Electron counting");
 
   if (mParam->K2Type) {
     radio = (CButton *)GetDlgItem(IDC_RCOUNTING);
@@ -2050,6 +2065,8 @@ void CCameraSetupDlg::OnK2Mode()
 {
   UpdateData(true);
   CButton *radio = (CButton *)GetDlgItem(IDC_RBIN1);
+  if (mParam->FEItype)
+    return;
   radio->EnableWindow(mBinningEnabled && m_iK2Mode == SUPERRES_MODE);
   if (m_iK2Mode != SUPERRES_MODE && !m_iBinning) {
     m_iBinning = 1;
@@ -2109,7 +2126,8 @@ void CCameraSetupDlg::ManageDoseFrac(void)
   FrameAliParams fap;
   ControlSet *conSet = &mConSets[mCurrentSet + mActiveCameraList[mCurrentCamera] *
     MAX_CONSETS];
-  bool forceSaving = m_bDoseFracMode && m_bAlignDoseFrac && conSet->useFrameAlign > 1 &&
+  bool forceSaving = mParam->K2Type && m_bDoseFracMode && m_bAlignDoseFrac && 
+    conSet->useFrameAlign > 1 && 
     mCamera->GetPluginVersion(mParam) >= PLUGIN_CAN_ALIGN_FRAMES;
   if ((forceSaving && !m_bSaveFrames) || (!forceSaving && !BOOL_EQUIV(m_bSaveFrames,
     mUserSaveFrames))) {
@@ -2121,7 +2139,7 @@ void CCameraSetupDlg::ManageDoseFrac(void)
   m_statFrameTime.EnableWindow(m_bDoseFracMode);
   m_statFrameSec.EnableWindow(m_bDoseFracMode);
   m_editFrameTime.EnableWindow(m_bDoseFracMode);
-  m_butAlignDoseFrac.EnableWindow(m_bDoseFracMode && 
+  m_butAlignDoseFrac.EnableWindow(m_bDoseFracMode && (m_bSaveFrames || !mFEItype) &&
     !(mCurrentSet == RECORD_CONSET && mWinApp->mTSController->GetFrameAlignInIMOD()));
   m_butSaveFrames.EnableWindow(m_bDoseFracMode && !forceSaving);
   m_butSetupAlign.EnableWindow(m_bDoseFracMode && m_bAlignDoseFrac);
@@ -2142,7 +2160,8 @@ void CCameraSetupDlg::ManageDoseFrac(void)
     ((m_iK2Mode == COUNTING_MODE && !mParam->countingRefForK2.IsEmpty()) ||
     (m_iK2Mode == SUPERRES_MODE && !mParam->superResRefForK2.IsEmpty()));
   m_statNormDSDF.ShowWindow(enable ? SW_SHOW : SW_HIDE);
-  m_statWhereAlign.ShowWindow((m_bDoseFracMode && m_bAlignDoseFrac) ? SW_SHOW : SW_HIDE);
+  m_statWhereAlign.ShowWindow((m_bDoseFracMode && m_bAlignDoseFrac && mParam->K2Type) ? 
+    SW_SHOW : SW_HIDE);
   if (!conSet->useFrameAlign)
     str = "Align in DM";
   else if (conSet->useFrameAlign == 1)
@@ -2201,14 +2220,17 @@ void CCameraSetupDlg::OnButFileOptions()
   optDlg.m_bUseExtensionMRCS = mCamera->GetNameFramesAsMRCS();
   optDlg.m_bSkipRotFlip = mCamera->GetSkipK2FrameRotFlip();
   optDlg.mEnableSkipRotFlip = mParam->rotationFlip;
-  optDlg.mFalconType = mParam->FEItype == 2;
+  optDlg.mFalconType = mParam->FEItype;
+  optDlg.mFEIflags = mParam->FEIflags;
+  mCamera->FixDirForFalconFrames(mParam);
   optDlg.mDEtype = mWinApp->mDEToolDlg.CanSaveFrames(mParam);
   optDlg.m_strBasename = mCamera->GetFrameBaseName();
   optDlg.mNameFormat = mCamera->GetFrameNameFormat();
   optDlg.mNumberDigits = mCamera->GetDigitsForNumberedFrame();
   optDlg.m_iStartNumber = mCamera->GetFrameNumberStart();
-  optDlg.mCanCreateDir = mParam->FEItype == 2 || (mParam->GatanCam &&
-    mCamera->GetPluginVersion(mParam) >= PLUGIN_CREATES_DIRECTORY);
+  optDlg.mCanCreateDir = IS_BASIC_FALCON2(mParam) || 
+    (mParam->FEItype && (mCamera->GetDirForFalconFrames()).IsEmpty()) || 
+    (mParam->GatanCam && mCamera->GetPluginVersion(mParam) >= PLUGIN_CREATES_DIRECTORY);
   optDlg.mCan4BitModeAndCounting = 
     mCamera->GetPluginVersion(mParam) >= PLUGIN_4BIT_101_COUNTING;
   optDlg.mCanSaveTimes100 = 
@@ -2245,16 +2267,32 @@ void CCameraSetupDlg::OnSetSaveFolder()
       mCamera->GetNoK2SaveFolderBrowse() ? "" : 
       "SELECT (do not type in) folder accessible on Gatan server for saving frames"))
       mCamera->SetDirForK2Frames(str);
-     m_butSetSaveFolder.SetButtonStyle(BS_PUSHBUTTON);
+    m_butSetSaveFolder.SetButtonStyle(BS_PUSHBUTTON);
     return;
+  }
+  if (mFEItype) {
+    mCamera->FixDirForFalconFrames(mParam);
+    str = mCamera->GetDirForFalconFrames();
+    if (FCAM_ADVANCED(mParam)) {
+      if (KGetOneString("Frames can be saved in the Falcon storage location or a new or"
+        " existing subfolder of it",
+        "Enter name of subfolder to save frames in, or leave blank for none", str)) 
+        mCamera->SetDirForFalconFrames(str);
+      m_butSetSaveFolder.SetButtonStyle(BS_PUSHBUTTON);
+      return;
+    }
   }
   if (str.IsEmpty())
     str = "C:\\";
 
   CXFolderDialog dlg(str);
   dlg.SetTitle(title);
-  if (dlg.DoModal() == IDOK)
-		mCamera->SetDirForK2Frames(dlg.GetPath());
+  if (dlg.DoModal() == IDOK) {
+    if (mParam->K2Type)
+  		mCamera->SetDirForK2Frames(dlg.GetPath());
+    else
+  		mCamera->SetDirForFalconFrames(dlg.GetPath());
+  }
   m_butSetSaveFolder.SetButtonStyle(BS_PUSHBUTTON);
 }
 
@@ -2356,7 +2394,7 @@ void CCameraSetupDlg::OnSetupFalconFrames()
   dlg.mReadoutInterval = B3DCHOICE(mParam->K2Type, m_fFrameTime,
     mCamera->GetFalconReadoutInterval());
   dlg.m_fSubframeTime = (float)(B3DNINT(dlg.mReadoutInterval * 2000.) / 2000.);
-  dlg.mMaxFrames = mParam->K2Type ? 1000 : mCamera->GetMaxFalconFrames();
+  dlg.mMaxFrames = mParam->K2Type ? 1000 : mCamera->GetMaxFalconFrames(mParam);
   dlg.mMaxPerFrame = 100;   // TODO: IS THERE AN ACTUAL OR USEFUL VALUE?
   if (dlg.DoModal() != IDOK) {
     m_butSetupFalconFrames.SetButtonStyle(BS_PUSHBUTTON);

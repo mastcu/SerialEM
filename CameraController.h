@@ -58,6 +58,14 @@ struct CamPluginFuncs;
 enum {INIT_ALL_CAMERAS, INIT_CURRENT_CAMERA, INIT_GIF_CAMERA, INIT_TIETZ_CAMERA};
 enum {LINEAR_MODE = 0, COUNTING_MODE, SUPERRES_MODE};
 enum DE_CAMERATYPE{LC1100_4k = 1,DE_12 = 2,DE_12_Survey=3,DE_LC1100=4};
+enum {EAGLE_TYPE = 1, FALCON2_TYPE, OTHER_FEI_TYPE, FALCON3_TYPE};
+
+#define DEFAULT_FEI_MIN_EXPOSURE 0.011f
+#define FCAM_ADVANCED(a) (a->FEIflags & PLUGFEI_USES_ADVANCED)
+#define FCAM_CAN_COUNT(a) (a->FEIflags & PLUGFEI_CAM_CAN_COUNT)
+#define FCAM_CAN_ALIGN(a) (a->FEIflags & PLUGFEI_CAM_CAN_ALIGN)
+#define IS_FALCON2_OR_3(a) (a->FEItype == FALCON2_TYPE || a->FEItype == FALCON3_TYPE)
+#define IS_BASIC_FALCON2(a) (a->FEItype == FALCON2_TYPE && !(a->FEIflags & PLUGFEI_USES_ADVANCED))
 
 struct DarkRef {
   int Left, Right, Top, Bottom;   // binned CCD coordinates of the image
@@ -90,6 +98,7 @@ struct CameraThreadData {
   int SelectCamera;           // Gatan camera number to select
   int TietzType;              // Or type of Tietz camera
   int FEItype;                // Or flag for FEI camera
+  int FEIflags;               // Flags entry for advanced interface and anything else
   int DE_camType;             // Flag for NCMIR camera
   CString cameraName;         // Camera name for FEI, or mapping name for Tietz (from detector name)
   BOOL checkFEIname;          // Flag to check name of FEI camera
@@ -211,6 +220,7 @@ struct InsertThreadData {
   int camera;                 // Camera number
   int DMindex;                // Index for DM-type camera
   int DE_camType;             // Flag for DE camera
+  int FEItype;                // Flag for FEI camera, advanced only
   CamPluginFuncs *plugFuncs;  // Plugin Functions for current camera
   BOOL insert;                // flag to insert rather than retract
   DWORD delay;                // delay time, msec
@@ -284,7 +294,8 @@ class DLL_IM_EX CCameraController
   GetSetMember(float, K2ReadoutInterval);
   CString *GetK2FilterNames() {return &mK2FilterNames[0];};
   GetSetMember(float, FalconReadoutInterval);
-  GetSetMember(int, MaxFalconFrames);
+  SetMember(int, MaxFalconFrames);
+  int GetMaxFalconFrames(CameraParameters *params);
   SetMember(BOOL, FrameSavingEnabled);
   BOOL GetFrameSavingEnabled() {return mFrameSavingEnabled || mCanUseFalconConfig > 0;};
   GetSetMember(CString, FalconFrameConfig);
@@ -357,6 +368,7 @@ class DLL_IM_EX CCameraController
   GetSetMember(BOOL, OneK2FramePerFile);
   GetSetMember(BOOL, NoK2SaveFolderBrowse);
   GetSetMember(CString, DirForK2Frames);
+  GetSetMember(CString, DirForFalconFrames);
   GetSetMember(float, ScalingForK2Counts);
   GetSetMember(int, SaveRawPacked);
   GetSetMember(int, SaveTimes100);
@@ -412,6 +424,7 @@ class DLL_IM_EX CCameraController
   GetMember(bool, DeferredSumFailed);
   SetMember(BOOL, AllowSpectroscopyImages);
   GetMember(bool, AskedDeferredSum);
+  GetSetMember(BOOL, ASIgivesGainNormOnly);
 
   int GetNumFramesSaved() {return mTD.NumFramesSaved;};
   BOOL *GetUseGPUforK2Align() {return &mUseGPUforK2Align[0];};
@@ -648,6 +661,7 @@ class DLL_IM_EX CCameraController
   int mFrameMdocForFalcon;      // 1 to save in mdoc for Records, 2 for all
   BOOL mFalconAsyncStacking;    // Flag to stack frames asynchronously
   int mWaitingForStacking;      // Flag that we are waiting for Falcon stacking
+  CString mDirForFalconFrames;  // Directory or subfolder to save Falcon frames in
   BOOL mOtherCamerasInTIA;      // Flag that FEI name needs to be checked before acquiring
   BOOL mSkipNextReblank;        // Flag to not blank readout in next shot
   int mDefaultGIFCamera;        // Active camera number of "first GIF camera"
@@ -732,6 +746,7 @@ class DLL_IM_EX CCameraController
   int mNumFrameAliLogLines;            // Number of frame align log lines
   bool mDeferredSumFailed;       // Flag that getting deferred sum failed
   BOOL mAllowSpectroscopyImages; // Flag to allow images to be taken in spectroscopy
+  BOOL mASIgivesGainNormOnly;    // Flag that advanced scripting interface only does norm
 
 public:
   void SetNonGatanPostActionTime(void);
@@ -848,6 +863,8 @@ float GetCountScaling(CameraParameters * camParam);
 int TargetSizeForTasks(CameraParameters *camParam = NULL);
 void RestoreGatanOrientations(void);
 void GetMergeK2DefectList(int DMind, CameraParameters *param, bool errToLog);
+bool CanProcessHere(CameraParameters *param);
+void FixDirForFalconFrames(CameraParameters * param);
 };
 
 

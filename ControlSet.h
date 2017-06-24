@@ -93,18 +93,18 @@ struct CameraParameters {
   int TietzType;           // Number of Tietz camera type if not 0
   BOOL failedToInitialize; // Flag that Tietz camera failed to initialize
   int AMTtype;             // Flag for AMT camera
-  int FEItype;             // Flag for Eagle camera
-  int DE_camType;     	   // Flag to determine NCMIR camera type	
-  int DE_indexType;   	   // Index to look up the proper NCMIR camera type
-  //Added to support image rotatations and inverting X axis for DE cams
-  //Added TM 4_11_11
-  int DE_ImageRot;		   // Provide an angle to rotate the DE image
+  int FEItype;             // Type of FEI camera
+  int FEIflags;            // Flags for FEI camera in advanced scripting
+  int DE_camType;     	   // Flag to determine DE camera type	
+  int DE_indexType;   	   // Index to look up the proper DE camera type
+  int DE_ImageRot;		     // Provide an angle to rotate the DE image
   int DE_ImageInvertX;     // Decides whether to invert the X axis on the DE image 1==invert.
   int DE_ServerDarkImage;  // Decides whether the DEServer will provide the Dark image
   CString DEServerIP;      // Server ip that the client will use to connect with
   int DE_ServerReadPort;   // Read port used with DE server.
   int DE_ServerWritePort;  // Write port used with the DE server.
   float DE_FramesPerSec;   // USER's setting for the frames per second for this camera
+  float DE_MaxFrameRate;   // Maximum frame rate from server
   int alsoInsertCamera;    // Other camera to insert to make sure blanking is OK
   int samePhysicalCamera;  // Camera on same insertion state
   int eagleIndex;          // Index from looking up eagle camera by name
@@ -131,12 +131,14 @@ struct CameraParameters {
   int numOrigBinnings;     // Original # of binnings for FEI STEM
   int origBinnings[MAX_BINNINGS];
   float gainFactor[MAX_BINNINGS];   // Relative gain factors for each binning
+  int autoGainAtBinning;   // Binning at which to start automatic gain fatcors
   int numExtraGainRefs;    // Number of extra gain refs
-  int processHere;       // Per-camera flag for whether to normalize in SerialEM
+  int processHere;         // Per-camera flag for whether to normalize in SerialEM
   BOOL retractable;        // Is camera retractable
   BOOL canBlock;           // Run-time flag for whether it might be inserted
   float insertDelay;       // Delay time for insertion, in seconds
   float retractDelay;      // Delay time for retraction, in seconds
+  int insertingRetracts;   // Other camera retracted by inserting this one
   int order;               // Order of camera in beam path
   CString name;            // Supplied name for camera
   CString DMRefName;       // File name of DM's reference

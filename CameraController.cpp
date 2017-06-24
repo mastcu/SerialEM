@@ -134,6 +134,7 @@ static int sGIFisSocket;             // 0 or 1 if GIF is on socket interface
 // This gives the DM-type index for a given camera parameter set
 #define CAMP_DM_INDEX(a) ((a)->AMTtype ? AMT_IND : ((a)->useSocket ? SOCK_IND : COM_IND))
 
+#define FALCON_DIR_UNSET "NotSetByUser"
 
 static int restrictedSizeIndex;       // Index to last selected restricted size
 
@@ -323,6 +324,7 @@ CCameraController::CCameraController()
   mDefaultCountScaling = 30.f;
   mScalingForK2Counts = 0.;
   mDirForK2Frames = "";
+  mDirForFalconFrames = FALCON_DIR_UNSET;
   mSkipNextReblank = false;
   mDefaultGIFCamera = -1;
   mDefaultRegularCamera = -1;
@@ -380,6 +382,7 @@ CCameraController::CCameraController()
   mBadDarkNumRetries = 2;
   mNextViewIsSearch = false;
   mAllowSpectroscopyImages = false;
+  mASIgivesGainNormOnly = true;
 }
 
 // Set a frame align param to default values
@@ -534,7 +537,8 @@ int CCameraController::Initialize(int whichCameras)
     return 0;
   }
   
-  // Count up cameras of each type listed, clear retractability of Tietz and FEI cameras
+  // Count up cameras of each type listed, clear retractability of Tietz cameras
+  // FEI retractability now cleared in initialize function
   for (i = 0; i < numOrig; i++) {
     ind = originalList[i];
     if (mAllParams[ind].TietzType) {
@@ -545,7 +549,6 @@ int CCameraController::Initialize(int whichCameras)
       mAllParams[ind].pluginName = "";
     } else if (mAllParams[ind].FEItype) {
       numFEIlisted++;
-      mAllParams[ind].retractable = false;
       if (mAllParams[ind].STEMcamera)
         FEIstem = 1;
     } else if (mAllParams[ind].DE_camType)
@@ -1057,13 +1060,15 @@ int CCameraController::InitializeTietz(int whichCameras, int *originalList, int 
 void CCameraController::InitializeFEIcameras(int &numFEIlisted, int *originalList, 
                                              int numOrig)
 {
-  int i, ind, err;
+  int i, ind, err, bin, base, power;
+  bool needsConfig = false, oldFalcon2, anyOldFalcon2 = false;
 
   // Check that all listed cameras are accessible (???)
   numFEIlisted = 0;
   for (ind = 0; ind < numOrig; ind++) {
     i = originalList[ind];
     if (mAllParams[i].FEItype) {
+      oldFalcon2 = mAllParams[i].FEItype == FALCON2_TYPE;
       err = mScope->LookupScriptingCamera(&mAllParams[i], false);
       if (err) {
         //mAllParams[i].failedToInitialize = true;
@@ -1082,10 +1087,54 @@ void CCameraController::InitializeFEIcameras(int &numFEIlisted, int *originalLis
             "not initialized", MB_EXCLAME);
           break;
         }
+      } else {
+        if (mAllParams[i].FEIflags & PLUGFEI_USES_ADVANCED)
+          oldFalcon2 = false;
       }
       mFEIinitialized = true;
+      if (oldFalcon2)
+        anyOldFalcon2 = true;
       numFEIlisted++;
       mAllParams[i].flyback = mAllParams[i].basicFlyback + mAllParams[i].addedFlyback;
+    }
+  }
+
+  // Initialize helper now that it is known whether configs should be ignored
+  // Also clear retractability here if not advanced interface
+  mWinApp->mFalconHelper->Initialize(mFEIinitialized && !anyOldFalcon2);
+  for (ind = 0; ind < numOrig; ind++) {
+    i = originalList[ind];
+    if (mAllParams[i].FEItype) {
+      if (mAllParams[i].FEIflags & PLUGFEI_USES_ADVANCED) {
+        if (mAllParams[i].autoGainAtBinning > 0) {
+          for (bin = 0; bin < mAllParams[i].numBinnings; bin++) {
+            if (mAllParams[i].gainFactor[bin] != 1.) {
+              mAllParams[i].autoGainAtBinning = 0;
+              AfxMessageBox("The FEI camera named " + mAllParams[i].name + " has "
+                "both RelativeGainFactors and AutoGainFactors property entries.\n\n"
+                "The AutoGainFactors entry will be ignored.", MB_EXCLAME);
+            }
+          }
+        }
+        if (mAllParams[i].autoGainAtBinning >= mAllParams[i].numBinnings) {
+          mAllParams[i].autoGainAtBinning = 0;
+          AfxMessageBox("The starting binning index in the AutoGainFactors property entry"
+            " is too high for the\nFEI camera named " + mAllParams[i].name + 
+            " and this entry will have no effect", MB_EXCLAME);
+
+        }
+        base = mAllParams[i].autoGainAtBinning;
+        if (base > 0) {
+          for (bin = base; bin < mAllParams[i].numBinnings; bin++) {
+            power = B3DNINT(2. * log((double)mAllParams[i].binnings[bin] / 
+              mAllParams[i].binnings[base - 1]) / log(2.));
+            mAllParams[i].gainFactor[bin] = (float)pow(0.5, (double)power);
+          }
+        }
+      } else {
+        mAllParams[i].retractable = false;
+        mAllParams[i].autoGainAtBinning = 0;
+      }
     }
   }
 }
@@ -1289,8 +1338,10 @@ void CCameraController::SetCurrentCamera(int currentCam, int activeCam)
 
   // When switching to an FEI camera and there is more than one, invalidate its index
   // so the scope will be refreshed to look it up again
-  if (mParam->FEItype && mOtherCamerasInTIA)
+  if (mParam->FEItype && mOtherCamerasInTIA && !FCAM_ADVANCED(mParam))
     mParam->eagleIndex = -1;
+
+  FixDirForFalconFrames(mParam);
 
   // Manage blanking of AMT camera
   if (!mAMTactive && mParam->AMTtype)
@@ -1480,8 +1531,9 @@ BOOL CCameraController::GetInitialized()
 // Return whether processing is being done here
 BOOL CCameraController::GetProcessHere()
 {
-  return mProcessHere || mParam->TietzType || mParam->AMTtype || mParam->DE_camType == 1
-    || (mTD.plugFuncs && !mParam->canDoProcessing);
+  return (mProcessHere || mParam->TietzType || mParam->AMTtype || mParam->DE_camType == 1
+    || (mTD.plugFuncs && !mParam->canDoProcessing)) &&
+    !(mParam->FEItype && FCAM_ADVANCED(mParam) && mASIgivesGainNormOnly);
 }
 
 // Set whether processing here from menu
@@ -1507,10 +1559,17 @@ bool CCameraController::CanPreExpose(CameraParameters *param, int shuttering)
     (!param->onlyOneShutter && (!param->OneViewType || shuttering == USE_FILM_SHUTTER) && 
     (param->DMsettlingOK || shuttering == USE_DUAL_SHUTTER)))) ||
     param->K2Type || (param->OneViewType && param->onlyOneShutter) || 
-    param->FEItype == 1 || 
+    param->FEItype == EAGLE_TYPE || 
     (param->TietzType && param->TietzCanPreExpose && shuttering == USE_BEAM_BLANK) ||
     param->AMTtype || (param->DE_camType && !param->onlyOneShutter) || 
     (!param->pluginName.IsEmpty() && (param->noShutter || param->canPreExpose))));
+}
+
+// Return whether processing here is allowed for the given camera
+bool CCameraController::CanProcessHere(CameraParameters *param)
+{
+  return !((param->FEItype && FCAM_ADVANCED(param) && mASIgivesGainNormOnly) ||
+    param->K2Type || param->OneViewType);
 }
 
 // Returns true if camera is a OneView and the DM version can do drift correction
@@ -1523,6 +1582,14 @@ bool CCameraController::OneViewDriftCorrectOK(CameraParameters *param)
 bool CCameraController::HasNewK2API(CameraParameters * param)
 {
   return param->K2Type && mDMversion[CAMP_DM_INDEX(param)] >= DM_K2_API_CHANGED_LOTS;
+}
+
+// Returns member variable for falcon frames, or value obtained from advanced scripting
+int CCameraController::GetMaxFalconFrames(CameraParameters *params)
+{
+  if (FCAM_ADVANCED(params))
+    return (params->FEIflags >> PLUGFEI_MAX_FRAC_SHIFT);
+  return mMaxFalconFrames;
 }
 
 // Return number of intervals if dynamic focusing can be used
@@ -1962,7 +2029,7 @@ int CCameraController::QueueTiltDuringShot(double angle, int delayToStart, doubl
 
 void CCameraController::Capture(int inSet, bool retrying)
 {
-  int ind, error, setState;
+  int ind, error, setState, binInd;
   BOOL bEnsureDark = false;
   CString logmess;
   int numActive = mWinApp->GetNumActiveCameras();
@@ -2017,7 +2084,7 @@ void CCameraController::Capture(int inSet, bool retrying)
     mWinApp->SetStatusText(SIMPLE_PANE, "");
   }
 
-  if (mParam->FEItype == 2 && mFrameSavingEnabled && conSet.saveFrames && 
+  if (mParam->FEItype == FALCON2_TYPE && mFrameSavingEnabled && conSet.saveFrames && 
     mWinApp->mFalconHelper->GetStackingFrames()) {
       mWaitingForStacking = 1;
       mWinApp->AddIdleTask(ThreadBusy, ScreenOrInsertDone, ScreenOrInsertError, inSet, 0);
@@ -2037,6 +2104,7 @@ void CCameraController::Capture(int inSet, bool retrying)
   /*if ((mWinApp->GetDebugKeys()).Find('}') >= 0) {
     CanPreExpose(NULL, 1);
   }*/
+  mTD.MoveInfo.plugFuncs = mTD.scopePlugFuncs = mScope->GetPlugFuncs();
   mTD.errFlag = 0;
   if (mParam->GatanCam)
     mTD.DMversion = mDMversion[CAMP_DM_INDEX(mParam)];
@@ -2081,7 +2149,7 @@ void CCameraController::Capture(int inSet, bool retrying)
   mExposure = conSet.exposure;
 
   // Make sure binning is legal too
-  if (!retracting && FindNearestBinning(mParam, &conSet, ind, mBinning)) {
+  if (!retracting && FindNearestBinning(mParam, &conSet, binInd, mBinning)) {
     logmess.Format("WARNING: Parameter set has an illegal binning (%d), using binning %d",
       conSet.binning, mBinning);
     mWinApp->AppendToLog(logmess);
@@ -2126,7 +2194,7 @@ void CCameraController::Capture(int inSet, bool retrying)
     return;
 
   // Check the config file time at least before every Falcon shot
-  if (mParam->FEItype == 2 && mCanUseFalconConfig >= 0) {
+  if (IS_BASIC_FALCON2(mParam) && mCanUseFalconConfig >= 0) {
     setState = -1;
     if (mCanUseFalconConfig > 0)
       setState = conSet.saveFrames ? 1 : 0;
@@ -2147,20 +2215,26 @@ void CCameraController::Capture(int inSet, bool retrying)
   mDeferSumOnNextAsync = false;
    
   // Set up Falcon saving
-  mSavingFalconFrames = mParam->FEItype == 2 && mFrameSavingEnabled && conSet.saveFrames;
-  if (mParam->FEItype == 2 && mFrameSavingEnabled) {
+  mSavingFalconFrames = IS_FALCON2_OR_3(mParam) && (FCAM_ADVANCED(mParam) || 
+    mFrameSavingEnabled) && conSet.saveFrames;
+  if ((IS_BASIC_FALCON2(mParam) && mFrameSavingEnabled) || mSavingFalconFrames) {
+      if (FCAM_ADVANCED(mParam))
+        mDeferStackingFrames = false;
 
-    // Setup routine will check that the frame folder is not an empty string when not
-    // saving, so pass it the top directory in that case, otherwise get path/name for real
-    if (conSet.saveFrames)
-      ComposeFramePathAndName();
-    else
-      mFrameFolder = mDirForK2Frames;
-    if (mWinApp->mFalconHelper->SetupConfigFile(conSet, mLocalFalconFramePath, 
-      mFrameFolder, mFalconFrameConfig, mStackingWasDeferred)) {
-        ErrorCleanup(1);
-        return;
-    }
+      // Setup routine will check that the frame folder is not an empty string when not
+      // saving, so pass it the top directory in that case, otherwise get path/name for
+      // real.  For advanced scripting, this sends the optional folder and it is turned
+      // into the full path
+      if (conSet.saveFrames)
+        ComposeFramePathAndName();
+      else
+        mFrameFolder = mDirForK2Frames;
+      if (mWinApp->mFalconHelper->SetupConfigFile(conSet, mLocalFalconFramePath, 
+        mFrameFolder, mFrameFilename, mFalconFrameConfig, mStackingWasDeferred, mParam,
+        mTD.NumFramesSaved)) {
+          ErrorCleanup(1);
+          return;
+      }
   }
 
   // Set up DE12 saving
@@ -2193,6 +2267,11 @@ void CCameraController::Capture(int inSet, bool retrying)
   // load some thread data
   mTD.ImageType = (mParam->unsignedImages && mDivideBy2 <= 0) ? kUSHORT : kSHORT;
   mTD.DivideBy2 = (mParam->unsignedImages && mDivideBy2 > 0) ? mDivideBy2 : 0;
+  if (mParam->FEItype && FCAM_ADVANCED(mParam) && mParam->autoGainAtBinning > 0) {
+    mTD.DivideBy2 += B3DNINT(log((double)mParam->gainFactor[binInd]) / log(0.5));
+    SEMTrace('E', "Divide by 2 set to %d for binning %d (factor %f)", mTD.DivideBy2, 
+      mBinning, mParam->gainFactor[binInd]);
+  }
   /*logmess.Format("Thread data divide by 2: %d", mTD.DivideBy2);
   if (mDebugMode)
     mWinApp->AppendToLog(logmess, LOG_OPEN_IF_CLOSED); */
@@ -2208,6 +2287,7 @@ void CCameraController::Capture(int inSet, bool retrying)
   // Copy flags and targets, clear the flags
   mTD.TietzType = mParam->TietzType;
   mTD.FEItype = mParam->FEItype;
+  mTD.FEIflags = mParam->FEIflags;
   mTD.DE_camType = mParam->DE_camType;
 
   // DNM: this was added for NCMIR camera
@@ -2236,7 +2316,6 @@ void CCameraController::Capture(int inSet, bool retrying)
   mTD.TiltDuringDelay = B3DCHOICE(!FEIscope && mTiltDuringShotDelay >= 0, 
     B3DMAX(1, mTiltDuringShotDelay), 0);
   mTD.Processing = conSet.processing;
-  mTD.MoveInfo.plugFuncs = mTD.scopePlugFuncs = mScope->GetPlugFuncs();
 
   // Set up scaling for K2 camera.  Enforce read mode 0 for base camera
   // Set read mode -2 or -3 for OneView so it is distinct from K2
@@ -2244,7 +2323,8 @@ void CCameraController::Capture(int inSet, bool retrying)
   mTD.NeedsReadMode = mNeedsReadMode[CAMP_DM_INDEX(mParam)];
   if (mParam->K2Type > 1)
     conSet.K2ReadMode = 0;
-  mTD.GatanReadMode = mParam->K2Type ? conSet.K2ReadMode : -1;
+  mTD.GatanReadMode = B3DCHOICE(mParam->K2Type > 0 || 
+    (mParam->FEItype && FCAM_CAN_COUNT(mParam)), conSet.K2ReadMode, -1);
   if (mParam->OneViewType)
     mTD.GatanReadMode = conSet.K2ReadMode != 0 ? -2 : -3;
   mTD.CountScaling = GetCountScaling(mParam);
@@ -2267,6 +2347,7 @@ void CCameraController::Capture(int inSet, bool retrying)
   }
   mTD.SaveFrames = conSet.saveFrames && (!mParam->K2Type || conSet.doseFrac);
   mTD.rotationFlip = mParam->rotationFlip;
+  mTD.FEIflags = mParam->FEIflags;
 
   B3DCLAMP(conSet.filterType, 0, mNumK2Filters - 1);
   if (mK2FilterNames[conSet.filterType].GetLength() >= MAX_FILTER_NAME_LEN)
@@ -2279,7 +2360,7 @@ void CCameraController::Capture(int inSet, bool retrying)
 
   // Set timeout for camera acquires from exposure and readout components
   megaVoxel = (mDMsizeX * mDMsizeY / 1.e6) / (mParam->fourPort ? 4. : 1.);
-  if (mParam->DE_camType == DE_12 || mParam->FEItype == 2)
+  if (mParam->DE_camType == DE_12 || IS_FALCON2_OR_3(mParam))
     megaVoxel = (mParam->sizeX * mParam->sizeY) / 1.e6;
   exposure = mExposure;
   if (mParam->STEMcamera && mParam->GatanCam && conSet.lineSync)
@@ -2624,7 +2705,7 @@ int CCameraController::CapManageInsertTempK2Saving(const ControlSet &conSet, int
 {
   BOOL blockable, STEMretract, insertingOther;
   bool aligning;
-  int iCam;
+  int iCam, camInd;
   LowDoseParams *ldParam = mWinApp->GetLowDoseParams();
   int curCam = mWinApp->GetCurrentCamera();
   mSetDeferredSize = false;
@@ -2636,9 +2717,10 @@ int CCameraController::CapManageInsertTempK2Saving(const ControlSet &conSet, int
   STEMretract = mParam->STEMcamera && !mWinApp->GetMustUnblankWithScreen() && 
     mWinApp->GetRetractToUnblankSTEM();
   for (iCam = 0; iCam < numActive; iCam++) {
-    CameraParameters *camP = &mAllParams[mActiveList[iCam]];
+    camInd = mActiveList[iCam];
+    CameraParameters *camP = &mAllParams[camInd];
     if (camP != mParam && curCam != camP->samePhysicalCamera && 
-      mActiveList[iCam] != mParam->samePhysicalCamera && 
+      camInd != mParam->samePhysicalCamera && camInd != mParam->insertingRetracts &&
       (camP->order <= mParam->order || STEMretract) && camP->canBlock) 
       blockable = true;
   }
@@ -2668,11 +2750,12 @@ int CCameraController::CapManageInsertTempK2Saving(const ControlSet &conSet, int
         // first scan active cameras for ones that can block and are not same physical
         // camera
         for (iCam = 0; iCam < numActive; iCam++) {
-          CameraParameters *camP = &mAllParams[mActiveList[iCam]];
-          insertingOther = mActiveList[iCam] == mParam->alsoInsertCamera && !retracting;
+          camInd = mActiveList[iCam];
+          CameraParameters *camP = &mAllParams[camInd];
+          insertingOther = camInd == mParam->alsoInsertCamera && !retracting;
 
           if ((((camP != mParam && curCam != camP->samePhysicalCamera && 
-            mActiveList[iCam] != mParam->samePhysicalCamera && 
+            camInd != mParam->samePhysicalCamera && camInd != mParam->insertingRetracts &&
             (camP->order <= mParam->order || STEMretract)) || inSet == RETRACT_ALL) && 
             camP->canBlock) || insertingOther) {
               inserted = insertingOther ? 1 : 0;
@@ -2689,6 +2772,9 @@ int CCameraController::CapManageInsertTempK2Saving(const ControlSet &conSet, int
                 mITD.camera = camP->cameraNumber;
                 mITD.DMindex = CAMP_DM_INDEX(camP);
                 mITD.DE_camType = camP->DE_camType;
+                mITD.FEItype = FCAM_ADVANCED(camP) ? camP->FEItype : 0;
+                if (mITD.FEItype)
+                  mITD.camera = camP->eagleIndex;
                 mITD.plugFuncs = mPlugFuncs[mActiveList[iCam]];
                 mITD.delay = (int)(1000. * camP->retractDelay);
                 mITD.insert = insertingOther;
@@ -2752,9 +2838,12 @@ int CCameraController::CapManageInsertTempK2Saving(const ControlSet &conSet, int
             mITD.camera = mTD.SelectCamera;
             mITD.DMindex = CAMP_DM_INDEX(mParam);
             mITD.DE_camType = mParam->DE_camType;
+            mITD.FEItype = mParam->FEItype;
             mITD.plugFuncs = mTD.plugFuncs;
             if (mTD.plugFuncs)
               mITD.camera = mParam->cameraNumber;
+            if (mParam->FEItype)
+              mITD.camera = mParam->eagleIndex;
             mITD.delay = (int)(1000. * mParam->insertDelay);
             mITD.insert = true;
             mWinApp->SetStatusText(SIMPLE_PANE, "INSERTING CAMERA");
@@ -3776,9 +3865,11 @@ void CCameraController::CapSetupShutteringTiming(ControlSet & conSet, int inSet,
 
     // FEI camera shuttering - set size also
     ConstrainDriftSettling(conSet.drift);
-    if ((!mParam->processHere || (mFrameSavingEnabled && mParam->FEItype == 2 && 
+    if ((!mParam->processHere || (mFrameSavingEnabled && IS_BASIC_FALCON2(mParam) &&
       !mWinApp->mGainRefMaker->GetPreparingGainRef())) && 
       conSet.processing == DARK_SUBTRACTED)
+      conSet.processing = GAIN_NORMALIZED;
+    if (FCAM_ADVANCED(mParam) && !mASIgivesGainNormOnly)
       conSet.processing = GAIN_NORMALIZED;
     SetNonGatanPostActionTime();
     mTD.eagleIndex = mParam->eagleIndex;
@@ -3933,7 +4024,7 @@ int CCameraController::CapSaveStageMagSetupDynFocus(ControlSet & conSet, int inS
 
   // Set up for focus steps for Gatan or Tietz
   mTD.FocusStep1 = 0.;
-  if ((mParam->GatanCam || mParam->TietzType || mParam->FEItype == 2) && 
+  if ((mParam->GatanCam || mParam->TietzType || IS_FALCON2_OR_3(mParam)) && 
     !mParam->STEMcamera && !mTD.DynFocusInterval && !mTD.DriftISinterval && 
     (mFocusStepToDo1 || mFocusStepToDo2) && mFocusInterval1 < conSet.exposure) {
       mCenterFocus = mScope->GetDefocus();
@@ -4003,7 +4094,7 @@ int CCameraController::CapManageDarkGainRefs(ControlSet & conSet, int inSet,
     mDarkp = NULL;
     mGainp = NULL;
 
-    if (GetProcessHere() && !(mFrameSavingEnabled && mParam->FEItype == 2 &&
+    if (GetProcessHere() && !(mFrameSavingEnabled && IS_BASIC_FALCON2(mParam) &&
       !mWinApp->mGainRefMaker->GetPreparingGainRef())) {
       double currentTicks = GetTickCount();
 
@@ -4551,8 +4642,8 @@ bool CCameraController::ConstrainExposureTime(CameraParameters *camP, BOOL doseF
     exposure = camP->minExposure;
     retval = true;
   }
-  if (!camP->K2Type && camP->FEItype != 2 && !mWinApp->mDEToolDlg.HasFrameTime(camP) &&
-    !camP->OneViewType) 
+  if (!camP->K2Type && !IS_FALCON2_OR_3(camP) && !mWinApp->mDEToolDlg.HasFrameTime(camP)
+    && !camP->OneViewType) 
     return retval;
   
   // Both K2 and Falcon round to nearest number of frames for a given exposure time;
@@ -4620,7 +4711,7 @@ bool CCameraController::ConstrainExposureTime(CameraParameters *camP, BOOL doseF
 // Return a factor for rounding a constrained exposure time if appropriate
 float CCameraController::ExposureRoundingFactor(CameraParameters *camP)
 {
-  if (camP->K2Type == 2 || camP->FEItype == 2 || mWinApp->mDEToolDlg.HasFrameTime(camP))
+  if (camP->K2Type == 2 || IS_FALCON2_OR_3(camP) ||mWinApp->mDEToolDlg.HasFrameTime(camP))
     return 200.f;
   if (camP->OneViewType)
     return 1000.f;
@@ -4629,7 +4720,7 @@ float CCameraController::ExposureRoundingFactor(CameraParameters *camP)
 
 bool CCameraController::IsDirectDetector(CameraParameters *camP)
 {
-  return camP->K2Type || camP->FEItype == 2 || camP->DE_camType == DE_12;
+  return camP->K2Type || IS_FALCON2_OR_3(camP) || camP->DE_camType == DE_12;
 }
 
 // Constrain a frame time for the K2 camera and return true if changed
@@ -6628,17 +6719,23 @@ UINT CCameraController::InsertProc(LPVOID pParam)
   InsertThreadData *itd = (InsertThreadData *)pParam;
   IDMCamera *pGatan;
   HRESULT hr = S_OK;
-  if (!itd->plugFuncs && !itd->DE_camType && itd->DMindex == COM_IND) {
+  CString message;
+  if (itd->FEItype) {
+    if (itd->td->scopePlugFuncs->BeginThreadAccess(2, PLUGFEI_MAKE_NOBASIC)) {
+      DeferMessage(itd->td, "Error setting up thread access for inserting/retracting");
+      retval = 1;
+    }
+
+  } else if (!itd->plugFuncs && !itd->DE_camType && itd->DMindex == COM_IND) {
     sCreateFor = CREATE_FOR_ANY;
     CreateDMCamera(pGatan);
     sCreateFor = CREATE_FOR_CURRENT;
   }
   if(FAILED(hr)) {
-    CString message;
     message.Format(_T("0x%x, Error getting second instance of Camera "), hr);
     DeferMessage(itd->td, message);
     retval = 1;
-  } else {
+  } else if (!retval) {
     try {
       SEMTrace('R', "InsertProc: Setting insertion state of camera %d to %d", 
         itd->camera, itd->insert);
@@ -6656,6 +6753,13 @@ UINT CCameraController::InsertProc(LPVOID pParam)
           hr = itd->td->DE_Cam->retractCamera();
         if (!SUCCEEDED(hr))
           retval = 1;
+      } else if (itd->FEItype) {
+          retval = itd->td->scopePlugFuncs->ASIsetCameraInsertion(itd->camera, itd->insert ? 1 : 0);
+          if (retval) {
+            message = itd->td->scopePlugFuncs->GetLastErrorString();
+            DeferMessage(itd->td, message);
+          }
+
       } else {
         CallDMIndCamera(itd->DMindex, pGatan, itd->td->amtCam, 
           InsertCamera(itd->camera, itd->insert ? 1 : 0));
@@ -6668,9 +6772,11 @@ UINT CCameraController::InsertProc(LPVOID pParam)
       CCReportCOMError(itd->td, E, _T("Error inserting or retracting camera "));
       retval = 1;
     }
-    if (!itd->plugFuncs && !itd->DE_camType && itd->DMindex == COM_IND)
+    if (!itd->plugFuncs && !itd->DE_camType  && !itd->FEItype&& itd->DMindex == COM_IND)
       pGatan->Release();
   }
+  if (itd->FEItype)
+    itd->td->scopePlugFuncs->EndThreadAccess(2);
   CoUninitialize();
   SEMTrace('R', "InsertProc: exiting thread after sleep");
   return retval;
@@ -7157,8 +7263,8 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       extra->mCamera = curCam;
       extra->mPixel = (float)(mBinning * 10000. * 
         mShiftManager->GetPixelSize(curCam, mMagBefore));
-      if (imBuf->mSampleMean > EXTRA_VALUE_TEST && IsDirectDetector(mParam) &&
-        extra->m_fDose > 0 &&
+      if (mTD.NumAsyncSumFrames != 0 && imBuf->mSampleMean > EXTRA_VALUE_TEST && 
+        IsDirectDetector(mParam) && extra->m_fDose > 0 &&
         !mWinApp->mProcessImage->DoseRateFromMean(imBuf, imBuf->mSampleMean, camRate)) {
           specRate = extra->m_fDose * 
             (float)pow((double)extra->mPixel / extra->mBinning, 2) / (float)mExposure;
@@ -7188,11 +7294,12 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       } else {
 
         // The frame path and name were composed in the setup step
-        mPathForFrames.Format("%s\\%s.mrc", (LPCTSTR)mFrameFolder, 
-          (LPCTSTR)mFrameFilename);
-        mTD.ErrorFromSave = mWinApp->mFalconHelper->StackFrames(mLocalFalconFramePath, 
-          mFrameFolder, mFrameFilename, mTD.DivideBy2, mTD.DivideBy2 ? 2 : 1, 
-          mParam->rotationFlip, extra->mPixel, mFalconAsyncStacking, mTD.NumFramesSaved);
+        mPathForFrames.Format("%s%s%s.mrc", (LPCTSTR)mFrameFolder, 
+          mFrameFolder.IsEmpty() ? "" : "\\", (LPCTSTR)mFrameFilename);
+        if (IS_BASIC_FALCON2(mParam))
+          mTD.ErrorFromSave = mWinApp->mFalconHelper->StackFrames(mLocalFalconFramePath, 
+            mFrameFolder, mFrameFilename, mTD.DivideBy2, mTD.DivideBy2 ? 2 : 1, 
+            mParam->rotationFlip, extra->mPixel, mFalconAsyncStacking,mTD.NumFramesSaved);
         mStackingWasDeferred = false;
       }
     }
@@ -7215,6 +7322,16 @@ void CCameraController::DisplayNewImage(BOOL acquired)
         if (mTD.ErrorFromSave < 0) {
           message = "An error occurred trying to find out how many frames were saved";
         } else {
+          // Adjust to full path for advanced scripting
+          if (IS_FALCON2_OR_3(mParam) && FCAM_ADVANCED(mParam)) {
+            message = mTD.scopePlugFuncs->ASIgetLastStoragePath();
+            SEMTrace('E', "%s   %s", (LPCTSTR)message, (LPCTSTR)mPathForFrames);
+            if (!message.IsEmpty()) {
+              if (message.GetAt(message.GetLength() - 1) != '\\')
+                message += '\\';
+              mPathForFrames = message + mPathForFrames;
+            }
+          }
           message = "";
           if (mTD.ErrorFromSave > 0)
             message.Format("Error %d occurred when saving frames:  %s\r\n", 
@@ -7277,8 +7394,8 @@ void CCameraController::DisplayNewImage(BOOL acquired)
     }
 
     // Save to autodoc file if one is designated
-    if (extra->mNumSubFrames > 0 || (mParam->FEItype == 2 && (mFrameMdocForFalcon > 1 || 
-      (mFrameMdocForFalcon && mLastConSet == RECORD_CONSET)))) {
+    if (extra->mNumSubFrames > 0 || (IS_FALCON2_OR_3(mParam) && (mFrameMdocForFalcon > 1 
+      || (mFrameMdocForFalcon && mLastConSet == RECORD_CONSET)))) {
         if (mTD.GetDeferredSum)
           i = mWinApp->mDocWnd->UpdateLastMdocFrame(image);
         else  
@@ -8254,19 +8371,33 @@ int CCameraController::AcquireFEIimage(CameraThreadData *td, void *array, int co
   CString message;
   long retval = 0, index = 0;
   static bool needFalconShutter = true;
+  bool advanced = (td->FEIflags & PLUGFEI_USES_ADVANCED) != 0;
   DWORD ticks = GetTickCount();
-  SEMTrace('E', "Entering AcquireFEIimage");
 
-  if (td->scopePlugFuncs->BeginThreadAccess(2, 0)) {
+  if (td->scopePlugFuncs->BeginThreadAccess(2, advanced ? PLUGFEI_MAKE_NOBASIC : 0)) {
     DeferMessage(td, "Error creating second instance of microscope object\n"
       " for acquiring image");
     SEMErrorOccurred(1);
     return 1;
   }
-  retval = td->scopePlugFuncs->AcquireFEIimage(array, sizeX, sizeY, correction, 
-    td->Exposure, settling, messInd, td->Binning, td->restrictedSize, td->ImageType,
-    td->DivideBy2, &td->eagleIndex, (LPCTSTR)td->cameraName, td->checkFEIname,
-    td->FEItype, td->oneFEIshutter, td->FauxCamera, &td->startingFEIshutter);
+  if (advanced) {
+    SEMTrace('E', "Calling ASIacquireFromcamera %p %d %d %f %d %d %d %d %d %d %d %d %d",
+      array, sizeX, sizeY,  
+      td->Exposure,  messInd, td->Binning, td->restrictedSize, td->ImageType,
+      td->DivideBy2, td->eagleIndex, 
+      (td->FEIflags & PLUGFEI_CAN_DOSE_FRAC) ? td->SaveFrames : -1, td->GatanReadMode,
+      (td->FEIflags & PLUGFEI_CAM_CAN_ALIGN) ? td->AlignFrames : -1);
+    retval = td->scopePlugFuncs->ASIacquireFromCamera(array, sizeX, sizeY,  
+      td->Exposure,  messInd, td->Binning, td->restrictedSize, td->ImageType,
+      td->DivideBy2, td->eagleIndex, 
+      (td->FEIflags & PLUGFEI_CAN_DOSE_FRAC) ? td->SaveFrames : -1, td->GatanReadMode,
+      (td->FEIflags & PLUGFEI_CAM_CAN_ALIGN) ? td->AlignFrames : -1, 0, 0, 0, 0., 0.);
+
+  } else
+    retval = td->scopePlugFuncs->AcquireFEIimage(array, sizeX, sizeY, correction, 
+      td->Exposure, settling, messInd, td->Binning, td->restrictedSize, td->ImageType,
+      td->DivideBy2, &td->eagleIndex, (LPCTSTR)td->cameraName, td->checkFEIname,
+      td->FEItype, td->oneFEIshutter, td->FauxCamera, &td->startingFEIshutter);
   if (retval)
     message = td->scopePlugFuncs->GetLastErrorString();
   td->scopePlugFuncs->EndThreadAccess(2);
@@ -8354,7 +8485,7 @@ void CCameraController::RestoreFEIshutter(void)
   // the shutter with it
   for (int cam = 0; cam < mWinApp->GetNumActiveCameras(); cam++) {
     CameraParameters *camP = &mAllParams[mActiveList[cam]];
-    if (camP->FEItype == 1 && !camP->STEMcamera &&
+    if (camP->FEItype == EAGLE_TYPE && !camP->STEMcamera &&
       !mScope->LookupScriptingCamera(camP, false, mTD.startingFEIshutter)) {
         mTD.startingFEIshutter = VALUE_NOT_SET;
         return;
@@ -8862,6 +8993,8 @@ void CCameraController::TestCameraInserted(int actIndex, long &inserted)
     inserted = mTD.DE_Cam->IsCameraInserted();
   } else if (!camP->pluginName.IsEmpty()) {
     inserted = mPlugFuncs[camIndex]->IsCameraInserted(camP->cameraNumber);
+  } else if (camP->FEItype && FCAM_ADVANCED(camP)) {
+    inserted = mTD.scopePlugFuncs->ASIisCameraInserted(camP->eagleIndex);
   }
 }
 
@@ -8919,15 +9052,27 @@ void CCameraController::ComposeFramePathAndName(void)
 
   // Set up folder
   if (!mParam->DE_camType) {
-    if ((mFrameNameFormat & FRAME_FOLDER_ROOT) && !mFrameBaseName.IsEmpty())
+     if ((mFrameNameFormat & FRAME_FOLDER_ROOT) && !mFrameBaseName.IsEmpty())
       path = mFrameBaseName;
     if ((mFrameNameFormat & FRAME_FOLDER_SAVEFILE) && !savefile.IsEmpty())
       UtilAppendWithSeparator(path, savefile, "_");
     if ((mFrameNameFormat & FRAME_FOLDER_NAVLABEL) && !label.IsEmpty())
       UtilAppendWithSeparator(path, label, "_");
-    mFrameFolder = mDirForK2Frames;
-    if (!path.IsEmpty())
-      mFrameFolder += CString("\\") + path;
+
+    // Ignore that path for advanced falcon if there is overall folder set, or use it
+    if (IS_FALCON2_OR_3(mParam) && FCAM_ADVANCED(mParam)) {
+      if (mDirForFalconFrames.IsEmpty())
+        mFrameFolder = path;
+      else
+        mFrameFolder = mDirForFalconFrames;
+    } else {
+
+      // Otherwise append the folder
+      mFrameFolder = B3DCHOICE(IS_BASIC_FALCON2(mParam), mDirForFalconFrames,
+        mDirForK2Frames);
+      if (!path.IsEmpty())
+        mFrameFolder += CString("\\") + path;
+    }
   }
 
   // Set up prefix of filename if any
@@ -8992,6 +9137,28 @@ CString CCameraController::MakeFullDMRefName(CameraParameters *camP, const char 
     }
   }
   return ref;
+}
+
+// One-time management of directory for Falcon frames
+void CCameraController::FixDirForFalconFrames(CameraParameters *param)
+{
+  if (!IS_FALCON2_OR_3(param))
+    return;
+  if (FCAM_ADVANCED(param)) {
+
+    // For advanced scripting, if it is not set yet, the default is blank; if
+    // it somehow has a path in it, set it to blank
+    if (mDirForFalconFrames == FALCON_DIR_UNSET)
+      mDirForFalconFrames = "";
+    int slashInd = mDirForFalconFrames.FindOneOf("/\\");
+    if (mDirForFalconFrames.Find(':') >= 0 || 
+      (slashInd >= 0 && slashInd < mDirForFalconFrames.GetLength() - 1))
+      mDirForFalconFrames = "";
+  } else if (mDirForFalconFrames == FALCON_DIR_UNSET) {
+
+    // For old scripting the default is to inherit from K2 path
+    mDirForFalconFrames = mDirForK2Frames;
+  }    
 }
 
 ////////////////////////////////////////////////////////////////////
