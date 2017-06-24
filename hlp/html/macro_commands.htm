@@ -589,6 +589,13 @@
             the script, if it is the current camera.&nbsp; Without this command, the cover
             will be opened and closed for each exposure except during tasks.</TD>
         </TR>
+        <TR>
+          <TD class="style8">SetDECamFrameRate #</TD>
+          <TD>Sets the frame rate of the current camera if it is a DE camera; follow with 
+            the new rate in frames per second, which must be positive and less than the 
+            maximum frame rate.&nbsp; The user&#39;s original frame rate is placed into 
+            ReportedValue1 and is restored when the script ends.</TD>
+        </TR>
         <TR vAlign="top">
           <TD class="style8">UpdateHWDarkRef #</TD>
           <TD>Updates the K2 hardware dark reference if the known interval since the last

@@ -149,7 +149,7 @@ public:
 
 	//functions below added for DE12 and future
 	int initDEServer();
-	int initializeDECamera(CString camName);
+	int initializeDECamera(CString camName, int camIndex);
   void FinishCameraSelection(bool initialCall);
 	int setROI(int offset_x, int offset_y, int xsize, int ysize);
   int SetLiveMode(int mode);
@@ -194,6 +194,7 @@ public:
   GetMember(int, InitializingIndex);
   GetMember(int, ServerVersion);
   GetMember(int, LastLiveMode);
+  GetMember(int, CurCamIndex);
   bool justSetDoubleProperty(const char * propName, double value);
   bool justSetIntProperty(const char * propName, int value);
   CString MakeErrorString(CString str);
@@ -223,6 +224,7 @@ public:
 
 private:
 	int mCamType;
+  int mCurCamIndex;  // Index of current or last selected camera
 	//determine if we are using the DE client/server model
 	bool m_DE_CLIENT_SERVER;
 	unsigned short *m_pCapturedDataShort;

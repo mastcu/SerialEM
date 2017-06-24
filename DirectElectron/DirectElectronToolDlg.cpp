@@ -123,8 +123,8 @@ void DirectElectronToolDlg::updateDEToolDlgPanel(bool initialCall)
       }
 
       // Update Max FPS
-      if (mDECamera->getFloatProperty("Frames Per Second (Max)", temp_float)) {
-        value.Format("%0.2f", temp_float);
+      if (camParam->DE_MaxFrameRate > 0.) {
+        value.Format("%0.2f", camParam->DE_MaxFrameRate);
         ((CWnd *) GetDlgItem(ID_DE_maxfps))->SetWindowText(value);
       }
     }
@@ -292,7 +292,8 @@ void DirectElectronToolDlg::Update()
   ((CWnd *) GetDlgItem(IDC_STAT_FPSLABEL))->EnableWindow(isEither);
   ((CWnd *) GetDlgItem(IDC_STAT_FPSMAX_LABEL))->EnableWindow(isEither);
   ((CWnd *) GetDlgItem(ID_DE_maxfps))->EnableWindow(isEither);
-  ((CWnd *) GetDlgItem(ID_DE_currfps))->EnableWindow(isEither && !thisCamBusy);
+  ((CWnd *) GetDlgItem(ID_DE_currfps))->EnableWindow(isEither && !thisCamBusy &&
+    mDECamera->GetCurCamIndex() >= 0);
   ((CWnd *) GetDlgItem(IDC_STAT_PROT_COV))->EnableWindow(isDE12);
   ((CWnd *) GetDlgItem(IDC_STAT_PROT_DELAY))->EnableWindow(isDE12);
   ((CWnd *) GetDlgItem(ID_DE_coverDelay))->EnableWindow(!thisCamBusy && isDE12);

@@ -81,6 +81,7 @@ DirectElectronCamera::DirectElectronCamera(int camType, int index)
 {
 
   mCamType = camType;
+  mCurCamIndex = -1;
   mWinApp = (CSerialEMApp *)AfxGetApp();
   mCamParams = mWinApp->GetCamParams();
 
@@ -232,10 +233,11 @@ int DirectElectronCamera::initialize(CString camName, int camIndex)
     }
     mInitializingIndex = camIndex;
     mCamType = mCamParams[camIndex].DE_camType;
-    check = initializeDECamera(camName);
+    check = initializeDECamera(camName, camIndex);
     mInitializingIndex = -1;
     if (check == -1)
       return check;
+    mCurCamIndex = camIndex;
 
   } else {
 
@@ -410,7 +412,7 @@ int DirectElectronCamera::initDEServer()
 }
 
 // Initialize a particular DE camera
-int DirectElectronCamera::initializeDECamera(CString camName)
+int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
 {
   //read in a properties file to know how to assign
   //Read in the information as this is very critical
@@ -435,6 +437,7 @@ int DirectElectronCamera::initializeDECamera(CString camName)
     setStringProperty("Autosave Raw Frames - Save Correction", "Disable");
     setStringProperty("Autosave Sum Frames - Save Correction", "Disable");
     setIntProperty("Autosave Sum Frames - Ignored Frames", 0);
+    getFloatProperty("Frames Per Second (Max)", mCamParams[camIndex].DE_MaxFrameRate);
     if (mServerVersion >= DE_HAS_REPEAT_REF)
       setStringProperty("Auto Repeat Reference - Multiple Acquisitions", "Disable");
 
@@ -533,6 +536,7 @@ void DirectElectronCamera::setCameraName(CString camName)
       //Now set the new camera.
       m_DE_CurrentCamera = camName;
       mCamType = camP->DE_camType;
+      mCurCamIndex = mWinApp->GetCurrentCamera();
 
       //its ok to update the panel after sending out any settings that exist
       SEMTrace('D', "Set the camera to:  %s", (LPCTSTR)camName);
@@ -1552,13 +1556,14 @@ CString DirectElectronCamera::ErrorTrace(char *fmt, ...)
 // DE 12 and sets the current value in camera parameters
 void DirectElectronCamera::SetFramesPerSecond(double value)
 {
-  CameraParameters *camP = mCamParams + mWinApp->GetCurrentCamera();
+  CameraParameters *camP = mCamParams + mCurCamIndex;
   int readoutDelay = (int)floor(1000. / value);
   CSingleLock slock(&m_mutex);
   if (slock.Lock(1000)) {
     if (mDeServer) {
       justSetDoubleProperty("Frames Per Second", value);
-      camP->DE_FramesPerSec = (float)value;
+      if (mCurCamIndex >= 0)
+        camP->DE_FramesPerSec = (float)value;
       if (CurrentIsDE12()) {
         justSetIntProperty("Sensor Readout Delay (milliseconds)", readoutDelay);
         SEMTrace('D', "DE12 FPS set to %f, readout delay to %d", value, readoutDelay);

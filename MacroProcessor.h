@@ -177,6 +177,8 @@ private:
   int mNumStatesToRestore; // Number of states to restore when macro stops
   double mFocusToRestore; // Saved focus value;
   float mFocusOffsetToRestore;  // Saved value of autofocus offset to restore
+  float mDEframeRateToRestore;  // Saved frame rate of DE camera
+  int mDEcamIndToRestore; // Index of that camera
   int mKeyPressed;        // Key pressed after macro starts
   int mStoppedContSetNum; // Set number for continuous acquire that was stopped
   float mMinDeltaFocus;   // Defocus change and absolute focus limits for autofocus

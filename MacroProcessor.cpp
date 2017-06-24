@@ -207,7 +207,8 @@ enum {CME_VIEW, CME_FOCUS, CME_TRIAL, CME_RECORD, CME_PREVIEW,
   CME_LOCALLOOPINDEXES, CME_ZEMLINTABLEAU, CME_WAITFORMIDNIGHT, CME_REPORTUSERSETTING,
   CME_SETUSERSETTING, CME_CHANGEITEMREGISTRATION, CME_SHIFTITEMSBYMICRONS,
   CME_SETFREELENSCONTROL, CME_SETLENSWITHFLC, CME_SAVETOOTHERFILE, CME_SKIPACQUIRINGGROUP,
-  CME_REPORTIMAGEDISTANCEOFFSET, CME_SETIMAGEDISTANCEOFFSET, CME_REPORTCAMERALENGTH
+  CME_REPORTIMAGEDISTANCEOFFSET, CME_SETIMAGEDISTANCEOFFSET, CME_REPORTCAMERALENGTH,
+  CME_SETDECAMFRAMERATE
 };
 
 static CmdItem cmdList[] = {{NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0},
@@ -306,7 +307,7 @@ static CmdItem cmdList[] = {{NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0
 {"ChangeItemRegistration", 2}, {"ShiftItemsByMicrons", 2}, {"SetFreeLensControl", 2},
 {"SetLensWithFLC", 2}, {"SaveToOtherFile", 4}, {"SkipAcquiringGroup", 0},
 {"ReportImageDistanceOffset", 0}, {"SetImageDistanceOffset", 1}, 
-{"ReportCameraLength", 0},
+{"ReportCameraLength", 0}, {"SetDECamFrameRate", 1},
 {NULL, 0, NULL}
 };
 
@@ -848,6 +849,8 @@ void CMacroProcessor::RunOrResume()
   mNumStatesToRestore = 0;
   mFocusToRestore = -999.;
   mFocusOffsetToRestore = -9999.;
+  mDEframeRateToRestore = -1.;
+  mDEcamIndToRestore = -1;
   mKeyPressed = 0;
   if (mChangedConsets.size() > 0 && mCamWithChangedSets == mWinApp->GetCurrentCamera())
     for (ind = 0; ind < (int)B3DMIN(mConsetNums.size(), mChangedConsets.size());ind++)
@@ -1589,6 +1592,8 @@ void CMacroProcessor::NextCommand()
     mCamera->QueueFocusSteps(0., itemDbl[1], 0., itemDbl[2]);
 
   } else if (CMD_IS(DEFERSTACKINGNEXTSHOT)) {               // DeferStackingNextShot
+    if (!IS_BASIC_FALCON2(camParams))
+      ABORT_NOLINE("Deferred stacking is available only for Falcon2 with old interface");
     mCamera->SetDeferStackingFrames(true);
 
   } else if (CMD_IS(EARLYRETURNNEXTSHOT)) {                 // EarlyReturnNextShot
@@ -3796,6 +3801,30 @@ void CMacroProcessor::NextCommand()
     if (!itemEmpty[6])
       mConSets[index].sumK2Frames = itemInt[6] ? 1 : 0;
 
+  } else if (CMD_IS(SETDECAMFRAMERATE)) {                   // SetDECamFrameRate
+    if (!(camParams->DE_camType && camParams->DE_FramesPerSec > 0))
+      ABORT_LINE("The current camera must be a DE camera with adjustable frame rate for"
+        " line:\n\n");
+    delISX = itemDbl[1];
+    if (delISX < camParams->DE_MaxFrameRate + 1.)
+      delISX = B3DMIN(delISX, camParams->DE_MaxFrameRate);
+    if (delISX <= 0. || delISX > camParams->DE_MaxFrameRate) {
+      report.Format("The new frame rate must be greater than zero\n"
+        "and less than %.2f FPS for line:\n\n", camParams->DE_MaxFrameRate);
+      ABORT_LINE(report);
+    }
+    if (mDEframeRateToRestore < 0) {
+      mNumStatesToRestore++;
+      mDEframeRateToRestore = camParams->DE_FramesPerSec;
+      mDEcamIndToRestore = mWinApp->GetCurrentCamera();
+    }
+    camParams->DE_FramesPerSec = (float)delISX;
+    mWinApp->mDEToolDlg.UpdateSettings();
+    SetReportedValues(mDEframeRateToRestore);
+    report.Format("Changed frame rate of DE camera from %.2f to %.2f", 
+      mDEframeRateToRestore, delISX);
+    mWinApp->AppendToLog(report, mLogAction);
+
   } else if (CMD_IS(USECONTINUOUSFRAMES)) {                 // UseContinuousFrames
     truth = itemInt[1] != 0;
     if ((mUsingContinuous ? 1 : 0) != (truth ? 1 : 0))
@@ -4535,6 +4564,7 @@ void CMacroProcessor::AbortMacro()
 
 void CMacroProcessor::SuspendMacro(BOOL abort)
 {
+  CameraParameters *camParams = mWinApp->GetCamParams();
   if (TestAndStartFuncOnStop())
     return;
 
@@ -4554,6 +4584,10 @@ void CMacroProcessor::SuspendMacro(BOOL abort)
         mScope->SetFocus(mFocusToRestore);
       if (mFocusOffsetToRestore > -9000.)
         mWinApp->mFocusManager->SetDefocusOffset(mFocusOffsetToRestore);
+      if (mDEframeRateToRestore > 0 || mDEcamIndToRestore >= 0) {
+        camParams[mDEcamIndToRestore].DE_FramesPerSec = mDEframeRateToRestore;
+        mWinApp->mDEToolDlg.UpdateSettings();
+      }
     }
     mSavedSettingNames.clear();
     mSavedSettingValues.clear();
