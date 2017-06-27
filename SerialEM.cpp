@@ -1117,7 +1117,6 @@ BOOL CSerialEMApp::InitInstance()
   mFilterTasks->Initialize();
   mDistortionTasks->Initialize();
   mNavHelper->Initialize();
-  //mFalconHelper->Initialize();
   mAutoTuning->Initialize();
 
   // Start the tool windows

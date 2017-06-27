@@ -880,8 +880,8 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external)
     SetFileZ();
 
     // Doing frame alignment in IMOD, turn off the frame alignment now and set flag
-    if (mCamParams->K2Type && mConSets[RECORD_CONSET].saveFrames && 
-      mConSets[RECORD_CONSET].doseFrac && mConSets[RECORD_CONSET].alignFrames && 
+    if (mCamera->IsK2ConSetSaving(&mConSets[RECORD_CONSET], mCamParams) && 
+      mConSets[RECORD_CONSET].alignFrames && 
       mConSets[RECORD_CONSET].useFrameAlign > 1 && mCamera->GetAlignWholeSeriesInIMOD()) {
         if (mWinApp->mStoreMRC->GetAdocIndex() < 0) {
           TSMessageBox("The output file was not opened with an associated .mdoc\n"
