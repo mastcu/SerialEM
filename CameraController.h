@@ -848,6 +848,7 @@ float GetCountScaling(CameraParameters * camParam);
 int TargetSizeForTasks(CameraParameters *camParam = NULL);
 void RestoreGatanOrientations(void);
 void GetMergeK2DefectList(int DMind, CameraParameters *param, bool errToLog);
+bool IsK2ConSetSaving(ControlSet *conSet, CameraParameters * param);
 };
 
 

@@ -1652,16 +1652,16 @@ int CCameraController::MakeMdocFrameAlignCom(void)
       "unless the K2 camera is still selected");
     return 1;
   }
-  if (!(conSet->doseFrac && conSet->alignFrames && conSet->useFrameAlign > 1 && 
-    conSet->saveFrames)) {
-      SEMMessageBox("The Record parameters must be set for frame saving and aligning\n"
-        "in IMOD in order to make a com file for aligning frames");
-      return 1;
-  }
   if (GetPluginVersion(mParam) < PLUGIN_CAN_ALIGN_FRAMES) {
     SEMMessageBox("The current version of the plugin cannot make\n"
       "a com file for aligning frames in IMOD");
     return 1;
+  }
+  if (!IsK2ConSetSaving(conSet, mParam) && conSet->alignFrames && 
+    conSet->useFrameAlign > 1) {
+      SEMMessageBox("The Record parameters must be set for frame saving and aligning\n"
+        "in IMOD in order to make a com file for aligning frames");
+      return 1;
   }
   if (!mWinApp->mStoreMRC || mWinApp->mStoreMRC->GetAdocIndex() < 0) {
     SEMMessageBox("There needs to be a current open file with an associated mdoc file\n"
@@ -2095,9 +2095,8 @@ void CCameraController::Capture(int inSet, bool retrying)
   // 2) switching to dark-subtracted if saving frames and they are
   // supposed to be unnormalized.
   if (mParam->K2Type && conSet.doseFrac) {
-    if (conSet.alignFrames && GetPluginVersion(mParam) >= PLUGIN_CAN_ALIGN_FRAMES &&
-      conSet.useFrameAlign > 1 && !conSet.saveFrames)
-        conSet.saveFrames = 1;
+    if (IsK2ConSetSaving(&conSet, mParam) && !conSet.saveFrames)
+      conSet.saveFrames = 1;
     if (conSet.saveFrames && conSet.processing == GAIN_NORMALIZED && 
       mSaveUnnormalizedFrames && GetPluginVersion(mParam) >= PLUGIN_CAN_GAIN_NORM)
         conSet.processing = DARK_SUBTRACTED;
@@ -2261,7 +2260,7 @@ void CCameraController::Capture(int inSet, bool retrying)
     if (conSet.useFrameAlign == 1) {
       mTD.K2ParamFlags |= K2_USE_FRAMEALIGN;
       mTD.UseFrameAlign = true;
-    } else {
+    } else if (!mAlignWholeSeriesInIMOD) {
       mTD.K2ParamFlags |= K2_MAKE_ALIGN_COM;
     }
   }
@@ -8992,6 +8991,14 @@ CString CCameraController::MakeFullDMRefName(CameraParameters *camP, const char 
     }
   }
   return ref;
+}
+
+// Returns true if all conditions are set for saving from K2 camera/control set
+bool CCameraController::IsK2ConSetSaving(ControlSet *conSet, CameraParameters *param)
+{
+  return (mParam->K2Type && conSet->doseFrac && (conSet->saveFrames ||
+    (conSet->useFrameAlign > 1 && GetPluginVersion(mParam) >= PLUGIN_CAN_ALIGN_FRAMES &&
+      (conSet->alignFrames || mWinApp->mTSController->GetFrameAlignInIMOD()))));
 }
 
 ////////////////////////////////////////////////////////////////////

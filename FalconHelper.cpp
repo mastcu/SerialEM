@@ -533,8 +533,8 @@ float CFalconHelper::AdjustSumsForExposure(CameraParameters *camParams,
 {
   bool falconCanSave = camParams->FEItype == 2 && mCamera->GetMaxFalconFrames() &&
     mCamera->GetFrameSavingEnabled();
-  if (falconCanSave || (camParams->K2Type && conSet->doseFrac && conSet->sumK2Frames && 
-    conSet->saveFrames))
+  if (falconCanSave || (mCamera->IsK2ConSetSaving(conSet, camParams) && 
+    conSet->sumK2Frames))
     return AdjustForExposure(conSet->summedFrameList, 
       falconCanSave ? conSet->numSkipBefore : 0, falconCanSave ? conSet->numSkipAfter : 0, 
       exposure, falconCanSave ? mCamera->GetFalconReadoutInterval() : conSet->frameTime, 
