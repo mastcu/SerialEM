@@ -734,12 +734,13 @@
         </TR>
         <TR VALIGN="top">
           <TD>MaxFalconFrames</TD>
-          <TD>Maximum number of intermediate frames that can be saved for Falcon.</TD>
+          <TD>Maximum number of intermediate frames that can be saved for Falcon 2 with 
+          old scripting interface.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>FalconFrameConfigFile</TD>
           <TD>Full path and name of the configuration file that controls the saving of 
-            intermediate frames.</TD>
+            intermediate frames for Falcon 2 with old scripting interface.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>FalconConfigFile</TD>
@@ -760,7 +761,8 @@
         <TR VALIGN="top">
           <TD>LocalFalconFramePath</TD>
           <TD>Path to directory where intermediate frames should always be written 
-            initially.&nbsp; If this is not entered, frames will be written to whatever 
+            initially for Falcon 2 with old scripting interface.&nbsp; If this is not 
+            entered, frames will be written to whatever 
             folder is chosen by the user.&nbsp;&nbsp; A local path should be supplied if 
             users can choose remote directories that FEI software will not write to.</TD>
         </TR>
@@ -805,7 +807,7 @@
         </TR>
       </TABLE>
       <BR>
-      <P><B>Energy filter properties</B></P>
+      <P><A NAME="gif_properties"></A><B>Energy filter properties</B></P>
       <TABLE BORDER cols="2">
         <TR VALIGN="top">
           <TD>BiggestGIFApertureNumber</TD>
@@ -967,9 +969,12 @@
         </TR>
         <TR VALIGN="top">
           <TD>FEIcameraType</TD>
-          <TD>1 for an FEI Eagle camera or FEI STEM, 2 for a Falcon camera, or 3 for another 
-            camera with no shuttering capabilities. This entry implies RestrictedSizeType 1. 
-            It also implies a MinimumExposure of 0.011, unless a different value is entered.</TD>
+          <TD>1 for an FEI Eagle camera or FEI STEM, 2 for a Falcon 1 or 2 camera, 3 for another 
+            camera with no shuttering capabilities, or 4 for Falcon 3.&nbsp; If the type is 
+            2 and a camera is determined to have electron counting and aligning 
+            capabilities, it will be converted to a 4. This entry implies RestrictedSizeType 
+            1. It also implies a MinimumExposure of 0.011, unless a different value is 
+            entered, or unless the new FEI camera interface is available.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>DEcameraType</TD>
@@ -1186,6 +1191,14 @@
             binning at which counts per electron is calibrated.</TD>
         </TR>
         <TR VALIGN="top">
+          <TD>AutoGainFactors</TD>
+          <TD>The binning index at which to start applying an automatically set gain factor, 
+            for an FEI camera with the advanced scripting interface.&nbsp; With a value of 
+            1, binning will essentially average instead of summing values, so counts are 
+            scaled by 0.25 , 0.0625, and 0.0156 at binnings 2, 4, and 8.&nbsp; With a value 
+            of 2, the scalings would be 1, 0.25, and 0.0625 at 2,&nbsp; 4, and 8.</TD>
+        </TR>
+        <TR VALIGN="top">
           <TD>ExtraGainReferences</TD>
           <TD>Enter the number of binnings above 2 for which to allow separate gain 
             references to be acquired. Up to 6 additional gain references may be saved, for 
@@ -1394,6 +1407,13 @@
           <TD>Delay in seconds after retracting the camera; this delay is imposed after the 
             camera software returns from the retraction command, so the total delay will be 
             the sum of any intrinsic delay in the camera software and this delay.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>InsertingRetractsCam</TD>
+          <TD>Number (camera properties index) of other camera that is automatically 
+            retracted when this one is inserted.&nbsp; This property must be specificed for 
+            both cameras if the retraction works in both directions.&nbsp; Using this will 
+            save the RetractionDelay time.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>CheckStableTemperature</TD>

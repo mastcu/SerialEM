@@ -150,8 +150,14 @@ BOOL CK2SaveOptionDlg::OnInitDialog()
   m_bHourMinSec = (mNameFormat & FRAME_FILE_HOUR_MIN_SEC) || !m_bNumber;
   m_bOnlyWhenAcquire = (mNameFormat & FRAME_LABEL_IF_ACQUIRE) != 0;
   if (!mCanCreateDir && !mDEtype)
-    SetDlgItemText(IDC_STAT_MUST_EXIST, 
-    "Plugin to DigitalMicrograph must be upgraded to create folders");
+    SetDlgItemText(IDC_STAT_MUST_EXIST, B3DCHOICE(mFalconType, 
+    "Subfolder set with \"Set Folder\" must be blank to create folders", 
+    "Plugin to DigitalMicrograph must be upgraded to create folders"));
+  else if (mFalconType && (mFEIflags & PLUGFEI_USES_ADVANCED)) {
+    SetDlgItemText(IDC_STAT_MUST_EXIST, "Folder will be created if necessary inside "
+      "Falcon storage location");
+    SetDlgItemText(IDC_STAT_MUST_EXIST2, "");
+  }
   if (mDEtype)
     SetDlgItemText(IDC_STAT_COMPTITLE, "Components for Filename Suffix");
   m_sbcDigits.SetPos(50);
@@ -164,11 +170,11 @@ BOOL CK2SaveOptionDlg::OnInitDialog()
   m_butRootFolder.ShowWindow(show);
   m_butSaveFileFolder.ShowWindow(show);
   m_butNavlabelFolder.ShowWindow(show);
-  m_butHourMinSec.ShowWindow(show);
-  m_butMonthDay.ShowWindow(show);
   m_statUseComp.ShowWindow(show);
   m_statFolder.ShowWindow(show);
   m_statFile.ShowWindow(show);
+  m_butHourMinSec.ShowWindow(show);
+  m_butMonthDay.ShowWindow(show);
   UpdateFormat();
   ManagePackOptions();
   return TRUE;
@@ -232,6 +238,8 @@ void CK2SaveOptionDlg::UpdateFormat(void)
   mWinApp->mDocWnd->DateTimeComponents(date, time);
   m_strExample = (m_bRootFolder && !m_strBasename.IsEmpty() && mCanCreateDir) ? 
     "Base" : "";
+  if (mFalconType && (mFEIflags & PLUGFEI_USES_ADVANCED) && !mCanCreateDir)
+    m_strExample = "Subfolder";
   if (m_bSavefileFolder && mCanCreateDir) 
     UtilAppendWithSeparator(m_strExample, "File", "_");
   if (m_bNavLabelFolder && mCanCreateDir)

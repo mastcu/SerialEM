@@ -844,7 +844,7 @@ void CCameraSetupDlg::UnloadConSet()
     m_bRemoveXrays = conSet->removeXrays > 0;
     noDark = mFEItype || (mPluginType && mCanProcess && !(mCanProcess & DARK_SUBTRACTED));
     m_butDarkSubtract.EnableWindow(mParam->processHere && !noDark);
-    noRaw = mFEItype && FCAM_ADVANCED(mParam);
+    noRaw = mFEItype && FCAM_ADVANCED(mParam) && mCamera->GetASIgivesGainNormOnly();
     m_butUnprocessed.EnableWindow(!noRaw);
     if ((noDark && !mParam->processHere && m_iProcessing == DARK_SUBTRACTED) || noRaw)
       m_iProcessing = conSet->processing = GAIN_NORMALIZED;
@@ -1144,7 +1144,7 @@ void CCameraSetupDlg::ManageCamera()
   ControlSet *conSets = &mConSets[mActiveCameraList[mCurrentCamera] * MAX_CONSETS];
   CString title = "Camera Parameters   --   " + mParam->name;
   mFalconCanSave = (IS_BASIC_FALCON2(mParam) && mCamera->GetMaxFalconFrames(mParam)) ||
-    (IS_FALCON2_OR_3(mParam) && FCAM_CAN_FRAME(mParam));
+    (IS_FALCON2_OR_3(mParam) && (mParam->FEIflags & PLUGFEI_CAN_DOSE_FRAC));
   states[0] = mNumCameras > 1;
   states[2] = !mParam->STEMcamera;
   states[3] = mParam->STEMcamera;

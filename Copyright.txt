@@ -1,24 +1,29 @@
 SerialEM is copyright (C) 2003-2017 by the Regents of the University of
 Colorado.
 
-The SerialEM executable is open source under the
-General Public License (GPL) version 2.0, except for components noted below.  A copy of this license is in the
-file GPL.txt.  SerialEM may be modified and redistributed under the terms of
-this license.  In addition, an exception to the GPL license is granted to
+The SerialEM executable is open source under the General Public License (GPL)
+version 2.0, except for components noted below.  A copy of this license is in
+the file GPL.txt.  SerialEM may be modified and redistributed under the terms
+of this license.  In addition, an exception to the GPL license is granted to
 allow non-open source plugins to be loaded by the program.  Additional GPL
 components can be added to the SerialEM executable only if the developers of
-such components similarly grant an excepton to allow non-open source plugins
+such components similarly grant an exception to allow non-open source plugins
 to be loaded, or if the program is run without such plugins.
 
-The University of Colorado reserves the exclusive rights of preparing
-derivative works, distributing copies for sale, lease or lending and
-displaying this software and documentation.
-Users may reproduce the software and documentation for use in their
-own institution, as long as the copyright notice and other notices are
-preserved.                   
-Neither the software nor the documentation may be distributed for
-profit, either in original form or in derivative works.
-                                                                    
+The SerialEMCCD plugin to DigitalMicrograph is also copyright (C) 2003-2017 by
+the Regents of the University of Colorado.  It is open source under the
+GPL version 2.0, and may be modified and redistributed under the terms of this
+This source can be found at
+http://bio3d.colorado.edu/SerialEM/SerialEMCCD
+
+The camera and microscope plugins to SerialEM distributed with the program are
+not open source.  The University of Colorado reserves the exclusive rights of
+preparing derivative works of these plugins, and distributing copies for sale,
+lease or lending.  Users may reproduce the full software package including
+plugins for use within own institution, as long as the copyright notice and
+other notices are preserved.  The plugins may not be distributed for profit,
+either in original form or in derivative works.
+
 THIS SOFTWARE AND/OR DOCUMENTATION IS PROVIDED WITH NO WARRANTY,    
 EXPRESS OR IMPLIED, INCLUDING, WITHOUT LIMITATION, WARRANTY OF      
 MERCHANTABILITY AND WARRANTY OF FITNESS FOR A PARTICULAR PURPOSE.   
@@ -30,23 +35,19 @@ Because SerialEM uses the libjpeg library, this software is based in part on
 the work of the Independent JPEG Group.  SerialEM also uses the zlib library,
 which is Copyright (c) 1995-2010 by Jean-loup Gailly and Mark Adler.
 
-IMOD includes a copy of the Mini-XML library which is Copyright 2003-2016 by
-Michael R. Sweet and is covered by the modified Library GPL in Mini-XML.txt
+SerialEM uses the libcfshr and libiimod libraries from IMOD, which are covered
+by the GNU Lesser General Public License (LGPL), a copy of which is in
+LGPL.txt.  The libcfshr library includes a copy of the Mini-XML library,
+which is Copyright 2003-2016 by Michael R. Sweet and is covered by the
+modified Library GPL in Mini-XML.txt.
 
-SerialEM uses FFTW libraries under a purchased licensed; those are Copyright
-(c) 1997--1999 Massachusetts Institute of Technology, written by Matteo Frigo
-and Steven G. Johnson.
+32-bit SerialEM uses FFTW libraries under a purchased license; those are
+Copyright (c) 1997--1999 Massachusetts Institute of Technology, written by
+Matteo Frigo and Steven G. Johnson.  64-bit SerialEM uses an early derivative
+of the FFT library included in IMOD, which is also covered by the LGPL.
 
 SerialEM also uses a Set dialog DPI helper class, Copyright (C) 2003 by George
 Yohng, and XFolderDialog by Hans Dietrich.
-
-The SerialEMCCD plugin is also copyright (C) 2003-2016 by the Regents of the
-University of Colorado.  It is open source under the General Public License
-(GPL) version 2.0, and may be modified and redistributed under the terms of
-this license.  A copy of this license is in the file GPL.txt in the
-SerialEMCCD source and the SerialEM binary distributions.
-The source can be found at
-http://bio3d.colorado.edu/SerialEM/SerialEMCCD
 
 This work was supported in the past by NIH P41 grants from NCRR and NIGMS to
 J. Richard McIntosh and Andreas Hoenger.

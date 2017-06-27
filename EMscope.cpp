@@ -1505,7 +1505,9 @@ void CEMscope::UpdateScreenBeamFocus(int STEMmode, int &screenPos, int &smallScr
     } else
       PLUGSCOPE_GET(Intensity, rawIntensity, 1.);
     PLUGSCOPE_GET(SpotSize, spotSize, 1);
-    PLUGSCOPE_GET(ScreenCurrent, current, 1.e9);
+    // TEMP FOR BAD VM!
+    if (!sCheckPosOnScreenError)
+      PLUGSCOPE_GET(ScreenCurrent, current, 1.e9);
     smallScreen = SmallScreenIn();
   }
   if (smallScreen)
@@ -3115,7 +3117,7 @@ BOOL CEMscope::SetMagIndex(int inIndex)
 
     // Falcon Dose Protector may respond to transient conditions after a mag change,
     // such as a temporary setting of objective strength, so there needs to be a delay
-    if (camParam->FEItype == 2)
+    if (IS_FALCON2_OR_3(camParam))
       mShiftManager->SetGeneralTimeOut(mLastNormalization, mFalconPostMagDelay);
     HandleNewMag(inIndex);
   }
@@ -6628,8 +6630,28 @@ int CEMscope::LookupScriptingCamera(CameraParameters *params, bool refresh,
     &params->eagleIndex, &minDrift, &params->maximumDrift);
   if (err == 3)
     SEMMessageBox(CString(mPlugFuncs->GetLastErrorString()));
-  if (!err)
-    params->minimumDrift = B3DMAX(params->minimumDrift, minDrift);
+  if (!err) {
+    if (mPluginVersion >= FEI_PLUGIN_DOES_FALCON3) {
+      //params->eagleIndex |= (PLUGFEI_USES_ADVANCED | PLUGFEI_CAN_DOSE_FRAC |
+        //PLUGFEI_CAM_CAN_ALIGN | PLUGFEI_CAM_CAN_COUNT);
+      params->FEIflags = params->eagleIndex & ~PLUGFEI_INDEX_MASK;
+      SEMTrace('E', "index ret %x  flags %x", params->eagleIndex, params->FEIflags);
+      if (params->FEIflags & PLUGFEI_USES_ADVANCED) {
+        if (fabs(params->minExposure - DEFAULT_FEI_MIN_EXPOSURE) < 1.e-5)
+          params->minExposure = minDrift;
+        else
+          params->minExposure = B3DMAX(params->minExposure, minDrift);
+      } else {
+        params->minimumDrift = B3DMAX(params->minimumDrift, minDrift);
+      }
+      if (params->FEItype == FALCON2_TYPE && (params->FEIflags & PLUGFEI_CAM_CAN_COUNT) && 
+        (params->FEIflags & PLUGFEI_CAM_CAN_ALIGN))
+        params->FEItype = FALCON3_TYPE;
+    } else {
+      params->minimumDrift = B3DMAX(params->minimumDrift, minDrift);
+    }
+    params->eagleIndex &= PLUGFEI_INDEX_MASK;
+  }
   return err;
  }
 

@@ -8,7 +8,7 @@
  * name
  */
 #ifndef FEISCOPE_PLUGIN_VERSION
-#define FEISCOPE_PLUGIN_VERSION 105
+#define FEISCOPE_PLUGIN_VERSION 106
 #endif
 
 #ifndef LINE_END
@@ -156,6 +156,11 @@ SCOPE_SAMENAME(FIFbuildMap, FIFbuildFileMap);
 SCOPE_SAMENAME(FIFgetNext, FIFgetNextFrame);
 SCOPE_SAMENAME(FIFclean, FIFcleanUp);
 SCOPE_SAMENAME(FIFclean2, FIFcleanUp2);
+SCOPE_SAMENAME(ASIsetup, ASIsetupFrames);
+SCOPE_SAMENAME(ASIimage, ASIacquireFromCamera);
+SCOPE_SAMENAME(GetErrStr, ASIgetLastStoragePath);
+SCOPE_SAMENAME(CamOneInt, ASIisCameraInserted);
+SCOPE_SAMENAME(CamTwoInt, ASIsetCameraInsertion);
 SCOPE_SAMENAME(FIFconfInit, FIFinitFalconConfig);
 SCOPE_SAMENAME(FIFclean2, FIFcheckFalconConfig);
 SCOPE_SAMENAME(CamNoArg, FocusRamperInitialize);

@@ -31,7 +31,8 @@ public:
   CButton m_butSkipRotFlip;
   BOOL m_bSkipRotFlip;
   BOOL mEnableSkipRotFlip;
-  BOOL mFalconType;
+  int mFalconType;
+  int mFEIflags;
   BOOL mDEtype;
   int mNameFormat;
   int mNumberDigits;

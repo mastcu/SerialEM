@@ -260,10 +260,12 @@ CSerialEMApp::CSerialEMApp()
     mCamParams[i].failedToInitialize = false;
     mCamParams[i].AMTtype = 0;
     mCamParams[i].FEItype = 0;
+    mCamParams[i].FEIflags = 0;
     mCamParams[i].DE_camType = 0;      // Wasn't init
     mCamParams[i].DE_ImageInvertX = 0;
     mCamParams[i].DE_ImageRot = 0;
     mCamParams[i].DE_FramesPerSec = -1.;
+    mCamParams[i].DE_MaxFrameRate = -1.;
     mCamParams[i].alsoInsertCamera = -1;
     mCamParams[i].samePhysicalCamera = -1;
     mCamParams[i].K2Type = 0;
@@ -290,12 +292,14 @@ CSerialEMApp::CSerialEMApp()
       mCamParams[i].quarterSizeX[j] = 0;
       mCamParams[i].quarterSizeY[j] = 0;
     }
+    mCamParams[i].autoGainAtBinning = 0;
     mCamParams[i].numExtraGainRefs = 0;
     mCamParams[i].processHere = -1;
     mCamParams[i].retractable = TRUE;
     mCamParams[i].insertDelay = INSERT_DELAY;
     mCamParams[i].retractDelay = INSERT_DELAY;
     mCamParams[i].order = i;
+    mCamParams[i].insertingRetracts = -1;
     mCamParams[i].name.Format("Default Camera %d", i + 1);
     mCamParams[i].GIF = FALSE;
     mCamParams[i].hasTVCamera = FALSE;
@@ -1023,7 +1027,7 @@ BOOL CSerialEMApp::InitInstance()
       mCamParams[iCam].restoreBBmode = JEOLscope ? 1 : 0;
     if (mCamParams[iCam].FEItype && !mCamParams[iCam].STEMcamera && 
       !mCamParams[iCam].minExposure)
-        mCamParams[iCam].minExposure = 0.011f;
+        mCamParams[iCam].minExposure = DEFAULT_FEI_MIN_EXPOSURE;
   }
 
   // Check the rest of the cameras for uninitialized parameter sets and transfer them
@@ -1064,7 +1068,7 @@ BOOL CSerialEMApp::InitInstance()
     // If no individual entry was made, set to global default
     if (mCamParams[iCam].processHere < 0)
       mCamParams[iCam].processHere = mProcessHere ? 1 : 0;
-    if (mCamParams[iCam].K2Type || mCamParams[iCam].OneViewType)
+    if (!mCamera->CanProcessHere(&mCamParams[iCam]))
       mCamParams[iCam].processHere = 0;
     if (mCamera->IsDirectDetector(&mCamParams[iCam]))
       mAnyDirectDetectors = true;
@@ -1113,7 +1117,7 @@ BOOL CSerialEMApp::InitInstance()
   mFilterTasks->Initialize();
   mDistortionTasks->Initialize();
   mNavHelper->Initialize();
-  mFalconHelper->Initialize();
+  //mFalconHelper->Initialize();
   mAutoTuning->Initialize();
 
   // Start the tool windows

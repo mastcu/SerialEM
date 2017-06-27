@@ -314,6 +314,11 @@ int CParameterIO::ReadSettings(CString strFileName)
       } else if (NAME_IS("DirForK2Frames")) {
         StripItems(strLine, 1, strCopy);
         camera->SetDirForK2Frames(strCopy);
+      } else if (NAME_IS("DirForFalconFrames")) {
+        StripItems(strLine, 1, strCopy);
+        if (strCopy == "EmptyPath")
+          strCopy = "";
+        camera->SetDirForFalconFrames(strCopy);
       } else if (NAME_IS("FrameBaseName")) {
         StripItems(strLine, 1, strCopy);
         camera->SetFrameBaseName(strCopy);
@@ -1037,6 +1042,11 @@ void CParameterIO::WriteSettings(CString strFileName)
       oneState.Format("DirForK2Frames %s\n", (LPCTSTR)macCopy);
       mFile->WriteString(oneState);
     }
+    macCopy = camera->GetDirForFalconFrames();
+    if (macCopy.IsEmpty())
+      macCopy = "EmptyPath";
+    oneState.Format("DirForFalconFrames %s\n", (LPCTSTR)macCopy);
+    mFile->WriteString(oneState);
     macCopy = camera->GetFrameBaseName();
     if (!macCopy.IsEmpty()) {
       oneState.Format("FrameBaseName %s\n", (LPCTSTR)macCopy);
@@ -1826,6 +1836,8 @@ int CParameterIO::ReadProperties(CString strFileName)
             camP->postBlankerDelay = (float)itemDbl[1];
           else if (MatchNoCase("Retractable"))
             camP->retractable = itemInt[1] != 0;
+          else if (MatchNoCase("InsertingRetractsCam"))
+            camP->insertingRetracts = itemInt[1];
           else if (MatchNoCase("GIF"))
             camP->GIF = itemInt[1] != 0;
           else if (MatchNoCase("HasTVCamera"))
@@ -1850,6 +1862,8 @@ int CParameterIO::ReadProperties(CString strFileName)
             camP->numExtraGainRefs = itemInt[1];
           else if (MatchNoCase("NormalizeInSerialEM"))
             camP->processHere = itemInt[1];
+          else if (MatchNoCase("AutoGainFactors"))
+            camP->autoGainAtBinning = itemInt[1];
           else if (MatchNoCase("RotationAndPixel")) {
             magInd = itemInt[1];
             if (magInd < 1 || magInd >= MAX_MAGS) {

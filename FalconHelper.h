@@ -12,7 +12,7 @@ class CFalconHelper
 public:
   CFalconHelper(void);
   ~CFalconHelper(void);
-  void Initialize();
+  void Initialize(bool skipConfigs);
   void DistributeSubframes(ShortVec &summedFrameList, int numReadouts, int newFrames, 
     FloatVec &userFrameFrac, FloatVec &userSubframeFrac);
   float AdjustForExposure(ShortVec &summedFrameList, int numSkipBefore,
@@ -60,8 +60,9 @@ private:
   int mStartedAsyncSave;
 
 public:
-  int SetupConfigFile(ControlSet & conSet, CString localPath, CString & directory, 
-    CString & configFile, BOOL stackingDeferred);
+  int SetupConfigFile(ControlSet &conSet, CString localPath, CString &directory, 
+    CString &filename, CString &configFile, BOOL stackingDeferred, 
+    CameraParameters *camParams, long &numFrames);
   int StackFrames(CString localPath, CString &directory, CString &rootname, 
     long divideBy2, int divideBy, int rotateFlip, float pixel, BOOL doAsync, 
     long & numStacked);

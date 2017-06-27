@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+6/24/17: Added script command to set frame rate of DE camera.
+
+6/24/17: Preliminary support for new FEI camera interface and Falcon 3 added.
+
 6/15/17: Added property to set the maximum beam radius allowed when centering
 beam with low dose tracking images in tilt series (In 3.6).
 

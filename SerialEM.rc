@@ -868,9 +868,9 @@ BEGIN
     CONTROL         "10",IDC_RBIN10,"Button",BS_AUTORADIOBUTTON,101,171,18,10
     GROUPBOX        "Binning",IDC_STATBIN,94,73,30,109,WS_GROUP
     CONTROL         "Linear",IDC_RLINEAR,"Button",BS_AUTORADIOBUTTON | WS_GROUP,11,386,35,10
-    CONTROL         "Counting",IDC_RCOUNTING,"Button",BS_AUTORADIOBUTTON,11,396,42,10
+    CONTROL         "Counting",IDC_RCOUNTING,"Button",BS_AUTORADIOBUTTON,11,396,67,10
     CONTROL         "Super-Resolution",IDC_RSUPERRES,"Button",BS_AUTORADIOBUTTON,11,406,68,10
-    GROUPBOX        "K2 Mode",IDC_STAT_K2MODE,7,377,74,41,WS_GROUP
+    GROUPBOX        "Operating mode",IDC_STAT_K2MODE,7,377,74,41,WS_GROUP
     CONTROL         "View",IDC_RVIEW,"Button",BS_AUTORADIOBUTTON | WS_GROUP,19,43,50,12
     CONTROL         "Focus",IDC_RFOCUS,"Button",BS_AUTORADIOBUTTON,69,43,38,12
     CONTROL         "Trial",IDC_RTRIAL,"Button",BS_AUTORADIOBUTTON,117,43,38,12
@@ -959,7 +959,7 @@ BEGIN
     CONTROL         "Align frames",IDC_ALIGN_DOSE_FRAC,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,87,407,50,10
     PUSHBUTTON      "Set Folder",IDC_SET_SAVE_FOLDER,223,418,43,14
     CTEXT           "Dose rate",IDC_STATDOSERATE,154,300,117,8
-    PUSHBUTTON      "Set Up Frames to Save",IDC_SETUP_FALCON_FRAMES,21,399,88,14
+    PUSHBUTTON      "Set Up Frames to Save",IDC_SETUP_FALCON_FRAMES,88,392,88,12
     GROUPBOX        "Auto save by server",IDC_GROUP_DE_SAVE,5,450,203,47
     CONTROL         "Raw frames",IDC_DE_SAVE_FRAMES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,461,52,10
     CONTROL         "Sum images with frame count",IDC_DE_SAVE_SUMS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,472,102,10
@@ -4083,10 +4083,14 @@ BEGIN
     IDC_RNOCOMPRESS         "Save TIFF file without compression"
     IDC_RZIPCOMPRESS        "Save TIFF file with Zip (deflate) compression"
     IDC_RLZWCOMPRESS        "Save TIFF file with Zempel-Liv compression"
-    IDC_RJPEGCOMPRESS       "Save TIFF file with JPEG compression"
     IDC_BUTSWAPXY           "Exchange X and Y coordinates"
     IDC_RMRCFILE            "Save to MRC file that can hold multiple images"
     IDC_RTIFFFILE           "Save image in TIFF file and close file"
+END
+
+STRINGTABLE
+BEGIN
+    IDC_RJPEGCOMPRESS       "Save TIFF file with JPEG compression"
 END
 
 STRINGTABLE

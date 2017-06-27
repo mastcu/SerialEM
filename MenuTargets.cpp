@@ -1613,8 +1613,8 @@ void CMenuTargets::OnUpdateCameraNormalizehere(CCmdUI* pCmdUI)
   CameraParameters *param = mWinApp->GetCamParams() + mWinApp->GetCurrentCamera();
   pCmdUI->SetCheck(mCamera->GetProcessHere() ? 1 : 0);
   pCmdUI->Enable(!param->TietzType && !param->AMTtype && (!param->DE_camType || 
-    param->DE_camType >= 2) &&
-    !param->K2Type && !param->OneViewType && (param->pluginName.IsEmpty() || 
+    param->DE_camType >= 2) && mCamera->CanProcessHere(param) &&
+    (param->pluginName.IsEmpty() || 
     param->canDoProcessing) && !DoingTasks() && !mCamera->CameraBusy());
 }
 

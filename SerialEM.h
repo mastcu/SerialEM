@@ -171,6 +171,14 @@ struct JeolParams;
 #define PLUGFEI_MAKE_PROJECT      0x10
 #define PLUGFEI_MAKE_VACUUM       0x20
 #define PLUGFEI_MAKE_ALL          0x3E
+#define PLUGFEI_MAKE_ADVANCED     0x40
+#define PLUGFEI_MAKE_NOBASIC      0x80
+#define PLUGFEI_USES_ADVANCED     0x100
+#define PLUGFEI_CAN_DOSE_FRAC     0x200
+#define PLUGFEI_CAM_CAN_COUNT     0x400
+#define PLUGFEI_CAM_CAN_ALIGN     0x800
+#define PLUGFEI_INDEX_MASK        0xFF
+#define PLUGFEI_MAX_FRAC_SHIFT    16
 
 typedef _variant_t PLUGIN_BOOL;
 typedef void (*PlugStopFunc)(int);

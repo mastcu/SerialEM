@@ -68,7 +68,7 @@ CFalconHelper::~CFalconHelper(void)
 }
 
 // Read the configuration file and save its essential features
-void CFalconHelper::Initialize()
+void CFalconHelper::Initialize(bool skipConfigs)
 {
   CString configFile, str, dir, fname;
   int error = 0;
@@ -79,7 +79,7 @@ void CFalconHelper::Initialize()
     return;
   mReadoutInterval = mCamera->GetFalconReadoutInterval();
   configFile = mCamera->GetFalconFrameConfig();
-  if (configFile.IsEmpty())
+  if (configFile.IsEmpty() || skipConfigs)
     return;
   error = mPlugFuncs->FIFinitialize((LPCTSTR)configFile, mReadoutInterval);
   if (error) {
@@ -125,8 +125,8 @@ int CFalconHelper::CheckFalconConfig(int setState, int &state, const char *messa
 // Modify the configuration file to save the desired frames, or put out a dummy file
 // if no frame-saving is selected
 int CFalconHelper::SetupConfigFile(ControlSet &conSet, CString localPath, 
-                                   CString &directory, CString &configFile, 
-                                   BOOL stackingDeferred)
+  CString &directory, CString &filename, CString &configFile, BOOL stackingDeferred, 
+  CameraParameters *camParams, long &numFrames)
 {
   CFileStatus status;
   CString str;
@@ -136,22 +136,26 @@ int CFalconHelper::SetupConfigFile(ControlSet &conSet, CString localPath,
   float frameInterval = mWinApp->mCamera->GetFalconReadoutInterval();
   int ind, block;
 
-  // Check the directory entry and assign local path if needed
-  if (directory.IsEmpty()) {
-    SEMMessageBox("You must specify a directory for saving the frame images");
-    return 1;
-  }
-  if (localPath.IsEmpty())
-    localPath = directory;
+  if (!FCAM_ADVANCED(camParams)) {
 
-  // Create directory if it doesn't exist
-  if (conSet.saveFrames && !CFile::GetStatus((LPCTSTR)directory, status)) {
-    SEMTrace('E', "Directory %s does not exist, creating it", (LPCTSTR)directory);
-    if (_mkdir((LPCTSTR)directory)) {
-      str.Format("An error occurred creating the directory:\n%s\n"
-        "for saving frame images.  Does its parent directory exist?", (LPCTSTR)directory);
-      SEMMessageBox(str);
+    // Check the directory entry and assign local path if needed
+    if (directory.IsEmpty()) {
+      SEMMessageBox("You must specify a directory for saving the frame images");
       return 1;
+    }
+    if (localPath.IsEmpty())
+      localPath = directory;
+
+    // Create directory if it doesn't exist
+    if (conSet.saveFrames && !CFile::GetStatus((LPCTSTR)directory, status)) {
+      SEMTrace('E', "Directory %s does not exist, creating it", (LPCTSTR)directory);
+      if (_mkdir((LPCTSTR)directory)) {
+        str.Format("An error occurred creating the directory:\n%s\n"
+          "for saving frame images.  Does its parent directory exist?", 
+          (LPCTSTR)directory);
+        SEMMessageBox(str);
+        return 1;
+      }
     }
   }
 
@@ -160,16 +164,32 @@ int CFalconHelper::SetupConfigFile(ControlSet &conSet, CString localPath,
     for (ind = 0; ind < conSet.summedFrameList[block * 2]; ind++)
       readouts.push_back((long)conSet.summedFrameList[block * 2 + 1]);
 
-  if (readouts.size() > 0) {
-    temp = (int)readouts.size();
+  numFrames = (int)readouts.size();
+  if (numFrames > 0) {
+    temp = numFrames;
     readPtr = &readouts[0];
   }
-  if (mPlugFuncs->FIFsetupConfigFile((LPCTSTR)localPath, stackingDeferred, 
-    conSet.saveFrames, temp, conSet.numSkipBefore, readPtr)) {
-      str.Format("Error opening or writing to intermediate frame configuration file"
-        " %s:\n%s", (LPCTSTR)configFile, mPlugFuncs->GetLastErrorString());
+  
+  if (FCAM_ADVANCED(camParams)) {
+    ind = -1;
+    //if (camParams->FEItype == FALCON2_TYPE)
+      //ind = stackingDeferred ? 1 : 0;
+    if (mPlugFuncs->ASIsetupFrames(camParams->eagleIndex, ind, temp, conSet.numSkipBefore,
+      readPtr, (LPCTSTR)directory, (LPCTSTR)filename, 0, 0.)) {
+      str.Format("Error setting up for frame saving from Falcon:\n%s",
+        mPlugFuncs->GetLastErrorString());
       SEMMessageBox(str);
       return 1;
+    }
+
+  } else {
+    if (mPlugFuncs->FIFsetupConfigFile((LPCTSTR)localPath, stackingDeferred, 
+      conSet.saveFrames, temp, conSet.numSkipBefore, readPtr)) {
+        str.Format("Error opening or writing to intermediate frame configuration file"
+          " %s:\n%s", (LPCTSTR)configFile, mPlugFuncs->GetLastErrorString());
+        SEMMessageBox(str);
+        return 1;
+    }
   }
   return 0;
  }
@@ -531,8 +551,9 @@ float CFalconHelper::AdjustForExposure(ShortVec &summedFrameList, int numSkipBef
 float CFalconHelper::AdjustSumsForExposure(CameraParameters *camParams, 
   ControlSet *conSet, float exposure)
 {
-  bool falconCanSave = camParams->FEItype == 2 && mCamera->GetMaxFalconFrames() &&
-    mCamera->GetFrameSavingEnabled();
+  bool falconCanSave = IS_FALCON2_OR_3(camParams) && 
+    mCamera->GetMaxFalconFrames(camParams) && 
+    (mCamera->GetFrameSavingEnabled() || FCAM_ADVANCED(camParams));
   if (falconCanSave || (camParams->K2Type && conSet->doseFrac && conSet->sumK2Frames && 
     conSet->saveFrames))
     return AdjustForExposure(conSet->summedFrameList, 

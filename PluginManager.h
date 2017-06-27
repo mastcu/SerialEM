@@ -79,6 +79,10 @@ typedef int (*FIFbuildMap)(const char *, long *, long *, long *);
 typedef int (*FIFgetNext)(short *, int, int, BOOL);
 typedef int (*FIFclean)(BOOL);
 typedef int (*FIFclean2)(int, long*);
+typedef int (*ASIsetup)(int, int, int, int, long *, const char *, const char *, int,
+  double);
+typedef int (*ASIimage)(void *, int, int, double, int, int, int, long, long, long, int, 
+    int, int, int, int, int, double, double);
 typedef int (*DoFocRamp)(long, long, long, float *, long, double);
 typedef int (*FinishFocRamp)(long, double *, double *, double *, double *);
 typedef int (*ShowMB)(int, const char *, const char *);
