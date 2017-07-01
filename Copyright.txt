@@ -9,11 +9,13 @@ allow non-open source plugins to be loaded by the program.  Additional GPL
 components can be added to the SerialEM executable only if the developers of
 such components similarly grant an exception to allow non-open source plugins
 to be loaded, or if the program is run without such plugins.
+This source can be found at
+http://bio3d.colorado.edu/SerialEM/OpenSerialEM
 
 The SerialEMCCD plugin to DigitalMicrograph is also copyright (C) 2003-2017 by
-the Regents of the University of Colorado.  It is open source under the
-GPL version 2.0, and may be modified and redistributed under the terms of this
-This source can be found at
+the Regents of the University of Colorado.  It is open source under the GPL
+version 2.0, and may be modified and redistributed under the terms of this
+license.  This source can be found at
 http://bio3d.colorado.edu/SerialEM/SerialEMCCD
 
 The camera and microscope plugins to SerialEM distributed with the program are
@@ -37,7 +39,7 @@ which is Copyright (c) 1995-2010 by Jean-loup Gailly and Mark Adler.
 
 SerialEM uses the libcfshr and libiimod libraries from IMOD, which are covered
 by the GNU Lesser General Public License (LGPL), a copy of which is in
-LGPL.txt.  The libcfshr library includes a copy of the Mini-XML library,
+LGPL.txt.  SerialEM also includes the Mini-XML library from IMOD,
 which is Copyright 2003-2016 by Michael R. Sweet and is covered by the
 modified Library GPL in Mini-XML.txt.
 
