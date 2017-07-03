@@ -411,6 +411,8 @@ BEGIN_MESSAGE_MAP(CMenuTargets, CCmdTarget)
   ON_UPDATE_COMMAND_UI(ID_FOCUS_RUNANOTHERITERATION, OnUpdateFocusRunAnotherIteration)
   ON_COMMAND(ID_FOCUS_MAKEZEMLINTABLEAU, OnFocusMakeZemlinTableau)
   ON_UPDATE_COMMAND_UI(ID_FOCUS_MAKEZEMLINTABLEAU, OnUpdateNoTasks)
+  ON_COMMAND(ID_SPECIALOPTIONS_NORMALIZEALLLENS, OnNormalizeAllLensesOnMag)
+  ON_UPDATE_COMMAND_UI(ID_SPECIALOPTIONS_NORMALIZEALLLENS, OnUpdateNoTasks)
   END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -2371,6 +2373,15 @@ void CMenuTargets::OnUpdateAdjustFocusOnProbeModeChange(CCmdUI *pCmdUI)
 {
   pCmdUI->Enable(!mWinApp->DoingTasks());
   pCmdUI->SetCheck(mScope->GetAdjustFocusForProbe() ? 1 : 0);
+}
+
+void CMenuTargets::OnNormalizeAllLensesOnMag()
+{
+  int value = mScope->GetNormAllOnMagChange();
+  if (KGetOneInt("This entry controls whether all lenses are normalized on a mag change",
+    "Enter 0 to do so only when going between LM and nonLM, 1 to do so when staying in "
+    "LM, or 2 to do so always", value))
+    mScope->SetNormAllOnMagChange(value);
 }
 
 void CMenuTargets::OnWindowStageMoveTool()

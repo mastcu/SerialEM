@@ -1678,6 +1678,7 @@
 #define ID_FOCUS_MAKEZEMLINTABLEAU      33275
 #define ID_FOCUS_SETCOMAITERATIONS      33276
 #define ID_SCRIPT_SETINDENTSIZE         33277
+#define ID_SPECIALOPTIONS_NORMALIZEALLLENS 33278
 
 // Next default values for new objects
 // 
@@ -1685,7 +1686,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        225
-#define _APS_NEXT_COMMAND_VALUE         33278
+#define _APS_NEXT_COMMAND_VALUE         33279
 #define _APS_NEXT_CONTROL_VALUE         2305
 #define _APS_NEXT_SYMED_VALUE           104
 #endif

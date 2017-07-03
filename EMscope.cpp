@@ -397,6 +397,7 @@ CEMscope::CEMscope()
   mMagChgIntensityDelay = -1;
   mLastMagModeChgTime = -1.;
   mAdjustFocusForProbe = false;
+  mNormAllOnMagChange = 0;
   mFirstFocusForProbe = EXTRA_NO_VALUE;
   mPostProbeDelay = 3000;
   mFirstBeamXforProbe = EXTRA_NO_VALUE;
@@ -2986,7 +2987,7 @@ BOOL CEMscope::SetMagIndex(int inIndex)
 {
   double tranISX, tranISY, focusStart, startTime, startISX, startISY, curISX, curISY;
   BOOL result = true;
-  BOOL convertIS, restoreIS, ifSTEM;
+  BOOL convertIS, restoreIS, ifSTEM, normAll;
   bool focusChanged = false, ISchanged, unblankAfter;
   int mode, newmode, lowestM, ticks;
   CameraParameters *camParam = mWinApp->GetActiveCamParam();
@@ -3087,16 +3088,26 @@ BOOL CEMscope::SetMagIndex(int inIndex)
           }
         }
 
-        if (mPlugFuncs->NormalizeLens && mCalNeutralStartMag < 0)
-          mPlugFuncs->NormalizeLens(pnmProjector);
+        if (mPlugFuncs->NormalizeLens && mCalNeutralStartMag < 0) {
+
+          // Normalize all lenses if going in or out of LM, or if in LM and option is 1,
+          // or always if option is 2.  This used to do condenser in addition, but now
+          // it does "all", which adds objective
+          normAll = !ifSTEM && (!BOOL_EQUIV(currentIndex < lowestM, inIndex < lowestM) ||
+            (inIndex < lowestM && mNormAllOnMagChange > 0) || mNormAllOnMagChange > 1);
+          if (normAll && FEIscope) {
+            mPlugFuncs->NormalizeLens(ALL_INSTRUMENT_LENSES);
+          } else {
+            mPlugFuncs->NormalizeLens(pnmProjector);
+            if (normAll) {
+              mPlugFuncs->NormalizeLens(nmCondenser);
+              mPlugFuncs->NormalizeLens(pnmObjective);
+            }
+          }
+        }
         mLastNormalization = GetTickCount();
         mLastNormMagIndex = inIndex;
 
-        // Normalize condenser if going in or out of LM
-        if (!ifSTEM && (currentIndex < lowestM ? 1 : 0) != (inIndex < lowestM ? 1 : 0)) {
-          if (mPlugFuncs->NormalizeLens && mCalNeutralStartMag < 0)
-            mPlugFuncs->NormalizeLens(nmCondenser);
-        }
         AUTONORMALIZE_SET(*vTrue);
 
       }
@@ -6633,7 +6644,7 @@ int CEMscope::LookupScriptingCamera(CameraParameters *params, bool refresh,
   if (!err) {
     if (mPluginVersion >= FEI_PLUGIN_DOES_FALCON3) {
       //params->eagleIndex |= (PLUGFEI_USES_ADVANCED | PLUGFEI_CAN_DOSE_FRAC |
-        //PLUGFEI_CAM_CAN_ALIGN | PLUGFEI_CAM_CAN_COUNT);
+      //  PLUGFEI_CAM_CAN_ALIGN | PLUGFEI_CAM_CAN_COUNT | (40 << PLUGFEI_MAX_FRAC_SHIFT));
       params->FEIflags = params->eagleIndex & ~PLUGFEI_INDEX_MASK;
       SEMTrace('E', "index ret %x  flags %x", params->eagleIndex, params->FEIflags);
       if (params->FEIflags & PLUGFEI_USES_ADVANCED) {

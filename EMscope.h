@@ -288,6 +288,7 @@ class DLL_IM_EX CEMscope
   GetSetMember(int, NumAlphaBeamTilts);
   GetSetMember(BOOL, AdjustFocusForProbe);
   SetMember(double, FirstFocusForProbe);
+  GetSetMember(int, NormAllOnMagChange);
   void GetMinMaxBeamShiftSpots(int secondary, int &outMin, int &outMax) 
   {outMin = mMinSpotWithBeamShift[secondary], outMax = mMaxSpotWithBeamShift[secondary];};
   void SetMinMaxBeamShiftSpots(int secondary, int inMin, int inMax) 
@@ -604,6 +605,7 @@ private:
   int mUpdateBeamBlank;       // Flag to update beam blanker
   BOOL mBlankTransients;      // Flag to blank for mag/spot size changes & normalizations
   double mLastCameraLength;   // Camera length in last update: valid only in diff mode
+  int mNormAllOnMagChange;    // Norm all lenses when in LM if 1, or always if 2
   int mPluginVersion;         // Version of plugin or server
 
   // Old static variables from UpdateProc

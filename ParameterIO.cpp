@@ -4556,6 +4556,10 @@ void CParameterIO::ReportSpecialOptions(void)
   if (mWinApp->mCamera->GetNoNormOfDSdoseFrac())
     mWinApp->AppendToLog("Special option is set for no gain normalization of returned"
     " sum for dark-subtracted K2 dose frac shots");
+  if (mWinApp->mScope->GetNormAllOnMagChange())
+    PrintfToLog("Special option is set to normalize all lenses on %s", 
+    mWinApp->mScope->GetNormAllOnMagChange() > 1 ? "all mag changes" : 
+    "mag changes within LM");
 }
 
 // Outputs a short or float vector in as many lines as it takes

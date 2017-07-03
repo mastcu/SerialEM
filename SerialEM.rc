@@ -433,14 +433,15 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Verbose",                    ID_TASKS_VERBOSE
         MENUITEM SEPARATOR
-        POPUP "Special Options"
+        POPUP "Speciali&zed Options"
         BEGIN
-            MENUITEM "Skip Beam Shift in TS",       ID_SPECIAL_SKIP_BEAM_SHIFT_IN_TS
-            MENUITEM "Piezo for LD Axis Shift",     ID_SPECIAL_PIEZO_FOR_LD_AXIS_SHIFT
-            MENUITEM "Disable Dark Trim in Align...", ID_SPECIAL_DISABLE_DARK_TRIM_IN_ALIGN
-            MENUITEM "Allow Continuous in TS",      ID_SPECIALOPTIONS_ALLOWCONTINUOUSINTASKS
-            MENUITEM "Normalize via View for Autofocus ", ID_SPECIALOPTIONS_NORMALIZEVIAVIEWFORAU
-            MENUITEM "Adjust Focus on Probe Mode Change", ID_SPECIALOPTIONS_ADJUSTFOCUSONPROBEMODECHANGE
+            MENUITEM "&Skip Beam Shift in TS",      ID_SPECIAL_SKIP_BEAM_SHIFT_IN_TS
+            MENUITEM "&Piezo for LD Axis Shift",    ID_SPECIAL_PIEZO_FOR_LD_AXIS_SHIFT
+            MENUITEM "&Disable Dark Trim in Align...", ID_SPECIAL_DISABLE_DARK_TRIM_IN_ALIGN
+            MENUITEM "Allow &Continuous in TS",     ID_SPECIALOPTIONS_ALLOWCONTINUOUSINTASKS
+            MENUITEM "&Normalize via View for Autofocus ", ID_SPECIALOPTIONS_NORMALIZEVIAVIEWFORAU
+            MENUITEM "Adjust &Focus on Probe Mode Change", ID_SPECIALOPTIONS_ADJUSTFOCUSONPROBEMODECHANGE
+            MENUITEM "Normalize &All on Mag Change...", ID_SPECIALOPTIONS_NORMALIZEALLLENS
         END
     END
     POPUP "T&ilt Series"
@@ -4726,6 +4727,8 @@ BEGIN
     ID_FOCUS_SETCOMAITERATIONS 
                             "Set # of initial iterations for coma-free alignment"
     ID_SCRIPT_SETINDENTSIZE "Set # of spaces for automatic indentation with Tab/`"
+    ID_SPECIALOPTIONS_NORMALIZEALLLENS 
+                            "Set whether to normalize all lenses when changing mag within LM or always"
 END
 
 STRINGTABLE

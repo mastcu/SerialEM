@@ -123,7 +123,7 @@
           <TD>Outputs progress and results of tasks to Log Window.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><b>Special Options</b></TD>
+          <TD class="style1"><b>Specialized Options</b></TD>
           <TD>Specialized and experimental options for tasks, tilt series, Navigator, or Low 
             Dose</TD>
         </TR>
@@ -157,6 +157,12 @@
             Adjust Focus on Probe Mode Change</a>&nbsp;&nbsp;</TD>
           <TD>Maintain constant focus difference when switching between microprobe and 
             nanoprobe</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1">&nbsp; <a href="#hid_specialoptions_normalizealllens">Normalize 
+            All on Mag Change</a></TD>
+          <TD>Specify whether to normalize all lenses when changing mag within LM, or on all 
+            mag changes</TD>
         </TR>
       </TABLE>
       <BR>
@@ -408,13 +414,13 @@
       <P>Use this command to toggle diagnostic output to the Log window from the various 
         procedures run from the Tasks menu.</P>
       <P><A NAME="hid_special_skip_beam_shift_in_ts"></A><B>Skip Beam Shift in TS 
-        command (Tasks - Special Option submenu)</B></P>
+        command (Tasks - Specialized Options submenu)</B></P>
     <P>When using a phase plate on a JEOL microscope, the beam shift that accompanies 
       every image shift operation will change the centering of the phase plate.&nbsp; 
       Turn on this entry to suppress the beam shift for the alignment operations 
       involving image shift during a tilt series.</P>
       <P><A NAME="hid_special_piezo_for_ld_axis_shift"></A><B>Piezo for LD Axis Shift 
-        command (Tasks&nbsp; - Special Option submenu)</B></P>
+        command (Tasks&nbsp; - Specialized Options submenu)</B></P>
     <p>
       If there is a piezo plugin loaded that can provide stage movement along the tilt 
       axis, and the properties file contains both an entry 'UsePiezoForLDAxis' 
@@ -431,7 +437,7 @@
       sign is changed.</p>
     <p>
       <A NAME="hid_special_disable_dark_trim_in_align"></A><B>Disable Dark Trim in 
-      Align command (Tasks&nbsp; - Special Option submenu)</B></p>
+      Align command (Tasks&nbsp; - Specialized Options submenu)</B></p>
     <p>
       Even when 'Trim dark borders in Autoalign' is not selected in the 
       <a href="hidd_alignfocus.htm">Image 
@@ -446,7 +452,7 @@
       want to disable it always.&nbsp; The third entry allows you to disable the 
       trimming when running Realign to Item.</p>
     <p>
-      <A NAME="hid_specialoptions_allowcontinuousintasks"></A><B>Allow Continuous in TS command (Tasks&nbsp; - Special Option submenu)</B></p>
+      <A NAME="hid_specialoptions_allowcontinuousintasks"></A><B>Allow Continuous in TS command (Tasks&nbsp; - Specialized Options submenu)</B></p>
     <p>
       Ordinarily, the program will acquire images in single-frame mode for almost all 
       automated operations, even when using a camera parameter set that has continuous 
@@ -459,7 +465,7 @@
       as to View and Preview images taken in Low Dose mode.</p>
     <p>
       <A NAME="hid_specialoptions_normalizeviaviewforau"></A><B>Normalize Via View 
-      for Autofocus command (Tasks&nbsp; - Special Option submenu)</B></p>
+      for Autofocus command (Tasks&nbsp; - Specialized Options submenu)</B></p>
     <p>
       When this option is selected, the program will switch to the View area in Low 
       Dose before going to the Focus area for autofocusing, unless it is currently in 
@@ -468,7 +474,7 @@
       equivalent for the purpose of deciding whether this normalization needs to be 
       done.</p>
     <p>
-      <A NAME="hid_specialoptions_adjustfocusonprobechange"></A><B>Adjust Focus on Probe Mode Change command (Tasks&nbsp; - Special Option submenu)</B></p>
+      <A NAME="hid_specialoptions_adjustfocusonprobechange"></A><B>Adjust Focus on Probe Mode Change command (Tasks&nbsp; - Specialized Options submenu)</B></p>
     <p>
       When changing between microprobe and nanoprobe TEM modes on FEI scopes, the 
       scope will restore the defocus last seen in a mode when returning to that mode.&nbsp; 
@@ -489,6 +495,14 @@
       If you want to &quot;Reset Defocus&quot; while this option is on and have that change in 
       focus readout ignored, use the entry in the Focus menu instead of a button in 
       the microscope interface.</p>
+    <p>
+      <A NAME="hid_specialoptions_normalizealllens"></A><B>Normalize All on Mag Change command (Tasks&nbsp; - Specialized Options submenu)</B></p>
+    <p>This option controls when all lenses are normalized after changing 
+      magnification on an FEI or Hitachi scope.&nbsp; Normally, the program will 
+      always normalize the projector lenses, and normalize condenser and objective 
+      lenses in addition when changing between LM and nonLM magnifications.&nbsp; With 
+      this option, you can enter a 1 to normalize all lenses after all mag changes 
+      within LM, or a 2 to normalize all lenses after all mag changes.</p>
       </basefont>
   </BODY>
 </HTML>

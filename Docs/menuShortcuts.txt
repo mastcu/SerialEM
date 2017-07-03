@@ -149,6 +149,15 @@ T
 U
 V
 W
+Z
+  Specialized options:
+  A
+  C
+  D
+  F
+  N
+  P
+  S
 
 Tilt series:
 A

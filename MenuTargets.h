@@ -338,6 +338,7 @@ public:
   afx_msg void OnFocusRunAnotherIteration();
   afx_msg void OnUpdateFocusRunAnotherIteration(CCmdUI *pCmdUI);
   afx_msg void OnFocusMakeZemlinTableau();
+  afx_msg void OnNormalizeAllLensesOnMag();
 };
 
 /////////////////////////////////////////////////////////////////////////////
