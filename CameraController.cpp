@@ -2104,7 +2104,7 @@ void CCameraController::Capture(int inSet, bool retrying)
   /*if ((mWinApp->GetDebugKeys()).Find('}') >= 0) {
     CanPreExpose(NULL, 1);
   }*/
-  mTD.MoveInfo.plugFuncs = mTD.scopePlugFuncs = mScope->GetPlugFuncs();
+  mSmiToDo.plugFuncs = mTD.scopePlugFuncs = mScope->GetPlugFuncs();
   mTD.errFlag = 0;
   if (mParam->GatanCam)
     mTD.DMversion = mDMversion[CAMP_DM_INDEX(mParam)];
@@ -2356,6 +2356,8 @@ void CCameraController::Capture(int inSet, bool retrying)
   mMagQueued = false;
   mISQueued = false;
   mNumDRdelete = 0;
+  mPriorRecordDose = (float)B3DCHOICE(mWinApp->DoingTiltSeries(),
+    mWinApp->mTSController->GetCumulativeDose(), -1.);
 
   // Set timeout for camera acquires from exposure and readout components
   megaVoxel = (mDMsizeX * mDMsizeY / 1.e6) / (mParam->fourPort ? 4. : 1.);
@@ -6803,6 +6805,8 @@ void CCameraController::DisplayNewImage(BOOL acquired)
   KImage *image;
   EMimageBuffer *imBuf;
   EMimageExtra *extra;
+  ShortVec summedList;
+  float frameTimeForDose;
   ControlSet *lastConSetp = mTD.GetDeferredSum ? mConsDeferred : &mConSetsp[mLastConSet];
   DWORD ticks;
   short int *parray, *imin, *imout;
@@ -7252,6 +7256,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       extra->m_fDose = (float)mWinApp->mBeamAssessor->GetElectronDose(spotSize, stZ, 
         SpecimenBeamExposure(curCam, lastConSetp, true));
       extra->m_fDose *= (float)mExposure / lastConSetp->exposure;
+      extra->mPriorRecordDose = mPriorRecordDose;
 
       // Store other no-cost stuff and then convert header items to shorts
       extra->mSpotSize = spotSize;
@@ -7311,11 +7316,10 @@ void CCameraController::DisplayNewImage(BOOL acquired)
         if (mTD.NumAsyncSumFrames >= 0) {
           mTD.NumFramesSaved = B3DNINT(mExposure / mTD.FrameTime);
           mTD.ErrorFromSave = 0;
-          if (lastConSetp->sumK2Frames && 
-             GetPluginVersion(mParam) >= PLUGIN_CAN_SUM_FRAMES && 
-             lastConSetp->summedFrameList.size() > 0)
+          if (lastConSetp->sumK2Frames && lastConSetp->summedFrameList.size() > 0 &&
+            GetPluginVersion(mParam) >= PLUGIN_CAN_SUM_FRAMES)
             mTD.NumFramesSaved = mWinApp->mFalconHelper->GetFrameTotals(
-            lastConSetp->summedFrameList, i, mTD.NumFramesSaved);
+              lastConSetp->summedFrameList, i, mTD.NumFramesSaved);
         }
 
         if (mTD.ErrorFromSave < 0) {
@@ -7388,7 +7392,52 @@ void CCameraController::DisplayNewImage(BOOL acquired)
           message.Format("Saving of %sframes was requested but the server says no frames "
             "were saved", (err & DE_SAVE_FRAMES) ? "" : "summed ");
         }
+
+        // Set up summed frame list for the dose estimate below
+        frameTimeForDose = 1.f / mParam->DE_FramesPerSec;
+        ix = B3DNINT(mExposure / frameTimeForDose);
+        if (err & DE_SAVE_FRAMES) {
+          if (!extra->mNumSubFrames && mScope->GetSimulationMode())
+            extra->mNumSubFrames = ix;
+          summedList.push_back((short)extra->mNumSubFrames);
+          summedList.push_back(1);
+        } else {
+          summedList.push_back((short)ix / lastConSetp->DEsumCount);
+          summedList.push_back(lastConSetp->DEsumCount);
+          if (ix % lastConSetp->DEsumCount) {
+            summedList.push_back(1);
+            summedList.push_back((short)(ix % lastConSetp->DEsumCount));
+          }
+          if (!extra->mNumSubFrames && mScope->GetSimulationMode())
+            extra->mNumSubFrames = (ix + lastConSetp->DEsumCount - 1) / 
+            lastConSetp->DEsumCount;
+        }
         mWinApp->AppendToLog(message);
+      }
+    }
+
+    // Get dose per frame and output list of doses and # of frames
+    if (extra->mNumSubFrames > 0) {
+      if (IS_FALCON2_OR_3(mParam)) {
+        summedList = lastConSetp->summedFrameList;
+        frameTimeForDose = mFalconReadoutInterval;
+      } else if (mParam->K2Type) {
+
+        // Set up dummy summed frame list or use the one that was used
+        frameTimeForDose = lastConSetp->frameTime;
+        summedList.push_back((short)mTD.NumFramesSaved);
+        summedList.push_back(1);
+        if (lastConSetp->sumK2Frames && lastConSetp->summedFrameList.size() > 0 &&
+          GetPluginVersion(mParam) >= PLUGIN_CAN_SUM_FRAMES)
+          summedList = lastConSetp->summedFrameList;
+      }
+      extra->mFrameDosesCounts = "";
+      for (i = 0; i < (int)summedList.size() / 2; i++) {
+        str.Format("%.5g %d", summedList[i * 2 + 1] * frameTimeForDose * extra->m_fDose /
+          mExposure, summedList[i * 2]);
+        if (!extra->mFrameDosesCounts.IsEmpty())
+          extra->mFrameDosesCounts += "  ";
+        extra->mFrameDosesCounts += str;
       }
     }
 

@@ -389,11 +389,17 @@ int KStoreADOC::SetValuesFromExtra(KImage *inImage, char *sectName, int index)
   if (extra->mTargetDefocus > EXTRA_VALUE_TEST &&
     AdocSetFloat(sectName, index, ADOC_TARGET, extra->mTargetDefocus))
     return 1;
+  if (extra->mPriorRecordDose >= 0. && AdocSetFloat(sectName, index, ADOC_PRIOR_DOSE,
+    extra->mPriorRecordDose))
+    return 1;
   if (!extra->mSubFramePath.IsEmpty() && AdocSetKeyValue(sectName, index, ADOC_FRAME_PATH, 
     (LPCTSTR)extra->mSubFramePath))
     return 1;
   if (extra->mNumSubFrames > 0 && 
     AdocSetInteger(sectName, index, ADOC_NUM_FRAMES, extra->mNumSubFrames))
+    return 1;
+  if (!extra->mFrameDosesCounts.IsEmpty() && AdocSetKeyValue(sectName, index, 
+    ADOC_DOSES_COUNTS, (LPCTSTR)extra->mFrameDosesCounts))
     return 1;
   if (!extra->mDateTime.IsEmpty() && AdocSetKeyValue(sectName, index, ADOC_DATE_TIME, 
     (LPCTSTR)extra->mDateTime))

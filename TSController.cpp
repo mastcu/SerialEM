@@ -5967,6 +5967,12 @@ double CTSController::AddToDoseSum(int which)
   return dose;
 }
 
+// Return the Record area dose to this point, include Record, Preview, and on-axis tasks
+double CTSController::GetCumulativeDose()
+{
+  return mDoseSums[RECORD_CONSET] + mDoseSums[PREVIEW_CONSET] + 
+    mComplexTasks->GetOnAxisDose();
+}
 
 // Modify parameters in master control record from other interfaces
 // Unconditionally get beam tilt, defocus target, tilt increment, cosine, delay

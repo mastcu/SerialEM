@@ -114,6 +114,7 @@ public:
   SetMember(CString, TCBoxCancelText);
   SetMember(int, TCBoxDefault);
   SetMember(float, TrialCenterMaxRadFrac);
+  double GetCumulativeDose();
 
   bool GetBidirStartAngle(float &outVal) {outVal = mTSParam.bidirAngle; return mStartedTS && mTSParam.doBidirectional;};
 
@@ -424,7 +425,7 @@ private:
   double mFirstExposure;
   float mExpSeriesStep;        // Exposure series setp factor for variations dialog
   BOOL mExpSeriesFixNumFrames; // Flag for fixed number of frames checkbox
-  double mDoseSums[5];
+  double mDoseSums[5];        // The first one has task total, last one has task on-axis
   BOOL mCloseValvesOnStop;    // Flag to close valves onnext stop
   int mOneShotCloseValves;    // Intermediate flag to make sure valves closed only once
   BOOL mUseNewRefOnResume;    // Flag to use A as reference when manual tracking

@@ -75,6 +75,7 @@ class CComplexTasks : public CCmdTarget
   GetMember(BOOL, LastWalkCompleted);
   SetMember(float, ZMicronsPerDialMark);
   GetMember(float, LastAxisOffset);
+  GetMember(double, OnAxisDose);
   void GetBacklashDelta(float &deltaX, float &deltaY) {deltaX = mBASPDeltaX; deltaY = mBASPDeltaY;};
 
   float GetTiltBacklash() {return mRTThreshold;};
@@ -161,6 +162,7 @@ class CComplexTasks : public CCmdTarget
   float mMinLMSlitWidth;            // Minimum slit width allowed if lowering mag
   float mSlitSafetyFactor;        // Extra amount to change intensity if opening slit
   double mTotalDose;               // Accumulate dose here
+  double mOnAxisDose;             // And keep a sub-sum of View/Preview dose
   BOOL mSkipNextBeamShift;        // Flag to skip beam shift on align in next RT or TASM
 
   BOOL mDoingRSRA;

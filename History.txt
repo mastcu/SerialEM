@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+7/4/17: Added to mdoc file the dose per frame when frames saved, and
+prior cumulative dose in Record area for tilt series images.
+
 7/3/17: Added special option to normalize all lenses when changing mag within
 LM or on all mag changes; when changing between LM and nonLM, it now does
 objective normalization too and uses one normalize call on FEI scopes.

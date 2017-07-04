@@ -47,8 +47,10 @@ public:
   int mMagIndex;
   float mMin, mMax, mMean;
   float mTargetDefocus;
+  float mPriorRecordDose;
   CString mSubFramePath;
   int mNumSubFrames;
+  CString mFrameDosesCounts;
   CString mDateTime;
   CString mDE12Version;
   float mPreExposeTime;

@@ -104,6 +104,7 @@ CComplexTasks::CComplexTasks()
   mMagStackInd = 0;
   mVerbose = false;
   mTotalDose = 0.;
+  mOnAxisDose = 0.;
   mMinLMSlitWidth = 25;
   mSlitSafetyFactor = 0.75f;
   mRSRAHigherMagCriterion = 1.7f;
@@ -707,7 +708,7 @@ BOOL CComplexTasks::InLowerMag()
 void CComplexTasks::StartCaptureAddDose(int conSet)
 {
   int spotSize, set, probe;
-  double intensity;
+  double intensity, dose;
   LowDoseParams *ldParam = mWinApp->GetLowDoseParams();
 
   mCamera->SetCancelNextContinuous(true);
@@ -723,14 +724,18 @@ void CComplexTasks::StartCaptureAddDose(int conSet)
     probe = mScope->GetProbeMode();
   }
 
-  mTotalDose += mWinApp->mBeamAssessor->GetElectronDose(spotSize, intensity, 
+  dose = mWinApp->mBeamAssessor->GetElectronDose(spotSize, intensity, 
     mCamera->SpecimenBeamExposure(mWinApp->GetCurrentCamera(), &mConSets[conSet]), probe);
+  mTotalDose += dose;
+  if (mWinApp->LowDoseMode() && (set == VIEW_CONSET || set == RECORD_CONSET))
+    mOnAxisDose += dose;
 }
 
 double CComplexTasks::GetAndClearDose()
 {
   double temp = mTotalDose;
   mTotalDose = 0.;
+  mOnAxisDose = 0.;
   return temp;
 }
 

@@ -843,7 +843,7 @@ void CCameraSetupDlg::UnloadConSet()
     m_iProcessing = conSet->processing;
     m_bRemoveXrays = conSet->removeXrays > 0;
     noDark = mFEItype || (mPluginType && mCanProcess && !(mCanProcess & DARK_SUBTRACTED));
-    m_butDarkSubtract.EnableWindow(mParam->processHere && !noDark);
+    m_butDarkSubtract.EnableWindow(mParam->processHere || !noDark);
     noRaw = mFEItype && FCAM_ADVANCED(mParam) && mCamera->GetASIgivesGainNormOnly();
     m_butUnprocessed.EnableWindow(!noRaw);
     if ((noDark && !mParam->processHere && m_iProcessing == DARK_SUBTRACTED) || noRaw)

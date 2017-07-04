@@ -213,7 +213,6 @@ struct CameraThreadData {
   double FaRawDist, FaSmoothDist, FaResMean, FaMaxResMax, FaMeanRawMax, FaMaxRawMax;
   // FRC values/frequencies times K2FA_FRC_INT_SCALE
   long FaCrossHalf, FaCrossQuarter, FaCrossEighth, FaHalfNyq;
-
 };
 
 struct InsertThreadData {
@@ -747,6 +746,7 @@ class DLL_IM_EX CCameraController
   bool mDeferredSumFailed;       // Flag that getting deferred sum failed
   BOOL mAllowSpectroscopyImages; // Flag to allow images to be taken in spectroscopy
   BOOL mASIgivesGainNormOnly;    // Flag that advanced scripting interface only does norm
+  float mPriorRecordDose;        // Cumulative dose prior to shot if doing tilt series
 
 public:
   void SetNonGatanPostActionTime(void);

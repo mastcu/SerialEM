@@ -33,8 +33,10 @@ EMimageExtra::EMimageExtra()
   mMagIndex = -1;
   mMin = mMax = mMean = EXTRA_NO_VALUE;
   mTargetDefocus = EXTRA_NO_VALUE;
+  mPriorRecordDose = -1;
   mSubFramePath = "";
   mNumSubFrames = -1;
+  mFrameDosesCounts = "";
   mDE12Version = "";
   mPreExposeTime = -1.;
   mNumDE12Frames = -1;
