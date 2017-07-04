@@ -1,34 +1,47 @@
-SerialEM is copyright (C) 2003-2017 by the Regents of the University of
-Colorado.
+SerialEM and associated documentation and plugins are
+copyright (C) 2003-2017 by the Regents of the University of Colorado.
 
-The SerialEM executable is open source under the General Public License (GPL)
-version 2.0, except for components noted below.  A copy of this license is in
-the file GPL.txt.  SerialEM may be modified and redistributed under the terms
-of this license.  In addition, an exception to the GPL license is granted to
-allow non-open source plugins to be loaded by the program.  Additional GPL
-components can be added to the SerialEM executable only if the developers of
-such components similarly grant an exception to allow non-open source plugins
-to be loaded, or if the program is run without such plugins.
-This source can be found at
+The following license applies to the SerialEM executable and it source code:
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+The SerialEM source can be found at
 http://bio3d.colorado.edu/SerialEM/OpenSerialEM
 
-The SerialEMCCD plugin to DigitalMicrograph is also copyright (C) 2003-2017 by
-the Regents of the University of Colorado.  It is open source under the GPL
-version 2.0, and may be modified and redistributed under the terms of this
-license.  This source can be found at
+The SerialEMCCD plugin to DigitalMicrograph is open source under the GNU
+General Public License (GPL) version 2.0, and may be modified and
+redistributed under the terms of this license.  A copy of this license is in
+the file GPL.txt.  This source can be found at
 http://bio3d.colorado.edu/SerialEM/SerialEMCCD
 
 The camera and microscope plugins to SerialEM distributed with the program are
 not open source.  The University of Colorado reserves the exclusive rights of
-preparing derivative works of these plugins, and distributing copies for sale,
-lease or lending.  Users may reproduce the full software package including
-plugins for use within own institution, as long as the copyright notice and
-other notices are preserved.  The plugins may not be distributed for profit,
-either in original form or in derivative works.
+preparing derivative works of these plugins to SerialEM, and distributing
+copies for sale, lease or lending.  Users may reproduce the full software
+package including plugins to SerialEM for use within their own institution, as
+long as the copyright notice and other notices are preserved.  The plugins to
+SerialEM may not be distributed for profit, either in original form or in
+derivative works.
 
-THIS SOFTWARE AND/OR DOCUMENTATION IS PROVIDED WITH NO WARRANTY,    
-EXPRESS OR IMPLIED, INCLUDING, WITHOUT LIMITATION, WARRANTY OF      
-MERCHANTABILITY AND WARRANTY OF FITNESS FOR A PARTICULAR PURPOSE.   
+THIS PLUGIN SOFTWARE IS PROVIDED WITH NO WARRANTY, EXPRESS OR IMPLIED,
+INCLUDING, WITHOUT LIMITATION, WARRANTY OF MERCHANTABILITY AND WARRANTY OF
+FITNESS FOR A PARTICULAR PURPOSE.
                                                                     
 SerialEM uses TIFF libraries which are Copyright (c) 1988-1997 Sam Leffler
 and Copyright (c) 1991-1997 Silicon Graphics, Inc.
@@ -37,16 +50,15 @@ Because SerialEM uses the libjpeg library, this software is based in part on
 the work of the Independent JPEG Group.  SerialEM also uses the zlib library,
 which is Copyright (c) 1995-2010 by Jean-loup Gailly and Mark Adler.
 
-SerialEM uses the libcfshr and libiimod libraries from IMOD, which are covered
-by the GNU Lesser General Public License (LGPL), a copy of which is in
-LGPL.txt.  SerialEM also includes the Mini-XML library from IMOD,
+SerialEM uses the libcfshr, libiimod, and libifft libraries from IMOD, which
+are covered by the GNU Lesser General Public License (LGPL), a copy of which
+is in LGPL.txt.  SerialEM also includes the Mini-XML library from IMOD,
 which is Copyright 2003-2016 by Michael R. Sweet and is covered by the
 modified Library GPL in Mini-XML.txt.
 
 32-bit SerialEM uses FFTW libraries under a purchased license; those are
 Copyright (c) 1997--1999 Massachusetts Institute of Technology, written by
-Matteo Frigo and Steven G. Johnson.  64-bit SerialEM uses an early derivative
-of the FFT library included in IMOD, which is also covered by the LGPL.
+Matteo Frigo and Steven G. Johnson.
 
 SerialEM also uses a Set dialog DPI helper class, Copyright (C) 2003 by George
 Yohng, and XFolderDialog by Hans Dietrich.
