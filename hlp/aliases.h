@@ -270,6 +270,7 @@ hid_special_disable_dark_trim_in_align = SerialEM.chm::/html\menu_tasks.htm#hid_
 hid_specialoptions_allowcontinuousintasks = SerialEM.chm::/html\menu_tasks.htm#hid_specialoptions_allowcontinuousintasks
 hid_specialoptions_normalizeviaviewforau = SerialEM.chm::/html\menu_tasks.htm#hid_specialoptions_normalizeviaviewforau
 hid_specialoptions_adjustfocusonprobemodechange = SerialEM.chm::/html\menu_tasks.htm#hid_specialoptions_adjustfocusonprobemodechange
+hid_specialoptions_normalizealllens = SerialEM.chm::/html\menu_tasks.htm#hid_specialoptions_normalizealllens
 hid_tasks_tiltseries						= SerialEM.chm::/html\menu_tilt_series.htm#hid_tasks_tiltseries
 hid_tiltseries_terminate				= SerialEM.chm::/html\menu_tilt_series.htm#hid_tiltseries_terminate
 hid_tiltseries_extraoutput			= SerialEM.chm::/html\menu_tilt_series.htm#hid_tiltseries_extraoutput
