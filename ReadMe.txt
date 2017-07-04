@@ -1,7 +1,28 @@
-This file contains a description of the modules in SerialEM.  Every
-.cpp file has a corresponding .h file.
+SerialEM is currently developed in Visual Studio 2010 with the v90 (VS 2008)
+platform toolset, which is required for it to run under Windows 2000 and XP
+below SP3.
+
+To compile it with VS 2010, change the platform toolset to v100 for each
+configuration being compiled.  To compile a 32-bit version without using FFTW
+(which cannot be used for free with SerialEM), open XCorr.cpp and comment out
+#define USE_FFTW, and edit the properties of FFT.cpp to include it in the
+build.
+
+It can be compiled in VS 2013 by reading in the current solution file,
+allowing it to upgrade the project, and changing preprocessor definition
+_WIN32_WINNT=0x0500 to 0x0501 and adding NO_WARN_MBCS_MFC_DEPRECATION.  The
+64-bit version will compile without problems; the 32-bit Release version will
+not link with the FFTW included in the package and that should be excluded as
+described above.
+
+
+The rest of this file contains a description of the modules in SerialEM.
+Every .cpp file has a corresponding .h file.
 
 BASIC PROGRAM MODULES:
+AutoTuning.cpp        Calibrates and does astigmatism and coma corrections
+BaseSocket.cpp        Base class for running operations through sockets, used
+                         in SerialEM and plugins
 BeamAssessor.cpp      Calibrates beam intensity, adjusts intensity using the
                          calibration, and calibrates beam movement
 CalibCameraTiming.cpp Calibrates camera timing
@@ -11,7 +32,7 @@ ChildFrm.cpp          Standard MFC MDI component, contains an individual
 ComplexTasks.cpp      Performs tasks invvolving multiple image acquisitions and
                          stage movement: finding eucentricity, resetting image
                          shift, reversing tilt direction and walking up.
-CreateTietzCamera.cpp Creates instance of Tietz camera
+DirectElectronCamera.cpp  Acquires images from Direct Electron cameras
 DistortionTasks.cpp   Captures overlapping pairs for measuring distortion field
 EMbufferManager.cpp   Manages buffer copying, saving, and reading from file
 EMimageBuffer.cpp     Image buffer class to hold images and associated scope
@@ -21,18 +42,17 @@ EMmontageController.cpp  The montage routine
 EMscope.cpp           The microscope module, performs all interactions with
                          microscope except ones by threads that need their
                          own instance of the Tecnai
+FalconHelper.cpp      Performs communication with plugin and frame stacking
+                         for Falcon camera
 FilterTasks.cpp       GIF-related tasks, specifically calibrating mag-dependent
                          energy shifts and refining ZLP
 FocusManager.cpp      Measures beam-tilt dependent image shifts, calibrates and
                          does autofocusing
 GainRefMaker.cpp      Acquires a gain reference and makes gain references
                          for the camera controller from stored gain references
-JeolSinks.cpp         Receives and responds to events from JEOL scope when
-                         using update by event
-JeolState.cpp         Runs a thread for periodic update of JEOL scope values
-                         and has functions to get/set the state values
-JeolWrap.cpp          Wrapper functions for JEOL COM calls
-MacroProcessor.cpp    Runs macros
+GatanSocket.cpp       Communicates with SerialEMCCD via a socket
+LC1100CamSink.cpp     Code used with old Direct Electron LC1100 camera
+MacroProcessor.cpp    Runs scripts
 Mailer.cpp            Sends mail
 MainFrm.cpp           Standard MFC MDI component, manages the main program 
                          window and has code for program shutdown, control
@@ -43,6 +63,8 @@ MultiTSTasks.cpp      Has specimen cooking and autocentering routines
 NavHelper.cpp         Helper routines for the Navigator
 ParameterIO.cpp       Reads property file, reads and writes settings and
                          calibration files
+PiezoAndPPControl.cpp Module for communicating with JEOL piezos associated
+                         with phase plates
 PluginManager.cpp     Handles loading and calling of plugins
 ProcessImage.cpp      Mostly has functions in the Process menu, also has
                          code for getting image means and for correcting 
@@ -65,6 +87,7 @@ ShiftManager.cpp      Does autoalignment, mouse shifting, image shift reset,
 TSController.cpp      The tilt series controller
 
 FREE-STANDING WINDOWS:
+DirectElectronCamPanel.cpp
 DoseMeter.cpp        A system-modal cumulative dose meter
 LogWindow.cpp        The log window
 MacroEditer.cpp      Macro editing window
@@ -73,6 +96,7 @@ NavigatorDlg.cpp     The Navigator for storing positions and maps
 NavRotAlignDlg.cpp   Window for finding alignment with rotation
 ReadFileDlg.cpp      Window for reading sections from file
 ScreenMeter.cpp      A system-modal screen meter with control on averaging
+StageMoveTool.cpp    Window for moving stage in large steps
 StateDlg.cpp         Dialog for saving and setting imaging states
 TSViewRange.cpp      Dialog open while viewing the results of TS range finding
 
@@ -82,15 +106,22 @@ BaseDlg.cpp          Base class to handle tool tips and help button
 CameraSetupDlg.cpp   To set camera exposure parameters and select camera
 CookerSetupDlg.cpp   To set parameters for specimen cooking
 DummyDlg.cpp         Dialog class required for no_hang solution
+FalconFrameDlg.cpp   To set up frame sums acquired from Falcon or K2 camera
 FilePropDlg.cpp      To set properties for saving images to files
+FrameAlignDlg.cpp    To set parameters for frame alignment
 GainRefDlg.cpp       To set parameters for taking gain references
+K2SaveOptionDlg.cpp  To set options for K2 frame saving, and set name and
+                        folder control for frame saving from all cameras
 MacroControlDlg.cpp  To set parameters for controlling macros
 MontageSetupDlg.cpp  To set up montaging frame number, size, overlap, binning
                          and mag
 NavAcquireDlg.cpp    To start acquisition from selected Navigator points
+NavBacklashDlg.cpp   To set preferences for correcting new maps for backlash
 NavFileTypeDlg.cpp   To select whether an acquired file will be montage
 NavImportDlg.cpp     To import a tiff file as a Navigator map
 RefPolicyDlg.cpp     To set policies for which gain references to use
+ThreeChoiceBox.cpp   To provide an option box with intelligible choices
+                        instead of yes-No-Cancel
 TSBackupDlg.cpp      To select a section to back up to in a tilt series
 TSExtraFile.cpp      To set up extra outputs from a tilt series
 TSPolicyDlg.cpp      To set policies for errors during multiple tilt series
@@ -102,6 +133,7 @@ TSVariationsDlg.cpp  To set up variations in exposure, etc during tilt series
 CONTROL PANELS:
 ToolDlg.cpp           Base class of control panels handles all common features
 AlignFocusWindow.cpp  Has image alignment and autofocusing controls
+DirectElectronToolDlg.cpp  Has controls for DE direct detector cameras
 CameraMacroTools.cpp  Has buttons for taking pictures, running macros,
                           and controlling tilt series.  Has general STOP.
 EMbufferwindow.cpp    Has buttons for copying and saving buffers and controls
@@ -112,6 +144,7 @@ ImageLevelDlg.cpp     Shows information about and allows control of image
                           display
 LowDoseDlg.cpp        Has controls for working in low dose mode
 MontageWindow.cpp     Has controls for montaging
+RemoteControl.cpp
 ScopeStatusDlg.cpp    Shows various critical microscope parameters
 STEMcontrolDlg.cpp    Has controls for working in STEM mode
 TiltWindow.cpp        Has controls for tilting and setting increments
@@ -125,7 +158,8 @@ KImageScale.cpp       A class with methods for determining and keeping track of
 KImageStore.cpp       A base class for image storage, inherits KImageBase
 KPixMap.cpp           A class that builds and holds a byte pixmap for an image
                          being displayed and sets up color tables and ramps
-KStoreADOC.cpp        A class for saving and reading series of TIFF files
+KStoreADOC.cpp        A class for saving and reading series of TIFF files and
+                         managing mdoc files
 KStoreIMOD.cpp        A class for saving and reading TIFF files
 KStoreMRC.cpp         A class for saving and reading MRC image files
 
@@ -140,28 +174,39 @@ Smoother.cpp          A class for smoothing a noisy data stream, used for
                          the screen meter
 STEMfocus.cpp         Has routines for analyzing power spectra and finding
                          focus in STEM mode
+SEMUtilities.cp       A collection of utilities
 XCorr.cpp             Free standing functions for computations, prefixed with
                          XCorr, Proc, or Stat generally.  This is one
                          module that gets optimized for a debug build
 This directory also has the FFTW and tiff-related libs.
 
-FILES in DirectElectron
-All of these files were added by Tomas Molina; they handle both Direct
-Electron cameras and some unique cameras at NCMIR
 
 FILES SHARED WITH IMOD in Shared
 Except for imodconfig.h, the master copy of each file is in IMOD and when it is
 modified there it can be simply copied into this directory and checked in.
-libcfshr.lib and libiimod.lib are static libs built with VS2008
+libcfshr.lib, libiimod.lib and libimxml.lib are static libs built with VS2008
 
 autodoc.h
 b3dutil.h             Needed for some functions and macros
 cfsemshare.h          Header file with declarations for functions in libcfshr
 hvemtypes.h
 iimage.h
+ilist.h
 imodconfig.h
 mrcslice.h            Needed for structure definitions
 mrcfiles.h            Needed for structure definitions
+parse_params.h
+SEMCCDDefines.h       Definitions shared with SerialEMCCD
+SharedJeolDefines.h   Definitions shared with JeolScopePlugin
+CorrectDefects.cpp    Common defect correction code shared with SerialCCD too
+
+
+FOLDER CHOOSER in XFolderDialog
+XFileOpenListView.cpp
+XFolderDialog.cpp
+XHistoryCombo.cpp
+XWinVer.cpp
+
 
 HEADER FILES FOR STRUCTURES:
 ControlSet.h          Has ControlSet with properties of a camera exposure,
@@ -179,6 +224,13 @@ TiltSeriesParam.h     Has TiltSeriesParam with parameters controlling a tilt
                           series
 
 
+OTHER NOTABLE HEADER FILES in main folder
+StandardScopeCalls.h  Has macros with scope plugin calls that can be included
+                          in various ways; shared with FEIScopePlugin
+PropertyTests.h       Has macros that can be used for reading in properties
+                          and manipulating them with script commands
+SettingsTests.h       Has macros that can be used for reading and writing
+                          settings and  manipulating them with script commands
 
 
 A NOTE ON WANDERING FILE/CLASS NOMENCLATURE:
@@ -210,14 +262,18 @@ anything complicated, but there are a few items that are.
 HELP FILES:
 Help was added to the application long after creation and converted to HTML
 help in 2010.  Everything is in the hlp directory.
+aliases.h        Translates IDs to links in the help; must be updated when a
+                    menu entry is added
+SerialEM.hhc     Has table of contents; must be updated when a new help file
+                    is added
+SerialEM.hhp     Lists all help files; should also be updated when a new help
+                    file is added
+
+Also note that when a new help file is added, it has to be added manually to
+each section in SerialEM.vcxproj
 
 
 REMNANTS FROM THE ORIGINAL PROJECT README.TXT PRODUCED BY MFC WIZARD:
-
-SerialEM.dsp
-    This file (the project file) contains information at the project level and
-    is used to build a single project or subproject. Other users can share the
-    project (.dsp) file, but they should export the makefiles locally.
 
 SerialEM.rc
     This is a listing of all of the Microsoft Windows resources that the
@@ -234,18 +290,6 @@ SerialEM.clw
 res\SerialEM.ico
     This is an icon file, which is used as the application's icon.  This
     icon is included by the main resource file SerialEM.rc.
-
-res\SerialEM.rc2
-    This file contains resources that are not edited by Microsoft 
-	Visual C++.  You should place all resources not editable by
-	the resource editor in this file.
-
-res\Toolbar.bmp
-    This bitmap file is used to create tiled images for the toolbar.
-    The initial toolbar and status bar are constructed in the CMainFrame
-    class. Edit this toolbar bitmap using the resource editor, and
-    update the IDR_MAINFRAME TOOLBAR array in SerialEM.rc to add
-    toolbar buttons.
 
 res\SerialEMDoc.ico
     This is an icon file, which is used as the icon for MDI child windows
