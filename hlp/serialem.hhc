@@ -188,6 +188,11 @@
 			</OBJECT>
 			<A HREF="html/hidd_scopestatus.htm">Microscope Status panel</A><BR>
 		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Microscope Control panel">
+			<param name="Local" value="html/hidd_remotecontrol.htm">
+			</OBJECT>
+			<A HREF="html/hidd_scopestatus.htm">Microscope Status panel</A><BR>
+		<LI><OBJECT type="text/sitemap">
 			<param name="Name" value="Tilt Control panel">
 			<param name="Local" value="html/hidd_tiltcontrol.htm">
 			</OBJECT>
