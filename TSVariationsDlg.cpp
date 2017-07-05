@@ -265,7 +265,7 @@ void CTSVariationsDlg::OnButTsvRemove()
 void CTSVariationsDlg::OnButTsvAddSeries()
 {
   int i, j;
-  double angle, factor = 1.;
+  double angle, fps, factor = 1.;
   int *active = mWinApp->GetActiveCameraList();
   ControlSet *conSet = mWinApp->GetCamConSets() + active[mParam->cameraIndex] * 
     MAX_CONSETS + RECORD_CONSET;
@@ -296,6 +296,13 @@ void CTSVariationsDlg::OnButTsvAddSeries()
       baseTime);
     if (AfxMessageBox(mess, MB_OKCANCEL | MB_ICONINFORMATION) == IDCANCEL)
       return;
+  } else if (camParam->FEItype == 2) {
+    baseTime = mWinApp->mCamera->GetFalconReadoutInterval();
+  } else if (mWinApp->mDEToolDlg.HasFrameTime(camParam)) {
+    fps = camParam->DE_FramesPerSec > 0 ? camParam->DE_FramesPerSec :
+      mWinApp->mDEToolDlg.GetFramesPerSecond();
+    if (fps > 0.)
+      baseTime = (float)(1. / fps);
   }
 
   // Remove any existing exposure entries, and frame entries if doing dose fraac at all
