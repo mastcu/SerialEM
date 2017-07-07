@@ -6805,6 +6805,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
   KImage *image;
   EMimageBuffer *imBuf;
   EMimageExtra *extra;
+  CMapDrawItem *navItem;
   ShortVec summedList;
   float frameTimeForDose;
   ControlSet *lastConSetp = mTD.GetDeferredSum ? mConsDeferred : &mConSetsp[mLastConSet];
@@ -7224,6 +7225,11 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       extra->mStageZ = (float)mStageZbefore;
       extra->mDividedBy2 = mTD.DivideBy2;
       extra->mDateTime = mWinApp->mDocWnd->DateTimeForTitle();
+      if (mWinApp->mNavigator && mWinApp->mNavigator->GetAcquiring() && 
+        !mWinApp->DoingTiltSeries()) {
+          ix = mWinApp->mNavigator->GetCurrentOrAcquireItem(navItem);
+          extra->mNavLabel = navItem->mLabel;
+      }
       extra->m_iMag = MagOrEFTEMmag(mWinApp->GetEFTEMMode(), mMagBefore, 
         mParam->STEMcamera);
       extra->mMagIndex = mMagBefore;

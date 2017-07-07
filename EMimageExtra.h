@@ -52,6 +52,7 @@ public:
   int mNumSubFrames;
   CString mFrameDosesCounts;
   CString mDateTime;
+  CString mNavLabel;
   CString mDE12Version;
   float mPreExposeTime;
   int mNumDE12Frames;

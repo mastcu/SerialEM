@@ -404,6 +404,9 @@ int KStoreADOC::SetValuesFromExtra(KImage *inImage, char *sectName, int index)
   if (!extra->mDateTime.IsEmpty() && AdocSetKeyValue(sectName, index, ADOC_DATE_TIME, 
     (LPCTSTR)extra->mDateTime))
     return 1;
+  if (!extra->mNavLabel.IsEmpty() && AdocSetKeyValue(sectName, index, ADOC_NAV_LABEL, 
+    (LPCTSTR)extra->mNavLabel))
+    return 1;
   if (!extra->mDE12Version.IsEmpty() && AdocSetKeyValue(sectName, index, 
     ADOC_DE12_VERSION, (char *)(LPCTSTR)extra->mDE12Version))
     return 1;

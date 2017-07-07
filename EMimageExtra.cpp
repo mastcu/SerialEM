@@ -33,6 +33,7 @@ EMimageExtra::EMimageExtra()
   mMagIndex = -1;
   mMin = mMax = mMean = EXTRA_NO_VALUE;
   mTargetDefocus = EXTRA_NO_VALUE;
+  mNavLabel = "";
   mPriorRecordDose = -1;
   mSubFramePath = "";
   mNumSubFrames = -1;

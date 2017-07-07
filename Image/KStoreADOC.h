@@ -71,6 +71,7 @@
 #define ADOC_ALPHA "Alpha"
 #define ADOC_FILTER "FilterState"
 #define ADOC_VOLTAGE "Voltage"
+#define ADOC_NAV_LABEL "NavigatorLabel"
 
 class KStoreADOC :
   public KImageStore
