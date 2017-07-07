@@ -7059,6 +7059,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
     mWinApp->AppendToLog(report);
 
     item->mAcquire = false;
+    mChanged = true;
     mNumAcquired++;
     item->mDraw = mParam->acquireType != ACQUIRE_TAKE_MAP;
     UpdateListString(mAcquireIndex);
@@ -7089,6 +7090,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
     ManageNumDoneAcquired();
     if (mWinApp->mMacroProcessor->GetLastCompleted()) {
       item->mAcquire = false;
+      mChanged = true;
       mNumAcquired++;
       UpdateListString(mAcquireIndex);
       if (mAcquireIndex == mCurrentItem)
