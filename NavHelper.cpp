@@ -663,7 +663,7 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState)
 
   // Go to Z position of item unless this is after doing rough eucentricity in acquire
   axes = axisXY;
-  if (!(mNav->GetAcquiring() && navParams->acqRoughEucen))
+  if (!(mNav->GetAcquiring() && (navParams->acqRoughEucen || navParams->acqSkipZmoves)))
     axes |= axisZ;
 
   // Go to map tilt angle or 0 if current angle differs by more than tolerance
@@ -3206,7 +3206,7 @@ void CNavHelper::StopDualMap(void)
 /////////////////////////////////////////////////
 
 // Check for problems in the set of items/files/etc to acquire
-int CNavHelper::AssessAcquireProblems()
+int CNavHelper::AssessAcquireProblems(int startInd, int endInd)
 {
   ScheduledFile *sched;
   CMapDrawItem *item;
@@ -3229,7 +3229,7 @@ int CNavHelper::AssessAcquireProblems()
   for (i = 0; i < MAX_CAMERAS; i++)
     lastBin[i] = -1;
 
-  for (i = 0; i < mItemArray->GetSize(); i++) {
+  for (i = startInd; i <= endInd; i++) {
     item = mItemArray->GetAt(i);
     if (item->mRegistration == mNav->GetCurrentRegistration() && 
       ((item->mAcquire && navParam->acquireType != ACQUIRE_DO_TS) || 
@@ -3506,7 +3506,7 @@ void CNavHelper::ListFilesToOpen(void)
 }
 
 // return count of items marked for acquire and tilt series, or -1 if Nav not open
-void CNavHelper::CountAcquireItems(int & numAcquire, int & numTS)
+void CNavHelper::CountAcquireItems(int startInd, int endInd, int & numAcquire, int & numTS)
 {
   CMapDrawItem *item;
   if (!mNav) {
@@ -3514,9 +3514,11 @@ void CNavHelper::CountAcquireItems(int & numAcquire, int & numTS)
     numTS = -1;
     return;
   }
+  if (endInd < 0)
+    endInd = (int)mItemArray->GetSize() - 1;
   numAcquire = 0;
   numTS = 0;
-  for (int i = 0; i < mItemArray->GetSize(); i++) {
+  for (int i = startInd; i <= endInd; i++) {
     item = mItemArray->GetAt(i);
     if (item->mRegistration == mNav->GetCurrentRegistration()) {
       if (item->mAcquire)

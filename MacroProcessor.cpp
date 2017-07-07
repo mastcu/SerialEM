@@ -208,7 +208,7 @@ enum {CME_VIEW, CME_FOCUS, CME_TRIAL, CME_RECORD, CME_PREVIEW,
   CME_SETUSERSETTING, CME_CHANGEITEMREGISTRATION, CME_SHIFTITEMSBYMICRONS,
   CME_SETFREELENSCONTROL, CME_SETLENSWITHFLC, CME_SAVETOOTHERFILE, CME_SKIPACQUIRINGGROUP,
   CME_REPORTIMAGEDISTANCEOFFSET, CME_SETIMAGEDISTANCEOFFSET, CME_REPORTCAMERALENGTH,
-  CME_SETDECAMFRAMERATE
+  CME_SETDECAMFRAMERATE, CME_SKIPMOVEINNAVACQUIRE
 };
 
 static CmdItem cmdList[] = {{NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0},
@@ -307,7 +307,7 @@ static CmdItem cmdList[] = {{NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0
 {"ChangeItemRegistration", 2}, {"ShiftItemsByMicrons", 2}, {"SetFreeLensControl", 2},
 {"SetLensWithFLC", 2}, {"SaveToOtherFile", 4}, {"SkipAcquiringGroup", 0},
 {"ReportImageDistanceOffset", 0}, {"SetImageDistanceOffset", 1}, 
-{"ReportCameraLength", 0}, {"SetDECamFrameRate", 1},
+{"ReportCameraLength", 0}, {"SetDECamFrameRate", 1}, {"SkipMoveInNavAcquire", 0},
 {NULL, 0, NULL}
 };
 
@@ -4140,7 +4140,7 @@ void CMacroProcessor::NextCommand()
     SetReportedValues(index); 
 
   } else if (CMD_IS(REPORTNUMNAVACQUIRE)) {                 // ReportNumNavAcquire
-    navHelper->CountAcquireItems(index, index2);
+    navHelper->CountAcquireItems(0, -1, index, index2);
     if (index < 0)
       report = "The Navigator is not open; there are no acquire items";
     else
@@ -4187,6 +4187,12 @@ void CMacroProcessor::NextCommand()
       index = itemInt[1];
     }
     navigator->SetGroupIDtoSkip(index);
+
+  } else if (CMD_IS(SKIPMOVEINNAVACQUIRE)) {                // SkipMoveInNavAcquire
+    ABORT_NONAV;
+    if (!navigator->GetAcquiring())
+      ABORT_NOLINE("The navigator must be acquiring to enable skipping the stage move");
+    navigator->SetSkipStageMoveInAcquire(itemEmpty[1] || itemInt[1] != 0);
 
   } else if (CMD_IS(SUFFIXFOREXTRAFILE)) {                  // SuffixForExtraFile
     ABORT_NONAV;

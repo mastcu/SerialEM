@@ -382,11 +382,14 @@ struct NavParams {
   BOOL acqRealign;
   BOOL acqRunPremacro;
   BOOL acqRunPremacroNonTS;
+  BOOL acqSkipInitialMove;
+  BOOL acqSkipZmoves;
   BOOL acqRestoreOnRealign;
   BOOL acqCloseValves;
   BOOL acqSendEmail;
   BOOL acqSendEmailNonTS;
   BOOL acqFocusOnceInGroup;
+  BOOL warnedOnSkipMove;
   CString stockFile;
   int numImportXforms;
   ScaleMat importXform[MAX_IMPORT_XFORMS];

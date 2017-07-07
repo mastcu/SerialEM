@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+7/5/17: In Navigator Acquire at Items, added options for doing a subset of
+items, skipping stage move if possible, and skipping stage move in Z.  There
+is also a script command to enable skipping the stage move.
+
 7/4/17: Fix tilt series variations dialog to constrain exposure time series to
 multiple of frame time for Falcon and DE cameras (In 3.6).
 

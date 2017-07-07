@@ -531,11 +531,14 @@ CSerialEMApp::CSerialEMApp()
   mNavParams.acqCenterBeam = false;
   mNavParams.acqRunPremacro = false;
   mNavParams.acqRunPremacroNonTS = false;
+  mNavParams.acqSkipInitialMove = false;
+  mNavParams.acqSkipZmoves = false;
   mNavParams.acqRestoreOnRealign = true;
   mNavParams.acqSendEmail = false;
   mNavParams.acqSendEmailNonTS = false;
   mNavParams.acqFocusOnceInGroup = false;
   mNavParams.acqCloseValves = false;
+  mNavParams.warnedOnSkipMove = false;
   mNavParams.stockFile = "";
   mNavParams.autosaveFile = "";
   mNavParams.numImportXforms = 1;

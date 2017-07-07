@@ -687,10 +687,14 @@ BOOL CNavigatorDlg::CornerMontageOK()
 }
 
 // Find out if there are any acquires of regular or TS type in current registration
-BOOL CNavigatorDlg::AcquireOK(bool tiltSeries)
+BOOL CNavigatorDlg::AcquireOK(bool tiltSeries, int startInd, int endInd)
 {
   CMapDrawItem *item;
-  for (int i = 0; i < mItemArray.GetSize(); i++) {
+  if (endInd < 0)
+    endInd = (int)mItemArray.GetSize() - 1;
+  startInd = B3DMAX(0, startInd);
+  endInd = B3DMIN((int)mItemArray.GetSize() - 1, endInd);
+  for (int i = startInd; i <= endInd; i++) {
      item = mItemArray[i];
      if (item->mRegistration == mCurrentRegistration && 
        (!tiltSeries && item->mAcquire || tiltSeries && item->mTSparamIndex >= 0))
@@ -2014,6 +2018,8 @@ int CNavigatorDlg::MoveStage(int axisBits)
           MB_EXCLAME);
     return -1;
   }
+  if (!axisBits)
+    return 0;
 
   // Make sure it is ready
   if (mScope->WaitForStageReady(5000)) {
@@ -6860,56 +6866,27 @@ CString CNavigatorDlg::NextTabField(CString inStr, int &index)
 // Initiate Acquisition
 void CNavigatorDlg::AcquireAreas()
 {
-  int loop, i, loopStart, loopEnd, macnum, numNoMap = 0, numAtEdge = 0;
-  int groupInd, groupID = -1;
+  int loop, loopStart, loopEnd, macnum, numNoMap = 0, numAtEdge = 0;
+  int groupID = -1;
   BOOL rangeErr = false;
   BOOL runPremacro;
-  ScheduledFile *sched;
-  CMapDrawItem *item;
   CString *macros = mWinApp->GetMacros();
   CString mess, mess2;
   CNavAcquireDlg dlg;
   mWinApp->RestoreViewFocus();
 
-  // Count up the number of items to acquire before a file to open, and the number of
-  // files to open.
-  dlg.mNumFilesToOpen = 0;
-  dlg.mNumAcqBeforeFile = 0;
-  dlg.mIfMontOutput = mWinApp->Montaging();
-  if (mWinApp->mStoreMRC)
-    dlg.mOutputFile = mWinApp->mStoreMRC->getName();
-  for (i = 0; i < mItemArray.GetSize(); i++) {
-    item = mItemArray[i];
-    groupInd = GroupScheduledIndex(item->mGroupID);
-    if (item->mAcquire && item->mRegistration == mCurrentRegistration) {
-      if (item->mFilePropIndex >= 0 || (groupInd >= 0 && item->mGroupID != groupID)) {
+  dlg.mNumArrayItems = (int)mItemArray.GetSize();
+  dlg.m_iSubsetStart = 1;
+  dlg.m_iSubsetEnd = dlg.mNumArrayItems;
+  dlg.mLastNonTStype = mParam->nonTSacquireType;
+  EvaluateAcquiresForDlg(&dlg);
 
-        // Keep track of name and type of first file to open
-        if (!dlg.mNumFilesToOpen && !dlg.mNumAcqBeforeFile) {
-          dlg.mIfMontOutput = item->mMontParamIndex >= 0;
-          dlg.mOutputFile = item->mFileToOpen;
-          if (groupInd >= 0) {
-            sched = (ScheduledFile *)mGroupFiles.GetAt(groupInd);
-            dlg.mIfMontOutput = sched->montParamIndex >= 0;
-            dlg.mOutputFile = sched->filename;
-          }
-        }
-        dlg.mNumFilesToOpen++;
-        if (groupInd >= 0)
-          groupID = item->mGroupID;
-          
-      } else if (!dlg.mNumFilesToOpen) {
-        dlg.mNumAcqBeforeFile++;
-      }
-    }
-  }
 
   // Run the dialog
   dlg.m_iAcquireType = mParam->nonTSacquireType;
-  if (AcquireOK(true))
+  if (dlg.mAnyTSpoints)
     dlg.m_iAcquireType = ACQUIRE_DO_TS;
-  dlg.mAnyAcquirePoints = AcquireOK(false);
-  if (dlg.DoModal() != IDOK)
+  if (dlg.DoModal() != IDOK || (!dlg.mAnyAcquirePoints && !dlg.mAnyTSpoints))
     return;
 
   runPremacro = mParam->acqRunPremacro;
@@ -6918,6 +6895,21 @@ void CNavigatorDlg::AcquireAreas()
     runPremacro = mParam->acqRunPremacroNonTS;
   }
   mParam->acquireType = dlg.m_iAcquireType;
+
+  if (mParam->acqSkipInitialMove && OKtoSkipStageMove(mParam) < 0) {
+    loop = IDYES;
+    if (mParam->warnedOnSkipMove)
+      mWinApp->AppendToLog("WARNING: Skipping initial stage move; relying on your script"
+      " to move stage or run Realign to Item");
+    else 
+      loop = AfxMessageBox("WARNING: You have selected to skip the initial stage move to "
+      "each item.  Your script must either run Realign to Item or do the stage move "
+      "explicitly.\n\nAre you sure you want to proceed?", MB_QUESTION);
+    mParam->warnedOnSkipMove = true;
+    if (loop !=IDYES)
+      return;
+  }
+  mSkipStageMoveInAcquire = mParam->acqSkipInitialMove;
 
   // Set up for macro, or check file if images
   if (mParam->acquireType == ACQUIRE_RUN_MACRO || runPremacro) {
@@ -6950,7 +6942,12 @@ void CNavigatorDlg::AcquireAreas()
   // in camera between state and parameters, or for changes in binning
   // Set acquire on first so the map finding assumes the correct low dose area
   mAcquireIndex = 0;
-  if (mHelper->AssessAcquireProblems()) {
+  mEndingAcquireIndex = dlg.mNumArrayItems - 1;
+  if (dlg.m_bDoSubset) {
+    mAcquireIndex = B3DMAX(0, dlg.m_iSubsetStart - 1);
+    mEndingAcquireIndex = B3DMIN(mEndingAcquireIndex, dlg.m_iSubsetEnd - 1);
+  }
+  if (mHelper->AssessAcquireProblems(mAcquireIndex, mEndingAcquireIndex)) {
     mAcquireIndex = -1;
     return;
   }
@@ -6998,7 +6995,7 @@ void CNavigatorDlg::AcquireAreas()
     return;
   }
 
-  mHelper->CountAcquireItems(loop, loopEnd);
+  mHelper->CountAcquireItems(mAcquireIndex, mEndingAcquireIndex, loop, loopEnd);
   mInitialNumAcquire = mParam->acquireType == ACQUIRE_DO_TS ? loopEnd : loop;
   mElapsedAcqTime = 0.;
   mLastAcqDoneTime = GetTickCount();
@@ -7320,6 +7317,59 @@ void CNavigatorDlg::StopAcquiring(BOOL testMacro)
   mWinApp->SetStatusText(COMPLEX_PANE, "");
 }
 
+
+// Count items before file opening, # of files to open and type, and whether there are
+// any acquire or TS points in range specified in dialog parameters if doing a subset
+void CNavigatorDlg::EvaluateAcquiresForDlg(CNavAcquireDlg *dlg)
+{
+  int i, groupInd, groupID, startInd = 0, endInd = (int)mItemArray.GetSize() - 1;
+  ScheduledFile *sched;
+  CMapDrawItem *item;
+
+  if (dlg->m_bDoSubset) {
+    startInd = B3DMAX(0, dlg->m_iSubsetStart - 1);
+    endInd = B3DMIN(endInd, dlg->m_iSubsetEnd - 1);
+  }
+
+  // Count up the number of items to acquire before a file to open, and the number of
+  // files to open.
+  dlg->mNumFilesToOpen = 0;
+  dlg->mNumAcqBeforeFile = 0;
+  dlg->mOutputFile = "";
+  dlg->mIfMontOutput = mWinApp->Montaging();
+  if (mWinApp->mStoreMRC)
+    dlg->mOutputFile = mWinApp->mStoreMRC->getName();
+  for (i = startInd; i <= endInd; i++) {
+    item = mItemArray[i];
+    groupInd = GroupScheduledIndex(item->mGroupID);
+    if (item->mAcquire && item->mRegistration == mCurrentRegistration) {
+      if (item->mFilePropIndex >= 0 || (groupInd >= 0 && item->mGroupID != groupID)) {
+
+        // Keep track of name and type of first file to open
+        if (!dlg->mNumFilesToOpen && !dlg->mNumAcqBeforeFile) {
+          dlg->mIfMontOutput = item->mMontParamIndex >= 0;
+          dlg->mOutputFile = item->mFileToOpen;
+          if (groupInd >= 0) {
+            sched = (ScheduledFile *)mGroupFiles.GetAt(groupInd);
+            dlg->mIfMontOutput = sched->montParamIndex >= 0;
+            dlg->mOutputFile = sched->filename;
+          }
+        }
+        dlg->mNumFilesToOpen++;
+        if (groupInd >= 0)
+          groupID = item->mGroupID;
+          
+      } else if (!dlg->mNumFilesToOpen) {
+        dlg->mNumAcqBeforeFile++;
+      }
+    }
+  }
+
+  // See if any point of each type in range
+  dlg->mAnyTSpoints = AcquireOK(true, startInd, endInd);
+  dlg->mAnyAcquirePoints = AcquireOK(false, startInd, endInd);
+}
+
 // Take care of incrementing the done count and the elapsed time
 void CNavigatorDlg::ManageNumDoneAcquired(void)
 {
@@ -7362,9 +7412,9 @@ void CNavigatorDlg::SendEmailIfNeeded(void)
 int CNavigatorDlg::GotoNextAcquireArea()
 {
   CMapDrawItem *item;
-  int i, err;
+  int i, err, axisBits = axisXY | axisZ;
   bool skippedGroup = false;
-  for (i = mAcquireIndex; i < mItemArray.GetSize(); i++) {
+  for (i = mAcquireIndex; i <= mEndingAcquireIndex; i++) {
     item = mItemArray[i];
     if (item->mRegistration == mCurrentRegistration && 
       ((item->mAcquire && mParam->acquireType != ACQUIRE_DO_TS) || 
@@ -7387,7 +7437,15 @@ int CNavigatorDlg::GotoNextAcquireArea()
 
         // Set the current item for the stage move!
         mItem = item;
-        err = MoveStage(axisXY | axisZ);
+
+        // It is OK to skip stage move on various conditions, but if center beam is 
+        // selected, do not do it on first item
+        if (mSkipStageMoveInAcquire && OKtoSkipStageMove(mParam) && 
+          (!mParam->acqCenterBeam || mNumAcquired))
+          axisBits = 0;
+        else if (mParam->acqSkipZmoves)
+          axisBits = axisXY;
+        err = MoveStage(axisBits);
         if (err > 0)
           return 1;
         if (err < 0) {
@@ -8406,4 +8464,21 @@ void CNavigatorDlg::AdjustBacklash(int index, bool showC)
    return;
  mBacklashItemInd = index >= 0 ? index : mCurrentItem;
  mWinApp->mComplexTasks->BacklashAdjustStagePos(backlashX, backlashY, true, showC);
+}
+
+// Functions to provide central answer to whether initial stage move can be skipped
+int CNavigatorDlg::OKtoSkipStageMove(NavParams *param)
+{
+  return OKtoSkipStageMove(param->acqRoughEucen, param->acqRealign, param->acqCookSpec, 
+    param->acqFineEucen, param->acqAutofocus, param->acquireType);
+}
+
+int CNavigatorDlg::OKtoSkipStageMove(BOOL roughEucen, BOOL realign, BOOL cook,
+  BOOL fineEucen, BOOL focus, int acqType)
+{
+  if (!roughEucen && realign)
+    return 1;
+  if (!roughEucen && !cook && !fineEucen && !focus && acqType == ACQUIRE_RUN_MACRO)
+    return -1;
+  return 0;
 }

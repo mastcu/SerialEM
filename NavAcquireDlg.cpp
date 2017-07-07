@@ -27,6 +27,11 @@ CNavAcquireDlg::CNavAcquireDlg(CWnd* pParent /*=NULL*/)
   , m_bGroupFocus(FALSE)
   , m_strSavingFate(_T(""))
   , m_strFileSavingInto(_T(""))
+  , m_bDoSubset(FALSE)
+  , m_iSubsetStart(0)
+  , m_iSubsetEnd(0)
+  , m_bSkipInitialMove(FALSE)
+  , m_bSkipZmoves(FALSE)
 {
 }
 
@@ -62,6 +67,14 @@ void CNavAcquireDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_COMBO_MACRO, m_comboMacro);
   DDX_Text(pDX, IDC_STAT_SAVING_FATE, m_strSavingFate);
   DDX_Text(pDX, IDC_STAT_FILE_SAVING_INTO, m_strFileSavingInto);
+  DDX_Check(pDX, IDC_NA_DO_SUBSET, m_bDoSubset);
+  DDX_Control(pDX, IDC_EDIT_SUBSET_START, m_editSubsetStart);
+  DDX_Text(pDX, IDC_EDIT_SUBSET_START, m_iSubsetStart);
+  DDX_Control(pDX, IDC_EDIT_SUBSET_END, m_editSubsetEnd);
+  DDX_Text(pDX, IDC_EDIT_SUBSET_END, m_iSubsetEnd);
+  DDX_Control(pDX, IDC_NA_SKIP_INITIAL_MOVE, m_butSkipInitialMove);
+  DDX_Check(pDX, IDC_NA_SKIP_INITIAL_MOVE, m_bSkipInitialMove);
+  DDX_Check(pDX, IDC_NA_SKIP_Z_MOVES, m_bSkipZmoves);
 }
 
 
@@ -75,6 +88,13 @@ BEGIN_MESSAGE_MAP(CNavAcquireDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_NA_AUTOFOCUS, OnNaAutofocus)
   ON_CBN_SELENDOK(IDC_COMBO_PREMACRO, OnSelendokComboPremacro)
   ON_CBN_SELENDOK(IDC_COMBO_MACRO, OnSelendokComboMacro)
+  ON_BN_CLICKED(IDC_NA_DO_SUBSET, OnDoSubset)
+  ON_EN_KILLFOCUS(IDC_EDIT_SUBSET_START, OnKillfocusSubsetStart)
+  ON_EN_KILLFOCUS(IDC_EDIT_SUBSET_END, OnKillfocusSubsetEnd)
+  ON_BN_CLICKED(IDC_NA_ROUGH_EUCEN, OnRoughEucen)
+  ON_BN_CLICKED(IDC_NA_COOKSPECIMEN, OnCookSpecimen)
+  ON_BN_CLICKED(IDC_NA_FINE_EUCEN, OnFineEucen)
+  ON_BN_CLICKED(IDC_NA_SKIP_INITIAL_MOVE, &CNavAcquireDlg::OnSkipInitialMove)
 END_MESSAGE_MAP()
 
 
@@ -90,6 +110,8 @@ void CNavAcquireDlg::OnOK()
   mParam->acqFineEucen = m_bFineEucen;
   mParam->acqCenterBeam = m_bCenterBeam;
   mParam->acqCookSpec = m_bCookSpec;
+  mParam->acqSkipInitialMove = m_bSkipInitialMove;
+  mParam->acqSkipZmoves = m_bSkipZmoves;
   mParam->acqRestoreOnRealign = m_bRestoreState;
   mParam->acqCloseValves = m_bCloseValves;
   mParam->acqSendEmail = m_bSendEmail;
@@ -116,12 +138,6 @@ BOOL CNavAcquireDlg::OnInitDialog()
   CString str;
 	CBaseDlg::OnInitDialog();
   mParam = mWinApp->GetNavParams();
-  m_butRestoreState.EnableWindow(m_bRealign && m_iAcquireType == ACQUIRE_RUN_MACRO);
-  m_butAcquireTS.EnableWindow(m_iAcquireType == ACQUIRE_DO_TS);
-  m_butAcquireMap.EnableWindow(mAnyAcquirePoints);
-  m_butJustAcquire.EnableWindow(mAnyAcquirePoints);
-  m_butRunMacro.EnableWindow(mAnyAcquirePoints);
-  m_butGroupFocus.EnableWindow(m_bAutofocus);
   mMacroNum = mParam->macroIndex;
   m_bAutofocus = mParam->acqAutofocus;
   m_bGroupFocus = mParam->acqFocusOnceInGroup;
@@ -130,8 +146,12 @@ BOOL CNavAcquireDlg::OnInitDialog()
   m_bFineEucen = mParam->acqFineEucen;
   m_bCenterBeam = mParam->acqCenterBeam;
   m_bCookSpec = mParam->acqCookSpec;
+  m_bSkipInitialMove = mParam->acqSkipInitialMove;
+  m_bSkipZmoves = mParam->acqSkipZmoves;
   m_bRestoreState = mParam->acqRestoreOnRealign;
   m_bCloseValves = mParam->acqCloseValves;
+  ManageEnables();
+  m_butGroupFocus.EnableWindow(m_bAutofocus);
   CString *names = mWinApp->GetMacroNames();
   for (ind = 0; ind < MAX_MACROS; ind++) {
     if (names[ind].IsEmpty())
@@ -174,8 +194,25 @@ void CNavAcquireDlg::LoadTSdependentToDlg(void)
 void CNavAcquireDlg::OnNaRealignitem()
 {
   UpdateData(true);
-  m_butRestoreState.EnableWindow(m_bRealign && m_iAcquireType == ACQUIRE_RUN_MACRO);
-  UpdateData(false);
+  ManageEnables();
+}
+
+void CNavAcquireDlg::OnRoughEucen()
+{
+  UpdateData(true);
+  ManageEnables();
+}
+
+void CNavAcquireDlg::OnCookSpecimen()
+{
+  UpdateData(true);
+  ManageEnables();
+}
+
+void CNavAcquireDlg::OnFineEucen()
+{
+  UpdateData(true);
+  ManageEnables();
 }
 
 void CNavAcquireDlg::OnNaAcquiremap()
@@ -184,7 +221,7 @@ void CNavAcquireDlg::OnNaAcquiremap()
   UpdateData(true);
   UnloadTSdependentFromDlg(oldAcquire);
   LoadTSdependentToDlg();
-  m_butRestoreState.EnableWindow(m_bRealign && m_iAcquireType == ACQUIRE_RUN_MACRO);
+  ManageEnables();
   ManageMacro();
   ManageOutputFile();
 }
@@ -208,6 +245,7 @@ void CNavAcquireDlg::OnNaAutofocus()
 {
   UpdateData(true);
   m_butGroupFocus.EnableWindow(m_bAutofocus);
+  ManageEnables();
 }
 
 
@@ -222,9 +260,38 @@ void CNavAcquireDlg::OnSelendokComboMacro()
   mMacroNum = m_comboMacro.GetCurSel() + 1;
 }
 
+void CNavAcquireDlg::OnDoSubset()
+{
+  UpdateData(true);
+  ManageForSubset();
+}
+
+
+void CNavAcquireDlg::OnKillfocusSubsetStart()
+{
+  UpdateData(true);
+  B3DCLAMP(m_iSubsetStart, 1, mNumArrayItems);
+  ManageForSubset();
+}
+
+void CNavAcquireDlg::OnKillfocusSubsetEnd()
+{
+  UpdateData(true);
+  B3DCLAMP(m_iSubsetEnd, 1, mNumArrayItems);
+  ManageForSubset();
+}
+
+void CNavAcquireDlg::OnSkipInitialMove()
+{
+  UpdateData(true);
+  ManageOutputFile();
+}
+
 void CNavAcquireDlg::ManageOutputFile(void)
 {
   CString dir;
+  m_strFileSavingInto = "";
+  m_strSavingFate = "";
   if (m_iAcquireType == ACQUIRE_TAKE_MAP || m_iAcquireType == ACQUIRE_IMAGE_ONLY) {
     if (mNumAcqBeforeFile && mOutputFile.IsEmpty()) {
         m_strSavingFate = "No output file is open for first acquire item!";
@@ -236,9 +303,41 @@ void CNavAcquireDlg::ManageOutputFile(void)
         " initially" : "");
       UtilSplitPath(mOutputFile, dir, m_strFileSavingInto);
     }
-  } else {
-    m_strFileSavingInto = "";
-    m_strSavingFate = "";
+  } else if (m_bSkipInitialMove && mWinApp->mNavigator->OKtoSkipStageMove(m_bRoughEucen,
+    m_bRealign, m_bCookSpec, m_bFineEucen, m_bAutofocus, m_iAcquireType) < 0) {
+      m_strFileSavingInto = "Relying on script to run Realign or move stage";
   }
+  if (!mAnyAcquirePoints && !mAnyTSpoints) {
+    m_strSavingFate = "Nothing will be acquired with this subset";
+  }
+  UpdateData(false);
+}
+
+
+void CNavAcquireDlg::ManageEnables(void)
+{
+  m_editSubsetStart.EnableWindow(m_bDoSubset);
+  m_editSubsetEnd.EnableWindow(m_bDoSubset);
+  m_butAcquireTS.EnableWindow(mAnyTSpoints);
+  m_butAcquireMap.EnableWindow(mAnyAcquirePoints);
+  m_butJustAcquire.EnableWindow(mAnyAcquirePoints);
+  m_butRunMacro.EnableWindow(mAnyAcquirePoints);
+  m_butRestoreState.EnableWindow(m_bRealign && m_iAcquireType == ACQUIRE_RUN_MACRO);
+  m_butSkipInitialMove.EnableWindow(mWinApp->mNavigator->OKtoSkipStageMove(m_bRoughEucen,
+    m_bRealign, m_bCookSpec, m_bFineEucen, m_bAutofocus, m_iAcquireType) != 0);
+  ManageOutputFile();
+}
+
+
+void CNavAcquireDlg::ManageForSubset(void)
+{
+  mWinApp->mNavigator->EvaluateAcquiresForDlg(this);
+  if (m_iAcquireType == ACQUIRE_DO_TS && !mAnyTSpoints && mAnyAcquirePoints)
+    m_iAcquireType = mLastNonTStype;
+  if (m_iAcquireType != ACQUIRE_DO_TS && mAnyTSpoints && !mAnyAcquirePoints) {
+    mLastNonTStype = m_iAcquireType;
+    m_iAcquireType = ACQUIRE_DO_TS;
+  }
+  ManageEnables();
   UpdateData(false);
 }

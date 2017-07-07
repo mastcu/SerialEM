@@ -1282,6 +1282,11 @@
 #define IDC_STAT_FILE_SAVING_INTO       2302
 #define IDC_STAT_EXPLANATION            2303
 #define IDC_RJPEGCOMPRESS               2304
+#define IDC_NA_DO_SUBSET                2305
+#define IDC_EDIT_SUBSET_START           2306
+#define IDC_EDIT_SUBSET_END             2307
+#define IDC_NA_SKIP_INITIAL_MOVE        2308
+#define IDC_NA_SKIP_Z_MOVES             2309
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -1687,7 +1692,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        225
 #define _APS_NEXT_COMMAND_VALUE         33279
-#define _APS_NEXT_CONTROL_VALUE         2305
+#define _APS_NEXT_CONTROL_VALUE         2310
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

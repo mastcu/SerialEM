@@ -92,6 +92,43 @@
       panel or from the Script menu.</P>
     <P><B>Acquire tilt series</B> - All parameters and file properties should already 
       be set up when you go to start the series.</P>
+    <P><b>Other Options</b></P>
+    <P><b>Do subset from index</b></P>
+    <P>Select this option to acquire from a subset of items.&nbsp; Enter the item 
+      index at which to start and end in the two text boxes.&nbsp; If there are no 
+      items within the subset marked for acquisition and compatible with the selected 
+      primary task, it will switch the primary task between tilt series and a non-tilt 
+      series selection.&nbsp; When a subset is done, only the information stored for 
+      items in that subset is accessed during that run.&nbsp; Specifically, files set to be opened and states to be set on 
+      items before the subset will not be available.&nbsp; Thus, if file-opening 
+      through the Navigator is needed, it must be done on the first item of the 
+      subset.&nbsp; If tilt series are being done and a state needs to be set, it 
+      should be done on the first item as well.</P>
+    <P><b>Skip initial stage move</b></P>
+    <P>Select this option to suppress the initial stage move to the area, which is 
+      redundant when Realign to Item is going to be run.&nbsp; Several conditions must 
+      be satisfied in order for the move to be skipped; if they are not, the option is 
+      disabled and it has no effect if is already selected.&nbsp; When the primary 
+      task is other than to run a script, it is disabled when <b>Realign to item</b> is not selected, and also when <b>Rough 
+      eucentricity</b> is selected, because it would make no sense to do rough 
+      eucentricity before the stage move.&nbsp; If <b>Autocenter beam</b> is selected,&nbsp; 
+      the stage move will not be skipped on the first item, to ensure that there is a 
+      usable area being viewed. </P>
+    <P>If the primary task is to run a script, this option is available even when <b>
+      Realign to item</b> is not selected.&nbsp; In such a case, the program just 
+      assumes that the script will run Realign to Item or otherwise move the stage, 
+      and it will issue warnings that it is relying on this.&nbsp; However, it will 
+      not skip the move (and this option will be disabled) if <b>Cook specimen</b>, <b>
+      Fine eucentricity</b>, or <b>Autofocus</b> is selected without <b>Realign to 
+      item</b>, because those operations can only be done after moving to the item.</P>
+    <P><b>Skip Z moves in initial move and Realign</b></P>
+    <P>Select this option to leave the Z height unchanged in the initial stage move to 
+      the item, and in Realign to Item if it is run.&nbsp; Otherwise, the Z height 
+      will be set to the Z value of the item in the initial move, and to the Z value 
+      of the first map used for aligning in ReAlign to Item unless <b>Rough 
+      eucentricity</b> was selected as an initial action.&nbsp; This option would be 
+      useful if the Z heights of the items are not correct, yet Z height is 
+      approximately the same from one point to another.</P>
     <P><B>Restore scope state after aligning to item</B></P>
     <P>This option is enabled when you select 'Realign to item' as an initial task and 
       are running a script. If it is checked, then the current magnification and beam 

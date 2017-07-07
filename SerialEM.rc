@@ -1906,7 +1906,7 @@ BEGIN
     LTEXT           "times its minimum value",IDC_STAT_MAX_DELTA2,84,234,80,8
 END
 
-IDD_NAVACQUIRE DIALOGEX 0, 0, 171, 252
+IDD_NAVACQUIRE DIALOGEX 0, 0, 171, 291
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Acquire at Items"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
@@ -1926,17 +1926,25 @@ BEGIN
     CONTROL         "Run script",IDC_NA_RUNMACRO,"Button",BS_AUTORADIOBUTTON,14,142,49,10
     CONTROL         "Acquire tilt series",IDC_NA_ACQUIRE_TS,"Button",BS_AUTORADIOBUTTON,14,154,73,10
     GROUPBOX        "Primary Task",IDC_STATIC,7,108,158,60,WS_GROUP
-    DEFPUSHBUTTON   "GO",IDOK,29,231,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,92,231,50,14
+    DEFPUSHBUTTON   "GO",IDOK,29,272,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,92,272,50,14
     CONTROL         "Restore scope state after aligning to item",IDC_NA_RESTORE_STATE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,193,151,10
-    PUSHBUTTON      "?",IDC_BUTHELP,153,235,11,10
-    CONTROL         "Close column valves at end",IDC_NA_CLOSE_VALVES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,205,105,10
-    CONTROL         "Send email at end",IDC_NA_SENDEMAIL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,217,75,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,232,151,10
+    PUSHBUTTON      "?",IDC_BUTHELP,153,276,11,10
+    CONTROL         "Close column valves at end",IDC_NA_CLOSE_VALVES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,244,105,10
+    CONTROL         "Send email at end",IDC_NA_SENDEMAIL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,256,75,10
     COMBOBOX        IDC_COMBO_PREMACRO,65,89,92,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
     COMBOBOX        IDC_COMBO_MACRO,65,141,92,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Images will be saved to:",IDC_STAT_SAVING_FATE,10,170,154,8
-    LTEXT           "This open file",IDC_STAT_FILE_SAVING_INTO,10,180,154,8
+    LTEXT           "Images will be saved to:",IDC_STAT_SAVING_FATE,10,171,154,8
+    LTEXT           "This open file",IDC_STAT_FILE_SAVING_INTO,10,181,154,8
+    CONTROL         "Do subset from index",IDC_NA_DO_SUBSET,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,194,84,10
+    EDITTEXT        IDC_EDIT_SUBSET_START,98,192,29,14,ES_AUTOHSCROLL
+    LTEXT           "to",IDC_STATIC,129,194,8,10
+    EDITTEXT        IDC_EDIT_SUBSET_END,136,192,29,14,ES_AUTOHSCROLL
+    CONTROL         "Skip initial stage move to item",IDC_NA_SKIP_INITIAL_MOVE,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,208,114,10
+    CONTROL         "Skip Z moves in initial move and Realign",IDC_NA_SKIP_Z_MOVES,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,220,147,10
 END
 
 IDD_NAVIMPORT DIALOGEX 0, 0, 179, 134
@@ -2883,7 +2891,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 164
         TOPMARGIN, 7
-        BOTTOMMARGIN, 245
+        BOTTOMMARGIN, 286
     END
 
     IDD_NAVIMPORT, DIALOG
@@ -4092,6 +4100,12 @@ END
 STRINGTABLE
 BEGIN
     IDC_RJPEGCOMPRESS       "Save TIFF file with JPEG compression"
+    IDC_NA_DO_SUBSET        "Acquire only at items in a specified subset of the table"
+    IDC_EDIT_SUBSET_START   "Specify the index in the table of first item to be acquired"
+    IDC_EDIT_SUBSET_END     "Specify the index in the table of last item to be acquired"
+    IDC_NA_SKIP_INITIAL_MOVE 
+                            "Skip the initial stage move; it is redundant to the moves in Realign to Item"
+    IDC_NA_SKIP_Z_MOVES     "Do not move stage in Z during initial move or Realign to Item"
 END
 
 STRINGTABLE

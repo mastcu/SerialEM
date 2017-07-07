@@ -16,6 +16,7 @@
 
 class CMontageSetupDlg;
 struct TiltSeriesParam;
+class CNavAcquireDlg;
 
 #define MAX_CURRENT_REG 99
 #define MAX_SAVED_REGXFORM 10
@@ -73,7 +74,7 @@ public:
 	int TaskAcquireBusy();
 	void AcquireNextTask(int param);
 	void AcquireAreas();
-	BOOL AcquireOK(bool tiltSeries = false);
+	BOOL AcquireOK(bool tiltSeries = false, int startInd = 0, int endInd = -1);
   int NewMap(bool unsuitableOK = false);
   void DeleteItem() {OnDeleteitem();};
 	void CornerMontage();
@@ -143,6 +144,7 @@ public:
   GetMember(int, FoundItem);
   SetMember(bool, SkipAcquiringItem);
   SetMember(int, GroupIDtoSkip);
+  SetMember(BOOL, SkipStageMoveInAcquire);
   BOOL InEditMode() {return m_bEditMode;};
   BOOL TakingMousePoints() {return m_bEditMode || mAddingPoints || mAddingPoly || mMovingItem;};
   std::set<int> *GetSelectedItems() {return &mSelectedItems;};
@@ -273,6 +275,7 @@ private:
   CString mMergeName;
   BOOL mChanged;
   int mAcquireIndex;
+  int mEndingAcquireIndex;
   BOOL mSaveAlignOnSave;
   BOOL mSaveProtectRecord;
   BOOL mNavBackedUp;        // Flag for managing whether to create a .bak
@@ -355,6 +358,7 @@ private:
   double mLastMontLeft;     // Last remaining montage time
   double mLastTimePerItem;  // Last time per item for that montage time
   int mGroupIDtoSkip;       // ID for skipping a group during acquire
+  BOOL mSkipStageMoveInAcquire;  // Skip stage moves: flag used during acquisition
 
 public:
   BOOL RegistrationChangeOK(void);
@@ -520,6 +524,10 @@ public:
   void ManageNumDoneAcquired(void);
   int SetCurrentRegistration(int newReg);
   int MakeUniqueID(void);
+  void EvaluateAcquiresForDlg(CNavAcquireDlg *dlg);
+  int OKtoSkipStageMove(NavParams * param);
+  int OKtoSkipStageMove(BOOL roughEucen, BOOL realign, BOOL cook, BOOL fineEucen, 
+    BOOL focus, int acqType);
 };
 
 //{{AFX_INSERT_LOCATION}}

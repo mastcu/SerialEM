@@ -235,7 +235,7 @@ public:
   void DualMapDone(int param);
   void DualMapCleanup(int error);
   void StopDualMap(void);
-  int AssessAcquireProblems();
+  int AssessAcquireProblems(int startInd, int endInd);
   void ListFilesToOpen(void);
   bool NameToOpenUsed(CString name);
   int AlignWithRotation(int buffer, float centerAngle, float angleRange, 
@@ -269,7 +269,7 @@ public:
   bool CanStayInLowDose(CMapDrawItem * item, int xFrame, int yFrame, int binning, int & set, float & netShiftX, float & netShiftY, bool forReal);
   void SimpleIStoStage(CMapDrawItem * item, double ISX, double ISY, float &stageX, float &stageY);
   ScaleMat ItemStageToCamera(CMapDrawItem * item);
-  void CountAcquireItems(int & numAcquire, int & numTS);
+  void CountAcquireItems(int startInd, int endInd, int & numAcquire, int & numTS);
   void RestoreLowDoseConset(void);
   int ProcessExternalItem(CMapDrawItem * item, int extType);
   int TransformExternalCoords(CMapDrawItem *item, int extType, 
