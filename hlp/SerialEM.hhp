@@ -35,9 +35,9 @@ html\menu_settings.htm
 html\menu_camera.htm
 html\menu_calibration.htm
 html\menu_focus.htm
-html\menu_macro.htm
-html\about_macros.htm
-html\macro_commands.htm
+html\menu_script.htm
+html\about_scripts.htm
+html\script_commands.htm
 html\menu_tasks.htm
 html\menu_tilt_series.htm
 html\menu_process.htm

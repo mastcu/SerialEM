@@ -460,9 +460,6 @@
     <None Include="hlp\html\about_low_dose.htm">
       <Filter>HTML Help Topics</Filter>
     </None>
-    <None Include="hlp\html\about_macros.htm">
-      <Filter>HTML Help Topics</Filter>
-    </None>
     <None Include="hlp\html\about_montaging.htm">
       <Filter>HTML Help Topics</Filter>
     </None>
@@ -643,9 +640,6 @@
     <None Include="hlp\html\hidd_tsvariations.htm">
       <Filter>HTML Help Topics</Filter>
     </None>
-    <None Include="hlp\html\macro_commands.htm">
-      <Filter>HTML Help Topics</Filter>
-    </None>
     <None Include="hlp\html\main_index.htm">
       <Filter>HTML Help Topics</Filter>
     </None>
@@ -662,9 +656,6 @@
       <Filter>HTML Help Topics</Filter>
     </None>
     <None Include="hlp\html\menu_help.htm">
-      <Filter>HTML Help Topics</Filter>
-    </None>
-    <None Include="hlp\html\menu_macro.htm">
       <Filter>HTML Help Topics</Filter>
     </None>
     <None Include="hlp\html\menu_navigator.htm">
@@ -701,6 +692,15 @@
       <Filter>HTML Help Topics</Filter>
     </None>
     <None Include="hlp\html\hidd_remotecontrol.htm">
+      <Filter>HTML Help Topics</Filter>
+    </None>
+    <None Include="hlp\html\about_scripts.htm">
+      <Filter>HTML Help Topics</Filter>
+    </None>
+    <None Include="hlp\html\menu_script.htm">
+      <Filter>HTML Help Topics</Filter>
+    </None>
+    <None Include="hlp\html\script_commands.htm">
       <Filter>HTML Help Topics</Filter>
     </None>
   </ItemGroup>

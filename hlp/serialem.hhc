@@ -74,14 +74,14 @@
 			<A HREF="html/menu_settings.htm#about_settings">Settings Files</A><BR>
 		<LI><OBJECT type="text/sitemap">
 			<param name="Name" value="Scripts">
-			<param name="Local" value="html/about_macros.htm">
+			<param name="Local" value="html/about_scripts.htm">
 			</OBJECT>
-			<A HREF="html/about_macros.htm">Scripts</A><BR>
+			<A HREF="html/about_scripts.htm">Scripts</A><BR>
 		<LI><OBJECT type="text/sitemap">
 			<param name="Name" value="Script Commands">
-			<param name="Local" value="html/macro_commands.htm">
+			<param name="Local" value="html/script_commands.htm">
 			</OBJECT>
-			<A HREF="html/macro_commands.htm">Script Commands</A><BR>
+			<A HREF="html/script_commands.htm">Script Commands</A><BR>
 		<LI><OBJECT type="text/sitemap">
 			<param name="Name" value="Setting Up SerialEM">
 			<param name="Local" value="html/setting_up_serialem.htm">
@@ -129,9 +129,9 @@
 			<A HREF="html/menu_focus.htm">Focus/Tune menu</A><BR>
 		<LI><OBJECT type="text/sitemap">
 			<param name="Name" value="Macro menu">
-			<param name="Local" value="html/menu_macro.htm">
+			<param name="Local" value="html/menu_script.htm">
 			</OBJECT>
-			<A HREF="html/menu_macro.htm">Macro menu</A><BR>
+			<A HREF="html/menu_script.htm">Macro menu</A><BR>
 		<LI><OBJECT type="text/sitemap">
 			<param name="Name" value="Tasks menu">
 			<param name="Local" value="html/menu_tasks.htm">
