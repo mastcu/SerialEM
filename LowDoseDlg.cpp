@@ -1750,7 +1750,7 @@ int CLowDoseDlg::DrawAreaOnView(int type, EMimageBuffer *imBuf,
   ControlSet *csp;
   ScaleMat aMat, vMat;
   int boxArea, cenArea, delX, delY, diamSq;
-  float scale, rotation;
+  float scale, rotation, pixel;
   if (!m_iDefineArea || !mTrulyLowDose)
     return 0;
   vMat = mShiftManager->SpecimenToCamera(curCam, mLDParams[0].magIndex);
@@ -1796,9 +1796,11 @@ int CLowDoseDlg::DrawAreaOnView(int type, EMimageBuffer *imBuf,
   }
 
   // Get radius in image coordinates and convert center to view image coord
+  pixel = mShiftManager->GetPixelSize(imBuf);
+  if (!pixel)
+    pixel = binning * mShiftManager->GetPixelSize(curCam, mLDParams[0].magIndex);
   radius = (float)(sqrt(0.25 * diamSq) * 
-    mShiftManager->GetPixelSize(curCam, mLDParams[cenArea].magIndex) /
-    (binning * mShiftManager->GetPixelSize(curCam, mLDParams[0].magIndex)));
+    mShiftManager->GetPixelSize(curCam, mLDParams[cenArea].magIndex) / pixel);
   AreaAcqCoordToView(cenArea, binning, sizeX, sizeY, aMat, vMat, 
     (csp->left + csp->right) / 2, (csp->bottom + csp->top) / 2, cenX, cenY);
 
