@@ -1738,18 +1738,24 @@ void CLowDoseDlg::SyncFilterSettings(int inArea, FilterParams *filtParam)
 // being defined.  type = 0 for the area, 1 for Record.  Binning and sizeX, sizeY
 // describe the View image.  Four corner points in image coordinates are returned
 // in corner[XY], and for the define area, 
-int CLowDoseDlg::DrawAreaOnView(int type, int binning, int sizeX, int sizeY, 
+int CLowDoseDlg::DrawAreaOnView(int type, EMimageBuffer *imBuf, 
                                 float * cornerX, float * cornerY,
                                 float & cenX, float & cenY, float &radius)
 {
+  int binning = imBuf->mBinning;
+  int sizeX = imBuf->mImage->getWidth();
+  int sizeY = imBuf->mImage->getHeight();
   int curCam = mWinApp->GetCurrentCamera();
   ControlSet *conSets = mWinApp->GetConSets();
   ControlSet *csp;
   ScaleMat aMat, vMat;
   int boxArea, cenArea, delX, delY, diamSq;
+  float scale, rotation;
   if (!m_iDefineArea || !mTrulyLowDose)
     return 0;
   vMat = mShiftManager->SpecimenToCamera(curCam, mLDParams[0].magIndex);
+  mShiftManager->GetScaleAndRotationForFocus(imBuf, scale, rotation);
+  vMat = mShiftManager->MatScaleRotate(vMat, scale, rotation);
 
   // First fill the corner array with the actual define area
   boxArea = type ? RECORD_CONSET : m_iDefineArea;

@@ -582,8 +582,7 @@ void CSerialEMView::DrawImage(void)
     if (imBuf->mCaptured > 0 && imBuf->mConSetUsed == 0 && imBuf->mLowDoseArea) {
       float cornerX[4], cornerY[4];
       for (int type  = 0; type < 2; type++) {
-        int area = mWinApp->mLowDoseDlg.DrawAreaOnView(type, imBuf->mBinning, 
-          imBuf->mImage->getWidth(), imBuf->mImage->getHeight(),
+        int area = mWinApp->mLowDoseDlg.DrawAreaOnView(type, imBuf,
           cornerX, cornerY, cenX, cenY, radius);
         if (area) {
           CPen pnSolidPen (PS_SOLID, 1, areaColors[area - 1]);

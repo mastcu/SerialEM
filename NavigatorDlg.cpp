@@ -3090,7 +3090,7 @@ int CNavigatorDlg::SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg)
 
   // Store new center stage position in the temporary item for fixing polygon center
   // Go to center only if not defining for future
-  aInv = MatInv(mShiftManager->StageToCamera(iCam, montParam->magIndex));
+  aInv = MatInv(mPolyToCamMat);
   mShiftManager->AdjustCameraToStageForTilt(aInv, item->mMapTiltAngle);
   item->mStageX = aInv.xpx * mCamCenX + aInv.xpy * mCamCenY;
   item->mStageY = aInv.ypx * mCamCenX + aInv.ypy * mCamCenY;
@@ -3126,7 +3126,8 @@ int CNavigatorDlg::FitMontageToItem(MontParam *montParam, int binning, int magIn
     forceStage = true;
 
   // Transform item to camera coordinates and save in second item, get min/max
-  PolygonToCameraCoords(item, iCam, magIndex, xMin, xMax, yMin, yMax);
+  PolygonToCameraCoords(item, iCam, magIndex, 
+    mWinApp->LowDoseMode() && montParam->useViewInLowDose, xMin, xMax, yMin, yMax);
 
   xx = (1.f + extraSizeFactor) * (xMax - xMin);
   yy = (1.f + extraSizeFactor) * (yMax - yMin);
@@ -3225,19 +3226,21 @@ int CNavigatorDlg::FitMontageToItem(MontParam *montParam, int binning, int magIn
 }
 
 void CNavigatorDlg::PolygonToCameraCoords(CMapDrawItem * item, int iCam, int magIndex,
-                                          float &xMin, float &xMax, float &yMin, 
-                                          float &yMax)
+  bool adjustForFocus, float &xMin, float &xMax, float &yMin, float &yMax)
 {
   float xx, yy;
-  ScaleMat aMat = mShiftManager->StageToCamera(iCam, magIndex);
+  mPolyToCamMat = mShiftManager->StageToCamera(iCam, magIndex);
+  if (adjustForFocus)
+    mPolyToCamMat = mShiftManager->FocusAdjustedStageToCamera(iCam, magIndex, 
+      mScope->FastSpotSize(), mScope->GetProbeMode(), mScope->FastIntensity(), 
+      mScope->GetLDViewDefocus());
   if (item->mMapTiltAngle > RAW_STAGE_TEST && fabs((double)item->mMapTiltAngle) > 1)
-    mShiftManager->AdjustStageToCameraForTilt(aMat, item->mMapTiltAngle);
-
+    mShiftManager->AdjustStageToCameraForTilt(mPolyToCamMat, item->mMapTiltAngle);
   xMin = yMin = 1.e10;
   xMax = yMax = -1.e10;
   for (int i = 0; i < item->mNumPoints; i++) {
-    xx = aMat.xpx * item->mPtX[i] + aMat.xpy * item->mPtY[i];
-    yy = aMat.ypx * item->mPtX[i] + aMat.ypy * item->mPtY[i];
+    xx = mPolyToCamMat.xpx * item->mPtX[i] + mPolyToCamMat.xpy * item->mPtY[i];
+    yy = mPolyToCamMat.ypx * item->mPtX[i] + mPolyToCamMat.ypy * item->mPtY[i];
     mMontItemCam->mPtX[i] = xx;
     mMontItemCam->mPtY[i] = yy;
     //  CString dump;
@@ -3573,7 +3576,7 @@ void CNavigatorDlg::PolygonSupermontage(void)
   mMontItemCam = new CMapDrawItem;
   for (int i = 0; i < mItem->mNumPoints; i++)
     mMontItemCam->AppendPoint(mItem->mPtX[i], mItem->mPtX[i]);
-  PolygonToCameraCoords(mItem, camInd, montP->magIndex, xMin, xMax, yMin, yMax);
+  PolygonToCameraCoords(mItem, camInd, montP->magIndex, false, xMin, xMax, yMin, yMax);
 
   // Get needed size with an extra allowance, compute number of supers and half coord
   extra = (float)(extraFactor * B3DMAX(montP->xFrame, montP->yFrame));

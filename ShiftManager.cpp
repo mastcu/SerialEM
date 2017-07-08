@@ -2736,6 +2736,16 @@ ScaleMat CShiftManager::MatInv(ScaleMat aa)
   return ::MatInv(aa);
 }
 
+// Scales and rotates a matrix
+ScaleMat CShiftManager::MatScaleRotate(ScaleMat aMat, float scale, float rotation)
+{
+  ScaleMat rotMat;
+  rotMat.xpx = rotMat.ypy = cos(rotation * DTOR) * scale;
+  rotMat.xpy = -sin(rotation * DTOR) * scale;
+  rotMat.ypx = -rotMat.xpy;
+  return MatMul(aMat, rotMat);
+}
+
 ////////////////////////////////////////////////////////////////////
 // Image shift checking and timing routines
 ////////////////////////////////////////////////////////////////////
@@ -3359,14 +3369,11 @@ ScaleMat CShiftManager::FocusAdjustedStageToCamera(int inCamera, int inMagInd, i
   float scale, rotation, nearFoc; 
   double nearC2dist[2];
   int nearC2Ind[2], numNearC2;
-  ScaleMat rotMat, aMat = StageToCamera(inCamera, inMagInd);
+  ScaleMat aMat = StageToCamera(inCamera, inMagInd);
   if (defocus >= 0. || !GetDefocusMagAndRot(spot, probe, intensity, defocus, scale, 
     rotation, nearFoc, nearC2dist, nearC2Ind, numNearC2))
     return aMat;
-  rotMat.xpx = rotMat.ypy = cos(rotation * DTOR) * scale;
-  rotMat.xpy = -sin(rotation * DTOR) * scale;
-  rotMat.ypx = -rotMat.xpy;
-  aMat = MatMul(aMat, rotMat);
+  aMat = MatScaleRotate(aMat, scale, rotation);
   SEMTrace('c', "Adjusted stage cal %f %f %f %f", aMat.xpx, aMat.xpy, aMat.ypx, aMat.ypy);
   return aMat;
 }

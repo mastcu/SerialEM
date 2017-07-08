@@ -185,7 +185,7 @@ private:
   float mTVPiezoDelayFac;     // Amount to cut it by for trial/focus
 
 public:
-  int DrawAreaOnView(int type, int binning, int sizeX, int sizeY, float * cornerX, 
+  int DrawAreaOnView(int type, EMimageBuffer *imBuf, float * cornerX, 
     float * cornerY, float & cenX, float & cenY, float &radius);
   void AreaAcqCoordToView(int inArea, int binning, int sizeX, int sizeY, ScaleMat aMat,
     ScaleMat vMat, int acqX, int acqY, float & imX, float & imY);

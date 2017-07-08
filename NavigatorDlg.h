@@ -292,6 +292,7 @@ private:
   CMapDrawItem *mMontItemCam;  // Item used with camera coordinates
   float mCamCenX, mCamCenY; // Center and extra for making skip list
   float mExtraX, mExtraY;
+  ScaleMat mPolyToCamMat;   // Matrix used to get from polygon to camera coordinates
   int mMarkerShiftReg;      // Registration at which shift to marker occurred, for undo
   float mMarkerShiftX, mMarkerShiftY;  // Shift that was applied
   BOOL mAcquireEnded;       // Flag that End button was pressed when running macro
@@ -399,8 +400,8 @@ public:
   BOOL CurrentIsInGroup(void);
   void DeleteGroup(bool collapsedGroup);
   void PolygonSupermontage(void);
-  void PolygonToCameraCoords(CMapDrawItem * item, int camera, int magIndex,
-    float &xMin, float &xMax, float &yMin, float &yMax);
+  void PolygonToCameraCoords(CMapDrawItem * item, int camera, int magIndex, 
+    bool adjustForFocus, float &xMin, float &xMax, float &yMin, float &yMax);
   bool IsFrameNeeded(CMapDrawItem * item, int xFrame, int yFrame, float xOverlap, 
     float yOverlap, float xExtra, float yExtra, float xOffset, float yOffset, int ix, 
     int iy, int xNframes, int yNframes, float &xMid, float &yMid);

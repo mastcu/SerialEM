@@ -7254,7 +7254,9 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       if (lowDoseMode) {
         ldSet = ConSetToLDArea(mLastConSet);
         spotSize = ldParam[ldSet].spotSize;
-        if (mLastConSet == VIEW_CONSET)
+        if (ldSet == VIEW_CONSET && mLastConSet == MONTAGE_CONSET)
+          imBuf->mConSetUsed = VIEW_CONSET;
+        if (ldSet == VIEW_CONSET)
           mImBufs->mViewDefocus = mScope->GetLDViewDefocus();
       } else {
         spotSize = mScope->FastSpotSize();
