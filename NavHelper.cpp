@@ -87,6 +87,7 @@ CNavHelper::CNavHelper(void)
   mEditReminderPrinted = false;
   mCollapseGroups = false;
   mRIstayingInLD = false;
+  mRIuseCurrentLDparams = false;
   mNav = NULL;
   mExtDrawnOnID = 0;
 }
@@ -1216,29 +1217,37 @@ void CNavHelper::PrepareToReimageMap(CMapDrawItem *item, MontParam *param,
     // If staying in low dose, go there now, so that the stage move will be adjusted at
     // the same mag as the anticipated adjustment was computed
     if (mRIstayingInLD) {
-      SEMTrace('1', "Map matches low dose %s; staying in low dose but with exp %.3f "
-        "intensity %.5f bin %f", (LPCTSTR)names[mRIconSetNum], item->mMapExposure, 
-        item->mMapIntensity, binning / (camP->K2Type ? 2. : 1.));
+      if (mRIuseCurrentLDparams)
+        SEMTrace('1', "Map matches low dose %s; staying in low dose with current "
+          "parameters but binning %g", (LPCTSTR)names[mRIconSetNum],
+          binning / (camP->K2Type ? 2. : 1.));
+      else
+        SEMTrace('1', "Map matches low dose %s; staying in low dose but with exp %.3f "
+          "intensity %.5f bin %g", (LPCTSTR)names[mRIconSetNum], item->mMapExposure, 
+          item->mMapIntensity, binning / (camP->K2Type ? 2. : 1.));
 
       // Save the conSet and modify it to the map parameters
       mSavedConset = conSets[mRIconSetNum];
       StateCameraCoords(item->mMapCamera, xFrame, yFrame, binning, 
         conSets[mRIconSetNum].left, conSets[mRIconSetNum].right, 
         conSets[mRIconSetNum].top, conSets[mRIconSetNum].bottom);
-      conSets[mRIconSetNum].exposure = item->mMapExposure;
       conSets[mRIconSetNum].binning = binning;
-      conSets[mRIconSetNum].saveFrames = 0;
-      conSets[mRIconSetNum].mode = SINGLE_FRAME;
 
-      // Also save the low dose params and use map beam and slit conditions
-      area = mCamera->ConSetToLDArea(item->mMapLowDoseConSet);
-      ldp = mWinApp->GetLowDoseParams() + area;
-      mRIsavedLDparam = *ldp;
-      ldp->intensity = item->mMapIntensity;
-      ldp->spotSize = item->mMapSpotSize;
-      if (filtered) {
-        ldp->slitIn = item->mMapSlitIn;
-        ldp->slitWidth = item->mMapSlitWidth;
+      if (!mRIuseCurrentLDparams) {
+        conSets[mRIconSetNum].exposure = item->mMapExposure;
+        conSets[mRIconSetNum].saveFrames = 0;
+        conSets[mRIconSetNum].mode = SINGLE_FRAME;
+
+        // Also save the low dose params and use map beam and slit conditions
+        area = mCamera->ConSetToLDArea(item->mMapLowDoseConSet);
+        ldp = mWinApp->GetLowDoseParams() + area;
+        mRIsavedLDparam = *ldp;
+        ldp->intensity = item->mMapIntensity;
+        ldp->spotSize = item->mMapSpotSize;
+        if (filtered) {
+          ldp->slitIn = item->mMapSlitIn;
+          ldp->slitWidth = item->mMapSlitWidth;
+        }
       }
       mScope->GotoLowDoseArea(mRIconSetNum);
       return;
@@ -1789,9 +1798,11 @@ void CNavHelper::RestoreLowDoseConset(void)
     return;
   workSets[mRIconSetNum] = mSavedConset;
   camSets[mWinApp->GetCurrentCamera() * MAX_CONSETS + mRIconSetNum] = mSavedConset;
-  area = mCamera->ConSetToLDArea(mRIconSetNum);
-  ldp = mWinApp->GetLowDoseParams() + area;
-  *ldp = mRIsavedLDparam;
+  if (!mRIuseCurrentLDparams) {
+    area = mCamera->ConSetToLDArea(mRIconSetNum);
+    ldp = mWinApp->GetLowDoseParams() + area;
+    *ldp = mRIsavedLDparam;
+  }
 
   // And be sure to turn flag off in case this is called from other situations
   mRIstayingInLD = false;

@@ -413,6 +413,8 @@ BEGIN_MESSAGE_MAP(CMenuTargets, CCmdTarget)
   ON_UPDATE_COMMAND_UI(ID_FOCUS_MAKEZEMLINTABLEAU, OnUpdateNoTasks)
   ON_COMMAND(ID_SPECIALOPTIONS_NORMALIZEALLLENS, OnNormalizeAllLensesOnMag)
   ON_UPDATE_COMMAND_UI(ID_SPECIALOPTIONS_NORMALIZEALLLENS, OnUpdateNoTasks)
+  ON_COMMAND(ID_NAVOPTIONS_USECURRENTLDPARAMSINRI, OnUseCurrentLDparamsInNavRealign)
+  ON_UPDATE_COMMAND_UI(ID_NAVOPTIONS_USECURRENTLDPARAMSINRI, OnUpdateUseCurrentLDparamsInNavRealign)
   END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -991,6 +993,18 @@ void CMenuTargets::OnCalibrationStagestretch()
 void CMenuTargets::OnUpdateCalibrationStagestretch(CCmdUI *pCmdUI)
 {
   pCmdUI->Enable(mNavigator && !DoingTasks() && mNavigator->XformForStageStretch(false));
+}
+
+void CMenuTargets::OnUseCurrentLDparamsInNavRealign()
+{
+  mWinApp->mNavHelper->SetRIuseCurrentLDparams(
+    !mWinApp->mNavHelper->GetRIuseCurrentLDparams());
+}
+
+void CMenuTargets::OnUpdateUseCurrentLDparamsInNavRealign(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(!DoingTasks());
+  pCmdUI->SetCheck(mWinApp->mNavHelper->GetRIuseCurrentLDparams());
 }
 
 // DISTORTION

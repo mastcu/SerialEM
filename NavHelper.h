@@ -49,6 +49,7 @@ public:
   GetSetMember(BOOL, DivideIntoGroups);
   GetSetMember(bool, EditReminderPrinted);
   SetMember(float, RITiltTolerance);
+  GetSetMember(BOOL, RIuseCurrentLDparams);
   GetSetMember(BOOL, CollapseGroups);
   SetMember(int, ExtDrawnOnID);
   void ForceCenterRealign() {mCenterSkipArray.RemoveAll();};
@@ -117,6 +118,7 @@ private:
   int mRIskipCenTimeCrit;       // Criterion time for reusing center alignment
   float mRIskipCenErrorCrit;    // Criterion error for stopping reuse
   float mRIweightSigma;         // Sigma for weighting by probability in corr at target
+  BOOL mRIuseCurrentLDparams;   // Flag to use current low dose parameters in realign
   int mTypeOfSavedState;        // Type of saved state: 1 imaging, 2 map acquire
   int mSavedLowDoseArea;        // Low dose area when saved state
   StateParams mSavedState;      // State that was saved

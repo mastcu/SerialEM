@@ -537,6 +537,7 @@ BEGIN
             MENUITEM "Write as &XML File",          ID_NAVIGATOR_WRITEASXMLFILE
             MENUITEM "Con&vert Maps to Bytes",      ID_NAVIGATOR_CONVERTMAPSTOBYTES
             MENUITEM "Load Maps &Unbinned",         ID_NAVIGATOR_LOADUNBINNED
+            MENUITEM "Use &Current LD Params in Realign", ID_NAVOPTIONS_USECURRENTLDPARAMSINRI
         END
         MENUITEM SEPARATOR
         MENUITEM "&Transform Items",            ID_TRANSFORM_PTS
@@ -4743,6 +4744,8 @@ BEGIN
     ID_SCRIPT_SETINDENTSIZE "Set # of spaces for automatic indentation with Tab/`"
     ID_SPECIALOPTIONS_NORMALIZEALLLENS 
                             "Set whether to normalize all lenses when changing mag within LM or always"
+    ID_NAVOPTIONS_USECURRENTLDPARAMSINRI 
+                            "Use current instead of map Low Dose parameters in Realign to Item"
 END
 
 STRINGTABLE

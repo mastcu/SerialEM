@@ -127,6 +127,12 @@
           <TD>Always load maps with overview binning of 1.</TD>
         </TR>
         <TR VALIGN="top">
+          <TD class="style1">&nbsp;&nbsp; <a href="#hid_navoptions_usecurrentldparamsinri">
+            Use Current LD Params in Realign</a></TD>
+          <TD>When staying in Low Dose for Realign to Item, use current instead of map 
+            parameters</TD>
+        </TR>
+        <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_transform_pts">Transform Points</A></TD>
           <TD>Transform items to the current registration.</TD>
         </TR>
@@ -240,7 +246,8 @@
       <P>Use this command to close the Navigator window. If the contents of the window 
         have changed since it was last saved, you will be asked if you want to save 
         them to a file.</P>
-      <P><A NAME="hid_options_setpointlabelthreshold"></A><B>Set Point Label Threshold command (Navigator menu)</B></P>
+      <P><A NAME="hid_options_setpointlabelthreshold"></A><B>Set Point Label Threshold command (Navigator 
+        - Options submenu)</B></P>
     <P>Use this command to set a threshold for skipping the drawing of most labels on 
       points when they belong to groups bigger than the threshold.&nbsp; Enter the 
       maximum group size for which all labels should appear, or 0 to draw labels 
@@ -250,7 +257,8 @@
       the selected point is in a group larger than the threshold.&nbsp; Labels will 
       also be drawn for points whose distance from the previous point is greater than 
       40 microns.</P>
-      <P><A NAME="hid_navigator_autosave"></A><B>Autosave Nav File command (Navigator menu)</B></P>
+      <P><A NAME="hid_navigator_autosave"></A><B>Autosave Nav File command (Navigator - 
+        Options submenu)</B></P>
       <P>Toggle this menu item on to have the Navigator items saved to a file 
         periodically if they have changed. If there is no currently open file, the 
         program will save to a file named AUTOSAVEmmddhhmm.nav, where 'mmddhhmm' are 
@@ -258,7 +266,8 @@
         when you save to a file or when the program exits (if you elect not to save at 
         that time). However, if the program crashes, you should find the file in the 
         directory in which your SerialEM shortcut starts the program.</P>
-      <P><A NAME="hid_navigator_writeasxml"></A><B>Write as XML command (Navigator menu)</B></P>
+      <P><A NAME="hid_navigator_writeasxml"></A><B>Write as XML command (Navigator - 
+        Options submenu)</B></P>
       <P>This command toggles an option to save the Navigator file as an XML file 
         instead of in autodoc format.&nbsp; Either one can be read back in by SerialEM.&nbsp; 
         The autodoc writing is significantly fast because it is optimized to write each 
@@ -266,7 +275,7 @@
         autodoc data structure, builds an XML structure from that, then writes out the 
         XML.&nbsp; This will matter only for very large numbers of points, over 10,000.</P>
       <P><A NAME="hid_navigator_convertmapstobytes"></A><B>Convert Maps to Bytes command 
-          (Navigator menu)</B></P>
+          (Navigator - Options submenu)</B></P>
       <P>This command toggles an option to keep maps in memory as bytes. The option does 
         not affect how maps are stored in the image file (typically as integers). Byte 
         conversion will reduce memory usage by 2/3, so that the memory required is just 
@@ -281,13 +290,27 @@
         load the map, adjust the Black and White levels as desired, and turn the option 
         back on.</P>
       <P><A NAME="hid_navigator_loadunbinned"></A><B>Load Maps Unbinned command (Navigator 
-          menu)</B></P>
+          - Options submenu)</B></P>
       <P>This command toggles an option to have montage maps always loaded unbinned, 
         i.e., with overview binning of 1. This is almost always what one wants, but if 
         you are short on memory and do not need to see a map at full resolution, you 
         can turn off the option and set a higher overview binning in the <A HREF="hidd_montagecontrol.htm">
           Montage Control panel</A> . However, if the map file is open, you must make 
         it the current open file before setting the binning in the control panel.</P>
+      <P><A NAME="hid_navoptions_usecurrentldparamsinri"></A><B>Use Current LD Params in 
+        Realign command (Navigator 
+          - Options submenu)</B></P>
+    <P>This command toggles an option to use the current Low Dose parameters for 
+      Realign to Item instead of the Low Dose parameters set when the map was 
+      acquired.&nbsp; The option applies only when staying in Low Dose mode for the 
+      Realign operation, which occurs as long as the current camera, magnification, 
+      and probe mode (on an FEI scope) or alpha (on a JEOL) match the map condition.&nbsp; 
+      By default, the Realign operation imposes the map conditions when realigning to 
+      a map.&nbsp; This option is available because there are situations where it is 
+      advantageous to take the map under different conditions.&nbsp; For example, more 
+      dose might be desired for the map to allow either better visualization of 
+      features or more reliable montage piece alignment, while less dose can be used 
+      for correlating with those maps.</P>
       <P><A NAME="hid_corner_montage"></A><B>Setup Corner Montage command (Navigator - 
           Montaging &amp; Grids sub-menu)</B></P>
       <P>Use this command to set up a montage to capture the area within the current set 
