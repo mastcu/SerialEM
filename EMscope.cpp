@@ -4033,7 +4033,7 @@ BOOL CEMscope::SetDiffractionFocus(double inVal)
     }
   }
   catch (_com_error E) {
-    SEMReportCOMError(E, _T("setting objective focus "));
+    SEMReportCOMError(E, _T("setting diffraction focus "));
   }
   ScopeMutexRelease("SetDiffractionFocus");
   return success;
