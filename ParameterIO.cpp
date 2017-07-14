@@ -119,6 +119,7 @@ int CParameterIO::ReadSettings(CString strFileName)
   ControlSet *cs;
   CString strLine, strCopy, unrecognized = "";
   CString strItems[MAX_TOKENS];
+  CString message;
   BOOL itemEmpty[MAX_TOKENS];
   int itemInt[MAX_TOKENS];
   double itemDbl[MAX_TOKENS];
@@ -137,7 +138,7 @@ int CParameterIO::ReadSettings(CString strFileName)
   AutocenParams *acParmP;
   RangeFinderParams *tsrParams = mWinApp->GetTSRangeParams();
   int *tssPanelStates = mWinApp->GetTssPanelStates();
-  BOOL recognized, recognized2;
+  BOOL recognized, recognized2, frameListOK;
   LowDoseParams *ldp;
   StateParams *stateP;
   CArray<StateParams *, StateParams *> *stateArray = mWinApp->mNavHelper->GetStateArray();
@@ -187,6 +188,7 @@ int CParameterIO::ReadSettings(CString strFileName)
         if (!strItems[2].IsEmpty())
           iCam = itemInt[2];
         cs = &mConSets[iset + iCam * MAX_CONSETS];
+        frameListOK = true;
         while ((err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, 
                                      MAX_TOKENS)) == 0) {
           if (NAME_IS("EndControlSet"))
@@ -267,14 +269,27 @@ int CParameterIO::ReadSettings(CString strFileName)
               cs->summedFrameList.push_back(spot);
             }
           } else if (NAME_IS("SummedFrameList")) {
-            for (index = 1; index < MAX_TOKENS && !itemEmpty[index]; index++)
-              cs->summedFrameList.push_back(itemInt[index]);
+            if (frameListOK)
+              for (index = 1; index < MAX_TOKENS && !itemEmpty[index]; index++)
+                cs->summedFrameList.push_back(itemInt[index]);
+            if (cs->summedFrameList.size() > 200) {
+              frameListOK = false;
+              message.Format("Excessively long SummedFrameList entry found for camera %d,"
+                " parameter set %d\nThese frame summing parameters are being removed"
+                " and you will need to set them up again", iCam, iset);
+              AfxMessageBox(message, MB_EXCLAME);
+              cs->summedFrameList.clear();
+              cs->userFrameFractions.clear();
+              cs->userSubframeFractions.clear();
+            }
           } else if (NAME_IS("UserFrameFracs")) {
-            for (index = 1; index < MAX_TOKENS && !itemEmpty[index]; index++)
-              cs->userFrameFractions.push_back((float)itemDbl[index]);
+            if (frameListOK)
+              for (index = 1; index < MAX_TOKENS && !itemEmpty[index]; index++)
+                cs->userFrameFractions.push_back((float)itemDbl[index]);
           } else if (NAME_IS("UserSubframeFracs")) {
-            for (index = 1; index < MAX_TOKENS && !itemEmpty[index]; index++)
-              cs->userSubframeFractions.push_back((float)itemDbl[index]);
+            if (frameListOK)
+              for (index = 1; index < MAX_TOKENS && !itemEmpty[index]; index++)
+                cs->userSubframeFractions.push_back((float)itemDbl[index]);
           } else if (NAME_IS("FilterType"))
             cs->filterType = itemInt[1];
           else if (NAME_IS("ChannelIndex")) {
@@ -286,7 +301,6 @@ int CParameterIO::ReadSettings(CString strFileName)
             cs->magAllShots = itemInt[2];
           } else {
             // Unrecognized camera parameter      
-            CString message;
             message.Format("For camera parameter set %d: %s\n", iset, strLine);
             unrecognized += message;
           }
