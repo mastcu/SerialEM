@@ -267,6 +267,10 @@ struct FrameAliParams {
   BOOL groupRefine;           // Falg to refine with groups
   BOOL keepPrecision;         // Flag to keep precision in alignment
   BOOL outputFloatSums;       // Flag to save aligned sums as floats
+  BOOL alignSubset;           // Flag to align a subset of frames
+  int subsetStart, subsetEnd; // Start and end of range, numbered from 1
+  int whereRestriction;       // 1 for only in plugin, 2 for only in IMOD
+  int sizeRestriction;        // 1 for only 4K, 2 for only 8K
   CString name;               // Name to show
 };
 

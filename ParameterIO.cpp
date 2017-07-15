@@ -148,7 +148,7 @@ int CParameterIO::ReadSettings(CString strFileName)
   FrameAliParams faParam, *faData;
   BOOL *useGPU4K2Ali = mWinApp->mCamera->GetUseGPUforK2Align();
   int faLastFileIndex = -1, faLastArrayIndex = -1;
-  mWinApp->mCamera->SetFrameAliDefaults(faParam, "4K default set", 4, 0.06f);
+  mWinApp->mCamera->SetFrameAliDefaults(faParam, "4K default set", 4, 0.06f, 1);
   mWinApp->SetAbsoluteDlgIndex(false);
 
   try {
@@ -841,6 +841,19 @@ int CParameterIO::ReadSettings(CString strFileName)
             faData->groupRefine = itemInt[6] != 0;
             faData->keepPrecision = itemInt[7] != 0;
             faData->outputFloatSums = itemInt[8] != 0;
+            if (itemEmpty[9]) {
+              faData->alignSubset = false;
+              faData->subsetStart = 1;
+              faData->subsetEnd = 20;
+              faData->sizeRestriction = 0;
+              faData->whereRestriction = 0;
+            } else {
+              faData->alignSubset = itemInt[9] != 0;
+              faData->subsetStart = itemInt[10];
+              faData->subsetEnd = itemInt[11];
+              faData->sizeRestriction = itemInt[12];
+              faData->whereRestriction = itemInt[13];
+            }
           } else {
             StripItems(strLine, 2, faData->name);
           }
@@ -878,9 +891,9 @@ int CParameterIO::ReadSettings(CString strFileName)
 
   // If there are no frame align params, set up default sets
   if (!faParamArray->GetSize()) {
-    mWinApp->mCamera->SetFrameAliDefaults(faParam, "4K default set", 4, 0.06f);
+    mWinApp->mCamera->SetFrameAliDefaults(faParam, "4K default set", 4, 0.06f, 1);
     faParamArray->Add(faParam);
-    mWinApp->mCamera->SetFrameAliDefaults(faParam, "8K default set", 6, 0.05f);
+    mWinApp->mCamera->SetFrameAliDefaults(faParam, "8K default set", 6, 0.05f, 2);
     faParamArray->Add(faParam);
   }
   
@@ -1390,10 +1403,11 @@ void CParameterIO::WriteSettings(CString strFileName)
         faParam.groupSize, faParam.doSmooth ? 1 : 0, faParam.smoothThresh,
         faParam.shiftLimit);
       mFile->WriteString(oneState);
-      oneState.Format("FrameAlignParams2 %d %d %f %d %f %d %d %d\n", i, 
+      oneState.Format("FrameAlignParams2 %d %d %f %d %f %d %d %d %d %d %d %d %d\n", i, 
         faParam.truncate ? 1 : 0, faParam.truncLimit, faParam.antialiasType, 
         faParam.stopIterBelow, faParam.groupRefine ? 1 : 0, faParam.keepPrecision ? 1 : 0,
-        faParam.outputFloatSums ? 1 : 0);
+        faParam.outputFloatSums ? 1 : 0, faParam.alignSubset ? 1 : 0, faParam.subsetStart,
+        faParam.subsetEnd, faParam.sizeRestriction, faParam.whereRestriction);
       mFile->WriteString(oneState);
       oneState.Format("FrameAliSetName %d %s\n", i, (LPCTSTR)faParam.name);
       mFile->WriteString(oneState);

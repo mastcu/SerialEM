@@ -251,6 +251,42 @@ FRC crossings 0.5: 0.0335  0.25: 0.0468  0.125: 0.0898  is 0.1025 at 0.25/pix   
     <p>
       Here you can edit the name of the set that appears in the list box.</p>
     <p class="style1">
+      Restrictions on When to Use a Parameter Set</p>
+    <p>
+      This group of check-boxes lets you control whether a parameter set is to be used 
+      only in under certain conditions.&nbsp; Namely, you can specify that a set 
+      should be used only when <b>Aligning in plugin</b> or only when <b>Aligning with 
+      IMOD</b>, and independently whether it should be only for <b>4K (non 
+      super-resolution) frames</b> or only for <b>8K (super-resolution) frames</b>.&nbsp; 
+      The restrictions are taken into account at several places in the program, where 
+      the currently selected parameters are tested for whether they meet the 
+      conditions.&nbsp; If they do not, the program analyzes whether the conditions 
+      are met by no, one, or several other parameter sets, and acts in various ways:</p>
+    <ul>
+      <li>When you close this dialog, you will be given a choice of whether to use the 
+        selected set anyway (if there are no suitable ones), use the one suitable set 
+        (if there is one), or use the first suitable set (if there is more than one), or 
+        whether to stay in the dialog to change some settings.</li>
+      <li>When you switch between aligning in the plugin and with IMOD, it will 
+        automatically switch to another set if it is the only suitable one, otherwise 
+        leave the selection as it is.</li>
+      <li>In the Camera Setup dialog, when you switch between Counting and 
+        Super-resolution modes, it will automatically switch to another set if it is the 
+        only suitable one.&nbsp; Otherwise, you will be given a choice of whether to 
+        switch the mode back, open the dialog, use the selected set anyway (if there are 
+        no suitable ones), or use the first suitable set (if there is more than one).</li>
+      <li>When an image is to be acquired, it will automatically use another set if it 
+        is the only suitable one or the first suitable set if there is more than one; 
+        otherwise it will use the current set anyway.</li>
+    </ul>
+    <p>
+      The use of restrictions will work most conveniently if you have only one 
+      parameter set for each kind of situation, each one marked with different 
+      restrictions.&nbsp; If have just the &quot;4K default set&quot; and &quot;8K default set&quot;, 
+      simply restrict each one to the respective size of frames, and the parameter set 
+      will switch automatically when you switch between super-resolution and counting 
+      mode.</p>
+    <p class="style1">
       Basic Alignment Parameters</p>
     <p>
       The parameters in the upper section are the ones most likely to need setting.</p>

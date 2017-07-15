@@ -54,6 +54,9 @@ struct CamPluginFuncs;
 #define PLUGIN_SAVES_TIMES_100   105
 #define PLUGIN_UNPROC_LIKE_DS    106
 #define PLUGIN_CAN_SET_MRCS_EXT  106
+#define PLUGIN_CAN_ALIGN_SUBSET  107
+
+#define CAN_PLUGIN_DO(c, p) CanPluginDo(PLUGIN_##c, p)
 
 enum {INIT_ALL_CAMERAS, INIT_CURRENT_CAMERA, INIT_GIF_CAMERA, INIT_TIETZ_CAMERA};
 enum {LINEAR_MODE = 0, COUNTING_MODE, SUPERRES_MODE};
@@ -747,6 +750,7 @@ class DLL_IM_EX CCameraController
   BOOL mAllowSpectroscopyImages; // Flag to allow images to be taken in spectroscopy
   BOOL mASIgivesGainNormOnly;    // Flag that advanced scripting interface only does norm
   float mPriorRecordDose;        // Cumulative dose prior to shot if doing tilt series
+  int mNumSubsetAligned;         // Number of frames aligned and returned in sum, 0 if all
 
 public:
   void SetNonGatanPostActionTime(void);
@@ -855,7 +859,7 @@ bool OneViewDriftCorrectOK(CameraParameters * param);
 void RollBuffers(int nRoll, int keepIndexCurrent);
 bool HasNewK2API(CameraParameters * param);
 void SetFrameAliDefaults(FrameAliParams & faParam, const char *name,
-  int binning, float filt1);
+  int binning, float filt1, int sizeRestrict);
 int MakeMdocFrameAlignCom(void);
 int QueueTiltDuringShot(double angle, int delayToStart, double speed);
 void RetractAllCameras(void);
@@ -866,6 +870,7 @@ void GetMergeK2DefectList(int DMind, CameraParameters *param, bool errToLog);
 bool IsK2ConSetSaving(ControlSet *conSet, CameraParameters * param);
 bool CanProcessHere(CameraParameters *param);
 void FixDirForFalconFrames(CameraParameters * param);
+bool CanPluginDo(int minVersion, CameraParameters * param);
 };
 
 

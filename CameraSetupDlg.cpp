@@ -2063,10 +2063,45 @@ int CCameraSetupDlg::GetFEIflybackTime(float &flyback)
 // Linear/counting/superres Mode change
 void CCameraSetupDlg::OnK2Mode()
 {
+  int newIndex, notOK, answ, oldMode = m_iK2Mode;
+  CString message, str;
+  ControlSet *conSet = &mConSets[mCurrentSet + mActiveCameraList[mCurrentCamera] *
+    MAX_CONSETS];
   UpdateData(true);
   CButton *radio = (CButton *)GetDlgItem(IDC_RBIN1);
   if (mParam->FEItype)
     return;
+  if (conSet->useFrameAlign) {
+    notOK = UtilFindValidFrameAliParams(m_iK2Mode, conSet->useFrameAlign, 
+      conSet->faParamSetInd, newIndex, &message);
+    if (notOK) {
+      message += "\n\nPress:\n\"Switch Back\" to change back to the previous operating "
+        "mode\n\n";
+      if (notOK > 0)
+         message += "\"Use Set Anyway\" to use these alignment parameters anyway";
+      else {
+        str.Format("\"Use Other Set\" to use the first suitable alignment parameters "
+         "(# %d)", newIndex + 1);
+        message += str;
+      }
+      message += "\n\n\"Open Dialog\" to open the Frame Alignment Parameters dialog\n"
+        "and adjust parameters or restrictions";
+      answ = SEMThreeChoiceBox(message, "Switch Back", "Use Set Anyway", "Open Dialog",
+        MB_YESNOCANCEL | MB_ICONQUESTION);
+      if (answ == IDCANCEL) {
+        OnButSetupAlign();
+      } else if (answ == IDYES) {
+        m_iK2Mode = oldMode;
+        UpdateData(false);
+        return;
+      } else {
+        conSet->faParamSetInd = newIndex;
+      }
+    } else {
+      conSet->faParamSetInd = newIndex;
+    }
+
+  }
   radio->EnableWindow(mBinningEnabled && m_iK2Mode == SUPERRES_MODE);
   if (m_iK2Mode != SUPERRES_MODE && !m_iBinning) {
     m_iBinning = 1;
@@ -2318,6 +2353,7 @@ void CCameraSetupDlg::OnButSetupAlign()
   dlg.m_bWholeSeries = mCamera->GetAlignWholeSeriesInIMOD();
   dlg.mCameraSelected = mCurrentCamera;
   dlg.mConSetSelected = mCurrentSet;
+  dlg.mReadMode = m_iK2Mode;
   if (dlg.DoModal() == IDOK) {
     conSet->filterType = dlg.mCurFiltInd;
     conSet->useFrameAlign = dlg.m_iWhereAlign;

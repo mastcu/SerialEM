@@ -1287,6 +1287,17 @@
 #define IDC_EDIT_SUBSET_END             2307
 #define IDC_NA_SKIP_INITIAL_MOVE        2308
 #define IDC_NA_SKIP_Z_MOVES             2309
+#define IDC_ONLY_IN_PLUGIN              2310
+#define IDC_ONLY_WITH_IMOD              2311
+#define IDC_ONLY_NON_SUPER              2312
+#define IDC_ONLY_SUPERRESOLUTION        2313
+#define IDC_ALIGN_SUBSET                2314
+#define IDC_STAT_SUBSET_TO              2317
+#define IDC_STAT_SUBSET_PAREN           2318
+#define IDC_STAT_USE_ONLY_GROUP         2319
+#define IDC_STAT_LINE1                  2320
+#define IDC_FA_EDIT_SUB_START           2321
+#define IDC_FA_EDIT_SUB_END             2322
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -1693,7 +1704,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        225
 #define _APS_NEXT_COMMAND_VALUE         33280
-#define _APS_NEXT_CONTROL_VALUE         2310
+#define _APS_NEXT_CONTROL_VALUE         2323
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

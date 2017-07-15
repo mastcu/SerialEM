@@ -387,7 +387,7 @@ CCameraController::CCameraController()
 
 // Set a frame align param to default values
 void CCameraController::SetFrameAliDefaults(FrameAliParams &faParam, const char *name,
-  int binning, float filt1)
+  int binning, float filt1, int sizeRestrict)
 {
   faParam.aliBinning = binning;
   faParam.name = name;
@@ -414,6 +414,11 @@ void CCameraController::SetFrameAliDefaults(FrameAliParams &faParam, const char 
   faParam.antialiasType = 4;
   faParam.keepPrecision = false;
   faParam.outputFloatSums = false;
+  faParam.alignSubset = false;
+  faParam.subsetStart = 1;
+  faParam.subsetEnd = 20;
+  faParam.sizeRestriction = sizeRestrict;
+  faParam.whereRestriction = 0;
 }
 
 CCameraController::~CCameraController()
@@ -2175,6 +2180,7 @@ void CCameraController::Capture(int inSet, bool retrying)
   // Only do this once, not if come back in from settling
   if (mSettling < 0) {
     mTD.NumAsyncSumFrames = -1;
+    mNumSubsetAligned = 0;
     if (CapManageInsertTempK2Saving(conSet, inSet, retracting, numActive)) {
         mLDwasSetToArea = -1;
         return;
@@ -2922,16 +2928,31 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
   bool saving, bool aligning, CString *aliComRoot)
 {
   int ldArea, magIndex, sizeX, sizeY, numAllVsAll, refineIter, groupSize, doSpline;
-  int numGroups, faInd, numFilt = 1, deferGpuSum = 0, flags = 0;
+  int notOK, newIndex, numGroups, faInd, numFilt = 1, deferGpuSum = 0, flags = 0;
+  int numAliFrames, aliStart, aliEnd, frameStartEnd = 0;
   int DMind = CAMP_DM_INDEX(mParam);
   double maxMemory = pow(1024., 3.) * mK2MaxRamStackGB;
   LowDoseParams *ldParam = mWinApp->GetLowDoseParams();
   FrameAliParams faParam;
-  bool bdum, sumWithAlign, isSuperRes = conSet.K2ReadMode == SUPERRES_MODE;
+  bool bdum, sumWithAlign, alignSubset = false;
+  bool isSuperRes = conSet.K2ReadMode == SUPERRES_MODE;
   bool trulyAligning = aligning && conSet.useFrameAlign == 1;
+  CString mess;
   if (aligning) {
     faInd = conSet.faParamSetInd;
     B3DCLAMP(faInd, 0, (int)mFrameAliParams.GetSize() - 1);
+    mess = "WARNING: ";
+    notOK = UtilFindValidFrameAliParams(conSet.K2ReadMode, conSet.useFrameAlign, faInd,
+      newIndex, &mess);
+    if (notOK || newIndex != faInd) {
+      mWinApp->AppendToLog(mess);
+      if (notOK > 0)
+        mWinApp->AppendToLog("Using the frame alignment parameter set anyway");
+      else
+        PrintfToLog("Using the %s suitable frame alignment parameter set, %s",
+          notOK < 0 ? "first" : "one", (LPCTSTR)mFrameAliParams[newIndex].name);
+      faInd = newIndex;
+    }
     faParam = mFrameAliParams[faInd];
   }
 
@@ -3127,6 +3148,18 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
 
   mGettingFRC = false;
   if (aligning) {
+    numAliFrames = numFrames;
+    if (saving && faParam.alignSubset && CAN_PLUGIN_DO(CAN_ALIGN_SUBSET, mParam)) {
+      aliStart = B3DMAX(1, B3DMIN(faParam.subsetStart, K2FA_SUB_START_MASK));
+      aliEnd = B3DMIN(numFrames, faParam.subsetEnd);
+      if (aliEnd - aliStart > 0) {
+        frameStartEnd = aliStart + (aliEnd << K2FA_SUB_END_SHIFT);
+        numAliFrames = aliEnd + 1 - aliStart;
+        alignSubset = true;
+        if (trulyAligning)
+          mNumSubsetAligned = numAliFrames;
+      }
+    }
 
     // Get array for aligning and pack strings into it
     stringSize /= 4;
@@ -3141,27 +3174,27 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
     // Set variables for the call
     numAllVsAll = faParam.numAllVsAll;
     if (faParam.strategy == FRAMEALI_HALF_PAIRWISE)
-      numAllVsAll = B3DMAX(7, numFrames / 2);
+      numAllVsAll = B3DMAX(7, numAliFrames / 2);
     else if (faParam.strategy == FRAMEALI_ALL_PAIRWISE)
-      numAllVsAll = numFrames;
+      numAllVsAll = numAliFrames;
     else if (faParam.strategy == FRAMEALI_ACCUM_REF)
       numAllVsAll = 0;
     groupSize = (faParam.useGroups && numAllVsAll) ? faParam.groupSize : 1;
     if (groupSize > 1) {
-      numGroups = numFrames + 1 - groupSize;
+      numGroups = numAliFrames + 1 - groupSize;
       if ((numGroups + 1 - groupSize) * (numGroups - groupSize) / 2 < numGroups)
         groupSize = 1;
       numAllVsAll += groupSize - 1;
     }
     mTypeOfAlignError = -1;
     if (numAllVsAll) {
-      ndata = B3DMIN(numAllVsAll, numFrames) + 1 - groupSize;
+      ndata = B3DMIN(numAllVsAll, numAliFrames) + 1 - groupSize;
       mTypeOfAlignError = B3DCHOICE(((ndata + 1 - groupSize) * (ndata - groupSize)) / 2 >= 
         2 * ndata, 1, 0);
     }
 
     refineIter = faParam.doRefine ? faParam.refineIter : 0;
-    doSpline = (faParam.doSmooth && numFrames >= faParam.smoothThresh) ? 1 : 0;
+    doSpline = (faParam.doSmooth && numAliFrames >= faParam.smoothThresh) ? 1 : 0;
     if (faParam.rad2Filt2 > 0)
       numFilt++;
     if (faParam.rad2Filt3 > 0)
@@ -3174,6 +3207,8 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
       alignFlags |= K2FA_GROUP_REFINE;
     if (doSpline)
       alignFlags |= K2FA_SMOOTH_SHIFTS;
+    if (alignSubset)
+      alignFlags |= K2FA_ALIGN_SUBSET;
 
     // Do things when truly aligning
     if (trulyAligning) {
@@ -3190,7 +3225,7 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
         sumPadSize, alignPadSize);
 
       if (mUseGPUforK2Align[DMind] && mGpuMemory[DMind]) {
-        UtilGpuMemoryNeeds(fullPadSize, sumPadSize, alignPadSize, numAllVsAll, numFrames,
+        UtilGpuMemoryNeeds(fullPadSize, sumPadSize, alignPadSize, numAllVsAll, numAliFrames,
           refineIter, groupSize, needForGpuSum, needForGpuAli);
         gpuUnusable = B3DMAX(gpuUnusable, (float)mGpuMemory[DMind] * (1.f - gpuFracMem));
         gpuUsableMem = (float)mGpuMemory[DMind] - gpuUnusable;
@@ -3210,7 +3245,7 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
         if (sumWithAlign && needForGpuAli < gpuUsableMem && needForGpuAli + needed >
           gpuUsableMem) {
             totAliMem =  UtilTotalMemoryNeeds(fullPadSize, sumPadSize, alignPadSize, 
-              numAllVsAll, numFrames, refineIter, 1, numFilt, faParam.hybridShifts, 
+              numAllVsAll, numAliFrames, refineIter, 1, numFilt, faParam.hybridShifts, 
               groupSize, doSpline, GPU_FOR_ALIGNING, 1, 0, -1, bdum);
             if (totAliMem < maxMemory) {
               sumWithAlign = false;
@@ -3244,7 +3279,7 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
 
       // Now evaluate CPU memory need again
       totAliMem =  UtilTotalMemoryNeeds(fullPadSize, sumPadSize, alignPadSize, 
-              numAllVsAll, numFrames, refineIter, 1, numFilt, faParam.hybridShifts, 
+              numAllVsAll, numAliFrames, refineIter, 1, numFilt, faParam.hybridShifts, 
               groupSize, doSpline, gpuFlags, deferGpuSum, 0, -1, bdum);
       if (totAliMem > maxMemory)
         PrintfToLog("WARNING: With current parameters, memory needed for aligning "
@@ -3339,7 +3374,7 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
         faParam.truncate ? faParam.truncLimit : 0., alignFlags, gpuFlags, numAllVsAll,
         groupSize, faParam.shiftLimit, faParam.antialiasType, refineIter,
         faParam.stopIterBelow, faParam.refRadius2, (long)(numAsyncSum + 0.1),
-        0, 0, 0., stringSize, (long *)strings, &setupErr));
+        frameStartEnd, 0, 0., stringSize, (long *)strings, &setupErr));
     }
   }
   catch (_com_error E) {
@@ -4762,6 +4797,12 @@ int CCameraController::GetPluginVersion(CameraParameters *camP)
   if (camP->GatanCam)
     return mPluginVersion[camP->useSocket ? SOCK_IND : COM_IND];
   return 0;
+}
+
+// Convenience function for testing capability
+bool CCameraController::CanPluginDo(int minVersion, CameraParameters *param)
+{
+  return GetPluginVersion(param) >= minVersion;
 }
 
 // For cameras with no special handling, fix and transfer the drift settling entry
@@ -6810,6 +6851,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
   float frameTimeForDose;
   ControlSet *lastConSetp = mTD.GetDeferredSum ? mConsDeferred : &mConSetsp[mLastConSet];
   DWORD ticks;
+  float partialExposure = (float)mExposure;
   short int *parray, *imin, *imout;
   LowDoseParams *ldParam = mWinApp->GetLowDoseParams();
   int curCam = mWinApp->GetCurrentCamera();
@@ -7111,6 +7153,18 @@ void CCameraController::DisplayNewImage(BOOL acquired)
     float defocus = (float)
       ((mTD.ScanTime || mTD.DynFocusInterval) ? mCenterFocus : mScope->FastDefocus());
 
+    // Get a partial exposure time that applies to this image for early return or aligned
+    // subset
+    if (mTD.NumAsyncSumFrames > 0 || mNumSubsetAligned > 0) {
+      i = B3DNINT(lastConSetp->exposure / lastConSetp->frameTime);
+      if (mTD.NumAsyncSumFrames > 0)
+        partialExposure = (float)(mExposure * B3DMIN(mTD.NumAsyncSumFrames, i) / 
+          (float)B3DMAX(1, i));
+      else if (mNumSubsetAligned > 0)
+        partialExposure = (float)(mExposure * B3DMIN(mNumSubsetAligned, i) / 
+        (float)B3DMAX(1, i));
+    }
+
     // Modify mImBufs only if there is actually an image, but save info when starting
     // deferred sum
     if (mTD.NumAsyncSumFrames != 0 || mStartingDeferredSum) {
@@ -7279,7 +7333,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
         IsDirectDetector(mParam) && extra->m_fDose > 0 &&
         !mWinApp->mProcessImage->DoseRateFromMean(imBuf, imBuf->mSampleMean, camRate)) {
           specRate = extra->m_fDose * 
-            (float)pow((double)extra->mPixel / extra->mBinning, 2) / (float)mExposure;
+            (float)pow((double)extra->mPixel / extra->mBinning, 2) / partialExposure;
           mParam->specToCamDoseFac = camRate / specRate;
       }
       if (mParam->STEMcamera)
@@ -7471,10 +7525,8 @@ void CCameraController::DisplayNewImage(BOOL acquired)
     }
   
     // If it is partial sum, adjust exposure time in extra and imbuf now that mdoc saved
-    if (mTD.NumAsyncSumFrames > 0) {
-      i = B3DNINT(lastConSetp->exposure / lastConSetp->frameTime);
-      extra->mExposure *= B3DMIN(mTD.NumAsyncSumFrames, i) / (float)B3DMAX(1, i);
-      mImBufs->mExposure = extra->mExposure;
+    if (mTD.NumAsyncSumFrames > 0 || mNumSubsetAligned > 0) {
+      mImBufs->mExposure = extra->mExposure = partialExposure;
     }
 
     // Now if this was deferred sum, we are done with imbuf and conSet

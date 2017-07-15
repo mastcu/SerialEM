@@ -5,6 +5,7 @@
 #include "SerialEM.h"
 #include "FrameAlignDlg.h"
 #include "CameraController.h"
+#include "Shared\SEMCCDDefines.h"
 #include "Utilities\KGetOne.h"
 #include "XFolderDialog\XFolderDialog.h"
 
@@ -17,12 +18,13 @@ static int idTable[] = {IDC_STAT_WHERE_ALIGN, IDC_USE_FRAME_ALIGN, IDC_RALIGN_IN
   IDC_RPAIRWISE_NUM, IDC_RPAIRWISE_HALF, IDC_RPAIRWISE_ALL, IDC_RACCUM_REF,
   IDC_SPIN_PAIRWISE_NUM, IDC_STAT_PAIRWISE_NUM, IDC_STAT_FRAME_LABEL, IDC_WHOLE_SERIES,
   IDC_STAT_ALIGN_BIN, IDC_SPIN_ALIGN_BIN, IDC_REFINE_ALIGNMENT, IDC_BUT_SET_FOLDER,
-  IDC_SPIN_REFINE_ITER, IDC_STAT_REFINE_ITER, IDC_STAT_ITER_LABEL,
-  IDC_GROUP_FRAMES, IDC_STAT_GROUP_SIZE, IDC_SPIN_GROUP_SIZE,
-  IDC_STAT_GROUP_NEEDS, IDC_SMOOTH_SHIFTS, IDC_STAT_SMOOTH_CRIT,
-  IDC_STAT_MAX_SHIFT, IDC_EDIT_MAX_SHIFT, IDC_STAT_PIXEL_LABEL,
-  IDC_SPIN_SMOOTH_CRIT, IDC_STAT_SMOOTH_LABEL, IDC_BUTMORE,
-  IDC_STAT_MORE_PARAMS, PANEL_END,
+  IDC_SPIN_REFINE_ITER, IDC_STAT_REFINE_ITER, IDC_STAT_ITER_LABEL, IDC_ALIGN_SUBSET,
+  IDC_GROUP_FRAMES, IDC_STAT_GROUP_SIZE, IDC_SPIN_GROUP_SIZE, IDC_STAT_SUBSET_TO,
+  IDC_STAT_GROUP_NEEDS, IDC_SMOOTH_SHIFTS, IDC_STAT_SMOOTH_CRIT, IDC_STAT_SUBSET_PAREN,
+  IDC_STAT_MAX_SHIFT, IDC_EDIT_MAX_SHIFT, IDC_STAT_PIXEL_LABEL, IDC_FA_EDIT_SUB_START,
+  IDC_SPIN_SMOOTH_CRIT, IDC_STAT_SMOOTH_LABEL, IDC_FA_EDIT_SUB_END, IDC_ONLY_IN_PLUGIN,
+  IDC_ONLY_WITH_IMOD, IDC_ONLY_NON_SUPER, IDC_ONLY_SUPERRESOLUTION, IDC_BUTMORE,
+  IDC_STAT_USE_ONLY_GROUP, IDC_STAT_LINE1, IDC_STAT_MORE_PARAMS, PANEL_END,
   IDC_REFINE_GROUPS, IDC_STAT_REFINE_CUTOFF, IDC_EDIT_REFINE_CUTOFF,
   IDC_EDIT_CUTOFF2, IDC_EDIT_CUTOFF3, IDC_HYBRID_SHIFTS, IDC_EDIT_SIGMA_RATIO,
   IDC_STAT_SIGMA_RATIO, IDC_STAT_STOP_ITER, IDC_EDIT_STOP_ITER, IDC_STAT_OTHER_CUTS,
@@ -63,6 +65,13 @@ CFrameAlignDlg::CFrameAlignDlg(CWnd* pParent /*=NULL*/)
   , m_bKeepPrecision(FALSE)
   , m_bSaveFloatSums(FALSE)
   , m_bWholeSeries(FALSE)
+  , m_bAlignSubset(FALSE)
+  , m_iSubsetStart(0)
+  , m_iSubsetEnd(0)
+  , m_bOnlyInPlugin(FALSE)
+  , m_bOnlyWithIMOD(FALSE)
+  , m_bOnlyNonSuperRes(FALSE)
+  , m_bOnlySuperRes(FALSE)
 {
   mMoreParamsOpen = false;
 }
@@ -141,6 +150,18 @@ void CFrameAlignDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Check(pDX, IDC_SAVE_FLOAT_SUMS, m_bSaveFloatSums);
   DDX_Control(pDX, IDC_WHOLE_SERIES, m_butWholeSeries);
   DDX_Check(pDX, IDC_WHOLE_SERIES, m_bWholeSeries);
+  DDX_Control(pDX, IDC_ALIGN_SUBSET, m_butAlignSubset);
+  DDX_Check(pDX, IDC_ALIGN_SUBSET, m_bAlignSubset);
+  DDX_Control(pDX, IDC_STAT_SUBSET_TO, m_statSubsetTo);
+  DDX_Control(pDX, IDC_STAT_SUBSET_PAREN, m_statSubsetParen);
+  DDX_Control(pDX, IDC_FA_EDIT_SUB_START, m_editSubsetStart);
+  DDX_Control(pDX, IDC_FA_EDIT_SUB_END, m_editSubsetEnd);
+  DDX_Text(pDX, IDC_FA_EDIT_SUB_START, m_iSubsetStart);
+  DDX_Text(pDX, IDC_FA_EDIT_SUB_END, m_iSubsetEnd);
+  DDX_Check(pDX, IDC_ONLY_IN_PLUGIN, m_bOnlyInPlugin);
+  DDX_Check(pDX, IDC_ONLY_WITH_IMOD, m_bOnlyWithIMOD);
+  DDX_Check(pDX, IDC_ONLY_NON_SUPER, m_bOnlyNonSuperRes);
+  DDX_Check(pDX, IDC_ONLY_SUPERRESOLUTION, m_bOnlySuperRes);
 }
 
 
@@ -170,6 +191,13 @@ BEGIN_MESSAGE_MAP(CFrameAlignDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_BUT_DELETE_SET, OnButDeleteSet)
   ON_EN_CHANGE(IDC_EDIT_NAME, OnEnChangeEditName)
   ON_BN_CLICKED(IDC_BUT_SET_FOLDER, OnButSetFolder)
+  ON_BN_CLICKED(IDC_ALIGN_SUBSET, OnAlignSubset)
+  ON_BN_CLICKED(IDC_ONLY_IN_PLUGIN, OnOnlyInPlugin)
+  ON_BN_CLICKED(IDC_ONLY_WITH_IMOD, OnOnlyWithImod)
+  ON_BN_CLICKED(IDC_ONLY_NON_SUPER, OnOnlyNonSuper)
+  ON_BN_CLICKED(IDC_ONLY_SUPERRESOLUTION, OnOnlySuperresolution)
+  ON_EN_KILLFOCUS(IDC_FA_EDIT_SUB_START, OnKillfocusEditSubsetStart)
+  ON_EN_KILLFOCUS(IDC_FA_EDIT_SUB_END, OnKillfocusEditSubsetEnd)
 END_MESSAGE_MAP()
 
 
@@ -227,26 +255,82 @@ BOOL CFrameAlignDlg::OnInitDialog()
 
 void CFrameAlignDlg::OnOK() 
 {
+  int stayIn, newIndex, oldInd = mCurParamInd;
+  CString mess, mess2;
   SetFocus();
   UpdateData(true);
   UnloadCurrentPanel(m_iWhereAlign);
+  stayIn = CheckConditionsOnClose(m_iWhereAlign, mCurParamInd, newIndex);
+
+  // Set new index regardless, and if staying in dialog, load the parameters
+  mCurParamInd = newIndex;
+  if (stayIn) {
+    if (oldInd != newIndex) {
+      m_listSetNames.SetCurSel(newIndex);
+      LoadParamToDialog();
+    }
+    return;
+  }
 	CBaseDlg::OnOK();
 }
 
 void CFrameAlignDlg::OnCancel() 
 {
+  int newIndex;
+  if (CheckConditionsOnClose(-1, -1, newIndex))
+    return;
   CBaseDlg::OnCancel();
 }
 
+// Common function to check whether there is a mismatch between current set and the
+// restrictions and ask the user what to do
+int CFrameAlignDlg::CheckConditionsOnClose(int whereAlign, int curIndex, int &newIndex)
+{
+  int notOK;
+  CString mess, mess2;
+  int *activeList = mWinApp->GetActiveCameraList();
+  ControlSet *camConSets = mWinApp->GetCamConSets();
+  ControlSet *conSet = &camConSets[mConSetSelected + activeList[mCameraSelected] *
+    MAX_CONSETS];
+  if (curIndex < 0)
+    curIndex = conSet->faParamSetInd;
+  notOK = UtilFindValidFrameAliParams(mReadMode,
+    whereAlign < 0 ? conSet->useFrameAlign : whereAlign, curIndex, newIndex, &mess);
+  if (notOK || newIndex != curIndex) {
+    mess += "\n\nPress:\n";
+    if (notOK > 0)
+      mess += "\"Use Set Anyway\" to use these parameters anyway";
+    else if (notOK < 0) {
+      mess2.Format("\"Use Other Set\" to use the first one (# %d)",
+        newIndex + 1);
+      mess += mess2;
+    } else
+      mess += "\"Use Other Set\" to use this other parameter set";
+    mess += "\n\n\"Stay in Dialog\" to adjust parameters or restrictions in this dialog";
+    if (SEMThreeChoiceBox(mess, notOK > 0 ? "Use Set Anyway" : "Use Other Set", 
+      "Stay in Dialog", "", MB_YESNO | MB_ICONQUESTION) == IDNO)
+      return 1;
+  }
+  if (whereAlign < 0)
+    conSet->faParamSetInd = newIndex;
+  return 0;
+}
 
 void CFrameAlignDlg::OnAlignInDM()
 { 
   int whereBefore = m_iWhereAlign;
+  int notOK, newIndex;
   UpdateData(true);
   if (m_iWhereAlign == whereBefore)
     return;
   UnloadCurrentPanel(whereBefore);
   if (m_iWhereAlign > 0) {
+    notOK = UtilFindValidFrameAliParams(mReadMode, m_iWhereAlign, mCurParamInd, newIndex,
+      NULL);
+    if (!notOK && mCurParamInd != newIndex) {
+      mCurParamInd = newIndex;
+      m_listSetNames.SetCurSel(newIndex);
+    }
     m_bUseGPU = mUseGpuTransfer[m_iWhereAlign > 1 ? 1 : 0];
     LoadParamToDialog();
   }
@@ -498,6 +582,73 @@ void CFrameAlignDlg::OnDeltaposSpinSmoothCrit(NMHDR *pNMHDR, LRESULT *pResult)
   *pResult = 0;
 }
 
+void CFrameAlignDlg::OnAlignSubset()
+{
+  UpdateData(true);
+  m_editSubsetStart.EnableWindow(m_bAlignSubset);
+  m_editSubsetEnd.EnableWindow(m_bAlignSubset);
+}
+
+void CFrameAlignDlg::OnKillfocusEditSubsetStart()
+{
+  CString mess = "The starting and ending frames must be positive\n"
+      "and at least 2 frames must be aligned";
+  int oldStart = m_iSubsetStart, oldEnd = m_iSubsetEnd;
+  UpdateData(true);
+  if (m_iSubsetStart < 1 || m_iSubsetStart > K2FA_SUB_START_MASK || 
+    m_iSubsetStart > m_iSubsetEnd - 1) {
+      if (m_iSubsetStart > K2FA_SUB_START_MASK)
+        mess.Format("The starting frame to align must be no more than %d", 
+          K2FA_SUB_START_MASK);
+      m_iSubsetStart = oldStart;
+      m_iSubsetEnd = oldEnd;
+      UpdateData(false);
+      AfxMessageBox(mess, MB_EXCLAME);
+  }
+}
+
+
+void CFrameAlignDlg::OnKillfocusEditSubsetEnd()
+{
+  OnKillfocusEditSubsetStart();
+}
+
+void CFrameAlignDlg::OnOnlyInPlugin()
+{
+  UpdateData(true);
+  if (m_bOnlyWithIMOD) {
+    m_bOnlyWithIMOD = false;
+    UpdateData(false);
+  }
+}
+
+void CFrameAlignDlg::OnOnlyWithImod()
+{
+  UpdateData(true);
+  if (m_bOnlyInPlugin) {
+    m_bOnlyInPlugin = false;
+    UpdateData(false);
+  }
+}
+
+void CFrameAlignDlg::OnOnlyNonSuper()
+{
+  UpdateData(true);
+  if (m_bOnlySuperRes) {
+    m_bOnlySuperRes = false;
+    UpdateData(false);
+  }
+}
+
+void CFrameAlignDlg::OnOnlySuperresolution()
+{
+  UpdateData(true);
+  if (m_bOnlyNonSuperRes) {
+    m_bOnlyNonSuperRes = false;
+    UpdateData(false);
+  }
+}
+
 void CFrameAlignDlg::ManageGroupSizeMinFrames(void)
 {
   int numFrames, numGroups;
@@ -585,6 +736,8 @@ void CFrameAlignDlg::SetBlankIsZeroEditBox(CString & editStr, float &cutoff)
 // Move data from a param into dialog
 void CFrameAlignDlg::LoadParamToDialog(void)
 {
+  CameraParameters *camP = mWinApp->GetCamParams() + mCameraSelected;
+  bool canSubset = mWinApp->mCamera->CAN_PLUGIN_DO(CAN_ALIGN_SUBSET, camP);
   if (mCurParamInd < 0)
     return;
   FrameAliParams *param = mParams->GetData() + mCurParamInd;
@@ -619,7 +772,20 @@ void CFrameAlignDlg::LoadParamToDialog(void)
   m_iMaxShift = param->shiftLimit;
   m_bKeepPrecision = param->keepPrecision;
   m_bSaveFloatSums = param->outputFloatSums;
+  m_bAlignSubset = param->alignSubset;
+  m_iSubsetStart = param->subsetStart;
+  m_iSubsetEnd = param->subsetEnd;
+  m_bOnlyInPlugin = param->whereRestriction == 1;
+  m_bOnlyWithIMOD = param->whereRestriction > 1;
+  m_bOnlyNonSuperRes = param->sizeRestriction == 1;
+  m_bOnlySuperRes = param->sizeRestriction > 1;
   m_strCurName = param->name;
+  m_butAlignSubset.EnableWindow(canSubset);
+  m_statSubsetTo.EnableWindow(canSubset);
+  m_statSubsetParen.EnableWindow(canSubset);
+  m_statSubsetTo.EnableWindow(canSubset);
+  m_editSubsetStart.EnableWindow(canSubset && m_bAlignSubset);
+  m_editSubsetEnd.EnableWindow(canSubset && m_bAlignSubset);
   ManageTruncation();
   ManageSmoothing();
   ManageGrouping();
@@ -657,5 +823,18 @@ void CFrameAlignDlg::UnloadDialogToParam(int index)
   param->shiftLimit = m_iMaxShift;
   param->keepPrecision = m_bKeepPrecision;
   param->outputFloatSums = m_bSaveFloatSums;
+  param->alignSubset = m_bAlignSubset;
+  param->subsetStart = m_iSubsetStart;
+  param->subsetEnd = m_iSubsetEnd;
+  param->whereRestriction = 0;
+  if (m_bOnlyInPlugin)
+    param->whereRestriction = 1;
+  else if (m_bOnlyWithIMOD)
+    param->whereRestriction = 2;
+  param->sizeRestriction = 0;
+  if (m_bOnlyNonSuperRes)
+    param->sizeRestriction = 1;
+  else if (m_bOnlySuperRes)
+    param->sizeRestriction = 2;
   param->name = m_strCurName;
 }

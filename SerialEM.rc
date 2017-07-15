@@ -2547,7 +2547,7 @@ BEGIN
     CONTROL         "Take Trial after move",IDC_IMAGE_AFTER_MOVE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,2,84,90,10
 END
 
-IDD_FRAMEALIGN DIALOGEX 0, 0, 251, 395
+IDD_FRAMEALIGN DIALOGEX 0, 0, 251, 449
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Frame Alignment Parameters"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
@@ -2556,70 +2556,83 @@ BEGIN
     CONTROL         "In SerialEMCCD plugin",IDC_USE_FRAME_ALIGN,"Button",BS_AUTORADIOBUTTON,94,14,89,10
     CONTROL         "With IMOD",IDC_RWITH_IMOD,"Button",BS_AUTORADIOBUTTON,186,14,51,10
     GROUPBOX        "Where to align frames",IDC_STAT_WHERE_ALIGN,7,3,234,27,WS_GROUP
-    CONTROL         "Fit pairwise shifts of ",IDC_RPAIRWISE_NUM,"Button",BS_AUTORADIOBUTTON | WS_GROUP,54,154,81,10
+    CONTROL         "Fit pairwise shifts of ",IDC_RPAIRWISE_NUM,"Button",BS_AUTORADIOBUTTON | WS_GROUP,54,194,81,10
     CONTROL         "Fit pairwise shifts of HALF the frames",IDC_RPAIRWISE_HALF,
-                    "Button",BS_AUTORADIOBUTTON,54,165,138,10
+                    "Button",BS_AUTORADIOBUTTON,54,205,138,10
     CONTROL         "Fit pairwise shifts of ALL frames",IDC_RPAIRWISE_ALL,
-                    "Button",BS_AUTORADIOBUTTON,54,176,121,10
-    CONTROL         "Align to cumulative reference",IDC_RACCUM_REF,"Button",BS_AUTORADIOBUTTON,54,187,111,10
-    GROUPBOX        "Alignment strategy",IDC_STAT_ALIGN_METHOD,49,144,148,56,WS_GROUP
-    DEFPUSHBUTTON   "OK",IDOK,47,375,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,154,375,50,14
-    CONTROL         "",IDC_SPIN_PAIRWISE_NUM,"msctls_updown32",UDS_ARROWKEYS,149,151,10,14
-    RTEXT           "99",IDC_STAT_PAIRWISE_NUM,137,154,9,8
-    LTEXT           "frames",IDC_STAT_FRAME_LABEL,163,154,24,8
-    LTEXT           "Filter cutoff",IDC_STAT_CUTOFF_LABEL,98,207,38,8
-    EDITTEXT        IDC_EDIT_CUTOFF,141,205,40,12,ES_AUTOHSCROLL
-    LTEXT           "Alignment binning  4",IDC_STAT_ALIGN_BIN,8,207,68,8
-    CONTROL         "",IDC_SPIN_ALIGN_BIN,"msctls_updown32",UDS_ARROWKEYS,78,204,10,14
+                    "Button",BS_AUTORADIOBUTTON,54,216,121,10
+    CONTROL         "Align to cumulative reference",IDC_RACCUM_REF,"Button",BS_AUTORADIOBUTTON,54,227,111,10
+    GROUPBOX        "Alignment strategy",IDC_STAT_ALIGN_METHOD,49,184,148,56,WS_GROUP
+    DEFPUSHBUTTON   "OK",IDOK,47,429,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,154,429,50,14
+    CONTROL         "",IDC_SPIN_PAIRWISE_NUM,"msctls_updown32",UDS_ARROWKEYS,149,191,10,14
+    RTEXT           "99",IDC_STAT_PAIRWISE_NUM,137,194,9,8
+    LTEXT           "frames",IDC_STAT_FRAME_LABEL,163,194,24,8
+    LTEXT           "Filter cutoff",IDC_STAT_CUTOFF_LABEL,98,247,38,8
+    EDITTEXT        IDC_EDIT_CUTOFF,141,245,40,12,ES_AUTOHSCROLL
+    LTEXT           "Alignment binning  4",IDC_STAT_ALIGN_BIN,8,247,68,8
+    CONTROL         "",IDC_SPIN_ALIGN_BIN,"msctls_updown32",UDS_ARROWKEYS,78,244,10,14
     CONTROL         "Refine alignment with up to",IDC_REFINE_ALIGNMENT,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,252,106,10
-    CONTROL         "",IDC_SPIN_REFINE_ITER,"msctls_updown32",UDS_ARROWKEYS,124,250,10,14
-    RTEXT           "10",IDC_STAT_REFINE_ITER,112,253,9,8
-    LTEXT           "iterations",IDC_STAT_ITER_LABEL,137,253,31,8
-    CONTROL         "Group frames by ",IDC_GROUP_FRAMES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,238,70,10
-    RTEXT           "5",IDC_STAT_GROUP_SIZE,76,239,8,8
-    CONTROL         "",IDC_SPIN_GROUP_SIZE,"msctls_updown32",UDS_ARROWKEYS,88,236,10,14
-    LTEXT           "(Requires at least 8 frames)",IDC_STAT_GROUP_NEEDS,106,239,93,8
-    CONTROL         "Smooth shifts if at least ",IDC_SMOOTH_SHIFTS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,267,95,10
-    LTEXT           "15",IDC_STAT_SMOOTH_CRIT,101,268,9,8
-    CONTROL         "",IDC_SPIN_SMOOTH_CRIT,"msctls_updown32",UDS_ARROWKEYS,112,265,10,14
-    LTEXT           "frames",IDC_STAT_SMOOTH_LABEL,125,268,24,8
-    PUSHBUTTON      "?",IDC_BUTHELP,233,379,11,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,292,106,10
+    CONTROL         "",IDC_SPIN_REFINE_ITER,"msctls_updown32",UDS_ARROWKEYS,124,290,10,14
+    RTEXT           "10",IDC_STAT_REFINE_ITER,112,293,9,8
+    LTEXT           "iterations",IDC_STAT_ITER_LABEL,137,293,31,8
+    CONTROL         "Group frames by ",IDC_GROUP_FRAMES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,278,70,10
+    RTEXT           "5",IDC_STAT_GROUP_SIZE,76,279,8,8
+    CONTROL         "",IDC_SPIN_GROUP_SIZE,"msctls_updown32",UDS_ARROWKEYS,88,276,10,14
+    LTEXT           "(Requires at least 8 frames)",IDC_STAT_GROUP_NEEDS,106,279,93,8
+    CONTROL         "Smooth shifts if at least ",IDC_SMOOTH_SHIFTS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,307,95,10
+    LTEXT           "15",IDC_STAT_SMOOTH_CRIT,101,308,9,8
+    CONTROL         "",IDC_SPIN_SMOOTH_CRIT,"msctls_updown32",UDS_ARROWKEYS,112,305,10,14
+    LTEXT           "frames",IDC_STAT_SMOOTH_LABEL,125,308,24,8
+    PUSHBUTTON      "?",IDC_BUTHELP,233,433,11,10
     CONTROL         "Use the GPU",IDC_USE_GPU,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,49,56,10
-    CONTROL         "Refine in groups",IDC_REFINE_GROUPS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,289,69,10
-    LTEXT           "Filter cutoff for refining",IDC_STAT_REFINE_CUTOFF,102,289,76,8
-    EDITTEXT        IDC_EDIT_REFINE_CUTOFF,181,288,28,12,ES_AUTOHSCROLL
-    LTEXT           "Maximum shift between frames",IDC_STAT_MAX_SHIFT,8,223,104,8
-    EDITTEXT        IDC_EDIT_MAX_SHIFT,116,221,40,12,ES_AUTOHSCROLL
-    LTEXT           "unbinned pixels",IDC_STAT_PIXEL_LABEL,160,223,51,8
-    CONTROL         "Truncate values above",IDC_TRUNCATE_ABOVE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,130,90,10
-    EDITTEXT        IDC_EDIT_TRUNCATION,100,129,40,12,ES_AUTOHSCROLL
-    LTEXT           "electrons",IDC_STAT_COUNT_LABEL,144,131,31,8
-    LTEXT           "Other filter cutoffs",IDC_STAT_OTHER_CUTS,8,323,60,8
-    EDITTEXT        IDC_EDIT_CUTOFF2,72,321,28,12,ES_AUTOHSCROLL
-    EDITTEXT        IDC_EDIT_CUTOFF3,105,321,28,12,ES_AUTOHSCROLL
-    CONTROL         "Use hybrid shifts",IDC_HYBRID_SHIFTS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,151,322,70,10
-    EDITTEXT        IDC_EDIT_SIGMA_RATIO,130,337,29,12,ES_AUTOHSCROLL
-    LTEXT           "Ratio of falloff sigma to filter cutoffs",IDC_STAT_SIGMA_RATIO,8,339,118,8
-    LTEXT           "Stop refining when changes are below ",IDC_STAT_STOP_ITER,8,306,129,8
-    EDITTEXT        IDC_EDIT_STOP_ITER,138,304,34,12,ES_AUTOHSCROLL
-    LTEXT           "unbinned pixels",IDC_STAT_STOP_LABEL,177,306,51,8
+    CONTROL         "Refine in groups",IDC_REFINE_GROUPS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,343,69,10
+    LTEXT           "Filter cutoff for refining",IDC_STAT_REFINE_CUTOFF,102,343,76,8
+    EDITTEXT        IDC_EDIT_REFINE_CUTOFF,181,342,28,12,ES_AUTOHSCROLL
+    LTEXT           "Maximum shift between frames",IDC_STAT_MAX_SHIFT,8,263,104,8
+    EDITTEXT        IDC_EDIT_MAX_SHIFT,116,261,40,12,ES_AUTOHSCROLL
+    LTEXT           "unbinned pixels",IDC_STAT_PIXEL_LABEL,160,263,51,8
+    CONTROL         "Truncate values above",IDC_TRUNCATE_ABOVE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,170,90,10
+    EDITTEXT        IDC_EDIT_TRUNCATION,100,169,40,12,ES_AUTOHSCROLL
+    LTEXT           "electrons",IDC_STAT_COUNT_LABEL,144,171,31,8
+    LTEXT           "Other filter cutoffs",IDC_STAT_OTHER_CUTS,8,377,60,8
+    EDITTEXT        IDC_EDIT_CUTOFF2,72,375,28,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_CUTOFF3,105,375,28,12,ES_AUTOHSCROLL
+    CONTROL         "Use hybrid shifts",IDC_HYBRID_SHIFTS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,151,376,70,10
+    EDITTEXT        IDC_EDIT_SIGMA_RATIO,130,391,29,12,ES_AUTOHSCROLL
+    LTEXT           "Ratio of falloff sigma to filter cutoffs",IDC_STAT_SIGMA_RATIO,8,393,118,8
+    LTEXT           "Stop refining when changes are below ",IDC_STAT_STOP_ITER,8,360,129,8
+    EDITTEXT        IDC_EDIT_STOP_ITER,138,358,34,12,ES_AUTOHSCROLL
+    LTEXT           "unbinned pixels",IDC_STAT_STOP_LABEL,177,360,51,8
     COMBOBOX        IDC_COMBOFILTER,114,35,75,80,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT           "Filter to use:",IDC_STAT_FILTER,67,35,43,12,SS_CENTERIMAGE
     PUSHBUTTON      "New Parameter Set",IDC_BUT_NEW_PARAMS,7,92,71,14
     LISTBOX         IDC_LIST_SET_NAMES,114,49,130,57,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
     LTEXT           "Parameter set name:",IDC_STAT_PARAM_NAME,42,113,71,8
     EDITTEXT        IDC_EDIT_NAME,114,110,130,14,ES_AUTOHSCROLL
-    LTEXT           "More parameters",IDC_STAT_MORE_PARAMS,22,280,58,8
-    PUSHBUTTON      "-",IDC_BUTMORE,9,281,10,7
+    LTEXT           "More parameters",IDC_STAT_MORE_PARAMS,22,334,58,8
+    PUSHBUTTON      "-",IDC_BUTMORE,9,335,10,7
     PUSHBUTTON      "Delete",IDC_BUT_DELETE_SET,81,92,29,14
     PUSHBUTTON      "Set Folder for Align Com Files",IDC_BUT_SET_FOLDER,7,74,103,14
     CONTROL         "Always process gain-normalized frames with full precision",IDC_KEEP_PRECISION,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,350,206,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,404,206,10
     CONTROL         "Output aligned sums as floating point",IDC_SAVE_FLOAT_SUMS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,362,137,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,416,137,10
     CONTROL         "Align only whole tilt series",IDC_WHOLE_SERIES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,61,101,10
+    GROUPBOX        "Use parameter set only for",IDC_STAT_USE_ONLY_GROUP,7,124,237,35
+    CONTROL         "Aligning in plugin",IDC_ONLY_IN_PLUGIN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,134,71,10
+    CONTROL         "Aligning with IMOD",IDC_ONLY_WITH_IMOD,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,146,78,10
+    CONTROL         "4K (non super-resolution) frames",IDC_ONLY_NON_SUPER,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,115,134,125,10
+    CONTROL         "8K (super-resolution) frames",IDC_ONLY_SUPERRESOLUTION,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,115,146,110,10
+    CONTROL         "",IDC_STAT_LINE1,"Static",SS_BLACKFRAME | SS_SUNKEN,7,163,237,1
+    CONTROL         "Align subset of frames from ",IDC_ALIGN_SUBSET,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,321,105,10
+    EDITTEXT        IDC_FA_EDIT_SUB_START,115,320,26,12,ES_AUTOHSCROLL
+    LTEXT           "to",IDC_STAT_SUBSET_TO,142,322,8,8
+    EDITTEXT        IDC_FA_EDIT_SUB_END,151,320,28,12,ES_AUTOHSCROLL
+    LTEXT           "(only when saving)",IDC_STAT_SUBSET_PAREN,182,322,63,8
 END
 
 IDD_REMOTE_CONTROL DIALOGEX 0, 0, 119, 64
@@ -3043,7 +3056,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 244
         TOPMARGIN, 7
-        BOTTOMMARGIN, 389
+        BOTTOMMARGIN, 443
     END
 
     IDD_REMOTE_CONTROL, DIALOG
@@ -4107,6 +4120,12 @@ BEGIN
     IDC_NA_SKIP_INITIAL_MOVE 
                             "Skip the initial stage move; it is redundant to the moves in Realign to Item"
     IDC_NA_SKIP_Z_MOVES     "Do not move stage in Z during initial move or Realign to Item"
+    IDC_ONLY_IN_PLUGIN      "Use these parameters only when aligning in plugin"
+    IDC_ONLY_WITH_IMOD      "Use these parameters only when saving pcm file to align with IMOD"
+    IDC_ONLY_NON_SUPER      "Use these parameters only for aligning counting mode (4K) frames"
+    IDC_ONLY_SUPERRESOLUTION 
+                            "Use these parameters only for aligning super-resolution (8K) frames"
+    IDC_ALIGN_SUBSET        "When saving frames, align a selected subset of them"
 END
 
 STRINGTABLE
@@ -4769,6 +4788,12 @@ BEGIN
     IDC_SPIN_EARLY_FRAMES   "Select number of frames in initially returned image used for aligning"
     IDC_DO_EARLY_RETURN     "Return from SEMCCD plugin when the selected # of frames are available"
     IDC_USE_EXTENSION_MRCS  "Output MRC frame stacks with extension .mrcs instead of .mrc"
+END
+
+STRINGTABLE
+BEGIN
+    IDC_FA_EDIT_SUB_START   "First frame (numbered from 1) of subset to align"
+    IDC_FA_EDIT_SUB_END     "Last frame (numbered from 1) of subset to align"
 END
 
 #endif    // English (United States) resources

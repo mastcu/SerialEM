@@ -51,6 +51,7 @@ public:
   BOOL m_bWholeSeries;        // Whole tilt series checkbox
   int mCameraSelected;        // Which camera is currently selected in cam setup
   int mConSetSelected;        // And which parameters set
+  int mReadMode;              // And the current read mode in the dialog
 
   BOOL m_bUseGPU;
   CStatic m_statPairwiseNum;
@@ -142,4 +143,24 @@ public:
   CButton m_butSaveFloatSums;
   BOOL m_bSaveFloatSums;
   CButton m_butWholeSeries;
+  CButton m_butAlignSubset;
+  BOOL m_bAlignSubset;
+  afx_msg void OnAlignSubset();
+  CStatic m_statSubsetTo;
+  CStatic m_statSubsetParen;
+  CEdit m_editSubsetStart;
+  CEdit m_editSubsetEnd;
+  int m_iSubsetStart;
+  int m_iSubsetEnd;
+  BOOL m_bOnlyInPlugin;
+  BOOL m_bOnlyWithIMOD;
+  BOOL m_bOnlyNonSuperRes;
+  BOOL m_bOnlySuperRes;
+  afx_msg void OnOnlyInPlugin();
+  afx_msg void OnOnlyWithImod();
+  afx_msg void OnOnlyNonSuper();
+  afx_msg void OnOnlySuperresolution();
+  afx_msg void OnKillfocusEditSubsetStart();
+  afx_msg void OnKillfocusEditSubsetEnd();
+  int CheckConditionsOnClose(int whereAlign, int curIndex, int & newIndex);
 };
