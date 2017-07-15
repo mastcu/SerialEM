@@ -8067,8 +8067,8 @@ float CCameraController::SpecimenBeamExposure(int camera, float exposure, float 
   CameraParameters *camP = mAllParams + camera;
   drift = excludeDrift ? 0 : drift;
   
-  // For Gatan camera, enforce minimum drift settling and add extra time
-  if (drift && !camP->TietzType) {
+  // For older Gatan camera, enforce minimum drift settling and add extra time
+  if (drift && camP->GatanCam && !camP->K2Type && !camP->OneViewType) {
     if (drift < camP->minimumDrift)
       drift = camP->minimumDrift;
     drift += camP->extraBeamTime;
