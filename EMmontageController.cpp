@@ -2241,7 +2241,7 @@ void EMmontageController::SavePiece()
     }
 
     // Bin if possible
-    if (!needSample) {
+    if (!needSample && xstrt < xend && ystrt < yend) {
       if (type == kUBYTE)
         keepByte = mConvertMini ? 1 : -1;
       outx = extractAndBinIntoArray(data, type, 
@@ -2257,7 +2257,7 @@ void EMmontageController::SavePiece()
     }
 
     // Or copy the subsampled image into place
-    if (needSample) {
+    if (needSample && xstrt < xend && ystrt < yend) {
       for (int outy = ystrt; outy < yend; outy++) {
         size_t indout = (miniBaseY + (size_t)outy) * mMiniArrayX + miniBaseX + xstrt;
         int indin = xstrt * mMiniZoom + subZoomX;
@@ -4459,7 +4459,7 @@ void EMmontageController::RetilePieces(int miniType)
         if (iy < mParam->yNframes)
           ystrt += ytrim;
         miniBaseX = ix * mMiniDeltaX;
-        miniBaseY = (mParam->yNframes - iy) * mMiniDeltaY;
+        miniBaseY = (mParam->yNframes - iy) * mMiniDeltaY; 
 
         // Get the final offset, set the minioffsets, then adjust for shift
         useMat = mDoCorrelations ? mBmat[2 * ivar] : 0.;
@@ -4484,15 +4484,17 @@ void EMmontageController::RetilePieces(int miniType)
           yend = mMiniSizeY - miniBaseY;
 
         // Copy lines
-        for (outy = ystrt; outy < (size_t)yend; outy++) {
-          size_t indout = (miniBaseY + outy) * mMiniSizeX + miniBaseX + xstrt;
-          size_t indin = xstrt + xtile + (ytile + outy) * mMiniArrayX;
-          if (mConvertMini) {
-            for (outx = xstrt; outx < xend; outx++)
-              mMiniByte[indout++] = mMiniByte[indin++];
-          } else {
-            for (outx = xstrt; outx < xend; outx++)
-              mMiniData[indout++] = mMiniData[indin++];
+        if (xstrt < xend && ystrt < yend) {
+          for (outy = ystrt; outy < (size_t)yend; outy++) {
+            size_t indout = (miniBaseY + outy) * mMiniSizeX + miniBaseX + xstrt;
+            size_t indin = xstrt + xtile + (ytile + outy) * mMiniArrayX;
+            if (mConvertMini) {
+              for (outx = xstrt; outx < xend; outx++)
+                mMiniByte[indout++] = mMiniByte[indin++];
+            } else {
+              for (outx = xstrt; outx < xend; outx++)
+                mMiniData[indout++] = mMiniData[indin++];
+            }
           }
         }
       }
