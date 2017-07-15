@@ -52,4 +52,6 @@ bool NewSpinnerValue(NMHDR *pNMHDR, LRESULT *pResult, int lowerLim, int upperLim
 void SetDropDownHeight(CComboBox* pMyComboBox, int itemsToShow);
 bool UtilCamRadiosNeedSmallFont(CButton *radio);
 double UtilGoodAngle(double angle);
+int UtilFindValidFrameAliParams(int readMode, int whereAlign, int curIndex, int &newIndex,
+  CString *message);
 #endif

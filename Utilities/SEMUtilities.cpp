@@ -2,6 +2,7 @@
 #include "SEMUtilities.h"
 #include "..\SerialEM.h"
 #include "..\EMscope.h"
+#include "..\CameraController.h"
 #include "..\EMBufferManager.h"
 #include "..\Shared\SEMCCDDefines.h"
 #include "..\Shared\autodoc.h"
@@ -31,7 +32,8 @@ static int SEMCCDcodes[] =
    DS_CHANNEL_NOT_ACQUIRED, NO_DEFERRED_SUM, NO_GPU_AVAILABLE, DEFECT_PARSE_ERROR, 
    GAIN_REF_LOAD_ERROR, BAD_FRAME_REDUCE_PARAM, FRAMEALI_INITIALIZE, FRAMEALI_NEXT_FRAME,
    FRAMEALI_FINISH_ALIGN, MAKECOM_BAD_PARAM, MAKECOM_NO_REL_PATH, OPEN_COM_ERROR,
-   WRITE_COM_ERROR, OPEN_MDOC_ERROR, WRITE_MDOC_ERROR, COPY_MDOC_ERROR, 0};
+   WRITE_COM_ERROR, OPEN_MDOC_ERROR, WRITE_MDOC_ERROR, COPY_MDOC_ERROR, 
+   FRAMEALI_BAD_SUBSET, 0};
 
 static char *SEMCCDmessages[] =
   {"Image not found from ID", "Image has unexpected data type", 
@@ -62,8 +64,9 @@ static char *SEMCCDmessages[] =
    "You cannot write an align com file when saving one file per image or aligning in the plugin",
    "The align com file needs to be written to the same drive as the frames", 
    "Error opening align com file", "Error writing align com file",
-   "Error opening file to write mdoc text", "Error writingmdoc text to file", 
-   "Error copying mdoc file to save directory"
+   "Error opening file to write mdoc text", "Error writing mdoc text to file", 
+   "Error copying mdoc file to save directory", 
+   "Subset parameters do not define a subset of at least 2 frames"
 };
 
 static char *noDesc = "No error description available";
@@ -644,4 +647,77 @@ double UtilGoodAngle(double angle)
   while (angle > 180.)
     angle -= 360.;
   return angle;
+}
+
+// Finds a frame alignment parameter that fits the given restriction on size and alignment
+// Return value is 0 if originally selected one or just one other one is valid, 1-3 if
+// none are valid, and -1 to -3 if new one is one of several that are valid
+int UtilFindValidFrameAliParams(int readMode, int whereAlign, int curIndex,
+  int &newIndex, CString *message)
+{
+  CString str;
+  int ind, retval = 0, numValid = 0, firstValid = -1;
+  CArray<FrameAliParams, FrameAliParams> *params = sWinApp->mCamera->GetFrameAliParams();
+  FrameAliParams *paramData = params->GetData();
+  FrameAliParams *faParam = &paramData[curIndex];
+  newIndex = curIndex;
+  if (!whereAlign || curIndex < 0 || curIndex >= (int)params->GetSize())
+    return 0;
+
+  // First check, is the selected on valid with its restrictions
+  if (faParam->sizeRestriction && 
+    !BOOL_EQUIV(readMode != SUPERRES_MODE, faParam->sizeRestriction != SUPERRES_MODE)) {
+      retval += 1;
+      if (message) {
+        str.Format("The camera parameters are for %s images but the selected\r\n"
+          "alignment parameters are marked as only for %s images.", 
+          readMode == SUPERRES_MODE ? "8K" : "4K",
+          faParam->sizeRestriction == SUPERRES_MODE ? "8K" : "4K");
+        *message += str;
+      }
+  }
+  if (faParam->whereRestriction && 
+    !BOOL_EQUIV(whereAlign < 2, faParam->whereRestriction < 2)) {
+      retval += 2;
+      if (message) {
+        if (!(*message).IsEmpty())
+          *message += "\r\n\r\n";
+        str.Format("The alignment is set to be done %s but the selected\r\n"
+          "alignment parameters are marked as only for alignment %s.", 
+          whereAlign < 2 ? "in the plugin" : "with IMOD",
+          faParam->whereRestriction < 2 ? "in the plugin" : "with IMOD");
+        *message += str;
+      }
+  }
+  if (!retval)
+    return 0;
+
+  for (ind = 0; ind < (int)params->GetSize(); ind++) {
+     faParam = &paramData[ind];
+    if ((!faParam->sizeRestriction || 
+      BOOL_EQUIV(readMode != SUPERRES_MODE, faParam->sizeRestriction != SUPERRES_MODE))
+      && (!faParam->whereRestriction || 
+      BOOL_EQUIV(whereAlign < 2, faParam->whereRestriction < 2))) {
+        numValid++;
+        if (firstValid < 0)
+          firstValid = ind;
+    }
+  }
+
+  // Return 1 with current selection if nothing else is valid, or first valid one with
+  // 0 if it is the only one or -1 if it is just the first
+  if (firstValid < 0) {
+    if (message)
+      *message += "\r\n\r\nThere are no other alignment parameter sets that fit "
+      "these conditions.";
+    return retval;
+  }
+  newIndex = firstValid;
+  if (numValid > 1 && message)
+    *message += "\r\n\r\nThere are several other alignment parameter sets that fit these"
+        " conditions.";
+  else if (message)
+    *message += "\r\n\r\nThere is one other alignment parameter set that fits these"
+        " conditions.";
+  return numValid > 1 ? -retval : 0;
 }
