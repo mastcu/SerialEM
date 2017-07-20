@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+7/19/17: Stopped it from turning off Low Dose when switching back to a montage
+file after changing the Record binning (In 3.6).
+
 7/14/17: Added ability to align subset of frames either in plugin or in IMOD
 when saving K2 frames.
 

@@ -1403,8 +1403,9 @@ void CSerialEMDoc::SwitchToFile(int which)
   if (mStoreList[which].montage) {
     *param = *mStoreList[which].montParam;
     mWinApp->SetMontaging(true);
-    if (mWinApp->LowDoseMode() && mWinApp->mMontageController->CameraNotFeasible())
-      mWinApp->mLowDoseDlg.SetLowDoseMode(false);
+
+    // 7/19/17: Removed turning off low dose if camera "not feasible": inappropriate when
+    // accessing a map file and irrelevant
     mWinApp->mMontageWindow.UpdateSettings();
   }
   ComposeTitlebarLine();
