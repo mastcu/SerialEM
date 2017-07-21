@@ -75,6 +75,7 @@ class CComplexTasks : public CCmdTarget
   GetMember(BOOL, LastWalkCompleted);
   SetMember(float, ZMicronsPerDialMark);
   GetMember(float, LastAxisOffset);
+  GetSetMember(float, StageTimeoutFactor);
   GetMember(double, OnAxisDose);
   void GetBacklashDelta(float &deltaX, float &deltaY) {deltaX = mBASPDeltaX; deltaY = mBASPDeltaY;};
 
@@ -258,6 +259,7 @@ class CComplexTasks : public CCmdTarget
   BOOL mFEWarnedUseTrial;         // Flag that they were warned
   float mZMicronsPerDialMark;     // Scale on Hitachi scope
   float mManualHitachiBacklash;   // Amount to target for manual adjustment
+  float mStageTimeoutFactor;      // Multiplier to idle task timeout for stage moves
 public:
   afx_msg void OnTasksSetincrements();
   afx_msg void OnTrialInLdRefine();

@@ -242,6 +242,7 @@ FLOAT_PROP_TEST("EucentricityCoarseMaxIncrementChange", complexTasks->, FEMaxInc
 INT_PROP_TEST("EucentricityFineIterationLimit", complexTasks->, FEIterationLimit)
 DBL_PROP_TEST("EucentricityMaxFineIS", complexTasks->, FEMaxFineIS)
 FLOAT_PROP_TEST("TiltBacklash", complexTasks->, TiltBacklash)
+FLOAT_PROP_TEST("StageTimeoutFactor", complexTasks->, StageTimeoutFactor)
 FLOAT_PROP_TEST("CookerISLimit", mWinApp->mMultiTSTasks->, CkISLimit)
 FLOAT_PROP_TEST("MinTaskExposure", complexTasks->, MinTaskExposure)
 FLOAT_PROP_TEST("RealignItemMinMarginNeeded", navHelper->, MinMarginNeeded)

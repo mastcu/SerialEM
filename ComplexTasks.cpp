@@ -158,6 +158,7 @@ CComplexTasks::CComplexTasks()
   mManualHitachiBacklash = 10.;
   mWalkUseViewInLD = false;
   mSkipNextBeamShift = false;
+  mStageTimeoutFactor = 1.;
   
   // Default minimum field of view
   mMinRSRAField = 7.0;
@@ -1473,7 +1474,7 @@ void CComplexTasks::EucentricityNextTask(int param)
       mFECurrentAngle = mFEReferenceAngle + mFECoarseIncrement;
       mScope->TiltTo(mFECurrentAngle);
       mWinApp->AddIdleTask(TASK_EUCENTRICITY, FE_COARSE_MOVED, 
-        30000);
+        B3DNINT(mStageTimeoutFactor * 30000));
       return;
     }
 
@@ -1605,7 +1606,7 @@ void CComplexTasks::EucentricityNextTask(int param)
       else {
         mScope->TiltTo(mFETargetAngles[mFEFineIndex]);
         mWinApp->AddIdleTask(TASK_EUCENTRICITY, FE_FINE_TILTED, 
-          30000);
+          B3DNINT(mStageTimeoutFactor * 30000));
       }
       return;
     }
@@ -1710,7 +1711,7 @@ void CComplexTasks::EucentricityNextTask(int param)
     else if (mFECoarseFine & REFINE_EUCENTRICITY_ALIGN) {
       mScope->TiltTo(mFEUsersAngle);
       mWinApp->AddIdleTask(TASK_EUCENTRICITY, FE_FINE_ALIGNTILT, 
-        30000);
+        B3DNINT(mStageTimeoutFactor * 30000));
     } else
       StopEucentricity();
     return;
@@ -1776,7 +1777,8 @@ void CComplexTasks::DoubleMoveStage(double finalZ, double backlashZ, BOOL doZ,
     smi.backAlpha = backlashTilt;
   }
   mScope->MoveStage(smi, backlashZ != 0. || backlashTilt != 0.);
-  mWinApp->AddIdleTask(TASK_EUCENTRICITY, nextAction, HitachiScope ? 120000 : 30000);
+  mWinApp->AddIdleTask(TASK_EUCENTRICITY, nextAction, 
+    B3DNINT(mStageTimeoutFactor * (HitachiScope ? 120000 : 30000)));
 }
 
 
