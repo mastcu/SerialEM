@@ -223,6 +223,7 @@ public:
   void InitialSetupForAperture(void);
   void CalibrateAlphaBeamShifts(void);
   void CalibrateSpotBeamShifts(void);
+  int SetAndCheckSpotSize(int newSize, BOOL normalize = FALSE);
 };
 
 #endif // !defined(AFX_BEAMASSESSOR_H__67812E27_EF7F_4AFB_A706_766E3FEA19AA__INCLUDED_)

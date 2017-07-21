@@ -1609,7 +1609,8 @@ void CBeamAssessor::CalibrateSpotIntensity()
 
   mFirstSpotToCal = mSpotCalIndex;
   if (mSpotCalStartSpot != mSpotCalIndex) {
-    mScope->SetSpotSize(mSpotCalIndex, true);
+    if (SetAndCheckSpotSize(mSpotCalIndex, true))
+      return;
   } else
     mScope->NormalizeCondenser();
   conSet->onceDark = 1;
@@ -1642,7 +1643,10 @@ void CBeamAssessor::SpotCalImage(int param)
 
   // Start next spot with normalization
   mSpotCalIndex = newIndex;
-  mScope->SetSpotSize(mSpotCalIndex, true);
+  if (SetAndCheckSpotSize(mSpotCalIndex, true)) {
+    StopSpotCalibration();
+    return;
+  }
   mCamera->InitiateCapture(SPOT_CAL_CONSET);
   mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, TASK_CAL_SPOT_INTENSITY, 0, 0);
 }
@@ -1758,7 +1762,8 @@ void CBeamAssessor::CalibrateCrossover(void)
     " go to a high mag (~100K) to do this.", MB_OKCANCEL | MB_ICONINFORMATION) != IDOK)
     return;
   for (spotSize = 1; spotSize <= mScope->GetNumSpotSizes(); spotSize++) {
-    mScope->SetSpotSize(spotSize);
+    if (SetAndCheckSpotSize(spotSize))
+      return;
     if (AfxMessageBox("Adjust brightness to bring the beam to crossover",
       MB_OKCANCEL | MB_ICONINFORMATION) != IDOK)
       break;
@@ -2048,7 +2053,8 @@ void CBeamAssessor::CalibrateSpotBeamShifts(void)
     return;
   minSpot = maxSpot = firstSpot;
   for (spot = firstSpot; spot * iDir <= lastSpot * iDir; spot += iDir) {
-    mScope->SetSpotSize(spot);
+    if (SetAndCheckSpotSize(spot))
+      return;
     if (AfxMessageBox("Center the beam at this spot size", 
       MB_OKCANCEL | MB_ICONINFORMATION) != IDOK)
       break;
@@ -2072,4 +2078,19 @@ void CBeamAssessor::CalibrateSpotBeamShifts(void)
   PrintfToLog("Relative shifts will be applied between spots %d and %d", minSpot, 
     maxSpot);
   mWinApp->SetCalibrationsNotSaved(true);
+}
+
+// Set a spot size, testing for error and for whether it actually set
+int CBeamAssessor::SetAndCheckSpotSize(int newSize, BOOL normalize)
+{
+  CString str;
+  BOOL OK = mScope->SetSpotSize(newSize, normalize);
+  if (!OK || mScope->GetSpotSize() != newSize) {
+    str.Format("Failed to set spot size %d\n\n%sheck the SerialEM property "
+      "NumberOfSpotSizes", newSize, 
+      FEIscope ? "Check if the holder is in; if not, then\nc" : "C");
+    AfxMessageBox(str, MB_EXCLAME);
+    return 1;
+  }
+  return 0;
 }

@@ -1778,7 +1778,7 @@ void CMenuTargets::OnCalibrationC2factor()
   int probe = mScope->ReadProbeMode();
 
   if (AfxMessageBox("To calibrate the intensity to C2 factor,\nyou need to have "
-    "a readout for the C2 lens in the Tecnai User Interface.\n\n"
+    "a readout for the C2 lens in the Microscope User Interface.\n\n"
     "The program will go to each spot size and ask you to enter the C2 reading.\n",
     MB_OKCANCEL | MB_ICONINFORMATION) != IDOK)
     return;
@@ -1786,11 +1786,12 @@ void CMenuTargets::OnCalibrationC2factor()
   // Set intensity here just for first time
   mScope->SetIntensity(0.3);
   for (spotSize = 0; spotSize <= mScope->GetNumSpotSizes(); spotSize++) {
-    mScope->SetSpotSize(spotSize ? spotSize : 1);
+    if (mWinApp->mBeamAssessor->SetAndCheckSpotSize(spotSize ? spotSize : 1))
+      return;
     intensity = (float)(100. * mScope->GetIntensity());
     C2Val = intensity;
-    if (!KGetOneFloat("Enter the current value for the C2 lens in the Tecnai interface",
-      C2Val, 3))
+    if (!KGetOneFloat("Enter the current value for the C2 lens in the microscope "
+      "interface", C2Val, 3))
       break;
 
     // First time, save values and set intensity to 0.7
