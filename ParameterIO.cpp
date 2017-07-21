@@ -275,8 +275,9 @@ int CParameterIO::ReadSettings(CString strFileName)
             if (cs->summedFrameList.size() > 200) {
               frameListOK = false;
               message.Format("Excessively long SummedFrameList entry found for camera %d,"
-                " parameter set %d\nThese frame summing parameters are being removed"
-                " and you will need to set them up again", iCam, iset);
+                " parameter set %d\nThese frame summing parameters are being removed - "
+                "this may take alarmingly long after you close this message.\n\n"
+                " You will need to set up frame summing parameters again.", iCam, iset);
               AfxMessageBox(message, MB_EXCLAME);
               cs->summedFrameList.clear();
               cs->userFrameFractions.clear();
