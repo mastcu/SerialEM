@@ -5559,6 +5559,7 @@ void CNavigatorDlg::ImportMap(void)
       item->mStageX = importDlg.m_fStageX;
       item->mStageY = importDlg.m_fStageY;
       item->mRegistration = lastRegNum;
+      item->mOriginalReg = lastRegNum;
       item->mImported = 1;
       item->mImageType = imageStore->getStoreType();
 
