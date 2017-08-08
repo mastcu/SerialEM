@@ -109,7 +109,7 @@ private:
   int mMatchedFlybackInd;     // Index of one that was matched in last lookup
 public:
   int FlybackTimeFromTable(int binning, int xSize, int magIndex, float exposure, 
-    float & flyback, float & startup);
+    float & flyback, float & startup, CString *message = NULL);
 };
 
 #endif // !defined(AFX_CALIBCAMERATIMING_H__57771EDA_E438_4D06_B975_31716490CE47__INCLUDED_)

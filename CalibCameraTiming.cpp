@@ -8,6 +8,7 @@
 #include "CameraController.h"
 #include "ProcessImage.h"
 #include "ShiftManager.h"
+#include "Shared\b3dutil.h"
 #include "Utilities\KGetOne.h"
 #include "Utilities\XCorr.h"
 
@@ -777,8 +778,8 @@ void CCalibCameraTiming::StopCalDead()
 // Look up flyback times in the table that match the binning and size and return an
 // exact, interpolated, or extrapolated value
 int CCalibCameraTiming::FlybackTimeFromTable(int binning, int xSize, int magIndex, 
-                                             float exposure, float & flyback, 
-                                             float & startup)
+                                             float exposure, float &flyback, 
+                                             float &startup, CString *message)
 {
   int i, j, indi, indrp, last, dropInd;
   const int maxFit = 5;
@@ -790,6 +791,7 @@ int CCalibCameraTiming::FlybackTimeFromTable(int binning, int xSize, int magInde
   float errCrit = 2.f;
   float slope, intcp, roCorr, errOfPred, predY;
   int numFittable = 0;
+  float minExposure = 1000000., maxExposure = -10.;
 
   // Scan table for exact match within tolerance and for number eligible to fit
   mMatchedFlybackInd = -1;
@@ -804,15 +806,23 @@ int CCalibCameraTiming::FlybackTimeFromTable(int binning, int xSize, int magInde
           return FLYBACK_EXACT;
         }
         numFittable++;
+        ACCUM_MIN(minExposure, mFlybackArray[i].exposure);
+        ACCUM_MAX(maxExposure, mFlybackArray[i].exposure);
     }
   }
   SEMTrace('c', "FlybackTimeFromTable: table size %d, numFittable %d exposure %f", 
     mFlybackArray.GetSize(), numFittable, exposure);
+  if (message)
+    *message = "No calibrated flyback times are available for this binning and "
+      "magnification";
   if (!numFittable)
     return FLYBACK_NONE;
   if (numFittable == 1) {
     flyback = mFlybackArray[last].flybackTime;
     startup = mFlybackArray[last].startupDelay;
+    if (message)
+      message->Format("Using the one calibrated flyback time, at exposure %g, available "
+      "for this binning and magnification", mFlybackArray[last].exposure);
     return FLYBACK_SINGLE;
   }
 
@@ -886,8 +896,13 @@ int CCalibCameraTiming::FlybackTimeFromTable(int binning, int xSize, int magInde
     &errOfPred);
   SEMTrace('c', "Fit to SUDs: slope %f intcp %f ro %f SUD %f", slope, intcp, roCorr, 
     startup);
+  if (message)
+    message->Format("%spolating from fit to %d calibrated flyback times, nearest one at "
+    "exposure %g", (exposure < minExposure || exposure > maxExposure) ? "Extra" : "Inter",
+    numFittable, mFlybackArray[tableInd[distInd[0]]]);
   delete [] distInd;
   delete [] tableInd;
   delete [] distances;
-  return ((exposure < xfit[0] || exposure > xfit[j-1]) ? FLYBACK_EXTRAP : FLYBACK_INTERP);
+  return ((exposure < minExposure || exposure > maxExposure) ? FLYBACK_EXTRAP : 
+    FLYBACK_INTERP);
 }
