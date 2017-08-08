@@ -258,10 +258,17 @@ void CShiftCalibrator::CalibrateIS(int ifRep, BOOL calStage, BOOL fromMacro)
     float cycleFac = FEIscope ? 0.9f : 0.5f;
     if ((xExtent < cycleFac * mStageCycleX || yExtent < cycleFac * mStageCycleY) && 
       mCalIndex > mScope->GetLowestNonLMmag(camP)) {
-        message = "WARNING: Stage calibrations become increasingly inaccurate"
-          " at higher mags.\n";
-        if (FEIscope)
-          message +="(Especially when they run over less than the stage cycle length.)\n";
+        if (xExtent < 0.25 * mStageCycleX || yExtent < 0.25 * mStageCycleY) {
+          message.Format("WARNING: You should not do this calibration!\n"
+            "It is over too short a distance (~ %.1f microns)\n"
+            "to give an accurate calibration\n", (xExtent + yExtent) / 2.);
+        } else {
+          message = "WARNING: Stage calibrations become increasingly inaccurate"
+            " at higher mags.\n";
+          if (FEIscope)
+            message += "(Especially when they run over less than the stage cycle length.)"
+            "\n";
+        }
         message += "\nIt is better to have a good stage calibration at ";
         if (FEIscope)
           message += "one nonLM mag\nand good image shift calibrations at that mag and"
