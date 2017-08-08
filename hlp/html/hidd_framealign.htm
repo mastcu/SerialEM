@@ -361,6 +361,17 @@ FRC crossings 0.5: 0.0335  0.25: 0.0468  0.125: 0.0898  is 0.1025 at 0.25/pix   
       Alignframes is to smooth shifts when there are at least 15 frames, but this is 
       left as a choice here because smoothing is one of the options that prevents any 
       frames from being summed until all have been aligned.</p>
+    <p>
+      <b>Align subset of frames</b></p>
+    <p>
+      Select this checkbox to align only a subset of the frames being saved, then fill 
+      in the starting and ending frames to align, numbered from 1.&nbsp; The option is 
+      irrelevant when no frames are saved, because in that case a drift settling time 
+      can be set to discard initial frames after the exposure starts.&nbsp; When 
+      frames are being aligned in the plugin, the image returned to SerialEM will be a 
+      sum of only the aligned frames.&nbsp; When frames are aligned with IMOD, the 
+      command file will contain the <i>-frames</i> option to Alignframes with the 
+      given starting and ending frames.</p>
     <p class="style1">
       More Advanced or Less Commonly Needed Parameters</p>
     <p>
