@@ -129,7 +129,7 @@ void CCameraMacroTools::OnButmontage()
   if (mWinApp->Montaging() && !mWinApp->LowDoseMode())
     mWinApp->StartMontageOrTrial(false);
   else
-    mWinApp->UserRequestedCapture(4);
+    mWinApp->UserRequestedCapture(PREVIEW_CONSET);
 }
 
 void CCameraMacroTools::SetMacroLabels()
@@ -290,11 +290,9 @@ void CCameraMacroTools::OnButend()
     mWinApp->mMultiTSTasks->SetEndTiltRange(true);
   else if (nav && !nav->StartedMacro() && nav->GetAcquiring())
     nav->SetAcquireEnded(true);
-  else if (mEnabledSearch) {
-    if (mWinApp->LowDoseMode() && mWinApp->mScope->GetLowDoseArea() != SEARCH_AREA)
-      mWinApp->mScope->GotoLowDoseArea(SEARCH_AREA);
-    mWinApp->UserRequestedCapture(VIEW_CONSET);
-  } else
+  else if (mEnabledSearch)
+    mWinApp->UserRequestedCapture(SEARCH_CONSET);
+  else
     mMacProcessor->SetNonResumable();
 }
 
@@ -368,9 +366,10 @@ void CCameraMacroTools::Update()
     SetDlgItemText(IDC_BUTEND, "End Script");
   else if (nav && !nav->StartedMacro() && nav->GetAcquiring() && !nav->GetStartedTS())
     SetDlgItemText(IDC_BUTEND, "End Nav");
-  else if (!mWinApp->mMultiTSTasks->GetAssessingRange() && mWinApp->LowDoseMode()) {
-    SetDlgItemText(IDC_BUTEND, "Search");
-    mEnabledSearch = true;
+  else if (!mWinApp->mMultiTSTasks->GetAssessingRange() && 
+    (mWinApp->LowDoseMode() || !mWinApp->GetUseViewForSearch())) {
+      SetDlgItemText(IDC_BUTEND, "Search");
+      mEnabledSearch = true;
   } else 
     SetDlgItemText(IDC_BUTEND, "End");
     
