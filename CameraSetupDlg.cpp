@@ -46,8 +46,8 @@ IDC_STATINTEGRATION, IDC_SPININTEGRATION, IDC_EDITINTEGRATION, IDC_STATEXPTIMESI
 IDC_STATBIN, IDC_RBIN1, IDC_RBIN2, IDC_RBIN3, IDC_RBIN4, IDC_RBIN5, IDC_RBIN6, IDC_RBIN7,
 IDC_RBIN8, IDC_RBIN9, IDC_RBIN10, IDC_STATEXPTIME, IDC_STATSEC1, IDC_DRIFTTEXT1, 
 IDC_DRIFTTEXT2, IDC_MINIMUM_DRIFT, IDC_STATBOX, IDC_STATTOP, IDC_STATLEFT, IDC_STATBOT,
-IDC_STATRIGHT, IDC_BUTQUARTER, IDC_BUTHALF, IDC_BUTFULL, IDC_REMOVEXRAYS,
-IDC_STATMICRON, IDC_STATAREA, IDC_STATPOSIT, IDC_STATSIZE, IDC_SPINLEFTRIGHT,
+IDC_STATRIGHT, IDC_BUTQUARTER, IDC_BUTHALF, IDC_BUTFULL, IDC_REMOVEXRAYS, IDC_RMONTAGE,
+IDC_STATMICRON, IDC_STATAREA, IDC_STATPOSIT, IDC_STATSIZE, IDC_SPINLEFTRIGHT, IDC_RSEARCH,
 IDC_SPINUPDOWN, IDC_BUTRECENTER, IDC_BUTSWAPXY, IDC_KEEP_PIXEL_TIME,
 IDC_CHECK_CORRECT_DRIFT, IDC_STAT_NORM_DSDF, PANEL_END,
 IDC_STATSHUTTER, IDC_RBEAMONLY, IDC_RFILMONLY, IDC_RSHUTTERCOMBO, IDC_STATDOSERATE,
@@ -303,6 +303,8 @@ BEGIN_MESSAGE_MAP(CCameraSetupDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_RTRIAL, OnConSet)
   ON_BN_CLICKED(IDC_RVIEW, OnConSet)
   ON_BN_CLICKED(IDC_RPREVIEW, OnConSet)
+  ON_BN_CLICKED(IDC_RSEARCH, OnConSet)
+  ON_BN_CLICKED(IDC_RMONTAGE, OnConSet)
   ON_EN_CHANGE(IDC_EDITLEFT, OnChangeCoord)
   ON_EN_CHANGE(IDC_EDITRIGHT, OnChangeCoord)
   ON_EN_CHANGE(IDC_EDITTOP, OnChangeCoord)
@@ -491,9 +493,14 @@ void CCameraSetupDlg::OnConSet()
 
 void CCameraSetupDlg::OnButcopycamera() 
 {
+  int setBase = mActiveCameraList[mCurrentCamera] * MAX_CONSETS;
+  ControlSet *conSet = &mConSets[mCurrentSet + setBase];
   m_butCopyCamera.SetButtonStyle(BS_PUSHBUTTON);
-  mWinApp->TransferConSet(mCurrentSet, mActiveCameraList[mLastCamera],
-    mActiveCameraList[mCurrentCamera]); 
+  if (!mWinApp->GetUseViewForSearch() && mCurrentSet == SEARCH_CONSET)
+    *conSet = mConSets[VIEW_CONSET + setBase];
+  else
+    mWinApp->TransferConSet(mCurrentSet, mActiveCameraList[mLastCamera],
+      mActiveCameraList[mCurrentCamera]); 
   UnloadConSet();
 }
 
@@ -718,16 +725,16 @@ static int binVals[MAX_BINNINGS] = {1, 2, 3, 4, 6, 8};
 void CCameraSetupDlg::UnloadConSet()
 {
   int i, indMin, binning, showProc, lockSet;
-  bool noDark, noGain, alwaysAdjust, noRaw;
+  bool noDark, noGain, alwaysAdjust, noRaw, show, canCopyView;
   CButton *radio;
   ControlSet *conSet = &mConSets[mCurrentSet + mActiveCameraList[mCurrentCamera] *
     MAX_CONSETS];
   MontParam *montp = mWinApp->GetMontParam();
   
-  lockSet = MontageConSetNum(montp, montp->setupInLowDose);
+  lockSet = MontageConSetNum(montp, false, montp->setupInLowDose);
   mBinningEnabled = !((mCurrentSet == RECORD_CONSET && mStartedTS || 
     (mCurrentSet == lockSet && mMontaging && 
-      (montp->cameraIndex == mCurrentCamera || mWinApp->LowDoseMode()))));
+      montp->cameraIndex == mCurrentCamera && !mWinApp->LowDoseMode())));
   mCamera->FindNearestBinning(mParam, conSet, m_iBinning, binning);
 
     // If this is Record set, disable the binning if doing TS, or if montaging and either
@@ -750,7 +757,7 @@ void CCameraSetupDlg::UnloadConSet()
     (mCurrentSet == RECORD_CONSET && mWinApp->mTSController->GetFrameAlignInIMOD());
   mUserSaveFrames = m_bSaveFrames = conSet->saveFrames > 0;
   m_bSaveK2Sums = conSet->sumK2Frames > 0 && 
-    mCamera->GetPluginVersion(mParam) >= PLUGIN_CAN_SUM_FRAMES;
+    mCamera->CAN_PLUGIN_DO(CAN_SUM_FRAMES, mParam);
   if (mParam->K2Type > 1)
     conSet->K2ReadMode = 0;
   m_iK2Mode = conSet->K2ReadMode;
@@ -884,7 +891,7 @@ void CCameraSetupDlg::UnloadConSet()
   
   if (mParam->K2Type || mFalconCanSave)
     ManageDoseFrac();
-  if (mWinApp->LowDoseMode()) {
+  if (mWinApp->LowDoseMode() && mWinApp->GetUseViewForSearch()) {
     if (mCurrentSet == VIEW_CONSET) {
       if (mWinApp->mScope->GetLowDoseArea() == SEARCH_AREA)
         SetDlgItemText(IDC_ACQUIRE_REOPEN, "Acquire Search");
@@ -893,6 +900,16 @@ void CCameraSetupDlg::UnloadConSet()
     } else
       SetDlgItemText(IDC_ACQUIRE_REOPEN, "Acquire");
   }
+
+  canCopyView = !mWinApp->GetUseViewForSearch() && mCurrentSet == SEARCH_CONSET;
+  show = mNumCameras > 1 || canCopyView;
+  m_butCopyCamera.ShowWindow(show ? SW_SHOW : SW_HIDE);
+  m_statCopyCamera.ShowWindow(show ? SW_SHOW : SW_HIDE);
+  if (canCopyView)
+    m_strCopyCamera = mModeNames[VIEW_CONSET];
+  else if (mNumCameras > 1)
+    m_strCopyCamera = mCamParam[mActiveCameraList[mLastCamera]].name;
+
   UpdateData(false);  
   ManageDrift();
   ManageTimingAvailable();
@@ -1221,10 +1238,6 @@ void CCameraSetupDlg::ManageCamera()
   m_statBox.ShowWindow(SW_HIDE);
 
   // Repair effects of adjusting the panels
-  m_butCopyCamera.ShowWindow(mNumCameras > 1 ? SW_SHOW : SW_HIDE);
-  m_statCopyCamera.ShowWindow(mNumCameras > 1 ? SW_SHOW : SW_HIDE);
-  if (mNumCameras > 1)
-    m_strCopyCamera = mCamParam[mActiveCameraList[mLastCamera]].name;
 
   // Set up the binning buttons and resize the group box
   for (i = 0; i < MAX_BIN_BUTTONS; i++) {
@@ -1245,6 +1258,9 @@ void CCameraSetupDlg::ManageCamera()
   }
   m_statBinning.SetWindowPos(NULL, 0, 0, mBinWidth, mBinFullHeight + visTop - lastTop,
     SWP_NOMOVE);
+
+  ShowDlgItem(IDC_RSEARCH, !mWinApp->GetUseViewForSearch());
+  ShowDlgItem(IDC_RMONTAGE, !mWinApp->GetUseRecordForMontage());
 
   // Disable beam shutter if that is not controllable
   radio = (CButton *)GetDlgItem(IDC_RBEAMONLY);
@@ -1491,12 +1507,21 @@ void CCameraSetupDlg::ManageIntegration()
 BOOL CCameraSetupDlg::OnInitDialog() 
 {
   int i, ind, space, delta, viewInd = -1, numRegular = 0;
+  float scale;
   CRect boxrect, butrect;
   CButton *radio;
   CFont *littleFont = mWinApp->GetLittleFont();
+  BOOL useViewForSearch = mWinApp->GetUseViewForSearch();
   int camPosInds[MAX_DLG_CAMERAS];
   int posButtonIDs[6] = {IDC_BUTQUARTER, IDC_BUTHALF, IDC_BUTFULL, IDC_BUTSMALLER10, 
     IDC_BUTBIGGER10, IDC_BUTABITLESS};
+  int setPosInds[7];
+  int setButtonIDs[7] = {IDC_RSEARCH, IDC_RVIEW, IDC_RFOCUS, IDC_RTRIAL, IDC_RRECORD,
+    IDC_RPREVIEW, IDC_RMONTAGE};
+  int fiveSetPos[7] = {11, 19, 69, 117, 165, 213, 230};
+  int noSearchPos[7] = {11, 11, 65, 107, 147, 189, 230};
+  int noMontPos[7] = {11, 54, 95, 136, 178, 224, 232};
+  int *posPtr;
 
   CBaseDlg::OnInitDialog();
   mCamera = mWinApp->mCamera;
@@ -1520,6 +1545,10 @@ BOOL CCameraSetupDlg::OnInitDialog()
     for (i = 0; i < 6; i++)
       if (idTable[ind] == posButtonIDs[i])
         mPosButtonIndex[i] = ind;
+
+    for (i = 0; i < 7; i++)
+      if (idTable[ind] == setButtonIDs[i])
+        setPosInds[i] = ind;
 
     i = idTable[ind] - IDC_RCAMERA1;
     if (i >= 0 && i < MAX_DLG_CAMERAS)
@@ -1557,16 +1586,42 @@ BOOL CCameraSetupDlg::OnInitDialog()
   }
   
   // Fill the names of the control sets
-  if (mWinApp->LowDoseMode()) {
-    if (viewInd >= 0)
-      leftTable[viewInd] = leftTable[camPosInds[0]];
-    SetDlgItemText(IDC_RVIEW, mModeNames[0] + "/Search");
-  } else
-    SetDlgItemText(IDC_RVIEW, mModeNames[0]);
+  SetDlgItemText(IDC_RVIEW, mModeNames[0]);
   SetDlgItemText(IDC_RFOCUS, mModeNames[1]);
   SetDlgItemText(IDC_RTRIAL, mModeNames[2]);
   SetDlgItemText(IDC_RRECORD, mModeNames[3]);
   SetDlgItemText(IDC_RPREVIEW, mModeNames[4]);
+  SetDlgItemText(IDC_RSEARCH, mModeNames[5]);
+  SetDlgItemText(IDC_RMONTAGE, mModeNames[6]);
+
+  // Adjust positions if less than 7 camera sets
+  if (useViewForSearch || mWinApp->GetUseRecordForMontage()) {
+    if (useViewForSearch && mWinApp->GetUseRecordForMontage())
+      posPtr = &fiveSetPos[0];
+    else if (useViewForSearch)
+      posPtr = &noSearchPos[0];
+    else
+      posPtr = &noMontPos[0];
+    scale = (float)(leftTable[setPosInds[6]] - leftTable[setPosInds[0]]) / 
+      (float)(fiveSetPos[6] - fiveSetPos[0]);
+    for (ind = 0; ind < 7; ind++)
+      leftTable[setPosInds[ind]] = leftTable[setPosInds[0]] + 
+        B3DNINT(scale * (posPtr[ind] - fiveSetPos[0]));
+
+    // Handle making View big enough, change to View/Search, move to left if low dose
+    if (mWinApp->LowDoseMode() && useViewForSearch) {
+      radio = (CButton *)GetDlgItem(IDC_RVIEW);
+      radio->GetWindowRect(butrect);
+      radio->SetWindowPos(NULL, 0, 0, B3DNINT(1.45 * butrect.Width()), butrect.Height(), 
+        SWP_NOMOVE | SWP_NOZORDER);
+      leftTable[setPosInds[1]] = leftTable[camPosInds[0]];
+      SetDlgItemText(IDC_RVIEW, mModeNames[0] + "/" + mModeNames[5]);
+    }
+  }
+  if (mCurrentSet == SEARCH_CONSET && useViewForSearch)
+    mCurrentSet = VIEW_CONSET;
+  if (mCurrentSet == MONT_USER_CONSET && mWinApp->GetUseRecordForMontage())
+    mCurrentSet = RECORD_CONSET;
   
   // Make text big for set name
   CFont font;
@@ -2163,14 +2218,14 @@ void CCameraSetupDlg::ManageDoseFrac(void)
     MAX_CONSETS];
   bool forceSaving = mParam->K2Type && m_bDoseFracMode && m_bAlignDoseFrac && 
     conSet->useFrameAlign > 1 && 
-    mCamera->GetPluginVersion(mParam) >= PLUGIN_CAN_ALIGN_FRAMES;
+    mCamera->CAN_PLUGIN_DO(CAN_ALIGN_FRAMES, mParam);
   if ((forceSaving && !m_bSaveFrames) || (!forceSaving && !BOOL_EQUIV(m_bSaveFrames,
     mUserSaveFrames))) {
     m_bSaveFrames = B3DCHOICE(forceSaving, true, mUserSaveFrames);
     UpdateData(false);
   }
   bool enable = m_bSaveFrames && m_bDoseFracMode && 
-    mCamera->GetPluginVersion(mParam) >= PLUGIN_CAN_SUM_FRAMES;
+    mCamera->CAN_PLUGIN_DO(CAN_SUM_FRAMES, mParam);
   m_statFrameTime.EnableWindow(m_bDoseFracMode);
   m_statFrameSec.EnableWindow(m_bDoseFracMode);
   m_editFrameTime.EnableWindow(m_bDoseFracMode);
@@ -2188,9 +2243,9 @@ void CCameraSetupDlg::ManageDoseFrac(void)
   m_butSetupK2FrameSums.EnableWindow(enable && m_bSaveK2Sums);
   m_butSetupFalconFrames.EnableWindow(m_bSaveFrames && m_bDoseFracMode);
   enable = mParam->K2Type && m_bSaveFrames && m_bDoseFracMode && 
-    ((mCamera->GetPluginVersion(mParam) >= PLUGIN_CAN_GAIN_NORM && 
+    ((mCamera->CAN_PLUGIN_DO(CAN_GAIN_NORM, mParam) && 
     m_iProcessing == DARK_SUBTRACTED) || (m_iProcessing == UNPROCESSED && 
-    mCamera->GetPluginVersion(mParam) >= PLUGIN_UNPROC_LIKE_DS)) &&
+    mCamera->CAN_PLUGIN_DO(UNPROC_LIKE_DS, mParam))) &&
     !mCamera->GetNoNormOfDSdoseFrac() &&
     ((m_iK2Mode == COUNTING_MODE && !mParam->countingRefForK2.IsEmpty()) ||
     (m_iK2Mode == SUPERRES_MODE && !mParam->superResRefForK2.IsEmpty()));
@@ -2265,13 +2320,13 @@ void CCameraSetupDlg::OnButFileOptions()
   optDlg.m_iStartNumber = mCamera->GetFrameNumberStart();
   optDlg.mCanCreateDir = IS_BASIC_FALCON2(mParam) || 
     (mParam->FEItype && (mCamera->GetDirForFalconFrames()).IsEmpty()) || 
-    (mParam->GatanCam && mCamera->GetPluginVersion(mParam) >= PLUGIN_CREATES_DIRECTORY);
+    (mParam->GatanCam && mCamera->CAN_PLUGIN_DO(CREATES_DIRECTORY, mParam));
   optDlg.mCan4BitModeAndCounting = 
-    mCamera->GetPluginVersion(mParam) >= PLUGIN_4BIT_101_COUNTING;
+    mCamera->CAN_PLUGIN_DO(4BIT_101_COUNTING, mParam);
   optDlg.mCanSaveTimes100 = 
-    mCamera->GetPluginVersion(mParam) >= PLUGIN_SAVES_TIMES_100;
-  optDlg.mCanUseExtMRCS = mCamera->GetPluginVersion(mParam) >= PLUGIN_CAN_SET_MRCS_EXT;
-  optDlg.mCanGainNormSum = mCamera->GetPluginVersion(mParam) >= PLUGIN_CAN_GAIN_NORM;
+    mCamera->CAN_PLUGIN_DO(SAVES_TIMES_100, mParam);
+  optDlg.mCanUseExtMRCS = mCamera->CAN_PLUGIN_DO(CAN_SET_MRCS_EXT, mParam);
+  optDlg.mCanGainNormSum = mCamera->CAN_PLUGIN_DO(CAN_GAIN_NORM, mParam);
   optDlg.mSetIsGainNormalized = m_iProcessing == GAIN_NORMALIZED;
   if (optDlg.DoModal() == IDOK) {
     mCamera->SetOneK2FramePerFile(optDlg.m_bOneFramePerFile);
@@ -2376,7 +2431,7 @@ void CCameraSetupDlg::ManageAntialias(void)
   int dummy;
   bool antialias = (m_bDoseFracMode && m_iBinning > 1) || 
     (m_iK2Mode == SUPERRES_MODE && m_iBinning > 0) || 
-    (m_bAlwaysAntialias && mCamera->GetPluginVersion(mParam) >= PLUGIN_CAN_ANTIALIAS &&
+    (m_bAlwaysAntialias && mCamera->CAN_PLUGIN_DO(CAN_ANTIALIAS, mParam) &&
     m_iBinning > (m_iK2Mode == SUPERRES_MODE ? 0 : 1) && m_iContSingle > 0);
   if (mParam->K2Type) {
     if ((m_iK2Mode == SUPERRES_MODE && m_iBinning == 0) || 
