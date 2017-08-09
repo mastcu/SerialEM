@@ -138,7 +138,9 @@ class DLL_IM_EX CEMscope
   GetSetMember(BOOL, LDNormalizeBeam)
   GetSetMember(BOOL, LDBeamTiltShifts)
   SetMember(int, LDBeamNormDelay)
-  GetSetMember(float, LDViewDefocus)
+  float GetLDViewDefocus(int areaOrSet = VIEW_CONSET) {return areaOrSet != VIEW_CONSET ? mSearchDefocus : mLDViewDefocus;};
+  void SetLDViewDefocus(float inVal, int area = VIEW_CONSET) {if (area) mSearchDefocus = inVal; else mLDViewDefocus = inVal;};
+  GetSetMember(float, SearchDefocus)
   GetSetMember(BOOL, ShiftToTiltAxis)
   GetSetMember(BOOL, NoScope)
   GetMember(BOOL, ApplyISoffset)
@@ -511,6 +513,7 @@ private:
   BOOL mLDBeamTiltShifts;     // Flag to record beam tilt shifts and adjust for them
   int mLDBeamNormDelay;       // Sleep time after going to view intensity
   float mLDViewDefocus;       // Defocus offset going to View in low dose
+  float mSearchDefocus;       // Defocus offset going to Search in low dose
   LowDoseParams *mLdsaParams; // Parameters of the current set low dose area
   int mJeolForceMDSmode;      // +1 to turn on MDS mode to avoid IS resets, -1 to turn off
   BOOL mCanControlEFTEM;      // Flag that EFTEM can be turned on/off (false on JEOL)

@@ -190,6 +190,7 @@ CEMscope::CEMscope()
   mLDNormalizeBeam = false;
   mLDBeamNormDelay = 100;
   mLDViewDefocus = 0.;
+  mSearchDefocus = 0.;
   mSelectedEFTEM = false;
   mSelectedSTEM = 0;
   mHasOmegaFilter = false;
@@ -3180,7 +3181,7 @@ BOOL CEMscope::AssessMagISchange(int fromInd, int toInd, BOOL STEMmode, double &
     (mMagTab[fromInd].neutralISX[mNeutralIndex] + mMagTab[fromInd].offsetISX);
   delISY = mMagTab[toInd].neutralISY[mNeutralIndex] + mMagTab[toInd].offsetISY -
     (mMagTab[fromInd].neutralISY[mNeutralIndex] + mMagTab[fromInd].offsetISY);
-  convertIS = (bothLMnonLM || mApplyISoffset) && 
+  convertIS = (bothLMnonLM || mApplyISoffset || mLowDoseMode) && 
     !mShiftManager->CanTransferIS(fromInd, toInd, STEMmode);
   if (delISX || delISY || MagChgResetsIS(toInd) || convertIS) {
     GetImageShift(oldISX, oldISY);
@@ -3201,7 +3202,7 @@ BOOL CEMscope::AssessMagISchange(int fromInd, int toInd, BOOL STEMmode, double &
   }
 
   result = (delISX || delISY || MagChgResetsIS(toInd)) && mCalNeutralStartMag < 0 &&
-    (bothLMnonLM || mApplyISoffset);
+    (bothLMnonLM || mApplyISoffset || mLowDoseMode);
   if (result) {
     newISX = oldISX + delISX + axisISX;
     newISY = oldISY + delISY + axisISY;
@@ -3903,6 +3904,8 @@ double CEMscope::GetUnoffsetDefocus()
   double defocus = GetDefocus();
   if (mLowDoseMode && mLowDoseSetArea == VIEW_CONSET && !mWinApp->GetSTEMMode())
     defocus -= mLDViewDefocus;
+  else if (mLowDoseMode && mLowDoseSetArea == SEARCH_AREA && !mWinApp->GetSTEMMode())
+    defocus -= mSearchDefocus;
   return defocus;
 }
 
@@ -3911,6 +3914,8 @@ BOOL CEMscope::SetUnoffsetDefocus(double inVal)
 {
   if (mLowDoseMode && mLowDoseSetArea == VIEW_CONSET && !mWinApp->GetSTEMMode())
     inVal += mLDViewDefocus;
+  else if (mLowDoseMode && mLowDoseSetArea == SEARCH_AREA && !mWinApp->GetSTEMMode())
+    inVal += mSearchDefocus;
   return SetDefocus(inVal);
 }
 
@@ -4181,6 +4186,7 @@ void CEMscope::GotoLowDoseArea(int inArea)
   BOOL STEMmode = mWinApp->GetSTEMMode();
   bool fromFocTrial = mLowDoseSetArea == FOCUS_CONSET || mLowDoseSetArea == TRIAL_CONSET;
   bool toFocTrial = inArea == FOCUS_CONSET || inArea == TRIAL_CONSET;
+  bool splitBeamShift;
   if (!sInitialized || mChangingLDArea || sClippingIS)
     return;
 
@@ -4189,6 +4195,10 @@ void CEMscope::GotoLowDoseArea(int inArea)
   // Use designated params if set by nav helper, otherwise use set area params
   if (!mLdsaParams)
     mLdsaParams = ldParams + mLowDoseSetArea;
+  splitBeamShift = !STEMmode && ((mLowDoseSetArea >= 0 && mLdsaParams->magIndex && 
+    mLdsaParams->magIndex < mLowestMModeMagInd && ldArea->magIndex >= mLowestMModeMagInd)
+    || ((mLowDoseSetArea < 0 || mLdsaParams->magIndex >= mLowestMModeMagInd) &&
+    ldArea->magIndex && ldArea->magIndex < mLowestMModeMagInd));
 
   if (GetDebugOutput('L'))
     GetImageShift(curISX, curISY);
@@ -4243,9 +4253,18 @@ void CEMscope::GotoLowDoseArea(int inArea)
   if (ISdone)
     DoISforLowDoseArea(inArea, mLdsaParams->magIndex, delISX, delISY);
 
-  // If leaving view area, set defocus back first
-  if (!STEMmode && mLDViewDefocus && !mLowDoseSetArea && inArea)
-    IncDefocus(-(double)mLDViewDefocus);
+  // If leaving view or search area, set defocus back first
+  if (!STEMmode && mLDViewDefocus && mLowDoseSetArea == VIEW_CONSET && 
+    inArea != VIEW_CONSET)
+      IncDefocus(-(double)mLDViewDefocus);
+  if (!STEMmode && mSearchDefocus && mLowDoseSetArea == SEARCH_AREA && 
+    inArea != SEARCH_AREA)
+      IncDefocus(-(double)mSearchDefocus);
+
+  // Pull off the beam shift if leaving an area and going between LM and nonLM
+  if (splitBeamShift && mLowDoseSetArea >= 0 && 
+    (mLdsaParams->beamDelX || mLdsaParams->beamDelY))
+      IncBeamShift(-mLdsaParams->beamDelX, -mLdsaParams->beamDelY);
 
   // Set probe mode if any.  This will simply save and restore IS across the change,
   // and impose any change in focus that has occurred in this mode unconditionally
@@ -4254,7 +4273,7 @@ void CEMscope::GotoLowDoseArea(int inArea)
   if (ldArea->probeMode >= 0) {
     if (mProbeMode != ldArea->probeMode) {
       if ((mLdsaParams->beamDelX || mLdsaParams->beamDelY) && 
-        mProbeMode == mLdsaParams->probeMode)
+        mProbeMode == mLdsaParams->probeMode && !splitBeamShift)
         IncBeamShift(-mLdsaParams->beamDelX, -mLdsaParams->beamDelY);
       SetProbeMode(ldArea->probeMode, true);
     }
@@ -4306,9 +4325,13 @@ void CEMscope::GotoLowDoseArea(int inArea)
   } else if (!STEMmode && !alphaDone)
     ldArea->beamAlpha = (float)curAlpha;
 
-  // If going to view area, set defocus offset
-  if (!STEMmode && mLDViewDefocus && mLowDoseSetArea && !inArea)
-    IncDefocus((double)mLDViewDefocus);
+  // If going to view or search area, set defocus offset
+  if (!STEMmode && mLDViewDefocus && mLowDoseSetArea != VIEW_CONSET && 
+    inArea == VIEW_CONSET)
+      IncDefocus((double)mLDViewDefocus);
+  if (!STEMmode && mSearchDefocus && mLowDoseSetArea != SEARCH_AREA && 
+    inArea == SEARCH_AREA)
+      IncDefocus((double)mSearchDefocus);
 
   // If in EFTEM mode, synchronize to the filter parameters
   if (!STEMmode && mWinApp->GetFilterMode()) {
@@ -4360,7 +4383,7 @@ void CEMscope::GotoLowDoseArea(int inArea)
       mLdsaParams = ldParams + RECORD_CONSET;
     beamDelX = ldArea->beamDelX - mLdsaParams->beamDelX;
     beamDelY = ldArea->beamDelY - mLdsaParams->beamDelY;
-    if (mLdsaParams->probeMode != ldArea->probeMode) {
+    if (splitBeamShift || mLdsaParams->probeMode != ldArea->probeMode) {
       beamDelX = ldArea->beamDelX;
       beamDelY = ldArea->beamDelY;
     }
@@ -4406,14 +4429,14 @@ void CEMscope::GotoLowDoseArea(int inArea)
 // Get change in image shift; set delay; tell low dose dialog to ignore this shift
 void CEMscope::DoISforLowDoseArea(int inArea, int curMag, double &delISX, double &delISY)
 {
-  double oldISX, oldISY, useISX, useISY;
+  double oldISX, oldISY, useISX = 0., useISY = 0.;
   float delay;
   LowDoseParams *ldParams = mWinApp->GetLowDoseParams();
 
   // IF using piezo for axis shift, do the movement
+  delISX = delISY = 0.;
   if (mUsePiezoForLDaxis) {
     mWinApp->mLowDoseDlg.GoToPiezoPosForLDarea(inArea);
-    delISX = delISY = 0.;
   }
 
   // Convert the image shift at the new area mag to the current mag unconditionally, 
