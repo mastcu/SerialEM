@@ -88,11 +88,31 @@ const char *SEMCCDErrorMessage(int code)
   return FindMessage(code, SEMCCDcodes, SEMCCDmessages);
 }
 
-int MontageConSetNum(MontParam *param, int lowDose)
-{
+// Gets the montage control set for the given parameters.  
+// If trueSet is true return the true set index, otherwise the set to be used.  
+// lowDose should be 0 or > 0 and is optional, the default is the current state
+int MontageConSetNum(MontParam *param, bool trueSet, int lowDose)
+{ 
+  LowDoseParams *ldp = sWinApp->GetLowDoseParams();
+  int set = RECORD_CONSET;
   if (lowDose < 0)
     lowDose = sWinApp->LowDoseMode();
-  return (lowDose && param->useViewInLowDose) ? VIEW_CONSET : RECORD_CONSET;
+  if (lowDose && param->useViewInLowDose)
+    set = VIEW_CONSET;
+  else if (lowDose && param->useSearchInLowDose && ldp[SEARCH_AREA].magIndex)
+    set = SEARCH_CONSET;
+  else if (!sWinApp->GetUseRecordForMontage() && param->useMontMapParams)
+    set = MONT_USER_CONSET;
+  if (!trueSet && set == SEARCH_CONSET && sWinApp->GetUseViewForSearch())
+    set = VIEW_CONSET;
+  return set;
+}
+
+// Returns the low dose area that would be used for a montage in low dose mode
+int MontageLDAreaIndex(MontParam *param) 
+{
+  int set = MontageConSetNum(param, true, 1);
+  return sWinApp->mCamera->ConSetToLDArea(set);
 }
 
 bool UtilOKtoAllocate(int numBytes)
