@@ -380,7 +380,6 @@ CCameraController::CCameraController()
   mDarkMaxMeanCrit = 0.;
   mDarkMaxSDcrit = 0.;
   mBadDarkNumRetries = 2;
-  mNextViewIsSearch = false;
   mAllowSpectroscopyImages = false;
   mASIgivesGainNormOnly = true;
 }
@@ -2042,6 +2041,7 @@ void CCameraController::Capture(int inSet, bool retrying)
   double exposure, megaVoxel, megaVoxPerSec = 0.15;
   bool superRes;
   BOOL retracting = inSet == RETRACT_BLOCKERS || inSet == RETRACT_ALL;
+  mWinApp->CopyOptionalSetIfNeeded(inSet);
   ControlSet conSet = mConSetsp[retracting ? 0 : inSet]; // Copy the control set for ease
   mStartTime = GetTickCount();
   mShotIncomplete = true;     // Set flag for incomplete shot, cleared only on image
@@ -2171,7 +2171,7 @@ void CCameraController::Capture(int inSet, bool retrying)
     if (IsK2ConSetSaving(&conSet, mParam) && !conSet.saveFrames)
       conSet.saveFrames = 1;
     if (conSet.saveFrames && conSet.processing == GAIN_NORMALIZED && 
-      mSaveUnnormalizedFrames && GetPluginVersion(mParam) >= PLUGIN_CAN_GAIN_NORM)
+        mSaveUnnormalizedFrames && CAN_PLUGIN_DO(CAN_GAIN_NORM, mParam))
         conSet.processing = DARK_SUBTRACTED;
   }
 
@@ -2904,7 +2904,7 @@ int CCameraController::CapManageInsertTempK2Saving(const ControlSet &conSet, int
       aligning = mParam->K2Type && conSet.doseFrac && conSet.alignFrames && 
         (conSet.useFrameAlign == 1 || 
         (conSet.useFrameAlign && conSet.saveFrames && !mAlignWholeSeriesInIMOD)) &&
-        GetPluginVersion(mParam) >= PLUGIN_CAN_ALIGN_FRAMES;
+        CAN_PLUGIN_DO(CAN_ALIGN_FRAMES, mParam);
       if (!justReturn && mParam->K2Type && conSet.doseFrac && 
         (conSet.saveFrames || aligning)) {
           if (SetupK2SavingAligning(conSet, inSet, conSet.saveFrames != 0, aligning,
@@ -2993,7 +2993,7 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
       root = mFrameFilename;
       if (mK2SaveAsTiff)
         mPathForFrames += ".tif";
-      else if (mNameFramesAsMRCS && GetPluginVersion(mParam) >= PLUGIN_CAN_SET_MRCS_EXT) {
+      else if (mNameFramesAsMRCS && CAN_PLUGIN_DO(CAN_SET_MRCS_EXT, mParam)) {
         mPathForFrames += ".mrcs";
         flags |= K2_MRCS_EXTENSION;
       } else
@@ -3016,13 +3016,13 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
   if (mSaveRawPacked & 1)
     flags |= K2_SAVE_RAW_PACKED;
   if ((mSaveRawPacked & 1) && (mSaveRawPacked & 2) && 
-    GetPluginVersion(mParam) >= PLUGIN_4BIT_101_COUNTING)
+      CAN_PLUGIN_DO(4BIT_101_COUNTING, mParam))
     flags |= K2_RAW_COUNTING_4BIT;
   if ((mSaveRawPacked & 1) && mUse4BitMrcMode && !mK2SaveAsTiff &&
-    GetPluginVersion(mParam) >= PLUGIN_4BIT_101_COUNTING)
+      CAN_PLUGIN_DO(4BIT_101_COUNTING, mParam))
     flags |= K2_SAVE_4BIT_MRC_MODE;
   if (mSaveTimes100 && conSet.processing == GAIN_NORMALIZED && 
-    GetPluginVersion(mParam) >= PLUGIN_SAVES_TIMES_100)
+      CAN_PLUGIN_DO(SAVES_TIMES_100, mParam))
     flags |= K2_SAVE_TIMES_100;
   if (!refFile.IsEmpty()) {
     flags |= K2_COPY_GAIN_REF;
@@ -3094,7 +3094,7 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
     nameSize += comlen;
   }
   if (saving && conSet.sumK2Frames && conSet.summedFrameList.size() >
-    0 && GetPluginVersion(mParam) >= PLUGIN_CAN_SUM_FRAMES) {
+      0 && CAN_PLUGIN_DO(CAN_SUM_FRAMES, mParam)) {
       flags |= K2_SAVE_SUMMED_FRAMES;
       for (int frm = 0; frm < (int)conSet.summedFrameList.size() / 2; frm++) {
         tmpStr.Format("%d %d", conSet.summedFrameList[frm *2], 
@@ -3399,21 +3399,16 @@ int CCameraController::CapSetLDAreaFilterSettling(int inSet)
   CString logmess;
 
   // If in low dose and this is not the settling re-entry, set the acquisition area
-  // unless it matches what we were just told about, or unless we are in search and this
-  // is View conset - exclude tasks from this unless they positively indicate they want
-  // to stay in Search
+  // unless it matches what we were just told about
   if (mSettling < 0 && mScope->GetLowDoseMode()) {
-    // translate sets 4->3, 5 & 6 -> 2
+
+    // translate sets appropriately
     ldArea = ConSetToLDArea(inSet);
     if (mOppositeAreaNextShot)
       mScope->NextLDAreaOpposite();
-    if (ldArea != mLDwasSetToArea && !(inSet == VIEW_CONSET && 
-      mScope->GetLowDoseArea() == SEARCH_AREA && 
-      (!mWinApp->DoingTasks() || mNextViewIsSearch || 
-      (mRepFlag >= 0 && mContinuousCount > 0))))
+    if (ldArea != mLDwasSetToArea)
         mScope->GotoLowDoseArea(ldArea);
     mOppositeAreaNextShot = false;
-    mNextViewIsSearch = false;
     mLDwasSetToArea = -1;
   }
   mSettling = -1;
@@ -3505,7 +3500,7 @@ void CCameraController::CapManageCoordinates(ControlSet & conSet, int &gainXoffs
   doseFrac = mParam->K2Type && conSet.doseFrac;
   if (mParam->K2Type && !superRes && conSet.binning < 2)
     conSet.binning = 2;
-  antialiasInPlugin = mParam->K2Type && GetPluginVersion(mParam) >= PLUGIN_CAN_ANTIALIAS  
+  antialiasInPlugin = mParam->K2Type && CAN_PLUGIN_DO(CAN_ANTIALIAS, mParam)  
     && conSet.mode == SINGLE_FRAME && (doseFrac || superRes || mAntialiasBinning) &&
     conSet.binning > (superRes ? 1 : 2) && mTD.NumAsyncSumFrames != 0;
   reduceAligned = doseFrac && conSet.alignFrames && conSet.useFrameAlign == 1;
@@ -3701,7 +3696,7 @@ void CCameraController::CapSetupShutteringTiming(ControlSet & conSet, int inSet,
        // Set up line sync variable, which is now a set of flags for plugin high enough
       mTD.LineSyncAndFlags = B3DCHOICE(conSet.lineSync && mNeedShotToInsert < 0, 
         DS_LINE_SYNC, 0);
-      if (GetPluginVersion(mParam) >= PLUGIN_CAN_CONTROL_BEAM && 
+      if (CAN_PLUGIN_DO(CAN_CONTROL_BEAM, mParam) && 
         mDMversion[CAMP_DM_INDEX(mParam)] > DM_DS_CONTROLS_BEAM && 
         conSet.mode == SINGLE_FRAME) {
           if (mDScontrolBeam > 0)
@@ -3968,6 +3963,7 @@ void CCameraController::CapSetupShutteringTiming(ControlSet & conSet, int inSet,
 int CCameraController::CapSaveStageMagSetupDynFocus(ControlSet & conSet, int inSet)
 {
   double msPerLine;
+  CString mess;
   float flyback = mParam->flyback, startupDelay = mParam->startupDelay;
   MagTable *magTab = mWinApp->GetMagTable();
   BOOL boostMag;
@@ -4013,9 +4009,12 @@ int CCameraController::CapSaveStageMagSetupDynFocus(ControlSet & conSet, int inS
       mTD.STEMrotation = -mTD.STEMrotation;
     if (conSet.dynamicFocus && mSingleContModeUsed == SINGLE_FRAME && 
       mNeedShotToInsert < 0) {
-        if (mParam->FEItype)
-          mWinApp->mCalibTiming->FlybackTimeFromTable(mBinning, mTD.DMSizeX, mMagBefore,
-          conSet.exposure, flyback, startupDelay);
+        if (mParam->FEItype) {
+          ind = mWinApp->mCalibTiming->FlybackTimeFromTable(mBinning, mTD.DMSizeX, 
+            mMagBefore, conSet.exposure, flyback, startupDelay, &mess);
+          if (ind != FLYBACK_EXACT)
+            mWinApp->AppendToLog("WARNING: " + mess);
+        }
         ind = DynamicFocusOK(conSet.exposure, mTD.DMSizeY, flyback, 
           mTD.DynFocusInterval, msPerLine);
         if (ind > 0)
@@ -7142,11 +7141,13 @@ void CCameraController::DisplayNewImage(BOOL acquired)
 
     // Adjust the IS for a view offset in low dose by the net offset
     lowDoseMode = mTD.GetDeferredSum ? mBufDeferred->mLowDoseArea :mWinApp->LowDoseMode();
-    if (lowDoseMode && (mLastConSet == VIEW_CONSET || 
-      (mLastConSet == MONTAGE_CONSET && (mWinApp->GetMontParam())->useViewInLowDose))) {
-      mWinApp->mLowDoseDlg.GetNetViewShift(ISX, ISY);
-      mStartingISX -= ISX;
-      mStartingISY -= ISY;
+    if (lowDoseMode) {
+      ldSet = ConSetToLDArea(mLastConSet);
+      if (ldSet == VIEW_CONSET || ldSet == SEARCH_AREA) {
+        mWinApp->mLowDoseDlg.GetNetViewShift(ISX, ISY, ldSet);
+        mStartingISX -= ISX;
+        mStartingISY -= ISY;
+      }
     }
 
     mLastImageTime = 0.001 * GetTickCount();
@@ -7308,10 +7309,11 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       if (lowDoseMode) {
         ldSet = ConSetToLDArea(mLastConSet);
         spotSize = ldParam[ldSet].spotSize;
-        if (ldSet == VIEW_CONSET && mLastConSet == MONTAGE_CONSET)
-          imBuf->mConSetUsed = VIEW_CONSET;
-        if (ldSet == VIEW_CONSET)
-          mImBufs->mViewDefocus = mScope->GetLDViewDefocus();
+        if ((ldSet == VIEW_CONSET || ldSet == SEARCH_AREA) && 
+          mLastConSet == MONTAGE_CONSET)
+          imBuf->mConSetUsed = ldSet == VIEW_CONSET ? VIEW_CONSET : SEARCH_CONSET;
+        if (ldSet == VIEW_CONSET || ldSet == SEARCH_AREA)
+          mImBufs->mViewDefocus = mScope->GetLDViewDefocus(ldSet);
       } else {
         spotSize = mScope->FastSpotSize();
       }
@@ -7372,14 +7374,14 @@ void CCameraController::DisplayNewImage(BOOL acquired)
 
     // Report the fate of frame-saving
     if ((mParam->K2Type && lastConSetp->doseFrac && (lastConSetp->saveFrames ||
-      (lastConSetp->alignFrames && GetPluginVersion(mParam) >= PLUGIN_CAN_ALIGN_FRAMES &&
+      (lastConSetp->alignFrames && CAN_PLUGIN_DO(CAN_ALIGN_FRAMES, mParam) &&
       lastConSetp->useFrameAlign > 1))) || 
       (mSavingFalconFrames && !mDeferStackingFrames)) {
         if (mTD.NumAsyncSumFrames >= 0) {
           mTD.NumFramesSaved = B3DNINT(mExposure / mTD.FrameTime);
           mTD.ErrorFromSave = 0;
           if (lastConSetp->sumK2Frames && lastConSetp->summedFrameList.size() > 0 &&
-            GetPluginVersion(mParam) >= PLUGIN_CAN_SUM_FRAMES)
+            CAN_PLUGIN_DO(CAN_SUM_FRAMES, mParam))
             mTD.NumFramesSaved = mWinApp->mFalconHelper->GetFrameTotals(
               lastConSetp->summedFrameList, i, mTD.NumFramesSaved);
         }
@@ -7490,7 +7492,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
         summedList.push_back((short)mTD.NumFramesSaved);
         summedList.push_back(1);
         if (lastConSetp->sumK2Frames && lastConSetp->summedFrameList.size() > 0 &&
-          GetPluginVersion(mParam) >= PLUGIN_CAN_SUM_FRAMES)
+          CAN_PLUGIN_DO(CAN_SUM_FRAMES, mParam))
           summedList = lastConSetp->summedFrameList;
       }
       extra->mFrameDosesCounts = "";
@@ -7709,9 +7711,13 @@ int CCameraController::ConSetToLDArea(int inConSet)
       MontParam *montp = mWinApp->GetMontParam();
       if (montp->useViewInLowDose)
         ldArea = VIEW_CONSET;
+      else if (montp->useSearchInLowDose)
+        ldArea = SEARCH_AREA;
     }
   } else if (inConSet == PREVIEW_CONSET)
     ldArea = RECORD_CONSET;
+  else if (inConSet == SEARCH_CONSET)
+    ldArea = SEARCH_AREA;
   else if (inConSet > 3)
     ldArea = TRIAL_CONSET;
   return ldArea;
@@ -8637,8 +8643,11 @@ void CCameraController::SetAMTblanking(bool blank)
 CString CCameraController::CurrentSetName(void)
 {
   int nameInd = mLastConSet == MONTAGE_CONSET ? RECORD_CONSET : mLastConSet;
-  if (mLastConSet == MONTAGE_CONSET && mWinApp->LowDoseMode())
+  if (mLastConSet == MONTAGE_CONSET && mWinApp->LowDoseMode()) {
     nameInd = ConSetToLDArea(mLastConSet);
+    if (nameInd == SEARCH_AREA)
+      nameInd = SEARCH_CONSET;
+  }
   CString *modeNamep = mWinApp->GetModeNames() + nameInd;
   return *modeNamep;
 }
@@ -9250,8 +9259,9 @@ CString CCameraController::MakeFullDMRefName(CameraParameters *camP, const char 
 // Returns true if all conditions are set for saving from K2 camera/control set
 bool CCameraController::IsK2ConSetSaving(ControlSet *conSet, CameraParameters *param)
 {
+  PrintfToLog("HERE %p %p", conSet, param);
   return (mParam->K2Type && conSet->doseFrac && (conSet->saveFrames ||
-    (conSet->useFrameAlign > 1 && GetPluginVersion(mParam) >= PLUGIN_CAN_ALIGN_FRAMES &&
+      (conSet->useFrameAlign > 1 && CAN_PLUGIN_DO(CAN_ALIGN_FRAMES, mParam) &&
       (conSet->alignFrames || mWinApp->mTSController->GetFrameAlignInIMOD()))));
 }
 

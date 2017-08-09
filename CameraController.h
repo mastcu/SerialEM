@@ -421,7 +421,6 @@ class DLL_IM_EX CCameraController
   SetMember(float, DarkMaxSDcrit);
   SetMember(float, DarkMaxMeanCrit);
   SetMember(double, TaskFrameWaitStart);
-  SetMember(bool, NextViewIsSearch);
   GetSetMember(int, NumFrameAliLogLines);
   GetMember(bool, DeferredSumFailed);
   SetMember(BOOL, AllowSpectroscopyImages);
@@ -501,7 +500,7 @@ class DLL_IM_EX CCameraController
   float   mDelay;
   BOOL mForce;
   BOOL mPreDarkBump;      // Flag that pre-exposure dark ref exposure was bumped
-  int mLastConSet;
+  int mLastConSet;        // Conset used for parameters
   int mRepFlag;           // Set number for continuous capture
   int mPending;           // Set number for a pending capture
   int mNumRetries;        // Number of retries after timeout
@@ -744,7 +743,6 @@ class DLL_IM_EX CCameraController
   float mDarkMaxMeanCrit;        // Mean for testing dark reference against if > 0
   int mBadDarkNumRetries;        // Number of retries if there is a bad dark reference
   int mBadDarkCount;             // Current count of bad dark refs
-  bool mNextViewIsSearch;        // Flag to stay in search mode for next view
   int mNumFrameAliLogLines;            // Number of frame align log lines
   bool mDeferredSumFailed;       // Flag that getting deferred sum failed
   BOOL mAllowSpectroscopyImages; // Flag to allow images to be taken in spectroscopy
