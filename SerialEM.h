@@ -16,9 +16,20 @@
 #define MAX_DLG_CAMERAS  6
 #define MAX_CAL_FOCUS_LEVELS 31
 #define MAX_MAGS 120      // F20 STEM requires 95, TItan 100, Titan Halo STEM 112
-#define NUMBER_OF_USER_CONSETS  5
 #define NUM_TSS_PANELS 8
 #define HITACHI_LENS_MAX 0x3FFC00
+#define MAX_CONSETS   9
+#define NUMBER_OF_USER_CONSETS  7
+#define VIEW_CONSET   0
+#define FOCUS_CONSET   1
+#define TRIAL_CONSET   2
+#define RECORD_CONSET  3
+#define PREVIEW_CONSET 4
+#define SEARCH_CONSET  5
+#define MONT_USER_CONSET 6
+#define MONTAGE_CONSET 8
+#define ISCAL_CONSET   7
+#define TRACK_CONSET   7
 
 //#define TASK_TIMER_INTERVAL 50
 
@@ -95,17 +106,8 @@ struct JeolParams;
 #define MAX_TS_VARIES  50
 #define MAX_VARY_TYPES  6
 #define MAX_DIALOGS  16
-#define MAX_CONSETS   7
 #define MAX_LOWDOSE_SETS 5
 #define LAD_INDEX_BASE  30
-#define VIEW_CONSET   0
-#define FOCUS_CONSET   1
-#define TRIAL_CONSET   2
-#define RECORD_CONSET  3
-#define PREVIEW_CONSET 4
-#define MONTAGE_CONSET 6
-#define ISCAL_CONSET   5
-#define TRACK_CONSET   5
 #define IDLE_TIMEOUT_ERROR  -99
 #define MAX_MACROS 20
 #define SCOPE_PANEL_INDEX    3
@@ -221,6 +223,8 @@ typedef bool (*PlugDoingFunc)(void);
 #define CLEAR_RESIZE(a,b,c) { a.clear(); \
   a.swap(std::vector<b>(a)); \
   a.resize(c); }
+
+#define IS_SET_VIEW_OR_SEARCH(a) (a == VIEW_CONSET || a == SEARCH_CONSET)
 
 #define B3DMIN(a,b) ((a) < (b) ? (a) : (b))
 #define B3DMAX(a,b) ((a) > (b) ? (a) : (b))
@@ -499,6 +503,8 @@ public:
   GetSetMember(BOOL, ShowRemoteControl);
   GetMember(bool, HasFEIcamera);
   GetSetMember(BOOL, KeepEFTEMstate);
+  GetSetMember(BOOL, UseRecordForMontage);
+  GetSetMember(BOOL, UseViewForSearch);
   int *GetDlgColorIndex() {return &mDlgColorIndex[0];};
   GetSetMember(bool, AbsoluteDlgIndex);
   CFont *GetLittleFont() {return &mLittleFont;};
@@ -735,6 +741,8 @@ private:
   CFont mLittleFont;            // Central place to get the right font
   bool mHasFEIcamera;           // Flag that there is an FEI camera
   BOOL mKeepEFTEMstate;         // Flag to stay in or out of EFTEM on startup/shutdown
+  BOOL mUseRecordForMontage;    // Flag to use Record parameters for Montage
+  BOOL mUseViewForSearch;       // Flag to use View parameters for Search
 
 public:
   void UpdateAllEditers(void);
@@ -779,6 +787,7 @@ public:
 afx_msg void OnUpdateShowScopeControlPanel(CCmdUI *pCmdUI);
 afx_msg void OnShowScopeControlPanel();
 void SetMaxDialogWidth(void);
+void CopyOptionalSetIfNeeded(int inSet, int inCam = -1);
 };
 
 

@@ -227,7 +227,9 @@ CSerialEMApp::CSerialEMApp()
   mModeName[2] = "Trial";
   mModeName[3] = "Record";
   mModeName[4] = "Preview";
-  mModeName[5] = "Track";
+  mModeName[5] = "Search";
+  mModeName[6] = "Mont-map";
+  mModeName[7] = "Track";
   
   mPctLo = 0.1f;
   mPctHi = 0.1f;
@@ -437,6 +439,7 @@ CSerialEMApp::CSerialEMApp()
   mMontParam.setupInLowDose = false;
   mMontParam.forFullMontage = false;
   mMontParam.useViewInLowDose = false;
+  mMontParam.useSearchInLowDose = false;
   mMontParam.useContinuousMode = false;
   mMontParam.continDelayFactor = 0.5f;
   mMontParam.noDriftCorr = true;
@@ -636,6 +639,8 @@ CSerialEMApp::CSerialEMApp()
   mShowRemoteControl = true;
   mHasFEIcamera = false;
   mKeepEFTEMstate = false;
+  mUseRecordForMontage = false;
+  mUseViewForSearch = false;
   mIdleBaseCount = 0;
   SEMUtilInitialize();
   traceMutexHandle = CreateMutex(0, 0, 0);
@@ -1015,11 +1020,20 @@ BOOL CSerialEMApp::InitInstance()
 
   // Check initialization of parameter sets for first active camera now that we know size
   int numInit = 0;
+  int camMScopied, numMontSearchCopy = 0;
   iCam = mActiveCameraList[0];
   for (iSet = 0; iSet < NUMBER_OF_USER_CONSETS; iSet++) {
     if (!mCamConSets[iCam][iSet].right) {
-      mParamIO->SetDefaultCameraControls(iSet, &mConSets[iSet], mCamParams[iCam].sizeX, 
-        mCamParams[iCam].sizeY);
+      if (iSet == SEARCH_CONSET || iSet == MONT_USER_CONSET) {
+        if (iSet == SEARCH_CONSET)
+          mCamConSets[iCam][iSet] = mCamConSets[iCam][VIEW_CONSET];
+        else
+          mCamConSets[iCam][iSet] = mCamConSets[iCam][RECORD_CONSET];
+        numMontSearchCopy = 1;
+      } else {
+        mParamIO->SetDefaultCameraControls(iSet, &mConSets[iSet], mCamParams[iCam].sizeX, 
+          mCamParams[iCam].sizeY);
+      }
       numInit++;
     }
   }
@@ -1037,6 +1051,7 @@ BOOL CSerialEMApp::InitInstance()
   // from camera 0, unless ALL sets were initialized for camera 0
   for (iAct = 0; iAct < mActiveCamListSize; iAct++) {
     iCam = mActiveCameraList[iAct];
+    camMScopied = 0;
     if (mCamParams[iCam].sizeX <= 0 || mCamParams[iCam].sizeY <= 0 ||
       mCamParams[iCam].pixelMicrons <= 0) {
       message.Format("%s is not defined for camera %d",
@@ -1048,11 +1063,16 @@ BOOL CSerialEMApp::InitInstance()
 
     for (iSet = 0; iSet < NUMBER_OF_USER_CONSETS; iSet++) {
       if (!mCamConSets[iCam][iSet].right) {
-        if (numInit < NUMBER_OF_USER_CONSETS)
+        if (iSet == SEARCH_CONSET || iSet == MONT_USER_CONSET) {
+          mCamConSets[iCam][iSet] = B3DCHOICE(iSet == SEARCH_CONSET,
+            mCamConSets[iCam][VIEW_CONSET], mCamConSets[iCam][RECORD_CONSET]);
+          camMScopied = 1;
+        } else if (numInit < NUMBER_OF_USER_CONSETS) {
           TransferConSet(iSet, mActiveCameraList[0], iCam);
-        else
+        } else {
           mParamIO->SetDefaultCameraControls(iSet, &mCamConSets[iCam][iSet],
-          mCamParams[iCam].sizeX, mCamParams[iCam].sizeY);
+            mCamParams[iCam].sizeX, mCamParams[iCam].sizeY);
+        }
       }
 
       // If camera has only one shutter, set to beam blank
@@ -1062,6 +1082,7 @@ BOOL CSerialEMApp::InitInstance()
       B3DCLAMP(mCamConSets[iCam][iSet].bottom, 0, mCamParams[iCam].sizeY);
     }
     mCamParams[iCam].canBlock = mCamParams[iCam].retractable;
+    numMontSearchCopy += camMScopied;
 
     // 10/1/13: subareas no longer need to be square with rotations; but needs testing
     /*if (mCamParams[iCam].TietzType && mCamParams[iCam].TietzImageGeometry > 0 && 
@@ -1244,6 +1265,18 @@ BOOL CSerialEMApp::InitInstance()
 
   mScope->ReadProbeMode();
   mAlignFocusWindow.Update();
+
+  if (numMontSearchCopy)
+    AfxMessageBox("The settings file did not have camera parameter sets for Search\n"
+    "and/or Montage-mapping.  New parameter sets for Search and\n"\
+    "Mont-map have been created from View and Record sets,\n"
+    "respectively.\n\n"
+    "You can hide the Search set and use the View parameters for\n"
+    "Search by selecting the Camera menu item \"Use View for Search\".\n\n"
+    "The Mont-map set can selected to use for montaging instead of\n"
+    "Record; this could be useful for mapping.  You can hide it by\n"
+    "selecting the Camera menu item \"No Mont. Map Params\".", 
+    MB_OK | MB_ICONINFORMATION);
 
   // Zero the image shifts
   if (mScope->GetInitialized()) {
@@ -2740,7 +2773,11 @@ void CSerialEMApp::OnCameraParameters()
   RestoreViewFocus();
   UpdateBufferWindows();
   if (camDlg.mAcquireAndReopen) {
-    mCamera->InitiateCapture(mSelectedConSet);
+    if (LowDoseMode() && mUseViewForSearch && mScope->GetLowDoseArea() == SEARCH_AREA &&
+      mSelectedConSet == VIEW_CONSET)
+      mCamera->InitiateCapture(SEARCH_CONSET);
+    else
+      mCamera->InitiateCapture(mSelectedConSet);
     AddIdleTask(CCameraController::TaskCameraBusy, TASK_ACQUIRE_RESETUP, 0, 0);
   }
 }
@@ -3306,6 +3343,21 @@ void CSerialEMApp::CopyConSets(int inCam)
 {
   for (int i = 0; i < MAX_CONSETS; i++)
     mConSets[i] = mCamConSets[inCam][i];
+}
+
+// Synchronize the Search or Montage control set from View or Record if option selected
+void CSerialEMApp::CopyOptionalSetIfNeeded(int inSet, int inCam)
+{
+  if (inCam < 0)
+    inCam = mCurrentCamera;
+  if (inSet == SEARCH_CONSET && mUseViewForSearch) {
+    mCamConSets[inCam][SEARCH_CONSET] = mCamConSets[inCam][VIEW_CONSET];
+    mConSets[SEARCH_CONSET] = mConSets[VIEW_CONSET];
+  }
+  if (inSet == MONT_USER_CONSET && mUseRecordForMontage) {
+    mCamConSets[inCam][MONT_USER_CONSET] = mCamConSets[inCam][RECORD_CONSET];
+    mConSets[MONT_USER_CONSET] = mConSets[RECORD_CONSET];
+  }
 }
 
 // Transfer a control set from one camera to another, scaling the coordinates

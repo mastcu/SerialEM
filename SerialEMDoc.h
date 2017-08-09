@@ -267,6 +267,7 @@ public:
   void ComposeTitlebarLine(void);
   void CalibrationWasDone(int type);
   int SaveToOtherFile(int buffer, int fileType, int compression, CString *filename);
+  bool FieldAboveStageMoveThreshold(MontParam *param, BOOL lowDose, int camInd);
 };
 
 // FILE DIALOG CLASS and associated thread class and data

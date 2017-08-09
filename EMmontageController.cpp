@@ -340,11 +340,11 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
 {
   int ind, icx1, icx2, icy1, icy2, first, last, j, iDir, notSkipping;
   int ix, iy, i, fullX, fullY, binning, numBlocksX, numBlocksY, frameDelX, frameDelY;
-  int left, right, top, bottom, firstUndone, lastDone, firstPiece;
+  int left, right, top, bottom, firstUndone, lastDone, firstPiece, area;
   double delISX, delISY, baseZ, needed, currentUsage, ISX, ISY;
-  float memoryLimit, stageX, stageY, cornX, cornY;
-  BOOL tryForMemory, focusFeasible, external, useHQ, alignable;
-  int already, borderTry, setNum, cookSkip = 0;
+  float memoryLimit, stageX, stageY, cornX, cornY, binDiv;
+  BOOL tryForMemory, focusFeasible, external, useHQ, alignable, useVorSinLD;
+  int already, borderTry, setNum, useSetNum, cookSkip = 0;
   ScaleMat bMat, aInv;
   bool definedCenter = mDefinedCenterFrames;
   bool preCooking = inTrial == MONT_TRIAL_PRECOOK;
@@ -386,8 +386,10 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
     }
 
     if ((mWinApp->LowDoseMode() ? 1 : 0) != (mParam->setupInLowDose ? 1 : 0)) {
+      useVorSinLD = mParam->useViewInLowDose || 
+        (mParam->useSearchInLowDose && ldp[SEARCH_AREA].magIndex);
       if ((mParam->setupInLowDose || mParam->magIndex == ldp[RECORD_CONSET].magIndex) &&
-        !mParam->useViewInLowDose) {
+        !useVorSinLD) {
 
           // If it was set up in low dose and no data taken yet, assign current low dose
           // R mag to the montage; in any event change the flag
@@ -398,13 +400,13 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
 
         // Change is never allowed here if View in LD is on, but can be achieved in 
         // dialog if no data yet
-        mess.Format("This montage file was set up in %s mode and cannot be used in %s "
-          "mode", mParam->setupInLowDose ? "Low Dose" : "regular", 
+        mess.Format("This montage file was set up in %s mode and cannot be used\n"
+          "in %s mode", mParam->setupInLowDose ? "Low Dose" : "regular", 
           mParam->setupInLowDose ? "regular" : "Low Dose");
-        if (mReadStoreMRC->getDepth() > 0 && mParam->useViewInLowDose)
+        if (mReadStoreMRC->getDepth() > 0 && useVorSinLD)
           mess += "\n\nYou must either change mode or set up a new montage";
         else
-          mess += "\nwithout going through the Montage Setup dialog again";
+          mess += " without going through the Montage Setup dialog again";
         SEMMessageBox(mess);
         return 1;
       }
@@ -421,11 +423,28 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
     }
 
     // Set mag index now from current low dose params (note this allows a change!)
-    setNum = MontageConSetNum(mParam);
+    setNum = MontageConSetNum(mParam, true);
+    useSetNum = MontageConSetNum(mParam, false);
+    mWinApp->CopyOptionalSetIfNeeded(setNum);
     if (mWinApp->LowDoseMode()) {
-      mParam->magIndex = ldp[setNum].magIndex;
-      if (setNum == VIEW_CONSET)
-        mDefocusForCal = mScope->GetLDViewDefocus();
+      area = mCamera->ConSetToLDArea(setNum);
+      mParam->magIndex = ldp[area].magIndex;
+      if (IS_SET_VIEW_OR_SEARCH(setNum) && 
+        mParam->magIndex >= mScope->GetLowestNonLMmag())
+          mDefocusForCal = mScope->GetLDViewDefocus(area);
+    } else if (mConSets[useSetNum].binning != mParam->binning && 
+      !mParam->warnedConSetBin) {
+        binDiv = cam->K2Type ? 2.f : 1.f;
+        mess.Format("This montage is set to be taken with binning %g,\n"
+          "different from the binning (%g) in the %s parameter\n"
+          "set.  The exposure time (%g sec) may not be right for\n"
+          "binning %g\n\nAre you sure you want to proceed?",
+          mParam->binning / binDiv, mConSets[useSetNum].binning / binDiv,  
+          (LPCTSTR)(*(mWinApp->GetModeNames() + useSetNum)), 
+          mConSets[useSetNum].exposure, mParam->binning / binDiv);
+        if (AfxMessageBox(mess, MB_QUESTION) == IDNO)
+          return 1;
+        mParam->warnedConSetBin = true;
     }
 
     /* if (!mMagTab[mParam->magIndex].calibrated[mWinApp->GetCurrentCamera()] && 
@@ -549,7 +568,7 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
     mBaseStageY = mParam->fullMontStageY;
   }
   if (mWinApp->LowDoseMode() && !mReadingMontage)
-    mScope->GotoLowDoseArea(setNum);
+    mScope->GotoLowDoseArea(mCamera->ConSetToLDArea(setNum));
   mScope->GetImageShift(mBaseISX, mBaseISY);
 
   // Set up skip list to read in only the center
@@ -1139,7 +1158,7 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
       if (mParam->xFrame != ix || mParam->yFrame != iy) {
         mess.Format("Turn off Dose Fractionation in the %s parameters or\r\n"
           "reopen the montage with full-sized frames\r\n(%d x %d at this binning)",
-          (LPCTSTR)(*(mWinApp->GetModeNames() + setNum)), ix, iy);
+          (LPCTSTR)(*(mWinApp->GetModeNames() + useSetNum)), ix, iy);
         SEMMessageBox(CString("Montage frames cannot be subareas with Dose Fractionation"
           " on\n\n") + mess);
         mWinApp->AppendToLog(mess);
@@ -1180,8 +1199,8 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
     }
 
     // "Use up" the once dark settings in the control sets, per camera and master
-    mConSets[setNum].onceDark = 0;
-    (mWinApp->GetCamConSets() + setNum + mWinApp->GetCurrentCamera() * 
+    mConSets[useSetNum].onceDark = 0;
+    (mWinApp->GetCamConSets() + useSetNum + mWinApp->GetCurrentCamera() * 
       MAX_CONSETS)->onceDark = 0;
   }
 
@@ -2567,10 +2586,10 @@ void EMmontageController::SavePiece()
         mImBufs[1].mISY = mHaveStageOffsets ? 0 : extra1->mISY;
         mScope->GetValidXYbacklash(mBaseStageX, mBaseStageY, mImBufs[1].mBacklashX,
           mImBufs[1].mBacklashY);
-        mImBufs[1].mConSetUsed = MontageConSetNum(mParam);
+        mImBufs[1].mConSetUsed = MontageConSetNum(mParam, true);
         mImBufs[1].mLowDoseArea = mWinApp->LowDoseMode();
-        if (mImBufs[1].mConSetUsed == VIEW_CONSET && mImBufs[1].mLowDoseArea)
-          mImBufs[1].mViewDefocus = mScope->GetLDViewDefocus();
+        if (IS_SET_VIEW_OR_SEARCH(mImBufs[1].mConSetUsed) && mImBufs[1].mLowDoseArea)
+          mImBufs[1].mViewDefocus = mScope->GetLDViewDefocus(mImBufs[1].mConSetUsed);
         if (MapParamsToAutodoc() > 0)
           PrintfToLog("WARNING: Errors occurred writing parameters for defining a map to"
             " autodoc");
@@ -2778,8 +2797,9 @@ void EMmontageController::SavePiece()
   } 
 
   if (mBufferManager->ReplaceImage((char *)mCenterData, 
-      cenType == kUSHORT ? kUSHORT : kSHORT,  mParam->xFrame, mParam->yFrame, 0, 
-      mTrialMontage ? BUFFER_PRESCAN_CENTER : BUFFER_MONTAGE_CENTER, MONTAGE_CONSET)) {
+    cenType == kUSHORT ? kUSHORT : kSHORT,  mParam->xFrame, mParam->yFrame, 0, 
+    mTrialMontage ? BUFFER_PRESCAN_CENTER : BUFFER_MONTAGE_CENTER, 
+    mImBufs[0].mConSetUsed)) {
       delete [] mCenterData;
       if (extra0)
         delete extra1;
@@ -3072,9 +3092,8 @@ bool EMmontageController::CameraNotFeasible(MontParam *param)
   if (!param)
     param = mWinApp->GetMontParam();
   int camera = mWinApp->GetCurrentCamera();
-  setNum = MontageConSetNum(param);
-  if (mConSets[setNum].binning != param->binning ||
-    param->binning * param->xFrame > mCamParams[camera].sizeX || 
+  setNum = MontageConSetNum(param, false);
+  if (param->binning * param->xFrame > mCamParams[camera].sizeX || 
     param->binning * param->yFrame > mCamParams[camera].sizeY)
     return true;
   xFrame = param->xFrame;
@@ -4308,14 +4327,14 @@ int EMmontageController::MapParamsToAutodoc(void)
   errSum -= AdocSetFloat(ADOC_MONT_SECT, index, ADOC_DRIFT, conSet->drift);
   errSum -= AdocSetTwoIntegers(ADOC_MONT_SECT, index, ADOC_CAM_MODES, conSet->shuttering,
     conSet->K2ReadMode);
-  if (mImBufs[1].mLowDoseArea && mImBufs[1].mConSetUsed == VIEW_CONSET) {
+  if (mImBufs[1].mLowDoseArea && IS_SET_VIEW_OR_SEARCH(mImBufs[1].mConSetUsed)) {
     CMapDrawItem item;
     item.mMapMagInd = mImBufs[1].mMagInd;
     item.mMapCamera = mImBufs[1].mCamera;
     errSum -= AdocSetFloat(ADOC_MONT_SECT, index, ADOC_FOCUS_OFFSET, 
       mImBufs[1].mViewDefocus);
     mWinApp->mNavHelper->GetViewOffsets(&item, netShiftX, netShiftY, beamShiftX, 
-      beamShiftY, beamTiltX, beamTiltY);
+      beamShiftY, beamTiltX, beamTiltY, mCamera->ConSetToLDArea(mImBufs[1].mConSetUsed));
     errSum -= AdocSetTwoFloats(ADOC_MONT_SECT, index, ADOC_NET_VIEW_SHIFT, netShiftX, 
       netShiftY);
     errSum -= AdocSetTwoFloats(ADOC_MONT_SECT, index, ADOC_VIEW_BEAM_SHIFT, beamShiftX, 

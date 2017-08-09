@@ -702,8 +702,11 @@ int CParameterIO::ReadSettings(CString strFileName)
       } else if (NAME_IS("GainRefNormalizeSpot")) {  // Obsolete or confused setting...
         mWinApp->mGainRefMaker->SetCalibrateDose(itemInt[1] != 0);
       } else if (NAME_IS("LowDoseViewShift")) {
-        mWinApp->mLowDoseDlg.mViewShiftX = itemDbl[1];
-        mWinApp->mLowDoseDlg.mViewShiftY = itemDbl[2];
+        mWinApp->mLowDoseDlg.mViewShiftX[0] = itemDbl[1];
+        mWinApp->mLowDoseDlg.mViewShiftY[0] = itemDbl[2];
+      } else if (NAME_IS("LDSearchShift")) {
+        mWinApp->mLowDoseDlg.mViewShiftX[1] = itemDbl[1];
+        mWinApp->mLowDoseDlg.mViewShiftY[1] = itemDbl[2];
       } else if(NAME_IS("ResetRealignIterationCriterion")) {
         mWinApp->mComplexTasks->SetRSRAUserCriterion((float)itemDbl[1]);
       } else
@@ -1301,8 +1304,11 @@ void CParameterIO::WriteSettings(CString strFileName)
         mFile->WriteString(oneState);
       }
     }
-    oneState.Format("LowDoseViewShift %f %f\n", mWinApp->mLowDoseDlg.mViewShiftX, 
-      mWinApp->mLowDoseDlg.mViewShiftY); 
+    oneState.Format("LowDoseViewShift %f %f\n", mWinApp->mLowDoseDlg.mViewShiftX[0], 
+      mWinApp->mLowDoseDlg.mViewShiftY[0]); 
+    mFile->WriteString(oneState);
+    oneState.Format("LDSearchShift %f %f\n", mWinApp->mLowDoseDlg.mViewShiftX[1], 
+      mWinApp->mLowDoseDlg.mViewShiftY[1]); 
     mFile->WriteString(oneState);
     pctLo = mWinApp->mComplexTasks->GetRSRAUserCriterion();
     if (pctLo >= 0.)
@@ -4183,6 +4189,7 @@ void CParameterIO::SetDefaultCameraControls(int which, ControlSet *cs,
 
   switch(which) {
   case VIEW_CONSET:
+  case SEARCH_CONSET:
     // Default values for VIEW Control Set
     InitializeControlSet(cs, cameraSizeX, cameraSizeY);
     cs->binning = minSize / 512;
@@ -4214,6 +4221,7 @@ void CParameterIO::SetDefaultCameraControls(int which, ControlSet *cs,
     break;
     
   case RECORD_CONSET:
+  case MONT_USER_CONSET:
     // Default values for Record 2 Control Set
     InitializeControlSet(cs, cameraSizeX, cameraSizeY);
     cs->binning = minBin;  

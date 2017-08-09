@@ -401,7 +401,8 @@ int CSerialEMDoc::OpenOldFile(CFile *file, CString cFilename, int err)
 
         // First try to get everything from the autodoc
         param->binning = 0;
-        int ind, binInd, binning, camInd, magInd, adocInd, conSet, stage = -1, lowDose = -1;
+        int ind, binInd, binning, camInd, magInd, adocInd, conSet, stage = -1;
+        int lowDose = -1;
         int *activeList = mWinApp->GetActiveCameraList();
         adocInd = mWinApp->mStoreMRC->GetAdocIndex();
         if (adocInd >= 0 && !AdocAcquireMutex())
@@ -455,6 +456,7 @@ int CSerialEMDoc::OpenOldFile(CFile *file, CString cFilename, int err)
           param->warnedCamChange = false;
           param->warnedCalOpen = false;
           param->warnedCalAcquire = false;
+          param->warnedConSetBin = false;
           param->offerToMakeMap = false;
 
           // Set to current state or to proper state for low dose
@@ -463,16 +465,15 @@ int CSerialEMDoc::OpenOldFile(CFile *file, CString cFilename, int err)
           } else {
             param->setupInLowDose = lowDose > 0;
             param->useViewInLowDose = lowDose > 0 && conSet == VIEW_CONSET;
+            param->useSearchInLowDose = lowDose > 0 && conSet == SEARCH_CONSET;
           }
 
           // Use previous stage parameter or assert it if montage is above threshold
           if (stage >= 0)
             param->moveStage = stage > 0;
           else
-            param->moveStage = param->magIndex < mWinApp->mScope->GetLowestNonLMmag() ||
-              0.7 * (B3DMAX(param->xFrame, param->yFrame) - param->xOverlap) * 
-              param->binning * mWinApp->mShiftManager->GetPixelSize(activeList[camInd], 
-              param->magIndex) > navp->maxMontageIS;
+            param->moveStage = FieldAboveStageMoveThreshold(param, lowDose > 0,
+              activeList[camInd]); 
           
           OpenMontageDialog(true);
           ManageExposure();
@@ -611,11 +612,11 @@ int CSerialEMDoc::GetMontageParamsAndFile(BOOL frameSet, int xNframes, int yNfra
 void CSerialEMDoc::InitMontParamsForDialog(MontParam *param, BOOL frameSet, int xNframes, 
                                            int yNframes, CString filename)
 {
-  int setNum = MontageConSetNum(param);
+  int setNum = MontageConSetNum(param, false);
   LowDoseParams *ldp = mWinApp->GetLowDoseParams();
   param->magIndex = mWinApp->mScope->GetMagIndex();
   if (mWinApp->LowDoseMode())
-    param->magIndex = ldp[setNum].magIndex;
+    param->magIndex = ldp[MontageLDAreaIndex(param)].magIndex;
   if (!frameSet) {
     MontParamInitFromConSet(param, setNum);
     param->xNframes = xNframes > 0 ? xNframes : mDefaultMontXpieces;
@@ -629,6 +630,7 @@ void CSerialEMDoc::InitMontParamsForDialog(MontParam *param, BOOL frameSet, int 
   param->warnedBinChange = false;
   param->warnedMagChange = false;
   param->warnedCamChange = false;
+  param->warnedConSetBin = false;
   param->ignoreSkipList = false;
   param->skipOutsidePoly = false;
   param->wasFitToPolygon = false;
@@ -646,12 +648,12 @@ void CSerialEMDoc::InitMontParamsForDialog(MontParam *param, BOOL frameSet, int 
 }
 
 // Do the part of the initialization that depends on the control set
+// setNum should be the conset number that will be used unless true conset has been synced
 void CSerialEMDoc::MontParamInitFromConSet(MontParam *param, int setNum)
 {
   int curCam = mWinApp->GetCurrentCamera();
   CameraParameters *camParam = mWinApp->GetCamParams() + curCam;
   ControlSet *cs = mWinApp->GetConSets() + setNum;
-  NavParams *navp = mWinApp->GetNavParams();
   param->binning = cs->binning;
   if (camParam->K2Type && cs->binning == 1)
     param->binning = 2;
@@ -662,12 +664,24 @@ void CSerialEMDoc::MontParamInitFromConSet(MontParam *param, int setNum)
   param->xOverlap += param->xOverlap % 2;
   param->yOverlap = param->xOverlap;
 
-  // Set up to use stage in LM or if a 2x2 montage will trip the maximum IS message
-  param->moveStage = param->magIndex < mWinApp->mScope->GetLowestNonLMmag() ||
-    0.7 * (maxSize - param->xOverlap) * param->binning * 
-    mWinApp->mShiftManager->GetPixelSize(curCam, param->magIndex) > navp->maxMontageIS;
+  // Set up to use stage if appropriate
+  param->moveStage = FieldAboveStageMoveThreshold(param, mWinApp->LowDoseMode(), curCam);
 }
 
+// Tests whether montage is in LM or if a 2x2 montage will trip the maximum IS message
+bool CSerialEMDoc::FieldAboveStageMoveThreshold(MontParam *param, BOOL lowDose, 
+  int camInd)
+{
+  NavParams *navp = mWinApp->GetNavParams();
+  LowDoseParams *ldp = mWinApp->GetLowDoseParams();
+  int magInd = param->magIndex;
+  if (lowDose)
+    magInd = ldp[MontageLDAreaIndex(param)].magIndex;
+  return magInd < mWinApp->mScope->GetLowestNonLMmag() ||
+    0.7 * (B3DMAX(param->xFrame, param->yFrame) - param->xOverlap) * 
+    param->binning * mWinApp->mShiftManager->GetPixelSize(camInd, magInd) > 
+    navp->maxMontageIS;
+}
 
 // Open the montage dialog: pass it the standard montage parameters, take them
 // back if no cancel
@@ -708,7 +722,7 @@ void CSerialEMDoc::ManageExposure()
   MontParam *param = mWinApp->GetMontParam();
   int *activeList = mWinApp->GetActiveCameraList();
   int camera = activeList[mWinApp->mMontageController->GetMontageActiveCamera(param)];
-  int setNum = MontageConSetNum(param, param->setupInLowDose ? 1 : 0);
+  int setNum = MontageConSetNum(param, false, param->setupInLowDose ? 1 : 0);
   ControlSet *cs = mWinApp->GetCamConSets() + camera * MAX_CONSETS + setNum;
   CString *modeName = mWinApp->GetModeNames();
   CameraParameters *camParam = mWinApp->GetCamParams() + camera;
@@ -716,15 +730,24 @@ void CSerialEMDoc::ManageExposure()
   // If binning changed, set it in record set and adjust exposure at least
   // Note this overrides the drift-adjusting code in montage controller
   if (param->binning != cs->binning) {
-    float ratio = (float)param->binning / cs->binning;
-    cs->exposure = B3DMAX(cs->exposure / (ratio * ratio), camParam->minExposure);
-    cs->binning = param->binning;
-    mWinApp->mTSController->TSMessageBox("The binning in the " + modeName[setNum] 
-    + " parameter set has been changed\n"
-      "to match your selection, and the exposure time has been\n"
-      "changed to give the same number of counts per bin.\n\n"
-      "You should now adjust the exposure and drift settling as\n"
-      "needed to obtain good images.", MB_EXCLAME);
+     if (param->setupInLowDose) {
+       float binDiv = camParam->K2Type ? 2.f : 1.f;
+        PrintfToLog("WARNING: This montage was set up with binning %g, different from "
+        "the binning (%g) in the %s parameter set\r\n"
+        "   Because this is a low-dose montage, the parameter set will be left as it was,"
+        "\r\n   and the exposure time there will be assumed to work with both binnings",
+        param->binning / binDiv, cs->binning / binDiv, modeName[setNum]);
+    } else {
+      float ratio = (float)param->binning / cs->binning;
+      cs->binning = param->binning;
+      cs->exposure = B3DMAX(cs->exposure / (ratio * ratio), camParam->minExposure);
+      SEMMessageBox("The binning in the " + modeName[setNum] 
+        + " parameter set has been changed\n"
+        "to match your selection, and the exposure time has been\n"
+        "changed to give the same number of counts per binned pixel.\n\n"
+        "You should now adjust the exposure and drift settling as\n"
+        "needed to obtain good images.", MB_EXCLAME);
+    }
     if (camera == mWinApp->GetCurrentCamera())
       mWinApp->CopyConSets(camera); 
   }
