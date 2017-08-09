@@ -28,6 +28,7 @@ struct MontParam {
   BOOL warnedMagChange;    // User was warned about changing mag
   BOOL warnedCamChange;    // User was warned about changing camera
   BOOL warnedStageChange;  // User was warned about changing move stage
+  BOOL warnedConSetBin;    // User was warned about binning different from parameter set
   BOOL offerToMakeMap;     // Ask user whether to make a map from montage
   BOOL adjustFocus;        // Change focus for column
   BOOL correctDrift;       // Use drift correction
@@ -48,7 +49,9 @@ struct MontParam {
   float minMicronsOverlap;  // And minimum overlap in microns
   float byteMinScale;       // Scaling factors for converting to bytes when read
   float byteMaxScale;
+  BOOL useMontMapParams;    // Flag to use the montage mapping parameters
   BOOL useViewInLowDose;    // Flag to use View parameters in low dose mode
+  BOOL useSearchInLowDose;  // Flag to use Search parameters/area in low dose
   BOOL setupInLowDose;      // Flag that params were set up in low dose
   BOOL useContinuousMode;   // Flag to use continuous mode if possible
   float continDelayFactor;  // Delay (settling) factor for continuous mode

@@ -34,10 +34,11 @@ static int idTable[] = {IDC_STATCAMERA, IDC_RCAMERA1, IDC_RCAMERA2, IDC_RCAMERA3
   IDC_STATICY2, IDC_EDITYSIZE, IDC_STATOVERLAP, IDC_EDITXOVERLAP, IDC_STATICY3,
   IDC_EDITYOVERLAP, IDC_STATTOTALLABEL, IDC_STATTOTALPIXELS, IDC_STATTOTALAREA, 
   IDC_UPDATE, IDC_MOVESTAGE, IDC_IGNORESKIPS, IDC_MINOVLABEL, IDC_MINOVVALUE, 
-  IDC_SPINMINOV, IDC_EDITMINOVERLAP, IDC_STATMINAND, IDC_STATMINMICRON, 
-  IDC_CHECK_SKIP_OUTSIDE, IDC_EDIT_SKIP_OUTSIDE, IDC_CHECKOFFERMAP, 
+  IDC_SPINMINOV, IDC_EDITMINOVERLAP, IDC_STATMINAND, IDC_STATMINMICRON, IDC_STAT_LINE1,
+  IDC_CHECK_SKIP_OUTSIDE, IDC_EDIT_SKIP_OUTSIDE, IDC_CHECKOFFERMAP, IDC_STAT_LINE2, 
   IDC_CHECK_USE_HQ_SETTINGS, IDC_BUT_RESET_OVERLAPS, IDC_CHECK_USE_VIEW_IN_LOWDOSE,
-  IDC_CHECK_NO_DRIFT_CORR, IDC_CHECK_CONTINUOUS_MODE, IDC_EDIT_CONTIN_DELAY_FAC, PANEL_END,
+  IDC_CHECK_NO_DRIFT_CORR, IDC_CHECK_CONTINUOUS_MODE, IDC_EDIT_CONTIN_DELAY_FAC, 
+  IDC_CHECK_USE_SEARCH_IN_LD, IDC_CHECK_USE_MONT_MAP_PARAMS, PANEL_END,
   IDC_STAT_HQSTAGEBOX, IDC_CHECK_FOCUS_EACH,IDC_CHECK_FOCUS_BLOCKS, 
   IDC_CHECK_SKIPCORR, IDC_CHECK_SKIP_REBLANK, IDC_STAT_BLOCKSIZE, IDC_STATBLOCKPIECES, 
   IDC_SPIN_BLOCK_SIZE, IDC_STAT_DELAY, 
@@ -72,6 +73,8 @@ CMontageSetupDlg::CMontageSetupDlg(CWnd* pParent /*=NULL*/)
   , m_bNoDriftCorr(FALSE)
   , m_bUseContinMode(FALSE)
   , m_fContinDelayFac(0)
+  , m_bUseSearchInLD(FALSE)
+  , m_bUseMontMapParams(FALSE)
 {
   //{{AFX_DATA_INIT(CMontageSetupDlg)
   m_iXnFrames = 1;
@@ -100,6 +103,7 @@ CMontageSetupDlg::CMontageSetupDlg(CWnd* pParent /*=NULL*/)
 	//}}AFX_DATA_INIT
   mForceStage = false;
   mNoneFeasible = false;
+  mLastRecordMoveStage = -1;
 }
 
 
@@ -210,7 +214,11 @@ void CMontageSetupDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Check(pDX, IDC_CHECK_CONTINUOUS_MODE, m_bUseContinMode);
   DDX_Control(pDX, IDC_EDIT_CONTIN_DELAY_FAC, m_editContinDelayFac);
   DDX_Text(pDX, IDC_EDIT_CONTIN_DELAY_FAC, m_fContinDelayFac);
-	DDV_MinMaxFloat(pDX, m_fContinDelayFac, 0., 9.);
+  DDV_MinMaxFloat(pDX, m_fContinDelayFac, 0., 9.);
+  DDX_Control(pDX, IDC_CHECK_USE_SEARCH_IN_LD, m_butUseSearchInLD);
+  DDX_Check(pDX, IDC_CHECK_USE_SEARCH_IN_LD, m_bUseSearchInLD);
+  DDX_Control(pDX, IDC_CHECK_USE_MONT_MAP_PARAMS, m_butUseMontMapParams);
+  DDX_Check(pDX, IDC_CHECK_USE_MONT_MAP_PARAMS, m_bUseMontMapParams);
 }
 
 
@@ -251,6 +259,8 @@ BEGIN_MESSAGE_MAP(CMontageSetupDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_CHECK_REPEAT_FOCUS, OnCheckRepeatFocus)
   ON_BN_CLICKED(IDC_CHECK_USE_VIEW_IN_LOWDOSE, OnUseViewInLowdose)
   ON_BN_CLICKED(IDC_CHECK_CONTINUOUS_MODE, OnCheckContinuousMode)
+  ON_BN_CLICKED(IDC_CHECK_USE_SEARCH_IN_LD, OnUseSearchInLD)
+  ON_BN_CLICKED(IDC_CHECK_USE_MONT_MAP_PARAMS, OnUseMontMapParams)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -321,7 +331,8 @@ BOOL CMontageSetupDlg::OnInitDialog()
     // Setup just can't be changed if View is to be used, but otherwise it is always
     // OK going from LD to regular because the mag index just carries over, but if the
     // mag changes going from regulr to LD, treat it like mag change requiring one confirm
-    if (mMismatchedModes && !mParam.useViewInLowDose) {
+    if (mMismatchedModes && !mParam.useViewInLowDose && 
+      !(mParam.useSearchInLowDose && mLdp[SEARCH_AREA].magIndex)) {
       if (mLowDoseMode && mParam.magIndex != mLdp[RECORD_CONSET].magIndex &&
         !mParam.warnedMagChange) {
         if (AfxMessageBox("These parameters have been used at one magnification in "
@@ -343,13 +354,21 @@ BOOL CMontageSetupDlg::OnInitDialog()
 
     // If not locked, and Low dose has changed from before, reformat for current set
     if (mMismatchedModes) {
-      mWinApp->mDocWnd->MontParamInitFromConSet(&mParam, MontageConSetNum(&mParam));
+      mParam.magIndex = mWinApp->mScope->GetMagIndex();
+      if (mLowDoseMode)
+        mParam.magIndex = mLdp[MontageLDAreaIndex(&mParam)].magIndex;
+      mWinApp->mDocWnd->MontParamInitFromConSet(&mParam, MontageConSetNum(&mParam,false));
       mParam.setupInLowDose = mLowDoseMode;
     }
   }
   mMismatchedModes = (mLowDoseMode ? 1 : 0) != (mParam.setupInLowDose ? 1 : 0);
   ReplaceDlgItemText(IDC_CHECK_USE_VIEW_IN_LOWDOSE, "View", modeName[VIEW_CONSET]);
+  ReplaceDlgItemText(IDC_CHECK_USE_MONT_MAP_PARAMS, "Record", modeName[RECORD_CONSET]);
+  m_butUseMontMapParams.EnableWindow(!mWinApp->GetUseRecordForMontage() && !mSizeLocked
+    && !(mLowDoseMode && (mParam.useViewInLowDose || mParam.useSearchInLowDose)));
   m_butUseViewInLD.EnableWindow(mLowDoseMode && !mSizeLocked);
+  m_butUseSearchInLD.EnableWindow(mLowDoseMode && !mSizeLocked && 
+    mLdp[SEARCH_AREA].magIndex);
   ManageSizeFields();
   m_editXoverlap.EnableWindow(!mSizeLocked && !mFittingItem);
   m_editYoverlap.EnableWindow(!mSizeLocked && !mFittingItem);
@@ -404,6 +423,8 @@ void CMontageSetupDlg::LoadParamData(BOOL setPos)
 
   // Set the spin button data
   mLDsetNum = mParam.useViewInLowDose ? VIEW_CONSET : RECORD_CONSET;
+  if (mParam.useSearchInLowDose && mLdp[SEARCH_AREA].magIndex)
+    mLDsetNum = SEARCH_AREA;
   m_sbcXnFrames.SetPos(mParam.xNframes);
   m_sbcYnFrames.SetPos(mParam.yNframes);
   if (mLowDoseMode) {
@@ -452,7 +473,9 @@ void CMontageSetupDlg::LoadParamData(BOOL setPos)
   m_fMinMicron = mParam.minMicronsOverlap;
   mParam.minOverlapFactor = B3DMAX(0.01f, B3DMIN(mMaxOverFrac, mParam.minOverlapFactor));
   m_strMinOvValue.Format("%d%%", B3DNINT(100. * mParam.minOverlapFactor));
+  m_bUseMontMapParams = mParam.useMontMapParams;
   m_bUseViewInLowDose = mParam.useViewInLowDose;
+  m_bUseSearchInLD = mParam.useSearchInLowDose;
   UpdateData(false);
   ValidateEdits();
   UpdateSizes();
@@ -831,7 +854,9 @@ void CMontageSetupDlg::UnloadParamData(void)
   mParam.maxRealignIS = m_fISlimit;
   mParam.ISrealign = m_bISrealign;
   mParam.useAnchorWithIS = m_bUseAnchor;
+  mParam.useMontMapParams = m_bUseMontMapParams;
   mParam.useViewInLowDose = m_bUseViewInLowDose;
+  mParam.useSearchInLowDose = m_bUseSearchInLD;
   mParam.useContinuousMode = m_bUseContinMode;
   mParam.continDelayFactor = m_fContinDelayFac;
   if (m_bUseHq)
@@ -1045,10 +1070,10 @@ int CMontageSetupDlg::CheckNavigatorFit(int magIndex, int binning, float minOver
 
   // If switching mode in low dose, re-init the param and set the mag index and binning
   if (switchingVinLD) {
-    int ldset = MontageConSetNum(&tmpParam);
-    ControlSet *conSet = mWinApp->GetConSets() + ldset;
-    mWinApp->mDocWnd->MontParamInitFromConSet(&tmpParam, ldset);
-    magIndex = mLdp[ldset].magIndex;
+    int setNum = MontageConSetNum(&tmpParam, false);
+    ControlSet *conSet = mWinApp->GetConSets() + setNum;
+    mWinApp->mDocWnd->MontParamInitFromConSet(&tmpParam, setNum);
+    magIndex = mLdp[MontageLDAreaIndex(&tmpParam)].magIndex;
     binning = conSet->binning;
   }
   int err = mWinApp->mNavigator->FitMontageToItem(&tmpParam, binning, magIndex, 
@@ -1056,7 +1081,7 @@ int CMontageSetupDlg::CheckNavigatorFit(int magIndex, int binning, float minOver
   if (!err) {
     mParam = tmpParam;
     if (switchingVinLD)
-      mLDsetNum = MontageConSetNum(&mParam);
+      mLDsetNum = MontageLDAreaIndex(&mParam);
     LoadParamData(false);
   }
   return err;
@@ -1242,26 +1267,60 @@ void CMontageSetupDlg::OnButResetOverlaps()
   SetFocus();
 }
 
-// When Use View changes, put values back in the param, reinitialize with these
-// conset sizes, and reload the dialog
+void CMontageSetupDlg::OnUseMontMapParams()
+{
+  BOOL dummy = false;
+  UseViewOrSearchInLD(dummy);
+}
+
 void CMontageSetupDlg::OnUseViewInLowdose()
 {
+  UseViewOrSearchInLD(m_bUseSearchInLD);
+}
+
+void CMontageSetupDlg::OnUseSearchInLD()
+{
+  UseViewOrSearchInLD(m_bUseViewInLowDose);
+}
+
+// When Use View changes, put values back in the param, reinitialize with these
+// conset sizes, and reload the dialog
+void CMontageSetupDlg::UseViewOrSearchInLD(BOOL &otherFlag)
+{
   BOOL saveVinLD = m_bUseViewInLowDose;
+  BOOL saveSinLD = m_bUseSearchInLD;
+  BOOL saveUseMMP = m_bUseMontMapParams;
+  int saveMoveStage = m_bMoveStage ? 1 : 0;
+  if (mLowDoseMode && !m_bUseViewInLowDose && !m_bUseSearchInLD)
+    mLastRecordMoveStage = saveMoveStage;
+
   UpdateData(true);
-  if (!mLowDoseMode)
-    return;
+  if (otherFlag) {
+    otherFlag = false;
+    UpdateData(false);
+  }
 
   // If fitting item, the sequence is handled entirely by the check routine and the mag
   // index and binning are supplied there, but need to restore button if fit is rejected
   if (mFittingItem) {
-    if (CheckNavigatorFit(0, 0, -1., -1., TRUE)) {
+    if (CheckNavigatorFit(0, 0, -1., -1., mLowDoseMode)) {
       m_bUseViewInLowDose = saveVinLD;
+      m_bUseSearchInLD = saveSinLD;
+      m_bUseMontMapParams = saveUseMMP;
       UpdateData(false);
     }
     return;
   }
   UnloadParamData();
-  mLDsetNum = MontageConSetNum(&mParam);
-  mWinApp->mDocWnd->MontParamInitFromConSet(&mParam, mLDsetNum);
+  mLDsetNum = MontageLDAreaIndex(&mParam);
+  mWinApp->mDocWnd->MontParamInitFromConSet(&mParam, MontageConSetNum(&mParam, false));
+  if (!mLowDoseMode)
+    mParam.moveStage = saveMoveStage > 0;
+  else if (!m_bUseViewInLowDose && !m_bUseSearchInLD && mLastRecordMoveStage >= 0)
+    mParam.moveStage = mLastRecordMoveStage > 0;
   LoadParamData(true);
+  if ((m_bMoveStage ? 1 : 0) != saveMoveStage)
+    OnMovestage();
+  m_butUseMontMapParams.EnableWindow(!mWinApp->GetUseRecordForMontage() && !mSizeLocked
+    && !(mLowDoseMode && (m_bUseViewInLowDose || m_bUseSearchInLD)));
 }

@@ -151,6 +151,7 @@ private:
   BOOL mCamFeasible[MAX_CAMERAS];
   int mPanelStart[5];
   int mNumInPanel[5];
+  int mLastRecordMoveStage;
 
 public:
   int CheckNavigatorFit(int magIndex, int binning, float minOverlap = -1.f, 
@@ -200,6 +201,13 @@ public:
   float m_fContinDelayFac;
   afx_msg void OnCheckContinuousMode();
   void ManageCamAndStageEnables(void);
+  CButton m_butUseSearchInLD;
+  BOOL m_bUseSearchInLD;
+  afx_msg void OnUseSearchInLD();
+  void UseViewOrSearchInLD(BOOL & otherFlag);
+  CButton m_butUseMontMapParams;
+  BOOL m_bUseMontMapParams;
+  afx_msg void OnUseMontMapParams();
 };
 
 //{{AFX_INSERT_LOCATION}}
