@@ -81,6 +81,7 @@ CNavHelper::CNavHelper(void)
   mRIalphaSet = -999;
   mRIuseBeamOffsets = false;
   mRITiltTolerance = 2.;
+  mRIdefocusChangeLimit = 0.;
   mContinuousRealign = 0;
   mGridGroupSize = 5.;
   mDivideIntoGroups = false;
@@ -251,13 +252,22 @@ int CNavHelper::FindMapForRealigning(CMapDrawItem * inItem, BOOL restoreState)
       // calibration shift unless staying in low dose, in which case need to clear out
       // the initial image shift.  Sadly, this is all empirical.
       if (differentMap && ((mWinApp->LowDoseMode() || item->mNetViewShiftX || 
-        item->mNetViewShiftY) && inItem->mMapMagInd == ldp[RECORD_CONSET].magIndex)) {
+        item->mNetViewShiftY) && (inItem->mMapMagInd == ldp[RECORD_CONSET].magIndex ||
+        inItem->mMapMagInd == ldp[VIEW_CONSET].magIndex))) {
           if (stayInLD && (item->mNetViewShiftX || item->mNetViewShiftY)) {
             firstDelX = 0.;
             firstDelY = 0.;
           } else if (!stayInLD) {
             targetX += mRIcalShiftX;
             targetY += mRIcalShiftY;
+          }
+
+          // If the user changed the view shift and this map was taken at the same 
+          // position (and presumably all under the old shift), revise the target by the
+          // change in the view shift.  
+          if (samePosMap) {
+            targetX += mRIviewShiftChangeX;
+            targetY += mRIviewShiftChangeY;
           }
       }
       firstDelX += netViewShiftX;
@@ -682,11 +692,14 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState)
   // 9/14/12: We have to use the aligning-to item's Z here to end up at the right Z
   // Add the view shift just to the coordinates being moved to, all the evaluations
   // of error below depend on comparisons to original first stage pos without it
-  SEMTrace('h', "first stage %.2f %.2f  net view shift %.2f %.2f  firstdel %.2f %.2f",
-    mRIfirstStageX ,mRIfirstStageY, mRInetViewShiftX, mRInetViewShiftY, firstDelX, firstDelY);
-  mNav->AdjustAndMoveStage(mRIfirstStageX + mRInetViewShiftX + firstDelX, 
-    mRIfirstStageY + mRInetViewShiftY + firstDelY, inItem->mStageZ, axes,
-    itemBackX, itemBackY, mRIfirstISX + mRIleaveISX, mRIfirstISY + mRIleaveISY, mapAngle);
+  SEMTrace('h', "first stage %.2f %.2f  net view shift %.2f %.2f  firstdel %.2f %.2f"
+    " VS change %.2f %.2f firstIS %.2f %.2f", mRIfirstStageX ,mRIfirstStageY, 
+    mRInetViewShiftX, mRInetViewShiftY, firstDelX, firstDelY, mRIviewShiftChangeX, 
+    mRIviewShiftChangeY, mRIfirstISX, mRIfirstISY);
+  mNav->AdjustAndMoveStage(mRIfirstStageX + mRInetViewShiftX + firstDelX - 
+    mRIviewShiftChangeX, mRIfirstStageY + mRInetViewShiftY + firstDelY - 
+    mRIviewShiftChangeY, inItem->mStageZ, axes, itemBackX, itemBackY, 
+    mRIfirstISX + mRIleaveISX, mRIfirstISY + mRIleaveISY, mapAngle);
 
   mWinApp->AddIdleTask(SEMStageCameraBusy, TASK_NAV_REALIGN, action, 30000);
   mWinApp->SetStatusText(MEDIUM_PANE, "REALIGNING TO ITEM");
@@ -939,8 +952,9 @@ void CNavHelper::RealignNextTask(int param)
       // Finally, move the stage, relative to the first stage move, adding the view shift
       // because it is not in the adjustment applied to the stage position
       mNav->BacklashForItem(item, shiftX, shiftY);
-      mNav->AdjustAndMoveStage(mRIfirstStageX + mRInetViewShiftX + stageDelX, 
-        mRIfirstStageY + mRInetViewShiftY + stageDelY, 0., axisXY, shiftX, shiftY,
+      mNav->AdjustAndMoveStage(mRIfirstStageX + mRInetViewShiftX + stageDelX - 
+        mRIviewShiftChangeX, mRIfirstStageY + mRInetViewShiftY + stageDelY - 
+        mRIviewShiftChangeY, 0., axisXY, shiftX, shiftY,
         mRIfirstISX + mRIleaveISX, mRIfirstISY + mRIleaveISY);
       mWinApp->AddIdleTask(CEMscope::TaskStageBusy, TASK_NAV_REALIGN, TASK_SECOND_MOVE,
         30000);
@@ -961,9 +975,9 @@ void CNavHelper::RealignNextTask(int param)
       mImBufs->mImage->getShifts(shiftX, shiftY);
       mLocalErrX = -mImBufs->mBinning * (bInv.xpx * shiftX - bInv.xpy * shiftY);
       mLocalErrY = -mImBufs->mBinning * (bInv.ypx * shiftX - bInv.ypy * shiftY);
-      SEMTrace('1', "Aligned to target with image shift of %.1f %.1f pixels\r\n    local "
-        "stage err %.2f %.2f, implied total err %.2f %.2f", shiftX, shiftY, mLocalErrX, 
-        mLocalErrY, mLocalErrX + mStageErrX, mLocalErrY + mStageErrY);
+      SEMTrace('1', "Aligned to target with image shift of %.1f %.1f pixels\r\n"
+        "    local stage err %.2f %.2f, implied total err %.2f %.2f", shiftX, shiftY, 
+        mLocalErrX, mLocalErrY, mLocalErrX + mStageErrX, mLocalErrY + mStageErrY);
       mRInumRounds++;
 
       // Get new stage position and revise and report error, based on original adjusted
@@ -1191,6 +1205,7 @@ void CNavHelper::PrepareToReimageMap(CMapDrawItem *item, MontParam *param,
 {
   ControlSet *conSets = mWinApp->GetConSets();
   int  binning, xFrame, yFrame, area;
+  float defocus;
   StateParams stateParam;
   LowDoseParams *ldp;
   CString *names = mWinApp->GetModeNames();
@@ -1249,7 +1264,16 @@ void CNavHelper::PrepareToReimageMap(CMapDrawItem *item, MontParam *param,
           ldp->slitWidth = item->mMapSlitWidth;
         }
       }
-      mScope->GotoLowDoseArea(mRIconSetNum);
+      mScope->GotoLowDoseArea(mCamera->ConSetToLDArea(mRIconSetNum));
+      mRIareaDefocusChange = 0.;
+      if (!mRIuseCurrentLDparams && IS_SET_VIEW_OR_SEARCH(mRIconSetNum)) {
+        defocus = mScope->GetLDViewDefocus(area);
+        if (fabs(item->mDefocusOffset - defocus) > 0.1) {
+          mRIareaDefocusChange = item->mDefocusOffset - defocus;
+          mScope->SetLDViewDefocus(item->mDefocusOffset, area);
+          mScope->IncDefocus(mRIareaDefocusChange);
+        }
+      }
       return;
     }
 
@@ -1267,32 +1291,42 @@ void CNavHelper::PrepareToReimageMap(CMapDrawItem *item, MontParam *param,
 bool CNavHelper::CanStayInLowDose(CMapDrawItem *item, int xFrame, int yFrame, int binning,
   int &setNum, float &retShiftX, float &retShiftY, bool forReal)
 {
-  int area;
   int mapLDconSet = item->mMapLowDoseConSet;
+  int area = mCamera->ConSetToLDArea(mapLDconSet);
   double netX, netY, fullX, fullY;
   bool match = true;
   LowDoseParams *ldp;
   CameraParameters *camP = mWinApp->GetCamParams() + mWinApp->GetCurrentCamera();
   bool hasAlpha = JEOLscope && !mScope->GetHasNoAlpha();
   setNum = TRACK_CONSET;
+
+  // Start out with the item's net view/search shifts in these, but if they are non-zero,
+  // replace them with the current net shift (as a stage move) and keep track of how much
+  // the view shift changed
   retShiftX = item->mNetViewShiftX;
   retShiftY = item->mNetViewShiftY;
+  mRIviewShiftChangeX = mRIviewShiftChangeY = 0;
+  if (retShiftX || retShiftY) {
+    mWinApp->mLowDoseDlg.GetNetViewShift(netX, netY, area);
+    SimpleIStoStage(item, netX, netY, retShiftX, retShiftY);
+    mRIviewShiftChangeX = retShiftX - item->mNetViewShiftX;
+    mRIviewShiftChangeY = retShiftY - item->mNetViewShiftY;
+  }
 
   // Compute the amount of mag offset calibration shift that the requested stage position
   // will be adjusted by so that it can be added onto the requested position, since the
-  // view shifts incorporate the calibration as well
+  // view shifts applied when going to low dose area incorporate the calibration as well
   mRIcalShiftX = mRIcalShiftY = 0.;
   if ((retShiftX || retShiftY) && !mScope->GetApplyISoffset()) {
-    mWinApp->mLowDoseDlg.GetNetViewShift(netX, netY);
-    mWinApp->mLowDoseDlg.GetFullViewShift(fullX, fullY);
+    mWinApp->mLowDoseDlg.GetNetViewShift(netX, netY, area);
+    mWinApp->mLowDoseDlg.GetFullViewShift(fullX, fullY, area);
     fullX -= netX;
     fullY -= netY;
     SimpleIStoStage(item, fullX, fullY, mRIcalShiftX, mRIcalShiftY);
-   }
+  }
 
   // Now if in low dose, look for matching set
-  if (mWinApp->LowDoseMode() && mapLDconSet >= 0 && mapLDconSet <= PREVIEW_CONSET) {
-    area = mCamera->ConSetToLDArea(mapLDconSet);
+  if (mWinApp->LowDoseMode() && mapLDconSet >= 0 && mapLDconSet <= SEARCH_CONSET) {
     ldp = mWinApp->GetLowDoseParams() + area;
 
     // Check mag/spot/alpha and filter
@@ -1312,16 +1346,17 @@ bool CNavHelper::CanStayInLowDose(CMapDrawItem *item, int xFrame, int yFrame, in
         match = false;
     }
 
-    // Check for defocus offset change
-    if (match && item->mMapLowDoseConSet == VIEW_CONSET && 
-      fabs(item->mDefocusOffset - mScope->GetLDViewDefocus()) > 20.) {
+    // Check for defocus offset change if a limit is set as a trap-door
+    if (match && IS_SET_VIEW_OR_SEARCH(item->mMapLowDoseConSet) && 
+      mRIdefocusChangeLimit > 0. && fabs(item->mDefocusOffset - 
+      mScope->GetLDViewDefocus(area)) > mRIdefocusChangeLimit) {
         if (forReal)
           SEMTrace('1', "Leaving LD, defocus offset map %.1f  LD %.1f",
-            item->mDefocusOffset, mScope->GetLDViewDefocus());
+            item->mDefocusOffset, mScope->GetLDViewDefocus(area));
         match = false;
     }
 
-    // Found a match!
+    // Found a match!  Zero out the returned shifts
     if (match) {
       setNum = item->mMapLowDoseConSet;
       retShiftX = 0.;
@@ -1331,7 +1366,7 @@ bool CNavHelper::CanStayInLowDose(CMapDrawItem *item, int xFrame, int yFrame, in
   }
 
   // But if not staying in low dose, need to adjust the returned shift to be a full view
-  // shift with the old shift and the new difference between full and net
+  // shift by adding the calibration back on
   retShiftX += mRIcalShiftX;
   retShiftY += mRIcalShiftY;
   return false;
@@ -1791,6 +1826,7 @@ void CNavHelper::SaveCurrentState(int type, bool saveLDfocusPos)
 void CNavHelper::RestoreLowDoseConset(void)
 {
   int area;
+  float defocus;
   LowDoseParams *ldp;
   ControlSet *workSets = mWinApp->GetConSets();
   ControlSet *camSets = mWinApp->GetCamConSets();
@@ -1802,6 +1838,11 @@ void CNavHelper::RestoreLowDoseConset(void)
     area = mCamera->ConSetToLDArea(mRIconSetNum);
     ldp = mWinApp->GetLowDoseParams() + area;
     *ldp = mRIsavedLDparam;
+    if (mRIareaDefocusChange) {
+      defocus = mScope->GetLDViewDefocus(area);
+      mScope->SetLDViewDefocus(defocus - mRIareaDefocusChange, area);
+      mScope->IncDefocus(-mRIareaDefocusChange);
+    }
   }
 
   // And be sure to turn flag off in case this is called from other situations
@@ -2080,24 +2121,24 @@ void CNavHelper::ChangeAllBufferRegistrations(int mapID, int fromReg, int toReg)
   }
 }
 
-// Get the image and beam shift and beam tilt for View from current parameters
+// Get the image and beam shift and beam tilt for View or search from current parameters
 void CNavHelper::GetViewOffsets(CMapDrawItem * item, float &netShiftX, 
   float &netShiftY, float &beamShiftX, float & beamShiftY, float &beamTiltX, 
-  float &beamTiltY)
+  float &beamTiltY, int area)
 {
   double shiftX, shiftY;
   LowDoseParams *ldParm = mWinApp->GetLowDoseParams();
   beamTiltX = beamTiltY = 0.;
-  mWinApp->mLowDoseDlg.GetNetViewShift(shiftX, shiftY);
+  mWinApp->mLowDoseDlg.GetNetViewShift(shiftX, shiftY, area);
   SimpleIStoStage(item, shiftX, shiftY, netShiftX, netShiftY);
 
   // Store incremental beam shift and tilt if any
-  beamShiftX = (float)(ldParm[VIEW_CONSET].beamDelX - ldParm[RECORD_CONSET].beamDelX);
-  beamShiftY = (float)(ldParm[VIEW_CONSET].beamDelY - ldParm[RECORD_CONSET].beamDelY);
+  beamShiftX = (float)(ldParm[area].beamDelX - ldParm[RECORD_CONSET].beamDelX);
+  beamShiftY = (float)(ldParm[area].beamDelY - ldParm[RECORD_CONSET].beamDelY);
   if (mScope->GetLDBeamTiltShifts()) {
-    beamTiltX = (float)(ldParm[VIEW_CONSET].beamTiltDX - 
+    beamTiltX = (float)(ldParm[area].beamTiltDX - 
       ldParm[RECORD_CONSET].beamTiltDX);
-    beamTiltY = (float)(ldParm[VIEW_CONSET].beamTiltDY - 
+    beamTiltY = (float)(ldParm[area].beamTiltDY - 
       ldParm[RECORD_CONSET].beamTiltDY);
   }
 }
@@ -2125,7 +2166,7 @@ void CNavHelper::SimpleIStoStage(CMapDrawItem * item, double ISX, double ISY,
 ScaleMat CNavHelper::ItemStageToCamera(CMapDrawItem * item)
 {
   ScaleMat aMat;
-  if (item->mMapLowDoseConSet == VIEW_CONSET)
+  if (IS_SET_VIEW_OR_SEARCH(item->mMapLowDoseConSet))
     aMat = mShiftManager->FocusAdjustedStageToCamera(item->mMapCamera, item->mMapMagInd,
       item->mMapSpotSize, item->mMapProbeMode, item->mMapIntensity, item->mDefocusOffset);
   else

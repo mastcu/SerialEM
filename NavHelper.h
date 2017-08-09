@@ -49,6 +49,7 @@ public:
   GetSetMember(BOOL, DivideIntoGroups);
   GetSetMember(bool, EditReminderPrinted);
   SetMember(float, RITiltTolerance);
+  SetMember(float, RIdefocusChangeLimit);
   GetSetMember(BOOL, RIuseCurrentLDparams);
   GetSetMember(BOOL, CollapseGroups);
   SetMember(int, ExtDrawnOnID);
@@ -156,13 +157,17 @@ private:
   float mRIbeamShiftSetY;
   float mRIbeamTiltSetX;
   float mRIbeamTiltSetY;
-  float mRInetViewShiftX;
+  float mRInetViewShiftX;       // Stage equivalent of underlying view shift
   float mRInetViewShiftY;
+  float mRIviewShiftChangeX;    // Difference between original and current shift
+  float mRIviewShiftChangeY;
   float mRIcalShiftX;           // The adjustment to be applied by AdjustAndMoveStage
   float mRIcalShiftY;
   int mRIconSetNum;
   bool mRIstayingInLD;
   LowDoseParams mRIsavedLDparam;
+  float mRIareaDefocusChange;   // Change in defocus offset when staying in low dose
+  float mRIdefocusChangeLimit;  // Maximum defocus change for it to stay in LD
   BOOL mRIuseBeamOffsets;       // Flag for whether to use the offsets
   float mTestParams[4];         // Parameters that can be set from macro
   int mContinuousRealign;       // Flag to use continuous mode; > 1 to leave it running
@@ -266,7 +271,7 @@ public:
     
   void LoadPieceContainingPoint(CMapDrawItem * ptItem, int mapIndex);
   void StartRealignCapture(bool useContinuous, int nextTask);
-  void GetViewOffsets(CMapDrawItem * item, float & netShiftX, float & netShiftY, float & beamShiftX, float & beamShiftY, float & beamTiltX, float & beamTiltY);
+  void GetViewOffsets(CMapDrawItem * item, float & netShiftX, float & netShiftY, float & beamShiftX, float & beamShiftY, float & beamTiltX, float & beamTiltY, int area = VIEW_CONSET);
   void StateCameraCoords(int camIndex, int xFrame, int yFrame, int binning, int &left, int &right, int &top, int &bottom);
   bool CanStayInLowDose(CMapDrawItem * item, int xFrame, int yFrame, int binning, int & set, float & netShiftX, float & netShiftY, bool forReal);
   void SimpleIStoStage(CMapDrawItem * item, double ISX, double ISY, float &stageX, float &stageY);
