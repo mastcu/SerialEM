@@ -415,6 +415,11 @@ BEGIN_MESSAGE_MAP(CMenuTargets, CCmdTarget)
   ON_UPDATE_COMMAND_UI(ID_SPECIALOPTIONS_NORMALIZEALLLENS, OnUpdateNoTasks)
   ON_COMMAND(ID_NAVOPTIONS_USECURRENTLDPARAMSINRI, OnUseCurrentLDparamsInNavRealign)
   ON_UPDATE_COMMAND_UI(ID_NAVOPTIONS_USECURRENTLDPARAMSINRI, OnUpdateUseCurrentLDparamsInNavRealign)
+  ON_COMMAND(ID_CAMERA_USEVIEWFORSEARCH, OnCameraUseViewForSearch)
+  ON_UPDATE_COMMAND_UI(ID_CAMERA_USEVIEWFORSEARCH, OnUpdateCameraUseViewForSearch)
+  ON_COMMAND(ID_CAMERA_USERECORDFORMONTAGE, OnCameraUseRecordForMontage)
+  ON_UPDATE_COMMAND_UI(ID_CAMERA_USERECORDFORMONTAGE, OnUpdateCameraUseRecordForMontage)
+  ON_COMMAND(ID_CAMERA_SEARCH, OnCameraSearch)
   END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1391,26 +1396,52 @@ void CMenuTargets::OnUpdateCalibrationListmags(CCmdUI* pCmdUI)
 // Menu or toolbar buttons to start a capture: go through common routine
 void CMenuTargets::OnCameraView() 
 {
-  if (mWinApp->LowDoseMode() && mWinApp->mScope->GetLowDoseArea() == SEARCH_AREA)
-    mWinApp->mScope->GotoLowDoseArea(VIEW_CONSET);
-  mWinApp->UserRequestedCapture(0);
+  mWinApp->UserRequestedCapture(VIEW_CONSET);
 }
 void CMenuTargets::OnCameraFocus() 
 {
-  mWinApp->UserRequestedCapture(1);
+  mWinApp->UserRequestedCapture(FOCUS_CONSET);
 }
 void CMenuTargets::OnCameraTrial() 
 {
-  mWinApp->UserRequestedCapture(2);
+  mWinApp->UserRequestedCapture(TRIAL_CONSET);
 }
 void CMenuTargets::OnCameraRecord() 
 {
-  mWinApp->UserRequestedCapture(3);
+  mWinApp->UserRequestedCapture(RECORD_CONSET);
 }
 
 void CMenuTargets::OnCameraPreview() 
 {
-  mWinApp->UserRequestedCapture(4);
+  mWinApp->UserRequestedCapture(PREVIEW_CONSET);
+}
+
+void CMenuTargets::OnCameraSearch()
+{
+  mWinApp->UserRequestedCapture(SEARCH_CONSET);
+}
+
+void CMenuTargets::OnCameraUseViewForSearch()
+{
+  mWinApp->SetUseViewForSearch(!mWinApp->GetUseViewForSearch());
+  mWinApp->mCameraMacroTools.Update();
+}
+
+void CMenuTargets::OnUpdateCameraUseViewForSearch(CCmdUI *pCmdUI)
+{
+  pCmdUI->SetCheck(mWinApp->GetUseViewForSearch() ? 1 : 0);
+  pCmdUI->Enable(!mWinApp->DoingTasks());
+}
+
+void CMenuTargets::OnCameraUseRecordForMontage()
+{
+  mWinApp->SetUseRecordForMontage(!mWinApp->GetUseRecordForMontage());
+}
+
+void CMenuTargets::OnUpdateCameraUseRecordForMontage(CCmdUI *pCmdUI)
+{
+  pCmdUI->SetCheck(mWinApp->GetUseRecordForMontage() ? 1 : 0);
+  pCmdUI->Enable(!mWinApp->DoingTasks());
 }
 
 void CMenuTargets::OnCameraSetcountlimit()

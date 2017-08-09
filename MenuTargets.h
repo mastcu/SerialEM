@@ -341,6 +341,11 @@ public:
   afx_msg void OnNormalizeAllLensesOnMag();
   afx_msg void OnUseCurrentLDparamsInNavRealign();
   afx_msg void OnUpdateUseCurrentLDparamsInNavRealign(CCmdUI *pCmdUI);
+  afx_msg void OnCameraUseViewForSearch();
+  afx_msg void OnUpdateCameraUseViewForSearch(CCmdUI *pCmdUI);
+  afx_msg void OnCameraUseRecordForMontage();
+  afx_msg void OnUpdateCameraUseRecordForMontage(CCmdUI *pCmdUI);
+  afx_msg void OnCameraSearch();
 };
 
 /////////////////////////////////////////////////////////////////////////////
