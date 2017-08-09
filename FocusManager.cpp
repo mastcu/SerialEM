@@ -532,8 +532,8 @@ void CFocusManager::OnFocusMovecenter()
      focusFac = -1.f / GetSTEMdefocusToDelZ(-1);;
   newFocus = imBuf->mDefocus + specY * tan(DTOR * angle) * focusFac;
   if (!mWinApp->GetSTEMMode() && mWinApp->LowDoseMode() && imBuf->mLowDoseArea && 
-    imBuf->mConSetUsed == VIEW_CONSET)
-    newFocus -= mScope->GetLDViewDefocus();
+    IS_SET_VIEW_OR_SEARCH(imBuf->mConSetUsed))
+    newFocus -= mScope->GetLDViewDefocus(imBuf->mConSetUsed);
   SEMTrace('1', "Shift %.1f %.1f  specY %.2f focusFac  %f  newFocus %.2f", shiftX, shiftY,
     specY, focusFac, newFocus);
   mScope->SetUnoffsetDefocus(newFocus);
@@ -1082,7 +1082,7 @@ int CFocusManager::CurrentDefocusFromShift(float inX, float inY, float &defocus,
   if (mFCindex < 0)
     defocus -= (float)mDefocusOffset;
   if (mFocusSetNum == VIEW_CONSET && !(mDoChangeFocus == -1 && mUseViewInLD == 1))
-    defocus -= mScope->GetLDViewDefocus();
+    defocus -= mScope->GetLDViewDefocus(VIEW_CONSET);
 
   // Adjust for image not centered - get specimen Y of center of field
   // The sign of change in measured defocus is opposite to sign when moving
@@ -1834,7 +1834,7 @@ int CFocusManager::CheckZeroPeak(float * xPeak, float * yPeak, float * peakVal, 
   else {
     expected += mDefocusOffset;
     if (mFocusSetNum == VIEW_CONSET)
-      expected += mWinApp->mScope->GetLDViewDefocus();
+      expected += mWinApp->mScope->GetLDViewDefocus(VIEW_CONSET);
   }
 
   if (fabs(xPeak[0]) > 0.5 || fabs(yPeak[0]) > 0.5)
