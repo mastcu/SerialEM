@@ -226,7 +226,8 @@ int CShiftManager::SetAlignShifts(float newX, float newY, BOOL incremental,
 
       // Get the stage movement based on nearest calibration, negative needed here
       // as for image shift
-      if (imBuf->mLowDoseArea && imBuf->mConSetUsed == VIEW_CONSET && 
+      if (imBuf->mLowDoseArea && IS_SET_VIEW_OR_SEARCH(imBuf->mConSetUsed) && 
+        magInd >= mScope->GetLowestNonLMmag() &&
         imBuf->GetSpotSize(spot) && imBuf->GetIntensity(intensity))
         defocus = imBuf->mViewDefocus;
       bMat = FocusAdjustedStageToCamera(camera, magInd, spot, imBuf->mProbeMode,
@@ -3387,7 +3388,7 @@ bool CShiftManager::GetScaleAndRotationForFocus(EMimageBuffer *imBuf, float &sca
   float nearFoc;
   scale = 1.;
   rotation = 0.;
-  if (imBuf->mLowDoseArea && imBuf->mConSetUsed == VIEW_CONSET && 
+  if (imBuf->mLowDoseArea && IS_SET_VIEW_OR_SEARCH(imBuf->mConSetUsed) && 
       imBuf->GetSpotSize(spot) && imBuf->GetIntensity(intensity))
      return GetDefocusMagAndRot(spot, imBuf->mProbeMode, intensity, imBuf->mViewDefocus,
           scale, rotation, nearFoc, nearC2dist, nearC2Ind, numNearC2);
