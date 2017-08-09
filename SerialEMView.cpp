@@ -1208,6 +1208,7 @@ void CSerialEMView::OnLButtonUp(UINT nFlags, CPoint point)
         imBuf->mDrawUserBox = false;
         imBuf->mUserPtX = shiftX;
         imBuf->mUserPtY = shiftY;
+        mWinApp->mLowDoseDlg.Update();
         if ((mMainWindow || mFFTWindow) && 
           mWinApp->mProcessImage->GetFFTZeroRadiiAndDefocus(imBuf, NULL, defocus)) {
             lenstr.Format("Defocus -%.2f um", defocus);
@@ -1451,6 +1452,7 @@ void CSerialEMView::OnMouseMove(UINT nFlags, CPoint point)
             imBuf->mUserPtY = prevY;
             if (mWinApp->mNavigator)
               mWinApp->mNavigator->UpdateAddMarker();
+            mWinApp->mLowDoseDlg.Update();
           }
           if (mDrawingLine) {
             imBuf->mLineEndX = shiftX;

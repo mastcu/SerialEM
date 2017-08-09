@@ -130,33 +130,50 @@
       'Blanked' will appear whenever the beam is blanked, even transiently during 
       exposures when not in low dose mode.
     </P>
-    <P><B>Search</B></P>
-    <P>Use this button to make the Search area be the current area. The Search area 
-      was originally not tied to camera acquisition. To leave the Search area, just 
-      take a camera picture other than Search.</P>
-    <P><B>Defocus offset for View</B></P>
-    <P>You can use this control to set an additional underfocus for the View area. 
-      Focus will be changed by this amount when going to the View area (e.g., by 
-      taking a View image) and then will be restored when going to another area. For 
+    <P><B>Defocus offset for View or Search</B></P>
+    <P>You can use this control to set an additional underfocus for the View or Search area, 
+      depending on which radio button is selected. 
+      Focus will be changed by this amount when going to the View or Search area 
+      (e.g., by taking an image) and then will be restored when going to another area. For 
       example, if you have a focus target of -4 microns, set the offset to -8 to get 
-      View images taken at -12 microns defocus.&nbsp; Be sure to align the View images 
+      View images taken at -12 microns defocus.&nbsp; Be sure to align the View or 
+      Search images 
       with the offset feature described next if you use very large defocus values.</P>
-    <P><a name="viewShiftOffset"></a><B>Shift offset for View</B></a></P>
-    <P>If image features shift when going between the View and Record areas, the <B>Set</B>
-      button allows you to correct for this shift. The Set button is enabled after 
-      you have shifted a View image into alignment with a Record or Preview image. 
-      The procedure for setting a shift is:</P>
+    <P>The defocus offset is applied after going to the magnification of the area; 
+      thus it will be incremental to a focus change imposed by the microscope during 
+      the magnification change.&nbsp; In particular, when going between nonLM and LM, 
+      the microscope may restore the last defocus seen in the new magnification range, 
+      and the offset is then applied to that.</P>
+    <P><a name="viewShiftOffset"></a><B>Shift offset for View or Search</B></a></P>
+    <P>If image features shift when going between the View or Search and Record areas, the <B>Set</B>
+      button allows you to correct for this shift. The are two methods for setting the 
+      shift offset: 1) applying a shift with the mouse button to bring the image in 
+      buffer A into alignment with a reference image; 2) placing the green marker 
+      point at corresponding locations in the images in buffers A and B.&nbsp;&nbsp; 
+      Method 1 is more direct and potentially more accurate, but may be more 
+      difficult.&nbsp; Method 2 is simple but depends on the accuracy of image shift 
+      calibrations and may also depend on the accuracy of rotation angle and pixel 
+      size calibrations.&nbsp; The Set button is enabled whenever there is a shift in 
+      the A buffer for an image of the type 
+      selected with the <b>View</b> or <b>Search</b> radio buttons, or whenever there 
+      are marker points on images of appropriate types in buffers A and B. However, the <B>Set</B> 
+      button should be pressed only if the shift in A brings the image into alignment with a Record or Preview image, 
+      or if the makrers are indeed on corresponding points. 
+      </P>
+    <P><b><i>1) Setting shift offset with an alignment shift:</i></b> The procedure for setting a shift for View is:</P>
     <OL>
       <LI>
         In the Image Alignment &amp; Focus panel, turn off 'Move stage for big mouse 
         shifts' if it is on.&nbsp; (This step is optional if you are making a small 
-        adjustment to an existing alignment.)</LI>
+        adjustment to an existing alignment, or if you shift the image in multiple steps 
+        each too small to trigger a stage move.)</LI>
       <LI>
         Take a Record or Preview image and use the right mouse button to center a 
         feature that will be recognizable in the View image. Take another image to 
         verify that it is centered.</LI>
       <LI>
-        Take a View image. Use the right mouse button to center the feature.</LI>
+        Take a View image. Use the right mouse button to center the feature.&nbsp; 
+        Do not take another image.</LI>
       <LI>
         Press <B>Set</B>. The shift will be recorded as a correction, and the program 
         will take a new View image, unless you skipped step 1 and your mouse shift 
@@ -169,8 +186,34 @@
         if necessary.</LI>
       <LI>
         Turn 'Move stage for big mouse shifts' back on if desired.</LI></OL>
+    <P>The procedure is the same for setting the offset for Search, although here you 
+      may want to use a View image instead of Record or Preview as your reference.&nbsp; 
+      If so, be sure to align View with Record first.</P>
+    <P><b><i>2) Setting shift offset with corresponding marker points:</i></b> The 
+      images from a reference area and from the area whose offset is being set can be 
+      taken in either order.&nbsp; To minimize the effect of inaccuracies in the 
+      calibrations, try to pick the points near the center of the images, especially 
+      for the reference image at higher magnification. </P>
+    <ul>
+      <li>To set an offset for View, you can have a View in A and a Record or Preview in 
+        B; or you can have the View in B and the Record or Preview in A.</li>
+      <li>To set an offset for Search, you can have a Search in A and a Record, Preview, 
+        or View in B; or you can have the Search in B and the reference image in A.</li>
+      <li>If you use a View as a reference image for setting the Search, set the View 
+        offset first.</li>
+      <li>Alignment shifts in the image buffer are not allowed with this procedure.&nbsp; 
+        The <b>Set</b> button will be enabled even if there are such shifts, but 
+        pressing it will bring up a message telling you to clear the shifts with the <b>
+        Clear Alignment</b> button in the Image Alignment &amp; Focus control panel.&nbsp; 
+        If the situation is ambiguous and the image in A could be used to set the offset 
+        by method 1, then the message will give you that choice.</li>
+    </ul>
+    <p>
+      <b><i>General points:</i></b> Once an image has been used for setting the 
+      offset, it cannot be used again; you need to acquire new images.</p>
     <P>If for some reason this shift offset becomes inappropriate, you can set it to 
-      zero with the <B>Zero</B> button.</P>
+      zero with the <B>Zero</B> button.&nbsp; However, do not zero out the shifts 
+      after taking images for setting the shift and before setting the shift with them</P>
     <P>If the image shift offsets between magnifications are calibrated, this 
       adjustment will work together with that calibration. You can set this 
       adjustment with the option to 'Adjust image shift between mags' either on or 

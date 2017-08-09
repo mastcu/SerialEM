@@ -771,28 +771,61 @@ void CLowDoseDlg::OnRadioShowOffset()
 void CLowDoseDlg::OnSetViewShift()
 {
   float shiftX, shiftY;
-  double delX, delY;
-  int mag, magv;
+  double delX, delY, ISX, ISY;
+  int mag, magv, shiftType, topInd = 0;
   CString mess, refText = mModeNames[RECORD_CONSET], areaText = mModeNames[VIEW_CONSET];
+  char *bufferText[3] = {"buffer A", "buffer B", "buffer A and buffer B"};
   MagTable *magTab = mWinApp->GetMagTable();
   mWinApp->RestoreViewFocus();  
   int area = (m_iOffsetShown ? SEARCH_AREA : VIEW_CONSET);
-  if (!OKtoSetViewShift())
+  shiftType = OKtoSetViewShift();
+  if (!shiftType)
     return;
-  ScaleMat bInv = mShiftManager->CameraToIS(mImBufs->mMagInd);
+  if (shiftType < -1)
+    topInd = 1;
+  ScaleMat bInv = mShiftManager->CameraToIS(mImBufs[topInd].mMagInd);
   if (!bInv.xpx)
     return;
-  mImBufs->mImage->getShifts(shiftX, shiftY);
+  mImBufs[topInd].mImage->getShifts(shiftX, shiftY);
   if (m_iOffsetShown) {
     refText += " or " + mModeNames[VIEW_CONSET];
     areaText = mModeNames[SEARCH_CONSET];
   }
-  if (shiftX == 0. && shiftY == 0.) {
+
+  // There is no route for this
+  if (shiftType == 1 && shiftX == 0. && shiftY == 0.) {
     mess = "To set a shift for the " + areaText + " area, center a feature"
       " in the " + refText + " area,\ntake a " + areaText + " image, and"
       " shift it with the mouse to center the same feature.\n\n"
       "Then press the Set button.";
     AfxMessageBox(mess, MB_OK | MB_ICONINFORMATION);
+    return;
+  }
+
+  // Message and choice if it is ambiguous which method to use
+  if (shiftType == 2) {
+    mess = "The " + areaText + " image in the A buffer is shifted as if\n"
+      "you have shifted it into alignment with the " + refText + " area,\n"
+      "but there are marker points in both A and B as if you have\n"
+      "marked corresponding points in the two images.\n\n"
+      "Do you want to set the offset from the shift in the image in A?\n\n"
+      "Press Yes to use the shift to set the offset\n\n"
+      "To use the corresponding points, press No then press the \n"
+      "\"Clear Alignment\" button to clear out the shift in A\n"
+      "(and clear the alignment for B also if it has a shift).";
+    if (AfxMessageBox(mess, MB_QUESTION) == IDNO)
+      return;
+    shiftType = 1;
+  }
+
+  // Or bail out if there are shifts and markers
+  if (shiftType > 1) {
+    mess.Format("There is an alignment or mouse shift in %s.\n"
+      "The routine to set an offset from marker points does not allow such shifts.\n\n"
+      "To use marker points, press the \"Clear Alignment\" button\n"
+      "for %s and press \"Set\" again.", bufferText[shiftType - 3], 
+      bufferText[shiftType - 3]);
+    AfxMessageBox(mess, MB_EXCLAME);
     return;
   }
 
@@ -809,33 +842,69 @@ void CLowDoseDlg::OnSetViewShift()
     mViewShiftY[m_iOffsetShown] = magTab[magv].offsetISY - delY;
   }
 
-  // Y inversion for deltas, then subtract the image shift just as negative is taken
-  // when mouse shifting  
-  // Fixed 10/14/12, Y was "= -" not "-=", PLUS the applied offset was added repeatedly
-  delX = mImBufs->mBinning * shiftX;
-  delY = -mImBufs->mBinning * shiftY;
-  mViewShiftX[m_iOffsetShown] -= (bInv.xpx * delX + bInv.xpy * delY);
-  mViewShiftY[m_iOffsetShown] -= (bInv.ypx * delX + bInv.ypy * delY);
+  if (shiftType > 0) {
+
+    // Y inversion for deltas, then subtract the image shift just as negative is taken
+    // when mouse shifting  
+    // Fixed 10/14/12, Y was "= -" not "-=", PLUS the applied offset was added repeatedly
+    delX = mImBufs->mBinning * shiftX;
+    delY = -mImBufs->mBinning * shiftY;
+    mViewShiftX[m_iOffsetShown] -= (bInv.xpx * delX + bInv.xpy * delY);
+    mViewShiftY[m_iOffsetShown] -= (bInv.ypx * delX + bInv.ypy * delY);
+  } else {
+
+    // Convert image point to image shift in main buffer and add it; 
+    SEMTrace('1', "Starting shift %.3f %.3f", mViewShiftX[m_iOffsetShown], 
+      mViewShiftY[m_iOffsetShown]);
+    delX = mImBufs[topInd].mBinning * (mImBufs[topInd].mUserPtX - 
+      mImBufs[topInd].mImage->getWidth() / 2.);
+    delY = -mImBufs[topInd].mBinning * (mImBufs[topInd].mUserPtY - 
+      mImBufs[topInd].mImage->getHeight() / 2.);
+    mViewShiftX[m_iOffsetShown] += (bInv.xpx * delX + bInv.xpy * delY);
+    mViewShiftY[m_iOffsetShown] += (bInv.ypx * delX + bInv.ypy * delY);
+    SEMTrace('1', "Image delta %.1f %.1f  new shift %.3f %.3f", delX, delY,
+      mViewShiftX[m_iOffsetShown], mViewShiftY[m_iOffsetShown]);
+
+    // Convert image point in reference buffer to IS and transfer IS to main mag, subtract
+    bInv = mShiftManager->CameraToIS(mImBufs[1 - topInd].mMagInd);
+    delX = mImBufs[1 - topInd].mBinning * (mImBufs[1 - topInd].mUserPtX - 
+      mImBufs[1 - topInd].mImage->getWidth() / 2.);
+    delY = -mImBufs[1 - topInd].mBinning * (mImBufs[1 - topInd].mUserPtY - 
+      mImBufs[1 - topInd].mImage->getHeight() / 2.);
+    ISX = (bInv.xpx * delX + bInv.xpy * delY);
+    ISY = (bInv.ypx * delX + bInv.ypy * delY);
+    mShiftManager->TransferGeneralIS(mImBufs[1 - topInd].mMagInd, ISX, ISY, magv, delX,
+      delY);
+    SEMTrace('1', "IS %.3f %.3f  transfer %.3f %.3f", ISX, ISY, delX, delY);
+    mViewShiftX[m_iOffsetShown] -= delX;
+    mViewShiftY[m_iOffsetShown] -= delY;
+  }
   mStampViewShift[m_iOffsetShown] = mImBufs->mTimeStamp;
 
   // revise the actual IS of the view area appropriately
   ConvertAxisPosition(false);
   ConvertAxisPosition(true);
   Update();
-  if (mImBufs->mStageShiftedByMouse) {
-    mess.Format("The stage was shifted away from the area centered in the %s image.  "
-      "To recover from this and check the offset, press \"Reset Image Shift\", then "
-      "take a new %s image and center a feature, then take a new %s image.", 
-      refText, refText, areaText);
-    AfxMessageBox(mess, MB_EXCLAME);
-  } else if (mWinApp->mCamera->CameraReady()) {
-    mess.Format("Full %s shift offset is set to %.3f, %.3f image shift units\r\n"
-      "Taking a new %s image - \r\n   if feature is not centered, shift to center "
-      "it and press \"Set\" again", areaText, mViewShiftX[m_iOffsetShown],
-      mViewShiftY[m_iOffsetShown], areaText);
+  if (shiftType > 0) {
+    if (mImBufs->mStageShiftedByMouse) {
+      mess.Format("The stage was shifted away from the area centered in the %s image.  "
+        "To recover from this and check the offset, press \"Reset Image Shift\", then "
+        "take a new %s image and center a feature, then take a new %s image.", 
+        refText, refText, areaText);
+      AfxMessageBox(mess, MB_EXCLAME);
+    } else if (mWinApp->mCamera->CameraReady()) {
+      mess.Format("Full %s shift offset is set to %.3f, %.3f image shift units\r\n"
+        "Taking a new %s image - \r\n   if feature is not centered, shift to center "
+        "it and press \"Set\" again", areaText, mViewShiftX[m_iOffsetShown],
+        mViewShiftY[m_iOffsetShown], areaText);
+      mWinApp->AppendToLog(mess);
+      mWinApp->mCamera->SetCancelNextContinuous(true);
+      mWinApp->mCamera->InitiateCapture(m_iOffsetShown ? SEARCH_CONSET : VIEW_CONSET);
+    }
+  } else {
+     mess.Format("Full %s shift offset is set to %.3f, %.3f image shift units\r\n",
+       areaText, mViewShiftX[m_iOffsetShown], mViewShiftY[m_iOffsetShown]);
     mWinApp->AppendToLog(mess);
-    mWinApp->mCamera->SetCancelNextContinuous(true);
-    mWinApp->mCamera->InitiateCapture(m_iOffsetShown ? SEARCH_CONSET : VIEW_CONSET);
   }
 }
 
@@ -849,18 +918,52 @@ void CLowDoseDlg::OnZeroViewShift()
   Update();
 }
 
-// Test if it is OK to set shift
-bool CLowDoseDlg::OKtoSetViewShift()
+// Test if it is OK to set shift and return complicated set of values
+int CLowDoseDlg::OKtoSetViewShift()
 {
-  float xx, yy;
-  if (!mImBufs->mImage || !mImBufs->mBinning || 
+  float xx, yy, xx1, yy1;
+  bool recOrPrev0, recOrPrev1, search0, search1, view0, view1, shiftOK, aShift, bShift;
+  search0 = mImBufs[0].mConSetUsed == SEARCH_CONSET;
+  view0 = mImBufs[0].mConSetUsed == VIEW_CONSET;
+  if (!mImBufs->mImage || !mImBufs->mBinning || !mImBufs->mMagInd ||
     mStampViewShift[m_iOffsetShown] == mImBufs->mTimeStamp ||!mImBufs->mLowDoseArea || 
-    (mImBufs->mConSetUsed != VIEW_CONSET && !m_iOffsetShown) || 
-    (mImBufs->mConSetUsed != SEARCH_CONSET && m_iOffsetShown) || 
     mImBufs->mCamera != mWinApp->GetCurrentCamera())
-    return false;
+    return 0;
   mImBufs->mImage->getShifts(xx, yy);
-  return (xx != 0. || yy != 0.);
+  aShift = (xx != 0. || yy != 0.);
+
+  // Set flag if it is a valid image for shift method, then evaluate for marked points
+  shiftOK = ((view0 && !m_iOffsetShown) || (search0 && m_iOffsetShown)) && aShift;
+  if (mImBufs[1].mImage && mImBufs[1].mBinning && mImBufs[1].mLowDoseArea &&
+    mImBufs[1].mMagInd  && mImBufs->mHasUserPt && mImBufs[1].mHasUserPt) {
+      mImBufs[1].mImage->getShifts(xx1, yy1);
+      bShift = (xx1 != 0. || yy1 != 0.);
+      recOrPrev0 = mImBufs[0].mConSetUsed == RECORD_CONSET || 
+        mImBufs[0].mConSetUsed == PREVIEW_CONSET;
+      recOrPrev1 = mImBufs[1].mConSetUsed == RECORD_CONSET || 
+        mImBufs[1].mConSetUsed == PREVIEW_CONSET;
+      search1 = mImBufs[1].mConSetUsed == SEARCH_CONSET;
+      view1 = mImBufs[1].mConSetUsed == VIEW_CONSET;
+
+      // For valid pair of images, 3 cases: ambiguous
+      // if A shifted, bad but repairable if anything shifted, good for marker method
+      if ((m_iOffsetShown && (((view1 || recOrPrev1) && search0) ||
+        ((view0 || recOrPrev0) && search1))) || 
+        (!m_iOffsetShown && ((recOrPrev1 && view0) || (recOrPrev0 && view1)))) {
+          if (shiftOK)
+            return 2;
+          if (aShift && bShift)
+            return 5;
+          if (aShift)
+            return 3;
+          if (bShift)
+            return 4;
+
+          // Area to adjust is in A if Search is in A or Record is in B
+          return (recOrPrev1 || search0) ? -1 : - 2;
+      }
+  }
+  return shiftOK ? 1 : 0;
 }
 
 // External call for enabling just the set view button when mouse shifting
