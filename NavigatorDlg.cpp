@@ -2589,8 +2589,8 @@ CArray<CMapDrawItem *, CMapDrawItem *> *CNavigatorDlg::GetMapDrawItems(
     if (mWinApp->LowDoseMode()) {
       ldp = mWinApp->GetLowDoseParams();
       magInd = ldp[RECORD_CONSET].magIndex;
-      if (montaging && montp->useViewInLowDose)
-        magInd = ldp[VIEW_CONSET].magIndex;
+      if (montaging)
+        magInd = ldp[MontageLDAreaIndex(montp)].magIndex;
       
     } else if (montaging) {
       magInd = montp->magIndex;
@@ -2719,10 +2719,11 @@ void CNavigatorDlg::ComputeStageToImage(EMimageBuffer *imBuf, float stageX, floa
     ConvertIStoStageIncrement(imBuf->mMagInd, imBuf->mCamera, imBuf->mISX, imBuf->mISY,
       angle, stageX, stageY);
 
-  if (imBuf->mConSetUsed == VIEW_CONSET && imBuf->mLowDoseArea) {
-    defocus = imBuf->mViewDefocus;
-    if (!imBuf->GetSpotSize(spot) || !imBuf->GetIntensity(intensity))
-      defocus = 0.;
+  if (imBuf->mLowDoseArea && imBuf->mMagInd >= mScope->GetLowestNonLMmag() && 
+    IS_SET_VIEW_OR_SEARCH(imBuf->mConSetUsed)) {
+      defocus = imBuf->mViewDefocus;
+      if (!imBuf->GetSpotSize(spot) || !imBuf->GetIntensity(intensity))
+        defocus = 0.;
   }
 
   // Sign woes as usual.  This transform is a true transformation from the stage
@@ -3018,13 +3019,14 @@ int CNavigatorDlg::SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg)
   mMontItemCam->mMapTiltAngle = item->mMapTiltAngle;
   mMontItem = item;
 
-  if (lowDose && !montParam->useViewInLowDose)
+  if (lowDose && !montParam->useViewInLowDose && !(montParam->useSearchInLowDose && 
+    ldp[SEARCH_AREA].magIndex))
     numTry = 2;
 
   for (trial = 0; trial < numTry; trial++) {
-    int consetNum = MontageConSetNum(montParam);
+    int consetNum = MontageConSetNum(montParam, false);
     if (lowDose)
-      magIndex = ldp[consetNum].magIndex;
+      magIndex = ldp[MontageLDAreaIndex(montParam)].magIndex;
     ControlSet *conSet = mWinApp->GetConSets() + consetNum;
     int binning = conSet->binning;
 
@@ -3110,7 +3112,7 @@ int CNavigatorDlg::FitMontageToItem(MontParam *montParam, int binning, int magIn
   float xMin, xMax, yMin, yMax, xx, yy, pixel, maxIS, tmpov;
   double maxISX, maxISY;
   int i, xNframes, yNframes, overlap, camSize, left, right, which, xFrame, yFrame;
-  int top, bot, saveOverlap;
+  int top, bot, saveOverlap, set = -1;
   int binx2 = 2 * binning;
   int maxOverlap = (int)(mDocWnd->GetMaxOverlapFraction() * 
     B3DMIN(mFrameLimitX, mFrameLimitY));
@@ -3126,8 +3128,11 @@ int CNavigatorDlg::FitMontageToItem(MontParam *montParam, int binning, int magIn
     forceStage = true;
 
   // Transform item to camera coordinates and save in second item, get min/max
-  PolygonToCameraCoords(item, iCam, magIndex, 
-    mWinApp->LowDoseMode() && montParam->useViewInLowDose, xMin, xMax, yMin, yMax);
+  if (mWinApp->LowDoseMode() && montParam->useViewInLowDose)
+    set = VIEW_CONSET;
+  else if (mWinApp->LowDoseMode() && montParam->useSearchInLowDose)
+    set = SEARCH_CONSET;
+  PolygonToCameraCoords(item, iCam, magIndex, set, xMin, xMax, yMin, yMax);
 
   xx = (1.f + extraSizeFactor) * (xMax - xMin);
   yy = (1.f + extraSizeFactor) * (yMax - yMin);
@@ -3226,14 +3231,14 @@ int CNavigatorDlg::FitMontageToItem(MontParam *montParam, int binning, int magIn
 }
 
 void CNavigatorDlg::PolygonToCameraCoords(CMapDrawItem * item, int iCam, int magIndex,
-  bool adjustForFocus, float &xMin, float &xMax, float &yMin, float &yMax)
+  int adjustForFocusSet, float &xMin, float &xMax, float &yMin, float &yMax)
 {
   float xx, yy;
   mPolyToCamMat = mShiftManager->StageToCamera(iCam, magIndex);
-  if (adjustForFocus)
+  if (adjustForFocusSet && magIndex >= mScope->GetLowestNonLMmag())
     mPolyToCamMat = mShiftManager->FocusAdjustedStageToCamera(iCam, magIndex, 
       mScope->FastSpotSize(), mScope->GetProbeMode(), mScope->FastIntensity(), 
-      mScope->GetLDViewDefocus());
+      mScope->GetLDViewDefocus(adjustForFocusSet));
   if (item->mMapTiltAngle > RAW_STAGE_TEST && fabs((double)item->mMapTiltAngle) > 1)
     mShiftManager->AdjustStageToCameraForTilt(mPolyToCamMat, item->mMapTiltAngle);
   xMin = yMin = 1.e10;
@@ -3576,7 +3581,7 @@ void CNavigatorDlg::PolygonSupermontage(void)
   mMontItemCam = new CMapDrawItem;
   for (int i = 0; i < mItem->mNumPoints; i++)
     mMontItemCam->AppendPoint(mItem->mPtX[i], mItem->mPtX[i]);
-  PolygonToCameraCoords(mItem, camInd, montP->magIndex, false, xMin, xMax, yMin, yMax);
+  PolygonToCameraCoords(mItem, camInd, montP->magIndex, -1, xMin, xMax, yMin, yMax);
 
   // Get needed size with an extra allowance, compute number of supers and half coord
   extra = (float)(extraFactor * B3DMAX(montP->xFrame, montP->yFrame));
@@ -5008,7 +5013,7 @@ int CNavigatorDlg::NewMap(bool unsuitableOK)
   float stageX, stageY, imX, imY, delX, delY, stageErrX, stageErrY, localErrX, localErrY;
   BOOL hasStage;
   CMapDrawItem *item, *item2;
-  int trimCount, i, setNum, sizeX, sizeY, montSect = -1;
+  int trimCount, i, setNum, sizeX, sizeY, area, montSect = -1;
   float slitIn;
   ScaleMat aInv;
   CString report;
@@ -5254,16 +5259,18 @@ int CNavigatorDlg::NewMap(bool unsuitableOK)
   if (!imBuf->GetSpotSize(item->mMapSpotSize))
     item->mMapSpotSize = mScope->GetSpotSize();
   item->mMapProbeMode = imBuf->mProbeMode;
-  if (imBuf->mLowDoseArea || (item->mMapMontage && imBuf->mConSetUsed == VIEW_CONSET))
+  if (imBuf->mLowDoseArea || (item->mMapMontage && 
+    IS_SET_VIEW_OR_SEARCH(imBuf->mConSetUsed)))
     item->mMapLowDoseConSet = imBuf->mConSetUsed;
 
   // For a LD View image, store the defocus offset, and get the net view IS shift and 
   // convert it to a stage position for use in realign to item
-  if (item->mMapLowDoseConSet == VIEW_CONSET) {
-    item->mDefocusOffset = mScope->GetLDViewDefocus();
+  if (IS_SET_VIEW_OR_SEARCH(item->mMapLowDoseConSet)) {
+    area = mCamera->ConSetToLDArea(item->mMapLowDoseConSet);
+    item->mDefocusOffset = mScope->GetLDViewDefocus(area);
     mHelper->GetViewOffsets(item, item->mNetViewShiftX,
       item->mNetViewShiftY, item->mViewBeamShiftX, item->mViewBeamShiftY,
-      item->mViewBeamTiltX, item->mViewBeamTiltY);
+      item->mViewBeamTiltX, item->mViewBeamTiltY, area);
     if (montSect >= 0) {
       AdocGetFloat(ADOC_MONT_SECT, montSect, ADOC_FOCUS_OFFSET, &item->mDefocusOffset);
       AdocGetTwoFloats(ADOC_MONT_SECT, montSect, ADOC_NET_VIEW_SHIFT, 
@@ -5277,11 +5284,11 @@ int CNavigatorDlg::NewMap(bool unsuitableOK)
 
   // For any low dose image, store the alpha value so beam adjustments can be applied in
   // realign to item
-  if (imBuf->mLowDoseArea || (item->mMapMontage && imBuf->mConSetUsed == VIEW_CONSET)) {
-    item->mMapAlpha = mScope->GetAlpha();
-    if (montSect >= 0)
-      AdocGetInteger(ADOC_MONT_SECT, montSect, ADOC_ALPHA, &item->mMapAlpha);
-
+  if (imBuf->mLowDoseArea || (item->mMapMontage && 
+    IS_SET_VIEW_OR_SEARCH(imBuf->mConSetUsed))) {
+      item->mMapAlpha = mScope->GetAlpha();
+      if (montSect >= 0)
+        AdocGetInteger(ADOC_MONT_SECT, montSect, ADOC_ALPHA, &item->mMapAlpha);
   }
 
   if (mCamParams[imBuf->mCamera].GIF || mScope->GetHasOmegaFilter()) {
@@ -7653,8 +7660,8 @@ int CNavigatorDlg::TargetLDAreaForRealign(void)
     if (montaging)
       montP = mMontParArray.GetAt(mNextMontParInd);
   }
-  if (montaging && montP->useViewInLowDose)
-    area = VIEW_CONSET;
+  if (montaging)
+    area = MontageLDAreaIndex(montP);
   return area;
 }
 

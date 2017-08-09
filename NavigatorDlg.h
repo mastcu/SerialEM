@@ -401,7 +401,7 @@ public:
   void DeleteGroup(bool collapsedGroup);
   void PolygonSupermontage(void);
   void PolygonToCameraCoords(CMapDrawItem * item, int camera, int magIndex, 
-    bool adjustForFocus, float &xMin, float &xMax, float &yMin, float &yMax);
+    int adjustForFocusSet, float &xMin, float &xMax, float &yMin, float &yMax);
   bool IsFrameNeeded(CMapDrawItem * item, int xFrame, int yFrame, float xOverlap, 
     float yOverlap, float xExtra, float yExtra, float xOffset, float yOffset, int ix, 
     int iy, int xNframes, int yNframes, float &xMid, float &yMid);
