@@ -173,7 +173,7 @@ private:
   double mLastBeamX, mLastBeamY;
   double mStartingBeamX, mStartingBeamY;
   double mStartingBTiltX, mStartingBTiltY;
-  double mStampViewShift;  // Time stamp of image used to set view shift
+  double mStampViewShift[2];  // Time stamp of image used to set view/search shift
   float mPiezoScaleFac;
   float mPiezoMinToUse;
   float mPiezoMaxToUse;
@@ -189,8 +189,6 @@ public:
     float * cornerY, float & cenX, float & cenY, float &radius);
   void AreaAcqCoordToView(int inArea, int binning, int sizeX, int sizeY, ScaleMat aMat,
     ScaleMat vMat, int acqX, int acqY, float & imX, float & imY);
-  afx_msg void OnBnClickedSearch();
-  CButton m_butSearch;
   void ManageDefines(int area);
   CButton m_butBlankBeam;
   void ToggleBlankWhenDown(void);
@@ -201,7 +199,7 @@ public:
   void CheckSeparationChange(int magIndex);
   CButton m_butSetViewShift;
   CButton m_butZeroViewShift;
-  double mViewShiftX, mViewShiftY;
+  double mViewShiftX[2], mViewShiftY[2];
   afx_msg void OnSetViewShift();
   afx_msg void OnZeroViewShift();
   bool OKtoSetViewShift();
@@ -216,12 +214,14 @@ public:
   double ConvertIStoAxisAndAngle(int mag, double ISX, double ISY, int & angle);
   bool ShiftsBalanced(void);
   CStatic m_statViewDefocus;
-  void GetNetViewShift(double &shiftX, double &shiftY);
-  void GetFullViewShift(double &shiftX, double &shiftY) {shiftX = mViewShiftX; shiftY = mViewShiftY;};
+  void GetNetViewShift(double &shiftX, double &shiftY, int area = VIEW_CONSET);
+  void GetFullViewShift(double &shiftX, double &shiftY, int area = VIEW_CONSET) {shiftX = mViewShiftX[area ? 1 : 0]; shiftY = mViewShiftY[area ? 1 : 0];};
   void CheckAndActivatePiezoShift(void);
   bool GoToPiezoPosForLDarea(int area);
   void ApplyNewISifDefineArea(void);
   int NewAxisPosition(int area, double position, int angle, bool setAngle);
+  afx_msg void OnRadioShowOffset();
+  int m_iOffsetShown;
 };
 
 //{{AFX_INSERT_LOCATION}}

@@ -28,6 +28,10 @@ static char THIS_FILE[] = __FILE__;
 
 #define MAX_VIEW_DEFOCUS  0
 #define MIN_VIEW_DEFOCUS  -400
+#define MIN_SEARCH_DEFOCUS -1999
+#define MAX_SEARCH_DEFOCUS 1999
+static int sMinVSDefocus[2] = {MIN_VIEW_DEFOCUS, MIN_SEARCH_DEFOCUS};
+static int sMaxVSDefocus[2] = {MAX_VIEW_DEFOCUS, MAX_SEARCH_DEFOCUS};
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -39,6 +43,7 @@ CLowDoseDlg::CLowDoseDlg(CWnd* pParent /*=NULL*/)
   , m_strViewDefocus(_T(""))
   , m_iAxisAngle(0)
   , m_bRotateAxis(FALSE)
+  , m_iOffsetShown(0)
 {
   SEMBuildTime(__DATE__, __TIME__);
   //{{AFX_DATA_INIT(CLowDoseDlg)
@@ -72,8 +77,9 @@ CLowDoseDlg::CLowDoseDlg(CWnd* pParent /*=NULL*/)
   mLastBeamX = 0.;
   mLastBeamY = 0.;
   mSearchName = "Search";
-  mViewShiftX = mViewShiftY = 0.;
-  mStampViewShift = -1.;
+  mViewShiftX[0] = mViewShiftY[0] = 0.;
+  mViewShiftX[1] = mViewShiftY[1] = 0.;
+  mStampViewShift[0] = mStampViewShift[1] = -1.;
   mAxisPiezoPlugNum = -1;
   mAxisPiezoNum = -1;
   mPiezoFullDelay = 20.;
@@ -116,7 +122,6 @@ void CLowDoseDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_EDITPOSITION, m_editPosition);
   DDX_Control(pDX, IDC_STATOVERLAP, m_statOverlap);
   DDX_Control(pDX, IDC_STATMAGSPOTC2, m_statMagSpot);
-  DDX_Control(pDX, IDC_SEARCH, m_butSearch);
   DDX_Control(pDX, IDC_BLANKBEAM, m_butBlankBeam);
   DDX_Radio(pDX, IDC_RSHOWVIEW, m_iShowArea);
   DDX_Radio(pDX, IDC_RDEFINENONE, m_iDefineArea);
@@ -146,6 +151,7 @@ void CLowDoseDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Text(pDX, IDC_EDIT_AXISANGLE, m_iAxisAngle);
   DDV_MinMaxInt(pDX, m_iAxisAngle, -90, 90);
   DDX_Control(pDX, IDC_STATVIEWDEFOCUS, m_statViewDefocus);
+  DDX_Radio(pDX, IDC_RVIEW_OFFSET, m_iOffsetShown);
 }
 
 
@@ -170,7 +176,6 @@ BEGIN_MESSAGE_MAP(CLowDoseDlg, CToolDlg)
   ON_BN_CLICKED(IDC_RSHOWSEARCH, OnRshow)
 	ON_BN_CLICKED(IDC_RESET_BEAM_SHIFT, OnResetBeamShift)
 	ON_BN_CLICKED(IDC_SET_BEAM_SHIFT, OnSetBeamShift)
-  ON_BN_CLICKED(IDC_SEARCH, OnBnClickedSearch)
   ON_NOTIFY(UDN_DELTAPOS, IDC_SPINVIEWDEFOCUS, OnDeltaposSpinviewdefocus)
 	//}}AFX_MSG_MAP
   ON_COMMAND_RANGE(IDC_COPYTOVIEW, IDC_COPYTORECORD, OnCopyArea)
@@ -178,6 +183,8 @@ BEGIN_MESSAGE_MAP(CLowDoseDlg, CToolDlg)
   ON_BN_CLICKED(IDC_ZERO_VIEW_SHIFT, OnZeroViewShift)
   ON_BN_CLICKED(IDC_LD_ROTATE_AXIS, OnLdRotateAxis)
   ON_EN_KILLFOCUS(IDC_EDIT_AXISANGLE, OnKillfocusEditAxisangle)
+  ON_BN_CLICKED(IDC_RVIEW_OFFSET, OnRadioShowOffset)
+  ON_BN_CLICKED(IDC_RSEARCH_OFFSET, OnRadioShowOffset)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -220,7 +227,7 @@ void CLowDoseDlg::SetLowDoseMode(BOOL inVal, BOOL hideOffState)
 // Translate axis position back and forth to ISX,ISY when mode changes
 void CLowDoseDlg::ConvertAxisPosition(BOOL axisToIS)
 {
-  int i, mag, magv;
+  int i, mag, magv, area;
   double delX, delY;
   MagTable *magTab = mWinApp->GetMagTable();
 
@@ -237,24 +244,29 @@ void CLowDoseDlg::ConvertAxisPosition(BOOL axisToIS)
         mLDParams[i].ISY);
   }
 
-  // Enforce view and Record having same position and add in the offset if any
-  if (axisToIS) {
-    TransferISonAxis(mLDParams[3].magIndex, mLDParams[3].ISX, mLDParams[3].ISY,
-      mLDParams[0].magIndex, mLDParams[0].ISX, mLDParams[0].ISY);
-    mag = mLDParams[3].magIndex;
-    magv = mLDParams[0].magIndex;
-    if ((mViewShiftX != 0. || mViewShiftY != 0.) && mag && magv) {
-      delX = mViewShiftX;      
-      delY = mViewShiftY;
+  // Enforce view/search and Record having same position and add in the offset if any
+  for (i = 0; i < 2; i ++) {
+    area = i ? SEARCH_AREA : VIEW_CONSET;
+    if (axisToIS) {
+      TransferISonAxis(mLDParams[RECORD_CONSET].magIndex, mLDParams[RECORD_CONSET].ISX, 
+        mLDParams[RECORD_CONSET].ISY,
+        mLDParams[area].magIndex, mLDParams[area].ISX, mLDParams[area].ISY);
+      mag = mLDParams[RECORD_CONSET].magIndex;
+      magv = mLDParams[0].magIndex;
+      if ((mViewShiftX[i] != 0. || mViewShiftY[i] != 0.) && mag && magv) {
+        delX = mViewShiftX[i];      
+        delY = mViewShiftY[i];
 
-      // If offsets are being applied, use the net offset instead
-      if (mScope->GetApplyISoffset())
-        GetNetViewShift(delX, delY);
-      mLDParams[0].ISX += delX;
-      mLDParams[0].ISY += delY;
+        // If offsets are being applied, use the net offset instead
+        if (mScope->GetApplyISoffset())
+          GetNetViewShift(delX, delY, area);
+        mLDParams[area].ISX += delX;
+        mLDParams[area].ISY += delY;
+      }
+    } else {
+      mLDParams[area].axisPosition = mLDParams[RECORD_CONSET].axisPosition;
     }
-  } else
-    mLDParams[0].axisPosition = mLDParams[3].axisPosition;
+  }
   for (i = 0; i < 4; i++)
     SEMTrace('l', "%d: mag %d  axisPos %.2f  IS  %f  %f", i, mLDParams[i].magIndex, 
       mLDParams[i].axisPosition, mLDParams[i].ISX, mLDParams[i].ISY);
@@ -262,18 +274,19 @@ void CLowDoseDlg::ConvertAxisPosition(BOOL axisToIS)
 
 // If there is a view shift set, unconditionally subtract the difference between
 // the View offset and the transferred Record offset from the full stored shift
-void CLowDoseDlg::GetNetViewShift(double &shiftX, double &shiftY)
+void CLowDoseDlg::GetNetViewShift(double &shiftX, double &shiftY, int area)
 {
-  int mag = mLDParams[3].magIndex, magv = mLDParams[0].magIndex;
+  int mag = mLDParams[RECORD_CONSET].magIndex, magv = mLDParams[area].magIndex;
   MagTable *magTab = mWinApp->GetMagTable();
   CameraParameters *camp = mWinApp->GetActiveCamParam();
+  int areaInd = (area != VIEW_CONSET ? 1 : 0);
   shiftX = shiftY = 0.;
-  if ((!mViewShiftX && !mViewShiftY) || !mag || !magv)
+  if ((!mViewShiftX[areaInd] && !mViewShiftY[areaInd]) || !mag || !magv)
     return;
   mShiftManager->TransferGeneralIS(mag, magTab[mag].calOffsetISX[camp->GIF], 
     magTab[mag].calOffsetISY[camp->GIF], magv, shiftX, shiftY);
-  shiftX += mViewShiftX - magTab[magv].calOffsetISX[camp->GIF];
-  shiftY += mViewShiftY - magTab[magv].calOffsetISY[camp->GIF];
+  shiftX += mViewShiftX[areaInd] - magTab[magv].calOffsetISX[camp->GIF];
+  shiftY += mViewShiftY[areaInd] - magTab[magv].calOffsetISY[camp->GIF];
 }
 
 double CLowDoseDlg::ConvertOneIStoAxis(int mag, double ISX, double ISY)
@@ -634,13 +647,6 @@ void CLowDoseDlg::OnUnblank()
   mScope->BlankBeam(false);  
 }
 
-// Search mode button pressed
-void CLowDoseDlg::OnBnClickedSearch()
-{
-  mWinApp->RestoreViewFocus();  
-  mScope->GotoLowDoseArea(SEARCH_AREA);
-}
-
 // Reset beam shift of current area to zero 
 void CLowDoseDlg::OnResetBeamShift() 
 {
@@ -687,25 +693,26 @@ void CLowDoseDlg::OnSetBeamShift()
 void CLowDoseDlg::OnDeltaposSpinviewdefocus(NMHDR *pNMHDR, LRESULT *pResult)
 {
   LPNMUPDOWN pNMUpDown = reinterpret_cast<LPNMUPDOWN>(pNMHDR);
-  int newval, curVal = B3DNINT(mScope->GetLDViewDefocus());
+  int newval, curVal = B3DNINT(mScope->GetLDViewDefocus(m_iOffsetShown));
   int delta = 1;
-  if (curVal <= B3DCHOICE(pNMUpDown->iDelta < 0, -110, -100))
+  bool less = BOOL_EQUIV(pNMUpDown->iDelta > 0, curVal > 0); 
+  if (B3DABS(curVal) >= B3DCHOICE(less, 110, 100))
     delta = 10;
-  else if (curVal <= B3DCHOICE(pNMUpDown->iDelta < 0, -55, -50))
+  else if (B3DABS(curVal) >= B3DCHOICE(pNMUpDown->iDelta < 0, 55, 50))
     delta = 5;
-  else if (curVal <= B3DCHOICE(pNMUpDown->iDelta < 0, -22, -20))
+  else if (B3DABS(curVal) >= B3DCHOICE(pNMUpDown->iDelta < 0, 22, 20))
     delta = 2;
 
   newval = -delta * ((-(curVal - delta * pNMUpDown->iDelta)) / delta);
   mWinApp->RestoreViewFocus();  
   *pResult = 1;
-  if (newval < MIN_VIEW_DEFOCUS || newval > MAX_VIEW_DEFOCUS)
+  if (newval < sMinVSDefocus[m_iOffsetShown] || newval> sMaxVSDefocus[m_iOffsetShown])
     return;
 
-  // If in view now, change defocus by the change
-  if (!mScope->GetLowDoseArea())
-    mScope->IncDefocus((double)(newval - mScope->GetLDViewDefocus()));
-  mScope->SetLDViewDefocus((float)newval);
+  // If in area now, change defocus by the change
+  if (mScope->GetLowDoseArea() == (m_iOffsetShown ? SEARCH_AREA : VIEW_CONSET))
+    mScope->IncDefocus((double)(newval - curVal));
+  mScope->SetLDViewDefocus((float)newval, m_iOffsetShown);
   m_strViewDefocus.Format("%d", newval);
   UpdateData(false);
 }
@@ -752,6 +759,13 @@ void CLowDoseDlg::FinishSettingBeamShift(BOOL toggled)
     mLDParams[3 - area] = mLDParams[area];
 }
 
+// Select which area offsets are controlled
+void CLowDoseDlg::OnRadioShowOffset()
+{
+  mWinApp->RestoreViewFocus();  
+  UpdateData(true);
+  UpdateSettings();
+}
 
 // Set the shift for view images
 void CLowDoseDlg::OnSetViewShift()
@@ -759,32 +773,40 @@ void CLowDoseDlg::OnSetViewShift()
   float shiftX, shiftY;
   double delX, delY;
   int mag, magv;
-  CString mess;
+  CString mess, refText = mModeNames[RECORD_CONSET], areaText = mModeNames[VIEW_CONSET];
   MagTable *magTab = mWinApp->GetMagTable();
   mWinApp->RestoreViewFocus();  
+  int area = (m_iOffsetShown ? SEARCH_AREA : VIEW_CONSET);
   if (!OKtoSetViewShift())
     return;
   ScaleMat bInv = mShiftManager->CameraToIS(mImBufs->mMagInd);
   if (!bInv.xpx)
     return;
   mImBufs->mImage->getShifts(shiftX, shiftY);
+  if (m_iOffsetShown) {
+    refText += " or " + mModeNames[VIEW_CONSET];
+    areaText = mModeNames[SEARCH_CONSET];
+  }
   if (shiftX == 0. && shiftY == 0.) {
-    AfxMessageBox("To set a shift for the View area, center a feature in the Record area"
-      ",\ntake a View image, and shift it with the mouse to center the same feature.\n\n"
-      "Then press the Set button.", MB_OK | MB_ICONINFORMATION);
+    mess = "To set a shift for the " + areaText + " area, center a feature"
+      " in the " + refText + " area,\ntake a " + areaText + " image, and"
+      " shift it with the mouse to center the same feature.\n\n"
+      "Then press the Set button.";
+    AfxMessageBox(mess, MB_OK | MB_ICONINFORMATION);
     return;
   }
 
-  mag = mLDParams[3].magIndex;
-  magv = mLDParams[0].magIndex;
-  if (mScope->GetApplyISoffset() && mag && !mViewShiftX && !mViewShiftY) {
+  mag = mLDParams[RECORD_CONSET].magIndex;
+  magv = mLDParams[area].magIndex;
+  if (mScope->GetApplyISoffset() && mag && !mViewShiftX[m_iOffsetShown] && 
+    !mViewShiftY[m_iOffsetShown]) {
 
     // If IS offsets are being applied and V offset is still zero, start with the view IS
     // offset minus the transferred Record offset to end  up with the full stored offset
     mShiftManager->TransferGeneralIS(mag, magTab[mag].offsetISX, 
       magTab[mag].offsetISY, magv, delX, delY);
-    mViewShiftX = magTab[magv].offsetISX - delX;
-    mViewShiftY = magTab[magv].offsetISY - delY;
+    mViewShiftX[m_iOffsetShown] = magTab[magv].offsetISX - delX;
+    mViewShiftY[m_iOffsetShown] = magTab[magv].offsetISY - delY;
   }
 
   // Y inversion for deltas, then subtract the image shift just as negative is taken
@@ -792,9 +814,9 @@ void CLowDoseDlg::OnSetViewShift()
   // Fixed 10/14/12, Y was "= -" not "-=", PLUS the applied offset was added repeatedly
   delX = mImBufs->mBinning * shiftX;
   delY = -mImBufs->mBinning * shiftY;
-  mViewShiftX -= (bInv.xpx * delX + bInv.xpy * delY);
-  mViewShiftY -= (bInv.ypx * delX + bInv.ypy * delY);
-  mStampViewShift = mImBufs->mTimeStamp;
+  mViewShiftX[m_iOffsetShown] -= (bInv.xpx * delX + bInv.xpy * delY);
+  mViewShiftY[m_iOffsetShown] -= (bInv.ypx * delX + bInv.ypy * delY);
+  mStampViewShift[m_iOffsetShown] = mImBufs->mTimeStamp;
 
   // revise the actual IS of the view area appropriately
   ConvertAxisPosition(false);
@@ -804,16 +826,16 @@ void CLowDoseDlg::OnSetViewShift()
     mess.Format("The stage was shifted away from the area centered in the %s image.  "
       "To recover from this and check the offset, press \"Reset Image Shift\", then "
       "take a new %s image and center a feature, then take a new %s image.", 
-      mModeNames[RECORD_CONSET], mModeNames[RECORD_CONSET], mModeNames[VIEW_CONSET]);
+      refText, refText, areaText);
     AfxMessageBox(mess, MB_EXCLAME);
   } else if (mWinApp->mCamera->CameraReady()) {
     mess.Format("Full %s shift offset is set to %.3f, %.3f image shift units\r\n"
       "Taking a new %s image - \r\n   if feature is not centered, shift to center "
-      "it and press \"Set\" again", mModeNames[VIEW_CONSET], mViewShiftX, mViewShiftY, 
-      mModeNames[VIEW_CONSET]);
+      "it and press \"Set\" again", areaText, mViewShiftX[m_iOffsetShown],
+      mViewShiftY[m_iOffsetShown], areaText);
     mWinApp->AppendToLog(mess);
     mWinApp->mCamera->SetCancelNextContinuous(true);
-    mWinApp->mCamera->InitiateCapture(VIEW_CONSET);
+    mWinApp->mCamera->InitiateCapture(m_iOffsetShown ? SEARCH_CONSET : VIEW_CONSET);
   }
 }
 
@@ -821,7 +843,7 @@ void CLowDoseDlg::OnSetViewShift()
 void CLowDoseDlg::OnZeroViewShift()
 {
   mWinApp->RestoreViewFocus();  
-  mViewShiftX = mViewShiftY = 0.;
+  mViewShiftX[m_iOffsetShown] = mViewShiftY[m_iOffsetShown] = 0.;
   ConvertAxisPosition(false);
   ConvertAxisPosition(true);
   Update();
@@ -832,8 +854,10 @@ bool CLowDoseDlg::OKtoSetViewShift()
 {
   float xx, yy;
   if (!mImBufs->mImage || !mImBufs->mBinning || 
-    mStampViewShift == mImBufs->mTimeStamp ||!mImBufs->mLowDoseArea || 
-    mImBufs->mConSetUsed || mImBufs->mCamera != mWinApp->GetCurrentCamera())
+    mStampViewShift[m_iOffsetShown] == mImBufs->mTimeStamp ||!mImBufs->mLowDoseArea || 
+    (mImBufs->mConSetUsed != VIEW_CONSET && !m_iOffsetShown) || 
+    (mImBufs->mConSetUsed != SEARCH_CONSET && m_iOffsetShown) || 
+    mImBufs->mCamera != mWinApp->GetCurrentCamera())
     return false;
   mImBufs->mImage->getShifts(xx, yy);
   return (xx != 0. || yy != 0.);
@@ -963,7 +987,7 @@ BOOL CLowDoseDlg::OnInitDialog()
 // Respond to possible external changes in down area, blank, or tie focus-trial
 void CLowDoseDlg::UpdateSettings()
 {
-  float defocus = mScope->GetLDViewDefocus();
+  float defocus= mScope->GetLDViewDefocus(m_iOffsetShown);
 
   // If defining an area, reject a change in show area
   if (mTrulyLowDose && m_iDefineArea)
@@ -971,9 +995,9 @@ void CLowDoseDlg::UpdateSettings()
 
   mScope->SetBlankWhenDown(m_bBlankWhenDown);
   mScope->SetLDNormalizeBeam(m_bNormalizeBeam);
-  if (defocus < MIN_VIEW_DEFOCUS || defocus > MAX_VIEW_DEFOCUS) {
-    B3DCLAMP(defocus, MIN_VIEW_DEFOCUS, MAX_VIEW_DEFOCUS);
-    mScope->SetLDViewDefocus(defocus);
+  if (defocus < sMinVSDefocus[m_iOffsetShown] || defocus > sMaxVSDefocus[m_iOffsetShown]){
+    B3DCLAMP(defocus, sMinVSDefocus[m_iOffsetShown], sMaxVSDefocus[m_iOffsetShown]);
+    mScope->SetLDViewDefocus(defocus, m_iOffsetShown ? SEARCH_AREA : VIEW_CONSET);
   }
   m_strViewDefocus.Format("%d", B3DNINT(defocus));
 
@@ -1009,9 +1033,8 @@ void CLowDoseDlg::Update()
   BOOL bEnable = mTrulyLowDose && !mWinApp->DoingTasks();
   m_butUnblank.EnableWindow(mLastBlanked && !mWinApp->DoingTasks() && !camBusy && 
     !mScope->GetJeol1230());
-  m_butSearch.EnableWindow(!STEMmode && bEnable && !camBusy && !m_iDefineArea);
-  m_butZeroViewShift.EnableWindow(!STEMmode && bEnable && 
-    (mViewShiftX != 0. || mViewShiftY != 0.));
+  m_butZeroViewShift.EnableWindow(!STEMmode && bEnable && !camBusy &&
+    (mViewShiftX[m_iOffsetShown] != 0. || mViewShiftY[m_iOffsetShown] != 0.));
 
   // Disable copy buttons on same conditions, require an active area
   bEnable = bEnable && (mScope->GetLowDoseArea() >= 0);
@@ -1024,7 +1047,7 @@ void CLowDoseDlg::Update()
   m_butResetBeamShift.EnableWindow(!STEMmode && bEnable && !camBusy);
 
   m_butSetViewShift.EnableWindow(!STEMmode && bEnable && OKtoSetViewShift());
-  m_sbcViewDefocus.EnableWindow(!STEMmode);
+  m_sbcViewDefocus.EnableWindow(!STEMmode && !mWinApp->DoingTasks() && !camBusy);
   m_statViewDefocus.EnableWindow(!STEMmode);
 
   // Make mag-spot line visible if mode on
