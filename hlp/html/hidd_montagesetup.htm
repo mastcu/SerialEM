@@ -19,9 +19,11 @@
         factor. When one of these settings (or the binning or the selection of stage 
         versus image shift) is changed, the dialog will maintain the fit to the 
         selected area by having the Navigator recompute the number and size of frames 
-        and their overlap.</P>
-    <P>Montages can also be taken in Low Dose mode, with either the Record or View 
-      area imaging parameters.&nbsp; Whether a montage file can be acquired into in 
+        and their overlap.&nbsp; Montages will be taken with the Record camera 
+        parameters by default, but this dialog includes an option to take a montage with 
+        the separate Mont-map parameters.</P>
+    <P>Montages can also be taken in Low Dose mode, with either the Record, View 
+      or Search area imaging parameters.&nbsp; Whether a montage file can be acquired into in 
       Low Dose depends solely on whether Low Dose was on when the montage was first 
       set up.&nbsp; Thus, you need to turn on Low Dose mode before setting up a 
       montage to be taken in Low Dose.&nbsp; Several parameters cannot be changed when 
@@ -90,7 +92,7 @@
       <P>The total area is computed based on the pixel size, number of pieces, piece size 
         and overlaps. It is recomputed whenever you push a button or leave a text box, 
         but to be sure the value is current, just push the <B>Update</B> button.</P>
-      <P><B>Move Stage instead of Shifting Image</B></P>
+      <P><B>Move stage instead of shifting Image</B></P>
       <P>Select this option to have the montage acquired by moving the stage instead of 
         using electronic image shift. Image shift is quite accurate but has a limited 
         range at medium and high magnifications (generally less than ~15 microns, but less 
@@ -99,7 +101,7 @@
         shift has a much higher range, so you may be able to use image shift instead of 
         stage shift at the highest LM mode magnifications. In area-fitting mode, the 
         fit will be recomputed and it may not be possible to change this setting.</P>
-      <P><B>Skip Pieces outside Navigator Item</B></P>
+      <P><B>Skip pieces outside Navigator item</B></P>
       <P>With this option, it is possible to define a polygon in the Navigator and have 
         each montage that is taken include only pieces that have some portion inside 
         the polygon. This option is not needed when taking a montage that was fit to a 
@@ -111,23 +113,51 @@
         supermontaging, and the value just needs to be 0. The legality of the item 
         number will not be checked until the montage is started. If the Navigator is 
         not open at that time, this setting is ignored.</P>
-      <P><B>Do Full Rectangle; Ignore List of Pieces to Skip</B></P>
+      <P><B>Do full rectangle; ignore list of pieces to skip</B></P>
       <P>When a montage is set up by the Navigator, it will compose a list of pieces that 
         do not need to be acquired because they fall outside the polygon used to define 
         the montage area. The option allows one to acquire the complete array of 
         pieces, including ones on the list to skip.</P>
-      <P><B>Ask about Making Map after Each Montage</B></P>
+      <P><B>Ask about making map after each montage</B></P>
       <P>If this option is checked, then when you take a montage manually, the program 
         will ask whether you want to make a Navigator map. It is available only when 
         the Navigator is open. It is turned on when you set up a montage through the 
         Navigator; otherwise it is off by default. If you answer with 'Cancel' by 
         mistake when asked if you want to make a map, you can use this option to 
         re-enable the offers to make a map.</P>
+    <P><b>Use Montage mapping, not Record parameters</b></P>
+    <P>If this option is checked and enabled, montages will be taken with the Mont-map 
+      camera parameter set instead of Record parameters.&nbsp; The option is most 
+      likely to be useful for taking maps, which often involve different exposure time 
+      and binning from montages for data acquisition; but it could also be useful if 
+      you routinely take montages for other uses with different parameters from the 
+      Record ones.&nbsp; The option is disabled if one of the two options described 
+      next is 
+      selected in Low Dose mode, or if the Mont-map parameters are being hidden with 
+      the <a href="#hid_camera_userecordformontage">No Mont. Map Params</a> option in 
+      the Camera menu.</P>
     <P><b>Use View parameters in Low Dose mode</b></P>
     <P>If this option is checked, montages in Low Dose mode will be taken with the 
       View camera and imaging parameters instead of Record parameters.&nbsp; This is 
       useful for mapping in Low Dose because a View shift offset can be set to align 
-      the View and Record areas.</P>
+      the View and Record areas (see 
+      <a href="hidd_lowdose.htm#viewShiftOffset">Shift offset for View or Search</a>).&nbsp; 
+      When this option is turned on, the program may turn the option for moving the 
+      stage on or off depending on the field of view of View images.&nbsp; When using 
+      View parameters is turned off again, it will restore the 
+      previous setting of the stage move option if that is known.</P>
+    <P><b>Use Search parameters in Low Dose mode</b></P>
+    <P>If this option is checked, montages in Low Dose mode will be taken with the 
+      Search imaging parameters instead of Record or View parameters.&nbsp; The Search 
+      camera parameters will be used, unless the <a href="#hid_camera_useviewforsearch">Use View for Search</a> 
+      option is selected in the Camera menu.&nbsp; Search mode may be useful for 
+      low-magnification mapping in Low Dose because a Search shift offset can be set to align 
+      the Search area with higher magnification areas.&nbsp; When this option is 
+      turned on, the program may turn the option for moving the stage on or off 
+      depending on the field of view of Search images.&nbsp; When using Search 
+      parameters is turned 
+      off again, it will restore the previous setting of the stage move option if that 
+      is known.</P>
     <P><b>Use continuous mode with settling factor</b></P>
     <P>This option is enabled for Gatan cameras where continuous camera acquisition 
       can be used through the SerialEMCCD plugin and allows a montage to be acquired 

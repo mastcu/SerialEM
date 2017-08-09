@@ -3,6 +3,29 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+8/8/17: Added ability to set View or Search shift offsets by placing the
+marker at corresponding points in two images,
+
+8/7/17: Search mode in Low Dose now has almost all the capabilities as View,
+with the ability to take montages in Search, set defocus and shift offsets for
+it, and have those offsets used properly in Realign to Item.
+
+8/7/17: Added separate camera parameters for Search, and a new parameter set
+that can be selected to be used for montages.  If fewer options are desired in
+the camera setup dialog, each of these can be hidden.
+
+8/7/17: In Low Dose mode, it now allows the binning to be set differently in
+the montage setup dialog without changing exposure time.
+
+8/7/17: View defocus offset can now be changed by an unlimited amount without
+causing Realign to Item to leave Low Dose mode.
+
+8/7/17: Made Realign to Item work better when the View/Search offset is
+changed after making map and it leaves Low Dose mode.
+
+8/7/17: Adjustments for high defocus are now applied to stage calibrations
+only in nonLM mode.
+
 7/21/17: Added property for increasing stage timeout time (In 3.6).
 
 7/20/17: Added test that spot size was successfully set for the calibration

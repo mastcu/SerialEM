@@ -40,8 +40,11 @@
       buttons to select a set and view and adjust its parameters. Whenever you change 
       from one set to another, the parameters are stored for the set that you are 
       leaving.</P>
-    <P><B>Copy from other camera</B></P>
-    <P>This button is available if there are multiple cameras. Press it to copy 
+    <P><B>Copy from other camera or from View</B></P>
+    <P>This button is available if there are multiple cameras, or if there are 
+      separate Search camera parameters. In the latter case, when Search is the 
+      selected parameter set, press the button to copy the View parameters for the 
+      current camera to Search.&nbsp; Otherwise, press the button to copy 
       parameters for the current parameter set from the camera listed on the button. 
       Acquisition area will be scaled appropriately if the two cameras are different 
       sizes.</P>
@@ -179,7 +182,7 @@
     <P><B>Dose readout and Update Dose button</B></P>
     <P>If electron dose is calibrated for the current spot size and intensity, the 
       estimated dose will be shown for the given exposure. This readout is refreshed 
-      whenever you change parameter sets or when you press the Update Dose button, so 
+      whenever you change parameter sets or when you press the <b>Update Dose</b> button, so 
       you can change brightness and use this button to see the effect of the change.&nbsp; 
       For a direct detector camera, there is also a line expressing the dose rate as electrons per 
       unbinned pixel per second, which is the value that affects camera performance.&nbsp; 
@@ -188,12 +191,17 @@
       in the dose rate from specimen to camera in the last image that was taken.
       </P>
     <P><B>OK - Acquire - Cancel</B></P>
-    <P>When you press the OK button, any changes in the current parameter set will be 
-      saved; if you press Cancel, such changes will be discarded. Note that changes 
+    <P>When you press the <b>OK</b> button, any changes in the current parameter set will be 
+      saved; if you press <b>Cancel</b>, such changes will be discarded. Note that changes 
       are saved for a parameter set whenever you switch to another set. If you press 
-      Acquire, the dialog will go away, an image of the current type will be taken, 
+      <b>Acquire</b>, the dialog will go away, an image of the current type will be taken, 
       the <A HREF="menu_process.htm#hid_process_minmaxmean">Min/Max/Mean command</A> 
-      of the Process menu will be run, and the dialog will reappear.</P>
+      of the Process menu will be run, and the dialog will reappear.&nbsp; If you have 
+      hidden the Search parameters with the <a href="#hid_camera_useviewforsearch">Use View for Search</a> 
+      option in the Camera menu, then in Low Dose mode this button will be labeled 
+      either <b>Acquire Search </b>or <b>Acquire View </b>when the View parameters are 
+      being shown, depending on whether Low Dose is currently in the Search area or a 
+      different area.</P>
     <P>&nbsp;</P>
     <P><i><A NAME="K2controls"></A><B><FONT size="3">Controls for Gatan K2 Camera</FONT></B></i></P>
     <P>When a K2 camera is selected, the bottom section of this dialog provides 

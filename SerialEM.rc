@@ -12,7 +12,8 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "afxres.h"
+#include "afxres.h"
+
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
@@ -180,6 +181,7 @@ BEGIN
         MENUITEM "Prepare &Gain Ref",           ID_CAMERA_ACQUIREGAINREF
         MENUITEM "Gain Ref Policy...",          ID_CAMERA_GAINREFPOLICY
         MENUITEM SEPARATOR
+        MENUITEM "Search\tCtrl+E",              ID_CAMERA_SEARCH
         MENUITEM "&View\tCtrl+V",               ID_CAMERA_VIEW
         MENUITEM "&Focus\tCtrl+F",              ID_CAMERA_FOCUS
         MENUITEM "&Trial\tCtrl+T",              ID_CAMERA_TRIAL
@@ -201,6 +203,9 @@ BEGIN
         MENUITEM "Set Minimum &Counts",         ID_CAMERA_SETCOUNTLIMIT
         MENUITEM SEPARATOR
         MENUITEM "&Stop Acquire\tCtrl+H",       ID_CAMERA_STOPACQUIRE
+        MENUITEM SEPARATOR
+        MENUITEM "&Use View for Search",        ID_CAMERA_USEVIEWFORSEARCH
+        MENUITEM "No Mont. Map Params",         ID_CAMERA_USERECORDFORMONTAGE
         MENUITEM SEPARATOR
         MENUITEM "S&how Gain Ref",              ID_CAMERA_SHOWGAINREF
         MENUITEM "Show &Dark Ref",              ID_CAMERA_SHOWDARKREF
@@ -631,11 +636,12 @@ BEGIN
     VK_SPACE,       IDM_CAMERATOGGLE,       VIRTKEY, NOINVERT
     VK_ESCAPE,      IDM_ESCAPE,             VIRTKEY, NOINVERT
     "N",            IDM_FILE_OPENNEW,       VIRTKEY, CONTROL, NOINVERT
+    "O",            IDM_FILE_OPENOLD,       VIRTKEY, CONTROL, NOINVERT
     "R",            IDM_FILE_READ,          VIRTKEY, SHIFT, NOINVERT
     "S",            IDM_FILE_SAVE,          VIRTKEY, CONTROL, NOINVERT
-    "O",            IDM_FILE_OPENOLD,       VIRTKEY, CONTROL, NOINVERT
     "D",            IDM_TILTDOWN,           VIRTKEY, CONTROL, NOINVERT
     "U",            IDM_TILTUP,             VIRTKEY, CONTROL, NOINVERT
+    "E",            ID_CAMERA_SEARCH,       VIRTKEY, CONTROL, NOINVERT
 END
 
 
@@ -873,11 +879,13 @@ BEGIN
     CONTROL         "Counting",IDC_RCOUNTING,"Button",BS_AUTORADIOBUTTON,11,396,67,10
     CONTROL         "Super-Resolution",IDC_RSUPERRES,"Button",BS_AUTORADIOBUTTON,11,406,68,10
     GROUPBOX        "Operating mode",IDC_STAT_K2MODE,7,377,74,41,WS_GROUP
-    CONTROL         "View",IDC_RVIEW,"Button",BS_AUTORADIOBUTTON | WS_GROUP,19,43,50,12
-    CONTROL         "Focus",IDC_RFOCUS,"Button",BS_AUTORADIOBUTTON,69,43,38,12
-    CONTROL         "Trial",IDC_RTRIAL,"Button",BS_AUTORADIOBUTTON,117,43,38,12
-    CONTROL         "Record",IDC_RRECORD,"Button",BS_AUTORADIOBUTTON,165,43,38,12
-    CONTROL         "Preview",IDC_RPREVIEW,"Button",BS_AUTORADIOBUTTON,213,43,38,12
+    CONTROL         "View",IDC_RVIEW,"Button",BS_AUTORADIOBUTTON | WS_GROUP,47,43,36,12
+    CONTROL         "Focus",IDC_RFOCUS,"Button",BS_AUTORADIOBUTTON,83,43,36,12
+    CONTROL         "Trial",IDC_RTRIAL,"Button",BS_AUTORADIOBUTTON,119,43,36,12
+    CONTROL         "Record",IDC_RRECORD,"Button",BS_AUTORADIOBUTTON,155,43,37,12
+    CONTROL         "Preview",IDC_RPREVIEW,"Button",BS_AUTORADIOBUTTON,192,43,38,12
+    CONTROL         "Search",IDC_RSEARCH,"Button",BS_AUTORADIOBUTTON,11,43,36,12
+    CONTROL         "Mont-map",IDC_RMONTAGE,"Button",BS_AUTORADIOBUTTON,230,43,42,12
     GROUPBOX        "Parameter set",IDC_STATPARAMBOX,7,36,266,20,WS_GROUP
     LTEXT           "Parameters for",IDC_STATPARAMTEXT,7,62,45,8
     LTEXT           "Record",IDC_BIGMODETEXT,55,60,50,13,SS_CENTERIMAGE
@@ -1019,7 +1027,7 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,4,76,111,10
 END
 
-IDD_MONTAGESETUP DIALOGEX 0, 0, 166, 448
+IDD_MONTAGESETUP DIALOGEX 0, 0, 166, 472
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 EXSTYLE WS_EX_LEFTSCROLLBAR
 CAPTION "Montage Setup"
@@ -1057,13 +1065,13 @@ BEGIN
     RTEXT           "8192 x 8192 pixels",IDC_STATTOTALPIXELS,49,168,65,8
     RTEXT           "50.5 x 50.5 microns",IDC_STATTOTALAREA,24,179,90,8
     PUSHBUTTON      "Update",IDC_UPDATE,121,171,33,14,NOT WS_TABSTOP
-    DEFPUSHBUTTON   "OK",IDOK,24,430,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,91,430,50,14
-    PUSHBUTTON      "?",IDC_BUTHELP,152,434,10,10
+    DEFPUSHBUTTON   "OK",IDOK,24,454,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,91,454,50,14
+    PUSHBUTTON      "?",IDC_BUTHELP,152,458,10,10
     CONTROL         "Move stage instead of shifting image",IDC_MOVESTAGE,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,190,125,10
     CONTROL         "Do full rectangle; ignore list of pieces to skip",IDC_IGNORESKIPS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,216,147,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,214,147,10
     LTEXT           "FITTING TO NAVIGATOR AREA: Change mag",IDC_STATNAVFIT1,9,36,141,8
     LTEXT           "to adjust number of pieces.  Changing mag,",IDC_STATNAVFIT2,9,45,129,8
     LTEXT           "binning, overlap, or ""Move stage"" will refit to area",IDC_STATNAVFIT3,9,54,145,8
@@ -1071,50 +1079,56 @@ BEGIN
     RTEXT           "99%",IDC_MINOVVALUE,64,155,14,8
     CONTROL         "",IDC_SPINMINOV,"msctls_updown32",UDS_ARROWKEYS,81,152,10,14
     CONTROL         "Skip pieces outside Navigator item",IDC_CHECK_SKIP_OUTSIDE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,203,118,10
-    EDITTEXT        IDC_EDIT_SKIP_OUTSIDE,129,201,25,14,ES_AUTOHSCROLL
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,202,118,10
+    EDITTEXT        IDC_EDIT_SKIP_OUTSIDE,129,201,25,12,ES_AUTOHSCROLL
     CONTROL         "Ask about making map after each montage",IDC_CHECKOFFERMAP,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,228,144,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,226,144,10
     CONTROL         "Use settings for high-quality stage montage",IDC_CHECK_USE_HQ_SETTINGS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,276,144,10
-    CONTROL         "Autofocus at each piece",IDC_CHECK_FOCUS_EACH,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,299,88,10
-    CONTROL         "Autofocus in blocks of ",IDC_CHECK_FOCUS_BLOCKS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,326,79,10
-    RTEXT           "16x16",IDC_STAT_BLOCKSIZE,89,326,18,8
-    CONTROL         "",IDC_SPIN_BLOCK_SIZE,"msctls_updown32",UDS_ARROWKEYS,109,323,10,14
-    LTEXT           "pieces",IDC_STATBLOCKPIECES,122,326,22,8
-    LTEXT           "Delay time after moving stage:",IDC_STAT_DELAY,10,384,91,8
-    EDITTEXT        IDC_EDITDELAY,107,382,30,12,ES_AUTOHSCROLL
-    LTEXT           "sec",IDC_STATDELAYSEC,140,384,12,8
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,300,144,10
+    CONTROL         "Autofocus at each piece",IDC_CHECK_FOCUS_EACH,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,323,88,10
+    CONTROL         "Autofocus in blocks of ",IDC_CHECK_FOCUS_BLOCKS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,350,79,10
+    RTEXT           "16x16",IDC_STAT_BLOCKSIZE,89,350,18,8
+    CONTROL         "",IDC_SPIN_BLOCK_SIZE,"msctls_updown32",UDS_ARROWKEYS,109,347,10,14
+    LTEXT           "pieces",IDC_STATBLOCKPIECES,122,350,22,8
+    LTEXT           "Delay time after moving stage:",IDC_STAT_DELAY,10,408,91,8
+    EDITTEXT        IDC_EDITDELAY,107,406,30,12,ES_AUTOHSCROLL
+    LTEXT           "sec",IDC_STATDELAYSEC,140,408,12,8
     CONTROL         "Skip correlations used to align pieces",IDC_CHECK_SKIPCORR,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,408,128,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,432,128,10
     EDITTEXT        IDC_EDITMINOVERLAP,108,152,27,14,ES_AUTOHSCROLL
     LTEXT           "and",IDC_STATMINAND,93,155,13,8
     LTEXT           "micron",IDC_STATMINMICRON,137,155,21,8
     PUSHBUTTON      "Reset",IDC_BUT_RESET_OVERLAPS,140,135,24,14
-    LTEXT           "Maximum alignment shift as % of piece",IDC_STATMAXALIGN,20,369,115,8
-    EDITTEXT        IDC_EDITMAXALIGN,138,367,20,12,ES_AUTOHSCROLL
-    GROUPBOX        "High-quality stage montage parameters",IDC_STAT_HQSTAGEBOX,4,289,158,134
+    LTEXT           "Maximum alignment shift as % of piece",IDC_STATMAXALIGN,20,393,115,8
+    EDITTEXT        IDC_EDITMAXALIGN,138,391,20,12,ES_AUTOHSCROLL
+    GROUPBOX        "High-quality stage montage parameters",IDC_STAT_HQSTAGEBOX,4,313,158,134
     CONTROL         "Realign with image shift up to ",IDC_CHECK_IS_REALIGN,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,340,98,10
-    LTEXT           "microns",IDC_STATISMICRONS,136,341,25,8
-    EDITTEXT        IDC_EDIT_IS_REALIGN,110,339,23,12,ES_AUTOHSCROLL
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,364,98,10
+    LTEXT           "microns",IDC_STATISMICRONS,136,365,25,8
+    EDITTEXT        IDC_EDIT_IS_REALIGN,110,363,23,12,ES_AUTOHSCROLL
     CONTROL         "Go from center out; anchor at mag:",IDC_CHECK_USE_ANCHOR,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,353,118,10
-    CONTROL         "",IDC_SPIN_ANCHOR_MAG,"msctls_updown32",UDS_ARROWKEYS,149,351,10,14
-    RTEXT           "5000",IDC_STAT_ANCHOR_MAG,128,354,19,8
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,377,118,10
+    CONTROL         "",IDC_SPIN_ANCHOR_MAG,"msctls_updown32",UDS_ARROWKEYS,149,375,10,14
+    RTEXT           "5000",IDC_STAT_ANCHOR_MAG,128,378,19,8
     CONTROL         "Repeat until drift is below",IDC_CHECK_REPEAT_FOCUS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,311,88,10
-    EDITTEXT        IDC_EDIT_NMPERSEC,99,310,23,12,ES_AUTOHSCROLL
-    LTEXT           "nm/sec",IDC_STATNMPERSEC,125,312,23,8
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,335,88,10
+    EDITTEXT        IDC_EDIT_NMPERSEC,99,334,23,12,ES_AUTOHSCROLL
+    LTEXT           "nm/sec",IDC_STATNMPERSEC,125,336,23,8
     CONTROL         "Use View parameters in Low Dose mode",IDC_CHECK_USE_VIEW_IN_LOWDOSE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,240,138,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,251,138,10
     CONTROL         "Do not blank beam during Record readout",IDC_CHECK_SKIP_REBLANK,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,396,141,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,420,141,10
     CONTROL         "Turn off Drift Correction for stage montage",IDC_CHECK_NO_DRIFT_CORR,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,264,139,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,288,139,10
     CONTROL         "Use continuous mode with settling factor",IDC_CHECK_CONTINUOUS_MODE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,252,131,10
-    EDITTEXT        IDC_EDIT_CONTIN_DELAY_FAC,142,250,22,14,ES_AUTOHSCROLL
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,276,131,10
+    EDITTEXT        IDC_EDIT_CONTIN_DELAY_FAC,142,275,22,12,ES_AUTOHSCROLL
+    CONTROL         "Use Search parameters in Low Dose mode",IDC_CHECK_USE_SEARCH_IN_LD,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,263,145,10
+    CONTROL         "Use Montage Mapping, not Record parameters",IDC_CHECK_USE_MONT_MAP_PARAMS,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,239,154,10
+    CONTROL         "",IDC_STAT_LINE1,"Static",SS_BLACKFRAME | SS_SUNKEN,5,237,158,1
+    CONTROL         "",IDC_STAT_LINE2,"Static",SS_BLACKFRAME | SS_SUNKEN,5,274,158,1
 END
 
 IDD_MONTAGECONTROL DIALOGEX 0, 0, 119, 98
@@ -1540,13 +1554,15 @@ BEGIN
     CONTROL         "Rec.",IDC_RSHOWRECORD,"Button",BS_AUTORADIOBUTTON,69,115,24,10
     CONTROL         "Sea.",IDC_RSHOWSEARCH,"Button",BS_AUTORADIOBUTTON,95,115,23,10
     GROUPBOX        "Go to area / show when screen down",IDC_STATIC,0,106,119,21,WS_GROUP
+    CONTROL         "View",IDC_RVIEW_OFFSET,"Button",BS_AUTORADIOBUTTON | WS_GROUP,40,154,31,8
+    CONTROL         "Search",IDC_RSEARCH_OFFSET,"Button",BS_AUTORADIOBUTTON,72,154,34,8
+    LTEXT           "Offsets for:",IDC_STATIC,7,154,32,8
     LTEXT           "Defocus:",IDC_STATVIEWDEFLABEL,3,165,27,8
     RTEXT           "-199",IDC_STATVIEWDEFOCUS,30,165,14,8
     CONTROL         "",IDC_SPINVIEWDEFOCUS,"msctls_updown32",UDS_ARROWKEYS,45,163,10,12
     LTEXT           "Shift:",IDC_STATIC,58,165,15,8
     PUSHBUTTON      "Set",IDC_SET_VIEW_SHIFT,73,164,20,10
     PUSHBUTTON      "Zero",IDC_ZERO_VIEW_SHIFT,96,164,20,10
-    GROUPBOX        "Offsets for View",IDC_STATIC,0,154,119,24
     PUSHBUTTON      "-",IDC_BUTOPEN,4,0,9,7
     PUSHBUTTON      "F",IDC_BUTFLOATDOCK,17,0,9,7
     CTEXT           "Low Dose Control",IDC_STATTOPLINE,33,0,67,8
@@ -1558,7 +1574,6 @@ BEGIN
     CONTROL         "Continuous update (see tooltip)",IDC_CONTINUOUSUPDATE,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,4,28,105,10
     CONTROL         "BLANK BEAM when screen down",IDC_BLANKBEAM,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,4,128,112,10
-    PUSHBUTTON      "Search",IDC_SEARCH,86,139,30,12
     PUSHBUTTON      "Unblank",IDC_UNBLANK,50,139,30,12
     LTEXT           "Blanked",IDC_STATBLANKED,20,138,26,8,NOT WS_VISIBLE
     PUSHBUTTON      "-",IDC_BUTMORE,4,146,9,7
@@ -1581,6 +1596,11 @@ BEGIN
     CONTROL         "Rotate inter-area axis",IDC_LD_ROTATE_AXIS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,4,238,76,10
     LTEXT           "deg",IDC_STAT_LD_DEG,104,238,13,8
     EDITTEXT        IDC_EDIT_AXISANGLE,81,236,22,12,ES_CENTER | ES_AUTOHSCROLL
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | SS_SUNKEN,0,177,119,1
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | SS_SUNKEN,0,159,1,19
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | SS_SUNKEN,0,158,6,1
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | SS_SUNKEN,111,158,8,1
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | SS_SUNKEN,118,159,1,19
 END
 
 IDD_SCREENMETER DIALOGEX 0, 0, 74, 26
@@ -2781,7 +2801,7 @@ BEGIN
 
     IDD_MONTAGESETUP, DIALOG
     BEGIN
-        BOTTOMMARGIN, 444
+        BOTTOMMARGIN, 468
     END
 
     IDD_MONTAGECONTROL, DIALOG
@@ -3259,10 +3279,11 @@ BEGIN
     IDM_FILE_SAVE           "Save image in buffer A to file"
     ID_RESIZE_MAIN          "Resize the main window to fill the frame"
     ID_CAMERA_PARAMETERS    "Set parameters for image acquisition"
-    ID_CAMERA_VIEW          "Acquire image with first parameter set"
-    ID_CAMERA_FOCUS         "Acquire image with second parameter set"
-    ID_CAMERA_TRIAL         "Acquire image with third parameter set"
-    ID_CAMERA_RECORD        "Acquire image with fourth parameter set"
+    ID_CAMERA_VIEW          "Acquire image with View parameter set"
+    ID_CAMERA_FOCUS         "Acquire image with Focus parameter set"
+    ID_CAMERA_TRIAL         "Acquire image with Trial parameter set"
+    ID_CAMERA_RECORD        "Acquire image with Record parameter set"
+    ID_CAMERA_SEARCH        "Acquire image with Search parameter set"
     ID_CAMERA_SCREENDOWN    "Leave screen down to monitor beam presence\nLeave screen down"
     ID_CAMERA_SIMULATION    "Acquire simulated images\nSimulation mode"
     ID_CAMERA_STOPACQUIRE   "Stop image acquisition process\nStop image acquisition"
@@ -3417,8 +3438,8 @@ BEGIN
     IDC_TILT_TO             "Enter an angle to tilt to"
     IDC_TILT_INCREMENT      "Set basic tilt increment"
     IDC_COSINE_TILT         "Use tilt increment proportional to cosine of tilt angle"
-    IDC_RVIEW               "Edit first parameter set"
-    IDC_RFOCUS              "Edit second parameter set"
+    IDC_RVIEW               "Edit View parameter set"
+    IDC_RFOCUS              "Edit Focus parameter set"
 END
 
 STRINGTABLE
@@ -3693,9 +3714,11 @@ END
 
 STRINGTABLE
 BEGIN
-    IDC_RTRIAL              "Edit third parameter set"
-    IDC_RRECORD             "Edit fourth parameter set"
-    IDC_RPREVIEW            "Edit fifth parameter set"
+    IDC_RTRIAL              "Edit Trial parameter set"
+    IDC_RRECORD             "Edit Record parameter set"
+    IDC_RPREVIEW            "Edit Preview parameter set"
+    IDC_RSEARCH             "Edit Search parameter set"
+    IDC_RMONTAGE            "Edit Montage-mapping parameter set"
     IDC_RSINGLE             "Get one image per acquisition request"
     IDC_RCONTINUOUS         "Acquire images one after another until stopped with Space Bar or Stop"
     IDC_RUNPROCESSED        "Acquire raw image from camera"
@@ -4040,7 +4063,9 @@ END
 
 STRINGTABLE
 BEGIN
-    IDC_SPINVIEWDEFOCUS     "Set the additional defocus applied in View mode"
+    IDC_SPINVIEWDEFOCUS     "Set the additional defocus applied in View or Search mode"
+    IDC_RVIEW_OFFSET        "Show and control defocus and shift offset for View"
+    IDC_RSEARCH_OFFSET      "Show and control defocus and shift offset for Search"
     IDC_CHECK_SKIP_OUTSIDE  "Skip pieces outside of a Navigator polygon"
     IDC_EDIT_SKIP_OUTSIDE   "Navigator item # or 0 for current item or item being acquired"
     IDC_FOCUS_AFTER_STAGE   "Autofocus after each movement in stage montage (not in LM mode)"
@@ -4666,6 +4691,12 @@ BEGIN
     IDC_CHECK_NO_DRIFT_CORR "Turn off OneView Drift Correction for montage if on in Record parameters"
     IDC_CHECK_CONTINUOUS_MODE 
                             "Use continuous camera acquisition to get montage images"
+    IDC_CHECK_USE_VIEW_IN_LOWDOSE
+                            "Use View camera and scope parameters in Low Dose mode"
+    IDC_CHECK_USE_SEARCH_IN_LD
+                            "Use Search camera and scope parameters in Low Dose mode"
+    IDC_CHECK_USE_MONT_MAP_PARAMS
+                            "Use the Mont-map camera parameters instead of Record for this montage"
 END
 
 STRINGTABLE
@@ -4796,6 +4827,13 @@ BEGIN
     IDC_FA_EDIT_SUB_END     "Last frame (numbered from 1) of subset to align"
 END
 
+STRINGTABLE
+BEGIN
+    ID_CAMERA_USEVIEWFORSEARCH "Use View camera parameters for Search images"
+    ID_CAMERA_USERECORDFORMONTAGE 
+                            "Do not show separate Montage Mapping parameter set"
+END
+
 #endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////
 
@@ -4819,7 +4857,8 @@ LANGUAGE 9, 1
 #include "res\SerialEM.rc2"  // non-Microsoft Visual C++ edited resources
 #include "afxres.rc"         // Standard components
 #include "XFolderDialog\XFolderDialog.rc"
-#endif
+#endif
+
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

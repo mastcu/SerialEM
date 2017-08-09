@@ -1268,7 +1268,8 @@
 #define IDC_CHECK_NO_DRIFT_CORR         2286
 #define IDC_CHECK_CONTINUOUS_MODE       2287
 #define IDC_EDIT_CONTIN_DELAY_FAC       2288
-#define IDC_RADIO2                      2291
+#define IDC_RMONTAGE                    2290
+#define IDC_RSEARCH_OFFSET              2291
 #define IDC_SAVE_UNNORMALIZED           2292
 #define IDC_STAT_MESSAGE                2293
 #define IDC_STAT_GRAY_PANEL             2294
@@ -1298,6 +1299,12 @@
 #define IDC_STAT_LINE1                  2320
 #define IDC_FA_EDIT_SUB_START           2321
 #define IDC_FA_EDIT_SUB_END             2322
+#define IDC_RSEARCH                     2323
+#define IDC_RVIEWOFFSET                 2315
+#define IDC_RVIEW_OFFSET                2324
+#define IDC_CHECK_USE_SEARCH_IN_LD      2325
+#define IDC_CHECK_USE_MONT_MAP_PARAMS   2326
+#define IDC_STAT_LINE2                  2327
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -1696,6 +1703,9 @@
 #define ID_SCRIPT_SETINDENTSIZE         33277
 #define ID_SPECIALOPTIONS_NORMALIZEALLLENS 33278
 #define ID_NAVOPTIONS_USECURRENTLDPARAMSINRI 33279
+#define ID_CAMERA_USEVIEWFORSEARCH      33280
+#define ID_CAMERA_USERECORDFORMONTAGE   33281
+#define ID_CAMERA_SEARCH                33282
 
 // Next default values for new objects
 // 
@@ -1703,8 +1713,8 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        225
-#define _APS_NEXT_COMMAND_VALUE         33280
-#define _APS_NEXT_CONTROL_VALUE         2323
+#define _APS_NEXT_COMMAND_VALUE         33284
+#define _APS_NEXT_CONTROL_VALUE         2328
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

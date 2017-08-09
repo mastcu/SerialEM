@@ -174,9 +174,12 @@ This is all image shift units
 CNavHelper::GetViewOffsets calls GetNetViewShift then transforms it to stage
 shift with SimpleIStoStage
 
-CanStayInLowDose: when NOT staying in low dose, takes the full view offset,
+CanStayInLowDose:
+If item->mNetViewShift is not zero, it actually uses the current view shift
+and computes how much it has changed
+when NOT staying in low dose, takes the full view offset,
 minus the net view shift, converts this with SimpleIStoStage, and adds this to
-item->mNetViewShift
+the view shift.  
 
 NewMap calls GetViewOffsets to get the offsets that are stored in
 item->mNetViewShift

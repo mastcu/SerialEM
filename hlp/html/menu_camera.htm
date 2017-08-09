@@ -29,24 +29,28 @@
           <TD>Opens dialog box to set policies governing multiple gain references.</TD>
         </TR>
         <TR VALIGN="top">
+          <TD class="style1"><a href="#hid_camera_search">Search</a></TD>
+          <TD>&nbsp;</TD>
+        </TR>
+        <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_camera_view">View</A></TD>
-          <TD>Acquires image with first parameter set.</TD>
+          <TD>Acquires image with View parameter set.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_camera_focus">Focus</A></TD>
-          <TD>Acquires image with second parameter set.</TD>
+          <TD>Acquires image with Focus parameter set.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_camera_trial">Trial</A></TD>
-          <TD>Acquires image with third parameter set.</TD>
+          <TD>Acquires image with Trial parameter set.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_camera_record">Record</A></TD>
-          <TD>Acquires image with fourth parameter set.</TD>
+          <TD>Acquires image with Record parameter set.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_camera_preview">Preview</A></TD>
-          <TD>Acquires image with fifth parameter set.</TD>
+          <TD>Acquires image with Preview parameter set.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_camera_montage">Montage</A></TD>
@@ -104,6 +108,15 @@
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_camera_stopacquire">Stop Acquire</A></TD>
           <TD>Stops image acquisition.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><a href="#hid_camera_useviewforsearch">Use View for Search</a></TD>
+          <TD>Use View camera parameters for Search images instead of separate Search camera 
+            parameters.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><a href="#hid_camera_userecordformontage">No Mont. Map Params</a></TD>
+          <TD>Do not show or offer separate parameters for Montage mapping.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_camera_showgainref">Show Gain Ref</A></TD>
@@ -336,7 +349,23 @@
         state, such as raising the screen or acquiring a dark reference. However, once 
         the request for an image has been issued, stopping will 
         have no effect.</P>
-      <P><A NAME="hid_camera_showgainref"></A><B>Show Gain Ref command (Camera menu)</B></P>
+      <P><A NAME="hid_camera_useviewforsearch"></A><B>Use View for Search command (Camera menu)</B></P>
+    <P>Use this command to hide the Search camera parameter set in the <A HREF="hidd_camerasetup.htm">Camera Setup dialog box</A>
+      and use the View camera parameters for all Search acquisitions.&nbsp; In 
+      Low Dose mode, Search will still use separate microscope parameters.&nbsp; Use 
+      this option if you do not use Search mode in Low Dose, do not want to keep track 
+      of separate View and Search cameras even if you do use Search, or if you are not 
+      using Low Dose mode and want fewer radio buttons in the 
+      <A HREF="hidd_camerasetup.htm">Camera Setup dialog</A>.</P>
+      <P><A NAME="hid_camera_userecordformontage"></A><B>No Mont. Map Params command (Camera menu)</B></P>
+    <P>Use this command to hide the Mont-map parameter set in the <A HREF="hidd_camerasetup.htm">Camera Setup dialog box</A>. 
+      This parameter set could be useful when making montage maps, which often involve 
+      different exposure time, binning, or other settings from Record acquisitions.&nbsp; 
+      Whether a montage is made with these parameters is controlled by an option in 
+      the <A HREF="hidd_montagesetup.htm">Montage Setup dialog box</A>. That option 
+      will be disabled, and Record parameters will be used by default, if Mont-map 
+      parameters are hidden with this command.</P>
+      <P><A NAME="hid_camera_showgainref"></A><B>Show Gain Ref command (Camera menu))</B></P>
       <P>This command will place the gain reference that was last used to normalize an 
         image into buffer A and roll the contents of A into B, etc., to the extent that 
         buffer rolling is selected. The gain reference consists of real numbers around 

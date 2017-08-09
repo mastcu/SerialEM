@@ -15,10 +15,9 @@
       and tracking, these separate areas must be displaced along the tilt axis from 
       the center of the recording area. SerialEM's low dose mode provides five 
       'areas' that can be defined to have different settings of magnification, spot 
-      size, and beam intensity, centered in up to 3 different locations. Four of them 
-      are named for a corresponding camera 
-      parameter set that is used to acquire images from them; the fifth provides a 
-      search mode that currently shares the View camera parameters. The areas are:</P>
+      size, and beam intensity, centered in up to 3 different locations. They are 
+      named for the corresponding camera parameter sets that are used to acquire images 
+      from them. The areas are:</P>
     <OL>
       <LI>
         Record area - the area where the region being recorded is located. The 
@@ -42,11 +41,15 @@
         the beam must be constricted. Taking an image with the Trial camera parameters 
         will acquire from this area.</LI>
       <LI>
-        Search area - this area allows one other set of 
-        microscope parameters; as 
-        of SerialEM 3.6, it can be acquired with the View camera parameters by using the 
-        'Search' button in the <a href="hidd_camera_macro.htm">Camera and Script control 
-        panel</a>, or with a 'Search' script command.</LI>
+        Search area - this area 
+        is centered on the Record area and could be set up for even lower magnification 
+        than the View area, or with other differences in parameters.&nbsp; Taking an 
+        image with the Search camera parameters will acquire from this area.&nbsp; 
+        However, the option to <a href="#hid_camera_useviewforsearch">Use View for Search</a> 
+        in the Camera menu can be used to simplify the situation and acquire with View 
+        camera parameters, even though a Search command, button, or script command is 
+        used to take the image.&nbsp; The following shows the relationships when that 
+        option is selected.</LI>
     </OL>
     <P align="center"><img  src="../images/lowDoseAreas.jpg" />&nbsp;</P>
     <P>Although the Focus and Trial areas can be set up with completely independent 
