@@ -1510,32 +1510,27 @@ void CMacroProcessor::NextCommand()
     mWinApp->mDEToolDlg.Update();
 
   } else if (CMD_IS(V) || CMD_IS(VIEW)) {                   // View
-    mCamera->InitiateCapture(0);
+    mCamera->InitiateCapture(VIEW_CONSET);
     mTestScale = true;
 
   } else if (CMD_IS(F) || CMD_IS(FOCUS)) {                  // Focus
-    mCamera->InitiateCapture(1);
+    mCamera->InitiateCapture(FOCUS_CONSET);
     mTestScale = true;
 
   } else if (CMD_IS(T) || CMD_IS(TRIAL)) {                  // Trial
-    mCamera->InitiateCapture(2);
+    mCamera->InitiateCapture(TRIAL_CONSET);
     mTestScale = true;
 
   } else if (CMD_IS(R) || CMD_IS(RECORD)) {                 // Record
-    mCamera->InitiateCapture(3);
+    mCamera->InitiateCapture(RECORD_CONSET);
     mTestScale = true;
 
   } else if (CMD_IS(L) || CMD_IS(PREVIEW)) {                // Preview
-    mCamera->InitiateCapture(4);
+    mCamera->InitiateCapture(PREVIEW_CONSET);
     mTestScale = true;
 
   } else if (CMD_IS(SEARCH)) {                              // Search
-    if (!mWinApp->LowDoseMode())
-      ABORT_NOLINE("The Search command can be used only in Low Dose mode");
-    mCamera->SetNextViewIsSearch(true);
-    if (mScope->GetLowDoseArea() != SEARCH_AREA)
-      mScope->GotoLowDoseArea(SEARCH_AREA);
-    mCamera->InitiateCapture(0);
+    mCamera->InitiateCapture(SEARCH_CONSET);
     mTestScale = true;
 
   } else if (CMD_IS(M) || CMD_IS(MONTAGE) || CMD_IS(PRECOOKMONTAGE)) { // Montage, PreCook
@@ -3113,6 +3108,7 @@ void CMacroProcessor::NextCommand()
     if (ConvertBufferLetter(strItems[1], 0, true, index, report))
       ABORT_LINE(report);
     index2 = mImBufs[index].mConSetUsed;
+
     if (index2 == MONTAGE_CONSET)
       index2 = RECORD_CONSET;
     if (mImBufs[index].mLowDoseArea && index2 >= 0) {
@@ -3135,11 +3131,11 @@ void CMacroProcessor::NextCommand()
             index2 = PREVIEW_CONSET;
         }
         report = "Image matches one from " + mModeNames[index2] + " in Low Dose";
-      } else if (index >= 0) {
+      } else if (index2 >= 0) {
         report = "Image is from " + mModeNames[index2] + " parameters, not in Low Dose";
       }
     }
-    if (index2 > PREVIEW_CONSET || index2 < 0) {
+    if (index2 > SEARCH_CONSET || index2 < 0) {
       index2 = -1;
       report = "Image properties do not match any Low Dose area well enough";
     }
@@ -4257,8 +4253,9 @@ void CMacroProcessor::NextCommand()
     shiftX = (float)stageX;
     shiftY = (float)stageY;
     mScope->GetImageShift(delISX, delISY);
-    if (mWinApp->LowDoseMode() && mScope->GetLowDoseArea() == VIEW_CONSET) {
-      mWinApp->mLowDoseDlg.GetNetViewShift(stageX, stageY);
+    index2 = mScope->GetLowDoseArea();
+    if (mWinApp->LowDoseMode() && (index2 == VIEW_CONSET || index2 == SEARCH_AREA)) {
+      mWinApp->mLowDoseDlg.GetNetViewShift(stageX, stageY, index2);
       delISX -= stageX;
       delISY -= stageY;
     }
