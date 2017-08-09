@@ -9259,9 +9259,8 @@ CString CCameraController::MakeFullDMRefName(CameraParameters *camP, const char 
 // Returns true if all conditions are set for saving from K2 camera/control set
 bool CCameraController::IsK2ConSetSaving(ControlSet *conSet, CameraParameters *param)
 {
-  PrintfToLog("HERE %p %p", conSet, param);
-  return (mParam->K2Type && conSet->doseFrac && (conSet->saveFrames ||
-      (conSet->useFrameAlign > 1 && CAN_PLUGIN_DO(CAN_ALIGN_FRAMES, mParam) &&
+  return (param->K2Type && conSet->doseFrac && (conSet->saveFrames ||
+      (conSet->useFrameAlign > 1 && CAN_PLUGIN_DO(CAN_ALIGN_FRAMES, param) &&
       (conSet->alignFrames || mWinApp->mTSController->GetFrameAlignInIMOD()))));
 }
 
