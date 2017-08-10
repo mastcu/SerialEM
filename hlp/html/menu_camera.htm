@@ -30,7 +30,7 @@
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><a href="#hid_camera_search">Search</a></TD>
-          <TD>&nbsp;</TD>
+          <TD>Acquires image with Search parameter set (or View if using for Search).</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_camera_view">View</A></TD>
@@ -206,10 +206,17 @@
       <P>Use this command to open the <A HREF="hidd_refpolicy.htm">Gain Reference Policy 
           dialog box</A> and set options controlling which gain reference is used for 
         gain normalization within SerialEM when several are available.</P>
-      <P><A NAME="hid_camera_view"></A><B>View command (Camera menu)</B></P>
-      <P>This command acquires an image with the first camera parameter set. This would 
-        be a good parameter set to use for highly binned, continuous exposures, if 
-        continuous exposures worked reasonably well.</P>
+      <P><A NAME="hid_camera_search"></A><B>Search command (Camera menu)</B></P>
+      <P>This command acquires an image with the Search camera parameter set, or with 
+        the View camera parameters if the option <a href="#hid_camera_useviewforsearch">Use View for Search</a> 
+        is selected.&nbsp; In Low Dose mode, images captured with this command are taken 
+        with the separately defined Search area microscope parameters.</P>
+    <P>Shortcut Key:CTRL+E</P> 
+     <P><A NAME="hid_camera_view"></A><B>View command (Camera menu)</B></P>
+      <P>This command acquires an image with the View camera parameter set. Either this 
+        set or the Search set would 
+        be a good parameter set to use for binned, continuous exposures, if continuous 
+        exposures work well for the particular camera.</P>
       <P>In Low Dose mode, images captured with these parameters are not shifted away 
         from the center of the recording area. The View area is intended to be set up 
         to give a low magnification, low exposure overview. The various procedures 
@@ -219,7 +226,7 @@
         low-mag tracking in low dose mode.</P>
       <P>Shortcut Key:CTRL+V</P>
       <P><A NAME="hid_camera_focus"></A><B>Focus command (Camera menu)</B></P>
-      <P>This command acquires an image with the second camera parameter set. This 
+      <P>This command acquires an image with the Focus camera parameter set. This 
         parameter set is used by the Autofocus routine to acquire two or three images 
         in quick succession, so it is typical to set it up for a small image that can 
         be read out quickly, such as the central quarter of the field, with somewhat 
@@ -230,7 +237,7 @@
         are, shifted away from the center of the recording area.</P>
       <P>Shortcut Key:CTRL+F</P>
       <P><A NAME="hid_camera_trial"></A><B>Trial command (Camera menu)</B></P>
-      <P>This command acquires an image with the third camera parameter set. This 
+      <P>This command acquires an image with the Trial camera parameter set. This 
         parameter set is typically set up to acquire a full-frame image relatively 
         quickly. It is used extensively by various routines that do tracking (e.g., 
         eucentricity-finding routines). You should thus make sure that this parameter 
@@ -245,7 +252,7 @@
         are, shifted away from the center of the recording area.</P>
       <P>Shortcut Key:CTRL+T</P>
       <P><A NAME="hid_camera_record"></A><B>Record command (Camera menu)</B></P>
-      <P>This command acquires an image with the fourth camera parameter set. This 
+      <P>This command acquires an image with the Record camera parameter set. This 
         parameter set is intended to be used for final acquisition of images to be 
         saved, and the Tilt Series Controller will rely on it being set up for that 
         purpose. In addition, montaging is done by acquiring images with these 
@@ -254,7 +261,7 @@
         recording area and can be considered unshifted.</P>
       <P>Shortcut Key:CTRL+R</P>
       <P><A NAME="hid_camera_preview"></A><B>Preview command (Camera menu)</B></P>
-      <P>This command acquires an image with the fifth camera parameter set. This is 
+      <P>This command acquires an image with the Preview camera parameter set. This is 
         probably useful only in Low Dose mode, where it acquires an image from the 
         Record area, using the same magnification and beam settings as for Record 
         images. It can be set up to provide a very low exposure image of the Record 
