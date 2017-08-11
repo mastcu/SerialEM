@@ -2366,7 +2366,7 @@ void CFocusManager::OnUpdateStemFocusVsZ(CCmdUI *pCmdUI)
   pCmdUI->Enable(mWinApp->GetSTEMMode() && FocusReady() && !mWinApp->DoingTasks());
 }
 
-void CFocusManager::ChangeZandDefocus(double relativeZ, double backlash)
+void CFocusManager::ChangeZandDefocus(double relativeZ, float backlash)
 {
   StageMoveInfo moveInfo;
   mScope->GetStagePosition(moveInfo.x, moveInfo.y, moveInfo.z);

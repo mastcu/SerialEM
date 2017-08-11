@@ -1781,6 +1781,7 @@ void CMultiTSTasks::BidirAnchorNextTask(int param)
     mScope->GetImageShift(mBaiISX, mBaiISY);
     mBaiMoveInfo.doBacklash = mScope->GetValidXYbacklash(mBaiMoveInfo.x, mBaiMoveInfo.y,
       backX, backY);
+    mBaiMoveInfo.doRelax = false;
     mBaiMoveInfo.backX = backX;
     mBaiMoveInfo.backY = backY;
   }

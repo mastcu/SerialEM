@@ -2502,6 +2502,7 @@ void CTSController::NextAction(int param)
             smi.backAlpha = mDirection * mComplexTasks->GetTiltBacklash();
             smi.doBacklash = true;
           }
+          smi.doRelax = false;
           smi.axisBits = axisA;
         } else {
 

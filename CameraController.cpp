@@ -1980,6 +1980,7 @@ void CCameraController::QueueStageMove(StageMoveInfo inSmi, int inDelay, bool do
   mStageDelay = inDelay;
   mSmiToDo = inSmi;
   mSmiToDo.doBacklash = doBacklash;
+  mSmiToDo.doRelax = false;
   mSmiToDo.useSpeed = false;
   if (!doBacklash)
     mSmiToDo.backX = mSmiToDo.backY = mSmiToDo.backZ = mSmiToDo.backAlpha = 0.;
@@ -2020,6 +2021,7 @@ int CCameraController::QueueTiltDuringShot(double angle, int delayToStart, doubl
   mSmiToDo.alpha = angle;
   mSmiToDo.axisBits = axisA;
   mSmiToDo.doBacklash = false;
+  mSmiToDo.doRelax = false;
   if (speed > 0. && (!FEIscope || mScope->GetPluginVersion() < FEI_PLUGIN_STAGE_SPEED))
     return 1;
   mSmiToDo.useSpeed = speed > 0.;

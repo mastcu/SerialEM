@@ -1385,8 +1385,8 @@ void CComplexTasks::EucentricityNextTask(int param)
   ScaleMat aInv, cMat;
   double stageX, stageY, ISX, ISY, specX, specY;
   float shiftX, shiftY, movedY, delZ, delY, intcp, movedX;
-  float delZact, delYact, yZero, yZeroGen, angle;
-  double backlashTilt, backlashZ, deltaInc, increment, radians;
+  float backlashTilt, backlashZ, delZact, delYact, yZero, yZeroGen, angle;
+  double deltaInc, increment, radians;
   int action, i;
   BOOL needTilt;
   CString report;
@@ -1753,8 +1753,8 @@ void CComplexTasks::EucentricityFineCapture()
 
 // Move stage in Z and/or in tilt, potentially doing two moves with backlash correction
 // This routine can only be called for eucentricity
-void CComplexTasks::DoubleMoveStage(double finalZ, double backlashZ, BOOL doZ,
-                  double finalTilt, double backlashTilt, BOOL doTilt,
+void CComplexTasks::DoubleMoveStage(double finalZ, float backlashZ, BOOL doZ,
+                  double finalTilt, float backlashTilt, BOOL doTilt,
                   int nextAction)
 {
   StageMoveInfo smi;

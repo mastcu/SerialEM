@@ -208,7 +208,7 @@ enum {CME_VIEW, CME_FOCUS, CME_TRIAL, CME_RECORD, CME_PREVIEW,
   CME_SETUSERSETTING, CME_CHANGEITEMREGISTRATION, CME_SHIFTITEMSBYMICRONS,
   CME_SETFREELENSCONTROL, CME_SETLENSWITHFLC, CME_SAVETOOTHERFILE, CME_SKIPACQUIRINGGROUP,
   CME_REPORTIMAGEDISTANCEOFFSET, CME_SETIMAGEDISTANCEOFFSET, CME_REPORTCAMERALENGTH,
-  CME_SETDECAMFRAMERATE, CME_SKIPMOVEINNAVACQUIRE
+  CME_SETDECAMFRAMERATE, CME_SKIPMOVEINNAVACQUIRE, CME_TESTRELAXINGSTAGE
 };
 
 static CmdItem cmdList[] = {{NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0},
@@ -308,6 +308,7 @@ static CmdItem cmdList[] = {{NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0
 {"SetLensWithFLC", 2}, {"SaveToOtherFile", 4}, {"SkipAcquiringGroup", 0},
 {"ReportImageDistanceOffset", 0}, {"SetImageDistanceOffset", 1}, 
 {"ReportCameraLength", 0}, {"SetDECamFrameRate", 1}, {"SkipMoveInNavAcquire", 0},
+{"TestRelaxingStage", 2},
 {NULL, 0, NULL}
 };
 
@@ -2765,10 +2766,13 @@ void CMacroProcessor::NextCommand()
     mWinApp->AppendToLog(report, mLogAction);
     SetReportedValues(&strItems[2], delISX);
     
-  } else if (CMD_IS(MOVESTAGE) || CMD_IS(MOVESTAGETO)) {
+    // MoveStage, MoveStageTo
+  } else if (CMD_IS(MOVESTAGE) || CMD_IS(MOVESTAGETO) || CMD_IS(TESTRELAXINGSTAGE)) {
     smi.z = 0.;
     smi.alpha = 0.;
     smi.axisBits = 0;
+    smi.backX = smi.backY = smi.relaxX = smi.relaxY = 0.;
+
     // If stage not ready, back up and try again, otherwise do action
     if (mScope->StageBusy() > 0)
       mLastIndex = mCurrentIndex;
@@ -2777,8 +2781,9 @@ void CMacroProcessor::NextCommand()
         ABORT_LINE("Stage movement command does not have at least 2 numbers: \n\n");
       stageX = itemDbl[1];
       stageY = itemDbl[2];
-      stageZ = itemEmpty[3] ? 0. : itemDbl[3];
-      if (CMD_IS(MOVESTAGE)) {
+      truth = CMD_IS(TESTRELAXINGSTAGE);
+      stageZ = (itemEmpty[3] || truth) ? 0. : itemDbl[3];
+      if (CMD_IS(MOVESTAGE) || truth) {
         if (!mScope->GetStagePosition(smi.x, smi.y, smi.z))
           SUSPEND_NOLINE("because of failure to get stage position");
         //CString report;
@@ -2795,6 +2800,18 @@ void CMacroProcessor::NextCommand()
         smi.z += stageZ;
         if (stageZ != 0.)
           smi.axisBits |= axisZ;
+        if (truth) {
+          delX = itemEmpty[3] ? 5. : itemDbl[3];
+          delY = itemEmpty[4] ? 0.025 : itemDbl[4];
+          if (stageX) {
+            smi.backX = (float)delX * (stageX > 0. ? 1.f : -1.f);
+            smi.relaxX = (float)delY * (smi.backX > 0. ? -1.f : 1.f);
+          }
+          if (stageY) {
+            smi.backY = (float)delX * (stageY > 0. ? 1.f : -1.f);
+            smi.relaxY = (float)delY * (smi.backY > 0. ? -1.f : 1.f);
+          }
+        }
       } else {
 
         // Absolute move: set to values; set Z axis bit if entered
@@ -2808,7 +2825,7 @@ void CMacroProcessor::NextCommand()
       }
 
       // Start the movement
-      mScope->MoveStage(smi, false);
+      mScope->MoveStage(smi, truth, false, false, truth);
       mMovedStage = true;
     }
 

@@ -68,12 +68,15 @@ struct StageMoveInfo {
   double speed;
   int axisBits;
   BOOL doBacklash;
+  BOOL doRelax;
   BOOL useSpeed;
   BOOL inBackground;
-  double backX;
-  double backY;
-  double backZ;
-  double backAlpha;
+  float backX;
+  float backY;
+  float backZ;
+  float backAlpha;
+  float relaxX;
+  float relaxY;
   DWORD finishedTick;
   double distanceMoved;    // Must be set for post-action using X/Y moves
   JeolStateData *JeolSD;
@@ -348,7 +351,7 @@ class DLL_IM_EX CEMscope
   BOOL SetScreenPos(int inPos);
   int StageBusy(int ignoreOrTrustState = 0);
   BOOL MoveStage(StageMoveInfo info, BOOL doBacklash = false, BOOL useSpeed = false, 
-    BOOL inBackground = false);
+    BOOL inBackground = false, BOOL doRelax = false);
   void TiltTo(double inVal);
   void TiltDown();
   void TiltUp();

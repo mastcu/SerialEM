@@ -299,7 +299,7 @@ public:
   int RotavIndexForDefocus(double defocus);
   afx_msg void OnStemFocusVsZ();
   afx_msg void OnUpdateStemFocusVsZ(CCmdUI *pCmdUI);
-  void ChangeZandDefocus(double relativeZ, double backlash);
+  void ChangeZandDefocus(double relativeZ, float backlash);
   void FocusVsZnextTask(int param);
   int FocusVsZBusy(void);
   void FocusVsZcleanup(int error);

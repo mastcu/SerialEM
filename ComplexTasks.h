@@ -59,7 +59,7 @@ class CComplexTasks : public CCmdTarget
   SetMember(float, MinFEFineField)
   GetSetMember(float, MinFEFineAlignField)
 
-  SetMember(double, FEBacklashZ)
+  SetMember(float, FEBacklashZ)
   SetMember(double, FEInitialAngle)
   SetMember(double, FEInitialIncrement)
   SetMember(double, FEResetISThreshold)
@@ -84,8 +84,8 @@ class CComplexTasks : public CCmdTarget
   BOOL DoingComplexTasks();
   BOOL DoingTasks();
   void EucentricityFineCapture();
-  void DoubleMoveStage(double finalZ, double backlashZ, BOOL doZ, double finalTilt, 
-                       double backlashTilt, BOOL doTilt, int nextAction);
+  void DoubleMoveStage(double finalZ, float backlashZ, BOOL doZ, double finalTilt, 
+                       float backlashTilt, BOOL doTilt, int nextAction);
   void RestoreMagIfNeeded();
   void LowerMagIfNeeded(int maxMagInd, float calIntSafetyFac, float intZoomSafetyFac, 
     int conSetNum);
@@ -228,7 +228,7 @@ class CComplexTasks : public CCmdTarget
   float mMinFEFineField;          // and fine
   float mMinFEFineAlignField;     // fine with alignment
   double mFEUsersAngle;           // Starting angle for fine align/realign
-  double mFEBacklashZ;            // Amount to overshoot Z changes
+  float mFEBacklashZ;             // Amount to overshoot Z changes
   double mFEInitialAngle;
   double mFECurrentZ;
   double mFECurrentAngle;
