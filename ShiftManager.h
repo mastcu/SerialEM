@@ -101,7 +101,8 @@ public:
   GetSetMember(int, StageMovedDelay)
   GetSetMember(float, DefocusZFactor)
   SetMember(int, StageDelayToUse);
-  int ResetImageShift(BOOL bDoBacklash, BOOL bAdjustScale, int waitTime = 5000);
+  int ResetImageShift(BOOL bDoBacklash, BOOL bAdjustScale, int waitTime = 5000, 
+    float relaxation = 0.);
   float *GetISmoved() {return &mISmoved[0];};
   float *GetISdelayNeeded() {return &mISdelayNeeded[0];};
   SetMember(int, NumISdelays)

@@ -208,7 +208,7 @@ enum {CME_VIEW, CME_FOCUS, CME_TRIAL, CME_RECORD, CME_PREVIEW,
   CME_SETUSERSETTING, CME_CHANGEITEMREGISTRATION, CME_SHIFTITEMSBYMICRONS,
   CME_SETFREELENSCONTROL, CME_SETLENSWITHFLC, CME_SAVETOOTHERFILE, CME_SKIPACQUIRINGGROUP,
   CME_REPORTIMAGEDISTANCEOFFSET, CME_SETIMAGEDISTANCEOFFSET, CME_REPORTCAMERALENGTH,
-  CME_SETDECAMFRAMERATE, CME_SKIPMOVEINNAVACQUIRE, CME_TESTRELAXINGSTAGE
+  CME_SETDECAMFRAMERATE, CME_SKIPMOVEINNAVACQUIRE, CME_TESTRELAXINGSTAGE, CME_RELAXSTAGE
 };
 
 static CmdItem cmdList[] = {{NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0},
@@ -308,7 +308,7 @@ static CmdItem cmdList[] = {{NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0
 {"SetLensWithFLC", 2}, {"SaveToOtherFile", 4}, {"SkipAcquiringGroup", 0},
 {"ReportImageDistanceOffset", 0}, {"SetImageDistanceOffset", 1}, 
 {"ReportCameraLength", 0}, {"SetDECamFrameRate", 1}, {"SkipMoveInNavAcquire", 0},
-{"TestRelaxingStage", 2},
+{"TestRelaxingStage", 2}, {"RelaxStage", 0},
 {NULL, 0, NULL}
 };
 
@@ -641,6 +641,7 @@ BOOL CMacroProcessor::MacroRunnable(int index)
 {
   return !mWinApp->DoingTasks() && !mWinApp->StartedTiltSeries() &&
     !(mWinApp->mNavigator && mWinApp->mNavigator->StartedMacro()) &&
+    !(mWinApp->mNavigator && mWinApp->mNavigator->GetPausedAcquire()) &&
     !mWinApp->NavigatorStartedTS() && (!mMacros[index].IsEmpty() || mMacroEditer[index]);
 }
 
@@ -2801,15 +2802,20 @@ void CMacroProcessor::NextCommand()
         if (stageZ != 0.)
           smi.axisBits |= axisZ;
         if (truth) {
-          delX = itemEmpty[3] ? 5. : itemDbl[3];
-          delY = itemEmpty[4] ? 0.025 : itemDbl[4];
+          backlashX = itemEmpty[3] ? mWinApp->mMontageController->GetStageBacklash() :
+            (float)itemDbl[3];
+          backlashY = itemEmpty[4] ? mScope->GetStageRelaxation() : (float)itemDbl[4];
+          if (backlashY <= 0)
+            backlashY = 0.025f;
+
+          // Set relaxation in the direction of backlash
           if (stageX) {
-            smi.backX = (float)delX * (stageX > 0. ? 1.f : -1.f);
-            smi.relaxX = (float)delY * (smi.backX > 0. ? -1.f : 1.f);
+            smi.backX = (stageX > 0. ? backlashX : -backlashX);
+            smi.relaxX = (smi.backX > 0. ? backlashY : -backlashY);
           }
           if (stageY) {
-            smi.backY = (float)delX * (stageY > 0. ? 1.f : -1.f);
-            smi.relaxY = (float)delY * (smi.backY > 0. ? -1.f : 1.f);
+            smi.backY = (stageY > 0. ? backlashX : -backlashX);
+            smi.relaxY = (smi.backY > 0. ? backlashY : -backlashY);
           }
         }
       } else {
@@ -2827,6 +2833,27 @@ void CMacroProcessor::NextCommand()
       // Start the movement
       mScope->MoveStage(smi, truth, false, false, truth);
       mMovedStage = true;
+    }
+
+    
+  } else if (CMD_IS(RELAXSTAGE)) {                          // RelaxStage
+    delX = itemEmpty[1] ? mScope->GetStageRelaxation() : itemDbl[1];
+    if (!mScope->GetStagePosition(smi.x, smi.y, smi.z))
+      SUSPEND_NOLINE("because of failure to get stage position");
+    if (mScope->GetValidXYbacklash(smi.x, smi.y, backlashX, backlashY)) {
+      mScope->CopyBacklashValid();
+
+      // Move in direction of the backlash, which is opposite to direction of stage move
+      smi.x += (backlashX > 0. ? delX : -delX);
+      smi.y += (backlashY > 0. ? delX : -delX);
+      smi.z = 0.;
+      smi.alpha = 0.;
+      smi.axisBits = axisXY;
+      mScope->MoveStage(smi);
+      mMovedStage = true;
+    } else {
+      mWinApp->AppendToLog("Stage is not in known backlash state so RelaxStage cannot "
+        "be done", mLogAction);
     }
 
   } else if (CMD_IS(BACKGROUNDTILT)) {                      // BackgroundTilt
@@ -3307,9 +3334,13 @@ void CMacroProcessor::NextCommand()
 
   } else if (CMD_IS(RESETIMAGESHIFT)) {                     // ResetImageShift
     truth = mShiftManager->GetBacklashMouseAndISR();
-    if (!itemEmpty[1] && itemInt[1] > 0)
+    backlashX = 0.;
+    if (!itemEmpty[1] && itemInt[1] > 0) {
       mShiftManager->SetBacklashMouseAndISR(true);
-    index = mShiftManager->ResetImageShift(true, false, 10000);
+      if (itemInt[1] > 1)
+        backlashX = itemEmpty[2] ? mScope->GetStageRelaxation() : (float)itemDbl[2];
+    }
+    index = mShiftManager->ResetImageShift(true, false, 10000, backlashX);
     mShiftManager->SetBacklashMouseAndISR(truth);
     if (index) {
       mCurrentIndex = mLastIndex;

@@ -1223,12 +1223,14 @@ void CShiftManager::AutoalignCleanup()
 ////////////////////////////////////////////////////////////////////
 // RESET IMAGE SHIFT
 ////////////////////////////////////////////////////////////////////
-int CShiftManager::ResetImageShift(BOOL bDoBacklash, BOOL bAdjustScale, int waitTime)
+int CShiftManager::ResetImageShift(BOOL bDoBacklash, BOOL bAdjustScale, int waitTime,
+  float relaxation)
 {
   double shiftX, shiftY, delX, delY, angle, specX, specY;
   double adjustX, adjustY, roughScale;
   int magInd;
   float defocusFac = mDefocusZFactor;
+  bool setBacklash;
   StageMoveInfo smi;
   ScaleMat aMat, dMat;
 
@@ -1309,8 +1311,19 @@ int CShiftManager::ResetImageShift(BOOL bDoBacklash, BOOL bAdjustScale, int wait
   mScope->GetStagePosition(smi.x, smi.y, smi.z);
   SEMTrace('i', "Stage at %.2f, %.2f  moving to %.2f %.2f", smi.x, smi.y, 
     smi.x + delX, smi.y + delY);
-  MaintainOrImposeBacklash(&smi, delX, delY, bDoBacklash && mBacklashMouseAndISR &&
-    fabs(angle / DTOR) < 10.);
+  setBacklash = bDoBacklash && mBacklashMouseAndISR && fabs(angle / DTOR) < 10.;
+  smi.relaxX = smi.relaxY = 0.;
+  MaintainOrImposeBacklash(&smi, delX, delY, setBacklash);
+
+  // relaxation is in the same direction as backlash
+  if (setBacklash && relaxation > 0) {
+    if (smi.backX)
+      smi.relaxX = (smi.backX > 0. ? relaxation : -relaxation);
+    if (smi.backY)
+      smi.relaxY = (smi.backY > 0. ? relaxation : -relaxation);
+  }
+  SEMTrace('n', "RIS: backlash %.2f  %.2f  relax %.3f  %.3f", smi.backX, smi.backY, 
+    smi.relaxX, smi.relaxY);
 
   // Do scope actions
   mResettingIS = true;
@@ -1324,7 +1337,8 @@ int CShiftManager::ResetImageShift(BOOL bDoBacklash, BOOL bAdjustScale, int wait
   if (!bAdjustScale  && magInd >= mScope->GetLowestNonLMmag())
     mScope->IncDefocus(specY * defocusFac * tan(angle));
   mScope->IncImageShift(-shiftX, -shiftY);
-  mScope->MoveStage(smi, smi.backX != 0. || smi.backY != 0.);
+  mScope->MoveStage(smi, smi.backX != 0. || smi.backY != 0., false, false, 
+    smi.relaxX != 0. || smi.relaxY != 0.);
   SetISTimeOut(GetLastISDelay());
   mWinApp->AddIdleTask(CEMscope::TaskStageBusy, TASK_RESET_SHIFT, 0, 30000);
   return 0;

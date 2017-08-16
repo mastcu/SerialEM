@@ -2344,9 +2344,15 @@
         <TR VALIGN="top">
           <TD>StageMontageBacklash</TD>
           <TD>Microns of movement to adjust for backlash when taking a montage with stage 
-            movement. Default is 5 microns for FEI, 10 microns for JEOL, and 20 microns for 
+            movement, and in some othe situations. Default is 5 microns for FEI, 10 microns
+            for JEOL, and 20 microns for 
             Hitachi.&nbsp; This entry must be positive; a negative entry makes it use the 
             default.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>StageRelatxation</TD>
+          <TD>Microns of movement to apply opposite to the last stage movement, available in 
+            specific situations to reduce drift.&nbsp; Default is 0.025.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>StageMontageMaxError
