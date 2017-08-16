@@ -131,7 +131,7 @@ public:
   CArray<StateParams *, StateParams *> *GetAcqStateArray() {return &mAcqStateArray;};
 	void OnOK();
   GetMember(int, MarkerShiftReg)
-  GetMember(BOOL, AcquireEnded)
+  GetMember(int, AcquireEnded)
   GetMember(BOOL, LoadingMap)
   GetMember(int, NumSavedRegXforms)
   SetMember(int, SuperCoordIndex)
@@ -145,6 +145,8 @@ public:
   SetMember(bool, SkipAcquiringItem);
   SetMember(int, GroupIDtoSkip);
   SetMember(BOOL, SkipStageMoveInAcquire);
+  GetSetMember(bool, PausedAcquire);
+  void ResumeFromPause() {mResumedFromPause = true; mPausedAcquire = false;};
   BOOL InEditMode() {return m_bEditMode;};
   BOOL TakingMousePoints() {return m_bEditMode || mAddingPoints || mAddingPoly || mMovingItem;};
   std::set<int> *GetSelectedItems() {return &mSelectedItems;};
@@ -286,6 +288,8 @@ private:
   int mAcqActionIndex;        // Current action index
   int mNumAcquired;          // Number actually acquired
   BOOL mStartedTS;           // Flag that started a tilt series
+  bool mPausedAcquire;       // Flag that acquire is paused
+  bool mResumedFromPause;    // Flag set when resume happens
 
   int mFrameLimitX, mFrameLimitY;         // Frame limits for montage setup
   CMapDrawItem *mMontItem;  // Item used
@@ -295,7 +299,7 @@ private:
   ScaleMat mPolyToCamMat;   // Matrix used to get from polygon to camera coordinates
   int mMarkerShiftReg;      // Registration at which shift to marker occurred, for undo
   float mMarkerShiftX, mMarkerShiftY;  // Shift that was applied
-  BOOL mAcquireEnded;       // Flag that End button was pressed when running macro
+  int mAcquireEnded;        // Flag that End Nav or Pause was pressed when running macro
   KImageStore *mLoadStoreMRC; // Variables to save state for asynchronous loading of map
   BOOL mReadingOther;
   int mCurStore;
@@ -469,7 +473,7 @@ public:
   CButton m_butCollapse;
   afx_msg void OnKillfocusEditBox();
   int DoUpdateZ(int index, int ifGroup);
-  void SetAcquireEnded(BOOL state);
+  void SetAcquireEnded(int state);
   int TransformToCurrentReg(int reg, ScaleMat aM, float *dxy);
   int TransformFromRotAlign(int reg, ScaleMat aM, float *dxy);
   void ProcessCKey(void);
@@ -529,6 +533,7 @@ public:
   int OKtoSkipStageMove(NavParams * param);
   int OKtoSkipStageMove(BOOL roughEucen, BOOL realign, BOOL cook, BOOL fineEucen, 
     BOOL focus, int acqType);
+  void EndAcquireWithMessage(void);
 };
 
 //{{AFX_INSERT_LOCATION}}

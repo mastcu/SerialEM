@@ -26,6 +26,10 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+enum {NO_NAV_RUNNING = 0, NAV_RUNNING_NO_SCRIPT_TS, NAV_PAUSED, NAV_TS_RUNNING,
+  NAV_TS_STOPPED, NAV_PRE_TS_RUNNING, NAV_PRE_TS_STOPPED, NAV_SCRIPT_RUNNING,
+  NAV_SCRIPT_STOPPED};
+
 /////////////////////////////////////////////////////////////////////////////
 // CCameraMacroTools dialog
 
@@ -139,14 +143,21 @@ void CCameraMacroTools::SetMacroLabels()
   SetOneMacroLabel(1, IDC_BUTMACRO2);
   SetOneMacroLabel(2, IDC_BUTMACRO3);
 }
+
 void CCameraMacroTools::SetOneMacroLabel(int num, UINT nID)
 {
+  int navState = GetNavigatorState();
   CString label;
-  CString *names = mWinApp->GetMacroNames();
-  if (names[mMacroNumber[num]].IsEmpty())
-    label.Format("Script %d", mMacroNumber[num] + 1);
-  else
-    label = names[mMacroNumber[num]];
+  if (num == 1 && (navState == NAV_SCRIPT_RUNNING || navState == NAV_SCRIPT_STOPPED ||
+    navState == NAV_RUNNING_NO_SCRIPT_TS || navState == NAV_PAUSED)) {
+    label = "End Nav";
+  } else {
+    CString *names = mWinApp->GetMacroNames();
+    if (names[mMacroNumber[num]].IsEmpty())
+      label.Format("Script %d", mMacroNumber[num] + 1);
+    else
+      label = names[mMacroNumber[num]];
+  }
   SetDlgItemText(nID, label);
 }
 
@@ -247,12 +258,21 @@ void CCameraMacroTools::OnButmacro1()
 
 void CCameraMacroTools::OnButmacro2() 
 {
+  int navState = GetNavigatorState();
   if (mDoingTS) {
     mWinApp->RestoreViewFocus();
     if (!mWinApp->DoingTiltSeries())
       mWinApp->mTSController->CommonResume(-1, 0);
-  } else
+  } else if (navState == NAV_SCRIPT_RUNNING || navState == NAV_SCRIPT_STOPPED || 
+    navState == NAV_RUNNING_NO_SCRIPT_TS) {
+    mWinApp->RestoreViewFocus();
+    mNav->SetAcquireEnded(1);
+  } else if (navState == NAV_PAUSED) {
+    mWinApp->RestoreViewFocus();
+    mNav->EndAcquireWithMessage();
+  } else {
     DoMacro(mMacroNumber[1]);
+  }
 }
 
 void CCameraMacroTools::OnButmacro3() 
@@ -268,15 +288,26 @@ void CCameraMacroTools::OnButmacro3()
 // The Stop button calls camera and general error stop
 void CCameraMacroTools::OnButstop() 
 {
+  CNavigatorDlg *nav = mWinApp->mNavigator;
+  int navState = GetNavigatorState();
   mWinApp->RestoreViewFocus();
-  mWinApp->mCamera->StopCapture(1);
-  mUserStop = TRUE;
-  mWinApp->ErrorOccurred(0);
-  mUserStop = FALSE;
+  if (navState == NAV_TS_STOPPED || navState == NAV_PRE_TS_STOPPED)
+    mNav->SetAcquireEnded(1);
+  else if (navState == NAV_SCRIPT_STOPPED) {
+    mMacProcessor->SetNonResumable();
+    mNav->EndAcquireWithMessage();
+  } else {
+    mWinApp->mCamera->StopCapture(1);
+    mUserStop = TRUE;
+    mWinApp->ErrorOccurred(0);
+    mUserStop = FALSE;
+  }
 }
+
+// The End button 
 void CCameraMacroTools::OnButend() 
 {
-  CNavigatorDlg *nav = mWinApp->mNavigator;
+  int navState = GetNavigatorState();
   mWinApp->RestoreViewFocus();
   if (mWinApp->NavigatorStartedTS() && mWinApp->mTSController->GetPostponed())
     mWinApp->mTSController->Terminate();
@@ -288,37 +319,63 @@ void CCameraMacroTools::OnButend()
     mMacProcessor->Stop(false);
   else if (mWinApp->mMultiTSTasks->GetAssessingRange())
     mWinApp->mMultiTSTasks->SetEndTiltRange(true);
-  else if (nav && !nav->StartedMacro() && nav->GetAcquiring())
-    nav->SetAcquireEnded(true);
   else if (mEnabledSearch)
     mWinApp->UserRequestedCapture(SEARCH_CONSET);
   else
     mMacProcessor->SetNonResumable();
 }
 
+// The Resume button
 void CCameraMacroTools::OnButresume() 
 {
+  int navState = GetNavigatorState();
   mWinApp->RestoreViewFocus();
   if (mWinApp->NavigatorStartedTS() && !mWinApp->StartedTiltSeries() && 
     mWinApp->mTSController->GetPostponed())
     mWinApp->mTSController->SetupTiltSeries(0);
   else if (mDoingTS) 
     mWinApp->mTSController->Resume();
-  else
+  else if (navState == NAV_TS_RUNNING || navState == NAV_PRE_TS_RUNNING)
+    mNav->SetAcquireEnded(1);
+  else if (navState == NAV_SCRIPT_RUNNING || navState == NAV_RUNNING_NO_SCRIPT_TS)
+    mNav->SetAcquireEnded(-1);
+  else if (navState == NAV_PAUSED) {
+    mMacProcessor->SetNonResumable();
+    mNav->ResumeFromPause();
+    mWinApp->SetStatusText(COMPLEX_PANE, "");
+    Update();
+  } else
     mMacProcessor->Resume();
 }
+
+////////////////////////////////////////////////
+// Navigator-related button setup:
+//
+//   Running, non-script, non TS:              PauseN  STOP
+//                                             EndNav
+//   Paused, non-script, nonTS:                ResumeN
+//                                             EndNav
+//   TS running:                      EndLoop  EndNav  STOP
+//   TS stopped:                      EndTS    ResumeT EndNav
+//   preTS script running:            EndLoop  EndNav  STOP
+//   preTS script stopped:            EndScr   ResumeS EndNav
+//   Script running                   EndLoop  PauseN  STOP
+//                                             EndNav
+//   Script stopped:                  EndScr   ResumeS EndAll
+//                                             EndNav
+
 
 // Set the state of all buttons based on whether a task is being done, etc.
 void CCameraMacroTools::Update()
 {
+  int navState = GetNavigatorState();
   BOOL camBusy = true;
   mEnabledSearch = false;
-  CNavigatorDlg *nav = mWinApp->mNavigator;
   if (mWinApp->mCamera)
     camBusy = mWinApp->mCamera->CameraBusy();
-  BOOL idle = !mWinApp->DoingTasks() && !(nav && nav->StartedMacro());
+  BOOL idle = !mWinApp->DoingTasks() && !(mNav && mNav->StartedMacro());
   BOOL shotOK = mWinApp->UserAcquireOK();
-  BOOL postponed = nav && nav->GetStartedTS() && mWinApp->mTSController->GetPostponed();
+  BOOL postponed = mNav && mNav->GetStartedTS() && mWinApp->mTSController->GetPostponed();
   BOOL tsResumable = mWinApp->mTSController->IsResumable();
   m_butView.EnableWindow(shotOK);
   m_butTrial.EnableWindow(shotOK);
@@ -336,7 +393,8 @@ void CCameraMacroTools::Update()
     m_butMacro1.EnableWindow(idle && tsResumable);
     m_butMacro2.EnableWindow(idle && tsResumable);
     m_butMacro3.EnableWindow(idle && tsResumable && mWinApp->mTSController->CanBackUp());
-    m_butResume.EnableWindow(idle && (tsResumable || postponed));
+    m_butResume.EnableWindow((idle && (tsResumable || postponed)) || 
+      navState == NAV_TS_RUNNING);
     m_butEnd.EnableWindow(mWinApp->DoingTiltSeries() || postponed);
   } else {
     
@@ -346,32 +404,59 @@ void CCameraMacroTools::Update()
       m_butMacro1.EnableWindow(!camBusy);
     else
       m_butMacro1.EnableWindow(idle && mMacProcessor->MacroRunnable(mMacroNumber[0]));
-    m_butMacro2.EnableWindow(idle && mMacProcessor->MacroRunnable(mMacroNumber[1]));
+    m_butMacro2.EnableWindow((idle && mMacProcessor->MacroRunnable(mMacroNumber[1])) ||
+      navState == NAV_SCRIPT_STOPPED || navState == NAV_SCRIPT_RUNNING || 
+      navState == NAV_RUNNING_NO_SCRIPT_TS || navState == NAV_PAUSED);
+    SetOneMacroLabel(1, IDC_BUTMACRO2);
     m_butMacro3.EnableWindow(idle && mMacProcessor->MacroRunnable(mMacroNumber[2]));
     
-    m_butResume.EnableWindow(mMacProcessor->IsResumable());
+    m_butResume.EnableWindow(mMacProcessor->IsResumable() || (navState == NAV_PAUSED && 
+      idle) || navState == NAV_SCRIPT_RUNNING || navState == NAV_RUNNING_NO_SCRIPT_TS);
   }
 
   // Keep STOP enabled during continuous acquires: the press event gets lost in repeated 
   // enable/disables 
   m_butStop.EnableWindow(mWinApp->DoingTasks() || camBusy || 
-    mWinApp->mScope->GetMovingStage() || mWinApp->mCamera->DoingContinuousAcquire());
+    mWinApp->mScope->GetMovingStage() || mWinApp->mCamera->DoingContinuousAcquire() ||
+    navState == NAV_TS_STOPPED || navState == NAV_PRE_TS_STOPPED || 
+    navState == NAV_SCRIPT_STOPPED);
   m_butSetup.EnableWindow((!mWinApp->DoingTasks() || mDoingCalISO) && !camBusy);
 
+  // Set the End button
   if (mMacProcessor->DoingMacro() || mWinApp->DoingTiltSeries())
     SetDlgItemText(IDC_BUTEND, "End Loop");
   else if (postponed)
     SetDlgItemText(IDC_BUTEND, "End TS");
-  else if (nav && nav->StartedMacro() && mMacProcessor->IsResumable())
+  else if (mNav && mNav->StartedMacro() && mMacProcessor->IsResumable())
     SetDlgItemText(IDC_BUTEND, "End Script");
-  else if (nav && !nav->StartedMacro() && nav->GetAcquiring() && !nav->GetStartedTS())
-    SetDlgItemText(IDC_BUTEND, "End Nav");
   else if (!mWinApp->mMultiTSTasks->GetAssessingRange() && 
     (mWinApp->LowDoseMode() || !mWinApp->GetUseViewForSearch())) {
       SetDlgItemText(IDC_BUTEND, "Search");
       mEnabledSearch = true;
   } else 
     SetDlgItemText(IDC_BUTEND, "End");
+
+  // Set the Resume button
+  if (navState == NAV_RUNNING_NO_SCRIPT_TS || navState == NAV_SCRIPT_RUNNING)
+    SetDlgItemText(IDC_BUTRESUME, "PauseN");
+  else if (navState == NAV_PAUSED && idle)
+    SetDlgItemText(IDC_BUTRESUME, "ResumeN");
+  else if (navState == NAV_TS_STOPPED)
+    SetDlgItemText(IDC_BUTRESUME, "ResumeT");
+  else if (navState == NAV_SCRIPT_STOPPED || navState == NAV_PRE_TS_STOPPED)
+    SetDlgItemText(IDC_BUTRESUME, "ResumeS");
+  else if (navState != NO_NAV_RUNNING)
+    SetDlgItemText(IDC_BUTRESUME, "End Nav");
+  else
+    SetDlgItemText(IDC_BUTRESUME, "Resume");
+
+  // Set the STOP button
+  if (navState == NAV_TS_STOPPED || navState == NAV_PRE_TS_STOPPED)
+    SetDlgItemText(IDC_BUTSTOP, "EndNav");
+  else if (navState == NAV_SCRIPT_STOPPED)
+    SetDlgItemText(IDC_BUTSTOP, "End All");
+  else
+    SetDlgItemText(IDC_BUTSTOP, "STOP");
     
   if (!mWinApp->Montaging() || mWinApp->LowDoseMode()) {
     CString *modeNames = mWinApp->GetModeNames();
@@ -380,11 +465,9 @@ void CCameraMacroTools::Update()
     SetDlgItemText(IDC_BUTMONTAGE, "Montage");
   if (!mDoingTS)
     m_butEnd.EnableWindow(mMacProcessor->DoingMacro() || mDoingCalISO || 
-      (mEnabledSearch && idle) ||
-      (nav && nav->StartedMacro() && mMacProcessor->IsResumable()) ||
-      (nav && !nav->StartedMacro() && nav->GetAcquiring()) || 
+      (mEnabledSearch && idle) || (navState != NO_NAV_RUNNING && 
+      navState != NAV_RUNNING_NO_SCRIPT_TS && !(navState == NAV_PAUSED && idle)) || 
       mWinApp->mMultiTSTasks->GetAssessingRange());
-
 }
 
 // Change macro tools to tilt series tools or vice versa
@@ -408,6 +491,33 @@ void CCameraMacroTools::DoingTiltSeries(BOOL ifTS)
   }
   mDoingTS = ifTS;
   Update();
+}
+
+// Test all the variables in the right order to determine navigator acquire state
+int CCameraMacroTools::GetNavigatorState(void)
+{
+  mNav = mWinApp->mNavigator;
+  BOOL idle = !mWinApp->DoingTasks();
+  NavParams *param = mWinApp->GetNavParams();
+  if (!mNav || !mNav->GetAcquiring())
+    return NO_NAV_RUNNING;
+  if (mNav->GetPausedAcquire())
+    return NAV_PAUSED;
+  if (!mNav->StartedMacro() && !mNav->GetStartedTS() && !idle)
+    return NAV_RUNNING_NO_SCRIPT_TS;
+  if (idle && !mNav->GetStartedTS() && (!mNav->StartedMacro() || 
+    !mMacProcessor->IsResumable()))
+    return NAV_PAUSED;
+  if (mNav->GetStartedTS())
+    return idle ? NAV_TS_STOPPED : NAV_TS_RUNNING;  // Should this test if postponed?
+  if (param->acquireType == ACQUIRE_DO_TS && mMacProcessor->DoingMacro())
+    return NAV_PRE_TS_RUNNING;
+  if (idle && param->acquireType == ACQUIRE_DO_TS && mNav->StartedMacro())
+    return mMacProcessor->IsResumable() ? NAV_PRE_TS_STOPPED : NAV_PAUSED;
+  if (mNav->StartedMacro())
+    return idle ? NAV_SCRIPT_STOPPED : NAV_SCRIPT_RUNNING;
+  mWinApp->AppendToLog("Warning: GetNavigatorState fell into an unexcluded muddle");
+  return 0;  //??
 }
 
 // Change tools a little bit for calibrating IS offset

@@ -668,28 +668,32 @@
         SerialEM, it will be made the current file. If the file is not open, it will be 
         reopened so that a new map can be saved into it. This command performs the same 
         operation as the <B>Set Map Acquire State</B> button in the <A HREF="hidd_statedlg.htm">
-          Imaging State dialog box</A> .</P>
+          Imaging State dialog box</A>.</P>
       <P><A NAME="hid_navigator_restorestate"></A><B>Restore State command (Navigator menu)</B></P>
       <P>This command will restore the microscope and camera acquisition state that was 
         present before the last time that 'Set Map Acquire State' was run, or before 
         the imaging state was set from the <A HREF="hidd_statedlg.htm">Imaging State dialog 
-          box</A> . If a file was opened when 'set Map Acquire State' was run, that 
+          box</A>. If a file was opened when 'set Map Acquire State' was run, that 
         file will be closed again. If the file that was current at that time is still 
         open, it will be made the current file again. Low dose mode will be restored to 
         its state prior to the state changes. This command does the same thing as the <B>Restore 
           Prior State</B> button in the <A HREF="hidd_statedlg.htm">Imaging State dialog 
-          box</A> .</P>
+          box</A>.</P>
       <P><A NAME="hid_navigator_acquire"></A><B>Acquire at Points command (Navigator menu)</B></P>
-      <P>Use this command to acquire images or maps or run a script at a series of points 
-        marked for acquisition with the Acquire check box. There must be an image file 
-        open before the command can be used to acquire images or maps. If montaging is 
+      <P>Use this command to acquire images or maps or run a script or tilt series at a series of points 
+        marked for acquisition with the &#39;Acquire&#39; or &#39;Tilt series&#39; check box in the 
+        Navigator window. There must be an image file 
+        open before the command can be used to acquire images or maps, unless &#39;New file 
+        at item&#39; has been set for the first item to be acquired. If montaging is 
         to be used, this means that the montaging must be set up already. Be sure to 
         have magnification, intensity, and exposure times set before starting the 
-        acquisition. This command opens the <A HREF="hidd_navacquire.htm">Navigator Acquire 
+        acquisition, unless an imaging state has been set for the first item. This command opens the <A HREF="hidd_navacquire.htm">Navigator Acquire 
           dialog box</A>, which allows various options to be set.</P>
       <P><A NAME="hid_navigator_endacquire"></A><B>End Acquire command (Navigator menu)</B></P>
       <P>After starting an 'Acquire at Points', use this command to stop the Navigator 
-        from going on to the next item after finishing the current one.</P>
+        from going on to the next item after finishing the current one.&nbsp; If the 
+        acquisition is already paused after finishing an item, the command will stop 
+        acquisition immediately.</P>
       <P><A NAME="hid_montage_listfilestoopen"></A><B>List Files/Series/States command 
           (Navigator menu)</B></P>
       <P>Use this command to get a list in the Log window of everything that has been 

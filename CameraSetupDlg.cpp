@@ -850,8 +850,8 @@ void CCameraSetupDlg::UnloadConSet()
     m_iProcessing = conSet->processing;
     m_bRemoveXrays = conSet->removeXrays > 0;
     noDark = mFEItype || (mPluginType && mCanProcess && !(mCanProcess & DARK_SUBTRACTED));
-    m_butDarkSubtract.EnableWindow(mParam->processHere || !noDark);
     noRaw = mFEItype && FCAM_ADVANCED(mParam) && mCamera->GetASIgivesGainNormOnly();
+    m_butDarkSubtract.EnableWindow((mParam->processHere || !noDark) && !noRaw);
     m_butUnprocessed.EnableWindow(!noRaw);
     if ((noDark && !mParam->processHere && m_iProcessing == DARK_SUBTRACTED) || noRaw)
       m_iProcessing = conSet->processing = GAIN_NORMALIZED;
@@ -1448,8 +1448,10 @@ void CCameraSetupDlg::ManageCamera()
 void CCameraSetupDlg::ManageDarkRefs(void)
 {
   // Manage the dark averaging based on processing here
+  BOOL normOnly = mParam->FEItype && FCAM_ADVANCED(mParam) && 
+    mCamera->GetASIgivesGainNormOnly();
   BOOL enable = (mParam->processHere || !mCanProcess) && 
-    !(mFalconCanSave && m_bDoseFracMode);
+    !(mFalconCanSave && m_bDoseFracMode) && !normOnly;
   m_butAverageDark.EnableWindow(enable);
   m_spinAverage.EnableWindow(enable);
   m_editAverage.EnableWindow(enable);
@@ -1459,7 +1461,7 @@ void CCameraSetupDlg::ManageDarkRefs(void)
   enable = enable || (mParam->GatanCam && !mParam->K2Type && !mParam->OneViewType);
   m_butDarkAlways.EnableWindow(enable);
   m_butDarkNext.EnableWindow(enable);
-  if (mFalconCanSave) {
+  if (mFalconCanSave && !normOnly) {
     m_butDarkSubtract.EnableWindow(mParam->processHere && !m_bDoseFracMode);
     if (m_bDoseFracMode && m_iProcessing == DARK_SUBTRACTED) {
       m_iProcessing = GAIN_NORMALIZED;

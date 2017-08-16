@@ -3,8 +3,18 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+8/16/17: Added ability to relax stage by moving it back slightly from the
+direction of its previous movement, in order to reduce drift.  There is a
+script command to assess its value, a command to do a relaxation, and
+ResetImageShift can include the relaxation when it imposes or retains
+backlash.
+
+8/16/17: Added ability to pause non-tilt series Navigator acquisition after
+the current item and resume; relabeled more buttons in Camera and Script
+control panel to make it easier to control Navigator acquisition.
+
 8/8/17: Added ability to set View or Search shift offsets by placing the
-marker at corresponding points in two images,
+marker at corresponding points in two images.
 
 8/7/17: Search mode in Low Dose now has almost all the capabilities as View,
 with the ability to take montages in Search, set defocus and shift offsets for

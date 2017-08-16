@@ -367,6 +367,7 @@ CEMscope::CEMscope()
   mStageAtLastPos = false;
   mBacklashValidAtStart = false;
   mMinMoveForBacklash = 0.;
+  mStageRelaxation = 0.025f;
   mMovingStage = false;
   mBkgdMovingStage = false;
   mLastGaugeStatus = gsInvalid;
@@ -1852,7 +1853,7 @@ BOOL CEMscope::MoveStage(StageMoveInfo info, BOOL doBacklash, BOOL useSpeed,
   mMoveInfo.JeolSD = &mJeolSD;
   mMoveInfo.plugFuncs = mPlugFuncs;
   mMoveInfo.doBacklash = doBacklash;
-  mMoveInfo.doRelax = doRelax;
+  mMoveInfo.doRelax = doRelax && (mMoveInfo.relaxX != 0. || mMoveInfo.relaxY != 0.);
   if (!doBacklash)
     mMoveInfo.backX = mMoveInfo.backY = mMoveInfo.backZ = mMoveInfo.backAlpha = 0.;
   if (!doRelax)
@@ -2076,17 +2077,19 @@ void CEMscope::StageMoveKernel(StageThreadData *std, BOOL fromBlanker, BOOL asyn
 
   // If doing backlash, set up a first move with backlash added
   // Only change axes that are specified in axisBits
-  // First do a backlash move if specified, then do the move for real
-
+  // First do a backlash move if specified, then do the move to an overshoot if relaxing
+  // and finally the move to the target
   for (step = 0; step < 3; step++) {
     back = step == 0 ? 1 : 0;
     relax = step == 1 ? 1 : 0;
     if ((back && !info->doBacklash) || (relax && !info->doRelax))
       continue;
 
+    // Adding backX/Y makes the second move be opposite to the direction of backX/Y
+    // Subtracting relax makes the final move be in the direction of relaxX/Y
     if (info->axisBits & (axisX | axisY)) {
-      xpos = info->x + back * info->backX + relax * info->relaxX;
-      ypos = info->y + back * info->backY + relax * info->relaxY;
+      xpos = info->x + back * info->backX - relax * info->relaxX;
+      ypos = info->y + back * info->backY - relax * info->relaxY;
       destX = xpos * 1.e-6;
       destY = ypos * 1.e-6;
     }
@@ -2096,6 +2099,8 @@ void CEMscope::StageMoveKernel(StageThreadData *std, BOOL fromBlanker, BOOL asyn
     destAlpha = alpha;
     if (fromBlanker && (info->axisBits & (axisX | axisY)))
       SEMTrace('S', "BlankerProc stage move to %.2f %.2f", xpos, ypos);
+    if (info->doRelax || info->doBacklash)
+      SEMTrace('n', "Step %d, move to %.3f %.3f", step + 1, xpos, ypos);
      
     // destX, destY are used to decide on "stage near end of range" message upon error
     // They are supposed to be in meters; leave at 0 to disable 
@@ -6933,8 +6938,11 @@ void CEMscope::SetValidXYbacklash(StageMoveInfo *info)
   bool old = mXYbacklashValid;
   bool didBacklash = info->doBacklash && (info->axisBits & axisXY) && 
     (info->backX || info->backY);
-  bool kept = mBacklashValidAtStart && (info->x - mPosForBacklashX) * mLastBacklashX < 0
-    && (info->y - mPosForBacklashY) * mLastBacklashY < 0;
+  double movedFromPosX = info->x - mPosForBacklashX;
+  double movedFromPosY = info->y - mPosForBacklashY;
+  bool kept = mBacklashValidAtStart && ((movedFromPosX * mLastBacklashX <= 0. &&
+    movedFromPosY * mLastBacklashY <= 0.) || (fabs(movedFromPosX) < mBacklashTolerance &&
+    fabs(movedFromPosY) < mBacklashTolerance));
   bool established = mMinMoveForBacklash > 0. && 
     fabs(info->x - mStartForMinMoveX) >= mMinMoveForBacklash &&
     fabs(info->y - mStartForMinMoveY) >= mMinMoveForBacklash;
@@ -6952,7 +6960,8 @@ void CEMscope::SetValidXYbacklash(StageMoveInfo *info)
   if (didBacklash) {
     mLastBacklashX = (float)info->backX;
     mLastBacklashY = (float)info->backY;
-    SEMTrace('n', "Backlash data recorded for this stage move");
+    SEMTrace('n', "Backlash data recorded for this stage move, pos %.3f  %.3f  bl %.1f "
+      "%.1f", mPosForBacklashX, mPosForBacklashY, mLastBacklashX, mLastBacklashY);
   } else if (established) {
     mLastBacklashX = (info->x > mStartForMinMoveX ? -1.f : 1.f) * mMinMoveForBacklash;
     mLastBacklashY = (info->y > mStartForMinMoveY ? -1.f : 1.f) * mMinMoveForBacklash;

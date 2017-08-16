@@ -12,8 +12,7 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "afxres.h"
-
+#include "afxres.h"
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
@@ -1238,9 +1237,9 @@ BEGIN
     PUSHBUTTON      "Script 2",IDC_BUTMACRO2,42,42,25,13
     CONTROL         "Spin1",IDC_SPINMACRO2,"msctls_updown32",UDS_ARROWKEYS,68,41,9,14
     CONTROL         "Spin2",IDC_SPINMACRO1,"msctls_updown32",UDS_ARROWKEYS,30,41,9,14
-    PUSHBUTTON      "STOP",IDC_BUTSTOP,88,26,28,13
+    PUSHBUTTON      "STOP",IDC_BUTSTOP,90,26,26,13
     PUSHBUTTON      "End",IDC_BUTEND,32,26,26,13
-    PUSHBUTTON      "Resume",IDC_BUTRESUME,62,26,22,13
+    PUSHBUTTON      "Resume",IDC_BUTRESUME,62,26,24,13
     PUSHBUTTON      "-",IDC_BUTOPEN,4,0,9,7
     CTEXT           "Camera && Script Controls",IDC_STATTOPLINE,28,0,77,8
     PUSHBUTTON      "Script 3",IDC_BUTMACRO3,80,42,25,13
@@ -3283,7 +3282,6 @@ BEGIN
     ID_CAMERA_FOCUS         "Acquire image with Focus parameter set"
     ID_CAMERA_TRIAL         "Acquire image with Trial parameter set"
     ID_CAMERA_RECORD        "Acquire image with Record parameter set"
-    ID_CAMERA_SEARCH        "Acquire image with Search parameter set"
     ID_CAMERA_SCREENDOWN    "Leave screen down to monitor beam presence\nLeave screen down"
     ID_CAMERA_SIMULATION    "Acquire simulated images\nSimulation mode"
     ID_CAMERA_STOPACQUIRE   "Stop image acquisition process\nStop image acquisition"
@@ -3292,6 +3290,14 @@ BEGIN
     ID_SETTINGS_SAVE        "Save settings to current file or to new file, if none is open\nSave to file"
     ID_SETTINGS_SAVEAS      "Save settings to a new file\nSave to new file"
     ID_SETTINGS_CLOSE       "Close settings file to prevent saving to it upon exit\nClose file"
+END
+
+STRINGTABLE
+BEGIN
+    ID_CAMERA_USEVIEWFORSEARCH "Use View camera parameters for Search images"
+    ID_CAMERA_USERECORDFORMONTAGE 
+                            "Do not show separate Montage Mapping parameter set"
+    ID_CAMERA_SEARCH        "Acquire image with Search parameter set"
 END
 
 STRINGTABLE
@@ -3717,14 +3723,36 @@ BEGIN
     IDC_RTRIAL              "Edit Trial parameter set"
     IDC_RRECORD             "Edit Record parameter set"
     IDC_RPREVIEW            "Edit Preview parameter set"
-    IDC_RSEARCH             "Edit Search parameter set"
-    IDC_RMONTAGE            "Edit Montage-mapping parameter set"
     IDC_RSINGLE             "Get one image per acquisition request"
     IDC_RCONTINUOUS         "Acquire images one after another until stopped with Space Bar or Stop"
     IDC_RUNPROCESSED        "Acquire raw image from camera"
     IDC_RDARKSUBTRACT       "Acquire dark-subtracted image from camera"
     IDC_RGAINNORMALIZED     "Acquire gain-normalized image from camera"
     IDC_EDITEXPOSURE        "Enter exposure time in seconds"
+END
+
+STRINGTABLE
+BEGIN
+    IDC_FA_EDIT_SUB_START   "First frame (numbered from 1) of subset to align"
+    IDC_FA_EDIT_SUB_END     "Last frame (numbered from 1) of subset to align"
+    IDC_RSEARCH             "Edit Search parameter set"
+    IDC_RVIEW_OFFSET        "Show and control defocus and shift offset for View"
+    IDC_CHECK_USE_SEARCH_IN_LD 
+                            "Use Search camera and scope parameters in Low Dose mode"
+    IDC_CHECK_USE_MONT_MAP_PARAMS 
+                            "Use the Mont-map camera parameters instead of Record for this montage"
+END
+
+STRINGTABLE
+BEGIN
+    IDC_EDIT_CONTIN_DELAY_FAC 
+                            "Multiplier of usual settling time to wait between movement and image"
+    IDC_RMONTAGE            "Edit Montage-mapping parameter set"
+    IDC_RSEARCH_OFFSET      "Show and control defocus and shift offset for Search"
+    IDC_SAVE_UNNORMALIZED   "Save unprocessed frames even if processing in Setup dialog is Gain Normalized"
+    IDC_SPIN_EARLY_FRAMES   "Select number of frames in initially returned image used for aligning"
+    IDC_DO_EARLY_RETURN     "Return from SEMCCD plugin when the selected # of frames are available"
+    IDC_USE_EXTENSION_MRCS  "Output MRC frame stacks with extension .mrcs instead of .mrc"
 END
 
 STRINGTABLE
@@ -4064,8 +4092,6 @@ END
 STRINGTABLE
 BEGIN
     IDC_SPINVIEWDEFOCUS     "Set the additional defocus applied in View or Search mode"
-    IDC_RVIEW_OFFSET        "Show and control defocus and shift offset for View"
-    IDC_RSEARCH_OFFSET      "Show and control defocus and shift offset for Search"
     IDC_CHECK_SKIP_OUTSIDE  "Skip pieces outside of a Navigator polygon"
     IDC_EDIT_SKIP_OUTSIDE   "Navigator item # or 0 for current item or item being acquired"
     IDC_FOCUS_AFTER_STAGE   "Autofocus after each movement in stage montage (not in LM mode)"
@@ -4462,6 +4488,8 @@ END
 
 STRINGTABLE
 BEGIN
+    IDC_CHECK_USE_VIEW_IN_LOWDOSE 
+                            "Use View camera and scope parameters in Low Dose mode"
     IDC_SHOW_ACQUIRE_AREA   "Show acquisition area around marker or line endpoint"
     IDC_CORRECT_BACKLASH    "Correct for backlash when moving stage with mouse or resetting IS"
     IDC_TSV_FRAME_TIME      "Change frame time for K2 camera dose fractionation"
@@ -4691,12 +4719,6 @@ BEGIN
     IDC_CHECK_NO_DRIFT_CORR "Turn off OneView Drift Correction for montage if on in Record parameters"
     IDC_CHECK_CONTINUOUS_MODE 
                             "Use continuous camera acquisition to get montage images"
-    IDC_CHECK_USE_VIEW_IN_LOWDOSE
-                            "Use View camera and scope parameters in Low Dose mode"
-    IDC_CHECK_USE_SEARCH_IN_LD
-                            "Use Search camera and scope parameters in Low Dose mode"
-    IDC_CHECK_USE_MONT_MAP_PARAMS
-                            "Use the Mont-map camera parameters instead of Record for this montage"
 END
 
 STRINGTABLE
@@ -4811,29 +4833,6 @@ BEGIN
     IDC_BUT_DELC2MINUS      "Decrease step size for intensity lens change by 1.4 (hot key Ctrl comma)"
 END
 
-STRINGTABLE
-BEGIN
-    IDC_EDIT_CONTIN_DELAY_FAC 
-                            "Multiplier of usual settling time to wait between movement and image"
-    IDC_SAVE_UNNORMALIZED   "Save unprocessed frames even if processing in Setup dialog is Gain Normalized"
-    IDC_SPIN_EARLY_FRAMES   "Select number of frames in initially returned image used for aligning"
-    IDC_DO_EARLY_RETURN     "Return from SEMCCD plugin when the selected # of frames are available"
-    IDC_USE_EXTENSION_MRCS  "Output MRC frame stacks with extension .mrcs instead of .mrc"
-END
-
-STRINGTABLE
-BEGIN
-    IDC_FA_EDIT_SUB_START   "First frame (numbered from 1) of subset to align"
-    IDC_FA_EDIT_SUB_END     "Last frame (numbered from 1) of subset to align"
-END
-
-STRINGTABLE
-BEGIN
-    ID_CAMERA_USEVIEWFORSEARCH "Use View camera parameters for Search images"
-    ID_CAMERA_USERECORDFORMONTAGE 
-                            "Do not show separate Montage Mapping parameter set"
-END
-
 #endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////
 
@@ -4857,8 +4856,7 @@ LANGUAGE 9, 1
 #include "res\SerialEM.rc2"  // non-Microsoft Visual C++ edited resources
 #include "afxres.rc"         // Standard components
 #include "XFolderDialog\XFolderDialog.rc"
-#endif
-
+#endif
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

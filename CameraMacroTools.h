@@ -8,6 +8,7 @@
 //
 
 class CMacroProcessor;
+class CNavigatorDlg;
 
 /////////////////////////////////////////////////////////////////////////////
 // CCameraMacroTools dialog
@@ -76,6 +77,7 @@ protected:
 
 private:
   CMacroProcessor *mMacProcessor;
+  CNavigatorDlg *mNav;   // Set by GetNavigatorState
 	BOOL mDoingTS;
   BOOL mDoingCalISO;
 	CString *mMacros;
@@ -86,6 +88,7 @@ public:
   void SetOneMacroLabel(int num, UINT nID);
   void MacroNameChanged(int num);
   void CalibratingISoffset(bool ifCal);
+  int GetNavigatorState(void);
 };
 
 //{{AFX_INSERT_LOCATION}}

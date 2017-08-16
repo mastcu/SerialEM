@@ -493,7 +493,7 @@ void CMenuTargets::OnUpdateLoadNavFile(CCmdUI* pCmdUI)
 {
   BOOL bEnable = !DoingTasks();
   if (mNavigator)
-    bEnable = bEnable && mNavigator->NoDrawing();
+    bEnable = bEnable && mNavigator->NoDrawing()  && !mNavigator->GetAcquiring();
   pCmdUI->Enable(bEnable);	
 }
 
@@ -514,7 +514,8 @@ void CMenuTargets::OnNavigatorMergefile()
 
 void CMenuTargets::OnUpdateNavigatorMergefile(CCmdUI *pCmdUI)
 {
-  pCmdUI->Enable(!DoingTasks() && mNavigator && mNavigator->NoDrawing());
+  pCmdUI->Enable(!DoingTasks() && mNavigator && mNavigator->NoDrawing() && 
+    !mNavigator->GetAcquiring());
 }
 
 void CMenuTargets::OnNavigatorOpenStateDlg()
@@ -589,7 +590,7 @@ void CMenuTargets::OnCornerMontage()
 void CMenuTargets::OnUpdateCornerMontage(CCmdUI* pCmdUI) 
 {
   pCmdUI->Enable(mNavigator && mNavigator->CornerMontageOK() && mNavigator->NoDrawing() 
-    && !DoingTasks());	
+    && !DoingTasks() && !mNavigator->GetAcquiring());	
 }
 
 void CMenuTargets::OnNavigatorPolygonFromCorners()
@@ -605,7 +606,7 @@ void CMenuTargets::OnPolygonMontage()
 void CMenuTargets::OnUpdatePolygonMontage(CCmdUI* pCmdUI) 
 {
   pCmdUI->Enable(mNavigator && mNavigator->GetItemType() == ITEM_TYPE_POLYGON &&
-    mNavigator->NoDrawing() && !DoingTasks());	
+    mNavigator->NoDrawing() && !DoingTasks() && !mNavigator->GetAcquiring());	
 }
 
 void CMenuTargets::OnNavigatorSetupfullmontage() 
@@ -615,7 +616,8 @@ void CMenuTargets::OnNavigatorSetupfullmontage()
 
 void CMenuTargets::OnUpdateNavigatorSetupfullmontage(CCmdUI* pCmdUI) 
 {
-  pCmdUI->Enable(mNavigator && mNavigator->NoDrawing() && !DoingTasks());	
+  pCmdUI->Enable(mNavigator && mNavigator->NoDrawing() && !DoingTasks() &&
+    !mNavigator->GetAcquiring());	
 }
 
 void CMenuTargets::OnMontageListFilesToOpen()
@@ -631,13 +633,17 @@ void CMenuTargets::OnNavigatorAcquire()
 void CMenuTargets::OnUpdateNavigatorAcquire(CCmdUI* pCmdUI) 
 {
   pCmdUI->Enable(mNavigator && mNavigator->NoDrawing() && (mNavigator->AcquireOK(false)
-    || mNavigator->AcquireOK(true)) && !mNavigator->StartedMacro() && !DoingTasks() && 
+    || mNavigator->AcquireOK(true)) && !mNavigator->GetAcquiring() &&
+    !mNavigator->StartedMacro() && !DoingTasks() && 
     !mWinApp->StartedTiltSeries() && !mCamera->CameraBusy());	
 }
 
 void CMenuTargets::OnNavigatorEndacquire()
 {
-  mNavigator->SetAcquireEnded(true);
+  if (mNavigator->GetPausedAcquire())
+    mNavigator->EndAcquireWithMessage();
+  else
+    mNavigator->SetAcquireEnded(1);
 }
 
 void CMenuTargets::OnUpdateNavigatorEndacquire(CCmdUI *pCmdUI)
@@ -653,7 +659,7 @@ void CMenuTargets::OnNewMap()
 void CMenuTargets::OnUpdateNewMap(CCmdUI* pCmdUI) 
 {
   pCmdUI->Enable(mNavigator && mNavigator->NoDrawing() &&
-    !DoingTasks() && mWinApp->mStoreMRC);	
+    !DoingTasks() && mWinApp->mStoreMRC && !mNavigator->GetAcquiring());	
 }
 
 void CMenuTargets::OnNavigatorAdjustBacklash()
@@ -665,7 +671,7 @@ void CMenuTargets::OnUpdateNavigatorAdjustBacklash(CCmdUI *pCmdUI)
 {
   pCmdUI->Enable(mNavigator && mNavigator->NoDrawing() && !mNavigator->StartedMacro() && 
     !DoingTasks() && !mWinApp->StartedTiltSeries() && !mCamera->CameraBusy() &&
-    mNavigator->OKtoAdjustBacklash(true));
+    !mNavigator->GetAcquiring() && mNavigator->OKtoAdjustBacklash(true));
 }
 
 void CMenuTargets::OnNavigatorBacklashSettings()
@@ -771,7 +777,7 @@ void CMenuTargets::OnNavigatorSkewedsupermontage()
 void CMenuTargets::OnUpdateNavigatorSkewedsupermontage(CCmdUI* pCmdUI) 
 {
  	EMimageBuffer *imBuf = mWinApp->mActiveView->GetActiveImBuf();
-  pCmdUI->Enable(mNavigator && mNavigator->NoDrawing()	&&
+  pCmdUI->Enable(mNavigator && mNavigator->NoDrawing()	&& !!mNavigator->GetAcquiring() &&
     !DoingTasks() && imBuf && imBuf->mHasUserPt && mWinApp->Montaging());
 }
 
@@ -783,7 +789,8 @@ void CMenuTargets::OnPolygonsupermontage()
 void CMenuTargets::OnUpdatePolygonsupermontage(CCmdUI *pCmdUI)
 {
   pCmdUI->Enable(mNavigator && mNavigator->GetItemType() == ITEM_TYPE_POLYGON &&
-    mNavigator->NoDrawing() && !DoingTasks() && mWinApp->Montaging());	
+    mNavigator->NoDrawing() && !DoingTasks() && mWinApp->Montaging()  &&
+    !mNavigator->GetAcquiring());	
 }
 
 void CMenuTargets::OnNavigatorAddcirclepolygon()
@@ -799,7 +806,7 @@ void CMenuTargets::OnNavigatorAddcirclepolygon()
 void CMenuTargets::OnUpdateNavigatorAddCirclePolygon(CCmdUI *pCmdUI)
 {
  	EMimageBuffer *imBuf = mWinApp->mActiveView->GetActiveImBuf();
-  pCmdUI->Enable(mNavigator && mNavigator->NoDrawing()	&&
+  pCmdUI->Enable(mNavigator && mNavigator->NoDrawing() && !!mNavigator->GetAcquiring() &&
     !DoingTasks() && imBuf && imBuf->mHasUserPt);
 }
 
@@ -810,7 +817,8 @@ void CMenuTargets::OnNavigatorAddGridOfPoints()
 
 void CMenuTargets::OnUpdateNavigatorAddGridOfPoints(CCmdUI *pCmdUI)
 {
-  pCmdUI->Enable(mNavigator && mNavigator->OKtoAddGrid() && !DoingTasks());
+  pCmdUI->Enable(mNavigator && mNavigator->OKtoAddGrid() && !DoingTasks() &&
+    !mNavigator->GetAcquiring());
 }
 
 void CMenuTargets::OnNavigatorDivideIntoGroups()
@@ -842,7 +850,8 @@ void CMenuTargets::OnNavigatorChangeregistration()
 
 void CMenuTargets::OnUpdateNavigatorChangeregistration(CCmdUI *pCmdUI)
 {
-  pCmdUI->Enable(mNavigator && mNavigator->RegistrationChangeOK());
+  pCmdUI->Enable(mNavigator && mNavigator->RegistrationChangeOK() &&
+    !mNavigator->GetAcquiring());
 }
 
 void CMenuTargets::OnNavigatorRotatemap()
@@ -882,7 +891,7 @@ void CMenuTargets::OnNavigatorShifttomarker()
 void CMenuTargets::OnUpdateNavigatorShifttomarker(CCmdUI *pCmdUI)
 {
  	EMimageBuffer *imBuf = mWinApp->mActiveView->GetActiveImBuf();
-  pCmdUI->Enable(mNavigator && mNavigator->NoDrawing()	&&
+  pCmdUI->Enable(mNavigator && mNavigator->NoDrawing() && !mNavigator->GetAcquiring() &&
     !DoingTasks() && imBuf && imBuf->mHasUserPt && mNavigator->GetItemType() >= 0);
 }
 
@@ -893,7 +902,7 @@ void CMenuTargets::OnNavigatorUndolastshift()
 
 void CMenuTargets::OnUpdateNavigatorUndolastshift(CCmdUI *pCmdUI)
 {
-  pCmdUI->Enable(mNavigator && mNavigator->NoDrawing()	&&
+  pCmdUI->Enable(mNavigator && mNavigator->NoDrawing() && !mNavigator->GetAcquiring() &&
     !DoingTasks() && mNavigator->GetMarkerShiftReg());
 }
 
@@ -961,7 +970,7 @@ void CMenuTargets::OnUpdateNavigatorGroupAcquire(CCmdUI *pCmdUI)
   BOOL checked = false;
   if (mNavigator && mNavigator->NoDrawing() && !DoingTasks() && 
     !mWinApp->DoingComplexTasks() && mNavigator->GetItemType() != ITEM_TYPE_POLYGON &&
-    mNavigator->GetCurrentOrGroupItem(item) >= 0) {
+    mNavigator->GetCurrentOrGroupItem(item) >= 0 && !mNavigator->GetAcquiring()) {
     enable = item->mGroupID > 0;
     checked = enable && item->mAcquire;
   }
@@ -976,7 +985,8 @@ void CMenuTargets::OnNavigatorDeleteGroup()
 
 void CMenuTargets::OnUpdateNavigatorDeleteGroup(CCmdUI *pCmdUI)
 {
-  pCmdUI->Enable(mNavigator && mNavigator->CurrentIsInGroup());
+  pCmdUI->Enable(mNavigator && mNavigator->CurrentIsInGroup() && 
+    !mNavigator->GetAcquiring());
 }
 
 void CMenuTargets::OnNavigatorAlignToMap()
@@ -986,7 +996,7 @@ void CMenuTargets::OnNavigatorAlignToMap()
 
 void CMenuTargets::OnUpdateNavigatorAlignToMap(CCmdUI *pCmdUI)
 {
-  pCmdUI->Enable(mNavigator && !DoingTasks() &&
+  pCmdUI->Enable(mNavigator && !DoingTasks() && !mNavigator->GetAcquiring() &&
     mWinApp->mNavHelper->OKtoAlignWithRotation());
 }
 

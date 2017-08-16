@@ -274,6 +274,7 @@ class DLL_IM_EX CEMscope
   SetMember(BOOL, BlankTransients);
   SetMember(BOOL, SelectedEFTEM);
   GetMember(double, LastCameraLength);
+  GetSetMember(float, StageRelaxation);
   void SetMessageBoxArgs(int type, CString &title, CString &message);
   int GetMessageBoxReturnValue(void);
   GetSetMember(BOOL, UseInvertedMagRange);
@@ -612,6 +613,7 @@ private:
   BOOL mBlankTransients;      // Flag to blank for mag/spot size changes & normalizations
   double mLastCameraLength;   // Camera length in last update: valid only in diff mode
   int mNormAllOnMagChange;    // Norm all lenses when in LM if 1, or always if 2
+  float mStageRelaxation;     // Default distance to relax stage from backlash 
   int mPluginVersion;         // Version of plugin or server
 
   // Old static variables from UpdateProc

@@ -32,36 +32,49 @@
     <P><B>End</B></P>
     <P>This button has several uses for ending an operation in an orderly fashion, and 
       its label sometimes changes accordingly. If a script is running, this button 
-      will end the script at the end of a loop or at the end of the script. If the Tilt 
-      Series Controller is active, the button will stop the series after completing 
+      (labeled <b>End Loop</b>) will end the script at the end of a loop or at the end of the script. If the Tilt 
+      Series Controller is active, the button (<b>End Loop</b>) will stop the series after completing 
       all actions at the current tilt angle. If a script or tilt series was being run 
       from the Navigator and was stopped, this button can also be used to terminate 
-      the script at the current position, or terminate the tilt series, and allow the 
-      Navigator to go on to the next position. Otherwise, when the Navigator is 
-      acquiring data, the button will signal the Navigator to end its acquisitions 
-      after finishing the current item.</P>
-    <P><B>Resume</B></P>
-    <P>If a script has been running, this button will resume the script at the next step. 
+      the script at the current position (<b>End Script</b>), or terminate the tilt series 
+      (<b>End TS</b>), and allow the Navigator to go on to the next position. </P>
+    <P><B>Resume/PauseN/End Nav)</B></P>
+    <P>If a script has been running and was stopped, this button will resume the script at the next step. 
       If the Tilt Series Controller is active, the button will open the <A HREF="hidd_tsresume.htm">
-        Tilt Series Resume dialog box</A>
-    </P>
-    <P><B>STOP</B></P>
+        Tilt Series Resume dialog box</A>. When acquisition of tilt series 
+      is being run from the Navigator, the button is labeled <b>End Nav</b> while the tilt 
+      series is running and will stop the Navigator acquisition at the end of the 
+      current tilt series.&nbsp; If a tilt series run from the Navigator or a script 
+      prior to a tilt series is stopped, the button is labeled <b>ResumeT</b> 
+      if it will resume the tilt series, or <b>ResumeS</b> if it will resume the 
+      script.&nbsp; When other acquisitions are running from the Navigator, the button 
+      (labeled <b>PauseN</b>) will pause the acquisition after the current item, and 
+      it can then be resumed with the same button, labeled <b>ResumeN</b>.</P>
+    <P><B>STOP/EndNav/End All</B></P>
     <P>This is a general Stop button for image acquisition, autofocus, montaging, 
       scripts, tasks, tilt series, or any other extended sequence of actions. It will 
       generally stop the activity as soon as possible after the current action. When 
       you are running a tilt series or a script from the Navigator, the Stop button 
-      acts on the lowest level of operation only.</P>
+      acts on the lowest level of operation only, so it can leave a tilt series or 
+      script in a suspended state.&nbsp; However, once such a tilt series is stopped,&nbsp; 
+      the button is labeled <b>EndNav</b> and will end the Navigator acquisition after 
+      the current item; and if a script is stopped, the button is labeled <b>End All</b> 
+      and will stop acquisition immediately.</P>
     <P><B>Script/One Loop</B></P>
     <P>If the Tilt Series Controller is not active, this button will execute the script 
       shown on the button; otherwise it will execute one loop of the tilt series. The 
-      program will stop at the same place where the End button would stop it, after 
+      program will stop at the same place where the <b>End Loop</b> button would stop it, after 
       finishing all actions at a tilt angle.</P>
-    <P><B>Script/One Step</B></P>
+    <P><B>Script/One Step/End Nav</B></P>
     <P>If the Tilt Series Controller is not active, this button will execute the script 
       shown on the button; otherwise it will advance one step of the tilt series. 
       There are many more steps in the loop of the Tilt Series Controller than actual 
       actions under particular conditions, but it should generally stop after the next 
-      actual action.</P>
+      actual action.&nbsp; When the Navigator is controlling acquisition, this button 
+      is labeled <b>End Nav</b> in a variety of circumstances.&nbsp; In most cases, it 
+      will end the Navigator acquisition after the current item; however, if 
+      acquisition was paused with the PauseN button and has finished an item, then 
+      this button will end the acquisition immediately.</P>
     <P><B>Script/Back Up</B></P>
     <P>If the Tilt Series Controller is not active, this button will execute the script 
       shown on the button; otherwise it will open the <A HREF="hidd_tsbackup.htm">Tilt 

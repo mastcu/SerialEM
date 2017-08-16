@@ -21,6 +21,12 @@
       taken only on the appropriate kind of item ('Acquire' or 'Tilt Series') and 
       items of the other kind will be skipped.
     </P>
+    <P>Control of the tilt series or script acquisition after it is started is complex 
+      because it involves two levels of activity: the Navigator acquisition and the 
+      operation being run.&nbsp; Buttons in the Camera and Script control panel will 
+      be modified and enabled to allow control at both of these levels.&nbsp; The 
+      effect of these buttons is described for each action in the <b>Primary Task</b> 
+      section below.</P>
     <P>Prior to the primary action are a series of optional steps that can be run after 
       moving the stage to each item's position. They are shown in the order in which 
       they would be run:</P>
@@ -66,7 +72,10 @@
       tasks are performed, the script is responsible for maintaining alignment to the 
       specimen position. Even if the script is stopped or fails to complete 
       successfully, the program will go on to the primary task, unless the script runs 
-      the command &#39;SkipAcquiringNavItem&#39;.&nbsp; The program 
+      the command &#39;SkipAcquiringNavItem&#39;.&nbsp; If you stop the script with 
+      &#39;End Loop' or 'STOP&#39; in the Camera and Script control panel, you can then resume 
+      it with &#39;ResumeS&#39;, or you can end the script and go on to the primary task with 
+      &#39;End Script&#39;. The program 
       keeps track of the script choice separately for tilt series and other primary 
       tasks.</P>
     <P><B>Primary Task</B></P>
@@ -79,19 +88,38 @@
       the original points.</P>
     <P><B>Just acquire and save image</B> - Again, the image file must be open before 
       starting unless a file is set to be opened on the first item. This option is 
-      useful if you do not need to make maps of your acquired images.</P>
-    <P><B>Run script</B> - Select the script number to run. When the script completes or 
-      stops with an error that cannot be resumed from, the Navigator will go on to 
-      the next item. If there is an error that can be resumed from, or if you stop 
-      the script with 'End' or 'Stop' and it is then resumable, then the Navigator 
+      useful if you do not need to make maps of your acquired images.&nbsp; For both 
+      this option and the previous one, buttons in the Camera and Script control panel 
+      allow you to stop the acquisition immediately (&#39;STOP&#39;), end it after the current 
+      item is complete (&#39;End Nav&#39;), or pause the acquisition after the current item is 
+      complete to allow some intervention (&#39;PauseN&#39;).&nbsp; Once acquisition is 
+      paused, it can be resumed on the next item with &#39;ResumeN&#39; or ended immediately 
+      with &#39;End Nav&#39;.</P>
+    <P><B>Run script</B> - Select the script to run by its number or name. When the script completes, 
+      the Navigator will go on to the next item. If it 
+      stops with an error that cannot be resumed from, the Navigator acquisition will 
+      also stop, unless the script includes the command &#39;NoMessageBoxOnError&#39;, in 
+      which case the Navigator will go on to the next item.&nbsp; If there is an error that can be resumed from, or if you stop 
+      the script with 'End Loop' or 'STOP' and it is then resumable, then the Navigator 
       will not go on to the next item and the status bar will show 'STOPPED NAV 
-      SCRIPT'. At this point you can do three things: 1) Resume the script, 2) abandon 
-      this script and go on to the next item by using 'End', or 3) terminate the 
-      acquisition by selecting 'End Acquire' in the Navigator menu. These 'End' or 
-      'Stop' functions can be activated either from the Camera and Script control 
-      panel or from the Script menu.</P>
+      SCRIPT'. At this point you can do several things: 1) Resume the script with 
+      &#39;ResumeS&#39;; 2) abandon 
+      this script and go on to the next item by using 'End Script'; 3) terminate the 
+      acquisition after this item is completed or abandoned by pressing &#39;End Nav&#39; or by selecting 'End Acquire' in the Navigator menu; 
+      or 4) end the acquisition immediately by pressing &#39;End All&#39;, which avoids having 
+      to remember to press &#39;End Nav&#39; before &#39;End Script&#39;.&nbsp; The Camera and Script 
+      control panel will also include a button &#39;PauseN&#39; for pausing acquisition after 
+      the current item is completed.&nbsp; Once paused, acquisition can be resumed 
+      with the &#39;ResumeN&#39; button or ended immediately with &#39;End Nav&#39;.</P>
     <P><B>Acquire tilt series</B> - All parameters and file properties should already 
-      be set up when you go to start the series.</P>
+      be set up when you go to start the series.&nbsp; Once a tilt series is started, 
+      the regular tilt series control buttons in the Camera and Script control panel 
+      function just as they do for tilt series started manually to allow stopping, 
+      resuming, and stepping through the series.&nbsp; However, there is also an &#39;End 
+      Nav&#39; button to stop Navigator acquisition after the current series is completed.&nbsp; 
+      When the tilt series is stopped, an &#39;End TS&#39; button can be used to end the tilt 
+      series and go on to the next.&nbsp; Press &#39;EndNav&#39; before &#39;End TS&#39; to terminate 
+      all acquisition.</P>
     <P><b>Other Options</b></P>
     <P><b>Do subset from index</b></P>
     <P>Select this option to acquire from a subset of items.&nbsp; Enter the item 

@@ -2612,7 +2612,7 @@ BOOL CSerialEMApp::DoingImagingTasks()
     mCalibTiming->Calibrating() ||
     mCalibTiming->DoingDeadTime() ||
     (mNavigator && ((mNavigator->GetAcquiring() && !mNavigator->GetStartedTS() && 
-    !mNavigator->StartedMacro()) ||
+    !mNavigator->StartedMacro() && !mNavigator->GetPausedAcquire()) ||
     mNavHelper->GetRealigning() ||
     mNavHelper->GetAcquiringDual())) || mAutoTuning->DoingAutoTune() ||
     (mStageMoveTool && mStageMoveTool->GetGoingToAcquire()) ||

@@ -132,6 +132,7 @@ CNavigatorDlg::CNavigatorDlg(CWnd* pParent /*=NULL*/)
   mNavFilename = "";
   mChanged = false;
   mAcquireIndex = -1;
+  mPausedAcquire = false;
   mNavBackedUp = false;
   mSuperNumX = 0;
   mSuperNumY = 0;
@@ -6993,7 +6994,9 @@ void CNavigatorDlg::AcquireAreas()
   mAcqActionIndex = 0;
 
   mNumAcquired = 0;
-  mAcquireEnded = false;
+  mAcquireEnded = 0;
+  mPausedAcquire = false;
+  mResumedFromPause = false;
   mEmailWasSent = false;
   mLastGroupID = 0;
   mGroupIDtoSkip = 0;
@@ -7107,7 +7110,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
       // Allow acquisition to go on after failure if the flag is set
     } else if (mWinApp->mMacroProcessor->GetLastAborted() && 
       !mWinApp->mMacroProcessor->GetNoMessageBoxOnError()) {
-        mAcquireEnded = true;
+        mAcquireEnded = 1;
     } else
       mAcquireIndex++;
     break;
@@ -7131,6 +7134,14 @@ void CNavigatorDlg::AcquireNextTask(int param)
         mAcquireIndex + 1, (LPCTSTR)item->mLabel);
       mAcquireIndex++;
     }
+    break;
+
+  case ACQ_MOVE_TO_NEXT:
+    if (mResumedFromPause) {
+      mAcqActionIndex--;
+      mLastAcqDoneTime = GetTickCount();
+    }
+    mResumedFromPause = false;
     break;
 
   default:
@@ -7252,21 +7263,37 @@ void CNavigatorDlg::AcquireNextTask(int param)
 
   // Go to next area if there is one
   case ACQ_MOVE_TO_NEXT:
-    mAcqActionIndex = 0;
     if (mAcquireEnded || (err = GotoNextAcquireArea()) != 0) {
-      StopAcquiring();
-      if (mNumAcquired) {
-        report.Format("%s at %d areas", mParam->acquireType == ACQUIRE_DO_TS ? 
-          "Tilt series acquired" : (mParam->acquireType == ACQUIRE_RUN_MACRO ?
-          "Script run to completion" : "Images acquired"), mNumAcquired);
-        AfxMessageBox(report, MB_EXCLAME);
+      if (mAcquireEnded < 0) {
+        mAcquireEnded = 0;
+        mPausedAcquire = true;
+        mWinApp->UpdateBufferWindows();
+        mWinApp->SetStatusText(COMPLEX_PANE, "PAUSED NAV ACQUIRE");
+        mWinApp->AddIdleTask(TASK_NAVIGATOR_ACQUIRE, 0, 0);
+        return;
       }
+      EndAcquireWithMessage();
     }
+    mAcqActionIndex = 0;
     return;
   }
   if (mAcquireIndex >= 0)
     m_listViewer.SetTopIndex(B3DMAX(0, mAcquireIndex - 2));
   mWinApp->AddIdleTask(TASK_NAVIGATOR_ACQUIRE, 0, 0);
+}
+
+// Message box on normal stopping or ending from paused state
+void CNavigatorDlg::EndAcquireWithMessage(void)
+{
+  CString report;
+  StopAcquiring();
+  mWinApp->SetStatusText(COMPLEX_PANE, "");
+  if (mNumAcquired) {
+    report.Format("%s at %d areas", mParam->acquireType == ACQUIRE_DO_TS ? 
+      "Tilt series acquired" : (mParam->acquireType == ACQUIRE_RUN_MACRO ?
+      "Script run to completion" : "Images acquired"), mNumAcquired);
+    AfxMessageBox(report, MB_EXCLAME);
+  }
 }
 
 // Task boilerplate
@@ -7276,7 +7303,7 @@ int CNavigatorDlg::TaskAcquireBusy()
 
   // If we started a resumable macro or a suspended tilt series,
   // take sleep to preserve CPU and say busy
-  if ((StartedMacro() && !mWinApp->mMacroProcessor->DoingMacro()) ||
+  if ((StartedMacro() && !mWinApp->mMacroProcessor->DoingMacro()) || mPausedAcquire ||
     (mStartedTS && (mWinApp->StartedTiltSeries() && !mWinApp->DoingTiltSeries() ||
     mWinApp->mTSController->GetPostponed()))) {
     Sleep(10);
@@ -7315,6 +7342,7 @@ void CNavigatorDlg::StopAcquiring(BOOL testMacro)
   }
   CloseFileOpenedByAcquire();
   mAcquireIndex = -1;
+  mPausedAcquire = false;
   m_statListHeader.SetWindowText(mSavedListHeader);
   SetCollapsing(mSaveCollapsed);
   mWinApp->UpdateBufferWindows();
@@ -7390,11 +7418,15 @@ void CNavigatorDlg::ManageNumDoneAcquired(void)
   mLastAcqDoneTime = now;
 }
 
-void CNavigatorDlg::SetAcquireEnded(BOOL state)
+void CNavigatorDlg::SetAcquireEnded(int state)
 {
   mAcquireEnded = state;
   if (mParam->acquireType != ACQUIRE_RUN_MACRO && mParam->acquireType != ACQUIRE_DO_TS)
-    mWinApp->SetStatusText(COMPLEX_PANE, "ENDING NAV ACQUIRE");
+    mWinApp->SetStatusText(COMPLEX_PANE, state > 0 ? "ENDING NAV ACQUIRE" : 
+    "PAUSING NAV ACQUIRE");
+  else
+    mWinApp->AppendToLog(CString(state > 0 ? "Ending" : "Pausing") + " Navigator "
+    "acquisition after current item");
 }
 
 // Test for whether we started a macro and it is either running or resumable
@@ -7497,7 +7529,7 @@ int CNavigatorDlg::GotoNextAcquireArea()
         return 0;
     }
   }
-  mAcquireEnded = true;
+  mAcquireEnded = 1;
   return -1;
 }
 
