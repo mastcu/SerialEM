@@ -1290,6 +1290,8 @@ void CMontageSetupDlg::UseViewOrSearchInLD(BOOL &otherFlag)
   BOOL saveVinLD = m_bUseViewInLowDose;
   BOOL saveSinLD = m_bUseSearchInLD;
   BOOL saveUseMMP = m_bUseMontMapParams;
+  int setNum;
+  ControlSet *conSet = mWinApp->GetConSets();
   int saveMoveStage = m_bMoveStage ? 1 : 0;
   if (mLowDoseMode && !m_bUseViewInLowDose && !m_bUseSearchInLD)
     mLastRecordMoveStage = saveMoveStage;
@@ -1302,12 +1304,16 @@ void CMontageSetupDlg::UseViewOrSearchInLD(BOOL &otherFlag)
 
   // If fitting item, the sequence is handled entirely by the check routine and the mag
   // index and binning are supplied there, but need to restore button if fit is rejected
+  // Have to supply the actual binning in control set when not low dose
   if (mFittingItem) {
-    if (CheckNavigatorFit(0, 0, -1., -1., mLowDoseMode)) {
-      m_bUseViewInLowDose = saveVinLD;
-      m_bUseSearchInLD = saveSinLD;
-      m_bUseMontMapParams = saveUseMMP;
-      UpdateData(false);
+    setNum = (m_bUseMontMapParams && !mWinApp->GetUseRecordForMontage()) ?
+      MONT_USER_CONSET : RECORD_CONSET;
+    if (CheckNavigatorFit(mParam.magIndex, conSet[setNum].binning, -1., -1., 
+      mLowDoseMode)) {
+        m_bUseViewInLowDose = saveVinLD;
+        m_bUseSearchInLD = saveSinLD;
+        m_bUseMontMapParams = saveUseMMP;
+        UpdateData(false);
     }
     return;
   }
