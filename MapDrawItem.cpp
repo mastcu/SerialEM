@@ -46,9 +46,13 @@ CMapDrawItem::CMapDrawItem()
   mGroupID = 0;
   mPolygonID = 0;
   mDrawnOnMapID = 0;
+  mOldDrawnOnID = 0;
   mPieceDrawnOn = -1;
+  mXinPiece = mYinPiece = -1.;
   mRealignedID = 0;
   mAtSamePosID = 0;
+  mRegisteredToID = 0;
+  mOldRegToID = 0;
   mRealignErrX = mRealignErrY = 0.;
   mRealignReg = 0;
   mLocalRealiErrX = mLocalRealiErrY = 0.;

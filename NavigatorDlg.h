@@ -344,6 +344,8 @@ private:
   CString mExtraFileSuffix; // Suffix for extra file to open when Acquire opens a file
   int mDrawnOnMontBufInd;   // Buffer index of map grid points were drawn on
   int mPieceGridPointOn;    // Montage piece for last point converted in GridImageToStage
+  float mGridPtXinPiece;      // Coordinates in piece
+  float mGridPtYinPiece;
   float mLast5ptIncX1;      // Parameters of the last 5-point geometry for adding grid
   float mLast5ptIncX2;
   float mLast5ptIncY1;
@@ -376,7 +378,8 @@ public:
   CMapDrawItem * FindItemWithMapID(int mapID, bool requireMap = true);
   ScaleMat GetRotationMatrix(float rotAngle, BOOL inverted);
   int PrepareMontAdjustments(EMimageBuffer * imBuf, ScaleMat & rMat, ScaleMat & rInv, float & rDelX, float & rDelY);
-  void AdjustMontImagePos(EMimageBuffer * imBuf, float & inX, float & inY, int *pcInd = NULL);
+  void AdjustMontImagePos(EMimageBuffer * imBuf, float & inX, float & inY, int *pcInd = NULL, 
+    float *xInPiece = NULL, float *yInPiece = NULL);
   float RotationFromStageMatrices(ScaleMat curMat, ScaleMat mapMat, BOOL &inverted);
   int AccessMapFile(CMapDrawItem * item, KImageStore *&storeMRC, int & curStore, MontParam *&montP, 
     float & useWidth, float & useHeight, bool readWrite = false);
@@ -474,7 +477,7 @@ public:
   afx_msg void OnKillfocusEditBox();
   int DoUpdateZ(int index, int ifGroup);
   void SetAcquireEnded(int state);
-  int TransformToCurrentReg(int reg, ScaleMat aM, float *dxy);
+  int TransformToCurrentReg(int reg, ScaleMat aM, float *dxy, int regDrawnOn, int curDrawnOn);
   int TransformFromRotAlign(int reg, ScaleMat aM, float *dxy);
   void ProcessCKey(void);
   ScaleMat * XformForStageStretch(bool usingIt);
@@ -490,7 +493,8 @@ public:
   bool OKtoAdjustBacklash(bool fastStage);
   void AdjustBacklash(int index = -1, bool showC = false);
   void MarkerStagePosition(EMimageBuffer * imBuf, ScaleMat aMat, float delX, float delY, 
-    float & stageX, float & stageY, BOOL useLineEnd = false, int *pcInd = NULL);
+    float & stageX, float & stageY, BOOL useLineEnd = false, int *pcInd = NULL,
+    float *xInPiece = NULL, float *yInPiece = NULL);
   BOOL m_bShowAcquireArea;
   CButton m_butAddMarker;
   afx_msg void OnAddMarker();
@@ -505,7 +509,8 @@ public:
   int OKtoAverageCrops(void);
   CMapDrawItem *FindMontMapDrawnOn(CMapDrawItem * item);
   int OffsetMontImagePos(MiniOffsets *mini, int xPcStart, int xPcEnd,
-    int yPcStart, int yPcEnd, float &testX, float &testY, int &pcInd);
+    int yPcStart, int yPcEnd, float &testX, float &testY, int &pcInd, float &xInPiece, 
+    float &yInPiece);
   void StageOrImageCoords(CMapDrawItem *item, float &posX, float &posY);
   void GridImageToStage(ScaleMat aInv, float delX, float delY, float posX, float posY, 
     float &stageX, float &stageY);

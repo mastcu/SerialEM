@@ -1902,7 +1902,7 @@ int CNavigatorDlg::DoUpdateZ(int index, int ifGroup)
 // Add a point at the current marker position
 void CNavigatorDlg::OnAddMarker()
 {
-  float delX, delY,stageX, stageY;
+  float delX, delY,stageX, stageY, xInPiece, yInPiece;
   int pcInd;
   ScaleMat aMat;
  	EMimageBuffer *imBuf = mWinApp->mActiveView->GetActiveImBuf();
@@ -1910,9 +1910,12 @@ void CNavigatorDlg::OnAddMarker()
   if (!OKtoAddMarkerPoint())
     return;
   BufferStageToImage(imBuf, aMat, delX, delY);
-  MarkerStagePosition(imBuf, aMat, delX, delY, stageX, stageY, false, &pcInd);
+  MarkerStagePosition(imBuf, aMat, delX, delY, stageX, stageY, false, &pcInd, &xInPiece,
+    &yInPiece);
 	CMapDrawItem *item = AddPointMarkedOnBuffer(imBuf, stageX, stageY, 0);
   item->mPieceDrawnOn = pcInd;
+  item->mXinPiece = xInPiece;
+  item->mYinPiece = yInPiece;
   UpdateListString(mCurrentItem);
   mChanged = true;
   mWinApp->RestoreViewFocus();
@@ -1991,14 +1994,14 @@ void CNavigatorDlg::OnGotoMarker()
 
 // Return the image marker as a stage position
 void CNavigatorDlg::MarkerStagePosition(EMimageBuffer * imBuf, ScaleMat aMat, float delX, 
-                                        float delY, float & stageX, float & stageY, 
-                                        BOOL useLineEnd, int *pcInd)
+  float delY, float & stageX, float & stageY, BOOL useLineEnd, int *pcInd, 
+  float *xInPiece, float *yInPiece)
 {
   float ptX, ptY;
   ScaleMat aInv;
   ptX = useLineEnd ? imBuf->mLineEndX : imBuf->mUserPtX;
   ptY = useLineEnd ? imBuf->mLineEndY : imBuf->mUserPtY;
-  AdjustMontImagePos(imBuf, ptX, ptY, pcInd);
+  AdjustMontImagePos(imBuf, ptX, ptY, pcInd, xInPiece, yInPiece);
   aInv = MatInv(aMat);
   stageX = aInv.xpx * (ptX - delX) + aInv.xpy * (ptY - delY);
   stageY = aInv.ypx * (ptX - delX) + aInv.ypy * (ptY - delY);
@@ -2318,7 +2321,7 @@ BOOL CNavigatorDlg::UserMousePoint(EMimageBuffer *imBuf, float inX, float inY,
                                    BOOL nearCenter, int button)
 {
   ScaleMat aMat, aInv;
-  float delX, delY, stageX, stageY, dist, distMin = 1.e10;
+  float delX, delY, stageX, stageY,xInPiece, yInPiece, dist, distMin = 1.e10;
   int ind, indMin, nxBuf, nyBuf, pieceIndex;
   int groupID = 0;
   std::set<int>::iterator iter;
@@ -2341,7 +2344,7 @@ BOOL CNavigatorDlg::UserMousePoint(EMimageBuffer *imBuf, float inX, float inY,
     return false;
   if (!BufferStageToImage(imBuf, aMat, delX, delY))
     return false;
-  AdjustMontImagePos(imBuf, inX, inY, &pieceIndex);
+  AdjustMontImagePos(imBuf, inX, inY, &pieceIndex, &xInPiece, &yInPiece);
   aInv = MatInv(aMat);
   stageX = aInv.xpx * (inX - delX) + aInv.xpy * (inY - delY);
   stageY = aInv.ypx * (inX - delX) + aInv.ypy * (inY - delY);
@@ -2391,6 +2394,8 @@ BOOL CNavigatorDlg::UserMousePoint(EMimageBuffer *imBuf, float inX, float inY,
       item->mColor = DEFAULT_POLY_COLOR;
     } else {
       item->mPieceDrawnOn = pieceIndex;
+      item->mXinPiece = xInPiece;
+      item->mYinPiece = yInPiece;
     }
     UpdateListString(mCurrentItem);
     mChanged = true;
@@ -2516,10 +2521,13 @@ CMapDrawItem *CNavigatorDlg::AddPointMarkedOnBuffer(EMimageBuffer *imBuf, float 
   item->mDrawnOnMapID = imBuf->mMapID;
 
   // Find map item from imbuf mapID and check its import flag, set this as imported too
+  // If the imported map has been registered to a real one, set the drawn ID to that
   // Also inherit the backlash directly from that item, or from the buffer
   mapItem = FindItemWithMapID(imBuf->mMapID);
   if (mapItem && mapItem->mImported > 0)
     item->mImported = 2;
+  if (mapItem && mapItem->mRegisteredToID && mapItem->mImported)
+    item->mDrawnOnMapID = mapItem->mRegisteredToID;
   if (mapItem)
     item->mStageZ = mapItem->mStageZ;
   else if (imBuf->GetStageZ(stageZ))
@@ -4459,6 +4467,8 @@ void CNavigatorDlg::AddPointOnGrid(int j, int k, CMapDrawItem *poly, int registr
   item->mAcquire = acquire;
   item->mDrawnOnMapID = drawnOnID;
   item->mPieceDrawnOn = mPieceGridPointOn;
+  item->mXinPiece = mGridPtXinPiece;
+  item->mYinPiece = mGridPtYinPiece;
   if (mDrawnOnMontBufInd >= 0)
     TransferBacklash(&mImBufs[mDrawnOnMontBufInd], item);
   UpdateListString(mCurrentItem);
@@ -4525,8 +4535,10 @@ void CNavigatorDlg::GridImageToStage(ScaleMat aInv, float delX, float delY, floa
     stageX = posX;
     stageY = posY;
     mPieceGridPointOn = -1;
+    mGridPtXinPiece = mGridPtYinPiece = -1.;
   } else {
-    AdjustMontImagePos(&mImBufs[mDrawnOnMontBufInd], posX, posY, &mPieceGridPointOn);
+    AdjustMontImagePos(&mImBufs[mDrawnOnMontBufInd], posX, posY, &mPieceGridPointOn,
+      &mGridPtXinPiece, &mGridPtYinPiece);
     stageX = aInv.xpx * (posX - delX) + aInv.xpy * (posY - delY);
     stageY = aInv.ypx * (posX - delX) + aInv.ypy * (posY - delY);
   }
@@ -4542,7 +4554,7 @@ void CNavigatorDlg::TransformPts()
 {
   CMapDrawItem *item, *item1, *item2;
   int maxRegis = 0, maxPtNum = 0;
-  int i, reg, pt, nPairs, ptMax, numDone, ixy, nCol, reg1, reg2;
+  int i, reg, pt, nPairs, ptMax, numDone, ixy, nCol, reg1, reg2, regDrawnOn, curDrawnOn;
   CString report, fitText;
   float x[MAX_REGPT_NUM][XSIZE], sx[MSIZE], xm[MSIZE], sd[MSIZE], b[MSIZE];
   float ss[MSIZE][MSIZE], ssd[MSIZE][MSIZE], d[MSIZE][MSIZE], r[MSIZE][MSIZE];
@@ -4582,6 +4594,7 @@ void CNavigatorDlg::TransformPts()
       continue;
     nPairs = 0;
     numDone = 0;
+    regDrawnOn = curDrawnOn = -1;
   
     // Brute force approach - loop on all possible reg pt numbers and find pairs
     for (pt = 1; pt <= maxPtNum; pt++) {
@@ -4610,7 +4623,7 @@ void CNavigatorDlg::TransformPts()
             return;
           }
           item2 = item;
-        }
+       }
 
         // Count up items that need transforming too (1/12/07, count maps too)
         if (item->mRegistration == reg && !item->mRegPoint) 
@@ -4624,6 +4637,20 @@ void CNavigatorDlg::TransformPts()
         x[nPairs][3] = item2->mStageX;
         x[nPairs][4] = item2->mStageY;
         pairPtNum[nPairs++] = pt;
+
+        // Keep track if all points were drawn on the same map in each case
+        if (item1->mDrawnOnMapID) {
+          if (regDrawnOn < 0)
+            regDrawnOn = item1->mDrawnOnMapID;
+          else if (regDrawnOn > 0 && regDrawnOn != item1->mDrawnOnMapID)
+            regDrawnOn = 0;
+        }
+        if (item2->mDrawnOnMapID) {
+          if (curDrawnOn < 0)
+            curDrawnOn = item2->mDrawnOnMapID;
+          else if (curDrawnOn > 0 && curDrawnOn != item2->mDrawnOnMapID)
+            curDrawnOn = 0;
+        }
       }
     }
 
@@ -4740,6 +4767,9 @@ void CNavigatorDlg::TransformPts()
       tmp = -(aM.xpx * dxy[0] + aM.xpy * dxy[1]);
       dxy[1] = -(aM.ypx * dxy[0] + aM.ypy * dxy[1]);
       dxy[0] = tmp;
+      i = regDrawnOn;
+      regDrawnOn = curDrawnOn;
+      curDrawnOn = i;
     }
 
     amatToRotmagstr(aM.xpx, aM.xpy, aM.ypx, aM.ypy, &rotAngle, 
@@ -4784,8 +4814,17 @@ void CNavigatorDlg::TransformPts()
       mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
     }
 
+    // See if coming from an import reg and all points are drawn on a pair of maps
+    if (fromImport && regDrawnOn > 0 && curDrawnOn > 0 && 
+      (item = FindItemWithMapID(regDrawnOn)) != NULL) {
+        item->mOldRegToID = item->mRegisteredToID;
+        item->mRegisteredToID = curDrawnOn;
+    } else {
+      regDrawnOn = curDrawnOn = 0;
+    }
+
     // Transform items that are not registration points
-    numDone = TransformToCurrentReg(reg, aM, dxy);
+    numDone = TransformToCurrentReg(reg, aM, dxy, regDrawnOn, curDrawnOn);
     report.Format("Registration %d: %s found from %d points; \r\n"
       "   deviation mean = %.2f um, max = %.2f at point %d;  %d items transformed",
       reg, fitText, nPairs, devSum, devMax, ptMax, numDone);
@@ -4798,7 +4837,8 @@ void CNavigatorDlg::TransformPts()
 }
 
 // Transform all non-registration points at given reg to current reg, return # done
-int CNavigatorDlg::TransformToCurrentReg(int reg, ScaleMat aM, float *dxy)
+int CNavigatorDlg::TransformToCurrentReg(int reg, ScaleMat aM, float *dxy, int regDrawnOn,
+  int curDrawnOn)
 {
   CMapDrawItem *item;
   int numDone = 0;
@@ -4809,8 +4849,15 @@ int CNavigatorDlg::TransformToCurrentReg(int reg, ScaleMat aM, float *dxy)
       TransformOneItem(item, aM, dxy, reg, mCurrentRegistration);
       item->mOldReg = reg;
       item->mOldImported = item->mImported;
+
+      // Set the imported flag negative now.  Also, if this was drawn on the imported map,
+      // switch the drawn on ID to the map it was registered to
       if (item->mImported > 0)
         item->mImported = -item->mImported;
+      if (item->mDrawnOnMapID == regDrawnOn) {
+        item->mOldDrawnOnID = item->mDrawnOnMapID;
+        item->mDrawnOnMapID = curDrawnOn;
+      }
       UpdateListString(i);
     }
   }
@@ -4842,10 +4889,14 @@ void CNavigatorDlg::UndoTransform(void)
     for (i = 0; i < mItemArray.GetSize(); i++) {
       item = mItemArray[i];
 
-      // For matching item, transform and restore import flag
+      // For matching item, transform and restore import flag and other import items
       if (item->mRegistration == mLastXformToReg && item->mOldReg == reg) {
         TransformOneItem(item, aM, dxy, mLastXformToReg, reg);
         item->mImported = item->mOldImported;
+        if (item->mOldDrawnOnID)
+          item->mDrawnOnMapID = item->mOldDrawnOnID;
+        if (item->mRegisteredToID)
+          item->mRegisteredToID = item->mOldRegToID;
         UpdateListString(i);
       }
     }
@@ -4855,6 +4906,8 @@ void CNavigatorDlg::UndoTransform(void)
   for (i = 0; i < mItemArray.GetSize(); i++) {
     item = mItemArray[i];
     item->mOldReg = 0;
+    item->mOldDrawnOnID = 0;
+    item->mOldRegToID = 0;
   }
   mNumSavedRegXforms = 0;
   Update();
@@ -4908,7 +4961,7 @@ void CNavigatorDlg::XfApply(ScaleMat a, float *dxy, float inX, float inY,
 int CNavigatorDlg::TransformFromRotAlign(int reg, ScaleMat aM, float *dxy)
 {
   mNumSavedRegXforms = 0;
-  int numDone = TransformToCurrentReg(reg, aM, dxy);
+  int numDone = TransformToCurrentReg(reg, aM, dxy, 0, 0);
   mMarkerShiftReg = 0;
   Update();
   Redraw();
@@ -6432,6 +6485,8 @@ void CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile)
 
         // No need to subtract 1, it should be saved as is
         ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "PieceOn", &item->mPieceDrawnOn));
+        ADOC_OPTIONAL(AdocGetTwoFloats("Item", sectInd, "XYinPc", &item->mXinPiece, 
+          &item->mYinPiece));
         if (item->mType == ITEM_TYPE_MAP) {
           ADOC_REQUIRED(AdocGetString("Item", sectInd, "MapFile", &adocStr));
           ADOC_STR_ASSIGN(item->mMapFile);
@@ -6495,6 +6550,8 @@ void CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile)
           ADOC_BOOL_ASSIGN(item->mRotOnLoad);
           ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "RealignedID", 
             &item->mRealignedID));
+          ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "RegisteredToID", 
+            &item->mRegisteredToID));
           ADOC_OPTIONAL(AdocGetTwoFloats("Item", sectInd, "RealignErrXY",
             &item->mRealignErrX, &item->mRealignErrX));
           ADOC_OPTIONAL(AdocGetTwoFloats("Item", sectInd, "LocalErrXY",
@@ -8096,15 +8153,19 @@ int CNavigatorDlg::PrepareMontAdjustments(EMimageBuffer *imBuf, ScaleMat &rMat,
 
 // Adjust the given position if there is a montage with piece offsets in the buffer
 void CNavigatorDlg::AdjustMontImagePos(EMimageBuffer *imBuf, float & inX, float & inY,
-  int *pcInd)
+  int *pcInd, float *xInPiece, float *yInPiece)
 {
   ScaleMat rMat, rInv;
-  float rDelX, rDelY, testX, testY;
+  float rDelX, rDelY, testX, testY, minXinPc, minYinPc;
   MiniOffsets *mini = imBuf->mMiniOffsets;
   int minInd;
   int adjust = PrepareMontAdjustments(imBuf, rMat, rInv, rDelX, rDelY);
   if (pcInd)
     *pcInd = -1;
+  if (xInPiece)
+    *xInPiece = -1.;
+  if (yInPiece)
+    *yInPiece = -1.;
   
   // if nothing to adjust return;
   if (adjust < 0)
@@ -8119,11 +8180,17 @@ void CNavigatorDlg::AdjustMontImagePos(EMimageBuffer *imBuf, float & inX, float 
   }
 
   if (OffsetMontImagePos(mini, 0, mini->xNframes - 1, 0, mini->yNframes - 1, testX, 
-    testY, minInd))
+    testY, minInd, minXinPc, minYinPc))
     return;
 
   if (pcInd)
     *pcInd = minInd;
+
+  // Return unbinned, right-handed coordinates in the piece
+  if (xInPiece)
+    *xInPiece = minXinPc * B3DMAX(1, imBuf->mOverviewBin);
+  if (yInPiece)
+    *yInPiece = minYinPc * B3DMAX(1, imBuf->mOverviewBin);
   inX = testX;
   inY = testY;
   if (adjust) {
@@ -8133,8 +8200,8 @@ void CNavigatorDlg::AdjustMontImagePos(EMimageBuffer *imBuf, float & inX, float 
 }
 
 int CNavigatorDlg::OffsetMontImagePos(MiniOffsets *mini, int xPcStart, int xPcEnd,
-                                      int yPcStart, int yPcEnd, float &testX, 
-                                      float &testY, int &pcInd)
+  int yPcStart, int yPcEnd, float &testX, float &testY, int &pcInd, float &xInPiece, 
+  float &yInPiece)
 {
   int ix, iy, index, xst, xnd, yst, ynd, xDist, yDist, minInd, minDist, xTest, yTest;
   xTest = (int)testX;
@@ -8143,6 +8210,7 @@ int CNavigatorDlg::OffsetMontImagePos(MiniOffsets *mini, int xPcStart, int xPcEn
   // Loop on pieces in given range; this piece numbering is inverted in Y!
   minDist = 100000000;
   pcInd = -1;
+  xInPiece = yInPiece = -1.f;
   for (ix = xPcStart; ix <= xPcEnd; ix++) {
     for (iy = yPcStart; iy <= yPcEnd; iy++) {
 
@@ -8185,8 +8253,13 @@ int CNavigatorDlg::OffsetMontImagePos(MiniOffsets *mini, int xPcStart, int xPcEn
       if (xDist < minDist) {
         minDist = xDist;
         minInd = index;
-        if (!mini->subsetLoaded)
+        if (!mini->subsetLoaded) {
           pcInd = minInd;
+
+          // Return coordinates in piece with the binning of overview, but right-handed
+          xInPiece = (float)(testX - xst);
+          yInPiece = (float)(mini->yFrame + yst - testY);
+        }
       }
     }
   }

@@ -581,7 +581,7 @@
       <P><A NAME="hid_navigator_importmap"></A><B>Import Map command (Navigator menu)</B></P>
       <P>Use this command to define an image obtained elsewhere, such as on a light 
         microscope, as a map. First, a dialog will open to allow you to select the 
-        file. You can select TIFF and DigitalMicrograph files (dm3 type) as well as MRC 
+        file. You can select TIFF and DigitalMicrograph files (dm3 or dm4 type) as well as MRC 
         files, and you can use color images. Then the <A HREF="hidd_navimport.htm">Navigator 
           Import dialog box</A> will open to allow you to specify the section number, 
         a stage position, a registration number, and a transformation between stage and 
@@ -596,6 +596,16 @@
         same registration as the other images, then points marked on the imported map 
         will appear on other images and can be used to move the stage to a desired 
         location.</P>
+    <P>When points are marked on a map, the program stores the ID of the map that they 
+      were drawn on.&nbsp; This &quot;drawn on&quot; ID is used to help decide what map to use 
+      for the Realign to Item routine, but an imported map cannot be used in that 
+      routine.&nbsp; When the imported map is transformed into registration with 
+      another map, the &quot;drawn on&quot; ID of any non-registration points marked on the 
+      imported map will be switched to the ID of the map that was registered to, and 
+      any points added after the transformation will also be given that &quot;drawn on&quot; ID.&nbsp; 
+      Thus, that map will be preferred for realigning to.&nbsp; In order for this to 
+      occur, all the registration points must be picked on just the two maps, one 
+      imported one and one native one being aligned to.</P>
       <P><A NAME="hid_navigator_rotatemap"></A><B>Rotate Map command (Navigator menu)</B></P>
       <P>Use this command to rotate the map in the active buffer into the correct 
         orientation for the current magnification and registration, or to rotate an 

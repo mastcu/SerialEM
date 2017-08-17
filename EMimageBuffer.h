@@ -54,7 +54,8 @@ public:
   double mTimeStamp;
   float mSampleMean;
   float mSampleSD;
-  float mEffectiveBin;  // Set for a montage overview
+  float mEffectiveBin;  // Set for a montage overview to make it display nicely
+  int mOverviewBin;     // Binning of a montage overview
   BOOL mDynamicFocused;
   BOOL mStageShiftedByMouse;  // Flag that the shift resulted in a stage shift
   BOOL mHasUserPt;

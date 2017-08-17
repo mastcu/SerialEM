@@ -83,6 +83,8 @@ public:
   int mDrawnOnMapID;      // ID of map point/polygon was drawn on
   int mAtSamePosID;       // Items with this matching were taken at same raw stage pos
   int mPieceDrawnOn;      // Index of piece in map that item was drawn on
+  float mXinPiece;        // Coordinates in unbinned piece        
+  float mYinPiece;
   ScaleMat mMapScaleMat;  // Scale matrix for drawing
   int mMapWidth;          // Size of image at which scale matrix was defined
   int mMapHeight;
@@ -106,6 +108,9 @@ public:
   int mRealignReg;        // Original registration of that realign
   int mImported;          // Indicator of an imported map or point drawn on one
   int mOldImported;       // Value of import flag before transform
+  int mRegisteredToID;    // ID of map that an imported map was registered to
+  int mOldDrawnOnID;      // Value of mDrawnOnMapID before transform for point on import
+  int mOldRegToID;        // Value of mRegisteredToID before transform
   int mImageType;         // STORE_TYPE flag for image
   int mSuperMontX;        // Camera coordinate of this montage in supermontage
   int mSuperMontY;

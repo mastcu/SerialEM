@@ -3904,7 +3904,7 @@ int CNavHelper::TransformExternalCoords(CMapDrawItem *item, int extType,
 {
   int pcX, pcY, adocInd, adocSave, numPieces, xPiece, yPiece, ipc, nameInd, iz;
   int pcZ, retval, adjX, adjY, adjZ;
-  float tempx;
+  float tempx, xInPc, yInPc;
   char *names[2] = {ADOC_ZVALUE, ADOC_IMAGE};
   char *keys[2] = {ADOC_ALI_COORD, ADOC_ALI_COORDVS};
 
@@ -3984,7 +3984,7 @@ int CNavHelper::TransformExternalCoords(CMapDrawItem *item, int extType,
     // Adjust the Y-inverted position and get piece it is on
     fy = mExtLoadHeight - fy;
     mNav->OffsetMontImagePos(&mExtOffsets, 0, mMapMontP->xNframes - 1, 0, 
-      mMapMontP->yNframes - 1, fx, fy, pieceDrawnOn);
+      mMapMontP->yNframes - 1, fx, fy, pieceDrawnOn, xInPc, yInPc);
     fy = mExtLoadHeight - fy;
   }
 

@@ -2552,6 +2552,7 @@ void EMmontageController::SavePiece()
       }
       mImBufs[1].mProbeMode = mImBufs[0].mProbeMode;
       mImBufs[1].mChangeWhenSaved = mImBufs[0].mChangeWhenSaved;
+      mImBufs[1].mOverviewBin = mMiniZoom;
 
       // Navigator is going to use this vs the setting below to distinguish if read-in
       mImBufs[1].mConSetUsed = MONTAGE_CONSET;

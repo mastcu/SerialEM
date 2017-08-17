@@ -46,6 +46,8 @@
   // No need to subtract 1, it should be saved as is
   if (item->mPieceDrawnOn >= 0)
     ADOC_PUT(Integer(ADOC_ARG, "PieceOn", item->mPieceDrawnOn));
+  if (item->mXinPiece >= 0. && item->mYinPiece >= 0.)
+    ADOC_PUT(TwoFloats(ADOC_ARG, "XYinPc", item->mXinPiece, item->mYinPiece));
   if (item->mType == ITEM_TYPE_MAP) {
     ADOC_PUT(KeyValue(ADOC_ARG, "MapFile",  (LPCTSTR)item->mMapFile));
     ADOC_PUT(Integer(ADOC_ARG, "MapID", item->mMapID));
@@ -79,6 +81,8 @@
       ADOC_PUT(Integer(ADOC_ARG, "RotOnLoad", 1));
     if (item->mRealignedID)
       ADOC_PUT(Integer(ADOC_ARG, "RealignedID", item->mRealignedID));
+    if (item->mRegisteredToID)
+      ADOC_PUT(Integer(ADOC_ARG, "RegisteredToID", item->mRegisteredToID));
     if (item->mRealignErrX || item->mRealignErrX)
       ADOC_PUT(TwoFloats(ADOC_ARG, "RealignErrXY", item->mRealignErrX,
                          item->mRealignErrX));

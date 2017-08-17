@@ -3,6 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+8/17/17: Made it change the "drawn on" map ID for points drawn on an imported
+map to be the ID for the native EM map that it was registered to.
+
+8/17/17: Fixed problem with switching "Use montage mapping parameters" when
+fitting a montage.
+
 8/16/17: Added ability to relax stage by moving it back slightly from the
 direction of its previous movement, in order to reduce drift.  There is a
 script command to assess its value, a command to do a relaxation, and
