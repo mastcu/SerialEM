@@ -509,13 +509,13 @@ int CCameraMacroTools::GetNavigatorState(void)
     !mMacProcessor->IsResumable()))
     return NAV_PAUSED;
   if (mNav->GetStartedTS())
-    return idle ? NAV_TS_STOPPED : NAV_TS_RUNNING;  // Should this test if postponed?
+    return (idle ? NAV_TS_STOPPED : NAV_TS_RUNNING);  // Should this test if postponed?
   if (param->acquireType == ACQUIRE_DO_TS && mMacProcessor->DoingMacro())
     return NAV_PRE_TS_RUNNING;
   if (idle && param->acquireType == ACQUIRE_DO_TS && mNav->StartedMacro())
     return mMacProcessor->IsResumable() ? NAV_PRE_TS_STOPPED : NAV_PAUSED;
   if (mNav->StartedMacro())
-    return idle ? NAV_SCRIPT_STOPPED : NAV_SCRIPT_RUNNING;
+    return (idle ? NAV_SCRIPT_STOPPED : NAV_SCRIPT_RUNNING);
   mWinApp->AppendToLog("Warning: GetNavigatorState fell into an unexcluded muddle");
   return 0;  //??
 }
