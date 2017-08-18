@@ -870,21 +870,23 @@ void CFocusManager::AutoFocusStart(int inChange, int useViewInLD, int iterNum)
 
   // Use up any limits that are set.  First apply standard limits available from menu,
   // then override that with a limit from a macro
-  mUseMinAbsFocus = mUseMaxAbsFocus = 0.;
-  if (mUseEucenAbsLimits) {
-    mUseMinAbsFocus = mEucenMinAbsFocus;
-    mUseMaxAbsFocus = mEucenMaxAbsFocus;
+  if (iterNum == 1) {
+    mUseMinAbsFocus = mUseMaxAbsFocus = 0.;
+    if (mUseEucenAbsLimits) {
+      mUseMinAbsFocus = mEucenMinAbsFocus;
+      mUseMaxAbsFocus = mEucenMaxAbsFocus;
+    }
+    if (mNextMinAbsFocus)
+      mUseMinAbsFocus = mNextMinAbsFocus;
+    if (mNextMaxAbsFocus)
+      mUseMaxAbsFocus = mNextMaxAbsFocus;
+    mUseMinDeltaFocus = mNextMinDeltaFocus;
+    mUseMaxDeltaFocus = mNextMaxDeltaFocus;
+    mNextMinDeltaFocus = 0.;
+    mNextMaxDeltaFocus = 0.;
+    mNextMinAbsFocus = 0.;
+    mNextMaxAbsFocus = 0.;
   }
-  if (mNextMinAbsFocus)
-    mUseMinAbsFocus = mNextMinAbsFocus;
-  if (mNextMaxAbsFocus)
-    mUseMaxAbsFocus = mNextMaxAbsFocus;
-  mUseMinDeltaFocus = mNextMinDeltaFocus;
-  mUseMaxDeltaFocus = mNextMaxDeltaFocus;
-  mNextMinDeltaFocus = 0.;
-  mNextMaxDeltaFocus = 0.;
-  mNextMinAbsFocus = 0.;
-  mNextMaxAbsFocus = 0.;
 
   if (!mWinApp->GetSTEMMode()) { 
 

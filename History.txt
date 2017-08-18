@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+8/18/17: Fixed autofocus to apply change limits and absolute focus limits
+after first iteration instead of clearing them (In 3.6).
+
 8/17/17: Made it change the "drawn on" map ID for points drawn on an imported
 map to be the ID for the native EM map that it was registered to.
 
