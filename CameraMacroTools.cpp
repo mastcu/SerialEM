@@ -508,8 +508,10 @@ int CCameraMacroTools::GetNavigatorState(void)
   if (idle && !mNav->GetStartedTS() && (!mNav->StartedMacro() || 
     !mMacProcessor->IsResumable()))
     return NAV_PAUSED;
+
+  // Should this test if postponed instead of idle?
   if (mNav->GetStartedTS())
-    return (idle ? NAV_TS_STOPPED : NAV_TS_RUNNING);  // Should this test if postponed?
+    return (idle ? NAV_TS_STOPPED : NAV_TS_RUNNING);  
   if (param->acquireType == ACQUIRE_DO_TS && mMacProcessor->DoingMacro())
     return NAV_PRE_TS_RUNNING;
   if (idle && param->acquireType == ACQUIRE_DO_TS && mNav->StartedMacro())
