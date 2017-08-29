@@ -40,12 +40,9 @@ you could use it by removing libifft.lib, adding in FFTW2st.lib and
 RFFTW2st.lib, making the changes in steps 2-4 above, and defining USE_FFTW2 at
 least for the compilation of Xcorr.cpp.
 
-It can be compiled in VS 2013 by reading in the current solution file,
+SerialEM can be compiled in VS 2013 by reading in the current solution file,
 allowing it to upgrade the project, and changing preprocessor definition
-_WIN32_WINNT=0x0500 to 0x0501 and adding NO_WARN_MBCS_MFC_DEPRECATION.  The
-64-bit version will compile without problems; the 32-bit Release version will
-not link with the FFTW included in the package and that should be excluded as
-described above.
+_WIN32_WINNT=0x0500 to 0x0501.
 
 
 The rest of this file contains a description of the modules in SerialEM.
