@@ -10,7 +10,6 @@
 #include "stdafx.h"
 #include "SerialEM.h"
 #include "ThreeChoiceBox.h"
-#include "afxdialogex.h"
 
 
 // CThreeChoiceBox dialog
