@@ -7,6 +7,9 @@
 #define LAB_NAME1 "Boulder Laboratory for 3-Dimensional"
 #define LAB_NAME2 "Electron Microscopy of Cells"
 #define F77FUNCAP
+#ifdef _MSC_VER
+#define strdup _strdup
+#endif
 #define WIN32_BIGFILE
 #define B3D_LITTLE_ENDIAN
 #define SWAP_IEEE_FLOATS

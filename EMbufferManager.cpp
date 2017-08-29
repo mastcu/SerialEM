@@ -291,6 +291,7 @@ int EMbufferManager::SaveImageBuffer(KImageStore *inStore, bool skipCheck, int i
   double axisRot;
   float axis, bidirAngle;
   int spot, err, check, cam, mag, oldDivided;
+  BOOL savingOther = mWinApp->SavingOther();
   EMimageBuffer *toBuf = GetSaveBuffer();
   if (!skipCheck) {
     check = CheckSaveConditions(inStore, toBuf);
@@ -342,16 +343,18 @@ int EMbufferManager::SaveImageBuffer(KImageStore *inStore, bool skipCheck, int i
       AdocReleaseMutex();
     }
   }
-  toBuf->mCurStoreChecksum = 0;
-  if (inStore == mWinApp->mStoreMRC)
-    toBuf->mCurStoreChecksum = mWinApp->mStoreMRC->getChecksum();
+  if (!toBuf->mCurStoreChecksum || !savingOther) {
+    toBuf->mCurStoreChecksum = 0;
+    if (inStore == mWinApp->mStoreMRC)
+      toBuf->mCurStoreChecksum = mWinApp->mStoreMRC->getChecksum();
+  }
 
   // Set flags before saving so mDivided can be in the mdoc
   extra = SetChangeWhenSaved(toBuf, inStore, oldDivided);
   if (inStore->getStoreType() != STORE_TYPE_IMOD) {
     err = 1;
     int secnum = inStore->getDepth();
-    if (mSaveAsynchronously && !mWinApp->SavingOther()) {
+    if (mSaveAsynchronously && !savingOther) {
       err = StartAsyncSave(inStore, toBuf, inSect);
       if (err)
         mWinApp->AppendToLog("Insufficient memory to start a background save; "
@@ -367,13 +370,13 @@ int EMbufferManager::SaveImageBuffer(KImageStore *inStore, bool skipCheck, int i
       if (!err)
         inStore->Flush();
     }
-    if (!err)
+    if (!err && !(toBuf->GetSaveCopyFlag() < 0 && savingOther))
       toBuf->mSecNumber = inSect < 0 ? secnum : inSect;
   } else {
     tiffStore = (KStoreIMOD *)inStore;
     
     err = tiffStore->WriteSection(toBuf->mImage);
-    if (!err)
+    if (!err && !(toBuf->GetSaveCopyFlag() < 0 && savingOther))
       toBuf->mSecNumber = 0;
   }
 
@@ -387,7 +390,7 @@ int EMbufferManager::SaveImageBuffer(KImageStore *inStore, bool skipCheck, int i
 
   toBuf->NegateSaveCopy();
   check = MainImBufIndex(toBuf);
-  if (mCopyOnSave > 0 && !mWinApp->Montaging() && !mWinApp->SavingOther() && check >= 0)
+  if (mCopyOnSave > 0 && !mWinApp->Montaging() && !savingOther && check >= 0)
     CopyImageBuffer(check, mCopyOnSave);
   mWinApp->UpdateBufferWindows();
   if (inStore->getLastIntTruncation() > mUnsignedTruncLimit && 

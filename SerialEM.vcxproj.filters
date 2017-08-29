@@ -119,9 +119,6 @@
     <ClInclude Include="FalconHelper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Utilities\FFT.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="FileOptions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -792,9 +789,6 @@
     <ClCompile Include="FalconHelper.cpp">
       <Filter>CSource Files</Filter>
     </ClCompile>
-    <ClCompile Include="Utilities\FFT.cpp">
-      <Filter>CSource Files</Filter>
-    </ClCompile>
     <ClCompile Include="FilePropDlg.cpp">
       <Filter>CSource Files</Filter>
     </ClCompile>
@@ -1033,6 +1027,12 @@
       <Filter>CSource Files</Filter>
     </ClCompile>
     <ClCompile Include="ThreeChoiceBox.cpp">
+      <Filter>CSource Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Shared\framealign.cpp">
+      <Filter>CSource Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Shared\frameutil.cpp">
       <Filter>CSource Files</Filter>
     </ClCompile>
   </ItemGroup>

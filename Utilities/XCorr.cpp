@@ -2,8 +2,7 @@
 //                          XCorr, Proc, or Stat generally.  This is the one
 //                          module that gets optimized for a debug build
 //
-// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2003-2017 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -12,13 +11,12 @@
 #include <math.h>
 #include <string.h>
 #include "XCorr.h"
-#include "FFT.h"
 #include "b3dutil.h"
 #include "mrcslice.h"
 #include "..\Shared\CorrectDefects.h"
-//#include "..\Shared\cfft.h"
 
 void SEMTrace(char key, char *fmt, ...);
+void PrintfToLog(char *fmt, ...);
 
 #pragma warning ( disable : 4244 )
 
@@ -29,18 +27,11 @@ void SEMTrace(char key, char *fmt, ...);
 
 #define DTOR 0.01745329252
 
-#ifndef _WIN64
-#define USE_FFTW
-#endif
-#ifdef USE_FFTW
+#if defined(USE_FFTW2) && !defined(_WIN64)
 #include "rfftw.h"
+#else
+#include "cfft.h"
 #endif
-
-/*static void FFTtodfft(float *array, int nx, int ny, int idir);
-static void FFTtodfft(float *array, int nx, int ny, int idir)
-{
-  todfft(array, &nx, &ny, &idir); 
-}*/
 
 static float amax(float x1, float x2)
 {
@@ -62,7 +53,7 @@ static int imin(int i1, int i2)
 // A generalized 2-D FFT routine with calling convention compatible with IMOD todfft
 void twoDfft(float *array, int *nxpad, int *nypad, int *dir)
 {
-#ifdef USE_FFTW
+#ifdef USE_FFTW2
   rfftwnd_plan plan;
   fftw_real dumreal;
   fftw_complex dumcomp;
@@ -75,14 +66,14 @@ void twoDfft(float *array, int *nxpad, int *nypad, int *dir)
   rfftwnd_destroy_plan(plan);
 
 #else
-  FFTtodfft(array, *nxpad, *nypad, *dir);
+  todfftc(array, *nxpad, *nypad, *dir);
 #endif
 }
 
 void XCorrCrossCorr(float *array, float *brray, int nxpad, int nypad, 
                     float deltap, float *ctfp, float *crray)
 {
-#ifdef USE_FFTW
+#ifdef USE_FFTW2
   rfftwnd_plan plan;
   fftw_real dumreal;
   fftw_complex dumcomp;
@@ -92,10 +83,10 @@ void XCorrCrossCorr(float *array, float *brray, int nxpad, int nypad,
   XCorrMeanZero(array, nxpad+2, nxpad, nypad);
   
   /* take forward transforms */
-#ifndef USE_FFTW
-  FFTtodfft(array, nxpad, nypad, 0);
+#ifndef USE_FFTW2
+  todfftc(array, nxpad, nypad, 0);
   if (array != brray)
-    FFTtodfft(brray, nxpad, nypad, 0);
+    todfftc(brray, nxpad, nypad, 0);
 #else
   plan = rfftw2d_create_plan(nypad, nxpad, FFTW_FORWARD, FFTW_IN_PLACE);
   rfftwnd_one_real_to_complex(plan, array, &dumcomp);
@@ -116,11 +107,11 @@ void XCorrCrossCorr(float *array, float *brray, int nxpad, int nypad,
   conjugateProduct(array, brray, nxpad, nypad);  
   
   
-#ifndef USE_FFTW
-  FFTtodfft(array, nxpad, nypad, 1);
+#ifndef USE_FFTW2
+  todfftc(array, nxpad, nypad, 1);
   if (crray) {
-    FFTtodfft(brray, nxpad, nypad, 1);
-    FFTtodfft(crray, nxpad, nypad, 1);
+    todfftc(brray, nxpad, nypad, 1);
+    todfftc(crray, nxpad, nypad, 1);
   }
 #else
   plan = rfftw2d_create_plan(nypad, nxpad, FFTW_BACKWARD, FFTW_IN_PLACE);
@@ -138,7 +129,7 @@ void XCorrRealCorr(float *array, float *brray, int nxpad, int nypad, int maxdist
 {
   double suma, tsuma, sumb, tsumb, meana, meanb, sumab, abar, bbar, corr;
      int dx, dy, jx, jy, xbase;
-#ifdef USE_FFTW
+#ifdef USE_FFTW2
      rfftwnd_plan plan;
      fftw_real dumreal;
      fftw_complex dumcomp;
@@ -146,8 +137,8 @@ void XCorrRealCorr(float *array, float *brray, int nxpad, int nypad, int maxdist
 
      /* filter one array if desired */
      if(deltap != 0.) {
-#ifndef USE_FFTW
-        FFTtodfft(brray, nxpad, nypad, 0);
+#ifndef USE_FFTW2
+        todfftc(brray, nxpad, nypad, 0);
 #else
     plan = rfftw2d_create_plan(nypad, nxpad, FFTW_FORWARD, FFTW_IN_PLACE);
     rfftwnd_one_real_to_complex(plan, brray, &dumcomp);
@@ -156,8 +147,8 @@ void XCorrRealCorr(float *array, float *brray, int nxpad, int nypad, int maxdist
 
     XCorrFilterPart(brray, brray, nxpad, nypad, ctfp, deltap);
 
-#ifndef USE_FFTW
-    FFTtodfft(brray, nxpad, nypad, 1);
+#ifndef USE_FFTW2
+    todfftc(brray, nxpad, nypad, 1);
 #else
     plan = rfftw2d_create_plan(nypad, nxpad, FFTW_BACKWARD, FFTW_IN_PLACE);
     rfftwnd_one_complex_to_real(plan, (fftw_complex *)brray, &dumreal);
@@ -214,7 +205,7 @@ void XCorrTripleCorr(float *array, float *brray, float *crray, int nxpad, int ny
 {
   float a, b, c, d;
   int jx, jp1;
-#ifdef USE_FFTW
+#ifdef USE_FFTW2
   rfftwnd_plan plan;
   fftw_real dumreal;
   fftw_complex dumcomp;
@@ -224,10 +215,10 @@ void XCorrTripleCorr(float *array, float *brray, float *crray, int nxpad, int ny
   XCorrMeanZero(brray, nxpad+2, nxpad, nypad);
   
   /* take forward transforms */
-#ifndef USE_FFTW
-  FFTtodfft(array, nxpad, nypad, 0);
-  FFTtodfft(brray, nxpad, nypad, 0);
-  FFTtodfft(crray, nxpad, nypad, 0);
+#ifndef USE_FFTW2
+  todfftc(array, nxpad, nypad, 0);
+  todfftc(brray, nxpad, nypad, 0);
+  todfftc(crray, nxpad, nypad, 0);
 #else
   plan = rfftw2d_create_plan(nypad, nxpad, FFTW_FORWARD, FFTW_IN_PLACE);
   rfftwnd_one_real_to_complex(plan, array, &dumcomp);
@@ -262,9 +253,9 @@ void XCorrTripleCorr(float *array, float *brray, float *crray, int nxpad, int ny
   
   /* take reverse transform */
   
-#ifndef USE_FFTW
-  FFTtodfft(array, nxpad, nypad, 1);
-  FFTtodfft(brray, nxpad, nypad, 1);
+#ifndef USE_FFTW2
+  todfftc(array, nxpad, nypad, 1);
+  todfftc(brray, nxpad, nypad, 1);
 #else
   plan = rfftw2d_create_plan(nypad, nxpad, FFTW_BACKWARD, FFTW_IN_PLACE);
   rfftwnd_one_complex_to_real(plan, (fftw_complex *)array, &dumreal);
@@ -277,7 +268,7 @@ void XCorrFilter(float *array, int nxin, int nyin, int nxpad, int nypad,
                  float delta, float *ctf)
 {
   float *inp, *outp = array;
-#ifdef USE_FFTW
+#ifdef USE_FFTW2
   rfftwnd_plan plan;
   fftw_real dumreal;
   fftw_complex dumcomp;
@@ -290,8 +281,8 @@ void XCorrFilter(float *array, int nxin, int nyin, int nxpad, int nypad,
     0, 0.);
 
   // Filter it laboriously
-#ifndef USE_FFTW
-  FFTtodfft(array, nxpad, nypad, 0);
+#ifndef USE_FFTW2
+  todfftc(array, nxpad, nypad, 0);
 #else
   plan = rfftw2d_create_plan(nypad, nxpad, FFTW_FORWARD, FFTW_IN_PLACE);
   rfftwnd_one_real_to_complex(plan, array, &dumcomp);
@@ -300,8 +291,8 @@ void XCorrFilter(float *array, int nxin, int nyin, int nxpad, int nypad,
 
   XCorrFilterPart(array, array, nxpad, nypad, ctf, delta);
 
-#ifndef USE_FFTW
-  FFTtodfft(array, nxpad, nypad, 1);
+#ifndef USE_FFTW2
+  todfftc(array, nxpad, nypad, 1);
 #else
   plan = rfftw2d_create_plan(nypad, nxpad, FFTW_BACKWARD, FFTW_IN_PLACE);
   rfftwnd_one_complex_to_real(plan, (fftw_complex *)array, &dumreal);
@@ -477,9 +468,11 @@ float XCorrOneInverseBin(void *array, int type, int nxin, int nyin, int ixofs, i
 
 int XCorrNiceFrame(int num, int idnum, int limit)
 {
-#ifdef USE_FFTW
   if (limit == 19)
+#ifdef USE_FFTW2
     limit = 13;
+#else
+     limit = niceFFTlimit();
 #endif
   int numin, numtmp, ifac;
   numin=2 * ((num + 1) / 2);
@@ -1466,16 +1459,18 @@ void ProcFFT(void *array, int type, int nx, int ny, int binning, float *fftarray
   double logScale = 5.;   // Higher numbers no longer make the background brighter
   void *data = array;
   int dataType = type;
+  int numThreads, maxThreads = 6;
   int nxTaper, nyTaper;
-#ifdef USE_FFTW
+#ifdef USE_FFTW2
      rfftwnd_plan plan;
      fftw_complex dumcomp;
 #endif
   double val, cenMax;  
   double scale, sum;
-  int i, ixbase, iyin, iyout;
+  int i, ixbase, iyin, iyout, iyinBase;
   short int *sdata, *sdata2;
   int cenLim;
+  double wallStart = wallTime();
 
   // Bin the array, replace data and dataType and sizes
   if (binning > 1) {
@@ -1491,15 +1486,19 @@ void ProcFFT(void *array, int type, int nx, int ny, int binning, float *fftarray
   nyTaper = ny * fracTaper;
   XCorrTaperInPad(data, dataType, nx, 0, nx - 1, 0, ny - 1, fftarray, nPadSize + 2,
     nPadSize, nPadSize, nxTaper, nyTaper);
+  //PrintfToLog("Taperpad time %.1f msec", (wallTime() - wallStart) * 1000.);
 
   // Take the FFT with chosen code
-#ifndef USE_FFTW
-    FFTtodfft(fftarray, nPadSize, nPadSize, 0);
+  wallStart = wallTime();
+#ifndef USE_FFTW2
+    todfftc(fftarray, nPadSize, nPadSize, 0);
 #else
   plan = rfftw2d_create_plan(nPadSize, nPadSize, FFTW_FORWARD, FFTW_IN_PLACE);
   rfftwnd_one_real_to_complex(plan, fftarray, &dumcomp);
   rfftwnd_destroy_plan(plan);
 #endif        
+  //PrintfToLog("Size %d  threads %d  time %.1f msec", nPadSize, numOMPthreads(16), (wallTime() - wallStart) * 1000.);
+  wallStart = wallTime();
 
   // Determine magnitudes around center, ignore 0,0
   cenMax = 0.;
@@ -1532,8 +1531,16 @@ void ProcFFT(void *array, int type, int nx, int ny, int binning, float *fftarray
 
   // Fill lower right of output array from top of FFT then wrap into bottom
   // of FFT to fill upper right
-  iyin = nPadSize / 2 + (nPadSize - nFinalSize) / 2;
+  // This switches to 2 threads at 1668, efficiency on 2-core system was 69% for 1584
+  numThreads = B3DNINT(0.0009 * nFinalSize);
+  B3DCLAMP(numThreads, 1, maxThreads);
+  numThreads = numOMPthreads(numThreads);
+  iyinBase = nPadSize / 2 + (nPadSize - nFinalSize) / 2;
+#pragma omp parallel for num_threads(numThreads) \
+  shared(nFinalSize, iyinBase, nPadSize, fftarray, brray, logScale) \
+  private(iyout, iyin, ixbase, sdata, i, val)
   for (iyout = 0; iyout < nFinalSize; iyout++) {
+    iyin = (iyout + iyinBase) % nPadSize;
     ixbase = iyin * (nPadSize + 2);
     sdata = brray + iyout * nFinalSize + nFinalSize / 2;
     for (i = ixbase; i < ixbase + nFinalSize; i += 2) {
@@ -1546,13 +1553,12 @@ void ProcFFT(void *array, int type, int nx, int ny, int binning, float *fftarray
     val = sqrt((double)(fftarray[i] * fftarray[i] + 
             fftarray[i + 1] * fftarray[i + 1]));
     brray[iyout * nFinalSize] = (int)(scale * log(logScale * val + 1.));
-
-    // Advance iyin and wrap when needed
-    iyin++;
-    iyin %= nPadSize;
   }
 
   // Mirror the lines in Y around the center
+#pragma omp parallel for num_threads(numThreads) \
+  shared(nFinalSize) \
+  private(iyout, iyin, sdata, sdata2, i)
   for (iyout = 0; iyout < nFinalSize; iyout++) {
     iyin = iyout ? nFinalSize - iyout : nFinalSize - 1;
     sdata = brray + iyin * nFinalSize + nFinalSize / 2 + 1;
@@ -1561,6 +1567,7 @@ void ProcFFT(void *array, int type, int nx, int ny, int binning, float *fftarray
       *sdata2-- = *sdata++;
   }
   brray[nFinalSize * nFinalSize / 2 + nFinalSize / 2] = 32000;
+  //PrintfToLog("Scale/mirror time %.1f msec", (wallTime() - wallStart) * 1000.);
 }
 
 double ProcFFTMagnitude(float *array, int nx, int ny, int ix, int iy)
@@ -1578,7 +1585,7 @@ void ProcRotAvFFT(void *array, int type, int nxdim, int ix0, int ix1, int iy0, i
   int nxTaper, nyTaper, i, ind, index, indf, ix, iy, nx, ny;
   double y, y2, x, scale = 1.;
   float delx, dely, delRing, s, fmag;
-#ifdef USE_FFTW
+#ifdef USE_FFTW2
   rfftwnd_plan plan;
   fftw_complex dumcomp;
 #endif
@@ -1594,8 +1601,8 @@ void ProcRotAvFFT(void *array, int type, int nxdim, int ix0, int ix1, int iy0, i
     nxpad, nypad, nxTaper, nyTaper);
 
   // Take the FFT with chosen code
-#ifndef USE_FFTW
-  FFTtodfft(fftarray, nxpad, nypad, 0);
+#ifndef USE_FFTW2
+  todfftc(fftarray, nxpad, nypad, 0);
 #else
   plan = rfftw2d_create_plan(nypad, nxpad, FFTW_FORWARD, FFTW_IN_PLACE);
   rfftwnd_one_real_to_complex(plan, fftarray, &dumcomp);

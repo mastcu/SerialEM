@@ -1,12 +1,44 @@
 SerialEM is currently developed in Visual Studio 2010 with the v90 (VS 2008)
 platform toolset, which is required for it to run under Windows 2000 and XP
-below SP3.
+below SP3.  To compile it with VS 2010, change the platform toolset to v100
+for each configuration being compiled.
 
-To compile it with VS 2010, change the platform toolset to v100 for each
-configuration being compiled.  To compile a 32-bit version without using FFTW
-(which cannot be used for free with SerialEM), open XCorr.cpp and comment out
-#define USE_FFTW, and edit the properties of FFT.cpp to include it in the
-build.
+There are 5 project configurations:
+Debug (Win 32 & x64)
+   A Debug build that will start in the top source directory and read
+   SerialEMsettings.txt there.
+Release (Win 32 & x64)
+   A Release build that will start in the top source directory and read
+   SerialEMsettings.txt there.
+JEOL Debug (Win 32 & x64)
+   A duplicate of the Debug build that will start in the subdirectory
+   settingsJeol and read SerialEMsettings.txt there.
+JEOL Release (Win 32 & x64)
+   A duplicate of the Release build that will start in the subdirectory
+   settingsJeol and read SerialEMsettings.txt there.
+NoHang (Win32 only; x64 properties are not maintained)
+   A Release build that compiles the MyFileDialog class in SerialEMDoc.cpp to
+   use the SDK file dialog instead of CFileDialog, which hangs on some Windows
+   2000 machines
+
+You must have the library collection SerialEMLibs in an adjacent directory, or
+change the project properties to access this repository elsewhere.  This
+collection includes libraries that you should not use unless you have a
+license for them.  Namely, libifft-MKL.lib and libifft-MKL-64.lib are import
+libraries for the corresponding DLLs in the binary SerialEM distributions,
+which incorporate Intel Math Kernel Library FFT routines from version 11.1 of
+the Intel compiler collection.  If you do not have a license for these, you
+should change the project configuration under Linker - Input as follows:
+  1) Remove "-MKL" from the entry for libifft in "Additional Dependencies".
+  2) Remove "-IOMP" from the entries there for libiimod and libcfshr.
+  3) Completely remove the entry there for libiomp5md.lib.
+  4) Remove "VCOMP;VCOMPD;" from "Ignore Specific Default Libraries".
+
+The collection also includes 32-bit version 2 of FFTW that was formerly used
+under a purchased license.  If you should happen to have a license for this,
+you could use it by removing libifft.lib, adding in FFTW2st.lib and
+RFFTW2st.lib, making the changes in steps 2-4 above, and defining USE_FFTW2 at
+least for the compilation of Xcorr.cpp.
 
 It can be compiled in VS 2013 by reading in the current solution file,
 allowing it to upgrade the project, and changing preprocessor definition

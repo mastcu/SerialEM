@@ -20,6 +20,7 @@
 #include "Utilities\XCorr.h"
 #include <map>
 #include "Shared\b3dutil.h"
+#include "framealign.h"
 
 enum {FIF_COMM_ERR = 1, FIF_NO_FILES, FIF_NO_NEW_FILES, FIF_OPEN_OLD, FIF_READ_ERR,
 FIF_BAD_SIZE, FIF_MEMORY, FIF_OPEN_NEW, FIF_MISMATCH, FIF_WRITE_ERR, FIF_REMOVE_ERR, 
@@ -46,6 +47,8 @@ static const char *errMess[] = {"Unspecified communication error",
 "The stack file and its backup already exist", 
 "Error renaming existing stack file to backup name"
 };
+
+static FrameAlign sFrameAli;
 
 CFalconHelper::CFalconHelper(void)
 {
@@ -203,6 +206,12 @@ int CFalconHelper::StackFrames(CString localPath, CString &directory, CString &r
   int ind, retval = 0;
   CFileStatus status;
   CString str;
+  float radius2[4], sigma2[4], sigma1 = 0.03f; 
+  float fullTaperFrac = 0.02f;
+  float trimFrac = fullTaperFrac;
+  float taperFrac = 0.1f;
+  float kFactor = 4.5f;
+  float maxMaxWeight = 0.1f;
   mDeletePrev = false;
   if (localPath.IsEmpty())
     localPath = directory;
@@ -239,6 +248,15 @@ int CFalconHelper::StackFrames(CString localPath, CString &directory, CString &r
     PrintfToLog("Stack file %s already exists; making it a backup by adding ~", 
       (LPCTSTR)str);
   }
+  radius2[0] = 0.06f;
+  sigma2[0] = 0.06f * 0.1f;
+  ind = sFrameAli.initialize(1, 2, trimFrac, 
+    7, 0, 0, 0, 0, mHeadNums[0],
+    mHeadNums[1], fullTaperFrac, taperFrac, 
+    4, 0., radius2, sigma1, 
+    sigma2, 1, 0, kFactor, maxMaxWeight, 0, mNumFiles, 0, 0);
+  if (ind)
+    PrintfToLog("Error return %d from fa.initialize", ind);
 
   // Start asynchronous looping on files
   mFileInd = 0;
@@ -345,6 +363,12 @@ void CFalconHelper::StackNextTask(int param)
 
   // Write the image
   if (!mStackError) {
+    ind = sFrameAli.nextFrame(outPtr, mDivideBy2 ? MRC_MODE_SHORT : MRC_MODE_USHORT,
+      NULL, 0, 0, NULL, 
+      0., NULL, 0,0, 
+      1, 0., 0.);
+    if (ind)
+      PrintfToLog("Error %d from fa.nextFrame", ind);
     if (mRotateFlip) {
       ProcRotateFlip((short *)mRotData, mDivideBy2 ? kSHORT : kUSHORT, mNx, mNy, 
         mRotateFlip, 0, outData, &ind, &val);
@@ -392,6 +416,23 @@ void CFalconHelper::StackNextTask(int param)
   if (mStackError == FIF_NO_MORE_FILES) {
     CleanupStacking();
     PrintfToLog("%d of %d frames were stacked successfully", mNumStacked, mNumFiles);
+    int err, bestFilt;
+    float resMean[5], smoothDist[5], rawDist[5], resSD[5], meanResMax[5];
+    float maxResMax[5], meanRawMax[5], maxRawMax[5], ringCorrs[26], frcDelta = 0.02f;
+    float refSigma = 0.01f;
+    float *aliSum = sFrameAli.getFullWorkArray();
+    float *xShifts = new float [mNumStacked + 10];
+    float *yShifts = new float [mNumStacked + 10];
+
+    err = sFrameAli.finishAlignAndSum(0.06f, refSigma, 0.1f,
+      0, 0, aliSum, xShifts, yShifts, xShifts, yShifts,
+      ringCorrs, frcDelta, bestFilt, smoothDist, rawDist,
+      resMean, resSD, meanResMax, maxResMax, meanRawMax, maxRawMax);
+    if (err)
+      PrintfToLog("Framealign failed to finish alignment (error %d)", err);
+    delete [] xShifts;
+    delete [] yShifts;
+    sFrameAli.cleanup();
   }
 }
 
