@@ -302,12 +302,10 @@ int EMbufferManager::SaveImageBuffer(KImageStore *inStore, bool skipCheck, int i
 
   // First time, set pixel in Angstroms, add a title with tilt axis rotation
   if (!inStore->getDepth()) {
-    if (inStore->getStoreType() != STORE_TYPE_IMOD && toBuf->mMagInd && toBuf->mBinning) {
-      cam = toBuf->mCamera >= 0 ? toBuf->mCamera : mWinApp->GetCurrentCamera();
-      mag = toBuf->mMagInd ? toBuf->mMagInd : mWinApp->mScope->FastMagIndex();
-      float pixel = mWinApp->mShiftManager->GetPixelSize(cam, mag);
-      inStore->SetPixelSpacing((float)(10000. * B3DMAX(1, toBuf->mBinning) * pixel));
-    }
+    cam = toBuf->mCamera >= 0 ? toBuf->mCamera : mWinApp->GetCurrentCamera();
+    mag = toBuf->mMagInd ? toBuf->mMagInd : mWinApp->mScope->FastMagIndex();
+    float pixel = mWinApp->mShiftManager->GetPixelSize(cam, mag);
+    inStore->SetPixelSpacing((float)(10000. * B3DMAX(1, toBuf->mBinning) * pixel));
 
     // 11/6/06: Removed 180 degree rotations for angles beyond 90!  Preserve true 
     // polarity. But 12/4/06: needed to subtract not add the 90 degrees to represent 
