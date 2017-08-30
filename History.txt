@@ -3,6 +3,13 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+8/28/17: Fixed SaveToOtherFile command to save specified, not active buffer.
+
+8/28/17: When an image that was already saved is saved to single/other file,
+retain the previous save information so that it can be made into a map.
+
+8/28/17: Started using Intel FFT routines.
+
 8/18/17: Fixed autofocus to apply change limits and absolute focus limits
 after first iteration instead of clearing them (In 3.6).
 
