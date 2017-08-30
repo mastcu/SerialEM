@@ -986,7 +986,7 @@ int CSerialEMDoc::SaveToOtherFile(int buffer, int fileType, int compression,
   // Save and restore buffer to save and copy on save
   int bufOld = mBufferManager->GetBufToSave();
   int copyOld = mBufferManager->GetCopyOnSave();
-  mBufferManager->SetBufToSave(-1);
+  mBufferManager->SetBufToSave(buffer);
   mBufferManager->SetCopyOnSave(0);
   mWinApp->SetSavingOther(true);
 
