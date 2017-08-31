@@ -274,6 +274,6 @@ void CBaseDlg::AdjustPanels(BOOL *states, int *idTable, int *leftTable, int *top
   EndDeferWindowPos(positions);
   wnd->GetWindowRect(rect);
   GetWindowRect(winRect);
-  SetWindowPos(NULL, 0, 0, mBasicWidth, rect.bottom + 8 - winRect.top, SWP_NOMOVE);
-
+  mSetToHeight = rect.bottom + 8 - winRect.top;
+  SetWindowPos(NULL, 0, 0, mBasicWidth, mSetToHeight, SWP_NOMOVE);
 }

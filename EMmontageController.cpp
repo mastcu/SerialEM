@@ -250,10 +250,10 @@ void EMmontageController::SetMontaging(BOOL inVal)
       mParam->magIndex >= mScope->GetLowestNonLMmag() &&
       (!mParam->moveStage  || CalNeededForISrealign(mParam)) &&
       !mParam->warnedCalOpen)
-      SEMMessageBox("The image shifts "
-      "for the selected magnification have not been calibrated in the last day.\n\n"
-        "You should do so (see Calibration menu) unless you are just doing "
-        "map or test montages.", MB_EXCLAME, false);
+      mWinApp->AppendToLog("WARNING: The image shifts "
+      "for the selected magnification have not been\r\n   calibrated in the last day."
+        "  You may want to do this calibration (see Calibration\r\n menu) "
+        "if image shift calibration is not very stable on your scope");
     mParam->warnedCalOpen = true;
     dlgState |= 1;  // Open the window
 

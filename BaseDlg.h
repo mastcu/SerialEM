@@ -67,6 +67,7 @@ protected:
   int mNumIDsToHide;
   int mSavedTopPos;
   int mIDToSaveTop;
+  int mSetToHeight;
 public:
   CButton m_butHelp;
   void ReplaceWindowText(CWnd * wnd, const char * fromText, CString toText);

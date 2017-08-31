@@ -1701,6 +1701,9 @@ BOOL CCameraSetupDlg::OnInitDialog()
   CButton *button = (CButton *)GetDlgItem(IDOK);
   button->SetFocus();
 
+  // Need to set the window size again because it comes up at last size otherwise
+  SetWindowPos(NULL, 0, 0, mBasicWidth, mSetToHeight, SWP_NOMOVE);
+
   return FALSE;  // return TRUE unless you set the focus to a control
                 // EXCEPTION: OCX Property Pages should return FALSE
 }
