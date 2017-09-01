@@ -164,9 +164,15 @@ void CBeamAssessor::CalIntensityCCD()
 
   // Wipe out all tables at this spot size and this side of crossover
   mFreeIndex = 0;
+  mNumExpectedCals = CountNonEmptyBeamCals();
   for (in = 0, out = 0; in < mNumTables; in++) {
-    if (mBeamTables[in].numIntensities && (mBeamTables[in].spotSize != mCalSpotSize ||
-      mBeamTables[in].aboveCross != aboveCross || mBeamTables[in].probeMode != probe)) {
+    if (!mBeamTables[in].numIntensities)
+      continue;
+    if (CheckCalForZeroIntensities(mBeamTables[in], "Before doing a beam calibration",
+      3)) {
+        mNumExpectedCals--;
+    } else if (mBeamTables[in].spotSize != mCalSpotSize ||
+      mBeamTables[in].aboveCross != aboveCross || mBeamTables[in].probeMode != probe) {
         SEMTrace('c', "Retaining table for spot %d  aboveCross %d  probeMode %d", 
           mBeamTables[in].spotSize, mBeamTables[in].aboveCross,mBeamTables[in].probeMode);
       mBeamTables[out] = mBeamTables[in];
@@ -184,9 +190,10 @@ void CBeamAssessor::CalIntensityCCD()
 
       mFreeIndex += mBeamTables[in].numIntensities;
       out++;
-    } else if (mBeamTables[in].numIntensities) {
+    } else {
       SEMTrace('c', "Deleting table for spot %d  aboveCross %d  probeMode %d", 
           mBeamTables[in].spotSize, mBeamTables[in].aboveCross,mBeamTables[in].probeMode);
+      mNumExpectedCals--;
     }
   }
   mNumTables = out;
@@ -494,18 +501,22 @@ void CBeamAssessor::CalIntensityCCDCleanup(int error)
     mWinApp->AppendToLog(report);
   }
 
+  mCalTable->numIntensities = mNumIntensities;
   if (mNumIntensities) {
     if (mCurrents[0] / mCurrents[mNumIntensities - 1] < 1.5) {
-      mNumIntensities = 0;
+      mCalTable->numIntensities = mNumIntensities = 0;
       mWinApp->AppendToLog("Beam intensity calibration too small to be usable",
         LOG_MESSAGE_IF_CLOSED);
     } else {
       report.Format("Beam intensity calibration completed, covering a %d-fold change in"
         " intensity", B3DNINT(mCurrents[0] / mCurrents[mNumIntensities - 1]));
       mWinApp->AppendToLog(report, LOG_MESSAGE_IF_CLOSED);
+      if (CheckCalForZeroIntensities(mBeamTables[mTableInd], 
+        "Right after running the calibration", 1)) {
+        mCalTable->numIntensities = mNumIntensities = 0;
 
       // For Titan, get the current aperture and scale all tables to it
-      if (mScope->GetUseIllumAreaForC2()) {
+      } else if (mScope->GetUseIllumAreaForC2()) {
         newAp = RequestApertureSize();
         if (newAp) {
           mCalTable->measuredAperture = newAp;
@@ -517,13 +528,28 @@ void CBeamAssessor::CalIntensityCCDCleanup(int error)
     }
   }
 
-  mCalTable->numIntensities = mNumIntensities;
   if (error)
     mWinApp->ErrorOccurred(error);
 
   // sort the table and take logs of currents
-  SortAndTakeLogs(mCalTable, true);
-  mFreeIndex += mNumIntensities;
+  if (mCalTable->numIntensities) {
+    SortAndTakeLogs(mCalTable, true);
+    if (CheckCalForZeroIntensities(mBeamTables[mTableInd], 
+      "After sorting the new calibration and taking logs", 2))
+      mCalTable->numIntensities = mNumIntensities = 0;
+  }
+  if (mCalTable->numIntensities)
+    mNumExpectedCals++;
+  newAp = CountNonEmptyBeamCals();
+  if (newAp != mNumExpectedCals) {
+    report.Format("After finishing or ending that beam calibration\r\n"
+      "  there are %d calibrations, while %d were expected.\r\n  Please report this "
+      "situation and the steps leading up to it to the SerialEM developer.", newAp, 
+      mNumExpectedCals);
+    AfxMessageBox(report, MB_EXCLAME);
+    mWinApp->AppendToLog("WARNING: " + report);
+  }
+  mFreeIndex += mCalTable->numIntensities;
   mScope->SetIntensity(mStartIntensity);
   mScope->SetMagIndex(mCalMagInd);
   if (!HitachiScope)
@@ -1869,6 +1895,7 @@ void CBeamAssessor::ScaleTablesForAperture(int currentAp, bool fromMeasured)
   BeamTable *btp;
   DoseTable *dtp;
   double cross;
+  CString mess;
   int i, j, spot, probe, fromAp = mCurrentAperture;
   mScope = mWinApp->mScope;
   CArray<HighFocusMagCal, HighFocusMagCal> *focusMagCals = 
@@ -1877,6 +1904,9 @@ void CBeamAssessor::ScaleTablesForAperture(int currentAp, bool fromMeasured)
   // Scale beam tables
   for (i = 0; i < mNumTables; i++) {
     btp = &mBeamTables[i];
+    if (btp->numIntensities && CheckCalForZeroIntensities(mBeamTables[i], 
+      "Before scaling for an aperture size", 2))
+      btp->numIntensities = 0;
     if (fromMeasured)
       fromAp = btp->measuredAperture;
     btp->crossover = mScope->IntensityAfterApertureChange(btp->crossover, fromAp,
@@ -1884,6 +1914,10 @@ void CBeamAssessor::ScaleTablesForAperture(int currentAp, bool fromMeasured)
     for (j = 0; j < btp->numIntensities; j++)
       btp->intensities[j] = mScope->IntensityAfterApertureChange(
         btp->intensities[j], fromAp, currentAp);
+    mess.Format("After scaling for an aperture size from %d to %d", fromAp, currentAp);
+    if (btp->numIntensities && CheckCalForZeroIntensities(mBeamTables[i], 
+      (LPCTSTR)mess, 1))
+      btp->numIntensities = 0;
   }
 
   // scale crossovers, electron doses, and spot tables
@@ -2093,4 +2127,50 @@ int CBeamAssessor::SetAndCheckSpotSize(int newSize, BOOL normalize)
     return 1;
   }
   return 0;
+}
+
+// Count up number of beam cals with entries in them
+int CBeamAssessor::CountNonEmptyBeamCals(void)
+{
+  int ind, num = 0;
+  for (ind = 0; ind < mNumTables; ind++)
+    if (mBeamTables[ind].numIntensities > 0)
+      num++;
+  return num;
+}
+
+// Check a beam calibration for all zero values and issue a message box and to log
+// Do not call this with an empty table unless you want the message to appear
+int CBeamAssessor::CheckCalForZeroIntensities(BeamTable &table, const char *message, 
+  int postMessType)
+{
+  CString str, str2;
+  int ind;
+  for (ind = 0; ind < table.numIntensities; ind++)
+    if (table.intensities[ind])
+      return 0;
+  str.Format("%s, the beam calibration table has all zero intensities\r\n"
+    "  for spot %d, starting mag %d, extrap flags %d", message, 
+    table.spotSize, table.magIndex, table.dontExtrapFlags);
+  if (table.aboveCross / 2 == 0) {
+    str2.Format(", aboveCross %d", table.aboveCross);
+    str += str2;
+  }
+  if (FEIscope)
+    str += (table.probeMode ? ", microprobe" : ", nanoprobe");
+  if (mWinApp->mScope->GetUseIllumAreaForC2()) {
+    str2.Format(", done with %d um aperture", table.measuredAperture);
+    str += str2;
+  }
+  if (postMessType == 1)
+    str += "\r\nPlease report this problem and the steps leading up to it to the "
+    "SerialEM developer";
+  if (postMessType == 2)
+    str += "\r\nTo eliminate this calibration from the file, turn on Administrator\r\n"
+    "  mode in the Calibration menu and save calibrations";
+  if (postMessType == 3)
+    str += "\r\nThis calibration will be removed when calibrations are saved again."
+  mWinApp->AppendToLog(str);
+  AfxMessageBox(str, MB_EXCLAME);
+  return 1;
 }

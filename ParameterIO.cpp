@@ -3140,6 +3140,9 @@ int CParameterIO::ReadCalibration(CString strFileName)
           retval = err;
           break;
         }
+        if (mWinApp->mBeamAssessor->CheckCalForZeroIntensities(beamTables[beamInd], 
+          "After reading in from the calibration file", 2))
+          beamTab->numIntensities = 0;
         mWinApp->mBeamAssessor->SortAndTakeLogs(beamTab, false);
 
       } else if (NAME_IS("BeamShiftCalibration")) {
@@ -3437,7 +3440,7 @@ void CParameterIO::WriteCalibration(CString strFileName)
   int indMicro[2] = {-1, -1}, indNano[2] = {-1, -1};
   CString string;
   int err = 0;
-  double cross[2], ratio[2], intensity[2];
+  double intScaled, cross[2], ratio[2], intensity[2];
   int curAperture = mWinApp->mBeamAssessor->GetCurrentAperture();
   int *crossCalAper = mWinApp->mBeamAssessor->GetCrossCalAperture();
   int *spotCalAper = mWinApp->mBeamAssessor->GetSpotCalAperture();
@@ -3599,6 +3602,9 @@ void CParameterIO::WriteCalibration(CString strFileName)
     // Write beam calibrations
     for (i = 0; i < mWinApp->mBeamAssessor->GetNumTables(); i++) {
       btp = &beamTables[i];
+      if (btp->numIntensities && mWinApp->mBeamAssessor->CheckCalForZeroIntensities(
+        beamTables[i], "Before saving to the calibration file", 0))
+        btp->numIntensities = 0;
       if (btp->numIntensities) {
         cross[0] = btp->crossover;
         if (cross[0])
@@ -3609,11 +3615,20 @@ void CParameterIO::WriteCalibration(CString strFileName)
           btp->spotSize, btp->dontExtrapFlags, cross[0],
           btp->measuredAperture, btp->probeMode, mMagTab[btp->magIndex].mag);
         mFile->WriteString(string);
+        nCal = 0;
         for (k = 0; k < btp->numIntensities; k++) {
-          string.Format("%f %f\n", btp->currents[k], 
-            mWinApp->mScope->IntensityAfterApertureChange(btp->intensities[k], 
-            curAperture, btp->measuredAperture));
+          intScaled = mWinApp->mScope->IntensityAfterApertureChange(btp->intensities[k], 
+            curAperture, btp->measuredAperture);
+          string.Format("%f %f\n", btp->currents[k], intScaled);
           mFile->WriteString(string);
+          if (intScaled)
+            nCal = 1;
+        }
+        if (!nCal) {
+          nCal = btp->numIntensities;
+          mWinApp->mBeamAssessor->CheckCalForZeroIntensities(beamTables[i], 
+            "After scaling back to the original aperture size and writing to file", 1);
+          btp->numIntensities = nCal;
         }
       }
     }

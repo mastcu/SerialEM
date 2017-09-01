@@ -206,6 +206,7 @@ class CBeamAssessor
   int mNumC2Apertures;    // List of available aperture sizes
   int mCrossCalAperture[2];  // Apertures at which crossover and spot size calibrated
   int mSpotCalAperture[4];
+  int mNumExpectedCals;   // Number of non-empty calibrations expected to exist
 
 public:
   void CalibrateCrossover(void);
@@ -224,6 +225,8 @@ public:
   void CalibrateAlphaBeamShifts(void);
   void CalibrateSpotBeamShifts(void);
   int SetAndCheckSpotSize(int newSize, BOOL normalize = FALSE);
+  int CountNonEmptyBeamCals(void);
+  int CheckCalForZeroIntensities(BeamTable &table, const char *message, int postMessType);
 };
 
 #endif // !defined(AFX_BEAMASSESSOR_H__67812E27_EF7F_4AFB_A706_766E3FEA19AA__INCLUDED_)
