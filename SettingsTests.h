@@ -122,6 +122,7 @@ BOOL_SETT_GETSET("RIuseCurrentLDparams", mWinApp->mNavHelper->, RIuseCurrentLDpa
 INT_SETT_GETSET("CameraDivide16BitBy2", camera->, DivideBy2)
 BOOL_SETT_GETSET("InterpolateDarkRefs", camera->, InterpDarkRefs)
 BOOL_SETT_GETSET("NoNormOfDSDoseFrac", camera->, NoNormOfDSdoseFrac)
+BOOL_SETT_GETSET("ComPathIsFramePath", camera->, ComPathIsFramePath)
 BOOL_SETT_GETSET("IgnoreHigherGainRefs", mWinApp->mGainRefMaker->, IgnoreHigherRefs)
 BOOL_SETT_GETSET("UseOlderBinned2Ref", mWinApp->mGainRefMaker->, UseOlderBinned2)
 INT_SETT_GETSET("DMgainRefAskPolicy", mWinApp->mGainRefMaker->, DMrefAskPolicy)

@@ -1293,6 +1293,7 @@
 #define IDC_ONLY_NON_SUPER              2312
 #define IDC_ONLY_SUPERRESOLUTION        2313
 #define IDC_ALIGN_SUBSET                2314
+#define IDC_RVIEWOFFSET                 2315
 #define IDC_STAT_SUBSET_TO              2317
 #define IDC_STAT_SUBSET_PAREN           2318
 #define IDC_STAT_USE_ONLY_GROUP         2319
@@ -1300,11 +1301,11 @@
 #define IDC_FA_EDIT_SUB_START           2321
 #define IDC_FA_EDIT_SUB_END             2322
 #define IDC_RSEARCH                     2323
-#define IDC_RVIEWOFFSET                 2315
 #define IDC_RVIEW_OFFSET                2324
 #define IDC_CHECK_USE_SEARCH_IN_LD      2325
 #define IDC_CHECK_USE_MONT_MAP_PARAMS   2326
 #define IDC_STAT_LINE2                  2327
+#define IDC_USE_FRAME_FOLDER            2328
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -1714,7 +1715,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        225
 #define _APS_NEXT_COMMAND_VALUE         33284
-#define _APS_NEXT_CONTROL_VALUE         2328
+#define _APS_NEXT_CONTROL_VALUE         2329
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

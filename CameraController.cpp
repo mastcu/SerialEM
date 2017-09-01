@@ -3112,10 +3112,12 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
   // Set up for align com file if one is needed
   if (aligning && conSet.useFrameAlign > 1) {
     if (aliComRoot)
-      aliComName = mAlignFramesComPath + "\\" + *aliComRoot + ".pcm";
+      aliComName = B3DCHOICE(mComPathIsFramePath, mFrameFolder, mAlignFramesComPath) + 
+      "\\" + *aliComRoot + ".pcm";
     else
-      aliComName.Format("%s\\%s.pcm", mAlignFramesComPath.IsEmpty() ? 
-        (LPCTSTR)mFrameFolder : (LPCTSTR)mAlignFramesComPath, (LPCTSTR)mFrameFilename);
+      aliComName.Format("%s\\%s.pcm", B3DCHOICE(mComPathIsFramePath || 
+      mAlignFramesComPath.IsEmpty(), (LPCTSTR)mFrameFolder, (LPCTSTR)mAlignFramesComPath),
+      (LPCTSTR)mFrameFilename);
     aliComLen = aliComName.GetLength() + 1;
     stringSize += aliComLen;
     alignFlags |= K2_MAKE_ALIGN_COM;

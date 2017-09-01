@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+8/31/17: Added option to save frame align com files to same folder as frames.
+
+8/31/17: Added checks for beam intensity calibrations with 0 intensities.
+
 8/29/17: SEM_3-7-12
 8/29/17: Fixed camera setup dialog opening at its last size (In 3.6).
 

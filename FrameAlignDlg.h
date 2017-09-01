@@ -163,4 +163,7 @@ public:
   afx_msg void OnKillfocusEditSubsetStart();
   afx_msg void OnKillfocusEditSubsetEnd();
   int CheckConditionsOnClose(int whereAlign, int curIndex, int & newIndex);
+  CButton m_butUseFrameFolder;
+  BOOL m_bUseFrameFolder;
+  afx_msg void OnUseFrameFolder();
 };

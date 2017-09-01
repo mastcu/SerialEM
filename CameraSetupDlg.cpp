@@ -2402,6 +2402,7 @@ void CCameraSetupDlg::OnButSetupAlign()
   BOOL *useGPU = mCamera->GetUseGPUforK2Align();
   dlg.mCurFiltInd = conSet->filterType;
   dlg.m_iWhereAlign = conSet->useFrameAlign;
+  dlg.m_bUseFrameFolder = mCamera->GetComPathIsFramePath();
   dlg.mCurParamInd = conSet->faParamSetInd;
   dlg.mGPUavailable = mCamera->GetGpuAvailable(DMind);
   dlg.mUseGpuTransfer[0] = useGPU[DMind];
@@ -2421,6 +2422,7 @@ void CCameraSetupDlg::OnButSetupAlign()
     useGPU[DMind] = dlg.mUseGpuTransfer[0];
     useGPU[2] = dlg.mUseGpuTransfer[1];
     mCamera->SetAlignWholeSeriesInIMOD(dlg.m_bWholeSeries);
+    mCamera->SetComPathIsFramePath(dlg.m_bUseFrameFolder);
   } else {
     B3DCLAMP(conSet->faParamSetInd, 0 , (int)faParams->GetSize() - 1);  
   }

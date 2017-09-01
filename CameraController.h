@@ -416,6 +416,7 @@ class DLL_IM_EX CCameraController
   GetSetMember(BOOL, NoNormOfDSdoseFrac);
   GetSetMember(float, K2MinStartupDelay);
   GetSetMember(CString, AlignFramesComPath);
+  GetSetMember(BOOL, ComPathIsFramePath);
   GetSetMember(BOOL, AlignWholeSeriesInIMOD);
   GetSetMember(CString, PathForFrames);
   SetMember(float, DarkMaxSDcrit);
@@ -717,6 +718,7 @@ class DLL_IM_EX CCameraController
   double mGpuMemory[2];         // GPU memory for K2 frame alignment, each channel
   BOOL mUseGPUforK2Align[3];    // Channel-specific flag to use GPU; third one for IMOD
   CString mAlignFramesComPath;  // Path where com files should be written
+  BOOL mComPathIsFramePath;     // Flag to put the com file in the frame folder
   BOOL mAlignWholeSeriesInIMOD;  // Flag to do IMOD alignment only for whole tilt series
   bool mGettingFRC;             // Flag that an FRC is being gotten
   int mTypeOfAlignError;         // -1 for no errors, 0 for unweighted, 1 for robust

@@ -24,7 +24,8 @@ static int idTable[] = {IDC_STAT_WHERE_ALIGN, IDC_USE_FRAME_ALIGN, IDC_RALIGN_IN
   IDC_STAT_MAX_SHIFT, IDC_EDIT_MAX_SHIFT, IDC_STAT_PIXEL_LABEL, IDC_FA_EDIT_SUB_START,
   IDC_SPIN_SMOOTH_CRIT, IDC_STAT_SMOOTH_LABEL, IDC_FA_EDIT_SUB_END, IDC_ONLY_IN_PLUGIN,
   IDC_ONLY_WITH_IMOD, IDC_ONLY_NON_SUPER, IDC_ONLY_SUPERRESOLUTION, IDC_BUTMORE,
-  IDC_STAT_USE_ONLY_GROUP, IDC_STAT_LINE1, IDC_STAT_MORE_PARAMS, PANEL_END,
+  IDC_STAT_USE_ONLY_GROUP, IDC_STAT_LINE1, IDC_STAT_MORE_PARAMS, IDC_USE_FRAME_FOLDER,
+  PANEL_END,
   IDC_REFINE_GROUPS, IDC_STAT_REFINE_CUTOFF, IDC_EDIT_REFINE_CUTOFF,
   IDC_EDIT_CUTOFF2, IDC_EDIT_CUTOFF3, IDC_HYBRID_SHIFTS, IDC_EDIT_SIGMA_RATIO,
   IDC_STAT_SIGMA_RATIO, IDC_STAT_STOP_ITER, IDC_EDIT_STOP_ITER, IDC_STAT_OTHER_CUTS,
@@ -72,6 +73,7 @@ CFrameAlignDlg::CFrameAlignDlg(CWnd* pParent /*=NULL*/)
   , m_bOnlyWithIMOD(FALSE)
   , m_bOnlyNonSuperRes(FALSE)
   , m_bOnlySuperRes(FALSE)
+  , m_bUseFrameFolder(FALSE)
 {
   mMoreParamsOpen = false;
 }
@@ -162,6 +164,8 @@ void CFrameAlignDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Check(pDX, IDC_ONLY_WITH_IMOD, m_bOnlyWithIMOD);
   DDX_Check(pDX, IDC_ONLY_NON_SUPER, m_bOnlyNonSuperRes);
   DDX_Check(pDX, IDC_ONLY_SUPERRESOLUTION, m_bOnlySuperRes);
+  DDX_Control(pDX, IDC_USE_FRAME_FOLDER, m_butUseFrameFolder);
+  DDX_Check(pDX, IDC_USE_FRAME_FOLDER, m_bUseFrameFolder);
 }
 
 
@@ -198,6 +202,7 @@ BEGIN_MESSAGE_MAP(CFrameAlignDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_ONLY_SUPERRESOLUTION, OnOnlySuperresolution)
   ON_EN_KILLFOCUS(IDC_FA_EDIT_SUB_START, OnKillfocusEditSubsetStart)
   ON_EN_KILLFOCUS(IDC_FA_EDIT_SUB_END, OnKillfocusEditSubsetEnd)
+  ON_BN_CLICKED(IDC_USE_FRAME_FOLDER, OnUseFrameFolder)
 END_MESSAGE_MAP()
 
 
@@ -354,7 +359,7 @@ void CFrameAlignDlg::ManagePanels(void)
   states[1] = m_iWhereAlign == 0;
   states[2] = m_iWhereAlign > 0;
   states[3] = states[2] && mMoreParamsOpen;
-  m_butSetFolder.EnableWindow(m_iWhereAlign == 2);
+  m_butSetFolder.EnableWindow(m_iWhereAlign == 2 && !m_bUseFrameFolder);
   m_butKeepPrecision.EnableWindow(m_iWhereAlign == 1 && mNewerK2API);
   m_butSaveFloatSums.EnableWindow(m_iWhereAlign == 2);
   m_butWholeSeries.EnableWindow(m_iWhereAlign == 2);
@@ -467,6 +472,13 @@ void CFrameAlignDlg::OnButSetFolder()
   if (dlg.DoModal() == IDOK)
 		mWinApp->mCamera->SetAlignFramesComPath(dlg.GetPath());
   m_butSetFolder.SetButtonStyle(BS_PUSHBUTTON);
+}
+
+
+void CFrameAlignDlg::OnUseFrameFolder()
+{
+  UpdateData(true);
+  m_butSetFolder.EnableWindow(m_iWhereAlign == 2 && !m_bUseFrameFolder);
 }
 
 void CFrameAlignDlg::OnTruncateAbove()

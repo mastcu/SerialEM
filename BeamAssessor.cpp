@@ -2169,7 +2169,7 @@ int CBeamAssessor::CheckCalForZeroIntensities(BeamTable &table, const char *mess
     str += "\r\nTo eliminate this calibration from the file, turn on Administrator\r\n"
     "  mode in the Calibration menu and save calibrations";
   if (postMessType == 3)
-    str += "\r\nThis calibration will be removed when calibrations are saved again."
+    str += "\r\nThis calibration will be removed when calibrations are saved again.";
   mWinApp->AppendToLog(str);
   AfxMessageBox(str, MB_EXCLAME);
   return 1;
