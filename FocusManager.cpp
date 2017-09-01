@@ -574,6 +574,18 @@ void CFocusManager::OnAutofocusListCalibrations()
       }
     }
   }
+  if (mWinApp->ScopeHasSTEM()) {
+    str = "";
+    if (mSFnormalizedSlope[0])
+      str = "\r\nSTEM autofocus is calibrated";
+    if (FEIscope) {
+      str += " in nanoprobe";
+      if (mSFnormalizedSlope[1])
+        str += "\r\nSTEM autofocus is calibrated in microprobe";
+    }
+    if (!str.IsEmpty())
+      mWinApp->AppendToLog(str);
+  }
 
   if (astigCal->GetSize()) {
     PrintfToLog("\r\nAstigmatism calibrations:\r\nMag  Index  Tilt  Defocus  %s", 
