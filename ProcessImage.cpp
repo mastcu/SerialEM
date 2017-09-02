@@ -992,7 +992,7 @@ int CProcessImage::FindBeamCenter(EMimageBuffer * imBuf, float & xcen, float & y
   meanVal = (float)ProcImageMean(data, type, sizeX, sizeY, ix0, ix1, iy0, iy1);
   outCrit = outFrac * meanVal;
   edgeCrit = edgeFrac * meanVal;
-  SEMTrace('1', "Centroid %.1f %.1f  mean %.0f", centX, centY, meanVal); 
+  SEMTrace('p', "Centroid %.1f %.1f  mean %.0f", centX, centY, meanVal); 
 
   // Get points along edge then determine if one quadrant or more and get edge centroid
   numPts = ProcFindCircleEdges(data, type, sizeX, sizeY, centX, centY, border, angleInc,
@@ -1025,7 +1025,7 @@ int CProcessImage::FindBeamCenter(EMimageBuffer * imBuf, float & xcen, float & y
 
   numQuadrant = (nquad1 ? 1:0) + (nquad2 ? 1:0) + (nquad3 ? 1:0) + (nquad4 ? 1:0);
   oneQuadrant = numQuadrant == 1;
-  SEMTrace('1', "# of points in quadrants 1 to 4: %d %d %d %d", nquad1, nquad2, 
+  SEMTrace('p', "# of points in quadrants 1 to 4: %d %d %d %d", nquad1, nquad2, 
     nquad3, nquad4);
 
   // If one quadrant, use the center point instead
@@ -1068,7 +1068,7 @@ int CProcessImage::FindBeamCenter(EMimageBuffer * imBuf, float & xcen, float & y
     // If that failed for points from more than one quadrant, give up
     if (failed3Pt && !oneQuadrant)
       return 5;
-    SEMTrace('1', "Three point fit radius %.1f  center %.1f  %.1f", radius, xcen, ycen);
+    SEMTrace('p', "Three point fit radius %.1f  center %.1f  %.1f", radius, xcen, ycen);
     if (numPts > 3 && !failed3Pt) {
 
       // Do full fit with initial weighting and then robust fitting with bisquare
@@ -1077,7 +1077,7 @@ int CProcessImage::FindBeamCenter(EMimageBuffer * imBuf, float & xcen, float & y
         xcenLast = xcen;
         ycenLast = ycen;
         fitSphereWgt(xx, yy, NULL, weight, numPts, &radius, &xcen, &ycen, &zcen,&rmsErr);
-        SEMTrace('1', "Amoeba fit to %d points, radius %.1f  center %.1f  %.1f   "
+        SEMTrace('p', "Amoeba fit to %d points, radius %.1f  center %.1f  %.1f   "
           "error %.2f", numPts, radius, xcen, ycen, rmsErr);
         if (fabs(xcen - xcenLast) < 0.1 && fabs(ycen - ycenLast) < 0.1)
           break;
@@ -1117,7 +1117,7 @@ int CProcessImage::FindBeamCenter(EMimageBuffer * imBuf, float & xcen, float & y
         edgeCenY, &radUse, &xcenUse, &ycenUse);
     if (failed)
       return 5;
-    SEMTrace('1', "Fit to edge center and corners gives minimal radius %.1f  center %.1f"
+    SEMTrace('p', "Fit to edge center and corners gives minimal radius %.1f  center %.1f"
       "  %.1f (arc %.1f)", radUse, xcenUse, ycenUse, arcLen);
     maxOutFrac = 0.1f;
     if (numPts < 3 || failed3Pt) {
@@ -1163,7 +1163,7 @@ int CProcessImage::FindBeamCenter(EMimageBuffer * imBuf, float & xcen, float & y
     fracUse = B3DMAX(fracUse, 1.f);
   else
     fracUse = B3DMIN(fracUse, 1.f);
-  SEMTrace('1', "Use fraction %.1f of shifts %.1f  %.1f", fracUse, delX, delY);
+  SEMTrace('p', "Use fraction %.1f of shifts %.1f  %.1f", fracUse, delX, delY);
 
   // The shift to do must be scaled up by the binning
   shiftX = (float)(binning * fracUse * delX);

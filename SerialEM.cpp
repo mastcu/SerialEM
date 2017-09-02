@@ -2409,6 +2409,7 @@ int SEMThreeChoiceBox(CString message, CString yesText, CString noText,
 //   l for low dose
 //   m to output all SEMMessageBox messages to log
 //   n for Navigator
+//   p for AlignWithScaling and FindBeamCenter output
 //   r for references
 //   s for STEM in general
 //   t for exposure time/intensity changes in tasks and continuous timing

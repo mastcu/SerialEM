@@ -460,7 +460,7 @@ int CMultiTSTasks::AlignWithScaling(int buffer, bool doImShift, float &scaleMax,
       scaleMax = scale;
     }
     if (CCCp) {
-      SEMTrace('1', "Scale %.3f  peak  %g  CCC %.4f  frac %.3f  shift %.1f %.1f", scale,
+      SEMTrace('p', "Scale %.3f  peak  %g  CCC %.4f  frac %.3f  shift %.1f %.1f", scale,
         usePeak, CCC, fracPix, shiftX, shiftY);
     } else {
       report.Format("Scale %.3f  peak  %g  shift %.1f %.1f", scale, peaks[ist], shiftX, 
@@ -486,7 +486,7 @@ int CMultiTSTasks::AlignWithScaling(int buffer, bool doImShift, float &scaleMax,
         scaleMax = scale;
       }
       if (CCCp) {
-        SEMTrace('1', "Scale %.3f  peak  %g  CCC %.4f  frac %.3f  shift %.1f %.1f", scale,
+        SEMTrace('p', "Scale %.3f  peak  %g  CCC %.4f  frac %.3f  shift %.1f %.1f", scale,
           peak, CCC, fracPix, shiftX, shiftY);
       } else {
         report.Format("Scale %.3f  peak  %g  shift %.1f %.1f", scale, peak, shiftX, 
