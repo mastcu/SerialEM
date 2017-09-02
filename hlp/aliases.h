@@ -240,6 +240,7 @@ hid_macro_run18									= SerialEM.chm::/html\menu_script.htm#hid_macro_run1
 hid_macro_run19									= SerialEM.chm::/html\menu_script.htm#hid_macro_run1
 hid_macro_run20									= SerialEM.chm::/html\menu_script.htm#hid_macro_run1
 hid_script_setindentsize				= SerialEM.chm::/html\menu_script.htm#hid_script_setindentsize
+hid_script_clearpersistentvars  = SerialEM.chm::/html\menu_script.htm#hid_script_clearpersistentvars
 hid_process_setintensity				= SerialEM.chm::/html\menu_tasks.htm#hid_process_setintensity
 hid_process_movebeam						= SerialEM.chm::/html\menu_tasks.htm#hid_process_movebeam
 hid_tasks_set_dose_rate					= SerialEM.chm::/html\menu_tasks.htm#hid_tasks_set_dose_rate

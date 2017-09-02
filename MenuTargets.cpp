@@ -869,7 +869,7 @@ void CMenuTargets::OnUpdateNavigatorRotatemap(CCmdUI *pCmdUI)
 
 void CMenuTargets::OnNavigatorAligntoitem()
 {
-  mWinApp->mNavigator->RealignToCurrentItem(true);
+  mWinApp->mNavigator->RealignToCurrentItem(true, 0., 0, 0);
 }
 
 void CMenuTargets::OnUpdateNavigatorAligntoitem(CCmdUI *pCmdUI)

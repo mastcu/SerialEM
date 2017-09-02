@@ -7,7 +7,7 @@
   TD { font-size:16 }
     .style1
       {
-        width: 109px;
+        width: 154px;
       }
       .style2
       {
@@ -22,7 +22,7 @@
       <TABLE BORDER cols="2">
         <TR VALIGN="top">
           <TD class="style1">Run</TD>
-          <TD class="style2">Open submenu for running scripts</TD>
+          <TD class="style2">Opens submenu for running scripts</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1">&nbsp;&nbsp;&nbsp;&nbsp; <A HREF="#hid_macro_run1">Run 1, 2, ...</A></TD>
@@ -46,7 +46,7 @@
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_macro_setlength">Set Height</A></TD>
-          <TD class="style2">Set the number of buttons and button height in the script toolbar.</TD>
+          <TD class="style2">Sets the number of buttons and button height in the script toolbar.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_macro_controls">Controls</A></TD>
@@ -58,19 +58,23 @@
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><a href="#hid_macro_readmany">Load Many</a></TD>
-          <TD class="style2">Loads all scripts in a file into their given script numbers</TD>
+          <TD class="style2">Loads all scripts in a file into their given script numbers.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><a href="#hid_macro_writeall">Save All</a></TD>
-          <TD class="style2">Saves all current scripts into a file</TD>
+          <TD class="style2">Saves all current scripts into a file.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><a href="#hid_macro_listfunctions">List Functions</a></TD>
-          <TD class="style2">Lists all functions defined in scripts</TD>
+          <TD class="style2">Lists all functions defined in scripts.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><a href="#hid_script_clearpersistentvars">Clear Persistent Vars</a></TD>
+          <TD class="style2">Clears all persistent variables defined by scripts.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_macro_verbose">Set Indent Size</A></TD>
-          <TD class="style2">Set number of spaces for automatic indenting in editor</TD>
+          <TD class="style2">Sets number of spaces for automatic indenting in editor.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_macro_verbose">Verbose</A></TD>
@@ -149,6 +153,10 @@
     <P>Use this command to get a list in the log window of all functions defined in 
       all scripts.&nbsp; The function name will be followed by the number of 
       arguments and 0 or 1 for whether it takes a string argument.</P>
+    <P><A NAME="hid_script_clearpersistentvars"></A><B>Clear Persistent Vars command (Script menu)</B></P>
+    <P>Use this command to clear all of the persistent variables that have been 
+      defined by previously run scripts.&nbsp; This will make a stopped script 
+      non-resumable.</P>
     <P><A NAME="hid_script_setindentsize"></A><B>Set Indent Size command (Script menu)</B></P>
     <p>Use this command to set the number of spaces that the script editor will use 
       for auto-indenting when Tab or ` (the back-tick character) is typed.&nbsp; This 

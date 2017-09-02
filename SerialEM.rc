@@ -397,6 +397,7 @@ BEGIN
         MENUITEM "&Load Many",                  ID_MACRO_READMANY
         MENUITEM "Save &All",                   ID_MACRO_WRITEALL
         MENUITEM "List &Functions",             ID_MACRO_LISTFUNCTIONS
+        MENUITEM "Clear &Persistent Vars",      ID_SCRIPT_CLEARPERSISTENTVARS
         MENUITEM "Set I&ndent Size",            ID_SCRIPT_SETINDENTSIZE
         MENUITEM "&Verbose",                    ID_MACRO_VERBOSE
     END
@@ -3299,6 +3300,8 @@ BEGIN
     ID_CAMERA_USERECORDFORMONTAGE 
                             "Do not show separate Montage Mapping parameter set"
     ID_CAMERA_SEARCH        "Acquire image with Search parameter set"
+    ID_SCRIPT_CLEARPERSISTENTVARS 
+                            "Clear out persistent variables defined in script processor"
 END
 
 STRINGTABLE

@@ -1707,6 +1707,7 @@
 #define ID_CAMERA_USEVIEWFORSEARCH      33280
 #define ID_CAMERA_USERECORDFORMONTAGE   33281
 #define ID_CAMERA_SEARCH                33282
+#define ID_SCRIPT_CLEARPERSISTENTVARS   33284
 
 // Next default values for new objects
 // 
@@ -1714,7 +1715,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        225
-#define _APS_NEXT_COMMAND_VALUE         33284
+#define _APS_NEXT_COMMAND_VALUE         33285
 #define _APS_NEXT_CONTROL_VALUE         2329
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
