@@ -354,6 +354,8 @@ BEGIN_MESSAGE_MAP(CMacroProcessor, CCmdTarget)
   ON_COMMAND(ID_MACRO_LISTFUNCTIONS, OnMacroListFunctions)
   ON_UPDATE_COMMAND_UI(ID_MACRO_LISTFUNCTIONS, OnUpdateMacroWriteAll)
   ON_COMMAND(ID_SCRIPT_SETINDENTSIZE, OnScriptSetIndentSize)
+  ON_COMMAND(ID_SCRIPT_CLEARPERSISTENTVARS, OnScriptClearPersistentVars)
+  ON_UPDATE_COMMAND_UI(ID_SCRIPT_CLEARPERSISTENTVARS, OnUpdateClearPersistentVars)
 END_MESSAGE_MAP()
 
 //////////////////////////////////////////////////////////////////////
@@ -495,6 +497,18 @@ void CMacroProcessor::OnMacroSetlength()
   mNumToolButtons = B3DMIN(MAX_MACROS, B3DMAX(5, num));
   if (mWinApp->mMacroToolbar)
     mWinApp->mMacroToolbar->SetLength(mNumToolButtons, mToolButHeight);
+}
+
+void CMacroProcessor::OnScriptClearPersistentVars()
+{
+  ClearVariables(VARTYPE_PERSIST);
+  mCurrentMacro = -1;
+  mWinApp->mCameraMacroTools.Update();
+}
+
+void CMacroProcessor::OnUpdateClearPersistentVars(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(!DoingMacro() && !mWinApp->DoingTasks());
 }
 
 void CMacroProcessor::OnScriptSetIndentSize()
@@ -4111,9 +4125,19 @@ void CMacroProcessor::NextCommand()
     if (itemEmpty[1])
       ABORT_LINE("Entry requires a number for whether to restore state: \n\n");
     index = itemInt[1];
+    bmax = 0.;
+    index2 = ix0 = 0;
+    if (!itemEmpty[3]) {
+      if (itemEmpty[5])
+        ABORT_LINE("Entry requires three values for controlling image shift reset in:"
+        "\n\n");
+      bmax = (float)itemDbl[3];
+      ix0 = itemInt[4];
+      ix1 = itemInt[5];
+    }
     if (!itemEmpty[2])
       navHelper->SetContinuousRealign(itemInt[2]);
-    if (navigator->RealignToCurrentItem(index != 0)) {
+    if (navigator->RealignToCurrentItem(index != 0, bmax, ix0, ix1)) {
       ABORT_NOLINE("Script halted due to failure to realign to item");
       navHelper->SetContinuousRealign(0);
     }
@@ -4125,9 +4149,19 @@ void CMacroProcessor::NextCommand()
       "state: \n\n");
     index = itemInt[1] - 1;
     index2 = itemInt[2];
+    bmax = 0.;
+    ix0 = ix1 = 0;
+    if (!itemEmpty[4]) {
+      if (itemEmpty[6])
+        ABORT_LINE("Entry requires three values for controlling image shift reset in:"
+        "\n\n");
+      bmax = (float)itemDbl[4];
+      ix0 = itemInt[5];
+      ix1 = itemInt[6];
+    }
     if (!itemEmpty[3])
       navHelper->SetContinuousRealign(itemInt[3]);
-    if (navigator->RealignToOtherItem(index, index2 != 0)) {
+    if (navigator->RealignToOtherItem(index, index2 != 0, bmax, ix0, ix1)) {
       ABORT_NOLINE("Script halted due to failure to realign to item");
       navHelper->SetContinuousRealign(0);
     }

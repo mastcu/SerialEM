@@ -32,7 +32,7 @@
 #include "Shared\autodoc.h"
 
 enum HelperTasks {TASK_FIRST_MOVE = 1, TASK_FIRST_SHOT, TASK_SECOND_MOVE, 
-TASK_SECOND_SHOT, TASK_FINAL_SHOT};
+TASK_SECOND_SHOT, TASK_FINAL_SHOT, TASK_RESET_IS, TASK_RESET_SHOT};
 
 CNavHelper::CNavHelper(void)
 {
@@ -488,7 +488,8 @@ int CNavHelper::DistAndPiecesForRealign(CMapDrawItem *item, float targetX, float
 
 
 // Realign to the coordinates in the given item by correlating with maps,
-int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState)
+int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState, 
+  float resetISalignCrit, int maxNumResetAlign, int leaveZeroIS)
 {
   int i, ix, iy, ind, axes, action; 
   CMapDrawItem *item;
@@ -516,6 +517,12 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState)
     mSecondRoundID = inItem->mMapID;
   SEMTrace('1', "(Initial) alignment to map %d (%s)", mRIitemInd, (LPCTSTR)item->mLabel);
 
+  // Use the passed-in values for resetting IS and leaving IS at 0 if no second round
+  mRIresetISCritForAlign = mSecondRoundID ? 0.f : resetISalignCrit;
+  mRIresetISmaxNumAlign = mSecondRoundID ? 0 : maxNumResetAlign;
+  mRIresetISleaveZero = mSecondRoundID ? 0 : leaveZeroIS;
+  mRIresetISnumDone = 0;
+  
   // Get access to map file again
   mMapMontP = &mMapMontParam;
   i = mNav->AccessMapFile(item, imageStore, mCurStoreInd, mMapMontP, useWidth, useHeight);
@@ -908,37 +915,38 @@ void CNavHelper::RealignNextTask(int param)
       mRInumRounds++;
 
       // If shift can be done with image shift, do that then go to second round
-      if (sqrt(stageDelX * stageDelX + stageDelY * stageDelY) < mRImaximumIS) {
-        bInv = MatMul(bMat, mShiftManager->CameraToIS(item->mMapMagInd));
+      if (sqrt(stageDelX * stageDelX + stageDelY * stageDelY) < mRImaximumIS && 
+        !(mRIresetISleaveZero > 0 || mRIresetISmaxNumAlign > 0)) {
+          bInv = MatMul(bMat, mShiftManager->CameraToIS(item->mMapMagInd));
 
-        // Subtract the local error which is assumed to be from stage moves
-        stageDelX -= mPrevLocalErrX;
-        stageDelY -= mPrevLocalErrY;
-        delISX = bInv.xpx * stageDelX + bInv.xpy * stageDelY;
-        delISY = bInv.ypx * stageDelX + bInv.ypy * stageDelY;
-        mScope->IncImageShift(delISX, delISY);
-        mShiftManager->SetISTimeOut(mShiftManager->GetLastISDelay());
-        report.Format("Aligning to target with image shift equivalent to stage shift:"
-          " %.2f %.2f", stageDelX, stageDelY);
-        mWinApp->AppendToLog(report, LOG_SWALLOW_IF_CLOSED);
+          // Subtract the local error which is assumed to be from stage moves
+          stageDelX -= mPrevLocalErrX;
+          stageDelY -= mPrevLocalErrY;
+          delISX = bInv.xpx * stageDelX + bInv.xpy * stageDelY;
+          delISY = bInv.ypx * stageDelX + bInv.ypy * stageDelY;
+          mScope->IncImageShift(delISX, delISY);
+          mShiftManager->SetISTimeOut(mShiftManager->GetLastISDelay());
+          report.Format("Aligning to target with image shift equivalent to stage shift:"
+            " %.2f %.2f", stageDelX, stageDelY);
+          mWinApp->AppendToLog(report, LOG_SWALLOW_IF_CLOSED);
 
-        // Shift the image as well (will need an override for debugging)
-        //mImBufs->mImage->getShifts(shiftX, shiftY);
-        bMat = mShiftManager->IStoCamera(item->mMapMagInd);
-        shiftX = -(float)((bMat.xpx * delISX + bMat.xpy * delISY) / mImBufs->mBinning);
-        shiftY = (float)((bMat.ypx * delISX + bMat.ypy * delISY) / mImBufs->mBinning);
-        mImBufs->mImage->setShifts(shiftX , shiftY);
-        mImBufs->SetImageChanged(1);
-        mNav->Redraw();
+          // Shift the image as well (will need an override for debugging)
+          //mImBufs->mImage->getShifts(shiftX, shiftY);
+          bMat = mShiftManager->IStoCamera(item->mMapMagInd);
+          shiftX = -(float)((bMat.xpx * delISX + bMat.xpy * delISY) / mImBufs->mBinning);
+          shiftY = (float)((bMat.ypx * delISX + bMat.ypy * delISY) / mImBufs->mBinning);
+          mImBufs->mImage->setShifts(shiftX , shiftY);
+          mImBufs->SetImageChanged(1);
+          mNav->Redraw();
 
-        // Revise error based on current position and original adjusted target position
-        mNav->GetAdjustedStagePos(stageX, stageY, shiftX);
-        mStageErrX = (stageX - B3DCHOICE(mRIstayingInLD, item->mNetViewShiftX, 
-          mRInetViewShiftX)) - (mRItargetX - mPreviousErrX);
-        mStageErrY = (stageY - B3DCHOICE(mRIstayingInLD, item->mNetViewShiftY, 
-          mRInetViewShiftY)) - (mRItargetY - mPreviousErrY);
-        StartSecondRound();
-        return;
+          // Revise error based on current position and original adjusted target position
+          mNav->GetAdjustedStagePos(stageX, stageY, shiftX);
+          mStageErrX = (stageX - B3DCHOICE(mRIstayingInLD, item->mNetViewShiftX, 
+            mRInetViewShiftX)) - (mRItargetX - mPreviousErrX);
+          mStageErrY = (stageY - B3DCHOICE(mRIstayingInLD, item->mNetViewShiftY, 
+            mRInetViewShiftY)) - (mRItargetY - mPreviousErrY);
+          StartSecondRound();
+          return;
       }
 
       // Otherwise first load images for aligning the next shot, get stage pos of center
@@ -961,7 +969,10 @@ void CNavHelper::RealignNextTask(int param)
       return;
 
     case TASK_SECOND_MOVE:
-      StartRealignCapture(mRIContinuousMode != 0, TASK_SECOND_SHOT);
+      if (mRIresetISleaveZero > 0 && mRIresetISmaxNumAlign <= 0) 
+        StartSecondRound();
+      else
+        StartRealignCapture(mRIContinuousMode != 0, TASK_SECOND_SHOT);
       return;
 
     case TASK_SECOND_SHOT:
@@ -1004,6 +1015,10 @@ void CNavHelper::RealignNextTask(int param)
       } else if (mRIskipCenErrorCrit > 0.) {
         mCenterSkipArray[mCenSkipIndex].timeStamp = mWinApp->MinuteTimeStamp();
       }
+      if (mRIresetISmaxNumAlign > 0) {
+        StartResetISorFinish(item->mMapMagInd);
+        return;
+      }
       StartSecondRound();
       return;
 
@@ -1030,8 +1045,46 @@ void CNavHelper::RealignNextTask(int param)
       mWinApp->AppendToLog(report, LOG_SWALLOW_IF_CLOSED);
       StopRealigning();
       return;
+
+      // After a reset, take an image if realign needed, or finish up
+    case TASK_RESET_IS:
+      mRIresetISnumDone++;
+      if (mRIresetISneedsAlign)
+        StartRealignCapture(mRIContinuousMode != 0, TASK_RESET_SHOT);
+      else
+        StartSecondRound();
+      return;
+
+      // Realign the shot after a reset, then do another operation or finish up
+    case TASK_RESET_SHOT:
+      mShiftManager->AutoAlign(1, 0);
+      StartResetISorFinish(item->mMapMagInd);
+      return;
   }
 }
+
+// Evaluate whether a realignment or just a reset IS is to be done and start a reset
+// in either case, or else finish up
+void CNavHelper::StartResetISorFinish(int magInd)
+{
+  double delISX, delISY;
+  float backlashX, backlashY;
+  mScope->GetLDCenteredShift(delISX, delISY);
+  delISX = mShiftManager->RadialShiftOnSpecimen(delISX, delISY, magInd);
+  mRIresetISneedsAlign = delISX >= mRIresetISCritForAlign && mRIresetISnumDone < 
+    mRIresetISmaxNumAlign;
+  if (mRIresetISneedsAlign || mRIresetISleaveZero > 0) {
+    SEMTrace('1', "Starting Reset IS%s, IS dist = %.2f", 
+      mRIresetISneedsAlign ? " and realign" : "", delISX);
+    mShiftManager->ResetImageShift(mScope->GetValidXYbacklash(delISX, delISY, backlashX,
+      backlashY), false);
+    mWinApp->AddIdleTask(TaskRealignBusy, TASK_NAV_REALIGN, TASK_RESET_IS, 0);
+    return;
+  }
+  SEMTrace('1', "Leaving final IS dist = %.2f", delISX); 
+  StartSecondRound();
+}
+
 
 // Load the image needed for second round alignment, rotate if needed, and compute 
 // expected shift for aligning
@@ -1079,6 +1132,13 @@ int CNavHelper::LoadForAlignAtTarget(CMapDrawItem *item)
     mWinApp->mMontageController->AdjustShiftInCenter(mMapMontP, mExpectedXshift,
     mExpectedYshift);
   return 0;
+}
+
+// This task is used for checking external operations still busy (just Reset IS so far)
+int CNavHelper::TaskRealignBusy(void)
+{
+  CSerialEMApp *winApp = (CSerialEMApp *)AfxGetApp();
+  return winApp->mShiftManager->ResettingIS() ? 1 : 0;
 }
 
 void CNavHelper::RealignCleanup(int error)

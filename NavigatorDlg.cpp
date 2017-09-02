@@ -820,27 +820,31 @@ int CNavigatorDlg::ChangeItemRegistration(int index, int newReg, CString &str)
 
 // Invokes the realign routine for the current item, or for the item being acquired
 // if a macro is being run at acquire points
-int CNavigatorDlg::RealignToCurrentItem(BOOL restore)
+int CNavigatorDlg::RealignToCurrentItem(BOOL restore, float resetISalignCrit, 
+    int maxNumResetAlign, int leaveZeroIS)
 {
   if (GetCurrentOrAcquireItem(mItem) < 0)
     return 1;
-  return RealignToAnItem(mItem, restore);
+  return RealignToAnItem(mItem, restore, resetISalignCrit, maxNumResetAlign, leaveZeroIS);
 }
 
 // Or, aligns to another item by index
-int CNavigatorDlg::RealignToOtherItem(int index, BOOL restore)
+int CNavigatorDlg::RealignToOtherItem(int index, BOOL restore, float resetISalignCrit, 
+    int maxNumResetAlign, int leaveZeroIS)
 {
   if (!GetOtherNavItem(index)) {
     AfxMessageBox("The Navigator item index is out of range", MB_EXCLAME);
     return 1;
   }
-  return RealignToAnItem(mItem, restore);
+  return RealignToAnItem(mItem, restore, resetISalignCrit, maxNumResetAlign, leaveZeroIS);
 }
 
 // The actual routine for calling the helper and giving error messages
-int CNavigatorDlg::RealignToAnItem(CMapDrawItem * item, BOOL restore)
+int CNavigatorDlg::RealignToAnItem(CMapDrawItem * item, BOOL restore, 
+  float resetISalignCrit, int maxNumResetAlign, int leaveZeroIS)
 {
-  int err = mHelper->RealignToItem(item, restore);
+  int err = mHelper->RealignToItem(item, restore, resetISalignCrit, maxNumResetAlign, 
+    leaveZeroIS);
   if (err && err < 4) 
     AfxMessageBox("An error occurred trying to access a map image file", MB_EXCLAME);
   if (err == 4 || err == 5) 
@@ -868,7 +872,7 @@ int CNavigatorDlg::MoveToItem(int index)
 void CNavigatorDlg::OnRealigntoitem()
 {
   mWinApp->RestoreViewFocus();
-  RealignToCurrentItem(true);
+  RealignToCurrentItem(true, 0., 0, 0);
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -7216,7 +7220,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
   // Run the realign routine; restore state for image or map or if flag set
   case ACQ_REALIGN:
     err = mHelper->RealignToItem(item, mParam->acqRestoreOnRealign || 
-      mParam->acquireType != ACQUIRE_RUN_MACRO);
+      mParam->acquireType != ACQUIRE_RUN_MACRO, 0., 0, 0);
     if (err && (err < 4 || err == 6)) {
       StopAcquiring();
       if (err < 4)

@@ -278,6 +278,8 @@ public:
   int ConvertArrayIndex(CString strItem, int leftInd, int rightInd, Variable * var, CString * errMess);
   static UINT RunInShellProc(LPVOID pParam);
   afx_msg void OnScriptSetIndentSize();
+  afx_msg void OnScriptClearPersistentVars();
+  afx_msg void OnUpdateClearPersistentVars(CCmdUI *pCmdUI);
 };
 
 #endif // !defined(AFX_MACROPROCESSOR_H__33178182_58A1_4F3A_B8F4_D41F94866517__INCLUDED_)

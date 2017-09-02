@@ -3,6 +3,11 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+9/1/17: Added optional entries to the RealignToNavItem command to reset image
+and realign until IS is below a threshold, and to leave IS at 0.
+
+9/1/17: Added script menu option to clear persistent variables.
+
 8/31/17: Added option to save frame align com files to same folder as frames.
 
 8/31/17: Added checks for beam intensity calibrations with 0 intensities.

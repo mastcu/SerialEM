@@ -1826,20 +1826,30 @@
             to the item whose index in the table is # (numbered from 1)</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">RealignToNavItem #r [#c]</TD>
+          <TD class="style12">RealignToNavItem #r [#c] [#s #n #z]</TD>
           <TD>Realign to the current Navigator item, or to the item that this script is being
             run on. For #r, enter 1 to restore the microscope state to the current state
             after the procedure, or 0 not to.&nbsp; For optional #c, enter 1 to use
             continuous acquisition mode and end it at end of procedure, or 2 to leave it
-            running if possible.</TD>
+            running if possible. The three optional entries #s, #n, #z control the resetting 
+            of image shift at the end of the procedure when aligning a single map at one 
+            magnification.&nbsp; It will reset image shift and move the stage to compensate, 
+            realigning with a new image up to #n times and if the starting shift is more 
+            than the criterion #s.&nbsp; Enter 0 or 1 for #z to end with nonzero or zero 
+            image shift, respectively, i.e. with the image realigned or with a final image 
+            shift reset and stage movement.&nbsp; This procedure occurs only if realignment 
+            is to a single map.&nbsp; All three values must be entered if any are, plus a 
+            value for #c.&nbsp; An entry of 0 for #n and 1 for #z will make it move the 
+            stage to the target position and skip the regular realignment there.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">RealignToOtherItem #i #r [#c]</TD>
+          <TD class="style12">RealignToOtherItem #i #r [#c] [#s #n #z]</TD>
           <TD>Realign to the Navigator item whose index in the table is #i, numbered from 1.
             For #r, enter 1 to restore the microscope state to the current state after the
             procedure, or 0 not to.&nbsp; For optional #c, enter 1 to use continuous
             acquisition mode and end it at end of procedure, or 2 to leave it running if
-            possible.</TD>
+            possible.&nbsp; Entries for #s, #n, and #z control image shift reset when 
+            aligning to a single map, as decribed for &#39;RealignToNavItem&#39;.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style12">ForceCenterRealign</TD>

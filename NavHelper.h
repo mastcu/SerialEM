@@ -26,7 +26,8 @@ class CNavHelper
 public:
   CNavHelper(void);
   ~CNavHelper(void);
-  int RealignToItem(CMapDrawItem * item, BOOL restoreState);
+  int RealignToItem(CMapDrawItem * item, BOOL restoreState, float resetISalignCrit, 
+    int maxNumResetAlign, int leaveZeroIS);
   float PointSegmentDistance(float ptX, float ptY, float x1, float y1, float x2, float y2);
   GetMember(int, Realigning)
   SetMember(float, RImaximumIS)
@@ -165,6 +166,11 @@ private:
   float mRIcalShiftY;
   int mRIconSetNum;
   bool mRIstayingInLD;
+  float mRIresetISCritForAlign; // Criterion for doing a reset shift - realign operation
+  int mRIresetISmaxNumAlign;    // Maximum times to do rest shift - realign
+  int mRIresetISleaveZero;      // Whether to leave IS at zero
+  int mRIresetISnumDone;        // Counter for number done
+  bool mRIresetISneedsAlign;    // Whether the reset needs an alignment after it
   LowDoseParams mRIsavedLDparam;
   float mRIareaDefocusChange;   // Change in defocus offset when staying in low dose
   float mRIdefocusChangeLimit;  // Maximum defocus change for it to stay in LD
@@ -282,5 +288,7 @@ public:
   int TransformExternalCoords(CMapDrawItem *item, int extType, 
      CMapDrawItem *mapItem, float &fx, float &fy, int &pieceDrawnOn);
   void CleanupFromExternalFileAccess();
+  static int TaskRealignBusy(void);
+  void StartResetISorFinish(int magInd);
 };
 
