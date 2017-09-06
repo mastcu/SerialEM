@@ -198,7 +198,7 @@ typedef bool (*PlugDoingFunc)(void);
 #define FRAME_FILE_MONTHDAY      (1 << 7)
 #define FRAME_FILE_HOUR_MIN_SEC  (1 << 8)
 #define FRAME_LABEL_IF_ACQUIRE   (1 << 9)
-#define FRAME_FILE_TILT_ANGLE    (10 << 10)
+#define FRAME_FILE_TILT_ANGLE    (1 << 10)
 
 // Definitions for Tietz errors
 #define TIETZ_NO_LOCK      1
