@@ -2412,7 +2412,7 @@ void CCameraSetupDlg::OnButSetupAlign()
   dlg.mEnableWhere = !(mCurrentSet == RECORD_CONSET && mStartedTS);
   dlg.mMoreParamsOpen = mWinApp->GetFrameAlignMoreOpen();
   dlg.m_bWholeSeries = mCamera->GetAlignWholeSeriesInIMOD();
-  dlg.mCameraSelected = mCurrentCamera;
+  dlg.mCameraSelected = mActiveCameraList[mCurrentCamera];
   dlg.mConSetSelected = mCurrentSet;
   dlg.mReadMode = m_iK2Mode;
   if (dlg.DoModal() == IDOK) {
