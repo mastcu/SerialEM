@@ -181,6 +181,7 @@ struct JeolParams;
 #define PLUGFEI_CAM_CAN_ALIGN     0x800
 #define PLUGFEI_INDEX_MASK        0xFF
 #define PLUGFEI_MAX_FRAC_SHIFT    16
+#define PLUGFEI_WAIT_FOR_FRAMES   1
 
 typedef _variant_t PLUGIN_BOOL;
 typedef void (*PlugStopFunc)(int);
@@ -788,6 +789,8 @@ afx_msg void OnUpdateShowScopeControlPanel(CCmdUI *pCmdUI);
 afx_msg void OnShowScopeControlPanel();
 void SetMaxDialogWidth(void);
 void CopyOptionalSetIfNeeded(int inSet, int inCam = -1);
+int GetBuildDayStamp(void);
+int GetIntegerVersion(void);
 };
 
 

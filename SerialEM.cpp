@@ -112,8 +112,9 @@ static int sNumTraceMsg = 0;
 static double sStartTime;
 static CString debugOutput = "";
 static DWORD appThreadID;
-static CString buildDate;
-static CString buildTime;
+static CString sBuildDate;
+static CString sBuildTime;
+static int sBuildDayStamp;
 
 CComModule _Module;
 
@@ -1260,6 +1261,19 @@ BOOL CSerialEMApp::InitInstance()
   SetActiveCameraNumber(iCam);
   mInitialCurrentCamera = mActiveCameraList[iCam];
 
+  // For Falcon 2, if align is ON without using framealign, turn it off
+  for (iAct = 0; iAct < mActiveCamListSize; iAct++) {
+    iCam = mActiveCameraList[iAct];
+    if (mCamParams[iCam].FEItype == FALCON2_TYPE) {
+      for (iSet = 0; iSet < NUMBER_OF_USER_CONSETS; iSet++) {
+        if (!mCamConSets[iCam][iSet].useFrameAlign && 
+          mCamConSets[iCam][iSet].alignFrames > 0)
+            mCamConSets[iCam][iSet].alignFrames = 0;
+      }
+    }
+  }
+  CopyConSets(mCurrentCamera);
+
   // Need to start update after cameras are initialized and active number set this way
   mScope->StartUpdate();
 
@@ -1345,12 +1359,27 @@ CString CSerialEMApp::GetStartupMessage()
   iCam = 64;
 #endif
   mStartupMessage.Format("%s %d-bit,  built %s  %s\r\n%s  %d/%d/%d  %02d:%02d:%02d",
-    VERSION_STRING, iCam, (LPCTSTR)buildDate, (LPCTSTR)buildTime,  
+    VERSION_STRING, iCam, (LPCTSTR)sBuildDate, (LPCTSTR)sBuildTime,  
     mStartingProgram ? "Started" : "Current date", ctdt.GetMonth(),
     ctdt.GetDay(), ctdt.GetYear(), ctdt.GetHour(), ctdt.GetMinute(), ctdt.GetSecond());
   return mStartupMessage;
 }
 
+// Return an integer of the form yyyymmdd
+int CSerialEMApp::GetBuildDayStamp(void)
+{
+  return sBuildDayStamp;
+}
+
+// Return the version in the form 10000 * generation + 100 * major + minor
+int CSerialEMApp::GetIntegerVersion(void)
+{
+  CString verStr = VERSION_STRING;
+  int major, minor, gen, start = verStr.Find("ion ") + 4;
+  verStr = verStr.Mid(start);
+  sscanf((LPCTSTR)verStr, "%d.%d.%d", &gen, &major, &minor);
+  return 10000 * gen + 100 * major + minor;
+}
 
 int CSerialEMApp::ExitInstance() 
 {
@@ -2313,8 +2342,9 @@ void SEMBuildTime(char *dateStr, char *timeStr)
   if (thisDate < latestDate) 
     return;
   latestDate = thisDate;
-  buildDate = dateStr;
-  buildTime = timeStr;
+  sBuildDate = dateStr;
+  sBuildTime = timeStr;
+  sBuildDayStamp = year * 10000 + month * 100 + day;
 }
 
 // Global function to get interval between two tick counts or from previous time to now
