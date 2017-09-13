@@ -126,9 +126,15 @@
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#DEdetails">For a Direct
           Electron direct detection camera</a>
         <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#FalconDetails">For a Falcon
-          camera that can save intermediate frames</a>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#FalconDetails">For a Falcon 2 camera that can save 
+        intermediate frames, under original scripting interface</a>
         <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#Falcon2NewDetails">For a Falcon 2 camera under the new advanced scripting interface</a>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#Falcon3Details">For a Falcon 3 camera</a>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#FalconGPU">To use a GPU for aligning Falcon frames in SerialEM</a>
+      <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#JeolCamera">For accessing
          a JEOL camera or STEM signals</a>
         <br>
@@ -1264,8 +1270,8 @@
         the chip during the pre-exposure and reduce its life accordingly.</li>
     </ul>
       <p>
-        <a name="FalconDetails"><i>For a Falcon camera with an FEI software version that allows saving of 
-        intermediate frames</i></a>: </p>
+        <a name="FalconDetails"><i>For a Falcon 2 camera that can save 
+        intermediate frames, under original scripting interface</i></a>: </p>
     <ul>
       <li>Add the general property &#39;FalconFrameConfigFile&#39; with 
         the full path and name of the XML configuration file that controls frame-saving.&nbsp; 
@@ -1274,10 +1280,13 @@
         that users can select network drives that the FEI software will not save to, add 
         the general property &#39;LocalFalconFramePath&#39; with a path for the initial saving 
         of the frames.</li>
-      <li>&nbsp; If the frames are not oriented the same as normal camera 
+      <li>If the frames are not oriented the same as normal camera 
         images, add the camera property &#39;RotationAndFlip&#39; with a value indicating the 
         operation that needs to be applied to the frames to make them match (e.g., 1 or 
-        3 for 90 degrees counterclockwise or clockwise).&nbsp; </li>
+        3 for 90 degrees counterclockwise or clockwise).&nbsp; If you find that the 
+        rotation takes too much time, you can leave this property out, but in that case 
+        you need the camera property &#39;AlignedSumRotFlip&#39; with the needed value so that 
+        the sum of frames aligned in SerialEM can be reoriented correctly.</li>
       <li>If the camera can save 
         more than 7 frames, add the general property &#39;MaxFalconFrames&#39; with the maximum 
         number that it can save.&nbsp;</li>
@@ -1297,6 +1306,60 @@
         FalconConfig.xml to change &#39;Mode_4&#39; to &#39;Mode_8&#39;. Try to take an image with 
         frame-saving in SerialEM.&nbsp; If it works, add the general property 
         &#39;SetModeInFalconConfig 1&#39;.</li>
+    </ul>
+      <p>
+        <a name="Falcon2NewDetails"><i>For a Falcon 2 camera under the new advanced scripting interface: </i></a>
+    </p>
+    <ul>
+      <li>If the frame rate is 17 FPS instead of 17.9 FPS, 
+        add the general property &#39;FalconReadoutInterval 0.058824&#39;.</li>
+      <li>If you select to do frame alignment in SerialEM and the aligned sum is not 
+        oriented the same as unaligned camera images, add the camera property 
+        &#39;RotationAndFlip&#39; with a value indicating the operation that needs to be applied 
+        to the aligned sum to make it match (e.g., 1 or 
+        3 for 90 degrees counterclockwise or clockwise).&nbsp; </li>
+      <li>If SerialEM is not running on the microscope computer, it will not be able to 
+        create command files for aligning frames with IMOD unless it has direct access 
+        to the microscope computer file system.&nbsp; To enable this option, add the 
+        general property &#39;LocalFalconFramePath&#39; with the path to the top directory in 
+        which Falcon frames are stored by the FEI software, as seen from the SerialEM 
+        computer.</li>
+    </ul>
+    <p>
+      <a name="Falcon3Details"><i>For a Falcon 3 camera:</i></p>
+    <ul>
+      <li>If the frame rate is not 40 FPS, 
+        add the general property &#39;FalconReadoutInterval&#39; with the inverse of the 
+        frame rate.</li>
+      <li>The options to do frame alignment in SerialEM or create command files for 
+        aligning frames with IMOD will not be available unless SerialEM has direct 
+        access to the storage server file system.&nbsp; To enable this option, add the 
+        general property &#39;LocalFalconFramePath&#39; with the path to the top directory in 
+        which Falcon frames are stored, as seen from the SerialEM computer (which might 
+        be the storage server).</li>
+      <li>If you select to do frame alignment in SerialEM and the aligned sum is not 
+        oriented the same as unaligned camera images, add the camera property 
+        &#39;RotationAndFlip&#39; with a value indicating the operation that needs to be applied 
+        to the aligned sum to make it match (e.g., 1 or 
+        3 for 90 degrees counterclockwise or clockwise).&nbsp; </li>
+
+    </ul>
+    <p>
+      <a name="FalconGPU"><i>To use a GPU for aligning frames in SerialEM with any of these Falcon 
+      configurations:</i></p>
+    <ul>
+      <li>The GPU currently works only with 64-bit SerialEM but could be available for 
+        32-bit SerialEM if there is enough need.</li>
+      <li>You need to have a CUDA-capable NVIDIA card and appropriate NVIDIA drivers 
+        installed.&nbsp; Even modest cards should be effective.</li>
+      <li>Copy FrameGPU.dll from the SerialEM package folder up into the main SerialEM 
+        folder where SerialEM.exe is located (C:\Program Files\SerialEM by default).</li>
+      <li>Download compatible CUDA runtime libraries (currently cudart64_41_28.dll and 
+        cufft64_41_28.dll) from the Tools folder on the SerialEM download site and place 
+        them in the same folder as FrameGPU.dll and SerialEM.exe.</li>
+      <li>If the property DebugOutput is set to 1, there will be a message on program 
+        startup about whether this GPU is available.&nbsp; If it is not, set DebugOutput 
+        to E for diagnostic output.</li>
     </ul>
       <p>
         <a name="JeolCamera"><i>For accessing a JEOL camera or STEM signals</i></a>, 

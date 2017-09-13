@@ -316,17 +316,33 @@
       on your selection of components, such as SerialEM output filename or tilt angle.</P>
     <P>&nbsp;</P>
     <P><i><A NAME="FalconControls"></A><B><FONT size="3">Controls for FEI Falcon Camera</FONT></B></i></P>
-    <P>When a Falcon camera is selected and the SerialEM property file contains an 
-      entry for the configuration file that FEI uses to specify intermediate frame-saving from the 
-      camera, a section at the bottom opens to allow control of frame-saving.&nbsp; 
-      With frame-saving selected, the FEI software writes the intermediate frames to a 
-      location specified in that file.&nbsp; SerialEM reads those files, converts them 
-      to a single MRC stack, and deletes the original frame files.&nbsp; Although the 
-      number of frames that can be saved is currently quite limited, it is possible to 
+    <P>Some aspects of these controls differ for different versions of the Falcon 
+      camera and the software interface to them.&nbsp; Originally, Falcon 2 was 
+      controlled through the standard microscope scripting interface; this will be 
+      referred to as &#39;Falcon 2, old interface&#39;.&nbsp; A new, advanced scripting 
+      interface was developed to allow control of the Falcon 3 camera, and this 
+      interface can be used with FEI software under Windows 7 to control the Falcon 2; 
+      this will be referred to as &#39;Falcon 2, new interface&#39;.</P>
+    <P>Under the old interface, when a Falcon 2 camera is selected and the SerialEM 
+      property file contains an entry for the configuration file that FEI uses to 
+      specify intermediate frame-saving from the camera, a section at the bottom opens 
+      to allow control of frame-saving.&nbsp; With frame-saving selected, the FEI 
+      software writes the intermediate frames to a location specified in that file.&nbsp; 
+      SerialEM reads those files, converts them to a single MRC stack and/or aligns 
+      the frames, and deletes the original frame files.&nbsp; Although the number of 
+      frames that could be saved was originally quite limited, it is possible to 
       use script commands to take multiple exposures whose frames are stacked into a 
       single MRC file.</P>
-    <P><b>Intermediate frame-saving is ON in FEI dialog</b></P>
-    <P>Frame-saving is enabled by a separate dialog that SerialEM cannot communicate 
+    <P>Under the new interface, frames are saved by FEI software into an MRC stack 
+      under a fixed location.&nbsp; If aligning of frames is selected to occur in 
+      SerialEM, the frames are read in by its microscope plugin or server, passed to 
+      SerialEM, and aligned there.&nbsp; If only aligning is selected without saving, 
+      SerialEM then deletes the frame stack.&nbsp; Some options will not be available 
+      if SerialEM does not have direct access to the frame storage location, however.&nbsp; 
+      See the help for the <a href="hidd_framealign.htm">Frame Alignment 
+      Parameters dialog</a> for details.</P>
+    <P><b>Intermediate frame-saving is ON in FEI dialog (old Falcon 2 only)</b></P>
+    <P>For Falcon 2, old interface, frame-saving is enabled by a separate dialog that SerialEM cannot communicate 
       with; however, there is another Falcon configuration file that SerialEM can 
       check to determine whether it is enabled, and on some systems, modifying this 
       file will enable it. There are thus 3 cases:</P>
@@ -353,15 +369,33 @@
       enabled, images will be gain-normalized 
       in FEI software instead of in SerialEM, since problems have been seen in images 
       gain-normalized in SerialEM when frame-saving is enabled.</p>
-    <P><b>Set Up Frames to Save</b></P>
-    <P>Press this button to open the <a href="#hidd_falcon_frames">Frame Summing Selector dialog</a>, which allows you to set how many frames are to be saved 
+    <P><b>Set Up Frames to Save (or Align)</b></P>
+    <P>Press this button to open the <a href="#hidd_falcon_frames">Frame Summing Selector dialog</a>, 
+      which allows you to set how many frames are to be created 
       from an exposure, as well as whether to skip some portion of camera readouts at 
       the beginning and end of the exposure.&nbsp; This dialog will open automatically 
-      when frame-saving is selected for a parameter set that has no previous 
-      information about how to save frames.&nbsp; Once this information is set up, it 
+      when frame-saving or aligning is selected for a parameter set that has no 
+      previous information about how to compose frames.&nbsp; Once this information is set up, it 
       may not be necessary to access this dialog often.&nbsp; When exposure time is 
       changed, the program will adjust the number of subframes summed into each frame 
-      so as to maintain the same number of frames saved, if possible. </P>
+      so as to maintain the same number of frames saved, if possible.</P>
+    <P>&nbsp;<b>Align Frames</b></P>
+    <P>Select this checkbox to have frames aligned in SerialEM, or by the Falcon 3 
+      processor, or to write a command file for aligning 
+      with the Alignframes program in IMOD.&nbsp; Press the <b>
+      Set Up</b> button to open the <a href="hidd_framealign.htm">Frame Alignment 
+      Parameters dialog</a> and choose the method and parameters for aligning. When 
+      frame alignment is selected, an indicator below this checkbox will show which 
+      method is selected: &#39;Align in Falcon Processor&#39;, &#39;Align in SerialEM&#39;, and either &#39;Align in IMOD&#39; 
+      or &#39;TS only in IMOD&#39; when the third method is chosen.&nbsp; In the 
+      latter two cases, frame saving will be activated automatically; the &#39;Save 
+      Frames&#39; checkbox will be disabled and shown as checked.&nbsp; When frame 
+      alignment is turned off or the option to align with IMOD is no longer selected, 
+      the &#39;Save Frames&#39; checkbox will revert to its original setting.</P>
+    <P>For a Falcon 3, if SerialEM does not have direct access to the storage server, 
+      only alignment by the Falcon processor is possible, and saving of frames must be 
+      selected to enable this checkbox.&nbsp; Other than that, saving and aliging can 
+      be selected independently.</P>
     <P><b>Save Frames</b></P>
     <P>Check this box to save frames for images takes with this parameter set.&nbsp; 
       The number of frames to be saved will appear in a text line.</P>
@@ -371,14 +405,21 @@
       frames are stacked and to put subsets of them into different folders 
       automatically.</P>
     <P><b>Set Folder</b></P>
-    <P>Press this button to open a directory chooser that allows you to specify where the 
+    <P>For Falcon 2, old interface, press this button to open a directory chooser that allows you to specify where the 
       stacked frames should be saved by SerialEM.&nbsp; The frame files written by FEI 
       software will go to this folder by default, but a property can be set to have 
       them written to a standard location that is accessible to the FEI software.&nbsp; 
       You can create a new directory in this chooser.&nbsp; If the directory specified 
-      here no longer exists when it is needed, the program will create it, but only if 
+      here no longer exists when it is needed, SerialEM will create it, but only if 
       its parent directory already exists.</P>
-    <P>&nbsp;</P>
+    <P>Under the new interface, the frame stack can be put into a subdirectory 
+      directly under the defined storage location, but not into deeper levels of 
+      folders.&nbsp; Thus, the button opens a simple text entry box that allows you to 
+      enter the name of the folder, which will be created by the storage server if 
+      necessary.&nbsp; Since only one level is allowed, you can specify a folder 
+      either here or in the&nbsp; <a href="hidd_k2_save_options.htm">Frame File 
+      Options dialog</a>, but not both.&nbsp; If you enter one here, the options to 
+      name subfolders will not be available in the other dialog.</P>
     <P><i><A NAME="STEMcontrols"></A><B><FONT size="3">Controls in STEM Mode</FONT></B></i></P>
 
     <p>
@@ -396,7 +437,7 @@
       whenever the image is being read out, this mode still presents an advantage 
       because SerialEM can process an image (e.g., for Live FFT) during the next scan.&nbsp; 
       For FEI STEM, <b>Continuous</b> just acquires single frames one after another, 
-      the same as for as CCD camera.</p>
+      the same as for a CCD camera.</p>
     <p>
       <b>Binning</b></p>
     <p>
@@ -416,7 +457,7 @@
       convenient than using Low Dose mode, if autofocusing needs a larger field of 
       view to work reliably while tracking does not.&nbsp; In any case, the nearest 
       available magnification is chosen for the Focus pictures.&nbsp; To see what the 
-      Focus pictures look like, check b&gt;Do for all Focus shots.</b></p>
+      Focus pictures look like, check <b>Do for all Focus shots.</b></p>
     <p>
       <b>Exposure time and Pixel time</b></p>
     <p>

@@ -24,24 +24,57 @@
 
     <p>
       This dialog allows you to set parameters to control alignment of frames taken 
-      from a K2 camera in Dose Fractionation mode.&nbsp; The alignment can be done in 
+      from a K2 camera in Dose Fractionation mode, or from a Falcon camera.&nbsp; </p>
+    <p>
+      With a K2 camera, the alignment can be done in 
       three different ways: with the native alignment procedures in DigitalMicrograph, 
       with the &#39;framealign&#39; module in SerialEM&#39;s plugin to DM, or 
       independently of SerialEM with the Alignframes 
       program in IMOD, which incorporates the same &#39;framealign&#39; module and thus uses 
-      the same parameters.&nbsp; In the latter case, all that the plugin does is write 
+      the same parameters.&nbsp; In the latter case, all that the plugin to DM does is write 
       a command file for running the alignment in IMOD after all of the frames have 
       been saved.&nbsp; The Framewatcher program in IMOD can be used to process these 
       command files as soon as they appear.</p>
-    <p class="style2">
-      Aligning in DigitalMicrograph</p>
     <p>
-      The alignment in DM has only one parameter, the filter that is used in the 
+      With a Falcon camera, the alignment can generally be done in two or three 
+      similar ways: with the FEI software that aligns frames from Falcon 3 camera, 
+      with the &#39;framealign&#39; module incorporated into SerialEM, or with the Alignframes 
+      program in IMOD.&nbsp; Again, in the latter case all that SerialEM does is write 
+      a command file.&nbsp; The availability of the different forms of alignment and 
+      how data are processed depends on the details of the system.&nbsp; Specifically:</p>
+    <ul>
+      <li>For Falcon 2 running through the standard scripting interface, FEI software 
+        writes the frames as raw files on the microscope computer.&nbsp; They are read 
+        by SerialEM&#39;s microscope plugin or server and sent to SerialEM to be aligned 
+        and/or stored in an MRC file.&nbsp; Both methods of alignment with &#39;framealign&#39; 
+        will always be available.</li>
+      <li>For Falcon 2 running through the advanced scripting interface, FEI software 
+        writes the frames as an MRC stack in a standard storage location on the 
+        microscope computer.&nbsp; Alignment by SerialEM will always be available 
+        because SerialEM&#39;s plugin or server can read them and send them to SerialEM.&nbsp; 
+        Writing a command file for alignment with IMOD is available only if SerialEM has 
+        direct access to the file system on the microscope computer.</li>
+      <li>For Falcon 3, FEI software writes the frames as an MRC stack on the storage 
+        server.&nbsp; This dialog, and alignment with &#39;framealign&#39; by either method, is 
+        available only if SerialEM has direct access to the file system on the storage 
+        server.</li>
+    </ul>
+    <p class="style2">
+      &nbsp;</p>
+    <p class="style2">
+      Aligning in DigitalMicrograph or FEI Software</p>
+    <p>
+      For a K2, the alignment in DM has only one parameter, the filter that is used in the 
       alignment procedure.&nbsp; The combo box should show the same set of filters 
       that are available in DM; if not, the SerialEMproperties file needs to be 
       modified to list the correct filters.</p>
+    <p>
+      For Falcon 3, alignment with the FEI software has no parameters but does require 
+      a certain minimum exposure time per frame.</p>
+    <p>
+      &nbsp;</p>
     <p class="style2">
-      Aligning in the SerialEMCCD Plugin</p>
+      Aligning in the SerialEMCCD Plugin or SerialEM</p>
     <p>
       Alignment with the &#39;framealign&#39; module has many more parameters.&nbsp; Virtually 
       all of the ones shown in this dialog correspond exactly to an Alignframes 
@@ -193,7 +226,7 @@ FRC crossings 0.5: 0.0335  0.25: 0.0468  0.125: 0.0898  is 0.1025 at 0.25/pix   
       frames needs aligning.&nbsp; Thus you can use refinement, smoothing, or multiple 
       filters routinely without worrying about whether they are actually helping.</p>
     <p>
-      Frames can be taken dark-subtracted in order to save efficiently in compressed 
+      K2 frames can be taken unnormalized in order to save efficiently in compressed 
       TIFF files.&nbsp; The command file will contain options to apply 
       gain-normalization, plus defect correction for GMS 2.31 and higher.</p>
     <p class="style1">
@@ -207,13 +240,16 @@ FRC crossings 0.5: 0.0335  0.25: 0.0468  0.125: 0.0898  is 0.1025 at 0.25/pix   
       <b>Use the GPU</b></p>
     <p>
       Select whether to use the GPU on an NVIDIA card for the frame alignment.&nbsp; 
-      This setting is kept track of separately for aligning in the plugin versus 
+      This setting is kept track of separately for aligning immediately versus 
       aligning in IMOD, because the latter could be done by any computer with access 
-      to the frame data.&nbsp; In fact, if there are two K2&#39;s, it is kept track of 
-      separately for each.&nbsp; When aligning in the plugin, the option should be 
+      to the frame data.&nbsp; In fact, if there are two K2&#39;s, or a K2 and a 
+      Falcon, it is kept track of 
+      separately for each camera.&nbsp; This option should be 
       enabled if NVIDIA drivers are installed, and the files FrameGPU.dll, 
-      cudart64_41_28.dll and cufft64_41_28.dll are in
-      C:\ProgramData\Gatan\Plugins along with the SEMCCD-GM2-64.dll plugin.</p>
+      cudart64_41_28.dll and cufft64_41_28.dll are in the correct location: 
+      specifically, for a K2 camera, in
+      C:\ProgramData\Gatan\Plugins along with the SEMCCD-GM2-64.dll plugin; and for a 
+      Falcon camera, in the same folder as the SerialEM executable.</p>
     <p>
       <b>Align only whole tilt series</b></p>
     <p>
@@ -288,7 +324,7 @@ FRC crossings 0.5: 0.0335  0.25: 0.0468  0.125: 0.0898  is 0.1025 at 0.25/pix   
     <p>
       The use of restrictions will work most conveniently if you have only one 
       parameter set for each kind of situation, each one marked with different 
-      restrictions.&nbsp; If have just the &quot;4K default set&quot; and &quot;8K default set&quot;, 
+      restrictions.&nbsp; For a K2, if you have just the &quot;4K default set&quot; and &quot;8K default set&quot;, 
       simply restrict each one to the respective size of frames, and the parameter set 
       will switch automatically when you switch between super-resolution and counting 
       mode.</p>
@@ -297,7 +333,7 @@ FRC crossings 0.5: 0.0335  0.25: 0.0468  0.125: 0.0898  is 0.1025 at 0.25/pix   
     <p>
       The parameters in the upper section are the ones most likely to need setting.</p>
     <p>
-      <b>Truncate values above n electrons</b></p>
+      <b>Truncate values above n electrons (K2 only)</b></p>
     <p>
       Select this option and set the number of electron counts to have values above 
       that number replaced by the local mean.&nbsp; This is the number of electrons 
@@ -373,8 +409,8 @@ FRC crossings 0.5: 0.0335  0.25: 0.0468  0.125: 0.0898  is 0.1025 at 0.25/pix   
       Select this checkbox to align only a subset of the frames being saved, then fill 
       in the starting and ending frames to align, numbered from 1.&nbsp; The option is 
       irrelevant when no frames are saved, because in that case a drift settling time 
-      can be set to discard initial frames after the exposure starts.&nbsp; When 
-      frames are being aligned in the plugin, the image returned to SerialEM will be a 
+      can be set for K2 to discard initial frames after the exposure starts.&nbsp; When 
+      frames are being aligned in the plugin to DM or in SerialEM, the image shown in SerialEM will be a 
       sum of only the aligned frames.&nbsp; When frames are aligned with IMOD, the 
       command file will contain the <i>-frames</i> option to Alignframes with the 
       given starting and ending frames.</p>
@@ -422,7 +458,7 @@ FRC crossings 0.5: 0.0335  0.25: 0.0468  0.125: 0.0898  is 0.1025 at 0.25/pix   
       done when using the '-vary' option in Alignframes, and the default ratio there 
       (1/7) is based on the ratio of default values for cutoff and falloff.</p>
     <p>
-      <b>Always process gain-normalized frames with full precision</b></p>
+      <b>Always process gain-normalized frames with full precision (K2 only)</b></p>
     <p>
       This option is available only when aligning in the plugin and only for GMS 2.31 
       or higher.&nbsp; It is only relevant there when acquiring a gain-normalized 
@@ -445,7 +481,7 @@ FRC crossings 0.5: 0.0335  0.25: 0.0468  0.125: 0.0898  is 0.1025 at 0.25/pix   
     <p>
       This option is available only when aligning in IMOD.&nbsp; Select the checkbox 
       to have aligned sums output as floating point instead of 2-byte integer, which 
-      will preserve a very small of precision in the sums.&nbsp; The regular scaling 
+      will preserve a very small amount of precision in the sums.&nbsp; The regular scaling 
       will still be applied to them in this case.</p>
 </BODY>
 </HTML>

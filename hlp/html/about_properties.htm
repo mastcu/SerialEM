@@ -761,11 +761,19 @@
         </TR>
         <TR VALIGN="top">
           <TD>LocalFalconFramePath</TD>
-          <TD>Path to directory where intermediate frames should always be written 
-            initially for Falcon 2 with old scripting interface.&nbsp; If this is not 
+          <TD><i>For Falcon 2 with old scripting interface</i>, path to directory where intermediate frames should always be written 
+            initially .&nbsp; If this is not 
             entered, frames will be written to whatever 
             folder is chosen by the user.&nbsp;&nbsp; A local path should be supplied if 
-            users can choose remote directories that FEI software will not write to.</TD>
+            users can choose remote directories that FEI software will not write to.&nbsp;
+            <i>For Falcon 2 with new interface or Falcon 3</i>, path to top directory where 
+            frames are written by the FEI software, as seen from the computer running 
+            SerialEM.&nbsp; For Falcon 2, this is needed to enable saving command files for 
+            aligning in IMOD, and only when SerialEM is not running on the microscope 
+            computer. For Falcon 3, it is needed regardless of where SerialEM is running to 
+            enable aligning of frames in SerialEM or IMOD. (If SerialEM is running on the 
+            Falcon 3 storage server, this entry would typically be&nbsp; 
+            &#39;C:\OffloadData\TemScripting\BM-Falcon&#39;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>FrameMdocForFalcon</TD>
