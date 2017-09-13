@@ -99,6 +99,8 @@ void CFalconHelper::Initialize(bool skipConfigs)
   mFrameAli->setPrintFunc(framePrintFunc);
   if (!mFrameAli->gpuAvailable(0, &mGpuMemory, GetDebugOutput('E') ? 1 : 0))
     mGpuMemory = 0;
+  else
+    SEMTrace('1', "GPU %s available for Falcon aligning", mGpuMemory ? "IS" : "IS NOT");
   configFile = mCamera->GetFalconFrameConfig();
   if (configFile.IsEmpty() || skipConfigs)
     return;
@@ -143,8 +145,9 @@ int CFalconHelper::CheckFalconConfig(int setState, int &state, const char *messa
   return error;
 }
 
-// Modify the configuration file to save the desired frames, or put out a dummy file
-// if no frame-saving is selected
+// Call the plugin/server to modify the configuration file to save the desired frames, or 
+// put out a dummy file if no frame-saving is selected, or just save the list of readouts
+// for advanced interface.  Also set up frame alignment
 int CFalconHelper::SetupConfigFile(ControlSet &conSet, CString localPath, 
   CString &directory, CString &filename, CString &configFile, BOOL stackingDeferred, 
   CameraParameters *camParams, long &numFrames)
@@ -226,8 +229,8 @@ int CFalconHelper::SetupConfigFile(ControlSet &conSet, CString localPath,
   return 0;
 }
 
-
-
+// Set up for frame alignment given the control set, camera parameters, gpu flags, and
+// expected number of frames
 int CFalconHelper::SetupFrameAlignment(ControlSet &conSet, CameraParameters *camParams, 
   float gpuMemory, int *useGPU, int numFrames)
 {
@@ -255,7 +258,6 @@ int CFalconHelper::SetupFrameAlignment(ControlSet &conSet, CameraParameters *cam
   if (conSet.useFrameAlign > 1)
     return 0;
 
-  SEMTrace('E', "Start Frame alignment inialization");
   // get param, size of images, and subset limits if any
   param = faParams->GetAt(conSet.faParamSetInd);
   nx = (conSet.right - conSet.left) / conSet.binning;
@@ -424,7 +426,7 @@ int CFalconHelper::StackFrames(CString localPath, CString &directory, CString &r
   return retval;
 }
 
-// Stack the next frame or finish up if none: param is > 0 for asynchronous stacking
+// Stack or align the next frame or finish up if none: param is > 0 for asynchronous stacking
 void CFalconHelper::StackNextTask(int param)
 {
   int ind, val;
@@ -436,12 +438,16 @@ void CFalconHelper::StackNextTask(int param)
   int rotateForSave = saving ? mRotateFlip : 0;
   int skipAlign = 0;
   mStackError = 0;
+
+  // Set variable if aligning subset and before or after it
   if (mUseFrameAlign && mAlignSubset && mFileInd < mAlignStart - 1)
     skipAlign = -1;
   if (mUseFrameAlign && mAlignSubset && mFileInd > mAlignEnd - 1)
     skipAlign = 1;
-
-  if (param && (mFileInd >= mNumFiles || (mDoingAdvancedFrames && skipAlign > 1) ||
+  
+  // Termination conditions if running asynchronously, including a possible external stop:
+  // out of files, past the subset for advanced frames, or aligning and stopped
+  if (param && (mFileInd >= mNumFiles || (mDoingAdvancedFrames && skipAlign > 0) ||
     (mUseFrameAlign && !mCamera->GetStartedFalconAlign()))) {
     CleanupAndFinishAlign(saving, param);
     return;
@@ -456,6 +462,8 @@ void CFalconHelper::StackNextTask(int param)
       NewArray(mRotData, short, mNx * mNy);
     mImage = new KImageShort((rotateForSave % 2) ? mNy : mNx,
       (rotateForSave % 2) ? mNx : mNy);
+
+    // It seems that advance interface returns signed only
     if (!mDivideBy2 && !mDoingAdvancedFrames)
       mImage->setType(kUSHORT);
     mUseImage2 = 0;
@@ -600,7 +608,9 @@ void CFalconHelper::StackNextTask(int param)
     CleanupAndFinishAlign(saving, param);
 }
 
-
+// Cleanup at the end of any operations, finish the alignment if doing it and put result
+// into saved array for image buffer, call for display of that, give summary line,
+// write a com file now if more than one frame was stacked
 void CFalconHelper::CleanupAndFinishAlign(bool saving, int async)
 {
   CString comPath;
@@ -631,6 +641,7 @@ void CFalconHelper::CleanupAndFinishAlign(bool saving, int async)
       SEMCCDErrorMessage(err));
 }
 
+// Get the summed image, results and possibly FRC back from frame alignment,
 void CFalconHelper::FinishFrameAlignment(void)
 {
   CArray<FrameAliParams, FrameAliParams> *faParams = 
@@ -687,6 +698,8 @@ void CFalconHelper::FinishFrameAlignment(void)
         usAliSum[ind] = (unsigned short)val;
       }
     }
+
+    // If rotating, that last operation was done in place and now rotate into array
     if (mAliSumRotFlip)
       ProcRotateFlip(sAliSum, mDivideBy2 ? kSHORT : kUSHORT, mNx, mNy, 
         mAliSumRotFlip, 0, mCamTD->Array[0], &ind, &val);
