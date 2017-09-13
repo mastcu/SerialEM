@@ -1,5 +1,7 @@
 #ifndef SEMUTILITIES_H
 #define SEMUTILITIES_H
+struct FrameAliParams;
+#include <string>
 
 #define RELEASE_RETURN_ON_ERR(a, b) if (a) { AdocReleaseMutex() ; return b;}
 
@@ -20,6 +22,10 @@ void UtilRemoveFile(CString filename);
 int UtilRenameFile(CString fromName, CString toName, const char *message = NULL);
 void UtilSplitExtension(CString filename, CString &root, CString &ext);
 void UtilSplitPath(CString fullPath, CString &directory, CString &filename);
+int UtilRelativePath(std::string fromDir, std::string toDir, std::string &relPath);
+int UtilStandardizePath(std::string &dir);
+int UtilRelativePath(CString fromDir, CString toDir, CString &relPath);
+int UtilStandardizePath(CString &dir);
 void UtilAppendWithSeparator(CString &filename, CString toAdd, const char* sep);
 void UtilBalancedGroupLimits(int numTotal, int numGroups, int groupInd, int &start, 
                          int &end);
@@ -41,6 +47,10 @@ float UtilTotalMemoryNeeds(float fullPadSize, float sumPadSize, float alignPadSi
                        bool &sumInOnePass);
 void UtilGetPadSizesBytes(int nx, int ny, float fullTaperFrac, int sumBin, int alignBin,
                       float &fullPadSize, float &sumPadSize, float &alignPadSize);
+float UtilEvaluateGpuCapability(int nx, int ny, int sumBinning, 
+  FrameAliParams &faParam, int numAllVsAll, int numAliFrames, int refineIter, 
+  int groupSize, int numFilt, int doSpline, double gpuMemory, double maxMemory, 
+  int &gpuFlags, int &deferGpuSum, bool &gettingFRC);
 int AdocGetMutexSetCurrent(int index);
 void AdocReleaseMutex();
 BOOL AdocAcquireMutex();
@@ -55,4 +65,5 @@ bool UtilCamRadiosNeedSmallFont(CButton *radio);
 double UtilGoodAngle(double angle);
 int UtilFindValidFrameAliParams(int readMode, int whereAlign, int curIndex, int &newIndex,
   CString *message);
+int UtilWriteTextFile(CString fileName, CString text);
 #endif

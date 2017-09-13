@@ -282,6 +282,97 @@ void UtilSplitPath(CString fullPath, CString &directory, CString &filename)
     filename = fullPath.Right(fullPath.GetLength() - index - 1);
   }
 }
+// Returns a relative path from fromDIR to toDir in relPath, returns 1 if no possible
+int UtilRelativePath(std::string fromDir, std::string toDir, std::string &relPath)
+{
+  int ind, fromLen, toLen, findInd;
+  fromLen = UtilStandardizePath(fromDir);
+  toLen = UtilStandardizePath(toDir);
+
+  // Find first non-matching character
+  for (ind = 0; ind < B3DMIN(fromLen, toLen); ind++)
+    if (fromDir[ind] != toDir[ind])
+      break;
+  if (!ind)
+    return 1;
+
+  // Switch to index of last match
+  ind--;
+
+  // If both at a /, back up
+  if (fromDir[ind] == '/' && toDir[ind] == '/') {
+    ind--;
+
+    // For windows, do not allow a starting /
+    if (ind < 0)
+      return 1;
+
+    // if both are either at the end or followed by a /, it is at a directory, but
+    // but otherwise need to back up to previous /
+  } else if (!((ind == fromLen - 1 || fromDir[ind + 1] == '/') &&
+               (ind == toLen - 1 || toDir[ind + 1] == '/'))) {
+    ind = (int)fromDir.find_last_of('/', ind);
+
+    // The ind == 0 is specific to Windows to require drive letter at start
+    if (ind == std::string::npos || ind == 0)
+      return 1;
+    ind--;
+  }
+
+  // return blank path if strings match to ends
+  relPath.clear();
+  if (ind == fromLen - 1 && ind == toLen - 1)
+    return 0;
+
+  // Start with a ../ for each directory after the match in the FROM directory
+  findInd = fromLen - 1;
+  while (findInd > ind + 1) {
+    relPath = relPath + "../";
+    findInd = (int)fromDir.find_last_of('/', findInd);
+    if (findInd == std::string::npos || findInd <= ind + 1)
+      break;
+    findInd--;
+  }
+
+  // Then add the path from the match to the end in the TO directory
+  if (ind < toLen - 2)
+    relPath += toDir.substr(ind + 2) + "/";
+  return 0;
+}
+
+int UtilRelativePath(CString fromDir, CString toDir, CString &relPath)
+{ int err;
+  std::string relStr, fromStr = (LPCTSTR)fromDir;
+  std::string toStr = (LPCTSTR)toDir;
+  err = UtilRelativePath(fromStr, toStr, relStr);
+  relPath = relStr.c_str();
+  return err;
+}
+
+// change \ to /, remove //, and remove trailing /, and return final length
+int UtilStandardizePath(std::string &dir)
+{
+  size_t ind;
+  while ((ind = dir.find('\\')) != std::string::npos)
+    dir = dir.replace(ind, 1, "/");
+  while ((ind = dir.find("//")) != std::string::npos)
+    dir = dir.replace(ind, 2, "/");
+  ind = dir.length();
+  if (ind > 0 && dir[ind - 1] == '/') {
+    dir.resize(ind - 1);
+    ind--;
+  }
+  return (int)ind;
+}
+
+int UtilStandardizePath(CString &dir)
+{
+  int ind;
+  std::string str = (LPCTSTR)dir;
+  ind = UtilStandardizePath(str);
+  dir = str.c_str();
+  return ind;
+}
 
 // Append a component to a string with the given separator if the string is not empty
 void UtilAppendWithSeparator(CString &filename, CString toAdd, const char *sep)
@@ -558,6 +649,82 @@ float UtilTotalMemoryNeeds(float fullPadSize, float sumPadSize, float alignPadSi
   return memTot;
 }
 
+// NOT from alignframes, code needed for K2/Falcon
+float UtilEvaluateGpuCapability(int nx, int ny, int sumBinning,  
+  FrameAliParams &faParam, int numAllVsAll, int numAliFrames, int refineIter, 
+  int groupSize, int numFilt, int doSpline, double gpuMemory, double maxMemory, 
+  int &gpuFlags, int &deferGpuSum, bool &gettingFRC)
+{
+  float fullPadSize, sumPadSize, alignPadSize;
+  float needForGpuSum, needForGpuAli;
+  float gpuUnusable = 3.5e8;
+  float totAliMem = 0., needed = 0., gpuUsableMem, gpuFracMem = 0.85f;
+  float fullTaperFrac = 0.02f;
+  bool bdum, sumWithAlign;
+
+  // Get memory for components then evaluate the GPU needs
+  UtilGetPadSizesBytes(nx, ny, fullTaperFrac, sumBinning, faParam.aliBinning, 
+    fullPadSize, sumPadSize, alignPadSize);
+  gettingFRC = sWinApp->mCamera->GetNumFrameAliLogLines() > 2;
+
+  if (gpuMemory > 0) {
+    UtilGpuMemoryNeeds(fullPadSize, sumPadSize, alignPadSize, numAllVsAll, numAliFrames,
+      refineIter, groupSize, needForGpuSum, needForGpuAli);
+    gpuUnusable = B3DMAX(gpuUnusable, (float)gpuMemory * (1.f - gpuFracMem));
+    gpuUsableMem = (float)gpuMemory - gpuUnusable;
+    sumWithAlign = (faParam.hybridShifts || numFilt == 1) && !doSpline && !refineIter;
+
+    // Summing is top priority
+    if (needForGpuSum < gpuUsableMem) {
+      needed = needForGpuSum;
+      gpuFlags = GPU_FOR_SUMMING;
+    } else {
+      PrintfToLog("Insufficient memory on GPU to use it for summing (%.0f MB needed "
+        "of %.0f MB total)\n", needForGpuSum / 1.048e6, gpuMemory / 1.048e6);
+    }
+
+    // If summing is supposed to be done with align and alignment would fit but both
+    // would not, get total memory needs and make sure THAT fits
+    if (sumWithAlign && needForGpuAli < gpuUsableMem && needForGpuAli + needed >
+      gpuUsableMem) {
+        totAliMem =  UtilTotalMemoryNeeds(fullPadSize, sumPadSize, alignPadSize, 
+          numAllVsAll, numAliFrames, refineIter, 1, numFilt, faParam.hybridShifts, 
+          groupSize, doSpline, GPU_FOR_ALIGNING, 1, 0, -1, bdum);
+        if (totAliMem < maxMemory) {
+          sumWithAlign = false;
+          deferGpuSum = 1;
+        }
+    }
+
+    // If summing is done with aligning add the usage for summing if any
+    if (sumWithAlign)
+      needForGpuAli += needed;
+
+    // Decide if alignment can be done there
+    if (needForGpuAli > gpuUsableMem) {
+      PrintfToLog("Insufficient memory on GPU to do alignment (%.0f MB needed"
+        " of %.0f MB total)\n", needForGpuAli / 1.048e6, gpuMemory / 1.048e6);
+    } else {
+      if (sumWithAlign)
+        needed = needForGpuAli;
+      gpuFlags |= GPU_FOR_ALIGNING;
+    }
+
+    // Now if summing, see if there is room for even/odd
+    if (gettingFRC && gpuFlags & GPU_FOR_SUMMING) {
+      if (needed + sumPadSize > gpuUsableMem) {
+        gettingFRC = false;
+      } else {
+        gpuFlags |= GPU_DO_EVEN_ODD;
+      }
+    }
+  }
+  return UtilTotalMemoryNeeds(fullPadSize, sumPadSize, alignPadSize, numAllVsAll, 
+    numAliFrames, refineIter, 1, numFilt, faParam.hybridShifts, groupSize, doSpline,
+    gpuFlags, deferGpuSum, 0, -1, bdum);
+}
+
+
 // Returns FALSE when the mutex could not be acquired or created
 BOOL AdocAcquireMutex()
 {
@@ -740,4 +907,26 @@ int UtilFindValidFrameAliParams(int readMode, int whereAlign, int curIndex,
     *message += "\r\n\r\nThere is one other alignment parameter set that fits these"
         " conditions.";
   return numValid > 1 ? -retval : 0;
+}
+
+// Writes text in a string to a text file, returning 1 on error opening or 2 on error 
+// writing
+int UtilWriteTextFile(CString fileName, CString text)
+{
+  int retval = 1;
+  CStdioFile *cFile = NULL;
+  try {
+    cFile = new CStdioFile(fileName, CFile::modeCreate | 
+      CFile::modeWrite |CFile::shareDenyWrite);
+    retval = 2;
+    cFile->WriteString(text);
+    cFile->Close();
+    retval = 0;
+  }
+  catch(CFileException *perr) {
+    perr->Delete();
+  } 
+  if (cFile)
+    delete cFile;
+  return retval;
 }
