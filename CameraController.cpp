@@ -954,7 +954,7 @@ void CCameraController::InitializeDMcameras(int DMind, int *numDMListed,
       if (anyK2 && mPluginVersion[DMind] >= PLUGIN_CAN_ALIGN_FRAMES) {
         CallDMIndGatan(DMind, mGatanCamera, IsGpuAvailable(0, &available, 
           &mGpuMemory[DMind]));
-        SEMTrace('1', "GPU %s available", available ? "IS" : "IS NOT");
+        SEMTrace('1', "GPU %s available for K2 aligning", available ? "IS" : "IS NOT");
       }
 
 
