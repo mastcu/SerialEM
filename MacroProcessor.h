@@ -72,6 +72,7 @@ class CMacroProcessor : public CCmdTarget
   GetSetMember(bool, WaitingForFrame);
   GetMember(bool, UsingContinuous);
   GetMember(bool, NoMessageBoxOnError);
+  bool SkipCheckingFrameAli() {return DoingMacro() && mSkipFrameAliCheck;};
 
 protected:
 
@@ -202,6 +203,7 @@ private:
   int mShowedScopeBox;      // Flag so reply can be assigned to variable
   bool mLoopIndsAreLocal;      // Flag that loop indexes are local
   int mAutoIndentSize;         // Number of spaces for autoindent of macro
+  bool mSkipFrameAliCheck;   // Flag for camera controller to skip checking frame ali param
 
 
 public:

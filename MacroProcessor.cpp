@@ -208,7 +208,8 @@ enum {CME_VIEW, CME_FOCUS, CME_TRIAL, CME_RECORD, CME_PREVIEW,
   CME_SETUSERSETTING, CME_CHANGEITEMREGISTRATION, CME_SHIFTITEMSBYMICRONS,
   CME_SETFREELENSCONTROL, CME_SETLENSWITHFLC, CME_SAVETOOTHERFILE, CME_SKIPACQUIRINGGROUP,
   CME_REPORTIMAGEDISTANCEOFFSET, CME_SETIMAGEDISTANCEOFFSET, CME_REPORTCAMERALENGTH,
-  CME_SETDECAMFRAMERATE, CME_SKIPMOVEINNAVACQUIRE, CME_TESTRELAXINGSTAGE, CME_RELAXSTAGE
+  CME_SETDECAMFRAMERATE, CME_SKIPMOVEINNAVACQUIRE, CME_TESTRELAXINGSTAGE, CME_RELAXSTAGE,
+  CME_SKIPFRAMEALIPARAMCHECK, CME_ISVERSIONATLEAST, CME_SKIPIFVERSIONLESSTHAN
 };
 
 static CmdItem cmdList[] = {{NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0},
@@ -308,7 +309,8 @@ static CmdItem cmdList[] = {{NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0
 {"SetLensWithFLC", 2}, {"SaveToOtherFile", 4}, {"SkipAcquiringGroup", 0},
 {"ReportImageDistanceOffset", 0}, {"SetImageDistanceOffset", 1}, 
 {"ReportCameraLength", 0}, {"SetDECamFrameRate", 1}, {"SkipMoveInNavAcquire", 0},
-{"TestRelaxingStage", 2}, {"RelaxStage", 0},
+{"TestRelaxingStage", 2}, {"RelaxStage", 0}, {"SkipFrameAliParamCheck", 0},
+{"IsVersionAtLeast", 1}, {"SkipIfVersionLessThan", 1},
 {NULL, 0, NULL}
 };
 
@@ -827,6 +829,7 @@ void CMacroProcessor::Run(int which)
   mRetryReadOther = 0;
   mEmailOnError = "";
   mNoMessageBoxOnError = false;
+  mSkipFrameAliCheck = false;
   mBoxOnScopeText = "SerialEM message";
   mBoxOnScopeType = 0;
   mBoxOnScopeInterval = 0.;
@@ -3277,6 +3280,20 @@ void CMacroProcessor::NextCommand()
   } else if (CMD_IS(PROGRAMTIMESTAMPS)) {                   // ProgramTimeStamps
     mWinApp->AppendToLog(mWinApp->GetStartupMessage(), LOG_OPEN_IF_CLOSED);
 
+                                              // IsVersionAtLeast, SkipIfVersionLessThan    
+  } else if (CMD_IS(ISVERSIONATLEAST) || CMD_IS(SKIPIFVERSIONLESSTHAN)) { 
+    index2 = itemEmpty[2] ? 0 : itemInt[2];
+    ix0 = mWinApp->GetIntegerVersion();
+    ix1 = mWinApp->GetBuildDayStamp();
+    truth = itemInt[1] <= ix0 && index2 <= ix1;
+    if (CMD_IS(ISVERSIONATLEAST)) {
+      SetReportedValues(truth ? 1. : 0.);
+      report.Format("Program version is %d date %d, %s than %d %s", ix0, ix1, 
+        truth ? "later" : "earlier", itemInt[1], (LPCTSTR)strItems[2]);
+      mWinApp->AppendToLog(report, mLogAction);
+    } else if (!truth && mCurrentIndex < macro->GetLength())
+      GetNextLine(macro, mCurrentIndex, strLine);
+
   } else if (CMD_IS(PAUSE) || CMD_IS(YESNOBOX) || CMD_IS(PAUSEIFFAILED) || 
     CMD_IS(ABORTIFFAILED)) {
       doPause = CMD_IS(PAUSEIFFAILED);
@@ -4044,6 +4061,10 @@ void CMacroProcessor::NextCommand()
         } 
       }
 
+  } else if (CMD_IS(SKIPFRAMEALIPARAMCHECK)) {              // SkipFrameAliCheck
+    index = itemEmpty[1] ? 1 : itemInt[1];
+    mSkipFrameAliCheck = index > 0;
+
   } else if (CMD_IS(REPORTCOUNTSCALING)) {                  // ReportCountScaling
     index = mCamera->GetDivideBy2();
     delX = mCamera->GetCountScaling(camParams);
@@ -4126,7 +4147,7 @@ void CMacroProcessor::NextCommand()
       ABORT_LINE("Entry requires a number for whether to restore state: \n\n");
     index = itemInt[1];
     bmax = 0.;
-    index2 = ix0 = 0;
+    ix1 = ix0 = 0;
     if (!itemEmpty[3]) {
       if (itemEmpty[5])
         ABORT_LINE("Entry requires three values for controlling image shift reset in:"
@@ -6016,6 +6037,9 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel)
         if (!cmdList[i].cmd)
           FAIL_CHECK_LINE("Unrecognized command in line");
       }
+      
+      if (CMD_IS(SKIPIFVERSIONLESSTHAN) && currentIndex < macro->GetLength())
+        GetNextLine(macro, currentIndex, strLine);
     }
   }
   if (blockLevel > startLevel)
