@@ -31,6 +31,7 @@
 #include "FilterTasks.h"
 #include "NavigatorDlg.h"
 #include "NavHelper.h"
+#include "FalconHelper.h"
 #include "EMmontageController.h"
 #include "MultiTSTasks.h"
 #include "Mailer.h"
@@ -868,6 +869,9 @@ int CParameterIO::ReadSettings(CString strFileName)
         useGPU4K2Ali[2] = itemInt[3] != 0;
         mWinApp->SetFrameAlignMoreOpen(itemInt[4] != 0);
         mWinApp->mCamera->SetAlignWholeSeriesInIMOD(itemInt[5] != 0);
+      } else if (NAME_IS("FalconAliUseGPU")) {
+        mWinApp->mFalconHelper->SetUseGpuForAlign(0, itemInt[1]);
+        mWinApp->mFalconHelper->SetUseGpuForAlign(1, itemInt[2]);
       } else if (NAME_IS("AlignframesComPath")) {
         StripItems(strLine, 1, strCopy);
         mWinApp->mCamera->SetAlignFramesComPath(strCopy);
@@ -1424,6 +1428,9 @@ void CParameterIO::WriteSettings(CString strFileName)
       mWinApp->GetFrameAlignMoreOpen() ? 1 : 0,
       mWinApp->mCamera->GetAlignWholeSeriesInIMOD() ? 1 : 0); 
     mFile->WriteString(oneState);
+    oneState.Format("FalconAliUseGPU %d %d\n", mWinApp->mFalconHelper->GetUseGpuForAlign(
+      0), mWinApp->mFalconHelper->GetUseGpuForAlign(1));
+    mFile->WriteString(oneState);
     oneState = mWinApp->mCamera->GetAlignFramesComPath();
     if (!oneState.IsEmpty())
       WriteString("AlignframesComPath", oneState);
@@ -1786,7 +1793,7 @@ int CParameterIO::ReadProperties(CString strFileName)
             camP->canPreExpose = itemInt[1] != 0;
           else if (MatchNoCase("RotationAndFlip"))
             camP->rotationFlip = itemInt[1];
-          else if (MatchNoCase("DMRotationAndFlip"))
+          else if (MatchNoCase("DMRotationAndFlip") || MatchNoCase("AlignedSumRotFlip"))
             camP->DMrotationFlip = itemInt[1];
           else if (MatchNoCase("SetRestoreDMRotFlip"))
             camP->setRestoreRotFlip = itemInt[1];
