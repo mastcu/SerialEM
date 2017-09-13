@@ -157,6 +157,7 @@ CCameraController::CCameraController()
   mBufferManager = mWinApp->mBufferManager;
   mScope = mWinApp->mScope;
   mShiftManager = mWinApp->mShiftManager;
+  mFalconHelper = mWinApp->mFalconHelper;
   mTD.JeolSD = &mScope->mJeolSD;
   mTD.scopePlugFuncs = NULL;
   mITD.td = &mTD;
@@ -318,6 +319,7 @@ CCameraController::CCameraController()
   mRestoreFalconConfig = false;
   mDeferStackingFrames = false;
   mStackingWasDeferred = false;
+  mStartedFalconAlign = false;
   mFrameMdocForFalcon = 0;
   mZoomFilterType = 5;
   mOneK2FramePerFile = false;
@@ -1105,7 +1107,7 @@ void CCameraController::InitializeFEIcameras(int &numFEIlisted, int *originalLis
 
   // Initialize helper now that it is known whether configs should be ignored
   // Also clear retractability here if not advanced interface
-  mWinApp->mFalconHelper->Initialize(mFEIinitialized && !anyOldFalcon2);
+  mFalconHelper->Initialize(mFEIinitialized && !anyOldFalcon2);
   for (ind = 0; ind < numOrig; ind++) {
     i = originalList[ind];
     if (mAllParams[i].FEItype) {
@@ -1490,7 +1492,8 @@ BOOL CCameraController::CameraReady()
 BOOL CCameraController::CameraBusy()
 {
   return mRaisingScreen || mInserting || mSettling >= 0 || mAcquiring || mEnsuringDark ||
-   mWaitingForStacking > 0 || mScope->LongOperationBusy(LONG_OP_HW_DARK_REF);
+   mWaitingForStacking > 0 || mStartedFalconAlign ||
+   mScope->LongOperationBusy(LONG_OP_HW_DARK_REF);
 }
 
 // Retract all cameras: set all retractable cameras as "canBlock" so that it will test
@@ -1718,18 +1721,18 @@ int CCameraController::MakeMdocFrameAlignCom(void)
   bool remote = mParam->useSocket && CBaseSocket::ServerIsRemote(GATAN_SOCK_ID);
 
   // Check parameters
-  if (!mParam->K2Type) {
+  if (!mParam->K2Type && !IS_FALCON2_OR_3(mParam)) {
     SEMMessageBox("Cannot make a com file for aligning tilt series frames\n"
-      "unless the K2 camera is still selected");
+      "unless the K2 or Falcon camera is still selected");
     return 1;
   }
-  if (GetPluginVersion(mParam) < PLUGIN_CAN_ALIGN_FRAMES) {
+  if (mParam->K2Type && GetPluginVersion(mParam) < PLUGIN_CAN_ALIGN_FRAMES) {
     SEMMessageBox("The current version of the plugin cannot make\n"
       "a com file for aligning frames in IMOD");
     return 1;
   }
-  if (!IsK2ConSetSaving(conSet, mParam) && conSet->alignFrames && 
-    conSet->useFrameAlign > 1) {
+  if (mParam->K2Type && !(IsK2ConSetSaving(conSet, mParam) && conSet->alignFrames && 
+    conSet->useFrameAlign > 1)) {
       SEMMessageBox("The Record parameters must be set for frame saving and aligning\n"
         "in IMOD in order to make a com file for aligning frames");
       return 1;
@@ -1746,6 +1749,24 @@ int CCameraController::MakeMdocFrameAlignCom(void)
   mdocPath = mWinApp->mStoreMRC->getAdocName();
   UtilSplitPath(mdocPath, tempStr, mdocName);
   UtilSplitExtension(mdocName, comRoot, tempStr);
+  if (!mParam->K2Type) {
+
+    // For Falcon, just call routine and leave
+    retVal = mFalconHelper->WriteAlignComFile(mdocPath, mAlignFramesComPath + 
+      '\\' + comRoot + ".pcm", conSet->faParamSetInd, 
+      mFalconHelper->GetUseGpuForAlign(1), true);
+    if (retVal) {
+      tempStr = "The com file for aligning frames was not written:\r\n   ";
+      if (retVal < 0)
+        tempStr += "An error occurred copying the mdoc file to the frame location";
+      else
+        tempStr += SEMCCDErrorMessage(retVal);
+      SEMMessageBox(tempStr);
+      return 1;
+    }
+    return 0;
+  }
+
   nameLen = mdocName.GetLength() + 1;
   if (remote) {
 
@@ -2041,7 +2062,7 @@ void CCameraController::Capture(int inSet, bool retrying)
   int numActive = mWinApp->GetNumActiveCameras();
   int gainXoffset, gainYoffset;
   double exposure, megaVoxel, megaVoxPerSec = 0.15;
-  bool superRes;
+  bool superRes, falconHasFrames, weCanAlignFalcon, aligningOnly;
   BOOL retracting = inSet == RETRACT_BLOCKERS || inSet == RETRACT_ALL;
   mWinApp->CopyOptionalSetIfNeeded(inSet);
   ControlSet conSet = mConSetsp[retracting ? 0 : inSet]; // Copy the control set for ease
@@ -2092,7 +2113,7 @@ void CCameraController::Capture(int inSet, bool retrying)
   }
 
   if (mParam->FEItype == FALCON2_TYPE && mFrameSavingEnabled && conSet.saveFrames && 
-    mWinApp->mFalconHelper->GetStackingFrames()) {
+    mFalconHelper->GetStackingFrames()) {
       mWaitingForStacking = 1;
       mWinApp->AddIdleTask(ThreadBusy, ScreenOrInsertDone, ScreenOrInsertError, inSet, 0);
       mWinApp->SetStatusText(SIMPLE_PANE, "WAITING FOR STACKING");    
@@ -2204,8 +2225,8 @@ void CCameraController::Capture(int inSet, bool retrying)
   if (IS_BASIC_FALCON2(mParam) && mCanUseFalconConfig >= 0) {
     setState = -1;
     if (mCanUseFalconConfig > 0)
-      setState = conSet.saveFrames ? 1 : 0;
-    error = mWinApp->mFalconHelper->CheckFalconConfig(setState, ind,
+      setState = (conSet.saveFrames || conSet.alignFrames) ? 1 : 0;
+    error = mFalconHelper->CheckFalconConfig(setState, ind,
       "Giving up on accessing the config file;\n"
       "You will need to use the stupid checkbox in the Camera Setup dialog to indicate "
       "if intermediate frame saving is selected in the FEI dialog");
@@ -2222,21 +2243,50 @@ void CCameraController::Capture(int inSet, bool retrying)
   mDeferSumOnNextAsync = false;
    
   // Set up Falcon saving
-  mSavingFalconFrames = IS_FALCON2_OR_3(mParam) && (FCAM_ADVANCED(mParam) || 
-    mFrameSavingEnabled) && conSet.saveFrames;
-  if ((IS_BASIC_FALCON2(mParam) && mFrameSavingEnabled) || mSavingFalconFrames) {
-      if (FCAM_ADVANCED(mParam))
+  mTD.FEIacquireFlags = 0;
+  falconHasFrames = IS_FALCON2_OR_3(mParam) && (FCAM_ADVANCED(mParam) || 
+    mFrameSavingEnabled);
+  weCanAlignFalcon = falconHasFrames && 
+    mWinApp->mScope->GetPluginVersion() >= PLUGFEI_ALLOWS_ALIGN_HERE &&
+    !(mParam->FEItype == FALCON3_TYPE && mLocalFalconFramePath.IsEmpty());
+
+  // Simply turn on the save flag where it has to save and retain the frames
+  if (falconHasFrames && conSet.alignFrames && weCanAlignFalcon && 
+    conSet.useFrameAlign > 1)
+    conSet.saveFrames = 1;
+  mSavingFalconFrames = falconHasFrames && conSet.saveFrames;
+  mAligningFalconFrames = weCanAlignFalcon && conSet.alignFrames && 
+    conSet.useFrameAlign == 1;
+  aligningOnly = conSet.alignFrames && !conSet.saveFrames && 
+    (weCanAlignFalcon || mParam->FEItype == FALCON3_TYPE); 
+  if (FCAM_ADVANCED(mParam) && conSet.alignFrames && weCanAlignFalcon && 
+    conSet.useFrameAlign > 0)
+    mTD.FEIacquireFlags |= PLUGFEI_WAIT_FOR_FRAMES;
+  if (FCAM_ADVANCED(mParam) && mParam->FEItype == FALCON2_TYPE && conSet.alignFrames &&
+    conSet.useFrameAlign > 1 && CBaseSocket::ServerIsRemote(FEI_SOCK_ID) &&
+    mLocalFalconFramePath.IsEmpty()) {
+      SEMMessageBox("The program cannot write a command file for alignment with IMOD"
+        " when the microscope computer is remote unless the property LocalFalconFramePath"
+        " is defined for direct access to files on the microscope.");
+      ErrorCleanup(1);
+      return;
+  }
+
+  if ((IS_BASIC_FALCON2(mParam) && mFrameSavingEnabled) || mSavingFalconFrames ||
+    mAligningFalconFrames | aligningOnly) {
+      if (FCAM_ADVANCED(mParam) || mAligningFalconFrames)
         mDeferStackingFrames = false;
 
       // Setup routine will check that the frame folder is not an empty string when not
       // saving, so pass it the top directory in that case, otherwise get path/name for
       // real.  For advanced scripting, this sends the optional folder and it is turned
       // into the full path
-      if (conSet.saveFrames)
-        ComposeFramePathAndName();
+      if (conSet.saveFrames || (FCAM_ADVANCED(mParam) && 
+        (mAligningFalconFrames || aligningOnly)))
+          ComposeFramePathAndName(aligningOnly);
       else
         mFrameFolder = mDirForK2Frames;
-      if (mWinApp->mFalconHelper->SetupConfigFile(conSet, mLocalFalconFramePath, 
+      if (mFalconHelper->SetupConfigFile(conSet, mLocalFalconFramePath, 
         mFrameFolder, mFrameFilename, mFalconFrameConfig, mStackingWasDeferred, mParam,
         mTD.NumFramesSaved)) {
           ErrorCleanup(1);
@@ -2244,10 +2294,20 @@ void CCameraController::Capture(int inSet, bool retrying)
       }
   }
 
+  // Now that the fact that we need to align without saving is recorded, turn on the
+  // save flag for all align cases: but set flag if we need to remove stack aligned by FEI
+  mRemoveFEIalignedFrames = false;
+  if (aligningOnly) {
+    conSet.saveFrames = 1;
+    mRemoveFEIalignedFrames = !conSet.useFrameAlign;
+    if (mRemoveFEIalignedFrames)
+      mTD.FEIacquireFlags |= PLUGFEI_WAIT_FOR_FRAMES;
+  }
+
   // Set up DE12 saving
   if (mWinApp->mDEToolDlg.CanSaveFrames(mParam)) {
     if (conSet.saveFrames)
-      ComposeFramePathAndName();
+      ComposeFramePathAndName(false);
     if (mTD.DE_Cam->SetAllAutoSaves(conSet.saveFrames, conSet.DEsumCount, mFrameFilename))
     {
       ErrorCleanup(1);
@@ -2343,8 +2403,9 @@ void CCameraController::Capture(int inSet, bool retrying)
   mTD.FrameTime = conSet.frameTime;
   mTD.AlignFrames = conSet.alignFrames;
   mTD.UseFrameAlign = false;
-  if (conSet.doseFrac && conSet.alignFrames && conSet.useFrameAlign) {
-    mTD.AlignFrames = 0;
+  if ((conSet.doseFrac || IS_FALCON2_OR_3(mParam)) && conSet.alignFrames && 
+    conSet.useFrameAlign) {
+    mTD.AlignFrames = 0;  // TODO: make this optional for Falcon 3
     if (conSet.useFrameAlign == 1) {
       mTD.K2ParamFlags |= K2_USE_FRAMEALIGN;
       mTD.UseFrameAlign = true;
@@ -2427,7 +2488,7 @@ void CCameraController::Capture(int inSet, bool retrying)
   // For Falcon saving, allow ~8 MB/sec, data are saved as 4 byte ints
   if (mSavingFalconFrames)
     mTD.cameraTimeout += (DWORD)(mTimeoutFactor * 1000. * (mDMsizeX * mDMsizeY / 2.e6) *
-    mWinApp->mFalconHelper->GetFrameTotals(conSet.summedFrameList, ind));
+    mFalconHelper->GetFrameTotals(conSet.summedFrameList, ind));
 
   // Add 4 minutes if tilting in blanker thread
   if (mTD.TiltDuringDelay)
@@ -2930,13 +2991,13 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
   bool saving, bool aligning, CString *aliComRoot)
 {
   int ldArea, magIndex, sizeX, sizeY, numAllVsAll, refineIter, groupSize, doSpline;
-  int notOK, newIndex, numGroups, faInd, numFilt = 1, deferGpuSum = 0, flags = 0;
-  int numAliFrames, aliStart, aliEnd, frameStartEnd = 0;
+  int notOK, newIndex, faInd, numFilt = 1, deferGpuSum = 0, flags = 0;
+  int numAliFrames, frameStartEnd = 0;
   int DMind = CAMP_DM_INDEX(mParam);
   double maxMemory = pow(1024., 3.) * mK2MaxRamStackGB;
   LowDoseParams *ldParam = mWinApp->GetLowDoseParams();
   FrameAliParams faParam;
-  bool bdum, sumWithAlign, alignSubset = false;
+  bool alignSubset = false;
   bool isSuperRes = conSet.K2ReadMode == SUPERRES_MODE;
   bool trulyAligning = aligning && conSet.useFrameAlign == 1;
   CString mess;
@@ -2944,16 +3005,18 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
     faInd = conSet.faParamSetInd;
     B3DCLAMP(faInd, 0, (int)mFrameAliParams.GetSize() - 1);
     mess = "WARNING: ";
-    notOK = UtilFindValidFrameAliParams(conSet.K2ReadMode, conSet.useFrameAlign, faInd,
-      newIndex, &mess);
-    if (notOK || newIndex != faInd) {
-      mWinApp->AppendToLog(mess);
-      if (notOK > 0)
-        mWinApp->AppendToLog("Using the frame alignment parameter set anyway");
-      else
-        PrintfToLog("Using the %s suitable frame alignment parameter set, %s",
+    if (!mWinApp->mMacroProcessor->SkipCheckingFrameAli()) {
+      notOK = UtilFindValidFrameAliParams(conSet.K2ReadMode, conSet.useFrameAlign, faInd,
+        newIndex, &mess);
+      if (notOK || newIndex != faInd) {
+        mWinApp->AppendToLog(mess);
+        if (notOK > 0)
+          mWinApp->AppendToLog("Using the frame alignment parameter set anyway");
+        else
+          PrintfToLog("Using the %s suitable frame alignment parameter set, %s",
           notOK < 0 ? "first" : "one", (LPCTSTR)mFrameAliParams[newIndex].name);
-      faInd = newIndex;
+        faInd = newIndex;
+      }
     }
     faParam = mFrameAliParams[faInd];
   }
@@ -2983,7 +3046,7 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
   if (saving) {
 
     // Set up the file and directory names.
-    ComposeFramePathAndName();
+    ComposeFramePathAndName(false);
     mPathForFrames.Format("%s\\%s", (LPCTSTR)mFrameFolder, 
       (LPCTSTR)mFrameFilename);
     if (mOneK2FramePerFile) {
@@ -3008,7 +3071,7 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
   int rootlen = root.GetLength() + 1;
   int nameSize = sdlen + rootlen + 4;
   int stringSize = 4;
-  int ndata, reflen = 0, comlen = 0, defectLen = 0, sumLen = 0;
+  int reflen = 0, comlen = 0, defectLen = 0, sumLen = 0;
   int alignFlags = 0, gpuFlags = 0, aliRefLen = 0, aliComLen;
   CString refFile, sumList, tmpStr, aliComName;
   if (isSuperRes)
@@ -3123,15 +3186,11 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
     alignFlags |= K2_MAKE_ALIGN_COM;
   }
 
-  float fullPadSize, sumPadSize, alignPadSize, needForGpuSum, needForGpuAli;
-  float fullTaperFrac = 0.02f;
-  float totAliMem = 0., needed = 0., gpuUsableMem, gpuFracMem = 0.85f;
-  float gpuUnusable = 3.5e8;
-
   // Get array for saving and pack strings into it
   char *names = NULL;
   char *strings = NULL;
   long setupErr;
+  float radius2[4], totAliMem = 0.;
   if (saving) {
     nameSize /= 4;
     names = new char[4 * nameSize];
@@ -3154,11 +3213,11 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
   if (aligning) {
     numAliFrames = numFrames;
     if (saving && faParam.alignSubset && CAN_PLUGIN_DO(CAN_ALIGN_SUBSET, mParam)) {
-      aliStart = B3DMAX(1, B3DMIN(faParam.subsetStart, K2FA_SUB_START_MASK));
-      aliEnd = B3DMIN(numFrames, faParam.subsetEnd);
-      if (aliEnd - aliStart > 0) {
-        frameStartEnd = aliStart + (aliEnd << K2FA_SUB_END_SHIFT);
-        numAliFrames = aliEnd + 1 - aliStart;
+      mAlignStart = B3DMAX(1, B3DMIN(faParam.subsetStart, K2FA_SUB_START_MASK));
+      mAlignEnd = B3DMIN(numFrames, faParam.subsetEnd);
+      if (mAlignEnd - mAlignStart > 0) {
+        frameStartEnd = mAlignStart + (mAlignEnd << K2FA_SUB_END_SHIFT);
+        numAliFrames = mAlignEnd + 1 - mAlignStart;
         alignSubset = true;
         if (trulyAligning)
           mNumSubsetAligned = numAliFrames;
@@ -3176,33 +3235,8 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
       sprintf(strings + aliRefLen + defectLen, "%s", (LPCTSTR)aliComName);
 
     // Set variables for the call
-    numAllVsAll = faParam.numAllVsAll;
-    if (faParam.strategy == FRAMEALI_HALF_PAIRWISE)
-      numAllVsAll = B3DMAX(7, numAliFrames / 2);
-    else if (faParam.strategy == FRAMEALI_ALL_PAIRWISE)
-      numAllVsAll = numAliFrames;
-    else if (faParam.strategy == FRAMEALI_ACCUM_REF)
-      numAllVsAll = 0;
-    groupSize = (faParam.useGroups && numAllVsAll) ? faParam.groupSize : 1;
-    if (groupSize > 1) {
-      numGroups = numAliFrames + 1 - groupSize;
-      if ((numGroups + 1 - groupSize) * (numGroups - groupSize) / 2 < numGroups)
-        groupSize = 1;
-      numAllVsAll += groupSize - 1;
-    }
-    mTypeOfAlignError = -1;
-    if (numAllVsAll) {
-      ndata = B3DMIN(numAllVsAll, numAliFrames) + 1 - groupSize;
-      mTypeOfAlignError = B3DCHOICE(((ndata + 1 - groupSize) * (ndata - groupSize)) / 2 >= 
-        2 * ndata, 1, 0);
-    }
-
-    refineIter = faParam.doRefine ? faParam.refineIter : 0;
-    doSpline = (faParam.doSmooth && numAliFrames >= faParam.smoothThresh) ? 1 : 0;
-    if (faParam.rad2Filt2 > 0)
-      numFilt++;
-    if (faParam.rad2Filt3 > 0)
-      numFilt++;
+    numAllVsAll = NumAllVsAllFromFAparam(faParam, numAliFrames, groupSize, refineIter, 
+      doSpline, numFilt, radius2);
 
      // Set some align flags
     if (faParam.hybridShifts && numFilt > 1)
@@ -3216,75 +3250,17 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
 
     // Do things when truly aligning
     if (trulyAligning) {
-      mGettingFRC = mNumFrameAliLogLines > 2;
 
       // Let plugin figure out whether it needs to do anything with this
       if (faParam.keepPrecision)
         alignFlags |= K2FA_KEEP_PRECISION;
 
-      // Get memory for components then evaluate the GPU needs
-      UtilGetPadSizesBytes(mParam->sizeX / (isSuperRes ? 1 : 2), 
-        mParam->sizeY / (isSuperRes ? 1 : 2), fullTaperFrac, 
-        conSet.binning / (isSuperRes ? 1 : 2), faParam.aliBinning, fullPadSize, 
-        sumPadSize, alignPadSize);
-
-      if (mUseGPUforK2Align[DMind] && mGpuMemory[DMind]) {
-        UtilGpuMemoryNeeds(fullPadSize, sumPadSize, alignPadSize, numAllVsAll, numAliFrames,
-          refineIter, groupSize, needForGpuSum, needForGpuAli);
-        gpuUnusable = B3DMAX(gpuUnusable, (float)mGpuMemory[DMind] * (1.f - gpuFracMem));
-        gpuUsableMem = (float)mGpuMemory[DMind] - gpuUnusable;
-        sumWithAlign = (faParam.hybridShifts || numFilt == 1) && !doSpline && !refineIter;
-
-        // Summing is top priority
-        if (needForGpuSum < gpuUsableMem) {
-          needed = needForGpuSum;
-          gpuFlags = GPU_FOR_SUMMING;
-        } else {
-          PrintfToLog("Insufficient memory on GPU to use it for summing (%.0f MB needed "
-            "of %.0f MB total)\n", needForGpuSum / 1.048e6, mGpuMemory[DMind] / 1.048e6);
-        }
-
-        // If summing is supposed to be done with align and alignment would fit but both
-        // would not, get total memory needs and make sure THAT fits
-        if (sumWithAlign && needForGpuAli < gpuUsableMem && needForGpuAli + needed >
-          gpuUsableMem) {
-            totAliMem =  UtilTotalMemoryNeeds(fullPadSize, sumPadSize, alignPadSize, 
-              numAllVsAll, numAliFrames, refineIter, 1, numFilt, faParam.hybridShifts, 
-              groupSize, doSpline, GPU_FOR_ALIGNING, 1, 0, -1, bdum);
-            if (totAliMem < maxMemory) {
-              sumWithAlign = false;
-              deferGpuSum = 1;
-            }
-        }
-
-        // If summing is done with aligning add the usage for summing if any
-        if (sumWithAlign)
-          needForGpuAli += needed;
-
-        // Decide if alignment can be done there
-        if (needForGpuAli > gpuUsableMem) {
-          PrintfToLog("Insufficient memory on GPU to do alignment (%.0f MB needed"
-            " of %.0f MB total)\n", needForGpuAli / 1.048e6, mGpuMemory[DMind] / 1.048e6);
-        } else {
-          if (sumWithAlign)
-            needed = needForGpuAli;
-          gpuFlags |= GPU_FOR_ALIGNING;
-        }
-
-        // Now if summing, see if there is room for even/odd
-        if (mGettingFRC && gpuFlags & GPU_FOR_SUMMING) {
-          if (needed + sumPadSize > gpuUsableMem) {
-            mGettingFRC = false;
-          } else {
-            gpuFlags |= GPU_DO_EVEN_ODD;
-          }
-        }
-      }
-
-      // Now evaluate CPU memory need again
-      totAliMem =  UtilTotalMemoryNeeds(fullPadSize, sumPadSize, alignPadSize, 
-              numAllVsAll, numAliFrames, refineIter, 1, numFilt, faParam.hybridShifts, 
-              groupSize, doSpline, gpuFlags, deferGpuSum, 0, -1, bdum);
+      // Evaluate all memory needs
+      totAliMem = UtilEvaluateGpuCapability(mParam->sizeX / (isSuperRes ? 1 : 2), 
+        mParam->sizeY / (isSuperRes ? 1 : 2), conSet.binning / (isSuperRes ? 1 : 2), 
+        faParam, numAllVsAll, numAliFrames, refineIter, groupSize, numFilt, doSpline, 
+        mUseGPUforK2Align[DMind] ? mGpuMemory[DMind] : 0., maxMemory, gpuFlags, 
+        deferGpuSum, mGettingFRC);
       if (totAliMem > maxMemory)
         PrintfToLog("WARNING: With current parameters, memory needed for aligning "
         "(%.1f GB) exceeds allowed\r\n  memory usage (%.1f GB), which is controlled by"
@@ -3395,6 +3371,50 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
   return setupErr != 0 ? 1 : 0;
 }
 
+int CCameraController::NumAllVsAllFromFAparam(FrameAliParams &faParam, int numAliFrames, 
+  int &groupSize, int &refineIter, int &doSpline, int &numFilters, float *radius2)
+{
+  int numGroups, ndata, ind;
+  int numAllVsAll = faParam.numAllVsAll;
+  if (faParam.strategy == FRAMEALI_HALF_PAIRWISE)
+    numAllVsAll = B3DMAX(7, numAliFrames / 2);
+  else if (faParam.strategy == FRAMEALI_ALL_PAIRWISE)
+    numAllVsAll = numAliFrames;
+  else if (faParam.strategy == FRAMEALI_ACCUM_REF)
+    numAllVsAll = 0;
+  groupSize = (faParam.useGroups && numAllVsAll) ? faParam.groupSize : 1;
+  if (groupSize > 1) {
+    numGroups = numAliFrames + 1 - groupSize;
+    if ((numGroups + 1 - groupSize) * (numGroups - groupSize) / 2 < numGroups)
+      groupSize = 1;
+    numAllVsAll += groupSize - 1;
+  }
+  mTypeOfAlignError = -1;
+  if (numAllVsAll) {
+    ndata = B3DMIN(numAllVsAll, numAliFrames) + 1 - groupSize;
+    mTypeOfAlignError = B3DCHOICE(((ndata + 1 - groupSize) * (ndata - groupSize)) / 2 >= 
+      2 * ndata, 1, 0);
+  }
+
+  refineIter = faParam.doRefine ? faParam.refineIter : 0;
+  doSpline = (faParam.doSmooth && numAliFrames >= faParam.smoothThresh) ? 1 : 0;
+  numFilters = 1;
+  radius2[0] = faParam.rad2Filt1;
+  radius2[1] = faParam.rad2Filt2;
+  radius2[2] = faParam.rad2Filt3;
+  radius2[3] = faParam.rad2Filt4;
+  if (!radius2[0])
+    radius2[0] = 0.06f;
+  for (ind = 1; ind < 4; ind++) {
+    if (radius2[ind] <= 0)
+      break;
+    numFilters++;
+  }
+  if (numFilters > 1)
+    rsSortFloats(radius2, numFilters);
+
+  return numAllVsAll;
+}
 
 // Set the low dose area, setup the energy filter, and check for timeouts and settling
 int CCameraController::CapSetLDAreaFilterSettling(int inSet)
@@ -6843,9 +6863,11 @@ void CCameraController::DisplayNewImage(BOOL acquired)
   int spotSize, chan, i, err, ix, iy, invertCon, operation, ixoff, iyoff;
   int typext = 0, ldSet = 0;
   BOOL lowDoseMode, hasUserPtSave = false;
+  bool readLocally = false;
   float axoff, ayoff, specRate, camRate;
   double delay;
-  CString message, str;
+  CString message, str, root, ext, localFramePath;
+  CString *comFolder = NULL;
   KImage *image;
   EMimageBuffer *imBuf;
   EMimageExtra *extra;
@@ -6858,6 +6880,8 @@ void CCameraController::DisplayNewImage(BOOL acquired)
   short int *parray, *imin, *imout;
   LowDoseParams *ldParam = mWinApp->GetLowDoseParams();
   int curCam = mWinApp->GetCurrentCamera();
+  float pixelSize = (float)(mBinning * 10000. * 
+    mShiftManager->GetPixelSize(curCam, mMagBefore));
 
   mAcquiring = false;
   mShotIncomplete = false;
@@ -6882,7 +6906,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
 
   // Process all the channels of data
   for (chan = mTD.NumChannels - 1; chan >= 0; chan--) {
-    if (acquired && chan == mTD.NumChannels - 1) {
+    if (acquired && chan == mTD.NumChannels - 1 && !mStartedFalconAlign) {
 
       if (mTD.ReblankTime && !mParam->noShutter)
         mScope->BlankBeam(false);
@@ -6913,6 +6937,81 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       mTD.Array[chan] = NULL;
       continue;      
     }
+
+    // Stack the Falcon frames or at least add them to the file map
+    if ((mSavingFalconFrames || mAligningFalconFrames) && !mStartedFalconAlign) {
+      if (mDeferStackingFrames) {
+        err = mFalconHelper->BuildFileMap(mLocalFalconFramePath,mDirForK2Frames);
+        mStackingWasDeferred = true;
+        if (err > 0) {
+          message.Format("Error %d occurred when adding to list of frames to stack:  "
+            "%s\r\n", err, mFalconHelper->GetErrorString(err));
+          mWinApp->AppendToLog(message);
+        }
+
+      } else {
+
+        // The frame path and name were composed in the setup step
+        mPathForFrames.Format("%s%s%s.mrc", (LPCTSTR)mFrameFolder, 
+          mFrameFolder.IsEmpty() ? "" : "\\", (LPCTSTR)mFrameFilename);
+        localFramePath = mLocalFalconFramePath;
+
+        // Adjust to full path for advanced scripting, but if there is a local path,
+        // compose full path with that and set to read locally
+        if (FCAM_ADVANCED(mParam)) {
+          message = mTD.scopePlugFuncs->ASIgetLastStoragePath();
+          SEMTrace('E', "%s   %s  local path: %s", (LPCTSTR)message,
+            (LPCTSTR)mPathForFrames, (LPCTSTR)localFramePath);
+          message.Replace("\\\\127.0.0.1", "C:");
+          if (!localFramePath.IsEmpty()) {
+            if (localFramePath.GetAt(localFramePath.GetLength() - 1) != '\\')
+              localFramePath += '\\';
+            localFramePath += mPathForFrames;
+            readLocally = true;
+          }
+          if (!message.IsEmpty()) {
+            if (message.GetAt(message.GetLength() - 1) != '\\')
+              message += '\\';
+            mPathForFrames = message + mPathForFrames;
+          }
+          if (localFramePath.IsEmpty())
+            localFramePath = mPathForFrames;
+        }
+        ix = -1;
+        if (IS_BASIC_FALCON2(mParam) && (mTD.K2ParamFlags & K2_MAKE_ALIGN_COM))
+          ix = lastConSetp->faParamSetInd;
+        if (IS_BASIC_FALCON2(mParam) || mAligningFalconFrames)
+          mTD.ErrorFromSave = mFalconHelper->StackFrames(localFramePath, mFrameFolder, 
+            mFrameFilename, mTD.DivideBy2, mTD.DivideBy2 ? 2 : 1, mParam->rotationFlip,
+            mParam->DMrotationFlip < 0 ? mParam->rotationFlip : mParam->DMrotationFlip,
+            pixelSize, mFalconAsyncStacking, readLocally, ix, mTD.NumFramesSaved,
+            &mTD);
+        mStackingWasDeferred = false;
+        mStartedFalconAlign = mAligningFalconFrames && mFalconAsyncStacking &&
+          !mTD.ErrorFromSave;
+        if (mStartedFalconAlign) {
+          mInDisplayNewImage = false;
+          return;
+        }
+      }
+    }
+
+    // Remove the frame file if only alignment in FEI was selected in the interface
+    if (mRemoveFEIalignedFrames) {
+      str = mLocalFalconFramePath;
+      if (str.GetAt(str.GetLength() - 1) != '\\')
+        str += '\\';
+      str += mFrameFolder + (mFrameFolder.IsEmpty() ? "" : "\\") + mFrameFilename;
+      SEMTrace('E', "Removing %s and .xml after alignment", (LPCTSTR)(str +".mrc"));
+      UtilRemoveFile(str + ".mrc");
+      UtilRemoveFile(str + ".xml");
+    }
+    if (mAligningFalconFrames && mFalconHelper->GetAlignSubset()) {
+      mNumSubsetAligned = mFalconHelper->GetNumAligned();
+      mAlignStart = mFalconHelper->GetAlignStart();
+      mAlignEnd = mFalconHelper->GetAlignEnd();
+    }
+
     if (acquired) {
       TestGainFactor((short *)mTD.Array[chan], mTD.DMSizeX, mTD.DMSizeY, mTD.Binning);
 
@@ -7165,9 +7264,13 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       if (mTD.NumAsyncSumFrames > 0)
         partialExposure = (float)(mExposure * B3DMIN(mTD.NumAsyncSumFrames, i) / 
           (float)B3DMAX(1, i));
-      else if (mNumSubsetAligned > 0)
+      else if (mNumSubsetAligned > 0 && mParam->K2Type && !lastConSetp->sumK2Frames)
         partialExposure = (float)(mExposure * B3DMIN(mNumSubsetAligned, i) / 
         (float)B3DMAX(1, i));
+      else 
+        partialExposure = mFalconHelper->AlignedSubsetExposure(
+          lastConSetp->summedFrameList, mParam->K2Type ? 
+          lastConSetp->frameTime : mFalconReadoutInterval, mAlignStart, mAlignEnd);
     }
 
     // Modify mImBufs only if there is actually an image, but save info when starting
@@ -7333,8 +7436,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       extra->mExposure = (float)mExposure;
       extra->mBinning = (float)mBinning / (mParam->K2Type ? 2.f : 1.f);
       extra->mCamera = curCam;
-      extra->mPixel = (float)(mBinning * 10000. * 
-        mShiftManager->GetPixelSize(curCam, mMagBefore));
+      extra->mPixel = pixelSize;
       if (mTD.NumAsyncSumFrames != 0 && imBuf->mSampleMean > EXTRA_VALUE_TEST && 
         IsDirectDetector(mParam) && extra->m_fDose > 0 &&
         !mWinApp->mProcessImage->DoseRateFromMean(imBuf, imBuf->mSampleMean, camRate)) {
@@ -7352,30 +7454,6 @@ void CCameraController::DisplayNewImage(BOOL acquired)
 
     // Now start using current values to update extra for a deferred sum
 
-    // Stack the Falcon frames or at least add them to the file map
-    if (mSavingFalconFrames) {
-      if (mDeferStackingFrames) {
-        err = mWinApp->mFalconHelper->BuildFileMap(mLocalFalconFramePath,mDirForK2Frames);
-        mStackingWasDeferred = true;
-        if (err > 0) {
-          message.Format("Error %d occurred when adding to list of frames to stack:  "
-            "%s\r\n", err, mWinApp->mFalconHelper->GetErrorString(err));
-          mWinApp->AppendToLog(message);
-        }
-
-      } else {
-
-        // The frame path and name were composed in the setup step
-        mPathForFrames.Format("%s%s%s.mrc", (LPCTSTR)mFrameFolder, 
-          mFrameFolder.IsEmpty() ? "" : "\\", (LPCTSTR)mFrameFilename);
-        if (IS_BASIC_FALCON2(mParam))
-          mTD.ErrorFromSave = mWinApp->mFalconHelper->StackFrames(mLocalFalconFramePath, 
-            mFrameFolder, mFrameFilename, mTD.DivideBy2, mTD.DivideBy2 ? 2 : 1, 
-            mParam->rotationFlip, extra->mPixel, mFalconAsyncStacking,mTD.NumFramesSaved);
-        mStackingWasDeferred = false;
-      }
-    }
-
     // Report the fate of frame-saving
     if ((mParam->K2Type && lastConSetp->doseFrac && (lastConSetp->saveFrames ||
       (lastConSetp->alignFrames && CAN_PLUGIN_DO(CAN_ALIGN_FRAMES, mParam) &&
@@ -7386,32 +7464,22 @@ void CCameraController::DisplayNewImage(BOOL acquired)
           mTD.ErrorFromSave = 0;
           if (lastConSetp->sumK2Frames && lastConSetp->summedFrameList.size() > 0 &&
             CAN_PLUGIN_DO(CAN_SUM_FRAMES, mParam))
-            mTD.NumFramesSaved = mWinApp->mFalconHelper->GetFrameTotals(
+            mTD.NumFramesSaved = mFalconHelper->GetFrameTotals(
               lastConSetp->summedFrameList, i, mTD.NumFramesSaved);
         }
 
         if (mTD.ErrorFromSave < 0) {
           message = "An error occurred trying to find out how many frames were saved";
         } else {
-          // Adjust to full path for advanced scripting
-          if (IS_FALCON2_OR_3(mParam) && FCAM_ADVANCED(mParam)) {
-            message = mTD.scopePlugFuncs->ASIgetLastStoragePath();
-            SEMTrace('E', "%s   %s", (LPCTSTR)message, (LPCTSTR)mPathForFrames);
-            if (!message.IsEmpty()) {
-              if (message.GetAt(message.GetLength() - 1) != '\\')
-                message += '\\';
-              mPathForFrames = message + mPathForFrames;
-            }
-          }
           message = "";
           if (mTD.ErrorFromSave > 0)
             message.Format("Error %d occurred when saving frames:  %s\r\n", 
             mTD.ErrorFromSave, mParam->K2Type ? SEMCCDErrorMessage(mTD.ErrorFromSave) : 
-            mWinApp->mFalconHelper->GetErrorString(mTD.ErrorFromSave));
+            mFalconHelper->GetErrorString(mTD.ErrorFromSave));
           if (mTD.NumFramesSaved)
             str.Format(" %d frames %s saved to %s", mTD.NumFramesSaved, 
-            mTD.NumAsyncSumFrames < 0 && !(mSavingFalconFrames && mFalconAsyncStacking) ? 
-            "were" : "are being", (LPCTSTR)mPathForFrames);
+            mTD.NumAsyncSumFrames < 0 && (!(mSavingFalconFrames && mFalconAsyncStacking)
+            || mAligningFalconFrames) ? "were" : "are being", (LPCTSTR)mPathForFrames);
           else
             str = "No frames were saved";
           message += str;
@@ -7420,32 +7488,62 @@ void CCameraController::DisplayNewImage(BOOL acquired)
           if (mTD.NumFramesSaved) {
             extra->mNumSubFrames = mTD.NumFramesSaved;
             extra->mSubFramePath = mPathForFrames;
+            if (FCAM_ADVANCED(mParam) && (mTD.K2ParamFlags & K2_MAKE_ALIGN_COM)) {
+              UtilSplitPath(localFramePath, str, message);
+              mFalconHelper->SetLastFrameDir(str);
+              UtilSplitExtension(message, root, ext);
+              if (mComPathIsFramePath)
+                root = str + '\\' + root + ".pcm";
+              else
+                root = mAlignFramesComPath + '\\' + root + ".pcm";
+              err = mFalconHelper->WriteAlignComFile(message, root, 
+                lastConSetp->faParamSetInd, mFalconHelper->GetUseGpuForAlign(1),
+                false);
+              if (err)
+                PrintfToLog("WARNING: The com file for aligning was not saved: %s",
+                  SEMCCDErrorMessage(err));
+            }
           }
         }
         mWinApp->AppendToLog(message);
     }
 
     // Report on frame aligning if not deferred
-    if (mTD.UseFrameAlign && mTD.NumAsyncSumFrames < 0 && mNumFrameAliLogLines > 0) {
-      if (mNumFrameAliLogLines > 1) {
-        PrintfToLog("Frame alignment results:          distance raw = %.1f smoothed"
-          " = %.1f", mTD.FaRawDist, mTD.FaSmoothDist);
-        if (mTypeOfAlignError == 0)
-          PrintfToLog(" Residual mean = %.2f  max max = %.2f", mTD.FaResMean, 
-          mTD.FaMaxResMax);
-        if (mTypeOfAlignError > 0)
-          PrintfToLog(" Weighted resid mean = %.2f  max max = %.2f  Mean unweighted max"
-          " = %.2f", mTD.FaResMean, mTD.FaMaxResMax, mTD.FaMaxRawMax);
-      } else {
-        PrintfToLog("Frame alignment: %sesid mean = %.2f  max max = %.2f  raw dist = %.1f"
-          , mTypeOfAlignError > 0 ? "Weighted r" : "R", mTD.FaResMean, mTD.FaMaxResMax, 
-          mTD.FaRawDist);
+    if (mTD.UseFrameAlign && mTD.NumAsyncSumFrames < 0) {
+      if (mParam->FEItype && ((err = mFalconHelper->GetAlignError()) != 0 || 
+        !(ix = mFalconHelper->GetNumAligned()))) {
+          if (!ix && !err && !mTD.ErrorFromSave) {
+            message = "An unknown error occurred when aligning frames";
+          } else {
+            if (!ix && !err)
+              err = mTD.ErrorFromSave;
+            message.Format("Error %d occurred when aligning frames:  %s\r\n", 
+              err, mFalconHelper->GetErrorString(err));
+          }
+          mWinApp->AppendToLog(message);
+      } else if (mNumFrameAliLogLines > 0) {
+ 
+        if (mNumFrameAliLogLines > 1) {
+          PrintfToLog("Frame alignment results:          distance raw = %.1f smoothed"
+            " = %.1f", mTD.FaRawDist, mTD.FaSmoothDist);
+          if (mTypeOfAlignError == 0)
+            PrintfToLog(" Residual mean = %.2f  max max = %.2f", mTD.FaResMean, 
+            mTD.FaMaxResMax);
+          if (mTypeOfAlignError > 0)
+            PrintfToLog(" Weighted resid mean = %.2f  max max = %.2f  Mean unweighted max"
+            " = %.2f", mTD.FaResMean, mTD.FaMaxResMax, mTD.FaMaxRawMax);
+        } else {
+          PrintfToLog("Frame alignment: %sesid mean = %.2f  max max = %.2f  "
+            "raw dist = %.1f", mTypeOfAlignError > 0 ? "Weighted r" : "R", mTD.FaResMean,
+            mTD.FaMaxResMax, mTD.FaRawDist);
+        }
+        if ((mParam->K2Type && mGettingFRC) || 
+          (mParam->FEItype && mFalconHelper->GetGettingFRC()))
+          PrintfToLog(" FRC crossings 0.5: %.4f  0.25: %.4f  0.125: %.4f  is %.4f at "
+          "0.25/pix", mTD.FaCrossHalf / K2FA_FRC_INT_SCALE, 
+          mTD.FaCrossQuarter / K2FA_FRC_INT_SCALE, 
+          mTD.FaCrossEighth / K2FA_FRC_INT_SCALE, mTD.FaHalfNyq / K2FA_FRC_INT_SCALE);
       }
-      if (mGettingFRC)
-        PrintfToLog(" FRC crossings 0.5: %.4f  0.25: %.4f  0.125: %.4f  is %.4f at "
-             "0.25/pix", mTD.FaCrossHalf / K2FA_FRC_INT_SCALE, 
-             mTD.FaCrossQuarter / K2FA_FRC_INT_SCALE, 
-             mTD.FaCrossEighth / K2FA_FRC_INT_SCALE, mTD.FaHalfNyq / K2FA_FRC_INT_SCALE);
     }
     
     // Get special data for DE camera
@@ -7660,6 +7758,7 @@ void CCameraController::ErrorCleanup(int error)
   mBlankWhenRetracting = false;
   mDeferStackingFrames = false;
   mCancelNextContinuous = false;
+  mStartedFalconAlign = false;
   mDiscardImage = false;
   mMaxChannelsToGet = MAX_STEM_CHANNELS;
   if (error || mRepFlag < 0 || mHalting || mPending >= 0 ||
@@ -7668,7 +7767,7 @@ void CCameraController::ErrorCleanup(int error)
   if (mParam->FEItype && mTD.eagleIndex < 0)
     mParam->eagleIndex = mTD.eagleIndex;
   if (mRestoreFalconConfig) {
-    if (!mWinApp->mFalconHelper->CheckFalconConfig(-2, ind, "Failed to restore initial "
+    if (!mFalconHelper->CheckFalconConfig(-2, ind, "Failed to restore initial "
       "state of Intermediate frame saving; check the FEI dialog"))
       mFrameSavingEnabled = ind > 0;
     mRestoreFalconConfig = false;
@@ -8499,17 +8598,18 @@ int CCameraController::AcquireFEIimage(CameraThreadData *td, void *array, int co
     return 1;
   }
   if (advanced) {
-    SEMTrace('E', "Calling ASIacquireFromcamera %p %d %d %f %d %d %d %d %d %d %d %d %d",
-      array, sizeX, sizeY,  
+    SEMTrace('E', "Calling ASIacquireFromcamera %p %d %d %f %d %d %d %d %d %d %d %d %d %d"
+      , array, sizeX, sizeY,  
       td->Exposure,  messInd, td->Binning, td->restrictedSize, td->ImageType,
       td->DivideBy2, td->eagleIndex, 
       (td->FEIflags & PLUGFEI_CAN_DOSE_FRAC) ? td->SaveFrames : -1, td->GatanReadMode,
-      (td->FEIflags & PLUGFEI_CAM_CAN_ALIGN) ? td->AlignFrames : -1);
+      (td->FEIflags & PLUGFEI_CAM_CAN_ALIGN) ? td->AlignFrames : -1, td->FEIacquireFlags);
     retval = td->scopePlugFuncs->ASIacquireFromCamera(array, sizeX, sizeY,  
       td->Exposure,  messInd, td->Binning, td->restrictedSize, td->ImageType,
       td->DivideBy2, td->eagleIndex, 
       (td->FEIflags & PLUGFEI_CAN_DOSE_FRAC) ? td->SaveFrames : -1, td->GatanReadMode,
-      (td->FEIflags & PLUGFEI_CAM_CAN_ALIGN) ? td->AlignFrames : -1, 0, 0, 0, 0., 0.);
+      (td->FEIflags & PLUGFEI_CAM_CAN_ALIGN) ? td->AlignFrames : -1, td->FEIacquireFlags,
+      0, 0, 0., 0.);
 
   } else
     retval = td->scopePlugFuncs->AcquireFEIimage(array, sizeX, sizeY, correction, 
@@ -9146,7 +9246,7 @@ int CCameraController::RotateAndReplaceArray(int chan, int operation, int invert
 
 // Given current settings from the Set File Options dialog, make up the directory and 
 // filename for saving the next set of frames
-void CCameraController::ComposeFramePathAndName(void)
+void CCameraController::ComposeFramePathAndName(bool temporary)
 {
   CString date, time, path, filename, savefile, label;
   char numFormat[6];
@@ -9206,7 +9306,9 @@ void CCameraController::ComposeFramePathAndName(void)
 
   // If doing numbers, now evaluate whether the number needs to be reset and record
   // current prefix and filename
-  if (mFrameNameFormat & FRAME_FILE_NUMBER) {
+  // For temporary names (files to be deleted), leave off the number and add both 
+  // date and time below
+  if ((mFrameNameFormat & FRAME_FILE_NUMBER) && !temporary) {
     if (mLastUsedFrameNumber < mFrameNumberStart || mNumberedFrameFolder != mFrameFolder
       || mNumberedFramePrefix != filename)
       mLastUsedFrameNumber = mFrameNumberStart - 1;
@@ -9226,11 +9328,11 @@ void CCameraController::ComposeFramePathAndName(void)
     UtilAppendWithSeparator(filename, date, "_");
   }
   if (!mParam->DE_camType) {
-    if (mFrameNameFormat & (FRAME_FILE_MONTHDAY | FRAME_FILE_HOUR_MIN_SEC))
+    if ((mFrameNameFormat & (FRAME_FILE_MONTHDAY | FRAME_FILE_HOUR_MIN_SEC)) || temporary)
       mWinApp->mDocWnd->DateTimeComponents(date, time);
-    if (mFrameNameFormat & FRAME_FILE_MONTHDAY)
+    if ((mFrameNameFormat & FRAME_FILE_MONTHDAY) || temporary)
       UtilAppendWithSeparator(filename, date, "_");
-    if (mFrameNameFormat & FRAME_FILE_HOUR_MIN_SEC)
+    if ((mFrameNameFormat & FRAME_FILE_HOUR_MIN_SEC) || temporary)
       UtilAppendWithSeparator(filename, time, "_");
   }
   mFrameFilename = filename;

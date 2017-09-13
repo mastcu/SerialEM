@@ -69,6 +69,9 @@ enum {EAGLE_TYPE = 1, FALCON2_TYPE, OTHER_FEI_TYPE, FALCON3_TYPE};
 #define FCAM_CAN_ALIGN(a) (a->FEIflags & PLUGFEI_CAM_CAN_ALIGN)
 #define IS_FALCON2_OR_3(a) (a->FEItype == FALCON2_TYPE || a->FEItype == FALCON3_TYPE)
 #define IS_BASIC_FALCON2(a) (a->FEItype == FALCON2_TYPE && !(a->FEIflags & PLUGFEI_USES_ADVANCED))
+// This needs to be 108 when that exists
+#define PLUGFEI_ALLOWS_ALIGN_HERE 107
+
 
 struct DarkRef {
   int Left, Right, Top, Bottom;   // binned CCD coordinates of the image
@@ -120,6 +123,7 @@ struct CameraThreadData {
   long ProcessingPlus;        // Actual processing value to send to Gatan with flags too
   double DMsettling;           // DM's settling time
   int K2ParamFlags;           // Flags to set in call to set K2Parameters2
+  int FEIacquireFlags;        // Flags for advanced FEI acquire
   int UnblankTime;            // delay from firing DM to unblanking, in msec
   int ReblankTime;            // total time for beam to be on, in msec
   int ShutterTime;            // time to hold shutter open before firing DM, in msec
@@ -301,7 +305,7 @@ class DLL_IM_EX CCameraController
   SetMember(BOOL, FrameSavingEnabled);
   BOOL GetFrameSavingEnabled() {return mFrameSavingEnabled || mCanUseFalconConfig > 0;};
   GetSetMember(CString, FalconFrameConfig);
-  SetMember(CString, LocalFalconFramePath);
+  GetSetMember(CString, LocalFalconFramePath);
   GetSetMember(CString, FalconConfigFile);
   GetSetMember(int, CanUseFalconConfig);
   int *GetIgnoreDMList(int index) {return &mIgnoreDMList[index][0];};
@@ -427,6 +431,7 @@ class DLL_IM_EX CCameraController
   SetMember(BOOL, AllowSpectroscopyImages);
   GetMember(bool, AskedDeferredSum);
   GetSetMember(BOOL, ASIgivesGainNormOnly);
+  GetMember(bool, StartedFalconAlign);
 
   int GetNumFramesSaved() {return mTD.NumFramesSaved;};
   BOOL *GetUseGPUforK2Align() {return &mUseGPUforK2Align[0];};
@@ -459,6 +464,7 @@ class DLL_IM_EX CCameraController
   EMbufferManager *mBufferManager;
   CEMscope  *mScope;
   CShiftManager *mShiftManager;
+  CFalconHelper *mFalconHelper;
   EMimageBuffer *mImBufs;
   CWinThread *mInsertThread;
   CWinThread *mAcquireThread;
@@ -657,6 +663,9 @@ class DLL_IM_EX CCameraController
   CString mFalconConfigFile;    // Path/Name of FalconConfig.xml
   int mCanUseFalconConfig;      // -1 not to, 0 read-only, 1 read/write
   bool mSavingFalconFrames;     // per-shot flag if it is happening
+  bool mStartedFalconAlign;     // Flag that DisplayNewImage started alignment and left
+  bool mAligningFalconFrames;   // Flag that Falcon frames are to be aligned here
+  bool mRemoveFEIalignedFrames; // Flag to remove frames aligned by FEI
   bool mRestoreFalconConfig;    // Flag that config file needs to be restored after shot
   BOOL mDeferStackingFrames;    // One-shot flag to defer stacking on next shot
   BOOL mStackingWasDeferred;    // Flag that it happened, so setup should be skipped
@@ -751,6 +760,7 @@ class DLL_IM_EX CCameraController
   BOOL mASIgivesGainNormOnly;    // Flag that advanced scripting interface only does norm
   float mPriorRecordDose;        // Cumulative dose prior to shot if doing tilt series
   int mNumSubsetAligned;         // Number of frames aligned and returned in sum, 0 if all
+  int mAlignStart, mAlignEnd;    // Starting and ending frames numbered from 1 as in UI
 
 public:
   void SetNonGatanPostActionTime(void);
@@ -848,7 +858,7 @@ public:
   void SetFullSumAsyncIfOK(int inSet);
   bool FindNearestBinning(CameraParameters *camParam, ControlSet *conSet, int &binInd,
     int &realBin);
-  void ComposeFramePathAndName(void);
+  void ComposeFramePathAndName(bool temporary);
   int GetPluginVersion(CameraParameters *camP);
   static int StartFocusRamp(CameraThreadData * td, bool & rampStarted);
   static void FinishFocusRamp(CameraThreadData *td, bool rampStarted);
@@ -871,6 +881,8 @@ bool IsK2ConSetSaving(ControlSet *conSet, CameraParameters * param);
 bool CanProcessHere(CameraParameters *param);
 void FixDirForFalconFrames(CameraParameters * param);
 bool CanPluginDo(int minVersion, CameraParameters * param);
+int NumAllVsAllFromFAparam(FrameAliParams &faParam, int numAliFrames, int &groupSize, 
+  int &refineIter, int &doSpline, int &numFilters, float *radius2);
 };
 
 

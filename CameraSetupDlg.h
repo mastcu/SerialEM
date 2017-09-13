@@ -190,6 +190,7 @@ private:
   int mProcBaseHeight;
   int mProcSTEMHeight;
   bool mFalconCanSave;
+  bool mWeCanAlignFalcon;
   int mDoseFracTableInd;
   int mDoseFracLeftOrig;
   int mDoseFracWidthOrig;
@@ -319,6 +320,7 @@ public:
   afx_msg void OnButSetupAlign();
   CStatic m_statWhereAlign;
   CStatic m_statIntermediateOnOff;
+  void CheckFalconFrameSumList(void);
 };
 
 //{{AFX_INSERT_LOCATION}}

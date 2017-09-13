@@ -8,7 +8,7 @@
  * name
  */
 #ifndef FEISCOPE_PLUGIN_VERSION
-#define FEISCOPE_PLUGIN_VERSION 106
+#define FEISCOPE_PLUGIN_VERSION 107
 #endif
 
 #ifndef LINE_END

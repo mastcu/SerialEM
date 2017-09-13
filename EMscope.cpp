@@ -44,7 +44,7 @@ static char THIS_FILE[]=__FILE__;
 // Scope plugin version that is good enough if there are no FEI cameras, and if there 
 // are cameras.  This allows odd features to be added without harrassing other users
 #define FEISCOPE_NOCAM_VERSION 105
-#define FEISCOPE_CAM_VERSION   106
+#define FEISCOPE_CAM_VERSION   107
 
 // Global variables for scope identity
 bool JEOLscope = false;
@@ -6680,8 +6680,12 @@ int CEMscope::LookupScriptingCamera(CameraParameters *params, bool refresh,
     SEMMessageBox(CString(mPlugFuncs->GetLastErrorString()));
   if (!err) {
     if (mPluginVersion >= FEI_PLUGIN_DOES_FALCON3) {
+      // For Falcon3
       //params->eagleIndex |= (PLUGFEI_USES_ADVANCED | PLUGFEI_CAN_DOSE_FRAC |
       //  PLUGFEI_CAM_CAN_ALIGN | PLUGFEI_CAM_CAN_COUNT | (40 << PLUGFEI_MAX_FRAC_SHIFT));
+      // For Falcon 2 in advanced
+      //params->eagleIndex |= (PLUGFEI_USES_ADVANCED | PLUGFEI_CAN_DOSE_FRAC |
+      //  (40 << PLUGFEI_MAX_FRAC_SHIFT));
       params->FEIflags = params->eagleIndex & ~PLUGFEI_INDEX_MASK;
       SEMTrace('E', "index ret %x  flags %x", params->eagleIndex, params->FEIflags);
       if (params->FEIflags & PLUGFEI_USES_ADVANCED) {
@@ -6692,9 +6696,14 @@ int CEMscope::LookupScriptingCamera(CameraParameters *params, bool refresh,
       } else {
         params->minimumDrift = B3DMAX(params->minimumDrift, minDrift);
       }
+
+      // Promote a Falcon 2 to 3 automatically, and adjust the frame time if low
       if (params->FEItype == FALCON2_TYPE && (params->FEIflags & PLUGFEI_CAM_CAN_COUNT) && 
         (params->FEIflags & PLUGFEI_CAM_CAN_ALIGN))
         params->FEItype = FALCON3_TYPE;
+      if (params->FEItype == FALCON3_TYPE && mWinApp->mCamera->GetFalconReadoutInterval()
+        > 0.05)
+          mWinApp->mCamera->SetFalconReadoutInterval(0.025f);
     } else {
       params->minimumDrift = B3DMAX(params->minimumDrift, minDrift);
     }

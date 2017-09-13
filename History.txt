@@ -3,6 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+9/12/17: Added script commands for suppressing the check on frame alignment
+parameter suitability before taking image, for testing program version and for
+skipping a command based on program version.
+
+9/12/17: Fixed RealignToNavItem command to not leave IS at 0 by mistake.
+
 9/1/17: Added optional entries to the RealignToNavItem command to reset image
 and realign until IS is below a threshold, and to leave IS at 0.
 

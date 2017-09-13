@@ -62,7 +62,7 @@ IDC_COMBOCHAN6, IDC_COMBOCHAN7, IDC_COMBOCHAN8, PANEL_END,
 IDC_STAT_K2MODE, IDC_RLINEAR, IDC_RCOUNTING, IDC_RSUPERRES, IDC_DOSE_FRAC_MODE, 
 IDC_STAT_FRAME_TIME, IDC_EDIT_FRAME_TIME, IDC_STAT_FRAME_SEC, IDC_ALIGN_DOSE_FRAC,
 IDC_BUT_SETUP_ALIGN, IDC_SAVE_FRAMES, IDC_SET_SAVE_FOLDER, IDC_BUT_FILE_OPTIONS,
-IDC_STAT_SAVE_SUMMARY, IDC_STAT_IMAGE_REDUCE, IDC_STAT_ANTIALIAS, IDC_SETUP_FALCON_FRAMES,
+IDC_STAT_SAVE_SUMMARY, IDC_STAT_ANTIALIAS, IDC_SETUP_FALCON_FRAMES,
 IDC_SETUP_K2_FRAME_SUMS, IDC_SAVE_FRAME_SUMS, IDC_ALWAYS_ANTIALIAS, IDC_STAT_WHERE_ALIGN,
 IDC_STAT_INTERMEDIATE_ONOFF, IDC_STAT_ALIGN_SUMMARY, PANEL_END,
 IDC_GROUP_DE_SAVE, IDC_DE_SAVE_FRAMES, IDC_DE_SAVE_SUMS, IDC_EDIT_DE_SUM_COUNT, 
@@ -752,6 +752,8 @@ void CCameraSetupDlg::UnloadConSet()
   m_eBottom = conSet->bottom / mCoordScaling;
   m_bDoseFracMode = B3DCHOICE(mParam->K2Type, conSet->doseFrac > 0, 
     mCamera->GetFrameSavingEnabled() || (FCAM_ADVANCED(mParam)&&IS_FALCON2_OR_3(mParam)));
+  if (mWeCanAlignFalcon && !FCAM_CAN_ALIGN(mParam) && !conSet->useFrameAlign)
+    conSet->useFrameAlign = 1;
   m_fFrameTime = conSet->frameTime;
   m_bAlignDoseFrac = conSet->alignFrames > 0 || 
     (mCurrentSet == RECORD_CONSET && mWinApp->mTSController->GetFrameAlignInIMOD());
@@ -1150,8 +1152,7 @@ void CCameraSetupDlg::ManageCamera()
   int hideForFalcon[] = {IDC_STAT_FRAME_TIME, IDC_EDIT_FRAME_TIME, IDC_STAT_FRAME_SEC,
     IDC_STAT_K2MODE, IDC_BUT_SETUP_ALIGN, IDC_RLINEAR, IDC_RCOUNTING, IDC_RSUPERRES, 
     IDC_ALIGN_DOSE_FRAC, IDC_STAT_ANTIALIAS, IDC_STAT_SAVE_SUMMARY, IDC_SAVE_FRAME_SUMS,
-    IDC_SETUP_K2_FRAME_SUMS, IDC_ALWAYS_ANTIALIAS, IDC_STAT_ALIGN_SUMMARY, 
-    IDC_STAT_WHERE_ALIGN};
+    IDC_SETUP_K2_FRAME_SUMS, IDC_ALWAYS_ANTIALIAS, IDC_STAT_ALIGN_SUMMARY};
   CButton *radio;
   CString strBin;
   CComboBox *combo;
@@ -1162,6 +1163,9 @@ void CCameraSetupDlg::ManageCamera()
   CString title = "Camera Parameters   --   " + mParam->name;
   mFalconCanSave = (IS_BASIC_FALCON2(mParam) && mCamera->GetMaxFalconFrames(mParam)) ||
     (IS_FALCON2_OR_3(mParam) && (mParam->FEIflags & PLUGFEI_CAN_DOSE_FRAC));
+  mWeCanAlignFalcon = mFalconCanSave && 
+    mWinApp->mScope->GetPluginVersion() >= PLUGFEI_ALLOWS_ALIGN_HERE && 
+    !(mParam->FEItype == FALCON3_TYPE && mCamera->GetLocalFalconFramePath().IsEmpty());
   states[0] = mNumCameras > 1;
   states[2] = !mParam->STEMcamera;
   states[3] = mParam->STEMcamera;
@@ -1305,9 +1309,14 @@ void CCameraSetupDlg::ManageCamera()
       ShowDlgItem(IDC_RLINEAR, true);
       ShowDlgItem(IDC_RCOUNTING, true);
     }
-    if (FCAM_CAN_ALIGN(mParam))
-      m_butAlignDoseFrac.ShowWindow(SW_SHOW);
   }
+  if (mWeCanAlignFalcon || FCAM_CAN_ALIGN(mParam))
+    m_butAlignDoseFrac.ShowWindow(SW_SHOW);
+  if (mWeCanAlignFalcon) {
+    ShowDlgItem(IDC_BUT_SETUP_ALIGN, true);
+    ShowDlgItem(IDC_STAT_ALIGN_SUMMARY, true);
+  } 
+
   if (!canConfig) {
     err = mWinApp->mFalconHelper->CheckFalconConfig(-1, state, "The config file will no "
       "longer be checked;\nyou will have to use the stupid checkbox");
@@ -1333,7 +1342,6 @@ void CCameraSetupDlg::ManageCamera()
     radio = (CButton *)GetDlgItem(IDC_RSUPERRES);
     radio->EnableWindow(mParam->K2Type == 1);
     SetDlgItemText(IDC_DOSE_FRAC_MODE, "Dose Fractionation mode");
-    SetDlgItemText(IDC_STAT_IMAGE_REDUCE, "");
     m_butAlwaysAntialias.EnableWindow(mCamera->GetPluginVersion(mParam) >= 
       PLUGIN_CAN_ANTIALIAS);
   } else {
@@ -2200,6 +2208,7 @@ void CCameraSetupDlg::OnDoseFracMode()
 void CCameraSetupDlg::OnAlignDoseFrac()
 {
   UpdateData(true);
+  CheckFalconFrameSumList();
   ManageDoseFrac();
 }
 
@@ -2217,36 +2226,44 @@ void CCameraSetupDlg::OnKillfocusEditFrameTime()
 void CCameraSetupDlg::ManageDoseFrac(void)
 {
   CString str;
+  bool enable;
   CArray<FrameAliParams, FrameAliParams> *faParams = mCamera->GetFrameAliParams();
   FrameAliParams fap;
   ControlSet *conSet = &mConSets[mCurrentSet + mActiveCameraList[mCurrentCamera] *
     MAX_CONSETS];
-  bool forceSaving = mParam->K2Type && m_bDoseFracMode && m_bAlignDoseFrac && 
-    conSet->useFrameAlign > 1 && 
-    mCamera->CAN_PLUGIN_DO(CAN_ALIGN_FRAMES, mParam);
+  bool forceSaving = m_bDoseFracMode && m_bAlignDoseFrac && (conSet->useFrameAlign > 1 && 
+    ((mParam->K2Type && mCamera->CAN_PLUGIN_DO(CAN_ALIGN_FRAMES, mParam)) || 
+    mWeCanAlignFalcon));
   if ((forceSaving && !m_bSaveFrames) || (!forceSaving && !BOOL_EQUIV(m_bSaveFrames,
     mUserSaveFrames))) {
     m_bSaveFrames = B3DCHOICE(forceSaving, true, mUserSaveFrames);
     UpdateData(false);
   }
-  bool enable = m_bSaveFrames && m_bDoseFracMode && 
-    mCamera->CAN_PLUGIN_DO(CAN_SUM_FRAMES, mParam);
+  
   m_statFrameTime.EnableWindow(m_bDoseFracMode);
   m_statFrameSec.EnableWindow(m_bDoseFracMode);
   m_editFrameTime.EnableWindow(m_bDoseFracMode);
-  m_butAlignDoseFrac.EnableWindow(m_bDoseFracMode && (m_bSaveFrames || !mFEItype) &&
+  m_butAlignDoseFrac.EnableWindow(m_bDoseFracMode && (m_bSaveFrames || !mFEItype || 
+    mWeCanAlignFalcon) &&
     !(mCurrentSet == RECORD_CONSET && mWinApp->mTSController->GetFrameAlignInIMOD()));
   m_butSaveFrames.EnableWindow(m_bDoseFracMode && !forceSaving);
   m_butSetupAlign.EnableWindow(m_bDoseFracMode && m_bAlignDoseFrac);
-  m_butSetSaveFolder.EnableWindow(m_bSaveFrames && m_bDoseFracMode); 
-  m_butFileOptions.EnableWindow(m_bSaveFrames && m_bDoseFracMode);
+  enable = m_bDoseFracMode && (m_bSaveFrames || (mWeCanAlignFalcon && m_bAlignDoseFrac &&
+    conSet->useFrameAlign));
+  m_butSetSaveFolder.EnableWindow(enable); 
+  m_butFileOptions.EnableWindow(enable);
   m_statSaveSummary.ShowWindow((m_bSaveFrames && m_bDoseFracMode && 
-    mParam->K2Type) ? SW_SHOW : SW_HIDE);
+    (mParam->K2Type || mFalconCanSave)) ? SW_SHOW : SW_HIDE);
   m_statAlignSummary.ShowWindow((!m_bSaveFrames && m_bAlignDoseFrac && m_bDoseFracMode && 
-    mParam->K2Type) ? SW_SHOW : SW_HIDE);
+    (mParam->K2Type || mWeCanAlignFalcon)) ? SW_SHOW : SW_HIDE);
+  enable = m_bSaveFrames && m_bDoseFracMode && 
+    mCamera->CAN_PLUGIN_DO(CAN_SUM_FRAMES, mParam);  
   m_butSaveFrameSums.EnableWindow(enable);
   m_butSetupK2FrameSums.EnableWindow(enable && m_bSaveK2Sums);
-  m_butSetupFalconFrames.EnableWindow(m_bSaveFrames && m_bDoseFracMode);
+  m_butSetupFalconFrames.EnableWindow((m_bSaveFrames || m_bAlignDoseFrac) && 
+    m_bDoseFracMode);
+  SetDlgItemText(IDC_SETUP_FALCON_FRAMES, (m_bAlignDoseFrac && !m_bSaveFrames &&
+    mWeCanAlignFalcon) ? "Set Up Frames to Align" : "Set Up Frames to Save");
   enable = mParam->K2Type && m_bSaveFrames && m_bDoseFracMode && 
     ((mCamera->CAN_PLUGIN_DO(CAN_GAIN_NORM, mParam) && 
     m_iProcessing == DARK_SUBTRACTED) || (m_iProcessing == UNPROCESSED && 
@@ -2255,12 +2272,12 @@ void CCameraSetupDlg::ManageDoseFrac(void)
     ((m_iK2Mode == COUNTING_MODE && !mParam->countingRefForK2.IsEmpty()) ||
     (m_iK2Mode == SUPERRES_MODE && !mParam->superResRefForK2.IsEmpty()));
   m_statNormDSDF.ShowWindow(enable ? SW_SHOW : SW_HIDE);
-  m_statWhereAlign.ShowWindow((m_bDoseFracMode && m_bAlignDoseFrac && mParam->K2Type) ? 
-    SW_SHOW : SW_HIDE);
+  m_statWhereAlign.ShowWindow((m_bDoseFracMode && m_bAlignDoseFrac && 
+    (mParam->K2Type || mWeCanAlignFalcon)) ? SW_SHOW : SW_HIDE);
   if (!conSet->useFrameAlign)
-    str = "Align in DM";
+    str = mParam->K2Type ? "Align in DM" : "Align in Falcon processor";
   else if (conSet->useFrameAlign == 1)
-    str = "Align in Plugin";
+    str = mParam->K2Type ? "Align in Plugin" : "Align in SerialEM";
   else
     str = (mCurrentSet == RECORD_CONSET && mCamera->GetAlignWholeSeriesInIMOD()) ?
     "TS only in IMOD" : "Align in IMOD";
@@ -2281,11 +2298,23 @@ void CCameraSetupDlg::OnSaveFrames()
 {
   UpdateData(true);
   mUserSaveFrames = m_bSaveFrames;
-  if (mFalconCanSave && m_bSaveFrames) {
+  CheckFalconFrameSumList();
+  if (mParam->K2Type && m_bSaveFrames && m_bSaveK2Sums)
+    OnSaveK2FrameSums();
+  ManageDoseFrac();
+  ManageAntialias();
+  ManageK2SaveSummary();
+}
+
+// Make sure there is a good summed frame list when save or align is turned on
+void CCameraSetupDlg::CheckFalconFrameSumList(void)
+{
+  if (mFalconCanSave && (m_bSaveFrames || m_bAlignDoseFrac)) {
     if (!mSummedFrameList.size())
       OnSetupFalconFrames();
     if (!mSummedFrameList.size()) {
       mUserSaveFrames = m_bSaveFrames = false;
+      m_bAlignDoseFrac = false;
       UpdateData(false);
     } else {
       mWinApp->mFalconHelper->AdjustForExposure(mSummedFrameList, mNumSkipBefore,
@@ -2294,11 +2323,6 @@ void CCameraSetupDlg::OnSaveFrames()
       ManageExposure();
     }
   }
-  if (mParam->K2Type && m_bSaveFrames && m_bSaveK2Sums)
-    OnSaveK2FrameSums();
-  ManageDoseFrac();
-  ManageAntialias();
-  ManageK2SaveSummary();
 }
 
 void CCameraSetupDlg::OnButFileOptions()
@@ -2404,10 +2428,17 @@ void CCameraSetupDlg::OnButSetupAlign()
   dlg.m_iWhereAlign = conSet->useFrameAlign;
   dlg.m_bUseFrameFolder = mCamera->GetComPathIsFramePath();
   dlg.mCurParamInd = conSet->faParamSetInd;
-  dlg.mGPUavailable = mCamera->GetGpuAvailable(DMind);
-  dlg.mUseGpuTransfer[0] = useGPU[DMind];
-  dlg.mUseGpuTransfer[1] = useGPU[2];
-  dlg.mServerIsRemote = mParam->useSocket && CBaseSocket::ServerIsRemote(GATAN_SOCK_ID);
+  if (mParam->K2Type) {
+    dlg.mGPUavailable = mCamera->GetGpuAvailable(DMind);
+    dlg.mUseGpuTransfer[0] = useGPU[DMind];
+    dlg.mUseGpuTransfer[1] = useGPU[2];
+    dlg.mServerIsRemote = mParam->useSocket && CBaseSocket::ServerIsRemote(GATAN_SOCK_ID);
+  } else {
+    dlg.mGPUavailable = mWinApp->mFalconHelper->GetGpuMemory() > 0;
+    dlg.mUseGpuTransfer[0] = mWinApp->mFalconHelper->GetUseGpuForAlign(0);
+    dlg.mUseGpuTransfer[1] = mWinApp->mFalconHelper->GetUseGpuForAlign(1);
+    dlg.mServerIsRemote = CBaseSocket::ServerIsRemote(FEI_SOCK_ID);
+  }
   dlg.mNewerK2API = mCamera->HasNewK2API(mParam);
   dlg.mEnableWhere = !(mCurrentSet == RECORD_CONSET && mStartedTS);
   dlg.mMoreParamsOpen = mWinApp->GetFrameAlignMoreOpen();
@@ -2419,8 +2450,13 @@ void CCameraSetupDlg::OnButSetupAlign()
     conSet->filterType = dlg.mCurFiltInd;
     conSet->useFrameAlign = dlg.m_iWhereAlign;
     conSet->faParamSetInd = dlg.mCurParamInd;
-    useGPU[DMind] = dlg.mUseGpuTransfer[0];
-    useGPU[2] = dlg.mUseGpuTransfer[1];
+    if (mParam->K2Type) {
+      useGPU[DMind] = dlg.mUseGpuTransfer[0];
+      useGPU[2] = dlg.mUseGpuTransfer[1];
+    } else {
+      mWinApp->mFalconHelper->SetUseGpuForAlign(0, dlg.mUseGpuTransfer[0]);
+      mWinApp->mFalconHelper->SetUseGpuForAlign(1, dlg.mUseGpuTransfer[1]);
+    }
     mCamera->SetAlignWholeSeriesInIMOD(dlg.m_bWholeSeries);
     mCamera->SetComPathIsFramePath(dlg.m_bUseFrameFolder);
   } else {
@@ -2435,7 +2471,6 @@ void CCameraSetupDlg::OnButSetupAlign()
 void CCameraSetupDlg::ManageAntialias(void)
 {
   CString str = "";
-  int dummy;
   bool antialias = (m_bDoseFracMode && m_iBinning > 1) || 
     (m_iK2Mode == SUPERRES_MODE && m_iBinning > 0) || 
     (m_bAlwaysAntialias && mCamera->CAN_PLUGIN_DO(CAN_ANTIALIAS, mParam) &&
@@ -2447,11 +2482,6 @@ void CCameraSetupDlg::ManageAntialias(void)
     } else {
       SetDlgItemText(IDC_STAT_ANTIALIAS, antialias ? "Anti-aliasing" : "Binning");
     }
-  } else {
-    if (m_bDoseFracMode && m_bSaveFrames)
-      str.Format("     %d intermediate frames will be saved", 
-      mWinApp->mFalconHelper->GetFrameTotals(mSummedFrameList, dummy));
-    SetDlgItemText(IDC_STAT_IMAGE_REDUCE, str);
   }
 }
 
@@ -2459,12 +2489,12 @@ void CCameraSetupDlg::ManageAntialias(void)
 void CCameraSetupDlg::ManageK2SaveSummary(void)
 {
   CString str;
-  int dummy;
+  int dummy, frames;
   bool unNormed = m_iProcessing != GAIN_NORMALIZED || 
     (mCamera->GetSaveUnnormalizedFrames() && mCamera->GetPluginVersion(mParam) > 
     PLUGIN_CAN_GAIN_NORM);
   if (mParam->K2Type && m_bDoseFracMode) {
-    int frames = B3DNINT(m_eExposure / B3DMAX(0.025, m_fFrameTime));
+    frames = B3DNINT(m_eExposure / B3DMAX(0.025, m_fFrameTime));
     int tiff = mCamera->GetK2SaveAsTiff();
     if (m_bSaveK2Sums && mSummedFrameList.size() > 0)
       frames = mWinApp->mFalconHelper->GetFrameTotals(mSummedFrameList, dummy);
@@ -2475,6 +2505,15 @@ void CCameraSetupDlg::ManageK2SaveSummary(void)
     SetDlgItemText(IDC_STAT_SAVE_SUMMARY, str);
     str.Format("%d frames", frames);
     SetDlgItemText(IDC_STAT_ALIGN_SUMMARY, str);
+  } else if (mFalconCanSave) {
+    frames = mWinApp->mFalconHelper->GetFrameTotals(mSummedFrameList, dummy);
+    if (m_bDoseFracMode && m_bSaveFrames)
+      str.Format("%d frames will be saved", frames);
+    SetDlgItemText(IDC_STAT_SAVE_SUMMARY, str);
+    if (mWeCanAlignFalcon && m_bDoseFracMode && m_bAlignDoseFrac) {
+      str.Format("%d frames", frames);
+      SetDlgItemText(IDC_STAT_ALIGN_SUMMARY, str);
+    }
   }
 }
 
@@ -2559,3 +2598,4 @@ void CCameraSetupDlg::OnKillfocusEditDeSumCount()
   UpdateData(true);
   ManageExposure();
 }
+

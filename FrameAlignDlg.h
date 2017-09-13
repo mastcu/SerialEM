@@ -36,6 +36,7 @@ private:
   float mRefineCutoff;
   float mCutoff2, mCutoff3;
   int mNumDMFilters;
+  CameraParameters *mCamParams;
 
 public:
   int m_iWhereAlign;          // radio button choice
@@ -166,4 +167,5 @@ public:
   CButton m_butUseFrameFolder;
   BOOL m_bUseFrameFolder;
   afx_msg void OnUseFrameFolder();
+  CButton m_butTruncateAbove;
 };

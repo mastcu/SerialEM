@@ -969,7 +969,7 @@ BEGIN
     CONTROL         "Align frames",IDC_ALIGN_DOSE_FRAC,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,87,407,50,10
     PUSHBUTTON      "Set Folder",IDC_SET_SAVE_FOLDER,223,418,43,14
     CTEXT           "Dose rate",IDC_STATDOSERATE,154,300,117,8
-    PUSHBUTTON      "Set Up Frames to Save",IDC_SETUP_FALCON_FRAMES,88,392,88,12
+    PUSHBUTTON      "Set Up Frames to Save",IDC_SETUP_FALCON_FRAMES,87,392,81,12
     GROUPBOX        "Auto save by server",IDC_GROUP_DE_SAVE,5,450,203,47
     CONTROL         "Raw frames",IDC_DE_SAVE_FRAMES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,461,52,10
     CONTROL         "Sum images with frame count",IDC_DE_SAVE_SUMS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,472,102,10
@@ -988,15 +988,14 @@ BEGIN
     CONTROL         "Correct Drift",IDC_CHECK_CORRECT_DRIFT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,152,81,10
     CONTROL         "Save variable frame sums",IDC_SAVE_FRAME_SUMS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,154,437,90,10
     PUSHBUTTON      "Set Up",IDC_SETUP_K2_FRAME_SUMS,246,435,26,14
-    LTEXT           "Intermediate frames",IDC_STAT_IMAGE_REDUCE,7,420,211,8
     CONTROL         "Always reduce to ""Binned size"" with anti-aliasing",IDC_ALWAYS_ANTIALIAS,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,426,158,10
     CTEXT           "Anti-aliasing",IDC_STAT_ANTIALIAS,165,427,46,8
     RTEXT           "Sum will be gain-normalized",IDC_STAT_NORM_DSDF,0,150,89,8
     PUSHBUTTON      "Set Up",IDC_BUT_SETUP_ALIGN,139,406,26,12
-    LTEXT           "Align in Plugin",IDC_STAT_WHERE_ALIGN,87,418,123,8
     LTEXT           "Intermediate frame saving is OFF in FEI dialog",IDC_STAT_INTERMEDIATE_ONOFF,11,381,138,8
-    LTEXT           "99 frames",IDC_STAT_ALIGN_SUMMARY,169,408,35,8
+    LTEXT           "99 frames",IDC_STAT_ALIGN_SUMMARY,169,408,40,8
+    LTEXT           "Align in Plugin",IDC_STAT_WHERE_ALIGN,87,418,123,8
 END
 
 IDD_ALIGNFOCUS DIALOGEX 0, 0, 119, 131

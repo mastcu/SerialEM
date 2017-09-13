@@ -316,6 +316,26 @@
             allowed.</TD>
         </TR>
         <TR vAlign="top">
+          <TD class="style4">IsVersionAtLeast #v [#d]</TD>
+          <TD>Tests whether the program version is at least the version specified with #v, 
+            and also if its build date is at least that specified by the optional #d.&nbsp; 
+            The version should be 5 digits: the initial version number (currently 3) times 
+            10000, plus the major release version times 100, plus the minor version (.e.g, 
+            3.6.3 is 30603).&nbsp; The build date should have the format yyyymmdd, e.g., 
+            &quot;Sep 12 2017&quot; is specified as 20170912.&nbsp; Sets reportedValue1 to 1 if the 
+            version is high enough, 0 if not.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style4">SkipIfVersionLessThan #v [#d]</TD>
+          <TD>Skips the command on the next line if the program version is earlier than the 
+            version specified with #v, or if the build date is earlier than the optional 
+            entry #d.&nbsp; The format of these entries is as just described.&nbsp; The next 
+            line will be skipped unconditionally when checking the script before execution.&nbsp; 
+            Thus, loop and conditional control statements cannot be on that line.&nbsp; This 
+            command is intended to provide a way to place a newer command into a script and 
+            allow it to be runnable on older versions.</TD>
+        </TR>
+        <TR vAlign="top">
           <TD class="style4">Test expression</TD>
           <TD>Evaluates a conditional expression (just as would be used for an IF statement) 
             or a single number or variable value and stores whether the test passed (i.e., 
@@ -678,6 +698,14 @@
             if T is positive, whether to use hybrid shifts if H is 1, primary filter radius 
             from R1, and second and third filter radii from R2 and R3 or 0 for either if R1 
             is present and R2 or R3 is not.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style8">SkipFrameAliParamCheck [#]</TD>
+          <TD>Disables the checking of whether the selected frame alignment parameter set 
+            fits the constraints for use selected in the Frame Alignment dialog.&nbsp; This 
+            can be used when modifying frame alignment parameters or Record parameters to 
+            avoid an annoying message before every shot.&nbsp; The optional value of 0 can 
+            be supplied to re-enable the checking. </TD>
         </TR>
       </TABLE>
       <BR>

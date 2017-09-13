@@ -166,6 +166,7 @@ void CFrameAlignDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Check(pDX, IDC_ONLY_SUPERRESOLUTION, m_bOnlySuperRes);
   DDX_Control(pDX, IDC_USE_FRAME_FOLDER, m_butUseFrameFolder);
   DDX_Check(pDX, IDC_USE_FRAME_FOLDER, m_bUseFrameFolder);
+  DDX_Control(pDX, IDC_TRUNCATE_ABOVE, m_butTruncateAbove);
 }
 
 
@@ -216,6 +217,7 @@ BOOL CFrameAlignDlg::OnInitDialog()
   SetupPanelTables(idTable, leftTable, topTable, mNumInPanel, mPanelStart);
   mParams = mWinApp->mCamera->GetFrameAliParams();
   FrameAliParams *param = mParams->GetData();
+  mCamParams = mWinApp->GetCamParams() + mCameraSelected;
   m_sbcPairwiseNum.SetRange(0, 500);
   m_sbcPairwiseNum.SetPos(250);
   m_sbcAlignBin.SetRange(0, 100);
@@ -228,22 +230,46 @@ BOOL CFrameAlignDlg::OnInitDialog()
   m_sbcRefineIter.SetPos(50);
 
   // set up filter combo box for K2 camera
-  mNumDMFilters = mWinApp->mCamera->GetNumK2Filters();
-  for (i = 0; i < mNumDMFilters; i++) {
-    filter = filterNames[i];
-    ind = filter.Find(" (default)");
-    if (ind > 0)
-      filter.Truncate(ind);
-    m_comboFilter.AddString((LPCTSTR)filter);
-  }
-  if (mNumDMFilters) {
-    B3DCLAMP(mCurFiltInd, 0, mNumDMFilters - 1);
-    m_comboFilter.SetCurSel(mCurFiltInd);
+  mNumDMFilters = 0;
+  if (mCamParams->K2Type) {
+    mNumDMFilters = mWinApp->mCamera->GetNumK2Filters();
+    for (i = 0; i < mNumDMFilters; i++) {
+      filter = filterNames[i];
+      ind = filter.Find(" (default)");
+      if (ind > 0)
+        filter.Truncate(ind);
+      m_comboFilter.AddString((LPCTSTR)filter);
+    }
+    if (mNumDMFilters) {
+      B3DCLAMP(mCurFiltInd, 0, mNumDMFilters - 1);
+      m_comboFilter.SetCurSel(mCurFiltInd);
+    }
   }
   m_butDeleteSet.EnableWindow(mParams->GetSize() > 1);
-  EnableDlgItem(IDC_RALIGN_IN_DM, mEnableWhere);
+  EnableDlgItem(IDC_RALIGN_IN_DM, mEnableWhere && 
+    (mCamParams->K2Type || FCAM_CAN_ALIGN(mCamParams)));
   EnableDlgItem(IDC_USE_FRAME_ALIGN, mEnableWhere);
   EnableDlgItem(IDC_RWITH_IMOD, mEnableWhere);
+
+  // Rename buttons for Falcon, disable some items
+  if (!mCamParams->K2Type) {
+    if (FCAM_CAN_ALIGN(mCamParams))
+      SetDlgItemText(IDC_RALIGN_IN_DM, "In Falcon processor");
+    else if (!m_iWhereAlign)
+      m_iWhereAlign = 1;
+    SetDlgItemText(IDC_USE_FRAME_ALIGN, "In SerialEM");
+    m_butTruncateAbove.EnableWindow(false);
+    m_editTruncation.EnableWindow(false);
+    m_statCountLabel.EnableWindow(false);
+
+    // Advanced Falcon 2 on remote computer with no local frame path cannot deal with
+    // paths in a com file or send it elsewhere, so disable that option
+    if (mCamParams->FEItype == FALCON2_TYPE && FCAM_ADVANCED(mCamParams) &&
+      mServerIsRemote && mWinApp->mCamera->GetLocalFalconFramePath().IsEmpty()) {
+        m_iWhereAlign = 1;
+        EnableDlgItem(IDC_RWITH_IMOD, false);
+    }
+  }
 
   // Load the set names and set the index
   for (ind = 0; ind < (int)mParams->GetSize(); ind++)
@@ -356,16 +382,19 @@ void CFrameAlignDlg::UnloadCurrentPanel(int whereAlign)
 void CFrameAlignDlg::ManagePanels(void)
 {
   BOOL states[5] = {true, true, true, true, true};
-  states[1] = m_iWhereAlign == 0;
+  states[1] = m_iWhereAlign == 0 && mCamParams->K2Type;
   states[2] = m_iWhereAlign > 0;
   states[3] = states[2] && mMoreParamsOpen;
   m_butSetFolder.EnableWindow(m_iWhereAlign == 2 && !m_bUseFrameFolder);
-  m_butKeepPrecision.EnableWindow(m_iWhereAlign == 1 && mNewerK2API);
+  m_butUseFrameFolder.EnableWindow(m_iWhereAlign == 2);
+  m_butKeepPrecision.EnableWindow(m_iWhereAlign == 1 && mNewerK2API &&mCamParams->K2Type);
   m_butSaveFloatSums.EnableWindow(m_iWhereAlign == 2);
   m_butWholeSeries.EnableWindow(m_iWhereAlign == 2);
   m_butUseGPU.EnableWindow(mGPUavailable || m_iWhereAlign > 1);
   SetDlgItemText(IDC_BUTMORE, mMoreParamsOpen ? "-" : "+");
   AdjustPanels(states, idTable, leftTable, topTable, mNumInPanel, mPanelStart, 0);
+  if (!mCamParams->K2Type && !FCAM_CAN_ALIGN(mCamParams))
+    ShowDlgItem(IDC_RALIGN_IN_DM, false);
 }
 
 // Show more or less parameters
@@ -748,8 +777,8 @@ void CFrameAlignDlg::SetBlankIsZeroEditBox(CString & editStr, float &cutoff)
 // Move data from a param into dialog
 void CFrameAlignDlg::LoadParamToDialog(void)
 {
-  CameraParameters *camP = mWinApp->GetCamParams() + mCameraSelected;
-  bool canSubset = mWinApp->mCamera->CAN_PLUGIN_DO(CAN_ALIGN_SUBSET, camP);
+  bool canSubset = mWinApp->mCamera->CAN_PLUGIN_DO(CAN_ALIGN_SUBSET, mCamParams) ||
+    !mCamParams->K2Type;
   if (mCurParamInd < 0)
     return;
   FrameAliParams *param = mParams->GetData() + mCurParamInd;
