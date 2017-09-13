@@ -2246,6 +2246,9 @@ void CCameraController::Capture(int inSet, bool retrying)
   mTD.FEIacquireFlags = 0;
   falconHasFrames = IS_FALCON2_OR_3(mParam) && (FCAM_ADVANCED(mParam) || 
     mFrameSavingEnabled);
+
+  // We can align HERE if the plugin version is sufficient and it is not a Falcon 3
+  // with no local path to server
   weCanAlignFalcon = falconHasFrames && 
     mWinApp->mScope->GetPluginVersion() >= PLUGFEI_ALLOWS_ALIGN_HERE &&
     !(mParam->FEItype == FALCON3_TYPE && mLocalFalconFramePath.IsEmpty());
@@ -2255,13 +2258,21 @@ void CCameraController::Capture(int inSet, bool retrying)
     conSet.useFrameAlign > 1)
     conSet.saveFrames = 1;
   mSavingFalconFrames = falconHasFrames && conSet.saveFrames;
+
+  // WE are aligning here if we can and slignment is selected for here
   mAligningFalconFrames = weCanAlignFalcon && conSet.alignFrames && 
     conSet.useFrameAlign == 1;
-  aligningOnly = conSet.alignFrames && !conSet.saveFrames && 
-    (weCanAlignFalcon || mParam->FEItype == FALCON3_TYPE); 
+
+  // Just aligning somewhere, and removing frames, if no save is selected and we CAN align
+  // here, meaning there is a local path to Falcon 3 frames
+  aligningOnly = conSet.alignFrames && !conSet.saveFrames && weCanAlignFalcon;
+
+  // Set flag for immediate wait if aligning here or in IMOD
   if (FCAM_ADVANCED(mParam) && conSet.alignFrames && weCanAlignFalcon && 
     conSet.useFrameAlign > 0)
     mTD.FEIacquireFlags |= PLUGFEI_WAIT_FOR_FRAMES;
+
+  // Check for inability to write a com file for Falcon 2
   if (FCAM_ADVANCED(mParam) && mParam->FEItype == FALCON2_TYPE && conSet.alignFrames &&
     conSet.useFrameAlign > 1 && CBaseSocket::ServerIsRemote(FEI_SOCK_ID) &&
     mLocalFalconFramePath.IsEmpty()) {
@@ -2272,8 +2283,10 @@ void CCameraController::Capture(int inSet, bool retrying)
       return;
   }
 
+  // Call the config setup function in any case of aligning/saving as well as to avoid
+  // frames for basic Falcon 2
   if ((IS_BASIC_FALCON2(mParam) && mFrameSavingEnabled) || mSavingFalconFrames ||
-    mAligningFalconFrames | aligningOnly) {
+    mAligningFalconFrames || aligningOnly) {
       if (FCAM_ADVANCED(mParam) || mAligningFalconFrames)
         mDeferStackingFrames = false;
 
@@ -2405,12 +2418,12 @@ void CCameraController::Capture(int inSet, bool retrying)
   mTD.UseFrameAlign = false;
   if ((conSet.doseFrac || IS_FALCON2_OR_3(mParam)) && conSet.alignFrames && 
     conSet.useFrameAlign) {
-    mTD.AlignFrames = 0;  // TODO: make this optional for Falcon 3
+    mTD.AlignFrames = 0; 
     if (conSet.useFrameAlign == 1) {
       mTD.K2ParamFlags |= K2_USE_FRAMEALIGN;
       mTD.UseFrameAlign = true;
     } else if (!mAlignWholeSeriesInIMOD) {
-      mTD.K2ParamFlags |= K2_MAKE_ALIGN_COM;
+      mTD.K2ParamFlags |= K2_MAKE_ALIGN_COM;   // Used for Falcon also
     }
   }
   mTD.SaveFrames = conSet.saveFrames && (!mParam->K2Type || conSet.doseFrac);
@@ -3371,6 +3384,8 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
   return setupErr != 0 ? 1 : 0;
 }
 
+// Compute the numAllVsAll variable for aligning based on expected # of frames and
+// sort and handle the filters, set a couple of other flags
 int CCameraController::NumAllVsAllFromFAparam(FrameAliParams &faParam, int numAliFrames, 
   int &groupSize, int &refineIter, int &doSpline, int &numFilters, float *radius2)
 {
@@ -6904,7 +6919,8 @@ void CCameraController::DisplayNewImage(BOOL acquired)
   }
   mInDisplayNewImage = true;
 
-  // Process all the channels of data
+  // Process all the channels of data; do one-time actions on first channel to process
+  // and only on first trip into here when aligning falcon frames
   for (chan = mTD.NumChannels - 1; chan >= 0; chan--) {
     if (acquired && chan == mTD.NumChannels - 1 && !mStartedFalconAlign) {
 
@@ -6977,6 +6993,8 @@ void CCameraController::DisplayNewImage(BOOL acquired)
           if (localFramePath.IsEmpty())
             localFramePath = mPathForFrames;
         }
+
+        // Call StackFrames to do stacking and/or aligning or writing com file
         ix = -1;
         if (IS_BASIC_FALCON2(mParam) && (mTD.K2ParamFlags & K2_MAKE_ALIGN_COM))
           ix = lastConSetp->faParamSetInd;
@@ -6989,6 +7007,8 @@ void CCameraController::DisplayNewImage(BOOL acquired)
         mStackingWasDeferred = false;
         mStartedFalconAlign = mAligningFalconFrames && mFalconAsyncStacking &&
           !mTD.ErrorFromSave;
+
+        // return now, when the stacking/aligning is done it will come back in
         if (mStartedFalconAlign) {
           mInDisplayNewImage = false;
           return;
@@ -7478,8 +7498,8 @@ void CCameraController::DisplayNewImage(BOOL acquired)
             mFalconHelper->GetErrorString(mTD.ErrorFromSave));
           if (mTD.NumFramesSaved)
             str.Format(" %d frames %s saved to %s", mTD.NumFramesSaved, 
-            mTD.NumAsyncSumFrames < 0 && (!(mSavingFalconFrames && mFalconAsyncStacking)
-            || mAligningFalconFrames) ? "were" : "are being", (LPCTSTR)mPathForFrames);
+            (mTD.NumAsyncSumFrames < 0 && (!(mSavingFalconFrames && mFalconAsyncStacking)
+            || mAligningFalconFrames)) ? "were" : "are being", (LPCTSTR)mPathForFrames);
           else
             str = "No frames were saved";
           message += str;
@@ -7488,19 +7508,24 @@ void CCameraController::DisplayNewImage(BOOL acquired)
           if (mTD.NumFramesSaved) {
             extra->mNumSubFrames = mTD.NumFramesSaved;
             extra->mSubFramePath = mPathForFrames;
-            if (FCAM_ADVANCED(mParam) && (mTD.K2ParamFlags & K2_MAKE_ALIGN_COM)) {
-              UtilSplitPath(localFramePath, str, message);
-              mFalconHelper->SetLastFrameDir(str);
-              UtilSplitExtension(message, root, ext);
-              if (mComPathIsFramePath)
-                root = str + '\\' + root + ".pcm";
-              else
-                root = mAlignFramesComPath + '\\' + root + ".pcm";
-              err = mFalconHelper->WriteAlignComFile(message, root, 
-                lastConSetp->faParamSetInd, mFalconHelper->GetUseGpuForAlign(1),
-                false);
-              if (err)
-                PrintfToLog("WARNING: The com file for aligning was not saved: %s",
+
+            // Write com file for Falcon aligning if flag is set in advanced case:
+            // Here local frame path is required, extract folder and make sure that
+            // helper has this as the last frame folder, and compose name
+            if (mParam->FEItype && FCAM_ADVANCED(mParam) && 
+              (mTD.K2ParamFlags & K2_MAKE_ALIGN_COM)) {
+                UtilSplitPath(localFramePath, str, message);
+                mFalconHelper->SetLastFrameDir(str);
+                UtilSplitExtension(message, root, ext);
+                if (mComPathIsFramePath)
+                  root = str + '\\' + root + ".pcm";
+                else
+                  root = mAlignFramesComPath + '\\' + root + ".pcm";
+                err = mFalconHelper->WriteAlignComFile(message, root, 
+                  lastConSetp->faParamSetInd, mFalconHelper->GetUseGpuForAlign(1),
+                  false);
+                if (err)
+                  PrintfToLog("WARNING: The com file for aligning was not saved: %s",
                   SEMCCDErrorMessage(err));
             }
           }
@@ -7539,10 +7564,10 @@ void CCameraController::DisplayNewImage(BOOL acquired)
         }
         if ((mParam->K2Type && mGettingFRC) || 
           (mParam->FEItype && mFalconHelper->GetGettingFRC()))
-          PrintfToLog(" FRC crossings 0.5: %.4f  0.25: %.4f  0.125: %.4f  is %.4f at "
-          "0.25/pix", mTD.FaCrossHalf / K2FA_FRC_INT_SCALE, 
-          mTD.FaCrossQuarter / K2FA_FRC_INT_SCALE, 
-          mTD.FaCrossEighth / K2FA_FRC_INT_SCALE, mTD.FaHalfNyq / K2FA_FRC_INT_SCALE);
+            PrintfToLog(" FRC crossings 0.5: %.4f  0.25: %.4f  0.125: %.4f  is %.4f at "
+              "0.25/pix", mTD.FaCrossHalf / K2FA_FRC_INT_SCALE, 
+              mTD.FaCrossQuarter / K2FA_FRC_INT_SCALE, 
+              mTD.FaCrossEighth / K2FA_FRC_INT_SCALE, mTD.FaHalfNyq / K2FA_FRC_INT_SCALE);
       }
     }
     

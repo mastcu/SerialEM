@@ -38,8 +38,8 @@ private:
   CSerialEMApp *mWinApp;
   CCameraController *mCamera;
   FrameAlign *mFrameAli;
-  float mReadoutInterval;
-  CArray<CString, CString> mOtherLines;
+  float mReadoutInterval;               // Local copy of frame time
+  CArray<CString, CString> mOtherLines; // Saved other lines from the config file
   CString mStorePrefix, mFramePrefix;
   int mNumStartLines;
   BOOL mConfigBackedUp;
@@ -49,47 +49,48 @@ private:
   std::map<int, std::string> mFileMap;
   int mBaseFileIndex;
   ScopePluginFuncs *mPlugFuncs;
-  long mNumFiles;
-  long mHeadNums[8];
-  int mNx, mNy;
-  int mChunkSize, mNumChunks;
-  short *mRotData;
-  int mRotateFlip, mDivideBy, mAliSumRotFlip;
+  long mNumFiles;                       // Number of frames found on first look
+  long mHeadNums[8];                    // Header values from raw file/stack
+  int mNx, mNy;                         // The X and Y size from first file or stack
+  int mChunkSize, mNumChunks;           // Variables to set writing in chunks
+  short *mRotData;                      // temporary buffer if doing rotation
+  int mRotateFlip, mDivideBy, mAliSumRotFlip;  // Saved values of passed-in variables
   long mDivideBy2;
-  float mPixel;
-  long mNumStacked;
-  CString mLocalPath, mDirectory, mRootname, mLastFrameDir;
+  float mPixel;                         // Pixel size for header
+  long mNumStacked;                     // NUmber of frames stacked so far
+  CString mLocalPath;  // Original folder of files when stacking, or name of stack to read
+  CString mDirectory, mRootname;        // folder and filename when stacking
+  CString mLastFrameDir;                // Last dir frame stack was saved in
   std::map<int, std::string>::iterator mIter;
-  int mFileInd;
-  int mStackError;
-  KStoreMRC *mStoreMRC;
-  KImageShort *mImage, *mImage2;
-  bool mDeletePrev;
-  double mWaitStart;
+  int mFileInd;                         // Running index to file/frame being processed
+  int mStackError;                      // Error flag from reading/stacking
+  KStoreMRC *mStoreMRC;                 // Input or output file
+  KImageShort *mImage, *mImage2;        // Main image, second image when saving async
+  bool mDeletePrev;                     // Flag that it is OK to delete previous frame
+  double mWaitStart;                    // Variables controlling wait for more frames
   int mWaitCount;
   int mWaitMaxCount;
   int mWaitInterval;
-  bool mStackingFrames;
-  int mUseImage2;
-  std::vector<long> mDeleteList;
-  int mStartedAsyncSave;
-  float mGpuMemory;
-  int mUseGpuForAlign[2];
-  int mUseFrameAlign;
-  int mFAparamSetInd;
-  int mAliComParamInd;
-  bool mJustAlignNotSave;
-  bool mGettingFRC;
-  bool mAlignSubset;
-  int mAlignStart, mAlignEnd;
-  bool mDoingAdvancedFrames;
-  bool mReadLocally;
-  FILE *mFrameFP;
-  MrcHeader mMrcHeader;
-  int mAlignError;
-  int mNumAligned;
+  bool mStackingFrames;                 // Flag that we are stacking frames
+  int mUseImage2;                       // Flag to use the second buffer
+  std::vector<long> mDeleteList;        // List of frames files to delete
+  int mStartedAsyncSave;                // Flag if started asynchronous saving
+  float mGpuMemory;                     // Memory of GPU here, or 0 if none
+  int mUseGpuForAlign[2];               // Flags for using GPU here and in IMOD
+  int mUseFrameAlign;                   // Set only if doing frame alignment here
+  int mFAparamSetInd;                   // Parameter set index if doing alignment here
+  int mAliComParamInd;                  // And separate index if writing  a com file
+  bool mJustAlignNotSave;               // Flag if aligning without saving (i.e. deleting)
+  bool mGettingFRC;                     // Flag if getting the FRC in the alignment
+  bool mAlignSubset;                    // Flag if aligning subset
+  int mAlignStart, mAlignEnd;           // The subset start and end
+  bool mDoingAdvancedFrames;            // Flag fror using advanced vs basic interface
+  bool mReadLocally;                    // Flag to read FEI stack directly
+  FILE *mFrameFP;                       // file pointer for local reading
+  MrcHeader mMrcHeader;                 // An MRC header for that file
+  int mAlignError;                      // Error code from alignment errors
+  int mNumAligned;                      // Number of frames aligned
   CameraThreadData *mCamTD;
-
 
 public:
   int SetupConfigFile(ControlSet &conSet, CString localPath, CString &directory, 

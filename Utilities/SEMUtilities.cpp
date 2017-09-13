@@ -711,7 +711,7 @@ float UtilEvaluateGpuCapability(int nx, int ny, int sumBinning,
     }
 
     // Now if summing, see if there is room for even/odd
-    if (gettingFRC && gpuFlags & GPU_FOR_SUMMING) {
+    if (gettingFRC && (gpuFlags & GPU_FOR_SUMMING)) {
       if (needed + sumPadSize > gpuUsableMem) {
         gettingFRC = false;
       } else {

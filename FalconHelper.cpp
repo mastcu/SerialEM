@@ -97,7 +97,7 @@ void CFalconHelper::Initialize(bool skipConfigs)
   mReadoutInterval = mCamera->GetFalconReadoutInterval();
   mFrameAli = new FrameAlign();
   mFrameAli->setPrintFunc(framePrintFunc);
-  if (!mFrameAli->gpuAvailable(0, &mGpuMemory, GetDebugOutput('E')))
+  if (!mFrameAli->gpuAvailable(0, &mGpuMemory, GetDebugOutput('E') ? 1 : 0))
     mGpuMemory = 0;
   configFile = mCamera->GetFalconFrameConfig();
   if (configFile.IsEmpty() || skipConfigs)
