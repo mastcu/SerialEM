@@ -9,7 +9,6 @@
  *  Colorado.  See dist/COPYRIGHT for full copyright notice.
  *
  *  $Id$
- *  Log at end
  */
 
 #ifndef MRCFILES_H
@@ -55,11 +54,17 @@
 #define MRC_MODE_COMPLEX_FLOAT 4
 #define MRC_MODE_USHORT        6
 #define MRC_MODE_RGB           16
+#define MRC_MODE_4BIT          101
 /* END_CODE */
 
-#define MRC_WINDOW_DATASIZE 1
-#define MRC_WINDOW_FULL     2
-#define MRC_WINDOW_NTSC     3
+#define MRC_EXT_TYPE_NONE      0
+#define MRC_EXT_TYPE_SERI      1
+#define MRC_EXT_TYPE_AGAR      2
+#define MRC_EXT_TYPE_FEI       3
+#define MRC_EXT_TYPE_UNKNOWN   4
+
+#define PACKED_4BIT_MODE       1
+#define PACKED_HALF_XSIZE      2
 
 #define MRC_RAMP_LIN 1
 #define MRC_RAMP_EXP 2
@@ -72,6 +77,14 @@
 #define MRC_HEADER_SIZE        1024   /* Length of Header is 1024 Bytes. */
 #define MRC_MAXCSIZE           3
 
+#define IIUNIT_SWAPPED       (1l << 0)
+#define IIUNIT_BYTES_SIGNED  (1l << 1)
+#define IIUNIT_OLD_STYLE     (1l << 2)
+#define IIUNIT_NINT_BUG      (1l << 3)
+#define IIUNIT_BAD_MAPCRS    (1l << 4)
+#define IIUNIT_4BIT_MODE     (1l << 5)
+#define IIUNIT_HALF_XSIZE    (1l << 6)
+#define IIUNIT_Y_INVERTED    (1l << 7)
 
 typedef struct  /*complex floating number*/
 {
@@ -96,41 +109,42 @@ typedef struct MRCheader
   b3dInt32   nz;         /*  # of Sections.                */
   b3dInt32   mode;       /*  given by #define MRC_MODE...  */
 
-  b3dInt32   nxstart;    /*  Starting point of sub image.  */
+  b3dInt32   nxstart;    /*  Starting point of sub image.  UNSUPPORTED */
   b3dInt32   nystart;
   b3dInt32   nzstart;
 
-  b3dInt32   mx;         /* Number of rows to read.        */
-  b3dInt32   my;
+  b3dInt32   mx;         /* "Grid size", # of pixels in "unit cell"    */
+  b3dInt32   my;         /* Keep the same as nx, ny, nz                */
   b3dInt32   mz;
 
-  b3dFloat   xlen;       /* length of x element in um.     */
-  b3dFloat   ylen;       /* get scale = xlen/nx ...        */
+  b3dFloat   xlen;       /* length of unit cell in Angstroms           */
+  b3dFloat   ylen;       /* get scale = xlen/nx ...                    */
   b3dFloat   zlen;
 
-  b3dFloat   alpha;      /* cell angles, ignore */
+  b3dFloat   alpha;      /* cell angles, ignored, set to 90            */
   b3dFloat   beta;
   b3dFloat   gamma;
 
-  b3dInt32   mapc;       /* map coloumn 1=x,2=y,3=z.       */
-  b3dInt32   mapr;       /* map row     1=x,2=y,3=z.       */
-  b3dInt32   maps;       /* map section 1=x,2=y,3=z.       */
+  b3dInt32   mapc;       /* map column  1=x,2=y,3=z.     UNSUPPORTED  */
+  b3dInt32   mapr;       /* map row     1=x,2=y,3=z.                  */
+  b3dInt32   maps;       /* map section 1=x,2=y,3=z.                  */
 
   b3dFloat   amin;
   b3dFloat   amax;
   b3dFloat   amean;
   
-  b3dInt16   ispg;       /* image type */
-  b3dInt16   nsymbt;     /* space group number */
-
+  /* 1/12/12: Removed nsymbt and made ispg be 4 bytes to match standard */
+  b3dInt32   ispg;       /* space group number in the standard */
 
   /* 64 bytes */
 
-  b3dInt32   next;
-  b3dInt16   creatid;  /* Creator id, hvem = 1000, DeltaVision = -16224 */
+  b3dInt32   next;     /* This is nsymbt in the MRC standard */
+  b3dInt16   creatid;  /* Used to be creator id, hvem = 1000, now 0 */
 
-  
-  b3dByte    blank[30];
+  b3dByte    blank[6];
+  b3dByte    extType[4]; /* Extended type */
+  b3dInt32   nversion;  /* Version number in MRC 2014 standard */
+  b3dByte    blank2[16];
   
   b3dInt16   nint;
   b3dInt16   nreal;
@@ -141,8 +155,8 @@ typedef struct MRCheader
   b3dFloat   max2;
   b3dFloat   min3;
   b3dFloat   max3;
-  b3dFloat   min4;
-  b3dFloat   max4;
+  b3dInt32   imodStamp;
+  b3dInt32   imodFlags;
 
   /*  UINT   extra[MRC_NEXTRA];*/
 
@@ -190,6 +204,10 @@ typedef struct MRCheader
   int    headerSize;
   int    sectionSkip;
   int    swapped;
+  int    bytesSigned;
+  int    yInverted;
+  int    iiuFlags;
+  int    packed4bits;
 
   char *pathname;
   char *filedesc;
@@ -215,6 +233,8 @@ typedef struct LoadInfo
   int ymax;
   int zmin;
   int zmax;
+  int padLeft;     /* Padding at start or end of line when reading or writing a */
+  int padRight;    /* subset of the array, in pixels not bytes */
   
   int ramp;      /* Contrast ramp type. */
   int scale;
@@ -266,11 +286,20 @@ extern "C" {
 /******************************** Header functions **************************/
 int mrc_head_read (FILE *fin,  MrcHeader *hdata);
 int mrc_head_write(FILE *fout, MrcHeader *hdata);
-int mrc_head_label(MrcHeader *hdata, char *label);
+void mrcInitOutputHeader(MrcHeader *hdata);
+int mrcCopyExtraHeader(MrcHeader *hin, MrcHeader *hout);
+int mrcReadExtraHeader(MrcHeader *hin, unsigned char **extData);
+int mrcWriteExtraHeader(MrcHeader *hout, unsigned char *extData, int next);
+void mrcCopyValidExtendedType(MrcHeader *hin, MrcHeader *hout);
+int mrc_head_label(MrcHeader *hdata, const char *label);
 int mrc_head_new  (MrcHeader *hdata, int x, int y, int z, int mode);
 int mrc_byte_mmm  (MrcHeader *hdata, unsigned char **idata);
 int mrc_head_label_cp(MrcHeader *hin, MrcHeader *hout);
 int mrc_test_size(MrcHeader *hdata);
+int mrcGetStandardVersion(MrcHeader *hdata);
+void fixTitlePadding(char *label);
+int sizeCanBe4BitK2SuperRes(int nx, int ny);
+int mrcGetExtendedType(MrcHeader *hdata, int *version);
 
 void mrc_get_scale(MrcHeader *h, float *xs, float *ys, float *zs);
 void mrc_set_scale(MrcHeader *h, double x, double y, double z);
@@ -283,16 +312,16 @@ int mrc_write_idata(FILE *fout, MrcHeader *hdata, void *data[]);
 int mrc_data_new   (FILE *fout, MrcHeader *hdata);
 int mrc_write_slice(void *buf, FILE *fout, MrcHeader *hdata, 
 		    int slice, char axis);
+int parallelWriteSlice(void *buf, FILE *fout, MrcHeader *hdata, int slice);
 
 /************************ Read image data functions **************************/
-float mrc_read_point (FILE *fin, MrcHeader *hdata, int x, int y, int z);
 void *mrc_mread_slice(FILE *fin, MrcHeader *hdata,
 		      int slice, char axis);
 int mrc_read_slice(void *buf, FILE *fin, MrcHeader *hdata, 
 		   int slice, char axis);
 int mrcReadFloatSlice(b3dFloat *buf, MrcHeader *hdata, int slice);
 
-  unsigned char **mrcGetDataMemory(struct LoadInfo *li, size_t xysize,
+  unsigned char **mrcGetDataMemory(IloadInfo *li, size_t xysize,
                                    int zsize, int pixsize);
   void mrcFreeDataMemory(unsigned char **idata, int contig, int zsize);
   float mrcGetComplexScale();
@@ -304,49 +333,55 @@ void mrcContrastScaling(MrcHeader *hdata, float smin, float smax, int black,
                         int white, int ramptype, float *slope, float *offset);
 
 unsigned char **read_mrc_byte(FILE *fin, MrcHeader *hdata, 
-			      struct LoadInfo *li);
+			      IloadInfo *li);
 unsigned char **mrc_read_byte(FILE *fin, MrcHeader *hdata, 
-			      struct LoadInfo *li,
-			      void (*func)(char *));
+			      IloadInfo *li,
+			      void (*func)(const char *));
 
-int mrcReadSectionByte(MrcHeader *hdata, struct LoadInfo *li,
-			unsigned char *buf, int z);
-int mrcReadZByte(MrcHeader *hdata, struct LoadInfo *li,
-		  unsigned char *buf, int z);
-int mrcReadYByte(MrcHeader *hdata, struct LoadInfo *li,
-		  unsigned char *buf, int y);
-int mrcReadZ(MrcHeader *hdata, struct LoadInfo *li,
-	      unsigned char *buf, int cz);
-int mrcReadY(MrcHeader *hdata, struct LoadInfo *li,
-			unsigned char *buf, int cy);
-int mrcReadSection(MrcHeader *hdata, struct LoadInfo *li,
-		    unsigned char *buf, int z);
+  /* Functions in mrcsec.c */
+int mrcReadSectionByte(MrcHeader *hdata, IloadInfo *li, unsigned char *buf, int z);
+int mrcReadZByte(MrcHeader *hdata, IloadInfo *li, unsigned char *buf, int z);
+int mrcReadYByte(MrcHeader *hdata, IloadInfo *li, unsigned char *buf, int y);
+int mrcReadSectionUShort(MrcHeader *hdata, IloadInfo *li, unsigned char *buf, int z);
+int mrcReadZUShort(MrcHeader *hdata, IloadInfo *li, unsigned char *buf, int z);
+int mrcReadYUShort(MrcHeader *hdata, IloadInfo *li, unsigned char *buf, int y);
+int mrcReadZ(MrcHeader *hdata, IloadInfo *li, unsigned char *buf, int cz);
+int mrcReadY(MrcHeader *hdata, IloadInfo *li, unsigned char *buf, int cy);
+int mrcReadSection(MrcHeader *hdata, IloadInfo *li, unsigned char *buf, int z);
 int mrcReadSectionFloat(MrcHeader *hdata, IloadInfo *li, b3dFloat *buf, int z);
 int mrcReadYFloat(MrcHeader *hdata, IloadInfo *li, b3dFloat *buf, int z);
 int mrcReadZFloat(MrcHeader *hdata, IloadInfo *li, b3dFloat *buf, int z);
+int mrcWriteZ(MrcHeader *hdata, IloadInfo *li, unsigned char *buf, int z);
+int mrcWriteZFloat(MrcHeader *hdata, IloadInfo *li, b3dFloat *buf, int z);
 
 /* misc stdio functions */
 int  loadtilts(struct TiltInfo *ti, MrcHeader *hdata);
-int  getloadinfo(MrcHeader *hdata,  struct LoadInfo *li); 
-int  mrc_init_li(struct LoadInfo *li, MrcHeader *hd);
-int  mrc_plist_li(struct LoadInfo *li, MrcHeader *hdata, char *fname);
-int  mrc_plist_load(struct LoadInfo *li, MrcHeader *hdata, FILE *fin);
-int  mrc_plist_proc(struct LoadInfo *li, int nx, int ny, int nz);
-int  mrc_plist_create(struct LoadInfo *li, int nx, int ny, int nz, int nfx, 
+int  getloadinfo(MrcHeader *hdata,  IloadInfo *li); 
+int  mrc_init_li(IloadInfo *li, MrcHeader *hd);
+int  mrc_plist_li(IloadInfo *li, MrcHeader *hdata, const char *fname);
+int  mrc_plist_load(IloadInfo *li, MrcHeader *hdata, FILE *fin);
+int  mrc_plist_proc(IloadInfo *li, int nx, int ny, int nz);
+int  mrc_plist_create(IloadInfo *li, int nx, int ny, int nz, int nfx, 
 		      int nfy, int ovx, int ovy);
-int  iiPlistLoadF(FILE *fin, struct LoadInfo *li, int nx, int ny, int nz);
-int  iiPlistLoad(char *filename, struct LoadInfo *li, int nx, int ny, int nz);
-void mrc_liso(MrcHeader *hdata, struct LoadInfo *li);
-int mrc_fix_li(struct LoadInfo *li, int nx, int ny, int nz);
-int get_loadinfo(MrcHeader *hdata, struct LoadInfo *li);
-unsigned char *get_byte_map(float slope, float offset, int outmin, int outmax);
+int  iiPlistLoadF(FILE *fin, IloadInfo *li, int nx, int ny, int nz);
+int  iiPlistLoad(const char *filename, IloadInfo *li, int nx, int ny, int nz);
+int iiPlistFromMetadata(const char *filename, int addMdoc, IloadInfo *li, int nx, 
+                        int ny, int nz);
+int iiPlistFromAutodoc(int adocIndex, int clearOnDone,  IloadInfo *li, int nx, int ny, 
+                       int nz, int montage, int numSect, int sectType);
+void iiPlistSetAdocCoordType(int value);
+void mrc_liso(MrcHeader *hdata, IloadInfo *li);
+int mrc_fix_li(IloadInfo *li, int nx, int ny, int nz);
+int get_loadinfo(MrcHeader *hdata, IloadInfo *li);
+unsigned char *get_byte_map(float slope, float offset, int outmin, int outmax, 
+                            int bytesSigned);
 unsigned char *get_short_map(float slope, float offset, int outmin, int outmax,
 			     int ramptype, int swapbytes, int signedint);
 
 
 /************************ Internal functions *********************************/
 int getfilename(char *name, char *prompt);
-void mrc_default_status(char *string);
+void mrc_default_status(const char *string);
 int mrc_getdcsize(int mode, int *dsize, int *csize);
 void mrc_swap_shorts(b3dInt16 *data, int amt);
 void mrc_swap_longs(b3dInt32 *data, int amt);
@@ -358,76 +393,3 @@ void mrc_set_cmap_stamp(MrcHeader *hdata);
 }
 #endif
 #endif
-
-/*
-
-$Log$
-Revision 1.3  2008/11/14 20:18:07  mast
-Synchronized from IMOD to SerialEM
-
-Revision 3.21  2008/11/02 13:43:17  mast
-Added functions for reading float slice
-
-Revision 3.20  2008/05/31 03:08:38  mast
-Added scaling routine
-
-Revision 3.19  2008/01/11 17:21:44  mast
-improved declaration for swap funcs
-
-Revision 3.18  2007/06/13 17:08:03  sueh
-bug# 1019 Adding sectionSkip to MrcHeader.
-
-Revision 3.17  2006/09/28 21:13:08  mast
-Changed xysize for data memory to size_t
-
-Revision 3.16  2006/08/27 23:47:00  mast
-Moved fgetline from mrcfiles to b3dutil
-
-Revision 3.15  2006/08/04 21:03:38  mast
-Add documentation tags
-
-Revision 3.14  2005/11/11 22:15:37  mast
-Changes for unsigned file mode
-
-Revision 3.13  2005/05/09 15:15:38  mast
-Removed mrc_read_image
-
-Revision 3.12  2005/01/14 23:19:21  mast
-Added typedef for MRCheader
-
-Revision 3.11  2004/11/05 18:52:53  mast
-Include local files with quotes, not brackets
-
-Revision 3.10  2004/11/04 17:09:38  mast
-Changes for mirroring FFTs
-
-Revision 3.9  2004/01/17 20:34:51  mast
-Move b3d file routines and mrc_big_seek to b3dutil
-
-Revision 3.8  2004/01/12 17:26:55  mast
-Change complex min max routine from float to void
-
-Revision 3.7  2004/01/08 06:43:05  mast
-Added functions for complex scaling
-
-Revision 3.6  2004/01/05 17:26:17  mast
-Renamed imin/imax to outmin/outmax; changed mrcRead... from void to int
-for error returns, and eliminated mode-specific calls
-
-Revision 3.5  2003/11/18 19:20:51  mast
-changes for 2GB problem on Windows
-
-Revision 3.4  2003/02/21 22:18:06  mast
-implement new b3d types
-
-Revision 3.3  2002/07/31 17:39:04  mast
-*** empty log message ***
-
-Revision 3.2  2002/07/31 17:29:29  mast
-Redefine header entries to comply with MRC image2000 standard
-Add declaration for mrc_set_cmap_stamp
-
-Revision 3.1  2002/06/26 16:53:13  mast
-Added prototype for mrc_swap_header
-
-*/

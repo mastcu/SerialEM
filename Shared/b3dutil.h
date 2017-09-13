@@ -13,6 +13,8 @@
 
 #include <stdio.h>
 #include <math.h>
+#include <stdlib.h>
+#include <string.h>
 
 /* Include this since this include file was split off from here */
 #include "cfsemshare.h"
@@ -40,11 +42,14 @@
 #define MRC_FLAGS_INV_ORIGIN 4
 #define MRC_FLAGS_BAD_RMS_NEG  8
 #define MRC_FLAGS_4BIT_BYTES  16
+#define INVERT_MRC_ORIGIN_DEFAULT 0
+#define INVERT_MRC_ORIGIN_ENV_VAR "INVERT_MRC_ORIGIN"
 
 /* Duplicate definitions of output-capable IITYPE values to avoid including iimage.h */
 #define OUTPUT_TYPE_TIFF    1
 #define OUTPUT_TYPE_MRC     2
 #define OUTPUT_TYPE_HDF     5
+#define OUTPUT_TYPE_JPEG    6
 #define OUTPUT_TYPE_DEFAULT OUTPUT_TYPE_MRC
 #define OUTPUT_TYPE_ENV_VAR "IMOD_OUTPUT_FORMAT"
 
@@ -52,6 +57,13 @@
 #define ALL_BIGTIFF_ENV_VAR "IMOD_ALL_BIG_TIFF"
 
 #define RADIANS_PER_DEGREE 0.01745329252
+
+/* Defined types for calling getExtHeaderValue */
+#define EXT_HEAD_VAL_BYTE   0
+#define EXT_HEAD_VAL_SHORT  1
+#define EXT_HEAD_VAL_FLOAT  2
+#define EXT_HEAD_VAL_INT    3
+#define EXT_HEAD_VAL_DOUBLE 4
 
 /* Determinant of 3x3 matrix */
 #define determ3(a1,a2,a3,b1,b2,b3,c1,c2,c3) ((a1)*(b2)*(c3) - (a1)*(b3)*(c2) +\
@@ -101,6 +113,8 @@ extern "C" {
   void overrideWriteBytes(int value);
   int writeBytesSigned();
   int readBytesSigned(int stamp, int flags, int mode, float dmin, float dmax);
+  int invertMrcOriginOnOutput();
+  void overrideInvertMrcOrigin(int value);
   void b3dShiftBytes(unsigned char *usbuf, char *sbuf, int nx, int ny, int direction,
                      int bytesSigned);
   void overrideOutputType(int type);
@@ -109,13 +123,22 @@ extern "C" {
   void overrideAllBigTiff(int value);
   int makeAllBigTiff();
   void setNextOutputSize(int nx, int ny, int nz, int mode);
+  int setTiffCompressionType(int typeIndex, int overrideEnv);
   void set4BitOutputMode(int inVal);
   int write4BitModeForBytes();
   int dataSizeForMode(int mode, int *bytes, int *channels);
+  int numCoresAndLogicalProcs(int *physical, int *logical);
   int totalCudaCores(int major, int minor, int multiprocCount);
+  double b3dPhysicalMemory();
   char **expandArgList(const char **argVec, int numArg, int *newNum, int *ifAlloc,
                        int *noMatchInd);
   int replaceFileArgVec(const char ***argv, int *argc, int *firstInd, int *ifAlloc);
+  double angleWithinLimits(float angle, float lowerLim, float upperLim);
+  void b3dSetLockTimeout(float timeout);
+  int b3dOpenLockFile(const char *filename);
+  int b3dLockFile(int index);
+  int b3dUnlockFile(int index);
+  int b3dCloseLockFile(int index);
 
 #ifdef __cplusplus
 }
