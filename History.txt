@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+9/16/17: Stopped function for getting dose rate from image mean from getting
+relative gain factor from the wrong buffer (In 3.6).
+
 9/12/17: Added ability to align frames from Falcon cameras in SerialEM and
 write command files for aligning with IMOD, just as with K2.
 

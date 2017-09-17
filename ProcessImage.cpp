@@ -2752,7 +2752,7 @@ int CProcessImage::DoseRateFromMean(EMimageBuffer *imBuf, float mean, float &dos
     return 2;
   if (extra->mDividedBy2 > 0)
     countsPerElectron /= 2.f;
-  gainFac = mWinApp->GetGainFactor(mImBufs->mCamera, mImBufs->mBinning);
+  gainFac = mWinApp->GetGainFactor(imBuf->mCamera, imBuf->mBinning);
   doseRate = (float)(mean / (gainFac * countsPerElectron * extra->mExposure * 
     imBuf->mBinning * imBuf->mBinning / (camParam->K2Type ? 4. : 1.)));
   if (camParam->K2Type && imBuf->mK2ReadMode > 0)
