@@ -154,7 +154,6 @@ int CFalconHelper::SetupConfigFile(ControlSet &conSet, CString localPath,
 {
   CFileStatus status;
   CString str;
-  std::vector<long> readouts;
   long temp = 1;
   long *readPtr = &temp;
   float frameInterval = mCamera->GetFalconReadoutInterval();
@@ -185,14 +184,15 @@ int CFalconHelper::SetupConfigFile(ControlSet &conSet, CString localPath,
   }
 
   // Build the list of readouts
+  mReadouts.clear();
   for (block = 0; block < (int)conSet.summedFrameList.size() / 2; block++)
     for (ind = 0; ind < conSet.summedFrameList[block * 2]; ind++)
-      readouts.push_back((long)conSet.summedFrameList[block * 2 + 1]);
+      mReadouts.push_back((long)conSet.summedFrameList[block * 2 + 1]);
 
-  numFrames = (int)readouts.size();
+  numFrames = (int)mReadouts.size();
   if (numFrames > 0) {
     temp = numFrames;
-    readPtr = &readouts[0];
+    readPtr = &mReadouts[0];
   }
   
   if (mDoingAdvancedFrames) {
@@ -320,11 +320,11 @@ int CFalconHelper::SetupFrameAlignment(ControlSet &conSet, CameraParameters *cam
 // For advanced interface, this is called for aligning only, and localPath should be the 
 // full path to the input stack file
 int CFalconHelper::StackFrames(CString localPath, CString &directory, CString &rootname, 
-  long divideBy2, int divideBy, int rotateFlip, int aliSumRotFlip, float pixel, 
-  BOOL doAsync, bool readLocally, int aliParamInd, long &numStacked, 
+  long divideBy2, int divideBy, float floatScale, int rotateFlip, int aliSumRotFlip, 
+  float pixel, BOOL doAsync, bool readLocally, int aliParamInd, long &numStacked, 
   CameraThreadData *camTD)
 {
-  int ind, retval = 0;
+  int ind, totalSubframes = 0, start, end, retval = 0;
   CFileStatus status;
   CString str, str2;
   CFile file;
@@ -338,12 +338,31 @@ int CFalconHelper::StackFrames(CString localPath, CString &directory, CString &r
   mRootname = rootname;
   mDivideBy = divideBy;
   mDivideBy2 = divideBy2;
+  mFloatScale = floatScale;
   mRotateFlip = rotateFlip;
   mAliSumRotFlip = aliSumRotFlip;
   mPixel = pixel;
   mReadLocally = readLocally;
   mCamTD = camTD;
   mAliComParamInd  = aliParamInd;
+
+  // For linear Falcon 3, the frames are all averaged, so we need to switch to floatScale
+  // if necessary and adjust it for average # of subframes in each frame
+  if (camTD->FEItype == FALCON3_TYPE && !camTD->GatanReadMode) {
+    start = 0;
+    end = (int)mReadouts.size();
+    if (mAlignSubset) {
+      start = mAlignStart - 1;
+      end = B3DMIN(mAlignEnd, end);
+      if (start >= end)
+        start = 0;
+    }
+    for (ind = start; ind < end; ind++)
+      totalSubframes += mReadouts[ind];
+    if (!mFloatScale)
+      mFloatScale = (float)( 1. / pow(2., mDivideBy));
+    mFloatScale = (float)((mFloatScale * totalSubframes) / (end - start));
+  }
 
   numStacked = 0;
   mNumStacked = 0;
@@ -358,6 +377,7 @@ int CFalconHelper::StackFrames(CString localPath, CString &directory, CString &r
 
     // Open a file locally if flag set for that
   if (readLocally) {
+    double wallStart = wallTime();
     mFrameFP = fopen((LPCTSTR)localPath, "rb");
     if (!mFrameFP) {
       SEMTrace('E', "Error opening frame stack at local path: %s", (LPCTSTR)localPath);
@@ -371,7 +391,7 @@ int CFalconHelper::StackFrames(CString localPath, CString &directory, CString &r
     mHeadNums[0] = mMrcHeader.nx;
     mHeadNums[1] = mMrcHeader.ny;
     mMrcHeader.yInverted = 0;
-
+    PrintfToLog("Open time %.3f", wallTime() -wallStart);
   } else {
 
     // Get the file map or open the file
@@ -538,8 +558,8 @@ void CFalconHelper::StackNextTask(int param)
   // Do alignment unless skipping that
   if (!mStackError && mUseFrameAlign && !mAlignError && !skipAlign) {
      ind = mFrameAli->nextFrame(outPtr, mImage->getMode(), NULL, mNx, mNy, 
-      NULL, 0.,  // Truncation limit...
-      NULL, 0, 0, 1, 0., 0.);
+       NULL, 0.,  // Truncation limit...
+       NULL, 0, 0, 1, 0., 0.);
      if (ind) {
        SEMTrace('1', "Error %d calling framealign nextFrame on frame %d", ind, 
          mFileInd + 1);
@@ -657,7 +677,7 @@ void CFalconHelper::FinishFrameAlignment(void)
   float *xShifts = new float [mNumAligned + 10];
   float *yShifts = new float [mNumAligned + 10];
   short *sAliSum = mAliSumRotFlip ? (short *)aliSum : mCamTD->Array[0];
-  unsigned short *usAliSum = (unsigned short *)aliSum;
+  unsigned short *usAliSum = (unsigned short *)sAliSum;
 
   ind = mFrameAli->finishAlignAndSum(param.refRadius2, refSigma, param.stopIterBelow,
     param.groupRefine, (mNumAligned >= param.smoothThresh && param.doSmooth) ? 1 : 0,
@@ -684,10 +704,39 @@ void CFalconHelper::FinishFrameAlignment(void)
     }
 
     // Only old Falcon 2 frames were divided, the advanced scripting frames were
-    // just read in and still need that treatment (but are they all signed now?)
-    if (mDoingAdvancedFrames && mDivideBy2) {
+    // just read in and still need that treatment.  In any case, data needs to be clamped
+    // and cast as appropropriate for the return type
+    if (mDoingAdvancedFrames && mFloatScale > 0) {
+      if (mDivideBy2) {
+        for (ind = 0; ind < mNx * mNy; ind++) {
+          val = B3DNINT(mFloatScale * aliSum[ind]);
+          B3DCLAMP(val, -32768, 32767);
+          sAliSum[ind] = (short)val;
+        }
+      } else {
+        for (ind = 0; ind < mNx * mNy; ind++) {
+          val = B3DNINT(mFloatScale * aliSum[ind]);
+          B3DCLAMP(val, 0, 65535);
+          usAliSum[ind] = (unsigned short)val;
+        }
+      }
+    } else if (mDoingAdvancedFrames && mDivideBy) {
+      if (mDivideBy2) {
+       for (ind = 0; ind < mNx * mNy; ind++) {
+          val = B3DNINT(aliSum[ind]) >> mDivideBy;
+          B3DCLAMP(val, -32768, 32767);
+          sAliSum[ind] = (short)val;
+        }
+      } else {
+        for (ind = 0; ind < mNx * mNy; ind++) {
+          val = B3DNINT(aliSum[ind]) >> mDivideBy;
+          B3DCLAMP(val, 0, 65535);
+          usAliSum[ind] = (unsigned short)val;
+        }
+      }
+    } else if (mDivideBy2) {
       for (ind = 0; ind < mNx * mNy; ind++) {
-        val = B3DNINT(aliSum[ind] / mDivideBy);
+        val = B3DNINT(aliSum[ind]);
         B3DCLAMP(val, -32768, 32767);
         sAliSum[ind] = (short)val;
       }

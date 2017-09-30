@@ -56,7 +56,7 @@ private:
   short *mRotData;                      // temporary buffer if doing rotation
   int mRotateFlip, mDivideBy, mAliSumRotFlip;  // Saved values of passed-in variables
   long mDivideBy2;
-  float mPixel;                         // Pixel size for header
+  float mPixel, mFloatScale;                         // Pixel size for header
   long mNumStacked;                     // NUmber of frames stacked so far
   CString mLocalPath;  // Original folder of files when stacking, or name of stack to read
   CString mDirectory, mRootname;        // folder and filename when stacking
@@ -71,6 +71,7 @@ private:
   int mWaitCount;
   int mWaitMaxCount;
   int mWaitInterval;
+  std::vector<long> mReadouts;          // Vector of subframes per frame
   bool mStackingFrames;                 // Flag that we are stacking frames
   int mUseImage2;                       // Flag to use the second buffer
   std::vector<long> mDeleteList;        // List of frames files to delete
@@ -97,7 +98,7 @@ public:
     CString &filename, CString &configFile, BOOL stackingDeferred, 
     CameraParameters *camParams, long &numFrames);
   int StackFrames(CString localPath, CString &directory, CString &rootname, 
-    long divideBy2, int divideBy, int rotateFlip, int aliSumRotFlip, float pixel, BOOL doAsync, 
+    long divideBy2, int divideBy, float floatScale, int rotateFlip, int aliSumRotFlip, float pixel, BOOL doAsync, 
     bool readLocally, int aliParamInd, long & numStacked, CameraThreadData *camTD);
   const char * GetErrorString(int code);
   int BuildFileMap(CString localPath, CString &directory);
