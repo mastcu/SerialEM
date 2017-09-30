@@ -131,7 +131,9 @@ struct CameraParameters {
   int numOrigBinnings;     // Original # of binnings for FEI STEM
   int origBinnings[MAX_BINNINGS];
   float gainFactor[MAX_BINNINGS];   // Relative gain factors for each binning
-  int autoGainAtBinning;   // Binning at which to start automatic gain fatcors
+  int autoGainAtBinning;   // Binning at which to start automatic gain factors
+  int falcon3ScalePower;   // Power for Falcon 3 scaling
+  float linear2CountingRatio;  // Ratio of raw counts in linear mode to counting mode
   int numExtraGainRefs;    // Number of extra gain refs
   int processHere;         // Per-camera flag for whether to normalize in SerialEM
   BOOL retractable;        // Is camera retractable
@@ -193,6 +195,7 @@ struct CameraParameters {
   int binnedOffsetX[MAX_BINNINGS];    // The offsets in unbinned pixels
   int binnedOffsetY[MAX_BINNINGS];
   float countsPerElectron;    // Camera gain in counts per electron
+  float unscaledCountsPerElec;  // Original value read in from properties
   int corrections;            // Corrections to do in DM, or -1 for default
   int sizeCheckSwapped;       // Flag that sizes are swapped in size check, or to skip it
   int subareasBad;            // Flag that subsets may give artifacts (Stokes Tietz)
@@ -226,6 +229,7 @@ struct CameraParameters {
   float doseTabScale;
   float doseTabConst;
   float specToCamDoseFac;     // Last measured scaling from specimen to camera dose rate
+  float addToExposure;        // Constant to add to exposure time 
   BOOL invertFocusRamp;       // Lazy way out: flag to invert direction of dynamic focus
   int numChannels;
   CString channelName[MAX_STEM_CHANNELS];  // Detector or official camera names for FEI,
