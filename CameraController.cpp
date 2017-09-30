@@ -2347,11 +2347,7 @@ void CCameraController::Capture(int inSet, bool retrying)
   // load some thread data
   mTD.ImageType = (mParam->unsignedImages && mDivideBy2 <= 0) ? kUSHORT : kSHORT;
   mTD.DivideBy2 = (mParam->unsignedImages && mDivideBy2 > 0) ? mDivideBy2 : 0;
-  if (mParam->FEItype && FCAM_ADVANCED(mParam) && mParam->autoGainAtBinning > 0) {
-    mTD.DivideBy2 += B3DNINT(log((double)mParam->gainFactor[binInd]) / log(0.5));
-    SEMTrace('E', "Divide by 2 set to %d for binning %d (factor %f)", mTD.DivideBy2, 
-      mBinning, mParam->gainFactor[binInd]);
-  }
+
   /*logmess.Format("Thread data divide by 2: %d", mTD.DivideBy2);
   if (mDebugMode)
     mWinApp->AppendToLog(logmess, LOG_OPEN_IF_CLOSED); */
@@ -2441,6 +2437,36 @@ void CCameraController::Capture(int inSet, bool retrying)
   mPriorRecordDose = (float)B3DCHOICE(mWinApp->DoingTiltSeries(),
     mWinApp->mTSController->GetCumulativeDose(), -1.);
 
+  // Adjust or set scaling for FEI cameras in advanced interface
+  mDivBy2ForExtra = mDivBy2ForImBuf = mTD.DivideBy2;
+  if (mParam->FEItype && FCAM_ADVANCED(mParam)) { 
+    if (mParam->autoGainAtBinning > 0) {
+      mTD.DivideBy2 += B3DNINT(log((double)mParam->gainFactor[binInd]) / log(0.5));
+      SEMTrace('E', "Divide by 2 set to %d for binning %d (factor %f)", mTD.DivideBy2, 
+        mBinning, mParam->gainFactor[binInd]);
+    }
+    mDivBy2ForExtra = mTD.DivideBy2;
+    mTD.CountScaling = 0.;
+    if (mParam->FEItype == FALCON3_TYPE && mParam->falcon3ScalePower > -10) {
+      if (conSet.K2ReadMode) {
+        if (mParam->falcon3ScalePower <= 0)
+          mTD.DivideBy2 -= mParam->falcon3ScalePower;
+        else
+          mTD.CountScaling = mParam->linear2CountingRatio / 
+            (float)pow(2., mTD.DivideBy2 + mParam->falcon3ScalePower);
+      } else {
+        mTD.FEIacquireFlags |= (PLUGFEI_APPLY_PIX2COUNT | PLUGFEI_UNBIN_PIX2COUNT);
+        if (mParam->falcon3ScalePower <= 0)
+          mTD.CountScaling = 1.f / (mParam->linear2CountingRatio * 
+            (float)pow(2., mTD.DivideBy2 - mParam->falcon3ScalePower));
+        else
+          mTD.DivideBy2 += mParam->falcon3ScalePower;
+      }
+      SEMTrace('E', "Falcon 3 scaling: divideBy2 %d float scale %f  flags %x", 
+        mTD.DivideBy2, mTD.CountScaling, mTD.FEIacquireFlags);
+    }
+  }
+
   // Set timeout for camera acquires from exposure and readout components
   megaVoxel = (mDMsizeX * mDMsizeY / 1.e6) / (mParam->fourPort ? 4. : 1.);
   if (mParam->DE_camType == DE_12 || IS_FALCON2_OR_3(mParam))
@@ -2527,6 +2553,9 @@ void CCameraController::Capture(int inSet, bool retrying)
     return;
 
   mTD.Exposure = mExposure;
+  if (mParam->addToExposure > -1. && 
+    mParam->addToExposure + mExposure > mParam->minExposure)
+      mTD.Exposure += mParam->addToExposure;
   mTD.psa = NULL;
   mTD.Array[0] = NULL;
   mTD.Simulation = mSimulationMode;
@@ -4820,6 +4849,19 @@ float CCameraController::GetCountScaling(CameraParameters *camParam)
   return retVal;
 }
 
+// Adjust the working value of counts per electron for a Falcon for the chosen scaling
+void CCameraController::AdjustCountsPerElecForScale(CameraParameters *param)
+{
+  if (param->FEItype != FALCON3_TYPE)
+    return;
+  param->countsPerElectron = param->unscaledCountsPerElec;
+  if (param->falcon3ScalePower < 0)
+    param->countsPerElectron /= (float)pow(2., -param->falcon3ScalePower);
+  else if (param->falcon3ScalePower > 0)
+    param->countsPerElectron *= 
+      param->linear2CountingRatio / (float)pow(2., param->falcon3ScalePower);
+}
+
 // Return the target size for tasks for the given camera, or the current on if camaParam
 // is NULL (the default)
 int CCameraController::TargetSizeForTasks(CameraParameters *camParam)
@@ -6875,7 +6917,7 @@ UINT CCameraController::InsertProc(LPVOID pParam)
 void CCameraController::DisplayNewImage(BOOL acquired)
 {
   double stX, stZ, ISX, ISY;
-  int spotSize, chan, i, err, ix, iy, invertCon, operation, ixoff, iyoff;
+  int spotSize, chan, i, err, ix, iy, invertCon, operation, ixoff, iyoff, divideBy;
   int typext = 0, ldSet = 0;
   BOOL lowDoseMode, hasUserPtSave = false;
   bool readLocally = false;
@@ -6998,12 +7040,15 @@ void CCameraController::DisplayNewImage(BOOL acquired)
         ix = -1;
         if (IS_BASIC_FALCON2(mParam) && (mTD.K2ParamFlags & K2_MAKE_ALIGN_COM))
           ix = lastConSetp->faParamSetInd;
+        divideBy = mTD.DivideBy2;
+        if (IS_BASIC_FALCON2(mParam))
+          divideBy = mTD.DivideBy2 ? 2 : 1;
         if (IS_BASIC_FALCON2(mParam) || mAligningFalconFrames)
           mTD.ErrorFromSave = mFalconHelper->StackFrames(localFramePath, mFrameFolder, 
-            mFrameFilename, mTD.DivideBy2, mTD.DivideBy2 ? 2 : 1, mParam->rotationFlip,
+            mFrameFilename, mDivBy2ForImBuf, divideBy, (float)mTD.CountScaling, 
+            mParam->rotationFlip, 
             mParam->DMrotationFlip < 0 ? mParam->rotationFlip : mParam->DMrotationFlip,
-            pixelSize, mFalconAsyncStacking, readLocally, ix, mTD.NumFramesSaved,
-            &mTD);
+            pixelSize, mFalconAsyncStacking, readLocally, ix, mTD.NumFramesSaved, &mTD);
         mStackingWasDeferred = false;
         mStartedFalconAlign = mAligningFalconFrames && mFalconAsyncStacking &&
           !mTD.ErrorFromSave;
@@ -7335,6 +7380,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       imBuf->mBinning = mBinning;
       imBuf->mEffectiveBin = (float)mBinning;
       CUR_OR_DEFD_TO_BUF(mDivideBinToShow, mParam->K2Type ? 2 : 1);
+      CUR_OR_DEFD_TO_BUF(mDividedBy2, mDivBy2ForImBuf > 0);
       CUR_OR_DEFD_TO_BUF(mCamera, curCam);
       if (mMagToRestore)
         CUR_OR_DEFD_TO_BUF(mEffectiveBin, imBuf->mEffectiveBin * 
@@ -7405,7 +7451,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       extra->mStageX = (float)mStageXbefore;
       extra->mStageY = (float)mStageYbefore;
       extra->mStageZ = (float)mStageZbefore;
-      extra->mDividedBy2 = mTD.DivideBy2;
+      extra->mDividedBy2 = mDivBy2ForExtra;
       extra->mDateTime = mWinApp->mDocWnd->DateTimeForTitle();
       if (mWinApp->mNavigator && mWinApp->mNavigator->GetAcquiring() && 
         !mWinApp->DoingTiltSeries()) {
@@ -7631,6 +7677,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
         extra->mFrameDosesCounts += str;
       }
     }
+    extra->mCountsPerElectron = mWinApp->mProcessImage->CountsPerElectronForImBuf(imBuf);
 
     // Save to autodoc file if one is designated
     if (extra->mNumSubFrames > 0 || (IS_FALCON2_OR_3(mParam) && (mFrameMdocForFalcon > 1 
@@ -8623,18 +8670,18 @@ int CCameraController::AcquireFEIimage(CameraThreadData *td, void *array, int co
     return 1;
   }
   if (advanced) {
-    SEMTrace('E', "Calling ASIacquireFromcamera %p %d %d %f %d %d %d %d %d %d %d %d %d %d"
-      , array, sizeX, sizeY,  
-      td->Exposure,  messInd, td->Binning, td->restrictedSize, td->ImageType,
-      td->DivideBy2, td->eagleIndex, 
+    SEMTrace('E', "Calling ASIacquireFromcamera %p %d %d %f %d %d %d %d %d %d %d %d %d "
+      "%d %f", array, sizeX, sizeY,  td->Exposure,  messInd, td->Binning, 
+      td->restrictedSize, td->ImageType, td->DivideBy2, td->eagleIndex, 
       (td->FEIflags & PLUGFEI_CAN_DOSE_FRAC) ? td->SaveFrames : -1, td->GatanReadMode,
-      (td->FEIflags & PLUGFEI_CAM_CAN_ALIGN) ? td->AlignFrames : -1, td->FEIacquireFlags);
+      (td->FEIflags & PLUGFEI_CAM_CAN_ALIGN) ? td->AlignFrames : -1, td->FEIacquireFlags,
+      td->CountScaling);
     retval = td->scopePlugFuncs->ASIacquireFromCamera(array, sizeX, sizeY,  
       td->Exposure,  messInd, td->Binning, td->restrictedSize, td->ImageType,
       td->DivideBy2, td->eagleIndex, 
       (td->FEIflags & PLUGFEI_CAN_DOSE_FRAC) ? td->SaveFrames : -1, td->GatanReadMode,
       (td->FEIflags & PLUGFEI_CAM_CAN_ALIGN) ? td->AlignFrames : -1, td->FEIacquireFlags,
-      0, 0, 0., 0.);
+      0, 0, td->CountScaling, 0.);
 
   } else
     retval = td->scopePlugFuncs->AcquireFEIimage(array, sizeX, sizeY, correction, 
