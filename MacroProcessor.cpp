@@ -209,7 +209,8 @@ enum {CME_VIEW, CME_FOCUS, CME_TRIAL, CME_RECORD, CME_PREVIEW,
   CME_SETFREELENSCONTROL, CME_SETLENSWITHFLC, CME_SAVETOOTHERFILE, CME_SKIPACQUIRINGGROUP,
   CME_REPORTIMAGEDISTANCEOFFSET, CME_SETIMAGEDISTANCEOFFSET, CME_REPORTCAMERALENGTH,
   CME_SETDECAMFRAMERATE, CME_SKIPMOVEINNAVACQUIRE, CME_TESTRELAXINGSTAGE, CME_RELAXSTAGE,
-  CME_SKIPFRAMEALIPARAMCHECK, CME_ISVERSIONATLEAST, CME_SKIPIFVERSIONLESSTHAN
+  CME_SKIPFRAMEALIPARAMCHECK, CME_ISVERSIONATLEAST, CME_SKIPIFVERSIONLESSTHAN,
+  CME_RAWELECTRONSTATS
 };
 
 static CmdItem cmdList[] = {{NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0},
@@ -310,7 +311,7 @@ static CmdItem cmdList[] = {{NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0
 {"ReportImageDistanceOffset", 0}, {"SetImageDistanceOffset", 1}, 
 {"ReportCameraLength", 0}, {"SetDECamFrameRate", 1}, {"SkipMoveInNavAcquire", 0},
 {"TestRelaxingStage", 2}, {"RelaxStage", 0}, {"SkipFrameAliParamCheck", 0},
-{"IsVersionAtLeast", 1}, {"SkipIfVersionLessThan", 1},
+{"IsVersionAtLeast", 1}, {"SkipIfVersionLessThan", 1}, {"RawElectronStats", 1},
 {NULL, 0, NULL}
 };
 
@@ -3085,24 +3086,21 @@ void CMacroProcessor::NextCommand()
       delX);
     mWinApp->AppendToLog(report, mLogAction);
     SetReportedValues(&strItems[5], delX);
-
-  } else if (CMD_IS(ELECTRONSTATS)) {                       // ElectronStats
+                                                       // ElectronStats, RawElectronStats
+  } else if (CMD_IS(ELECTRONSTATS) || CMD_IS(RAWELECTRONSTATS)) { 
     if (ConvertBufferLetter(strItems[1], 0, true, index, report))
       ABORT_LINE(report);
     delX = mImBufs[index].mBinning;
     if (mImBufs[index].mCamera < 0 || !delX || !mImBufs[index].mExposure)
       ABORT_LINE("Image buffer does not have enough information for dose statistics in:"
       "\r\n\r\n");
-    cpe = camParams->countsPerElectron;
+    cpe = mWinApp->mProcessImage->CountsPerElectronForImBuf(&mImBufs[index]);
     if (!cpe)
       ABORT_LINE("Camera does not have a CountsPerElectron property for:\r\n\r\n");
     image = mImBufs[index].mImage;
     image->getSize(sizeX, sizeY);
     ProcMinMaxMeanSD(image->getData(), image->getType(), sizeX, sizeY, 0,
       sizeX - 1, 0, sizeY - 1, &bmean, &bmin, &bmax, &bSD);
-    EMimageExtra *extra = (EMimageExtra *)mImBufs[index].mImage->GetUserData();
-    if (extra && extra->mDividedBy2 > 0)
-      cpe /= 2.;
     camParams = mWinApp->GetCamParams() + mImBufs[index].mCamera;
     if (camParams->K2Type)
       delX /= 2;
@@ -3111,8 +3109,14 @@ void CMacroProcessor::NextCommand()
     bmean /= cpe;
     bSD /= cpe;
     backlashX = (float)(bmean / (mImBufs[index].mExposure * delX * delX));
+    backlashY = backlashX;
+    if (CMD_IS(ELECTRONSTATS) && mImBufs[index].mK2ReadMode > 0)
+      backlashY = mWinApp->mProcessImage->LinearizedDoseRate(mImBufs[index].mCamera, 
+        backlashX);
+    shiftX = backlashY / backlashX;
     report.Format("Min = %.3f  max = %.3f  mean = %.3f  SD = %.3f electrons/pixel; "
-      "dose rate = %.3f e/unbinned pixel/sec", bmin, bmax, bmean, bSD, backlashX);
+      "dose rate = %.3f e/unbinned pixel/sec", bmin * shiftX, bmax * shiftX, 
+      bmean * shiftX, bSD * shiftX, backlashY);
     mWinApp->AppendToLog(report, mLogAction);
     SetReportedValues(&strItems[2], bmin, bmax, bmean, bSD, backlashX);
  
