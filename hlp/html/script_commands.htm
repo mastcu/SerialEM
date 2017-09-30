@@ -761,8 +761,15 @@
           <TD class="style7">ElectronStats [buf]</TD>
           <TD>Report the min, max, mean, and SD of the A buffer, or of the buffer indicated
             by &#39;buf&#39;, scaled to electrons, and also report the electrons per unbinned pixel
-            per second.&nbsp; The camera must have a defined counts per electron.
+            per second.&nbsp; The camera must have a defined counts per electron.  Values 
+            recorded in electron counting mode will be linearized if possible 
+            (corrected for decreasing counting efficiency at higher dose rates).
             &nbsp; Values can be assigned to variables after a buffer letter.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style7">RawElectronStats [buf]</TD>
+          <TD>Report the same items as 'ElectronStats' without linearizing them for loss in
+          counting mode.&nbsp; Values can be assigned to variables after a buffer letter.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style7">SubareaMean x0 x1 y0 y1</TD>
