@@ -2738,58 +2738,85 @@ double CProcessImage::GetRecentVoltage(bool *valueWasRead)
 // rate for a K2 camera
 int CProcessImage::DoseRateFromMean(EMimageBuffer *imBuf, float mean, float &doseRate)
 {
-  float countsPerElectron, gainFac;
+  float countsPerElectron;
   if (!imBuf || !imBuf->mImage)
     return 1;
+  CameraParameters *camParam = mWinApp->GetCamParams() + imBuf->mCamera;
+  countsPerElectron = CountsPerElectronForImBuf(imBuf);
+  if (!countsPerElectron)
+    return 2;
+  doseRate = (float)(mean / (countsPerElectron * imBuf->mExposure * 
+    imBuf->mBinning * imBuf->mBinning / (camParam->K2Type ? 4. : 1.)));
+  if ((camParam->K2Type || camParam->FEItype == FALCON3_TYPE) && imBuf->mK2ReadMode > 0)
+    doseRate = LinearizedDoseRate(imBuf->mCamera, doseRate);
+  return 0;
+}
+
+// Returns the actual counts per electron for the image in a buffer, accounting for the
+// gain factor and other factors as needed
+float CProcessImage::CountsPerElectronForImBuf(EMimageBuffer * imBuf)
+{
+  float countsPerElectron, gainFac;
+  if (!imBuf || !imBuf->mImage)
+    return 0.;
   EMimageExtra *extra = (EMimageExtra *)imBuf->mImage->GetUserData();
   if (!extra || imBuf->mCamera < 0 || imBuf->mBinning < 1 || extra->mExposure <= 0)
-    return 2;
+    return 0.;
   CameraParameters *camParam = mWinApp->GetCamParams() + imBuf->mCamera;
   countsPerElectron = camParam->countsPerElectron;
   if (camParam->K2Type && imBuf->mK2ReadMode > 0)
     countsPerElectron = mWinApp->mCamera->GetCountScaling(camParam);
   if (countsPerElectron <= 0.)
-    return 2;
-  if (extra->mDividedBy2 > 0)
+    return 0.;
+  if (imBuf->mDividedBy2)
     countsPerElectron /= 2.f;
   gainFac = mWinApp->GetGainFactor(imBuf->mCamera, imBuf->mBinning);
-  doseRate = (float)(mean / (gainFac * countsPerElectron * extra->mExposure * 
-    imBuf->mBinning * imBuf->mBinning / (camParam->K2Type ? 4. : 1.)));
-  if (camParam->K2Type && imBuf->mK2ReadMode > 0)
-    doseRate = LinearizedDoseRate(imBuf->mCamera, doseRate);
-  return 0;
+  return gainFac * countsPerElectron;
 }
 
-// Computes a linearized dose rate for a K2 camera 
+// Computes a linearized dose rate for a K2 or Falcon camera.  Will test camera type,
+// but caller needs to test if image was taken in counting mode
 float CProcessImage::LinearizedDoseRate(int camera, float rawRate)
 {
   CameraParameters *camParam = mWinApp->GetCamParams() + camera;
-  const float counts200KV[] = {1.010f, 2.093f, 3.112f, 4.520f, 6.355f, 8.095f, 9.902f, 
+  const float K2counts200KV[] = {1.010f, 2.093f, 3.112f, 4.520f, 6.355f, 8.095f, 9.902f, 
     13.288f, 17.325f, 19.424f, 22.683f, 26.42f, 28.63f, 29.53f, 30.16f};
-  const float rates200KV[] = {0.909f, 1.950f, 2.984f, 4.491f, 6.583f, 8.705f, 11.071f, 
+  const float K2rates200KV[] = {0.909f, 1.950f, 2.984f, 4.491f, 6.583f, 8.705f, 11.071f, 
     16.107f, 23.707f, 28.698f, 38.486f, 53.90f, 65.78f, 71.37f, 75.54f};
-  const float counts300KV[] = {0.731f, 1.703f, 2.724f, 3.517f, 5.279f, 7.336f, 9.950f,
+  const float K2counts300KV[] = {0.731f, 1.703f, 2.724f, 3.517f, 5.279f, 7.336f, 9.950f,
     13.014f, 16.514f, 21.21f, 25.32f, 28.20f, 29.25f};
-  const float rates300KV[] = {0.789f, 1.890f, 3.107f, 4.092f, 6.388f, 9.252f, 13.213f,
+  const float K2rates300KV[] = {0.789f, 1.890f, 3.107f, 4.092f, 6.388f, 9.252f, 13.213f,
     18.480f, 25.744f, 39.14f, 56.29f, 72.61f, 79.76f};
+  const float FalconCounts200KV[] = {0.103f, 0.119f, 0.159f, 0.199f, 0.259f, 0.352f,
+    0.418f, 0.502f, 0.575f, 0.663f, 0.734f, 0.818f, 0.875f, 0.94f, 1.007f, 1.075f,
+    1.123f, 1.157f, 1.189f, 1.219f, 1.248f};
+  const float FalconRates200KV[] = {0.101f, 0.119f, 0.161f, 0.201f, 0.271f, 0.377f,
+    0.461f, 0.577f, 0.693f, 0.838f, 0.981f, 1.159f, 1.302f, 1.486f, 1.711f, 1.968f,
+    2.226f, 2.422f, 2.651f, 2.894f, 3.191f};
   const float *countsArr, *ratesArr;
   int numVals;
   float doseRate, ratio;
 
-  if (camera < 0 || !camParam->K2Type)
+  if (camera < 0 || !(camParam->K2Type || camParam->FEItype == FALCON3_TYPE))
     return rawRate;
 
   // First time for a camera, in no table read in from properties, assign the default
   // based on voltage
   if (!camParam->doseTabCounts.size()) {
-    if (mWinApp->mScope->GetHTValue() > 250) {
-      countsArr = &counts300KV[0];
-      ratesArr = &rates300KV[0];
-      numVals = sizeof(counts300KV) / sizeof(float);
+    if (camParam->K2Type) {
+      if (mWinApp->mScope->GetHTValue() > 250) {
+        countsArr = &K2counts300KV[0];
+        ratesArr = &K2rates300KV[0];
+        numVals = sizeof(K2counts300KV) / sizeof(float);
+      } else {
+        countsArr = &K2counts200KV[0];
+        ratesArr = &K2rates200KV[0];
+        numVals = sizeof(K2counts200KV) / sizeof(float);
+      }
     } else {
-      countsArr = &counts200KV[0];
-      ratesArr = &rates200KV[0];
-      numVals = sizeof(counts200KV) / sizeof(float);
+      countsArr = &FalconCounts200KV[0];
+      ratesArr = &FalconRates200KV[0];
+      numVals = sizeof(FalconCounts200KV) / sizeof(float);
     }
     camParam->doseTabCounts.insert(camParam->doseTabCounts.end(), countsArr, 
       countsArr + numVals);
@@ -2927,5 +2954,5 @@ int CProcessImage::FindDoseRate(float countVal, float *counts, float *rates, int
     }
   }
   doseRate = countVal / ratioBest;
-  return err;
+  return err; 
 }

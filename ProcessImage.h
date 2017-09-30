@@ -204,6 +204,7 @@ int FindDoseRate(float countVal, float *counts, float *rates, int numVals,
                   float &ratioBest, float &doseRate);
 int DoseRateFromMean(EMimageBuffer * imBuf, float mean, float & doseRate);
 double GetRecentVoltage(bool *valueWasRead = NULL);
+float CountsPerElectronForImBuf(EMimageBuffer * imBuf);
 };
 
 /////////////////////////////////////////////////////////////////////////////
