@@ -45,6 +45,7 @@ public:
   int mCamera;
   int mDividedBy2;
   int mMagIndex;
+  float mCountsPerElectron;
   float mMin, mMax, mMean;
   float mTargetDefocus;
   float mPriorRecordDose;

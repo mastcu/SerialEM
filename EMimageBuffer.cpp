@@ -28,6 +28,7 @@ EMimageBuffer::EMimageBuffer()
   mChangeWhenSaved = 0;
 	mBinning = 0;
   mDivideBinToShow = 1;
+  mDividedBy2 = false;
 	mMagInd = 0;
 	mDefocus = 0.;
   mISX = 0.;

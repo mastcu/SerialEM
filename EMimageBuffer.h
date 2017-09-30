@@ -43,6 +43,7 @@ public:
   int mCaptured;
   int mBinning;
   int mDivideBinToShow;   // Value to divide binning by to display it
+  BOOL mDividedBy2;
   int mCamera;
   int mMagInd;
   float mDefocus;
