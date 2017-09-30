@@ -182,6 +182,8 @@ struct JeolParams;
 #define PLUGFEI_INDEX_MASK        0xFF
 #define PLUGFEI_MAX_FRAC_SHIFT    16
 #define PLUGFEI_WAIT_FOR_FRAMES   1
+#define PLUGFEI_APPLY_PIX2COUNT   2
+#define PLUGFEI_UNBIN_PIX2COUNT   4
 
 typedef _variant_t PLUGIN_BOOL;
 typedef void (*PlugStopFunc)(int);

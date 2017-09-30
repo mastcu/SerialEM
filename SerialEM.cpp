@@ -372,6 +372,9 @@ CSerialEMApp::CSerialEMApp()
     mCamParams[i].setRestoreRotFlip = 2;
     mCamParams[i].rotFlipToRestore = -1;
     mCamParams[i].postActionsOK = -1;     // -1 = Unspecified and OK
+    mCamParams[i].addToExposure = -999.;
+    mCamParams[i].falcon3ScalePower = 4;
+    mCamParams[i].linear2CountingRatio = 10.;
     mCamParams[i].origDefects = NULL;
     mCamParams[i].defNameHasFrameFile = false;
     mCamParams[i].taskTargetSize = 512;
@@ -1009,6 +1012,11 @@ BOOL CSerialEMApp::InitInstance()
       // Divide the pixel sizes by 2; they are based on native pixels
       for (mag = 1; mag < MAX_MAGS; mag++)
         mMagTab[mag].pixelSize[iCam] /= 2.;
+    }
+
+    if (mCamParams[iCam].FEItype == FALCON3_TYPE) {
+      mCamParams[iCam].unscaledCountsPerElec = mCamParams[iCam].countsPerElectron;
+      mCamera->AdjustCountsPerElecForScale(&mCamParams[iCam]);
     }
   }
 

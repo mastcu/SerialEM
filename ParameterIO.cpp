@@ -1801,6 +1801,8 @@ int CParameterIO::ReadProperties(CString strFileName)
             camP->taskTargetSize = itemInt[1];
           else if (MatchNoCase("AllowPostActions"))
             camP->postActionsOK = itemInt[1];
+          else if (MatchNoCase("AddToExposureTime"))
+            camP->addToExposure = (float)itemDbl[1];
           else if (MatchNoCase("ImageRotation"))
             camP->imageRotation = itemInt[1];
           else if (MatchNoCase("InvertFocusRamp"))
@@ -1903,6 +1905,8 @@ int CParameterIO::ReadProperties(CString strFileName)
             camP->pixelMicrons = (float)itemDbl[1];
           else if (MatchNoCase("CountsPerElectron"))
             camP->countsPerElectron = (float)itemDbl[1];
+          else if (MatchNoCase("LinearToCountingRatio"))
+            camP->linear2CountingRatio = (float)itemDbl[1];
           else if (MatchNoCase("ExtraRotation"))
             camP->extraRotation = (float)itemDbl[1];
           else if (MatchNoCase("ExtraGainReferences"))
@@ -1911,6 +1915,8 @@ int CParameterIO::ReadProperties(CString strFileName)
             camP->processHere = itemInt[1];
           else if (MatchNoCase("AutoGainFactors"))
             camP->autoGainAtBinning = itemInt[1];
+          else if (MatchNoCase("Falcon3ScalingPower"))
+            camP->falcon3ScalePower = itemInt[1];
           else if (MatchNoCase("RotationAndPixel")) {
             magInd = itemInt[1];
             if (magInd < 1 || magInd >= MAX_MAGS) {
