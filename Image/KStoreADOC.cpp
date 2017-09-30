@@ -383,6 +383,9 @@ int KStoreADOC::SetValuesFromExtra(KImage *inImage, char *sectName, int index)
   if (extra->mMagIndex >= 0 && 
     AdocSetInteger(sectName, index, ADOC_MAGIND, extra->mMagIndex))
     return 1;
+  if (extra->mCountsPerElectron >= 0. && AdocSetFloat(sectName, index, ADOC_COUNT_ELEC, 
+    extra->mCountsPerElectron))
+    return 1;
   if (extra->mMax > EXTRA_VALUE_TEST && AdocSetThreeFloats(sectName, index,
     ADOC_MINMAXMEAN, extra->mMin, extra->mMax, extra->mMean))
     return 1;
@@ -495,6 +498,7 @@ int KStoreADOC::LoadExtraFromValues(EMimageExtra *extra, int &typext, char *sect
   AdocGetInteger(sectName, index, ADOC_CAMERA, &extra->mCamera);
   AdocGetInteger(sectName, index, ADOC_DIVBY2, &extra->mDividedBy2);
   AdocGetInteger(sectName, index, ADOC_MAGIND, &extra->mMagIndex);
+  AdocGetFloat(sectName, index, ADOC_COUNT_ELEC, &extra->mCountsPerElectron);
   AdocGetThreeFloats(sectName, index, ADOC_MINMAXMEAN, &extra->mMin, &extra->mMax,
     &extra->mMean);
   AdocGetFloat(sectName, index, ADOC_TARGET, &extra->mTargetDefocus);

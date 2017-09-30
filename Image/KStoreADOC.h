@@ -30,6 +30,7 @@
 #define ADOC_DIVBY2 "DividedBy2"
 #define ADOC_MAGIND "MagIndex"
 #define ADOC_ZVALUE "ZValue"
+#define ADOC_COUNT_ELEC "CountsPerElectron"
 #define ADOC_MINMAXMEAN "MinMaxMean"
 #define ADOC_PRIOR_DOSE "PriorRecordDose"
 #define ADOC_XEDGE "XedgeDxy"
