@@ -526,6 +526,8 @@ class DLL_IM_EX CCameraController
   double mLastImageTime;  // Time stamp of last image acquire, for expiring gain refs
   BOOL mProcessHere;      // Flag to process data here
   int mDivideBy2;         // Flag to divide 16-bit data by 2
+  int mDivBy2ForImBuf;    // Whether division by 2 into unsigned, to be stored in imbuf
+  int mDivBy2ForExtra;    // Actual # of divisions by 2 value to be stored in extra
   float mMinBlankingTime; // Minimum time that it takes to blank/unblank beam
 
   BOOL mStageQueued;            // flag that stage move queued for postaction
@@ -883,6 +885,7 @@ void FixDirForFalconFrames(CameraParameters * param);
 bool CanPluginDo(int minVersion, CameraParameters * param);
 int NumAllVsAllFromFAparam(FrameAliParams &faParam, int numAliFrames, int &groupSize, 
   int &refineIter, int &doSpline, int &numFilters, float *radius2);
+void AdjustCountsPerElecForScale(CameraParameters * param);
 };
 
 
