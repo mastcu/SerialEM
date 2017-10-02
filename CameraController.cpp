@@ -7521,9 +7521,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
     // Now start using current values to update extra for a deferred sum
 
     // Report the fate of frame-saving
-    if ((mParam->K2Type && lastConSetp->doseFrac && (lastConSetp->saveFrames ||
-      (lastConSetp->alignFrames && CAN_PLUGIN_DO(CAN_ALIGN_FRAMES, mParam) &&
-      lastConSetp->useFrameAlign > 1))) || 
+    if (IsK2ConSetSaving(lastConSetp, mParam) || 
       (mSavingFalconFrames && !mDeferStackingFrames)) {
         if (mTD.NumAsyncSumFrames >= 0) {
           mTD.NumFramesSaved = B3DNINT(mExposure / mTD.FrameTime);

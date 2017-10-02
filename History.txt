@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ===========================================================================
+10/1/17: Fixed report on frame saving when aligning whole TS in IMOD and
+saving is imposed rather than selected (In 3.6).
+
 9/17/17: Provided for different scaling of counting and linear mode images
 from Falcon 3 with the power of 2 for scaling selectable by property.  Added
 preliminary linearization of counting mode dose rates.
