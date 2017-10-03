@@ -1306,6 +1306,8 @@
 #define IDC_CHECK_USE_MONT_MAP_PARAMS   2326
 #define IDC_STAT_LINE2                  2327
 #define IDC_USE_FRAME_FOLDER            2328
+#define IDC_STAT_MIN_FRAME_TIME         2329
+#define IDC_STAT_MAX_FRAME_TIME         2330
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -1716,7 +1718,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        225
 #define _APS_NEXT_COMMAND_VALUE         33285
-#define _APS_NEXT_CONTROL_VALUE         2329
+#define _APS_NEXT_CONTROL_VALUE         2330
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

@@ -8,6 +8,7 @@
 #include "FalconHelper.h"
 #include "CameraController.h"
 #include "MacroProcessor.h"
+#include "Shared\b3dutil.h"
 
 
 // CFalconFrameDlg dialog
@@ -21,6 +22,8 @@ CFalconFrameDlg::CFalconFrameDlg(CWnd* pParent /*=NULL*/)
   , m_strTotalSave(_T(""))
   , m_strSkipEnd(_T(""))
   , m_fSubframeTime(0)
+  , m_statMinFrameTime(_T(""))
+  , m_statMaxFrameTime(_T(""))
 {
 
 }
@@ -49,6 +52,8 @@ void CFalconFrameDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_STAT_SKIP_START, m_statSkipStart);
   DDX_Control(pDX, IDC_STAT_SKIP_END, m_statSkipEnd);
   DDX_Control(pDX, IDC_STAT_EXPLANATION, m_statExplanation);
+  DDX_Text(pDX, IDC_STAT_MIN_FRAME_TIME, m_statMinFrameTime);
+  DDX_Text(pDX, IDC_STAT_MAX_FRAME_TIME, m_statMaxFrameTime);
 }
 
 
@@ -298,11 +303,14 @@ void CFalconFrameDlg::UpdateAllDisplays(void)
 {
   int i, numFrames = mHelper->GetFrameTotals(mSummedFrameList, mTotalSaved);
   CString oneval;
+  int minFrames = 1000000, maxFrames = 0;
   m_strReadouts = "";
   for (i = 0; i < (int)mSummedFrameList.size() / 2; i++) {
     oneval.Format("%d              %d\r\n", mSummedFrameList[2 * i], 
       mSummedFrameList[2 * i + 1]);
     m_strReadouts += oneval;
+    ACCUM_MIN(minFrames, mSummedFrameList[2 * i + 1]);
+    ACCUM_MAX(maxFrames, mSummedFrameList[2 * i + 1]);
   }
   m_strNumFrames.Format("%d", numFrames);
   m_strSkipStart.Format("%d", mNumSkipBefore);
@@ -310,6 +318,8 @@ void CFalconFrameDlg::UpdateAllDisplays(void)
   m_strTotalSave.Format("%d", mTotalSaved);
   mExposure = (mTotalSaved + mNumSkipBefore + mNumSkipAfter) * mReadoutInterval;
   m_fExposure = (float)(B3DNINT(mExposure * 200.) / 200.);
+  m_statMinFrameTime.Format("min: %.3f", minFrames * mReadoutInterval);
+  m_statMaxFrameTime.Format("max: %.3f", maxFrames * mReadoutInterval);
   UpdateData(false);
 }
 

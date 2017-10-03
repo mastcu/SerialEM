@@ -72,4 +72,6 @@ public:
   CStatic m_statSkipEnd;
   afx_msg void OnButEqualize();
   CStatic m_statExplanation;
+  CString m_statMinFrameTime;
+  CString m_statMaxFrameTime;
 };

@@ -2467,36 +2467,39 @@ BEGIN
     PUSHBUTTON      "?",IDC_BUTHELP,239,82,11,10,NOT WS_VISIBLE
 END
 
-IDD_FALCON_FRAMES DIALOGEX 0, 0, 143, 271
+IDD_FALCON_FRAMES DIALOGEX 0, 0, 143, 287
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Frame Summing Selector"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,7,250,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,65,250,50,14
+    DEFPUSHBUTTON   "OK",IDOK,7,266,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,65,266,50,14
     RTEXT           "Exposure time",IDC_STATIC,29,35,47,8
     EDITTEXT        IDC_EDIT_EXPOSURE,79,32,43,14,ES_AUTOHSCROLL
-    LTEXT           "# of summed frames to save:",IDC_STATIC,9,68,99,8
-    RTEXT           "999",IDC_STAT_NUM_FRAMES,107,68,14,8
-    CONTROL         "",IDC_SPIN_NUM_FRAMES,"msctls_updown32",UDS_ARROWKEYS,124,65,10,14
-    RTEXT           "# to skip before start:",IDC_STAT_STARTLABEL,20,95,73,8
-    RTEXT           "99",IDC_STAT_SKIP_START,93,95,10,8
-    CONTROL         "",IDC_SPIN_SKIP_START,"msctls_updown32",UDS_ARROWKEYS,106,92,10,14
-    RTEXT           "Total saved in sums:",IDC_STATIC,16,112,69,8
-    RTEXT           "9999",IDC_STAT_TOTAL_SAVE,86,112,17,8
-    CONTROL         "",IDC_SPIN_TOTAL_SAVE,"msctls_updown32",UDS_ARROWKEYS,106,109,10,14
-    RTEXT           "# to skip after end:",IDC_STAT_ENDLABEL,29,129,64,8
-    RTEXT           "99",IDC_STAT_SKIP_END,93,129,10,8
-    CONTROL         "",IDC_SPIN_SKIP_AFTER,"msctls_updown32",UDS_ARROWKEYS,106,126,10,14
-    EDITTEXT        IDC_EDIT_READOUTS,14,162,113,62,ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_WANTRETURN
-    PUSHBUTTON      "?",IDC_BUTHELP,125,254,11,10
-    LTEXT           "# camera frames in each summed frame",IDC_STATIC,58,144,69,15
-    LTEXT           "# summed frames",IDC_STATIC,15,144,39,15
+    LTEXT           "# of summed frames to save:",IDC_STATIC,9,84,99,8
+    RTEXT           "999",IDC_STAT_NUM_FRAMES,107,84,14,8
+    CONTROL         "",IDC_SPIN_NUM_FRAMES,"msctls_updown32",UDS_ARROWKEYS,124,81,10,14
+    RTEXT           "# to skip before start:",IDC_STAT_STARTLABEL,20,111,73,8
+    RTEXT           "99",IDC_STAT_SKIP_START,93,111,10,8
+    CONTROL         "",IDC_SPIN_SKIP_START,"msctls_updown32",UDS_ARROWKEYS,106,108,10,14
+    RTEXT           "Total saved in sums:",IDC_STATIC,16,128,69,8
+    RTEXT           "9999",IDC_STAT_TOTAL_SAVE,86,128,17,8
+    CONTROL         "",IDC_SPIN_TOTAL_SAVE,"msctls_updown32",UDS_ARROWKEYS,106,125,10,14
+    RTEXT           "# to skip after end:",IDC_STAT_ENDLABEL,29,145,64,8
+    RTEXT           "99",IDC_STAT_SKIP_END,93,145,10,8
+    CONTROL         "",IDC_SPIN_SKIP_AFTER,"msctls_updown32",UDS_ARROWKEYS,106,142,10,14
+    EDITTEXT        IDC_EDIT_READOUTS,14,178,113,62,ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_WANTRETURN
+    PUSHBUTTON      "?",IDC_BUTHELP,125,270,11,10
+    LTEXT           "# camera frames in each summed frame",IDC_STATIC,58,160,69,15
+    LTEXT           "# summed frames",IDC_STATIC,15,160,39,15
     RTEXT           "Camera frame time",IDC_STAT_SUBFRAME_TIME,8,52,68,8
-    PUSHBUTTON      "Equalize",IDC_BUT_EQUALIZE,45,227,50,14
+    PUSHBUTTON      "Equalize",IDC_BUT_EQUALIZE,45,243,50,14
     EDITTEXT        IDC_EDIT_SUBFRAME_TIME,79,49,43,14,ES_AUTOHSCROLL
-    GROUPBOX        "Number of camera frames",IDC_STATIC,7,82,129,164
+    GROUPBOX        "Number of camera frames",IDC_STATIC,7,98,129,164
     LTEXT           "This dialog controls how to save variable-sized sums of the basic camera frames",IDC_STAT_EXPLANATION,11,5,121,26
+    LTEXT           "min: 0.125",IDC_STAT_MIN_FRAME_TIME,87,64,49,8
+    LTEXT           "max: 0.125",IDC_STAT_MAX_FRAME_TIME,86,72,50,8
+    LTEXT           "Summed frame time",IDC_STATIC,14,68,68,8
 END
 
 IDD_K2_SAVE_OPTIONS DIALOGEX 0, 0, 255, 317
@@ -3053,7 +3056,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 136
         TOPMARGIN, 7
-        BOTTOMMARGIN, 264
+        BOTTOMMARGIN, 280
     END
 
     IDD_K2_SAVE_OPTIONS, DIALOG
