@@ -374,7 +374,7 @@ CSerialEMApp::CSerialEMApp()
     mCamParams[i].postActionsOK = -1;     // -1 = Unspecified and OK
     mCamParams[i].addToExposure = -999.;
     mCamParams[i].falcon3ScalePower = 4;
-    mCamParams[i].linear2CountingRatio = 10.;
+    mCamParams[i].linear2CountingRatio = 8.;
     mCamParams[i].origDefects = NULL;
     mCamParams[i].defNameHasFrameFile = false;
     mCamParams[i].taskTargetSize = 512;
@@ -1272,12 +1272,14 @@ BOOL CSerialEMApp::InitInstance()
   // For Falcon 2, if align is ON without using framealign, turn it off
   for (iAct = 0; iAct < mActiveCamListSize; iAct++) {
     iCam = mActiveCameraList[iAct];
-    if (mCamParams[iCam].FEItype == FALCON2_TYPE) {
       for (iSet = 0; iSet < NUMBER_OF_USER_CONSETS; iSet++) {
+      if (mCamParams[iCam].FEItype == FALCON2_TYPE) {
         if (!mCamConSets[iCam][iSet].useFrameAlign && 
           mCamConSets[iCam][iSet].alignFrames > 0)
             mCamConSets[iCam][iSet].alignFrames = 0;
       }
+      if (mCamParams[iCam].FEItype == FALCON2_TYPE)
+        mCamConSets[iCam][iSet].numSkipBefore = mCamConSets[iCam][iSet].numSkipAfter = 0;
     }
   }
   CopyConSets(mCurrentCamera);
