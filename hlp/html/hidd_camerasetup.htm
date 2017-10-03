@@ -369,18 +369,30 @@
       enabled, images will be gain-normalized 
       in FEI software instead of in SerialEM, since problems have been seen in images 
       gain-normalized in SerialEM when frame-saving is enabled.</p>
+    <p>
+      <b>Linear or Counting Mode (Falcon 3 only)</b></p>
+    <p>
+      Use these radio buttons to select whether images are acquired from a Falcon 3 in 
+      linear (normal) mode or in electron counting mode.&nbsp; If frame alignment is 
+      being done with the Falcon processor, switching to counting mode may change the 
+      exposure time to satisfy the minimum requirements for counting mode.</p>
     <P><b>Set Up Frames to Save (or Align)</b></P>
     <P>Press this button to open the <a href="#hidd_falcon_frames">Frame Summing Selector dialog</a>, 
-      which allows you to set how many frames are to be created 
-      from an exposure, as well as whether to skip some portion of camera readouts at 
-      the beginning and end of the exposure.&nbsp; This dialog will open automatically 
+      which allows you to set how many summed (intermediate) frames are to be created 
+      from an exposure, as well as whether to skip some portion of camera frames at 
+      the beginning or end of the exposure.&nbsp; This dialog will open automatically 
       when frame-saving or aligning is selected for a parameter set that has no 
       previous information about how to compose frames.&nbsp; Once this information is set up, it 
       may not be necessary to access this dialog often.&nbsp; When exposure time is 
-      changed, the program will adjust the number of subframes summed into each frame 
+      changed, the program will adjust the number of camera frames summed into each frame 
       so as to maintain the same number of frames saved, if possible.</P>
-    <P>&nbsp;<b>Align Frames</b></P>
-    <P>Select this checkbox to have frames aligned in SerialEM, or by the Falcon 3 
+    <P>When aligning frames from a Falcon 3 in the Falcon processor, the saved frames 
+      are constrained to be either single camera frames or multiples of 6 frames.&nbsp; 
+      Thus, switching to this alignment will cause the frames sums to be reorganized 
+      to meet these constraints; they will not be changed back when switching away 
+      from this alignment.</P>
+    <P><b>Align Frames</b></P>
+    <P>Select this checkbox to have summed frames aligned in SerialEM, or by the Falcon 3 
       processor, or to write a command file for aligning 
       with the Alignframes program in IMOD.&nbsp; Press the <b>
       Set Up</b> button to open the <a href="hidd_framealign.htm">Frame Alignment 
@@ -398,7 +410,7 @@
       be selected independently.</P>
     <P><b>Save Frames</b></P>
     <P>Check this box to save frames for images takes with this parameter set.&nbsp; 
-      The number of frames to be saved will appear in a text line.</P>
+      The number of summed frames to be saved will appear in a text line.</P>
     <P><b>Set File Options</b></P>
     <P>Press this button to open the <a href="hidd_k2_save_options.htm">Frame File 
       Options dialog</a>, which allows you to control the names of the files in which 

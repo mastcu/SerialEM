@@ -5830,11 +5830,11 @@ BOOL CEMscope::ScopeMutexAcquire(const char *name, BOOL retry) {
   if (mutex_status == WAIT_FAILED) {
     SEMTrace('1', "Mutex error: %s",GetLastError());
   }
-  assert(mutex_status == WAIT_OBJECT_0);
+  assert(mutex_status == WAIT_OBJECT_0 || mutex_status == WAIT_ABANDONED);
 
   /* Consistency Check */
 
-  assert(mScopeMutexOwnerCount == 0);
+  assert(mScopeMutexOwnerCount == 0 || mutex_status == WAIT_ABANDONED);
   mScopeMutexOwnerCount = 1;
 
   /* Now we're sure that we have the mutex. */
@@ -6680,12 +6680,19 @@ int CEMscope::LookupScriptingCamera(CameraParameters *params, bool refresh,
     SEMMessageBox(CString(mPlugFuncs->GetLastErrorString()));
   if (!err) {
     if (mPluginVersion >= FEI_PLUGIN_DOES_FALCON3) {
-      // For Falcon3
-      //params->eagleIndex |= (PLUGFEI_USES_ADVANCED | PLUGFEI_CAN_DOSE_FRAC |
-      //  PLUGFEI_CAM_CAN_ALIGN | PLUGFEI_CAM_CAN_COUNT | (40 << PLUGFEI_MAX_FRAC_SHIFT));
-      // For Falcon 2 in advanced
-      //params->eagleIndex |= (PLUGFEI_USES_ADVANCED | PLUGFEI_CAN_DOSE_FRAC |
-      //  (40 << PLUGFEI_MAX_FRAC_SHIFT));
+
+      // Entries for testing the interface for advanced scripting cameras
+      if (params->FEItype == 10 + FALCON3_TYPE && mSimulationMode) {
+        params->eagleIndex |= (PLUGFEI_USES_ADVANCED | PLUGFEI_CAN_DOSE_FRAC |
+          PLUGFEI_CAM_CAN_ALIGN | PLUGFEI_CAM_CAN_COUNT | 
+          (40000 << PLUGFEI_MAX_FRAC_SHIFT));
+        params->FEItype -= 10;
+      }
+      if (params->FEItype == 10 + FALCON2_TYPE && mSimulationMode) {
+        params->eagleIndex |= (PLUGFEI_USES_ADVANCED | PLUGFEI_CAN_DOSE_FRAC |
+          (40 << PLUGFEI_MAX_FRAC_SHIFT));
+        params->FEItype -= 10;
+      }
       params->FEIflags = params->eagleIndex & ~PLUGFEI_INDEX_MASK;
       SEMTrace('E', "index ret %x  flags %x", params->eagleIndex, params->FEIflags);
       if (params->FEIflags & PLUGFEI_USES_ADVANCED) {

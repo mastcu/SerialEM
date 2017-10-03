@@ -23,6 +23,18 @@
       dialog let you select which camera frames are summed and saved, and this is the only 
       way to set the exposure time integrated in the saved frames.</p>
     <p>
+      <i>For the Falcon 3 camera</i>, when alignment in the Falcon processor is 
+      selected for this parameter set, the constraints for alignment are imposed as 
+      changes are made here.&nbsp; Specifically, a minimum exposure time is 
+      maintained, depending on whether linear or counting mode is selected; and the 
+      summed frames are constrained to either a single camera frame or a multiple of 6 
+      frames.&nbsp; The only way to switch to saving single camera frames is to type 
+      one line with the total number of camera frames and a 1 into the box for the 
+      list of frame sums.&nbsp; Once single-frame saving is specify, it should be 
+      maintained as you change exposure time.&nbsp; Similarly, the only way to switch 
+      back to multiples of 6 is to type in a line with some number of summed frames 
+      and a 6.</p>
+    <p>
       <i>For the K2 camera</i>, the exposure time of the camera frames available for 
       saving can be set in the main camera setup dialog, and this dialog is needed 
       only if you want to save frames with different durations from a single exposure.&nbsp; In this case, 
@@ -56,9 +68,9 @@
     <p>
       This text box is initialized with the current exposure time for this parameter 
       set, but the time can be changed here.&nbsp; The exposure is constrained to be a 
-      multiple of the camera frame time.&nbsp; <i>For the Falcon</i>, the total number of 
+      multiple of the camera frame time.&nbsp; <i>For the Falcon 2</i>, the total number of 
       camera frames in the 
-      exposure is the sum of ones skipped at the beginning and end and the total 
+      exposure is the sum of ones selected to be skipped at the beginning and end and the total 
       included in the saved frames.&nbsp; When this time is changed, a new number of 
       camera frames is distributed among the current number of summed frames.</p>
     <p>
@@ -76,9 +88,10 @@
     <p>
       <b>Skip before start</b></p>
     <p>
-      <i>For the Falcon</i>, use this spinner to set whether to leave out any camera frames at the beginning of 
+      <i>For the Falcon 2</i>, use this spinner to set whether to leave out any camera frames at the beginning of 
       the exposure, which may have shuttering effects.&nbsp; Changing this value will 
-      change the exposure time.</p>
+      change the exposure time.&nbsp; For Falcon 3, the first and last frames with 
+      shuttering effects are automatically discarded.</p>
     <p>
       <b>Total to save</b></p>
     <p>This spinner reflects the the total number of 
@@ -87,14 +100,16 @@
     <p>
       <b>Skip after end</b></p>
     <p>
-      <i>For the Falcon</i>, use this spinner to leave out camera frames at the end of the exposure; such 
+      <i>For the Falcon 2</i>, use this spinner to leave out camera frames at the end of the exposure; such 
       camera frames may also have shuttering effects.&nbsp; Changing this value will 
       change the exposure time.</p>
     <p>
       <b>List of frame sums</b></p>
     <p>The format of this text box was explained above.&nbsp; 
       Be aware of these points: 1) Type Tab or click elsewhere in the dialog to have 
-      the program read your changes.&nbsp; 2) There must be at least two numbers on 
+      the program read your changes.&nbsp; The program will not process your changes 
+      until you do this, so you need to make a complete and consistent set of changes 
+      before doing so.&nbsp; 2) There must be at least two numbers on 
       each line, and numbers after the second one are ignored.&nbsp; 3) The program 
       will rewrite the list into the box after you change it.&nbsp; 4) Thus you can 
       simply add a new second value on a line without erasing the existing one 

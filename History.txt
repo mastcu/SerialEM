@@ -3,6 +3,16 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ===========================================================================
+10/3/17: Added script commands so that entire tilt series run by script could
+be aligned in IMOD just like ones run by the Tilt Series Controller.
+
+10/3/17: Increased timeout for blanker/post-action thread to finish when
+tilting.  If the thread times out and has to be killed, it is done in a way
+that releases the access to the JOEL scope.
+
+10/3/17: Imposed constraints on exposure time and intermediate frame
+selections when aligning in Falcon 3 processor.
+
 10/1/17: Fixed report on frame saving when aligning whole TS in IMOD and
 saving is imposed rather than selected (In 3.6).
 

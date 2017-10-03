@@ -2477,13 +2477,13 @@ BEGIN
     RTEXT           "Exposure time",IDC_STATIC,29,35,47,8
     EDITTEXT        IDC_EDIT_EXPOSURE,79,32,43,14,ES_AUTOHSCROLL
     LTEXT           "# of summed frames to save:",IDC_STATIC,9,68,99,8
-    RTEXT           "99",IDC_STAT_NUM_FRAMES,110,68,10,8
+    RTEXT           "999",IDC_STAT_NUM_FRAMES,107,68,14,8
     CONTROL         "",IDC_SPIN_NUM_FRAMES,"msctls_updown32",UDS_ARROWKEYS,124,65,10,14
     RTEXT           "# to skip before start:",IDC_STAT_STARTLABEL,20,95,73,8
-    RTEXT           "99",IDC_STAT_SKIP_START,92,95,10,8
+    RTEXT           "99",IDC_STAT_SKIP_START,93,95,10,8
     CONTROL         "",IDC_SPIN_SKIP_START,"msctls_updown32",UDS_ARROWKEYS,106,92,10,14
-    RTEXT           "Total saved in sums:",IDC_STATIC,18,112,69,8
-    RTEXT           "999",IDC_STAT_TOTAL_SAVE,89,112,13,8
+    RTEXT           "Total saved in sums:",IDC_STATIC,16,112,69,8
+    RTEXT           "9999",IDC_STAT_TOTAL_SAVE,86,112,17,8
     CONTROL         "",IDC_SPIN_TOTAL_SAVE,"msctls_updown32",UDS_ARROWKEYS,106,109,10,14
     RTEXT           "# to skip after end:",IDC_STAT_ENDLABEL,29,129,64,8
     RTEXT           "99",IDC_STAT_SKIP_END,93,129,10,8
