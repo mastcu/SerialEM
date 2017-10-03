@@ -880,7 +880,7 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external)
     SetFileZ();
 
     // Doing frame alignment in IMOD, turn off the frame alignment now and set flag
-    if (mCamera->IsK2ConSetSaving(&mConSets[RECORD_CONSET], mCamParams) && 
+    if (mCamera->IsConSetSaving(&mConSets[RECORD_CONSET], mCamParams, false) && 
       mConSets[RECORD_CONSET].alignFrames && 
       mConSets[RECORD_CONSET].useFrameAlign > 1 && mCamera->GetAlignWholeSeriesInIMOD()) {
         if (mWinApp->mStoreMRC->GetAdocIndex() < 0) {
@@ -3259,7 +3259,7 @@ void CTSController::ChangeExposure(double &delFac, double angle, double limit)
   if (mCamParams->K2Type)
     SEMTrace('1', "Frame time for constraint is %.4f", frameTime);
   mCamera->ConstrainExposureTime(mCamParams, recSet->doseFrac, recSet->K2ReadMode, 
-    recSet->binning, newExp, frameTime);
+    recSet->binning, recSet->alignFrames && !recSet->useFrameAlign, newExp, frameTime);
   newExp = mWinApp->mFalconHelper->AdjustSumsForExposure(mCamParams, recSet, newExp);
   if (oneFrame)
     constraint = mCamera->GetK2ReadoutInterval();

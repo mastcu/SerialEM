@@ -278,7 +278,8 @@ void CTSVariationsDlg::OnButTsvAddSeries()
   
   // Constrain the exposure time
   mWinApp->mCamera->ConstrainExposureTime(camParam, conSet->doseFrac > 0, 
-    conSet->K2ReadMode, conSet->binning, recExp, frameTime);
+    conSet->K2ReadMode, conSet->binning, conSet->alignFrames && !conSet->useFrameAlign, 
+    recExp, frameTime);
   if (camParam->K2Type) {
     if (conSet->doseFrac && fabs(recExp - frameTime) < 1.e-5) {
       baseTime = mWinApp->mCamera->GetK2ReadoutInterval();
