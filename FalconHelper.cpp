@@ -377,7 +377,6 @@ int CFalconHelper::StackFrames(CString localPath, CString &directory, CString &r
 
     // Open a file locally if flag set for that
   if (readLocally) {
-    double wallStart = wallTime();
     mFrameFP = fopen((LPCTSTR)localPath, "rb");
     if (!mFrameFP) {
       SEMTrace('E', "Error opening frame stack at local path: %s", (LPCTSTR)localPath);
@@ -391,7 +390,6 @@ int CFalconHelper::StackFrames(CString localPath, CString &directory, CString &r
     mHeadNums[0] = mMrcHeader.nx;
     mHeadNums[1] = mMrcHeader.ny;
     mMrcHeader.yInverted = 0;
-    PrintfToLog("Open time %.3f", wallTime() -wallStart);
   } else {
 
     // Get the file map or open the file
@@ -843,15 +841,41 @@ const char * CFalconHelper::GetErrorString(int code)
 
 // Divide the given number of readouts among the current number of frames
 void CFalconHelper::DistributeSubframes(ShortVec &summedFrameList, int numReadouts, 
-  int newFrames, FloatVec &userFrameFrac, FloatVec &userSubframeFrac)
+  int newFrames, FloatVec &userFrameFrac, FloatVec &userSubframeFrac,
+  bool aligningInFalcon)
 {
   float fracLeft = 1., sum1 = 0., sum2 = 0.;
   int ind, frames, subframesLeft, framesLeft, numBlocks, blocksLeft, frameTot = 0;
-  int perFrame, extra;
+  int perFrame, extra, numFrames, alignFraction;
   ShortVec framesPerBlock, subframesPerBlock;
   if (!summedFrameList.size())
     return;
-  int numFrames = B3DMIN(numReadouts, newFrames);
+
+  // If aligning in the falcon, see if all frames are single readouts, and if so
+  // just keep it that way and return; otherwise work with "align fractions" instead of
+  // single readouts
+  if (aligningInFalcon) {
+    alignFraction = mWinApp->mCamera->GetFalcon3AlignFraction();
+    extra = 0;
+    for (ind = 0; ind < (int)summedFrameList.size(); ind += 2) {
+      if (summedFrameList[ind + 1] != 1)
+        extra = 1;
+      summedFrameList[ind + 1] = B3DMAX(1, B3DNINT((float)summedFrameList[ind + 1]) / 
+        alignFraction);
+    }
+    if (!extra) {
+      userFrameFrac.resize(1);
+      userFrameFrac[0] = 1.;
+      userSubframeFrac.resize(1);
+      userSubframeFrac[0] = 1.;
+      summedFrameList.resize(2);
+      summedFrameList[0] = numReadouts;
+      summedFrameList[1] = 1;
+      return;
+    }
+    numReadouts = B3DMAX(1, B3DNINT((float)numReadouts / alignFraction));
+  }
+  numFrames = B3DMIN(numReadouts, newFrames);
 
   // If there are too many fractions, renormalize the smaller number of them
   if (numFrames < (int)userFrameFrac.size()) {
@@ -906,19 +930,25 @@ void CFalconHelper::DistributeSubframes(ShortVec &summedFrameList, int numReadou
       summedFrameList.push_back(perFrame + 1);
     }
   }
+
+  // Multiply by align fraction size now if aligning in Falcon
+  if (aligningInFalcon) {
+    for (ind = 0; ind < (int)summedFrameList.size(); ind += 2)
+      summedFrameList[ind + 1] *= alignFraction;
+  }
 }
 
 float CFalconHelper::AdjustForExposure(ShortVec &summedFrameList, int numSkipBefore,
     int numSkipAfter, float exposure, float readoutInterval, FloatVec &userFrameFrac, 
-    FloatVec &userSubframeFrac)
+    FloatVec &userSubframeFrac, bool aligningInFalcon)
 {
   int newFrames, curTotal = 0;
   int numFrames = B3DMAX(1, B3DNINT(exposure / readoutInterval) - 
     (numSkipBefore + numSkipAfter));
   newFrames = GetFrameTotals(summedFrameList, curTotal);
-  if (numFrames != curTotal)
+  if (numFrames != curTotal || aligningInFalcon)
     DistributeSubframes(summedFrameList, numFrames, newFrames, userFrameFrac, 
-    userSubframeFrac);
+    userSubframeFrac, aligningInFalcon);
   return (numFrames + numSkipBefore + numSkipAfter) * readoutInterval;
 }
 
@@ -929,12 +959,13 @@ float CFalconHelper::AdjustSumsForExposure(CameraParameters *camParams,
   bool falconCanSave = IS_FALCON2_OR_3(camParams) && 
     mCamera->GetMaxFalconFrames(camParams) && 
     (mCamera->GetFrameSavingEnabled() || FCAM_ADVANCED(camParams));
-  if (falconCanSave || (mCamera->IsK2ConSetSaving(conSet, camParams) && 
+  if (falconCanSave || (mCamera->IsConSetSaving(conSet, camParams, true) && 
     conSet->sumK2Frames))
     return AdjustForExposure(conSet->summedFrameList, 
       falconCanSave ? conSet->numSkipBefore : 0, falconCanSave ? conSet->numSkipAfter : 0, 
       exposure, falconCanSave ? mCamera->GetFalconReadoutInterval() : conSet->frameTime, 
-      conSet->userFrameFractions, conSet->userSubframeFractions);
+      conSet->userFrameFractions, conSet->userSubframeFractions, falconCanSave && 
+      FCAM_CAN_ALIGN(camParams) && conSet->alignFrames && !conSet->useFrameAlign);
   return exposure;
 }
 

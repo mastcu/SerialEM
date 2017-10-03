@@ -17,10 +17,10 @@ public:
   ~CFalconHelper(void);
   void Initialize(bool skipConfigs);
   void DistributeSubframes(ShortVec &summedFrameList, int numReadouts, int newFrames, 
-    FloatVec &userFrameFrac, FloatVec &userSubframeFrac);
+    FloatVec &userFrameFrac, FloatVec &userSubframeFrac, bool aligningInFalcon);
   float AdjustForExposure(ShortVec &summedFrameList, int numSkipBefore,
     int numSkipAfter, float exposure, float readoutInterval, FloatVec &userFrameFrac, 
-    FloatVec &userSubframeFrac);
+    FloatVec &userSubframeFrac, bool aligningInFalcon);
   GetMember(bool, StackingFrames);
   GetMember(float, GpuMemory);
   GetMember(bool, GettingFRC);

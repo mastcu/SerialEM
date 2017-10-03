@@ -727,15 +727,14 @@ void CCameraSetupDlg::UnloadConSet()
   int i, indMin, binning, showProc, lockSet;
   bool noDark, noGain, alwaysAdjust, noRaw, show, canCopyView;
   CButton *radio;
-  ControlSet *conSet = &mConSets[mCurrentSet + mActiveCameraList[mCurrentCamera] *
-    MAX_CONSETS];
   MontParam *montp = mWinApp->GetMontParam();
+  mCurSet = &mConSets[mCurrentSet + mActiveCameraList[mCurrentCamera] * MAX_CONSETS];
   
   lockSet = MontageConSetNum(montp, false, montp->setupInLowDose);
   mBinningEnabled = !((mCurrentSet == RECORD_CONSET && mStartedTS || 
     (mCurrentSet == lockSet && mMontaging && 
       montp->cameraIndex == mCurrentCamera && !mWinApp->LowDoseMode())));
-  mCamera->FindNearestBinning(mParam, conSet, m_iBinning, binning);
+  mCamera->FindNearestBinning(mParam, mCurSet, m_iBinning, binning);
 
     // If this is Record set, disable the binning if doing TS, or if montaging and either
     // in low dose mode or this is the montage camera
@@ -745,40 +744,40 @@ void CCameraSetupDlg::UnloadConSet()
   }
 
   // Fix exposure and frame times in control set before loading
-  mCamera->ConstrainExposureTime(mParam, conSet);
-  m_eLeft = conSet->left / mCoordScaling;
-  m_eRight = conSet->right / mCoordScaling;
-  m_eTop = conSet->top / mCoordScaling;
-  m_eBottom = conSet->bottom / mCoordScaling;
-  m_bDoseFracMode = B3DCHOICE(mParam->K2Type, conSet->doseFrac > 0, 
+  mCamera->ConstrainExposureTime(mParam, mCurSet);
+  m_eLeft = mCurSet->left / mCoordScaling;
+  m_eRight = mCurSet->right / mCoordScaling;
+  m_eTop = mCurSet->top / mCoordScaling;
+  m_eBottom = mCurSet->bottom / mCoordScaling;
+  m_bDoseFracMode = B3DCHOICE(mParam->K2Type, mCurSet->doseFrac > 0, 
     mCamera->GetFrameSavingEnabled() || (FCAM_ADVANCED(mParam)&&IS_FALCON2_OR_3(mParam)));
-  if (mWeCanAlignFalcon && !FCAM_CAN_ALIGN(mParam) && !conSet->useFrameAlign)
-    conSet->useFrameAlign = 1;
-  m_fFrameTime = conSet->frameTime;
-  m_bAlignDoseFrac = conSet->alignFrames > 0 || 
+  if (mWeCanAlignFalcon && !FCAM_CAN_ALIGN(mParam) && !mCurSet->useFrameAlign)
+    mCurSet->useFrameAlign = 1;
+  m_fFrameTime = mCurSet->frameTime;
+  m_bAlignDoseFrac = mCurSet->alignFrames > 0 || 
     (mCurrentSet == RECORD_CONSET && mWinApp->mTSController->GetFrameAlignInIMOD());
-  mUserSaveFrames = m_bSaveFrames = conSet->saveFrames > 0;
-  m_bSaveK2Sums = conSet->sumK2Frames > 0 && 
+  mUserSaveFrames = m_bSaveFrames = mCurSet->saveFrames > 0;
+  m_bSaveK2Sums = mCurSet->sumK2Frames > 0 && 
     mCamera->CAN_PLUGIN_DO(CAN_SUM_FRAMES, mParam);
   if (mParam->K2Type > 1)
-    conSet->K2ReadMode = 0;
-  m_iK2Mode = conSet->K2ReadMode;
+    mCurSet->K2ReadMode = 0;
+  m_iK2Mode = mCurSet->K2ReadMode;
   if (mParam->K2Type) {
     radio = (CButton *)GetDlgItem(IDC_RBIN1);
     radio->EnableWindow(mBinningEnabled && m_iK2Mode == SUPERRES_MODE);
   }
   if (mParam->OneViewType)
-    m_bCorrectDrift = conSet->alignFrames != 0;
-  mSummedFrameList = conSet->summedFrameList;
-  mNumSkipBefore = conSet->numSkipBefore;
-  mNumSkipAfter = conSet->numSkipAfter;
-  mUserFrameFrac = conSet->userFrameFractions;
-  mUserSubframeFrac = conSet->userSubframeFractions;
+    m_bCorrectDrift = mCurSet->alignFrames != 0;
+  mSummedFrameList = mCurSet->summedFrameList;
+  mNumSkipBefore = mCurSet->numSkipBefore;
+  mNumSkipAfter = mCurSet->numSkipAfter;
+  mUserFrameFrac = mCurSet->userFrameFractions;
+  mUserSubframeFrac = mCurSet->userSubframeFractions;
   if (mWinApp->mDEToolDlg.CanSaveFrames(mParam)) {
-    m_bDEsaveFrames = (conSet->saveFrames & DE_SAVE_FRAMES) != 0;
-    m_bDEsaveSums = (conSet->saveFrames & DE_SAVE_SUMS) != 0;
-    m_bDEsaveFinal = (conSet->saveFrames & DE_SAVE_FINAL) != 0;
-    m_iSumCount = conSet->DEsumCount;
+    m_bDEsaveFrames = (mCurSet->saveFrames & DE_SAVE_FRAMES) != 0;
+    m_bDEsaveSums = (mCurSet->saveFrames & DE_SAVE_SUMS) != 0;
+    m_bDEsaveFinal = (mCurSet->saveFrames & DE_SAVE_FINAL) != 0;
+    m_iSumCount = mCurSet->DEsumCount;
     B3DCLAMP(m_iSumCount, 2, 100);
     m_editSumCount.EnableWindow(m_bDEsaveSums);
   }
@@ -790,29 +789,29 @@ void CCameraSetupDlg::UnloadConSet()
     mTietzBlocks || alwaysAdjust)
     AdjustCoords(binning, alwaysAdjust);
 
-  m_iContSingle = 1 - conSet->mode;
-  m_iShuttering = conSet->shuttering;
+  m_iContSingle = 1 - mCurSet->mode;
+  m_iShuttering = mCurSet->shuttering;
   m_iControlSet = mCurrentSet;
   B3DCLAMP(mCurrentCamera, 0, MAX_DLG_CAMERAS - 1);
   m_iCamera = mCurrentCamera;
-  m_eExposure = conSet->exposure;
+  m_eExposure = mCurSet->exposure;
   ManageExposure(false);
-  m_eSettling = conSet->drift;
+  m_eSettling = mCurSet->drift;
   if (mParam->K2Type)
     m_strSettling.Format("%.4f", m_eSettling);
   else if (!mParam->STEMcamera)
     m_strSettling.Format("%.2f", m_eSettling);
-  m_bDarkAlways = conSet->forceDark > 0;
-  m_bDarkNext = conSet->onceDark > 0;
-  m_bAverageDark = conSet->averageDark > 0;
-  m_bLineSync = conSet->lineSync > 0;
-  m_bDynFocus = conSet->dynamicFocus > 0;
-  m_iIntegration = conSet->integration;
+  m_bDarkAlways = mCurSet->forceDark > 0;
+  m_bDarkNext = mCurSet->onceDark > 0;
+  m_bAverageDark = mCurSet->averageDark > 0;
+  m_bLineSync = mCurSet->lineSync > 0;
+  m_bDynFocus = mCurSet->dynamicFocus > 0;
+  m_iIntegration = mCurSet->integration;
 
   // Initialize dark ref averaging to defaults if out of range
-  if (conSet->numAverage < 2)
-    conSet->numAverage = mCurrentSet == 3 ? 10 : 4;
-  m_iAverageTimes = conSet->numAverage;
+  if (mCurSet->numAverage < 2)
+    mCurSet->numAverage = mCurrentSet == 3 ? 10 : 4;
+  m_iAverageTimes = mCurSet->numAverage;
   m_spinAverage.SetRange(2, MAX_DARK_AVERAGE);
   m_spinAverage.SetPos(m_iAverageTimes);
   m_sBigText = mModeNames[mCurrentSet];
@@ -821,7 +820,7 @@ void CCameraSetupDlg::UnloadConSet()
   // is not OK and there is settling, kick it into nonDM shutter mode
   if (mGatanType && ((m_iShuttering == USE_BEAM_BLANK && !mDMbeamShutterOK) || 
     (m_iShuttering != USE_DUAL_SHUTTER && !mDMsettlingOK && m_eSettling > 0.)))
-    m_iShuttering = conSet->shuttering = USE_DUAL_SHUTTER;
+    m_iShuttering = mCurSet->shuttering = USE_DUAL_SHUTTER;
 
   // For Tietz camera or advanced/K2, make sure third option is converted to beam shutter
   // For AMT and FEI do this unconditionally
@@ -830,12 +829,12 @@ void CCameraSetupDlg::UnloadConSet()
     m_iShuttering == USE_DUAL_SHUTTER) || mAMTtype || mFEItype || 
     (mPluginType && ((mNumPlugShutters < 2 && m_iShuttering != USE_BEAM_BLANK) ||
     (mNumPlugShutters < 3 && m_iShuttering == USE_DUAL_SHUTTER))))
-    m_iShuttering = conSet->shuttering = USE_BEAM_BLANK;
+    m_iShuttering = mCurSet->shuttering = USE_BEAM_BLANK;
 
   if (mParam->STEMcamera) {
-    conSet->processing = UNPROCESSED;
-    m_iProcessing = conSet->boostMag;
-    m_bRemoveXrays = conSet->magAllShots > 0;
+    mCurSet->processing = UNPROCESSED;
+    m_iProcessing = mCurSet->boostMag;
+    m_bRemoveXrays = mCurSet->magAllShots > 0;
     showProc = (mCurrentSet == FOCUS_CONSET && mParam->GatanCam) ? SW_SHOW : SW_HIDE;
     m_butUnprocessed.EnableWindow(!mWinApp->LowDoseMode());
     m_butGainNormalize.EnableWindow(!mWinApp->LowDoseMode());
@@ -849,20 +848,20 @@ void CCameraSetupDlg::UnloadConSet()
     // Manage the dark subtract button for FEI, promote to gain normalized if disabled
     // Manage nonSTEM enables of these buttons here, show/hide and STEM enables in 
     // ManageProcessing, where is varies by set
-    m_iProcessing = conSet->processing;
-    m_bRemoveXrays = conSet->removeXrays > 0;
+    m_iProcessing = mCurSet->processing;
+    m_bRemoveXrays = mCurSet->removeXrays > 0;
     noDark = mFEItype || (mPluginType && mCanProcess && !(mCanProcess & DARK_SUBTRACTED));
     noRaw = mFEItype && FCAM_ADVANCED(mParam) && mCamera->GetASIgivesGainNormOnly();
     m_butDarkSubtract.EnableWindow((mParam->processHere || !noDark) && !noRaw);
     m_butUnprocessed.EnableWindow(!noRaw);
     if ((noDark && !mParam->processHere && m_iProcessing == DARK_SUBTRACTED) || noRaw)
-      m_iProcessing = conSet->processing = GAIN_NORMALIZED;
+      m_iProcessing = mCurSet->processing = GAIN_NORMALIZED;
 
     // Do same for plugin with no gain normalization, demote to DS
     noGain = mPluginType && mCanProcess && !(mCanProcess & GAIN_NORMALIZED);
     m_butGainNormalize.EnableWindow(!noGain);
-    if (noGain && conSet->processing == GAIN_NORMALIZED)
-      m_iProcessing = conSet->processing = DARK_SUBTRACTED;
+    if (noGain && mCurSet->processing == GAIN_NORMALIZED)
+      m_iProcessing = mCurSet->processing = DARK_SUBTRACTED;
     
     showProc = SW_SHOW;
     m_butRemoveXrays.EnableWindow(m_iProcessing == GAIN_NORMALIZED);
@@ -881,11 +880,11 @@ void CCameraSetupDlg::UnloadConSet()
     indMin = mCamera->GetMaxChannels(mParam);
     for (i = 0; i < indMin; i++) {
       CComboBox *combo = (CComboBox *)GetDlgItem(IDC_COMBOCHAN1 + i);
-      int sel = conSet->channelIndex[i] + (indMin > 1 ? 1 : 0);
+      int sel = mCurSet->channelIndex[i] + (indMin > 1 ? 1 : 0);
       if (sel < 0 || sel > mParam->numChannels)
         sel = 0;
       for (int j = 0; sel !=0 && j < i; j++)
-        if (mCamera->MutuallyExclusiveChannels(sel, conSet->channelIndex[j] + 1))
+        if (mCamera->MutuallyExclusiveChannels(sel, mCurSet->channelIndex[j] + 1))
           sel = 0;
       combo->SetCurSel(sel);
     }
@@ -927,51 +926,49 @@ void CCameraSetupDlg::UnloadConSet()
 void CCameraSetupDlg::LoadConSet()
 {
   UpdateData(TRUE);
-  ControlSet *conSet = &mConSets[mCurrentSet + mActiveCameraList[mCurrentCamera] *
-    MAX_CONSETS];
-  conSet->binning = mBinnings[m_iBinning];
-  conSet->mode = 1 - m_iContSingle ;
-  conSet->shuttering = m_iShuttering;
-  conSet->exposure = ManageExposure(false);
+  mCurSet->binning = mBinnings[m_iBinning];
+  mCurSet->mode = 1 - m_iContSingle ;
+  mCurSet->shuttering = m_iShuttering;
+  mCurSet->exposure = ManageExposure(false);
   if (!mParam->STEMcamera) {
     m_eSettling = (float)atof(m_strSettling);
     B3DCLAMP(m_eSettling, 0.f, 10.f);
   }
-  conSet->drift = m_eSettling;
-  conSet->left = m_eLeft * mCoordScaling;
-  conSet->right = m_eRight * mCoordScaling;
-  conSet->top = m_eTop * mCoordScaling;
-  conSet->bottom = m_eBottom * mCoordScaling;
-  conSet->forceDark = m_bDarkAlways ? 1 : 0;
-  conSet->onceDark = m_bDarkNext ? 1 : 0;
-  conSet->averageDark = m_bAverageDark ? 1 : 0;
-  conSet->numAverage = m_iAverageTimes;
-  conSet->K2ReadMode =  m_iK2Mode;
+  mCurSet->drift = m_eSettling;
+  mCurSet->left = m_eLeft * mCoordScaling;
+  mCurSet->right = m_eRight * mCoordScaling;
+  mCurSet->top = m_eTop * mCoordScaling;
+  mCurSet->bottom = m_eBottom * mCoordScaling;
+  mCurSet->forceDark = m_bDarkAlways ? 1 : 0;
+  mCurSet->onceDark = m_bDarkNext ? 1 : 0;
+  mCurSet->averageDark = m_bAverageDark ? 1 : 0;
+  mCurSet->numAverage = m_iAverageTimes;
+  mCurSet->K2ReadMode =  m_iK2Mode;
   if (mParam->K2Type)
-    conSet->doseFrac = m_bDoseFracMode ? 1 : 0;
-  conSet->frameTime = m_fFrameTime;
+    mCurSet->doseFrac = m_bDoseFracMode ? 1 : 0;
+  mCurSet->frameTime = m_fFrameTime;
   if (!(mCurrentSet == RECORD_CONSET && mWinApp->mTSController->GetFrameAlignInIMOD()))
-    conSet->alignFrames = m_bAlignDoseFrac ? 1 : 0;
-  conSet->saveFrames = mUserSaveFrames ? 1 : 0;
-  conSet->sumK2Frames = m_bSaveK2Sums ? 1 : 0;
-  conSet->summedFrameList = mSummedFrameList;
-  conSet->numSkipBefore = mNumSkipBefore;
-  conSet->numSkipAfter = mNumSkipAfter;
-  conSet->userFrameFractions = mUserFrameFrac;
-  conSet->userSubframeFractions = mUserSubframeFrac;
+    mCurSet->alignFrames = m_bAlignDoseFrac ? 1 : 0;
+  mCurSet->saveFrames = mUserSaveFrames ? 1 : 0;
+  mCurSet->sumK2Frames = m_bSaveK2Sums ? 1 : 0;
+  mCurSet->summedFrameList = mSummedFrameList;
+  mCurSet->numSkipBefore = mNumSkipBefore;
+  mCurSet->numSkipAfter = mNumSkipAfter;
+  mCurSet->userFrameFractions = mUserFrameFrac;
+  mCurSet->userSubframeFractions = mUserSubframeFrac;
   if (mWinApp->mDEToolDlg.CanSaveFrames(mParam)) {
-    conSet->saveFrames = (m_bDEsaveFrames ? DE_SAVE_FRAMES : 0) +
+    mCurSet->saveFrames = (m_bDEsaveFrames ? DE_SAVE_FRAMES : 0) +
       (m_bDEsaveSums ? DE_SAVE_SUMS : 0) + (m_bDEsaveFinal ? DE_SAVE_FINAL : 0);
-    conSet->DEsumCount = m_iSumCount;
+    mCurSet->DEsumCount = m_iSumCount;
   }
   if (mParam->OneViewType)
-    conSet->alignFrames = m_bCorrectDrift ? 1 : 0;
-  conSet->lineSync = m_bLineSync ? 1 : 0;
-  conSet->dynamicFocus = m_bDynFocus ? 1 : 0;
-  conSet->integration = m_iIntegration;
+    mCurSet->alignFrames = m_bCorrectDrift ? 1 : 0;
+  mCurSet->lineSync = m_bLineSync ? 1 : 0;
+  mCurSet->dynamicFocus = m_bDynFocus ? 1 : 0;
+  mCurSet->integration = m_iIntegration;
   if (mParam->STEMcamera) {
-    conSet->boostMag = m_iProcessing;
-    conSet->magAllShots = m_bRemoveXrays ? 1 : 0;
+    mCurSet->boostMag = m_iProcessing;
+    mCurSet->magAllShots = m_bRemoveXrays ? 1 : 0;
     for (int i = 0; i < mCamera->GetMaxChannels(mParam); i++) {
       CComboBox *combo = (CComboBox *)GetDlgItem(IDC_COMBOCHAN1 + i);
       int sel = combo->GetCurSel();
@@ -979,11 +976,11 @@ void CCameraSetupDlg::LoadConSet()
         sel = -1;
       else if (mCamera->GetMaxChannels(mParam) > 1)
         sel--;
-      conSet->channelIndex[i] = sel;
+      mCurSet->channelIndex[i] = sel;
     }
   } else {
-    conSet->processing = m_iProcessing;
-    conSet->removeXrays = m_bRemoveXrays ? 1 : 0;
+    mCurSet->processing = m_iProcessing;
+    mCurSet->removeXrays = m_bRemoveXrays ? 1 : 0;
   }
 
   // After accessing current data, set possibly new camera and set number, refresh param
@@ -998,7 +995,8 @@ float CCameraSetupDlg::ManageExposure(bool updateIfChange)
 {
   float realExp = m_eExposure;
   bool changed = mCamera->ConstrainExposureTime(mParam, m_bDoseFracMode, m_iK2Mode, 
-    mBinnings[m_iBinning], realExp, m_fFrameTime);
+    mBinnings[m_iBinning], m_bAlignDoseFrac && !mCurSet->useFrameAlign, realExp, 
+    m_fFrameTime);
 
   float roundFac = mCamera->ExposureRoundingFactor(mParam);
   if (roundFac) {
@@ -1027,7 +1025,8 @@ float CCameraSetupDlg::ManageExposure(bool updateIfChange)
       mWinApp->mFalconHelper->AdjustForExposure(mSummedFrameList, 
         mFalconCanSave ? mNumSkipBefore : 0, mFalconCanSave ? mNumSkipAfter : 0, realExp, 
         mFalconCanSave ? mCamera->GetFalconReadoutInterval() : m_fFrameTime, 
-        mUserFrameFrac, mUserSubframeFrac);
+        mUserFrameFrac, mUserSubframeFrac, mFalconCanSave && FCAM_CAN_ALIGN(mParam) &&
+        m_bAlignDoseFrac && !mCurSet->useFrameAlign);
       ManageK2SaveSummary();
   }
   return realExp;
@@ -1918,15 +1917,16 @@ void CCameraSetupDlg::OnKillfocusEditexposure()
 {
   if (!UpdateData(TRUE))
     return;
-  if (m_bDoseFracMode && m_bSaveFrames && 
-    (mFalconCanSave || (mParam->K2Type && m_bSaveK2Sums))) {
+  ManageExposure();
+  if (m_bDoseFracMode && ((m_bSaveFrames && mParam->K2Type && m_bSaveK2Sums) ||
+    ((m_bSaveFrames || m_bAlignDoseFrac) && mFalconCanSave))) {
       mWinApp->mFalconHelper->AdjustForExposure(mSummedFrameList, mNumSkipBefore,
         mNumSkipAfter, m_eExposure, 
         mFalconCanSave ? mCamera->GetFalconReadoutInterval() : m_fFrameTime, 
-        mUserFrameFrac, mUserSubframeFrac);
+        mUserFrameFrac, mUserSubframeFrac, mFalconCanSave && FCAM_CAN_ALIGN(mParam) &&
+        m_bAlignDoseFrac && !mCurSet->useFrameAlign);
       ManageAntialias();
   }
-  ManageExposure();
   ManageK2SaveSummary();
   if (mParam->STEMcamera)
     ManageDrift();
@@ -2006,7 +2006,7 @@ void CCameraSetupDlg::ManageDose()
   mWinApp->CopyCurrentToCameraLDP();
   float realExp = m_eExposure;
   mCamera->ConstrainExposureTime(mParam, m_bDoseFracMode, m_iK2Mode, mBinnings[m_iBinning]
-    , realExp, m_fFrameTime);
+    , mCurSet->alignFrames && !mCurSet->useFrameAlign, realExp, m_fFrameTime);
   dose = mWinApp->mBeamAssessor->GetCurrentElectronDose(camera, mCurrentSet, realExp, 
     m_eSettling, spotSize, intensity);
   if (dose)
@@ -2133,15 +2133,11 @@ void CCameraSetupDlg::OnK2Mode()
 {
   int newIndex, notOK, answ, oldMode = m_iK2Mode;
   CString message, str;
-  ControlSet *conSet = &mConSets[mCurrentSet + mActiveCameraList[mCurrentCamera] *
-    MAX_CONSETS];
   UpdateData(true);
   CButton *radio = (CButton *)GetDlgItem(IDC_RBIN1);
-  if (mParam->FEItype)
-    return;
-  if (conSet->useFrameAlign) {
-    notOK = UtilFindValidFrameAliParams(m_iK2Mode, conSet->useFrameAlign, 
-      conSet->faParamSetInd, newIndex, &message);
+  if (mCurSet->useFrameAlign) {
+    notOK = UtilFindValidFrameAliParams(m_iK2Mode, mCurSet->useFrameAlign, 
+      mCurSet->faParamSetInd, newIndex, &message);
     if (notOK) {
       message += "\n\nPress:\n\"Switch Back\" to change back to the previous operating "
         "mode\n\n";
@@ -2163,18 +2159,20 @@ void CCameraSetupDlg::OnK2Mode()
         UpdateData(false);
         return;
       } else {
-        conSet->faParamSetInd = newIndex;
+        mCurSet->faParamSetInd = newIndex;
       }
     } else {
-      conSet->faParamSetInd = newIndex;
+      mCurSet->faParamSetInd = newIndex;
     }
 
   }
-  radio->EnableWindow(mBinningEnabled && m_iK2Mode == SUPERRES_MODE);
-  if (m_iK2Mode != SUPERRES_MODE && !m_iBinning) {
-    m_iBinning = 1;
-    ManageBinnedSize();
-    UpdateData(FALSE);
+  if (mParam->K2Type) {
+    radio->EnableWindow(mBinningEnabled && m_iK2Mode == SUPERRES_MODE);
+    if (m_iK2Mode != SUPERRES_MODE && !m_iBinning) {
+      m_iBinning = 1;
+      ManageBinnedSize();
+      UpdateData(FALSE);
+    }
   }
   ManageDoseFrac();
   ManageAntialias();
@@ -2217,7 +2215,7 @@ void CCameraSetupDlg::OnKillfocusEditFrameTime()
   UpdateData(TRUE);
   if (m_bSaveFrames && m_bSaveK2Sums)
     mWinApp->mFalconHelper->AdjustForExposure(mSummedFrameList, 0,
-      0, m_eExposure, m_fFrameTime, mUserFrameFrac, mUserSubframeFrac);
+      0, m_eExposure, m_fFrameTime, mUserFrameFrac, mUserSubframeFrac, false);
   ManageExposure();
   ManageK2SaveSummary();
 }
@@ -2229,9 +2227,7 @@ void CCameraSetupDlg::ManageDoseFrac(void)
   bool enable;
   CArray<FrameAliParams, FrameAliParams> *faParams = mCamera->GetFrameAliParams();
   FrameAliParams fap;
-  ControlSet *conSet = &mConSets[mCurrentSet + mActiveCameraList[mCurrentCamera] *
-    MAX_CONSETS];
-  bool forceSaving = m_bDoseFracMode && m_bAlignDoseFrac && (conSet->useFrameAlign > 1 && 
+  bool forceSaving = m_bDoseFracMode && m_bAlignDoseFrac && (mCurSet->useFrameAlign > 1 && 
     ((mParam->K2Type && mCamera->CAN_PLUGIN_DO(CAN_ALIGN_FRAMES, mParam)) || 
     mWeCanAlignFalcon));
   if ((forceSaving && !m_bSaveFrames) || (!forceSaving && !BOOL_EQUIV(m_bSaveFrames,
@@ -2249,7 +2245,7 @@ void CCameraSetupDlg::ManageDoseFrac(void)
   m_butSaveFrames.EnableWindow(m_bDoseFracMode && !forceSaving);
   m_butSetupAlign.EnableWindow(m_bDoseFracMode && m_bAlignDoseFrac);
   enable = m_bDoseFracMode && (m_bSaveFrames || (mWeCanAlignFalcon && m_bAlignDoseFrac &&
-    conSet->useFrameAlign));
+    mCurSet->useFrameAlign));
   m_butSetSaveFolder.EnableWindow(enable); 
   m_butFileOptions.EnableWindow(enable);
   m_statSaveSummary.ShowWindow((m_bSaveFrames && m_bDoseFracMode && 
@@ -2274,20 +2270,20 @@ void CCameraSetupDlg::ManageDoseFrac(void)
   m_statNormDSDF.ShowWindow(enable ? SW_SHOW : SW_HIDE);
   m_statWhereAlign.ShowWindow((m_bDoseFracMode && m_bAlignDoseFrac && 
     (mParam->K2Type || mWeCanAlignFalcon)) ? SW_SHOW : SW_HIDE);
-  if (!conSet->useFrameAlign)
+  if (!mCurSet->useFrameAlign)
     str = mParam->K2Type ? "Align in DM" : "Align in Falcon processor";
-  else if (conSet->useFrameAlign == 1)
+  else if (mCurSet->useFrameAlign == 1)
     str = mParam->K2Type ? "Align in Plugin" : "Align in SerialEM";
   else
     str = (mCurrentSet == RECORD_CONSET && mCamera->GetAlignWholeSeriesInIMOD()) ?
     "TS only in IMOD" : "Align in IMOD";
-  if (conSet->useFrameAlign && conSet->faParamSetInd >= 0 && 
-    conSet->faParamSetInd < faParams->GetSize()) {
-      fap = faParams->GetAt(conSet->faParamSetInd);
+  if (mCurSet->useFrameAlign && mCurSet->faParamSetInd >= 0 && 
+    mCurSet->faParamSetInd < faParams->GetSize()) {
+      fap = faParams->GetAt(mCurSet->faParamSetInd);
       str += " with \"" + fap.name + "\"";
   }
   SetDlgItemText(IDC_STAT_WHERE_ALIGN, (LPCTSTR)str);
-  m_statWhereAlign.EnableWindow(conSet->useFrameAlign < 2 || m_bSaveFrames);
+  m_statWhereAlign.EnableWindow(mCurSet->useFrameAlign < 2 || m_bSaveFrames);
 
   ManageSizeAndPositionButtons(m_bDoseFracMode && mParam->K2Type);
   ManageDarkRefs();
@@ -2317,10 +2313,11 @@ void CCameraSetupDlg::CheckFalconFrameSumList(void)
       m_bAlignDoseFrac = false;
       UpdateData(false);
     } else {
+      ManageExposure();
       mWinApp->mFalconHelper->AdjustForExposure(mSummedFrameList, mNumSkipBefore,
         mNumSkipAfter, m_eExposure, mCamera->GetFalconReadoutInterval(), mUserFrameFrac,
-        mUserSubframeFrac);
-      ManageExposure();
+        mUserSubframeFrac, FCAM_CAN_ALIGN(mParam) && m_bAlignDoseFrac && 
+        !mCurSet->useFrameAlign);
     }
   }
 }
@@ -2419,15 +2416,13 @@ void CCameraSetupDlg::OnSetSaveFolder()
 void CCameraSetupDlg::OnButSetupAlign()
 {
   CFrameAlignDlg dlg;
-  ControlSet *conSet = &mConSets[mCurrentSet + mActiveCameraList[mCurrentCamera] *
-    MAX_CONSETS];
   CArray<FrameAliParams, FrameAliParams> *faParams = mCamera->GetFrameAliParams();
   int DMind = mParam->useSocket ? 1 : 0;
   BOOL *useGPU = mCamera->GetUseGPUforK2Align();
-  dlg.mCurFiltInd = conSet->filterType;
-  dlg.m_iWhereAlign = conSet->useFrameAlign;
+  dlg.mCurFiltInd = mCurSet->filterType;
+  dlg.m_iWhereAlign = mCurSet->useFrameAlign;
   dlg.m_bUseFrameFolder = mCamera->GetComPathIsFramePath();
-  dlg.mCurParamInd = conSet->faParamSetInd;
+  dlg.mCurParamInd = mCurSet->faParamSetInd;
   if (mParam->K2Type) {
     dlg.mGPUavailable = mCamera->GetGpuAvailable(DMind);
     dlg.mUseGpuTransfer[0] = useGPU[DMind];
@@ -2447,9 +2442,9 @@ void CCameraSetupDlg::OnButSetupAlign()
   dlg.mConSetSelected = mCurrentSet;
   dlg.mReadMode = m_iK2Mode;
   if (dlg.DoModal() == IDOK) {
-    conSet->filterType = dlg.mCurFiltInd;
-    conSet->useFrameAlign = dlg.m_iWhereAlign;
-    conSet->faParamSetInd = dlg.mCurParamInd;
+    mCurSet->filterType = dlg.mCurFiltInd;
+    mCurSet->useFrameAlign = dlg.m_iWhereAlign;
+    mCurSet->faParamSetInd = dlg.mCurParamInd;
     if (mParam->K2Type) {
       useGPU[DMind] = dlg.mUseGpuTransfer[0];
       useGPU[2] = dlg.mUseGpuTransfer[1];
@@ -2459,8 +2454,10 @@ void CCameraSetupDlg::OnButSetupAlign()
     }
     mCamera->SetAlignWholeSeriesInIMOD(dlg.m_bWholeSeries);
     mCamera->SetComPathIsFramePath(dlg.m_bUseFrameFolder);
+    if (mParam->FEItype == FALCON3_TYPE && !mCurSet->useFrameAlign)
+      CheckFalconFrameSumList();
   } else {
-    B3DCLAMP(conSet->faParamSetInd, 0 , (int)faParams->GetSize() - 1);  
+    B3DCLAMP(mCurSet->faParamSetInd, 0 , (int)faParams->GetSize() - 1);  
   }
   mWinApp->SetFrameAlignMoreOpen(dlg.mMoreParamsOpen);
   m_butSetupAlign.SetButtonStyle(BS_PUSHBUTTON);
@@ -2522,8 +2519,10 @@ void CCameraSetupDlg::OnSetupFalconFrames()
   UpdateData(true);
   CFalconFrameDlg dlg;
   dlg.mExposure = m_eExposure;
-  dlg.mNumSkipBefore = mParam->K2Type ? 0 : mNumSkipBefore;
-  dlg.mNumSkipAfter = mParam->K2Type ? 0 : mNumSkipAfter;
+  dlg.mNumSkipBefore = (mParam->K2Type || mParam->FEItype == FALCON3_TYPE) ? 
+    0 : mNumSkipBefore;
+  dlg.mNumSkipAfter = (mParam->K2Type  || mParam->FEItype == FALCON3_TYPE) ?
+    0 : mNumSkipAfter;
   dlg.mSummedFrameList = mSummedFrameList;
   dlg.mUserFrameFrac = mUserFrameFrac;
   dlg.mUserSubframeFrac = mUserSubframeFrac;
@@ -2532,7 +2531,11 @@ void CCameraSetupDlg::OnSetupFalconFrames()
     mCamera->GetFalconReadoutInterval());
   dlg.m_fSubframeTime = (float)(B3DNINT(dlg.mReadoutInterval * 2000.) / 2000.);
   dlg.mMaxFrames = mParam->K2Type ? 1000 : mCamera->GetMaxFalconFrames(mParam);
-  dlg.mMaxPerFrame = 100;   // TODO: IS THERE AN ACTUAL OR USEFUL VALUE?
+  dlg.mMaxPerFrame = 200;   // TODO: IS THERE AN ACTUAL OR USEFUL VALUE?
+  dlg.mCamParams = mParam;
+  dlg.mReadMode = m_iK2Mode;
+  dlg.mAligningInFalcon = mParam->FEItype == FALCON3_TYPE && FCAM_CAN_ALIGN(mParam) &&
+    m_bAlignDoseFrac && !mCurSet->useFrameAlign;
   if (dlg.DoModal() != IDOK) {
     m_butSetupFalconFrames.SetButtonStyle(BS_PUSHBUTTON);
     m_butSetupK2FrameSums.SetButtonStyle(BS_PUSHBUTTON);
@@ -2566,7 +2569,7 @@ void CCameraSetupDlg::OnSaveK2FrameSums()
       UpdateData(false);
     } else {
       mWinApp->mFalconHelper->AdjustForExposure(mSummedFrameList, 0,
-        0, m_eExposure, m_fFrameTime, mUserFrameFrac, mUserSubframeFrac);
+        0, m_eExposure, m_fFrameTime, mUserFrameFrac, mUserSubframeFrac, false);
       ManageExposure();
     }
   }

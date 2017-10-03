@@ -49,6 +49,9 @@ public:
   FloatVec mUserSubframeFrac;
   float mExposure;
   bool mK2Type;
+  bool mAligningInFalcon;
+  int mReadMode;
+  CameraParameters *mCamParams;
 
 private:
   int mTotalSaved;

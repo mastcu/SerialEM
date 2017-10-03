@@ -67,7 +67,7 @@ END_MESSAGE_MAP()
 // CFalconFrameDlg message handlers
 BOOL CFalconFrameDlg::OnInitDialog()
 {
-  int show = mK2Type ? SW_HIDE : SW_SHOW;
+  int show = (mK2Type || mCamParams->FEItype == FALCON3_TYPE) ? SW_HIDE : SW_SHOW;
   CBaseDlg::OnInitDialog();
   mHelper = mWinApp->mFalconHelper;
   m_sbcNumFrames.SetRange(0, 30000);
@@ -114,8 +114,10 @@ void CFalconFrameDlg::OnCancel()
 void CFalconFrameDlg::OnKillfocusEditExposure()
 {
   UpdateData(TRUE);
+  mWinApp->mCamera->ConstrainExposureTime(mCamParams, true, mReadMode, 1, 
+    mAligningInFalcon, m_fExposure, m_fSubframeTime);
   mHelper->AdjustForExposure(mSummedFrameList, mNumSkipBefore, mNumSkipAfter,
-    m_fExposure, mReadoutInterval, mUserFrameFrac, mUserSubframeFrac);
+    m_fExposure, mReadoutInterval, mUserFrameFrac, mUserSubframeFrac, mAligningInFalcon);
   UpdateAllDisplays();
 }
 
@@ -125,7 +127,7 @@ void CFalconFrameDlg::OnKillfocusSubframeTime()
   mWinApp->mCamera->ConstrainFrameTime(m_fSubframeTime);
   mReadoutInterval = m_fSubframeTime;
   mHelper->AdjustForExposure(mSummedFrameList, mNumSkipBefore, mNumSkipAfter,
-    m_fExposure, mReadoutInterval, mUserFrameFrac, mUserSubframeFrac);
+    m_fExposure, mReadoutInterval, mUserFrameFrac, mUserSubframeFrac, false);
   UpdateAllDisplays();
 }
 
@@ -134,10 +136,13 @@ void CFalconFrameDlg::OnKillfocusEditReadouts()
 {
   int ind, totFrames, totSubframes, numVals, currentIndex = 0;
   int lineList[2];
-  bool changed, badEntry = false;
+  bool changed, allOnes = true, badEntry = false;
+  int alignFraction = mAligningInFalcon ? mWinApp->mCamera->GetFalcon3AlignFraction() : 1;
   CString strLine;
   ShortVec newList;
   UpdateData(TRUE);
+
+  // Process the list into an array and keep track of whether it is all 1's
   while (currentIndex < m_strReadouts.GetLength()) {
     mWinApp->mMacroProcessor->GetNextLine(&m_strReadouts, currentIndex, strLine);
     mWinApp->mParamIO->StringToEntryList(3, strLine, numVals, lineList, NULL, 2);
@@ -148,9 +153,19 @@ void CFalconFrameDlg::OnKillfocusEditReadouts()
         badEntry = true;
         break;
     }
+    if (lineList[1] > 1)
+      allOnes = false;
     newList.push_back(lineList[0]);
     newList.push_back(lineList[1]);
   }
+
+  // If not all 1's, constrain the counts to the proper multiple when aligning in Falcon
+  if (mAligningInFalcon && !allOnes) {
+    for (ind = 0; ind < (int)newList.size() / 2; ind++)
+      newList[ind * 2 + 1] = alignFraction * 
+        B3DMAX(1, B3DNINT((float)newList[ind * 2 + 1] / alignFraction));
+  }
+
   if (!badEntry && newList.size() > 0) {
 
     // If list is valid, see if it has changed
@@ -169,23 +184,52 @@ void CFalconFrameDlg::OnKillfocusEditReadouts()
           (float)totSubframes;
       }
       mSummedFrameList = newList;
+
+      // Make sure the exposure time is valid and if it changes, redistribute frames
+      m_fExposure = m_fSubframeTime * totSubframes;
+      if (mWinApp->mCamera->ConstrainExposureTime(mCamParams, true, mReadMode, 1, 
+        mAligningInFalcon, m_fExposure, m_fSubframeTime))
+          mHelper->DistributeSubframes(mSummedFrameList, 
+            B3DNINT(m_fExposure / m_fSubframeTime), totFrames, mUserFrameFrac, 
+            mUserSubframeFrac, mAligningInFalcon);
     }
   }
-    
+   
   UpdateAllDisplays();
 }
 
-
-// A new number of frames
+// A new number of summed frames
 void CFalconFrameDlg::OnDeltaposSpinNumFrames(NMHDR *pNMHDR, LRESULT *pResult)
 {
-  int newval, newTotal, totSub, totFrames;
+  int newval, newTotal, totSub, totFrames, alignFraction, ind, minFrames = 1;
+  bool allOnes = true;
   totFrames = mHelper->GetFrameTotals(mSummedFrameList, totSub);
-  if (NewSpinnerValue(pNMHDR, pResult, totFrames, 1, mMaxFrames, newval))
+
+  // When aligning in Falcon, check if they are all 1's and if so, need to constrain
+  // the change to a multiple of the align fraction size, so divide by that
+  if (mAligningInFalcon) {
+    alignFraction = mWinApp->mCamera->GetFalcon3AlignFraction();
+    for (ind = 0; ind < (int)mSummedFrameList.size() / 2; ind++)
+      if (mSummedFrameList[2 * ind + 1] > 1)
+        allOnes = false;
+    if (allOnes) {
+      totFrames = B3DMAX(1, B3DNINT((float)totFrames / alignFraction));
+      minFrames = (mReadMode ? mWinApp->mCamera->GetMinAlignFractionsCounting() :
+        mWinApp->mCamera->GetMinAlignFractionsLinear());
+    }
+  }
+  if (NewSpinnerValue(pNMHDR, pResult, totFrames, minFrames, mMaxFrames, newval))
     return;
-  newTotal = B3DMIN(mMaxFrames * mMaxPerFrame, B3DMAX(newval, totSub));
+
+  // Boost bakc up by align fraction if single frames in Falcon
+  if (mAligningInFalcon && allOnes) {
+    newval *= alignFraction;
+    newTotal = B3DMIN(mMaxFrames, newval);
+  } else {
+    newTotal = B3DMIN(mMaxFrames * mMaxPerFrame, B3DMAX(newval, totSub));
+  }
   mHelper->DistributeSubframes(mSummedFrameList, newTotal, newval, mUserFrameFrac,
-    mUserSubframeFrac);
+    mUserSubframeFrac, mAligningInFalcon);
   UpdateAllDisplays();
 }
 
@@ -201,13 +245,28 @@ void CFalconFrameDlg::OnDeltaposSpinSkipStart(NMHDR *pNMHDR, LRESULT *pResult)
 // A new number of subframes
 void CFalconFrameDlg::OnDeltaposSpinTotalSave(NMHDR *pNMHDR, LRESULT *pResult)
 {
-  int newval, totSub, totFrames;
+  int newval, totSub, totFrames, minFrames, maxFrames, alignFraction;
   totFrames = mHelper->GetFrameTotals(mSummedFrameList, totSub);
-  if (NewSpinnerValue(pNMHDR, pResult, totSub, 1, mMaxFrames * mMaxPerFrame, newval))
-    return;
+  minFrames = 1;
+  maxFrames = mMaxFrames * mMaxPerFrame;
+
+  // When aligning in Falcon, divide by fraction size and set the min/max, boost
+  // result back up afterwards
+  if (mAligningInFalcon) {
+    alignFraction = mWinApp->mCamera->GetFalcon3AlignFraction();
+    totSub = B3DMAX(1, B3DNINT((float)totSub / alignFraction));
+    minFrames = mReadMode ? mWinApp->mCamera->GetMinAlignFractionsCounting() :
+      mWinApp->mCamera->GetMinAlignFractionsLinear();
+    maxFrames /= alignFraction;
+  }
+  if (NewSpinnerValue(pNMHDR, pResult, totSub, minFrames, mMaxFrames * mMaxPerFrame, 
+    newval))
+      return;
+  if (mAligningInFalcon)
+    newval *= alignFraction;
   totFrames = B3DMIN(newval, totFrames);
   mHelper->DistributeSubframes(mSummedFrameList, newval, totFrames, mUserFrameFrac,
-    mUserSubframeFrac);
+    mUserSubframeFrac, mAligningInFalcon);
   UpdateAllDisplays();
 }
 
@@ -230,7 +289,7 @@ void CFalconFrameDlg::OnButEqualize()
   mUserSubframeFrac.resize(1);
   mUserSubframeFrac[0] = 1.;
   mHelper->DistributeSubframes(mSummedFrameList, totSub, totFrames, mUserFrameFrac,
-    mUserSubframeFrac);
+    mUserSubframeFrac, mAligningInFalcon);
   UpdateAllDisplays();
 }
 

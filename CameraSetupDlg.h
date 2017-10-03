@@ -31,6 +31,7 @@ public:
   void UnloadConSet();
   int mCurrentSet;
   ControlSet *mConSets;
+  ControlSet *mCurSet;
   CCameraController *mCamera;
   CCameraSetupDlg(CWnd* pParent = NULL);   // standard constructor
   CameraParameters *mCamParam;
