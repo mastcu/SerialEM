@@ -94,7 +94,7 @@ struct CameraParameters {
   BOOL failedToInitialize; // Flag that Tietz camera failed to initialize
   int AMTtype;             // Flag for AMT camera
   int FEItype;             // Type of FEI camera
-  int FEIflags;            // Flags for FEI camera in advanced scripting
+  unsigned int FEIflags;   // Flags for FEI camera in advanced scripting
   int DE_camType;     	   // Flag to determine DE camera type	
   int DE_indexType;   	   // Index to look up the proper DE camera type
   int DE_ImageRot;		     // Provide an angle to rotate the DE image
