@@ -72,7 +72,6 @@ enum {EAGLE_TYPE = 1, FALCON2_TYPE, OTHER_FEI_TYPE, FALCON3_TYPE};
 // This needs to be 108 when that exists
 #define PLUGFEI_ALLOWS_ALIGN_HERE 107
 
-
 struct DarkRef {
   int Left, Right, Top, Bottom;   // binned CCD coordinates of the image
   int SizeX, SizeY;           // size in X and Y
@@ -104,7 +103,7 @@ struct CameraThreadData {
   int SelectCamera;           // Gatan camera number to select
   int TietzType;              // Or type of Tietz camera
   int FEItype;                // Or flag for FEI camera
-  int FEIflags;               // Flags entry for advanced interface and anything else
+  unsigned int FEIflags;      // Flags entry for advanced interface and anything else
   int DE_camType;             // Flag for NCMIR camera
   CString cameraName;         // Camera name for FEI, or mapping name for Tietz (from detector name)
   BOOL checkFEIname;          // Flag to check name of FEI camera
@@ -432,6 +431,10 @@ class DLL_IM_EX CCameraController
   GetMember(bool, AskedDeferredSum);
   GetSetMember(BOOL, ASIgivesGainNormOnly);
   GetMember(bool, StartedFalconAlign);
+  GetSetMember(int, Falcon3AlignFraction);
+  GetSetMember(int, MinAlignFractionsLinear);
+  GetSetMember(int, MinAlignFractionsCounting);
+
 
   int GetNumFramesSaved() {return mTD.NumFramesSaved;};
   BOOL *GetUseGPUforK2Align() {return &mUseGPUforK2Align[0];};
@@ -669,6 +672,9 @@ class DLL_IM_EX CCameraController
   bool mAligningFalconFrames;   // Flag that Falcon frames are to be aligned here
   bool mRemoveFEIalignedFrames; // Flag to remove frames aligned by FEI
   bool mRestoreFalconConfig;    // Flag that config file needs to be restored after shot
+  int mFalcon3AlignFraction;    // Number of frames in an alignment fraction for Falcon 3
+  int mMinAlignFractionsLinear; // Minimum # of alignment fractions for aligning linear
+  int mMinAlignFractionsCounting; // Minimum # of alignment fractions for aligning counting
   BOOL mDeferStackingFrames;    // One-shot flag to defer stacking on next shot
   BOOL mStackingWasDeferred;    // Flag that it happened, so setup should be skipped
   int mFrameMdocForFalcon;      // 1 to save in mdoc for Records, 2 for all
@@ -845,7 +851,7 @@ public:
   int CapSaveStageMagSetupDynFocus(ControlSet & conSet, int inSet);
   bool ConstrainExposureTime(CameraParameters *camP, ControlSet *consP);
   bool ConstrainExposureTime(CameraParameters *camP, BOOL doseFrac, 
-    int readMode, int binning, float &exposure, float &frameTime);
+    int readMode, int binning, bool alignInCamera, float &exposure, float &frameTime);
   bool ConstrainFrameTime(float &frameTime);
   void RestoreFEIshutter(void);
   void QueueFocusSteps(float interval1, double focus1, float interval2, double focus2);
@@ -879,7 +885,7 @@ float GetCountScaling(CameraParameters * camParam);
 int TargetSizeForTasks(CameraParameters *camParam = NULL);
 void RestoreGatanOrientations(void);
 void GetMergeK2DefectList(int DMind, CameraParameters *param, bool errToLog);
-bool IsK2ConSetSaving(ControlSet *conSet, CameraParameters * param);
+bool IsConSetSaving(ControlSet *conSet, CameraParameters * param, bool K2only);
 bool CanProcessHere(CameraParameters *param);
 void FixDirForFalconFrames(CameraParameters * param);
 bool CanPluginDo(int minVersion, CameraParameters * param);

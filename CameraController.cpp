@@ -314,6 +314,9 @@ CCameraController::CCameraController()
   }
   mFalconReadoutInterval = 0.055771f;
   mMaxFalconFrames = 7;
+  mFalcon3AlignFraction = 6;
+  mMinAlignFractionsLinear = 8;
+  mMinAlignFractionsCounting = 32;
   mFrameSavingEnabled = false;
   mCanUseFalconConfig = -1;
   mRestoreFalconConfig = false;
@@ -1595,7 +1598,7 @@ bool CCameraController::HasNewK2API(CameraParameters * param)
 int CCameraController::GetMaxFalconFrames(CameraParameters *params)
 {
   if (FCAM_ADVANCED(params))
-    return (params->FEIflags >> PLUGFEI_MAX_FRAC_SHIFT);
+    return ((params->FEIflags >> PLUGFEI_MAX_FRAC_SHIFT) & 0xFFFF);
   return mMaxFalconFrames;
 }
 
@@ -1731,7 +1734,7 @@ int CCameraController::MakeMdocFrameAlignCom(void)
       "a com file for aligning frames in IMOD");
     return 1;
   }
-  if (mParam->K2Type && !(IsK2ConSetSaving(conSet, mParam) && conSet->alignFrames && 
+  if (mParam->K2Type && !(IsConSetSaving(conSet, mParam, true) && conSet->alignFrames && 
     conSet->useFrameAlign > 1)) {
       SEMMessageBox("The Record parameters must be set for frame saving and aligning\n"
         "in IMOD in order to make a com file for aligning frames");
@@ -2188,15 +2191,15 @@ void CCameraController::Capture(int inSet, bool retrying)
   mTiltBefore = (float)mScope->GetTiltAngle();
 
   // First manage 1) Turning on frame-saving if it is supposed to align frames in IMOD
+  // (Applies to K2 or Falcon)
   // 2) switching to dark-subtracted if saving frames and they are
   // supposed to be unnormalized.
-  if (mParam->K2Type && conSet.doseFrac) {
-    if (IsK2ConSetSaving(&conSet, mParam) && !conSet.saveFrames)
-      conSet.saveFrames = 1;
-    if (conSet.saveFrames && conSet.processing == GAIN_NORMALIZED && 
-        mSaveUnnormalizedFrames && CAN_PLUGIN_DO(CAN_GAIN_NORM, mParam))
-        conSet.processing = DARK_SUBTRACTED;
-  }
+  if (IsConSetSaving(&conSet, mParam, false) && !conSet.saveFrames)
+    conSet.saveFrames = 1;
+  if (mParam->K2Type && conSet.doseFrac && conSet.saveFrames && 
+    conSet.processing == GAIN_NORMALIZED && mSaveUnnormalizedFrames && 
+    CAN_PLUGIN_DO(CAN_GAIN_NORM, mParam))
+      conSet.processing = DARK_SUBTRACTED;
 
   // Make sure camera is inserted, blocking cameras are retracted, check temperature, and
   // set up saving from K2 camera;  Again clear low dose area flag to be safe
@@ -2253,13 +2256,9 @@ void CCameraController::Capture(int inSet, bool retrying)
     mWinApp->mScope->GetPluginVersion() >= PLUGFEI_ALLOWS_ALIGN_HERE &&
     !(mParam->FEItype == FALCON3_TYPE && mLocalFalconFramePath.IsEmpty());
 
-  // Simply turn on the save flag where it has to save and retain the frames
-  if (falconHasFrames && conSet.alignFrames && weCanAlignFalcon && 
-    conSet.useFrameAlign > 1)
-    conSet.saveFrames = 1;
   mSavingFalconFrames = falconHasFrames && conSet.saveFrames;
 
-  // WE are aligning here if we can and slignment is selected for here
+  // WE are aligning here if we can and alignment is selected for here
   mAligningFalconFrames = weCanAlignFalcon && conSet.alignFrames && 
     conSet.useFrameAlign == 1;
 
@@ -2545,6 +2544,9 @@ void CCameraController::Capture(int inSet, bool retrying)
   if (mTD.PostMoveStage && (mTD.MoveInfo.axisBits & (axisX | axisY)))
     mTD.blankerTimeout += (DWORD)(((JEOLscope && mScope->GetSimulationMode()) ? 
     1.0f : 0.25f) * mTD.MoveInfo.distanceMoved * 1000.);
+  else if (mTD.PostMoveStage && (mTD.MoveInfo.axisBits && axisA))
+    mTD.blankerTimeout += (DWORD)((JEOLscope ? 1000. : 200.) * 
+      (2. + fabs(mTD.MoveInfo.alpha - mTiltBefore)));
   if (mTD.TiltDuringDelay)
     mTD.blankerTimeout += 240000;
 
@@ -2553,6 +2555,12 @@ void CCameraController::Capture(int inSet, bool retrying)
     return;
 
   mTD.Exposure = mExposure;
+  if (mParam->FEItype == FALCON3_TYPE && FCAM_CAN_COUNT(mParam) && conSet.K2ReadMode > 0){
+    ind = B3DNINT(mTD.Exposure / mFalconReadoutInterval);
+    mTD.Exposure = mFalconReadoutInterval * (ind + ind / 32);
+    SEMTrace('E', "Adjusted exposure time for lost frames in counting from %.3f to %.3f",
+      mExposure, mTD.Exposure);
+  }
   if (mParam->addToExposure > -1. && 
     mParam->addToExposure + mExposure > mParam->minExposure)
       mTD.Exposure += mParam->addToExposure;
@@ -3008,7 +3016,8 @@ int CCameraController::CapManageInsertTempK2Saving(const ControlSet &conSet, int
       // Now set up for K2 frame saving or aligning
       aligning = mParam->K2Type && conSet.doseFrac && conSet.alignFrames && 
         (conSet.useFrameAlign == 1 || 
-        (conSet.useFrameAlign && conSet.saveFrames && !mAlignWholeSeriesInIMOD)) &&
+        (conSet.useFrameAlign && conSet.saveFrames && !mAlignWholeSeriesInIMOD &&
+        !(mWinApp->mMacroProcessor->DoingMacro() && mWinApp->mMacroProcessor->GetAlignWholeTSOnly()))) &&
         CAN_PLUGIN_DO(CAN_ALIGN_FRAMES, mParam);
       if (!justReturn && mParam->K2Type && conSet.doseFrac && 
         (conSet.saveFrames || aligning)) {
@@ -4729,16 +4738,17 @@ void CCameraController::BlockAdjustSizes(int &DMsize, int ccdSize, int sizeMod,
 bool CCameraController::ConstrainExposureTime(CameraParameters *camP, ControlSet *consP) 
 {
   return ConstrainExposureTime(camP, consP->doseFrac > 0, consP->K2ReadMode, 
-    consP->binning, consP->exposure, consP->frameTime);
+    consP->binning, consP->alignFrames && !consP->useFrameAlign,
+    consP->exposure, consP->frameTime);
 }
 
 bool CCameraController::ConstrainExposureTime(CameraParameters *camP, BOOL doseFrac,
-  int readMode, int binning, float &exposure, float &frameTime)
+  int readMode, int binning, bool alignInCamera, float &exposure, float &frameTime)
 {
   bool retval = false;
   float ftime, baseTime, minExp;
   double fps = 0., epsilon = 0.;
-  int num;
+  int num, minFracs;
 
   // For all cameras, enforce the minimum exposure
   if (exposure < camP->minExposure) {
@@ -4791,6 +4801,14 @@ bool CCameraController::ConstrainExposureTime(CameraParameters *camP, BOOL doseF
 
     // Falcon for now
     baseTime = mFalconReadoutInterval;
+    if (camP->FEItype == FALCON3_TYPE && alignInCamera) {
+      baseTime *= mFalcon3AlignFraction;
+      minFracs = readMode > 0 ? mMinAlignFractionsCounting : mMinAlignFractionsLinear;
+      if (exposure < baseTime * minFracs) {
+        exposure = baseTime * minFracs;
+        retval = true;
+      }
+    }
   } else {
 
     // DE12
@@ -6273,16 +6291,18 @@ int CCameraController::WaitForBlankerThread(CameraThreadData * td, DWORD timeout
   } while (SEMTickInterval(beginTime) < timeout);
 
   // Suspend it if still active, then delete
+  // Yes, it is supposedly bad to call TerminateThread!  But without this, the scope mutex
+  // is not released and others getting the mutex hang.  With it, the mutex IS released
   retval = exitCode;
   if (exitCode == STILL_ACTIVE) {
     retval = 1;
     DeferMessage(td, message);
     td->blankerThread->SuspendThread();
+    TerminateThread(td->blankerThread->m_hThread, 0);
   }
   delete td->blankerThread;
   td->blankerThread = NULL;
   ReleaseMutex(td->blankerMutexHandle);
-
   return retval;
 }
 
@@ -7055,6 +7075,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
 
         // return now, when the stacking/aligning is done it will come back in
         if (mStartedFalconAlign) {
+          mWinApp->SetStatusText(SIMPLE_PANE, "ALIGNING " + CurrentSetName());
           mInDisplayNewImage = false;
           return;
         }
@@ -7521,7 +7542,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
     // Now start using current values to update extra for a deferred sum
 
     // Report the fate of frame-saving
-    if (IsK2ConSetSaving(lastConSetp, mParam) || 
+    if (IsConSetSaving(lastConSetp, mParam, true) || 
       (mSavingFalconFrames && !mDeferStackingFrames)) {
         if (mTD.NumAsyncSumFrames >= 0) {
           mTD.NumFramesSaved = B3DNINT(mExposure / mTD.FrameTime);
@@ -9433,11 +9454,17 @@ CString CCameraController::MakeFullDMRefName(CameraParameters *camP, const char 
 }
 
 // Returns true if all conditions are set for saving from K2 camera/control set
-bool CCameraController::IsK2ConSetSaving(ControlSet *conSet, CameraParameters *param)
+bool CCameraController::IsConSetSaving(ControlSet *conSet, CameraParameters *param,
+  bool K2only)
 {
-  return (param->K2Type && conSet->doseFrac && (conSet->saveFrames ||
-      (conSet->useFrameAlign > 1 && CAN_PLUGIN_DO(CAN_ALIGN_FRAMES, param) &&
-      (conSet->alignFrames || mWinApp->mTSController->GetFrameAlignInIMOD()))));
+  bool falconCanSave = (IS_BASIC_FALCON2(param) && GetMaxFalconFrames(param)) ||
+    (IS_FALCON2_OR_3(param) && (param->FEIflags & PLUGFEI_CAN_DOSE_FRAC));
+  return (((param->K2Type && conSet->doseFrac) || (falconCanSave && !K2only)) &&
+    (conSet->saveFrames || (conSet->useFrameAlign > 1 && 
+    (CAN_PLUGIN_DO(CAN_ALIGN_FRAMES, param) || !K2only) &&
+    (conSet->alignFrames || mWinApp->mTSController->GetFrameAlignInIMOD() ||
+    (mWinApp->mMacroProcessor->DoingMacro() && 
+    mWinApp->mMacroProcessor->GetAlignWholeTSOnly())))));
 }
 
 // One-time management of directory for Falcon frames
