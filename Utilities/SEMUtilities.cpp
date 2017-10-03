@@ -147,11 +147,13 @@ int UtilThreadBusy(CWinThread **threadpp, DWORD *exitPtr)
   return 0;
 }
 
-// Clean up a thread after an error: suspend and delete thread
+// Clean up a thread after an error: suspend, terminate, and delete thread
+// The terminate will make the system release any mutexes held and mark as abandoned
 void UtilThreadCleanup(CWinThread **threadpp)
 {
   if (*threadpp) {
     (*threadpp)->SuspendThread();
+    TerminateThread((*threadpp)->m_hThread, 0);
     delete *threadpp;
     *threadpp = NULL;
   }
