@@ -3017,7 +3017,7 @@ int CCameraController::CapManageInsertTempK2Saving(const ControlSet &conSet, int
       aligning = mParam->K2Type && conSet.doseFrac && conSet.alignFrames && 
         (conSet.useFrameAlign == 1 || 
         (conSet.useFrameAlign && conSet.saveFrames && !mAlignWholeSeriesInIMOD &&
-        !(mWinApp->mMacroProcessor->DoingMacro() && mWinApp->mMacroProcessor->GetAlignWholeTSOnly()))) &&
+        !mWinApp->mMacroProcessor->GetAlignWholeTSOnly())) &&
         CAN_PLUGIN_DO(CAN_ALIGN_FRAMES, mParam);
       if (!justReturn && mParam->K2Type && conSet.doseFrac && 
         (conSet.saveFrames || aligning)) {
@@ -9463,8 +9463,7 @@ bool CCameraController::IsConSetSaving(ControlSet *conSet, CameraParameters *par
     (conSet->saveFrames || (conSet->useFrameAlign > 1 && 
     (CAN_PLUGIN_DO(CAN_ALIGN_FRAMES, param) || !K2only) &&
     (conSet->alignFrames || mWinApp->mTSController->GetFrameAlignInIMOD() ||
-    (mWinApp->mMacroProcessor->DoingMacro() && 
-    mWinApp->mMacroProcessor->GetAlignWholeTSOnly())))));
+    mWinApp->mMacroProcessor->GetAlignWholeTSOnly()))));
 }
 
 // One-time management of directory for Falcon frames
