@@ -72,6 +72,7 @@ class CMacroProcessor : public CCmdTarget
   GetSetMember(bool, WaitingForFrame);
   GetMember(bool, UsingContinuous);
   GetMember(bool, NoMessageBoxOnError);
+  bool GetAlignWholeTSOnly() {return DoingMacro() && mAlignWholeTSOnly;};
   bool SkipCheckingFrameAli() {return DoingMacro() && mSkipFrameAliCheck;};
 
 protected:
@@ -204,7 +205,7 @@ private:
   bool mLoopIndsAreLocal;      // Flag that loop indexes are local
   int mAutoIndentSize;         // Number of spaces for autoindent of macro
   bool mSkipFrameAliCheck;   // Flag for camera controller to skip checking frame ali param
-
+  bool mAlignWholeTSOnly;    // Flag for alignment to happen is if in TS with Whole TS 
 
 public:
   void GetNextLine(CString * macro, int & currentIndex, CString &strLine);

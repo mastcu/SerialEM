@@ -210,7 +210,7 @@ enum {CME_VIEW, CME_FOCUS, CME_TRIAL, CME_RECORD, CME_PREVIEW,
   CME_REPORTIMAGEDISTANCEOFFSET, CME_SETIMAGEDISTANCEOFFSET, CME_REPORTCAMERALENGTH,
   CME_SETDECAMFRAMERATE, CME_SKIPMOVEINNAVACQUIRE, CME_TESTRELAXINGSTAGE, CME_RELAXSTAGE,
   CME_SKIPFRAMEALIPARAMCHECK, CME_ISVERSIONATLEAST, CME_SKIPIFVERSIONLESSTHAN,
-  CME_RAWELECTRONSTATS
+  CME_RAWELECTRONSTATS, CME_ALIGNWHOLETSONLY, CME_WRITECOMFORTSALIGN
 };
 
 static CmdItem cmdList[] = {{NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0},
@@ -312,6 +312,7 @@ static CmdItem cmdList[] = {{NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0
 {"ReportCameraLength", 0}, {"SetDECamFrameRate", 1}, {"SkipMoveInNavAcquire", 0},
 {"TestRelaxingStage", 2}, {"RelaxStage", 0}, {"SkipFrameAliParamCheck", 0},
 {"IsVersionAtLeast", 1}, {"SkipIfVersionLessThan", 1}, {"RawElectronStats", 1},
+{"AlignWholeTSOnly", 0}, {"WriteComForTSAlign", 0},
 {NULL, 0, NULL}
 };
 
@@ -831,6 +832,7 @@ void CMacroProcessor::Run(int which)
   mEmailOnError = "";
   mNoMessageBoxOnError = false;
   mSkipFrameAliCheck = false;
+  mAlignWholeTSOnly = false;
   mBoxOnScopeText = "SerialEM message";
   mBoxOnScopeType = 0;
   mBoxOnScopeInterval = 0.;
@@ -2164,6 +2166,31 @@ void CMacroProcessor::NextCommand()
     SetReportedValues(&strItems[1], index);
     report.Format("Autodoc for frames %s open", index ? "IS" : "is NOT");
     mWinApp->AppendToLog(report, mLogAction);
+
+  } else if (CMD_IS(ALIGNWHOLETSONLY)) {                 // SetAlignWholeTSOnly 
+    index  = (itemEmpty[1] || itemInt[1] != 0) ? 1 : 0;
+    if (mCamera->IsConSetSaving(&mConSets[RECORD_CONSET], camParams, false) && 
+      (mConSets[RECORD_CONSET].alignFrames || !index) && 
+      mConSets[RECORD_CONSET].useFrameAlign > 1 && mCamera->GetAlignWholeSeriesInIMOD()) {
+        if (index && !mWinApp->mStoreMRC)
+          ABORT_LINE("There must be an output file before this command can be used:\n\n");
+        if (index && mWinApp->mStoreMRC->GetAdocIndex() < 0)
+          ABORT_NOLINE("The output file was not opened with an associated .mdoc\r\n"
+            "file, which is required to align whole tilt series in IMOD");
+        SaveControlSet(RECORD_CONSET);
+        mConSets[RECORD_CONSET].alignFrames = 1 - index;
+        mAlignWholeTSOnly = index > 0;
+    } else
+      index = 0;
+    SetReportedValues(index);
+  
+  } else if (CMD_IS(WRITECOMFORTSALIGN)) {                  //  WriteComForTSAlign
+    if (mAlignWholeTSOnly) {
+      mConSets[RECORD_CONSET].alignFrames = 1;
+      if (mCamera->MakeMdocFrameAlignCom())
+        ABORT_NOLINE("Problem writing com file for aligning whole tilt series");
+      mConSets[RECORD_CONSET].alignFrames = 0;
+    }
 
   } else if (CMD_IS(SAVELOGOPENNEW)) {                      // SaveLogOpenNew
     if (mWinApp->mLogWindow) {
@@ -3800,7 +3827,8 @@ void CMacroProcessor::NextCommand()
       // Just adjusting exposure time
       bmean = (float)delISY;
       mCamera->ConstrainExposureTime(camParams, mConSets[index].doseFrac, 
-        mConSets[index].K2ReadMode, mConSets[index].binning, bmean, 
+        mConSets[index].K2ReadMode, mConSets[index].binning, 
+        mConSets[index].alignFrames && !mConSets[index].useFrameAlign, bmean, 
         mConSets[index].frameTime);
       if (fabs(bmean - mConSets[index].exposure) < 0.00001) {
         PrintfToLog("In SetExposureForMean %s, change by a factor of %.4f would require "
@@ -3966,6 +3994,10 @@ void CMacroProcessor::NextCommand()
         ABORT_LINE(strCopy);
     if (RestoreCameraSet(index, true))
       ABORT_NOLINE("No camera parameters were changed; there is nothing to restore");
+    if (index == RECORD_CONSET && mAlignWholeTSOnly) {
+      SaveControlSet(index);
+      mConSets[index].alignFrames = 0;
+    }
 
   } else if (CMD_IS(REPORTK2FILEPARAMS)) {                  // ReportK2FileParams
     index = mCamera->GetK2SaveAsTiff();

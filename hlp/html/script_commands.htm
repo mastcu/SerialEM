@@ -632,6 +632,21 @@
             be set.</TD>
         </TR>
         <TR vAlign="top">
+          <TD class="style8">AlignWholeTSOnly [#]</TD>
+          <TD>Allows a whole tilt series taken from a K2 or Falcon through the script to be 
+            aligned with one command file in IMOD, just as when using the tilt series 
+            controller.&nbsp; Specifically, no command files will be written for individual 
+            Record images taken after the command is given, and a single command file to 
+            align all frame stacks in the series is written at the end with the 
+            &#39;WriteComForTSAlign&#39; command.&nbsp; The command has no effect unless frame 
+            alignment in IMOD is selected in the Record parameter set and &#39;Align only whole 
+            tilt series&#39; is selected in the Frame Alignment Parameters dialog.&nbsp; If 
+            these conditions are satisfied, there must already be a current image file with 
+            an associated .mdoc file.&nbsp; The optional # can be 0 to turn this mode of 
+            operation off.&nbsp; Sets reportedValue1 to 1 or 0 depending on whether this 
+            operating mode was switched to or not.</TD>
+        </TR>
+        <TR vAlign="top">
           <TD class="style8">ReportK2FileParams</TD>
           <TD>Reports values selected in the Frame File Options dialog: 0 for MRC, 1 for 
             TIFF LZW, or 2 for TIFF ZIP; sum of 1 to pack unnormalized data at all, plus 2 
@@ -653,7 +668,7 @@
           <TD class="style8">ReportCountScaling</TD>
           <TD>Reports two values of current camera: either the scaling being applied to 
             counting/super-resolution mode images returned from a K2 camera, or the 
-            'CountsPerElectron' property; and whether division by 2 is.</TD>
+            'CountsPerElectron' property; and whether division by 2 is on.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style8">SetDivideBy2 #</TD>
@@ -980,6 +995,12 @@
         <TR vAlign="top">
           <TD class="style7">ReportFrameMdocOpen</TD>
           <TD>Reports whether a frame .mdoc file is open; sets ReportedValue1 to 1 if so.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style7">WriteComForTSAlign</TD>
+          <TD>Writes the command file for aliging a whole tilt series if this mode of 
+            operation was selected with the AlignWholeTSOnly command; otherwise it has no 
+            effect.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style7">SaveLogOpenNew [newFile]</TD>
