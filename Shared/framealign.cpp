@@ -1188,7 +1188,7 @@ void FrameAlign::findAllVsAllAlignment(bool justForLimits)
         mFitMat[numCol * row + numInCol + 1] = 
           mYallShifts[filt][ref * mNumAllVsAll + ind];
         for (col = 0; col < numInCol; col++)
-          mFitMat[numCol * row + col] = (ind == numGroups - 1 ? -1.f : 0.f);
+          mFitMat[numCol * row + col] = ((ind == numGroups - 1) ? -1.f : 0.f);
         mFitMat[numCol * row + ref] += -1.f;
         if (ind < numGroups - 1)
           mFitMat[numCol * row + ind] += 1.f;
