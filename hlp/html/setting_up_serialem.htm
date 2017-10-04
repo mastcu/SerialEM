@@ -1326,7 +1326,7 @@
         computer.</li>
     </ul>
     <p>
-      <a name="Falcon3Details"><i>For a Falcon 3 camera:</i></p>
+      <i><a name="Falcon3Details">For a Falcon 3 camera:</a></i></p>
     <ul>
       <li>If the frame rate is not 40 FPS, 
         add the general property &#39;FalconReadoutInterval&#39; with the inverse of the 
@@ -1342,6 +1342,30 @@
         &#39;RotationAndFlip&#39; with a value indicating the operation that needs to be applied 
         to the aligned sum to make it match (e.g., 1 or 
         3 for 90 degrees counterclockwise or clockwise).&nbsp; </li>
+      <li>The camera property &#39;<a href="about_properties.htm#scalePower">Falcon3ScalingPower</a>&#39; can be set to control the scaling of 
+        images from the camera.&nbsp; It specifies the power of 2 to divide by, where 
+        positive or negative values set a power for dividing linear or counting mode counts, 
+        respectively, and scaling by floating point arithmetic is applied to the other 
+        mode to make its counts match for a given exposure.&nbsp; (See&nbsp; '<a href="about_properties.htm#scalePower">Falcon3ScalingPower</a>' 
+        for details).&nbsp; The two ways to scale were implemented in case it was 
+        significantly faster to divide by a power of 2 than to scale by a floating point 
+        value, but the difference in timing is minor.&nbsp; The default is 4, which will 
+        divide linear mode counts by 16 and make the counts per electron be ~40-50.&nbsp; 
+        You may find a different scaling preferable (e.g., if linear mode images 
+        saturate too easily).</li>
+      <li>Making the counts match between counting and linear modes requires an accurate 
+        setting for the camera property 'LinearToCountingRatio'; procedures for setting 
+        this and the counts per electron later are described in
+        <a href="#setup_camera_gain">Measuring Camera Gain</a>.</li>
+      <li>There are two things that can speed up frame alignment in SerialEM: most 
+        importantly, not reading the frames across a 1 gigabit network connection; 
+        secondly, using the GPU of an NVIDIA card for alignment.&nbsp; The simplest step 
+        is to run SerialEM on the storage server, but it may not be possible to install 
+        an NVIDIA card in that machine.&nbsp; The logical alternative, adding a 10G 
+        network interface and/or substituting an NVIDIA graphics card on the microscope 
+        PC, requires substantial modification that may not be acceptable to FEI.&nbsp; A 
+        third solution would be to install SerialEM on a third computer with a 10G 
+        connection to the storage server and an NVIDIA card.</li>
 
     </ul>
     <p>
@@ -1563,6 +1587,11 @@
       instead of summation, in which case the gain factors are needed there as well.&nbsp; 
       If there are binnings of 1, 2, and 4, the line just above will work; if there is 
       a binning 8, the line needs 0.015625 at the end.</P>
+    <P>The Falcon 3 and Ceta 2 cameras also have relative gain factors to keep the 
+      number of counts constant with binning; the line above will work for Falcon 3, 
+      and for Ceta2 it needs 0.015625 at the end.&nbsp; With the new FEI camera 
+      scripting interface, the same behavior can be imposed for Falcon 2 and Ceta 1 
+      camera by adding the camera property &#39;AutoGainFactors 1&#39;.</P>
     <P>Gain factors may also be needed for a Gatan OneView camera, so the relative 
       gains should be measured as described above. If a factor is not 1, it will be 
       exactly the inverse of a power of 2.&nbsp; On one camera these factors were &#39;1 0.25 0.125 0.0625&#39;; 
@@ -2562,8 +2591,55 @@
       just to redo the procedure.&nbsp; Again, your dose measurements with counting 
       images will match those in DM even if you leave the values as they are.</p>
     <p>
+        <i>For a Falcon 3 camera:</i> The procedure for setting CountsPerElectron is, to 
+        first order, simple.&nbsp; Take an image in counting mode with frame-saving 
+        turned on and open the .xml file.&nbsp; Take the inverse of the value for 
+        CountsToElectrons and use that for the CountsPerElectron (it is typically ~105).&nbsp; 
+        It is not known whether there is loss in detecting electrons even at the lowest 
+        dose rates such as there is 
+        for the K2; if this becomes established or you have measurements indicating that 
+        it occurs, multiply the value by the efficiency factor (1 minus the fraction 
+        lost).</p>
+    <p>
+        It is also important for some purposes to make linear mode and counting mode 
+        give the same number of counts; this is achieved with the camera property 
+        'LinearToCountingRatio'.&nbsp; A procedure for estimating this is:</p>
+    <ol>
+      <li>Add the property 'LinearToCountingRatio 8' if it is not already present.</li>
+      <li>Turn on Divide By 2 in the Camera menu so that linear mode measurements will 
+        not be biased by truncation at 0.</li>
+      <li>Set Record parameters for unbinned, 2 second exposure, no frame saving.</li>
+      <li>Set the beam intensity to give ~0.5 electrons/unbinned pixel/sec.&nbsp; It is 
+        not necessary to set this to a very low value, where loss of counting efficiency 
+        is minimal, because the mean counts for counting mode will be linearized to 
+        account for this loss by a table built into SerialEM.</li>
+      <li>Copy and paste this into a script window:
+      sumc = 0.
+      <br />
+      suml = 0.<br />
+      num = 30<br />
+      SetK2ReadMode R 1<br />
+      loop 3<br />
+&nbsp; R<br />
+&nbsp; ReportMeanCounts A<br />
+&nbsp; sumc = $sumc + $repVal1<br />
+      EndLoop<br />
+      cmean = $sumc / 3<br />
+      SetK2ReadMode R 0<br />
+      loop $num<br />
+&nbsp; R<br />
+&nbsp; ReportMeanCounts A<br />
+&nbsp; suml = $suml + $repVal1<br />
+      EndLoop<br />
+      lmean = $suml / $num<br />
+      adjust = round ( $lmean / $cmean 3 )<br />
+      echo linear mean $lmean&nbsp;&nbsp; counting mean&nbsp; $cmean<br />
+      echo Adjust by $adjust</li>
+      <li>Multiply the value of LinearToCountingRatio by the adjustment factor.</li>
+    </ol>
+      <p>
         &nbsp;</p>
-      <P><A name="setup_stretches"></A><B>Stage and Imaging Stretch (Priority 2)</B></P>
+      <P><A name="setup_stretches"></A><B>Stage and Imaging Stretch (Priority 2)))</B></P>
       <P>These calibrations are important if the Navigator is going to be used to find 
         marked locations after rotating the grid. Since the two stage axes do not behave 
         identically, a calibration of the stretch in the stage coordinate system is 
