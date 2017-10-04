@@ -2190,16 +2190,16 @@ void CCameraController::Capture(int inSet, bool retrying)
   // For JEOL, need a reliable value of tilt.  Tilt is needed before frame saving setups
   mTiltBefore = (float)mScope->GetTiltAngle();
 
-  // First manage 1) Turning on frame-saving if it is supposed to align frames in IMOD
-  // (Applies to K2 or Falcon)
+  // First manage K2 1) Turning on frame-saving if it is supposed to align frames in IMOD
   // 2) switching to dark-subtracted if saving frames and they are
   // supposed to be unnormalized.
-  if (IsConSetSaving(&conSet, mParam, false) && !conSet.saveFrames)
-    conSet.saveFrames = 1;
-  if (mParam->K2Type && conSet.doseFrac && conSet.saveFrames && 
-    conSet.processing == GAIN_NORMALIZED && mSaveUnnormalizedFrames && 
-    CAN_PLUGIN_DO(CAN_GAIN_NORM, mParam))
-      conSet.processing = DARK_SUBTRACTED;
+  if (mParam->K2Type && conSet.doseFrac) {
+    if (IsConSetSaving(&conSet, mParam, true) && !conSet.saveFrames)
+      conSet.saveFrames = 1;
+    if (conSet.saveFrames && conSet.processing == GAIN_NORMALIZED && 
+        mSaveUnnormalizedFrames && CAN_PLUGIN_DO(CAN_GAIN_NORM, mParam))
+        conSet.processing = DARK_SUBTRACTED;
+  }
 
   // Make sure camera is inserted, blocking cameras are retracted, check temperature, and
   // set up saving from K2 camera;  Again clear low dose area flag to be safe
@@ -2255,6 +2255,11 @@ void CCameraController::Capture(int inSet, bool retrying)
   weCanAlignFalcon = falconHasFrames && 
     mWinApp->mScope->GetPluginVersion() >= PLUGFEI_ALLOWS_ALIGN_HERE &&
     !(mParam->FEItype == FALCON3_TYPE && mLocalFalconFramePath.IsEmpty());
+
+// Simply turn on the save flag where it has to save and retain the frames
+  if (falconHasFrames && conSet.alignFrames && weCanAlignFalcon && 
+    conSet.useFrameAlign > 1)
+    conSet.saveFrames = 1;
 
   mSavingFalconFrames = falconHasFrames && conSet.saveFrames;
 
@@ -3016,8 +3021,7 @@ int CCameraController::CapManageInsertTempK2Saving(const ControlSet &conSet, int
       // Now set up for K2 frame saving or aligning
       aligning = mParam->K2Type && conSet.doseFrac && conSet.alignFrames && 
         (conSet.useFrameAlign == 1 || 
-        (conSet.useFrameAlign && conSet.saveFrames && !mAlignWholeSeriesInIMOD &&
-        !mWinApp->mMacroProcessor->GetAlignWholeTSOnly())) &&
+        (conSet.useFrameAlign && conSet.saveFrames && !mAlignWholeSeriesInIMOD)) &&
         CAN_PLUGIN_DO(CAN_ALIGN_FRAMES, mParam);
       if (!justReturn && mParam->K2Type && conSet.doseFrac && 
         (conSet.saveFrames || aligning)) {
@@ -9453,15 +9457,20 @@ CString CCameraController::MakeFullDMRefName(CameraParameters *camP, const char 
   return ref;
 }
 
-// Returns true if all conditions are set for saving from K2 camera/control set
+// Returns true if all conditions are set for saving from K2 or Falcon camera/control set
 bool CCameraController::IsConSetSaving(ControlSet *conSet, CameraParameters *param,
   bool K2only)
 {
-  bool falconCanSave = (IS_BASIC_FALCON2(param) && GetMaxFalconFrames(param)) ||
+  bool falconCanSave = (IS_BASIC_FALCON2(param) && GetMaxFalconFrames(param) && 
+    mFrameSavingEnabled) || 
     (IS_FALCON2_OR_3(param) && (param->FEIflags & PLUGFEI_CAN_DOSE_FRAC));
+  bool weCanAlignFalcon = falconCanSave && 
+    mWinApp->mScope->GetPluginVersion() >= PLUGFEI_ALLOWS_ALIGN_HERE &&
+    !(mParam->FEItype == FALCON3_TYPE && mLocalFalconFramePath.IsEmpty());
+
   return (((param->K2Type && conSet->doseFrac) || (falconCanSave && !K2only)) &&
-    (conSet->saveFrames || (conSet->useFrameAlign > 1 && 
-    (CAN_PLUGIN_DO(CAN_ALIGN_FRAMES, param) || !K2only) &&
+    (conSet->saveFrames || (conSet->useFrameAlign > 1 && ((param->K2Type &&
+    CAN_PLUGIN_DO(CAN_ALIGN_FRAMES, param)) || (!K2only && weCanAlignFalcon)) &&
     (conSet->alignFrames || mWinApp->mTSController->GetFrameAlignInIMOD() ||
     mWinApp->mMacroProcessor->GetAlignWholeTSOnly()))));
 }
