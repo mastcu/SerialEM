@@ -1839,7 +1839,7 @@ BOOL CEMscope::MoveStage(StageMoveInfo info, BOOL doBacklash, BOOL useSpeed,
       waitTime += mJeolSD.postMagStageDelay;
   }
   if (WaitForStageReady(waitTime)) {
-    AfxMessageBox(_T("Stage not ready"));
+    SEMMessageBox(_T("Stage not ready"));
     return false;
   }
   if (inBackground && FEIscope && SEMNumFEIChannels() < 4) {
