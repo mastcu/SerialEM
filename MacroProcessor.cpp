@@ -210,7 +210,8 @@ enum {CME_VIEW, CME_FOCUS, CME_TRIAL, CME_RECORD, CME_PREVIEW,
   CME_REPORTIMAGEDISTANCEOFFSET, CME_SETIMAGEDISTANCEOFFSET, CME_REPORTCAMERALENGTH,
   CME_SETDECAMFRAMERATE, CME_SKIPMOVEINNAVACQUIRE, CME_TESTRELAXINGSTAGE, CME_RELAXSTAGE,
   CME_SKIPFRAMEALIPARAMCHECK, CME_ISVERSIONATLEAST, CME_SKIPIFVERSIONLESSTHAN,
-  CME_RAWELECTRONSTATS, CME_ALIGNWHOLETSONLY, CME_WRITECOMFORTSALIGN
+  CME_RAWELECTRONSTATS, CME_ALIGNWHOLETSONLY, CME_WRITECOMFORTSALIGN, CME_RECORDANDTILTTO,
+  CME_AREPOSTACTIONSENABLED
 };
 
 static CmdItem cmdList[] = {{NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0},
@@ -312,7 +313,8 @@ static CmdItem cmdList[] = {{NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0
 {"ReportCameraLength", 0}, {"SetDECamFrameRate", 1}, {"SkipMoveInNavAcquire", 0},
 {"TestRelaxingStage", 2}, {"RelaxStage", 0}, {"SkipFrameAliParamCheck", 0},
 {"IsVersionAtLeast", 1}, {"SkipIfVersionLessThan", 1}, {"RawElectronStats", 1},
-{"AlignWholeTSOnly", 0}, {"WriteComForTSAlign", 0},
+{"AlignWholeTSOnly", 0}, {"WriteComForTSAlign", 0}, {"RecordAndTiltTo", 1},
+{"ArePostActionsEnabled", 0},
 {NULL, 0, NULL}
 };
 
@@ -1636,23 +1638,38 @@ void CMacroProcessor::NextCommand()
     else
       mCamera->RetractAllCameras();
 
-  } else if (CMD_IS(RECORDANDTILTUP) || CMD_IS(RECORDANDTILTDOWN)) { // RecordAndTilt
-    double increment = mScope->GetIncrement();
-    int delay = mShiftManager->GetAdjustedTiltDelay(increment);
-    if (CMD_IS(RECORDANDTILTDOWN)) {
-      increment = -increment;
-      SetIntensityFactor(-1);
-    } else
-      SetIntensityFactor(1);
+  } else if (CMD_IS(RECORDANDTILTUP) || CMD_IS(RECORDANDTILTDOWN) || 
+    CMD_IS(RECORDANDTILTTO)) {                              // RecordAndTilt
+      if (!mCamera->PostActionsOK())
+        ABORT_LINE("Post-exposure actions are not enabled for the current camera"
+        " for line:\n\n");
+      double increment = mScope->GetIncrement();
+      delISX = mScope->GetTiltAngle();
+      if (CMD_IS(RECORDANDTILTTO))
+        increment = itemDbl[1] - delISX;
+      int delay = mShiftManager->GetAdjustedTiltDelay(increment);
+      if (CMD_IS(RECORDANDTILTDOWN)) {
+        increment = -increment;
+        SetIntensityFactor(-1);
+      } else if (CMD_IS(RECORDANDTILTUP)) {
+        SetIntensityFactor(1);
+      }
 
-    StageMoveInfo smiRAT;
-    smiRAT.axisBits = axisA;
-    smiRAT.alpha = mScope->GetTiltAngle() + increment;
-    mCamera->QueueStageMove(smiRAT,  delay);
-    mCamera->InitiateCapture(3);
-    mTestScale = true;
-    mMovedStage = true;
-    mTestTiltAngle = true;
+      StageMoveInfo smiRAT;
+      smiRAT.axisBits = axisA;
+      smiRAT.alpha = delISX + increment;
+      mCamera->QueueStageMove(smiRAT,  delay);
+      mCamera->InitiateCapture(3);
+      mTestScale = true;
+      mMovedStage = true;
+      mTestTiltAngle = true;
+
+  } else if (CMD_IS(AREPOSTACTIONSENABLED)) {                  // ArePostActionsEnabled
+    truth = mCamera->PostActionsOK();
+    report.Format("Post-exposure actions %s enabled for this camera", 
+      truth ? "ARE" : "are NOT");
+    mWinApp->AppendToLog(report, mLogAction);
+    SetReportedValues(&strItems[1], truth ? 1. : 0.);
 
   } else if (CMD_IS(TILTDURINGRECORD)) {                       // TiltDuringRecord
     delX = itemEmpty[3] ? 0. : itemDbl[3];

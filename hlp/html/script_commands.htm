@@ -590,12 +590,22 @@
         <TR>
           <TD class="style8">RecordAndTiltUp</TD>
           <TD>Starts a Record acquisition and tilts the stage up by the current increment 
-            after the exposure is expected to be done.</TD>
+            after the exposure is expected to be done.&nbsp; Post-exposure actions must be 
+            enabled for the current camera.</TD>
         </TR>
         <TR>
           <TD class="style8">RecordAndTiltDown</TD>
-          <TD>Starts a Record acquisition and tilts the stage down by the current increment 
-            after the exposure is expected to be done.</TD>
+          <TD>Like 'RecordAndTiltUp', but tilts the stage down by the current increment.</TD>
+        </TR>
+        <TR>
+          <TD class="style8">RecordAndTiltTo #</TD>
+          <TD>Like 'RecordAndTiltUp', but tilts the stage to the given angle #.</TD>
+        </TR>
+        <TR>
+          <TD class="style8">ArePostActionsEnabled</TD>
+          <TD>Reports whether post-exposure actions are enabled for the current camera and 
+            sets reportedValue1 to 1 if so, 0 if not.&nbsp; The value can be assigned to a 
+            variable after the command.</TD>
         </TR>
         <TR>
           <TD class="style8">TiltDuringRecord #A #D [#S]</TD>
@@ -1002,7 +1012,8 @@
           <TD class="style7">WriteComForTSAlign</TD>
           <TD>Writes the command file for aliging a whole tilt series if this mode of 
             operation was selected with the AlignWholeTSOnly command; otherwise it has no 
-            effect.</TD>
+            effect.  The tilt series file with associated .mdoc must still be the current 
+            open file.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style7">SaveLogOpenNew [newFile]</TD>

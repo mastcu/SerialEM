@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ===========================================================================
+10/9/17: Added script command to take Record and tilt to specific angle after
+exposure; made RecordAndTilt... command require that post-exposure actions be
+enabled, and added command to report whether they are.
+
 10/3/17: Added script commands so that entire tilt series run by script could
 be aligned in IMOD just like ones run by the Tilt Series Controller.
 
