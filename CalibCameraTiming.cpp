@@ -594,7 +594,8 @@ void CCalibCameraTiming::CalTimeNextTask()
       oneVal.Format("This StartupDelay is less than the currently allowed minimum\r\n"
         "delay for the K2, %.2f, so post-exposure actions will not be allowed.\r\n"
         "To enable post-exposure actions, either set StartupDelay to %.2f or\r\n"
-        "add (or change) this property:\r\n  K2MinStartupDelay   %.2f", 
+        "add (or change) this property:\r\n  K2MinStartupDelay   %.2f\r\n"
+        "See warnings in the Help for this command before adding that property", 
         mCamera->GetK2MinStartupDelay(), mCamera->GetK2MinStartupDelay() + 0.1,
         newDelay - 0.1);
       mWinApp->AppendToLog(oneVal, LOG_OPEN_IF_CLOSED);

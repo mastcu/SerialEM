@@ -1643,22 +1643,32 @@
         camera with two shutters.&nbsp; If the blanking apparently ended before or after 
         the exposure for some of these pictures, the 
         program will recommend rerunning the procedure with a longer exposure time.</P>
-    <P>For a camera with the NoShutter property set, the program will switch from 
+    <P><i>For a camera with the NoShutter property set</i>, the program will switch from 
       NoShutter 2 to 1 for the timing measurements.&nbsp; This means that during the 
       reference images, it will unblank before requesting the exposure and reblank 
       after the image is acquired and returned.&nbsp; During the test images, it will 
       unblank at various times after the acquisition is requested, but still not 
       reblank until the image is returned.</P>
-    <P>For a K2 Summit camera, the procedure starts with a much longer initial 
+    <P><i>For a K2 Summit camera</i>, the procedure starts with a much longer initial 
       blanking to save time.&nbsp; If this blanking is too long, a shorter value can 
       be set with the general property &#39;CalibTimingK2InitialStartup&#39;.&nbsp; Because a 
       startup delay measured in linear or counting mode with earlier versions of 
       SerialEM would be considerably shorter and can lead to problems, the program 
       will not allow post-exposure actions if the StartupDelay property is less than a 
       minimum value.&nbsp; If your camera gives a startup delay less than this limit, 
-      the program will tell you to add the property &#39;K2MinStartupDelay&#39; with a number 
-      less than your measured delay.</P>
-    <P>For a STEM camera, the program does not use the mean counts in an exposure but 
+      the program will tell you that you can either set the delay above the default 
+      minimum or add the property &#39;K2MinStartupDelay&#39; with a number 
+      less than your measured delay.&nbsp; However, there is some risk that the 
+      measured time is too short with the latter approach, and it may even be too 
+      short when it is longer than the default minimum.&nbsp; Especially if you use a 
+      measured delay less than this default, watch out for signs that it is too short: 
+      when calibrating image shift, images after the first one may be smeared or the 
+      calibration may be bad; when taking tilt series, images after the first few 
+      tilts may be smeared; when saving frames, the final frames of the exposure may 
+      have excessive drift within each frame.&nbsp; If turning off the Post-actions 
+      option in the Camera menu solves the problem, then the StartupDelay is too 
+      short.</P>
+    <P><i>For a STEM camera</i>, the program does not use the mean counts in an exposure but 
       instead finds the line in the image where the beam was unblanked.&nbsp; To take 
       interpretable images, it cancels any contrast inversion or image rotation being 
       done in SerialEM.&nbsp; The default exposure time is 1.2 seconds, which helps to 
