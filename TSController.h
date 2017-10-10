@@ -114,6 +114,7 @@ public:
   SetMember(CString, TCBoxCancelText);
   SetMember(int, TCBoxDefault);
   SetMember(float, TrialCenterMaxRadFrac);
+  GetMember(int, TerminateOnError);
   double GetCumulativeDose();
 
   bool GetBidirStartAngle(float &outVal) {outVal = mTSParam.bidirAngle; return mStartedTS && mTSParam.doBidirectional;};
