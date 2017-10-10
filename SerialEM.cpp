@@ -101,7 +101,7 @@ RGB(0,255,255), RGB(127,0,192), RGB(150,160,0), RGB(255,170,255), RGB(75,75,0),
 RGB(0,0,0), RGB(255,255,255)};
 
 // Static variable for com and other errors to be reported in, watched by OnIdle
-static int threadError = 0;
+static int sThreadError = 0;
 
 // A mutex and static data for trace output to log window
 static HANDLE traceMutexHandle;
@@ -1867,9 +1867,9 @@ BOOL CSerialEMApp::CheckIdleTasks()
   }
 
   // First check for com errors and have program act on them
-  if (threadError) {
-    ErrorOccurred(threadError);
-    threadError = 0;
+  if (sThreadError) {
+    ErrorOccurred(sThreadError);
+    sThreadError = 0;
   }
   
   // Look through the list of tasks if any
@@ -2261,7 +2261,7 @@ void SEMErrorOccurred(int error)
   if (GetCurrentThreadId() == appThreadID)
     ((CSerialEMApp *)AfxGetApp())->ErrorOccurred(error);
   else
-    threadError = error;
+    sThreadError = error;
 }
 
 void SEMReportCOMError(_com_error E, CString inString, CString *outStr, bool skipErr)
@@ -2285,11 +2285,13 @@ void SEMReportCOMError(_com_error E, CString inString, CString *outStr, bool ski
           }
         }
       }
-    if (E.Error() == PLUGIN_FAKE_HRESULT || E.Error() == NOFUNC_FAKE_HRESULT ||
-      (debugOutput.IsEmpty() || debugOutput == "0"))
-      SEMMessageBox(sDescription);
-    else
-      SEMTrace('1', (char *)((LPCTSTR)sDescription));
+      if (outStr)
+        *outStr = sDescription;
+      else if (E.Error() == PLUGIN_FAKE_HRESULT || E.Error() == NOFUNC_FAKE_HRESULT ||
+        (debugOutput.IsEmpty() || debugOutput == "0"))
+        SEMMessageBox(sDescription);
+      else
+        SEMTrace('1', (char *)((LPCTSTR)sDescription));
 
   } else if (E.Error() == SOCKET_FAKE_HRESULT) {
     sDescription = _T("ERROR calling socket server camera: ") + inString;
