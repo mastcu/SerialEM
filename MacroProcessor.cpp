@@ -976,6 +976,7 @@ void CMacroProcessor::NextCommand()
   int itemInt[MAX_TOKENS];
   double itemDbl[MAX_TOKENS];
   BOOL truth, doShift, keyBreak, doPause, doAbort;
+  bool doBack;
   ScaleMat aMat, bInv;
   EMimageBuffer *imBuf;
   KImage *image;
@@ -1644,9 +1645,15 @@ void CMacroProcessor::NextCommand()
         ABORT_LINE("Post-exposure actions are not enabled for the current camera"
         " for line:\n\n");
       double increment = mScope->GetIncrement();
+      doBack = false;
       delISX = mScope->GetTiltAngle();
-      if (CMD_IS(RECORDANDTILTTO))
+      if (CMD_IS(RECORDANDTILTTO)) {
         increment = itemDbl[1] - delISX;
+        if (!itemEmpty[2]) {
+          doBack = true;
+          backlashX = (float)itemDbl[2];
+        }
+      }
       int delay = mShiftManager->GetAdjustedTiltDelay(increment);
       if (CMD_IS(RECORDANDTILTDOWN)) {
         increment = -increment;
@@ -1658,7 +1665,8 @@ void CMacroProcessor::NextCommand()
       StageMoveInfo smiRAT;
       smiRAT.axisBits = axisA;
       smiRAT.alpha = delISX + increment;
-      mCamera->QueueStageMove(smiRAT,  delay);
+      smiRAT.backAlpha = backlashX;
+      mCamera->QueueStageMove(smiRAT, delay, doBack);
       mCamera->InitiateCapture(3);
       mTestScale = true;
       mMovedStage = true;
@@ -4724,6 +4732,8 @@ void CMacroProcessor::AbortMacro()
 void CMacroProcessor::SuspendMacro(BOOL abort)
 {
   CameraParameters *camParams = mWinApp->GetCamParams();
+  if (!mDoingMacro)
+    return;
   if (TestAndStartFuncOnStop())
     return;
 
