@@ -3,6 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ===========================================================================
+10/10/17: Fixed message boxes coming out from errors in post-exposure actions
+when error are just supposed to terminate batch tilt series or script.
+
+10/10/17: Made the Refill long operation give a special message that it
+probably completed with a misleading error.
+
 10/9/17: Added script command to take Record and tilt to specific angle after
 exposure; made RecordAndTilt... command require that post-exposure actions be
 enabled, and added command to report whether they are.

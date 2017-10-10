@@ -7182,6 +7182,8 @@ int CEMscope::LongOperationBusy(int index)
   int thread, op, longOp, busy, indStart, indEnd, retval = 0;
   int now = mWinApp->MinuteTimeStamp();
   int errorOK[MAX_LONG_OPERATIONS] = {0, 1, 0, 0, 0, 0, 0, 0};
+  const char *errStringsOK[MAX_LONG_OPERATIONS] = {"", "Cannot force refill", "", "", "",
+    "", "", ""};
   bool throwErr = false;
   indStart = B3DCHOICE(index < 0, 0, sLongThreadMap[index]);
   indEnd = B3DCHOICE(index < 0, MAX_LONG_THREADS - 1, sLongThreadMap[index]);
@@ -7191,15 +7193,25 @@ int CEMscope::LongOperationBusy(int index)
     if (!mLongOpThreads[thread])
       continue;
     busy = UtilThreadBusy(&mLongOpThreads[thread]);
-    if (busy > 0)
-      retval = 1;
-    if (busy < 0 && !retval)
-      retval = -1;
     if (busy <= 0) {
-      mWinApp->AppendToLog("Call for " + sLongOpDescriptions[thread] + 
-        (busy ? " ended with error" : " finished successfully"));
       for (op = 0; op < mLongOpData[thread].numOperations; op++) {
         longOp = mLongOpData[thread].operations[op];
+
+        // First convert an error to success if the error is allowed and the error string
+        // matches the allowed one; issue completion messages in either case
+        if (busy < 0 && errorOK[longOp] && errStringsOK[longOp][0] != 0x00 &&
+          mLongOpData[thread].errString.Find(errStringsOK[longOp]) >= 0) {
+            mWinApp->AppendToLog("Call for " + CString(longOpDescription[longOp]) + 
+              " probably finished successfully with misleading error message:\r\n     " + 
+              mLongOpData[thread].errString);
+            mLongOpData[thread].finished[op] = true;
+            busy = 0;
+        } else
+          mWinApp->AppendToLog("Call for " + CString(longOpDescription[longOp]) + 
+             B3DCHOICE(busy && !mLongOpData[thread].finished[op], " ended with error", 
+             " finished successfully"));
+
+        // Record time if completed, throw error if not and error not OK
         if (mLongOpData[thread].finished[op]) {
           mLastLongOpTimes[longOp] = now;
           mWinApp->mDocWnd->SetShortTermNotSaved();
@@ -7207,14 +7219,34 @@ int CEMscope::LongOperationBusy(int index)
           throwErr = true;
       }
     }
+    if (busy > 0)
+      retval = 1;
+    if (busy < 0 && !retval)
+      retval = -1;
     if (busy < 0)
       mWinApp->AppendToLog(mLongOpData[thread].errString);
   }
+
+  // It looks fishy to do this after one thread errors if there is another still running,
+  // but the system stays disabled anyway because the operation as whole is still busy
   if (throwErr)
     SEMErrorOccurred(1);
 
   // If all were checked and none are busy any more, clear flag and reenable interface
+  // First rescan them all to make sure they are finished and give final error return
   if (index < 0 && retval <= 0) {
+    if (!retval) {
+      for (thread = indStart; thread <= indEnd; thread++) {
+        if (mLongOpThreads[thread]) {
+          for (op = 0; op < mLongOpData[thread].numOperations; op++) {
+            longOp = mLongOpData[thread].operations[op];
+            if (!mLongOpData[thread].finished[op] && !errorOK[longOp])
+              retval = -1;
+          }
+        }
+      }
+    }
+
     mDoingLongOperation = false;
     mWinApp->SetStatusText(MEDIUM_PANE, "");
     mWinApp->UpdateBufferWindows();
