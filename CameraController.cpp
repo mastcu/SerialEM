@@ -176,6 +176,7 @@ CCameraController::CCameraController()
   mHalting = false;
   mShotIncomplete = false;
   mDiscardImage = false;
+  mNoMessageBoxOnError = 0;
   mStageQueued = false;
   mMagQueued = false;
   mISQueued = false;
@@ -2396,6 +2397,15 @@ void CCameraController::Capture(int inSet, bool retrying)
   mTD.TiltDuringDelay = B3DCHOICE(!FEIscope && mTiltDuringShotDelay >= 0, 
     B3DMAX(1, mTiltDuringShotDelay), 0);
   mTD.Processing = conSet.processing;
+
+  // Set up so that an error message in the post-action script, which is not issued until 
+  // final cleanup, will not result in a message box if script or TS is set to avoid them
+  mNoMessageBoxOnError = 0;
+  if (mWinApp->mMacroProcessor->DoingMacro() &&
+    mWinApp->mMacroProcessor->GetNoMessageBoxOnError())
+    mNoMessageBoxOnError = -1;
+  if (mWinApp->DoingTiltSeries() && mWinApp->mTSController->GetTerminateOnError())
+    mNoMessageBoxOnError = 1;
 
   // Set up scaling for K2 camera.  Enforce read mode 0 for base camera
   // Set read mode -2 or -3 for OneView so it is distinct from K2
@@ -6569,7 +6579,21 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
         CEMscope::WaitForStageDone(stData.info, "BlankerProc");
 
       if (td->PostMoveStage) {
-        CEMscope::StageMoveKernel(&stData, true, false, destX, destY, destZ, destAlpha);
+
+        // Wait for stage ready for FEI at least, where it is simple
+        if (FEIscope) {
+          startTime = GetTickCount();
+          while (SEMTickInterval(startTime) < 5000) {
+            if ((retval = td->scopePlugFuncs->GetStageStatus()))
+              Sleep(100);
+            else
+              break;
+          }
+        }
+        if (retval)
+          DeferMessage(td, "Stage not ready for doing post-exposure movement");
+        else
+          CEMscope::StageMoveKernel(&stData, true, false, destX, destY, destZ, destAlpha);
         SEMTrace('M', "BlankerProc finished stage move");
       }
     }
@@ -7875,6 +7899,7 @@ void CCameraController::ErrorCleanup(int error)
   if (mTD.errFlag)
     SEMMessageBox(mTD.errMess, MB_EXCLAME);
   mTD.errFlag = 0;
+  mNoMessageBoxOnError = 0;
   if (error || mRepFlag < 0 || mHalting || mPending >= 0)
     mWinApp->UpdateBufferWindows();
   mWinApp->SetStatusText(SIMPLE_PANE, "");

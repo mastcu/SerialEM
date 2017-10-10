@@ -434,7 +434,7 @@ class DLL_IM_EX CCameraController
   GetSetMember(int, Falcon3AlignFraction);
   GetSetMember(int, MinAlignFractionsLinear);
   GetSetMember(int, MinAlignFractionsCounting);
-
+  GetMember(int, NoMessageBoxOnError);
 
   int GetNumFramesSaved() {return mTD.NumFramesSaved;};
   BOOL *GetUseGPUforK2Align() {return &mUseGPUforK2Align[0];};
@@ -702,6 +702,7 @@ class DLL_IM_EX CCameraController
   BOOL mRunCommandAfterSave;    // Flag to run a command after saving frames
   CString mPostSaveCommand;     // Command to run after saving (future)
   bool mInDisplayNewImage;      // Flag for proper testing of continuous mode
+  int mNoMessageBoxOnError;     // -1 for macro processor no MB set, 1 for TS with term
   int mDMversion[3];
   int mPluginVersion[3];
   int mNextAsyncSumFrames;      // 0 for async next shot, > 0 to return partial sum
