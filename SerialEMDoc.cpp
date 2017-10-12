@@ -2079,9 +2079,10 @@ int CSerialEMDoc::SaveSettingsOnExit()
     result = 0;
     str = "There are unsaved calibrations (";
     for (ind = 0; ind < NUM_CAL_DONE_TYPES; ind++) {
-      if (mNumCalsDone[ind] > 0)
-        str2.Format("%d %s", mNumCalsDone[ind], calType[ind]);
-      str += str2;
+      if (mNumCalsDone[ind] > 0) {
+        str2.Format(" %d %s", mNumCalsDone[ind], calType[ind]);
+        str += str2;
+      }
       if (mNumCalsDone[ind] >= mNumCalsAskThresh[ind])
         result = 1;
     }
