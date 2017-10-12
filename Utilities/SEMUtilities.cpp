@@ -418,7 +418,7 @@ int MagForCamera(int camera, int index)
 // Or find mag index for mag value; camera defaults to -1 for current camera
 int FindIndexForMagValue(int magval, int camera, int magInd)
 {
-  int i, lastMag, thisMag, limlo = 1, limhi = MAX_MAGS - 1;
+  int i, minInd, thisMag, diff, minMag, minDiff, limlo = 1, limhi = MAX_MAGS - 1;
   CEMscope *scope = sWinApp->mScope;
   bool inverted = false;
   int secondary = scope->GetLowestSecondaryMag();
@@ -455,18 +455,30 @@ int FindIndexForMagValue(int magval, int camera, int magInd)
   }
 
   // Look up mags from high to low to avoid a LM mag that duplicates Mag mode mag
-  lastMag = MagOrEFTEMmag(camParams->GIF, limhi, ifSTEM);
+  // Just look for the nearest mag first
+  minInd = -1;
   for (i = limhi; i >= limlo; i--) {
     if (!ifSTEM && secondary && scope->GetSecondaryMode() && i == secondary - 1)
       i = scope->GetLowestMModeMagInd() - 1;
     thisMag = MagOrEFTEMmag(camParams->GIF, i, ifSTEM);
-    if (fabs((double)magval - thisMag) < 1. || fabs((double)magval - thisMag) < 
-      0.35 * fabs((double)lastMag - thisMag))
-      return i;
-    if (fabs((double)magval - lastMag) < 0.35 * fabs((double)lastMag - thisMag))
-      return i + 1;
-    lastMag = thisMag;
+    diff = magval > thisMag ? (magval - thisMag) : (thisMag - magval);
+    if (minInd < 0 || diff < minDiff) {
+      minDiff = diff;
+      minInd = i;
+      minMag = thisMag;
+    }
   }
+
+  // Now require it not be midway between mags, compare to spacing between mags
+  if (minInd == limhi)
+    i = minInd - 1;
+  else if (minInd == limlo)
+    i = minInd + 1;
+  else
+    i = magval > minMag ? 1 : -1;
+  thisMag = MagOrEFTEMmag(camParams->GIF, i, ifSTEM);
+  if (minDiff < 0.35 * fabs((double)thisMag - minMag))
+    return minInd;
   return 0;
 }
 

@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ===========================================================================
+10/11/17: Fixed method of looking up mag index from a mag value, which fixes
+problems in removing IS and stage calibrations (In 3.6).
+
 10/10/17: Fixed message boxes coming out from errors in post-exposure actions
 when error are just supposed to terminate batch tilt series or script.
 
