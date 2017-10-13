@@ -7724,7 +7724,17 @@ void CCameraController::DisplayNewImage(BOOL acquired)
         extra->mFrameDosesCounts += str;
       }
     }
-    extra->mCountsPerElectron = mWinApp->mProcessImage->CountsPerElectronForImBuf(imBuf);
+
+    // Get counts per electron from imBuf if not early return, or else compute laboriously
+    if (mTD.NumAsyncSumFrames != 0) {
+      extra->mCountsPerElectron= mWinApp->mProcessImage->CountsPerElectronForImBuf(imBuf);
+    } else if (mParam->countsPerElectron && mParam->K2Type) {
+      extra->mCountsPerElectron = mParam->countsPerElectron;
+      if (lastConSetp->K2ReadMode > 0)
+        extra->mCountsPerElectron = GetCountScaling(mParam);
+      if (mTD.DivideBy2)
+        extra->mCountsPerElectron /= 2.;
+    }
 
     // Save to autodoc file if one is designated
     if (extra->mNumSubFrames > 0 || (IS_FALCON2_OR_3(mParam) && (mFrameMdocForFalcon > 1 
