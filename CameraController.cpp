@@ -7823,7 +7823,8 @@ void CCameraController::DisplayNewImage(BOOL acquired)
   }
   
   // Update filter settings if there is a timer that may have been waiting
-  if (mFilterUpdateID)
+  if (mFilterUpdateID && !mTD.ContinuousSTEM && 
+    !(mTD.ProcessingPlus & CONTINUOUS_USE_THREAD))
     CheckFilterSettings();
   
   // If halting, stop now and clear pending
