@@ -586,11 +586,11 @@ void CShiftCalibrator::ShiftDone()
     return;
   }
   mShiftIndex = -1;
-  xOut = mCCCsum / (mNumShiftCal - 1);
+  xOut = mCCCsum / (mNumShiftCal - (mCalStage ? 2 : 1));
   PrintfToLog("\r\nThe mean cross-correlation coefficient was %.3f and the minimum was"
     " %.3f", xOut, mCCCmin);
   if (xOut < 0.1) 
-    PrintfToLog("THIS IS RICIDULOUSLY LOW: YOU NEED TO USE MORE EXPOSURE\r\n");
+    PrintfToLog("THIS IS RIDICULOUSLY LOW: YOU NEED TO USE MORE EXPOSURE\r\n");
   else if (xOut < 0.2) 
     PrintfToLog("THIS IS DANGEROUSLY LOW: YOU SHOULD USE MORE EXPOSURE\r\n");
   else if (xOut < 0.4)
