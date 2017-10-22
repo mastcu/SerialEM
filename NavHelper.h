@@ -19,6 +19,20 @@ struct CenterSkipData
   float baseDelY;
 };
 
+// Structure for the multiple-record parameters
+struct MultiShotParams
+{
+  float spokeRad;       // Distance to off-center shots
+  int numShots;         // Number of off-center shots
+  int doCenter;         // Center shot: -1 before, 0 none, 1 after
+  float extraDelay;     // Additional delay after image shift
+  int doEarlyReturn;    // 1 for early return on last, 2 for all
+  int numEarlyFrames;   // Number of frames in early return
+  BOOL saveRecord;      // Whether to save Record shot
+  float beamDiam;       // Beam diameter: display only
+  BOOL useIllumArea;    // Whether to use illuminated area for drawing diameter
+};
+
 enum SetStateTypes {STATE_NONE = 0, STATE_IMAGING, STATE_MAP_ACQUIRE};
 
 class CNavHelper
@@ -39,6 +53,16 @@ public:
   GetSetMember(BOOL, SearchRotAlign)
   GetSetMember(float, RotAlignRange)
   GetSetMember(float, RotAlignCenter)
+  GetSetMember(BOOL, ConvertMaps)
+  GetSetMember(BOOL, LoadMapsUnbinned)
+  GetSetMember(BOOL, WriteNavAsXML);
+  GetSetMember(BOOL, TryRealignScaling);
+  GetSetMember(int, RealignTestOptions);
+  GetSetMember(int, AutoBacklashNewMap);
+  GetSetMember(float, AutoBacklashMinField);
+  GetSetMember(int, PointLabelDrawThresh);
+  GetSetMember(int, EnableMultiShot);
+  MultiShotParams *GetMultiShotParams() {return &mMultiShotParams;};
   SetMember(float, DistWeightThresh);
   SetMember(float, RImaxLMfield);
   SetMember(int, RIskipCenTimeCrit);
@@ -81,6 +105,8 @@ private:
   CCameraController *mCamera;
   WINDOWPLACEMENT mStatePlacement;
   CArray<CenterSkipData, CenterSkipData> mCenterSkipArray;
+  MultiShotParams mMultiShotParams;
+  int mEnableMultiShot;
 
   std::vector<int> mPieceSavedAt;  // Sections numbers for existing pieces in montage
   int mSecondRoundID;           // Map ID of map itself for 2nd round alignment
@@ -150,6 +176,15 @@ private:
   BOOL mSearchRotAlign;         // Flag to do rotation search
   float mRotAlignRange;         // Range of search
   float mRotAlignCenter;        // Center angle for rotation
+  BOOL mConvertMaps;                   // Flag that Navigator should convert maps to byte
+  BOOL mLoadMapsUnbinned;              // Flag that Navigator should load maps unbinned
+  BOOL mTryRealignScaling;             // Flag to do realign with scaling centered image
+  BOOL mWriteNavAsXML;                 // Flag to write Nav files as XML
+  int mRealignTestOptions;             // For testing backlash and mont stage error
+  int mAutoBacklashNewMap;             // Whether to do backlash for new maps 
+  float mAutoBacklashMinField;         // FOV for doing backlash routine
+  int mPointLabelDrawThresh;           // Threshold group size for drawing point labels
+
   WINDOWPLACEMENT mRotAlignPlace;
   double mRIdefocusOffsetSet;   // Defocus offset set in realign to item
   int mRIalphaSet;              // Alpha value set in realign to item

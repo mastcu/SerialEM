@@ -76,7 +76,7 @@ enum Tasks {TASK_NAVIGATOR_ACQUIRE, TASK_DISTORTION_STAGEPAIR, TASK_CAL_BEAMSHIF
   TASK_MONTAGE_REALIGN, TASK_STEM_FOCUS, TASK_FOCUS_VS_Z, TASK_INTERSET_SHIFT,
   TASK_BACKLASH_ADJUST, TASK_ASYNC_SAVE, TASK_LONG_OPERATION, TASK_BIDIR_COPY, 
   TASK_BIDIR_ANCHOR, TASK_STAGE_TOOL, TASK_STACK_FALCON, TASK_MONTAGE_DWELL, 
-  TASK_CAL_ASTIG, TASK_FIX_ASTIG, TASK_COMA_FREE, TASK_ZEMLIN
+  TASK_CAL_ASTIG, TASK_FIX_ASTIG, TASK_COMA_FREE, TASK_ZEMLIN, TASK_MULTI_SHOT
 };
 
 enum CalTypes {CAL_DONE_IS = 0, CAL_DONE_STAGE, CAL_DONE_FOCUS, CAL_DONE_BEAM, 
@@ -268,6 +268,7 @@ class CCalibCameraTiming;
 class CCookerSetupDlg;
 class CAutocenSetupDlg;
 class CMultiTSTasks;
+class CParticleTasks;
 class CMailer;
 class CPluginManager;
 class CGatanSocket;
@@ -350,14 +351,6 @@ public:
   SetMember(BOOL, ExitOnScopeError)
   void SetAdministratorMode(BOOL inVal) {mAdministrator = inVal;};
   void SetDebugOutput(CString keys);
-  GetSetMember(BOOL, ConvertMaps)
-  GetSetMember(BOOL, LoadMapsUnbinned)
-  GetSetMember(BOOL, WriteNavAsXML);
-  GetSetMember(BOOL, TryRealignScaling);
-  GetSetMember(int, RealignTestOptions);
-  GetSetMember(int, AutoBacklashNewMap);
-  GetSetMember(float, AutoBacklashMinField);
-  GetSetMember(int, PointLabelDrawThresh);
   BOOL ScopeHasFilter() {return mScopeHasFilter;};
   BOOL ScopeHasSTEM() {return mScopeHasSTEM;};
   void NavigatorClosing();
@@ -566,6 +559,7 @@ public:
   CCookerSetupDlg *mCookerDlg;
   CAutocenSetupDlg *mAutocenDlg;
   CMultiTSTasks *mMultiTSTasks;
+  CParticleTasks *mParticleTasks;
   CMailer *mMailer;
   CGatanSocket *mGatanSocket;
   CPluginManager *mPluginManager;
@@ -637,6 +631,7 @@ private:
   BOOL mScopeHasFilter;
   BOOL mScopeHasSTEM;
   int mFirstSTEMcamera;                // Index of first STEM camera or -1 if none
+  BOOL mOpenStateWithNav;              // Flag to open state dialog with the Navigator
 
   int mImBufIndex;
   int mFFTbufIndex;
@@ -655,15 +650,6 @@ private:
   WINDOWPLACEMENT mCamSetupPlacement;
   WINDOWPLACEMENT mStageToolPlacement;
   BOOL mReopenLog;
-  BOOL mConvertMaps;                   // Flag that Navigator should convert maps to byte
-  BOOL mLoadMapsUnbinned;              // Flag that Navigator should load maps unbinned
-  BOOL mOpenStateWithNav;              // Flag to open state dialog with the Navigator
-  BOOL mTryRealignScaling;             // Flag to do realign with scaling centered image
-  BOOL mWriteNavAsXML;                 // Flag to write Nav files as XML
-  int mRealignTestOptions;             // For testing backlash and mont stage error
-  int mAutoBacklashNewMap;             // Whether to do backlash for new maps 
-  float mAutoBacklashMinField;         // FOV for doing backlash routine
-  int mPointLabelDrawThresh;           // Threshold group size for drawing point labels
 
   MontParam  mMontParam;
   BOOL mMontaging;

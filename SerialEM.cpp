@@ -45,6 +45,7 @@
 #include "NavHelper.h"
 #include "CalibCameraTiming.h"
 #include "MultiTSTasks.h"
+#include "ParticleTasks.h"
 #include "TSViewRange.h"
 #include "ReadFileDlg.h"
 #include "Mailer.h"
@@ -196,14 +197,6 @@ CSerialEMApp::CSerialEMApp()
   mNavigator = NULL;
   mNavHelper = NULL;
   mStageMoveTool = NULL;
-  mConvertMaps = true;
-  mLoadMapsUnbinned = true;
-  mWriteNavAsXML = false;
-  mTryRealignScaling = true;
-  mRealignTestOptions = 3;  // TEMPORARY
-  mAutoBacklashMinField = 5.f;
-  mAutoBacklashNewMap = 1;  // ASK
-  mPointLabelDrawThresh = 15;
   mAdministrator = false;
   mCalNotSaved = false;
   mEFTEMMode = false;
@@ -701,6 +694,7 @@ CSerialEMApp::~CSerialEMApp()
   delete mFocusManager;
   delete mComplexTasks;
   delete mMultiTSTasks;
+  delete mParticleTasks;
   delete mBeamAssessor;
   delete mProcessImage;
   delete mTSController;
@@ -870,6 +864,7 @@ BOOL CSerialEMApp::InitInstance()
   mFocusManager = new CFocusManager();
   mComplexTasks = new CComplexTasks();
   mMultiTSTasks = new CMultiTSTasks();
+  mParticleTasks = new CParticleTasks();
   mBeamAssessor = new CBeamAssessor();
   mProcessImage = new CProcessImage();
   mTSController = new CTSController();
@@ -1145,6 +1140,7 @@ BOOL CSerialEMApp::InitInstance()
   mMacroProcessor->Initialize();
   mComplexTasks->Initialize();
   mMultiTSTasks->Initialize();
+  mParticleTasks->Initialize();
   mBeamAssessor->Initialize();
   mTSController->Initialize();
   mFilterTasks->Initialize();
@@ -1962,6 +1958,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
           mMultiTSTasks->SetupAutocenter(true);
         else if (idc->source == TASK_AUTOCEN_BEAM)
           mMultiTSTasks->AutocenNextTask(idc->param);
+        else if (idc->source == TASK_MULTI_SHOT)
+          mParticleTasks->MultiShotNextTask(idc->param);
         else if (idc->source == TASK_RESET_SHIFT)
           mShiftManager->ResetISDone();
         else if (idc->source == TASK_CAL_IMAGESHIFT)
@@ -2055,6 +2053,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
           mMultiTSTasks->TiltRangeCleanup(busy);
         else if (idc->source == TASK_AUTOCEN_BEAM)
           mMultiTSTasks->AutocenCleanup(busy);
+        else if (idc->source == TASK_MULTI_SHOT)
+          mParticleTasks->MultiShotCleanup(busy);
         else if (idc->source == TASK_RESET_SHIFT)
           mShiftManager->ResetISCleanup(busy);
         else if (idc->source == TASK_CAL_IMAGESHIFT)
@@ -2235,6 +2235,8 @@ void CSerialEMApp::ErrorOccurred(int error)
     mMultiTSTasks->StopBidirFileCopy();
   if (mMultiTSTasks->DoingAnchorImage())
     mMultiTSTasks->StopAnchorImage();
+  if (mParticleTasks->DoingMultiShot())
+    mParticleTasks->StopMultiShot();
   if (mStageMoveTool && mStageMoveTool->GetGoingToAcquire())
     mStageMoveTool->StopNextAcquire();
   if (mCamera->GetWaitingForStacking())
@@ -2654,6 +2656,7 @@ BOOL CSerialEMApp::DoingImagingTasks()
     mDistortionTasks->DoingStagePairs() ||
     mCalibTiming->Calibrating() ||
     mCalibTiming->DoingDeadTime() ||
+    mParticleTasks->DoingMultiShot() ||
     (mNavigator && ((mNavigator->GetAcquiring() && !mNavigator->GetStartedTS() && 
     !mNavigator->StartedMacro() && !mNavigator->GetPausedAcquire()) ||
     mNavHelper->GetRealigning() ||

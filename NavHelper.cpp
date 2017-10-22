@@ -85,6 +85,25 @@ CNavHelper::CNavHelper(void)
   mContinuousRealign = 0;
   mGridGroupSize = 5.;
   mDivideIntoGroups = false;
+  mConvertMaps = true;
+  mLoadMapsUnbinned = true;
+  mWriteNavAsXML = false;
+  mTryRealignScaling = true;
+  mRealignTestOptions = 3;  // TEMPORARY
+  mAutoBacklashMinField = 5.f;
+  mAutoBacklashNewMap = 1;  // ASK
+  mPointLabelDrawThresh = 15;
+  mEnableMultiShot = 0;
+  mMultiShotParams.beamDiam = 0.2f;
+  mMultiShotParams.spokeRad = 0.5f;
+  mMultiShotParams.numShots = 6;
+  mMultiShotParams.doCenter = 1;
+  mMultiShotParams.saveRecord = false;
+  mMultiShotParams.doEarlyReturn = 0;
+  mMultiShotParams.numEarlyFrames = 0;
+  mMultiShotParams.extraDelay = 2.;
+  mMultiShotParams.useIllumArea = false;
+
   mEditReminderPrinted = false;
   mCollapseGroups = false;
   mRIstayingInLD = false;
@@ -540,7 +559,7 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
   montErrX = montErrY = 0.;
   mUseMontStageError = false;
   if (item->mMapMontage) {
-    mUseMontStageError = (mWinApp->GetRealignTestOptions() & 2) != 0 &&
+    mUseMontStageError = (mRealignTestOptions & 2) != 0 &&
       item->mRegistration == item->mOriginalReg;
     mWinApp->mMontageController->ListMontagePieces(mMapStore, mMapMontP, 
       item->mMapSection, mPieceSavedAt);
@@ -611,7 +630,7 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
   }
 
   // Set up to use scaling in first if option selected and not low dose
-  mRItryScaling = mWinApp->GetTryRealignScaling() && !mWinApp->LowDoseMode();
+  mRItryScaling = mTryRealignScaling && !mWinApp->LowDoseMode();
 
   // Save state if desired; which will only work by forgetting prior state
   if (restoreState) {
