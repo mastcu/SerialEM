@@ -1074,6 +1074,7 @@ void CNavigatorDlg::OnDrawOne()
 // Show acquire area changed
 void CNavigatorDlg::OnShowAcquireArea()
 {
+  mWinApp->RestoreViewFocus();
   UpdateData(true);
   Redraw();
 }
