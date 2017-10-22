@@ -17,6 +17,7 @@
 #include "EMmontageController.h"
 #include "BeamAssessor.h"
 #include "NavHelper.h"
+#include "NavigatorDlg.h"
 #include "MultiTSTasks.h"
 #include "PiezoAndPPControl.h"
 
@@ -1333,6 +1334,7 @@ void CLowDoseDlg::ScopeUpdate(int magIndex, int spotSize, double intensity,
   LowDoseParams *ldArea;
   double specX, specY, tiltAxisX, newISX, newISY, baseTransX, baseTransY;
   int shiftedA;
+  MultiShotParams *msParams;
 
   if (!mInitialized || !mTrulyLowDose)
     return;
@@ -1352,11 +1354,21 @@ void CLowDoseDlg::ScopeUpdate(int magIndex, int spotSize, double intensity,
       ldArea->ISX, ldArea->ISY);
     ldArea->magIndex = magIndex;
     ldArea->spotSize = spotSize;
-    ldArea->intensity = intensity;
     ldArea->camLenIndex = camLenIndex;
     ldArea->diffFocus = focus;
     ldArea->beamAlpha = alpha;
     ldArea->probeMode = probeMode;
+    if (inSetArea == RECORD_CONSET && mWinApp->mNavigator &&
+      mWinApp->mNavigator->m_bShowAcquireArea &&mWinApp->mNavHelper->GetEnableMultiShot()
+      && fabs(ldArea->intensity - intensity) > 1.e-6 && mScope->GetUseIllumAreaForC2() &&
+      ((mWinApp->mMainView->GetActiveImBuf())->mHasUserPt || 
+      (mWinApp->mMainView->GetActiveImBuf())->mHasUserLine)) {
+        msParams = mWinApp->mNavHelper->GetMultiShotParams();
+        ldArea->intensity = intensity;
+        if (msParams->useIllumArea)
+          mWinApp->mMainView->DrawImage();
+    } else
+      ldArea->intensity = intensity;
 
     if (mWinApp->GetFilterMode())
       SyncFilterSettings(inSetArea);
