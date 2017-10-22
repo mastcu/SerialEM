@@ -2584,8 +2584,8 @@ CArray<CMapDrawItem *, CMapDrawItem *> *CNavigatorDlg::GetMapDrawItems(
   if (m_bDrawNone || !BufferStageToImage(imBuf, aMat, delX, delY))
     return NULL;
   drawAllReg = m_bDrawAllReg;
-  if ((imBuf->mHasUserPt || imBuf->mHasUserLine) &&
-    RegistrationUseType(imBuf->mRegistration) != NAVREG_IMPORT && m_bShowAcquireArea) {
+  if ((imBuf->mHasUserPt || imBuf->mHasUserLine) && m_bShowAcquireArea &&
+    RegistrationUseType(imBuf->mRegistration) != NAVREG_IMPORT) {
 
       // If there is a user point and the box is on to draw acquire area, get needed
       // parameters: camera and mag index from current state or low dose or montage params
@@ -2638,6 +2638,34 @@ CArray<CMapDrawItem *, CMapDrawItem *> *CNavigatorDlg::GetMapDrawItems(
         ptX = box->mStageX + c2s.xpx * cornX + c2s.xpy * cornY;
         ptY = box->mStageY + c2s.ypx * cornX + c2s.ypy * cornY;
         box->AppendPoint(ptX, ptY);
+      }
+
+      // If showing circles, then get the parameters and comput stage coordinates for 
+      // each circle from camera coordinates; add more points to box
+      if (mHelper->GetEnableMultiShot()) {
+        float radius, pixel = mShiftManager->GetPixelSize(camera, magInd);
+        if (pixel) {
+          MultiShotParams *msParams = mHelper->GetMultiShotParams();
+          radius = msParams->spokeRad / pixel;
+          for (ind = 0; ind < msParams->numShots; ind++) {
+            angle = (float)(DTOR * ind * 360. / msParams->numShots);
+            cornX = radius * (float)cos(angle);
+            cornY = radius * (float)sin(angle);
+            ptX = box->mStageX + c2s.xpx * cornX + c2s.xpy * cornY;
+            ptY = box->mStageY + c2s.ypx * cornX + c2s.ypy * cornY;
+            box->AppendPoint(ptX, ptY);
+          }
+
+          // Add one more point with beam radius as a position in X in stage coordinates
+          radius = 0.5f * msParams->beamDiam / pixel;
+          if (msParams->useIllumArea && mWinApp->mScope->GetUseIllumAreaForC2() && 
+            mWinApp->LowDoseMode())
+            radius = (float)(50. * 
+            mWinApp->mScope->IntensityToIllumArea(ldp[RECORD_CONSET].intensity) / pixel);
+          ptX = box->mStageX + c2s.xpx * radius;
+          ptY = box->mStageY + c2s.ypx * radius;
+          box->AppendPoint(ptX, ptY);
+        }
       }
       box->mRegistration = mCurrentRegistration;
       box->mType = ITEM_TYPE_POLYGON;
@@ -5403,7 +5431,7 @@ int CNavigatorDlg::NewMap(bool unsuitableOK)
     item->mMapMinScale /= 2.f;
     item->mMapMaxScale /= 2.f;
   }
-  if (mWinApp->GetConvertMaps())
+  if (mHelper->GetConvertMaps())
     imBuf->ConvertToByte(0., 0.);
 
   // Make bounding box
@@ -5451,10 +5479,10 @@ int CNavigatorDlg::NewMap(bool unsuitableOK)
   delX = mShiftManager->GetPixelSize(item->mMapCamera, item->mMapMagInd) *
     item->mMapBinning;
   delY = (float)sqrt(delX * item->mMapWidth * delX * item->mMapHeight);
-  if (item->mBacklashX == 0. && mWinApp->GetAutoBacklashNewMap() > mSkipBacklashType && 
-    delY >= mWinApp->GetAutoBacklashMinField()) {
+  if (item->mBacklashX == 0. && mHelper->GetAutoBacklashNewMap() > mSkipBacklashType && 
+    delY >= mHelper->GetAutoBacklashMinField()) {
       i = 1;
-      if (mWinApp->GetAutoBacklashNewMap() == 1) {
+      if (mHelper->GetAutoBacklashNewMap() == 1) {
         if (AfxMessageBox("Do you want to run the routine to adjust the\nstage position"
           " of this map for backlash?\n\n(Use Navigator - Backlash Settings to set "
           "whether this question is asked)", MB_QUESTION) == IDNO)
@@ -5800,10 +5828,10 @@ int CNavigatorDlg::DoLoadMap(bool synchronous)
 
   // Save and set overview binning to 1 if selected, then
   mOverviewBinSave = masterMont->overviewBinning;
-  if (mWinApp->GetLoadMapsUnbinned())
+  if (mHelper->GetLoadMapsUnbinned())
     masterMont->overviewBinning = 1;
 
-  if (mWinApp->GetConvertMaps()) {
+  if (mHelper->GetConvertMaps()) {
     masterMont->byteMinScale = mItem->mMapMinScale;
     masterMont->byteMaxScale = mItem->mMapMaxScale;
   }
@@ -5883,7 +5911,7 @@ void CNavigatorDlg::FinishLoadMap(void)
     imBuf->mEffectiveBin = B3DMIN(camP->sizeX / mUseWidth, camP->sizeY / mUseHeight);
 
   // Convert single frame map to bytes now if flag set
-  if (mWinApp->GetConvertMaps() && !mItem->mMapMontage && 
+  if (mHelper->GetConvertMaps() && !mItem->mMapMontage && 
     mItem->mMapMinScale != mItem->mMapMaxScale)
     mImBufs[bufInd].ConvertToByte(mItem->mMapMinScale, mItem->mMapMaxScale);
   
@@ -6193,7 +6221,7 @@ void CNavigatorDlg::OpenAndWriteFile(bool autosave)
 
   adocErr = 0;
 
-  if (mWinApp->GetWriteNavAsXML()) {
+  if (mHelper->GetWriteNavAsXML()) {
 
     // If writing as XML, need to go through the autodoc structure, get mutex, etc
     if (!AdocAcquireMutex()) {
@@ -8057,7 +8085,7 @@ bool CNavigatorDlg::BacklashForItem(CMapDrawItem *item, float &backX, float &bac
       return false;
   }
   if ((!item->mBacklashX && !item->mBacklashY) || 
-    (mWinApp->GetRealignTestOptions() & 1) == 0 || 
+    (mHelper->GetRealignTestOptions() & 1) == 0 || 
     item->mRegistration != item->mOriginalReg)
       return false;
   backX = item->mBacklashX;

@@ -24,6 +24,7 @@
 #include "ProcessImage.h"
 #include "MapDrawItem.h"
 #include "NavigatorDlg.h"
+#include "NavHelper.h"
 #include "MacroProcessor.h"
 #include "MultiTSTasks.h"
 #include "RemoteControl.h"
@@ -648,7 +649,7 @@ void CSerialEMView::DrawImage(void)
 
   // Now draw navigator items
   float ptX, ptY, lastStageX, lastStageY, labelDistThresh = 40.;
-  int lastGroupID = -1, lastGroupSize, size;
+  int lastGroupID = -1, lastGroupSize, size, numPoints;
   CArray<CMapDrawItem *,CMapDrawItem *> *itemArray = GetMapItemsForImageCoords
     (imBuf, false);
   if (!itemArray)
@@ -660,7 +661,7 @@ void CSerialEMView::DrawImage(void)
   CMapDrawItem *item;
   int currentIndex = navigator->GetCurrentOrAcquireItem(item);
   int currentGroup = (currentIndex >= 0 && item != NULL) ? item->mGroupID : -1;
-  int groupThresh = mWinApp->GetPointLabelDrawThresh();
+  int groupThresh = mWinApp->mNavHelper->GetPointLabelDrawThresh();
   for (int iDraw = -1; iDraw < itemArray->GetSize(); iDraw++) {
     if (iDraw < 0) {
       if (!mAcquireBox)
@@ -668,11 +669,13 @@ void CSerialEMView::DrawImage(void)
       item = mAcquireBox;
       thick = 1;
       highlight = false;
+      numPoints = B3DMIN(5, item->mNumPoints);
     } else {
       item = itemArray->GetAt(iDraw);
       thick = item->mType == ITEM_TYPE_POINT ? 3 : 2;
       highlight = selectedItems->count(iDraw) > 0;
       thick = highlight ? thick : 1;
+      numPoints = item->mNumPoints;
     }
 
     if (!item->mNumPoints || !item->mDraw || 
@@ -704,13 +707,29 @@ void CSerialEMView::DrawImage(void)
 
       // Draw lines if there is more than one point
       CPen *pOldPen = cdc.SelectObject(&pnSolidPen);
-      for (int pt = 0; pt < item->mNumPoints; pt++) {
+      for (int pt = 0; pt < numPoints; pt++) {
         StageToImage(imBuf, item->mPtX[pt], item->mPtY[pt], ptX, ptY);
         MakeDrawPoint(&rect, imBuf->mImage, ptX + delPtX, ptY + delPtY, &point);
         if (pt)
           cdc.LineTo(point);
         else
           cdc.MoveTo(point);
+      }
+      if (iDraw < 0 && mWinApp->mNavHelper->GetEnableMultiShot()) {
+        MultiShotParams *msParams = mWinApp->mNavHelper->GetMultiShotParams();
+        float beamRad;
+        StageToImage(imBuf, item->mStageX, item->mStageY, cenX, cenY);
+        StageToImage(imBuf, item->mPtX[item->mNumPoints - 1], 
+          item->mPtY[item->mNumPoints - 1], ptX, ptY);
+        beamRad = (float)sqrt((double)(ptX - cenX) * (ptX - cenX) + 
+          (ptY - cenY) * (ptY - cenY));
+        CPen circlePen(PS_SOLID, 1, COLORREF(RGB(0, 255, 0)));
+        for (int pt = numPoints; pt < item->mNumPoints - 1; pt++) {
+          StageToImage(imBuf, item->mPtX[pt], item->mPtY[pt], ptX, ptY);
+          DrawCircle(&cdc, &circlePen, &rect, imBuf->mImage, ptX, ptY, beamRad);
+        }
+        if (msParams->doCenter)
+          DrawCircle(&cdc, &circlePen, &rect, imBuf->mImage, cenX, cenY, beamRad);
       }
       cdc.SelectObject(pOldPen);
       mAdjustPt = adjSave;
