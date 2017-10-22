@@ -7,7 +7,7 @@
   TD { font-size:16 }
       .style1
       {
-        width: 191px;
+        width: 238px;
       }
   --></style>
   </HEAD>
@@ -28,7 +28,7 @@
         <TR VALIGN="top">
           <TD class="style1"><a href="#hid_navigator_mergefile">Merge File</a></TD>
           <TD>Merge items from other Navigator file into current items, eliminating 
-            duplicates</TD>
+            duplicates.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_save_nav_file">Save</A></TD>
@@ -45,7 +45,7 @@
        <TR VALIGN="top">
           <TD class="style1"><b>Montaging &amp; Grids</b></TD>
           <TD>This submenu has operations for setting up montages, super montages, and grids 
-            of points</TD>
+            of points.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_corner_montage">Setup Corner Montage</A></TD>
@@ -84,12 +84,23 @@
           <TD class="style1">&nbsp;&nbsp; <a href="#hid_montaginggrids_grouppointsingrid">
             Divide 
               Point into Groups</a></TD>
-          <TD>Place points in groups with a maximum radius from first point at the center</TD>
+          <TD>Place points in groups with a maximum radius from first point at the center.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1">&nbsp;&nbsp; <a href="#hid_montaginggrids_grouppointsingrid">Set 
             Group Size</a></TD>
-          <TD>Set the maximum radius for groups of added points</TD>
+          <TD>Set the maximum radius for groups of added points.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1">&nbsp;&nbsp; <a href="#hid_options_setmulti">Set Multi-shot 
+            Parameters</a></TD>
+          <TD>Set parameters for acquiring multiple Records in a hole with image shift.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1">&nbsp;&nbsp; <a href="#hid_options_showmulti">Show Shots when 
+            Show Acquire</a></TD>
+          <TD>Show a pattern of beam circles for the multiple Records when Show Acquire area 
+            is turned on.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_navigator_addcirclepolygon">Add Circle 
@@ -108,7 +119,7 @@
         </TR>
          <TR VALIGN="top">
           <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_options_setpointlabelthreshold">Set Point Label Threshold</A></TD>
-          <TD>Set maximum size of group for which point labels will be drawn</TD>
+          <TD>Set maximum size of group for which point labels will be drawn.</TD>
         </TR>
          <TR VALIGN="top">
           <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_navigator_autosave">Autosave Nav File</A></TD>
@@ -116,7 +127,7 @@
         </TR>
         <TR VALIGN="top">
           <TD class="style1">&nbsp;&nbsp; <a href="#hid_navigator_writeasxml">Write as XML</a></TD>
-          <TD>Write Navigator file as an XML file instead of in autodoc format</TD>
+          <TD>Write Navigator file as an XML file instead of in autodoc format.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_navigator_convertmapstobytes">Convert Maps to Bytes</A></TD>
@@ -130,7 +141,7 @@
           <TD class="style1">&nbsp;&nbsp; <a href="#hid_navoptions_usecurrentldparamsinri">
             Use Current LD Params in Realign</a></TD>
           <TD>When staying in Low Dose for Realign to Item, use current instead of map 
-            parameters</TD>
+            parameters.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_transform_pts">Transform Points</A></TD>
@@ -270,7 +281,7 @@
         Options submenu)</B></P>
       <P>This command toggles an option to save the Navigator file as an XML file 
         instead of in autodoc format.&nbsp; Either one can be read back in by SerialEM.&nbsp; 
-        The autodoc writing is significantly fast because it is optimized to write each 
+        The autodoc writing is significantly faster because it is optimized to write each 
         line directly to file, whereas to write an the XML file the program builds an 
         autodoc data structure, builds an XML structure from that, then writes out the 
         XML.&nbsp; This will matter only for very large numbers of points, over 10,000.</P>
@@ -288,7 +299,9 @@
         and White levels to avoid truncating image intensities before designating an 
         image as a map. Second, use this menu entry to turn off the conversion option, 
         load the map, adjust the Black and White levels as desired, and turn the option 
-        back on.</P>
+        back on.&nbsp; This option is not saved in the settings file between sessions; 
+        it can be turned off by default with the general property 
+        &#39;ConvertMapsToBytesDefault 0&#39;.</P>
       <P><A NAME="hid_navigator_loadunbinned"></A><B>Load Maps Unbinned command (Navigator 
           - Options submenu)</B></P>
       <P>This command toggles an option to have montage maps always loaded unbinned, 
@@ -494,7 +507,22 @@
         as described above.&nbsp; Sometimes groups will be smaller than they could be 
         for a particular radius, because the total extent in each direction of the grid 
         gets divided into groups as evenly as possible.</P>
-      <P><A NAME="hid_navigator_addcirclepolygon"></A><B>Add Circle Polygon command 
+      <P><A NAME="hid_options_setmulti"></A><B>Set Multi-shot Parameters command 
+          (Navigator - Montaging &amp; Grids sub-menu)</B></P>
+          <p>Use this command to open the 
+            <a href="hidd_multi_shot_setup.htm">Multiple Record Setup dialog</a> and set 
+            parameters for taking multiple Record images in a circular pattern around the 
+            current position.</p>
+       <P><A NAME="hid_options_showmulti"></A><B>Show Shots when 
+            Show Acquire command 
+          (Navigator - Montaging &amp; Grids sub-menu)</B></P>
+          <p>This command toggles whether selecting the 'Show Acquire area' checkbox in the 
+            Navigator window will also result in a pattern of circles drawn around the 
+            marker point, based on the parameters set in the 
+            <a href="hidd_multi_shot_setup.htm">Multiple Record Setup dialog</a>.&nbsp; The 
+            circles will represent the area covered by the beam, assuming the beam size 
+            specified there.</p>
+     <P><A NAME="hid_navigator_addcirclepolygon"></A><B>Add Circle Polygon command 
           (Navigator - Montaging &amp; Grids sub-menu)</B></P>
       <P>Use this command to add a polygon that is a circle. First mark the desired 
         center point by clicking in an image. Then select this command and enter the 

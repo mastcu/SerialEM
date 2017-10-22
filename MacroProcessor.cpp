@@ -34,6 +34,7 @@
 #include "ProcessImage.h"
 #include "ComplexTasks.h"
 #include "MultiTSTasks.h"
+#include "ParticleTasks.h"
 #include "FilterTasks.h"
 #include "MacroControlDlg.h"
 #include "NavigatorDlg.h"
@@ -211,7 +212,8 @@ enum {CME_VIEW, CME_FOCUS, CME_TRIAL, CME_RECORD, CME_PREVIEW,
   CME_SETDECAMFRAMERATE, CME_SKIPMOVEINNAVACQUIRE, CME_TESTRELAXINGSTAGE, CME_RELAXSTAGE,
   CME_SKIPFRAMEALIPARAMCHECK, CME_ISVERSIONATLEAST, CME_SKIPIFVERSIONLESSTHAN,
   CME_RAWELECTRONSTATS, CME_ALIGNWHOLETSONLY, CME_WRITECOMFORTSALIGN, CME_RECORDANDTILTTO,
-  CME_AREPOSTACTIONSENABLED
+  CME_AREPOSTACTIONSENABLED, CME_MEASUREBEAMSIZE, CME_MULTIPLERECORDS, 
+  CME_MOVEBEAMBYMICRONS, CME_MOVEBEAMBYFIELDFRACTION
 };
 
 static CmdItem cmdList[] = {{NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0},
@@ -314,7 +316,8 @@ static CmdItem cmdList[] = {{NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0
 {"TestRelaxingStage", 2}, {"RelaxStage", 0}, {"SkipFrameAliParamCheck", 0},
 {"IsVersionAtLeast", 1}, {"SkipIfVersionLessThan", 1}, {"RawElectronStats", 1},
 {"AlignWholeTSOnly", 0}, {"WriteComForTSAlign", 0}, {"RecordAndTiltTo", 1},
-{"ArePostActionsEnabled", 0},
+{"ArePostActionsEnabled", 0}, {"MeasureBeamSize", 0}, {"MultipleRecords", 0},
+{"MoveBeamByMicrons", 2}, {"MoveBeamByFieldFraction", 2},
 {NULL, 0, NULL}
 };
 
@@ -773,7 +776,8 @@ int CMacroProcessor::TaskBusy()
     mWinApp->mShiftCalibrator->CalibratingIS() ||
     (mCamera->CameraBusy() && (mCamera->GetTaskWaitingForFrame() || 
     !(mUsingContinuous && mCamera->DoingContinuousAcquire()))) ||
-    mWinApp->mMontageController->DoingMontage() ||
+    mWinApp->mMontageController->DoingMontage() || 
+    mWinApp->mParticleTasks->DoingMultiShot() ||
     mWinApp->mFocusManager->DoingFocus() || mWinApp->mAutoTuning->DoingAutoTune() ||
     mShiftManager->ResettingIS() || mWinApp->mCalibTiming->Calibrating() ||
     mWinApp->mFilterTasks->RefiningZLP() ||
@@ -984,7 +988,7 @@ void CMacroProcessor::NextCommand()
   double delISX, delISY, delX, delY, specDist, h1, v1, v2, h2, h3, v3, v4, h4;
   double stageX, stageY, stageZ;
   int index, index2, i, ix0, ix1, iy0, iy1, sizeX, sizeY, mag;
-  float backlashX, backlashY, bmin, bmax, bmean, bSD, cpe, shiftX, shiftY;
+  float backlashX, backlashY, bmin, bmax, bmean, bSD, cpe, shiftX, shiftY, fitErr;
   FilterParams *filtParam = mWinApp->GetFilterParams();
   int *activeList = mWinApp->GetActiveCameraList();
   CameraParameters *camParams = mWinApp->GetCamParams() + mWinApp->GetCurrentCamera();
@@ -1667,19 +1671,19 @@ void CMacroProcessor::NextCommand()
       smiRAT.alpha = delISX + increment;
       smiRAT.backAlpha = backlashX;
       mCamera->QueueStageMove(smiRAT, delay, doBack);
-      mCamera->InitiateCapture(3);
+      mCamera->InitiateCapture(RECORD_CONSET);
       mTestScale = true;
       mMovedStage = true;
       mTestTiltAngle = true;
 
-  } else if (CMD_IS(AREPOSTACTIONSENABLED)) {                  // ArePostActionsEnabled
+  } else if (CMD_IS(AREPOSTACTIONSENABLED)) {               // ArePostActionsEnabled
     truth = mCamera->PostActionsOK();
     report.Format("Post-exposure actions %s enabled for this camera", 
       truth ? "ARE" : "are NOT");
     mWinApp->AppendToLog(report, mLogAction);
     SetReportedValues(&strItems[1], truth ? 1. : 0.);
 
-  } else if (CMD_IS(TILTDURINGRECORD)) {                       // TiltDuringRecord
+  } else if (CMD_IS(TILTDURINGRECORD)) {                    // TiltDuringRecord
     delX = itemEmpty[3] ? 0. : itemDbl[3];
     if (delX && !FEIscope)
       ABORT_LINE("Variable stage speed is available only on FEI scopes for line:\n\n");
@@ -1693,6 +1697,23 @@ void CMacroProcessor::NextCommand()
     mCamera->InitiateCapture(3);
     mMovedStage = true;
     mTestTiltAngle = true;
+
+  } else if (CMD_IS(MULTIPLERECORDS)) {                     // MultipleRecords
+    MultiShotParams *msParams = mWinApp->mNavHelper->GetMultiShotParams();
+    index = (itemEmpty[6] || itemInt[6] < -8) ? msParams->doEarlyReturn : itemInt[6];
+    if (!camParams->K2Type)
+      index = 0;
+    truth = (index == 0 || msParams->numEarlyFrames != 0) ? msParams->saveRecord : false;
+    if (mWinApp->mParticleTasks->StartMultiShot(
+      (itemEmpty[1] || itemInt[1] < -8) ? msParams->numShots : itemInt[1],
+      (itemEmpty[2] || itemInt[2] < -8) ? msParams->doCenter : itemInt[2],
+      (itemEmpty[3] || itemDbl[3] < -8.) ? msParams->spokeRad : (float)itemDbl[3],
+      (itemEmpty[4] || itemDbl[4] < -8.) ? msParams->extraDelay : (float)itemDbl[4],
+      (itemEmpty[5] || itemInt[5] < -8) ? truth : itemInt[5] != 0, index,
+      (itemEmpty[7] || itemInt[7] < -8) ? msParams->numEarlyFrames : itemInt[7])) {
+        AbortMacro();
+        return;
+    }
 
   } else if (CMD_IS(A) || CMD_IS(AUTOALIGN)                 // Autoalign, AlignTo, Conical
     || CMD_IS(ALIGNTO) || CMD_IS(CONICALALIGNTO)) {
@@ -2650,6 +2671,17 @@ void CMacroProcessor::NextCommand()
       return;
     }
 
+  } else if (CMD_IS(MOVEBEAMBYMICRONS)) {                  // MoveBeamByMicrons
+    if (mWinApp->mProcessImage->MoveBeam(NULL, (float)itemDbl[1], (float)itemDbl[2]))
+      ABORT_LINE("Either an image shift or a beam shift calibration is not available for"
+      " line:\n\n");
+
+  } else if (CMD_IS(MOVEBEAMBYFIELDFRACTION)) {            // MoveBeamByFieldFraction
+    if (mWinApp->mProcessImage->MoveBeamByCameraFraction((float)itemDbl[1], 
+      (float)itemDbl[2]))
+      ABORT_LINE("Either an image shift or a beam shift calibration is not available for"
+      " line:\n\n");
+
   } else if (CMD_IS(SETBEAMTILT)) {                        // SetBeamTilt
     if (!mScope->SetBeamTilt(itemDbl[1], itemDbl[2])) {
       AbortMacro();
@@ -3259,6 +3291,22 @@ void CMacroProcessor::NextCommand()
     mWinApp->AppendToLog(report, mLogAction);
     SetReportedValues(&strItems[2], (double)index2, 
       mImBufs[index].mLowDoseArea ? 1. : 0.);
+
+  } else if (CMD_IS(MEASUREBEAMSIZE)) {                     // MeasureBeamSize
+    if (ConvertBufferLetter(strItems[1], 0, true, index, report))
+      ABORT_LINE(report);
+    ix0 = mWinApp->mProcessImage->FindBeamCenter(&mImBufs[index], backlashX, backlashY,
+      cpe, bmin, bmax, bmean, bSD, index2, ix1, shiftX, shiftY, fitErr);
+    if (ix0)
+      ABORT_LINE("No beam edges were detected in image for line:\n\n");
+    bmean = mWinApp->mShiftManager->GetPixelSize(&mImBufs[index]);
+    if (!bmean)
+      ABORT_LINE("No pixel size is available for the image for line:\n\n");
+    cpe *= index2 * bmean;
+    report.Format("Beam size measured to be %.3f um from %d quadrants, fit error %.3f",
+      cpe, ix1, fitErr);
+    mWinApp->AppendToLog(report, mLogAction);
+    SetReportedValues(cpe, ix1, fitErr);
 
   } else if (CMD_IS(QUADRANTMEANS)) {                       // QuadrantMeans
     delY = 0.1;

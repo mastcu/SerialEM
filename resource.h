@@ -66,6 +66,7 @@
 #define IDD_FRAMEALIGN                  222
 #define IDD_REMOTE_CONTROL              223
 #define IDD_THREE_CHOICE_BOX            224
+#define IDD_MULTI_SHOT_SETUP            225
 #define IDC_EDITXSIZE                   1000
 #define IDC_EDITYSIZE                   1002
 #define IDC_EDITYOVERLAP                1003
@@ -1307,7 +1308,25 @@
 #define IDC_STAT_LINE2                  2327
 #define IDC_USE_FRAME_FOLDER            2328
 #define IDC_STAT_MIN_FRAME_TIME         2329
-#define IDC_STAT_MAX_FRAME_TIME         2330
+#define IDC_STAT_NUM_SHOTS              2330
+#define IDC_SPIN_NUM_SHOTS              2331
+#define IDC_RNO_CENTER                  2332
+#define IDC_RCENTER_AFTER               2333
+#define IDC_RCENTER_BEFORE              2334
+#define IDC_EDIT_SPOKE_DIST             2335
+#define IDC_STAT_MAX_FRAME_TIME         2336
+#define IDC_EDIT_EARLY_FRAMES           2337
+#define IDC_CHECK_SAVE_RECORD           2338
+#define IDC_STAT_BEAM_DIAM              2339
+#define IDC_EDIT_BEAM_DIAM              2340
+#define IDC_STAT_BEAM_UM                2341
+#define IDC_CHECK_USE_ILLUM_AREA        2342
+#define IDC_STAT_NUM_EARLY              2343
+#define IDC_STAT_EARLY_GROUP            2344
+#define IDC_RNO_EARLY                   2345
+#define IDC_RLAST_EARLY                 2346
+#define IDC_RALL_EARLY                  2347
+#define IDC_EDIT_EXTRA_DELAY            2348
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -1710,15 +1729,18 @@
 #define ID_CAMERA_USERECORDFORMONTAGE   33281
 #define ID_CAMERA_SEARCH                33282
 #define ID_SCRIPT_CLEARPERSISTENTVARS   33284
+#define ID_OPTIONS_SHOWMULTI            33285
+#define ID_OPTIONS_SETMULTI             33286
+#define ID_Menu33287                    33287
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        225
-#define _APS_NEXT_COMMAND_VALUE         33285
-#define _APS_NEXT_CONTROL_VALUE         2330
+#define _APS_NEXT_RESOURCE_VALUE        226
+#define _APS_NEXT_COMMAND_VALUE         33288
+#define _APS_NEXT_CONTROL_VALUE         2349
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

@@ -413,6 +413,12 @@
     <ClInclude Include="SettingsTests.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ParticleTasks.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MultiShotDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\bitmap1.bmp">
@@ -699,6 +705,12 @@
     </None>
     <None Include="hlp\html\script_commands.htm">
       <Filter>HTML Help Topics</Filter>
+    </None>
+    <None Include="hlp\html\hidd_multi_shot_setup.htm">
+      <Filter>HTML Help Topics</Filter>
+    </None>
+    <None Include="resource.hm">
+      <Filter>Header Files</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -1033,6 +1045,12 @@
       <Filter>CSource Files</Filter>
     </ClCompile>
     <ClCompile Include="Shared\frameutil.cpp">
+      <Filter>CSource Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ParticleTasks.cpp">
+      <Filter>CSource Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MultiShotDlg.cpp">
       <Filter>CSource Files</Filter>
     </ClCompile>
   </ItemGroup>

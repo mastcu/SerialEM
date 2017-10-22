@@ -1,0 +1,86 @@
+<html>
+  <head>
+    <title>Multiple Record Setup Dialog</title>
+    <meta HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252"/>
+    <style type="text/css"> <!-- BODY { font-family:"Arial" }
+  TD { font-size:16 }
+      .style1
+      {
+        font-size: larger;
+        font-weight: bold;
+      }
+      --></style>
+  </head>
+  <body BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+    <p><a NAME="hidd_multi_shot_setup"></a><span class="style1">Multiple Record
+    Setup Dialog</span></p>
+    <p>This dialog allows you to set parameters for taking multiple Record images in a 
+      circular pattern around the current position, with image shift used to center on 
+      each position.&nbsp; The parameters are used in two ways: when acquiring the 
+      images with the 'MultipleRecords' script command, and when displaying the 
+      positions as a pattern of circles representing the beam on an image (e.g., a 
+      lower-magnification map).&nbsp; The latter display occurs when the 'Show Acquire 
+      area' checkbox in the Navigator dialog is turned on, provided that the display 
+      is enabled with the <a href="#hid_options_showmulti">Show Shots when 
+            Show Acquire</a> option in the Navigator - Montaging & Grids submenu.&nbsp; 
+      When this display is active, changes in the relevant parameters here will appear 
+      immediately in display.</p>
+    <p><b>Number of shots around center</b></p>
+    <p>Select a value between 2 and 12 for the number of Records taken in off-center 
+      positions.</p>
+    <p><b>Shot in center</b></p>
+    <p>With these radio buttons, you can include a shot in the center of the pattern, 
+      which should be possible with 6 or more off-center shots.&nbsp; The centered 
+      shot can be taken either before or after the off-center shots.&nbsp; Although 
+      taking it may involve one more delay for image shift settling, it is reported 
+      that this shot will have less drift when take after the others.</p>
+    <p>&nbsp;<b>Distance from center to off-center shots</b></p>
+    <p>Distance from the center position to the off-center positions, in microns.&nbsp; 
+      This distance must be at least as big as the beam diameter to avoid exposing 
+      overlapping areas in more than one Record shot.&nbsp; If the multi-shot circles 
+      are being displayed, press tab or Enter to have the image redrawn after entering 
+      a new distance.</p>
+    <p><b>Early returns for K2</b></p>
+    <p>This group of controls appears when there is a K2 camera available and allows 
+      for SerialEM to resume operations as soon as possible after acquiring an image 
+      with saved frames, the same as is accomplished with the script command 
+      'EarlyReturnNextShot'.&nbsp; The radio buttons allow you to select to have an 
+      early return only on the last shot, or on all shots.&nbsp; If post-exposure 
+      actions are enabled for the camera (namely, if <A HREF="#hid_camera_postactions">Post-actions</A> 
+      in the Camera menu is not grayed out and is selected), then image shift to the 
+      next position will occur soon after the exposure is finished for each shot, 
+      regardless of whether early return is selected, and it is slightly more 
+      efficient not to do an early return except on the last shot.&nbsp; If 
+      post-actions are not enabled, the early return will allow the program to do the 
+      image shift sooner.</p>
+    <p>In the text box in this group, enter the number of frames in the returned 
+      image: 0 for none, a specific number of frames, or -1 for all the frames.</p>
+    <p><b>Save Record image</b></p>
+    <p>Select this option to have the Record image saved in the current file.&nbsp; 
+      The option is disabled and its setting is irrelevant if an early return is 
+      selected with no returned image.</p>
+    <p><b>Extra delay after image shift</b></p>
+    <p>A standard amount of settling time is imposed after each image shift; the extra 
+      delay entered here will be added to this settling time.</p>
+    <p><b>Diameter of circles to draw</b></p>
+    <p>If the multi-shot circles are being displayed, the diameter of the circles is 
+      set to the entered value in microns, unless the option described next is 
+      selected to use the illuminated area on an FEI Titan.&nbsp; Press tab or Enter 
+      to have the image redrawn after entering a new diameter.</p>
+    <p><b>Use Record illuminated area for circles in Low Dose</b></p>
+    <p>This option appears on an FEI Titan and allows the multi-shot circle display to 
+      take its diameter from the illuminated area setting of the Record area when Low 
+      Dose mode is on instead of from the value entered in this dialog.&nbsp; The 
+      display will be updated dynamically as this illuminated area setting is changed.&nbsp; 
+      This update works even while this dialog is option, provided that the scope is 
+      in the Record area and &#39;Continuous update&#39; is check in the Low Dose Control 
+      panel before opening the dialog, and illuminated area is changed with microscope 
+      controls.&nbsp; </p>
+    <p>For this option to be valuable rather than misleading, the illuminated area 
+      readout must be fairly accurate in the range of interest, which may not be the 
+      case.</p>
+    <p>&nbsp;</p>
+
+</body>
+</html>

@@ -368,6 +368,11 @@
 			</OBJECT>
 			<A HREF="html/hidd_macro.htm">Macro Editing window</A><BR>
 		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Multiple Record Setup dialog">
+			<param name="Local" value="html/hidd_multi_shot_setup.htm">
+			</OBJECT>
+			<A HREF="html/hidd_framealign.htm">Multiple Record Setup dialog</A><BR>
+		<LI><OBJECT type="text/sitemap">
 			<param name="Name" value="Stage Move Tool">
 			<param name="Local" value="html/hidd_stagemovetool.htm">
 			</OBJECT>

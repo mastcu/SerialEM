@@ -17,13 +17,9 @@
       {
         width: 215px;
       }
-      .style9
-      {
-        width: 227px;
-      }
       .style10
       {
-        width: 227px;
+        width: 237px;
         height: 24px;
       }
       .style11
@@ -33,6 +29,10 @@
       .style12
       {
         width: 214px;
+      }
+      .style13
+      {
+        width: 237px;
       }
   --></style>
   </HEAD>
@@ -1050,11 +1050,11 @@
           <TD colspan="2"><A name="stage_commands"></A><B>Stage-Related Commands</B></TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">U or TiltUp</TD>
+          <TD class="style13">U or TiltUp</TD>
           <TD>Tilt up by preset increment</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">D or TiltDown</TD>
+          <TD class="style13">D or TiltDown</TD>
           <TD>Tilt down by preset increment</TD>
         </TR>
         <TR vAlign="top">
@@ -1062,11 +1062,11 @@
           <TD class="style11">Tilt to given angle</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">TiltBy #</TD>
+          <TD class="style13">TiltBy #</TD>
           <TD>Change tilt by the given amount</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">BackgroundTilt #A [#S]</TD>
+          <TD class="style13">BackgroundTilt #A [#S]</TD>
           <TD>Start tilting stage in the background; images can be taken and scripts can run 
             during the tilt.&nbsp; Follow with #A, the angle to tilt to, and optionally with 
             #S, a speed factor for FEI scopes (&lt; 1 for slower than normal tilting).&nbsp; 
@@ -1075,28 +1075,28 @@
             operations is opened when the program starts.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">ReportTiltAngle</TD>
+          <TD class="style13">ReportTiltAngle</TD>
           <TD>Report current tilt angle</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">MoveStage #X #Y #Z</TD>
+          <TD class="style13">MoveStage #X #Y #Z</TD>
           <TD>Move stage by micron increments in X, Y, Z (Z optional)</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">MoveStageTo #X #Y #Z</TD>
+          <TD class="style13">MoveStageTo #X #Y #Z</TD>
           <TD>Move stage to given position in microns. Z is optional and Z will not be
             changed if it is omitted.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">ReportStageXYZ</TD>
+          <TD class="style13">ReportStageXYZ</TD>
           <TD>Report current stage position</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">ReportStageBusy</TD>
+          <TD class="style13">ReportStageBusy</TD>
           <TD>Reports if the stage is busy and sets ReportedValue1 to 1 if so, 0 if not.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">TestStageRelaxation #X #Y [#B] [#R]</TD>
+          <TD class="style13">TestStageRelaxation #X #Y [#B] [#R]</TD>
           <TD>Move stage by the micron increments in X and Y with backlash correction and a 
             small relaxation in the opposite direction from the backlash correction.&nbsp; 
             The optional B can be set with the backlash amount, otherwise the value of the 
@@ -1108,7 +1108,7 @@
             hould be done after this command.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">RelaxStage [#R]</TD>
+          <TD class="style13">RelaxStage [#R]</TD>
           <TD>If the stage is in a known backlash state, move the stage in the opposite 
             direction from its last movement by the amount given by the optional R, or the 
             StageRelaxation property (0.025 by default).&nbsp; A message is printed if the 
@@ -1118,42 +1118,42 @@
           <TD colspan="2"><A name="focus_commands"></A><B>Focus-Related Commands</B></TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">ChangeFocus #</TD>
+          <TD class="style13">ChangeFocus #</TD>
           <TD>Change defocus by the given value in microns</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">SetDefocus #</TD>
+          <TD class="style13">SetDefocus #</TD>
           <TD>Set the defocus to the given value in microns</TD>
         </TR>
         <TR>
-          <TD class="style9">SetAbsoluteFocus #</TD>
+          <TD class="style13">SetAbsoluteFocus #</TD>
           <TD>Set focus to a an absolute (standardized)&nbsp;value as reported earlier by
             ReportAbsoluteFocus or ReportFocus</TD>
         </TR>
         <TR>
-          <TD class="style9">SetStandardFocus #</TD>
+          <TD class="style13">SetStandardFocus #</TD>
           <TD>Same as &#39;SetAbsoluteFocus&#39;, which is preferred to avoid confusion with the
             calibrated standard or eucentric focus value</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">SetObjFocus #</TD>
+          <TD class="style13">SetObjFocus #</TD>
           <TD>Calls SetObjFocus on JEOL with the given #, an integer increment, and reports
             change in focus</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">ReportDefocus</TD>
+          <TD class="style13">ReportDefocus</TD>
           <TD>Report current defocus readout in microns</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">ReportAbsoluteFocus</TD>
+          <TD class="style13">ReportAbsoluteFocus</TD>
           <TD>Report an absolute (standardized) value for the current focus setting</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">ReportFocus</TD>
+          <TD class="style13">ReportFocus</TD>
           <TD>Same as &#39;ReportAbsoluteFocus&#39;, which is a better description of the operation</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">SetEucentricFocus</TD>
+          <TD class="style13">SetEucentricFocus</TD>
           <TD>If in low mag, sets to the standard focus for the current mag or nearest LM
             mag if one has been set; otherwise on FEI it assumes standard focus is 0 and on
             JEOL it stops with an error.&nbsp; If not in LM, sets to the standard focus for
@@ -1162,25 +1162,25 @@
             from a different mag.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">CalEucentricFocus</TD>
+          <TD class="style13">CalEucentricFocus</TD>
           <TD>Stores the current standardized focus value as the standard focus for the
             current mag, just as the Calibrate menu item
             <a href="menu_calibration.htm#hid_calibration_standardlmfocus">Standard Focus</a>
             does.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">SaveFocus</TD>
+          <TD class="style13">SaveFocus</TD>
           <TD>Saves the current focus; the focus will be restored to this value either by
             RestoreFocus or when the script stops or exits.&nbsp; The script will not be
             resumable if it stops.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">RestoreFocus</TD>
+          <TD class="style13">RestoreFocus</TD>
           <TD>Restores the focus value when SaveFocus was run.&nbsp; After this is run, the
             focus will not be restored again when the script ends.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">ResetDefocus</TD>
+          <TD class="style13">ResetDefocus</TD>
           <TD>Sets the defocus readout to 0, just as
             <a href="menu_focus.htm#hid_focus_resetdefocus">Reset Defocus</a> in Focus menu
             does.</TD>
@@ -1189,40 +1189,40 @@
           <TD colspan="2"><A name="mag_commands"></A><B>Magnification-Related Commands</B></TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">SetMag #</TD>
+          <TD class="style13">SetMag #</TD>
           <TD>Set the mag to an actual film mag value</TD>
         </TR>
        <TR vAlign="top">
-          <TD class="style9">SetMagIndex #</TD>
+          <TD class="style13">SetMagIndex #</TD>
           <TD>Set the magnification index to the given value</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">ChangeMag #</TD>
+          <TD class="style13">ChangeMag #</TD>
           <TD>Change mag by given number of mag steps, positive to increase mag index and 
             negative to decrease it.&nbsp; If the property &#39;UseInvertedMagRange&#39; is set, 
             positive and negative increase or decrease the mag rather than the mag index in 
             the inverted range.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">ReportMag</TD>
+          <TD class="style13">ReportMag</TD>
           <TD>Report the current mag; also set ReportedValue2 to 1 if low mag mode, 0 if not</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">ReportMagIndex</TD>
+          <TD class="style13">ReportMagIndex</TD>
           <TD>Report the current mag index; also set ReportedValue2 to 1 if low mag mode, 0
             if not</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">ReportCameraLength</TD>
+          <TD class="style13">ReportCameraLength</TD>
           <TD>Report the camera length in meters, or 0 if not in diffraction mode.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">SetCamLenIndex #</TD>
+          <TD class="style13">SetCamLenIndex #</TD>
           <TD>Set the camera length index to the given number; on an FEI scope, values higher
             than 30 set the index to (# - 30) in LAD mode</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">SetMagAndIntensity #</TD>
+          <TD class="style13">SetMagAndIntensity #</TD>
           <TD>Set the mag to the actual film mag value and change the beam to maintain the
             same brightness. Two values are reported: the initial percent C2 value and the
             remaining factor of intensity change needed if it was not possible to change
@@ -1232,13 +1232,13 @@
             error in the intensity change.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">ChangeMagAndIntensity #</TD>
+          <TD class="style13">ChangeMagAndIntensity #</TD>
           <TD>Change mag by the given number of mag steps and change the beam to maintain the
             same brightness. Behaves same as SetMagAndIntensity, and steps in the same way 
             as ChangeMag.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">IncMagIfFoundPixel #</TD>
+          <TD class="style13">IncMagIfFoundPixel #</TD>
           <TD>Increase or decrease mag by one step if the pixel size has been found at the
             current mag with the <a href="menu_calibration.htm#hid_process_findpixelsize">Find Pixel Size</a>
             routine, depending on whether # is positive or negative.&nbsp; Sets
@@ -1248,57 +1248,57 @@
           <TD colspan="2"><A name="beam_commands"></A><B>Beam-Related Commands</B></TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">SetSpotSize #</TD>
+          <TD class="style13">SetSpotSize #</TD>
           <TD>Set the spot size to the given number</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">ReportSpotSize</TD>
+          <TD class="style13">ReportSpotSize</TD>
           <TD>Report the current spot size</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">SetPercentC2 #</TD>
+          <TD class="style13">SetPercentC2 #</TD>
           <TD>Set the C2/C3 lens strength to the given percentage, or illuminated area on
             Titan to given value in microns.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">IncPercentC2 #</TD>
+          <TD class="style13">IncPercentC2 #</TD>
           <TD>Change the C2/C3 lens strength percentage or illuminated area in microns by the given amount</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">ReportPercentC2</TD>
+          <TD class="style13">ReportPercentC2</TD>
           <TD>Report the percent C2/C3 (on an FEI scope, this number matches the value in MUI)
             and the fractional lens strength.&nbsp; On a Titan, if illuminated area is being
             used for intensity, this reports the illuminated area value.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">ReportIlluminatedArea</TD>
+          <TD class="style13">ReportIlluminatedArea</TD>
           <TD>Report the illuminated area on a Titan in the units that are used internally, which are 
             microns times 0.01.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">SetIlluminatedArea #</TD>
+          <TD class="style13">SetIlluminatedArea #</TD>
           <TD>Set the illuminated area on a Titan to the given value, expressed in microns 
             times 0.01.</TD>
         </TR>
        <TR vAlign="top">
-          <TD class="style9">ReportImageDistanceOffset</TD>
+          <TD class="style13">ReportImageDistanceOffset</TD>
           <TD>Report the offset of the distance from the condenser plane to the image plane
            on a Titan in the units from the scope.  Older versions of the scripting software
            do not have this function, and with them, this command and the next one will crash SerialEM or FEI-SEMserver.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">SetImageDistanceOffset #</TD>
+          <TD class="style13">SetImageDistanceOffset #</TD>
           <TD>Set the offset of the distance from the condenser plane to the image plane
            on a Titan; the allowed range is +/- 0.02.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">SetIntensityForMean #</TD>
+          <TD class="style13">SetIntensityForMean #</TD>
           <TD>Adjust beam intensity to yield the given number of counts, based on counts in
             the tilt-foreshortened area of the image in A. In Low Dose mode, this operates
             only on Record images and will change the intensity only of the Record area.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">SetExposureForMean #M [#K]</TD>
+          <TD class="style13">SetExposureForMean #M [#K]</TD>
           <TD>Adjust Record exposure time to yield the gven number of counts #M, based on 
             counts in the tilt-foreshortened area of the image in A, which must be a Record 
             image in Low Dose mode.&nbsp; For a K2 camera taking dose-fractionated images, a 
@@ -1306,47 +1306,57 @@
             keep the same number of frames.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">SetIntensityByLastTilt</TD>
+          <TD class="style13">SetIntensityByLastTilt</TD>
           <TD>Adjust beam intensity by the change in cosine of the tilt angle from the last
             tilt change. In low dose mode, this changes the intensity only of the Record
             area.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">ChangeIntensityBy #</TD>
+          <TD class="style13">ChangeIntensityBy #</TD>
           <TD>Change beam intensity by the given factor using calibrations. In low dose mode
             this changes the intensity of the current area.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">SetAlpha #</TD>
+          <TD class="style13">SetAlpha #</TD>
           <TD>Sets alpha value on JEOL.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">ReportAlpha</TD>
+          <TD class="style13">ReportAlpha</TD>
           <TD>Reports alpha value on JEOL.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">SetBeamShift #X #Y</TD>
+          <TD class="style13">SetBeamShift #X #Y</TD>
           <TD>Set the beam shift to the given values (nominal micron units)</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">ReportBeamShift</TD>
+          <TD class="style13">ReportBeamShift</TD>
           <TD>Report the beam shift in nominal micron units</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">SetBeamTilt #X #Y</TD>
+          <TD class="style13">MoveBeamByMicrons #X #Y</TD>
+          <TD>Moves the beam by the given number of microns in X and Y.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style13">MoveBeamByFieldFraction #X #Y</TD>
+          <TD>Moves the beam by the given fractions of the current camera field of view in X 
+            and Y; e.g. 0.5,0.5 would move the center of the beam from the center of the 
+            field to the upper right corner.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style13">SetBeamTilt #X #Y</TD>
           <TD>Set the beam tilt to the given values (milliradians or % of full scale)</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">ReportBeamTilt</TD>
+          <TD class="style13">ReportBeamTilt</TD>
           <TD>Reports the beam tilt in milliradians for FEI, % of full-scale value for JEOL</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">SetProbeMode #</TD>
+          <TD class="style13">SetProbeMode #</TD>
           <TD>Sets the mode to microprobe or nanoprobe on an FEI scope.&nbsp; Follow with 0 
             or &quot;nano&quot; for nanoprobe, or 1 or &quot;micro&quot; for microprobe.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">ReportProbeMode</TD>
+          <TD class="style13">ReportProbeMode</TD>
           <TD>Reports whether an FEI scope is in nanoprobe or microprobe mode; sets first 
             reported value to 0 or 1, respectively.</TD>
         </TR>
@@ -1354,7 +1364,7 @@
           <TD colspan="2"><A name="image_shift"></A><B>Image Shift-Related Commands</B></TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">SetImageShift #X #Y [#D]</TD>
+          <TD class="style13">SetImageShift #X #Y [#D]</TD>
           <TD>Set the image shift to the given values (image shift units).&nbsp; The values
             correspond to the ones give by ReportImageShift, which are adjusted for tilt
             axis offset, image shift offset, and low dose area shift.&nbsp; Add the optional 
@@ -1362,22 +1372,22 @@
             the normal settling time (i.e., 1 for regular settling).</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">ImageShiftByPixels #X #Y [#D]</TD>
+          <TD class="style13">ImageShiftByPixels #X #Y [#D]</TD>
           <TD>Change image shift by given # of pixels in camera X and Y; optional #D 
             provides settling time as just described.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">ImageShiftByUnits #X #Y&nbsp; [#D]</TD>
+          <TD class="style13">ImageShiftByUnits #X #Y&nbsp; [#D]</TD>
           <TD>Change image shift by given # of IS units in X &amp; Y; optional #D provides 
             settling time as just described.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">ImageShiftByMicrons #X #Y [#D]</TD>
+          <TD class="style13">ImageShiftByMicrons #X #Y [#D]</TD>
           <TD>Change image shift by given distance on specimen (X is tilt axis); optional #D 
             provides settling time as just described.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">ReportImageShift</TD>
+          <TD class="style13">ReportImageShift</TD>
           <TD>Report the image shift in IS units, adjusted for tilt axis offset, image shift
             offset, and low dose area shift; if image shift is calibrated, also report the equivalent shift in unbinned 
             pixels on the current camera at the current magnification, and the amount the 
@@ -1389,24 +1399,24 @@
           <TD colspan="2"><A name="misc_scope"></A><B>Miscellaneous Scope Commands</B></TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">SetObjectiveStigmator #X #Y</TD>
+          <TD class="style13">SetObjectiveStigmator #X #Y</TD>
           <TD>Set the objective lens stigmator to the given values (between -1 and 1)</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">ReportObjectiveStigmator</TD>
+          <TD class="style13">ReportObjectiveStigmator</TD>
           <TD>Report the X and Y values of the objective stigmator, between -1 and 1</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">SetBeamBlank #</TD>
+          <TD class="style13">SetBeamBlank #</TD>
           <TD>Blank beam if # is 1, unblank if # is 0</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">NormalizeLenses #</TD>
+          <TD class="style13">NormalizeLenses #</TD>
           <TD>Normalize selected lenses on an FEI or Hitachi scope; # is the sum of 1 for projector, 2
             for objective, 4 for condenser lenses</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">NormalizeAllLenses [#]</TD>
+          <TD class="style13">NormalizeAllLenses [#]</TD>
           <TD>Normalize all lenses, or in a lens group, on an FEI scope.&nbsp; With # 0 or
             not present, it normalizes all lenses in one call.&nbsp; Otherwise, # can be the
             sum of 1 to normalize the illumination group (which includes condenser,
@@ -1414,50 +1424,50 @@
             lenses) in a separate call.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">ReportColumnOrGunValve</TD>
+          <TD class="style13">ReportColumnOrGunValve</TD>
           <TD>Reports 0 or 1 if column/gun valve is closed or open on FEG scopes, or if 
             filament on JEOL is clearly off or on.&nbsp; Reports -1 if the filament current 
             is inconsistent with the beam switch state.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">SetColumnOrGunValve #</TD>
+          <TD class="style13">SetColumnOrGunValve #</TD>
           <TD>Close column/gun valve on FEG scope or turn off filament on JEOL if # is 0; open valve if # is 1 
             (turning on filament does not work).</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">ScreenUp</TD>
+          <TD class="style13">ScreenUp</TD>
           <TD>Raise the main screen</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">ScreenDown</TD>
+          <TD class="style13">ScreenDown</TD>
           <TD>Lower the main screen</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">ReportScreen</TD>
+          <TD class="style13">ReportScreen</TD>
           <TD>Report if screen is up or down; reportedValue1 is set to 0 or 1, respectively.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">ReportLens name</TD>
+          <TD class="style13">ReportLens name</TD>
           <TD>For a Hitachi or JEOL scope, reports the lens value by its abbreviated name.&nbsp; 
             For JEOL, allowed names are CL1, CL2, OM2, IL1, IL2, IL3, PL1, PL2, PL3, PL4, 
             FLf, FLc, FLcomp1, FLcomp2.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">ReportDeflector</TD>
+          <TD class="style13">ReportDeflector</TD>
           <TD>For a Hitachi scope, reports the X and Y values of deflector specified by its 
             abbreviated name.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">ManualFilmExposure #</TD>
+          <TD class="style13">ManualFilmExposure #</TD>
           <TD>Film exposure time in seconds for manual exposures, or 0 for automatic exposure
             (the default)</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">ExposeFilm</TD>
+          <TD class="style13">ExposeFilm</TD>
           <TD>Take a film exposure</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">SpecialExposeFilm # [#] [#]</TD>
+          <TD class="style13">SpecialExposeFilm # [#] [#]</TD>
           <TD>Expose film with special handling: the first # specifies a delay in seconds
             after loading the plate; the second # specifies a pre-exposure of the specimen
             before exposing the plate, in seconds. The third # suppresses dimming of the
@@ -1465,7 +1475,7 @@
             screen if it is down. It requires the adaexp server to be installed.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">SetupMessageBox #B [#T] [text]</TD>
+          <TD class="style13">SetupMessageBox #B [#T] [text]</TD>
           <TD>Sets properties for a message box to be shown on an FEI microscope computer 
             with the next command.&nbsp; B specifies the type of buttons: 0 for OK, 1 for OK 
             - Cancel, 2 for Yes - No, 3 for Yes - No - Cancel.&nbsp; The optional T sets the 
@@ -1476,7 +1486,7 @@
             for a box to be displayed unconditionally, enter &#39;0 0 text&#39;.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">ShowMessageOnScope title</TD>
+          <TD class="style13">ShowMessageOnScope title</TD>
           <TD>Opens a message box on an FEI microscope computer with the given title, which 
             can include spaces.&nbsp; The box is displayed with the &quot;long operation&quot; 
             mechanism described below, so it is possible to have it displayed only after an 
@@ -1490,32 +1500,32 @@
           <TD colspan="2"><A name="filter_commands"></A><B>Energy Filter Commands</B></TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">SetSlitWidth #</TD>
+          <TD class="style13">SetSlitWidth #</TD>
           <TD>Sets energy filter slit width in eV</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">SetSlitIn [#]</TD>
+          <TD class="style13">SetSlitIn [#]</TD>
           <TD>Inserts the slit; or if # is entered, inserts if 1 or retracts if 0</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">SetEnergyLoss #</TD>
+          <TD class="style13">SetEnergyLoss #</TD>
           <TD>Set sthe energy loss to the #</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">ChangeEnergyLoss #</TD>
+          <TD class="style13">ChangeEnergyLoss #</TD>
           <TD>Changes the energy loss by the #</TD>
         </TR>
         <TR>
-          <TD class="style9">ReportEnergyFilter</TD>
+          <TD class="style13">ReportEnergyFilter</TD>
           <TD>Reports the slit width, energy loss, and whether the slit is in or out (the
             latter is placed in ReportedValue3 as a 1 or 0)</TD>
         </TR>
         <TR>
-          <TD class="style9">SetJeolGIF #</TD>
+          <TD class="style13">SetJeolGIF #</TD>
           <TD>Calls JEOL function to set GIF mode on (if # is nonzero) or off.</TD>
         </TR>
         <TR>
-          <TD class="style9">ReportJeolGIF</TD>
+          <TD class="style13">ReportJeolGIF</TD>
           <TD>Calls JEOL function to get whether GIF mode is on.</TD>
         </TR>
         <TR  vAlign="top">
@@ -1523,43 +1533,43 @@
           Refrigerant, and Vacuum Commands</B></TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">LoadCartridge #</TD>
+          <TD class="style13">LoadCartridge #</TD>
           <TD>Loads the cartridge from the given slot # (numbered from 1) if there is an
             autoloader.  This command starts a long operation.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">UnloadCartridge</TD>
+          <TD class="style13">UnloadCartridge</TD>
           <TD>If there is an autoloader, unloads the cartridge.  This command starts a long operation</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">ReportSlotStatus #</TD>
+          <TD class="style13">ReportSlotStatus #</TD>
           <TD>Report the status of the cartridge slot given by # (numbered from 1) if there
             is an autoloader.&nbsp; Status is -1 for an error, 0 for empty, and 1 for
             occupied.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">AreDewarsFilling</TD>
+          <TD class="style13">AreDewarsFilling</TD>
           <TD>Report whether any of the dewars in a temperature control system are busy
             filling (reported value 1 is set to 0 or 1).
             &nbsp; Value can be assigned to a variable at end of commmand.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">DewarsRemainingTime</TD>
+          <TD class="style13">DewarsRemainingTime</TD>
           <TD>Report the time remaining for until next automatic dewar filling, or -1 if
             none is scheduled.&nbsp; Value can be assigned to a variable at end of commmand.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">RefrigerantLevel #</TD>
+          <TD class="style13">RefrigerantLevel #</TD>
           <TD>Report the refrigerant level of the given dewar: 1 for autoloader, 2 for
             column, 3 for liquid helium. &nbsp; Value can be assigned to a variable at end of commmand.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">IsPVPRunning</TD>
+          <TD class="style13">IsPVPRunning</TD>
           <TD>Report whether the PVP is running on an FEI scope.&nbsp; Value can be assigned 
           to a variable at end of commmand.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">LongOperation Op # [Op #...]</TD>
+          <TD class="style13">LongOperation Op # [Op #...]</TD>
           <TD>Starts one or more time-consuming operations: Buffer cycle (Bu), Refill
             refrigerant (Re), Inventory cassettes (In), Loader buffer cycle (Lo), Unload 
             cartridge (Un), or Dark
@@ -1584,27 +1594,27 @@
           <TD colspan="2"><A name="piezo_commands"></A><B>Piezo Drive Commands</B></TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">SelectPiezo # #</TD>
+          <TD class="style13">SelectPiezo # #</TD>
           <TD>Select a piezo drive for reports or movements, follow with the plugin number
             (numbered from 0, enter 0 if there is only one plugin controlling piezos) and
             the piezo number (numbered from 0).</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">ReportPiezoXY</TD>
+          <TD class="style13">ReportPiezoXY</TD>
           <TD>Reports the X and Y position of the currently selected piezo</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">ReportPiezoZ</TD>
+          <TD class="style13">ReportPiezoZ</TD>
           <TD>Reports the Z position, or the position of the only axis for a single-axis
             piezo, of the currently selected piezo</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">MovePiezoXY #X #Y [#]</TD>
+          <TD class="style13">MovePiezoXY #X #Y [#]</TD>
           <TD>Sets the X and Y position of the currently selected piezo to #X, #Y, or if the
             optional third # is non-zero, moves the piezo by #X, #Y</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style9">MovePiezoZ #Z [#]</TD>
+          <TD class="style13">MovePiezoZ #Z [#]</TD>
           <TD>Sets the Z position, or position of a single-axis piezo, to #Z for the
             currently selected piezo, or if the optional second # is non-zero, moves the
             piezo by #Z</TD>
@@ -1854,6 +1864,29 @@
             edges of the beam, or from the centroid of the image intensities if # is
             nonzero. In the latter case the beam should be completely within the camera
             field.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style12">MeasureBeamSize [#B]</TD>
+          <TD>Measures the beam size by detecting its edges in the image in buffer A, or in 
+            the buffer given by the optional #B.&nbsp; The value is reported in microns.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style12">MultipleRecords [#N] [#C] [#O] [#D] [#S] [#E] [#F]</TD>
+          <TD>Acquire multiple Record images around the periphery of a hole, using image 
+            shift to move to each off-center position.&nbsp; The parameters set in the 
+            <a href="hidd_multi_shot_setup.htm">Multiple Record Setup dialog</a> control the 
+            operation of this task, but any subset of them can be overridden by entering 
+            optional parameters here.&nbsp; The value in the dialog is used if -9 is entered 
+            for the corresponding parameter here, or if the optional entries end before the 
+            given parameter.&nbsp; The parameters are: #N for number of shots around the 
+            center; #C -1 or 1 for a shot in the center before or after the off-center 
+            shots; #O for the distance from center of the off-center shots, in microns; #D 
+            for the extra delay after the image shift, in seconds; #S 1 to save a Record 
+            image at each position or 0 not to; #E 1 or 2 to use early return for a K2 
+            camera after the last shot or after all shots; #F for the number of frames in 
+            the early returned image (or -1 for all, 0 for none).&nbsp; For example, 
+            &#39;MultipleRecords -9 -9 -9 4. 1&#39; will use an extra delay of 4 seconds and save 
+            Records, but take all other parameters from the dialog.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style12">CalibrateImageShift [#]</TD>

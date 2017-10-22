@@ -12,6 +12,7 @@ class CCameraController;
 class CEMscope;
 class CShiftManager;
 class CTSController;
+class CNavHelper;
 
 /////////////////////////////////////////////////////////////////////////////
 // CMenuTargets command target
@@ -176,6 +177,7 @@ private:
   CEMscope *mScope;
   CShiftManager *mShiftManager;
   CTSController *mTSController;
+  CNavHelper *mNavHelper;
   CString mFlybackSet;
 public:
   afx_msg void OnNavigatorChangeregistration();
@@ -346,6 +348,9 @@ public:
   afx_msg void OnCameraUseRecordForMontage();
   afx_msg void OnUpdateCameraUseRecordForMontage(CCmdUI *pCmdUI);
   afx_msg void OnCameraSearch();
+  afx_msg void OnNavigatorShowMultiShot();
+  afx_msg void OnNavigatorSetMultiShotParams();
+  afx_msg void OnUpdateNavigatorShowMultiShot(CCmdUI *pCmdUI);
 };
 
 /////////////////////////////////////////////////////////////////////////////

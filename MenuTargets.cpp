@@ -34,6 +34,7 @@
 #include "EMmontageController.h"
 #include "CalibCameraTiming.h"
 #include "CookerSetupDlg.h"
+#include "MultiShotDlg.h"
 #include "MultiTSTasks.h"
 #include "NavBacklashDlg.h"
 #include "Mailer.h"
@@ -70,6 +71,7 @@ void CMenuTargets::Initialize()
   mCamera = mWinApp->mCamera;
   mScope = mWinApp->mScope;
   mTSController = mWinApp->mTSController;
+  mNavHelper = mWinApp->mNavHelper;
   mFlybackSet = "R";
 }
 
@@ -420,6 +422,9 @@ BEGIN_MESSAGE_MAP(CMenuTargets, CCmdTarget)
   ON_COMMAND(ID_CAMERA_USERECORDFORMONTAGE, OnCameraUseRecordForMontage)
   ON_UPDATE_COMMAND_UI(ID_CAMERA_USERECORDFORMONTAGE, OnUpdateCameraUseRecordForMontage)
   ON_COMMAND(ID_CAMERA_SEARCH, OnCameraSearch)
+  ON_COMMAND(ID_OPTIONS_SHOWMULTI, OnNavigatorShowMultiShot)
+  ON_COMMAND(ID_OPTIONS_SETMULTI, OnNavigatorSetMultiShotParams)
+  ON_UPDATE_COMMAND_UI(ID_OPTIONS_SHOWMULTI, OnUpdateNavigatorShowMultiShot)
   END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -472,13 +477,13 @@ void CMenuTargets::OnTasksNavigator()
   }
   mNavigator = new CNavigatorDlg();
   mWinApp->mNavigator = mNavigator;
-  mWinApp->mNavHelper->NavOpeningOrClosing(true);
+  mNavHelper->NavOpeningOrClosing(true);
   mNavigator->Create(IDD_NAVIGATOR);
   if (placement->rcNormalPosition.right > 0)
     mNavigator->SetWindowPlacement(placement);
   mNavigator->ShowWindow(SW_SHOW);
   if (mWinApp->GetOpenStateWithNav())
-    mWinApp->mNavHelper->OpenStateDialog();
+    mNavHelper->OpenStateDialog();
   if (!param->autosaveFile.IsEmpty())
     mNavigator->LoadNavFile(true, false);
   mWinApp->RestoreViewFocus();
@@ -520,12 +525,12 @@ void CMenuTargets::OnUpdateNavigatorMergefile(CCmdUI *pCmdUI)
 
 void CMenuTargets::OnNavigatorOpenStateDlg()
 {
-  mWinApp->mNavHelper->OpenStateDialog();
+  mNavHelper->OpenStateDialog();
 }
 
 void CMenuTargets::OnUpdateNavigatorOpenStateDlg(CCmdUI *pCmdUI)
 {
-  pCmdUI->Enable(!mWinApp->mNavHelper->mStateDlg && !DoingTasks());
+  pCmdUI->Enable(!mNavHelper->mStateDlg && !DoingTasks());
 }
 
 void CMenuTargets::OnNavigatorImportmap()
@@ -574,12 +579,12 @@ void CMenuTargets::OnUpdateNavigatorAutosave(CCmdUI* pCmdUI)
 
 void CMenuTargets::OnNavigatorWriteAsXmlFile()
 {
-  mWinApp->SetWriteNavAsXML(!mWinApp->GetWriteNavAsXML());
+  mNavHelper->SetWriteNavAsXML(!mNavHelper->GetWriteNavAsXML());
 }
 
 void CMenuTargets::OnUpdateNavigatorWriteAsXmlFile(CCmdUI *pCmdUI)
 {
-  pCmdUI->SetCheck(mWinApp->GetWriteNavAsXML()); 
+  pCmdUI->SetCheck(mNavHelper->GetWriteNavAsXML()); 
 }
 
 void CMenuTargets::OnCornerMontage() 
@@ -622,7 +627,7 @@ void CMenuTargets::OnUpdateNavigatorSetupfullmontage(CCmdUI* pCmdUI)
 
 void CMenuTargets::OnMontageListFilesToOpen()
 {
-  mWinApp->mNavHelper->ListFilesToOpen();
+  mNavHelper->ListFilesToOpen();
 }
 
 void CMenuTargets::OnNavigatorAcquire() 
@@ -677,11 +682,11 @@ void CMenuTargets::OnUpdateNavigatorAdjustBacklash(CCmdUI *pCmdUI)
 void CMenuTargets::OnNavigatorBacklashSettings()
 {
   CNavBacklashDlg dlg;
-  dlg.m_iAskOrAuto = mWinApp->GetAutoBacklashNewMap();
-  dlg.m_fMinField = mWinApp->GetAutoBacklashMinField();
+  dlg.m_iAskOrAuto = mNavHelper->GetAutoBacklashNewMap();
+  dlg.m_fMinField = mNavHelper->GetAutoBacklashMinField();
   if (dlg.DoModal() == IDOK) {
-    mWinApp->SetAutoBacklashNewMap(dlg.m_iAskOrAuto);
-    mWinApp->SetAutoBacklashMinField(dlg.m_fMinField);
+    mNavHelper->SetAutoBacklashNewMap(dlg.m_iAskOrAuto);
+    mNavHelper->SetAutoBacklashMinField(dlg.m_fMinField);
   }
 }
 
@@ -715,53 +720,81 @@ void CMenuTargets::OnDeleteitem()
 void CMenuTargets::OnUpdateDeleteitem(CCmdUI* pCmdUI) 
 {
   pCmdUI->Enable(mNavigator && !mNavigator->GetAcquiring() && 
-    !mWinApp->mNavHelper->GetRealigning() && !mNavigator->GetLoadingMap() &&
+    !mNavHelper->GetRealigning() && !mNavigator->GetLoadingMap() &&
     mNavigator->NoDrawing()	&& mNavigator->GetItemType() >= 0);	
 }
 
 void CMenuTargets::OnNavigatorConvertmaps() 
 {
-  mWinApp->SetConvertMaps(!mWinApp->GetConvertMaps());
+  mNavHelper->SetConvertMaps(!mNavHelper->GetConvertMaps());
 }
 
 void CMenuTargets::OnUpdateNavigatorConvertmaps(CCmdUI* pCmdUI) 
 {
   pCmdUI->Enable(true);
-  pCmdUI->SetCheck(mWinApp->GetConvertMaps() ? 1 : 0);
+  pCmdUI->SetCheck(mNavHelper->GetConvertMaps() ? 1 : 0);
 }
 
 void CMenuTargets::OnNavigatorLoadunbinned()
 {
-  mWinApp->SetLoadMapsUnbinned(!mWinApp->GetLoadMapsUnbinned());
+  mNavHelper->SetLoadMapsUnbinned(!mNavHelper->GetLoadMapsUnbinned());
 }
 
 void CMenuTargets::OnUpdateNavigatorLoadunbinned(CCmdUI *pCmdUI)
 {
   pCmdUI->Enable(true);
-  pCmdUI->SetCheck(mWinApp->GetLoadMapsUnbinned() ? 1 : 0);
+  pCmdUI->SetCheck(mNavHelper->GetLoadMapsUnbinned() ? 1 : 0);
 }
 
 void CMenuTargets::OnSetPointLabelThreshold()
 {
-  int thresh = mWinApp->GetPointLabelDrawThresh();
-  if (KGetOneInt("Enter maximum group size for which to draw point labels (or 0 to draw "
+  int thresh = mNavHelper->GetPointLabelDrawThresh();
+  if (!KGetOneInt("Enter maximum group size for which to draw point labels (or 0 to draw "
     "always):", thresh))
-    mWinApp->SetPointLabelDrawThresh(thresh);
+    return;
+  mNavHelper->SetPointLabelDrawThresh(thresh);
+  mWinApp->mMainView->DrawImage();
+}
+
+void CMenuTargets::OnNavigatorShowMultiShot()
+{
+  mNavHelper->SetEnableMultiShot(mNavHelper->GetEnableMultiShot() == 0 ? 1 : 0);
+  mWinApp->mMainView->DrawImage();
+}
+
+void CMenuTargets::OnUpdateNavigatorShowMultiShot(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(!mWinApp->DoingTasks());
+  pCmdUI->SetCheck(mNavHelper->GetEnableMultiShot() != 0 ? 1 : 0);
+}
+
+void CMenuTargets::OnNavigatorSetMultiShotParams()
+{
+  int *activeList = mWinApp->GetActiveCameraList();
+  CameraParameters *camParams = mWinApp->GetCamParams();
+  CMultiShotDlg dlg;
+  dlg.mHasIlluminatedArea = mScope->GetUseIllumAreaForC2();
+  dlg.mCanReturnEarly = false;
+  for (int ind = 0; ind < mWinApp->GetActiveCamListSize(); ind++)
+    if (camParams[activeList[ind]].K2Type)
+      dlg.mCanReturnEarly = true;
+  dlg.DoModal();
+  mWinApp->mMainView->DrawImage();
 }
 
 void CMenuTargets::OnNavigatorRealignScaling()
 {
-  mWinApp->SetTryRealignScaling(!mWinApp->GetTryRealignScaling());
-  /*int options = mWinApp->GetRealignTestOptions();
+  mNavHelper->SetTryRealignScaling(!mNavHelper->GetTryRealignScaling());
+  /*int options = mNavHelper->GetRealignTestOptions();
   if (KGetOneInt("Enter sum of 1 to use montage backlash and 2 to use montage stage "
     "errors", options))
-    mWinApp->SetRealignTestOptions(options); */
+    mNavHelper->SetRealignTestOptions(options); */
 }
 
 void CMenuTargets::OnUpdateNavigatorRealignScaling(CCmdUI *pCmdUI)
 {
   pCmdUI->Enable(true);
-  pCmdUI->SetCheck(mWinApp->GetTryRealignScaling() ? 1 : 0);
+  pCmdUI->SetCheck(mNavHelper->GetTryRealignScaling() ? 1 : 0);
 }
 
 void CMenuTargets::OnNavigatorAlignedsupermontage() 
@@ -823,24 +856,24 @@ void CMenuTargets::OnUpdateNavigatorAddGridOfPoints(CCmdUI *pCmdUI)
 
 void CMenuTargets::OnNavigatorDivideIntoGroups()
 {
-  mWinApp->mNavHelper->SetDivideIntoGroups(!mWinApp->mNavHelper->GetDivideIntoGroups());
+  mNavHelper->SetDivideIntoGroups(!mNavHelper->GetDivideIntoGroups());
 }
 
 void CMenuTargets::OnUpdateNavigatorDivideIntoGroups(CCmdUI *pCmdUI)
 {
   pCmdUI->Enable(!DoingTasks());
-  pCmdUI->SetCheck(mWinApp->mNavHelper->GetDivideIntoGroups());
+  pCmdUI->SetCheck(mNavHelper->GetDivideIntoGroups());
 }
 
 void CMenuTargets::OnNavigatorSetGridGroupSize()
 {
-  float size = mWinApp->mNavHelper->GetGridGroupSize();
+  float size = mNavHelper->GetGridGroupSize();
   if (!KGetOneFloat("The radius is the maximum distance from first point to any other one"
     , "Enter maximum radius of groups in microns:", size, 1))
     return;
   if (size <= 0)
     return;
-  mWinApp->mNavHelper->SetGridGroupSize(size);
+  mNavHelper->SetGridGroupSize(size);
 }
 
 void CMenuTargets::OnNavigatorChangeregistration()
@@ -880,7 +913,7 @@ void CMenuTargets::OnUpdateNavigatorAligntoitem(CCmdUI *pCmdUI)
 
 void CMenuTargets::OnNavigatorForceCenterAlign()
 {
-  mWinApp->mNavHelper->ForceCenterRealign();
+  mNavHelper->ForceCenterRealign();
 }
 
 void CMenuTargets::OnNavigatorShifttomarker()
@@ -910,7 +943,7 @@ void CMenuTargets::OnNavigatorSetgridlimits()
 {
   char *limText[4] = {"Lower X", "Upper X", "Lower Y", "Upper Y"};
   CString str;
-  float *limits = mWinApp->mNavHelper->GetGridLimits();
+  float *limits = mNavHelper->GetGridLimits();
   for (int i = 0; i < 4; i++) {
     str.Format("%s limit in microns for full montage (enter 0 for default limit of %.0f)"
       , limText[i], mScope->GetStageLimit(i));
@@ -928,7 +961,7 @@ void CMenuTargets::OnNavigatorSetacquirestate()
   CMapDrawItem *item;
   if (mNavigator->GetCurrentOrAcquireItem(item) < 0)
     return;
-  mWinApp->mNavHelper->SetToMapImagingState(item, true);
+  mNavHelper->SetToMapImagingState(item, true);
 }
 
 void CMenuTargets::OnUpdateNavigatorSetacquirestate(CCmdUI *pCmdUI)
@@ -936,22 +969,22 @@ void CMenuTargets::OnUpdateNavigatorSetacquirestate(CCmdUI *pCmdUI)
   pCmdUI->Enable(mNavigator && mNavigator->NoDrawing()	&& !DoingTasks() && 
     !mNavigator->GetAcquiring() && !mNavigator->CurrentIsImported() &&
     !mWinApp->StartedTiltSeries() && mNavigator->GetItemType() == ITEM_TYPE_MAP &&
-    mWinApp->mNavHelper->GetTypeOfSavedState() == STATE_NONE);
+    mNavHelper->GetTypeOfSavedState() == STATE_NONE);
 }
 
 void CMenuTargets::OnNavigatorRestorestate()
 {
-  if (mWinApp->mNavHelper->GetTypeOfSavedState() == STATE_MAP_ACQUIRE)
-    mWinApp->mNavHelper->RestoreFromMapState();
+  if (mNavHelper->GetTypeOfSavedState() == STATE_MAP_ACQUIRE)
+    mNavHelper->RestoreFromMapState();
   else
-    mWinApp->mNavHelper->RestoreSavedState();
+    mNavHelper->RestoreSavedState();
 }
 
 void CMenuTargets::OnUpdateNavigatorRestorestate(CCmdUI *pCmdUI)
 {
   pCmdUI->Enable(mNavigator && mNavigator->NoDrawing()	&& !DoingTasks() && 
     !mNavigator->GetAcquiring() &&
-    !mWinApp->StartedTiltSeries() && mWinApp->mNavHelper->GetTypeOfSavedState() !=
+    !mWinApp->StartedTiltSeries() && mNavHelper->GetTypeOfSavedState() !=
     STATE_NONE);
 }
 
@@ -991,13 +1024,13 @@ void CMenuTargets::OnUpdateNavigatorDeleteGroup(CCmdUI *pCmdUI)
 
 void CMenuTargets::OnNavigatorAlignToMap()
 {
-  mWinApp->mNavHelper->OpenRotAlignDlg();
+  mNavHelper->OpenRotAlignDlg();
 }
 
 void CMenuTargets::OnUpdateNavigatorAlignToMap(CCmdUI *pCmdUI)
 {
   pCmdUI->Enable(mNavigator && !DoingTasks() && !mNavigator->GetAcquiring() &&
-    mWinApp->mNavHelper->OKtoAlignWithRotation());
+    mNavHelper->OKtoAlignWithRotation());
 }
 
 void CMenuTargets::OnCalibrationStagestretch()
@@ -1012,14 +1045,14 @@ void CMenuTargets::OnUpdateCalibrationStagestretch(CCmdUI *pCmdUI)
 
 void CMenuTargets::OnUseCurrentLDparamsInNavRealign()
 {
-  mWinApp->mNavHelper->SetRIuseCurrentLDparams(
-    !mWinApp->mNavHelper->GetRIuseCurrentLDparams());
+  mNavHelper->SetRIuseCurrentLDparams(
+    !mNavHelper->GetRIuseCurrentLDparams());
 }
 
 void CMenuTargets::OnUpdateUseCurrentLDparamsInNavRealign(CCmdUI *pCmdUI)
 {
   pCmdUI->Enable(!DoingTasks());
-  pCmdUI->SetCheck(mWinApp->mNavHelper->GetRIuseCurrentLDparams());
+  pCmdUI->SetCheck(mNavHelper->GetRIuseCurrentLDparams());
 }
 
 // DISTORTION

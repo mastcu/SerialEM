@@ -148,6 +148,7 @@ int CParameterIO::ReadSettings(CString strFileName)
     mWinApp->mCamera->GetFrameAliParams();
   FrameAliParams faParam, *faData;
   BOOL *useGPU4K2Ali = mWinApp->mCamera->GetUseGPUforK2Align();
+  MultiShotParams *msParams = mWinApp->mNavHelper->GetMultiShotParams();
   int faLastFileIndex = -1, faLastArrayIndex = -1;
   mWinApp->mCamera->SetFrameAliDefaults(faParam, "4K default set", 4, 0.06f, 1);
   mWinApp->SetAbsoluteDlgIndex(false);
@@ -399,8 +400,18 @@ int CParameterIO::ReadSettings(CString strFileName)
           "saved automatically, turn this option off with the\n"
           "Navigator - Autosave Nav File menu item.", MB_OK | MB_ICONINFORMATION);
       } else if (NAME_IS("AutoBacklashNewMap")) {
-        mWinApp->SetAutoBacklashNewMap(itemInt[1]);
-        mWinApp->SetAutoBacklashMinField((float)itemDbl[2]);
+        mWinApp->mNavHelper->SetAutoBacklashNewMap(itemInt[1]);
+        mWinApp->mNavHelper->SetAutoBacklashMinField((float)itemDbl[2]);
+      } else if (NAME_IS("MultiShotParams")) {
+        msParams->beamDiam = (float)itemDbl[1];
+        msParams->spokeRad = (float)itemDbl[2]; 
+        msParams->numShots =  itemInt[3];
+        msParams->doCenter =  itemInt[4];
+        msParams->doEarlyReturn =  itemInt[5];
+        msParams->numEarlyFrames =  itemInt[6];
+        msParams->saveRecord = itemInt[7] != 0;
+        msParams->extraDelay = (float)itemDbl[8];
+        msParams->useIllumArea = itemInt[9] != 0;
       } else if (NAME_IS("NavigatorAcquireParams")) {
         navParams->acqAutofocus = itemInt[1] != 0;
         navParams->acqFineEucen = itemInt[2] != 0;
@@ -1001,6 +1012,7 @@ void CParameterIO::WriteSettings(CString strFileName)
     mWinApp->mCamera->GetFrameAliParams();
   FrameAliParams faParam;
   BOOL *useGPU4K2Ali = mWinApp->mCamera->GetUseGPUforK2Align();
+  MultiShotParams *msParams = mWinApp->mNavHelper->GetMultiShotParams();
 
   try {
     // Open the file for writing, 
@@ -1137,8 +1149,14 @@ void CParameterIO::WriteSettings(CString strFileName)
 
     WriteAllMacros();
 
-    oneState.Format("AutoBacklashNewMap %d %f\n", mWinApp->GetAutoBacklashNewMap(),
-      mWinApp->GetAutoBacklashMinField());
+    oneState.Format("AutoBacklashNewMap %d %f\n", 
+      mWinApp->mNavHelper->GetAutoBacklashNewMap(), 
+      mWinApp->mNavHelper->GetAutoBacklashMinField());
+    mFile->WriteString(oneState);
+    oneState.Format("MultiShotParams %f %f %d %d %d %d %d %f %d\n", msParams->beamDiam, 
+      msParams->spokeRad, msParams->numShots, msParams->doCenter, msParams->doEarlyReturn,
+      msParams->numEarlyFrames, msParams->saveRecord ? 1 : 0, msParams->extraDelay,
+      msParams->useIllumArea ? 1 : 0);
     mFile->WriteString(oneState);
     oneState.Format("NavigatorAcquireParams %d %d %d %d %d %d %d %d %d %d %d %d %d %d"
       " %d %d %d\n", navParams->acqAutofocus ? 1 : 0, navParams->acqFineEucen ? 1 : 0,

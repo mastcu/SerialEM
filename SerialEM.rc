@@ -531,6 +531,9 @@ BEGIN
             MENUITEM "Di&vide Points into Groups",  ID_MONTAGINGGRIDS_GROUPPOINTSINGRID
             MENUITEM "Set Group &Radius",           ID_MONTAGINGGRIDS_SETGROUPSIZE
             MENUITEM SEPARATOR
+            MENUITEM "Set &Multi-shot Parameters...", ID_OPTIONS_SETMULTI
+            MENUITEM "S&how Shots when Show Acquire", ID_OPTIONS_SHOWMULTI
+            MENUITEM SEPARATOR
             MENUITEM "A&dd Circle Polygon",         ID_NAVIGATOR_ADDCIRCLEPOLYGON
             MENUITEM "Pol&ygon from Corners",       ID_NAVIGATOR_POLYGON_FROM_CORNERS
         END
@@ -2701,6 +2704,41 @@ BEGIN
     PUSHBUTTON      "No",IDC_BUTMIDDLE,135,47,50,14
 END
 
+IDD_MULTI_SHOT_SETUP DIALOGEX 0, 0, 203, 214
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Multiple Record Setup"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    CONTROL         "No center shot",IDC_RNO_CENTER,"Button",BS_AUTORADIOBUTTON | WS_GROUP,61,30,63,10
+    CONTROL         "Center shot at end",IDC_RCENTER_AFTER,"Button",BS_AUTORADIOBUTTON,61,40,77,10
+    CONTROL         "Center shot at start",IDC_RCENTER_BEFORE,"Button",BS_AUTORADIOBUTTON,61,50,79,10
+    GROUPBOX        "Shot in center",IDC_STATIC,56,20,89,42,WS_GROUP
+    CONTROL         "No early return",IDC_RNO_EARLY,"Button",BS_AUTORADIOBUTTON | WS_GROUP,21,88,65,10
+    CONTROL         "Early return only on last shot",IDC_RLAST_EARLY,"Button",BS_AUTORADIOBUTTON,21,98,110,10
+    CONTROL         "Early return on all shots",IDC_RALL_EARLY,"Button",BS_AUTORADIOBUTTON,21,108,94,10
+    LTEXT           "Number of frames in return (-1 for all):",IDC_STAT_NUM_EARLY,23,119,130,8,WS_GROUP
+    EDITTEXT        IDC_EDIT_EARLY_FRAMES,156,116,25,14,ES_AUTOHSCROLL
+    GROUPBOX        "Early Returns for K2",IDC_STAT_EARLY_GROUP,15,78,173,55
+    DEFPUSHBUTTON   "OK",IDOK,35,193,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,115,193,50,14
+    LTEXT           "Number of shots around center:",IDC_STATIC,11,10,106,8
+    LTEXT           "99",IDC_STAT_NUM_SHOTS,119,10,9,8
+    CONTROL         "",IDC_SPIN_NUM_SHOTS,"msctls_updown32",UDS_ARROWKEYS,131,7,10,14
+    LTEXT           "Distance from center to off-center shots:",IDC_STATIC,11,67,134,8
+    EDITTEXT        IDC_EDIT_SPOKE_DIST,146,64,32,14,ES_AUTOHSCROLL
+    LTEXT           "um",IDC_STATIC,181,67,11,8
+    CONTROL         "Save Record image",IDC_CHECK_SAVE_RECORD,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,137,79,10
+    LTEXT           "Diameter of circles to draw:",IDC_STAT_BEAM_DIAM,11,167,92,8
+    EDITTEXT        IDC_EDIT_BEAM_DIAM,105,164,32,14,ES_AUTOHSCROLL
+    LTEXT           "um",IDC_STAT_BEAM_UM,140,167,11,8
+    CONTROL         "Use Record illuminated area for circles in Low Dose",IDC_CHECK_USE_ILLUM_AREA,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,179,184,10
+    PUSHBUTTON      "?",IDC_BUTHELP,189,197,11,10
+    LTEXT           "Extra delay after image shift:",IDC_STATIC,11,149,96,8
+    LTEXT           "sec",IDC_STATIC,141,150,12,8
+    EDITTEXT        IDC_EDIT_EXTRA_DELAY,107,147,32,14,ES_AUTOHSCROLL
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3094,6 +3132,14 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 61
     END
+
+    IDD_MULTI_SHOT_SETUP, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 196
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 207
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -3304,6 +3350,8 @@ BEGIN
     ID_CAMERA_SEARCH        "Acquire image with Search parameter set"
     ID_SCRIPT_CLEARPERSISTENTVARS 
                             "Clear out persistent variables defined in script processor"
+    ID_OPTIONS_SHOWMULTI    "Show multi-shot circles when Show Acquire area turned on"
+    ID_OPTIONS_SETMULTI     "Open dialog to set up multiple Records around a hole"
 END
 
 STRINGTABLE
@@ -4838,6 +4886,19 @@ BEGIN
     IDC_BUT_DELBEAMMINUS    "Reduce step size for beam movement by 1.4 (hot key < )"
     IDC_BUT_DELC2PLUS       "Increase step size for intensity lens change by 1.4 (hot key Ctrl period)"
     IDC_BUT_DELC2MINUS      "Decrease step size for intensity lens change by 1.4 (hot key Ctrl comma)"
+    IDC_SPIN_NUM_SHOTS      "Set the number of shots around the periphery"
+    IDC_RNO_CENTER          "Do not take a shot in the center of the pattern"
+    IDC_RCENTER_AFTER       "Take a shot in the center after the off-center shots"
+    IDC_RCENTER_BEFORE      "Take a shot in the center before the off-center shots"
+    IDC_EDIT_SPOKE_DIST     "Distance of peripheral shots from center in microns"
+    IDC_EDIT_EARLY_FRAMES   "Number of frames to sum in the returned image"
+    IDC_CHECK_SAVE_RECORD   "Saved returned Record image to file"
+    IDC_EDIT_BEAM_DIAM      "Diameter to draw circles representing the beam, in microns"
+    IDC_CHECK_USE_ILLUM_AREA "Instead of specified diameter, use illuminated area of Record when in Low Dose"
+    IDC_RNO_EARLY            "Return image after frame saving is complete, if any"
+    IDC_RLAST_EARLY          "Return as soon as possible with specified sum for last shot only"
+    IDC_RALL_EARLY           "Return as soon as possible with specified sum for all shots"
+    IDC_EDIT_EXTRA_DELAY     "Additional settling time after image shift in seconds"
 END
 
 #endif    // English (United States) resources

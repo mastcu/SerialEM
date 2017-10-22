@@ -3,6 +3,13 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ===========================================================================
+10/21/17: Added a task to take multiple Record shots in a hole with image
+shift, a script command to run the task, an option to draw the pattern of
+shots when showing the Acquire area in Navigator, and a dialog to set the
+parameters for the task and for drawing.
+
+10/18/17: Add a property to turn off Convert Maps to Bytes by default.
+
 10/14/17: Fixed fast continuous mode for Gatan cameras with a GIF in the
 system to not stop and restart (In 3.6).
 
@@ -12,7 +19,7 @@ system to not stop and restart (In 3.6).
 problems in removing IS and stage calibrations (In 3.6).
 
 10/10/17: Fixed message boxes coming out from errors in post-exposure actions
-when error are just supposed to terminate batch tilt series or script.
+when errors are just supposed to terminate batch tilt series or script.
 
 10/10/17: Made the Refill long operation give a special message that it
 probably completed with a misleading error.
