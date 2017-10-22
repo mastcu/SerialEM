@@ -141,7 +141,7 @@ public:
     int &numQuadrant, float &shiftX, float &shiftY, float &fitErr);
   afx_msg void OnTasksCenterbeam();
   afx_msg void OnUpdateTasksCenterbeam(CCmdUI *pCmdUI);
-  void MoveBeam(EMimageBuffer * imBuf, float shiftX, float shiftY);
+  int MoveBeam(EMimageBuffer * imBuf, float shiftX, float shiftY);
   void EnableMoveBeam(CCmdUI * pCmdUI, bool skipUserPt);
   int CenterBeamFromActiveImage(double maxRadius, double maxError, 
     BOOL useCentroid = false);

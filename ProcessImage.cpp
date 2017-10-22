@@ -872,28 +872,45 @@ void CProcessImage::EnableMoveBeam(CCmdUI * pCmdUI, bool skipUserPt)
 }
 
 // Move the beam BY the given shift in X and Y, in pixels in the given buffer image
-void CProcessImage::MoveBeam(EMimageBuffer *imBuf, float shiftX, float shiftY)
+// Or if imBuf is NULL, move beam by given number of microns in camera coordinates
+int CProcessImage::MoveBeam(EMimageBuffer *imBuf, float shiftX, float shiftY)
 {
   double bsX, bsY, bsTot;
+  int magInd = imBuf != NULL ? imBuf->mMagInd : mWinApp->mScope->GetMagIndex();
+  if (imBuf) {
+    shiftX *= imBuf->mBinning;
+    shiftY *= imBuf->mBinning;
+  } else {
+    float pixel = mWinApp->mShiftManager->GetPixelSize(mWinApp->GetCurrentCamera(), 
+      magInd);
+    shiftX /= pixel;
+    shiftY /= pixel;
+  }
+
   // Get the matrix for going from camera to Beam shift through image shift
-  ScaleMat bInv = mWinApp->mShiftManager->CameraToIS(imBuf->mMagInd);
-  ScaleMat IStoBS = mWinApp->mShiftManager->GetBeamShiftCal(imBuf->mMagInd);
+  ScaleMat bInv = mWinApp->mShiftManager->CameraToIS(magInd);
+  ScaleMat IStoBS = mWinApp->mShiftManager->GetBeamShiftCal(magInd);
+  if (!bInv.xpx || !IStoBS.xpx)
+    return 1;
+
   ScaleMat camToBS = mWinApp->mShiftManager->MatMul(bInv, IStoBS);
   
   // Invert Y when getting beam shift - then there is the usual sign question
-  bsX = imBuf->mBinning * (camToBS.xpx * shiftX - camToBS.xpy * shiftY);
-  bsY = imBuf->mBinning * (camToBS.ypx * shiftX - camToBS.ypy * shiftY);
+  bsX = camToBS.xpx * shiftX - camToBS.xpy * shiftY;
+  bsY = camToBS.ypx * shiftX - camToBS.ypy * shiftY;
   mWinApp->mScope->IncBeamShift(bsX, bsY);
 
   // Message?
-  ScaleMat aInv = mWinApp->mShiftManager->CameraToSpecimen(imBuf->mMagInd);
-  bsX = imBuf->mBinning * (aInv.xpx * shiftX - aInv.xpy * shiftY);
-  bsY = imBuf->mBinning * (aInv.ypx * shiftX - aInv.ypy * shiftY);
-  bsTot = sqrt(bsX * bsX + bsY * bsY);
-  CString message;
-  message.Format("Beam was shifted %.3f microns", bsTot);
-  mWinApp->AppendToLog(message, LOG_MESSAGE_IF_CLOSED);
-
+  if (imBuf) {
+    ScaleMat aInv = mWinApp->mShiftManager->CameraToSpecimen(magInd);
+    bsX = aInv.xpx * shiftX - aInv.xpy * shiftY;
+    bsY = aInv.ypx * shiftX - aInv.ypy * shiftY;
+    bsTot = sqrt(bsX * bsX + bsY * bsY);
+    CString message;
+    message.Format("Beam was shifted %.3f microns", bsTot);
+    mWinApp->AppendToLog(message, LOG_MESSAGE_IF_CLOSED);
+  }
+  return 0;
 }
 
 // Move the beam by a fraction of field of view on the current camera
