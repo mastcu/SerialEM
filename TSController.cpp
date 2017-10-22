@@ -4202,7 +4202,7 @@ int CTSController::TSMessageBox(CString message, UINT type, BOOL terminate, int 
 
   // Intercept error from macros if the flag is set, make sure there is a \r before at
   // least one \n in a row, print message and return
-  if (mCamera->GetNoMessageBoxOnError() < 0 || (mWinApp->mMacroProcessor->DoingMacro() && 
+  if (mWinApp->mCamera->GetNoMessageBoxOnError() < 0 || (mWinApp->mMacroProcessor->DoingMacro() && 
     mWinApp->mMacroProcessor->GetNoMessageBoxOnError())) {
       for (int ind = 0; ind < message.GetLength(); ind++) {
         if (message.GetAt(ind) == '\n' && (!ind || (message.GetAt(ind - 1) != '\r' &&
@@ -4222,8 +4222,8 @@ int CTSController::TSMessageBox(CString message, UINT type, BOOL terminate, int 
   // Send an email if the user seems not to be around, we are not postponed, and
   // it is clearly in the tilt series somewhere
   // If we are not in tilt series but in navigator acquire, let it send email
-  if (((!mTerminateOnError || mPostponed) && !mCamera->GetNoMessageBoxOnError()) || 
-    mUserStop || mUserPresent) {
+  if (((!mTerminateOnError || mPostponed) && !mWinApp->mCamera->GetNoMessageBoxOnError())
+    || mUserStop || mUserPresent) {
     if (mInInitialChecks || mStartedTS || mDoingTS) {
       if (!(mUserStop || mPostponed || mUserPresent))
         SendEmailIfNeeded(false);
@@ -4275,7 +4275,7 @@ int CTSController::TSMessageBox(CString message, UINT type, BOOL terminate, int 
       message.Insert(index++, '\r');
     index++;
   }
-  if (terminate || mCamera->GetNoMessageBoxOnError())
+  if (terminate || mWinApp->mCamera->GetNoMessageBoxOnError())
     message = CString("\r\n* * * * * * * * * * * * * * * * * *\r\n"
       "TILT SERIES TERMINATING WITH THIS"
       " MESSAGE:\r\n") + message + CString("\r\n* * * * * * * * * * * * * * * * * *");
