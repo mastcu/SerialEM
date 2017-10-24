@@ -1343,7 +1343,7 @@ BOOL CSerialEMApp::InitInstance()
     if (mCamParams[iCam].K2Type == 1 && mCamParams[iCam].startupDelay >= 1.46 && 
       mCamParams[iCam].startupDelay < mCamera->GetK2MinStartupDelay())
         PrintfToLog("WARNING: Post-exposure actions will be disabled for camera %d "
-          "because the\r\n  camera propertyStartupDelay is too short.  To enable "
+          "because the\r\n  camera property StartupDelay is too short.  To enable "
           "Post-exposure actions,\r\n"
           "  run Camera Timing in the Calibrate menu and update the StartupDelay.", iCam);
   }
