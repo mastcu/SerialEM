@@ -56,8 +56,7 @@ void DirectElectronToolDlg::updateDEToolDlgPanel(bool initialCall)
   if (index < 0)
     index = mWinApp->GetCurrentCamera();
   CameraParameters *camParam = mWinApp->GetCamParams() + index;
-  BOOL curIsDE = camParam->DE_camType > 0;
-  if (!initialCall && curIsDE && mWinApp->mCamera->CameraBusy())
+  if (!initialCall && camParam->DE_camType > 0 && mWinApp->mCamera->CameraBusy())
     return;
   if (GetDebugOutput('D')) {
     if (mSuppressDebug)
@@ -131,7 +130,7 @@ void DirectElectronToolDlg::updateDEToolDlgPanel(bool initialCall)
     }
 
     // Update Current FPS if there is no user value yet
-    if (isEither && curIsDE && camParam->DE_FramesPerSec <= 0) {
+    if (isEither && camParam->DE_FramesPerSec <= 0) {
       if (mDECamera->getFloatProperty("Frames Per Second", temp_float)) {
         value.Format("%0.2f", temp_float);
         ((CWnd *) GetDlgItem(ID_DE_currfps))->SetWindowText(value);
