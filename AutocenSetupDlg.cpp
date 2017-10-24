@@ -190,7 +190,7 @@ void CAutocenSetupDlg::OnDeltaposSpinbinning(NMHDR *pNMHDR, LRESULT *pResult)
 {
   LPNMUPDOWN pNMUpDown = reinterpret_cast<LPNMUPDOWN>(pNMHDR);
   int newind = mBinIndex + pNMUpDown->iDelta;
-  if (newind >= mCamParams->numBinnings || newind < mCamParams->K2Type ? 1 : 0) {
+  if (newind >= mCamParams->numBinnings || newind < (mCamParams->K2Type ? 1 : 0)) {
     *pResult = 1;
     return;
   }
