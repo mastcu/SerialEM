@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ===========================================================================
+10/22/17: Prevented DE camera FPS value from being put in wrong camera's
+parameters (In 3.6).
+
 10/21/17: Added a task to take multiple Record shots in a hole with image
 shift, a script command to run the task, an option to draw the pattern of
 shots when showing the Acquire area in Navigator, and a dialog to set the
