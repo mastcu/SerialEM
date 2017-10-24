@@ -216,7 +216,7 @@ void CTSExtraFile::OnDeltaposSpinTrialBin(NMHDR *pNMHDR, LRESULT *pResult)
   LPNMUPDOWN pNMUpDown = reinterpret_cast<LPNMUPDOWN>(pNMHDR);
   *pResult = 1;
   int newVal = mBinIndex + pNMUpDown->iDelta;
-  if (newVal < mCamParam->K2Type ? 1 : 0 || newVal >= mCamParam->numBinnings)
+  if (newVal < (mCamParam->K2Type ? 1 : 0) || newVal >= mCamParam->numBinnings)
     return;
   mBinIndex = newVal;
   m_strTrialBin.Format("%s", (LPCTSTR)mWinApp->BinningText(
