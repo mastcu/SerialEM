@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include <direct.h>
 #include "SEMUtilities.h"
 #include "..\SerialEM.h"
 #include "..\EMscope.h"
@@ -384,6 +385,36 @@ void UtilAppendWithSeparator(CString &filename, CString toAdd, const char *sep)
   filename += toAdd;
 }
 
+// Creates a directory for frame-saving if it does not already exist, checks if parent
+// does not exist; returns error in errStr if nonNULL or does debug output on given letter
+int CreateFrameDirIfNeeded(CString &directory, CString *errStr, char debug)
+{
+  CFileStatus status;
+  CString parent, tmp;
+  int len;
+  if (!CFile::GetStatus((LPCTSTR)directory, status)) {
+    SEMTrace(debug, "Directory %s does not exist, creating it", (LPCTSTR)directory);
+    if (_mkdir((LPCTSTR)directory)) {
+      directory.Replace('/', '\\');
+      len = directory.GetLength();
+      if (directory.GetAt(len - 1) == '\\')
+        directory = directory.Left(len - 1);
+      UtilSplitPath(directory, parent, tmp);
+      tmp.Format("An error occurred creating the directory:\r\n   %s\r\n"
+        "   for saving frame images %s", (LPCTSTR)directory,
+        CFile::GetStatus((LPCTSTR)parent, status) ? 
+        "even though its parent directory exists" : 
+        "because its parent directory does not exist");
+      if (errStr)
+        *errStr = tmp;
+      else
+        SEMTrace(debug, "%s", (LPCTSTR)tmp);
+      return 1;
+    }
+  }
+  return 0;
+}
+
 // Compute inclusive limits "start" and "end" of group at index groupInd when dividing 
 // a total of numTotal items into numGroups groups as evenly as possible, with remainder
 // distributed among the first groups
@@ -521,6 +552,22 @@ bool UtilMagInInvertedRange(int magInd, BOOL EFTEM)
   return magInd >= limLow && magInd <= limHigh;
 }
 
+// Return a divisor for a binning to apply for a camera with super-resolution mode
+int BinDivisorI(CameraParameters *camParam)
+{
+  return (camParam->K2Type ? 2 : 1);
+}
+
+float BinDivisorF(CameraParameters *camParam)
+{
+  return (camParam->K2Type ? 2.f : 1.f);
+}
+
+// Return true if a camera can return super-res images at all
+bool CamReturnsSuperRes(CameraParameters *camParam)
+{
+  return (camParam->K2Type > 0 && camParam->K2Type != 2);
+}
 
 // Returns the index in the CamLowDoseParams for the given camera (-1 for current)
 int CamLDParamIndex(int camera)
@@ -822,6 +869,15 @@ void SetDropDownHeight(CComboBox* pMyComboBox, int itemsToShow)
   pMyComboBox->GetParent()->ScreenToClient(&rctDropDown); //Converts coordinates
   rctDropDown.bottom = rctDropDown.top + rctComboBox.Height() + itemHeight*itemsToShow; //Set height
   pMyComboBox->MoveWindow(&rctDropDown); //enable changes
+}
+
+// Modify a menu item given its submenu # and ID
+void UtilModifyMenuItem(int subMenuNum, UINT itemID, const char *newText)
+{
+  CMenu *menu;
+  menu = sWinApp->m_pMainWnd->GetMenu()->GetSubMenu(subMenuNum);
+  menu->ModifyMenu(itemID, MF_BYCOMMAND | MF_STRING, itemID, newText);
+  sWinApp->m_pMainWnd->DrawMenuBar();
 }
 
 bool UtilCamRadiosNeedSmallFont(CButton *radio) 
