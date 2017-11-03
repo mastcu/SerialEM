@@ -533,7 +533,6 @@ void CMacroProcessor::OnMacroVerbose()
 
 void CMacroProcessor::OnUpdateMacroVerbose(CCmdUI *pCmdUI)
 {
-  CMenu *menu = mWinApp->m_pMainWnd->GetMenu()->GetSubMenu(5);
   CString menuText;
   CString *longMacNames = mWinApp->GetLongMacroNames();
   pCmdUI->Enable();
@@ -545,8 +544,7 @@ void CMacroProcessor::OnUpdateMacroVerbose(CCmdUI *pCmdUI)
       menuText.Format("Run %d", ind + 1);
     else
       menuText.Format("%d: %s", ind + 1, (LPCTSTR)mMacNames[ind]);
-    menu->ModifyMenu(ID_MACRO_RUN1 + ind, MF_BYCOMMAND | MF_STRING, ID_MACRO_RUN1 + ind,
-      (LPCTSTR)menuText);
+    UtilModifyMenuItem(5, ID_MACRO_RUN1 + ind, (LPCTSTR)menuText);
   }
 
 }
@@ -2726,7 +2724,7 @@ void CMacroProcessor::NextCommand()
    aMat = mShiftManager->IStoCamera(mag);
    delISX = delISY = stageX = stageY = 0.;
    if (aMat.xpx) {
-     index = camParams->K2Type ? 2 : 1;
+     index = BinDivisorI(camParams);
      delISX = -(delX * aMat.xpx + delY * aMat.xpy) / index;
      delISY = -(delX * aMat.ypx + delY * aMat.ypy) / index;
      h1 = DTOR * mScope->GetTiltAngle();
@@ -2786,7 +2784,7 @@ void CMacroProcessor::NextCommand()
       mAccumShiftX += shiftX;
       mAccumShiftY += shiftY;
       index = mScope->GetMagIndex();
-      index2 = camParams->K2Type ? 2 : 1;
+      index2 = BinDivisorI(camParams);
       if (delISY) {
         delX = mShiftManager->GetPixelSize(mWinApp->GetCurrentCamera(), index);
         delY = delX * sqrt(shiftX * shiftX + shiftY * shiftY);
@@ -2817,7 +2815,7 @@ void CMacroProcessor::NextCommand()
     }
 
   } else if (CMD_IS(REPORTACCUMSHIFT)) {                    // ReportAccumShift
-    index2 = camParams->K2Type ? 2 : 1;
+    index2 = BinDivisorI(camParams);
     report.Format("%8.1f %8.1f cumulative pixels", mAccumShiftX / index2,
       mAccumShiftY / index2);
     mWinApp->AppendToLog(report, mLogAction);
@@ -3186,7 +3184,7 @@ void CMacroProcessor::NextCommand()
     ProcMinMaxMeanSD(image->getData(), image->getType(), sizeX, sizeY, 0,
       sizeX - 1, 0, sizeY - 1, &bmean, &bmin, &bmax, &bSD);
     camParams = mWinApp->GetCamParams() + mImBufs[index].mCamera;
-    if (camParams->K2Type)
+    if (CamHasDoubledBinnings(camParams))
       delX /= 2;
     bmin /= cpe;
     bmax /= cpe;
@@ -3819,7 +3817,7 @@ void CMacroProcessor::NextCommand()
     } else {
       if (itemEmpty[5])
         ABORT_LINE("Not enough coordinates for setting camera area: \n\n");
-      index2 = camParams->K2Type ? 2 : 1;
+      index2 = BinDivisorI(camParams);
       ix0 = index2 * B3DMAX(0, B3DMIN(camParams->sizeX - 4, itemInt[2]));
       ix1 = index2 * B3DMAX(ix0 + 1, B3DMIN(camParams->sizeX, itemInt[3]));
       iy0 = index2 * B3DMAX(0, B3DMIN(camParams->sizeY - 4, itemInt[4]));
@@ -3899,9 +3897,10 @@ void CMacroProcessor::NextCommand()
 
       // Just adjusting exposure time
       bmean = (float)delISY;
+      ix1 = mCamera->DESumCountForConstraints(camParams, &mConSets[index]);
       mCamera->ConstrainExposureTime(camParams, mConSets[index].doseFrac, 
         mConSets[index].K2ReadMode, mConSets[index].binning, 
-        mConSets[index].alignFrames && !mConSets[index].useFrameAlign, bmean, 
+        mConSets[index].alignFrames && !mConSets[index].useFrameAlign, ix1, bmean, 
         mConSets[index].frameTime);
       if (fabs(bmean - mConSets[index].exposure) < 0.00001) {
         PrintfToLog("In SetExposureForMean %s, change by a factor of %.4f would require "
@@ -4198,7 +4197,7 @@ void CMacroProcessor::NextCommand()
         ABORT_LINE("Active camera number is out of range in:\n\n")
       camParams = mWinApp->GetCamParams() + activeList[itemInt[1] - 1];
     }
-    ix1 = camParams->K2Type ? 2 : 1;
+    ix1 = BinDivisorI(camParams);
     index = camParams->sizeX / ix1;
     index2 = camParams->sizeY / ix1;
     report.Format("%s: size %d x %d    rotation/flip %d   physical pixel %.1f", 
@@ -6454,7 +6453,7 @@ bool CMacroProcessor::ConvertBufferLetter(CString strItem, int emptyDefault,
 bool CMacroProcessor::CheckCameraBinning(double binDblIn, int &binning, CString &message)
 {
   CameraParameters *camParams = mWinApp->GetActiveCamParam();
-  binning = B3DNINT((camParams->K2Type ? 2. : 1.) * binDblIn);
+  binning = B3DNINT(BinDivisorF(camParams) * binDblIn);
   for (int ix0 = 0; ix0 < camParams->numBinnings; ix0++)
     if (binning == camParams->binnings[ix0])
       return false;
