@@ -44,10 +44,21 @@ using namespace std;
 
 #include "DirectElectronCamPanel.h"
 
-// Property strings used more than once
-#define psCamPosition "Camera Position"
-#define psSave "Save"
-#define psNoSave  "Discard"
+// Property strings used more than once but only here
+static const char *psCamPosition = "Camera Position";
+static const char *psSave = "Save";
+static const char *psNoSave = "Discard";
+static const char *psReadoutDelay = "Sensor Readout Delay (milliseconds)";
+static const char *psServerVersion = "Server Software Version";
+static const char *psHardwareBin = "Hardware Binning";    // Maybe!
+static const char *psAutoRepeatRef = "Auto Repeat Reference - Multiple Acquisitions";
+static const char *psEnable = "Enable";
+static const char *psDisable = "Disable";
+static const char *psMotionCor = "Motion Correction";
+
+// This one is concatenated into multiple strings
+#define DE_PROP_COUNTING "Electron Counting"
+
 
 ///////////////////////////////////////////////////////////////////
 // Added a special properties files for reading properties specific to the LC1100.
@@ -62,6 +73,7 @@ using namespace std;
 
 
 bool FIX_COLUMNS = false;
+#define VALID_REF_MINUTES 5
 
 //Customized panel:
 //The dialog window that is specific to non-DDD cameras
@@ -96,6 +108,7 @@ DirectElectronCamera::DirectElectronCamera(int camType, int index)
   m_LCCaptureInterface = NULL;
   m_DE_CONNECTED = false;
   mServerVersion = 0;
+  mRepeatForServerRef = 0;
 
   // mDEsameCam eliminated, main controller manages all insertions/retractions sensibly
 
@@ -147,6 +160,9 @@ void DirectElectronCamera::InitializeLastSettings()
 {
   mLastSaveFlags = -1;
   mLastSumCount = -1;
+  mLastDoseFracNum = -1;
+  mLastSaveDir = "";
+  mLastSuffix = "";
   mLastXoffset = mLastYoffset = -1;
   mLastROIsizeX = mLastROIsizeY = -1;
   mLastXimageSize = mLastYimageSize = -1;
@@ -155,7 +171,14 @@ void DirectElectronCamera::InitializeLastSettings()
   mLastExposureTime = -1.;
   mLastPreExposure = -1.;
   mLastProcessing = -1;
+  mLastNormCounting = -1;
+  mLastElectronCounting = -1;
+  mLastSuperResolution = -1;
+  mLastFPS = -1.;
   mLastLiveMode = -1;
+  mLastServerAlign = -1;
+  mLastUseHardwareBin = -1;
+  mLastAutoRepeatRef = -1;
 }
 
 
@@ -340,8 +363,6 @@ int DirectElectronCamera::initialize(CString camName, int camIndex)
 ///////////////////////////////////////////////////////////////////
 int DirectElectronCamera::initDEServer()
 {
-  CString token;
-  int curpos = 0;
   if (!mDeServer) {
     SEMTrace('D', "No DE plugin was loaded");
     m_DE_CONNECTED = false;
@@ -386,27 +407,8 @@ int DirectElectronCamera::initDEServer()
   SEMTrace('D', "Camera list: %s", listCameras);
 
   std::string propValue;
-  if (mDeServer->getProperty(std::string("Server Software Version"), &propValue)) {
-    mSoftwareVersion = propValue.c_str();
-
-    // Convert to a single number, 1000000 * major * 10000 * minor + build
-    token = mSoftwareVersion.Tokenize(".", curpos);
-    if (!token.IsEmpty()) {
-      mServerVersion = 1000000 * atoi((LPCTSTR)token);
-      token = mSoftwareVersion.Tokenize(".", curpos);
-      if (!token.IsEmpty()) {
-        mServerVersion += 10000 * atoi((LPCTSTR)token);
-        token = mSoftwareVersion.Tokenize(".", curpos);
-        if (!token.IsEmpty())
-          mServerVersion += atoi((LPCTSTR)token);
-      }
-    }
-    if (mServerVersion >= DE_CAN_SAVE_MRC)
-      mWinApp->mDEToolDlg.SwitchSaveOptToMRC();
-  } else {
-    token = ErrorTrace("Call to get software version failed; try restarting SerialEM");
-    AfxMessageBox(token);
-  }
+  if (mDeServer->getProperty(std::string(psServerVersion), &propValue))
+    SetSoftwareAndServerVersion(propValue);
 
   return 1;
 }
@@ -418,8 +420,15 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
   //Read in the information as this is very critical
   if (m_DE_CONNECTED) {
     CString str;
-    CString tmp;
+    CString tmp, tmp2;
+    std::string propValue;
     bool result;
+    BOOL debug = GetDebugOutput('D');
+    const char *propsToCheck[] = {DE_PROP_COUNTING, psMotionCor, DE_PROP_TEMP_SET_PT,
+      psReadoutDelay, psHardwareBin};
+    unsigned int flagsToSet[] = {DE_CAM_CAN_COUNT, DE_CAM_CAN_ALIGN, DE_HAS_TEMP_SET_PT,
+      DE_HAS_READOUT_DELAY, DE_HAS_HARDWARE_BIN};
+    int numFlags = sizeof(flagsToSet) / sizeof(unsigned int);
 
     result = mDeServer->setCameraName((LPCTSTR)camName);
     m_DE_CurrentCamera = camName;
@@ -432,49 +441,125 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
       return -1;
     }
 
-    //By default, set it to uncorrected raw images
-    setCorrectionMode(DE_UNCORRECTED_RAW_MODE);
-    setStringProperty("Autosave Raw Frames - Save Correction", "Disable");
-    setStringProperty("Autosave Sum Frames - Save Correction", "Disable");
-    setIntProperty("Autosave Sum Frames - Ignored Frames", 0);
-    getFloatProperty("Frames Per Second (Max)", mCamParams[camIndex].DE_MaxFrameRate);
-    if (mServerVersion >= DE_HAS_REPEAT_REF)
-      setStringProperty("Auto Repeat Reference - Multiple Acquisitions", "Disable");
+    double startTime = GetTickCount();
+    CString listProps;
+    listProps += camName;
+    listProps += "\r\n\r\n";
 
-    if (GetDebugOutput('D')) {
-      double startTime = GetTickCount();
-      CString listProps;
-      listProps += camName;
-      listProps += "\r\n\r\n";
+    // read out all the possible properties and report when starting in Debug mode
+    std::vector<std::string> camProps;
+    if (!mDeServer->getProperties(&camProps)) {
+      str = ErrorTrace("Could not get properties for the camera named : %s", 
+        (LPCTSTR)camName);
+      AfxMessageBox(str);
+      return -1;
+    }
+    SEMTrace('D', "Time to get properties %.3f", SEMTickInterval(startTime) / 1000.);
 
-      //read out all the possible properties when starting in Debug mode
-      std::vector<std::string> camProps;
-      if (!mDeServer->getProperties(&camProps)) {
-        str = ErrorTrace("Could not get properties for the camera named : %s", 
-          (LPCTSTR)camName);
-        AfxMessageBox(str);
-        return -1;
-      }
-
-      for (int i = 0; i < (int)camProps.size(); i++) {
-
+    // Clear out the flags in the structure, then set them if seen
+    for (int j = 0; j < numFlags; j++)
+      mCamParams[camIndex].CamFlags &= ~flagsToSet[j];
+    for (int i = 0; i < (int)camProps.size(); i++) {
+      for (int j = 0; j < numFlags; j++)
+        if (!camProps[i].compare(propsToCheck[j]))
+          mCamParams[camIndex].CamFlags |= flagsToSet[j];
+      if (debug) {
         listProps += camProps[i].c_str();
-        std::string propValue;
         if (mDeServer->getProperty(camProps[i], &propValue))
           listProps += CString("    Value: ") + propValue.c_str() + "\r\n";
-
       }
-
-      str += "\r\nProperties for : " + listProps;
-      str += "\r\n\r\n";
-      SEMTrace('D', "%s", str);
-      SEMTrace('D', "Time to get properties %.3f", SEMTickInterval(startTime) / 1000.);
     }
 
-    FinishCameraSelection(true);
+    // Try to get server version again after all that if it didn't work before
+    if (!mServerVersion) {
+      if (mDeServer->getProperty(psServerVersion, &propValue)) {
+        SetSoftwareAndServerVersion(propValue);
+      } else {
+        str = ErrorTrace("Call to get software version failed; try restarting SerialEM");
+        AfxMessageBox(str);
+        mServerVersion = 1;
+      }
+    }
+
+    if (debug) {
+      str += "\r\nProperties for : " + listProps;
+      str += "\r\n\r\n";
+      PrintfToLog("%s", str);
+    }
+
+    // Set up so that frames are saved with same correction as acquisition if normalizing
+    // in server
+    mNormAllInServer = mServerVersion >= DE_ALL_NORM_IN_SERVER;
+    setStringProperty("Autosave Raw Frames - Save Correction", 
+      mNormAllInServer ? psEnable : psDisable);
+    setStringProperty("Autosave Sum Frames - Save Correction",
+      mNormAllInServer ? psEnable : psDisable);
+    setIntProperty("Autosave Sum Frames - Ignored Frames", 0);
+    getFloatProperty("Frames Per Second (Max)", mCamParams[camIndex].DE_MaxFrameRate);
+    B3DCLAMP(mCamParams[camIndex].DE_MaxFrameRate, 1.f, 5000.f);
+    if (mServerVersion >= DE_HAS_REPEAT_REF) {
+      setStringProperty(psAutoRepeatRef, psDisable);
+      mLastAutoRepeatRef = 0;
+    }
+
+    // Make sure that if an autosave dir can be set and one is in properties, it is there
+    // or can be created
+    if (mServerVersion >= DE_CAN_SET_FOLDER && ServerIsLocal()) {
+      if (!mCamParams[camIndex].DE_AutosaveDir.IsEmpty() &&
+       CreateFrameDirIfNeeded(mCamParams[camIndex].DE_AutosaveDir, &str, 'D')) {
+         PrintfToLog("WARNING: %s", (LPCTSTR)str);
+         mCamParams[camIndex].DE_AutosaveDir = "";
+      }
+
+      // If the autosave dir property is (now or originally) empty, strip the dir from the
+      // server back to the
+      // camera name and save that as the dir if possible; otherwise clear it out
+      if (mCamParams[camIndex].DE_AutosaveDir.IsEmpty()) { 
+        if (getStringProperty(DE_PROP_AUTOSAVE_DIR, str)) {
+          str.Replace('/', '\\');
+          int len;
+          while ((len = str.GetLength()) > 3) {
+            if (str.GetAt(len - 1) == '\\')
+              str = str.Left(len - 1);
+            UtilSplitPath(str, tmp, tmp2);
+            if (!tmp2.Compare(camName)) {
+              mCamParams[camIndex].DE_AutosaveDir = str;
+              break;
+            }
+            str = tmp;
+          }
+        }
+      }
+    } else
+      mCamParams[camIndex].DE_AutosaveDir = "";
+
+    FinishCameraSelection(true, &mCamParams[camIndex]);
   }
 
   return 1;
+}
+
+// Save the string for the software version and convert it to a number
+void DirectElectronCamera::SetSoftwareAndServerVersion(std::string &propValue)
+{
+  CString token;
+  int curpos = 0;
+  mSoftwareVersion = propValue.c_str();
+
+  // Convert to a single number, 1000000 * major * 10000 * minor + build
+  token = mSoftwareVersion.Tokenize(".", curpos);
+  if (!token.IsEmpty()) {
+    mServerVersion = 1000000 * atoi((LPCTSTR)token);
+    token = mSoftwareVersion.Tokenize(".", curpos);
+    if (!token.IsEmpty()) {
+      mServerVersion += 10000 * atoi((LPCTSTR)token);
+      token = mSoftwareVersion.Tokenize(".", curpos);
+      if (!token.IsEmpty())
+        mServerVersion += atoi((LPCTSTR)token);
+    }
+  }
+  if (mServerVersion >= DE_CAN_SAVE_MRC)
+    mWinApp->mDEToolDlg.SwitchSaveOptToMRC();
 }
 
 ////////////////
@@ -540,17 +625,20 @@ void DirectElectronCamera::setCameraName(CString camName)
 
       //its ok to update the panel after sending out any settings that exist
       SEMTrace('D', "Set the camera to:  %s", (LPCTSTR)camName);
-      FinishCameraSelection(false);
+      FinishCameraSelection(false, camP);
     }
 
   }
 }
 
 // Common tasks when initializing or selecting a camera
-void DirectElectronCamera::FinishCameraSelection(bool initialCall)
+void DirectElectronCamera::FinishCameraSelection(bool initialCall, CameraParameters *camP)
 {
   if (CurrentIsDE12()) {
-    getIntProperty("Sensor Readout Delay (milliseconds)", mReadoutDelay);
+    if (camP->CamFlags & DE_HAS_READOUT_DELAY)
+      getIntProperty(psReadoutDelay, mReadoutDelay);
+    else 
+      mReadoutDelay = -1;
     getStringProperty("Sensor Module SN", mDE12SensorSN);
   }
   mWinApp->mDEToolDlg.ApplyUserSettings();
@@ -572,17 +660,18 @@ BOOL DirectElectronCamera::CurrentIsSurvey()
 // SetAllAutoSaves sets the properties for the three kinds of saving, keeping track of
 // their previous settings and setting a value to the server only if it changes
 //
-int DirectElectronCamera::SetAllAutoSaves(int autoSaveFlags, int sumCount, CString suffix)
+int DirectElectronCamera::SetAllAutoSaves(int autoSaveFlags, int sumCount, CString suffix,
+  CString saveDir, bool canCount)
 {
-  bool ret1 = true, ret2 = true, ret3 = true, ret4 = true, ret5 = true;
+  bool ret1 = true, ret2 = true, ret3 = true, ret4 = true, ret5 = true, ret6 = true;
+  bool ret7 = true;
   if (!m_DE_CLIENT_SERVER)
     return 1;
   int saveRaw = (autoSaveFlags & DE_SAVE_FRAMES) ? 1 : 0;
   int saveSums = (autoSaveFlags & DE_SAVE_SUMS) ? 1 : 0;
   int saveFinal = (autoSaveFlags & DE_SAVE_FINAL) ? 1 : 0;
+  int saveCount = (canCount && (autoSaveFlags & DE_SAVE_COUNTING)) ? 1 : 0;
   bool setSaves = mLastSaveFlags < 0 || !mTrustLastSettings;
-  if (!saveSums)
-    sumCount = 0;
   CSingleLock slock(&m_mutex);
 
   if (slock.Lock(1000)) {
@@ -592,22 +681,41 @@ int DirectElectronCamera::SetAllAutoSaves(int autoSaveFlags, int sumCount, CStri
       ret2 = mDeServer->setProperty("Autosave Summed Image", saveSums ? psSave :psNoSave);
     if (setSaves || ((mLastSaveFlags & DE_SAVE_FINAL) ? 1 : 0) != saveFinal)
       ret3 = mDeServer->setProperty("Autosave Final Image", saveFinal ? psSave :psNoSave);
-
-    if (mLastSumCount < 0 || !mTrustLastSettings || mLastSumCount != sumCount) {
-      ret4 = justSetIntProperty("Autosave Sum Frames - Sum Count", sumCount);
+    if (canCount && (setSaves || ((mLastSaveFlags & DE_SAVE_COUNTING) ? 1 : 0) 
+      != saveCount))
+        ret7 = mDeServer->setProperty(DE_PROP_COUNTING" - Save Dose Fractionation Stack",
+          saveCount ? psSave : psNoSave);
+    if (saveCount) {
+      if (mLastDoseFracNum < 0 || !mTrustLastSettings || mLastDoseFracNum != sumCount)
+        ret4 = justSetIntProperty(DE_PROP_COUNTING" - Dose Fractionation "
+          "Number of Frames", sumCount);
+      if (ret4)
+        mLastDoseFracNum = sumCount;
+    } else if (saveSums) {
+      if (mLastSumCount < 0 || !mTrustLastSettings || mLastSumCount != sumCount) {
+        ret4 = justSetIntProperty("Autosave Sum Frames - Sum Count", sumCount);
+        if (ret4)
+          mLastSumCount = sumCount;
+      }
     }
     if (setSaves || ((saveRaw || saveSums || saveFinal) && suffix != mLastSuffix)) {
       ret5 = mDeServer->setProperty("Autosave Filename Suffix (User Input)", 
         (LPCTSTR)suffix);
-      mLastSuffix = suffix;
+      if (ret5)
+        mLastSuffix = suffix;
     }
-    if (!ret1 || !ret2 || !ret3 || !ret4 || !ret5) {
+    if (!saveDir.IsEmpty() && (setSaves || ((saveRaw || saveSums || saveFinal || 
+      saveCount) && saveDir != mLastSaveDir))) {
+        ret6 = mDeServer->setProperty(DE_PROP_AUTOSAVE_DIR, (LPCTSTR)saveDir);
+        if (ret6)
+          mLastSaveDir = saveDir;
+    }
+    if (!ret1 || !ret2 || !ret3 || !ret4 || !ret5 || !ret6 || !ret7) {
       SEMMessageBox("An error occurred trying to set frame and sum saving to current "
         "selections");
       return 1;
     }
     mLastSaveFlags = autoSaveFlags;
-    mLastSumCount = sumCount;
     return 0;
   }
   SEMMessageBox("Failed to obtain mutex for setting frame and sum saving properties");
@@ -631,7 +739,8 @@ int DirectElectronCamera::setPreExposureTime(double preExpMillisecs)
       if (fabs(mLastPreExposure - preExpMillisecs) > 0.01 || !mTrustLastSettings) {
         if (!justSetDoubleProperty("Preexposure Time (seconds)", preExpMillisecs / 1000.))
         {
-          ErrorTrace("ERROR: Could NOT properly set the pre-exposure time.");
+          mLastErrorString = ErrorTrace("ERROR: Could NOT set the pre-exposure time"
+            " to %.3f", preExpMillisecs / 1000.);
           return 1;
         }
         SEMTrace('D', "Pre-exposure time set to:  %.3f", preExpMillisecs / 1000.);
@@ -658,7 +767,7 @@ int DirectElectronCamera::setPreExposureTime(double preExpMillisecs)
 int DirectElectronCamera::copyImageData(unsigned short *image4k, int imageSizeX, 
                                         int imageSizeY, int divideBy2)
 {
-
+  CString valStr;
   if (!m_DE_CLIENT_SERVER && m_STOPPING_ACQUISITION == true) {
     memset(image4k, 0, imageSizeX * imageSizeY * 2);
     m_STOPPING_ACQUISITION = false;
@@ -719,13 +828,14 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, int imageSizeX,
         status = UtilThreadBusy(&mLiveThread);
       if (status <= 0) {
         if (mLiveTD.outBufInd == -1) {
-          SEMTrace('D', "Live mode did not get started in timely manner");
+          SetAndTraceErrorString("Live mode did not get started in timely manner");
         } else if (status < 0) {
-          ErrorTrace("ERROR: Live mode ended with an error");
+          mLastErrorString = ErrorTrace("ERROR: Live mode ended with an error");
         } else if (startedThread) {
-          SEMTrace('D', "Live mode ended without error right after being started");
+          SetAndTraceErrorString("Live mode ended without error right after being "
+            "started");
         } else {
-          SEMTrace('D', "Live mode flag is set after thread was told to quit");
+          SetAndTraceErrorString("Live mode flag is set after thread was told to quit");
         }
         CleanupLiveMode(&mLiveTD);
         return 1;
@@ -745,35 +855,115 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, int imageSizeX,
       }
     }
 
-    // Resume code for normal single image acquisition
+    // Resume code for NORMAL SINGLE IMAGE ACQUISITION
+
+    // Get a checksum of current conditions and time stamp
+    int checksum = B3DNINT(1000 * mLastExposureTime) + B3DNINT(1005 * mLastPreExposure) +
+      B3DNINT(105. * mLastFPS) + 17 * mLastXbinning + 23 * mLastXoffset + 
+      29 * mLastYoffset + 31 * mLastROIsizeX + 37 * mLastROIsizeY + 41 * mLastXimageSize +
+      43 * mLastYimageSize + 47 * mLastElectronCounting + 53 * mLastUseHardwareBin;
+    int minuteNow = mWinApp->MinuteTimeStamp();
+
+    // Check exposure time and FPS if needed
+    if (!CheckMapForValidState(checksum, mExpFPSchecks, minuteNow)) {
+      float maxFPS = mLastFPS, maxExp = mLastExposureTime;
+      getFloatProperty("Frames Per Second (Max)" , maxFPS);
+      getFloatProperty("Exposure Time Max (seconds)", maxExp);
+      if (mLastExposureTime > maxExp || mLastFPS > maxFPS) {
+        if (mLastExposureTime > maxExp)
+          mLastErrorString.Format("The exposure time of %.3f exceeds the maximum allowed "
+            "under current conditions (%.3f)", mLastExposureTime, maxExp);
+        else
+          mLastErrorString.Format("The frames per second of %.2f exceeds the maximum "
+          "allowed under current conditions (%.2f)", mLastFPS, maxFPS);
+        SEMTrace('D', "%s", (LPCTSTR)mLastErrorString);
+        return 1;
+      }
+      AddValidStateToMap(checksum, mExpFPSchecks, minuteNow);
+    }
+
+    // Check dark reference if any processing or counting mode
+    if ((mLastProcessing != UNPROCESSED || mLastElectronCounting) &&
+      !IsReferenceValid(checksum, mDarkChecks, minuteNow,
+      "Correction Mode Dark Reference Status", "dark"))
+         return 1;
+
+    // Check gain reference if normalized or counting mode
+    if ((mLastProcessing == GAIN_NORMALIZED || mLastElectronCounting) &&
+      !IsReferenceValid(checksum, mGainChecks, minuteNow,
+      "Correction Mode Gain Reference Status", "gain"))
+         return 1;
+
+    // Check counting gain reference if normalized and counting mode
+    if ((mLastNormCounting && mLastElectronCounting) &&
+      !IsReferenceValid(checksum, mCountGainChecks, minuteNow,
+      "Correction Mode Counting Gain Reference Status", "post-counting gain"))
+         return 1;
+
     unsigned short *useBuf = image4k;
     if (operation) {
       NewArray(useBuf, unsigned short, imageSizeX * imageSizeY);
       if (!useBuf) {
-        SEMTrace('D', "Failed to get memory for rotation/flip of DE image");
+        SetAndTraceErrorString("Failed to get memory for rotation/flip of DE image");
         return 1;
       }
     }
 
     SEMTrace('D', "About to get image from DE server now that all properties are set.");
 
-    if (!mDeServer->getImage(useBuf, imageSizeX * imageSizeY * 2)) {
-      ErrorTrace("ERROR: Could NOT get the image from DE server");
+    // THIS IS THE ACTUAL IMAGE ACQUISITION AT LAST
+    if (!mDeServer->getImage(useBuf, imageSizeX * imageSizeY *  2)) {
+      mLastErrorString = ErrorTrace("ERROR: Could NOT get the image from DE server");
       if (operation)
         delete useBuf;
       return 1;
     }
     SEMTrace('D', "Got something back from DE Server..");
 
-    // Do the rotation/flip, free array, divide by 2 if needed
+    // If doing ref in server, loop until all the acquisitions are done
+    while (mNumLeftServerRef > 0) {
+      double startTime = GetTickCount();
+      int remaining;
+      bool ret1;
+      while (SEMTickInterval(startTime) < 5000. * mLastExposureTime) {
+        ret1 = mDeServer->getIntProperty("Auto Repeat Reference - Remaining Acquisitions",
+          &remaining);
+        if (ret1 && remaining != mNumLeftServerRef)
+          break;
+        Sleep(100);
+      }
+      if (remaining != mNumLeftServerRef)
+        mNumLeftServerRef = remaining;
+      else {
+        mLastErrorString = ret1 ? "Time out getting server reference; remaining "
+          "acquisitions did not drop fast enough" : "Error getting remaining acquisitions"
+          " when getting server reference";
+        SEMTrace('D', "%s", (LPCTSTR)mLastErrorString);
+        if (operation)
+          delete useBuf;
+        return 1;
+      }
+    }
+
+    // Do the rotation/flip, free array, divide by 2 if needed or scale counting image
     if (operation) {
       ProcRotateFlip((short *)useBuf, kUSHORT, inSizeX, inSizeY, operation, 0, 
         (short *)image4k, &outX, &outY);
       delete useBuf;
     }
-    if (divideBy2)
+    if (mLastNormCounting > 0 && mCountScaling != 1.) {
+      float scale = mCountScaling * (divideBy2 ? 0.5f : 1.f);
+      int val, maxVal = divideBy2 ? 32767 : 65535;
+      for (int i = 0; i < imageSizeX * imageSizeY; i++) {
+        val = (int)(scale * (float)image4k[i] + 0.5f);
+        B3DCLAMP(val, 0, maxVal);
+        image4k[i] = val;
+      }
+
+    } else if (divideBy2) {
       for (int i = 0; i < imageSizeX * imageSizeY; i++)
         image4k[i] = image4k[i] >> 1;
+    }
   }
 
   else { //LC1100 code
@@ -868,7 +1058,7 @@ static void CleanupLiveMode(LiveThreadData *td)
 //setBinning() routine, used to set the appropriate binning and binned image size
 //
 ///////////////////////////////////////////////////////////////////
-int DirectElectronCamera::setBinning(int x, int y, int sizex, int sizey)
+int DirectElectronCamera::setBinning(int x, int y, int sizex, int sizey, int hardwareBin)
 {
   CSingleLock slock(&m_mutex);
 
@@ -880,8 +1070,8 @@ int DirectElectronCamera::setBinning(int x, int y, int sizex, int sizey)
       if (x != mLastXbinning || y != mLastYbinning || !mTrustLastSettings) {
         if (!justSetIntProperty(g_Property_DE_BinningX, x) || 
           !justSetIntProperty(g_Property_DE_BinningY, y)) {
-            ErrorTrace("ERROR: Could NOT set the binning parameters of X: %d and Y: %d" 
-              , x, y);
+           mLastErrorString = ErrorTrace("ERROR: Could NOT set the binning parameters of"
+             " X: %d and Y: %d", x, y);
             return 1;
         } else {
           m_binFactor = x;
@@ -889,22 +1079,30 @@ int DirectElectronCamera::setBinning(int x, int y, int sizex, int sizey)
         }
       }
 
+      // Save last values regardless
+      mLastXbinning = x;
+      mLastYbinning = y;
+
       // set size if it does not match last value
       if (sizex != mLastXimageSize || sizey != mLastYimageSize || !mTrustLastSettings) {
         if (!justSetIntProperty(g_Property_DE_ImageWidth, sizex) || 
           !justSetIntProperty(g_Property_DE_ImageHeight, sizey)) {
-            ErrorTrace("ERROR: Could NOT set the dimension parameters of X: %d and"
-              " Y: %d", sizex, sizey);
+            mLastErrorString = ErrorTrace("ERROR: Could NOT set the dimension parameters"
+              " of X: %d and Y: %d", sizex, sizey);
             return 1;
         } else
           SEMTrace('D', "Dimensions set to X: %d Y: %d", sizex, sizey);
       }
 
-      // Save last values regardless
-      mLastXbinning = x;
-      mLastYbinning = y;
       mLastXimageSize = sizex;
       mLastYimageSize = sizey;
+
+      if (hardwareBin >= 0 && (hardwareBin != mLastUseHardwareBin || !mTrustLastSettings))
+      {
+        if (!setStringWithError(psHardwareBin, hardwareBin > 0 ? psEnable : psDisable))
+          return 1;
+      }
+      mLastUseHardwareBin = hardwareBin;
 
     } else { //LC1100 DE code
       m_LCCaptureInterface->SetBinning(x, y);
@@ -941,6 +1139,47 @@ int DirectElectronCamera::setBinning(int x, int y, int sizex, int sizey)
   return 1;
 }
 
+// Set the parameters related to counting/super-resolution, including frames per second
+int DirectElectronCamera::SetCountingParams(int readMode, double scaling, double FPS)
+{
+  CSingleLock slock(&m_mutex);
+  bool superRes = readMode == SUPERRES_MODE;
+  mCountScaling = (float)scaling;
+
+  if (slock.Lock(1000)) {
+    if ((readMode == LINEAR_MODE && mLastElectronCounting != 0) || 
+      (readMode > 0 && mLastElectronCounting <= 0) || !mTrustLastSettings) {
+        if (!setStringWithError(DE_PROP_COUNTING, readMode > 0 ? psEnable : psDisable))
+          return 1;
+        mLastElectronCounting = readMode > 0 ? 1 : 0;
+    }
+    if ((readMode == COUNTING_MODE && mLastSuperResolution != 0) ||
+      (superRes && mLastSuperResolution <= 0) || !mTrustLastSettings) {
+        if (!setStringWithError(DE_PROP_COUNTING" - Super Resolution", 
+          superRes ? psEnable : psDisable))
+            return 1;
+        mLastSuperResolution = superRes ? 1 : 0;
+    }
+    if ((fabs(FPS - mLastFPS) > 1.e-3 || !mTrustLastSettings) && SetFramesPerSecond(FPS))
+      return 1;
+  }
+  return 0;
+}
+
+int DirectElectronCamera::SetAlignInServer(int alignFrames)
+{
+  CSingleLock slock(&m_mutex);
+  if (slock.Lock(1000)) {
+    if (alignFrames != mLastServerAlign || !mTrustLastSettings) {
+      if (!setStringWithError(psMotionCor, alignFrames > 0 ?
+        psEnable : psDisable))
+        return 1;
+      mLastServerAlign = alignFrames;
+    }
+  }
+  return 0;
+}
+
 
 // Set size and offset in unbinned coordinates as returned by the server; the caller
 // now takes care of setting these correctly from the final user's coordinates
@@ -964,8 +1203,10 @@ int DirectElectronCamera::setROI(int offset_x, int offset_y, int xsize, int ysiz
         SEMTrace('D', "ROI settings: xsize: %d ysize: %d  ret: %d", xsize, ysize, 
           ret2 ? 1 : 0);
       }
-      if (!ret1 || !ret2)
+      if (!ret1 || !ret2) {
+        mLastErrorString = "Error setting offset and size for region of interest";
         return 1;
+      }
       mLastXoffset = offset_x;
       mLastYoffset = offset_y;
       mLastROIsizeX = xsize;
@@ -1010,12 +1251,17 @@ int DirectElectronCamera::setImageSize(int sizeX, int sizeY)
 int DirectElectronCamera::AcquireImage(float seconds)
 {
   CSingleLock slock(&m_mutex);
+  int mode;
 
   if (slock.Lock(1000)) {
 
     if (m_DE_CLIENT_SERVER) {
-      if (SetExposureTimeAndMode(seconds, 
-        mWinApp->mGainRefMaker->GetTakingRefImages() ? DE_GAIN_IMAGE : DE_NORMAL_IMAGE))
+      if (mRepeatForServerRef > 0)
+        mode = mModeForServerRef;
+      else
+        mode = mWinApp->mGainRefMaker->GetTakingRefImages() ? DE_GAIN_IMAGE : 
+          DE_NORMAL_IMAGE;
+      if (SetExposureTimeAndMode(seconds, mode))
         return 1;
 
     } else {  // LC1100
@@ -1025,7 +1271,7 @@ int DirectElectronCamera::AcquireImage(float seconds)
 
       m_LCCaptureInterface->get_ReadoutParam(ATTENUATION_PARAM, &atten);
       m_LCCaptureInterface->get_ReadoutParam(DSI_TIME, &dsi_time);
-      SEMTrace('D', "DE_CAMERA: In AquireImage:  attenuation_param %d and DSI_TIME %d", 
+      SEMTrace('D', "DE_CAMERA: In AcquireImage:  attenuation_param %d and DSI_TIME %d", 
         atten, dsi_time);
       m_sink->setDataIsNotReady();
       m_STOPPING_ACQUISITION = false;
@@ -1090,22 +1336,36 @@ int DirectElectronCamera::SetExposureTimeAndMode(float seconds, int mode)
 
   if (fabs((double)(seconds - mLastExposureTime)) > 1.e-4 || !mTrustLastSettings) {
     if (!justSetDoubleProperty(g_Property_DE_ExposureTime, seconds)) {
-      ErrorTrace("ERROR: Could NOT set the exposure time of %f", seconds);
+      mLastErrorString = ErrorTrace("ERROR: Could NOT set the exposure time to %.3f",
+        seconds);
       return 1;
     }
     SEMTrace('D', "Exposure time set to %.4f", seconds);
   }
+  mLastExposureTime = seconds;
 
   if (mLastExposureMode != mode || !mTrustLastSettings) {
-    if (!mDeServer->setProperty("Exposure Mode", modeName[mode])) {
-      ErrorTrace("ERROR: Could NOT set the exposure mode of a %s DE image.",
-        modeName[mode]);
+    if (!setStringWithError("Exposure Mode", modeName[mode])) 
       return 1;
-    } 
-    SEMTrace('D', "Exposure mode set to:  %s", modeName[mode]);
   }
-  mLastExposureTime = seconds;
   mLastExposureMode = mode;
+
+  if (mLastAutoRepeatRef >= 0 && (mLastAutoRepeatRef != (mRepeatForServerRef > 0 ? 1 : 0)
+    || !mTrustLastSettings)) {
+      if (!setStringWithError(psAutoRepeatRef, mRepeatForServerRef > 0 ? 
+        psEnable : psDisable))
+          return 1;
+      mLastAutoRepeatRef = mRepeatForServerRef > 0 ? 1 : 0;
+  }
+
+  if (mRepeatForServerRef > 0) {
+    if (!justSetIntProperty("Auto Repeat Reference - Total Number of Acquisitions", 
+      mRepeatForServerRef)) {
+        mLastErrorString = ErrorTrace("ERROR: Could NOT set the auto repeat # of acquires"
+          " to %d", mRepeatForServerRef);
+        return 1;
+    }
+  }
   return 0;
 }
 
@@ -1149,7 +1409,8 @@ int DirectElectronCamera::SetLiveMode(int mode)
 
       // Set the new mode.
       if (!mDeServer->setLiveMode(mode > 0)) {
-        ErrorTrace("ERROR: Could NOT set the live mode %s.", mode ? "ON" : "OFF");
+        mLastErrorString = ErrorTrace("ERROR: Could NOT set the live mode %s.", 
+          mode ? "ON" : "OFF");
         return 1;
       } 
       SEMTrace('D', "Live mode turned %s (%d)", mode ? "ON" : "OFF", mode);
@@ -1383,27 +1644,38 @@ HRESULT DirectElectronCamera::CoolDownCamera()
 }
 
 // Set the correction mode with the given value
-HRESULT DirectElectronCamera::setCorrectionMode(int nIndex)
+int DirectElectronCamera::setCorrectionMode(int nIndex, int readMode)
 {
   const char *corrections[3] = {"Uncorrected Raw", "Dark Corrected", 
     "Gain and Dark Corrected"};
-  HRESULT hr = S_OK;
-
   CString str;
+  int normCount;
   if (nIndex < 0 || nIndex > 2) 
-    return S_FALSE;
-  if (nIndex != mLastProcessing || !mTrustLastSettings) {
-    if (!mDeServer->setProperty("Correction Mode", corrections[nIndex])) {
+    return 1;
 
-      str = ErrorTrace("Could not set the Correction mode of the camera.");
-      AfxMessageBox(str);
-      return S_FALSE;
+  // For counting mode, set post-counting gain correction based on the selected correction
+  // except turn it off if taking a counting ref
+  if (readMode > 0) {
+    normCount = nIndex / 2;
+    if (mRepeatForServerRef > 0)
+      normCount = 0;
+    if (normCount != mLastNormCounting || !mTrustLastSettings) {
+      if (!setStringWithError(DE_PROP_COUNTING" - Apply Counting Gain", 
+        normCount ? psEnable : psDisable) ||
+        !setStringWithError(DE_PROP_COUNTING" - Enable 32-bit output", 
+        normCount ? psEnable : psDisable))
+          return 1;
+      mLastNormCounting = normCount;
     }
-    SEMTrace('D', "Correction mode set to %s", corrections[nIndex]);
+    nIndex = 2;
+  }
+  if (nIndex != mLastProcessing || !mTrustLastSettings) {
+    if (!setStringWithError("Correction Mode", corrections[nIndex]))
+      return 1;
     mLastProcessing = nIndex;
   }
 
-  return hr;
+  return 0;
 }
 ///////////////
 // 2/15/17 Removed unused setAutoSaveSumCount, getAutoSaveSumCount, 
@@ -1531,6 +1803,17 @@ void DirectElectronCamera::setStringProperty(CString name, CString value)
   }
 }
 
+// Set a string property from inside a lock with complete trace output and return status
+bool DirectElectronCamera::setStringWithError(const char *name, const char *value) 
+{
+  if (!mDeServer->setProperty(name, value)) {
+    mLastErrorString = ErrorTrace("ERROR: Could not set property %s to %s", name, value);
+    return false;
+  }
+  SEMTrace('D', "Set property  %s to %s", name, value);
+  return true;
+}
+
 // Composes an error string with the given arguments, appends error code and description
 // if possible, does a trace with D, and returns the full string
 CString DirectElectronCamera::ErrorTrace(char *fmt, ...)
@@ -1551,26 +1834,47 @@ CString DirectElectronCamera::ErrorTrace(char *fmt, ...)
   return str;
 }
 
+void DirectElectronCamera::SetAndTraceErrorString(CString str)
+{
+  mLastErrorString = str;
+  SEMTrace('D', "%s", (LPCTSTR)str);
+}
 
 // Routine to set the frames per second, also takes care of readout delay of 1 frame for
 // DE 12 and sets the current value in camera parameters
-void DirectElectronCamera::SetFramesPerSecond(double value)
+int DirectElectronCamera::SetFramesPerSecond(double value)
 {
-  CameraParameters *camP = mCamParams + mCurCamIndex;
+  bool ret1 = true, ret2 = true;
+  CameraParameters *camP = mCamParams + (mInitializingIndex >= 0 ? mInitializingIndex : mCurCamIndex);
+  SEMTrace('D', "cam index %d  flags %x", mCurCamIndex, camP->CamFlags);
   int readoutDelay = (int)floor(1000. / value);
   CSingleLock slock(&m_mutex);
   if (slock.Lock(1000)) {
     if (mDeServer) {
-      justSetDoubleProperty("Frames Per Second", value);
-      if (mCurCamIndex >= 0)
-        camP->DE_FramesPerSec = (float)value;
+      ret1 = justSetDoubleProperty("Frames Per Second", value);
+      if (ret1) {
+        mLastFPS = (float)value;
+        if (mCurCamIndex >= 0 && !(camP->CamFlags && DE_CAM_CAN_COUNT))
+          camP->DE_FramesPerSec = (float)value;
+      }
       if (CurrentIsDE12()) {
-        justSetIntProperty("Sensor Readout Delay (milliseconds)", readoutDelay);
-        SEMTrace('D', "DE12 FPS set to %f, readout delay to %d", value, readoutDelay);
-        mReadoutDelay = readoutDelay;
+        if (camP->CamFlags & DE_HAS_READOUT_DELAY) {
+          ret2 = justSetIntProperty(psReadoutDelay, readoutDelay);
+        } else {
+          ret2 = justSetIntProperty("Ignore Number of Frames", 1);
+          readoutDelay = -1;
+        }
+        if (ret1 && ret2) {
+          SEMTrace('D', "DE12 FPS set to %f, readout delay to %d", value, readoutDelay);
+          mReadoutDelay = readoutDelay;
+        } else {
+          mLastErrorString = ErrorTrace("Error setting %s%s%s", !ret1 ? "FPS" : "", 
+            !ret1 && !ret2 ? " and " : "", !ret2 ? "readoutdelay/ignored frames" : "");
+        }
       }
     }
   }
+  return (ret1 && ret2) ? 0 : 1;
 }
 
 // Converts the rotation and flipping parameters here into an operation value for
@@ -1586,10 +1890,58 @@ int DirectElectronCamera::OperationForRotateFlip(int DErotation, int flip)
   return operation;
 }
 
+// Check if a reference is valid from a map of valid reference conditions and from 
+// properties; add to map if it is
+bool DirectElectronCamera::IsReferenceValid(int checksum, std::map<int, int> &vmap, 
+  int minuteNow, const char *propStr, const char *refType)
+{
+  CString valStr;
+  if (!CheckMapForValidState(checksum, vmap, minuteNow)) {
+    if (getStringProperty(propStr, valStr)) {
+      if (valStr == "None") {
+        valStr.Format("There is no %s reference valid for the current conditions", 
+          refType);
+        SetAndTraceErrorString(valStr);
+        return false;
+      }
+      AddValidStateToMap(checksum, vmap, minuteNow);
+    }
+  }
+  return true;
+}
+
+// Look in the map for the checksum and make sure it was checked recently enough
+bool DirectElectronCamera::CheckMapForValidState(int checksum, std::map<int, int> &vmap, 
+  int minuteNow)
+{
+  std::map<int,int>::iterator iter;
+  iter = vmap.find(checksum);
+  return (iter != vmap.end() && minuteNow - iter->second <= VALID_REF_MINUTES);
+}
+
+// Add a validated checksum to the map (updates an existing entry), also trim the map
+// for expired ones if it is big enough
+void DirectElectronCamera::AddValidStateToMap(int checksum, std::map<int, int> &vmap, 
+  int minuteNow)
+{
+  std::map<int,int>::iterator iter;
+  IntVec remList;
+  vmap[checksum] = minuteNow;
+  if (vmap.size() > 20) {
+    for (iter = vmap.begin(); iter != vmap.end(); iter++)
+      if (minuteNow - iter->second > VALID_REF_MINUTES)
+        remList.push_back(iter->first);
+    for (int ind = 0; ind < (int)remList.size(); ind++)
+      vmap.erase(remList[ind]);
+  }
+}
+
 // Fill in the metadata for the mdoc file; use existing values where possible
 void DirectElectronCamera::SetImageExtraData(EMimageExtra *extra)
 {
   CString str;
+  BOOL saveSums = mLastSaveFlags & DE_SAVE_SUMS;
+  BOOL saveCount = mLastSaveFlags & DE_SAVE_COUNTING;
   extra->mDE12Version = mSoftwareVersion;
   extra->mDE12FPS = (float)mWinApp->mDEToolDlg.GetFramesPerSecond();
   extra->mNumDE12Frames = (int)floor((double)mLastExposureTime * extra->mDE12FPS) + 1;
@@ -1601,17 +1953,30 @@ void DirectElectronCamera::SetImageExtraData(EMimageExtra *extra)
     extra->mSensorSerial = mDE12SensorSN;
   }
   extra->mPreExposeTime = (float)(mLastPreExposure / 1000.);
-  extra->mReadoutDelay = mReadoutDelay;
+  if (mReadoutDelay >= 0)
+    extra->mReadoutDelay = mReadoutDelay;
   getFloatProperty("Faraday Plate - Last Exposure Peak Density (pA/cm^2)", 
     extra->mFaraday);
 
   // Autosave path and frames...
-  if (mLastSaveFlags & (DE_SAVE_FRAMES | DE_SAVE_SUMS)) {
+  if ((mLastSaveFlags & DE_SAVE_FRAMES) || saveSums || saveCount) {
     getStringProperty("Autosave Frames - Previous Dataset Name", str);
-    extra->mSubFramePath = mWinApp->mDEToolDlg.GetAutosaveDir() + "\\" + str;
-    str.Format("Autosave %s Frames - Frames Written in Last Exposure", 
-      (mLastSaveFlags & DE_SAVE_FRAMES) ? "Raw" : "Sum");
-    getIntProperty(str, extra->mNumSubFrames);
+    if (mWinApp->mDEToolDlg.GetFormatForAutoSave()) {
+      if (!saveCount && mNormAllInServer)
+        str += saveSums ? "" : "_movies";
+      else if (!saveCount)
+        str += saveSums ? "_SumImages" : "_RawImages";
+      else
+        str += "_???Images";
+      str += CString(mServerVersion >= 1000715 ? ".mrc" : ".h5");
+    }
+    extra->mSubFramePath = (mLastSaveDir.IsEmpty() ? mWinApp->mDEToolDlg.GetAutosaveDir():
+      mLastSaveDir) + "\\" + str;
+    if (!saveCount) {
+      str.Format("Autosave %s Frames - Frames Written in Last Exposure", 
+        saveSums ? "Sum" : "Raw");
+      getIntProperty(str, extra->mNumSubFrames);
+    }
   }
 }
 

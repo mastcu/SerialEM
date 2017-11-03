@@ -23,6 +23,7 @@
 #include "fsm_memorylib.tlh"
 //#import "FSM_MEMORYLib.tlb" no_namespace named_guids raw_interfaces_only
 #include "LC1100CamSink.h"
+#include <map>
 
 struct DEPluginFuncs;
 
@@ -90,15 +91,21 @@ struct LiveThreadData {
 #define DE_COOL_DOWN 1
 #define DE_WARM_UP 0
 
+// Strings needed in multiple places
 #define DE_LCNAME "LC1100"
 #define DE_CAM_STATE_RETRACTED "Retracted"
 #define DE_CAM_STATE_INSERTED "Extended"
 #define DE_KEEP_COVER_OPEN "Always Open During Operation"
 #define DE_OPEN_CLOSE_COVER "Open/Close During Each Exposure"
+#define DE_PROP_TEMP_SET_PT "Temperature Control - Setpoint (Celsius)"
+#define DE_PROP_AUTOSAVE_DIR "Autosave Directory"
 
+// DE server versions for capabilities
 #define DE_CAN_SAVE_MRC 1000715
 #define DE_HAS_REPEAT_REF 1000768
 #define DE_SUFFIX_KEEPS_PT 9999999
+#define DE_CAN_SET_FOLDER 1000943
+#define DE_ALL_NORM_IN_SERVER 1001172
 
 //The following define the different
 //gain/dsi setting modes for the LC1100
@@ -116,7 +123,7 @@ public:
 	int initialize(CString camName, int camIndex);
 	int readCameraProperties();
 	void readinTempandPressure();
-	int setBinning(int x, int y, int sizex, int sizey);
+	int setBinning(int x, int y, int sizex, int sizey, int hardwareBin);
 	int setImageSize(int sizeX, int sizeY);
 	int AcquireImage(float seconds);
 	int AcquireDarkImage(float seconds);
@@ -150,7 +157,7 @@ public:
 	//functions below added for DE12 and future
 	int initDEServer();
 	int initializeDECamera(CString camName, int camIndex);
-  void FinishCameraSelection(bool initialCall);
+  void FinishCameraSelection(bool initialCall, CameraParameters *camP);
 	int setROI(int offset_x, int offset_y, int xsize, int ysize);
   int SetLiveMode(int mode);
 	void setCameraName(CString name);
@@ -164,63 +171,50 @@ public:
 	float getColdFingerTemp();
 	HRESULT WarmUPCamera();
 	HRESULT CoolDownCamera();
-	HRESULT setCorrectionMode(int mode);
-	void setTotalFrames(int frames);
+	int setCorrectionMode(int mode, int readMode);
 	CString getCameraInsertionState();
-	CString getPreviousDataSetName();
-	CString getNextDataSetName();
 	CString getCurrentCameraName(){return m_DE_CurrentCamera;};
   BOOL CurrentIsDE12();
   BOOL CurrentIsSurvey();
-	int setAutoSaveSumCount(int frameCount);
-	int getAutoSaveSumCount();
-	int setAutoSaveSumIgnoreFrames(int frameCount);
-	int getAutoSaveSumIgnoreFrames();
 	bool getIntProperty(CString name, int &value);
 	bool getFloatProperty(CString name, float &value);
 	bool getStringProperty(CString name, CString &value);
 	void setIntProperty(CString name,int value);
 	void setStringProperty(CString name,CString value);
 	void setDoubleProperty(CString name,double value);
-	void SetFramesPerSecond(double value);
-  int SetAllAutoSaves(int autoSaveFlags, int sumCount, CString suffix);
+  bool setStringWithError(const char *name, const char *value);
+	int SetFramesPerSecond(double value);
+  int SetAllAutoSaves(int autoSaveFlags, int sumCount, CString suffix, CString saveDir, 
+    bool canCount);
   int OperationForRotateFlip(int DErotation, int flip);
   void WaitForInsertionState(const char *state);
   int IsCameraInserted();
   void InitializeLastSettings();
   int SetExposureTimeAndMode(float seconds, int mode);
+  int SetCountingParams(int readMode, double scaling, double FPS);
+  int SetAlignInServer(int alignFrames);
   void SetImageExtraData(EMimageExtra *extra);
   GetMember(int, CamType);
   GetMember(int, InitializingIndex);
   GetMember(int, ServerVersion);
   GetMember(int, LastLiveMode);
   GetMember(int, CurCamIndex);
+  GetMember(bool, NormAllInServer);
+  GetMember(int, NumLeftServerRef);
+  GetSetMember(CString, LastErrorString);
+  void SetAndTraceErrorString(CString str);
+
+  bool ServerIsLocal() {return mDE_SERVER_IP == "127.0.0.1";};
+  void SetupServerReference(int repeat, int mode) {mRepeatForServerRef = repeat;
+    mModeForServerRef = mode; mNumLeftServerRef = repeat;};
   bool justSetDoubleProperty(const char * propName, double value);
   bool justSetIntProperty(const char * propName, int value);
-  CString MakeErrorString(CString str);
   CString ErrorTrace(char *fmt, ...);
-
-/*#ifdef NCMIR_CCDB
-	//void SaveImage(CString path, CString basename,int sectionNumber);
-	void getCCDBID();
-	void saveResizeImage(CString path, CString basename,int sectionNumber);
-	CString getURLPath(){return mURLPath;}
-	void setApachePath(CString ApachePath,CString ApacheURL);
-	void setMetaDataThumbNail(double x,double y,double z,double defocus,CString index,double TiltAngle);
-	void SaveThumNailImage(CString path, CString basename,long ccdbID, int sectionNumber, float TiltAngle,unsigned short* image,int sizeX,int sizeY, double meanCounts);
-	void setTiltSeriesInfo(BOOL isTiltSeries);	
-	void setMontageInfo(BOOL isMontage, int xNframes, int yNframes);
-
-	void setApachePath(CString apachepath){mApachePath = apachepath;}	
-	void setApacheUrl(CString apacheurl){mApacheURL = apacheurl;}	
-	CString getApachePath(){return mApachePath;}	
-	CString getApacheUrl(){return mApacheURL;}
-	int readWebProperties();
-	//special metadata file used for rysnc and CCDB to extract info
-	void writeOutCCDBmetaData(CString inFilename, CString Basename, int CCDBid);
-#endif
-
-*/
+  void SetSoftwareAndServerVersion(std::string & propValue);
+  bool CheckMapForValidState(int checksum, std::map<int, int> &map, int minuteNow);
+  void AddValidStateToMap(int checksum, std::map<int, int> &map, int minuteNow);
+  bool IsReferenceValid(int checksum, std::map<int, int> &map, int minuteNow, 
+    const char *propStr, const char *messStr);
 
 private:
 	int mCamType;
@@ -258,69 +252,58 @@ private:
 
 	CMutex m_mutex;
 
-	//added for DE12 support
+	//DE server settings.
 	bool m_DE_CONNECTED;
 	CString m_DE_CurrentCamera;
   CWinThread *mLiveThread;
   LiveThreadData mLiveTD;
 
-	//DE settings.
 	CString mDE_SERVER_IP;
 	int mDE_WRITEPORT;
 	int mDE_READPORT;
-  int mLastSaveFlags;
-  int mLastSumCount;
-  CString mLastSuffix;
-  int mLastXoffset, mLastYoffset;
-  int mLastROIsizeX, mLastROIsizeY;
-  int mLastXimageSize, mLastYimageSize;
-  int mLastXbinning, mLastYbinning;
-  int mLastExposureMode;
-  float mLastExposureTime;
-  int mLastProcessing;
-  int mLastLiveMode;
-  BOOL mTrustLastSettings;
-  double mLastPreExposure;
-  int mReadoutDelay;
-  CString mSoftwareVersion;
-  CString mDE12SensorSN;
-  int mServerVersion;
-  int mInitializingIndex;
 
-	CString m_Camera_InsertionState;
-	CString m_DE_PreviousDataSet;
-	CString m_DE_NextDataSet;
+  // State variables: last values set in server.  Keep in same order as in init function
+  int mLastSaveFlags;                   // Flags for types of frames to save
+  int mLastSumCount;                    // Sum count for saving summed linear frames
+  int mLastDoseFracNum;                 // Number of frames summed in counting mode
+  CString mLastSuffix, mLastSaveDir;    // Last filename components and directory
+  int mLastXoffset, mLastYoffset;       // Offset set in ROI routine
+  int mLastROIsizeX, mLastROIsizeY;     // Size set in ROI routine
+  int mLastXimageSize, mLastYimageSize; // Image sizes (unused)
+  int mLastXbinning, mLastYbinning;     // Binnning values (should be the same)
+  int mLastExposureMode;                // Normal, Dark, Gain
+  float mLastExposureTime;              // Exposure time
+  double mLastPreExposure;              // Pre-exposure
+  int mLastProcessing;                  // uncorrected, dark, or dark/gain (linear mode)
+  int mLastNormCounting;                // Normalization of couting images
+  int mLastElectronCounting;            // Electron counting of either kind is a 1
+  int mLastSuperResolution;             // Super-resolution is a separate flag
+  float mLastFPS;                       // Frames per second
+  int mLastLiveMode;                    // Whether live mode was one
+  int mLastServerAlign;                 // Motion correction
+  int mLastUseHardwareBin;              // Hardware binning
+  int mLastAutoRepeatRef;               // Auto repeat reference enable setting
+  BOOL mTrustLastSettings;              // Whether to trust all those values in server
+
+  float mCountScaling;                  // Scaling for counting mode
+  int mReadoutDelay;                    // Milliseconds of readout delay set
+  bool mNormAllInServer;                // Whether to normalize all images in server
+  CString mSoftwareVersion;             // String for server version
+  CString mDE12SensorSN;
+  int mServerVersion;                   // 1000000 * major + 10000 * middle + minor
+  int mInitializingIndex;               // Index of camera being initialized
+  int mRepeatForServerRef;              // Number of repeats for doing reference in server
+  int mModeForServerRef;                // Processing mode to set for server reference
+  int mNumLeftServerRef;                // Running tally of number left to do
+  CString mLastErrorString;             // Error string stored for CamController to access
+
+  // Maps of acquisition parameter checksum and minute time stamp at which validated
+  std::map<int, int> mDarkChecks, mGainChecks, mCountGainChecks, mExpFPSchecks;
+
+	CString m_Camera_InsertionState;      // Current description of state
 
 	//added to support flexibilty of rotating the image and inverting the X axis.
 	int m_DE_ImageRot;		   // Provide an angle to rotate the DE image 
 	int m_DE_ImageInvertX;     // Decides whether to invert the X axis on the DE image 1==invert.
-
-/*#ifdef NCMIR_CCDB
-	CString mApachePath;
-	CString mApacheURL;
-	CString mCCDBInstName;
-	CString mURLPath;
-
-	CString mTxBrServerName;
-	int mTxBrPortNumber;	
-	int mTxBrInstName;
-	CString mTxBrPathDir;
-	CString mTxBrDataJailPath;
-	CString mlocalDatajailpath;
-
-	double mCurrx;
-	double mCurry;
-	double mCurrz;
-	double mCurrdefocus;
-	CString mCurrMagindex;
-	double mCurrTiltAngle;
-	BOOL misMontage;
-	int mXNframes;
-	int mYNframes;
-	BOOL misTiltSeries;
-	long m_CCDBid;
-
-#endif
-*/
 
 };
