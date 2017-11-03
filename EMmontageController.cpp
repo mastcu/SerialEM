@@ -238,7 +238,6 @@ void EMmontageController::SetMontaging(BOOL inVal)
   int dlgState = dlgTable[MONTAGE_DIALOG_INDEX].state;
   int *activeList = mWinApp->GetActiveCameraList();
   CString menuText = "Overwrite Pieces...";
-  CMenu *menu;
 
   mParam = mWinApp->GetMontParam();
   int iCam = activeList[mParam->cameraIndex];
@@ -280,10 +279,7 @@ void EMmontageController::SetMontaging(BOOL inVal)
   mWinApp->mMontageWindow.SetOpenClosed(dlgState);
   mWinApp->DialogChangedState((CToolDlg *)(&mWinApp->mMontageWindow), dlgState);
   mWinApp->UpdateBufferWindows();
-  menu = mWinApp->m_pMainWnd->GetMenu()->GetSubMenu(0);
-  menu->ModifyMenu(ID_FILE_OVERWRITE, MF_BYCOMMAND | MF_STRING, ID_FILE_OVERWRITE, 
-    (LPCTSTR)menuText);
-  mWinApp->m_pMainWnd->DrawMenuBar();
+  UtilModifyMenuItem(0, ID_FILE_OVERWRITE, (LPCTSTR)menuText);
 }
 
 ///////////////////////////////////
@@ -434,7 +430,7 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
           mDefocusForCal = mScope->GetLDViewDefocus(area);
     } else if (mConSets[useSetNum].binning != mParam->binning && 
       !mParam->warnedConSetBin) {
-        binDiv = cam->K2Type ? 2.f : 1.f;
+        binDiv = BinDivisorF(cam);
         mess.Format("This montage is set to be taken with binning %g,\n"
           "different from the binning (%g) in the %s parameter\n"
           "set.  The exposure time (%g sec) may not be right for\n"

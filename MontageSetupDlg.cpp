@@ -283,7 +283,7 @@ BOOL CMontageSetupDlg::OnInitDialog()
   m_iCamera = mWinApp->mMontageController->GetMontageActiveCamera(&mParam);
   mCurrentCamera = mActiveCameraList[m_iCamera];
   mFittingItem = mWinApp->mNavigator && mWinApp->mNavigator->FittingMontage();
-  mSizeScaling = mCamParams[mCurrentCamera].K2Type ? 2 : 1;
+  mSizeScaling = BinDivisorI(&mCamParams[mCurrentCamera]);
   mCamSizeX = mCamParams[mCurrentCamera].sizeX;
   mCamSizeY = mCamParams[mCurrentCamera].sizeY;
   mMaxOverFrac = mWinApp->mDocWnd->GetMaxOverlapFraction();
@@ -442,7 +442,7 @@ void CMontageSetupDlg::LoadParamData(BOOL setPos)
   m_iYoverlap = mParam.yOverlap;
   m_iYsize = mParam.yFrame;
   m_strBinning.Format("%s", (LPCTSTR)mWinApp->BinningText(mParam.binning, 
-    mCamParams[mCurrentCamera].K2Type ? 2 : 1));
+    &mCamParams[mCurrentCamera]));
   m_bMoveStage = mParam.moveStage;
   m_bSkipOutside = mParam.skipOutsidePoly;
   m_editSkipOutside.EnableWindow(m_bSkipOutside);
@@ -486,7 +486,7 @@ BOOL CMontageSetupDlg::SizeIsFeasible(int camInd, int binning)
 {
   int top, bot, left, right, xFrame, yFrame;
   int iCam = mActiveCameraList[camInd];
-  int newScale = mCamParams[iCam].K2Type ? 2 : 1;
+  int newScale = BinDivisorI(&mCamParams[iCam]);
   int binToEval = newScale * binning / mSizeScaling;
   if (!mWinApp->BinningIsValid(binToEval, iCam, false))
     return false;
@@ -608,7 +608,7 @@ void CMontageSetupDlg::OnDeltaposSpinbin(NMHDR* pNMHDR, LRESULT* pResult)
   }
 
   m_strBinning.Format("%s", 
-    (LPCTSTR)mWinApp->BinningText(mParam.binning, cam->K2Type ? 2 : 1));
+    (LPCTSTR)mWinApp->BinningText(mParam.binning, cam));
   UpdateSizes();
   *pResult = 0;
 }
@@ -758,7 +758,7 @@ void CMontageSetupDlg::OnRcamera()
   } else
     UpdateData(true);
   int newCam = mActiveCameraList[m_iCamera];
-  int newScale = mCamParams[newCam].K2Type ? 2 : 1;
+  int newScale = BinDivisorI(&mCamParams[newCam]);
   mParam.binning = newScale * (mParam.binning / mSizeScaling);
   if (!mSizeLocked) {
 

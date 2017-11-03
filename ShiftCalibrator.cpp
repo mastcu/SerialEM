@@ -126,7 +126,7 @@ void CShiftCalibrator::CalibrateIS(int ifRep, BOOL calStage, BOOL fromMacro)
   mActPostExposure = mWinApp->ActPostExposure();
   camP = &mCamParams[mCurrentCamera];
   mFromMacro = fromMacro;
-  showPixScale = camP->K2Type ? 2000. : 1000.;
+  showPixScale = BinDivisorF(camP) * 1000.f;
   if (mCamera->IsDirectDetector(camP))
     targetSize = 1024;
 

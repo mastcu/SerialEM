@@ -183,7 +183,7 @@ void CProcessImage::OnProcessMinmaxmean()
   if (imBuf->mCamera >= 0 && mWinApp->mCamera->IsDirectDetector(camP) &&  
     !DoseRateFromMean(imBuf, mean, pixel)) {
       sd = (float)(mean / (imBuf->mBinning * imBuf->mBinning * extra->mExposure / 
-        (camP->K2Type ? 4. : 1.)));
+        (CamHasDoubledBinnings(camP) ? 4. : 1.)));
       rep2.Format("\r\n    %.3f electrons (%.2f counts) per unbinned pixel per second", 
         pixel, sd);
       report += rep2;
@@ -2763,7 +2763,7 @@ int CProcessImage::DoseRateFromMean(EMimageBuffer *imBuf, float mean, float &dos
   if (!countsPerElectron)
     return 2;
   doseRate = (float)(mean / (countsPerElectron * imBuf->mExposure * 
-    imBuf->mBinning * imBuf->mBinning / (camParam->K2Type ? 4. : 1.)));
+    imBuf->mBinning * imBuf->mBinning / (CamHasDoubledBinnings(camParam) ? 4. : 1.)));
   if ((camParam->K2Type || camParam->FEItype == FALCON3_TYPE) && imBuf->mK2ReadMode > 0)
     doseRate = LinearizedDoseRate(imBuf->mCamera, doseRate);
   return 0;

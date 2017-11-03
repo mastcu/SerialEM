@@ -1276,7 +1276,7 @@ void CFocusManager::FocusDone()
   int ifCalibrated = GetFocusCal(mFocusMag, iCam, mFocusProbe, focCal);
   int bufnum = 0;
   CameraParameters *camParam = mWinApp->GetActiveCamParam();
-  int divForK2 = camParam->K2Type ? 2 : 1;
+  int divForK2 = BinDivisorI(camParam);
   if (mFocusIndex < 0)
     return;
   if (mUsingExisting)
@@ -1298,7 +1298,7 @@ void CFocusManager::FocusDone()
   type = imA->getType();
 
   // See if binning is needed, or at least scaling of filter parameters
-  minBinning = mDDDminBinning * (camParam->K2Type ? 2 : 1);
+  minBinning = mDDDminBinning * BinDivisorI(camParam);
   if (mCamera->IsDirectDetector(camParam) && binning > 0 && binning < minBinning) {
 
     // Get needed achievable binning then scale the filter down the rest of the way

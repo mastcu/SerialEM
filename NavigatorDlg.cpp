@@ -5290,7 +5290,7 @@ int CNavigatorDlg::NewMap(bool unsuitableOK)
       setNum = imBuf->mConSetUsed;
     if (imExtra && imExtra->mBinning > 0 && imExtra->mCamera >= 0)
       item->mMontBinning = B3DNINT(imExtra->mBinning * 
-      (mCamParams[imExtra->mCamera].K2Type ? 2 : 1));
+      BinDivisorI(&mCamParams[imExtra->mCamera]));
     else
       item->mMontBinning = conSets[setNum].binning;
 

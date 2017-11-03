@@ -141,7 +141,7 @@ void CCalibCameraTiming::CalibrateTiming(int setNum, float exposure, bool confir
 
   if (!mQuickFlyback) {
     mExposure = mSTEMcamera ? mDefSTEMexposure : mDefRegExposure;
-    chan = mConSet->binning / (mCamParam->K2Type ? 2 : 1);
+    chan = mConSet->binning / BinDivisorI(mCamParam);
     report.Format("To calibrate timing, the beam should be set to give\nmoderately"
       " high counts (but not saturated exposures) with\nthe selected binning "
       "(default %d) and exposure time (default %.2f seconds)\n\nAre you ready to proceed?"
@@ -158,7 +158,7 @@ void CCalibCameraTiming::CalibrateTiming(int setNum, float exposure, bool confir
 
     if (!KGetOneInt("Binning:", chan))
       return;
-    mConSet->binning = chan * (mCamParam->K2Type ? 2 : 1);
+    mConSet->binning = chan * BinDivisorI(mCamParam);
     if (!KGetOneInt("Number of test pictures:", mNumTestShots))
       return;
     if (mSTEMcamera) {

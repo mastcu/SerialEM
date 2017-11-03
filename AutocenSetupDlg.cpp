@@ -190,15 +190,16 @@ void CAutocenSetupDlg::OnDeltaposSpinbinning(NMHDR *pNMHDR, LRESULT *pResult)
 {
   LPNMUPDOWN pNMUpDown = reinterpret_cast<LPNMUPDOWN>(pNMHDR);
   int newind = mBinIndex + pNMUpDown->iDelta;
-  if (newind >= mCamParams->numBinnings || newind < (mCamParams->K2Type ? 1 : 0)) {
-    *pResult = 1;
-    return;
+  if (newind >= mCamParams->numBinnings || newind < (CamHasDoubledBinnings(mCamParams) ? 
+    1 : 0)){
+      *pResult = 1;
+      return;
   }
   if (UpdateIfExposureChanged())
     FetchParams();
   mBinIndex = newind;
-  m_strBinning.Format("%s", (LPCTSTR)mWinApp->BinningText(
-    mCamParams->binnings[mBinIndex], mCamParams->K2Type ? 2 : 1));
+  m_strBinning.Format("%s", (LPCTSTR)mWinApp->BinningText(mCamParams->binnings[mBinIndex],
+    mCamParams));
   mParam->binning = mCamParams->binnings[mBinIndex];
   ParamChanged();
   *pResult = 0;
@@ -282,8 +283,7 @@ void CAutocenSetupDlg::UpdateParamSettings(void)
 {
   CString str1, str2;
   m_fExposure = (float)mParam->exposure;
-  m_strBinning.Format("%s", (LPCTSTR)mWinApp->BinningText(
-    mParam->binning, mCamParams->K2Type ? 2 : 1));
+  m_strBinning.Format("%s", (LPCTSTR)mWinApp->BinningText(mParam->binning, mCamParams));
   m_iUseCentroid = mParam->useCentroid;
   if (mParam->intensity >= 0.) {
     m_strIntensity.Format("%.2f%s %s", mScope->GetC2Percent(mCurSpot, mParam->intensity,

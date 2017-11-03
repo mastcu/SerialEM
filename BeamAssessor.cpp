@@ -229,7 +229,7 @@ void CBeamAssessor::CalIntensityCCD()
   mMagMaxDelCurrent = B3DMIN(mMagMaxDelCurrent, (float)mMaxCounts / mMinCounts);
 
   mExposure = mMinExposure;
-  mBinning = mCamParam->binnings[mCamParam->K2Type ? 1 : 0];
+  mBinning = mCamParam->binnings[CamHasDoubledBinnings(mCamParam) ? 1 : 0];
   fracField = 8;
   if (mCamParam->subareasBad)
     fracField = mCamParam->subareasBad > 1 ? 1 : 2;
@@ -495,7 +495,7 @@ void CBeamAssessor::CalIntensityCCDCleanup(int error)
       "\r\n   binned image size %d and %d in X and Y", 
       MagForCamera(mCamParam, mScope->GetMagIndex()),
       mScope->GetC2Percent(mCalSpotSize, mScope->GetIntensity()), mScope->GetC2Units(),
-      mScope->GetC2Name(), mExposure, mBinning / (mCamParam->K2Type ? 2. : 1.), 
+      mScope->GetC2Name(), mExposure, mBinning / BinDivisorF(mCamParam), 
       (conSet->right - conSet->left) / mBinning,
       (conSet->bottom - conSet->top) / mBinning);
     mWinApp->AppendToLog(report);
@@ -1371,7 +1371,7 @@ void CBeamAssessor::CalibrateElectronDose(BOOL interactive)
   // Go ahead and compute the dose and set it so that the intensity can be checked
   mean = mWinApp->mProcessImage->WholeImageMean(imBuf);
   mWinApp->mProcessImage->DoseRateFromMean(imBuf, (float)mean, doseRate);
-  pixel = 10000. * (camParam->K2Type ? 2 : 1) * 
+  pixel = 10000. * BinDivisorI(camParam) * 
     mWinApp->mShiftManager->GetPixelSize(imBuf->mCamera, imBuf->mMagInd);
 
   dtp->dose = doseRate / (pixel * pixel);

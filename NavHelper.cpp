@@ -1314,11 +1314,11 @@ void CNavHelper::PrepareToReimageMap(CMapDrawItem *item, MontParam *param,
       if (mRIuseCurrentLDparams)
         SEMTrace('1', "Map matches low dose %s; staying in low dose with current "
           "parameters but binning %g", (LPCTSTR)names[mRIconSetNum],
-          binning / (camP->K2Type ? 2. : 1.));
+          binning / BinDivisorF(camP));
       else
         SEMTrace('1', "Map matches low dose %s; staying in low dose but with exp %.3f "
           "intensity %.5f bin %g", (LPCTSTR)names[mRIconSetNum], item->mMapExposure, 
-          item->mMapIntensity, binning / (camP->K2Type ? 2. : 1.));
+          item->mMapIntensity, binning / BinDivisorF(camP));
 
       // Save the conSet and modify it to the map parameters
       mSavedConset = conSets[mRIconSetNum];
@@ -3595,7 +3595,7 @@ void CNavHelper::ListFilesToOpen(void)
         camp = mWinApp->GetActiveCamParam(tsp->cameraIndex);
         mess.Format("Tilt series with camera %d,   binning %d,   %.1f to %.1f at %.2f "
           "deg,  item # %d,  label %s", tsp->cameraIndex + 1, 
-          tsp->binning / (camp->K2Type ? 2 : 1), tsp->startingTilt, 
+          tsp->binning / BinDivisorI(camp), tsp->startingTilt, 
           tsp->endingTilt, tsp->tiltIncrement, i, (LPCTSTR)item->mLabel);
       } else {
         mess.Format("Single item # %d,  label %s", i, (LPCTSTR)item->mLabel);
@@ -3609,7 +3609,7 @@ void CNavHelper::ListFilesToOpen(void)
         if (item->mTSparamIndex < 0) {
           camp = mWinApp->GetActiveCamParam(montp->cameraIndex);
           mess2.Format("   with camera %d   binning %d", montp->cameraIndex+1, 
-            montp->binning / (camp->K2Type ? 2 : 1));
+            montp->binning / BinDivisorI(camp));
           mess += mess2;
         }
       }
@@ -3627,7 +3627,7 @@ void CNavHelper::ListFilesToOpen(void)
           "%.3f   bin %d   %dx%d", state->lowDose ? "LD" : "", active, mag, spot, 
           mScope->GetC2Name(), mScope->GetC2Percent(spot, intensity), 
           mScope->GetC2Units(), state->exposure,
-          state->binning / (camp->K2Type ? 2 : 1), state->xFrame, state->yFrame);
+          state->binning / BinDivisorI(camp), state->xFrame, state->yFrame);
         mWinApp->AppendToLog(mess, LOG_OPEN_IF_CLOSED);
       }
     }

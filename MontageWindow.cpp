@@ -287,7 +287,7 @@ void CMontageWindow::ManageBinning()
     int *activeList = mWinApp->GetActiveCameraList();
     int iCam = activeList[mMontageController->GetMontageActiveCamera(mParam)];
     CameraParameters *cam = mWinApp->GetCamParams() + iCam;
-    divideBin = cam->K2Type ? 2 : 1;
+    divideBin = BinDivisorI(cam);
   }
   m_strScanBin.Format("Prescan %s", (LPCTSTR)mWinApp->BinningText(
     mParam->prescanBinning, divideBin));

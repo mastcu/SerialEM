@@ -416,7 +416,7 @@ int CSerialEMDoc::OpenOldFile(CFile *file, CString cFilename, int err)
               camInd = mWinApp->LookupActiveCamera(ind);
               if (camInd >= 0) {
                 cam = mWinApp->GetCamParams() + ind;
-                binning *= (cam->K2Type ? 2 : 1);
+                binning *= BinDivisorI(cam);
                 if (mWinApp->mStoreMRC->getWidth() * binning <= cam->sizeX &&
                   mWinApp->mStoreMRC->getHeight() * binning <= cam->sizeY)
                   param->binning = binning;
@@ -655,7 +655,7 @@ void CSerialEMDoc::MontParamInitFromConSet(MontParam *param, int setNum)
   CameraParameters *camParam = mWinApp->GetCamParams() + curCam;
   ControlSet *cs = mWinApp->GetConSets() + setNum;
   param->binning = cs->binning;
-  if (camParam->K2Type && cs->binning == 1)
+  if (CamHasDoubledBinnings(camParam) && cs->binning == 1)
     param->binning = 2;
   param->xFrame = (cs->right - cs->left) / param->binning;
   param->yFrame = (cs->bottom - cs->top) / param->binning;
@@ -731,12 +731,12 @@ void CSerialEMDoc::ManageExposure()
   // Note this overrides the drift-adjusting code in montage controller
   if (param->binning != cs->binning) {
      if (param->setupInLowDose) {
-       float binDiv = camParam->K2Type ? 2.f : 1.f;
-        PrintfToLog("WARNING: This montage was set up with binning %g, different from "
-        "the binning (%g) in the %s parameter set\r\n"
-        "   Because this is a low-dose montage, the parameter set will be left as it was,"
-        "\r\n   and the exposure time there will be assumed to work with both binnings",
-        param->binning / binDiv, cs->binning / binDiv, modeName[setNum]);
+       float binDiv = BinDivisorF(camParam);
+       PrintfToLog("WARNING: This montage was set up with binning %g, different from "
+         "the binning (%g) in the %s parameter set\r\n"
+         "   Because this is a low-dose montage, the parameter set will be left as it was,"
+         "\r\n   and the exposure time there will be assumed to work with both binnings",
+         param->binning / binDiv, cs->binning / binDiv, modeName[setNum]);
     } else {
       float ratio = (float)param->binning / cs->binning;
       cs->binning = param->binning;
@@ -809,12 +809,8 @@ void CSerialEMDoc::CloseAllStores()
 // Switches between Save single and Save to Other if there is an open file
 void CSerialEMDoc::ManageSaveSingle(void)
 {
-  CMenu *menu;
-  CString menuText = mNumStores ? "Save to Other..." : "Save Single...";
-  menu = mWinApp->m_pMainWnd->GetMenu()->GetSubMenu(0);
-  menu->ModifyMenu(IDM_FILE_SAVEOTHER, MF_BYCOMMAND | MF_STRING, IDM_FILE_SAVEOTHER, 
-    (LPCTSTR)menuText);
-  mWinApp->m_pMainWnd->DrawMenuBar();
+  UtilModifyMenuItem(0, IDM_FILE_SAVEOTHER,
+    mNumStores ? "Save to Other..." : "Save Single...");
 }
 
 // Regular save of regular buffer

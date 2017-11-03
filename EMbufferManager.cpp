@@ -802,7 +802,7 @@ int EMbufferManager::ReadFromFile(KImageStore *inStore, int inSect, int inToBuf,
   if (toBuf->mCamera < 0)
     toBuf->mCamera = mWinApp->GetCurrentCamera();
   CameraParameters *camParam = mWinApp->GetCamParams();
-  toBuf->mDivideBinToShow = camParam[toBuf->mCamera].K2Type ? 2 : 1;
+  toBuf->mDivideBinToShow = BinDivisorI(&camParam[toBuf->mCamera]);
   toBuf->mBinning = B3DNINT(bufBin * toBuf->mDivideBinToShow);
 
   // If that fails to get a binning, fall back to the problematic old logic

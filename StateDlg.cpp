@@ -393,8 +393,7 @@ void CStateDlg::StateToListString(int index, CString &string)
   }
 
   string.Format("%s\t%d\t%d\t%d\t%.1f\t%.3f\t%s\t%.1fx%.1f\t%s", (LPCTSTR)lds, active,
-    mag, spot, percentC2, state->exposure, mWinApp->BinningText(state->binning,
-    (camp->K2Type ? 2 : 1)), 
+    mag, spot, percentC2, state->exposure, mWinApp->BinningText(state->binning, camp), 
     state->xFrame / 1000., state->yFrame / 1000., (LPCTSTR)state->name);
 }
 

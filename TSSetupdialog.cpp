@@ -566,7 +566,7 @@ BOOL CTSSetupDialog::OnInitDialog()
   m_sbcRecordMag.SetPos(mMagIndex[mSTEMindex]);
   mBinning = mTSParam.binning;
   m_strBinning.Format("%s", (LPCTSTR)mWinApp->BinningText(mBinning, 
-    mCamParams[mCurrentCamera].K2Type ? 2 : 1));
+    &mCamParams[mCurrentCamera]));
   m_sbcBin.SetRange(0, 100);
   m_sbcBin.SetPos(50);
   m_bLowMagTrack = mTSParam.trackLowMag;
@@ -784,8 +784,8 @@ void CTSSetupDialog::ManageCameras()
   // loop through the cameras, making sure the current binning exists
   for (iCamInd = 0; iCamInd < mNumCameras; iCamInd++) {
     iCam = mActiveCameraList[iCamInd];
-    binToEval = (mCamParams[iCam].K2Type ? 2 : 1) * mBinning / 
-      (mCamParams[mCurrentCamera].K2Type ? 2 : 1);
+    binToEval = BinDivisorI(&mCamParams[iCam]) * mBinning / 
+      BinDivisorI(&mCamParams[mCurrentCamera]);
     BOOL binOK = mWinApp->BinningIsValid(binToEval, iCam, true);
     CButton *radio = (CButton *)GetDlgItem(iCamInd + IDC_RCAMERA1);
 
@@ -803,7 +803,7 @@ void CTSSetupDialog::OnRcamera()
   int index = 2 * mSTEMindex + (mLowDoseMode ? 1 : 0);
   mCurrentCamera = mActiveCameraList[m_iCamera];
   CameraParameters *camP = &mCamParams[mCurrentCamera];
-  mBinning = (camP->K2Type ? 2 : 1) * mBinning / (mCamParams[lastCam].K2Type ? 2 : 1);
+  mBinning = BinDivisorI(camP) * mBinning / BinDivisorI(&mCamParams[lastCam]);
   B3DCLAMP(mBinning, camP->binnings[0], camP->binnings[camP->numBinnings - 1]);
   mProbeMode = mWinApp->mScope->GetProbeMode();    // Let them change probe mode on fly
   mSTEMindex = mCamParams[mCurrentCamera].STEMcamera ? 1 + mProbeMode : 0;
@@ -1108,8 +1108,7 @@ void CTSSetupDialog::OnDeltaposSpinbin(NMHDR* pNMHDR, LRESULT* pResult)
   if (newVal == mBinning)
     return;
   mBinning = newVal;
-  m_strBinning.Format("%s", 
-    (LPCTSTR)mWinApp->BinningText(mBinning, cam->K2Type ? 2 : 1));
+  m_strBinning.Format("%s", (LPCTSTR)mWinApp->BinningText(mBinning, cam));
   ManageIntersetStatus();
   SetPixelSize();
   ManageCameras();

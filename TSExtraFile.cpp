@@ -216,11 +216,11 @@ void CTSExtraFile::OnDeltaposSpinTrialBin(NMHDR *pNMHDR, LRESULT *pResult)
   LPNMUPDOWN pNMUpDown = reinterpret_cast<LPNMUPDOWN>(pNMHDR);
   *pResult = 1;
   int newVal = mBinIndex + pNMUpDown->iDelta;
-  if (newVal < (mCamParam->K2Type ? 1 : 0) || newVal >= mCamParam->numBinnings)
+  if (newVal < (CamHasDoubledBinnings(mCamParam) ? 1 : 0) || newVal >=mCamParam->numBinnings)
     return;
   mBinIndex = newVal;
   m_strTrialBin.Format("%s", (LPCTSTR)mWinApp->BinningText(
-    mCamParam->binnings[newVal], mCamParam->K2Type ? 2 : 1));
+    mCamParam->binnings[newVal], mCamParam));
   UpdateData(false);
   *pResult = 0;
 }
@@ -302,10 +302,10 @@ BOOL CTSExtraFile::OnInitDialog()
   m_sbcTrialBin.SetRange(1, 50);
   m_sbcTrialBin.SetPos(25);
   mBinIndex = B3DMIN(mBinIndex, mCamParam->numBinnings - 1);
-  if (mCamParam->K2Type)
+  if (CamHasDoubledBinnings(mCamParam))
     mBinIndex = B3DMAX(1, mBinIndex);
   m_strTrialBin.Format("%s", (LPCTSTR)mWinApp->BinningText(
-    mCamParam->binnings[mBinIndex], mCamParam->K2Type ? 2 : 1));
+    mCamParam->binnings[mBinIndex], mCamParam));
   if (!mWinApp->LowDoseMode() || mWinApp->mLowDoseDlg.ShiftsBalanced()) {
     m_butOppositeTrial.EnableWindow(false);
     if (m_iWhichRecord == TS_OPPOSITE_TRIAL)
