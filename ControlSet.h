@@ -29,9 +29,12 @@
 #define K2_LINEAR_MODE 0
 #define K2_COUNTING_MODE 1
 #define K2_SUPERRES_MODE 2
-#define DE_SAVE_FRAMES   1
-#define DE_SAVE_SUMS     2
-#define DE_SAVE_FINAL    4
+#define DE_SAVE_FRAMES   0x1
+#define DE_SAVE_SUMS     0x2
+#define DE_SAVE_FINAL    0x4
+#define DE_SAVE_COUNTING 0x8
+#define DE_SAVE_MASTER   0x10
+#define DE_SAVE_SINGLE   0x20
 #define MAX_SPOT_SIZE  13
 #define MAX_CAMLENS 40
 
@@ -94,7 +97,7 @@ struct CameraParameters {
   BOOL failedToInitialize; // Flag that Tietz camera failed to initialize
   int AMTtype;             // Flag for AMT camera
   int FEItype;             // Type of FEI camera
-  unsigned int FEIflags;   // Flags for FEI camera in advanced scripting
+  unsigned int CamFlags;   // Flags for FEI camera in advanced scripting
   int DE_camType;     	   // Flag to determine DE camera type	
   int DE_indexType;   	   // Index to look up the proper DE camera type
   int DE_ImageRot;		     // Provide an angle to rotate the DE image
@@ -104,7 +107,9 @@ struct CameraParameters {
   int DE_ServerReadPort;   // Read port used with DE server.
   int DE_ServerWritePort;  // Write port used with the DE server.
   float DE_FramesPerSec;   // USER's setting for the frames per second for this camera
+  float DE_CountingFPS;    // User's setting for FPS in counting mode
   float DE_MaxFrameRate;   // Maximum frame rate from server
+  CString DE_AutosaveDir;  // Top folder for autosaves
   int alsoInsertCamera;    // Other camera to insert to make sure blanking is OK
   int samePhysicalCamera;  // Camera on same insertion state
   int eagleIndex;          // Index from looking up eagle camera by name
