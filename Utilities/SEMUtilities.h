@@ -36,7 +36,7 @@ int MagForCamera(CameraParameters *camParam, int index);
 int MagForCamera(int camera, int index);
 int BinDivisorI(CameraParameters *camParam);
 float BinDivisorF(CameraParameters *camParam);
-bool CamReturnsSuperRes(CameraParameters *camParam);
+bool CamHasDoubledBinnings(CameraParameters *camParam);
 bool UtilInvertedMagRangeLimits(BOOL EFTEM, int &lowInd, int &highInd);
 bool UtilMagInInvertedRange(int magInd, BOOL EFTEM);
 void ConstrainWindowPlacement(int *left, int *top, int *right, int *bottom);

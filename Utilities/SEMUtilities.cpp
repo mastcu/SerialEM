@@ -563,10 +563,10 @@ float BinDivisorF(CameraParameters *camParam)
   return (camParam->K2Type ? 2.f : 1.f);
 }
 
-// Return true if a camera can return super-res images at all
-bool CamReturnsSuperRes(CameraParameters *camParam)
+// Return true if a camera has its binnings doubled to allow for super-res images
+bool CamHasDoubledBinnings(CameraParameters *camParam)
 {
-  return (camParam->K2Type > 0 && camParam->K2Type != 2);
+  return (camParam->K2Type > 0);
 }
 
 // Returns the index in the CamLowDoseParams for the given camera (-1 for current)
