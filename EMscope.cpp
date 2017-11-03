@@ -6693,9 +6693,9 @@ int CEMscope::LookupScriptingCamera(CameraParameters *params, bool refresh,
           (40 << PLUGFEI_MAX_FRAC_SHIFT));
         params->FEItype -= 10;
       }
-      params->FEIflags = params->eagleIndex & ~PLUGFEI_INDEX_MASK;
-      SEMTrace('E', "index ret %x  flags %x", params->eagleIndex, params->FEIflags);
-      if (params->FEIflags & PLUGFEI_USES_ADVANCED) {
+      params->CamFlags = params->eagleIndex & ~PLUGFEI_INDEX_MASK;
+      SEMTrace('E', "index ret %x  flags %x", params->eagleIndex, params->CamFlags);
+      if (params->CamFlags & PLUGFEI_USES_ADVANCED) {
         if (fabs(params->minExposure - DEFAULT_FEI_MIN_EXPOSURE) < 1.e-5)
           params->minExposure = minDrift;
         else
@@ -6705,8 +6705,8 @@ int CEMscope::LookupScriptingCamera(CameraParameters *params, bool refresh,
       }
 
       // Promote a Falcon 2 to 3 automatically, and adjust the frame time if low
-      if (params->FEItype == FALCON2_TYPE && (params->FEIflags & PLUGFEI_CAM_CAN_COUNT) && 
-        (params->FEIflags & PLUGFEI_CAM_CAN_ALIGN))
+      if (params->FEItype == FALCON2_TYPE && (params->CamFlags & PLUGFEI_CAM_CAN_COUNT) && 
+        (params->CamFlags & PLUGFEI_CAM_CAN_ALIGN))
         params->FEItype = FALCON3_TYPE;
       if (params->FEItype == FALCON3_TYPE && mWinApp->mCamera->GetFalconReadoutInterval()
         > 0.05)
