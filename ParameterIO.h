@@ -73,6 +73,8 @@ public:
   void UserSetProperty(void);
   int MacroSetSetting(CString name, double value);
   int MacroGetSetting(CString name, double &value);
+  void WriteIndexedInts(const char *keyword, int *values, int numVal);
+  void WriteIndexedFloats(const char *keyword, float *values, int numVal);
 };
 
 #endif // !defined(AFX_PARAMETERIO_H__A83A6CC0_40E1_4BDF_8FEF_53898673E513__INCLUDED_)

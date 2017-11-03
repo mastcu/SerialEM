@@ -144,6 +144,8 @@ int CParameterIO::ReadSettings(CString strFileName)
   StateParams *stateP;
   CArray<StateParams *, StateParams *> *stateArray = mWinApp->mNavHelper->GetStateArray();
   mWinApp->mNavHelper->ClearStateArray();
+  int *deNumRepeats = mWinApp->mGainRefMaker->GetDEnumRepeats();
+  float *deExposures = mWinApp->mGainRefMaker->GetDEexposureTimes();
   CArray<FrameAliParams, FrameAliParams> *faParamArray =
     mWinApp->mCamera->GetFrameAliParams();
   FrameAliParams faParam, *faData;
@@ -331,6 +333,9 @@ int CParameterIO::ReadSettings(CString strFileName)
       } else if (NAME_IS("DirForK2Frames")) {
         StripItems(strLine, 1, strCopy);
         camera->SetDirForK2Frames(strCopy);
+      } else if (NAME_IS("DirForDEFrames")) {
+        StripItems(strLine, 1, strCopy);
+        camera->SetDirForDEFrames(strCopy);
       } else if (NAME_IS("DirForFalconFrames")) {
         StripItems(strLine, 1, strCopy);
         if (strCopy == "EmptyPath")
@@ -346,8 +351,11 @@ int CParameterIO::ReadSettings(CString strFileName)
         StripItems(strLine, 1, strCopy);
         camera->SetNumberedFrameFolder(strCopy);
       } else if (NAME_IS("DE12FPS")) {
-        if (!itemEmpty[2] && itemInt[1] >= 0 && itemInt[1] < MAX_CAMERAS)
-        mCamParam[itemInt[1]].DE_FramesPerSec = (float)itemDbl[2];
+        if (!itemEmpty[2] && itemInt[1] >= 0 && itemInt[1] < MAX_CAMERAS) {
+          mCamParam[itemInt[1]].DE_FramesPerSec = (float)itemDbl[2];
+          if (!itemEmpty[3])
+            mCamParam[itemInt[1]].DE_CountingFPS = (float)itemDbl[3];
+        }
       } else if (NAME_IS("DEAutosaveFormat")) {
         mWinApp->mDEToolDlg.SetFormatForAutoSave(itemInt[1]);
       } else if (NAME_IS("PercentDisplayTruncationLo")) {
@@ -713,6 +721,16 @@ int CParameterIO::ReadSettings(CString strFileName)
 
       } else if (NAME_IS("GainRefNormalizeSpot")) {  // Obsolete or confused setting...
         mWinApp->mGainRefMaker->SetCalibrateDose(itemInt[1] != 0);
+      } else if (NAME_IS("DErefExposures")) {
+        for (index = 0; index < MAX_DE_REF_TYPES; index++)
+          deExposures[index] = (float)itemDbl[index + 1];
+      } else if (NAME_IS("DErefNumRepeats")) {
+        for (index = 0; index < MAX_DE_REF_TYPES; index++)
+          deNumRepeats[index] = itemInt[index + 1];
+      } else if (NAME_IS("DElastRefParams")) {
+        mWinApp->mGainRefMaker->SetDElastProcessType(itemInt[1]);
+        mWinApp->mGainRefMaker->SetDElastReferenceType(itemInt[2]);
+        mWinApp->mGainRefMaker->SetDEuseHardwareBin(itemInt[3]);
       } else if (NAME_IS("LowDoseViewShift")) {
         mWinApp->mLowDoseDlg.mViewShiftX[0] = itemDbl[1];
         mWinApp->mLowDoseDlg.mViewShiftY[0] = itemDbl[2];
@@ -1008,6 +1026,8 @@ void CParameterIO::WriteSettings(CString strFileName)
   LowDoseParams *ldp;
   StateParams *stateP;
   CArray<StateParams *, StateParams *> *stateArray = mWinApp->mNavHelper->GetStateArray();
+  int *deNumRepeats = mWinApp->mGainRefMaker->GetDEnumRepeats();
+  float *deExposures = mWinApp->mGainRefMaker->GetDEexposureTimes();
   CArray<FrameAliParams, FrameAliParams> *faParamArray =
     mWinApp->mCamera->GetFrameAliParams();
   FrameAliParams faParam;
@@ -1057,12 +1077,7 @@ void CParameterIO::WriteSettings(CString strFileName)
         if (cs->DEsumCount)
           WriteInt("DEsumCount", cs->DEsumCount);
         WriteInt("FilterType", cs->filterType);
-        oneState = "ChannelIndex";
-        for (i =0; i < MAX_STEM_CHANNELS; i++) {
-          macCopy.Format(" %d", cs->channelIndex[i]);
-          oneState += macCopy;
-        }
-        mFile->WriteString(oneState + "\n");
+        WriteIndexedInts("ChannelIndex", cs->channelIndex, MAX_STEM_CHANNELS);
         oneState.Format("BoostMag %d %d\n", cs->boostMag, cs->magAllShots);
         mFile->WriteString(oneState);
         if (cs->numSkipBefore)
@@ -1079,8 +1094,12 @@ void CParameterIO::WriteSettings(CString strFileName)
       }
 
       if (mCamParam[iCam].DE_camType && mCamParam[iCam].DE_FramesPerSec > 0) {
-        oneState.Format("DE12FPS %d %f\n", iCam, mCamParam[iCam].DE_FramesPerSec);
-        mFile->WriteString(oneState);
+        oneState.Format("DE12FPS %d %f", iCam, mCamParam[iCam].DE_FramesPerSec);
+        if (mCamParam[iCam].DE_CountingFPS > 0.) {
+          macCopy.Format(" %f", mCamParam[iCam].DE_CountingFPS);
+          oneState += macCopy;
+        }
+        mFile->WriteString(oneState + "\n");
       }
     }
 
@@ -1091,6 +1110,11 @@ void CParameterIO::WriteSettings(CString strFileName)
     macCopy = camera->GetDirForK2Frames();
     if (!macCopy.IsEmpty()) {
       oneState.Format("DirForK2Frames %s\n", (LPCTSTR)macCopy);
+      mFile->WriteString(oneState);
+    }
+    macCopy = camera->GetDirForDEFrames();
+    if (!macCopy.IsEmpty()) {
+      oneState.Format("DirForDEFrames %s\n", (LPCTSTR)macCopy);
       mFile->WriteString(oneState);
     }
     macCopy = camera->GetDirForFalconFrames();
@@ -1369,12 +1393,7 @@ void CParameterIO::WriteSettings(CString strFileName)
       mTSParam->bidirAngle, mTSParam->anchorBidirWithView ? 1 : 0, 
       mTSParam->walkBackForBidir ? 1 : 0, mTSParam->retainBidirAnchor ? 1 : 0);
     WriteString("TiltSeriesBidirParams", oneState);
-    oneState = "";
-    for (i = 0; i < 6; i++) {
-      macCopy.Format(" %d", mTSParam->bidirAnchorMagInd[i]);
-      oneState += macCopy;
-    }
-    WriteString("TiltSeriesBDAnchorMags", oneState);
+    WriteIndexedInts("TiltSeriesBDAnchorMags", mTSParam->bidirAnchorMagInd, 6);
     oneState.Format("%d %d %d", mWinApp->mTSController->GetRunMacroInTS() ? 1 : 0,
       mWinApp->mTSController->GetMacroToRun(), 
       mWinApp->mTSController->GetStepAfterMacro());
@@ -1393,13 +1412,7 @@ void CParameterIO::WriteSettings(CString strFileName)
     oneState = mWinApp->mMailer->GetSendTo();
     if (!oneState.IsEmpty())
       WriteString("EmailAddress", oneState);
-    oneState = "TSSetupPanelStates ";
-    for (i = 0; i < NUM_TSS_PANELS - 1; i++) {
-      macCopy.Format(" %d", tssPanelStates[i]);
-      oneState += macCopy;
-    }
-    oneState += "\n";
-    mFile->WriteString(oneState);
+    WriteIndexedInts("TSSetupPanelStates", tssPanelStates, NUM_TSS_PANELS - 1);
     //WriteFloat("AddedSTEMrotation", mWinApp->GetAddedSTEMrotation());
     oneState.Format("NonGIFMatchPixelIntensity %d %d\n", 
       mWinApp->GetNonGIFMatchPixel(), mWinApp->GetNonGIFMatchIntensity());
@@ -1418,8 +1431,13 @@ void CParameterIO::WriteSettings(CString strFileName)
         mCamParam[i].imageXRayNumSDCrit, mCamParam[i].imageXRayBothCrit);
       mFile->WriteString(oneState);
     }
-    oneState.Format("GridMapLimits %f %f %f %f\n", gridLim[0], gridLim[1], gridLim[2], 
-      gridLim[3]);
+    WriteIndexedFloats("GridMapLimits", gridLim, 4);
+    WriteIndexedInts("DErefNumRepeats", deNumRepeats, MAX_DE_REF_TYPES);
+    WriteIndexedFloats("DErefExposures", deExposures, MAX_DE_REF_TYPES);
+    oneState.Format("DElastRefParams %d %d %d\n", 
+      mWinApp->mGainRefMaker->GetDElastProcessType(),
+      mWinApp->mGainRefMaker->GetDElastReferenceType(),
+      mWinApp->mGainRefMaker->GetDEuseHardwareBin());
     mFile->WriteString(oneState);
 
     for (i = 0; i < (int)faParamArray->GetSize(); i++) {
@@ -1757,6 +1775,8 @@ int CParameterIO::ReadProperties(CString strFileName)
             camP->DE_ImageRot = itemInt[1];
           else if(MatchNoCase("DEImageInvertXAxis"))
             camP->DE_ImageInvertX = itemInt[1]; 
+          else if(MatchNoCase("DEAutosaveFolder"))
+            StripItems(strLine, 1, camP->DE_AutosaveDir);
           else if(MatchNoCase("DECameraServerIP"))
             camP->DEServerIP = strItems[1];
           else if(MatchNoCase("DECameraReadPort"))
@@ -4674,6 +4694,22 @@ void CParameterIO::OutputVector(const char *key, int size, ShortVec *shorts,
   }
 }
 
+#define WRITE_INDEXED_LIST(a) { \
+  CString line, val; \
+  line = keyword; \
+  for (int ind = 0; ind < numVal; ind++) { \
+    val.Format(a, values[ind]);  \
+    line += val;   \
+  }  \
+  mFile->WriteString(line + "\n");  \
+}
+
+void CParameterIO::WriteIndexedInts(const char *keyword, int *values, int numVal)
+  WRITE_INDEXED_LIST(" %d");
+
+void CParameterIO::WriteIndexedFloats(const char *keyword, float *values, int numVal)
+  WRITE_INDEXED_LIST(" %f");
+
 // Fills a float array with items for each binning
 void CParameterIO::StoreFloatsPerBinning(CString *strItems, const char *descrip, int iset,
   CString &strFileName, float *values)
@@ -4959,3 +4995,5 @@ int CParameterIO::MacroSetSetting(CString name, double value)
 #undef INT_SETT_ASSIGN
 #undef BOOL_SETT_ASSIGN
 #undef FLOAT_SETT_ASSIGN
+
+
