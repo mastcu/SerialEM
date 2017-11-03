@@ -715,9 +715,28 @@ void CSerialEMView::DrawImage(void)
         else
           cdc.MoveTo(point);
       }
+
+      // Draw multi-shot pattern
       if (iDraw < 0 && mWinApp->mNavHelper->GetEnableMultiShot()) {
         MultiShotParams *msParams = mWinApp->mNavHelper->GetMultiShotParams();
         float beamRad;
+
+        // First draw rectangles in the off-center positions with current pen
+        for (int pt = numPoints; pt < item->mNumPoints - 1; pt++) {
+          delPtX = item->mPtX[pt] - item->mStageX;
+          delPtY = item->mPtY[pt] - item->mStageY;
+          for (int bpt = 0; bpt < numPoints; bpt++) {
+            StageToImage(imBuf, item->mPtX[bpt] + delPtX, item->mPtY[bpt] + delPtY, 
+              ptX, ptY);
+            MakeDrawPoint(&rect, imBuf->mImage, ptX, ptY, &point);
+            if (bpt)
+              cdc.LineTo(point);
+            else
+              cdc.MoveTo(point);
+          }
+        }
+
+        // Setup to draw circles, switch color and draw them
         StageToImage(imBuf, item->mStageX, item->mStageY, cenX, cenY);
         StageToImage(imBuf, item->mPtX[item->mNumPoints - 1], 
           item->mPtY[item->mNumPoints - 1], ptX, ptY);
