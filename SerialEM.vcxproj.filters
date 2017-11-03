@@ -419,6 +419,9 @@
     <ClInclude Include="MultiShotDlg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="DERefMakerDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\bitmap1.bmp">
@@ -711,6 +714,9 @@
     </None>
     <None Include="resource.hm">
       <Filter>Header Files</Filter>
+    </None>
+    <None Include="hlp\html\hidd_de_reference.htm">
+      <Filter>HTML Help Topics</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -1051,6 +1057,9 @@
       <Filter>CSource Files</Filter>
     </ClCompile>
     <ClCompile Include="MultiShotDlg.cpp">
+      <Filter>CSource Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DERefMakerDlg.cpp">
       <Filter>CSource Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -67,6 +67,7 @@
 #define IDD_REMOTE_CONTROL              223
 #define IDD_THREE_CHOICE_BOX            224
 #define IDD_MULTI_SHOT_SETUP            225
+#define IDD_DE_REFERENCE                226
 #define IDC_EDITXSIZE                   1000
 #define IDC_EDITYSIZE                   1002
 #define IDC_EDITYOVERLAP                1003
@@ -1047,7 +1048,10 @@
 #define IDC_RLINEAR                     2059
 #define IDC_RCOUNTING                   2060
 #define IDC_RBACKLASH_AUTO              2061
+#define IDC_STAT_DEMODE                 2372
+#define IDC_RDE_LINEAR                  2062
 #define IDC_RBACKLASH_ASK               2063
+#define IDC_RDE_COUNTING                2373
 #define IDC_RBACKLASH_NONE              2064
 #define IDC_EDIT_MIN_FIELD              2065
 #define IDC_STAT_MIN_FIELD              2066
@@ -1059,10 +1063,13 @@
 #define IDC_ALIGN_DOSE_FRAC             2072
 #define IDC_STAT_FRAME_SEC              2073
 #define IDC_COMBOFILTER                 2074
+#define IDC_RDE_SUPERRES                2374
 #define IDC_SAVE_FRAMES                 2075
 #define IDC_ONE_FRAME_PER_FILE          2076
+#define IDC_DE_ALIGN_FRAMES             2375
 #define IDC_SET_SAVE_FOLDER             2077
 #define IDC_STAT_IMAGE_REDUCE           2078
+#define IDC_DE_SET_SAVE_FOLDER          2376
 #define IDC_EDIT_READOUTS               2079
 #define IDC_STAT_ANTIALIAS              2080
 #define IDC_CHECK_USE_VIEW_IN_LOWDOSE   2081
@@ -1231,6 +1238,7 @@
 #define IDC_STAT_MORE_PARAMS            2247
 #define IDC_STAT_WHERE_ALIGN            2248
 #define IDC_STAT_OTHER_CUTS             2249
+#define IDC_STAT_DE_WHERE_ALIGN         2377
 #define IDC_BUT_DELETE_SET              2250
 #define IDC_BUT_SET_FOLDER              2251
 #define IDC_KEEP_PRECISION              2252
@@ -1258,6 +1266,7 @@
 #define IDC_BUT_NEW_PARAMS              2275
 #define IDC_BUT_SETUP_ALIGN             2276
 #define IDC_CHECK_END_HIGH_EXP          2277
+#define IDC_BUT_DE_SETUP_ALIGN          2378
 #define IDC_CHECK_MAGINTENSITY          2278
 #define IDC_DRAW_LABELS                 2279
 #define IDC_COMBO_PREMACRO              2280
@@ -1327,6 +1336,27 @@
 #define IDC_RLAST_EARLY                 2346
 #define IDC_RALL_EARLY                  2347
 #define IDC_EDIT_EXTRA_DELAY            2348
+#define IDC_STAT_DEFPS                  2349
+#define IDC_EDIT_DE_FPS                 2350
+#define IDC_STAT_DE_FRAME_TIME          2351
+#define IDC_EDIT_DE_FRAME_TIME          2352
+#define IDC_STAT_DE_SUM_NUM             2353
+#define IDC_SPIN_DE_SUM_NUM             2354
+#define IDC_DE_SAVE_MASTER              2355
+#define IDC_STAT_DE_FRAME_SEC           2357
+#define IDC_STAT_PROC_TYPE              2358
+#define IDC_RLINEAR_REF                 2359
+#define IDC_RPRE_COUNTING               2360
+#define IDC_RPOST_COUNTING              2361
+#define IDC_STAT_REF_TYPE               2362
+#define IDC_RDARK_REF                   2363
+#define IDC_RGAIN_REF                   2364
+#define IDC_STAT_REF_FPS                2365
+#define IDC_EDIT_REF_EXPOSURE           2366
+#define IDC_SPIN_NUM_REPEATS            2368
+#define IDC_EDIT_NUM_REPEATS            2369
+#define IDC_STAT_GAIN_ADVICE            2370
+#define IDC_USE_HARDWARE_BIN            2371
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -1738,9 +1768,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        226
+#define _APS_NEXT_RESOURCE_VALUE        227
 #define _APS_NEXT_COMMAND_VALUE         33288
-#define _APS_NEXT_CONTROL_VALUE         2349
+#define _APS_NEXT_CONTROL_VALUE         2379
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

@@ -278,6 +278,11 @@
 			</OBJECT>
 			<A HREF="html/hidd_refpolicy.htm">Gain Reference Policy dialog</A><BR>
 		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Direct Electron Server Reference Maker dialog">
+			<param name="Local" value="html/hidd_de_reference.htm">
+			</OBJECT>
+			<A HREF="html/hidd_framealign.htm">Direct Electron Server Reference Maker dialog</A><BR>
+		<LI><OBJECT type="text/sitemap">
 			<param name="Name" value="Montage Setup dialog">
 			<param name="Local" value="html/hidd_montagesetup.htm">
 			</OBJECT>
