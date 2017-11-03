@@ -65,13 +65,15 @@ void DirectElectronToolDlg::updateDEToolDlgPanel(bool initialCall)
   } else {
     mSuppressDebug = 0;
   }
+
   try {
     CString value = mDECamera->getCurrentCameraName();
     BOOL isDE12 = mDECamera->CurrentIsDE12();
     BOOL isSurvey = mDECamera->CurrentIsSurvey();
     BOOL isEither = isDE12 || isSurvey;
     ((CWnd *)GetDlgItem(ID_DE_camName))->SetWindowText(value);
-
+    ((CWnd *) GetDlgItem(ID_DE_currfps))->EnableWindow(!(isDE12 && 
+      (camParam->CamFlags & DE_CAM_CAN_COUNT)));
     float temp_float = 0.0;
     int temp_int = 1;
 
@@ -83,12 +85,12 @@ void DirectElectronToolDlg::updateDEToolDlgPanel(bool initialCall)
 
     // update temperature setpoint if no property entered
     if (isDE12) {
-      if (mTemperSetpoint <= -999) {
-        if (mDECamera->getIntProperty("Temperature Control - Setpoint (Celsius)", 
-          temp_int)) {
-            value.Format("Setpoint(C): %d", temp_int);
-            ((CWnd *) GetDlgItem(ID_DE_temperSet))->SetWindowText(value);
-            mTemperSetpoint = temp_int;
+      if (mTemperSetpoint <= -999 && curIsDE &&
+        (camParam->CamFlags & DE_HAS_TEMP_SET_PT)) {
+        if (mDECamera->getIntProperty(DE_PROP_TEMP_SET_PT, temp_int)) {
+          value.Format("Setpoint(C): %d", temp_int);
+          ((CWnd *) GetDlgItem(ID_DE_temperSet))->SetWindowText(value);
+          mTemperSetpoint = temp_int;
         }
       }
 
@@ -107,8 +109,11 @@ void DirectElectronToolDlg::updateDEToolDlgPanel(bool initialCall)
         ((CButton *) GetDlgItem(IDC_DE_insertCam))->SetCheck(value == 
           DE_CAM_STATE_INSERTED ? 1 : 0);
 
-      // Update Auto save address
-      if (mDECamera->getStringProperty("Autosave Directory", value)) {
+      // Update Auto save address either from the camera properties or the server
+      value = camParam->DE_AutosaveDir;
+      if (value.IsEmpty() && !mDECamera->getStringProperty(DE_PROP_AUTOSAVE_DIR, value))
+        value = "";
+      if (!value.IsEmpty()) {
         ((CWnd *) GetDlgItem(ID_DE_saveDir))->SetWindowText(value);
         mAutosaveDir = value;
       }
@@ -255,11 +260,14 @@ void DirectElectronToolDlg::ApplyUserSettings()
     ((CWnd *) GetDlgItem(ID_DE_coverDelay))->SetWindowText(value);
     mDECamera->setIntProperty("Protection Cover Delay (milliseconds)", mProtCoverDelay);
   }
-  if (isDE12 && mTemperSetpoint > -999) {
+  if (isDE12 && mTemperSetpoint > -999 && (camParam->CamFlags & DE_HAS_TEMP_SET_PT)) {
     value.Format("Setpoint(C): %d", mTemperSetpoint);
     ((CWnd *) GetDlgItem(ID_DE_temperSet))->SetWindowText(value);
-    mDECamera->setIntProperty("Temperature Control - Setpoint (Celsius)", mTemperSetpoint);
+    mDECamera->setIntProperty(DE_PROP_TEMP_SET_PT, mTemperSetpoint);
   }
+  if (isDE12)
+    ((CWnd *) GetDlgItem(ID_DE_temperSet))->EnableWindow
+    (camParam->CamFlags & DE_HAS_TEMP_SET_PT);
 }
 
 // Update the enable/disable state based on what is active, and manage protection cover
@@ -475,6 +483,7 @@ void DirectElectronToolDlg::OnEnKillfocusDecurrfps()
   double currentFPS = GetFramesPerSecond();
   mWinApp->RestoreViewFocus();
   mDECamera->getFloatProperty("Frames Per Second (Max)", maxFPS);
+  B3DCLAMP(maxFPS, 1.f, 5000.f);
   if (currentFPS < maxFPS + 1.)
     currentFPS = B3DMIN(currentFPS, maxFPS);
   if (currentFPS >= 0 && currentFPS <= maxFPS) {

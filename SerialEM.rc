@@ -2759,7 +2759,7 @@ CAPTION "Direct Electron Server Reference Maker"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "YES",IDOK,41,156,50,14
-    PUSHBUTTON      "NO",IDCANCEL,112,156,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,112,156,50,14
     CONTROL         "Linear mode",IDC_RLINEAR_REF,"Button",BS_AUTORADIOBUTTON | WS_GROUP,14,15,57,10
     CONTROL         "Pre-counting",IDC_RPRE_COUNTING,"Button",BS_AUTORADIOBUTTON,75,15,57,10
     CONTROL         "Post-counting",IDC_RPOST_COUNTING,"Button",BS_AUTORADIOBUTTON,135,15,60,10
@@ -4527,6 +4527,7 @@ BEGIN
     IDC_OTHERCHANNELS       "Save images from other STEM detectors"
     IDC_RLINEAR             "Acquire images in linear mode"
     IDC_RCOUNTING           "Acquire images in counting mode"
+    IDC_RDE_LINEAR          "Take image in integrating mode"
 END
 
 STRINGTABLE
@@ -4763,6 +4764,7 @@ BEGIN
     IDC_BUT_NAME_SUFFIX     "Set components of a suffix to standard frame file names"
     IDC_SPIN_DIGITS         "Set number of digits for sequential numbers"
     IDC_CHECK_KEEP_ANCHOR   "Save file with bidirectional anchor and add image used to realign to anchor"
+    IDC_CHECK_CORRECT_DRIFT "Oneview: use drift correction in camera; DE camera: use binning by 2 on chip"
     IDC_BUT_EQUALIZE        "Distribute total subframes among saved frames as equally as possible"
     IDC_EDIT_SUBFRAME_TIME  "Underlying frame time at which subframes are acquired"
     IDC_SAVE_FRAME_SUMS     "Save frames that each consist of a sum of a specified # of camera frames"
@@ -4952,17 +4954,23 @@ BEGIN
     IDC_RLAST_EARLY         "Return as soon as possible with specified sum for last shot only"
     IDC_RALL_EARLY          "Return as soon as possible with specified sum for all shots"
     IDC_EDIT_EXTRA_DELAY    "Additional settling time after image shift in seconds"
+    IDC_EDIT_DE_FPS         "Frames per second for the current operating mode (linear versus counting)"
 END
 
 STRINGTABLE
 BEGIN
-    IDC_RDE_LINEAR          "Take image in integrating mode"
+    IDC_SPIN_NUM_REPEATS    "Increase/decrease number of images acquired to make reference"
+    IDC_EDIT_NUM_REPEATS    "Number of images to acquire to make the reference"
+    IDC_USE_HARDWARE_BIN    "Make reference with hardware binning"
     IDC_RDE_COUNTING        "Take electron counting image; if saving frames, they will be native size "
     IDC_RDE_SUPERRES        "Output super-resolution electron counting frames with double size"
     IDC_DE_ALIGN_FRAMES     "Align frames to remove drift"
     IDC_DE_SET_SAVE_FOLDER  "Enter name of a subfolder to save in directly under the main autosave folder"
     IDC_BUT_DE_SETUP_ALIGN  "Set location and parameters for frame alignment"
-    IDC_EDIT_DE_FPS         "Frames per second for the current operating mode (linear versus counting)"
+END
+
+STRINGTABLE
+BEGIN
     IDC_EDIT_DE_FRAME_TIME  "Frame time for each saved summed frame (a multiple of camera frame time)"
     IDC_SPIN_DE_SUM_NUM     "Number of camera frames to save in each saved frame"
     IDC_DE_SAVE_MASTER      "Save summed frames and/or single camera frames"
@@ -4972,9 +4980,6 @@ BEGIN
     IDC_RDARK_REF           "Make a dark reference"
     IDC_RGAIN_REF           "Make a gain reference with uniform beam illumination"
     IDC_EDIT_REF_EXPOSURE   "Exposure time for each acquisition used to make reference"
-    IDC_SPIN_NUM_REPEATS    "Increase/decrease number of images acquired to make reference"
-    IDC_EDIT_NUM_REPEATS    "Number of images to acquire to make the reference"
-    IDC_USE_HARDWARE_BIN    "Make reference with hardware binning"
 END
 
 #endif    // English (United States) resources

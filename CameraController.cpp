@@ -277,6 +277,7 @@ CCameraController::CCameraController()
   mLowerScreenForSTEM = 1;
   mRamperInstance = false;
   mBlankNextShot = false;
+  mDEserverRefNextShot = 0;
   mTD.ContinuousSTEM = 0;
   mDSextraShotDelay = 100;
   mDSshouldFlip = -1;         // Will be 0 or 1 if read in
@@ -705,7 +706,7 @@ void CCameraController::InitializeDMcameras(int DMind, int *numDMListed,
   HRESULT hr;
   CString report;
   double flyback, rotOffset;
-  int i, ind, sel, nlist, needVers = SEMCCD_VERSION_OK_NO_K2;
+  int i, ind, div, sel, nlist, needVers = SEMCCD_VERSION_OK_NO_K2;
   long num, allnum, doFlip, available;
   int gatanSelectList[2 * MAX_IGNORE_GATAN];
   bool anyK2 = false, gotDefectList;
@@ -933,9 +934,9 @@ void CCameraController::InitializeDMcameras(int DMind, int *numDMListed,
 
               // For all Gatan cameras, identify bad pixels that touch rows/columns
               if (!gotDefectList) {
-                CorDefFindTouchingPixels(mAllParams[i].defects, 
-                  mAllParams[i].sizeX / (mAllParams[i].K2Type ? 2 : 1),
-                  mAllParams[i].sizeY / (mAllParams[i].K2Type ? 2 : 1), 0);
+                div = BinDivisorI(&mAllParams[i]);
+                CorDefFindTouchingPixels(mAllParams[i].defects, mAllParams[i].sizeX / div,
+                  mAllParams[i].sizeY / div, 0);
 
                 // For K2, scale the defects up and mark as K2
                 if (mAllParams[i].K2Type && !mAllParams[i].defects.wasScaled) {
@@ -1098,7 +1099,7 @@ void CCameraController::InitializeFEIcameras(int &numFEIlisted, int *originalLis
           break;
         }
       } else {
-        if (mAllParams[i].FEIflags & PLUGFEI_USES_ADVANCED)
+        if (mAllParams[i].CamFlags & PLUGFEI_USES_ADVANCED)
           oldFalcon2 = false;
       }
       mFEIinitialized = true;
@@ -1115,7 +1116,7 @@ void CCameraController::InitializeFEIcameras(int &numFEIlisted, int *originalLis
   for (ind = 0; ind < numOrig; ind++) {
     i = originalList[ind];
     if (mAllParams[i].FEItype) {
-      if (mAllParams[i].FEIflags & PLUGFEI_USES_ADVANCED) {
+      if (mAllParams[i].CamFlags & PLUGFEI_USES_ADVANCED) {
         if (mAllParams[i].autoGainAtBinning > 0) {
           for (bin = 0; bin < mAllParams[i].numBinnings; bin++) {
             if (mAllParams[i].gainFactor[bin] != 1.) {
@@ -1170,17 +1171,21 @@ void CCameraController::InitializeDirectElectron(int *originalList, int numOrig)
             mAllParams[i].useContinuousMode = 1;
             mAllParams[i].setContinuousReadout = 1;
           }
+          if (mAllParams[i].name.Find("Survey") > 0)
+            mAllParams[i].CamFlags &= ~(DE_CAM_CAN_COUNT);
         }	else {
           AfxMessageBox("FAILURE in Initializing Direct Electron camera", MB_EXCLAME);
           mAllParams[i].failedToInitialize = true;
-
-          // DNM: keep it consistent, delete object and NULL the pointer now
-          delete mTD.DE_Cam;
-          mTD.DE_Cam = NULL;
         }
       } else
         mAllParams[i].failedToInitialize = true;
     }
+  }
+
+  // DNM: keep it consistent, delete object and NULL the pointer now if none initialized
+  if (!mDEInitialized) {
+    delete mTD.DE_Cam;
+    mTD.DE_Cam = NULL;
   }
 }
 
@@ -1345,6 +1350,8 @@ void CCameraController::SetCurrentCamera(int currentCam, int activeCam)
 	  if(mTD.DE_Cam)
 		  mTD.DE_Cam->setCameraName(mParam->name);
   }
+  UtilModifyMenuItem(2, ID_CAMERA_ACQUIREGAINREF, (mParam->DE_camType && 
+    !CanProcessHere(mParam)) ? "Ac&quire Ref in Server" : "Ac&quire Gain Ref");
 
   // When switching to an FEI camera and there is more than one, invalidate its index
   // so the scope will be refreshed to look it up again
@@ -1500,6 +1507,11 @@ BOOL CCameraController::CameraBusy()
    mScope->LongOperationBusy(LONG_OP_HW_DARK_REF);
 }
 
+int CCameraController::GetServerFramesLeft()
+{
+  return mTD.DE_Cam ? mTD.DE_Cam->GetNumLeftServerRef() : 0;
+};
+
 // Retract all cameras: set all retractable cameras as "canBlock" so that it will test
 // and retract them if in
 void CCameraController::RetractAllCameras(void)
@@ -1543,8 +1555,7 @@ BOOL CCameraController::GetInitialized()
 BOOL CCameraController::GetProcessHere()
 {
   return (mProcessHere || mParam->TietzType || mParam->AMTtype || mParam->DE_camType == 1
-    || (mTD.plugFuncs && !mParam->canDoProcessing)) &&
-    !(mParam->FEItype && FCAM_ADVANCED(mParam) && mASIgivesGainNormOnly);
+    || (mTD.plugFuncs && !mParam->canDoProcessing)) && CanProcessHere(mParam);
 }
 
 // Set whether processing here from menu
@@ -1580,7 +1591,8 @@ bool CCameraController::CanPreExpose(CameraParameters *param, int shuttering)
 bool CCameraController::CanProcessHere(CameraParameters *param)
 {
   return !((param->FEItype && FCAM_ADVANCED(param) && mASIgivesGainNormOnly) ||
-    param->K2Type || param->OneViewType);
+    param->K2Type || param->OneViewType || (param->DE_camType && mTD.DE_Cam &&
+    mTD.DE_Cam->GetNormAllInServer()));
 }
 
 // Returns true if camera is a OneView and the DM version can do drift correction
@@ -1599,7 +1611,7 @@ bool CCameraController::HasNewK2API(CameraParameters * param)
 int CCameraController::GetMaxFalconFrames(CameraParameters *params)
 {
   if (FCAM_ADVANCED(params))
-    return ((params->FEIflags >> PLUGFEI_MAX_FRAC_SHIFT) & 0xFFFF);
+    return ((params->CamFlags >> PLUGFEI_MAX_FRAC_SHIFT) & 0xFFFF);
   return mMaxFalconFrames;
 }
 
@@ -2060,7 +2072,7 @@ int CCameraController::QueueTiltDuringShot(double angle, int delayToStart, doubl
 
 void CCameraController::Capture(int inSet, bool retrying)
 {
-  int ind, error, setState, binInd;
+  int ind, error, setState, binInd, sumCount;
   BOOL bEnsureDark = false;
   CString logmess;
   int numActive = mWinApp->GetNumActiveCameras();
@@ -2324,12 +2336,46 @@ void CCameraController::Capture(int inSet, bool retrying)
 
   // Set up DE12 saving
   if (mWinApp->mDEToolDlg.CanSaveFrames(mParam)) {
-    if (conSet.saveFrames)
+    setState = 0;
+    sumCount = conSet.DEsumCount;
+    if (conSet.saveFrames & DE_SAVE_MASTER) {
+
+      // Set up the traditional frame/sum/final and new counting saving flags
+      if (conSet.K2ReadMode > 0) {
+        setState = DE_SAVE_COUNTING;
+        sumCount = conSet.sumK2Frames;
+      } else {
+        if (conSet.DEsumCount <= 1 || (conSet.saveFrames & DE_SAVE_SINGLE))
+          setState = DE_SAVE_FRAMES;
+        if (conSet.DEsumCount > 1)
+          setState |= DE_SAVE_SUMS;
+      }
+      if (conSet.saveFrames & DE_SAVE_FINAL)
+        setState |= DE_SAVE_FINAL;
+
+      // Set up frame folder before getting full folder, make sure it is OK
+      mFrameFolder = mParam->DE_AutosaveDir;
+      if (!mFrameFolder.IsEmpty() && !mDirForDEFrames.IsEmpty()) {
+        mFrameFolder += "\\" + mDirForDEFrames;
+        if (CreateFrameDirIfNeeded(mFrameFolder, &logmess, 'D')) {
+          SEMMessageBox(logmess);
+          ErrorCleanup(1);
+          return;
+        }
+      }
+
+      // Get full folder and suffix, again make sure folder is OK
       ComposeFramePathAndName(false);
-    if (mTD.DE_Cam->SetAllAutoSaves(conSet.saveFrames, conSet.DEsumCount, mFrameFilename))
-    {
-      ErrorCleanup(1);
-      return;
+      if (!mFrameFolder.IsEmpty() && CreateFrameDirIfNeeded(mFrameFolder, &logmess, 'D')){
+        SEMMessageBox(logmess);
+        ErrorCleanup(1);
+        return;
+      }
+    }
+    if (mTD.DE_Cam->SetAllAutoSaves(setState, sumCount, mFrameFilename, mFrameFolder, 
+      mParam->CamFlags & DE_CAM_CAN_COUNT)) {
+        ErrorCleanup(1);
+        return;
     }
   }
   
@@ -2368,7 +2414,7 @@ void CCameraController::Capture(int inSet, bool retrying)
   // Copy flags and targets, clear the flags
   mTD.TietzType = mParam->TietzType;
   mTD.FEItype = mParam->FEItype;
-  mTD.FEIflags = mParam->FEIflags;
+  mTD.CamFlags = mParam->CamFlags;
   mTD.DE_camType = mParam->DE_camType;
 
   // DNM: this was added for NCMIR camera
@@ -2381,8 +2427,8 @@ void CCameraController::Capture(int inSet, bool retrying)
   mTD.MakeFEIerrorTimeout = mMakeFEIerrorBeTimeout;
   mTD.checkFEIname = mOtherCamerasInTIA;
   mTD.oneFEIshutter = mParam->onlyOneShutter;
-  mTD.fullSizeX = mParam->sizeX / (mParam->K2Type ? 2 : 1);
-  mTD.fullSizeY = mParam->sizeY / (mParam->K2Type ? 2 : 1);
+  mTD.fullSizeX = mParam->sizeX / BinDivisorI(mParam);
+  mTD.fullSizeY = mParam->sizeY / BinDivisorI(mParam);
   mTD.PostMoveStage = mStageQueued;
   mTD.imageReturned = false;
   mTD.GetDeferredSum = false;
@@ -2411,15 +2457,41 @@ void CCameraController::Capture(int inSet, bool retrying)
   // Set read mode -2 or -3 for OneView so it is distinct from K2
   // Send a scaling of 1 for summit linear mode, or the scaling parameter for base camera
   mTD.NeedsReadMode = mNeedsReadMode[CAMP_DM_INDEX(mParam)];
-  if (mParam->K2Type > 1)
+  if (mParam->K2Type == 2)
     conSet.K2ReadMode = 0;
   mTD.GatanReadMode = B3DCHOICE(mParam->K2Type > 0 || 
+    (mParam->DE_camType && (mParam->CamFlags & DE_CAM_CAN_COUNT)) ||
     (mParam->FEItype && FCAM_CAN_COUNT(mParam)), conSet.K2ReadMode, -1);
   if (mParam->OneViewType)
     mTD.GatanReadMode = conSet.K2ReadMode != 0 ? -2 : -3;
   mTD.CountScaling = GetCountScaling(mParam);
   if (mTD.GatanReadMode == 0)
-    mTD.CountScaling = mParam->K2Type > 1 ? mK2BaseModeScaling : 1.;
+    mTD.CountScaling = mParam->K2Type == 2 ? mK2BaseModeScaling : 1.;
+
+  // DE cameras: Handle numerous items
+  if (mParam->DE_camType) {
+
+    // Set the frames per second and AlignfFrames if aligning in server
+    if (mParam->CamFlags & DE_CAM_CAN_COUNT)
+      mTD.FramesPerSec = mTD.GatanReadMode ? mParam->DE_CountingFPS : 
+        mParam->DE_FramesPerSec;
+    mTD.AlignFrames = -1;
+    if (mParam->CamFlags & DE_CAM_CAN_ALIGN)
+      mTD.AlignFrames = (conSet.useFrameAlign && (conSet.saveFrames & DE_SAVE_MASTER)) ? 
+        0 : conSet.alignFrames;
+
+    // Set hardware binning if available and needed
+    mTD.UseHardwareBinning = -1;
+    if (mParam->CamFlags & DE_HAS_HARDWARE_BIN)
+      mTD.UseHardwareBinning = (conSet.binning > 1 && conSet.boostMag > 0) ? 1 : 0;
+
+    // If doing gain ref in server, Send the repeat count and the mode to set
+    // Adjust the mode to linear for the pre-counting items now that FPS is set
+    mTD.DE_Cam->SetupServerReference(mDEserverRefNextShot, 
+      conSet.processing == UNPROCESSED ? DE_DARK_IMAGE : DE_GAIN_IMAGE);
+    if (mDEserverRefNextShot > 0 && mWinApp->mGainRefMaker->GetDElastProcessType() == 1)
+        mTD.GatanReadMode = 0;
+  }
 
   mTD.DoseFrac = conSet.doseFrac;
   B3DCLAMP(conSet.frameTime, mMinK2FrameTime, 10.f);
@@ -2438,7 +2510,6 @@ void CCameraController::Capture(int inSet, bool retrying)
   }
   mTD.SaveFrames = conSet.saveFrames && (!mParam->K2Type || conSet.doseFrac);
   mTD.rotationFlip = mParam->rotationFlip;
-  mTD.FEIflags = mParam->FEIflags;
 
   B3DCLAMP(conSet.filterType, 0, mNumK2Filters - 1);
   if (mK2FilterNames[conSet.filterType].GetLength() >= MAX_FILTER_NAME_LEN)
@@ -2486,6 +2557,8 @@ void CCameraController::Capture(int inSet, bool retrying)
   if (mParam->DE_camType == DE_12 || IS_FALCON2_OR_3(mParam))
     megaVoxel = (mParam->sizeX * mParam->sizeY) / 1.e6;
   exposure = mExposure;
+  if (mDEserverRefNextShot > 0)
+    exposure = mDEserverRefNextShot * (exposure + 3.);
   if (mParam->STEMcamera && mParam->GatanCam && conSet.lineSync)
     exposure += mDMsizeY * mDSsyncMargin / 1.e6;
   mTD.cameraTimeout = (DWORD)(mTimeoutFactor * 1000. * (5. + mTD.DMsettling + exposure +
@@ -4752,12 +4825,21 @@ void CCameraController::BlockAdjustSizes(int &DMsize, int ccdSize, int sizeMod,
 bool CCameraController::ConstrainExposureTime(CameraParameters *camP, ControlSet *consP) 
 {
   return ConstrainExposureTime(camP, consP->doseFrac > 0, consP->K2ReadMode, 
-    consP->binning, consP->alignFrames && !consP->useFrameAlign,
-    consP->exposure, consP->frameTime);
+    consP->binning, consP->alignFrames && !consP->useFrameAlign, 
+    DESumCountForConstraints(camP, consP), consP->exposure, consP->frameTime);
+}
+
+int CCameraController::DESumCountForConstraints(CameraParameters *camP, ControlSet *consP) 
+{
+ if (mWinApp->mDEToolDlg.HasFrameTime(camP) && ((consP->saveFrames & DE_SAVE_MASTER) ||
+   (consP->alignFrames && consP->useFrameAlign > 1)))
+     return (consP->K2ReadMode > 0 ? consP->sumK2Frames : consP->DEsumCount);
+ return 1;
 }
 
 bool CCameraController::ConstrainExposureTime(CameraParameters *camP, BOOL doseFrac,
-  int readMode, int binning, bool alignInCamera, float &exposure, float &frameTime)
+  int readMode, int binning, bool alignInCamera, int sumCount, float &exposure, 
+  float &frameTime)
 {
   bool retval = false;
   float ftime, baseTime, minExp;
@@ -4826,12 +4908,14 @@ bool CCameraController::ConstrainExposureTime(CameraParameters *camP, BOOL doseF
   } else {
 
     // DE12
-    fps = camP->DE_FramesPerSec > 0 ? camP->DE_FramesPerSec :
-      mWinApp->mDEToolDlg.GetFramesPerSecond();
+    fps = readMode > 0 ? camP->DE_CountingFPS : camP->DE_FramesPerSec;
+    if (fps <= 0.)
+      fps = mWinApp->mDEToolDlg.GetFramesPerSecond();
     if (fps <= 0.)
       return retval;
     epsilon = -0.0005f;
-    baseTime = (float)(1. / fps);
+    baseTime = (float)(sumCount / fps);
+    frameTime = baseTime;
   }
 
   // Make exposure a multiple of base time: round up from a boundary by adding a bit (K2)
@@ -5081,7 +5165,7 @@ UINT CCameraController::EnsureProc(LPVOID pParam)
   int sizeX, sizeY, numDum, retval = 0;
   long binning = td->Binning;
   double expSave = td->Exposure;
-  CString message;
+  CString message, str;
   CString strGainDark = "Dark";
   DarkRef *ref;
   IDMCamera *pGatan;
@@ -5231,18 +5315,19 @@ UINT CCameraController::EnsureProc(LPVOID pParam)
     // DE camera getting a dark reference
     // DNM: removed code for GainToGet which will never happen
     if (td->DarkToGet) {
+      td->DE_Cam->SetLastErrorString("");
       ref = td->DarkToGet;
       retval = GetArrayForReference(td, ref, arrSize, strGainDark);
-
       if (retval != 1) {
         retval = td->DE_Cam->setPreExposureTime((long) (1000 * td->DMsettling));
 
-        // Calculate the proper ROI. TM 3_28_11 added to support ROI
+        // Calculate the proper ROI and set the binning
         if (!retval)
           retval = td->DE_Cam->setROI(td->Left * binning, td->Top * binning, 
             td->CallSizeX * binning, td->CallSizeY * binning);
         if (!retval)
-          retval = td->DE_Cam->setBinning(binning, binning, td->CallSizeX, td->CallSizeY);
+          retval = td->DE_Cam->setBinning(binning, binning, td->CallSizeX, td->CallSizeY,
+          -1);
         if (!retval)
           retval = td->DE_Cam->AcquireDarkImage((float)ref->Exposure);	
         bool imageFinished = false;
@@ -5264,9 +5349,10 @@ UINT CCameraController::EnsureProc(LPVOID pParam)
           delete [] ref->Array;
           ref->Array = NULL;
           if (retval > 0) {
+            str = td->DE_Cam->GetLastErrorString();
             message.Format("Error %d setting parameters or getting dark reference from DE"
-              " camera; %s", retval, GetDebugOutput('D') ? "see debug output" : 
-              "Set Debug Output to D for details");
+              " camera; %s", retval, B3DCHOICE(str.IsEmpty(), GetDebugOutput('D') ? 
+              "see debug output" : "Set Debug Output to D for details", (LPCTSTR)str));
             DeferMessage(td, message);
           }
         }
@@ -5462,6 +5548,8 @@ void CCameraController::StartAcquire()
   DWORD ticks = GetTickCount();
   if (mParam->unsignedImages && mDivideBy2)
     darkCrit /= 2.;
+  if (setText == "TRACK")
+    setText = "IN TASK";
 
   // In continuous mode, reduce increment to be able to catch the thread ending quicker
   // And if a macro is using it, stop watching thread and add idle task much sooner so
@@ -5764,7 +5852,7 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
   bool startBlanker = td->PostActionTime || td->UnblankTime || td->FocusStep1 || 
     td->TiltDuringDelay;
   int sizeX, sizeY, chan, numChan, retval = 0, numCopied = 0;
-  CString report;
+  CString report, str;
   long binning = td->Binning;
 
   // For any camera, wait to start if this is set
@@ -6065,9 +6153,9 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
       
     }
   } else if (td->DE_camType) {
+    td->DE_Cam->SetLastErrorString("");
 
-    // RAW IMAGE from Direct Electron camera
-    //int actualX=0,actualY=0;
+    // IMAGE from Direct Electron camera
     retval = GetArrayForImage(td, arrSize);
 
     // DNM: skip if there is a memory problem
@@ -6078,19 +6166,28 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
         retval = td->DE_Cam->SetLiveMode(0); 
 
       // Set the processing
-      if (!retval && td->DE_camType >= 2 && 
-        td->DE_Cam->setCorrectionMode(td->ProcessingPlus & 3) != S_OK)
-          retval = 1;
+      if (!retval && td->DE_camType >= 2) 
+        retval = td->DE_Cam->setCorrectionMode(td->ProcessingPlus & 3, td->GatanReadMode);
 
-      // Calculate proper Image size based on binning
-      retval = td->DE_Cam->setBinning(td->Binning, td->Binning, td->CallSizeX, 
-        td->CallSizeY);
+      // Set the operating mode if relevant
+      if (!retval && td->GatanReadMode >= 0)
+        retval = td->DE_Cam->SetCountingParams(td->GatanReadMode, td->CountScaling, 
+          td->FramesPerSec);
+
+      // Set alignment in server if relevant
+      if (!retval && td->AlignFrames >= 0)
+        retval = td->DE_Cam->SetAlignInServer(td->AlignFrames);
+
+      // Set the binning
+      if (!retval) 
+        retval = td->DE_Cam->setBinning(td->Binning, td->Binning, td->CallSizeX, 
+          td->CallSizeY, td->UseHardwareBinning);
 
       // Set the preexposure time in milliseconds
       if (!retval)
         retval = td->DE_Cam->setPreExposureTime(1000. * td->DMsettling);
 
-      // Calculate the proper ROI. TM to support DE12 3_28_11
+      // Calculate the proper ROI and set it. TM to support DE12 3_28_11
       if (!retval)
         retval = td->DE_Cam->setROI(td->Left * td->Binning, td->Top * td->Binning, 
           td->CallSizeX * td->Binning, td->CallSizeY * td->Binning);
@@ -6125,9 +6222,10 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
       }
       if (retval) {
         if (retval > 0) {
+          str = td->DE_Cam->GetLastErrorString();
           report.Format("Error setting parameters or getting image from DE camera; %s",
-            GetDebugOutput('D') ? "see debug output" : 
-            "Set Debug Output to D for details");
+            B3DCHOICE(str.IsEmpty(), GetDebugOutput('D') ? "see debug output" : 
+            "Set Debug Output to D for details", (LPCTSTR)str));
           DeferMessage(td, report);
         }
         delete [] td->Array[0];
@@ -6966,7 +7064,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
 {
   double stX, stZ, ISX, ISY;
   int spotSize, chan, i, err, ix, iy, invertCon, operation, ixoff, iyoff, divideBy;
-  int typext = 0, ldSet = 0;
+  int sumCount, camFrames, typext = 0, ldSet = 0;
   BOOL lowDoseMode, hasUserPtSave = false;
   bool readLocally = false;
   float axoff, ayoff, specRate, camRate;
@@ -7428,7 +7526,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
 
       imBuf->mBinning = mBinning;
       imBuf->mEffectiveBin = (float)mBinning;
-      CUR_OR_DEFD_TO_BUF(mDivideBinToShow, mParam->K2Type ? 2 : 1);
+      CUR_OR_DEFD_TO_BUF(mDivideBinToShow, BinDivisorI(mParam));
       CUR_OR_DEFD_TO_BUF(mDividedBy2, mDivBy2ForImBuf > 0);
       CUR_OR_DEFD_TO_BUF(mCamera, curCam);
       if (mMagToRestore)
@@ -7549,7 +7647,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       extra->mISX = (float)mStartingISX;
       extra->mISY = (float)mStartingISY;
       extra->mExposure = (float)mExposure;
-      extra->mBinning = (float)mBinning / (mParam->K2Type ? 2.f : 1.f);
+      extra->mBinning = (float)mBinning / BinDivisorF(mParam);
       extra->mCamera = curCam;
       extra->mPixel = pixelSize;
       if (mTD.NumAsyncSumFrames != 0 && imBuf->mSampleMean > EXTRA_VALUE_TEST && 
@@ -7668,34 +7766,35 @@ void CCameraController::DisplayNewImage(BOOL acquired)
     if (mParam->DE_camType >= 2 && !(mTD.ProcessingPlus & CONTINUOUS_USE_THREAD)) {
       mTD.DE_Cam->SetImageExtraData(extra);
       err = lastConSetp->saveFrames;
-      if (err & (DE_SAVE_FRAMES | DE_SAVE_SUMS)) {
+      if (err & DE_SAVE_MASTER) {
+
+        // Get frame time, number of camera frames and # in summed frames
+        // Counting mode has no readout on  frames saved, so we have to fill that in
+        frameTimeForDose = (float)(1.f / mTD.FramesPerSec);
+        camFrames = B3DNINT(mExposure / frameTimeForDose);
+        sumCount = B3DMAX(1, lastConSetp->DEsumCount);
+        if (lastConSetp->K2ReadMode && (mParam->CamFlags & DE_CAM_CAN_COUNT)) {
+          sumCount = B3DMAX(1, lastConSetp->sumK2Frames);
+          extra->mNumSubFrames = camFrames / sumCount;
+        }
         if (extra->mNumSubFrames > 0) {
           message.Format(" %d %sframes were saved to %s", extra->mNumSubFrames, 
-            (err & DE_SAVE_FRAMES) ? "raw " : "summed ", (LPCTSTR)extra->mSubFramePath);
+            sumCount > 1 ? "" : "summed ", (LPCTSTR)extra->mSubFramePath);
         } else  {
           message.Format("Saving of %sframes was requested but the server says no frames "
-            "were saved", (err & DE_SAVE_FRAMES) ? "" : "summed ");
+            "were saved", sumCount > 1 ? "" : "summed ");
         }
 
         // Set up summed frame list for the dose estimate below
-        frameTimeForDose = 1.f / mParam->DE_FramesPerSec;
-        ix = B3DNINT(mExposure / frameTimeForDose);
-        if (err & DE_SAVE_FRAMES) {
-          if (!extra->mNumSubFrames && mScope->GetSimulationMode())
-            extra->mNumSubFrames = ix;
-          summedList.push_back((short)extra->mNumSubFrames);
+        // There shouldn't be any remainder any more, but leave it here
+        summedList.push_back((short)camFrames / sumCount);
+        summedList.push_back(sumCount);
+        if (camFrames % sumCount) {
           summedList.push_back(1);
-        } else {
-          summedList.push_back((short)ix / lastConSetp->DEsumCount);
-          summedList.push_back(lastConSetp->DEsumCount);
-          if (ix % lastConSetp->DEsumCount) {
-            summedList.push_back(1);
-            summedList.push_back((short)(ix % lastConSetp->DEsumCount));
-          }
-          if (!extra->mNumSubFrames && mScope->GetSimulationMode())
-            extra->mNumSubFrames = (ix + lastConSetp->DEsumCount - 1) / 
-            lastConSetp->DEsumCount;
+          summedList.push_back((short)(camFrames % sumCount));
         }
+        if (!extra->mNumSubFrames && mScope->GetSimulationMode())
+          extra->mNumSubFrames = (camFrames + sumCount - 1) / sumCount;
         mWinApp->AppendToLog(message);
       }
     }
@@ -7885,6 +7984,7 @@ void CCameraController::ErrorCleanup(int error)
   if (mBlankNextShot)
     mScope->BlankBeam(false);
   mBlankNextShot = false;
+  mDEserverRefNextShot = 0;
   mBlankWhenRetracting = false;
   mDeferStackingFrames = false;
   mCancelNextContinuous = false;
@@ -8719,7 +8819,7 @@ int CCameraController::AcquireFEIimage(CameraThreadData *td, void *array, int co
   CString message;
   long retval = 0, index = 0;
   static bool needFalconShutter = true;
-  bool advanced = (td->FEIflags & PLUGFEI_USES_ADVANCED) != 0;
+  bool advanced = (td->CamFlags & PLUGFEI_USES_ADVANCED) != 0;
   DWORD ticks = GetTickCount();
 
   if (td->scopePlugFuncs->BeginThreadAccess(2, advanced ? PLUGFEI_MAKE_NOBASIC : 0)) {
@@ -8732,14 +8832,14 @@ int CCameraController::AcquireFEIimage(CameraThreadData *td, void *array, int co
     SEMTrace('E', "Calling ASIacquireFromcamera %p %d %d %f %d %d %d %d %d %d %d %d %d "
       "%d %f", array, sizeX, sizeY,  td->Exposure,  messInd, td->Binning, 
       td->restrictedSize, td->ImageType, td->DivideBy2, td->eagleIndex, 
-      (td->FEIflags & PLUGFEI_CAN_DOSE_FRAC) ? td->SaveFrames : -1, td->GatanReadMode,
-      (td->FEIflags & PLUGFEI_CAM_CAN_ALIGN) ? td->AlignFrames : -1, td->FEIacquireFlags,
+      (td->CamFlags & PLUGFEI_CAN_DOSE_FRAC) ? td->SaveFrames : -1, td->GatanReadMode,
+      (td->CamFlags & PLUGFEI_CAM_CAN_ALIGN) ? td->AlignFrames : -1, td->FEIacquireFlags,
       td->CountScaling);
     retval = td->scopePlugFuncs->ASIacquireFromCamera(array, sizeX, sizeY,  
       td->Exposure,  messInd, td->Binning, td->restrictedSize, td->ImageType,
       td->DivideBy2, td->eagleIndex, 
-      (td->FEIflags & PLUGFEI_CAN_DOSE_FRAC) ? td->SaveFrames : -1, td->GatanReadMode,
-      (td->FEIflags & PLUGFEI_CAM_CAN_ALIGN) ? td->AlignFrames : -1, td->FEIacquireFlags,
+      (td->CamFlags & PLUGFEI_CAN_DOSE_FRAC) ? td->SaveFrames : -1, td->GatanReadMode,
+      (td->CamFlags & PLUGFEI_CAM_CAN_ALIGN) ? td->AlignFrames : -1, td->FEIacquireFlags,
       0, 0, td->CountScaling, 0.);
 
   } else
@@ -9403,7 +9503,7 @@ void CCameraController::ComposeFramePathAndName(bool temporary)
     label = item->mLabel;
 
   // Set up folder
-  if (!mParam->DE_camType) {
+  if (!mParam->DE_camType || !mParam->DE_AutosaveDir.IsEmpty()) {
      if ((mFrameNameFormat & FRAME_FOLDER_ROOT) && !mFrameBaseName.IsEmpty())
       path = mFrameBaseName;
     if ((mFrameNameFormat & FRAME_FOLDER_SAVEFILE) && !savefile.IsEmpty())
@@ -9419,9 +9519,10 @@ void CCameraController::ComposeFramePathAndName(bool temporary)
         mFrameFolder = mDirForFalconFrames;
     } else {
 
-      // Otherwise append the folder
-      mFrameFolder = B3DCHOICE(IS_BASIC_FALCON2(mParam), mDirForFalconFrames,
-        mDirForK2Frames);
+      // Otherwise append the folder.  For DE, FrameFolder is set up by caller
+      if (!mParam->DE_camType)
+        mFrameFolder = B3DCHOICE(IS_BASIC_FALCON2(mParam), mDirForFalconFrames,
+          mDirForK2Frames);
       if (!path.IsEmpty())
         mFrameFolder += CString("\\") + path;
     }
@@ -9499,7 +9600,7 @@ bool CCameraController::IsConSetSaving(ControlSet *conSet, CameraParameters *par
 {
   bool falconCanSave = (IS_BASIC_FALCON2(param) && GetMaxFalconFrames(param) && 
     mFrameSavingEnabled) || 
-    (IS_FALCON2_OR_3(param) && (param->FEIflags & PLUGFEI_CAN_DOSE_FRAC));
+    (IS_FALCON2_OR_3(param) && (param->CamFlags & PLUGFEI_CAN_DOSE_FRAC));
   bool weCanAlignFalcon = falconCanSave && 
     mWinApp->mScope->GetPluginVersion() >= PLUGFEI_ALLOWS_ALIGN_HERE &&
     !(mParam->FEItype == FALCON3_TYPE && mLocalFalconFramePath.IsEmpty());

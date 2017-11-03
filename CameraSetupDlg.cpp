@@ -33,6 +33,7 @@ static char THIS_FILE[] = __FILE__;
 #define MAX_BIN_BUTTONS 10
 #define SHIFT_FRACTION 64
 #define MAX_DARK_AVERAGE 20
+#define MAX_DE_SUM_COUNT 250
 
 static int idTable[] = {IDC_STATCAMERA, IDC_RCAMERA1, IDC_RCAMERA2, IDC_RCAMERA3,
 IDC_RCAMERA4, IDC_RCAMERA5, IDC_RCAMERA6, IDC_MATCH_REG_PIXEL, IDC_MATCH_REG_INTENSITY,
@@ -50,10 +51,11 @@ IDC_STATRIGHT, IDC_BUTQUARTER, IDC_BUTHALF, IDC_BUTFULL, IDC_REMOVEXRAYS, IDC_RM
 IDC_STATMICRON, IDC_STATAREA, IDC_STATPOSIT, IDC_STATSIZE, IDC_SPINLEFTRIGHT, IDC_RSEARCH,
 IDC_SPINUPDOWN, IDC_BUTRECENTER, IDC_BUTSWAPXY, IDC_KEEP_PIXEL_TIME,
 IDC_CHECK_CORRECT_DRIFT, IDC_STAT_NORM_DSDF, PANEL_END,
-IDC_STATSHUTTER, IDC_RBEAMONLY, IDC_RFILMONLY, IDC_RSHUTTERCOMBO, IDC_STATDOSERATE,
-IDC_BUTWIDEQUARTER, IDC_BUTWIDEHALF, IDC_BUTSMALLER10, IDC_BUTBIGGER10,
-IDC_BUTABITLESS, IDC_DARKNEXT, IDC_DARKALWAYS, IDC_STATELECDOSE, IDC_EDITAVERAGE,
-IDC_BUTUPDATEDOSE, IDC_AVERAGEDARK, IDC_SPINAVERAGE, IDC_STATAVERAGE, PANEL_END,
+IDC_STATSHUTTER, IDC_RBEAMONLY, IDC_RFILMONLY, IDC_RSHUTTERCOMBO, IDC_BUTWIDEQUARTER,
+IDC_BUTWIDEHALF, IDC_BUTSMALLER10, IDC_BUTBIGGER10, IDC_BUTABITLESS, PANEL_END,
+IDC_DARKNEXT, IDC_DARKALWAYS, IDC_EDITAVERAGE, IDC_AVERAGEDARK, IDC_SPINAVERAGE, 
+IDC_STATAVERAGE, IDC_STAT_LINE1, PANEL_END,
+IDC_BUTUPDATEDOSE, IDC_STATELECDOSE, IDC_STATDOSERATE, PANEL_END,
 IDC_STAT_SCANRATE, IDC_BUT_MAX_SCAN_RATE, IDC_STAT_TIMING_AVAIL,
 IDC_CHECK_DYNFOCUS, IDC_CHECK_LINESYNC, IDC_STATCHANACQ, IDC_STATCHAN1, IDC_STATCHAN2,
 IDC_STATCHAN3, IDC_STATCHAN4, IDC_STATCHAN5, IDC_STATCHAN6, IDC_STATCHAN7, IDC_STATCHAN8,
@@ -65,9 +67,12 @@ IDC_BUT_SETUP_ALIGN, IDC_SAVE_FRAMES, IDC_SET_SAVE_FOLDER, IDC_BUT_FILE_OPTIONS,
 IDC_STAT_SAVE_SUMMARY, IDC_STAT_ANTIALIAS, IDC_SETUP_FALCON_FRAMES,
 IDC_SETUP_K2_FRAME_SUMS, IDC_SAVE_FRAME_SUMS, IDC_ALWAYS_ANTIALIAS, IDC_STAT_WHERE_ALIGN,
 IDC_STAT_INTERMEDIATE_ONOFF, IDC_STAT_ALIGN_SUMMARY, PANEL_END,
-IDC_GROUP_DE_SAVE, IDC_DE_SAVE_FRAMES, IDC_DE_SAVE_SUMS, IDC_EDIT_DE_SUM_COUNT, 
-IDC_DE_SAVE_FINAL, IDC_STAT_NUM_DE_RAW, IDC_STAT_NUM_DE_SUMS, IDC_BUT_NAME_SUFFIX, 
-PANEL_END,
+IDC_STAT_DEMODE, IDC_RDE_LINEAR, IDC_RDE_COUNTING, IDC_RDE_SUPERRES, IDC_EDIT_DE_FPS,
+IDC_DE_SAVE_FRAMES, IDC_EDIT_DE_SUM_COUNT, IDC_DE_SAVE_MASTER,
+IDC_DE_SAVE_FINAL, IDC_STAT_NUM_DE_RAW, IDC_BUT_NAME_SUFFIX, IDC_STAT_DE_FRAME_TIME,
+IDC_STAT_DE_FRAME_SEC, IDC_STAT_DEFPS, IDC_DE_ALIGN_FRAMES, IDC_BUT_DE_SETUP_ALIGN,
+IDC_EDIT_DE_FRAME_TIME, IDC_STAT_DE_SUM_NUM, IDC_SPIN_DE_SUM_NUM, IDC_STAT_DE_WHERE_ALIGN,
+IDC_DE_SET_SAVE_FOLDER, PANEL_END,
 IDOK, IDC_ACQUIRE_REOPEN, IDCANCEL, IDC_BUTHELP, PANEL_END, TABLE_END};
 
 static int topTable[sizeof(idTable) / sizeof(int)];
@@ -84,15 +89,19 @@ CCameraSetupDlg::CCameraSetupDlg(CWnd* pParent /*=NULL*/)
   , m_bKeepPixel(FALSE)
   , m_strTimingAvail(_T(""))
   , m_iK2Mode(0)
+  , m_iDEMode(0)
   , m_bDoseFracMode(FALSE)
   , m_fFrameTime(0)
   , m_bAlignDoseFrac(FALSE)
   , m_bSaveFrames(FALSE)
   , m_strDoseRate(_T(""))
   , m_bDEsaveFrames(FALSE)
-  , m_bDEsaveSums(FALSE)
+  , m_bDEsaveMaster(FALSE)
   , m_bDEsaveFinal(FALSE)
   , m_iSumCount(0)
+  , m_fDEframeTime(0.04f)
+  , m_fDEfps(25.f)
+  , m_bDEalignFrames(FALSE)
   , m_strNumDEraw(_T(""))
   , mChangedBinning(false)
   , mMaxIntegration(1)
@@ -224,6 +233,7 @@ void CCameraSetupDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_STAT_TIMING_AVAIL, m_statTimingAvail);
   DDX_Text(pDX, IDC_STAT_TIMING_AVAIL, m_strTimingAvail);
   DDX_Radio(pDX, IDC_RLINEAR, m_iK2Mode);
+  DDX_Radio(pDX, IDC_RDE_LINEAR, m_iDEMode);
   DDX_Check(pDX, IDC_DOSE_FRAC_MODE, m_bDoseFracMode);
   DDX_Control(pDX, IDC_STAT_FRAME_TIME, m_statFrameTime);
   DDX_Control(pDX, IDC_EDIT_FRAME_TIME, m_editFrameTime);
@@ -235,20 +245,35 @@ void CCameraSetupDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Check(pDX, IDC_SAVE_FRAMES, m_bSaveFrames);
   DDX_Control(pDX, IDC_SAVE_FRAMES, m_butSaveFrames);
   DDX_Control(pDX, IDC_SET_SAVE_FOLDER, m_butSetSaveFolder);
+  DDX_Control(pDX, IDC_DE_SET_SAVE_FOLDER, m_butDESetSaveFolder);
   DDX_Text(pDX, IDC_STATDOSERATE, m_strDoseRate);
   DDX_Control(pDX, IDC_SETUP_FALCON_FRAMES, m_butSetupFalconFrames);
   DDX_Check(pDX, IDC_DE_SAVE_FRAMES, m_bDEsaveFrames);
-  DDX_Check(pDX, IDC_DE_SAVE_SUMS, m_bDEsaveSums);
+  DDX_Control(pDX, IDC_DE_SAVE_FRAMES, m_butDESaveFrames);
   DDX_Check(pDX, IDC_DE_SAVE_FINAL, m_bDEsaveFinal);
+  DDX_Check(pDX, IDC_DE_SAVE_MASTER, m_bDEsaveMaster);
+  DDX_Control(pDX, IDC_DE_SAVE_FINAL, m_butDESaveFinal);
+  DDX_Control(pDX, IDC_STAT_DE_FRAME_TIME, m_statDEframeTime);
+  DDX_Control(pDX, IDC_STAT_DE_FRAME_SEC, m_statDEframeSec);
+  DDX_Control(pDX, IDC_STAT_DE_WHERE_ALIGN, m_statDEfwhereAlign);
+  DDX_Control(pDX, IDC_STAT_DE_SUM_NUM, m_statDEsumNum);
+  DDX_Control(pDX, IDC_EDIT_DE_FRAME_TIME, m_editDEframeTime);
+  DDX_Control(pDX, IDC_SPIN_DE_SUM_NUM, m_spinDEsumNum);
   DDX_Control(pDX, IDC_EDIT_DE_SUM_COUNT, m_editSumCount);
   DDX_Text(pDX, IDC_EDIT_DE_SUM_COUNT, m_iSumCount);
-  DDV_MinMaxInt(pDX, m_iSumCount, 0, 100);
+  DDV_MinMaxInt(pDX, m_iSumCount, 1, MAX_DE_SUM_COUNT);
+  DDX_Text(pDX, IDC_EDIT_DE_FRAME_TIME, m_fDEframeTime);
+  DDV_MinMaxFloat(pDX, m_fDEframeTime, 0., 10.);
+  DDX_Text(pDX, IDC_EDIT_DE_FPS, m_fDEfps);
+  DDV_MinMaxFloat(pDX, m_fDEfps, 0., 5000.);
+  DDX_Check(pDX, IDC_DE_ALIGN_FRAMES, m_bDEalignFrames);
+  DDX_Control(pDX, IDC_DE_ALIGN_FRAMES, m_butDEalignFrames);
+  DDX_Control(pDX, IDC_BUT_DE_SETUP_ALIGN, m_butDEsetupAlign);
   DDX_Control(pDX, IDC_STAT_NUM_DE_RAW, m_statNumDEraw);
-  DDX_Control(pDX, IDC_STAT_NUM_DE_SUMS, m_statNumDEsums);
   DDX_Text(pDX, IDC_STAT_NUM_DE_RAW, m_strNumDEraw);
-  DDX_Text(pDX, IDC_STAT_NUM_DE_SUMS, m_strNumDEsums);
   DDX_Control(pDX, IDC_DOSE_FRAC_MODE, m_butDoseFracMode);
   DDX_Control(pDX, IDC_BUT_FILE_OPTIONS, m_butFileOptions);
+  DDX_Control(pDX, IDC_BUT_NAME_SUFFIX, m_butNameSuffix);
   DDX_Control(pDX, IDC_STAT_SAVE_SUMMARY, m_statSaveSummary);
   DDX_Control(pDX, IDC_STAT_ALIGN_SUMMARY, m_statAlignSummary);
   DDX_Check(pDX, IDC_CHECK_CORRECT_DRIFT, m_bCorrectDrift);
@@ -345,13 +370,16 @@ BEGIN_MESSAGE_MAP(CCameraSetupDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_RLINEAR, OnK2Mode)
   ON_BN_CLICKED(IDC_RCOUNTING, OnK2Mode)
   ON_BN_CLICKED(IDC_RSUPERRES, OnK2Mode)
+  ON_BN_CLICKED(IDC_RDE_LINEAR, OnDEMode)
+  ON_BN_CLICKED(IDC_RDE_COUNTING, OnDEMode)
+  ON_BN_CLICKED(IDC_RDE_SUPERRES, OnDEMode)
   ON_BN_CLICKED(IDC_DOSE_FRAC_MODE, OnDoseFracMode)
   ON_BN_CLICKED(IDC_ALIGN_DOSE_FRAC, OnAlignDoseFrac)
   ON_BN_CLICKED(IDC_SAVE_FRAMES, OnSaveFrames)
   ON_BN_CLICKED(IDC_SET_SAVE_FOLDER, OnSetSaveFolder)
+  ON_BN_CLICKED(IDC_DE_SET_SAVE_FOLDER, OnDESetSaveFolder)
   ON_BN_CLICKED(IDC_SETUP_FALCON_FRAMES, OnSetupFalconFrames)
   ON_BN_CLICKED(IDC_DE_SAVE_FRAMES, OnDeSaveFrames)
-  ON_BN_CLICKED(IDC_DE_SAVE_SUMS, OnDeSaveSums)
   ON_EN_KILLFOCUS(IDC_EDIT_DE_SUM_COUNT, OnKillfocusEditDeSumCount)
   ON_BN_CLICKED(IDC_BUT_FILE_OPTIONS, OnButFileOptions)
   ON_BN_CLICKED(IDC_BUT_NAME_SUFFIX, OnButFileOptions)
@@ -359,6 +387,10 @@ BEGIN_MESSAGE_MAP(CCameraSetupDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_SETUP_K2_FRAME_SUMS, OnSetupFalconFrames)
   ON_BN_CLICKED(IDC_ALWAYS_ANTIALIAS, OnAlwaysAntialias)
   ON_BN_CLICKED(IDC_BUT_SETUP_ALIGN, OnButSetupAlign)
+  ON_BN_CLICKED(IDC_DE_SAVE_MASTER, OnDeSaveMaster)
+  ON_EN_KILLFOCUS(IDC_EDIT_DE_FRAME_TIME, OnKillfocusDeFrameTime)
+  ON_EN_KILLFOCUS(IDC_EDIT_DE_FPS, OnKillfocusEditDeFPS)
+  ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_DE_SUM_NUM, OnDeltaposSpinDeSumNum)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -487,8 +519,8 @@ void CCameraSetupDlg::OnShuttering()
 
 void CCameraSetupDlg::OnConSet() 
 {
-  LoadConSet();
-  UnloadConSet();
+  UnloadDialogToConset();
+  LoadConsetToDialog();
 }
 
 void CCameraSetupDlg::OnButcopycamera() 
@@ -501,16 +533,16 @@ void CCameraSetupDlg::OnButcopycamera()
   else
     mWinApp->TransferConSet(mCurrentSet, mActiveCameraList[mLastCamera],
       mActiveCameraList[mCurrentCamera]); 
-  UnloadConSet();
+  LoadConsetToDialog();
 }
 
 // Switch camera - keep track of last camera
 void CCameraSetupDlg::OnRcamera() 
 {
   mLastCamera = mCurrentCamera;
-  LoadConSet();
+  UnloadDialogToConset();
   ManageCamera();
-  UnloadConSet();
+  LoadConsetToDialog();
 }
 
 
@@ -529,6 +561,8 @@ void CCameraSetupDlg::OnBinning()
     }
     ManageDrift();
   }
+  if (mDE_Type && (mParam->CamFlags & DE_HAS_HARDWARE_BIN))
+    m_butCorrectDrift.EnableWindow(m_iBinning > 0);
   ManageExposure();
   ManageBinnedSize();
   ManageTimingAvailable();
@@ -701,7 +735,7 @@ void CCameraSetupDlg::OnOK()
 
   // This gets OnKillfocus called for an edit box if it has focus.
   SetFocus();
-  LoadConSet(); 
+  UnloadDialogToConset(); 
   mCamera->SetAntialiasBinning(m_bAlwaysAntialias);
   GetWindowPlacement(&mPlacement);
   CBaseDlg::OnOK();
@@ -713,19 +747,25 @@ void CCameraSetupDlg::OnAcquireReopen()
   OnOK();
 }
 
+// Cancel: Restore last saved values of the FPS for the DE camera, save placement
 void CCameraSetupDlg::OnCancel() 
 {
+  if (mWinApp->mDEToolDlg.CanSaveFrames(mParam)) {
+    mParam->DE_FramesPerSec = mSaveLinearFPS;
+    mParam->DE_CountingFPS = mSaveCountingFPS;
+  }
   GetWindowPlacement(&mPlacement);
   CBaseDlg::OnCancel();
 }
 
 static int binVals[MAX_BINNINGS] = {1, 2, 3, 4, 6, 8};
 
-// Unload the current control set into the dialog
-void CCameraSetupDlg::UnloadConSet()
+// Load the current control set into the dialog
+void CCameraSetupDlg::LoadConsetToDialog()
 {
   int i, indMin, binning, showProc, lockSet;
   bool noDark, noGain, alwaysAdjust, noRaw, show, canCopyView;
+  int *modeP = mParam->DE_camType ? &m_iDEMode : &m_iK2Mode;
   CButton *radio;
   MontParam *montp = mWinApp->GetMontParam();
   mCurSet = &mConSets[mCurrentSet + mActiveCameraList[mCurrentCamera] * MAX_CONSETS];
@@ -754,33 +794,45 @@ void CCameraSetupDlg::UnloadConSet()
   if (mWeCanAlignFalcon && !FCAM_CAN_ALIGN(mParam) && !mCurSet->useFrameAlign)
     mCurSet->useFrameAlign = 1;
   m_fFrameTime = mCurSet->frameTime;
+  m_fDEframeTime = RoundedDEframeTime(m_fFrameTime);
   m_bAlignDoseFrac = mCurSet->alignFrames > 0 || 
     (mCurrentSet == RECORD_CONSET && mWinApp->mTSController->GetFrameAlignInIMOD());
   mUserSaveFrames = m_bSaveFrames = mCurSet->saveFrames > 0;
   m_bSaveK2Sums = mCurSet->sumK2Frames > 0 && 
     mCamera->CAN_PLUGIN_DO(CAN_SUM_FRAMES, mParam);
-  if (mParam->K2Type > 1)
+  if (mParam->K2Type == 2)
     mCurSet->K2ReadMode = 0;
-  m_iK2Mode = mCurSet->K2ReadMode;
-  if (mParam->K2Type) {
+  *modeP = mCurSet->K2ReadMode;
+  if (CamHasDoubledBinnings(mParam)) {
     radio = (CButton *)GetDlgItem(IDC_RBIN1);
-    radio->EnableWindow(mBinningEnabled && m_iK2Mode == SUPERRES_MODE);
+    radio->EnableWindow(mBinningEnabled && *modeP == SUPERRES_MODE);
   }
   if (mParam->OneViewType)
     m_bCorrectDrift = mCurSet->alignFrames != 0;
+  else if (mDE_Type && (mParam->CamFlags & DE_HAS_HARDWARE_BIN))
+    m_bCorrectDrift = mCurSet->boostMag != 0;
+
   mSummedFrameList = mCurSet->summedFrameList;
   mNumSkipBefore = mCurSet->numSkipBefore;
   mNumSkipAfter = mCurSet->numSkipAfter;
   mUserFrameFrac = mCurSet->userFrameFractions;
   mUserSubframeFrac = mCurSet->userSubframeFractions;
+
+  // For DE camera, set checkboxes by the flags and the appropriate sum count and FPS
+  // for the mode, and save the starting values of FPS
   if (mWinApp->mDEToolDlg.CanSaveFrames(mParam)) {
-    m_bDEsaveFrames = (mCurSet->saveFrames & DE_SAVE_FRAMES) != 0;
-    m_bDEsaveSums = (mCurSet->saveFrames & DE_SAVE_SUMS) != 0;
+    m_bDEsaveMaster = (mCurSet->saveFrames & DE_SAVE_MASTER) != 0;
+    m_bDEsaveFrames = (mCurSet->saveFrames & DE_SAVE_SINGLE) != 0;
     m_bDEsaveFinal = (mCurSet->saveFrames & DE_SAVE_FINAL) != 0;
-    m_iSumCount = mCurSet->DEsumCount;
-    B3DCLAMP(m_iSumCount, 2, 100);
-    m_editSumCount.EnableWindow(m_bDEsaveSums);
+    m_iSumCount = (*modeP > 0) ? mCurSet->sumK2Frames : mCurSet->DEsumCount;
+    m_fDEfps = (*modeP > 0 && mParam->DE_CountingFPS > 0.) ? mParam->DE_CountingFPS : 
+      mParam->DE_FramesPerSec;
+    m_bDEalignFrames = m_bAlignDoseFrac;
+    mSaveLinearFPS = mParam->DE_FramesPerSec;
+    mSaveCountingFPS = mParam->DE_CountingFPS;
+    ManageDEpanel();
   }
+  B3DCLAMP(m_iSumCount, 1, MAX_DE_SUM_COUNT);
 
   // Adjust the size in case of restricted sizes
   alwaysAdjust = (mParam->STEMcamera && mParam->FEItype) || 
@@ -922,9 +974,10 @@ void CCameraSetupDlg::UnloadConSet()
   DrawBox();
 }
 
-// Load the data in the dialog into the current control set
-void CCameraSetupDlg::LoadConSet()
+// Unload the data in the dialog into the current control set
+void CCameraSetupDlg::UnloadDialogToConset()
 {
+  int *modeP = mParam->DE_camType ? &m_iDEMode : &m_iK2Mode;
   UpdateData(TRUE);
   mCurSet->binning = mBinnings[m_iBinning];
   mCurSet->mode = 1 - m_iContSingle ;
@@ -943,7 +996,7 @@ void CCameraSetupDlg::LoadConSet()
   mCurSet->onceDark = m_bDarkNext ? 1 : 0;
   mCurSet->averageDark = m_bAverageDark ? 1 : 0;
   mCurSet->numAverage = m_iAverageTimes;
-  mCurSet->K2ReadMode =  m_iK2Mode;
+  mCurSet->K2ReadMode =  *modeP;
   if (mParam->K2Type)
     mCurSet->doseFrac = m_bDoseFracMode ? 1 : 0;
   mCurSet->frameTime = m_fFrameTime;
@@ -956,13 +1009,27 @@ void CCameraSetupDlg::LoadConSet()
   mCurSet->numSkipAfter = mNumSkipAfter;
   mCurSet->userFrameFractions = mUserFrameFrac;
   mCurSet->userSubframeFractions = mUserSubframeFrac;
+
+  // DE camera: Recompose the save flags, put sum count in appropriate spot, and update
+  // the saved FPS values
   if (mWinApp->mDEToolDlg.CanSaveFrames(mParam)) {
-    mCurSet->saveFrames = (m_bDEsaveFrames ? DE_SAVE_FRAMES : 0) +
-      (m_bDEsaveSums ? DE_SAVE_SUMS : 0) + (m_bDEsaveFinal ? DE_SAVE_FINAL : 0);
-    mCurSet->DEsumCount = m_iSumCount;
+    mCurSet->saveFrames = (m_bDEsaveFrames ? DE_SAVE_SINGLE : 0) +
+      (m_bDEsaveMaster ? DE_SAVE_MASTER : 0) + (m_bDEsaveFinal ? DE_SAVE_FINAL : 0);
+    if (*modeP)
+      mCurSet->sumK2Frames = m_iSumCount;
+    else
+      mCurSet->DEsumCount = m_iSumCount;
+    mSaveLinearFPS = mParam->DE_FramesPerSec;
+    mSaveCountingFPS = mParam->DE_CountingFPS;
+    m_bAlignDoseFrac = m_bDEalignFrames;
   }
   if (mParam->OneViewType)
     mCurSet->alignFrames = m_bCorrectDrift ? 1 : 0;
+  else if (mDE_Type && (mParam->CamFlags & DE_HAS_HARDWARE_BIN))
+    mCurSet->boostMag = m_bCorrectDrift ? 1 : 0;
+  if (!(mCurrentSet == RECORD_CONSET && mWinApp->mTSController->GetFrameAlignInIMOD()))
+    mCurSet->alignFrames = m_bAlignDoseFrac ? 1 : 0;
+
   mCurSet->lineSync = m_bLineSync ? 1 : 0;
   mCurSet->dynamicFocus = m_bDynFocus ? 1 : 0;
   mCurSet->integration = m_iIntegration;
@@ -994,9 +1061,10 @@ void CCameraSetupDlg::LoadConSet()
 float CCameraSetupDlg::ManageExposure(bool updateIfChange)
 {
   float realExp = m_eExposure;
-  bool changed = mCamera->ConstrainExposureTime(mParam, m_bDoseFracMode, m_iK2Mode, 
-    mBinnings[m_iBinning], m_bAlignDoseFrac && !mCurSet->useFrameAlign, realExp, 
-    m_fFrameTime);
+  int *modeP = mDE_Type ? &m_iDEMode : &m_iK2Mode;
+  BOOL changed = mCamera->ConstrainExposureTime(mParam, m_bDoseFracMode, *modeP, 
+    mBinnings[m_iBinning], m_bAlignDoseFrac && !mCurSet->useFrameAlign, 
+    m_bDEsaveMaster ? m_iSumCount : 1, realExp, m_fFrameTime);
 
   float roundFac = mCamera->ExposureRoundingFactor(mParam);
   if (roundFac) {
@@ -1005,18 +1073,13 @@ float CCameraSetupDlg::ManageExposure(bool updateIfChange)
   } else
     m_eExposure = realExp;
   if (mWinApp->mDEToolDlg.CanSaveFrames(mParam)) {
-    double fps = mParam->DE_FramesPerSec > 0 ? mParam->DE_FramesPerSec :
-      mWinApp->mDEToolDlg.GetFramesPerSecond();
-    int frames = (int)floor(fps * realExp) + 1;
-    m_statNumDEraw.ShowWindow(m_bDEsaveFrames ? SW_SHOW : SW_HIDE);
-    m_statNumDEsums.ShowWindow(m_bDEsaveSums ? SW_SHOW : SW_HIDE);
-    changed = m_bDEsaveFrames || m_bDEsaveSums;
-    if (m_bDEsaveFrames)
-      m_strNumDEraw.Format("%d will be saved", frames);
-    if (m_bDEsaveSums) {
-      m_iSumCount = B3DMAX(2, B3DMIN(frames, m_iSumCount));
-      m_strNumDEsums.Format("%d will be saved", (frames + m_iSumCount -1) / m_iSumCount);
-    }
+    m_fDEframeTime = RoundedDEframeTime(m_fFrameTime * 
+      (m_bDEsaveMaster ? 1 : m_iSumCount));
+    int frames = (int)floor(realExp / m_fDEframeTime) + 1;
+    m_statNumDEraw.ShowWindow(m_bDEsaveMaster ? SW_SHOW : SW_HIDE);
+    changed = m_bDEsaveMaster;
+    if (m_bDEsaveMaster)
+      m_strNumDEraw.Format("%d frames will be saved", frames);
   }
   if (changed && updateIfChange)
     ManageDose();
@@ -1146,7 +1209,7 @@ void CCameraSetupDlg::ManageCamera()
 {
   int i, j, dir, err, showbox, maxChan, visTop, lastTop, areaHeight = mAreaBaseHeight;
   int canConfig, state;
-  BOOL states[7] = {0, true, 0, 0, 0, 0, true};
+  BOOL states[NUM_CAMSETUP_PANELS] = {0, true, 0, 0, 0, 0, 0, 0, true};
   bool twoRowPos;
   int hideForFalcon[] = {IDC_STAT_FRAME_TIME, IDC_EDIT_FRAME_TIME, IDC_STAT_FRAME_SEC,
     IDC_STAT_K2MODE, IDC_BUT_SETUP_ALIGN, IDC_RLINEAR, IDC_RCOUNTING, IDC_RSUPERRES, 
@@ -1161,15 +1224,16 @@ void CCameraSetupDlg::ManageCamera()
   ControlSet *conSets = &mConSets[mActiveCameraList[mCurrentCamera] * MAX_CONSETS];
   CString title = "Camera Parameters   --   " + mParam->name;
   mFalconCanSave = (IS_BASIC_FALCON2(mParam) && mCamera->GetMaxFalconFrames(mParam)) ||
-    (IS_FALCON2_OR_3(mParam) && (mParam->FEIflags & PLUGFEI_CAN_DOSE_FRAC));
+    (IS_FALCON2_OR_3(mParam) && (mParam->CamFlags & PLUGFEI_CAN_DOSE_FRAC));
   mWeCanAlignFalcon = mFalconCanSave && 
     mWinApp->mScope->GetPluginVersion() >= PLUGFEI_ALLOWS_ALIGN_HERE && 
     !(mParam->FEItype == FALCON3_TYPE && mCamera->GetLocalFalconFramePath().IsEmpty());
   states[0] = mNumCameras > 1;
-  states[2] = !mParam->STEMcamera;
-  states[3] = mParam->STEMcamera;
-  states[4] = mParam->K2Type || mFalconCanSave;
-  states[5] = mWinApp->mDEToolDlg.CanSaveFrames(mParam);
+  states[2] = !mParam->STEMcamera && !IS_FALCON2_OR_3(mParam);  // Shutter and other sizes
+  states[4] = !mParam->STEMcamera;    // Dose
+  states[5] = mParam->STEMcamera;
+  states[6] = mParam->K2Type || mFalconCanSave;
+  states[7] = mWinApp->mDEToolDlg.CanSaveFrames(mParam);
   SetWindowText((LPCTSTR)title);
   mCameraSizeX = mParam->sizeX;
   mCameraSizeY = mParam->sizeY;
@@ -1202,6 +1266,11 @@ void CCameraSetupDlg::ManageCamera()
     mCanProcess = GAIN_NORMALIZED;
   else if (mPluginType)
     mCanProcess = mParam->canDoProcessing;
+
+  // Dark reference section
+  states[3] = !mParam->STEMcamera && mCamera->CanProcessHere(mParam) && 
+    (mParam->processHere || !mCanProcess || mGatanType);
+  
   mBuiltInSettling = mParam->builtInSettling;
   mDMbeamShutterOK = mParam->DMbeamShutterOK || !mParam->GatanCam;
   mMinDualSettling = mParam->K2Type ? mCamera->GetK2ReadoutInterval() : 
@@ -1211,7 +1280,7 @@ void CCameraSetupDlg::ManageCamera()
   mNumBinnings = mParam->numBinnings;
   for (i = 0; i < mParam->numBinnings; i++)
     mBinnings[i] = mParam->binnings[i];
-  mCoordScaling = mParam->K2Type ? 2 : 1;
+  mCoordScaling = BinDivisorI(mParam);
   mMaxIntegration = B3DMAX(1, mParam->maxIntegration);
   m_spinIntegration.SetRange(1, 10000);
   m_spinIntegration.SetPos(5000);
@@ -1247,8 +1316,7 @@ void CCameraSetupDlg::ManageCamera()
     radio = (CButton *)GetDlgItem(i + IDC_RBIN1);
     radio->ShowWindow(i < mNumBinnings ? SW_SHOW : SW_HIDE);
     if (i < mNumBinnings) {
-      SetDlgItemText(i + IDC_RBIN1, mWinApp->BinningText(mBinnings[i], 
-        mParam->K2Type ? 2 : 1));
+      SetDlgItemText(i + IDC_RBIN1, mWinApp->BinningText(mBinnings[i], mParam));
     }
     if (i == mNumBinnings - 1) {
       radio->GetWindowRect(&rect);
@@ -1348,6 +1416,27 @@ void CCameraSetupDlg::ManageCamera()
   }
   m_statNormDSDF.ShowWindow(SW_HIDE);
 
+  // Manage the DE panel
+  if (mDE_Type) {
+    mDEweCanAlign = false;
+    if (!mParam->DE_AutosaveDir.IsEmpty())
+      ReplaceWindowText(&m_butNameSuffix, "Suffix", "Options");
+    if (!(mParam->CamFlags & DE_CAM_CAN_COUNT)) {
+      ShowDlgItem(IDC_RDE_LINEAR, false);
+      ShowDlgItem(IDC_RDE_COUNTING, false);
+      ShowDlgItem(IDC_RDE_SUPERRES, false);
+      ShowDlgItem(IDC_STAT_DEMODE, false);
+      ShowDlgItem(IDC_STAT_DEFPS, false);
+      ShowDlgItem(IDC_EDIT_DE_FPS, false);
+    }
+    ShowDlgItem(IDC_DE_ALIGN_FRAMES, mDEweCanAlign || 
+      (mParam->CamFlags & DE_CAM_CAN_ALIGN));
+    ShowDlgItem(IDC_BUT_DE_SETUP_ALIGN, mDEweCanAlign);
+    ShowDlgItem(IDC_STAT_DE_WHERE_ALIGN, mDEweCanAlign);
+    m_spinDEsumNum.SetRange(1, 10000);
+    m_spinDEsumNum.SetPos(5000);
+  }
+  
   // Dark ref management is now con-set dependent, moved it there
 
   // Show remove X rays box if it is enabled for camera or if any sets have it on
@@ -1356,7 +1445,10 @@ void CCameraSetupDlg::ManageCamera()
     showbox += conSets[i].removeXrays;
   m_butRemoveXrays.ShowWindow((showbox && !mParam->STEMcamera) ? SW_SHOW : SW_HIDE);
 
-  m_butCorrectDrift.ShowWindow(mParam->OneViewType ? SW_SHOW : SW_HIDE);
+  m_butCorrectDrift.ShowWindow((mParam->OneViewType || 
+    (mDE_Type && (mParam->CamFlags & DE_HAS_HARDWARE_BIN))) ? SW_SHOW : SW_HIDE);
+  m_butCorrectDrift.SetWindowText(mParam->OneViewType ? "Correct drift" : 
+    "Use hardware binning by 2");
 
   // Disable many things for restricted sizes
   ManageSizeAndPositionButtons(m_bDoseFracMode && mParam->K2Type);
@@ -1407,6 +1499,8 @@ void CCameraSetupDlg::ManageCamera()
   SetDlgItemText(IDC_DRIFTTEXT2, mParam->STEMcamera ? "usec" : "sec");
   if (mParam->STEMcamera)
     areaHeight = mParam->moduloX >= 0 ? mAreaTwoRowHeight : mAreaSTEMHeight;
+  else if (IS_FALCON2_OR_3(mParam))
+    areaHeight = mAreaSTEMHeight;
   m_statArea.SetWindowPos(NULL, 0, 0, mAreaWidth, areaHeight, SWP_NOMOVE);
   m_statProcessing.SetWindowPos(NULL, 0, 0, mProcWidth, 
     mParam->STEMcamera ? mProcSTEMHeight : mProcBaseHeight, SWP_NOMOVE);
@@ -1511,6 +1605,8 @@ void CCameraSetupDlg::ManageIntegration()
   if (mParam->OneViewType)
     m_butCorrectDrift.EnableWindow(mCamera->OneViewDriftCorrectOK(mParam) &&
     m_iProcessing == GAIN_NORMALIZED && !mParam->processHere);
+  else if (mDE_Type)
+    m_butCorrectDrift.EnableWindow(m_iBinning > 0);
 }
 
 BOOL CCameraSetupDlg::OnInitDialog() 
@@ -1702,7 +1798,7 @@ BOOL CCameraSetupDlg::OnInitDialog()
   ManageCamera();
     
   // Unload the control set
-  UnloadConSet();
+  LoadConsetToDialog();
   if (mPlacement.rcNormalPosition.right > 0)
     SetWindowPlacement(&mPlacement);
   CButton *button = (CButton *)GetDlgItem(IDOK);
@@ -2005,8 +2101,10 @@ void CCameraSetupDlg::ManageDose()
   // Need to synchronize back to camera LDP since we are accessing them
   mWinApp->CopyCurrentToCameraLDP();
   float realExp = m_eExposure;
-  mCamera->ConstrainExposureTime(mParam, m_bDoseFracMode, m_iK2Mode, mBinnings[m_iBinning]
-    , mCurSet->alignFrames && !mCurSet->useFrameAlign, realExp, m_fFrameTime);
+  mCamera->ConstrainExposureTime(mParam, m_bDoseFracMode, mParam->DE_camType ? m_iDEMode :
+    m_iK2Mode, mBinnings[m_iBinning], mCurSet->alignFrames && !mCurSet->useFrameAlign,
+    m_bDEsaveMaster ? m_iSumCount : 1, realExp, m_fFrameTime);
+  m_fDEframeTime = RoundedDEframeTime(m_fFrameTime * (m_bDEsaveMaster ? 1 : m_iSumCount));
   dose = mWinApp->mBeamAssessor->GetCurrentElectronDose(camera, mCurrentSet, realExp, 
     m_eSettling, spotSize, intensity);
   if (dose)
@@ -2017,7 +2115,7 @@ void CCameraSetupDlg::ManageDose()
     m_strElecDose = "Dose: Not calibrated";
   if (mCamera->IsDirectDetector(mParam)) {
     if (dose) {
-      float pixel = 10000.f * (mParam->K2Type ? 2.f : 1.f ) * 
+      float pixel = 10000.f * BinDivisorF(mParam) * 
         mWinApp->mShiftManager->GetPixelSize(mActiveCameraList[mCurrentCamera], 
         mWinApp->mScope->FastMagIndex());
       m_strDoseRate.Format("%.2f e/ub pixel/s at %s", (doseFac > 0. ? doseFac : 1.) *
@@ -2131,12 +2229,14 @@ int CCameraSetupDlg::GetFEIflybackTime(float &flyback)
 // Linear/counting/superres Mode change
 void CCameraSetupDlg::OnK2Mode()
 {
-  int newIndex, notOK, answ, oldMode = m_iK2Mode;
+  // Despite this, DE does not come through this route (yet)
+  int *modeP = mParam->DE_camType ? &m_iDEMode : &m_iK2Mode;
+  int newIndex, notOK, answ, oldMode = *modeP;
   CString message, str;
   UpdateData(true);
   CButton *radio = (CButton *)GetDlgItem(IDC_RBIN1);
   if (mCurSet->useFrameAlign) {
-    notOK = UtilFindValidFrameAliParams(m_iK2Mode, mCurSet->useFrameAlign, 
+    notOK = UtilFindValidFrameAliParams(*modeP, mCurSet->useFrameAlign, 
       mCurSet->faParamSetInd, newIndex, &message);
     if (notOK) {
       message += "\n\nPress:\n\"Switch Back\" to change back to the previous operating "
@@ -2155,7 +2255,7 @@ void CCameraSetupDlg::OnK2Mode()
       if (answ == IDCANCEL) {
         OnButSetupAlign();
       } else if (answ == IDYES) {
-        m_iK2Mode = oldMode;
+        *modeP = oldMode;
         UpdateData(false);
         return;
       } else {
@@ -2167,8 +2267,8 @@ void CCameraSetupDlg::OnK2Mode()
 
   }
   if (mParam->K2Type) {
-    radio->EnableWindow(mBinningEnabled && m_iK2Mode == SUPERRES_MODE);
-    if (m_iK2Mode != SUPERRES_MODE && !m_iBinning) {
+    radio->EnableWindow(mBinningEnabled && *modeP == SUPERRES_MODE);
+    if (*modeP != SUPERRES_MODE && !m_iBinning) {
       m_iBinning = 1;
       ManageBinnedSize();
       UpdateData(FALSE);
@@ -2178,6 +2278,33 @@ void CCameraSetupDlg::OnK2Mode()
   ManageAntialias();
   ManageExposure();
   ManageK2SaveSummary();
+}
+
+// Mode change for DE camera
+void CCameraSetupDlg::OnDEMode()
+{
+  int lastMode = m_iDEMode;
+  UpdateData(true);
+  if (lastMode > 0 && m_iDEMode > 0)
+    return;
+
+  // Unload the mode-dependent items and reload appropriate ones
+  if (m_iDEMode) {
+    mCurSet->DEsumCount = m_iSumCount;
+    m_iSumCount = mCurSet->sumK2Frames;
+    mParam->DE_FramesPerSec = m_fDEfps;
+    if (mParam->DE_CountingFPS > 0.)
+      m_fDEfps = mParam->DE_CountingFPS;
+  } else {
+    mCurSet->sumK2Frames = m_iSumCount;
+    m_iSumCount = mCurSet->DEsumCount;
+    mParam->DE_CountingFPS = m_fDEfps;
+    m_fDEfps = mParam->DE_FramesPerSec;
+  }
+  m_iSumCount = B3DMAX(1, m_iSumCount);
+  ManageDEpanel();
+  ManageExposure();
+  UpdateData(false);
 }
 
 // Dose fractionation mode change
@@ -2337,7 +2464,7 @@ void CCameraSetupDlg::OnButFileOptions()
   optDlg.m_bSkipRotFlip = mCamera->GetSkipK2FrameRotFlip();
   optDlg.mEnableSkipRotFlip = mParam->rotationFlip;
   optDlg.mFalconType = mParam->FEItype;
-  optDlg.mFEIflags = mParam->FEIflags;
+  optDlg.mCamFlags = mParam->CamFlags;
   mCamera->FixDirForFalconFrames(mParam);
   optDlg.mDEtype = mWinApp->mDEToolDlg.CanSaveFrames(mParam);
   optDlg.m_strBasename = mCamera->GetFrameBaseName();
@@ -2346,7 +2473,8 @@ void CCameraSetupDlg::OnButFileOptions()
   optDlg.m_iStartNumber = mCamera->GetFrameNumberStart();
   optDlg.mCanCreateDir = IS_BASIC_FALCON2(mParam) || 
     (mParam->FEItype && (mCamera->GetDirForFalconFrames()).IsEmpty()) || 
-    (mParam->GatanCam && mCamera->CAN_PLUGIN_DO(CREATES_DIRECTORY, mParam));
+    (mParam->GatanCam && mCamera->CAN_PLUGIN_DO(CREATES_DIRECTORY, mParam)) ||
+    (mParam->DE_camType && !mParam->DE_AutosaveDir.IsEmpty());
   optDlg.mCan4BitModeAndCounting = 
     mCamera->CAN_PLUGIN_DO(4BIT_101_COUNTING, mParam);
   optDlg.mCanSaveTimes100 = 
@@ -2392,8 +2520,12 @@ void CCameraSetupDlg::OnSetSaveFolder()
     if (FCAM_ADVANCED(mParam)) {
       if (KGetOneString("Frames can be saved in the Falcon storage location or a new or"
         " existing subfolder of it",
-        "Enter name of subfolder to save frames in, or leave blank for none", str)) 
-        mCamera->SetDirForFalconFrames(str);
+        "Enter name of subfolder to save frames in, or leave blank for none", str)) {
+          if (str.FindOneOf("/\\") < 0)
+            mCamera->SetDirForFalconFrames(str);
+          else
+            AfxMessageBox("You can enter only a single folder name without \\ or /");
+      }
       m_butSetSaveFolder.SetButtonStyle(BS_PUSHBUTTON);
       return;
     }
@@ -2410,6 +2542,21 @@ void CCameraSetupDlg::OnSetSaveFolder()
   		mCamera->SetDirForFalconFrames(dlg.GetPath());
   }
   m_butSetSaveFolder.SetButtonStyle(BS_PUSHBUTTON);
+}
+
+// And a separate call for DE
+void CCameraSetupDlg::OnDESetSaveFolder()
+{
+  CString str = mCamera->GetDirForDEFrames();
+  if (KGetOneString("Here, you can specify a single subfolder under this camera's "
+    "autosave directory", "Enter name of a new or existing subfolder to save frames in, "
+    "or leave blank for none", str)) {
+       if (str.FindOneOf("/\\") < 0)
+         mCamera->SetDirForDEFrames(str);
+       else
+         AfxMessageBox("You can enter only a single folder name without \\ or /");
+  }
+  m_butDESetSaveFolder.SetButtonStyle(BS_PUSHBUTTON);
 }
 
 // Run dialog to set frame align parameters
@@ -2514,6 +2661,7 @@ void CCameraSetupDlg::ManageK2SaveSummary(void)
   }
 }
 
+// Run the frame summing setup dialog for Falcon or K2
 void CCameraSetupDlg::OnSetupFalconFrames()
 {
   UpdateData(true);
@@ -2558,6 +2706,7 @@ void CCameraSetupDlg::OnSetupFalconFrames()
   m_butSetupK2FrameSums.SetButtonStyle(BS_PUSHBUTTON);
 }
 
+// Enable/disable saved summed frames from K2
 void CCameraSetupDlg::OnSaveK2FrameSums()
 {
   UpdateData(true);
@@ -2583,22 +2732,88 @@ void CCameraSetupDlg::OnAlwaysAntialias()
   ManageAntialias();
 }
 
+// DE CAMERA:
+// The master button for saving any frames
+void CCameraSetupDlg::OnDeSaveMaster()
+{
+  UpdateData(true);
+  ManageDEpanel();
+  ManageExposure();
+  UpdateData(false);
+}
+
+// Now this is for saving single frames
 void CCameraSetupDlg::OnDeSaveFrames()
 {
   UpdateData(true);
+  ManageDEpanel();
   ManageExposure();
+  UpdateData(false);
 }
 
-void CCameraSetupDlg::OnDeSaveSums()
-{
-  UpdateData(true);
-  m_editSumCount.EnableWindow(m_bDEsaveSums);
-  ManageExposure();
-}
-
+// Process a new sum count
 void CCameraSetupDlg::OnKillfocusEditDeSumCount()
 {
   UpdateData(true);
   ManageExposure();
+  UpdateData(false);
 }
 
+// Manage the enables in the panel
+void CCameraSetupDlg::ManageDEpanel(void)
+{
+  m_butNameSuffix.EnableWindow(!mParam->DE_AutosaveDir.IsEmpty() && m_bDEsaveMaster);
+  m_butDESetSaveFolder.EnableWindow(m_bDEsaveMaster);
+  m_editSumCount.EnableWindow(m_bDEsaveMaster);
+  m_butDESaveFrames.EnableWindow(m_bDEsaveMaster && m_iSumCount > 1 && !m_iDEMode);
+  m_butDESaveFinal.EnableWindow(m_bDEsaveMaster);
+  m_statDEframeTime.EnableWindow(m_bDEsaveMaster);
+  m_statDEframeSec.EnableWindow(m_bDEsaveMaster);
+  m_statDEfwhereAlign.EnableWindow(m_bDEalignFrames && m_bDEsaveMaster);  // TEMP
+  m_statDEsumNum.EnableWindow(m_bDEsaveMaster);
+  m_editDEframeTime.EnableWindow(m_bDEsaveMaster);
+  m_spinDEsumNum.EnableWindow(m_bDEsaveMaster);
+  m_butDEalignFrames.EnableWindow(m_bDEsaveMaster);  // TEMP
+  m_butDEsetupAlign.EnableWindow(m_bDEalignFrames && m_bDEsaveMaster);  // TEMP
+}
+
+// new frame time: adjust the sum count and then make sure it is legal
+void CCameraSetupDlg::OnKillfocusDeFrameTime()
+{
+  UpdateData(true);
+  m_iSumCount = B3DNINT(m_fDEframeTime * m_fDEfps);
+  B3DCLAMP(m_iSumCount, 1, MAX_DE_SUM_COUNT);
+  m_fDEframeTime = RoundedDEframeTime((float)(m_iSumCount / m_fDEfps));
+  ManageExposure();
+  UpdateData(false);
+}
+
+// Process new FPS value to appropriate camera parameter
+void CCameraSetupDlg::OnKillfocusEditDeFPS()
+{
+  UpdateData(true);
+  if (m_iDEMode > 0)
+    mParam->DE_CountingFPS = m_fDEfps;
+  else
+    mParam->DE_FramesPerSec = m_fDEfps;
+  OnKillfocusDeFrameTime();
+  UpdateData(false);
+}
+
+// Convenience spinner for number of frames to sum
+void CCameraSetupDlg::OnDeltaposSpinDeSumNum(NMHDR *pNMHDR, LRESULT *pResult)
+{
+  UpdateData(true);
+  if (NewSpinnerValue(pNMHDR, pResult, m_iSumCount, 1, MAX_DE_SUM_COUNT, m_iSumCount))
+    return;
+  m_butDESaveFrames.EnableWindow(m_bDEsaveMaster && m_iSumCount > 1 && !m_iDEMode);
+  ManageExposure();
+  UpdateData(false);
+}
+
+// Round the DE frame time for display
+float CCameraSetupDlg::RoundedDEframeTime(float frameTime)
+{
+  float roundFac = 0.0005f;
+  return roundFac * B3DNINT(frameTime / roundFac);
+}

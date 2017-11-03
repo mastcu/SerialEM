@@ -10,6 +10,7 @@
 #include "afxcmn.h"
 #include "afxwin.h"
 
+#define NUM_CAMSETUP_PANELS 9
 /////////////////////////////////////////////////////////////////////////////
 // CCameraSetupDlg dialog
 
@@ -27,8 +28,8 @@ public:
   void ManageDrift(bool useMinRate = false);
   CString * mModeNames;
   void SetFractionalSize(int fracX, int fracY);
-  void LoadConSet();
-  void UnloadConSet();
+  void UnloadDialogToConset();
+  void LoadConsetToDialog();
   int mCurrentSet;
   ControlSet *mConSets;
   ControlSet *mCurSet;
@@ -179,8 +180,8 @@ protected:
   DECLARE_MESSAGE_MAP()
 private:
   void DrawBox();
-  int mPanelStart[7];
-  int mNumInPanel[7];
+  int mPanelStart[NUM_CAMSETUP_PANELS];
+  int mNumInPanel[NUM_CAMSETUP_PANELS];
   CameraParameters *mParam;   // The current param
   int mAreaWidth;
   int mAreaBaseHeight;
@@ -208,6 +209,9 @@ private:
   int mLowerPosShift;
   bool mShiftedPosButtons;
   int mAreaTwoRowHeight;
+  bool mDEweCanAlign;
+  float mSaveLinearFPS;
+  float mSaveCountingFPS;
 
 public:
   afx_msg void OnAcquireReopen();
@@ -261,7 +265,9 @@ public:
   int GetFEIflybackTime(float & flyback);
   afx_msg void OnDynfocus();
   afx_msg void OnK2Mode();
+  afx_msg void OnDEMode();
   int m_iK2Mode;
+  int m_iDEMode;
   BOOL m_bDoseFracMode;
   CStatic m_statFrameTime;
   CEdit m_editFrameTime;
@@ -276,17 +282,32 @@ public:
   BOOL m_bSaveFrames;
   CButton m_butSaveFrames;
   CButton m_butSetSaveFolder;
+  CButton m_butDESetSaveFolder;
+  CButton m_butDESaveFrames;
+  CButton m_butDESaveFinal;
+  CButton m_butDEalignFrames;
+  CButton m_butDEsetupAlign;
+  CStatic m_statDEframeTime;
+  CStatic m_statDEframeSec;
+  CStatic m_statDEfwhereAlign;
+  CStatic m_statDEsumNum;
+  CEdit m_editDEframeTime;
+  CSpinButtonCtrl m_spinDEsumNum;
+  float m_fDEframeTime;
+  float m_fDEfps;
   afx_msg void OnSaveFrames();
   afx_msg void OnSetSaveFolder();
+  afx_msg void OnDESetSaveFolder();
   void ManageAntialias(void);
   CString m_strDoseRate;
   float ManageExposure(bool updateIfChange = true);
   CButton m_butSetupFalconFrames;
   afx_msg void OnSetupFalconFrames();
   void ManageDarkRefs(void);
+  BOOL m_bDEsaveMaster;
   BOOL m_bDEsaveFrames;
-  BOOL m_bDEsaveSums;
   BOOL m_bDEsaveFinal;
+  BOOL m_bDEalignFrames;
   CEdit m_editSumCount;
   int m_iSumCount;
   CStatic m_statNumDEraw;
@@ -294,10 +315,10 @@ public:
   CString m_strNumDEraw;
   CString m_strNumDEsums;
   afx_msg void OnDeSaveFrames();
-  afx_msg void OnDeSaveSums();
   afx_msg void OnKillfocusEditDeSumCount();
   CButton m_butDoseFracMode;
   CButton m_butFileOptions;
+  CButton m_butNameSuffix;
   afx_msg void OnButFileOptions();
   CStatic m_statSaveSummary;
   CStatic m_statAlignSummary;
@@ -311,6 +332,9 @@ public:
   CButton m_butSetupK2FrameSums;
   afx_msg void OnSaveK2FrameSums();
   afx_msg void OnSetupK2FrameSums();
+afx_msg void OnDeltaposSpinDeSumNum(NMHDR *pNMHDR, LRESULT *pResult);
+afx_msg void OnKillfocusEditDeFPS();
+afx_msg void OnKillfocusDeFrameTime();
   afx_msg void OnAlwaysAntialias();
   CButton m_butAlwaysAntialias;
   BOOL m_bAlwaysAntialias;
@@ -321,7 +345,10 @@ public:
   afx_msg void OnButSetupAlign();
   CStatic m_statWhereAlign;
   CStatic m_statIntermediateOnOff;
+void ManageDEpanel(void);
+afx_msg void OnDeSaveMaster();
   void CheckFalconFrameSumList(void);
+float RoundedDEframeTime(float frameTime);
 };
 
 //{{AFX_INSERT_LOCATION}}

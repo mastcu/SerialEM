@@ -58,24 +58,24 @@ struct ControlSet {
   int channelIndex[MAX_STEM_CHANNELS];
   int lineSync;
   int dynamicFocus;
-  int boostMag;
+  int boostMag;       // For boostin mag in STEM focus AND for DE hardware binning
   int magAllShots;
   int integration;
-  int K2ReadMode;
+  int K2ReadMode;     // Linear/counting/super-resolution for K2, DE, and Falcon!
   int doseFrac;
   float frameTime;
   int alignFrames;
-  int useFrameAlign;
+  int useFrameAlign;  // 1 to align in SerialEM[CCD], 2 to write alignframes pcm file
   int faParamSetInd;
   int saveFrames;
   int filterType;
-  int sumK2Frames;
+  int sumK2Frames;    // Flag that K2 summing is active; AND DE counting mode dose frac #
   ShortVec summedFrameList;
   FloatVec userFrameFractions;
   FloatVec userSubframeFractions;
   int numSkipBefore;
   int numSkipAfter;
-  int DEsumCount;
+  int DEsumCount;     // DE sum count only for linear mode
 };
 
 struct CameraParameters {

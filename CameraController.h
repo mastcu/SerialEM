@@ -58,17 +58,24 @@ struct CamPluginFuncs;
 
 #define CAN_PLUGIN_DO(c, p) CanPluginDo(PLUGIN_##c, p)
 
+// DE Camera flags
+#define DE_CAM_CAN_COUNT          0x1
+#define DE_CAM_CAN_ALIGN          0x2
+#define DE_HAS_TEMP_SET_PT        0x4
+#define DE_HAS_READOUT_DELAY      0x8
+#define DE_HAS_HARDWARE_BIN       0x10
+
 enum {INIT_ALL_CAMERAS, INIT_CURRENT_CAMERA, INIT_GIF_CAMERA, INIT_TIETZ_CAMERA};
 enum {LINEAR_MODE = 0, COUNTING_MODE, SUPERRES_MODE};
 enum DE_CAMERATYPE{LC1100_4k = 1,DE_12 = 2,DE_12_Survey=3,DE_LC1100=4};
 enum {EAGLE_TYPE = 1, FALCON2_TYPE, OTHER_FEI_TYPE, FALCON3_TYPE};
 
 #define DEFAULT_FEI_MIN_EXPOSURE 0.011f
-#define FCAM_ADVANCED(a) (a->FEIflags & PLUGFEI_USES_ADVANCED)
-#define FCAM_CAN_COUNT(a) (a->FEIflags & PLUGFEI_CAM_CAN_COUNT)
-#define FCAM_CAN_ALIGN(a) (a->FEIflags & PLUGFEI_CAM_CAN_ALIGN)
+#define FCAM_ADVANCED(a) (a->CamFlags & PLUGFEI_USES_ADVANCED)
+#define FCAM_CAN_COUNT(a) (a->CamFlags & PLUGFEI_CAM_CAN_COUNT)
+#define FCAM_CAN_ALIGN(a) (a->CamFlags & PLUGFEI_CAM_CAN_ALIGN)
 #define IS_FALCON2_OR_3(a) (a->FEItype == FALCON2_TYPE || a->FEItype == FALCON3_TYPE)
-#define IS_BASIC_FALCON2(a) (a->FEItype == FALCON2_TYPE && !(a->FEIflags & PLUGFEI_USES_ADVANCED))
+#define IS_BASIC_FALCON2(a) (a->FEItype == FALCON2_TYPE && !(a->CamFlags & PLUGFEI_USES_ADVANCED))
 // This needs to be 108 when that exists
 #define PLUGFEI_ALLOWS_ALIGN_HERE 107
 
@@ -103,7 +110,7 @@ struct CameraThreadData {
   int SelectCamera;           // Gatan camera number to select
   int TietzType;              // Or type of Tietz camera
   int FEItype;                // Or flag for FEI camera
-  unsigned int FEIflags;      // Flags entry for advanced interface and anything else
+  unsigned int CamFlags;      // Flags entry for advanced interface and anything else
   int DE_camType;             // Flag for NCMIR camera
   CString cameraName;         // Camera name for FEI, or mapping name for Tietz (from detector name)
   BOOL checkFEIname;          // Flag to check name of FEI camera
@@ -117,6 +124,8 @@ struct CameraThreadData {
   int restrictedSize;         // Restricted size index
   int ImageType;              // Type of image
   long Binning;                // Binning
+  int UseHardwareBinning;     // Hardware binning flag for DE
+  double FramesPerSec;        // FPS value when ther is counting mode for DE
   double Exposure;            // Exposure in sec. after forcing bump if any
   long Processing;
   long ProcessingPlus;        // Actual processing value to send to Gatan with flags too
@@ -374,6 +383,7 @@ class DLL_IM_EX CCameraController
   GetSetMember(BOOL, NoK2SaveFolderBrowse);
   GetSetMember(CString, DirForK2Frames);
   GetSetMember(CString, DirForFalconFrames);
+  GetSetMember(CString, DirForDEFrames);
   GetSetMember(float, ScalingForK2Counts);
   GetSetMember(int, SaveRawPacked);
   GetSetMember(int, SaveTimes100);
@@ -435,6 +445,8 @@ class DLL_IM_EX CCameraController
   GetSetMember(int, MinAlignFractionsLinear);
   GetSetMember(int, MinAlignFractionsCounting);
   GetMember(int, NoMessageBoxOnError);
+  SetMember(int, DEserverRefNextShot);
+  int GetServerFramesLeft();
 
   int GetNumFramesSaved() {return mTD.NumFramesSaved;};
   BOOL *GetUseGPUforK2Align() {return &mUseGPUforK2Align[0];};
@@ -624,6 +636,7 @@ class DLL_IM_EX CCameraController
   int mLowerScreenForSTEM;      // 1 = lower when taking shot; 2 = lower when switch
   BOOL mRamperInstance;         // Flag that FocusRamper was created
   BOOL mBlankNextShot;          // Flag to blank beam during next shot
+  int mDEserverRefNextShot;     // # of repeats to do a reference in DE server next shot
   int mDSextraShotDelay;        // Extra delay time after nominal time to acquire image
   int mDSshouldFlip;            // Flipping value that DS should have
   float mDSglobalRotOffset;     // Rotation offset that it should have
@@ -718,6 +731,7 @@ class DLL_IM_EX CCameraController
   float mContinuousDelayFrac;   // Fraction of normal delay to apply in continous mode
   int mPreventUserToggle;       // Flag not to let user toggle continuous mode
   bool mStoppedContinuous;      // Set when stop to prevent settling timeout from capture
+  CString mDirForDEFrames;      // Single directory name for a subfolder of main location
   int mFrameNameFormat;         // Set of flags for components of folder/filename 
   int mFrameNumberStart;        // Starting number for sequential numbers
   CString mFrameBaseName;       // User's base name
@@ -851,8 +865,8 @@ public:
     int gainXoffset, int gainYoffset);
   int CapSaveStageMagSetupDynFocus(ControlSet & conSet, int inSet);
   bool ConstrainExposureTime(CameraParameters *camP, ControlSet *consP);
-  bool ConstrainExposureTime(CameraParameters *camP, BOOL doseFrac, 
-    int readMode, int binning, bool alignInCamera, float &exposure, float &frameTime);
+  bool ConstrainExposureTime(CameraParameters *camP, BOOL doseFrac, int readMode, 
+    int binning, bool alignInCamera, int sumCount, float &exposure, float &frameTime);
   bool ConstrainFrameTime(float &frameTime);
   void RestoreFEIshutter(void);
   void QueueFocusSteps(float interval1, double focus1, float interval2, double focus2);
@@ -893,6 +907,7 @@ bool CanPluginDo(int minVersion, CameraParameters * param);
 int NumAllVsAllFromFAparam(FrameAliParams &faParam, int numAliFrames, int &groupSize, 
   int &refineIter, int &doSpline, int &numFilters, float *radius2);
 void AdjustCountsPerElecForScale(CameraParameters * param);
+int DESumCountForConstraints(CameraParameters *camP, ControlSet *consP);
 };
 
 
