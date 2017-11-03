@@ -256,11 +256,12 @@ CSerialEMApp::CSerialEMApp()
     mCamParams[i].failedToInitialize = false;
     mCamParams[i].AMTtype = 0;
     mCamParams[i].FEItype = 0;
-    mCamParams[i].FEIflags = 0;
+    mCamParams[i].CamFlags = 0;
     mCamParams[i].DE_camType = 0;      // Wasn't init
     mCamParams[i].DE_ImageInvertX = 0;
     mCamParams[i].DE_ImageRot = 0;
     mCamParams[i].DE_FramesPerSec = -1.;
+    mCamParams[i].DE_CountingFPS = -1.;
     mCamParams[i].DE_MaxFrameRate = -1.;
     mCamParams[i].alsoInsertCamera = -1;
     mCamParams[i].samePhysicalCamera = -1;
@@ -983,7 +984,7 @@ BOOL CSerialEMApp::InitInstance()
       AfxMessageBox(message, MB_EXCLAME);
   }
   
-  // Double sizes for K2 camera And define the DM and Gatan camera flags
+  // Double sizes for K2 camera and define the DM and Gatan camera flags
   iAct = 0;
   for (iCam = 0; iCam < MAX_CAMERAS; iCam++) {
     mCamParams[iCam].DMCamera = !(mCamParams[iCam].TietzType ||
@@ -992,27 +993,8 @@ BOOL CSerialEMApp::InitInstance()
     mCamParams[iCam].GatanCam = mCamParams[iCam].DMCamera && !mCamParams[iCam].AMTtype;
     if (!mCamParams[iCam].GatanCam)
       mCamParams[iCam].K2Type = 0;
-
-    if (mCamParams[iCam].K2Type) {
-      mCamParams[iCam].sizeX *= 2;
-      mCamParams[iCam].sizeY *= 2;
-      mCamParams[iCam].pixelMicrons /= 2.;
-      for (iSet = B3DMIN(mCamParams[iCam].numBinnings - 1, MAX_BINNINGS - 2); iSet >= 0;
-        iSet--)
-        mCamParams[iCam].binnings[iSet + 1] = mCamParams[iCam].binnings[iSet] * 2;
-      mCamParams[iCam].binnings[0] = 1;
-      mCamParams[iCam].numBinnings = B3DMIN(mCamParams[iCam].numBinnings + 1, 
-        MAX_BINNINGS);
-
-      // Divide the pixel sizes by 2; they are based on native pixels
-      for (mag = 1; mag < MAX_MAGS; mag++)
-        mMagTab[mag].pixelSize[iCam] /= 2.;
-    }
-
-    if (mCamParams[iCam].FEItype == FALCON3_TYPE) {
-      mCamParams[iCam].unscaledCountsPerElec = mCamParams[iCam].countsPerElectron;
-      mCamera->AdjustCountsPerElecForScale(&mCamParams[iCam]);
-    }
+    if (mCamParams[iCam].K2Type)
+      AdjustSizesForSuperResolution(iCam);
   }
 
   // Load plugins now, in case there is a microscope plugin
@@ -1221,6 +1203,7 @@ BOOL CSerialEMApp::InitInstance()
 
   mDocWnd->AppendToProgramLog(true);
   
+  // INITIALIZE THE CAMERAS
   if (mCamera->Initialize(INIT_ALL_CAMERAS) < 0)
     return false;
   if (mNoCameras) {
@@ -1268,14 +1251,32 @@ BOOL CSerialEMApp::InitInstance()
   // For Falcon 2, if align is ON without using framealign, turn it off
   for (iAct = 0; iAct < mActiveCamListSize; iAct++) {
     iCam = mActiveCameraList[iAct];
-      for (iSet = 0; iSet < NUMBER_OF_USER_CONSETS; iSet++) {
+    if (mCamParams[iCam].FEItype == FALCON3_TYPE) {
+      mCamParams[iCam].unscaledCountsPerElec = mCamParams[iCam].countsPerElectron;
+      mCamera->AdjustCountsPerElecForScale(&mCamParams[iCam]);
+    }
+    for (iSet = 0; iSet < NUMBER_OF_USER_CONSETS; iSet++) {
       if (mCamParams[iCam].FEItype == FALCON2_TYPE) {
         if (!mCamConSets[iCam][iSet].useFrameAlign && 
           mCamConSets[iCam][iSet].alignFrames > 0)
-            mCamConSets[iCam][iSet].alignFrames = 0;
+          mCamConSets[iCam][iSet].alignFrames = 0;
       }
-      if (mCamParams[iCam].FEItype == FALCON2_TYPE)
+      if (mCamParams[iCam].FEItype == FALCON3_TYPE)
         mCamConSets[iCam][iSet].numSkipBefore = mCamConSets[iCam][iSet].numSkipAfter = 0;
+
+      // Transition DE saving flags to new form
+      if (mCamParams[iCam].DE_camType) {
+        if ((mCamConSets[iCam][iSet].saveFrames & DE_SAVE_FRAMES) &&
+          (mCamConSets[iCam][iSet].saveFrames & DE_SAVE_SUMS))
+            mCamConSets[iCam][iSet].saveFrames |= DE_SAVE_MASTER | DE_SAVE_SINGLE;
+        else if (mCamConSets[iCam][iSet].saveFrames & DE_SAVE_FRAMES) {
+          mCamConSets[iCam][iSet].saveFrames |= DE_SAVE_MASTER;
+          mCamConSets[iCam][iSet].DEsumCount = 1;
+        } else if (mCamConSets[iCam][iSet].saveFrames & DE_SAVE_SUMS) {
+          mCamConSets[iCam][iSet].saveFrames |= DE_SAVE_MASTER;
+        }
+        mCamConSets[iCam][iSet].saveFrames &= ~(DE_SAVE_FRAMES | DE_SAVE_SUMS) ;
+      }
     }
   }
   CopyConSets(mCurrentCamera);
@@ -1355,6 +1356,34 @@ BOOL CSerialEMApp::InitInstance()
   mStartingProgram = false;
   OnResizeMain();
   return TRUE;
+}
+
+// Multiply sizes and binning and divide pixel sizes from properties by 2 for a camera
+// with super-resolution mode; or undo this operation (not used for DE after all!)
+void CSerialEMApp::AdjustSizesForSuperResolution(int iCam)
+{
+  int iSet, mag;
+  float pixelDiv = 2.f;
+  if (mCamParams[iCam].DE_camType && !(mCamParams[iCam].CamFlags & DE_CAM_CAN_COUNT)) {
+    pixelDiv = 0.5f;
+    for (iSet = 1 ; iSet < mCamParams[iCam].numBinnings; iSet++)
+      mCamParams[iCam].binnings[iSet - 1] = mCamParams[iCam].binnings[iSet] / 2;
+    mCamParams[iCam].numBinnings--;
+  } else {
+    for (iSet = B3DMIN(mCamParams[iCam].numBinnings - 1, MAX_BINNINGS - 2); iSet >= 0;
+      iSet--)
+      mCamParams[iCam].binnings[iSet + 1] = mCamParams[iCam].binnings[iSet] * 2;
+    mCamParams[iCam].binnings[0] = 1;
+    mCamParams[iCam].numBinnings = B3DMIN(mCamParams[iCam].numBinnings + 1, 
+      MAX_BINNINGS);
+  }
+  mCamParams[iCam].sizeX = B3DNINT(mCamParams[iCam].sizeX * pixelDiv);
+  mCamParams[iCam].sizeY = B3DNINT(mCamParams[iCam].sizeY * pixelDiv);
+
+  // Divide the pixel sizes by 2; they are based on native pixels
+  mCamParams[iCam].pixelMicrons /= pixelDiv;
+  for (mag = 1; mag < MAX_MAGS; mag++)
+    mMagTab[mag].pixelSize[iCam] /= pixelDiv;
 }
 
 CString CSerialEMApp::GetStartupMessage()
@@ -1901,6 +1930,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
       busy = mNavigator->TaskAcquireBusy();
     else if (idc->source == TASK_ASYNC_SAVE)
       busy = mBufferManager->AsyncSaveBusy();
+    else if (idc->source == TASK_GAIN_REF)
+      busy = mGainRefMaker->GainRefBusy();
     else if (idc->source == TASK_LONG_OPERATION)
       busy = mScope->LongOperationBusy();
     else if (idc->source == TASK_STACK_FALCON)
@@ -2015,6 +2046,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
           mAutoTuning->ComaFreeNextTask(idc->param);
         else if (idc->source == TASK_ZEMLIN)
           mAutoTuning->ZemlinNextTask(idc->param);
+        else if (idc->source == TASK_GAIN_REF)
+          mGainRefMaker->AcquiringRefNextTask(idc->param);
 
       } else {
         if (busy > 0 && idc->timeOut && (idc->timeOut <= time))
@@ -2091,8 +2124,10 @@ BOOL CSerialEMApp::CheckIdleTasks()
           mAutoTuning->FixAstigCleanup(idc->param);
         else if (idc->source == TASK_COMA_FREE)
           mAutoTuning->ComaFreeCleanup(idc->param);
-       else if (idc->source == TASK_ZEMLIN)
+        else if (idc->source == TASK_ZEMLIN)
           mAutoTuning->ZemlinCleanup(idc->param);
+        else if (idc->source == TASK_GAIN_REF)
+          mGainRefMaker->ErrorCleanup(busy);
      }
 
       // Delete task from memory and drop index
@@ -3417,8 +3452,8 @@ void CSerialEMApp::TransferConSet(int inSet, int fromCam, int toCam)
   tocs->right = (fromcs->right * mCamParams[toCam].sizeX) / mCamParams[fromCam].sizeX;
   tocs->top = (fromcs->top * mCamParams[toCam].sizeY) / mCamParams[fromCam].sizeY;
   tocs->bottom = (fromcs->bottom * mCamParams[toCam].sizeY) / mCamParams[fromCam].sizeY;
-  tocs->binning = (mCamParams[toCam].K2Type ? 2 : 1) * fromcs->binning /
-    (mCamParams[fromCam].K2Type ? 2 : 1);
+  tocs->binning = BinDivisorI(&mCamParams[toCam]) * fromcs->binning /
+    BinDivisorI(&mCamParams[fromCam]);
   if (!BinningIsValid(tocs->binning, toCam, false)) {
     int newbin = NextValidBinning(tocs->binning, -1, toCam, false);
     if (newbin == tocs->binning)
@@ -3663,6 +3698,11 @@ CString CSerialEMApp::BinningText(int binning, int divideBinToShow)
   else
     str.Format("%.1f", trueBin);
   return str;
+}
+
+CString CSerialEMApp::BinningText(int binning, CameraParameters *camParam)
+{
+  return BinningText(binning, BinDivisorI(camParam));
 }
 
 CameraParameters *CSerialEMApp::GetActiveCamParam(int index)

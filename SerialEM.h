@@ -76,7 +76,8 @@ enum Tasks {TASK_NAVIGATOR_ACQUIRE, TASK_DISTORTION_STAGEPAIR, TASK_CAL_BEAMSHIF
   TASK_MONTAGE_REALIGN, TASK_STEM_FOCUS, TASK_FOCUS_VS_Z, TASK_INTERSET_SHIFT,
   TASK_BACKLASH_ADJUST, TASK_ASYNC_SAVE, TASK_LONG_OPERATION, TASK_BIDIR_COPY, 
   TASK_BIDIR_ANCHOR, TASK_STAGE_TOOL, TASK_STACK_FALCON, TASK_MONTAGE_DWELL, 
-  TASK_CAL_ASTIG, TASK_FIX_ASTIG, TASK_COMA_FREE, TASK_ZEMLIN, TASK_MULTI_SHOT
+  TASK_CAL_ASTIG, TASK_FIX_ASTIG, TASK_COMA_FREE, TASK_ZEMLIN, TASK_MULTI_SHOT,
+  TASK_GAIN_REF
 };
 
 enum CalTypes {CAL_DONE_IS = 0, CAL_DONE_STAGE, CAL_DONE_FOCUS, CAL_DONE_BEAM, 
@@ -765,6 +766,7 @@ public:
   int NextValidBinning(int curBinning, int direction, int camera, bool allowFractional);
   bool BinningIsValid(int binning, int camera, bool allowFractional);
   CString BinningText(int binning, int divideBinToShow);
+  CString BinningText(int binning, CameraParameters *camParam);
   void RestoreCameraForExit(void);
   void RemoveIdleTask(int source);
   EMimageBuffer * GetActiveNonStackImBuf(void);
@@ -779,6 +781,7 @@ void SetMaxDialogWidth(void);
 void CopyOptionalSetIfNeeded(int inSet, int inCam = -1);
 int GetBuildDayStamp(void);
 int GetIntegerVersion(void);
+void AdjustSizesForSuperResolution(int iCam);
 };
 
 
