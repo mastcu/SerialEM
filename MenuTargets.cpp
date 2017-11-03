@@ -1081,13 +1081,19 @@ void CMenuTargets::OnUpdateCalibrationMagenergyshifts(CCmdUI* pCmdUI)
 // GAIN REF MAKER
 void CMenuTargets::OnAcquiregainref() 
 {
-  mWinApp->mGainRefMaker->AcquireGainRef();
+  CameraParameters *params = mWinApp->GetActiveCamParam();
+  if (params->DE_camType && !mCamera->CanProcessHere(params))
+    mWinApp->mGainRefMaker->MakeRefInDEserver();
+  else
+    mWinApp->mGainRefMaker->AcquireGainRef();
 }
 
 void CMenuTargets::OnUpdateAcquiregainref(CCmdUI* pCmdUI) 
 {
-  pCmdUI->Enable(!DoingTasks() && !mCamera->CameraBusy() &&
-    mCamera->GetProcessHere() && !mWinApp->GetSTEMMode());
+  CameraParameters *params = mWinApp->GetActiveCamParam();
+  pCmdUI->Enable(!DoingTasks() && !mCamera->CameraBusy() && !mWinApp->GetSTEMMode() &&
+    (mCamera->GetProcessHere() || 
+    (params->DE_camType && !mCamera->CanProcessHere(params))));
 }
 
 // BEAM ASSESSOR
