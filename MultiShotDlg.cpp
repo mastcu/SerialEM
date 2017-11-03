@@ -15,7 +15,6 @@
 
 // CMultiShotDlg dialog
 
-IMPLEMENT_DYNAMIC(CMultiShotDlg, CBaseDlg)
 
 CMultiShotDlg::CMultiShotDlg(CWnd* pParent /*=NULL*/)
 	: CBaseDlg(CMultiShotDlg::IDD, pParent)
@@ -149,7 +148,6 @@ void CMultiShotDlg::OnDeltaposSpinNumShots(NMHDR *pNMHDR, LRESULT *pResult)
   m_strNumShots.Format("%d", mActiveParams->numShots);
   UpdateData(false);
   UpdateAndUseMSparams();
-  *pResult = 0;
 }
 
 // Center shot radio button

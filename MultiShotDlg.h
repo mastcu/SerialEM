@@ -8,7 +8,6 @@
 
 class CMultiShotDlg : public CBaseDlg
 {
-	DECLARE_DYNAMIC(CMultiShotDlg)
 
 public:
 	CMultiShotDlg(CWnd* pParent = NULL);   // standard constructor
