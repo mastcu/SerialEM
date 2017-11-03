@@ -3259,7 +3259,8 @@ void CTSController::ChangeExposure(double &delFac, double angle, double limit)
   if (mCamParams->K2Type)
     SEMTrace('1', "Frame time for constraint is %.4f", frameTime);
   mCamera->ConstrainExposureTime(mCamParams, recSet->doseFrac, recSet->K2ReadMode, 
-    recSet->binning, recSet->alignFrames && !recSet->useFrameAlign, newExp, frameTime);
+    recSet->binning, recSet->alignFrames && !recSet->useFrameAlign, 
+    mCamera->DESumCountForConstraints(mCamParams, recSet), newExp, frameTime);
   newExp = mWinApp->mFalconHelper->AdjustSumsForExposure(mCamParams, recSet, newExp);
   if (oneFrame)
     constraint = mCamera->GetK2ReadoutInterval();
@@ -6042,13 +6043,8 @@ int CTSController::MontageMagIntoTSparam(MontParam *montParam, TiltSeriesParam *
 
 void CTSController::ManageTerminateMenu(void)
 {
-  CMenu *menu;
-  CString menuText = mStartedTS && mBidirSeriesPhase == BIDIR_FIRST_PART ?
-    "Ter&minate Part/Whole" : "Ter&minate";
-  menu = mWinApp->m_pMainWnd->GetMenu()->GetSubMenu(7);
-  menu->ModifyMenu(ID_TILTSERIES_TERMINATE, MF_BYCOMMAND | MF_STRING, 
-    ID_TILTSERIES_TERMINATE, (LPCTSTR)menuText);
-  mWinApp->m_pMainWnd->DrawMenuBar();
+  UtilModifyMenuItem(7, ID_TILTSERIES_TERMINATE, mStartedTS && 
+    mBidirSeriesPhase == BIDIR_FIRST_PART ? "Ter&minate Part/Whole" : "Ter&minate");
 }
 
 // Looks up the name of an action from and return its corresponding action index

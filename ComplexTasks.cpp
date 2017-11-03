@@ -441,7 +441,7 @@ void CComplexTasks::MakeTrackingConSet(ControlSet *conSet, int targetSize,
       exposure = B3DMAX(exposure, mMinTaskExposure);
       tryExp = exposure;
       mCamera->ConstrainExposureTime(camParam, false, conSet->K2ReadMode, 
-        conSet->binning * 2, conSet->alignFrames && !conSet->useFrameAlign, exposure, 
+        conSet->binning * 2, conSet->alignFrames && !conSet->useFrameAlign, 1, exposure, 
         frameTime);
       if (exposure < 0.9 * mMinTaskExposure || exposure > 1.25 * tryExp || 
         exposure < 0.75 * tryExp)
@@ -592,14 +592,14 @@ void CComplexTasks::LowerMagIfNeeded(int maxMagInd, float calIntSafetyFac,
     exposure = B3DMAX(exposure, mMinTaskExposure);
     tryExp = exposure;
     mCamera->ConstrainExposureTime(camParam, false, conSet->K2ReadMode, conSet->binning, 
-      conSet->alignFrames && !conSet->useFrameAlign, exposure, frameTime);
+      conSet->alignFrames && !conSet->useFrameAlign, 1, exposure, frameTime);
 
     // If the constrained exposure comes out too small, try again with a bigger starting
     // value
     if (exposure < 0.8 * tryExp) {
       exposure = 1.3f * tryExp;
       mCamera->ConstrainExposureTime(camParam, false, conSet->K2ReadMode, conSet->binning,
-        conSet->alignFrames && !conSet->useFrameAlign, exposure, frameTime);
+        conSet->alignFrames && !conSet->useFrameAlign, 1, exposure, frameTime);
     }
     if (exposure >= 0.9 * mMinTaskExposure && exposure >= 0.8 * tryExp)
       conSet->exposure = exposure;
