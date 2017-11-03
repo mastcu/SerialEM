@@ -13,6 +13,7 @@
 #define DMREF_ASK_IF_NEWER 0
 #define DMREF_ASK_ALWAYS   1
 #define DMREF_ASK_NEVER    2
+#define MAX_DE_REF_TYPES  10
 
 /////////////////////////////////////////////////////////////////////////////
 // CGainRefMaker command target
@@ -52,10 +53,14 @@ public:
   GetSetMember(BOOL, CalibrateDose)
   GetSetMember(BOOL, IgnoreHigherRefs)
   GetSetMember(BOOL, UseOlderBinned2)
+  int *GetDEnumRepeats() {return &mDEnumRepeats[0];};
+  float *GetDEexposureTimes() {return &mDEexposureTimes[0];};
+  GetSetMember(int, DEuseHardwareBin);
+  GetSetMember(int, DElastProcessType);
+  GetSetMember(int, DElastReferenceType);
   GetSetMember(int, DMrefAskPolicy)
 
-  static void AcquiringRefError(int error);
-  static void AcquiringRefDone(int param);
+  int GainRefBusy();
   void DeleteReferences(void);
   void InitializeRefArrays(void);
   void CheckChangedKV(void);
@@ -117,9 +122,18 @@ private:
   BOOL mSearchedRefs;               // Flag to prevent double search of references
   BOOL mTakingRefImages;            // Flag that image for reference is being taken
   BOOL mPreparingGainRef;           // Flag that any image for making gain reference is being taken
+  int mDEnumRepeats[MAX_DE_REF_TYPES];  // Number of repeats for the various of DE refs
+  float mDEexposureTimes[MAX_DE_REF_TYPES]; // Exposure times for the various DE refs
+  int mDEuseHardwareBin;            // Use hardware binning by 2 for DE refs
+  int mDElastProcessType;           // Last setting of processing type
+  int mDElastReferenceType;         // Last setting of reference type
+  int mStartingServerFrames;        // Starting number of frames
+
+
 public:
   void UpdateDMReferenceTimes(void);
   bool IsDMReferenceNew(int camNum);
+  void MakeRefInDEserver(void);
 };
 
 /////////////////////////////////////////////////////////////////////////////

@@ -13,6 +13,7 @@
 #include ".\GainRefMaker.h"
 #include "CameraController.h"
 #include "GainRefDlg.h"
+#include "DERefMakerDlg.h"
 #include "ProcessImage.h"
 #include "BeamAssessor.h"
 #include "GatanSocket.h"
@@ -31,6 +32,7 @@ static char THIS_FILE[] = __FILE__;
 #define REF_FIRST_SHOT  1
 #define REF_SECOND_SHOT 2
 #define REAL_FRAME_SHOT 3
+#define REF_SERVER_SHOTS 4
 
 /////////////////////////////////////////////////////////////////////////////
 // CGainRefMaker
@@ -48,6 +50,7 @@ CGainRefMaker::CGainRefMaker()
 
   InitializeRefArrays(); 
   mFrameCount = 0;
+  mStartingServerFrames = 0;
   mBackedUp = false;
   mCalibrateDose = true;
   mStoreMRC = NULL;
@@ -59,6 +62,13 @@ CGainRefMaker::CGainRefMaker()
   mUseOlderBinned2 = false;
   mTakingRefImages = false;
   mPreparingGainRef = false;
+  for (int ind = 0; ind < MAX_DE_REF_TYPES; ind++) {
+    mDEexposureTimes[ind] = 1.;
+    mDEnumRepeats[ind] = 10;
+  }
+  mDEuseHardwareBin = 0;
+  mDElastProcessType = 0;
+  mDElastReferenceType = 0;
 }
 
 CGainRefMaker::~CGainRefMaker()
@@ -299,12 +309,70 @@ void CGainRefMaker::AcquireGainRef()
   mPreparingGainRef = true;
 
   mCamera->InitiateCapture(TRACK_CONSET);
-  mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, AcquiringRefDone,
-    AcquiringRefError, REF_FIRST_SHOT, 0);
+  mWinApp->AddIdleTask(TASK_GAIN_REF, REF_FIRST_SHOT, 0);
 
 }
 
+// Alternate pathway for making a reference in the DE server
+void CGainRefMaker::MakeRefInDEserver(void)
+{
+  CDERefMakerDlg dlg;
+  int ind;
+  CString str;
+  mConSet = mWinApp->GetConSets() + TRACK_CONSET;
+  mCurrentCamera = mWinApp->GetCurrentCamera(); 
+  mParam = mWinApp->GetCamParams() + mCurrentCamera;  
+  mCamera = mWinApp->mCamera;
+  dlg.m_iProcessingType = mDElastProcessType;
+  dlg.m_iReferenceType = mDElastReferenceType;
+  dlg.m_bUseHardwareBin = mDEuseHardwareBin > 0;
+  for (ind = 0; ind < MAX_DE_REF_TYPES; ind++) {
+    dlg.mExposureList[ind] = mDEexposureTimes[ind];
+    dlg.mRepeatList[ind] = mDEnumRepeats[ind];
+  }
+  dlg.mCamParams = mParam;
+  if (dlg.DoModal() != IDOK)
+    return;
 
+  // Get parameters back
+  mDElastProcessType = dlg.m_iProcessingType;
+  mDElastReferenceType = dlg.m_iReferenceType;
+  mDEuseHardwareBin = dlg.m_bUseHardwareBin ? 1 : 0;
+  for (ind = 0; ind < MAX_DE_REF_TYPES; ind++) {
+    mDEexposureTimes[ind] = dlg.mExposureList[ind];
+    mDEnumRepeats[ind] = dlg.mRepeatList[ind];
+  }
+
+  // Set up control set
+  ind = 2 * mDElastProcessType + (1 - mDElastReferenceType);
+  mConSet->exposure = mDEexposureTimes[ind];
+  mConSet->drift = 0.;
+  mConSet->binning = mDEuseHardwareBin ? 2 : 1;
+  mConSet->boostMag = mDEuseHardwareBin ? 1 : 0;
+  mConSet->processing = UNPROCESSED;
+  if (mDElastReferenceType)
+    mConSet->processing = mDElastProcessType > 1 ? GAIN_NORMALIZED : DARK_SUBTRACTED;
+  mConSet->K2ReadMode = mDElastProcessType > 0 ? COUNTING_MODE : LINEAR_MODE;
+  mConSet->mode = SINGLE_FRAME;
+  mConSet->saveFrames = 0;
+  mConSet->alignFrames = 0;
+  mConSet->shuttering = USE_BEAM_BLANK;
+  mConSet->left = 0;
+  mConSet->right = mParam->sizeX;
+  mConSet->top = 0;
+  mConSet->bottom = mParam->sizeY;
+  mStartingServerFrames = mFrameCount = mDEnumRepeats[ind];
+  mWinApp->UpdateBufferWindows();
+  mWinApp->SetStatusText(COMPLEX_PANE, mDElastReferenceType ? "ACQUIRING GAIN REF" :
+    "ACQUIRING DARK REF");
+  str.Format("0 OF %d SHOTS DONE", mFrameCount);
+  mWinApp->SetStatusText(MEDIUM_PANE, str);
+  mCamera->SetDEserverRefNextShot(mFrameCount);
+  mCamera->InitiateCapture(TRACK_CONSET);
+  mWinApp->AddIdleTask(TASK_GAIN_REF, REF_SERVER_SHOTS, 0);
+}
+
+// Do next operation for regular reference, or just clean up for DE server ref
 void CGainRefMaker::AcquiringRefNextTask(int param)
 {
   CString paneStr;
@@ -316,6 +384,11 @@ void CGainRefMaker::AcquiringRefNextTask(int param)
   float *arrpt, *inpt;
   unsigned short int *usdata;
   short int *sdata;
+
+  if (param == REF_SERVER_SHOTS) {
+    StopAcquiringRef();
+    return;
+  }
 
   mImBufs->mCaptured = BUFFER_CALIBRATION;
   if (!mFrameCount)
@@ -357,8 +430,7 @@ void CGainRefMaker::AcquiringRefNextTask(int param)
     mConSet->exposure = exposure;
     mConSet->binning = binning;
     mCamera->InitiateCapture(TRACK_CONSET);
-    mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, AcquiringRefDone, 
-      AcquiringRefError, REF_SECOND_SHOT, 0);
+    mWinApp->AddIdleTask(TASK_GAIN_REF, REF_SECOND_SHOT, 0);
     return;
 
   case REF_SECOND_SHOT:
@@ -429,8 +501,7 @@ void CGainRefMaker::AcquiringRefNextTask(int param)
     paneStr.Format("%.1f sec exp., %d frames left", mConSet->exposure, mFrameCount);
     mWinApp->SetStatusText(MEDIUM_PANE, paneStr);
     mCamera->InitiateCapture(TRACK_CONSET);
-    mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, AcquiringRefDone, 
-      AcquiringRefError, REAL_FRAME_SHOT, 0);
+    mWinApp->AddIdleTask(TASK_GAIN_REF, REAL_FRAME_SHOT, 0);
     return;
   }
                                             
@@ -537,24 +608,29 @@ void CGainRefMaker::AcquiringRefNextTask(int param)
   StopAcquiringRef();
 }
 
-void CGainRefMaker::AcquiringRefError(int error)
+// Busy routine: just check camera for regular reference, or update # of shots for
+// DE server ref
+int CGainRefMaker::GainRefBusy()
 {
-  CSerialEMApp *winApp = (CSerialEMApp *)AfxGetApp();
-  winApp->mGainRefMaker->ErrorCleanup(error);
+  CString str;
+  int busy = mCamera->CameraBusy();
+  if (!mStartingServerFrames || !busy || !mCamera->Acquiring())
+    return busy;
+  int numLeft = mCamera->GetServerFramesLeft();
+  if (numLeft != mFrameCount) {
+    mFrameCount = numLeft;
+    str.Format("%d OF %d SHOTS DONE", mStartingServerFrames - mFrameCount, 
+      mStartingServerFrames);
+    mWinApp->SetStatusText(MEDIUM_PANE, str);
+  }
+  return 1;
 }
-
 void CGainRefMaker::ErrorCleanup(int error)
 {
   if (error == IDLE_TIMEOUT_ERROR)
     AfxMessageBox(_T("Time out acquiring gain reference"), MB_EXCLAME);
   StopAcquiringRef();
   mWinApp->ErrorOccurred(error);
-}
-
-void CGainRefMaker::AcquiringRefDone(int param)
-{
-  CSerialEMApp *winApp = (CSerialEMApp *)AfxGetApp();
-  winApp->mGainRefMaker->AcquiringRefNextTask(param);
 }
 
 void CGainRefMaker::BeamTooWeak()
@@ -571,20 +647,23 @@ void CGainRefMaker::StopAcquiringRef()
   mFrameCount = 0;
   mTakingRefImages = false;
   mPreparingGainRef = false;
-  if (mArray)
-    delete mArray;
-  mArray = NULL;
-  if (mStoreMRC)
-    delete mStoreMRC;
-  mStoreMRC = NULL;
-  if (mBackedUp) {
-    UtilRenameFile(mBackupName, mFileName, 
-      "Error attempting to restore backup file or previous reference");
-    mBackedUp = false;
+  if (!mStartingServerFrames) {
+    if (mArray)
+      delete mArray;
+    mArray = NULL;
+    if (mStoreMRC)
+      delete mStoreMRC;
+    mStoreMRC = NULL;
+    if (mBackedUp) {
+      UtilRenameFile(mBackupName, mFileName, 
+        "Error attempting to restore backup file or previous reference");
+      mBackedUp = false;
+    }
+    mConSet->saveFrames = 0;
+    mParam->moduloX = mModuloSaveX;
+    mParam->moduloY = mModuloSaveY;
   }
-  mConSet->saveFrames = 0;
-  mParam->moduloX = mModuloSaveX;
-  mParam->moduloY = mModuloSaveY;
+  mStartingServerFrames = 0;
   mWinApp->UpdateBufferWindows();
   mWinApp->SetStatusText(COMPLEX_PANE, "");
   mWinApp->SetStatusText(MEDIUM_PANE, "");
