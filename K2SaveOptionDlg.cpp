@@ -5,6 +5,8 @@
 #include "SerialEM.h"
 #include "SerialEMDoc.h"
 #include "K2SaveOptionDlg.h"
+#include "CameraController.h"
+#include "DirectElectron\DirectElectronCamera.h"
 
 
 // CK2SaveOptionDlg dialog
@@ -131,7 +133,8 @@ END_MESSAGE_MAP()
 BOOL CK2SaveOptionDlg::OnInitDialog()
 {
   BOOL states[3] = {true, true, true};
-  int show = mDEtype ? SW_HIDE : SW_SHOW;
+  int show = (mDEtype && !mCanCreateDir) ? SW_HIDE : SW_SHOW;
+  CString str;
   CBaseDlg::OnInitDialog();
   m_butSkipRotFlip.EnableWindow(mEnableSkipRotFlip);
   m_butSaveUnnormalized.EnableWindow(mCanGainNormSum);
@@ -153,13 +156,20 @@ BOOL CK2SaveOptionDlg::OnInitDialog()
     SetDlgItemText(IDC_STAT_MUST_EXIST, B3DCHOICE(mFalconType, 
     "Subfolder set with \"Set Folder\" must be blank to create folders", 
     "Plugin to DigitalMicrograph must be upgraded to create folders"));
-  else if (mFalconType && (mFEIflags & PLUGFEI_USES_ADVANCED)) {
+  else if (mFalconType && (mCamFlags & PLUGFEI_USES_ADVANCED)) {
     SetDlgItemText(IDC_STAT_MUST_EXIST, "Folder will be created if necessary inside "
       "Falcon storage location");
     SetDlgItemText(IDC_STAT_MUST_EXIST2, "");
+  } else if (!mCanCreateDir && mDEtype) {
+    SetDlgItemText(IDC_STAT_MUST_EXIST, "SerialEM must run on DE server and server "
+      "version");
+    str.Format("must be at least %d.%d.%d to create folders", DE_CAN_SET_FOLDER / 1000000,
+      (DE_CAN_SET_FOLDER / 10000) % 100, DE_CAN_SET_FOLDER % 10000);
+    SetDlgItemText(IDC_STAT_MUST_EXIST2, str);
   }
   if (mDEtype)
-    SetDlgItemText(IDC_STAT_COMPTITLE, "Components for Filename Suffix");
+    SetDlgItemText(IDC_STAT_COMPTITLE, mCanCreateDir ? "Components for Folder and "
+    "Filename Suffix" : "Components for Filename Suffix");
   m_sbcDigits.SetPos(50);
   m_sbcDigits.SetRange(0, 100);
   B3DCLAMP(mNumberDigits, 3, 5);
@@ -173,8 +183,8 @@ BOOL CK2SaveOptionDlg::OnInitDialog()
   m_statUseComp.ShowWindow(show);
   m_statFolder.ShowWindow(show);
   m_statFile.ShowWindow(show);
-  m_butHourMinSec.ShowWindow(show);
-  m_butMonthDay.ShowWindow(show);
+  m_butHourMinSec.ShowWindow(mDEtype ? SW_HIDE : SW_SHOW);
+  m_butMonthDay.ShowWindow(mDEtype ? SW_HIDE : SW_SHOW);
   UpdateFormat();
   ManagePackOptions();
   return TRUE;
@@ -232,13 +242,13 @@ void CK2SaveOptionDlg::OnDeltaposSpinDigits(NMHDR *pNMHDR, LRESULT *pResult)
 
 void CK2SaveOptionDlg::UpdateFormat(void)
 {
-  CString date, time, filename;
+  CString date, time, filename, folders;
   char digHash[6] = "#####";
   CTime ctDateTime = CTime::GetCurrentTime();
   mWinApp->mDocWnd->DateTimeComponents(date, time);
   m_strExample = (m_bRootFolder && !m_strBasename.IsEmpty() && mCanCreateDir) ? 
     "Base" : "";
-  if (mFalconType && (mFEIflags & PLUGFEI_USES_ADVANCED) && !mCanCreateDir)
+  if (mFalconType && (mCamFlags & PLUGFEI_USES_ADVANCED) && !mCanCreateDir)
     m_strExample = "Subfolder";
   if (m_bSavefileFolder && mCanCreateDir) 
     UtilAppendWithSeparator(m_strExample, "File", "_");
@@ -246,10 +256,12 @@ void CK2SaveOptionDlg::UpdateFormat(void)
     UtilAppendWithSeparator(m_strExample, "Label", "_");
   if (!m_strExample.IsEmpty())
     m_strExample += "\\";
-  m_statMustExist.ShowWindow(((m_strExample.IsEmpty() && mCanCreateDir) || mDEtype) 
+  if (mCanCreateDir)
+    folders = m_strExample;
+  m_statMustExist.ShowWindow((m_strExample.IsEmpty() && mCanCreateDir) 
     ? SW_HIDE : SW_SHOW);
-  m_statMustExist2.ShowWindow((m_strExample.IsEmpty() || !mCanCreateDir) ? SW_HIDE : 
-    SW_SHOW);
+  m_statMustExist2.ShowWindow(((!mDEtype && (m_strExample.IsEmpty() || !mCanCreateDir)) || 
+    (mDEtype && mCanCreateDir)) ? SW_HIDE : SW_SHOW);
   if (m_bRootFile && !m_strBasename.IsEmpty())
     filename = "Base";
   if (m_bSavefileFile)
@@ -264,10 +276,12 @@ void CK2SaveOptionDlg::UpdateFormat(void)
     UtilAppendWithSeparator(filename, date, "_");
   if (m_bHourMinSec && !mDEtype)
     UtilAppendWithSeparator(filename, time, "_");
-  if (mDEtype)
-    m_strExample.Format("Format: %d%02d%02d_00001_%s_RawImages", ctDateTime.GetYear(),
-    ctDateTime.GetMonth(), ctDateTime.GetDay(), filename);
-  else
+  if (mDEtype) {
+    if (!filename.IsEmpty())
+      filename += "_";
+    m_strExample.Format("Format: %s%d%02d%02d_00001_%sRawImages", folders, 
+      ctDateTime.GetYear(), ctDateTime.GetMonth(), ctDateTime.GetDay(), filename);
+  } else
     m_strExample = CString("Format: ") + m_strExample + filename;
   UpdateData(false);
 }

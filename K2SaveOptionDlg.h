@@ -32,7 +32,7 @@ public:
   BOOL m_bSkipRotFlip;
   BOOL mEnableSkipRotFlip;
   int mFalconType;
-  int mFEIflags;
+  int mCamFlags;
   BOOL mDEtype;
   int mNameFormat;
   int mNumberDigits;
