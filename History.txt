@@ -2,7 +2,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
-===========================================================================
+============================================================================
+11/5/17: Fixed the lack of defect correction when drift correction is used in
+the OneView if there is no BasicCorrections property entry (In 3.6).
+
 10/22/17: Prevented DE camera FPS value from being put in wrong camera's
 parameters (In 3.6).
 

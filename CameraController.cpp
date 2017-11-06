@@ -2707,10 +2707,11 @@ void CCameraController::Capture(int inSet, bool retrying)
   }
 
   // Drift correction actually seems to work in continuous mode so allow it
+  // Property files went out without BasicCorrections so we need to supply the 49 here
   if (OneViewDriftCorrectOK(mParam) && conSet.alignFrames && 
     mTD.Processing == GAIN_NORMALIZED) {
-      if (mTD.Corrections < 0)
-        mTD.Corrections = 0;
+      if (mTD.Corrections <= 0)
+        mTD.Corrections = 49;     
       mTD.Corrections |= OVW_DRIFT_CORR_FLAG;
   }
  
