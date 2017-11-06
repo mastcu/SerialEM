@@ -3,6 +3,7 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+11/5/17 SEM_3-6-13
 11/5/17: Fixed the lack of defect correction when drift correction is used in
 the OneView if there is no BasicCorrections property entry (In 3.6).
 
@@ -64,7 +65,7 @@ unlinearized values.
 9/16/17: Stopped function for getting dose rate from image mean from getting
 relative gain factor from the wrong buffer (In 3.6).
 
-9/12/17: Added ability to align frames from Falcon cameras in SerialEM and
+8/29/17: SEM_3-6-12
 write command files for aligning with IMOD, just as with K2.
 
 9/12/17: Added script commands for suppressing the check on frame alignment
@@ -82,7 +83,6 @@ and realign until IS is below a threshold, and to leave IS at 0.
 
 8/31/17: Added checks for beam intensity calibrations with 0 intensities.
 
-8/29/17: SEM_3-7-12
 8/29/17: Fixed camera setup dialog opening at its last size (In 3.6).
 
 8/29/17: Turned warning that image shift has not been calibrated for a montage
