@@ -330,6 +330,8 @@ int KStoreADOC::SetValuesFromExtra(KImage *inImage, char *sectName, int index)
   if (!inImage || !inImage->GetUserData())
     return 0;
   EMimageExtra *extra = (EMimageExtra *)inImage->GetUserData();
+
+  // BE SURE TO ADD NEW VALUES TO THE LOAD FUNCTION SO THEY AREN'T LOST IN BIDIR SERIES
   if (extra->m_fTilt > EXTRA_VALUE_TEST && 
     AdocSetFloat(sectName, index, ADOC_TILT, extra->m_fTilt))
     return 1;
@@ -470,6 +472,12 @@ int KStoreADOC::LoadExtraFromValues(KImage *inImage, int &typext, char *sectName
   return 0;
 }
 
+#define ADOC_GET_STRING(a, b) \
+  if (AdocGetString(sectName, index, a, &frameDir) == 0) { \
+    extra->b = frameDir;    \
+    free(frameDir);                     \
+  }
+
 int KStoreADOC::LoadExtraFromValues(EMimageExtra *extra, int &typext, char *sectName, 
                                     int index)
 {
@@ -502,17 +510,18 @@ int KStoreADOC::LoadExtraFromValues(EMimageExtra *extra, int &typext, char *sect
   AdocGetThreeFloats(sectName, index, ADOC_MINMAXMEAN, &extra->mMin, &extra->mMax,
     &extra->mMean);
   AdocGetFloat(sectName, index, ADOC_TARGET, &extra->mTargetDefocus);
-  if (AdocGetString(sectName, index, ADOC_FRAME_PATH, &frameDir) == 0) {
-    extra->mSubFramePath = frameDir;
-    free(frameDir);
-  }
+  AdocGetFloat(sectName, index, ADOC_PRIOR_DOSE, &extra->mPriorRecordDose);
+  ADOC_GET_STRING(ADOC_FRAME_PATH, mSubFramePath);
   AdocGetInteger(sectName, index, ADOC_NUM_FRAMES, &extra->mNumSubFrames);
-  if (AdocGetString(sectName, index, ADOC_DATE_TIME, &frameDir) == 0) {
-    extra->mDateTime = frameDir;
-    free(frameDir);
-  }
+  ADOC_GET_STRING(ADOC_DOSES_COUNTS, mFrameDosesCounts);
+  ADOC_GET_STRING(ADOC_DATE_TIME, mDateTime);
+  ADOC_GET_STRING(ADOC_NAV_LABEL, mNavLabel);
   
-  //Skip DE12 items
+  //Skip most DE12 items
+  AdocGetFloat(sectName, index, ADOC_DE12_PREEXPOSE, &extra->mPreExposeTime);
+  AdocGetInteger(sectName, index, ADOC_DE12_TOTAL_FRAMES, &extra->mNumDE12Frames);
+  AdocGetFloat(sectName, index, ADOC_DE12_FPS, &extra->mDE12FPS);
+  AdocGetFloat(sectName, index, ADOC_FARADAY, &extra->mFaraday);
   extra->ValuesIntoShorts();
   return 0;
 }
