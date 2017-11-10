@@ -2250,6 +2250,7 @@ void CMacroProcessor::NextCommand()
     }
     mWinApp->AppendToLog("", LOG_OPEN_IF_CLOSED);
     if (!itemEmpty[1]) {
+      SubstituteVariables(&strLine, 1, strLine);
       mWinApp->mParamIO->StripItems(strLine, 1, report);
       mWinApp->mLogWindow->UpdateSaveFile(true, report);
     }
