@@ -1025,7 +1025,8 @@
             file and the log has new contents since program startup, the program will ask 
             the user whether to save to log first; if the user cancels, the script is 
             aborted.&nbsp; If a filename (newFile) is added, the new log will be saved with 
-            that name.&nbsp; An extension in this name will be stripped off before adding 
+            that name.&nbsp; Variables will be substituted before using the name.  
+            An extension in this name will be stripped off before adding 
             '.log', so if you want to preserve extensions or other text after a period, add 
             '.log' to the end of the name.&nbsp; If the file already exists, a number will 
             be added to get a unique new name.</TD>
