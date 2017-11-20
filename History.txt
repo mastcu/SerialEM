@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+11/20/17: Fixed potential problems with spot intensity calibrations that do
+not start at spot 1 (In 3.6).
+
 11/19/17: Added small dialog for entering and running a single-line script
 command.
 

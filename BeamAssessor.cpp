@@ -738,9 +738,10 @@ int CBeamAssessor::GetAboveCrossover(int spotSize, double intensity, int probe)
 int CBeamAssessor::FindSpotTableIndex(int aboveCross, int probe)
 {
   for (int i = 0; i < mNumSpotTables; i++)
-    if (GetAboveCrossover(1, mSpotTables[i].intensity[1], probe) == aboveCross && 
-      mSpotTables[i].probeMode == probe)
-      return i;
+    for (int spot = 1; spot <= mScope->GetNumSpotSizes(); spot++)
+      if (mSpotTables[i].probeMode == probe && mSpotTables[i].ratio[spot] > 0. &&
+        GetAboveCrossover(spot, mSpotTables[i].intensity[spot], probe) == aboveCross)
+        return i;
   return -1;
 }
 
@@ -1720,7 +1721,7 @@ void CBeamAssessor::StopSpotCalibration()
 
     // Find a table on the same side of crossover or use the next one (but not > 4)
     if (saveData) {
-      aboveCross = GetAboveCrossover(1, mTempIntensities[mFirstSpotToCal]);
+      aboveCross = GetAboveCrossover(mFirstSpotToCal, mTempIntensities[mFirstSpotToCal]);
       indTab = FindSpotTableIndex(aboveCross, probe);
       if (indTab < 0) {
         if (mNumSpotTables < 4)

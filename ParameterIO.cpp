@@ -3816,7 +3816,7 @@ void CParameterIO::WriteCalibration(CString strFileName)
     for (ind = 0; ind < mWinApp->mBeamAssessor->GetNumSpotTables(); ind++) {
       if (spotTables[ind].probeMode && probe < 2)
         indMicro[probe++] = ind;
-      else if (nCal2 < 2)
+      else if (!spotTables[ind].probeMode && nCal2 < 2)
         indNano[nCal2++] = ind;
     }
 
