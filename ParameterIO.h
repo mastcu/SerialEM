@@ -62,8 +62,8 @@ public:
   void ReadPartialBad(CString *strItems, int *itemInt, UShortVec &partialBadCol, ShortVec &partialBadWidth, 
     UShortVec &partialBadStartY, UShortVec &partialBadEndY, const char *colText, 
     CString &strLine);
-  int ReadOneMacro(int iset, CString & strLine, CString * strItems);
-  void WriteAllMacros(void);
+  int ReadOneMacro(int iset, CString & strLine, CString * strItems, int maxMacros);
+  void WriteAllMacros(int numWrite);
   void ReadMacrosFromFile(CString filename);
   void WriteMacrosToFile(CString filename);
   void ReportSpecialOptions(void);

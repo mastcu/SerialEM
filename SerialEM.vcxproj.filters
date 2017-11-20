@@ -422,6 +422,9 @@
     <ClInclude Include="DERefMakerDlg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="OneLineScript.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\bitmap1.bmp">
@@ -1060,6 +1063,9 @@
       <Filter>CSource Files</Filter>
     </ClCompile>
     <ClCompile Include="DERefMakerDlg.cpp">
+      <Filter>CSource Files</Filter>
+    </ClCompile>
+    <ClCompile Include="OneLineScript.cpp">
       <Filter>CSource Files</Filter>
     </ClCompile>
   </ItemGroup>

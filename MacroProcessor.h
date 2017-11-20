@@ -10,6 +10,7 @@
 #endif // _MSC_VER > 1000
 
 #include <afxtempl.h>
+class COneLineScript;
 
 #define MAX_LOOP_DEPTH  40
 #define MAX_CALL_DEPTH  (2 * MAX_MACROS)
@@ -74,6 +75,7 @@ class CMacroProcessor : public CCmdTarget
   GetMember(bool, NoMessageBoxOnError);
   bool GetAlignWholeTSOnly() {return DoingMacro() && mAlignWholeTSOnly;};
   bool SkipCheckingFrameAli() {return DoingMacro() && mSkipFrameAliCheck;};
+  COneLineScript *mOneLineScript;
 
 protected:
 
@@ -147,6 +149,7 @@ private:
   int mNumToolButtons;    // Number of tool bottons to show
   int mToolButHeight;     // Height of tool buttons
   WINDOWPLACEMENT mEditerPlacement;
+  WINDOWPLACEMENT mOneLinePlacement;
   int mLogErrAction;      // Log argument for error messages
   int mLogAction;         // Parameterized log argument for suppressing reports
   std::vector<ControlSet> mConsetsSaved; // COntrol sets saved from changes
@@ -229,7 +232,9 @@ public:
   void ToolbarMacroRun(UINT nID);
   WINDOWPLACEMENT * GetToolPlacement(void);
   WINDOWPLACEMENT * GetEditerPlacement(void) {return &mEditerPlacement;};
+  WINDOWPLACEMENT * GetOneLinePlacement(void);
   void ToolbarClosing(void);
+  void OneLineClosing(void);
   int CheckBlockNesting(int macroNum, int startLevel);
   int SkipToBlockEnd(int type, CString line);
   BOOL ItemToDouble(CString str, CString line, double & value);
@@ -283,6 +288,8 @@ public:
   afx_msg void OnScriptSetIndentSize();
   afx_msg void OnScriptClearPersistentVars();
   afx_msg void OnUpdateClearPersistentVars(CCmdUI *pCmdUI);
+  afx_msg void OnScriptRunOneCommand();
+  afx_msg void OnUpdateScriptRunOneCommand(CCmdUI *pCmdUI);
 };
 
 #endif // !defined(AFX_MACROPROCESSOR_H__33178182_58A1_4F3A_B8F4_D41F94866517__INCLUDED_)

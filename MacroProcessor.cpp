@@ -40,6 +40,7 @@
 #include "NavigatorDlg.h"
 #include "NavHelper.h"
 #include "FalconHelper.h"
+#include "OneLineScript.h"
 #include "Mailer.h"
 #include "PluginManager.h"
 #include "PiezoAndPPControl.h"
@@ -365,6 +366,8 @@ BEGIN_MESSAGE_MAP(CMacroProcessor, CCmdTarget)
   ON_COMMAND(ID_SCRIPT_SETINDENTSIZE, OnScriptSetIndentSize)
   ON_COMMAND(ID_SCRIPT_CLEARPERSISTENTVARS, OnScriptClearPersistentVars)
   ON_UPDATE_COMMAND_UI(ID_SCRIPT_CLEARPERSISTENTVARS, OnUpdateClearPersistentVars)
+  ON_COMMAND(ID_SCRIPT_RUNONECOMMAND, OnScriptRunOneCommand)
+  ON_UPDATE_COMMAND_UI(ID_SCRIPT_RUNONECOMMAND, OnUpdateScriptRunOneCommand)
 END_MESSAGE_MAP()
 
 //////////////////////////////////////////////////////////////////////
@@ -384,6 +387,7 @@ CMacroProcessor::CMacroProcessor()
   mControl = mWinApp->GetMacControl();
   mMacroEditer = &(mWinApp->mMacroEditer[0]);
   mConSets = mWinApp->GetConSets();
+  mOneLineScript = NULL;
   mDoingMacro = false;
   mCurrentMacro = -1;
   mInitialVerbose = false;
@@ -403,6 +407,7 @@ CMacroProcessor::CMacroProcessor()
   mToolButHeight = 0;
   mAutoIndentSize = 3;
   mEditerPlacement.rcNormalPosition.right = 0;
+  mOneLinePlacement.rcNormalPosition.right = 0;
   mMailSubject = "Message from SerialEM script";
   for (i = 0; i < 5; i++)
     cmdList[i].mixedCase = (LPCTSTR)mModeNames[i];
@@ -657,13 +662,47 @@ void CMacroProcessor::OnUpdateMacroRun(CCmdUI* pCmdUI)
   pCmdUI->Enable(MacroRunnable(index));
 }
 
+
+void CMacroProcessor::OnScriptRunOneCommand()
+{
+  if (mOneLineScript) {
+    mOneLineScript->BringWindowToTop();
+    return;
+  }
+  mOneLineScript = new COneLineScript();
+  mOneLineScript->m_strOneLine = mMacros[MAX_MACROS];
+  mOneLineScript->mMacros = mMacros;
+  mOneLineScript->Create(IDD_ONELINESCRIPT);
+  mWinApp->SetPlacementFixSize(mOneLineScript, &mOneLinePlacement);
+  mWinApp->RestoreViewFocus();
+}
+
+void CMacroProcessor::OnUpdateScriptRunOneCommand(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(!DoingMacro());
+}
+
+WINDOWPLACEMENT *CMacroProcessor::GetOneLinePlacement(void)
+{
+  if (mOneLineScript)
+    mOneLineScript->GetWindowPlacement(&mOneLinePlacement);
+  return &mOneLinePlacement;
+}
+
+void CMacroProcessor::OneLineClosing(void)
+{
+  mOneLineScript->GetWindowPlacement(&mOneLinePlacement);
+  mOneLineScript = NULL;
+}
+
 // Central place to determine if a macro is theoretically runnable
 BOOL CMacroProcessor::MacroRunnable(int index)
 {
   return !mWinApp->DoingTasks() && !mWinApp->StartedTiltSeries() &&
     !(mWinApp->mNavigator && mWinApp->mNavigator->StartedMacro()) &&
     !(mWinApp->mNavigator && mWinApp->mNavigator->GetPausedAcquire()) &&
-    !mWinApp->NavigatorStartedTS() && (!mMacros[index].IsEmpty() || mMacroEditer[index]);
+    !mWinApp->NavigatorStartedTS() && (index >= MAX_MACROS || !mMacros[index].IsEmpty() || 
+    mMacroEditer[index]);
 }
 
 void CMacroProcessor::OnMacroEnd()
@@ -4863,6 +4902,8 @@ int CMacroProcessor::ScanForName(int macroNumber, CString *macro)
   CString *longMacNames = mWinApp->GetLongMacroNames();
   MacroFunction *funcP;
   int currentIndex = 0;
+  if (macroNumber >= MAX_MACROS)
+    return 0;
   if (!macro)
     macro = &mMacros[macroNumber];
   ClearFunctionArray(macroNumber);

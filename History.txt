@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+11/19/17: Added small dialog for entering and running a single-line script
+command.
+
 11/9/17: Substituted variables in SaveLogOpenNew command (In 3.6).
 
 11/8/17: Fixed loss of PriorRecordDose and FramesDosesCounts from mdoc for

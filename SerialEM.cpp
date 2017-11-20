@@ -34,6 +34,7 @@
 #include "MacroProcessor.h"
 #include "MacroToolbar.h"
 #include "MacroControlDlg.h"
+#include "OneLineScript.h"
 #include "ComplexTasks.h"
 #include "BeamAssessor.h"
 #include "ProcessImage.h"
@@ -2640,6 +2641,8 @@ void CSerialEMApp::UpdateAllEditers(void)
   for (int i = 0; i < MAX_MACROS; i++)
     if (mMacroEditer[i])
       mMacroEditer[i]->UpdateButtons();
+  if (mMacroProcessor->mOneLineScript)
+    mMacroProcessor->mOneLineScript->Update();
 }
 
 // Central call to update macro buttons

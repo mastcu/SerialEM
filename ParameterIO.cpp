@@ -317,7 +317,8 @@ int CParameterIO::ReadSettings(CString strFileName)
         }
 
       } else if (NAME_IS("Macro")) {
-        err = ReadOneMacro(itemInt[1], strLine, strItems);
+        err = ReadOneMacro(itemInt[1], strLine, strItems, 
+          MAX_MACROS + MAX_ONE_LINE_SCRIPTS);
         if (err > 0) {
           retval = err;
           break;
@@ -547,7 +548,8 @@ int CParameterIO::ReadSettings(CString strFileName)
         NAME_IS("MeterPlacement") || NAME_IS("DosePlacement") || 
         NAME_IS("RotAlignPlacement") ||NAME_IS("StageToolPlacement") ||
         NAME_IS("ReadDlgPlacement") || NAME_IS("StatePlacement") ||
-        NAME_IS("MacroToolPlacement") || NAME_IS("MacroEditerPlacement")) {
+        NAME_IS("MacroToolPlacement") || NAME_IS("MacroEditerPlacement") ||
+        NAME_IS("OneLinePlacement")) {
         if (strItems[10].IsEmpty()) {
             AfxMessageBox("Error in window placement line in settings file "
               + strFileName + " :\n" + strLine, MB_EXCLAME);
@@ -568,6 +570,8 @@ int CParameterIO::ReadSettings(CString strFileName)
             place = mWinApp->GetStageToolPlacement();
           else if (NAME_IS("MacroEditerPlacement"))
             place = mWinApp->mMacroProcessor->GetEditerPlacement();
+          else if (NAME_IS("OneLinePlacement"))
+            place = mWinApp->mMacroProcessor->GetOneLinePlacement();
           else if (NAME_IS("MacroToolPlacement")) {
             mWinApp->SetReopenMacroToolbar(itemInt[1] != 0);
             place = mWinApp->mMacroProcessor->GetToolPlacement();
@@ -1010,6 +1014,7 @@ void CParameterIO::WriteSettings(CString strFileName)
   WINDOWPLACEMENT *meterPlace = mWinApp->mScopeStatus.GetMeterPlacement();
   WINDOWPLACEMENT *dosePlace = mWinApp->mScopeStatus.GetDosePlacement();
   WINDOWPLACEMENT *toolPlace = mWinApp->mMacroProcessor->GetToolPlacement();
+  WINDOWPLACEMENT *oneLinePlace = mWinApp->mMacroProcessor->GetOneLinePlacement();
   WINDOWPLACEMENT *readPlace = mWinApp->mDocWnd->GetReadDlgPlacement();
   WINDOWPLACEMENT *stageToolPlace = mWinApp->GetStageToolPlacement();
   WINDOWPLACEMENT *rotAlignPlace = mWinApp->mNavHelper->GetRotAlignPlacement();
@@ -1171,7 +1176,7 @@ void CParameterIO::WriteSettings(CString strFileName)
 #include "SettingsTests.h"
 #undef SET_TEST_SECT3
 
-    WriteAllMacros();
+    WriteAllMacros(MAX_MACROS + MAX_ONE_LINE_SCRIPTS);
 
     oneState.Format("AutoBacklashNewMap %d %f\n", 
       mWinApp->mNavHelper->GetAutoBacklashNewMap(), 
@@ -1294,6 +1299,7 @@ void CParameterIO::WriteSettings(CString strFileName)
     WritePlacement("ReadDlgPlacement", 0, readPlace);
     WritePlacement("StageToolPlacement", 0, stageToolPlace);
     WritePlacement("MacroToolPlacement", mWinApp->mMacroToolbar ? 1 : 0, toolPlace);
+    WritePlacement("OneLinePlacement", 0, oneLinePlace);
     WritePlacement("MacroEditerPlacement", 0, 
       mWinApp->mMacroProcessor->FindEditerPlacement());
     oneState.Format("MacroToolbarButtons %d %d\n", 
@@ -1510,7 +1516,7 @@ void CParameterIO::ReadMacrosFromFile(CString filename)
       (err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, 
       MAX_TOKENS)) == 0) {
         if (NAME_IS("Macro")) {
-          err = ReadOneMacro(itemInt[1], strLine, strItems);
+          err = ReadOneMacro(itemInt[1], strLine, strItems, MAX_MACROS);
           if (err > 0) {
             retval = err;
             break;
@@ -1547,7 +1553,7 @@ void CParameterIO::WriteMacrosToFile(CString filename)
     // Open the file for writing, 
     mFile = new CStdioFile(filename, CFile::modeCreate | CFile::modeWrite | 
       CFile::shareDenyWrite);
-    WriteAllMacros();
+    WriteAllMacros(MAX_MACROS);
   }
   catch(CFileException *perr) {
     perr->Delete();
@@ -4456,10 +4462,11 @@ void CParameterIO::WritePlacement(char *string, int open, WINDOWPLACEMENT *place
 }
 
 // Read one macro after "Macro" has been found
-int CParameterIO::ReadOneMacro(int iset, CString &strLine, CString *strItems)
+int CParameterIO::ReadOneMacro(int iset, CString &strLine, CString *strItems, 
+  int maxMacros)
 {
   int err;
-  if (iset < 0 || iset >= MAX_MACROS)
+  if (iset < 0 || iset >= maxMacros)
     return 1;
   CString *macros = mWinApp->GetMacros();
   macros[iset] = "";
@@ -4477,11 +4484,11 @@ int CParameterIO::ReadOneMacro(int iset, CString &strLine, CString *strItems)
 }
 
 // Write all macros to the current file
-void CParameterIO::WriteAllMacros(void)
+void CParameterIO::WriteAllMacros(int numWrite)
 {
   CString *macros = mWinApp->GetMacros();
   CString macCopy;
-  for (int i = 0; i < MAX_MACROS; i++) {
+  for (int i = 0; i < numWrite; i++) {
     if (!macros[i].IsEmpty()) {
       WriteInt("Macro", i);
       macCopy = macros[i];

@@ -7,7 +7,6 @@
 #define IDD_ABOUTBOX                    100
 #define IDR_MAINFRAME                   128
 #define IDR_SERIALTYPE                  129
-#define IDS_STRING130                   130
 #define IDD_ASKONE_DIALOG               132
 #define IDD_IMAGELEVEL                  133
 #define IDD_BUFFERCONTROL               134
@@ -69,6 +68,7 @@
 #define IDD_THREE_CHOICE_BOX            224
 #define IDD_MULTI_SHOT_SETUP            225
 #define IDD_DE_REFERENCE                226
+#define IDD_ONELINESCRIPT               227
 #define IDC_EDITXSIZE                   1000
 #define IDC_EDITYSIZE                   1002
 #define IDC_EDITYOVERLAP                1003
@@ -1358,6 +1358,11 @@
 #define IDC_DE_SET_SAVE_FOLDER          2376
 #define IDC_STAT_DE_WHERE_ALIGN         2377
 #define IDC_BUT_DE_SETUP_ALIGN          2378
+#define IDC_EDIT_ONE_LINE               2379
+#define IDC_EDIT_ONE_LINE2              2380
+#define IDC_EDIT_ONE_LINE3              2381
+#define IDC_EDIT_ONE_LINE4              2382
+#define IDC_EDIT_ONE_LINE5              2383
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -1763,15 +1768,16 @@
 #define ID_OPTIONS_SHOWMULTI            33285
 #define ID_OPTIONS_SETMULTI             33286
 #define ID_Menu33287                    33287
+#define ID_SCRIPT_RUNONECOMMAND         33288
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        227
-#define _APS_NEXT_COMMAND_VALUE         33288
-#define _APS_NEXT_CONTROL_VALUE         2379
+#define _APS_NEXT_RESOURCE_VALUE        228
+#define _APS_NEXT_COMMAND_VALUE         33289
+#define _APS_NEXT_CONTROL_VALUE         2384
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

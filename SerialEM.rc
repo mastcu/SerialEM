@@ -373,6 +373,7 @@ BEGIN
             MENUITEM "Run 19",                      ID_MACRO_RUN19
             MENUITEM "Run 20",                      ID_MACRO_RUN20
         END
+        MENUITEM "Edit/Run &One Line...",       ID_SCRIPT_RUNONECOMMAND
         MENUITEM "&Stop",                       ID_MACRO_STOP
         MENUITEM "&End",                        ID_MACRO_END
         MENUITEM "Resu&me",                     ID_MACRO_RESUME
@@ -2780,6 +2781,17 @@ BEGIN
     CONTROL         "With hardware binning by 2",IDC_USE_HARDWARE_BIN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,49,68,106,10
 END
 
+IDD_ONELINESCRIPT DIALOGEX 0, 0, 163, 24
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_TOOLWINDOW
+CAPTION "One-line Script Editor"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "Run",IDOK,123,10,36,12
+    LTEXT           "Tab or  `  to complete command",IDC_STAT_COMPLETIONS,3,1,156,8
+    EDITTEXT        IDC_EDIT_ONE_LINE,3,10,115,12,ES_AUTOHSCROLL
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3188,6 +3200,13 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 170
     END
+
+    IDD_ONELINESCRIPT, DIALOG
+    BEGIN
+        LEFTMARGIN, 3
+        RIGHTMARGIN, 159
+        BOTTOMMARGIN, 22
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -3400,6 +3419,7 @@ BEGIN
                             "Clear out persistent variables defined in script processor"
     ID_OPTIONS_SHOWMULTI    "Show multi-shot circles when Show Acquire area turned on"
     ID_OPTIONS_SETMULTI     "Open dialog to set up multiple Records around a hole"
+    ID_SCRIPT_RUNONECOMMAND "Open window to enter and run one line command"
 END
 
 STRINGTABLE

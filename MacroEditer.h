@@ -106,8 +106,10 @@ public:
   CStatic m_statCompletions;
   CButton m_butFindInMacro;
   afx_msg void OnFindInMacro();
-  bool FindIndentAndMatch(int lineStart, int limit, const char ** keywords, int numKeys, 
+  static bool FindIndentAndMatch(CString &strMacro, int lineStart, int limit, const char ** keywords, int numKeys, 
     int & curIndent);
+  static void HandleCompletionsAndIndent(CString &strMacro, CString &strCompletions,
+    int &sel2, bool &setCompletions, bool &completing);
 };
 
 //{{AFX_INSERT_LOCATION}}
