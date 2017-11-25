@@ -4,6 +4,7 @@
   MacroControl *macControl = mWinApp->GetMacControl();
 // mBufferManager, mFilterParam, mTSParam
 #endif
+  // This section is full 11/24/17
 #ifdef SET_TEST_SECT1
 FLOAT_SETT_GETSET("AreaFractionForScaling", mWinApp->, PctAreaFraction)
 FLOAT_SETT_GETSET("FFTTruncDiameter", mWinApp->, TruncDiamOfFFT)
@@ -234,4 +235,7 @@ BOOL_SETT_GETSET("InvertSTEMimages", mWinApp->, InvertSTEMimages)
 BOOL_SETT_GETSET("BlankBeamInSTEM", mWinApp->, BlankBeamInSTEM)
 BOOL_SETT_GETSET("RetractToUnblankSTEM", mWinApp->, RetractToUnblankSTEM)
 BOOL_SETT_GETSET("KeepPixelTime", mWinApp->, KeepPixelTime)
+FLOAT_SETT_GETSET("RightBorderFrac", mWinApp->, RightBorderFrac)
+FLOAT_SETT_GETSET("BottomBorderFrac", mWinApp->, BottomBorderFrac)
+FLOAT_SETT_GETSET("MainFFTsplitFrac", mWinApp->, MainFFTsplitFrac)
 #endif

@@ -65,6 +65,7 @@ BEGIN_MESSAGE_MAP(CSerialEMView, CView)
   ON_WM_RBUTTONUP()
   ON_WM_HELPINFO()
 	ON_WM_DESTROY()
+  ON_WM_SIZE()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -77,6 +78,7 @@ CSerialEMView::CSerialEMView()
   mImBufs = NULL;
   mImBufNumber = 1;
   mImBufArraySize = 0;
+  mResizingToFit = false;
   mZoom = 1.0;
   m_iOffsetX = 0;
   m_iOffsetY = 0;
@@ -139,8 +141,8 @@ BOOL CSerialEMView::PreCreateWindow(CREATESTRUCT& cs)
     childFrame->SetWindowText("Main Window");
     mMainWindow = true;
   } else if (type == 3) {
-    width = (rect.Width() - iBordLeft - iBordRight) / 2;
-    childFrame->SetWindowPos(NULL, rect.left + iBordLeft + width, rect.top + iBordTop,
+    width = (rect.Width() - iBordLeft - iBordRight);
+    childFrame->SetWindowPos(NULL, rect.left + iBordLeft, rect.top + iBordTop,
       width, rect.Height() - iBordTop - iBordBottom, SWP_NOZORDER);
     childFrame->SetWindowText("FFT");
     mFFTWindow = true;
@@ -183,6 +185,10 @@ BOOL CSerialEMView::PreCreateWindow(CREATESTRUCT& cs)
     CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
     FF_DONTCARE, fontName);
 
+  if (mFFTWindow) {
+    mCreateTime = GetTickCount();
+    mFFTresizeCount = 0;
+  }
   return CView::PreCreateWindow(cs);
 }
 
@@ -1737,25 +1743,44 @@ void CSerialEMView::NewImageScale()
     mWinApp->mImageLevel.NewImageScale(mImBufs[mImBufIndex].mImageScale);
 }
 
-// Resize to fit client area with borders - should only happen for main window
+// Resize to fit client area with borders - should only happen for main and FFT windows
 void CSerialEMView::ResizeToFit(int iBordLeft, int iBordTop, int iBordRight, 
                 int iBordBottom, int useHalf)
 {
   CChildFrame *childFrame = (CChildFrame *)GetParent();
   CMainFrame *mainFrame = (CMainFrame *)childFrame->GetParent();
   CRect rect;
-  int useWidth, useLeft;
+  int useWidth, useLeft, fullWidth;
   mainFrame->GetClientRect(&rect);
-  useWidth = rect.Width() - iBordLeft - iBordRight;
+  useWidth = fullWidth = rect.Width() - iBordLeft - iBordRight;
   useLeft = rect.left + iBordLeft;
   if (useHalf)
-    useWidth /= 2;
-  if (useHalf > 0)
+    useWidth = (int)(useWidth * mWinApp->GetMainFFTsplitFrac());
+  if (useHalf > 0) {
     useLeft += useWidth;
+    useWidth = fullWidth - useWidth;
+  }
 
   mFirstDraw = true;
+  mResizingToFit = true;
   childFrame->SetWindowPos(NULL, useLeft, rect.top + iBordTop, useWidth, 
       rect.Height() - iBordTop - iBordBottom, SWP_NOZORDER);
+  mResizingToFit = false;
+}
+
+// Report a resize event other than one caused by ResizeToFit or one of the first two
+// right after opening the FFT window
+void CSerialEMView::OnSize(UINT nType, int cx, int cy) 
+{
+  CRect rect;
+  CView::OnSize(nType, cx, cy);
+  if (mFFTWindow)
+    mFFTresizeCount++;
+  if (!mResizingToFit && (mMainWindow || mFFTWindow) && 
+    !(mFFTWindow && SEMTickInterval(mCreateTime) < 1000. && mFFTresizeCount < 3)) {
+    GetWindowRect(&rect);
+    mWinApp->MainViewResizing(rect, mFFTWindow);
+  }
 }
 
 // Try to change to the buffer iTrial, moving in direction iDir

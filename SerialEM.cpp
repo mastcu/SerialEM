@@ -609,6 +609,11 @@ CSerialEMApp::CSerialEMApp()
   mLogPlacement.rcNormalPosition.right = 0;
   mNavPlacement.rcNormalPosition.right = 0;
   mCamSetupPlacement.rcNormalPosition.right = 0;
+  mRightBorderFrac = 0.;
+  mBottomBorderFrac = 0.;
+  mMainFFTsplitFrac = 0.5f;
+  mRightFrameWidth = 0;
+  mBottomFrameWidth = 0;
   mReopenLog =  false;
   mExitWithUnsavedLog = false;
   mReopenMacroToolbar = false;
@@ -1193,7 +1198,7 @@ BOOL CSerialEMApp::InitInstance()
 
   RestoreViewFocus();
   if (mMainView) 
-    OnResizeMain();
+    DoResizeMain();
 
   // More initializations
   mDocWnd->SetPointers(mBufferManager, &mBufferWindow);
@@ -1355,7 +1360,7 @@ BOOL CSerialEMApp::InitInstance()
     SetTitleFile("");
 
   mStartingProgram = false;
-  OnResizeMain();
+  DoResizeMain();
   return TRUE;
 }
 
@@ -1593,7 +1598,7 @@ void CSerialEMApp::SetCurrentBuffer(int index, bool fftBuf)
       mFFTView->SetCurrentBuffer(index);
     } else {
       mNeedFFTWindow = true;
-      OnResizeMain();
+      DoResizeMain();
       ViewOpening();
       ((CMainFrame *)m_pMainWnd)->OnWindowNew();
     }
@@ -1616,7 +1621,8 @@ int CSerialEMApp::GetNewViewProperties(CSerialEMView *inView, int &iBordLeft,
                                        EMimageBuffer *&imBufs, int &iImBufNumber, 
                                        int &iImBufIndex)
 {
-  int needStatic = mNeedStaticWindow ? 1 : 0;
+  CRect rect;
+  int userRight, userBot, fullWidth, needStatic = mNeedStaticWindow ? 1 : 0;
   iBordLeft = STATIC_BORDER_LEFT;
   iBordRight = STATIC_BORDER_RIGHT;
   iBordTop = STATIC_BORDER_TOP;
@@ -1630,9 +1636,15 @@ int CSerialEMApp::GetNewViewProperties(CSerialEMView *inView, int &iBordLeft,
     iImBufIndex = mImBufIndex;
     mNeedStaticWindow = FALSE;
   } else if (mNeedFFTWindow) {
-    iBordLeft = mMaxDialogWidth;
+    m_pMainWnd->GetWindowRect(rect);
+    fullWidth = rect.Width() - mMaxDialogWidth - mRightFrameWidth;
     if (CountOpenViews() > 1)
       iBordRight += 30;
+    userRight = B3DNINT(mRightBorderFrac * fullWidth);
+    iBordRight = B3DMAX(iBordRight, userRight);
+    iBordLeft = mMaxDialogWidth + B3DNINT(mMainFFTsplitFrac * (fullWidth - iBordRight));
+    userBot = B3DNINT(mBottomBorderFrac * (rect.Height() - mBottomFrameWidth));
+    iBordBottom = B3DMAX(iBordBottom, userBot);
     imBufs = &mFFTBufs[0];
     iImBufNumber = MAX_FFT_BUFFERS;
     iImBufIndex = 0;
@@ -1744,7 +1756,7 @@ void CSerialEMApp::ViewClosing(BOOL stackView, BOOL FFTview)
   mViewClosing = true;
   nview = CountOpenViews();
   if (mMainView && (nview < 2 + B3DCHOICE(mFFTView, 1, 0) || FFTview) && !mAppExiting)
-    OnResizeMain();
+    DoResizeMain();
   mViewClosing = false;
 }
 
@@ -1764,21 +1776,72 @@ void CSerialEMApp::ResizeStackView(int extraBordLeft, int bordTop)
       STATIC_BORDER_RIGHT, STATIC_BORDER_BOTTOM, 0);
 }
 
-// Tell the main window to resize itself to fill space; come in a bit if other windows
+// This is the handler for the resize menu entry/shortcut, which resets the border
+// fractions to resize to the full area
 void CSerialEMApp::OnResizeMain() 
+{
+  mRightBorderFrac = 0.;
+  mBottomBorderFrac = 0.;
+  DoResizeMain();
+}
+
+// Tell the main window to resize itself to fill space; come in a bit if other windows
+// whichBuf is 0 to do both, -1 for just main, 1 for just FFT
+void CSerialEMApp::DoResizeMain(int whichBuf) 
 {
   // ResizeToFit crashes on very small screens (<= 800x600) on some systems so skip during
   // startup and do at very end of startup
   if (mStartingProgram)
     return;
+  CRect rect;
+  m_pMainWnd->GetWindowRect(rect);
   int nview = CountOpenViews();
   int ifFFT = B3DCHOICE(mFFTView || mNeedFFTWindow, 1, 0);
   int right = STATIC_BORDER_RIGHT + B3DCHOICE(nview > 1 + ifFFT, 30, 0);
-  mMainView->ResizeToFit(mMaxDialogWidth, STATIC_BORDER_TOP, right, STATIC_BORDER_BOTTOM, 
-    -ifFFT);
-  if (mFFTView)
-    mFFTView->ResizeToFit(mMaxDialogWidth, STATIC_BORDER_TOP, right, 
-    STATIC_BORDER_BOTTOM, 1);
+  int userRight = B3DNINT(mRightBorderFrac * (rect.Width() - mMaxDialogWidth - 
+    mRightFrameWidth));
+  int userBottom = B3DNINT(mBottomBorderFrac * (rect.Height() - mBottomFrameWidth));
+  userBottom = B3DMAX(userBottom, STATIC_BORDER_BOTTOM);
+  right = B3DMAX(userRight, right);
+  if (whichBuf <= 0)
+    mMainView->ResizeToFit(mMaxDialogWidth, STATIC_BORDER_TOP, right, userBottom, -ifFFT);
+  if (mFFTView && whichBuf >= 0)
+    mFFTView->ResizeToFit(mMaxDialogWidth, STATIC_BORDER_TOP, right, userBottom, 1);
+}
+
+// Either the main window or FFT window is resizing to the given rectangle: adjust border
+// fractions and possible the split between the two windows
+void CSerialEMApp::MainViewResizing(CRect &winRect, bool FFTwin)
+{
+  CRect rect;
+  float usableWidth;
+  m_pMainWnd->GetWindowRect(rect);
+  if (mStartingProgram) {
+    mRightFrameWidth = B3DMIN(30, rect.right - winRect.right);
+    mBottomFrameWidth = B3DMIN(100, rect.bottom - winRect.bottom);
+  } else {
+    usableWidth = (float)(rect.Width() - mMaxDialogWidth);
+
+    // If FFT open, adjust right fraction only if this is FFT resizing
+    if (!mFFTView || FFTwin)
+      mRightBorderFrac = (float)(rect.right - mRightFrameWidth - winRect.right) / 
+        usableWidth;
+    mBottomBorderFrac = (float)(rect.bottom - mBottomFrameWidth - winRect.bottom) / 
+      (float)rect.Height();
+    B3DCLAMP(mRightBorderFrac, 0.f, 0.9f);
+    B3DCLAMP(mBottomBorderFrac, 0.f, 0.9f);
+
+    // If FFT open, adjust the split between main and FFT and resize windows
+    if (mFFTView) {
+      mMainFFTsplitFrac = (float)((B3DCHOICE(FFTwin, winRect.left, winRect.right) - 
+        (rect.left + mMaxDialogWidth)) / ((1. - mRightBorderFrac) * usableWidth));
+      B3DCLAMP(mMainFFTsplitFrac, 0.1f, 0.9f);
+
+      // This resizes the currently resizing window, but seems to work and results in
+      // both windows having their zooms adjusted instead of just one
+      DoResizeMain(0);
+    }
+  }
 }
 
 int CSerialEMApp::CountOpenViews(void)
@@ -1798,7 +1861,7 @@ int CSerialEMApp::CountOpenViews(void)
 void CSerialEMApp::ViewOpening(void)
 {
   mViewOpening = true;
-  OnResizeMain();
+  DoResizeMain();
   mViewOpening = false;
 }
 

@@ -412,6 +412,7 @@ public:
   void UpdateBufferWindows();
   void OnCameraParameters();
   void OnResizeMain();
+  void DoResizeMain(int whichBuf = 0);
   GetMember(BOOL, Administrator)
   GetSetMember(int, SelectedConSet)
   GetMember(int, CurrentCamera)
@@ -503,6 +504,9 @@ public:
   GetSetMember(BOOL, KeepEFTEMstate);
   GetSetMember(BOOL, UseRecordForMontage);
   GetSetMember(BOOL, UseViewForSearch);
+  GetSetMember(float, RightBorderFrac);
+  GetSetMember(float, BottomBorderFrac);
+  GetSetMember(float, MainFFTsplitFrac);
   int *GetDlgColorIndex() {return &mDlgColorIndex[0];};
   GetSetMember(bool, AbsoluteDlgIndex);
   CFont *GetLittleFont() {return &mLittleFont;};
@@ -734,6 +738,11 @@ private:
   BOOL mKeepEFTEMstate;         // Flag to stay in or out of EFTEM on startup/shutdown
   BOOL mUseRecordForMontage;    // Flag to use Record parameters for Montage
   BOOL mUseViewForSearch;       // Flag to use View parameters for Search
+  float mRightBorderFrac;       // User's setting for right border of main as frac of area
+  float mBottomBorderFrac;      // User's setting for bottom border of main as frac
+  float mMainFFTsplitFrac;      // Fraction of right-left area taken by Main with FFT open
+  int mRightFrameWidth;         // difference between main and frame right edge at startup
+  int mBottomFrameWidth;        // difference between main and frame bottom edge at start
 
 public:
   void UpdateAllEditers(void);
@@ -783,6 +792,7 @@ void CopyOptionalSetIfNeeded(int inSet, int inCam = -1);
 int GetBuildDayStamp(void);
 int GetIntegerVersion(void);
 void AdjustSizesForSuperResolution(int iCam);
+void MainViewResizing(CRect &winRect, bool FFTwin);
 };
 
 

@@ -100,6 +100,9 @@ private:
   BOOL mMainWindow;              // Flag that this is the main window
   BOOL mStackWindow;             // Flag that this is THE active stack view
   bool mFFTWindow;               // Flag that this is the FFT window
+  bool mResizingToFit;           // Flag that a resize to fit is causing OnSize
+  double mCreateTime;            // Timer for avoiding initial resizes of FFT
+  int mFFTresizeCount;           // And counter
   int m_iPrevMX, m_iPrevMY;      // Previous mouse X and Y
   int m_iOffsetX, m_iOffsetY;    // Image offsets in window
   int mNonMapPanX, mNonMapPanY;  // Offset for non-map buffers
@@ -151,6 +154,7 @@ protected:
   afx_msg BOOL OnEraseBkgnd(CDC* pDC);
   afx_msg void OnRButtonUp(UINT nFlags, CPoint point);
   afx_msg void OnDestroy();
+	afx_msg void OnSize(UINT nType, int cx, int cy);
 //}}AFX_MSG
   DECLARE_MESSAGE_MAP()
 public:

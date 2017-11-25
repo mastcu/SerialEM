@@ -32,14 +32,24 @@
     <P><B><I>Buffers and display windows:</I></B> Images are initially displayed in a 
       main image display window. Images are kept in a set of buffers, and the main 
       display window can show an image from any one of these buffers. Similarly to 
-      Imod, you can riffle through the images with PageUp and PageDn. The buffers are 
+      3dmod in IMOD, you can riffle through the images with PageUp and PageDn. The buffers are 
       referred to by letter. Images from the camera are always placed in buffer A, 
       the first buffer. The program is typically set up to roll images through the 
       first three buffers. In other words, when a new image comes in, the existing 
       image in buffer A is moved to buffer B, the image previously in buffer B is 
-      moved to buffer C, and the image in buffer C is lost.</P>
+      moved to buffer C, and the image in buffer C is lost.&nbsp; However, it is often 
+      desireable to increase the number of images kept in rolling buffers, which can 
+      be done with a spin button in the Options section of the
+      <a href="hidd_buffercontrol.htm">Buffer Control</a> panel. </P>
     <P>It is also possible to copy an image to a new, free-standing window, which could 
       be useful if you want to look at two images side by side.</P>
+    <P>The main display window will initially occupy the full area inside the program 
+      frame, and the program will resize it whenever you resize the program window.&nbsp; 
+      You can adjust the right and bottom edges of the window so that it takes up only 
+      a fraction of the area in the frame.&nbsp;&nbsp; This fraction will be 
+      maintained as the program window is resized, and it will be remembered between 
+      sessions of the program.&nbsp; The image window is kept in the top-left corner 
+      of the frame when the program adjusts the window size.</P>
     <P><B><I>Camera control:</I></B> The camera controls are patterned after those 
       available in DigitalMicrograph, but there are some important enhancements that 
       provide more flexible control of the specimen exposure, make it easier to 
