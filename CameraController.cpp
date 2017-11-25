@@ -2469,6 +2469,8 @@ void CCameraController::Capture(int inSet, bool retrying)
     mTD.CountScaling = mParam->K2Type == 2 ? mK2BaseModeScaling : 1.;
 
   // DE cameras: Handle numerous items
+  mTD.AlignFrames = conSet.alignFrames;
+  mTD.UseFrameAlign = false;
   if (mParam->DE_camType) {
 
     // Set the frames per second and AlignfFrames if aligning in server
@@ -2496,8 +2498,6 @@ void CCameraController::Capture(int inSet, bool retrying)
   mTD.DoseFrac = conSet.doseFrac;
   B3DCLAMP(conSet.frameTime, mMinK2FrameTime, 10.f);
   mTD.FrameTime = conSet.frameTime;
-  mTD.AlignFrames = conSet.alignFrames;
-  mTD.UseFrameAlign = false;
   if ((conSet.doseFrac || IS_FALCON2_OR_3(mParam)) && conSet.alignFrames && 
     conSet.useFrameAlign) {
     mTD.AlignFrames = 0; 

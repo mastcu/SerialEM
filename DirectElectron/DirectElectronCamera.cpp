@@ -883,19 +883,19 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, int imageSizeX,
     }
 
     // Check dark reference if any processing or counting mode
-    if ((mLastProcessing != UNPROCESSED || mLastElectronCounting) &&
+    if ((mLastProcessing != UNPROCESSED || mLastElectronCounting > 0) &&
       !IsReferenceValid(checksum, mDarkChecks, minuteNow,
       "Correction Mode Dark Reference Status", "dark"))
          return 1;
 
     // Check gain reference if normalized or counting mode
-    if ((mLastProcessing == GAIN_NORMALIZED || mLastElectronCounting) &&
+    if ((mLastProcessing == GAIN_NORMALIZED || mLastElectronCounting > 0) &&
       !IsReferenceValid(checksum, mGainChecks, minuteNow,
       "Correction Mode Gain Reference Status", "gain"))
          return 1;
 
     // Check counting gain reference if normalized and counting mode
-    if ((mLastNormCounting && mLastElectronCounting) &&
+    if ((mLastNormCounting && mLastElectronCounting > 0) &&
       !IsReferenceValid(checksum, mCountGainChecks, minuteNow,
       "Correction Mode Counting Gain Reference Status", "post-counting gain"))
          return 1;
@@ -1940,6 +1940,8 @@ void DirectElectronCamera::AddValidStateToMap(int checksum, std::map<int, int> &
 void DirectElectronCamera::SetImageExtraData(EMimageExtra *extra)
 {
   CString str;
+  int numTry;
+  double startTime = GetTickCount();
   BOOL saveSums = mLastSaveFlags & DE_SAVE_SUMS;
   BOOL saveCount = mLastSaveFlags & DE_SAVE_COUNTING;
   extra->mDE12Version = mSoftwareVersion;
@@ -1960,7 +1962,16 @@ void DirectElectronCamera::SetImageExtraData(EMimageExtra *extra)
 
   // Autosave path and frames...
   if ((mLastSaveFlags & DE_SAVE_FRAMES) || saveSums || saveCount) {
-    getStringProperty("Autosave Frames - Previous Dataset Name", str);
+    str = "";
+    numTry = 0;
+    /*while (str.IsEmpty() && SEMTickInterval(startTime) < 10000) {*/
+      getStringProperty("Autosave Frames - Previous Dataset Name", str);
+      /*if (str.IsEmpty())
+        Sleep(300);
+      numTry++;
+    }
+    if (numTry > 1)
+      SEMTrace('D', "It took %d tries to get that name", numTry);*/
     if (mWinApp->mDEToolDlg.GetFormatForAutoSave()) {
       if (!saveCount && mNormAllInServer)
         str += saveSums ? "" : "_movies";
@@ -1973,10 +1984,21 @@ void DirectElectronCamera::SetImageExtraData(EMimageExtra *extra)
     extra->mSubFramePath = (mLastSaveDir.IsEmpty() ? mWinApp->mDEToolDlg.GetAutosaveDir():
       mLastSaveDir) + "\\" + str;
     if (!saveCount) {
+      startTime = GetTickCount();
       str.Format("Autosave %s Frames - Frames Written in Last Exposure", 
         saveSums ? "Sum" : "Raw");
-      getIntProperty(str, extra->mNumSubFrames);
-    }
+      extra->mNumSubFrames = 0;
+      /*numTry = 0;
+      while (!extra->mNumSubFrames && SEMTickInterval(startTime) < 5000) {*/
+        getIntProperty(str, extra->mNumSubFrames);
+        /*if (!extra->mNumSubFrames)
+          Sleep(100);
+        numTry++;
+        PrintfToLog("numtry %d", numTry);
+      }
+      if (numTry > 1)
+        SEMTrace('D', "It took %d tries to get that count", numTry);*/
+      }
   }
 }
 
