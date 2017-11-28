@@ -26,6 +26,7 @@
 #include "LogWindow.h"
 #include "EMscope.h"
 #include "CameraController.h"
+#include "GainRefMaker.h"
 #include "CalibCameraTiming.h"
 #include "TSController.h"
 #include "EMbufferManager.h"
@@ -214,7 +215,7 @@ enum {CME_VIEW, CME_FOCUS, CME_TRIAL, CME_RECORD, CME_PREVIEW,
   CME_SKIPFRAMEALIPARAMCHECK, CME_ISVERSIONATLEAST, CME_SKIPIFVERSIONLESSTHAN,
   CME_RAWELECTRONSTATS, CME_ALIGNWHOLETSONLY, CME_WRITECOMFORTSALIGN, CME_RECORDANDTILTTO,
   CME_AREPOSTACTIONSENABLED, CME_MEASUREBEAMSIZE, CME_MULTIPLERECORDS, 
-  CME_MOVEBEAMBYMICRONS, CME_MOVEBEAMBYFIELDFRACTION
+  CME_MOVEBEAMBYMICRONS, CME_MOVEBEAMBYFIELDFRACTION, CME_NEWDESERVERDARKREF
 };
 
 static CmdItem cmdList[] = {{NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0},
@@ -318,7 +319,7 @@ static CmdItem cmdList[] = {{NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0
 {"IsVersionAtLeast", 1}, {"SkipIfVersionLessThan", 1}, {"RawElectronStats", 1},
 {"AlignWholeTSOnly", 0}, {"WriteComForTSAlign", 0}, {"RecordAndTiltTo", 1},
 {"ArePostActionsEnabled", 0}, {"MeasureBeamSize", 0}, {"MultipleRecords", 0},
-{"MoveBeamByMicrons", 2}, {"MoveBeamByFieldFraction", 2},
+{"MoveBeamByMicrons", 2}, {"MoveBeamByFieldFraction", 2}, {"NewDEserverDarkRef", 2},
 {NULL, 0, NULL}
 };
 
@@ -4739,6 +4740,12 @@ void CMacroProcessor::NextCommand()
       "A long scope operation can be done only on an FEI scope for:\n\n");
     mStartedLongOp = !index;
     
+  } else if (CMD_IS(NEWDESERVERDARKREF)) {                   // NewDEserverDarkRef
+    if (mWinApp->mGainRefMaker->MakeDEdarkRefIfNeeded(itemInt[1], (float)itemDbl[2], 
+      report))
+      ABORT_NOLINE(CString("Cannot make a new dark reference in DE server with "
+      "NewDEserverDarkRef:\n") + report);
+
   } else if (CMD_IS(RUNINSHELL)) {                           // RunInShell
     SubstituteVariables(&strLine, 1, strLine);
     mWinApp->mParamIO->StripItems(strLine, 1, mEnteredName);

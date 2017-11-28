@@ -57,8 +57,10 @@ public:
   float *GetDEexposureTimes() {return &mDEexposureTimes[0];};
   GetSetMember(int, DEuseHardwareBin);
   GetSetMember(int, DElastProcessType);
+  GetMember(int, DEcurProcessType);
   GetSetMember(int, DElastReferenceType);
-  GetSetMember(int, DMrefAskPolicy)
+  GetSetMember(int, DMrefAskPolicy);
+  int *GetLastDEdarkRefTime() {return &mLastDEdarkRefTime[0];};
 
   int GainRefBusy();
   void DeleteReferences(void);
@@ -128,12 +130,16 @@ private:
   int mDElastProcessType;           // Last setting of processing type
   int mDElastReferenceType;         // Last setting of reference type
   int mStartingServerFrames;        // Starting number of frames
-
+  int mLastDEdarkRefTime[2];        // Minute time stamps of DE server dark references
+  int mDEcurProcessType;            // Processing type actually being done now
+  int mDEcurReferenceType;          // Reference type being done
 
 public:
   void UpdateDMReferenceTimes(void);
   bool IsDMReferenceNew(int camNum);
   void MakeRefInDEserver(void);
+  void StartDEserverRef(int processType, int referenceType);
+  int MakeDEdarkRefIfNeeded(int processType, float hoursSinceLast, CString &message);
 };
 
 /////////////////////////////////////////////////////////////////////////////

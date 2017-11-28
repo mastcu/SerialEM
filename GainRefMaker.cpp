@@ -69,6 +69,7 @@ CGainRefMaker::CGainRefMaker()
   mDEuseHardwareBin = 0;
   mDElastProcessType = 0;
   mDElastReferenceType = 0;
+  mLastDEdarkRefTime[0] = mLastDEdarkRefTime[1] = 0;
 }
 
 CGainRefMaker::~CGainRefMaker()
@@ -313,16 +314,14 @@ void CGainRefMaker::AcquireGainRef()
 
 }
 
-// Alternate pathway for making a reference in the DE server
+// Alternate pathway for making a reference in the DE server:
+// Open a separate dialog
 void CGainRefMaker::MakeRefInDEserver(void)
 {
   CDERefMakerDlg dlg;
   int ind;
-  CString str;
-  mConSet = mWinApp->GetConSets() + TRACK_CONSET;
   mCurrentCamera = mWinApp->GetCurrentCamera(); 
   mParam = mWinApp->GetCamParams() + mCurrentCamera;  
-  mCamera = mWinApp->mCamera;
   dlg.m_iProcessingType = mDElastProcessType;
   dlg.m_iReferenceType = mDElastReferenceType;
   dlg.m_bUseHardwareBin = mDEuseHardwareBin > 0;
@@ -342,17 +341,35 @@ void CGainRefMaker::MakeRefInDEserver(void)
     mDEexposureTimes[ind] = dlg.mExposureList[ind];
     mDEnumRepeats[ind] = dlg.mRepeatList[ind];
   }
+  StartDEserverRef(mDElastProcessType, mDElastReferenceType);
+}
+
+// Actually start the reference operation in the DE server
+void CGainRefMaker::StartDEserverRef(int processType, int referenceType)
+{
+  int ind;
+  CString str;
+  mConSet = mWinApp->GetConSets() + TRACK_CONSET;
+  mCamera = mWinApp->mCamera;
+  mCurrentCamera = mWinApp->GetCurrentCamera(); 
+  mParam = mWinApp->GetCamParams() + mCurrentCamera;  
+  mDEcurProcessType = processType;
+  mDEcurReferenceType = referenceType;
 
   // Set up control set
-  ind = 2 * mDElastProcessType + (1 - mDElastReferenceType);
+  ind = 2 * processType + (1 - referenceType);
   mConSet->exposure = mDEexposureTimes[ind];
   mConSet->drift = 0.;
   mConSet->binning = mDEuseHardwareBin ? 2 : 1;
   mConSet->boostMag = mDEuseHardwareBin ? 1 : 0;
   mConSet->processing = UNPROCESSED;
-  if (mDElastReferenceType)
-    mConSet->processing = mDElastProcessType > 1 ? GAIN_NORMALIZED : DARK_SUBTRACTED;
-  mConSet->K2ReadMode = mDElastProcessType > 0 ? COUNTING_MODE : LINEAR_MODE;
+
+  // Set up gain normalized for post-counting reference
+  // Set mode to counting here so that the controller sets the right FPS; it will then
+  // switch it to linear when doing a pre-counting reference
+  if (referenceType)
+    mConSet->processing = processType > 1 ? GAIN_NORMALIZED : DARK_SUBTRACTED;
+  mConSet->K2ReadMode = processType > 0 ? COUNTING_MODE : LINEAR_MODE;
   mConSet->mode = SINGLE_FRAME;
   mConSet->saveFrames = 0;
   mConSet->alignFrames = 0;
@@ -363,13 +380,44 @@ void CGainRefMaker::MakeRefInDEserver(void)
   mConSet->bottom = mParam->sizeY;
   mStartingServerFrames = mFrameCount = mDEnumRepeats[ind];
   mWinApp->UpdateBufferWindows();
-  mWinApp->SetStatusText(COMPLEX_PANE, mDElastReferenceType ? "ACQUIRING GAIN REF" :
+  mWinApp->SetStatusText(COMPLEX_PANE, referenceType ? "ACQUIRING GAIN REF" :
     "ACQUIRING DARK REF");
   str.Format("0 OF %d SHOTS DONE", mFrameCount);
   mWinApp->SetStatusText(MEDIUM_PANE, str);
   mCamera->SetDEserverRefNextShot(mFrameCount);
   mCamera->InitiateCapture(TRACK_CONSET);
   mWinApp->AddIdleTask(TASK_GAIN_REF, REF_SERVER_SHOTS, 0);
+}
+
+// External call for making new DE dark refexrence of the given type, unconditionally
+// if hoursSinceLast is 0, or if elapsed time since last is greater than hoursSinceLast
+// Or just update time if it is < 0
+int CGainRefMaker::MakeDEdarkRefIfNeeded(int processType, float hoursSinceLast, 
+  CString &message)
+{
+  mCurrentCamera = mWinApp->GetCurrentCamera(); 
+  mParam = mWinApp->GetCamParams() + mCurrentCamera;  
+  int now = mWinApp->MinuteTimeStamp();
+  if (!mWinApp->mDEToolDlg.CanSaveFrames(mParam)) {
+    message = "The current camera is not a DE camera";
+    return 1;
+  }
+  if (processType < 0 || processType > 1) {
+    message = "The processing type must be 0 for linear or for 1 for counting";
+    return 1;
+  }
+  if (processType && !(mParam->CamFlags & DE_CAM_CAN_COUNT)) {
+    message = "This camera does not support electron counting so the processing type "
+      "must be 0";
+    return 1;
+  }
+  if (hoursSinceLast < 0.) {
+    mLastDEdarkRefTime[processType] = now;
+    return 0;
+  }
+  if (!hoursSinceLast || hoursSinceLast * 60 < now - mLastDEdarkRefTime[processType])
+    StartDEserverRef(processType, 0);
+  return 0;
 }
 
 // Do next operation for regular reference, or just clean up for DE server ref
@@ -386,6 +434,9 @@ void CGainRefMaker::AcquiringRefNextTask(int param)
   short int *sdata;
 
   if (param == REF_SERVER_SHOTS) {
+    if (mStartingServerFrames && !mDEcurReferenceType && mDEcurProcessType < 2 && 
+      !mFrameCount)
+        mLastDEdarkRefTime[mDEcurProcessType] = mWinApp->MinuteTimeStamp();
     StopAcquiringRef();
     return;
   }
