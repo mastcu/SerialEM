@@ -332,6 +332,8 @@ CCameraController::CCameraController()
   mScalingForK2Counts = 0.;
   mDirForK2Frames = "";
   mDirForFalconFrames = FALCON_DIR_UNSET;
+  mDESetNameTimeoutUsed = 0.;
+  mDEPrevSetNameTimeout = 5.;
   mSkipNextReblank = false;
   mDefaultGIFCamera = -1;
   mDefaultRegularCamera = -1;
@@ -2491,8 +2493,15 @@ void CCameraController::Capture(int inSet, bool retrying)
     // Adjust the mode to linear for the pre-counting items now that FPS is set
     mTD.DE_Cam->SetupServerReference(mDEserverRefNextShot, 
       conSet.processing == UNPROCESSED ? DE_DARK_IMAGE : DE_GAIN_IMAGE);
-    if (mDEserverRefNextShot > 0 && mWinApp->mGainRefMaker->GetDElastProcessType() == 1)
-        mTD.GatanReadMode = 0;
+    if (mDEserverRefNextShot > 0 && mWinApp->mGainRefMaker->GetDEcurProcessType() == 1)
+      mTD.GatanReadMode = 0;
+
+    // If last saved frame name was predicted, try to verify it now; then set the timeout
+    // for getting name this time by multiplying basic timeout by 2 or 3 ???
+    mTD.DE_Cam->VerifyLastSetNameIfPredicted(
+      B3DMAX(mDEPrevSetNameTimeout, mDESetNameTimeoutUsed));
+    mDESetNameTimeoutUsed = mDEPrevSetNameTimeout * (1.f + 
+      (mTD.GatanReadMode > 0 ? 1.f : 0.f) + (mTD.AlignFrames ? 1.f : 0.f));
   }
 
   mTD.DoseFrac = conSet.doseFrac;
@@ -7067,7 +7076,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
   int spotSize, chan, i, err, ix, iy, invertCon, operation, ixoff, iyoff, divideBy;
   int sumCount, camFrames, typext = 0, ldSet = 0;
   BOOL lowDoseMode, hasUserPtSave = false;
-  bool readLocally = false;
+  bool nameValid, readLocally = false;
   float axoff, ayoff, specRate, camRate;
   double delay;
   CString message, str, root, ext, localFramePath;
@@ -7765,7 +7774,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
     
     // Get special data for DE camera
     if (mParam->DE_camType >= 2 && !(mTD.ProcessingPlus & CONTINUOUS_USE_THREAD)) {
-      mTD.DE_Cam->SetImageExtraData(extra);
+      mTD.DE_Cam->SetImageExtraData(extra, mDESetNameTimeoutUsed, nameValid);
       err = lastConSetp->saveFrames;
       if (err & DE_SAVE_MASTER) {
 
@@ -7778,12 +7787,15 @@ void CCameraController::DisplayNewImage(BOOL acquired)
           sumCount = B3DMAX(1, lastConSetp->sumK2Frames);
           extra->mNumSubFrames = camFrames / sumCount;
         }
+        if (!nameValid)
+          extra->mNumSubFrames = camFrames / sumCount;
         if (extra->mNumSubFrames > 0) {
-          message.Format(" %d %sframes were saved to %s", extra->mNumSubFrames, 
-            sumCount > 1 ? "" : "summed ", (LPCTSTR)extra->mSubFramePath);
+          message.Format(" %d %sframes %s saved to %s", extra->mNumSubFrames, 
+            sumCount > 1 ? "" : "summed ", nameValid ? "were" : "are being", 
+            (LPCTSTR)extra->mSubFramePath);
         } else  {
-          message.Format("Saving of %sframes was requested but the server says no frames "
-            "were saved", sumCount > 1 ? "" : "summed ");
+          message.Format("Saving of %d %sframes was requested but the server says no "
+            "frames were saved", camFrames / sumCount, sumCount > 1 ? "" : "summed ");
         }
 
         // Set up summed frame list for the dose estimate below

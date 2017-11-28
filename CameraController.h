@@ -446,6 +446,7 @@ class DLL_IM_EX CCameraController
   GetSetMember(int, MinAlignFractionsCounting);
   GetMember(int, NoMessageBoxOnError);
   SetMember(int, DEserverRefNextShot);
+  SetMember(float, DEPrevSetNameTimeout);
   int GetServerFramesLeft();
 
   int GetNumFramesSaved() {return mTD.NumFramesSaved;};
@@ -732,6 +733,8 @@ class DLL_IM_EX CCameraController
   int mPreventUserToggle;       // Flag not to let user toggle continuous mode
   bool mStoppedContinuous;      // Set when stop to prevent settling timeout from capture
   CString mDirForDEFrames;      // Single directory name for a subfolder of main location
+  float mDEPrevSetNameTimeout;  // Sec of timeout when fetching set name
+  float mDESetNameTimeoutUsed;  // Actual value used for timeout
   int mFrameNameFormat;         // Set of flags for components of folder/filename 
   int mFrameNumberStart;        // Starting number for sequential numbers
   CString mFrameBaseName;       // User's base name

@@ -1003,7 +1003,8 @@ void CCameraSetupDlg::UnloadDialogToConset()
   if (!(mCurrentSet == RECORD_CONSET && mWinApp->mTSController->GetFrameAlignInIMOD()))
     mCurSet->alignFrames = m_bAlignDoseFrac ? 1 : 0;
   mCurSet->saveFrames = mUserSaveFrames ? 1 : 0;
-  mCurSet->sumK2Frames = m_bSaveK2Sums ? 1 : 0;
+  if (!mWinApp->mDEToolDlg.CanSaveFrames(mParam))
+    mCurSet->sumK2Frames = m_bSaveK2Sums ? 1 : 0;
   mCurSet->summedFrameList = mSummedFrameList;
   mCurSet->numSkipBefore = mNumSkipBefore;
   mCurSet->numSkipAfter = mNumSkipAfter;

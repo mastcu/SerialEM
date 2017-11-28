@@ -50,7 +50,7 @@ static const char *psSave = "Save";
 static const char *psNoSave = "Discard";
 static const char *psReadoutDelay = "Sensor Readout Delay (milliseconds)";
 static const char *psServerVersion = "Server Software Version";
-static const char *psHardwareBin = "Hardware Binning";    // Maybe!
+static const char *psHardwareBin = "Hardware Binning X";    // Maybe!
 static const char *psAutoRepeatRef = "Auto Repeat Reference - Multiple Acquisitions";
 static const char *psEnable = "Enable";
 static const char *psDisable = "Disable";
@@ -109,6 +109,7 @@ DirectElectronCamera::DirectElectronCamera(int camType, int index)
   m_DE_CONNECTED = false;
   mServerVersion = 0;
   mRepeatForServerRef = 0;
+  mSetNamePredictionAgeLimit = 300;
 
   // mDEsameCam eliminated, main controller manages all insertions/retractions sensibly
 
@@ -916,6 +917,7 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, int imageSizeX,
       mLastErrorString = ErrorTrace("ERROR: Could NOT get the image from DE server");
       if (operation)
         delete useBuf;
+      mDateInPrevSetName = 0;
       return 1;
     }
     SEMTrace('D', "Got something back from DE Server..");
@@ -925,6 +927,7 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, int imageSizeX,
       double startTime = GetTickCount();
       int remaining;
       bool ret1;
+      mDateInPrevSetName = 0;
       while (SEMTickInterval(startTime) < 5000. * mLastExposureTime) {
         ret1 = mDeServer->getIntProperty("Auto Repeat Reference - Remaining Acquisitions",
           &remaining);
@@ -1099,8 +1102,11 @@ int DirectElectronCamera::setBinning(int x, int y, int sizex, int sizey, int har
 
       if (hardwareBin >= 0 && (hardwareBin != mLastUseHardwareBin || !mTrustLastSettings))
       {
-        if (!setStringWithError(psHardwareBin, hardwareBin > 0 ? psEnable : psDisable))
-          return 1;
+        if (!justSetIntProperty(psHardwareBin, hardwareBin > 0 ? 2 : 1) ||
+          !justSetIntProperty("Hardware Binning Y", hardwareBin > 0 ? 2 : 1)) 
+          mLastErrorString = ErrorTrace("ERROR: Could NOT set the hardware binning to %d"
+             , hardwareBin > 0 ? 2 : 1);
+         return 1;
       }
       mLastUseHardwareBin = hardwareBin;
 
@@ -1937,10 +1943,10 @@ void DirectElectronCamera::AddValidStateToMap(int checksum, std::map<int, int> &
 }
 
 // Fill in the metadata for the mdoc file; use existing values where possible
-void DirectElectronCamera::SetImageExtraData(EMimageExtra *extra)
+void DirectElectronCamera::SetImageExtraData(EMimageExtra *extra, float nameTimeout, 
+  bool &nameValid)
 {
   CString str;
-  int numTry;
   double startTime = GetTickCount();
   BOOL saveSums = mLastSaveFlags & DE_SAVE_SUMS;
   BOOL saveCount = mLastSaveFlags & DE_SAVE_COUNTING;
@@ -1962,16 +1968,8 @@ void DirectElectronCamera::SetImageExtraData(EMimageExtra *extra)
 
   // Autosave path and frames...
   if ((mLastSaveFlags & DE_SAVE_FRAMES) || saveSums || saveCount) {
-    str = "";
-    numTry = 0;
-    /*while (str.IsEmpty() && SEMTickInterval(startTime) < 10000) {*/
-      getStringProperty("Autosave Frames - Previous Dataset Name", str);
-      /*if (str.IsEmpty())
-        Sleep(300);
-      numTry++;
-    }
-    if (numTry > 1)
-      SEMTrace('D', "It took %d tries to get that name", numTry);*/
+    nameValid = GetPreviousDatasetName(nameTimeout, mSetNamePredictionAgeLimit, true, 
+      str);
     if (mWinApp->mDEToolDlg.GetFormatForAutoSave()) {
       if (!saveCount && mNormAllInServer)
         str += saveSums ? "" : "_movies";
@@ -1983,24 +1981,89 @@ void DirectElectronCamera::SetImageExtraData(EMimageExtra *extra)
     }
     extra->mSubFramePath = (mLastSaveDir.IsEmpty() ? mWinApp->mDEToolDlg.GetAutosaveDir():
       mLastSaveDir) + "\\" + str;
-    if (!saveCount) {
-      startTime = GetTickCount();
+    extra->mNumSubFrames = 0;
+    if (!saveCount && nameValid) {
       str.Format("Autosave %s Frames - Frames Written in Last Exposure", 
         saveSums ? "Sum" : "Raw");
-      extra->mNumSubFrames = 0;
-      /*numTry = 0;
-      while (!extra->mNumSubFrames && SEMTickInterval(startTime) < 5000) {*/
-        getIntProperty(str, extra->mNumSubFrames);
-        /*if (!extra->mNumSubFrames)
-          Sleep(100);
-        numTry++;
-        PrintfToLog("numtry %d", numTry);
-      }
-      if (numTry > 1)
-        SEMTrace('D', "It took %d tries to get that count", numTry);*/
-      }
-  }
+      getIntProperty(str, extra->mNumSubFrames);
+    }
+  } else if (mLastElectronCounting > 0)
+    mNumberInPrevSetName++;
 }
+
+// Get the string for the previous dataset name or provide a prediction of it if it is not
+// available yet.  If the previous actual name known is older than the ageLimitSec, it
+// will retry for as long as given by timeout (in seconds); otherwise it will try only
+// once.  If it does not get a name back, and predictName is true, and the date matches
+// that of the last known name, it will increment the number and compose the name
+bool DirectElectronCamera::GetPreviousDatasetName(float timeout, int ageLimitSec, 
+  bool predictName, CString &name)
+{
+  int numTry = 0, wait = 100;
+  std::string valStr;
+  CSingleLock slock(&m_mutex);
+  double startTime;
+  CTime ctdt = CTime::GetCurrentTime();
+
+  // Get the date compoent of the string as an integer
+  int currentDate = ctdt.GetYear() * 10000 + ctdt.GetMonth() * 100 + ctdt.GetDay();
+  name = "";
+  mLastPredictedSetName= "";
+  if (slock.Lock(1000)) {
+
+    // Cancel timeout if known name not too old
+    if (mDateInPrevSetName == currentDate && SEMTickInterval(mTimeOfPrevSetName) < 
+      1000. * ageLimitSec)
+      timeout = 0;
+    startTime = GetTickCount();
+    while (true) {
+      if (mDeServer->getProperty("Autosave Frames - Previous Dataset Name", &valStr) &&
+        valStr.length() > 0) {
+
+          // Valid name: return it and save the time and store the two numeric components
+          name = valStr.c_str();
+          mTimeOfPrevSetName = GetTickCount();
+          mDateInPrevSetName = atoi((LPCTSTR)name.Left(8));
+          mNumberInPrevSetName = atoi(valStr.c_str() + 9);
+          if (numTry)
+            SEMTrace('D', "It took %.1f sec to get name", SEMTickInterval(startTime) / 
+            1000.);
+          return true;
+      }
+
+      // No valid name: retry until timeout reached
+      if (!timeout || SEMTickInterval(startTime) >= 1000. * timeout)
+        break;
+      Sleep(wait);
+      numTry++;
+    }
+
+    // No valid name and prediction called for and date matches:increment number and
+    // make up name, 
+    if (mDateInPrevSetName == currentDate && predictName) {
+      name.Format("%08d_%05d", mDateInPrevSetName, ++mNumberInPrevSetName);
+      mLastPredictedSetName = name;
+    }
+  }
+  return false;
+}
+
+// If the last set name was predicted because it was not available yet, get it now (before
+// another shot of any kind) and make sure the prediction was right as well as updating
+// the known name
+void DirectElectronCamera::VerifyLastSetNameIfPredicted(float timeout)
+{
+  CString str, predictedSave = mLastPredictedSetName;
+  if (mLastPredictedSetName.IsEmpty())
+    return;
+  if (GetPreviousDatasetName(timeout, mSetNamePredictionAgeLimit / 2, false, str) &&
+    str != predictedSave)
+    PrintfToLog("WARNING: The root name of the last set of saved frames (%s)\r\n    "
+      "differs from what was assumed and reported (%s)", (LPCTSTR)str, 
+      (LPCTSTR)predictedSave);
+  mLastPredictedSetName = "";
+}
+
 
 /////////////////////////////////////////////////////////////////////////////////////
 // LC1100 only calls

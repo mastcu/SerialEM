@@ -193,7 +193,7 @@ public:
   int SetExposureTimeAndMode(float seconds, int mode);
   int SetCountingParams(int readMode, double scaling, double FPS);
   int SetAlignInServer(int alignFrames);
-  void SetImageExtraData(EMimageExtra *extra);
+  void SetImageExtraData(EMimageExtra *extra, float nameTimeout, bool &nameValid);
   GetMember(int, CamType);
   GetMember(int, InitializingIndex);
   GetMember(int, ServerVersion);
@@ -215,6 +215,8 @@ public:
   void AddValidStateToMap(int checksum, std::map<int, int> &map, int minuteNow);
   bool IsReferenceValid(int checksum, std::map<int, int> &map, int minuteNow, 
     const char *propStr, const char *messStr);
+  bool GetPreviousDatasetName(float timeout, int ageLimitSec, bool predictName, CString &name);
+  void VerifyLastSetNameIfPredicted(float timeout);
 
 private:
 	int mCamType;
@@ -295,6 +297,11 @@ private:
   int mRepeatForServerRef;              // Number of repeats for doing reference in server
   int mModeForServerRef;                // Processing mode to set for server reference
   int mNumLeftServerRef;                // Running tally of number left to do
+  int mDateInPrevSetName;               // 20yymmdd part of set name
+  int mNumberInPrevSetName;             // Sequential number part of set name
+  double mTimeOfPrevSetName;            // Tick time when last valid set name was gotten
+  int mSetNamePredictionAgeLimit;       // Number of sec that a predicted name is valid
+  CString mLastPredictedSetName;        // Store name for checking when it is predicted
   CString mLastErrorString;             // Error string stored for CamController to access
 
   // Maps of acquisition parameter checksum and minute time stamp at which validated
