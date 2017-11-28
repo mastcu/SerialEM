@@ -33,6 +33,7 @@ static int compressions[] = {COMPRESS_NONE, COMPRESS_ZIP, COMPRESS_LZW, COMPRESS
 CFilePropDlg::CFilePropDlg(CWnd* pParent /*=NULL*/)
   : CBaseDlg(CFilePropDlg::IDD, pParent)
   , m_bSaveMdoc(FALSE)
+  , m_bSkipFileDlg(FALSE)
 {
   //{{AFX_DATA_INIT(CFilePropDlg)
   m_iMaxSects = 0;
@@ -100,6 +101,7 @@ void CFilePropDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Check(pDX, IDC_SAVEMDOC, m_bSaveMdoc);
   DDX_Control(pDX, IDC_RBYTE, m_butSaveByte);
   DDX_Control(pDX, IDC_RINTEGERS, m_butSaveInteger);
+  DDX_Check(pDX, IDC_SKIP_FILE_DLG, m_bSkipFileDlg);
 }
 
 
@@ -232,7 +234,8 @@ BOOL CFilePropDlg::OnInitDialog()
   UpdateData(FALSE);
   ManageStates();
 //  EnableToolTips(true);
-  
+  if (m_bSkipFileDlg && !mShowDlgThisTime)
+    OnOK();
   return TRUE;  // return TRUE unless you set the focus to a control
                 // EXCEPTION: OCX Property Pages should return FALSE
 }

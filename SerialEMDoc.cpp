@@ -124,10 +124,12 @@ BEGIN_MESSAGE_MAP(CSerialEMDoc, CDocument)
 	//}}AFX_MSG_MAP
   ON_COMMAND_RANGE(ID_SETTINGS_MRU_FILE1, ID_SETTINGS_MRU_FILE8, OnSettingsRecent)
   ON_UPDATE_COMMAND_UI_RANGE(ID_SETTINGS_MRU_FILE1, ID_SETTINGS_MRU_FILE8, OnUpdateSettingsRecent)
-  ON_COMMAND(ID_FILE_OPEN_MDOC, &CSerialEMDoc::OnFileOpenMdoc)
-  ON_COMMAND(ID_FILE_CLOSE_MDOC, &CSerialEMDoc::OnFileCloseMdoc)
-  ON_UPDATE_COMMAND_UI(ID_FILE_CLOSE_MDOC, &CSerialEMDoc::OnUpdateFileCloseMdoc)
-  ON_UPDATE_COMMAND_UI(ID_FILE_OPEN_MDOC, &CSerialEMDoc::OnUpdateFileOpenMdoc)
+  ON_COMMAND(ID_FILE_OPEN_MDOC, OnFileOpenMdoc)
+  ON_COMMAND(ID_FILE_CLOSE_MDOC, OnFileCloseMdoc)
+  ON_UPDATE_COMMAND_UI(ID_FILE_CLOSE_MDOC, OnUpdateFileCloseMdoc)
+  ON_UPDATE_COMMAND_UI(ID_FILE_OPEN_MDOC, OnUpdateFileOpenMdoc)
+  ON_COMMAND(ID_FILE_SKIPFILEPROPERTIESDIALOG, OnSkipFilePropertiesDlg)
+  ON_UPDATE_COMMAND_UI(ID_FILE_SKIPFILEPROPERTIESDIALOG, OnUpdateSkipFilePropertiesDlg)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -152,6 +154,8 @@ CSerialEMDoc::CSerialEMDoc()
   mDefFileOpt.separateForMont = true;
   mDefFileOpt.montFileType = STORE_TYPE_MRC;
   mDefFileOpt.montUseMdoc = true;
+  mShowFileDlgOnce = true;
+  mSkipFileDlg = true;
   mSTEMfileMode = 1;
   mSTEMunsignOpt = SHIFT_UNSIGNED;
   mMaxTrunc = 2000;
@@ -1063,6 +1067,16 @@ void CSerialEMDoc::OnUpdateFileSetsignedpolicy(CCmdUI* pCmdUI)
   pCmdUI->Enable(bEnable);
 }
 
+// Toggle skipping through the file properties dialog
+void CSerialEMDoc::OnSkipFilePropertiesDlg()
+{
+  mSkipFileDlg = !mSkipFileDlg;
+}
+
+void CSerialEMDoc::OnUpdateSkipFilePropertiesDlg(CCmdUI *pCmdUI)
+{
+  pCmdUI->SetCheck(mSkipFileDlg);
+}
 
 // Reading from either the current file or a random file
 void CSerialEMDoc::OnFileRead() 
@@ -1180,6 +1194,9 @@ int CSerialEMDoc::FilePropForSaveFile(FileOptions * fileOptp)
   // there is an unsigned short buffer
   CFilePropDlg propDlg;
   propDlg.mFileOpt = *fileOptp;
+  propDlg.mShowDlgThisTime = mShowFileDlgOnce;
+  propDlg.m_bSkipFileDlg = mSkipFileDlg;
+  mShowFileDlgOnce = false;
   propDlg.mAny16Bit = mWinApp->GetAny16BitCameras() && 
     (mWinApp->mCamera->GetDivideBy2() <= 0);
   for (int i = 0; i < MAX_BUFFERS && !propDlg.mAny16Bit; i++)
@@ -1193,6 +1210,7 @@ int CSerialEMDoc::FilePropForSaveFile(FileOptions * fileOptp)
 
   // unload properties from the dialog even if the rest of this aborts
   *fileOptp = propDlg.mFileOpt;
+  mSkipFileDlg = propDlg.m_bSkipFileDlg;
   return 0;
 }
 
@@ -1727,9 +1745,9 @@ void CSerialEMDoc::ReadSetPropCalFiles()
       "or by changing the properties in the shortcut used to start SerialEM", MB_EXCLAME);
   }
 
-  // Set the file options from defaults
+  // Set the file options from defaults; set other file options EXCEPT the managed ones
   mFileOpt = mDefFileOpt;
-  mOtherFileOpt = mDefFileOpt;
+  CopyDefaultToOtherFileOpts();
     
   // Read calibrations
   strSys = mSystemPath + "\\" + mCalibrationName;
@@ -1763,8 +1781,19 @@ void CSerialEMDoc::SetDfltUseMdoc(int value)
   mDfltUseMdoc = value; 
   mDefFileOpt.useMdoc = value > 0;
   mFileOpt = mDefFileOpt;
-  mOtherFileOpt = mDefFileOpt;
+  CopyDefaultToOtherFileOpts();
 };
+
+// Save managed members in other options, copy from default and restore them
+void CSerialEMDoc::CopyDefaultToOtherFileOpts(void)
+{
+  int typeSave, compSave;
+  typeSave = mOtherFileOpt.fileType;
+  compSave = mOtherFileOpt.compression;
+  mOtherFileOpt = mDefFileOpt;
+  mOtherFileOpt.fileType = typeSave;
+  mOtherFileOpt.compression = compSave;
+}
 
 // Set system path from line in settings file: save it as the path that will be rewritten,
 // then modify from command line if possible

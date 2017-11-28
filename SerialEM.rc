@@ -140,9 +140,11 @@ BEGIN
         MENUITEM "S&ave Active",                IDM_FILE_SAVEACTIVE
         MENUITEM "Over&write",                  ID_FILE_OVERWRITE
         MENUITEM "Sa&ve Single...",             IDM_FILE_SAVEOTHER
+        MENUITEM SEPARATOR
         MENUITEM "Set Truncation...",           IDM_FILE_TRUNCATION
         MENUITEM "Set 16-bit Policy...",        ID_FILE_SET16BITPOLICY
         MENUITEM "Set Signed Policy...",        ID_FILE_SETSIGNEDPOLICY
+        MENUITEM "S&kip File Properties Dlg",   ID_FILE_SKIPFILEPROPERTIESDIALOG
         MENUITEM SEPARATOR
         MENUITEM "&Read\tShift+R",              IDM_FILE_READ
         MENUITEM "R&ead from Other",            IDM_FILE_READOTHER
@@ -751,7 +753,7 @@ BEGIN
     GROUPBOX        "Copy Active Image to Buffer",IDC_STATIC,4,7,111,26
 END
 
-IDD_FILEPROPERTIES DIALOGEX 0, 0, 181, 310
+IDD_FILEPROPERTIES DIALOGEX 0, 0, 181, 323
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 EXSTYLE WS_EX_LEFTSCROLLBAR
 CAPTION "File Properties"
@@ -791,9 +793,11 @@ BEGIN
     LTEXT           "(Be generous)",IDC_BEGENEROUS,51,182,44,8
     EDITTEXT        IDC_MAXSECTSEDIT,122,174,27,14,ES_AUTOHSCROLL
     GROUPBOX        "Save images to",IDC_STATIC,15,207,153,49,WS_GROUP
-    DEFPUSHBUTTON   "OK",IDOK,32,294,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,98,294,50,14
-    PUSHBUTTON      "?",IDC_BUTHELP,165,298,10,10
+    DEFPUSHBUTTON   "OK",IDOK,32,307,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,98,307,50,14
+    PUSHBUTTON      "?",IDC_BUTHELP,165,311,10,10
+    CONTROL         "Skip this dialog in future (re-enable in File menu)",IDC_SKIP_FILE_DLG,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,291,157,10
 END
 
 IDD_BUFFERSTATUS DIALOGEX 0, 0, 119, 58
@@ -2869,7 +2873,7 @@ BEGIN
 
     IDD_FILEPROPERTIES, DIALOG
     BEGIN
-        BOTTOMMARGIN, 308
+        BOTTOMMARGIN, 321
     END
 
     IDD_BUFFERSTATUS, DIALOG
@@ -3420,6 +3424,8 @@ BEGIN
     ID_OPTIONS_SHOWMULTI    "Show multi-shot circles when Show Acquire area turned on"
     ID_OPTIONS_SETMULTI     "Open dialog to set up multiple Records around a hole"
     ID_SCRIPT_RUNONECOMMAND "Open window to enter and run one line command"
+    ID_FILE_SKIPFILEPROPERTIESDIALOG 
+                            "Skip file properties dialog; turn off to adjust properties"
 END
 
 STRINGTABLE
@@ -5000,6 +5006,11 @@ BEGIN
     IDC_RDARK_REF           "Make a dark reference"
     IDC_RGAIN_REF           "Make a gain reference with uniform beam illumination"
     IDC_EDIT_REF_EXPOSURE   "Exposure time for each acquisition used to make reference"
+END
+
+STRINGTABLE
+BEGIN
+    IDC_SKIP_FILE_DLG       "Use the values set here instead of opening this dialog every time"
 END
 
 #endif    // English (United States) resources

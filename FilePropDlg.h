@@ -20,6 +20,7 @@ public:
 	CFilePropDlg(CWnd* pParent = NULL);   // standard constructor
 	FileOptions mFileOpt;
   BOOL mAny16Bit;
+  bool mShowDlgThisTime;
 
 // Dialog Data
 	//{{AFX_DATA(CFilePropDlg)
@@ -93,6 +94,7 @@ public:
   afx_msg void OnRNoCompress();
   CButton m_butSaveByte;
   CButton m_butSaveInteger;
+  BOOL m_bSkipFileDlg;
 };
 
 //{{AFX_INSERT_LOCATION}}

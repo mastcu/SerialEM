@@ -78,6 +78,7 @@ public:
   GetMember(float, MaxOverlapFraction)
   SetMember(int, STEMfileMode);
   SetMember(int, STEMunsignOpt);
+  GetSetMember(BOOL, SkipFileDlg);
 
 	void AutoSaveFiles();
 	int AppendToLogBook(CString inString, CString title);
@@ -92,6 +93,7 @@ public:
   int OpenMontageDialog(BOOL locked);
   FileOptions *GetDefFileOpt() {return &mDefFileOpt;};
   FileOptions *GetFileOpt() {return &mFileOpt;};
+  FileOptions *GetOtherFileOpt() {return &mOtherFileOpt;};
   int SaveSettingsOnExit();
   void ManageBackupFile(CString strFile, BOOL &bBackedUp);
   int OfferToSaveSettings(CString strWhy);
@@ -235,6 +237,8 @@ private:
   CString mFrameFilename;         // Filename for frame mdoc
   int mDfltUseMdoc;              // Default setting for whether to use mdoc
   int mLastFrameSect;            // Index of last section in frame mdoc
+  BOOL mSkipFileDlg;             // Settings flag to skip the file dialog
+  bool mShowFileDlgOnce;         // Flag to be able to show it once
 
 public:
   KImageStore * OpenNewFileByName(CString cFilename, FileOptions * fileOptp);
@@ -268,6 +272,9 @@ public:
   void CalibrationWasDone(int type);
   int SaveToOtherFile(int buffer, int fileType, int compression, CString *filename);
   bool FieldAboveStageMoveThreshold(MontParam *param, BOOL lowDose, int camInd);
+  afx_msg void OnSkipFilePropertiesDlg();
+  afx_msg void OnUpdateSkipFilePropertiesDlg(CCmdUI *pCmdUI);
+void CopyDefaultToOtherFileOpts(void);
 };
 
 // FILE DIALOG CLASS and associated thread class and data

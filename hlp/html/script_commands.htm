@@ -637,6 +637,16 @@
             maximum frame rate.&nbsp; The user&#39;s original frame rate is placed into 
             ReportedValue1 and is restored when the script ends.</TD>
         </TR>
+        <TR>
+          <TD class="style8">NewDEserverDarkRef #P #H</TD>
+          <TD>Acquires a dark reference in the DE server if the known interval since the 
+            last reference for processing mode #P is longer than #H in hours. #P must be 0 
+            for linear mode or 1 for counting mode.&nbsp; Parameters for the reference are 
+            those specified in the <a href="hidd_de_reference.htm">Direct Electron Server 
+            Reference Maker Dialog</a> for the given mode.&nbsp; If #H is 0, the reference 
+            is done unconditionally; if #H is negative (-1), the command simply records the 
+            current time as the time of the last reference.</TD>
+        </TR>
         <TR vAlign="top">
           <TD class="style8">UpdateHWDarkRef #</TD>
           <TD>Updates the K2 hardware dark reference if the known interval since the last

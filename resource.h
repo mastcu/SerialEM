@@ -1363,6 +1363,7 @@
 #define IDC_EDIT_ONE_LINE3              2381
 #define IDC_EDIT_ONE_LINE4              2382
 #define IDC_EDIT_ONE_LINE5              2383
+#define IDC_SKIP_FILE_DLG               2385
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -1769,6 +1770,7 @@
 #define ID_OPTIONS_SETMULTI             33286
 #define ID_Menu33287                    33287
 #define ID_SCRIPT_RUNONECOMMAND         33288
+#define ID_FILE_SKIPFILEPROPERTIESDIALOG 33289
 
 // Next default values for new objects
 // 
@@ -1776,8 +1778,8 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        228
-#define _APS_NEXT_COMMAND_VALUE         33289
-#define _APS_NEXT_CONTROL_VALUE         2384
+#define _APS_NEXT_COMMAND_VALUE         33290
+#define _APS_NEXT_CONTROL_VALUE         2386
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

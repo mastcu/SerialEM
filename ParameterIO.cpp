@@ -126,6 +126,7 @@ int CParameterIO::ReadSettings(CString strFileName)
   double itemDbl[MAX_TOKENS];
   int nLines = 0;
   FileOptions *defFileOpt = mWinApp->mDocWnd->GetDefFileOpt();
+  FileOptions *otherFileOpt = mWinApp->mDocWnd->GetOtherFileOpt();
   int *initialDlgState = mWinApp->GetInitialDlgState();
   int *macroButtonNumbers = mWinApp->mCameraMacroTools.GetMacroNumbers();
   float pctLo, pctHi;
@@ -447,6 +448,11 @@ int CParameterIO::ReadSettings(CString strFileName)
           navParams->acqSkipZmoves = itemInt[17] != 0;
         }
 
+      } else if (NAME_IS("SingleFileOptions")) {
+
+        // If you add any, need to preserve in SerialEMDoc::CopyDefaultToOtherFileOpts
+        otherFileOpt->fileType = itemInt[1];
+        otherFileOpt->compression = itemInt[2];
       } else if (NAME_IS("CookerParams")) {
         cookParams->magIndex = itemInt[1];
         cookParams->spotSize = itemInt[2];
@@ -995,6 +1001,7 @@ void CParameterIO::WriteSettings(CString strFileName)
   ControlSet *cs;
   float pctLo, pctHi;
   FileOptions *fileOpt = mWinApp->mDocWnd->GetFileOpt();
+  FileOptions *otherFileOpt = mWinApp->mDocWnd->GetOtherFileOpt();
 #define SETTINGS_MODULES
 #include "SettingsTests.h"
 #undef SETTINGS_MODULES
@@ -1161,6 +1168,9 @@ void CParameterIO::WriteSettings(CString strFileName)
       mWinApp->mMontageController->GetDivFilterSet2By2() ? 1 : 0);
     mFile->WriteString(oneState);
     WriteInt("TIFFcompression", fileOpt->compression);
+    oneState.Format("SingleFileOptions %d %d\n", otherFileOpt->fileType, 
+      otherFileOpt->compression);
+    mFile->WriteString(oneState);
     oneState.Format("AutofocusEucenAbsParams %f %f %f %f %d %d\n", 
       focusMan->GetEucenMinAbsFocus(), focusMan->GetEucenMaxAbsFocus(),
       focusMan->GetEucenMinDefocus(), focusMan->GetEucenMaxDefocus(),
@@ -3915,6 +3925,7 @@ int CParameterIO::ReadShortTermCal(CString strFileName)
   int itemInt[MAX_TOKENS];
   double itemDbl[MAX_TOKENS];
   int *times = mWinApp->mScope->GetLastLongOpTimes();
+  int *DEdarkRefTimes = mWinApp->mGainRefMaker->GetLastDEdarkRefTime();
   int timeStamp = mWinApp->MinuteTimeStamp();
   DoseTable *doseTables = mWinApp->mBeamAssessor->GetDoseTables();
   FilterParams *filtP = mWinApp->GetFilterParams();
@@ -4027,6 +4038,10 @@ int CParameterIO::ReadShortTermCal(CString strFileName)
         for (index = 1; index <= MAX_LONG_OPERATIONS && !itemEmpty[index]; index++)
           times[index - 1] = itemInt[index];
 
+      } else if (NAME_IS("LastDEdarkRefTimes")) {
+        DEdarkRefTimes[0] = itemInt[1];
+        DEdarkRefTimes[1] = itemInt[2];
+
       } else if (!strItems[0].IsEmpty())
         AfxMessageBox("Unrecognized entry in short term calibration file " + strFileName
         + " : " + strLine , MB_EXCLAME);
@@ -4057,6 +4072,7 @@ void CParameterIO::WriteShortTermCal(CString strFileName)
   DoseTable *doseTables = mWinApp->mBeamAssessor->GetDoseTables();
   FilterParams *filtP = mWinApp->GetFilterParams();
   NavParams *navP = mWinApp->GetNavParams();
+  int *DEdarkRefTimes = mWinApp->mGainRefMaker->GetLastDEdarkRefTime();
   int err = 0;
   int foundPix = mWinApp->mProcessImage->GetPixelTimeStamp();
   ShortVec *pixSizCamera, *pixSizMagInd, *addedRotation;
@@ -4144,6 +4160,11 @@ void CParameterIO::WriteShortTermCal(CString strFileName)
     }
     if (err > 0)
       mFile->WriteString(oneState + "\n");
+
+    if (DEdarkRefTimes[0] > 0 || DEdarkRefTimes[1] > 0) {
+      oneState.Format("LastDEdarkRefTimes %d %d\n", DEdarkRefTimes[0], DEdarkRefTimes[1]);
+        mFile->WriteString(oneState);
+    }
 
     mFile->Close();
   }

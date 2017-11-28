@@ -11,18 +11,18 @@
     <P><A NAME="hidd_fileproperties"></A><B><FONT size="3">File Properties Dialog</FONT></B></P>
     <P>This dialog box provides options for file storage. Most of them have to do with 
       how to treat unsigned 16-bit integer data, produced by 16-bit cameras. 
-      According to the MRC standard, MRC files in integer mode store data as signed 
+      The MRC standard used to be that MRC files in integer mode stored data as signed 
       integers, ranging from -32768 to 32767. However, 16-bit cameras have the 
       potential to produce numbers higher than 32767. SerialEM provides five (!) 
       options for dealing with this possibility.</P>
     <OL>
       <LI>
-        Data can be saved in a non-standard unsigned integer mode (mode 6), which is 
-        supported in IMOD as of version 3.7 but may not be portable to other MRC file 
-        reading software.
+        Data can be saved in the now-standard unsigned integer mode (mode 6). This mode 
+        has been supported in IMOD for many years, but there may still be some MRC file 
+        reading software that does not read it.
       </LI>
       <LI>
-        Data can be saved in a standard integer file with truncation at 32767. If the 
+        Data can be saved in a signed integer file with truncation at 32767. If the 
         counts in the images to be saved are not expected to be higher than 32767, this 
         should not lose any data.
       </LI>
@@ -32,10 +32,10 @@
         lose one bit of precision. Since the Gatan 16-bit cameras simply amplify the 
         signal from the CCD chip 4 times as much as the 14-bit cameras, dividing by 2 
         probably just removes one bit of noise, which makes this an acceptable option 
-        for current US1000/US4000 cameras.
-      </LI>
+        for current US1000/US4000 cameras.&nbsp; This option should not be used for 
+        electron counting data such as from the K2 camera.</LI>
       <LI>
-        Subtracting 32768 and storing with the standard file mode will preserve the 
+        Subtracting 32768 and storing with the signed file mode will preserve the 
         camera values completely, at the cost of producing negative values in the 
         output file.</LI>
       <LI>
@@ -84,10 +84,11 @@
       some of the information that would appear in an MRC header.&nbsp; This includes 
       the &#39;Pixel spacing&#39;, which is the pixel size in Angstroms.&nbsp; The IMOD programs extracttilts and extractpieces can extract 
       the same information from either type of file as they can from the extended 
-      header of the MRC file. Eventually IMOD may be able to handle this information 
-      appropriately, but currently it does not have any mechanisms for keeping it up 
-      to date as the image file is changed, so it important to continue to save the 
-      standard items in the extended header.</P>
+      header of the MRC file.&nbsp; In fact, they will automatically look for 
+      information in an associated autodoc file if the values are not found in the 
+      extended header. In addition, newstack and edmont can transfer information from 
+      the autodoc file associated with an input file to a new autodoc for an output 
+      file.&nbsp; </P>
     <P><B>Save data as:</B></P>
     <P>Allows data to be saved as bytes or 16-bit integers. If there is a 16-bit camera 
       and values are not being divided by 2, or if there are any buffers with 
@@ -141,14 +142,26 @@
       specifying the file will attach the extension '.adoc' if you type in a root 
       name without an extension. Thus, the autodoc will be named rootname.adoc, and 
       the TIFF files will be named rootnameNNNN.tif, where 'NNNN' is a 4-digit number 
-      starting with 0000.</P>
+      starting with 0000.&nbsp; Your selection here will be saved in the settings file 
+      when saving a single image with the <a href="menu_file.htm#hidm_file_saveother">
+      Save Single/Save to Other</a> command in the File menu.</P>
     <P><B>Type of compression in TIFF file:</B></P>
     <P>Select whether TIFF files will be saved with no compression, the type of 
-      compression used in Zip and PNG files, or LZW (Lempel-Ziv-Welch) compression 
-      These are both loss-less compression methods that may not save much space. Your 
-      selection here will be saved in your settings file, whereas the default values 
-      for other options in this dialog are controlled by entries the 
+      compression used in Zip and PNG files, LZW (Lempel-Ziv-Welch) compression, or 
+      JPEG compression. ZIP and LZW are both loss-less compression methods that may not save much space.&nbsp; 
+      JPEG compression does lose a small amount of information but can save much more 
+      space. Your 
+      selection here will be saved in your settings file, and separate values are 
+      maintained for saving a single image with the
+      <a href="menu_file.htm#hidm_file_saveother">Save Single/Save to Other</a> 
+      command versus other situations.&nbsp; In contrast, the default values 
+      for other options in this dialog are controlled by entries in the 
       SerialEMproperties.txt file.</P>
+    <P><b>Skip this dialog (turn skipping off in the File menu):</b></P>
+    <P>Select this option to avoid seeing this dialog every time you open a new file.&nbsp; 
+      Instead, existing values will be used.&nbsp; With this option selected, the 
+      dialog will open once per session of the program.&nbsp; When you want to see 
+      this dialog again, you can turn off Skip File Properties Dlg in the File menu.</P>
     <P><B>Cancel:</B></P>
     <P>Cancel file setup (and montaging, if setting that up).</P>
     </basefont>

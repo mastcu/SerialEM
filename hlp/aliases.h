@@ -76,6 +76,7 @@ hid_file_readappend							= SerialEM.chm::/html\menu_file.htm#hid_file_readappen
 hid_file_continuoussave					= SerialEM.chm::/html\menu_file.htm#hid_file_continuoussave
 hid_file_open_mdoc    					= SerialEM.chm::/html\menu_file.htm#hid_file_open_mdoc
 hid_file_close_mdoc    					= SerialEM.chm::/html\menu_file.htm#hid_file_close_mdoc
+hid_file_skipfilepropertiesdialog	= SerialEM.chm::/html\menu_file.htm#hid_file_skipfilepropertiesdialog
 hid_app_exit										= SerialEM.chm::/html\menu_file.htm#hid_app_exit				
 hid_settings_open								= SerialEM.chm::/html\menu_settings.htm#hid_settings_open
 hid_settings_readagain					= SerialEM.chm::/html\menu_settings.htm#hid_settings_readagain

@@ -3,6 +3,11 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+11/26/17: Added option to skip file properties dialog.  Started saving file
+type and compression type for save single/other in settings so it would be
+easy to save a particular type of compressed tiff from that command without
+having to revisit the file properties dialog.
+
 11/24/17: Made the program store the fraction of the area in the frame
 occupied by the main image window so that the window can be kept reliably
 smaller than the frame; the allocation of width between the main and

@@ -108,6 +108,7 @@ INT_SETT_GETSET("ScriptIndentSize", mWinApp->mMacroProcessor->, AutoIndentSize)
 #ifdef SET_TEST_SECT2
 BOOL_SETT_GETSET("AutosaveSettings", mWinApp->mDocWnd->, AutoSaveSettings)
 BOOL_SETT_GETSET("AutosaveNavNew", mWinApp->mDocWnd->, AutoSaveNav)
+BOOL_SETT_GETSET("SkipFileDlg", mWinApp->mDocWnd->, SkipFileDlg)
 BOOL_SETT_GETSET("AutosaveLog", mWinApp->mTSController->, AutosaveLog)
 BOOL_SETT_GETSET("AutosaveXYZ", mWinApp->mTSController->, AutosaveXYZ)
 BOOL_SETT_GETSET("StageMoveToolImage", mWinApp->, ImageWithStageToolMove)

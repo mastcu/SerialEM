@@ -63,7 +63,12 @@
         </TR>
         <TR VALIGN="top">
           <TD width="190"><A HREF="#hid_file_setsignedpolicy">Set Signed Policy</A></TD>
-          <TD>Sets how signed data are treated when saved to unsigned mode file</TD>
+          <TD>Sets how signed data are treated when saved to unsigned mode file.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD width="190"><a href="#hid_file_skipfilepropertiesdialog">Skip File Properties 
+            Dlg</a></TD>
+          <TD>Toggles option to use existing options and skip file properties dialog.</TD>
         </TR>
         <TR VALIGN="top">
           <TD width="190"><A HREF="#hidm_file_read">Read</A></TD>
@@ -116,7 +121,8 @@
       </OBJECT>
       <P><A NAME="hidm_file_opennew"></A><B>Open New command (File menu)</B></P>
       <P>Use this command to open a new file for saving single-frame images. You will 
-        first encounter the File Properties dialog, then the standard <A HREF="afx_hidd_filesave.htm">
+        first encounter the <a href="hidd_fileproperties.htm">File Properties dialog</a> 
+        (unless the option to skip this dialog is selected), then the standard <A HREF="afx_hidd_filesave.htm">
           Save As dialog box</A>. If the file already exists, you will be asked to 
         confirm that you want to replace it.&nbsp; If you are saving to an MRC file, the 
         extension .mrc will be added automatically unless you put the extension on 
@@ -153,7 +159,8 @@
       <P>Use this command to open a new MRC file for saving montages. You first enter the <A HREF="hidd_montagesetup.htm">
           Montage Setup dialog box</A>, which allows you to specify the number of 
         frames, magnification, and binning. From there, you enter the <A HREF="hidd_fileproperties.htm">
-          File Properties dialog box</A> then the <A HREF="afx_hidd_filesave.htm">Save As 
+          File Properties dialog box</A> (unless the option to skip this 
+        dialog is selected) then the <A HREF="afx_hidd_filesave.htm">Save As 
           dialog box</A>. A new montage can be started even when there is already an 
         open file; the new file becomes the current open file and montaging is 
         activated with the parameters for this file.</P>
@@ -164,7 +171,8 @@
       <P>Use this command to open a file for montaging, or to check parameters if the 
         current open file is a montage. In either case, you first enter the <A HREF="hidd_montagesetup.htm">
           Montage Setup dialog box</A>. If you are starting a new file, you then 
-        enter the <A HREF="hidd_fileproperties.htm">File Properties dialog box</A> then 
+        enter the <A HREF="hidd_fileproperties.htm">File Properties dialog
+          box</A> (unless the option to skip this dialog is selected) then 
         the <A HREF="afx_hidd_filesave.htm">Save As dialog box</A>.</P>
       <OBJECT classid="clsid:1e2a7bd0-dab9-11d0-b93a-00c04fc99f9e" type="application/x-oleobject">
         <PARAM NAME="Keyword" VALUE="files: managing">
@@ -179,7 +187,8 @@
       <P><A NAME="hidm_file_save"></A><B>Save A command (File menu)</B></P>
       <P>Use this command to save the image in Buffer A to the current open image file. 
         If there is no image file open yet, you will first enter the <A HREF="hidd_fileproperties.htm">
-          File Properties</A> and <A HREF="afx_hidd_filesave.htm">Save As dialog boxes</A>
+          File Properties</A> (unless the option to skip this 
+        dialog is selected) and <A HREF="afx_hidd_filesave.htm">Save As dialog boxes</A>
         to specify a file. This file will become the open image file, available for 
         further saving. However, only images of the same size can be saved in the same 
         file.</P>
@@ -194,8 +203,9 @@
         focus, with its title bar highlighted rather than gray), then its image will be 
         saved.</P>
       <P>If there is no image file open yet, you will first enter the <A HREF="hidd_fileproperties.htm">
-          File Properties</A> and <A HREF="afx_hidd_filesave.htm">Save As dialog boxes</A>
-        to specify a file. This file will become the open image file, available for 
+          File Properties</A> (unless the option to skip this 
+        dialog is selected) and <A HREF="afx_hidd_filesave.htm">Save As dialog boxes</A>
+        to specify a file. This file will become the current open image file, available for 
         further saving.</P>
       <OBJECT classid="clsid:1e2a7bd0-dab9-11d0-b93a-00c04fc99f9e" type="application/x-oleobject">
         <PARAM NAME="Keyword" VALUE="files: managing">
@@ -218,9 +228,16 @@
       <P>Use this command to save the active image into a new file just for this one 
         image. The file will be left closed when you are done. You will enter the <A HREF="hidd_fileproperties.htm">
           File Properties</A> and <A HREF="afx_hidd_filesave.htm">Save As dialog boxes</A>, 
-        as usual. If you specify an existing file, it will be replaced. The menu item 
+        as usual, unless the option to skip the properties dialog is selected. If you specify an existing file, it will be replaced. The menu item 
         is 'Save Single' when there is no open file and 'Save to Other' when there is 
-        an open file, to indicate that the file is different from the open file.</P>
+        an open file, to indicate that the file is different from the open file.&nbsp; 
+        The selection of file properties are stored separately for files opened through 
+        this command and files opened in other ways.&nbsp; The type of file to store, 
+        and the TIFF compression type, are saved between sessions.&nbsp; For example, if 
+        you choose to store single images as TIFF with JPEG compression, and then select 
+        a different compression for saving as a series of TIFFs, single images would 
+        still be saved as TIFF-JPEG without having to reselect that in the properties 
+        dialog.</P>
       <OBJECT classid="clsid:1e2a7bd0-dab9-11d0-b93a-00c04fc99f9e" type="application/x-oleobject">
         <PARAM NAME="Keyword" VALUE="files: managing">
       </OBJECT>
@@ -256,6 +273,13 @@
         added before values are saved, which will preserve negative values. Using this 
         command sets the policy for the current open file and the default for newly 
         opened files but does not affect any other open files.</P>
+      <P><A NAME="hid_file_skipfilepropertiesdialog"></A><B>Skip File Properties Dlg command (File menu)</B></P>
+      <P>Use this command to control whether the <A HREF="hidd_fileproperties.htm">
+          File Properties</A> 
+        dialog opens when opening a new file.&nbsp; With the option selected, the dialog 
+        will open only the first time during a session of the program. Thereafter, the 
+        existing file properties will be used when opening a new file. The option can be 
+        toggled either here or in the dialog itself.</P>
       <OBJECT classid="clsid:1e2a7bd0-dab9-11d0-b93a-00c04fc99f9e" type="application/x-oleobject">
         <PARAM NAME="Keyword" VALUE="files: managing">
       </OBJECT>
