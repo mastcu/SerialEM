@@ -729,7 +729,7 @@ void CCameraController::InitializeDMcameras(int DMind, int *numDMListed,
 
   if(!SEMTestHResult(hr, report)) {
     try {
-      long version;
+      long version, plugVersion;
       long canSelectShutter, canSetSettling, openShutterWorks;
       mPluginVersion[DMind] = 0;
       MainCallDMIndCamera(DMind, GetNumberOfCameras(&allnum));
@@ -751,9 +751,9 @@ void CCameraController::InitializeDMcameras(int DMind, int *numDMListed,
 
         mNewFunctionCalled = "a new function to get the plugin version";
         try {
-          CallDMIndGatan(DMind, mGatanCamera, GetPluginVersion(&version));
-          mPluginVersion[DMind] = version;
-          if (version < needVers) {
+          CallDMIndGatan(DMind, mGatanCamera, GetPluginVersion(&plugVersion));
+          mPluginVersion[DMind] = plugVersion;
+          if (plugVersion < needVers) {
             if (DMind == SOCK_IND && CBaseSocket::ServerIsRemote(GATAN_SOCK_ID))
               report.Format("The SerialEMCCD plugin to DigitalMicrograph on the other "
               "computer\nis version %d and should be upgraded to the current version (%d)"
@@ -761,14 +761,14 @@ void CCameraController::InitializeDMcameras(int DMind, int *numDMListed,
               "\n(normally in a folder C:\\Program Files\\SerialEM\\SerialEM_3-x-x...)\n" 
               "to the Gatan Plugins folder on the other computer and replace\n"
               "the version that is currently there (exit DM first)",
-              version, SEMCCD_PLUGIN_VERSION);
+              plugVersion, SEMCCD_PLUGIN_VERSION);
             else
               report.Format("The SerialEMCCD plugin to DigitalMicrograph on this computer"
               "\nis version %d and should be upgraded to the current version (%d)\n\n"
               "This is usually accomplished by exiting DM and running\n"
               "install.bat in a current SerialEM installation package\n"
               "(normally in a folder C:\\Program Files\\SerialEM\\SerialEM_3-x-x...)", 
-              version, SEMCCD_PLUGIN_VERSION);
+              plugVersion, SEMCCD_PLUGIN_VERSION);
             AfxMessageBox(report, MB_ICONINFORMATION | MB_OK);
           }
         }
