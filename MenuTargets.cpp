@@ -1708,10 +1708,11 @@ void CMenuTargets::OnUpdateCameraNormalizehere(CCmdUI* pCmdUI)
 {
   CameraParameters *param = mWinApp->GetCamParams() + mWinApp->GetCurrentCamera();
   pCmdUI->SetCheck(mCamera->GetProcessHere() ? 1 : 0);
-  pCmdUI->Enable(!param->TietzType && !param->AMTtype && (!param->DE_camType || 
-    param->DE_camType >= 2) && mCamera->CanProcessHere(param) &&
-    (param->pluginName.IsEmpty() || 
-    param->canDoProcessing) && !DoingTasks() && !mCamera->CameraBusy());
+  pCmdUI->Enable(!param->TietzType && 
+    (!param->AMTtype || mCamera->GetDMversion(2) >= AMT_VERSION_CAN_NORM) && 
+    (!param->DE_camType || param->DE_camType >= 2) && 
+    mCamera->CanProcessHere(param) && (param->pluginName.IsEmpty() || 
+     param->canDoProcessing) && !DoingTasks() && !mCamera->CameraBusy());
 }
 
 void CMenuTargets::OnCameraInterpolateDarkRefs()

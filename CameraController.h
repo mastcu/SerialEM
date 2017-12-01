@@ -65,6 +65,8 @@ struct CamPluginFuncs;
 #define DE_HAS_READOUT_DELAY      0x8
 #define DE_HAS_HARDWARE_BIN       0x10
 
+#define AMT_VERSION_CAN_NORM     700
+
 enum {INIT_ALL_CAMERAS, INIT_CURRENT_CAMERA, INIT_GIF_CAMERA, INIT_TIETZ_CAMERA};
 enum {LINEAR_MODE = 0, COUNTING_MODE, SUPERRES_MODE};
 enum DE_CAMERATYPE{LC1100_4k = 1,DE_12 = 2,DE_12_Survey=3,DE_LC1100=4};
@@ -437,6 +439,7 @@ class DLL_IM_EX CCameraController
   SetMember(double, TaskFrameWaitStart);
   GetSetMember(int, NumFrameAliLogLines);
   GetMember(bool, DeferredSumFailed);
+  int GetDMversion(int ind) {return mDMversion[ind];};
   SetMember(BOOL, AllowSpectroscopyImages);
   GetMember(bool, AskedDeferredSum);
   GetSetMember(BOOL, ASIgivesGainNormOnly);

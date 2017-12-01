@@ -1012,7 +1012,9 @@
             degrees clockwise) plus 4 for flipping around the Y axis before the rotation.&nbsp; 
             Set this before doing any calibrations that rely on image orientation. For a K2 
             camera, this entry indicates operations to be applied to dose fractionation 
-            images returned to SerialEM and to frames saved from the plugin.&nbsp; For a 
+            images returned to SerialEM and to frames saved from the plugin by default.&nbsp; 
+            Even if frames are being saved without rotation and flip, the correct entry is
+            needed here to keep DM from applying its own rotation.&nbsp; For a 
             Falcon camera, the indicated operation is applied to intermediate frames.</TD>
         </TR>
         <TR VALIGN="top">

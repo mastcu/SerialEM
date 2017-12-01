@@ -3,6 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+11/30/17: Enabled obtaining normalized images from AMT cameras if AMT version
+is high enough (In 3.6).
+
+11/30/17: Fixed crash from using drift correction with OneView with a
+non-square subarea (In 3.6).
+
 11/26/17: Added option to skip file properties dialog.  Started saving file
 type and compression type for save single/other in settings so it would be
 easy to save a particular type of compressed tiff from that command without

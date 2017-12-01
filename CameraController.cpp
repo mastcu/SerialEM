@@ -734,6 +734,10 @@ void CCameraController::InitializeDMcameras(int DMind, int *numDMListed,
       MainCallDMIndCamera(DMind, GetNumberOfCameras(&allnum));
       MainCallDMIndCamera(DMind, SetDebugMode(mDebugMode));
 
+      // The plugin knows the DM version, so get it from there.  And AMT has a version too
+      MainCallDMIndCamera(DMind, GetDMVersion(&version));
+      mDMversion[DMind] = version;
+
       if (DMind != AMT_IND) {
 
         // See if latest version is required instead of what is OK if no K2
@@ -771,9 +775,6 @@ void CCameraController::InitializeDMcameras(int DMind, int *numDMListed,
         }
         mNewFunctionCalled = "";
 
-        // The plugin knows the DM version, so get it from there
-        MainCallDMIndCamera(DMind, GetDMVersion(&version));
-        mDMversion[DMind] = version;
         if (digiscan[DMind]) {
           CallDMIndGatan(DMind, mGatanCamera, GetDSProperties(mDSextraShotDelay, 
             addedFlyback, mDSsyncMargin, &flyback, &mDSlineFreq, &rotOffset, &doFlip));
@@ -1556,8 +1557,10 @@ BOOL CCameraController::GetInitialized()
 // Return whether processing is being done here
 BOOL CCameraController::GetProcessHere()
 {
-  return (mProcessHere || mParam->TietzType || mParam->AMTtype || mParam->DE_camType == 1
-    || (mTD.plugFuncs && !mParam->canDoProcessing)) && CanProcessHere(mParam);
+  return (mProcessHere || mParam->TietzType || 
+    (mParam->AMTtype && mDMversion[AMT_IND] < AMT_VERSION_CAN_NORM) ||
+    mParam->DE_camType == 1 || 
+    (mTD.plugFuncs && !mParam->canDoProcessing)) && CanProcessHere(mParam);
 }
 
 // Set whether processing here from menu
@@ -6119,10 +6122,9 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
                   "timeout by sleeping %d", td->cameraTimeout + td->blankerTimeout +3000);
                 Sleep(td->cameraTimeout + td->blankerTimeout + 3000);
               }
-              report.Format("Getting image from camera - %s\n\n%s%sDescription: ",
+              report.Format("Getting image from camera - %s\n\n%sDescription: ",
                 errCode > 0 ? SEMCCDErrorMessage(errCode) : "", sAmtCurrent ? "" : 
-                "Check Digital Micrograph for error messages.\n\n",
-                td->Processing == GAIN_NORMALIZED ? "Is there a gain reference?  " : "");
+                "Check Digital Micrograph for error messages.\n\n");
               CCReportCOMError(td, E, (LPCTSTR)report);
             }
           }
@@ -7429,17 +7431,17 @@ void CCameraController::DisplayNewImage(BOOL acquired)
                 if (relTop > 0)
                   defCopy.usableTop = B3DMAX(defCopy.usableTop, 
                   mBinning * (mTop + relTop));
-                if (relBottom < mTD.DMSizeX - 1) {
-                  defCopy.usableBottom = ((mBottom - 1) - (mTD.DMSizeX - 1 - relBottom)) *
+                if (relBottom < mTD.DMSizeY - 1) {
+                  defCopy.usableBottom = ((mBottom - 1) - (mTD.DMSizeY - 1 - relBottom)) *
                     mBinning;
                   if (mParam->defects.usableBottom > 0)
                     defCopy.usableBottom = B3DMIN(defCopy.usableBottom, 
                     mParam->defects.usableBottom);
                 }
-                /* SEMTrace('1', "CDFDCE: size %d %d; returned %d %d %d %d; usable area"
+                /*SEMTrace('1', "CDFDCE: size %d %d; returned %d %d %d %d; usable area"
                 " %d %d %d %d", mTD.DMSizeX, mTD.DMSizeY, relLeft, relRight, relTop, 
                   relBottom, defCopy.usableLeft, defCopy.usableRight, defCopy.usableTop,
-                  defCopy.usableBottom); */
+                  defCopy.usableBottom);*/
                 CorDefCorrectDefects(&defCopy, mTD.Array[chan], mTD.ImageType, 
                   mBinning, mTop, mLeft, mBottom, mRight);
               }
