@@ -8290,8 +8290,11 @@ int CNavigatorDlg::OffsetMontImagePos(MiniOffsets *mini, int xPcStart, int xPcEn
           pcInd = minInd;
 
           // Return coordinates in piece with the binning of overview, but right-handed
-          xInPiece = (float)(testX - xst);
-          yInPiece = (float)(mini->yFrame + yst - testY);
+          // Need to adjust starting coordinates by the base to be the actual coordinate
+          // of the full piece and not of the subset pasted in to the overview
+          xInPiece = (float)(testX - (xst - B3DCHOICE(ix > 0, mini->xBase, 0)));
+          yInPiece = (float)(mini->yFrame + (yst - B3DCHOICE(iy > 0, mini->yBase, 0)) - 
+            testY);
         }
       }
     }

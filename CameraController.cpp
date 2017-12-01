@@ -325,6 +325,7 @@ CCameraController::CCameraController()
   mDeferStackingFrames = false;
   mStackingWasDeferred = false;
   mStartedFalconAlign = false;
+  mStartedExtraForDEalign = false;
   mFrameMdocForFalcon = 0;
   mZoomFilterType = 5;
   mOneK2FramePerFile = false;
@@ -1115,7 +1116,7 @@ void CCameraController::InitializeFEIcameras(int &numFEIlisted, int *originalLis
 
   // Initialize helper now that it is known whether configs should be ignored
   // Also clear retractability here if not advanced interface
-  mFalconHelper->Initialize(mFEIinitialized && !anyOldFalcon2);
+  mFalconHelper->Initialize(mFEIinitialized && !anyOldFalcon2 ? 1 : 0);
   for (ind = 0; ind < numOrig; ind++) {
     i = originalList[ind];
     if (mAllParams[i].FEItype) {
@@ -1176,6 +1177,8 @@ void CCameraController::InitializeDirectElectron(int *originalList, int numOrig)
           }
           if (mAllParams[i].name.Find("Survey") > 0)
             mAllParams[i].CamFlags &= ~(DE_CAM_CAN_COUNT);
+          if (mAllParams[i].CamFlags & DE_WE_CAN_ALIGN)
+            mFalconHelper->Initialize(-1);
         }	else {
           AfxMessageBox("FAILURE in Initializing Direct Electron camera", MB_EXCLAME);
           mAllParams[i].failedToInitialize = true;
@@ -1506,7 +1509,7 @@ BOOL CCameraController::CameraReady()
 BOOL CCameraController::CameraBusy()
 {
   return mRaisingScreen || mInserting || mSettling >= 0 || mAcquiring || mEnsuringDark ||
-   mWaitingForStacking > 0 || mStartedFalconAlign ||
+   mWaitingForStacking > 0 || mStartedFalconAlign || mStartedExtraForDEalign ||
    mScope->LongOperationBusy(LONG_OP_HW_DARK_REF);
 }
 
@@ -4850,6 +4853,8 @@ int CCameraController::DESumCountForConstraints(CameraParameters *camP, ControlS
  return 1;
 }
 
+// The underlying constraint routine.  doseFrac is relevant only for K2, alignInCamera
+// only for Falcon, sumCount only for DE
 bool CCameraController::ConstrainExposureTime(CameraParameters *camP, BOOL doseFrac,
   int readMode, int binning, bool alignInCamera, int sumCount, float &exposure, 
   float &frameTime)
@@ -7122,7 +7127,8 @@ void CCameraController::DisplayNewImage(BOOL acquired)
   // Process all the channels of data; do one-time actions on first channel to process
   // and only on first trip into here when aligning falcon frames
   for (chan = mTD.NumChannels - 1; chan >= 0; chan--) {
-    if (acquired && chan == mTD.NumChannels - 1 && !mStartedFalconAlign) {
+    if (acquired && chan == mTD.NumChannels - 1 && !mStartedFalconAlign && 
+      !mStartedExtraForDEalign) {
 
       if (mTD.ReblankTime && !mParam->noShutter)
         mScope->BlankBeam(false);
@@ -7220,6 +7226,28 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       }
     }
 
+    // Do similar operation for DE align
+    if (mDoingDEframeAlign == 1 && !mStartedExtraForDEalign) {
+      mExtraDeferred = new EMimageExtra;
+      mTD.DE_Cam->SetImageExtraData(mExtraDeferred, mDESetNameTimeoutUsed, false, 
+        nameValid);
+      if (nameValid) {
+        mStartedExtraForDEalign = !mFalconHelper->AlignFramesFromFile(
+          extra->mSubFramePath, mConSetsp[mLastConSet], mParam->rotationFlip, 
+          mTD.DivideBy2, (float)mTD.CountScaling, ix, &mTD);
+        if (mStartedExtraForDEalign) {
+          mWinApp->SetStatusText(SIMPLE_PANE, "ALIGNING " + CurrentSetName());
+          mInDisplayNewImage = false;
+          return;
+        }
+      } else {
+        SEMMessageBox("The name of the stack of frames to be aligned was not available in"
+          " the expected time");
+      }
+      delete mExtraDeferred;
+      mExtraDeferred = NULL;
+    }
+
     // Remove the frame file if only alignment in FEI was selected in the interface
     if (mRemoveFEIalignedFrames) {
       str = mLocalFalconFramePath;
@@ -7230,10 +7258,11 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       UtilRemoveFile(str + ".mrc");
       UtilRemoveFile(str + ".xml");
     }
-    if (mAligningFalconFrames && mFalconHelper->GetAlignSubset()) {
-      mNumSubsetAligned = mFalconHelper->GetNumAligned();
-      mAlignStart = mFalconHelper->GetAlignStart();
-      mAlignEnd = mFalconHelper->GetAlignEnd();
+    if ((mAligningFalconFrames || mDoingDEframeAlign == 1) && 
+      mFalconHelper->GetAlignSubset()) {
+        mNumSubsetAligned = mFalconHelper->GetNumAligned();
+        mAlignStart = mFalconHelper->GetAlignStart();
+        mAlignEnd = mFalconHelper->GetAlignEnd();
     }
 
     if (acquired) {
@@ -7594,11 +7623,13 @@ void CCameraController::DisplayNewImage(BOOL acquired)
     }
 
     // Get the extra header data - get JEOL data from last update to save time
-    if (mTD.GetDeferredSum) {
+    if (mTD.GetDeferredSum || mStartedExtraForDEalign) {
       extra = mExtraDeferred;
       image->SetUserData(extra);
       mExtraDeferred = NULL;
-    } else {
+    } 
+    
+    if (!mTD.GetDeferredSum) {
       extra = new EMimageExtra;
       image->SetUserData(extra);
       extra->m_fTilt = mTiltBefore;
@@ -7776,7 +7807,10 @@ void CCameraController::DisplayNewImage(BOOL acquired)
     
     // Get special data for DE camera
     if (mParam->DE_camType >= 2 && !(mTD.ProcessingPlus & CONTINUOUS_USE_THREAD)) {
-      mTD.DE_Cam->SetImageExtraData(extra, mDESetNameTimeoutUsed, nameValid);
+      if (!mStartedExtraForDEalign)
+        mTD.DE_Cam->SetImageExtraData(extra, mDESetNameTimeoutUsed, true, nameValid);
+      else
+        nameValid = true;
       err = lastConSetp->saveFrames;
       if (err & DE_SAVE_MASTER) {
 
@@ -8004,6 +8038,7 @@ void CCameraController::ErrorCleanup(int error)
   mDeferStackingFrames = false;
   mCancelNextContinuous = false;
   mStartedFalconAlign = false;
+  mStartedExtraForDEalign = false;
   mDiscardImage = false;
   mMaxChannelsToGet = MAX_STEM_CHANNELS;
   if (error || mRepFlag < 0 || mHalting || mPending >= 0 ||

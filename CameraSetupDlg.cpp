@@ -252,10 +252,11 @@ void CCameraSetupDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_DE_SAVE_FRAMES, m_butDESaveFrames);
   DDX_Check(pDX, IDC_DE_SAVE_FINAL, m_bDEsaveFinal);
   DDX_Check(pDX, IDC_DE_SAVE_MASTER, m_bDEsaveMaster);
+  DDX_Control(pDX, IDC_DE_SAVE_MASTER, m_butDESaveMaster);
   DDX_Control(pDX, IDC_DE_SAVE_FINAL, m_butDESaveFinal);
   DDX_Control(pDX, IDC_STAT_DE_FRAME_TIME, m_statDEframeTime);
   DDX_Control(pDX, IDC_STAT_DE_FRAME_SEC, m_statDEframeSec);
-  DDX_Control(pDX, IDC_STAT_DE_WHERE_ALIGN, m_statDEfwhereAlign);
+  DDX_Control(pDX, IDC_STAT_DE_WHERE_ALIGN, m_statDEwhereAlign);
   DDX_Control(pDX, IDC_STAT_DE_SUM_NUM, m_statDEsumNum);
   DDX_Control(pDX, IDC_EDIT_DE_FRAME_TIME, m_editDEframeTime);
   DDX_Control(pDX, IDC_SPIN_DE_SUM_NUM, m_spinDEsumNum);
@@ -380,6 +381,7 @@ BEGIN_MESSAGE_MAP(CCameraSetupDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_DE_SET_SAVE_FOLDER, OnDESetSaveFolder)
   ON_BN_CLICKED(IDC_SETUP_FALCON_FRAMES, OnSetupFalconFrames)
   ON_BN_CLICKED(IDC_DE_SAVE_FRAMES, OnDeSaveFrames)
+  ON_BN_CLICKED(IDC_DE_ALIGN_FRAMES, OnDeAlignFrames)
   ON_EN_KILLFOCUS(IDC_EDIT_DE_SUM_COUNT, OnKillfocusEditDeSumCount)
   ON_BN_CLICKED(IDC_BUT_FILE_OPTIONS, OnButFileOptions)
   ON_BN_CLICKED(IDC_BUT_NAME_SUFFIX, OnButFileOptions)
@@ -387,6 +389,7 @@ BEGIN_MESSAGE_MAP(CCameraSetupDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_SETUP_K2_FRAME_SUMS, OnSetupFalconFrames)
   ON_BN_CLICKED(IDC_ALWAYS_ANTIALIAS, OnAlwaysAntialias)
   ON_BN_CLICKED(IDC_BUT_SETUP_ALIGN, OnButSetupAlign)
+  ON_BN_CLICKED(IDC_BUT_DE_SETUP_ALIGN, OnButSetupAlign)
   ON_BN_CLICKED(IDC_DE_SAVE_MASTER, OnDeSaveMaster)
   ON_EN_KILLFOCUS(IDC_EDIT_DE_FRAME_TIME, OnKillfocusDeFrameTime)
   ON_EN_KILLFOCUS(IDC_EDIT_DE_FPS, OnKillfocusEditDeFPS)
@@ -1063,9 +1066,12 @@ float CCameraSetupDlg::ManageExposure(bool updateIfChange)
 {
   float realExp = m_eExposure;
   int *modeP = mDE_Type ? &m_iDEMode : &m_iK2Mode;
+  bool saySaving, savingDE = m_bDEsaveMaster || m_bDEalignFrames;
+
+  // General call and computations
   BOOL changed = mCamera->ConstrainExposureTime(mParam, m_bDoseFracMode, *modeP, 
     mBinnings[m_iBinning], m_bAlignDoseFrac && !mCurSet->useFrameAlign, 
-    m_bDEsaveMaster ? m_iSumCount : 1, realExp, m_fFrameTime);
+    savingDE ? m_iSumCount : 1, realExp, m_fFrameTime);
 
   float roundFac = mCamera->ExposureRoundingFactor(mParam);
   if (roundFac) {
@@ -1073,17 +1079,23 @@ float CCameraSetupDlg::ManageExposure(bool updateIfChange)
     changed = changed || fabs(m_eExposure - realExp) > 1.e-5;
   } else
     m_eExposure = realExp;
+
+  // Special for DE
   if (mWinApp->mDEToolDlg.CanSaveFrames(mParam)) {
-    m_fDEframeTime = RoundedDEframeTime(m_fFrameTime * 
-      (m_bDEsaveMaster ? 1 : m_iSumCount));
+    m_fDEframeTime = RoundedDEframeTime(m_fFrameTime * (savingDE ? 1 : m_iSumCount));
     int frames = (int)floor(realExp / m_fDEframeTime) + 1;
-    m_statNumDEraw.ShowWindow(m_bDEsaveMaster ? SW_SHOW : SW_HIDE);
-    changed = m_bDEsaveMaster;
-    if (m_bDEsaveMaster)
-      m_strNumDEraw.Format("%d frames will be saved", frames);
+    m_statNumDEraw.ShowWindow(savingDE ? SW_SHOW : SW_HIDE);
+    changed = savingDE;
+    saySaving = m_bDEsaveMaster || (m_bDEalignFrames && mCurSet->useFrameAlign > 1);
+    if (savingDE)
+      m_strNumDEraw.Format("%d frames will be %s%s%s", frames, 
+        saySaving ? "saved" : "", saySaving && m_bDEalignFrames ? "/" : "",
+        m_bDEalignFrames ? "aligned" : "");
   }
   if (changed && updateIfChange)
     ManageDose();
+
+  // Special for variable-size sum saving, K2 or Falcon
   if (changed && m_bDoseFracMode && (mFalconCanSave || 
     (mParam->K2Type && m_bSaveK2Sums && m_bSaveFrames))) {
       mWinApp->mFalconHelper->AdjustForExposure(mSummedFrameList, 
@@ -1253,9 +1265,7 @@ void CCameraSetupDlg::ManageCamera()
       mNumPlugShutters = 2;
   }
 
-  //Added to enable the DE camera to set the variable for DE Type
   mDE_Type = mParam->DE_camType;
-
   mTietzCanPreExpose = mParam->TietzCanPreExpose;
   mAMTtype = mParam->AMTtype;
   mFEItype = mParam->FEItype;
@@ -1419,7 +1429,7 @@ void CCameraSetupDlg::ManageCamera()
 
   // Manage the DE panel
   if (mDE_Type) {
-    mDEweCanAlign = false;
+    mDEweCanAlign = (mParam->CamFlags & DE_WE_CAN_ALIGN) != 0;
     if (!mParam->DE_AutosaveDir.IsEmpty())
       ReplaceWindowText(&m_butNameSuffix, "Suffix", "Options");
     if (!(mParam->CamFlags & DE_CAM_CAN_COUNT)) {
@@ -2353,8 +2363,6 @@ void CCameraSetupDlg::ManageDoseFrac(void)
 {
   CString str;
   bool enable;
-  CArray<FrameAliParams, FrameAliParams> *faParams = mCamera->GetFrameAliParams();
-  FrameAliParams fap;
   bool forceSaving = m_bDoseFracMode && m_bAlignDoseFrac && (mCurSet->useFrameAlign > 1 && 
     ((mParam->K2Type && mCamera->CAN_PLUGIN_DO(CAN_ALIGN_FRAMES, mParam)) || 
     mWeCanAlignFalcon));
@@ -2398,9 +2406,25 @@ void CCameraSetupDlg::ManageDoseFrac(void)
   m_statNormDSDF.ShowWindow(enable ? SW_SHOW : SW_HIDE);
   m_statWhereAlign.ShowWindow((m_bDoseFracMode && m_bAlignDoseFrac && 
     (mParam->K2Type || mWeCanAlignFalcon)) ? SW_SHOW : SW_HIDE);
-  if (!mCurSet->useFrameAlign)
-    str = mParam->K2Type ? "Align in DM" : "Align in Falcon processor";
-  else if (mCurSet->useFrameAlign == 1)
+  ComposeWhereAlign(str);
+  SetDlgItemText(IDC_STAT_WHERE_ALIGN, (LPCTSTR)str);
+  // This is vestigial from when save enabled align with UFA = 2
+  m_statWhereAlign.EnableWindow(mCurSet->useFrameAlign < 2 || m_bSaveFrames);
+
+  ManageSizeAndPositionButtons(m_bDoseFracMode && mParam->K2Type);
+  ManageDarkRefs();
+}
+
+void CCameraSetupDlg::ComposeWhereAlign(CString &str)
+{
+  CArray<FrameAliParams, FrameAliParams> *faParams = mCamera->GetFrameAliParams();
+  FrameAliParams fap;
+  if (!mCurSet->useFrameAlign) {
+    if (mDE_Type)
+      str = "Align in DE server";
+    else
+      str = mParam->K2Type ? "Align in DM" : "Align in Falcon processor";
+  } else if (mCurSet->useFrameAlign == 1)
     str = mParam->K2Type ? "Align in Plugin" : "Align in SerialEM";
   else
     str = (mCurrentSet == RECORD_CONSET && mCamera->GetAlignWholeSeriesInIMOD()) ?
@@ -2410,11 +2434,6 @@ void CCameraSetupDlg::ManageDoseFrac(void)
       fap = faParams->GetAt(mCurSet->faParamSetInd);
       str += " with \"" + fap.name + "\"";
   }
-  SetDlgItemText(IDC_STAT_WHERE_ALIGN, (LPCTSTR)str);
-  m_statWhereAlign.EnableWindow(mCurSet->useFrameAlign < 2 || m_bSaveFrames);
-
-  ManageSizeAndPositionButtons(m_bDoseFracMode && mParam->K2Type);
-  ManageDarkRefs();
 }
 
 // Save frames toggled (dose frac mode is on)
@@ -2580,7 +2599,7 @@ void CCameraSetupDlg::OnButSetupAlign()
     dlg.mGPUavailable = mWinApp->mFalconHelper->GetGpuMemory() > 0;
     dlg.mUseGpuTransfer[0] = mWinApp->mFalconHelper->GetUseGpuForAlign(0);
     dlg.mUseGpuTransfer[1] = mWinApp->mFalconHelper->GetUseGpuForAlign(1);
-    dlg.mServerIsRemote = CBaseSocket::ServerIsRemote(FEI_SOCK_ID);
+    dlg.mServerIsRemote = mDE_Type ? false : CBaseSocket::ServerIsRemote(FEI_SOCK_ID);
   }
   dlg.mNewerK2API = mCamera->HasNewK2API(mParam);
   dlg.mEnableWhere = !(mCurrentSet == RECORD_CONSET && mStartedTS);
@@ -2609,7 +2628,10 @@ void CCameraSetupDlg::OnButSetupAlign()
   }
   mWinApp->SetFrameAlignMoreOpen(dlg.mMoreParamsOpen);
   m_butSetupAlign.SetButtonStyle(BS_PUSHBUTTON);
-  ManageDoseFrac();
+  if (mDE_Type)
+    ManageDEpanel();
+  else
+    ManageDoseFrac();
 }
 
 // Manage the line that reports whether antialiasing will be applied
@@ -2738,6 +2760,7 @@ void CCameraSetupDlg::OnAlwaysAntialias()
 void CCameraSetupDlg::OnDeSaveMaster()
 {
   UpdateData(true);
+  mUserSaveFrames = m_bDEsaveMaster;
   ManageDEpanel();
   ManageExposure();
   UpdateData(false);
@@ -2760,22 +2783,42 @@ void CCameraSetupDlg::OnKillfocusEditDeSumCount()
   UpdateData(false);
 }
 
+void CCameraSetupDlg::OnDeAlignFrames()
+{
+  UpdateData(true);
+  ManageDEpanel();
+  ManageExposure();
+  UpdateData(false);
+}
+
 // Manage the enables in the panel
 void CCameraSetupDlg::ManageDEpanel(void)
 {
-  m_butNameSuffix.EnableWindow(!mParam->DE_AutosaveDir.IsEmpty() && m_bDEsaveMaster);
-  m_butDESetSaveFolder.EnableWindow(m_bDEsaveMaster);
-  m_editSumCount.EnableWindow(m_bDEsaveMaster);
+  CString str;
+  bool saving = m_bDEsaveMaster || m_bDEalignFrames;
+  bool forceSaving = m_bDEalignFrames && mCurSet->useFrameAlign > 1 && mDEweCanAlign;
+  if ((forceSaving && !m_bDEsaveMaster) || (!forceSaving && !BOOL_EQUIV(m_bDEsaveMaster,
+    mUserSaveFrames))) {
+    m_bDEsaveMaster = B3DCHOICE(forceSaving, true, mUserSaveFrames);
+    UpdateData(false);
+  }
+  m_butNameSuffix.EnableWindow(!mParam->DE_AutosaveDir.IsEmpty() && saving);
+  m_butDESetSaveFolder.EnableWindow(saving);
+  m_editSumCount.EnableWindow(saving);
+  m_butDESaveMaster.EnableWindow(!forceSaving);
   m_butDESaveFrames.EnableWindow(m_bDEsaveMaster && m_iSumCount > 1 && !m_iDEMode);
   m_butDESaveFinal.EnableWindow(m_bDEsaveMaster);
-  m_statDEframeTime.EnableWindow(m_bDEsaveMaster);
-  m_statDEframeSec.EnableWindow(m_bDEsaveMaster);
-  m_statDEfwhereAlign.EnableWindow(m_bDEalignFrames && m_bDEsaveMaster);  // TEMP
-  m_statDEsumNum.EnableWindow(m_bDEsaveMaster);
-  m_editDEframeTime.EnableWindow(m_bDEsaveMaster);
-  m_spinDEsumNum.EnableWindow(m_bDEsaveMaster);
-  m_butDEalignFrames.EnableWindow(m_bDEsaveMaster);  // TEMP
-  m_butDEsetupAlign.EnableWindow(m_bDEalignFrames && m_bDEsaveMaster);  // TEMP
+  m_statDEframeTime.EnableWindow(saving);
+  m_statDEframeSec.EnableWindow(saving);
+  m_statDEwhereAlign.ShowWindow(m_bDEalignFrames && mDEweCanAlign);
+  m_statDEsumNum.EnableWindow(saving);
+  m_editDEframeTime.EnableWindow(saving);
+  m_spinDEsumNum.EnableWindow(saving);
+  m_butDEsetupAlign.EnableWindow(m_bDEalignFrames);
+  if (m_bDEalignFrames) {
+    ComposeWhereAlign(str);
+    SetDlgItemText(IDC_STAT_DE_WHERE_ALIGN, (LPCTSTR)str);
+  }
 }
 
 // new frame time: adjust the sum count and then make sure it is legal

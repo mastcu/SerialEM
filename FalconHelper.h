@@ -15,7 +15,7 @@ class CFalconHelper
 public:
   CFalconHelper(void);
   ~CFalconHelper(void);
-  void Initialize(bool skipConfigs);
+  void Initialize(int skipConfigs);
   void DistributeSubframes(ShortVec &summedFrameList, int numReadouts, int newFrames, 
     FloatVec &userFrameFrac, FloatVec &userSubframeFrac, bool aligningInFalcon);
   float AdjustForExposure(ShortVec &summedFrameList, int numSkipBefore,
@@ -30,6 +30,7 @@ public:
   GetMember(int, AlignStart);
   GetMember(int, AlignEnd);
   SetMember(CString, LastFrameDir);
+  int DEFrameAlignBusy() {return 0;};
  
   int GetUseGpuForAlign(int inIMOD) {return mUseGpuForAlign[inIMOD ? 1 : 0];};
   void SetUseGpuForAlign(int inIMOD, int inVal) {mUseGpuForAlign[inIMOD ? 1 : 0] = inVal;};
@@ -91,6 +92,9 @@ private:
   MrcHeader mMrcHeader;                 // An MRC header for that file
   int mAlignError;                      // Error code from alignment errors
   int mNumAligned;                      // Number of frames aligned
+  int mTrimXstart, mTrimXend;           // Limits for trimming DE frame sum to subarea
+  int mTrimYstart, mTrimYend;
+  bool mTrimDEsum;
   CameraThreadData *mCamTD;
 
 public:
@@ -118,4 +122,7 @@ public:
     bool ifMdoc);
   float AlignedSubsetExposure(ShortVec & summedFrameList, float frameTime, int subsetStart,
     int subsetEnd, int maxFrames = -1);
+  int AlignFramesFromFile(CString filename, ControlSet &conSet, int rotateFlip, int divideBy2, 
+    float scaling, int &numFrames, CameraThreadData *td);
+  void AlignNextFrameTask(int param);
 };

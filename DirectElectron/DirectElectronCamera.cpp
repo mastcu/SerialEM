@@ -534,6 +534,10 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
     } else
       mCamParams[camIndex].DE_AutosaveDir = "";
 
+    // Set that we can align if server is local and frames are normalized
+    if (ServerIsLocal() && mServerVersion >= DE_ALL_NORM_IN_SERVER)
+      mCamParams[camIndex].CamFlags |= DE_WE_CAN_ALIGN;
+
     FinishCameraSelection(true, &mCamParams[camIndex]);
   }
 
@@ -1944,7 +1948,7 @@ void DirectElectronCamera::AddValidStateToMap(int checksum, std::map<int, int> &
 
 // Fill in the metadata for the mdoc file; use existing values where possible
 void DirectElectronCamera::SetImageExtraData(EMimageExtra *extra, float nameTimeout, 
-  bool &nameValid)
+  bool allowNamePrediction, bool &nameValid)
 {
   CString str;
   double startTime = GetTickCount();
@@ -1968,8 +1972,8 @@ void DirectElectronCamera::SetImageExtraData(EMimageExtra *extra, float nameTime
 
   // Autosave path and frames...
   if ((mLastSaveFlags & DE_SAVE_FRAMES) || saveSums || saveCount) {
-    nameValid = GetPreviousDatasetName(nameTimeout, mSetNamePredictionAgeLimit, true, 
-      str);
+    nameValid = GetPreviousDatasetName(nameTimeout, 
+      allowNamePrediction ? mSetNamePredictionAgeLimit : 0, true, str);
     if (mWinApp->mDEToolDlg.GetFormatForAutoSave()) {
       if (!saveCount && mNormAllInServer)
         str += saveSums ? "" : "_movies";

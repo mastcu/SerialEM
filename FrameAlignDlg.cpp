@@ -228,6 +228,8 @@ BOOL CFrameAlignDlg::OnInitDialog()
   m_sbcSmoothCrit.SetPos(250);
   m_sbcRefineIter.SetRange(0, 100);
   m_sbcRefineIter.SetPos(50);
+  mFalconCanAlign = mCamParams->FEItype && FCAM_CAN_ALIGN(mCamParams);
+  mDEcanAlign = mCamParams->DE_camType && (mCamParams->CamFlags & DE_CAM_CAN_ALIGN);
 
   // set up filter combo box for K2 camera
   mNumDMFilters = 0;
@@ -247,14 +249,16 @@ BOOL CFrameAlignDlg::OnInitDialog()
   }
   m_butDeleteSet.EnableWindow(mParams->GetSize() > 1);
   EnableDlgItem(IDC_RALIGN_IN_DM, mEnableWhere && 
-    (mCamParams->K2Type || FCAM_CAN_ALIGN(mCamParams)));
+    (mCamParams->K2Type || mFalconCanAlign || mDEcanAlign));
   EnableDlgItem(IDC_USE_FRAME_ALIGN, mEnableWhere);
   EnableDlgItem(IDC_RWITH_IMOD, mEnableWhere);
 
   // Rename buttons for Falcon, disable some items
   if (!mCamParams->K2Type) {
-    if (FCAM_CAN_ALIGN(mCamParams))
+    if (mFalconCanAlign)
       SetDlgItemText(IDC_RALIGN_IN_DM, "In Falcon processor");
+    else if (mDEcanAlign)
+      SetDlgItemText(IDC_RALIGN_IN_DM, "In DE server");
     else if (!m_iWhereAlign)
       m_iWhereAlign = 1;
     SetDlgItemText(IDC_USE_FRAME_ALIGN, "In SerialEM");
@@ -393,7 +397,7 @@ void CFrameAlignDlg::ManagePanels(void)
   m_butUseGPU.EnableWindow(mGPUavailable || m_iWhereAlign > 1);
   SetDlgItemText(IDC_BUTMORE, mMoreParamsOpen ? "-" : "+");
   AdjustPanels(states, idTable, leftTable, topTable, mNumInPanel, mPanelStart, 0);
-  if (!mCamParams->K2Type && !FCAM_CAN_ALIGN(mCamParams))
+  if (!mCamParams->K2Type && !mFalconCanAlign || !mDEcanAlign)
     ShowDlgItem(IDC_RALIGN_IN_DM, false);
 }
 
@@ -574,22 +578,13 @@ void CFrameAlignDlg::OnSmoothShifts()
 
 void CFrameAlignDlg::OnDeltaposSpinPairwiseNum(NMHDR *pNMHDR, LRESULT *pResult)
 {
-  if (NewSpinnerValue(pNMHDR, pResult, mPairwiseNum, 7, 99, mPairwiseNum))
-    return;
-  UpdateData(true);
-  m_strPairwiseNum.Format("%d", mPairwiseNum);
-  UpdateData(false);
-  *pResult = 0;
+  FormattedSpinnerValue(pNMHDR, pResult, 7, 99, mPairwiseNum, m_strPairwiseNum, "%d");
 }
 
 void CFrameAlignDlg::OnDeltaposSpinAlignBin(NMHDR *pNMHDR, LRESULT *pResult)
 {
-  if (NewSpinnerValue(pNMHDR, pResult, mAlignBin, 2, 10, mAlignBin))
-    return;
-  UpdateData(true);
-  m_strAlignBin.Format("Alignment binning %d", mAlignBin);
-  UpdateData(false);
-  *pResult = 0;
+  FormattedSpinnerValue(pNMHDR, pResult, 2, 10, mAlignBin, m_strAlignBin, 
+    "Alignment binning %d");
 }
 
 void CFrameAlignDlg::OnDeltaposSpinGroupSize(NMHDR *pNMHDR, LRESULT *pResult)
@@ -599,29 +594,30 @@ void CFrameAlignDlg::OnDeltaposSpinGroupSize(NMHDR *pNMHDR, LRESULT *pResult)
   UpdateData(true);
   ManageGroupSizeMinFrames();
   UpdateData(false);
-  *pResult = 0;
 }
 
 void CFrameAlignDlg::OnDeltaposSpinRefineIter(NMHDR *pNMHDR, LRESULT *pResult)
 {
-  if (NewSpinnerValue(pNMHDR, pResult, mRefineIter, 1, 20, mRefineIter))
-    return;
-  UpdateData(true);
-  m_strRefineIter.Format("%d", mRefineIter);
-  UpdateData(false);
-  *pResult = 0;
+  FormattedSpinnerValue(pNMHDR, pResult, 1, 20, mRefineIter, m_strRefineIter, "%d");
 }
 
 
 void CFrameAlignDlg::OnDeltaposSpinSmoothCrit(NMHDR *pNMHDR, LRESULT *pResult)
 {
-  if (NewSpinnerValue(pNMHDR, pResult, mSmoothCrit, 10, 30, mSmoothCrit))
+  FormattedSpinnerValue(pNMHDR, pResult, 10, 30, mSmoothCrit, m_strSmoothCrit, "%d");
+}
+
+void CFrameAlignDlg::FormattedSpinnerValue(NMHDR *pNMHDR, LRESULT *pResult, int lowerLim,
+  int upperLim, int &oldNewVal, CString &str, const char *format)
+{
+  if (NewSpinnerValue(pNMHDR, pResult, oldNewVal, lowerLim, upperLim, oldNewVal))
     return;
   UpdateData(true);
-  m_strSmoothCrit.Format("%d", mSmoothCrit);
+  str.Format("%d", oldNewVal);
   UpdateData(false);
   *pResult = 0;
 }
+
 
 void CFrameAlignDlg::OnAlignSubset()
 {

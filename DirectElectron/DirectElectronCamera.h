@@ -193,7 +193,8 @@ public:
   int SetExposureTimeAndMode(float seconds, int mode);
   int SetCountingParams(int readMode, double scaling, double FPS);
   int SetAlignInServer(int alignFrames);
-  void SetImageExtraData(EMimageExtra *extra, float nameTimeout, bool &nameValid);
+  void SetImageExtraData(EMimageExtra *extra, float nameTimeout, bool allowNamePrediction,
+    bool &nameValid);
   GetMember(int, CamType);
   GetMember(int, InitializingIndex);
   GetMember(int, ServerVersion);

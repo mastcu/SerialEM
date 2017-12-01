@@ -86,6 +86,11 @@ extern "C" {
                         float *delta, int *nsizeOut);
   void XCorrFilterPart(float *fft, float *array, int nx, int ny, float *ctf, 
                        float delta);
+  void doseWeightFilter(float startDose, float endDose, float pixelSize, float afac, 
+                        float bfac, float cfac, float doseScale, float *ctf, int numVals,
+                        float maxFreq, float *delta);
+  void doseFilterValue(float startDose, float endDose, float frequency, float afac,
+                       float bfac, float cfac, float doseScale, float *atten);
   void XCorrMeanZero(float *array, int nxdim, int nx, int ny);
   void XCorrPeakFind(float *array, int nxdim, int ny, float  *xpeak,
                      float *ypeak, float *peak, int maxpeaks);
@@ -169,6 +174,8 @@ extern "C" {
   void sumsToAvgSD(float sx, float sxsq, int n, float *avg, float *sd);
   void sumsToAvgSDdbl(double sx8, double sxsq8, int n1, int n2, float *avg,
                       float *sd);
+  void sumsToAvgSDallDbl(double sx8, double sxsq8, int n1, int n2, double *avg,
+                         double *sd);
   void arrayMinMaxMean(float *array, int nx, int ny, int ix0, int ix1, int iy0, int iy1,
                        float *dmin, float *dmax, float *dmean);
   void arrayMinMaxMeanSd(float *array, int nx, int ny, int ix0, int ix1, int iy0, int iy1,
@@ -379,6 +386,10 @@ extern "C" {
                             int *numPieces, int maxPiece);
   int getMetadataPieces(int index, int itype, int nz, int *ixPiece, int *iyPiece,
                          int *izPiece, int maxPiece, int *numFound);
+  int getMetadataWeightingDoses(int indAdoc, int iTypeAdoc, int nz, int *izPiece, 
+                                int bidirNumInvert, float *priorDose, float *secDose);
+  void priorDosesFromImageDoses(float *secDose, int nz, int bidirNumInvert,
+                                float *priorDose);
   double SEMshortsToFloat(short low, short ihigh);
   int getExtraHeaderValue(void *extHead, int offset, int type, unsigned char *bval,
                           short *sval, int *ival, float *fval, double *dval);
@@ -389,6 +400,11 @@ extern "C" {
   int copyExtraHeaderSection(void *extraIn, int sizeIn, void *extraOut, int sizeOut,
                              int numInt, int numReal, int izSect, int *cumulBytesOut);
   double getFeiExtHeadAngleScale(void *extHead);
+
+  /* rotateflip.c */
+  int rotateFlipImage(void *array, int mode, int nx, int ny, int operation, 
+                      int leftHanded, int invertAfter, int invertCon, void *brray,
+                      int *nxout, int *nyout);
     
 #ifdef __cplusplus
 }

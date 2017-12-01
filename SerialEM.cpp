@@ -67,7 +67,7 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 #define VERSION_STRING  "SerialEM Version 3.7.0 beta"
-#define TAG_STRING      "(Tagged SEM_3-6-13, 11/5/17)"
+#define TAG_STRING      "(Tagged SEM_3-6-12, 8/29/17)"
 
 // Offsets for static window inside main frame
 #define STATIC_BORDER_TOP      0
@@ -899,6 +899,7 @@ BOOL CSerialEMApp::InitInstance()
   ReleaseDC(0, screen);
   mDisplayNot120DPI = mSystemDPI != 120;
   mag = mSystemDPI;
+  b3dSetStoreError(1);
 
   // Initialize the ParameterIO class and read properties and settings; reopen log
   // now in case someone has debugging output to the log

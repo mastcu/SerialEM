@@ -64,6 +64,7 @@ struct CamPluginFuncs;
 #define DE_HAS_TEMP_SET_PT        0x4
 #define DE_HAS_READOUT_DELAY      0x8
 #define DE_HAS_HARDWARE_BIN       0x10
+#define DE_WE_CAN_ALIGN           0x20
 
 #define AMT_VERSION_CAN_NORM     700
 
@@ -779,6 +780,8 @@ class DLL_IM_EX CCameraController
   ControlSet *mConsDeferred;
   EMimageBuffer *mBufDeferred;
   EMimageExtra *mExtraDeferred;
+  bool mStartedExtraForDEalign;  // Flag that an extra header was made to start DE align
+  int mDoingDEframeAlign;        // Flag that align is being done here or IMOD
   float mDarkMaxSDcrit;          // Sd for testing dark reference against if > 0
   float mDarkMaxMeanCrit;        // Mean for testing dark reference against if > 0
   int mBadDarkNumRetries;        // Number of retries if there is a bad dark reference

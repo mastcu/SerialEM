@@ -403,7 +403,7 @@ int CGainRefMaker::MakeDEdarkRefIfNeeded(int processType, float hoursSinceLast,
     return 1;
   }
   if (processType < 0 || processType > 1) {
-    message = "The processing type must be 0 for linear or for 1 for counting";
+    message = "The processing type must be 0 for linear or 1 for counting";
     return 1;
   }
   if (processType && !(mParam->CamFlags & DE_CAM_CAN_COUNT)) {
