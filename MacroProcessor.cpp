@@ -2253,8 +2253,8 @@ void CMacroProcessor::NextCommand()
 
   } else if (CMD_IS(ALIGNWHOLETSONLY)) {                 // SetAlignWholeTSOnly 
     index  = (itemEmpty[1] || itemInt[1] != 0) ? 1 : 0;
-    if (mCamera->IsConSetSaving(&mConSets[RECORD_CONSET], camParams, false) && 
-      (mConSets[RECORD_CONSET].alignFrames || !index) && 
+    if (mCamera->IsConSetSaving(&mConSets[RECORD_CONSET], RECORD_CONSET, camParams, false)
+      && (mConSets[RECORD_CONSET].alignFrames || !index) && 
       mConSets[RECORD_CONSET].useFrameAlign > 1 && mCamera->GetAlignWholeSeriesInIMOD()) {
         if (index && !mWinApp->mStoreMRC)
           ABORT_LINE("There must be an output file before this command can be used:\n\n");

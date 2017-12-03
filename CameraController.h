@@ -782,6 +782,7 @@ class DLL_IM_EX CCameraController
   EMimageExtra *mExtraDeferred;
   bool mStartedExtraForDEalign;  // Flag that an extra header was made to start DE align
   int mDoingDEframeAlign;        // Flag that align is being done here or IMOD
+  bool mRemoveAlignedDEframes;   // Flag to remove DE frames if aligning only
   float mDarkMaxSDcrit;          // Sd for testing dark reference against if > 0
   float mDarkMaxMeanCrit;        // Mean for testing dark reference against if > 0
   int mBadDarkNumRetries;        // Number of retries if there is a bad dark reference
@@ -909,7 +910,7 @@ float GetCountScaling(CameraParameters * camParam);
 int TargetSizeForTasks(CameraParameters *camParam = NULL);
 void RestoreGatanOrientations(void);
 void GetMergeK2DefectList(int DMind, CameraParameters *param, bool errToLog);
-bool IsConSetSaving(ControlSet *conSet, CameraParameters * param, bool K2only);
+bool IsConSetSaving(ControlSet *conSet, int setNum, CameraParameters *param, bool K2only);
 bool CanProcessHere(CameraParameters *param);
 void FixDirForFalconFrames(CameraParameters * param);
 bool CanPluginDo(int minVersion, CameraParameters * param);
@@ -917,6 +918,7 @@ int NumAllVsAllFromFAparam(FrameAliParams &faParam, int numAliFrames, int &group
   int &refineIter, int &doSpline, int &numFilters, float *radius2);
 void AdjustCountsPerElecForScale(CameraParameters * param);
 int DESumCountForConstraints(CameraParameters *camP, ControlSet *consP);
+void MakeOneFrameAlignCom(CString & localFramePath, int paramInd);
 };
 
 

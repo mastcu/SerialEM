@@ -262,6 +262,7 @@ BOOL CFrameAlignDlg::OnInitDialog()
     else if (!m_iWhereAlign)
       m_iWhereAlign = 1;
     SetDlgItemText(IDC_USE_FRAME_ALIGN, "In SerialEM");
+    SetDlgItemText(IDC_ONLY_IN_PLUGIN, "Aligning in SerialEM");
     m_butTruncateAbove.EnableWindow(false);
     m_editTruncation.EnableWindow(false);
     m_statCountLabel.EnableWindow(false);
@@ -397,7 +398,7 @@ void CFrameAlignDlg::ManagePanels(void)
   m_butUseGPU.EnableWindow(mGPUavailable || m_iWhereAlign > 1);
   SetDlgItemText(IDC_BUTMORE, mMoreParamsOpen ? "-" : "+");
   AdjustPanels(states, idTable, leftTable, topTable, mNumInPanel, mPanelStart, 0);
-  if (!mCamParams->K2Type && !mFalconCanAlign || !mDEcanAlign)
+  if (!mCamParams->K2Type && !mFalconCanAlign && !mDEcanAlign)
     ShowDlgItem(IDC_RALIGN_IN_DM, false);
 }
 
@@ -613,7 +614,7 @@ void CFrameAlignDlg::FormattedSpinnerValue(NMHDR *pNMHDR, LRESULT *pResult, int 
   if (NewSpinnerValue(pNMHDR, pResult, oldNewVal, lowerLim, upperLim, oldNewVal))
     return;
   UpdateData(true);
-  str.Format("%d", oldNewVal);
+  str.Format(format, oldNewVal);
   UpdateData(false);
   *pResult = 0;
 }

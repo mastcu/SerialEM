@@ -2665,7 +2665,7 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,428,137,10
     CONTROL         "Align only whole tilt series",IDC_WHOLE_SERIES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,61,101,10
     GROUPBOX        "Use parameter set only for",IDC_STAT_USE_ONLY_GROUP,7,136,237,35
-    CONTROL         "Aligning in plugin",IDC_ONLY_IN_PLUGIN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,146,71,10
+    CONTROL         "Aligning in plugin",IDC_ONLY_IN_PLUGIN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,146,89,10
     CONTROL         "Aligning with IMOD",IDC_ONLY_WITH_IMOD,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,158,78,10
     CONTROL         "4K (non super-resolution) frames",IDC_ONLY_NON_SUPER,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,115,146,125,10

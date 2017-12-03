@@ -35,6 +35,8 @@ class FrameAlign {
                  float radius1, float *radius2, float sigma1, float *sigma2, 
                  int numFilters, int maxShift, float kFactor, float maxMaxWeight,
                  int summingMode, int expectedZ, int gpuFlags, int debug);
+  int setupDoseWeighting(float priorDose, float *frameDoses, float pixelSize, 
+                         float critScale, float aFac, float bFac, float cFac);
   int gpuAvailable(int nGPU, float *memory, int debug);
   int nextFrame(void *frame, int type, float *gainRef, int nxGain, int nyGain,
                 void *darkRef, float truncLimit,
@@ -74,6 +76,8 @@ class FrameAlign {
   void frameShiftFromGroups(int frame, int filt, float &shiftX, float &shiftY);
   void getAllFrameShifts(FloatVec &frameXshift, FloatVec &frameYshift, int useFilt);
   int prepareToFetchAlignFFTs(int aliFrameInd);
+  void filterAndAddToSum(float *fft, float *array, int nx, int ny, float *ctf, 
+                         float delta);
 
   CharArgType mPrintFunc;
   float *mFullEvenSum;
@@ -153,5 +157,14 @@ class FrameAlign {
   float mMaxRawMax[MAX_FILTERS+ 1], mRawMaxSum[MAX_FILTERS+ 1];
   float mFiltFunc[8193], mFiltDelta;
   int mGpuLibLoaded;
+  int mNumExpectedFrames;
+  bool mDoingDoseWeighting;
+  std::vector<float> mFrameDoses;
+  std::vector<float> mDoseWgtFilter;
+  float mPriorDoseCum;
+  float mPixelSize;
+  float mCritDoseScale;
+  float mCritDoseAfac, mCritDoseBfac, mCritDoseCfac;
+  float mDWFdelta;
 };
 #endif

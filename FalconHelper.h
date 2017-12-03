@@ -30,6 +30,8 @@ public:
   GetMember(int, AlignStart);
   GetMember(int, AlignEnd);
   SetMember(CString, LastFrameDir);
+  GetMember(long, NumFiles);
+  SetMember(int, RotFlipForComFile);
   int DEFrameAlignBusy() {return 0;};
  
   int GetUseGpuForAlign(int inIMOD) {return mUseGpuForAlign[inIMOD ? 1 : 0];};
@@ -58,6 +60,7 @@ private:
   int mRotateFlip, mDivideBy, mAliSumRotFlip;  // Saved values of passed-in variables
   long mDivideBy2;
   float mPixel, mFloatScale;                         // Pixel size for header
+  int mRotFlipForComFile;               // Value to put in com file
   long mNumStacked;                     // NUmber of frames stacked so far
   CString mLocalPath;  // Original folder of files when stacking, or name of stack to read
   CString mDirectory, mRootname;        // folder and filename when stacking
@@ -95,6 +98,7 @@ private:
   int mTrimXstart, mTrimXend;           // Limits for trimming DE frame sum to subarea
   int mTrimYstart, mTrimYend;
   bool mTrimDEsum;
+  int mSumBinning;                      // Binning relative to frames being aligned
   CameraThreadData *mCamTD;
 
 public:
@@ -116,7 +120,7 @@ public:
   int CheckFalconConfig(int setState, int & state, const char * message);
   int SetupFrameAlignment(ControlSet & conSet, CameraParameters *camParams, float gpuMemory,
     int * useGPU, int numFrames);
-  void FinishFrameAlignment(void);
+  void FinishFrameAlignment(int binning);
   void CleanupAndFinishAlign(bool saving, int async);
   int WriteAlignComFile(CString inputFile, CString comName, int faParamInd, int useGPU,
     bool ifMdoc);

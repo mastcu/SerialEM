@@ -18,7 +18,7 @@
 #endif
 #endif
 
-#define GPUFRAME_VERSION 100
+#define GPUFRAME_VERSION 101
 #define NICE_GPU_DIVISOR 32
 #define MAX_GPU_GROUP_SIZE 5
 typedef void (*CharArgType)(const char *message);
@@ -32,6 +32,7 @@ class FrameGPU {
   int setupAligning(int alignXpad, int alignYpad, int sumXpad, int sumYpad,
                     float *alignMask, int aliFiltSize, int groupSize, int expectStackSize,
                     int doAlignSum);
+  int setupDoseWeighting(float *filter, int filtSize, float delta);
   int addToFullSum(float *fullArr, float shiftX, float shiftY);
   int returnSums(float *sumArr, float *evenArr, float *oddArr, int evenOddOnly);
   void cleanup();
@@ -69,7 +70,7 @@ class FrameGPU {
   void normalize(float *data, float scale, int numPix);
   int shiftAddCommon(float *fullArr, float *sumArr, int needBound, 
                      int fullXpad, int fullYpad, int sumXpad, int sumYpad,
-                     float shiftX, float shiftY, int shiftSource);
+                     float shiftX, float shiftY, int shiftSource, bool applyDoseFilt);
   
   float *mWorkFullSize;
   float *mEvenSum;
@@ -104,6 +105,9 @@ class FrameGPU {
   size_t mFullBytes, mSumBytes, mAlignBytes;
   double mWallStart, mWallCopy, mWallFFT, mWallShift, mWallFilt, mWallConj, mWallExtract;
   double mWallSubtract, mWallAddEO, mWallGroup;
+  int mDWFilterSize;
+  float mDWFilterDelta;
+  float *mDoseWgtFilter;
 };
 
 extern "C" {
@@ -113,6 +117,7 @@ extern "C" {
   DLL_EX_IM int fgpuSetupAligning(int alignXpad, int alignYpad, int sumXpad, int sumYpad,
                     float *alignMask, int aliFiltSize, int groupSize, int expectStackSize,
                     int doAlignSum);
+  DLL_EX_IM int fgpuSetupDoseWeighting(float *filter, int filtSize, float delta);
   DLL_EX_IM int fgpuAddToFullSum(float *fullArr, float shiftX, float shiftY);
   DLL_EX_IM int fgpuReturnSums(float *sumArr, float *evenArr, float *oddArr,
                                int evenOddOnly);

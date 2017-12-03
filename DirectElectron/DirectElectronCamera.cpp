@@ -613,7 +613,6 @@ void DirectElectronCamera::setCameraName(CString camName)
     m_DE_ImageInvertX = camP->DE_ImageInvertX;
 
     if (m_DE_CurrentCamera == camName) {
-      SEMTrace('D', "You have already selected this camera, no need to set it again.");
       return;
     }
 
@@ -1948,7 +1947,7 @@ void DirectElectronCamera::AddValidStateToMap(int checksum, std::map<int, int> &
 
 // Fill in the metadata for the mdoc file; use existing values where possible
 void DirectElectronCamera::SetImageExtraData(EMimageExtra *extra, float nameTimeout, 
-  bool allowNamePrediction, bool &nameValid)
+  bool allowNamePrediction, bool &nameConfirmed)
 {
   CString str;
   double startTime = GetTickCount();
@@ -1972,8 +1971,15 @@ void DirectElectronCamera::SetImageExtraData(EMimageExtra *extra, float nameTime
 
   // Autosave path and frames...
   if ((mLastSaveFlags & DE_SAVE_FRAMES) || saveSums || saveCount) {
-    nameValid = GetPreviousDatasetName(nameTimeout, 
+    nameConfirmed = GetPreviousDatasetName(nameTimeout, 
       allowNamePrediction ? mSetNamePredictionAgeLimit : 0, true, str);
+
+    // Get the full root path for cleaning up ancillary files
+    str = (mLastSaveDir.IsEmpty() ? mWinApp->mDEToolDlg.GetAutosaveDir():
+      mLastSaveDir) + "\\" + str;
+    mPathAndDatasetName = str;
+
+    // Attach the standard suffix and extensions
     if (mWinApp->mDEToolDlg.GetFormatForAutoSave()) {
       if (!saveCount && mNormAllInServer)
         str += saveSums ? "" : "_movies";
@@ -1981,12 +1987,13 @@ void DirectElectronCamera::SetImageExtraData(EMimageExtra *extra, float nameTime
         str += saveSums ? "_SumImages" : "_RawImages";
       else
         str += "_???Images";
-      str += CString(mServerVersion >= 1000715 ? ".mrc" : ".h5");
+      str += CString(mServerVersion >= DE_CAN_SAVE_MRC ? ".mrc" : ".h5");
     }
-    extra->mSubFramePath = (mLastSaveDir.IsEmpty() ? mWinApp->mDEToolDlg.GetAutosaveDir():
-      mLastSaveDir) + "\\" + str;
+    extra->mSubFramePath = str;
+
+    // Get the number of frames saved if not counting and name was actually gotten
     extra->mNumSubFrames = 0;
-    if (!saveCount && nameValid) {
+    if (!saveCount && nameConfirmed) {
       str.Format("Autosave %s Frames - Frames Written in Last Exposure", 
         saveSums ? "Sum" : "Raw");
       getIntProperty(str, extra->mNumSubFrames);
@@ -2009,7 +2016,7 @@ bool DirectElectronCamera::GetPreviousDatasetName(float timeout, int ageLimitSec
   double startTime;
   CTime ctdt = CTime::GetCurrentTime();
 
-  // Get the date compoent of the string as an integer
+  // Get the date component of the string as an integer
   int currentDate = ctdt.GetYear() * 10000 + ctdt.GetMonth() * 100 + ctdt.GetDay();
   name = "";
   mLastPredictedSetName= "";
@@ -2028,7 +2035,7 @@ bool DirectElectronCamera::GetPreviousDatasetName(float timeout, int ageLimitSec
           name = valStr.c_str();
           mTimeOfPrevSetName = GetTickCount();
           mDateInPrevSetName = atoi((LPCTSTR)name.Left(8));
-          mNumberInPrevSetName = atoi(valStr.c_str() + 9);
+          mNumberInPrevSetName = atoi((LPCTSTR)name.Mid(9, 5));
           if (numTry)
             SEMTrace('D', "It took %.1f sec to get name", SEMTickInterval(startTime) / 
             1000.);
@@ -2045,7 +2052,8 @@ bool DirectElectronCamera::GetPreviousDatasetName(float timeout, int ageLimitSec
     // No valid name and prediction called for and date matches:increment number and
     // make up name, 
     if (mDateInPrevSetName == currentDate && predictName) {
-      name.Format("%08d_%05d", mDateInPrevSetName, ++mNumberInPrevSetName);
+      name.Format("%08d_%05d_%s", mDateInPrevSetName, ++mNumberInPrevSetName, 
+        (LPCTSTR)mLastSuffix);
       mLastPredictedSetName = name;
     }
   }

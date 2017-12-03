@@ -2103,6 +2103,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
           mStageMoveTool->StageToolNextTask();
         else if (idc->source == TASK_STACK_FALCON)
           mFalconHelper->StackNextTask(idc->param);
+        else if (idc->source == TASK_ALIGN_DE_FRAMES)
+          mFalconHelper->AlignNextFrameTask(idc->param);
         else if (idc->source == TASK_CAL_ASTIG)
           mAutoTuning->AstigCalNextTask(idc->param);
         else if (idc->source == TASK_FIX_ASTIG)

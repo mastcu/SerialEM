@@ -202,6 +202,7 @@ public:
   GetMember(int, CurCamIndex);
   GetMember(bool, NormAllInServer);
   GetMember(int, NumLeftServerRef);
+  GetSetMember(CString, PathAndDatasetName);
   GetSetMember(CString, LastErrorString);
   void SetAndTraceErrorString(CString str);
 
@@ -303,6 +304,7 @@ private:
   double mTimeOfPrevSetName;            // Tick time when last valid set name was gotten
   int mSetNamePredictionAgeLimit;       // Number of sec that a predicted name is valid
   CString mLastPredictedSetName;        // Store name for checking when it is predicted
+  CString mPathAndDatasetName;          // The root for all output files
   CString mLastErrorString;             // Error string stored for CamController to access
 
   // Maps of acquisition parameter checksum and minute time stamp at which validated

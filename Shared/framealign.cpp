@@ -32,6 +32,7 @@ typedef void (*SetGroupSizeType)(int);
 typedef int (*GpuAvailableType)(int, float *, int);
 typedef int (*SetupSummingType)(int, int, int, int, int);
 typedef int (*SetupAligningType)(int, int, int, int, float *, int, int, int, int);
+typedef int (*SetupDoseWeightingType)(float *, int, float);
 typedef int (*AddToFullSumType)(float *, float, float);
 typedef int (*ReturnSumsType)(float *, float *, float *, int);
 typedef int (*NewFilterMaskType)(float *);
@@ -45,6 +46,7 @@ static HMODULE sGpuModule;
 static GpuAvailableType sFgpuGpuAvailable;
 static SetupSummingType sFgpuSetupSumming;
 static SetupAligningType sFgpuSetupAligning;
+static SetupDoseWeightingType sFgpuSetupDoseWeighting;
 static AddToFullSumType sFgpuAddToFullSum;
 static ReturnSumsType sFgpuReturnSums;
 static FgpuNoArgType sFgpuCleanup;
@@ -70,6 +72,7 @@ static SetPrintFuncType sFgpuSetPrintFunc;
 #define sFgpuGpuAvailable fgpuGpuAvailable
 #define sFgpuSetupSumming fgpuSetupSumming
 #define sFgpuSetupAligning fgpuSetupAligning
+#define sFgpuSetupDoseWeighting fgpuSetupDoseWeighting
 #define sFgpuAddToFullSum fgpuAddToFullSum
 #define sFgpuReturnSums fgpuReturnSums
 #define sFgpuCleanup fgpuCleanup
@@ -242,7 +245,7 @@ int FrameAlign::initialize(int binSum, int binAlign, float trimFrac, int numAllV
     B3DFREE(mShiftTemp);
     B3DFREE(mWorkFullSize);
     mWorkFullSize = B3DMALLOC(float, (fullXpad + 2) * fullYpad);
-    mShiftTemp = B3DMALLOC(float, fullXpad + 2);
+    mShiftTemp = B3DMALLOC(float, 2 * B3DMAX(nx, ny) + (fullXpad - nx) + (fullYpad - ny));
     mLinePtrs = B3DMALLOC(unsigned char *, fullYpad);
     if (testAndCleanup(!mWorkFullSize || !mShiftTemp || !mLinePtrs))
       return 2;
@@ -414,6 +417,7 @@ int FrameAlign::initialize(int binSum, int binAlign, float trimFrac, int numAllV
   // needed immediately
   mGpuAligning = (gpuFlags & GPU_FOR_ALIGNING) != 0 && summingMode >= 0;
   mGpuSumming = (gpuFlags & GPU_FOR_SUMMING) != 0 && summingMode <= 0;
+  mNumExpectedFrames = expectedZ;
   expectStack = B3DMIN(numAllVsAll, expectedZ);
   if (cumAlignAtEnd)
     expectStack = expectedZ;
@@ -472,6 +476,29 @@ int FrameAlign::initialize(int binSum, int binAlign, float trimFrac, int numAllV
   }
   mWallFullFFT = mWallBinPad = mWallBinFFT = mWallReduce = mWallShift = 0.;
   mWallConjProd = mWallFilter = mWallPreProc = 0.;
+  mDoingDoseWeighting = false;
+  CLEAR_RESIZE(mDoseWgtFilter, float, 0);
+  mDWFdelta = 0.;
+  return 0;
+}
+
+int FrameAlign::setupDoseWeighting(float priorDose, float *frameDoses, float pixelSize, 
+                                   float critScale, float aFac, float bFac, float cFac)
+{
+  int ind, filtSize;
+  mDoingDoseWeighting = true;
+  mPriorDoseCum = priorDose;
+  CLEAR_RESIZE(mFrameDoses, float, mNumExpectedFrames);
+  for (ind = 0; ind < mNumExpectedFrames; ind++)
+    mFrameDoses[ind] = frameDoses[ind];
+  mPixelSize = pixelSize;
+  mCritDoseScale = critScale;
+  mCritDoseAfac = aFac;
+  mCritDoseBfac = bFac;
+  mCritDoseCfac = cFac;
+  filtSize = 2 * B3DMAX(mFullXpad, mFullYpad);
+  B3DCLAMP(filtSize, 1024, 8193);
+  CLEAR_RESIZE(mDoseWgtFilter, float, filtSize);
   return 0;
 }
 
@@ -537,6 +564,8 @@ void FrameAlign::cleanup()
   }
   if (mGpuFlags)
     sFgpuCleanup();
+  CLEAR_RESIZE(mFrameDoses, float, 0);
+  CLEAR_RESIZE(mDoseWgtFilter, float, 0);
   mGpuFlags = 0;
 }
 
@@ -564,6 +593,7 @@ int FrameAlign::gpuAvailable(int nGPU, float *memory, int debug)
     GET_PROC(GpuAvailableType, sFgpuGpuAvailable, fgpuGpuAvailable);
     GET_PROC(SetupSummingType, sFgpuSetupSumming, fgpuSetupSumming);
     GET_PROC(SetupAligningType, sFgpuSetupAligning, fgpuSetupAligning);
+    GET_PROC(SetupDoseWeightingType, sFgpuSetupDoseWeighting, fgpuSetupDoseWeighting);
     GET_PROC(AddToFullSumType, sFgpuAddToFullSum, fgpuAddToFullSum);
     GET_PROC(ReturnSumsType, sFgpuReturnSums, fgpuReturnSums);
     GET_PROC(FgpuNoArgType, sFgpuCleanup, fgpuCleanup);
@@ -684,6 +714,8 @@ int FrameAlign::nextFrame(void *frame, int type, float *gainRef, int nxGain, int
   float *fFrame = (float *)frame;
   short *sDark = (short *)darkRef;
   unsigned short *usDark = (unsigned short *)darkRef;
+  int noiseLength = B3DMAX(mNx, mNy) / 50;
+  B3DCLAMP(noiseLength, 20, 120);
 
   // PROCESS ALL-VS-ALL RESULT FIRST
   if (mNumAllVsAll && mNumFrames > mGroupSize - 1 && mSummingMode >= 0)
@@ -883,7 +915,7 @@ int FrameAlign::nextFrame(void *frame, int type, float *gainRef, int nxGain, int
     //sliceTaperOutPad(useFrame, useType, mNx, mNy, fullArr, mFullXpad + 2, mFullXpad,
     //mFullYpad, 0, 0.);
     sliceNoiseTaperPad(useFrame, useType, mNx, mNy, fullArr, mFullXpad + 2, mFullXpad,
-                       mFullYpad, 80, 4, mShiftTemp);
+                     mFullYpad, noiseLength, 4, mShiftTemp);
     nxDimForBP = mFullXpad + 2;
     nxForBP = mFullXpad;
     nyForBP = mFullYpad;
@@ -1891,11 +1923,32 @@ int FrameAlign::addToSums(float *fullArr, int binInd, int frameNum, int filtInd)
 
   // Shift full image and add into final sum if one is passed
   if (fullArr) {
+
+    // Get a full-sized dose-weight filter regardless of binning because that is needed 
+    // for the GPU case
+    if (mDoingDoseWeighting) {
+      doseWeightFilter(mPriorDoseCum, mPriorDoseCum + mFrameDoses[frameNum], mPixelSize,
+                       mCritDoseAfac, mCritDoseBfac, mCritDoseCfac, mCritDoseScale,
+                       &mDoseWgtFilter[0], (int)mDoseWgtFilter.size(), 0.71f, &mDWFdelta);
+      if (mDebug > 1) {
+        utilPrint("1/pixel  Attenuation   Dose weight filter for frame %d:\n", frameNum);
+        for (ind = 0; ind < (int)mDoseWgtFilter.size(); ind += (int)mDoseWgtFilter.size()
+               / 35) {
+          utilPrint("%.4f  %.4f\n", ind, mDWFdelta * ind, mDoseWgtFilter[ind]);
+          if (!mDoseWgtFilter[ind])
+            break;
+        }
+      }
+      mPriorDoseCum += mFrameDoses[frameNum];
+    }
+
     //dumpFFT(fullArr, mFullXpad, mFullYpad, "full pad to sum", 1);
     // Try to do sum on GPU if flag set
     if (mGpuSumming) {
       mWallStart = wallTime();
-      if (sFgpuAddToFullSum(fullArr, xShift, yShift)) {
+      if (sFgpuSetupDoseWeighting(&mDoseWgtFilter[0], (int)mDoseWgtFilter.size(), 
+                                  mDWFdelta) ||
+          sFgpuAddToFullSum(fullArr, xShift, yShift)) {
 
         // Recover by getting existing sum back and taking FFT of current array
         if (mDebug)
@@ -1917,16 +1970,34 @@ int FrameAlign::addToSums(float *fullArr, int binInd, int frameNum, int filtInd)
       mWallStart = wallTime();
       fourierReduceImage(fullArr, mFullXpad, mFullYpad, mReduceTemp, mSumXpad, mSumYpad,
                          xShift, yShift, mShiftTemp);
-      for (ind = 0; ind < (mSumXpad + 2) * mSumYpad; ind++)
-        fullSum[ind] += mReduceTemp[ind];
-      //dumpFFT(fullSum, mSumXpad, mSumYpad, "reduced sum", 0);
       mWallReduce += wallTime() - mWallStart;
+      mWallStart = wallTime();
+
+      // Just scale the delta by the binning to use the initial part of the filter
+      // on already-reduced images
+      if (mDoingDoseWeighting) {
+        filterAndAddToSum(mReduceTemp, fullSum, mSumXpad, mSumYpad, &mDoseWgtFilter[0],
+                        mDWFdelta * mBinSum);
+      //utilDumpFFT(mReduceTemp, mSumXpad, mSumYpad, "reduced", 0, frameNum);
+      } else {
+        for (ind = 0; ind < (mSumXpad + 2) * mSumYpad; ind++)
+          fullSum[ind] += mReduceTemp[ind];
+      }
+      mWallFilter += wallTime() - mWallStart;
     } else if (!mGpuSumming) {
       mWallStart = wallTime();
       fourierShiftImage(fullArr, mFullXpad, mFullYpad, xShift, yShift , mShiftTemp);
       mWallShift += wallTime() - mWallStart;
-      for (ind = 0; ind < (mFullXpad + 2) * mFullYpad; ind++)
-        fullSum[ind] += fullArr[ind];
+      mWallStart = wallTime();
+      if (mDoingDoseWeighting) {
+        filterAndAddToSum(fullArr, fullSum, mFullXpad, mFullYpad, &mDoseWgtFilter[0],
+                          mDWFdelta);
+      //utilDumpFFT(fullArr, mFullXpad, mFullYpad, "shifted", 0, frameNum);
+      } else {
+        for (ind = 0; ind < (mFullXpad + 2) * mFullYpad; ind++)
+          fullSum[ind] += fullArr[ind];
+      }
+      mWallFilter += wallTime() - mWallStart;
     }
   }
 
@@ -2253,4 +2324,64 @@ void FrameAlign::analyzeFRCcrossings(float *ringCorrs, float frcDeltaR, float &h
   halfNyq = 0.;
   for (ind = 0; ind < numBins; ind++)
     halfNyq += (float)(ringCorrs[ind + cenBin - numBins / 2] / numBins);
+}
+
+/*
+ * Apply filter to image and add it to the sum; this is a simplified form of 
+ * XcorrFilterPart and saves the time of zeroing regions where the filter is zero, plus
+ * saving the second pass through to add to sum
+ */
+void FrameAlign::filterAndAddToSum(float *fft, float *array, int nx, int ny, float *ctf, 
+                       float delta)
+{
+  float x, delx, dely, y, s, maxFreq;
+  double ysq;
+  int ix, iy, index, ind, indp1, indf, nxDiv2, nxDiv2p1, nyMinus1;
+  int nxMax;
+  int numThreads, maxThreads = 16;
+
+  nxDiv2 = nx / 2;
+  nxDiv2p1 = nxDiv2 + 1;
+  nyMinus1 = ny - 1;
+  delx = (float)(1.0 / nx);
+  dely = (float)(1.0 / ny);
+
+  /* Find last non-zero filter value in range that matters */
+  for (ix = (int)(0.707 / delta); ix > 1; ix--)
+    if (ctf[ix])
+      break;
+
+  /* Get a frequency limit to apply in Y and a limit to X indexes */
+  maxFreq = (ix + 1) * delta;
+  nxMax = (int)(maxFreq / delx) + 1;
+  B3DCLAMP(nxMax, 1, nxDiv2);
+
+  /* This formula give 1.5+ at 128 and 11.5+ at 4096 */
+  numThreads = B3DNINT(3.33 * (log10((double)nx * ny) - 3.75));
+  B3DCLAMP(numThreads, 1, maxThreads);
+  numThreads = numOMPthreads(numThreads);
+
+  /*   apply filter function on fft, put result in array */
+#pragma omp parallel for num_threads(numThreads)                                 \
+  shared(nyMinus1, dely, maxFreq, nxDiv2, array, nxMax, delta, fft, nxDiv2p1) \
+  private(iy, y, ix, ind, index, ysq, x, indp1, s, indf)
+  for (iy = 0; iy <= nyMinus1; iy++) {
+    y = iy * dely;
+    index = iy * nxDiv2p1;
+    if (y > 0.5)
+      y = 1.0f - y;
+    if (y > maxFreq)
+      continue;
+    ysq = y * y;
+    x = 0.0;
+    for (ix = 0; ix <= nxMax; ix++) {
+      ind = 2 * (index + ix);
+      indp1 = ind + 1;
+      s = (float)sqrt(x * x + ysq);
+      indf = (int)(s / delta + 0.5f);
+      array[ind] += fft[ind] * ctf[indf];
+      array[indp1] += fft[indp1] * ctf[indf];
+      x = x + delx;
+    }
+  }
 }

@@ -1755,8 +1755,8 @@ int CCameraController::MakeMdocFrameAlignCom(void)
       "a com file for aligning frames in IMOD");
     return 1;
   }
-  if (mParam->K2Type && !(IsConSetSaving(conSet, mParam, true) && conSet->alignFrames && 
-    conSet->useFrameAlign > 1)) {
+  if (mParam->K2Type && !(IsConSetSaving(conSet,RECORD_CONSET, mParam, true) && 
+    conSet->alignFrames && conSet->useFrameAlign > 1)) {
       SEMMessageBox("The Record parameters must be set for frame saving and aligning\n"
         "in IMOD in order to make a com file for aligning frames");
       return 1;
@@ -1867,6 +1867,30 @@ int CCameraController::MakeMdocFrameAlignCom(void)
   if (!mParam->useSocket)
     ReleaseCamera(CREATE_FOR_CURRENT);
   return retVal;
+}
+
+// Take the frame file path for Falcon or DE, and tell FalconHelper to write the com file
+// for alignframes
+void CCameraController::MakeOneFrameAlignCom(CString &localFramePath, int paramInd)
+{
+  int err;
+  CString dirPath, filename, root, ext;
+  
+  // Extract folder and make sure that
+  // helper has this as the last frame folder, and compose name
+  UtilSplitPath(localFramePath, dirPath, filename);
+  mFalconHelper->SetLastFrameDir(dirPath);
+  UtilSplitExtension(filename, root, ext);
+  if (mComPathIsFramePath)
+    root = dirPath + '\\' + root + ".pcm";
+  else
+    root = mAlignFramesComPath + '\\' + root + ".pcm";
+  err = mFalconHelper->WriteAlignComFile(filename, root, 
+    paramInd, mFalconHelper->GetUseGpuForAlign(1),
+    false);
+  if (err)
+    PrintfToLog("WARNING: The com file for aligning was not saved: %s",
+    SEMCCDErrorMessage(err));
 }
 
 // Set the next shot for early return with full sum if possible and appropriate
@@ -2211,11 +2235,18 @@ void CCameraController::Capture(int inSet, bool retrying)
   // For JEOL, need a reliable value of tilt.  Tilt is needed before frame saving setups
   mTiltBefore = (float)mScope->GetTiltAngle();
 
-  // First manage K2 1) Turning on frame-saving if it is supposed to align frames in IMOD
-  // 2) switching to dark-subtracted if saving frames and they are
+  // First turn on the save flag for EVERYBODY if it is supposed to align frames in IMOD
+  if (IsConSetSaving(&conSet, inSet, mParam, false)) {
+    if (mParam->DE_camType)
+      conSet.saveFrames |= DE_SAVE_MASTER;
+    else if (!conSet.saveFrames)
+      conSet.saveFrames = 1;
+  }
+
+  // Next manage K2 switching to dark-subtracted if saving frames and they are
   // supposed to be unnormalized.
   if (mParam->K2Type && conSet.doseFrac) {
-    if (IsConSetSaving(&conSet, mParam, true) && !conSet.saveFrames)
+    if (IsConSetSaving(&conSet, inSet, mParam, true) && !conSet.saveFrames)
       conSet.saveFrames = 1;
     if (conSet.saveFrames && conSet.processing == GAIN_NORMALIZED && 
         mSaveUnnormalizedFrames && CAN_PLUGIN_DO(CAN_GAIN_NORM, mParam))
@@ -2276,11 +2307,6 @@ void CCameraController::Capture(int inSet, bool retrying)
   weCanAlignFalcon = falconHasFrames && 
     mWinApp->mScope->GetPluginVersion() >= PLUGFEI_ALLOWS_ALIGN_HERE &&
     !(mParam->FEItype == FALCON3_TYPE && mLocalFalconFramePath.IsEmpty());
-
-// Simply turn on the save flag where it has to save and retain the frames
-  if (falconHasFrames && conSet.alignFrames && weCanAlignFalcon && 
-    conSet.useFrameAlign > 1)
-    conSet.saveFrames = 1;
 
   mSavingFalconFrames = falconHasFrames && conSet.saveFrames;
 
@@ -2343,9 +2369,17 @@ void CCameraController::Capture(int inSet, bool retrying)
   }
 
   // Set up DE12 saving
+  mRemoveAlignedDEframes = false;
   if (mWinApp->mDEToolDlg.CanSaveFrames(mParam)) {
     setState = 0;
     sumCount = conSet.DEsumCount;
+
+    // Turn on only the save master flag if aligning only and set flag to remove frames
+    if (conSet.alignFrames && !(conSet.saveFrames & DE_SAVE_MASTER)) {
+      conSet.saveFrames = DE_SAVE_MASTER;
+      mRemoveAlignedDEframes = true;
+    }
+
     if (conSet.saveFrames & DE_SAVE_MASTER) {
 
       // Set up the traditional frame/sum/final and new counting saving flags
@@ -2372,8 +2406,9 @@ void CCameraController::Capture(int inSet, bool retrying)
         }
       }
 
-      // Get full folder and suffix, again make sure folder is OK
-      ComposeFramePathAndName(false);
+      // Get full folder and suffix, using temporary name if aligning only
+      // again make sure folder is OK
+      ComposeFramePathAndName(mRemoveAlignedDEframes);
       if (!mFrameFolder.IsEmpty() && CreateFrameDirIfNeeded(mFrameFolder, &logmess, 'D')){
         SEMMessageBox(logmess);
         ErrorCleanup(1);
@@ -2479,6 +2514,7 @@ void CCameraController::Capture(int inSet, bool retrying)
   // DE cameras: Handle numerous items
   mTD.AlignFrames = conSet.alignFrames;
   mTD.UseFrameAlign = false;
+  mDoingDEframeAlign = 0;
   if (mParam->DE_camType) {
 
     // Set the frames per second and AlignfFrames if aligning in server
@@ -2489,6 +2525,21 @@ void CCameraController::Capture(int inSet, bool retrying)
     if (mParam->CamFlags & DE_CAM_CAN_ALIGN)
       mTD.AlignFrames = (conSet.useFrameAlign && (conSet.saveFrames & DE_SAVE_MASTER)) ? 
         0 : conSet.alignFrames;
+
+    // Set up the flags for our own frame alignment
+    if (conSet.alignFrames && (mParam->CamFlags & DE_WE_CAN_ALIGN)) {
+      mDoingDEframeAlign = conSet.useFrameAlign;
+      if (conSet.useFrameAlign > 1 && mAlignWholeSeriesInIMOD)
+        mDoingDEframeAlign = 0;
+    }
+
+    // Give error if TIFF file saving is selected for incompatible actions
+    if (!mWinApp->mDEToolDlg.GetFormatForAutoSave() && 
+      conSet.alignFrames && (mParam->CamFlags & DE_WE_CAN_ALIGN) && conSet.useFrameAlign){
+        SEMMessageBox("You must have saving to MRC files selected to align frames");
+        ErrorCleanup(1);
+        return;
+    }
 
     // Set hardware binning if available and needed
     mTD.UseHardwareBinning = -1;
@@ -7081,9 +7132,9 @@ void CCameraController::DisplayNewImage(BOOL acquired)
 {
   double stX, stZ, ISX, ISY;
   int spotSize, chan, i, err, ix, iy, invertCon, operation, ixoff, iyoff, divideBy;
-  int sumCount, camFrames, typext = 0, ldSet = 0;
+  int alignErr, sumCount, camFrames, typext = 0, ldSet = 0;
   BOOL lowDoseMode, hasUserPtSave = false;
-  bool nameValid, readLocally = false;
+  bool nameConfirmed, readLocally = false;
   float axoff, ayoff, specRate, camRate;
   double delay;
   CString message, str, root, ext, localFramePath;
@@ -7219,7 +7270,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
 
         // return now, when the stacking/aligning is done it will come back in
         if (mStartedFalconAlign) {
-          mWinApp->SetStatusText(SIMPLE_PANE, "ALIGNING " + CurrentSetName());
+          mWinApp->SetStatusText(SIMPLE_PANE, "ALIGNING " + CurrentSetName().MakeUpper());
           mInDisplayNewImage = false;
           return;
         }
@@ -7227,16 +7278,19 @@ void CCameraController::DisplayNewImage(BOOL acquired)
     }
 
     // Do similar operation for DE align
+    // Get the extra data structure now so that name can be stored in it
     if (mDoingDEframeAlign == 1 && !mStartedExtraForDEalign) {
       mExtraDeferred = new EMimageExtra;
       mTD.DE_Cam->SetImageExtraData(mExtraDeferred, mDESetNameTimeoutUsed, false, 
-        nameValid);
-      if (nameValid) {
+        nameConfirmed);
+
+      // If name was availble, proceed to start the align
+      if (nameConfirmed) {
         mStartedExtraForDEalign = !mFalconHelper->AlignFramesFromFile(
-          extra->mSubFramePath, mConSetsp[mLastConSet], mParam->rotationFlip, 
+          mExtraDeferred->mSubFramePath, mConSetsp[mLastConSet], mParam->rotationFlip, 
           mTD.DivideBy2, (float)mTD.CountScaling, ix, &mTD);
         if (mStartedExtraForDEalign) {
-          mWinApp->SetStatusText(SIMPLE_PANE, "ALIGNING " + CurrentSetName());
+          mWinApp->SetStatusText(SIMPLE_PANE, "ALIGNING " + CurrentSetName().MakeUpper());
           mInDisplayNewImage = false;
           return;
         }
@@ -7519,7 +7573,10 @@ void CCameraController::DisplayNewImage(BOOL acquired)
           (float)B3DMAX(1, i));
       else if (mNumSubsetAligned > 0 && mParam->K2Type && !lastConSetp->sumK2Frames)
         partialExposure = (float)(mExposure * B3DMIN(mNumSubsetAligned, i) / 
-        (float)B3DMAX(1, i));
+          (float)B3DMAX(1, i));
+      else if (mNumSubsetAligned > 0 && mParam->DE_camType)
+        partialExposure = (float)((mExposure * mNumSubsetAligned) / 
+          mFalconHelper->GetNumFiles());
       else 
         partialExposure = mFalconHelper->AlignedSubsetExposure(
           lastConSetp->summedFrameList, mParam->K2Type ? 
@@ -7623,15 +7680,18 @@ void CCameraController::DisplayNewImage(BOOL acquired)
     }
 
     // Get the extra header data - get JEOL data from last update to save time
+    // Adopt the stored extra if getting deferred sum or have extra from starting DE align
     if (mTD.GetDeferredSum || mStartedExtraForDEalign) {
       extra = mExtraDeferred;
       image->SetUserData(extra);
       mExtraDeferred = NULL;
-    } 
+    }
     
     if (!mTD.GetDeferredSum) {
-      extra = new EMimageExtra;
-      image->SetUserData(extra);
+      if (!mStartedExtraForDEalign) {
+        extra = new EMimageExtra;
+        image->SetUserData(extra);
+      }
       extra->m_fTilt = mTiltBefore;
       extra->mDefocus = defocus;
       if (!mParam->STEMcamera)
@@ -7710,8 +7770,8 @@ void CCameraController::DisplayNewImage(BOOL acquired)
 
     // Now start using current values to update extra for a deferred sum
 
-    // Report the fate of frame-saving
-    if (IsConSetSaving(lastConSetp, mParam, true) || 
+    // Report the fate of frame-saving for K2 and Falcon
+    if (IsConSetSaving(lastConSetp, mLastConSet, mParam, true) || 
       (mSavingFalconFrames && !mDeferStackingFrames)) {
         if (mTD.NumAsyncSumFrames >= 0) {
           mTD.NumFramesSaved = B3DNINT(mExposure / mTD.FrameTime);
@@ -7744,40 +7804,29 @@ void CCameraController::DisplayNewImage(BOOL acquired)
             extra->mSubFramePath = mPathForFrames;
 
             // Write com file for Falcon aligning if flag is set in advanced case:
-            // Here local frame path is required, extract folder and make sure that
-            // helper has this as the last frame folder, and compose name
+            // Here local frame path is required
             if (mParam->FEItype && FCAM_ADVANCED(mParam) && 
               (mTD.K2ParamFlags & K2_MAKE_ALIGN_COM)) {
-                UtilSplitPath(localFramePath, str, message);
-                mFalconHelper->SetLastFrameDir(str);
-                UtilSplitExtension(message, root, ext);
-                if (mComPathIsFramePath)
-                  root = str + '\\' + root + ".pcm";
-                else
-                  root = mAlignFramesComPath + '\\' + root + ".pcm";
-                err = mFalconHelper->WriteAlignComFile(message, root, 
-                  lastConSetp->faParamSetInd, mFalconHelper->GetUseGpuForAlign(1),
-                  false);
-                if (err)
-                  PrintfToLog("WARNING: The com file for aligning was not saved: %s",
-                  SEMCCDErrorMessage(err));
+                MakeOneFrameAlignCom(localFramePath, lastConSetp->faParamSetInd);
             }
           }
         }
         mWinApp->AppendToLog(message);
     }
 
+    // MOVE THIS DOWN BELOW DE AFTER REVIEW
     // Report on frame aligning if not deferred
-    if (mTD.UseFrameAlign && mTD.NumAsyncSumFrames < 0) {
-      if (mParam->FEItype && ((err = mFalconHelper->GetAlignError()) != 0 || 
+    if ((mTD.UseFrameAlign && mTD.NumAsyncSumFrames < 0) || 
+      (mDoingDEframeAlign == 1 && mStartedExtraForDEalign)) {
+      if (!mParam->K2Type && ((alignErr = mFalconHelper->GetAlignError()) != 0 || 
         !(ix = mFalconHelper->GetNumAligned()))) {
-          if (!ix && !err && !mTD.ErrorFromSave) {
+          if (!ix && !alignErr && !mTD.ErrorFromSave) {
             message = "An unknown error occurred when aligning frames";
           } else {
-            if (!ix && !err)
-              err = mTD.ErrorFromSave;
+            if (!ix && !alignErr)
+              alignErr = mTD.ErrorFromSave;
             message.Format("Error %d occurred when aligning frames:  %s\r\n", 
-              err, mFalconHelper->GetErrorString(err));
+              alignErr, mFalconHelper->GetErrorString(alignErr));
           }
           mWinApp->AppendToLog(message);
       } else if (mNumFrameAliLogLines > 0) {
@@ -7797,7 +7846,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
             mTD.FaMaxResMax, mTD.FaRawDist);
         }
         if ((mParam->K2Type && mGettingFRC) || 
-          (mParam->FEItype && mFalconHelper->GetGettingFRC()))
+          (!mParam->K2Type && mFalconHelper->GetGettingFRC()))
             PrintfToLog(" FRC crossings 0.5: %.4f  0.25: %.4f  0.125: %.4f  is %.4f at "
               "0.25/pix", mTD.FaCrossHalf / K2FA_FRC_INT_SCALE, 
               mTD.FaCrossQuarter / K2FA_FRC_INT_SCALE, 
@@ -7808,43 +7857,58 @@ void CCameraController::DisplayNewImage(BOOL acquired)
     // Get special data for DE camera
     if (mParam->DE_camType >= 2 && !(mTD.ProcessingPlus & CONTINUOUS_USE_THREAD)) {
       if (!mStartedExtraForDEalign)
-        mTD.DE_Cam->SetImageExtraData(extra, mDESetNameTimeoutUsed, true, nameValid);
+        mTD.DE_Cam->SetImageExtraData(extra, mDESetNameTimeoutUsed, 
+          mDoingDEframeAlign < 2, nameConfirmed);
       else
-        nameValid = true;
-      err = lastConSetp->saveFrames;
-      if (err & DE_SAVE_MASTER) {
+        nameConfirmed = true;
+      alignErr = 0;
+      if (IsConSetSaving(lastConSetp, mLastConSet, mParam, false)) {
 
-        // Get frame time, number of camera frames and # in summed frames
-        // Counting mode has no readout on  frames saved, so we have to fill that in
-        frameTimeForDose = (float)(1.f / mTD.FramesPerSec);
-        camFrames = B3DNINT(mExposure / frameTimeForDose);
-        sumCount = B3DMAX(1, lastConSetp->DEsumCount);
-        if (lastConSetp->K2ReadMode && (mParam->CamFlags & DE_CAM_CAN_COUNT)) {
-          sumCount = B3DMAX(1, lastConSetp->sumK2Frames);
-          extra->mNumSubFrames = camFrames / sumCount;
-        }
-        if (!nameValid)
-          extra->mNumSubFrames = camFrames / sumCount;
-        if (extra->mNumSubFrames > 0) {
-          message.Format(" %d %sframes %s saved to %s", extra->mNumSubFrames, 
-            sumCount > 1 ? "" : "summed ", nameValid ? "were" : "are being", 
-            (LPCTSTR)extra->mSubFramePath);
-        } else  {
-          message.Format("Saving of %d %sframes was requested but the server says no "
-            "frames were saved", camFrames / sumCount, sumCount > 1 ? "" : "summed ");
-        }
+          // Get frame time, number of camera frames and # in summed frames
+          // Counting mode has no readout on  frames saved, so we have to fill that in
+          frameTimeForDose = (float)(1.f / mTD.FramesPerSec);
+          camFrames = B3DNINT(mExposure / frameTimeForDose);
+          sumCount = B3DMAX(1, lastConSetp->DEsumCount);
 
-        // Set up summed frame list for the dose estimate below
-        // There shouldn't be any remainder any more, but leave it here
-        summedList.push_back((short)camFrames / sumCount);
-        summedList.push_back(sumCount);
-        if (camFrames % sumCount) {
-          summedList.push_back(1);
-          summedList.push_back((short)(camFrames % sumCount));
-        }
-        if (!extra->mNumSubFrames && mScope->GetSimulationMode())
-          extra->mNumSubFrames = (camFrames + sumCount - 1) / sumCount;
-        mWinApp->AppendToLog(message);
+          // Just compute number of frames for counting mode or if saving is in progress
+          if (lastConSetp->K2ReadMode && (mParam->CamFlags & DE_CAM_CAN_COUNT)) {
+            sumCount = B3DMAX(1, lastConSetp->sumK2Frames);
+            extra->mNumSubFrames = camFrames / sumCount;
+          }
+          if (!nameConfirmed)
+            extra->mNumSubFrames = camFrames / sumCount;
+          if (extra->mNumSubFrames > 0) {
+            message.Format(" %d %sframes %s saved to %s", extra->mNumSubFrames, 
+              sumCount > 1 ? "" : "summed ", nameConfirmed ? "were" : "are being", 
+              (LPCTSTR)extra->mSubFramePath);
+          } else  {
+            message.Format("Saving of %d %sframes was requested but the server says no "
+              "frames were saved", camFrames / sumCount, sumCount > 1 ? "" : "summed ");
+          }
+
+          // Set up summed frame list for the dose estimate below
+          // There shouldn't be any remainder any more, but leave it here
+          summedList.push_back((short)camFrames / sumCount);
+          summedList.push_back(sumCount);
+          if (camFrames % sumCount) {
+            summedList.push_back(1);
+            summedList.push_back((short)(camFrames % sumCount));
+          }
+          if (!extra->mNumSubFrames && mScope->GetSimulationMode())
+            extra->mNumSubFrames = (camFrames + sumCount - 1) / sumCount;
+          mWinApp->AppendToLog(message);
+      }
+
+      // Write com file for IMOD alignment
+      if (mDoingDEframeAlign == 2) {
+        mFalconHelper->SetRotFlipForComFile(mParam->rotationFlip);
+        MakeOneFrameAlignCom(extra->mSubFramePath, lastConSetp->faParamSetInd);
+      }
+
+      // Remove frames if flag set and no align error
+      if (mRemoveAlignedDEframes && !alignErr) {
+        UtilRemoveFile(extra->mSubFramePath);
+        UtilRemoveFile(mTD.DE_Cam->GetPathAndDatasetName() + "_info.txt");
       }
     }
 
@@ -9644,22 +9708,33 @@ CString CCameraController::MakeFullDMRefName(CameraParameters *camP, const char 
   return ref;
 }
 
-// Returns true if all conditions are set for saving from K2 or Falcon camera/control set
-bool CCameraController::IsConSetSaving(ControlSet *conSet, CameraParameters *param,
-  bool K2only)
+// Returns true if all conditions are set for frame-saving from K2 or permanent 
+// frame-saving from Falcon or DE based on camera and control set
+bool CCameraController::IsConSetSaving(ControlSet *conSet, int setNum,
+  CameraParameters *param, bool K2only)
 {
   bool falconCanSave = (IS_BASIC_FALCON2(param) && GetMaxFalconFrames(param) && 
     mFrameSavingEnabled) || 
     (IS_FALCON2_OR_3(param) && (param->CamFlags & PLUGFEI_CAN_DOSE_FRAC));
   bool weCanAlignFalcon = falconCanSave && 
     mWinApp->mScope->GetPluginVersion() >= PLUGFEI_ALLOWS_ALIGN_HERE &&
-    !(mParam->FEItype == FALCON3_TYPE && mLocalFalconFramePath.IsEmpty());
+    !(param->FEItype == FALCON3_TYPE && mLocalFalconFramePath.IsEmpty());
+  BOOL DEcanSave = mWinApp->mDEToolDlg.CanSaveFrames(param);
+  bool weCanAlignDE = DEcanSave && (param->CamFlags & DE_WE_CAN_ALIGN);
 
-  return (((param->K2Type && conSet->doseFrac) || (falconCanSave && !K2only)) &&
-    (conSet->saveFrames || (conSet->useFrameAlign > 1 && ((param->K2Type &&
-    CAN_PLUGIN_DO(CAN_ALIGN_FRAMES, param)) || (!K2only && weCanAlignFalcon)) &&
-    (conSet->alignFrames || mWinApp->mTSController->GetFrameAlignInIMOD() ||
-    mWinApp->mMacroProcessor->GetAlignWholeTSOnly()))));
+  // Align is turned off during TS/script with these set, but need it for Record
+  bool alignAnyway = setNum == RECORD_CONSET && 
+    (mWinApp->mTSController->GetFrameAlignInIMOD() ||
+    mWinApp->mMacroProcessor->GetAlignWholeTSOnly());
+
+  return (((param->K2Type && conSet->doseFrac) ||   // Saving possible for camera type
+           ((falconCanSave || DEcanSave) && !K2only)) &&
+          (((!DEcanSave && conSet->saveFrames) ||   // Ordinary saving selected
+            (DEcanSave && (conSet->saveFrames & DE_SAVE_MASTER))) ||
+           (conSet->useFrameAlign > 1 &&            // Or forced saving is called for
+            ((param->K2Type && CAN_PLUGIN_DO(CAN_ALIGN_FRAMES, param)) || 
+             (!K2only && (weCanAlignFalcon || weCanAlignDE))) &&
+            (conSet->alignFrames || alignAnyway)))); // and align should be done
 }
 
 // One-time management of directory for Falcon frames
