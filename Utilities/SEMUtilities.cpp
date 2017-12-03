@@ -233,7 +233,7 @@ void UtilRemoveFile(CString filename)
       CFile::Remove((LPCTSTR)filename);
   }
   catch (CFileException *cerr) {
-    delete cerr;
+    cerr->Delete();
   }
 }
 
