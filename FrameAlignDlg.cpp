@@ -608,18 +608,6 @@ void CFrameAlignDlg::OnDeltaposSpinSmoothCrit(NMHDR *pNMHDR, LRESULT *pResult)
   FormattedSpinnerValue(pNMHDR, pResult, 10, 30, mSmoothCrit, m_strSmoothCrit, "%d");
 }
 
-void CFrameAlignDlg::FormattedSpinnerValue(NMHDR *pNMHDR, LRESULT *pResult, int lowerLim,
-  int upperLim, int &oldNewVal, CString &str, const char *format)
-{
-  if (NewSpinnerValue(pNMHDR, pResult, oldNewVal, lowerLim, upperLim, oldNewVal))
-    return;
-  UpdateData(true);
-  str.Format(format, oldNewVal);
-  UpdateData(false);
-  *pResult = 0;
-}
-
-
 void CFrameAlignDlg::OnAlignSubset()
 {
   UpdateData(true);

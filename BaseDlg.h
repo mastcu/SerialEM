@@ -78,6 +78,8 @@ public:
                                 int *numInPanel, int *panelStart, int numCameras);
   void EnableDlgItem(int nID, BOOL enable);
   void ShowDlgItem(int nID, bool show);
+  void FormattedSpinnerValue(NMHDR *pNMHDR, LRESULT *pResult, int lowerLim,
+    int upperLim, int &oldNewVal, CString &str, const char *format);
 };
 
 //{{AFX_INSERT_LOCATION}}

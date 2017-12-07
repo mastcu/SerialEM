@@ -169,6 +169,4 @@ public:
   BOOL m_bUseFrameFolder;
   afx_msg void OnUseFrameFolder();
   CButton m_butTruncateAbove;
-  void FormattedSpinnerValue(NMHDR *pNMHDR, LRESULT *pResult, int lowerLim,
-    int upperLim, int &oldNewVal, CString &str, const char *format);
 };

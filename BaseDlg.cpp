@@ -134,6 +134,19 @@ void CBaseDlg::ShowDlgItem(int nID, bool show)
     but->ShowWindow(show ? SW_SHOW : SW_HIDE);
 }
 
+// Gets a new spinner value within the given limits and sets some formatted text with the
+// value
+void CBaseDlg::FormattedSpinnerValue(NMHDR *pNMHDR, LRESULT *pResult, int lowerLim,
+  int upperLim, int &oldNewVal, CString &str, const char *format)
+{
+  if (NewSpinnerValue(pNMHDR, pResult, oldNewVal, lowerLim, upperLim, oldNewVal))
+    return;
+  UpdateData(true);
+  str.Format(format, oldNewVal);
+  UpdateData(false);
+  *pResult = 0;
+}
+
 // If nonModal, capture all the stray mouse events not on a control and yield focus
 void CBaseDlg::OnLButtonDown(UINT nFlags, CPoint point) 
 {
