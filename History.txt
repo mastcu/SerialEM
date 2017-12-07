@@ -3,6 +3,8 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+12/6/17: Changed script beam size measurement from radius to diameter.
+
 12/3/17: Added frame alignment for DE camera frames.
 
 12/3/17: Fixed coordinates in piece put into mdoc file.

@@ -3341,9 +3341,9 @@ void CMacroProcessor::NextCommand()
     bmean = mWinApp->mShiftManager->GetPixelSize(&mImBufs[index]);
     if (!bmean)
       ABORT_LINE("No pixel size is available for the image for line:\n\n");
-    cpe *= index2 * bmean;
-    report.Format("Beam size measured to be %.3f um from %d quadrants, fit error %.3f",
-      cpe, ix1, fitErr);
+    cpe *= 2.f * index2 * bmean;
+    report.Format("Beam diameter measured to be %.3f um from %d quadrants, fit error %.3f"
+      , cpe, ix1, fitErr);
     mWinApp->AppendToLog(report, mLogAction);
     SetReportedValues(cpe, ix1, fitErr);
 
