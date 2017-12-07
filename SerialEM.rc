@@ -2758,31 +2758,32 @@ BEGIN
     EDITTEXT        IDC_EDIT_EXTRA_DELAY,107,147,32,14,ES_AUTOHSCROLL
 END
 
-IDD_DE_REFERENCE DIALOGEX 0, 0, 203, 177
+IDD_DE_REFERENCE DIALOGEX 0, 0, 190, 191
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Direct Electron Server Reference Maker"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "YES",IDOK,41,156,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,112,156,50,14
     CONTROL         "Linear mode",IDC_RLINEAR_REF,"Button",BS_AUTORADIOBUTTON | WS_GROUP,14,15,57,10
-    CONTROL         "Pre-counting",IDC_RPRE_COUNTING,"Button",BS_AUTORADIOBUTTON,75,15,57,10
-    CONTROL         "Post-counting",IDC_RPOST_COUNTING,"Button",BS_AUTORADIOBUTTON,135,15,60,10
-    GROUPBOX        "Type of Processing",IDC_STAT_PROC_TYPE,7,5,189,23,WS_GROUP
-    CONTROL         "Dark",IDC_RDARK_REF,"Button",BS_AUTORADIOBUTTON | WS_GROUP,66,41,31,10
-    CONTROL         "Gain",IDC_RGAIN_REF,"Button",BS_AUTORADIOBUTTON,106,41,30,10
-    GROUPBOX        "Type of Reference",IDC_STAT_REF_TYPE,55,31,93,23,WS_GROUP
-    CTEXT           "Reference for 25.00 frames/sec",IDC_STAT_REF_FPS,42,57,119,8
-    LTEXT           "Exposure time:",IDC_STATIC,48,85,50,8
-    LTEXT           "sec",IDC_STATIC,143,85,12,8
-    EDITTEXT        IDC_EDIT_REF_EXPOSURE,100,82,40,14,ES_AUTOHSCROLL
-    LTEXT           "Number of acquisitions:",IDC_STATIC,43,103,78,8
-    CONTROL         "",IDC_SPIN_NUM_REPEATS,"msctls_updown32",UDS_ARROWKEYS,149,101,10,14
-    EDITTEXT        IDC_EDIT_NUM_REPEATS,123,101,25,14,ES_AUTOHSCROLL
-    PUSHBUTTON      "?",IDC_BUTHELP,190,160,11,10
-    CTEXT           "ARE YOU READY TO PROCEED?",IDC_STATIC,7,145,189,8
-    CTEXT           "To acquire a gain reference, be sure that the beam is uniform over the whole field of the camera and has a suitable intensity, and that no specimen is in the way.",IDC_STAT_GAIN_ADVICE,7,118,189,28
-    CONTROL         "With hardware binning by 2",IDC_USE_HARDWARE_BIN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,49,68,106,10
+    CONTROL         "Pre-counting",IDC_RPRE_COUNTING,"Button",BS_AUTORADIOBUTTON,14,26,57,10
+    CONTROL         "Post-counting",IDC_RPOST_COUNTING,"Button",BS_AUTORADIOBUTTON,14,37,60,10
+    CONTROL         "Super-resolution",IDC_RSUPER_RES_REF,"Button",BS_AUTORADIOBUTTON,14,48,70,10
+    GROUPBOX        "Type of Processing",IDC_STAT_PROC_TYPE,7,5,98,57,WS_GROUP
+    CONTROL         "Dark",IDC_RDARK_REF,"Button",BS_AUTORADIOBUTTON | WS_GROUP,120,26,31,10
+    CONTROL         "Gain",IDC_RGAIN_REF,"Button",BS_AUTORADIOBUTTON,120,37,30,10
+    GROUPBOX        "Type of Reference",IDC_STAT_REF_TYPE,112,16,71,35,WS_GROUP
+    DEFPUSHBUTTON   "YES",IDOK,34,170,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,105,170,50,14
+    CTEXT           "Reference for 25.00 frames/sec",IDC_STAT_REF_FPS,35,68,119,8
+    LTEXT           "Exposure time:",IDC_STATIC,41,96,50,8
+    LTEXT           "sec",IDC_STATIC,136,96,12,8
+    EDITTEXT        IDC_EDIT_REF_EXPOSURE,93,93,40,14,ES_AUTOHSCROLL
+    LTEXT           "Number of acquisitions:",IDC_STATIC,36,114,78,8
+    CONTROL         "",IDC_SPIN_NUM_REPEATS,"msctls_updown32",UDS_ARROWKEYS,142,112,10,14
+    EDITTEXT        IDC_EDIT_NUM_REPEATS,116,112,25,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "?",IDC_BUTHELP,172,174,11,10
+    CTEXT           "ARE YOU READY TO PROCEED?",IDC_STATIC,7,157,176,8
+    CTEXT           "To acquire a gain reference, be sure that the beam is uniform over the whole field of the camera and has a suitable intensity, and that no specimen is in the way.",IDC_STAT_GAIN_ADVICE,7,130,176,28
+    CONTROL         "With hardware binning by 2",IDC_USE_HARDWARE_BIN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,42,79,106,10
 END
 
 IDD_ONELINESCRIPT DIALOGEX 0, 0, 163, 24
@@ -3200,9 +3201,9 @@ BEGIN
     IDD_DE_REFERENCE, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 196
+        RIGHTMARGIN, 183
         TOPMARGIN, 7
-        BOTTOMMARGIN, 170
+        BOTTOMMARGIN, 184
     END
 
     IDD_ONELINESCRIPT, DIALOG
@@ -5003,6 +5004,7 @@ BEGIN
     IDC_RLINEAR_REF         "Make references for integrating mode"
     IDC_RPRE_COUNTING       "Make references applied to correct frames before electron counting"
     IDC_RPOST_COUNTING      "Make gain reference for correcting electron-counted images"
+    IDC_RSUPER_RES_REF      "Make gain reference for correcting super-resolution images"
     IDC_RDARK_REF           "Make a dark reference"
     IDC_RGAIN_REF           "Make a gain reference with uniform beam illumination"
     IDC_EDIT_REF_EXPOSURE   "Exposure time for each acquisition used to make reference"

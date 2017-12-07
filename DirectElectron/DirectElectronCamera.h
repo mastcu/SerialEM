@@ -280,7 +280,7 @@ private:
   double mLastPreExposure;              // Pre-exposure
   int mLastProcessing;                  // uncorrected, dark, or dark/gain (linear mode)
   int mLastNormCounting;                // Normalization of couting images
-  int mLastElectronCounting;            // Electron counting of either kind is a 1
+  int mLastElectronCounting;            // Electron counting of either kind is 1, test > 0
   int mLastSuperResolution;             // Super-resolution is a separate flag
   float mLastFPS;                       // Frames per second
   int mLastLiveMode;                    // Whether live mode was one

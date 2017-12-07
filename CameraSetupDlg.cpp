@@ -270,6 +270,7 @@ void CCameraSetupDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Check(pDX, IDC_DE_ALIGN_FRAMES, m_bDEalignFrames);
   DDX_Control(pDX, IDC_DE_ALIGN_FRAMES, m_butDEalignFrames);
   DDX_Control(pDX, IDC_BUT_DE_SETUP_ALIGN, m_butDEsetupAlign);
+  DDX_Control(pDX, IDC_RDE_SUPERRES, m_butDEsuperRes);
   DDX_Control(pDX, IDC_STAT_NUM_DE_RAW, m_statNumDEraw);
   DDX_Text(pDX, IDC_STAT_NUM_DE_RAW, m_strNumDEraw);
   DDX_Control(pDX, IDC_DOSE_FRAC_MODE, m_butDoseFracMode);
@@ -1083,7 +1084,7 @@ float CCameraSetupDlg::ManageExposure(bool updateIfChange)
   // Special for DE
   if (mWinApp->mDEToolDlg.CanSaveFrames(mParam)) {
     m_fDEframeTime = RoundedDEframeTime(m_fFrameTime * (savingDE ? 1 : m_iSumCount));
-    int frames = (int)floor(realExp / m_fDEframeTime) + 1;
+    int frames = (int)floor(realExp / m_fFrameTime) + 1;
     m_statNumDEraw.ShowWindow(savingDE ? SW_SHOW : SW_HIDE);
     changed = savingDE;
     saySaving = m_bDEsaveMaster || (m_bDEalignFrames && mCurSet->useFrameAlign > 1);
@@ -2628,6 +2629,7 @@ void CCameraSetupDlg::OnButSetupAlign()
   }
   mWinApp->SetFrameAlignMoreOpen(dlg.mMoreParamsOpen);
   m_butSetupAlign.SetButtonStyle(BS_PUSHBUTTON);
+  m_butDEsetupAlign.SetButtonStyle(BS_PUSHBUTTON);
   if (mDE_Type)
     ManageDEpanel();
   else
@@ -2761,6 +2763,8 @@ void CCameraSetupDlg::OnDeSaveMaster()
 {
   UpdateData(true);
   mUserSaveFrames = m_bDEsaveMaster;
+  if (!m_bDEalignFrames && !m_bDEsaveMaster && m_iDEMode == SUPERRES_MODE)
+    m_iDEMode = COUNTING_MODE;
   ManageDEpanel();
   ManageExposure();
   UpdateData(false);
@@ -2786,6 +2790,8 @@ void CCameraSetupDlg::OnKillfocusEditDeSumCount()
 void CCameraSetupDlg::OnDeAlignFrames()
 {
   UpdateData(true);
+  if (!m_bDEalignFrames && !m_bDEsaveMaster && m_iDEMode == SUPERRES_MODE)
+    m_iDEMode = COUNTING_MODE;
   ManageDEpanel();
   ManageExposure();
   UpdateData(false);
@@ -2815,6 +2821,7 @@ void CCameraSetupDlg::ManageDEpanel(void)
   m_editDEframeTime.EnableWindow(saving);
   m_spinDEsumNum.EnableWindow(saving);
   m_butDEsetupAlign.EnableWindow(m_bDEalignFrames);
+  m_butDEsuperRes.EnableWindow(saving);
   if (m_bDEalignFrames) {
     ComposeWhereAlign(str);
     SetDlgItemText(IDC_STAT_DE_WHERE_ALIGN, (LPCTSTR)str);

@@ -1946,9 +1946,9 @@ int FrameAlign::addToSums(float *fullArr, int binInd, int frameNum, int filtInd)
     // Try to do sum on GPU if flag set
     if (mGpuSumming) {
       mWallStart = wallTime();
-      if (sFgpuSetupDoseWeighting(&mDoseWgtFilter[0], (int)mDoseWgtFilter.size(), 
-                                  mDWFdelta) ||
-          sFgpuAddToFullSum(fullArr, xShift, yShift)) {
+      ind = (int)mDoseWgtFilter.size();
+      if (sFgpuSetupDoseWeighting(ind > 0 ? &mDoseWgtFilter[0] : NULL, ind, mDWFdelta)
+          || sFgpuAddToFullSum(fullArr, xShift, yShift)) {
 
         // Recover by getting existing sum back and taking FFT of current array
         if (mDebug)

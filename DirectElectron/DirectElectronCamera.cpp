@@ -679,16 +679,14 @@ int DirectElectronCamera::SetAllAutoSaves(int autoSaveFlags, int sumCount, CStri
   CSingleLock slock(&m_mutex);
 
   if (slock.Lock(1000)) {
-    if (setSaves || ((mLastSaveFlags & DE_SAVE_FRAMES) ? 1 : 0) != saveRaw)
-      ret1 = mDeServer->setProperty("Autosave Raw Frames", saveRaw ? psSave : psNoSave);
+    if (setSaves || ((mLastSaveFlags & DE_SAVE_FRAMES) ? 1 : 0) != saveRaw ||
+      ((canCount && (mLastSaveFlags & DE_SAVE_COUNTING)) ? 1 : 0) != saveCount)
+      ret1 = mDeServer->setProperty("Autosave Raw Frames", 
+        (saveRaw || saveCount) ? psSave : psNoSave);
     if (setSaves || ((mLastSaveFlags & DE_SAVE_SUMS) ? 1 : 0) != saveSums)
       ret2 = mDeServer->setProperty("Autosave Summed Image", saveSums ? psSave :psNoSave);
     if (setSaves || ((mLastSaveFlags & DE_SAVE_FINAL) ? 1 : 0) != saveFinal)
       ret3 = mDeServer->setProperty("Autosave Final Image", saveFinal ? psSave :psNoSave);
-    if (canCount && (setSaves || ((mLastSaveFlags & DE_SAVE_COUNTING) ? 1 : 0) 
-      != saveCount))
-        ret7 = mDeServer->setProperty(DE_PROP_COUNTING" - Save Dose Fractionation Stack",
-          saveCount ? psSave : psNoSave);
     if (saveCount) {
       if (mLastDoseFracNum < 0 || !mTrustLastSettings || mLastDoseFracNum != sumCount)
         ret4 = justSetIntProperty(DE_PROP_COUNTING" - Dose Fractionation "
@@ -865,7 +863,8 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, int imageSizeX,
     int checksum = B3DNINT(1000 * mLastExposureTime) + B3DNINT(1005 * mLastPreExposure) +
       B3DNINT(105. * mLastFPS) + 17 * mLastXbinning + 23 * mLastXoffset + 
       29 * mLastYoffset + 31 * mLastROIsizeX + 37 * mLastROIsizeY + 41 * mLastXimageSize +
-      43 * mLastYimageSize + 47 * mLastElectronCounting + 53 * mLastUseHardwareBin;
+      43 * mLastYimageSize + 47 * mLastElectronCounting + 53 * mLastUseHardwareBin +
+      59 * mLastSuperResolution;
     int minuteNow = mWinApp->MinuteTimeStamp();
 
     // Check exposure time and FPS if needed
@@ -931,7 +930,7 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, int imageSizeX,
       int remaining;
       bool ret1;
       mDateInPrevSetName = 0;
-      while (SEMTickInterval(startTime) < 5000. * mLastExposureTime) {
+      while (SEMTickInterval(startTime) < 10000. * mLastExposureTime) {
         ret1 = mDeServer->getIntProperty("Auto Repeat Reference - Remaining Acquisitions",
           &remaining);
         if (ret1 && remaining != mNumLeftServerRef)
@@ -1985,8 +1984,10 @@ void DirectElectronCamera::SetImageExtraData(EMimageExtra *extra, float nameTime
         str += saveSums ? "" : "_movies";
       else if (!saveCount)
         str += saveSums ? "_SumImages" : "_RawImages";
+      else if (mLastSuperResolution > 0)
+        str += "_super_movies";
       else
-        str += "_???Images";
+        str += "_movies";
       str += CString(mServerVersion >= DE_CAN_SAVE_MRC ? ".mrc" : ".h5");
     }
     extra->mSubFramePath = str;
@@ -2010,16 +2011,22 @@ void DirectElectronCamera::SetImageExtraData(EMimageExtra *extra, float nameTime
 bool DirectElectronCamera::GetPreviousDatasetName(float timeout, int ageLimitSec, 
   bool predictName, CString &name)
 {
-  int numTry = 0, wait = 100;
-  std::string valStr;
+  int numTry = 0, wait = 100, numSub;
+  std::string valStr, numStr;
   CSingleLock slock(&m_mutex);
   double startTime;
+  bool gotName = false, gotNum;
+  CString str;
+  BOOL saveSums = mLastSaveFlags & DE_SAVE_SUMS;
   CTime ctdt = CTime::GetCurrentTime();
 
   // Get the date component of the string as an integer
   int currentDate = ctdt.GetYear() * 10000 + ctdt.GetMonth() * 100 + ctdt.GetDay();
   name = "";
   mLastPredictedSetName= "";
+  str.Format("Autosave %s Frames - Frames Written in Last Exposure", 
+        saveSums ? "Sum" : "Raw");
+  numStr = (LPCTSTR)str;
   if (slock.Lock(1000)) {
 
     // Cancel timeout if known name not too old
@@ -2027,18 +2034,27 @@ bool DirectElectronCamera::GetPreviousDatasetName(float timeout, int ageLimitSec
       1000. * ageLimitSec)
       timeout = 0;
     startTime = GetTickCount();
-    while (true) {
-      if (mDeServer->getProperty("Autosave Frames - Previous Dataset Name", &valStr) &&
-        valStr.length() > 0) {
+    gotNum = mLastElectronCounting > 0 || timeout == 0;
+    while (!gotName || !gotNum) {
+      if (!gotName && mDeServer->getProperty("Autosave Frames - Previous Dataset Name", 
+        &valStr) && valStr.length() > 0) {
 
           // Valid name: return it and save the time and store the two numeric components
           name = valStr.c_str();
           mTimeOfPrevSetName = GetTickCount();
           mDateInPrevSetName = atoi((LPCTSTR)name.Left(8));
           mNumberInPrevSetName = atoi((LPCTSTR)name.Mid(9, 5));
-          if (numTry)
-            SEMTrace('D', "It took %.1f sec to get name", SEMTickInterval(startTime) / 
-            1000.);
+          SEMTrace('D', "It took %.1f sec to get name %s, timeout %.1f",
+            SEMTickInterval(startTime) / 1000., valStr.c_str(), timeout);
+          gotName = true;
+          if (gotNum)
+            return true;
+      }
+      if (!gotNum && mDeServer->getIntProperty(numStr, &numSub) && numSub > 0) {
+        gotNum = true;
+        SEMTrace('D', "It took %.1f sec to get number %d, timeout %.1f", 
+          SEMTickInterval(startTime) / 1000., numSub, timeout);
+        if (gotName)
           return true;
       }
 
@@ -2048,12 +2064,14 @@ bool DirectElectronCamera::GetPreviousDatasetName(float timeout, int ageLimitSec
       Sleep(wait);
       numTry++;
     }
+    if (gotName)
+      return true;
 
     // No valid name and prediction called for and date matches:increment number and
     // make up name, 
     if (mDateInPrevSetName == currentDate && predictName) {
-      name.Format("%08d_%05d_%s", mDateInPrevSetName, ++mNumberInPrevSetName, 
-        (LPCTSTR)mLastSuffix);
+      name.Format("%08d_%05d%s%s", mDateInPrevSetName, ++mNumberInPrevSetName, 
+        mLastSuffix.IsEmpty() ? "" : "_", (LPCTSTR)mLastSuffix);
       mLastPredictedSetName = name;
     }
   }

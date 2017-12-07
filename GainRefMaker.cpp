@@ -348,11 +348,13 @@ void CGainRefMaker::MakeRefInDEserver(void)
 void CGainRefMaker::StartDEserverRef(int processType, int referenceType)
 {
   int ind;
+  int readModes[4] = {LINEAR_MODE, COUNTING_MODE, COUNTING_MODE, SUPERRES_MODE};
   CString str;
   mConSet = mWinApp->GetConSets() + TRACK_CONSET;
   mCamera = mWinApp->mCamera;
   mCurrentCamera = mWinApp->GetCurrentCamera(); 
   mParam = mWinApp->GetCamParams() + mCurrentCamera;  
+  B3DCLAMP(processType, 0, 3);
   mDEcurProcessType = processType;
   mDEcurReferenceType = referenceType;
 
@@ -369,7 +371,7 @@ void CGainRefMaker::StartDEserverRef(int processType, int referenceType)
   // switch it to linear when doing a pre-counting reference
   if (referenceType)
     mConSet->processing = processType > 1 ? GAIN_NORMALIZED : DARK_SUBTRACTED;
-  mConSet->K2ReadMode = processType > 0 ? COUNTING_MODE : LINEAR_MODE;
+  mConSet->K2ReadMode = readModes[processType];
   mConSet->mode = SINGLE_FRAME;
   mConSet->saveFrames = 0;
   mConSet->alignFrames = 0;

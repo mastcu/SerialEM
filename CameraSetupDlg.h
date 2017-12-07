@@ -289,6 +289,7 @@ public:
   CButton m_butDESaveFinal;
   CButton m_butDEalignFrames;
   CButton m_butDEsetupAlign;
+  CButton m_butDEsuperRes;
   CStatic m_statDEframeTime;
   CStatic m_statDEframeSec;
   CStatic m_statDEwhereAlign;

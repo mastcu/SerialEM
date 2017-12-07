@@ -53,6 +53,7 @@ BEGIN_MESSAGE_MAP(CDERefMakerDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_RLINEAR_REF, OnProcessingType)
   ON_BN_CLICKED(IDC_RPRE_COUNTING, OnProcessingType)
   ON_BN_CLICKED(IDC_RPOST_COUNTING, OnProcessingType)
+  ON_BN_CLICKED(IDC_RSUPER_RES_REF, OnProcessingType)
   ON_BN_CLICKED(IDC_RDARK_REF, OnReferenceType)
   ON_BN_CLICKED(IDC_RGAIN_REF, OnReferenceType)
   ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_NUM_REPEATS, OnDeltaposSpinNumRepeats)
@@ -66,12 +67,13 @@ BOOL CDERefMakerDlg::OnInitDialog()
 {
   CBaseDlg::OnInitDialog();
   ShowDlgItem(IDC_USE_HARDWARE_BIN, (mCamParams->CamFlags & DE_HAS_HARDWARE_BIN) != 0);
-  B3DCLAMP(m_iProcessingType, 0, 2);
+  B3DCLAMP(m_iProcessingType, 0, 3);
   B3DCLAMP(m_iReferenceType, 0, 1);
   if (!(mCamParams->CamFlags & DE_CAM_CAN_COUNT)) {
     ShowDlgItem(IDC_RLINEAR_REF, false);
     ShowDlgItem(IDC_RPRE_COUNTING, false);
     ShowDlgItem(IDC_RPOST_COUNTING, false);
+    ShowDlgItem(IDC_RSUPER_RES_REF, false);
     ShowDlgItem(IDC_STAT_PROC_TYPE, false);
     m_iProcessingType = 0;
   }
@@ -87,7 +89,7 @@ BOOL CDERefMakerDlg::OnInitDialog()
 // dialog elements
 void CDERefMakerDlg::LoadListItemsToDialog(void)
 {
-  if (m_iProcessingType == 2)
+  if (m_iProcessingType >= 2)
     m_iReferenceType = 1;
   m_butDarkRef.EnableWindow(m_iProcessingType < 2);
   mCurListInd = 2 * m_iProcessingType + (1 - m_iReferenceType);

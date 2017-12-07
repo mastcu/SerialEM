@@ -20,7 +20,7 @@
       multiple acquisitions and summing operations required.&nbsp; The server keeps 
       track of references separately for different settings of the frames per second 
       (FPS).&nbsp; This dialog allows you to set the essential parameters for all of 
-      the kinds of references needed; i.e. 5 kinds when electron counting is available 
+      the kinds of references needed; i.e. 6 kinds when electron counting is available 
       and otherwise 2 kinds.&nbsp; The exposure time and the number of acquisitions 
       are stored separately for each kind of reference.</p>
     <p><b>Type of Processing: Linear - Pre-counting - Post-counting</b></p>
@@ -31,10 +31,11 @@
       counting mode.&nbsp; There is nothing intrinsically different between these 
       references except for the FPS, so if you do not have different FPS values for 
       the two modes, separate references are not needed.&nbsp; Select <b>Post-counting</b> to 
-      make a gain reference to apply after electron counting.</p>
+      make a gain reference to apply after electron counting at native resolution, and
+      <b>Super-resolution</b> to make a reference for super-resolution counting images.</p>
     <p><b>Type of Reference: Dark - Gain</b></p>
     <p>Select whether to make a dark or a gain reference; only a gain reference can be 
-      made if <b>Post-counting</b> is selected.</p>
+      made if <b>Post-counting</b> or <b>Super-resolution </b>is selected.</p>
     <p><b>With hardware binning by 2</b></p>
     <p>This checkbox appears if hardware binning is available; hardware binning will 
       be used if it is selected.</p>

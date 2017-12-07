@@ -7814,7 +7814,60 @@ void CCameraController::DisplayNewImage(BOOL acquired)
         mWinApp->AppendToLog(message);
     }
 
-    // MOVE THIS DOWN BELOW DE AFTER REVIEW
+    // Get special data for DE camera and report frame-saving there
+    if (mParam->DE_camType >= 2 && !(mTD.ProcessingPlus & CONTINUOUS_USE_THREAD)) {
+      if (!mStartedExtraForDEalign)
+        mTD.DE_Cam->SetImageExtraData(extra, mDESetNameTimeoutUsed, 
+          mDoingDEframeAlign < 2, nameConfirmed);
+      else
+        nameConfirmed = true;
+      alignErr = 0;
+      if (IsConSetSaving(lastConSetp, mLastConSet, mParam, false)) {
+
+          // Get frame time, number of camera frames and # in summed frames
+          // Counting mode has no readout on  frames saved, so we have to fill that in
+          frameTimeForDose = (float)(1.f / mTD.FramesPerSec);
+          camFrames = B3DNINT(mExposure / frameTimeForDose);
+          sumCount = B3DMAX(1, lastConSetp->DEsumCount);
+
+          // Just compute number of frames for counting mode or if saving is in progress
+          if (lastConSetp->K2ReadMode && (mParam->CamFlags & DE_CAM_CAN_COUNT)) {
+            sumCount = B3DMAX(1, lastConSetp->sumK2Frames);
+            extra->mNumSubFrames = camFrames / sumCount;
+          }
+          if (!nameConfirmed || !extra->mNumSubFrames) {
+            extra->mNumSubFrames = camFrames / sumCount;
+            nameConfirmed = false;
+          }
+          if (extra->mNumSubFrames > 0) {
+            message.Format(" %d %sframes %s saved to %s", extra->mNumSubFrames, 
+              sumCount > 1 ? "" : "summed ", nameConfirmed ? "were" : "are being", 
+              (LPCTSTR)extra->mSubFramePath);
+          } else  {
+            message.Format("Saving of %d %sframes was requested but the server says no "
+              "frames were saved", camFrames / sumCount, sumCount > 1 ? "" : "summed ");
+          }
+
+          // Set up summed frame list for the dose estimate below
+          // There shouldn't be any remainder any more, but leave it here
+          summedList.push_back((short)camFrames / sumCount);
+          summedList.push_back(sumCount);
+          if (camFrames % sumCount) {
+            summedList.push_back(1);
+            summedList.push_back((short)(camFrames % sumCount));
+          }
+          if (!extra->mNumSubFrames && mScope->GetSimulationMode())
+            extra->mNumSubFrames = (camFrames + sumCount - 1) / sumCount;
+          mWinApp->AppendToLog(message);
+      }
+
+      // Write com file for IMOD alignment
+      if (mDoingDEframeAlign == 2) {
+        mFalconHelper->SetRotFlipForComFile(mParam->rotationFlip);
+        MakeOneFrameAlignCom(extra->mSubFramePath, lastConSetp->faParamSetInd);
+      }
+    }
+
     // Report on frame aligning if not deferred
     if ((mTD.UseFrameAlign && mTD.NumAsyncSumFrames < 0) || 
       (mDoingDEframeAlign == 1 && mStartedExtraForDEalign)) {
@@ -7854,62 +7907,12 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       }
     }
     
-    // Get special data for DE camera
-    if (mParam->DE_camType >= 2 && !(mTD.ProcessingPlus & CONTINUOUS_USE_THREAD)) {
-      if (!mStartedExtraForDEalign)
-        mTD.DE_Cam->SetImageExtraData(extra, mDESetNameTimeoutUsed, 
-          mDoingDEframeAlign < 2, nameConfirmed);
-      else
-        nameConfirmed = true;
-      alignErr = 0;
-      if (IsConSetSaving(lastConSetp, mLastConSet, mParam, false)) {
-
-          // Get frame time, number of camera frames and # in summed frames
-          // Counting mode has no readout on  frames saved, so we have to fill that in
-          frameTimeForDose = (float)(1.f / mTD.FramesPerSec);
-          camFrames = B3DNINT(mExposure / frameTimeForDose);
-          sumCount = B3DMAX(1, lastConSetp->DEsumCount);
-
-          // Just compute number of frames for counting mode or if saving is in progress
-          if (lastConSetp->K2ReadMode && (mParam->CamFlags & DE_CAM_CAN_COUNT)) {
-            sumCount = B3DMAX(1, lastConSetp->sumK2Frames);
-            extra->mNumSubFrames = camFrames / sumCount;
-          }
-          if (!nameConfirmed)
-            extra->mNumSubFrames = camFrames / sumCount;
-          if (extra->mNumSubFrames > 0) {
-            message.Format(" %d %sframes %s saved to %s", extra->mNumSubFrames, 
-              sumCount > 1 ? "" : "summed ", nameConfirmed ? "were" : "are being", 
-              (LPCTSTR)extra->mSubFramePath);
-          } else  {
-            message.Format("Saving of %d %sframes was requested but the server says no "
-              "frames were saved", camFrames / sumCount, sumCount > 1 ? "" : "summed ");
-          }
-
-          // Set up summed frame list for the dose estimate below
-          // There shouldn't be any remainder any more, but leave it here
-          summedList.push_back((short)camFrames / sumCount);
-          summedList.push_back(sumCount);
-          if (camFrames % sumCount) {
-            summedList.push_back(1);
-            summedList.push_back((short)(camFrames % sumCount));
-          }
-          if (!extra->mNumSubFrames && mScope->GetSimulationMode())
-            extra->mNumSubFrames = (camFrames + sumCount - 1) / sumCount;
-          mWinApp->AppendToLog(message);
-      }
-
-      // Write com file for IMOD alignment
-      if (mDoingDEframeAlign == 2) {
-        mFalconHelper->SetRotFlipForComFile(mParam->rotationFlip);
-        MakeOneFrameAlignCom(extra->mSubFramePath, lastConSetp->faParamSetInd);
-      }
-
-      // Remove frames if flag set and no align error
-      if (mRemoveAlignedDEframes && !alignErr) {
-        UtilRemoveFile(extra->mSubFramePath);
-        UtilRemoveFile(mTD.DE_Cam->GetPathAndDatasetName() + "_info.txt");
-      }
+    // Remove DE frames if flag set and no align error
+    if (mRemoveAlignedDEframes && !alignErr) {
+      UtilRemoveFile(extra->mSubFramePath);
+      UtilRemoveFile(mTD.DE_Cam->GetPathAndDatasetName() + "_info.txt");
+      if (lastConSetp->K2ReadMode > 0)
+        UtilRemoveFile(mTD.DE_Cam->GetPathAndDatasetName() + ".log");
     }
 
     // Get dose per frame and output list of doses and # of frames

@@ -101,7 +101,8 @@ void CFalconHelper::Initialize(int skipConfigs)
   if (!mFrameAli) {
     mFrameAli = new FrameAlign();
     mFrameAli->setPrintFunc(framePrintFunc);
-    if (!mFrameAli->gpuAvailable(0, &mGpuMemory, GetDebugOutput('E') ? 1 : 0))
+    if (!mFrameAli->gpuAvailable(0, &mGpuMemory, 
+      (GetDebugOutput('E') || GetDebugOutput('D')) ? 1 : 0))
       mGpuMemory = 0;
     SEMTrace('1', "GPU %s available for %s aligning", mGpuMemory ? "IS" : "IS NOT",
       skipConfigs >= 0 ? "Falcon" : "DE");
@@ -331,7 +332,7 @@ int CFalconHelper::SetupFrameAlignment(ControlSet &conSet, CameraParameters *cam
     param.hybridShifts, (deferGpuSum | doSpline) ? 1 : 0, groupSize, nx, ny, 
     fullTaperFrac, taperFrac, param.antialiasType, 0., radius2, sigma1, sigma2, 
     numFilters, param.shiftLimit, kFactor, maxMaxWeight, 0, numFrames, gpuFlags, 
-    GetDebugOutput('E') ? 11 : 0);
+    (GetDebugOutput('E') || GetDebugOutput('D')) ? 11 : 0);
   if (ind) {
     str.Format("The framealign routine failed to initialize (error %d)", ind);
     mFrameAli->cleanup();
