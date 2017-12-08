@@ -2142,7 +2142,7 @@ void CNavigatorDlg::OnDeleteitem()
   }
   if (mItem->mType == ITEM_TYPE_MAP && !mItem->mImported && 
     AfxMessageBox("This item is a map image\n\n"
-    "It includes critical information about the file\n and coordinate scaling that"
+    "It includes critical information about the file\n and coordinate scaling that "
     "would be very hard to recreate.\n\n Are you sure you want to delete the item?",
     MB_YESNO | MB_ICONQUESTION) == IDNO)
     return;
