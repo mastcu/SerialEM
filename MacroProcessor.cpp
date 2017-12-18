@@ -4691,7 +4691,7 @@ void CMacroProcessor::NextCommand()
 
   } else if (CMD_IS(UPDATEHWDARKREF)) {                     // UpdateHWDarkRef
     index = mCamera->UpdateK2HWDarkRef((float)itemDbl[1]);
-    if (index > 0)
+    if (index == 1)
       ABORT_LINE("The thread is already busy for this operation:\n\n")
     mStartedLongOp = !index;
  
