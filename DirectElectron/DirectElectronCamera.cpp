@@ -50,7 +50,7 @@ static const char *psSave = "Save";
 static const char *psNoSave = "Discard";
 static const char *psReadoutDelay = "Sensor Readout Delay (milliseconds)";
 static const char *psServerVersion = "Server Software Version";
-static const char *psHardwareBin = "Hardware Binning X";    // Maybe!
+static const char *psHardwareBin = "Sensor Hardware Binning";
 static const char *psAutoRepeatRef = "Auto Repeat Reference - Multiple Acquisitions";
 static const char *psEnable = "Enable";
 static const char *psDisable = "Disable";
@@ -1104,10 +1104,7 @@ int DirectElectronCamera::setBinning(int x, int y, int sizex, int sizey, int har
 
       if (hardwareBin >= 0 && (hardwareBin != mLastUseHardwareBin || !mTrustLastSettings))
       {
-        if (!justSetIntProperty(psHardwareBin, hardwareBin > 0 ? 2 : 1) ||
-          !justSetIntProperty("Hardware Binning Y", hardwareBin > 0 ? 2 : 1)) 
-          mLastErrorString = ErrorTrace("ERROR: Could NOT set the hardware binning to %d"
-             , hardwareBin > 0 ? 2 : 1);
+        if (!setStringWithError(psHardwareBin, hardwareBin > 0 ? psEnable : psDisable))
          return 1;
       }
       mLastUseHardwareBin = hardwareBin;
@@ -1981,13 +1978,13 @@ void DirectElectronCamera::SetImageExtraData(EMimageExtra *extra, float nameTime
     // Attach the standard suffix and extensions
     if (mWinApp->mDEToolDlg.GetFormatForAutoSave()) {
       if (!saveCount && mNormAllInServer)
-        str += saveSums ? "" : "_movies";
+        str += "_movies";
       else if (!saveCount)
         str += saveSums ? "_SumImages" : "_RawImages";
       else if (mLastSuperResolution > 0)
         str += "_super_movies";
       else
-        str += "_movies";
+        str += "_counting_movies";
       str += CString(mServerVersion >= DE_CAN_SAVE_MRC ? ".mrc" : ".h5");
     }
     extra->mSubFramePath = str;
