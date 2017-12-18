@@ -639,6 +639,7 @@ CSerialEMApp::CSerialEMApp()
   mPlugStopFunc = NULL;
   mPlugImagingTask = false;
   mAnyDirectDetectors = false;
+  mAnySuperResMode = false;
   mFrameAlignMoreOpen = false;
   mShowRemoteControl = true;
   mHasFEIcamera = false;
@@ -1255,15 +1256,21 @@ BOOL CSerialEMApp::InitInstance()
   SetActiveCameraNumber(iCam);
   mInitialCurrentCamera = mActiveCameraList[iCam];
 
-  // For Falcon 2, if align is ON without using framealign, turn it off
   for (iAct = 0; iAct < mActiveCamListSize; iAct++) {
     iCam = mActiveCameraList[iAct];
     if (mCamParams[iCam].FEItype == FALCON3_TYPE) {
       mCamParams[iCam].unscaledCountsPerElec = mCamParams[iCam].countsPerElectron;
       mCamera->AdjustCountsPerElecForScale(&mCamParams[iCam]);
     }
+    if (mCamParams[iCam].K2Type || (mCamParams[iCam].DE_camType && 
+      (mCamParams[iCam].CamFlags & DE_CAM_CAN_COUNT)))
+      mAnySuperResMode = true;
+
+    // For Falcon 2 or DE that can't align, if align is ON without using framealign, 
+    // turn it off
     for (iSet = 0; iSet < NUMBER_OF_USER_CONSETS; iSet++) {
-      if (mCamParams[iCam].FEItype == FALCON2_TYPE) {
+      if (mCamParams[iCam].FEItype == FALCON2_TYPE || (mCamParams[iCam].DE_camType && 
+        !(mCamParams[iCam].CamFlags & DE_CAM_CAN_ALIGN))) {
         if (!mCamConSets[iCam][iSet].useFrameAlign && 
           mCamConSets[iCam][iSet].alignFrames > 0)
           mCamConSets[iCam][iSet].alignFrames = 0;

@@ -918,7 +918,7 @@ int NumAllVsAllFromFAparam(FrameAliParams &faParam, int numAliFrames, int &group
   int &refineIter, int &doSpline, int &numFilters, float *radius2);
 void AdjustCountsPerElecForScale(CameraParameters * param);
 int DESumCountForConstraints(CameraParameters *camP, ControlSet *consP);
-void MakeOneFrameAlignCom(CString & localFramePath, int paramInd);
+void MakeOneFrameAlignCom(CString & localFramePath, ControlSet *conSet);
 };
 
 

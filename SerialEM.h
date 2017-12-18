@@ -492,6 +492,7 @@ public:
   GetSetMember(bool, AppExiting);
   SetMember(int, IdleBaseCount);
   GetMember(bool, AnyDirectDetectors);
+  GetMember(bool, AnySuperResMode);
   GetSetMember(BOOL, FrameAlignMoreOpen);
   GetSetMember(int, BkgdGrayOfFFT);
   GetSetMember(float, TruncDiamOfFFT);
@@ -725,6 +726,7 @@ private:
   PlugDoingFunc mPlugDoingFunc; // Function for a plugin to indicate doing a task
   bool mPlugImagingTask;        // Flag that plugin task is tested as an imaging task
   bool mAnyDirectDetectors;     // Flag for whther any cameras are direct detectors
+  bool mAnySuperResMode;        // Flag if any camera has a super-res mode
   BOOL mFrameAlignMoreOpen;     // Flag that bottom panel is open in frame align dialog
   bool mAppExiting;             // Flag that program is exiting
   int mIdleBaseCount;           // Count for letting base class finish idle tasks

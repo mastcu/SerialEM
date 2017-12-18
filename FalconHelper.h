@@ -123,10 +123,13 @@ public:
   void FinishFrameAlignment(int binning);
   void CleanupAndFinishAlign(bool saving, int async);
   int WriteAlignComFile(CString inputFile, CString comName, int faParamInd, int useGPU,
-    bool ifMdoc);
+    bool ifMdoc, int frameX, int frameY);
   float AlignedSubsetExposure(ShortVec & summedFrameList, float frameTime, int subsetStart,
     int subsetEnd, int maxFrames = -1);
   int AlignFramesFromFile(CString filename, ControlSet &conSet, int rotateFlip, int divideBy2, 
     float scaling, int &numFrames, CameraThreadData *td);
   void AlignNextFrameTask(int param);
+  int GetFrameAlignBinning(FrameAliParams & param, int frameSizeX, int frameSizeY);
+  void GetSavedFrameSizes(CameraParameters *camParams, const ControlSet *conSet, 
+    int & frameX, int & frameY);
 };

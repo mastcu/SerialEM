@@ -257,6 +257,8 @@ struct CameraParameters {
 struct FrameAliParams {
   int strategy;               // Choice of how many pairwise or if cumulative ref
   int aliBinning;             // Binning for alignment
+  BOOL binToTarget;           // Flag to bin to target size instead
+  int targetSize;            // And target size
   int numAllVsAll;            // All-vs-all for strategy 0 only
   float rad2Filt1, rad2Filt2, rad2Filt3, rad2Filt4;   // Up to 4 filters just in case
   BOOL hybridShifts;          // Use hybrid shifts with multiple filters        

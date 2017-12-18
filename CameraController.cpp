@@ -400,6 +400,8 @@ void CCameraController::SetFrameAliDefaults(FrameAliParams &faParam, const char 
 {
   faParam.aliBinning = binning;
   faParam.name = name;
+  faParam.targetSize = 1000;
+  faParam.binToTarget = 1;
   faParam.strategy = FRAMEALI_PAIRWISE_NUM;
   faParam.numAllVsAll = 7;
   faParam.rad2Filt1 = filt1;
@@ -1735,7 +1737,7 @@ int CCameraController::GetDeferredSum(void)
 int CCameraController::MakeMdocFrameAlignCom(void)
 {
   CString mdocPath, mdocName, tempStr, comRoot;
-  int nameLen, textLen, stringSize;
+  int nameLen, textLen, stringSize, frameX, frameY;
   long retVal = 0;
   UINT numRead;
   CFile *file = NULL;
@@ -1755,7 +1757,7 @@ int CCameraController::MakeMdocFrameAlignCom(void)
       "a com file for aligning frames in IMOD");
     return 1;
   }
-  if (mParam->K2Type && !(IsConSetSaving(conSet,RECORD_CONSET, mParam, true) && 
+  if (mParam->K2Type && !(IsConSetSaving(conSet, RECORD_CONSET, mParam, true) && 
     conSet->alignFrames && conSet->useFrameAlign > 1)) {
       SEMMessageBox("The Record parameters must be set for frame saving and aligning\n"
         "in IMOD in order to make a com file for aligning frames");
@@ -1776,9 +1778,10 @@ int CCameraController::MakeMdocFrameAlignCom(void)
   if (!mParam->K2Type) {
 
     // For Falcon, just call routine and leave
+    mFalconHelper->GetSavedFrameSizes(mParam, conSet, frameX, frameY);
     retVal = mFalconHelper->WriteAlignComFile(mdocPath, mAlignFramesComPath + 
       '\\' + comRoot + ".pcm", conSet->faParamSetInd, 
-      mFalconHelper->GetUseGpuForAlign(1), true);
+      mFalconHelper->GetUseGpuForAlign(1), true, frameX, frameY);
     if (retVal) {
       tempStr = "The com file for aligning frames was not written:\r\n   ";
       if (retVal < 0)
@@ -1871,10 +1874,11 @@ int CCameraController::MakeMdocFrameAlignCom(void)
 
 // Take the frame file path for Falcon or DE, and tell FalconHelper to write the com file
 // for alignframes
-void CCameraController::MakeOneFrameAlignCom(CString &localFramePath, int paramInd)
+void CCameraController::MakeOneFrameAlignCom(CString &localFramePath, ControlSet *conSet)
 {
-  int err;
+  int err, frameX, frameY;
   CString dirPath, filename, root, ext;
+  int paramInd = conSet->faParamSetInd;
   
   // Extract folder and make sure that
   // helper has this as the last frame folder, and compose name
@@ -1885,9 +1889,10 @@ void CCameraController::MakeOneFrameAlignCom(CString &localFramePath, int paramI
     root = dirPath + '\\' + root + ".pcm";
   else
     root = mAlignFramesComPath + '\\' + root + ".pcm";
+  mFalconHelper->GetSavedFrameSizes(mParam, conSet, frameX, frameY);
   err = mFalconHelper->WriteAlignComFile(filename, root, 
     paramInd, mFalconHelper->GetUseGpuForAlign(1),
-    false);
+    false, frameX, frameY);
   if (err)
     PrintfToLog("WARNING: The com file for aligning was not saved: %s",
     SEMCCDErrorMessage(err));
@@ -3197,7 +3202,7 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
 {
   int ldArea, magIndex, sizeX, sizeY, numAllVsAll, refineIter, groupSize, doSpline;
   int notOK, newIndex, faInd, numFilt = 1, deferGpuSum = 0, flags = 0;
-  int numAliFrames, frameStartEnd = 0;
+  int frameSizeX, frameSizeY, numAliFrames, frameStartEnd = 0;
   int DMind = CAMP_DM_INDEX(mParam);
   double maxMemory = pow(1024., 3.) * mK2MaxRamStackGB;
   LowDoseParams *ldParam = mWinApp->GetLowDoseParams();
@@ -3211,8 +3216,8 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
     B3DCLAMP(faInd, 0, (int)mFrameAliParams.GetSize() - 1);
     mess = "WARNING: ";
     if (!mWinApp->mMacroProcessor->SkipCheckingFrameAli()) {
-      notOK = UtilFindValidFrameAliParams(conSet.K2ReadMode, conSet.useFrameAlign, faInd,
-        newIndex, &mess);
+      notOK = UtilFindValidFrameAliParams(conSet.K2ReadMode, conSet.useFrameAlign,
+        faInd, newIndex, &mess);
       if (notOK || newIndex != faInd) {
         mWinApp->AppendToLog(mess);
         if (notOK > 0)
@@ -3442,6 +3447,7 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
     // Set variables for the call
     numAllVsAll = NumAllVsAllFromFAparam(faParam, numAliFrames, groupSize, refineIter, 
       doSpline, numFilt, radius2);
+    mFalconHelper->GetSavedFrameSizes(mParam, &conSet, frameSizeX, frameSizeY);
 
      // Set some align flags
     if (faParam.hybridShifts && numFilt > 1)
@@ -3461,8 +3467,8 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
         alignFlags |= K2FA_KEEP_PRECISION;
 
       // Evaluate all memory needs
-      totAliMem = UtilEvaluateGpuCapability(mParam->sizeX / (isSuperRes ? 1 : 2), 
-        mParam->sizeY / (isSuperRes ? 1 : 2), conSet.binning / (isSuperRes ? 1 : 2), 
+      totAliMem = UtilEvaluateGpuCapability(frameSizeX, 
+        frameSizeY, conSet.binning / (isSuperRes ? 1 : 2), 
         faParam, numAllVsAll, numAliFrames, refineIter, groupSize, numFilt, doSpline, 
         mUseGPUforK2Align[DMind] ? mGpuMemory[DMind] : 0., maxMemory, gpuFlags, 
         deferGpuSum, mGettingFRC);
@@ -3553,9 +3559,10 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
       MainCallGatanCamera(SetupFileSaving2(mParam->rotationFlip, mOneK2FramePerFile, 
       pixel, flags, numAsyncSum, 0., 0., 0., nameSize, (long *)names, &setupErr));
     if (aligning) {
-      MainCallGatanCamera(SetupFrameAligning(faParam.aliBinning, faParam.rad2Filt1, 
-        numAllVsAll ? faParam.rad2Filt2 : 0., numAllVsAll ? faParam.rad2Filt3 : 0.,
-        faParam.sigmaRatio, 
+      MainCallGatanCamera(SetupFrameAligning(
+        mFalconHelper->GetFrameAlignBinning(faParam, frameSizeX, frameSizeY),
+        faParam.rad2Filt1, numAllVsAll ? faParam.rad2Filt2 : 0., 
+        numAllVsAll ? faParam.rad2Filt3 : 0., faParam.sigmaRatio, 
         faParam.truncate ? faParam.truncLimit : 0., alignFlags, gpuFlags, numAllVsAll,
         groupSize, faParam.shiftLimit, faParam.antialiasType, refineIter,
         faParam.stopIterBelow, faParam.refRadius2, (long)(numAsyncSum + 0.1),
@@ -7807,7 +7814,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
             // Here local frame path is required
             if (mParam->FEItype && FCAM_ADVANCED(mParam) && 
               (mTD.K2ParamFlags & K2_MAKE_ALIGN_COM)) {
-                MakeOneFrameAlignCom(localFramePath, lastConSetp->faParamSetInd);
+                MakeOneFrameAlignCom(localFramePath, lastConSetp);
             }
           }
         }
@@ -7864,7 +7871,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       // Write com file for IMOD alignment
       if (mDoingDEframeAlign == 2) {
         mFalconHelper->SetRotFlipForComFile(mParam->rotationFlip);
-        MakeOneFrameAlignCom(extra->mSubFramePath, lastConSetp->faParamSetInd);
+        MakeOneFrameAlignCom(extra->mSubFramePath, lastConSetp);
       }
     }
 

@@ -9,6 +9,9 @@
 #include "Utilities\KGetOne.h"
 #include "XFolderDialog\XFolderDialog.h"
 
+#define MIN_TARGET_SIZE 250
+#define MAX_TARGET_SIZE 4000
+
 static int idTable[] = {IDC_STAT_WHERE_ALIGN, IDC_USE_FRAME_ALIGN, IDC_RALIGN_IN_DM, 
   IDC_RWITH_IMOD, PANEL_END,
   IDC_STAT_FILTER, IDC_COMBOFILTER, PANEL_END,
@@ -25,7 +28,8 @@ static int idTable[] = {IDC_STAT_WHERE_ALIGN, IDC_USE_FRAME_ALIGN, IDC_RALIGN_IN
   IDC_SPIN_SMOOTH_CRIT, IDC_STAT_SMOOTH_LABEL, IDC_FA_EDIT_SUB_END, IDC_ONLY_IN_PLUGIN,
   IDC_ONLY_WITH_IMOD, IDC_ONLY_NON_SUPER, IDC_ONLY_SUPERRESOLUTION, IDC_BUTMORE,
   IDC_STAT_USE_ONLY_GROUP, IDC_STAT_LINE1, IDC_STAT_MORE_PARAMS, IDC_USE_FRAME_FOLDER,
-  PANEL_END,
+  IDC_SPIN_BIN_TO, IDC_STAT_ALIBIN_PIX, IDC_STAT_ALIBIN, IDC_RALIBIN_BY_FAC, 
+  IDC_RBIN_TO_SIZE, IDC_STAT_ALIGN_TARGET, PANEL_END,
   IDC_REFINE_GROUPS, IDC_STAT_REFINE_CUTOFF, IDC_EDIT_REFINE_CUTOFF,
   IDC_EDIT_CUTOFF2, IDC_EDIT_CUTOFF3, IDC_HYBRID_SHIFTS, IDC_EDIT_SIGMA_RATIO,
   IDC_STAT_SIGMA_RATIO, IDC_STAT_STOP_ITER, IDC_EDIT_STOP_ITER, IDC_STAT_OTHER_CUTS,
@@ -74,6 +78,8 @@ CFrameAlignDlg::CFrameAlignDlg(CWnd* pParent /*=NULL*/)
   , m_bOnlyNonSuperRes(FALSE)
   , m_bOnlySuperRes(FALSE)
   , m_bUseFrameFolder(FALSE)
+  , m_strAlignTarget(_T(""))
+  , m_iBinByOrTo(0)
 {
   mMoreParamsOpen = false;
 }
@@ -167,6 +173,12 @@ void CFrameAlignDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_USE_FRAME_FOLDER, m_butUseFrameFolder);
   DDX_Check(pDX, IDC_USE_FRAME_FOLDER, m_bUseFrameFolder);
   DDX_Control(pDX, IDC_TRUNCATE_ABOVE, m_butTruncateAbove);
+  DDX_Control(pDX, IDC_STAT_ALIGN_TARGET, m_statAlignTarget);
+  DDX_Text(pDX, IDC_STAT_ALIGN_TARGET, m_strAlignTarget);
+  DDX_Control(pDX, IDC_STAT_ALIBIN_PIX, m_statAlibinPix);
+  DDX_Control(pDX, IDC_SPIN_BIN_TO, m_sbcBinTo);
+  DDX_Radio(pDX, IDC_RALIBIN_BY_FAC, m_iBinByOrTo);
+  DDX_Control(pDX, IDC_STAT_ALIGN_BIN, m_statAlignBin);
 }
 
 
@@ -204,6 +216,9 @@ BEGIN_MESSAGE_MAP(CFrameAlignDlg, CBaseDlg)
   ON_EN_KILLFOCUS(IDC_FA_EDIT_SUB_START, OnKillfocusEditSubsetStart)
   ON_EN_KILLFOCUS(IDC_FA_EDIT_SUB_END, OnKillfocusEditSubsetEnd)
   ON_BN_CLICKED(IDC_USE_FRAME_FOLDER, OnUseFrameFolder)
+  ON_BN_CLICKED(IDC_RALIBIN_BY_FAC, OnAliBinByFac)
+  ON_BN_CLICKED(IDC_RBIN_TO_SIZE, OnAliBinByFac)
+  ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_BIN_TO, OnDeltaposSpinBinTo)
 END_MESSAGE_MAP()
 
 
@@ -213,6 +228,7 @@ BOOL CFrameAlignDlg::OnInitDialog()
   CString filter;
   CString *filterNames = mWinApp->mCamera->GetK2FilterNames();
   int i, ind;
+  bool constrainByRes;
   CBaseDlg::OnInitDialog();
   SetupPanelTables(idTable, leftTable, topTable, mNumInPanel, mPanelStart);
   mParams = mWinApp->mCamera->GetFrameAliParams();
@@ -222,6 +238,8 @@ BOOL CFrameAlignDlg::OnInitDialog()
   m_sbcPairwiseNum.SetPos(250);
   m_sbcAlignBin.SetRange(0, 100);
   m_sbcAlignBin.SetPos(50);
+  m_sbcBinTo.SetRange(0, 500);
+  m_sbcBinTo.SetPos(250);
   m_sbcGroupSize.SetRange(0, 100);
   m_sbcGroupSize.SetPos(50);
   m_sbcSmoothCrit.SetRange(0, 500);
@@ -252,6 +270,10 @@ BOOL CFrameAlignDlg::OnInitDialog()
     (mCamParams->K2Type || mFalconCanAlign || mDEcanAlign));
   EnableDlgItem(IDC_USE_FRAME_ALIGN, mEnableWhere);
   EnableDlgItem(IDC_RWITH_IMOD, mEnableWhere);
+  constrainByRes = mCamParams->K2Type || (mDEcanAlign && 
+    (mCamParams->CamFlags & DE_CAM_CAN_COUNT));
+  ShowDlgItem(IDC_ONLY_NON_SUPER, constrainByRes);
+  ShowDlgItem(IDC_ONLY_SUPERRESOLUTION, constrainByRes); 
 
   // Rename buttons for Falcon, disable some items
   if (!mCamParams->K2Type) {
@@ -535,6 +557,26 @@ void CFrameAlignDlg::OnEnChangeEditName()
   m_listSetNames.InsertString(mCurParamInd, m_strCurName);
 }
 
+
+void CFrameAlignDlg::OnAliBinByFac()
+{
+  UpdateData(true);
+  ManageAlignBinning();
+}
+
+void CFrameAlignDlg::OnDeltaposSpinBinTo(NMHDR *pNMHDR, LRESULT *pResult)
+{
+  int newVal;
+  int mult = 50;
+  if (NewSpinnerValue(pNMHDR, pResult, mAlignTargetSize / mult, MIN_TARGET_SIZE / mult,
+    MAX_TARGET_SIZE / mult, newVal))
+    return;
+  UpdateData(true);
+  mAlignTargetSize = mult * newVal;
+  m_strAlignTarget.Format("%d", mAlignTargetSize);
+  UpdateData(false);
+}
+
 void CFrameAlignDlg::OnKillfocusEditCutoff2()
 {
   UpdateData(true);
@@ -700,6 +742,22 @@ void CFrameAlignDlg::ManageAlignStategy(void)
   ManageGrouping();
 }
 
+void CFrameAlignDlg::ManageAlignBinning(void)
+{
+  m_statAlignBin.EnableWindow(!m_iBinByOrTo);
+  m_sbcAlignBin.EnableWindow(!m_iBinByOrTo);
+  m_statAlibinPix.EnableWindow(m_iBinByOrTo > 0);
+  m_statAlignTarget.EnableWindow(m_iBinByOrTo > 0);
+  m_sbcBinTo.EnableWindow(m_iBinByOrTo > 0);
+  if (m_iBinByOrTo > 0 && (!mAlignTargetSize || 
+    (mAlignTargetSize && mAlignTargetSize < MIN_TARGET_SIZE))) { 
+      if (!mAlignTargetSize)
+        mAlignTargetSize = 1000;
+      B3DCLAMP(mAlignTargetSize, MIN_TARGET_SIZE, MAX_TARGET_SIZE);
+      m_strAlignTarget.Format("%d", mAlignTargetSize);
+      UpdateData(false);
+  }
+}
 
 void CFrameAlignDlg::ManageRefinement(void)
 {
@@ -769,7 +827,10 @@ void CFrameAlignDlg::LoadParamToDialog(void)
   FrameAliParams *param = mParams->GetData() + mCurParamInd;
   m_iAlignStrategy = param->strategy;
   mAlignBin = param->aliBinning;
-  m_strAlignBin.Format("Alignment binning %d", mAlignBin);
+  m_strAlignBin.Format("%d", mAlignBin);
+  m_iBinByOrTo = param->binToTarget ? 1 : 0;
+  mAlignTargetSize = param->targetSize;
+  m_strAlignTarget.Format("%d", mAlignTargetSize);
   mPairwiseNum = param->numAllVsAll;
   m_strPairwiseNum.Format("%d", mPairwiseNum);
   m_fCutoff = param->rad2Filt1;
@@ -817,6 +878,7 @@ void CFrameAlignDlg::LoadParamToDialog(void)
   ManageGrouping();
   ManageAlignStategy();
   ManageRefinement();
+  ManageAlignBinning();
   UpdateData(false);
   ManagePanels();
 }
@@ -829,6 +891,8 @@ void CFrameAlignDlg::UnloadDialogToParam(int index)
   FrameAliParams *param = mParams->GetData() + index;
   param->strategy = m_iAlignStrategy;
   param->aliBinning = mAlignBin;
+  param->binToTarget = m_iBinByOrTo > 0;
+  param->targetSize = mAlignTargetSize;
   param->numAllVsAll = mPairwiseNum;
   param->rad2Filt1 = m_fCutoff;
   param->rad2Filt2 = mCutoff2;

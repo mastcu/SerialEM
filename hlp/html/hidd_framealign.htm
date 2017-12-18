@@ -24,9 +24,9 @@
 
     <p>
       This dialog allows you to set parameters to control alignment of frames taken 
-      from a K2 camera in Dose Fractionation mode, or from a Falcon camera.&nbsp; </p>
+      from a K2 camera in Dose Fractionation mode, or from a Falcon or Direct Electron camera.&nbsp; </p>
     <p>
-      With a K2 camera, the alignment can be done in 
+      <i>With a K2 camera</i>, the alignment can be done in 
       three different ways: with the native alignment procedures in DigitalMicrograph, 
       with the &#39;framealign&#39; module in SerialEM&#39;s plugin to DM, or 
       independently of SerialEM with the Alignframes 
@@ -36,7 +36,7 @@
       been saved.&nbsp; The Framewatcher program in IMOD can be used to process these 
       command files as soon as they appear.</p>
     <p>
-      With a Falcon camera, the alignment can generally be done in two or three 
+      <i>With a Falcon camera</i>, the alignment can generally be done in two or three 
       similar ways: with the FEI software that aligns frames from Falcon 3 camera, 
       with the &#39;framealign&#39; module incorporated into SerialEM, or with the Alignframes 
       program in IMOD.&nbsp; Again, in the latter case all that SerialEM does is write 
@@ -59,10 +59,16 @@
         available only if SerialEM has direct access to the file system on the storage 
         server.</li>
     </ul>
-    <p class="style2">
+    <p>
+      <i>With a DE camera</i> running a server version higher than about 1200, frame 
+      alignment can be done within SerialEM or by writing a command file to run 
+      Alignframes in IMOD, provided that SerialEM is running on the DE server.&nbsp; 
+      Alignment is done in SerialEM by reading in the frames from disk. In addition, 
+      there may be a frame alignment available through the DE server.</p>
+    <p>
       &nbsp;</p>
     <p class="style2">
-      Aligning in DigitalMicrograph or FEI Software</p>
+      Aligning in DigitalMicrograph or FEI or DE Software</p>
     <p>
       For a K2, the alignment in DM has only one parameter, the filter that is used in the 
       alignment procedure.&nbsp; The combo box should show the same set of filters 
@@ -71,6 +77,8 @@
     <p>
       For Falcon 3, alignment with the FEI software has no parameters but does require 
       a certain minimum exposure time per frame.</p>
+    <p>
+      For a DE camera with the frame alignment option, again there are no parameters.</p>
     <p>
       &nbsp;</p>
     <p class="style2">
@@ -87,7 +95,8 @@
       dialog allows you to chose among them.&nbsp; The selection is stored as part of 
       the individual camera parameter set.&nbsp; If you have no previously defined 
       parameter sets, the program will add two sets suitable for use with counting 
-      mode and super-resolution frames.</p>
+      mode and super-resolution frames.&nbsp; These default parameters are a good 
+      starting point and may well be adequate for you.</p>
     <p>
       The dialog gives a choice among several alignment strategies.&nbsp; Which one is 
       appropriate depends on the kind of data being taken and its noise level.&nbsp; 
@@ -242,14 +251,13 @@ FRC crossings 0.5: 0.0335  0.25: 0.0468  0.125: 0.0898  is 0.1025 at 0.25/pix   
       Select whether to use the GPU on an NVIDIA card for the frame alignment.&nbsp; 
       This setting is kept track of separately for aligning immediately versus 
       aligning in IMOD, because the latter could be done by any computer with access 
-      to the frame data.&nbsp; In fact, if there are two K2&#39;s, or a K2 and a 
-      Falcon, it is kept track of 
-      separately for each camera.&nbsp; This option should be 
-      enabled if NVIDIA drivers are installed, and the files FrameGPU.dll, 
+      to the frame data.&nbsp; In fact, if there are two K2&#39;s, or a K2 and a Falcon, 
+      it is kept track of separately for each camera.&nbsp; This option should 
+      available if NVIDIA drivers are installed, and the files FrameGPU.dll, 
       cudart64_41_28.dll and cufft64_41_28.dll are in the correct location: 
       specifically, for a K2 camera, in
       C:\ProgramData\Gatan\Plugins along with the SEMCCD-GM2-64.dll plugin; and for a 
-      Falcon camera, in the same folder as the SerialEM executable.</p>
+      Falcon or DE camera, in the same folder as the SerialEM executable.</p>
     <p>
       <b>Align only whole tilt series</b></p>
     <p>
@@ -297,10 +305,11 @@ FRC crossings 0.5: 0.0335  0.25: 0.0468  0.125: 0.0898  is 0.1025 at 0.25/pix   
     <p>
       This group of check-boxes lets you control whether a parameter set is to be used 
       only in under certain conditions.&nbsp; Namely, you can specify that a set 
-      should be used only when <b>Aligning in plugin</b> or only when <b>Aligning with 
-      IMOD</b>, and independently whether it should be only for <b>4K (non 
-      super-resolution) frames</b> or only for <b>8K (super-resolution) frames</b>.&nbsp; 
-      The restrictions are taken into account at several places in the program, where 
+      should be used only when <b>Aligning in plugin</b> (or in SerialEM) or only when <b>Aligning with 
+      IMOD</b>, and independently whether it should be only for <b>non 
+      super-resolution frames</b> or only for <b>super-resolution frames</b>.&nbsp; 
+      The restrictions based on size may be superfluous if one specifies binning to a 
+      target size rather than by a fixed amount for alignment.&nbsp; The restrictions are taken into account at several places in the program, where 
       the currently selected parameters are tested for whether they meet the 
       conditions.&nbsp; If they do not, the program analyzes whether the conditions 
       are met by no, one, or several other parameter sets, and acts in various ways:</p>
@@ -324,10 +333,11 @@ FRC crossings 0.5: 0.0335  0.25: 0.0468  0.125: 0.0898  is 0.1025 at 0.25/pix   
     <p>
       The use of restrictions will work most conveniently if you have only one 
       parameter set for each kind of situation, each one marked with different 
-      restrictions.&nbsp; For a K2, if you have just the &quot;4K default set&quot; and &quot;8K default set&quot;, 
+      restrictions.&nbsp; For a K2 or DE, if you have just the &quot;4K default set&quot; and &quot;8K default set&quot;, 
       simply restrict each one to the respective size of frames, and the parameter set 
       will switch automatically when you switch between super-resolution and counting 
-      mode.</p>
+      mode.&nbsp; However, if all the parameters except binning are the same, it may 
+      be simpler just to bin to a target size.</p>
     <p class="style1">
       Basic Alignment Parameters</p>
     <p>
@@ -357,7 +367,9 @@ FRC crossings 0.5: 0.0335  0.25: 0.0468  0.125: 0.0898  is 0.1025 at 0.25/pix   
       Binning, actually antialiased image reduction, is one of the two most important 
       parameters because it affects processing time as well as the accuracy of the 
       fits.&nbsp; Binning should be set to bring images to a size of 1000 to 1250 
-      pixels; thus 3 or 4 for ~4K images and 6 or 8 for ~8K images.</p>
+      pixels; thus 3 or 4 for ~4K images and 6 or 8 for ~8K images.&nbsp; You can 
+      choose to set either a specific binning or a target size to which images should 
+      be binned.</p>
     <p>
       <b>Filter cutoff</b></p>
     <p>

@@ -909,8 +909,8 @@ double UtilGoodAngle(double angle)
 // Finds a frame alignment parameter that fits the given restriction on size and alignment
 // Return value is 0 if originally selected one or just one other one is valid, 1-3 if
 // none are valid, and -1 to -3 if new one is one of several that are valid
-int UtilFindValidFrameAliParams(int readMode, int whereAlign, int curIndex,
-  int &newIndex, CString *message)
+int UtilFindValidFrameAliParams(int readMode, int whereAlign,
+  int curIndex, int &newIndex, CString *message)
 {
   CString str;
   int ind, retval = 0, numValid = 0, firstValid = -1;
@@ -922,14 +922,14 @@ int UtilFindValidFrameAliParams(int readMode, int whereAlign, int curIndex,
     return 0;
 
   // First check, is the selected on valid with its restrictions
-  if (faParam->sizeRestriction && 
+  if (faParam->sizeRestriction && sWinApp->GetAnySuperResMode() && 
     !BOOL_EQUIV(readMode != SUPERRES_MODE, faParam->sizeRestriction != SUPERRES_MODE)) {
       retval += 1;
       if (message) {
-        str.Format("The camera parameters are for %s images but the selected\r\n"
-          "alignment parameters are marked as only for %s images.", 
-          readMode == SUPERRES_MODE ? "8K" : "4K",
-          faParam->sizeRestriction == SUPERRES_MODE ? "8K" : "4K");
+        str.Format("The camera parameters are for %sresolution images but the selected"
+          "\r\nalignment parameters are marked as only for %sresolution images.", 
+          readMode == SUPERRES_MODE ? "super-" : "normal ",
+          faParam->sizeRestriction == SUPERRES_MODE ? "super-" : "normal");
         *message += str;
       }
   }
@@ -951,7 +951,7 @@ int UtilFindValidFrameAliParams(int readMode, int whereAlign, int curIndex,
 
   for (ind = 0; ind < (int)params->GetSize(); ind++) {
      faParam = &paramData[ind];
-    if ((!faParam->sizeRestriction || 
+    if ((!faParam->sizeRestriction || !sWinApp->GetAnySuperResMode() ||
       BOOL_EQUIV(readMode != SUPERRES_MODE, faParam->sizeRestriction != SUPERRES_MODE))
       && (!faParam->whereRestriction || 
       BOOL_EQUIV(whereAlign < 2, faParam->whereRestriction < 2))) {

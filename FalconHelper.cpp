@@ -327,8 +327,8 @@ int CFalconHelper::SetupFrameAlignment(ControlSet &conSet, CameraParameters *cam
     "(%.1f GB) exceeds allowed\r\n  memory usage (%.1f GB), controlled by MemoryLimit"
     " property if it is set", totAliMem, maxMemory);
 
-  ind = mFrameAli->initialize(mSumBinning, param.aliBinning, trimFrac, numAllVsAll, 
-    refineIter, 
+  ind = mFrameAli->initialize(mSumBinning, GetFrameAlignBinning(param, nx, ny), trimFrac,
+    numAllVsAll, refineIter, 
     param.hybridShifts, (deferGpuSum | doSpline) ? 1 : 0, groupSize, nx, ny, 
     fullTaperFrac, taperFrac, param.antialiasType, 0., radius2, sigma1, sigma2, 
     numFilters, param.shiftLimit, kFactor, maxMaxWeight, 0, numFrames, gpuFlags, 
@@ -687,7 +687,7 @@ void CFalconHelper::CleanupAndFinishAlign(bool saving, int async)
     comPath = (mCamera->GetComPathIsFramePath() ? mDirectory : 
       mCamera->GetAlignFramesComPath()) + '\\' + mRootname + ".pcm";
     err = WriteAlignComFile(mDirectory + "\\" + mRootname + ".mrc", comPath, 
-      mAliComParamInd, mUseGpuForAlign[1], false);
+      mAliComParamInd, mUseGpuForAlign[1], false, mNx, mNy);
   }
   if (saving)
     PrintfToLog("%d of %d frames were stacked successfully%s", mNumStacked, mNumFiles,
@@ -1174,7 +1174,7 @@ float CFalconHelper::AlignedSubsetExposure(ShortVec &summedFrameList, float fram
  * Write a com file for alignment with alignframes
  */
 int CFalconHelper::WriteAlignComFile(CString inputFile, CString comName, int faParamInd, 
-  int useGPU, bool ifMdoc)
+  int useGPU, bool ifMdoc, int frameX, int frameY)
 {
   CString comStr, strTemp, aliHead, inputPath, relPath, outputRoot, outputExt, temp,temp2;
   CArray<FrameAliParams, FrameAliParams> *faParams = 
@@ -1208,7 +1208,8 @@ int CFalconHelper::WriteAlignComFile(CString inputFile, CString comName, int faP
     "FilterRadius2 %f\n"
     "FilterSigma2 %f\n"
     "VaryFilter %f", useGPU ? 0 : -1, numAllVsAll, param.useGroups ? param.groupSize : 1, 
-    param.aliBinning, param.antialiasType, refineIter, param.stopIterBelow,
+    GetFrameAlignBinning(param, frameX, frameY), param.antialiasType, 
+    refineIter, param.stopIterBelow,
     param.shiftLimit, param.doSmooth ? param.smoothThresh : 0, radius2[0], 
     radius2[0] * param.sigmaRatio, radius2[0]);
   comStr = strTemp;
@@ -1280,4 +1281,41 @@ int CFalconHelper::WriteAlignComFile(CString inputFile, CString comName, int faP
   else if (error == 2)
     error = WRITE_COM_ERROR;
   return error;
+}
+
+// Return the alignment binning for the given parameters and frame size
+int CFalconHelper::GetFrameAlignBinning(FrameAliParams &param, int frameSizeX, 
+  int frameSizeY)
+{
+  if (!param.binToTarget || param.targetSize < 100)
+    return param.aliBinning;
+  return B3DNINT(sqrt((double)frameSizeX * frameSizeY) / param.targetSize);
+}
+
+// Return the size that frames will be saved for the given camera and parameters
+void CFalconHelper::GetSavedFrameSizes(CameraParameters *camParams, 
+  const ControlSet *conSet, int &frameX, int &frameY)
+{
+  int superResDiv = (conSet->K2ReadMode == SUPERRES_MODE ? 1 : 2);
+  int hwBin;
+  BOOL maybeSwap;
+  if (camParams->K2Type) {
+    frameX = camParams->sizeX / superResDiv;
+    frameY = camParams->sizeY / superResDiv;
+    maybeSwap = mCamera->GetSkipK2FrameRotFlip();
+  } else if (camParams->FEItype) {
+    frameX = (conSet->right - conSet->left) / conSet->binning;
+    frameY = (conSet->bottom - conSet->top) / conSet->binning;
+    maybeSwap = FCAM_ADVANCED(camParams);
+  } else {
+    hwBin = ((camParams->CamFlags & DE_HAS_HARDWARE_BIN) && conSet->boostMag) ? 2 : 1;
+    frameX = (camParams->sizeX * 2) / (superResDiv * hwBin);
+    frameY = (camParams->sizeY * 2) / (superResDiv * hwBin);
+    maybeSwap = true;
+  }
+  if (maybeSwap && (camParams->rotationFlip % 2 != 0)) {
+    hwBin = frameX;
+    frameX = frameY;
+    frameY = hwBin;
+  }
 }

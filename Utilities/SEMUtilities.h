@@ -68,7 +68,7 @@ void SetDropDownHeight(CComboBox* pMyComboBox, int itemsToShow);
 void UtilModifyMenuItem(int subMenuNum, UINT itemID, const char * newText);;
 bool UtilCamRadiosNeedSmallFont(CButton *radio);
 double UtilGoodAngle(double angle);
-int UtilFindValidFrameAliParams(int readMode, int whereAlign, int curIndex, int &newIndex,
-  CString *message);
+int UtilFindValidFrameAliParams(      int readMode, int whereAlign, 
+  int curIndex, int &newIndex, CString *message);
 int UtilWriteTextFile(CString fileName, CString text);
 #endif

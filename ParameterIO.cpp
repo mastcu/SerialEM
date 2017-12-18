@@ -898,6 +898,13 @@ int CParameterIO::ReadSettings(CString strFileName)
               faData->sizeRestriction = itemInt[12];
               faData->whereRestriction = itemInt[13];
             }
+            if (itemEmpty[14]) {
+              faData->binToTarget = false;
+              faData->targetSize = 1000;
+            } else {
+              faData->binToTarget = itemInt[14] > 0;
+              faData->targetSize = itemInt[15];
+            }
           } else {
             StripItems(strLine, 2, faData->name);
           }
@@ -1466,11 +1473,12 @@ void CParameterIO::WriteSettings(CString strFileName)
         faParam.groupSize, faParam.doSmooth ? 1 : 0, faParam.smoothThresh,
         faParam.shiftLimit);
       mFile->WriteString(oneState);
-      oneState.Format("FrameAlignParams2 %d %d %f %d %f %d %d %d %d %d %d %d %d\n", i, 
-        faParam.truncate ? 1 : 0, faParam.truncLimit, faParam.antialiasType, 
+      oneState.Format("FrameAlignParams2 %d %d %f %d %f %d %d %d %d %d %d %d %d %d %d\n",
+        i, faParam.truncate ? 1 : 0, faParam.truncLimit, faParam.antialiasType, 
         faParam.stopIterBelow, faParam.groupRefine ? 1 : 0, faParam.keepPrecision ? 1 : 0,
         faParam.outputFloatSums ? 1 : 0, faParam.alignSubset ? 1 : 0, faParam.subsetStart,
-        faParam.subsetEnd, faParam.sizeRestriction, faParam.whereRestriction);
+        faParam.subsetEnd, faParam.sizeRestriction, faParam.whereRestriction,
+        faParam.binToTarget ? 1 : 0, faParam.targetSize);
       mFile->WriteString(oneState);
       oneState.Format("FrameAliSetName %d %s\n", i, (LPCTSTR)faParam.name);
       mFile->WriteString(oneState);

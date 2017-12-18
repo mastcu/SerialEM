@@ -372,9 +372,9 @@ BEGIN_MESSAGE_MAP(CCameraSetupDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_RLINEAR, OnK2Mode)
   ON_BN_CLICKED(IDC_RCOUNTING, OnK2Mode)
   ON_BN_CLICKED(IDC_RSUPERRES, OnK2Mode)
-  ON_BN_CLICKED(IDC_RDE_LINEAR, OnDEMode)
-  ON_BN_CLICKED(IDC_RDE_COUNTING, OnDEMode)
-  ON_BN_CLICKED(IDC_RDE_SUPERRES, OnDEMode)
+  ON_BN_CLICKED(IDC_RDE_LINEAR, OnK2Mode)
+  ON_BN_CLICKED(IDC_RDE_COUNTING, OnK2Mode)
+  ON_BN_CLICKED(IDC_RDE_SUPERRES, OnK2Mode)
   ON_BN_CLICKED(IDC_DOSE_FRAC_MODE, OnDoseFracMode)
   ON_BN_CLICKED(IDC_ALIGN_DOSE_FRAC, OnAlignDoseFrac)
   ON_BN_CLICKED(IDC_SAVE_FRAMES, OnSaveFrames)
@@ -2235,18 +2235,19 @@ int CCameraSetupDlg::GetFEIflybackTime(float &flyback)
 }
 
 /////////////////////////////////////////////
-// K2 Camera 
+// K2 Camera and some others
 /////////////////////////////////////////////
 
-// Linear/counting/superres Mode change
+// Linear/counting/superres Mode change for all cameras
 void CCameraSetupDlg::OnK2Mode()
 {
-  // Despite this, DE does not come through this route (yet)
   int *modeP = mParam->DE_camType ? &m_iDEMode : &m_iK2Mode;
   int newIndex, notOK, answ, oldMode = *modeP;
   CString message, str;
   UpdateData(true);
   CButton *radio = (CButton *)GetDlgItem(IDC_RBIN1);
+
+  // Check the frame align parameters
   if (mCurSet->useFrameAlign) {
     notOK = UtilFindValidFrameAliParams(*modeP, mCurSet->useFrameAlign, 
       mCurSet->faParamSetInd, newIndex, &message);
@@ -2278,6 +2279,34 @@ void CCameraSetupDlg::OnK2Mode()
     }
 
   }
+
+  // Handle DE and return
+  if (mParam->DE_camType) {
+    if (oldMode == 0 || m_iDEMode == 0) {
+
+      // Unload the mode-dependent items and reload appropriate ones if switching in or 
+      // out of linear mode
+      if (m_iDEMode) {
+        mCurSet->DEsumCount = m_iSumCount;
+        m_iSumCount = mCurSet->sumK2Frames;
+        mParam->DE_FramesPerSec = m_fDEfps;
+        if (mParam->DE_CountingFPS > 0.)
+          m_fDEfps = mParam->DE_CountingFPS;
+      } else {
+        mCurSet->sumK2Frames = m_iSumCount;
+        m_iSumCount = mCurSet->DEsumCount;
+        mParam->DE_CountingFPS = m_fDEfps;
+        m_fDEfps = mParam->DE_FramesPerSec;
+      }
+      m_iSumCount = B3DMAX(1, m_iSumCount);
+    }
+    ManageDEpanel();
+    ManageExposure();
+    UpdateData(false);
+    return;
+  }
+
+  // Handle K2, do general updates for Falcon too
   if (mParam->K2Type) {
     radio->EnableWindow(mBinningEnabled && *modeP == SUPERRES_MODE);
     if (*modeP != SUPERRES_MODE && !m_iBinning) {
@@ -2290,33 +2319,6 @@ void CCameraSetupDlg::OnK2Mode()
   ManageAntialias();
   ManageExposure();
   ManageK2SaveSummary();
-}
-
-// Mode change for DE camera
-void CCameraSetupDlg::OnDEMode()
-{
-  int lastMode = m_iDEMode;
-  UpdateData(true);
-  if (lastMode > 0 && m_iDEMode > 0)
-    return;
-
-  // Unload the mode-dependent items and reload appropriate ones
-  if (m_iDEMode) {
-    mCurSet->DEsumCount = m_iSumCount;
-    m_iSumCount = mCurSet->sumK2Frames;
-    mParam->DE_FramesPerSec = m_fDEfps;
-    if (mParam->DE_CountingFPS > 0.)
-      m_fDEfps = mParam->DE_CountingFPS;
-  } else {
-    mCurSet->sumK2Frames = m_iSumCount;
-    m_iSumCount = mCurSet->DEsumCount;
-    mParam->DE_CountingFPS = m_fDEfps;
-    m_fDEfps = mParam->DE_FramesPerSec;
-  }
-  m_iSumCount = B3DMAX(1, m_iSumCount);
-  ManageDEpanel();
-  ManageExposure();
-  UpdateData(false);
 }
 
 // Dose fractionation mode change

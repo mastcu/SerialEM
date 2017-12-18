@@ -30,6 +30,7 @@ private:
   CArray<FrameAliParams, FrameAliParams> *mParams;
   int mPairwiseNum;
   int mAlignBin;
+  int mAlignTargetSize;
   int mGroupSize;
   int mRefineIter;
   int mSmoothCrit;
@@ -169,4 +170,13 @@ public:
   BOOL m_bUseFrameFolder;
   afx_msg void OnUseFrameFolder();
   CButton m_butTruncateAbove;
+  CStatic m_statAlignTarget;
+  CString m_strAlignTarget;
+  afx_msg void OnAliBinByFac();
+  CStatic m_statAlibinPix;
+  CSpinButtonCtrl m_sbcBinTo;
+  afx_msg void OnDeltaposSpinBinTo(NMHDR *pNMHDR, LRESULT *pResult);
+  int m_iBinByOrTo;
+  void ManageAlignBinning(void);
+  CStatic m_statAlignBin;
 };
