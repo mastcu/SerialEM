@@ -3,6 +3,17 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+12/29/17: Made truncation when saving as bytes be expressed as percentage
+instead of number of pixels, be saved as a setting, and have a separate value
+for single-file saving so JPEG-compressed TIFFs can look OK without adjusting
+contrast.
+
+12/29/17: Made low dose do image shift change before leaving search mode on
+JEOL using PLA.
+
+12/18/17: Add frame alignment parameters for binning to a target size to avoid
+a set binning becoming inappropriate for different size frames.
+
 12/8/17: SEM_3-6-14
 12/6/17: Changed script beam size measurement from radius to diameter.
 

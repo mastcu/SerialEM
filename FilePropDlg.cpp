@@ -41,8 +41,8 @@ CFilePropDlg::CFilePropDlg(CWnd* pParent /*=NULL*/)
   m_bStagePos = FALSE;
   m_bTiltAngle = FALSE;
   m_bMag = FALSE;
-  m_iTruncBlack = 40;
-  m_iTruncWhite = 40;
+  m_fTruncBlack = 0.2f;
+  m_fTruncWhite = 0.2f;
   m_iUnsignOpt = 0;
 	m_bIntensity = FALSE;
   m_bExposure = FALSE;
@@ -75,10 +75,10 @@ void CFilePropDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Check(pDX, IDC_STAGEPOS, m_bStagePos);
   DDX_Check(pDX, IDC_TILTANGLE, m_bTiltAngle);
   DDX_Check(pDX, IDC_MAGNIFICATION, m_bMag);
-  DDX_Text(pDX, IDC_TRUNCBLACKEDIT, m_iTruncBlack);
-  DDV_MinMaxInt(pDX, m_iTruncBlack, 0, 10000);
-  DDX_Text(pDX, IDC_TRUNCWHITEEDIT, m_iTruncWhite);
-  DDV_MinMaxInt(pDX, m_iTruncWhite, 0, 10000);
+  DDX_Text(pDX, IDC_TRUNCBLACKEDIT, m_fTruncBlack);
+  DDV_MinMaxFloat(pDX, m_fTruncBlack, 0., 2.5f);
+  DDX_Text(pDX, IDC_TRUNCWHITEEDIT, m_fTruncWhite);
+  DDV_MinMaxFloat(pDX, m_fTruncWhite, 0., 2.5f);
   DDX_Radio(pDX, IDC_RTRUNCATE, m_iUnsignOpt);
   DDX_Radio(pDX, IDC_RNOCOMPRESS, m_iCompress);
   DDX_Radio(pDX, IDC_RMRCFILE, m_iFileType);
@@ -158,20 +158,20 @@ void CFilePropDlg::OnChangeTruncwhiteedit()
 // or whether any extra header info is being selected
 void CFilePropDlg::ManageStates()
 {
-  BOOL bEnable = (m_iByteInt == 0);
+  BOOL tiffFile = (mFileOpt.TIFFallowed && m_iFileType == 1) || m_iFileType == 2;
+  BOOL bEnable = m_iByteInt == 0 || (tiffFile && compressions[m_iCompress] == 
+    COMPRESS_JPEG);
   m_groupTrunc.EnableWindow(bEnable);
   m_statTruncWhite.EnableWindow(bEnable);
   m_editTruncWhite.EnableWindow(bEnable);
   m_statTruncBlack.EnableWindow(bEnable);
   m_editTruncBlack.EnableWindow(bEnable);
-
-  bEnable = (mFileOpt.TIFFallowed && m_iFileType == 1) || m_iFileType == 2;
-  m_statCompress.EnableWindow(bEnable);
-  m_butNoComp.EnableWindow(bEnable);
-  m_butLZWComp.EnableWindow(bEnable);
-  m_butZIPComp.EnableWindow(bEnable);
-  m_butJPEGComp.EnableWindow(bEnable);
-  bEnable = !bEnable || compressions[m_iCompress] != COMPRESS_JPEG;
+  m_statCompress.EnableWindow(tiffFile);
+  m_butNoComp.EnableWindow(tiffFile);
+  m_butLZWComp.EnableWindow(tiffFile);
+  m_butZIPComp.EnableWindow(tiffFile);
+  m_butJPEGComp.EnableWindow(tiffFile);
+  bEnable = !tiffFile || compressions[m_iCompress] != COMPRESS_JPEG;
   m_butSaveByte.EnableWindow(bEnable);
   m_butSaveInteger.EnableWindow(bEnable);
   m_butSaveUnsigned.EnableWindow(bEnable);
@@ -206,8 +206,8 @@ BOOL CFilePropDlg::OnInitDialog()
   // Set the variables based on the FileOption structure
   m_iByteInt = mFileOpt.mode < 2 ? mFileOpt.mode : 2;
   m_iMaxSects = mFileOpt.maxSec;
-  m_iTruncBlack = mFileOpt.nTruncLo;
-  m_iTruncWhite = mFileOpt.nTruncHi;
+  m_fTruncBlack = mFileOpt.pctTruncLo;
+  m_fTruncWhite = mFileOpt.pctTruncHi;
   m_bTiltAngle = ((mFileOpt.typext & TILT_MASK) != 0);
   m_bStagePos = ((mFileOpt.typext & VOLT_XY_MASK) != 0);
   m_bMag = ((mFileOpt.typext & MAG100_MASK) != 0);
@@ -247,8 +247,8 @@ void CFilePropDlg::OnOK()
   UpdateData(TRUE); 
   mFileOpt.mode = m_iByteInt < 2 ? m_iByteInt : MRC_MODE_USHORT;
   mFileOpt.maxSec = m_iMaxSects;
-  mFileOpt.nTruncLo = m_iTruncBlack;
-  mFileOpt.nTruncHi = m_iTruncWhite;
+  mFileOpt.pctTruncLo = m_fTruncBlack;
+  mFileOpt.pctTruncHi = m_fTruncWhite;
   mFileOpt.unsignOpt = m_iUnsignOpt;
   SetFlag(m_bTiltAngle, TILT_MASK);
   SetFlag(m_bMag, MAG100_MASK);

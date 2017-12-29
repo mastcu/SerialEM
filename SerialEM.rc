@@ -778,7 +778,7 @@ BEGIN
     CONTROL         "LZW",IDC_RLZWCOMPRESS,"Button",BS_AUTORADIOBUTTON,95,272,33,10
     CONTROL         "JPEG",IDC_RJPEGCOMPRESS,"Button",BS_AUTORADIOBUTTON,131,272,34,10
     GROUPBOX        "Type of compression in TIFF file",IDC_STATCOMPRESS,15,262,153,25,WS_GROUP
-    GROUPBOX        "Number of pixels to truncate converting to bytes",IDC_TRUNCGROUP,10,65,160,30
+    GROUPBOX        "Percent of pixels to truncate converting to bytes",IDC_TRUNCGROUP,10,65,160,30
     LTEXT           "As black (0):",IDC_TRUNCBLACKTEXT,16,78,38,8
     EDITTEXT        IDC_TRUNCBLACKEDIT,55,76,24,14,ES_AUTOHSCROLL
     LTEXT           "As white (255):",IDC_TRUNCWHITETEXT,95,78,43,8

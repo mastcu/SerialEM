@@ -26,8 +26,8 @@ struct  FileOptions {
   int maxSec;
   BOOL useMdoc;
   BOOL montageInMdoc;
-  int nTruncLo;
-  int nTruncHi;
+  float pctTruncLo;
+  float pctTruncHi;
   int unsignOpt;
   int signToUnsignOpt;
   int fileType;

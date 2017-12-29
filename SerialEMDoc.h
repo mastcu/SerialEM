@@ -188,7 +188,7 @@ private:
   FileOptions  mFileOpt;
   FileOptions  mDefFileOpt;
   FileOptions  mOtherFileOpt;    // File options for other file
-  int   mMaxTrunc;
+  float   mMaxTrunc;
     
   CParameterIO *mParamIO;
   CString mSystemPath;           // Path for system settings & properties

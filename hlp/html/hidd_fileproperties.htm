@@ -99,18 +99,24 @@
       integer file. The three options are to truncate at 32767, divide by 2, or 
       subtract 32768, as described above.
     </P>
-    <P><B>Number of pixels to truncate converting to bytes:</B></P>
-    <P>Controls the number of pixels that will be truncated as black (0) or white (255) 
+    <P><B>Percentage of pixels to truncate converting to bytes:</B></P>
+    <P>Controls the fraction of pixels that will be truncated as black (0) or white (255) 
       when images are scaled to bytes.</P>
     <P>Images are captured as 16-bit integers, and the default is to save them to file 
       in this mode. Images can be saved as bytes (range 0 to 255), but this requires 
       scaling of the intensity values into this limited range. To keep the scaling 
       from being dominated by a few extreme values (e.g., from X-rays), which would 
       compress the dynamic range for the rest of the image data, the program will 
-      find a scaling which truncates a certain number of extremely dark and light 
-      pixels at 0 and 255, respectively. Every image is scaled independently. If you 
-      select byte storage, you can control the number of pixels that will be 
-      truncated with these text boxes.</P>
+      find a scaling which truncates a certain percentage of extremely dark and light 
+      pixels at 0 and 255, respectively. Every image is scaled independently. </P>
+    <P>If you 
+      select byte storage or saving to a TIFF file with JPEG compression, you can control the 
+      fraction of pixels that will be 
+      truncated with these text boxes.&nbsp; Your entries here will be saved in your 
+      settings file, and separate values are maintained for saving a single image with 
+      the
+      <a href="menu_file.htm#hidm_file_saveother">Save Single/Save to Other</a> 
+      command versus other situations.</P>
     <P><B>Save in extended header:</B></P>
     <P>Select whether to save tilt angle, C2 intensity value, stage position, 
       magnification, or dose in the header. The dose is referred to as 'exposure 
@@ -155,7 +161,7 @@
       maintained for saving a single image with the
       <a href="menu_file.htm#hidm_file_saveother">Save Single/Save to Other</a> 
       command versus other situations.&nbsp; In contrast, the default values 
-      for other options in this dialog are controlled by entries in the 
+      for most other options in this dialog are controlled by entries in the 
       SerialEMproperties.txt file.</P>
     <P><b>Skip this dialog (turn skipping off in the File menu):</b></P>
     <P>Select this option to avoid seeing this dialog every time you open a new file.&nbsp; 

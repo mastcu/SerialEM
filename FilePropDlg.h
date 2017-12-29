@@ -49,8 +49,8 @@ public:
 	BOOL	m_bStagePos;
 	BOOL	m_bTiltAngle;
 	BOOL	m_bMag;
-	int		m_iTruncBlack;
-	int		m_iTruncWhite;
+	float	m_fTruncBlack;
+	float m_fTruncWhite;
 	int		m_iUnsignOpt;
 	BOOL	m_bIntensity;
   BOOL  m_bExposure;

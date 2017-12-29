@@ -393,13 +393,11 @@ char *KImageStore::convertForWriting(KImage *inImage, bool needFlipped,
     // Otherwise, integer data that must go to bytes
     // Need to find storage limits
     float scaleLo, scaleHi;
-    float thePctLo = ( 100.0f * mFileOpt.nTruncLo) / (mWidth * mHeight);    
-    float thePctHi = ( 100.0f * mFileOpt.nTruncHi )/ (mWidth * mHeight);
     unsigned char **lines = makeLinePointers(idata, mWidth, mHeight, 2);
     if (!lines)
       return NULL;
     percentileStretch(lines, theType, mWidth, mHeight, 1.0, 0, 0, mWidth, mHeight,
-      thePctLo, thePctHi, &scaleLo, &scaleHi);
+      mFileOpt.pctTruncLo, mFileOpt.pctTruncHi, &scaleLo, &scaleHi);
     free(lines);
 
     // Again, flip data while scaling it 

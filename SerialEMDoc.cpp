@@ -142,8 +142,8 @@ CSerialEMDoc::CSerialEMDoc()
   mDefFileOpt.mode = 1;
   mDefFileOpt.typext = TILT_MASK | INTENSITY_MASK;
   mDefFileOpt.maxSec = 360;
-  mDefFileOpt.nTruncLo = 40;
-  mDefFileOpt.nTruncHi = 40;
+  mDefFileOpt.pctTruncLo = 0.2f;
+  mDefFileOpt.pctTruncHi = 0.2f;
   mDefFileOpt.unsignOpt = TRUNCATE_UNSIGNED;
   mDefFileOpt.signToUnsignOpt = TRUNCATE_SIGNED;
   mDefFileOpt.fileType = STORE_TYPE_MRC;
@@ -154,11 +154,15 @@ CSerialEMDoc::CSerialEMDoc()
   mDefFileOpt.separateForMont = true;
   mDefFileOpt.montFileType = STORE_TYPE_MRC;
   mDefFileOpt.montUseMdoc = true;
+  mOtherFileOpt.pctTruncLo = 0.2f;
+  mOtherFileOpt.pctTruncHi = 0.5f;
+  mOtherFileOpt.fileType = STORE_TYPE_MRC;
+  mOtherFileOpt.compression = COMPRESS_NONE;
   mShowFileDlgOnce = true;
   mSkipFileDlg = true;
   mSTEMfileMode = 1;
   mSTEMunsignOpt = SHIFT_UNSIGNED;
-  mMaxTrunc = 2000;
+  mMaxTrunc = 2.5f;
   mSystemPath = DEFAULT_SYSTEM_PATH;
   mPluginPath = DEFAULT_SYSTEM_PATH"Plugins";
   mSettingsName = SETTINGS_NAME;
@@ -391,7 +395,7 @@ int CSerialEMDoc::OpenOldFile(CFile *file, CString cFilename, int err)
   if (mWinApp->mStoreMRC != NULL) {
     if (mWinApp->mStoreMRC->FileOK()) {
       SetFileOptsForSTEM();
-      mWinApp->mStoreMRC->SetTruncation(mFileOpt.nTruncLo, mFileOpt.nTruncHi);
+      mWinApp->mStoreMRC->SetTruncation(mFileOpt.pctTruncLo, mFileOpt.pctTruncHi);
       mWinApp->mStoreMRC->SetUnsignedOption(mFileOpt.unsignOpt);
       mWinApp->mStoreMRC->SetSignedOption(mFileOpt.signToUnsignOpt);
       mWinApp->mStoreMRC->setName(cFilename);
@@ -1007,17 +1011,17 @@ void CSerialEMDoc::OnUpdateFileSaveother(CCmdUI* pCmdUI)
 
 void CSerialEMDoc::OnFileTruncation() 
 {
-  int number = mFileOpt.nTruncLo;
-  if (KGetOneInt ("Number of pixels to truncate as black:", number) ) {
+  float number = mFileOpt.pctTruncLo;
+  if (KGetOneFloat("Percent of pixels to truncate as black:", number, 2)) {
     if (number > mMaxTrunc)
         number = mMaxTrunc;
   } else
     return;
-  if (KGetOneInt ("Number of pixels to truncate as white:", mFileOpt.nTruncHi) ) {
-    if (mFileOpt.nTruncHi > mMaxTrunc)
-      mFileOpt.nTruncHi = mMaxTrunc;
-    mFileOpt.nTruncLo = number;
-    mWinApp->mStoreMRC->SetTruncation(mFileOpt.nTruncLo, mFileOpt.nTruncHi);
+  if (KGetOneFloat("Percent of pixels to truncate as white:", mFileOpt.pctTruncHi, 2)) {
+    if (mFileOpt.pctTruncHi > mMaxTrunc)
+      mFileOpt.pctTruncHi = mMaxTrunc;
+    mFileOpt.pctTruncLo = number;
+    mWinApp->mStoreMRC->SetTruncation(mFileOpt.pctTruncLo, mFileOpt.pctTruncHi);
   }
 }
 
@@ -1788,11 +1792,16 @@ void CSerialEMDoc::SetDfltUseMdoc(int value)
 void CSerialEMDoc::CopyDefaultToOtherFileOpts(void)
 {
   int typeSave, compSave;
+  float loSave, hiSave;
   typeSave = mOtherFileOpt.fileType;
   compSave = mOtherFileOpt.compression;
+  loSave = mOtherFileOpt.pctTruncLo;
+  hiSave = mOtherFileOpt.pctTruncHi;
   mOtherFileOpt = mDefFileOpt;
   mOtherFileOpt.fileType = typeSave;
   mOtherFileOpt.compression = compSave;
+  mOtherFileOpt.pctTruncLo = loSave;
+  mOtherFileOpt.pctTruncHi = hiSave;
 }
 
 // Set system path from line in settings file: save it as the path that will be rewritten,

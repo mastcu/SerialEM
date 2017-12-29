@@ -72,8 +72,8 @@ public:
 	virtual CString getName(void) {return mFilename;};
 	virtual BOOL    FileOK() { return (mFile != NULL); };
   static int      lookupPixSize(int inMode);
-	virtual void    SetTruncation(int inTruncLo, int inTruncHi)
-			{ mFileOpt.nTruncLo = inTruncLo; mFileOpt.nTruncHi = inTruncHi; }
+	virtual void    SetTruncation(float inTruncLo, float inTruncHi)
+			{ mFileOpt.pctTruncLo = inTruncLo; mFileOpt.pctTruncHi = inTruncHi; }
   virtual void    SetUnsignedOption(int inOpt) {mFileOpt.unsignOpt = inOpt;};
   virtual void    SetSignedOption(int inOpt) {mFileOpt.signToUnsignOpt = inOpt;};
   virtual void    SetCompression(int inComp) {mFileOpt.compression = inComp;};

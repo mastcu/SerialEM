@@ -383,9 +383,13 @@ int CParameterIO::ReadSettings(CString strFileName)
         mWinApp->mMontageController->SetUseSet2InLD(itemInt[2] != 0);
         mWinApp->mMontageController->SetDivFilterSet1By2(itemInt[3] != 0);
         mWinApp->mMontageController->SetDivFilterSet2By2(itemInt[4] != 0);
-      } else if (NAME_IS("TIFFcompression")) {
+      } else if (NAME_IS("TIFFcompression"))
         defFileOpt->compression = itemInt[1];
-      } else if (NAME_IS("AutofocusEucenAbsParams")) {
+      else if (MatchNoCase("FileOptionsPctTruncLo"))
+        defFileOpt->pctTruncLo = (float)itemDbl[1];
+      else if (MatchNoCase("FileOptionsPctTruncHi"))
+        defFileOpt->pctTruncHi = (float)itemDbl[1];
+      else if (NAME_IS("AutofocusEucenAbsParams")) {
         mWinApp->mFocusManager->SetEucenAbsFocusParams(itemDbl[1], itemDbl[2], 
         (float)itemDbl[3], (float)itemDbl[4], itemInt[5] != 0, itemInt[6] != 0);
       } else if (NAME_IS("AssessMultiplePeaksInAlign")) {
@@ -453,6 +457,10 @@ int CParameterIO::ReadSettings(CString strFileName)
         // If you add any, need to preserve in SerialEMDoc::CopyDefaultToOtherFileOpts
         otherFileOpt->fileType = itemInt[1];
         otherFileOpt->compression = itemInt[2];
+        if (!itemEmpty[4]) {
+          otherFileOpt->pctTruncLo = (float)itemDbl[3];
+          otherFileOpt->pctTruncHi = (float)itemDbl[4];
+        }
       } else if (NAME_IS("CookerParams")) {
         cookParams->magIndex = itemInt[1];
         cookParams->spotSize = itemInt[2];
@@ -1175,8 +1183,10 @@ void CParameterIO::WriteSettings(CString strFileName)
       mWinApp->mMontageController->GetDivFilterSet2By2() ? 1 : 0);
     mFile->WriteString(oneState);
     WriteInt("TIFFcompression", fileOpt->compression);
-    oneState.Format("SingleFileOptions %d %d\n", otherFileOpt->fileType, 
-      otherFileOpt->compression);
+    WriteFloat("FileOptionsPctTruncLo", fileOpt->pctTruncLo);
+    WriteFloat("FileOptionsPctTruncHi", fileOpt->pctTruncHi);
+    oneState.Format("SingleFileOptions %d %d %f %f\n", otherFileOpt->fileType, 
+      otherFileOpt->compression, otherFileOpt->pctTruncLo, otherFileOpt->pctTruncHi);
     mFile->WriteString(oneState);
     oneState.Format("AutofocusEucenAbsParams %f %f %f %f %d %d\n", 
       focusMan->GetEucenMinAbsFocus(), focusMan->GetEucenMaxAbsFocus(),
@@ -2330,11 +2340,9 @@ int CParameterIO::ReadProperties(CString strFileName)
         defFileOpt->typext = (short)itemInt[1];
       else if (MatchNoCase("FileOptionsMaxSections"))
         defFileOpt->maxSec = itemInt[1];
-      else if (MatchNoCase("FileOptionsPixelsTruncatedLo"))
-        defFileOpt->nTruncLo = itemInt[1];
-      else if (MatchNoCase("FileOptionsPixelsTruncatedHi"))
-        defFileOpt->nTruncHi = itemInt[1];
-      else if (MatchNoCase("FileOptionsUnsignedOption"))
+      else if (MatchNoCase("FileOptionsPixelsTruncatedLo")) {
+      } else if (MatchNoCase("FileOptionsPixelsTruncatedHi")) {
+      } else if (MatchNoCase("FileOptionsUnsignedOption"))
         defFileOpt->unsignOpt = itemInt[1];
       else if (MatchNoCase("FileOptionsSignToUnsignOption"))
         defFileOpt->signToUnsignOpt = itemInt[1];
