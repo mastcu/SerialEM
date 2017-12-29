@@ -4200,6 +4200,7 @@ void CEMscope::GotoLowDoseArea(int inArea)
   BOOL STEMmode = mWinApp->GetSTEMMode();
   bool fromFocTrial = mLowDoseSetArea == FOCUS_CONSET || mLowDoseSetArea == TRIAL_CONSET;
   bool toFocTrial = inArea == FOCUS_CONSET || inArea == TRIAL_CONSET;
+  bool fromSearch = mLowDoseSetArea == SEARCH_AREA;
   bool splitBeamShift;
   if (!sInitialized || mChangingLDArea || sClippingIS)
     return;
@@ -4259,8 +4260,8 @@ void CEMscope::GotoLowDoseArea(int inArea)
   // separation may be out of range at a higher mag where a bigger projector shift is 
   // needed for the given IS offset
   if (GetUsePLforIS(ldArea->magIndex) && ((fromFocTrial && !toFocTrial) || 
-    (!fromFocTrial && toFocTrial)))
-    ISdone = mLowDoseSetArea >= 0 && fromFocTrial;
+    (!fromFocTrial && toFocTrial) || fromSearch))
+    ISdone = mLowDoseSetArea >= 0 && (fromFocTrial || fromSearch);
   else
     ISdone = mLowDoseSetArea >= 0 && (ldArea->magIndex || ldArea->camLenIndex) &&
       ldArea->magIndex < mLdsaParams->magIndex;
@@ -4271,8 +4272,7 @@ void CEMscope::GotoLowDoseArea(int inArea)
   if (!STEMmode && mLDViewDefocus && mLowDoseSetArea == VIEW_CONSET && 
     inArea != VIEW_CONSET)
       IncDefocus(-(double)mLDViewDefocus);
-  if (!STEMmode && mSearchDefocus && mLowDoseSetArea == SEARCH_AREA && 
-    inArea != SEARCH_AREA)
+  if (!STEMmode && mSearchDefocus && fromSearch && inArea != SEARCH_AREA)
       IncDefocus(-(double)mSearchDefocus);
 
   // Pull off the beam shift if leaving an area and going between LM and nonLM
