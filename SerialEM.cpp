@@ -683,8 +683,9 @@ void CSerialEMApp::InitializeLDParams(void)
       mCamLowDoseParams[j][i].dfTiltX = 0.;
       mCamLowDoseParams[j][i].dfTiltY = 0.;
     }
-    mCamLowDoseParams[j][0].delayFactor = 0.3f;
-    mCamLowDoseParams[j][1].delayFactor = 2.0f;
+    mCamLowDoseParams[j][VIEW_CONSET].delayFactor = 0.3f;
+    mCamLowDoseParams[j][FOCUS_CONSET].delayFactor = 2.0f;
+    mCamLowDoseParams[j][SEARCH_AREA].delayFactor = 0.05f;
   }
 
 }
