@@ -3628,6 +3628,11 @@ void CNavHelper::ListFilesToOpen(void)
           mScope->GetC2Name(), mScope->GetC2Percent(spot, intensity), 
           mScope->GetC2Units(), state->exposure,
           state->binning / BinDivisorI(camp), state->xFrame, state->yFrame);
+        if (state->lowDose) {
+          mess2.Format("  F pos %.2f off %d %d", state->focusAxisPos, state->focusXoffset / state->binning, 
+            state->focusYoffset / state->binning);
+          mess += mess2;
+        }
         mWinApp->AppendToLog(mess, LOG_OPEN_IF_CLOSED);
       }
     }
