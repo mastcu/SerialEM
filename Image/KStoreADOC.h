@@ -44,6 +44,7 @@
 #define ADOC_NUM_FRAMES "NumSubFrames"
 #define ADOC_DOSES_COUNTS "FrameDosesAndNumber"
 #define ADOC_DATE_TIME "DateTime"
+#define ADOC_CHAN_NAME "ChannelName"
 #define ADOC_DE12_VERSION "DE12-ServerSoftwareVersion"
 #define ADOC_DE12_PREEXPOSE "DE12-PreexposureTime(s)"
 #define ADOC_DE12_TOTAL_FRAMES "DE12-TotalNumberOfFrames"

@@ -412,6 +412,9 @@ int KStoreADOC::SetValuesFromExtra(KImage *inImage, char *sectName, int index)
   if (!extra->mNavLabel.IsEmpty() && AdocSetKeyValue(sectName, index, ADOC_NAV_LABEL, 
     (LPCTSTR)extra->mNavLabel))
     return 1;
+  if (!extra->mChannelName.IsEmpty() && AdocSetKeyValue(sectName, index, ADOC_CHAN_NAME, 
+    (LPCTSTR)extra->mChannelName))
+    return 1;
   if (!extra->mDE12Version.IsEmpty() && AdocSetKeyValue(sectName, index, 
     ADOC_DE12_VERSION, (char *)(LPCTSTR)extra->mDE12Version))
     return 1;
@@ -516,6 +519,7 @@ int KStoreADOC::LoadExtraFromValues(EMimageExtra *extra, int &typext, char *sect
   ADOC_GET_STRING(ADOC_DOSES_COUNTS, mFrameDosesCounts);
   ADOC_GET_STRING(ADOC_DATE_TIME, mDateTime);
   ADOC_GET_STRING(ADOC_NAV_LABEL, mNavLabel);
+  ADOC_GET_STRING(ADOC_CHAN_NAME, mChannelName);
   
   //Skip most DE12 items
   AdocGetFloat(sectName, index, ADOC_DE12_PREEXPOSE, &extra->mPreExposeTime);

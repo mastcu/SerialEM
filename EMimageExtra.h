@@ -54,6 +54,7 @@ public:
   CString mFrameDosesCounts;
   CString mDateTime;
   CString mNavLabel;
+  CString mChannelName;
   CString mDE12Version;
   float mPreExposeTime;
   int mNumDE12Frames;

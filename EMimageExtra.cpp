@@ -39,6 +39,7 @@ EMimageExtra::EMimageExtra()
   mSubFramePath = "";
   mNumSubFrames = -1;
   mFrameDosesCounts = "";
+  mChannelName = "";
   mDE12Version = "";
   mPreExposeTime = -1.;
   mNumDE12Frames = -1;
