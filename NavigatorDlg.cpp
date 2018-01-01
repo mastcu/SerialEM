@@ -153,6 +153,8 @@ CNavigatorDlg::CNavigatorDlg(CWnd* pParent /*=NULL*/)
   mNextFileOptInd = -1;
   mNextMontParInd = -1;
   mLast5ptRegis = -1;
+  mNumExtraFileSuffixes = 0;
+  mNumExtraFilesToClose = 0;
 }
 
 
@@ -7626,7 +7628,7 @@ int CNavigatorDlg::GotoNextAcquireArea()
 // Open file and set state if called for for this item
 int CNavigatorDlg::OpenFileIfNeeded(CMapDrawItem * item, bool stateOnly)
 {
-  int j;
+  int j, ind;
   ScheduledFile *sched;
   FileOptions *fileOptp;
   CString root, extension, extraName;
@@ -7680,10 +7682,10 @@ int CNavigatorDlg::OpenFileIfNeeded(CMapDrawItem * item, bool stateOnly)
       return 1;
     }
 
-    // Check the extra file before proceeding too
-    if (!mExtraFileSuffix.IsEmpty()) {
+    // Check the extra file(s) before proceeding too
+    for (ind = 0; ind < mNumExtraFileSuffixes; ind++) {
       UtilSplitExtension(*namep, root, extension);
-      extraName = root + mExtraFileSuffix + extension;
+      extraName = root + mExtraFileSuffix[ind] + extension;
       if (mDocWnd->StoreIndexFromName(extraName) >= 0) {
         SEMMessageBox("The extra file set to be opened for this item,\n" + extraName 
           + "\n" + "is already open.");
@@ -7700,8 +7702,10 @@ int CNavigatorDlg::OpenFileIfNeeded(CMapDrawItem * item, bool stateOnly)
     }
     fileOptp = (FileOptions *)mFileOptArray.GetAt(mNextFileOptInd);
 
-    // Now open the extra file
-    if (!mExtraFileSuffix.IsEmpty()) {
+    // Now open the extra file(s)
+    for (ind = 0; ind < mNumExtraFileSuffixes; ind++) {
+      UtilSplitExtension(*namep, root, extension);
+      extraName = root + mExtraFileSuffix[ind] + extension;
       mWinApp->mStoreMRC = mDocWnd->OpenNewFileByName(extraName, fileOptp);
       if (!mWinApp->mStoreMRC) {
         mDocWnd->RestoreCurrentFile();
@@ -7711,10 +7715,11 @@ int CNavigatorDlg::OpenFileIfNeeded(CMapDrawItem * item, bool stateOnly)
       }
       mDocWnd->AddCurrentStore();
       mWinApp->AppendToLog("Opened extra file " + extraName, LOG_OPEN_IF_CLOSED);
-      mExtraFileToClose = mWinApp->mStoreMRC->getFilePath();
-      mExtraFileSuffix = "";
+      mExtraFileToClose[ind] = mWinApp->mStoreMRC->getFilePath();
       mDocWnd->LeaveCurrentFile();
     }
+    mNumExtraFilesToClose = mNumExtraFileSuffixes;
+    mNumExtraFileSuffixes = 0;
 
     // And open the regular file
     mWinApp->mStoreMRC = mDocWnd->OpenNewFileByName(*namep, fileOptp);
@@ -7754,10 +7759,12 @@ void CNavigatorDlg::CloseFileOpenedByAcquire(void)
   if (!mAcquireOpenedFile.IsEmpty() && mDocWnd->GetNumStores() > 0 && 
     mAcquireOpenedFile == mWinApp->mStoreMRC->getFilePath())
     mDocWnd->DoCloseFile();
-  if (!mExtraFileToClose.IsEmpty() && mDocWnd->GetNumStores() > 0 && 
-    mExtraFileToClose == mWinApp->mStoreMRC->getFilePath())
-      mDocWnd->DoCloseFile();
-  mExtraFileToClose = "";
+  for (int ind = mNumExtraFilesToClose - 1; ind >= 0; ind--) {
+    if (mDocWnd->GetNumStores() > 0 && 
+      mExtraFileToClose[ind] == mWinApp->mStoreMRC->getFilePath())
+        mDocWnd->DoCloseFile();
+  }
+  mNumExtraFilesToClose = 0;
   mAcquireOpenedFile = "";
 }
 
@@ -8493,6 +8500,14 @@ void CNavigatorDlg::SetCollapsing(BOOL state)
   m_bCollapseGroups = state;
   UpdateData(false);
   OnCollapseGroups();
+}
+
+// Store suffixes of extra files to open
+void CNavigatorDlg::SetExtraFileSuffixes(CString *items, int numItems)
+{
+  mNumExtraFileSuffixes = numItems;
+  for (int i = 0; i < numItems; i++)
+    mExtraFileSuffix[i] = items[i];
 }
 
 // See if new current item raw stage position matches that of any other(s) and assign them

@@ -140,7 +140,7 @@ public:
   SetMember(int, SkipBacklashType);
   GetSetMember(int, CurListSel)
   GetMember(int, NumAcquired);
-  SetMember(CString, ExtraFileSuffix);
+  void SetExtraFileSuffixes(CString *items, int numItems);
   GetMember(int, FoundItem);
   SetMember(bool, SkipAcquiringItem);
   SetMember(int, GroupIDtoSkip);
@@ -340,8 +340,10 @@ private:
   int mNextFileOptInd;      // File and mont param index for file to be opened on the
   int mNextMontParInd;      // item being acquired, set in GoToNextAcquirearea
   CString mAcquireOpenedFile;  // Name of file opened by Acquire
-  CString mExtraFileToClose;   // Name of extra file opened by Acquire
-  CString mExtraFileSuffix; // Suffix for extra file to open when Acquire opens a file
+  CString mExtraFileToClose[MAX_STORES - 1];   // Name of extra files opened by Acquire
+  int mNumExtraFilesToClose;   // Number of files to close
+  CString mExtraFileSuffix[MAX_STORES - 1]; // Suffix for extra files to open when Acquire opens a file
+  int mNumExtraFileSuffixes; // Number of suffixes stored
   int mDrawnOnMontBufInd;   // Buffer index of map grid points were drawn on
   int mPieceGridPointOn;    // Montage piece for last point converted in GridImageToStage
   float mGridPtXinPiece;      // Coordinates in piece

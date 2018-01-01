@@ -1025,7 +1025,7 @@ void CMacroProcessor::NextCommand()
   CFile *cfile;
   double delISX, delISY, delX, delY, specDist, h1, v1, v2, h2, h3, v3, v4, h4;
   double stageX, stageY, stageZ;
-  int index, index2, i, ix0, ix1, iy0, iy1, sizeX, sizeY, mag;
+  int index, index2, i, ix0, ix1, iy0, iy1, sizeX, sizeY, mag, lastNonEmptyInd;
   float backlashX, backlashY, bmin, bmax, bmean, bSD, cpe, shiftX, shiftY, fitErr;
   FilterParams *filtParam = mWinApp->GetFilterParams();
   int *activeList = mWinApp->GetActiveCameraList();
@@ -1138,7 +1138,7 @@ void CMacroProcessor::NextCommand()
   // Convert a single number to a DOMACRO (obsolete and bad!)
   InsertDomacro(&strItems[0]);
 
-  // Substitute variables in line and check for control word substitution
+  // Substitute variables in parsed items and check for control word substitution
   report = strItems[0];
   if (SubstituteVariables(strItems, MAX_TOKENS, strLine)) {
     AbortMacro();
@@ -1157,6 +1157,7 @@ void CMacroProcessor::NextCommand()
     if (!itemEmpty[i]) {
       itemInt[i] = atoi((LPCTSTR)strItems[i]);
       itemDbl[i] = atof((LPCTSTR)strItems[i]);
+      lastNonEmptyInd = i;
     }
   }
 
@@ -4444,9 +4445,8 @@ void CMacroProcessor::NextCommand()
 
   } else if (CMD_IS(SUFFIXFOREXTRAFILE)) {                  // SuffixForExtraFile
     ABORT_NONAV;
-    SubstituteVariables(&strLine, 1, strLine);
-    mWinApp->mParamIO->StripItems(strLine, 1, strCopy);
-    navigator->SetExtraFileSuffix(strCopy);
+    navigator->SetExtraFileSuffixes(&strItems[1], 
+      B3DMIN(lastNonEmptyInd, MAX_STORES - 1));
 
   } else if (CMD_IS(ITEMFORSUPERCOORD)) {                   // ItemForSuperCoord
     ABORT_NONAV;
