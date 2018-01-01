@@ -1703,34 +1703,40 @@ int CParameterIO::ReadProperties(CString strFileName)
 
       if (MatchNoCase("CameraProperties")) {
         int iset = itemInt[1];
-        if (iset < 0 || iset >= MAX_CAMERAS) {
+        if (iset >= MAX_CAMERAS) {
           message.Format("Index in \"CameraProperties %d\" is out of range", iset);
           AfxMessageBox(message, MB_EXCLAME);
           retval = 1;
           break;
         }
-        camP = &mCamParam[iset];
-        if (camEntered[iset]) {
-            message.Format("More than one entry in properties file for camera %d", iset);
-            AfxMessageBox(message, MB_EXCLAME);
+        if (iset >= 0) {
+          camP = &mCamParam[iset];
+          if (camEntered[iset]) {
+              message.Format("More than one entry in properties file for camera %d", iset);
+              AfxMessageBox(message, MB_EXCLAME);
+          }
+          camEntered[iset] = 1;
         }
-        camEntered[iset] = 1;
         while ((err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, 
                                      MAX_TOKENS)) == 0) {
           message = strItems[0];
-          std::string propLower = (LPCTSTR)message.MakeLower();
-          if (!itemEmpty[0]) {
-            if (camPropSets[iset].count(propLower) && !dupOKcamProps.count(propLower)) {
-              message.Format("%s (property for camera # %d)\r\n", (LPCTSTR)strItems[0],
-                iset);
-              mDupMessage += message;
-            } else
-              camPropSets[iset].insert(propLower);
+          if (iset >= 0) {
+            std::string propLower = (LPCTSTR)message.MakeLower();
+            if (!itemEmpty[0]) {
+              if (camPropSets[iset].count(propLower) && !dupOKcamProps.count(propLower)) {
+                message.Format("%s (property for camera # %d)\r\n", (LPCTSTR)strItems[0],
+                  iset);
+                mDupMessage += message;
+              } else
+                camPropSets[iset].insert(propLower);
+            }
           }
 
           recognizedc1 = true;
           if (MatchNoCase("EndCameraProperties"))
             break;
+          if (iset < 0)
+            continue;
           else if (MatchNoCase("CameraSizeX"))
             camP->sizeX = itemInt[1];
           else if (MatchNoCase("CameraSizeY"))
