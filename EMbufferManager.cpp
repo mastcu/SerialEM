@@ -337,7 +337,8 @@ int EMbufferManager::SaveImageBuffer(KImageStore *inStore, bool skipCheck, int i
     if (cam >= 0 && !CheckAsyncSaving() && !AdocGetMutexSetCurrent(cam)) {
       AdocSetFloat(ADOC_GLOBAL, 0, ADOC_VOLTAGE, 
         (float)mWinApp->mProcessImage->GetRecentVoltage());
-      AdocWrite((char *)(LPCTSTR)mWinApp->mStoreMRC->getAdocName());
+      // Writing the adoc here made the first write from the background write to the
+      // backup file when there was TS extra output too.  It was bizarre. 12/30/17
       AdocReleaseMutex();
     }
   }
