@@ -3,6 +3,15 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+1/1/18: Expanded SuffixForExtraFile command to provide suffixes for more than
+one extra file to open during Navigator acquisition.
+
+1/1/18: Added option to save multiple extra Records into separate stack
+files instead of all into one.
+
+1/1/18: Allowed up to 6 STEM channels to be obtained simultaneously during
+tilt series.  Added STEM channel name to mdoc file.
+
 12/29/17: Made truncation when saving as bytes be expressed as percentage
 instead of number of pixels, be saved as a setting, and have a separate value
 for single-file saving so JPEG-compressed TIFFs can look OK without adjusting

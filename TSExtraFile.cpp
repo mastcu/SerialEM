@@ -34,6 +34,8 @@ CTSExtraFile::CTSExtraFile(CWnd* pParent /*=NULL*/)
   , m_strTrialBin(_T(""))
   , m_strExposures(_T(""))
   , m_bKeepBidirAnchor(FALSE)
+  , m_bConsecutiveFiles(FALSE)
+  , m_statConsecList(_T(""))
 {
 	//{{AFX_DATA_INIT(CTSExtraFile)
 	m_bSaveView = FALSE;
@@ -97,6 +99,9 @@ void CTSExtraFile::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_CHECK_SETSPOT, m_butSetSpot);
   DDX_Text(pDX, IDC_EDIT_NEWEXPOSURE, m_strExposures);
   DDX_Check(pDX, IDC_CHECK_KEEP_ANCHOR, m_bKeepBidirAnchor);
+  DDX_Control(pDX, IDC_CONSECUTIVE_FILES, m_butConsecutiveFiles);
+  DDX_Check(pDX, IDC_CONSECUTIVE_FILES, m_bConsecutiveFiles);
+  DDX_Text(pDX, IDC_STAT_CONSEC_LIST, m_statConsecList);
 }
 
 
@@ -119,6 +124,7 @@ BEGIN_MESSAGE_MAP(CTSExtraFile, CBaseDlg)
   ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_NEWSPOT, OnDeltaposSpinNewspot)
   ON_BN_CLICKED(IDC_CHECK_TRIAL_BIN, OnCheckTrialBin)
   ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_TRIAL_BIN, OnDeltaposSpinTrialBin)
+  ON_BN_CLICKED(IDC_CONSECUTIVE_FILES, &CTSExtraFile::OnConsecutiveFiles)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -137,6 +143,7 @@ void CTSExtraFile::OnDeltaposSpinpreview(NMHDR* pNMHDR, LRESULT* pResult)
 void CTSExtraFile::OnDeltaposSpinrecord(NMHDR* pNMHDR, LRESULT* pResult) 
 {
   DeltaposSpin(3, IDC_STATRECORDNUM, pNMHDR, pResult);
+  ManageExtraRecords();
 }
 
 void CTSExtraFile::OnDeltaposSpintrial(NMHDR* pNMHDR, LRESULT* pResult) 
@@ -162,6 +169,11 @@ void CTSExtraFile::DeltaposSpin(int index, int statID, NMHDR *pNMHDR, LRESULT *p
 	*pResult = 0;
 }
 
+void CTSExtraFile::OnConsecutiveFiles()
+{
+  UpdateData(true);
+  ManageExtraRecords();
+}
 
 void CTSExtraFile::OnDeltaposSpinbinsize(NMHDR *pNMHDR, LRESULT *pResult)
 {
@@ -271,6 +283,7 @@ BOOL CTSExtraFile::OnInitDialog()
   ReplaceDlgItemText(IDC_OPPOSITETRIAL, "Trial", modeNames[2]);
   ReplaceDlgItemText(IDC_CHECK_TRIAL_BIN, "Trial", modeNames[2]);
   ReplaceDlgItemText(IDC_STATEXTRAINSTR1, "Record", modeNames[3]);
+  ReplaceDlgItemText(IDC_CONSECUTIVE_FILES, "Record", modeNames[3]);
   m_bSaveView = mSaveOn[0];	
   m_bSaveFocus = mSaveOn[1];	
   m_bSaveTrial = mSaveOn[2];	
@@ -376,7 +389,7 @@ void CTSExtraFile::ManageExtraRecords()
 {
   CString *modeNames = mWinApp->GetModeNames();
   CString str;
-  int numSimul, numAvail, simultaneous[3];
+  int numExtra = 0, ind, numSimul, add, numAvail, simultaneous[MAX_TS_SIMULTANEOUS_CHAN];
   bool trials = m_iWhichRecord == TS_OPPOSITE_TRIAL;
   bool STEM = m_iWhichRecord == TS_OTHER_CHANNELS;
   m_strExtraRec.Format("Extra %ss", modeNames[trials ? 2 : 3]);
@@ -395,24 +408,28 @@ void CTSExtraFile::ManageExtraRecords()
     m_strInstruct1 = "";
     m_strInstruct2 = "";
     m_strEntries = "";
+    if (m_iWhichRecord == TS_OPPOSITE_TRIAL)
+      numExtra = 2;
     break;
   case TS_FOCUS_SERIES:
     m_strEntries = mWinApp->mParamIO->EntryListToString(1, 2, mNumExtraFocus, NULL, 
       &mExtraFocus[0]);
     m_strInstruct2 = "Each entry is change in defocus from default";
     m_strInstruct1 = "";
+    numExtra = mNumExtraFocus;
     break;
   case TS_FILTER_SERIES:
     m_strEntries = mWinApp->mParamIO->EntryListToString(2, 1, mNumExtraFilter, 
       &mExtraSlits[0], &mExtraLosses[0]);
     m_strInstruct1 = "Each entry is 2 numbers: -1,0 for unfiltered,";
     m_strInstruct2 = "or slit width (0=default), change in loss";
+    numExtra = mNumExtraFilter;
     break;
   case TS_OTHER_CHANNELS:
     m_strEntries = mWinApp->mParamIO->EntryListToString(3, 0, mNumExtraChannels, 
       &mExtraChannels[0], NULL);
-    mWinApp->mCamera->CountSimultaneousChannels(mCamParam, simultaneous, 3, numSimul, 
-      numAvail);
+    mWinApp->mCamera->CountSimultaneousChannels(mCamParam, simultaneous, 
+      MAX_TS_SIMULTANEOUS_CHAN, numSimul, numAvail);
     if (!numSimul)
       m_strInstruct1.Format("No available detectors are selected in %s parameters",
         (LPCTSTR)modeNames[3]);
@@ -421,14 +438,58 @@ void CTSExtraFile::ManageExtraRecords()
         simultaneous[0], (LPCTSTR)modeNames[3]);
     else {
       str = mWinApp->mParamIO->EntryListToString(3, 0, numSimul, &simultaneous[0], NULL);
-      m_strInstruct1 = CString("Detectors to be acquired simultaneously: ") + str;
+      m_strInstruct1 = CString("Detectors taken simultaneously: ") + str;
     }
     m_editEntries.EnableWindow(numAvail > B3DMAX(1, numSimul));
     m_strInstruct2 = "";
     if (numAvail > B3DMAX(1, numSimul))
       m_strInstruct2 = "Enter detectors to acquire in separate shots";
+    numExtra = numSimul;
+    if (numAvail > B3DMAX(1, numSimul))
+      numExtra += mNumExtraChannels;
     break;
   }
+  m_butConsecutiveFiles.EnableWindow(numExtra > 1);
+  if (m_bConsecutiveFiles && mFileIndex[RECORD_CONSET] + numExtra > MAX_STORES) {
+    str.Format("There can be only %d open files, so it is not possible to save\n%d extra "
+      "%s to consecutive files starting with file #%d", MAX_STORES, numExtra, 
+      (LPCTSTR)modeNames[RECORD_CONSET], mFileIndex[RECORD_CONSET] + 1);
+    AfxMessageBox(str, MB_EXCLAME);
+    m_bConsecutiveFiles = false;
+  }
+
+  // Elaborate code for a summary of status of consecutive files
+  m_statConsecList = "";
+  if (numExtra > 1 && m_bConsecutiveFiles) {
+    numAvail = mWinApp->mDocWnd->GetNumStores();
+    ind = 1;
+    m_statConsecList = "File # ";
+    while (mFileIndex[RECORD_CONSET] + ind < numAvail) {
+      str.Format("%d", mFileIndex[RECORD_CONSET] + 1 + ind);
+      if (ind > 1)
+        m_statConsecList += ", ";
+      m_statConsecList += str;
+      ind++;
+    }
+    if (ind > 1)
+      m_statConsecList += ind > 2 ? " are open" : " is open";
+    if (ind < numExtra) {
+      if (ind > 1)
+        m_statConsecList += "; ";
+      add = 0;
+      while (ind < numExtra) {
+        str.Format("%d", mFileIndex[RECORD_CONSET] + 1 + ind);
+        if (add)
+          m_statConsecList += ", ";
+        m_statConsecList += str;
+        add++;
+        ind++;
+      }
+      m_statConsecList += add > 1 ? " are" : " is";
+      m_statConsecList += " not open yet";
+    }
+  }
+  
   UpdateData(false);
 }
 
@@ -436,7 +497,7 @@ void CTSExtraFile::ManageExtraRecords()
 int CTSExtraFile::ValidateRecordEntries(int whichRecord)
 {
   CString message;
-  int numSimul, numAvail, simultaneous[3];
+  int numSimul, numAvail, simultaneous[MAX_TS_SIMULTANEOUS_CHAN];
   int err = 0;
   switch (whichRecord) {
   case NO_TS_EXTRA_RECORD:
@@ -451,8 +512,8 @@ int CTSExtraFile::ValidateRecordEntries(int whichRecord)
       mExtraSlits, mExtraLosses, MAX_EXTRA_RECORDS);
     break;
   case TS_OTHER_CHANNELS:
-    mWinApp->mCamera->CountSimultaneousChannels(mCamParam, simultaneous, 3, numSimul, 
-      numAvail);
+    mWinApp->mCamera->CountSimultaneousChannels(mCamParam, simultaneous, 
+      MAX_TS_SIMULTANEOUS_CHAN, numSimul, numAvail);
     mNumExtraChannels = 0;
     if (numAvail > B3DMAX(1, numSimul)) {
       err = mWinApp->mParamIO->StringToEntryList(3, m_strEntries, mNumExtraChannels, 

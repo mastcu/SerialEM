@@ -25,25 +25,24 @@
         like extra Record images, after the&nbsp;normal Record is taken, but they are 
         not constrained to being at the same binning as regular Trial images.&nbsp; 
         Fourth, in STEM mode, images from other detectors than the primary one can be 
-        saved into a file.</P>
+        saved into a file.&nbsp; When there is more than one extra Record image, they 
+        can each be saved into a separate file instead of all into the same file.</P>
     <P>When acquiring multiple tilt series through the Navigator, it is possible to 
-      have one extra file opened for each tilt series and closed at the end of the 
+      have one or more extra files opened for each tilt series and closed at the end of the 
       series.&nbsp; Set up a script with the line<br />
-&nbsp;&nbsp;&nbsp; SuffixForExtraFile&nbsp; suffix<br />
-      where &#39;suffix&#39; will be added to the root of the filename of the regular tilt 
+&nbsp;&nbsp;&nbsp; SuffixForExtraFile&nbsp; suffix1 
+      suffix2 ...<br />
+      where &#39;suffix1&#39;, 
+      &#39;suffix2&#39;, etc, will be added to the root of the filename of the regular tilt 
       series output file.&nbsp; For example, if the regular filename is &#39;series1.mrc&#39; 
-      and the suffix is &#39;_trial&#39;, the extra file will be named &#39;series1_trial.mrc&#39;.&nbsp; 
+      and a suffix is &#39;_trial&#39;, the extra file will be named &#39;series1_trial.mrc&#39;.&nbsp; 
       In the
       <A HREF="hidd_navacquire.htm">Navigator Acquire dialog</A>, turn on the option 
       to run a script before the main action and select the script with this command.&nbsp; 
-      The extra file will be opened before the regular file, so set the file number 
-      for the extra output to 1 if there will be no other files open when the 
-      acquisition is started.&nbsp; If there will be other files open, set the file 
-      number to one past the number of the highest file that will be open.</P>
-    <P>It is also possible to save more than one kind of extra output during multiple 
-      tilt series, but only one kind of output will go into separate files as just 
-      described; all of the series will write into the same file for the other kinds 
-      of output.</P>
+      The extra files will be opened before the regular file, so set the file numbers 
+      for the extra output to start from 1 if there will be no other files open when 
+      the acquisition is started.&nbsp; If there will be other files open, start the file 
+      numbers one past the number of the highest file that will be open.</P>
       <P><B>Stack Record/Overview images in separate window</B></P>
       <P>Select this check box to display binned down Record or montage overview images 
         in a window separate from the main window. This window will initially be opened 
@@ -90,6 +89,11 @@
       size as the main output, but this is not required or done automatically by the 
       program; you have to set up the montage of the needed size when you open the 
       output file.</P>
+    <P><b>Save multiple Records in consecutive files</b></P>
+    <P>Select this option to have each extra Record image at one tilt angle saved into 
+      a separate file, where the file numbers are consecutive from the one selected 
+      with the spin button.&nbsp; With the option turned on, a line below this will 
+      show whether these additional files are open yet.</P>
       <P><B>Extra Record/Trial radio buttons and text box</B></P>
       <P style="Z-INDEX: 0">These buttons select whether one or more Record images are 
         saved at different focus or filter settings or from different STEM detectors, or whether a pair of Trial images 
@@ -111,12 +115,15 @@
     <P>When you select the option to save images from multiple STEM detectors, the 
       dialog will show a line listing the numbers of the detectors that will be 
       acquired simultaneously with the main Record image, based on the current 
-      selection in the Record parameter set.&nbsp; Only three channels can be acquired 
-      from simultaneously during a tilt series, i.e., two extra ones.&nbsp; Separate 
+      selection in the Record parameter set.&nbsp; Up to 6 channels can be acquired 
+      from simultaneously during a tilt series; this limit could easily be raised.&nbsp; Separate 
       acquisitions are needed to acquire from more than this number of detectors, or 
       to acquire from ones that cannot be used simultaneously with the main Record 
       detector.&nbsp; Enter a space-separated list of additional channels to acquire 
-      in separate acquisitions in the text box.</P>
+      in separate acquisitions in the text box.&nbsp; Note that when acquiring from 
+      more than 3 simultaneous channels during a tilt series, the number of rolling 
+      buffers is set to the number of simultaneous channels, and the alignment and 
+      read buffers are shifted to higher buffers.</P>
       <P><B>Changes for Extra Records/Trials</B></P>
       <P>The options in this group allow you to change the beam or the camera acquisition 
         parameters for the extra Record or Trial images. Redundant methods are provided 

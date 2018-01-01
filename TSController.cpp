@@ -83,8 +83,7 @@ static const char *actionText[] =
 "BIDIR_FINISH_INVERT", "GET_DEFERRED_SUM"};
 
 #define NO_PREVIOUS_ACTION   -1
-#define SHIFTS_ON_ACQUIRE    2
-#define BUFFERS_FOR_USER   3
+#define DFLT_ROLLING_BUFFERS  3
 
 // provisionally:
 #define TRACKING_CONSET      2
@@ -839,6 +838,7 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external)
     }
 
     // Set the current output file, then test the output files and set the protections
+    mNumRollingBuf = DFLT_ROLLING_BUFFERS;
     mCurrentStore = mDocWnd->GetCurrentStore();
     EvaluateExtraRecord();
     if (CheckExtraFiles()) {
@@ -961,8 +961,8 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external)
     mSaveCopyOnSave = mBufferManager->GetCopyOnSave();
     mSaveAlignToB = mBufferManager->GetAlignToB();
     mSaveProtectRecord = mBufferManager->GetConfirmBeforeDestroy(3);
-    mBufferManager->SetShiftsOnAcquire(SHIFTS_ON_ACQUIRE);
-    mAlignBuf = SHIFTS_ON_ACQUIRE + 1;
+    mBufferManager->SetShiftsOnAcquire(mNumRollingBuf - 1);
+    mAlignBuf = mNumRollingBuf;
     mExtraRefBuf = mAlignBuf + 1;
     mReadBuf = mAlignBuf + 2;
     mBufferManager->SetBufToReadInto(mReadBuf);
@@ -1091,7 +1091,7 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external)
 
     // If low dose, set up more buffers for tracking stack
     if (mLowDoseMode) {
-      mTrackStackBuf = mReadBuf + 1 + BUFFERS_FOR_USER;
+      mTrackStackBuf = mReadBuf + 1 + mNumRollingBuf;
       mNumTrackStack = MAX_BUFFERS - mTrackStackBuf - 
         ((mHaveAnchor || mTSParam.leaveAnchor || mTSParam.doBidirectional) ? 1 : 0);
       for (i = mTrackStackBuf; i < mNumTrackStack + mTrackStackBuf; i++) {
@@ -2178,7 +2178,7 @@ void CTSController::NextAction(int param)
           mNeedGoodAngle = true;
         }
         mCamera->SetMaxChannelsToGet(mTSParam.extraRecordType == TS_OTHER_CHANNELS ? 
-          3 : 1);
+          mNumRollingBuf : 1);
         if (mEarlyK2RecordReturn)
           mCamera->SetFullSumAsyncIfOK(RECORD_CONSET);
         mCamera->InitiateCapture(RECORD_CONSET);
@@ -4818,6 +4818,7 @@ void CTSController::SetExtraOutput()
   extraDlg.mBinIndex = mTSParam.extraBinIndex;
   extraDlg.m_bTrialBin = mTSParam.extraSetBinning;
   extraDlg.m_bKeepBidirAnchor = mTSParam.retainBidirAnchor;
+  extraDlg.m_bConsecutiveFiles = mSeparateExtraRecFiles;
 
   if (extraDlg.DoModal() != IDOK)
     return;
@@ -4853,6 +4854,7 @@ void CTSController::SetExtraOutput()
     mTSParam.extraBinIndex = extraDlg.mBinIndex;
   }
   mTSParam.retainBidirAnchor = extraDlg.m_bKeepBidirAnchor;
+  mSeparateExtraRecFiles = extraDlg.m_bConsecutiveFiles;
   
   // Renew the protections with the potentially new file numbers
   if (mStartedTS) {
@@ -4889,12 +4891,17 @@ int CTSController::LookupProtectedFiles()
 // Set the output file protections for main and extra outputs
 void CTSController::SetProtections()
 {
+  int numFiles, file;
   mDocWnd->EndStoreProtection();
   mDocWnd->ProtectStore(mCurrentStore);
   mProtectedStore = mCurrentStore;
   for (int i = 0; i < MAX_EXTRA_SAVES; i++) {
     if (mStoreExtra[i]) {
-      mDocWnd->ProtectStore(mExtraFiles[i]);
+      numFiles = 1;
+      if (i == RECORD_CONSET && mSeparateExtraRecFiles)
+        numFiles = mNumExtraRecords;
+      for (file = 0; file < numFiles; file++)
+        mDocWnd->ProtectStore(mExtraFiles[i] + file);
       mProtectedFiles[i] = mExtraFiles[i];
     }
   }
@@ -4906,7 +4913,7 @@ int CTSController::CheckExtraFiles()
   CString typestr, message;
   KImageStore *store;
   int fileX[MAX_STORES], fileY[MAX_STORES];
-  int i, numStores, sizeX, sizeY, actual, binning;
+  int i, csNum, fileNum, numStores, numFiles, file, sizeX, sizeY, actual, binning;
   int camera = mActiveCameraList[mTSParam.cameraIndex];
   ControlSet *csp;
 
@@ -4917,94 +4924,102 @@ int CTSController::CheckExtraFiles()
     return 1;
 
   numStores = mDocWnd->GetNumStores();
-  for (i = 0; i < MAX_EXTRA_SAVES; i++) {
-    if (mStoreExtra[i]) {
-      if (i < NUMBER_OF_USER_CONSETS)
-        typestr.Format("extra %s output", (LPCTSTR)mModeNames[i]);
+  for (csNum = 0; csNum < MAX_EXTRA_SAVES; csNum++) {
+    if (mStoreExtra[csNum]) {
+      if (csNum <= PREVIEW_CONSET)
+        typestr.Format("extra %s output", (LPCTSTR)mModeNames[csNum]);
       else
-        typestr.Format("extra output type #%d", i + 1);
-      if (mExtraFiles[i] >= numStores) {
-        message.Format("File #%d for %s does not exist; only %d files are open", 
-          mExtraFiles[i] + 1, (LPCTSTR)typestr, numStores);
-        TSMessageBox(message);
-        return 1;
-      }
-      if (mExtraFiles[i] == mCurrentStore) {
-        message.Format("File #%d for %s is selected as\nthe current file for output\n\n"
-          "Use the \"To #\" spinner in the Buffer Controls panel to make\n"
-          "the desired file for regular %ss be the current file", 
-          mExtraFiles[i] + 1, (LPCTSTR)typestr, (LPCTSTR)mModeNames[RECORD_CONSET]);
-        TSMessageBox(message);
-        return 1;
-      }
-      store = mDocWnd->GetStoreMRC(mExtraFiles[i]);
-
-      // For a montage file, make sure it extra Record and not STEM mode or opposite trial
-      if (mDocWnd->StoreIsMontage(mExtraFiles[i])) {
-        if (i != RECORD_CONSET) {
-          message.Format("File #%d for %s is a montage and cannot be saved to except for "
-            "extra Records", mExtraFiles[i] + 1, (LPCTSTR)typestr);
+        typestr.Format("extra output type #%d", csNum + 1);
+      numFiles = 1;
+      if (csNum == RECORD_CONSET && mSeparateExtraRecFiles)
+        numFiles = mNumExtraRecords;
+      for (file = 0; file < numFiles; file++) {
+        fileNum = mExtraFiles[csNum] + file;
+        if (fileNum >= numStores) {
+          message.Format("File #%d for %s does not exist; only %d files are %s", 
+            fileNum + 1, (LPCTSTR)typestr, fileNum >= MAX_STORES ? MAX_STORES : numStores,
+            fileNum >= MAX_STORES ? "allowed" : "open");
           TSMessageBox(message);
           return 1;
         }
-        if (mTSParam.extraRecordType == TS_OPPOSITE_TRIAL || mCamParams->STEMcamera) {
-          message.Format("File #%d for %s is a montage and cannot be used for %s",
-            mExtraFiles[i] + 1, (LPCTSTR)typestr,
-            mCamParams->STEMcamera ? "extra Records in STEM mode" : "opposite Trials");
+        if (fileNum == mCurrentStore) {
+          message.Format("File #%d for %s is selected as\nthe current file for output\n\n"
+            "Use the \"To #\" spinner in the Buffer Controls panel to make\n"
+            "the desired file for regular %ss be the current file", 
+            fileNum + 1, (LPCTSTR)typestr, (LPCTSTR)mModeNames[RECORD_CONSET]);
           TSMessageBox(message);
           return 1;
         }
-        MontParam *montp = mDocWnd->GetStoreMontParam(mExtraFiles[i]);
-        if (!mStartedTS && montp)
-          mExtraFreeZtoWrite = montp->zCurrent;
-      }
+        store = mDocWnd->GetStoreMRC(fileNum);
+
+        // For a montage file, make sure it extra Record and not STEM mode or opposite 
+        // trial
+        if (mDocWnd->StoreIsMontage(fileNum)) {
+          if (i != RECORD_CONSET) {
+            message.Format("File #%d for %s is a montage and cannot be saved to except "
+              "for extra Records", fileNum + 1, (LPCTSTR)typestr);
+            TSMessageBox(message);
+            return 1;
+          }
+          if (mTSParam.extraRecordType == TS_OPPOSITE_TRIAL || mCamParams->STEMcamera) {
+            message.Format("File #%d for %s is a montage and cannot be used for %s",
+              fileNum + 1, (LPCTSTR)typestr,
+              mCamParams->STEMcamera ? "extra Records in STEM mode" : "opposite Trials");
+            TSMessageBox(message);
+            return 1;
+          }
+          MontParam *montp = mDocWnd->GetStoreMontParam(fileNum);
+          if (!mStartedTS && montp)
+            mExtraFreeZtoWrite = montp->zCurrent;
+        }
 
 
-      if (i >= NUMBER_OF_USER_CONSETS)
-        continue;
+        if (csNum > PREVIEW_CONSET)
+          continue;
 
-      actual = i;
-      csp = mWinApp->GetCamConSets() + camera * MAX_CONSETS + i;
-      binning = csp->binning;
-      if (i == RECORD_CONSET && mTSParam.extraRecordType == TS_OPPOSITE_TRIAL) {
-        actual = TRIAL_CONSET;
-        csp = mWinApp->GetCamConSets() + camera * MAX_CONSETS + TRIAL_CONSET;
+        actual = i;
+        csp = mWinApp->GetCamConSets() + camera * MAX_CONSETS + csNum;
         binning = csp->binning;
-        if (mTSParam.extraSetBinning)
-          csp->binning = mCamParams->binnings
+        if (csNum == RECORD_CONSET && mTSParam.extraRecordType == TS_OPPOSITE_TRIAL) {
+          actual = TRIAL_CONSET;
+          csp = mWinApp->GetCamConSets() + camera * MAX_CONSETS + TRIAL_CONSET;
+          binning = csp->binning;
+          if (mTSParam.extraSetBinning)
+            csp->binning = mCamParams->binnings
             [B3DMIN(mTSParam.extraBinIndex, mCamParams->numBinnings - 1)];
-      }
-      
-      // Check sizes except for a montage file
-      if (!mDocWnd->StoreIsMontage(mExtraFiles[i])) {
-        mCamera->AcquiredSize(csp, camera, sizeX, sizeY);
-        csp->binning = binning;
-        if (!mStartedTS)
-          mExtraFreeZtoWrite = store->getDepth();
+        }
 
-        // If file already has a size, make sure it matches; otherwise make sure
-        // it matches size if file was previously assigned; otherwise save size
-        if (store->getWidth()) {
-          if (store->getWidth() != sizeX || store->getHeight() != sizeY) {
-            message.Format("The current %s parameters will produce a %d x %d image,\n"
-              "the wrong size for file #%d (%d x %d)", (LPCTSTR)mModeNames[actual], sizeX, 
-              sizeY, mExtraFiles[i] + 1, store->getWidth(), store->getHeight());
-            TSMessageBox(message);
-            return 1;
-          }
+        // Check sizes except for a montage file
+        if (!mDocWnd->StoreIsMontage(fileNum)) {
+          mCamera->AcquiredSize(csp, camera, sizeX, sizeY);
+          csp->binning = binning;
+          if (!mStartedTS)
+            mExtraFreeZtoWrite = store->getDepth();
 
-        } else if (fileX[mExtraFiles[i]]) {
-          if (fileX[mExtraFiles[i]] != sizeX || fileY[mExtraFiles[i]] != sizeY) {
-            message.Format("The current %s parameters will produce a %d x %d image,\n"
-              "but some other selected output to file #%d  will produce a %d x %d image",
-              (LPCTSTR)mModeNames[actual], sizeX, sizeY, mExtraFiles[i] + 1, 
-              fileX[mExtraFiles[i]], fileY[mExtraFiles[i]]);
-            TSMessageBox(message);
-            return 1;
+          // If file already has a size, make sure it matches; otherwise make sure
+          // it matches size if file was previously assigned; otherwise save size
+          if (store->getWidth()) {
+            if (store->getWidth() != sizeX || store->getHeight() != sizeY) {
+              message.Format("The current %s parameters will produce a %d x %d image,\n"
+                "the wrong size for file #%d (%d x %d)", (LPCTSTR)mModeNames[actual], 
+                sizeX, sizeY, fileNum + 1, store->getWidth(), store->getHeight());
+              TSMessageBox(message);
+              return 1;
+            }
+
+          } else if (fileX[fileNum]) {
+            if (fileX[fileNum] != sizeX || fileY[fileNum] != sizeY) {
+              message.Format("The current %s parameters will produce a %d x %d image,\n"
+                "but some other selected output to file #%d  will produce a %d x %d image"
+                , (LPCTSTR)mModeNames[actual], sizeX, sizeY, fileNum + 1, 
+                fileX[fileNum], fileY[fileNum]);
+              TSMessageBox(message);
+              return 1;
+            }
+          } else {
+            fileX[fileNum] = sizeX;
+            fileY[fileNum] = sizeY;
           }
-        } else {
-          fileX[mExtraFiles[i]] = sizeX;
-          fileY[mExtraFiles[i]] = sizeY;
         }
       }
     }
@@ -5015,7 +5030,8 @@ int CTSController::CheckExtraFiles()
 // Check whether an image of the given index should be saved and save it
 int CTSController::SaveExtraImage(int index, char *message)
 {
-  int i, err, lastSave = 0, sectNum;
+  int buf, err, lastSave = 0, sectNum;
+  bool recSet = index == RECORD_CONSET;
   CString report;
   EMimageBuffer saveBuf;
   if (!mStoreExtra[index])
@@ -5023,6 +5039,7 @@ int CTSController::SaveExtraImage(int index, char *message)
 
   // This should be pointless...  but could user close a file while running?
   int fileNum = mDocWnd->LookupProtectedStore(mProtectedFiles[index]);
+  int fileUse = fileNum;
   int numSave = 1;
 
   // Report montage saving and return
@@ -5038,29 +5055,31 @@ int CTSController::SaveExtraImage(int index, char *message)
   // Otherwise set up and save image(s)
   if (index == FOCUS_CONSET)
     numSave = (mFocusManager->GetTripleMode() || mSTEMindex) ? 3 : 2;
-  if (index == RECORD_CONSET && mTSParam.extraRecordType == TS_OTHER_CHANNELS &&
+  if (recSet && mTSParam.extraRecordType == TS_OTHER_CHANNELS &&
     mExtraRecIndex < mNumSimultaneousChans - 1) {
       lastSave = mExtraRecIndex + 1;
   }
 
-  for (i = numSave + lastSave - 1; i >= lastSave; i--) {
+  for (buf = numSave + lastSave - 1; buf >= lastSave; buf--) {
 
     // Set up to overwrite a record section, otherwise it appends
     sectNum = -1;
-    if (index == RECORD_CONSET && mExtraOverwriteSec >= 0)
+    if (recSet && mExtraOverwriteSec >= 0)
       sectNum = mExtraOverwriteSec;
-    if ((err = mDocWnd->SaveBufferToFile(i, fileNum, sectNum))) {
-      report.Format("Error saving %s image to file #%d", message, fileNum + 1);
+    if (recSet && mSeparateExtraRecFiles)
+      fileUse = fileNum + mExtraRecIndex;
+    if ((err = mDocWnd->SaveBufferToFile(buf, fileUse, sectNum))) {
+      report.Format("Error saving %s image to file #%d", message, fileUse + 1);
       TSMessageBox(report);
       ErrorStop();
       mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
       return err;
     }
-    report.Format("%s image saved to file #%d, Z = %d", message, fileNum + 1, 
-      mImBufs[i].mSecNumber);
+    report.Format("%s image saved to file #%d, Z = %d", message, fileUse + 1, 
+      mImBufs[buf].mSecNumber);
     if (mVerbose)
       mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
-    if (index == RECORD_CONSET)
+    if (index == RECORD_CONSET && (!mSeparateExtraRecFiles || !mExtraRecIndex))
       ManageZafterNewExtraRec();
   }
   return 0;
@@ -5080,7 +5099,10 @@ void CTSController::ManageZafterNewExtraRec(void)
   if (mExtraOverwriteSec < 0)
     mExtraFreeZtoWrite++;
   else {
-    mExtraOverwriteSec++;
+
+    // Advance the overwrite section unless doing separate files
+    if (!mSeparateExtraRecFiles)
+      mExtraOverwriteSec++;
     mExtraFreeZtoWrite = B3DMAX(mExtraFreeZtoWrite, mExtraOverwriteSec);
   }
 }
@@ -5090,6 +5112,7 @@ void CTSController::EvaluateExtraRecord()
 {
   CString str = "";
   int ind, numex, numAvail, chan;
+  int maxChan = mStartedTS ? mNumRollingBuf : MAX_TS_SIMULTANEOUS_CHAN;
 
   mNumExtraRecords = 0;
   mNumSimultaneousChans = 1;
@@ -5133,17 +5156,18 @@ void CTSController::EvaluateExtraRecord()
       }
       if (mCamParams->FEItype)
         mScope->GetFEIChannelList(mCamParams, true);
-      mCamera->CountSimultaneousChannels(mCamParams, mSimultaneousChans, 3, 
-        mNumSimultaneousChans, numAvail);
+      mCamera->CountSimultaneousChannels(mCamParams, mSimultaneousChans, 
+        maxChan, mNumSimultaneousChans, numAvail);
       if (!mNumSimultaneousChans) {
         str = "The tilt series will fail because the " + mModeNames[RECORD_CONSET] + 
           " parameter set\r\ndoes not specify an available STEM detector";
         break;
       }
       mNumExtraRecords = mNumSimultaneousChans - 1;
+      mNumRollingBuf = B3DMAX(mNumRollingBuf, mNumSimultaneousChans);
 
       // For each channel in the extra list not in the simultaneous channels and
-      // not duplicated later in the kist, increment the record count
+      // not duplicated later in the list, increment the record count
       numex = mTSParam.numExtraChannels;
       for (ind = 0; ind < numex; ind++) {
         chan = mTSParam.extraChannels[ind];
@@ -5366,7 +5390,8 @@ void CTSController::SetupExtraOverwriteSec(void)
   if (!mInExtraRecState && !mExtraRecIndex) {
     mExtraOverwriteSec = -1;
     if (trueTiltInd < (int)mExtraStartingZ.size()) {
-      if (mNumSavedExtras[trueTiltInd] != mNumExtraRecords && 
+      if ((!mSeparateExtraRecFiles || mNumExtraRecords == 1) &&
+        mNumSavedExtras[trueTiltInd] != mNumExtraRecords && 
         trueTiltInd != mExtraStartingZ.size() - 1) {
           mWinApp->AppendToLog("Warning: Number of extra Records to save does not "
             "match number previously saved at this tilt,\r\n  so new images are being"

@@ -115,6 +115,7 @@ public:
   SetMember(int, TCBoxDefault);
   SetMember(float, TrialCenterMaxRadFrac);
   GetMember(int, TerminateOnError);
+  GetSetMember(BOOL, SeparateExtraRecFiles);
   double GetCumulativeDose();
 
   bool GetBidirStartAngle(float &outVal) {outVal = mTSParam.bidirAngle; return mStartedTS && mTSParam.doBidirectional;};
@@ -220,6 +221,7 @@ private:
   BOOL mStoreExtra[MAX_EXTRA_SAVES];      // Flags to save extra output
   int mProtectedFiles[MAX_EXTRA_SAVES];  // Indexes of files as protected
   int mExtraFiles[MAX_EXTRA_SAVES];      // Indexes of actual files to save to
+  BOOL mSeparateExtraRecFiles; // Flag to put multiple extra Recs in consecutive files
   int mSwitchedToMontFrom;    // Flag that switched to mentage for extra record; store #
   int mProtectedStore;        // File number that was protected for main output
   int mCurrentStore;          // Current storage file number
@@ -230,7 +232,7 @@ private:
   EMimageBuffer *mSavedBufForExtra;   // Copy of starting record to be restored at end
   BOOL mWarnedNoExtraFilter;  // Flag that user was told no filtering would happen
   BOOL mWarnedNoExtraChannels; // Flag that user was told no extra channels would be saved
-  int mSimultaneousChans[3];  // Channels to be acquired simultaneously
+  int mSimultaneousChans[MAX_TS_SIMULTANEOUS_CHAN];  // Channels to be acquired simultaneously
   int mNumSimultaneousChans;  // Number being acquired that way
   int mExtraOverwriteSec;
   int mExtraFreeZtoWrite;
@@ -280,7 +282,8 @@ private:
   BOOL mVaryFrameTime;        // Flag for whether varying frame time
   BOOL mFrameAlignInIMOD;     // Flag to put out mdoc and com file to align TS frames
   double mCenBeamTimeStamp;   // Time beam center was last done, or start of series
-  BOOL mCrossedBeamCenAngle;  // Flag that 
+  BOOL mCrossedBeamCenAngle;  // Flag that
+  int mNumRollingBuf;         // Number of rolling buffers
   int mAlignBuf;              // Alignment buffer
   int mReadBuf;               // Read buffer
   int mExtraRefBuf;           // For low mag or other ref

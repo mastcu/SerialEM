@@ -1371,6 +1371,8 @@
 #define IDC_STAT_ALIBIN_PIX             2390
 #define IDC_RALIBIN_BY_FAC              2391
 #define IDC_STAT_ALIGN_TARGET           2392
+#define IDC_CONSECUTIVE_FILES           2393
+#define IDC_STAT_CONSEC_LIST            2394
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -1786,7 +1788,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        228
 #define _APS_NEXT_COMMAND_VALUE         33290
-#define _APS_NEXT_CONTROL_VALUE         2393
+#define _APS_NEXT_CONTROL_VALUE         2395
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

@@ -217,6 +217,7 @@ INT_SETT_GETSET("TiltSeriesTermNotAskOnDim", mWinApp->mTSController->, TermNotAs
 INT_SETT_GETSET("TiltSeriesLDRecordLossPolicy", mWinApp->mTSController->, LDRecordLossPolicy)
 INT_SETT_GETSET("TiltSeriesAutoTerminatePolicy", mWinApp->mTSController->,
            AutoTerminatePolicy)
+BOOL_SETT_GETSET("TSSeparateExtraRec", mWinApp->mTSController->, SeparateExtraRecFiles)
 BOOL_SETT_GETSET("TiltSeriesAutoSavePolicy", mWinApp->mTSController->, AutoSavePolicy)
 BOOL_SETT_GETSET("TSCallPlugins", mWinApp->mTSController->, CallTSplugins)
 BOOL_SETT_GETSET("TSFixedNumFrames", mWinApp->mTSController->, FixedNumFrames)

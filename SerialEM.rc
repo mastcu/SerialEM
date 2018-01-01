@@ -1788,18 +1788,18 @@ BEGIN
     PUSHBUTTON      "?",IDC_BUTHELP,0,0,10,10,NOT WS_VISIBLE
 END
 
-IDD_TSEXTRAFILE DIALOGEX 0, 0, 171, 393
+IDD_TSEXTRAFILE DIALOGEX 0, 0, 171, 413
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Tilt Series Extra Output"
 FONT 8, "MS Shell Dlg", 400, 0, 0x0
 BEGIN
-    CONTROL         "None",IDC_NOEXTRA,"Button",BS_AUTORADIOBUTTON | WS_GROUP,18,152,33,10
-    CONTROL         "Focus Series",IDC_FOCUSSERIES,"Button",BS_AUTORADIOBUTTON,18,163,56,10
-    CONTROL         "Filter Series",IDC_FILTERSERIES,"Button",BS_AUTORADIOBUTTON,18,175,52,10
+    CONTROL         "None",IDC_NOEXTRA,"Button",BS_AUTORADIOBUTTON | WS_GROUP,18,173,33,10
+    CONTROL         "Focus Series",IDC_FOCUSSERIES,"Button",BS_AUTORADIOBUTTON,18,184,56,10
+    CONTROL         "Filter Series",IDC_FILTERSERIES,"Button",BS_AUTORADIOBUTTON,18,196,52,10
     CONTROL         "Pair of Trials from opposite areas",IDC_OPPOSITETRIAL,
-                    "Button",BS_AUTORADIOBUTTON,18,187,126,10
-    CONTROL         "Other STEM detectors",IDC_OTHERCHANNELS,"Button",BS_AUTORADIOBUTTON,18,199,101,10
-    GROUPBOX        "Type of Extra Records/Trials",IDC_GRPEXTRAREC,12,142,146,70,WS_GROUP
+                    "Button",BS_AUTORADIOBUTTON,18,208,126,10
+    CONTROL         "Other STEM detectors",IDC_OTHERCHANNELS,"Button",BS_AUTORADIOBUTTON,18,220,101,10
+    GROUPBOX        "Type of Extra Records/Trials",IDC_GRPEXTRAREC,12,163,146,70,WS_GROUP
     LTEXT           "Select an image type to save it",IDC_STATIC,7,39,54,17
     LTEXT           "Select the file to save images in",IDC_STATIC,69,39,54,17
     CONTROL         "View",IDC_TSSAVEVIEW,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,59,31,10
@@ -1817,34 +1817,37 @@ BEGIN
     LTEXT           "Extra Records",IDC_STATEXTRAREC,8,128,48,8
     CONTROL         "Spin1",IDC_SPINRECORD,"msctls_updown32",UDS_ARROWKEYS,57,125,10,14
     LTEXT           "10",IDC_STATRECORDNUM,72,128,91,8
-    LTEXT           "Each entry controls one extra Record image",IDC_STATEXTRAINSTR1,7,216,156,8
-    LTEXT           "Separate multiple entries with spaces",IDC_STATIC,7,226,156,8
-    LTEXT           "",IDC_STATINSTRUCT1,7,236,156,8
-    LTEXT           "",IDC_STATINSTRUCT2,8,246,155,8
-    EDITTEXT        IDC_EDITENTRIES,7,255,156,14,ES_AUTOHSCROLL
-    DEFPUSHBUTTON   "OK",IDOK,26,372,36,14
-    PUSHBUTTON      "Cancel",IDCANCEL,96,372,36,14
-    PUSHBUTTON      "?",IDC_BUTHELP,158,376,10,10
+    LTEXT           "Each entry controls one extra Record image",IDC_STATEXTRAINSTR1,7,237,156,8
+    LTEXT           "Separate multiple entries with spaces",IDC_STATIC,7,247,156,8
+    LTEXT           "",IDC_STATINSTRUCT1,7,257,156,8
+    LTEXT           "",IDC_STATINSTRUCT2,8,267,155,8
+    EDITTEXT        IDC_EDITENTRIES,7,276,156,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,26,392,36,14
+    PUSHBUTTON      "Cancel",IDCANCEL,96,392,36,14
+    PUSHBUTTON      "?",IDC_BUTHELP,158,396,10,10
     CONTROL         "Stack Record/Overview in separate window",IDC_STACKRECORD,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,7,154,10
     LTEXT           "Bin to",IDC_STATIC,7,21,18,8
     CONTROL         "",IDC_SPINBINSIZE,"msctls_updown32",UDS_ARROWKEYS,27,18,10,14
     LTEXT           "256 KB/image (e.g., 512 x512)",IDC_STATKBPIMAGE,41,21,122,8
-    CONTROL         "Change spot size to",IDC_CHECK_SETSPOT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,296,78,10
-    LTEXT           "Change intensity by factor of",IDC_STATIC,24,282,70,8
-    EDITTEXT        IDC_EDIT_DELTAC2,92,280,33,12,ES_AUTOHSCROLL
-    CONTROL         "Set exposure(s) to",IDC_CHECK_SETEXPOSURE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,311,74,10
-    EDITTEXT        IDC_EDIT_NEWEXPOSURE,87,310,72,12,ES_AUTOHSCROLL
-    LTEXT           "Drift settling to",IDC_STATIC,36,327,49,8
-    EDITTEXT        IDC_EDIT_NEWDRIFT,87,325,29,12,ES_AUTOHSCROLL
-    CONTROL         "",IDC_SPIN_NEWSPOT,"msctls_updown32",UDS_ARROWKEYS,100,294,10,14
-    LTEXT           "99",IDC_STAT_NEWSPOT,91,297,8,8
-    CONTROL         "",IDC_SPIN_TRIAL_BIN,"msctls_updown32",UDS_ARROWKEYS,99,339,10,14
-    CONTROL         "Set Trial binning to",IDC_CHECK_TRIAL_BIN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,341,76,10
-    LTEXT           "16",IDC_STAT_TRIAL_BIN,89,342,9,8
-    GROUPBOX        "Changes for Extra Records/Trials",IDC_GRPCHANGES,7,271,156,85
+    CONTROL         "Change spot size to",IDC_CHECK_SETSPOT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,317,78,10
+    LTEXT           "Change intensity by factor of",IDC_STATIC,24,303,70,8
+    EDITTEXT        IDC_EDIT_DELTAC2,92,301,33,12,ES_AUTOHSCROLL
+    CONTROL         "Set exposure(s) to",IDC_CHECK_SETEXPOSURE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,332,74,10
+    EDITTEXT        IDC_EDIT_NEWEXPOSURE,87,331,72,12,ES_AUTOHSCROLL
+    LTEXT           "Drift settling to",IDC_STATIC,36,348,49,8
+    EDITTEXT        IDC_EDIT_NEWDRIFT,87,346,29,12,ES_AUTOHSCROLL
+    CONTROL         "",IDC_SPIN_NEWSPOT,"msctls_updown32",UDS_ARROWKEYS,100,315,10,14
+    LTEXT           "99",IDC_STAT_NEWSPOT,91,318,8,8
+    CONTROL         "",IDC_SPIN_TRIAL_BIN,"msctls_updown32",UDS_ARROWKEYS,99,360,10,14
+    CONTROL         "Set Trial binning to",IDC_CHECK_TRIAL_BIN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,362,76,10
+    LTEXT           "16",IDC_STAT_TRIAL_BIN,89,363,9,8
+    GROUPBOX        "Changes for Extra Records/Trials",IDC_GRPCHANGES,7,292,156,85
     CONTROL         "Keep file with bidirectional anchor images",IDC_CHECK_KEEP_ANCHOR,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,358,152,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,379,152,10
+    CONTROL         "Save multiple Records in consecutive files",IDC_CONSECUTIVE_FILES,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,141,152,10
+    LTEXT           "1,2,3 ",IDC_STAT_CONSEC_LIST,20,152,134,8
 END
 
 IDD_REFPOLICY DIALOGEX 0, 0, 275, 122
@@ -2999,7 +3002,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 164
         TOPMARGIN, 7
-        BOTTOMMARGIN, 386
+        BOTTOMMARGIN, 406
     END
 
     IDD_REFPOLICY, DIALOG
@@ -4130,6 +4133,7 @@ BEGIN
     IDC_SPINTRIAL           "Select file number to save Trial images to"
     IDC_SPINPREVIEW         "Select file number to save Preview images to"
     IDC_SPINRECORD          "Select file number to save extra Record images to"
+    IDC_CONSECUTIVE_FILES   "Save multiple extra Records to separate files following the selected one"
     IDC_NOEXTRA             "No saving of extra Record images"
     IDC_FOCUSSERIES         "Save extra images at a series of defocus levels"
     IDC_FILTERSERIES        "Save extra images at a series of filter settings"
