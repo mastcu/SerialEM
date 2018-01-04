@@ -115,6 +115,10 @@ public:
   CButton m_butSetSpot;
   CString m_strExposures;
   BOOL m_bKeepBidirAnchor;
+  CButton m_butConsecutiveFiles;
+  BOOL m_bConsecutiveFiles;
+  CString m_statConsecList;
+  afx_msg void OnConsecutiveFiles();
 };
 
 //{{AFX_INSERT_LOCATION}}
