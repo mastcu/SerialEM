@@ -370,6 +370,17 @@
         add &quot;-m 2&quot; to a command when the data are already integers.&nbsp; The extra 
         storage required will not be an issue if the normalized data are only being used 
         temporarily for alignment and averaging of frames.</p>
+    <p>
+        Finally, if you want to run MotionCor2 directly on the unnormalized data, you 
+        should give it a defect map file as well as the gain reference file.&nbsp; You 
+        can make a defect map from the text file with &#39;clip defect&#39; in IMOD 4.10.7 or 
+        higher:<br />
+&nbsp;&nbsp;&nbsp; clip defect -D defects...txt&nbsp; fileWithFrames&nbsp; defects...mrc<br />
+        where the fileWithFrames is used only to set the size of the output and can be 
+        any file of the right X and Y size.&nbsp; To make a compressed TIFF file, which 
+        will be much smaller, use:<br />
+&nbsp;&nbsp;&nbsp; clip defect -D defects...txt&nbsp; -f tif&nbsp; fileWithFrames&nbsp; 
+        defects...tif</p>
       <p><b>Drift settling</b>&nbsp; Drift settling is implemented not by having two shutters but
         by having a longer exposure in which readout
         frames at the beginning are discarded.&nbsp; This is known to work correctly 
