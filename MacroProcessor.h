@@ -208,7 +208,8 @@ private:
   bool mLoopIndsAreLocal;      // Flag that loop indexes are local
   int mAutoIndentSize;         // Number of spaces for autoindent of macro
   bool mSkipFrameAliCheck;   // Flag for camera controller to skip checking frame ali param
-  bool mAlignWholeTSOnly;    // Flag for alignment to happen is if in TS with Whole TS 
+  bool mAlignWholeTSOnly;    // Flag for alignment to happen is if in TS with Whole TS
+  bool mStartNavAcqAtEnd;    // Flag to start Nav acquire on successful completion 
 
 public:
   void GetNextLine(CString * macro, int & currentIndex, CString &strLine);
@@ -290,6 +291,7 @@ public:
   afx_msg void OnUpdateClearPersistentVars(CCmdUI *pCmdUI);
   afx_msg void OnScriptRunOneCommand();
   afx_msg void OnUpdateScriptRunOneCommand(CCmdUI *pCmdUI);
+  int StartNavAvqBusy(void);
 };
 
 #endif // !defined(AFX_MACROPROCESSOR_H__33178182_58A1_4F3A_B8F4_D41F94866517__INCLUDED_)

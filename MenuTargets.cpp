@@ -519,8 +519,10 @@ void CMenuTargets::OnNavigatorMergefile()
 
 void CMenuTargets::OnUpdateNavigatorMergefile(CCmdUI *pCmdUI)
 {
+ int navState = mWinApp->mCameraMacroTools.GetNavigatorState();
+
   pCmdUI->Enable(!DoingTasks() && mNavigator && mNavigator->NoDrawing() && 
-    !mNavigator->GetAcquiring());
+    (!mNavigator->GetAcquiring() || navState == NAV_PAUSED));
 }
 
 void CMenuTargets::OnNavigatorOpenStateDlg()
@@ -632,7 +634,7 @@ void CMenuTargets::OnMontageListFilesToOpen()
 
 void CMenuTargets::OnNavigatorAcquire() 
 {
-  mNavigator->AcquireAreas();	
+  mNavigator->AcquireAreas(true);	
 }
 
 void CMenuTargets::OnUpdateNavigatorAcquire(CCmdUI* pCmdUI) 

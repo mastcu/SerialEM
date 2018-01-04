@@ -215,7 +215,8 @@ enum {CME_VIEW, CME_FOCUS, CME_TRIAL, CME_RECORD, CME_PREVIEW,
   CME_SKIPFRAMEALIPARAMCHECK, CME_ISVERSIONATLEAST, CME_SKIPIFVERSIONLESSTHAN,
   CME_RAWELECTRONSTATS, CME_ALIGNWHOLETSONLY, CME_WRITECOMFORTSALIGN, CME_RECORDANDTILTTO,
   CME_AREPOSTACTIONSENABLED, CME_MEASUREBEAMSIZE, CME_MULTIPLERECORDS, 
-  CME_MOVEBEAMBYMICRONS, CME_MOVEBEAMBYFIELDFRACTION, CME_NEWDESERVERDARKREF
+  CME_MOVEBEAMBYMICRONS, CME_MOVEBEAMBYFIELDFRACTION, CME_NEWDESERVERDARKREF,
+  CME_STARTNAVACQUIREATEND, CME_REDUCEIMAGE
 };
 
 static CmdItem cmdList[] = {{NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0},
@@ -320,6 +321,7 @@ static CmdItem cmdList[] = {{NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0
 {"AlignWholeTSOnly", 0}, {"WriteComForTSAlign", 0}, {"RecordAndTiltTo", 1},
 {"ArePostActionsEnabled", 0}, {"MeasureBeamSize", 0}, {"MultipleRecords", 0},
 {"MoveBeamByMicrons", 2}, {"MoveBeamByFieldFraction", 2}, {"NewDEserverDarkRef", 2},
+{"StartNavAcquireAtEnd", 0}, {"ReduceImage", 2},
 {NULL, 0, NULL}
 };
 
@@ -863,6 +865,7 @@ void CMacroProcessor::Run(int which)
   mOnStopMacroIndex = -1;
   mExitAtFuncEnd = false;
   mLoopIndsAreLocal = false;
+  mStartNavAcqAtEnd = false;
   mConsetNums.clear();
   mConsetsSaved.clear();
   mChangedConsets.clear();
@@ -1181,6 +1184,8 @@ void CMacroProcessor::NextCommand()
       if (!mCallLevel || CMD_IS(EXIT) || (CMD_IS(ENDFUNCTION) && mExitAtFuncEnd)) {
         AbortMacro();
         mLastCompleted = !mExitAtFuncEnd;
+        if (mLastCompleted && mStartNavAcqAtEnd)
+          mWinApp->AddIdleTask(TASK_START_NAV_ACQ, 0, 0);
         return;
       }
 
@@ -3258,6 +3263,16 @@ void CMacroProcessor::NextCommand()
       ABORT_LINE(report);
     }
 
+  } else if (CMD_IS(REDUCEIMAGE)) {                         // ReduceImage
+    if (ConvertBufferLetter(strItems[1], -1, true, index, report))
+      ABORT_LINE(report);
+    ix0 = mWinApp->mProcessImage->ReduceImage(&mImBufs[index], (float)itemDbl[2], 
+      &report);
+    if (ix0) {
+      report += " in statement:\n\n";
+      ABORT_LINE(report);
+    }
+
   } else if (CMD_IS(FFT)) {                                 // FFT
     if (ConvertBufferLetter(strItems[1], -1, true, index, report))
       ABORT_LINE(report);
@@ -4443,6 +4458,14 @@ void CMacroProcessor::NextCommand()
       ABORT_NOLINE("The navigator must be acquiring to enable skipping the stage move");
     navigator->SetSkipStageMoveInAcquire(itemEmpty[1] || itemInt[1] != 0);
 
+  } else if (CMD_IS(STARTNAVACQUIREATEND)) {                // StartNavAcquireAtEnd
+    ABORT_NONAV;
+    mStartNavAcqAtEnd = itemEmpty[1] || itemInt[1] != 0;
+    if (mStartNavAcqAtEnd&& (mWinApp->DoingTiltSeries() || navigator->GetAcquiring()))
+      ABORT_NOLINE(CString("You cannot use StartNavAcquireAtEnd when ") + 
+        (mWinApp->DoingTiltSeries() ? "a tilt series is running" : 
+        "Navigator is already acquiring"));
+    
   } else if (CMD_IS(SUFFIXFOREXTRAFILE)) {                  // SuffixForExtraFile
     ABORT_NONAV;
     navigator->SetExtraFileSuffixes(&strItems[1], 
@@ -6641,5 +6664,15 @@ UINT CMacroProcessor::RunInShellProc(LPVOID pParam)
     }
     return 1;
   }
+  return 0;
+}
+
+// Busy function for the task to start the Navigator Acquire
+int CMacroProcessor::StartNavAvqBusy(void)
+{
+  if (DoingMacro())
+    return 1;
+  if (mLastCompleted && mWinApp->mNavigator) 
+    mWinApp->mNavigator->AcquireAreas(false);
   return 0;
 }
