@@ -3875,10 +3875,10 @@ void CMacroProcessor::NextCommand()
       if (itemEmpty[5])
         ABORT_LINE("Not enough coordinates for setting camera area: \n\n");
       index2 = BinDivisorI(camParams);
-      ix0 = index2 * B3DMAX(0, B3DMIN(camParams->sizeX - 4, itemInt[2]));
-      ix1 = index2 * B3DMAX(ix0 + 1, B3DMIN(camParams->sizeX, itemInt[3]));
-      iy0 = index2 * B3DMAX(0, B3DMIN(camParams->sizeY - 4, itemInt[4]));
-      iy1 = index2 * B3DMAX(iy0 + 1, B3DMIN(camParams->sizeY, itemInt[5]));
+      ix0 = B3DMAX(0, B3DMIN(camParams->sizeX - 4, index2 * itemInt[2]));
+      ix1 = B3DMAX(ix0 + 1, B3DMIN(camParams->sizeX, index2 * itemInt[3]));
+      iy0 = B3DMAX(0, B3DMIN(camParams->sizeY - 4, index2 * itemInt[4]));
+      iy1 = B3DMAX(iy0 + 1, B3DMIN(camParams->sizeY, index2 * itemInt[5]));
     }
     index2 = mConSets[index].binning;
     iy0 /= index2;

@@ -283,32 +283,30 @@
       &#39;defects...txt&#39; describing the defects that need to be corrected in 
       post-processing. You can convert the gain reference to an MRC 
       file with the IMOD program &#39;dm2mrc&#39; or, again, use it directly in any 
-      program.&nbsp; The gain reference will need to be rotated 
+      program.&nbsp; The gain reference may need to be rotated 
       and/or flipped by the same operations described in the camera configuration in 
       DM, unless the frames are saved without rotation and flipping as provided by an 
       option in the
-      <a href="hidd_k2_save_options.htm">Frame File Options dialog</a>. There are 
-      several ways to handle this:<ol>
-      <li>In the general case, use the IMOD commands 
-        <br />
-&nbsp;&nbsp; newstack -near -rot -angle reference.dm4&nbsp; rotated.mrc<br />
-        to rotate, where &#39;-angle&#39; is the negative of the rotation angle in DM, followed 
-        by<br />
-&nbsp;&nbsp; clip flipy rotated.mrc rotFlipped.mrc<br />
-        to flip around the Y axis.</li>
-      <li>The header of the frame stacks will have a title line with the text &#39;r/f&#39; 
-        followed by a value corresponding to a RotationAndFlip entry in the SerialEM 
-        properties file.&nbsp; This value is the rotation counterclockwise divided by 90 
-        (i.e., 1, 2, or 3 for angles of 90, 180 or 270) plus 4 for a flip around the Y 
-        axis before the rotation.&nbsp; Thus for the general case you would need to do<br />
-&nbsp;&nbsp;&nbsp; clip flipy reference.dm4 flipped.mrc<br />
-        first for a value of 4-7, followed by
-        <br />
-&nbsp;&nbsp;&nbsp; newstack -near -rot angle flipped.mrc rotFlipped.mrc</li>
+      <a href="hidd_k2_save_options.htm">Frame File Options dialog</a>. 
+    <p>
+      The header of the frame stacks will have a title line with the text &#39;r/f&#39; 
+      followed by a value corresponding to a RotationAndFlip entry in the SerialEM 
+      properties file.&nbsp; This value is the rotation counterclockwise divided by 90 
+      (i.e., 1, 2, or 3 for angles of 90, 180 or 270) plus 4 for a flip around the Y 
+      axis before the rotation.&nbsp; There are several ways to handle the rotation of the 
+      gain reference:<ol>
+      <li>With &#39;alignframes&#39; in IMOD, there is no need to normalize the data separately; 
+        the gain reference and defect file can be given to the program and the option 
+        &#39;-rotation -1&#39; can be used to read the r/f value from the frame stack header. </li>
       <li>With IMOD 4.9.2 or higher, or 4.10.1 or higher, the &#39;clip&#39; program can do the 
         rotation with the universal &#39;norm&#39; command given below in the section starting &#39;<i>In IMOD version 4.8.41 or higher.</i>&#39;&nbsp; 
         It must be given the &#39;-R&#39; option with either the SerialEM rotation/flip value 
         applied to the frames, or -1 to read the r/f value from the frame stack header.</li>
+      <li>In the general case, use the IMOD commands<br />
+&nbsp;&nbsp;&nbsp; clip flipy reference.dm4 flipped.mrc<br />
+        first for a r/f value of 4-7, followed by 
+        <br />&nbsp;&nbsp;&nbsp; newstack -near -rot angle flipped.mrc rotFlipped.mrc<br /to rotate, where &#39;-angle&#39; is 
+        90 times the r/f value modulo 4 (e.g., 1 if r/f is 5) </li>
     </ol>
       <p>
         Once you have the reference in the right orientation, you can use the program 
@@ -316,7 +314,7 @@
         the following, &#39;scalingFactor&#39; is the regular scaling factor applied to summed 
         images, &#39;fileWithFrames&#39; is the data file to normalize, &#39;gainReference.mrc&#39; 
         is the reoriented gain reference, and &#39;normalizedFrames.mrc&#39; is the desired 
-        output file. The alternatives for GMS 2.3.0 or lower are:<ul>
+        output file. The alternatives for GMS 2.3.0 or lower are:e:<ul>
       <li><i>Counting mode, not packed:</i>&nbsp; The data need to be scaled to preserve 
         precision after normalization.&nbsp; The command is<br />
 &nbsp;&nbsp;&nbsp;&nbsp; clip mult -n scalingFactor&nbsp; fileWithFrames.mrc&nbsp; 
