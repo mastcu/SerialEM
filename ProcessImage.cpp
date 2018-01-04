@@ -69,6 +69,7 @@ CProcessImage::CProcessImage()
   mSphericalAber = 2.;   // It is very insensitive to Cs!
   mKVTime = -1.;
   mFixedRingDefocus = 0.;
+  mReductionFactor = 4.;
 }
 
 CProcessImage::~CProcessImage()
@@ -138,6 +139,8 @@ BEGIN_MESSAGE_MAP(CProcessImage, CCmdTarget)
   ON_UPDATE_COMMAND_UI(ID_PROCESS_AUTOMATICFFTS, OnUpdateProcessAutomaticFFTs)
   ON_COMMAND(ID_PROCESS_SETPHASEPLATESHIFT, OnProcessSetPhasePlateShift)
   ON_COMMAND(ID_PROCESS_SETDEFOCUSFORCIRCLES, OnProcessSetDefocusForCircles)
+  ON_COMMAND(ID_PROCESS_REDUCEIMAGE, OnProcessReduceimage)
+  ON_UPDATE_COMMAND_UI(ID_PROCESS_REDUCEIMAGE, OnUpdateProcess)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -513,6 +516,100 @@ int CProcessImage::CropImage(EMimageBuffer *imBuf, int top, int left, int bottom
   free(newsl);
 
   return 0;
+}
+
+// Menu entry to reduce an image
+void CProcessImage::OnProcessReduceimage()
+{
+  EMimageBuffer *imBuf = mWinApp->GetActiveNonStackImBuf();
+  if (!imBuf)
+    return;
+  if (!KGetOneFloat("Factor (greater than 1) by which to reduce image:",
+    mReductionFactor, 1))
+    return;
+  mReductionFactor = B3DMAX(1.f, mReductionFactor);
+  ReduceImage(imBuf, mReductionFactor);
+}
+
+// Reduce the image in the given buffer by the given amount, returning an optional error 
+// string or just putting up a message box
+int CProcessImage::ReduceImage(EMimageBuffer *imBuf, float factor, CString *errStr)
+{
+  int nx, ny, newX, newY, mode, retval = 0, dataSize, numChan, zoomErr = 0;
+  void *data;
+  float sxOff, syOff;
+  char *filtImage = NULL;
+  unsigned char **linePtrs = NULL;
+  double zoom;
+  CString mess, str;
+  const char *messages[] = {"reduction factor not in allowed range",
+    "unsupported type of data",
+    "failed to allocate memory for arrays",
+    "error in zoomWithFilter"};
+  
+  KImage *image = imBuf->mImage;
+  if (errStr)
+    *errStr = "";
+  if (!image)
+    return 1;
+
+  // Get new size and test it; keep X even
+  image->getSize(nx, ny);
+  newX = 2 * (int)(0.5 * nx / factor);
+  newY = (int)(ny / factor);
+  if (factor <= 1. || newX < 10. || newY < 10.)
+    retval = 2;
+
+  // Use Lanczos 2 for this
+  zoom = 1. / factor;
+  if (!retval) {
+    if ((zoomErr = selectZoomFilter(4, zoom, &mode)) != 0)
+      retval = 2;
+  }
+
+  // Center the image
+  sxOff = (float)(0.5 * (nx - factor * newX));
+  syOff = (float)(0.5 * (ny - factor * newY));
+  mode = image->getType();
+  if (!retval && dataSizeForMode(mode, &dataSize, &numChan))
+    retval = 3;
+  image->Lock();
+  data = image->getData();
+
+  // Get array and line pointers
+  if (!retval) {
+    NewArray(filtImage, char, newX * newY * dataSize * numChan);
+    linePtrs = makeLinePointers(data, nx, ny, dataSize * numChan);
+    if (!filtImage || !linePtrs) {
+      retval = 4;
+      delete [] filtImage;
+    }
+  }
+
+  // Do the reduction
+  if (!retval) {
+    if ((zoomErr = zoomWithFilter(linePtrs, nx, ny, sxOff, syOff, newX, newY, newX, 0,
+      mode, filtImage, NULL, NULL)) != 0) {
+        retval = 5;
+        delete [] filtImage;
+    } else {
+      NewProcessedImage(imBuf, (short *)filtImage, mode, newX, newY, B3DNINT(factor));
+    }
+  }
+  image->UnLock();
+  B3DFREE(linePtrs);
+  if (retval) {
+    mess = CString("Error trying to reduce image: ") + messages[retval - 2];
+    if (zoomErr) {
+      str.Format(" (error code %d)", zoomErr);
+      mess += str;
+    }
+    if (errStr)
+      *errStr = mess;
+    else
+      SEMMessageBox(mess);
+  }
+  return retval;
 }
 
 // Allocate a new array and copy a scaled correlation into, assign to buffer A

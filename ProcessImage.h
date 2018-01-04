@@ -59,6 +59,7 @@ public:
   SetMember(float, SphericalAber);
   GetSetMember(float, PlatePhase);
   GetSetMember(float, FixedRingDefocus);
+  GetSetMember(float, ReductionFactor);
 
 // Overrides
   // ClassWizard generated virtual function overrides
@@ -129,6 +130,7 @@ private:
   double mKVTime;
   float mPlatePhase;
   float mFixedRingDefocus;
+  float mReductionFactor;      // factor for reducing image
 
 
 public:
@@ -205,6 +207,8 @@ int FindDoseRate(float countVal, float *counts, float *rates, int numVals,
 int DoseRateFromMean(EMimageBuffer * imBuf, float mean, float & doseRate);
 double GetRecentVoltage(bool *valueWasRead = NULL);
 float CountsPerElectronForImBuf(EMimageBuffer * imBuf);
+int ReduceImage(EMimageBuffer *imBuf, float factor, CString *errStr = NULL);
+afx_msg void OnProcessReduceimage();
 };
 
 /////////////////////////////////////////////////////////////////////////////

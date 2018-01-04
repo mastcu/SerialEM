@@ -69,6 +69,10 @@
           <TD>Crops out image inside drawn box or box around drawn line</TD>
         </TR>
         <TR VALIGN="top">
+          <TD class="style1"><a href="#hid_process_reduceimage">Reduce Image</a></TD>
+          <TD>Reduces image in size by a selected factor with antialiasing</TD>
+        </TR>
+        <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_process_makecoloroverlay">Make Color Overlay</A></TD>
           <TD>Combines 2 or 3 gray-scale images into a single color image</TD>
         </TR>
@@ -221,6 +225,13 @@
         box around a drawn line. The cropped image will be placed into buffer A and 
         existing images will be rolled to higher buffers to the extent specified in the 
         Buffer Control Panel, just as when a new image is acquired.</P>
+      <P><A NAME="hid_process_reduceimage"></A><B>Reduce Image command (Process menu)</B></P>
+      <p>Use this command to reduce the size of the image in the active buffer with an 
+        antialiasing filter, just as is used when zooming the display down below 1.&nbsp; 
+        Enter the reduction factor in the text box; it must be a factor greater than 1 
+        but is not constrained to an integer value, unlike binning.&nbsp; The reduced 
+        image will be placed into buffer A and existing images will be rolled to higher 
+        buffers to the extent specified in the Buffer Control Panel.</p>
       <P><A NAME="hid_process_makecoloroverlay"></A><B>Make Color Overlay command 
           (Process menu)</B></P>
       <P>Use this command to overlay two or three images in any buffers into a single 

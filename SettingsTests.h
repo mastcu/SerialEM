@@ -4,7 +4,7 @@
   MacroControl *macControl = mWinApp->GetMacControl();
 // mBufferManager, mFilterParam, mTSParam
 #endif
-  // This section is full 11/24/17
+  // This section is close to full 11/24/17
 #ifdef SET_TEST_SECT1
 FLOAT_SETT_GETSET("AreaFractionForScaling", mWinApp->, PctAreaFraction)
 FLOAT_SETT_GETSET("FFTTruncDiameter", mWinApp->, TruncDiamOfFFT)
@@ -29,11 +29,6 @@ INT_SETT_GETSET("Antialias", mBufferManager->, Antialias)
 INT_SETT_GETSET("FixedZoomSteps", mBufferManager->, FixedZoomStep)
 INT_SETT_GETSET("DrawScaleBar", mBufferManager->, DrawScaleBar)
 BOOL_SETT_GETSET("DrawCrosshairs", mBufferManager->, DrawCrosshairs)
-BOOL_SETT_GETSET("CircleOnLiveFFT", mWinApp->mProcessImage->, CircleOnLiveFFT)
-BOOL_SETT_GETSET("SideBySideFFT", mWinApp->mProcessImage->, SideBySideFFT)
-BOOL_SETT_GETSET("AutoSingleFFT", mWinApp->mProcessImage->, AutoSingleFFT)
-FLOAT_SETT_GETSET("PhasePlateShift", mWinApp->mProcessImage->, PlatePhase)
-FLOAT_SETT_GETSET("FixedRingDefocus", mWinApp->mProcessImage->, FixedRingDefocus)
 BOOL_SETT_ASSIGN("MontageCorrectDrift", montParam->correctDrift)
 BOOL_SETT_ASSIGN("MontageAdjustFocus", montParam->adjustFocus)
 BOOL_SETT_ASSIGN("MontageFocusAfterStage", montParam->focusAfterStage)
@@ -106,6 +101,12 @@ INT_SETT_GETSET("ScriptIndentSize", mWinApp->mMacroProcessor->, AutoIndentSize)
 
 #endif
 #ifdef SET_TEST_SECT2
+BOOL_SETT_GETSET("CircleOnLiveFFT", mWinApp->mProcessImage->, CircleOnLiveFFT)
+BOOL_SETT_GETSET("SideBySideFFT", mWinApp->mProcessImage->, SideBySideFFT)
+BOOL_SETT_GETSET("AutoSingleFFT", mWinApp->mProcessImage->, AutoSingleFFT)
+FLOAT_SETT_GETSET("PhasePlateShift", mWinApp->mProcessImage->, PlatePhase)
+FLOAT_SETT_GETSET("ImageReductionFac", mWinApp->mProcessImage->, ReductionFactor)
+FLOAT_SETT_GETSET("FixedRingDefocus", mWinApp->mProcessImage->, FixedRingDefocus)
 BOOL_SETT_GETSET("AutosaveSettings", mWinApp->mDocWnd->, AutoSaveSettings)
 BOOL_SETT_GETSET("AutosaveNavNew", mWinApp->mDocWnd->, AutoSaveNav)
 BOOL_SETT_GETSET("SkipFileDlg", mWinApp->mDocWnd->, SkipFileDlg)

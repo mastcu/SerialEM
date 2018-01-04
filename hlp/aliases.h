@@ -314,6 +314,7 @@ hid_process_setdefocusforcircles = SerialEM.chm::/html\menu_process.htm#hid_proc
 hid_process_setphaseplateshift  = SerialEM.chm::/html\menu_process.htm#hid_process_setphaseplateshift
 hid_process_rotateleft					= SerialEM.chm::/html\menu_process.htm#hid_process_rotateleft
 hid_process_rotateright					= SerialEM.chm::/html\menu_process.htm#hid_process_rotateright
+hid_process_reduceimage					= SerialEM.chm::/html\menu_process.htm#hid_process_reduceimage
 hid_process_cropimage						= SerialEM.chm::/html\menu_process.htm#hid_process_cropimage
 hid_process_makecoloroverlay		= SerialEM.chm::/html\menu_process.htm#hid_process_makecoloroverlay
 hid_process_showcrosscorr				= SerialEM.chm::/html\menu_process.htm#hid_process_showcrosscorr

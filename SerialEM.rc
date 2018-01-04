@@ -499,6 +499,7 @@ BEGIN
         MENUITEM "Rotate &Left",                ID_PROCESS_ROTATELEFT
         MENUITEM "&Rotate Right",               ID_PROCESS_ROTATERIGHT
         MENUITEM "Cr&op Image",                 ID_PROCESS_CROPIMAGE
+        MENUITEM "Reduce Ima&ge",               ID_PROCESS_REDUCEIMAGE
         MENUITEM "Crop && &Average",            ID_PROCESS_CROP_AVERAGE
         MENUITEM SEPARATOR
         MENUITEM "Ma&ke Color Overlay",         ID_PROCESS_MAKECOLOROVERLAY
@@ -1971,11 +1972,11 @@ BEGIN
     CONTROL         "Run script",IDC_NA_RUNMACRO,"Button",BS_AUTORADIOBUTTON,14,142,49,10
     CONTROL         "Acquire tilt series",IDC_NA_ACQUIRE_TS,"Button",BS_AUTORADIOBUTTON,14,154,73,10
     GROUPBOX        "Primary Task",IDC_STATIC,7,108,158,60,WS_GROUP
-    DEFPUSHBUTTON   "GO",IDOK,29,272,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,92,272,50,14
+    DEFPUSHBUTTON   "GO",IDOK,7,272,40,14
+    PUSHBUTTON      "Cancel",IDCANCEL,111,272,40,14
     CONTROL         "Restore scope state after aligning to item",IDC_NA_RESTORE_STATE,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,232,151,10
-    PUSHBUTTON      "?",IDC_BUTHELP,153,276,11,10
+    PUSHBUTTON      "?",IDC_BUTHELP,158,276,11,10
     CONTROL         "Close column valves at end",IDC_NA_CLOSE_VALVES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,244,105,10
     CONTROL         "Send email at end",IDC_NA_SENDEMAIL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,256,75,10
     COMBOBOX        IDC_COMBO_PREMACRO,65,89,92,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
@@ -1990,6 +1991,7 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,208,114,10
     CONTROL         "Skip Z moves in initial move and Realign",IDC_NA_SKIP_Z_MOVES,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,220,147,10
+    PUSHBUTTON      "Postpone",IDC_BUT_POSTPONE,59,272,40,14
 END
 
 IDD_NAVIMPORT DIALOGEX 0, 0, 179, 134
@@ -3435,6 +3437,7 @@ BEGIN
     ID_SCRIPT_RUNONECOMMAND "Open window to enter and run one line command"
     ID_FILE_SKIPFILEPROPERTIESDIALOG 
                             "Skip file properties dialog; turn off to adjust properties"
+    ID_PROCESS_REDUCEIMAGE  "Reduce an image in size with antialiasing"
 END
 
 STRINGTABLE
@@ -4133,11 +4136,17 @@ BEGIN
     IDC_SPINTRIAL           "Select file number to save Trial images to"
     IDC_SPINPREVIEW         "Select file number to save Preview images to"
     IDC_SPINRECORD          "Select file number to save extra Record images to"
-    IDC_CONSECUTIVE_FILES   "Save multiple extra Records to separate files following the selected one"
     IDC_NOEXTRA             "No saving of extra Record images"
     IDC_FOCUSSERIES         "Save extra images at a series of defocus levels"
     IDC_FILTERSERIES        "Save extra images at a series of filter settings"
     IDC_EDITENTRIES         "Enter the series of defocus or filter settings or STEM detectors"
+END
+
+STRINGTABLE
+BEGIN
+    IDC_SKIP_FILE_DLG       "Use the values set here instead of opening this dialog every time"
+    IDC_RSUPER_RES_REF      "Make gain reference for correcting super-resolution images"
+    IDC_CONSECUTIVE_FILES   "Save multiple extra Records to separate files following the selected one"
 END
 
 STRINGTABLE
@@ -5016,12 +5025,6 @@ BEGIN
     IDC_RDARK_REF           "Make a dark reference"
     IDC_RGAIN_REF           "Make a gain reference with uniform beam illumination"
     IDC_EDIT_REF_EXPOSURE   "Exposure time for each acquisition used to make reference"
-END
-
-STRINGTABLE
-BEGIN
-    IDC_SKIP_FILE_DLG       "Use the values set here instead of opening this dialog every time"
-    IDC_RSUPER_RES_REF      "Make gain reference for correcting super-resolution images"
 END
 
 #endif    // English (United States) resources
