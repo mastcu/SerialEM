@@ -155,6 +155,7 @@ CNavigatorDlg::CNavigatorDlg(CWnd* pParent /*=NULL*/)
   mLast5ptRegis = -1;
   mNumExtraFileSuffixes = 0;
   mNumExtraFilesToClose = 0;
+  mAcqDlgPostponed = false;
 }
 
 
@@ -6349,6 +6350,8 @@ void CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile)
     "CoordsInPiece"};
   char *adocStr;
   CMapDrawItem *item, *prev;
+  int originalSize = (int)mItemArray.GetSize();
+  bool resetAcquireEnd = mPausedAcquire && originalSize - 1 <= mEndingAcquireIndex;
   int version = 100;
   int mapSkip = 13;
 
@@ -6905,7 +6908,11 @@ void CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile)
   FillListBox();
   Redraw();
   mChanged = false;
-
+  if (resetAcquireEnd) {
+    mEndingAcquireIndex = (int)mItemArray.GetSize() - 1;
+    mHelper->CountAcquireItems(originalSize, mEndingAcquireIndex, numSect, numToGet);
+    mInitialNumAcquire += (mParam->acquireType == ACQUIRE_DO_TS ? numToGet : numSect);
+  }
 }
 
 // Get the filename for reading or writing
@@ -6968,7 +6975,7 @@ CString CNavigatorDlg::NextTabField(CString inStr, int &index)
 // ACQUIRING SEQUENCE OF MARKED AREAS AND MAKING MAPS / RUNNING MACRO / DOING TILT SERIES
 
 // Initiate Acquisition
-void CNavigatorDlg::AcquireAreas()
+void CNavigatorDlg::AcquireAreas(bool fromMenu)
 {
   int loop, loopStart, loopEnd, macnum, numNoMap = 0, numAtEdge = 0;
   int groupID = -1;
@@ -6977,28 +6984,51 @@ void CNavigatorDlg::AcquireAreas()
   CString *macros = mWinApp->GetMacros();
   CString mess, mess2;
   CNavAcquireDlg dlg;
-  mWinApp->RestoreViewFocus();
+  if (fromMenu)
+    mWinApp->RestoreViewFocus();
 
+  // If postponed, set subset from postponed values; otherwise initialize to no subset
   dlg.mNumArrayItems = (int)mItemArray.GetSize();
-  dlg.m_iSubsetStart = 1;
-  dlg.m_iSubsetEnd = dlg.mNumArrayItems;
+  if (mAcqDlgPostponed) {
+    dlg.m_iSubsetStart = B3DMIN(mPostponedSubsetStart, dlg.mNumArrayItems);
+    dlg.m_iSubsetEnd = B3DMIN(mPostponedSubsetEnd, dlg.mNumArrayItems);
+    dlg.m_bDoSubset = mPostposedDoSubset;
+  } else {
+    dlg.m_iSubsetStart = 1;
+    dlg.m_iSubsetEnd = dlg.mNumArrayItems;
+  }
   dlg.mLastNonTStype = mParam->nonTSacquireType;
   EvaluateAcquiresForDlg(&dlg);
 
 
   // Run the dialog
-  dlg.m_iAcquireType = mParam->nonTSacquireType;
-  if (dlg.mAnyTSpoints)
-    dlg.m_iAcquireType = ACQUIRE_DO_TS;
-  if (dlg.DoModal() != IDOK || (!dlg.mAnyAcquirePoints && !dlg.mAnyTSpoints))
-    return;
+  if (fromMenu) {
+    dlg.m_iAcquireType = mParam->nonTSacquireType;
+    if (dlg.mAnyTSpoints)
+      dlg.m_iAcquireType = ACQUIRE_DO_TS;
+    if (dlg.DoModal() != IDOK || (!dlg.mAnyAcquirePoints && !dlg.mAnyTSpoints))
+      return;
 
-  runPremacro = mParam->acqRunPremacro;
-  if (dlg.m_iAcquireType != ACQUIRE_DO_TS) {
-    mParam->nonTSacquireType = dlg.m_iAcquireType;
-    runPremacro = mParam->acqRunPremacroNonTS;
+    if (dlg.m_iAcquireType != ACQUIRE_DO_TS)
+      mParam->nonTSacquireType = dlg.m_iAcquireType;
+    mParam->acquireType = dlg.m_iAcquireType;
+
+    // Postponing: save subset parameters
+    mAcqDlgPostponed = dlg.mPostponed;
+    if (mAcqDlgPostponed) {
+      mPostponedSubsetStart = dlg.m_iSubsetStart;
+      mPostponedSubsetEnd = dlg.m_iSubsetEnd;
+      mPostposedDoSubset = dlg.m_bDoSubset;
+      return;
+    }
+  } else if ((mParam->acquireType == ACQUIRE_DO_TS && !dlg.mAnyTSpoints) ||
+    (mParam->acquireType != ACQUIRE_DO_TS && !dlg.mAnyAcquirePoints)) {
+      return;
   }
-  mParam->acquireType = dlg.m_iAcquireType;
+ 
+  runPremacro = mParam->acqRunPremacro;
+  if (mParam->acquireType != ACQUIRE_DO_TS)
+    runPremacro = mParam->acqRunPremacroNonTS;
 
   if (mParam->acqSkipInitialMove && OKtoSkipStageMove(mParam) < 0) {
     loop = IDYES;
@@ -7021,7 +7051,7 @@ void CNavigatorDlg::AcquireAreas()
     loopEnd = runPremacro ? 2 : 1;
     for (loop = loopStart; loop < loopEnd; loop++) {
       if (loop)
-        macnum = (dlg.m_iAcquireType == ACQUIRE_DO_TS ? mParam->preMacroInd : 
+        macnum = (mParam->acquireType == ACQUIRE_DO_TS ? mParam->preMacroInd : 
           mParam->preMacroIndNonTS) - 1;
       else 
         macnum = mParam->macroIndex - 1;

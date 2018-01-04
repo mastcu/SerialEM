@@ -132,6 +132,10 @@
       through the Navigator is needed, it must be done on the first item of the 
       subset.&nbsp; If tilt series are being done and a state needs to be set, it 
       should be done on the first item as well.</P>
+    <P>The subset selection is reset after every run.&nbsp; However, if you close this 
+      dialog with <b>Postpone</b>, the subset setting is saved.&nbsp; It will reappear 
+      when you reopen the dialog and will apply if the acquisition is started from a 
+      script command.</P>
     <P><b>Skip initial stage move</b></P>
     <P>Select this option to suppress the initial stage move to the area, which is 
       redundant when Realign to Item is going to be run.&nbsp; Several conditions must 
@@ -182,6 +186,12 @@
       from must be specified in the SerialEM properties file.&nbsp; The program keeps 
       track of this option setting separately for tilt series and other kinds of 
       primary tasks.</P>
+    <P><b>GO - Postpone - Cancel</b></P>
+    <P><b>GO</b> starts the acquisition with the selected parameters.&nbsp; <b>
+      Postpone</b> closes the dialog but saves the parameters, which is useful if 
+      acquisition is started subsequently with the StartNavAcquireAtEnd script 
+      command.&nbsp; <b>Cancel</b> closes the dialog and discards any changes in 
+      parameters.</P>
     </basefont>
   </BODY>
 </HTML>

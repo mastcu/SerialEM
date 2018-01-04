@@ -94,7 +94,8 @@ BEGIN_MESSAGE_MAP(CNavAcquireDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_NA_ROUGH_EUCEN, OnRoughEucen)
   ON_BN_CLICKED(IDC_NA_COOKSPECIMEN, OnCookSpecimen)
   ON_BN_CLICKED(IDC_NA_FINE_EUCEN, OnFineEucen)
-  ON_BN_CLICKED(IDC_NA_SKIP_INITIAL_MOVE, &CNavAcquireDlg::OnSkipInitialMove)
+  ON_BN_CLICKED(IDC_NA_SKIP_INITIAL_MOVE, OnSkipInitialMove)
+  ON_BN_CLICKED(IDC_BUT_POSTPONE, OnButPostpone)
 END_MESSAGE_MAP()
 
 
@@ -119,6 +120,12 @@ void CNavAcquireDlg::OnOK()
 	CBaseDlg::OnOK();
 }
 
+void CNavAcquireDlg::OnButPostpone()
+{
+ mPostponed = true;
+ OnOK();
+}
+
 void CNavAcquireDlg::UnloadTSdependentFromDlg(int acquireType)
 {
   if (acquireType == ACQUIRE_DO_TS) {
@@ -137,6 +144,7 @@ BOOL CNavAcquireDlg::OnInitDialog()
   int ind;
   CString str;
 	CBaseDlg::OnInitDialog();
+  mPostponed = false;
   mParam = mWinApp->GetNavParams();
   mMacroNum = mParam->macroIndex;
   m_bAutofocus = mParam->acqAutofocus;

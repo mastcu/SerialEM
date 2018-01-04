@@ -1373,6 +1373,7 @@
 #define IDC_STAT_ALIGN_TARGET           2392
 #define IDC_CONSECUTIVE_FILES           2393
 #define IDC_STAT_CONSEC_LIST            2394
+#define IDC_BUT_POSTPONE                2395
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -1780,6 +1781,7 @@
 #define ID_Menu33287                    33287
 #define ID_SCRIPT_RUNONECOMMAND         33288
 #define ID_FILE_SKIPFILEPROPERTIESDIALOG 33289
+#define ID_PROCESS_REDUCEIMAGE          33290
 
 // Next default values for new objects
 // 
@@ -1787,8 +1789,8 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        228
-#define _APS_NEXT_COMMAND_VALUE         33290
-#define _APS_NEXT_CONTROL_VALUE         2395
+#define _APS_NEXT_COMMAND_VALUE         33291
+#define _APS_NEXT_CONTROL_VALUE         2396
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

@@ -31,6 +31,7 @@ public:
   BOOL m_bRealign;
   BOOL m_bFineEucen;
   BOOL m_bAutofocus;
+  bool mPostponed;
   int mMacroNum;
   int mPremacNum;
   int mNumArrayItems;
@@ -86,4 +87,5 @@ public:
   afx_msg void OnCookSpecimen();
   afx_msg void OnFineEucen();
   afx_msg void OnSkipInitialMove();
+  afx_msg void OnButPostpone();
 };

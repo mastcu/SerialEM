@@ -73,7 +73,7 @@ public:
 	void AcquireCleanup(int error);
 	int TaskAcquireBusy();
 	void AcquireNextTask(int param);
-	void AcquireAreas();
+	void AcquireAreas(bool fromMenu);
 	BOOL AcquireOK(bool tiltSeries = false, int startInd = 0, int endInd = -1);
   int NewMap(bool unsuitableOK = false);
   void DeleteItem() {OnDeleteitem();};
@@ -368,6 +368,10 @@ private:
   double mLastTimePerItem;  // Last time per item for that montage time
   int mGroupIDtoSkip;       // ID for skipping a group during acquire
   BOOL mSkipStageMoveInAcquire;  // Skip stage moves: flag used during acquisition
+  bool mAcqDlgPostponed;    // Flag that acquire dialog closed with postpone
+  int mPostponedSubsetStart; // Subset values when postponed
+  int mPostponedSubsetEnd;
+  BOOL mPostposedDoSubset;
 
 public:
   BOOL RegistrationChangeOK(void);

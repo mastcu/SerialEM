@@ -2009,6 +2009,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
       busy = mScope->LongOperationBusy();
     else if (idc->source == TASK_STACK_FALCON)
       busy = mFalconHelper->StackingWaiting();
+    else if (idc->source == TASK_START_NAV_ACQ)
+      busy = mMacroProcessor->StartNavAvqBusy();
 
     // Increase timeouts after long intervals
     if (idc->extendTimeOut)
