@@ -818,7 +818,7 @@ void CSerialEMDoc::CloseAllStores()
 void CSerialEMDoc::ManageSaveSingle(void)
 {
   UtilModifyMenuItem(0, IDM_FILE_SAVEOTHER,
-    mNumStores ? "Save to Other..." : "Save Single...");
+    mNumStores ? "Sa&ve to Other..." : "Sa&ve Single...");
 }
 
 // Regular save of regular buffer
