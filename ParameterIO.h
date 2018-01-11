@@ -18,7 +18,7 @@ public:
     int *iVals, double *dVals, int maxVals);
 	CString EntryListToString(int type, int precision, int numVals, int *iVals, double *dVals);
 	void WriteShortTermCal(CString strFileName);
-	int ReadShortTermCal(CString strFileName);
+	int ReadShortTermCal(CString strFileName, BOOL ignoreCals);
 	void WritePlacement(char *string, int open, WINDOWPLACEMENT *place);
   int ParseString(CString strLine, CString *strItems, int maxItems);
   void WriteCalibration(CString strFile);

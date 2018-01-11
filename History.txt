@@ -3,6 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+1/10/18: Made non-calibration parameters saved in the short-term calibration
+file be used even when the property to ignore short-terms cals is set.
+
+1/10/18: Added property for limiting the frame sizes in montages fit to
+polygons at specific mags.
+
 1/3/18: Fixed bug in limiting K2 coordinates entered with SetCameraArea (In
 3.6).
 
@@ -10,7 +16,7 @@ significance.
 an antialiasing filter.
 
 1/3/18: Added script command to start Navigator Acquire when the script ends,
-and a Postpone button the the Acquire dialog for setting parameters only.
+and a Postpone button to the Acquire dialog for setting parameters only.
 
 1/1/18: Expanded SuffixForExtraFile command to provide suffixes for more than
 one extra file to open during Navigator acquisition.

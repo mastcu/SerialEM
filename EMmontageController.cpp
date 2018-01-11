@@ -3282,16 +3282,28 @@ bool EMmontageController::PieceNeedsRealigning(int index, bool nextPiece)
 }
 
 // Limit the X and Y sizes if necessary to be within usable area
-void EMmontageController::LimitSizesToUsable(CameraParameters *cam, int &xsize, 
-                                             int &ysize, int binning)
+void EMmontageController::LimitSizesToUsable(CameraParameters *cam, int camNum, 
+  int magInd, int &xsize, int &ysize, int binning)
 {
+  int ind, div;
   if (mLimitMontToUsable && cam->defects.usableRight)
     LimitOneSizeToUsable(xsize, cam->sizeX, cam->defects.usableLeft, 
     cam->defects.usableRight, binning, cam->moduloX);
   if (mLimitMontToUsable && cam->defects.usableBottom)
     LimitOneSizeToUsable(ysize, cam->sizeY, cam->defects.usableTop, 
     cam->defects.usableBottom, binning, cam->moduloY);
-
+  for (ind = 0; ind < (int)mMontageLimits.GetSize(); ind++) {
+    if (mMontageLimits[ind].camera == camNum && mMontageLimits[ind].magInd == magInd) {
+      div = BinDivisorI(cam);
+      if (mMontageLimits[ind].right)
+        LimitOneSizeToUsable(xsize, cam->sizeX, div * mMontageLimits[ind].left, 
+          div * mMontageLimits[ind].right, binning, cam->moduloX);
+      if (mMontageLimits[ind].bottom)
+        LimitOneSizeToUsable(ysize, cam->sizeY, div * mMontageLimits[ind].top, 
+         div *  mMontageLimits[ind].bottom, binning, cam->moduloY);
+      break;
+    }
+  }
 }
 
 // Compute centered size that is within usable area in one dimension

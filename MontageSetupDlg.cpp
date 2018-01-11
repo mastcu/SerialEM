@@ -953,7 +953,8 @@ void CMontageSetupDlg::ValidateEdits()
     // Sizes must be what the camera will actually shoot
     tempX = m_iXsize;
     tempY = m_iYsize;
-    mWinApp->mMontageController->LimitSizesToUsable(cam, m_iXsize, m_iYsize, 
+    mWinApp->mMontageController->LimitSizesToUsable(cam, mCurrentCamera, 
+        mLowDoseMode ? mLdp[mLDsetNum].magIndex : mParam.magIndex, m_iXsize, m_iYsize, 
       mParam.binning);
     mWinApp->mCamera->CenteredSizes(m_iXsize, cam->sizeX, cam->moduloX, left, right,
       m_iYsize, cam->sizeY, cam->moduloY, top, bot, mParam.binning, 
@@ -1082,6 +1083,10 @@ int CMontageSetupDlg::CheckNavigatorFit(int magIndex, int binning, float minOver
     mParam = tmpParam;
     if (switchingVinLD)
       mLDsetNum = MontageLDAreaIndex(&mParam);
+
+    // Have to get the magIndex right before the load as it will validate again
+    if (!mLowDoseMode)
+      mParam.magIndex = magIndex;
     LoadParamData(false);
   }
   return err;

@@ -3078,8 +3078,8 @@ int CNavigatorDlg::SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg)
     // Check for Record area smaller than camera and ask if user wants that limit
     mFrameLimitX = camParam->sizeX;
     mFrameLimitY = camParam->sizeY;
-    mWinApp->mMontageController->LimitSizesToUsable(camParam, mFrameLimitX, mFrameLimitY,
-      1);
+    mWinApp->mMontageController->LimitSizesToUsable(camParam, iCam, magIndex, 
+      mFrameLimitX, mFrameLimitY, 1);
     if ((conSet->right - conSet->left < askLimitRatio * mFrameLimitX ||
       conSet->bottom - conSet->top < askLimitRatio * mFrameLimitY) &&
       AfxMessageBox("The " + modeNames[consetNum] + " area is significantly smaller than "
@@ -6351,7 +6351,7 @@ void CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile)
   char *adocStr;
   CMapDrawItem *item, *prev;
   int originalSize = (int)mItemArray.GetSize();
-  bool resetAcquireEnd = mPausedAcquire && originalSize - 1 <= mEndingAcquireIndex;
+  bool resetAcquireEnd = mAcquireIndex >= 0 && originalSize - 1 <= mEndingAcquireIndex;
   int version = 100;
   int mapSkip = 13;
 

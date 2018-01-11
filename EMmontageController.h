@@ -16,6 +16,14 @@
 #include <vector>
 #include "EMscope.h"
 
+// Structure for storing limits to frame sizes in fitted montages
+struct MontLimits
+{
+  int camera;           // Camera #
+  int magInd;           // Mag at which limit applies
+  int top, left, bottom, right;    // Unbinned usable area   
+};
+
 class EMmontageController  
 {
  public:
@@ -71,6 +79,7 @@ class EMmontageController
     mRadius2[ind] = r2; mSigma1[ind] = s1; mSigma2[ind] = s2;};
   void GetLastBacklash(float &outX, float &outY);
   double GetRemainingTime();
+  CArray<MontLimits, MontLimits> *GetMontageLimits() {return &mMontageLimits;};
 
  private:
   EMbufferManager *mBufferManager;
@@ -258,6 +267,7 @@ class EMmontageController
   double mLastElapsed;            // Elapsed time and mNumDoing values when 
   int mLastNumDoing;               // GetRemainingTime was last called
   int mInitialNumDoing;
+  CArray<MontLimits, MontLimits> mMontageLimits;
 
 public:
 	void AdjustShiftInCenter(MontParam *param, float &shiftX, float &shiftY);
@@ -289,7 +299,7 @@ public:
   int AutodocStageOffsetIO(bool write, int pieceInd);
   bool CalNeededForISrealign(MontParam * param);
   void GetColumnBacklash(float & backlashX, float & backlashY);
-  void LimitSizesToUsable(CameraParameters * cam, int & xsize, int & ysize, int binning);
+  void LimitSizesToUsable(CameraParameters * cam, int camNum, int magInd, int & xsize, int & ysize, int binning);
   void LimitOneSizeToUsable(int &size, int camSize, int start, int end, 
                                          int binning, int modulo);
   void extractPatch(void *data, int type, int ixy, int *ind0, int *ind1, float **patch);

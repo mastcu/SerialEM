@@ -1630,11 +1630,13 @@ int CParameterIO::ReadProperties(CString strFileName)
   CArray<ChannelSet, ChannelSet> *blockSets = scope->GetBlockedChannels();
   CArray<PiezoScaling, PiezoScaling> *piezoScalings = 
     mWinApp->mPiezoControl->GetScalings();
+  CArray<MontLimits, MontLimits> *montLimits = mWinApp->mMontageController->GetMontageLimits();
   CString *K2FilterNames = camera->GetK2FilterNames();
   HitachiParams *hitachi = mWinApp->GetHitachiParams();
   RotStretchXform rotXform;
   PiezoScaling pzScale;
   ChannelSet chanSet;
+  MontLimits montLim;
   TiffField *tfield;
   int camEntered[MAX_CAMERAS];
   std::set<std::string> genPropSet;
@@ -1950,7 +1952,15 @@ int CParameterIO::ReadProperties(CString strFileName)
             camP->deadTime = (float)itemDbl[1];
           else if (MatchNoCase("MinimumExposure"))
             camP->minExposure = (float)itemDbl[1];
-          else 
+          else if (MatchNoCase("UsableAtMag")) {
+            montLim.camera = iset;
+            montLim.magInd = itemInt[1];
+            montLim.top = itemInt[2];
+            montLim.left = itemInt[3];
+            montLim.bottom = itemInt[4];
+            montLim.right = itemInt[5];
+            montLimits->Add(montLim);
+          } else 
             recognizedc1 = false;
 
           if (recognizedc1) {
@@ -3937,7 +3947,7 @@ void CParameterIO::WriteCalibration(CString strFileName)
 
 
 // Read the short-term calibration file (for dose calibration)
-int CParameterIO::ReadShortTermCal(CString strFileName)
+int CParameterIO::ReadShortTermCal(CString strFileName, BOOL ignoreCals)
 {
   int retval = 0;
   int err, index, cam, inTime;
@@ -3973,7 +3983,33 @@ int CParameterIO::ReadShortTermCal(CString strFileName)
       (err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, 
                             MAX_TOKENS)) == 0) {
 
-      if (NAME_IS("DoseCalibration")) {
+        // Save the nav autosave filename if it belongs to this user
+      if (NAME_IS("NavAutosave")) {
+        CString name = getenv("USERNAME");
+        name = name.Trim();
+        name.Replace(" ", "_");
+        if (strItems[1] == name)
+          StripItems(strLine, 2, navP->autosaveFile);
+
+      } else if (NAME_IS("FakeMagIndex")) {
+        if (itemInt[1] >= 0 && itemInt[1] < MAX_MAGS)
+          mWinApp->mScope->SetFakeMagIndex(itemInt[1]);
+      } else if (NAME_IS("FakeScreenPos")) {
+          mWinApp->mScope->SetFakeScreenPos(itemInt[1]);
+      } else if (NAME_IS("LastC2Aperture")) {
+        mWinApp->mBeamAssessor->ScaleTablesForAperture(itemInt[1], true);
+
+      } else if (NAME_IS("LastLongOpTimes")) {
+        for (index = 1; index <= MAX_LONG_OPERATIONS && !itemEmpty[index]; index++)
+          times[index - 1] = itemInt[index];
+
+      } else if (NAME_IS("LastDEdarkRefTimes")) {
+        DEdarkRefTimes[0] = itemInt[1];
+        DEdarkRefTimes[1] = itemInt[2];
+
+      } else if (ignoreCals) {
+
+      } else if (NAME_IS("DoseCalibration")) {
         index = itemInt[1] * 2 + itemInt[2];
         index = 2 * index + B3DCHOICE(itemEmpty[6], 1, itemInt[6]);
         if (index < 0 || index >= 4 * MAX_SPOT_SIZE || strItems[5].IsEmpty()) {
@@ -4039,30 +4075,6 @@ int CParameterIO::ReadShortTermCal(CString strFileName)
           pixelSizes->push_back((float)itemDbl[5]);
           gridRotations->push_back((float)itemDbl[6]);
         }
-
-        // Save the nav autosave filename if it belongs to this user
-      } else if (NAME_IS("NavAutosave")) {
-        CString name = getenv("USERNAME");
-        name = name.Trim();
-        name.Replace(" ", "_");
-        if (strItems[1] == name)
-          StripItems(strLine, 2, navP->autosaveFile);
-
-      } else if (NAME_IS("FakeMagIndex")) {
-        if (itemInt[1] >= 0 && itemInt[1] < MAX_MAGS)
-          mWinApp->mScope->SetFakeMagIndex(itemInt[1]);
-      } else if (NAME_IS("FakeScreenPos")) {
-          mWinApp->mScope->SetFakeScreenPos(itemInt[1]);
-      } else if (NAME_IS("LastC2Aperture")) {
-        mWinApp->mBeamAssessor->ScaleTablesForAperture(itemInt[1], true);
-
-      } else if (NAME_IS("LastLongOpTimes")) {
-        for (index = 1; index <= MAX_LONG_OPERATIONS && !itemEmpty[index]; index++)
-          times[index - 1] = itemInt[index];
-
-      } else if (NAME_IS("LastDEdarkRefTimes")) {
-        DEdarkRefTimes[0] = itemInt[1];
-        DEdarkRefTimes[1] = itemInt[2];
 
       } else if (!strItems[0].IsEmpty())
         AfxMessageBox("Unrecognized entry in short term calibration file " + strFileName
