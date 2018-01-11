@@ -105,7 +105,7 @@ struct LiveThreadData {
 #define DE_HAS_REPEAT_REF 1000768
 #define DE_SUFFIX_KEEPS_PT 9999999
 #define DE_CAN_SET_FOLDER 1000943
-#define DE_ALL_NORM_IN_SERVER 1001172
+#define DE_ALL_NORM_IN_SERVER 1001214
 
 //The following define the different
 //gain/dsi setting modes for the LC1100
@@ -268,8 +268,7 @@ private:
 
   // State variables: last values set in server.  Keep in same order as in init function
   int mLastSaveFlags;                   // Flags for types of frames to save
-  int mLastSumCount;                    // Sum count for saving summed linear frames
-  int mLastDoseFracNum;                 // Number of frames summed in counting mode
+  int mLastSumCount;                    // Sum count for saving summed frames
   CString mLastSuffix, mLastSaveDir;    // Last filename components and directory
   int mLastXoffset, mLastYoffset;       // Offset set in ROI routine
   int mLastROIsizeX, mLastROIsizeY;     // Size set in ROI routine
@@ -279,7 +278,8 @@ private:
   float mLastExposureTime;              // Exposure time
   double mLastPreExposure;              // Pre-exposure
   int mLastProcessing;                  // uncorrected, dark, or dark/gain (linear mode)
-  int mLastNormCounting;                // Normalization of couting images
+  int mLastNormDoseFrac;                // Normalization of saved frames
+  int mLastUnnormBits;                  // Bits output in unnormalized movie
   int mLastElectronCounting;            // Electron counting of either kind is 1, test > 0
   int mLastSuperResolution;             // Super-resolution is a separate flag
   float mLastFPS;                       // Frames per second

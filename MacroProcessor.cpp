@@ -216,7 +216,7 @@ enum {CME_VIEW, CME_FOCUS, CME_TRIAL, CME_RECORD, CME_PREVIEW,
   CME_RAWELECTRONSTATS, CME_ALIGNWHOLETSONLY, CME_WRITECOMFORTSALIGN, CME_RECORDANDTILTTO,
   CME_AREPOSTACTIONSENABLED, CME_MEASUREBEAMSIZE, CME_MULTIPLERECORDS, 
   CME_MOVEBEAMBYMICRONS, CME_MOVEBEAMBYFIELDFRACTION, CME_NEWDESERVERDARKREF,
-  CME_STARTNAVACQUIREATEND, CME_REDUCEIMAGE
+  CME_STARTNAVACQUIREATEND, CME_REDUCEIMAGE, CME_REPORTAXISPOSITION
 };
 
 static CmdItem cmdList[] = {{NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0},
@@ -321,7 +321,7 @@ static CmdItem cmdList[] = {{NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0
 {"AlignWholeTSOnly", 0}, {"WriteComForTSAlign", 0}, {"RecordAndTiltTo", 1},
 {"ArePostActionsEnabled", 0}, {"MeasureBeamSize", 0}, {"MultipleRecords", 0},
 {"MoveBeamByMicrons", 2}, {"MoveBeamByFieldFraction", 2}, {"NewDEserverDarkRef", 2},
-{"StartNavAcquireAtEnd", 0}, {"ReduceImage", 2},
+{"StartNavAcquireAtEnd", 0}, {"ReduceImage", 2}, {"ReportAxisPosition", 1},
 {NULL, 0, NULL}
 };
 
@@ -4654,23 +4654,40 @@ void CMacroProcessor::NextCommand()
       mWinApp->mLowDoseDlg.SetLowDoseMode(itemInt[1] != 0);
     SetReportedValues(&strItems[2], (double)index);
 
-  } else if (CMD_IS(SETAXISPOSITION)) {                     // SetAxisPosition
+                                                   // ReportAxisPosition, SetAxisPosition
+  } else if (CMD_IS(SETAXISPOSITION) || CMD_IS(REPORTAXISPOSITION)) {
+    truth = CMD_IS(REPORTAXISPOSITION);
     if (!mWinApp->LowDoseMode())
-      ABORT_NOLINE("You must be in low dose mode to use SetAxisPosition");
+      ABORT_LINE("You must be in low dose mode to use this command:\n\n");
     index = CString("VFTRS").Find(strItems[1].Left(1));
     if ((index + 1) / 2 != 1)
-      ABORT_NOLINE("SetAxisPosition must be followed by F or T");
-    index2 = 0;
-    if (fabs(itemDbl[2]) > 19.)
-      ABORT_LINE("The axis distance is too large in:\n\n");
-    if (!itemEmpty[3])
-      index2 = B3DNINT(UtilGoodAngle(itemDbl[3]));
-    ix0 = (mScope->GetLowDoseArea() + 1) / 2;
-    if (ix0 == 1)
-      mScope->GetLDCenteredShift(delX, delY);
-    mWinApp->mLowDoseDlg.NewAxisPosition(index, itemDbl[2], index2, !itemEmpty[3]);
-    if (ix0 == 1)
-      mScope->SetLDCenteredShift(delX, delY);
+      ABORT_LINE("This command must be followed by F or T:\n\n");
+    if (CMD_IS(REPORTAXISPOSITION)) {
+      delX = mWinApp->mLowDoseDlg.ConvertOneIStoAxis(ldParam[index].magIndex,
+        ldParam[index].ISX, ldParam[index].ISY);
+      ix0 = ((mConSets[index].right + mConSets[index].left) / 2 - camParams->sizeX / 2) /
+        BinDivisorI(camParams);
+      iy0 = ((mConSets[index].bottom + mConSets[index].top) / 2 - camParams->sizeY / 2) /
+        BinDivisorI(camParams);
+      index2 = mWinApp->mLowDoseDlg.m_bRotateAxis ? mWinApp->mLowDoseDlg.m_iAxisAngle : 0;
+      report.Format("%s axis position %.2f microns, %d degrees; camera offset %d, %d "
+        "unbinned pixels", mModeNames[index], delX, index2, ix0, iy0);
+      mWinApp->AppendToLog(report, mLogAction);
+      SetReportedValues(&strItems[2], delX, (double)index2, (double)ix0, (double)iy0);
+
+    } else {
+      index2 = 0;
+      if (fabs(itemDbl[2]) > 19.)
+        ABORT_LINE("The axis distance is too large in:\n\n");
+      if (!itemEmpty[3])
+        index2 = B3DNINT(UtilGoodAngle(itemDbl[3]));
+      ix0 = (mScope->GetLowDoseArea() + 1) / 2;
+      if (ix0 == 1)
+        mScope->GetLDCenteredShift(delX, delY);
+      mWinApp->mLowDoseDlg.NewAxisPosition(index, itemDbl[2], index2, !itemEmpty[3]);
+      if (ix0 == 1)
+        mScope->SetLDCenteredShift(delX, delY);
+    }
 
   } else if (CMD_IS(REPORTLOWDOSE)) {                       // ReportLowDose
     char *modeLets = "VFTRS";

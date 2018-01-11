@@ -1809,6 +1809,13 @@
             non-zero or off if # is 0.</TD>
         </TR>
         <TR>
+          <TD class="style12">ReportAxisPosition F/T</TD>
+          <TD>Reports the axis position in microns and the rotation of the inter-area axis, 
+            for the Focus and/or Trial area as specified by F or T.&nbsp;The offset from center 
+            of the camera acquisition subarea is also reported in unbinned pixels (in 
+            left-handed camera coordinates).</TD>
+        </TR>
+        <TR>
           <TD class="style12">SetAxisPosition F/T #D [#A]</TD>
           <TD>Modifies the axis position, and optionally the rotation of the inter-area 
             axis, for the Focus and/or Trial area.&nbsp; Follow with F or T to specify the 
@@ -2113,6 +2120,13 @@
             selection in the Acquire at Items dialog for whether to skip this stage move.&nbsp; 
             Thus a script that is going to use Realign to Item on each point can skip the 
             stage move and there is no need for the user to make this selection.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style12">StartNavAcquireAtEnd</TD>
+          <TD>Starts the Navigator Acquire at Items operation after the script ends 
+            successfully, using the parameters last defined in the
+      <A HREF="hidd_navacquire.htm">Navigator Acquire</A> dialog.&nbsp; The command cannot 
+            be used when Navigator is already acquiring or a tilt series is running.</TD>
         </TR>
       </TABLE>
       <BR>

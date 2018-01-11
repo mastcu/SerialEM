@@ -56,8 +56,9 @@ static const char *psEnable = "Enable";
 static const char *psDisable = "Disable";
 static const char *psMotionCor = "Motion Correction";
 
-// This one is concatenated into multiple strings
+// These are concatenated into multiple strings
 #define DE_PROP_COUNTING "Electron Counting"
+#define DE_PROP_DOSEFRAC "Dose Fractionation - "
 
 
 ///////////////////////////////////////////////////////////////////
@@ -161,7 +162,6 @@ void DirectElectronCamera::InitializeLastSettings()
 {
   mLastSaveFlags = -1;
   mLastSumCount = -1;
-  mLastDoseFracNum = -1;
   mLastSaveDir = "";
   mLastSuffix = "";
   mLastXoffset = mLastYoffset = -1;
@@ -172,7 +172,8 @@ void DirectElectronCamera::InitializeLastSettings()
   mLastExposureTime = -1.;
   mLastPreExposure = -1.;
   mLastProcessing = -1;
-  mLastNormCounting = -1;
+  mLastNormDoseFrac = -1;
+  mLastUnnormBits = -1;
   mLastElectronCounting = -1;
   mLastSuperResolution = -1;
   mLastFPS = -1.;
@@ -488,14 +489,20 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
       PrintfToLog("%s", str);
     }
 
-    // Set up so that frames are saved with same correction as acquisition if normalizing
-    // in server
+    // Set some properties that are not going to be managed
     mNormAllInServer = mServerVersion >= DE_ALL_NORM_IN_SERVER;
-    setStringProperty("Autosave Raw Frames - Save Correction", 
-      mNormAllInServer ? psEnable : psDisable);
-    setStringProperty("Autosave Sum Frames - Save Correction",
-      mNormAllInServer ? psEnable : psDisable);
-    setIntProperty("Autosave Sum Frames - Ignored Frames", 0);
+    if (mNormAllInServer) {
+      mCamParams[camIndex].CamFlags |= DE_NORM_IN_SERVER; 
+      setIntProperty(DE_PROP_DOSEFRAC"Start", 0);
+      setStringProperty("Backward Compatibility", psDisable);
+      // Leave this for engineers to be able to set depending on what is best
+      //if (mCamParams[camIndex].CamFlags & DE_CAM_CAN_COUNT)
+        //setStringProperty(DE_PROP_COUNTING" - Apply Pre-Counting Gain", psEnable);
+    } else {
+      setStringProperty("Autosave Raw Frames - Save Correction", psDisable);  
+      setStringProperty("Autosave Sum Frames - Save Correction", psDisable);
+      setIntProperty("Autosave Sum Frames - Ignored Frames", 0);
+    }
     getFloatProperty("Frames Per Second (Max)", mCamParams[camIndex].DE_MaxFrameRate);
     B3DCLAMP(mCamParams[camIndex].DE_MaxFrameRate, 1.f, 5000.f);
     if (mServerVersion >= DE_HAS_REPEAT_REF) {
@@ -671,43 +678,41 @@ int DirectElectronCamera::SetAllAutoSaves(int autoSaveFlags, int sumCount, CStri
   bool ret7 = true;
   if (!m_DE_CLIENT_SERVER)
     return 1;
+
+  // With old server, should get DE_SAVE_FRAMES to save single frames and DE_SAVE_SUMS
+  // to save sums that are NOT single frames
+  // With new server, should get DE_SAVE_SUMS for any kind of processed movie saving,
+  // and DE_SAVE_FRAMES only to save raw frames too
   int saveRaw = (autoSaveFlags & DE_SAVE_FRAMES) ? 1 : 0;
   int saveSums = (autoSaveFlags & DE_SAVE_SUMS) ? 1 : 0;
   int saveFinal = (autoSaveFlags & DE_SAVE_FINAL) ? 1 : 0;
-  int saveCount = (canCount && (autoSaveFlags & DE_SAVE_COUNTING)) ? 1 : 0;
   bool setSaves = mLastSaveFlags < 0 || !mTrustLastSettings;
   CSingleLock slock(&m_mutex);
 
   if (slock.Lock(1000)) {
-    if (setSaves || ((mLastSaveFlags & DE_SAVE_FRAMES) ? 1 : 0) != saveRaw ||
-      ((canCount && (mLastSaveFlags & DE_SAVE_COUNTING)) ? 1 : 0) != saveCount)
-      ret1 = mDeServer->setProperty("Autosave Raw Frames", 
-        (saveRaw || saveCount) ? psSave : psNoSave);
-    if (setSaves || ((mLastSaveFlags & DE_SAVE_SUMS) ? 1 : 0) != saveSums)
-      ret2 = mDeServer->setProperty("Autosave Summed Image", saveSums ? psSave :psNoSave);
+    if (setSaves || ((mLastSaveFlags & DE_SAVE_FRAMES) ? 1 : 0) != saveRaw)
+      ret1 = mDeServer->setProperty("Autosave Raw Frames", saveRaw ? psSave : psNoSave);
     if (setSaves || ((mLastSaveFlags & DE_SAVE_FINAL) ? 1 : 0) != saveFinal)
       ret3 = mDeServer->setProperty("Autosave Final Image", saveFinal ? psSave :psNoSave);
-    if (saveCount) {
-      if (mLastDoseFracNum < 0 || !mTrustLastSettings || mLastDoseFracNum != sumCount)
-        ret4 = justSetIntProperty(DE_PROP_COUNTING" - Dose Fractionation "
-          "Number of Frames", sumCount);
-      if (ret4)
-        mLastDoseFracNum = sumCount;
-    } else if (saveSums) {
-      if (mLastSumCount < 0 || !mTrustLastSettings || mLastSumCount != sumCount) {
-        ret4 = justSetIntProperty("Autosave Sum Frames - Sum Count", sumCount);
+    if (setSaves || ((mLastSaveFlags & DE_SAVE_SUMS) ? 1 : 0) != saveSums)
+      ret2 = mDeServer->setProperty(mNormAllInServer ? "Autosave Movie" : 
+      "Autosave Summed Image", saveSums ? psSave : psNoSave);
+    if (saveSums && (mLastSumCount < 0 || !mTrustLastSettings || 
+      mLastSumCount != sumCount)) {
+        ret4 = justSetIntProperty(mNormAllInServer ? DE_PROP_DOSEFRAC"Quanta" : 
+          "Autosave Sum Frames - Sum Count", sumCount);
         if (ret4)
           mLastSumCount = sumCount;
-      }
     }
+
     if (setSaves || ((saveRaw || saveSums || saveFinal) && suffix != mLastSuffix)) {
       ret5 = mDeServer->setProperty("Autosave Filename Suffix (User Input)", 
         (LPCTSTR)suffix);
       if (ret5)
         mLastSuffix = suffix;
     }
-    if (!saveDir.IsEmpty() && (setSaves || ((saveRaw || saveSums || saveFinal || 
-      saveCount) && saveDir != mLastSaveDir))) {
+    if (!saveDir.IsEmpty() && (setSaves || ((saveRaw || saveSums || saveFinal) && 
+      saveDir != mLastSaveDir))) {
         ret6 = mDeServer->setProperty(DE_PROP_AUTOSAVE_DIR, (LPCTSTR)saveDir);
         if (ret6)
           mLastSaveDir = saveDir;
@@ -770,6 +775,7 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, int imageSizeX,
                                         int imageSizeY, int divideBy2)
 {
   CString valStr;
+  double startTime = GetTickCount();
   if (!m_DE_CLIENT_SERVER && m_STOPPING_ACQUISITION == true) {
     memset(image4k, 0, imageSizeX * imageSizeY * 2);
     m_STOPPING_ACQUISITION = false;
@@ -898,7 +904,7 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, int imageSizeX,
          return 1;
 
     // Check counting gain reference if normalized and counting mode
-    if ((mLastNormCounting && mLastElectronCounting > 0) &&
+    if ((mLastNormDoseFrac > 0 && mNumLeftServerRef <= 0 && mLastElectronCounting > 0) &&
       !IsReferenceValid(checksum, mCountGainChecks, minuteNow,
       "Correction Mode Counting Gain Reference Status", "post-counting gain"))
          return 1;
@@ -925,12 +931,14 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, int imageSizeX,
     SEMTrace('D', "Got something back from DE Server..");
 
     // If doing ref in server, loop until all the acquisitions are done
+    double maxInterval = 2. * SEMTickInterval(startTime);
+    maxInterval = B3DMAX(maxInterval, 15000. * mLastExposureTime);
     while (mNumLeftServerRef > 0) {
-      double startTime = GetTickCount();
       int remaining;
       bool ret1;
+      startTime = GetTickCount();
       mDateInPrevSetName = 0;
-      while (SEMTickInterval(startTime) < 10000. * mLastExposureTime) {
+      while (SEMTickInterval(startTime) < maxInterval) {
         ret1 = mDeServer->getIntProperty("Auto Repeat Reference - Remaining Acquisitions",
           &remaining);
         if (ret1 && remaining != mNumLeftServerRef)
@@ -956,7 +964,7 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, int imageSizeX,
         (short *)image4k, &outX, &outY);
       delete useBuf;
     }
-    if (mLastNormCounting > 0 && mCountScaling != 1.) {
+    if (mLastElectronCounting > 0 && mCountScaling != 1.) {
       float scale = mCountScaling * (divideBy2 ? 0.5f : 1.f);
       int val, maxVal = divideBy2 ? 32767 : 65535;
       for (int i = 0; i < imageSizeX * imageSizeY; i++) {
@@ -1636,7 +1644,7 @@ HRESULT DirectElectronCamera::CoolDownCamera()
 
   if (!mDeServer->setProperty("Temperature Control", "Cool Down")) {
 
-    str = ErrorTrace("ERROR: Could COOL DOWN UP the camera.");
+    str = ErrorTrace("ERROR: Could NOT COOL DOWN the camera.");
     AfxMessageBox(str);
     return S_FALSE;
   } else {
@@ -1654,31 +1662,43 @@ int DirectElectronCamera::setCorrectionMode(int nIndex, int readMode)
   const char *corrections[3] = {"Uncorrected Raw", "Dark Corrected", 
     "Gain and Dark Corrected"};
   CString str;
-  int normCount;
+  int normDoseFrac = 1;
+  int bits = (readMode == SUPERRES_MODE) ? 8 : 16;
   if (nIndex < 0 || nIndex > 2) 
     return 1;
 
-  // For counting mode, set post-counting gain correction based on the selected correction
-  // except turn it off if taking a counting ref
-  if (readMode > 0) {
-    normCount = nIndex / 2;
-    if (mRepeatForServerRef > 0)
-      normCount = 0;
-    if (normCount != mLastNormCounting || !mTrustLastSettings) {
-      if (!setStringWithError(DE_PROP_COUNTING" - Apply Counting Gain", 
-        normCount ? psEnable : psDisable) ||
-        !setStringWithError(DE_PROP_COUNTING" - Enable 32-bit output", 
-        normCount ? psEnable : psDisable))
-          return 1;
-      mLastNormCounting = normCount;
-    }
-    nIndex = 2;
+  // For frames, set gain correction based on the selected correction in the new version
+  // And require dark/gain references for unnorm counting modes
+  if (mNormAllInServer) {
+    normDoseFrac = nIndex / 2;
+    if (readMode > 0)
+      nIndex = 2;
   }
-  if (nIndex != mLastProcessing || !mTrustLastSettings) {
+
+  // If any saving is happening, make sure normalized frames is set appropriately, and
+  // Set the output bits if they are not normalized
+  if ((mLastSaveFlags > 0 || mRepeatForServerRef > 0) && mNormAllInServer && 
+    (normDoseFrac != mLastNormDoseFrac || !mTrustLastSettings)) {
+      if (!setStringWithError(DE_PROP_DOSEFRAC"Gain Normalization",
+        normDoseFrac ? psEnable : psDisable))
+        return 1;
+      mLastNormDoseFrac = normDoseFrac;
+  }
+  if (mLastSaveFlags > 0 && mNormAllInServer && (!normDoseFrac || nIndex < 2) && 
+    (bits != mLastUnnormBits || !mTrustLastSettings)) {
+      str.Format("%dbit", bits);
+      if (!setStringWithError(DE_PROP_DOSEFRAC"Format for Unnormalized Movie",
+        (LPCTSTR)str))
+        return 1;
+      mLastUnnormBits = bits;
+  }
+
+  // Set the general correction mode
+  if (!mNormAllInServer && (nIndex != mLastProcessing || !mTrustLastSettings)) {
     if (!setStringWithError("Correction Mode", corrections[nIndex]))
       return 1;
-    mLastProcessing = nIndex;
   }
+  mLastProcessing = nIndex;
 
   return 0;
 }
@@ -1948,7 +1968,7 @@ void DirectElectronCamera::SetImageExtraData(EMimageExtra *extra, float nameTime
   CString str;
   double startTime = GetTickCount();
   BOOL saveSums = mLastSaveFlags & DE_SAVE_SUMS;
-  BOOL saveCount = mLastSaveFlags & DE_SAVE_COUNTING;
+  BOOL saveCount = saveSums && mLastElectronCounting > 0;
   extra->mDE12Version = mSoftwareVersion;
   extra->mDE12FPS = (float)mWinApp->mDEToolDlg.GetFramesPerSecond();
   extra->mNumDE12Frames = (int)floor((double)mLastExposureTime * extra->mDE12FPS) + 1;
@@ -1978,22 +1998,22 @@ void DirectElectronCamera::SetImageExtraData(EMimageExtra *extra, float nameTime
     // Attach the standard suffix and extensions
     if (mWinApp->mDEToolDlg.GetFormatForAutoSave()) {
       if (!saveCount && mNormAllInServer)
-        str += "_movies";
+        str += "_movie";
       else if (!saveCount)
         str += saveSums ? "_SumImages" : "_RawImages";
       else if (mLastSuperResolution > 0)
-        str += "_super_movies";
+        str += "_super_movie";
       else
-        str += "_counting_movies";
+        str += "_counting_movie";
       str += CString(mServerVersion >= DE_CAN_SAVE_MRC ? ".mrc" : ".h5");
     }
     extra->mSubFramePath = str;
 
-    // Get the number of frames saved if not counting and name was actually gotten
+    // Get the number of frames saved if name was actually gotten
     extra->mNumSubFrames = 0;
-    if (!saveCount && nameConfirmed) {
-      str.Format("Autosave %s Frames - Frames Written in Last Exposure", 
-        saveSums ? "Sum" : "Raw");
+    if (nameConfirmed) {
+      str.Format("%sFrames Written in Last Exposure", mNormAllInServer ? DE_PROP_DOSEFRAC 
+        : (saveSums ? "Autosave Sum Frames - " : "Autosave Raw Frames - "));
       getIntProperty(str, extra->mNumSubFrames);
     }
   } else if (mLastElectronCounting > 0)
@@ -2021,8 +2041,8 @@ bool DirectElectronCamera::GetPreviousDatasetName(float timeout, int ageLimitSec
   int currentDate = ctdt.GetYear() * 10000 + ctdt.GetMonth() * 100 + ctdt.GetDay();
   name = "";
   mLastPredictedSetName= "";
-  str.Format("Autosave %s Frames - Frames Written in Last Exposure", 
-        saveSums ? "Sum" : "Raw");
+  str.Format("%sFrames Written in Last Exposure", mNormAllInServer ? DE_PROP_DOSEFRAC 
+    : (saveSums ? "Autosave Sum Frames - " : "Autosave Raw Frames - "));
   numStr = (LPCTSTR)str;
   if (slock.Lock(1000)) {
 
@@ -2032,35 +2052,32 @@ bool DirectElectronCamera::GetPreviousDatasetName(float timeout, int ageLimitSec
       timeout = 0;
     startTime = GetTickCount();
     gotNum = mLastElectronCounting > 0 || timeout == 0;
-    while (!gotName || !gotNum) {
-      if (!gotName && mDeServer->getProperty("Autosave Frames - Previous Dataset Name", 
-        &valStr) && valStr.length() > 0) {
 
-          // Valid name: return it and save the time and store the two numeric components
-          name = valStr.c_str();
-          mTimeOfPrevSetName = GetTickCount();
-          mDateInPrevSetName = atoi((LPCTSTR)name.Left(8));
-          mNumberInPrevSetName = atoi((LPCTSTR)name.Mid(9, 5));
-          SEMTrace('D', "It took %.1f sec to get name %s, timeout %.1f",
-            SEMTickInterval(startTime) / 1000., valStr.c_str(), timeout);
-          gotName = true;
-          if (gotNum)
-            return true;
-      }
-      if (!gotNum && mDeServer->getIntProperty(numStr, &numSub) && numSub > 0) {
-        gotNum = true;
-        SEMTrace('D', "It took %.1f sec to get number %d, timeout %.1f", 
-          SEMTickInterval(startTime) / 1000., numSub, timeout);
-        if (gotName)
-          return true;
-      }
-
-      // No valid name: retry until timeout reached
-      if (!timeout || SEMTickInterval(startTime) >= 1000. * timeout)
-        break;
-      Sleep(wait);
-      numTry++;
+    // Timeout is set only for new server, so wait for savingto be completed
+    if (timeout > 0) {
+      valStr = "Not Yet";
+      while (valStr == "Not Yet" && SEMTickInterval(startTime) < 1000. * timeout)
+        mDeServer->getProperty("Autosave Movie - Completed", &valStr);
     }
+
+    if (mDeServer->getProperty("Autosave Frames - Previous Dataset Name", 
+      &valStr) && valStr.length() > 0) {
+
+        // Valid name: return it and save the time and store the two numeric components
+        name = valStr.c_str();
+        mTimeOfPrevSetName = GetTickCount();
+        mDateInPrevSetName = atoi((LPCTSTR)name.Left(8));
+        mNumberInPrevSetName = atoi((LPCTSTR)name.Mid(9, 5));
+        SEMTrace('D', "It took %.1f sec to get name %s, timeout %.1f",
+          SEMTickInterval(startTime) / 1000., valStr.c_str(), timeout);
+        gotName = true;
+    }
+    if (!gotNum && mDeServer->getIntProperty(numStr, &numSub) && numSub > 0) {
+      gotNum = true;
+      SEMTrace('D', "It took %.1f sec to get number %d, timeout %.1f", 
+        SEMTickInterval(startTime) / 1000., numSub, timeout);
+    }
+
     if (gotName)
       return true;
 

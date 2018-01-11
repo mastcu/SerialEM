@@ -2182,9 +2182,9 @@ void CCameraController::Capture(int inSet, bool retrying)
     }
   }
   // Trap door to crash the program!  It proves that the crash address matches the map
-  /*if ((mWinApp->GetDebugKeys()).Find('}') >= 0) {
+  if ((mWinApp->GetDebugKeys()).Find('}') >= 0) {
     CanPreExpose(NULL, 1);
-  }*/
+  }
   mSmiToDo.plugFuncs = mTD.scopePlugFuncs = mScope->GetPlugFuncs();
   mTD.errFlag = 0;
   if (mParam->GatanCam)
@@ -2377,7 +2377,8 @@ void CCameraController::Capture(int inSet, bool retrying)
   mRemoveAlignedDEframes = false;
   if (mWinApp->mDEToolDlg.CanSaveFrames(mParam)) {
     setState = 0;
-    sumCount = conSet.DEsumCount;
+    sumCount = conSet.K2ReadMode > 0 ? conSet.sumK2Frames : conSet.DEsumCount;
+    sumCount = B3DMAX(1, sumCount);
 
     // Turn on only the save master flag if aligning only and set flag to remove frames
     if (conSet.alignFrames && !(conSet.saveFrames & DE_SAVE_MASTER)) {
@@ -2387,11 +2388,18 @@ void CCameraController::Capture(int inSet, bool retrying)
 
     if (conSet.saveFrames & DE_SAVE_MASTER) {
 
-      // Set up the traditional frame/sum/final and new counting saving flags
-      if (conSet.K2ReadMode > 0) {
-        setState = DE_SAVE_COUNTING;
-        sumCount = conSet.sumK2Frames;
+      // Set up the traditional frame/sum/final flags
+      if (mTD.DE_Cam->GetNormAllInServer()) {
+
+        // New server: always set DE_SAVE_SUMS, set DE_SAVE_FRAMES for saving raw/single
+        // also if summing
+        setState = DE_SAVE_SUMS;
+        if (sumCount > 1 && conSet.K2ReadMode < 1 && (conSet.saveFrames & DE_SAVE_SINGLE))
+          setState |= DE_SAVE_FRAMES;
       } else {
+
+        // Old server: set DE_SAVE_SUMS only for sums > 1; set DE_SAVE_FRAMES for sums = 1
+        // or to save single also
         if (conSet.DEsumCount <= 1 || (conSet.saveFrames & DE_SAVE_SINGLE))
           setState = DE_SAVE_FRAMES;
         if (conSet.DEsumCount > 1)
@@ -2628,8 +2636,13 @@ void CCameraController::Capture(int inSet, bool retrying)
   if (mParam->DE_camType == DE_12 || IS_FALCON2_OR_3(mParam))
     megaVoxel = (mParam->sizeX * mParam->sizeY) / 1.e6;
   exposure = mExposure;
-  if (mDEserverRefNextShot > 0)
-    exposure = mDEserverRefNextShot * (exposure + 3.);
+  if (mDEserverRefNextShot > 0) {
+    exposure = mDEserverRefNextShot * ((conSet.K2ReadMode * 10 + 1) * exposure + 3.);
+    if (mParam->CamFlags & DE_CAM_CAN_COUNT)
+      exposure *= mTD.FramesPerSec / 20.;
+  }
+  else if (mParam->DE_camType && conSet.K2ReadMode > 0)
+    exposure *= 3 * conSet.K2ReadMode;
   if (mParam->STEMcamera && mParam->GatanCam && conSet.lineSync)
     exposure += mDMsizeY * mDSsyncMargin / 1.e6;
   mTD.cameraTimeout = (DWORD)(mTimeoutFactor * 1000. * (5. + mTD.DMsettling + exposure +
@@ -7710,6 +7723,8 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       extra->mStageZ = (float)mStageZbefore;
       extra->mDividedBy2 = mDivBy2ForExtra;
       extra->mDateTime = mWinApp->mDocWnd->DateTimeForTitle();
+      if (mParam->STEMcamera)
+        extra->mChannelName = mParam->channelName[mTD.ChannelIndex[chan]];
       if (mWinApp->mNavigator && mWinApp->mNavigator->GetAcquiring() && 
         !mWinApp->DoingTiltSeries()) {
           ix = mWinApp->mNavigator->GetCurrentOrAcquireItem(navItem);

@@ -1443,6 +1443,8 @@ void CCameraSetupDlg::ManageCamera()
     }
     ShowDlgItem(IDC_DE_ALIGN_FRAMES, mDEweCanAlign || 
       (mParam->CamFlags & DE_CAM_CAN_ALIGN));
+    if (mParam->CamFlags && DE_NORM_IN_SERVER)
+       ReplaceWindowText(&m_butDESaveFrames, "single", "raw");
     ShowDlgItem(IDC_BUT_DE_SETUP_ALIGN, mDEweCanAlign);
     ShowDlgItem(IDC_STAT_DE_WHERE_ALIGN, mDEweCanAlign);
     m_spinDEsumNum.SetRange(1, 10000);

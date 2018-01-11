@@ -65,6 +65,7 @@ struct CamPluginFuncs;
 #define DE_HAS_READOUT_DELAY      0x8
 #define DE_HAS_HARDWARE_BIN       0x10
 #define DE_WE_CAN_ALIGN           0x20
+#define DE_NORM_IN_SERVER         0x40
 
 #define AMT_VERSION_CAN_NORM     700
 
