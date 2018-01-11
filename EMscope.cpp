@@ -4264,7 +4264,8 @@ void CEMscope::GotoLowDoseArea(int inArea)
     ISdone = mLowDoseSetArea >= 0 && (fromFocTrial || fromSearch);
   else
     ISdone = mLowDoseSetArea >= 0 && (ldArea->magIndex || ldArea->camLenIndex) &&
-      ldArea->magIndex < mLdsaParams->magIndex;
+      ldArea->magIndex < mLdsaParams->magIndex && 
+      !(GetUsePLforIS(ldArea->magIndex) && inArea == SEARCH_AREA);
   if (ISdone)
     DoISforLowDoseArea(inArea, mLdsaParams->magIndex, delISX, delISY);
 
@@ -4311,7 +4312,7 @@ void CEMscope::GotoLowDoseArea(int inArea)
   alphaDone = curAlpha >= 0 && ldArea->beamAlpha >= 0. && !STEMmode && 
     mLowDoseSetArea >= 0 && (ldArea->magIndex || ldArea->camLenIndex) &&
     ldArea->magIndex < mLdsaParams->magIndex;
-  if (alphaDone)
+  if (alphaDone && !mHasNoAlpha)
     ChangeAlphaAndBeam(curAlpha, (int)ldArea->beamAlpha);
   
   if (ldArea->magIndex)
@@ -4334,7 +4335,7 @@ void CEMscope::GotoLowDoseArea(int inArea)
 
   // For alpha change, need to restore the beam shift to what it was for consistent
   // changes; and if there is a calibrated beam shift change, apply that
-  if (ldArea->beamAlpha >= 0. && !STEMmode && !alphaDone) {
+  if (ldArea->beamAlpha >= 0. && !STEMmode && !alphaDone && !mHasNoAlpha) {
     ChangeAlphaAndBeam(curAlpha, (int)ldArea->beamAlpha);
   } else if (!STEMmode && !alphaDone)
     ldArea->beamAlpha = (float)curAlpha;
@@ -6560,7 +6561,7 @@ BOOL CEMscope::SaveOrRestoreIS(int saveMag, int otherMag)
   if (JEOLscope)
     return ((saveMag >= lowestM && !otherMag) ||
       (saveMag < lowestM && !otherMag && mApplyISoffset) ||
-      (saveMag >= lowestM && otherMag < lowestM && !mApplyISoffset));
+      (saveMag >= lowestM && otherMag < lowestM && !mApplyISoffset && !mLowDoseMode));
   else
     return (saveMag && !otherMag && mApplyISoffset);
 }
