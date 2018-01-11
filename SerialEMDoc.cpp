@@ -1763,8 +1763,8 @@ void CSerialEMDoc::ReadSetPropCalFiles()
 
   // Read short-term calibrations unless ignoring them
   strSys = mSystemPath + "\\" + mShortTermName;
-  if (!mIgnoreShortTerm && CFile::GetStatus((LPCTSTR)strSys, status)) {
-    if (mParamIO->ReadShortTermCal(strSys))
+  if (CFile::GetStatus((LPCTSTR)strSys, status)) {
+    if (mParamIO->ReadShortTermCal(strSys, mIgnoreShortTerm))
       AfxMessageBox("Error reading short-term calibration file", MB_EXCLAME);
   }
 
@@ -2279,7 +2279,7 @@ void CSerialEMDoc::SaveShortTermCal()
   }
 
   // 4/22/12: changed && to ||
-  if (!mShortTermNotSaved || mIgnoreShortTerm)
+  if (!mShortTermNotSaved)
     return;
   if (!mOriginalCwd.IsEmpty()) {
     cwd = _getcwd(NULL, _MAX_PATH);
