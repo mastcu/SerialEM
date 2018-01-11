@@ -519,10 +519,11 @@ void CMenuTargets::OnNavigatorMergefile()
 
 void CMenuTargets::OnUpdateNavigatorMergefile(CCmdUI *pCmdUI)
 {
- int navState = mWinApp->mCameraMacroTools.GetNavigatorState();
-
+  int navState = mWinApp->mCameraMacroTools.GetNavigatorState();
   pCmdUI->Enable(!DoingTasks() && mNavigator && mNavigator->NoDrawing() && 
-    (!mNavigator->GetAcquiring() || navState == NAV_PAUSED));
+    (!mNavigator->GetAcquiring() || navState == NAV_PAUSED || 
+    navState == NAV_SCRIPT_STOPPED || navState == NAV_TS_STOPPED || 
+    navState == NAV_PRE_TS_STOPPED));
 }
 
 void CMenuTargets::OnNavigatorOpenStateDlg()
