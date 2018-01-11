@@ -2182,9 +2182,9 @@ void CCameraController::Capture(int inSet, bool retrying)
     }
   }
   // Trap door to crash the program!  It proves that the crash address matches the map
-  if ((mWinApp->GetDebugKeys()).Find('}') >= 0) {
+  /*if ((mWinApp->GetDebugKeys()).Find('}') >= 0) {
     CanPreExpose(NULL, 1);
-  }
+  }*/
   mSmiToDo.plugFuncs = mTD.scopePlugFuncs = mScope->GetPlugFuncs();
   mTD.errFlag = 0;
   if (mParam->GatanCam)
