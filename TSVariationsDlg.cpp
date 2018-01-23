@@ -302,6 +302,8 @@ void CTSVariationsDlg::OnButTsvAddSeries()
   } else if (mWinApp->mDEToolDlg.HasFrameTime(camParam)) {
     fps = camParam->DE_FramesPerSec > 0 ? camParam->DE_FramesPerSec :
       mWinApp->mDEToolDlg.GetFramesPerSecond();
+    if (conSet->K2ReadMode > 0 && camParam->DE_CountingFPS > 0)
+      fps = camParam->DE_CountingFPS;
     if (fps > 0.)
       baseTime = (float)(1. / fps);
   }
