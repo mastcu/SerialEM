@@ -26,6 +26,7 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
   CameraParameters *mCamParams;
+  ControlSet *mRecSet;
   int mRepeatList[MAX_DE_REF_TYPES];
   float mExposureList[MAX_DE_REF_TYPES];
   int mCurListInd;
@@ -33,7 +34,6 @@ public:
   afx_msg void OnProcessingType();
   afx_msg void OnReferenceType();
   int m_iReferenceType;
-  CString m_strRefFPS;
   BOOL m_bUseHardwareBin;
   float m_fExposureTime;
   CSpinButtonCtrl m_spinNumRepeats;
@@ -41,4 +41,12 @@ public:
   int m_iNumRepeats;
   CButton m_butDarkRef;
   void LoadListItemsToDialog(void);
+  float m_fRefFPS;
+  afx_msg void OnKillfocusEditRefFps();
+  CEdit m_editRefFPS;
+  BOOL m_bUseRecHardwareROI;
+  CButton m_butUseRecHardwareROI;
+  bool mEnableROI;
+  afx_msg void OnHardwareChange();
+  CString m_strRecArea;
 };

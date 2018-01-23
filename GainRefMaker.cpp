@@ -67,6 +67,7 @@ CGainRefMaker::CGainRefMaker()
     mDEnumRepeats[ind] = 10;
   }
   mDEuseHardwareBin = 0;
+  mDEuseHardwareROI = 0;
   mDElastProcessType = 0;
   mDElastReferenceType = 0;
   mLastDEdarkRefTime[0] = mLastDEdarkRefTime[1] = 0;
@@ -325,6 +326,8 @@ void CGainRefMaker::MakeRefInDEserver(void)
   dlg.m_iProcessingType = mDElastProcessType;
   dlg.m_iReferenceType = mDElastReferenceType;
   dlg.m_bUseHardwareBin = mDEuseHardwareBin > 0;
+  dlg.m_bUseRecHardwareROI = mDEuseHardwareROI > 0;
+
   for (ind = 0; ind < MAX_DE_REF_TYPES; ind++) {
     dlg.mExposureList[ind] = mDEexposureTimes[ind];
     dlg.mRepeatList[ind] = mDEnumRepeats[ind];
@@ -337,6 +340,7 @@ void CGainRefMaker::MakeRefInDEserver(void)
   mDElastProcessType = dlg.m_iProcessingType;
   mDElastReferenceType = dlg.m_iReferenceType;
   mDEuseHardwareBin = dlg.m_bUseHardwareBin ? 1 : 0;
+  mDEuseHardwareROI = dlg.m_bUseRecHardwareROI ? 1 : 0;
   for (ind = 0; ind < MAX_DE_REF_TYPES; ind++) {
     mDEexposureTimes[ind] = dlg.mExposureList[ind];
     mDEnumRepeats[ind] = dlg.mRepeatList[ind];
@@ -351,9 +355,11 @@ void CGainRefMaker::StartDEserverRef(int processType, int referenceType)
   int readModes[4] = {LINEAR_MODE, COUNTING_MODE, COUNTING_MODE, SUPERRES_MODE};
   CString str;
   mConSet = mWinApp->GetConSets() + TRACK_CONSET;
+  ControlSet *recSet = mWinApp->GetConSets() + RECORD_CONSET;
   mCamera = mWinApp->mCamera;
   mCurrentCamera = mWinApp->GetCurrentCamera(); 
   mParam = mWinApp->GetCamParams() + mCurrentCamera;  
+  bool useHardwareBin = (mParam->CamFlags & DE_HAS_HARDWARE_BIN) && mDEuseHardwareBin;
   B3DCLAMP(processType, 0, 3);
   mDEcurProcessType = processType;
   mDEcurReferenceType = referenceType;
@@ -362,8 +368,9 @@ void CGainRefMaker::StartDEserverRef(int processType, int referenceType)
   ind = 2 * processType + (1 - referenceType);
   mConSet->exposure = mDEexposureTimes[ind];
   mConSet->drift = 0.;
-  mConSet->binning = mDEuseHardwareBin ? 2 : 1;
-  mConSet->boostMag = mDEuseHardwareBin ? 1 : 0;
+  mConSet->binning = useHardwareBin ? 2 : 1;
+  mConSet->boostMag = useHardwareBin ? 1 : 0;
+  mConSet->magAllShots = 0;
   mConSet->processing = UNPROCESSED;
 
   // Set up gain normalized for post-counting reference
@@ -376,10 +383,23 @@ void CGainRefMaker::StartDEserverRef(int processType, int referenceType)
   mConSet->saveFrames = 0;
   mConSet->alignFrames = 0;
   mConSet->shuttering = USE_BEAM_BLANK;
-  mConSet->left = 0;
-  mConSet->right = mParam->sizeX;
-  mConSet->top = 0;
-  mConSet->bottom = mParam->sizeY;
+
+  // Set up for hardware RO or full frame image
+  if ((mParam->CamFlags & DE_HAS_HARDWARE_ROI) && mDEuseHardwareROI && 
+    (recSet->left > 0 || recSet->right < mParam->sizeX || recSet->top > 0 ||
+    recSet->bottom < mParam->sizeY)) {
+    mConSet->left = recSet->left;
+    mConSet->right = recSet->right;
+    mConSet->top = recSet->top;
+    mConSet->bottom = recSet->bottom;
+    mConSet->magAllShots = 1;
+  } else {
+    mConSet->left = 0;
+    mConSet->right = mParam->sizeX;
+    mConSet->top = 0;
+    mConSet->bottom = mParam->sizeY;
+    mConSet->magAllShots = 0;
+  }
   mStartingServerFrames = mFrameCount = mDEnumRepeats[ind];
   mWinApp->UpdateBufferWindows();
   mWinApp->SetStatusText(COMPLEX_PANE, referenceType ? "ACQUIRING GAIN REF" :
@@ -697,6 +717,8 @@ void CGainRefMaker::BeamTooWeak()
 void CGainRefMaker::StopAcquiringRef()
 {
   CFileStatus status;
+  if (!mPreparingGainRef && !mStartingServerFrames)
+    return;
   mFrameCount = 0;
   mTakingRefImages = false;
   mPreparingGainRef = false;

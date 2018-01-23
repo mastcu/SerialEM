@@ -56,6 +56,7 @@ public:
   int *GetDEnumRepeats() {return &mDEnumRepeats[0];};
   float *GetDEexposureTimes() {return &mDEexposureTimes[0];};
   GetSetMember(int, DEuseHardwareBin);
+  GetSetMember(int, DEuseHardwareROI);
   GetSetMember(int, DElastProcessType);
   GetMember(int, DEcurProcessType);
   GetSetMember(int, DElastReferenceType);
@@ -127,6 +128,7 @@ private:
   int mDEnumRepeats[MAX_DE_REF_TYPES];  // Number of repeats for the various of DE refs
   float mDEexposureTimes[MAX_DE_REF_TYPES]; // Exposure times for the various DE refs
   int mDEuseHardwareBin;            // Use hardware binning by 2 for DE refs
+  int mDEuseHardwareROI;            // Use hardware ROI of Record subarea for DE refs
   int mDElastProcessType;           // Last setting of processing type
   int mDElastReferenceType;         // Last setting of reference type
   int mStartingServerFrames;        // Starting number of frames
