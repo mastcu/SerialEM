@@ -72,8 +72,7 @@ void DirectElectronToolDlg::updateDEToolDlgPanel(bool initialCall)
     BOOL isSurvey = mDECamera->CurrentIsSurvey();
     BOOL isEither = isDE12 || isSurvey;
     ((CWnd *)GetDlgItem(ID_DE_camName))->SetWindowText(value);
-    ((CWnd *) GetDlgItem(ID_DE_currfps))->EnableWindow(!(isDE12 && 
-      (camParam->CamFlags & DE_CAM_CAN_COUNT)));
+    ((CWnd *) GetDlgItem(ID_DE_currfps))->EnableWindow(!isDE12); 
     float temp_float = 0.0;
     int temp_int = 1;
 

@@ -51,6 +51,7 @@ static const char *psNoSave = "Discard";
 static const char *psReadoutDelay = "Sensor Readout Delay (milliseconds)";
 static const char *psServerVersion = "Server Software Version";
 static const char *psHardwareBin = "Sensor Hardware Binning";
+static const char *psHardwareROI = "Sensor Hardware ROI";
 static const char *psAutoRepeatRef = "Auto Repeat Reference - Multiple Acquisitions";
 static const char *psEnable = "Enable";
 static const char *psDisable = "Disable";
@@ -173,6 +174,7 @@ void DirectElectronCamera::InitializeLastSettings()
   mLastPreExposure = -1.;
   mLastProcessing = -1;
   mLastNormDoseFrac = -1;
+  mLastNormCounting = -1;
   mLastUnnormBits = -1;
   mLastElectronCounting = -1;
   mLastSuperResolution = -1;
@@ -180,6 +182,7 @@ void DirectElectronCamera::InitializeLastSettings()
   mLastLiveMode = -1;
   mLastServerAlign = -1;
   mLastUseHardwareBin = -1;
+  mLastUseHardwareROI = -1;
   mLastAutoRepeatRef = -1;
 }
 
@@ -427,9 +430,9 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
     bool result;
     BOOL debug = GetDebugOutput('D');
     const char *propsToCheck[] = {DE_PROP_COUNTING, psMotionCor, DE_PROP_TEMP_SET_PT,
-      psReadoutDelay, psHardwareBin};
+      psReadoutDelay, psHardwareBin, psHardwareROI};
     unsigned int flagsToSet[] = {DE_CAM_CAN_COUNT, DE_CAM_CAN_ALIGN, DE_HAS_TEMP_SET_PT,
-      DE_HAS_READOUT_DELAY, DE_HAS_HARDWARE_BIN};
+      DE_HAS_READOUT_DELAY, DE_HAS_HARDWARE_BIN, DE_HAS_HARDWARE_ROI};
     int numFlags = sizeof(flagsToSet) / sizeof(unsigned int);
 
     result = mDeServer->setCameraName((LPCTSTR)camName);
@@ -870,7 +873,7 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, int imageSizeX,
       B3DNINT(105. * mLastFPS) + 17 * mLastXbinning + 23 * mLastXoffset + 
       29 * mLastYoffset + 31 * mLastROIsizeX + 37 * mLastROIsizeY + 41 * mLastXimageSize +
       43 * mLastYimageSize + 47 * mLastElectronCounting + 53 * mLastUseHardwareBin +
-      59 * mLastSuperResolution;
+      59 * mLastSuperResolution + 61 * mLastUseHardwareROI;
     int minuteNow = mWinApp->MinuteTimeStamp();
 
     // Check exposure time and FPS if needed
@@ -904,7 +907,7 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, int imageSizeX,
          return 1;
 
     // Check counting gain reference if normalized and counting mode
-    if ((mLastNormDoseFrac > 0 && mNumLeftServerRef <= 0 && mLastElectronCounting > 0) &&
+    if ((mLastNormCounting > 0 && mNumLeftServerRef <= 0 && mLastElectronCounting > 0) &&
       !IsReferenceValid(checksum, mCountGainChecks, minuteNow,
       "Correction Mode Counting Gain Reference Status", "post-counting gain"))
          return 1;
@@ -1079,6 +1082,15 @@ int DirectElectronCamera::setBinning(int x, int y, int sizex, int sizey, int har
 
     if (m_DE_CLIENT_SERVER) {
 
+      // Set hardware binning first and if it has changed, force setting new binning
+      if (hardwareBin >= 0 && (hardwareBin != mLastUseHardwareBin || !mTrustLastSettings))
+      {
+        if (!setStringWithError(psHardwareBin, hardwareBin > 0 ? psEnable : psDisable))
+         return 1;
+        mLastXbinning = -1;
+      }
+      mLastUseHardwareBin = hardwareBin;
+
       // set binning if it does not match last value
       if (x != mLastXbinning || y != mLastYbinning || !mTrustLastSettings) {
         if (!justSetIntProperty(g_Property_DE_BinningX, x) || 
@@ -1109,13 +1121,6 @@ int DirectElectronCamera::setBinning(int x, int y, int sizex, int sizey, int har
 
       mLastXimageSize = sizex;
       mLastYimageSize = sizey;
-
-      if (hardwareBin >= 0 && (hardwareBin != mLastUseHardwareBin || !mTrustLastSettings))
-      {
-        if (!setStringWithError(psHardwareBin, hardwareBin > 0 ? psEnable : psDisable))
-         return 1;
-      }
-      mLastUseHardwareBin = hardwareBin;
 
     } else { //LC1100 DE code
       m_LCCaptureInterface->SetBinning(x, y);
@@ -1153,12 +1158,12 @@ int DirectElectronCamera::setBinning(int x, int y, int sizex, int sizey, int har
 }
 
 // Set the parameters related to counting/super-resolution, including frames per second
+// Readmode can be negative to set FPS only
 int DirectElectronCamera::SetCountingParams(int readMode, double scaling, double FPS)
 {
   CSingleLock slock(&m_mutex);
   bool superRes = readMode == SUPERRES_MODE;
   mCountScaling = (float)scaling;
-
   if (slock.Lock(1000)) {
     if ((readMode == LINEAR_MODE && mLastElectronCounting != 0) || 
       (readMode > 0 && mLastElectronCounting <= 0) || !mTrustLastSettings) {
@@ -1196,29 +1201,56 @@ int DirectElectronCamera::SetAlignInServer(int alignFrames)
 
 // Set size and offset in unbinned coordinates as returned by the server; the caller
 // now takes care of setting these correctly from the final user's coordinates
-int DirectElectronCamera::setROI(int offset_x, int offset_y, int xsize, int ysize)
+int DirectElectronCamera::setROI(int offset_x, int offset_y, int xsize, int ysize, 
+  int hardwareROI)
 {
   CSingleLock slock(&m_mutex);
 
   if (slock.Lock(1000)) {
 
-    bool ret1 = true, ret2 = true;
+    bool needOffset, needSize, ret1 = true, ret2 = true, ret3 = true;
     if (m_DE_CLIENT_SERVER) {
-      if (offset_x != mLastXoffset || offset_y != mLastYoffset || !mTrustLastSettings) {
-        ret1 = justSetIntProperty(g_Property_DE_RoiOffsetX, offset_x) && 
-          justSetIntProperty(g_Property_DE_RoiOffsetY, offset_y);
-        SEMTrace('D', "ROI settings: offsetX: %d offsetY: %d  ret: %d", offset_x, 
-          offset_y, ret1 ? 1 : 0);
+
+      // Set hardware ROI first and if it as changed, force setting new ROI
+      if (hardwareROI >= 0 && (hardwareROI != mLastUseHardwareROI || !mTrustLastSettings))
+      {
+        if (!setStringWithError(psHardwareROI, hardwareROI > 0 ? psEnable : psDisable))
+         return 1;
+        mLastXoffset = mLastROIsizeX = -1;
       }
-      if (xsize != mLastROIsizeX || ysize != mLastROIsizeY || !mTrustLastSettings) {
+      mLastUseHardwareROI = hardwareROI;
+
+      // EValuate what needs setting; of both need to be set, it may be best practice to
+      // set to offset to 0 first so the new size is always valid
+      needOffset = offset_x != mLastXoffset || offset_y != mLastYoffset || 
+        !mTrustLastSettings;
+      needSize = xsize != mLastROIsizeX || ysize != mLastROIsizeY || !mTrustLastSettings;
+      if (needOffset && needSize) {
+        ret3 = justSetIntProperty(g_Property_DE_RoiOffsetX, 0) && 
+          justSetIntProperty(g_Property_DE_RoiOffsetY, 0);
+        SEMTrace('D', "ROI offset set to 0 before setting size and offset, ret: %d",
+          ret3 ? 1 : 0);
+      }
+
+      // Set size
+      if (needSize) {
         ret2 = justSetIntProperty(g_Property_DE_RoiDimensionX, xsize) && 
           justSetIntProperty(g_Property_DE_RoiDimensionY, ysize);
         SEMTrace('D', "ROI settings: xsize: %d ysize: %d  ret: %d", xsize, ysize, 
           ret2 ? 1 : 0);
       }
-      if (!ret1 || !ret2) {
+
+      //Set offset
+      if (needOffset) {
+        ret1 = justSetIntProperty(g_Property_DE_RoiOffsetX, offset_x) && 
+          justSetIntProperty(g_Property_DE_RoiOffsetY, offset_y);
+        SEMTrace('D', "ROI settings: offsetX: %d offsetY: %d  ret: %d", offset_x, 
+          offset_y, ret1 ? 1 : 0);
+      }
+      if (!ret1 || !ret2 || !ret3) {
         mLastErrorString = "Error setting offset and size for region of interest";
-        return 1;
+        mLastXoffset = mLastROIsizeX = -1;
+       return 1;
       }
       mLastXoffset = offset_x;
       mLastYoffset = offset_y;
@@ -1662,21 +1694,26 @@ int DirectElectronCamera::setCorrectionMode(int nIndex, int readMode)
   const char *corrections[3] = {"Uncorrected Raw", "Dark Corrected", 
     "Gain and Dark Corrected"};
   CString str;
-  int normDoseFrac = 1;
+  int normCount, normDoseFrac = 1;
   int bits = (readMode == SUPERRES_MODE) ? 8 : 16;
   if (nIndex < 0 || nIndex > 2) 
     return 1;
 
   // For frames, set gain correction based on the selected correction in the new version
   // And require dark/gain references for unnorm counting modes
+  // But it is unclear how normDoseFrac should be set in those cases
   if (mNormAllInServer) {
     normDoseFrac = nIndex / 2;
-    if (readMode > 0)
+    if (readMode > 0) {
       nIndex = 2;
+      normCount = normDoseFrac;
+      if (mRepeatForServerRef > 0)
+        normCount = 0;
+      normDoseFrac = 1;
+    }
   }
 
   // If any saving is happening, make sure normalized frames is set appropriately, and
-  // Set the output bits if they are not normalized
   if ((mLastSaveFlags > 0 || mRepeatForServerRef > 0) && mNormAllInServer && 
     (normDoseFrac != mLastNormDoseFrac || !mTrustLastSettings)) {
       if (!setStringWithError(DE_PROP_DOSEFRAC"Gain Normalization",
@@ -1684,7 +1721,16 @@ int DirectElectronCamera::setCorrectionMode(int nIndex, int readMode)
         return 1;
       mLastNormDoseFrac = normDoseFrac;
   }
-  if (mLastSaveFlags > 0 && mNormAllInServer && (!normDoseFrac || nIndex < 2) && 
+  if (readMode > 0 && (normCount != mLastNormCounting || !mTrustLastSettings)) {
+    if (!setStringWithError(DE_PROP_COUNTING" - Apply Post-Counting Gain", 
+      normCount ? psEnable : psDisable))
+        return 1;
+    mLastNormCounting = normCount;
+  }
+
+  // Set the output bits if they are not normalized
+  if (mLastSaveFlags > 0 && mNormAllInServer && 
+    (!normDoseFrac || nIndex < 2 || (readMode > 0 && !normCount)) && 
     (bits != mLastUnnormBits || !mTrustLastSettings)) {
       str.Format("%dbit", bits);
       if (!setStringWithError(DE_PROP_DOSEFRAC"Format for Unnormalized Movie",
@@ -1694,7 +1740,7 @@ int DirectElectronCamera::setCorrectionMode(int nIndex, int readMode)
   }
 
   // Set the general correction mode
-  if (!mNormAllInServer && (nIndex != mLastProcessing || !mTrustLastSettings)) {
+  if (nIndex != mLastProcessing || !mTrustLastSettings) {
     if (!setStringWithError("Correction Mode", corrections[nIndex]))
       return 1;
   }

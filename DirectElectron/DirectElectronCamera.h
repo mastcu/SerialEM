@@ -158,7 +158,7 @@ public:
 	int initDEServer();
 	int initializeDECamera(CString camName, int camIndex);
   void FinishCameraSelection(bool initialCall, CameraParameters *camP);
-	int setROI(int offset_x, int offset_y, int xsize, int ysize);
+	int setROI(int offset_x, int offset_y, int xsize, int ysize, int hardwareROI);
   int SetLiveMode(int mode);
 	void setCameraName(CString name);
 	int insertCamera();
@@ -279,6 +279,7 @@ private:
   double mLastPreExposure;              // Pre-exposure
   int mLastProcessing;                  // uncorrected, dark, or dark/gain (linear mode)
   int mLastNormDoseFrac;                // Normalization of saved frames
+  int mLastNormCounting;                // Post-counting normalization of saved frames
   int mLastUnnormBits;                  // Bits output in unnormalized movie
   int mLastElectronCounting;            // Electron counting of either kind is 1, test > 0
   int mLastSuperResolution;             // Super-resolution is a separate flag
@@ -286,6 +287,7 @@ private:
   int mLastLiveMode;                    // Whether live mode was one
   int mLastServerAlign;                 // Motion correction
   int mLastUseHardwareBin;              // Hardware binning
+  int mLastUseHardwareROI;              // Hardware ROI
   int mLastAutoRepeatRef;               // Auto repeat reference enable setting
   BOOL mTrustLastSettings;              // Whether to trust all those values in server
 
