@@ -66,6 +66,7 @@ struct CamPluginFuncs;
 #define DE_HAS_HARDWARE_BIN       0x10
 #define DE_WE_CAN_ALIGN           0x20
 #define DE_NORM_IN_SERVER         0x40
+#define DE_HAS_HARDWARE_ROI       0x80
 
 #define AMT_VERSION_CAN_NORM     700
 
@@ -129,6 +130,7 @@ struct CameraThreadData {
   int ImageType;              // Type of image
   long Binning;                // Binning
   int UseHardwareBinning;     // Hardware binning flag for DE
+  int UseHardwareROI;         // Hardware ROI flag for DE
   double FramesPerSec;        // FPS value when ther is counting mode for DE
   double Exposure;            // Exposure in sec. after forcing bump if any
   long Processing;

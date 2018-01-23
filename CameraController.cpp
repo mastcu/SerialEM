@@ -2376,7 +2376,7 @@ void CCameraController::Capture(int inSet, bool retrying)
   // Set up DE12 saving
   mRemoveAlignedDEframes = false;
   if (mWinApp->mDEToolDlg.CanSaveFrames(mParam)) {
-    setState = 0;
+    setState = (conSet.saveFrames & DE_SAVE_FINAL) ? DE_SAVE_FINAL : 0;
     sumCount = conSet.K2ReadMode > 0 ? conSet.sumK2Frames : conSet.DEsumCount;
     sumCount = B3DMAX(1, sumCount);
 
@@ -2393,20 +2393,19 @@ void CCameraController::Capture(int inSet, bool retrying)
 
         // New server: always set DE_SAVE_SUMS, set DE_SAVE_FRAMES for saving raw/single
         // also if summing
-        setState = DE_SAVE_SUMS;
-        if (sumCount > 1 && conSet.K2ReadMode < 1 && (conSet.saveFrames & DE_SAVE_SINGLE))
-          setState |= DE_SAVE_FRAMES;
+        setState |= DE_SAVE_SUMS;
+        if ((sumCount > 1 || conSet.K2ReadMode > 0) && 
+          (conSet.saveFrames & DE_SAVE_SINGLE))
+            setState |= DE_SAVE_FRAMES;
       } else {
 
         // Old server: set DE_SAVE_SUMS only for sums > 1; set DE_SAVE_FRAMES for sums = 1
         // or to save single also
         if (conSet.DEsumCount <= 1 || (conSet.saveFrames & DE_SAVE_SINGLE))
-          setState = DE_SAVE_FRAMES;
+          setState |= DE_SAVE_FRAMES;
         if (conSet.DEsumCount > 1)
           setState |= DE_SAVE_SUMS;
       }
-      if (conSet.saveFrames & DE_SAVE_FINAL)
-        setState |= DE_SAVE_FINAL;
 
       // Set up frame folder before getting full folder, make sure it is OK
       mFrameFolder = mParam->DE_AutosaveDir;
@@ -2530,10 +2529,14 @@ void CCameraController::Capture(int inSet, bool retrying)
   mDoingDEframeAlign = 0;
   if (mParam->DE_camType) {
 
-    // Set the frames per second and AlignfFrames if aligning in server
-    if (mParam->CamFlags & DE_CAM_CAN_COUNT)
-      mTD.FramesPerSec = mTD.GatanReadMode ? mParam->DE_CountingFPS : 
-        mParam->DE_FramesPerSec;
+    // Set the frames per second and fix count scaling for no counting
+    mTD.FramesPerSec = mParam->DE_FramesPerSec;
+    if ((mParam->CamFlags & DE_CAM_CAN_COUNT) && mTD.GatanReadMode > 0)
+      mTD.FramesPerSec = mParam->DE_CountingFPS;
+    else
+      mTD.CountScaling = 1.;
+
+    // set AlignFrames if aligning in server
     mTD.AlignFrames = -1;
     if (mParam->CamFlags & DE_CAM_CAN_ALIGN)
       mTD.AlignFrames = (conSet.useFrameAlign && (conSet.saveFrames & DE_SAVE_MASTER)) ? 
@@ -2558,6 +2561,9 @@ void CCameraController::Capture(int inSet, bool retrying)
     mTD.UseHardwareBinning = -1;
     if (mParam->CamFlags & DE_HAS_HARDWARE_BIN)
       mTD.UseHardwareBinning = (conSet.binning > 1 && conSet.boostMag > 0) ? 1 : 0;
+    mTD.UseHardwareROI = -1;
+    if (mParam->CamFlags & DE_HAS_HARDWARE_ROI)
+      mTD.UseHardwareROI = conSet.magAllShots > 0 ? 1 : 0;
 
     // If doing gain ref in server, Send the repeat count and the mode to set
     // Adjust the mode to linear for the pre-counting items now that FPS is set
@@ -5050,7 +5056,7 @@ float CCameraController::GetCountScaling(CameraParameters *camParam)
     if (!retVal)
       retVal = mDefaultCountScaling;
   } else if (!retVal)
-    retVal = 1.;
+    retVal = camParam->DE_camType ? mDefaultCountScaling : 1.f;
   return retVal;
 }
 
@@ -5413,7 +5419,7 @@ UINT CCameraController::EnsureProc(LPVOID pParam)
         // Calculate the proper ROI and set the binning
         if (!retval)
           retval = td->DE_Cam->setROI(td->Left * binning, td->Top * binning, 
-            td->CallSizeX * binning, td->CallSizeY * binning);
+            td->CallSizeX * binning, td->CallSizeY * binning, -1);
         if (!retval)
           retval = td->DE_Cam->setBinning(binning, binning, td->CallSizeX, td->CallSizeY,
           -1);
@@ -6257,11 +6263,6 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
       if (!retval && td->DE_camType >= 2) 
         retval = td->DE_Cam->setCorrectionMode(td->ProcessingPlus & 3, td->GatanReadMode);
 
-      // Set the operating mode if relevant
-      if (!retval && td->GatanReadMode >= 0)
-        retval = td->DE_Cam->SetCountingParams(td->GatanReadMode, td->CountScaling, 
-          td->FramesPerSec);
-
       // Set alignment in server if relevant
       if (!retval && td->AlignFrames >= 0)
         retval = td->DE_Cam->SetAlignInServer(td->AlignFrames);
@@ -6278,7 +6279,12 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
       // Calculate the proper ROI and set it. TM to support DE12 3_28_11
       if (!retval)
         retval = td->DE_Cam->setROI(td->Left * td->Binning, td->Top * td->Binning, 
-          td->CallSizeX * td->Binning, td->CallSizeY * td->Binning);
+          td->CallSizeX * td->Binning, td->CallSizeY * td->Binning, td->UseHardwareROI);
+
+      // Set the operating mode if relevant and the FPS
+      if (!retval)
+        retval = td->DE_Cam->SetCountingParams(td->GatanReadMode, td->CountScaling, 
+          td->FramesPerSec);
 
       // Start thread to do post actions
       if (!retval && startBlanker) {
