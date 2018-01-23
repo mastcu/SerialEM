@@ -48,7 +48,8 @@ HeaderMRC::HeaderMRC()
   cmap[2] = 'P';
   cmap[3] = ' ';
   stamp[0] = 68;
-  stamp[1] = stamp[2] = stamp[3] = 0;
+  stamp[1] = 68;
+  stamp[2] = stamp[3] = 0;
   imodStamp = IMOD_MRC_STAMP;
   imodFlags = 0;
   rms = -1.;
@@ -59,6 +60,7 @@ HeaderMRC::HeaderMRC()
     blank2[i] = 0;
   for (i = 0; i < 6; i++)
     tiltAngles[i] = 0.;
+  memset(&labels[0], 0, 800);
 }
 
 // Initialize the header appropriately for the nx, ny, and nz values
