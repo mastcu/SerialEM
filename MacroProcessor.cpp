@@ -48,6 +48,7 @@
 #include "Utilities\XCorr.h"
 #include "Utilities\KGetOne.h"
 #include "Shared\autodoc.h"
+#include "Shared\ctffind.h"
 #include "Image\KStoreADOC.h"
 #include "XFolderDialog\XFolderDialog.h"
 
@@ -216,7 +217,7 @@ enum {CME_VIEW, CME_FOCUS, CME_TRIAL, CME_RECORD, CME_PREVIEW,
   CME_RAWELECTRONSTATS, CME_ALIGNWHOLETSONLY, CME_WRITECOMFORTSALIGN, CME_RECORDANDTILTTO,
   CME_AREPOSTACTIONSENABLED, CME_MEASUREBEAMSIZE, CME_MULTIPLERECORDS, 
   CME_MOVEBEAMBYMICRONS, CME_MOVEBEAMBYFIELDFRACTION, CME_NEWDESERVERDARKREF,
-  CME_STARTNAVACQUIREATEND, CME_REDUCEIMAGE, CME_REPORTAXISPOSITION
+  CME_STARTNAVACQUIREATEND, CME_REDUCEIMAGE, CME_REPORTAXISPOSITION, CME_CTFFIND
 };
 
 static CmdItem cmdList[] = {{NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0},
@@ -322,6 +323,7 @@ static CmdItem cmdList[] = {{NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0
 {"ArePostActionsEnabled", 0}, {"MeasureBeamSize", 0}, {"MultipleRecords", 0},
 {"MoveBeamByMicrons", 2}, {"MoveBeamByFieldFraction", 2}, {"NewDEserverDarkRef", 2},
 {"StartNavAcquireAtEnd", 0}, {"ReduceImage", 2}, {"ReportAxisPosition", 1},
+{"CtfFind", 3},
 {NULL, 0, NULL}
 };
 
@@ -3283,6 +3285,50 @@ void CMacroProcessor::NextCommand()
       ABORT_LINE("Binning must be between 1 and 8 in line:\n\n");
     mWinApp->mProcessImage->GetFFT(&mImBufs[index], index2, BUFFER_FFT);
 
+  } else if (CMD_IS(CTFFIND)) {                          // CtfFind
+    if (ConvertBufferLetter(strItems[1], -1, true, index, report))
+      ABORT_LINE(report);
+    CtffindParams param;
+    float resultsArray[7];
+    if (mWinApp->mProcessImage->InitializeCtffindParams(&mImBufs[index], param))
+      ABORT_LINE("Error initializing Ctffind parameters for line:\n\n");
+    param.minimum_defocus = -(float)(10000. * itemDbl[2]);
+    param.maximum_defocus = -(float)(10000. * itemDbl[3]);
+    param.slower_search = itemEmpty[4] || itemInt[4] == 0;
+    if (!itemEmpty[5] && itemInt[5] != 0) {
+      if (itemInt[5] < 128 || itemInt[5] > 640)
+        ABORT_LINE("The box size must be between 128 and 640 in the line:\n\n");
+      param.box_size = itemInt[5];
+    }
+    if (!itemEmpty[6]) {
+      delX = itemDbl[6];
+      if (delX == 0)
+        delX = mWinApp->mProcessImage->GetPlatePhase() / DTOR;
+      param.minimum_additional_phase_shift = param.maximum_additional_phase_shift = 
+        (float)(delX);
+      param.find_additional_phase_shift = true;
+      if (!itemEmpty[7] && (itemDbl[6] != 0 || itemDbl[7] != 0)) {
+        if (itemDbl[7] < delX)
+          ABORT_LINE("The maximum phase shift is less than the minimum in line:\n\n");
+        if (itemDbl[7] - delX > 1.5)
+          ABORT_LINE("The range of phase shift to search is more than 1.5 radians in "
+          "line:\n\n");
+        param.maximum_additional_phase_shift = (float)itemDbl[7];
+      }
+      if (!itemEmpty[8] && itemDbl[8])
+        param.additional_phase_shift_search_step = (float)itemDbl[8];
+      if (!itemEmpty[9] && itemInt[9]) {
+        param.astigmatism_is_known = true;
+        param.known_astigmatism = 0.;
+        param.known_astigmatism_angle = 0.;
+      }
+    }
+    param.compute_extra_stats = true;
+    if (mWinApp->mProcessImage->RunCtffind(&mImBufs[index], param, resultsArray))
+      ABORT_LINE("Ctffind fitting returned an error for line:\n\n");
+    SetReportedValues(resultsArray[0], resultsArray[1], resultsArray[2], resultsArray[3],
+      resultsArray[4], resultsArray[5]);
+     
   } else if (CMD_IS(IMAGEPROPERTIES)) {                     // ImageProperties
     if (ConvertBufferLetter(strItems[1], 0, true, index, report))
       ABORT_LINE(report);

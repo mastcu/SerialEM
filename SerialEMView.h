@@ -60,6 +60,8 @@ public:
   void DrawCross(CClientDC *cdc, CPen *pNewPen, CPoint point, int crossLen);
   void DrawCircle(CClientDC *cdc, CPen *pNewPen, CRect *rect, KImage *image, float cenX, 
     float cenY, float radius);
+  void DrawEllipse(CClientDC *cdc, CPen *pNewPen, CRect *rect, KImage *image, float cenX, 
+    float cenY, float radius1, float radius2, float angle, bool drawHalf);
   float GetBufferBinning();
   void FindEffectiveZoom();
   void SetCurrentBuffer(int inIndex);

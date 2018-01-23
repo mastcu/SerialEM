@@ -15,6 +15,7 @@
 #include "Utilities\XCorr.h"
 #include "Shared\b3dutil.h"
 #include "Shared\mrcslice.h"
+#include "Shared\ctffind.h"
 #include "Utilities\KGetOne.h"
 #include "SerialEMView.h"
 #include "SerialEMDoc.h"
@@ -33,6 +34,8 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 #define KV_CHECK_SECONDS 120.
+static void ctffindPrintFunc(const char *strMessage);
+static int ctffindDumpFunc(const char *filename, float *data, int xsize, int ysize);
 
 /////////////////////////////////////////////////////////////////////////////
 // CProcessImage
@@ -70,6 +73,13 @@ CProcessImage::CProcessImage()
   mKVTime = -1.;
   mFixedRingDefocus = 0.;
   mReductionFactor = 4.;
+  mCtffindOnClick = false;
+  mCtfFitFocusRangeFac = 2.5f;
+  mSlowerCtfFit = false;
+  mExtraCtfStats = false;
+  mDrawExtraCtfRings = false;
+  ctffindSetPrintFunc(ctffindPrintFunc);
+  ctffindSetSliceWriteFunc(ctffindDumpFunc);
 }
 
 CProcessImage::~CProcessImage()
@@ -141,6 +151,9 @@ BEGIN_MESSAGE_MAP(CProcessImage, CCmdTarget)
   ON_COMMAND(ID_PROCESS_SETDEFOCUSFORCIRCLES, OnProcessSetDefocusForCircles)
   ON_COMMAND(ID_PROCESS_REDUCEIMAGE, OnProcessReduceimage)
   ON_UPDATE_COMMAND_UI(ID_PROCESS_REDUCEIMAGE, OnUpdateProcess)
+  ON_COMMAND(ID_PROCESS_DOCTFFINDFITONCLICK, OnProcessDoCtffindFitOnClick)
+  ON_UPDATE_COMMAND_UI(ID_PROCESS_DOCTFFINDFITONCLICK, OnUpdateProcessDoCtffindFitOnClick)
+  ON_COMMAND(ID_PROCESS_SETCTFFINDOPTIONS, OnProcessSetCtffindOptions)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -342,6 +355,36 @@ void CProcessImage::OnProcessSetPhasePlateShift()
   float shift = (float)(mPlatePhase / DTOR);
   if (KGetOneFloat("Phase shift to assume for phase plate (degrees):", shift, 1))
     mPlatePhase = (float)fabs(DTOR * shift);
+}
+
+
+void CProcessImage::OnProcessDoCtffindFitOnClick()
+{
+  mCtffindOnClick = !mCtffindOnClick;
+}
+
+
+void CProcessImage::OnUpdateProcessDoCtffindFitOnClick(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(true);
+  pCmdUI->SetCheck(mCtffindOnClick ? 1 : 0);
+}
+
+
+void CProcessImage::OnProcessSetCtffindOptions()
+{
+  if (!KGetOneInt("1 to compute resolution to which Thon rings fit, 0 not to:", 
+    mExtraCtfStats))
+    return;
+  if (!KGetOneInt("1 to draw rings out to the computed resolution that Thon rings fit, "
+    "0 not to:", mDrawExtraCtfRings))
+    return;
+  if (!KGetOneInt("1 for slower search for very astigmatic images, 0 for fast search:",
+    mSlowerCtfFit))
+    return;
+  KGetOneFloat("Factor to multiply and divide clicked defocus by to set maximum and "
+    "minimum defocus to search:", mCtfFitFocusRangeFac, 1);
+  B3DCLAMP(mCtfFitFocusRangeFac, 0.1f, 10.f);
 }
 
 void CProcessImage::OnProcessRotateleft() 
@@ -2740,7 +2783,7 @@ bool CProcessImage::GetFFTZeroRadiiAndDefocus(EMimageBuffer *imBuf, FloatVec *ra
   pointRad = sqrt(dx * dx + dy * dy);
   if (pointRad > 1.2)
     return false;
-  return DefocusFromPointAndZeros(pointRad, 1, pixel, radii, defocus);
+  return DefocusFromPointAndZeros(pointRad, 1, pixel, 0., radii, defocus);
 }
 
 // If there are already rings at zeros and en existing user point, takes the values for
@@ -2778,7 +2821,7 @@ void CProcessImage::ModifyFFTPointToFirstZero(EMimageBuffer *imBuf, float &shift
       pointRad > B3DCHOICE(ind > 1, 0.5 * (lastRad + nextRad), lastRad) && 
       pointRad < 2 * lastRad - nextRad) || ind == num - 2 && ind &&
       pointRad > nextRad && pointRad < 0.5 * (lastRad + nextRad)) {
-      if (!DefocusFromPointAndZeros(pointRad, ind + 1, pixel, &adjRadii, defocus))
+      if (!DefocusFromPointAndZeros(pointRad, ind + 1, pixel, 0., &adjRadii, defocus))
         return;
       dx *= adjRadii[0] / pointRad;
       dy *= adjRadii[0] / pointRad;
@@ -2788,15 +2831,15 @@ void CProcessImage::ModifyFFTPointToFirstZero(EMimageBuffer *imBuf, float &shift
   }
 }
 
-// Computes the defocus implied by a given radius (as fratcion of Nyquist) for the given
+// Computes the defocus implied by a given radius (as fraction of Nyquist) for the given
 // zero number; returns ring radii if radii is non-NULL.  Defocus is positive in microns
 // If zeroNum is zero, it returns rings for a defocus value given in the argument
 // Returns false if the radius is in a range where the equations have broken down
 bool CProcessImage::DefocusFromPointAndZeros(double pointRad, int zeroNum, float pixel,
-  FloatVec *radii, double & defocus)
+  float maxRingFreq, FloatVec *radii, double & defocus)
 {
   double wavelength, csOne, csTwo, ampAngle, theta, thetaNew, delz, rootTemp;
-  int ind;
+  int ind, numZeros = mNumFFTZeros;
   double PI = 3.1415926535;
   GetRecentVoltage();
   if (radii)
@@ -2819,7 +2862,9 @@ bool CProcessImage::DefocusFromPointAndZeros(double pointRad, int zeroNum, float
   if (!radii)
     return true;
   delz = defocus / csOne;
-  for (ind = 0; ind < mNumFFTZeros; ind++) {
+  if (zeroNum <= 0 && maxRingFreq > 0)
+    numZeros = 50;
+  for (ind = 0; ind < numZeros; ind++) {
     rootTemp = delz * delz + ampAngle + 2. * mPlatePhase / PI - 2. * (ind + 1);
     if (rootTemp < 0. || sqrt(rootTemp) > delz)
       return true;
@@ -2828,6 +2873,9 @@ bool CProcessImage::DefocusFromPointAndZeros(double pointRad, int zeroNum, float
     // And if the first zero for the computed defocus does not regenerate
     if (zeroNum == 1 && !ind && fabs(thetaNew - theta) > 1.e-5 * theta)
       return false;
+    if (zeroNum <= 0 && maxRingFreq > 0 && 
+      thetaNew * pixel / (wavelength * csTwo) > maxRingFreq)
+      break;
     radii->push_back((float)(thetaNew * pixel * 2.0 / (wavelength * csTwo)));
   }
   return true;
@@ -2846,6 +2894,129 @@ double CProcessImage::GetRecentVoltage(bool *valueWasRead)
   }
   return mVoltage;
 }
+
+/*
+ * CTFFIND SUPPORT FUNCTIONS
+ */
+// Print and image dump functions for debugging
+void ctffindPrintFunc(const char *strMessage)
+{
+  CString str = strMessage;
+  str.TrimRight('\n');
+  str.TrimLeft('\n');
+  str.Replace("\n", "\r\n");
+  PrintfToLog("Ctffind : %s", (LPCTSTR)str);
+}
+
+int ctffindDumpFunc(const char *filename, float *data, int xsize, int ysize)
+{
+  Islice slice;
+  sliceInit(&slice, xsize, ysize, MRC_MODE_FLOAT, data);
+  return sliceWriteMRCfile((char *)filename, &slice);
+}
+
+// Initialize parameters as well as possible given an image, but not a defocus
+// The notable defaults here are:
+//   box size 256
+//   slow search on
+//   no phase shift
+//   no extra stats
+// phase search step 0.1, defocus step 500
+//   If there is an image, minimum resolution to 0.05/pixel but limited to 50 A
+//                         maximum resoltuion 0.3/pixel, or 0.35/pixel for direct detector
+int CProcessImage::InitializeCtffindParams(EMimageBuffer *imBuf, CtffindParams &params)
+{
+  CameraParameters *camParams = mWinApp->GetCamParams();
+  GetRecentVoltage();
+  params.acceleration_voltage = (float)mVoltage;
+  params.spherical_aberration = mSphericalAber;
+  params.amplitude_contrast = mAmpRatio;
+  params.box_size = 256;
+  params.defocus_search_step = 500.;
+  params.astigmatism_tolerance = -100.;
+  params.slower_search = true;
+  params.astigmatism_is_known = false;
+  params.find_additional_phase_shift = false;
+  params.minimum_additional_phase_shift = 0.;
+  params.maximum_additional_phase_shift = 0.;
+  params.additional_phase_shift_search_step = 0.1f;
+  params.compute_extra_stats = false;
+  if (imBuf) {
+    params.pixel_size_of_input_image = mWinApp->mShiftManager->GetPixelSize(imBuf) *
+      10000.f;
+  /*params.pixel_size_of_input_image = 2.804f;
+  params.acceleration_voltage = 200.;//(float)mVoltage;
+  params.minimum_defocus = 5000.;
+  params.maximum_defocus = 25000.;*/
+    if (!params.pixel_size_of_input_image)
+      return 1;
+    params.minimum_resolution = B3DMIN(params.pixel_size_of_input_image / 0.05f, 50.f);
+    params.maximum_resolution = params.pixel_size_of_input_image / 0.3f;
+    if (imBuf->mCamera >= 0 && mWinApp->mCamera->IsDirectDetector
+      (&camParams[imBuf->mCamera]))
+      params.maximum_resolution = params.pixel_size_of_input_image / 0.35f;
+
+  }
+  return 0;
+}
+
+// Run
+int CProcessImage::RunCtffind(EMimageBuffer *imBuf, CtffindParams &params,
+  float results_array[7])
+{
+  float *spectrum;
+  //float *rotationalAvg, *normalizedAvg, *fitCurve;
+  float lastBinFreq;
+  CString mess, str;
+  double wallStart = wallTime();
+  int numPoints, padSize, err;
+  KImage *image = imBuf->mImage;
+  if (!image)
+    return 1;
+
+  // Get the scaled spectrum; just flip image first and restore at end to make it match
+  // IMOD and ctffind expectations
+  NewArray(spectrum, float, params.box_size * (params.box_size + 2));
+  if (!spectrum)
+    return 1;
+  image->Lock();
+  padSize = B3DMAX(image->getWidth(), image->getHeight());
+  padSize = XCorrNiceFrame(padSize, 2, 19);
+  image->flipY();
+  err = spectrumScaled(image->getData(), image->getType(), image->getWidth(), 
+    image->getHeight(), spectrum, -padSize, params.box_size, 0, 0., -1, twoDfft);
+  if (err) 
+    PrintfToLog("Error %d calling spectrumScaled", err);
+  image->flipY();
+  image->UnLock();
+
+  // Run the fit and report results
+  if (!err && ctffind(params, spectrum, params.box_size + 2, results_array, NULL,
+                 NULL, NULL, numPoints, lastBinFreq)) {
+    mess.Format("Ctffind: defocus 1&2: %.3f & %.3f um,  angle: %.1f,  ",  
+      -results_array[0] / 10000., -results_array[1] / 10000., results_array[2]);
+    if (params.find_additional_phase_shift && params.minimum_additional_phase_shift < 
+      params.maximum_additional_phase_shift) {
+      str.Format("phase shift %.3f rad,  ", results_array[3]);
+      mess += str;
+    }
+    str.Format("score %.4f", results_array[4]);
+    mess += str;
+    mWinApp->AppendToLog(mess);
+    if (params.compute_extra_stats) {
+      PrintfToLog("Thon rings fit to %.1f A", results_array[5]);
+      /*if (results_array[6])
+        PrintfToLog("Antialiasing detected at %.1f", results_array[6]);*/
+    }
+    //PrintfToLog("Elapsed time %.3f sec", wallTime() - wallStart);
+  } else {
+    err = 1;
+  }
+  delete [] spectrum;
+  return err;
+}
+
+// DOSE RATE AND LINEARIZATION ROUTINES
 
 // Return a dose rate in electrons per unbinned pixel per second given the mean value
 // in the given buffer; returns 2 if it cannot be computed; returns a linearized dose

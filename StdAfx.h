@@ -11,6 +11,7 @@
 #endif // _MSC_VER > 1000
 
 // Include these lines for allocation line numbers on memory leaks
+// But first get rid of the DE plugin and DLL
 /*#define _CRTDBG_MAP_ALLOC
 #include <stdlib.h>
 #include <crtdbg.h>*/

@@ -49,6 +49,7 @@ EMimageBuffer::EMimageBuffer()
 	mHasUserPt = false;
   mHasUserLine = false;
   mDrawUserBox = false;
+  mCtfFocus1 = 0.;
   mRegistration = 0;
   mMapID = 0;
   mRotAngle = 0.;

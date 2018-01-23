@@ -66,6 +66,9 @@ public:
   BOOL mDrawUserBox;
   float mLineEndX;
   float mLineEndY;
+  float mCtfFocus1, mCtfFocus2;
+  float mCtfAngle;
+  float mMaxRingFreq;
   double mZoom;
   int mPanX, mPanY;
   int mFiltXpan, mFiltYpan;   // Pan and zoom at which filtered pixmap was made

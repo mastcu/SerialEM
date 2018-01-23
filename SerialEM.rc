@@ -12,7 +12,8 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "afxres.h"
+#include "afxres.h"
+
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
@@ -494,6 +495,8 @@ BEGIN
         MENUITEM "&Automatic Single FFTs",      ID_PROCESS_AUTOMATICFFTS
         MENUITEM "Circle on Live FF&T",         ID_PROCESS_CIRCLEONLIVEFFT
         MENUITEM "S&et Defocus for Circles",    ID_PROCESS_SETDEFOCUSFORCIRCLES
+        MENUITEM "Do Ctffind Fit on Click",     ID_PROCESS_DOCTFFINDFITONCLICK
+        MENUITEM "Set Ctffind Options",         ID_PROCESS_SETCTFFINDOPTIONS
         MENUITEM "Set &Phase Plate Shift",      ID_PROCESS_SETPHASEPLATESHIFT
         MENUITEM SEPARATOR
         MENUITEM "Rotate &Left",                ID_PROCESS_ROTATELEFT
@@ -3393,11 +3396,6 @@ END
 
 STRINGTABLE
 BEGIN
-    AFX_IDS_SCRESTORE       "Magnification of image taken at bidirectional starting angle for repositioning"
-END
-
-STRINGTABLE
-BEGIN
     ID_NEW_IMAGE            "Make New Image\nNew Image"
     IDM_FILE_SAVEOTHER      "Save active image in a different, new file\nSave to another file"
     IDM_FILE_READ           "Read image from file\nRead in image"
@@ -3522,14 +3520,14 @@ BEGIN
     IDC_GROUPSHOOT          "Select which kind of image to acquire after autofocusing"
     IDC_EDITALWAYSFOCUS     "Enter (positive) angle above which focus will always be done"
     IDC_EDITTAPERCOUNTS     "Enter target value for mean counts at the highest tilt angle"
-    IDC_EDITMAXTILTFITY     "Enter largest tilt interval over which to fit movements in Y (across tilt axis)"
+    IDC_EDITMAXTILTFITY     "Enter largest tilt interval over which to fit movements across tilt axis"
     IDC_EDITMINFOCUSRATIO   "Set threshold autofocusing capability needed to continue"
     IDC_BUTBIGGER10         "Increase linear dimensions of area by 10%"
     IDC_BUTMONTAGE          "Start montage or acquire image with fifth parameter set"
     IDC_BUTFLOAT            "Launch a floating window showing screen current"
     IDC_TSGO                "Start or resume the tilt series"
     IDC_TILT_DELAY          "Set delay between tilting by basic increment and acquiring image"
-    IDC_ALIGNTRACKONLY      "Get tracking image every time and use only it for alignment, not Record image"
+    IDC_ALIGNTRACKONLY      "Get tracking image every time and use only it for alignment, not Record"
     IDC_COPYTOVIEW          "Copy parameters of current area to View area"
     IDC_COPYTOFOCUS         "Copy parameters of  current area to Focus area"
 END
@@ -3540,10 +3538,9 @@ BEGIN
     IDC_COPYTORECORD        "Copy parameters of current area to Record area"
     IDC_RNEXTTILT           "Consider current tilt complete and go on to next tilt"
     IDC_RLOWTRACKFOCUS      "Realign with low mag tracking image, then continue with autofocus, etc."
-    IDC_EDITNEWTRACKDIFF    "Replace track reference when its alignment disagrees with that of Record image"
+    IDC_EDITNEWTRACKDIFF    "Replace track reference when its alignment disagrees with that of Record"
     IDC_EDITPREDICTERRORZ   "Do autofocus when actual or computed error in focus prediction exceeds this"
     IDC_EDITPREDICTERRORXY  "Do tracking when actual or computed error exceeds this value as % of field"
-    IDC_EVALMULTIPLE        "Examine correlation peaks lower than the highest one to find an autoalignment"
     ID_TESTACQUIRE          "Take image at this setting and reopen dialog"
 END
 
@@ -3757,7 +3754,7 @@ END
 STRINGTABLE
 BEGIN
     IDC_SAVEMACRO           "Save this script to a file"
-    IDC_CONTINUOUSUPDATE    "Apply changes of mag, spot, intensity, filter, probe or alpha to current area"
+    IDC_CONTINUOUSUPDATE    "Apply change of mag, spot, intensity, filter, probe or alpha to current area"
     IDC_CENTERUNSHIFTED     "Keep first and fourth areas in center of unshifted field of view"
     IDC_BALANCESHIFTS       "Shift all areas to minimize distances from center of unshifted field"
     IDC_BUTSMALLER10        "Reduce linear dimensions of area by 10%"
@@ -3794,7 +3791,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDC_EDITMAXTILTFITX     "Enter largest tilt interval over which to fit movements in X (along tilt axis)"
+    IDC_EDITMAXTILTFITX     "Enter largest tilt interval over which to fit movements along tilt axis"
     IDC_EDITTILTDELAY       "Enter the settling time to allow after a tilt by the basic increment"
     IDC_STATTOTALTILT       "The estimated number of tilts with the settings given in this section"
     IDC_EDITFOCUSTARGET     "Enter the target defocus for autofocusing"
@@ -3846,8 +3843,8 @@ BEGIN
     IDC_EDITBEAMTILT        "Enter the beam tilt applied for autofocusing"
     IDC_EDITCHECKFOCUS      "Enter tilt interval after which autofocus will be done even if not needed"
     IDC_EDITREPEATRECORD    "Enter maximum percentage of linear extent of field that may be lost"
-    IDC_REPEATFOCUS         "Select to do a second autofocus when the first differs too much from prediction"
-    IDC_EDITREPEATFOCUS     "Criterion difference between measured defocus and prediction for doing 2nd autofocus"
+    IDC_REPEATFOCUS         "Select to do a 2nd autofocus when the first differs too much from prediction"
+    IDC_EDITREPEATFOCUS     "Criterion diff between measurement and prediction for doing 2nd autofocus"
 END
 
 STRINGTABLE
@@ -3901,7 +3898,7 @@ BEGIN
                             "Multiplier of usual settling time to wait between movement and image"
     IDC_RMONTAGE            "Edit Montage-mapping parameter set"
     IDC_RSEARCH_OFFSET      "Show and control defocus and shift offset for Search"
-    IDC_SAVE_UNNORMALIZED   "Save unprocessed frames even if processing in Setup dialog is Gain Normalized"
+    IDC_SAVE_UNNORMALIZED   "Save unprocessed frames even if processing in Setup is Gain Normalized"
     IDC_SPIN_EARLY_FRAMES   "Select number of frames in initially returned image used for aligning"
     IDC_DO_EARLY_RETURN     "Return from SEMCCD plugin when the selected # of frames are available"
     IDC_USE_EXTENSION_MRCS  "Output MRC frame stacks with extension .mrcs instead of .mrc"
@@ -3948,7 +3945,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDC_DOMAGSHIFTS         "Impose mag-dependent energy shifts when filtering (also adjust for slit width)"
+    IDC_DOMAGSHIFTS         "Impose mag-dependent energy shifts when slit in (also adjust for slit width)"
     IDC_ZLPALIGNED          "Inform SerialEM that you have Aligned ZLP - needed for mag-dependent shifts"
     IDC_UNBLANK             "Unblank the beam if it is blanked (do before Align ZLP)"
     IDC_EDITTARGET          "Enter the average counts for each picture to be taken to get gain reference"
@@ -3956,14 +3953,14 @@ BEGIN
     IDC_RADIOBIN1           "Take gain reference with no binning"
     IDC_RADIOBIN2           "Take images binned by 2 for binned gain reference"
     IDC_SPINFRAMES          "Increase or decrease the number of frames to be averaged"
-    IDC_STATSAVING16        "Save images from 16-bit camera by truncating high values, dividing by 2,or shifting down  "
+    IDC_STATSAVING16        "Save images from 16-bit camera by truncating, dividing by 2,or shifting down"
 END
 
 STRINGTABLE
 BEGIN
     IDC_CHECKAUTOFOCUS      "Assess ability to autofocus before starting series"
     IDC_ZEROLOSS            "Toggle between filtering at selected loss and zero loss"
-    IDC_MOUSESTAGE          "Move stage instead of image shift for mouse shift > threshold fraction of field"
+    IDC_MOUSESTAGE          "Move stage instead of image for mouse shift > threshold fraction of field"
     IDC_BUTSTAGETHRESH      "Set fraction of field and absolute distance for moving stage via mouse"
     IDC_LIMITINTENSITY      "Limit intensity to value set after first image of series"
     IDC_SKIPAUTOFOCUS       "Do not autofocus during startup or series"
@@ -4064,7 +4061,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDC_STOPONBIGSHIFT      "Stop if alignment shift of tracking or Record images is bigger than criterion"
+    IDC_STOPONBIGSHIFT      "Stop if alignment shift of tracking or Record images exceeds than criterion"
     IDC_EDITBIGSHIFT        "Limit on alignment shift as percentage of image size"
     IDC_ALIGNTOB            "Autoalign to B instead of buffer past the rolling buffers"
     IDC_OFFSET_SLIT         "Impose energy shift and center slit so energy adjustments will work"
@@ -4105,7 +4102,7 @@ BEGIN
     IDC_CHECKNORMSPOT       "Use last image to calibrate electron dose - requires spot normalization"
     IDC_VERY_SLOPPY         "Analyze overlaps with large correlation areas and special parameters"
     IDC_CLOSE_VALVES        "Close valves after taking image at ending angle "
-    IDC_MANUAL_TRACKING     "Stop after tracking image, adjust its position, and take it as new reference "
+    IDC_MANUAL_TRACKING     "Stop after tracking image, adjust its position, and take it as new reference"
     IDC_AVERAGEDARK         "Acquire and average dark references the given # of times"
     IDC_EDITAVERAGE         "Enter number of times to average dark reference"
     IDC_CENTER_FROM_TRIAL   "Use beam edges in trial image to recenter the beam"
@@ -4161,12 +4158,12 @@ BEGIN
     IDC_RSHOWSEARCH         "Go to Search mode when screen is down or button pressed"
     IDC_SEARCH              "Enter search mode with separate parameters from V/F/T/R areas"
     IDC_SPINBINSIZE         "Select maximum size or memory needed for each image"
-    IDC_CHECK_IGNORE_HIGH   "Derive gain references for all binnings from unbinned or binned by 2 references "
+    IDC_CHECK_IGNORE_HIGH   "Derive gain references for all binnings from unbinned or binned 2 references"
     IDC_DELETEBUF           "Delete image in the active buffer"
     IDC_BUTRESETDEFOCUS     "Reset relative defocus readout to zero"
     IDC_CHECK_PREFER_BIN2   "If binned by 2 reference exists, use it even if it is older"
-    IDC_RADIO_ASK_IF_NEWER  "For each possible binning, ask if DigitalMicrograph reference should be used when it is newer"
-    IDC_RADIO_ASK_ALWAYS    "For each possible binning, always ask whether to us a DigitalMicrograph reference"
+    IDC_RADIO_ASK_IF_NEWER  "For each possible binning, ask if DM reference should be used if it is newer"
+    IDC_RADIO_ASK_ALWAYS    "For each possible binning, always ask whether to use a DM reference"
 END
 
 STRINGTABLE
@@ -4216,7 +4213,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDC_RADIO_ASK_NEVER     "Never ask whether to use DigitalMicrograph reference instead of a SerialEM reference"
+    IDC_RADIO_ASK_NEVER     "Never ask whether to use DM reference instead of a SerialEM reference"
     IDC_CHECK_SETEXPOSURE   "Change exposure time and possible drift settling for extra Record images"
     IDC_EDIT_NEWEXPOSURE    "Exposure time(s) for extra Record images"
     IDC_EDIT_NEWDRIFT       "Drift settling for extra Record images, if appropriate"
@@ -4486,7 +4483,7 @@ BEGIN
     IDC_CHECK_TSV_PLUS_MINUS 
                             "Apply change at both positive and negative tilt angles"
     IDC_TSV_FIXED_VALUE     "Use specified value until next change above the given angle"
-    IDC_TSV_LINEAR_CHANGE   "Change linearly from specified value to value for next change at higher angle"
+    IDC_TSV_LINEAR_CHANGE   "Change linearly from entered value to value for next change at higher angle"
     IDC_TSV_EXPOSURE        "Change exposure time to specified value"
 END
 
@@ -4555,11 +4552,11 @@ END
 STRINGTABLE
 BEGIN
     IDC_CHECK_DYNFOCUS      "Keep tilted specimen in focus during the scan"
-    IDC_MATCH_STEM_PIXEL    "Set magnification to keep pixel size the same when going between STEM and TEM"
+    IDC_MATCH_STEM_PIXEL    "Set magnification to keep pixel size the same on going between STEM and TEM"
     IDC_CHECK_STEM_MODE     "Turn on STEM mode or go back to TEM mode"
     IDC_CHECK_INVERT_CONTRAST 
                             "Invert pixel values of some or all STEM images (changes data that is stored)"
-    IDC_EDIT_ADDED_ROT      "Additional angle to rotate the STEM scan; image/stage shift cals will not work"
+    IDC_EDIT_ADDED_ROT      "Additional angle to rotate the STEM scan; image/stage shift cals won't work"
     IDC_INVERT_CON          "Invert the contrast of the active image (hot key F11)"
     ID_DE_autosaveSummedImages 
                             "Autosave the grouped sum images based on the sum count"
@@ -4574,7 +4571,7 @@ BEGIN
     IDC_UNBLANK_STEM        "Unblank the beam (when enabled, beam is blanked)"
     IDC_CONFIRM_LOWDOSE_REPEAT 
                             "Ask before repeating Record image that has too much lost data"
-    IDC_RETRACT_UNBLANK     "Use camera retraction instead of lowering screen to keep camera from blanking"
+    IDC_RETRACT_UNBLANK     "Use camera retraction instead of lowering screen to prevent camera blanking"
     IDC_OTHERCHANNELS       "Save images from other STEM detectors"
     IDC_RLINEAR             "Acquire images in linear mode"
     IDC_RCOUNTING           "Acquire images in counting mode"
@@ -4670,7 +4667,7 @@ BEGIN
     IDC_SAVE_FRAMES         "Save each subframe in Dose Fractionation mode from SerialEMCCD plugin"
     IDC_ONE_FRAME_PER_FILE  "Save each subframe to a separate file instead of in one stack"
     IDC_SET_SAVE_FOLDER     "Specify the folder where frames will be saved"
-    IDC_EDIT_READOUTS       "Enter 2 values on each line, # of sums to save and # of subframes in each sum"
+    IDC_EDIT_READOUTS       "Enter 2 values on each line, # of sums to save & # of subframes in each sum"
 END
 
 STRINGTABLE
@@ -4698,7 +4695,7 @@ BEGIN
     IDC_SAVE_MRC            "Save frames to MRC file"
     IDC_COMPRESSED_TIFF     "Save frames to TIFF file with LZW compression"
     IDC_TIFF_ZIP_COMPRESS   "Save frames to TIFF file with ZIP compression"
-    IDC_DO_BIDIR            "Do bidirectional tilt series statring at the angle in the text box"
+    IDC_DO_BIDIR            "Do bidirectional tilt series starting at the angle in the text box"
     IDC_BIDIR_ANGLE         "Starting angle of bidirectional tilt series"
     IDC_BIDIR_WALK_BACK     "Return to starting angle with the Walk Up routine"
 END
@@ -4797,7 +4794,7 @@ BEGIN
     IDC_CHECK_SAVEFILE_FOLDER 
                             "Use root name of current open file as part of folder name"
     IDC_CHECK_NAVLABEL_FOLDER 
-                            "Use label of current Navigator item (or one being acquired) as part of folder name"
+                            "Use label of current Navigator item (or acquired one) as part of folder name"
     IDC_CHECK_ROOT_FILE     "Use base name as part of unique file or folder name"
     IDC_EDIT_BASENAME       "Enter the base name to use in folder or file names"
     IDC_CHECK_SAVEFILE_FILE "Use root name of current open file as part of unique file or folder name"
@@ -4864,11 +4861,11 @@ END
 STRINGTABLE
 BEGIN
     IDC_SPIN_BEAM_LEFT_RIGHT 
-                            "Shift beam left or right in X on current camera (hot keys Shift Left/Right arrows)"
+                            "Shift beam left or right in X on camera (hot keys Shift Left/Right arrows)"
     IDC_FIND_IN_MACRO       "Search for text in this script"
     IDC_BUT_NEW_PARAMS      "Add a new set of alignment parameters"
     IDC_BUT_SETUP_ALIGN     "Select type of alignment and set parameters"
-    IDC_CHECK_END_HIGH_EXP  "End series or first half normally if exposure or intensity has increased too much"
+    IDC_CHECK_END_HIGH_EXP  "End series or first half normally if exposure or intensity increase too much"
     IDC_CHECK_MAGINTENSITY  "Change intensity with magnification to keep brightness constant "
     IDC_DRAW_LABELS         "Draw labels except for points in groups above threshold size"
     IDC_CHECK_LIMIT_ABS_FOCUS 
@@ -4937,12 +4934,12 @@ BEGIN
     IDC_KEEP_PRECISION      "Align original floating point data in all case (may take more memory/time)"
     IDC_SAVE_FLOAT_SUMS     "Make alignframes output floating point sums with same scaling as usual"
     IDC_WHOLE_SERIES        "Do alignment in IMOD only for all frames in a tilt series, not other Records"
-    IDC_SAVE_TIMES_100      "Scale floating point frames by 100 times the usual amount and save in 16 bits"
+    IDC_SAVE_TIMES_100      "Scale floating point by 100 times the usual amount and save in 16 bits"
 END
 
 STRINGTABLE
 BEGIN
-    IDC_EDIT_REFINE_CUTOFF  "Cutoff for high frequency filter when refining, or blank for same as initially"
+    IDC_EDIT_REFINE_CUTOFF  "Cutoff for high frequency filter when refining; blank for same as initially"
     IDC_EDIT_MAX_SHIFT      "Maximum shift between successive frames (unbinned pixels)"
     IDC_TRUNCATE_ABOVE      "Truncate values about a given number of electrons per pixel"
     IDC_EDIT_TRUNCATION     "Number of electrons per pixel above which to truncate values"
@@ -4983,9 +4980,9 @@ END
 
 STRINGTABLE
 BEGIN
-    IDC_SPIN_RCMAG          "Increase or decrease magnification; do multiple clicks for several steps at once"
+    IDC_SPIN_RCMAG          "Increase or decrease magnification; multiple clicks do several steps at once"
     IDC_SPIN_RCSPOT         "Increase or decrease spot size; do multiple clicks for several steps at once"
-    IDC_SPIN_RCINTENSITY    "Increase or decrease the intensity lens value by step (hot keys Ctrl Up/Down arrows"
+    IDC_SPIN_RCINTENSITY    "Change the intensity lens value by step (hot keys Ctrl Up/Down arrows)"
     IDC_SPIN_RCBEAM         "Shift beam up or down in Y on current camera (hot keys Shift Up/Down arrows)"
     IDC_BUT_VALVES          "Toggle state of beam valves or filament"
     IDC_BUT_DELBEAMPLUS     "Increase step size for beam movement by 1.4 (hot key > )"
@@ -5000,7 +4997,7 @@ BEGIN
     IDC_CHECK_SAVE_RECORD   "Saved returned Record image to file"
     IDC_EDIT_BEAM_DIAM      "Diameter to draw circles representing the beam, in microns"
     IDC_CHECK_USE_ILLUM_AREA 
-                            "Instead of specified diameter, use illuminated area of Record when in Low Dose"
+                            "Instead of specified diameter, use Record illuminated area when in Low Dose"
     IDC_RNO_EARLY           "Return image after frame saving is complete, if any"
     IDC_RLAST_EARLY         "Return as soon as possible with specified sum for last shot only"
     IDC_RALL_EARLY          "Return as soon as possible with specified sum for all shots"
@@ -5056,7 +5053,7 @@ LANGUAGE 9, 1
 #include "res\SerialEM.rc2"  // non-Microsoft Visual C++ edited resources
 #include "afxres.rc"         // Standard components
 #include "XFolderDialog\XFolderDialog.rc"
-#endif
+#endif
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

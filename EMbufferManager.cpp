@@ -734,7 +734,8 @@ int EMbufferManager::ReadFromFile(KImageStore *inStore, int inSect, int inToBuf,
   toBuf->mMagInd = 0;
   toBuf->mHasUserPt = false;
   toBuf->mHasUserLine = false;
-  toBuf->mTimeStamp = (float)0.001 * GetTickCount();
+  toBuf->mCtfFocus1 = 0.;
+  toBuf->mTimeStamp = 0.001 * GetTickCount();
   toBuf->mChangeWhenSaved = 0;
   toBuf->mMapID = 0;
   toBuf->mStage2ImMat.xpx = 0.;
@@ -885,6 +886,7 @@ int EMbufferManager::ReplaceImage(char *inData, int inType, int inX, int inY,
   toBuf->mBinning = 1;
   toBuf->mHasUserPt = false;
   toBuf->mHasUserLine = false;
+  toBuf->mCtfFocus1 = 0.;
   toBuf->mMapID = 0;
   toBuf->mStage2ImMat.xpx = 0.;
   toBuf->mZoom = 0.;

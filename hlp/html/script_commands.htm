@@ -833,6 +833,30 @@
             vertical strips.</TD>
         </TR>
         <TR vAlign="top">
+          <TD class="style7">CtfFind buf dmin dmax [fast] [box] [phmin] [phmax] [phstep] 
+            [afix]</TD>
+          <TD>Determines defocus and astigmatism by fitting to Thon rings in an FFT of the 
+            image in the given buffer.&nbsp; Follow the buffer letter with the minimum and 
+            maximum defocus for the search (in microns, underfocus negative), and with these 
+            optional entries: 
+            <br />&&nbsp; &#39;fast&#39; non-zero to do a 1-D initial search instead of a slower 2D one<br />
+&nbsp;&#39;box&#39; between 128 and 640 to set the box size for the amplitude spectrum to analyze, 
+            or zero to use the default (256)<br />
+&nbsp; &#39;phmin&#39; alone to set the additional phase shift, in radians, or 0 (or 0 0) to use the 
+            phase shift set in the <A HREF="#hid_process_setphaseplateshift">Set Phase Plate Shift</A> 
+            menu item<br />
+&nbsp; &#39;phmin&#39; and &#39;phmax&#39; to set the minimum and maximum phase shift for a search that 
+            includes phase shift; the range must be less than 1.5 radians.&nbsp; Such a 
+            search may be slow.<br />
+&nbsp; &#39;phstep&#39; nonzero to set the phase shift search step, or 0 to use the default (0.1)<br />
+&nbsp; &#39;afix&#39; non-zero to fix astigmatism at zero.<br />
+            See a href="#hid_process_doctffindfitonclick">Do Ctffind On Click</a> and <a href="#hid_process_setctffindoptions">Set Ctffind Options</a> 
+            for more details on these options.<br />
+            After successful fitting, the command will set reportedValue1-6 with defocus 1, 
+            defocus 2, astigmatism angle, additional phase shift, fitting score, and 
+            resolution in Angstroms to which Thon rings fit.</TD>
+        </TR>
+        <TR vAlign="top">
           <TD colspan="2"><A name="file_dir"></A><B>File and Directory Commands</B></TD>
         </TR>
         <TR vAlign="top">

@@ -20,7 +20,7 @@ set HASJEOLPLUG=1
 IF NOT EXIST ..\JeolScopePlugin.dll IF NOT EXIST ../Plugins\JeolScopePlugin.dll SET HASJEOLPLUG=0
 
 rem # Clean up all existing and older files
-for %%A in (SerialEM.exe SERIALEM.HLP SerialEM.cnt SerialEM.chm FTComm.dll jpeg62.dll zlib1.dll libtiff3.dll b3dregsvr.exe b3dregsvr32.exe b3dregsvr64.exe MFC71.dll msvcp71.dll msvcr71.dll register.bat register-GMS1.bat register-GMS2-32.bat register-GMS2-64.bat SEMCCD-GMS2-32.dll SEMCCD-GMS2-64.dll SEMCCDps-GMS2-32.dll SEMCCDps-GMS2-64.dll SerialEMCCD.dll SerialEMCCDps.dll msvcp90.dll mfc90.dll msvcr90.dll vcomp90.dll FEIScopePlugin.dll Plugins\FEIScopePlugin.dll JeolScopePlugin.dll Plugins\JeolScopePlugin.dll TietzPlugin.dll Plugins\TietzPlugin.dll DEcamPlugin.dll Plugins\DEcamPlugin.dll DeInterface.Win32.dll Plugins\DeInterface.Win32.dll libifft-MKL.dll libifft-MKL-64.dll libiomp5md.dll) DO (
+for %%A in (SerialEM.exe SERIALEM.HLP SerialEM.cnt SerialEM.chm FTComm.dll jpeg62.dll zlib1.dll libtiff3.dll b3dregsvr.exe b3dregsvr32.exe b3dregsvr64.exe MFC71.dll msvcp71.dll msvcr71.dll register.bat register-GMS1.bat register-GMS2-32.bat register-GMS2-64.bat SEMCCD-GMS2-32.dll SEMCCD-GMS2-64.dll SEMCCDps-GMS2-32.dll SEMCCDps-GMS2-64.dll SerialEMCCD.dll SerialEMCCDps.dll msvcp90.dll mfc90.dll msvcr90.dll vcomp90.dll FEIScopePlugin.dll Plugins\FEIScopePlugin.dll JeolScopePlugin.dll Plugins\JeolScopePlugin.dll TietzPlugin.dll Plugins\TietzPlugin.dll DEcamPlugin.dll Plugins\DEcamPlugin.dll DeInterface.Win32.dll Plugins\DeInterface.Win32.dll libifft-MKL.dll libifft-MKL-64.dll libiomp5md.dll libctffind.dll libmmd.dll) DO (
   IF EXIST ..\%%A DEL ..\%%A
 )
 

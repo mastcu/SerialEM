@@ -53,6 +53,15 @@
           <TD>Allows you enter a defocus to have circles drawn at corresponding CTF zeros</TD>
         </TR>
         <TR VALIGN="top">
+          <TD class="style1"><a href="#hid_process_doctffindfitonclick">Do Ctffind On Click</a></TD>
+          <TD>Computes defocus/astigmatism by fitting to Thon rings after clicking near 
+            first zero.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><a href="#hid_process_setctffindoptions">Set Ctffind Options</a></TD>
+          <TD>Sets options for the Ctffind operation when clicking.</TD>
+        </TR>
+        <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_process_setphaseplateshift">Set Phase Plate Shift</A></TD>
           <TD>Allows you to enter the phase shift from a phase plate</TD>
         </TR>
@@ -130,8 +139,13 @@
         the active window. The FFT will be placed into buffer A and existing images will be 
         rolled to higher buffers to the extent specified in the Buffer Control Panel, 
         just as when a new image is acquired.</P>
-    <P>If you have an FFT that shows Thon rings, you can click at the first minimum 
-      (the first zero of the CTF) to determine the defocus.&nbsp; The program will 
+    <P>If you have an FFT that shows Thon rings, there are two ways to determine the 
+      defocus: either by automatic fitting to several Thon rings with the Ctffind 
+      module (see the <a href="#hid_process_doctffindfitonclick">Do Ctffind On Click</a> 
+      command below, which activates this feature), or by manually clicking on the FFT 
+      if that feature is not active.&nbsp;&nbsp; </P>
+    <P>For manual measurement, click right at the location of the first minimum 
+      (the first zero of the CTF) with the left mouse button.&nbsp; The program will 
       draw a circle through the clicked location and circles at the expected positions 
       of several more minima (5 total by default).&nbsp; The estimated defocus will be 
       displayed in the middle pane of the status bar.&nbsp; Once the circles are 
@@ -203,7 +217,51 @@
       <P>Use this command to set a fixed defocus that defines where circles will be 
         drawn on a live FFT, namely at the zeros of the CTF for that defocus.&nbsp; 
         Underfocus is negative, as in all defocus readouts.</P>
-    <P><A NAME="hid_process_setphaseplateshift"></A><B>Set Phase Plate Shift command (Process 
+    <P><A NAME="hid_process_doctffindfitonclick"></A><B>Do Ctffind on Click command (Process 
+          menu)</B></P>
+    <P>Use this command to have the Thon rings in an FFT fit with the Ctffind module, 
+      adapted from the Ctffind4 program of Rohou and Grigorieff.&nbsp; There should be 
+      at least two zeros (minima) visible in the FFT, preferably more.&nbsp; Initiate 
+      the fitting by clicking near the first zero to inform the program of the 
+      approximate defocus (usually it works if you click anywhere between the first 
+      and second zero, or possibly out to the third).&nbsp; The program will solve for 
+      defocus and astigmatism, draw ellipses (5 by default) at the zeros, and show the 
+      maximum and minimum defocus values in the status bar.&nbsp; The log will also 
+      have the following output:<br />
+&nbsp;&nbsp; defocus 1 &amp; 2: the maximum and minimum defocus values<br />
+&nbsp;&nbsp; angle:&nbsp; the angle of the maximum defocus (minor axis of ellipse)<br />
+&nbsp;&nbsp; score:&nbsp; the correlation coefficient between the 2D image and 
+      computed CTF</P>
+    <P>In addition, if the option to compute the extent of good fitting to the Thon 
+      rings is turned on with the next command, the log will show the resolution in 
+      Angstroms to which the Thon rings can be fit.</P>
+    <P><A NAME="hid_process_setctffindoptions"></A><B>Set Ctffind Options command (Process 
+          menu)</B></P>
+    <P>Use this command to set some parameters for fitting with the Ctffind module.&nbsp; 
+      There will be four entry boxes:</P>
+    <ol>
+      <li>Enter 1 to do the extra computations needed to determine the resolution to 
+        which the Thon rings can be fit, or 0 not to.&nbsp; These computations will 
+        increase the fitting time by 10-20%, which may be noticeable.</li>
+      <li>Enter 1 to draw half-rings on the image out to the resolution determined by 
+        these extra computaions if they were done, or 0 not to.</li>
+      <li>Enter 1 to do a slower 2-D initial exhaustive search instead of the default 
+        1-D search with a rotational averaged spectrum.&nbsp; This search is needed if 
+        the astigmatism is large (for example, if analyzing images with beam-tilt) but 
+        should not be needed for ordinary amounts of astigmatism.&nbsp; The 2-D search 
+        is parallelized so its speed will depend heavily on the number of computer cores 
+        available.</li>
+      <li>Enter the factor by which to multiply and divide the defocus implied by the 
+        clicked position to set the maximum and minimum defocus for the initial search.&nbsp; 
+        This entry determines how far away from the first zero you can click and still 
+        get reliable fits.&nbsp; The initial default is 2.5.</li>
+    </ol>
+    <p>
+      All fits are done with a box size of 256 for speed, and because high accuracy at 
+      the highest frequencies is not needed.&nbsp; The &#39;CtfFind&#39; script command gives 
+      more flexibility with regard to the fitting parameters, including the ability to 
+      set the box size.</p>
+      <P><A NAME="hid_process_setphaseplateshift"></A><B>Set Phase Plate Shift command (Process 
           menu)</B></P>
       <P>Use this command to define the phase shift imposed by a phase plate (a positive 
         value in degrees).&nbsp; This phase shift will be taken into account when 

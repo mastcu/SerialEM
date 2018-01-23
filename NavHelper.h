@@ -84,6 +84,7 @@ public:
   CArray<StateParams *, StateParams *> *GetStateArray () {return &mStateArray;};
   CNavRotAlignDlg *mRotAlignDlg;
 
+
 private:
   CSerialEMApp *mWinApp;
   CSerialEMDoc *mDocWnd;

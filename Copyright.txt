@@ -1,5 +1,5 @@
 SerialEM and associated documentation and plugins are
-copyright (C) 2003-2017 by the Regents of the University of Colorado.
+copyright (C) 2003-2018 by the Regents of the University of Colorado.
 
 The following license applies to the SerialEM executable and it source code:
 
@@ -54,7 +54,11 @@ SerialEM uses the libcfshr, libiimod, and libifft libraries from IMOD, which
 are covered by the GNU Lesser General Public License (LGPL), a copy of which
 is in LGPL.txt.  SerialEM also includes the Mini-XML library from IMOD,
 which is Copyright 2003-2016 by Michael R. Sweet and is covered by the
-modified Library GPL in Mini-XML.txt.
+modified Library GPL in Mini-XML.txt.  SerialEM also includes the ctffind
+library from IMOD, adapted from the ctffind program of Alexis Rohou and
+Nikolaus Grigorieff, which is Copyright (c) 2018, Howard Hughes Medical
+Institute, and is covered by the Janelia Research Campus Software License
+1.2.
 
 SerialEM uses Intel Math Kernel Library FFT routines under a purchased
 license.

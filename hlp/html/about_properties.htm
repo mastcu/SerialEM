@@ -1243,6 +1243,16 @@
             gain normalization is being done in SerialEM.</TD>
         </TR>
         <TR VALIGN="top">
+          <TD>UsableAtMag</TD>
+          <TD>Specifies the coordinates of the usable area at a particular magnification 
+            where the image is partly occluded.&nbsp; Follow with the magnification index 
+            and the&nbsp; top, left, bottom, and right coordinates of the last good column 
+            or row, in unbinned pixels.&nbsp; The top and bottom entries can be set to 0 to 
+            avoid limiting the Y dimension, or the left and right entries can be 0 to avoid 
+            limiting X.&nbsp; Each entry applies only at one magnification and currently has 
+            an effect only when setting up montages through Navigator.</TD>
+        </TR>
+        <TR VALIGN="top">
           <TD>SubareasAreBad</TD>
           <TD>Set this entry to 1 for a Tietz camera if taking an image of a subarea makes 
             the next image of the full camera area, or a much larger subarea, be bad. Set it 

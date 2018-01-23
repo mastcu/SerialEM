@@ -28,6 +28,7 @@
 #include "MacroProcessor.h"
 #include "MultiTSTasks.h"
 #include "RemoteControl.h"
+#include "Shared\ctffind.h"
 #include "Utilities\KGetOne.h"
 #include "Shared\b3dutil.h"
 #include "XFolderDialog/XWinVer.h"
@@ -253,7 +254,8 @@ void CSerialEMView::DrawImage(void)
   int zoomWidthCrit = 20;
   bool bufferOK, filtering = false;
   CNavigatorDlg *navigator = mWinApp->mNavigator;
-  FloatVec zeroRadii;
+  CProcessImage *processImg = mWinApp->mProcessImage;
+  FloatVec zeroRadii, zeroRadii2;
   CPoint point;
   CString letString, firstLabel, lastLabel;
   COLORREF bkgColor = RGB(48, 0, 48);
@@ -611,9 +613,27 @@ void CSerialEMView::DrawImage(void)
     }
   }
 
+  // Draw rings at CTF zeros detemined by ctfffind
+  if ((mMainWindow || mFFTWindow) && imBuf->mCaptured == BUFFER_FFT &&
+    imBuf->mCtfFocus1 > 0) {
+      float pixel = 1000.f * mWinApp->mShiftManager->GetPixelSize(imBuf);
+      double defocus = imBuf->mCtfFocus1;
+      boost = processImg->GetDrawExtraCtfRings() > 0 ? imBuf->mMaxRingFreq : 0.f;
+      processImg->DefocusFromPointAndZeros(0., 0, pixel, boost, &zeroRadii, defocus);
+      defocus = imBuf->mCtfFocus2;
+      processImg->DefocusFromPointAndZeros(0., 0, pixel, boost, &zeroRadii2, defocus); 
+      cenX = imBuf->mImage->getWidth() / 2.f;
+      cenY = imBuf->mImage->getHeight() / 2.f;
+      CPen pnDashPen (PS_DASHDOT, 1, RGB(255, 255, 0));
+      for (int zr = 0; zr < (int)B3DMIN(zeroRadii.size(), zeroRadii2.size()); zr++)
+        DrawEllipse(&cdc, &pnDashPen, &rect, imBuf->mImage, cenX, cenY, 
+        zeroRadii[zr] * cenX, zeroRadii2[zr] * cenX, imBuf->mCtfAngle, 
+        zr >= processImg->GetNumFFTZeros());
+
+
   // Draw rings at zeros on an FFT if clicked and configured
-  if ((mMainWindow || mFFTWindow) && mWinApp->mProcessImage->GetFFTZeroRadiiAndDefocus(
-    imBuf, &zeroRadii, defocus)) {
+  } else if ((mMainWindow || mFFTWindow) && 
+    processImg->GetFFTZeroRadiiAndDefocus(imBuf, &zeroRadii, defocus)) {
       cenX = imBuf->mImage->getWidth() / 2.f;
       cenY = imBuf->mImage->getHeight() / 2.f;
       CPen pnDashPen (PS_DASHDOT, 1, RGB(0, 255, 0));
@@ -623,21 +643,21 @@ void CSerialEMView::DrawImage(void)
 
   // Otherwise Draw circle on Live FFT
   } else if ((mMainWindow || mFFTWindow) && imBuf->mCaptured == BUFFER_LIVE_FFT && 
-    mWinApp->mProcessImage->GetCircleOnLiveFFT()) {
-      float *radii = mWinApp->mProcessImage->GetFFTCircleRadii();
+    processImg->GetCircleOnLiveFFT()) {
+      float *radii = processImg->GetFFTCircleRadii();
       float pixel = 1000.f * mWinApp->mShiftManager->GetPixelSize(imBuf);
-      double defocus = mWinApp->mProcessImage->GetFixedRingDefocus();
+      double defocus = processImg->GetFixedRingDefocus();
       cenX = imBuf->mImage->getWidth() / 2.f;
       cenY = imBuf->mImage->getHeight() / 2.f;
       CPen pnDashPen (PS_DASHDOT, 1, RGB(0, 255, 0));
       if (defocus > 0 && pixel > 0.) {
-        mWinApp->mProcessImage->DefocusFromPointAndZeros(0., 0, pixel, &zeroRadii, 
+        processImg->DefocusFromPointAndZeros(0., 0, pixel, 0., &zeroRadii, 
           defocus);
         for (int zr = 0; zr < (int)zeroRadii.size(); zr++)
           DrawCircle(&cdc, &pnDashPen, &rect, imBuf->mImage, cenX, cenY, 
             zeroRadii[zr] * cenX);
       } else {
-        for (int ir = 0; ir < mWinApp->mProcessImage->GetNumCircles(); ir++)
+        for (int ir = 0; ir < processImg->GetNumCircles(); ir++)
           DrawCircle(&cdc, &pnDashPen, &rect, imBuf->mImage, cenX, cenY, radii[ir] * 
             cenX);
       }
@@ -967,6 +987,31 @@ void CSerialEMView::DrawCircle(CClientDC *cdc, CPen *pNewPen, CRect *rect, KImag
   cdc->SelectObject(pOldPen);
 }
 
+// Draw an ellipse with the given pen, given two radii and the right-handed angle of
+// radius 1 (i.e., take negative of angle to draw in inverted coordinates)
+void CSerialEMView::DrawEllipse(CClientDC *cdc, CPen *pNewPen, CRect *rect, KImage *image,
+  float cenX, float cenY, float radius1, float radius2, float angle, bool drawHalf)
+{
+  CPoint point;
+  float ptX, ptY, xOnAx, yOnAx;
+  CPen *pOldPen = cdc->SelectObject(pNewPen);
+  float sinAng = (float)sin(-DTOR * angle);
+  float cosAng = (float)cos(-DTOR * angle);
+  for (int pt = 0; pt < (drawHalf ? 46 : 91); pt++) {
+    xOnAx = (float)(radius1 * cos(DTOR * (pt * 4 + angle - 90.)));
+    yOnAx = (float)(radius2 * sin(DTOR * (pt * 4 + angle - 90.)));
+    ptX = cenX + xOnAx * cosAng - yOnAx * sinAng;
+    ptY = cenY + xOnAx * sinAng + yOnAx * cosAng;
+    MakeDrawPoint(rect, image, ptX, ptY, &point);
+    if (pt)
+      cdc->LineTo(point);
+    else
+      cdc->MoveTo(point);
+  }
+
+  cdc->SelectObject(pOldPen);
+}
+
 // Draw a scale bar in appropriate images (code doctored from 3dmod)
 void CSerialEMView::DrawScaleBar(CClientDC *cdc, CRect *rect, EMimageBuffer *imBuf)
 {
@@ -1221,7 +1266,9 @@ void CSerialEMView::OnLButtonUp(UINT nFlags, CPoint point)
   BOOL legal, used = false;
   CString lenstr;
   EMimageBuffer *imBuf;
+  CProcessImage *processImg = mWinApp->mProcessImage;
   CRect rect;
+  FloatVec radii;
   mNavUsedLastLButtonUp = false;
   if (GetCapture() == this) {
     ReleaseCapture();
@@ -1245,8 +1292,8 @@ void CSerialEMView::OnLButtonUp(UINT nFlags, CPoint point)
         // If the point is legal and was not used by navigator, commit it and output 
         // stats.  But first see if low dose needs to snap it to axis and act on it
         mWinApp->mLowDoseDlg.UserPointChange(shiftX, shiftY, imBuf);
-        if (mMainWindow || mFFTWindow)
-          mWinApp->mProcessImage->ModifyFFTPointToFirstZero(imBuf, shiftX, shiftY);
+        if ((mMainWindow || mFFTWindow) && !imBuf->mCtfFocus1)
+          processImg->ModifyFFTPointToFirstZero(imBuf, shiftX, shiftY);
         imBuf->mHasUserPt = true;
         imBuf->mHasUserLine = false;
         imBuf->mDrawUserBox = false;
@@ -1254,9 +1301,55 @@ void CSerialEMView::OnLButtonUp(UINT nFlags, CPoint point)
         imBuf->mUserPtY = shiftY;
         mWinApp->mLowDoseDlg.Update();
         if ((mMainWindow || mFFTWindow) && 
-          mWinApp->mProcessImage->GetFFTZeroRadiiAndDefocus(imBuf, NULL, defocus)) {
+          processImg->GetFFTZeroRadiiAndDefocus(imBuf, &radii, defocus)) {
             lenstr.Format("Defocus -%.2f um", defocus);
-            if (mWinApp->mProcessImage->GetPlatePhase() > 0.001)
+            imBuf->mCtfFocus1 = 0.;
+            if (processImg->GetCtffindOnClick()) {
+              EMimageBuffer *mainImBufs = mWinApp->GetImBufs();
+              CtffindParams param;
+              float resultsArray[7];
+              for (imX = 0; imX < MAX_BUFFERS; imX++)
+                if (imBuf->mTimeStamp == mainImBufs[imX].mTimeStamp && 
+                  imBuf != &mainImBufs[imX])
+                  break;
+
+              // For an FFT, run Ctffind if option selected
+              if (imX < MAX_BUFFERS && !processImg->InitializeCtffindParams(
+                &mainImBufs[imX], param)) {
+
+                  // Adjust search parameters based on options
+                  param.slower_search = processImg->GetSlowerCtfFit() > 0;
+                  param.compute_extra_stats = processImg->GetExtraCtfStats() > 0;
+                  param.minimum_defocus = (float)(10000. * B3DMAX(0.3, defocus / 
+                    processImg->GetCtfFitFocusRangeFac()));
+                  param.maximum_defocus = (float)(10000. * (defocus * 
+                    processImg->GetCtfFitFocusRangeFac()));
+                  if (processImg->GetPlatePhase() > 0.001) {
+                    param.minimum_additional_phase_shift = 
+                      param.maximum_additional_phase_shift = 
+                      (float)(processImg->GetPlatePhase() / DTOR);
+                    param.find_additional_phase_shift = true;
+                  }
+
+                  // Make sure minimum resolution is below first zero
+                  if (radii.size() > 0)
+                    ACCUM_MIN(param.minimum_resolution, 
+                    param.pixel_size_of_input_image / (0.4f * radii[0]));
+                  if (!processImg->RunCtffind(&mainImBufs[imX], param, 
+                    resultsArray)) {
+                      imBuf->mCtfFocus1 = resultsArray[0] / 10000.f;
+                      imBuf->mCtfFocus2 = resultsArray[1] / 10000.f;
+                      imBuf->mCtfAngle = resultsArray[2];
+                      lenstr.Format("Defocus -%.2f & -%.2f um", imBuf->mCtfFocus1, 
+                        imBuf->mCtfFocus2);
+                      imBuf->mMaxRingFreq = 0.;
+                      if (param.compute_extra_stats && resultsArray[5] > 0.)
+                        imBuf->mMaxRingFreq = param.pixel_size_of_input_image / 
+                          resultsArray[5];
+                  }
+              }
+            }
+            if (processImg->GetPlatePhase() > 0.001)
               lenstr += "  (PP)";
             mWinApp->SetStatusText(MEDIUM_PANE, lenstr);
         } else {
@@ -1492,6 +1585,7 @@ void CSerialEMView::OnMouseMove(UINT nFlags, CPoint point)
             mDrawingLine = true;
             imBuf->mHasUserPt = false;
             imBuf->mHasUserLine = true;
+            imBuf->mCtfFocus1 = 0.;
             imBuf->mUserPtX = prevX;
             imBuf->mUserPtY = prevY;
             if (mWinApp->mNavigator)

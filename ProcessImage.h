@@ -9,6 +9,8 @@
 
 #define MAX_FFT_CIRCLES 8
 
+struct CtffindParams;
+
 /////////////////////////////////////////////////////////////////////////////
 // CProcessImage command target
 
@@ -54,12 +56,17 @@ public:
   float *GetFFTCircleRadii() {return &mFFTCircleRadii[0];};
   GetSetMember(CString, OverlayChannels);
   GetSetMember(int, PixelTimeStamp);
-  SetMember(int, NumFFTZeros);
+  GetSetMember(int, NumFFTZeros);
   SetMember(float, AmpRatio);
   SetMember(float, SphericalAber);
   GetSetMember(float, PlatePhase);
   GetSetMember(float, FixedRingDefocus);
   GetSetMember(float, ReductionFactor);
+  GetSetMember(BOOL, CtffindOnClick);
+  GetSetMember(float, CtfFitFocusRangeFac);
+  GetSetMember(int, SlowerCtfFit);
+  GetSetMember(int, ExtraCtfStats);
+  GetSetMember(int, DrawExtraCtfRings);
 
 // Overrides
   // ClassWizard generated virtual function overrides
@@ -131,6 +138,11 @@ private:
   float mPlatePhase;
   float mFixedRingDefocus;
   float mReductionFactor;      // factor for reducing image
+  BOOL mCtffindOnClick;        // Flag to do CTF fitting when click FFT
+  float mCtfFitFocusRangeFac;  // Factor to divide/multiply by to setting min/max defocus
+  int mSlowerCtfFit;           // Flag for 2D fits
+  int mExtraCtfStats;          // Compute extra statistics
+  int mDrawExtraCtfRings;      // Draw as many rings as resolution
 
 
 public:
@@ -192,8 +204,8 @@ public:
     afx_msg void OnUpdateProcessSideBySide(CCmdUI *pCmdUI);
     bool GetFFTZeroRadiiAndDefocus(EMimageBuffer * imBuf, FloatVec *radii, double &defocus);
 void ModifyFFTPointToFirstZero(EMimageBuffer * imBuf, float & shiftX, float & shiftY);
-bool DefocusFromPointAndZeros(double pointRad, int zeroNum, float pixel, FloatVec * radii,
-  double & defocus);
+bool DefocusFromPointAndZeros(double pointRad, int zeroNum, float pixel, float maxRingFreq, 
+  FloatVec * radii, double & defocus);
 afx_msg void OnProcessAutomaticFFTs();
 afx_msg void OnUpdateProcessAutomaticFFTs(CCmdUI *pCmdUI);
 afx_msg void OnProcessSetPhasePlateShift();
@@ -209,6 +221,11 @@ double GetRecentVoltage(bool *valueWasRead = NULL);
 float CountsPerElectronForImBuf(EMimageBuffer * imBuf);
 int ReduceImage(EMimageBuffer *imBuf, float factor, CString *errStr = NULL);
 afx_msg void OnProcessReduceimage();
+int RunCtffind(EMimageBuffer *imBuf, CtffindParams &params, float results_array[7]);
+int InitializeCtffindParams(EMimageBuffer * imBuf, CtffindParams & params);
+afx_msg void OnProcessDoCtffindFitOnClick();
+afx_msg void OnUpdateProcessDoCtffindFitOnClick(CCmdUI *pCmdUI);
+afx_msg void OnProcessSetCtffindOptions();
 };
 
 /////////////////////////////////////////////////////////////////////////////

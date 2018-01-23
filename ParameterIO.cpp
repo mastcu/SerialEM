@@ -501,7 +501,13 @@ int CParameterIO::ReadSettings(CString strFileName)
         mWinApp->mProcessImage->SetOverlayChannels(strItems[1]);
       else if (NAME_IS("ImportOverlayChannels"))
         navParams->overlayChannels = strItems[1];
-      else if (NAME_IS("RemoteControlParams")) {
+      else if (NAME_IS("CtffindParams")) {
+        mWinApp->mProcessImage->SetCtffindOnClick(itemInt[1] != 0);
+        mWinApp->mProcessImage->SetSlowerCtfFit(itemInt[2]);
+        mWinApp->mProcessImage->SetExtraCtfStats(itemInt[3]);
+        mWinApp->mProcessImage->SetDrawExtraCtfRings(itemInt[4]); 
+        mWinApp->mProcessImage->SetCtfFitFocusRangeFac((float)itemDbl[5]);
+      } else if (NAME_IS("RemoteControlParams")) {
         mWinApp->SetShowRemoteControl(itemInt[1] != 0);
         mWinApp->mRemoteControl.SetBeamIncrement((float)itemDbl[2]);
         mWinApp->mRemoteControl.SetIntensityIncrement((float)itemDbl[3]);
@@ -1263,6 +1269,13 @@ void CParameterIO::WriteSettings(CString strFileName)
     mFile->WriteString(oneState);
     oneState.Format("ProcessOverlayChannels %s\n", 
       mWinApp->mProcessImage->GetOverlayChannels());
+    mFile->WriteString(oneState);
+    oneState.Format("CtffindParams %d %d %d %d %f\n", 
+      mWinApp->mProcessImage->GetCtffindOnClick() ? 1 : 0,
+      mWinApp->mProcessImage->GetSlowerCtfFit(),
+      mWinApp->mProcessImage->GetExtraCtfStats(),
+      mWinApp->mProcessImage->GetDrawExtraCtfRings(), 
+      mWinApp->mProcessImage->GetCtfFitFocusRangeFac());
     mFile->WriteString(oneState);
 
     // Save states of tool windows, but set montage closed

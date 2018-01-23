@@ -32,13 +32,18 @@ should change the project configuration under Linker - Input as follows:
   1) Remove "-MKL" from the entry for libifft in "Additional Dependencies".
   2) Remove "-IOMP" from the entries there for libiimod and libcfshr.
   3) Completely remove the entry there for libiomp5md.lib.
+  5) Add -VCOMP to the entry there for libctffind. (The executable will depend
+  on libctffind-VCOMP.dll in SerialEMLibs, not on the libctffind.dll
+  distributed with SerialEM.)
   4) Remove "VCOMP;VCOMPD;" from "Ignore Specific Default Libraries".
 
 The collection also includes 32-bit version 2 of FFTW that was formerly used
 under a purchased license.  If you should happen to have a license for this,
 you could use it by removing libifft.lib, adding in FFTW2st.lib and
-RFFTW2st.lib, making the changes in steps 2-4 above, and defining USE_FFTW2 at
+RFFTW2st.lib, making the changes in steps 2-5 above, and defining USE_FFTW2 at
 least for the compilation of Xcorr.cpp.
+
+
 
 SerialEM can be compiled in VS 2013 by reading in the current solution file,
 allowing it to upgrade the project, and changing preprocessor definition
