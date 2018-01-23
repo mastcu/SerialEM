@@ -59,7 +59,7 @@ struct ControlSet {
   int lineSync;
   int dynamicFocus;
   int boostMag;       // For boostin mag in STEM focus AND for DE hardware binning
-  int magAllShots;
+  int magAllShots;    // For choice to boost mag on all shots AND for DE hardware ROI
   int integration;
   int K2ReadMode;     // Linear/counting/super-resolution for K2, DE, and Falcon!
   int doseFrac;

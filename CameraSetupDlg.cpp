@@ -50,7 +50,7 @@ IDC_DRIFTTEXT2, IDC_MINIMUM_DRIFT, IDC_STATBOX, IDC_STATTOP, IDC_STATLEFT, IDC_S
 IDC_STATRIGHT, IDC_BUTQUARTER, IDC_BUTHALF, IDC_BUTFULL, IDC_REMOVEXRAYS, IDC_RMONTAGE,
 IDC_STATMICRON, IDC_STATAREA, IDC_STATPOSIT, IDC_STATSIZE, IDC_SPINLEFTRIGHT, IDC_RSEARCH,
 IDC_SPINUPDOWN, IDC_BUTRECENTER, IDC_BUTSWAPXY, IDC_KEEP_PIXEL_TIME,
-IDC_CHECK_CORRECT_DRIFT, IDC_STAT_NORM_DSDF, PANEL_END,
+IDC_CHECK_CORRECT_DRIFT, IDC_STAT_NORM_DSDF, IDC_CHECK_HARDWARE_ROI, PANEL_END,
 IDC_STATSHUTTER, IDC_RBEAMONLY, IDC_RFILMONLY, IDC_RSHUTTERCOMBO, IDC_BUTWIDEQUARTER,
 IDC_BUTWIDEHALF, IDC_BUTSMALLER10, IDC_BUTBIGGER10, IDC_BUTABITLESS, PANEL_END,
 IDC_DARKNEXT, IDC_DARKALWAYS, IDC_EDITAVERAGE, IDC_AVERAGEDARK, IDC_SPINAVERAGE, 
@@ -107,6 +107,7 @@ CCameraSetupDlg::CCameraSetupDlg(CWnd* pParent /*=NULL*/)
   , mMaxIntegration(1)
   , m_iIntegration(1)
   , m_bCorrectDrift(FALSE)
+  , m_bUseHardwareROI(FALSE)
   , m_bSaveK2Sums(FALSE)
   , m_bAlwaysAntialias(FALSE)
 {
@@ -280,6 +281,8 @@ void CCameraSetupDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_STAT_ALIGN_SUMMARY, m_statAlignSummary);
   DDX_Check(pDX, IDC_CHECK_CORRECT_DRIFT, m_bCorrectDrift);
   DDX_Control(pDX, IDC_CHECK_CORRECT_DRIFT, m_butCorrectDrift);
+  DDX_Check(pDX, IDC_CHECK_HARDWARE_ROI, m_bUseHardwareROI);
+  DDX_Control(pDX, IDC_CHECK_HARDWARE_ROI, m_butUseHardwareROI);
   DDX_Check(pDX, IDC_SAVE_FRAME_SUMS, m_bSaveK2Sums);
   DDX_Control(pDX, IDC_SAVE_FRAME_SUMS, m_butSaveFrameSums);
   DDX_Control(pDX, IDC_SETUP_K2_FRAME_SUMS, m_butSetupK2FrameSums);
@@ -815,6 +818,8 @@ void CCameraSetupDlg::LoadConsetToDialog()
     m_bCorrectDrift = mCurSet->alignFrames != 0;
   else if (mDE_Type && (mParam->CamFlags & DE_HAS_HARDWARE_BIN))
     m_bCorrectDrift = mCurSet->boostMag != 0;
+  if (mDE_Type && (mParam->CamFlags & DE_HAS_HARDWARE_ROI))
+    m_bUseHardwareROI = mCurSet->magAllShots != 0;
 
   mSummedFrameList = mCurSet->summedFrameList;
   mNumSkipBefore = mCurSet->numSkipBefore;
@@ -828,6 +833,7 @@ void CCameraSetupDlg::LoadConsetToDialog()
     m_bDEsaveMaster = (mCurSet->saveFrames & DE_SAVE_MASTER) != 0;
     m_bDEsaveFrames = (mCurSet->saveFrames & DE_SAVE_SINGLE) != 0;
     m_bDEsaveFinal = (mCurSet->saveFrames & DE_SAVE_FINAL) != 0;
+    mUserSaveFrames = m_bDEsaveMaster;
     m_iSumCount = (*modeP > 0) ? mCurSet->sumK2Frames : mCurSet->DEsumCount;
     m_fDEfps = (*modeP > 0 && mParam->DE_CountingFPS > 0.) ? mParam->DE_CountingFPS : 
       mParam->DE_FramesPerSec;
@@ -1019,7 +1025,7 @@ void CCameraSetupDlg::UnloadDialogToConset()
   // the saved FPS values
   if (mWinApp->mDEToolDlg.CanSaveFrames(mParam)) {
     mCurSet->saveFrames = (m_bDEsaveFrames ? DE_SAVE_SINGLE : 0) +
-      (m_bDEsaveMaster ? DE_SAVE_MASTER : 0) + (m_bDEsaveFinal ? DE_SAVE_FINAL : 0);
+      (mUserSaveFrames ? DE_SAVE_MASTER : 0) + (m_bDEsaveFinal ? DE_SAVE_FINAL : 0);
     if (*modeP)
       mCurSet->sumK2Frames = m_iSumCount;
     else
@@ -1032,6 +1038,8 @@ void CCameraSetupDlg::UnloadDialogToConset()
     mCurSet->alignFrames = m_bCorrectDrift ? 1 : 0;
   else if (mDE_Type && (mParam->CamFlags & DE_HAS_HARDWARE_BIN))
     mCurSet->boostMag = m_bCorrectDrift ? 1 : 0;
+  if (mDE_Type && (mParam->CamFlags & DE_HAS_HARDWARE_ROI))
+    mCurSet->magAllShots = m_bUseHardwareROI ? 1 : 0;
   if (!(mCurrentSet == RECORD_CONSET && mWinApp->mTSController->GetFrameAlignInIMOD()))
     mCurSet->alignFrames = m_bAlignDoseFrac ? 1 : 0;
 
@@ -1438,8 +1446,6 @@ void CCameraSetupDlg::ManageCamera()
       ShowDlgItem(IDC_RDE_COUNTING, false);
       ShowDlgItem(IDC_RDE_SUPERRES, false);
       ShowDlgItem(IDC_STAT_DEMODE, false);
-      ShowDlgItem(IDC_STAT_DEFPS, false);
-      ShowDlgItem(IDC_EDIT_DE_FPS, false);
     }
     ShowDlgItem(IDC_DE_ALIGN_FRAMES, mDEweCanAlign || 
       (mParam->CamFlags & DE_CAM_CAN_ALIGN));
@@ -1462,7 +1468,10 @@ void CCameraSetupDlg::ManageCamera()
   m_butCorrectDrift.ShowWindow((mParam->OneViewType || 
     (mDE_Type && (mParam->CamFlags & DE_HAS_HARDWARE_BIN))) ? SW_SHOW : SW_HIDE);
   m_butCorrectDrift.SetWindowText(mParam->OneViewType ? "Correct drift" : 
-    "Use hardware binning by 2");
+    "Use hardware binning");
+
+  m_butUseHardwareROI.ShowWindow((mDE_Type && (mParam->CamFlags & DE_HAS_HARDWARE_ROI)) ?
+    SW_SHOW : SW_HIDE);
 
   // Disable many things for restricted sizes
   ManageSizeAndPositionButtons(m_bDoseFracMode && mParam->K2Type);
@@ -2638,6 +2647,7 @@ void CCameraSetupDlg::OnButSetupAlign()
     ManageDEpanel();
   else
     ManageDoseFrac();
+  ManageExposure();
 }
 
 // Manage the line that reports whether antialiasing will be applied
@@ -2816,8 +2826,7 @@ void CCameraSetupDlg::ManageDEpanel(void)
   m_butDESetSaveFolder.EnableWindow(saving);
   m_editSumCount.EnableWindow(saving);
   m_butDESaveMaster.EnableWindow(!forceSaving);
-  m_butDESaveFrames.EnableWindow(m_bDEsaveMaster && m_iSumCount > 1 && !m_iDEMode);
-  m_butDESaveFinal.EnableWindow(m_bDEsaveMaster);
+  m_butDESaveFrames.EnableWindow(m_bDEsaveMaster && (m_iSumCount > 1 || m_iDEMode > 0));
   m_statDEframeTime.EnableWindow(saving);
   m_statDEframeSec.EnableWindow(saving);
   m_statDEwhereAlign.ShowWindow(m_bDEalignFrames && mDEweCanAlign);
@@ -2861,7 +2870,7 @@ void CCameraSetupDlg::OnDeltaposSpinDeSumNum(NMHDR *pNMHDR, LRESULT *pResult)
   UpdateData(true);
   if (NewSpinnerValue(pNMHDR, pResult, m_iSumCount, 1, MAX_DE_SUM_COUNT, m_iSumCount))
     return;
-  m_butDESaveFrames.EnableWindow(m_bDEsaveMaster && m_iSumCount > 1 && !m_iDEMode);
+  m_butDESaveFrames.EnableWindow(m_bDEsaveMaster && (m_iSumCount > 1 || m_iDEMode > 0));
   ManageExposure();
   UpdateData(false);
 }

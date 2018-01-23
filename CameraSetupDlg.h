@@ -331,6 +331,8 @@ public:
   void ManageIntegration();
   BOOL m_bCorrectDrift;
   CButton m_butCorrectDrift;
+  BOOL m_bUseHardwareROI;
+  CButton m_butUseHardwareROI;
   BOOL m_bSaveK2Sums;
   CButton m_butSaveFrameSums;
   CButton m_butSetupK2FrameSums;
