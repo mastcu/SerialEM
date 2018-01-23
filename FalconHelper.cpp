@@ -58,7 +58,8 @@ static void framePrintFunc(const char *strMessage)
   CString str = strMessage;
   str.TrimRight('\n');
   str.Replace("\n", "\r\n");
-  SEMTrace('E', "Framealign : %s", (LPCTSTR)str);
+  if (GetDebugOutput('D') || GetDebugOutput('E'))
+    PrintfToLog("Framealign : %s", (LPCTSTR)str);
 }
 
 CFalconHelper::CFalconHelper(void)
@@ -250,7 +251,7 @@ int CFalconHelper::SetupFrameAlignment(ControlSet &conSet, CameraParameters *cam
   float maxMaxWeight = 0.1f;
   float totAliMem = 0.,cpuMemFrac = 0.75f;
   float maxMemory, memoryLimit;
-  int xTrim, yTrim;
+  int xTrim, yTrim, left, right, top, bottom, sizeX, sizeY;
   int numAliFrames, numAllVsAll, groupSize, refineIter, doSpline, gpuFlags = 0;
   FrameAliParams param;
   CArray<FrameAliParams, FrameAliParams> *faParams = 
@@ -272,23 +273,37 @@ int CFalconHelper::SetupFrameAlignment(ControlSet &conSet, CameraParameters *cam
     ny = (conSet.bottom - conSet.top) / conSet.binning;
     mSumBinning = 1;
     mTrimDEsum = false;
+    mDEframeNeedsTrim = false;
   } else {
 
     // DE camera: the size is already known and is the image size
-    // Binning must be multiplied by 2 for super-res
+    // Binning must be multiplied by 2 for super-res or divided by 2 for HW bin
+    // The binning of image being read is binDivisor / 2 (0.5 for SR, 2 for HW, etc)
     nx = mNx;
     ny = mNy;
-    mSumBinning = conSet.binning * (conSet.K2ReadMode == SUPERRES_MODE ? 2 : 1);
+    mSumBinning = (conSet.binning * 2) / SuperResHardwareBinDivisor(camParams, &conSet);
 
     // Raise trim fraction if usable area indicates bigger border needed
-    xTrim = camParams->defects.usableLeft;
+    // But have to get usable area back to the chip coordinates
+    left = camParams->defects.usableLeft;
+    top = camParams->defects.usableTop;
+    sizeX = camParams->sizeX;
+    sizeY = camParams->sizeY;
+    right = sizeX;
+    bottom = sizeY;
     if (camParams->defects.usableRight > 0)
-      xTrim = B3DMAX(xTrim, camParams->sizeX - camParams->defects.usableRight);
-    yTrim = camParams->defects.usableTop;
+      right = camParams->defects.usableRight;
     if (camParams->defects.usableBottom > 0)
-      yTrim = B3DMAX(yTrim, camParams->sizeY - camParams->defects.usableBottom);
-    ACCUM_MAX(trimFrac, (float)xTrim / (float)(camParams->sizeX));
-    ACCUM_MAX(trimFrac, (float)yTrim / (float)(camParams->sizeY));
+      bottom = camParams->defects.usableBottom;
+    xTrim = right - left;
+    yTrim = bottom - top;
+    CorDefUserToRotFlipCCD(mAliSumRotFlip, 1, sizeX, sizeY, xTrim, yTrim, top, left, 
+      bottom, right);
+    
+    xTrim = B3DMAX(left, sizeX - right);
+    yTrim = B3DMAX(top, sizeY - bottom);
+    ACCUM_MAX(trimFrac, (float)xTrim / (float)sizeX);
+    ACCUM_MAX(trimFrac, (float)yTrim / (float)sizeY);
   }
   mAlignSubset = false;
   numAliFrames = numFrames;
@@ -371,6 +386,7 @@ int CFalconHelper::StackFrames(CString localPath, CString &directory, CString &r
   mFloatScale = floatScale;
   mRotateFlip = rotateFlip;
   mAliSumRotFlip = aliSumRotFlip;
+  mSumNeedsRotFlip = mAliSumRotFlip != 0;
   mPixel = pixel;
   mReadLocally = readLocally;
   mCamTD = camTD;
@@ -425,8 +441,8 @@ int CFalconHelper::StackFrames(CString localPath, CString &directory, CString &r
     mHeadNums[0] = mMrcHeader.nx;
     mHeadNums[1] = mMrcHeader.ny;
 
-    // This builds in the assumption that the FEI file IS inverted and IS NOT recognized
-    // as such AND that we want inverted images in here anyway
+    // This builds in the assumption that the FEI file IS inverted AND that we want 
+    // inverted images in here anyway, in case it is eventually recognized as inverted
     mMrcHeader.yInverted = 0;
   } else {
 
@@ -713,7 +729,8 @@ void CFalconHelper::FinishFrameAlignment(int binning)
   float *aliSum = mFrameAli->getFullWorkArray();
   float *xShifts = new float [mNumAligned + 10];
   float *yShifts = new float [mNumAligned + 10];
-  short *sAliSum = (mTrimDEsum || mAliSumRotFlip) ? (short *)aliSum : mCamTD->Array[0];
+  short *sAliSum = (mTrimDEsum || mSumNeedsRotFlip) ? 
+    (short *)aliSum : mCamTD->Array[0];
   unsigned short *usAliSum = (unsigned short *)sAliSum;
 
   ind = mFrameAli->finishAlignAndSum(param.refRadius2, refSigma, param.stopIterBelow,
@@ -788,14 +805,13 @@ void CFalconHelper::FinishFrameAlignment(int binning)
     // Trim and get modified nx, ny
     if (mTrimDEsum)
       extractWithBinning(sAliSum, mDivideBy2 ? kSHORT : kUSHORT, nxBin, mTrimXstart, 
-        mTrimXend, mTrimYstart, mTrimYend, 1, mAliSumRotFlip ? sAliSum : mCamTD->Array[0],
-        1, &rotNx, &rotNy);
+        mTrimXend, mTrimYstart, mTrimYend, 1, 
+        mSumNeedsRotFlip ? sAliSum : mCamTD->Array[0], 1, &rotNx, &rotNy);
 
     // If rotating, that last operation was done in place and now rotate into array
-    if (mAliSumRotFlip)
+    if (mSumNeedsRotFlip)
       rotateFlipImage(sAliSum, mDivideBy2 ? kSHORT : kUSHORT, rotNx, rotNy, 
-        mAliSumRotFlip, mCamTD->FEItype ? 1 : 0, mCamTD->DE_camType ? 1 : 0, 0, 
-        mCamTD->Array[0], &ind, &val);
+        mAliSumRotFlip, 1, 0, 0, mCamTD->Array[0], &ind, &val);
   } else {
     SEMTrace('1', "Error %d finishing frame alignment", ind);
     mAlignError = FIF_FINISH_ALIGN_ERR;
@@ -876,6 +892,9 @@ int CFalconHelper::AlignFramesFromFile(CString filename, ControlSet &conSet,
   int dsize, csize;
   CString str;
   char errStr[160];
+  int hwSuperDiv = SuperResHardwareBinDivisor(camParam, &conSet);
+  int top, bottom, left, right, fullSizeX, fullSizeY, frameX, frameY, fullFileX;
+  bool hardwareROI = (camParam->CamFlags & DE_HAS_HARDWARE_ROI) && conSet.magAllShots;
   mAlignError = 0;
   mNumAligned = 0;
   mCamTD = td;
@@ -896,23 +915,69 @@ int CFalconHelper::AlignFramesFromFile(CString filename, ControlSet &conSet,
     SEMMessageBox(str);
     return 1;
   }
+  mNx = mMrcHeader.nx;
+  mNy = mMrcHeader.ny;
+
+  // This builds in the assumption that the DE file IS inverted AND that we want 
+  // inverted images in here anyway, in case it is eventually recognized as inverted
+  mMrcHeader.yInverted = 0;
+
+  GetSavedFrameSizes(camParam, &conSet, frameX, frameY);
+  fullFileX = (camParam->sizeX * 2) / hwSuperDiv;
+  if (frameY != mNy || (!hardwareROI && frameX != mNx) || 
+    (hardwareROI && frameX != mNx && fullFileX != mNx)) {
+      str.Format("Saved frames are %d x %d, not the expected size of %d x %d; cannot "
+        "align the frames", mNx, mNy, hardwareROI ? fullFileX : frameX, frameY);
+      SEMMessageBox(str);
+      fclose(mFrameFP);
+      return 1;
+  }
+  mDEframeNeedsTrim = hardwareROI && frameX < fullFileX;
 
   // Save many parameters including trim size and need to trim
   mNumFiles = mMrcHeader.nz;
   numFrames = mAlignEnd = mNumFiles;
   mAlignStart = 1;
-  mNx = mMrcHeader.nx;
-  mNy = mMrcHeader.ny;
   mDivideBy2 = divideBy2;
   B3DCLAMP(rotateFlip, 0, 7);
   mAliSumRotFlip = rotateFlip;
+
+  /*// DE frames are read in right-handed and require inversion after.  rotateflip first 
+  // maps r/f through the right-handed map that maps 6 to 6, then through the invertAfter
+  // map that maps 6 to 0.  So 6 needs no operation*/
+  mSumNeedsRotFlip = mAliSumRotFlip != 0;
   mFloatScale = scaling * (divideBy2 ? 0.5f : 1.f);
-  mTrimXstart = conSet.left / conSet.binning;
-  mTrimXend = conSet.right / conSet.binning - 1;
-  mTrimYstart = conSet.top / conSet.binning;
-  mTrimYend = conSet.bottom / conSet.binning - 1;
-  mTrimDEsum = conSet.left > 0 || conSet.right < camParam->sizeX ||
-    conSet.top > 0 || conSet.bottom < camParam->sizeY;
+
+  // The alignment will do the binning but not the rotation.  If trimming is needed, it
+  // needs to be native full-chip coordinates but binned by final binning
+  left = conSet.left;
+  right = conSet.right;
+  top = conSet.top;
+  bottom = conSet.bottom;
+  frameX = right - left;
+  frameY = bottom - top;
+  fullSizeX = camParam->sizeX;
+  fullSizeY = camParam->sizeY;
+  CorDefUserToRotFlipCCD(rotateFlip, 1, fullSizeX, fullSizeY, frameX, frameY, top, left,
+    bottom, right);
+
+  /*// But native coordinates need to be inverted in Y since the right-handed image will be
+  // trimmed
+  frameY = fullSizeY - top;
+  top = fullSizeY - bottom;
+  bottom = frameY;*/
+  mTrimXstart = left / conSet.binning;
+  mTrimXend = right / conSet.binning - 1;
+  mTrimYstart = top / conSet.binning;
+  mTrimYend = bottom / conSet.binning - 1;
+  mTrimDEsum = (conSet.left > 0 || conSet.right < camParam->sizeX ||
+    conSet.top > 0 || conSet.bottom < camParam->sizeY) && !hardwareROI;
+
+  if (mDEframeNeedsTrim) {
+    mFrameTrimStart = (2 * left) / hwSuperDiv;
+    mFrameTrimEnd = (2 * right) / hwSuperDiv - 1;
+    mNx = mFrameTrimEnd + 1 - mFrameTrimStart;
+  }
 
   // Get array for reading in and set up the alignment
   mrc_getdcsize(mMrcHeader.mode, &dsize, &csize);
@@ -940,9 +1005,16 @@ int CFalconHelper::AlignFramesFromFile(CString filename, ControlSet &conSet,
 void CFalconHelper::AlignNextFrameTask(int param)
 {
   int ind;
-  if (mrc_read_slice(mRotData, mFrameFP, &mMrcHeader, mFileInd, 'Z')) {
+  IloadInfo li;
+  mrc_init_li(&li, NULL);
+  mrc_init_li(&li, &mMrcHeader);
+  if (mDEframeNeedsTrim) {
+    li.xmin = mFrameTrimStart;
+    li.xmax = mFrameTrimEnd;
+  }
+  if (mrcReadZ(&mMrcHeader, &li, (unsigned char *)mRotData, mFileInd)) {
     mAlignError = FIF_DE_READ_ERR;
-    SEMTrace('1', "Error reading frame %d: %d", mFileInd, b3dGetError());
+    SEMTrace('1', "Error reading frame %d: %s", mFileInd, b3dGetError());
   }
 
   // Align if no error
@@ -1297,7 +1369,6 @@ void CFalconHelper::GetSavedFrameSizes(CameraParameters *camParams,
   const ControlSet *conSet, int &frameX, int &frameY)
 {
   int superResDiv = (conSet->K2ReadMode == SUPERRES_MODE ? 1 : 2);
-  int hwBin;
   BOOL maybeSwap;
   if (camParams->K2Type) {
     frameX = camParams->sizeX / superResDiv;
@@ -1308,14 +1379,29 @@ void CFalconHelper::GetSavedFrameSizes(CameraParameters *camParams,
     frameY = (conSet->bottom - conSet->top) / conSet->binning;
     maybeSwap = FCAM_ADVANCED(camParams);
   } else {
-    hwBin = ((camParams->CamFlags & DE_HAS_HARDWARE_BIN) && conSet->boostMag) ? 2 : 1;
-    frameX = (camParams->sizeX * 2) / (superResDiv * hwBin);
-    frameY = (camParams->sizeY * 2) / (superResDiv * hwBin);
+    superResDiv = SuperResHardwareBinDivisor(camParams, conSet);
+    frameX = (camParams->sizeX * 2) / superResDiv;
+    frameY = (camParams->sizeY * 2) / superResDiv;
+    if ((camParams->CamFlags & DE_HAS_HARDWARE_ROI) && conSet->magAllShots) {
+      frameX = 2 * (conSet->right - conSet->left) / superResDiv;
+      frameY = 2 * (conSet->bottom - conSet->top) / superResDiv;
+    }
     maybeSwap = true;
   }
   if (maybeSwap && (camParams->rotationFlip % 2 != 0)) {
-    hwBin = frameX;
+    superResDiv = frameX;
     frameX = frameY;
-    frameY = hwBin;
+    frameY = superResDiv;
   }
+}
+
+// For a DE camera, returns a binning divisor to apply to coordinates and sizes times 2
+int CFalconHelper::SuperResHardwareBinDivisor(CameraParameters *camParams, 
+  const ControlSet *conSet)
+{
+  int superResDiv = B3DCHOICE((camParams->CamFlags & DE_CAM_CAN_COUNT) && 
+    conSet->K2ReadMode == SUPERRES_MODE, 1, 2);
+  int hwBin = B3DCHOICE((camParams->CamFlags & DE_HAS_HARDWARE_BIN) && conSet->boostMag &&
+      conSet->binning > 1, 2, 1);
+  return superResDiv * hwBin;
 }

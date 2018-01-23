@@ -98,6 +98,9 @@ private:
   int mTrimXstart, mTrimXend;           // Limits for trimming DE frame sum to subarea
   int mTrimYstart, mTrimYend;
   bool mTrimDEsum;
+  bool mSumNeedsRotFlip;
+  bool mDEframeNeedsTrim;
+  int mFrameTrimStart, mFrameTrimEnd;
   int mSumBinning;                      // Binning relative to frames being aligned
   CameraThreadData *mCamTD;
 
@@ -132,4 +135,5 @@ public:
   int GetFrameAlignBinning(FrameAliParams & param, int frameSizeX, int frameSizeY);
   void GetSavedFrameSizes(CameraParameters *camParams, const ControlSet *conSet, 
     int & frameX, int & frameY);
+  int SuperResHardwareBinDivisor(CameraParameters *camParams, const ControlSet *conSet);
 };
