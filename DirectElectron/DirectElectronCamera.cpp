@@ -173,7 +173,6 @@ void DirectElectronCamera::InitializeLastSettings()
   mLastExposureTime = -1.;
   mLastPreExposure = -1.;
   mLastProcessing = -1;
-  mLastNormDoseFrac = -1;
   mLastNormCounting = -1;
   mLastUnnormBits = -1;
   mLastElectronCounting = -1;
@@ -1701,7 +1700,6 @@ int DirectElectronCamera::setCorrectionMode(int nIndex, int readMode)
 
   // For frames, set gain correction based on the selected correction in the new version
   // And require dark/gain references for unnorm counting modes
-  // But it is unclear how normDoseFrac should be set in those cases
   if (mNormAllInServer) {
     normDoseFrac = nIndex / 2;
     if (readMode > 0) {
@@ -1713,14 +1711,6 @@ int DirectElectronCamera::setCorrectionMode(int nIndex, int readMode)
     }
   }
 
-  // If any saving is happening, make sure normalized frames is set appropriately, and
-  if ((mLastSaveFlags > 0 || mRepeatForServerRef > 0) && mNormAllInServer && 
-    (normDoseFrac != mLastNormDoseFrac || !mTrustLastSettings)) {
-      if (!setStringWithError(DE_PROP_DOSEFRAC"Gain Normalization",
-        normDoseFrac ? psEnable : psDisable))
-        return 1;
-      mLastNormDoseFrac = normDoseFrac;
-  }
   if (readMode > 0 && (normCount != mLastNormCounting || !mTrustLastSettings)) {
     if (!setStringWithError(DE_PROP_COUNTING" - Apply Post-Counting Gain", 
       normCount ? psEnable : psDisable))

@@ -278,7 +278,6 @@ private:
   float mLastExposureTime;              // Exposure time
   double mLastPreExposure;              // Pre-exposure
   int mLastProcessing;                  // uncorrected, dark, or dark/gain (linear mode)
-  int mLastNormDoseFrac;                // Normalization of saved frames
   int mLastNormCounting;                // Post-counting normalization of saved frames
   int mLastUnnormBits;                  // Bits output in unnormalized movie
   int mLastElectronCounting;            // Electron counting of either kind is 1, test > 0
