@@ -1433,22 +1433,36 @@ void CSerialEMView::WindowCornersInImageCoords(EMimageBuffer *imBuf, float *xCor
 // Middle button down: zoom up if control, or add a point in edit mode
 void CSerialEMView::OnMButtonDown(UINT nFlags, CPoint point) 
 {
-  float shiftX, shiftY;
+  float shiftX, shiftY, pixel;
   EMimageBuffer *imBuf;
+  CString str;
   CRect rect;
   if (GetAsyncKeyState(VK_CONTROL) / 2 && !(GetAsyncKeyState(VK_SHIFT) / 2)) {
     SetupZoomAroundPoint(&point);
     ZoomUp();
-  } else if (mWinApp->mNavigator && mWinApp->mNavigator->TakingMousePoints() && mImBufs &&
-    !(GetAsyncKeyState(VK_SHIFT) / 2)) {
+  } else if (mImBufs && mImBufs[mImBufIndex].mImage && 
+    ((mWinApp->mNavigator && mWinApp->mNavigator->TakingMousePoints() && 
+    !(GetAsyncKeyState(VK_SHIFT) / 2)) || mImBufs[mImBufIndex].mCaptured == BUFFER_FFT ||
+    mImBufs[mImBufIndex].mCaptured == BUFFER_LIVE_FFT)) {
       imBuf = &mImBufs[mImBufIndex];
       GetClientRect(&rect);
       if (ConvertMousePoint(&rect, imBuf->mImage, &point, shiftX, shiftY)) {
-        mWinApp->mNavigator->UserMousePoint(imBuf, shiftX, shiftY, mPointNearImageCenter, 
-          VK_MBUTTON);
-        DrawImage();
+        if (imBuf->mCaptured == BUFFER_FFT || imBuf->mCaptured == BUFFER_LIVE_FFT) {
+          pixel = mWinApp->mShiftManager->GetPixelSize(imBuf);
+          if (pixel) {
+            shiftY = (float)(sqrt(pow(shiftX - imBuf->mImage->getWidth() / 2., 2.) +
+              pow(shiftY - imBuf->mImage->getHeight() / 2., 2.)) / 
+              imBuf->mImage->getWidth());
+            shiftX = 10000.f * pixel / B3DMAX(0.0001f, shiftY);
+            str.Format("Freq. %.3g/A   Period %.1f A", 1. / shiftX, shiftX);
+            mWinApp->SetStatusText(MEDIUM_PANE, str);
+          }
+        } else {
+          mWinApp->mNavigator->UserMousePoint(imBuf, shiftX, shiftY, mPointNearImageCenter
+            , VK_MBUTTON);
+          DrawImage();
+        }
       }
-
   }
 
   CView::OnMButtonDown(nFlags, point);
