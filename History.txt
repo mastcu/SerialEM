@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+1/23/18: Added ctffind module, options to support fitting to Thon rings when
+click in FFT, and CtfFind script command to run it with specified parameters.
+
 1/10/18: Made non-calibration parameters saved in the short-term calibration
 file be used even when the property to ignore short-terms cals is set.
 
