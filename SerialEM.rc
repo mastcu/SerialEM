@@ -1019,6 +1019,7 @@ BEGIN
     PUSHBUTTON      "Set Up",IDC_BUT_DE_SETUP_ALIGN,138,494,26,12
     CTEXT           "Align in Server",IDC_STAT_DE_WHERE_ALIGN,63,506,123,8
     LTEXT           "sec",IDC_STAT_DE_FRAME_SEC,178,463,12,8
+    CONTROL         "Use Hardware ROI",IDC_CHECK_HARDWARE_ROI,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,167,73,10
 END
 
 IDD_ALIGNFOCUS DIALOGEX 0, 0, 119, 131
@@ -2768,7 +2769,7 @@ BEGIN
     EDITTEXT        IDC_EDIT_EXTRA_DELAY,107,147,32,14,ES_AUTOHSCROLL
 END
 
-IDD_DE_REFERENCE DIALOGEX 0, 0, 190, 191
+IDD_DE_REFERENCE DIALOGEX 0, 0, 191, 210
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Direct Electron Server Reference Maker"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
@@ -2781,19 +2782,24 @@ BEGIN
     CONTROL         "Dark",IDC_RDARK_REF,"Button",BS_AUTORADIOBUTTON | WS_GROUP,120,26,31,10
     CONTROL         "Gain",IDC_RGAIN_REF,"Button",BS_AUTORADIOBUTTON,120,37,30,10
     GROUPBOX        "Type of Reference",IDC_STAT_REF_TYPE,112,16,71,35,WS_GROUP
-    DEFPUSHBUTTON   "YES",IDOK,34,170,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,105,170,50,14
-    CTEXT           "Reference for 25.00 frames/sec",IDC_STAT_REF_FPS,35,68,119,8
-    LTEXT           "Exposure time:",IDC_STATIC,41,96,50,8
-    LTEXT           "sec",IDC_STATIC,136,96,12,8
-    EDITTEXT        IDC_EDIT_REF_EXPOSURE,93,93,40,14,ES_AUTOHSCROLL
-    LTEXT           "Number of acquisitions:",IDC_STATIC,36,114,78,8
-    CONTROL         "",IDC_SPIN_NUM_REPEATS,"msctls_updown32",UDS_ARROWKEYS,142,112,10,14
-    EDITTEXT        IDC_EDIT_NUM_REPEATS,116,112,25,14,ES_AUTOHSCROLL
-    PUSHBUTTON      "?",IDC_BUTHELP,172,174,11,10
-    CTEXT           "ARE YOU READY TO PROCEED?",IDC_STATIC,7,157,176,8
-    CTEXT           "To acquire a gain reference, be sure that the beam is uniform over the whole field of the camera and has a suitable intensity, and that no specimen is in the way.",IDC_STAT_GAIN_ADVICE,7,130,176,28
-    CONTROL         "With hardware binning by 2",IDC_USE_HARDWARE_BIN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,42,79,106,10
+    DEFPUSHBUTTON   "YES",IDOK,34,189,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,105,189,50,14
+    LTEXT           "Reference for",IDC_STAT_REF_FPS,35,68,45,8
+    LTEXT           "Exposure time:",IDC_STATIC,41,115,50,8
+    LTEXT           "sec",IDC_STATIC,136,115,12,8
+    EDITTEXT        IDC_EDIT_REF_EXPOSURE,93,112,40,14,ES_AUTOHSCROLL
+    LTEXT           "Number of acquisitions:",IDC_STATIC,36,133,78,8
+    CONTROL         "",IDC_SPIN_NUM_REPEATS,"msctls_updown32",UDS_ARROWKEYS,142,131,10,14
+    EDITTEXT        IDC_EDIT_NUM_REPEATS,116,131,25,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "?",IDC_BUTHELP,172,193,11,10
+    CTEXT           "ARE YOU READY TO PROCEED?",IDC_STATIC,7,176,176,8
+    CTEXT           "To acquire a gain reference, be sure that the beam is uniform over the whole field of the camera and has a suitable intensity, and that no specimen is in the way.",IDC_STAT_GAIN_ADVICE,7,149,176,28
+    CONTROL         "With hardware binning by 2",IDC_USE_HARDWARE_BIN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,42,81,106,10
+    EDITTEXT        IDC_EDIT_REF_FPS,82,65,30,14,ES_AUTOHSCROLL
+    LTEXT           "frames/sec",IDC_STATIC,116,68,38,8
+    CONTROL         "Use hardware ROI with current Record subarea",IDC_USE_REC_HARDWARE_ROI,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,92,171,10
+    LTEXT           "(2048 x 2048)",IDC_STAT_REC_AREA,23,102,161,8
 END
 
 IDD_ONELINESCRIPT DIALOGEX 0, 0, 163, 24
@@ -3211,9 +3217,9 @@ BEGIN
     IDD_DE_REFERENCE, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 183
+        RIGHTMARGIN, 184
         TOPMARGIN, 7
-        BOTTOMMARGIN, 184
+        BOTTOMMARGIN, 203
     END
 
     IDD_ONELINESCRIPT, DIALOG

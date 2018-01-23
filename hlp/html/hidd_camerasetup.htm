@@ -322,6 +322,17 @@
       useful.</P>
     <P>Frames will still be saved to disk when aligning is selected and saving is not, 
       but they will be deleted after alignment.</P>
+    <P>In addition to the options in the frame control panel described below, one or 
+      two options will appear above the Exposure time setting if the camera supports 
+      them:</P>
+    <ol>
+      <li><b>Use hardware binning</b>:&nbsp; If the camera supports hardware binning and 
+        a binning greater than 1 is selected, this option allows you to use this 
+        feature.&nbsp; The hardware binning is only by 2, so if a binning higher than 2 
+        is selected, the remaining binning is done in software.</li>
+      <li><b>Use hardware ROI</b>: This option appears if the camera supports readout of 
+        a subarea or region of interest (ROI).</li>
+    </ol>
     <P><b>Operating mode - Linear, Counting, Super-Resolution</b></P>
     <P>When electron counting is available, these radio button appear to allow the 
       selection of linear (integrating) mode, electron counting mode, and a 
@@ -331,8 +342,8 @@
       SerialEM, and if the saved frames are aligned in SerialEM, the aligned sum will 
       be Fourier-cropped to the selected binning.</P>
     <P><b>Frames per sec</b></P>
-    <P>When electron counting is available, the frames per second can be entered here.&nbsp; 
-      The program maintains two separate settings, one for linear mode and one for 
+    <P>The frames per second can be seen and entered here.&nbsp; 
+      When electron counting is available, the program maintains two separate settings, one for linear mode and one for 
       counting mode, and switches between them automatically when you change modes.&nbsp; 
       There is not a separate frames per second value for each camera parameter set; 
       they all share these two values.</P>
@@ -350,7 +361,7 @@
       frames can be aligned either within the DE server or within SerialEM.&nbsp; In 
       the latter case, either the frames can be aligned within SerialEM, with the 
       aligned sum displayed at the end; or a command file can be written for running 
-      Alignframes in IMOD.&nbsp; When aligning in IMOD is selected, frame will be 
+      Alignframes in IMOD.&nbsp; When aligning in IMOD is selected, frames will be 
       saved permanently even if you did not turn on the <b>Save frames</b> checkbox.</P>
     <P><b>Set Up</b></P>
     <P>When frames can be aligned within SerialEM, this button allows you to open the <a href="hidd_framealign.htm">Frame Alignment 
@@ -370,13 +381,14 @@
       choose folder options as well in the <a href="hidd_k2_save_options.htm">Frame File 
       Options dialog</a>, the automatically named folders will be made under this 
       chosen folder.</P>
-    <P><b>Save single frames also</b></P>
-    <P>When saving summed frames (in linear mode?), this option is enabled and allows 
-      you to save single frames as well.</P>
+    <P><b>Save single/raw frames also</b></P>
+    <P>When saving summed frames in linear mode, this option is enabled and allows 
+      you to save single frames as well.&nbsp; In electron counting mode, the option 
+      is always enabled and allows the raw frames used for counting to be saved.</P>
     <P><b>Save final image</b></P>
-    <P>&nbsp;Select this option to have the server save the final summed image along 
-      with the frames.</P>
-    <P><i><A NAME="FalconControls"></A><B><FONT size="3">Controls for FEI Falcon Camera</FONT></B></i></P>
+    <P>&nbsp;Select this option to have the server save the final summed image.</P>
+    <P>&nbsp;</P>
+    <P><i><A NAME="FalconControls"></A><B><FONT size="3">Controls for FEI Falcon Cameras</FONT></B></i></P>
     <P>Some aspects of these controls differ for different versions of the Falcon 
       camera and the software interface to them.&nbsp; Originally, Falcon 2 was 
       controlled through the standard microscope scripting interface; this will be 

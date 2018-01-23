@@ -749,6 +749,8 @@ int CParameterIO::ReadSettings(CString strFileName)
         mWinApp->mGainRefMaker->SetDElastProcessType(itemInt[1]);
         mWinApp->mGainRefMaker->SetDElastReferenceType(itemInt[2]);
         mWinApp->mGainRefMaker->SetDEuseHardwareBin(itemInt[3]);
+        if (!itemEmpty[4])
+          mWinApp->mGainRefMaker->SetDEuseHardwareROI(itemInt[4]);
       } else if (NAME_IS("LowDoseViewShift")) {
         mWinApp->mLowDoseDlg.mViewShiftX[0] = itemDbl[1];
         mWinApp->mLowDoseDlg.mViewShiftY[0] = itemDbl[2];
@@ -1467,10 +1469,11 @@ void CParameterIO::WriteSettings(CString strFileName)
     WriteIndexedFloats("GridMapLimits", gridLim, 4);
     WriteIndexedInts("DErefNumRepeats", deNumRepeats, MAX_DE_REF_TYPES);
     WriteIndexedFloats("DErefExposures", deExposures, MAX_DE_REF_TYPES);
-    oneState.Format("DElastRefParams %d %d %d\n", 
+    oneState.Format("DElastRefParams %d %d %d %d\n", 
       mWinApp->mGainRefMaker->GetDElastProcessType(),
       mWinApp->mGainRefMaker->GetDElastReferenceType(),
-      mWinApp->mGainRefMaker->GetDEuseHardwareBin());
+      mWinApp->mGainRefMaker->GetDEuseHardwareBin(),
+      mWinApp->mGainRefMaker->GetDEuseHardwareROI());
     mFile->WriteString(oneState);
 
     for (i = 0; i < (int)faParamArray->GetSize(); i++) {

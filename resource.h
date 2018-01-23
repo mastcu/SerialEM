@@ -1374,6 +1374,10 @@
 #define IDC_CONSECUTIVE_FILES           2393
 #define IDC_STAT_CONSEC_LIST            2394
 #define IDC_BUT_POSTPONE                2395
+#define IDC_CHECK_HARDWARE_ROI          2396
+#define IDC_EDIT_REF_FPS                2397
+#define IDC_USE_REC_HARDWARE_ROI        2399
+#define IDC_STAT_REC_AREA               2400
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -1790,7 +1794,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        228
 #define _APS_NEXT_COMMAND_VALUE         33291
-#define _APS_NEXT_CONTROL_VALUE         2396
+#define _APS_NEXT_CONTROL_VALUE         2401
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

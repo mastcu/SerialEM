@@ -36,9 +36,23 @@
     <p><b>Type of Reference: Dark - Gain</b></p>
     <p>Select whether to make a dark or a gain reference; only a gain reference can be 
       made if <b>Post-counting</b> or <b>Super-resolution </b>is selected.</p>
+    <p><b>Frames per Second</b></p>
+    <p>This text box shows the FPS at which the reference will be taken.&nbsp; If 
+      electron counting is available, it allows you to set the FPS here instead of in 
+      the <a href="hidd_camerasetup.htm">Camera Setup</a> dialog.&nbsp; If you change 
+      the setting here, it will become the current FPS for acquisitions in the given 
+      mode. </p>
     <p><b>With hardware binning by 2</b></p>
     <p>This checkbox appears if hardware binning is available; hardware binning will 
-      be used if it is selected.</p>
+      be used if it is selected.&nbsp; The reference collected will be valid only with 
+      hardware binning selected in the Record parameters.</p>
+    <p><b>Use hardware ROI with current Record subarea</b></p>
+    <p>This checkbox appears if hardware ROI (region of interest or subarea readout) 
+      is available.&nbsp; Subarea acquired will be whatever is currently selected for 
+      the Record parameters in the <a href="hidd_camerasetup.htm">Camera Setup</a> 
+      dialog.&nbsp; Thus, the subarea needs to be set there first, and this option is 
+      disabled if there is no subarea set. The reference collected will be valid only 
+      with hardware ROI and this same subarea selected in the Record parameters.</p>
 
     <p>
       <b>Exposure time</b></p>
