@@ -4078,7 +4078,7 @@ void CCameraController::CapSetupShutteringTiming(ControlSet & conSet, int inSet,
         mSkipNextReblank = false;
       }
       mTD.ShutterMode = mFilmShutter;
-      bEnsureDark = conSet.processing != UNPROCESSED;
+      bEnsureDark = conSet.processing != UNPROCESSED && !mParam->K2Type;
       break;
     }
 
@@ -4101,7 +4101,7 @@ void CCameraController::CapSetupShutteringTiming(ControlSet & conSet, int inSet,
         mParam->startupDelay + mDelay + mParam->extraBeamTime));
 
       // Make it ensure dark reference
-      bEnsureDark = conSet.processing != UNPROCESSED;
+      bEnsureDark = conSet.processing != UNPROCESSED && !mParam->K2Type;
     }
   } else if (mParam->TietzType) {
 
@@ -4211,7 +4211,8 @@ void CCameraController::CapSetupShutteringTiming(ControlSet & conSet, int inSet,
       if (mStageQueued || mISQueued || mMagQueued || (mDriftISQueued && mBeamWidth <= 0))
          mTD.PostActionTime = mTD.ReblankTime;
     }
-    bEnsureDark |= (conSet.processing != UNPROCESSED && mParam->GatanCam);
+    bEnsureDark |= (conSet.processing != UNPROCESSED && mParam->GatanCam && 
+      !mParam->K2Type);
   }
 }
 

@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+1/24/18: Stopped calling DM to ensure existence of dark reference for a K2
+camera when post-actions are going to occur (In 3.6).
+
 1/23/18: Added output on status bar of frequency and resolution for a point
 clicked in FFT with middle mouse button.
 
