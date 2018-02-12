@@ -236,7 +236,7 @@ CEMscope::CEMscope()
   mLastEFTEMmag = 0;
   mLastSTEMmag = 0;
   mLastSTEMmode = -1;
-  mSimulationMode = false;
+  mSimulationMode = 0;
 
   // JEOL initializations
   mJeolSD.tiltAngle = 0;
@@ -5152,6 +5152,8 @@ double CEMscope::GetHTValue()
   double result;
   if (mNoScope)
     return mNoScope;
+  if (mSimulationMode > 1)
+    return mSimulationMode;
   if (!sInitialized)
     return -1.;
 
@@ -6058,35 +6060,6 @@ int CEMscope::GetSpectroscopyMode()
   return mode;
 }
 
-
-int CEMscope::LimitJeolImageShift(long &jShiftX, long &jShiftY)
-{
-  CString message;
-  int lowLim = 0;
-  int hiLim = 0xffff;
-  // For testing, use Tietz camera to get progressive shifts
-  //int lowLim = 0x5000;
-  //int hiLim = 0xB000;
-  
-  if (jShiftX >= lowLim && jShiftX <= hiLim && jShiftY >= lowLim && jShiftY <= hiLim)
-    return 0;
-  if (sMessageWhenClipIS) {
-    sClippingIS = true;
-    message.Format("The image shift values, %d  %d, are out of range and are being "
-      "clipped\n\nTracking may be incorrect - you should reset image shift and check "
-      "image position", jShiftX, jShiftY);
-    AfxMessageBox(message, MB_EXCLAME);
-    sClippingIS = false;
-    SEMErrorOccurred(1);
-  }
-
-  SEMTrace('1', "Image shift 0x%X  0x%X out of range, being clipped to limits",
-    jShiftX, jShiftY);
-
-  B3DCLAMP(jShiftX, lowLim, hiLim);
-  B3DCLAMP(jShiftY, lowLim, hiLim);
-  return 1;
-}
 
 BOOL CEMscope::GetClippingIS()
 {

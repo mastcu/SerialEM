@@ -136,7 +136,7 @@ class DLL_IM_EX CEMscope
   GetSetMember(int, JeolUpdateSleep)
   GetMember(BOOL, CanControlEFTEM)
   GetSetMember(BOOL, HasOmegaFilter)
-  GetSetMember(BOOL, SimulationMode)
+  GetSetMember(int, SimulationMode)
   GetSetMember(BOOL, NoColumnValve)
   GetSetMember(BOOL, LDNormalizeBeam)
   GetSetMember(BOOL, LDBeamTiltShifts)
@@ -382,7 +382,6 @@ class DLL_IM_EX CEMscope
 
 
   // JEOL functions
-  static int LimitJeolImageShift(long &jShiftX, long &jShiftY);
   BOOL SetMDSMode(int which);
   int GetMDSMode();
   BOOL SetSpectroscopyMode(int which);
@@ -521,7 +520,7 @@ private:
   LowDoseParams *mLdsaParams; // Parameters of the current set low dose area
   int mJeolForceMDSmode;      // +1 to turn on MDS mode to avoid IS resets, -1 to turn off
   BOOL mCanControlEFTEM;      // Flag that EFTEM can be turned on/off (false on JEOL)
-  BOOL mSimulationMode;       // Flag that a simulator is being run
+  int mSimulationMode;        // Flag that a simulator is being run; if > 1, it sets KV
   int mJeolPostMagDelay;      // Sleep delay after changing mag
   int mJeolMagEventWait;      // Full wait time for a mag event to show up after change
   int mJeolSTEMPreMagDelay;   // Delay between a JEOL STEM image and STEM mag change
