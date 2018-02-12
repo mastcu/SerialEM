@@ -4541,7 +4541,10 @@ int CParameterIO::ReadOneMacro(int iset, CString &strLine, CString *strItems,
     return 1;
   CString *macros = mWinApp->GetMacros();
   macros[iset] = "";
-  while ((err = ReadAndParse(strLine, strItems, MAX_TOKENS)) == 0) {
+  while ((err = ReadAndParse(strLine, strItems, 4)) == 0 || err == 2) {
+
+    // Error 2 is too many items, which is fine, but reset it to 0
+    err = 0;
     if (NAME_IS("EndMacro"))
       break;
     strLine.TrimRight("\r\n");
