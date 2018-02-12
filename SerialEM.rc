@@ -12,8 +12,7 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "afxres.h"
-
+#include "afxres.h"
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
@@ -271,10 +270,14 @@ BEGIN
             MENUITEM "STEM Focus Vs. &Z",           ID_CALIBRATION_STEMFOCUSVSZ
             MENUITEM "&Base Focus Values",          ID_AUTOFOCUSFOCUS_BASEFOCUSVALUES
             MENUITEM SEPARATOR
-            MENUITEM "Astig&matism",                ID_AUTOFOCUSFOCUS_ASTIGMATI
+            MENUITEM "Asti&gmatism by CTF",         ID_FOCUSTUNING_CTF
+            MENUITEM "Astig&matism by BTID",        ID_AUTOFOCUSFOCUS_ASTIGMATI
             MENUITEM "S&etup Astigmatism",          ID_AUTOFOCUSFOCUS_SETUPASTIGMATISM
-            MENUITEM "&Coma-free Aligment",         ID_AUTOFOCUSFOCUS_COMA
-            MENUITEM "Se&tup Coma-free",            ID_AUTOFOCUSFOCUS_SETUPCOMA
+            POPUP "Old Coma-free Alignment"
+            BEGIN
+                MENUITEM "BTID &Coma-free Aligment",    ID_AUTOFOCUSFOCUS_COMA
+                MENUITEM "Se&tup BTID Coma-free",       ID_AUTOFOCUSFOCUS_SETUPCOMA
+            END
             MENUITEM SEPARATOR
             MENUITEM "&List Calibrations",          ID_AUTOFOCUSFOCUS_LISTCALIBRATIONS
         END
@@ -339,14 +342,21 @@ BEGIN
         MENUITEM "Use Absolute Limits",         ID_FOCUS_USEABSOLUTERANGE
         MENUITEM "Limit Offset Defocus",        ID_FOCUS_TESTWHENUSINGOFFSET
         MENUITEM SEPARATOR
-        MENUITEM "Corr&ect Astigmatism",        ID_FOCUS_CORRECTASTIGMATISM
-        MENUITEM "Set Astig Beam Tilt",         ID_FOCUS_SETASTIGBEAMTILT
-        MENUITEM SEPARATOR
-        MENUITEM "Coma-free A&lignment",        ID_FOCUS_COMA
-        MENUITEM "Set Coma Beam Tilt",          ID_FOCUS_SETCOMABEAMTILT
-        MENUITEM "Set Coma Iterations",         ID_FOCUS_SETCOMAITERATIONS
-        MENUITEM "Run Another Iteration",       ID_FOCUS_RUNANOTHERITERATION
+        MENUITEM "Corr&ect Astigmatism by CTF", ID_FOCUS_CORRECTASTIGMATISMWITHFFTS
+        MENUITEM "Coma-free A&lignment by CTF", ID_FOCUS_COMA_BY_CTF
+        MENUITEM "Set CTF Ac&quire Params",     ID_FOCUS_SETCTFACQUIREPARAMS
+        MENUITEM "Set CTF Coma-free &Params",   ID_FOCUS_SET_CTF_COMA_BT
         MENUITEM "Beam-tilted FFT Arra&y",      ID_FOCUS_MAKEZEMLINTABLEAU
+        MENUITEM SEPARATOR
+        MENUITEM "Correct Astigmatism by BTID", ID_FOCUS_CORRECTASTIGMATISM
+        MENUITEM "Set BTID Astig Beam Tilt",    ID_FOCUS_SETASTIGBEAMTILT
+        POPUP "Old Coma-free Alignment"
+        BEGIN
+            MENUITEM "BTID Coma-free Alignment",    ID_FOCUS_COMA
+            MENUITEM "Set Beam Tilt",               ID_FOCUS_SETCOMABEAMTILT
+            MENUITEM "Set Iterations",              ID_FOCUS_SETCOMAITERATIONS
+            MENUITEM "Run Another Iteration",       ID_FOCUS_RUNANOTHERITERATION
+        END
         MENUITEM SEPARATOR
         MENUITEM "Re&set Defocus",              ID_FOCUS_RESETDEFOCUS
         MENUITEM "&Verbose",                    ID_FOCUS_VERBOSE
@@ -495,8 +505,8 @@ BEGIN
         MENUITEM "&Automatic Single FFTs",      ID_PROCESS_AUTOMATICFFTS
         MENUITEM "Circle on Live FF&T",         ID_PROCESS_CIRCLEONLIVEFFT
         MENUITEM "S&et Defocus for Circles",    ID_PROCESS_SETDEFOCUSFORCIRCLES
-        MENUITEM "Do Ctffind Fit on Click",     ID_PROCESS_DOCTFFINDFITONCLICK
-        MENUITEM "Set Ctffind Options",         ID_PROCESS_SETCTFFINDOPTIONS
+        MENUITEM "Do CTF Fit o&n Click\tShift+D", ID_PROCESS_DOCTFFINDFITONCLICK
+        MENUITEM "Set Ctffind Fit Options",     ID_PROCESS_SETCTFFINDOPTIONS
         MENUITEM "Set &Phase Plate Shift",      ID_PROCESS_SETPHASEPLATESHIFT
         MENUITEM SEPARATOR
         MENUITEM "Rotate &Left",                ID_PROCESS_ROTATELEFT
@@ -608,17 +618,20 @@ END
 
 IDR_MAINFRAME ACCELERATORS
 BEGIN
+    VK_F1,          ID_HELP,                VIRTKEY, NOINVERT
+    VK_F6,          ID_NEXT_PANE,           VIRTKEY, NOINVERT
+    VK_SPACE,       IDM_CAMERATOGGLE,       VIRTKEY, NOINVERT
+    VK_ESCAPE,      IDM_ESCAPE,             VIRTKEY, NOINVERT
     "F",            ID_CAMERA_FOCUS,        VIRTKEY, CONTROL, NOINVERT
     "M",            ID_CAMERA_MONTAGE,      VIRTKEY, CONTROL, NOINVERT
     "P",            ID_CAMERA_PARAMETERS,   VIRTKEY, CONTROL, NOINVERT
     "L",            ID_CAMERA_PREVIEW,      VIRTKEY, CONTROL, NOINVERT
     "R",            ID_CAMERA_RECORD,       VIRTKEY, CONTROL, NOINVERT
+    "E",            ID_CAMERA_SEARCH,       VIRTKEY, CONTROL, NOINVERT
     "H",            ID_CAMERA_STOPACQUIRE,  VIRTKEY, CONTROL, NOINVERT
     "T",            ID_CAMERA_TRIAL,        VIRTKEY, CONTROL, NOINVERT
     "V",            ID_CAMERA_VIEW,         VIRTKEY, CONTROL, NOINVERT
-    VK_F1,          ID_CONTEXT_HELP,        VIRTKEY, SHIFT, NOINVERT
     "G",            ID_FOCUS_AUTOFOCUS,     VIRTKEY, CONTROL, NOINVERT
-    VK_F1,          ID_HELP,                VIRTKEY, NOINVERT
     VK_F1,          ID_MACRO_RUN1,          VIRTKEY, CONTROL, NOINVERT
     VK_F10,         ID_MACRO_RUN10,         VIRTKEY, CONTROL, NOINVERT
     VK_F2,          ID_MACRO_RUN2,          VIRTKEY, CONTROL, NOINVERT
@@ -629,29 +642,27 @@ BEGIN
     VK_F7,          ID_MACRO_RUN7,          VIRTKEY, CONTROL, NOINVERT
     VK_F8,          ID_MACRO_RUN8,          VIRTKEY, CONTROL, NOINVERT
     VK_F9,          ID_MACRO_RUN9,          VIRTKEY, CONTROL, NOINVERT
-    VK_F6,          ID_NEXT_PANE,           VIRTKEY, NOINVERT
+    "I",            ID_PROCESS_MINMAXMEAN,  VIRTKEY, CONTROL, NOINVERT
+    "Z",            ID_PROCESS_ZEROTILTMEAN, VIRTKEY, CONTROL, NOINVERT
+    "A",            IDM_AUTOALIGN,          VIRTKEY, CONTROL, NOINVERT
+    "N",            IDM_FILE_OPENNEW,       VIRTKEY, CONTROL, NOINVERT
+    "O",            IDM_FILE_OPENOLD,       VIRTKEY, CONTROL, NOINVERT
+    "S",            IDM_FILE_SAVE,          VIRTKEY, CONTROL, NOINVERT
+    "D",            IDM_TILTDOWN,           VIRTKEY, CONTROL, NOINVERT
+    "U",            IDM_TILTUP,             VIRTKEY, CONTROL, NOINVERT
+    VK_F1,          ID_CONTEXT_HELP,        VIRTKEY, SHIFT, NOINVERT
     VK_F6,          ID_PREV_PANE,           VIRTKEY, SHIFT, NOINVERT
     "B",            ID_PROCESS_BINNEDFFT,   VIRTKEY, SHIFT, NOINVERT
     "F",            ID_PROCESS_FFT,         VIRTKEY, SHIFT, NOINVERT
     "L",            ID_PROCESS_LIVEFFT,     VIRTKEY, SHIFT, NOINVERT
-    "I",            ID_PROCESS_MINMAXMEAN,  VIRTKEY, CONTROL, NOINVERT
     "M",            ID_PROCESS_MOVEBEAM,    VIRTKEY, SHIFT, NOINVERT
     "I",            ID_PROCESS_SETINTENSITY, VIRTKEY, SHIFT, NOINVERT
     "S",            ID_PROCESS_SIDE_BY_SIDE, VIRTKEY, SHIFT, NOINVERT
-    "Z",            ID_PROCESS_ZEROTILTMEAN, VIRTKEY, CONTROL, NOINVERT
-    "R",            ID_RESIZE_MAIN,         VIRTKEY, SHIFT, CONTROL, NOINVERT
     "E",            ID_TASKS_AUTOCENTERBEAM, VIRTKEY, SHIFT, NOINVERT
     "C",            ID_TASKS_CENTERBEAM,    VIRTKEY, SHIFT, NOINVERT
-    "A",            IDM_AUTOALIGN,          VIRTKEY, CONTROL, NOINVERT
-    VK_SPACE,       IDM_CAMERATOGGLE,       VIRTKEY, NOINVERT
-    VK_ESCAPE,      IDM_ESCAPE,             VIRTKEY, NOINVERT
-    "N",            IDM_FILE_OPENNEW,       VIRTKEY, CONTROL, NOINVERT
-    "O",            IDM_FILE_OPENOLD,       VIRTKEY, CONTROL, NOINVERT
     "R",            IDM_FILE_READ,          VIRTKEY, SHIFT, NOINVERT
-    "S",            IDM_FILE_SAVE,          VIRTKEY, CONTROL, NOINVERT
-    "D",            IDM_TILTDOWN,           VIRTKEY, CONTROL, NOINVERT
-    "U",            IDM_TILTUP,             VIRTKEY, CONTROL, NOINVERT
-    "E",            ID_CAMERA_SEARCH,       VIRTKEY, CONTROL, NOINVERT
+    "R",            ID_RESIZE_MAIN,         VIRTKEY, SHIFT, CONTROL, NOINVERT
+    "D",            ID_PROCESS_DOCTFFINDFITONCLICK, VIRTKEY, SHIFT, NOINVERT
 END
 
 
@@ -3442,6 +3453,12 @@ BEGIN
     ID_FILE_SKIPFILEPROPERTIESDIALOG 
                             "Skip file properties dialog; turn off to adjust properties"
     ID_PROCESS_REDUCEIMAGE  "Reduce an image in size with antialiasing"
+    ID_PROCESS_DOCTFFINDFITONCLICK 
+                            "Left-click near first zero to get Ctffind fit to Thon rings"
+    ID_PROCESS_SETCTFFINDOPTIONS 
+                            "Set parameters for CTF fitting when click image"
+    ID_FOCUSTUNING_CTF      "Calibrate astigmatism correction by CTF-fitting to images"
+    ID_FOCUS_COMA33295      "Correct coma by fitting CTF to beam-tilted images"
 END
 
 STRINGTABLE
@@ -4826,7 +4843,7 @@ BEGIN
     ID_TILTSERIES_AUTOSAVEX "Save file with X/Y/Z positions after each tilt series"
     ID_MACRO_LISTFUNCTIONS  "List all functions defined in scripts"
     ID_AUTOFOCUSFOCUS_ASTIGMATI 
-                            "Calibrate relationships for correcting astigmatism"
+                            "Calibrate correcting astigmatism from beam-tilted image shifts"
     ID_AUTOFOCUSFOCUS_COMA  "Calibrate relationships for correcting coma"
     ID_FOCUS_CORRECTASTIGMATISM 
                             "Measure objective astigmatism and adjust stigmators"
@@ -4838,7 +4855,7 @@ BEGIN
     ID_FOCUS_SETASTIGBEAMTILT 
                             "Set beam tilt for astigmatism calibration and correction"
     ID_FOCUS_SETCOMABEAMTILT 
-                            "Set beam tilt for coma-free calibration and alignment "
+                            "Set beam tilt for BTID coma-free cal and alignment "
     ID_TILTSERIES_RUN_MACRO "Run a simple script before Record acquisition"
     ID_TILTSERIES_SETMACROTORUN 
                             "Set script number and step at which to run it"
@@ -4970,7 +4987,7 @@ BEGIN
     ID_FOCUS_MAKEZEMLINTABLEAU 
                             "Make array of FFTs (Zemlin tableau) from beam-tilted images"
     ID_FOCUS_SETCOMAITERATIONS 
-                            "Set # of initial iterations for coma-free alignment"
+                            "Set # of initial iterations for BTID coma-free alignment"
     ID_SCRIPT_SETINDENTSIZE "Set # of spaces for automatic indentation with Tab/`"
     ID_SPECIALOPTIONS_NORMALIZEALLLENS 
                             "Set whether to normalize all lenses when changing mag within LM or always"
@@ -5030,6 +5047,16 @@ BEGIN
     IDC_EDIT_REF_EXPOSURE   "Exposure time for each acquisition used to make reference"
 END
 
+STRINGTABLE
+BEGIN
+    ID_FOCUS_CORRECTASTIGMATISMWITHFFTS 
+                            "Measure and correct astigmatism by fitting CTF to Thon rings"
+    ID_FOCUS_SETCTFACQUIREPARAMS 
+                            "Set exposure and binning for astigmatism/coma images"
+    ID_FOCUS_COMA_BY_CTF    "Correct coma by fitting CTF to beam-tilted images"
+    ID_FOCUS_SET_CTF_COMA_BT "Set beam tilt for coma-free alignment by CTF"
+END
+
 #endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////
 
@@ -5053,7 +5080,7 @@ LANGUAGE 9, 1
 #include "res\SerialEM.rc2"  // non-Microsoft Visual C++ edited resources
 #include "afxres.rc"         // Standard components
 #include "XFolderDialog\XFolderDialog.rc"
-#endif
+#endif
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

@@ -1,6 +1,7 @@
 #pragma once
 
 enum {COMA_JUST_MEASURE = 0, COMA_INITIAL_ITERS, COMA_ADD_ONE_ITER, COMA_CONTINUE_RUN};
+#define MAX_CAL_CTF_FITS 10
 
 struct AstigCalib {
   int probeMode;
@@ -23,6 +24,13 @@ struct ComaCalib {
   ScaleMat comaYmat;
 };
 
+struct CtfBasedCalib {
+  int magInd;
+  bool comaType;
+  float amplitude;
+  int numFits;
+  float fitValues[3 * MAX_CAL_CTF_FITS];
+};
 
 
 class CAutoTuning
@@ -33,6 +41,7 @@ public:
   GetMember(bool, DoingCalAstig);
   GetMember(bool, DoingFixAstig);
   GetMember(bool, DoingComaFree);
+  GetMember(bool, DoingCtfBased);
   GetSetMember(float, MaxComaBeamTilt);
   GetSetMember(float, CalComaFocus);
   SetMember(int, PostFocusDelay);
@@ -51,11 +60,19 @@ public:
   GetMember(int, LastComaAlpha);
   GetMember(int, LastComaProbe);
   GetSetMember(float, MenuZemlinTilt);
+  GetSetMember(float, CtfExposure);
+  GetSetMember(float, CtfDriftSettling);
+  GetSetMember(float, ComaIterationThresh);
+  GetSetMember(int, CtfBinning);
+  GetSetMember(BOOL, CtfUseFullField);
+  GetSetMember(BOOL, CtfDoFullArray);
+  GetSetMember(float, TestCtfTuningDefocus);
+  GetMember(bool, LastCtfBasedFailed);
   CArray <AstigCalib, AstigCalib> *GetAstigCals() {return &mAstigCals;};
   CArray <ComaCalib, ComaCalib> *GetComaCals() {return &mComaCals;};
-
+  CArray <CtfBasedCalib, CtfBasedCalib> *GetCtfBasedCals() {return &mCtfBasedCals;};
   bool DoingAutoTune() {return mDoingCalAstig || mDoingFixAstig || mDoingComaFree ||
-    mZemlinIndex >= 0;};
+    mDoingCtfBased || mZemlinIndex >= 0;};
   bool DoingZemlin() {return mZemlinIndex >= 0;};
 
 private:
@@ -64,6 +81,7 @@ private:
   CFocusManager *mFocusManager;
   CArray <AstigCalib, AstigCalib> mAstigCals;
   CArray <ComaCalib, ComaCalib> mComaCals;
+  CArray <CtfBasedCalib, CtfBasedCalib> mCtfBasedCals;
   int mMagIndex;          // Mag of the operation
   ScaleMat mCamToSpec;    // Matrix for converting pixels to nm
   double mSavedBeamTilt;  // Starting values of beam til, defocus, astigmatism
@@ -92,10 +110,10 @@ private:
   bool mDoingComaFree;
   bool mCalibrateComa;
   int mPostFocusDelay;
-  int mPostAstigDelay;
-  int mPostBeamTiltDelay;
+  int mPostAstigDelay;            // Delay after applying stigmator change
+  int mPostBeamTiltDelay;         // Delay after applying beam tilt change
   bool mImposeChange;
-  float mAstigIterationThresh;
+  float mAstigIterationThresh;    // Threshold for iterating astigmatism
   int mMaxAstigIterations;
   int mNumIterations;
   float mFirstFocusMean;
@@ -120,6 +138,40 @@ private:
   int mLastComaProbe;
   float mMenuZemlinTilt;
 
+  int mCtfActionType;             // 0 to apply, 1 to measure, 2 to use existing images
+  bool mDoingCtfBased;            // Flag that CTF-based operations are occurring
+  bool mCtfCalibrating;           // Flag for calibrating
+  int mCtfComaFree;               // Flag for coma-free: 2 for full array
+  float mCtfExposure;             // User's variables to potentially replace Record
+  float mCtfDriftSettling;        // exposure, drift, and binning
+  int mCtfBinning;
+  BOOL mCtfUseFullField;          // And whether to use full field even if Record isn't
+  BOOL mCtfDoFullArray;           // Flag to do 10 image array
+  float mMinCtfBasedDefocus;      // Absolute min and max focus range for doing fits
+  float mMaxCtfBasedDefocus;
+  float mMinDefocusForMag;        // Minimum and maximum defocus allowed for this mag
+  float mMaxDefocusForMag;
+  int mMinRingsForCtf;            // Minimum and maximum number of rings allowed in a CTF
+  int mMaxRingsForCtf;            // based on thepixel size at current mag
+  float mAddToMinForAstigCTF;     // Amount of extra defocus to require for astig cal/coma
+  float mCenteredScore;           // Score of first "centered" shot
+  float mMinCenteredScore;        // Minimum score required for first "centered" shot
+  float mCenteredDefocus;         // Defocus determined for that shot
+  float mMinScoreRatio;           // Minimum ratio for score from starting one
+  CtfBasedCalib mCtfCal;          // The current calibration structure
+  float mAstigBacklash;           // Amount of backlash to apply to stigmator
+  float mBeamTiltBacklash;        // Amount of backlash to apply for beam tilt
+  int mBacklashDelay;             // Delay between setting backlash amount an actual value
+  float mLastStageX, mLastStageY, mLastStageZ;  // Position, for testing if focus valid
+  int mGotFocusMinuteStamp;       // Time when last focus used (it is renewed)
+  float mLastMeasuredFocus;       // Focus last measured with autofocus
+  bool mSkipMeasuringFocus;       // Flag to skip the autofocus
+  ControlSet mSavedRecSet;        // Record set saved before modification
+  float mComaIterationThresh;     // Threshold for iteration CTF-based coma correction
+  double mLastBeamX, mLastBeamY;  // Last beam tilt values set
+  bool mDoingFullArray;           // Flag that full coma array is being done
+  float mTestCtfTuningDefocus;    // Initial focus to assign when reading in images
+  bool mLastCtfBasedFailed;       // Flag for failure in last CTF-based operation
 
 public:
   void CalibrateAstigmatism(void);
@@ -149,5 +201,17 @@ public:
   void StopZemlin(void);
   void ZemlinCleanup(int error);
   void ReportMisalignment(const char *prefix, double misAlignX, double misAlignY);
+  float DefocusFromCtfFit(float * fitValues, float angle);
+  float DefocusDiffFromTwoCtfFits(float * fitValues, int index1, int index2, float angle);
+  void AstigCoefficientsFromCtfFits(float * fitValues, float angle, float astig,  float &xCoeff, float &yCoeff);
+  int CtfBasedAstigmatismComa(int comaFree, bool calibrate, int actionType, bool leaveIS);
+  void CtfBasedNextTask(int tparm);
+  void StopCtfBased(bool restore = true, bool failed = true);
+  void CtfBasedCleanup(int error);
+  int LookupCtfBasedCal(bool coma, int magInd, bool matchMag);
+  float ComaSlopeFromCalibration(float *fitValues, int index, float angle, 
+  float beamTilt, float *factors);
+  int SetupCtfAcquireParams(bool fromCheck);
+  int CheckAndSetupCtfAcquireParams(const char *operation, bool fromSetup);
 };
 

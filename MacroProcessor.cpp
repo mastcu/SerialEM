@@ -1,7 +1,6 @@
 // MacroProcessor.cpp:    Runs macros
 //
-// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2003-2018 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -109,7 +108,7 @@ static char THIS_FILE[]=__FILE__;
 #define FAIL_CHECK_LINE(a) \
 { \
   CString macStr = CString("Script failed initial checking - nothing was executed."  \
-  "\r\n\r\n") + (a) + errmess + ":\n\n" + strLine;          \
+  "\r\n\r\n") + (a) + errmess + ":\r\n\r\n" + strLine;          \
   mWinApp->AppendToLog(macStr, mLogErrAction);  \
   SEMMessageBox(macStr, MB_EXCLAME); \
   return 99; \
@@ -217,7 +216,8 @@ enum {CME_VIEW, CME_FOCUS, CME_TRIAL, CME_RECORD, CME_PREVIEW,
   CME_RAWELECTRONSTATS, CME_ALIGNWHOLETSONLY, CME_WRITECOMFORTSALIGN, CME_RECORDANDTILTTO,
   CME_AREPOSTACTIONSENABLED, CME_MEASUREBEAMSIZE, CME_MULTIPLERECORDS, 
   CME_MOVEBEAMBYMICRONS, CME_MOVEBEAMBYFIELDFRACTION, CME_NEWDESERVERDARKREF,
-  CME_STARTNAVACQUIREATEND, CME_REDUCEIMAGE, CME_REPORTAXISPOSITION, CME_CTFFIND
+  CME_STARTNAVACQUIREATEND, CME_REDUCEIMAGE, CME_REPORTAXISPOSITION, CME_CTFFIND,
+  CME_CBASTIGCOMA, CME_FIXASTIGMATISMBYCTF, CME_FIXCOMABYCTF
 };
 
 static CmdItem cmdList[] = {{NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0},
@@ -323,7 +323,7 @@ static CmdItem cmdList[] = {{NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0
 {"ArePostActionsEnabled", 0}, {"MeasureBeamSize", 0}, {"MultipleRecords", 0},
 {"MoveBeamByMicrons", 2}, {"MoveBeamByFieldFraction", 2}, {"NewDEserverDarkRef", 2},
 {"StartNavAcquireAtEnd", 0}, {"ReduceImage", 2}, {"ReportAxisPosition", 1},
-{"CtfFind", 3},
+{"CtfFind", 3}, {"CBAstigComa", 3}, {"FixAstigmatismByCTF", 0}, {"FixComaByCTF", 0},
 {NULL, 0, NULL}
 };
 
@@ -676,6 +676,7 @@ void CMacroProcessor::OnScriptRunOneCommand()
   }
   mOneLineScript = new COneLineScript();
   mOneLineScript->m_strOneLine = mMacros[MAX_MACROS];
+  mOneLineScript->m_strOneLine.TrimRight("\r\n");
   mOneLineScript->mMacros = mMacros;
   mOneLineScript->Create(IDD_ONELINESCRIPT);
   mWinApp->SetPlacementFixSize(mOneLineScript, &mOneLinePlacement);
@@ -1828,6 +1829,27 @@ void CMacroProcessor::NextCommand()
       index2 = itemInt[3];
     mWinApp->mAutoTuning->MakeZemlinTableau((float)itemDbl[1], index, index2);
 
+  } else if (CMD_IS(CBASTIGCOMA)) {                         // CBAstigComa
+    B3DCLAMP(itemInt[1], 0, 2);
+    if (mWinApp->mAutoTuning->CtfBasedAstigmatismComa(itemInt[1], itemInt[2] != 0, 
+      itemInt[3], !itemEmpty[4] && itemInt[4] > 0)) {
+      AbortMacro();
+      return;
+    }
+                                                     // FixAstigmatismByCTF, FixComaByCTF
+  } else if (CMD_IS(FIXASTIGMATISMBYCTF) || CMD_IS(FIXCOMABYCTF)) {
+    index = 0;
+    if (CMD_IS(FIXCOMABYCTF)) {
+       index = mWinApp->mAutoTuning->GetCtfDoFullArray() ? 2 : 1;
+      if (!itemEmpty[3])
+        index = itemInt[3] > 0 ? 2 : 1;
+    }
+    if (mWinApp->mAutoTuning->CtfBasedAstigmatismComa(index, false,
+      (!itemEmpty[1] && itemInt[1] > 0) ? 1 : 0, !itemEmpty[2] && itemInt[2] > 0)) {
+      AbortMacro();
+      return;
+    }
+     
   } else if (CMD_IS(S) || CMD_IS(SAVE)) {                   // Save
     index2 = -1;
     if (ConvertBufferLetter(strItems[1], 0, true, i, report))
@@ -3292,8 +3314,17 @@ void CMacroProcessor::NextCommand()
     float resultsArray[7];
     if (mWinApp->mProcessImage->InitializeCtffindParams(&mImBufs[index], param))
       ABORT_LINE("Error initializing Ctffind parameters for line:\n\n");
+    if (itemDbl[2] > 0. || itemDbl[3] > 0. || itemDbl[2] < -100 || itemDbl[3] < -100)
+      ABORT_LINE("Minimum and maximum defocus must be negative and in microns");
+    if (itemDbl[2] < itemDbl[3]) {
+      delX = itemDbl[2];
+      itemDbl[2] = itemDbl[3];
+      itemDbl[3] = delX;
+    }
     param.minimum_defocus = -(float)(10000. * itemDbl[2]);
     param.maximum_defocus = -(float)(10000. * itemDbl[3]);
+    mWinApp->mProcessImage->SetCtffindParamsForDefocus(param, 
+      0.8 * itemDbl[2] + 0.2 * itemDbl[3], true);
     param.slower_search = itemEmpty[4] || itemInt[4] == 0;
     if (!itemEmpty[5] && itemInt[5] != 0) {
       if (itemInt[5] < 128 || itemInt[5] > 640)

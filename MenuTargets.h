@@ -351,6 +351,12 @@ public:
   afx_msg void OnNavigatorShowMultiShot();
   afx_msg void OnNavigatorSetMultiShotParams();
   afx_msg void OnUpdateNavigatorShowMultiShot(CCmdUI *pCmdUI);
+  afx_msg void OnCalFocusTuningCtfAstig();
+  afx_msg void OnFocusComaByCtf();
+  afx_msg void OnFocusSetCtfAcquireParams();
+  afx_msg void OnFocusCorrectAstigmatismWithFfts();
+  afx_msg void OnFocusSetCtfComaBt();
+  afx_msg void OnUpdateFocusCorrectAstigmatismWithFfts(CCmdUI *pCmdUI);
 };
 
 /////////////////////////////////////////////////////////////////////////////

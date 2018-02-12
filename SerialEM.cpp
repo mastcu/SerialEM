@@ -1983,7 +1983,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
     else if (idc->source == TASK_MACRO_RUN)
       busy = mMacroProcessor->TaskBusy();
     else if (idc->source == TASK_MONTAGE_FOCUS || idc->source == TASK_CAL_ASTIG || 
-      idc->source == TASK_FIX_ASTIG || idc->source == TASK_COMA_FREE)
+      idc->source == TASK_FIX_ASTIG || idc->source == TASK_COMA_FREE || 
+      idc->source == TASK_CTF_BASED)
       busy = mFocusManager->DoingFocus() ? 1 : 0;
     else if (idc->source == TASK_MONTAGE_DWELL)
       busy = mMontageController->CookingDwellBusy();
@@ -2123,6 +2124,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
           mAutoTuning->ComaFreeNextTask(idc->param);
         else if (idc->source == TASK_ZEMLIN)
           mAutoTuning->ZemlinNextTask(idc->param);
+        else if (idc->source == TASK_CTF_BASED)
+          mAutoTuning->CtfBasedNextTask(idc->param);
         else if (idc->source == TASK_GAIN_REF)
           mGainRefMaker->AcquiringRefNextTask(idc->param);
 
@@ -2203,6 +2206,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
           mAutoTuning->ComaFreeCleanup(idc->param);
         else if (idc->source == TASK_ZEMLIN)
           mAutoTuning->ZemlinCleanup(idc->param);
+        else if (idc->source == TASK_CTF_BASED)
+          mAutoTuning->CtfBasedCleanup(idc->param);
         else if (idc->source == TASK_GAIN_REF)
           mGainRefMaker->ErrorCleanup(busy);
      }
@@ -2363,6 +2368,8 @@ void CSerialEMApp::ErrorOccurred(int error)
     mAutoTuning->StopComaFree();
   if (mAutoTuning->DoingZemlin())
     mAutoTuning->StopZemlin();
+  if (mAutoTuning->GetDoingCtfBased())
+    mAutoTuning->StopCtfBased();
   if (mPlugStopFunc && mPlugDoingFunc && mPlugDoingFunc())
     mPlugStopFunc(error);
   mCamera->SetPreventUserToggle(0);

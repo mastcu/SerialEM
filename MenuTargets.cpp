@@ -425,6 +425,16 @@ BEGIN_MESSAGE_MAP(CMenuTargets, CCmdTarget)
   ON_COMMAND(ID_OPTIONS_SHOWMULTI, OnNavigatorShowMultiShot)
   ON_COMMAND(ID_OPTIONS_SETMULTI, OnNavigatorSetMultiShotParams)
   ON_UPDATE_COMMAND_UI(ID_OPTIONS_SHOWMULTI, OnUpdateNavigatorShowMultiShot)
+  ON_COMMAND(ID_FOCUSTUNING_CTF, OnCalFocusTuningCtfAstig)
+  ON_UPDATE_COMMAND_UI(ID_FOCUSTUNING_CTF, OnUpdateNoTasksNoSTEM)
+  ON_COMMAND(ID_FOCUS_COMA_BY_CTF, OnFocusComaByCtf)
+  ON_UPDATE_COMMAND_UI(ID_FOCUS_COMA_BY_CTF, OnUpdateNoTasksNoSTEM)
+  ON_COMMAND(ID_FOCUS_SETCTFACQUIREPARAMS, OnFocusSetCtfAcquireParams)
+  ON_UPDATE_COMMAND_UI(ID_FOCUS_SETCTFACQUIREPARAMS, OnUpdateNoTasks)
+  ON_COMMAND(ID_FOCUS_CORRECTASTIGMATISMWITHFFTS, OnFocusCorrectAstigmatismWithFfts)
+  ON_COMMAND(ID_FOCUS_SET_CTF_COMA_BT, OnFocusSetCtfComaBt)
+  ON_UPDATE_COMMAND_UI(ID_FOCUS_SET_CTF_COMA_BT, OnUpdateNoTasks)
+  ON_UPDATE_COMMAND_UI(ID_FOCUS_CORRECTASTIGMATISMWITHFFTS, OnUpdateFocusCorrectAstigmatismWithFfts)
   END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -2488,7 +2498,7 @@ void CMenuTargets::OnWindowStageMoveTool()
   mWinApp->OpenStageMoveTool();
 }
 
-// Astigamtism and coma-free entries
+// Astigmatism and coma-free entries
 void CMenuTargets::OnFocusCorrectAstigmatism()
 {
   mWinApp->mAutoTuning->FixAstigmatism(true);
@@ -2606,12 +2616,14 @@ void CMenuTargets::OnCalibrateSetupAstigmatism()
     return;
   mWinApp->mAutoTuning->SetAstigToApply(value);
   value = mWinApp->mAutoTuning->GetAstigCenterFocus();
-  if (!KGetOneFloat("Defocus in microns at which to calibrate astigmatism:", value, 1))
+  if (!KGetOneFloat("This entry applies only when using beam-tilt-induced displacements "
+    "(BTID)", "Defocus in microns at which to calibrate astigmatism by BTID:", value, 1))
     return;
   mWinApp->mAutoTuning->SetAstigCenterFocus(value);
   value = mWinApp->mAutoTuning->GetAstigFocusRange();
-  if (!KGetOneFloat("Defocus range to use for focus component of astigmatism calibration:"
-    , value, 1))
+  if (!KGetOneFloat("This entry applies only when using beam-tilt-induced displacements "
+    "(BTID)", "Defocus range to use for focus component of astigmatism calibration by"
+    " BTID:", value, 1))
     return;
   mWinApp->mAutoTuning->SetAstigFocusRange(value);
 }
@@ -2673,6 +2685,70 @@ void CMenuTargets::OnFocusSetComaBeamTilt()
     return;
   mWinApp->mAutoTuning->SetMaxComaBeamTilt(value);
   mWinApp->mAutoTuning->SetUsersComaTilt(value);
+}
+
+void CMenuTargets::OnFocusSetCtfComaBt()
+{
+  float value = mWinApp->mAutoTuning->GetUsersComaTilt();
+  if (!FEIscope) {
+    CString str;
+    float scaling = mWinApp->mFocusManager->EstimatedBeamTiltScaling();
+    str.Format("The scaling from %% beam tilt to milliradians is about %.2f", scaling);
+    if (!KGetOneFloat(str, "Beam tilt (as % of full range) for CTF-based coma-free "
+      "alignment:", value, 2))
+      return;
+  } else {
+    if (!KGetOneFloat("Beam tilt in milliradians for CTF-based coma-free "
+      "alignment:", value, 2))
+      return;
+  }
+  mWinApp->mAutoTuning->SetUsersComaTilt(value);
+  int full = mWinApp->mAutoTuning->GetCtfDoFullArray() ? 1 : 0;
+  if (!KGetOneInt("1 to do full 3x3 array of images for CTF-based coma-free "
+    "alignment, 0 not to:", full))
+    return;
+
+  mWinApp->mAutoTuning->SetCtfDoFullArray(full != 0);
+  value = mWinApp->mAutoTuning->GetComaIterationThresh();
+  if (KGetOneFloat("Threshold in milliradians for iterating coma-free alignment:",
+    value, 1))
+    mWinApp->mAutoTuning->SetComaIterationThresh(value);
+}
+
+void CMenuTargets::OnCalFocusTuningCtfAstig()
+{
+  if (mWinApp->mAutoTuning->CheckAndSetupCtfAcquireParams("calibrating astigmatism", 
+    false))
+    return;
+  mWinApp->mAutoTuning->CtfBasedAstigmatismComa(0, true, 0, false);
+}
+
+void CMenuTargets::OnFocusComaByCtf()
+{
+  if (mWinApp->mAutoTuning->CheckAndSetupCtfAcquireParams("correcting coma", 
+    false))
+    return;
+  mWinApp->mAutoTuning->CtfBasedAstigmatismComa
+    (mWinApp->mAutoTuning->GetCtfDoFullArray() ? 2 : 1, false, 0, false);
+}
+
+void CMenuTargets::OnFocusSetCtfAcquireParams()
+{
+  mWinApp->mAutoTuning->SetupCtfAcquireParams(false);
+}
+
+void CMenuTargets::OnFocusCorrectAstigmatismWithFfts()
+{
+  if (mWinApp->mAutoTuning->CheckAndSetupCtfAcquireParams("correcting astigmatism", 
+    false))
+    return;
+  mWinApp->mAutoTuning->CtfBasedAstigmatismComa(0, false, 0, false);
+}
+
+void CMenuTargets::OnUpdateFocusCorrectAstigmatismWithFfts(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(mWinApp->mAutoTuning->LookupCtfBasedCal(false, mScope->GetMagIndex(), 
+    false) >= 0 && !mWinApp->DoingTasks() && !mWinApp->GetSTEMMode());
 }
 
 void CMenuTargets::OnSettingsSetProperty()

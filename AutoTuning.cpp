@@ -1,13 +1,24 @@
+// Autotuning.cpp:    Does astigmatism correction and coma-free alignment
+//
+// Copyright (C) 2003-2018 by the Regents of the University of
+// Colorado.  See Copyright.txt for full notice of copyright and limitations.
+//
+// Author: David Mastronarde
+//////////////////////////////////////////////////////////////////////
+
 #include "stdafx.h"
 #include "SerialEM.h"
 #include "AutoTuning.h"
 #include "EMscope.h"
+#include "SerialEMView.h"
 #include "FocusManager.h"
 #include "ShiftManager.h"
 #include "ProcessImage.h"
 #include "CameraController.h"
 #include "Shared\b3dutil.h"
+#include "Shared\ctffind.h"
 #include "Utilities\XCorr.h"
+#include "Utilities\KGetOne.h"
 
 
 CAutoTuning::CAutoTuning(void)
@@ -17,6 +28,7 @@ CAutoTuning::CAutoTuning(void)
   mDoingCalAstig = false;
   mDoingFixAstig = false;
   mDoingComaFree = false;
+  mDoingCtfBased = false;
   mAstigCenterFocus = -1.;
   mAstigFocusRange = 10.;
   mCalComaFocus = -1.;
@@ -27,7 +39,7 @@ CAutoTuning::CAutoTuning(void)
   mMaxComaBeamTilt = 10.;
   mPostFocusDelay = 500;
   mPostAstigDelay = 900;
-  mPostBeamTiltDelay = 500;
+  mPostBeamTiltDelay = 750;
   mAstigIterationThresh = 0.015f;
   mMaxAstigIterations = 2;
   mComaMeanCritFac = 0.5f;
@@ -37,6 +49,25 @@ CAutoTuning::CAutoTuning(void)
   mInitialComaIters = 2;
   mNumComaItersDone = 0;
   mMenuZemlinTilt = 6.;
+  mMinCtfBasedDefocus = -0.9f;
+  mAddToMinForAstigCTF = -0.5f;
+  mMaxCtfBasedDefocus = -10.;
+  mMinRingsForCtf = 3;
+  mMaxRingsForCtf = 20;
+  mMinCenteredScore = 0.1f;
+  mMinScoreRatio = 0.33f;
+  mAstigBacklash = -0.02f;
+  mBeamTiltBacklash = -999.;
+  mBacklashDelay = 100;
+  mGotFocusMinuteStamp = 0;
+  mCtfExposure = -1.;
+  mCtfDriftSettling = 0.;
+  mCtfBinning = 0;
+  mCtfUseFullField = true;
+  mComaIterationThresh = 1.f;
+  mCtfDoFullArray = false;
+  mTestCtfTuningDefocus = 0.;
+  mLastCtfBasedFailed = false;
 }
 
 
@@ -557,7 +588,7 @@ void CAutoTuning::ComaFreeNextTask(int param)
         lsFit2(xx1, xx2, yy, 4, &misAlignX, &misAlignY, NULL);
         PrintfToLog("Displacement differences  %.2f  %.2f  %.2f  %.2f  nm", yy[0], yy[1],
           yy[2], yy[3]);
-        ReportMisalignment("Solved misalignment", misAlignX, misAlignY);
+        ReportMisalignment("Solved misalignment =", misAlignX, misAlignY);
         if (mComaActionType != COMA_JUST_MEASURE) {
 
           // Average new result with previous ones, keep track of total change
@@ -572,7 +603,7 @@ void CAutoTuning::ComaFreeNextTask(int param)
             return;
           }
           if (mNumComaItersDone > 1) {
-            mess.Format("Average misalignment from %d iterations", mNumComaItersDone);
+            mess.Format("Average misalignment from %d iterations =", mNumComaItersDone);
             ReportMisalignment((LPCTSTR)mess, -mCumulTiltChangeX, -mCumulTiltChangeY);
           }
         }
@@ -787,7 +818,7 @@ void CAutoTuning::ReportMisalignment(const char *prefix, double misAlignX,
   double misAlignY)
 {
   CString mess, mess2;
-  mess.Format("%s = %.2f  %.2f", (LPCTSTR)prefix, misAlignX, misAlignY);
+  mess.Format("%s %.2f  %.2f", (LPCTSTR)prefix, misAlignX, misAlignY);
   if (!FEIscope) {
     float scale = mFocusManager->EstimatedBeamTiltScaling();
     mess2.Format(" %%, about %.2f  %.2f  milliradians", misAlignX * scale, 
@@ -941,4 +972,665 @@ void CAutoTuning::ZemlinCleanup(int error)
     SEMMessageBox(_T("Timeout getting images for Zemlin tableau"));
   StopComaFree();
   mWinApp->ErrorOccurred(error);
+}
+
+///////////////////////////////////////////////////////////////////
+// CTF-BASED ASTIGMATISM/COMA ROUTINES
+///////////////////////////////////////////////////////////////////
+
+// The external call to start the operation for calibration or measurement of the given
+// type, actionType = 0 to apply, 1 to measure, 2/3 to measure from existing images
+int CAutoTuning::CtfBasedAstigmatismComa(int comaFree, bool calibrate, int actionType,
+  bool leaveIS)
+{
+  float scaling = mWinApp->mFocusManager->EstimatedBeamTiltScaling();
+  double curDefocus, tryFocus, stageX, stageY, stageZ;
+  int binInd, realBin, maxMinutes = 5;
+  float pixel, scanDelta = 0.1f, maxStageFocusChange = 0.05f;
+  FloatVec radii;
+  CameraParameters *camParam = mWinApp->GetActiveCamParam();
+  ControlSet *recSet = mWinApp->GetConSets() + RECORD_CONSET;
+  CString str;
+
+  // Initialize the calibrations structure and looping variables
+  mDirectionInd = 0;
+  mNumIterations = 0;
+  mCtfComaFree = comaFree;
+  mDoingFullArray = comaFree > 1 && !calibrate;
+  mOperationInd = (actionType / 2 == 0) ? -1 : 0;
+  mCtfActionType = actionType;
+  mCtfCalibrating = calibrate;
+  mCtfCal.magInd = mScope->GetMagIndex();
+  mCtfCal.numFits = 0;
+  mCtfCal.comaType = comaFree > 0;
+  mCtfCal.amplitude = mAstigToApply;
+  mSavedRecSet = *recSet;
+
+  if (comaFree && calibrate) {
+    SEMMessageBox("There is no calibration for CTF-based coma-free alignment");
+    return 1;
+  }
+  if (!comaFree && !calibrate && LookupCtfBasedCal(comaFree > 0, mCtfCal.magInd, false) 
+    < 0) {
+      SEMMessageBox("There are no CTF-based astigmatism calibrations");
+      return 1;
+  }
+  if (mCtfExposure < 0) {
+    SEMMessageBox("You must set up acquire parameters\n"
+      "before running CTF-based astigmatism or coma operations");
+      return 1;
+  }
+
+  // Massage the control set
+  if (mCtfBinning > 0) {
+    recSet->binning = mCtfBinning * BinDivisorI(camParam);
+    mWinApp->mCamera->FindNearestBinning(camParam, recSet, binInd, realBin);
+    recSet->binning = realBin;
+  }
+  if (mCtfDriftSettling > 0)
+    recSet->drift = mCtfDriftSettling;
+  if (mCtfUseFullField) {
+    recSet->left = recSet->top = 0;
+    recSet->right = camParam->sizeX;
+    recSet->bottom = camParam->sizeY;
+  }
+  recSet->mode = SINGLE_FRAME;
+  recSet->alignFrames = 0;
+  recSet->saveFrames = 0;
+
+  // Find limits to allowed focus range based on number of rings.  Unfortunately the 
+  // absolute limits and the ones to use are in negative microns, the trial value is in
+  // positive microns because that function takes it that way as an & reference
+  mMinDefocusForMag = 0.;
+  mMaxDefocusForMag = 0.;
+  pixel = mWinApp->mShiftManager->GetPixelSize(mWinApp->GetCurrentCamera(), 
+    mCtfCal.magInd) * 1000.f * (float)recSet->binning;
+  tryFocus = -mMinCtfBasedDefocus;
+  while (tryFocus <= -mMaxCtfBasedDefocus) {
+    mWinApp->mProcessImage->DefocusFromPointAndZeros(0., 0, pixel, 0.4f, &radii,tryFocus);
+    if (!mMinDefocusForMag && (int)radii.size() >= mMinRingsForCtf)
+      mMinDefocusForMag = -(float)tryFocus;
+    if ((int)radii.size() > mMaxRingsForCtf)
+      break;
+    mMaxDefocusForMag = -(float)tryFocus;
+    tryFocus += scanDelta;
+  }
+  if (actionType / 2 == 0 && (!mMinDefocusForMag || !mMaxDefocusForMag)) {
+    str.Format("CTF analysis for this operation requires from\r\n%d to %d rings with a "
+      "defocus between %.1f and %.1f um\r\n\r\nThis cannot be obtained at the current "
+      "magnification", mMinRingsForCtf, mMaxRingsForCtf, mMinCtfBasedDefocus,
+      mMaxCtfBasedDefocus);
+    SEMMessageBox(str);
+    *recSet = mSavedRecSet;
+    return 1;
+  }
+  
+  // Get starting values and apply backlash before first image
+  if (comaFree) {
+
+    // Operations with beam tilt:
+    // Set default backlash and make sure it is negative
+    if (mBeamTiltBacklash < -900) {
+      mBeamTiltBacklash = -1.0f;
+      if (!FEIscope && scaling > 0.)
+        mBeamTiltBacklash /= scaling;
+    }
+    mBeamTiltBacklash = -fabs(mBeamTiltBacklash);
+    mCtfCal.amplitude = calibrate ? mMaxComaBeamTilt : mUsersComaTilt;
+    mScope->GetBeamTilt(mBaseBeamTiltX, mBaseBeamTiltY);
+    mScope->SetBeamTilt(mBaseBeamTiltX + mBeamTiltBacklash, 
+      mBaseBeamTiltY + mBeamTiltBacklash);
+    Sleep(mBacklashDelay);
+    mScope->SetBeamTilt(mBaseBeamTiltX, mBaseBeamTiltY);
+    mWinApp->mShiftManager->SetGeneralTimeOut(GetTickCount(), mPostBeamTiltDelay);
+    mLastBeamX = mBaseBeamTiltX;
+    mLastBeamY = mBaseBeamTiltY;
+  } else {
+
+    // Operations for astigmatism
+    mAstigBacklash= -fabs(mAstigBacklash);
+    mScope->GetObjectiveStigmator(mSavedAstigX, mSavedAstigY);
+    mScope->SetObjectiveStigmator(mSavedAstigX + mAstigBacklash, 
+      mSavedAstigY + mAstigBacklash); 
+    Sleep(mBacklashDelay);
+    mScope->SetObjectiveStigmator(mSavedAstigX, mSavedAstigY); 
+    mWinApp->mShiftManager->SetGeneralTimeOut(GetTickCount(), mPostAstigDelay);
+    mLastAstigX = mSavedAstigX;
+    mLastAstigY = mSavedAstigY;
+  }
+
+  // Zero the IS unless flag is set
+  if (!leaveIS)
+    mScope->SetLDCenteredShift(0., 0.);
+
+  // Decide whether a new autofocus is needed and save current state before starting
+  curDefocus = mScope->GetDefocus();
+  mScope->GetStagePosition(stageX, stageY, stageZ);
+  mDoingCtfBased = true;
+  mSkipMeasuringFocus = mWinApp->MinuteTimeStamp() - mGotFocusMinuteStamp <= maxMinutes && 
+    fabs(stageX - mLastStageX) < maxStageFocusChange && fabs(stageY - mLastStageY) < 
+    maxStageFocusChange && fabs(stageZ - mLastStageZ) < maxStageFocusChange && 
+    fabs(curDefocus - mSavedDefocus) < maxStageFocusChange && mCtfCal.magInd == mMagIndex;
+  mSavedDefocus = curDefocus;
+  mLastStageX = (float)stageX;
+  mLastStageY = (float)stageY;
+  mLastStageZ = (float)stageZ;
+  mMagIndex = mCtfCal.magInd;
+  mGotFocusMinuteStamp = mWinApp->MinuteTimeStamp();
+  if (actionType / 2 == 0 && !mSkipMeasuringFocus)
+    mFocusManager->AutoFocusStart(-1);
+  mWinApp->AddIdleTask(TASK_CTF_BASED, 0, 0); 
+  mWinApp->UpdateBufferWindows();
+  return 0;
+}
+
+// The next task after autofocus or an image is done
+void CAutoTuning::CtfBasedNextTask(int tparm)
+{
+  CtffindParams param;
+  CString str;
+  int ind, calInd, xyInd, minusInd, plusInd, numInLineFit = 0, numInDat = 36;
+  EMimageBuffer *fftBuf = mWinApp->GetFFTBufs();
+  float scaling = FEIscope ? 1.f : mWinApp->mFocusManager->EstimatedBeamTiltScaling();
+  FloatVec radii;
+  float fourXfacs[5] = {-1., 1., 0., 0.};
+  float fourYfacs[5] = {0., 0., -1., 1.};
+  const float sqrt2 = (float)sqrt(2.);
+  const float diag = sqrt2 / 2.f;
+  float fullArrXfacs[9] = {-1., -diag, 0., diag, 1., diag, 0., -diag, 0.};
+  float fullArrYfacs[9] = {0., -diag, -1., -diag, 0., diag, 1., diag, 0.};
+  float *xFacs = &fourXfacs[0], *yFacs = &fourYfacs[0];
+  int centralInds[4][2] = {{1, 5}, {3, 7}, {2, 6}, {4, 8}};
+  float resultsArray[7], solution[4];
+  float newFocus = 0, negMicrons, xCoeff, yCoeff, angle, diffPlus, diffMinus, minFocus;
+  float intercept, diff1, diff9;
+  const int maxInLineFit = 50;
+  float xfit[maxInLineFit], yfit[maxInLineFit], zfit[maxInLineFit];
+  double xmax = 0., ymax = 0., nextXval, nextYval;
+  int numOperations = 4;
+  bool iterating = false;
+  CtfBasedCalib calUse;
+
+  if (mDoingFullArray) {
+    numOperations = 9;
+    xFacs = &fullArrXfacs[0];
+    yFacs = &fullArrYfacs[0];
+  }
+
+  EMimageBuffer *imBufs = mWinApp->GetImBufs();
+  if (!mDoingCtfBased)
+    return;
+
+  if (mCtfActionType / 2)
+    imBufs += B3DCHOICE(mCtfCalibrating || mCtfComaFree, numOperations- mOperationInd, 0);
+  if (!imBufs->mImage || imBufs->mCaptured == BUFFER_FFT) {
+    SEMMessageBox("The buffers do not have the right images to do this operation");
+    StopCtfBased();
+    return;
+  }
+  str.Format("%s %s", mCtfCalibrating ? "CALIBRATING" : "MEASURING", 
+    mCtfComaFree ? "COMA" : "ASTIGMATISM");
+  mWinApp->SetStatusText(MEDIUM_PANE, str);
+
+  // Handle initial focus determination
+  if (mCtfActionType > 1 && mTestCtfTuningDefocus > 0)
+    mInitialDefocus = mTestCtfTuningDefocus;
+  if (mOperationInd < 0) {
+
+    // Check and get the focus if actualy did it
+    if (!mSkipMeasuringFocus) {
+      if (mFocusManager->GetLastFailed() || mFocusManager->GetLastAborted()) {
+        SEMMessageBox("Stopping the procedure because the initial focus measurement "
+          "failed");
+        StopCtfBased();
+        return;
+      }
+      mLastMeasuredFocus = mFocusManager->GetCurrentDefocus();
+    }
+
+    // In any case use that measurement to set and constrain initial defocus
+    mInitialDefocus = mLastMeasuredFocus;
+    minFocus = mMinDefocusForMag + B3DCHOICE(mCtfCalibrating || mCtfComaFree,  
+      mAddToMinForAstigCTF, 0.f);
+    if (mInitialDefocus > minFocus)
+      newFocus = minFocus;
+    else if (mInitialDefocus < mMaxDefocusForMag)
+      newFocus = mMaxDefocusForMag;
+    if (newFocus) {
+      mScope->IncDefocus(newFocus - mInitialDefocus);
+      mInitialDefocus = newFocus;
+      PrintfToLog("Changing defocus to %.2f to get an acceptable number of CTF rings",
+        newFocus);
+    }
+
+    mOperationInd = 0;
+  } else {
+
+    // An image is ready to analyze
+    if (mWinApp->mProcessImage->InitializeCtffindParams(imBufs, param)) {
+      SEMMessageBox("An error occurred setting up Ctffind parameters");
+      StopCtfBased();
+      return;
+    }
+
+    // Make box bigger if there are a lot of rings
+    nextXval = -mInitialDefocus;
+    mWinApp->mProcessImage->DefocusFromPointAndZeros(0., 0, 
+      param.pixel_size_of_input_image, 0.4f, &radii, nextXval);
+    if ((int)radii.size() > (2 * mMaxRingsForCtf) / 3)
+      param.box_size = 384;
+
+    // Get the default focus range and limit it
+    mWinApp->mProcessImage->SetCtffindParamsForDefocus(param, -mInitialDefocus, false);
+    ACCUM_MAX(param.minimum_defocus, 10000.f * (-mInitialDefocus - 1.f));
+    ACCUM_MIN(param.maximum_defocus, 10000.f * (-mInitialDefocus + 1.5f));
+    param.compute_extra_stats = true;
+    /* PrintfToLog("rmin %.1f  rmax %.1f  dmin %.0f  dmax %.0f", param.minimum_resolution,
+    param.maximum_resolution, param.minimum_defocus, param.maximum_defocus); */
+    if (mWinApp->mProcessImage->RunCtffind(imBufs, param, resultsArray)) {
+      SEMMessageBox("An error occurred running the Ctffind operation");
+      StopCtfBased();
+      return;
+    }
+
+    // reality check on fit to centered image
+    negMicrons = -(resultsArray[0] + resultsArray[1]) / 20000.f;
+    if (!mOperationInd) {
+      mCenteredScore = resultsArray[4];
+      mCenteredDefocus = negMicrons;
+      if (fabs(negMicrons - mInitialDefocus) > 2. || 
+        negMicrons > mMinCtfBasedDefocus + 0.5) {
+          str.Format("The defocus from Ctffind, %.2f um, is too far from the\n"
+            "expected defocus of %.2f or too low to proceed (below %.2f)", negMicrons,
+            mInitialDefocus, mMinCtfBasedDefocus + 0.5);
+        SEMMessageBox(str);
+        StopCtfBased();
+        return;
+      }
+      if (mCenteredScore < mMinCenteredScore) {
+        str.Format("The score from the Ctffind fit, %.3f, is below the\n"
+          " minimum (%.3f) and probably too low for a reliable result", mCenteredScore,
+          mMinCenteredScore);
+        SEMMessageBox(str);
+        StopCtfBased();
+        return;
+      }
+    }
+
+    // Check general results
+    if (resultsArray[4] < mMinScoreRatio * mCenteredScore) {
+      str.Format("The score from the Ctffind fit, %.3f, has changed\n"
+        "by %.2f from the initial fit so fitting may be unreliable", resultsArray[4],
+        resultsArray[4] / mCenteredScore);
+      SEMMessageBox(str);
+      StopCtfBased();
+      return;
+    }
+    if (resultsArray[5] > param.minimum_resolution) {
+      str.Format("The resolution to which Thon rings fit,\n"
+        "%.0f A is way too high for a reliable fit", resultsArray[5]);
+      SEMMessageBox(str);
+      StopCtfBased();
+      return;
+    }
+    if (fabs(negMicrons - mCenteredDefocus) > 1.) {
+      str.Format("The mean defocus from this fit, %.2f um, is\n"
+        "%.2f from the defocus in the initial fit, the fit may be unreliable",
+        negMicrons, fabs(negMicrons - mCenteredDefocus));
+      SEMMessageBox(str);
+      StopCtfBased();
+      return;
+    }
+
+    // Store the results for all but first cal astig shot. Convert to negative microns
+
+    resultsArray[0] /= -10000.;
+    resultsArray[1] /= -10000.;
+    if (mOperationInd > 0 || mCtfComaFree || !mCtfCalibrating) {
+      for (ind = 0; ind < 3; ind++)
+        mCtfCal.fitValues[3 * mCtfCal.numFits + ind] = resultsArray[ind];
+      mCtfCal.numFits++;
+    }
+
+    // Display the circles if side-by-side FFT and new images
+    if (mCtfActionType / 2 == 0 && mWinApp->mFFTView && 
+      mWinApp->mProcessImage->GetSideBySideFFT()) {
+        if (!mWinApp->mProcessImage->GetAutoSingleFFT())
+          mWinApp->mProcessImage->GetFFT(imBufs, 1, BUFFER_FFT);
+        fftBuf->mCtfFocus1 = -resultsArray[0];
+        fftBuf->mCtfFocus2 = -resultsArray[1];
+        fftBuf->mCtfAngle = resultsArray[2];
+        fftBuf->mMaxRingFreq = mWinApp->mProcessImage->GetDrawExtraCtfRings() ?
+          param.pixel_size_of_input_image / resultsArray[5] : 0;
+        mWinApp->mFFTView->DrawImage();
+    }
+        
+    // Set up scope for next shot
+    if (mOperationInd < numOperations && (mCtfCalibrating || mCtfComaFree)) {
+      if (mCtfActionType / 2 == 0 && mCtfComaFree) {
+        nextXval = mLastBeamX + xFacs[mOperationInd] * mCtfCal.amplitude;
+        nextYval = mLastBeamY + yFacs[mOperationInd] * mCtfCal.amplitude;
+        if (mOperationInd == 0 || (!mDoingFullArray && mOperationInd == numOperations / 2)
+          || mDoingFullArray) {
+            mScope->SetBeamTilt(nextXval + mBeamTiltBacklash, nextYval+mBeamTiltBacklash);
+            Sleep(mBacklashDelay);
+        }
+        mScope->SetBeamTilt(nextXval, nextYval);
+        mWinApp->mShiftManager->SetGeneralTimeOut(GetTickCount(), mPostBeamTiltDelay);
+        //PrintfToLog("Beam tilt set to %.3f %.3f", nextXval, nextYval);
+      } else if (mCtfActionType / 2 == 0) {
+        nextXval = mSavedAstigX + xFacs[mOperationInd] * mAstigToApply;
+        nextYval = mSavedAstigY + yFacs[mOperationInd] * mAstigToApply;
+        if (mOperationInd == 0 || mOperationInd == numOperations / 2) {
+          if (TestAndSetStigmator(nextXval + mAstigBacklash, nextYval + mAstigBacklash,
+            "The next stigmator value to test minus backlash"))
+            return;
+          Sleep(mBacklashDelay);
+        }
+        if (TestAndSetStigmator(nextXval, nextYval, "The next stigmator value to test"))
+          return;
+        mWinApp->mShiftManager->SetGeneralTimeOut(GetTickCount(), mPostAstigDelay);
+      }
+      mOperationInd++;
+    } else {
+
+      // or finish up:
+      // with calibration of astigmatism
+      if (mCtfCalibrating) {
+        calInd = LookupCtfBasedCal(mCtfComaFree > 0, mMagIndex, true);
+        if (calInd < 0)
+          mCtfBasedCals.Add(mCtfCal);
+        else
+          mCtfBasedCals[calInd] = mCtfCal;
+        for (ind = 0; ind < 8; ind++) {
+          angle = (float)(22.5 * ind);
+          AstigCoefficientsFromCtfFits(mCtfCal.fitValues, angle, 
+            mCtfCal.amplitude, xCoeff, yCoeff);
+          SEMTrace('c', "%.1f deg: %.4g  %.4g", angle, xCoeff, yCoeff);
+        }
+        mWinApp->SetCalibrationsNotSaved(true);
+        StopCtfBased(true, false);
+        return;
+
+      } else {
+
+        // Coma measurement..
+        // Loop on pairs of images, measure defocus differences at all angles, average
+        // the implied beam tilt zero over all angles
+        if (mCtfComaFree) {
+          for (xyInd = 0; xyInd < (mDoingFullArray ? 4 : 2); xyInd++) {
+            xmax = 0.;
+            ymax = 0.;
+            solution[xyInd] = 0.;
+            numInLineFit = 0;
+            for (ind = 0; ind < numInDat; ind++) {
+              angle = (float)((ind * 180.) / numInDat);
+              if (mDoingFullArray) {
+                minusInd = centralInds[xyInd][0];
+                diff1 = DefocusDiffFromTwoCtfFits(mCtfCal.fitValues, minusInd, 0, angle);
+                diff9 = DefocusDiffFromTwoCtfFits(mCtfCal.fitValues, minusInd, 9, angle);
+                if (mCtfActionType < 3)
+                  diffMinus = (diff1 + diff9) / 2.f;
+                else if (mCtfActionType == 3) 
+                  diffMinus = (float)(((9. - minusInd) * diff1 + minusInd * diff9) / 9.);
+                else
+                  diffMinus = minusInd < 5 ? diff1 : diff9;
+                plusInd = centralInds[xyInd][1];
+                diff1 = DefocusDiffFromTwoCtfFits(mCtfCal.fitValues, 0, plusInd, angle);
+                diff9 = DefocusDiffFromTwoCtfFits(mCtfCal.fitValues, 9, plusInd, angle);
+                if (mCtfActionType < 3)
+                  diffPlus = (diff1 + diff9) / 2.f;
+                else if (mCtfActionType == 3) 
+                  diffPlus = (float)(((9. - minusInd) * diff1 + minusInd * diff9) / 9.);
+                else
+                  diffPlus = minusInd < 5 ? diff1 : diff9;
+              } else {
+                diffMinus = DefocusDiffFromTwoCtfFits(mCtfCal.fitValues, 1 + xyInd * 2, 0,
+                  angle);
+                diffPlus = DefocusDiffFromTwoCtfFits(mCtfCal.fitValues, 0, 2 + xyInd * 2,
+                  angle);
+              }
+              xfit[ind] = -(diffPlus + diffMinus);
+
+              // This slope is specific to this amplitude of tilt
+              yfit[ind] = (diffPlus - diffMinus) / mCtfCal.amplitude;
+              ACCUM_MAX(xmax, fabs(xfit[ind]));
+              ACCUM_MAX(ymax, fabs(yfit[ind]));
+
+              if (GetDebugOutput('c') && (ind % 4) == 0)
+                PrintfToLog("%5.1f %8.4f  %8.4f  %8.4f  %8.4f", angle,  diffMinus,
+                  diffPlus, xfit[ind], yfit[ind]);
+
+            }
+
+            // Use data only if measurement-based slopes above a criterion
+            // Does not happen in practice and probably would bias the result
+            for (ind = 0; ind < numInDat; ind++) {
+              if (fabs(yfit[ind]) > 0.25 * ymax) {
+                numInLineFit++;
+                solution[xyInd] += -xfit[ind] / (2.f * yfit[ind]);
+                angle = (float)((ind * 180.) / numInDat);
+                if (GetDebugOutput('c') && (ind % 4) == 0)
+                  PrintfToLog("%5.1f %9.5f  %9.5f  %9.5f", angle, xfit[ind], 
+                    yfit[ind] , -xfit[ind] / (2.f * yfit[ind]));
+              }
+            }
+            solution[xyInd] /= numInLineFit;
+            SEMTrace('1', "axis %d  n = %d  solution %.4g", xyInd, 
+              numInLineFit, solution[xyInd]);
+          }
+
+          // Rotate the diagonal results and average with the X and Y axis results
+          if (mDoingFullArray) {
+            xCoeff = (solution[2] - solution[3]) / sqrt2;
+            solution[3] = (solution[2] + solution[3]) / sqrt2;
+            solution[2] = xCoeff;
+            SEMTrace('1', "Rotated diagonal solution: %.4g  %.4g", solution[2], 
+              solution[3]);
+            solution[0] = (solution[0] + solution[2]) / 2.f;
+            solution[1] = (solution[1] + solution[3]) / 2.f;
+          }
+
+ 
+          // Output results and apply them; use ill-fated calibration if it exists
+          str.Format("Beam tilt %s adjusted by", mCtfActionType ? "needs to be" : "was");
+          ReportMisalignment((LPCTSTR)str, -solution[0], -solution[1]);
+          nextXval = mLastBeamX - (mCtfActionType ? 0. : solution[0]);
+          nextYval = mLastBeamY - (mCtfActionType ? 0. : solution[1]);
+          if (mCtfActionType / 2 == 0) {
+            mScope->SetBeamTilt(nextXval + mBeamTiltBacklash, 
+              nextYval + mBeamTiltBacklash);
+            Sleep(mBacklashDelay); 
+            mScope->SetBeamTilt(nextXval, nextYval);
+          }
+
+            // Check if iterating
+          if (!mCtfActionType && !mNumIterations && 
+            sqrt((double)solution[0] * solution[0] + solution[1] * solution[1]) * scaling
+            > mComaIterationThresh) {
+              mNumIterations++;
+              mLastBeamX = nextXval;
+              mLastBeamY = nextYval;
+              mWinApp->mShiftManager->SetGeneralTimeOut(GetTickCount(), 
+                mPostBeamTiltDelay);
+              mOperationInd = 0;
+              mCtfCal.numFits = 0;
+              PrintfToLog("Iterating because beam tilt is above threshold");
+              iterating = true;
+          }
+
+        } else {
+
+          // Astigmatism measurement: Lookup calibration
+          calInd = LookupCtfBasedCal(mCtfComaFree > 0, mMagIndex, false);
+          calUse = mCtfBasedCals[calInd];
+
+          // fit defocus versus coefficients at each angle
+          for (ind = 0; ind < numInDat; ind++) {
+            angle = (float)((ind * 180.) / numInDat);
+            AstigCoefficientsFromCtfFits(calUse.fitValues, angle, 
+              calUse.amplitude, xfit[ind], yfit[ind]);
+            zfit[ind] = DefocusFromCtfFit(mCtfCal.fitValues, angle);
+          }
+
+          // Report and apply
+          lsFit2(xfit, yfit, zfit, numInDat, &solution[0], &solution[1], &intercept);
+          PrintfToLog("Objective stigmator %s adjusted by %.4f  %.4f", 
+            mCtfActionType ? "needs to be" : "was", -solution[0], -solution[1]);
+          if (!mCtfActionType) {
+            nextXval = mLastAstigX - solution[0];
+            nextYval = mLastAstigY - solution[1];
+            TestAndSetStigmator(nextXval + mAstigBacklash, nextYval + mAstigBacklash,
+              "The new solved stigmator value minus backlash");
+            Sleep(mBacklashDelay); 
+            TestAndSetStigmator(nextXval, nextYval,"The new solved stigmator value");
+
+            // Check if iterating
+            if (!mNumIterations && sqrt((double)solution[0] * solution[0] + solution[1] *
+              solution[1]) > mAstigIterationThresh) {
+                mNumIterations++;
+                mLastAstigX = nextXval;
+                mLastAstigY = nextYval;
+                mWinApp->mShiftManager->SetGeneralTimeOut(GetTickCount(),mPostAstigDelay);
+                mOperationInd = 0;
+                mCtfCal.numFits = 0;
+                PrintfToLog("Iterating because astigmatism is above threshold");
+                iterating = true;
+            }
+          }
+        }
+        if (!iterating) {
+          StopCtfBased(false, false);
+          return;
+        }
+      }
+    }
+  }
+
+  if (mCtfActionType / 2 == 0)
+    mWinApp->mCamera->InitiateCapture(RECORD_CONSET);
+  mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, TASK_CTF_BASED, 0, 0);
+}
+
+// Stop function: restore initial values if flag set (default true)
+void CAutoTuning::StopCtfBased(bool restore, bool failed)
+{
+  ControlSet *recSet = mWinApp->GetConSets() + RECORD_CONSET;
+  if (!mDoingCtfBased)
+    return;
+  mScope->SetDefocus(mSavedDefocus);
+  if (mCtfComaFree && restore)
+    mScope->SetBeamTilt(mBaseBeamTiltX, mBaseBeamTiltY);
+  else if (mCtfCalibrating && restore)
+    mScope->SetObjectiveStigmator(mSavedAstigX, mSavedAstigY);
+  *recSet = mSavedRecSet;
+  mDoingCtfBased = false;
+  mWinApp->UpdateBufferWindows();
+  mWinApp->SetStatusText(MEDIUM_PANE, "");
+  mLastCtfBasedFailed = failed;
+}
+
+
+void CAutoTuning::CtfBasedCleanup(int error)
+{
+  if (error == IDLE_TIMEOUT_ERROR)
+    SEMMessageBox(_T("Timeout getting images for CTF-based astigmatism/coma operation"));
+  StopCtfBased();
+  mWinApp->ErrorOccurred(1);
+}
+
+// Returns the defocus at a particular angle implied by the given CTF fit 
+// The equation here is from Rohou and Grigorieff, 2015
+ // 0.5 * (df1 + df2 + (df1 - df2) * cos(2 * (angle - axis)))
+ float CAutoTuning::DefocusFromCtfFit(float *fitValues, float angle)
+{
+  float axis = fitValues[2];
+  return (float)(0.5 * (fitValues[0] + fitValues[1] + (fitValues[0] - fitValues[1]) *
+    cos(DTOR * 2. * (angle - axis))));
+}
+
+// Returns the difference in defocus at a particular angle between two fits
+float CAutoTuning::DefocusDiffFromTwoCtfFits(float *fitValues, int index1, int index2, 
+  float angle)
+{
+  return DefocusFromCtfFit(&fitValues[3 * index2], angle) - 
+    DefocusFromCtfFit(&fitValues[3 * index1], angle);
+}
+
+// Returns the two coefficients of astigmatism at a particular angle from the 4 fits
+void CAutoTuning::AstigCoefficientsFromCtfFits(float *fitValues, float angle, float astig,
+  float &xCoeff, float &yCoeff)
+{
+  xCoeff = DefocusDiffFromTwoCtfFits(fitValues, 0, 1, angle) / (2.f * astig);
+  yCoeff = DefocusDiffFromTwoCtfFits(fitValues, 2, 3, angle) / (2.f * astig);
+}
+
+// Look up a calibration is the array, specific to the mag or from the closest mag
+// Currently only astigmatism cals are saved to file
+int CAutoTuning::LookupCtfBasedCal(bool coma, int magInd, bool matchMag)
+{
+  MagTable *magTabs = mWinApp->GetMagTable();
+  double minRatio = 1.e30, ratio;
+  int indMin = -1;
+  for (int ind = 0; ind < mCtfBasedCals.GetSize(); ind++) {
+    if (BOOL_EQUIV(mCtfBasedCals[ind].comaType, coma)) {
+      if (matchMag) {
+        if (magInd == mCtfBasedCals[ind].magInd)
+          indMin = ind;
+      } else {
+        ratio = magTabs[magInd].mag / magTabs[mCtfBasedCals[ind].magInd].mag;
+        if (ratio < 0)
+          ratio = 1. / ratio;
+        if (ratio < minRatio) {
+          minRatio = ratio;
+          indMin = ind;
+        }
+      }
+    }
+  } 
+  return indMin;
+}
+
+// Get user's values for acquisition parameters, calling the check function first to get
+// an initial message if they have never been set up (unless called from there)
+int CAutoTuning::SetupCtfAcquireParams(bool fromCheck)
+{
+  float val = B3DMAX(0.f, mCtfExposure);
+  int full = mCtfUseFullField ? 1 : 0;
+  if (!fromCheck)
+    CheckAndSetupCtfAcquireParams("CTF-based astigmatism or coma-free operations", true);
+  if (!KGetOneFloat("Exposure time (in sec), or 0 to use current Record exposure:", 
+    val, 2))
+    return 1;
+  mCtfExposure = B3DMAX(0, val);
+  if (!KGetOneInt("Binning, or 0 to use current Record binning", mCtfBinning))
+    return 1;
+  if (!KGetOneFloat("Drift settling time (in sec), or 0 to use current Record value",
+    mCtfDriftSettling, 2))
+    return 1;
+  if (!KGetOneInt("1 to take full-field images or 0 to use current Record subarea",
+    full))
+    return 1;
+  mCtfUseFullField = full != 0;
+  return 0;
+}
+
+// Check whether the acquisition parameters have ever been set up, and if not, call to
+// do so, unless called from there
+int CAutoTuning::CheckAndSetupCtfAcquireParams(const char *operation, bool fromSetup)
+{
+  CString str;
+  if (mCtfExposure >= 0.)
+    return 0;
+  str = CString("You must set the exposure time, binning,\n"
+    "and image area to acquire before ") + operation + ".\n\n"
+    "Images must give FFTs with clear enough Thon rings\n"
+    "to allow reliable 2-D CTF analysis so that the\n "
+    "astigmatism in the image can be determined.\n\n"
+    "For each parameter, you will have the choice\n"
+    "of setting a specific value or using the current Record setting";
+  AfxMessageBox(str, MB_OK | MB_ICONINFORMATION);
+  if (fromSetup)
+    return 0;
+  return SetupCtfAcquireParams(true);
 }

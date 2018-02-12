@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+2/10/18: Added routines for astigmatism correction and coma-free alignment by
+CTF fitting to images with Thon rings.  The latter is much better than the old
+coma-free alignment routine and requires no calibration.
+
 2/10/18: Fixed Navigator "go to" movements when there are incorrect mag IS
 offsets not being applied and superceded by View shift offset.  Also fixed
 both "go to" and Realign to Item initial movement with Balance Shifts on.

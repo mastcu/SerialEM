@@ -2964,6 +2964,9 @@ int CParameterIO::ReadCalibration(CString strFileName)
   AstigCalib astig;
   CArray <ComaCalib, ComaCalib> *comaCals = mWinApp->mAutoTuning->GetComaCals();
   ComaCalib coma;
+  CArray <CtfBasedCalib, CtfBasedCalib> *ctfAstigCals =
+    mWinApp->mAutoTuning->GetCtfBasedCals();
+  CtfBasedCalib ctfCal;
   CArray<HighFocusMagCal, HighFocusMagCal> *focusMagCals =
     mWinApp->mShiftManager->GetFocusMagCals();
   HighFocusMagCal focCal;
@@ -3191,6 +3194,25 @@ int CParameterIO::ReadCalibration(CString strFileName)
         coma.comaYmat.ypx = (float)itemDbl[12];
         coma.comaYmat.ypy = (float)itemDbl[13];
         comaCals->Add(coma);
+
+      } else if (NAME_IS("CtfAstigCalib")) {
+        ctfCal.comaType = false;
+        ctfCal.numFits = 4;
+        ctfCal.magInd = itemInt[1];
+        ctfCal.amplitude = (float)itemDbl[2];
+        ctfCal.fitValues[0] = (float)itemDbl[3];
+        ctfCal.fitValues[1] = (float)itemDbl[4];
+        ctfCal.fitValues[2] = (float)itemDbl[5];
+        ctfCal.fitValues[3] = (float)itemDbl[6];
+        ctfCal.fitValues[4] = (float)itemDbl[7];
+        ctfCal.fitValues[5] = (float)itemDbl[8];
+        ctfCal.fitValues[6] = (float)itemDbl[9];
+        ctfCal.fitValues[7] = (float)itemDbl[10];
+        ctfCal.fitValues[8] = (float)itemDbl[11];
+        ctfCal.fitValues[9] = (float)itemDbl[12];
+        ctfCal.fitValues[10] = (float)itemDbl[13];
+        ctfCal.fitValues[11] = (float)itemDbl[14];
+        ctfAstigCals->Add(ctfCal);
 
       } else if (NAME_IS("BeamIntensityTable")) {
         nCal = itemInt[1];
@@ -3577,6 +3599,9 @@ void CParameterIO::WriteCalibration(CString strFileName)
   AstigCalib astig;
   CArray <ComaCalib, ComaCalib> *comaCals = mWinApp->mAutoTuning->GetComaCals();
   ComaCalib coma;
+  CArray <CtfBasedCalib, CtfBasedCalib> *ctfAstigCals =
+    mWinApp->mAutoTuning->GetCtfBasedCals();
+  CtfBasedCalib ctfCal;
   CArray<HighFocusMagCal, HighFocusMagCal> *focusMagCals = 
     mWinApp->mShiftManager->GetFocusMagCals();
   HighFocusMagCal focCal;
@@ -3691,7 +3716,7 @@ void CParameterIO::WriteCalibration(CString strFileName)
       }
     }
 
-    // Write astigmatism calibrations
+    // Write BTID-based astigmatism calibrations
     for (i = 0; i < astigCals->GetSize(); i++) {
       astig = astigCals->GetAt(i);
       string.Format("AstigmatismCalib %d %d %d %f %f %f %f %f %f %f %f %f %f %f %f %f %f"
@@ -3701,7 +3726,7 @@ void CParameterIO::WriteCalibration(CString strFileName)
         astig.astigXmat.ypy, astig.astigYmat.xpx, astig.astigYmat.xpy, 
         astig.astigYmat.ypx, astig.astigYmat.ypy, mMagTab[astig.magInd].mag);
       mFile->WriteString(string);
-   }
+    }
 
     // Write coma calibrations
     for (i = 0; i < comaCals->GetSize(); i++) {
@@ -3712,7 +3737,20 @@ void CParameterIO::WriteCalibration(CString strFileName)
         coma.comaXmat.ypy, coma.comaYmat.xpx, coma.comaYmat.xpy, 
         coma.comaYmat.ypx, coma.comaYmat.ypy, mMagTab[coma.magInd].mag);
       mFile->WriteString(string);
-   }
+    }
+
+    // Write ctf-based astigmatism calibrations
+    for (i = 0; i < ctfAstigCals->GetSize(); i++) {
+      ctfCal = ctfAstigCals->GetAt(i);
+      if (ctfCal.comaType)
+        continue;
+      string.Format("CtfAstigCalib %d %f %f %f %f %f %f %f %f %f %f %f %f %f   %d\n", 
+        ctfCal.magInd, ctfCal.amplitude, ctfCal.fitValues[0], ctfCal.fitValues[1], 
+        ctfCal.fitValues[2], ctfCal.fitValues[3], ctfCal.fitValues[4],ctfCal.fitValues[5], 
+        ctfCal.fitValues[6], ctfCal.fitValues[7], ctfCal.fitValues[8],ctfCal.fitValues[9], 
+        ctfCal.fitValues[10], ctfCal.fitValues[11], mMagTab[ctfCal.magInd].mag);
+      mFile->WriteString(string);
+    }
 
     // Write beam calibrations
     for (i = 0; i < mWinApp->mBeamAssessor->GetNumTables(); i++) {

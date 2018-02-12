@@ -1788,6 +1788,15 @@
 #define ID_PROCESS_REDUCEIMAGE          33290
 #define ID_PROCESS_DOCTFFINDFITONCLICK  33291
 #define ID_PROCESS_SETCTFFINDOPTIONS    33292
+#define ID_FOCUSTUNING_CTF              33294
+#define ID_FOCUS_COMA33295              33295
+#define ID_FOCUS_CORRECTASTIGMATISMWITHFFTS 33296
+#define ID_FOCUS_SETCTFACQUIREPARAMS    33297
+#define ID_FOCUS_COMA_BY_CTF            33298
+#define ID_FOCUS_BTIDCOMA               33299
+#define ID_BTIDCOMA_OLDCOMA             33300
+#define ID_FOCUS_SETCOMA                33301
+#define ID_FOCUS_SET_CTF_COMA_BT        33302
 
 // Next default values for new objects
 // 
@@ -1795,7 +1804,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        228
-#define _APS_NEXT_COMMAND_VALUE         33293
+#define _APS_NEXT_COMMAND_VALUE         33303
 #define _APS_NEXT_CONTROL_VALUE         2401
 #define _APS_NEXT_SYMED_VALUE           104
 #endif

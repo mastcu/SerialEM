@@ -839,8 +839,8 @@
             image in the given buffer.&nbsp; Follow the buffer letter with the minimum and 
             maximum defocus for the search (in microns, underfocus negative), and with these 
             optional entries: 
-            <br />&&nbsp; &#39;fast&#39; non-zero to do a 1-D initial search instead of a slower 2D one<br />
-&nbsp;&#39;box&#39; between 128 and 640 to set the box size for the amplitude spectrum to analyze, 
+            <br />&nbsp; &#39;fast&#39; non-zero to do a 1-D initial search instead of a slower 2D one<br />
+&nbsp; &#39;box&#39; between 128 and 640 to set the box size for the amplitude spectrum to analyze, 
             or zero to use the default (256)<br />
 &nbsp; &#39;phmin&#39; alone to set the additional phase shift, in radians, or 0 (or 0 0) to use the 
             phase shift set in the <A HREF="#hid_process_setphaseplateshift">Set Phase Plate Shift</A> 
@@ -850,7 +850,7 @@
             search may be slow.<br />
 &nbsp; &#39;phstep&#39; nonzero to set the phase shift search step, or 0 to use the default (0.1)<br />
 &nbsp; &#39;afix&#39; non-zero to fix astigmatism at zero.<br />
-            See a href="#hid_process_doctffindfitonclick">Do Ctffind On Click</a> and <a href="#hid_process_setctffindoptions">Set Ctffind Options</a> 
+            See <a href="#hid_process_doctffindfitonclick">Do Ctffind On Click</a> and <a href="#hid_process_setctffindoptions">Set Ctffind Options</a> 
             for more details on these options.<br />
             After successful fitting, the command will set reportedValue1-6 with defocus 1, 
             defocus 2, astigmatism angle, additional phase shift, fitting score, and 
@@ -1786,13 +1786,27 @@
           <TD>Report the defocus target</TD>
         </TR>
         <TR>
+          <TD class="style12">FixAstigmatismByCTF [#M] [#L]</TD>
+          <TD>Measure astigmatism by CTF fitting, report the stigmation change, and correct 
+            for those values (or just measure, if the optional #M is nonzero).&nbsp; Image 
+            shift is set to 0 unless the optional #L is non-zero.</TD>
+        </TR>
+        <TR>
+          <TD class="style12">FixComaByCtf&nbsp; [#M] [#L] [#F]</TD>
+          <TD>Measure beam-tilt misalignment by CTF fitting, report beam tilt change needed, 
+            and correct for it (or just measure, if the optional #M is nonzero).&nbsp; Image 
+            shift is set to 0 unless the optional #L is non-zero.&nbsp; The user setting for 
+            whether to do a full array of images is used unless optional #F is 0 for 5 
+            images &gt; 0 for a full array. </TD>
+        </TR>
+        <TR>
           <TD class="style12">CorrectAstigmatism [#]</TD>
-          <TD>Measure astigmatism, report the stigmator values, and correct for those values 
+          <TD>Measure astigmatism by beam-tilt-induced displacements (BTID), report the stigmator values, and correct for those values 
             (or do not correct, if the optional # is -1)</TD>
         </TR>
         <TR>
           <TD class="style12">CorrectComa [#]</TD>
-          <TD>Measure beam-tilt misalignment, report the estimated beam tilt, and correct to 
+          <TD>Measure beam-tilt misalignment by beam-tilt-induced displacements (BTID), report the estimated beam tilt, and correct to 
             bring beam tilt to zero. If the optional # is -1, it will simply measure the 
             misalignment once and report it without correcting it.&nbsp; If the # is 1, it 
             will do another iteration of estimating beam tilt and average the result with 
@@ -1806,6 +1820,14 @@
             optional entry #S sets the cropped size of each FFT in the array (default 340) 
             and #C sets the number of pixels to crop (default 170).&nbsp; See
             <a href="menu_focus.htm#hid_focus_zemlintableau">Beam-Tilted FFT Array</a> for other details.</TD>
+        </TR>
+        <TR>
+          <TD class="style12">CBAstigComa #T #C [#A] [#L] </TD>
+          <TD>FOR TESTING: Runs the routine for astigmatism and coma by CTF fitting.&nbsp; Set #T 
+            0 for astigmatism, 1 for coma with 5 images, 2 for coma with full array; #C 0/1 to measure/calibrate; #A 0 to apply a 
+            measurement, 1 to just measure, 2 to measure from images in the buffers; #L 
+            non-zero to 
+            leave image shift as it is.</TD>
         </TR>
         <TR  vAlign="top">
           <TD colspan="2"><A name="low_dose"></A><B>Low Dose Commands</B></TD>

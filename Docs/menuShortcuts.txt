@@ -1,4 +1,4 @@
-niotAnd by the way, when you add a menu item to the help, you need to add the
+And by the way, when you add a menu item to the help, you need to add the
 entry to aliases.h by hand.
 
 File:
@@ -69,9 +69,10 @@ Calibration:
   B
   C
   E
+  F
+  G
   L
   M
-  F
   S
   T
   Z
@@ -120,6 +121,7 @@ L
 M
 N
 O
+P
 R
 S
 T
@@ -212,8 +214,10 @@ I
 K
 L
 M
+N
 O
 P
+Q
 R
 S
 T
