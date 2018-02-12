@@ -1920,7 +1920,7 @@ void CNavigatorDlg::OnAddMarker()
   BufferStageToImage(imBuf, aMat, delX, delY);
   MarkerStagePosition(imBuf, aMat, delX, delY, stageX, stageY, false, &pcInd, &xInPiece,
     &yInPiece);
-	CMapDrawItem *item = AddPointMarkedOnBuffer(imBuf, stageX, stageY, 0);
+  CMapDrawItem *item = AddPointMarkedOnBuffer(imBuf, stageX, stageY, 0);
   item->mPieceDrawnOn = pcInd;
   item->mXinPiece = xInPiece;
   item->mYinPiece = yInPiece;
@@ -2060,16 +2060,39 @@ void CNavigatorDlg::AdjustAndMoveStage(float stageX, float stageY, float stageZ,
   float validX, validY, stageDx = 0., stageDy = 0.;
   bool validBack;
   BOOL doBacklash = mParam->stageBacklash != 0.;
+  int magInd = mScope->GetMagIndex();
 
-  // If scope not applying mag offsets, adjust actual stage position to compensate
-  // This also compensates for the IS being imposed
+  // This compensates for the IS being imposed
   mScope->GetLDCenteredShift(shiftX, shiftY);
+  
+  // So this gets it back to a 0 IS readout
   mScope->IncImageShift(leaveISX - shiftX, leaveISY - shiftY);
-  ConvertIStoStageIncrement(mScope->GetMagIndex(), mWinApp->GetCurrentCamera(), leaveISX,
-    leaveISY, (float)mScope->FastTiltAngle(), stageDx, stageDy);
+
+  // In low dose mode, if balance shifts is on, need to leave that IS also
+  if (mWinApp->LowDoseMode()) {
+    LowDoseParams *ldp = mWinApp->GetLowDoseParams() + RECORD_CONSET;
+    int area = mScope->GetLowDoseArea();
+    if (mWinApp->mLowDoseDlg.ShiftsBalanced()) {
+      leaveISX += ldp->ISX;
+      leaveISY += ldp->ISY;
+    }
+
+    // And unless the compensation has been done (painfully) in realign or there are no
+    // view offsets set in View, set up to compensate to the Record area in the next call
+    if (!mHelper->GetRealigning() && ldp->magIndex && !(area == VIEW_CONSET && 
+      !mWinApp->mLowDoseDlg.mViewShiftX && !mWinApp->mLowDoseDlg.mViewShiftY))
+        magInd = ldp->magIndex;
+  }
+
+  // If scope not applying mag offsets, this adjusts actual stage position to compensate
+  ConvertIStoStageIncrement(magInd, mWinApp->GetCurrentCamera(), leaveISX, leaveISY, 
+    (float)mScope->FastTiltAngle(), stageDx, stageDy);
   smi.x = stageX - stageDx;
   smi.y = stageY - stageDy;
   smi.z = stageZ;
+  SEMTrace('n', "Nominal pos %.2f %.2f  leave IS %.2f %.2f  LDcenIS %.2f %.2f\r\ndelta"
+    " %.2f  %.2f  final %.2f %.2f", stageX, stageY, leaveISX, leaveISY, shiftX, shiftY, 
+    stageDx, stageDy, smi.x, smi.y);
   smi.axisBits = axisBits;
   if (HitachiScope)
     smi.axisBits &= ~(axisZ);
@@ -2800,7 +2823,8 @@ BOOL CNavigatorDlg::ConvertIStoStageIncrement(int magInd, int camera, double ISX
     ISY -= mMagTab[magInd].calOffsetISY[gif];
   }
 
-  // If shifting to tilt axis is on, convert offset to stage and adjust position
+  // If shifting to tilt axis is on, convert offset to stage and adjust position to get
+  // back to coordinates in unshifted system
   if (mScope->GetShiftToTiltAxis()) {
     aMat = mShiftManager->SpecimenToStage(1., 1.);
     stageX += aMat.xpy * mScope->GetTiltAxisOffset();
@@ -5143,7 +5167,7 @@ int CNavigatorDlg::NewMap(bool unsuitableOK)
       return 1;
   }
 
-  SEMTrace('1', "NewMap montaging %d  image %d  captured %d  BMO %d secno %d", 
+  SEMTrace('n', "NewMap montaging %d  image %d  captured %d  BMO %d secno %d", 
     mWinApp->Montaging() ? 1 : 0, imBuf->mImage, imBuf->mCaptured, BUFFER_MONTAGE_OVERVIEW
     , imBuf->mSecNumber);
   if (mWinApp->Montaging()) {
@@ -5402,6 +5426,8 @@ int CNavigatorDlg::NewMap(bool unsuitableOK)
   if (hasStage)
     ConvertIStoStageIncrement(imBuf->mMagInd, imBuf->mCamera, imBuf->mISX, imBuf->mISY, 
       item->mMapTiltAngle, item->mStageX, item->mStageY);
+  SEMTrace('n', "Raw stage %.3f %.3f   adjusted %.3f %.3f", item->mRawStageX, 
+    item->mRawStageY, item->mStageX, item->mStageY);
 
   // Switch image to current registration and give it the map ID, clear out rotation info
   // Loop on image buffer then read buffer, changing read buffer only if it matches

@@ -3,6 +3,15 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+2/10/18: Fixed Navigator "go to" movements when there are incorrect mag IS
+offsets not being applied and superceded by View shift offset.  Also fixed
+both "go to" and Realign to Item initial movement with Balance Shifts on.
+(In 3.6).
+
+2/10/18: Just ignore scripts beyond those allowed in the current version
+instead of making it a settings read error, so settings files from versiosn
+with more scripts can be read (In 3.6).
+
 2/7/18: Fixed failure to read a settings file with a script line having more
 than 40 words (In 3.6).
 

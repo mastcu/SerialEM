@@ -720,8 +720,8 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
   // of error below depend on comparisons to original first stage pos without it
   SEMTrace('h', "first stage %.2f %.2f  net view shift %.2f %.2f  firstdel %.2f %.2f"
     " VS change %.2f %.2f firstIS %.2f %.2f", mRIfirstStageX ,mRIfirstStageY, 
-    mRInetViewShiftX, mRInetViewShiftY, firstDelX, firstDelY, mRIviewShiftChangeX, 
     mRIviewShiftChangeY, mRIfirstISX, mRIfirstISY);
+  mRealigning = 1;
   mNav->AdjustAndMoveStage(mRIfirstStageX + mRInetViewShiftX + firstDelX - 
     mRIviewShiftChangeX, mRIfirstStageY + mRInetViewShiftY + firstDelY - 
     mRIviewShiftChangeY, inItem->mStageZ, axes, itemBackX, itemBackY, 
@@ -730,7 +730,6 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
   mWinApp->AddIdleTask(SEMStageCameraBusy, TASK_NAV_REALIGN, action, 30000);
   mWinApp->SetStatusText(MEDIUM_PANE, "REALIGNING TO ITEM");
   mCamera->SetRequiredRoll(1);
-  mRealigning = 1;
   mRInumRounds = 0;
   mWinApp->UpdateBufferWindows();
   return 0;
