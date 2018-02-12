@@ -557,6 +557,9 @@ void CFocusManager::OnAutofocusListCalibrations()
   int ind, iCam, iMag;
   CArray <AstigCalib, AstigCalib> *astigCal = mWinApp->mAutoTuning->GetAstigCals();
   CArray <ComaCalib, ComaCalib> *comaCal = mWinApp->mAutoTuning->GetComaCals();
+  CArray <CtfBasedCalib, CtfBasedCalib> *ctfAstigCals =
+    mWinApp->mAutoTuning->GetCtfBasedCals();
+  CtfBasedCalib ctfCal;
   AstigCalib astig;
   ComaCalib coma;
   CString str, str2;
@@ -587,15 +590,25 @@ void CFocusManager::OnAutofocusListCalibrations()
       mWinApp->AppendToLog(str);
   }
 
+  if (ctfAstigCals->GetSize()) {
+    PrintfToLog("\r\nCTF-fitting based astigmatism calibrations:\r\n"
+      "Mag  Index  Stigmator delta");
+    for (ind = 0; ind < ctfAstigCals->GetSize(); ind++) {
+      ctfCal = ctfAstigCals->GetAt(ind);
+       PrintfToLog("%d   %d   %.2f    %.1f", magTab[ctfCal.magInd].mag, ctfCal.magInd, 
+        ctfCal.amplitude);
+    }
+  }
+
   if (astigCal->GetSize()) {
-    PrintfToLog("\r\nAstigmatism calibrations:\r\nMag  Index  Tilt  Defocus  %s", 
+    PrintfToLog("\r\nBTID astigmatism calibrations:\r\nMag  Index  Tilt  Defocus  %s", 
       B3DCHOICE(JEOLscope && !mScope->GetHasNoAlpha(), "Alpha", ""));
     for (ind = 0; ind < astigCal->GetSize(); ind++) {
       astig = astigCal->GetAt(ind);
       str.Format("%d   %d   %.2f    %.1f", magTab[astig.magInd].mag, astig.magInd, 
         astig.beamTilt, astig.defocus);
       if (JEOLscope  && !mScope->GetHasNoAlpha()) {
-        str2.Format("    %d", astig.alpha);
+        str2.Format("    %d", astig.alpha + 1);
         str += str2;
       }
       if (!astig.probeMode)
@@ -605,14 +618,14 @@ void CFocusManager::OnAutofocusListCalibrations()
   }
 
   if (comaCal->GetSize()) {
-    PrintfToLog("\r\nComa calibrations:\r\nMag  Index  Tilt  Defocus  %s", 
+    PrintfToLog("\r\nOld (BTID) coma calibrations:\r\nMag  Index  Tilt  Defocus  %s", 
       B3DCHOICE(JEOLscope && !mScope->GetHasNoAlpha(), "Alpha", ""));
     for (ind = 0; ind < comaCal->GetSize(); ind++) {
       coma = comaCal->GetAt(ind);
       str.Format("%6d   %d   %.2f    %.1f", magTab[coma.magInd].mag, coma.magInd, 
         coma.beamTilt, coma.defocus);
       if (JEOLscope  && !mScope->GetHasNoAlpha()) {
-        str2.Format("    %d", coma.alpha);
+        str2.Format("    %d", coma.alpha + 1);
         str += str2;
       }
       if (!coma.probeMode)
