@@ -4537,10 +4537,13 @@ int CParameterIO::ReadOneMacro(int iset, CString &strLine, CString *strItems,
   int maxMacros)
 {
   int err;
-  if (iset < 0 || iset >= maxMacros)
+  if (iset < 0)
     return 1;
   CString *macros = mWinApp->GetMacros();
-  macros[iset] = "";
+
+  // For forward compatibility, it is not an error to have too many macros; just flush it
+  if (iset < maxMacros)
+    macros[iset] = "";
   while ((err = ReadAndParse(strLine, strItems, 4)) == 0 || err == 2) {
 
     // Error 2 is too many items, which is fine, but reset it to 0
@@ -4548,12 +4551,15 @@ int CParameterIO::ReadOneMacro(int iset, CString &strLine, CString *strItems,
     if (NAME_IS("EndMacro"))
       break;
     strLine.TrimRight("\r\n");
-    macros[iset] += strLine+ "\r\n";
+    if (iset < maxMacros)
+      macros[iset] += strLine+ "\r\n";
   }
-  if (mWinApp->mMacroEditer[iset])
-    mWinApp->mMacroEditer[iset]->TransferMacro(false);
-  else
-    mWinApp->mMacroProcessor->ScanForName(iset);
+  if (iset < maxMacros) {
+    if (mWinApp->mMacroEditer[iset])
+      mWinApp->mMacroEditer[iset]->TransferMacro(false);
+    else
+      mWinApp->mMacroProcessor->ScanForName(iset);
+  }
   return err;
 }
 
