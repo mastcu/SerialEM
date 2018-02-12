@@ -613,11 +613,13 @@ void CSerialEMView::DrawImage(void)
     }
   }
 
-  // Draw rings at CTF zeros detemined by ctfffind
+  // Draw rings at CTF zeros determined by ctffind
   if ((mMainWindow || mFFTWindow) && imBuf->mCaptured == BUFFER_FFT &&
     imBuf->mCtfFocus1 > 0) {
-      float pixel = 1000.f * mWinApp->mShiftManager->GetPixelSize(imBuf);
       double defocus = imBuf->mCtfFocus1;
+      float pixel = 1000.f * mWinApp->mShiftManager->GetPixelSize(imBuf);
+      if (processImg->GetTestCtfPixelSize())
+        pixel = processImg->GetTestCtfPixelSize();
       boost = processImg->GetDrawExtraCtfRings() > 0 ? imBuf->mMaxRingFreq : 0.f;
       processImg->DefocusFromPointAndZeros(0., 0, pixel, boost, &zeroRadii, defocus);
       defocus = imBuf->mCtfFocus2;
@@ -1262,7 +1264,7 @@ void CSerialEMView::OnLButtonUp(UINT nFlags, CPoint point)
 {
   float shiftX, shiftY, angle, pixScale;
   int imX, imY;
-  double defocus;
+  double defocus, mmDefocus, newRad;
   BOOL legal, used = false;
   CString lenstr;
   EMimageBuffer *imBuf;
@@ -1314,27 +1316,35 @@ void CSerialEMView::OnLButtonUp(UINT nFlags, CPoint point)
                   break;
 
               // For an FFT, run Ctffind if option selected
-              if (imX < MAX_BUFFERS && !processImg->InitializeCtffindParams(
+                if (imX < MAX_BUFFERS && !processImg->InitializeCtffindParams(
                 &mainImBufs[imX], param)) {
+                  processImg->SetCtffindParamsForDefocus(param, defocus, false);
+                  if (radii.size() > 1) {
+                    imY = imBuf->mImage->getWidth() / 2;
+                    newRad = radii[0] - 
+                      B3DMAX(10. / (imY * mZoom), 1.0 * (radii[1] - radii[0]));
+                    if (mWinApp->mProcessImage->DefocusFromPointAndZeros(newRad, 1, 
+                      param.pixel_size_of_input_image / 10.f, 0., NULL, mmDefocus))
+                      ACCUM_MIN(param.maximum_defocus, (float)(mmDefocus * 10000.));
+                    newRad = radii[0] + 
+                      B3DMAX(10. / (imY * mZoom), 0.5 * (radii[1] - radii[0]));
+                    if (mWinApp->mProcessImage->DefocusFromPointAndZeros(newRad, 1, 
+                      param.pixel_size_of_input_image / 10.f, 0., NULL, mmDefocus))
+                      ACCUM_MAX(param.minimum_defocus, (float)(mmDefocus * 10000.));
+                  }
 
                   // Adjust search parameters based on options
                   param.slower_search = processImg->GetSlowerCtfFit() > 0;
                   param.compute_extra_stats = processImg->GetExtraCtfStats() > 0;
-                  param.minimum_defocus = (float)(10000. * B3DMAX(0.3, defocus / 
-                    processImg->GetCtfFitFocusRangeFac()));
-                  param.maximum_defocus = (float)(10000. * (defocus * 
-                    processImg->GetCtfFitFocusRangeFac()));
                   if (processImg->GetPlatePhase() > 0.001) {
                     param.minimum_additional_phase_shift = 
                       param.maximum_additional_phase_shift = 
                       (float)(processImg->GetPlatePhase() / DTOR);
                     param.find_additional_phase_shift = true;
                   }
+                  if (param.slower_search)
+                    ACCUM_MAX(param.defocus_search_step, (param.maximum_defocus - param.minimum_defocus) / 100.f);
 
-                  // Make sure minimum resolution is below first zero
-                  if (radii.size() > 0)
-                    ACCUM_MIN(param.minimum_resolution, 
-                    param.pixel_size_of_input_image / (0.4f * radii[0]));
                   if (!processImg->RunCtffind(&mainImBufs[imX], param, 
                     resultsArray)) {
                       imBuf->mCtfFocus1 = resultsArray[0] / 10000.f;

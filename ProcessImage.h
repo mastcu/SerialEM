@@ -67,6 +67,7 @@ public:
   GetSetMember(int, SlowerCtfFit);
   GetSetMember(int, ExtraCtfStats);
   GetSetMember(int, DrawExtraCtfRings);
+  GetSetMember(float, TestCtfPixelSize);
 
 // Overrides
   // ClassWizard generated virtual function overrides
@@ -143,6 +144,7 @@ private:
   int mSlowerCtfFit;           // Flag for 2D fits
   int mExtraCtfStats;          // Compute extra statistics
   int mDrawExtraCtfRings;      // Draw as many rings as resolution
+  float mTestCtfPixelSize;     // A read-in value to replace buffer value for testing
 
 
 public:
@@ -226,6 +228,7 @@ int InitializeCtffindParams(EMimageBuffer * imBuf, CtffindParams & params);
 afx_msg void OnProcessDoCtffindFitOnClick();
 afx_msg void OnUpdateProcessDoCtffindFitOnClick(CCmdUI *pCmdUI);
 afx_msg void OnProcessSetCtffindOptions();
+void SetCtffindParamsForDefocus(CtffindParams & param, double defocus, bool justMinRes);
 };
 
 /////////////////////////////////////////////////////////////////////////////

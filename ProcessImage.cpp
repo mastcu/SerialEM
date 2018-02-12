@@ -78,6 +78,7 @@ CProcessImage::CProcessImage()
   mSlowerCtfFit = false;
   mExtraCtfStats = false;
   mDrawExtraCtfRings = false;
+  mTestCtfPixelSize = 0.;
   ctffindSetPrintFunc(ctffindPrintFunc);
   ctffindSetSliceWriteFunc(ctffindDumpFunc);
 }
@@ -2771,6 +2772,8 @@ bool CProcessImage::GetFFTZeroRadiiAndDefocus(EMimageBuffer *imBuf, FloatVec *ra
     mSphericalAber <= 0. || !mNumFFTZeros || !imBuf->mHasUserPt || !imBuf->mImage)
     return false;
   float pixel = 1000.f * mWinApp->mShiftManager->GetPixelSize(imBuf);
+  if (mTestCtfPixelSize)
+    pixel = mTestCtfPixelSize;
   if (!pixel)
     return false;
   imBuf->mImage->getSize(nx, ny);
@@ -2800,6 +2803,8 @@ void CProcessImage::ModifyFFTPointToFirstZero(EMimageBuffer *imBuf, float &shift
   if (mNumFFTZeros < 2 || !GetFFTZeroRadiiAndDefocus(imBuf, &radii, defocus))
     return;
   float pixel = 1000.f * mWinApp->mShiftManager->GetPixelSize(imBuf);
+  if (mTestCtfPixelSize)
+    pixel = mTestCtfPixelSize;
   num = (int)radii.size();
   if (num < 2)
     return;
@@ -2833,8 +2838,10 @@ void CProcessImage::ModifyFFTPointToFirstZero(EMimageBuffer *imBuf, float &shift
 
 // Computes the defocus implied by a given radius (as fraction of Nyquist) for the given
 // zero number; returns ring radii if radii is non-NULL.  Defocus is positive in microns
-// If zeroNum is zero, it returns rings for a defocus value given in the argument
+// If zeroNum is zero, it returns rings for a defocus value given in the argument; either
+// the number given in mNumFFTZeros or up to maxRingFreq in reciprocal pixels
 // Returns false if the radius is in a range where the equations have broken down
+// pixel is in nm, radii are in fraction of Nyquist
 bool CProcessImage::DefocusFromPointAndZeros(double pointRad, int zeroNum, float pixel,
   float maxRingFreq, FloatVec *radii, double & defocus)
 {
@@ -2944,10 +2951,8 @@ int CProcessImage::InitializeCtffindParams(EMimageBuffer *imBuf, CtffindParams &
   if (imBuf) {
     params.pixel_size_of_input_image = mWinApp->mShiftManager->GetPixelSize(imBuf) *
       10000.f;
-  /*params.pixel_size_of_input_image = 2.804f;
-  params.acceleration_voltage = 200.;//(float)mVoltage;
-  params.minimum_defocus = 5000.;
-  params.maximum_defocus = 25000.;*/
+    if (mTestCtfPixelSize)
+      params.pixel_size_of_input_image = mTestCtfPixelSize * 10.f;
     if (!params.pixel_size_of_input_image)
       return 1;
     params.minimum_resolution = B3DMIN(params.pixel_size_of_input_image / 0.05f, 50.f);
@@ -2958,6 +2963,27 @@ int CProcessImage::InitializeCtffindParams(EMimageBuffer *imBuf, CtffindParams &
 
   }
   return 0;
+}
+
+// Set or adjust some more parameters with a known target defocus in positive microns
+void CProcessImage::SetCtffindParamsForDefocus(CtffindParams &param, double defocus, 
+  bool justMinRes)
+{
+  FloatVec radii;
+  if (!justMinRes) {
+    param.minimum_defocus = (float)(10000. * B3DMAX(0.3, defocus / mCtfFitFocusRangeFac));
+    param.maximum_defocus = (float)(10000. * B3DMIN(defocus * mCtfFitFocusRangeFac, defocus + 5.));
+  }
+  DefocusFromPointAndZeros(0., 0, param.pixel_size_of_input_image / 10.f, 0., &radii, 
+    defocus);
+  
+  // Make sure minimum resolution is below first zero, and if it gets lower than the
+  // default, potentially lower the maximum resolution to limit fitting range
+  if (radii.size() > 0)
+    ACCUM_MAX(param.minimum_resolution, param.pixel_size_of_input_image / 
+      (0.4f * radii[0]));
+  if (param.minimum_resolution > 50.)
+    ACCUM_MAX(param.maximum_resolution, param.minimum_resolution / 5.f);
 }
 
 // Run
@@ -3002,12 +3028,13 @@ int CProcessImage::RunCtffind(EMimageBuffer *imBuf, CtffindParams &params,
     }
     str.Format("score %.4f", results_array[4]);
     mess += str;
-    mWinApp->AppendToLog(mess);
     if (params.compute_extra_stats) {
-      PrintfToLog("Thon rings fit to %.1f A", results_array[5]);
+      str.Format(",   fit to %.1f A", results_array[5]);
+      mess += str;
       /*if (results_array[6])
         PrintfToLog("Antialiasing detected at %.1f", results_array[6]);*/
     }
+    mWinApp->AppendToLog(mess);
     //PrintfToLog("Elapsed time %.3f sec", wallTime() - wallStart);
   } else {
     err = 1;
