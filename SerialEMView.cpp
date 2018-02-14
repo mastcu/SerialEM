@@ -1319,6 +1319,10 @@ void CSerialEMView::OnLButtonUp(UINT nFlags, CPoint point)
                 if (imX < MAX_BUFFERS && !processImg->InitializeCtffindParams(
                 &mainImBufs[imX], param)) {
                   processImg->SetCtffindParamsForDefocus(param, defocus, false);
+
+                  // Use radii of first and second zeros to determine a smaller defocus
+                  // range from that at the second zero to that halfway of the zero
+                  // spacing below the first
                   if (radii.size() > 1) {
                     imY = imBuf->mImage->getWidth() / 2;
                     newRad = radii[0] - 
@@ -1342,8 +1346,15 @@ void CSerialEMView::OnLButtonUp(UINT nFlags, CPoint point)
                       (float)(processImg->GetPlatePhase() / DTOR);
                     param.find_additional_phase_shift = true;
                   }
+
+                  // Boost search step for big defocus ranges
                   if (param.slower_search)
-                    ACCUM_MAX(param.defocus_search_step, (param.maximum_defocus - param.minimum_defocus) / 100.f);
+                    ACCUM_MAX(param.defocus_search_step, 
+                    (param.maximum_defocus - param.minimum_defocus) / 100.f);
+                  SEMTrace('1', "Search defocus range %.0f  %.0f  step %.0f  resolution "
+                    "range %.1f %.1f", param.minimum_defocus, param.maximum_defocus, 
+                    param.defocus_search_step, param.minimum_resolution, 
+                    param.maximum_resolution);
 
                   if (!processImg->RunCtffind(&mainImBufs[imX], param, 
                     resultsArray)) {
