@@ -2346,7 +2346,7 @@ void CCameraController::Capture(int inSet, bool retrying)
       if (FCAM_ADVANCED(mParam) || mAligningFalconFrames)
         mDeferStackingFrames = false;
 
-      // Setup routine will check that the frame folder is not an empty string when not
+      // Setup routine used to check that the frame folder is not an empty string when not
       // saving, so pass it the top directory in that case, otherwise get path/name for
       // real.  For advanced scripting, this sends the optional folder and it is turned
       // into the full path
@@ -2354,7 +2354,7 @@ void CCameraController::Capture(int inSet, bool retrying)
         (mAligningFalconFrames || aligningOnly)))
           ComposeFramePathAndName(aligningOnly);
       else
-        mFrameFolder = mDirForK2Frames;
+        mFrameFolder = mDirForFalconFrames;
       if (mFalconHelper->SetupConfigFile(conSet, mLocalFalconFramePath, 
         mFrameFolder, mFrameFilename, mFalconFrameConfig, mStackingWasDeferred, mParam,
         mTD.NumFramesSaved)) {

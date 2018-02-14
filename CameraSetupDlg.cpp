@@ -1664,7 +1664,7 @@ BOOL CCameraSetupDlg::OnInitDialog()
       mDoseFracTableInd = ind;
       mDoseFracLeftOrig = leftTable[ind];
     }
-    if (idTable[ind] == IDC_AVERAGEDARK)
+    if (idTable[ind] == IDC_RBEAMONLY)
       mDoseFracLeftFalcon = leftTable[ind];
     if (idTable[ind] == IDC_RVIEW)
       viewInd = ind;

@@ -170,7 +170,7 @@ int CFalconHelper::SetupConfigFile(ControlSet &conSet, CString localPath,
   if (!mDoingAdvancedFrames) {
 
     // Check the directory entry and assign local path if needed
-    if (directory.IsEmpty()) {
+    if (saveFrames && directory.IsEmpty()) {
       SEMMessageBox("You must specify a directory for saving the frame images");
       return 1;
     }
