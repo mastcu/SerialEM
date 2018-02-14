@@ -2057,6 +2057,7 @@ void CNavigatorDlg::AdjustAndMoveStage(float stageX, float stageY, float stageZ,
 {
   StageMoveInfo smi;
   double shiftX, shiftY, curStageX, curStageY, curStageZ, moveX, moveY;
+  double viewX, viewY, searchX, searchY;
   float validX, validY, stageDx = 0., stageDy = 0.;
   bool validBack;
   BOOL doBacklash = mParam->stageBacklash != 0.;
@@ -2078,9 +2079,12 @@ void CNavigatorDlg::AdjustAndMoveStage(float stageX, float stageY, float stageZ,
     }
 
     // And unless the compensation has been done (painfully) in realign or there are no
-    // view offsets set in View, set up to compensate to the Record area in the next call
+    // view offsets set in View or Search, set up to compensate to the Record area in the
+    // next call
+    mWinApp->mLowDoseDlg.GetFullViewShift(viewX, viewY, VIEW_CONSET);
+    mWinApp->mLowDoseDlg.GetFullViewShift(searchX, searchY, SEARCH_AREA);
     if (!mHelper->GetRealigning() && ldp->magIndex && !(area == VIEW_CONSET && 
-      !mWinApp->mLowDoseDlg.mViewShiftX && !mWinApp->mLowDoseDlg.mViewShiftY))
+      !viewX && !viewY) && !(area == SEARCH_AREA && !searchX && !searchY))
         magInd = ldp->magIndex;
   }
 
