@@ -1138,6 +1138,7 @@ BOOL CSerialEMApp::InitInstance()
   mDistortionTasks->Initialize();
   mNavHelper->Initialize();
   mAutoTuning->Initialize();
+  mProcessImage->Initialize();
 
   // Start the tool windows
   mNumToolDlg = 4;
