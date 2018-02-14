@@ -7,11 +7,11 @@
   TD { font-size:16 }
     .style1
       {
-        width: 187px;
+        width: 208px;
       }
       .style2
       {
-        width: 187px;
+        width: 208px;
         font-weight: bold;
       }
     .style3
@@ -20,7 +20,7 @@
       }
       .style4
       {
-        width: 187px;
+        width: 208px;
         height: 24px;
       }
       .style5
@@ -165,9 +165,13 @@
           <TD>Record Hitachi microscope&#39;s set focus value at each magnification.</TD>
         </TR>
         <TR vAlign="top">
+          <TD class="style1">&nbsp;&nbsp;&nbsp; <a href="#hid_focustuning_ctf">Astigmatism by CTF</a>&nbsp;</TD>
+          <TD>Calibrate astigmatism correction using CTF-fitting to images</TD>
+        </TR>
+        <TR vAlign="top">
           <TD class="style1">&nbsp;&nbsp;&nbsp; <a href="#hid_autofocusfocus_astigmati">
-            Astigmatism</a>&nbsp;</TD>
-          <TD>Calibrate astigmatism correction.</TD>
+            Astigmatism by BTID</a>&nbsp;</TD>
+          <TD>Calibrate astigmatism correction using beam-tilt-induced displacements</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style1">&nbsp;&nbsp;&nbsp; <a href="#hid_autofocusfocus_setupastigmatism">
@@ -175,12 +179,17 @@
           <TD>Set parameters for astigmatism calibration (other than beam tilt).</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style1">&nbsp;&nbsp;&nbsp; <a href="#hid_autofocusfocus_coma">Coma-free 
+          <TD class="style2">&nbsp;&nbsp;&nbsp;&nbsp;Old Coma-free Alignment</TD>
+          <TD>&nbsp;&nbsp;&nbsp; <span class="style3">Operations for coma-free alignment by beam-tilt-induced 
+            displacements</span></TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#hid_autofocusfocus_coma">Coma-free 
             Alignment</a>&nbsp;</TD>
           <TD>Calibrate the effects of beam-tilt misalignment for coma-free alignment.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style1">&nbsp;&nbsp;&nbsp; <a href="#hid_autofocusfocus_setupcoma">Setup 
+          <TD class="style1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#hid_autofocusfocus_setupcoma">Setup 
             Coma-free</a></TD>
           <TD>Set focus level at which coma-free calibration and alignment are done.</TD>
         </TR>
@@ -934,10 +943,30 @@
       this calibration is needed so that SerialEM can subtract off such changes and 
       show a constant defocus when magnification changes.</p>
     <p>
-      <A name="hid_autofocusfocus_astigmati"></A><B>Astigmatism command
+      <A name="hid_focustuning_ctf"></A><B>Astigmatism by CTF command
         (Calibration - Focus &amp; Tuning sub-menu)</B></p>
     <p>
-      Use this command to obtain a calibration for correcting astigmatism.&nbsp; The 
+      Use this command to obtain a calibration for correcting astigmatism by CTF 
+      fitting to images with Thon rings.&nbsp; The program will measure the amount of 
+      astigmatism induced by setting the X and Y objective stigmators to positive and 
+      negative values.&nbsp; The images used for calibration should satisfy the 
+      various criteria described in <a href="menu_focus.htm#autotuning_by_ctf">
+      Autotuning by CTF Fitting</a>.&nbsp; The calibration should be done at a fairly 
+      high magnification for more accurate fitting (e.g., pixel size around 0.25 nm).&nbsp; 
+      The defocus should be -1.5 to -2.5 microns.</p>
+    <p>
+      The stigmator change should be set so as to get changes of about +/-0.4 microns 
+      in the defocus values found by the fitting.&nbsp; The easiest way to determine 
+      this is just to run the calibration and see how much the numbers change from the 
+      first fit to the following four.&nbsp; Then use the
+      <a href="#hid_autofocusfocus_setupastigmatism">Setup Astigmatism</a> command to 
+      change the stigmator value to achieve the desired defocus change instead.</p>
+    <p>
+      <A name="hid_autofocusfocus_astigmati"></A><B>Astigmatism by BTID command
+        (Calibration - Focus &amp; Tuning sub-menu)</B></p>
+    <p>
+      Use this command to obtain a calibration for correcting astigmatism 
+      by beam-tilt induced displacements.&nbsp; The 
       program will measure the relationship between settings of the objective 
       stigmator and the amount of shift in the image induced by beam tilt in two 
       different directions.&nbsp; It also needs to measure these shifts for a known 
@@ -1029,12 +1058,17 @@
       The first value is important, as discussed for the previous command, but the 
       defaults for the others are probably fine.</p>
     <p>
-      <A name="hid_autofocusfocus_coma"></A><B>Coma-free Alignment command
-        (Calibration - Focus &amp; Tuning sub-menu)</B></p>
+      <A name="hid_autofocusfocus_coma"></A><B>BTID Coma-free Alignment command
+        (Calibration - Focus &amp; Tuning - Old Coma-free Alignment sub-menu)</B></p>
     <p>
       Use this command to obtain a calibration for running the
-      <a href="menu_focus.htm#hid_focus_coma">Coma-free Alignment</a> routine, which 
-      will adjust beam tilt to near zero.&nbsp; The calibration involves measuring the 
+      <a href="menu_focus.htm#hid_focus_coma">Coma-free Alignment by BTID</a> routine, which 
+      will adjust beam tilt to near zero by measuring beam-tilt induced displacements.&nbsp; 
+      This method should no longer be used; it has been superceded by the more 
+      accurate <a href="menu_focus.htm#hid_focus_coma_by_ctf">Coma-free Alignment by CTF</a> 
+      routine.</p>
+    <p>
+      &nbsp;The calibration involves measuring the 
       difference between beam-tilt induced displacements at various beam tilt 
       misalignments away from the current setting.&nbsp; From differences at negative 
       and positive misalignments, it computes a matrix based on differences of these 
@@ -1101,8 +1135,8 @@
       less.&nbsp; The two ways to reduce these errors are to increase the 
       magnification and the beam tilt; the latter will have a bigger effect.</p>
     <p>
-      <A name="hid_autofocusfocus_setupcoma"></A><B>Setup Coma-free command
-        (Calibration - Focus &amp; Tuning sub-menu))</B></p>
+      <A name="hid_autofocusfocus_setupcoma"></A><B>Setup BTID Coma-free command
+        (Calibration - Focus &amp; Tuning - Old Coma-free Alignment sub-menu))</B></p>
     <p>
       Use this command to set the defocus at which the coma-free calibration and 
       alignment will run.</p>

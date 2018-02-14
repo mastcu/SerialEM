@@ -7,7 +7,20 @@
   TD { font-size:16 }
       .style1
       {
-        width: 159px;
+        width: 224px;
+      }
+      .style2
+      {
+        width: 611px;
+      }
+      .style3
+      {
+        width: 224px;
+        font-weight: bold;
+      }
+    .style4
+      {
+        text-decoration: underline;
       }
   --></style>
   </HEAD>
@@ -19,117 +32,141 @@
       <TABLE BORDER cols="2">
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_focus_measuredefocus">Measure Defocus</A></TD>
-          <TD>Measure current defocus.</TD>
+          <TD class="style2">Measure current defocus.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_focus_autofocus">Autofocus</A></TD>
-          <TD>Autofocus to the defined target value.</TD>
+          <TD class="style2">Autofocus to the defined target value.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_focus_movecenter">Move Focus Center</A></TD>
-          <TD>Shift center of focus from display point to center of field.</TD>
+          <TD class="style2">Shift center of focus from display point to center of field.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_focus_checkautofocus">Check Autofocus</A></TD>
-          <TD>Assess ability to autofocus by measuring defocus at 3 levels.</TD>
+          <TD class="style2">Assess ability to autofocus by measuring defocus at 3 levels.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_focus_reportshiftdrift">Report Shift &amp; Drift</A></TD>
-          <TD>Does focus detection and reports shift and drift.</TD>
+          <TD class="style2">Does focus detection and reports shift and drift.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_focus_reportonexisting">Report On Existing</A></TD>
-          <TD>Report shift and drift from pictures already present in buffers A-C.</TD>
+          <TD class="style2">Report shift and drift from pictures already present in buffers A-C.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_focus_showexistingcorr">Show Existing Corr</A></TD>
-          <TD>Show the cross-correlation from pictures already present in A-C.</TD>
+          <TD class="style2">Show the cross-correlation from pictures already present in A-C.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><a href="#hid_focus_showexistingstretch">Show Image Stretch</a></TD>
-          <TD>For existing images, show the image that is stretched to compensate for 
+          <TD class="style2">For existing images, show the image that is stretched to compensate for 
             specimen tilt.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_focus_settarget">Set Target</A></TD>
-          <TD>Enter target defocus to change to after autofocus.</TD>
+          <TD class="style2">Enter target defocus to change to after autofocus.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_focus_setbeamtilt">Set Beam Tilt</A></TD>
-          <TD>Set amount of beam tilt for detecting defocus.</TD>
+          <TD class="style2">Set amount of beam tilt for detecting defocus.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_focus_setoffset">Set Offset</A></TD>
-          <TD>Set focus offset to apply before measuring defocus.</TD>
+          <TD class="style2">Set focus offset to apply before measuring defocus.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_focus_setthreshold">Set Threshold</A></TD>
-          <TD>Set threshold focus change for reiterating the autofocus.</TD>
+          <TD class="style2">Set threshold focus change for reiterating the autofocus.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_focus_set_tilt_direction">Set Tilt Direction</A></TD>
-          <TD>Set the direction of beam tilt for autofocusing.</TD>
+          <TD class="style2">Set the direction of beam tilt for autofocusing.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_focus_set_ddd_min_binning">Set Min Binning</A></TD>
-          <TD>Set minimum total binning for correlating autofocus images from a direct detector.</TD>
+          <TD class="style2">Set minimum total binning for correlating autofocus images from a direct detector.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_focus_set_filter_cutoffs">Test Filter Cutoffs</A></TD>
-          <TD>Set trial parameters for filters in autofocus correlations.</TD>
+          <TD class="style2">Set trial parameters for filters in autofocus correlations.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_focus_driftprotection">Drift Protection</A></TD>
-          <TD>Use three autofocus pictures to protect against drift.</TD>
+          <TD class="style2">Use three autofocus pictures to protect against drift.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_focus_setabsoluteliimits">Set Absolute Limits</A></TD>
-          <TD>Set lower and upper absolute limits for autofocusing around eucentric focus.</TD>
+          <TD class="style2">Set lower and upper absolute limits for autofocusing around eucentric focus.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_focus_useabsoluterange">Use Absolute Limits</A></TD>
-          <TD>Apply the lower and upper absolute limits when autofocusing</TD>
+          <TD class="style2">Apply the lower and upper absolute limits when autofocusing</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_focus_testwhenusingoffset">Limit Offset Defocus</A></TD>
-          <TD>Keep the offset defocus used to find focus within limits also.</TD>
+          <TD class="style2">Keep the offset defocus used to find focus within limits also.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><a href="#hid_focus_correctastigmatism">Correct Astigmatism</a></TD>
-          <TD>Measure and correct for objective astigmatism.</TD>
+          <TD class="style1"><A HREF="#hid_focus_correctastigmatismwithffts">Correct Astigmatism by CTF</A></TD>
+          <TD class="style2">Measure and correct for objective astigmatism by CTF fitting</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><a href="#hid_focus_setastigbeamtilt">Set Astig Beam Tilt</a></TD>
-          <TD>Set beam tilt to use for astigmatism calibration and/or correction.</TD>
+          <TD class="style1"><a href="#hid_focus_coma_by_ctf">Coma-free alignment by CTF</A></TD>
+          <TD class="style2">Measure and correct for beam-tilt misalignment by CTF fitting</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><a href="#hid_focus_coma">Coma-free Alignment</a></TD>
-          <TD>Measure and correct for beam-tilt misalignment.</TD>
+          <TD class="style1"><a href="#hid_focus_setctfacquireparams">Set CTF Acquire Params</A></TD>
+          <TD class="style2">Set parameters for acquiring images for CTF fitting</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><a href="#hid_focus_setcomabeamtilt">Set Coma Beam Tilt</a></TD>
-          <TD>Set the maximum beam tilt for coma-free alignment.</TD>
-        </TR>
-        <TR VALIGN="top">
-          <TD class="style1"><a href="#hid_focus_setcomaiterations">Set Coma Iterations</a></TD>
-          <TD>Set number of coma measurements to average over.</TD>
-        </TR>
-        <TR VALIGN="top">
-          <TD class="style1"><a href="#hid_focus_runanotheriteration">Run Another Iteration</a></TD>
-          <TD>Measure coma one more time and average with previous iterations.</TD>
+          <TD class="style1"><a href="#hid_focus_set_ctf_coma_bt">Set CTF Coma-free Params</A></TD>
+          <TD class="style2">Set parameters for the coma-free alignment by CTF fitting</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><a href="#hid_focus_makezemlintableau">Beam-Tilted FFT Array</a></TD>
-          <TD>Make Zemlin tableau: FFTs of images with beam tilted in 8 different 
+          <TD class="style2">Make Zemlin tableau: FFTs of images with beam tilted in 8 different 
             directions.</TD>
         </TR>
         <TR VALIGN="top">
+          <TD class="style1"><a href="#hid_focus_correctastigmatism">Correct Astigmatism by 
+            BTID</a></TD>
+          <TD class="style2">Measure and correct for objective astigmatism by beam-tilt 
+            induced displacements.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><a href="#hid_focus_setastigbeamtilt">Set BTID Astig Beam Tilt</a></TD>
+          <TD class="style2">Set beam tilt to use for astigmatism calibration and/or correction 
+            by BTID.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style3">Old Coma-free Alignment</TD>
+          <TD class="style2">&nbsp;<span class="style4">Operations for coma-free alignment by beam-tilt-induced 
+            displacements</span></TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1">&nbsp;&nbsp;&nbsp;&nbsp; <a href="#hid_focus_coma">BTID Coma-free Alignment</a></TD>
+          <TD class="style2">Measure and correct for beam-tilt misalignment by BTID.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1">&nbsp;&nbsp;&nbsp;&nbsp; <a href="#hid_focus_setcomabeamtilt">Set Coma Beam Tilt</a></TD>
+          <TD class="style2">Set the maximum beam tilt for coma-free alignment by BTID.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1">&nbsp;&nbsp;&nbsp;&nbsp; <a href="#hid_focus_setcomaiterations">Set Coma Iterations</a></TD>
+          <TD class="style2">Set number of coma measurements to average over.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1">&nbsp;&nbsp;&nbsp;&nbsp; <a href="#hid_focus_runanotheriteration">Run Another Iteration</a></TD>
+          <TD class="style2">Measure coma one more time and average with previous iterations.</TD>
+        </TR>
+        <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_focus_resetdefocus">Reset Defocus</A></TD>
-          <TD>Set the defocus shown in the microscope panel to zero.</TD>
+          <TD class="style2">Set the defocus shown in the microscope panel to zero.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_focus_verbose">Verbose</A></TD>
-          <TD>Output defocus shift and drift information to Log Window.</TD>
+          <TD class="style2">Output defocus shift and drift information to Log Window.</TD>
         </TR>
       </TABLE>
       <BR>
@@ -298,8 +335,150 @@
       exceeding the limits; if it is not included, the limits will apply only to a new 
       focus needed to reach the target defocus.&nbsp; This option should be turned on 
       for Falcon cameras but should not be needed in other situations.</P>
-    <P><A NAME="hid_focus_correctastigmatism"></A><B>Correct Astigmatism command (Focus menu)</B></P>
-    <P>Use this command to measure and correct for objective astigmatism.&nbsp; The 
+    <P><A NAME="hid_focus_correctastigmatismwithffts"></A><B>Correct Astigmatism by CTF command (Focus menu)</B></P>
+    <p>This command will measure and correct astigmatism by fitting the CTF to Thon 
+      rings in an image.&nbsp; It is one of three operations run through the same 
+      routine, the others being the calibration of this correction and <a href="#hid_focus_coma_by_ctf">Coma-free alignment by CTF</A>.&nbsp; 
+      Here is a general introduction to the operation and use of this routine.</p>
+    <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <A NAME="autotuning_by_ctf"></A><i><b>Autotuning by CTF Fitting</b></i>&nbsp;</p>
+    <p>The CTF autotuning routines require images with Thon rings suitable for fitting 
+      with the Ctffind module.&nbsp; To get the best signal-to-noise ratio and the 
+      most accurate fitting, images need to have a long enough exposure and use the 
+      full camera area.&nbsp; They are taken with parameters generally derived from 
+      the Record parameters, but specific values, such as for exposure time and 
+      binning, can be set with the <a href="#hid_focus_setctfacquireparams">Set CTF Acquire Params</A>.&nbsp; 
+      For example, if your Record exposure time is set for a long acquisition for 
+      single-particle reconstruction, you should specify a shorter time for the CTF 
+      tuning images.</p>
+    <p>The first step in the CTF tuning routine is to measure the current defocus, 
+      both to make sure that defocus is an acceptable range and to set the defocus 
+      range for CTF fitting.&nbsp; The routine will then run at the current defocus 
+      provided that it is within a range where the CTF fitting is expected to work.&nbsp; 
+      Defocus will be changed if necessary to avoid defocus values that are too low in 
+      astigmatic images, and so that the expected number of CTF rings will not be too 
+      low or too high.</p>
+    <p>Defocus should be in the range of -1.0 to -2.5 microns, or more underfocused at 
+      lower magnifications (e.g., with a pixel size in the range of 1 nm or more).</p>
+    <p>You should verify that the CTF fitting is reasonably accurate with the 
+      acquisition parameters and defocus being used by turning on <a href="#hid_process_doctffindfitonclick">Do Ctffind On Click</a> 
+      and checking that the fits work when clicking, and that the defocus varies by 
+      only about 3-10 nm between successive images (e.g., for focus near -2 microns).&nbsp; 
+      Larger variations will occur at lower magnifications and higher defocus, 
+      situations where the lower accuracy of fitting may be acceptable.&nbsp; </p>
+    <p>It is a good idea to open the side-by-side FFT display (see <a href="#hid_process_side_by_side">Side by Side</a>) 
+      when you are first using these routines.&nbsp; When this window is open, the 
+      program will show the CTF fit for each image, taking an FFT if it is not being 
+      done automatically (i.e., with <a href="#hid_process_automaticffts">Automatic Single FFTs</a> 
+      turned on).</p>
+    <p>Fitting will be done with the slower 2D search, which is not the default when 
+      clicking in an image.&nbsp; If you see bad fits when running these routines, you 
+      should enable the 2D search when clicking with the <a href="#hid_process_setctffindoptions">Set Ctffind Options</a> 
+      command, and adjust parameters until fitting works when clicking in an image.</p>
+    <p>If there are few Thon rings and they do not extend out very far, the fitting 
+      may fail because the resolution range for fitting is set too high.&nbsp; The 
+      solution for this currently is to bin the images so that the Thon rings extend 
+      to a higher frequency (in reciprocal pixels) in the image.</p>
+    <p>The CTF autotuning routines will zero out the image shift, giving a zero 
+      reading of IS or PLA in the Microscope Status panel.</p>
+    <p>&nbsp;&nbsp;&nbsp;&nbsp; <i><b>Correcting Astigmatism by CTF Fitting</b></i>&nbsp;</p>
+    <p>The astigmatism correction routine will measure defocus, take a single image, 
+      and correct the astigmatism.&nbsp; If the change in stigmators is above a 
+      threshold, it will take another image and refine the correction.&nbsp; You can 
+      check the result by taking an image and clicking near the first zero with <a href="#hid_process_doctffindfitonclick">Do Ctffind On Click</a> 
+      enabled.</p>
+    <p>Technically, if you are going to correct coma as well, you should correct that 
+      first, then astigmatism. In practice, this matters only if the the beam tilt 
+      misalignment is substantial.&nbsp; In that case, some of the astigmatism in the 
+      image may be due to beam tilt, and simply making the image have no astigmatism 
+      will leave the stigmators at the wrong setting. The coma-free alignment routine 
+      is insensitive to astigmatism, so it will fix the beam tilt and leave the 
+      astigmatism in the image that does need to be corrected with stigmators.</p>
+    <p>&nbsp;&nbsp;&nbsp; <b><i>Which Astigmatism Method to Use</i></b></p>
+    <p>The CTF-based method has several advantages: it is based on a direct 
+      measurement of astigmatism, it is insensitive to drift, it does not require beam 
+      tilt, and it uses on-axis images in Low Dose mode.&nbsp; It is inherently more 
+      accurate at higher magnifications.&nbsp; Both methods should be calibrated at 
+      higher magnification but can work at lower ones (e.g., ~1 nm pixel size).&nbsp; 
+      The big disadvantage of the CTF-based method is that it requires images with 
+      Thon rings.&nbsp; There is thus still a role for the BTID-base method at lower 
+      magnifications and when working with stained, embedded samples, which are 
+      usually imaged near focus and rarely give Thon rings.</p>
+    <P><A NAME="hid_focus_coma_by_ctf"></A><B>Coma-free Alignment by CTF command (Focus menu)</B></P>
+    <p>Use this command to measure and correct for beam-tilt misalignment (coma) by 
+      fitting a CTF to the Thon rings in images.&nbsp; The program will take 5 images, 
+      one with no beam tilt and the others with beam tilt in the plus and minus X and 
+      Y directions.&nbsp; It is also possible to take a full array of images, 8 with 
+      beam tilt and 2 without.&nbsp; The defocus changes at various angles will be 
+      analyzed to determine the existing beam tilt that needs to be corrected.&nbsp; 
+      The procedure needs no calibration.</p>
+    <p>The operations and requirements described in&nbsp;<a href="#autotuning_by_ctf">Autotuning by CTF Fitting</a> 
+      all apply here.&nbsp; Aside from getting images with good Thon rings, the main 
+      challenge may be getting beam-tilted images without the objective aperture or 
+      beam edge intruding.</p>
+    <p>The maximum beam tilt should be in the range of 4 to 10 milliradians, 
+      preferably between 6 and 8.&nbsp; The goal is to get defocus changes ranging up 
+      to 0.3-0.4 micron.&nbsp; The defocus changes being measured are proportional to 
+      the square of the beam tilt, so the reliability of the estimated misalignment 
+      will increase accordingly.&nbsp; Both the maximum beam tilt and whether to use a 
+      full array of images can be set with the <a href="#hid_focus_set_ctf_coma_bt">Set CTF Coma-free Params</A> 
+      command.</p>
+    <p>There are two reasons why you might want to use a full 3x3 array of images 
+      instead of the basic 5 images along the X and Y axes of beam tilt.&nbsp; First, 
+      if the Thon rings are not very strong and the estimates of defocus vary much 
+      from one shot to the next (with no applied beam tilt), then you can use a full 
+      array to average over more of these noisy data.&nbsp; Second, you may find that 
+      the full array gives a solution consistently different from the one using 5 
+      images by an amount that you think matters.&nbsp; To assess this, you can use 
+      the script command FixComaByCtf to measure the beam tilt repeatedly without 
+      changing it.&nbsp; Run the two commands<br />
+&nbsp;&nbsp; FixComaByCtf 1 0 0<br />
+&nbsp;&nbsp; FixComaByCtf 1 0 1<br />
+      repeatedly (in a loop) to measure the beam tilt with 5 and 10 images.&nbsp; You 
+      can see more details about the solution by setting Debug Output (in the 
+      Calibrate menu or in the properties) to 1 or any letters.&nbsp; In that case, 
+      the log will show the beam tilt from X and Y deflections as the &quot;solution&quot; 
+      values for axes 0 and 1, and the corresponding estimates from the diagonal 
+      deflections as the &quot;rotated diagonal solution&quot;.&nbsp; If they do differ by much, 
+      the average of the two is presumed to be a less biased estimate of the actual 
+      beam tilts.</p>
+    <p>The method used to derive the beam tilts is described in
+      <br />
+      http://bio3d.colorado.edu/SerialEM/OpenSerialEM/Docs/Coma.docx</p>
+    <P><A NAME="hid_focus_setctfacquireparams"></A><B>Set CTF Acquire Params command (Focus menu)</B></P>
+    <p>Use this command to set the parameters for acquiring and analyzing images for 
+      the CTF-based astigmatism and coma routines.&nbsp; You can set:</p>
+    <ol>
+      <li><i>Exposure time</i>.&nbsp; Enter a specific time 0 to use the current Record 
+        exposure time.&nbsp; If you take long Record images during single particle 
+        acquisition, you will want to set this to a reasonable time.</li>
+      <li><i>Binning</i>.&nbsp; Enter a specific binning or 0 to use the current Record 
+        binning.&nbsp; The CTF analysis itself should be fairly insensitive to binning 
+        unless it is too high, but you may want to use a binning higher than 1 to make 
+        the Thon rings extend farther out in the display.</li>
+      <li><i>Drift settling time</i>.&nbsp; Enter a specific settling time, or 0 to use 
+        the current Record settling.</li>
+      <li><i>Field size</i>.&nbsp; Enter 1 to take full-field images, or 0 to use the 
+        current Record subarea if any.</li>
+    </ol>
+    <P><A NAME="hid_focus_set_ctf_coma_bt"></A><B>Set CTF Coma-free Params command (Focus menu)</B></P>
+    <p>Use this command to set parameters for the coma-free alignment.&nbsp; You can 
+      set:</p>
+    <ol>
+      <li><i>Maximum beam tilt.</i>&nbsp; On an FEI scope, enter this in milliradians.&nbsp; 
+        Otherwise, you will be told the estimated scaling from percent of full-scale to 
+        milliradians and asked to enter a value in percent, the same units used for the 
+        autofocus beam tilt.</li>
+      <li><i>Whether to take a full array of images.</i>&nbsp; With a non-zero entry, it 
+        will take a 3x3 array of images and repeat the image at 0 beam tilt at the end.&nbsp; 
+        The difference in beam tilt along diagonals will be the same as that along the 
+        axes.&nbsp; See above for a discussion of when the full array is useful.</li>
+      <li><i>Threshold for iterating.</i>&nbsp; The program will iterate the operation 
+        once when the initial correction of beam tilt exceeds this threshold.&nbsp; 
+        Enter a value in milliradians.</li>
+    </ol>
+    <P><A NAME="hid_focus_correctastigmatism"></A><B>Correct Astigmatism by BTID command (Focus menu)</B></P>
+    <P>Use this command to measure and correct for objective astigmatism with 
+      beam-tilt induced displacements.&nbsp; The 
       procedure first measures defocus and changes to the focus used for the 
       astigmatism calibration that fits the current conditions. It then measures 
       beam-tilt induced image shift for beam tilts in three directions and uses this 
@@ -323,14 +502,17 @@
     <P>This procedure will be more accurate at higher magnifications, but should work 
       at magnifications where the pixel size for data acquisition is around 1 nm.&nbsp; 
       The routine uses the calibration from the nearest calibrated magnification.</P>
-    <P><A NAME="hid_focus_setastigbeamtilt"></A><B>Set Astig Beam Tilt command (Focus menu)</B></P>
+    <P><A NAME="hid_focus_setastigbeamtilt"></A><B>Set BTID Astig Beam Tilt command (Focus menu)</B></P>
     <P>Use this command to set the beam tilt that will be used either to calibrate 
-      astigatism or to correct it.&nbsp; On a non-FEI scope, the entry box will tell 
+      astigatism with or to correct it with beam-tilt induced displacements.&nbsp; On a non-FEI scope, the entry box will tell 
       you the scaling from percent of full scale to milliradians, so that you can use 
       a standardized value if desired.</P>
-    <P><A NAME="hid_focus_coma"></A><B>Coma-free Alignment command (Focus menu)</B></P>
-    <P>Use this command to measure and correct for beam-tilt misalignment (coma).&nbsp; 
-      The procedure measures focus, changes to the focus at which a coma calibration 
+    <P><A NAME="hid_focus_coma"></A><B>BTID Coma-free Alignment command (Focus - Old 
+      Coma-free Alignment submenu)</B></P>
+    <P>This command will measure and correct for beam-tilt misalignment (coma) using 
+      beam-tilt-induced image displacements.&nbsp; 
+      This routine is of limited accuracy and has been superceded by the CTF-based 
+      coma-free alignment, so it should probably not be used.&nbsp; The procedure measures focus, changes to the focus at which a coma calibration 
       was done, and measures beam-tilt induced image shift for positive and negative 
       beam tilts in X and Y directions.&nbsp; From the difference between 
       displacements, it estimates the current beam tilt and adjusts for it.&nbsp; To 
@@ -364,8 +546,10 @@
       running the script command 'CorrectComa -1' several times in a row to find the 
       misalignment without correcting it, which lets you see how much the reported 
       misalignment varies.&nbsp; </P>
-    <P><A NAME="hid_focus_setcomabeamtilt"></A><B>Set Coma-free Beam Tilt command (Focus menu)</B></P>
-    <P>Use this command to set the maximum beam tilt for coma-free calibrations.&nbsp; 
+    <P><A NAME="hid_focus_setcomabeamtilt"></A><B>Set Beam Tilt command (Focus - Old 
+      Coma-free Alignment submenu)</B></P>
+    <P>Use this command to set the maximum beam tilt for coma-free calibrations by 
+      BTID.&nbsp; 
       That beam tilt will be used for doing a calibration, and the coma-free alignment 
       can be done only with a beam tilt that matches what was used for a calibration.&nbsp; 
       The entry box will list the beam tilts for all calibrations that match the 
@@ -373,12 +557,15 @@
       such calibrations, for a non-FEI scope, the box will show the scaling from 
       percent of full scale to milliradians, so that an appropriately large percentage 
       value can be entered. </P>
-      <P><A NAME="hid_focus_setcomaiterations"></A><B>Set Coma Iterations command (Focus menu)</B></P>
+      <P><A NAME="hid_focus_setcomaiterations"></A><B>Set Coma Iterations command (Focus 
+        - Old Coma-free Alignment submenu)</B></P>
       <P>Use this command to adjust the number of iterations, or misalignment 
-        measurements to be averaged, for an initial run of the <a href="#hid_focus_coma">Coma-free Alignment</a> 
+        measurements to be averaged, for an initial run of the <a href="#hid_focus_coma">
+        BTID Coma-free Alignment</a> 
         command.</P>
-      <P><A NAME="hid_focus_runanotheriteration"></A><B>Run Another Iteration command (Focus menu)</B></P>
-      <P>Use this command after the <a href="#hid_focus_coma">Coma-free Alignment</a> 
+      <P><A NAME="hid_focus_runanotheriteration"></A><B>Run Another Iteration command (Focus 
+        - Old Coma-free Alignment submenu)</B></P>
+      <P>Use this command after the <a href="#hid_focus_coma">BTID Coma-free Alignment</a> 
         command to make one more measurement of misalignment and average it with the 
         previous results.&nbsp; This command can be used repeatedly if necessary.</P>
       <P><A NAME="hid_focus_makezemlintableau"></A><B>Beam-Tilted FFT Array (Focus menu)</B></P>

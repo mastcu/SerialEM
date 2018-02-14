@@ -225,8 +225,9 @@
       adapted from the Ctffind4 program of Rohou and Grigorieff.&nbsp; There should be 
       at least two zeros (minima) visible in the FFT, preferably more.&nbsp; Initiate 
       the fitting by clicking near the first zero to inform the program of the 
-      approximate defocus (usually it works if you click anywhere between the first 
-      and second zero, or possibly out to the third).&nbsp; The program will solve for 
+      approximate defocus (it should work if you click anywhere between the first 
+      and second zero, or inside the first zero by up to half the distance between 
+      first and second zeros).&nbsp; The program will solve for 
       defocus and astigmatism, draw ellipses (5 by default) at the zeros, and show the 
       maximum and minimum defocus values in the status bar.&nbsp; The log will also 
       have the following output:<br />
@@ -253,10 +254,19 @@
         should not be needed for ordinary amounts of astigmatism.&nbsp; The 2-D search 
         is parallelized so its speed will depend heavily on the number of computer cores 
         available.</li>
-      <li>Enter the factor by which to multiply and divide the defocus implied by the 
-        clicked position to set the maximum and minimum defocus for the initial search.&nbsp; 
-        This entry determines how far away from the first zero you can click and still 
-        get reliable fits.&nbsp; The initial default is 2.5.</li>
+      <li>Enter a limiting value to the maximum resolution to which to fit the amplitude 
+        spectrum, in Angstroms.&nbsp; This setting is unusual in that there is a default that 
+        may be set in the SerialEM properties file, and you will continue to use the 
+        default (even if it is changed) unless you enter a different value here.&nbsp; 
+        If you do enter a different value, you can return to the default by entering 0.&nbsp; 
+        If there is no property setting, the default is 5 if the voltage on program 
+        startup is above 120 KV, which is the same as the default 
+        maximum resolution in Ctffind4, and 10 otherwise.&nbsp; SerialEM will choose a maximum resolution 
+        higher than this value when the defocus is high and the minimum resolution is a 
+        high number as well.&nbsp; However, with a non-FEG microscope or other situation 
+        where Thon rings may never approach this resolution, a higher value may be 
+        needed here or in the properties file.&nbsp; If you click in an FFT with the middle mouse button, the 
+        status bar will show the resolution (&#39;Period&#39;) at that frequency.</li>
     </ol>
     <p>
       All fits are done with a box size of 256 for speed, and because high accuracy at 

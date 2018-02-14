@@ -227,10 +227,17 @@
         <TR VALIGN="top">
           <TD>FFTZeroParams</TD>
           <TD>Parameters governing the display of circles at the expected zeros of the CTF 
-            when a point is clicked in an FFT.&nbsp; See
+            when a point is clicked in an FFT, and providing parameters for CTF fitting.&nbsp; See
             <a href="menu_process.htm#hid_process_fft">FFT command help</a> for details.&nbsp; 
             For with 1, 2, or 3 values: the spherical aberration in mm, the number of 
             circles to draw, and the amplitude contrast ratio (defaults 2, 5, and 0.07).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>DefaultMaxCtfFitRes</TD>
+          <TD>Default maximum resolution for CTF fitting, in Angstroms.&nbsp; This default 
+            applies until the user enters a different value, at which point the resolution 
+            becomes a user setting.&nbsp; The default value is 5 if the voltage on program 
+            startup is &gt; 125, otherwise 10.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>GridLinesPerMM</TD>
