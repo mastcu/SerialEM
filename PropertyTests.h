@@ -309,5 +309,6 @@ BOOL_PROP_TEST("RefineZLPRedoInLowDose", mWinApp->mFilterTasks->, RZlpRedoInLowD
 FLOAT_PROP_TEST("EnergyShiftCalMinField", mWinApp->mFilterTasks->, ShiftCalMinField)
 FLOAT_PROP_TEST("GridLinesPerMM", mWinApp->mProcessImage->, GridLinesPerMM)
 FLOAT_PROP_TEST("TestCtfPixelSize", mWinApp->mProcessImage->, TestCtfPixelSize)
+FLOAT_PROP_TEST("DefaultMaxCtfFitRes", mWinApp->mProcessImage->, DefaultMaxCtfFitRes)
 FLOAT_PROP_TEST("TestCtfTuningDefocus", mWinApp->mAutoTuning->, TestCtfTuningDefocus)
 #endif

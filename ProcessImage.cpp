@@ -78,6 +78,8 @@ CProcessImage::CProcessImage()
   mSlowerCtfFit = false;
   mExtraCtfStats = false;
   mDrawExtraCtfRings = false;
+  mUserMaxCtfFitRes = 0.;
+  mDefaultMaxCtfFitRes = 0.;
   mTestCtfPixelSize = 0.;
   ctffindSetPrintFunc(ctffindPrintFunc);
   ctffindSetSliceWriteFunc(ctffindDumpFunc);
@@ -85,6 +87,15 @@ CProcessImage::CProcessImage()
 
 CProcessImage::~CProcessImage()
 {
+}
+
+void CProcessImage::Initialize(void)
+{
+  mShiftManager = mWinApp->mShiftManager;
+  mCamera = mWinApp->mCamera;
+  mScope = mWinApp->mScope;
+  if (!mDefaultMaxCtfFitRes)
+    mDefaultMaxCtfFitRes = GetRecentVoltage() > 125. ? 5.f : 10.f;
 }
 
 
@@ -190,14 +201,14 @@ void CProcessImage::OnProcessMinmaxmean()
   image->UnLock();
   report.Format("Min = %.1f, max = %.1f, mean = %.2f, SD = %.2f", min, max, mean, sd);
   if (rep2.IsEmpty()) {
-    pixel = 1000.f * mWinApp->mShiftManager->GetPixelSize(imBuf);
+    pixel = 1000.f * mShiftManager->GetPixelSize(imBuf);
     if (pixel)
       rep2.Format("    Pixel size = " + mWinApp->PixelFormat(pixel), pixel);
   }
   report += rep2;
 
   // Add the dose rate for a direct detector
-  if (imBuf->mCamera >= 0 && mWinApp->mCamera->IsDirectDetector(camP) &&  
+  if (imBuf->mCamera >= 0 && mCamera->IsDirectDetector(camP) &&  
     !DoseRateFromMean(imBuf, mean, pixel)) {
       sd = (float)(mean / (imBuf->mBinning * imBuf->mBinning * extra->mExposure / 
         (CamHasDoubledBinnings(camP) ? 4. : 1.)));
@@ -296,7 +307,7 @@ void CProcessImage::OnProcessBinnedfft()
 void CProcessImage::OnProcessLivefft()
 {
   mLiveFFT = !mLiveFFT;
-  if (mWinApp->mCamera->DoingContinuousAcquire())
+  if (mCamera->DoingContinuousAcquire())
     mWinApp->SetStatusText(mLiveFFT ? MEDIUM_PANE : COMPLEX_PANE, "");
 }
 
@@ -374,6 +385,8 @@ void CProcessImage::OnUpdateProcessDoCtffindFitOnClick(CCmdUI *pCmdUI)
 
 void CProcessImage::OnProcessSetCtffindOptions()
 {
+  float maxRes = GetMaxCtfFitRes();
+  CString str;
   if (!KGetOneInt("1 to compute resolution to which Thon rings fit, 0 not to:", 
     mExtraCtfStats))
     return;
@@ -383,9 +396,20 @@ void CProcessImage::OnProcessSetCtffindOptions()
   if (!KGetOneInt("1 for slower search for very astigmatic images, 0 for fast search:",
     mSlowerCtfFit))
     return;
-  KGetOneFloat("Factor to multiply and divide clicked defocus by to set maximum and "
+  str.Format(" (0 to use default from properties, %.1f):", mDefaultMaxCtfFitRes);
+  if (!KGetOneFloat(mUserMaxCtfFitRes > 0 ? "A higher number will make it fit over a "
+    "smaller range of frequencies" : "Higher value fits over smaller range. "
+    "Leave unchanged to use the default value from properties.", 
+    CString("Limit on maximum resolution for fitting, in Angstroms") + 
+    (mUserMaxCtfFitRes > 0 ? str : ":"), maxRes, 1))
+    return;
+  if (maxRes)
+    ACCUM_MAX(maxRes, 3.f);
+  if (fabs(maxRes - GetMaxCtfFitRes()) > .01)
+    mUserMaxCtfFitRes = maxRes;
+  /*KGetOneFloat("Factor to multiply and divide clicked defocus by to set maximum and "
     "minimum defocus to search:", mCtfFitFocusRangeFac, 1);
-  B3DCLAMP(mCtfFitFocusRangeFac, 0.1f, 10.f);
+  B3DCLAMP(mCtfFitFocusRangeFac, 0.1f, 10.f);*/
 }
 
 void CProcessImage::OnProcessRotateleft() 
@@ -719,7 +743,7 @@ float CProcessImage::ForeshortenedMean(int bufNum)
   if (mImBufs[bufNum].GetTiltAngle(tiltAngle)) {
     double factor = cos(DTOR * tiltAngle);
     // Foreshorten X if rotation puts tilt axis near Y axis, otherwise foreshorten Y
-    if (fabs(tan(DTOR * mWinApp->mShiftManager->GetImageRotation(
+    if (fabs(tan(DTOR * mShiftManager->GetImageRotation(
       mWinApp->GetCurrentCamera(), mImBufs[bufNum].mMagInd))) > 1.)
       nxuse = (int)(nx * factor);
     else 
@@ -774,7 +798,7 @@ void CProcessImage::DoSetIntensity(bool doseRate)
   // Get mean of full image
   fullMean = (float)WholeImageMean(mImBufs);
   ldArea = mWinApp->LowDoseMode() ? 
-    mWinApp->mCamera->ConSetToLDArea(mImBufs->mConSetUsed) : -1;
+    mCamera->ConSetToLDArea(mImBufs->mConSetUsed) : -1;
 
   // For regular mode or Record/Preview in low dose, get zero-tilt mean and ask for
   // factor or value for it
@@ -843,19 +867,19 @@ void CProcessImage::DoUpdateSetintensity(CCmdUI* pCmdUI, bool doseRate)
   if (mImBufs->mImage != NULL && mImBufs->mExposure && mImBufs->mBinning &&
     !mWinApp->GetSTEMMode() && (!doseRate || mImBufs->mCamera >= 0)) {
     ldArea = mWinApp->LowDoseMode() ? 
-      mWinApp->mCamera->ConSetToLDArea(mImBufs->mConSetUsed) : -1;
+      mCamera->ConSetToLDArea(mImBufs->mConSetUsed) : -1;
     if (ldArea < 0 || ldArea == 3) {
-      spot = mWinApp->mScope->FastSpotSize();
-      intensity = mWinApp->mScope->GetIntensity();
+      spot = mScope->FastSpotSize();
+      intensity = mScope->GetIntensity();
     } else {
       spot = ldParm[ldArea].spotSize;
       intensity = ldParm[ldArea].intensity;
     }
-    probe = ldArea < 0 ? mWinApp->mScope->GetProbeMode() : ldParm[ldArea].probeMode;
+    probe = ldArea < 0 ? mScope->GetProbeMode() : ldParm[ldArea].probeMode;
     enable = !mWinApp->mBeamAssessor->OutOfCalibratedRange(intensity, spot, probe, junk);
     if (doseRate && enable) {
       CameraParameters *camP = mWinApp->GetCamParams() + mImBufs->mCamera;
-      enable = mWinApp->mCamera->IsDirectDetector(camP) && camP->countsPerElectron > 0. &&
+      enable = mCamera->IsDirectDetector(camP) && camP->countsPerElectron > 0. &&
         mImBufs->mExposure > 0.;
     }
   }
@@ -1004,10 +1028,10 @@ void CProcessImage::EnableMoveBeam(CCmdUI * pCmdUI, bool skipUserPt)
  EMimageBuffer *imBuf = mWinApp->GetActiveNonStackImBuf();
  ScaleMat mat, mat2;
  if (imBuf->mMagInd) {
-   mat = mWinApp->mShiftManager->IStoCamera(imBuf->mMagInd);
-   mat2 = mWinApp->mShiftManager->GetBeamShiftCal(imBuf->mMagInd);
+   mat = mShiftManager->IStoCamera(imBuf->mMagInd);
+   mat2 = mShiftManager->GetBeamShiftCal(imBuf->mMagInd);
  }
- pCmdUI->Enable(!mWinApp->DoingTasks() && !mWinApp->mCamera->CameraBusy() && mat.xpx != 0. 
+ pCmdUI->Enable(!mWinApp->DoingTasks() && !mCamera->CameraBusy() && mat.xpx != 0. 
    && mat2.xpx != 0 && imBuf->mImage != NULL && imBuf->mTimeStamp != mMoveBeamStamp &&
    (skipUserPt || imBuf->mHasUserPt) && imBuf->mMagInd && imBuf->mBinning);
 }
@@ -1017,33 +1041,33 @@ void CProcessImage::EnableMoveBeam(CCmdUI * pCmdUI, bool skipUserPt)
 int CProcessImage::MoveBeam(EMimageBuffer *imBuf, float shiftX, float shiftY)
 {
   double bsX, bsY, bsTot;
-  int magInd = imBuf != NULL ? imBuf->mMagInd : mWinApp->mScope->GetMagIndex();
+  int magInd = imBuf != NULL ? imBuf->mMagInd : mScope->GetMagIndex();
   if (imBuf) {
     shiftX *= imBuf->mBinning;
     shiftY *= imBuf->mBinning;
   } else {
-    float pixel = mWinApp->mShiftManager->GetPixelSize(mWinApp->GetCurrentCamera(), 
+    float pixel = mShiftManager->GetPixelSize(mWinApp->GetCurrentCamera(), 
       magInd);
     shiftX /= pixel;
     shiftY /= pixel;
   }
 
   // Get the matrix for going from camera to Beam shift through image shift
-  ScaleMat bInv = mWinApp->mShiftManager->CameraToIS(magInd);
-  ScaleMat IStoBS = mWinApp->mShiftManager->GetBeamShiftCal(magInd);
+  ScaleMat bInv = mShiftManager->CameraToIS(magInd);
+  ScaleMat IStoBS = mShiftManager->GetBeamShiftCal(magInd);
   if (!bInv.xpx || !IStoBS.xpx)
     return 1;
 
-  ScaleMat camToBS = mWinApp->mShiftManager->MatMul(bInv, IStoBS);
+  ScaleMat camToBS = mShiftManager->MatMul(bInv, IStoBS);
   
   // Invert Y when getting beam shift - then there is the usual sign question
   bsX = camToBS.xpx * shiftX - camToBS.xpy * shiftY;
   bsY = camToBS.ypx * shiftX - camToBS.ypy * shiftY;
-  mWinApp->mScope->IncBeamShift(bsX, bsY);
+  mScope->IncBeamShift(bsX, bsY);
 
   // Message?
   if (imBuf) {
-    ScaleMat aInv = mWinApp->mShiftManager->CameraToSpecimen(magInd);
+    ScaleMat aInv = mShiftManager->CameraToSpecimen(magInd);
     bsX = aInv.xpx * shiftX - aInv.xpy * shiftY;
     bsY = aInv.ypx * shiftX - aInv.ypy * shiftY;
     bsTot = sqrt(bsX * bsX + bsY * bsY);
@@ -1059,22 +1083,22 @@ int CProcessImage::MoveBeam(EMimageBuffer *imBuf, float shiftX, float shiftY)
 int CProcessImage::MoveBeamByCameraFraction(float shiftX, float shiftY)
 {
   double bsX, bsY;
-  int magInd = mWinApp->mScope->FastMagIndex();
+  int magInd = mScope->FastMagIndex();
   int cam = mWinApp->GetCurrentCamera();
   CameraParameters *camp = mWinApp->GetCamParams() + cam;
-  ScaleMat bInv = mWinApp->mShiftManager->CameraToIS(magInd);
-  ScaleMat IStoBS = mWinApp->mShiftManager->GetBeamShiftCal(magInd);
+  ScaleMat bInv = mShiftManager->CameraToIS(magInd);
+  ScaleMat IStoBS = mShiftManager->GetBeamShiftCal(magInd);
   float camSize = (float)sqrt((double)camp->sizeX * camp->sizeY);
   if (!bInv.xpx || !IStoBS.xpx)
     return 1;
-  ScaleMat camToBS = mWinApp->mShiftManager->MatMul(bInv, IStoBS);
+  ScaleMat camToBS = mShiftManager->MatMul(bInv, IStoBS);
   if (!shiftX && !shiftY)
     return 0;
   shiftX *= camSize;
   shiftY *= camSize;
   bsX = camToBS.xpx * shiftX + camToBS.xpy * shiftY;
   bsY = camToBS.ypx * shiftX + camToBS.ypy * shiftY;
-  mWinApp->mScope->IncBeamShift(bsX, bsY);
+  mScope->IncBeamShift(bsX, bsY);
   return 0;
 }
 
@@ -1430,7 +1454,7 @@ void CProcessImage::FixXRaysInBuffer(BOOL doImage)
   int nx = image->getWidth();
   int ny = image->getHeight();
   NewArray(brray, short int, nx * ny);
-  float critFac = param->unsignedImages && mWinApp->mCamera->GetDivideBy2() ? 2.f : 1.f;
+  float critFac = param->unsignedImages && mCamera->GetDivideBy2() ? 2.f : 1.f;
   if (!brray) {
     AfxMessageBox("Failed to get memory for corrected image", MB_EXCLAME);
     return;
@@ -1491,7 +1515,7 @@ void CProcessImage::OnSetimagecriteria()
 
 void CProcessImage::OnUpdateSetcriteria(CCmdUI* pCmdUI) 
 {
-  pCmdUI->Enable(!mWinApp->DoingTasks() && !mWinApp->mCamera->CameraBusy()); 
+  pCmdUI->Enable(!mWinApp->DoingTasks() && !mCamera->CameraBusy()); 
 }
 
 
@@ -1655,7 +1679,7 @@ double CProcessImage::WholeImageMean(EMimageBuffer *imBuf)
 
 void CProcessImage::OnProcessShowcrosscorr() 
 {
-  mWinApp->mShiftManager->AutoAlign(0, 0, false, true);	
+  mShiftManager->AutoAlign(0, 0, false, true);	
 }
 
 void CProcessImage::OnUpdateProcessShowcrosscorr(CCmdUI* pCmdUI) 
@@ -1667,22 +1691,22 @@ void CProcessImage::OnUpdateProcessShowcrosscorr(CCmdUI* pCmdUI)
 
 void CProcessImage::OnProcessAutocorrelation()
 {
-  float sigma1save = mWinApp->mShiftManager->GetSigma1();
-  float sigma2save = mWinApp->mShiftManager->GetSigma2();
-  float radius2save = mWinApp->mShiftManager->GetRadius2();
-  mWinApp->mShiftManager->SetSigma1(0.);
-  mWinApp->mShiftManager->SetSigma2(0.);
-  mWinApp->mShiftManager->SetRadius2(0.);
-  mWinApp->mShiftManager->AutoAlign(-1, 0, false, true);
+  float sigma1save = mShiftManager->GetSigma1();
+  float sigma2save = mShiftManager->GetSigma2();
+  float radius2save = mShiftManager->GetRadius2();
+  mShiftManager->SetSigma1(0.);
+  mShiftManager->SetSigma2(0.);
+  mShiftManager->SetRadius2(0.);
+  mShiftManager->AutoAlign(-1, 0, false, true);
 
   // Fix the scaling, 32000 is not really good
   if (mImBufs->mImageScale) {
     mImBufs->mImageScale->SetMinMax(mImBufs->mImageScale->GetMinScale(), mCorrMaxScale);
     mWinApp->SetCurrentBuffer(0);
   }
-  mWinApp->mShiftManager->SetSigma1(sigma1save);
-  mWinApp->mShiftManager->SetSigma2(sigma2save);
-  mWinApp->mShiftManager->SetRadius2(radius2save);
+  mShiftManager->SetSigma1(sigma1save);
+  mShiftManager->SetSigma2(sigma2save);
+  mShiftManager->SetRadius2(radius2save);
 }
 
 void CProcessImage::OnUpdateProcessAutocorrelation(CCmdUI* pCmdUI) 
@@ -1692,7 +1716,7 @@ void CProcessImage::OnUpdateProcessAutocorrelation(CCmdUI* pCmdUI)
 
 void CProcessImage::OnUpdateProcessMakecoloroverlay(CCmdUI *pCmdUI)
 {
-  pCmdUI->Enable(!mWinApp->DoingTasks() && !mWinApp->mCamera->CameraBusy());
+  pCmdUI->Enable(!mWinApp->DoingTasks() && !mCamera->CameraBusy());
 }
 
 /////////////////////////////////////////
@@ -1818,7 +1842,7 @@ void CProcessImage::FindPixelSize(float markedX, float markedY, float minScale,
 
   // Handle automatic target selection
   if (!targetSize) {
-    pixel = mWinApp->mShiftManager->GetPixelSize(mImBufs);
+    pixel = mShiftManager->GetPixelSize(mImBufs);
     if (mGridMeshSize > 0) {
       targetSize = 512;
       PrintfToLog("Setting target binned size to 512;\r\n   there is no automatic target"
@@ -2771,7 +2795,7 @@ bool CProcessImage::GetFFTZeroRadiiAndDefocus(EMimageBuffer *imBuf, FloatVec *ra
   if (!(imBuf->mCaptured == BUFFER_FFT || imBuf->mCaptured == BUFFER_LIVE_FFT) || 
     mSphericalAber <= 0. || !mNumFFTZeros || !imBuf->mHasUserPt || !imBuf->mImage)
     return false;
-  float pixel = 1000.f * mWinApp->mShiftManager->GetPixelSize(imBuf);
+  float pixel = 1000.f * mShiftManager->GetPixelSize(imBuf);
   if (mTestCtfPixelSize)
     pixel = mTestCtfPixelSize;
   if (!pixel)
@@ -2802,7 +2826,7 @@ void CProcessImage::ModifyFFTPointToFirstZero(EMimageBuffer *imBuf, float &shift
   double pointRad, critBelow, critAbove, defocus, xcen, ycen, dx, dy;
   if (mNumFFTZeros < 2 || !GetFFTZeroRadiiAndDefocus(imBuf, &radii, defocus))
     return;
-  float pixel = 1000.f * mWinApp->mShiftManager->GetPixelSize(imBuf);
+  float pixel = 1000.f * mShiftManager->GetPixelSize(imBuf);
   if (mTestCtfPixelSize)
     pixel = mTestCtfPixelSize;
   num = (int)radii.size();
@@ -2895,7 +2919,7 @@ double CProcessImage::GetRecentVoltage(bool *valueWasRead)
     *valueWasRead = false;
   if (mKVTime < 0 || SEMTickInterval(mKVTime) > 1000 * KV_CHECK_SECONDS) {
     mKVTime = GetTickCount();
-    mVoltage = mWinApp->mScope->GetHTValue();
+    mVoltage = mScope->GetHTValue();
     if (valueWasRead)
       *valueWasRead = true;
   }
@@ -2949,7 +2973,7 @@ int CProcessImage::InitializeCtffindParams(EMimageBuffer *imBuf, CtffindParams &
   params.additional_phase_shift_search_step = 0.1f;
   params.compute_extra_stats = false;
   if (imBuf) {
-    params.pixel_size_of_input_image = mWinApp->mShiftManager->GetPixelSize(imBuf) *
+    params.pixel_size_of_input_image = mShiftManager->GetPixelSize(imBuf) *
       10000.f;
     if (mTestCtfPixelSize)
       params.pixel_size_of_input_image = mTestCtfPixelSize * 10.f;
@@ -2957,10 +2981,10 @@ int CProcessImage::InitializeCtffindParams(EMimageBuffer *imBuf, CtffindParams &
       return 1;
     params.minimum_resolution = B3DMIN(params.pixel_size_of_input_image / 0.05f, 50.f);
     params.maximum_resolution = params.pixel_size_of_input_image / 0.3f;
-    if (imBuf->mCamera >= 0 && mWinApp->mCamera->IsDirectDetector
+    if (imBuf->mCamera >= 0 && mCamera->IsDirectDetector
       (&camParams[imBuf->mCamera]))
       params.maximum_resolution = params.pixel_size_of_input_image / 0.35f;
-
+    ACCUM_MAX(params.maximum_resolution, GetMaxCtfFitRes());
   }
   return 0;
 }
@@ -2984,6 +3008,7 @@ void CProcessImage::SetCtffindParamsForDefocus(CtffindParams &param, double defo
       (0.4f * radii[0]));
   if (param.minimum_resolution > 50.)
     ACCUM_MAX(param.maximum_resolution, param.minimum_resolution / 5.f);
+  ACCUM_MAX(param.maximum_resolution, GetMaxCtfFitRes());
 }
 
 // Run
@@ -2992,17 +3017,27 @@ int CProcessImage::RunCtffind(EMimageBuffer *imBuf, CtffindParams &params,
 {
   float *spectrum;
   //float *rotationalAvg, *normalizedAvg, *fitCurve;
-  float lastBinFreq;
+  float lastBinFreq, resampleRes;
+  float pixelSave = params.pixel_size_of_input_image;
+  float minFracOfNyquistForMaxRes = 0.6f;
   CString mess, str;
   double wallStart = wallTime();
-  int numPoints, padSize, err;
+  int numPoints, padSize, err, useBox, start, end, val;
   KImage *image = imBuf->mImage;
   if (!image)
     return 1;
 
+  // Determine whether to resample the power spectrum from a larger box
+  resampleRes = minFracOfNyquistForMaxRes * params.maximum_resolution;
+  useBox = params.box_size;
+  if (resampleRes > params.pixel_size_of_input_image * 2.)
+    useBox = 2 * (B3DNINT(1. + 0.5 * params.box_size * resampleRes /
+      params.pixel_size_of_input_image) / 2);
+
+
   // Get the scaled spectrum; just flip image first and restore at end to make it match
   // IMOD and ctffind expectations
-  NewArray(spectrum, float, params.box_size * (params.box_size + 2));
+  NewArray(spectrum, float, useBox * (useBox + 2));
   if (!spectrum)
     return 1;
   image->Lock();
@@ -3010,11 +3045,20 @@ int CProcessImage::RunCtffind(EMimageBuffer *imBuf, CtffindParams &params,
   padSize = XCorrNiceFrame(padSize, 2, 19);
   image->flipY();
   err = spectrumScaled(image->getData(), image->getType(), image->getWidth(), 
-    image->getHeight(), spectrum, -padSize, params.box_size, 0, 0., -1, twoDfft);
+    image->getHeight(), spectrum, -padSize, useBox, 0, 0., -1, twoDfft);
   if (err) 
     PrintfToLog("Error %d calling spectrumScaled", err);
   image->flipY();
   image->UnLock();
+  if (!err && useBox > params.box_size) {
+    start = (useBox - params.box_size) / 2;
+    end = start + params.box_size - 1;
+    err = extractAndBinIntoArray(spectrum, MRC_MODE_FLOAT, useBox + 2, start, end, start,
+       end, 1, spectrum, params.box_size + 2, 0, 0, 0, &val, &val);
+    if (err)
+      PrintfToLog("Error %d extracting reduced spectrum from larger box to smaller", err);
+    params.pixel_size_of_input_image *= (float)useBox / (float)params.box_size;
+  }
 
   // Run the fit and report results
   if (!err && ctffind(params, spectrum, params.box_size + 2, results_array, NULL,
@@ -3040,6 +3084,7 @@ int CProcessImage::RunCtffind(EMimageBuffer *imBuf, CtffindParams &params,
     err = 1;
   }
   delete [] spectrum;
+  params.pixel_size_of_input_image = pixelSave;
   return err;
 }
 
@@ -3077,7 +3122,7 @@ float CProcessImage::CountsPerElectronForImBuf(EMimageBuffer * imBuf)
   CameraParameters *camParam = mWinApp->GetCamParams() + imBuf->mCamera;
   countsPerElectron = camParam->countsPerElectron;
   if (camParam->K2Type && imBuf->mK2ReadMode > 0)
-    countsPerElectron = mWinApp->mCamera->GetCountScaling(camParam);
+    countsPerElectron = mCamera->GetCountScaling(camParam);
   if (countsPerElectron <= 0.)
     return 0.;
   if (imBuf->mDividedBy2)
@@ -3116,7 +3161,7 @@ float CProcessImage::LinearizedDoseRate(int camera, float rawRate)
   // based on voltage
   if (!camParam->doseTabCounts.size()) {
     if (camParam->K2Type) {
-      if (mWinApp->mScope->GetHTValue() > 250) {
+      if (mScope->GetHTValue() > 250) {
         countsArr = &K2counts300KV[0];
         ratesArr = &K2rates300KV[0];
         numVals = sizeof(K2counts300KV) / sizeof(float);
@@ -3267,4 +3312,10 @@ int CProcessImage::FindDoseRate(float countVal, float *counts, float *rates, int
   }
   doseRate = countVal / ratioBest;
   return err; 
+}
+
+// Return maximum resolution for fitting, in Angstroms
+float CProcessImage::GetMaxCtfFitRes(void)
+{
+  return (mUserMaxCtfFitRes > 0 ? mUserMaxCtfFitRes : mDefaultMaxCtfFitRes);
 }

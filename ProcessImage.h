@@ -67,6 +67,8 @@ public:
   GetSetMember(int, SlowerCtfFit);
   GetSetMember(int, ExtraCtfStats);
   GetSetMember(int, DrawExtraCtfRings);
+  GetSetMember(float, UserMaxCtfFitRes);
+  SetMember(float, DefaultMaxCtfFitRes);
   GetSetMember(float, TestCtfPixelSize);
 
 // Overrides
@@ -107,6 +109,9 @@ protected:
 private:
   CSerialEMApp * mWinApp;
   EMimageBuffer *mImBufs;
+  CCameraController *mCamera;
+  CEMscope *mScope;
+  CShiftManager *mShiftManager;
   float mInnerXRayDistance;   // minimum and maximum distances from X ray patch
   float mOuterXRayDistance;   // for neighboring pixels to average
   int mXRayCritIterations;    // Number of times to try oversized patch with higher crit 
@@ -144,6 +149,8 @@ private:
   int mSlowerCtfFit;           // Flag for 2D fits
   int mExtraCtfStats;          // Compute extra statistics
   int mDrawExtraCtfRings;      // Draw as many rings as resolution
+  float mUserMaxCtfFitRes;     // Users (setting) value of max resolution, in Angstroms
+  float mDefaultMaxCtfFitRes;  // Default value if no setting
   float mTestCtfPixelSize;     // A read-in value to replace buffer value for testing
 
 
@@ -229,6 +236,8 @@ afx_msg void OnProcessDoCtffindFitOnClick();
 afx_msg void OnUpdateProcessDoCtffindFitOnClick(CCmdUI *pCmdUI);
 afx_msg void OnProcessSetCtffindOptions();
 void SetCtffindParamsForDefocus(CtffindParams & param, double defocus, bool justMinRes);
+void Initialize(void);
+float GetMaxCtfFitRes(void);
 };
 
 /////////////////////////////////////////////////////////////////////////////
