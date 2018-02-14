@@ -1037,6 +1037,9 @@ int CAutoTuning::CtfBasedAstigmatismComa(int comaFree, bool calibrate, int actio
   recSet->mode = SINGLE_FRAME;
   recSet->alignFrames = 0;
   recSet->saveFrames = 0;
+  recSet->doseFrac = 0;
+  B3DCLAMP(recSet->K2ReadMode, 0, 1);
+  recSet->processing = GAIN_NORMALIZED;
 
   // Find limits to allowed focus range based on number of rings.  Unfortunately the 
   // absolute limits and the ones to use are in negative microns, the trial value is in
@@ -1050,8 +1053,11 @@ int CAutoTuning::CtfBasedAstigmatismComa(int comaFree, bool calibrate, int actio
     mWinApp->mProcessImage->DefocusFromPointAndZeros(0., 0, pixel, 0.4f, &radii,tryFocus);
     if (!mMinDefocusForMag && (int)radii.size() >= mMinRingsForCtf)
       mMinDefocusForMag = -(float)tryFocus;
-    if ((int)radii.size() > mMaxRingsForCtf)
-      break;
+
+    // In fact it is now complicated to anticipate how many rings will be in the spectrum
+    // actually analyzed and it is probably unnecessary because of automatic resampling
+    //if ((int)radii.size() > mMaxRingsForCtf)
+      //break;
     mMaxDefocusForMag = -(float)tryFocus;
     tryFocus += scanDelta;
   }
