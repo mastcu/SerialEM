@@ -3155,7 +3155,7 @@ StateParams *CNavHelper::NewStateParam(bool navAcquire)
   param->magIndex = param->spotSize = 0;
   param->probeMode = -1;
   param->slitIn = param->zeroLoss = false;
-  param->ldParams.delayFactor = 0.6f;
+  param->ldParams.delayFactor = 0.9f;
   param->singleContMode = SINGLE_FRAME;
   if (navAcquire)
     mAcqStateArray->Add(param);
