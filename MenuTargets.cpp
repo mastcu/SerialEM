@@ -2690,6 +2690,8 @@ void CMenuTargets::OnFocusSetComaBeamTilt()
 void CMenuTargets::OnFocusSetCtfComaBt()
 {
   float value = mWinApp->mAutoTuning->GetUsersComaTilt();
+  if (value <= 0)
+    value = mWinApp->mAutoTuning->GetMaxComaBeamTilt();
   if (!FEIscope) {
     CString str;
     float scaling = mWinApp->mFocusManager->EstimatedBeamTiltScaling();
