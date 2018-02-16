@@ -222,6 +222,7 @@ public:
   int NewAxisPosition(int area, double position, int angle, bool setAngle);
   afx_msg void OnRadioShowOffset();
   int m_iOffsetShown;
+  void SyncFocusAndTrial(int fromArea);
 };
 
 //{{AFX_INSERT_LOCATION}}

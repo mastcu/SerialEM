@@ -509,8 +509,7 @@ void CLowDoseDlg::OnTiefocustrial()
   int area = m_iDefineArea ? m_iDefineArea : mScope->GetLowDoseArea();
   if ((area + 1) / 2 != 1)
     area = 2;
-  if (m_bTieFocusTrial)
-    mLDParams[3 - area] = mLDParams[area];
+  SyncFocusAndTrial(area);
   ManageAxisPosition();
   mWinApp->RestoreViewFocus();
 }
@@ -637,8 +636,7 @@ void CLowDoseDlg::OnCopyArea(UINT nID)
     ldArea->dfTiltX = ldFrom->dfTiltX;
     ldArea->dfTiltY = ldFrom->dfTiltY;
   }
-  if (m_bTieFocusTrial && (area + 1) / 2 == 1)
-    mLDParams[3 - area] = mLDParams[area];
+  SyncFocusAndTrial(area);
 }
 
 // Unblank the beam temporarily
@@ -673,8 +671,7 @@ void CLowDoseDlg::OnResetBeamShift()
       " area reset to 0.,0.");
   }
   // TODO: should it zero dark field tilt beam shift?
-  if (m_bTieFocusTrial && focusTrial)
-    mLDParams[3 - area] = mLDParams[area];
+  SyncFocusAndTrial(area);
 }
 
 // Either start or terminate setting of beam shift
@@ -756,8 +753,7 @@ void CLowDoseDlg::FinishSettingBeamShift(BOOL toggled)
      PrintfToLog("Dark field beam tilt for %s area set to %.3f, %.3f", 
        (LPCTSTR)mModeNames[area], mLDParams[area].dfTiltX, mLDParams[area].dfTiltY);
   }
-  if (m_bTieFocusTrial && focusTrial)
-    mLDParams[3 - area] = mLDParams[area];
+  SyncFocusAndTrial(area);
 }
 
 // Select which area offsets are controlled
@@ -1115,8 +1111,7 @@ void CLowDoseDlg::UpdateSettings()
   int area = m_iDefineArea ? m_iDefineArea : mScope->GetLowDoseArea();
   if ((area + 1) / 2 != 1)
     area = 2;
-  if (m_bTieFocusTrial)
-    mLDParams[3 - area] = mLDParams[area];
+  SyncFocusAndTrial(area);
   ManageAxisPosition();
 
   Update();
@@ -1302,9 +1297,8 @@ void CLowDoseDlg::ManageMagSpot(int inSetArea, BOOL screenDown)
     needUpdate = true;
 
     // This will catch initialization oddities, I hope; but don't do it when autocentering
-    if ((inSetArea + 1) / 2 == 1 && m_bTieFocusTrial && 
-      !mWinApp->mMultiTSTasks->GetAutoCentering())
-      mLDParams[3 - inSetArea] = mLDParams[inSetArea];
+    if (!mWinApp->mMultiTSTasks->GetAutoCentering())
+      SyncFocusAndTrial(inSetArea);
   }
   if (needUpdate)
     UpdateData(false);
@@ -1374,8 +1368,7 @@ void CLowDoseDlg::ScopeUpdate(int magIndex, int spotSize, double intensity,
       SyncFilterSettings(inSetArea);
 
     // Keep trial and focus together?
-    if ((inSetArea + 1) / 2 == 1 && m_bTieFocusTrial)
-      mLDParams[3 - inSetArea] = mLDParams[inSetArea];
+    SyncFocusAndTrial(inSetArea);
   }
 
   ManageMagSpot(inSetArea, screenDown);
@@ -1423,8 +1416,7 @@ void CLowDoseDlg::ScopeUpdate(int magIndex, int spotSize, double intensity,
         // Set new mode shift values and set the user point
         ldArea->axisPosition = tiltAxisX;
         ConvertOneAxisToIS(ldArea->magIndex, tiltAxisX, ldArea->ISX, ldArea->ISY);
-        if (m_bTieFocusTrial)
-          mLDParams[3 - m_iDefineArea] = mLDParams[m_iDefineArea];
+        SyncFocusAndTrial(m_iDefineArea);
         FixUserPoint(shiftedA);
         ManageAxisPosition();
       }
@@ -1490,8 +1482,7 @@ BOOL CLowDoseDlg::ImageAlignmentChange(float &newX, float &newY,
   if (UsefulImageInA() > 0) {
     ldArea->axisPosition += ConvertOneIStoAxis(mImBufs->mMagInd, delISX, delISY);
     ConvertOneAxisToIS(ldArea->magIndex, ldArea->axisPosition, ldArea->ISX, ldArea->ISY);
-    if (m_bTieFocusTrial)
-      mLDParams[3 - m_iDefineArea] = mLDParams[m_iDefineArea];
+    SyncFocusAndTrial(m_iDefineArea);
     ManageAxisPosition();
     SEMTrace('W', "ImageAlignmentChange setting axis IS");
   } else {
@@ -1540,8 +1531,7 @@ void CLowDoseDlg::UserPointChange(float &ptX, float &ptY, EMimageBuffer *imBuf)
   ldArea->axisPosition = mLDParams[conSet].axisPosition +
     ConvertOneIStoAxis(imBuf->mMagInd, delISX, delISY);
   ConvertOneAxisToIS(ldArea->magIndex, ldArea->axisPosition, ldArea->ISX, ldArea->ISY);
-  if (m_bTieFocusTrial)
-    mLDParams[3 - m_iDefineArea] = mLDParams[m_iDefineArea];
+  SyncFocusAndTrial(m_iDefineArea);
 
   /*
   CString message;
@@ -1600,8 +1590,7 @@ void CLowDoseDlg::OnKillfocusEditposition()
   // Set the axis position and image shift
   ldArea->axisPosition = newAxis;
   ConvertOneAxisToIS(ldArea->magIndex, newAxis, ldArea->ISX, ldArea->ISY);
-  if (m_bTieFocusTrial)
-    mLDParams[3 - m_iDefineArea] = mLDParams[m_iDefineArea];
+  SyncFocusAndTrial(m_iDefineArea);
 
 
   // Output new image shift if the defined area is current
@@ -2113,4 +2102,16 @@ bool CLowDoseDlg::GoToPiezoPosForLDarea(int area)
     mScope->WaitForStageReady(20000);
   }
   return false;
+}
+
+// If the given area is T or F and they are to have same parameters, copy to the other
+// area, preserving the delay factor.
+void CLowDoseDlg::SyncFocusAndTrial(int fromArea)
+{
+  int toArea = B3DCHOICE(fromArea == FOCUS_CONSET, TRIAL_CONSET, FOCUS_CONSET);
+  if ((fromArea == FOCUS_CONSET|| fromArea == TRIAL_CONSET) && m_bTieFocusTrial) {
+    float delay = mLDParams[toArea].delayFactor;
+    mLDParams[toArea] = mLDParams[fromArea];
+    mLDParams[toArea].delayFactor = delay;
+  }
 }

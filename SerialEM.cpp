@@ -670,7 +670,7 @@ void CSerialEMApp::InitializeLDParams(void)
       mCamLowDoseParams[j][i].beamDelX = 0.;
       mCamLowDoseParams[j][i].beamDelY = 0.;
       mCamLowDoseParams[j][i].axisPosition = 0.;
-      mCamLowDoseParams[j][i].delayFactor = 0.6f;
+      mCamLowDoseParams[j][i].delayFactor = 1.0f;
       mCamLowDoseParams[j][i].slitIn = false;
       mCamLowDoseParams[j][i].slitWidth = 0.;
       mCamLowDoseParams[j][i].energyLoss = 0.;
@@ -684,7 +684,9 @@ void CSerialEMApp::InitializeLDParams(void)
       mCamLowDoseParams[j][i].dfTiltY = 0.;
     }
     mCamLowDoseParams[j][VIEW_CONSET].delayFactor = 0.3f;
-    mCamLowDoseParams[j][FOCUS_CONSET].delayFactor = 2.0f;
+    mCamLowDoseParams[j][FOCUS_CONSET].delayFactor = 1.5f;
+    mCamLowDoseParams[j][TRIAL_CONSET].delayFactor = 0.6f;
+    mCamLowDoseParams[j][RECORD_CONSET].delayFactor = 0.9f;
     mCamLowDoseParams[j][SEARCH_AREA].delayFactor = 0.05f;
   }
 
@@ -2579,6 +2581,7 @@ int SEMThreeChoiceBox(CString message, CString yesText, CString noText,
 //   t for exposure time/intensity changes in tasks and continuous timing
 //   u for updates
 //   y for background save start/end reports
+//   % list script commands allowing arithmetic
 //   } Crash program on next image acquire
 void SEMTrace(char key, char *fmt, ...)
 {
