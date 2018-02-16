@@ -2373,6 +2373,11 @@ void CCameraController::Capture(int inSet, bool retrying)
       mTD.FEIacquireFlags |= PLUGFEI_WAIT_FOR_FRAMES;
   }
 
+  // Enforce read mode 0 for K2 base camera and DE that cannot count
+  if (mParam->K2Type == 2 || (mParam->DE_camType && 
+    !(mParam->CamFlags & DE_CAM_CAN_COUNT)))
+    conSet.K2ReadMode = 0;
+
   // Set up DE12 saving
   mRemoveAlignedDEframes = false;
   if (mWinApp->mDEToolDlg.CanSaveFrames(mParam)) {
@@ -2428,7 +2433,7 @@ void CCameraController::Capture(int inSet, bool retrying)
       }
     }
     if (mTD.DE_Cam->SetAllAutoSaves(setState, sumCount, mFrameFilename, mFrameFolder, 
-      mParam->CamFlags & DE_CAM_CAN_COUNT)) {
+      conSet.K2ReadMode > 0)) {
         ErrorCleanup(1);
         return;
     }
@@ -2508,12 +2513,10 @@ void CCameraController::Capture(int inSet, bool retrying)
   if (mWinApp->DoingTiltSeries() && mWinApp->mTSController->GetTerminateOnError())
     mNoMessageBoxOnError = 1;
 
-  // Set up scaling for K2 camera.  Enforce read mode 0 for base camera
+  // Set up scaling for K2 camera.  
   // Set read mode -2 or -3 for OneView so it is distinct from K2
   // Send a scaling of 1 for summit linear mode, or the scaling parameter for base camera
   mTD.NeedsReadMode = mNeedsReadMode[CAMP_DM_INDEX(mParam)];
-  if (mParam->K2Type == 2)
-    conSet.K2ReadMode = 0;
   mTD.GatanReadMode = B3DCHOICE(mParam->K2Type > 0 || 
     (mParam->DE_camType && (mParam->CamFlags & DE_CAM_CAN_COUNT)) ||
     (mParam->FEItype && FCAM_CAN_COUNT(mParam)), conSet.K2ReadMode, -1);
@@ -7787,8 +7790,9 @@ void CCameraController::DisplayNewImage(BOOL acquired)
         IsDirectDetector(mParam) && extra->m_fDose > 0 &&
         !mWinApp->mProcessImage->DoseRateFromMean(imBuf, imBuf->mSampleMean, camRate)) {
           specRate = extra->m_fDose * 
-            (float)pow((double)extra->mPixel / extra->mBinning, 2) / partialExposure;
-          mParam->specToCamDoseFac = camRate / specRate;
+            (float)pow((double)extra->mPixel / extra->mBinning, 2) / 
+            B3DMAX(0.0025f, partialExposure - mParam->deadTime);
+          mParam->specToCamDoseFac = camRate / B3DMAX(0.000001f, specRate);
       }
       if (mParam->STEMcamera)
         extra->mAxisAngle = mParam->imageRotation + mWinApp->GetAddedSTEMrotation();
