@@ -311,4 +311,5 @@ FLOAT_PROP_TEST("GridLinesPerMM", mWinApp->mProcessImage->, GridLinesPerMM)
 FLOAT_PROP_TEST("TestCtfPixelSize", mWinApp->mProcessImage->, TestCtfPixelSize)
 FLOAT_PROP_TEST("DefaultMaxCtfFitRes", mWinApp->mProcessImage->, DefaultMaxCtfFitRes)
 FLOAT_PROP_TEST("TestCtfTuningDefocus", mWinApp->mAutoTuning->, TestCtfTuningDefocus)
+INT_PROP_TEST("CtfBasedLDareaDelay", mWinApp->mAutoTuning->, CtfBasedLDareaDelay)
 #endif

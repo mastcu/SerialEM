@@ -356,7 +356,8 @@
               s for STEM in general<br />
               t for exposure time changes in tasks and for continuous mode timing<BR>
               u for update items when polling<BR>
-              y for reports when background saving starts and ends</P>
+              y for reports when background saving starts and ends<br />
+              % list script commands other than Set that allow arithmetic when program starts</P>
           </TD>
         </TR>
         <TR VALIGN="top">
@@ -2345,8 +2346,9 @@
         </TR>
         <TR VALIGN="top">
           <TD class="style4"><A name="AstigmatismParams"></A>AstigmatismParams B [A] [T] [F] [R]</TD>
-          <TD>Default beam tilt for astigmatism calibration and/or correction (default 3.2).&nbsp; 
-            A setting made through Focus - <a href="menu_focus.htm#hid_focus_setastigbeamtilt">Set Astig 
+          <TD>Default beam tilt for BTID astigmatism calibration and/or correction (default 3.2).&nbsp; 
+            A setting made through Focus - <a href="menu_focus.htm#hid_focus_setastigbeamtilt">Set 
+            BTID Astig 
         Beam Tilt</a> will be retained in the settings file and override this default.&nbsp; 
             Additional entries are optional: &#39;A&#39; for stigmator values to apply (default 
             0.1); &#39;T&#39; for threshold stigmator change above which the correction is iterated 
@@ -2355,11 +2357,13 @@
         </TR>
         <TR VALIGN="top">
           <TD class="style4"><A name="ComaParams"></A>ComaParams B [F]</TD>
-          <TD>Default maximum beam tilt for coma-free calibration (default 10).&nbsp; A 
-            setting made through Focus - <a href="menu_focus.htm#hid_focus_setcomabeamtilt">
-            Set Coma 
+          <TD>Default maximum beam tilt for BTID coma-free calibration (default 10) and for 
+            CTF-based coma-free alignment.&nbsp; A 
+            setting made through Focus/Tune - <a href="#hid_focus_set_ctf_coma_bt">Set CTF Coma-free Params</A> 
+            or Focus/Tune - Old Coma-free Alignment - <a href="menu_focus.htm#hid_focus_setcomabeamtilt">
+            Set  
         Beam Tilt</a> will be retained in the settings file and override this default. The 
-            optional &#39;F&#39; entry is the focus at which coma-free operations are done (default 
+            optional &#39;F&#39; entry is the focus at which BTID coma-free operations are done (default 
             -1).</TD>
         </TR>
         <TR VALIGN="top">
@@ -2371,6 +2375,12 @@
             msec).&nbsp; The optional &#39;B&#39; is the delay after changing beam tilt for the 
             coma-free routines (default 750 msec); it is applied only if it is larger than 
             the delay set with FocusPostTiltDelay.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style4">CtfBasedLDareaDelay</TD>
+          <TD>Additional delay after changing low dose area for CTF-based coma-free 
+            alignment.&nbsp; The delay is needed to settle out focus changes.&nbsp; The 
+            default is 8 seconds.</TD>
         </TR>
       </TABLE>
       <BR>

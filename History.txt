@@ -3,6 +3,20 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+2/16/18: Adjusted Low Dose post-image shift delay factors from 0.6 to 0.9 for
+Record and from 2 to 1.5 for Focus.  Fixed Focus using Trial factor of 0.6 if
+the two are tied together.
+
+2/16/18: Arithmetic expressions are now allowed on all script commands
+starting with "Set" and many others.
+
+2/16/18: In camera setup dialog, fixed estimate of dose rate at camera for
+difference in mag between low dose areas.
+
+2/16/18: Fixed various aspects of doing coma-free alignment in Low Dose,
+including focusing with Record and adding a big settling time when not
+starting in Record.
+
 2/10/18: Added routines for astigmatism correction and coma-free alignment by
 CTF fitting to images with Thon rings.  The latter is much better than the old
 coma-free alignment routine and requires no calibration.
