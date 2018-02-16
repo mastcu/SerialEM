@@ -123,7 +123,7 @@ static char THIS_FILE[]=__FILE__;
   return 98; \
 }
 
-#define CMD_IS(a) (strItems[0] == cmdList[CME_##a].cmd)
+#define CMD_IS(a) (strItems[0] == cmdList[CME_##a].cmd.c_str())
 
 #define MAX_TOKENS 60
 
@@ -220,115 +220,114 @@ enum {CME_VIEW, CME_FOCUS, CME_TRIAL, CME_RECORD, CME_PREVIEW,
   CME_CBASTIGCOMA, CME_FIXASTIGMATISMBYCTF, CME_FIXCOMABYCTF
 };
 
-static CmdItem cmdList[] = {{NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0}, {NULL, 0},
-  {"A", 0}, {"AlignTo", 1}, {"AutoAlign", 0}, {"AutoFocus", 0}, {"Break", 0}, {"Call", 1},
-  {"CallMacro", 1}, {"CenterBeamFromImage", 0}, {"ChangeEnergyLoss", 1},
-  {"ChangeFocus", 1}, {"ChangeIntensityBy", 1}, {"ChangeMag", 1}, {"CircleFromPoints", 6},
-  {"ClearAlignment", 0}, {"CloseFile", 0}, {"ConicalAlignTo", 1}, {"Continue", 0},
-  {"Copy", 2}, {"D", 0}, {"Delay", 1}, {"DoMacro", 1}, {"Echo", 0}, {"Else", 0},
-  {"Endif", 0}, {"EndLoop", 0}, {"Eucentricity", 0}, {"ExposeFilm", 0}, {"F", 0},
-  {"G", 0}, {"GoToLowDoseArea", 1}, {"If", 3}, {"ImageShiftByMicrons", 2},
-  {"ImageShiftByPixels", 2}, {"ImageShiftByUnits", 2}, {"IncPercentC2", 1}, {"L", 0},
-  {"Loop", 1}, {"M", 0}, {"MacroName", 1}, {"LongName", 1}, {"ManualFilmExposure", 1},
-  {"Montage", 0}, {"MoveStage", 2}, {"MoveStageTo", 2}, {"NewMap", 0}, {"OpenNewFile", 1},
-  {"OpenNewMontage", 1}, {"Pause", 0}, {"QuadrantMeans", 0}, {"R", 0}, {"ReadFile", 0},
-  {"RealignToNavItem", 1}, {"RealignToOtherItem", 2}, {"RecordAndTiltDown", 0},
-  {"RecordAndTiltUp", 0}, {"RefineZLP", 0}, {"Repeat", 0}, {"ReportAccumShift", 0},
-  {"ReportAlignShift", 0}, {"ReportBeamShift", 0}, {"ReportClock", 0},
-  {"ReportDefocus", 0}, {"ReportFocus", 0}, {"ReportMag", 0}, {"ReportMagIndex", 0},
-  {"ReportMeanCounts", 0}, {"ReportNavItem", 0}, {"ReportOtherItem", 1},
-  {"ReportPercentC2", 0}, {"ReportShiftDiffFrom", 1}, {"ReportSpotSize", 0},
-  {"ReportStageXYZ", 0}, {"ReportTiltAngle", 0}, {"ResetAccumShift", 0},
-  {"ResetClock", 0}, {"ResetImageShift", 0}, {"ResetShiftIfAbove", 1},
-  {"RestoreCameraSet", 0}, {"RetractCamera", 0}, {"ReverseTilt", 0}, {"s", 0},
-  {"Save", 0}, {"ScreenDown", 0}, {"ScreenUp", 0}, {"SetBeamBlank", 1},
-  {"SetBeamShift", 2}, {"SetBinning", 2}, {"SetCamLenIndex", 1},
-  {"SetColumnOrGunValve", 1}, {"SetDefocus", 1}, {"SetDirectory", 1},
-  {"SetEnergyLoss", 1}, {"SetExposure", 2}, {"SetIntensityByLastTilt", 0},
-  {"SetIntensityForMean", 0}, {"SetMag", 1}, {"SetObjFocus", 1}, {"SetPercentC2", 1},
-  {"SetSlitIn", 0}, {"SetSlitWidth", 1}, {"SetSpotSize", 1}, {"Show", 1},
-  {"SubareaMean", 4}, {"SuppressReports", 0}, {"SwitchToFile", 1}, {"T", 0},
-  {"TiltBy", 1}, {"TiltDown", 0}, {"TiltTo", 1}, {"TiltUp", 0},
-  {"U", 0}, {"V", 0}, {"WaitForDose", 1}, {"WalkUpTo", 1}, {"Return", 0}, {"Exit", 0},
-  {"MoveToNavItem", 0}, {"SkipPiecesOutsideItem", 1}, {"IncTargetDefocus", 1},
-  {"ReportFileZsize", 0}, {"SpecialExposeFilm", 2}, {"SetMontageParams", 1},
-  {"AutoCenterBeam", 0}, {"CookSpecimen", 0}, {"ImageProperties", 0},
-  {"ItemForSuperCoord", 1}, {"SetNewFileType", 1}, {"ShiftItemsByAlignment", 0},
-  {"ShiftImageForDrift", 3}, {"ReportFocusDrift", 0}, {"CalibrateImageShift", 0},
-{"SetMagAndIntensity", 1}, {"ChangeMagAndIntensity", 1}, {"OpenOldFile", 1},
-{"verbose", 1}, {"MailSubject", 1}, {"SendEmail", 1}, {"UpdateItemZ", 0},
-{"UpdateGroupZ", 0}, {"ReportGroupStatus", 0}, {"CropImage", 5},
-{"ClearPersistentVars", 0}, {"ElseIf", 3}, {"YesNoBox", 1}, {"MakeDirectory", 1},
-{"AllowFileOverwrite", 1}, {"OppositeTrial", 0}, {"OppositeFocus", 0},
-{"OppositeAutoFocus", 0}, {"ReportAutoFocus", 0}, {"ReportTargetDefocus", 0},
-{"Plugin", 2}, {"ListPluginCalls", 0}, {"SetStandardFocus", 1}, {"SetCameraArea", 2},
-{"SetIlluminatedArea", 1}, {"ReportIlluminatedArea", 0}, {"SelectCamera", 1},
-{"SetLowDoseMode", 1}, {"TestSTEMshift", 3}, {"QuickFlyback", 2}, {"NormalizeLenses", 1},
-{"ReportSlotStatus", 1}, {"LoadCartridge", 1}, {"UnloadCartridge", 0},
-{"BacklashAdjust", 0}, {"SaveFocus", 0}, {"MakeDateTimeDir", 0},
-{"EnterNameOpenFile", 0}, {"FindPixelSize", 0}, {"SetEucentricFocus", 0},
-{"CameraProperties", 0}, {"SetImageShift", 2}, {"ReportImageShift", 0},
-{"EnterOneNumber", 1}, {"SetHelperParams", 1}, {"StepFocusNextShot", 2},
-{"BeamTiltDirection", 1}, {"OpenFrameSumFile", 1}, {"DeferStackingNextShot", 0},
-{"SetObjectiveStigmator", 2}, {"ReportObjectiveStigmator", 0}, {"AreDewarsFilling", 0},
-{"DewarsRemainingTime", 0}, {"RefrigerantLevel", 0}, {"OpenDECameraCover", 0},
-{"SmoothFocusNextShot", 2}, {"ReportLowDose", 0}, {"IsPVPRunning", 0},
-{"LongOperation", 1}, {"UpdateHWDarkRef", 1}, {"RestoreFocus", 0},
-{"CalEucentricFocus", 0}, {"EarlyReturnNextShot", 1}, {"SelectPiezo", 2},
-{"ReportPiezoXY", 0}, {"ReportPiezoZ", 0}, {"MovePiezoXY", 2}, {"MovePiezoZ", 1},
-{"KeyBreak", 0}, {"ReportAlpha", 0}, {"SetAlpha", 1}, {"SetSTEMDetectors", 2},
-{"SetCenteredSize", 4}, {"ImageLowDoseSet", 0}, {"ForceCenterRealign", 0},
-{"SetTargetDefocus", 1}, {"FocusChangeLimits", 2}, {"AbsoluteFocusLimits", 2},
-{"ReportColumnMode", 0}, {"ReportLens", 1}, {"ReportCoil", 1}, {"ReportAbsoluteFocus", 0},
-{"SetAbsoluteFocus", 1}, {"ReportEnergyFilter", 0}, {"ReportBeamTilt", 0},
-{"UserSetDirectory", 0}, {"SetJeolSTEMflags", 2}, {"ProgramTimeStamps", 0}, 
-{"SetContinuous", 2}, {"UseContinuousFrames", 1}, {"WaitForNextFrame", 0},
-{"StopContinuous", 0}, {"ReportContinuous", 0}, {"SetLiveSettleFraction", 1},
-{"SkipTo", 1}, {"Function", 1}, {"EndFunction", 0}, {"CallFunction", 1}, 
-{"PreCookMontage", 1}, {"ReportAlignTrimming", 0}, {"NormalizeAllLenses", 0},
-{"AddToAutodoc", 2}, {"IsVariableDefined", 1}, {"EnterDefaultedNumber", 3},
-{"SetupWaffleMontage", 2}, {"IncMagIfFoundPixel", 1}, {"ResetDefocus", 0},
-{"WriteAutodoc", 0}, {"ElectronStats", 1}, {"ErrorsToLog", 0}, {"FlashDisplay", 0},
-{"ReportProbeMode", 0}, {"SetProbeMode", 1}, {"SaveLogOpenNew", 0}, {"SetAxisPosition", 2}
-, {"AddToFrameMdoc", 2}, {"WriteFrameMdoc", 0}, {"ReportFrameMdocOpen", 0 },
-{"ShiftCalSkipLensNorm", 0}, {"ReportLastAxisOffset", 0}, {"SetBeamTilt", 2}, //end in 3.5
-{"CorrectAstigmatism", 0}, {"CorrectComa", 0}, {"ShiftItemsByCurrentDiff", 1},
-{"ReportCurrentFilename", 0}, {"SuffixForExtraFile", 1}, {"ReportScreen", 0},
-{"GetDeferredSum", 0}, {"ReportJeolGIF", 0}, {"SetJeolGIF", 1}, {"TiltDuringRecord", 2},
-{"SetLDContinuousUpdate", 1}, {"ErrorBoxSendEmail", 1}, {"ReportLastFrameFile", 0},
-{"Test", 1}, {"AbortIfFailed", 1}, {"PauseIfFailed"}, {"ReadOtherFile", 3},
-{"ReportK2FileParams", 0}, {"SetK2FileParams", 1}, {"SetDoseFracParams", 1}, 
-{"SetK2ReadMode", 2}, {"SetProcessing", 2}, {"SetFrameTime", 2},
-{"ReportCountScaling", 0}, {"SetDivideBy2", 1}, {"ReportNumFramesSaved", 0},
-{"RemoveFile", 1}, {"ReportFrameAliParams", 0}, {"SetFrameAliParams", 2},
-{"Require", 1}, {"OnStopCallFunc", 1}, {"RetryReadOtherFile", 1}, {"DoScript", 1},
-{"CallScript", 1}, {"ScriptName", 1}, {"SetFrameAli2", 1}, {"ReportFrameAli2", 0},
-{"ReportMinuteTime", 0}, {"ReportColumnOrGunValve", 0}, {"NavIndexWithLabel", 1},
-{"NavIndexWithNote", 1}, {"SetDiffractionFocus", 1}, {"ReportDirectory", 0},
-{"BackgroundTilt", 1}, {"ReportStageBusy", 0}, {"SetExposureForMean", 1}, {"FFT", 1},
-{"ReportNumNavAcquire", 0}, {"StartFrameWaitTimer", 0}, {"ReportTickTime", 0},
-{"ReadTextFile", 2}, {"RunInShell", 1}, {"ElapsedTickTime", 1}, {"NoMessageBoxOnError",0},
-{"ReportAutofocusOffset", 0}, {"SetAutofocusOffset", 1}, {"ChooserForNewFile", 2}, 
-{"SkipAcquiringNavItem", 0}, {"ShowMessageOnScope", 1}, {"SetupScopeMessage", 1},
-{"Search", 0}, {"SetProperty", 2}, /* End in 3.6 */ {"SetMagIndex", 1},
-{"SetNavRegistration", 1}, {"LocalVar", 1}, {"LocalLoopIndexes", 0}, {"ZemlinTableau", 1},
-{"WaitForMidnight", 0}, {"ReportUserSetting", 1}, {"SetUserSetting", 2}, 
-{"ChangeItemRegistration", 2}, {"ShiftItemsByMicrons", 2}, {"SetFreeLensControl", 2},
-{"SetLensWithFLC", 2}, {"SaveToOtherFile", 4}, {"SkipAcquiringGroup", 0},
-{"ReportImageDistanceOffset", 0}, {"SetImageDistanceOffset", 1}, 
-{"ReportCameraLength", 0}, {"SetDECamFrameRate", 1}, {"SkipMoveInNavAcquire", 0},
-{"TestRelaxingStage", 2}, {"RelaxStage", 0}, {"SkipFrameAliParamCheck", 0},
-{"IsVersionAtLeast", 1}, {"SkipIfVersionLessThan", 1}, {"RawElectronStats", 1},
-{"AlignWholeTSOnly", 0}, {"WriteComForTSAlign", 0}, {"RecordAndTiltTo", 1},
-{"ArePostActionsEnabled", 0}, {"MeasureBeamSize", 0}, {"MultipleRecords", 0},
-{"MoveBeamByMicrons", 2}, {"MoveBeamByFieldFraction", 2}, {"NewDEserverDarkRef", 2},
-{"StartNavAcquireAtEnd", 0}, {"ReduceImage", 2}, {"ReportAxisPosition", 1},
-{"CtfFind", 3}, {"CBAstigComa", 3}, {"FixAstigmatismByCTF", 0}, {"FixComaByCTF", 0},
-{NULL, 0, NULL}
+static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0},
+{"A",0,0}, {"AlignTo",1,0}, {"AutoAlign",0,0}, {"AutoFocus",0,0}, {"Break",0,0}, 
+{"Call",1,0}, {"CallMacro",1,0},{"CenterBeamFromImage",0,0}, {"ChangeEnergyLoss",1,1},
+{"ChangeFocus",1,1},{"ChangeIntensityBy",1,1}, {"ChangeMag",1,1},{"CircleFromPoints",6,1},
+{"ClearAlignment",0,0}, {"CloseFile",0,0}, {"ConicalAlignTo",1,0}, {"Continue", 0, 0},
+{"Copy",2,0}, {"D",0,0}, {"Delay",1,1}, {"DoMacro",1,0}, {"Echo", 0, 0}, {"Else", 0, 0},
+{"Endif", 0, 0}, {"EndLoop", 0, 0}, {"Eucentricity", 0,0}, {"ExposeFilm",0,1}, {"F",0,0},
+{"G",0,0}, {"GoToLowDoseArea",1,0}, {"If",3,0}, {"ImageShiftByMicrons", 2, 1},
+{"ImageShiftByPixels",2,1}, {"ImageShiftByUnits",2,1}, {"IncPercentC2",1,1}, {"L", 0, 0},
+{"Loop",1,0}, {"M",0,0}, {"MacroName",1,0}, {"LongName",1,0}, {"ManualFilmExposure", 1,1},
+{"Montage",0,0}, {"MoveStage",2,1},{"MoveStageTo",2,1},{"NewMap",0,0},{"OpenNewFile",1,0},
+{"OpenNewMontage",1,0}, {"Pause",0,0}, {"QuadrantMeans",0,0}, {"R",0,0}, {"ReadFile",0,0},
+{"RealignToNavItem",1,0}, {"RealignToOtherItem",2,0}, {"RecordAndTiltDown",0,0},
+{"RecordAndTiltUp", 0, 0}, {"RefineZLP", 0,0}, {"Repeat", 0,0}, {"ReportAccumShift", 0,0},
+{"ReportAlignShift", 0, 0}, {"ReportBeamShift", 0, 0}, {"ReportClock", 0, 0},
+{"ReportDefocus",0,0}, {"ReportFocus", 0,0}, {"ReportMag", 0,0}, {"ReportMagIndex", 0,0},
+{"ReportMeanCounts", 0, 0}, {"ReportNavItem", 0, 0}, {"ReportOtherItem", 1, 0},
+{"ReportPercentC2", 0, 0}, {"ReportShiftDiffFrom", 1, 0}, {"ReportSpotSize", 0, 0},
+{"ReportStageXYZ", 0, 0}, {"ReportTiltAngle", 0, 0}, {"ResetAccumShift", 0, 0},
+{"ResetClock", 0, 0}, {"ResetImageShift", 0, 0}, {"ResetShiftIfAbove", 1, 1},
+{"RestoreCameraSet", 0, 0}, {"RetractCamera", 0, 0}, {"ReverseTilt", 0, 0}, {"S", 0, 0},
+{"Save", 0, 0}, {"ScreenDown", 0, 0}, {"ScreenUp", 0, 0}, {"SetBeamBlank", 1, 0},
+{"SetBeamShift", 2, 0}, {"SetBinning", 2, 0}, {"SetCamLenIndex", 1, 0},
+{"SetColumnOrGunValve", 1, 0}, {"SetDefocus", 1, 0}, {"SetDirectory", 1, -1},
+{"SetEnergyLoss", 1, 0}, {"SetExposure", 2, 0}, {"SetIntensityByLastTilt", 0, -1},
+{"SetIntensityForMean", 0,0}, {"SetMag",1,0}, {"SetObjFocus",1,0}, {"SetPercentC2", 1,0},
+{"SetSlitIn",0,1}, {"SetSlitWidth", 1, 0}, {"SetSpotSize", 1, 0}, {"Show", 1, 0},
+{"SubareaMean", 4, 1}, {"SuppressReports", 0,0}, {"SwitchToFile", 1,0}, {"T", 0, 0},
+{"TiltBy", 1, 1}, {"TiltDown", 0, 0}, {"TiltTo", 1, 1}, {"TiltUp", 0, 0},
+{"U",0,0}, {"V",0,0}, {"WaitForDose",1,1}, {"WalkUpTo",1,1}, {"Return",0,0}, {"Exit",0,0},
+{"MoveToNavItem", 0, 0}, {"SkipPiecesOutsideItem", 1, 0}, {"IncTargetDefocus", 1, 1},
+{"ReportFileZsize", 0, 0}, {"SpecialExposeFilm", 2, 1}, {"SetMontageParams", 1, 0},
+{"AutoCenterBeam", 0, 0}, {"CookSpecimen", 0, 0}, {"ImageProperties", 0, 0},
+{"ItemForSuperCoord", 1, 0}, {"SetNewFileType", 1, 0}, {"ShiftItemsByAlignment", 0, 0},
+{"ShiftImageForDrift", 3, 0}, {"ReportFocusDrift", 0, 0}, {"CalibrateImageShift", 0, 0},
+{"SetMagAndIntensity", 1, 0}, {"ChangeMagAndIntensity", 1, 1}, {"OpenOldFile", 1, 0},
+{"verbose", 1, 0}, {"MailSubject", 1, 0}, {"SendEmail", 1, 0}, {"UpdateItemZ", 0, 0},
+{"UpdateGroupZ", 0, 0}, {"ReportGroupStatus", 0, 0}, {"CropImage", 5, 1},
+{"ClearPersistentVars", 0, 0}, {"ElseIf", 3,0}, {"YesNoBox", 1,0}, {"MakeDirectory",1,0},
+{"AllowFileOverwrite", 1, 0}, {"OppositeTrial", 0, 0}, {"OppositeFocus", 0, 0},
+{"OppositeAutoFocus", 0, 0}, {"ReportAutoFocus", 0, 0}, {"ReportTargetDefocus", 0, 0},
+{"Plugin",2,0}, {"ListPluginCalls",0,0}, {"SetStandardFocus",1,0}, {"SetCameraArea",2,0},
+{"SetIlluminatedArea", 1, 0}, {"ReportIlluminatedArea", 0, 0}, {"SelectCamera", 1, 0},
+{"SetLowDoseMode",1,0},{"TestSTEMshift",3,1},{"QuickFlyback",2,1},{"NormalizeLenses",1,0},
+{"ReportSlotStatus", 1, 0}, {"LoadCartridge", 1, 0}, {"UnloadCartridge", 0, 0},
+{"BacklashAdjust", 0, 0}, {"SaveFocus", 0, 0}, {"MakeDateTimeDir", 0, 0},
+{"EnterNameOpenFile", 0, 0}, {"FindPixelSize", 0, 0}, {"SetEucentricFocus", 0, 0},
+{"CameraProperties", 0, 0}, {"SetImageShift", 2, 0}, {"ReportImageShift", 0, 0},
+{"EnterOneNumber", 1, 0}, {"SetHelperParams", 1, 0}, {"StepFocusNextShot", 2, 1},
+{"BeamTiltDirection", 1, 1}, {"OpenFrameSumFile", 1, 0}, {"DeferStackingNextShot", 0, 0},
+{"SetObjectiveStigmator",2,0}, {"ReportObjectiveStigmator",0,0}, {"AreDewarsFilling",0,0},
+{"DewarsRemainingTime", 0, 0}, {"RefrigerantLevel", 0, 0}, {"OpenDECameraCover", 0, 0},
+{"SmoothFocusNextShot", 2, 1}, {"ReportLowDose", 0, 0}, {"IsPVPRunning", 0, 0},
+{"LongOperation", 1, 1}, {"UpdateHWDarkRef", 1, 1}, {"RestoreFocus", 0, 0},
+{"CalEucentricFocus", 0, 0}, {"EarlyReturnNextShot", 1, 1}, {"SelectPiezo", 2, 0},
+{"ReportPiezoXY", 0, 0}, {"ReportPiezoZ", 0, 0}, {"MovePiezoXY",2,1}, {"MovePiezoZ",1,1},
+{"KeyBreak", 0, 0}, {"ReportAlpha", 0, 0}, {"SetAlpha", 1, 0}, {"SetSTEMDetectors", 2, 0},
+{"SetCenteredSize", 4, 0}, {"ImageLowDoseSet", 0, 0}, {"ForceCenterRealign", 0, 0},
+{"SetTargetDefocus", 1, 0}, {"FocusChangeLimits", 2, 1}, {"AbsoluteFocusLimits", 2, 1},
+{"ReportColumnMode",0,0},{"ReportLens",1,0},{"ReportCoil",1,0},{"ReportAbsoluteFocus",0,0},
+{"SetAbsoluteFocus", 1, 0}, {"ReportEnergyFilter", 0, 0}, {"ReportBeamTilt", 0, 0},
+{"UserSetDirectory", 0, 0}, {"SetJeolSTEMflags", 2, -1}, {"ProgramTimeStamps", 0, 0}, 
+{"SetContinuous", 2, -1}, {"UseContinuousFrames", 1, 0}, {"WaitForNextFrame", 0, 0},
+{"StopContinuous", 0, 0}, {"ReportContinuous", 0, 0}, {"SetLiveSettleFraction", 1, 0},
+{"SkipTo", 1, 0}, {"Function", 1, 0}, {"EndFunction", 0, 0}, {"CallFunction", 1, 0}, 
+{"PreCookMontage", 1, 1}, {"ReportAlignTrimming", 0, 0}, {"NormalizeAllLenses", 0, 0},
+{"AddToAutodoc", 2}, {"IsVariableDefined", 1, 0}, {"EnterDefaultedNumber", 3, 0},
+{"SetupWaffleMontage", 2, -1}, {"IncMagIfFoundPixel", 1, 0}, {"ResetDefocus", 0, 0},
+{"WriteAutodoc",0,0}, {"ElectronStats",1,0}, {"ErrorsToLog", 0,0}, {"FlashDisplay", 0,0},
+{"ReportProbeMode",0,0},{"SetProbeMode",1,0},{"SaveLogOpenNew",0,0},{"SetAxisPosition",2,0}
+, {"AddToFrameMdoc", 2, 0}, {"WriteFrameMdoc", 0, 0}, {"ReportFrameMdocOpen", 0, 0},
+{"ShiftCalSkipLensNorm",0,0},{"ReportLastAxisOffset",0,0},{"SetBeamTilt",2,0},//end in 3.5
+{"CorrectAstigmatism", 0, 0}, {"CorrectComa", 0, 0}, {"ShiftItemsByCurrentDiff", 1, 0},
+{"ReportCurrentFilename", 0, 0}, {"SuffixForExtraFile", 1, 0}, {"ReportScreen", 0, 0},
+{"GetDeferredSum",0,0},{"ReportJeolGIF",0,0},{"SetJeolGIF",1,0},{"TiltDuringRecord",2,1},
+{"SetLDContinuousUpdate", 1, 0}, {"ErrorBoxSendEmail", 1,0}, {"ReportLastFrameFile", 0,0},
+{"Test", 1, 0}, {"AbortIfFailed", 1, 0}, {"PauseIfFailed", 0, 0}, {"ReadOtherFile", 3, 0},
+{"ReportK2FileParams", 0, 0}, {"SetK2FileParams", 1, 0}, {"SetDoseFracParams", 1, 0}, 
+{"SetK2ReadMode", 2, 0}, {"SetProcessing", 2, 0}, {"SetFrameTime", 2, 0},
+{"ReportCountScaling", 0, 0}, {"SetDivideBy2", 1, 0}, {"ReportNumFramesSaved", 0, 0},
+{"RemoveFile", 1, 0}, {"ReportFrameAliParams", 0, 0}, {"SetFrameAliParams", 2, 0},
+{"Require", 1, 0}, {"OnStopCallFunc", 1,0}, {"RetryReadOtherFile",1,0}, {"DoScript",1,0},
+{"CallScript",1,0}, {"ScriptName", 1, 0}, {"SetFrameAli2", 1,0}, {"ReportFrameAli2", 0,0},
+{"ReportMinuteTime", 0, 0}, {"ReportColumnOrGunValve", 0, 0}, {"NavIndexWithLabel", 1,0 },
+{"NavIndexWithNote", 1, 0}, {"SetDiffractionFocus", 1, 0}, {"ReportDirectory", 0, 0},
+{"BackgroundTilt",1,1}, {"ReportStageBusy",0,0}, {"SetExposureForMean",1,0}, {"FFT",1,0},
+{"ReportNumNavAcquire", 0, 0}, {"StartFrameWaitTimer", 0,0}, {"ReportTickTime", 0, 0},
+{"ReadTextFile",2,0},{"RunInShell",1,0},{"ElapsedTickTime",1,1},{"NoMessageBoxOnError",0,0},
+{"ReportAutofocusOffset", 0, 0}, {"SetAutofocusOffset", 1, 0}, {"ChooserForNewFile", 2,0}, 
+{"SkipAcquiringNavItem", 0, 0}, {"ShowMessageOnScope", 1, 0}, {"SetupScopeMessage", 1,-1},
+{"Search", 0, 0}, {"SetProperty", 2, 0}, /* End in 3.6 */ {"SetMagIndex", 1, 0},
+{"SetNavRegistration",1,0},{"LocalVar",1,0},{"LocalLoopIndexes",0,0},{"ZemlinTableau",1,1},
+{"WaitForMidnight", 0, 1}, {"ReportUserSetting", 1, 0}, {"SetUserSetting", 2, 0}, 
+{"ChangeItemRegistration",2,1}, {"ShiftItemsByMicrons",2,1}, {"SetFreeLensControl", 2, 0},
+{"SetLensWithFLC", 2, 0}, {"SaveToOtherFile", 4, 0}, {"SkipAcquiringGroup", 0, 0},
+{"ReportImageDistanceOffset", 0, 0}, {"SetImageDistanceOffset", 1, 0}, 
+{"ReportCameraLength", 0, 0}, {"SetDECamFrameRate", 1, 0}, {"SkipMoveInNavAcquire", 0, 0},
+{"TestRelaxingStage", 2, 1}, {"RelaxStage", 0, 1}, {"SkipFrameAliParamCheck", 0, 0},
+{"IsVersionAtLeast", 1, 0}, {"SkipIfVersionLessThan", 1, 0}, {"RawElectronStats", 1, 0},
+{"AlignWholeTSOnly", 0, 0}, {"WriteComForTSAlign", 0, 0}, {"RecordAndTiltTo", 1, 1},
+{"ArePostActionsEnabled", 0, 0}, {"MeasureBeamSize", 0, 0}, {"MultipleRecords", 0, 1},
+{"MoveBeamByMicrons",2,1}, {"MoveBeamByFieldFraction", 2, 1}, {"NewDEserverDarkRef", 2,0},
+{"StartNavAcquireAtEnd", 0, 0}, {"ReduceImage", 2, 1}, {"ReportAxisPosition", 1, 0},
+{"CtfFind",3,1}, {"CBAstigComa",3,0}, {"FixAstigmatismByCTF",0,0}, {"FixComaByCTF", 0, 0},
+{NULL, 0, 0}
 };
 
 #define NUM_COMMANDS (sizeof(cmdList) / sizeof(CmdItem))
-static CString cmdUpper[NUM_COMMANDS];
 static std::string sTmpOp1[] = {"SQRT", "COS", "SIN", "TAN", "ATAN", "ABS", "NEARINT"};
 static std::string sTmpOp2[] = {"ROUND", "POWER", "ATAN2", "MODULO", "DIFFABS", 
   "FRACDIFF"};
@@ -416,10 +415,15 @@ CMacroProcessor::CMacroProcessor()
   mMailSubject = "Message from SerialEM script";
   for (i = 0; i < 5; i++)
     cmdList[i].mixedCase = (LPCTSTR)mModeNames[i];
+  CString cstr;
   for (i = 0; i < NUM_COMMANDS - 1; i++) {
-    cmdUpper[i] = cmdList[i].mixedCase;
-    cmdUpper[i].MakeUpper();
-    cmdList[i].cmd = (LPCTSTR)cmdUpper[i];
+    cstr = cmdList[i].mixedCase;
+    cstr.MakeUpper();
+    cmdList[i].cmd = (LPCTSTR)cstr;
+    if (cmdList[i].arithAllowed > 0)
+      mArithAllowed.insert(cmdList[i].cmd);
+   if (cmdList[i].arithAllowed < 0)
+      mArithDenied.insert(cmdList[i].cmd);
   }
 
   for (i = 0; i < MAX_MACROS; i++) {
@@ -443,6 +447,12 @@ void CMacroProcessor::Initialize()
   mCamera = mWinApp->mCamera;
   mBufferManager = mWinApp->mBufferManager;
   mShiftManager = mWinApp->mShiftManager;
+  if (GetDebugOutput('%')) {
+    mWinApp->AppendToLog("Commands allowing arithmetic in arguments:");
+    for (int i = 0; i < NUM_COMMANDS - 1; i++)
+      if (cmdList[i].arithAllowed > 0)
+        mWinApp->AppendToLog(cmdList[i].mixedCase);
+  }
 }
 
 // MESSAGE HANDLERS
@@ -1157,6 +1167,19 @@ void CMacroProcessor::NextCommand()
     ABORT_LINE("You cannot make a command by substituting a\n"
       "variable value that is a control command on line: \n\n");
 
+  // Do arithmetic on selected commands
+  if (ArithmeticIsAllowed(strItems[0])) {
+    if (SeparateParentheses(&strItems[1], MAX_TOKENS - 1))
+      ABORT_LINE("Too many items on line after separating out parentheses in line: \n\n");
+    EvaluateExpression(&strItems[1], MAX_TOKENS - 1, strLine, 0, index, index2);
+    for (i = index + 1; i <= index2; i++)
+      strItems[i] = "";
+    if (CheckLegalCommandAndArgNum(&strItems[0], strLine, mCurrentMacro)) {
+      AbortMacro();
+      return;
+    }
+  }
+
   // Evaluate emptiness, ints and doubles
   for (i = 0; i < MAX_TOKENS; i++) {
     itemEmpty[i] = strItems[i].IsEmpty();
@@ -1440,9 +1463,10 @@ void CMacroProcessor::NextCommand()
     ix0 = CheckForArrayAssignment(strItems, index2);
     if (SeparateParentheses(&strItems[index2], MAX_TOKENS - index2))
       ABORT_LINE("Too many items on line after separating out parentheses in line: \n\n");
-    if (EvaluateExpression(&strItems[index2], MAX_TOKENS - index2, strLine, index, ix0)) {
-      AbortMacro();
-      return;
+    if (EvaluateExpression(&strItems[index2], MAX_TOKENS - index2, strLine, ix0, index, 
+      ix1)) {
+        AbortMacro();
+        return;
     }
 
     // Concatenate array elements separated by \n
@@ -1792,10 +1816,10 @@ void CMacroProcessor::NextCommand()
       mWinApp->mFocusManager->NextFocusAbsoluteLimits(mMinAbsFocus, mMaxAbsFocus);
     if (index < -1)
       mWinApp->mFocusManager->DetectFocus(FOCUS_REPORT, 
-      !itemEmpty[2] && itemInt[2] > 0 ? itemInt[2] : 0);
+      !itemEmpty[2] ? itemInt[2] : 0);
     else
       mWinApp->mFocusManager->AutoFocusStart(index, 
-      !itemEmpty[2] && itemInt[2] > 0 ? itemInt[2] : 0);
+      !itemEmpty[2] ? itemInt[2] : 0);
     mTestScale = true;
 
   } else if (CMD_IS(BEAMTILTDIRECTION)) {                   // BeamTiltDirection
@@ -5586,7 +5610,7 @@ void CMacroProcessor::FindValueAtIndex(Variable *var, int arrInd, int &beginInd,
 
 // Evaluates an arithmetic expression in the array of items
 int CMacroProcessor::EvaluateExpression(CString *strItems, int maxItems, CString line,
-                                        int &numItems, int ifArray)
+                                        int ifArray, int &numItems, int &numOrig)
 {
   int ind, left, right, maxLevel, level;
   CString cstr;
@@ -5596,6 +5620,7 @@ int CMacroProcessor::EvaluateExpression(CString *strItems, int maxItems, CString
   numItems = 0;
   for (ind = 0; ind < maxItems && !strItems[ind].IsEmpty(); ind++)
     numItems++;
+  numOrig = numItems;
 
   // Loop on parenthesis pairs
   for (;;) {
@@ -5924,10 +5949,10 @@ int CMacroProcessor::EvaluateComparison(CString * strItems, int maxItems, CStrin
   }
 
   // If there is more than one item, evaluate expressions, make sure there is only one
-  if (opind > 1 && EvaluateExpression(strItems, opind, line, numLeft, 0))
+  if (opind > 1 && EvaluateExpression(strItems, opind, line, 0, numLeft, ind))
     return 1;
   if (opind < numItems - 2 && EvaluateExpression(&strItems[opind + 1],
-    numItems - 1 - opind, line, numRight, 0))
+    numItems - 1 - opind, line, 0, numRight, ind))
     return 1;
   if (numLeft > 1 || numRight > 1) {
     AfxMessageBox("Items being compared do not reduce to a single number in script line:"
@@ -6052,7 +6077,7 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel)
   int numLabels = 0, numSkips = 0;
   int i, inloop, index, skipInd, labInd, length, currentIndex = 0;
   CString strLine, strItems[MAX_TOKENS], errmess, intCheck;
-  const char *features[] = {"variable1", "arrays", "keepcase", "zeroloop"};
+  const char *features[] = {"variable1", "arrays", "keepcase", "zeroloop", "evalargs"};
   int numFeatures = sizeof(features) / sizeof(char *);
 
   mAlreadyChecked[macroNum] = true;
@@ -6296,23 +6321,17 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel)
 
       } else {
 
-        // Loop on the commands and make sure they are legal enough arguments
-        i = 0;
-        while (cmdList[i].cmd) {
-          if (strItems[0] == cmdList[i].cmd) {
-            if (strItems[cmdList[i].minargs].IsEmpty()) {
-              errmess.Format("The command must be followed by at least %d entries\n"
-                " on this line in script #%d:\n\n", cmdList[i].minargs, macroNum + 1);
-              AfxMessageBox(errmess + strLine, MB_EXCLAME);
-              return 17;
-            }
-            break;
-          }
-          i++;
-        }
-        if (!cmdList[i].cmd)
+        i = CheckLegalCommandAndArgNum(&strItems[0], strLine, macroNum);
+        if (i == 17)
+          return 17;
+        if (i)
           FAIL_CHECK_LINE("Unrecognized command in line");
       }
+
+      // Check commands where arithmetic is allowed
+      if (ArithmeticIsAllowed(strItems[0]) == 0 && 
+        CheckBalancedParentheses(strItems, MAX_TOKENS, strLine, errmess))
+        return 99;
       
       if (CMD_IS(SKIPIFVERSIONLESSTHAN) && currentIndex < macro->GetLength())
         GetNextLine(macro, currentIndex, strLine);
@@ -6344,6 +6363,31 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel)
       FAIL_CHECK_NOLINE(CString("Label not found for SkipTo ") + strSkips[skipInd]);
   }
   return 0;
+}
+
+
+// Check for whether the command is legal and has enough arguments
+// Returns 17 if there are not enough arguments, 1 if not legal command
+int CMacroProcessor::CheckLegalCommandAndArgNum(CString * strItems, CString strLine, 
+  int macroNum)
+{
+  int i = 0;
+  CString errmess;
+
+  // Loop on the commands
+  while (cmdList[i].cmd.length()) {
+    if (strItems[0] == cmdList[i].cmd.c_str()) {
+      if (strItems[cmdList[i].minargs].IsEmpty()) {
+        errmess.Format("The command must be followed by at least %d entries\n"
+          " on this line in script #%d:\n\n", cmdList[i].minargs, macroNum + 1);
+        SEMMessageBox(errmess + strLine, MB_EXCLAME);
+        return 17;
+      }
+      return 0;
+    }
+    i++;
+  }
+  return 1;
 }
 
 // Check a line for balanced parentheses and no empty clauses
@@ -6517,6 +6561,14 @@ BOOL CMacroProcessor::WordIsReserved(CString str)
           str == "RETURN" || str == "KEYBREAK" || str == "SKIPTO" || str == "FUNCTION" ||
           str == "CALLFUNCTION" || str == "ENDFUNCTION" || str == "CALLSCRIPT" || 
           str == "DOSCRIPT");
+}
+
+// Common place to check if arithmetic is allowed for a command
+bool CMacroProcessor::ArithmeticIsAllowed(CString &str)
+{
+  std::string sstr = (LPCTSTR)str;
+  return ((str.Find("SET") == 0 && mArithDenied.count(sstr) <= 0) || 
+    mArithAllowed.count(sstr) > 0);
 }
 
 // Remove zeros from end of a string to be stored in a variable

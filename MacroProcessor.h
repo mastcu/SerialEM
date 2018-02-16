@@ -10,6 +10,7 @@
 #endif // _MSC_VER > 1000
 
 #include <afxtempl.h>
+#include <set>
 class COneLineScript;
 
 #define MAX_LOOP_DEPTH  40
@@ -40,7 +41,8 @@ struct Variable {
 struct CmdItem {
   const char *mixedCase;
   int minargs;
-  const char *cmd;
+  int arithAllowed;
+  std::string cmd;
 };
 
 class CMacroProcessor : public CCmdTarget
@@ -114,6 +116,8 @@ private:
   CString *mMacNames;
   CString mStrNum[MAX_MACROS];
   CArray <MacroFunction *, MacroFunction *> mFuncArray[MAX_MACROS];
+  std::set<std::string> mArithAllowed;
+  std::set<std::string> mArithDenied;
 
   CString *mMacros;
 
@@ -221,8 +225,8 @@ public:
   Variable *LookupVariable(CString name, int &ind);
   void ClearVariables(int type = -1, int level = -1, int index = -1);
   int SubstituteVariables(CString * strItems, int maxItems, CString line);
-  int EvaluateExpression(CString * strItems, int maxItems, CString line, int &numItems,
-    int ifArray);
+  int EvaluateExpression(CString * strItems, int maxItems, CString line, int ifArray, 
+    int &numItems, int &numOrig);
   int EvaluateArithmeticClause(CString * strItems, int maxItems, CString line, int &numItems);
   void SetReportedValues(double val1 = MACRO_NO_VALUE, double val2 = MACRO_NO_VALUE, 
     double val3 = MACRO_NO_VALUE, double val4 = MACRO_NO_VALUE, 
@@ -292,6 +296,8 @@ public:
   afx_msg void OnScriptRunOneCommand();
   afx_msg void OnUpdateScriptRunOneCommand(CCmdUI *pCmdUI);
   int StartNavAvqBusy(void);
+  int CheckLegalCommandAndArgNum(CString * strItems, CString strLine, int macroNum);
+  bool ArithmeticIsAllowed(CString & str);
 };
 
 #endif // !defined(AFX_MACROPROCESSOR_H__33178182_58A1_4F3A_B8F4_D41F94866517__INCLUDED_)

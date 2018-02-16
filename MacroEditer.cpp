@@ -616,7 +616,7 @@ void CMacroEditer::HandleCompletionsAndIndent(CString &strMacro, CString &strCom
     if (substr == "\r" || substr == "\n")
       break;
     for (i = 0; i < numCommands; i++)
-      if (CString(cmdList[i].cmd).Find(substr) == 0)
+      if (cmdList[i].cmd.find(substr) == 0)
         matchList[numMatch++] = i;
 
     // If there are no matches, try one less character
@@ -633,13 +633,13 @@ void CMacroEditer::HandleCompletionsAndIndent(CString &strMacro, CString &strCom
     // If there are multiple matches, find the point where they diverge
     if (numMatch > 1) {
       matched = true;
-      first = cmdList[matchList[0]].cmd;
+      first = cmdList[matchList[0]].cmd.c_str();
       while (matched && strlen(first) > lenMatch) {
         ch = first[lenMatch];
 
         // Check each one against the first and see if other is too short or different
         for (i = 1; i < numMatch; i++) {
-          other = cmdList[matchList[i]].cmd;
+          other = cmdList[matchList[i]].cmd.c_str();
           if (strlen(other) <= lenMatch || other[lenMatch] != ch) {
             matched = false;
             break;
