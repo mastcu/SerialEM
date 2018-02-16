@@ -877,8 +877,8 @@ void CFocusManager::AutoFocusStart(int inChange, int useViewInLD, int iterNum)
   mFocusSetNum = FOCUS_CONSET;
   mAutofocusIterNum = iterNum;
   if (useViewInLD && mWinApp->LowDoseMode() && !mWinApp->GetSTEMMode()) {
-    mFocusSetNum = VIEW_CONSET;
-    mScope->GotoLowDoseArea(VIEW_CONSET);
+    mFocusSetNum = useViewInLD > 0 ? VIEW_CONSET : RECORD_CONSET;
+    mScope->GotoLowDoseArea(mFocusSetNum);
     if (mUseOppositeLDArea) {
       SEMMessageBox("You can not use opposite low dose areas with the View area",
         MB_EXCLAME);
@@ -1064,8 +1064,7 @@ void CFocusManager::AutoFocusData(float inX, float inY)
           mAutofocusIterNum, mOriginalDefocus, (LPCTSTR)addon);
         mWinApp->AppendToLog(report);
       } else if (refocus) {
-        AutoFocusStart(FOCUS_AUTOFOCUS, mFocusSetNum == VIEW_CONSET, mAutofocusIterNum +
-          1);
+        AutoFocusStart(FOCUS_AUTOFOCUS, mUseViewInLD, mAutofocusIterNum + 1);
         return;
       }
     }
@@ -1120,7 +1119,7 @@ int CFocusManager::CurrentDefocusFromShift(float inX, float inY, float &defocus,
 
   // And if the low dose axis is rotated, add Y component of the rotated axis separation
   if (mWinApp->LowDoseMode() && mWinApp->mLowDoseDlg.m_bRotateAxis && 
-    mWinApp->mLowDoseDlg.m_iAxisAngle)
+    mWinApp->mLowDoseDlg.m_iAxisAngle && mFocusSetNum == FOCUS_CONSET)
     specY += (float)((ldParm[1].axisPosition - ldParm[3].axisPosition) * 
       sin(DTOR * mWinApp->mLowDoseDlg.m_iAxisAngle));
   if (!mImBufs->GetTiltAngle(angle))
@@ -1139,7 +1138,7 @@ void CFocusManager::DetectFocus(int inWhere, int useViewInLD)
   CString str;
   mFocusSetNum = FOCUS_CONSET;
   if (useViewInLD && mWinApp->LowDoseMode() && !mWinApp->GetSTEMMode())
-    mFocusSetNum = VIEW_CONSET;
+    mFocusSetNum = useViewInLD > 0 ? VIEW_CONSET : RECORD_CONSET;
   ControlSet  *set = mConSets + mFocusSetNum;
   CameraParameters *camParam = mWinApp->GetCamParams() + mWinApp->GetCurrentCamera();
 
