@@ -66,6 +66,7 @@ CAutoTuning::CAutoTuning(void)
   mCtfUseFullField = true;
   mComaIterationThresh = 1.f;
   mCtfDoFullArray = false;
+  mCtfBasedLDareaDelay = 8000;   // Based on coming back from View on an F20
   mTestCtfTuningDefocus = 0.;
   mLastCtfBasedFailed = false;
 }
@@ -987,10 +988,14 @@ int CAutoTuning::CtfBasedAstigmatismComa(int comaFree, bool calibrate, int actio
   double curDefocus, tryFocus, stageX, stageY, stageZ;
   int binInd, realBin, maxMinutes = 5;
   float pixel, scanDelta = 0.1f, maxStageFocusChange = 0.05f;
+  UINT lastTimeOut;
   FloatVec radii;
   CameraParameters *camParam = mWinApp->GetActiveCamParam();
   ControlSet *recSet = mWinApp->GetConSets() + RECORD_CONSET;
   CString str;
+  LowDoseParams *ldp = mWinApp->GetLowDoseParams() + RECORD_CONSET;
+  BOOL lowDoseMode = mWinApp->LowDoseMode();
+  bool needAreaChange = lowDoseMode && mScope->GetLowDoseArea() != RECORD_CONSET;
 
   // Initialize the calibrations structure and looping variables
   mDirectionInd = 0;
@@ -1000,7 +1005,7 @@ int CAutoTuning::CtfBasedAstigmatismComa(int comaFree, bool calibrate, int actio
   mOperationInd = (actionType / 2 == 0) ? -1 : 0;
   mCtfActionType = actionType;
   mCtfCalibrating = calibrate;
-  mCtfCal.magInd = mScope->GetMagIndex();
+  mCtfCal.magInd = lowDoseMode ? ldp->magIndex : mScope->GetMagIndex();
   mCtfCal.numFits = 0;
   mCtfCal.comaType = comaFree > 0;
   mCtfCal.amplitude = mAstigToApply;
@@ -1062,9 +1067,9 @@ int CAutoTuning::CtfBasedAstigmatismComa(int comaFree, bool calibrate, int actio
     tryFocus += scanDelta;
   }
   if (actionType / 2 == 0 && (!mMinDefocusForMag || !mMaxDefocusForMag)) {
-    str.Format("CTF analysis for this operation requires from\r\n%d to %d rings with a "
+    str.Format("CTF analysis for this operation requires at least %d Thon rings with a "
       "defocus between %.1f and %.1f um\r\n\r\nThis cannot be obtained at the current "
-      "magnification", mMinRingsForCtf, mMaxRingsForCtf, mMinCtfBasedDefocus,
+      "magnification", mMinRingsForCtf, mMinCtfBasedDefocus,
       mMaxCtfBasedDefocus);
     SEMMessageBox(str);
     *recSet = mSavedRecSet;
@@ -1082,7 +1087,7 @@ int CAutoTuning::CtfBasedAstigmatismComa(int comaFree, bool calibrate, int actio
         mBeamTiltBacklash /= scaling;
     }
     mBeamTiltBacklash = -fabs(mBeamTiltBacklash);
-    mCtfCal.amplitude = calibrate ? mMaxComaBeamTilt : mUsersComaTilt;
+    mCtfCal.amplitude = mUsersComaTilt <= 0. ? mMaxComaBeamTilt : mUsersComaTilt;
     mScope->GetBeamTilt(mBaseBeamTiltX, mBaseBeamTiltY);
     mScope->SetBeamTilt(mBaseBeamTiltX + mBeamTiltBacklash, 
       mBaseBeamTiltY + mBeamTiltBacklash);
@@ -1105,10 +1110,14 @@ int CAutoTuning::CtfBasedAstigmatismComa(int comaFree, bool calibrate, int actio
     mLastAstigY = mSavedAstigY;
   }
 
+  // Go to Record now so IS is set right and focus is recorded
+  if (actionType / 2 == 0 && needAreaChange)
+    mScope->GotoLowDoseArea(RECORD_CONSET);
+
   // Zero the IS unless flag is set
   if (!leaveIS)
     mScope->SetLDCenteredShift(0., 0.);
-
+  
   // Decide whether a new autofocus is needed and save current state before starting
   curDefocus = mScope->GetDefocus();
   mScope->GetStagePosition(stageX, stageY, stageZ);
@@ -1116,15 +1125,26 @@ int CAutoTuning::CtfBasedAstigmatismComa(int comaFree, bool calibrate, int actio
   mSkipMeasuringFocus = mWinApp->MinuteTimeStamp() - mGotFocusMinuteStamp <= maxMinutes && 
     fabs(stageX - mLastStageX) < maxStageFocusChange && fabs(stageY - mLastStageY) < 
     maxStageFocusChange && fabs(stageZ - mLastStageZ) < maxStageFocusChange && 
-    fabs(curDefocus - mSavedDefocus) < maxStageFocusChange && mCtfCal.magInd == mMagIndex;
+    fabs(curDefocus - mSavedDefocus) < maxStageFocusChange && mCtfCal.magInd == mMagIndex
+    && !needAreaChange;
   mSavedDefocus = curDefocus;
   mLastStageX = (float)stageX;
   mLastStageY = (float)stageY;
   mLastStageZ = (float)stageZ;
   mMagIndex = mCtfCal.magInd;
+
+  // Add to timeout if area changed for coma-free align.  Astig should be OK because of
+  // the focusing
+  if (actionType / 2 == 0 && needAreaChange && comaFree) {
+    lastTimeOut = mWinApp->mShiftManager->GetGeneralTimeOut(RECORD_CONSET);
+    if (SEMTickInterval(lastTimeOut) > 0)
+      lastTimeOut = GetTickCount();
+    mWinApp->mShiftManager->SetGeneralTimeOut(lastTimeOut, mCtfBasedLDareaDelay);
+  }
+
   mGotFocusMinuteStamp = mWinApp->MinuteTimeStamp();
   if (actionType / 2 == 0 && !mSkipMeasuringFocus)
-    mFocusManager->AutoFocusStart(-1);
+    mFocusManager->AutoFocusStart(-1, -1);
   mWinApp->AddIdleTask(TASK_CTF_BASED, 0, 0); 
   mWinApp->UpdateBufferWindows();
   return 0;
@@ -1183,7 +1203,7 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
     mInitialDefocus = mTestCtfTuningDefocus;
   if (mOperationInd < 0) {
 
-    // Check and get the focus if actualy did it
+    // Check and get the focus if actually did it
     if (!mSkipMeasuringFocus) {
       if (mFocusManager->GetLastFailed() || mFocusManager->GetLastAborted()) {
         SEMMessageBox("Stopping the procedure because the initial focus measurement "
@@ -1208,8 +1228,8 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
       PrintfToLog("Changing defocus to %.2f to get an acceptable number of CTF rings",
         newFocus);
     }
-
     mOperationInd = 0;
+
   } else {
 
     // An image is ready to analyze
@@ -1336,7 +1356,7 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
         if (TestAndSetStigmator(nextXval, nextYval, "The next stigmator value to test"))
           return;
         mWinApp->mShiftManager->SetGeneralTimeOut(GetTickCount(), mPostAstigDelay);
-      }
+      } 
       mOperationInd++;
     } else {
 

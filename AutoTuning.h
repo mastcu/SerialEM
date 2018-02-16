@@ -68,6 +68,7 @@ public:
   GetSetMember(BOOL, CtfDoFullArray);
   GetSetMember(float, TestCtfTuningDefocus);
   GetMember(bool, LastCtfBasedFailed);
+  SetMember(int, CtfBasedLDareaDelay);
   CArray <AstigCalib, AstigCalib> *GetAstigCals() {return &mAstigCals;};
   CArray <ComaCalib, ComaCalib> *GetComaCals() {return &mComaCals;};
   CArray <CtfBasedCalib, CtfBasedCalib> *GetCtfBasedCals() {return &mCtfBasedCals;};
@@ -172,6 +173,7 @@ private:
   bool mDoingFullArray;           // Flag that full coma array is being done
   float mTestCtfTuningDefocus;    // Initial focus to assign when reading in images
   bool mLastCtfBasedFailed;       // Flag for failure in last CTF-based operation
+  int mCtfBasedLDareaDelay;       // Delay after changing low dose area
 
 public:
   void CalibrateAstigmatism(void);
