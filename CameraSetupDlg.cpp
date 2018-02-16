@@ -702,12 +702,29 @@ void CCameraSetupDlg::ManageBinnedSize()
   int bottom = mCoordScaling * m_eBottom / binning;
   int sizeX = right - left;
   int sizeY = bottom - top;
+  int magInd = GetMagIndexForCamAndSet();
+  CString str;
+  float pixel = (float)(binning * mWinApp->mShiftManager->GetPixelSize(
+    mActiveCameraList[mCurrentCamera], magInd));
+
+  mCamera->AdjustSizes(sizeX, mCameraSizeX, mParam->moduloX, left, right, 
+    sizeY, mCameraSizeY, mParam->moduloY, top, bottom, 
+    binning, mActiveCameraList[mCurrentCamera]);
+  str.Format("Binned size: %d x %d", sizeX, sizeY);
+  SetDlgItemText(IDC_STATSIZE, str);
+  str.Format("%.2f x %.2f um @ " + mWinApp->PixelFormat(pixel * 1000.f), sizeX * pixel, 
+    sizeY * pixel, pixel * 1000.);
+  SetDlgItemText(IDC_STATMICRON, str);
+}
+
+// Returns either the currented mag index or the one for current camera and set
+int CCameraSetupDlg::GetMagIndexForCamAndSet(void)
+{
   int magInd, curLDind = 0, camLDind = 0, ldSet;
-  float pixel;
   LowDoseParams *ldParams;
 
   // Get the right mag in low dose mode for the selected camera
-  if (mWinApp->LowDoseMode()) {
+  if (mLowDoseMode) {
     ldSet = mCamera->ConSetToLDArea(m_iControlSet);
     curLDind = CamLDParamIndex();
     camLDind = CamLDParamIndex(mParam);
@@ -719,18 +736,7 @@ void CCameraSetupDlg::ManageBinnedSize()
 
   } else
     magInd = mWinApp->mScope->FastMagIndex();
-  pixel = (float)(binning * mWinApp->mShiftManager->GetPixelSize(
-    mActiveCameraList[mCurrentCamera], magInd));
-  CString str;
-
-  mCamera->AdjustSizes(sizeX, mCameraSizeX, mParam->moduloX, left, right, 
-    sizeY, mCameraSizeY, mParam->moduloY, top, bottom, 
-    binning, mActiveCameraList[mCurrentCamera]);
-  str.Format("Binned size: %d x %d", sizeX, sizeY);
-  SetDlgItemText(IDC_STATSIZE, str);
-  str.Format("%.2f x %.2f um @ " + mWinApp->PixelFormat(pixel * 1000.f), sizeX * pixel, 
-    sizeY * pixel, pixel * 1000.);
-  SetDlgItemText(IDC_STATMICRON, str);
+  return magInd;
 }
 
 void CCameraSetupDlg::OnOK() 
@@ -780,7 +786,7 @@ void CCameraSetupDlg::LoadConsetToDialog()
   lockSet = MontageConSetNum(montp, false, montp->setupInLowDose);
   mBinningEnabled = !((mCurrentSet == RECORD_CONSET && mStartedTS || 
     (mCurrentSet == lockSet && mMontaging && 
-      montp->cameraIndex == mCurrentCamera && !mWinApp->LowDoseMode())));
+      montp->cameraIndex == mCurrentCamera && !mLowDoseMode)));
   mCamera->FindNearestBinning(mParam, mCurSet, m_iBinning, binning);
 
     // If this is Record set, disable the binning if doing TS, or if montaging and either
@@ -898,12 +904,12 @@ void CCameraSetupDlg::LoadConsetToDialog()
     m_iProcessing = mCurSet->boostMag;
     m_bRemoveXrays = mCurSet->magAllShots > 0;
     showProc = (mCurrentSet == FOCUS_CONSET && mParam->GatanCam) ? SW_SHOW : SW_HIDE;
-    m_butUnprocessed.EnableWindow(!mWinApp->LowDoseMode());
-    m_butGainNormalize.EnableWindow(!mWinApp->LowDoseMode());
-    m_butDarkSubtract.EnableWindow(!mWinApp->LowDoseMode());
-    m_butBoostMag3.EnableWindow(!mWinApp->LowDoseMode());
-    m_butBoostMag4.EnableWindow(!mWinApp->LowDoseMode());
-    m_butRemoveXrays.EnableWindow(!mWinApp->LowDoseMode() && m_iProcessing > 0);
+    m_butUnprocessed.EnableWindow(!mLowDoseMode);
+    m_butGainNormalize.EnableWindow(!mLowDoseMode);
+    m_butDarkSubtract.EnableWindow(!mLowDoseMode);
+    m_butBoostMag3.EnableWindow(!mLowDoseMode);
+    m_butBoostMag4.EnableWindow(!mLowDoseMode);
+    m_butRemoveXrays.EnableWindow(!mLowDoseMode && m_iProcessing > 0);
     m_butRemoveXrays.ShowWindow(showProc);
   } else {
 
@@ -954,7 +960,7 @@ void CCameraSetupDlg::LoadConsetToDialog()
   
   if (mParam->K2Type || mFalconCanSave)
     ManageDoseFrac();
-  if (mWinApp->LowDoseMode() && mWinApp->GetUseViewForSearch()) {
+  if (mLowDoseMode && mWinApp->GetUseViewForSearch()) {
     if (mCurrentSet == VIEW_CONSET) {
       if (mWinApp->mScope->GetLowDoseArea() == SEARCH_AREA)
         SetDlgItemText(IDC_ACQUIRE_REOPEN, "Acquire Search");
@@ -1136,7 +1142,7 @@ void CCameraSetupDlg::ManageDrift(bool useMinRate)
     double pixelTime, scanRate;
     float expTmp, flyback = mParam->flyback;
     float pixelSize = binning * mWinApp->mShiftManager->GetPixelSize(
-      mActiveCameraList[mCurrentCamera], mWinApp->mScope->FastMagIndex());
+      mActiveCameraList[mCurrentCamera], GetMagIndexForCamAndSet());
     left = m_eLeft / binning;
     right = m_eRight / binning;
     top = m_eTop / binning;
@@ -1653,6 +1659,7 @@ BOOL CCameraSetupDlg::OnInitDialog()
 
   CBaseDlg::OnInitDialog();
   mCamera = mWinApp->mCamera;
+  mLowDoseMode = mWinApp->LowDoseMode();
   
   SetupPanelTables(idTable, leftTable, topTable, mNumInPanel, mPanelStart);
 
@@ -1737,7 +1744,7 @@ BOOL CCameraSetupDlg::OnInitDialog()
         B3DNINT(scale * (posPtr[ind] - fiveSetPos[0]));
 
     // Handle making View big enough, change to View/Search, move to left if low dose
-    if (mWinApp->LowDoseMode() && useViewForSearch) {
+    if (mLowDoseMode && useViewForSearch) {
       radio = (CButton *)GetDlgItem(IDC_RVIEW);
       radio->GetWindowRect(butrect);
       radio->SetWindowPos(NULL, 0, 0, B3DNINT(1.45 * butrect.Width()), butrect.Height(), 
@@ -1780,8 +1787,8 @@ BOOL CCameraSetupDlg::OnInitDialog()
   }
   m_butMatchPixel.ShowWindow(numRegular > 1 ? SW_SHOW : SW_HIDE);
   m_butMatchIntensity.ShowWindow(numRegular > 1 ? SW_SHOW : SW_HIDE);
-  m_butMatchPixel.EnableWindow(!mWinApp->LowDoseMode());
-  m_butMatchIntensity.EnableWindow(!mWinApp->LowDoseMode());
+  m_butMatchPixel.EnableWindow(!mLowDoseMode);
+  m_butMatchIntensity.EnableWindow(!mLowDoseMode);
   if (numRegular < 2) {
     mNumIDsToHide = 2;
     mIDsToHide[0] = IDC_MATCH_REG_PIXEL;
@@ -2140,9 +2147,9 @@ void CCameraSetupDlg::ManageDose()
     if (dose) {
       float pixel = 10000.f * BinDivisorF(mParam) * 
         mWinApp->mShiftManager->GetPixelSize(mActiveCameraList[mCurrentCamera], 
-        mWinApp->mScope->FastMagIndex());
+        GetMagIndexForCamAndSet());
       m_strDoseRate.Format("%.2f e/ub pixel/s at %s", (doseFac > 0. ? doseFac : 1.) *
-        dose * pixel * pixel /B3DMAX(0.0025, realExp), 
+        dose * pixel * pixel /B3DMAX(0.0025, realExp - mParam->deadTime), 
         doseFac > 0 ? "camera" : "specimen");
     } else
       m_strDoseRate = "Dose rate: Not calibrated";
@@ -2240,7 +2247,7 @@ int CCameraSetupDlg::GetFEIflybackTime(float &flyback)
   int binning = mBinnings[m_iBinning];
   LowDoseParams *ldp = mWinApp->GetLowDoseParams() + 
     mCamera->ConSetToLDArea(mCurrentSet);
-  int magIndex = mWinApp->LowDoseMode() ? ldp->magIndex : mWinApp->mScope->FastMagIndex();
+  int magIndex = GetMagIndexForCamAndSet();
   return mWinApp->mCalibTiming->FlybackTimeFromTable(binning, (m_eRight - m_eLeft) /
     binning, magIndex, m_eExposure, flyback, startup);
 }

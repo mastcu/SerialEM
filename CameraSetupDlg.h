@@ -212,6 +212,7 @@ private:
   bool mDEweCanAlign;
   float mSaveLinearFPS;
   float mSaveCountingFPS;
+  BOOL mLowDoseMode;
 
 public:
   afx_msg void OnAcquireReopen();
@@ -355,6 +356,7 @@ void ManageDEpanel(void);
 afx_msg void OnDeSaveMaster();
   void CheckFalconFrameSumList(void);
 float RoundedDEframeTime(float frameTime);
+int GetMagIndexForCamAndSet(void);
 };
 
 //{{AFX_INSERT_LOCATION}}
