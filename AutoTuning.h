@@ -75,6 +75,8 @@ public:
   bool DoingAutoTune() {return mDoingCalAstig || mDoingFixAstig || mDoingComaFree ||
     mDoingCtfBased || mZemlinIndex >= 0;};
   bool DoingZemlin() {return mZemlinIndex >= 0;};
+  void GetLastAstigNeeded(float &x, float &y) {x = mLastXStigNeeded; y = mLastYStigNeeded;};
+  void GetLastBeamTiltNeeded(float &x, float &y) {x = mLastXTiltNeeded; y = mLastYTiltNeeded;};
 
 private:
   CSerialEMApp *mWinApp;
@@ -174,6 +176,10 @@ private:
   float mTestCtfTuningDefocus;    // Initial focus to assign when reading in images
   bool mLastCtfBasedFailed;       // Flag for failure in last CTF-based operation
   int mCtfBasedLDareaDelay;       // Delay after changing low dose area
+  float mLastXStigNeeded;         // Change needed from last astigmatism measurement only
+  float mLastYStigNeeded;         // Can be BTID or CTF
+  float mLastXTiltNeeded;         // Change needed from last CTF coma measurement only
+  float mLastYTiltNeeded;
 
 public:
   void CalibrateAstigmatism(void);

@@ -69,6 +69,8 @@ CAutoTuning::CAutoTuning(void)
   mCtfBasedLDareaDelay = 8000;   // Based on coming back from View on an F20
   mTestCtfTuningDefocus = 0.;
   mLastCtfBasedFailed = false;
+  mLastXStigNeeded = mLastYStigNeeded = 0.;
+  mLastXTiltNeeded = mLastYTiltNeeded = 0.;
 }
 
 
@@ -247,6 +249,7 @@ int CAutoTuning::FixAstigmatism(bool imposeChange)
   mOperationInd = -1;
   mNumIterations = 0;
   mImposeChange = imposeChange;
+  mLastXStigNeeded = mLastYStigNeeded = 0.;
   mScope->GetObjectiveStigmator(mSavedAstigX, mSavedAstigY);
   mFocusManager->AutoFocusStart(-1);
   mWinApp->AddIdleTask(TASK_FIX_ASTIG, 0, 0);
@@ -378,6 +381,9 @@ void CAutoTuning::FixAstigNextTask(int param)
         FixAstigNextTask(0);
         return;
     }
+  } else {
+    mLastXStigNeeded = -(float)xAstig;
+    mLastYStigNeeded = -(float)yAstig;
   }
 
   StopFixAstig();
@@ -988,6 +994,7 @@ int CAutoTuning::CtfBasedAstigmatismComa(int comaFree, bool calibrate, int actio
   double curDefocus, tryFocus, stageX, stageY, stageZ;
   int binInd, realBin, maxMinutes = 5;
   float pixel, scanDelta = 0.1f, maxStageFocusChange = 0.05f;
+  float minMagChangeInterval = 10000.;
   UINT lastTimeOut;
   FloatVec radii;
   CameraParameters *camParam = mWinApp->GetActiveCamParam();
@@ -1010,6 +1017,11 @@ int CAutoTuning::CtfBasedAstigmatismComa(int comaFree, bool calibrate, int actio
   mCtfCal.comaType = comaFree > 0;
   mCtfCal.amplitude = mAstigToApply;
   mSavedRecSet = *recSet;
+
+  if (comaFree) 
+    mLastXTiltNeeded = mLastYTiltNeeded = 0.;
+  else
+    mLastXStigNeeded = mLastYStigNeeded = 0.;
 
   if (comaFree && calibrate) {
     SEMMessageBox("There is no calibration for CTF-based coma-free alignment");
@@ -1126,7 +1138,9 @@ int CAutoTuning::CtfBasedAstigmatismComa(int comaFree, bool calibrate, int actio
     fabs(stageX - mLastStageX) < maxStageFocusChange && fabs(stageY - mLastStageY) < 
     maxStageFocusChange && fabs(stageZ - mLastStageZ) < maxStageFocusChange && 
     fabs(curDefocus - mSavedDefocus) < maxStageFocusChange && mCtfCal.magInd == mMagIndex
-    && !needAreaChange;
+    && !needAreaChange && 
+    SEMTickInterval(mScope->GetInternalMagTime()) > minMagChangeInterval &&
+    SEMTickInterval(mScope->GetUpdateSawMagTime()) > minMagChangeInterval;
   mSavedDefocus = curDefocus;
   mLastStageX = (float)stageX;
   mLastStageY = (float)stageY;
@@ -1461,6 +1475,10 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
           // Output results and apply them; use ill-fated calibration if it exists
           str.Format("Beam tilt %s adjusted by", mCtfActionType ? "needs to be" : "was");
           ReportMisalignment((LPCTSTR)str, -solution[0], -solution[1]);
+          if (mCtfActionType) {
+            mLastXTiltNeeded = -solution[0];
+            mLastYTiltNeeded = -solution[1];
+          }
           nextXval = mLastBeamX - (mCtfActionType ? 0. : solution[0]);
           nextYval = mLastBeamY - (mCtfActionType ? 0. : solution[1]);
           if (mCtfActionType / 2 == 0) {
@@ -1503,6 +1521,10 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
           lsFit2(xfit, yfit, zfit, numInDat, &solution[0], &solution[1], &intercept);
           PrintfToLog("Objective stigmator %s adjusted by %.4f  %.4f", 
             mCtfActionType ? "needs to be" : "was", -solution[0], -solution[1]);
+          if (mCtfActionType) {
+            mLastXStigNeeded = -solution[0];
+            mLastYStigNeeded = -solution[1];
+          }
           if (!mCtfActionType) {
             nextXval = mLastAstigX - solution[0];
             nextYval = mLastAstigY - solution[1];
