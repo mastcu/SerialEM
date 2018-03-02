@@ -217,7 +217,8 @@ enum {CME_VIEW, CME_FOCUS, CME_TRIAL, CME_RECORD, CME_PREVIEW,
   CME_AREPOSTACTIONSENABLED, CME_MEASUREBEAMSIZE, CME_MULTIPLERECORDS, 
   CME_MOVEBEAMBYMICRONS, CME_MOVEBEAMBYFIELDFRACTION, CME_NEWDESERVERDARKREF,
   CME_STARTNAVACQUIREATEND, CME_REDUCEIMAGE, CME_REPORTAXISPOSITION, CME_CTFFIND,
-  CME_CBASTIGCOMA, CME_FIXASTIGMATISMBYCTF, CME_FIXCOMABYCTF, CME_ECHOEVAL
+  CME_CBASTIGCOMA, CME_FIXASTIGMATISMBYCTF, CME_FIXCOMABYCTF, CME_ECHOEVAL, 
+  CME_REPORTFILENUMBER, CME_REPORTCOMATILTNEEDED, CME_REPORTSTIGMATORNEEDED
 };
 
 static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0},
@@ -324,7 +325,8 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"MoveBeamByMicrons",2,1}, {"MoveBeamByFieldFraction", 2, 1}, {"NewDEserverDarkRef", 2,0},
 {"StartNavAcquireAtEnd", 0, 0}, {"ReduceImage", 2, 1}, {"ReportAxisPosition", 1, 0},
 {"CtfFind",3,1}, {"CBAstigComa",3,0}, {"FixAstigmatismByCTF",0,0}, {"FixComaByCTF", 0, 0},
-{"EchoEval", 0, 1},
+{"EchoEval", 0, 1}, {"ReportFileNumber", 0, 0}, {"ReportComaTiltNeeded", 0, 0}, 
+{"ReportStigmatorNeeded", 0, 0},
 {NULL, 0, 0}
 };
 
@@ -1057,7 +1059,7 @@ void CMacroProcessor::NextCommand()
   CFileStatus status;
   StageMoveInfo smi;
   int readOtherSleep = 2000;
-  BOOL recognized, recognized2;
+  BOOL recognized, recognized2, recognized3;
 
   // Be sure to add an entry for longHasTime when adding long operation
   const char *longKeys[MAX_LONG_OPERATIONS] = {"BU", "RE", "IN", "LO", "$=", "DA", "UN", 
@@ -1206,6 +1208,7 @@ void CMacroProcessor::NextCommand()
   // If we are at end, finish up unless there is a caller to return to
   recognized = true;
   recognized2 = true;
+  recognized3 = true;
   if (itemEmpty[0] || CMD_IS(EXIT) || CMD_IS(RETURN) || CMD_IS(ENDFUNCTION) || 
     CMD_IS(FUNCTION)) {
       if (!mCallLevel || CMD_IS(EXIT) || (CMD_IS(ENDFUNCTION) && mExitAtFuncEnd)) {
@@ -1717,7 +1720,7 @@ void CMacroProcessor::NextCommand()
 
   } else if (CMD_IS(RECORDANDTILTUP) || CMD_IS(RECORDANDTILTDOWN) || 
     CMD_IS(RECORDANDTILTTO)) {                              // RecordAndTilt
-      if (!mCamera->PostActionsOK())
+      if (!mCamera->PostActionsOK(&mConSets[RECORD_CONSET]))
         ABORT_LINE("Post-exposure actions are not enabled for the current camera"
         " for line:\n\n");
       double increment = mScope->GetIncrement();
@@ -1874,7 +1877,21 @@ void CMacroProcessor::NextCommand()
       AbortMacro();
       return;
     }
-     
+ 
+  } else if (CMD_IS(REPORTSTIGMATORNEEDED)) {               // ReportStigmatorNeeded
+    mWinApp->mAutoTuning->GetLastAstigNeeded(backlashX, backlashY);
+    report.Format("Last measured stigmator change needed: %.4f  %.4f", backlashX,
+      backlashY);
+    mWinApp->AppendToLog(report, mLogAction);
+    SetReportedValues(&strItems[1], backlashX, backlashY);
+    
+  } else if (CMD_IS(REPORTCOMATILTNEEDED)) {                // ReportComaTiltNeeded
+    mWinApp->mAutoTuning->GetLastBeamTiltNeeded(backlashX, backlashY);
+    report.Format("Last measured beam tilt change needed: %.2f  %.2f", backlashX,
+      backlashY);
+    mWinApp->AppendToLog(report, mLogAction);
+    SetReportedValues(&strItems[1], backlashX, backlashY);
+
   } else if (CMD_IS(S) || CMD_IS(SAVE)) {                   // Save
     index2 = -1;
     if (ConvertBufferLetter(strItems[1], 0, true, i, report))
@@ -2138,6 +2155,10 @@ void CMacroProcessor::NextCommand()
     ClearVariables(VARTYPE_REPORT);
     SetVariable("REPORTEDVALUE1", dlg.GetPath(), VARTYPE_REPORT, 1, true);
     SetVariable("REPVAL1", dlg.GetPath(), VARTYPE_REPORT, 1, true);
+  } else
+    recognized = false;
+
+  if (recognized) {
     
   } else if (CMD_IS(SETNEWFILETYPE)) {                      // SetNewFileType
     FileOptions *fileOpt = mWinApp->mDocWnd->GetFileOpt();
@@ -2253,6 +2274,16 @@ void CMacroProcessor::NextCommand()
         " \n\n");
     mWinApp->mDocWnd->SetCurrentStore(index - 1);
 
+  } else if (CMD_IS(REPORTFILENUMBER)) {                     // ReportFileNumber
+    index = mWinApp->mDocWnd->GetCurrentStore();
+    if (index >= 0) {
+      index++;
+      report.Format("Current open file number is %d", index);
+    } else 
+      report = "There is no file open currently";
+    mWinApp->AppendToLog(report, mLogAction);
+    SetReportedValues(&strItems[1], index);
+    
   } else if (CMD_IS(ADDTOAUTODOC) || CMD_IS(WRITEAUTODOC)) { // AddToAutodoc, WriteAutodoc
     if (!mWinApp->mStoreMRC)
       ABORT_LINE("There is no open image file for: \n\n");
@@ -2714,10 +2745,6 @@ void CMacroProcessor::NextCommand()
     if (!itemEmpty[1] && itemInt[1])
       index = -1;
     mWinApp->mShiftCalibrator->CalibrateIS(index, false, true);
-  } else
-    recognized = false;
-
-  if (recognized) {
 
   } else if (CMD_IS(REPORTFOCUSDRIFT)) {                    // ReportFocusDrift
     if (mWinApp->mFocusManager->GetLastDrift(delX, delY))
@@ -3071,6 +3098,9 @@ void CMacroProcessor::NextCommand()
         return;
       }
     }
+  } else
+    recognized2 = false;
+  if (recognized || recognized2) {
 
   } else if (CMD_IS(REPORTSTAGEXYZ)) {                      // ReportStageXYZ
     mScope->GetStagePosition(stageX, stageY, stageZ);
@@ -3726,10 +3756,6 @@ void CMacroProcessor::NextCommand()
       AbortMacro();
       return;
     }
-  } else
-    recognized2 = false;
-  if (recognized || recognized2) {
-
                       // SetIntensityForMean, ChangeIntensityBy, SetIntensityByLastTilt
   } else if (CMD_IS(SETINTENSITYBYLASTTILT) ||
     CMD_IS(SETINTENSITYFORMEAN) || CMD_IS(CHANGEINTENSITYBY)) {
@@ -4005,7 +4031,10 @@ void CMacroProcessor::NextCommand()
     mConSets[index].right = ix1 * index2;
     mConSets[index].top = iy0 * index2;
     mConSets[index].bottom = iy1 * index2;
-
+  } else
+    recognized3 = false;
+  if (recognized || recognized2 || recognized3) {
+    
   } else if (CMD_IS(SETCENTEREDSIZE)) {                     // SetCenteredSize
     if (CheckAndConvertCameraSet(strItems[1], itemInt[1], index, strCopy))
       ABORT_LINE(strCopy);
@@ -4965,7 +4994,7 @@ void CMacroProcessor::NextCommand()
   } else
     ABORT_LINE("Unrecognized statement in script: \n\n");
 
-  // The action is taken or started: now set up on idle task
+  // The action is taken or started: now set up an idle task
   mWinApp->AddIdleTask(NULL, TASK_MACRO_RUN, 0, 0);
 }
 
