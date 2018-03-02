@@ -815,7 +815,7 @@ public:
   static void AddStatsAndSleep(CameraThreadData * td, DWORD &curTime, DWORD &lastTime, 
     int &numScan, double &intervalSum, double &intervalSumSq, int stepInterval);
 
-  BOOL PostActionsOK(void);
+  BOOL PostActionsOK(ControlSet *conSet = NULL);
   double RefMemoryUsage(void);
   void TestGainFactor(short * array, int sizeX, int sizeY, int binning);
   void SetAMTblanking();

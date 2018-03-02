@@ -653,7 +653,8 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
       notSkipping = 0;
     }
 
-    mActPostExposure = mWinApp->ActPostExposure() && !preCooking && !mUseContinuousMode;
+    mActPostExposure = mWinApp->ActPostExposure(&mConSets[setNum]) && !preCooking && 
+      !mUseContinuousMode;
 
     // Check that the image shift/stage move is not out of range
     for (ix = 0; ix < mNumPieces; ix++) {

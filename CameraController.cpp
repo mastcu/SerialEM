@@ -1576,10 +1576,12 @@ void CCameraController::SetProcessHere(BOOL inVal)
 }
 
 // Return whether post-actions can be taken safely
-BOOL CCameraController::PostActionsOK(void)
+// Linear mode for K2 takes a new dark reference every time exposure is changed
+BOOL CCameraController::PostActionsOK(ControlSet *conSet)
 {
   return (!mParam->FEItype && !((mParam->K2Type > 1 && mParam->startupDelay < 1.46) ||
-    (mParam->K2Type == 1 && mParam->startupDelay < mK2MinStartupDelay)) && 
+    (mParam->K2Type == 1 && (mParam->startupDelay < mK2MinStartupDelay ||
+    (conSet && conSet->K2ReadMode == LINEAR_MODE)))) && 
     mParam->postActionsOK && mParam->DE_camType < 2 && 
     !mParam->STEMcamera && mParam->noShutter != 1);
 }
