@@ -3,6 +3,7 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+2/18/18: SEM_3-6-15
 2/16/18: Adjusted Low Dose post-image shift delay factors from 0.6 to 0.9 for
 Record and from 2 to 1.5 for Focus.  Fixed Focus using Trial factor of 0.6 if
 the two are tied together.
