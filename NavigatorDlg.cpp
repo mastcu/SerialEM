@@ -8304,10 +8304,16 @@ int CNavigatorDlg::OffsetMontImagePos(MiniOffsets *mini, int xPcStart, int xPcEn
   float &yInPiece)
 {
   int ix, iy, index, xst, xnd, yst, ynd, xDist, yDist, minInd, minDist, xTest, yTest;
+
+  // When there are two frames, the base is 0 and the delta is frame - overlap / 2
+  // So get a correct adjustment from xst/yst to real start of second piece
+  // which is also the amount to fix xnd/ynd when there are two pieces
+  int xstAdjForInPc = mini->xNframes == 2 ? mini->xFrame - mini->xDelta : mini->xBase;
+  int ystAdjForInPc = mini->yNframes == 2 ? mini->yFrame - mini->yDelta : mini->yBase;
   xTest = (int)testX;
   yTest = (int)testY;
 
-  // Loop on pieces in given range; this piece numbering is inverted in Y!
+  // Loop on pieces in given range; this piece numbering iy is inverted in Y!
   minDist = 100000000;
   pcInd = -1;
   xInPiece = yInPiece = -1.f;
@@ -8325,14 +8331,20 @@ int CNavigatorDlg::OffsetMontImagePos(MiniOffsets *mini, int xPcStart, int xPcEn
       xnd = xst + mini->xDelta;
       if (!ix)
         xst = mini->offsetX[index];
-      if (ix == mini->xNframes - 1)
+      if (ix == mini->xNframes - 1) {
         xnd = mini->xFrame + ix * mini->xDelta + mini->offsetX[index];
+        if (mini->xNframes == 2)
+          xnd -= xstAdjForInPc;
+      }
       yst = mini->yBase + iy * mini->yDelta + mini->offsetY[index];
       ynd = yst + mini->yDelta;
       if (!iy)
         yst = mini->offsetY[index];
-      if (iy == mini->yNframes - 1)
+      if (iy == mini->yNframes - 1) {
         ynd = mini->yFrame + iy * mini->yDelta + mini->offsetY[index];
+        if (mini->yNframes == 2)
+          ynd -= ystAdjForInPc;
+      }
       
       // Get the "distance" from point to piece, negative if inside
       if (xTest < xst)
@@ -8359,8 +8371,8 @@ int CNavigatorDlg::OffsetMontImagePos(MiniOffsets *mini, int xPcStart, int xPcEn
           // Return coordinates in piece with the binning of overview, but right-handed
           // Need to adjust starting coordinates by the base to be the actual coordinate
           // of the full piece and not of the subset pasted in to the overview
-          xInPiece = (float)(testX - (xst - B3DCHOICE(ix > 0, mini->xBase, 0)));
-          yInPiece = (float)(mini->yFrame + (yst - B3DCHOICE(iy > 0, mini->yBase, 0)) - 
+          xInPiece = (float)(testX - (xst - B3DCHOICE(ix > 0, xstAdjForInPc, 0)));
+          yInPiece = (float)(mini->yFrame + (yst - B3DCHOICE(iy > 0, ystAdjForInPc, 0)) - 
             testY);
         }
       }
