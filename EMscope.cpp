@@ -141,7 +141,7 @@ int    CEMscope::mScopeMutexOwnerCount;
 int    CEMscope::mLastMagIndex;
 BOOL   CEMscope::mMagChanged;
 int    CEMscope::mInternalPrevMag;
-double CEMscope::mInternalMagTime;
+double CEMscope::mInternalMagTime = 0;
 double CEMscope::mLastISX = 0.;
 double CEMscope::mLastISY = 0.;
 double CEMscope::mPreviousISX;
@@ -1103,6 +1103,8 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
       if (magIndex != lastMag || rawISX != mLastISX || rawISY != mLastISY)
         SEMTrace('i', "Update: lastMag %d new mag %d last IS %.3f %.3f  rawIS %.3f %.3f",
         lastMag, magIndex, mLastISX, mLastISY, rawISX, rawISY);
+      if (magIndex != lastMag)
+        mUpdateSawMagTime = GetTickCount();
 
       // This flag is solely to indicate on the next round that previous rather than
       // last IS should be used for transfers; but do not do that when crossing boundary

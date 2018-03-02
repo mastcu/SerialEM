@@ -278,6 +278,8 @@ class DLL_IM_EX CEMscope
   void SetMessageBoxArgs(int type, CString &title, CString &message);
   int GetMessageBoxReturnValue(void);
   GetSetMember(BOOL, UseInvertedMagRange);
+  GetMember(double, InternalMagTime);
+  GetMember(double, UpdateSawMagTime);
 
   static void SetJeolIndForMagMode(int inVal);
   static int GetJeolIndForMagMode();
@@ -415,6 +417,7 @@ private:
   int mLastSTEMmag;
   double mLastSTEMfocus;      // Keep track of last focus values seen too
   double mLastRegularFocus;
+  double mUpdateSawMagTime;  // Time of last mag change seen in update routine
   BOOL mBlankWhenDown;        // if blanking when screen down
   BOOL mLowDoseMode;          // flag for low dose
   BOOL mCameraAcquiring;      // flag to not blank when screen up in low dose
