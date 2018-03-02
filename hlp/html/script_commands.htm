@@ -1007,8 +1007,13 @@
           <TD>Close the current file. Enter optional 'e' to stop script if no file is open.</TD>
         </TR>
         <TR vAlign="top">
+          <TD class="style7">ReportFileNumber</TD>
+          <TD>Report the number of the currently selected file, numbered from 1, or -1 if 
+            there is no file open.</TD>
+        </TR>
+        <TR vAlign="top">
           <TD class="style7">SwitchToFile #</TD>
-          <TD>Make the given file number be the current open file.</TD>
+          <TD>Make the given file number, numbered from 1, be the current open file.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style7">RemoveFile file</TD>
@@ -1823,6 +1828,19 @@
             misalignment once and report it without correcting it.&nbsp; If the # is 1, it 
             will do another iteration of estimating beam tilt and average the result with 
             the previous iterations.</TD>
+        </TR>
+        <TR>
+          <TD class="style12">ReportStigmatorNeeded</TD>
+          <TD>Report the needed stigmator change in X and Y that was measured only, but not 
+            imposed, after running &#39;FixAstigmatismByCTF 1&#39; or &#39;CorrectAstigmatism 1&#39;.&nbsp; 
+            The last run of either astigmatism routine must be by one of these commands; 
+            otherwise it will return 0 and 0.</TD>
+        </TR>
+        <TR>
+          <TD class="style12">ReportComaTiltNeeded</TD>
+          <TD>Report the needed change in X and Y beam tilt that was measured only, but not 
+            imposed, after running &#39;FixComaByCTF 1&#39;.&nbsp; If the last run of the coma 
+            routine applied rather than just measured the tilt, it will return 0 and 0.</TD>
         </TR>
         <TR>
           <TD class="style12">ZemlinTableau #T [#S] [#C]</TD>

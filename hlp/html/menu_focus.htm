@@ -467,7 +467,8 @@
       <li><i>Maximum beam tilt.</i>&nbsp; On an FEI scope, enter this in milliradians.&nbsp; 
         Otherwise, you will be told the estimated scaling from percent of full-scale to 
         milliradians and asked to enter a value in percent, the same units used for the 
-        autofocus beam tilt.</li>
+        autofocus beam tilt.&nbsp; If you enter a negative value, it will use the 
+        program&#39;s default value, which can be set by the property &#39;ComaParams&#39;.</li>
       <li><i>Whether to take a full array of images.</i>&nbsp; With a non-zero entry, it 
         will take a 3x3 array of images and repeat the image at 0 beam tilt at the end.&nbsp; 
         The difference in beam tilt along diagonals will be the same as that along the 
@@ -504,7 +505,7 @@
       The routine uses the calibration from the nearest calibrated magnification.</P>
     <P><A NAME="hid_focus_setastigbeamtilt"></A><B>Set BTID Astig Beam Tilt command (Focus menu)</B></P>
     <P>Use this command to set the beam tilt that will be used either to calibrate 
-      astigatism with or to correct it with beam-tilt induced displacements.&nbsp; On a non-FEI scope, the entry box will tell 
+      astigmatism with or to correct it with beam-tilt induced displacements.&nbsp; On a non-FEI scope, the entry box will tell 
       you the scaling from percent of full scale to milliradians, so that you can use 
       a standardized value if desired.</P>
     <P><A NAME="hid_focus_coma"></A><B>BTID Coma-free Alignment command (Focus - Old 
