@@ -217,7 +217,7 @@ enum {CME_VIEW, CME_FOCUS, CME_TRIAL, CME_RECORD, CME_PREVIEW,
   CME_AREPOSTACTIONSENABLED, CME_MEASUREBEAMSIZE, CME_MULTIPLERECORDS, 
   CME_MOVEBEAMBYMICRONS, CME_MOVEBEAMBYFIELDFRACTION, CME_NEWDESERVERDARKREF,
   CME_STARTNAVACQUIREATEND, CME_REDUCEIMAGE, CME_REPORTAXISPOSITION, CME_CTFFIND,
-  CME_CBASTIGCOMA, CME_FIXASTIGMATISMBYCTF, CME_FIXCOMABYCTF
+  CME_CBASTIGCOMA, CME_FIXASTIGMATISMBYCTF, CME_FIXCOMABYCTF, CME_ECHOEVAL
 };
 
 static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0},
@@ -324,6 +324,7 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"MoveBeamByMicrons",2,1}, {"MoveBeamByFieldFraction", 2, 1}, {"NewDEserverDarkRef", 2,0},
 {"StartNavAcquireAtEnd", 0, 0}, {"ReduceImage", 2, 1}, {"ReportAxisPosition", 1, 0},
 {"CtfFind",3,1}, {"CBAstigComa",3,0}, {"FixAstigmatismByCTF",0,0}, {"FixComaByCTF", 0, 0},
+{"EchoEval", 0, 1},
 {NULL, 0, 0}
 };
 
@@ -3532,6 +3533,15 @@ void CMacroProcessor::NextCommand()
     SubstituteVariables(&strLine, 1, strLine);
     mWinApp->mParamIO->StripItems(strLine, 1, report);
     report.Replace("\n", "  ");
+    mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
+
+  } else if (CMD_IS(ECHOEVAL)) {                            // EchoEval
+    report = "";
+    for (index = 1; index < MAX_TOKENS && !itemEmpty[index]; index++) {
+      if (index > 1)
+        report += " ";
+      report += strItems[index];
+    }
     mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
 
   } else if (CMD_IS(VERBOSE)) {                             // verbose

@@ -30,7 +30,6 @@
     <A HREF="#variables">Using Variables</A><br>
     <A HREF="#arrayVars">Array Variables</A><br>
     <A HREF="#arithmetic">Arithmetic Expressions</A><br>
-    <A HREF="#arithForArgs">Commands Allowing Arithmetic Expressions for Arguments</A><br>
     <A HREF="#ifElseEndif">IF, ELSEIF, ELSE, ENDIF, BREAK and CONTINUE Statements</A><br>
     <A HREF="#labels">Labels and SKIPTO Statements</A><br>
     <A HREF="#functions">Defining and Calling Functions</A><br>
@@ -364,7 +363,6 @@
           by maximum of the two absolute values</td>
       </tr>
     </table>
-    <P><A NAME="arithForArgs"></A><B>Commands Allowing Arithmetic Expressions for Arguments</B></P>
     <P>
       As of SerialEM 4.7 (Feb 14, 2018), arithmetic expressions can be used in a wide 
       variety of commands, in addition to variable assignments and conditional 
@@ -374,61 +372,10 @@
       spaces around parentheses are optional, as just described, but there must be 
       space between operators and values.&nbsp; An example of such a command is:<br />
 &nbsp;&nbsp;&nbsp; SetImageShift ($baseX + $deltaX) ($baseY + $deltaY)<P>
-      Virtually all commands starting with &quot;Set&quot; allow arithmetic expressions.&nbsp; 
-      In addition, these commands also allow them:<pre>
-AbsoluteFocusLimits
-BackgroundTilt
-BeamTiltDirection
-ChangeEnergyLoss
-ChangeFocus
-ChangeIntensityBy
-ChangeItemRegistration
-ChangeMag
-ChangeMagAndIntensity
-CircleFromPoints
-CropImage
-CtfFind
-Delay
-EarlyReturnNextShot
-ElapsedTickTime
-ExposeFilm
-FocusChangeLimits
-ImageShiftByMicrons
-ImageShiftByPixels
-ImageShiftByUnits
-IncPercentC2
-IncTargetDefocus
-LongOperation
-ManualFilmExposure
-MoveBeamByFieldFraction
-MoveBeamByMicrons
-MovePiezoXY
-MovePiezoZ
-MoveStage
-MoveStageTo
-MultipleRecords
-PreCookMontage
-QuickFlyback
-RecordAndTiltTo
-ReduceImage
-RelaxStage
-ResetShiftIfAbove
-SetSlitIn
-ShiftItemsByMicrons
-SmoothFocusNextShot
-SpecialExposeFilm
-StepFocusNextShot
-SubareaMean
-TestRelaxingStage
-TestSTEMshift
-TiltBy
-TiltDuringRecord
-TiltTo
-UpdateHWDarkRef
-WaitForDose
-WaitForMidnight
-WalkUpTo
-ZemlinTableau</pre>
+      Virtually all commands starting with 'Set' allow arithmetic expressions.&nbsp; 
+      All other commands allowing them are listed in
+      <A HREF="#script_commands.htm/arithForArgs">Commands Allowing Arithmetic Expressions for Arguments</A>.<br>
+
     <p>
 
       Older versions of the program will probably convert most components of the 

@@ -45,9 +45,13 @@
         In the table, brackets around an entry indicate that the entry is optional; do 
         not include the brackets in your script.&nbsp; In every case, the &#39;#&#39; symbols or 
         letters after a command should be replaced by an actual numeric or other entry.&nbsp; 
-        Commands starting with &#39;Report...&#39; will assign output to one or more variable 
+        </P>
+    <P>Commands starting with &#39;Report...&#39; will assign output to one or more variable 
         names listed after the command (omitting the &#39;$&#39;), except where the table notes 
-        otherwise.</P>
+        otherwise.&nbsp; For other commands, the table explicitly states when they 
+      accept variable names.&nbsp; Arithmetic expressions can be used after virtually 
+      all commands starting with 'Set' and with the commands listed in
+      <A HREF="#arithForArgs">Commands Allowing Arithmetic Expressions for Arguments</A>.</P>
       <BR>
       <A href="#macro_control_commands">Script Control Commands</A>
       <BR>
@@ -80,7 +84,8 @@
       &nbsp;&nbsp;&nbsp;&nbsp; <A href="#low_dose">Low Dose Commands</A><br>
       &nbsp;&nbsp;&nbsp;&nbsp; <A href="#task_commands">Task-Related Commands</A><br>
       &nbsp;&nbsp;&nbsp;&nbsp; <A href="#navigator">Navigator-Related Commands</A><br>
-      <A href="#miscellaneous">Miscellaneous Commands</A>
+      <A href="#miscellaneous">Miscellaneous Commands</A><br />
+    <A HREF="#arithForArgs">Commands Allowing Arithmetic Expressions for Arguments</A><br>
       
     <P></P>
       <P><A name="macro_control_commands"></A><B>Script Control Commands</B></P>
@@ -225,7 +230,14 @@
         </TR>
         <TR vAlign="top">
           <TD class="style4">Echo [text]</TD>
-          <TD>Prints the text to the log window, or a blank line if there is no text.</TD>
+          <TD>Prints the text to the log window, or a blank line if there is no text.&nbsp; 
+            Variables are substituted but arithmetic expressions are not evaluated.&nbsp; 
+            Multiple spaces between words are preserved.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style4">EchoEval [text]</TD>
+          <TD>Prints the text to the log window after substituting variables and evaluating 
+            arithmetic expressions.&nbsp; Multiple spaces between words will be lost.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style4">Pause [text]</TD>
@@ -2317,6 +2329,64 @@
             set on resume.</TD>
         </TR>
       </TABLE>
+    <P><A NAME="arithForArgs"></A><B>Commands Allowing Arithmetic Expressions for Arguments</B></P>
+      In addition to the commands starting with 'Set', these commands
+    allow arithemetic arguments:
+    <pre>
+AbsoluteFocusLimitsss
+BackgroundTilt
+BeamTiltDirection
+ChangeEnergyLoss
+ChangeFocus
+ChangeIntensityBy
+ChangeItemRegistration
+ChangeMag
+ChangeMagAndIntensity
+CircleFromPoints
+CropImage
+CtfFind
+EchoEval
+Delay
+EarlyReturnNextShot
+ElapsedTickTime
+ExposeFilm
+FocusChangeLimits
+ImageShiftByMicrons
+ImageShiftByPixels
+ImageShiftByUnits
+IncPercentC2
+IncTargetDefocus
+LongOperation
+ManualFilmExposure
+MoveBeamByFieldFraction
+MoveBeamByMicrons
+MovePiezoXY
+MovePiezoZ
+MoveStage
+MoveStageTo
+MultipleRecords
+PreCookMontage
+QuickFlyback
+RecordAndTiltTo
+ReduceImage
+RelaxStage
+ResetShiftIfAbove
+SetSlitIn
+ShiftItemsByMicrons
+SmoothFocusNextShot
+SpecialExposeFilm
+StepFocusNextShot
+SubareaMean
+TestRelaxingStage
+TestSTEMshift
+TiltBy
+TiltDuringRecord
+TiltTo
+UpdateHWDarkRef
+WaitForDose
+WaitForMidnight
+WalkUpTo
+ZemlinTableau</pre>
     </basefont>
   </BODY>
 </HTML>
