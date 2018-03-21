@@ -24,7 +24,7 @@ public:
 		     KPixMap();
 	virtual ~KPixMap();	
 	virtual  KImage*    getImRectPtr() { return mRect; }
-	virtual  int  useRect(KImage *inImage, bool keepBGRorder = false);
+	virtual  int  useRect(KImage *inImage);
 	virtual  void doneWithRect();	
 	virtual  void KPixMap::SetLut(int inType, int inMin, int inRange);
 	virtual  void setLevels(int inBrightness, int inContrast, int inInverted, 

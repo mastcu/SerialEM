@@ -226,7 +226,7 @@ int CPluginManager::LoadPlugins(void)
         SCOPE_PROC(GetPluginVersions, CamGetTwoInt, "GetPluginVersions");
 #include "StandardScopeCalls.h"
         mScopePlugIndex = (int)mPlugins.GetSize();
-        SEMTrace('1', "%d functions resolved, %d unresolved in scope plugin", j, i);
+        SEMTrace('1', "%d of %d possible functions resolved in scope plugin", j, i + j);
       }
 
       // Get Direct Electron plugin functions, forbid two, require all functions

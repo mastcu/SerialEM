@@ -3,9 +3,6 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
-3/17/18: Fixed color image inversion when zoomed down with antialiasing
-(In 3.6).
-
 3/1/18: Fixed coordinates in piece put into nav file for 2-piece case.
 
 3/1/18: Added script commands for reporting current file number and last

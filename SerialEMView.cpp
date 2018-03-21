@@ -396,7 +396,7 @@ void CSerialEMView::DrawImage(void)
           (float)mXSrc, (float)(bitImage->getHeight() - 1 - (mYSrc + iSrcHeight - 1)),
           tmpWidth, tmpHeight, needWidth, 0, byteMap ? SLICE_MODE_BYTE : SLICE_MODE_RGB, 
           filtImage->getRowData(0), NULL, NULL)) {
-        imBuf->mFiltPixMap->useRect(filtImage, true);
+        imBuf->mFiltPixMap->useRect(filtImage);
       } else {
         filtering = false;
       }
