@@ -2981,8 +2981,8 @@ int CProcessImage::InitializeCtffindParams(EMimageBuffer *imBuf, CtffindParams &
       return 1;
     params.minimum_resolution = B3DMIN(params.pixel_size_of_input_image / 0.05f, 50.f);
     params.maximum_resolution = params.pixel_size_of_input_image / 0.3f;
-    //if (imBuf->mCamera >= 0 && mCamera->IsDirectDetector
-      //(&camParams[imBuf->mCamera]))
+    if (imBuf->mCamera >= 0 && mCamera->IsDirectDetector
+      (&camParams[imBuf->mCamera]))
       params.maximum_resolution = params.pixel_size_of_input_image / 0.35f;
     ACCUM_MAX(params.maximum_resolution, GetMaxCtfFitRes());
   }

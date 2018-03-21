@@ -38,12 +38,6 @@ KStoreIMOD::KStoreIMOD(CString inFilename , FileOptions inFileOpt)
   mIIfile = iiOpenNew(inFilename, "w", isJpeg ? IIFILE_JPEG : IIFILE_TIFF);
   if (!mIIfile)
     return;
-/*  mIIfile->filename = _strdup((LPCTSTR)inFilename);
-  if (!mIIfile->filename || (!isJpeg && tiffOpenNew(mIIfile)) || 
-    (isJpeg && jpegOpenNew(mIIfile))) {
-    iiDelete(mIIfile);
-    mIIfile = NULL;
-  }*/
 }
 
 void KStoreIMOD::CommonInit()

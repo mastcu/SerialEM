@@ -3,6 +3,19 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+3/21/18: A few more tweaks in the CTF-based astigmatism/coma routine.
+
+3/21/18: Added calibration of beam tilt needed to compensate image shift, made
+multi-shot routine able to use this, added some related script commands and
+options on image shift commands to do compensation for he image shift.
+
+3/21/18: Switched Ctffind outout from showing defocus 1 and 2 to showing
+average defocus and astigmatism (difference between the two).
+
+3/21/18: Added ability to make a true JPEG file because ImageJ will not
+display JPEG-compressed TIFFs and mad JPEG/JPG an allowed file type on the
+SaveToOtherFile command.
+
 3/18/18: Prevented right click in edit mode from moving map or polygon
 (In 3.6).
 
