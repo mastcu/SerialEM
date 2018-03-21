@@ -2395,6 +2395,8 @@ BOOL CNavigatorDlg::UserMousePoint(EMimageBuffer *imBuf, float inX, float inY,
       return false;
     if (mItem->mRegistration != imBuf->mRegistration)
       return false;
+    if (movingOne && mItem->mType != ITEM_TYPE_POINT)
+      return false;
     ShiftItemPoints(mItem, stageX - mItem->mStageX, stageY - mItem->mStageY);
     mItem->mStageX = stageX;
     mItem->mStageY = stageY;
