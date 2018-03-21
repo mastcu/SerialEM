@@ -1322,7 +1322,10 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
       StopCtfBased();
       return;
     }
-    if (resultsArray[5] > param.minimum_resolution) {
+
+    // Check fit to resolution, but try to ignore infinite result
+    if (resultsArray[5] > param.minimum_resolution && resultsArray[5] < 
+      10. * imBufs->mImage->getWidth() * param.pixel_size_of_input_image) {
       str.Format("The resolution to which Thon rings fit,\n"
         "%.0f A is way too high for a reliable fit", resultsArray[5]);
       SEMMessageBox(str);
