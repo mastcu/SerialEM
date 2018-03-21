@@ -43,10 +43,12 @@ KPixMap::KPixMap()
 
 // Sets up the member byte image mRect: just points to existing byte data, or creates a new
 // byte image in other cases and copies scaled data there
-int KPixMap::useRect(KImage *inRect)
+int KPixMap::useRect(KImage *inRect, bool keepBGRorder)
 {
   int i, j;
   int theShiftX, theShiftY, fillFac;
+  int blueInd = keepBGRorder ? 0 : 2;
+  int redInd = 2 - blueInd;
   float fShiftX, fShiftY;
   int theMode = inRect->getMode();
   int theType = inRect->getType();
@@ -178,9 +180,9 @@ int KPixMap::useRect(KImage *inRect)
 
         // The pixmap is BGR like the RGBQUAD structure used in bmiColors
         for(i = 0; i < nCopyX; i++) {
-          *bdata++ = ucdata[2];
+          *bdata++ = ucdata[blueInd];
           *bdata++ = ucdata[1];
-          *bdata++ = ucdata[0];
+          *bdata++ = ucdata[redInd];
           ucdata += 3;
         }
         break;
