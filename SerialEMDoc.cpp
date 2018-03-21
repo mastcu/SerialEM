@@ -1317,12 +1317,14 @@ KImageStore *CSerialEMDoc::OpenNewFileByName(CString cFilename, FileOptions *fil
   char title[80];
   MakeSerialEMTitle(mTitle, title);
 
-  if (fileOptp->TIFFallowed && fileOptp->fileType == STORE_TYPE_TIFF) {
+  if (fileOptp->TIFFallowed && (fileOptp->fileType == STORE_TYPE_TIFF ||
+    fileOptp->fileType == STORE_TYPE_JPEG)) {
 
     // TIFF file
     KStoreIMOD *tiffStore = new KStoreIMOD(cFilename, *fileOptp);
     store = (KImageStore *)tiffStore;
-    store->AddTitle(title);
+    if (fileOptp->fileType == STORE_TYPE_TIFF)
+      store->AddTitle(title);
     
   } else {
     

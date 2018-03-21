@@ -32,6 +32,15 @@ struct CtfBasedCalib {
   float fitValues[3 * MAX_CAL_CTF_FITS];
 };
 
+struct ComaVsISCalib {
+  ScaleMat matrix;
+  int spotSize;
+  int magInd;
+  int alpha;
+  float intensity;
+  int probeMode;
+  int aperture;
+};
 
 class CAutoTuning
 {
@@ -69,12 +78,17 @@ public:
   GetSetMember(float, TestCtfTuningDefocus);
   GetMember(bool, LastCtfBasedFailed);
   SetMember(int, CtfBasedLDareaDelay);
+  GetSetMember(float, ComaVsISextent);
+  ComaVsISCalib *GetComaVsIScal() {return &mComaVsIScal;};
+  void SetBaseBeamTilt(double inX, double inY) {mBaseBeamTiltX = inX; mBaseBeamTiltY = inY;}; 
+
   CArray <AstigCalib, AstigCalib> *GetAstigCals() {return &mAstigCals;};
   CArray <ComaCalib, ComaCalib> *GetComaCals() {return &mComaCals;};
   CArray <CtfBasedCalib, CtfBasedCalib> *GetCtfBasedCals() {return &mCtfBasedCals;};
   bool DoingAutoTune() {return mDoingCalAstig || mDoingFixAstig || mDoingComaFree ||
-    mDoingCtfBased || mZemlinIndex >= 0;};
+    mDoingCtfBased || mZemlinIndex >= 0 || mComaVsISindex >= 0;};
   bool DoingZemlin() {return mZemlinIndex >= 0;};
+  bool DoingComaVsIS() { return mComaVsISindex >= 0;};
   void GetLastAstigNeeded(float &x, float &y) {x = mLastXStigNeeded; y = mLastYStigNeeded;};
   void GetLastBeamTiltNeeded(float &x, float &y) {x = mLastXTiltNeeded; y = mLastYTiltNeeded;};
 
@@ -87,6 +101,7 @@ private:
   CArray <CtfBasedCalib, CtfBasedCalib> mCtfBasedCals;
   int mMagIndex;          // Mag of the operation
   ScaleMat mCamToSpec;    // Matrix for converting pixels to nm
+  ComaVsISCalib mComaVsIScal;
   double mSavedBeamTilt;  // Starting values of beam til, defocus, astigmatism
   double mSavedDefocus;
   double mSavedAstigX;
@@ -180,6 +195,10 @@ private:
   float mLastYStigNeeded;         // Can be BTID or CTF
   float mLastXTiltNeeded;         // Change needed from last CTF coma measurement only
   float mLastYTiltNeeded;
+  float mComaVsISextent;
+  int mComaVsISindex;
+  float mComaVsISXTiltNeeded[4];
+  float mComaVsISYTiltNeeded[4];
 
 public:
   void CalibrateAstigmatism(void);
@@ -221,5 +240,9 @@ public:
   float beamTilt, float *factors);
   int SetupCtfAcquireParams(bool fromCheck);
   int CheckAndSetupCtfAcquireParams(const char *operation, bool fromSetup);
+  int CalibrateComaVsImageShift(bool interactive);
+  void ComaVsISNextTask(int param);
+  void ComaVsISCleanup(int error);
+  void StopComaVsISCal(void);
 };
 

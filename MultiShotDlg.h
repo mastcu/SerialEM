@@ -60,4 +60,8 @@ public:
   CButton m_butSaveRecord;
   afx_msg void OnKillfocusEditEarlyFrames();
   void ManageEnables(void);
+  CButton m_butAdjustBeamTilt;
+  BOOL m_bAdjustBeamTilt;
+  CStatic m_statComaIScal;
+  CStatic m_statComaConditions;
 };

@@ -9,6 +9,8 @@
 
 #include "stdafx.h"
 #include "SerialEM.h"
+#include "EMscope.h"
+#include "AutoTuning.h"
 #include "SerialEMView.h"
 #include "MultiShotDlg.h"
 
@@ -26,6 +28,7 @@ CMultiShotDlg::CMultiShotDlg(CWnd* pParent /*=NULL*/)
   , m_fBeamDiam(0)
   , m_iEarlyReturn(0)
   , m_fExtraDelay(0)
+  , m_bAdjustBeamTilt(FALSE)
 {
 
 }
@@ -59,6 +62,10 @@ void CMultiShotDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Text(pDX, IDC_EDIT_EXTRA_DELAY, m_fExtraDelay);
   DDV_MinMaxFloat(pDX, m_fExtraDelay, 0., 100.);
   DDX_Control(pDX, IDC_CHECK_SAVE_RECORD, m_butSaveRecord);
+  DDX_Control(pDX, IDC_CHECK_ADJUST_BEAM_TILT, m_butAdjustBeamTilt);
+  DDX_Check(pDX, IDC_CHECK_ADJUST_BEAM_TILT, m_bAdjustBeamTilt);
+  DDX_Control(pDX, IDC_STAT_COMA_IS_CAL, m_statComaIScal);
+  DDX_Control(pDX, IDC_STAT_COMA_CONDITIONS, m_statComaConditions);
 }
 
 
@@ -82,6 +89,8 @@ END_MESSAGE_MAP()
 // Initialize dialog
 BOOL CMultiShotDlg::OnInitDialog()
 {
+  ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
+  CString str, str2;
   CBaseDlg::OnInitDialog();
 
   // Save original parameters and transfer them to interface elements
@@ -94,6 +103,7 @@ BOOL CMultiShotDlg::OnInitDialog()
   m_fSpokeDist = mActiveParams->spokeRad;
   m_bSaveRecord = mActiveParams->saveRecord;
   m_fExtraDelay = mActiveParams->extraDelay;
+  m_bAdjustBeamTilt = mActiveParams->adjustBeamTilt;
   m_bUseIllumArea = mActiveParams->useIllumArea;
   m_sbcNumShots.SetRange(0, 100);
   m_sbcNumShots.SetPos(50);
@@ -106,6 +116,27 @@ BOOL CMultiShotDlg::OnInitDialog()
   ShowDlgItem(IDC_STAT_NUM_EARLY, mCanReturnEarly);
   ShowDlgItem(IDC_EDIT_EARLY_FRAMES, mCanReturnEarly);
   ManageEnables();
+
+  if (comaVsIS->magInd <= 0) {
+    SetDlgItemText(IDC_STAT_COMA_IS_CAL, "Coma versus image shift is not calibrated");
+    ShowDlgItem(IDC_STAT_COMA_CONDITIONS, false);
+    m_butAdjustBeamTilt.EnableWindow(false);
+  } else {
+    str.Format("%.4g%s %s, spot %d", mWinApp->mScope->GetC2Percent(comaVsIS->spotSize, 
+      comaVsIS->intensity), mWinApp->mScope->GetC2Units(), mWinApp->mScope->GetC2Name(),
+      comaVsIS->spotSize);
+    if (!mWinApp->mScope->GetHasNoAlpha() && comaVsIS->alpha >= 0) {
+      str2.Format(", alpha %d", comaVsIS->alpha + 1);
+      str += str2;
+    }
+    if (comaVsIS->probeMode == 0)
+      str += ", nanoprobe";
+    if (comaVsIS->aperture > 0) {
+      str2.Format(", %d um aperture", comaVsIS->aperture);
+      str += str2;
+    }
+    SetDlgItemText(IDC_STAT_COMA_CONDITIONS, str);
+  }
 
   // Hide "Use illuminated area" if not present
   m_butUseIllumArea.ShowWindow(mHasIlluminatedArea ? SW_SHOW : SW_HIDE);
@@ -203,6 +234,7 @@ void CMultiShotDlg::UpdateAndUseMSparams(void)
   mActiveParams->spokeRad = m_fSpokeDist;
   mActiveParams->saveRecord = m_bSaveRecord;
   mActiveParams->extraDelay = m_fExtraDelay;
+  mActiveParams->adjustBeamTilt = m_bAdjustBeamTilt;
   mActiveParams->useIllumArea = m_bUseIllumArea;
   mWinApp->mMainView->DrawImage();
 }

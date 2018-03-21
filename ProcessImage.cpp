@@ -2981,8 +2981,8 @@ int CProcessImage::InitializeCtffindParams(EMimageBuffer *imBuf, CtffindParams &
       return 1;
     params.minimum_resolution = B3DMIN(params.pixel_size_of_input_image / 0.05f, 50.f);
     params.maximum_resolution = params.pixel_size_of_input_image / 0.3f;
-    if (imBuf->mCamera >= 0 && mCamera->IsDirectDetector
-      (&camParams[imBuf->mCamera]))
+    //if (imBuf->mCamera >= 0 && mCamera->IsDirectDetector
+      //(&camParams[imBuf->mCamera]))
       params.maximum_resolution = params.pixel_size_of_input_image / 0.35f;
     ACCUM_MAX(params.maximum_resolution, GetMaxCtfFitRes());
   }
@@ -3063,8 +3063,9 @@ int CProcessImage::RunCtffind(EMimageBuffer *imBuf, CtffindParams &params,
   // Run the fit and report results
   if (!err && ctffind(params, spectrum, params.box_size + 2, results_array, NULL,
                  NULL, NULL, numPoints, lastBinFreq)) {
-    mess.Format("Ctffind: defocus 1&2: %.3f & %.3f um,  angle: %.1f,  ",  
-      -results_array[0] / 10000., -results_array[1] / 10000., results_array[2]);
+    mess.Format("Ctffind: defocus: %.3f,  astig: %.3f um,  angle: %.1f,  ",  
+      -(results_array[0] + results_array[1]) / 20000., 
+      (results_array[0] - results_array[1]) / 10000., results_array[2]);
     if (params.find_additional_phase_shift && params.minimum_additional_phase_shift < 
       params.maximum_additional_phase_shift) {
       str.Format("phase shift %.3f rad,  ", results_array[3]);

@@ -2658,7 +2658,7 @@ CArray<CMapDrawItem *, CMapDrawItem *> *CNavigatorDlg::GetMapDrawItems(
         imBuf->mHasUserLine);
       sizeX = conSet->right - conSet->left;
       sizeY = conSet->bottom - conSet->top;
-      if (montaging) {
+      if (montaging && !mHelper->GetEnableMultiShot()) {
         sizeX = montp->binning * (montp->xFrame + (montp->xFrame - montp->xOverlap) * 
           (montp->xNframes - 1));
         sizeY = montp->binning * (montp->yFrame + (montp->yFrame - montp->yOverlap) * 

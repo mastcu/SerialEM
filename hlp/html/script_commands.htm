@@ -34,6 +34,15 @@
       {
         width: 237px;
       }
+      .style14
+      {
+        width: 237px;
+        height: 78px;
+      }
+      .style15
+      {
+        height: 78px;
+      }
   --></style>
   </HEAD>
   <BODY bgColor="#ffffff" text="#000000">
@@ -947,13 +956,16 @@
         <TR>
           <TD class="style7">SaveToOtherFile buf typ cmp file</TD>
           <TD>Saves one image in the given buffer to the file with the given name and closes 
-            the file.&nbsp; &#39;typ&#39; specifes the type of file and can be MRC, TIF, TIFF, CUR, 
+            the file.&nbsp; &#39;typ&#39; specifes the type of file and can be MRC, TIF, TIFF, 
+            JPG, JPEG, CUR, 
             or -1 (case insensitive), where CUR or -1 means use the current file type for 
             the File menu entry Save Single/Save to Other.&nbsp; If that type is a series of 
-            TIFF files, a single TIFF will be written with the given name instead. &#39;cmp&#39; 
+            TIFF files, a single TIFF will be written with the given name instead.&nbsp; &#39;cmp&#39; 
             specifies the compression for a TIFF file and can be NONE,&nbsp; LZW, ZIP, JPG, 
             JPEG, CUR, or -1 (case insensitive), where CUR or -1 means use the current 
-            compression for Save Single/Save to Other.</TD>
+            compression for Save Single/Save to Other.&nbsp; If JPG or JPEG is entered for 
+            &#39;typ&#39;, a true JPEG file will be written, not a JPEG-compressed TIFF, and the 
+            compression entry does not matter (but must be present before the filename).</TD>
         </TR>
         <TR>
           <TD class="style7">EnterNameOpenFile [prompt]</TD>
@@ -1414,6 +1426,17 @@
             or &quot;nano&quot; for nanoprobe, or 1 or &quot;micro&quot; for microprobe.</TD>
         </TR>
         <TR vAlign="top">
+          <TD class="style13">SaveBeamTilt</TD>
+          <TD>Saves the current X and Y beam tilt; it will be restored to these values 
+            either by RestoreBeamTilt or when the script stops or exits.&nbsp; The script will not be
+            resumable if it stops.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style13">RestoreBeamTilt</TD>
+          <TD>Restores the beam tilt saved when SaveBeamTilt was run.&nbsp; After this is run, 
+            the beam tilt will not be restored again when the script ends.</TD>
+        </TR>
+        <TR vAlign="top">
           <TD class="style13">ReportProbeMode</TD>
           <TD>Reports whether an FEI scope is in nanoprobe or microprobe mode; sets first 
             reported value to 0 or 1, respectively.</TD>
@@ -1422,27 +1445,32 @@
           <TD colspan="2"><A name="image_shift"></A><B>Image Shift-Related Commands</B></TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style13">SetImageShift #X #Y [#D]</TD>
-          <TD>Set the image shift to the given values (image shift units).&nbsp; The values
+          <TD class="style14">SetImageShift #X #Y [#D] [#A]</TD>
+          <TD class="style15">Set the image shift to the given values (image shift units).&nbsp; The values
             correspond to the ones give by ReportImageShift, which are adjusted for tilt
             axis offset, image shift offset, and low dose area shift.&nbsp; Add the optional 
-            #D to impose a settling time before the next camera image equal to&nbsp; D times 
-            the normal settling time (i.e., 1 for regular settling).</TD>
+            #D to impose a settling time before the next camera image equal to D times 
+            the normal settling time (i.e., 1 for regular settling).&nbsp; Add the optional 
+            #A to use the <a href="menu_calibration.htm#hid_focustuning_comavs">Coma vs. 
+            Image Shift</a> calibration to adjust beam tilt for the incremental change in 
+            image shift from its current value. With that option, the command saves the 
+            current beam tilt, if it has not been saved before in the script, and it will be 
+            automatically restored when the script exits.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style13">ImageShiftByPixels #X #Y [#D]</TD>
+          <TD class="style13">ImageShiftByPixels #X #Y [#D] [#A]</TD>
           <TD>Change image shift by given # of pixels in camera X and Y; optional #D 
-            provides settling time as just described.</TD>
+            and #A provide settling time and beam-tilt adjustment for the image shift as just described.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style13">ImageShiftByUnits #X #Y&nbsp; [#D]</TD>
-          <TD>Change image shift by given # of IS units in X &amp; Y; optional #D provides 
-            settling time as just described.</TD>
+          <TD class="style13">ImageShiftByUnits #X #Y&nbsp; [#D] [#A]</TD>
+          <TD>Change image shift by given # of IS units in X &amp; Y; optional #D and #A provide settling time 
+            and beam-tilt adjustment for the image shift as just described.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style13">ImageShiftByMicrons #X #Y [#D]</TD>
+          <TD class="style13">ImageShiftByMicrons #X #Y [#D] [#A]</TD>
           <TD>Change image shift by given distance on specimen (X is tilt axis); optional #D 
-            provides settling time as just described.</TD>
+            and #A provide settling time and beam-tilt adjustment for the image shift as just described.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style13">ReportImageShift</TD>
@@ -1850,6 +1878,24 @@
             optional entry #S sets the cropped size of each FFT in the array (default 340) 
             and #C sets the number of pixels to crop (default 170).&nbsp; See
             <a href="menu_focus.htm#hid_focus_zemlintableau">Beam-Tilted FFT Array</a> for other details.</TD>
+        </TR>
+        <TR>
+          <TD class="style12">ReportComaVsISmatrix</TD>
+          <TD>Report the matrix computed from the
+            <a href="menu_calibration.htm#hid_focustuning_comavs">Coma vs. Image Shift</a> 
+            calibration.&nbsp; The 4 values are xpx, xpy, ypx, and ypy, where the change in 
+            beam tilt for a given image shift (in IS units) is given by<br />
+&nbsp; BTx = ISx * xpx + ISy * xpy<br />
+&nbsp; BTy = ISx * ypx + ISy * ypy</TD>
+        </TR>
+        <TR>
+          <TD class="style12">AdjustBeamTiltforIS</TD>
+          <TD>&nbsp;Adjusts beam tilt to compensate for the current image shift (as 
+            displayed in the Scope Status panel), provided that the
+            <a href="menu_calibration.htm#hid_focustuning_comavs">Coma vs. Image Shift</a> 
+            calibration has been done.&nbsp; This command saves the current beam tilt, if it 
+            has not been saved before in the script, and it will be automatically restored 
+            when the script exits.</TD>
         </TR>
         <TR>
           <TD class="style12">CBAstigComa #T #C [#A] [#L] </TD>

@@ -435,6 +435,8 @@ BEGIN_MESSAGE_MAP(CMenuTargets, CCmdTarget)
   ON_COMMAND(ID_FOCUS_SET_CTF_COMA_BT, OnFocusSetCtfComaBt)
   ON_UPDATE_COMMAND_UI(ID_FOCUS_SET_CTF_COMA_BT, OnUpdateNoTasks)
   ON_UPDATE_COMMAND_UI(ID_FOCUS_CORRECTASTIGMATISMWITHFFTS, OnUpdateFocusCorrectAstigmatismWithFfts)
+  ON_COMMAND(ID_FOCUSTUNING_COMAVS, OnCalibrateComaVsIS)
+  ON_UPDATE_COMMAND_UI(ID_FOCUSTUNING_COMAVS, OnUpdateNoTasksNoSTEM)
   END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -2751,6 +2753,11 @@ void CMenuTargets::OnUpdateFocusCorrectAstigmatismWithFfts(CCmdUI *pCmdUI)
 {
   pCmdUI->Enable(mWinApp->mAutoTuning->LookupCtfBasedCal(false, mScope->GetMagIndex(), 
     false) >= 0 && !mWinApp->DoingTasks() && !mWinApp->GetSTEMMode());
+}
+
+void CMenuTargets::OnCalibrateComaVsIS()
+{
+  mWinApp->mAutoTuning->CalibrateComaVsImageShift(true);
 }
 
 void CMenuTargets::OnSettingsSetProperty()

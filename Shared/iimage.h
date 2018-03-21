@@ -24,6 +24,7 @@ extern "C" {
 #define IIFILE_QIMAGE  3
 #define IIFILE_RAW     4
 #define IIFILE_HDF     5
+#define IIFILE_JPEG    6
 
   /* Values for the format member of ImodImageFile, describing kind data */
 #define IIFORMAT_LUMINANCE 0
@@ -61,6 +62,7 @@ extern "C" {
 #define IIERR_IO_ERROR   2
 #define IIERR_MEMORY_ERR 3
 #define IIERR_NO_SUPPORT 4
+#define IIERR_QUITTING   5
 
   /* Codes for source of HDF files */
 #define IIHDF_IMOD       1
@@ -95,6 +97,8 @@ extern "C" {
 #define IIAXIS_X 1
 #define IIAXIS_Y 2
 #define IIAXIS_Z 3
+
+#define MAX_TIFF_THREADS 16
 
   /* DOC_CODE ImodImageFile structure */
   typedef struct  ImodImageFileStruct ImodImageFile;
@@ -251,7 +255,7 @@ extern "C" {
   void iiAddRawCheckFunction(IIRawCheckFunction func, const char *name);
   void iiDeleteRawCheckList();
   void iiRegisterQuitCheck(int (*func)(int));
-  int iiCheckForQuit();
+  int iiCheckForQuit(int param);
   ImodImageFile *iiNew(void);
   ImodImageFile *iiOpen(const char *filename, const char *mode);
   ImodImageFile *iiOpenNew(const char *filename, const char *mode, int fileKind);
@@ -277,6 +281,8 @@ extern "C" {
   int iiGetAdocIndex(ImodImageFile *inFile, int global, int openMdocOrNew);
   int iiTransferAdocSections(ImodImageFile *fromFile, ImodImageFile *toFile);
   int iiSetChunkSizes(ImodImageFile *inFile, int xSize, int ySize, int zSize);
+  char *iiMakeBufferConvertIfFloat(ImodImageFile *inFile, char *buf, int ifFloat, 
+                                   int *inverted, const char *routine);
   void iiConvertLineOfFloats(float *fbufp, unsigned char *bdata, int nx, int mrcMode, 
                              int bytesSigned, int pack4bits);
   void iiSaveLoadParams(ImodImageFile *iiFile, ImodImageFile *iiSave);
@@ -337,6 +343,12 @@ extern "C" {
   int tiffParallelRead(ImodImageFile **fileCopies, int maxThreads, int llx, int urx,
                        int lly, int ury, int dataSize, char *readBuf, int izRead, 
                        int convert);
+  int tiffParallelWrite(ImodImageFile *inFile, void *buf, int compression,
+                        int inverted, int resolution, int quality, int *didParallel);
+  int iiUseTiffThreads(ImodImageFile *inFile, int maxThreads);
+  int iiUseTiffThreadsForFP(FILE *fp, int maxThreads);
+  void iiCloseTiffCopies(ImodImageFile *inFile);
+  void iiCloseTiffCopiesForFP(FILE *fp);
   int iiLikeMRCCheck(ImodImageFile *inFile);
   void iiLikeMRCDelete(ImodImageFile *inFile);
   int iiSetupRawHeaders(ImodImageFile *inFile, RawImageInfo *info);
@@ -346,13 +358,29 @@ extern "C" {
   int iiHDFCheck(ImodImageFile *inFile);
   int iiHDFopenNew(ImodImageFile *inFile, const char *mode);
   int hdfWriteGlobalAdoc(ImodImageFile *inFile);
+  int hdfWriteDummySection(ImodImageFile *inFile, char *buf, int cz);
   int iiProcessReadLine(MrcHeader *hdata, IloadInfo *li, LineProcData *d);
   int iiInitReadSectionAny(MrcHeader *hdata, IloadInfo *li, unsigned char *buf,
                            LineProcData *d, int *freeMap, int *yEnd, const char *caller);
   void iiBestTileSize(int imSize, int *tileSize, int *numTiles, int multipleOf);
+  int iiTestIfHDF(const char *filename);
+
+  int iiJPEGCheck(ImodImageFile *inFile);
+  int jpegOpenNew(ImodImageFile *inFile);
+  int jpegWriteSection(ImodImageFile *inFile, char *buf, int inverted, int resolution, 
+                       int quality);
+  int iiSimpleFillMrcHeader(ImodImageFile *inFile, MrcHeader *hdata);
 
   /* This is here in case a program links with iiqimage */
   int iiQImageCheck(ImodImageFile *inFile);
+
+  /* some of what is in parallelwrite.c */
+  int parWrtInitialize(const char *filename, int nxin, int nyin);
+  int parWrtProperties(int *allSec, int *linesBound, int *nfiles);
+  int parWrtSetCurrent(int index);
+  void parWrtClose();
+  int parWrtRecloseHDF(ImodImageFile *iiFile, MrcHeader *hdata);
+  int parWrtFlushBuffers(ImodImageFile *iiFile, MrcHeader *hdata);
 
 #ifdef __cplusplus
 }

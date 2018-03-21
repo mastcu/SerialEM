@@ -150,6 +150,7 @@ hid_autofocusfocus_astigmati	  = SerialEM.chm::/html\menu_calibration.htm#hid_au
 hid_autofocusfocus_coma	= SerialEM.chm::/html\menu_calibration.htm#hid_autofocusfocus_coma
 hid_autofocusfocus_setupcoma	  = SerialEM.chm::/html\menu_calibration.htm#hid_autofocusfocus_setupcoma
 hid_focustuning_ctf             = SerialEM.chm::/html\menu_calibration.htm#hid_focustuning_ctf
+hid_focustuning_comavs             = SerialEM.chm::/html\menu_calibration.htm#hid_focustuning_comavs
 hid_calibration_setfocusrange		= SerialEM.chm::/html\menu_calibration.htm#hid_calibration_setfocusrange
 hid_calibration_standardlmfocus = SerialEM.chm::/html\menu_calibration.htm#hid_calibration_standardlmfocus
 hid_calibration_stemfocusvsz    = SerialEM.chm::/html\menu_calibration.htm#hid_calibration_stemfocusvsz

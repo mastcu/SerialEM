@@ -14,6 +14,7 @@
 #include "FocusManager.h"
 #include "ShiftManager.h"
 #include "ProcessImage.h"
+#include "BeamAssessor.h"
 #include "CameraController.h"
 #include "Shared\b3dutil.h"
 #include "Shared\ctffind.h"
@@ -71,6 +72,10 @@ CAutoTuning::CAutoTuning(void)
   mLastCtfBasedFailed = false;
   mLastXStigNeeded = mLastYStigNeeded = 0.;
   mLastXTiltNeeded = mLastYTiltNeeded = 0.;
+  mComaVsISindex = -1;
+  mComaVsIScal.magInd = -1;
+  mComaVsIScal.spotSize = -1;
+  mComaVsISextent = 3.f;
 }
 
 
@@ -995,6 +1000,7 @@ int CAutoTuning::CtfBasedAstigmatismComa(int comaFree, bool calibrate, int actio
   int binInd, realBin, maxMinutes = 5;
   float pixel, scanDelta = 0.1f, maxStageFocusChange = 0.05f;
   float minMagChangeInterval = 10000.;
+  float ISdelayFactor = 2.f;
   UINT lastTimeOut;
   FloatVec radii;
   CameraParameters *camParam = mWinApp->GetActiveCamParam();
@@ -1024,7 +1030,7 @@ int CAutoTuning::CtfBasedAstigmatismComa(int comaFree, bool calibrate, int actio
     mLastXStigNeeded = mLastYStigNeeded = 0.;
 
   if (comaFree && calibrate) {
-    SEMMessageBox("There is no calibration for CTF-based coma-free alignment");
+    SEMMessageBox("There is no calibration procedure for CTF-based coma-free alignment");
     return 1;
   }
   if (!comaFree && !calibrate && LookupCtfBasedCal(comaFree > 0, mCtfCal.magInd, false) 
@@ -1044,6 +1050,8 @@ int CAutoTuning::CtfBasedAstigmatismComa(int comaFree, bool calibrate, int actio
     mWinApp->mCamera->FindNearestBinning(camParam, recSet, binInd, realBin);
     recSet->binning = realBin;
   }
+  if (mCtfExposure > 0)
+    recSet->exposure = mCtfExposure;
   if (mCtfDriftSettling > 0)
     recSet->drift = mCtfDriftSettling;
   if (mCtfUseFullField) {
@@ -1056,6 +1064,8 @@ int CAutoTuning::CtfBasedAstigmatismComa(int comaFree, bool calibrate, int actio
   recSet->saveFrames = 0;
   recSet->doseFrac = 0;
   B3DCLAMP(recSet->K2ReadMode, 0, 1);
+  if (camParam->K2Type)
+    recSet->binning = B3DMAX(2, recSet->binning);
   recSet->processing = GAIN_NORMALIZED;
 
   // Find limits to allowed focus range based on number of rings.  Unfortunately the 
@@ -1127,8 +1137,11 @@ int CAutoTuning::CtfBasedAstigmatismComa(int comaFree, bool calibrate, int actio
     mScope->GotoLowDoseArea(RECORD_CONSET);
 
   // Zero the IS unless flag is set
-  if (!leaveIS)
+  if (!leaveIS) {
     mScope->SetLDCenteredShift(0., 0.);
+    mWinApp->mShiftManager->SetISTimeOut(ISdelayFactor *
+      mWinApp->mShiftManager->GetLastISDelay());
+  }
   
   // Decide whether a new autofocus is needed and save current state before starting
   curDefocus = mScope->GetDefocus();
@@ -1155,8 +1168,8 @@ int CAutoTuning::CtfBasedAstigmatismComa(int comaFree, bool calibrate, int actio
       lastTimeOut = GetTickCount();
     mWinApp->mShiftManager->SetGeneralTimeOut(lastTimeOut, mCtfBasedLDareaDelay);
   }
-
-  mGotFocusMinuteStamp = mWinApp->MinuteTimeStamp();
+  if (mSkipMeasuringFocus)
+    mGotFocusMinuteStamp = mWinApp->MinuteTimeStamp();
   if (actionType / 2 == 0 && !mSkipMeasuringFocus)
     mFocusManager->AutoFocusStart(-1, -1);
   mWinApp->AddIdleTask(TASK_CTF_BASED, 0, 0); 
@@ -1186,7 +1199,7 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
   float intercept, diff1, diff9;
   const int maxInLineFit = 50;
   float xfit[maxInLineFit], yfit[maxInLineFit], zfit[maxInLineFit];
-  double xmax = 0., ymax = 0., nextXval, nextYval;
+  double xmax = 0., ymax = 0., nextXval, nextYval, assumedPosFocus;
   int numOperations = 4;
   bool iterating = false;
   CtfBasedCalib calUse;
@@ -1213,7 +1226,7 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
   mWinApp->SetStatusText(MEDIUM_PANE, str);
 
   // Handle initial focus determination
-  if (mCtfActionType > 1 && mTestCtfTuningDefocus > 0)
+  if (mCtfActionType > 1 && mTestCtfTuningDefocus < 0)
     mInitialDefocus = mTestCtfTuningDefocus;
   if (mOperationInd < 0) {
 
@@ -1243,6 +1256,7 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
         newFocus);
     }
     mOperationInd = 0;
+    mGotFocusMinuteStamp = mWinApp->MinuteTimeStamp();
 
   } else {
 
@@ -1254,19 +1268,21 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
     }
 
     // Make box bigger if there are a lot of rings
-    nextXval = -mInitialDefocus;
+    assumedPosFocus = -mInitialDefocus;
+    if (mOperationInd > 0)
+      assumedPosFocus = -mCenteredDefocus;
     mWinApp->mProcessImage->DefocusFromPointAndZeros(0., 0, 
-      param.pixel_size_of_input_image, 0.4f, &radii, nextXval);
+      param.pixel_size_of_input_image, 0.4f, &radii, assumedPosFocus);
     if ((int)radii.size() > (2 * mMaxRingsForCtf) / 3)
       param.box_size = 384;
 
     // Get the default focus range and limit it
-    mWinApp->mProcessImage->SetCtffindParamsForDefocus(param, -mInitialDefocus, false);
-    ACCUM_MAX(param.minimum_defocus, 10000.f * (-mInitialDefocus - 1.f));
-    ACCUM_MIN(param.maximum_defocus, 10000.f * (-mInitialDefocus + 1.5f));
+    mWinApp->mProcessImage->SetCtffindParamsForDefocus(param, assumedPosFocus, false);
+    ACCUM_MAX(param.minimum_defocus, 10000.f * ((float)assumedPosFocus - 1.f));
+    ACCUM_MIN(param.maximum_defocus, 10000.f * ((float)assumedPosFocus + 1.5f));
     param.compute_extra_stats = true;
-    /* PrintfToLog("rmin %.1f  rmax %.1f  dmin %.0f  dmax %.0f", param.minimum_resolution,
-    param.maximum_resolution, param.minimum_defocus, param.maximum_defocus); */
+    SEMTrace('1', "rmin %.1f  rmax %.1f  dmin %.0f  dmax %.0f", param.minimum_resolution,
+    param.maximum_resolution, param.minimum_defocus, param.maximum_defocus);
     if (mWinApp->mProcessImage->RunCtffind(imBufs, param, resultsArray)) {
       SEMMessageBox("An error occurred running the Ctffind operation");
       StopCtfBased();
@@ -1333,9 +1349,9 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
     }
 
     // Display the circles if side-by-side FFT and new images
-    if (mCtfActionType / 2 == 0 && mWinApp->mFFTView && 
-      mWinApp->mProcessImage->GetSideBySideFFT()) {
-        if (!mWinApp->mProcessImage->GetAutoSingleFFT())
+    // Take FFT if it wasn't done automatically or if side-by-side not open yet
+    if (mCtfActionType / 2 == 0 && mWinApp->mProcessImage->GetSideBySideFFT()) {
+        if (!mWinApp->mProcessImage->GetAutoSingleFFT() || !mWinApp->mFFTView)
           mWinApp->mProcessImage->GetFFT(imBufs, 1, BUFFER_FFT);
         fftBuf->mCtfFocus1 = -resultsArray[0];
         fftBuf->mCtfFocus2 = -resultsArray[1];
@@ -1681,4 +1697,108 @@ int CAutoTuning::CheckAndSetupCtfAcquireParams(const char *operation, bool fromS
   if (fromSetup)
     return 0;
   return SetupCtfAcquireParams(true);
+}
+
+
+int CAutoTuning::CalibrateComaVsImageShift(bool interactive)
+{
+  CString str;
+  ScaleMat aMat = mWinApp->mShiftManager->IStoSpecimen(mScope->FastMagIndex());
+  if (!aMat.xpx) {
+    SEMMessageBox("Beam tilt versus image shift cannot be calibrated.\n"
+      "There is no image shift to specimen calibration available at this magnification");
+    return 1;
+  }
+
+  if (interactive && !KGetOneFloat("Change in beam tilt will be measured at 4 "
+    "image-shifted positions", "Extent of image shift to apply in plus and minus"
+    " directions (microns):", mComaVsISextent, 1))
+    return 1;
+  mComaVsISextent = (float)fabs(mComaVsISextent);
+  if (mComaVsISextent < 0.5 && mComaVsISextent > 10.) {
+    str.Format("The value for image shift extent, %.1f, is out of the allowed range"
+      " (0.5 to 10.)", mComaVsISextent);
+    SEMMessageBox(str, MB_EXCLAME);
+    return 1;
+  }
+
+  mComaVsISindex = 0;
+  mWinApp->UpdateBufferWindows();
+  ComaVsISNextTask(0);
+  return 0;
+}
+
+
+void CAutoTuning::ComaVsISNextTask(int param)
+{
+  int delx[4] = {-1, 1, 0, 0};
+  int dely[4] = {0, 0, -1, 1};
+  float delayFactor = 2.;
+  ScaleMat aMat = mWinApp->mShiftManager->IStoSpecimen(mScope->FastMagIndex());
+  double ISX = mComaVsISextent / sqrt(aMat.xpx * aMat.xpx + aMat.ypx * aMat.ypx);
+  double ISY = mComaVsISextent / sqrt(aMat.ypx * aMat.ypx + aMat.ypy * aMat.ypy);
+
+  if (mComaVsISindex < 0)
+    return;
+
+  // Save results of last measurement or stop if it failed
+  if (mComaVsISindex > 0) {
+    if (mLastCtfBasedFailed) {
+      StopComaVsISCal();
+      return;
+    }
+    mComaVsISXTiltNeeded[mComaVsISindex - 1] = mLastXTiltNeeded;
+    mComaVsISYTiltNeeded[mComaVsISindex - 1] = mLastYTiltNeeded;
+  }
+
+  // Set IS for next measurement and start the routine
+  if (mComaVsISindex < 4) {
+    PrintfToLog("Measuring at image shift %.1f  %.1f", 
+      delx[mComaVsISindex] * mComaVsISextent, dely[mComaVsISindex] * mComaVsISextent);
+    mScope->SetImageShift(delx[mComaVsISindex] * ISX, dely[mComaVsISindex] * ISY);
+    mWinApp->mShiftManager->SetISTimeOut(delayFactor *
+      mWinApp->mShiftManager->GetLastISDelay());
+    mWinApp->AddIdleTask(TASK_CAL_COMA_VS_IS, 0, 0);
+    CtfBasedAstigmatismComa(1, false, 1, true);
+    mComaVsISindex++;
+    return;
+  }
+
+  // Finished; save the calibration
+  mComaVsIScal.matrix.xpx = (mComaVsISXTiltNeeded[1] - mComaVsISXTiltNeeded[0]) /
+    (2.f * mComaVsISextent);
+  mComaVsIScal.matrix.ypx = (mComaVsISYTiltNeeded[1] - mComaVsISYTiltNeeded[0]) /
+    (2.f * mComaVsISextent);
+  mComaVsIScal.matrix.xpy = (mComaVsISXTiltNeeded[3] - mComaVsISXTiltNeeded[2]) /
+    (2.f * mComaVsISextent);
+  mComaVsIScal.matrix.ypy = (mComaVsISYTiltNeeded[3] - mComaVsISYTiltNeeded[2]) /
+    (2.f * mComaVsISextent);
+  PrintfToLog("IS to beam tilt matrix: %f  %f  %f  %f", mComaVsIScal.matrix.xpx,
+    mComaVsIScal.matrix.xpy, mComaVsIScal.matrix.ypx, mComaVsIScal.matrix.ypy);
+  mComaVsIScal.magInd = mMagIndex;
+  mComaVsIScal.spotSize = mScope->GetSpotSize();
+  mComaVsIScal.intensity = (float)mScope->GetIntensity();
+  mComaVsIScal.probeMode = mScope->ReadProbeMode();
+  mComaVsIScal.alpha = mScope->GetAlpha();
+  mComaVsIScal.aperture = 0;
+  if (mScope->GetUseIllumAreaForC2())
+    mComaVsIScal.aperture = mWinApp->mBeamAssessor->RequestApertureSize();
+  StopComaVsISCal();
+}
+
+
+void CAutoTuning::ComaVsISCleanup(int error)
+{
+  if (error == IDLE_TIMEOUT_ERROR)
+    SEMMessageBox(_T("Timeout doing calibration of coma versus image shift"));
+  StopComaVsISCal();
+  mWinApp->ErrorOccurred(1);
+}
+
+
+void CAutoTuning::StopComaVsISCal(void)
+{
+  mComaVsISindex = -1;
+  mScope->SetImageShift(0., 0.);
+  mWinApp->UpdateBufferWindows();
 }

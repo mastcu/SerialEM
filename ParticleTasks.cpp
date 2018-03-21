@@ -12,6 +12,7 @@
 #include "ParticleTasks.h"
 #include "ComplexTasks.h"
 #include "EMscope.h"
+#include "AutoTuning.h"
 #include "ShiftManager.h"
 #include "CameraController.h"
 
@@ -42,17 +43,19 @@ void CParticleTasks::Initialize(void)
  * External call to start the operation with all the parameters
  */
 int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeRad, 
-  float extraDelay, BOOL saveRec, int ifEarlyReturn, int earlyRetFrames)
+  float extraDelay, BOOL saveRec, int ifEarlyReturn, int earlyRetFrames, BOOL adjustBT)
 {
   float pixel;
   int magInd;
   CameraParameters *camParam = mWinApp->GetActiveCamParam();
+  ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
   mMSNumPeripheral = numPeripheral;
   mMSDoCenter = doCenter;
   mMSExtraDelay = extraDelay;
   mMSIfEarlyReturn = ifEarlyReturn;
   mMSEarlyRetFrames = earlyRetFrames;
   mMSSaveRecord = saveRec;
+  mMSAdjustBeamTilt = adjustBT && comaVsIS->magInd > 0;
 
   // Check conditions
   if (ifEarlyReturn && !camParam->K2Type) {
@@ -81,6 +84,8 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
     mScope->GotoLowDoseArea(RECORD_CONSET);
   magInd = mScope->GetMagIndex();
   mScope->GetImageShift(mBaseISX, mBaseISY);
+  if (mMSAdjustBeamTilt)
+    mScope->GetBeamTilt(mBaseBeamTiltX, mBaseBeamTiltY);
   mActPostExposure = mWinApp->ActPostExposure();
   mLastISX = mBaseISX;
   mLastISY = mBaseISY;
@@ -144,6 +149,8 @@ void CParticleTasks::StopMultiShot(void)
   if (mMSCurIndex < -1)
     return;
   mScope->SetImageShift(mBaseISX, mBaseISY);
+    if (mMSAdjustBeamTilt)
+      mScope->SetBeamTilt(mBaseBeamTiltX, mBaseBeamTiltY);
   mMSCurIndex = -2;
   mWinApp->UpdateBufferWindows();
   mWinApp->SetStatusText(MEDIUM_PANE, "");
@@ -154,8 +161,9 @@ void CParticleTasks::StopMultiShot(void)
  */
 void CParticleTasks::SetUpMultiShotShift(int shotIndex, BOOL queueIt)
 {
-  double ISX, ISY, delISX = 0, delISY = 0, angle, cosAng, sinAng;
+  double ISX, ISY, delBTX, delBTY, delISX = 0, delISY = 0, angle, cosAng, sinAng;
   float delay;
+  ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
 
   // Compute IS from center for a peripheral shot
   if (shotIndex < mMSNumPeripheral) {
@@ -173,12 +181,23 @@ void CParticleTasks::SetUpMultiShotShift(int shotIndex, BOOL queueIt)
   if (mMSExtraDelay > 0.)
     delay += mMSExtraDelay;
 
+  if (mMSAdjustBeamTilt) {
+    delBTX = comaVsIS->matrix.xpx * delISX + comaVsIS->matrix.xpy * delISY;
+    delBTY = comaVsIS->matrix.ypx * delISX + comaVsIS->matrix.ypy * delISY;
+    SEMTrace('1', "%s incremental IS  %.3f %.3f   BT  %.3f  %.3f", 
+      queueIt ? "Queuing" : "Setting", delISX, delISY, delBTX, delBTY);
+  }
+
   // Queue it or do it
   if (queueIt) {
     mCamera->QueueImageShift(ISX, ISY, B3DNINT(1000. * delay));
+    if (mMSAdjustBeamTilt)
+      mCamera->QueueBeamTilt(mBaseBeamTiltX + delBTX, mBaseBeamTiltY + delBTY);
   } else {
     mScope->SetImageShift(ISX, ISY);
     mShiftManager->SetISTimeOut(delay);
+    if (mMSAdjustBeamTilt)
+      mScope->SetBeamTilt(mBaseBeamTiltX + delBTX, mBaseBeamTiltY + delBTY);
   }
   mLastISX = ISX;
   mLastISY = ISY;

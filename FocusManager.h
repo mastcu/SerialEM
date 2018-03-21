@@ -102,6 +102,8 @@ public:
   GetMember(float, EucenMaxDefocus);
   GetSetMember(BOOL, UseEucenAbsLimits);
   GetMember(BOOL, TestOffsetEucenAbs);
+  void SetBaseBeamTilt(double inX, double inY) {mBaseTiltX = inX; mBaseTiltY = inY;}; 
+
 
 protected:
 

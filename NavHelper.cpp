@@ -102,6 +102,7 @@ CNavHelper::CNavHelper(void)
   mMultiShotParams.doEarlyReturn = 0;
   mMultiShotParams.numEarlyFrames = 0;
   mMultiShotParams.extraDelay = 2.;
+  mMultiShotParams.adjustBeamTilt = false;
   mMultiShotParams.useIllumArea = false;
 
   mEditReminderPrinted = false;

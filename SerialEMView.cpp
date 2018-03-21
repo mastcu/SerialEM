@@ -687,9 +687,13 @@ void CSerialEMView::DrawImage(void)
   std::set<int> *selectedItems = navigator->GetSelectedItems();
   bool highlight, draw;
   CMapDrawItem *item;
+  MultiShotParams *msParams;
+  BOOL useMultiShot = mWinApp->mNavHelper->GetEnableMultiShot();
   int currentIndex = navigator->GetCurrentOrAcquireItem(item);
   int currentGroup = (currentIndex >= 0 && item != NULL) ? item->mGroupID : -1;
   int groupThresh = mWinApp->mNavHelper->GetPointLabelDrawThresh();
+  if (useMultiShot)
+    msParams = mWinApp->mNavHelper->GetMultiShotParams();
   for (int iDraw = -1; iDraw < itemArray->GetSize(); iDraw++) {
     if (iDraw < 0) {
       if (!mAcquireBox)
@@ -735,18 +739,19 @@ void CSerialEMView::DrawImage(void)
 
       // Draw lines if there is more than one point
       CPen *pOldPen = cdc.SelectObject(&pnSolidPen);
-      for (int pt = 0; pt < numPoints; pt++) {
-        StageToImage(imBuf, item->mPtX[pt], item->mPtY[pt], ptX, ptY);
-        MakeDrawPoint(&rect, imBuf->mImage, ptX + delPtX, ptY + delPtY, &point);
-        if (pt)
-          cdc.LineTo(point);
-        else
-          cdc.MoveTo(point);
+      if (!(iDraw < 0 && useMultiShot && !msParams->doCenter)) {
+        for (int pt = 0; pt < numPoints; pt++) {
+          StageToImage(imBuf, item->mPtX[pt], item->mPtY[pt], ptX, ptY);
+          MakeDrawPoint(&rect, imBuf->mImage, ptX + delPtX, ptY + delPtY, &point);
+          if (pt)
+            cdc.LineTo(point);
+          else
+            cdc.MoveTo(point);
+        }
       }
 
       // Draw multi-shot pattern
-      if (iDraw < 0 && mWinApp->mNavHelper->GetEnableMultiShot()) {
-        MultiShotParams *msParams = mWinApp->mNavHelper->GetMultiShotParams();
+      if (iDraw < 0 && useMultiShot) {
         float beamRad;
 
         // First draw rectangles in the off-center positions with current pen
@@ -1361,8 +1366,8 @@ void CSerialEMView::OnLButtonUp(UINT nFlags, CPoint point)
                       imBuf->mCtfFocus1 = resultsArray[0] / 10000.f;
                       imBuf->mCtfFocus2 = resultsArray[1] / 10000.f;
                       imBuf->mCtfAngle = resultsArray[2];
-                      lenstr.Format("Defocus -%.2f & -%.2f um", imBuf->mCtfFocus1, 
-                        imBuf->mCtfFocus2);
+                      lenstr.Format("Defocus -%.2f  astig %.3f um", (imBuf->mCtfFocus1 +
+                        imBuf->mCtfFocus2) / 2., imBuf->mCtfFocus1 - imBuf->mCtfFocus2);
                       imBuf->mMaxRingFreq = 0.;
                       if (param.compute_extra_stats && resultsArray[5] > 0.)
                         imBuf->mMaxRingFreq = param.pixel_size_of_input_image / 

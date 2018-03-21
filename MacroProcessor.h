@@ -188,6 +188,8 @@ private:
   float mFocusOffsetToRestore;  // Saved value of autofocus offset to restore
   float mDEframeRateToRestore;  // Saved frame rate of DE camera
   int mDEcamIndToRestore; // Index of that camera
+  double mBeamTiltXtoRestore;   // Saved beam tilt values to restore
+  double mBeamTiltYtoRestore;
   int mKeyPressed;        // Key pressed after macro starts
   int mStoppedContSetNum; // Set number for continuous acquire that was stopped
   float mMinDeltaFocus;   // Defocus change and absolute focus limits for autofocus
@@ -298,6 +300,7 @@ public:
   int StartNavAvqBusy(void);
   int CheckLegalCommandAndArgNum(CString * strItems, CString strLine, int macroNum);
   bool ArithmeticIsAllowed(CString & str);
+  int AdjustBeamTiltIfSelected(double delISX, double delISY, BOOL doAdjust, CString &message);
 };
 
 #endif // !defined(AFX_MACROPROCESSOR_H__33178182_58A1_4F3A_B8F4_D41F94866517__INCLUDED_)

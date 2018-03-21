@@ -154,6 +154,7 @@ INT_SETT_GETSET("CtfBinning", mWinApp->mAutoTuning->, CtfBinning)
 BOOL_SETT_GETSET("CtfUseFullField", mWinApp->mAutoTuning->, CtfUseFullField)
 BOOL_SETT_GETSET("CtfDoFullArray", mWinApp->mAutoTuning->, CtfDoFullArray)
 FLOAT_SETT_GETSET("ComaIterationThresh", mWinApp->mAutoTuning->, ComaIterationThresh)
+FLOAT_SETT_GETSET("ComaVsISextent", mWinApp->mAutoTuning->, ComaVsISextent)
 #endif
 #ifdef SET_TEST_SECT3
 FLOAT_SETT_ASSIGN("TiltSeriesLastStartingTilt", mTSParam->lastStartingTilt)

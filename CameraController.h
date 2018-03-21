@@ -74,6 +74,7 @@ enum {INIT_ALL_CAMERAS, INIT_CURRENT_CAMERA, INIT_GIF_CAMERA, INIT_TIETZ_CAMERA}
 enum {LINEAR_MODE = 0, COUNTING_MODE, SUPERRES_MODE};
 enum DE_CAMERATYPE{LC1100_4k = 1,DE_12 = 2,DE_12_Survey=3,DE_LC1100=4};
 enum {EAGLE_TYPE = 1, FALCON2_TYPE, OTHER_FEI_TYPE, FALCON3_TYPE};
+enum {K2_SUMMIT = 1, K2_BASE, K3_TYPE};
 
 #define DEFAULT_FEI_MIN_EXPOSURE 0.011f
 #define FCAM_ADVANCED(a) (a->CamFlags & PLUGFEI_USES_ADVANCED)
@@ -163,6 +164,8 @@ struct CameraThreadData {
   BOOL PostImageShift;        // Flag to do image shift
   double ISX, ISY;            // Image shift
   DWORD ISTicks;              // Time when change finished
+  BOOL PostBeamTilt;          // Flag to do beam tilt
+  double BeamTiltX, BeamTiltY; // Beam tilt
   BOOL PostChangeMag;         // Flag to change mag
   BOOL PostMagFixIS;          // Flag to fix IS after mag change
   int NewMagIndex;            // Index to change to
@@ -559,6 +562,8 @@ class DLL_IM_EX CCameraController
   BOOL mISQueued;               // Image shift queued
   double mISToDoX, mISToDoY;    // image shift to do
   int mISDelay;                 // delay for image shift
+  BOOL mBeamTiltQueued;         // Beam tilt queued
+  double mBTToDoX, mBTToDoY;    // Absolute beam tilt to set
   BOOL mMagQueued;              // mag change queued
   int mMagIndToDo;              // mag to change to;
   int mTiltDuringShotDelay;     // Delay time to starting tilt during shot (< 0 for none)
@@ -922,6 +927,7 @@ int NumAllVsAllFromFAparam(FrameAliParams &faParam, int numAliFrames, int &group
 void AdjustCountsPerElecForScale(CameraParameters * param);
 int DESumCountForConstraints(CameraParameters *camP, ControlSet *consP);
 void MakeOneFrameAlignCom(CString & localFramePath, ControlSet *conSet);
+void QueueBeamTilt(double inBTX, double inBTY);
 };
 
 

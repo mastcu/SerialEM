@@ -29,6 +29,7 @@ struct MultiShotParams
   int doEarlyReturn;    // 1 for early return on last, 2 for all
   int numEarlyFrames;   // Number of frames in early return
   BOOL saveRecord;      // Whether to save Record shot
+  BOOL adjustBeamTilt;  // Whether to adjust beam tilt if possible
   float beamDiam;       // Beam diameter: display only
   BOOL useIllumArea;    // Whether to use illuminated area for drawing diameter
 };

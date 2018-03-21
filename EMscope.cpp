@@ -393,7 +393,7 @@ CEMscope::CEMscope()
   mAlphaChangeDelay = 500;
   mHitachiMagFocusDelay = 250;   // Times up to 125 seen on a local scope
   mHitachiMagISDelay = 150;      // Shows up within one check of focus and within 125 ms
-  mInternalMagTime = -1.;
+  mInternalMagTime = mUpdateSawMagTime = GetTickCount();
   mISwasNewLastUpdate = false;
   mHitachiMagChgSeeTime = 200;
   mMagChgIntensityDelay = -1;
@@ -6686,7 +6686,7 @@ int CEMscope::LookupScriptingCamera(CameraParameters *params, bool refresh,
         params->FEItype = FALCON3_TYPE;
       if (params->FEItype == FALCON3_TYPE && mWinApp->mCamera->GetFalconReadoutInterval()
         > 0.05)
-          mWinApp->mCamera->SetFalconReadoutInterval(0.025f);
+          mWinApp->mCamera->SetFalconReadoutInterval(0.024923f);
     } else {
       params->minimumDrift = B3DMAX(params->minimumDrift, minDrift);
     }

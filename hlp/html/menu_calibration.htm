@@ -179,6 +179,10 @@
           <TD>Set parameters for astigmatism calibration (other than beam tilt).</TD>
         </TR>
         <TR vAlign="top">
+          <TD class="style1">&nbsp;&nbsp;&nbsp; <a href="#hid_focustuning_comavs">Coma vs. Image Shift</a>&nbsp;</TD>
+          <TD>Calibrate beam tilt changes needed to compensate for image shift.</TD>
+        </TR>
+        <TR vAlign="top">
           <TD class="style2">&nbsp;&nbsp;&nbsp;&nbsp;Old Coma-free Alignment</TD>
           <TD>&nbsp;&nbsp;&nbsp; <span class="style3">Operations for coma-free alignment by beam-tilt-induced 
             displacements</span></TD>
@@ -1058,8 +1062,44 @@
       The first value is important, as discussed for the previous command, but the 
       defaults for the others are probably fine.</p>
     <p>
+      <A name="hid_focustuning_comavs"></A><B>Coma vs. Image Shift command
+        (Calibration - Focus &amp; Tuning sub-menu)</B></p>
+    <p>
+      Use this command to calibrate how beam tilt must be changed to achieve coma-free 
+      alignment when an image shift is imposed.&nbsp; The program will ask you what 
+      image shift extent to calibrate, and then run the
+      <a href="menu_focus.htm#ID_FOCUS_COMA_BY_CTF">Coma-free Alignment by CTF</a> 
+      routine to measure the beam tilt needed at four locations, image shifted in +/-X 
+      and +/-Y by the given amount.&nbsp; The calibration can then be applied by the 
+      multi-shot routine (see <a href="navigator.htm#ID_OPTIONS_SETMULTI">Set 
+      Multi-Shot Parameters</a>) and with several other script commands.</p>
+    <p>
+      It is important to realize that this calibration strictly applies only under the 
+      current illumination conditions (specifically, the C2/C3 lens setting or 
+      illuminated area).&nbsp; When near parallel illumination, it may not change much 
+      with beam changes; otherwise it might change considerably.&nbsp; This has 
+      several consequences:</p>
+    <ul>
+      <li>It may be necessary to do the calibration once per session, after setting up 
+        the illumination to be used for acquisition.</li>
+      <li>The calibration should be done in Low Dose mode if acquisition is to be done 
+        in Low Dose mode</li>
+      <li>Because it depends on your settings for illumination, the calibration will be 
+        saved in your settings file, not shared with others using other settings files.</li>
+      <li>The calibration can be checked with a script like<br />
+&nbsp;&nbsp; FixComaByCTF<br />
+&nbsp;&nbsp; ImageShiftByMicrons 2 0 1 1<br />
+&nbsp;&nbsp; Delay 3<br />
+&nbsp;&nbsp; FixComaByCTF 1 1<br />
+        where you could omit the first FixComaByCTF if you have already done the 
+        coma-free alignment, the &quot;2 0&quot; can be replaced by an image shift of your choice, 
+        and you could add additional tests at other image shift positions.&nbsp; Such a 
+        script could be used to explore how much the adjusted beam tilt gets off when 
+        the beam intensity is changed.</li>
+    </ul>
+    <p>
       <A name="hid_autofocusfocus_coma"></A><B>BTID Coma-free Alignment command
-        (Calibration - Focus &amp; Tuning - Old Coma-free Alignment sub-menu)</B></p>
+        (Calibration - Focus &amp; Tuning - Old Coma-free Alignment sub-menu)))</B></p>
     <p>
       Use this command to obtain a calibration for running the
       <a href="menu_focus.htm#hid_focus_coma">Coma-free Alignment by BTID</a> routine, which 

@@ -27,21 +27,23 @@ KStoreIMOD::KStoreIMOD(CString filename)
 KStoreIMOD::KStoreIMOD(CString inFilename , FileOptions inFileOpt)
   : KImageStore()
 {
+  bool isJpeg = inFileOpt.fileType == STORE_TYPE_JPEG;
   CommonInit();
   mFileOpt = inFileOpt;
   mFilename = inFilename;
-  if (mFileOpt.fileType != STORE_TYPE_TIFF)
+  if (mFileOpt.fileType != STORE_TYPE_TIFF && !isJpeg)
     return;
-  if (mFileOpt.compression == COMPRESS_JPEG)
+  if (mFileOpt.compression == COMPRESS_JPEG || isJpeg)
     mFileOpt.mode = MRC_MODE_BYTE;
-  mIIfile = iiNew();
+  mIIfile = iiOpenNew(inFilename, "w", isJpeg ? IIFILE_JPEG : IIFILE_TIFF);
   if (!mIIfile)
     return;
-  mIIfile->filename = _strdup((LPCTSTR)inFilename);
-  if (!mIIfile->filename || tiffOpenNew(mIIfile)) {
+/*  mIIfile->filename = _strdup((LPCTSTR)inFilename);
+  if (!mIIfile->filename || (!isJpeg && tiffOpenNew(mIIfile)) || 
+    (isJpeg && jpegOpenNew(mIIfile))) {
     iiDelete(mIIfile);
     mIIfile = NULL;
-  }
+  }*/
 }
 
 void KStoreIMOD::CommonInit()
@@ -108,7 +110,6 @@ KImage  *KStoreIMOD::getRect(void)
   retVal->flipY();
   return retVal;
 }
-
 
 void KStoreIMOD::Close(void)
 {
@@ -214,19 +215,20 @@ int KStoreIMOD::WriteSection(KImage * inImage)
   double theMean;
   int retval = 0;
   int resolution = 0;
+  bool isJpeg = mFileOpt.fileType == STORE_TYPE_JPEG;
   if (inImage == NULL) 
     return 1;
   EMimageExtra *extra = (EMimageExtra *)inImage->GetUserData();
   if (mIIfile == NULL)
     return 2;
-  if (mFileOpt.fileType != STORE_TYPE_TIFF)
+  if (mFileOpt.fileType != STORE_TYPE_TIFF && !isJpeg)
     return 10;
   mIIfile->nx = mWidth = inImage->getWidth();
   mIIfile->ny = mHeight = inImage->getHeight();
   mMode = inImage->getMode() == kGray ? mFileOpt.mode : MRC_MODE_RGB;
   mPixSize = lookupPixSize(mMode);
   mIIfile->format = IIFORMAT_LUMINANCE;
-  mIIfile->file = IIFILE_TIFF;
+  mIIfile->file = isJpeg ? IIFILE_JPEG : IIFILE_TIFF;
   mIIfile->type = IITYPE_UBYTE;
   int dataSize = mWidth * mHeight * mPixSize;
 
@@ -256,24 +258,29 @@ int KStoreIMOD::WriteSection(KImage * inImage)
     inImage->UnLock();
     return 4;
   }
-  minMaxMean(idata, dataSize, mIIfile->amin, mIIfile->amax, theMean);
-  inImage->setMinMaxMean(mIIfile->amin, mIIfile->amax, (float)theMean);
-  if (extra) {
-    extra->mMin = mIIfile->amin;
-    extra->mMax = mIIfile->amax;
-    extra->mMean = (float)theMean;
-    if (extra->mPixel > 0)
-      resolution = B3DNINT(2.54e8 / extra->mPixel);
-  }
+  if (extra && extra->mPixel > 0)
+    resolution = B3DNINT(2.54e8 / extra->mPixel);
+  if (isJpeg) {
+    if (jpegWriteSection(mIIfile, idata, 1, resolution, -1))
+      retval = 6;
+  } else {
+    minMaxMean(idata, dataSize, mIIfile->amin, mIIfile->amax, theMean);
+    inImage->setMinMaxMean(mIIfile->amin, mIIfile->amax, (float)theMean);
+    if (extra) {
+      extra->mMin = mIIfile->amin;
+      extra->mMax = mIIfile->amax;
+      extra->mMean = (float)theMean;
+    }
 
-  if (mNumTitles > 0)
-    tiffAddDescription((LPCTSTR)mTitles);
-  mNumTitles = 0;
-  mTitles = "";
- 
-  // Write the data with given compression; 1 means it is already inverted
-  if (tiffWriteSection(mIIfile, idata, mFileOpt.compression, 1, resolution, -1))
-    retval = 6;
+    if (mNumTitles > 0)
+      tiffAddDescription((LPCTSTR)mTitles);
+    mNumTitles = 0;
+    mTitles = "";
+
+    // Write the data with given compression; 1 means it is already inverted
+    if (tiffWriteSection(mIIfile, idata, mFileOpt.compression, 1, resolution, -1))
+      retval = 6;
+  }
   if (needToDelete)
     delete [] idata;
   inImage->UnLock();

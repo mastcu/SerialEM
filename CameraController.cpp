@@ -932,7 +932,7 @@ void CCameraController::InitializeDMcameras(int DMind, int *numDMListed,
                     ".m3.");
               }
 
-              if (mAllParams[i].OneViewType && 
+              if ((mAllParams[i].OneViewType || mAllParams[i].K2Type == K3_TYPE) && 
                 mPluginVersion[DMind] < PLUGIN_CAN_MAKE_SUBAREA) {
                   mAllParams[i].subareasBad = 2;
                   mAllParams[i].moduloX = -2;
@@ -2073,6 +2073,14 @@ void CCameraController::QueueImageShift(double inISX, double inISY, int inDelay)
   mISDelay = inDelay;
 }
 
+// Queue a beam tilt to compensate for the image shift
+void CCameraController::QueueBeamTilt(double inBTX, double inBTY)
+{
+  mBeamTiltQueued = true;
+  mBTToDoX = inBTX;
+  mBTToDoX = inBTY;
+}
+
 // Queue a mag change and normalization
 void CCameraController::QueueMagChange(int inMagInd)
 {
@@ -2500,6 +2508,9 @@ void CCameraController::Capture(int inSet, bool retrying)
   mTD.PostImageShift = mISQueued;
   mTD.ISX = mISToDoX;
   mTD.ISY = mISToDoY;
+  mTD.PostBeamTilt = mBeamTiltQueued;
+  mTD.BeamTiltX = mBTToDoX;
+  mTD.BeamTiltY = mBTToDoY;
   mTD.PostChangeMag = mMagQueued;
   mTD.NewMagIndex = mMagIndToDo;
   mTD.TiltDuringDelay = B3DCHOICE(!FEIscope && mTiltDuringShotDelay >= 0, 
@@ -3898,7 +3909,7 @@ void CCameraController::CapManageCoordinates(ControlSet & conSet, int &gainXoffs
 
   // For oneView, throw the flag to take a subarea if plugin can do this and it is indeed
   // a subarea
-  if (mParam->OneViewType && !mParam->subareasBad && 
+  if ((mParam->OneViewType || mParam->K2Type == K3_TYPE) && !mParam->subareasBad && 
     (tsizeX < csizeX / mBinning || tsizeY < csizeY / mBinning))
     mTD.K2ParamFlags |= K2_OVW_MAKE_SUBAREA;
 
@@ -4096,7 +4107,8 @@ void CCameraController::CapSetupShutteringTiming(ControlSet & conSet, int inSet,
 
     // Set up post actions
     mTD.PostActionTime = 0;
-    if (mStageQueued || mISQueued || mMagQueued || (mDriftISQueued && mBeamWidth <= 0)) {
+    if (mStageQueued || mISQueued || mBeamTiltQueued || mMagQueued || 
+      (mDriftISQueued && mBeamWidth <= 0)) {
 
       // Use reblanktime as a flag, or set up time to end of exposure regardless
       if (mTD.ReblankTime)
@@ -4213,7 +4225,8 @@ void CCameraController::CapSetupShutteringTiming(ControlSet & conSet, int inSet,
         mTD.UnblankTime = (int)(1000. * (mParam->startupDelay - conSet.drift));
       mTD.ReblankTime = (int)(1000 * (mParam->startupDelay + mExposure + 
         mParam->extraBeamTime)) - mTD.UnblankTime;
-      if (mStageQueued || mISQueued || mMagQueued || (mDriftISQueued && mBeamWidth <= 0))
+      if (mStageQueued || mISQueued || mBeamTiltQueued || mMagQueued || 
+        (mDriftISQueued && mBeamWidth <= 0))
          mTD.PostActionTime = mTD.ReblankTime;
     }
     bEnsureDark |= (conSet.processing != UNPROCESSED && mParam->GatanCam && 
@@ -6030,6 +6043,7 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
           pdTD.UnblankTime = td->PreDarkBlankTime;
           pdTD.ReblankTime = pdTD.PostActionTime = pdTD.DriftISinterval = 0;
           pdTD.PostChangeMag = pdTD.PostImageShift = pdTD.PostMoveStage = false;
+          pdTD.PostBeamTilt = false;
           td->blankerThread = StartBlankerThread(&pdTD);
         }
         try {
@@ -6772,6 +6786,8 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
         }
       }
       td->ISTicks = ::GetTickCount();
+      if (td->PostBeamTilt)
+        td->scopePlugFuncs->SetBeamTilt(td->BeamTiltX, td->BeamTiltY);
 
       if (td->TiltDuringDelay)
         CEMscope::WaitForStageDone(stData.info, "BlankerProc");
@@ -8686,7 +8702,7 @@ void CCameraController::SetupBeamScan(ControlSet *conSetp)
   mExposure = 0.001 * mTD.ScanTime + conSetp->drift + 2 * mParam->extraBeamTime;
   mTD.ShutterMode = mParam->beamShutter;
   mTD.PostActionTime = 0;
-  if (mStageQueued || mISQueued || mMagQueued)
+  if (mStageQueued || mISQueued || mBeamTiltQueued || mMagQueued)
     mTD.PostActionTime = (int)(1000. * mParam->extraBeamTime);
   if (mDebugMode) {
     message.Format("Start Y %.3f  Total Y %.3f  Delay %d  Total Time %.1f  Exposure %.3f"
@@ -8779,7 +8795,8 @@ void CCameraController::SetNonGatanPostActionTime(void)
     if (!mTD.UnblankTime)
       mTD.UnblankTime = 1;
   }
-  if (mStageQueued || mISQueued || mMagQueued || (mDriftISQueued && mBeamWidth <= 0.))
+  if (mStageQueued || mISQueued || mBeamTiltQueued || mMagQueued || 
+    (mDriftISQueued && mBeamWidth <= 0.))
     mTD.PostActionTime = (int)(1000. * (mParam->startupDelay + mExposure + 
     mTD.DMsettling + mParam->extraBeamTime));
 }

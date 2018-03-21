@@ -152,6 +152,7 @@ int CParameterIO::ReadSettings(CString strFileName)
   FrameAliParams faParam, *faData;
   BOOL *useGPU4K2Ali = mWinApp->mCamera->GetUseGPUforK2Align();
   MultiShotParams *msParams = mWinApp->mNavHelper->GetMultiShotParams();
+  ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
   int faLastFileIndex = -1, faLastArrayIndex = -1;
   mWinApp->mCamera->SetFrameAliDefaults(faParam, "4K default set", 4, 0.06f, 1);
   mWinApp->SetAbsoluteDlgIndex(false);
@@ -494,6 +495,18 @@ int CParameterIO::ReadSettings(CString strFileName)
         tsrParams[index].endAngle = (float)itemDbl[7];
         tsrParams[index].angleInc = (float)itemDbl[8];
         tsrParams[index].direction = itemInt[9];
+
+      } else if (NAME_IS("ComaVsISCal")) {
+        comaVsIS->magInd = itemInt[1];
+        comaVsIS->spotSize = itemInt[2];
+        comaVsIS->probeMode = itemInt[3];
+        comaVsIS->alpha = itemInt[4];
+        comaVsIS->aperture = itemInt[5];
+        comaVsIS->intensity = (float)itemDbl[6];
+        comaVsIS->matrix.xpx = (float)itemDbl[7];
+        comaVsIS->matrix.xpy = (float)itemDbl[8];
+        comaVsIS->matrix.ypx = (float)itemDbl[9];
+        comaVsIS->matrix.ypy = (float)itemDbl[10];
 
       } else if (NAME_IS("NavigatorStockFile"))
         StripItems(strLine, 1, navParams->stockFile);
@@ -1068,6 +1081,7 @@ void CParameterIO::WriteSettings(CString strFileName)
   FrameAliParams faParam;
   BOOL *useGPU4K2Ali = mWinApp->mCamera->GetUseGPUforK2Align();
   MultiShotParams *msParams = mWinApp->mNavHelper->GetMultiShotParams();
+  ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
 
   try {
     // Open the file for writing, 
@@ -1257,6 +1271,13 @@ void CParameterIO::WriteSettings(CString strFileName)
           mFile->WriteString(oneState);
         }
       }
+    }
+    if (comaVsIS->magInd >= 0) {
+      oneState.Format("ComaVsISCal %d %d %d %d %d %f %f %f %f %f\n", comaVsIS->magInd,
+        comaVsIS->spotSize, comaVsIS->probeMode, comaVsIS->alpha, comaVsIS->aperture, 
+        comaVsIS->intensity, comaVsIS->matrix.xpx, comaVsIS->matrix.xpy, 
+        comaVsIS->matrix.ypx, comaVsIS->matrix.ypy);
+      mFile->WriteString(oneState);
     }
     for (i = 0; i < 2; i++) {
       oneState.Format("RangeFinderParams %d %d %d %d %d %f %f %f %d -999 -999\n", i,

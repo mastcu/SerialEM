@@ -218,7 +218,8 @@ enum {CME_VIEW, CME_FOCUS, CME_TRIAL, CME_RECORD, CME_PREVIEW,
   CME_MOVEBEAMBYMICRONS, CME_MOVEBEAMBYFIELDFRACTION, CME_NEWDESERVERDARKREF,
   CME_STARTNAVACQUIREATEND, CME_REDUCEIMAGE, CME_REPORTAXISPOSITION, CME_CTFFIND,
   CME_CBASTIGCOMA, CME_FIXASTIGMATISMBYCTF, CME_FIXCOMABYCTF, CME_ECHOEVAL, 
-  CME_REPORTFILENUMBER, CME_REPORTCOMATILTNEEDED, CME_REPORTSTIGMATORNEEDED
+  CME_REPORTFILENUMBER, CME_REPORTCOMATILTNEEDED, CME_REPORTSTIGMATORNEEDED,
+  CME_SAVEBEAMTILT, CME_RESTOREBEAMTILT, CME_REPORTCOMAVSISMATRIX,CME_ADJUSTBEAMTILTFORIS,
 };
 
 static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0},
@@ -326,7 +327,8 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"StartNavAcquireAtEnd", 0, 0}, {"ReduceImage", 2, 1}, {"ReportAxisPosition", 1, 0},
 {"CtfFind",3,1}, {"CBAstigComa",3,0}, {"FixAstigmatismByCTF",0,0}, {"FixComaByCTF", 0, 0},
 {"EchoEval", 0, 1}, {"ReportFileNumber", 0, 0}, {"ReportComaTiltNeeded", 0, 0}, 
-{"ReportStigmatorNeeded", 0, 0},
+{"ReportStigmatorNeeded", 0, 0}, {"SaveBeamTilt", 0, 0}, {"RestoreBeamTilt", 0, 0},
+{"ReportComaVsISmatrix", 0, 0}, {"AdjustBeamTiltforIS", 0, 0},
 {NULL, 0, 0}
 };
 
@@ -936,6 +938,8 @@ void CMacroProcessor::RunOrResume()
   mFocusOffsetToRestore = -9999.;
   mDEframeRateToRestore = -1.;
   mDEcamIndToRestore = -1;
+  mBeamTiltXtoRestore = EXTRA_NO_VALUE;
+  mBeamTiltYtoRestore = EXTRA_NO_VALUE;
   mKeyPressed = 0;
   if (mChangedConsets.size() > 0 && mCamWithChangedSets == mWinApp->GetCurrentCamera())
     for (ind = 0; ind < (int)B3DMIN(mConsetNums.size(), mChangedConsets.size());ind++)
@@ -1785,7 +1789,8 @@ void CMacroProcessor::NextCommand()
       (itemEmpty[3] || itemDbl[3] < -8.) ? msParams->spokeRad : (float)itemDbl[3],
       (itemEmpty[4] || itemDbl[4] < -8.) ? msParams->extraDelay : (float)itemDbl[4],
       (itemEmpty[5] || itemInt[5] < -8) ? truth : itemInt[5] != 0, index,
-      (itemEmpty[7] || itemInt[7] < -8) ? msParams->numEarlyFrames : itemInt[7])) {
+      (itemEmpty[7] || itemInt[7] < -8) ? msParams->numEarlyFrames : itemInt[7],
+      (itemEmpty[8] || itemInt[8] < -8) ? msParams->adjustBeamTilt : itemInt[8] != 0)) {
         AbortMacro();
         return;
     }
@@ -1892,6 +1897,16 @@ void CMacroProcessor::NextCommand()
     mWinApp->AppendToLog(report, mLogAction);
     SetReportedValues(&strItems[1], backlashX, backlashY);
 
+  } else if (CMD_IS(REPORTCOMAVSISMATRIX)) {                // ReportComaVsISmatrix
+    ComaVsISCalib *cvsis = mWinApp->mAutoTuning->GetComaVsIScal();
+    if (cvsis->magInd <= 0)
+      ABORT_LINE("There is no calibration of beam tilt versus image shift for line:\n\n");
+    report.Format("Coma versus IS calibration is %f  %f  %f  %f", cvsis->matrix.xpx,
+      cvsis->matrix.xpy, cvsis->matrix.ypx, cvsis->matrix.ypy);
+    mWinApp->AppendToLog(report, mLogAction);
+    SetReportedValues(&strItems[1], cvsis->matrix.xpx, cvsis->matrix.xpy, 
+      cvsis->matrix.ypx, cvsis->matrix.ypy);
+    
   } else if (CMD_IS(S) || CMD_IS(SAVE)) {                   // Save
     index2 = -1;
     if (ConvertBufferLetter(strItems[1], 0, true, i, report))
@@ -1980,8 +1995,11 @@ void CMacroProcessor::NextCommand()
       index2 = STORE_TYPE_MRC;
     else if (strItems[2] == "TIF" || strItems[2] == "TIFF")
       index2 = STORE_TYPE_TIFF;
+    else if (strItems[2] == "JPG" || strItems[2] == "JPEG")
+      index2 = STORE_TYPE_JPEG;
     else if (strItems[2] != "CUR" && strItems[2] != "-1")
-      ABORT_LINE("Second entry must be MRC, TIF, TIFF, CUR, or -1 in line:\n\n");
+      ABORT_LINE("Second entry must be MRC, TIF, TIFF, JPG, JPEG, CUR, or -1 in line:"
+      "\n\n");
     ix1 = -1;
     if (strItems[3] == "NONE")
       ix1 = COMPRESS_NONE;
@@ -2701,6 +2719,8 @@ void CMacroProcessor::NextCommand()
 
     delISX = bInv.xpx * index + bInv.xpy * index2;
     delISY = bInv.ypx * index + bInv.ypy * index2;
+    if (AdjustBeamTiltIfSelected(delISX, delISY, !itemEmpty[4] && itemInt[4], report))
+      ABORT_LINE(report);
 
     // Make the change in image shift
     mScope->IncImageShift(delISX, delISY);
@@ -2710,6 +2730,9 @@ void CMacroProcessor::NextCommand()
   } else if (CMD_IS(IMAGESHIFTBYUNITS)) {                   // ImageShiftByUnits
     delISX = itemDbl[1];
     delISY = itemDbl[2];
+    if (AdjustBeamTiltIfSelected(delISX, delISY, !itemEmpty[4] && itemInt[4], report))
+      ABORT_LINE(report);
+
     // Make the change in image shift
     mScope->IncImageShift(delISX, delISY);
     if (!itemEmpty[3] && itemDbl[3] > 0)
@@ -2730,6 +2753,8 @@ void CMacroProcessor::NextCommand()
     bInv = mShiftManager->MatInv(aMat);
     delISX = bInv.xpx * delX + bInv.xpy * delY;
     delISY = bInv.ypx * delX + bInv.ypy * delY;
+    if (AdjustBeamTiltIfSelected(delISX, delISY, !itemEmpty[4] && itemInt[4], report))
+      ABORT_LINE(report);
     mScope->IncImageShift(delISX, delISY);
     if (!itemEmpty[3] && itemDbl[3] > 0)
       mShiftManager->SetISTimeOut((float)itemDbl[3] * mShiftManager->GetLastISDelay());
@@ -2830,12 +2855,28 @@ void CMacroProcessor::NextCommand()
   } else if (CMD_IS(SETIMAGESHIFT)) {                       // SetImageShift
     delX = itemDbl[1];
     delY = itemDbl[2];
+    truth = !itemEmpty[4] && itemInt[4];
+    if (truth)
+      mScope->GetLDCenteredShift(delISX, delISY);
     if (!mScope->SetLDCenteredShift(delX, delY)) {
       AbortMacro();
       return;
     }
+    if (AdjustBeamTiltIfSelected(delX - delISX, delY - delISY, truth, report))
+      ABORT_LINE(report);
     if (!itemEmpty[3] && itemDbl[3] > 0)
       mShiftManager->SetISTimeOut((float)itemDbl[3] * mShiftManager->GetLastISDelay());
+
+ } else if (CMD_IS(ADJUSTBEAMTILTFORIS)) {                 // AdjustBeamTiltforIS
+    if (!itemEmpty[1] && itemEmpty[2])
+      ABORT_LINE("There must be either no entries or X and Y IS entries for line:\n\n");
+    if (!itemEmpty[2]) {
+      delISX = itemDbl[1];
+      delISY = itemDbl[2];
+    } else
+      mScope->GetLDCenteredShift(delISX, delISY);
+    if (AdjustBeamTiltIfSelected(delISX, delISY, true, report))
+      ABORT_LINE(report);
 
   } else if (CMD_IS(REPORTIMAGESHIFT)) {                     // ReportImageShift
     if (!mScope->GetLDCenteredShift(delX, delY)) {
@@ -2862,7 +2903,7 @@ void CMacroProcessor::NextCommand()
    SetReportedValues(&strItems[1], delX, delY, delISX, delISY, stageX, stageY);
    mWinApp->AppendToLog(strCopy, mLogAction);
 
-  } else if (CMD_IS(SETOBJECTIVESTIGMATOR)) {               // SetObjectiveStigmator
+   } else if (CMD_IS(SETOBJECTIVESTIGMATOR)) {               // SetObjectiveStigmator
     delX = itemDbl[1];
     delY = itemDbl[2];
     if (!mScope->SetObjectiveStigmator(delX, delY)) {
@@ -4948,6 +4989,20 @@ void CMacroProcessor::NextCommand()
     mNumStatesToRestore--;
     mFocusToRestore = -999.;
 
+   } else if (CMD_IS(SAVEBEAMTILT)) {                        // SaveBeamTilt
+    if (mBeamTiltXtoRestore > EXTRA_VALUE_TEST)
+      ABORT_NOLINE("There is a second SaveBeamTilt without a RestoreBeamTilt");
+    mScope->GetBeamTilt(mBeamTiltXtoRestore, mBeamTiltYtoRestore);
+    mNumStatesToRestore++;
+
+  } else if (CMD_IS(RESTOREBEAMTILT)) {                      // RestoreBeamTilt
+    if (mBeamTiltXtoRestore < EXTRA_VALUE_TEST)
+      ABORT_NOLINE("There is a RestoreBeamTilt, but beam tilt was not saved or has been "
+        "restored already");
+    mScope->SetBeamTilt(mBeamTiltXtoRestore, mBeamTiltYtoRestore);
+    mNumStatesToRestore--;
+    mBeamTiltXtoRestore = mBeamTiltYtoRestore = EXTRA_NO_VALUE;
+ 
     // PIEZO COMMANDS
   } else if (CMD_IS(SELECTPIEZO)) {                         // SelectPiezo
     if (mWinApp->mPiezoControl->SelectPiezo(itemInt[1], itemInt[2])) {
@@ -5030,6 +5085,19 @@ void CMacroProcessor::SuspendMacro(BOOL abort)
       if (mDEframeRateToRestore > 0 || mDEcamIndToRestore >= 0) {
         camParams[mDEcamIndToRestore].DE_FramesPerSec = mDEframeRateToRestore;
         mWinApp->mDEToolDlg.UpdateSettings();
+      }
+      if (mBeamTiltXtoRestore > EXTRA_VALUE_TEST) {
+        mScope->SetBeamTilt(mBeamTiltXtoRestore, mBeamTiltYtoRestore);
+        if (mWinApp->mFocusManager->DoingFocus())
+          mWinApp->mFocusManager->SetBaseBeamTilt(mBeamTiltXtoRestore, 
+          mBeamTiltYtoRestore);
+        if (mWinApp->mAutoTuning->DoingZemlin() || 
+          mWinApp->mAutoTuning->GetDoingCtfBased())
+          mWinApp->mAutoTuning->SetBaseBeamTilt(mBeamTiltXtoRestore, 
+          mBeamTiltYtoRestore);
+        if (mWinApp->mParticleTasks->DoingMultiShot())
+          mWinApp->mParticleTasks->SetBaseBeamTilt(mBeamTiltXtoRestore, 
+          mBeamTiltYtoRestore);
       }
     }
     mSavedSettingNames.clear();
@@ -6758,6 +6826,29 @@ bool CMacroProcessor::CheckAndConvertCameraSet(CString &strItem, int &itemInt, i
   }
   message = "Inappropriate parameter set letter/number in: \n\n";
   return true;
+}
+
+// If adjustment of beam tilt for given image shift is requested and available, do it
+int CMacroProcessor::AdjustBeamTiltIfSelected(double delISX, double delISY, BOOL doAdjust,
+  CString &message)
+{
+  double delBTX, delBTY;
+  ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
+  if (!doAdjust)
+    return 0;
+  if (comaVsIS->magInd <= 0) {
+    message = "There is no calibration of beam tilt needed to compensate image shift "
+      "in:\n\n";
+    return 1;
+  }
+  if (mBeamTiltXtoRestore < EXTRA_VALUE_TEST) {
+    mScope->GetBeamTilt(mBeamTiltXtoRestore, mBeamTiltYtoRestore);
+    mNumStatesToRestore++;
+  }
+  delBTX = comaVsIS->matrix.xpx * delISX + comaVsIS->matrix.xpy * delISY;
+  delBTY = comaVsIS->matrix.ypx * delISX + comaVsIS->matrix.ypy * delISY;
+  mScope->IncBeamTilt(delBTX, delBTY);
+  return 0;
 }
 
 // Saves a control set in the stack if it has not been saved already

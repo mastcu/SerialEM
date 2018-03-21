@@ -1989,6 +1989,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
       idc->source == TASK_FIX_ASTIG || idc->source == TASK_COMA_FREE || 
       idc->source == TASK_CTF_BASED)
       busy = mFocusManager->DoingFocus() ? 1 : 0;
+    else if (idc->source == TASK_CAL_COMA_VS_IS)
+      busy = mAutoTuning->GetDoingCtfBased() ? 1 : 0;
     else if (idc->source == TASK_MONTAGE_DWELL)
       busy = mMontageController->CookingDwellBusy();
     else if (idc->source == TASK_DEL_OTHER_STORE || idc->source == TASK_LOAD_MAP)
@@ -2129,6 +2131,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
           mAutoTuning->ZemlinNextTask(idc->param);
         else if (idc->source == TASK_CTF_BASED)
           mAutoTuning->CtfBasedNextTask(idc->param);
+        else if (idc->source == TASK_CAL_COMA_VS_IS)
+          mAutoTuning->ComaVsISNextTask(idc->param);
         else if (idc->source == TASK_GAIN_REF)
           mGainRefMaker->AcquiringRefNextTask(idc->param);
 
@@ -2373,6 +2377,8 @@ void CSerialEMApp::ErrorOccurred(int error)
     mAutoTuning->StopZemlin();
   if (mAutoTuning->GetDoingCtfBased())
     mAutoTuning->StopCtfBased();
+  if (mAutoTuning->DoingComaVsIS())
+    mAutoTuning->StopComaVsISCal();
   if (mPlugStopFunc && mPlugDoingFunc && mPlugDoingFunc())
     mPlugStopFunc(error);
   mCamera->SetPreventUserToggle(0);

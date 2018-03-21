@@ -21,6 +21,7 @@
 #define STORE_TYPE_IMOD 1
 #define STORE_TYPE_TIFF 2
 #define STORE_TYPE_ADOC 3
+#define STORE_TYPE_JPEG 4
 
 class KImageStore : public KImageBase
 {

@@ -357,6 +357,7 @@ public:
   afx_msg void OnFocusCorrectAstigmatismWithFfts();
   afx_msg void OnFocusSetCtfComaBt();
   afx_msg void OnUpdateFocusCorrectAstigmatismWithFfts(CCmdUI *pCmdUI);
+  afx_msg void OnCalibrateComaVsIS();
 };
 
 /////////////////////////////////////////////////////////////////////////////
