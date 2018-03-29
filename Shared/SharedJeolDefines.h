@@ -153,6 +153,10 @@ struct JeolParams {
   int initializeJeolDelay;
   int magEventWait;
   int useGIFmodeCalls;
+  BOOL hasNitrogenClass;
+  int flashFegTimeout;
+  int fillNitrogenTimeout;
+  int emissionTimeout;
   // Used to keep track if actual structure is smaller than what was built against
   int lastMember; 
 };
