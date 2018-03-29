@@ -480,10 +480,10 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
         (!mParam->settingsUsed || mScope->GetMagChanged())) {
         mScope->NormalizeProjector();
       }
-    }
 
-    // If in low mag, go to a standard focus if one is defined
-    mScope->SetFocusToStandardIfLM(mParam->magIndex);
+      // If in low mag, go to a standard focus if one is defined
+      mScope->SetFocusToStandardIfLM(mParam->magIndex);
+    }
   }
 
   if (inTrial == MONT_TRIAL_IMAGE) {
