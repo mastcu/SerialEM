@@ -444,7 +444,7 @@ void CTSExtraFile::ManageExtraRecords()
     m_strInstruct2 = "";
     if (numAvail > B3DMAX(1, numSimul))
       m_strInstruct2 = "Enter detectors to acquire in separate shots";
-    numExtra = numSimul;
+    numExtra = numSimul - 1;
     if (numAvail > B3DMAX(1, numSimul))
       numExtra += mNumExtraChannels;
     break;
