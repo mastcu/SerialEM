@@ -136,6 +136,7 @@ static int spFEItoJeol[] = {0, spUnknownJeol, spUpJeol, spDownJeol};
 
 HANDLE CEMscope::mScopeMutexHandle; 
 char * CEMscope::mScopeMutexOwnerStr;
+char * CEMscope::mScopeMutexLenderStr;
 DWORD  CEMscope::mScopeMutexOwnerId;
 int    CEMscope::mScopeMutexOwnerCount;
 int    CEMscope::mLastMagIndex;
@@ -362,6 +363,10 @@ CEMscope::CEMscope()
   mUseJeolGIFmodeCalls = 0;
   mJeolSTEMunitsX = false;
   mUsePLforIS = false;
+  mJeolHasNitrogenClass = false;
+  mJeolRefillTimeout = 2400;
+  mJeolFlashFegTimeout = 30;
+  mJeolEmissionTimeout = 120;
   mBacklashTolerance = -1.;
   mXYbacklashValid = false;
   mStageAtLastPos = false;
@@ -430,6 +435,7 @@ CEMscope::~CEMscope()
   if (mScopeMutexHandle) {
     CloseHandle(mScopeMutexHandle);
     free(mScopeMutexOwnerStr);
+    free(mScopeMutexLenderStr);
   }
 
   sInitialized = false;
@@ -512,7 +518,8 @@ int CEMscope::Initialize()
     // Create the mutex here for JEOL, Hitachi, and FEI plugin without separate threads
     if (JEOLscope || HitachiScope) {
       mScopeMutexHandle = CreateMutex(0,0,0);
-      mScopeMutexOwnerStr = (char *)calloc(1024,1);
+      mScopeMutexOwnerStr = (char *)calloc(128,1);
+      mScopeMutexLenderStr = (char *)calloc(128,1);
       mScopeMutexOwnerCount = 0;
       mScopeMutexOwnerId = 0;
       strcpy(mScopeMutexOwnerStr,"NOBODY");
@@ -573,6 +580,10 @@ int CEMscope::Initialize()
       mJeolParams.hasOmegaFilter = mHasOmegaFilter;
       mJeolParams.initializeJeolDelay = mInitializeJeolDelay;
       mJeolParams.useGIFmodeCalls = mUseJeolGIFmodeCalls;
+      mJeolParams.hasNitrogenClass = mJeolHasNitrogenClass;
+      mJeolParams.flashFegTimeout = mJeolFlashFegTimeout;
+      mJeolParams.emissionTimeout = mJeolEmissionTimeout;
+      mJeolParams.fillNitrogenTimeout = mJeolRefillTimeout;
       mJeolSD.mainDetectorID = mMainDetectorID;
 
       // Event stuff is subject to revision if it fails, including spectrum by event
@@ -4192,7 +4203,7 @@ void CEMscope::UnblankAfterTransient(bool needUnblank, const char *routine)
 void CEMscope::GotoLowDoseArea(int inArea)
 {
   double delISX, delISY, beamDelX, beamDelY;
-  double curISX, curISY, newISX, newISY;
+  double curISX, curISY, newISX, newISY, focusBeforeLMnonLM;
   int curAlpha;
   DWORD magTime;
   LowDoseParams *ldParams = mWinApp->GetLowDoseParams();
@@ -4297,6 +4308,11 @@ void CEMscope::GotoLowDoseArea(int inArea)
   } else
     ldArea->probeMode = mProbeMode;
 
+  // After probe mode change where focus might have been managed, record focus if
+  // going across LM/nonLM boundary
+  if (splitBeamShift)
+    focusBeforeLMnonLM = GetDefocus();
+
   // Mag and spot size will be set only if they change.  Do intensity unconditionally
   // If something is not initialized, set it up with current value
   // Don't set spot size on 1230 since it can't be read
@@ -4342,13 +4358,22 @@ void CEMscope::GotoLowDoseArea(int inArea)
   } else if (!STEMmode && !alphaDone)
     ldArea->beamAlpha = (float)curAlpha;
 
-  // If going to view or search area, set defocus offset
+  // If going to view or search area, set defocus offset: based on previous value if
+  // going between LM and nonLM, otherwise just incrementally
   if (!STEMmode && mLDViewDefocus && mLowDoseSetArea != VIEW_CONSET && 
-    inArea == VIEW_CONSET)
+    inArea == VIEW_CONSET) {
+    if (splitBeamShift)
+      SetDefocus(focusBeforeLMnonLM + mLDViewDefocus);
+    else
       IncDefocus((double)mLDViewDefocus);
+  }
   if (!STEMmode && mSearchDefocus && mLowDoseSetArea != SEARCH_AREA && 
-    inArea == SEARCH_AREA)
+    inArea == SEARCH_AREA) {
+    if (splitBeamShift)
+      SetDefocus(focusBeforeLMnonLM + mSearchDefocus);
+    else
       IncDefocus((double)mSearchDefocus);
+  }
 
   // If in EFTEM mode, synchronize to the filter parameters
   if (!STEMmode && mWinApp->GetFilterMode()) {
@@ -5231,11 +5256,28 @@ int CEMscope::UnloadCartridge(void)
 // Functions for dealing with temperature control
 
 // Dewars busy
-bool CEMscope::AreDewarsFilling(BOOL &busy)
+bool CEMscope::AreDewarsFilling(int &busy)
 {
-  int time;
+  int time, ibusy, ibusy2;
   double level;
-  return GetTemperatureInfo(0, busy, time, 0, level);
+  BOOL bBusy;
+  bool bRet = true;
+  if (HitachiScope || (JEOLscope && !mPlugFuncs->GetNitrogenStatus))
+    return false;
+  ScopeMutexAcquire("AreDewarsFilling", true);
+  if (FEIscope) {
+    bRet = GetTemperatureInfo(0, bBusy, time, 0, level);
+    busy = bBusy ? 1 : 0;
+  } else {
+    ibusy = mPlugFuncs->GetNitrogenStatus(1);
+    ibusy2 = mPlugFuncs->GetNitrogenStatus(2);
+    if (ibusy < 0 || ibusy2 < 0)
+      bRet = false;
+    else
+      busy = (ibusy ? 1 : 0) + (ibusy2 ? 2 : 0);
+  }
+  ScopeMutexRelease("AreDewarsFilling");
+  return bRet;
 }
 
 // Remaining time - units?
@@ -5799,7 +5841,7 @@ void CEMscope::HandleNewMag(int inMag)
 
 BOOL CEMscope::ScopeMutexAcquire(const char *name, BOOL retry) {
   DWORD mutex_status;
-  
+  const char *useName = name;
   if (!mScopeMutexHandle)
     return true;
 
@@ -5810,7 +5852,10 @@ BOOL CEMscope::ScopeMutexAcquire(const char *name, BOOL retry) {
     return true;
   }
 
-  if (TRACE_MUTEX) SEMTrace('1', "%s waiting for Mutex",name);
+  if (!strcmp(name, "MutexLender"))
+    useName = mScopeMutexLenderStr;
+
+  if (TRACE_MUTEX) SEMTrace('1', "%s waiting for Mutex",useName);
   
   // This wait does not seem to allow enough time for threads to run properly, so set
   // the timeout low when not retrying.  It should loop and sleep instead...
@@ -5819,12 +5864,12 @@ BOOL CEMscope::ScopeMutexAcquire(const char *name, BOOL retry) {
     if (retry) {
       if (TRACE_MUTEX) 
         SEMTrace('1', "%s timed out getting mutex, currently held by %s.. trying again.",
-        name, mScopeMutexOwnerStr);
+        useName, mScopeMutexOwnerStr);
       continue;
     } else {
       if (TRACE_MUTEX) 
         SEMTrace('1', "%s failed to get the mutex, currently held by %s. giving up!", 
-        name, mScopeMutexOwnerStr);
+        useName, mScopeMutexOwnerStr);
       return false;
     }
     assert(false);
@@ -5844,7 +5889,7 @@ BOOL CEMscope::ScopeMutexAcquire(const char *name, BOOL retry) {
 
   /* Now we're sure that we have the mutex. */
 
-  strcpy(mScopeMutexOwnerStr,name);
+  strcpy(mScopeMutexOwnerStr,useName);
   mScopeMutexOwnerId = GetCurrentThreadId();
   if (TRACE_MUTEX) SEMTrace('1', "%s got Mutex",mScopeMutexOwnerStr);   
 
@@ -5869,10 +5914,15 @@ BOOL CEMscope::ScopeMutexRelease(const char *name) {
     return true;
   } 
 
-  if ( TRACE_MUTEX && (0 != strcmp(mScopeMutexOwnerStr,name))) {
-    SEMTrace('1', "%s tried to release the mutex, but the mutex is held by %s!",name,mScopeMutexOwnerStr);
+  if (!strcmp(mScopeMutexOwnerStr, "MutexLender")) {
+    strcpy(mScopeMutexLenderStr, mScopeMutexOwnerStr);
+  } else {
+
+    if ( TRACE_MUTEX && (0 != strcmp(mScopeMutexOwnerStr,name))) {
+      SEMTrace('1', "%s tried to release the mutex, but the mutex is held by %s!",name,mScopeMutexOwnerStr);
+    }
+    assert(0 == strcmp(mScopeMutexOwnerStr, name));
   }
-  assert(0 == strcmp(mScopeMutexOwnerStr, name));
   if (TRACE_MUTEX) SEMTrace('1', "%s released the Mutex.",name);
 
   strcpy(mScopeMutexOwnerStr,"NOBODY"); 
@@ -6998,7 +7048,8 @@ bool CEMscope::StageIsAtSamePos(double stageX, double stageY, float requestedX,
 static char *longOpDescription[MAX_LONG_OPERATIONS] = 
 {"running buffer cycle", "refilling refrigerant",
   "getting cassette inventory", "running autoloader buffer cycle", "showing message box",
-  "updating hardware dark reference", "unloading a cartridge", "loading a cartridge"};
+  "updating hardware dark reference", "unloading a cartridge", "loading a cartridge",
+  "refilling stage", "refilling transfer tank", "flashing FEG"};
 
 // Start a thread for a long-running operation: returns 1 if thread busy, 
 // 2 if inappropriate in some other way, -1 if nothing was started
@@ -7008,6 +7059,8 @@ int CEMscope::StartLongOperation(int *operations, float *hoursSinceLast, int num
   float sinceLast;
   bool needHWDR = false, startedThread = false;
   int now = mWinApp->MinuteTimeStamp();
+  short scopeType[MAX_LONG_OPERATIONS] = {1, 1, 1, 1, 1, 0, 1, 1, 2, 2, 2};
+  mDoingStoppableRefill = 0;
 
   // Loop through the operations, test if it is time to do each and add to list to do
   for (ind = 0; ind < numOps; ind++) {
@@ -7025,9 +7078,16 @@ int CEMscope::StartLongOperation(int *operations, float *hoursSinceLast, int num
           needHWDR = true;
         } else {
           scopeOps[numScopeOps++] = longOp;
-          if (!FEIscope)
+          if ((scopeType[longOp] == 1 && !FEIscope) || 
+            (scopeType[longOp] == 2 && !JEOLscope))
             return 2;
+          if (JEOLscope && !mPlugFuncs->FlashFEG)
+            return 3;
         }
+        if (longOp == LONG_OP_FILL_STAGE)
+          mDoingStoppableRefill |= 1;
+        if (longOp == LONG_OP_FILL_TRANSFER)
+          mDoingStoppableRefill |= 2;
     }
     if (sinceLast < 0) {
       mLastLongOpTimes[longOp] = now;
@@ -7081,12 +7141,13 @@ UINT CEMscope::LongOperationProc(LPVOID pParam)
 {
   LongThreadData *lod = (LongThreadData *)pParam;
   HRESULT hr = S_OK;
-  int retval = 0, longOp, ind;
+  int retval = 0, longOp, ind, error;
+  bool fillTransfer;
 
   CoInitializeEx(NULL, COINIT_MULTITHREADED);
   CEMscope::ScopeMutexAcquire("LongOperationProc", true);
 
-  if (lod->plugFuncs->BeginThreadAccess(1, PLUGFEI_MAKE_VACUUM)) {
+  if (FEIscope && lod->plugFuncs->BeginThreadAccess(1, PLUGFEI_MAKE_VACUUM)) {
     SEMMessageBox("Error creating second instance of microscope object for" +
     sLongOpDescriptions[0]);
     SEMErrorOccurred(1);
@@ -7097,6 +7158,8 @@ UINT CEMscope::LongOperationProc(LPVOID pParam)
     // Do the operations in the entered sequence
     for (ind = 0; ind < lod->numOperations; ind++) {
       longOp = lod->operations[ind];
+      fillTransfer = longOp == LONG_OP_FILL_TRANSFER;
+      error = 0;
       try {
 
         // Run buffer cycle
@@ -7133,7 +7196,21 @@ UINT CEMscope::LongOperationProc(LPVOID pParam)
           lod->plugFuncs->LoadCartridge(sCartridgeToLoad);
         }
 
-        lod->finished[ind] = true;
+        // Fill JEOL stage tank or transfer tank
+        if (longOp == LONG_OP_FILL_STAGE || fillTransfer) {
+          error = lod->plugFuncs->RefillNitrogen(fillTransfer ? 2 : 1, 1);
+        }
+
+        if (longOp == LONG_OP_FLASH_FEG) {
+          error = lod->plugFuncs->FlashFEG(1);
+        }
+
+        if (error) {
+          hr = 0x80000000 | error;
+          SEMTestHResult(hr,  _T(longOpDescription[longOp]), &lod->errString, &error, 
+            true);
+        } else
+          lod->finished[ind] = true;
       }
 
       // Save an error in the error string and retval but continue in loop
@@ -7157,9 +7234,9 @@ int CEMscope::LongOperationBusy(int index)
 { 
   int thread, op, longOp, busy, indStart, indEnd, retval = 0;
   int now = mWinApp->MinuteTimeStamp();
-  int errorOK[MAX_LONG_OPERATIONS] = {0, 1, 0, 0, 0, 0, 0, 0};
+  int errorOK[MAX_LONG_OPERATIONS] = {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0};
   const char *errStringsOK[MAX_LONG_OPERATIONS] = {"", "Cannot force refill", "", "", "",
-    "", "", ""};
+    "", "", "", "", "", ""};
   bool throwErr = false;
   indStart = B3DCHOICE(index < 0, 0, sLongThreadMap[index]);
   indEnd = B3DCHOICE(index < 0, MAX_LONG_THREADS - 1, sLongThreadMap[index]);
@@ -7236,6 +7313,14 @@ int CEMscope::StopLongOperation(bool exiting, int index)
   CString mess;
   indStart = B3DCHOICE(index < 0, 0, sLongThreadMap[index]);
   indEnd = B3DCHOICE(index < 0, MAX_LONG_THREADS - 1, sLongThreadMap[index]);
+  if (mDoingLongOperation && mDoingStoppableRefill && !exiting) {
+    if (mDoingStoppableRefill & 1)
+      mPlugFuncs->RefillNitrogen(1, 0);
+    if (mDoingStoppableRefill & 2)
+      mPlugFuncs->RefillNitrogen(2, 0);
+    SEMMessageBox("If nitrogen was filling, it has now been stopped");
+    return 0;
+  }
   for (op = indStart; op <= indEnd; op++) {
     if (UtilThreadBusy(&mLongOpThreads[op]) > 0) {
       mess.Format("There is a thread running for %s\n\nAre you sure you want to terminate"

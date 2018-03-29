@@ -44,10 +44,11 @@ enum {lpRegular = 1, lpEFTEM};
 #define pmImaging 1
 #define psmLAD 5
 
-#define MAX_LONG_OPERATIONS 8
+#define MAX_LONG_OPERATIONS 11
 #define MAX_LONG_THREADS 2
 enum {LONG_OP_BUFFER = 0, LONG_OP_REFILL, LONG_OP_INVENTORY, LONG_OP_LOAD_CYCLE, 
-LONG_OP_MESSAGE_BOX, LONG_OP_HW_DARK_REF, LONG_OP_UNLOAD_CART, LONG_OP_LOAD_CART,};
+LONG_OP_MESSAGE_BOX, LONG_OP_HW_DARK_REF, LONG_OP_UNLOAD_CART, LONG_OP_LOAD_CART,
+LONG_OP_FILL_STAGE, LONG_OP_FILL_TRANSFER, LONG_OP_FLASH_FEG};
 
 // Standard conversions from signed real to nearest integer for JEOL calls
 #define NINT8000(a) (long)floor((a) + 0x8000 + 0.5)
@@ -280,6 +281,7 @@ class DLL_IM_EX CEMscope
   GetSetMember(BOOL, UseInvertedMagRange);
   GetMember(double, InternalMagTime);
   GetMember(double, UpdateSawMagTime);
+  SetMember(BOOL, JeolHasNitrogenClass);
 
   static void SetJeolIndForMagMode(int inVal);
   static int GetJeolIndForMagMode();
@@ -433,6 +435,7 @@ private:
   int mJeolUpdateSleep;
   static HANDLE mScopeMutexHandle;
   static char * mScopeMutexOwnerStr;
+  static char * mScopeMutexLenderStr;
   static DWORD  mScopeMutexOwnerId;
   static int    mScopeMutexOwnerCount;
   double mJeol_OLfine_to_um;  // Scale factor from OL fine value to microns
@@ -609,6 +612,10 @@ private:
   bool mLastGettingFast;
   int mPostFocusChgDelay;     // Delay after changing focus
   int mUseJeolGIFmodeCalls;   // 1 to rely on state from calls, 2 to change EFTEM with it
+  BOOL mJeolHasNitrogenClass; // Flag to create the nitrogen class
+  int mJeolRefillTimeout;     // Timeout for refilling
+  int mJeolFlashFegTimeout;   // Timeout for flashing FEG
+  int mJeolEmissionTimeout;   // Timeout for turning emission off or on
   int mPostJeolGIFdelay;      // Delay time after setting GIF mode
   BOOL mUseInvertedMagRange;  // Flag to step up in Titan inverted range to find mag
   int mUpdateBeamBlank;       // Flag to update beam blanker
@@ -616,6 +623,7 @@ private:
   double mLastCameraLength;   // Camera length in last update: valid only in diff mode
   int mNormAllOnMagChange;    // Norm all lenses when in LM if 1, or always if 2
   float mStageRelaxation;     // Default distance to relax stage from backlash 
+  int mDoingStoppableRefill;  // Sum of bits for refill types
   int mPluginVersion;         // Version of plugin or server
 
   // Old static variables from UpdateProc
@@ -701,7 +709,7 @@ public:
   double IllumAreaToIntensity(double illum);
   double IntensityToIllumArea(double intensity);
   double IntensityAfterApertureChange(double intensity, int oldAper, int newAper);
-  bool AreDewarsFilling(BOOL & busy);
+  bool AreDewarsFilling(int & busy);
   bool GetDewarsRemainingTime(int & time);
   bool GetRefrigerantLevel(int which, double & level);
   bool GetObjectiveStigmator(double & stigX, double & stigY);
