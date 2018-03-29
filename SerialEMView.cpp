@@ -554,9 +554,9 @@ void CSerialEMView::DrawImage(void)
         imBuf->mCaptured == BUFFER_MONTAGE_PIECE);
       if (mMainWindow && imBuf->mCamera >= 0 && scaleCrit > 0 && (bufferOK ||
         mWinApp->GetNumActiveCameras() > 1)) {
+          CameraParameters *camP = mWinApp->GetCamParams() + imBuf->mCamera;
           cdc.SetTextColor(RGB(0, 255, 40));
           cdc.SelectObject(&mLabelFont);
-          CameraParameters *camP = mWinApp->GetCamParams() + imBuf->mCamera;
           if (imBuf->mSampleMean > EXTRA_VALUE_TEST && bufferOK &&
             !mWinApp->mProcessImage->DoseRateFromMean(imBuf, imBuf->mSampleMean, boost)) {
               if (mWinApp->mCamera->IsDirectDetector(camP)) {
@@ -570,6 +570,11 @@ void CSerialEMView::DrawImage(void)
           }
           if (mWinApp->GetNumActiveCameras() > 1)
             cdc.TextOut(420, 10, camP->name);
+          if (bufferOK && camP->STEMcamera && camP->numChannels > 1) {
+            EMimageExtra *extra = imBuf->mImage->GetUserData();
+            if (!extra->mChannelName.IsEmpty())
+              cdc.TextOut(140, 10, extra->mChannelName);
+          }
       }
     } else {
       cdc.SelectObject(&mLabelFont);
