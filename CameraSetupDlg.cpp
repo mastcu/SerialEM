@@ -880,6 +880,7 @@ void CCameraSetupDlg::LoadConsetToDialog()
   if (mCurSet->numAverage < 2)
     mCurSet->numAverage = mCurrentSet == 3 ? 10 : 4;
   m_iAverageTimes = mCurSet->numAverage;
+  B3DCLAMP(m_iAverageTimes, 2, MAX_DARK_AVERAGE);
   m_spinAverage.SetRange(2, MAX_DARK_AVERAGE);
   m_spinAverage.SetPos(m_iAverageTimes);
   m_sBigText = mModeNames[mCurrentSet];
