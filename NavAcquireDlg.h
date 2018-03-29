@@ -34,6 +34,7 @@ public:
   bool mPostponed;
   int mMacroNum;
   int mPremacNum;
+  int mPostmacNum;
   int mNumArrayItems;
   int mNumAcqBeforeFile;
   int mNumFilesToOpen;
@@ -56,15 +57,20 @@ public:
   CButton m_butRunMacro;
   CButton m_butJustAcquire;
   CButton m_butPremacro;
+  CButton m_butPostmacro;
   BOOL m_bPremacro;
+  BOOL m_bPostmacro;
   afx_msg void OnPremacro();
+  afx_msg void OnPostmacro();
   CButton m_butGroupFocus;
   BOOL m_bGroupFocus;
   afx_msg void OnNaAutofocus();
   void LoadTSdependentToDlg(void);
   void UnloadTSdependentFromDlg(int acquireType);
   CComboBox m_comboPremacro;
+  CComboBox m_comboPostmacro;
   afx_msg void OnSelendokComboPremacro();
+  afx_msg void OnSelendokComboPostmacro();
   CComboBox m_comboMacro;
   afx_msg void OnSelendokComboMacro();
   CString m_strSavingFate;

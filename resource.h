@@ -1378,10 +1378,12 @@
 #define IDC_EDIT_REF_FPS                2397
 #define IDC_USE_REC_HARDWARE_ROI        2399
 #define IDC_STAT_REC_AREA               2400
-#define IDC_CHECK1                      2401
 #define IDC_CHECK_ADJUST_BEAM_TILT      2401
 #define IDC_STAT_COMA_IS_CAL            2402
 #define IDC_STAT_COMA_CONDITIONS        2403
+#define IDC_NA_POSTMACRO                2404
+#define IDC_COMBO1                      2405
+#define IDC_COMBO_POSTMACRO             2405
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -1810,7 +1812,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        228
 #define _APS_NEXT_COMMAND_VALUE         33304
-#define _APS_NEXT_CONTROL_VALUE         2404
+#define _APS_NEXT_CONTROL_VALUE         2406
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

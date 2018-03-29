@@ -388,7 +388,9 @@ struct NavParams {
   int nonTSacquireType;    // User's latest value for a non-TS acquire type
   int macroIndex;          // Macro index numbered from 1
   int preMacroInd;         // Pre-macro index also from 1
+  int postMacroInd;         // Post-macro index also from 1
   int preMacroIndNonTS;    // Pre-macro index for non tilt series actions
+  int postMacroIndNonTS;    // Post-macro index for non tilt series actions
   BOOL acqRoughEucen;       // Flags for initial actions on acquire
   BOOL acqCookSpec;
   BOOL acqFineEucen;
@@ -396,7 +398,9 @@ struct NavParams {
   BOOL acqAutofocus;
   BOOL acqRealign;
   BOOL acqRunPremacro;
+  BOOL acqRunPostmacro;
   BOOL acqRunPremacroNonTS;
+  BOOL acqRunPostmacroNonTS;
   BOOL acqSkipInitialMove;
   BOOL acqSkipZmoves;
   BOOL acqRestoreOnRealign;

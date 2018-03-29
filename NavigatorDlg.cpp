@@ -54,7 +54,7 @@ static char *typeString[] = {"Pt", "Poly", "Map", "Imp", "Anc"};
 #define MAX_REGPT_NUM 99
 enum NavTasks {ACQ_ROUGH_EUCEN, ACQ_REALIGN, ACQ_COOK_SPEC, ACQ_FINE_EUCEN, 
   ACQ_CENTER_BEAM, ACQ_AUTOFOCUS, ACQ_OPEN_FILE, ACQ_ACQUIRE, ACQ_RUN_MACRO, 
-  ACQ_START_TS, ACQ_MOVE_TO_NEXT, ACQ_BACKLASH, ACQ_RUN_PREMACRO};
+  ACQ_START_TS, ACQ_MOVE_TO_NEXT, ACQ_BACKLASH, ACQ_RUN_PREMACRO, ACQ_RUN_POSTMACRO};
 #define NAV_FILE_VERSION "2.00"
 #define VERSION_TIMES_100 200
 
@@ -7012,7 +7012,7 @@ void CNavigatorDlg::AcquireAreas(bool fromMenu)
   int loop, loopStart, loopEnd, macnum, numNoMap = 0, numAtEdge = 0;
   int groupID = -1;
   BOOL rangeErr = false;
-  BOOL runPremacro;
+  BOOL runPremacro, runPostmacro;
   CString *macros = mWinApp->GetMacros();
   CString mess, mess2;
   CNavAcquireDlg dlg;
@@ -7061,6 +7061,9 @@ void CNavigatorDlg::AcquireAreas(bool fromMenu)
   runPremacro = mParam->acqRunPremacro;
   if (mParam->acquireType != ACQUIRE_DO_TS)
     runPremacro = mParam->acqRunPremacroNonTS;
+  runPostmacro = mParam->acqRunPostmacro;
+  if (mParam->acquireType != ACQUIRE_DO_TS)
+    runPostmacro = mParam->acqRunPostmacroNonTS;
 
   if (mParam->acqSkipInitialMove && OKtoSkipStageMove(mParam) < 0) {
     loop = IDYES;
@@ -7078,16 +7081,20 @@ void CNavigatorDlg::AcquireAreas(bool fromMenu)
   mSkipStageMoveInAcquire = mParam->acqSkipInitialMove;
 
   // Set up for macro, or check file if images
-  if (mParam->acquireType == ACQUIRE_RUN_MACRO || runPremacro) {
+  if (mParam->acquireType == ACQUIRE_RUN_MACRO || runPremacro || runPostmacro) {
     loopStart = mParam->acquireType == ACQUIRE_RUN_MACRO ? 0 : 1;
-    loopEnd = runPremacro ? 2 : 1;
+    loopEnd = (runPremacro || runPostmacro) ? 3 : 1;
     for (loop = loopStart; loop < loopEnd; loop++) {
-      if (loop)
+      macnum = -1;
+      if (loop == 1 && runPremacro)
         macnum = (mParam->acquireType == ACQUIRE_DO_TS ? mParam->preMacroInd : 
           mParam->preMacroIndNonTS) - 1;
-      else 
+      if (loop == 2 && runPostmacro)
+        macnum = (mParam->acquireType == ACQUIRE_DO_TS ? mParam->postMacroInd : 
+          mParam->postMacroIndNonTS) - 1;
+      if (loop == 0)
         macnum = mParam->macroIndex - 1;
-      if (mWinApp->mMacroProcessor->EnsureMacroRunnable(macnum))
+      if (macnum >= 0 && mWinApp->mMacroProcessor->EnsureMacroRunnable(macnum))
         return;
     }
 
@@ -7144,6 +7151,8 @@ void CNavigatorDlg::AcquireAreas(bool fromMenu)
     mAcqActions[mNumAcqActions++] = ACQ_ACQUIRE;
   if (mParam->acquireType == ACQUIRE_TAKE_MAP)
     mAcqActions[mNumAcqActions++] = ACQ_BACKLASH;
+  if (runPostmacro)
+    mAcqActions[mNumAcqActions++] = ACQ_RUN_POSTMACRO;
   mAcqActions[mNumAcqActions++] = ACQ_MOVE_TO_NEXT;
   mAcqActionIndex = 0;
 
@@ -7410,7 +7419,13 @@ void CNavigatorDlg::AcquireNextTask(int param)
     mWinApp->UpdateBufferWindows();
     break;
 
-  // Adjust for backlash if needed
+  // Run a post-macro
+  case ACQ_RUN_POSTMACRO:
+    mWinApp->mMacroProcessor->Run((mParam->acquireType == ACQUIRE_DO_TS ? 
+      mParam->postMacroInd : mParam->postMacroIndNonTS) - 1);
+    break;
+
+    // Adjust for backlash if needed
   case ACQ_BACKLASH:
     AdjustBacklash(-1, true);
     break;
@@ -7587,7 +7602,7 @@ void CNavigatorDlg::SetAcquireEnded(int state)
 BOOL CNavigatorDlg::StartedMacro(void)
 {
   return (GetAcquiring() && (mParam->acquireType == ACQUIRE_RUN_MACRO || 
-    mParam->acqRunPremacro) && 
+    mParam->acqRunPremacro || mParam->acqRunPostmacro) && 
     (mWinApp->mMacroProcessor->DoingMacro() || mWinApp->mMacroProcessor->IsResumable()));
 }
 

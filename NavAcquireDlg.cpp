@@ -24,6 +24,7 @@ CNavAcquireDlg::CNavAcquireDlg(CWnd* pParent /*=NULL*/)
   , m_bCenterBeam(FALSE)
   , m_bSendEmail(FALSE)
   , m_bPremacro(FALSE)
+  , m_bPostmacro(FALSE)
   , m_bGroupFocus(FALSE)
   , m_strSavingFate(_T(""))
   , m_strFileSavingInto(_T(""))
@@ -56,14 +57,17 @@ void CNavAcquireDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_NA_SENDEMAIL, m_butSendEmail);
   DDX_Check(pDX, IDC_NA_SENDEMAIL, m_bSendEmail);
   DDX_Check(pDX, IDC_NA_PREMACRO, m_bPremacro);
+  DDX_Check(pDX, IDC_NA_POSTMACRO, m_bPostmacro);
   DDX_Control(pDX, IDC_NA_ACQUIRE_TS, m_butAcquireTS);
   DDX_Control(pDX, IDC_NA_RUNMACRO, m_butRunMacro);
   DDX_Control(pDX, IDC_NA_ACQUIREMAP, m_butAcquireMap);
   DDX_Control(pDX, IDC_NA_JUSTACQUIRE, m_butJustAcquire);
   DDX_Control(pDX, IDC_NA_PREMACRO, m_butPremacro);
+  DDX_Control(pDX, IDC_NA_POSTMACRO, m_butPostmacro);
   DDX_Control(pDX, IDC_NA_GROUP_FOCUS, m_butGroupFocus);
   DDX_Check(pDX, IDC_NA_GROUP_FOCUS, m_bGroupFocus);
   DDX_Control(pDX, IDC_COMBO_PREMACRO, m_comboPremacro);
+  DDX_Control(pDX, IDC_COMBO_POSTMACRO, m_comboPostmacro);
   DDX_Control(pDX, IDC_COMBO_MACRO, m_comboMacro);
   DDX_Text(pDX, IDC_STAT_SAVING_FATE, m_strSavingFate);
   DDX_Text(pDX, IDC_STAT_FILE_SAVING_INTO, m_strFileSavingInto);
@@ -85,8 +89,10 @@ BEGIN_MESSAGE_MAP(CNavAcquireDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_NA_RUNMACRO, OnNaAcquiremap)
   ON_BN_CLICKED(IDC_NA_ACQUIRE_TS, OnNaAcquiremap)
   ON_BN_CLICKED(IDC_NA_PREMACRO, OnPremacro)
+  ON_BN_CLICKED(IDC_NA_POSTMACRO, OnPostmacro)
   ON_BN_CLICKED(IDC_NA_AUTOFOCUS, OnNaAutofocus)
   ON_CBN_SELENDOK(IDC_COMBO_PREMACRO, OnSelendokComboPremacro)
+  ON_CBN_SELENDOK(IDC_COMBO_POSTMACRO, OnSelendokComboPostmacro)
   ON_CBN_SELENDOK(IDC_COMBO_MACRO, OnSelendokComboMacro)
   ON_BN_CLICKED(IDC_NA_DO_SUBSET, OnDoSubset)
   ON_EN_KILLFOCUS(IDC_EDIT_SUBSET_START, OnKillfocusSubsetStart)
@@ -130,11 +136,15 @@ void CNavAcquireDlg::UnloadTSdependentFromDlg(int acquireType)
 {
   if (acquireType == ACQUIRE_DO_TS) {
     mParam->preMacroInd = mPremacNum;
+    mParam->postMacroInd = mPostmacNum;
     mParam->acqRunPremacro = m_bPremacro;
+    mParam->acqRunPostmacro = m_bPostmacro;
     mParam->acqSendEmail = m_bSendEmail;
   } else {
     mParam->preMacroIndNonTS = mPremacNum;
+    mParam->postMacroIndNonTS = mPostmacNum;
     mParam->acqRunPremacroNonTS = m_bPremacro;
+    mParam->acqRunPostmacroNonTS = m_bPostmacro;
     mParam->acqSendEmailNonTS = m_bSendEmail;
   }
 }
@@ -167,9 +177,11 @@ BOOL CNavAcquireDlg::OnInitDialog()
     else
       str = names[ind];
     m_comboPremacro.AddString((LPCTSTR)str);
+    m_comboPostmacro.AddString((LPCTSTR)str);
     m_comboMacro.AddString((LPCTSTR)str);
   }
   SetDropDownHeight(&m_comboPremacro, MAX_MACROS);
+  SetDropDownHeight(&m_comboPostmacro, MAX_MACROS);
   SetDropDownHeight(&m_comboMacro, MAX_MACROS);
   LoadTSdependentToDlg();
   ManageOutputFile();
@@ -189,11 +201,15 @@ void CNavAcquireDlg::LoadTSdependentToDlg(void)
 {
   if (m_iAcquireType == ACQUIRE_DO_TS) {
     mPremacNum = mParam->preMacroInd;
+    mPostmacNum = mParam->postMacroInd;
     m_bPremacro = mParam->acqRunPremacro;
+    m_bPostmacro = mParam->acqRunPostmacro;
     m_bSendEmail = mParam->acqSendEmail;
   } else {
     mPremacNum = mParam->preMacroIndNonTS;
+    mPostmacNum = mParam->postMacroIndNonTS;
     m_bPremacro = mParam->acqRunPremacroNonTS;
+    m_bPostmacro = mParam->acqRunPostmacroNonTS;
     m_bSendEmail = mParam->acqSendEmailNonTS;
   }
   ManageMacro();
@@ -240,12 +256,20 @@ void CNavAcquireDlg::OnPremacro()
   ManageMacro();
 }
 
+void CNavAcquireDlg::OnPostmacro()
+{
+  UpdateData(true);
+  ManageMacro();
+}
+
 void CNavAcquireDlg::ManageMacro(void)
 {
   m_comboPremacro.SetCurSel(mPremacNum - 1);
+  m_comboPostmacro.SetCurSel(mPostmacNum - 1);
   m_comboMacro.SetCurSel(mMacroNum - 1);
   m_comboMacro.EnableWindow(m_iAcquireType == ACQUIRE_RUN_MACRO);
   m_comboPremacro.EnableWindow(m_bPremacro);
+  m_comboPostmacro.EnableWindow(m_bPostmacro);
   UpdateData(false);
 }
 
@@ -262,6 +286,10 @@ void CNavAcquireDlg::OnSelendokComboPremacro()
   mPremacNum = m_comboPremacro.GetCurSel() + 1;
 }
 
+void CNavAcquireDlg::OnSelendokComboPostmacro()
+{
+  mPostmacNum = m_comboPostmacro.GetCurSel() + 1;
+}
 
 void CNavAcquireDlg::OnSelendokComboMacro()
 {

@@ -3,6 +3,22 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+3/28/18: If a low dose map is used for anchor state, new anchor map will be
+taken in low dose mode too, instead of just matching parameters (In 3.6).
+
+3/28/18: Added ability to run a script after each acquisition in acquire at
+items.
+
+3/28/18: Added long operations for filling nitrogen or flashing FEG on
+JEOL CryoARM.
+
+3/28/18: Prevented standard focus from being set for montaging in LM when in
+Low Dose mode.
+
+3/28/18: When a view or search focus offset is being set while going across LM
+boundary, it retains the focus across the boundary so offset can be set
+correctly.
+
 3/21/18: A few more tweaks in the CTF-based astigmatism/coma routine.
 
 3/21/18: Added calibration of beam tilt needed to compensate image shift, made

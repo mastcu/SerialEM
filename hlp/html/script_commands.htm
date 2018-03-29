@@ -1635,9 +1635,11 @@
         </TR>
         <TR vAlign="top">
           <TD class="style13">AreDewarsFilling</TD>
-          <TD>Report whether any of the dewars in a temperature control system are busy
+          <TD>Report whether any of the dewars in a temperature control system on an FEI are busy
             filling (reported value 1 is set to 0 or 1).
-            &nbsp; Value can be assigned to a variable at end of commmand.</TD>
+            &nbsp; Also reports if tanks are being refilled on a JEOL if the interface 
+            exists for determining that (reported value is set to 1 for stage tank plus 2 
+            for transfer tank).&nbsp; Value can be assigned to a variable at end of commmand.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style13">DewarsRemainingTime</TD>
@@ -1657,9 +1659,10 @@
         <TR vAlign="top">
           <TD class="style13">LongOperation Op # [Op #...]</TD>
           <TD>Starts one or more time-consuming operations: Buffer cycle (Bu), Refill
-            refrigerant (Re), Inventory cassettes (In), Loader buffer cycle (Lo), Unload 
-            cartridge (Un), or Dark
-            reference update for K2 (Da).&nbsp; Operations are identified by the first two
+            refrigerant on FEI (Re), Inventory cassettes (In), Loader buffer cycle (Lo), 
+            Unload cartridge (Un), Dark
+            reference update for K2 (Da), Refill Stage tank&nbsp; (RS) or Refill Transfer 
+            tank (RT) on JEOL, or Flash FEG (FF) on JEOL.&nbsp; Operations are identified by the first two
             letters of whatever full word you use (case insensitive).&nbsp; Each operation
             except Inventory and Unload cartridge must be followed by an interval in hours (#).&nbsp; If # is &gt;
             0, the operation is done only if the time since the last such operation is
@@ -1672,7 +1675,9 @@
             stop.&nbsp; The user
             interface should not hang during long operations, and users will be asked to confirm that they want to
             kill the operation threads if they press STOP or try to exit the program.&nbsp;
-            The consequences of killing these threads are uncertain.&nbsp; In order for time 
+            The consequences of killing these threads are uncertain.&nbsp; If a tank 
+            refilling on a JEOL is included in the operations, a STOP will just stop all 
+            filling.&nbsp; In order for time 
             intervals to be kept track of between runs of the program, the property 
             IgnoreShortTermCals must not be set.</TD>
         </TR>

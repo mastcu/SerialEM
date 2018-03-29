@@ -452,6 +452,12 @@ int CParameterIO::ReadSettings(CString strFileName)
           navParams->acqSkipInitialMove = itemInt[16] != 0;
           navParams->acqSkipZmoves = itemInt[17] != 0;
         }
+        if (!strItems[18].IsEmpty()) {
+          navParams->postMacroInd = itemInt[18];
+          navParams->acqRunPostmacro = itemInt[19] != 0;
+          navParams->postMacroIndNonTS = itemInt[20];
+          navParams->acqRunPostmacroNonTS = itemInt[21] != 0;
+        }
 
       } else if (NAME_IS("SingleFileOptions")) {
 
@@ -1237,7 +1243,8 @@ void CParameterIO::WriteSettings(CString strFileName)
       msParams->useIllumArea ? 1 : 0);
     mFile->WriteString(oneState);
     oneState.Format("NavigatorAcquireParams %d %d %d %d %d %d %d %d %d %d %d %d %d %d"
-      " %d %d %d\n", navParams->acqAutofocus ? 1 : 0, navParams->acqFineEucen ? 1 : 0,
+      " %d %d %d %d %d %d %d\n", navParams->acqAutofocus ? 1 : 0, 
+      navParams->acqFineEucen ? 1 : 0,
       navParams->acqRealign ? 1 : 0, navParams->acqRestoreOnRealign ? 1 : 0,
       navParams->acqRoughEucen ? 1 : 0, navParams->nonTSacquireType, 
       navParams->macroIndex, navParams->acqCloseValves ? 1 : 0, 
@@ -1245,7 +1252,9 @@ void CParameterIO::WriteSettings(CString strFileName)
       navParams->preMacroInd, navParams->acqRunPremacro ? 1 : 0, 
       navParams->preMacroIndNonTS, navParams->acqRunPremacroNonTS ? 1 : 0, 
       navParams->acqSendEmailNonTS ? 1 : 0, navParams->acqSkipInitialMove ? 1 : 0,
-      navParams->acqSkipZmoves ? 1 : 0);
+      navParams->acqSkipZmoves ? 1 : 0, navParams->postMacroInd, 
+      navParams->acqRunPostmacro ? 1 : 0, navParams->postMacroIndNonTS, 
+      navParams->acqRunPostmacroNonTS ? 1 : 0);
     mFile->WriteString(oneState);
     oneState.Format("CookerParams %d %d %f %d %d %f %d %d %f -999 -999\n", 
       cookParams->magIndex, cookParams->spotSize, cookParams->intensity, 

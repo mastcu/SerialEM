@@ -524,6 +524,8 @@ CSerialEMApp::CSerialEMApp()
   mNavParams.macroIndex = 1;
   mNavParams.preMacroInd = 1;
   mNavParams.preMacroIndNonTS = 1;
+  mNavParams.postMacroInd = 1;
+  mNavParams.postMacroIndNonTS = 1;
   mNavParams.nonTSacquireType = 0;
   mNavParams.acqRealign = false;
   mNavParams.acqRoughEucen = false;
@@ -533,6 +535,8 @@ CSerialEMApp::CSerialEMApp()
   mNavParams.acqCenterBeam = false;
   mNavParams.acqRunPremacro = false;
   mNavParams.acqRunPremacroNonTS = false;
+  mNavParams.acqRunPostmacro = false;
+  mNavParams.acqRunPostmacroNonTS = false;
   mNavParams.acqSkipInitialMove = false;
   mNavParams.acqSkipZmoves = false;
   mNavParams.acqRestoreOnRealign = true;

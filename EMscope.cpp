@@ -5852,6 +5852,7 @@ BOOL CEMscope::ScopeMutexAcquire(const char *name, BOOL retry) {
     return true;
   }
 
+  // If the lender is reacquiring it, use the lender string
   if (!strcmp(name, "MutexLender"))
     useName = mScopeMutexLenderStr;
 
@@ -5914,6 +5915,7 @@ BOOL CEMscope::ScopeMutexRelease(const char *name) {
     return true;
   } 
 
+  // If the owner is lending it, copy its name to the lender string
   if (!strcmp(mScopeMutexOwnerStr, "MutexLender")) {
     strcpy(mScopeMutexLenderStr, mScopeMutexOwnerStr);
   } else {
