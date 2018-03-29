@@ -328,6 +328,7 @@ double DLL_IM_EX SEMWallTime();
 int DLL_IM_EX SEMUseTEMScripting();
 int DLL_IM_EX SEMNumFEIChannels();
 HitachiParams DLL_IM_EX *SEMGetHitachiParams();
+int DLL_IM_EX *SEMGetLastHitachiMember();
 int DLL_IM_EX SEMSetSecondaryModeForMag(int index);
 BOOL DLL_IM_EX SEMAcquireScopeMutex(char *name, BOOL retry);
 BOOL DLL_IM_EX SEMReleaseScopeMutex(char *name); 

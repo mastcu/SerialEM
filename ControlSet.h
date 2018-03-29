@@ -467,6 +467,9 @@ struct ChannelSet {
   int channels[MAX_STEM_CHANNELS];   // List of channels
 };
 
+#define HITACHI_IS_HT7800     1
+#define HITACHI_HAS_ZSTAGE  0x2
+
 // Hitachi  microscope params
 struct HitachiParams {
   std::string IPaddress;
@@ -487,6 +490,8 @@ struct HitachiParams {
   int lowestNonLMmag;
   int lowestSecondaryMag;
   BOOL usingSharedMem;
+  int flags;
+  int lastMember;
 };
 
 #endif

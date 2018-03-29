@@ -2524,6 +2524,10 @@ HitachiParams *SEMGetHitachiParams()
 {
   return &((CSerialEMApp *)AfxGetApp())->mHitachiParams;
 }
+int *SEMGetLastHitachiMember()
+{
+  return &((CSerialEMApp *)AfxGetApp())->mHitachiParams.lastMember;
+}
 
 // Global convenience function for accessing TSMessageBox
 int SEMMessageBox(CString message, UINT type, BOOL terminate, int retval)
