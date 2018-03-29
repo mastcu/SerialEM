@@ -624,6 +624,8 @@ private:
   int mNormAllOnMagChange;    // Norm all lenses when in LM if 1, or always if 2
   float mStageRelaxation;     // Default distance to relax stage from backlash 
   int mDoingStoppableRefill;  // Sum of bits for refill types
+  float mFalcon3ReadoutInterval; // Frame interval for Falcon 3 camera
+  float mAddToFalcon3Exposure; // Default to set addToExposure for Falcon 3
   int mPluginVersion;         // Version of plugin or server
 
   // Old static variables from UpdateProc

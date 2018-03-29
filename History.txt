@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+3/29/18: Added name of STEM detector to image display if there is more than
+one detector.
+
 3/28/18: If a low dose map is used for anchor state, new anchor map will be
 taken in low dose mode too, instead of just matching parameters (In 3.6).
 

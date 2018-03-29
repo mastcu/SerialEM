@@ -420,6 +420,8 @@ CEMscope::CEMscope()
   mFakeMagIndex = 1;
   mFakeScreenPos = spUp;
   mUseInvertedMagRange = false;
+  mFalcon3ReadoutInterval = 0.024923f;
+  mAddToFalcon3Exposure = 0.013f;
   mGettingValuesFast = false;
   mLastGettingFast = false;
   mPluginVersion = 0;
@@ -6738,7 +6740,9 @@ int CEMscope::LookupScriptingCamera(CameraParameters *params, bool refresh,
         params->FEItype = FALCON3_TYPE;
       if (params->FEItype == FALCON3_TYPE && mWinApp->mCamera->GetFalconReadoutInterval()
         > 0.05)
-          mWinApp->mCamera->SetFalconReadoutInterval(0.024923f);
+          mWinApp->mCamera->SetFalconReadoutInterval(mFalcon3ReadoutInterval);
+      if (params->FEItype == FALCON3_TYPE && !params->addToExposure)
+        params->addToExposure = mAddToFalcon3Exposure;
     } else {
       params->minimumDrift = B3DMAX(params->minimumDrift, minDrift);
     }
