@@ -1535,7 +1535,7 @@ void CNavHelper::RestoreSavedState(void)
 }
 
 // Set the scope and camera parameter state to that used to acquire a map item
-int CNavHelper::SetToMapImagingState(CMapDrawItem * item, bool setCurFile)
+int CNavHelper::SetToMapImagingState(CMapDrawItem * item, bool setCurFile, BOOL hideLDoff)
 {
   int camera, curStore, err, retval = 0;
   float width, height;
@@ -1594,7 +1594,7 @@ int CNavHelper::SetToMapImagingState(CMapDrawItem * item, bool setCurFile)
     }
   }
 
-  PrepareToReimageMap(item, mMapMontP, &tmpSet, RECORD_CONSET, FALSE);
+  PrepareToReimageMap(item, mMapMontP, &tmpSet, RECORD_CONSET, hideLDoff);
   camera = mWinApp->GetCurrentCamera();
   /*if (conSet->binning != tmpSet.binning || conSet->exposure != tmpSet.exposure ||
     conSet->drift != tmpSet.drift)
@@ -3244,7 +3244,7 @@ void CNavHelper::MakeDualMap(CMapDrawItem *item)
   }
 
   // Go to imaging state, apply any defocus offset
-  if (SetToMapImagingState(item, true)) {
+  if (SetToMapImagingState(item, true, TRUE)) {
     RestoreFromMapState();
     return;
   }
@@ -3254,7 +3254,7 @@ void CNavHelper::MakeDualMap(CMapDrawItem *item)
     mWinApp->StartMontageOrTrial(false);
   } else {
     mCamera->SetCancelNextContinuous(true);
-    mWinApp->mCamera->InitiateCapture(RECORD_CONSET);
+    mWinApp->mCamera->InitiateCapture(mRIstayingInLD ? mRIconSetNum : RECORD_CONSET);
   }
   mAcquiringDual = true;
 

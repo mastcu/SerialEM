@@ -251,7 +251,7 @@ public:
   float *GetGridLimits() {return &mGridLimits[0];};
   void Initialize(void);
   void RestoreSavedState(void);
-  int SetToMapImagingState(CMapDrawItem * item, bool setCurFile);
+  int SetToMapImagingState(CMapDrawItem * item, bool setCurFile, BOOL hideLDoff = FALSE);
   int RestoreFromMapState(void);
   void ChangeAllBufferRegistrations(int mapID, int fromReg, int toReg);
   CString NextAutoFilename(CString inStr);
