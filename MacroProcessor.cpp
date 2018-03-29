@@ -1067,8 +1067,8 @@ void CMacroProcessor::NextCommand()
 
   // Be sure to add an entry for longHasTime when adding long operation
   const char *longKeys[MAX_LONG_OPERATIONS] = {"BU", "RE", "IN", "LO", "$=", "DA", "UN", 
-    "$="};
-  int longHasTime[MAX_LONG_OPERATIONS] = {1, 1, 0, 1, 0, 1, 0, 0};
+    "$=", "RS", "RT", "FF"};
+  int longHasTime[MAX_LONG_OPERATIONS] = {1, 1, 0, 1, 0, 1, 0, 0, 1, 1, 1};
   mSleepTime = 0.;
   mDoseTarget = 0.;
   mMovedStage = false;
@@ -3940,13 +3940,20 @@ void CMacroProcessor::NextCommand()
     SetReportedValues(&strItems[1], (double)index);
 
   } else if (CMD_IS(AREDEWARSFILLING)) {                    // AreDewarsFilling
-    if (!mScope->AreDewarsFilling(truth)) {
+    if (!mScope->AreDewarsFilling(index)) {
       AbortMacro();
       return;
     }
-    report.Format("Dewars %s busy filling", truth ? "ARE" : "are NOT");
+    if (FEIscope)
+      report.Format("Dewars %s busy filling", index ? "ARE" : "are NOT");
+    else {
+      char *dewarTxt[4] = {"No tanks are", "Stage tank is", "Transfer tank is", 
+        "Stage and transfer tanks are"};
+      B3DCLAMP(index, 0, 3);
+      report.Format("%s being refilled", dewarTxt[index]);
+    }
     mWinApp->AppendToLog(report, mLogAction);
-    SetReportedValues(&strItems[1], truth ? 1. : 0.);
+    SetReportedValues(&strItems[1], index);
 
   } else if (CMD_IS(SETSLITWIDTH)) {                        // SetSlitWidth
     if (itemEmpty[1])
@@ -4919,7 +4926,7 @@ void CMacroProcessor::NextCommand()
 
   } else if (CMD_IS(LONGOPERATION)) {                       // LongOperation
     ix1 = 0;
-    int used[] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+    int used[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     int operations[MAX_LONG_OPERATIONS + 1];
     float intervals[MAX_LONG_OPERATIONS + 1];
     for (index = 1; index < MAX_TOKENS && !itemEmpty[index]; index++) {
