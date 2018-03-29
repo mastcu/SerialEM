@@ -577,6 +577,7 @@ public:
   CAutoTuning *mAutoTuning;
   CString  m_strTitle;
   HitachiParams mHitachiParams;
+  CString mStartupMessage;     // Message to display in box or log window on startup
 
   // Overrides
   // ClassWizard generated virtual function overrides
@@ -695,7 +696,6 @@ private:
   BOOL mSettingSTEM;           // Flags to prevent double calls into set routines
   BOOL mSettingEFTEM;
   FilterParams mFilterParams;
-  CString mStartupMessage;     // Message to display in box or log window on startup
   BOOL mStartupInfo;           // Give startup info if log open
   BOOL mExitWithUnsavedLog;    // Developer's flag to exit without having to say no
   BOOL mTestGainFactors;       // Flag to multiply images by gain factors

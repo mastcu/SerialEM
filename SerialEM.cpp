@@ -1462,6 +1462,7 @@ static LONG WINAPI SEMExceptionFilter(struct _EXCEPTION_POINTERS* ExceptionInfo)
   CString name, func;
   CString message;
   CSerialEMApp *winApp = (CSerialEMApp *)AfxGetApp();
+  int startInd = winApp->mStartupMessage.Find('\r');
 
   // It comes in twice; returning this only the second time allows the application error
   // box to come up once instead of twice
@@ -1476,8 +1477,9 @@ static LONG WINAPI SEMExceptionFilter(struct _EXCEPTION_POINTERS* ExceptionInfo)
       "You need to upgrade the plugin to a version with this function,\r\n"
       "as well as one or two \"proxy-stub\" dlls (with \"ps\" in their names)";
     else {
-      message.Format("SerialEM is crashing due to an unhandled exception\r\n(Exception "
-        "code 0x%x, address 0x%x, SEMTrace is 0x%x)", 
+      message.Format("%s is crashing due to an unhandled exception\r\n(Exception "
+        "code 0x%x, address 0x%x, SEMTrace is 0x%x)", startInd > 0 ?
+        (LPCTSTR)winApp->mStartupMessage.Left(startInd) : "SerialEM",
         ExceptionInfo->ExceptionRecord->ExceptionCode, 
         ExceptionInfo->ExceptionRecord->ExceptionAddress, SEMTrace);
     
