@@ -38,7 +38,6 @@ average defocus and astigmatism (difference between the two).
 3/21/18: Added ability to make a true JPEG file because ImageJ will not
 display JPEG-compressed TIFFs and mad JPEG/JPG an allowed file type on the
 SaveToOtherFile command.
-
 3/18/18: Prevented right click in edit mode from moving map or polygon
 (In 3.6).
 
