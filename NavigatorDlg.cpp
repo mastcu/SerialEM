@@ -2635,7 +2635,7 @@ CArray<CMapDrawItem *, CMapDrawItem *> *CNavigatorDlg::GetMapDrawItems(
     if (mWinApp->LowDoseMode()) {
       ldp = mWinApp->GetLowDoseParams();
       magInd = ldp[RECORD_CONSET].magIndex;
-      if (montaging)
+      if (montaging && !mHelper->GetEnableMultiShot())
         magInd = ldp[MontageLDAreaIndex(montp)].magIndex;
       
     } else if (montaging) {
