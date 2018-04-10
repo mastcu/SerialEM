@@ -356,7 +356,7 @@
               r for gain and dark references<BR>
               s for STEM in general<br />
               t for exposure time changes in tasks and for continuous mode timing<BR>
-              u for update items when polling<BR>
+              u for update items when polling JEOL, or time of scope update for all scopes<BR>
               y for reports when background saving starts and ends<br />
               % list script commands other than Set that allow arithmetic when program starts</P>
           </TD>
@@ -3090,8 +3090,9 @@
         <TR VALIGN="top">
           <TD>ScopeUpdateInterval</TD>
           <TD>The interval in milliseconds between calls to the function that reads scope 
-            properties and updates the user interface. The default is 100. For a JEOL, the update function does not normally access the microscope so this 
-            should be OK.</TD>
+            properties and updates the user interface. The default is 200, raised from
+            100 on April 10, 2018. For a JEOL, the update function does not normally access
+            the microscope so this should be OK.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>JeolUpdateSleep</TD>

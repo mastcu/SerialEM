@@ -15,6 +15,7 @@
 #include "CookerSetupDlg.h"
 #include "AutocenSetupDlg.h"
 #include "CameraController.h"
+#include "ComplexTasks.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -169,9 +170,11 @@ BOOL CScopeStatusDlg::OnInitDialog()
     }
   } else
     m_butResetDef.ShowWindow(SW_HIDE);
-  if (HitachiScope) {
+  if (mWinApp->mComplexTasks->GetHitachiWithoutZ()) {
     m_statStageZ.ShowWindow(SW_HIDE);
     m_statZlabel.ShowWindow(SW_HIDE);
+  }
+  if (HitachiScope) {
     m_statCurrent.ShowWindow(SW_HIDE);
     m_butFloat.ShowWindow(SW_HIDE);
     m_statNano.ShowWindow(SW_HIDE);

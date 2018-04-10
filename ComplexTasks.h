@@ -75,6 +75,7 @@ class CComplexTasks : public CCmdTarget
   GetMember(BOOL, LastWalkCompleted);
   SetMember(float, ZMicronsPerDialMark);
   GetMember(float, LastAxisOffset);
+  GetMember(bool, HitachiWithoutZ);
   GetSetMember(float, StageTimeoutFactor);
   GetMember(double, OnAxisDose);
   void GetBacklashDelta(float &deltaX, float &deltaY) {deltaX = mBASPDeltaX; deltaY = mBASPDeltaY;};
@@ -260,6 +261,8 @@ class CComplexTasks : public CCmdTarget
   float mZMicronsPerDialMark;     // Scale on Hitachi scope
   float mManualHitachiBacklash;   // Amount to target for manual adjustment
   float mStageTimeoutFactor;      // Multiplier to idle task timeout for stage moves
+  bool mHitachiWithoutZ;          // Flag that it is a Hitachi with no Z
+
 public:
   afx_msg void OnTasksSetincrements();
   afx_msg void OnTrialInLdRefine();

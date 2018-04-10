@@ -15,6 +15,7 @@
 #include "TSController.h"
 #include "CameraController.h"
 #include "BeamAssessor.h"
+#include "ComplexTasks.h"
 #include "MultiTSTasks.h"
 #include "TSVariationsDlg.h"
 
@@ -724,7 +725,8 @@ BOOL CTSSetupDialog::OnInitDialog()
     m_butConfirmLowDoseRepeat.EnableWindow(false);
   }
 
-  m_butRefineEucen.EnableWindow(!mDoingTS && mCanFindEucentricity && !HitachiScope);
+  m_butRefineEucen.EnableWindow(!mDoingTS && mCanFindEucentricity && 
+    !mWinApp->mComplexTasks->GetHitachiWithoutZ());
 
   // Now disable lots of things if doing series
   if (mDoingTS) {

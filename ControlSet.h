@@ -472,7 +472,7 @@ struct ChannelSet {
 };
 
 #define HITACHI_IS_HT7800     1
-#define HITACHI_HAS_ZSTAGE  0x2
+#define HITACHI_HAS_STAGEZ  0x2
 
 // Hitachi  microscope params
 struct HitachiParams {

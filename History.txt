@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+4/10/18: Raised scope update interval to 200 ms (In 3.6).
+
+4/10/18: Changes to support Z stage movement for Hitachi HT7800 (In 3.6).
+
 3/29/18: Added name of STEM detector to image display if there is more than
 one detector.
 

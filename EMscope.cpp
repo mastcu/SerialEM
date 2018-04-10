@@ -318,7 +318,7 @@ CEMscope::CEMscope()
 
   // General initializations (-1 for these 2 that are scope-dependent)
   mHasNoAlpha = -1;
-  mUpdateInterval = 100;
+  mUpdateInterval = 200;
   mMagFixISdelay = 450;    // Was 300: needed to be longer for diffraction
   mJeolForceMDSmode = 0;
   mCalNeutralStartMag = -1;
@@ -959,7 +959,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
   float alpha = -999.;
   double diffFocus = -999.;
   double updateStart = GetTickCount();
-  //double wallStart = wallTime();
+  double wallStart = wallTime();
 
   if (mNoScope) {
     mWinApp->mScopeStatus.Update(0., mFakeMagIndex, 0., 0., 0., 0., 0., 0., 
@@ -1466,8 +1466,9 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
     SEMReleaseJeolDataMutex();
   else
     ScopeMutexRelease("UpdateProc"); 
-  //SEMTrace('H', "Update time %f (ticks)  %.1f (wall)", SEMTickInterval(updateStart),
-    //1000.*(wallTime() - wallStart));
+  if (GetDebugOutput('u') && (mAutosaveCount % 10 == 0))
+    PrintfToLog("Update time %f (ticks)  %.1f (wall)", SEMTickInterval(updateStart),
+      1000.*(wallTime() - wallStart));
 }
 
 // UPDATE SUB-ROUTINES CALLED ONLY FROM INSIDE ScopeUpdate

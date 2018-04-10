@@ -179,6 +179,7 @@ CComplexTasks::~CComplexTasks()
 
 void CComplexTasks::Initialize()
 {
+  HitachiParams *hParams = mWinApp->GetHitachiParams();
   mScope = mWinApp->mScope;
   mCamera = mWinApp->mCamera;
   mBufferManager = mWinApp->mBufferManager;
@@ -186,6 +187,7 @@ void CComplexTasks::Initialize()
   mTSController = mWinApp->mTSController;
   if (mMinTASMField < 0.)
     mMinTASMField = JEOLscope ? 4.5f : 0.f;
+  mHitachiWithoutZ = HitachiScope && !(hParams->flags & HITACHI_HAS_STAGEZ);
 }
 
 // MESSAGE HANDLERS
@@ -215,7 +217,7 @@ void CComplexTasks::OnTasksFinerealign()
 void CComplexTasks::OnUpdateNoTasksNoTSNoHitachi(CCmdUI *pCmdUI)
 {
   pCmdUI->Enable(!mWinApp->DoingTasks() && !mWinApp->StartedTiltSeries() && 
-    !HitachiScope);  
+    !mHitachiWithoutZ);  
 }
 
 void CComplexTasks::OnReverseTilt() 
@@ -1303,7 +1305,7 @@ void CComplexTasks::FindEucentricity(int coarseFine)
     mMaxFECoarseMagInd = FindMaxMagInd(mMinFECoarseField, curMag);
     mMaxFEFineMagInd = FindMaxMagInd(mMinFEFineField, curMag);
     mMaxFEFineAlignMag = FindMaxMagInd(mMinFEFineAlignField, curMag);
-    if (HitachiScope) {
+    if (mHitachiWithoutZ) {
       mess.Format("If you want to adjust for backlash, turn the Z knob\n"
         "%d grooves left, then right by about\n"
         "the same amount, stopping at the nearest groove", 
@@ -1406,7 +1408,7 @@ void CComplexTasks::EucentricityNextTask(int param)
     mFECoarseIncrement = mFEInitialIncrement;
     mFEReferenceAngle = mFEInitialAngle;
     mFECurrentAngle = mFEInitialAngle;
-    if (HitachiScope)
+    if (mHitachiWithoutZ)
       mWinApp->AddIdleTask(TASK_EUCENTRICITY, FE_COARSE_MOVED, 0);
     else
       DoubleMoveStage(mFECurrentZ, mFEBacklashZ, true, mFEInitialAngle, backlashTilt,
@@ -1496,7 +1498,7 @@ void CComplexTasks::EucentricityNextTask(int param)
       mFECoarseIncrement < mFEMaxTilt - mFECurrentAngle)
       action = FE_COARSE_MOVED;
 
-    if (HitachiScope) {
+    if (mHitachiWithoutZ) {
       ReportManualZChange(delZ, "Rough");
       StopEucentricity();
       return;
@@ -1680,14 +1682,14 @@ void CComplexTasks::EucentricityNextTask(int param)
       mLastAxisOffset = delY + 
         (float)(mScope->GetShiftToTiltAxis() ? mScope->GetTiltAxisOffset() : 0.);
     action = mVerbose ? LOG_OPEN_IF_CLOSED : LOG_SWALLOW_IF_CLOSED;
-    if (mVerbose || !mRepeatFine || HitachiScope)
+    if (mVerbose || !mRepeatFine || mHitachiWithoutZ)
       mWinApp->AppendToLog(report, action);
     else if (mRepeatFine) {
       report.Format("Refining eucentricity: changing Z by %.2f microns and restarting",
         -delZ);
       mWinApp->AppendToLog(report, action);
     }
-    if (HitachiScope) {
+    if (mHitachiWithoutZ) {
       ReportManualZChange(delZ, "Refine");
       StopEucentricity();
       return;

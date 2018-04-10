@@ -601,6 +601,7 @@ CSerialEMApp::CSerialEMApp()
   mHitachiParams.screenAreaSqCm = 15000.;
   mHitachiParams.stageTiltSpeed = 100;
   mHitachiParams.stageXYSpeed = 80000;
+  mHitachiParams.flags = 0;
   for (i = 0; i < MAX_MAGS; i++)
     mHitachiParams.baseFocus[i] = HITACHI_LENS_MAX / 2;
 

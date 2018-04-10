@@ -3000,7 +3000,8 @@ BOOL CTSController::NextActionIsReally(int nextIndex, int action, int testStep)
 
   // REFINE EUCENTRICITY if starting near zero
   case EUCENTRICITY:
-    return (mCanFindEucentricity && mTSParam.refineEucen && !HitachiScope);
+    return (mCanFindEucentricity && mTSParam.refineEucen && 
+      !mComplexTasks->GetHitachiWithoutZ());
   
   case WALK_UP:
   case STARTUP_AUTOFOCUS:

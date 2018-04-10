@@ -2098,7 +2098,7 @@ void CNavigatorDlg::AdjustAndMoveStage(float stageX, float stageY, float stageZ,
     " %.2f  %.2f  final %.2f %.2f", stageX, stageY, leaveISX, leaveISY, shiftX, shiftY, 
     stageDx, stageDy, smi.x, smi.y);
   smi.axisBits = axisBits;
-  if (HitachiScope)
+  if (mWinApp->mComplexTasks->GetHitachiWithoutZ())
     smi.axisBits &= ~(axisZ);
   smi.backX = -mParam->stageBacklash;
   smi.backY = -mParam->stageBacklash;
