@@ -318,7 +318,7 @@ CEMscope::CEMscope()
 
   // General initializations (-1 for these 2 that are scope-dependent)
   mHasNoAlpha = -1;
-  mUpdateInterval = 200;
+  mUpdateInterval = 150;
   mMagFixISdelay = 450;    // Was 300: needed to be longer for diffraction
   mJeolForceMDSmode = 0;
   mCalNeutralStartMag = -1;
@@ -959,7 +959,6 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
   float alpha = -999.;
   double diffFocus = -999.;
   double updateStart = GetTickCount();
-  double wallStart = wallTime();
 
   if (mNoScope) {
     mWinApp->mScopeStatus.Update(0., mFakeMagIndex, 0., 0., 0., 0., 0., 0., 
@@ -1467,8 +1466,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
   else
     ScopeMutexRelease("UpdateProc"); 
   if (GetDebugOutput('u') && (mAutosaveCount % 10 == 0))
-    PrintfToLog("Update time %f (ticks)  %.1f (wall)", SEMTickInterval(updateStart),
-      1000.*(wallTime() - wallStart));
+    PrintfToLog("Update time %.0f msec", SEMTickInterval(updateStart));
 }
 
 // UPDATE SUB-ROUTINES CALLED ONLY FROM INSIDE ScopeUpdate
@@ -1541,39 +1539,42 @@ void CEMscope::UpdateScreenBeamFocus(int STEMmode, int &screenPos, int &smallScr
 // Determine vacuum status for gauges for FEI
 void CEMscope::UpdateGauges(int &vacStatus)
 {
-  if (mPlugFuncs->GetGaugePressure) {
-    int gaugeStatus, gauge, statIndex;
-    double gaugePressure;
+  static int lastVacStatus = 0;
+  if (mVacCount++ >= 1700 / mUpdateInterval) {
+    mVacCount = 0;
+    if (mPlugFuncs->GetGaugePressure) {
+      int gaugeStatus, gauge, statIndex;
+      double gaugePressure;
 
-    if (mNumGauges) {
+      if (mNumGauges) {
 
-      for (gauge = 0; gauge < mNumGauges; gauge++) {
+        for (gauge = 0; gauge < mNumGauges; gauge++) {
 
-        // Get status of one gauge on the list by its index
-        mPlugFuncs->GetGaugePressure((LPCTSTR)mGaugeNames[gauge], &gaugeStatus, 
-          &gaugePressure);
-        mLastGaugeStatus = gaugeStatus;
-        mLastPressure = gaugePressure;
-        statIndex = 0;
-        if (gaugeStatus == gsInvalid || gaugeStatus == gsOverflow || 
-          gaugePressure > mRedThresh[gauge])
-          statIndex = 2;
-        else if (gaugeStatus != gsUnderflow && 
-          gaugePressure > mYellowThresh[gauge])
-          statIndex = 1;
+          // Get status of one gauge on the list by its index
+          mPlugFuncs->GetGaugePressure((LPCTSTR)mGaugeNames[gauge], &gaugeStatus, 
+            &gaugePressure);
+          mLastGaugeStatus = gaugeStatus;
+          mLastPressure = gaugePressure;
+          statIndex = 0;
+          if (gaugeStatus == gsInvalid || gaugeStatus == gsOverflow || 
+            gaugePressure > mRedThresh[gauge])
+            statIndex = 2;
+          else if (gaugeStatus != gsUnderflow && 
+            gaugePressure > mYellowThresh[gauge])
+            statIndex = 1;
 
-        if (mVacCount == 0)
           SEMTrace('V', "Gauge %d, status %d,  pressure %f", gauge, gaugeStatus, 
-          gaugePressure);
+            gaugePressure);
 
-        // Report maximum of all status values
-        if (vacStatus < statIndex)
-          vacStatus = statIndex;
+          // Report maximum of all status values
+          if (vacStatus < statIndex)
+            vacStatus = statIndex;
+        }
+        lastVacStatus = vacStatus;
       }
-      if (mVacCount++ >= 1000 / mUpdateInterval)
-        mVacCount = 0;
-}
-  }
+    }
+  } else
+    vacStatus = lastVacStatus;
 }
 
 // Manage things when screen changes in low dose, update low dose panel
