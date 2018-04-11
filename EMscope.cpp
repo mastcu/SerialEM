@@ -937,6 +937,8 @@ static VOID CALLBACK UpdateProc(
   winApp->mScope->ScopeUpdate(dwTime);
 }
   
+#define CHECK_TIME(a) if (reportTime) wallTimes[a] = wallTime() - wallStart;
+
 void CEMscope::ScopeUpdate(DWORD dwTime)
 {
   int screenPos;
@@ -958,7 +960,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
   int lastMag;
   float alpha = -999.;
   double diffFocus = -999.;
-  double wallStart;
+  double wallStart, wallTimes[12];
   bool reportTime = GetDebugOutput('u') && (mAutosaveCount % 10 == 0);
 
   if (reportTime)
@@ -1002,6 +1004,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
     // Get stage position and readiness
     UpdateStage(stageX, stageY, stageZ, bReady);
     checkpoint = "stage";
+    CHECK_TIME(0);
 
     // Get the mag and determine if it has changed
     lastMag = mLastMagIndex;
@@ -1022,7 +1025,9 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
       // Get the image shift immediately before the mag and it will be known to be the
       // image shift for the mag that we then read
       mPlugFuncs->GetImageShift(&rawISX, &rawISY);
+      CHECK_TIME(1);
       STEMmode = (mWinApp->ScopeHasSTEM() && mPlugFuncs->GetSTEMMode() != 0) ? 1 : 0;
+      CHECK_TIME(2);
       if (mUpdateBeamBlank > 0 && mPlugFuncs->GetBeamBlank) {
         blanked = mPlugFuncs->GetBeamBlank();
         if ((blanked ? 1 : 0) != (sBeamBlanked ? 1 : 0))
@@ -1037,6 +1042,8 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
       } else {
         probe = STEMmode ? 0 : 1;
       }
+      CHECK_TIME(3);
+
       if (STEMmode) {
         PLUGSCOPE_GET(STEMMagnification, curMag, 1);
 
@@ -1082,6 +1089,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
         // TEM mode.  If the probe mode changed, set flag and just restore the raw IS 
         // values
         PLUGSCOPE_GET(MagnificationIndex, magIndex, 1);
+        CHECK_TIME(4);
         if (probe != mProbeMode) {
           temProbeChanged = true;
           rawISX = mLastISX;
@@ -1146,6 +1154,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
       }
     }
     checkpoint = "mag";
+    CHECK_TIME(5);
 
     // Is it JEOL EFTEM with a change of state?  Get the neutral index fixed now, and set
     // up old and new indices and IS offset indices, and camera we are going to
@@ -1318,6 +1327,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
        HandleNewMag(magIndex);
     ReleaseMagMutex();
     checkpoint = "image shift/mag handling";
+    CHECK_TIME(6);
 
     if (JEOLscope) {
       ISX = mJeolSD.ISX - axisISX;
@@ -1336,6 +1346,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
     UpdateScreenBeamFocus(STEMmode, screenPos, smallScreen, spotSize, rawIntensity, 
       current, defocus, objective, alpha);
     checkpoint = "defocus";
+    CHECK_TIME(7);
 
     // Handle adjusting focus on a probe mode change, record first focus of mode
     if (temProbeChanged) {
@@ -1360,6 +1371,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
     // Do vacuum gauge check on FEI
     UpdateGauges(vacStatus);
     checkpoint = "vacuum";
+    CHECK_TIME(8);
 
     // Take care of screen-dependent changes in low dose and update low dose panel
     needBlank = NeedBeamBlanking(screenPos, STEMmode != 0, gotoArea);
@@ -1367,6 +1379,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
       alpha, spotSize, rawIntensity, ISX, ISY);
 
     checkpoint = "low dose";
+    CHECK_TIME(9);
 
     // If screen changed, tell an AMT camera to change its blanking
     // If screen changed or STEM changed, manage blanking for shutterless camera when not
@@ -1399,6 +1412,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
     if (mWinApp->mStageMoveTool)
       mWinApp->mStageMoveTool->UpdateStage(stageX, stageY);
     checkpoint = "status update";
+    CHECK_TIME(10);
 
     // Update the last mags/focus seen in a mode and change mode if indicated
     UpdateLastMagEftemStem(magIndex, defocus, screenPos, EFTEM, STEMmode);    
@@ -1469,8 +1483,13 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
     SEMReleaseJeolDataMutex();
   else
     ScopeMutexRelease("UpdateProc"); 
-  if (reportTime)
+  if (reportTime) {
     PrintfToLog("Update time %.1f msec", 1000. * (wallTime() - wallStart));
+    PrintfToLog("Components %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f", 
+      1000.*wallTimes[0],1000.*wallTimes[1], 1000.*wallTimes[2],1000.*wallTimes[3],
+      1000.*wallTimes[4],1000.*wallTimes[5],1000.*wallTimes[6],
+      1000.*wallTimes[7],1000.*wallTimes[8],1000.*wallTimes[9],1000.*wallTimes[10]);
+  }
 }
 
 // UPDATE SUB-ROUTINES CALLED ONLY FROM INSIDE ScopeUpdate
