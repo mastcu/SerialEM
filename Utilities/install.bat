@@ -76,6 +76,8 @@ COPY /Y SerialEM.exe ..
 COPY /Y SerialEM.chm ..
 COPY /Y libifft-*.dll ..
 COPY /Y libiomp5md.dll ..
+COPY /Y libmmd.dll ..
+COPY /Y libctffind.dll ..
 
 Rem # If neither properties file seen, just copy them
 if %SAWPROPS% EQU 0 (
