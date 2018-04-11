@@ -189,7 +189,9 @@
           <TD>IgnoreShortTermCals</TD>
           <TD>Set to 1 to prevent the program from reading in "Short term calibrations" when 
             starting and from saving them when exiting. This might be useful when first 
-            setting up the program if there are troubles with image shift calibrations.</TD>
+            setting up the program if there are troubles with image shift calibrations, 
+            but it is better to use the menu entry to remove bad calibrations instead,
+            since rotation and pixel size measurements are stored in this file too.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>MaxStackWindowSizeXY</TD>
@@ -213,6 +215,13 @@
             good value.</TD>
         </TR>
         <TR VALIGN="top">
+          <TD>ScopeUpdateInterval</TD>
+          <TD>The interval in milliseconds between calls to the function that reads scope 
+            properties and updates the user interface. The default is 150, raised from
+            100 on April 10, 2018. For a JEOL, the update function does not normally access
+            the microscope so this should be OK.</TD>
+       </TR>
+       <TR VALIGN="top">
           <TD>SkipGainRefWarning</TD>
           <TD>Set to 1 to suppress the warning that the spot was normalized before starting 
             to take a gain reference. This may be appropriate on a Tecnai F30.</TD>
@@ -3086,13 +3095,6 @@
           <TD>The delay between initializing the JEOL COM object and the first attempt to 
             call functions, in milliseconds, if events are not being used for update. 
             Without this delay, errors occur.</TD>
-        </TR>
-        <TR VALIGN="top">
-          <TD>ScopeUpdateInterval</TD>
-          <TD>The interval in milliseconds between calls to the function that reads scope 
-            properties and updates the user interface. The default is 150, raised from
-            100 on April 10, 2018. For a JEOL, the update function does not normally access
-            the microscope so this should be OK.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>JeolUpdateSleep</TD>
