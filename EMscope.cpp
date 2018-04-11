@@ -958,7 +958,11 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
   int lastMag;
   float alpha = -999.;
   double diffFocus = -999.;
-  double updateStart = GetTickCount();
+  double wallStart;
+  bool reportTime = GetDebugOutput('u') && (mAutosaveCount % 10 == 0);
+
+  if (reportTime)
+    wallStart = wallTime();
 
   if (mNoScope) {
     mWinApp->mScopeStatus.Update(0., mFakeMagIndex, 0., 0., 0., 0., 0., 0., 
@@ -1465,8 +1469,8 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
     SEMReleaseJeolDataMutex();
   else
     ScopeMutexRelease("UpdateProc"); 
-  if (GetDebugOutput('u') && (mAutosaveCount % 10 == 0))
-    PrintfToLog("Update time %.0f msec", SEMTickInterval(updateStart));
+  if (reportTime)
+    PrintfToLog("Update time %.1f msec", 1000. * (wallTime() - wallStart));
 }
 
 // UPDATE SUB-ROUTINES CALLED ONLY FROM INSIDE ScopeUpdate
