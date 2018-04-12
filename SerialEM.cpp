@@ -1146,6 +1146,7 @@ BOOL CSerialEMApp::InitInstance()
   mNavHelper->Initialize();
   mAutoTuning->Initialize();
   mProcessImage->Initialize();
+  mFalconHelper->InitializePointers();
 
   // Start the tool windows
   mNumToolDlg = 4;

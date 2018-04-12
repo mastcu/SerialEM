@@ -86,6 +86,11 @@ CFalconHelper::~CFalconHelper(void)
   delete mFrameAli;
 }
 
+void CFalconHelper::InitializePointers(void)
+{
+  mCamera = mWinApp->mCamera;
+}
+
 // Read the configuration file and save its essential features
 // This is now used for Falcon (skipConfigs 0 or 1) or for DE (-1) for setting up
 // frame alignment.  This is safe to call multiple times with skipConfig != 0
@@ -94,7 +99,6 @@ void CFalconHelper::Initialize(int skipConfigs)
   CString configFile, str, dir, fname;
   int error = 0;
   long version;
-  mCamera = mWinApp->mCamera;
   mPlugFuncs = mWinApp->mScope->GetPlugFuncs();
   if (!mPlugFuncs && skipConfigs >= 0)
     return;

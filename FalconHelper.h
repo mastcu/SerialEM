@@ -136,4 +136,5 @@ public:
   void GetSavedFrameSizes(CameraParameters *camParams, const ControlSet *conSet, 
     int & frameX, int & frameY);
   int SuperResHardwareBinDivisor(CameraParameters *camParams, const ControlSet *conSet);
+  void InitializePointers(void);
 };
