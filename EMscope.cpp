@@ -88,6 +88,7 @@ static int sLongThreadMap[MAX_LONG_OPERATIONS];
 static int sJeolIndForMagMode = JEOL_MAG1_MODE;  // Index to use in mag mode for JEOL
 static int sJeolSecondaryModeInd = JEOL_SAMAG_MODE;  // Index to use for secondary mode
 static BOOL sCheckPosOnScreenError = false;
+static BOOL sJeolReadStageForWait = false;
 CString sMessageBoxTitle;   // Arguments for calling message box function
 CString sMessageBoxText;
 int sMessageBoxType;
@@ -221,6 +222,7 @@ CEMscope::CEMscope()
   mLowestMicroSTEMmag = 1;
   mNumShiftBoundaries = 0;
   mNumSpotSizes = -1;
+  mMinSpotSize = 1;
   for (i = 0; i <= MAX_SPOT_SIZE; i++) {
     mC2SpotOffset[i][0] = mC2SpotOffset[i][1] = 0.; 
     mCrossovers[i][0] = mCrossovers[i][1] = 0.;
@@ -582,7 +584,7 @@ int CEMscope::Initialize()
       mJeolParams.hasOmegaFilter = mHasOmegaFilter;
       mJeolParams.initializeJeolDelay = mInitializeJeolDelay;
       mJeolParams.useGIFmodeCalls = mUseJeolGIFmodeCalls;
-      mJeolParams.hasNitrogenClass = mJeolHasNitrogenClass;
+      mJeolParams.flags = (mJeolHasNitrogenClass ? JEOL_HAS_NITROGEN_CLASS : 0);
       mJeolParams.flashFegTimeout = mJeolFlashFegTimeout;
       mJeolParams.emissionTimeout = mJeolEmissionTimeout;
       mJeolParams.fillNitrogenTimeout = mJeolRefillTimeout;
@@ -4865,7 +4867,7 @@ BOOL CEMscope::SetSpotSize(int inIndex, BOOL normalize)
   double startTime, beamXorig, beamYorig, curBSX, curBSY, startBSX, startBSY;
   const char *routine = "SetSpotSize";
 
-  if (!sInitialized)
+  if (!sInitialized || inIndex < mMinSpotSize)
     return false;
 
   if (!mJeol1230)
@@ -6012,7 +6014,8 @@ void CEMscope::WaitForStageDone(StageMoveInfo *smi, char *procName)
 
   // If updating by event, first wait to see it go non-ready, using the ready state flag
   if (JEOLscope && jsd->eventDataIsGood) {
-    smi->plugFuncs->GetValuesFast(1);
+    if (!sJeolReadStageForWait)
+      smi->plugFuncs->GetValuesFast(1);
     for (i = 0; i < ntry; i++) {
       if (smi->plugFuncs->GetStageStatus())
         break;
@@ -6036,6 +6039,9 @@ void CEMscope::WaitForStageDone(StageMoveInfo *smi, char *procName)
       if (i == ntryReady)
         SEMTrace('S', "WaitForStageDone: Ready event not seen in %d ms", 
           ntryReady * waitTime);
+
+      if (sJeolReadStageForWait)
+        Sleep(waitTime);
 
     } else
       SEMTrace('S', "WaitForStageDone: Not ready event not seen in %d ms", 
@@ -6807,6 +6813,11 @@ double CEMscope::CloseValvesAfterInterval(double interval)
   sCloseValvesInterval = interval;
   sCloseValvesStart = GetTickCount();
   return prior;
+}
+
+void CEMscope::SetJeolReadStageForWait(BOOL inVal)
+{
+  sJeolReadStageForWait = inVal;
 }
 
 bool CEMscope::TestSTEMshift(int type, int delx, int dely)

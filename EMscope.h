@@ -159,6 +159,7 @@ class DLL_IM_EX CEMscope
   SetMember(int, JeolMagEventWait);    
   GetSetMember(int, JeolSTEMPreMagDelay);
   GetSetMember(int, NumSpotSizes)
+  GetSetMember(int, MinSpotSize);
   GetMember(int, NumShiftBoundaries)
   int *GetShiftBoundaries() {return &mShiftBoundaries[0];};
   BOOL ScanMagnifications();
@@ -282,6 +283,7 @@ class DLL_IM_EX CEMscope
   GetMember(double, InternalMagTime);
   GetMember(double, UpdateSawMagTime);
   SetMember(BOOL, JeolHasNitrogenClass);
+  void SetJeolReadStageForWait(BOOL inVal);
 
   static void SetJeolIndForMagMode(int inVal);
   static int GetJeolIndForMagMode();
@@ -501,6 +503,7 @@ private:
   float mC2IntensityFactor[2];   // Factor to scale intensity to C2 reading, each probe mode
   float mC2SpotOffset[MAX_SPOT_SIZE + 1][2];    // Offset for each spot size, each probe mode
   int mNumSpotSizes;          // Number of spot size
+  int mMinSpotSize;           // Minimum usable spot size
   double mCrossovers[MAX_SPOT_SIZE + 1][2];        // Intensity at crossover
   float mAlphaBeamShifts[MAX_ALPHAS][2];
   int mNumAlphaBeamShifts;    // Number of alphas with recorded beam shifts

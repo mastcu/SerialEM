@@ -162,7 +162,7 @@ void CAutocenSetupDlg::OnDeltaposSpinspot(NMHDR *pNMHDR, LRESULT *pResult)
 {
   LPNMUPDOWN pNMUpDown = reinterpret_cast<LPNMUPDOWN>(pNMHDR);
   int newspot = mCurSpot + pNMUpDown->iDelta;
-  if (newspot < 1 || newspot > mScope->GetNumSpotSizes()) {
+  if (newspot < mScope->GetMinSpotSize() || newspot > mScope->GetNumSpotSizes()) {
     *pResult = 1;
     return;
   }

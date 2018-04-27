@@ -86,7 +86,7 @@ BOOL CRemoteControl::OnInitDialog()
   if (!FEIscope)
     m_butNanoMicro.ShowWindow(SW_HIDE);
   m_sbcMag.SetRange(1, 2000);
-  m_sbcSpot.SetRange(1, mScope->GetNumSpotSizes());
+  m_sbcSpot.SetRange(mScope->GetMinSpotSize(), mScope->GetNumSpotSizes());
   m_sbcBeamShift.SetRange(-30000, 30000);
   m_sbcBeamShift.SetPos(0);
   m_sbcIntensity.SetRange(-30000, 30000);
@@ -275,8 +275,8 @@ void CRemoteControl::OnDeltaposSpinSpot(NMHDR *pNMHDR, LRESULT *pResult)
 
   SetFocus();
   mWinApp->RestoreViewFocus();
-  if (!NewSpinnerValue(pNMHDR, pResult, oldVal, 1, mScope->GetNumSpotSizes(), 
-    mNewSpotIndex)) {
+  if (!NewSpinnerValue(pNMHDR, pResult, oldVal, mScope->GetMinSpotSize(),
+    mScope->GetNumSpotSizes(), mNewSpotIndex)) {
       mSpotClicked = true;
       mTimerID = ::SetTimer(NULL, mTimerID, mMaxClickInterval, TimerProc);
   } else if (mSpotClicked) {
