@@ -352,6 +352,7 @@ hid_supermontaging_polygonsupermontage = SerialEM.chm::/html\menu_navigator.htm#
 hid_navigator_addgridofpoints		= SerialEM.chm::/html\menu_navigator.htm#hid_navigator_addgridofpoints
 hid_montaginggrids_grouppointsingrid		= SerialEM.chm::/html\menu_navigator.htm#hid_montaginggrids_grouppointsingrid
 hid_montaginggrids_setgroupsize		= SerialEM.chm::/html\menu_navigator.htm#hid_montaginggrids_setgroupsize
+hid_montaginggrids_showwholeareaforallpoints		= SerialEM.chm::/html\menu_navigator.htm#hid_montaginggrids_showwholeareaforallpoints
 hid_options_setmulti            = SerialEM.chm::/html\menu_navigator.htm#hid_options_setmulti
 hid_options_showmulti           = SerialEM.chm::/html\menu_navigator.htm#hid_options_showmulti
 hid_navigator_addcirclepolygon	= SerialEM.chm::/html\menu_navigator.htm#hid_navigator_addcirclepolygon
