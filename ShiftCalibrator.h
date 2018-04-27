@@ -21,7 +21,7 @@ public:
   GetSetMember(BOOL, WholeCorrForStageCal);
   GetSetMember(float, StageCycleX)
   GetSetMember(float, StageCycleY)
-  SetMember(float, CalISOstageLimit)
+  GetSetMember(float, CalISOstageLimit)
   SetMember(float, MaxStageCalExtent)
   GetSetMember(BOOL, UseTrialSize)
   GetSetMember(BOOL, UseTrialBinning)

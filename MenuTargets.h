@@ -358,6 +358,8 @@ public:
   afx_msg void OnFocusSetCtfComaBt();
   afx_msg void OnUpdateFocusCorrectAstigmatismWithFfts(CCmdUI *pCmdUI);
   afx_msg void OnCalibrateComaVsIS();
+  afx_msg void OnShowWholeAreaForAllPoints();
+  afx_msg void OnUpdateShowWholeAreaForAllPoints(CCmdUI *pCmdUI);
 };
 
 /////////////////////////////////////////////////////////////////////////////

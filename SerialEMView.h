@@ -176,6 +176,14 @@ public:
   void SetupZoomAroundPoint(CPoint * point);
   void WindowCornersInImageCoords(EMimageBuffer *imBuf, float *xCorner, float *yCorner);
   bool IsBufferInStack(EMimageBuffer *imBuf);
+  void DrawMapItemBox(CClientDC &cdc, CRect *rect, CMapDrawItem *item, EMimageBuffer *imBuf,
+    int numPoints, float delXstage, float delYstage, float delPtX, float delPtY, 
+    FloatVec *drawnX, FloatVec *drawnY);
+  void GetSingleAdjustmentForItem(EMimageBuffer *imBuf, CMapDrawItem *item, float &delPtX,
+    float & delPtY);
+  void DrawVectorPolygon(CClientDC &cdc, CRect *rect, EMimageBuffer *imBuf,
+    FloatVec &convX, FloatVec &convY, float delXstage, float delYstage, 
+    float delPtX, float delPtY, FloatVec *drawnX, FloatVec *drawnY);
 };
 
 #ifndef _DEBUG  // debug version in SerialEMView.cpp

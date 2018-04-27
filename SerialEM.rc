@@ -551,6 +551,7 @@ BEGIN
             MENUITEM SEPARATOR
             MENUITEM "Set &Multi-shot Parameters...", ID_OPTIONS_SETMULTI
             MENUITEM "S&how Shots when Show Acquire", ID_OPTIONS_SHOWMULTI
+            MENUITEM "Show &Whole Area for All Points", ID_MONTAGINGGRIDS_SHOWWHOLEAREAFORALLPOINTS
             MENUITEM SEPARATOR
             MENUITEM "A&dd Circle Polygon",         ID_NAVIGATOR_ADDCIRCLEPOLYGON
             MENUITEM "Pol&ygon from Corners",       ID_NAVIGATOR_POLYGON_FROM_CORNERS
@@ -2751,43 +2752,66 @@ BEGIN
     PUSHBUTTON      "No",IDC_BUTMIDDLE,135,47,50,14
 END
 
-IDD_MULTI_SHOT_SETUP DIALOGEX 0, 0, 203, 240
+IDD_MULTI_SHOT_SETUP DIALOGEX 0, 0, 203, 381
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Multiple Record Setup"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    CONTROL         "No center shot",IDC_RNO_CENTER,"Button",BS_AUTORADIOBUTTON | WS_GROUP,61,30,63,10
-    CONTROL         "Center shot at end",IDC_RCENTER_AFTER,"Button",BS_AUTORADIOBUTTON,61,40,77,10
-    CONTROL         "Center shot at start",IDC_RCENTER_BEFORE,"Button",BS_AUTORADIOBUTTON,61,50,79,10
-    GROUPBOX        "Shot in center",IDC_STATIC,56,20,89,42,WS_GROUP
-    CONTROL         "No early return",IDC_RNO_EARLY,"Button",BS_AUTORADIOBUTTON | WS_GROUP,21,88,65,10
-    CONTROL         "Early return only on last shot",IDC_RLAST_EARLY,"Button",BS_AUTORADIOBUTTON,21,98,110,10
-    CONTROL         "Early return on all shots",IDC_RALL_EARLY,"Button",BS_AUTORADIOBUTTON,21,108,94,10
-    LTEXT           "Number of frames in return (-1 for all):",IDC_STAT_NUM_EARLY,23,119,130,8
-    EDITTEXT        IDC_EDIT_EARLY_FRAMES,156,116,25,14,ES_AUTOHSCROLL
-    GROUPBOX        "Early Returns for K2",IDC_STAT_EARLY_GROUP,15,78,173,55
-    DEFPUSHBUTTON   "OK",IDOK,35,219,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,115,219,50,14
-    LTEXT           "Number of shots around center:",IDC_STATIC,11,10,106,8
-    LTEXT           "99",IDC_STAT_NUM_SHOTS,119,10,9,8
-    CONTROL         "",IDC_SPIN_NUM_SHOTS,"msctls_updown32",UDS_ARROWKEYS,131,7,10,14
-    LTEXT           "Distance from center to off-center shots:",IDC_STATIC,11,67,134,8
-    EDITTEXT        IDC_EDIT_SPOKE_DIST,146,64,32,14,ES_AUTOHSCROLL
-    LTEXT           "um",IDC_STATIC,181,67,11,8
-    CONTROL         "Save Record image",IDC_CHECK_SAVE_RECORD,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,137,79,10
-    LTEXT           "Diameter of circles to draw:",IDC_STAT_BEAM_DIAM,11,196,92,8
-    EDITTEXT        IDC_EDIT_BEAM_DIAM,105,193,32,14,ES_AUTOHSCROLL
-    LTEXT           "um",IDC_STAT_BEAM_UM,140,196,11,8
+    CONTROL         "No center shot",IDC_RNO_CENTER,"Button",BS_AUTORADIOBUTTON | WS_GROUP,59,40,63,10
+    CONTROL         "Center shot at end",IDC_RCENTER_AFTER,"Button",BS_AUTORADIOBUTTON,59,50,77,10
+    CONTROL         "Center shot at start",IDC_RCENTER_BEFORE,"Button",BS_AUTORADIOBUTTON,59,60,79,10
+    GROUPBOX        "Shot in center",IDC_STAT_CENTER_GROUP,54,30,89,42,WS_GROUP
+    CONTROL         "No early return",IDC_RNO_EARLY,"Button",BS_AUTORADIOBUTTON | WS_GROUP,21,237,65,10
+    CONTROL         "Early return only on last shot",IDC_RLAST_EARLY,"Button",BS_AUTORADIOBUTTON,21,247,110,10
+    CONTROL         "Early return on all shots",IDC_RALL_EARLY,"Button",BS_AUTORADIOBUTTON,21,257,94,10
+    LTEXT           "Number of frames in return (-1 for all):",IDC_STAT_NUM_EARLY,23,268,130,8
+    EDITTEXT        IDC_EDIT_EARLY_FRAMES,156,265,25,14,ES_AUTOHSCROLL
+    GROUPBOX        "Early Returns for K2",IDC_STAT_EARLY_GROUP,15,227,173,55
+    DEFPUSHBUTTON   "OK",IDOK,36,359,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,116,359,50,14
+    LTEXT           "Number of shots around center:",IDC_STAT_NUM_PERIPHERAL,9,20,106,8
+    LTEXT           "99",IDC_STAT_NUM_SHOTS,117,20,9,8
+    CONTROL         "",IDC_SPIN_NUM_SHOTS,"msctls_updown32",UDS_ARROWKEYS,129,17,10,14
+    LTEXT           "Distance from center to off-center shots:",IDC_STAT_CENTER_DIST,9,77,134,8
+    EDITTEXT        IDC_EDIT_SPOKE_DIST,144,75,32,14,ES_AUTOHSCROLL
+    LTEXT           "um",IDC_STAT_CENTER_UM,179,77,11,8
+    CONTROL         "Save Record image",IDC_CHECK_SAVE_RECORD,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,217,79,10
+    LTEXT           "Diameter of circles to draw:",IDC_STAT_BEAM_DIAM,8,334,92,8
+    EDITTEXT        IDC_EDIT_BEAM_DIAM,102,331,32,14,ES_AUTOHSCROLL
+    LTEXT           "um",IDC_STAT_BEAM_UM,137,334,11,8
     CONTROL         "Use Record illuminated area for circles in Low Dose",IDC_CHECK_USE_ILLUM_AREA,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,208,184,10
-    PUSHBUTTON      "?",IDC_BUTHELP,189,223,11,10
-    LTEXT           "Extra delay after image shift:",IDC_STATIC,11,149,96,8
-    LTEXT           "sec",IDC_STATIC,141,150,12,8
-    EDITTEXT        IDC_EDIT_EXTRA_DELAY,107,147,32,14,ES_AUTOHSCROLL
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,346,184,10
+    PUSHBUTTON      "?",IDC_BUTHELP,185,363,11,10
+    LTEXT           "Extra delay after image shift:",IDC_STAT_EXTRA_DELAY,8,288,96,8
+    LTEXT           "sec",IDC_STAT_SEC,138,288,12,8
+    EDITTEXT        IDC_EDIT_EXTRA_DELAY,104,285,32,14,ES_AUTOHSCROLL
     CONTROL         "Adjust beam tilt to compensate for image shift",IDC_CHECK_ADJUST_BEAM_TILT,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,162,167,10
-    LTEXT           " Coma versus image shift was calibrated with:",IDC_STAT_COMA_IS_CAL,19,172,152,8
-    LTEXT           "0.8 um IA, spot 8, nanoprobe, 70 um aperture",IDC_STAT_COMA_CONDITIONS,22,180,176,8
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,300,167,10
+    LTEXT           " Coma versus image shift was calibrated with:",IDC_STAT_COMA_IS_CAL,16,310,152,8
+    LTEXT           "0.8 um IA, spot 8, nanoprobe, 70 um aperture",IDC_STAT_COMA_CONDITIONS,20,318,176,8
+    CONTROL         "Do multiple Records within each hole",IDC_CHECK_DO_SHOTS_IN_HOLE,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,7,137,10
+    CONTROL         "Do Records in multiple holes",IDC_CHECK_DO_MULTIPLE_HOLES,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,96,109,10
+    LTEXT           "Regular pattern of holes:",IDC_STAT_REGULAR,9,124,83,8
+    RTEXT           "99",IDC_STAT_NUM_X_HOLES,92,124,9,8
+    CONTROL         "",IDC_SPIN_NUM_X_HOLES,"msctls_updown32",UDS_ARROWKEYS,105,121,10,14
+    LTEXT           "by 99",IDC_STAT_NUM_Y_HOLES,118,124,19,8
+    CONTROL         "",IDC_SPIN_NUM_Y_HOLES,"msctls_updown32",UDS_ARROWKEYS,140,121,10,14
+    LTEXT           "Spacing:",IDC_STAT_SPACING,8,136,188,8
+    PUSHBUTTON      "For Corners of Regular Pattern",IDC_BUT_SET_REGULAR,11,168,107,12
+    CONTROL         "Use custom pattern (NONE DEFINED)",IDC_CHECK_USE_CUSTOM,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,146,180,10
+    PUSHBUTTON      "For Custom Pattern",IDC_BUT_SET_CUSTOM,122,168,69,12
+    LTEXT           "Multiplier of usual delay after shifting to hole:",IDC_STAT_HOLE_DELAY_FAC,9,108,149,8
+    EDITTEXT        IDC_EDIT_HOLE_DELAY_FAC,160,105,28,14,ES_AUTOHSCROLL
+    CONTROL         "",IDC_TSS_LINE1,"Static",SS_BLACKFRAME | SS_SUNKEN,7,92,189,1
+    CONTROL         "",IDC_TSS_LINE2,"Static",SS_BLACKFRAME | SS_SUNKEN,7,212,189,1
+    GROUPBOX        "Save Image Shift Values at Holes",IDC_STAT_MEASURE_BOX,7,156,189,53
+    PUSHBUTTON      "Save Image Shift",IDC_BUT_SAVE_IS,11,183,71,12
+    PUSHBUTTON      "End Pattern",IDC_BUT_END_PATTERN,86,183,50,12
+    PUSHBUTTON      "Abort",IDC_BUT_ABORT,141,183,49,12
+    LTEXT           "Image shift should be measured near focus",IDC_STAT_SAVE_INSTRUCTIONS,12,198,181,10
 END
 
 IDD_DE_REFERENCE DIALOGEX 0, 0, 191, 210
@@ -3232,7 +3256,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 196
         TOPMARGIN, 7
-        BOTTOMMARGIN, 233
+        BOTTOMMARGIN, 374
     END
 
     IDD_DE_REFERENCE, DIALOG
@@ -5063,6 +5087,8 @@ BEGIN
     ID_FOCUS_COMA_BY_CTF    "Correct coma by fitting CTF to beam-tilted images"
     ID_FOCUS_SET_CTF_COMA_BT "Set beam tilt for coma-free alignment by CTF"
     ID_FOCUSTUNING_COMAVS   "Calibrate beam tilt needed to compensate for image shift"
+    ID_MONTAGINGGRIDS_SHOWWHOLEAREAFORALLPOINTS 
+                            "Show circle around all shots for all acquire points"
 END
 
 #endif    // English (United States) resources

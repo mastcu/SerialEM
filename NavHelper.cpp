@@ -21,6 +21,7 @@
 #include "MapDrawItem.h"
 #include "NavFileTypeDlg.h"
 #include "NavRotAlignDlg.h"
+#include "MultiShotDlg.h"
 #include "MontageSetupDlg.h"
 #include "BeamAssessor.h"
 #include "StateDlg.h"
@@ -75,6 +76,8 @@ CNavHelper::CNavHelper(void)
   mRotAlignRange = 20.f;
   mSearchRotAlign = true;
   mRotAlignPlace.rcNormalPosition.right = 0;
+  mMultiShotDlg = NULL;
+  mMultiShotPlace.rcNormalPosition.right = 0;
   mRIdefocusOffsetSet = 0.;
   mRIbeamShiftSetX = mRIbeamShiftSetY = 0.;
   mRIbeamTiltSetX = mRIbeamTiltSetY = 0.;
@@ -104,7 +107,17 @@ CNavHelper::CNavHelper(void)
   mMultiShotParams.extraDelay = 2.;
   mMultiShotParams.adjustBeamTilt = false;
   mMultiShotParams.useIllumArea = false;
-
+  mMultiShotParams.numHoles[0] = 2;
+  mMultiShotParams.numHoles[1] = 2;
+  mMultiShotParams.holeISXspacing[0] = 1.;
+  mMultiShotParams.holeISYspacing[0] = 1.;
+  mMultiShotParams.holeISXspacing[1] = 1.;
+  mMultiShotParams.holeISYspacing[1] = 1.;
+  mMultiShotParams.inHoleOrMultiHole = 1;
+  mMultiShotParams.useCustomHoles = false;
+  mMultiShotParams.holeDelayFactor = 1.5f;
+  mMultiShotParams.holeMagIndex = 0;
+  mMultiShotParams.customMagIndex = 0;
   mEditReminderPrinted = false;
   mCollapseGroups = false;
   mRIstayingInLD = false;
@@ -3804,6 +3817,35 @@ int CNavHelper::AlignWithScaling(float & shiftX, float & shiftY, float & scaling
   }
   mImBufs->mImage->getShifts(shiftX, shiftY);
   return 0;
+}
+
+// Opens the multishot dialog or raises it, manages position
+void CNavHelper::OpenMultishotDlg(void)
+{
+  int *activeList = mWinApp->GetActiveCameraList();
+  if (mMultiShotDlg) {
+    mMultiShotDlg->BringWindowToTop();
+    return;
+  }
+  mMultiShotDlg = new CMultiShotDlg();
+  mMultiShotDlg->mHasIlluminatedArea = mScope->GetUseIllumAreaForC2();
+  mMultiShotDlg->mCanReturnEarly = false;
+  for (int ind = 0; ind < mWinApp->GetActiveCamListSize(); ind++)
+    if (mCamParams[activeList[ind]].K2Type)
+      mMultiShotDlg->mCanReturnEarly = true;
+  mMultiShotDlg->Create(IDD_MULTI_SHOT_SETUP);
+  mWinApp->SetPlacementFixSize(mMultiShotDlg, &mMultiShotPlace);
+  mWinApp->RestoreViewFocus();
+}
+
+WINDOWPLACEMENT *CNavHelper::GetMultiShotPlacement(bool update)
+{
+  if (mMultiShotDlg) {
+    mMultiShotDlg->GetWindowPlacement(&mMultiShotPlace);
+    if (update)
+      mMultiShotDlg->UpdateAndUseMSparams(false);
+  }
+  return &mMultiShotPlace;
 }
 
 // Loads a piece or synthesizes piece containing the given item

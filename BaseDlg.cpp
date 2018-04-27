@@ -229,6 +229,8 @@ void CBaseDlg::SetupPanelTables(int * idTable, int * leftTable, int * topTable,
         wnd->GetWindowRect(idRect);
         leftTable[index] = idRect.left - wndRect.left - iXoffset;
         topTable[index] = idRect.top - wndRect.top - iYoffset;
+        if (numInPanel[mNumPanels] == 1 && wndRect.Height() < 3)
+          topTable[index] += 4;
       }
       index++;
     }

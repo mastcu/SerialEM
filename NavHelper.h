@@ -6,6 +6,7 @@ struct ScheduledFile;
 class CStateDlg;
 class CNavRotAlignDlg;
 struct TiltSeriesParam;
+class CMultiShotDlg;
 
 // Structure for keeping track pf parameters that enable skipping center align in round 1
 struct CenterSkipData
@@ -22,16 +23,26 @@ struct CenterSkipData
 // Structure for the multiple-record parameters
 struct MultiShotParams
 {
-  float spokeRad;       // Distance to off-center shots
-  int numShots;         // Number of off-center shots
-  int doCenter;         // Center shot: -1 before, 0 none, 1 after
-  float extraDelay;     // Additional delay after image shift
-  int doEarlyReturn;    // 1 for early return on last, 2 for all
-  int numEarlyFrames;   // Number of frames in early return
-  BOOL saveRecord;      // Whether to save Record shot
-  BOOL adjustBeamTilt;  // Whether to adjust beam tilt if possible
-  float beamDiam;       // Beam diameter: display only
-  BOOL useIllumArea;    // Whether to use illuminated area for drawing diameter
+  float spokeRad;        // Distance to off-center shots
+  int numShots;          // Number of off-center shots
+  int doCenter;          // Center shot: -1 before, 0 none, 1 after
+  float extraDelay;      // Additional delay after image shift
+  int doEarlyReturn;     // 1 for early return on last, 2 for all
+  int numEarlyFrames;    // Number of frames in early return
+  BOOL saveRecord;       // Whether to save Record shot
+  BOOL adjustBeamTilt;   // Whether to adjust beam tilt if possible
+  int inHoleOrMultiHole; // 1 to do pattern in hole, 2 to do multi-hole, 3 to do both
+  int holeMagIndex;      // Mag at which hole positions are measured
+  BOOL useCustomHoles;   // Use the list of custom holes
+  float holeDelayFactor; // Factor by which to increase regular IS delay between holes
+  double holeISXspacing[2];  // Hole spacing in each direction
+  double holeISYspacing[2];
+  int numHoles[2];       // Number of holes in each direction
+  int customMagIndex;
+  FloatVec customHoleX;  // For custom holes, list of hole IS relative
+  FloatVec customHoleY;  // to item point
+  float beamDiam;        // Beam diameter: display only
+  BOOL useIllumArea;     // Whether to use illuminated area for drawing diameter
 };
 
 enum SetStateTypes {STATE_NONE = 0, STATE_IMAGING, STATE_MAP_ACQUIRE};
@@ -84,6 +95,7 @@ public:
   CStateDlg *mStateDlg;
   CArray<StateParams *, StateParams *> *GetStateArray () {return &mStateArray;};
   CNavRotAlignDlg *mRotAlignDlg;
+  CMultiShotDlg *mMultiShotDlg;
 
 
 private:
@@ -188,6 +200,7 @@ private:
   int mPointLabelDrawThresh;           // Threshold group size for drawing point labels
 
   WINDOWPLACEMENT mRotAlignPlace;
+  WINDOWPLACEMENT mMultiShotPlace;
   double mRIdefocusOffsetSet;   // Defocus offset set in realign to item
   int mRIalphaSet;              // Alpha value set in realign to item
   int mRIalphaSaved;            // Alpha value that it was before
@@ -327,5 +340,7 @@ public:
   void CleanupFromExternalFileAccess();
   static int TaskRealignBusy(void);
   void StartResetISorFinish(int magInd);
+  void OpenMultishotDlg(void);
+  WINDOWPLACEMENT *GetMultiShotPlacement(bool update);
 };
 

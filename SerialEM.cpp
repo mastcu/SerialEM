@@ -44,6 +44,7 @@
 #include "GainRefMaker.h"
 #include "NavigatorDlg.h"
 #include "NavHelper.h"
+#include "MultiShotDlg.h"
 #include "CalibCameraTiming.h"
 #include "MultiTSTasks.h"
 #include "ParticleTasks.h"
@@ -2732,6 +2733,8 @@ void CSerialEMApp::UpdateBufferWindows()
     mNavigator->Update();
   else
     mNavHelper->UpdateStateDlg();
+  if (mNavHelper->mMultiShotDlg)
+    mNavHelper->mMultiShotDlg->ManagePanels();
   if (mDocWnd->mReadFileDlg)
     mDocWnd->mReadFileDlg->Update();
   if (mStageMoveTool)

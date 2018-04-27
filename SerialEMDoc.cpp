@@ -42,6 +42,7 @@
 #include "MacroProcessor.h"
 #include "ReadFileDlg.h"
 #include "NavHelper.h"
+#include "MultiShotDlg.h"
 #include "MainFrm.h"
 #include "StateDlg.h"
 #include "DummyDlg.h"
@@ -2056,6 +2057,8 @@ void CSerialEMDoc::PostSettingsRead()
   mWinApp->UpdateWindowSettings();
   if (mWinApp->mNavHelper->mStateDlg)
     mWinApp->mNavHelper->mStateDlg->UpdateSettings();
+  if (mWinApp->mNavHelper->mMultiShotDlg)
+    mWinApp->mNavHelper->mMultiShotDlg->UpdateSettings();
   if (!mWinApp->GetStartingProgram()) {
     mWinApp->SetShowRemoteControl(saveRemote);
     ((CMainFrame *)(mWinApp->m_pMainWnd))->InitializeDialogPositions(initialState, 

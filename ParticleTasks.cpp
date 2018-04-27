@@ -37,20 +37,22 @@ void CParticleTasks::Initialize(void)
   mCamera = mWinApp->mCamera;
   mComplexTasks = mWinApp->mComplexTasks;
   mShiftManager = mWinApp->mShiftManager;
+  mMSParams = mWinApp->mNavHelper->GetMultiShotParams();
 }
 
 /*
  * External call to start the operation with all the parameters
  */
 int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeRad, 
-  float extraDelay, BOOL saveRec, int ifEarlyReturn, int earlyRetFrames, BOOL adjustBT)
+  float extraDelay, BOOL saveRec, int ifEarlyReturn, int earlyRetFrames, BOOL adjustBT,
+  int inHoleOrMulti)
 {
   float pixel;
-  int magInd;
+  int magInd, nextShot, nextHole;
   CameraParameters *camParam = mWinApp->GetActiveCamParam();
   ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
-  mMSNumPeripheral = numPeripheral;
-  mMSDoCenter = doCenter;
+  mMSNumPeripheral = (inHoleOrMulti & 1) ? numPeripheral : 0;
+  mMSDoCenter = (inHoleOrMulti & 1) ? doCenter : 1;
   mMSExtraDelay = extraDelay;
   mMSIfEarlyReturn = ifEarlyReturn;
   mMSEarlyRetFrames = earlyRetFrames;
@@ -79,10 +81,26 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
     return 1;
   }
 
-  // Go to low dose are before recording any values
+  // Go to low dose area before recording any values
   if (mWinApp->LowDoseMode())
     mScope->GotoLowDoseArea(RECORD_CONSET);
   magInd = mScope->GetMagIndex();
+
+  mMSHoleIndex = 0;
+  mMSHoleISX.clear();
+  mMSHoleISY.clear();
+  if (inHoleOrMulti & 2) {
+     mMSNumHoles = GetHolePositions(mMSHoleISX, mMSHoleISY, magInd, 
+       mWinApp->GetCurrentCamera());
+     mMSUseHoleDelay = true;
+  } else {
+
+    // No holes = 1
+    mMSNumHoles = 1;
+    mMSHoleISX.push_back(0.);
+    mMSHoleISY.push_back(0.);
+  }
+
   mScope->GetImageShift(mBaseISX, mBaseISY);
   if (mMSAdjustBeamTilt)
     mScope->GetBeamTilt(mBaseBeamTiltX, mBaseBeamTiltY);
@@ -93,15 +111,17 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
   mMSRadiusOnCam = spokeRad / pixel;
   mCamToIS = mShiftManager->CameraToIS(magInd);
   mMSCurIndex = mMSDoCenter < 0 ? -1 : 0;
+  mMSLastShotIndex = mMSNumPeripheral + (mMSDoCenter > 0 ? 0 : -1);
   mWinApp->UpdateBufferWindows();
 
-  // Do initial image shift or queue it depending on what is being shot
-  // Go to position 0 immediately if no center shot, or queue it if doing center
-  // And if postactions and no center shot now, queue movement to position 1
-  if (mMSDoCenter >= 0 || mActPostExposure)
-    SetUpMultiShotShift(0, mMSDoCenter < 0);
-  if (mMSDoCenter >= 0 && mActPostExposure)
-    SetUpMultiShotShift(1, true);
+  // Need to shift to the first position if doing holes or if center is not being done
+  // first
+  if (mMSUseHoleDelay || mMSDoCenter >= 0)
+    SetUpMultiShotShift(mMSCurIndex, mMSHoleIndex, false);
+
+  // Queue the next position if post-actions and there IS a next position
+  if (mActPostExposure && GetNextShotAndHole(nextShot, nextHole))
+    SetUpMultiShotShift(nextShot, nextHole, true);
 
   return StartOneShotOfMulti();
 }
@@ -111,7 +131,7 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
  */
 void CParticleTasks::MultiShotNextTask(int param)
 {
-  int lastIndex = mMSNumPeripheral + (mMSDoCenter > 0 ? 0 : -1);
+  int nextShot, nextHole;
   if (mMSCurIndex < -1)
     return;
 
@@ -121,16 +141,23 @@ void CParticleTasks::MultiShotNextTask(int param)
     return;
   }
 
-  // Stop at end
-  mMSCurIndex++;
-  if (mMSCurIndex > lastIndex) {
+  // Set indices for next shot if there is one, otherwise quite
+  if (GetNextShotAndHole(nextShot, nextHole)) {
+    mMSCurIndex = nextShot;
+    mMSHoleIndex = nextHole;
+  } else {
     StopMultiShot();
     return;
   }
 
   // Do or queue image shift as needed and take shot
-  if (mMSCurIndex < lastIndex || !mActPostExposure)
-    SetUpMultiShotShift(mMSCurIndex + (mActPostExposure ? 1 : 0), mActPostExposure);
+  // For post-action queuing, get the hole and shot index of next position
+  if (mActPostExposure) {
+    if (GetNextShotAndHole(nextShot, nextHole))
+      SetUpMultiShotShift(nextShot, nextHole, true);
+  } else {
+    SetUpMultiShotShift(mMSCurIndex, mMSHoleIndex, false);
+  }
   StartOneShotOfMulti(); 
 }
 
@@ -149,8 +176,8 @@ void CParticleTasks::StopMultiShot(void)
   if (mMSCurIndex < -1)
     return;
   mScope->SetImageShift(mBaseISX, mBaseISY);
-    if (mMSAdjustBeamTilt)
-      mScope->SetBeamTilt(mBaseBeamTiltX, mBaseBeamTiltY);
+  if (mMSAdjustBeamTilt)
+    mScope->SetBeamTilt(mBaseBeamTiltX, mBaseBeamTiltY);
   mMSCurIndex = -2;
   mWinApp->UpdateBufferWindows();
   mWinApp->SetStatusText(MEDIUM_PANE, "");
@@ -159,14 +186,14 @@ void CParticleTasks::StopMultiShot(void)
 /*
  * Compute the image shift to the given position and queue it or do it
  */
-void CParticleTasks::SetUpMultiShotShift(int shotIndex, BOOL queueIt)
+void CParticleTasks::SetUpMultiShotShift(int shotIndex, int holeIndex, BOOL queueIt)
 {
   double ISX, ISY, delBTX, delBTY, delISX = 0, delISY = 0, angle, cosAng, sinAng;
   float delay;
   ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
 
   // Compute IS from center for a peripheral shot
-  if (shotIndex < mMSNumPeripheral) {
+  if (shotIndex < mMSNumPeripheral && shotIndex >= 0) {
     angle = DTOR * shotIndex * 360. / mMSNumPeripheral;
     cosAng = cos(angle);
     sinAng = sin(angle);
@@ -174,12 +201,20 @@ void CParticleTasks::SetUpMultiShotShift(int shotIndex, BOOL queueIt)
     delISY = mMSRadiusOnCam * (mCamToIS.ypx * cosAng + mCamToIS.ypy * sinAng);
   }
 
-  // Get full IS and default delay for move from last position; plus extra delay
-  ISX = mBaseISX + delISX;
-  ISY = mBaseISY + delISY;
-  delay = mShiftManager->ComputeISDelay(ISX - mLastISX, ISY - mLastISY);
+  // Get full IS and delta IS and default delay for move from last position
+  // Multiply by hole delay factor if doing hole; add extra delay
+  ISX = mBaseISX + mMSHoleISX[holeIndex] + delISX;
+  ISY = mBaseISY + mMSHoleISY[holeIndex] + delISY;
+   SEMTrace('1', "For hole %d shot %d  %s  delIS  %.3f %.3f", holeIndex, shotIndex,
+      queueIt ? "Queuing" : "Setting", mMSHoleISX[holeIndex] + delISX, mMSHoleISY[holeIndex] + delISY);
+  delISX = ISX - mLastISX;
+  delISY = ISY - mLastISY;
+  delay = mShiftManager->ComputeISDelay(delISX, delISY);
+  if (mMSUseHoleDelay)
+    delay *= mMSParams->holeDelayFactor;
   if (mMSExtraDelay > 0.)
     delay += mMSExtraDelay;
+  mMSUseHoleDelay = false;
 
   if (mMSAdjustBeamTilt) {
     delBTX = comaVsIS->matrix.xpx * delISX + comaVsIS->matrix.xpy * delISY;
@@ -203,12 +238,25 @@ void CParticleTasks::SetUpMultiShotShift(int shotIndex, BOOL queueIt)
   mLastISY = ISY;
 }
 
+// Given current hole and shot index, this will give the next one
+bool CParticleTasks::GetNextShotAndHole(int &nextShot, int &nextHole)
+{
+  nextShot = mMSCurIndex + 1;
+  nextHole = mMSHoleIndex;
+  if (nextShot > mMSLastShotIndex) {
+    nextShot = mMSDoCenter < 0 ? -1 : 0;
+    nextHole++;
+  }
+  return (nextHole < mMSNumHoles);
+}
+
 /*
  * Start an acquisition: Set up early return, start shot, set the status pane
  */
 int CParticleTasks::StartOneShotOfMulti(void)
 {
   CString str;
+  int numInHole = mMSNumPeripheral + (mMSDoCenter ? 1 : 0);
   if (mMSIfEarlyReturn && mCamera->SetNextAsyncSumFrames(mMSEarlyRetFrames < 0 ? 65535 : 
     mMSEarlyRetFrames, false)) {
     StopMultiShot();
@@ -216,9 +264,70 @@ int CParticleTasks::StartOneShotOfMulti(void)
   }
   mCamera->InitiateCapture(RECORD_CONSET);
   mWinApp->AddIdleTask(SEMStageCameraBusy, TASK_MULTI_SHOT, 0, 0);
-  str.Format("DOING MULTI-SHOT %d OF %d", mMSCurIndex + (mMSDoCenter < 0 ? 2 : 1), 
-    mMSNumPeripheral + (mMSDoCenter ? 1 : 0));
+  str.Format("DOING MULTI-SHOT %d OF %d", mMSHoleIndex * numInHole + 
+    mMSCurIndex + (mMSDoCenter < 0 ? 2 : 1), numInHole * mMSNumHoles);
   mWinApp->SetStatusText(MEDIUM_PANE, str);
   return 0;
 }
 
+/*
+ * Get relative image shifts of the holes into the vectors, transferred to the given
+ * mag and camera
+ */
+int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, int magInd,
+  int camera)
+{
+  int numHoles = 0, ind, ix, iy, direction[2], startInd[2], endInd[2], fromMag;
+  double xCenISX, yCenISX, xCenISY, yCenISY, transISX, transISY;
+  std::vector<double> fromISX, fromISY;
+  delISX.clear();
+  delISY.clear();
+  if (mMSParams->useCustomHoles && mMSParams->customHoleX.size() > 0) {
+
+    // Custom holes are easy, the list is relative to the center position
+    numHoles = (int)mMSParams->customHoleX.size();
+    for (ind = 0; ind < numHoles; ind++) {
+      fromISX.push_back(mMSParams->customHoleX[ind]);
+      fromISY.push_back(mMSParams->customHoleY[ind]);
+    }
+    fromMag = mMSParams->customMagIndex;
+  } else if (mMSParams->holeMagIndex > 0) {
+
+    // The hole pattern requires computing position relative to center of pattern
+    numHoles = mMSParams->numHoles[0] * mMSParams->numHoles[1];
+    xCenISX = mMSParams->holeISXspacing[0] * 0.5 * (mMSParams->numHoles[0] - 1);
+    xCenISY = mMSParams->holeISYspacing[0] * 0.5 * (mMSParams->numHoles[0] - 1);
+    yCenISX = mMSParams->holeISXspacing[1] * 0.5 * (mMSParams->numHoles[1] - 1);
+    yCenISY = mMSParams->holeISYspacing[1] * 0.5 * (mMSParams->numHoles[1] - 1);
+    fromMag = mMSParams->holeMagIndex;
+
+    // Set up to do arbitrary directions in each axis
+    direction[0] = direction[1] = 1;
+    startInd[0] = startInd[1] = 0;
+    endInd[0] = mMSParams->numHoles[0] - 1;
+    endInd[1] = mMSParams->numHoles[1] - 1;
+    for (iy = startInd[1]; (endInd[1] - iy) * direction[1] >= 0; iy += direction[1]) {
+      for (ix = startInd[0]; (endInd[0] - ix) * direction[0] >= 0 ; ix += direction[0]) {
+        fromISX.push_back((ix * mMSParams->holeISXspacing[0] - xCenISX) +
+          (iy * mMSParams->holeISXspacing[1] - yCenISX));
+        fromISY.push_back((ix * mMSParams->holeISYspacing[0] - xCenISY) +
+          (iy * mMSParams->holeISYspacing[1] - yCenISY));
+      }
+
+      // For now, zigzag pattern
+      ix = startInd[0];
+      startInd[0] = endInd[0];
+      endInd[0] = ix;
+      direction[0] = -direction[0];
+    }
+  }
+
+  // Transfer the image shifts and add to return vectors
+  for (ind = 0; ind < numHoles; ind++) {
+    mWinApp->mShiftManager->TransferGeneralIS(fromMag, fromISX[ind], fromISY[ind], magInd,
+      transISX, transISY, camera);
+    delISX.push_back((float)transISX);
+    delISY.push_back((float)transISY);
+  }
+  return numHoles;
+}

@@ -156,6 +156,8 @@ int CParameterIO::ReadSettings(CString strFileName)
   int faLastFileIndex = -1, faLastArrayIndex = -1;
   mWinApp->mCamera->SetFrameAliDefaults(faParam, "4K default set", 4, 0.06f, 1);
   mWinApp->SetAbsoluteDlgIndex(false);
+  msParams->customHoleX.clear();
+  msParams->customHoleY.clear();
 
   try {
     // Open the file for reading, verify that it is a settings file
@@ -427,6 +429,27 @@ int CParameterIO::ReadSettings(CString strFileName)
         msParams->saveRecord = itemInt[7] != 0;
         msParams->extraDelay = (float)itemDbl[8];
         msParams->useIllumArea = itemInt[9] != 0;
+        if (!itemEmpty[10]) {
+          msParams->adjustBeamTilt = itemInt[10] != 0;
+          msParams->inHoleOrMultiHole = itemInt[11];
+          msParams->useCustomHoles = itemInt[12] != 0;
+          msParams->holeDelayFactor = (float)itemDbl[13];
+          msParams->holeISXspacing[0] = itemDbl[14];
+          msParams->holeISYspacing[0] = itemDbl[15];
+          msParams->holeISXspacing[1] = itemDbl[16];
+          msParams->holeISYspacing[1] = itemDbl[17];
+          msParams->numHoles[0] = itemInt[18];
+          msParams->numHoles[1] = itemInt[19];
+          msParams->holeMagIndex = itemInt[20];
+          msParams->customMagIndex = itemInt[21];
+        }
+      } else if (NAME_IS("CustomHoleX")) {
+        for (index = 1; index < MAX_TOKENS && !itemEmpty[index]; index++)
+          msParams->customHoleX.push_back((float)itemDbl[index]);
+      } else if (NAME_IS("CustomHoleY")) {
+        for (index = 1; index < MAX_TOKENS && !itemEmpty[index]; index++)
+          msParams->customHoleY.push_back((float)itemDbl[index]);
+
       } else if (NAME_IS("NavigatorAcquireParams")) {
         navParams->acqAutofocus = itemInt[1] != 0;
         navParams->acqFineEucen = itemInt[2] != 0;
@@ -588,7 +611,7 @@ int CParameterIO::ReadSettings(CString strFileName)
         NAME_IS("RotAlignPlacement") ||NAME_IS("StageToolPlacement") ||
         NAME_IS("ReadDlgPlacement") || NAME_IS("StatePlacement") ||
         NAME_IS("MacroToolPlacement") || NAME_IS("MacroEditerPlacement") ||
-        NAME_IS("OneLinePlacement")) {
+        NAME_IS("OneLinePlacement") || NAME_IS("MultiShotPlacement")) {
         if (strItems[10].IsEmpty()) {
             AfxMessageBox("Error in window placement line in settings file "
               + strFileName + " :\n" + strLine, MB_EXCLAME);
@@ -600,6 +623,8 @@ int CParameterIO::ReadSettings(CString strFileName)
             place = mWinApp->mScopeStatus.GetDosePlacement();
           else if (NAME_IS("RotAlignPlacement"))
             place = mWinApp->mNavHelper->GetRotAlignPlacement();
+          else if (NAME_IS("MultiShotPlacement"))
+            place = mWinApp->mNavHelper->GetMultiShotPlacement(false);
           else if (NAME_IS("StatePlacement")) {
             mWinApp->SetOpenStateWithNav(itemInt[1] != 0);
             place = mWinApp->mNavHelper->GetStatePlacement();
@@ -1067,6 +1092,7 @@ void CParameterIO::WriteSettings(CString strFileName)
   WINDOWPLACEMENT *readPlace = mWinApp->mDocWnd->GetReadDlgPlacement();
   WINDOWPLACEMENT *stageToolPlace = mWinApp->GetStageToolPlacement();
   WINDOWPLACEMENT *rotAlignPlace = mWinApp->mNavHelper->GetRotAlignPlacement();
+  WINDOWPLACEMENT *multiShotPlace = mWinApp->mNavHelper->GetMultiShotPlacement(true);
   int *macroButtonNumbers = mWinApp->mCameraMacroTools.GetMacroNumbers();
   mWinApp->CopyCurrentToCameraLDP();
   DoseTable *doseTables = mWinApp->mBeamAssessor->GetDoseTables();
@@ -1237,11 +1263,23 @@ void CParameterIO::WriteSettings(CString strFileName)
       mWinApp->mNavHelper->GetAutoBacklashNewMap(), 
       mWinApp->mNavHelper->GetAutoBacklashMinField());
     mFile->WriteString(oneState);
-    oneState.Format("MultiShotParams %f %f %d %d %d %d %d %f %d\n", msParams->beamDiam, 
+    oneState.Format("MultiShotParams %f %f %d %d %d %d %d %f %d %d %d %d %f %f %f %f %f "
+      "%d %d %d %d\n", msParams->beamDiam, 
       msParams->spokeRad, msParams->numShots, msParams->doCenter, msParams->doEarlyReturn,
       msParams->numEarlyFrames, msParams->saveRecord ? 1 : 0, msParams->extraDelay,
-      msParams->useIllumArea ? 1 : 0);
+      msParams->useIllumArea ? 1 : 0, msParams->adjustBeamTilt ? 1 : 0, 
+      msParams->inHoleOrMultiHole, msParams->useCustomHoles ? 1 : 0, 
+      msParams->holeDelayFactor, msParams->holeISXspacing[0], msParams->holeISYspacing[0],
+      msParams->holeISXspacing[1], msParams->holeISYspacing[1],
+      msParams->numHoles[0], msParams->numHoles[1], msParams->holeMagIndex, 
+      msParams->customMagIndex);
     mFile->WriteString(oneState);
+    if (msParams->customHoleX.size()) {
+      OutputVector("CustomHoleX", (int)msParams->customHoleX.size(), NULL, 
+        &msParams->customHoleX);
+      OutputVector("CustomHoleY", (int)msParams->customHoleY.size(), NULL, 
+        &msParams->customHoleY);
+    }
     oneState.Format("NavigatorAcquireParams %d %d %d %d %d %d %d %d %d %d %d %d %d %d"
       " %d %d %d %d %d %d %d\n", navParams->acqAutofocus ? 1 : 0, 
       navParams->acqFineEucen ? 1 : 0,
@@ -1368,6 +1406,7 @@ void CParameterIO::WriteSettings(CString strFileName)
     WritePlacement("StatePlacement", (mWinApp->GetOpenStateWithNav() || 
       (mWinApp->mNavigator && mWinApp->mNavHelper->mStateDlg)) ? 1 : 0, statePlace);
     WritePlacement("RotAlignPlacement", 0, rotAlignPlace);
+    WritePlacement("MultiShotPlacement", 0, multiShotPlace);
     WritePlacement("ReadDlgPlacement", 0, readPlace);
     WritePlacement("StageToolPlacement", 0, stageToolPlace);
     WritePlacement("MacroToolPlacement", mWinApp->mMacroToolbar ? 1 : 0, toolPlace);

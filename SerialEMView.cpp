@@ -548,6 +548,7 @@ void CSerialEMView::DrawImage(void)
           cdc.TextOut(25, 10, letString);
       }
 
+      // Dose rate output for direct detector and channel name for STEM
       bufferOK = !imBuf->IsProcessed() && (imBuf->mCaptured > 0 || 
         imBuf->mCaptured == BUFFER_CALIBRATION || imBuf->mCaptured == BUFFER_TRACKING ||
         imBuf->mCaptured == BUFFER_MONTAGE_CENTER || imBuf->mCaptured == BUFFER_ANCHOR ||
@@ -681,7 +682,7 @@ void CSerialEMView::DrawImage(void)
     return;
 
   // Now draw navigator items
-  float ptX, ptY, lastStageX, lastStageY, labelDistThresh = 40.;
+  float ptX, ptY, lastStageX, lastStageY, acquireRadii[2], labelDistThresh = 40.;
   int lastGroupID = -1, lastGroupSize, size, numPoints;
   CArray<CMapDrawItem *,CMapDrawItem *> *itemArray = GetMapItemsForImageCoords
     (imBuf, false);
@@ -693,13 +694,20 @@ void CSerialEMView::DrawImage(void)
   bool highlight, draw;
   CMapDrawItem *item;
   MultiShotParams *msParams;
-  BOOL useMultiShot = mWinApp->mNavHelper->GetEnableMultiShot();
+  BOOL useMultiShot = (mWinApp->mNavHelper->GetEnableMultiShot() & 1) || 
+    mWinApp->mNavHelper->mMultiShotDlg;
+  bool showMultiOnAll = useMultiShot && (mWinApp->mNavHelper->GetEnableMultiShot() & 2);
   int currentIndex = navigator->GetCurrentOrAcquireItem(item);
   int currentGroup = (currentIndex >= 0 && item != NULL) ? item->mGroupID : -1;
   int groupThresh = mWinApp->mNavHelper->GetPointLabelDrawThresh();
   if (useMultiShot)
     msParams = mWinApp->mNavHelper->GetMultiShotParams();
+  FloatVec drawnXinHole, drawnYinHole, drawnXallHole, drawnYallHole;
+  FloatVec convXinHole, convYinHole, convXallHole, convYallHole;
   for (int iDraw = -1; iDraw < itemArray->GetSize(); iDraw++) {
+    int adjSave = mAdjustPt;
+    float delPtX = 0., delPtY = 0.;
+
     if (iDraw < 0) {
       if (!mAcquireBox)
         continue;
@@ -729,68 +737,138 @@ void CSerialEMView::DrawImage(void)
       DrawCross(&cdc, &pnSolidPen, point, crossLen);
     } else {
 
-      int adjSave = mAdjustPt;
-      float delPtX = 0., delPtY = 0.;
-
       // For a map, find the adjust that applies to the center, turn off adjustment for
       // the corner points, and adjust them all by the center adjustment to get a square
-      if (item->mType == ITEM_TYPE_MAP) {
-        StageToImage(imBuf, item->mStageX, item->mStageY, delPtX, delPtY);
-        mAdjustPt = -1;
-        StageToImage(imBuf, item->mStageX, item->mStageY, ptX, ptY);
-        delPtX -= ptX;
-        delPtY -= ptY;
-      }
+      if (item->mType == ITEM_TYPE_MAP)
+        GetSingleAdjustmentForItem(imBuf, item, delPtX, delPtY);
 
       // Draw lines if there is more than one point
       CPen *pOldPen = cdc.SelectObject(&pnSolidPen);
-      if (!(iDraw < 0 && useMultiShot && !msParams->doCenter)) {
-        for (int pt = 0; pt < numPoints; pt++) {
-          StageToImage(imBuf, item->mPtX[pt], item->mPtY[pt], ptX, ptY);
-          MakeDrawPoint(&rect, imBuf->mImage, ptX + delPtX, ptY + delPtY, &point);
-          if (pt)
-            cdc.LineTo(point);
-          else
-            cdc.MoveTo(point);
-        }
-      }
+      if (!(iDraw < 0 && useMultiShot))
+        DrawMapItemBox(cdc, &rect, item, imBuf, numPoints, 0., 0., delPtX, delPtY, NULL,
+        NULL);
 
       // Draw multi-shot pattern
       if (iDraw < 0 && useMultiShot) {
-        float beamRad;
+        float holeXoffset = 0, holeYoffset = 0;
+        bool doInHole = (msParams->inHoleOrMultiHole & 1) > 0;
+        bool doMultiHole = (msParams->inHoleOrMultiHole & 2) > 0;
+        int inHoleEnd = item->mNumPoints - 2;
+        int inHoleStart = inHoleEnd - (doInHole ? msParams->numShots : 0);
+        GetSingleAdjustmentForItem(imBuf, item, delPtX, delPtY);
 
-        // First draw rectangles in the off-center positions with current pen
-        for (int pt = numPoints; pt < item->mNumPoints - 1; pt++) {
-          delPtX = item->mPtX[pt] - item->mStageX;
-          delPtY = item->mPtY[pt] - item->mStageY;
-          for (int bpt = 0; bpt < numPoints; bpt++) {
-            StageToImage(imBuf, item->mPtX[bpt] + delPtX, item->mPtY[bpt] + delPtY, 
-              ptX, ptY);
-            MakeDrawPoint(&rect, imBuf->mImage, ptX, ptY, &point);
-            if (bpt)
-              cdc.LineTo(point);
-            else
-              cdc.MoveTo(point);
+        // If there is multishot in hole, draw them either centered or in the last hole
+        if (doInHole) {
+          holeXoffset = doMultiHole ? item->mPtX[inHoleStart - 1] : 0;
+          holeYoffset = doMultiHole ? item->mPtY[inHoleStart - 1] : 0;
+
+          // Draw rectangles in the off-center positions, then center if needed
+          for (int pt = inHoleStart; pt < inHoleEnd; pt++)
+            DrawMapItemBox(cdc, &rect, item, imBuf, numPoints, 
+              item->mPtX[pt] - item->mStageX + holeXoffset, 
+              item->mPtY[pt] - item->mStageY + holeYoffset, delPtX, delPtY, 
+              &drawnXinHole, &drawnYinHole);
+          if (msParams->doCenter)
+            DrawMapItemBox(cdc, &rect, item, imBuf, numPoints, holeXoffset, holeYoffset,
+              delPtX, delPtY, &drawnXinHole, &drawnYinHole);
+
+          // Adjust the list of drawn points to be relative to their center after adding
+          // absoulte points to the list of multihole points
+          for (int pt = 0; pt < (int)drawnXinHole.size(); pt++) {
+            drawnXallHole.push_back(drawnXinHole[pt]);
+            drawnYallHole.push_back(drawnYinHole[pt]);
+            drawnXinHole[pt] -= holeXoffset;
+            drawnYinHole[pt] -= holeYoffset;
+          }
+
+          // Get the convex boundary
+          convXinHole.resize(drawnXinHole.size());
+          convYinHole.resize(drawnYinHole.size());
+          convexBound(&drawnXinHole[0], &drawnYinHole[0], (int)drawnXinHole.size(), 0., 
+            0., &convXinHole[0], &convYinHole[0], &size, &ptX, &ptY, 
+            (int)drawnXinHole.size());
+          convXinHole.resize(size);
+          convYinHole.resize(size);
+        }
+
+        // If there are hole positions without multi-shot in hole, then need basic box
+        // in each position with current pen
+        // Hole positions are relative and multi in hole positions are absolute
+        if (doMultiHole && !doInHole) {
+          for (int pt = numPoints; pt < inHoleStart; pt++)
+            DrawMapItemBox(cdc, &rect, item, imBuf, numPoints, item->mPtX[pt],
+              item->mPtY[pt], delPtX, delPtY, &drawnXallHole, &drawnYallHole);
+        } else if (doMultiHole) {
+          for (int pt = numPoints; pt < inHoleStart - 1; pt++)
+            DrawVectorPolygon(cdc, &rect, imBuf, convXinHole, convYinHole, item->mPtX[pt],
+              item->mPtY[pt], delPtX, delPtY, &drawnXallHole, &drawnYallHole);
+        }
+
+        // Adjust all-hole vectors to item center and get the convex boundary
+        for (int pt = 0; pt < (int)drawnXallHole.size(); pt++) {
+          drawnXallHole[pt] -= item->mStageX;
+          drawnYallHole[pt] -= item->mStageY;
+        }
+
+        // Get the convex boundary
+        convXallHole.resize(drawnXallHole.size());
+        convYallHole.resize(drawnYallHole.size());
+        convexBound(&drawnXallHole[0], &drawnYallHole[0], (int)drawnXallHole.size(), 0., 
+          0., &convXallHole[0], &convYallHole[0], &size, &ptX, &ptY, 
+          (int)drawnXallHole.size());
+        convXallHole.resize(size);
+        convYallHole.resize(size);
+
+        // Setup to draw circles, switch color and draw them
+        // Get radii of Record and multishot in hole
+        StageToImage(imBuf, item->mStageX, item->mStageY, cenX, cenY);
+        for (int pt = item->mNumPoints - 2; pt < item->mNumPoints; pt++) {
+          StageToImage(imBuf, item->mPtX[pt], item->mPtY[pt], ptX, ptY);
+          acquireRadii[pt + 2 - item->mNumPoints] = sqrtf((ptX - cenX) * (ptX - cenX) + 
+            (ptY - cenY) * (ptY - cenY));
+        }
+        CPen circlePen(PS_SOLID, 1, COLORREF(RGB(0, 255, 0)));
+
+        // Now if doing multiholes, draw a circle on each that is either acquire or
+        // multi inhole radius
+        if (doMultiHole) {
+          for (int pt = numPoints; pt < inHoleStart; pt++) {
+            StageToImage(imBuf, item->mPtX[pt] + item->mStageX, 
+              item->mPtY[pt] + item->mStageY, ptX, ptY);
+            DrawCircle(&cdc, &circlePen, &rect, imBuf->mImage, ptX + delPtX, ptY + delPtY, 
+              doInHole ? acquireRadii[1] : acquireRadii[0]);
           }
         }
 
-        // Setup to draw circles, switch color and draw them
-        StageToImage(imBuf, item->mStageX, item->mStageY, cenX, cenY);
-        StageToImage(imBuf, item->mPtX[item->mNumPoints - 1], 
-          item->mPtY[item->mNumPoints - 1], ptX, ptY);
-        beamRad = (float)sqrt((double)(ptX - cenX) * (ptX - cenX) + 
-          (ptY - cenY) * (ptY - cenY));
-        CPen circlePen(PS_SOLID, 1, COLORREF(RGB(0, 255, 0)));
-        for (int pt = numPoints; pt < item->mNumPoints - 1; pt++) {
-          StageToImage(imBuf, item->mPtX[pt], item->mPtY[pt], ptX, ptY);
-          DrawCircle(&cdc, &circlePen, &rect, imBuf->mImage, ptX, ptY, beamRad);
+        // Inside a hole, circle around each area
+        if (doInHole) {
+          for (int pt = inHoleStart; pt < inHoleEnd; pt++) {
+            StageToImage(imBuf, item->mPtX[pt] + holeXoffset, 
+              item->mPtY[pt] + holeYoffset, ptX, ptY);
+            DrawCircle(&cdc, &circlePen, &rect, imBuf->mImage, ptX + delPtX, ptY + delPtY,
+              acquireRadii[0]);
+          }
+          StageToImage(imBuf, item->mStageX + holeXoffset, item->mStageY + holeYoffset,
+            ptX, ptY);
+          if (msParams->doCenter)
+            DrawCircle(&cdc, &circlePen, &rect, imBuf->mImage, ptX + delPtX, ptY + delPtY,
+              acquireRadii[0]);
         }
-        if (msParams->doCenter)
-          DrawCircle(&cdc, &circlePen, &rect, imBuf->mImage, cenX, cenY, beamRad);
       }
       cdc.SelectObject(pOldPen);
-      mAdjustPt = adjSave;
     }
+
+    // Draw polygons for full acquire area on all acquire points if selected
+    if (iDraw >= 0 && mAcquireBox && showMultiOnAll && item->mAcquire && 
+      item->mNumPoints == 1) {
+      GetSingleAdjustmentForItem(imBuf, item, delPtX, delPtY);
+      CPen pnAcquire(PS_SOLID, 1, COLORREF(RGB(255, 255, 0)));  
+      CPen *pOldPen = cdc.SelectObject(&pnAcquire);
+      DrawVectorPolygon(cdc, &rect, imBuf, convXallHole, convYallHole, item->mStageX, 
+        item->mStageY, delPtX, delPtY, NULL, NULL);
+      cdc.SelectObject(pOldPen);
+    }
+    mAdjustPt = adjSave;
 
     // Draw the label if any
     if (iDraw >= 0 && !item->mLabel.IsEmpty() && navigator->m_bDrawLabels) {
@@ -832,6 +910,69 @@ void CSerialEMView::DrawImage(void)
   }
   delete mAcquireBox;
 
+}
+
+// For drawing a map rectangle or other shape that should not be distorted by montage 
+// adjusts at each point, get the adjustment, return it, and turn off further adjustments
+// for this item
+void CSerialEMView::GetSingleAdjustmentForItem(EMimageBuffer *imBuf, CMapDrawItem *item, 
+  float &delPtX, float &delPtY)
+{
+  float ptX, ptY;
+  StageToImage(imBuf, item->mStageX, item->mStageY, delPtX, delPtY);
+  mAdjustPt = -1;
+  StageToImage(imBuf, item->mStageX, item->mStageY, ptX, ptY);
+  delPtX -= ptX;
+  delPtY -= ptY;
+}
+
+// Draw a box for a map item with a given stage offset from the item points and with a
+// common montage adjustment, potentially saving the points in vectors
+void CSerialEMView::DrawMapItemBox(CClientDC &cdc, CRect *rect, CMapDrawItem *item, 
+  EMimageBuffer *imBuf, int numPoints, float delXstage, float delYstage, float delPtX, 
+  float delPtY, FloatVec *drawnX, FloatVec *drawnY)
+{
+  CPoint point;
+  float stX, stY, ptX, ptY;
+  for (int bpt = 0; bpt < numPoints; bpt++) {
+    stX = item->mPtX[bpt] + delXstage;
+    stY = item->mPtY[bpt] + delYstage;
+    if (drawnX && drawnY) {
+      drawnX->push_back(stX);
+      drawnY->push_back(stY);
+    }
+    StageToImage(imBuf, stX, stY, ptX, ptY);
+    MakeDrawPoint(rect, imBuf->mImage, ptX + delPtX, ptY + delPtY, &point);
+    if (bpt)
+      cdc.LineTo(point);
+    else
+      cdc.MoveTo(point);
+  }
+}
+
+// Draw a polygon from points in a vector, with the given adjustment to the stage
+// positions, a common montage adjustment, and potentially storing in more vectors
+void CSerialEMView::DrawVectorPolygon(CClientDC &cdc, CRect *rect, EMimageBuffer *imBuf,
+  FloatVec &convX, FloatVec &convY, float delXstage, float delYstage, 
+  float delPtX, float delPtY, FloatVec *drawnX, FloatVec *drawnY)
+{
+  CPoint point;
+  float stX, stY, ptX, ptY;
+  int numPoints = (int)convX.size();
+  for (int bpt = 0; bpt <= numPoints; bpt++) {
+    stX = convX[bpt % numPoints] + delXstage;
+    stY = convY[bpt % numPoints] + delYstage;
+    if (drawnX && drawnY) {
+      drawnX->push_back(stX);
+      drawnY->push_back(stY);
+    }
+    StageToImage(imBuf, stX, stY, ptX, ptY);
+    MakeDrawPoint(rect, imBuf->mImage, ptX + delPtX, ptY + delPtY, &point);
+    if (bpt)
+      cdc.LineTo(point);
+    else
+      cdc.MoveTo(point);
+  }
 }
 
 void CSerialEMView::MakeDrawPoint(CRect *rect, KImage *image, float inX, float inY, 

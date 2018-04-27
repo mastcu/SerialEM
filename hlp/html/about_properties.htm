@@ -1953,7 +1953,12 @@
         </TR>
         <TR VALIGN="top">
           <TD>NumberOfSpotSizes</TD>
-          <TD>Number of spot sizes on the microscope; default is 11.</TD>
+          <TD>Number of spot sizes on the microscope, or highest spot size to use, if 
+            &#39;MinSpotSizeToUse&#39; is not 1; default is 11.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>MinSpotSizeToUse</TD>
+          <TD>Minimum spot size to set from the program; default is 1. </TD>
         </TR>
         <TR VALIGN="top">
           <TD>IntensityToC2Factor</TD>
@@ -2144,9 +2149,12 @@
         </TR>
         <TR VALIGN="top">
           <TD>MaxStageCalExtent</TD>
-          <TD>Maximum distance over which to do the stage calibration. If this is larger 
+          <TD>Maximum distance over which to do the stage calibration, unless this distance
+           is less than one-fifth of the camera field size. If this is larger 
             than the cycle lengths in X and Y, it will allow calibrations to go over one 
-            cycle length, but may limit the number of cycles traversed at very low mag. A 
+            cycle length, but may limit the number of cycles traversed at low mag.  At 
+            very low mag, the extent will be at least one-fifth of the camera field size up to a
+            fixed limit of 500 microns.  A 
             value lower than a cycle length will keep the calibration from being done over a 
             full cycle on that axis. The default is 140 microns, which limits the extent to 
             2 cycles in X and 3 cycles in Y with the default cycle lengths.</TD>

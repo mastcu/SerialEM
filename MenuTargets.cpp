@@ -424,6 +424,7 @@ BEGIN_MESSAGE_MAP(CMenuTargets, CCmdTarget)
   ON_COMMAND(ID_CAMERA_SEARCH, OnCameraSearch)
   ON_COMMAND(ID_OPTIONS_SHOWMULTI, OnNavigatorShowMultiShot)
   ON_COMMAND(ID_OPTIONS_SETMULTI, OnNavigatorSetMultiShotParams)
+  ON_UPDATE_COMMAND_UI(ID_OPTIONS_SETMULTI, OnUpdateNoTasksNoTS)
   ON_UPDATE_COMMAND_UI(ID_OPTIONS_SHOWMULTI, OnUpdateNavigatorShowMultiShot)
   ON_COMMAND(ID_FOCUSTUNING_CTF, OnCalFocusTuningCtfAstig)
   ON_UPDATE_COMMAND_UI(ID_FOCUSTUNING_CTF, OnUpdateNoTasksNoSTEM)
@@ -437,6 +438,8 @@ BEGIN_MESSAGE_MAP(CMenuTargets, CCmdTarget)
   ON_UPDATE_COMMAND_UI(ID_FOCUS_CORRECTASTIGMATISMWITHFFTS, OnUpdateFocusCorrectAstigmatismWithFfts)
   ON_COMMAND(ID_FOCUSTUNING_COMAVS, OnCalibrateComaVsIS)
   ON_UPDATE_COMMAND_UI(ID_FOCUSTUNING_COMAVS, OnUpdateNoTasksNoSTEM)
+  ON_COMMAND(ID_MONTAGINGGRIDS_SHOWWHOLEAREAFORALLPOINTS, OnShowWholeAreaForAllPoints)
+  ON_UPDATE_COMMAND_UI(ID_MONTAGINGGRIDS_SHOWWHOLEAREAFORALLPOINTS, OnUpdateShowWholeAreaForAllPoints)
   END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -773,28 +776,35 @@ void CMenuTargets::OnSetPointLabelThreshold()
 
 void CMenuTargets::OnNavigatorShowMultiShot()
 {
-  mNavHelper->SetEnableMultiShot(mNavHelper->GetEnableMultiShot() == 0 ? 1 : 0);
+  b3dUInt32 multi = mNavHelper->GetEnableMultiShot();
+  setOrClearFlags(&multi, 1, (multi & 1) ? 0  : 1);
+  mNavHelper->SetEnableMultiShot(multi);
   mWinApp->mMainView->DrawImage();
 }
 
 void CMenuTargets::OnUpdateNavigatorShowMultiShot(CCmdUI *pCmdUI)
 {
   pCmdUI->Enable(!mWinApp->DoingTasks());
-  pCmdUI->SetCheck(mNavHelper->GetEnableMultiShot() != 0 ? 1 : 0);
+  pCmdUI->SetCheck((mNavHelper->GetEnableMultiShot() & 1) != 0 ? 1 : 0);
+}
+
+void CMenuTargets::OnShowWholeAreaForAllPoints()
+{
+  b3dUInt32 multi = mNavHelper->GetEnableMultiShot();
+  setOrClearFlags(&multi, 2, (multi & 2) ? 0 : 1);
+  mNavHelper->SetEnableMultiShot(multi);
+  mWinApp->mMainView->DrawImage();
+}
+
+void CMenuTargets::OnUpdateShowWholeAreaForAllPoints(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(!mWinApp->DoingTasks());
+  pCmdUI->SetCheck((mNavHelper->GetEnableMultiShot() & 2) != 0 ? 1 : 0);
 }
 
 void CMenuTargets::OnNavigatorSetMultiShotParams()
 {
-  int *activeList = mWinApp->GetActiveCameraList();
-  CameraParameters *camParams = mWinApp->GetCamParams();
-  CMultiShotDlg dlg;
-  dlg.mHasIlluminatedArea = mScope->GetUseIllumAreaForC2();
-  dlg.mCanReturnEarly = false;
-  for (int ind = 0; ind < mWinApp->GetActiveCamListSize(); ind++)
-    if (camParams[activeList[ind]].K2Type)
-      dlg.mCanReturnEarly = true;
-  dlg.DoModal();
-  mWinApp->mMainView->DrawImage();
+  mWinApp->mNavHelper->OpenMultishotDlg();
 }
 
 void CMenuTargets::OnNavigatorRealignScaling()
@@ -854,7 +864,7 @@ void CMenuTargets::OnNavigatorAddcirclepolygon()
 void CMenuTargets::OnUpdateNavigatorAddCirclePolygon(CCmdUI *pCmdUI)
 {
  	EMimageBuffer *imBuf = mWinApp->mActiveView->GetActiveImBuf();
-  pCmdUI->Enable(mNavigator && mNavigator->NoDrawing() && !!mNavigator->GetAcquiring() &&
+  pCmdUI->Enable(mNavigator && mNavigator->NoDrawing() && !mNavigator->GetAcquiring() &&
     !DoingTasks() && imBuf && imBuf->mHasUserPt);
 }
 
