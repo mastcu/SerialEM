@@ -956,7 +956,7 @@ void CShiftCalibrator::OptimizeStageSteps(float cycle, double &xOut, int &numCal
   
   // Reduce xOut to be less than half the maximum extent
   if (xOut > mMaxStageCalExtent / 2.)
-    xOut = mMaxStageCalExtent / 2.;
+    xOut = B3DMIN(500., B3DMAX(xOut / 5., mMaxStageCalExtent / 2.));
   
   // Get number of moves from center and total steps
   numHalf = (cycle / 2.) / xOut + 0.95;
