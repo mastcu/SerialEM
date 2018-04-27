@@ -1597,7 +1597,7 @@ void CEMscope::UpdateGauges(int &vacStatus)
           lastVacStatus = vacStatus;
         }
       }
-  } else
+  } else if (mPlugFuncs->GetGaugePressure)
     vacStatus = lastVacStatus;
 }
 
