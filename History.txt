@@ -3,6 +3,7 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+4/26/18: SEM_3-6-16
 4/12/18: Fixed uninitialized pointer causing crash when aligning with K2.
 
 4/10/18: Raised scope update interval to 150 ms and made vacuum update happen
