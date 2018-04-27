@@ -669,6 +669,8 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
           delISX + mBaseStageX > mScope->GetStageLimit(STAGE_MAX_X) || 
           delISY + mBaseStageY < mScope->GetStageLimit(STAGE_MIN_Y) || 
           delISY + mBaseStageY > mScope->GetStageLimit(STAGE_MAX_Y)) {
+            SEMTrace('S', "Adding piece %d at %.2f %.2f to skip list", ix, 
+              delISX + mBaseStageX, delISY + mBaseStageY);
           if (AddToSkipListIfUnique(ix))
             mActPostExposure = false;
          }
