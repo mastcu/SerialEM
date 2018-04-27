@@ -3,6 +3,18 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+4/27/18: Multiple reciords can now be taken from multiple holes as well as
+from multiple positions in a hole.
+
+4/27/18: Added script commands to load a map and added option to adjust note
+on a new map.
+
+4/27/18: Modified polygon used to get full montage to avoid loss of corner
+pieces due to coordinates out of range.
+
+4/27/18: Fixed failure to clear existing summed frame list when reading in new
+settings file (In 3.6).
+
 4/26/18: SEM_3-6-16
 4/18/18: Added property to set minimum spot size to use.
 
