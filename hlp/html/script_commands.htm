@@ -2022,7 +2022,7 @@
             the buffer given by the optional #B.&nbsp; The value is reported in microns.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">MultipleRecords [#N] [#C] [#O] [#D] [#S] [#E] [#F]</TD>
+          <TD class="style12">MultipleRecords [#N] [#C] [#O] [#D] [#S] [#E] [#F] [#H]</TD>
           <TD>Acquire multiple Record images around the periphery of a hole, using image 
             shift to move to each off-center position.&nbsp; The parameters set in the 
             <a href="hidd_multi_shot_setup.htm">Multiple Record Setup dialog</a> control the 
@@ -2035,7 +2035,9 @@
             for the extra delay after the image shift, in seconds; #S 1 to save a Record 
             image at each position or 0 not to; #E 1 or 2 to use early return for a K2 
             camera after the last shot or after all shots; #F for the number of frames in 
-            the early returned image (or -1 for all, 0 for none).&nbsp; For example, 
+            the early returned image (or -1 for all, 0 for none); #H the sum of 1 to do 
+            shots around a center (within a hole) and 2 to do shots in multiple holes or 
+            specified positions.&nbsp; For example, 
             &#39;MultipleRecords -9 -9 -9 4. 1&#39; will use an extra delay of 4 seconds and save 
             Records, but take all other parameters from the dialog.</TD>
         </TR>
@@ -2072,8 +2074,11 @@
           <TD colspan="2"><A name="navigator"></A><B>Navigator-Related Commands</B></TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">NewMap</TD>
-          <TD>Make the current image or montage a new Navigator map</TD>
+          <TD class="style12">NewMap [#n&nbsp; text]</TD>
+          <TD>Make the current image or montage a new Navigator map.&nbsp; If an optional #n 
+            is entered, text after that replaces, or is added to, the standard note for a 
+            map.&nbsp; The text replaces the standard note if #n is 0, is added before it if 
+            #n is &lt; 0, or is added after it if # &gt; 0.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style12">MoveToNavItem [#]</TD>
@@ -2143,6 +2148,15 @@
             non-zero group ID. If the group would show up on more than one line with
             'Collapse groups' on, items on all lines will be updated, unlike with the
             'Update Z' button.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style12">LoadNavMap</TD>
+          <TD>Load the current Navigator item, or the item this script is being run on, if 
+            it is a map.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style12">LoadOtherMap #</TD>
+          <TD>Load the Navigator item whose index in the table is #, if it is a map.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style12">ReportNavItem</TD>

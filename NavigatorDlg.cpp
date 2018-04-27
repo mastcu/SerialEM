@@ -19,6 +19,7 @@
 #include "ProcessImage.h"
 #include "FocusManager.h"
 #include "ComplexTasks.h"
+#include "ParticleTasks.h"
 #include "MultiTSTasks.h"
 #include "MacroProcessor.h"
 #include "MacroEditer.h"
@@ -28,6 +29,7 @@
 #include "NavHelper.h"
 #include "NavAcquireDlg.h"
 #include "NavImportDlg.h"
+#include "MultiShotDlg.h"
 #include "MapDrawItem.h"
 #include "Mailer.h"
 #include "LogWindow.h"
@@ -39,6 +41,7 @@
 #include "Utilities\KGetOne.h"
 #include "Shared\cfsemshare.h"
 #include "Shared\autodoc.h"
+#include "Shared\b3dutil.h"
 #include "Image\KStoreIMOD.h"
 #include "Image\KStoreADOC.h"
 
@@ -512,6 +515,7 @@ void CNavigatorDlg::Update()
   BOOL groupOK = false;
   BOOL propsNameStateOK;
   BOOL grpExists = GetCollapsedGroupLimits(mCurListSel, start, end);
+  BOOL recordingHoles = mHelper->mMultiShotDlg &&mHelper->mMultiShotDlg->RecordingHoles();
   if (grpExists)
     mItem = mItemArray[start];
 
@@ -585,9 +589,11 @@ void CNavigatorDlg::Update()
   //m_butUpdatePos.EnableWindow(curExists && mItem->mType != ITEM_TYPE_MAP && noDrawing &&
   //  mAcquireIndex < 0);
   m_butUpdateZ.EnableWindow((curExists || grpExists) && noTasks && noDrawing);
-  m_butGotoPoint.EnableWindow(stageMoveOK);
+  m_butGotoPoint.EnableWindow(stageMoveOK && !recordingHoles);
   m_butGotoXy.EnableWindow(stageMoveOK);
   m_butGotoMarker.EnableWindow(noTasks && noDrawing);
+  m_butGotoXy.SetWindowText(recordingHoles ? "IS To XY" : "Go To XY");
+  m_butGotoMarker.SetWindowText(recordingHoles ? "IS To Marker" : "Go To Marker");
   m_butAddStagePos.EnableWindow(noTasks && noDrawing);
   if (curExists)
     item = FindMontMapDrawnOn(mItem);
@@ -1960,8 +1966,7 @@ void CNavigatorDlg::OnGotoXy()
   mWinApp->RestoreViewFocus();
   if (!SetCurrentItem())
     return;
-  MoveStage(axisXY);  
-  mWinApp->AddIdleTask(CEMscope::TaskStageBusy, -1, 0, 0);
+  MoveStageOrDoImageShift(axisXY);
 }
 
 // Go to the position of the user point in the active window
@@ -1995,8 +2000,7 @@ void CNavigatorDlg::OnGotoMarker()
     mItem->mBacklashX = imBuf->mBacklashX;
     mItem->mBacklashY = imBuf->mBacklashY;
   }
-  MoveStage(axisXY);
-  mWinApp->AddIdleTask(CEMscope::TaskStageBusy, -1, 0, 0);
+  MoveStageOrDoImageShift(axisXY);
   delete item;
 }
 
@@ -2139,6 +2143,37 @@ void CNavigatorDlg::AdjustAndMoveStage(float stageX, float stageY, float stageZ,
   mRequestedStageX = (float)smi.x;
   mRequestedStageY = (float)smi.y;
   mScope->MoveStage(smi, doBacklash);
+}
+
+// Either call the usual MoveStage routine, or do an image shift if recording holes in
+// mulishot dialog
+void CNavigatorDlg::MoveStageOrDoImageShift(int axisBits)
+{
+  float stageX, stageY, stageZ, delX, delY, delISX, delISY;
+  double areaX = 0, areaY = 0;
+  ScaleMat stage2IS;
+  int magInd, area;
+  if (mHelper->mMultiShotDlg && mHelper->mMultiShotDlg->RecordingHoles()) {
+    GetAdjustedStagePos(stageX, stageY, stageZ);
+    if (mWinApp->LowDoseMode()) {
+      area = mScope->GetLowDoseArea();
+      if (area == VIEW_CONSET || area == SEARCH_AREA)
+        mWinApp->mLowDoseDlg.GetNetViewShift(areaX, areaY, area);
+    }
+    magInd = mScope->GetMagIndex();
+    stage2IS = MatMul(mShiftManager->StageToCamera(mWinApp->GetCurrentCamera(), magInd),
+      mShiftManager->CameraToIS(magInd));
+    if (stage2IS.xpx) {
+      delX = mItem->mStageX - stageX;
+      delY = mItem->mStageY - stageY;
+      delISX = stage2IS.xpx * delX + stage2IS.xpy * delY;
+      delISY = stage2IS.ypx * delX + stage2IS.ypy * delY;
+      mScope->IncImageShift(delISX + areaX, delISY + areaY);
+    }
+  } else {
+    MoveStage(axisXY);  
+    mWinApp->AddIdleTask(CEMscope::TaskStageBusy, -1, 0, 0);
+  }
 }
 
 // Delete an item or portion of collapsed group on one line
@@ -2609,19 +2644,23 @@ CArray<CMapDrawItem *, CMapDrawItem *> *CNavigatorDlg::GetMapDrawItems(
   EMimageBuffer *imBuf, ScaleMat &aMat, float &delX, float &delY, BOOL &drawAllReg, 
   CMapDrawItem **acquireBox)
 {
-  float angle;
+  float angle, tiltAngle;
+  bool showMulti;
   if (!SetCurrentItem())
     mItem = NULL;
   *acquireBox = NULL;
   if (m_bDrawNone || !BufferStageToImage(imBuf, aMat, delX, delY))
     return NULL;
   drawAllReg = m_bDrawAllReg;
-  if ((imBuf->mHasUserPt || imBuf->mHasUserLine) && m_bShowAcquireArea &&
+  showMulti = (m_bShowAcquireArea && (mHelper->GetEnableMultiShot() & 1)) ||
+    mHelper->mMultiShotDlg;
+  if ((imBuf->mHasUserPt || imBuf->mHasUserLine) && (m_bShowAcquireArea || 
+    showMulti) &&
     RegistrationUseType(imBuf->mRegistration) != NAVREG_IMPORT) {
 
       // If there is a user point and the box is on to draw acquire area, get needed
       // parameters: camera and mag index from current state or low dose or montage params
-    ScaleMat s2c, c2s;
+    ScaleMat s2c, c2s, is2cam, is2stage;
     ControlSet *conSet = mWinApp->GetConSets() + RECORD_CONSET;
     int camera = mWinApp->GetCurrentCamera();
     MontParam *montp;
@@ -2635,7 +2674,7 @@ CArray<CMapDrawItem *, CMapDrawItem *> *CNavigatorDlg::GetMapDrawItems(
     if (mWinApp->LowDoseMode()) {
       ldp = mWinApp->GetLowDoseParams();
       magInd = ldp[RECORD_CONSET].magIndex;
-      if (montaging && !mHelper->GetEnableMultiShot())
+      if (montaging && !showMulti)
         magInd = ldp[MontageLDAreaIndex(montp)].magIndex;
       
     } else if (montaging) {
@@ -2650,15 +2689,15 @@ CArray<CMapDrawItem *, CMapDrawItem *> *CNavigatorDlg::GetMapDrawItems(
     s2c = mShiftManager->StageToCamera(camera, magInd);
     if (s2c.xpx) {
       c2s = MatInv(s2c);
-      if (imBuf->GetTiltAngle(angle) && fabs((double)angle) > 1.)
-        mShiftManager->AdjustCameraToStageForTilt(c2s, angle);
+      if (imBuf->GetTiltAngle(tiltAngle) && fabs((double)tiltAngle) > 1.)
+        mShiftManager->AdjustCameraToStageForTilt(c2s, tiltAngle);
       CMapDrawItem *box = new CMapDrawItem;
       *acquireBox = box;
       MarkerStagePosition(imBuf, aMat, delX, delY, box->mStageX, box->mStageY,
         imBuf->mHasUserLine);
       sizeX = conSet->right - conSet->left;
       sizeY = conSet->bottom - conSet->top;
-      if (montaging && !mHelper->GetEnableMultiShot()) {
+      if (montaging && !showMulti) {
         sizeX = montp->binning * (montp->xFrame + (montp->xFrame - montp->xOverlap) * 
           (montp->xNframes - 1));
         sizeY = montp->binning * (montp->yFrame + (montp->yFrame - montp->yOverlap) * 
@@ -2672,30 +2711,74 @@ CArray<CMapDrawItem *, CMapDrawItem *> *CNavigatorDlg::GetMapDrawItems(
         box->AppendPoint(ptX, ptY);
       }
 
-      // If showing circles, then get the parameters and comput stage coordinates for 
+      // If showing circles, then get the parameters and compute stage coordinates for 
       // each circle from camera coordinates; add more points to box
-      if (mHelper->GetEnableMultiShot()) {
-        float radius, pixel = mShiftManager->GetPixelSize(camera, magInd);
-        if (pixel) {
+      if (showMulti) {
+        float inHoleRadius = 0., beamRadius;
+        float pixel = mShiftManager->GetPixelSize(camera, magInd);
+        FloatVec delISX, delISY;
+        is2cam = mShiftManager->IStoGivenCamera(magInd, camera);
+        if (pixel && is2cam.xpx) {
           MultiShotParams *msParams = mHelper->GetMultiShotParams();
-          radius = msParams->spokeRad / pixel;
-          for (ind = 0; ind < msParams->numShots; ind++) {
-            angle = (float)(DTOR * ind * 360. / msParams->numShots);
-            cornX = radius * (float)cos(angle);
-            cornY = radius * (float)sin(angle);
-            ptX = box->mStageX + c2s.xpx * cornX + c2s.xpy * cornY;
-            ptY = box->mStageY + c2s.ypx * cornX + c2s.ypy * cornY;
-            box->AppendPoint(ptX, ptY);
+
+          // Make multihole positions relative to center
+          if (msParams->inHoleOrMultiHole & 2) {
+            int numHoles = mWinApp->mParticleTasks->GetHolePositions(delISX, delISY, 
+              magInd, camera);
+            if (numHoles > 0) {
+              bool custom = msParams->useCustomHoles && msParams->customHoleX.size() > 0;
+              int minInd = -1;
+              float dist, minDist = 1.e20f;
+              is2stage = MatMul(is2cam, c2s);
+              for (ind = 0; ind < numHoles; ind++) {
+                ptX = is2stage.xpx * delISX[ind] + is2stage.xpy * delISY[ind];
+                ptY = is2stage.ypx * delISX[ind] + is2stage.ypy * delISY[ind];
+                dist = sqrtf(ptX * ptX + ptY * ptY);
+                if (dist < minDist) {
+                  minInd = box->mNumPoints;
+                  minDist = dist;
+                }
+                box->AppendPoint(ptX, ptY);
+              }
+
+              // Swap last point for closest point;
+              if (!custom) {
+                ptX = box->mPtX[minInd];
+                box->mPtX[minInd] = box->mPtX[box->mNumPoints - 1];
+                box->mPtX[box->mNumPoints - 1] = ptX;
+                ptY = box->mPtY[minInd];
+                box->mPtY[minInd] = box->mPtY[box->mNumPoints - 1];
+                box->mPtY[box->mNumPoints - 1] = ptY;
+              }
+            }
           }
 
-          // Add one more point with beam radius as a position in X in stage coordinates
-          radius = 0.5f * msParams->beamDiam / pixel;
+           // Multishot positions in hole, with absolute positions
+          if (msParams->inHoleOrMultiHole & 1) {
+            inHoleRadius = msParams->spokeRad / pixel;
+            for (ind = 0; ind < msParams->numShots; ind++) {
+              angle = (float)(DTOR * ind * 360. / msParams->numShots);
+              cornX = inHoleRadius * (float)cos(angle);
+              cornY = inHoleRadius * (float)sin(angle);
+              ptX = box->mStageX + c2s.xpx * cornX + c2s.xpy * cornY;
+              ptY = box->mStageY + c2s.ypx * cornX + c2s.ypy * cornY;
+              box->AppendPoint(ptX, ptY);
+            }
+          }
+
+          // Add one more point with beam radius as a position in X in camera coordinates
+          beamRadius = 0.5f * msParams->beamDiam / pixel;
           if (msParams->useIllumArea && mWinApp->mScope->GetUseIllumAreaForC2() && 
             mWinApp->LowDoseMode())
-            radius = (float)(50. * 
+            beamRadius = (float)(50. * 
             mWinApp->mScope->IntensityToIllumArea(ldp[RECORD_CONSET].intensity) / pixel);
-          ptX = box->mStageX + c2s.xpx * radius;
-          ptY = box->mStageY + c2s.ypx * radius;
+          ptX = box->mStageX + c2s.xpx * beamRadius;
+          ptY = box->mStageY + c2s.ypx * beamRadius;
+          box->AppendPoint(ptX, ptY);
+
+          // Add another point with outside radius for whole acquisition in hole
+          ptX = box->mStageX + c2s.xpx * (beamRadius + inHoleRadius);
+          ptY = box->mStageY + c2s.ypx * (beamRadius + inHoleRadius);
           box->AppendPoint(ptX, ptY);
         }
       }
@@ -2978,10 +3061,11 @@ int CNavigatorDlg::PolygonMontage(CMontageSetupDlg *montDlg)
 void CNavigatorDlg::FullMontage()
 {
   float minX, minY, maxX, maxY, midX, midY, cornerX, cornerY;
-  float minCornerX, maxCornerX, minCornerY, maxCornerY;
+  float minCornerX, maxCornerX, minCornerY, maxCornerY, maxOverNominal;
   float fullCornXmin, fullCornXmax, fullCornYmin, fullCornYmax;
   float cornerExtra = 93.;
   float *gridLim = mHelper->GetGridLimits();
+  float nominalLim = JEOLscope ? 1200.f : 1000.f;
   MontParam *montp = mWinApp->GetMontParam();
   mWinApp->RestoreViewFocus();
 	CMapDrawItem *itmp = new CMapDrawItem;
@@ -3004,6 +3088,14 @@ void CNavigatorDlg::FullMontage()
   fullCornYmax = 0.707f * B3DMAX(1000.f, maxY);
   cornerX = 1.414f * (maxX - minX) / 4.f;
   cornerY = 1.414f * (maxY - minY) / 4.f;
+  maxOverNominal = 0.;
+
+  // Phase out the extra addition to the corners when set stage limit approaches nominal
+  ACCUM_MAX(maxOverNominal, -nominalLim - minX);
+  ACCUM_MAX(maxOverNominal, maxX - nominalLim);
+  ACCUM_MAX(maxOverNominal, -nominalLim - minY);
+  ACCUM_MAX(maxOverNominal, maxY - nominalLim);
+  cornerExtra = B3DMAX(0.f, cornerExtra - maxOverNominal);
   minCornerX = B3DMIN(midX - cornerX - cornerExtra, fullCornXmin - cornerExtra);
   maxCornerX = B3DMAX(midX + cornerX + cornerExtra, fullCornXmax + cornerExtra);
   minCornerY = B3DMIN(midY - cornerY - cornerExtra, fullCornYmin - cornerExtra);
@@ -3323,9 +3415,7 @@ void CNavigatorDlg::PolygonToCameraCoords(CMapDrawItem * item, int iCam, int mag
     yy = mPolyToCamMat.ypx * item->mPtX[i] + mPolyToCamMat.ypy * item->mPtY[i];
     mMontItemCam->mPtX[i] = xx;
     mMontItemCam->mPtY[i] = yy;
-    //  CString dump;
-    //  dump.Format("-1 %.2f %.2f", xx, yy);
-    //  mWinApp->AppendToLog(dump, LOG_OPEN_IF_CLOSED);
+    //SEMTrace('n', "-1 %.2f %.2f", xx, yy);
     if (xMin > xx)
       xMin = xx;
     if (xMax < xx)
@@ -3383,7 +3473,8 @@ bool CNavigatorDlg::IsFrameNeeded(CMapDrawItem * item, int xFrame, int yFrame,
                                   int iy, int xNframes, int yNframes, float &xMid, 
                                   float &yMid)
 {
-  float xStart, yStart, xEnd, yEnd;
+  float xStart, yStart, xEnd, yEnd, xCen, yCen;
+  float cornf = 0.6f, cenf = 1.f - cornf;
 
   // Get start and end coordinates of piece, in camera coordinates, and
   // adjust by extra factor and overlaps
@@ -3401,12 +3492,14 @@ bool CNavigatorDlg::IsFrameNeeded(CMapDrawItem * item, int xFrame, int yFrame,
     yStart += yOverlap;
   if (iy < yNframes - 1)
     yEnd -= yOverlap;
+  xCen = 0.5f * (xStart + xEnd);
+  yCen = 0.5f * (yStart + yEnd);
 
-  /* CString dump;
-  dump.Format("%d%d %.2f %.2f\r\n%d%d %.2f %.2f\r\n%d%d %.2f %.2f\r\n%d%d %.2f %.2f",
-  ix, iy, xStart, yStart, ix, iy, xStart, yEnd, ix, iy, xEnd, yEnd, ix, iy, xEnd, yStart);
-  mWinApp->AppendToLog(dump, LOG_OPEN_IF_CLOSED); */
-  // Check for each corner and center inside contours
+  //SEMTrace('n', "%d%d %.2f %.2f\r\n%d%d %.2f %.2f\r\n%d%d %.2f %.2f\r\n%d%d %.2f %.2f",
+  //ix, iy, xStart, yStart, ix, iy, xStart, yEnd, ix, iy, xEnd, yEnd, ix, iy,xEnd,yStart);
+
+  // Check for each edge line and each diagonal point a fraction cornf from center to 
+  // corner for being inside contours
   return (LineInsideContour(item->mPtX, item->mPtY, item->mNumPoints, xStart, yStart, 
     xStart, yEnd) ||
     LineInsideContour(item->mPtX, item->mPtY, item->mNumPoints, xStart, yEnd, xEnd, 
@@ -3415,8 +3508,14 @@ bool CNavigatorDlg::IsFrameNeeded(CMapDrawItem * item, int xFrame, int yFrame,
     yStart) ||
     LineInsideContour(item->mPtX, item->mPtY, item->mNumPoints, xEnd, yStart, xStart, 
     yStart) ||
-    InsideContour(item->mPtX, item->mPtY, item->mNumPoints, 0.5f * (xStart + xEnd),
-    0.5f * (yStart + yEnd)));
+    InsideContour(item->mPtX, item->mPtY, item->mNumPoints, cenf * xCen + cornf * xStart,
+    cenf * yCen + cornf * yStart) ||
+    InsideContour(item->mPtX, item->mPtY, item->mNumPoints, cenf * xCen + cornf * xEnd,
+    cenf * yCen + cornf * yStart) ||
+    InsideContour(item->mPtX, item->mPtY, item->mNumPoints, cenf * xCen + cornf * xStart,
+    cenf * yCen + cornf * yEnd) ||
+    InsideContour(item->mPtX, item->mPtY, item->mNumPoints, cenf * xCen + cornf * xEnd,
+    cenf * yCen + cornf * yEnd));
 }
 
 // Determine if a line segment crosses inside a contour by sampling
@@ -5126,7 +5225,8 @@ void CNavigatorDlg::OnNewMap()
   NewMap();
 }
 
-int CNavigatorDlg::NewMap(bool unsuitableOK) 
+// Defaults are unsuitableOK = false, addOrReplaceNote = 0, newNote = NULL
+int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newNote) 
 {
   EMimageBuffer *imBuf, *readBuf;
   EMimageExtra *imExtra;
@@ -5311,6 +5411,14 @@ int CNavigatorDlg::NewMap(bool unsuitableOK)
   item->mMapHeight = imBuf->mImage->getHeight();
   item->mMapSection = imBuf->mSecNumber;
   item->mNote.Format("Sec %d - %s", item->mMapSection, item->mTrimmedName);
+  if (newNote) {
+    if (addOrReplaceNote > 0)
+      item->mNote = item->mNote + " " + *newNote;
+    else if (addOrReplaceNote < 0)
+      item->mNote = *newNote + " " + item->mNote;
+    else
+      item->mNote = *newNote;
+  }
   item->mMontBinning = item->mMapBinning;
   setNum = RECORD_CONSET;
   if (item->mMapMontage) {
@@ -5732,11 +5840,11 @@ void CNavigatorDlg::ImportMap(void)
       
       // If an overlay is requested, need to load maps synchronously
       if (importDlg.m_bOverlay) {
-        overfail = DoLoadMap(true) ? -1 : 0;
+        overfail = DoLoadMap(true, NULL) ? -1 : 0;
         if (!overfail) {
           mBufferManager->CopyImageBuffer(mBufferManager->GetBufToReadInto(), 0);
           mCurrentItem = oldCurItem;
-          overfail = DoLoadMap(true) ? -2 : 0;
+          overfail = DoLoadMap(true, NULL) ? -2 : 0;
         }
 
         // Then get the overlay image into A
@@ -5830,10 +5938,10 @@ void CNavigatorDlg::OnLoadMap()
   if (mItem->mType == ITEM_TYPE_POINT) {
     mHelper->LoadPieceContainingPoint(mItem, mFoundItem);
   } else
-    DoLoadMap(false);
+    DoLoadMap(false, NULL);
 }
 
-int CNavigatorDlg::DoLoadMap(bool synchronous)
+int CNavigatorDlg::DoLoadMap(bool synchronous, CMapDrawItem *item)
 {
   int err;
   static MontParam mntp;
@@ -5841,9 +5949,12 @@ int CNavigatorDlg::DoLoadMap(bool synchronous)
   MontParam *masterMont = mWinApp->GetMontParam();
 
   mWinApp->RestoreViewFocus();
-  if (!SetCurrentItem())
+  if (item)
+    mItem = item;
+  else if (!SetCurrentItem())
     return 1;
   mOriginalStore = mDocWnd->GetCurrentStore();
+  mLoadItem = mItem;
 
   // Get the pointers to file, open if necessary
   err = AccessMapFile(mItem, mLoadStoreMRC, mCurStore, montP, mUseWidth, mUseHeight);
@@ -5878,7 +5989,8 @@ int CNavigatorDlg::DoLoadMap(bool synchronous)
     err = mWinApp->mMontageController->ReadMontage(mItem->mMapSection, NULL, NULL, false,
       synchronous);
   else
-    err = mBufferManager->ReadFromFile(mLoadStoreMRC, mItem->mMapSection, -1, false, synchronous);
+    err = mBufferManager->ReadFromFile(mLoadStoreMRC, mItem->mMapSection, -1, false, 
+    synchronous);
 
   if (err && err != READ_MONTAGE_OK) {
     AfxMessageBox("Error reading image from file.", MB_EXCLAME);
@@ -5904,28 +6016,28 @@ void CNavigatorDlg::FinishLoadMap(void)
   bool noStage, noTilt;
 
   LoadMapCleanup();
-  if (mItem->mMapMontage && mWinApp->mMontageController->GetLastFailed()) {
+  if (mLoadItem->mMapMontage && mWinApp->mMontageController->GetLastFailed()) {
     mWinApp->UpdateBufferWindows(); 
     return;
   }
   if (mReadingOther)
-    imBuf->mSecNumber = -mItem->mMapSection - 1;
+    imBuf->mSecNumber = -mLoadItem->mMapSection - 1;
 
   // Set the registration and map ID, clear out rotation info
-  imBuf->mRegistration = mItem->mRegistration;
-  imBuf->mMapID = mItem->mMapID;
+  imBuf->mRegistration = mLoadItem->mRegistration;
+  imBuf->mMapID = mLoadItem->mMapID;
   imBuf->mRotAngle = 0.;
   imBuf->mInverted = false;
   imBuf->mUseWidth = mUseWidth;
   imBuf->mUseHeight = mUseHeight;
   imBuf->mLoadWidth = imBuf->mImage->getWidth();
   imBuf->mLoadHeight = imBuf->mImage->getHeight();
-  imBuf->mCamera = mItem->mMapCamera;
-  imBuf->mMagInd = mItem->mMapMagInd;
+  imBuf->mCamera = mLoadItem->mMapCamera;
+  imBuf->mMagInd = mLoadItem->mMapMagInd;
 
   // Attach the map stage position to the image if it is missing
   noStage = !imBuf->GetStagePosition(stageX, stageY);
-  noTilt = !imBuf->GetTiltAngle(angle) && mItem->mMapTiltAngle > RAW_STAGE_TEST;
+  noTilt = !imBuf->GetTiltAngle(angle) && mLoadItem->mMapTiltAngle > RAW_STAGE_TEST;
   if (noStage || noTilt) {
     extra1 = (EMimageExtra *)imBuf->mImage->GetUserData();
     if (!extra1) {
@@ -5933,29 +6045,29 @@ void CNavigatorDlg::FinishLoadMap(void)
       imBuf->mImage->SetUserData(extra1);
     }
     if (noStage) {
-      extra1->mStageX = mItem->mStageX;
-      extra1->mStageY = mItem->mStageY;
+      extra1->mStageX = mLoadItem->mStageX;
+      extra1->mStageY = mLoadItem->mStageY;
     }
     if (noTilt)
-      extra1->m_fTilt = mItem->mMapTiltAngle;
+      extra1->m_fTilt = mLoadItem->mMapTiltAngle;
     extra1->ValuesIntoShorts();
   }
 
   // Set effective binning for imported map
-  if (mItem->mImported)
+  if (mLoadItem->mImported)
     imBuf->mEffectiveBin = B3DMIN(camP->sizeX / mUseWidth, camP->sizeY / mUseHeight);
 
   // Convert single frame map to bytes now if flag set
-  if (mHelper->GetConvertMaps() && !mItem->mMapMontage && 
-    mItem->mMapMinScale != mItem->mMapMaxScale)
-    mImBufs[bufInd].ConvertToByte(mItem->mMapMinScale, mItem->mMapMaxScale);
+  if (mHelper->GetConvertMaps() && !mLoadItem->mMapMontage && 
+    mLoadItem->mMapMinScale != mLoadItem->mMapMaxScale)
+    mImBufs[bufInd].ConvertToByte(mLoadItem->mMapMinScale, mLoadItem->mMapMaxScale);
   
   // Copy montage to read buffer, get loaded size, rotate if requested, and display
   // 4/20/09: montage has already been copied there, but still work on buffer B first and
   // then copy it again so that both buffers have the map data
-  if (mItem->mMapMontage)
+  if (mLoadItem->mMapMontage)
     mBufferManager->CopyImageBuffer(1, bufInd);
-  if (mItem->mRotOnLoad)
+  if (mLoadItem->mRotOnLoad)
     RotateMap(&mImBufs[bufInd], false);
   mWinApp->SetCurrentBuffer(bufInd);
 
@@ -8737,4 +8849,31 @@ int CNavigatorDlg::OKtoSkipStageMove(BOOL roughEucen, BOOL realign, BOOL cook,
   if (!roughEucen && !cook && !fineEucen && !focus && acqType == ACQUIRE_RUN_MACRO)
     return -1;
   return 0;
+}
+
+// Returns the number of point items in the current group; if maxPoints is > 0, returns
+// with maxPoints + 1 if number of items exceeds maxPoints; if stageX and stageY are
+// non-NULL, returns the stage coordinates of the points
+int CNavigatorDlg::GetCurrentGroupSizeAndPoints(int maxPoints, float *stageX, 
+  float *stageY, float *defocusOffset)
+{
+  int ind, num = 0;
+  CMapDrawItem *item;
+  if (!SetCurrentItem(true) || mItem->mType != ITEM_TYPE_POINT)
+    return 0;
+  if (defocusOffset)
+    *defocusOffset = mItem->mDefocusOffset;
+  for (ind = 0; ind < mItemArray.GetSize(); ind++) {
+    item = mItemArray[ind];
+    if (item->mGroupID == mItem->mGroupID && item->mType == ITEM_TYPE_POINT) {
+      num++;
+      if (maxPoints > 0 && num > maxPoints)
+        return num;
+      if (stageX)
+        stageX[num - 1] = item->mStageX;
+      if (stageY)
+        stageY[num - 1] = item->mStageY;
+    }
+  }
+  return num;
 }

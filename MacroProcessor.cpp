@@ -220,6 +220,7 @@ enum {CME_VIEW, CME_FOCUS, CME_TRIAL, CME_RECORD, CME_PREVIEW,
   CME_CBASTIGCOMA, CME_FIXASTIGMATISMBYCTF, CME_FIXCOMABYCTF, CME_ECHOEVAL, 
   CME_REPORTFILENUMBER, CME_REPORTCOMATILTNEEDED, CME_REPORTSTIGMATORNEEDED,
   CME_SAVEBEAMTILT, CME_RESTOREBEAMTILT, CME_REPORTCOMAVSISMATRIX,CME_ADJUSTBEAMTILTFORIS,
+  CME_LOADNAVMAP, CME_LOADOTHERMAP
 };
 
 static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0},
@@ -328,7 +329,8 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"CtfFind",3,1}, {"CBAstigComa",3,0}, {"FixAstigmatismByCTF",0,0}, {"FixComaByCTF", 0, 0},
 {"EchoEval", 0, 1}, {"ReportFileNumber", 0, 0}, {"ReportComaTiltNeeded", 0, 0}, 
 {"ReportStigmatorNeeded", 0, 0}, {"SaveBeamTilt", 0, 0}, {"RestoreBeamTilt", 0, 0},
-{"ReportComaVsISmatrix", 0, 0}, {"AdjustBeamTiltforIS", 0, 0},
+{"ReportComaVsISmatrix", 0, 0}, {"AdjustBeamTiltforIS", 0, 0}, {"LoadNavMap", 0, 0},
+{"LoadOtherMap", 1, 0},
 {NULL, 0, 0}
 };
 
@@ -408,6 +410,7 @@ CMacroProcessor::CMacroProcessor()
   mExposedFilm = false;
   mStartedLongOp = false;
   mMovedPiezo = false;
+  mLoadingMap = false;
   mLastCompleted = false;
   mLastAborted = false;
   mEnteredName = "";
@@ -831,6 +834,7 @@ int CMacroProcessor::TaskBusy()
     (mMovedScreen && mScope->ScreenBusy()))) ||
     (mStartedLongOp && mScope->LongOperationBusy()) ||
     (mMovedPiezo && mWinApp->mPiezoControl->PiezoBusy() > 0) ||
+    (mLoadingMap && mWinApp->mNavigator && mWinApp->mNavigator->GetLoadingMap()) ||
     mWinApp->mShiftCalibrator->CalibratingIS() ||
     (mCamera->CameraBusy() && (mCamera->GetTaskWaitingForFrame() || 
     !(mUsingContinuous && mCamera->DoingContinuousAcquire()))) ||
@@ -1075,6 +1079,7 @@ void CMacroProcessor::NextCommand()
   mMovedScreen = false;
   mExposedFilm = false;
   mStartedLongOp = false;
+  mLoadingMap = false;
 
   if (mMovedPiezo && mWinApp->mPiezoControl->GetLastMovementError()) {
     AbortMacro();
@@ -1782,6 +1787,13 @@ void CMacroProcessor::NextCommand()
     index = (itemEmpty[6] || itemInt[6] < -8) ? msParams->doEarlyReturn : itemInt[6];
     if (!camParams->K2Type)
       index = 0;
+    index2 = msParams->inHoleOrMultiHole;
+    if (!itemEmpty[9] && itemInt[9] > -9) {
+      index2 = itemInt[9];
+      if (index2 < 1 || index2> 3)
+        ABORT_LINE("The ninth entry for doing within holes or\n"
+        "in multiple holes must be between 1 and 3 in line:\n\n");
+    }
     truth = (index == 0 || msParams->numEarlyFrames != 0) ? msParams->saveRecord : false;
     if (mWinApp->mParticleTasks->StartMultiShot(
       (itemEmpty[1] || itemInt[1] < -8) ? msParams->numShots : itemInt[1],
@@ -1790,7 +1802,8 @@ void CMacroProcessor::NextCommand()
       (itemEmpty[4] || itemDbl[4] < -8.) ? msParams->extraDelay : (float)itemDbl[4],
       (itemEmpty[5] || itemInt[5] < -8) ? truth : itemInt[5] != 0, index,
       (itemEmpty[7] || itemInt[7] < -8) ? msParams->numEarlyFrames : itemInt[7],
-      (itemEmpty[8] || itemInt[8] < -8) ? msParams->adjustBeamTilt : itemInt[8] != 0)) {
+      (itemEmpty[8] || itemInt[8] < -8) ? msParams->adjustBeamTilt : itemInt[8] != 0,
+      index2)) {
         AbortMacro();
         return;
     }
@@ -2617,7 +2630,8 @@ void CMacroProcessor::NextCommand()
 
   } else if (CMD_IS(SETSPOTSIZE)) {                         // SetSpotSize
     index = B3DNINT(itemDbl[1]);
-    if (itemEmpty[1] || index < 1 || index > mScope->GetNumSpotSizes())
+    if (itemEmpty[1] || index < mScope->GetMinSpotSize() || 
+      index > mScope->GetNumSpotSizes())
       ABORT_LINE("Improper spot size in statement: \n\n");
     if (!mScope->SetSpotSize(index)) {
       AbortMacro();
@@ -4539,42 +4553,48 @@ void CMacroProcessor::NextCommand()
       ABORT_NOLINE("Script halted due to failure to realign to item");
       navHelper->SetContinuousRealign(0);
     }
+                              // ReportNavItem, ReportOtherItem, LoadNavMap, LoadOtherMap
+  } else if (CMD_IS(REPORTNAVITEM) || CMD_IS(REPORTOTHERITEM) || CMD_IS(LOADNAVMAP) || 
+    CMD_IS(LOADOTHERMAP)) {
+      ABORT_NONAV;
+      if (CMD_IS(REPORTNAVITEM) || CMD_IS(LOADNAVMAP)) {                            
+        index = navigator->GetCurrentOrAcquireItem(navItem);
+        if (index < 0)
+          ABORT_LINE("There is no current Navigator item for line:\n\n.");
+      } else {
+        index = itemInt[1] - 1;
+        navItem = navigator->GetOtherNavItem(index);
+        if (!navItem)
+          ABORT_LINE("Index is out of range in statement:\n\n");
+      }
 
-  } else if (CMD_IS(REPORTNAVITEM) || CMD_IS(REPORTOTHERITEM)) {
-    ABORT_NONAV;
-    if (CMD_IS(REPORTNAVITEM)) {                            // ReportNavItem
-      index = navigator->GetCurrentOrAcquireItem(navItem);
-      if (index < 0)
-        ABORT_NOLINE("There is no current Navigator item.");
-    } else {
-      if (itemEmpty[1])
-        ABORT_NOLINE("ReportOtherItem command requires a Navigator item index");
-      index = itemInt[1] - 1;
-      navItem = navigator->GetOtherNavItem(index);
-      if (!navItem)
-        ABORT_LINE("Index is out of range in statement:\n\n");
-    }
 
-    report.Format("Item %d:  Stage: %.2f %.2f %2.f  Label: %s", index + 1,
-      navItem->mStageX, navItem->mStageY, navItem->mStageZ, (LPCTSTR)navItem->mLabel);
-    if (!navItem->mNote.IsEmpty())
-      report += "\r\n    Note: " + navItem->mNote;
-    mWinApp->AppendToLog(report, mLogAction);
-    SetReportedValues(index + 1., navItem->mStageX, navItem->mStageY, navItem->mStageZ,
-      (double)navItem->mType);
-    report.Format("%d", index + 1);
-    SetVariable("NAVINDEX", report, VARTYPE_REGULAR, -1, false);
-    SetVariable("NAVLABEL", navItem->mLabel, VARTYPE_REGULAR, -1, false);
-    SetVariable("NAVNOTE", navItem->mNote, VARTYPE_REGULAR, -1, false);
-    SetVariable("NAVREGIS", navItem->mRegistration, VARTYPE_REGULAR, -1, false);
-    index = atoi(navItem->mLabel);
-    report.Format("%d", index);
-    SetVariable("NAVINTLABEL", report, VARTYPE_REGULAR, -1, false);
-    if (navigator->GetAcquiring()) {
-      report.Format("%d", navigator->GetNumAcquired() + 1);
-      SetVariable("NAVACQINDEX", report, VARTYPE_REGULAR, -1, false);
-    }
-
+      if (CMD_IS(REPORTNAVITEM) || CMD_IS(REPORTOTHERITEM)) {
+        report.Format("Item %d:  Stage: %.2f %.2f %2.f  Label: %s", index + 1,
+          navItem->mStageX, navItem->mStageY, navItem->mStageZ, (LPCTSTR)navItem->mLabel);
+        if (!navItem->mNote.IsEmpty())
+          report += "\r\n    Note: " + navItem->mNote;
+        mWinApp->AppendToLog(report, mLogAction);
+        SetReportedValues(index + 1., navItem->mStageX, navItem->mStageY, navItem->mStageZ,
+          (double)navItem->mType);
+        report.Format("%d", index + 1);
+        SetVariable("NAVINDEX", report, VARTYPE_REGULAR, -1, false);
+        SetVariable("NAVLABEL", navItem->mLabel, VARTYPE_REGULAR, -1, false);
+        SetVariable("NAVNOTE", navItem->mNote, VARTYPE_REGULAR, -1, false);
+        SetVariable("NAVREGIS", navItem->mRegistration, VARTYPE_REGULAR, -1, false);
+        index = atoi(navItem->mLabel);
+        report.Format("%d", index);
+        SetVariable("NAVINTLABEL", report, VARTYPE_REGULAR, -1, false);
+        if (navigator->GetAcquiring()) {
+          report.Format("%d", navigator->GetNumAcquired() + 1);
+          SetVariable("NAVACQINDEX", report, VARTYPE_REGULAR, -1, false);
+        }
+      } else {
+        if (navItem->mType != ITEM_TYPE_MAP)
+          ABORT_LINE("The Navigator item is not a map for line:\n\n");
+        navigator->DoLoadMap(false, navItem);
+        mLoadingMap = true;
+      }
                                                    // NavIndexWithLabel, NavIndexWithNote
   } else if (CMD_IS(NAVINDEXWITHLABEL) || CMD_IS(NAVINDEXWITHNOTE)) {
     ABORT_NONAV;
@@ -4694,7 +4714,14 @@ void CMacroProcessor::NextCommand()
   } else if (CMD_IS(NEWMAP)) {                              // NewMap
     ABORT_NONAV;
     navigator->SetSkipBacklashType(1);
-    if (navigator->NewMap()) {
+    index = 0;
+    if (!itemEmpty[1]) {
+      index = itemInt[1];
+      if (itemEmpty[2])
+        ABORT_LINE("There must be text for the Navigator note after the number in:\n\n");
+      mWinApp->mParamIO->StripItems(strLine, 2, strCopy);
+    }
+    if (navigator->NewMap(false, index, itemEmpty[1] ? NULL : &strCopy)) {
       mCurrentIndex = mLastIndex;
       SuspendMacro();
       return;

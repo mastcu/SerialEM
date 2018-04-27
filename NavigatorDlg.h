@@ -75,7 +75,7 @@ public:
 	void AcquireNextTask(int param);
 	void AcquireAreas(bool fromMenu);
 	BOOL AcquireOK(bool tiltSeries = false, int startInd = 0, int endInd = -1);
-  int NewMap(bool unsuitableOK = false);
+  int NewMap(bool unsuitableOK = false, int addOrReplaceNote = 0, CString *newNote = NULL);
   void DeleteItem() {OnDeleteitem();};
 	void CornerMontage();
 	int PolygonMontage(CMontageSetupDlg *montDlg);
@@ -253,6 +253,7 @@ private:
   int mFilenameBorderX;
   BOOL mInitialized;
   CMapDrawItem *mItem;
+  CMapDrawItem *mLoadItem;
   CArray<CMapDrawItem *, CMapDrawItem *> mItemArray;
   CArray<ScheduledFile *, ScheduledFile *> mGroupFiles;
   CArray<FileOptions *, FileOptions *> mFileOptArray;
@@ -439,7 +440,7 @@ public:
   CStatic m_statListHeader;
   void GetSuperCoords(int & superX, int &superY);
   int ShiftItemsByAlign(void);
-  int DoLoadMap(bool synchronous);
+  int DoLoadMap(bool synchronous, CMapDrawItem *item);
   CButton m_butTiltSeries;
   BOOL m_bTiltSeries;
   CButton m_butFileAtItem;
@@ -548,6 +549,9 @@ public:
   int OKtoSkipStageMove(BOOL roughEucen, BOOL realign, BOOL cook, BOOL fineEucen, 
     BOOL focus, int acqType);
   void EndAcquireWithMessage(void);
+  int GetCurrentGroupSizeAndPoints(int maxPoints, float * stageX, float * stageY, 
+    float *defocusOffset);
+void MoveStageOrDoImageShift(int axisBits);
 };
 
 //{{AFX_INSERT_LOCATION}}
