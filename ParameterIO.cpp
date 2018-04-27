@@ -109,9 +109,6 @@ CParameterIO::~CParameterIO()
   else if (strItems[0] == a) \
     b = (float)itemDbl[1];
 
-// BEWARE: FOR ANYTHING THAT CAN BE ON MULTIPLE LINES AND IS JUST ADDED TO A VECTOR,
-// THE VECTOR MUST BE CLEARED FIRST
-
 int CParameterIO::ReadSettings(CString strFileName)
 {
   int retval = 0;
@@ -198,9 +195,6 @@ int CParameterIO::ReadSettings(CString strFileName)
           iCam = itemInt[2];
         cs = &mConSets[iset + iCam * MAX_CONSETS];
         frameListOK = true;
-        cs->summedFrameList.clear();
-        cs->userFrameFractions.clear();
-        cs->userSubframeFractions.clear();
         while ((err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, 
                                      MAX_TOKENS)) == 0) {
           if (NAME_IS("EndControlSet"))

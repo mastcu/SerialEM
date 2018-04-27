@@ -1601,7 +1601,7 @@ void CBeamAssessor::StopShiftCalibration()
 //
 void CBeamAssessor::CalibrateSpotIntensity()
 {
-  int dimmestSpot = HitachiScope ? 1 : mScope->GetNumSpotSizes();
+  int dimmestSpot = HitachiScope ? mScope->GetMinSpotSize() : mScope->GetNumSpotSizes();
   mNumSpotsToCal = mScope->GetNumSpotSizes();
   mSpotCalStartSpot = mScope->GetSpotSize();
   ControlSet *conSet = mWinApp->GetConSets() + SPOT_CAL_CONSET;
@@ -1622,12 +1622,12 @@ void CBeamAssessor::CalibrateSpotIntensity()
 
   for (int ind = 1; ind <= mNumSpotsToCal; ind++)
     mTempIntensities[ind] = mTempCounts[ind] = 0.;
-  mSpotCalIndex = HitachiScope ? mNumSpotsToCal : 1;
+  mSpotCalIndex = HitachiScope ? mNumSpotsToCal : mScope->GetMinSpotSize();
   if (!KGetOneInt("Brightest spot number to measure:", mSpotCalIndex))
     return;
   if (!KGetOneInt("Dimmest spot number to measure:", dimmestSpot))
     return;
-  B3DCLAMP(mSpotCalIndex, 1, mNumSpotsToCal);
+  B3DCLAMP(mSpotCalIndex, mScope->GetMinSpotSize(), mNumSpotsToCal);
   B3DCLAMP(dimmestSpot, 1, mNumSpotsToCal);
   mNumSpotsToCal = B3DCHOICE(HitachiScope, mSpotCalIndex + 1 - dimmestSpot,
     dimmestSpot + 1 - mSpotCalIndex);
@@ -1775,6 +1775,7 @@ void CBeamAssessor::CalibrateCrossover(void)
 {
   double delCross, crossover, intensity;
  	int spotSize, spot, i, j;
+  int minSpot = mScope->GetMinSpotSize();
   int numBeamChg = 0, numWarn = 0;
   BOOL changed = false;
   bool focChanged = false;
@@ -1788,15 +1789,15 @@ void CBeamAssessor::CalibrateCrossover(void)
     "You should make sure you are at eucentric focus and\n"
     " go to a high mag (~100K) to do this.", MB_OKCANCEL | MB_ICONINFORMATION) != IDOK)
     return;
-  for (spotSize = 1; spotSize <= mScope->GetNumSpotSizes(); spotSize++) {
-    if (SetAndCheckSpotSize(spotSize))
-      return;
-    if (AfxMessageBox("Adjust brightness to bring the beam to crossover",
-      MB_OKCANCEL | MB_ICONINFORMATION) != IDOK)
-      break;
-    intensity = mScope->GetIntensity();
-    mScope->SetCrossover(spotSize, probe, intensity);
-    mWinApp->SetCalibrationsNotSaved(true);
+  for (spotSize = minSpot; spotSize <= mScope->GetNumSpotSizes(); spotSize++) {
+      if (SetAndCheckSpotSize(spotSize))
+        return;
+      if (AfxMessageBox("Adjust brightness to bring the beam to crossover",
+        MB_OKCANCEL | MB_ICONINFORMATION) != IDOK)
+        break;
+      intensity = mScope->GetIntensity();
+      mScope->SetCrossover(spotSize, probe, intensity);
+      mWinApp->SetCalibrationsNotSaved(true);
   }
   mScope->SetSpotSize(spotSave);
   if (mScope->GetUseIllumAreaForC2()) {
@@ -1809,7 +1810,7 @@ void CBeamAssessor::CalibrateCrossover(void)
 
   // Look at the beam and spot calibrations and shift intensity values by change in 
   //crossover.  First check if this shifts any beam tables out of range
-  for (spot = 1; spot < spotSize; spot++) {
+  for (spot = minSpot; spot < spotSize; spot++) {
     crossover = mScope->GetCrossover(spot);
     for (i = 0; i < mNumTables; i++) {
       delCross = crossover - mBeamTables[i].crossover;
@@ -1829,7 +1830,7 @@ void CBeamAssessor::CalibrateCrossover(void)
   }
 
   // Then go through again if no problems there
-  for (spot = 1; !numWarn && spot < spotSize; spot++) {
+  for (spot = minSpot; !numWarn && spot < spotSize; spot++) {
     crossover = mScope->GetCrossover(spot);
     for (i = 0; i < mNumSpotTables; i++) {
       if (mSpotTables[i].ratio[spot] && mSpotTables[i].probeMode == probe && 
@@ -2073,10 +2074,10 @@ void CBeamAssessor::CalibrateSpotBeamShifts(void)
   int secondary = mScope->GetSecondaryMode();
   int calBase = secondary * 2 * (MAX_SPOT_SIZE + 1);
   int iDir = HitachiScope ? 1 : -1;
-  int lastSpot = HitachiScope ? numSpots : 1;
+  int lastSpot = HitachiScope ? numSpots : mScope->GetMinSpotSize();
   mScope->GetMinMaxBeamShiftSpots(secondary, minSpot, maxSpot);
   if (!minSpot || !maxSpot)
-    firstSpot = HitachiScope ? 1: numSpots;
+    firstSpot = HitachiScope ? mScope->GetMinSpotSize() : numSpots;
   else
     firstSpot = HitachiScope ? minSpot : maxSpot;
   if (!KGetOneInt("You will be asked to center the beam at each spot"
