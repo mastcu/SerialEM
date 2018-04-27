@@ -627,7 +627,7 @@ void CFrameAlignDlg::OnDeltaposSpinPairwiseNum(NMHDR *pNMHDR, LRESULT *pResult)
 void CFrameAlignDlg::OnDeltaposSpinAlignBin(NMHDR *pNMHDR, LRESULT *pResult)
 {
   FormattedSpinnerValue(pNMHDR, pResult, 2, 10, mAlignBin, m_strAlignBin, 
-    "Alignment binning %d");
+    "%d");
 }
 
 void CFrameAlignDlg::OnDeltaposSpinGroupSize(NMHDR *pNMHDR, LRESULT *pResult)
