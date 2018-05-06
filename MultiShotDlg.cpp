@@ -301,6 +301,7 @@ void CMultiShotDlg::ManagePanels(void)
     ManageEnables();
   }
   AdjustPanels(states, idTable, leftTable, topTable, mNumInPanel, mPanelStart, 0);
+  mWinApp->RestoreViewFocus();
 }
 
 // Do multiple shots in hole check box
@@ -412,7 +413,7 @@ void CMultiShotDlg::StopRecording(void)
 void CMultiShotDlg::OnButSaveIs()
 {
   double ISX, ISY, stageX, stageY, stageZ;
-  float ISlimit = mWinApp->mShiftCalibrator->GetCalISOstageLimit();
+  float ISlimit = 2.f * mWinApp->mShiftCalibrator->GetCalISOstageLimit();
   float focusLim = -20.;
   EMimageBuffer *imBufs = mWinApp->GetImBufs();
   CString str;
@@ -481,7 +482,10 @@ void CMultiShotDlg::OnButSaveIs()
         str.Format("Shift by %d holes in second direction", numSteps[1]);
     }
   } else {
-    str.Format("Shift to the %s position in the pattern", size > 1 ? "next" : "first");
+    if (size > 1)
+      str.Format("Shift to acquire position # %d in the pattern", size);
+    else
+      str = "Shift to the first acquire position in the pattern";
   }
   m_statSaveInstructions.SetWindowText(str);
 }

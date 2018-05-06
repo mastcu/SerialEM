@@ -1016,7 +1016,7 @@ void CCameraSetupDlg::UnloadDialogToConset()
   mCurSet->K2ReadMode =  *modeP;
   if (mParam->K2Type)
     mCurSet->doseFrac = m_bDoseFracMode ? 1 : 0;
-  mCurSet->frameTime = m_fFrameTime;
+  mCurSet->frameTime = ActualFrameTime(m_fFrameTime);
   if (!(mCurrentSet == RECORD_CONSET && mWinApp->mTSController->GetFrameAlignInIMOD()))
     mCurSet->alignFrames = m_bAlignDoseFrac ? 1 : 0;
   mCurSet->saveFrames = mUserSaveFrames ? 1 : 0;
@@ -1095,6 +1095,9 @@ float CCameraSetupDlg::ManageExposure(bool updateIfChange)
     changed = changed || fabs(m_eExposure - realExp) > 1.e-5;
   } else
     m_eExposure = realExp;
+
+  if (mParam->K2Type == K3_TYPE)
+    m_fFrameTime = RoundedDEframeTime(m_fFrameTime);
 
   // Special for DE
   if (mWinApp->mDEToolDlg.CanSaveFrames(mParam)) {
@@ -1180,7 +1183,8 @@ void CCameraSetupDlg::ManageDrift(bool useMinRate)
     // or if Tietz beam shutter
     if (mCamera->CanPreExpose(mParam, m_iShuttering)) {
       if (mParam->K2Type)
-        limit.Format("Minimum %.4f if not 0.0", mCamera->GetK2ReadoutInterval());
+        limit.Format("Minimum %.4f if not 0.0", mCamera->GetK2ReadoutInterval
+        (mParam->K2Type));
       else
         limit.Format("Minimum %.2f if not 0.0", mMinimumSettling);
       m_driftText1.EnableWindow(true);
@@ -1203,8 +1207,8 @@ void CCameraSetupDlg::ManageDrift(bool useMinRate)
 
     // For K2, constrain settling to multiple of frame time
     if (m_eSettling > 0.0 && mParam->K2Type) {
-      float newSettling = (float)(mCamera->GetK2ReadoutInterval() * 
-        B3DNINT(m_eSettling / mCamera->GetK2ReadoutInterval()));
+      float newSettling = (float)(mCamera->GetK2ReadoutInterval(mParam->K2Type) * 
+        B3DNINT(m_eSettling / mCamera->GetK2ReadoutInterval(mParam->K2Type)));
       if (fabs(newSettling - m_eSettling) > 1.e-5) {
         m_eSettling = newSettling;
         m_strSettling.Format("%.4f", m_eSettling);
@@ -1300,7 +1304,7 @@ void CCameraSetupDlg::ManageCamera()
   
   mBuiltInSettling = mParam->builtInSettling;
   mDMbeamShutterOK = mParam->DMbeamShutterOK || !mParam->GatanCam;
-  mMinDualSettling = mParam->K2Type ? mCamera->GetK2ReadoutInterval() : 
+  mMinDualSettling = mParam->K2Type ? mCamera->GetK2ReadoutInterval(mParam->K2Type) : 
     mParam->minimumDrift;
   mMinExposure = mParam->minExposure;
   mDMsettlingOK = mParam->DMsettlingOK;
@@ -1432,9 +1436,9 @@ void CCameraSetupDlg::ManageCamera()
 
   if (mParam->K2Type) {
     radio = (CButton *)GetDlgItem(IDC_RCOUNTING);
-    radio->EnableWindow(mParam->K2Type == 1);
+    radio->EnableWindow(mParam->K2Type == K2_SUMMIT || mParam->K2Type == K3_TYPE);
     radio = (CButton *)GetDlgItem(IDC_RSUPERRES);
-    radio->EnableWindow(mParam->K2Type == 1);
+    radio->EnableWindow(mParam->K2Type == K2_SUMMIT || mParam->K2Type == K3_TYPE);
     SetDlgItemText(IDC_DOSE_FRAC_MODE, "Dose Fractionation mode");
     m_butAlwaysAntialias.EnableWindow(mCamera->GetPluginVersion(mParam) >= 
       PLUGIN_CAN_ANTIALIAS);
@@ -2136,6 +2140,8 @@ void CCameraSetupDlg::ManageDose()
     m_iK2Mode, mBinnings[m_iBinning], mCurSet->alignFrames && !mCurSet->useFrameAlign,
     m_bDEsaveMaster ? m_iSumCount : 1, realExp, m_fFrameTime);
   m_fDEframeTime = RoundedDEframeTime(m_fFrameTime * (m_bDEsaveMaster ? 1 : m_iSumCount));
+  if (mParam->K2Type)
+    m_fFrameTime = RoundedDEframeTime(m_fFrameTime);
   dose = mWinApp->mBeamAssessor->GetCurrentElectronDose(camera, mCurrentSet, realExp, 
     m_eSettling, spotSize, intensity);
   if (dose)
@@ -2373,9 +2379,13 @@ void CCameraSetupDlg::OnAlignDoseFrac()
 void CCameraSetupDlg::OnKillfocusEditFrameTime() 
 {
   UpdateData(TRUE);
+  if (mParam->K2Type)
+    mCamera->ConstrainFrameTime(m_fFrameTime, mParam->K2Type);
   if (m_bSaveFrames && m_bSaveK2Sums)
     mWinApp->mFalconHelper->AdjustForExposure(mSummedFrameList, 0,
       0, m_eExposure, m_fFrameTime, mUserFrameFrac, mUserSubframeFrac, false);
+  if (mParam->K2Type)
+    m_fFrameTime = RoundedDEframeTime(m_fFrameTime);
   ManageExposure();
   ManageK2SaveSummary();
 }
@@ -2685,7 +2695,8 @@ void CCameraSetupDlg::ManageK2SaveSummary(void)
     (mCamera->GetSaveUnnormalizedFrames() && mCamera->GetPluginVersion(mParam) > 
     PLUGIN_CAN_GAIN_NORM);
   if (mParam->K2Type && m_bDoseFracMode) {
-    frames = B3DNINT(m_eExposure / B3DMAX(0.025, m_fFrameTime));
+    frames = B3DNINT(m_eExposure / B3DMAX(mCamera->GetMinK2FrameTime(mParam->K2Type),
+      ActualFrameTime(m_fFrameTime)));
     int tiff = mCamera->GetK2SaveAsTiff();
     if (m_bSaveK2Sums && mSummedFrameList.size() > 0)
       frames = mWinApp->mFalconHelper->GetFrameTotals(mSummedFrameList, dummy);
@@ -2722,7 +2733,7 @@ void CCameraSetupDlg::OnSetupFalconFrames()
   dlg.mUserFrameFrac = mUserFrameFrac;
   dlg.mUserSubframeFrac = mUserSubframeFrac;
   dlg.mK2Type = mParam->K2Type> 0;
-  dlg.mReadoutInterval = B3DCHOICE(mParam->K2Type, m_fFrameTime,
+  dlg.mReadoutInterval = B3DCHOICE(mParam->K2Type, ActualFrameTime(m_fFrameTime),
     mCamera->GetFalconReadoutInterval());
   dlg.m_fSubframeTime = (float)(B3DNINT(dlg.mReadoutInterval * 2000.) / 2000.);
   dlg.mMaxFrames = mParam->K2Type ? 1000 : mCamera->GetMaxFalconFrames(mParam);
@@ -2738,7 +2749,7 @@ void CCameraSetupDlg::OnSetupFalconFrames()
   }
   m_eExposure = dlg.mExposure;
   if (mParam->K2Type)
-    m_fFrameTime = dlg.mReadoutInterval;
+    m_fFrameTime = RoundedDEframeTime(dlg.mReadoutInterval);
   UpdateData(false);
   mNumSkipBefore = dlg.mNumSkipBefore;
   mNumSkipAfter = dlg.mNumSkipAfter;
@@ -2888,4 +2899,12 @@ float CCameraSetupDlg::RoundedDEframeTime(float frameTime)
 {
   float roundFac = 0.0005f;
   return roundFac * B3DNINT(frameTime / roundFac);
+}
+
+
+float CCameraSetupDlg::ActualFrameTime(float roundedTime)
+{
+  if (mParam->K2Type)
+    mCamera->ConstrainFrameTime(roundedTime, mParam->K2Type);
+  return roundedTime;
 }

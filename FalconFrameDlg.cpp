@@ -123,16 +123,18 @@ void CFalconFrameDlg::OnKillfocusEditExposure()
     mAligningInFalcon, 1, m_fExposure, m_fSubframeTime);
   mHelper->AdjustForExposure(mSummedFrameList, mNumSkipBefore, mNumSkipAfter,
     m_fExposure, mReadoutInterval, mUserFrameFrac, mUserSubframeFrac, mAligningInFalcon);
+  m_fSubframeTime = .0005f * B3DNINT(2000. * m_fSubframeTime);
   UpdateAllDisplays();
 }
 
 void CFalconFrameDlg::OnKillfocusSubframeTime()
 {
   UpdateData(TRUE);
-  mWinApp->mCamera->ConstrainFrameTime(m_fSubframeTime);
+  mWinApp->mCamera->ConstrainFrameTime(m_fSubframeTime, mK2Type);
   mReadoutInterval = m_fSubframeTime;
   mHelper->AdjustForExposure(mSummedFrameList, mNumSkipBefore, mNumSkipAfter,
     m_fExposure, mReadoutInterval, mUserFrameFrac, mUserSubframeFrac, false);
+  m_fSubframeTime = 0.0005f * B3DNINT(2000. * m_fSubframeTime);
   UpdateAllDisplays();
 }
 
@@ -141,6 +143,7 @@ void CFalconFrameDlg::OnKillfocusEditReadouts()
 {
   int ind, totFrames, totSubframes, numVals, currentIndex = 0;
   int lineList[2];
+  float realFrame = m_fSubframeTime;
   bool changed, allOnes = true, badEntry = false;
   int alignFraction = mAligningInFalcon ? mWinApp->mCamera->GetFalcon3AlignFraction() : 1;
   CString strLine;
@@ -191,12 +194,15 @@ void CFalconFrameDlg::OnKillfocusEditReadouts()
       mSummedFrameList = newList;
 
       // Make sure the exposure time is valid and if it changes, redistribute frames
-      m_fExposure = m_fSubframeTime * totSubframes;
+      if (mCamParams->K2Type)
+        mWinApp->mCamera->ConstrainFrameTime(realFrame, mCamParams->K2Type); 
+      m_fExposure = realFrame * totSubframes;
       if (mWinApp->mCamera->ConstrainExposureTime(mCamParams, true, mReadMode, 1, 
-        mAligningInFalcon, 1, m_fExposure, m_fSubframeTime))
+        mAligningInFalcon, 1, m_fExposure, realFrame))
           mHelper->DistributeSubframes(mSummedFrameList, 
-            B3DNINT(m_fExposure / m_fSubframeTime), totFrames, mUserFrameFrac, 
+            B3DNINT(m_fExposure / realFrame), totFrames, mUserFrameFrac, 
             mUserSubframeFrac, mAligningInFalcon);
+      m_fSubframeTime = .0005f * B3DNINT(2000. * realFrame);
     }
   }
    

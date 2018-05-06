@@ -282,11 +282,12 @@ void CTSVariationsDlg::OnButTsvAddSeries()
     mWinApp->mCamera->DESumCountForConstraints(camParam, conSet), recExp, frameTime);
   if (camParam->K2Type) {
     if (conSet->doseFrac && fabs(recExp - frameTime) < 1.e-5) {
-      baseTime = mWinApp->mCamera->GetK2ReadoutInterval();
+      baseTime = mWinApp->mCamera->GetK2ReadoutInterval(camParam->K2Type);
       oneFrame = true;
       fixedFrames = false;
     } else if (fixedFrames) {
-      baseTime = (recExp / frameTime) * mWinApp->mCamera->GetK2ReadoutInterval();
+      baseTime = (recExp / frameTime) * 
+        mWinApp->mCamera->GetK2ReadoutInterval(camParam->K2Type);
     } else {
       baseTime = mWinApp->mCamera->GetLastK2BaseTime();
     }
@@ -486,6 +487,8 @@ void CTSVariationsDlg::UnloadToCurrentItem(void)
 bool CTSVariationsDlg::CheckItemValue(bool update)
 {
   bool changed = false;
+  int *active = mWinApp->GetActiveCameraList();
+  CameraParameters *camParam = mWinApp->GetCamParams() + active[mParam->cameraIndex];
   FilterParams *filtp = mWinApp->GetFilterParams();
   switch (m_iType) {
     case TS_VARY_DRIFT:
@@ -503,7 +506,7 @@ bool CTSVariationsDlg::CheckItemValue(bool update)
       break;
 
     case TS_VARY_FRAME_TIME:
-      changed = mWinApp->mCamera->ConstrainFrameTime(m_fValue);
+      changed = mWinApp->mCamera->ConstrainFrameTime(m_fValue, camParam->K2Type);
       break;
 
     case TS_VARY_SLIT:

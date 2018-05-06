@@ -911,6 +911,9 @@ void CFocusManager::AutoFocusStart(int inChange, int useViewInLD, int iterNum)
     mNextMaxDeltaFocus = 0.;
     mNextMinAbsFocus = 0.;
     mNextMaxAbsFocus = 0.;
+    mNumNearZeroCorr = 0;
+    mCumulFocusChange = 0.;
+    mNumFullChangeIters = 0;
   }
 
   if (!mWinApp->GetSTEMMode()) { 
@@ -986,6 +989,8 @@ void CFocusManager::AutoFocusData(float inX, float inY)
   float changeLimit = 2.f * B3DMAX(8.f, mRefocusThreshold);
   double overShoot = 0.0;   // Microns to overshoot and return on negative change
   float closerCrit = 0.33f;
+  int fullChangeIterLimit = 8;
+  float nearZeroAbsCrit = 0.15f, nearZeroRelCrit = 0.1f;
   CString report, addon;
   float rawDefocus, lastDefocus = mCurrentDefocus;
   bool refocus, testAbs, testDelta;
@@ -1005,6 +1010,12 @@ void CFocusManager::AutoFocusData(float inX, float inY)
 
     // Limit the change
     B3DCLAMP(diff, -changeLimit, changeLimit);
+    if (fabs(diff - fullDiff) < 0.1)
+      mNumFullChangeIters++;
+    mCumulFocusChange += (float)diff;
+
+    if (fabs(rawDefocus) < B3DMAX(0.15, 0.1 * diff))
+      mNumNearZeroCorr++;
       
     // Approach from below: if it is a positive change, do it; 
     // Otherwise overshoot then go back (THIS DIDN'T HELP)
@@ -1054,6 +1065,15 @@ void CFocusManager::AutoFocusData(float inX, float inY)
         diff = mScope->GetFocus();
         abort = B3DCHOICE((mUseMinAbsFocus != 0. && diff < mUseMinAbsFocus) ||
           (mUseMinAbsFocus != 0. && diff > mUseMaxAbsFocus), FOCUS_ABORT_ABS_LIMIT, 0);
+      }
+      if (!abort && mAutofocusIterNum > 2 && fabs(mCumulFocusChange) > mAbortThreshold && 
+        mAbortThreshold > 0. && mNumNearZeroCorr >= ceil(0.75 * mAutofocusIterNum)) {
+          abort = FOCUS_ABORT_NEAR_ZERO;
+          addon = "correlation was near zero too many times";
+      }
+      if (!abort && mNumFullChangeIters >= fullChangeIterLimit) {
+        abort = FOCUS_ABORT_TOO_MANY_ITERS;
+        addon = "too may iterations have been run";
       }
       if (abort) {
         mLastAborted = abort;

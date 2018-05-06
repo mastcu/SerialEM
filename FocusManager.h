@@ -12,7 +12,8 @@
 enum FocusTasks {FOCUS_AUTOFOCUS = 1, FOCUS_CALIBRATE, FOCUS_REPORT, FOCUS_EXISTING, 
 FOCUS_SHOW_CORR, FOCUS_SHOW_STRETCH, FOCUS_CAL_ASTIG, FOCUS_ASTIGMATISM, FOCUS_COMA_FREE};
 
-enum {FOCUS_ABORT_INCONSISTENT = 1, FOCUS_ABORT_ABS_LIMIT, FOCUS_ABORT_DELTA_LIMIT};
+enum {FOCUS_ABORT_INCONSISTENT = 1, FOCUS_ABORT_ABS_LIMIT, FOCUS_ABORT_DELTA_LIMIT,
+FOCUS_ABORT_NEAR_ZERO, FOCUS_ABORT_TOO_MANY_ITERS};
 
 #define MAX_FOCUS_CALIBRATIONS 40
 #define MAX_STEMFOC_STEPS  25
@@ -229,6 +230,9 @@ private:
   float mEucenMaxDefocus;
   BOOL mUseEucenAbsLimits;
   BOOL mTestOffsetEucenAbs;
+  int mNumNearZeroCorr;     // Number of correlations that wrer near 0 schift
+  float mCumulFocusChange;  // Sum of focus changes made through iterations
+  int mNumFullChangeIters;  // Number of iterations that made a full change
   float mRFTbkgdStart;      // Frequencies for start and end of background range
   float mRFTbkgdEnd;
   float mRFTtotPowStart;    // Frequency range for measuring total power

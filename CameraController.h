@@ -308,13 +308,17 @@ class DLL_IM_EX CCameraController
   SetMember(int, RetainMagAndShift);
   SetMember(float, DSsyncMargin);
   GetSetMember(int, NumK2Filters);
-  GetSetMember(float, MinK2FrameTime);
+  SetMember(float, MinK2FrameTime);
+  SetMember(float, MinK3FrameTime);
+  float GetMinK2FrameTime(int K2Type) {return K2Type == K3_TYPE ? mMinK3FrameTime : mMinK2FrameTime;};
   SetMember(float, K2BaseModeScaling);
   SetMember(BOOL, SkipNextReblank);
   SetMember(int, DefaultGIFCamera);
   SetMember(int, DefaultRegularCamera);
   GetMember(float, LastK2BaseTime);
-  GetSetMember(float, K2ReadoutInterval);
+  SetMember(float, K2ReadoutInterval);
+  SetMember(float, K3ReadoutInterval);
+  float GetK2ReadoutInterval(int K2Type) {return K2Type == K3_TYPE ? mK3ReadoutInterval : mK2ReadoutInterval;};
   CString *GetK2FilterNames() {return &mK2FilterNames[0];};
   GetSetMember(float, FalconReadoutInterval);
   SetMember(int, MaxFalconFrames);
@@ -677,6 +681,8 @@ class DLL_IM_EX CCameraController
   int mNumK2Filters;
   float mMinK2FrameTime;        // Minimum frame time allowed in dose fractionation
   float mK2ReadoutInterval;       // Actual readout interval, base for all times
+  float mMinK3FrameTime;        // Minimum frame time for K3
+  float mK3ReadoutInterval;     // Actual readout interval for K3
   int mZoomFilterType;          // Type for antialias filter
   BOOL mOneK2FramePerFile;      // Flag to save one file per frame
   CString mDirForK2Frames;      // Directory to save them in
@@ -711,8 +717,10 @@ class DLL_IM_EX CCameraController
   BOOL mSkipNextReblank;        // Flag to not blank readout in next shot
   int mDefaultGIFCamera;        // Active camera number of "first GIF camera"
   int mDefaultRegularCamera;    // Active camera number of "first regular camera"
-  float mBaseK2CountingTime;    // Counting and super-res need to be multiples of these
-  float mBaseK2SuperResTime;
+  float mBaseK2CountingTime;    // Counting and super-res single-shot need to be multiples
+  float mBaseK2SuperResTime;    // of these for K3
+  float mBaseK3CountingTime;    // And for K3
+  float mBaseK3SuperResTime;
   float mLastK2BaseTime;        // Base time last time that exposure time was constrained
   BOOL mNoK2SaveFolderBrowse;   // Flag not to show the Browse button when picking folder
   int mSaveRawPacked;           // Pack flags: 1 bytes->4bits/ints->bytes + 2 ints->4bits
@@ -885,7 +893,7 @@ public:
   bool ConstrainExposureTime(CameraParameters *camP, ControlSet *consP);
   bool ConstrainExposureTime(CameraParameters *camP, BOOL doseFrac, int readMode, 
     int binning, bool alignInCamera, int sumCount, float &exposure, float &frameTime);
-  bool ConstrainFrameTime(float &frameTime);
+  bool ConstrainFrameTime(float &frameTime, int K2Type);
   void RestoreFEIshutter(void);
   void QueueFocusSteps(float interval1, double focus1, float interval2, double focus2);
   static void ChangeDynFocus(CameraThreadData *td, double focus, double focusBase, 

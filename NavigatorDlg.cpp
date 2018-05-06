@@ -2865,9 +2865,6 @@ void CNavigatorDlg::ComputeStageToImage(EMimageBuffer *imBuf, float stageX, floa
                                         BOOL needAddIS, ScaleMat &aMat, float &delX, 
                                         float &delY)
 {
-  float defocus = 0.;
-  int spot = 1;
-  double intensity = 0.5;
   float angle = RAW_STAGE_TEST - 1000.;
   BOOL hasAngle = imBuf->GetTiltAngle(angle);
 
@@ -2876,17 +2873,9 @@ void CNavigatorDlg::ComputeStageToImage(EMimageBuffer *imBuf, float stageX, floa
     ConvertIStoStageIncrement(imBuf->mMagInd, imBuf->mCamera, imBuf->mISX, imBuf->mISY,
       angle, stageX, stageY);
 
-  if (imBuf->mLowDoseArea && imBuf->mMagInd >= mScope->GetLowestNonLMmag() && 
-    IS_SET_VIEW_OR_SEARCH(imBuf->mConSetUsed)) {
-      defocus = imBuf->mViewDefocus;
-      if (!imBuf->GetSpotSize(spot) || !imBuf->GetIntensity(intensity))
-        defocus = 0.;
-  }
-
   // Sign woes as usual.  This transform is a true transformation from the stage
   // to the camera coordinate system, but invert Y to get to image coordinate system
-  aMat = mShiftManager->FocusAdjustedStageToCamera(imBuf->mCamera, imBuf->mMagInd, spot,
-    imBuf->mProbeMode, intensity, defocus);
+  aMat = mShiftManager->FocusAdjustedStageToCamera(imBuf);
   aMat.xpx /= imBuf->mBinning;
   aMat.xpy /= imBuf->mBinning;
   aMat.ypx /= -imBuf->mBinning;

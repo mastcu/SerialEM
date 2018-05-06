@@ -4333,7 +4333,7 @@ void CEMscope::GotoLowDoseArea(int inArea)
       if ((mLdsaParams->beamDelX || mLdsaParams->beamDelY) && 
         mProbeMode == mLdsaParams->probeMode && !splitBeamShift)
         IncBeamShift(-mLdsaParams->beamDelX, -mLdsaParams->beamDelY);
-      SetProbeMode(ldArea->probeMode, true);
+      SetProbeMode(ldArea->probeMode, false);
     }
   } else
     ldArea->probeMode = mProbeMode;

@@ -2156,7 +2156,9 @@
         </TR>
         <TR vAlign="top">
           <TD class="style12">LoadOtherMap #</TD>
-          <TD>Load the Navigator item whose index in the table is #, if it is a map.</TD>
+          <TD>Load the Navigator item whose index in the table is #, if it is a map; ; or if 
+            # is negative, load the item that many items from the end of the table, i.e., 
+            -1 loads on the last item. </TD>
         </TR>
         <TR vAlign="top">
           <TD class="style12">ReportNavItem</TD>
@@ -2175,8 +2177,9 @@
         </TR>
         <TR vAlign="top">
           <TD class="style12">ReportOtherItem #</TD>
-          <TD>Report similarly on the Navigator item whose index in the table is #, numbered
-            from 1.</TD>
+          <TD>Report similarly on the Navigator item whose index in the table is #, numbered 
+            from 1; or if # is negative, reports on item that many items from the end of the 
+            table, i.e., -1 reports on the last item. </TD>
         </TR>
         <TR vAlign="top">
           <TD class="style12">ReportGroupStatus</TD>
@@ -2194,13 +2197,13 @@
             as two values; return each as -1 if Navigator is not open.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">ItemIndexWithLabel str</TD>
+          <TD class="style12">NavIndexWithLabel str</TD>
           <TD>Report the index in the Navigator table of the item whose label is the given 
             string, or 0 if there is none.&nbsp; Sets reportedValue1 with the index.&nbsp; 
             The string can contain spaces and the comparison is not case-sensitive.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">ItemIndexWithNote str</TD>
+          <TD class="style12">NavIndexWithNote str</TD>
           <TD>Report the Navigator index of the item whose note is the given string, 
             otherwise just like ItemIndexWithLabel.</TD>
         </TR>

@@ -1186,8 +1186,11 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
       mConSets[MONTAGE_CONSET].alignFrames = 0;
     
     // Adjust exposure, try to do something about reducing drift settling if exposure is
-    // now very short.  THIS IS OBSOLETE SINCE BINNING IS ALREADY LOCKED TO MATCH
+    // now very short.  THIS IS OBSOLETE SINCE BINNING IS ALREADY LOCKED TO MATCH,
+    // But it does set the prescan exposure
     float binRatio = (float)mConSets[setNum].binning / mParam->binning;
+    if (binRatio < 0.9 && mWinApp->LowDoseMode())
+      binRatio *= B3DMIN(2., B3DMAX(1., 1. / binRatio));
     mConSets[MONTAGE_CONSET].exposure *= binRatio * binRatio;
     if (mParam->binning > mConSets[setNum].binning && mConSets[MONTAGE_CONSET].drift > 0.)
     {
@@ -3141,6 +3144,13 @@ int EMmontageController::SetMaxPrescanBinning()
   int iCam = activeList[GetMontageActiveCamera(mParam)];
   CameraParameters *cam = mWinApp->GetCamParams() + iCam;
 
+  // For faster readout cameras (e.g., CMOS), limit the binning to 2 and boost the target
+  bool limitBinning = false;
+  if (mCamera->IsDirectDetector(cam) || cam->OneViewType || cam->FEItype == 3) {
+    trialTarget = 2048;
+    limitBinning = true;
+  }
+
   fullX = mParam->binning * (mParam->xFrame * mParam->xNframes -
     mParam->xOverlap * (mParam->xNframes - 1));
   fullY = mParam->binning * (mParam->yFrame * mParam->yNframes -
@@ -3151,7 +3161,8 @@ int EMmontageController::SetMaxPrescanBinning()
     binning = cam->binnings[i];
     if (binning < mParam->binning)
       continue;
-    if (fullX / binning <= trialTarget && fullY / binning <= trialTarget)
+    if (fullX / binning <= trialTarget && fullY / binning <= trialTarget ||
+      (limitBinning && binning >= 2 * mParam->binning))
       break;
   }
   mParam->maxPrescanBin = binning;

@@ -303,6 +303,8 @@ CCameraController::CCameraController()
   mMinK2FrameTime = -1.;
   mK2ReadoutInterval = -1.;
   mK2BaseModeScaling = -1.;
+  mK3ReadoutInterval = .000665779f;
+  mMinK3FrameTime = 0.01331558f;
 
   // Set these to values in simple DM user interface except for first incrment
   mOneViewMinExposure[0] = 0.04f;
@@ -340,6 +342,8 @@ CCameraController::CCameraController()
   mDefaultRegularCamera = -1;
   mBaseK2CountingTime = 0.1f;
   mBaseK2SuperResTime = 0.5f;
+  mBaseK3CountingTime = 0.01331558f;
+  mBaseK3SuperResTime = 0.01331558f;
   mNoK2SaveFolderBrowse = false;
   mRunCommandAfterSave = false;
   mSaveRawPacked = -1;
@@ -597,10 +601,10 @@ int CCameraController::Initialize(int whichCameras)
     mOtherCamerasInTIA = true;
 
   // Delayed initialization of K2 parameters depending on base or summit if not entered
-  if (mMinK2FrameTime < 0) 
-    mMinK2FrameTime = anyK2Type > 1 ? 0.1138f : 0.025f;
+  if (mMinK2FrameTime < 0)
+    mMinK2FrameTime = anyK2Type == K2_BASE ? 0.1138f : 0.025f;
   if (mK2ReadoutInterval < 0)
-    mK2ReadoutInterval = anyK2Type > 1 ? 0.1138f : 0.0025f;
+    mK2ReadoutInterval = anyK2Type == K2_BASE ? 0.1138f : 0.0025f;
   if (mK2BaseModeScaling < 0)
     mK2BaseModeScaling = 0.25f;
 
@@ -2536,8 +2540,11 @@ void CCameraController::Capture(int inSet, bool retrying)
   if (mParam->OneViewType)
     mTD.GatanReadMode = conSet.K2ReadMode != 0 ? -2 : -3;
   mTD.CountScaling = GetCountScaling(mParam);
-  if (mTD.GatanReadMode == 0)
-    mTD.CountScaling = mParam->K2Type == 2 ? mK2BaseModeScaling : 1.;
+  if (mTD.GatanReadMode == 0) {
+    mTD.CountScaling = mParam->K2Type == K2_BASE ? mK2BaseModeScaling : 1.;
+    if (mParam->K2Type == K3_TYPE)
+      mTD.CountScaling = 0.01 / (mTD.Binning * mTD.Binning);
+  }
 
   // DE cameras: Handle numerous items
   mTD.AlignFrames = conSet.alignFrames;
@@ -3765,7 +3772,7 @@ void CCameraController::CapManageCoordinates(ControlSet & conSet, int &gainXoffs
   int csizeX, csizeY, block, operation = 0;
   int tLeft, tTop, tBot, tRight, tsizeX, tsizeY, reducedSizeX, reducedSizeY;
   BOOL unbinnedK2, doseFrac, superRes, antialiasInPlugin, swapXYinAcquire = false;
-  bool reduceAligned;
+  bool reduceAligned, binInPlugin;
 
   // Get the CCD coordinates after binning. First make sure binning is right for K2
   // and set various flags about taking images unbinned and antialiasing in plugin
@@ -3774,8 +3781,12 @@ void CCameraController::CapManageCoordinates(ControlSet & conSet, int &gainXoffs
   if (mParam->K2Type && !superRes && conSet.binning < 2)
     conSet.binning = 2;
   antialiasInPlugin = mParam->K2Type && CAN_PLUGIN_DO(CAN_ANTIALIAS, mParam)  
-    && conSet.mode == SINGLE_FRAME && (doseFrac || superRes || mAntialiasBinning) &&
+    && (conSet.mode == SINGLE_FRAME || mParam->K2Type == K3_TYPE) && 
+    (doseFrac || superRes || mAntialiasBinning || mParam->K2Type == K3_TYPE) &&
     conSet.binning > (superRes ? 1 : 2) && mTD.NumAsyncSumFrames != 0;
+  binInPlugin = mParam->K2Type == K3_TYPE && (!(doseFrac || superRes || 
+     mAntialiasBinning) || conSet.mode == CONTINUOUS);
+   
   reduceAligned = doseFrac && conSet.alignFrames && conSet.useFrameAlign == 1;
   unbinnedK2 = mParam->K2Type && (superRes || doseFrac || antialiasInPlugin);
   mBinning = conSet.binning;
@@ -3894,7 +3905,9 @@ void CCameraController::CapManageCoordinates(ControlSet & conSet, int &gainXoffs
   mTD.CallSizeY = tsizeY;
   mTD.Binning = mBinning;
   B3DCLAMP(mZoomFilterType, 0, 5);
-  mTD.K2ParamFlags = B3DCHOICE(antialiasInPlugin, mZoomFilterType + 1, 0);
+  mTD.K2ParamFlags = 0;
+  if (antialiasInPlugin)
+    mTD.K2ParamFlags =B3DCHOICE(binInPlugin, 1, mZoomFilterType + 1);
   if (mParam->K2Type) {
     if ((superRes || doseFrac) && !(antialiasInPlugin || reduceAligned))
       mTD.Binning = 1;
@@ -3909,8 +3922,9 @@ void CCameraController::CapManageCoordinates(ControlSet & conSet, int &gainXoffs
 
   // For oneView, throw the flag to take a subarea if plugin can do this and it is indeed
   // a subarea
-  if ((mParam->OneViewType || mParam->K2Type == K3_TYPE) && !mParam->subareasBad && 
-    (tsizeX < csizeX / mBinning || tsizeY < csizeY / mBinning))
+  if ((mParam->OneViewType || (mParam->K2Type == K3_TYPE && !(mParam->coordsModulo && 
+    mParam->moduloX && mParam->moduloX % 32 == 0 && mParam->moduloY && mParam->moduloY % 16 == 0)))
+    && !mParam->subareasBad && (tsizeX < csizeX / mBinning || tsizeY < csizeY / mBinning))
     mTD.K2ParamFlags |= K2_OVW_MAKE_SUBAREA;
 
 }
@@ -4017,8 +4031,8 @@ void CCameraController::CapSetupShutteringTiming(ControlSet & conSet, int inSet,
         if (mDelay < 0.01)
           mDelay = 0.01f;
         if (mParam->K2Type)
-          mDelay = (float)(mK2ReadoutInterval * B3DNINT(conSet.drift / 
-          mK2ReadoutInterval));
+          mDelay = (float)(GetK2ReadoutInterval(mParam->K2Type) * B3DNINT(conSet.drift / 
+          GetK2ReadoutInterval(mParam->K2Type)));
       }
       mTD.ShutterMode = mParam->beamShutter;
       if (mParam->extraBeamTime < 0.)
@@ -4977,16 +4991,16 @@ bool CCameraController::ConstrainExposureTime(CameraParameters *camP, BOOL doseF
     // For K2, first fix the frame time if it is used and set it as base time for 
     // exposure, otherwise set base time based on mode
     if (doseFrac) {
-      if (ConstrainFrameTime(frameTime))
+      if (ConstrainFrameTime(frameTime, camP->K2Type))
         retval = true;
       baseTime = frameTime;
 
     } else if (readMode == COUNTING_MODE) {
-      baseTime = mBaseK2CountingTime;
+      baseTime = camP->K2Type == K3_TYPE ? mBaseK3CountingTime : mBaseK2CountingTime;
     } else if (readMode == SUPERRES_MODE) {
-      baseTime = mBaseK2SuperResTime;
+      baseTime = camP->K2Type == K3_TYPE ? mBaseK3SuperResTime : mBaseK2SuperResTime;
     } else {
-      baseTime = mBaseK2CountingTime;
+      baseTime = camP->K2Type == K3_TYPE ? mBaseK3CountingTime : mBaseK2CountingTime;
     }
     mLastK2BaseTime = baseTime;
   } else if (camP->OneViewType) {
@@ -5044,9 +5058,10 @@ bool CCameraController::ConstrainExposureTime(CameraParameters *camP, BOOL doseF
 // Return a factor for rounding a constrained exposure time if appropriate
 float CCameraController::ExposureRoundingFactor(CameraParameters *camP)
 {
-  if (camP->K2Type == 2 || IS_FALCON2_OR_3(camP) ||mWinApp->mDEToolDlg.HasFrameTime(camP))
+  if (camP->K2Type == K2_BASE || IS_FALCON2_OR_3(camP) ||
+    mWinApp->mDEToolDlg.HasFrameTime(camP))
     return 200.f;
-  if (camP->OneViewType)
+  if (camP->OneViewType || camP->K2Type == K3_TYPE)
     return 1000.f;
   return 0;
 }
@@ -5057,12 +5072,12 @@ bool CCameraController::IsDirectDetector(CameraParameters *camP)
 }
 
 // Constrain a frame time for the K2 camera and return true if changed
-bool CCameraController::ConstrainFrameTime(float &frameTime)
+bool CCameraController::ConstrainFrameTime(float &frameTime, int K2Type)
 {
   float ftime = frameTime;
-  int num = B3DNINT(frameTime / mK2ReadoutInterval);
-  frameTime = (float)(num * mK2ReadoutInterval);
-  B3DCLAMP(frameTime, mMinK2FrameTime, 10.f);
+  int num = B3DNINT(frameTime / GetK2ReadoutInterval(K2Type));
+  frameTime = (float)(num * GetK2ReadoutInterval(K2Type));
+  B3DCLAMP(frameTime, GetMinK2FrameTime(K2Type), 10.f);
   return fabs(frameTime - ftime) > 1.e-5;
 }
 

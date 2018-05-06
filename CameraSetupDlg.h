@@ -357,6 +357,7 @@ afx_msg void OnDeSaveMaster();
   void CheckFalconFrameSumList(void);
 float RoundedDEframeTime(float frameTime);
 int GetMagIndexForCamAndSet(void);
+float ActualFrameTime(float roundedTime);
 };
 
 //{{AFX_INSERT_LOCATION}}

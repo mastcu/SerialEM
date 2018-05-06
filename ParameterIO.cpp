@@ -4667,7 +4667,7 @@ int CParameterIO::ReadOneMacro(int iset, CString &strLine, CString *strItems,
     if (iset < maxMacros)
       macros[iset] += strLine+ "\r\n";
   }
-  if (iset < maxMacros) {
+  if (iset < MAX_MACROS) {
     if (mWinApp->mMacroEditer[iset])
       mWinApp->mMacroEditer[iset]->TransferMacro(false);
     else

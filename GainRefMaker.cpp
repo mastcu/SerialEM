@@ -1149,8 +1149,10 @@ void CGainRefMaker::UpdateDMReferenceTimes(void)
     SEMTrace('r', "Looking for DM gain reference");
 
     // Look for counting reference for K2
-    if (mParam->K2Type)
+    if (mParam->K2Type) {
       name = mCamera->MakeFullDMRefName(mParam, ".m2.");
+     SEMTrace('r', "Prop name  -%s-  look for  -%s-", (LPCTSTR)(refPath + "\\" + mParam->DMRefName), name);
+    }
     if (mParam->useSocket && CBaseSocket::ServerIsRemote(GATAN_SOCK_ID)) {
       i = mWinApp->mGatanSocket->CheckReferenceTime((LPCTSTR)name, &mtime);
       exists = i == 0;

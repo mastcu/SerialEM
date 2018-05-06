@@ -15,17 +15,27 @@
     <basefont size="2">
     <p><a NAME="hidd_multi_shot_setup"></a><span class="style1">Multiple Record
     Setup Dialog</span></p>
-    <p>This dialog allows you to set parameters for taking multiple Record images in a 
-      circular pattern around the current position, with image shift used to center on 
-      each position.&nbsp; The parameters are used in two ways: when acquiring the 
+    <p>This dialog allows you to set parameters for taking multiple Record images with 
+      image shift used to center on a series of positions.&nbsp; The positions can be in a 
+      circular pattern around the current position, which would generally be used for 
+      taking multiple shots within a hole, or in designated positions relative to the 
+      current position, which would generally be used for taking shots in multiple 
+      holes.&nbsp; Both within-hole and between-hole images can be taken.&nbsp; The parameters are used in two ways: when acquiring the 
       images with the 'MultipleRecords' script command, and when displaying the 
       positions as a pattern of circles representing the beam on an image (e.g., a 
-      lower-magnification map).&nbsp; The latter display occurs when the 'Show Acquire 
-      area' checkbox in the Navigator dialog is turned on, provided that the display 
+      lower-magnification map).&nbsp; The latter display occurs when this dialog is 
+      open, and also when the 'Show Acquire 
+      area' checkbox in the Navigator dialog is turned on and the display 
       is enabled with the <a href="#hid_options_showmulti">Show Shots when 
             Show Acquire</a> option in the Navigator - Montaging & Grids submenu.&nbsp; 
-      When this display is active, changes in the relevant parameters here will appear 
-      immediately in display.</p>
+      When the relevant parameters here are changed, these changes will appear 
+      immediately in the display.</p>
+    <p>It is important to realize that if the image areas are being displayed on a Low 
+      Dose View image with a large defocus offset, the positions and sizes may be 
+      misleading.</p>
+    <p><b>Do multiple Records within each hole</b></p>
+    <p>Select this checkbox to take images in a circular pattern, with no control over 
+      their angles.&nbsp; The relevant controls will appear when it is selected.</p>
     <p><b>Number of shots around center</b></p>
     <p>Select a value between 2 and 12 for the number of Records taken in off-center 
       positions.</p>
@@ -34,13 +44,42 @@
       which should be possible with 6 or more off-center shots.&nbsp; The centered 
       shot can be taken either before or after the off-center shots.&nbsp; Although 
       taking it may involve one more delay for image shift settling, it is reported 
-      that this shot will have less drift when take after the others.</p>
+      that this shot will have less drift when taken after the others.</p>
     <p>&nbsp;<b>Distance from center to off-center shots</b></p>
     <p>Distance from the center position to the off-center positions, in microns.&nbsp; 
       This distance must be at least as big as the beam diameter to avoid exposing 
       overlapping areas in more than one Record shot.&nbsp; If the multi-shot circles 
       are being displayed, press tab or Enter to have the image redrawn after entering 
       a new distance.</p>
+    <p><b>Do Records in multiple holes</b></p>
+    <p>Select this checkbox to take Records in either a rectangular grid of positions 
+      or a series of arbitrary, &#39;custom&#39; positions around the current center position.&nbsp; 
+      The relevant controls will appear when it is selected.</p>
+    <p><b>Multiplier of usual delay after shifting to hole</b></p>
+    <p>SerialEM has a built-in settling time after image shift that depends on the 
+      size of the shift; it is probably inadequate at high magnification.&nbsp; The 
+      factor entered here increases this settling time when shifting between holes; 
+      the extra delay time described below is still added to the settling time.&nbsp; 
+      This separate entrt allows you to have an adequate settling time when moving 
+      between holes without having to make the extra delay for shots within a hole 
+      bigger than necessary.</p>
+    <p><b>Regular pattern of holes: n by n</b></p>
+    <p>Use the two spinners to set the number of positions in the rectangular pattern.&nbsp; 
+      These values must be set before recording the image shift values at the 
+      corners.Use </p>
+    <p><b>Use custom pattern</b></p>
+    <p>Select this checkbox to take images in an arbitrary set of positions specified 
+      by shifting to a center location then to each acquisition position.</p>
+    <p><b>Save Image Shift Values at Holes</b></p>
+    <p>Press &#39;For Corners of Regular Pattern&#39; to start setting the image shifts needed 
+      for a regular pattern, or &#39;For custom pattern&#39; to start setting the shifts for 
+      arbitrary positions.&nbsp; After pressing one of these buttons, the label below 
+      the next line of buttons will summarize what to do next.</p>
+    <p>To set the corners of a regular pattern</p>
+    <p><b>Save Record image</b></p>
+    <p>Select this option to have the Record image saved in the current file.&nbsp; 
+      The option is disabled and its setting is irrelevant if an early return is 
+      selected with no returned image.</p>
     <p><b>Early returns for K2</b></p>
     <p>This group of controls appears when there is a K2 camera available and allows 
       for SerialEM to resume operations as soon as possible after acquiring an image 
@@ -56,10 +95,6 @@
       image shift sooner.</p>
     <p>In the text box in this group, enter the number of frames in the returned 
       image: 0 for none, a specific number of frames, or -1 for all the frames.</p>
-    <p><b>Save Record image</b></p>
-    <p>Select this option to have the Record image saved in the current file.&nbsp; 
-      The option is disabled and its setting is irrelevant if an early return is 
-      selected with no returned image.</p>
     <p><b>Extra delay after image shift</b></p>
     <p>A standard amount of settling time is imposed after each image shift; the extra 
       delay entered here will be added to this settling time.</p>

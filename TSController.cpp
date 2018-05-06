@@ -3237,7 +3237,7 @@ void CTSController::ChangeExposure(double &delFac, double angle, double limit)
   if (!oneFrame && mCamParams->K2Type && recSet->doseFrac && !mVaryFrameTime && 
     mFixedNumFrames) {
       recSet->frameTime = (float)(newExp / numFrames);
-      mCamera->ConstrainFrameTime(recSet->frameTime);
+      mCamera->ConstrainFrameTime(recSet->frameTime, mCamParams->K2Type);
       newExp = (float)(recSet->frameTime * numFrames);
       SEMTrace('1', "Changing frame time to %.4f, actual exposure to %.4f", 
         recSet->frameTime, newExp);
@@ -3264,7 +3264,7 @@ void CTSController::ChangeExposure(double &delFac, double angle, double limit)
     mCamera->DESumCountForConstraints(mCamParams, recSet), newExp, frameTime);
   newExp = mWinApp->mFalconHelper->AdjustSumsForExposure(mCamParams, recSet, newExp);
   if (oneFrame)
-    constraint = mCamera->GetK2ReadoutInterval();
+    constraint = mCamera->GetK2ReadoutInterval(mCamParams->K2Type);
   else 
     constraint = mCamera->GetLastK2BaseTime();
   if (mCamParams->K2Type)

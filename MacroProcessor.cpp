@@ -4139,7 +4139,7 @@ void CMacroProcessor::NextCommand()
       index2 = B3DNINT(mConSets[index].exposure /
         B3DMAX(0.001, mConSets[index].frameTime));
       bmin = (float)(delISY / index2);
-      mCamera->ConstrainFrameTime(bmin);
+      mCamera->ConstrainFrameTime(bmin, camParams->K2Type);
       if (fabs(bmin - mConSets[index].frameTime) < 0.0001) {
         PrintfToLog("In SetExposureForMean %s, change by a factor of %.4f would require "
           "too small a change in frame time", (LPCTSTR)strItems[1], delISX);
@@ -4211,7 +4211,7 @@ void CMacroProcessor::NextCommand()
       ABORT_NOLINE("Frame time can be set only if the current camera is a K2");
     SaveControlSet(index);
     mConSets[index].frameTime = (float)itemDbl[2];
-    mCamera->ConstrainFrameTime(mConSets[index].frameTime);
+    mCamera->ConstrainFrameTime(mConSets[index].frameTime, camParams->K2Type);
 
   } else if (CMD_IS(SETK2READMODE)) {                       // SetK2ReadMode
     if (CheckAndConvertCameraSet(strItems[1], itemInt[1], index, strCopy))
@@ -4562,7 +4562,11 @@ void CMacroProcessor::NextCommand()
         if (index < 0)
           ABORT_LINE("There is no current Navigator item for line:\n\n.");
       } else {
-        index = itemInt[1] - 1;
+        if (itemInt[1] < 0) {
+           CArray<CMapDrawItem *, CMapDrawItem *> *items = navigator->GetItemArray();
+           index = items->GetSize() + itemInt[1];
+        } else
+          index = itemInt[1] - 1;
         navItem = navigator->GetOtherNavItem(index);
         if (!navItem)
           ABORT_LINE("Index is out of range in statement:\n\n");
