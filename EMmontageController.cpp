@@ -3144,7 +3144,8 @@ int EMmontageController::SetMaxPrescanBinning()
   int iCam = activeList[GetMontageActiveCamera(mParam)];
   CameraParameters *cam = mWinApp->GetCamParams() + iCam;
 
-  // For faster readout cameras (e.g., CMOS), limit the binning to 2 and boost the target
+  // For faster readout cameras (e.g., CMOS), limit the added binning to 2 and make target
+  // bigger
   bool limitBinning = false;
   if (mCamera->IsDirectDetector(cam) || cam->OneViewType || cam->FEItype == 3) {
     trialTarget = 2048;

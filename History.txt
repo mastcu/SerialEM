@@ -3,6 +3,20 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+5/6/18: Fix crash when reading in settings with one-line script.
+
+5/6/18: Try to leave low dose mode when crashing.
+
+5/6/18: Added script commands to load a map.
+
+5/6/18: Made autofocus abort if too many iterations measure a defocus near
+zero, and if there are too many iterations where the change was not limited.
+
+5/6/18: Made Montage Prescan not increase the binning by more than 2 for some
+CMOS cameras with fast readouts (direct detectors, OneView, Ceta), and made it
+not drop the exposure time so much in low dose mode by allowing counts to
+increase up to 4-fold.
+
 4/27/18: Multiple reciords can now be taken from multiple holes as well as
 from multiple positions in a hole.
 
