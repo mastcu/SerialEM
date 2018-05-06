@@ -1519,7 +1519,11 @@ static LONG WINAPI SEMExceptionFilter(struct _EXCEPTION_POINTERS* ExceptionInfo)
   }
   catch (...) {
   }
+  if (winApp->LowDoseMode())
+    message += "\r\n\r\nWill try to leave low dose mode before closing...";
   AfxMessageBox(message);
+  if (winApp->LowDoseMode())
+    winApp->mLowDoseDlg.SetLowDoseMode(false);
   first = false;
   return EXCEPTION_EXECUTE_HANDLER;
 }
