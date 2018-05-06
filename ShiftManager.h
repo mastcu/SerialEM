@@ -281,6 +281,7 @@ public:
   yA = mLastAlignYTrimA; xRef = mLastAlignXTrimRef; yRef = mLastAlignYTrimRef;};
   ScaleMat FocusAdjustedStageToCamera(int inCamera, int inMagInd, int spot, int probe,
      double intensity, float defocus);
+  ScaleMat FocusAdjustedStageToCamera(EMimageBuffer *imBuf);
   bool GetScaleAndRotationForFocus(EMimageBuffer * imBuf, float &scale, float &rotation);
   ScaleMat MatScaleRotate(ScaleMat aMat, float scale, float rotation);
   void AdjustStageToCameraForTilt(ScaleMat & aMat, float angle);

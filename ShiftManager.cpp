@@ -3393,6 +3393,25 @@ ScaleMat CShiftManager::FocusAdjustedStageToCamera(int inCamera, int inMagInd, i
   return aMat;
 }
 
+ScaleMat CShiftManager::FocusAdjustedStageToCamera(EMimageBuffer *imBuf)
+{
+  float defocus = 0.;
+  int spot = 1;
+  double intensity = 0.5;
+  ScaleMat aMat = {0., 0., 0., 1.};
+  if (imBuf->mCamera < 0 || !imBuf->mMagInd)
+    return aMat;
+  if (imBuf->mLowDoseArea && imBuf->mMagInd >= mScope->GetLowestNonLMmag() && 
+    IS_SET_VIEW_OR_SEARCH(imBuf->mConSetUsed)) {
+      defocus = imBuf->mViewDefocus;
+      if (!imBuf->GetSpotSize(spot) || !imBuf->GetIntensity(intensity))
+        defocus = 0.;
+  }
+
+  return FocusAdjustedStageToCamera(imBuf->mCamera, imBuf->mMagInd, spot,
+    imBuf->mProbeMode, intensity, defocus);
+}
+
 // Return scale and rotation values for an image buffer, returns true if any returned
 bool CShiftManager::GetScaleAndRotationForFocus(EMimageBuffer *imBuf, float &scale, 
   float &rotation)
