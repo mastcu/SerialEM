@@ -700,8 +700,10 @@ void CSerialEMView::DrawImage(void)
   int currentIndex = navigator->GetCurrentOrAcquireItem(item);
   int currentGroup = (currentIndex >= 0 && item != NULL) ? item->mGroupID : -1;
   int groupThresh = mWinApp->mNavHelper->GetPointLabelDrawThresh();
-  if (useMultiShot)
+  if (useMultiShot) {
     msParams = mWinApp->mNavHelper->GetMultiShotParams();
+    useMultiShot = (msParams->inHoleOrMultiHole & 3) != 0;
+  }
   FloatVec drawnXinHole, drawnYinHole, drawnXallHole, drawnYallHole;
   FloatVec convXinHole, convYinHole, convXallHole, convYallHole;
   for (int iDraw = -1; iDraw < itemArray->GetSize(); iDraw++) {
