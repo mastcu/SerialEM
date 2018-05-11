@@ -1150,8 +1150,10 @@ void CGainRefMaker::UpdateDMReferenceTimes(void)
 
     // Look for counting reference for K2
     if (mParam->K2Type) {
-      name = mCamera->MakeFullDMRefName(mParam, ".m2.");
-     SEMTrace('r', "Prop name  -%s-  look for  -%s-", (LPCTSTR)(refPath + "\\" + mParam->DMRefName), name);
+      name = mCamera->MakeFullDMRefName(mParam, mParam->K2Type == K3_TYPE ? ".m1." : 
+        ".m2.");
+      SEMTrace('r', "Prop name  -%s-  look for  -%s-", (LPCTSTR)(refPath + "\\" +
+        mParam->DMRefName), name);
     }
     if (mParam->useSocket && CBaseSocket::ServerIsRemote(GATAN_SOCK_ID)) {
       i = mWinApp->mGatanSocket->CheckReferenceTime((LPCTSTR)name, &mtime);
@@ -1195,10 +1197,9 @@ void CGainRefMaker::UpdateDMReferenceTimes(void)
       // If not OK, need to clear existence flag
       mRefExists[mCurrentCamera][mDMind] = false;
       if (!mWarnedNoDM[mCurrentCamera]) {
-        name.Format("WARNING: Did not find DigitalMicrograph gain reference file:   %s"
+        PrintfToLog("WARNING: Did not find DigitalMicrograph gain reference file:   %s"
           "\r\n    in folder:   %s\r\n    Are the name and location correct in the "
-          "SerialEM properties file?", (LPCTSTR)mParam->DMRefName,(LPCTSTR)refPath);
-        mWinApp->AppendToLog(name);
+          "SerialEM properties file?", (LPCTSTR)name,(LPCTSTR)refPath);
         mWarnedNoDM[mCurrentCamera] = true;
       }
     }

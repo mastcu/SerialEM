@@ -139,6 +139,7 @@ struct CameraParameters {
   int autoGainAtBinning;   // Binning at which to start automatic gain factors
   int falcon3ScalePower;   // Power for Falcon 3 scaling
   float linear2CountingRatio;  // Ratio of raw counts in linear mode to counting mode
+  float linearOffset;      // Amount to subtract before scaling (K3)
   int numExtraGainRefs;    // Number of extra gain refs
   int processHere;         // Per-camera flag for whether to normalize in SerialEM
   BOOL retractable;        // Is camera retractable
