@@ -3122,7 +3122,7 @@ float CProcessImage::CountsPerElectronForImBuf(EMimageBuffer * imBuf)
     return 0.;
   CameraParameters *camParam = mWinApp->GetCamParams() + imBuf->mCamera;
   countsPerElectron = camParam->countsPerElectron;
-  if (camParam->K2Type && imBuf->mK2ReadMode > 0)
+  if (camParam->K2Type != K3_TYPE && imBuf->mK2ReadMode > 0)
     countsPerElectron = mCamera->GetCountScaling(camParam);
   if (countsPerElectron <= 0.)
     return 0.;
@@ -3145,6 +3145,12 @@ float CProcessImage::LinearizedDoseRate(int camera, float rawRate)
     13.014f, 16.514f, 21.21f, 25.32f, 28.20f, 29.25f};
   const float K2rates300KV[] = {0.789f, 1.890f, 3.107f, 4.092f, 6.388f, 9.252f, 13.213f,
     18.480f, 25.744f, 39.14f, 56.29f, 72.61f, 79.76f};
+  const float K3counts200KV[] = {2.153f, 3.24f, 4.321f, 5.29f, 6.175f, 7.141f,
+    8.194f, 9.1f, 10.144f, 12.03f, 14.540f, 17.340f, 21.608f, 26.200f,
+    29.832f, 34.058f, 41.526f, 49.123f, 57.474f, 72.784f, 86.110f};
+  const float K3rates200KV[] = {1.962f, 3.165f, 4.095f, 5.274f, 5.943f, 6.984f,
+    8.029f, 8.97f, 10.013f, 11.984f, 14.600f, 17.655f, 22.581f, 27.962f,
+    32.744f, 38.213f, 48.847f, 61.181f, 76.710f, 113.502f, 163.196f};
   const float FalconCounts200KV[] = {0.103f, 0.119f, 0.159f, 0.199f, 0.259f, 0.352f,
     0.418f, 0.502f, 0.575f, 0.663f, 0.734f, 0.818f, 0.875f, 0.94f, 1.007f, 1.075f,
     1.123f, 1.157f, 1.189f, 1.219f, 1.248f};
@@ -3161,7 +3167,11 @@ float CProcessImage::LinearizedDoseRate(int camera, float rawRate)
   // First time for a camera, in no table read in from properties, assign the default
   // based on voltage
   if (!camParam->doseTabCounts.size()) {
-    if (camParam->K2Type) {
+    if (camParam->K2Type == K3_TYPE) {
+        countsArr = &K3counts200KV[0];
+        ratesArr = &K3rates200KV[0];
+        numVals = sizeof(K3counts200KV) / sizeof(float);
+    } else if (camParam->K2Type) {
       if (mScope->GetHTValue() > 250) {
         countsArr = &K2counts300KV[0];
         ratesArr = &K2rates300KV[0];

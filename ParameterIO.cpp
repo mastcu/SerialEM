@@ -2086,6 +2086,8 @@ int CParameterIO::ReadProperties(CString strFileName)
             camP->countsPerElectron = (float)itemDbl[1];
           else if (MatchNoCase("LinearToCountingRatio"))
             camP->linear2CountingRatio = (float)itemDbl[1];
+          else if (MatchNoCase("LinearOffset"))
+            camP->linearOffset = (float)itemDbl[1];
           else if (MatchNoCase("ExtraRotation"))
             camP->extraRotation = (float)itemDbl[1];
           else if (MatchNoCase("ExtraGainReferences"))
