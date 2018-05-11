@@ -361,7 +361,7 @@ void CEMbufferWindow::UpdateSaveCopy()
   curStore = mWinApp->mDocWnd->GetCurrentStore();
   if (curStore < 0)
     curStore = 0;
-  m_strToFile.Format("To %d", curStore + 1);
+  m_strToFile.Format("To file %d", curStore + 1);
   m_sbcToFile.EnableWindow(maxStore > 0 && noTasks);
   m_sbcToFile.SetPos(curStore);
 
