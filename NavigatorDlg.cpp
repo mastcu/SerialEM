@@ -2653,7 +2653,7 @@ CArray<CMapDrawItem *, CMapDrawItem *> *CNavigatorDlg::GetMapDrawItems(
     return NULL;
   drawAllReg = m_bDrawAllReg;
   showMulti = (m_bShowAcquireArea && (mHelper->GetEnableMultiShot() & 1)) ||
-    mHelper->mMultiShotDlg;
+    (mHelper->mMultiShotDlg && !mHelper->mMultiShotDlg->RecordingISValues());
   if ((imBuf->mHasUserPt || imBuf->mHasUserLine) && (m_bShowAcquireArea || 
     showMulti) &&
     RegistrationUseType(imBuf->mRegistration) != NAVREG_IMPORT) {
@@ -2722,7 +2722,7 @@ CArray<CMapDrawItem *, CMapDrawItem *> *CNavigatorDlg::GetMapDrawItems(
           MultiShotParams *msParams = mHelper->GetMultiShotParams();
 
           // Make multihole positions relative to center
-          if (msParams->inHoleOrMultiHole & 2) {
+          if (msParams->inHoleOrMultiHole & MULTI_HOLES) {
             int numHoles = mWinApp->mParticleTasks->GetHolePositions(delISX, delISY, 
               magInd, camera);
             if (numHoles > 0) {
@@ -2754,7 +2754,7 @@ CArray<CMapDrawItem *, CMapDrawItem *> *CNavigatorDlg::GetMapDrawItems(
           }
 
            // Multishot positions in hole, with absolute positions
-          if (msParams->inHoleOrMultiHole & 1) {
+          if (msParams->inHoleOrMultiHole & MULTI_IN_HOLE) {
             inHoleRadius = msParams->spokeRad / pixel;
             for (ind = 0; ind < msParams->numShots; ind++) {
               angle = (float)(DTOR * ind * 360. / msParams->numShots);
@@ -7784,6 +7784,7 @@ int CNavigatorDlg::GotoNextAcquireArea()
               mWinApp->mLogWindow->SaveFileNotOnStack(item->mFileToOpen)) {
                 mWinApp->mLogWindow->DoSave();
                 mWinApp->mLogWindow->CloseLog();
+                mWinApp->AppendToLog(mWinApp->mDocWnd->DateTimeForTitle());
             }
             mWinApp->AppendToLog("", LOG_OPEN_IF_CLOSED);
             mWinApp->mLogWindow->UpdateSaveFile(true, item->mFileToOpen);
@@ -8865,4 +8866,52 @@ int CNavigatorDlg::GetCurrentGroupSizeAndPoints(int maxPoints, float *stageX,
     }
   }
   return num;
+}
+
+
+void CNavigatorDlg::IStoXYandAdvance(int &direction)
+{
+  OnGotoXy();
+  if (direction && mCurrentItem + direction >= 0 && 
+    mCurrentItem + direction < mItemArray.GetSize()) {
+    SetCurrentSelection(mCurListSel + direction);
+  } else
+    direction = 0;
+}
+
+
+int CNavigatorDlg::LimitsOfContiguousGroup(int itemInd, int &groupStart, int & groupEnd)
+{
+  CMapDrawItem *item;
+  int ind, groupID;
+  item = mItemArray.GetAt(itemInd);
+  groupID = item->mGroupID;
+  for (ind = itemInd; ind >= 0; ind--) {
+    item = mItemArray.GetAt(ind);
+    if (item->mGroupID == groupID)
+      groupStart = ind;
+    else
+      break;
+  }
+  for (ind = itemInd; ind < mItemArray.GetSize(); ind++) {
+    item = mItemArray.GetAt(ind);
+    if (item->mGroupID == groupID)
+      groupEnd = ind;
+    else
+      break;
+  }
+  return groupEnd + 1 - groupStart;
+}
+
+
+void CNavigatorDlg::SetCurrentSelection(int listInd)
+{
+  if (listInd < 0 || listInd >= m_listViewer.GetCount())
+    return;
+  mCurListSel = listInd;
+  m_listViewer.SetCurSel(mCurListSel);
+  if (!m_bCollapseGroups)
+    mCurrentItem = mCurListSel;
+  ManageCurrentControls();
+  Redraw();
 }

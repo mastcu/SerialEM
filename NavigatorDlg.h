@@ -552,6 +552,9 @@ public:
   int GetCurrentGroupSizeAndPoints(int maxPoints, float * stageX, float * stageY, 
     float *defocusOffset);
 void MoveStageOrDoImageShift(int axisBits);
+void SetCurrentSelection(int listInd);
+int LimitsOfContiguousGroup(int itemInd, int &groupStart, int & groupEnd);
+void IStoXYandAdvance(int &direction);
 };
 
 //{{AFX_INSERT_LOCATION}}
