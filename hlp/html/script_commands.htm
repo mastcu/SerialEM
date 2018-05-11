@@ -1539,9 +1539,28 @@
             FLf, FLc, FLcomp1, FLcomp2.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style13">ReportDeflector</TD>
+          <TD class="style13">ReportDeflector name</TD>
           <TD>For a Hitachi scope, reports the X and Y values of deflector specified by its 
             abbreviated name.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style13">SetFreeLensControl&nbsp; #L #S</TD>
+          <TD>On a JEOL with scripting support for free lens control, turn free lens control 
+            for the lens given by #L off if #S is 0 and on otherwise.&nbsp;&nbsp; Lens 
+            numbers are: 0: CL1,&nbsp; 2: CL3,&nbsp; 6: OL Coarse,&nbsp; 7: OL Fine,&nbsp; 
+            8: OM,&nbsp; I0: IL1,&nbsp; 11: IL2,&nbsp; 12: IL3, 13: IL4,&nbsp; 14: PL1,&nbsp; 
+            15 or 16: PL2,&nbsp; 19: FL Coarse,&nbsp; 20: FL Fine,&nbsp; 21: FL Ratio </TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style13">SetLensWithFLC #L #V [#R]</TD>
+          <TD>Using free lens control, sets the lens given by #L (see SetFreeLensControl) to 
+            the value #V between 0 and 1 if the optional #R is 0 or absent, or changes it by 
+            #V if #R is non-zero.&nbsp; This command probably turns on FLC for that lens.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style13">ReportLensFLCStatus #L</TD>
+          <TD>For the lens given by #L (see SetFreeLensControl), reports whether free lens 
+            control is on and the value for the lens.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style13">ManualFilmExposure #</TD>
@@ -2037,9 +2056,18 @@
             camera after the last shot or after all shots; #F for the number of frames in 
             the early returned image (or -1 for all, 0 for none); #H the sum of 1 to do 
             shots around a center (within a hole) and 2 to do shots in multiple holes or 
-            specified positions.&nbsp; For example, 
+            specified positions.&nbsp; (In addition, the sum in #H can include 4 for testing 
+            image locations or 8 for testing the coma correction.) For example, 
             &#39;MultipleRecords -9 -9 -9 4. 1&#39; will use an extra delay of 4 seconds and save 
             Records, but take all other parameters from the dialog.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style12">TestNextMultiShot #</TD>
+          <TD>Set a variable so that the next MultipleRecords command will test image 
+            location by acquiring a Record or montage at each location (if # is 1) or by 
+            measuring coma at each location (if # is 2).&nbsp; See
+            <a href="hidd_multi_shot_setup.htm#testing">Testing Image Location and Coma Adjustment</a> for details on 
+            this testing.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style12">CalibrateImageShift [#]</TD>
@@ -2417,9 +2445,9 @@
       </TABLE>
     <P><A NAME="arithForArgs"></A><B>Commands Allowing Arithmetic Expressions for Arguments</B></P>
       In addition to the commands starting with 'Set', these commands
-    allow arithemetic arguments:
+    allow arithmetic arguments:
     <pre>
-AbsoluteFocusLimitsss
+AbsoluteFocusLimitssss
 BackgroundTilt
 BeamTiltDirection
 ChangeEnergyLoss

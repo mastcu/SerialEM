@@ -33,6 +33,145 @@
     <p>It is important to realize that if the image areas are being displayed on a Low 
       Dose View image with a large defocus offset, the positions and sizes may be 
       misleading.</p>
+    <p><i><b>Saving Accurate Image Shift Values for Holes</b></i></p>
+    <p>There are several possible methods of setting the image shift values for the 
+      holes, ranging from centering holes in an image where they are all visible 
+      (e.g., low dose View), through centering consistent positions at a magnification 
+      still lower than the Record mag, to centering positions at the Record mag 
+      itself.&nbsp; Your choice depends on how accurate the positioning needs to be 
+      (more accuracy is needed for holes at more distant image shifts or if multiple 
+      shots are to be taken inside the holes), and on how well image shift positions 
+      correspond between the Record mag and the mag where they are defined (a constant 
+      offset is not a problem, scaling or rotation is).&nbsp; You can try an easier 
+      method first and see if it is adequate for your situation.&nbsp; See the section 
+      at the end of this page on how to assess that point .</p>
+    <p>The goal is the save image shifts at <i>consistent</i> positions, not 
+      necessarily the ones at the center of the holes, because only the differences 
+      between shifts matter.&nbsp; It is just as good to save the shift at the edge of 
+      each hole, if a corresponding point on the edge can be picked accurately enough.&nbsp; 
+      Here are two methods of positioning along a diagonally oriented part of a hole 
+      edge:</p>
+    <ul>
+      <li>Shift the image so that the hole edge intersects the center of the display 
+        (turn on the cross to see this).&nbsp; Note where the hole edge intersects the 
+        two edges of the image.&nbsp; While keeping the edge on the cross, shift the 
+        image to equalize the two distances from each edge intersection point to the 
+        nearby corner of the image.&nbsp; Alternatively,move those two intersection 
+        points to distances from the corners that can be recognized and reproduced on 
+        successive holes, perhaps by making one go through the corner. </li>
+      <li>Shift the image so that the hole edge intersects opposite corners of the 
+        image.&nbsp; Note the distance from the hole edge to the image center on the 
+        first hole and try to reproduce that difference on successive holes.</li>
+    </ul>
+    <p>All of these methods require the Navigator to be open and suggest that you add 
+      a group of points on an image at the locations where you want to save image 
+      shift values.&nbsp; This step is helpful if you have more than a 2x2 pattern of 
+      holes, to avoid losing track of which hole you are on. You should add those 
+      points in the order in which their positions will be saved (see &#39;Save Image 
+      Shift Values at Holes&#39; below.)&nbsp; When you press the 
+      button to start saving image shift values, the Navigator buttons on the left 
+      change, &#39;Go To XY&#39; and &#39;Go To Marker&#39; change to &#39;IS to XY&#39; and &#39;IS to Marker&#39; 
+      respectively.&nbsp; They can be used to move to marked positions with image 
+      instead of stage shift.&nbsp; The same operation can be done with the 'IS to Nav 
+      Pt' button in this dialog.</p>
+    <p>
+      <i>1) Centering holes at a lower mag.</i>&nbsp; In order for image shift 
+      positions to correspond well enough between this mag and the record mag, this 
+      operation must be done near focus (within about 20 microns).&nbsp; Assuming that 
+      you use View images, the steps are:</p>
+    <ul>
+      <li>Reduce the View defocus offset to the lowest level that you need to see the 
+        holes.</li>
+      <li>Take a View image.</li>
+      <li>If image shift range is a concern, first shift the image with the right mouse 
+        button to center the pattern, and reset the image shift if necessary.</li>
+      <li>Add a set of Navigator points at the centers of the holes, in the order 
+        required when shifting to the holes (see below).&nbsp; If necessary, take a new 
+        View image to see the required positions.</li>
+      <li>Press the relevant button to start saving image shifts.</li>
+      <li>Press the &#39;IS to Nav Pt&#39; button in this dialog, or select the first added point in the Navigator and press &#39;Go To IS&#39; 
+        there.</li>
+      <li>Take a View image, center with the right mouse button, and take another to 
+        check the centering.</li>
+      <li>When centered, press the &#39;Save Image Shift&#39; button.</li>
+      <li>Press the &#39;IS to Nav Pt&#39; button in this dialog, or select the next added point in the Navigator and press &#39;Go To IS&#39; 
+        there.</li>
+      <li>Take a View and center the image.</li>
+      <li>Press &#39;Save Image Shift&#39;.</li>
+      <li>Repeat the last three steps for each other point.</li>
+      <li>Restore the View defocus offset.</li>
+    </ul>
+    <p>
+      This method can be accurate to within 1% on a scope with good correspondence 
+      between View and Record positions, but can be off by a lot.</p>
+    <p>
+      2) 
+      <i>Picking consistent positions at an intermediate mag where it is still easy to 
+      find the hole.</i>&nbsp; Even if you cannot 
+      use the View mag, you will probably get accurate positions at some mag closer to 
+      the Record mag (e.g., half the mag), because image shifts are likely to be 
+      consistent at higher mags.&nbsp; You will probably be able to use this method 
+      without changing the View defocus offset, but you will need to change the Record 
+      mag.&nbsp; The steps are:</p>
+    <ul>
+      <li>Take a View image.</li>
+      <li>If image shift range is a concern, first shift the image with the right mouse 
+        button to center the pattern, and reset the image shift if necessary.</li>
+      <li>Add a set of Navigator points in the right order, either at the centers of the 
+        holes (if you think you can define those at the intermediate mag), or at an edge 
+        at +/-45 or +/-135 degrees.</li>
+      <li>Press the relevant button to start saving image shifts.</li>
+      <li>Press the &#39;IS to Nav Pt&#39; button in this dialog, or select the first added point in the Navigator and press &#39;Go To IS&#39; 
+        there.</li>
+      <li>Press the &#39;Record&#39; radio button in the Low Dose control panel to go to Record 
+        mode, turn on continuous update, and change the mag to the chosen value.</li>
+      <li>Take a Record or Preview image and shift it to either center the hole or 
+        position the chosen quadrant of the edge.</li>
+      <li>Press &#39;Save Image Shift&#39;.</li>
+      <li>Press the &#39;IS to Nav Pt&#39; button in this dialog, or select the next added point in the Navigator and press &#39;Go To IS&#39; 
+        there.</li>
+      <li>Take a Record or Preview and shift it to the same position as for the first 
+        point.</li>
+      <li>Press &#39;Save Image Shift&#39;.</li>
+      <li>Repeat the last three steps for each other point.</li>
+      <li>Restore the Record mag.</li>
+    </ul>
+    <p>
+      3) <i>Picking consistent positions at the Record mag.</i>&nbsp; This method is 
+      guaranteed to give accurate image shift values, as long as you can define 
+      consistent positions.&nbsp; If you think that you can position edges well 
+      enough, then the procedure is the same as just described, except that you do not 
+      need to change the Record mag.&nbsp; However, if you have difficulty finding the 
+      holes, you may need to reduce the View defocus offset close to zero.&nbsp; This 
+      will likely throw off the View shift offset, and you might need to adjust that 
+      too.
+    </p>
+    <p>
+      An alternative to positioning edges is to take a Prescan montage at the Record 
+      mag big enough to show the whole hole, and center that.&nbsp; This may be 
+      reasonably fast, especially if you use continuous mode with a K2 camera.&nbsp; 
+      The steps are:</p>
+    <ul>
+      <li>Select File - New Montage.</li>
+      <li>Turn off &#39;Use View in Low Dose mode&#39; and &#39;Use Search in Low Dose mode&#39;</li>
+      <li>Select the number of pieces that will make an image bigger than a hole.</li>
+      <li>For a K2 camera, turn on the option to &#39;Use continuous mode&#39; and set the 
+        settling factor to at least 0.75.</li>
+      <li>If necessary, adjust the exposure time of the Record parameters, or of the 
+        Mont-Map parameter set if you selected the option to use that.</li>
+      <li>Follow all the steps in method 2 above through pressing the &#39;IS to Nav Pt&#39; button.</li>
+      <li>Press &#39;Prescan&#39; in the Montage control panel.</li>
+      <li>Shift the overview image in the buffer B to center the hole.&nbsp; Take 
+        another Prescan if necessary.</li>
+      <li>Press &#39;Save Image Shift&#39;.</li>
+      <li>Press the &#39;IS to Nav Pt&#39; button in this dialog, or select the next added point in the Navigator and press &#39;Go To IS&#39; 
+        there.</li>
+      <li>Take a Prescan and center it.</li>
+      <li>Press &#39;Save Image Shift&#39;.</li>
+      <li>Repeat the last three steps for each other point.</li>
+      <li>Restore any parameters that you changed.</li>
+    </ul>
+    <p><b><i>The Dialog Controls</i></b></p>
     <p><b>Do multiple Records within each hole</b></p>
     <p>Select this checkbox to take images in a circular pattern, with no control over 
       their angles.&nbsp; The relevant controls will appear when it is selected.</p>
@@ -45,7 +184,7 @@
       shot can be taken either before or after the off-center shots.&nbsp; Although 
       taking it may involve one more delay for image shift settling, it is reported 
       that this shot will have less drift when taken after the others.</p>
-    <p>&nbsp;<b>Distance from center to off-center shots</b></p>
+    <p><b>Distance from center to off-center shots</b></p>
     <p>Distance from the center position to the off-center positions, in microns.&nbsp; 
       This distance must be at least as big as the beam diameter to avoid exposing 
       overlapping areas in more than one Record shot.&nbsp; If the multi-shot circles 
@@ -65,8 +204,9 @@
       bigger than necessary.</p>
     <p><b>Regular pattern of holes: n by n</b></p>
     <p>Use the two spinners to set the number of positions in the rectangular pattern.&nbsp; 
-      These values must be set before recording the image shift values at the 
-      corners.Use </p>
+      These values must be set before recording the image shift values at the corners. 
+      Once the spacing of the pattern is defined, the spinners can be changed to 
+      acquire more or fewer holes at that spacing.</p>
     <p><b>Use custom pattern</b></p>
     <p>Select this checkbox to take images in an arbitrary set of positions specified 
       by shifting to a center location then to each acquisition position.</p>
@@ -75,7 +215,40 @@
       for a regular pattern, or &#39;For custom pattern&#39; to start setting the shifts for 
       arbitrary positions.&nbsp; After pressing one of these buttons, the label below 
       the next line of buttons will summarize what to do next.</p>
-    <p>To set the corners of a regular pattern</p>
+    <p>To set the corners of a regular pattern, you will save image shifts at 4 hole 
+      positions, even if one of the spinners is set to 1.&nbsp; Start at one corner of 
+      the pattern and save the position.&nbsp; Then shift by the needed number of 
+      holes corresponding to the value of the first spinner (i.e., move by 2 holes if 
+      the value is 3) and save that position.&nbsp; Shift by the number of holes 
+      indicated by the second spinner, save, and shift back by the number of holes 
+      along the first axis.&nbsp; If one of the spinners is set to 1, the program will 
+      still expect you to shift by one hole along that axis.</p>
+    <p>To set the positions in a custom pattern, shift to a center position for the 
+      pattern and save the shift.&nbsp; When taking multiple Records, all the shifts 
+      will be done relative to this position.&nbsp; Then shift to the first point to 
+      be acquired and save that position.&nbsp; Repeat until the last point and press 
+      &#39;End Pattern&#39;.</p>See above for instructions on how to save sufficiently accurate shift values.<p><bIS to Nav Pt</b>
+      <b>IS to Nav Pt</b></p>
+    <p>Press this button move to the location of the current Navigator point 
+      with image shift and then select the next point&nbsp; in the table.&nbsp; This saves you from 
+      pressing &#39;IS to XY&#39; and selecting the next point in the Navigator window, extra 
+      steps where you can lose track of whether you have changed the selection there.&nbsp; 
+      Press this button on first starting the saving operation and immediately after 
+      each &#39;Save Image Shift&#39;.&nbsp; The first time that you do so, the program looks 
+      at how many points are in the current group and which one is selected.&nbsp; If 
+      the first one is selected, or if you are defining a regular pattern and there 
+      are 4 points, it will image shift to the first point in the group and select the 
+      next one.&nbsp; Otherwise, it will ask you if you want to start from the 
+      beginning and work forward, or start at the end and work backward (which is not 
+      going to work for a custom group unless you marked the central point at the 
+      end), or simply leave the selected point alone.&nbsp; </p>
+    <p><b>End Pattern</b></p>
+    <p>Press this button to end the entries when defining a custom pattern.&nbsp; It 
+      can be pressed either after saving the last position, or without explicitly 
+      saving it.&nbsp; The current image shift will be saved if it is different from 
+      that of the last saved point.</p>
+    <p><b>Abort</b></p>
+    <p>Press this button to stop entering shifts and throw away all entries.</p>
     <p><b>Save Record image</b></p>
     <p>Select this option to have the Record image saved in the current file.&nbsp; 
       The option is disabled and its setting is irrelevant if an early return is 
@@ -124,6 +297,32 @@
     <p>For this option to be valuable rather than misleading, the illuminated area 
       readout must be fairly accurate in the range of interest, which may not be the 
       case.</p>
+    <p><a NAME="testing"></a><i><b>Testing Image Location and Coma Adjustment</b></i></p>
+    <p>Once positions are set up in this dialog, the script command &#39;TestNextMultiShot 
+      1&#39; followed by &#39;MultipleRecords&#39; can be used to test whether image positions are 
+      suitable, and &#39;TestNextMultiShot 2&#39; can be used to measure the amount of beam 
+      tilt adjustment needed at various positions, either with or without an 
+      adjustment for image shift.&nbsp; The details of this operation are as follows:</p>
+    <ul>
+      <li>If shots are being taken only within a hole, then test images will be taken 
+        only at each peripheral position, while beam tilt will be measured first in the 
+        central position then at all peripheral positions.</li>
+      <li>If shots are being taken in multiple holes, images or beam tilt measurements 
+        will be taken in the centers of holes only.</li>
+      <li>When a regular hole pattern is selected, the four corners of the pattern, or 
+        two ends of a single line of holes, will be tested.</li>
+      <li>When a custom pattern is selected, all holes in the pattern will be tested.</li>
+      <li>Record images will be taken when testing images within a hole, or when testing 
+        multiple holes if the current open file is not a montage.&nbsp; Most likely, 
+        montages will be needed to test holes.</li>
+      <li>Record images will be saved only if the option to save them is checked; 
+        otherwise they will accumulate in the rolling buffers.&nbsp; In the latter case, 
+        be sure to allow enough buffers to see all the images afterwards.</li>
+      <li>The test with montages, open a new montage file with enough pieces to cover 
+        the hole; it must not be in View mode or be done with stage shift.</li>
+      <li>After saving montages or Record images, use the menu entry File - Read and use 
+        the buttons in the dialog to inspect the images.</li>
+    </ul>
     <p>&nbsp;</p>
 
 </body>

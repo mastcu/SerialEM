@@ -3258,12 +3258,12 @@
         mode change.&nbsp; </li>
       <li>The net change in defocus is kept track of over the time when the scope is in 
         one probe mode.&nbsp; After the scope reimposes the prior defocus when switching 
-        back to a mode, the program applies this net change to that defocus in several 
+        back to a mode, the program applies this net change to that defocus in two 
         circumstances: when the option
         <a href="menu_tasks.htm#hid_specialoptions_adjustfocusonprobechange">Adjust Focus on Probe Mode Change</a> 
-        in the Tasks-Special Options menu is turned on; when switching between low dose 
-        areas; or when setting an imaging state with the Navigator or Image State 
-        dialog.</li>
+        in the Tasks-Special Options menu is turned on; or when setting an imaging state with the Navigator or Image State 
+        dialog.&nbsp; (As of SerialEM 3.7, it no longer applies the change in Low Dose 
+        mode unless the option is on).</li>
       <li>The change in beam shift is kept track of over the time when the scope is in 
         one probe mode.&nbsp; After the scope reimposes the beam shift last seen in a 
         mode, the program will convert the change in beam shift to be appropriate for 
@@ -3278,17 +3278,13 @@
       probe mode change, the change in additional shifts between the two areas is 
       applied after all other changes, as usual.)</p>
     <p>
-      To equalize focus between the two modes while in Low Dose mode, turn off
-      <a href="menu_tasks.htm#hid_specialoptions_adjustfocusonprobechange">Adjust Focus on Probe Mode Change</a>, 
-      turn on 'Continuous update of Mag and Beam', and autofocus in each mode.&nbsp; 
-      Use either a script or the microscope interface to change modes.&nbsp; Similarly, 
-      to center the beam independently in the two modes, set up Trial parameters for a 
+      To center the beam independently in the two modes, set up Trial parameters for a 
       condensed beam that can be centered, turn on 'Continuous update of Mag and 
       Beam', and change between the modes with a script or in the microscope interface.&nbsp;
     </p>
     <p>
       If you already have different Low Dose modes set up to use different probe 
-      modes, you can adjust also adjust beam position in each probe mode by the 
+      modes, you can also adjust beam position in each probe mode by the 
       following procedure: 1) Zero out the addition beam shift in each Low Dose mode.&nbsp; 
       2) Center the beam on one Low Dose mode.&nbsp; 3) Change to the other probe mode 
       with a script or in the microscope interface.&nbsp; 4) Go to the other Low Dose 
