@@ -304,7 +304,11 @@ CCameraController::CCameraController()
   mK2ReadoutInterval = -1.;
   mK2BaseModeScaling = -1.;
   mK3ReadoutInterval = .000665779f;
-  mMinK3FrameTime = 0.01331558f;
+  mMinK3FrameTime = 0.0106525f;  // For counting...
+  mBaseK2CountingTime = 0.1f;
+  mBaseK2SuperResTime = 0.5f;
+  mBaseK3LinearTime = 0.01331558f;
+  mBaseK3SuperResTime = 0.0106525f;
 
   // Set these to values in simple DM user interface except for first incrment
   mOneViewMinExposure[0] = 0.04f;
@@ -340,10 +344,6 @@ CCameraController::CCameraController()
   mSkipNextReblank = false;
   mDefaultGIFCamera = -1;
   mDefaultRegularCamera = -1;
-  mBaseK2CountingTime = 0.1f;
-  mBaseK2SuperResTime = 0.5f;
-  mBaseK3CountingTime = 0.01331558f;
-  mBaseK3SuperResTime = 0.01331558f;
   mNoK2SaveFolderBrowse = false;
   mRunCommandAfterSave = false;
   mSaveRawPacked = -1;
@@ -933,13 +933,21 @@ void CCameraController::InitializeDMcameras(int DMind, int *numDMListed,
                   mAllParams[i].superResRefForK2 = mSuperResRef;
                 else
                   mAllParams[i].superResRefForK2 = MakeFullDMRefName(&mAllParams[i], 
-                    ".m3.");
+                    mAllParams[i].K2Type == K3_TYPE ? ".m1." : ".m3.");
               }
 
               if ((mAllParams[i].OneViewType || mAllParams[i].K2Type == K3_TYPE) && 
                 mPluginVersion[DMind] < PLUGIN_CAN_MAKE_SUBAREA) {
                   mAllParams[i].subareasBad = 2;
                   mAllParams[i].moduloX = -2;
+              }
+              if (mAllParams[i].K2Type == K3_TYPE) {
+                if (!mAllParams[i].countsPerElectron)
+                  mAllParams[i].countsPerElectron = 32.;
+                if (!mAllParams[i].linearOffset)
+                  mAllParams[i].linearOffset = 8192;
+                if (mAllParams[i].linear2CountingRatio == 8.)
+                  mAllParams[i].linear2CountingRatio = 350.;
               }
 
               // For all Gatan cameras, identify bad pixels that touch rows/columns
@@ -2127,7 +2135,7 @@ void CCameraController::Capture(int inSet, bool retrying)
   BOOL bEnsureDark = false;
   CString logmess;
   int numActive = mWinApp->GetNumActiveCameras();
-  int gainXoffset, gainYoffset;
+  int gainXoffset, gainYoffset, offsetPerMs;
   double exposure, megaVoxel, megaVoxPerSec = 0.15;
   bool superRes, falconHasFrames, weCanAlignFalcon, aligningOnly;
   BOOL retracting = inSet == RETRACT_BLOCKERS || inSet == RETRACT_ALL;
@@ -2501,8 +2509,11 @@ void CCameraController::Capture(int inSet, bool retrying)
   mTD.MakeFEIerrorTimeout = mMakeFEIerrorBeTimeout;
   mTD.checkFEIname = mOtherCamerasInTIA;
   mTD.oneFEIshutter = mParam->onlyOneShutter;
-  mTD.fullSizeX = mParam->sizeX / BinDivisorI(mParam);
-  mTD.fullSizeY = mParam->sizeY / BinDivisorI(mParam);
+  binInd = BinDivisorI(mParam);
+  if (mParam->K2Type == K3_TYPE && conSet.K2ReadMode != LINEAR_MODE)
+    binInd = 1;
+  mTD.fullSizeX = mParam->sizeX / binInd;
+  mTD.fullSizeY = mParam->sizeY / binInd;
   mTD.PostMoveStage = mStageQueued;
   mTD.imageReturned = false;
   mTD.GetDeferredSum = false;
@@ -2542,9 +2553,19 @@ void CCameraController::Capture(int inSet, bool retrying)
   mTD.CountScaling = GetCountScaling(mParam);
   if (mTD.GatanReadMode == 0) {
     mTD.CountScaling = mParam->K2Type == K2_BASE ? mK2BaseModeScaling : 1.;
-    if (mParam->K2Type == K3_TYPE)
-      mTD.CountScaling = 0.01 / (mTD.Binning * mTD.Binning);
-  }
+    if (mParam->K2Type == K3_TYPE) {
+
+      // For K3 linear mode, it needs to scale by the linear / counting ratio
+      mTD.CountScaling = 1. / mParam->linear2CountingRatio;
+
+      // Add the offset per 10 ms of exposure to the scaling; compute per ms and multiply
+      // by 10 just in case there is a scale between 1 and 10.
+      offsetPerMs = B3DNINT(mParam->linearOffset * 0.001 / mK3ReadoutInterval);
+      mTD.CountScaling += 10 * offsetPerMs;
+      mTD.GatanReadMode = K3_LINEAR_SET_MODE;
+    }
+  } else if (mParam->K2Type == K3_TYPE)
+    mTD.GatanReadMode = K3_COUNTING_SET_MODE;
 
   // DE cameras: Handle numerous items
   mTD.AlignFrames = conSet.alignFrames;
@@ -2604,7 +2625,7 @@ void CCameraController::Capture(int inSet, bool retrying)
   }
 
   mTD.DoseFrac = conSet.doseFrac;
-  B3DCLAMP(conSet.frameTime, mMinK2FrameTime, 10.f);
+  B3DCLAMP(conSet.frameTime, GetMinK2FrameTime(mParam->K2Type), 10.f);
   mTD.FrameTime = conSet.frameTime;
   if ((conSet.doseFrac || IS_FALCON2_OR_3(mParam)) && conSet.alignFrames && 
     conSet.useFrameAlign) {
@@ -2682,7 +2703,7 @@ void CCameraController::Capture(int inSet, bool retrying)
       asyncUsedUp = SEMTickInterval(mAsyncTickStart);
 
     // K2 has a basic fixed time that depends on mode, but linear mode can have dark ref
-    superRes = conSet.K2ReadMode == SUPERRES_MODE;
+    superRes = IS_SUPERRES(mParam, conSet.K2ReadMode);
     mTD.cameraTimeout = (DWORD)((conSet.K2ReadMode == LINEAR_MODE ? 2. : 1.) * 
       mTimeoutFactor * 1000. * (mExposure + (superRes ? 20. : 15.)));
     if (mTD.DoseFrac) {
@@ -2827,6 +2848,10 @@ void CCameraController::Capture(int inSet, bool retrying)
         mTD.Corrections = 49;     
       mTD.Corrections |= OVW_DRIFT_CORR_FLAG;
   }
+
+  // Turn on defect corrections for K3???
+  if (mParam->K2Type == K3_TYPE && !(mTD.Corrections & 1))
+    mTD.Corrections |= 1;
  
   // Record that a deferred sum is being started, or cancel its existence if doing dose 
   // frac or continuous shot
@@ -3250,7 +3275,7 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
   LowDoseParams *ldParam = mWinApp->GetLowDoseParams();
   FrameAliParams faParam;
   bool alignSubset = false;
-  bool isSuperRes = conSet.K2ReadMode == SUPERRES_MODE;
+  bool isSuperRes = IS_SUPERRES(mParam, conSet.K2ReadMode);
   bool trulyAligning = aligning && conSet.useFrameAlign == 1;
   CString mess;
   if (aligning) {
@@ -3776,7 +3801,7 @@ void CCameraController::CapManageCoordinates(ControlSet & conSet, int &gainXoffs
 
   // Get the CCD coordinates after binning. First make sure binning is right for K2
   // and set various flags about taking images unbinned and antialiasing in plugin
-  superRes = conSet.K2ReadMode == SUPERRES_MODE;
+  superRes = IS_SUPERRES(mParam, conSet.K2ReadMode);
   doseFrac = mParam->K2Type && conSet.doseFrac;
   if (mParam->K2Type && !superRes && conSet.binning < 2)
     conSet.binning = 2;
@@ -4750,9 +4775,10 @@ void CCameraController::CenteredSizes(int &DMsizeX, int ccdSizeX, int moduloX, i
 void CCameraController::AcquiredSize(ControlSet *csp, int camera, int &sizeX, int &sizeY)
 {
   int binning = csp->binning;
+  CameraParameters *camP = &mAllParams[camera];
 
   // Promote the binning to 2 if K2 not in SuperRes mode
-  if (mAllParams[camera].K2Type && csp->K2ReadMode != SUPERRES_MODE)
+  if (camP->K2Type && !IS_SUPERRES(camP, csp->K2ReadMode))
     binning = B3DMAX(2, binning);
   int left = csp->left / binning;
   int right = csp->right / binning;
@@ -4760,9 +4786,8 @@ void CCameraController::AcquiredSize(ControlSet *csp, int camera, int &sizeX, in
   int bottom = csp->bottom / binning;
   sizeX = right - left;
   sizeY = bottom - top;
-  AdjustSizes(sizeX, mAllParams[camera].sizeX, mAllParams[camera].moduloX, left, 
-    right, sizeY, mAllParams[camera].sizeY, mAllParams[camera].moduloY, top, 
-    bottom, binning, camera);
+  AdjustSizes(sizeX, camP->sizeX, camP->moduloX, left, right, sizeY, camP->sizeY, 
+    camP->moduloY, top, bottom, binning, camera);
 }
 
 // Adjust sizes and positions for both axes: all external calls are through this
@@ -4995,12 +5020,14 @@ bool CCameraController::ConstrainExposureTime(CameraParameters *camP, BOOL doseF
         retval = true;
       baseTime = frameTime;
 
+    } else if (camP->K2Type == K3_TYPE) {
+      baseTime = readMode == LINEAR_MODE ? mBaseK3LinearTime :  mBaseK3SuperResTime;
     } else if (readMode == COUNTING_MODE) {
-      baseTime = camP->K2Type == K3_TYPE ? mBaseK3CountingTime : mBaseK2CountingTime;
+      baseTime = mBaseK2CountingTime;
     } else if (readMode == SUPERRES_MODE) {
-      baseTime = camP->K2Type == K3_TYPE ? mBaseK3SuperResTime : mBaseK2SuperResTime;
+      baseTime = mBaseK2SuperResTime;
     } else {
-      baseTime = camP->K2Type == K3_TYPE ? mBaseK3CountingTime : mBaseK2CountingTime;
+      baseTime = mBaseK2CountingTime;
     }
     mLastK2BaseTime = baseTime;
   } else if (camP->OneViewType) {
@@ -5081,11 +5108,13 @@ bool CCameraController::ConstrainFrameTime(float &frameTime, int K2Type)
   return fabs(frameTime - ftime) > 1.e-5;
 }
 
-// Return the count scaling being used for a K2 camera, or countsPereElectron otherwise
+// Return the count scaling being used for a K2 camera, or countsPerElectron otherwise
 float CCameraController::GetCountScaling(CameraParameters *camParam)
 {
   float retVal = camParam->countsPerElectron;
-  if (camParam->K2Type) {
+  if (camParam->K2Type == K3_TYPE) {
+    retVal = 1.;
+  } else if (camParam->K2Type) {
     retVal = mScalingForK2Counts > 0. ? mScalingForK2Counts : mParam->countsPerElectron;
     if (!retVal)
       retVal = mDefaultCountScaling;
@@ -5153,7 +5182,7 @@ bool CCameraController::FindNearestBinning(CameraParameters *camParam,
       binInd = i;
     }
   }
-  if (camParam->K2Type && conSet->K2ReadMode != SUPERRES_MODE && !binInd)
+  if (camParam->K2Type && !IS_SUPERRES(camParam, conSet->K2ReadMode) && !binInd)
     binInd = 1;
   realBin = camParam->binnings[binInd];
   return realBin != conSet->binning;
@@ -7408,8 +7437,9 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       } else if (mParam->K2Type) {
 
         // Get the adjusted binning of the data
-        if (mTD.GatanReadMode != SUPERRES_MODE)
-          mTD.Binning *= 2;
+        if (mTD.GatanReadMode != SUPERRES_MODE && mTD.GatanReadMode != 
+          K3_COUNTING_SET_MODE)
+            mTD.Binning *= 2;
         if (mTD.DoseFrac) {
           
           // Need to rotate dose frac image if it is rotated - but check if the rotation

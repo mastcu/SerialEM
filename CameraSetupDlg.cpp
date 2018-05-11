@@ -813,12 +813,14 @@ void CCameraSetupDlg::LoadConsetToDialog()
   mUserSaveFrames = m_bSaveFrames = mCurSet->saveFrames > 0;
   m_bSaveK2Sums = mCurSet->sumK2Frames > 0 && 
     mCamera->CAN_PLUGIN_DO(CAN_SUM_FRAMES, mParam);
-  if (mParam->K2Type == 2)
+  if (mParam->K2Type == K2_BASE)
     mCurSet->K2ReadMode = 0;
+  if (mParam->K2Type == K3_TYPE && mCurSet->K2ReadMode > 0)
+    mCurSet->K2ReadMode = COUNTING_MODE;
   *modeP = mCurSet->K2ReadMode;
   if (CamHasDoubledBinnings(mParam)) {
     radio = (CButton *)GetDlgItem(IDC_RBIN1);
-    radio->EnableWindow(mBinningEnabled && *modeP == SUPERRES_MODE);
+    radio->EnableWindow(mBinningEnabled && IS_SUPERRES(mParam, *modeP));
   }
   if (mParam->OneViewType)
     m_bCorrectDrift = mCurSet->alignFrames != 0;
@@ -1436,9 +1438,10 @@ void CCameraSetupDlg::ManageCamera()
 
   if (mParam->K2Type) {
     radio = (CButton *)GetDlgItem(IDC_RCOUNTING);
-    radio->EnableWindow(mParam->K2Type == K2_SUMMIT || mParam->K2Type == K3_TYPE);
+    radio->EnableWindow(mParam->K2Type != K2_BASE);
     radio = (CButton *)GetDlgItem(IDC_RSUPERRES);
-    radio->EnableWindow(mParam->K2Type == K2_SUMMIT || mParam->K2Type == K3_TYPE);
+    radio->ShowWindow(mParam->K2Type == K2_SUMMIT ? SW_SHOW : SW_HIDE);
+    radio->EnableWindow(mParam->K2Type == K2_SUMMIT);
     SetDlgItemText(IDC_DOSE_FRAC_MODE, "Dose Fractionation mode");
     m_butAlwaysAntialias.EnableWindow(mCamera->GetPluginVersion(mParam) >= 
       PLUGIN_CAN_ANTIALIAS);
@@ -2333,8 +2336,8 @@ void CCameraSetupDlg::OnK2Mode()
 
   // Handle K2, do general updates for Falcon too
   if (mParam->K2Type) {
-    radio->EnableWindow(mBinningEnabled && *modeP == SUPERRES_MODE);
-    if (*modeP != SUPERRES_MODE && !m_iBinning) {
+    radio->EnableWindow(mBinningEnabled && IS_SUPERRES(mParam, *modeP));
+    if (!IS_SUPERRES(mParam, *modeP) && !m_iBinning) {
       m_iBinning = 1;
       ManageBinnedSize();
       UpdateData(FALSE);
@@ -2433,8 +2436,8 @@ void CCameraSetupDlg::ManageDoseFrac(void)
     m_iProcessing == DARK_SUBTRACTED) || (m_iProcessing == UNPROCESSED && 
     mCamera->CAN_PLUGIN_DO(UNPROC_LIKE_DS, mParam))) &&
     !mCamera->GetNoNormOfDSdoseFrac() &&
-    ((m_iK2Mode == COUNTING_MODE && !mParam->countingRefForK2.IsEmpty()) ||
-    (m_iK2Mode == SUPERRES_MODE && !mParam->superResRefForK2.IsEmpty()));
+    ((!IS_SUPERRES(mParam, m_iK2Mode) && !mParam->countingRefForK2.IsEmpty()) ||
+    (IS_SUPERRES(mParam, m_iK2Mode) && !mParam->superResRefForK2.IsEmpty()));
   m_statNormDSDF.ShowWindow(enable ? SW_SHOW : SW_HIDE);
   m_statWhereAlign.ShowWindow((m_bDoseFracMode && m_bAlignDoseFrac && 
     (mParam->K2Type || mWeCanAlignFalcon)) ? SW_SHOW : SW_HIDE);
@@ -2672,14 +2675,13 @@ void CCameraSetupDlg::OnButSetupAlign()
 void CCameraSetupDlg::ManageAntialias(void)
 {
   CString str = "";
-  bool antialias = (m_bDoseFracMode && m_iBinning > 1) || 
-    (m_iK2Mode == SUPERRES_MODE && m_iBinning > 0) || 
-    (m_bAlwaysAntialias && mCamera->CAN_PLUGIN_DO(CAN_ANTIALIAS, mParam) &&
-    m_iBinning > (m_iK2Mode == SUPERRES_MODE ? 0 : 1) && m_iContSingle > 0);
+  bool isSuperRes = mParam->K2Type && IS_SUPERRES(mParam, m_iK2Mode);
+  bool antialias = (m_bDoseFracMode && m_iBinning > 1) || (isSuperRes && m_iBinning > 0)
+    || (m_bAlwaysAntialias && mCamera->CAN_PLUGIN_DO(CAN_ANTIALIAS, mParam) &&
+    m_iBinning > (isSuperRes ? 0 : 1) && m_iContSingle > 0);
   if (mParam->K2Type) {
-    if ((m_iK2Mode == SUPERRES_MODE && m_iBinning == 0) || 
-      (m_iK2Mode != SUPERRES_MODE && m_iBinning == 1)) {
-        SetDlgItemText(IDC_STAT_ANTIALIAS, "");
+    if ((isSuperRes && m_iBinning == 0) || (!isSuperRes && m_iBinning == 1)) {
+      SetDlgItemText(IDC_STAT_ANTIALIAS, "");
     } else {
       SetDlgItemText(IDC_STAT_ANTIALIAS, antialias ? "Anti-aliasing" : "Binning");
     }
