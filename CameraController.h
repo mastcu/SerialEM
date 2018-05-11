@@ -71,10 +71,14 @@ struct CamPluginFuncs;
 #define AMT_VERSION_CAN_NORM     700
 
 enum {INIT_ALL_CAMERAS, INIT_CURRENT_CAMERA, INIT_GIF_CAMERA, INIT_TIETZ_CAMERA};
-enum {LINEAR_MODE = 0, COUNTING_MODE, SUPERRES_MODE};
+enum {LINEAR_MODE = 0, COUNTING_MODE, SUPERRES_MODE, K3_LINEAR_SET_MODE, K3_COUNTING_SET_MODE};
 enum DE_CAMERATYPE{LC1100_4k = 1,DE_12 = 2,DE_12_Survey=3,DE_LC1100=4};
 enum {EAGLE_TYPE = 1, FALCON2_TYPE, OTHER_FEI_TYPE, FALCON3_TYPE};
 enum {K2_SUMMIT = 1, K2_BASE, K3_TYPE};
+
+// This is not specific to K2, will give true for DE also
+#define IS_SUPERRES(p, ck2rm) (((p)->K2Type != K3_TYPE && (ck2rm) == SUPERRES_MODE) || \
+  ((p)->K2Type == K3_TYPE && (ck2rm) > LINEAR_MODE))
 
 #define DEFAULT_FEI_MIN_EXPOSURE 0.011f
 #define FCAM_ADVANCED(a) (a->CamFlags & PLUGFEI_USES_ADVANCED)
@@ -124,7 +128,7 @@ struct CameraThreadData {
   CString errMess;            // Error message for deferred message boxes
   int errFlag;                // Flag set by testing routines or threads
   long Left, Right, Top, Bottom;     // binned CCD coordinates of the image
-  long DMSizeX, DMSizeY;      // size in X and Y
+  long DMSizeX, DMSizeY;      // Binned size in X and Y
   long CallSizeX, CallSizeY;  // Sizes to use in calls for DE and Tietz
   int fullSizeX, fullSizeY;   // Actual full size of camera
   int restrictedSize;         // Restricted size index
@@ -719,7 +723,7 @@ class DLL_IM_EX CCameraController
   int mDefaultRegularCamera;    // Active camera number of "first regular camera"
   float mBaseK2CountingTime;    // Counting and super-res single-shot need to be multiples
   float mBaseK2SuperResTime;    // of these for K3
-  float mBaseK3CountingTime;    // And for K3
+  float mBaseK3LinearTime;      // And for K3
   float mBaseK3SuperResTime;
   float mLastK2BaseTime;        // Base time last time that exposure time was constrained
   BOOL mNoK2SaveFolderBrowse;   // Flag not to show the Browse button when picking folder

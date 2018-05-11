@@ -12,6 +12,7 @@ class CMultiShotDlg : public CBaseDlg
 public:
 	CMultiShotDlg(CWnd* pParent = NULL);   // standard constructor
 	virtual ~CMultiShotDlg();
+  bool RecordingISValues() {return mRecordingCustom || mRecordingRegular;};
 
 // Dialog Data
 	enum { IDD = IDD_MULTI_SHOT_SETUP };
@@ -37,6 +38,8 @@ private:
   BOOL mSavedMouseStage;
   double mRecordStageX, mRecordStageY;
   bool mDisabledDialog;
+  int mNavPointIncrement;
+  bool mWarnedIStoNav;
 
 public:
   bool mCanReturnEarly;
@@ -120,4 +123,6 @@ public:
   void UpdateSettings(void);
   CEdit m_editExtraDelay;
   CButton m_butCancel;
+  CButton m_butIStoPt;
+  afx_msg void OnButIsToPt();
 };

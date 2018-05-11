@@ -64,6 +64,7 @@ CMultiShotDlg::CMultiShotDlg(CWnd* pParent /*=NULL*/)
   mRecordingRegular = false;
   mRecordingCustom = false;
   mDisabledDialog = false;
+  mWarnedIStoNav = false;
 }
 
 CMultiShotDlg::~CMultiShotDlg()
@@ -132,6 +133,7 @@ void CMultiShotDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_STAT_SAVE_INSTRUCTIONS, m_statSaveInstructions);
   DDX_Control(pDX, IDC_EDIT_EXTRA_DELAY, m_editExtraDelay);
   DDX_Control(pDX, IDCANCEL, m_butCancel);
+  DDX_Control(pDX, IDC_BUT_IS_TO_PT, m_butIStoPt);
 }
 
 
@@ -157,6 +159,7 @@ BEGIN_MESSAGE_MAP(CMultiShotDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_BUT_SAVE_IS, OnButSaveIs)
   ON_BN_CLICKED(IDC_BUT_END_PATTERN, OnButEndPattern)
   ON_BN_CLICKED(IDC_BUT_ABORT, OnButAbort)
+  ON_BN_CLICKED(IDC_BUT_IS_TO_PT, &CMultiShotDlg::OnButIsToPt)
 END_MESSAGE_MAP()
 
 
@@ -195,8 +198,8 @@ void CMultiShotDlg::UpdateSettings(void)
   m_bAdjustBeamTilt = mActiveParams->adjustBeamTilt;
   m_bUseIllumArea = mActiveParams->useIllumArea;
   m_bUseCustom = mActiveParams->useCustomHoles;
-  m_bDoShotsInHoles = (mActiveParams->inHoleOrMultiHole & 1) != 0;
-  m_bDoMultipleHoles = (mActiveParams->inHoleOrMultiHole & 2) != 0;
+  m_bDoShotsInHoles = (mActiveParams->inHoleOrMultiHole & MULTI_IN_HOLE) != 0;
+  m_bDoMultipleHoles = (mActiveParams->inHoleOrMultiHole & MULTI_HOLES) != 0;
   if (mActiveParams->numHoles[1] <= 1) {
     minNum0 = 2;
     mActiveParams->numHoles[1] = 1;
@@ -285,12 +288,14 @@ BOOL CMultiShotDlg::PreTranslateMessage(MSG* pMsg)
 void CMultiShotDlg::ManagePanels(void)
 {
   BOOL states[7] = {true, true, true, true, true, true, true};
+  static BOOL lastStates[7] = {true, true, true, true, true, true, true};
+  int ind, numStates = sizeof(states) / sizeof(BOOL);
   states[1] = m_bDoShotsInHoles;
   states[3] = m_bDoMultipleHoles;
   states[5] = mCanReturnEarly;
   if ((mWinApp->mNavigator && mWinApp->mNavigator->GetAcquiring()) || 
     mWinApp->mParticleTasks->DoingMultiShot() || mWinApp->mMacroProcessor->DoingMacro()) {
-      for (int ind = 0; ind < sizeof(states) / sizeof(BOOL) - 1; ind++)
+      for (ind = 0; ind < numStates - 1; ind++)
         states[ind] = false;
       if (!mDisabledDialog) {
         mDisabledDialog = true;
@@ -300,8 +305,15 @@ void CMultiShotDlg::ManagePanels(void)
     mDisabledDialog = false;
     ManageEnables();
   }
-  AdjustPanels(states, idTable, leftTable, topTable, mNumInPanel, mPanelStart, 0);
-  mWinApp->RestoreViewFocus();
+  for (ind = 0; ind < numStates; ind++) {
+    if (!BOOL_EQUIV(states[ind], lastStates[ind])) {
+      AdjustPanels(states, idTable, leftTable, topTable, mNumInPanel, mPanelStart, 0);
+      mWinApp->RestoreViewFocus();
+      break;
+    }
+  }
+  for (ind = 0; ind < numStates; ind++)
+    lastStates[ind] = states[ind];
 }
 
 // Do multiple shots in hole check box
@@ -375,14 +387,14 @@ void CMultiShotDlg::OnDeltaposSpinNumYHoles(NMHDR *pNMHDR, LRESULT *pResult)
 void CMultiShotDlg::OnSetRegular()
 {
   mRecordingRegular = true;
-  StartRecording("Shift to center the hole at first corner of pattern");
+  StartRecording("Shift to define the hole at first corner of pattern");
 }
 
 // Button to set custom points: there are at least two Nav points in group
 void CMultiShotDlg::OnSetCustom()
 {
   mRecordingCustom = true;
-  StartRecording("Shift image to center point of custom pattern");
+  StartRecording("Shift image to central point of custom pattern");
 }
 
 // Common operations to start recording corners/points
@@ -395,6 +407,7 @@ void CMultiShotDlg::StartRecording(const char *instruct)
   mSavedMouseStage = mWinApp->mShiftManager->GetMouseMoveStage();
   mWinApp->mShiftManager->SetMouseMoveStage(false);
   m_statSaveInstructions.SetWindowText(instruct);
+  mNavPointIncrement = -9;
   ManageEnables();
 }
 
@@ -407,6 +420,59 @@ void CMultiShotDlg::StopRecording(void)
       mWinApp->mNavigator->Update();
     mWinApp->mShiftManager->SetMouseMoveStage(mSavedMouseStage);
   }
+}
+
+// Do IS to XY in Nav and advance point
+void CMultiShotDlg::OnButIsToPt()
+{
+  CNavigatorDlg *nav = mWinApp->mNavigator;
+  CString mess;  
+  int answer, itemInd, numInGroup, groupStart, groupEnd;
+  if (nav->m_bCollapseGroups) {
+    AfxMessageBox("This function will not work right if groups are collapsed\n\n"
+      "Turn off \"Collapse groups\" in the Navigator window and try again");
+    return;
+  }
+  if (mNavPointIncrement < -1) {
+    itemInd = nav->GetCurrentIndex();
+    numInGroup = nav->LimitsOfContiguousGroup(itemInd, groupStart, groupEnd);
+    if (numInGroup == 1) {
+      AfxMessageBox("There is only one point in the current Navigator group\n\n"
+        "You will be reponsible for selecting the next point\n"
+        "BEFORE pressing this button again");
+      mNavPointIncrement = 0;
+    } else if (groupStart == itemInd || (mRecordingRegular && numInGroup == 4)) {
+      mNavPointIncrement = 1;
+      if (groupStart != itemInd) {
+        mess = "The first point in the group was selected for moving to with IS\n";
+        mWarnedIStoNav = false;
+      }
+      if (!mWarnedIStoNav) {
+        mess += "After moving to the current point with IS, the next Navigator\n"
+          "point will be selected each time you press this button";
+        AfxMessageBox(mess);
+        mWarnedIStoNav = true;
+      }
+      nav->SetCurrentSelection(groupStart);
+    } else {
+      answer = SEMThreeChoiceBox("The current Navigator point is not at the beginning\n"
+        "of its group so it is not clear how to change the selection after each move\n\n"
+        "Press:\n\"Forward from Start\" to go to start of group and advance forward "
+        "each time\n\n\"Backward from End\" to go to end of group and go backwards each "
+        "time\n\n\"Leave Selection\" to always use the current item and leave\n"
+        "the selection alone (you will be responsible for selecting the next point)",
+        "Forward from Start",  "Backward from End", "Leave Selection",
+        MB_YESNOCANCEL | MB_ICONQUESTION);
+      if (answer == IDYES) {
+        nav->SetCurrentSelection(groupStart);
+        mNavPointIncrement = 1;
+      } else if (answer == IDNO) {
+        nav->SetCurrentSelection(groupEnd);
+        mNavPointIncrement = -1;
+      }
+    }
+  }
+  nav->IStoXYandAdvance(mNavPointIncrement);
 }
 
 // Save one image shift, or finish up for regular pattern when there are 4
@@ -620,6 +686,7 @@ void CMultiShotDlg::ManageEnables(void)
   m_butSetRegular.EnableWindow(enable && !recording &&
     (mActiveParams->numHoles[0] > 1 || mActiveParams->numHoles[1] > 1));
   m_butSaveIS.EnableWindow(recording);
+  m_butIStoPt.EnableWindow(recording && mWinApp->mNavigator);
   m_butAbort.EnableWindow(recording);
   m_butEndPattern.EnableWindow(mRecordingCustom);
   m_butSetCustom.EnableWindow(m_bDoMultipleHoles && !recording);

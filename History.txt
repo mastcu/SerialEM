@@ -3,6 +3,21 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+5/11/18: Fixed mag change when changing EFTEM state in Low Dose mode and the
+parameters are not defined for current area in the other state.
+
+5/11/18: There are script commands for testing image location and beam tilt
+compensation when doing multiple Records, and setting up multiple holes is now
+documented.
+
+5/11/18: Added free lens control script commands for JEOL.
+
+5/11/18: The script processor now saves and restores beam tilt specifically
+for the current probe mode.
+
+5/11/18: Made CTF-base coma/astigmatism go to Record area with its possible
+probe mode change before saving any values.
+
 5/11/18: Stopped turning on "very sloppy" option for stage montages (In 3.6).
 
 5/6/18: Fix crash when reading in settings with one-line script.
@@ -19,7 +34,7 @@ CMOS cameras with fast readouts (direct detectors, OneView, Ceta), and made it
 not drop the exposure time so much in low dose mode by allowing counts to
 increase up to 4-fold.
 
-4/27/18: Multiple reciords can now be taken from multiple holes as well as
+4/27/18: Multiple records can now be taken from multiple holes as well as
 from multiple positions in a hole.
 
 4/27/18: Added script commands to load a map and added option to adjust note

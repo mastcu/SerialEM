@@ -8868,7 +8868,8 @@ int CNavigatorDlg::GetCurrentGroupSizeAndPoints(int maxPoints, float *stageX,
   return num;
 }
 
-
+// Goes to the current item (with IS or not) and selects the next item in the given
+// direction if nonzero; intended to be used without collapsed groups
 void CNavigatorDlg::IStoXYandAdvance(int &direction)
 {
   OnGotoXy();
@@ -8879,7 +8880,8 @@ void CNavigatorDlg::IStoXYandAdvance(int &direction)
     direction = 0;
 }
 
-
+// Returns the index of first and last item in the same group as the given item and in
+// a contiguous set of items in same group
 int CNavigatorDlg::LimitsOfContiguousGroup(int itemInd, int &groupStart, int & groupEnd)
 {
   CMapDrawItem *item;
@@ -8903,7 +8905,7 @@ int CNavigatorDlg::LimitsOfContiguousGroup(int itemInd, int &groupStart, int & g
   return groupEnd + 1 - groupStart;
 }
 
-
+// Sets the current selected item and updates display and window
 void CNavigatorDlg::SetCurrentSelection(int listInd)
 {
   if (listInd < 0 || listInd >= m_listViewer.GetCount())

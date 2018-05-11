@@ -15,6 +15,7 @@
 #include "AutoTuning.h"
 #include "ShiftManager.h"
 #include "CameraController.h"
+#include "EMmontageController.h"
 
 
 CParticleTasks::CParticleTasks(void)
@@ -23,6 +24,7 @@ CParticleTasks::CParticleTasks(void)
   mWinApp = (CSerialEMApp *)AfxGetApp();
   mImBufs = mWinApp->GetImBufs();
   mMSCurIndex = -2;             // Index when it is not doing anything must be < -1
+  mMSTestRun = 0;
 }
 
 
@@ -48,38 +50,91 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
   int inHoleOrMulti)
 {
   float pixel;
-  int magInd, nextShot, nextHole;
+  int magInd, nextShot, nextHole, testRun;
   CameraParameters *camParam = mWinApp->GetActiveCamParam();
   ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
-  mMSNumPeripheral = (inHoleOrMulti & 1) ? numPeripheral : 0;
-  mMSDoCenter = (inHoleOrMulti & 1) ? doCenter : 1;
+  MontParam *montP = mWinApp->GetMontParam();
+  bool multiInHole = (inHoleOrMulti & MULTI_IN_HOLE) != 0;
+  bool multiHoles = (inHoleOrMulti & MULTI_HOLES) != 0;
+  int testImage = inHoleOrMulti & MULTI_TEST_IMAGE;
+  bool testComa = (inHoleOrMulti & MULTI_TEST_COMA) != 0;
+  mMSNumPeripheral = multiInHole ? numPeripheral : 0;
+  mMSDoCenter = multiInHole ? doCenter : 1;
   mMSExtraDelay = extraDelay;
   mMSIfEarlyReturn = ifEarlyReturn;
   mMSEarlyRetFrames = earlyRetFrames;
-  mMSSaveRecord = saveRec;
   mMSAdjustBeamTilt = adjustBT && comaVsIS->magInd > 0;
 
-  // Check conditions
-  if (ifEarlyReturn && !camParam->K2Type) {
+  // Check conditions, first for test runs
+  if (testImage && testComa) {
+    SEMMessageBox("You cannot test both multishot image location and coma correction in "
+      "one run");
+    return 1;
+  }
+  testRun = testImage;
+  if (testImage) {
+    if (mWinApp->Montaging() && ((mWinApp->LowDoseMode() && (montP->useViewInLowDose ||
+      montP->useSearchInLowDose)) || montP->moveStage)) {
+        SEMMessageBox("You cannot test multishot image location with a View or Search "
+          "montage or a stage montage");
+        return 1;
+    }
+  }
+  if (testComa) {
+    testRun =  MULTI_TEST_COMA;
+    if (comaVsIS->magInd <= 0 && adjustBT) {
+      SEMMessageBox("You cannot test multishot coma correction with\r\n""adjustment for"
+        " image shift: there is no calibration of coma versus image shift");
+      return 1;
+    }
+    mMSAdjustBeamTilt = true;
+    mMSSaveRecord = false;
+    mMSDoCenter = -1;
+  }
+
+  // Adjust some parameters for test runs
+  if (testRun) {
+    mMSIfEarlyReturn = 0;
+    if (multiHoles) {
+      mMSNumPeripheral = 0;
+      multiInHole = false;
+      mMSDoCenter = 1;
+    } else if (testImage)
+      mMSDoCenter = 0;
+  }
+
+  mMSSaveRecord = !(multiHoles && mWinApp->Montaging()) && !testComa && saveRec;
+
+  // Then test other conditions
+  if (mMSIfEarlyReturn && !camParam->K2Type) {
     SEMMessageBox("The current camera must be a K2 to use early return for multiple "
-      "shots");
+       "shots");
     return 1;
   }
-  if (numPeripheral < 2 || numPeripheral > 12) {
-    SEMMessageBox("To do multiple shots, the number of shots\n"
-      "around the center must be between 2 and 12");
-    return 1;
+  if (multiInHole  && (numPeripheral < 2 || numPeripheral > 12)) {
+      SEMMessageBox("To do multiple shots in a hole, the number of shots\n"
+        "around the center must be between 2 and 12");
+      return 1;
   }
-  if (ifEarlyReturn && earlyRetFrames <= 0 && saveRec) {
+  if (mMSIfEarlyReturn && earlyRetFrames <= 0 && mMSSaveRecord) {
     SEMMessageBox("You cannot save Record images from multiple\n"
       "shots when doing an early return with 0 frames");
     return 1;
   }
-  if (saveRec && !mWinApp->mStoreMRC) {
+  if (mMSSaveRecord && !mWinApp->mStoreMRC) {
     SEMMessageBox("An image file must be open for saving\n"
       "before starting to acquire multiple Record shots");
     return 1;
   }
+  if (mMSSaveRecord && mWinApp->Montaging()) {
+    SEMMessageBox("Multiple Records are supposed to be saved but the current image file"
+      " is a montage");
+    return 1;
+  }
+
+  // Set this after all tests and parameter settings, it determines operation of
+  // GetHolePositions which is called from SerialEMView
+  mMSTestRun = testRun;
 
   // Go to low dose area before recording any values
   if (mWinApp->LowDoseMode())
@@ -89,7 +144,7 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
   mMSHoleIndex = 0;
   mMSHoleISX.clear();
   mMSHoleISY.clear();
-  if (inHoleOrMulti & 2) {
+  if (inHoleOrMulti & MULTI_HOLES) {
      mMSNumHoles = GetHolePositions(mMSHoleISX, mMSHoleISY, magInd, 
        mWinApp->GetCurrentCamera());
      mMSUseHoleDelay = true;
@@ -104,7 +159,7 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
   mScope->GetImageShift(mBaseISX, mBaseISY);
   if (mMSAdjustBeamTilt)
     mScope->GetBeamTilt(mBaseBeamTiltX, mBaseBeamTiltY);
-  mActPostExposure = mWinApp->ActPostExposure();
+  mActPostExposure = mWinApp->ActPostExposure() && !mMSTestRun;
   mLastISX = mBaseISX;
   mLastISY = mBaseISY;
   pixel = mShiftManager->GetPixelSize(mWinApp->GetCurrentCamera(), magInd);
@@ -141,7 +196,7 @@ void CParticleTasks::MultiShotNextTask(int param)
     return;
   }
 
-  // Set indices for next shot if there is one, otherwise quite
+  // Set indices for next shot if there is one, otherwise quit
   if (GetNextShotAndHole(nextShot, nextHole)) {
     mMSCurIndex = nextShot;
     mMSHoleIndex = nextHole;
@@ -161,6 +216,13 @@ void CParticleTasks::MultiShotNextTask(int param)
   StartOneShotOfMulti(); 
 }
 
+int CParticleTasks::MultiShotBusy(void)
+{
+  return (DoingMultiShot() && (mWinApp->mCamera->CameraBusy() || 
+    mWinApp->mMontageController->DoingMontage() || 
+    mWinApp->mAutoTuning->GetDoingCtfBased())) ? 1 : 0;
+}
+
 // Cleanup call on error/timeout
 void CParticleTasks::MultiShotCleanup(int error)
 {
@@ -176,9 +238,13 @@ void CParticleTasks::StopMultiShot(void)
   if (mMSCurIndex < -1)
     return;
   mScope->SetImageShift(mBaseISX, mBaseISY);
+
+  // Montage does a second restore after it is no longer "Doing", so just set this
+  mWinApp->mMontageController->SetBaseISXY(mBaseISX, mBaseISY);
   if (mMSAdjustBeamTilt)
     mScope->SetBeamTilt(mBaseBeamTiltX, mBaseBeamTiltY);
   mMSCurIndex = -2;
+  mMSTestRun = 0;
   mWinApp->UpdateBufferWindows();
   mWinApp->SetStatusText(MEDIUM_PANE, "");
 }
@@ -205,8 +271,10 @@ void CParticleTasks::SetUpMultiShotShift(int shotIndex, int holeIndex, BOOL queu
   // Multiply by hole delay factor if doing hole; add extra delay
   ISX = mBaseISX + mMSHoleISX[holeIndex] + delISX;
   ISY = mBaseISY + mMSHoleISY[holeIndex] + delISY;
-   SEMTrace('1', "For hole %d shot %d  %s  delIS  %.3f %.3f", holeIndex, shotIndex,
-      queueIt ? "Queuing" : "Setting", mMSHoleISX[holeIndex] + delISX, mMSHoleISY[holeIndex] + delISY);
+  if (GetDebugOutput('1') || mMSTestRun) 
+   PrintfToLog("For hole %d shot %d  %s  delIS  %.3f %.3f", holeIndex, shotIndex,
+    queueIt ? "Queuing" : "Setting", mMSHoleISX[holeIndex] + delISX, 
+    mMSHoleISY[holeIndex] + delISY);
   delISX = ISX - mLastISX;
   delISY = ISY - mLastISY;
   delay = mShiftManager->ComputeISDelay(delISX, delISY);
@@ -262,8 +330,14 @@ int CParticleTasks::StartOneShotOfMulti(void)
     StopMultiShot();
     return 1;
   }
-  mCamera->InitiateCapture(RECORD_CONSET);
-  mWinApp->AddIdleTask(SEMStageCameraBusy, TASK_MULTI_SHOT, 0, 0);
+  if (mMSTestRun & MULTI_TEST_COMA) {
+    mWinApp->mAutoTuning->CtfBasedAstigmatismComa(1, 0, 1, 1);
+  } else if (mMSTestRun && mWinApp->Montaging()) {
+    mWinApp->mMontageController->StartMontage(MONT_NOT_TRIAL, false);
+  } else {
+    mCamera->InitiateCapture(RECORD_CONSET);
+  }
+  mWinApp->AddIdleTask(TASK_MULTI_SHOT, 0, 0);
   str.Format("DOING MULTI-SHOT %d OF %d", mMSHoleIndex * numInHole + 
     mMSCurIndex + (mMSDoCenter < 0 ? 2 : 1), numInHole * mMSNumHoles);
   mWinApp->SetStatusText(MEDIUM_PANE, str);
@@ -277,7 +351,7 @@ int CParticleTasks::StartOneShotOfMulti(void)
 int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, int magInd,
   int camera)
 {
-  int numHoles = 0, ind, ix, iy, direction[2], startInd[2], endInd[2], fromMag;
+  int numHoles = 0, ind, ix, iy, direction[2], startInd[2], endInd[2], fromMag, jump[2];
   double xCenISX, yCenISX, xCenISY, yCenISY, transISX, transISY;
   std::vector<double> fromISX, fromISY;
   delISX.clear();
@@ -295,6 +369,8 @@ int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, int mag
 
     // The hole pattern requires computing position relative to center of pattern
     numHoles = mMSParams->numHoles[0] * mMSParams->numHoles[1];
+    if (mMSTestRun)
+      numHoles = B3DMIN(2, mMSParams->numHoles[0]) * B3DMIN(2, mMSParams->numHoles[1]);
     xCenISX = mMSParams->holeISXspacing[0] * 0.5 * (mMSParams->numHoles[0] - 1);
     xCenISY = mMSParams->holeISYspacing[0] * 0.5 * (mMSParams->numHoles[0] - 1);
     yCenISX = mMSParams->holeISXspacing[1] * 0.5 * (mMSParams->numHoles[1] - 1);
@@ -306,8 +382,15 @@ int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, int mag
     startInd[0] = startInd[1] = 0;
     endInd[0] = mMSParams->numHoles[0] - 1;
     endInd[1] = mMSParams->numHoles[1] - 1;
-    for (iy = startInd[1]; (endInd[1] - iy) * direction[1] >= 0; iy += direction[1]) {
-      for (ix = startInd[0]; (endInd[0] - ix) * direction[0] >= 0 ; ix += direction[0]) {
+    jump[0] = jump[1] = 1;
+    if (mMSTestRun) {
+      jump[0] = B3DMAX(2, mMSParams->numHoles[0]) - 1;
+      jump[1] = B3DMAX(2, mMSParams->numHoles[1]) - 1;
+    }
+    for (iy = startInd[1]; (endInd[1] - iy) * direction[1] >= 0; 
+      iy += direction[1] * jump[1]) {
+      for (ix = startInd[0]; (endInd[0] - ix) * direction[0] >= 0 ; 
+        ix += direction[0] * jump[0]) {
         fromISX.push_back((ix * mMSParams->holeISXspacing[0] - xCenISX) +
           (iy * mMSParams->holeISXspacing[1] - yCenISX));
         fromISY.push_back((ix * mMSParams->holeISYspacing[0] - xCenISY) +

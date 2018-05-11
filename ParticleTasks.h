@@ -1,5 +1,6 @@
 #pragma once
 #include "NavHelper.h"
+
 class CParticleTasks
 {
 public:
@@ -36,6 +37,7 @@ private:
   FloatVec mMSHoleISX, mMSHoleISY;  // IS values for all the holes
   int mMSLastShotIndex;           // Last index of multishots in hole
   MultiShotParams *mMSParams;      // Pointer to params from NavHelper
+  int mMSTestRun;
 
 public:
   void Initialize(void);
@@ -48,5 +50,6 @@ public:
   void MultiShotCleanup(int error);
   bool GetNextShotAndHole(int &nextShot, int &nextHole);
   int GetHolePositions(FloatVec & delIsX, FloatVec & delISY, int magInd, int camera);
+  int MultiShotBusy(void);
 };
 

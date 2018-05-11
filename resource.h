@@ -1391,8 +1391,6 @@
 #define IDC_STAT_NUM_Y_HOLES            2411
 #define IDC_SPIN_NUM_Y_HOLES            2412
 #define IDC_STAT_SPACING                2413
-#define IDC_EDIT_X_SPACING              2414
-#define IDC_STAT_ANGLE                  2416
 #define IDC_BUT_SET_REGULAR             2418
 #define IDC_CHECK_USE_CUSTOM            2419
 #define IDC_BUT_SET_CUSTOM              2420
@@ -1409,6 +1407,7 @@
 #define IDC_BUT_END_PATTERN             2431
 #define IDC_BUT_ABORT                   2432
 #define IDC_STAT_SAVE_INSTRUCTIONS      2433
+#define IDC_BUT_IS_TO_PT                2434
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -1838,7 +1837,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        228
 #define _APS_NEXT_COMMAND_VALUE         33305
-#define _APS_NEXT_CONTROL_VALUE         2434
+#define _APS_NEXT_CONTROL_VALUE         2435
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
