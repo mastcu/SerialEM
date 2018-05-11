@@ -1427,14 +1427,18 @@
         </TR>
         <TR vAlign="top">
           <TD class="style13">SaveBeamTilt</TD>
-          <TD>Saves the current X and Y beam tilt; it will be restored to these values 
+          <TD>Saves the current X and Y beam tilt (specifically for the current probe mode 
+            on an FEI scope).&nbsp; It will be restored to these values 
             either by RestoreBeamTilt or when the script stops or exits.&nbsp; The script will not be
             resumable if it stops.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style13">RestoreBeamTilt</TD>
-          <TD>Restores the beam tilt saved when SaveBeamTilt was run.&nbsp; After this is run, 
-            the beam tilt will not be restored again when the script ends.</TD>
+          <TD>Restores the beam tilt saved when SaveBeamTilt was run or another command 
+            saved the beam tilt (AdjustBeamTiltForIS or several ImageShift commands).&nbsp; After this is run, 
+            the beam tilt will not be restored again when the script ends.&nbsp; For an FEI 
+            scope, it is restored for the current probe mode provided that a value was saved 
+            in that mode.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style13">ReportProbeMode</TD>
@@ -1536,7 +1540,7 @@
           <TD class="style13">ReportLens name</TD>
           <TD>For a Hitachi or JEOL scope, reports the lens value by its abbreviated name.&nbsp; 
             For JEOL, allowed names are CL1, CL2, OM2, IL1, IL2, IL3, PL1, PL2, PL3, PL4, 
-            FLf, FLc, FLcomp1, FLcomp2.</TD>
+            FLf, FLc, FLcomp1, FLcomp2.  Value cannot be assigned to a variable at end of commmand</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style13">ReportDeflector name</TD>

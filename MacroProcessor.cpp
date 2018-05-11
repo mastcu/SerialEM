@@ -3288,9 +3288,9 @@ void CMacroProcessor::NextCommand()
       AbortMacro();
       return;
     }
-    report.Format("Lens %s = %f", (LPCTSTR)strItems[1], delX);
+    report.Format("Lens %s = %f", (LPCTSTR)report, delX);
     mWinApp->AppendToLog(report, mLogAction);
-    SetReportedValues(&strItems[2], delX);
+    SetReportedValues(delX);
 
   } else if (CMD_IS(REPORTCOIL)) {                          // ReportCoil
     if (!mScope->GetDeflectorByName(strItems[1], delX, delY)) {
