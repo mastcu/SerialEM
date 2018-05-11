@@ -143,6 +143,7 @@ SCOPE_SAMENAME(ScopeSetInt, StartUpdates);
 SCOPE_SAMENAME(ScopeGetThreeDbl, GetFilterRanges);
 SCOPE_SAMENAME(ScopeSetTwoInt, SetFreeLensControl);
 SCOPE_SAMENAME(ScopeSetTwoIntDbl, SetLensWithFLC);
+SCOPE_SAMENAME(ScopeSetIntGetIntDbl, GetLensFLCStatus);
 SCOPE_SAMENAME(ScopeGetInt, GetEmissionState);
 SCOPE_SAMENAME(CamOneInt, SetEmissionState);
 SCOPE_SAMENAME(CamOneInt, FlashFEG);
