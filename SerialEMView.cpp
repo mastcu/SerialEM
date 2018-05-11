@@ -753,8 +753,8 @@ void CSerialEMView::DrawImage(void)
       // Draw multi-shot pattern
       if (iDraw < 0 && useMultiShot) {
         float holeXoffset = 0, holeYoffset = 0;
-        bool doInHole = (msParams->inHoleOrMultiHole & 1) > 0;
-        bool doMultiHole = (msParams->inHoleOrMultiHole & 2) > 0;
+        bool doInHole = (msParams->inHoleOrMultiHole & MULTI_IN_HOLE) > 0;
+        bool doMultiHole = (msParams->inHoleOrMultiHole & MULTI_HOLES) > 0;
         int inHoleEnd = item->mNumPoints - 2;
         int inHoleStart = inHoleEnd - (doInHole ? msParams->numShots : 0);
         GetSingleAdjustmentForItem(imBuf, item, delPtX, delPtY);

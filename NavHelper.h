@@ -8,6 +8,11 @@ class CNavRotAlignDlg;
 struct TiltSeriesParam;
 class CMultiShotDlg;
 
+#define MULTI_IN_HOLE   0x1
+#define MULTI_HOLES     0x2
+#define MULTI_TEST_IMAGE 0x4
+#define MULTI_TEST_COMA 0x8
+
 // Structure for keeping track pf parameters that enable skipping center align in round 1
 struct CenterSkipData
 {
