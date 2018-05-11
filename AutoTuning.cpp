@@ -1098,6 +1098,10 @@ int CAutoTuning::CtfBasedAstigmatismComa(int comaFree, bool calibrate, int actio
     return 1;
   }
   
+  // Go to Record now so IS and BT are set right and focus is recorded
+  if (actionType / 2 == 0 && needAreaChange)
+    mScope->GotoLowDoseArea(RECORD_CONSET);
+
   // Get starting values and apply backlash before first image
   if (comaFree) {
 
@@ -1131,10 +1135,6 @@ int CAutoTuning::CtfBasedAstigmatismComa(int comaFree, bool calibrate, int actio
     mLastAstigX = mSavedAstigX;
     mLastAstigY = mSavedAstigY;
   }
-
-  // Go to Record now so IS is set right and focus is recorded
-  if (actionType / 2 == 0 && needAreaChange)
-    mScope->GotoLowDoseArea(RECORD_CONSET);
 
   // Zero the IS unless flag is set
   if (!leaveIS) {
