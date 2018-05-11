@@ -371,6 +371,7 @@ CSerialEMApp::CSerialEMApp()
     mCamParams[i].addToExposure = -999.;
     mCamParams[i].falcon3ScalePower = 4;
     mCamParams[i].linear2CountingRatio = 8.;
+    mCamParams[i].linearOffset = 0.;
     mCamParams[i].origDefects = NULL;
     mCamParams[i].defNameHasFrameFile = false;
     mCamParams[i].taskTargetSize = 512;
@@ -2030,6 +2031,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
       busy = mFalconHelper->StackingWaiting();
     else if (idc->source == TASK_START_NAV_ACQ)
       busy = mMacroProcessor->StartNavAvqBusy();
+    else if (idc->source == TASK_MULTI_SHOT)
+      busy = mParticleTasks->MultiShotBusy();
 
     // Increase timeouts after long intervals
     if (idc->extendTimeOut)
@@ -3427,11 +3430,16 @@ void CSerialEMApp::SetEFTEMMode(BOOL inState)
       mCamera->Capture(RETRACT_BLOCKERS);
     }
     
-    // If in low dose mode, turn off defining area
+    // If in low dose mode, turn off defining area and set the current parameters as the
+    // "set area" params, since parameters get changed before the call to set the area
     if (LowDoseMode()) {
       if (mLowDoseDlg.GetDefining())
         mLowDoseDlg.TurnOffDefine();
       ldArea = mScope->GetLowDoseArea();
+      if (ldArea >= 0) {
+        mScope->GotoLowDoseArea(ldArea);
+        mScope->SetLdsaParams(&mCamLowDoseParams[mEFTEMMode ? 1 : 0][ldArea]);
+      }
       // 1/18/12 No longer call ChangeAllShifts!
     }
 
