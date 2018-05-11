@@ -10,6 +10,7 @@
 
 #include "stdafx.h"
 #include "SerialEM.h"
+#include "SerialEMDoc.h"
 #include ".\EMmontageController.h"
 #include "Utilities\XCorr.h"
 #include "CameraController.h"
@@ -1251,7 +1252,7 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
     mWinApp->mLogWindow->SaveFileNotOnStack(mWinApp->mStoreMRC->getName())) {
       mWinApp->mLogWindow->DoSave();
       mWinApp->mLogWindow->CloseLog();
-      mWinApp->AppendToLog("", LOG_OPEN_IF_CLOSED);
+      mWinApp->AppendToLog(mWinApp->mDocWnd->DateTimeForTitle());
   }
   SEMTrace('M', preCooking ? "Montage Precook Start" : "Montage Start");
 
