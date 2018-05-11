@@ -65,6 +65,7 @@ typedef void (*ScopeGetGauge)(const char *, int *, double *);
 typedef double (*ScopeGetDblByName)(const char *);
 typedef void (*ScopeGetTwoDblByName)(const char *, double *, double *);
 typedef void (*ScopeSetTwoIntDbl)(int, int, double);
+typedef void (*ScopeSetIntGetIntDbl)(int, int *, double*);
 typedef int (*GetChannelList)(int, int, long *, const char **, BOOL, long *, long *,
                               BOOL *);
 typedef int (*LookupCamera)(const char *, BOOL, int, int *, float *, float *);
