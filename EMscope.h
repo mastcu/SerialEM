@@ -741,6 +741,7 @@ public:
   void UnblankAfterTransient(bool needUnblank, const char *routine);
   BOOL SetFreeLensControl(int lens, int arg);
   BOOL SetLensWithFLC(int lens, double inVal, bool relative);
+  BOOL GetLensFLCStatus(int lens, int &state, double &lensVal);
 };
 
 

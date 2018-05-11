@@ -5146,6 +5146,24 @@ BOOL CEMscope::SetLensWithFLC(int lens, double inVal, bool relative)
   return result;
 }
 
+BOOL CEMscope::GetLensFLCStatus(int lens, int &state, double &lensVal)
+{
+  BOOL result = true;
+  if (!sInitialized || !mPlugFuncs->GetLensFLCStatus)
+    return false;
+  ScopeMutexAcquire("GetLensFLCStatus", true);
+  try {
+    mPlugFuncs->GetLensFLCStatus(lens, &state, &lensVal);
+  }
+  catch (_com_error E) {
+    SEMReportCOMError(E, _T("getting status of lens with free lens control "));
+    result = false;
+  }
+  ScopeMutexRelease("GetLensFLCStatus");
+  return result;
+}
+
+
 // Returns state of column valves or beam; 1 open/on, 0 closed, -1 for indeterminate
 // and -2 for error or not supported
 int CEMscope::GetColumnValvesOpen()
@@ -5363,8 +5381,7 @@ BOOL CEMscope::SetProbeMode(int micro, BOOL fromLowDose)
 {
   BOOL success = true, ifSTEM;
   double ISX, ISY, beamX, beamY, toBeamX, toBeamY, delFocus;
-  bool adjustFocus = (mAdjustFocusForProbe || fromLowDose) && 
-          mFirstFocusForProbe > EXTRA_VALUE_TEST;
+  bool adjustFocus = mAdjustFocusForProbe && mFirstFocusForProbe > EXTRA_VALUE_TEST;
   bool adjustShift = false;
   int magInd;
   ScaleMat fromMat, toMat;
