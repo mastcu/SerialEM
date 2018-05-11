@@ -189,8 +189,8 @@ private:
   float mFocusOffsetToRestore;  // Saved value of autofocus offset to restore
   float mDEframeRateToRestore;  // Saved frame rate of DE camera
   int mDEcamIndToRestore; // Index of that camera
-  double mBeamTiltXtoRestore;   // Saved beam tilt values to restore
-  double mBeamTiltYtoRestore;
+  double mBeamTiltXtoRestore[2];   // Saved beam tilt values to restore for two probe
+  double mBeamTiltYtoRestore[2];   // modes
   int mKeyPressed;        // Key pressed after macro starts
   int mStoppedContSetNum; // Set number for continuous acquire that was stopped
   float mMinDeltaFocus;   // Defocus change and absolute focus limits for autofocus
@@ -217,6 +217,7 @@ private:
   bool mSkipFrameAliCheck;   // Flag for camera controller to skip checking frame ali param
   bool mAlignWholeTSOnly;    // Flag for alignment to happen is if in TS with Whole TS
   bool mStartNavAcqAtEnd;    // Flag to start Nav acquire on successful completion 
+  int mTestNextMultiShot;    // 1 or 2 to test image area or coma
 
 public:
   void GetNextLine(CString * macro, int & currentIndex, CString &strLine);

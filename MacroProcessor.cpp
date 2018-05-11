@@ -220,7 +220,7 @@ enum {CME_VIEW, CME_FOCUS, CME_TRIAL, CME_RECORD, CME_PREVIEW,
   CME_CBASTIGCOMA, CME_FIXASTIGMATISMBYCTF, CME_FIXCOMABYCTF, CME_ECHOEVAL, 
   CME_REPORTFILENUMBER, CME_REPORTCOMATILTNEEDED, CME_REPORTSTIGMATORNEEDED,
   CME_SAVEBEAMTILT, CME_RESTOREBEAMTILT, CME_REPORTCOMAVSISMATRIX,CME_ADJUSTBEAMTILTFORIS,
-  CME_LOADNAVMAP, CME_LOADOTHERMAP
+  CME_LOADNAVMAP, CME_LOADOTHERMAP,CME_REPORTLENSFLCSTATUS, CME_TESTNEXTMULTISHOT
 };
 
 static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0},
@@ -316,7 +316,7 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"Search", 0, 0}, {"SetProperty", 2, 0}, /* End in 3.6 */ {"SetMagIndex", 1, 0},
 {"SetNavRegistration",1,0},{"LocalVar",1,0},{"LocalLoopIndexes",0,0},{"ZemlinTableau",1,1},
 {"WaitForMidnight", 0, 1}, {"ReportUserSetting", 1, 0}, {"SetUserSetting", 2, 0}, 
-{"ChangeItemRegistration",2,1}, {"ShiftItemsByMicrons",2,1}, {"SetFreeLensControl", 2, 0},
+{"ChangeItemRegistration",2,1}, {"ShiftItemsByMicrons",2,1}, {"SetFreeLensControl", 2, 1},
 {"SetLensWithFLC", 2, 0}, {"SaveToOtherFile", 4, 0}, {"SkipAcquiringGroup", 0, 0},
 {"ReportImageDistanceOffset", 0, 0}, {"SetImageDistanceOffset", 1, 0}, 
 {"ReportCameraLength", 0, 0}, {"SetDECamFrameRate", 1, 0}, {"SkipMoveInNavAcquire", 0, 0},
@@ -330,7 +330,7 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"EchoEval", 0, 1}, {"ReportFileNumber", 0, 0}, {"ReportComaTiltNeeded", 0, 0}, 
 {"ReportStigmatorNeeded", 0, 0}, {"SaveBeamTilt", 0, 0}, {"RestoreBeamTilt", 0, 0},
 {"ReportComaVsISmatrix", 0, 0}, {"AdjustBeamTiltforIS", 0, 0}, {"LoadNavMap", 0, 0},
-{"LoadOtherMap", 1, 0},
+{"LoadOtherMap", 1, 0}, {"ReportLensFLCStatus", 1, 0}, {"TestNextMultiShot", 1, 0},
 {NULL, 0, 0}
 };
 
@@ -906,6 +906,7 @@ void CMacroProcessor::Run(int which)
   mBoxOnScopeType = 0;
   mBoxOnScopeInterval = 0.;
   mNumRuns = 0;
+  mTestNextMultiShot = 0;
   mAccumShiftX = 0.;
   mAccumShiftY = 0.;
   mAccumDiff = 0.;
@@ -942,8 +943,8 @@ void CMacroProcessor::RunOrResume()
   mFocusOffsetToRestore = -9999.;
   mDEframeRateToRestore = -1.;
   mDEcamIndToRestore = -1;
-  mBeamTiltXtoRestore = EXTRA_NO_VALUE;
-  mBeamTiltYtoRestore = EXTRA_NO_VALUE;
+  mBeamTiltXtoRestore[0] = mBeamTiltXtoRestore[1] = EXTRA_NO_VALUE;
+  mBeamTiltYtoRestore[0] = mBeamTiltXtoRestore[1] = EXTRA_NO_VALUE;
   mKeyPressed = 0;
   if (mChangedConsets.size() > 0 && mCamWithChangedSets == mWinApp->GetCurrentCamera())
     for (ind = 0; ind < (int)B3DMIN(mConsetNums.size(), mChangedConsets.size());ind++)
@@ -1782,17 +1783,22 @@ void CMacroProcessor::NextCommand()
     mMovedStage = true;
     mTestTiltAngle = true;
 
+  } else if (CMD_IS(TESTNEXTMULTISHOT)) {                   // TestNextMultiShot
+    if (itemInt[1] < 0 || itemInt[1] > 2)
+      ABORT_LINE("The value must be between 0 and 2 in line:\n\n");
+    mTestNextMultiShot = itemInt[1];
+
   } else if (CMD_IS(MULTIPLERECORDS)) {                     // MultipleRecords
     MultiShotParams *msParams = mWinApp->mNavHelper->GetMultiShotParams();
     index = (itemEmpty[6] || itemInt[6] < -8) ? msParams->doEarlyReturn : itemInt[6];
     if (!camParams->K2Type)
       index = 0;
-    index2 = msParams->inHoleOrMultiHole;
+    index2 = msParams->inHoleOrMultiHole | (mTestNextMultiShot << 2);
     if (!itemEmpty[9] && itemInt[9] > -9) {
       index2 = itemInt[9];
-      if (index2 < 1 || index2> 3)
+      if (index2 < 1 || index2 > 11)
         ABORT_LINE("The ninth entry for doing within holes or\n"
-        "in multiple holes must be between 1 and 3 in line:\n\n");
+        "in multiple holes must be between 1 and 11 in line:\n\n");
     }
     truth = (index == 0 || msParams->numEarlyFrames != 0) ? msParams->saveRecord : false;
     if (mWinApp->mParticleTasks->StartMultiShot(
@@ -2405,7 +2411,7 @@ void CMacroProcessor::NextCommand()
       mWinApp->mLogWindow->SetUnsaved(false);
       mWinApp->mLogWindow->CloseLog();
     }
-    mWinApp->AppendToLog("", LOG_OPEN_IF_CLOSED);
+    mWinApp->AppendToLog(mWinApp->mDocWnd->DateTimeForTitle());
     if (!itemEmpty[1]) {
       SubstituteVariables(&strLine, 1, strLine);
       mWinApp->mParamIO->StripItems(strLine, 1, report);
@@ -3284,7 +3290,7 @@ void CMacroProcessor::NextCommand()
     }
     report.Format("Lens %s = %f", (LPCTSTR)strItems[1], delX);
     mWinApp->AppendToLog(report, mLogAction);
-    SetReportedValues(&strItems[1], delX);
+    SetReportedValues(&strItems[2], delX);
 
   } else if (CMD_IS(REPORTCOIL)) {                          // ReportCoil
     if (!mScope->GetDeflectorByName(strItems[1], delX, delY)) {
@@ -3293,7 +3299,7 @@ void CMacroProcessor::NextCommand()
     }
     report.Format("Coil %s = %f  %f", (LPCTSTR)strItems[1], delX, delY);
     mWinApp->AppendToLog(report, mLogAction);
-    SetReportedValues(&strItems[1], delX, delY);
+    SetReportedValues(&strItems[2], delX, delY);
 
   } else if (CMD_IS(SETFREELENSCONTROL)) {                  // SetFreeLensControl
     if (!mScope->SetFreeLensControl(itemInt[1], itemInt[2]))
@@ -3303,6 +3309,13 @@ void CMacroProcessor::NextCommand()
     if (!mScope->SetLensWithFLC(itemInt[1], itemDbl[2], !itemEmpty[3] && itemInt[3] != 0))
       ABORT_LINE("Error trying to run:\n\n");
     
+  } else if (CMD_IS(REPORTLENSFLCSTATUS)) {                    // ReportLensFLCStatus
+    if (!mScope->GetLensFLCStatus(itemInt[1], index, delX))
+      ABORT_LINE("Error trying to run:\n\n");
+    report.Format("Lens %d, FLC %s  value  %f", itemInt[1], index ? "ON" : "OFF", delY);
+    mWinApp->AppendToLog(report, mLogAction);
+    SetReportedValues(&strItems[2], index, delX);
+
   } else if (CMD_IS(SETJEOLSTEMFLAGS)) {                    // SetJeolSTEMflags
     if (itemInt[1] < 0 || itemInt[1] > 0xFFFFFF || itemInt[2] < 0 || itemInt[2] > 15)
         ABORT_LINE("Entries must fit in 24 and 4 bits in: \n\n");
@@ -4564,7 +4577,7 @@ void CMacroProcessor::NextCommand()
       } else {
         if (itemInt[1] < 0) {
            CArray<CMapDrawItem *, CMapDrawItem *> *items = navigator->GetItemArray();
-           index = items->GetSize() + itemInt[1];
+           index = (int)items->GetSize() + itemInt[1];
         } else
           index = itemInt[1] - 1;
         navItem = navigator->GetOtherNavItem(index);
@@ -5028,18 +5041,28 @@ void CMacroProcessor::NextCommand()
     mFocusToRestore = -999.;
 
    } else if (CMD_IS(SAVEBEAMTILT)) {                        // SaveBeamTilt
-    if (mBeamTiltXtoRestore > EXTRA_VALUE_TEST)
-      ABORT_NOLINE("There is a second SaveBeamTilt without a RestoreBeamTilt");
-    mScope->GetBeamTilt(mBeamTiltXtoRestore, mBeamTiltYtoRestore);
-    mNumStatesToRestore++;
+     index = mScope->GetProbeMode();
+     if (mBeamTiltXtoRestore[index] > EXTRA_VALUE_TEST) {
+       report = "There is a second SaveBeamTilt without a RestoreBeamTilt";
+       if (FEIscope)
+         report += " for " + CString(index ? "micro" : "nano") + "probe mode";
+       ABORT_NOLINE(report);
+     }
+     mScope->GetBeamTilt(mBeamTiltXtoRestore[index], mBeamTiltYtoRestore[index]);
+     mNumStatesToRestore++;
 
   } else if (CMD_IS(RESTOREBEAMTILT)) {                      // RestoreBeamTilt
-    if (mBeamTiltXtoRestore < EXTRA_VALUE_TEST)
-      ABORT_NOLINE("There is a RestoreBeamTilt, but beam tilt was not saved or has been "
-        "restored already");
-    mScope->SetBeamTilt(mBeamTiltXtoRestore, mBeamTiltYtoRestore);
+    index = mScope->GetProbeMode();
+    if (mBeamTiltXtoRestore[index] < EXTRA_VALUE_TEST) {
+       report = "There is a RestoreBeamTilt, but beam tilt was not saved or has been "
+        "restored already";
+       if (FEIscope)
+         report += " for " + CString(index ? "micro" : "nano") + "probe mode";
+       ABORT_NOLINE(report);
+    }
+    mScope->SetBeamTilt(mBeamTiltXtoRestore[index], mBeamTiltYtoRestore[index]);
     mNumStatesToRestore--;
-    mBeamTiltXtoRestore = mBeamTiltYtoRestore = EXTRA_NO_VALUE;
+    mBeamTiltXtoRestore[index] = mBeamTiltYtoRestore[index] = EXTRA_NO_VALUE;
  
     // PIEZO COMMANDS
   } else if (CMD_IS(SELECTPIEZO)) {                         // SelectPiezo
@@ -5099,6 +5122,7 @@ void CMacroProcessor::AbortMacro()
 void CMacroProcessor::SuspendMacro(BOOL abort)
 {
   CameraParameters *camParams = mWinApp->GetCamParams();
+  int probe;
   if (!mDoingMacro)
     return;
   if (TestAndStartFuncOnStop())
@@ -5124,18 +5148,26 @@ void CMacroProcessor::SuspendMacro(BOOL abort)
         camParams[mDEcamIndToRestore].DE_FramesPerSec = mDEframeRateToRestore;
         mWinApp->mDEToolDlg.UpdateSettings();
       }
-      if (mBeamTiltXtoRestore > EXTRA_VALUE_TEST) {
-        mScope->SetBeamTilt(mBeamTiltXtoRestore, mBeamTiltYtoRestore);
+      probe = mScope->GetProbeMode();
+      if (mBeamTiltXtoRestore[probe] > EXTRA_VALUE_TEST) {
+        mScope->SetBeamTilt(mBeamTiltXtoRestore[probe], mBeamTiltYtoRestore[probe]);
         if (mWinApp->mFocusManager->DoingFocus())
-          mWinApp->mFocusManager->SetBaseBeamTilt(mBeamTiltXtoRestore, 
-          mBeamTiltYtoRestore);
+          mWinApp->mFocusManager->SetBaseBeamTilt(mBeamTiltXtoRestore[probe], 
+          mBeamTiltYtoRestore[probe]);
         if (mWinApp->mAutoTuning->DoingZemlin() || 
           mWinApp->mAutoTuning->GetDoingCtfBased())
-          mWinApp->mAutoTuning->SetBaseBeamTilt(mBeamTiltXtoRestore, 
-          mBeamTiltYtoRestore);
+          mWinApp->mAutoTuning->SetBaseBeamTilt(mBeamTiltXtoRestore[probe], 
+          mBeamTiltYtoRestore[probe]);
         if (mWinApp->mParticleTasks->DoingMultiShot())
-          mWinApp->mParticleTasks->SetBaseBeamTilt(mBeamTiltXtoRestore, 
-          mBeamTiltYtoRestore);
+          mWinApp->mParticleTasks->SetBaseBeamTilt(mBeamTiltXtoRestore[probe], 
+          mBeamTiltYtoRestore[probe]);
+      }
+      if (mBeamTiltXtoRestore[1 - probe] > EXTRA_VALUE_TEST) {
+        mWinApp->AppendToLog("Switching probe modes to restore beam tilt value");
+        mScope->SetProbeMode(1 - probe);
+        mScope->SetBeamTilt(mBeamTiltXtoRestore[1 - probe], 
+          mBeamTiltYtoRestore[1 - probe]);
+        mScope->SetProbeMode(probe);
       }
     }
     mSavedSettingNames.clear();
@@ -6871,6 +6903,7 @@ int CMacroProcessor::AdjustBeamTiltIfSelected(double delISX, double delISY, BOOL
   CString &message)
 {
   double delBTX, delBTY;
+  int probe = mScope->GetProbeMode();
   ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
   if (!doAdjust)
     return 0;
@@ -6879,8 +6912,8 @@ int CMacroProcessor::AdjustBeamTiltIfSelected(double delISX, double delISY, BOOL
       "in:\n\n";
     return 1;
   }
-  if (mBeamTiltXtoRestore < EXTRA_VALUE_TEST) {
-    mScope->GetBeamTilt(mBeamTiltXtoRestore, mBeamTiltYtoRestore);
+  if (mBeamTiltXtoRestore[probe] < EXTRA_VALUE_TEST) {
+    mScope->GetBeamTilt(mBeamTiltXtoRestore[probe], mBeamTiltYtoRestore[probe]);
     mNumStatesToRestore++;
   }
   delBTX = comaVsIS->matrix.xpx * delISX + comaVsIS->matrix.xpy * delISY;
