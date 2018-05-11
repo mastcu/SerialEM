@@ -379,7 +379,7 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
   }
 
   if (inDefocus != mDefocus) {
-    if (fabs(inDefocus) < 100.)
+    if (fabs(inDefocus) < 99.98)
       m_strDefocus.Format("%.2f", inDefocus);
     else if (fabs(inDefocus) < 1000.)
       m_strDefocus.Format("%.1f", inDefocus);

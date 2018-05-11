@@ -719,8 +719,7 @@ int CSerialEMDoc::OpenMontageDialog(BOOL locked)
     return 1;
   *param = montDlg.mParam;
 
-  // Set sloppy parameter by whether stage is being moved
-  param->verySloppy = param->moveStage;
+  // 5/11/18: No longer set sloppy parameter by whether stage is being moved
   mWinApp->mMontageWindow.UpdateSettings();
   mWinApp->mLowDoseDlg.Update();
   return 0;

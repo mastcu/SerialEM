@@ -2622,7 +2622,7 @@ int CNavHelper::SetFileProperties(int itemNum, int listType, ScheduledFile *sche
       return -1;
 
     // Set some params after the dialog: note offerToMakeMap is irrelevant in Nav acquire
-    montDlg.mParam.verySloppy = montDlg.mParam.moveStage;
+    // 5/11/18: give up on setting very sloppy for stage
     montDlg.mParam.warnedCalOpen = true;
     montDlg.mParam.warnedCalAcquire = true;
     movingStage = montDlg.mParam.moveStage ? 1 : 0;
