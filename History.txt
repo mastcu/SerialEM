@@ -6,6 +6,9 @@ significance.
 5/29/18: Added support for K3 camera.  Parallelized several frame-processing
 steps, with modest time-savings on K2 and good savings on K3.
 
+5/29/18: Fixed JEOL scope plugin to connect with older TemExt64 versions by
+using the old class ID after failing with the new one.
+
 5/29/18: Fixed loss of OneView drift correction setting, broken 11/3/17.
 
 5/29/18: Made beam intensity calibration use counting mode for K2 when dose
