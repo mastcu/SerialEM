@@ -66,6 +66,11 @@ CBeamAssessor::CBeamAssessor()
   mMaxExposure = 3.f;
   mMaxCounts = 8000;
   mMinCounts = 100;
+  mCntK2MinExposure = 0.1f;
+  mCntK2MaxExposure = 0.4f;
+  mCntK2MinCounts = 2000;
+  mLinK2MinCounts = 10000;
+  mCntK2MaxCounts = 30000;
   mFavorMagChanges = false;
   mNumMatchAfter = 2;
   mNumMatchBefore = 3;
@@ -105,10 +110,13 @@ void CBeamAssessor::CalIntensityCCD()
 {
   double ratio;
   int in, out, i, camera, aboveCross, fracField, probe;
+  float minDoseRates[2] = {2.5f, 9.4f};
+  float maxDoseRates[2] = {20.f, 75.f};
   camera = mWinApp->GetCurrentCamera();
   mCamParam = mWinApp->GetCamParams() + camera;
   CString message;
   int minMagIndNeeded = mWinApp->mComplexTasks->FindMaxMagInd(mCalMinField);
+  int K2ind = mCamParam->K2Type == K3_TYPE ? 1 : 0;
   AssignCrossovers();
   probe = mScope->ReadProbeMode();
   
@@ -117,21 +125,26 @@ void CBeamAssessor::CalIntensityCCD()
     return;
   }
 
+  mCountingK2 = mCamParam->K2Type && mCamParam->K2Type != K2_BASE && 
+    mCamParam->countsPerElectron;
+ 
   // To protect against Tecnai intensity problem, just get and set intensity
   mStartIntensity = mScope->GetIntensity();
   mScope->SetIntensity(mStartIntensity);
   mScope->NormalizeCondenser();
   mCalSpotSize = mScope->GetSpotSize();
   aboveCross = GetAboveCrossover(mCalSpotSize, mStartIntensity, probe);
-
   message.Format("To calibrate beam intensity for a spot size:\n"
     "1) Make sure there is no specimen in the beam.\n"
-    "2) Start at the highest mag and brightest beam that you want calibrated \n"
+    "2) Make sure the beam is on the side of crossover where you want to work.\n"
+    "3) Start at the highest mag and brightest beam that you want calibrated\n"
     "  (It might be safest to start at a mag 2 times higher).\n"
-    "3) Make sure the beam is on the side of crossover where you want to work.\n"
-    "4) Center the beam and spread it so that it just covers the CCD camera.\n%s"
-    "5) Be sure to cover the viewing port after setting up the beam.", FEIscope ? 
-    "   (Check it now - it could have changed due to an FEI scripting problem.)\n" : "");
+    "4) Center the beam and spread it so that it just covers the camera (for FEG) or "
+    "fills the screen (non-FEG)\n%s" 
+    "5) Be sure to cover the viewing port after setting up the beam.", 
+    FEIscope ? "   (Check it now - it could have changed due to normalization or setting"
+    " intensity.)\n" : "");
+  
   if (mScope->GetCrossover(mCalSpotSize, probe) > 0.) {
     message = message + "\n\nThe calibration will be done for intensities " + 
       (aboveCross ? "above" : "below") + " crossover.";
@@ -226,14 +239,25 @@ void CBeamAssessor::CalIntensityCCD()
   mNumIntensities = 0;
   mMatchFactor = 1.;
   mNextMagInd = mCalMagInd;
+  mUseMaxCounts = mMaxCounts;
+  mUseMinCounts = mMinCounts;
+  mUseMaxExposure = mMaxExposure;
   mMagMaxDelCurrent = B3DMIN(mMagMaxDelCurrent, (float)mMaxCounts / mMinCounts);
-
   mExposure = mMinExposure;
+  if (mCountingK2) {
+    mMinDoseRate = minDoseRates[K2ind];
+    mMaxDoseRate = maxDoseRates[K2ind];
+    mUseMaxCounts = mCntK2MaxCounts;
+    mUseMaxExposure = mCntK2MaxExposure;
+    mExposure = mCntK2MinExposure;
+    mUseMinCounts = mLinK2MinCounts;
+  }
+
   mBinning = mCamParam->binnings[CamHasDoubledBinnings(mCamParam) ? 1 : 0];
-  fracField = 8;
+  fracField = mCamera->IsDirectDetector(mCamParam) ? 2 : 8;
   if (mCamParam->subareasBad)
     fracField = mCamParam->subareasBad > 1 ? 1 : 2;
-  MakeControlSet(fracField);
+  MakeControlSet(fracField, false);
   mCamera->InitiateCapture(TRACK_CONSET);
   mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, TASK_CCD_CAL_INTENSITY, 
     CAL_RANGE_SHOT, 0);
@@ -247,19 +271,28 @@ void CBeamAssessor::CalIntensityCCD()
 void CBeamAssessor::CalIntensityImage(int param)
 {
   EMimageBuffer *imBuf = mWinApp->GetImBufs();
-  double testInterval, ratio;
-  double meanCounts = mWinApp->mProcessImage->WholeImageMean(imBuf) *
-    (mCamParam->unsignedImages && mCamera->GetDivideBy2() ? 2. : 1.);
-  double testCurrent = mMatchFactor * meanCounts / (mBinning * mBinning * mExposure);
+  double testInterval, ratio, testCurrent, meanCounts, bufferMean;
   int task = 0;
-  float extraDelta = mMagExtraDelta;
+  float doseRate = 0., extraDelta = mMagExtraDelta;
   double targetInterval = -log(mSpacingFactor);
   double targetLo = targetInterval + mIntervalTolerance * targetInterval;
   double targetHi = targetInterval - mIntervalTolerance * targetInterval;
+  bool k2TooLow;
   imBuf->mCaptured = BUFFER_CALIBRATION;
   CString report;
   if (!mCalibratingIntensity)
     return;
+
+  // Get a dose rate for counting K2 camera
+  bufferMean = mWinApp->mProcessImage->WholeImageMean(imBuf);
+  meanCounts = bufferMean *
+    (mCamParam->unsignedImages && mCamera->GetDivideBy2() ? 2. : 1.);
+  if (mCountingK2 && 
+    !mWinApp->mProcessImage->DoseRateFromMean(imBuf, (float)bufferMean, doseRate))
+      meanCounts = doseRate * mCamParam->countsPerElectron * mExposure * 
+        mBinning * mBinning / 4.;
+
+  testCurrent = mMatchFactor * meanCounts / (mBinning * mBinning * mExposure);
 
   /*report.Format("Task %d bin %d exp %f int %.5f mean %.0f current %.2f", param, mBinning,
     mExposure, mTestIntensity, meanCounts, testCurrent);
@@ -269,15 +302,42 @@ void CBeamAssessor::CalIntensityImage(int param)
     
     // FIRST SHOT FOR FINDING RANGE
   case CAL_RANGE_SHOT:
+
+    // For K2, if dose rate is in range for counting, test against minimum and also set
+    // the rest of the counting-specific parameters; otherwise drop back to linear mode
+    if (mCountingK2) {
+      if (doseRate > 0. && doseRate < 1.05 * mMaxDoseRate) {
+        if (doseRate < 0.95 * mMinDoseRate) {
+          report.Format("The dose rate is %.1f e/pixel/sec, below the minimum rate"
+            " of %.1f for starting this calibration with this camera\n\n"
+            "Condense the beam or use a larger condenser aperture", doseRate,
+            mMinDoseRate);
+          AfxMessageBox(report, MB_EXCLAME);
+          mStoppingCal = true;
+          break;
+        }
+        mUseMinCounts = mCntK2MinCounts;
+        mMagMaxDelCurrent = B3DMIN(mMagMaxDelCurrent, mMaxDoseRate / mMinDoseRate);
+        if (doseRate / mMinDoseRate < mMagMaxDelCurrent)
+          mMagMaxDelCurrent = B3DMAX(2.f, doseRate / mMinDoseRate);
+      } else {
+        mCountingK2 = false;
+      }
+      report.Format("Dose rate is %.1f e/ubpix/sec; using %s mode for the calibration",
+        doseRate, mCountingK2 ? "counting" : "linear");
+      mWinApp->AppendToLog(report);
+    }
     
     // increase binning as much as possible within range of allowed counts
-    while (testCurrent * mExposure * mBinning * mBinning * 4 <= mMaxCounts && 
+    while (testCurrent * mExposure * mBinning * mBinning * 4 <= mUseMaxCounts && 
       CanDoubleBinning()) {
       mBinning *= 2;
+      if (mCountingK2 && mBinning >= 8)
+        break;
     }
     
     // Set up for half-field image with this binning
-    MakeControlSet(mCamParam->subareasBad > 1 ? 1 : 2);
+    MakeControlSet(mCamParam->subareasBad > 1 ? 1 : 2, mCountingK2);
     task = CAL_FIRST_SHOT;
     break;
     
@@ -334,9 +394,9 @@ void CBeamAssessor::CalIntensityImage(int param)
         B3DCLAMP(ratio, 0.3, 3.);
     }
     
-    SEMTrace('c', "%d %d %d %.1f %7.1f %8.3f %8.5f %.5f %.5f", mNumIntensities, mNumTry, 
-      mBinning, mExposure, meanCounts, testCurrent, mTestIntensity, testInterval, 
-      mTestIncrement);
+    SEMTrace('c', "%d %d %d %.1f mc %7.1f dr %4.1f tc %8.3f int %8.5f ti %.5f inc %.5f",
+      mNumIntensities, mNumTry, mBinning, mExposure, meanCounts, doseRate, testCurrent, 
+      mTestIntensity, testInterval, mTestIncrement);
     
     // If interval acceptable, save values; otherwise repeat
     // Adjust the increment if successful
@@ -371,14 +431,17 @@ void CBeamAssessor::CalIntensityImage(int param)
       // below and the counts are below the min counts
       // if counts are down 10 & exposure is still small or if counts are down to the min
       mCalChangeType = 0;
-      if (meanCounts * 4 < mMaxCounts && CanDoubleBinning())
+      k2TooLow = mCountingK2 && doseRate > 0 && doseRate < mMinDoseRate;
+      if (meanCounts * 4 < mUseMaxCounts && CanDoubleBinning() && !mCountingK2)
         mCalChangeType = CAL_CHANGE_BIN;
-      else if (testCurrent < mMagChgMaxCurrent && (meanCounts < mMagChgMaxCounts || 
-        (meanCounts  < mMinCounts && (mCamParam->K2Type || mFavorMagChanges)))) {
+      else if ((k2TooLow && testCurrent < mNextMagMaxCurrent) ||
+        (testCurrent < mMagChgMaxCurrent && (meanCounts < mMagChgMaxCounts || 
+        k2TooLow || (meanCounts  < mUseMinCounts && ((mCamParam->K2Type && 
+        (!mCountingK2 || !doseRate)) || mFavorMagChanges))))) {
         mCalChangeType = CAL_CHANGE_MAG;
         mDropBinningOnMagChg = meanCounts > mMagChgMaxCounts && mBinning > 2;
       } else if ((meanCounts * 10 < mMaxCounts && mExposure <= 0.25) || 
-        (meanCounts < mMinCounts && mExposure < mMaxExposure))
+        (meanCounts < mUseMinCounts && mExposure < mUseMaxExposure))
         mCalChangeType = CAL_CHANGE_EXP;
       if (mCalChangeType) {
         SEMTrace('c', "Changing %s", mCalChangeType == CAL_CHANGE_BIN ? "binning" : 
@@ -438,9 +501,9 @@ void CBeamAssessor::CalIntensityImage(int param)
         mScope->SetIntensity(mIntensities[mNumIntensities - 1]);
     } else
       mExposure *= 4.;
-    if (mExposure > mMaxExposure)
-      mExposure = mMaxExposure;
-    MakeControlSet(mCamParam->subareasBad > 1 ? 1 : 2);
+    if (mExposure > mUseMaxExposure)
+      mExposure = mUseMaxExposure;
+    MakeControlSet(mCamParam->subareasBad > 1 ? 1 : 2, mCountingK2);
     task = CAL_MATCH_AFTER;
     break;
     
@@ -562,7 +625,7 @@ void CBeamAssessor::CalIntensityCCDCleanup(int error)
 }
 
 // Make a control set with current parameters for give fraction of field
-void CBeamAssessor::MakeControlSet(int fracField)
+void CBeamAssessor::MakeControlSet(int fracField, bool useCounting)
 {
   ControlSet *conSet = mWinApp->GetConSets() + TRACK_CONSET;
   ControlSet *trialSet = mWinApp->GetConSets() + TRIAL_CONSET;
@@ -585,7 +648,11 @@ void CBeamAssessor::MakeControlSet(int fracField)
   conSet->right = ((fracField + 1) * mCamParam->sizeX) / (2 * fracField);
   conSet->top = ((fracField - 1) * mCamParam->sizeY) / (2 * fracField);
   conSet->bottom = ((fracField + 1) * mCamParam->sizeY) / (2 * fracField);
-  conSet->K2ReadMode = LINEAR_MODE;
+  conSet->K2ReadMode = useCounting ? COUNTING_MODE : LINEAR_MODE;
+  conSet->doseFrac = 0;
+  conSet->saveFrames = 0;
+  conSet->alignFrames = 0;
+  conSet->useFrameAlign = 0;
 }
 
 // Test for whether binning can be doubled
@@ -606,6 +673,7 @@ void CBeamAssessor::CalSetupNextMag(float extraDelta)
 
   // Set to zero in case no mag change can be done
   mMagChgMaxCurrent = 0.;
+  mNextMagMaxCurrent = 0.;
 
   // Loop down from one below current mag to lowest M mag index, getting ratio of
   // pixel sizes squared as current change ratio
@@ -620,8 +688,17 @@ void CBeamAssessor::CalSetupNextMag(float extraDelta)
     if (ratio > mMagMaxDelCurrent && mag < magNow - 1)
       break;
     mMagChgMaxCurrent = mCurrents[mNumIntensities - 1] / (ratio * extraDelta);
-    mMagChgMaxCounts = 0.9 * mMaxCounts / ratio;
+    mMagChgMaxCounts = 0.9 * mUseMaxCounts / ratio;
     mNextMagInd = mag;
+
+    // Get a max current that should allow switching to the very next mag if the dose rate
+    // gets too low, reference this to initial mag/current so it doesn't decline through
+    // several changes
+    if (mag == magNow - 1) {
+      ratio = mWinApp->mShiftManager->GetPixelSize(camera, mag) /
+        mWinApp->mShiftManager->GetPixelSize(camera, mCalMagInd);
+      mNextMagMaxCurrent = 0.8 * mCurrents[0] / (ratio * ratio);
+    }
   }
   // Exit with the biggest mag change that fits within range allowed
   SEMTrace('c', "Next mag %d max current %f  max counts %f", 

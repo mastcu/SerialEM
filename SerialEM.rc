@@ -2548,7 +2548,7 @@ BEGIN
     LTEXT           "Summed frame time",IDC_STATIC,14,68,68,8
 END
 
-IDD_K2_SAVE_OPTIONS DIALOGEX 0, 0, 255, 317
+IDD_K2_SAVE_OPTIONS DIALOGEX 0, 0, 255, 330
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Frame File Options"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
@@ -2560,46 +2560,48 @@ BEGIN
     GROUPBOX        "File type",IDC_STAT_FILETYPE,55,3,146,46,WS_GROUP
     CONTROL         "Save one frame per file",IDC_ONE_FRAME_PER_FILE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,52,94,10
     CONTROL         "Pack unnormalized data as 4-bit (Super-Res) or 4/8-bit (Counting)",IDC_PACK_RAW_FRAME,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,91,233,10
-    DEFPUSHBUTTON   "OK",IDOK,57,297,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,139,297,50,14
-    PUSHBUTTON      "?",IDC_BUTHELP,237,301,11,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,104,233,10
+    DEFPUSHBUTTON   "OK",IDOK,57,310,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,139,310,50,14
+    PUSHBUTTON      "?",IDC_BUTHELP,237,314,11,10
     CONTROL         "Save frames without rotation/flip to standard orientation",IDC_SKIP_ROTFLIP,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,130,200,10
-    CTEXT           "Components for Folder and File Names",IDC_STAT_COMPTITLE,40,147,174,8
-    CONTROL         "",IDC_TSS_LINE1,"Static",SS_BLACKFRAME | SS_SUNKEN,7,142,241,1
-    LTEXT           "Use component in name of:",IDC_STAT_USE_COMP,11,157,91,8
-    LTEXT           "Folder",IDC_STAT_FOLDER,11,166,22,8
-    LTEXT           "File",IDC_STAT_FILE,37,166,12,8
-    CONTROL         "",IDC_CHECK_ROOT_FOLDER,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,175,12,10
-    CONTROL         "",IDC_CHECK_SAVEFILE_FOLDER,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,187,12,10
-    CONTROL         "",IDC_CHECK_NAVLABEL_FOLDER,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,199,13,10
-    CONTROL         "Base name:",IDC_CHECK_ROOT_FILE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,37,175,55,10
-    EDITTEXT        IDC_EDIT_BASENAME,92,174,115,12,ES_AUTOHSCROLL
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,143,200,10
+    CTEXT           "Components for Folder and File Names",IDC_STAT_COMPTITLE,40,160,174,8
+    CONTROL         "",IDC_TSS_LINE1,"Static",SS_BLACKFRAME | SS_SUNKEN,7,155,241,1
+    LTEXT           "Use component in name of:",IDC_STAT_USE_COMP,11,170,91,8
+    LTEXT           "Folder",IDC_STAT_FOLDER,11,179,22,8
+    LTEXT           "File",IDC_STAT_FILE,37,179,12,8
+    CONTROL         "",IDC_CHECK_ROOT_FOLDER,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,188,12,10
+    CONTROL         "",IDC_CHECK_SAVEFILE_FOLDER,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,200,12,10
+    CONTROL         "",IDC_CHECK_NAVLABEL_FOLDER,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,212,13,10
+    CONTROL         "Base name:",IDC_CHECK_ROOT_FILE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,37,188,55,10
+    EDITTEXT        IDC_EDIT_BASENAME,92,187,115,12,ES_AUTOHSCROLL
     CONTROL         "File name of current open file (minus extension)",IDC_CHECK_SAVEFILE_FILE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,37,187,173,10
-    CONTROL         "Label of Navigator item",IDC_CHECK_NAVLABEL_FILE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,37,199,91,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,37,200,173,10
+    CONTROL         "Label of Navigator item",IDC_CHECK_NAVLABEL_FILE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,37,212,91,10
     CONTROL         "Sequential number starting from:",IDC_CHECK_NUMBER,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,37,211,125,10
-    CONTROL         "Month and day",IDC_CHECK_MONTHDAY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,37,235,64,10
-    CONTROL         "Hour, minute, second",IDC_CHECK_HOUR_MIN_SEC,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,37,247,86,10
-    LTEXT           "Format: Base-File-Label\\Base-File-Label-###-Mar06-10:15:20",IDC_STAT_EXAMPLE,10,260,222,8
-    LTEXT           "Folder will be created inside folder specified in Set Folder dialog,",IDC_STAT_MUST_EXIST,11,272,213,8
-    EDITTEXT        IDC_EDIT_START_NUMBER,162,210,34,12,ES_AUTOHSCROLL
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,37,224,125,10
+    CONTROL         "Month and day",IDC_CHECK_MONTHDAY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,37,248,64,10
+    CONTROL         "Hour, minute, second",IDC_CHECK_HOUR_MIN_SEC,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,37,260,86,10
+    LTEXT           "Format: Base-File-Label\\Base-File-Label-###-Mar06-10:15:20",IDC_STAT_EXAMPLE,10,273,222,8
+    LTEXT           "Folder will be created inside folder specified in Set Folder dialog,",IDC_STAT_MUST_EXIST,11,285,213,8
+    EDITTEXT        IDC_EDIT_START_NUMBER,162,223,34,12,ES_AUTOHSCROLL
     CONTROL         "Only when Acquiring at Points",IDC_CHECK_ONLY_ACQUIRE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,129,199,113,10
-    LTEXT           "but the folder specified in Set Folder dialog must exist",IDC_STAT_MUST_EXIST2,11,282,177,8
-    CONTROL         "Tilt angle",IDC_CHECK_TILT_ANGLE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,37,223,46,10
-    LTEXT           "Digits: 3",IDC_STAT_DIGITS,203,212,28,8
-    CONTROL         "",IDC_SPIN_DIGITS,"msctls_updown32",UDS_ARROWKEYS,232,209,10,14
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,129,212,113,10
+    LTEXT           "but the folder specified in Set Folder dialog must exist",IDC_STAT_MUST_EXIST2,11,295,177,8
+    CONTROL         "Tilt angle",IDC_CHECK_TILT_ANGLE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,37,236,46,10
+    LTEXT           "Digits: 3",IDC_STAT_DIGITS,203,225,28,8
+    CONTROL         "",IDC_SPIN_DIGITS,"msctls_updown32",UDS_ARROWKEYS,232,222,10,14
     CONTROL         "Pack unnormalized Counting mode data as 4-bit, not 8-bit",IDC_PACK_COUNTING_4BIT,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,29,104,204,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,29,117,204,10
     CONTROL         "Use non-standard mode 101 for 4-bit MRC files",IDC_USE_4BIT_MRC_MODE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,29,117,170,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,29,130,170,10
     CONTROL         "Save normalized data as 16-bit with 100 times scaling of sum",IDC_SAVE_TIMES_100,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,78,217,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,91,217,10
     CONTROL         "Save unnormalized frames even if Gain Normalized is selected",IDC_SAVE_UNNORMALIZED,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,65,219,10
+    CONTROL         "Reduce normalized super-resolution frames by 2 with antialiasing",IDC_CHECK_REDUCE_SUPERRES,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,78,230,10
 END
 
 IDD_STAGEMOVETOOL DIALOGEX 0, 0, 94, 106
@@ -3221,7 +3223,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 248
         TOPMARGIN, 7
-        BOTTOMMARGIN, 310
+        BOTTOMMARGIN, 323
     END
 
     IDD_STAGEMOVETOOL, DIALOG

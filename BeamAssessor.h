@@ -75,7 +75,7 @@ class CBeamAssessor
    void SetMaxCounts(int inVal) {mMaxCounts = inVal;};
 	 BOOL SetAndTestIntensity();
 	 BOOL CanDoubleBinning();
-	 void MakeControlSet(int fracField);
+	 void MakeControlSet(int fracField, bool useCounting);
 	 void CalIntensityCCDCleanup(int error);
 	 void CalIntensityImage(int param);
 	 void CalIntensityCCD();
@@ -156,10 +156,18 @@ class CBeamAssessor
   int mNumIntensities;    // Number of intensities so far
   int mMinCounts;         // Minimum counts allowed in image
   int mMaxCounts;         // Maximum/target counts allowed in image
+  int mCntK2MinCounts;    // Values for K2
+  int mCntK2MaxCounts;
+  int mLinK2MinCounts;    // Linear mode value
+  int mUseMaxCounts;      // Values to use when running
+  int mUseMinCounts;
   float mExposure;        // Exposure time
   int mBinning;           // Binning 
   float mMinExposure;     // Minimum exposure time
   float mMaxExposure;     // Minimum exposure time
+  float mCntK2MinExposure;  // Values for K2
+  float mCntK2MaxExposure;
+  float mUseMaxExposure;  // Value to use when running
   BOOL mFavorMagChanges;  // Flag to change mag frequently like with a K2
   double mIntervalTolerance;  // Variation in interval allowed
   int mNumFail;           // Number of failures to get desired interval (trials > 10)
@@ -173,11 +181,15 @@ class CBeamAssessor
   int mNextMagInd;        // Mag index for next mag down
   double mMagChgMaxCurrent;  // Maximum current for doing mag change
   double mMagChgMaxCounts;   // Maximum counts for doing mag change
+  double mNextMagMaxCurrent;  // Maximum current for switch to next mag if dose rate low
   int mCalChangeType;     // Flag for type of change being done
   float mMagMaxDelCurrent;   // Maximum change in current allowed over a mag change
   float mMagExtraDelta;   // Extra change in current from first mag (for spreading beam)
   bool mDropBinningOnMagChg;  // Flag to drop binning on mag change for K2
   double mLastIncrement;   // For keeping track of whether to work out hysteresis
+  bool mCountingK2;        //Flag for counting K2/K3 camera
+  float mMinDoseRate;      // Values for min and max dose rate to stay within, different
+  float mMaxDoseRate;      // for K2 and K3
   int mLastNumIntensities;
   CWinThread *mIntensityThread;
   BOOL mCalibratingIntensity;

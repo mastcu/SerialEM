@@ -1188,7 +1188,7 @@
       plus astigmatism and coma-free calibrations with their conditions.</p>
       <P><A name="hid_calibration_beamcrossover"></A><B>Beam Crossover command (Calibration 
           - Beam &amp; Spot sub-menu)</B></P>
-      <P>This command allows a calibration of the C2 setting for beam crossover at each 
+      <P>This command allows a calibration of the condenser lens setting for beam crossover at each 
         spot size. This calibration is needed in order to maintain beam intensity 
         calibrations on both sides of crossover. In addition, this calibration should 
         be done before the beam and spot intensity calibrations because the crossover 
@@ -1211,10 +1211,8 @@
         intensity properly when going to low magnification during various procedures. 
         This is preferable to simply relying on the intensity zoom feature. The Beam 
         Crossover calibration should be up to date before this calibration is done.</P>
-      <P>As of version 2.4.1, the program uses the CCD camera instead of measuring screen 
-        current, giving more reliable calibrations with less difficulty.</P>
       <P>To prepare a calibration, start with the brightest beam that anyone might need 
-        calibrations for. In other words, go to the highest magnification that might be 
+        calibrations for. For example, go to the highest magnification that might be 
         used for tilt series, and condense the beam until it is slightly bigger than 
         the field of the CCD camera. For an extra margin of safety, you could start one 
         or two magnification steps higher. Also, if the beam is too bright when 
@@ -1247,12 +1245,17 @@
 &nbsp;&nbsp; BeamCalInitialIncrement&nbsp;&nbsp; 0.0002<br />
 &nbsp;&nbsp; BeamCalSpacingFactor&nbsp;&nbsp;&nbsp; 1.2
       <br />
-      In addition, for the weaker spots, you must be sure to condense the beam to be 
+      For SerialEM 3.7 as of May 28, 2018, the first four are set automatically, and 
+      the property values are ignored.&nbsp; In addition, this version will use 
+      counting mode when the starting dose rate is below 20 electrons/unbinned 
+      pixel/sec (or 75 on a K3 camera).</P>
+    <P>For the weakest spots, you must be sure to condense the beam to be 
       tight around the field of view of the camera before starting, so that you are 
       working with as bright a beam as possible when starting.&nbsp; The problem with 
       the K2 is that the noise becomes too big once the beam gets weak, so the 
       procedure has to be run in a way that keeps dropping the magnification instead 
-      of making the beam much weaker.</P>
+      of making the beam much weaker.&nbsp; Using counting mode where possible 
+      alleviates this problem.</P>
     <P><i>For a Ceta camera,</i> noise is also a problem when the counts get low. 
       Modify the properties to the following, adding the last one to make the 
       calibration routine behave as it does for a K2:<br />
