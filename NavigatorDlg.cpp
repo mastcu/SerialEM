@@ -3404,7 +3404,7 @@ void CNavigatorDlg::PolygonToCameraCoords(CMapDrawItem * item, int iCam, int mag
     yy = mPolyToCamMat.ypx * item->mPtX[i] + mPolyToCamMat.ypy * item->mPtY[i];
     mMontItemCam->mPtX[i] = xx;
     mMontItemCam->mPtY[i] = yy;
-    //SEMTrace('n', "-1 %.2f %.2f", xx, yy);
+    SEMTrace('n', "-1 %.2f %.2f", xx, yy);
     if (xMin > xx)
       xMin = xx;
     if (xMax < xx)
@@ -3484,8 +3484,8 @@ bool CNavigatorDlg::IsFrameNeeded(CMapDrawItem * item, int xFrame, int yFrame,
   xCen = 0.5f * (xStart + xEnd);
   yCen = 0.5f * (yStart + yEnd);
 
-  //SEMTrace('n', "%d%d %.2f %.2f\r\n%d%d %.2f %.2f\r\n%d%d %.2f %.2f\r\n%d%d %.2f %.2f",
-  //ix, iy, xStart, yStart, ix, iy, xStart, yEnd, ix, iy, xEnd, yEnd, ix, iy,xEnd,yStart);
+  SEMTrace('n', "%d%d %.2f %.2f\r\n%d%d %.2f %.2f\r\n%d%d %.2f %.2f\r\n%d%d %.2f %.2f",
+    ix, iy, xStart, yStart, ix, iy, xStart, yEnd, ix, iy, xEnd, yEnd, ix, iy,xEnd,yStart);
 
   // Check for each edge line and each diagonal point a fraction cornf from center to 
   // corner for being inside contours
