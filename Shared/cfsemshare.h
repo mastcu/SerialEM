@@ -33,6 +33,10 @@ extern "C" {
   /* parselist.c  - for parsing a list of integers */
   int *parselist (const char *line, int *nlist);
 
+  /* writelist.c  - for converting and writing a list as ranges */
+  int writeList(int *list, int numList, int lineLen);
+  char *listToString(int *list, int numList);
+
   /* amoeba.c - simplex minimization routine */
   void amoeba(float *p, float *y, int mp, int ndim, float ftol, 
               void (*funk)(float *, float *), int *iterP, float *ptol,
@@ -368,6 +372,7 @@ extern "C" {
   int spectrumScaled(void *image, int type, int nx, int ny, void *spectrum, int padSize, 
                      int finalSize, int bkgdGray, float truncDiam, int filtType,
                      void (*twoDfft)(float *, int *, int *, int *));
+  void makeAmplitudeSpectrum(float *fftArray, float *spectrum, int padSize, int outXdim);
 
   /* extraheader.c */
   int getExtraHeaderTilts(char *array, int numExtraBytes, int nbytes, int iflags, int nz,
@@ -404,7 +409,7 @@ extern "C" {
   /* rotateflip.c */
   int rotateFlipImage(void *array, int mode, int nx, int ny, int operation, 
                       int leftHanded, int invertAfter, int invertCon, void *brray,
-                      int *nxout, int *nyout);
+                      int *nxout, int *nyout, int numThreads);
     
 #ifdef __cplusplus
 }

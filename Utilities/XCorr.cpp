@@ -1253,7 +1253,7 @@ void ProcShiftInPlace(short int *array, int type, int nx, int ny, int shiftX, in
 void ProcRotateFlip(short int *array, int type, int nx, int ny, int operation, 
                     int invertCon, short int *brray, int *nxout, int *nyout)
 {
-  rotateFlipImage(array, type, nx, ny, operation, 1, 0, invertCon, brray, nxout, nyout);
+  rotateFlipImage(array, type, nx, ny, operation, 1, 0, invertCon, brray, nxout, nyout,0);
 }
 
 void ProcFFT(void *array, int type, int nx, int ny, int binning, float *fftarray, 

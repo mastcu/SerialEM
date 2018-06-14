@@ -815,7 +815,7 @@ void CFalconHelper::FinishFrameAlignment(int binning)
     // If rotating, that last operation was done in place and now rotate into array
     if (mSumNeedsRotFlip)
       rotateFlipImage(sAliSum, mDivideBy2 ? kSHORT : kUSHORT, rotNx, rotNy, 
-        mAliSumRotFlip, 1, 0, 0, mCamTD->Array[0], &ind, &val);
+        mAliSumRotFlip, 1, 0, 0, mCamTD->Array[0], &ind, &val, 0);
   } else {
     SEMTrace('1', "Error %d finishing frame alignment", ind);
     mAlignError = FIF_FINISH_ALIGN_ERR;
