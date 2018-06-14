@@ -505,6 +505,13 @@
             microscope interface and use it from SerialEM.</TD>
         </TR>
         <TR VALIGN="top">
+          <TD>SkipAdvancedScripting</TD>
+          <TD>Set to 1 to prevent FEI cameras from trying to use the advanced scripting 
+            interface.&nbsp; If AdvancedScripting.dll is installed (Titan 2.9/Talos 1.9) but 
+            there is no license for it, the initial connections through this interface work 
+            but acquisition fails.&nbsp; This property prevents that.</TD>
+        </TR>
+        <TR VALIGN="top">
           <TD>InitialCurrentCamera</TD>
           <TD>The index on the CameraProperties line of the camera that should initially be 
             set as the current camera. Without this entry, the program will start with the 

@@ -284,6 +284,7 @@ class DLL_IM_EX CEMscope
   GetMember(double, UpdateSawMagTime);
   SetMember(BOOL, JeolHasNitrogenClass);
   void SetJeolReadStageForWait(BOOL inVal);
+  SetMember(BOOL, SkipAdvancedScripting);
 
   static void SetJeolIndForMagMode(int inVal);
   static int GetJeolIndForMagMode();
@@ -629,6 +630,7 @@ private:
   int mDoingStoppableRefill;  // Sum of bits for refill types
   float mFalcon3ReadoutInterval; // Frame interval for Falcon 3 camera
   float mAddToFalcon3Exposure; // Default to set addToExposure for Falcon 3
+  BOOL mSkipAdvancedScripting; // To make cameras connect by old scripting
   int mPluginVersion;         // Version of plugin or server
 
   // Old static variables from UpdateProc

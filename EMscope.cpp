@@ -159,6 +159,7 @@ CEMscope::CEMscope()
   vFalse = new _variant_t(false);
   vTrue = new _variant_t(true);
   mUseTEMScripting = 0;
+  mSkipAdvancedScripting = false;
   mIncrement = 1.5;
   mStageThread = NULL;
   mScreenThread = NULL;
@@ -6731,6 +6732,7 @@ int CEMscope::LookupScriptingCamera(CameraParameters *params, bool refresh,
                                     int restoreShutter)
 {
   CString CCDname = params->name;
+  static bool doMessage = true;
   int i, err;
   float minDrift;
   if (!FEIscope)
@@ -6753,6 +6755,8 @@ int CEMscope::LookupScriptingCamera(CameraParameters *params, bool refresh,
     CCDname = params->detectorName[0];
 
   // It outputs a message only for error 3, COM error
+  if (restoreShutter < -900 && mSkipAdvancedScripting)
+    restoreShutter = -950;
   err = mPlugFuncs->LookupScriptingCamera((LPCTSTR)CCDname, refresh, restoreShutter,
     &params->eagleIndex, &minDrift, &params->maximumDrift);
   if (err == 3)
@@ -6774,6 +6778,12 @@ int CEMscope::LookupScriptingCamera(CameraParameters *params, bool refresh,
       }
       params->CamFlags = params->eagleIndex & ~PLUGFEI_INDEX_MASK;
       SEMTrace('E', "index ret %x  flags %x", params->eagleIndex, params->CamFlags);
+      if (doMessage) {
+        mWinApp->AppendToLog(CString("Connected to ") + 
+          ((params->CamFlags & PLUGFEI_USES_ADVANCED) ? "Advanced" : "Standard") + 
+          " Scripting interface for FEI camera access");
+        doMessage = false;
+      }
       if (params->CamFlags & PLUGFEI_USES_ADVANCED) {
         if (fabs(params->minExposure - DEFAULT_FEI_MIN_EXPOSURE) < 1.e-5)
           params->minExposure = minDrift;
