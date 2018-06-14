@@ -620,7 +620,8 @@ void CSerialEMView::DrawImage(void)
   }
 
   // Draw rings at CTF zeros determined by ctffind
-  if ((mMainWindow || mFFTWindow) && imBuf->mCaptured == BUFFER_FFT &&
+  if ((mMainWindow || mFFTWindow) && (imBuf->mCaptured == BUFFER_FFT || 
+    imBuf->mCaptured == BUFFER_LIVE_FFT && !mWinApp->mCamera->DoingContinuousAcquire()) && 
     imBuf->mCtfFocus1 > 0) {
       double defocus = imBuf->mCtfFocus1;
       float pixel = 1000.f * mWinApp->mShiftManager->GetPixelSize(imBuf);
@@ -1459,7 +1460,8 @@ void CSerialEMView::OnLButtonUp(UINT nFlags, CPoint point)
           processImg->GetFFTZeroRadiiAndDefocus(imBuf, &radii, defocus)) {
             lenstr.Format("Defocus -%.2f um", defocus);
             imBuf->mCtfFocus1 = 0.;
-            if (processImg->GetCtffindOnClick()) {
+            if (processImg->GetCtffindOnClick() && 
+              !mWinApp->mCamera->DoingContinuousAcquire()) {
               EMimageBuffer *mainImBufs = mWinApp->GetImBufs();
               CtffindParams param;
               float resultsArray[7];
