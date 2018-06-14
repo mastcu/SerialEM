@@ -29,6 +29,7 @@ private:
   double mBaseISX, mBaseISY;      // Starting IS
   double mLastISX, mLastISY;      // Last IS position
   double mBaseBeamTiltX, mBaseBeamTiltY;  // Starting beam tilt
+  double mCenterBeamTiltX, mCenterBeamTiltY;  // Beam tilt to set compensation from
   ScaleMat mCamToIS;              // Camera to IS matrix
   int mMSCurIndex;                // Index of shot, or -1 for center before; -2 inactive
   int mMSHoleIndex;               // Current hole index if any

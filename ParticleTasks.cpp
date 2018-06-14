@@ -12,6 +12,7 @@
 #include "ParticleTasks.h"
 #include "ComplexTasks.h"
 #include "EMscope.h"
+#include "MacroProcessor.h"
 #include "AutoTuning.h"
 #include "ShiftManager.h"
 #include "CameraController.h"
@@ -51,6 +52,7 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
 {
   float pixel;
   int magInd, nextShot, nextHole, testRun;
+  double delISX, delISY, delBTX, delBTY;
   CameraParameters *camParam = mWinApp->GetActiveCamParam();
   ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
   MontParam *montP = mWinApp->GetMontParam();
@@ -116,6 +118,11 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
         "around the center must be between 2 and 12");
       return 1;
   }
+  if (multiHoles && !((mMSParams->useCustomHoles && mMSParams->customHoleX.size() > 0) ||
+    mMSParams->holeMagIndex > 0)) {
+      SEMMessageBox("Hole positions have not been defined for doing multiple Records");
+      return 1;
+  }
   if (mMSIfEarlyReturn && earlyRetFrames <= 0 && mMSSaveRecord) {
     SEMMessageBox("You cannot save Record images from multiple\n"
       "shots when doing an early return with 0 frames");
@@ -156,9 +163,29 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
     mMSHoleISY.push_back(0.);
   }
 
+  // Get the starting image shift and beam tilt, save BT as value to restore and value to
+  // increment from when compensating
   mScope->GetImageShift(mBaseISX, mBaseISY);
-  if (mMSAdjustBeamTilt)
+  if (mMSAdjustBeamTilt) {
     mScope->GetBeamTilt(mBaseBeamTiltX, mBaseBeamTiltY);
+    mCenterBeamTiltX = mBaseBeamTiltX;
+    mCenterBeamTiltY = mBaseBeamTiltY;
+
+    // If script hasn't already compensated for IS, get the IS to compensate and, compute
+    // the beam tilt to apply, and set it as base for compensating position IS's
+    if (!(mWinApp->mMacroProcessor->DoingMacro() && 
+      mWinApp->mMacroProcessor->GetCompensatedBTforIS())) {
+      mScope->GetLDCenteredShift(delISX, delISY);
+      delBTX = comaVsIS->matrix.xpx * delISX + comaVsIS->matrix.xpy * delISY;
+      delBTY = comaVsIS->matrix.ypx * delISX + comaVsIS->matrix.ypy * delISY;
+      mCenterBeamTiltX = mBaseBeamTiltX + delBTX;
+      mCenterBeamTiltY = mBaseBeamTiltY + delBTY;
+      mScope->SetBeamTilt(mCenterBeamTiltX, mCenterBeamTiltY);
+      SEMTrace('1', "For starting IS  %.3f %.3f  setting BT  %.3f  %.3f", 
+        delISX, delISY, delBTX, delBTY);
+    }
+  }
+
   mActPostExposure = mWinApp->ActPostExposure() && !mMSTestRun;
   mLastISX = mBaseISX;
   mLastISY = mBaseISY;
@@ -295,12 +322,12 @@ void CParticleTasks::SetUpMultiShotShift(int shotIndex, int holeIndex, BOOL queu
   if (queueIt) {
     mCamera->QueueImageShift(ISX, ISY, B3DNINT(1000. * delay));
     if (mMSAdjustBeamTilt)
-      mCamera->QueueBeamTilt(mBaseBeamTiltX + delBTX, mBaseBeamTiltY + delBTY);
+      mCamera->QueueBeamTilt(mCenterBeamTiltX + delBTX, mCenterBeamTiltY + delBTY);
   } else {
     mScope->SetImageShift(ISX, ISY);
     mShiftManager->SetISTimeOut(delay);
     if (mMSAdjustBeamTilt)
-      mScope->SetBeamTilt(mBaseBeamTiltX + delBTX, mBaseBeamTiltY + delBTY);
+      mScope->SetBeamTilt(mCenterBeamTiltX + delBTX, mCenterBeamTiltY + delBTY);
   }
   mLastISX = ISX;
   mLastISY = ISY;
