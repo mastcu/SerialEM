@@ -3,6 +3,8 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+5/29/18: Fixed lookup of astigmtism/coma calibration at nearest mag (In 3.6).
+
 5/25/18: Sped up saving from K2 by computing min/max/mean from samples instead
 of whole image (In 3.6).
 
