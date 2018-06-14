@@ -770,7 +770,7 @@ void CSerialEMDoc::OnFileClose()
 
 void CSerialEMDoc::DoCloseFile()
 {
-  if (mBufferManager->CheckAsyncSaving())
+  if (mWinApp->mStoreMRC && mBufferManager->CheckAsyncSaving())
     return;
   delete mWinApp->mStoreMRC;
   mWinApp->mStoreMRC = NULL;

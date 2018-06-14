@@ -2466,7 +2466,9 @@ void CTSController::NextAction(int param)
       // Start or resume the copying of the file
       error = mMultiTSTasks->InvertFileInZ(mBaseZ + mTiltIndex);
       if (error > 0) {
-        if (!mAlreadyTerminated)
+        if (error > 10)
+          ErrorStop();
+        else if (!mAlreadyTerminated)
           TerminateOnError();
         return;
       }

@@ -1490,6 +1490,9 @@ int CMultiTSTasks::InvertFileInZ(int zmax)
     if (err) {
       mess.Format("An error (code %d) occurred trying to initialize the\ncopying of the"
         " file to a new one with inverted Z values.\n\n", err);
+      if (err > 10)
+        mess += "The file is probably open in another program;\n"
+        " try closing any other program accessing the file";
     } else {
       err = StartBidirFileCopy(false);
       if (err > 0)
@@ -1497,10 +1500,10 @@ int CMultiTSTasks::InvertFileInZ(int zmax)
         "the file to a new one with inverted Z values.\n\n", err);
     }
   }
-  if (err > 0) {
+  if (err > 0 && err < 11)
     mess += "This error cannot be recovered from;\nthe tilt series is being terminated.";
+  if (err > 0)
     SEMMessageBox(mess);
-  }
   return err;
 }
 
@@ -1529,13 +1532,25 @@ int CMultiTSTasks::SetupBidirFileCopy(int zmax)
   }
 
   // Close the file, rename it, and reopen it by new name, then open new file in current
-  // store.  If anything goes wrong, we simply have to close the current file and bail
+  // store.  This leaves the store system in a bad state!  If the file rename fails, try
+  // to rename it back and restore mStoreMC 
+  // If anything else goes wrong, we simply have to close the current file and bail, but
+  // it is going to crash unless there is another file open because a lot of things assume
+  // mStoreMRC is nonnull
+  if (!adocName.IsEmpty() && UtilRenameFile(adocName, mBfcAdocFirstHalf))
+    return 11;
+
   delete mWinApp->mStoreMRC;
   mWinApp->mStoreMRC = NULL;
-  if (UtilRenameFile(filename, mBfcNameFirstHalf) || 
-    (!adocName.IsEmpty() && UtilRenameFile(adocName, mBfcAdocFirstHalf))) {
-    mWinApp->mDocWnd->DoCloseFile();
-    return 4;
+  if (UtilRenameFile(filename, mBfcNameFirstHalf)) {
+    if (!adocName.IsEmpty())
+      UtilRenameFile(mBfcAdocFirstHalf, adocName);
+    mWinApp->mStoreMRC = mBfcStoreFirstHalf = UtilOpenOldMRCFile(filename);
+    if (!mWinApp->mStoreMRC) {
+      mWinApp->mDocWnd->DoCloseFile();
+      return 4;
+    }
+    return 12;
   }
   mBfcStoreFirstHalf = UtilOpenOldMRCFile(mBfcNameFirstHalf);
   if (!mBfcStoreFirstHalf) {
