@@ -2705,7 +2705,7 @@ void CCameraSetupDlg::ManageK2SaveSummary(void)
     str.Format("%d %s to %s %s%s", frames, unNormed ? "raw" : "norm",
       tiff > 0 ? (tiff > 1 ? "TIF-ZIP" : "TIF-LZW") : "MRC", 
       mCamera->GetOneK2FramePerFile() ? "files" : "stack",
-      (unNormed && (mCamera->GetSaveRawPacked() & 1))? ", packed" : "");
+      (unNormed && m_iK2Mode > 0 && (mCamera->GetSaveRawPacked() & 1))? ", packed" : "");
     SetDlgItemText(IDC_STAT_SAVE_SUMMARY, str);
     str.Format("%d frames", frames);
     SetDlgItemText(IDC_STAT_ALIGN_SUMMARY, str);
