@@ -1214,7 +1214,7 @@ void CCameraController::InitializeDirectElectron(int *originalList, int numOrig)
 void CCameraController::InitializePluginCameras(int &numPlugListed, int *originalList, 
                                                 int numOrig)
 {
-  int ind, i, err, num, idum;
+  int ind, i, err, num, idum, numGain;
   double minPixel, rotInc, ddum;
   CString report;
 
@@ -1273,6 +1273,20 @@ void CCameraController::InitializePluginCameras(int &numPlugListed, int *origina
           "but the plugin camera named " + mAllParams[i].pluginName + 
           " has no SetRotationFlip function", MB_EXCLAME);
         err = 1;
+      }
+
+      // Send a gain index if that function exists and there is a non-negative value
+      // Clamp it to the given range if the the plugin supplies a limit 
+      if (!err && mPlugFuncs[ind]->SetGainIndex && mAllParams[i].TietzGainIndex >= 0) {
+        if (mPlugFuncs[ind]->GetNumberOfGains) {
+          numGain = mPlugFuncs[ind]->GetNumberOfGains();
+          if (numGain > 0)
+            B3DCLAMP(mAllParams[i].TietzGainIndex, 0, numGain);
+        } 
+        if (mPlugFuncs[ind]->SetGainIndex(mAllParams[i].TietzGainIndex)) {
+          AfxMessageBox("An error occurred sending the value of TietzGainIndex to the"
+            " plugin camera " + mAllParams[i].pluginName);
+        }
       }
 
       // For a STEM camera, send the camera number plus the number of additional channels
