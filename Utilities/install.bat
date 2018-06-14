@@ -264,19 +264,19 @@ set Major=%FullVers:~0,1%
 
 set BIT64=0
 IF %Major% EQU 3 (
-  set versRange64=2.31 and higher
-  set SEMCCD64=SEMCCD-GMS2.31-64.dll
+  set versRange64=3.01 and higher
+  set SEMCCD64=SEMCCD-GMS3.01-64.dll
   set BIT64=1
 ) ELSE IF %Minor% LSS 30 (
   set versRange32=2.0-2.2
   set SEMCCD32=SEMCCD-GMS2.0-32.dll
   set versRange64=2.2
-  set SEMCCD64=SEMCCD-GMS2.2-64.dll
+  set SEMCCD64=0
 ) ELSE IF %Minor% EQU 30 (
   set versRange32=2.30 and higher
   set SEMCCD32=SEMCCD-GMS2.30-32.dll
   set versRange64=2.30
-  set SEMCCD64=SEMCCD-GMS2.30-64.dll
+  set SEMCCD64=0
 ) ELSE (
   set versRange32=2.30 and higher
   set SEMCCD32=SEMCCD-GMS2.30-32.dll
@@ -287,6 +287,15 @@ IF %Major% EQU 3 (
 dir C:\ProgramData\Gatan\Licenses\*64-Bit* > nul 2>&1
 IF %ERRORLEVEL% EQU 0 (
   set BIT64=1
+)
+
+IF %BIT64% EQU 1 IF %SEMCCD64% EQU 0 (
+  echo.
+  echo Detected 64-bit GMS version %Major%.%Minor%
+  echo The DM plugin for 64-bit GMS %versRange64% is no longer included
+  echo No new SEMCCD plugin is being installed
+  echo You should upgrade your GMS version to 2.31 or higher
+  GOTO :CheckPlugDone
 )
 
 if %BIT64% EQU 1 (
