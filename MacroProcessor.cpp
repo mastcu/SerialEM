@@ -902,6 +902,7 @@ void CMacroProcessor::Run(int which)
   mNoMessageBoxOnError = false;
   mSkipFrameAliCheck = false;
   mAlignWholeTSOnly = false;
+  mDisableAlignTrim = false;
   mBoxOnScopeText = "SerialEM message";
   mBoxOnScopeType = 0;
   mBoxOnScopeInterval = 0.;
@@ -945,6 +946,7 @@ void CMacroProcessor::RunOrResume()
   mDEcamIndToRestore = -1;
   mBeamTiltXtoRestore[0] = mBeamTiltXtoRestore[1] = EXTRA_NO_VALUE;
   mBeamTiltYtoRestore[0] = mBeamTiltXtoRestore[1] = EXTRA_NO_VALUE;
+  mCompensatedBTforIS = false;
   mKeyPressed = 0;
   if (mChangedConsets.size() > 0 && mCamWithChangedSets == mWinApp->GetCurrentCamera())
     for (ind = 0; ind < (int)B3DMIN(mConsetNums.size(), mChangedConsets.size());ind++)
@@ -1828,8 +1830,12 @@ void CMacroProcessor::NextCommand()
       delX = itemDbl[2];
       truth = !itemEmpty[3] && itemInt[3] != 0;
     }
-    if (CMD_IS(ALIGNTO) && !itemEmpty[2] && itemInt[2]) doShift = false;
-    if (mShiftManager->AutoAlign(index, 0, doShift, truth, NULL, 0., 0., (float)delX))
+    if (CMD_IS(ALIGNTO) && !itemEmpty[2] && itemInt[2]) 
+      doShift = false;
+    mDisableAlignTrim = CMD_IS(ALIGNTO) && !itemEmpty[3] && itemInt[3];
+    index2 = mShiftManager->AutoAlign(index, 0, doShift, truth, NULL, 0., 0.,(float)delX);
+    mDisableAlignTrim = false;
+    if (index2)
       SUSPEND_NOLINE("because of failure to autoalign");
 
   } else if (CMD_IS(G) || CMD_IS(AUTOFOCUS)) {              // AutoFocus
@@ -5063,6 +5069,7 @@ void CMacroProcessor::NextCommand()
     mScope->SetBeamTilt(mBeamTiltXtoRestore[index], mBeamTiltYtoRestore[index]);
     mNumStatesToRestore--;
     mBeamTiltXtoRestore[index] = mBeamTiltYtoRestore[index] = EXTRA_NO_VALUE;
+    mCompensatedBTforIS = false;
  
     // PIEZO COMMANDS
   } else if (CMD_IS(SELECTPIEZO)) {                         // SelectPiezo
@@ -6919,6 +6926,7 @@ int CMacroProcessor::AdjustBeamTiltIfSelected(double delISX, double delISY, BOOL
   delBTX = comaVsIS->matrix.xpx * delISX + comaVsIS->matrix.xpy * delISY;
   delBTY = comaVsIS->matrix.ypx * delISX + comaVsIS->matrix.ypy * delISY;
   mScope->IncBeamTilt(delBTX, delBTY);
+  mCompensatedBTforIS = true;
   return 0;
 }
 

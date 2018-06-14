@@ -74,6 +74,8 @@ class CMacroProcessor : public CCmdTarget
   SetMember(int, KeyPressed);
   GetSetMember(bool, WaitingForFrame);
   GetMember(bool, UsingContinuous);
+  GetMember(bool, DisableAlignTrim);
+  GetMember(bool, CompensatedBTforIS);
   GetMember(bool, NoMessageBoxOnError);
   bool GetAlignWholeTSOnly() {return DoingMacro() && mAlignWholeTSOnly;};
   bool SkipCheckingFrameAli() {return DoingMacro() && mSkipFrameAliCheck;};
@@ -191,6 +193,7 @@ private:
   int mDEcamIndToRestore; // Index of that camera
   double mBeamTiltXtoRestore[2];   // Saved beam tilt values to restore for two probe
   double mBeamTiltYtoRestore[2];   // modes
+  bool mCompensatedBTforIS; // Flag that beam tilt was compensated for an IS change
   int mKeyPressed;        // Key pressed after macro starts
   int mStoppedContSetNum; // Set number for continuous acquire that was stopped
   float mMinDeltaFocus;   // Defocus change and absolute focus limits for autofocus
@@ -218,6 +221,7 @@ private:
   bool mAlignWholeTSOnly;    // Flag for alignment to happen is if in TS with Whole TS
   bool mStartNavAcqAtEnd;    // Flag to start Nav acquire on successful completion 
   int mTestNextMultiShot;    // 1 or 2 to test image area or coma
+  bool mDisableAlignTrim;    // Flag to disable trimming in autoalign
 
 public:
   void GetNextLine(CString * macro, int & currentIndex, CString &strLine);
