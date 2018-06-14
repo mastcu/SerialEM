@@ -235,7 +235,7 @@ public:
   void CtfBasedNextTask(int tparm);
   void StopCtfBased(bool restore = true, bool failed = true);
   void CtfBasedCleanup(int error);
-  int LookupCtfBasedCal(bool coma, int magInd, bool matchMag);
+  int LookupCtfBasedCal(bool coma, int magInd, bool matchMag, float *rotateImage = NULL);
   float ComaSlopeFromCalibration(float *fitValues, int index, float angle, 
   float beamTilt, float *factors);
   int SetupCtfAcquireParams(bool fromCheck);

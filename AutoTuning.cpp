@@ -1196,7 +1196,7 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
   int centralInds[4][2] = {{1, 5}, {3, 7}, {2, 6}, {4, 8}};
   float resultsArray[7], solution[4];
   float newFocus = 0, negMicrons, xCoeff, yCoeff, angle, diffPlus, diffMinus, minFocus;
-  float intercept, diff1, diff9;
+  float intercept, diff1, diff9, rotateImage;
   const int maxInLineFit = 50;
   float xfit[maxInLineFit], yfit[maxInLineFit], zfit[maxInLineFit];
   double xmax = 0., ymax = 0., nextXval, nextYval, assumedPosFocus;
@@ -1524,8 +1524,9 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
 
         } else {
 
-          // Astigmatism measurement: Lookup calibration
-          calInd = LookupCtfBasedCal(mCtfComaFree > 0, mMagIndex, false);
+          // Astigmatism measurement: Lookup calibration and get angle that image
+          // would need to be rotated
+          calInd = LookupCtfBasedCal(mCtfComaFree > 0, mMagIndex, false, &rotateImage);
           calUse = mCtfBasedCals[calInd];
 
           // fit defocus versus coefficients at each angle
@@ -1533,7 +1534,10 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
             angle = (float)((ind * 180.) / numInDat);
             AstigCoefficientsFromCtfFits(calUse.fitValues, angle, 
               calUse.amplitude, xfit[ind], yfit[ind]);
-            zfit[ind] = DefocusFromCtfFit(mCtfCal.fitValues, angle);
+
+            // Since we haven't rotated the image to match calib, look for defocus at 
+            // calib angle rotated back by the image's rotation
+            zfit[ind] = DefocusFromCtfFit(mCtfCal.fitValues, angle - rotateImage);
           }
 
           // Report and apply
@@ -1634,23 +1638,30 @@ void CAutoTuning::AstigCoefficientsFromCtfFits(float *fitValues, float angle, fl
 
 // Look up a calibration is the array, specific to the mag or from the closest mag
 // Currently only astigmatism cals are saved to file
-int CAutoTuning::LookupCtfBasedCal(bool coma, int magInd, bool matchMag)
+int CAutoTuning::LookupCtfBasedCal(bool coma, int magInd, bool matchMag,
+  float *rotateImage)
 {
   MagTable *magTabs = mWinApp->GetMagTable();
   double minRatio = 1.e30, ratio;
   int indMin = -1;
+  double magAngle, calAngle;
+  magAngle = mWinApp->mShiftManager->GetImageRotation(mWinApp->GetCurrentCamera(),magInd);
   for (int ind = 0; ind < mCtfBasedCals.GetSize(); ind++) {
     if (BOOL_EQUIV(mCtfBasedCals[ind].comaType, coma)) {
       if (matchMag) {
         if (magInd == mCtfBasedCals[ind].magInd)
           indMin = ind;
       } else {
-        ratio = magTabs[magInd].mag / magTabs[mCtfBasedCals[ind].magInd].mag;
-        if (ratio < 0)
+        ratio = ((double)magTabs[magInd].mag) / magTabs[mCtfBasedCals[ind].magInd].mag;
+        if (ratio < 1.)
           ratio = 1. / ratio;
         if (ratio < minRatio) {
           minRatio = ratio;
           indMin = ind;
+          calAngle = mWinApp->mShiftManager->GetImageRotation(mWinApp->GetCurrentCamera(),
+            mCtfBasedCals[ind].magInd);
+          if (rotateImage)
+            *rotateImage = (float)(calAngle - magAngle);
         }
       }
     }
