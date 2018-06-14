@@ -1406,6 +1406,7 @@ int DirectElectronCamera::SetExposureTimeAndMode(float seconds, int mode)
   if (mLastExposureMode != mode || !mTrustLastSettings) {
     if (!setStringWithError("Exposure Mode", modeName[mode])) 
       return 1;
+    SEMTrace('D', "Exposure mode set to %s", modeName[mode]);
   }
   mLastExposureMode = mode;
 
