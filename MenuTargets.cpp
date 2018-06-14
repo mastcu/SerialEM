@@ -2365,6 +2365,10 @@ void CMenuTargets::OnUpdateTasksAutocenterbeam(CCmdUI *pCmdUI)
   double roughInt;
   bool synth;
   AutocenParams *param;
+  if (mWinApp->GetSTEMMode()) {
+    pCmdUI->Enable(false);
+    return;
+  }
   if (mWinApp->LowDoseMode()) {
     LowDoseParams *ldParm = mWinApp->GetLowDoseParams() + TRIAL_CONSET;
     mag = ldParm->magIndex;
