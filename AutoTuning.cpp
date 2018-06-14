@@ -735,7 +735,7 @@ int CAutoTuning::LookupAstigCal(int probeMode, int alpha, int magInd, bool match
         if (magInd == mAstigCals[ind].magInd)
           indMin = ind;
       } else {
-        ratio = magTabs[magInd].mag / magTabs[mAstigCals[ind].magInd].mag;
+        ratio = ((double)magTabs[magInd].mag) / magTabs[mAstigCals[ind].magInd].mag;
         if (ratio < 1.)
           ratio = 1. / ratio;
         if (ratio < minRatio) {
@@ -762,7 +762,7 @@ int CAutoTuning::LookupComaCal(int probeMode, int alpha, int magInd, bool matchM
           if (magInd == mComaCals[ind].magInd)
             indMin = ind;
         } else {
-          ratio = magTabs[magInd].mag / magTabs[mComaCals[ind].magInd].mag;
+          ratio = ((double)magTabs[magInd].mag) / magTabs[mComaCals[ind].magInd].mag;
           if (ratio < 1.)
             ratio = 1. / ratio;
           if (ratio < minRatio) {
