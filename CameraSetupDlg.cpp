@@ -2512,7 +2512,8 @@ void CCameraSetupDlg::OnButFileOptions()
   B3DCLAMP(optDlg.m_iFileType, 0, 2);
   optDlg.m_bPackRawFrames = (mCamera->GetSaveRawPacked() & 1) > 0;
   optDlg.m_bPackCounting4Bit = (mCamera->GetSaveRawPacked() & 2) > 0;
-  optDlg.m_bSaveTimes100 = mCamera->GetSaveTimes100() != 0;
+  optDlg.m_bSaveTimes100 = mCamera->GetSaveTimes100() != 0 && mParam->K2Type == K2_SUMMIT;
+  optDlg.m_bReduceSuperres = mCamera->GetSaveSuperResReduced();
   optDlg.m_bUse4BitMode = mCamera->GetUse4BitMrcMode();
   optDlg.m_bSaveUnnormalized = mCamera->GetSaveUnnormalizedFrames();
   optDlg.m_bUseExtensionMRCS = mCamera->GetNameFramesAsMRCS();
@@ -2520,6 +2521,7 @@ void CCameraSetupDlg::OnButFileOptions()
   optDlg.mEnableSkipRotFlip = mParam->rotationFlip;
   optDlg.mFalconType = mParam->FEItype;
   optDlg.mCamFlags = mParam->CamFlags;
+  optDlg.mK2Type = mParam->K2Type;
   mCamera->FixDirForFalconFrames(mParam);
   optDlg.mDEtype = mWinApp->mDEToolDlg.CanSaveFrames(mParam);
   optDlg.m_strBasename = mCamera->GetFrameBaseName();
@@ -2533,15 +2535,18 @@ void CCameraSetupDlg::OnButFileOptions()
   optDlg.mCan4BitModeAndCounting = 
     mCamera->CAN_PLUGIN_DO(4BIT_101_COUNTING, mParam);
   optDlg.mCanSaveTimes100 = 
-    mCamera->CAN_PLUGIN_DO(SAVES_TIMES_100, mParam);
+    mCamera->CAN_PLUGIN_DO(SAVES_TIMES_100, mParam) && mParam->K2Type == K2_SUMMIT;
   optDlg.mCanUseExtMRCS = mCamera->CAN_PLUGIN_DO(CAN_SET_MRCS_EXT, mParam);
   optDlg.mCanGainNormSum = mCamera->CAN_PLUGIN_DO(CAN_GAIN_NORM, mParam);
+  optDlg.mCanReduceSuperres = mCamera->CAN_PLUGIN_DO(CAN_REDUCE_SUPER, mParam);
   optDlg.mSetIsGainNormalized = m_iProcessing == GAIN_NORMALIZED;
   if (optDlg.DoModal() == IDOK) {
     mCamera->SetOneK2FramePerFile(optDlg.m_bOneFramePerFile);
     mCamera->SetSaveRawPacked((optDlg.m_bPackRawFrames ? 1 : 0) + 
       (optDlg.m_bPackCounting4Bit ? 2 : 0));
-    mCamera->SetSaveTimes100(optDlg.m_bSaveTimes100);
+    if (mParam->K2Type == K2_SUMMIT)
+      mCamera->SetSaveTimes100(optDlg.m_bSaveTimes100);
+    mCamera->SetSaveSuperResReduced(optDlg.m_bReduceSuperres);
     mCamera->SetUse4BitMrcMode(optDlg.m_bUse4BitMode);
     mCamera->SetSaveUnnormalizedFrames(optDlg.m_bSaveUnnormalized);
     mCamera->SetNameFramesAsMRCS(optDlg.m_bUseExtensionMRCS);
@@ -2696,16 +2701,19 @@ void CCameraSetupDlg::ManageK2SaveSummary(void)
   bool unNormed = m_iProcessing != GAIN_NORMALIZED || 
     (mCamera->GetSaveUnnormalizedFrames() && mCamera->GetPluginVersion(mParam) > 
     PLUGIN_CAN_GAIN_NORM);
+  bool reducing = !unNormed && IS_SUPERRES(mParam, m_iK2Mode) && 
+    mCamera->GetSaveSuperResReduced() && mCamera->CAN_PLUGIN_DO(CAN_REDUCE_SUPER, mParam);
   if (mParam->K2Type && m_bDoseFracMode) {
     frames = B3DNINT(m_eExposure / B3DMAX(mCamera->GetMinK2FrameTime(mParam->K2Type),
       ActualFrameTime(m_fFrameTime)));
     int tiff = mCamera->GetK2SaveAsTiff();
     if (m_bSaveK2Sums && mSummedFrameList.size() > 0)
       frames = mWinApp->mFalconHelper->GetFrameTotals(mSummedFrameList, dummy);
-    str.Format("%d %s to %s %s%s", frames, unNormed ? "raw" : "norm",
+    str.Format("%d %s to %s %s%s%s", frames, unNormed ? "raw" : "norm",
       tiff > 0 ? (tiff > 1 ? "TIF-ZIP" : "TIF-LZW") : "MRC", 
-      mCamera->GetOneK2FramePerFile() ? "files" : "stack",
-      (unNormed && m_iK2Mode > 0 && (mCamera->GetSaveRawPacked() & 1))? ", packed" : "");
+      reducing ? "" : (mCamera->GetOneK2FramePerFile() ? "files" : "stack"),
+      (unNormed && m_iK2Mode > 0 && (mCamera->GetSaveRawPacked() & 1))? ", packed" : "",
+      reducing ? ", reduced" : "");
     SetDlgItemText(IDC_STAT_SAVE_SUMMARY, str);
     str.Format("%d frames", frames);
     SetDlgItemText(IDC_STAT_ALIGN_SUMMARY, str);

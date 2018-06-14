@@ -55,6 +55,8 @@ struct CamPluginFuncs;
 #define PLUGIN_UNPROC_LIKE_DS    106
 #define PLUGIN_CAN_SET_MRCS_EXT  106
 #define PLUGIN_CAN_ALIGN_SUBSET  107
+#define PLUGIN_CAN_REDUCE_SUPER  108
+#define PLUGIN_SUPPORTS_K3       108
 
 #define CAN_PLUGIN_DO(c, p) CanPluginDo(PLUGIN_##c, p)
 
@@ -405,6 +407,7 @@ class DLL_IM_EX CCameraController
   GetSetMember(int, SaveRawPacked);
   GetSetMember(int, SaveTimes100);
   GetSetMember(int, K2SaveAsTiff);
+  GetSetMember(BOOL, SaveSuperResReduced);
   GetSetMember(BOOL, NameFramesAsMRCS);
   GetSetMember(BOOL, Use4BitMrcMode);
   GetSetMember(BOOL, SaveUnnormalizedFrames);
@@ -730,6 +733,7 @@ class DLL_IM_EX CCameraController
   int mSaveRawPacked;           // Pack flags: 1 bytes->4bits/ints->bytes + 2 ints->4bits
   int mSaveTimes100;            // Flag to save times 100 in 16 bits
   int mK2SaveAsTiff;            // 1 for lzw compression, 2 for zip compression
+  BOOL mSaveSuperResReduced;    // Flag to save super-res frames reduced by 2
   BOOL mUse4BitMrcMode;         // Flag to use 4-bit mode 101
   BOOL mSaveUnnormalizedFrames; // Flag to save frames as unnormalized
   BOOL mSkipK2FrameRotFlip;     // Flag to have plugin skip reorienting frames

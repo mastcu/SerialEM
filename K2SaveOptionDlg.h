@@ -34,11 +34,13 @@ public:
   int mFalconType;
   int mCamFlags;
   BOOL mDEtype;
+  int mK2Type;
   int mNameFormat;
   int mNumberDigits;
   BOOL mCanCreateDir;
   BOOL mCan4BitModeAndCounting;
   BOOL mCanSaveTimes100;
+  BOOL mCanReduceSuperres;
   BOOL mCanUseExtMRCS;
   BOOL mCanGainNormSum;
   BOOL mSetIsGainNormalized;
@@ -94,4 +96,7 @@ public:
   afx_msg void OnSaveUnnormalized();
   CButton m_butPackRawFrame;
   CButton m_butSavesTimes100;
+  CButton m_butReduceSuperres;
+  BOOL m_bReduceSuperres;
+  afx_msg void OnReduceSuperres();
 };

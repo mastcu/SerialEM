@@ -46,7 +46,7 @@
     <p>
       <b>Use extension .mrcs</b></p>
     <p>
-      When MRC output format is selected, this optin can be used to make the names of 
+      When MRC output format is selected, this option can be used to make the names of 
       the frame stacks end in &#39;.mrcs&#39; instead of &#39;.mrc&#39;.&nbsp; Some other software 
       requires the &#39;.mrcs&#39; extension to process frame stacks.</p>
     <p>
@@ -62,6 +62,21 @@
       this set, you can leave the processing for Record images as gain-normalized as 
       you turn the saving of frames on and off.&nbsp; You will always get normalized 
       images in SerialEM, and the frames will always be unprocessed.</p>
+    <p>
+      <b>Reduce normalized super-resolution frames by 2 with antialiasing</b></p>
+    <p>
+      Select this option to save super-resolution frames with the same number of 
+      pixels as the camera chip has, after reducing by 2 with antialiasing.&nbsp; This 
+      is the same antialias filtering that is used to reduce the summed 
+      super-resolution image to binning 1 or higher for return to SerialEM.&nbsp; Such 
+      images have better high-frequency content than the same size counting mode 
+      images from the K2 camera because the high-frequency information being thrown 
+      away by sampling at the native pixel size is filtered out rather than aliased 
+      into lower frequencies.&nbsp; This option can thus be used to get some of the 
+      benefits of super-resolution data without having images 4 times larger.&nbsp; 
+      For the K2 camera, it will take an additional 3-4 seconds to take 
+      super-resolution instead of counting images, plus ~0.1 second/frame to reduce 
+      the frames.&nbsp; For the K3 camera, only the time per frame applies.</p>
     <p>
       <b>Save normalized data as 16-bit with 100 times scaling of sum</b></p>
     <p>
@@ -80,7 +95,8 @@
       This option was added before simulations revealed that the efficiency loss from 
       the regular conversion of scaled normalized values to integers was so small (see 
       &#39;Signal loss from saving normalized frames as integers&#39; in
-      <a href="about_camera.htm#directDetectors">Direct Electron Detectors, Especially the Gatan K2</a>).</p>
+      <a href="about_camera.htm#directDetectors">Direct Electron Detectors, Especially the Gatan K2</a>).&nbsp; 
+      The option is not available for K3 cameras.</p>
     <p>
       <b>Pack unnormalized data as 4-bit (Super-Res) or 4/8-bit (Counting)</b></p>
     <p>
@@ -111,7 +127,8 @@
       selected.&nbsp; If the mean of a frame is only a few electrons per pixel, then 
       counts above 15 are probably spurious and can be safely truncated.&nbsp; 
       Otherwise, this option is not appropriate, so <i>be sure that the mean of your 
-      frames is low enough before using it for data collection</i>.</p>
+      frames is low enough before using it for data collection</i>.&nbsp; This option 
+      is not available for K3 cameras.</p>
     <p>
       <b>Use non-standard mode 101 for 4-bit MRC files</b></p>
     <p>

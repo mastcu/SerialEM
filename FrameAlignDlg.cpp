@@ -414,7 +414,8 @@ void CFrameAlignDlg::ManagePanels(void)
   states[3] = states[2] && mMoreParamsOpen;
   m_butSetFolder.EnableWindow(m_iWhereAlign == 2 && !m_bUseFrameFolder);
   m_butUseFrameFolder.EnableWindow(m_iWhereAlign == 2);
-  m_butKeepPrecision.EnableWindow(m_iWhereAlign == 1 && mNewerK2API &&mCamParams->K2Type);
+  m_butKeepPrecision.EnableWindow(m_iWhereAlign == 1 && mNewerK2API && 
+    mCamParams->K2Type == K2_SUMMIT);
   m_butSaveFloatSums.EnableWindow(m_iWhereAlign == 2);
   m_butWholeSeries.EnableWindow(m_iWhereAlign == 2);
   m_butUseGPU.EnableWindow(mGPUavailable || m_iWhereAlign > 1);

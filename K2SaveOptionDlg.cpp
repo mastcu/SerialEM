@@ -49,6 +49,7 @@ CK2SaveOptionDlg::CK2SaveOptionDlg(CWnd* pParent /*=NULL*/)
   , m_bSaveTimes100(FALSE)
   , m_bUseExtensionMRCS(FALSE)
   , m_bSaveUnnormalized(FALSE)
+  , m_bReduceSuperres(FALSE)
 {
 
 }
@@ -105,6 +106,8 @@ void CK2SaveOptionDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Check(pDX, IDC_SAVE_UNNORMALIZED, m_bSaveUnnormalized);
   DDX_Control(pDX, IDC_PACK_RAW_FRAME, m_butPackRawFrame);
   DDX_Control(pDX, IDC_SAVE_TIMES_100, m_butSavesTimes100);
+  DDX_Control(pDX, IDC_CHECK_REDUCE_SUPERRES, m_butReduceSuperres);
+  DDX_Check(pDX, IDC_CHECK_REDUCE_SUPERRES, m_bReduceSuperres);
 }
 
 
@@ -126,6 +129,7 @@ BEGIN_MESSAGE_MAP(CK2SaveOptionDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_COMPRESSED_TIFF, OnSaveMrc)
   ON_BN_CLICKED(IDC_TIFF_ZIP_COMPRESS, OnSaveMrc)
   ON_BN_CLICKED(IDC_SAVE_UNNORMALIZED, OnSaveUnnormalized)
+  ON_BN_CLICKED(IDC_CHECK_REDUCE_SUPERRES, OnReduceSuperres)
 END_MESSAGE_MAP()
 
 
@@ -141,6 +145,9 @@ BOOL CK2SaveOptionDlg::OnInitDialog()
   SetupPanelTables(idTable, leftTable, topTable, mNumInPanel, mPanelStart);
   states[0] = !mFalconType && !mDEtype;
   AdjustPanels(states, idTable, leftTable, topTable, mNumInPanel, mPanelStart, 0);
+  m_butPackCounting4Bits.ShowWindow(mK2Type == K2_SUMMIT);
+  if (mK2Type == K3_TYPE)
+    m_butPackRawFrame.SetWindowText("Pack unnormalized data as 4-bit");
   m_bRootFolder = (mNameFormat & FRAME_FOLDER_ROOT) != 0;
   m_bSavefileFolder = (mNameFormat & FRAME_FOLDER_SAVEFILE) != 0;
   m_bNavLabelFolder = (mNameFormat & FRAME_FOLDER_NAVLABEL) != 0;
@@ -294,7 +301,8 @@ void CK2SaveOptionDlg::ManagePackOptions(void)
     mCan4BitModeAndCounting);
   m_butUse4BitMode.EnableWindow(unNormed && m_bPackRawFrames && !m_iFileType &&
     mCan4BitModeAndCounting);
-  m_butSavesTimes100.EnableWindow(!unNormed && mCanSaveTimes100);
+  m_butReduceSuperres.EnableWindow(!unNormed && mCanReduceSuperres);
+  m_butSavesTimes100.EnableWindow(!unNormed && mCanSaveTimes100 && !m_bReduceSuperres);
   m_butUseExtensionMRCS.EnableWindow(!m_iFileType && mCanUseExtMRCS);
 }
 
@@ -311,6 +319,13 @@ void CK2SaveOptionDlg::OnSaveMrc()
 }
 
 void CK2SaveOptionDlg::OnSaveUnnormalized()
+{
+  UpdateData(true);
+  ManagePackOptions();
+}
+
+
+void CK2SaveOptionDlg::OnReduceSuperres()
 {
   UpdateData(true);
   ManagePackOptions();

@@ -348,6 +348,7 @@ CCameraController::CCameraController()
   mRunCommandAfterSave = false;
   mSaveRawPacked = -1;
   mSaveTimes100 = 0;
+  mSaveSuperResReduced = false;
   mSaveUnnormalizedFrames = false;
   mK2SaveAsTiff = 0;
   mSkipK2FrameRotFlip = false;
@@ -2510,8 +2511,8 @@ void CCameraController::Capture(int inSet, bool retrying)
   mTD.checkFEIname = mOtherCamerasInTIA;
   mTD.oneFEIshutter = mParam->onlyOneShutter;
   binInd = BinDivisorI(mParam);
-  if (mParam->K2Type == K3_TYPE && conSet.K2ReadMode != LINEAR_MODE)
-    binInd = 1;
+
+  // Pass the native chip size and let plugin adjust for image type
   mTD.fullSizeX = mParam->sizeX / binInd;
   mTD.fullSizeY = mParam->sizeY / binInd;
   mTD.PostMoveStage = mStageQueued;
@@ -2530,6 +2531,11 @@ void CCameraController::Capture(int inSet, bool retrying)
   mTD.NewMagIndex = mMagIndToDo;
   mTD.TiltDuringDelay = B3DCHOICE(!FEIscope && mTiltDuringShotDelay >= 0, 
     B3DMAX(1, mTiltDuringShotDelay), 0);
+
+  // The need for this is supposedly temporary
+  if (mParam->K2Type == K3_TYPE && conSet.processing == UNPROCESSED && 
+    conSet.K2ReadMode > 0)
+      conSet.processing = DARK_SUBTRACTED;
   mTD.Processing = conSet.processing;
 
   // Set up so that an error message in the post-action script, which is not issued until 
@@ -2564,8 +2570,11 @@ void CCameraController::Capture(int inSet, bool retrying)
       mTD.CountScaling += 10 * offsetPerMs;
       mTD.GatanReadMode = K3_LINEAR_SET_MODE;
     }
-  } else if (mParam->K2Type == K3_TYPE)
+  } else if (mParam->K2Type == K3_TYPE) {
     mTD.GatanReadMode = K3_COUNTING_SET_MODE;
+    if (conSet.processing == DARK_SUBTRACTED)
+      mTD.CountScaling = mParam->countsPerElectron;
+  }
 
   // DE cameras: Handle numerous items
   mTD.AlignFrames = conSet.alignFrames;
@@ -3277,6 +3286,11 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
   bool alignSubset = false;
   bool isSuperRes = IS_SUPERRES(mParam, conSet.K2ReadMode);
   bool trulyAligning = aligning && conSet.useFrameAlign == 1;
+  bool gainNormed = conSet.processing == GAIN_NORMALIZED;
+  bool reducingSuperRes = saving && mSaveSuperResReduced && isSuperRes && gainNormed &&
+     CAN_PLUGIN_DO(CAN_REDUCE_SUPER, mParam);
+  bool savingTimes100 = saving && mSaveTimes100 && mParam->K2Type != K3_TYPE &&
+    gainNormed && CAN_PLUGIN_DO(SAVES_TIMES_100, mParam) && !reducingSuperRes;
   CString mess;
   if (aligning) {
     faInd = conSet.faParamSetInd;
@@ -3363,16 +3377,17 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
   if ((mSaveRawPacked & 1) && mUse4BitMrcMode && !mK2SaveAsTiff &&
       CAN_PLUGIN_DO(4BIT_101_COUNTING, mParam))
     flags |= K2_SAVE_4BIT_MRC_MODE;
-  if (mSaveTimes100 && conSet.processing == GAIN_NORMALIZED && 
-      CAN_PLUGIN_DO(SAVES_TIMES_100, mParam))
+  if (savingTimes100)
     flags |= K2_SAVE_TIMES_100;
+  if (reducingSuperRes)
+    flags |= K2_SAVE_SUPER_REDUCED;
   if (!refFile.IsEmpty()) {
     flags |= K2_COPY_GAIN_REF;
     reflen = refFile.GetLength() + 1;
     nameSize += reflen;
 
     // Older plugin copied if flag set regardless of DS versus unproc
-    if (conSet.processing != GAIN_NORMALIZED) {
+    if (!gainNormed) {
       alignFlags |= K2_COPY_GAIN_REF;
       stringSize += reflen;
       aliRefLen = reflen;
@@ -3388,7 +3403,7 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
   }
   if (mSkipK2FrameRotFlip && mParam->rotationFlip)
     flags |= K2_SKIP_FRAME_ROTFLIP;
-  if ((saving || aligning) && conSet.processing != GAIN_NORMALIZED && 
+  if ((saving || aligning) && !gainNormed && 
     mDMversion[DMind] >= DM_RETURNS_DEFECT_LIST) {
       flags |= K2_SAVE_DEFECTS;
       alignFlags |= K2_SAVE_DEFECTS;
@@ -3530,7 +3545,7 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
     if (trulyAligning) {
 
       // Let plugin figure out whether it needs to do anything with this
-      if (faParam.keepPrecision)
+      if (faParam.keepPrecision && mParam->K2Type != K3_TYPE)
         alignFlags |= K2FA_KEEP_PRECISION;
 
       // Evaluate all memory needs
@@ -3593,10 +3608,11 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
     // If there is a grab stack and we are keeping precision in alignment, need to double
     // both; but if saving times 100, that is sufficient and it doubles only superres
     maxMemory = B3DMAX(0., maxMemory - totAliMem * pow(1024., 3.));
-    if (conSet.processing == GAIN_NORMALIZED) {
-      if (trulyAligning && faParam.keepPrecision && !(saving && mSaveTimes100))
+    if (gainNormed) {
+      if (trulyAligning && faParam.keepPrecision && !savingTimes100 && 
+        mParam->K2Type != K3_TYPE)
         frameInGrab *= 2;
-      if (saving && mSaveTimes100 && isSuperRes)
+      if (savingTimes100 && isSuperRes)
         frameInGrab *= 2;
     }
 
@@ -3932,7 +3948,7 @@ void CCameraController::CapManageCoordinates(ControlSet & conSet, int &gainXoffs
   B3DCLAMP(mZoomFilterType, 0, 5);
   mTD.K2ParamFlags = 0;
   if (antialiasInPlugin)
-    mTD.K2ParamFlags =B3DCHOICE(binInPlugin, 1, mZoomFilterType + 1);
+    mTD.K2ParamFlags = B3DCHOICE(binInPlugin, 1, mZoomFilterType + 1);
   if (mParam->K2Type) {
     if ((superRes || doseFrac) && !(antialiasInPlugin || reduceAligned))
       mTD.Binning = 1;
@@ -4639,7 +4655,7 @@ int CCameraController::CapManageDarkGainRefs(ControlSet & conSet, int inSet,
           mNumAverageDark = conSet.numAverage;
       }
 
-    } else if (mParam->GatanCam) {
+    } else if (mParam->GatanCam && !mParam->K2Type) {
 
       // If processing in DM, need to analyze whether to force a new dark ref
       // Search for a matching dark ref in our list
