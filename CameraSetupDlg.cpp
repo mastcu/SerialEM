@@ -1019,8 +1019,6 @@ void CCameraSetupDlg::UnloadDialogToConset()
   if (mParam->K2Type)
     mCurSet->doseFrac = m_bDoseFracMode ? 1 : 0;
   mCurSet->frameTime = ActualFrameTime(m_fFrameTime);
-  if (!(mCurrentSet == RECORD_CONSET && mWinApp->mTSController->GetFrameAlignInIMOD()))
-    mCurSet->alignFrames = m_bAlignDoseFrac ? 1 : 0;
   mCurSet->saveFrames = mUserSaveFrames ? 1 : 0;
   if (!mWinApp->mDEToolDlg.CanSaveFrames(mParam))
     mCurSet->sumK2Frames = m_bSaveK2Sums ? 1 : 0;
@@ -1043,14 +1041,16 @@ void CCameraSetupDlg::UnloadDialogToConset()
     mSaveCountingFPS = mParam->DE_CountingFPS;
     m_bAlignDoseFrac = m_bDEalignFrames;
   }
-  if (mParam->OneViewType)
-    mCurSet->alignFrames = m_bCorrectDrift ? 1 : 0;
   else if (mDE_Type && (mParam->CamFlags & DE_HAS_HARDWARE_BIN))
     mCurSet->boostMag = m_bCorrectDrift ? 1 : 0;
   if (mDE_Type && (mParam->CamFlags & DE_HAS_HARDWARE_ROI))
     mCurSet->magAllShots = m_bUseHardwareROI ? 1 : 0;
+
+  // First set alignFrames for direct detectors, then override that for OneView
   if (!(mCurrentSet == RECORD_CONSET && mWinApp->mTSController->GetFrameAlignInIMOD()))
     mCurSet->alignFrames = m_bAlignDoseFrac ? 1 : 0;
+  if (mParam->OneViewType)
+    mCurSet->alignFrames = m_bCorrectDrift ? 1 : 0;
 
   mCurSet->lineSync = m_bLineSync ? 1 : 0;
   mCurSet->dynamicFocus = m_bDynFocus ? 1 : 0;
