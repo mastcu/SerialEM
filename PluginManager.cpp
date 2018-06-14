@@ -102,7 +102,7 @@ int CPluginManager::LoadPlugins(void)
       if (path.IsEmpty())
         continue;
       mess = path + "\\*.dll";
-    } else if (dirLoop = 1) {
+    } else if (dirLoop == 1) {
       path = plugPath;
       mess = path + "\\*.dll";
     } else {
