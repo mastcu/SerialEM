@@ -3,6 +3,13 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+6/14/18: Added property SkipAdvancedScripting to avoid trying to use the
+advanced scripting interface for FEI cameras, which is necessary if there is
+no license for it.
+
+6/14/18: Fixed checking for balanced parentheses in commands where arithmetic
+is not allowed.
+
 5/29/18: Added support for K3 camera.  Parallelized several frame-processing
 steps, with modest time-savings on K2 and good savings on K3.
 

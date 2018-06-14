@@ -1644,21 +1644,22 @@
         <TR vAlign="top">
           <TD class="style13">LoadCartridge #</TD>
           <TD>Loads the cartridge from the given slot # (numbered from 1) if there is an
-            autoloader.  This command starts a long operation.</TD>
+            FEI autoloader.  This command starts a long operation.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style13">UnloadCartridge</TD>
-          <TD>If there is an autoloader, unloads the cartridge.  This command starts a long operation</TD>
+          <TD>If there is an FEI autoloader, unloads the cartridge.  This command starts a long operation</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style13">ReportSlotStatus #</TD>
           <TD>Report the status of the cartridge slot given by # (numbered from 1) if there
-            is an autoloader.&nbsp; Status is -1 for an error, 0 for empty, and 1 for
+            is an FEI autoloader.&nbsp; Status is -1 for an error, 0 for empty, and 1 for
             occupied.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style13">AreDewarsFilling</TD>
-          <TD>Report whether any of the dewars in a temperature control system on an FEI are busy
+          <TD>Report whether any of the dewars in a temperature control system on an FEI 
+            scope are busy
             filling (reported value 1 is set to 0 or 1).
             &nbsp; Also reports if tanks are being refilled on a JEOL if the interface 
             exists for determining that (reported value is set to 1 for stage tank plus 2 
@@ -1666,12 +1667,13 @@
         </TR>
         <TR vAlign="top">
           <TD class="style13">DewarsRemainingTime</TD>
-          <TD>Report the time remaining for until next automatic dewar filling, or -1 if
+          <TD>Report the time remaining for until next automatic dewar filling on an FEI 
+            scope, or -1 if
             none is scheduled.&nbsp; Value can be assigned to a variable at end of commmand.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style13">RefrigerantLevel #</TD>
-          <TD>Report the refrigerant level of the given dewar: 1 for autoloader, 2 for
+          <TD>Report the refrigerant level of the given dewar on an FEI scope: 1 for autoloader, 2 for
             column, 3 for liquid helium. &nbsp; Value can be assigned to a variable at end of commmand.</TD>
         </TR>
         <TR vAlign="top">
