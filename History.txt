@@ -3,7 +3,21 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
-5/29/18: Fixed lookup of astigmtism/coma calibration at nearest mag (In 3.6).
+5/29/18: Added support for K3 camera.  Parallelized several frame-processing
+steps, with modest time-savings on K2 and good savings on K3.
+
+5/29/18: Fixed loss of OneView drift correction setting, broken 11/3/17.
+
+5/29/18: Made beam intensity calibration use counting mode for K2 when dose
+rate is low enough and set exposure and count parameters automatically.
+
+5/29/18: Fixed CTF-based astigmatism correction to account for rotation
+between calibrated and curretn mag.
+
+5/29/18: Fixed crash when double-clicking on a Navigator point loads the
+montage piece and rotate on load is set.
+
+5/29/18: Fixed lookup of astigmatism/coma calibration at nearest mag (In 3.6).
 
 5/25/18: Sped up saving from K2 by computing min/max/mean from samples instead
 of whole image (In 3.6).
