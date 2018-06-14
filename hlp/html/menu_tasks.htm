@@ -442,7 +442,8 @@
       Even when 'Trim dark borders in Autoalign' is not selected in the 
       <a href="hidd_alignfocus.htm">Image 
       Alignment &amp; Focus</a> control panel, this trimming happens automatically in three 
-      cases: when in Low Dose mode, when doing a task at a lower magnification, and 
+      cases: when in Low Dose mode, when doing a task at a lower magnification and not 
+      in Low Dose mode, and 
       when the Navigator does Realign to Item.&nbsp; This option allows the automatic 
       trimming to be disabled in selected cases.&nbsp; Three dialog boxes will come 
       up.&nbsp; The first controls the trimming in Low Dose mode; enter 1 if you want 
@@ -450,7 +451,21 @@
       always.&nbsp; The second entry controls the trimming when doing tasks; again, 
       enter 1 if you want to disable it just when doing a tilt series, or 2 if you 
       want to disable it always.&nbsp; The third entry allows you to disable the 
-      trimming when running Realign to Item.</p>
+      trimming when running Realign to Item.&nbsp; Note that the &#39;AlignTo&#39; script 
+      command also has an optional entry to prevent trimming.&nbsp; The decision to 
+      trim is made as follows: </p>
+    <ul>
+      <li>Trimming is not done if &#39;AlignTo&#39; is run with that option set to prevent 
+        trimming</li>
+      <li>Otherwise, if doing Realign to Item, trimming is determined by the option set 
+        here for Realign</li>
+      <li>Or, if in low mag for another task and not in Low Dose, trimming is determined 
+        by the option set here for tasks</li>
+      <li>Or if in Low Dose mode, not doing a Realign, trimming is determined by the 
+        option set here for Low Dose</li>
+      <li>If not in Low Dose mode or doing Realign or a task, trimming is controlled by 
+        the choice in the control panel</li>
+    </ul>
     <p>
       <A NAME="hid_specialoptions_allowcontinuousintasks"></A><B>Allow Continuous in TS command (Tasks&nbsp; - Specialized Options submenu)</B></p>
     <p>

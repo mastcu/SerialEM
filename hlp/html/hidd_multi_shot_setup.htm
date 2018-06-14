@@ -229,8 +229,8 @@
       be acquired and save that position.&nbsp; Repeat until the last point and press 
       &#39;End Pattern&#39;.</p>
     <p> See above for instructions on how to save sufficiently accurate shift values.</p>
-      <b>IS to Nav Pt</b></p>
-    <p>Press this button move to the location of the current Navigator point 
+      <p><b>IS to Nav Pt</b></p>
+    <p>Press this button to move to the location of the current Navigator point 
       with image shift and then select the next point&nbsp; in the table.&nbsp; This saves you from 
       pressing &#39;IS to XY&#39; and selecting the next point in the Navigator window, extra 
       steps where you can lose track of whether you have changed the selection there.&nbsp; 
@@ -278,7 +278,10 @@
       <a href="menu_calibration.htm#hid_focustuning_comavs">Coma vs. Image Shift</a> 
       in the Calibration - Focus &amp; Tuning submenu.&nbsp; If so, then beam tilt will be 
       adjusted appropriately for each Record position, and restored at the end.&nbsp; 
-      The conditions under which the calibration was taken are shown on the following 
+      In addition, the image shift present when starting the routine will also be 
+      compensated for, unless the script command &#39;AdjustBeamTiltforIS&#39; was run or beam 
+      tilt was adjusted by any of the image-shift setting commands that provide the 
+      adjustment.&nbsp; The conditions under which the calibration was taken are shown on the following 
       line.&nbsp; For the adjustment to work accurately, the current beam intensity at 
       least should be close to what it was when the calibration was done.</p>
     <p><b>Diameter of circles to draw</b></p>

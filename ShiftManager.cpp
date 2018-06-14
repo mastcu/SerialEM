@@ -19,6 +19,7 @@
 #include "SerialEMView.h"
 #include "Utilities\XCorr.h"
 #include "EMscope.h"
+#include "MacroProcessor.h"
 #include "CameraController.h"
 #include "EMmontageController.h"
 #include "TSController.h"
@@ -379,7 +380,7 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, BOOL 
                              float *fracPix, BOOL trimOutput, float *xShiftOut, 
                              float *yShiftOut, float probSigma)
 {
-  BOOL swapStretch;
+  BOOL doTrim, swapStretch;
   int nxUse, nxPad, nyUse, nyPad;
   int needBinA, needBinC;
   int nxTaper, nyTaper, nyTrimCtop;
@@ -723,6 +724,26 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, BOOL 
   nxTrimA = nyTrimA = nxTrimC = nyTrimC = (int)(trimFrac * size + 1);
   nxTrimAright = nyTrimAtop = nxTrimCright = nyTrimCtop = nxTrimA;
 
+  // Whether to trim: it is disallowed completely if doing template correlation, 
+  // calibrating IS, or script has disabled it
+  // Otherwise the choice for realign governs it for realign;
+  // the choice for tasks governs it for tasks
+  // the choice for low dose governs it in low dose if neither task nor realign
+  // Or finally the option governs it
+  doTrim = false;
+  if (!(tmplCorr || mWinApp->mShiftCalibrator->CalibratingIS() ||
+    (mWinApp->mMacroProcessor->DoingMacro() && 
+    mWinApp->mMacroProcessor->GetDisableAlignTrim()))) {
+      if (mWinApp->mNavHelper->GetRealigning() == 1)
+        doTrim = !disableItemTrim;
+      else if (mWinApp->mComplexTasks->InLowerMag())
+        doTrim = !disableTaskTrim;
+      else if (mWinApp->LowDoseMode())
+        doTrim = !disableLDtrim;
+      else
+        doTrim = mTrimDarkBorders;
+  }
+
   // If rotating, find the trimming needed for rotated image
   if (rotation != 0.) {
     if (fabs(fabs(rotation) - 90.) < 0.05f) {
@@ -772,10 +793,7 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, BOOL 
   
     // If flag set, low dose mode, or low mag, or first round of realign, 
     // find needed trimming to avoid bad corners
-  } else if ((mTrimDarkBorders || (mWinApp->LowDoseMode() && !disableLDtrim) || 
-    (mWinApp->mComplexTasks->InLowerMag() && !disableTaskTrim) || 
-    (mWinApp->mNavHelper->GetRealigning() == 1 && !disableItemTrim))
-    && !tmplCorr && !mWinApp->mShiftCalibrator->CalibratingIS()) {
+  } else if (doTrim) {
     int nTrim = nxTrimA;
     centered = fabs(stretch - 1.) > 0.0005;
     CString report;
@@ -998,7 +1016,7 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, BOOL 
   }
   *fracPtr = fracBest;
   *CCCptr = CCCbest;
-  if (mWinApp->mScope->GetSimulationMode()) {
+  if (mWinApp->mScope->GetSimulationMode() && nxPad > 128 && nyPad > 128) {
     tempX = (float)(0.02 * B3DMIN(nxUseA, nxUseC));
     tempY = (float)(0.02 * B3DMIN(nyUseA, nyUseC));
     B3DCLAMP(Xpeaks[indMaxPeak], -tempX, tempX);
