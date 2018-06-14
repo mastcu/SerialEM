@@ -1873,8 +1873,7 @@ void CTSController::NextAction(int param)
         // enough rather than too much
         angleError = fabs(angle - mNextTilt);
         if ((angleError > 0.75 * mLastIncrement || angleError > mMaxTiltError) &&
-          fabs(mNextTilt) > fabs(mCurrentTilt) && 
-          mDirection * (angle - mCurrentTilt) < mLastIncrement) {
+          mDirection * mNextTilt > 0. && mDirection * (mNextTilt - angle) > 0.) {
 
           // 5/5/06: Jaap claims he sees the old angle, so wait a while and try again
           Sleep(5000);

@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+5/23/18: Fixed test in tilt series for whether stage tilted to correct angle
+(In 3.6).
+
 5/11/18: Fixed mag change when changing EFTEM state in Low Dose mode and the
 parameters are not defined for current area in the other state.
 
