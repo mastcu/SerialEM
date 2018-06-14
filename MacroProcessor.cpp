@@ -6513,7 +6513,7 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel)
       }
 
       // Check commands where arithmetic is allowed
-      if (ArithmeticIsAllowed(strItems[0]) == 0 && 
+      if (ArithmeticIsAllowed(strItems[0]) && 
         CheckBalancedParentheses(strItems, MAX_TOKENS, strLine, errmess))
         return 99;
       
