@@ -5133,9 +5133,10 @@ int CNavigatorDlg::RotateMap(EMimageBuffer *imBuf, BOOL redraw)
   CMapDrawItem *item = FindItemWithMapID(imBuf->mMapID);
   if (!item && !imBuf->mStage2ImMat.xpx)
     return 1;
-  if (item->mMapTiltAngle > RAW_STAGE_TEST && fabs((double)item->mMapTiltAngle) > 2.5) {
-    SEMMessageBox("You cannot rotate a map taken at a tilt higher than 2.5 degrees");
-    return 1;
+  if (item && item->mMapTiltAngle > RAW_STAGE_TEST && 
+    fabs((double)item->mMapTiltAngle) > 2.5) {
+      SEMMessageBox("You cannot rotate a map taken at a tilt higher than 2.5 degrees");
+      return 1;
   }
 
   if (item && item->mImported == 1) {
