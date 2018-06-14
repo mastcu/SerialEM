@@ -102,6 +102,7 @@ public:
   void SetSystemPath(CString sysPath);
   GetMember(CString, SysPathForSettings);
   GetSetMember(CString, PluginPath)
+  GetSetMember(CString, PluginPath2)
   GetMember(CString, FlybackName);
   GetMember(int, DfltUseMdoc);
   GetMember(int, FrameAdocIndex);
@@ -202,7 +203,8 @@ private:
   CString mTitle;                // Title string
   CString mLogBook;              // Name of file to log tilt series in
   CString mShortTermName;        // Name of file for short term calibrations (dose)
-  CString mPluginPath;           // Path name for plugins
+  CString mPluginPath;           // Path name for plugins; replaces PF/SEM/Plugins
+  CString mPluginPath2;          // Second path name for plugins; additional location
   CString mFlybackName;          // Name of flyback time file
   BOOL mSettingsOpen;            // flag that settings file open
   BOOL mSettingsReadable;        // flag that settings file is readable

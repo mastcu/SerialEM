@@ -2780,6 +2780,10 @@ int CParameterIO::ReadProperties(CString strFileName)
         StripItems(strLine, 1, message);
         mWinApp->mDocWnd->SetPluginPath(message);
 
+      } else if (MatchNoCase("PluginPath2")) {
+        StripItems(strLine, 1, message);
+        mWinApp->mDocWnd->SetPluginPath2(message);
+
       } else if (MatchNoCase("FFTCircleRadii")) {
         for (ind = 1; ind < MAX_FFT_CIRCLES; ind++) {
           if (itemEmpty[ind])

@@ -73,14 +73,17 @@
         <TR VALIGN="top">
           <TD>SerialEMProperties</TD>
           <TD>The file must start with this entry.</TD>
+          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>ScopeIsFEI</TD>
           <TD>This entry no longer has any effect.</TD>
+          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>ScopeIsJEOL</TD>
           <TD>This entry no longer has any effect.</TD>
+          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>UseTEMScripting</TD>
@@ -89,26 +92,31 @@
             default of 0, the program will first try to create a Tecnai object then try to 
             create a TEMScripting object if that fails. The object changed to TEMScripting 
             in Tecnai version 3.1.1.</TD>
+          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>SimulationMode</TD>
           <TD>Set to 1 to indicate a microscope simulator is being used (enables some 
-            actions on JEOL and is needed to use an Eagle camera in simulation mode).</TD>
+            actions on JEOL and is needed to use an Eagle camera in simul;ation mode).</TD>
+          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>NoScope</TD>
           <TD>Set to 1 if there is no microscope, to avoid trying to connect with a scope.&nbsp; 
             If there is an unsupported microscope, this can be set to the KV of the 
             microscope to get rings and a defocus value when clicking on an FFT.</TD>
+          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>GainReferencePath</TD>
           <TD>The path to SerialEM's gain references, if it is not the system path.</TD>
+          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>MRCHeaderTitle</TD>
           <TD>Title to be placed in MRC files; full title is SERIALEM: 'your title' 
             date-time . Your title is limited to 45 characters</TD>
+          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>LogBookPathName</TD>
@@ -120,11 +128,23 @@
             frames for montage or 1x1 for single-frame, camera name, nominal film mag, 
             binning, pixel size in nm, LD for lowdose or ND if not, slit width if filtered 
             or 0 if not, energy loss or 0 if not filtered.</TD>
+          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>PluginPath</TD>
           <TD>Alternative path from which to load plugins; the default path
-            'C:\Program Files\SerialEM\Plugins' is not searched.</TD>
+            'C:\Program Files\SerialEM\Plugins' is not searched.&nbsp; This entry is 
+            overridden by a command-line argument specifying a plugin path.&nbsp; Files 
+            ending in -32.dll or -64.dll are skipped by 64-bit and 32-bit versions, 
+            respectively.</TD>
+          <TD>&nbsp;</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>PluginPath2</TD>
+          <TD>Additional path from which to load plugins.&nbsp; Loading as described in 
+            &#39;PluginPath&#39; is not affected.&nbsp; Files ending in -32.dll or -64.dll are 
+            skipped by 64-bit and 32-bit versions, respectively.</TD>
+          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>StartupMessage</TD>
@@ -132,16 +152,19 @@
             must be all one line but the message can consist of multiple lines, separated by 
             \n. The message is printed to the log window if it is reopened, otherwise to a 
             message box.</TD>
+          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>PrintStartupInfo</TD>
           <TD>Set to 0 to stop program version, build time, and startup time information 
             from being printed in the log window if it is open.</TD>
+          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>WarnIfKVnotAt</TD>
           <TD>Use this entry with a KV value (e.g., 200) to get a warning message box if the 
             program is started with the microscope at a different voltage.</TD>
+          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>ControlSetName # name</TD>
@@ -149,10 +172,12 @@
             (between 0 and 6; 0 to 4 are View to Preview) and the new name. The new name may 
             not be substituted in all dialogs and message boxes and it may not all appear in 
             a dialog if it is much longer than the name that it is replacing.</TD>
+          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>SearchAreaName</TD>
           <TD>Use this entry to rename the Search area in Low Dose mode.</TD>
+          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>DisplayIsNot120DPI</TD>
@@ -162,11 +187,13 @@
             detected DPI is different from 120.&nbsp; Set it to 1 if the detected DPI is 120 
             and you enter a different value in the &#39;AssumeDPI&#39;&nbsp; property, so that both 
             dialog and font scaling will occur.</TD>
+          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>AssumeDPI</TD>
           <TD>Follow with a DPI value to use in font and dialog scaling instead of the 
             detected one, see previous property. </TD>
+          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>PanelConstants</TD>
@@ -175,15 +202,18 @@
             to add to control panels.&nbsp; The defaults are 24, 5, and 8 for DPI &lt; 120, 24, 
             0, and 0 for DPI = 120, and<br />
             40, 6, and 10 for DPI &gt; 120.</TD>
+          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>ExitOnBadScopeStartup</TD>
           <TD>Set this to 1 to have the program exit if errors occur when connecting to the 
             microscope.</TD>
+          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>StartAsAdministrator</TD>
           <TD>Set to 1 to turn on Administrator mode when starting the program.</TD>
+          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>IgnoreShortTermCals</TD>
@@ -192,6 +222,7 @@
             setting up the program if there are troubles with image shift calibrations, 
             but it is better to use the menu entry to remove bad calibrations instead,
             since rotation and pixel size measurements are stored in this file too.</TD>
+          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>MaxStackWindowSizeXY</TD>
@@ -199,6 +230,7 @@
             in a separate window during a tilt series. Enter the maximum size for a square 
             image; rectangular images will be binned to have no more pixels than a square 
             image of this size. The default is 512.</TD>
+          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>TotalMemoryLimitMB</TD>
@@ -213,6 +245,7 @@
             the program from running into the 2 GB memory limit. For a 4 GB system with the 
             /3GB boot option set, this entry may not be needed, but 2700 would probably be a 
             good value.</TD>
+          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>ScopeUpdateInterval</TD>
@@ -220,11 +253,13 @@
             properties and updates the user interface. The default is 150, raised from
             100 on April 10, 2018. For a JEOL, the update function does not normally access
             the microscope so this should be OK.</TD>
+          <TD>&nbsp;</TD>
        </TR>
        <TR VALIGN="top">
           <TD>SkipGainRefWarning</TD>
           <TD>Set to 1 to suppress the warning that the spot was normalized before starting 
             to take a gain reference. This may be appropriate on a Tecnai F30.</TD>
+          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>FFTCircleRadii
@@ -233,6 +268,7 @@
             FFT. The radius is expressed as fraction of the distance from the center to the 
             edge of the FFT (Nyquist frequency). The default is one circle at 0.33.
           </TD>
+          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>FFTZeroParams</TD>
@@ -241,6 +277,7 @@
             <a href="menu_process.htm#hid_process_fft">FFT command help</a> for details.&nbsp; 
             For with 1, 2, or 3 values: the spherical aberration in mm, the number of 
             circles to draw, and the amplitude contrast ratio (defaults 2, 5, and 0.07).</TD>
+          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>DefaultMaxCtfFitRes</TD>
@@ -248,16 +285,19 @@
             applies until the user enters a different value, at which point the resolution 
             becomes a user setting.&nbsp; The default value is 5 if the voltage on program 
             startup is &gt; 125, otherwise 10.</TD>
+          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>GridLinesPerMM</TD>
           <TD>Number of lines per mm in the cross-line replica grating being used to 
             calibrate pixel sizes. The default is 2160.</TD>
+          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>CatalaseAxisLengths</TD>
           <TD>Distances along the short and long axes to assume for catalase crystal when 
             finding pixel size.&nbsp; The defaults are 6.85 and 8.75.</TD>
+          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>SMTPServer</TD>
@@ -266,11 +306,13 @@
             must be defined and an address to send to must be entered with 'Set Email 
             Address' in the Tilt Series menu. There is a script command, 'SendEmail', that 
             can be used to test this capability.</TD>
+          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>SMTPPort</TD>
           <TD>Port to use for sending to the SMTP server; a default port will be used if 
             this is not specified</TD>
+          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>SendMailFrom</TD>
@@ -281,6 +323,7 @@
             will be added to the sending address, so that it will appear to come from you. 
             The address probably needs to look like a valid address but does not need to be 
             valid.</TD>
+          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>SocketServerIP</TD>
@@ -293,34 +336,41 @@
             &#39;SocketServer 1 x.x.x.x&#39; to connect with an FEI scope through that server.&nbsp; 
             ID 4 is assigned to JEOL camera server, 5 is assigned to the Tietz camera remote 
             server, and 6 is assigned to the Hitachi remote shared memory server.</TD>
+          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>SocketServerPort</TD>
           <TD>Socket ID and port number for a server whose address is given in a 
             &#39;SocketServerIP&#39; entry. </TD>
+          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>SocketServerIPif64</TD>
           <TD>Socket ID and IP address of a server to be used only if running a 64-bit 
             version; be sure to enter the port with SocketServerPortIf64 and not with SocketServerPort.</TD>
+          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>SocketServerPortIf64</TD>
           <TD>Socket ID and port number of a server to be used only if running a 64-bit 
             version.</TD>
+          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>BackgroundSocketToFEI </TD>
           <TD>Set to 1 to open a fourth socket connection to an FEI scope for tilting slowly 
             while acquiring data.</TD>
+          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>SmallFontsBad</TD>
           <TD>This entry now has no effect.</TD>
+          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>SingleTecnaiObject</TD>
           <TD>This entry is disabled</TD>
+          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>DebugOutput</TD>
@@ -369,10 +419,13 @@
               y for reports when background saving starts and ends<br />
               % list script commands other than Set that allow arithmetic when program starts</P>
           </TD>
+          <TD>
+            &nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>ExitWithUnsavedLog</TD>
           <TD>Set to 1 to prevent being asked whether to save log before exiting.</TD>
+          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>ContinuousSaveLog</TD>
@@ -380,10 +433,12 @@
             program is crashing on startup and a crash log is not being saved; it will ask 
             for a log filename on the first trace output and all log output will go into the 
             file after that.</TD>
+          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>TestGainFactors</TD>
           <TD>Set to 1 to multiply simulation images by gain factors.</TD>
+          <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
           <TD>NoExceptionHandler</TD>
@@ -393,6 +448,7 @@
             save the log.&nbsp; Set this to 1 to not set up the unhandled exception handler for 
             this; or -1 to skip the Microsoft error&nbsp; report box that comes up after 
             SerialEM's message box.</TD>
+          <TD>&nbsp;</TD>
         </TR>
       </TABLE>
       <BR>

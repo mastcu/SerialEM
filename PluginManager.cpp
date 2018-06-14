@@ -96,8 +96,13 @@ int CPluginManager::LoadPlugins(void)
     plugPath = path;
     dirLoop = 1;
   }
-  for (; dirLoop < 2; dirLoop++) {
-    if (dirLoop) {
+  for (; dirLoop < 3; dirLoop++) {
+    if (dirLoop > 1) {
+      path = mWinApp->mDocWnd->GetPluginPath2();
+      if (path.IsEmpty())
+        continue;
+      mess = path + "\\*.dll";
+    } else if (dirLoop = 1) {
       path = plugPath;
       mess = path + "\\*.dll";
     } else {
@@ -123,7 +128,17 @@ int CPluginManager::LoadPlugins(void)
     if (hFind == INVALID_HANDLE_VALUE)
       continue;
     do {
-      module = AfxLoadLibrary((LPCTSTR)(path + "\\" + CString(FindFileData.cFileName)));
+      mess = FindFileData.cFileName;
+#ifdef _WIN64
+      if (mess.Find("-32.dll") > 0)
+#else
+      if (mess.Find("-64.dll") > 0)
+#endif
+      {
+        mWinApp->AppendToLog("Skipping file " + mess, action);
+        continue;
+      }
+      module = AfxLoadLibrary((LPCTSTR)(path + "\\" + mess));
       if (!module) {
         lastErr = GetLastError();
         mess.Format("An error (%d) occurred loading %s as a plugin library", lastErr,
