@@ -3448,6 +3448,7 @@ void CNavigatorDlg::SetupSkipList(MontParam * montParam)
           montParam->skipPieceX.resize(size);
           montParam->skipPieceY.resize(size);
         }
+        SEMTrace('n', "SetupSkipList adding piece %d  %d to list", ix, iy);
         montParam->skipPieceX[montParam->numToSkip] = ix;
         montParam->skipPieceY[montParam->numToSkip++] = iy;
       }
