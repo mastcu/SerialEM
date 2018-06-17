@@ -5498,8 +5498,8 @@ bool CMacroProcessor::SetVariable(CString name, CString value, int type,
       (LPCTSTR)name);
     return true;
   }
-  if (type == VARTYPE_PERSIST && var->type != VARTYPE_PERSIST ||
-    type == VARTYPE_PERSIST && var->type != VARTYPE_PERSIST) {
+  if ((type == VARTYPE_PERSIST && var->type != VARTYPE_PERSIST) ||
+    (type != VARTYPE_PERSIST && var->type == VARTYPE_PERSIST)) {
       if (errStr)
         errStr->Format("Variable %s is already defined as %spersistent and cannot"
           " be reassigned as %spersistent", (LPCTSTR)name, 
