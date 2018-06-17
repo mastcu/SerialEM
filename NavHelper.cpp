@@ -3261,7 +3261,8 @@ void CNavHelper::MakeDualMap(CMapDrawItem *item)
     RestoreFromMapState();
     return;
   }
-  SetMapOffsetsIfAny(item);
+  if (!mRIstayingInLD)
+    SetMapOffsetsIfAny(item);
 
   if (item->mMapMontage) {
     mWinApp->StartMontageOrTrial(false);
