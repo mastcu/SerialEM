@@ -171,6 +171,7 @@ BOOL_PROP_TEST("ShootFilmIfMontageDark", mWinApp->mMontageController->, ShootFil
 INT_PROP_TEST("MontageDuplicateRetries", mWinApp->mMontageController->, DuplicateRetryLimit)
 INT_PROP_TEST("MontageDriftRepeatLimit", mWinApp->mMontageController->, DriftRepeatLimit)
 FLOAT_PROP_TEST("MontageDriftRepeatDelay", mWinApp->mMontageController->, DriftRepeatDelay)
+FLOAT_PROP_TEST("MontageMinZigzagOverlap", mWinApp->mMontageController->, MinOverlapForZigzag)
 BOOL_PROP_TEST("MontageAutosaveLog", mWinApp->mMontageController->, AutosaveLog)
 #endif
 #ifdef PROP_TEST_SECT3

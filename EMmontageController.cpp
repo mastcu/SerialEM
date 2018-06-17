@@ -98,7 +98,7 @@ EMmontageController::EMmontageController()
   mNumActions = SAVE_PIECE + 1;
   mAutosaveLog = false;
   mDefinedCenterFrames = false;
-  mMinOverlapForZigzag = 20.;
+  mMinOverlapForZigzag = 15.;
   mSloppyRadius1[0] = -0.01f;
   mSloppyRadius1[1] = 0.f;
   mRadius2[0] = mRadius2[1] = 0.35f;

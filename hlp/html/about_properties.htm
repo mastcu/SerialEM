@@ -2504,7 +2504,7 @@
             is 3.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD>MontageaAutosaveLog</TD>
+          <TD>MontageAutosaveLog</TD>
           <TD>Set to 1 to save the log window after every piece is saved.&nbsp; A new file will 
             be created with a name based on the name of the montage image file, unless there 
             is already a file open with such a name.</TD>
@@ -2518,9 +2518,16 @@
             default.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD>StageRelatxation</TD>
+          <TD>StageRelaxation</TD>
           <TD>Microns of movement to apply opposite to the last stage movement, available in 
             specific situations to reduce drift.&nbsp; Default is 0.025.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>MontageMinZigzagOverlap</TD>
+          <TD>Minimum number of microns of overlap between pieces for doing a montage in a 
+            zig-zag pattern, in which it goes up a column, down the next column, up the next 
+            column, etc.&nbsp; The default is 15.&nbsp; This should be at least 10% of the 
+            observed backlash when reversing directions.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>StageMontageMaxError
