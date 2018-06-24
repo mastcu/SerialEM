@@ -247,14 +247,17 @@
       to SerialEM; namely in counting and linear modes as well as in super-resolution 
       mode for K2, and in linear mode for K3.</P>
     <P><b>Bin normalized counting frames by 2 (K3 only)</b></P>
-    <P>With a K3 camera, use this checkbox to acquire frames for saving or aligning 
-      with fast hardware binning by 2 into a size that corresponds to the physical 
-      pixels of the chip (referred to elsewhere as &quot;unbinned&quot; pixels).&nbsp; This mode 
-      of operation is equivalent to counting mode on the K2 and will introduce some 
-      aliasing of high frequency information, but it saves both time processing the 
-      frames and space occupied by saved frames.&nbsp; However, the binning is done 
-      into bytes which can saturate if there are more than 7 electrons in a physical 
-      pixel. </P>
+    <P>With a K3 camera, use this checkbox to acquire normalized frames for saving or 
+      aligning with fast hardware binning by 2 into a size that corresponds to the 
+      physical pixels of the chip (referred to elsewhere as &quot;unbinned&quot; pixels).&nbsp; 
+      This mode of operation is equivalent to counting mode on the K2 and will 
+      introduce some aliasing of high frequency information, but it saves both time 
+      processing the frames and space occupied by saved frames.&nbsp; However, the 
+      binning is done into bytes which can saturate if there are more than 7 electrons 
+      in a physical pixel. </P>
+    <P>If acquired frames are being saved, they will still be saved as bytes.&nbsp; 
+      However, if you sum frames for saving with the option &#39;Save variable frame 
+      sums&#39;, they will be saved as integers, like K2 normalized counting mode frames.</P>
     <P><b>Dose Fractionation Mode</b></P>
     <P>Use this checkbox to select Dose Fractionation mode, which enables a number of 
       other options.</P>

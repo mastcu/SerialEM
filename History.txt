@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+6/24/18: Additional K3 developments for using hardware binning in continuous
+mode and for saving frames; properties, dialogs, and setup documented.
+
 6/24/18: SEM-3-6-21
 6/24/18: Fixed wrong defocus offset being saved for View anchor map (In 3.6).
 
