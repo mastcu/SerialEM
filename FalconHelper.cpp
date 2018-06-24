@@ -926,7 +926,7 @@ int CFalconHelper::AlignFramesFromFile(CString filename, ControlSet &conSet,
   // inverted images in here anyway, in case it is eventually recognized as inverted
   mMrcHeader.yInverted = 0;
 
-  GetSavedFrameSizes(camParam, &conSet, frameX, frameY);
+  GetSavedFrameSizes(camParam, &conSet, frameX, frameY, false);
   fullFileX = (camParam->sizeX * 2) / hwSuperDiv;
   if (frameY != mNy || (!hardwareROI && frameX != mNx) || 
     (hardwareROI && frameX != mNx && fullFileX != mNx)) {
@@ -1369,12 +1369,17 @@ int CFalconHelper::GetFrameAlignBinning(FrameAliParams &param, int frameSizeX,
 }
 
 // Return the size that frames will be saved for the given camera and parameters
+// For K2/K3, acquiredSize should be true to get the size in the plugin instead of the
+// one actually saved, if they differ
 void CFalconHelper::GetSavedFrameSizes(CameraParameters *camParams, 
-  const ControlSet *conSet, int &frameX, int &frameY)
+  const ControlSet *conSet, int &frameX, int &frameY, bool acquiredSize)
 {
-  int superResDiv = (conSet->K2ReadMode == SUPERRES_MODE ? 1 : 2);
+  int superResDiv = IS_SUPERRES(camParams, conSet->K2ReadMode) ? 1 : 2;
   BOOL maybeSwap;
   if (camParams->K2Type) {
+    if (!acquiredSize && conSet->processing == GAIN_NORMALIZED && 
+      !mCamera->GetSaveUnnormalizedFrames() && mCamera->GetSaveSuperResReduced())
+      superResDiv = 2;
     frameX = camParams->sizeX / superResDiv;
     frameY = camParams->sizeY / superResDiv;
     maybeSwap = mCamera->GetSkipK2FrameRotFlip();

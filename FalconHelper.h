@@ -134,7 +134,7 @@ public:
   void AlignNextFrameTask(int param);
   int GetFrameAlignBinning(FrameAliParams & param, int frameSizeX, int frameSizeY);
   void GetSavedFrameSizes(CameraParameters *camParams, const ControlSet *conSet, 
-    int & frameX, int & frameY);
+    int & frameX, int & frameY, bool acquiredSize);
   int SuperResHardwareBinDivisor(CameraParameters *camParams, const ControlSet *conSet);
   void InitializePointers(void);
 };

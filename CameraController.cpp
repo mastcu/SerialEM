@@ -304,7 +304,7 @@ CCameraController::CCameraController()
   mK2ReadoutInterval = -1.;
   mK2BaseModeScaling = -1.;
   mK3ReadoutInterval = .000665779f;
-  mMinK3FrameTime = 0.0106525f;  // For counting...
+  mMinK3FrameTime = 0.01331558f; 
   mBaseK2CountingTime = 0.1f;
   mBaseK2SuperResTime = 0.5f;
   mBaseK3LinearTime = 0.01331558f;
@@ -1807,7 +1807,7 @@ int CCameraController::MakeMdocFrameAlignCom(void)
   if (!mParam->K2Type) {
 
     // For Falcon, just call routine and leave
-    mFalconHelper->GetSavedFrameSizes(mParam, conSet, frameX, frameY);
+    mFalconHelper->GetSavedFrameSizes(mParam, conSet, frameX, frameY, false);
     retVal = mFalconHelper->WriteAlignComFile(mdocPath, mAlignFramesComPath + 
       '\\' + comRoot + ".pcm", conSet->faParamSetInd, 
       mFalconHelper->GetUseGpuForAlign(1), true, frameX, frameY);
@@ -1918,7 +1918,7 @@ void CCameraController::MakeOneFrameAlignCom(CString &localFramePath, ControlSet
     root = dirPath + '\\' + root + ".pcm";
   else
     root = mAlignFramesComPath + '\\' + root + ".pcm";
-  mFalconHelper->GetSavedFrameSizes(mParam, conSet, frameX, frameY);
+  mFalconHelper->GetSavedFrameSizes(mParam, conSet, frameX, frameY, false);
   err = mFalconHelper->WriteAlignComFile(filename, root, 
     paramInd, mFalconHelper->GetUseGpuForAlign(1),
     false, frameX, frameY);
@@ -2152,6 +2152,7 @@ void CCameraController::Capture(int inSet, bool retrying)
   int numActive = mWinApp->GetNumActiveCameras();
   int gainXoffset, gainYoffset, offsetPerMs;
   double exposure, megaVoxel, megaVoxPerSec = 0.15;
+  float scaleFac;
   bool superRes, falconHasFrames, weCanAlignFalcon, aligningOnly;
   BOOL retracting = inSet == RETRACT_BLOCKERS || inSet == RETRACT_ALL;
   mWinApp->CopyOptionalSetIfNeeded(inSet);
@@ -2580,7 +2581,11 @@ void CCameraController::Capture(int inSet, bool retrying)
 
       // Add the offset per 10 ms of exposure to the scaling; compute per ms and multiply
       // by 10 just in case there is a scale between 1 and 10.
-      offsetPerMs = B3DNINT(mParam->linearOffset * 0.001 / mK3ReadoutInterval);
+      // Possibly temporary workaround to extra frame of offset in continuous mode
+      scaleFac = 0.001f;
+      if (conSet.mode == CONTINUOUS)
+        scaleFac *= (float)((mExposure + mK3ReadoutInterval) / mExposure);
+      offsetPerMs = B3DNINT(mParam->linearOffset * scaleFac / mK3ReadoutInterval);
       mTD.CountScaling += 10 * offsetPerMs;
       mTD.GatanReadMode = K3_LINEAR_SET_MODE;
     }
@@ -3543,7 +3548,8 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
     // Set variables for the call
     numAllVsAll = NumAllVsAllFromFAparam(faParam, numAliFrames, groupSize, refineIter, 
       doSpline, numFilt, radius2);
-    mFalconHelper->GetSavedFrameSizes(mParam, &conSet, frameSizeX, frameSizeY);
+    mFalconHelper->GetSavedFrameSizes(mParam, &conSet, frameSizeX, frameSizeY, 
+      trulyAligning);
 
      // Set some align flags
     if (faParam.hybridShifts && numFilt > 1)
