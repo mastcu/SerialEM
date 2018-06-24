@@ -877,6 +877,7 @@ void CCameraSetupDlg::LoadConsetToDialog()
   m_bLineSync = mCurSet->lineSync > 0;
   m_bDynFocus = mCurSet->dynamicFocus > 0;
   m_iIntegration = mCurSet->integration;
+  B3DCLAMP(m_iIntegration, 1, mMaxIntegration);
 
   // Initialize dark ref averaging to defaults if out of range
   if (mCurSet->numAverage < 2)
