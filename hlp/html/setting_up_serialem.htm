@@ -1244,6 +1244,9 @@
         correctly set (presumably to &#39;C:\ProgramData\Gatan\Reference Images&#39;).</li>
       <li>To make frames be saved in packed format by default, add the general property 
         &#39;K2PackRawFramesDefault&nbsp; 1&#39;.&nbsp;&nbsp; Users can have their own settings for this choice.</li>
+      <li>Making counts match between linear and counting mode requires different 
+        procedures for K2 and K3 cameras, described in
+        <a href="#setup_camera_gain">Measuring Camera Gain</a>.</li>
     </ul>
     <p>
       <a name="DEdetails"><i>For a Direct Electron direct detection camera</i></a>, particularly if you are 
@@ -2519,7 +2522,8 @@
       an image that includes the whole beam and relate the counts to the screen 
       current.&nbsp; It is only as accurate as the screen current reading itself, so 
       ideally that should be checked with a Faraday cup.&nbsp; The following procedure applies to cameras generally; see the 
-      section below for the procedure for a K2 Summit.</P>
+      sections below for the procedures for a K2 Summit or K3 camera and for a Falcon 
+      3 camera.</P>
     <ol>
       <li>Turn off &#39;Divide by 2&#39; in the Camera menu before starting this procedure.</li>
       <li>To do this, you need to have a beam that falls entirely in the camera field of 
@@ -2594,6 +2598,24 @@
       values obtained with a previous version and you care to correct them, it is best 
       just to redo the procedure.&nbsp; Again, your dose measurements with counting 
       images will match those in DM even if you leave the values as they are.</p>
+    <p>
+      <i>For a K3 camera</i>: Here the situation for counting mode images is simple.&nbsp; 
+      These yield 32 counts per detected electron by design, and recorded counts are 
+      linearized with a table, so the CountsPerElectron property is 32 by default and 
+      should not need to be changed.&nbsp; However, it is necessary to determine the 
+      scaling factor needed to make linear and counting mode images have the same 
+      counts in SerialEM.&nbsp; The procedure for this is:</p>
+    <ol>
+      <li>Add the property LinearToCountingRatio to the K3 properties section if it is 
+        not already there, and temporarily set it to 300.&nbsp; Restart SerialEM.</li>
+      <li>Select the K3 and set up for a 1 second counting mode exposure.</li>
+      <li>Adjust the beam to get a dose rate readout of about 30 electrons/unbinned pixel/sec. 
+      </li>
+      <li>Take an image and get the statistics and dose rate output with &#39;Crtl-I&#39;.</li>
+      <li>Switch to linear mode, take an image, and get the statistics.</li>
+      <li>Set LinearToCountingRatio to 300 * (linear mode dose rate) / (counting mode 
+        dose rate).</li>
+      </ol>
     <p>
         <i>For a Falcon 3 camera:</i> The procedure for setting CountsPerElectron is, to 
         first order, simple.&nbsp; Take an image in counting mode with frame-saving 

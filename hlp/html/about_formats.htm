@@ -49,8 +49,16 @@
   </HEAD>
   <BODY BGCOLOR="#ffffff" TEXT="#000000">
     <basefont size="2">
-      <P><A NAME="about_formats"></A><span class="style12">File Formats</span></P>
-    <P><b>Image Metadata Files</b></P>
+      <P><A NAME="about_formats"></A><span class="style12">File
+          Formats</span></P>
+      <P>
+        <a href="#metadata">Image Metadata Files</a><br>
+        <a href="#navigator">Navigator Files</a><br>
+        <a href="#importing">Importing Externally Defined Navigator
+          Items</a><br>
+        <a href="#calfile">Calibration File Entries</a><br>
+      </p>
+    <P><a name="metadata"></a><b>Image Metadata Files</b></P>
       <P>SerialEM stores metadata about images in text files in the IMOD &quot;autodoc&quot; format.&nbsp; 
         This format consists of keyword-value pairs organized into blocks called 
         sections.&nbsp; These sections can be of different types with different kinds of 
@@ -340,7 +348,7 @@
       on the nominal number of pieces in X and Y rather than the actual number.
     </p>
     <p>
-      <b>Navigator Files</b></p>
+      <a name="navigator"></a><b>Navigator Files</b></p>
     <p>
       In SerialEM 3.6, the Navigator output was switched from one tab-delimited line 
       per item to an autodoc format, with an option to output as XML instead.&nbsp; 
@@ -780,7 +788,7 @@
     </TR>
 </TBODY></TABLE>
     </P>
-    <P><b>Importing Externally Defined Navigator Items</b></P>
+    <P><a name="importing"></a><b>Importing Externally Defined Navigator Items</b></P>
     <P>It is possible to add items to a Navigator file whose positions are specified 
       by image coordinates in a map and have SerialEM do the conversion to stage 
       coordinates.&nbsp; Instead of the StageXYZ entry, the item can have one of these 
@@ -836,6 +844,34 @@
       label.&nbsp; However, there is no detail when the item is initially rejected 
       either because it lacked a required entry or because there was an error (such as 
       too few values on a line) reading data from the autodoc.</p>
+    <p>
+      <a name="calfile"></a><b>Calibration File Entries</b></p>
+    <p>
+      This section is for lengthy entries to calibration file that sometimes need to 
+      be interpreted.&nbsp; Entries will be added upon need or request.</p>
+    <p>
+      LowDoseParameters: 
+      <br />
+&nbsp;&nbsp; low dose set number 0 to 4 for V F T R S, or negative of state number 
+      (numbered from 1)<br />
+&nbsp;&nbsp; mag index or negative of camera length index<br />
+&nbsp;&nbsp; spot size<br />
+&nbsp;&nbsp; intensity<br />
+&nbsp;&nbsp; axis offset in microns<br />
+&nbsp;&nbsp; 0-2 for regular/GIF/STEM or 0 for state<br />
+&nbsp;&nbsp; filter slit in<br />
+&nbsp;&nbsp; filter slit width<br />
+&nbsp;&nbsp; energy loss<br />
+&nbsp;&nbsp; zero loss flag<br />
+&nbsp;&nbsp; beam X &amp; Y offset<br />
+&nbsp;&nbsp; alpha on JEOL, -99 otherwise<br />
+&nbsp;&nbsp; diffraction focus<br />
+&nbsp;&nbsp; beam tilt X &amp; Y<br />
+&nbsp;&nbsp; probe mode<br />
+&nbsp;&nbsp; dark field mode flag<br />
+&nbsp;&nbsp; dark field tilt X &amp; Y</p>
+    <p>
+      &nbsp;</p>
     
     </basefont>
   </BODY>

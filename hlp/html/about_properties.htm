@@ -341,7 +341,9 @@
         <TR VALIGN="top">
           <TD>SocketServerPort</TD>
           <TD>Socket ID and port number for a server whose address is given in a 
-            &#39;SocketServerIP&#39; entry. </TD>
+            &#39;SocketServerIP&#39; entry.&nbsp; The default ports are 48890 for 
+            SerialEMCCD, 48892-48895 for FEI, 48896 for JEOL camera, 48897 for Tietz, 48898 
+            for Hitachi.</TD>
           <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
@@ -1077,8 +1079,8 @@
         </TR>
         <TR VALIGN="top">
           <TD>K2Type</TD>
-          <TD>Set to 1 for a Gatan K2 Summit camera or 2 for a Base camera or for a Summit 
-            booted into Base mode.</TD>
+          <TD>Set to 1 for a Gatan K2 Summit camera, 2 for a Base camera or for a Summit 
+            booted into Base mode, or 3 for a K3 camera.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>OneViewType</TD>
@@ -1267,7 +1269,9 @@
           <TD>The camera gain, i.e. the number of counts per primary electron. This entry is 
             needed for dose estimates. It should be in counts before dividing by 2 for a 
             16-bit camera.&nbsp; <b>For a K2 camera, set to the number of linear mode counts 
-            per electron, not to a value near 1.</b></TD>
+            per electron, not to a value near 1.&nbsp; For a K3 camera, this is the number 
+            of counts per electron in counting mode, which is 32 by design, so the default 
+            is 32 and the property is not needed.</b></TD>
         </TR>
         <TR VALIGN="top">
           <TD>Binnings</TD>
@@ -1645,10 +1649,13 @@
         </TR>
         <TR VALIGN="top">
           <TD>LinearToCountingRatio</TD>
-          <TD>Ratio of number of counts (in SerialEM) obtained from a Falcon 3 camera in 
+          <TD><i>For Falcon 3:</i> Ratio of number of counts (in SerialEM) obtained from a Falcon 3 camera in 
             linear mode to # of counts for the same exposure in counting mode.&nbsp; The 
             counts for linear mode must be measured in SerialEM because it returns 
-            integrated rather than averaged counts.&nbsp; The default is 8.</TD>
+            integrated rather than averaged counts.&nbsp; The default is 8.<br />
+            <i>For K3:</i> Ratio needed to make linear and counting mode images give the 
+            same dose rate (electrons per unbinned pixel per second) for images at the same 
+            exposure.&nbsp; The default is 350.</TD>
         </TR>
         <TR VALIGN="top">
           <TD><a name="scalepower">Falcon3ScalingPower</a></TD>
@@ -1664,6 +1671,12 @@
             disable the scaling of both kinds of data.&nbsp; The default is 4, which will 
             divide linear mode counts by 16 and scale counting mode by ~0.4 to 0.5, 
             depending on the entry for &#39;LinearToCountingRatio&#39;.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>LinearOffset</TD>
+          <TD>For a K3 camera, the offset that needs to be subtracted from linear mode 
+            images per camera readout.&nbsp; The default is 8192; this number is defined by 
+            the algorithm in the software and should not need adjusting.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>EndCameraProperties</TD>
