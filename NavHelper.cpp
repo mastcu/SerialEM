@@ -3299,7 +3299,9 @@ void CNavHelper::DualMapDone(int param)
       }
       mBufferManager->SaveImageBuffer(mWinApp->mStoreMRC);
     }
-    mNav->SetSkipBacklashType(2);
+
+    if (!mScope->GetSimulationMode())
+      mNav->SetSkipBacklashType(2);
     if (!mNav->NewMap()) {
       item = mNav->GetCurrentItem();
       if (item) {
