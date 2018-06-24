@@ -3309,8 +3309,10 @@ void CNavHelper::DualMapDone(int param)
         mNav->SetCurListSel(mIndexAfterDual);
         item->mNote = "Anchor - " + item->mNote;
         mNav->UpdateListString((int)mItemArray->GetSize() - 1);
-        item->mDefocusOffset = (float)mRIdefocusOffsetSet;
-        item->mMapAlpha = mRIalphaSet;
+        if (!mRIstayingInLD) {
+          item->mDefocusOffset = (float)mRIdefocusOffsetSet;
+          item->mMapAlpha = mRIalphaSet;
+        }
       }
     }
   }

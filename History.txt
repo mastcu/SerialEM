@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+6/24/18: SEM-3-6-21
+6/24/18: Fixed wrong defocus offset being saved for View anchor map (In 3.6).
+
 6/17/18: SEM_3-6-20
 6/15/18: Fixed check for assigning to persistent variable as regular and vice
 versa.
