@@ -1036,6 +1036,8 @@ BEGIN
     CTEXT           "Align in Server",IDC_STAT_DE_WHERE_ALIGN,63,509,123,8
     LTEXT           "sec",IDC_STAT_DE_FRAME_SEC,178,466,12,8
     CONTROL         "Use Hardware ROI",IDC_CHECK_HARDWARE_ROI,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,167,73,10
+    CONTROL         "Bin normalized counting frames by 2",IDC_CHECK_TAKE_K3_BINNED,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,436,136,10
 END
 
 IDD_ALIGNFOCUS DIALOGEX 0, 0, 119, 131
@@ -2548,16 +2550,16 @@ BEGIN
     LTEXT           "Summed frame time",IDC_STATIC,14,68,68,8
 END
 
-IDD_K2_SAVE_OPTIONS DIALOGEX 0, 0, 255, 330
+IDD_K2_SAVE_OPTIONS DIALOGEX 0, 0, 255, 331
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Frame File Options"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    CONTROL         "Use extension .mrcs",IDC_USE_EXTENSION_MRCS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,115,14,82,10
-    CONTROL         "MRC file",IDC_SAVE_MRC,"Button",BS_AUTORADIOBUTTON | WS_GROUP,63,14,43,10
-    CONTROL         "TIFF (LZW compression)",IDC_COMPRESSED_TIFF,"Button",BS_AUTORADIOBUTTON,63,25,97,10
-    CONTROL         "TIFF (ZIP compression)",IDC_TIFF_ZIP_COMPRESS,"Button",BS_AUTORADIOBUTTON,63,36,93,10
-    GROUPBOX        "File type",IDC_STAT_FILETYPE,55,3,146,46,WS_GROUP
+    CONTROL         "Use extension .mrcs",IDC_USE_EXTENSION_MRCS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,67,14,82,10
+    CONTROL         "MRC file",IDC_SAVE_MRC,"Button",BS_AUTORADIOBUTTON | WS_GROUP,15,14,43,10
+    CONTROL         "TIFF (LZW compression)",IDC_COMPRESSED_TIFF,"Button",BS_AUTORADIOBUTTON,15,25,97,10
+    CONTROL         "TIFF (ZIP compression)",IDC_TIFF_ZIP_COMPRESS,"Button",BS_AUTORADIOBUTTON,15,36,93,10
+    GROUPBOX        "File type",IDC_STAT_FILETYPE,7,3,138,46,WS_GROUP
     CONTROL         "Save one frame per file",IDC_ONE_FRAME_PER_FILE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,52,94,10
     CONTROL         "Pack unnormalized data as 4-bit (Super-Res) or 4/8-bit (Counting)",IDC_PACK_RAW_FRAME,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,104,233,10
@@ -2596,12 +2598,14 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,29,117,204,10
     CONTROL         "Use non-standard mode 101 for 4-bit MRC files",IDC_USE_4BIT_MRC_MODE,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,29,130,170,10
-    CONTROL         "Save normalized data as 16-bit with 100 times scaling of sum",IDC_SAVE_TIMES_100,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,91,217,10
     CONTROL         "Save unnormalized frames even if Gain Normalized is selected",IDC_SAVE_UNNORMALIZED,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,65,219,10
     CONTROL         "Reduce normalized super-resolution frames by 2 with antialiasing",IDC_CHECK_REDUCE_SUPERRES,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,78,230,10
+    CONTROL         "Save normalized data as 16-bit with 100 times scaling of sum",IDC_SAVE_TIMES_100,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,91,217,10
+    CTEXT           "Current settings will save",IDC_STAT_CURSET1,156,15,84,9
+    CTEXT           " TIF LZW stack, packed",IDC_STAT_CURSET2,151,25,92,8
 END
 
 IDD_STAGEMOVETOOL DIALOGEX 0, 0, 94, 106
@@ -3223,7 +3227,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 248
         TOPMARGIN, 7
-        BOTTOMMARGIN, 323
+        BOTTOMMARGIN, 324
     END
 
     IDD_STAGEMOVETOOL, DIALOG

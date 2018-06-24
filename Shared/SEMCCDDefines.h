@@ -39,11 +39,12 @@ WRITE_COM_ERROR, OPEN_MDOC_ERROR, WRITE_MDOC_ERROR, COPY_MDOC_ERROR, FRAMEALI_BA
 #define K2_SAVE_SUPER_REDUCED  (1 << 17)
 
 // Flags for SetK2Parameters
-#define K2_ANTIALIAS_MASK    7
-#define K2_OVW_MAKE_SUBAREA  (1 << 3)
-#define K2_USE_FRAMEALIGN    (1 << 4)
-#define K2_MAKE_ALIGN_COM    (1 << 11)
-#define K2_REDUCED_Y_SCALE  100000.
+#define K2_ANTIALIAS_MASK      7
+#define K2_OVW_MAKE_SUBAREA    (1 << 3)
+#define K2_USE_FRAMEALIGN      (1 << 4)
+#define K2_TAKE_BINNED_FRAMES  (1 << 5)
+#define K2_MAKE_ALIGN_COM      (1 << 11)
+#define K2_REDUCED_Y_SCALE     100000.
 
 // Flags for SetupFrameAligning (bit 1 is apply gain ref, bit 7 is for early return)
 // (And bit 5 is for synchronous align/save, and bit 6 for apply defects, 

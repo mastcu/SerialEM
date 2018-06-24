@@ -50,6 +50,7 @@ CK2SaveOptionDlg::CK2SaveOptionDlg(CWnd* pParent /*=NULL*/)
   , m_bUseExtensionMRCS(FALSE)
   , m_bSaveUnnormalized(FALSE)
   , m_bReduceSuperres(FALSE)
+  , m_strCurSetSaves(_T(""))
 {
 
 }
@@ -108,6 +109,7 @@ void CK2SaveOptionDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_SAVE_TIMES_100, m_butSavesTimes100);
   DDX_Control(pDX, IDC_CHECK_REDUCE_SUPERRES, m_butReduceSuperres);
   DDX_Check(pDX, IDC_CHECK_REDUCE_SUPERRES, m_bReduceSuperres);
+  DDX_Text(pDX, IDC_STAT_CURSET2, m_strCurSetSaves);
 }
 
 
@@ -145,6 +147,7 @@ BOOL CK2SaveOptionDlg::OnInitDialog()
   SetupPanelTables(idTable, leftTable, topTable, mNumInPanel, mPanelStart);
   states[0] = !mFalconType && !mDEtype;
   AdjustPanels(states, idTable, leftTable, topTable, mNumInPanel, mPanelStart, 0);
+  m_butSavesTimes100.ShowWindow(mK2Type == K2_SUMMIT);
   m_butPackCounting4Bits.ShowWindow(mK2Type == K2_SUMMIT);
   if (mK2Type == K3_TYPE)
     m_butPackRawFrame.SetWindowText("Pack unnormalized data as 4-bit");
@@ -297,13 +300,24 @@ void CK2SaveOptionDlg::ManagePackOptions(void)
 {
   bool unNormed = !mSetIsGainNormalized || (mCanGainNormSum && m_bSaveUnnormalized);
   m_butPackRawFrame.EnableWindow(unNormed);
+  bool binning = mWinApp->mCamera->IsK3BinningSuperResFrames(mK2Type, 1, mSaveSetting,
+    mAlignSetting, mUseFrameAlign, unNormed ? DARK_SUBTRACTED : GAIN_NORMALIZED, 
+    mK2mode, mTakingK3Binned);
+  bool reducing = !unNormed && (mK2Type == K3_TYPE || mK2mode == K2_SUPERRES_MODE) && 
+    mK2mode > 0 && !binning && mCanReduceSuperres && m_bReduceSuperres;
   m_butPackCounting4Bits.EnableWindow(unNormed && m_bPackRawFrames && 
     mCan4BitModeAndCounting);
   m_butUse4BitMode.EnableWindow(unNormed && m_bPackRawFrames && !m_iFileType &&
     mCan4BitModeAndCounting);
-  m_butReduceSuperres.EnableWindow(!unNormed && mCanReduceSuperres);
+  m_butReduceSuperres.EnableWindow(!unNormed && mCanReduceSuperres && !mTakingK3Binned);
   m_butSavesTimes100.EnableWindow(!unNormed && mCanSaveTimes100 && !m_bReduceSuperres);
   m_butUseExtensionMRCS.EnableWindow(!m_iFileType && mCanUseExtMRCS);
+  m_strCurSetSaves.Format("%s to %s%s%s%s", unNormed ? "raw" : "norm",
+      m_iFileType > 0 ? (m_iFileType > 2 ? "TIF-ZIP" : "TIF-LZW") : "MRC", 
+      (reducing || binning) ? "" : (m_bOneFramePerFile ? " files" : " stack"),
+      (unNormed && mK2mode > 0 && m_bPackRawFrames)? ", packed" : "",
+      reducing ? ", reduced" : (binning ? ", binned" : ""));
+  UpdateData(false);
 }
 
 void CK2SaveOptionDlg::OnPackRawFrame()
@@ -323,7 +337,6 @@ void CK2SaveOptionDlg::OnSaveUnnormalized()
   UpdateData(true);
   ManagePackOptions();
 }
-
 
 void CK2SaveOptionDlg::OnReduceSuperres()
 {

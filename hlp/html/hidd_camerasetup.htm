@@ -210,18 +210,23 @@
       explained in <A href="about_camera.htm#directDetectors">Direct Electron Detectors,
        Especially the Gatan K2</A>.  The most salient points are these:</P>
     <ul>
-      <li>Binning values are relative to the native 3.8K x 3.7K pixels of the camera; a 7.6K x 7.4K image in 
-        super-resolution mode is referred to as having binning 0.5. </li>
+      <li>Binning values are relative to the native pixels of the camera (3838 x 3710 
+        for K2; 5760 x 4092 for K3).&nbsp; An image in 
+        K2 super-resolution mode or in K3 counting mode (which is intrinsically 
+        super-resolution) is referred to as having binning 0.5. </li>
       <li>SerialEM or its plugin to DM can apply anti-aliased image reduction to an unbinned 
         image received from DM to produce an image with the binning that you select.&nbsp; 
         This method is used automatically for binned images in super-resolution or 
         dose-fractionation mode, and there is an option at the bottom of the dialog to 
         apply it for all binned images.&nbsp; To the right of that checkbox is a bold 
         indicator for whether binning or anti-aliasing is being used.</li>
-      <li>The dose rate estimate shown here can be useful for anticipating whether 
-        electron counting can be used effectively, but it is the dose rate incident on 
-        the sample, estimated from the current beam settings.&nbsp; The dose rate at the 
-        camera will be less and is known only after an image is taken.</li>
+      <li>The dose rate estimate shown here is usually the dose rate on the camera,&nbsp; 
+        which is useful for anticipating whether 
+        electron counting can be used effectively.&nbsp; Initially (or at other times 
+        when the label indicates so) it may be the dose rate incident on the specimen, estimated from the current beam settings.&nbsp; 
+        After an image is taken, the program can estimate dose rate at the camera from 
+        the dose rate of an acquired image and any change in beam settings that has 
+        occurred since that image was taken.</li>
       <li>In Dose Fractionation mode, the image is constrained to be full-sized and 
         subarea options are disabled.</li>
       <li>There are several constraints on exposure time, drift settling, or frame time 
@@ -233,17 +238,30 @@
         gain-normalized even though normalization is not selected.</ul>
     <P><b>Linear - Counting - Super-resolution Mode</b></P>
     <P>These radio buttons allow one to select one of the basic camera modes.&nbsp; 
-      The image size and binning selection are preserved when switching into 
-      super-resolution mode, or when switching out of it if the binning is above 0.5.</P>
+      For K2, the image size and binning selection are preserved when switching into 
+      super-resolution mode, or when switching out of it if the binning is above 0.5.&nbsp; 
+      For K3, the same applies when switching in or out of counting mode, or when 
+      turning on &#39;Bin normalized counting frames by 2&#39;.</P>
     <P><b>Always reduce to &quot;Binned size&quot; with anti-aliasing instead of binning</b></P>
-    <P>Select this option to have anti-aliasing applied to binned images in counting 
-      and linear modes as well as in super-resolution mode.</P>
+    <P>Select this option to have anti-aliasing applied to all binned images returned 
+      to SerialEM; namely in counting and linear modes as well as in super-resolution 
+      mode for K2, and in linear mode for K3.</P>
+    <P><b>Bin normalized counting frames by 2 (K3 only)</b></P>
+    <P>With a K3 camera, use this checkbox to acquire frames for saving or aligning 
+      with fast hardware binning by 2 into a size that corresponds to the physical 
+      pixels of the chip (referred to elsewhere as &quot;unbinned&quot; pixels).&nbsp; This mode 
+      of operation is equivalent to counting mode on the K2 and will introduce some 
+      aliasing of high frequency information, but it saves both time processing the 
+      frames and space occupied by saved frames.&nbsp; However, the binning is done 
+      into bytes which can saturate if there are more than 7 electrons in a physical 
+      pixel. </P>
     <P><b>Dose Fractionation Mode</b></P>
     <P>Use this checkbox to select Dose Fractionation mode, which enables a number of 
       other options.</P>
     <P><b>Frame Time</b></P>
     <P>Enter the exposure time of each frame of the exposure in Dose Fractionation 
-      mode.&nbsp; The frame time is constrained to a minimum of 0.025 second.</P>
+      mode.&nbsp; The frame time is constrained to a minimum of 0.025 second for K2 or 
+      0.013 second for K3.</P>
     <P><b>Align Frames</b></P>
     <P>Select this checkbox to have frames aligned in one of two ways (in DM, or by the 
       SerialEM plugin to DM), or to have the plugin write a command file for aligning 

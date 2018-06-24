@@ -349,6 +349,7 @@ CCameraController::CCameraController()
   mSaveRawPacked = -1;
   mSaveTimes100 = 0;
   mSaveSuperResReduced = false;
+  mTakeK3SuperResBinned = false;
   mSaveUnnormalizedFrames = false;
   mK2SaveAsTiff = 0;
   mSkipK2FrameRotFlip = false;
@@ -3303,11 +3304,13 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
   LowDoseParams *ldParam = mWinApp->GetLowDoseParams();
   FrameAliParams faParam;
   bool alignSubset = false;
-  bool isSuperRes = IS_SUPERRES(mParam, conSet.K2ReadMode);
+  bool isSuperRes = IS_SUPERRES(mParam, conSet.K2ReadMode) && 
+    !IsK3BinningSuperResFrames(&conSet, mParam->K2Type);
   bool trulyAligning = aligning && conSet.useFrameAlign == 1;
   bool gainNormed = conSet.processing == GAIN_NORMALIZED;
   bool reducingSuperRes = saving && mSaveSuperResReduced && isSuperRes && gainNormed &&
-     CAN_PLUGIN_DO(CAN_REDUCE_SUPER, mParam);
+     CAN_PLUGIN_DO(CAN_REDUCE_SUPER, mParam) && 
+     !(mTakeK3SuperResBinned && mParam->K2Type == K3_TYPE);
   bool savingTimes100 = saving && mSaveTimes100 && mParam->K2Type != K3_TYPE &&
     gainNormed && CAN_PLUGIN_DO(SAVES_TIMES_100, mParam) && !reducingSuperRes;
   CString mess;
@@ -3837,7 +3840,8 @@ void CCameraController::CapManageCoordinates(ControlSet & conSet, int &gainXoffs
 
   // Get the CCD coordinates after binning. First make sure binning is right for K2
   // and set various flags about taking images unbinned and antialiasing in plugin
-  superRes = IS_SUPERRES(mParam, conSet.K2ReadMode);
+  superRes = IS_SUPERRES(mParam, conSet.K2ReadMode) && 
+    !IsK3BinningSuperResFrames(&conSet, mParam->K2Type);
   doseFrac = mParam->K2Type && conSet.doseFrac;
   if (mParam->K2Type && !superRes && conSet.binning < 2)
     conSet.binning = 2;
@@ -3974,6 +3978,8 @@ void CCameraController::CapManageCoordinates(ControlSet & conSet, int &gainXoffs
       mTD.Binning = 1;
     else if (!superRes)
       mTD.Binning /= 2;
+    if (IsK3BinningSuperResFrames(&conSet, mParam->K2Type))
+      mTD.K2ParamFlags |= K2_TAKE_BINNED_FRAMES;
   }
 
   mTD.Left = tLeft;
@@ -7473,8 +7479,8 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       } else if (mParam->K2Type) {
 
         // Get the adjusted binning of the data
-        if (mTD.GatanReadMode != SUPERRES_MODE && mTD.GatanReadMode != 
-          K3_COUNTING_SET_MODE)
+        if ((mTD.GatanReadMode != SUPERRES_MODE && mTD.GatanReadMode != 
+          K3_COUNTING_SET_MODE) || IsK3BinningSuperResFrames(lastConSetp, mParam->K2Type))
             mTD.Binning *= 2;
         if (mTD.DoseFrac) {
           
@@ -9872,6 +9878,24 @@ bool CCameraController::IsConSetSaving(ControlSet *conSet, int setNum,
             ((param->K2Type && CAN_PLUGIN_DO(CAN_ALIGN_FRAMES, param)) || 
              (!K2only && (weCanAlignFalcon || weCanAlignDE))) &&
             (conSet->alignFrames || alignAnyway)))); // and align should be done
+}
+
+// Returns true if all conditions are satisfied for saving binned frames from K3 camera
+bool CCameraController::IsK3BinningSuperResFrames(int K2Type, int doseFrac, 
+  int saveFrames, int alignFrames, int useFrameAlign, int processing, int readMode,
+  BOOL takeBinnedFlag)
+{
+ return doseFrac && readMode != K2_LINEAR_MODE && (saveFrames ||
+    (alignFrames && useFrameAlign > 0)) && processing == GAIN_NORMALIZED &&
+    !mSaveUnnormalizedFrames && K2Type == K3_TYPE &&
+    takeBinnedFlag;
+}
+
+bool CCameraController::IsK3BinningSuperResFrames(const ControlSet *conSet, int K2Type)
+{
+  return IsK3BinningSuperResFrames(K2Type, conSet->doseFrac, conSet->saveFrames,
+    conSet->alignFrames, conSet->useFrameAlign, conSet->processing, conSet->K2ReadMode,
+    mTakeK3SuperResBinned);
 }
 
 // One-time management of directory for Falcon frames

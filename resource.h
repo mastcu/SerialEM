@@ -1409,6 +1409,9 @@
 #define IDC_STAT_SAVE_INSTRUCTIONS      2433
 #define IDC_BUT_IS_TO_PT                2434
 #define IDC_CHECK_REDUCE_SUPERRES       2435
+#define IDC_CHECK_TAKE_K3_BINNED        2437
+#define IDC_STAT_CURSET1                2438
+#define IDC_STAT_CURSET2                2439
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -1838,7 +1841,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        228
 #define _APS_NEXT_COMMAND_VALUE         33305
-#define _APS_NEXT_CONTROL_VALUE         2436
+#define _APS_NEXT_CONTROL_VALUE         2440
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

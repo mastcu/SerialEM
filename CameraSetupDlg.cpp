@@ -66,7 +66,7 @@ IDC_STAT_FRAME_TIME, IDC_EDIT_FRAME_TIME, IDC_STAT_FRAME_SEC, IDC_ALIGN_DOSE_FRA
 IDC_BUT_SETUP_ALIGN, IDC_SAVE_FRAMES, IDC_SET_SAVE_FOLDER, IDC_BUT_FILE_OPTIONS,
 IDC_STAT_SAVE_SUMMARY, IDC_STAT_ANTIALIAS, IDC_SETUP_FALCON_FRAMES,
 IDC_SETUP_K2_FRAME_SUMS, IDC_SAVE_FRAME_SUMS, IDC_ALWAYS_ANTIALIAS, IDC_STAT_WHERE_ALIGN,
-IDC_STAT_INTERMEDIATE_ONOFF, IDC_STAT_ALIGN_SUMMARY, PANEL_END,
+IDC_STAT_INTERMEDIATE_ONOFF, IDC_STAT_ALIGN_SUMMARY, IDC_CHECK_TAKE_K3_BINNED, PANEL_END,
 IDC_STAT_DEMODE, IDC_RDE_LINEAR, IDC_RDE_COUNTING, IDC_RDE_SUPERRES, IDC_EDIT_DE_FPS,
 IDC_DE_SAVE_FRAMES, IDC_EDIT_DE_SUM_COUNT, IDC_DE_SAVE_MASTER,
 IDC_DE_SAVE_FINAL, IDC_STAT_NUM_DE_RAW, IDC_BUT_NAME_SUFFIX, IDC_STAT_DE_FRAME_TIME,
@@ -110,6 +110,7 @@ CCameraSetupDlg::CCameraSetupDlg(CWnd* pParent /*=NULL*/)
   , m_bUseHardwareROI(FALSE)
   , m_bSaveK2Sums(FALSE)
   , m_bAlwaysAntialias(FALSE)
+  , m_bTakeK3Binned(FALSE)
 {
   //{{AFX_DATA_INIT(CCameraSetupDlg)
   m_iBinning = -1;
@@ -292,6 +293,8 @@ void CCameraSetupDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_BUT_SETUP_ALIGN, m_butSetupAlign);
   DDX_Control(pDX, IDC_STAT_WHERE_ALIGN, m_statWhereAlign);
   DDX_Control(pDX, IDC_STAT_INTERMEDIATE_ONOFF, m_statIntermediateOnOff);
+  DDX_Control(pDX, IDC_CHECK_TAKE_K3_BINNED, m_butTakeK3Binned);
+  DDX_Check(pDX, IDC_CHECK_TAKE_K3_BINNED, m_bTakeK3Binned);
 }
 
 
@@ -398,6 +401,7 @@ BEGIN_MESSAGE_MAP(CCameraSetupDlg, CBaseDlg)
   ON_EN_KILLFOCUS(IDC_EDIT_DE_FRAME_TIME, OnKillfocusDeFrameTime)
   ON_EN_KILLFOCUS(IDC_EDIT_DE_FPS, OnKillfocusEditDeFPS)
   ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_DE_SUM_NUM, OnDeltaposSpinDeSumNum)
+  ON_BN_CLICKED(IDC_CHECK_TAKE_K3_BINNED, OnTakeK3Binned)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -602,6 +606,7 @@ void CCameraSetupDlg::OnProcessing()
     || mParam->STEMcamera && m_iProcessing > 0);
   if (mParam->K2Type) {
     ManageExposure();
+    ManageK2Binning();
     ManageK2SaveSummary();
     ManageDoseFrac();
   }
@@ -750,6 +755,7 @@ void CCameraSetupDlg::OnOK()
   SetFocus();
   UnloadDialogToConset(); 
   mCamera->SetAntialiasBinning(m_bAlwaysAntialias);
+  mCamera->SetTakeK3SuperResBinned(m_bTakeK3Binned);
   GetWindowPlacement(&mPlacement);
   CBaseDlg::OnOK();
 }
@@ -987,6 +993,7 @@ void CCameraSetupDlg::LoadConsetToDialog()
   ManageDrift();
   ManageTimingAvailable();
   ManageDose();
+  ManageK2Binning();
   ManageAntialias();
   ManageK2SaveSummary();
   ManageIntegration();
@@ -1446,6 +1453,7 @@ void CCameraSetupDlg::ManageCamera()
     SetDlgItemText(IDC_DOSE_FRAC_MODE, "Dose Fractionation mode");
     m_butAlwaysAntialias.EnableWindow(mCamera->GetPluginVersion(mParam) >= 
       PLUGIN_CAN_ANTIALIAS);
+    m_butTakeK3Binned.ShowWindow(mParam->K2Type == K3_TYPE ? SW_SHOW : SW_HIDE);
   } else {
     SetDlgItemText(IDC_DOSE_FRAC_MODE, "Intermediate frame saving is ON in FEI dialog");
   }
@@ -1832,6 +1840,7 @@ BOOL CCameraSetupDlg::OnInitDialog()
   mProcSTEMHeight = mProcBaseHeight + (butrect.top - boxrect.top);
 
   m_bAlwaysAntialias = mCamera->GetAntialiasBinning();
+  m_bTakeK3Binned = mCamera->GetTakeK3SuperResBinned();
 
   mParam = &mCamParam[mActiveCameraList[mCurrentCamera]];
   ManageCamera();
@@ -2274,7 +2283,6 @@ void CCameraSetupDlg::OnK2Mode()
   int newIndex, notOK, answ, oldMode = *modeP;
   CString message, str;
   UpdateData(true);
-  CButton *radio = (CButton *)GetDlgItem(IDC_RBIN1);
 
   // Check the frame align parameters
   if (mCurSet->useFrameAlign) {
@@ -2337,17 +2345,30 @@ void CCameraSetupDlg::OnK2Mode()
 
   // Handle K2, do general updates for Falcon too
   if (mParam->K2Type) {
-    radio->EnableWindow(mBinningEnabled && IS_SUPERRES(mParam, *modeP));
-    if (!IS_SUPERRES(mParam, *modeP) && !m_iBinning) {
-      m_iBinning = 1;
-      ManageBinnedSize();
-      UpdateData(FALSE);
-    }
+    ManageK2Binning();
   }
   ManageDoseFrac();
   ManageAntialias();
   ManageExposure();
   ManageK2SaveSummary();
+}
+
+// Checks whether binning 0.5 is allowed in current conditions, enables radio button, and
+// adjusts binning to 1 if not
+void CCameraSetupDlg::ManageK2Binning(void)
+{
+  if (!mParam->K2Type)
+    return;
+  CButton *radio = (CButton *)GetDlgItem(IDC_RBIN1);
+  bool superResOK = IS_SUPERRES(mParam, m_iK2Mode) && !mCamera->IsK3BinningSuperResFrames(
+    mParam->K2Type, m_bDoseFracMode ? 1 : 0, m_bSaveFrames ? 1 : 0, m_bAlignDoseFrac ? 1 : 0,
+    mCurSet->useFrameAlign,  m_iProcessing, m_iK2Mode, m_bTakeK3Binned);
+  radio->EnableWindow(mBinningEnabled && superResOK);
+  if (!superResOK && !m_iBinning) {
+    m_iBinning = 1;
+    ManageBinnedSize();
+    UpdateData(FALSE);
+  }
 }
 
 // Dose fractionation mode change
@@ -2360,6 +2381,7 @@ void CCameraSetupDlg::OnDoseFracMode()
     OnSaveK2FrameSums();
   if (mFalconCanSave && m_bDoseFracMode && m_bSaveFrames)
     OnSaveFrames();
+  ManageK2Binning();
   ManageDoseFrac();
   // TODO: is this the case for Falcon too?
   if (m_bDoseFracMode) {
@@ -2377,6 +2399,7 @@ void CCameraSetupDlg::OnAlignDoseFrac()
 {
   UpdateData(true);
   CheckFalconFrameSumList();
+  ManageK2Binning();
   ManageDoseFrac();
 }
 
@@ -2480,6 +2503,7 @@ void CCameraSetupDlg::OnSaveFrames()
   CheckFalconFrameSumList();
   if (mParam->K2Type && m_bSaveFrames && m_bSaveK2Sums)
     OnSaveK2FrameSums();
+  ManageK2Binning();
   ManageDoseFrac();
   ManageAntialias();
   ManageK2SaveSummary();
@@ -2515,6 +2539,7 @@ void CCameraSetupDlg::OnButFileOptions()
   optDlg.m_bPackCounting4Bit = (mCamera->GetSaveRawPacked() & 2) > 0;
   optDlg.m_bSaveTimes100 = mCamera->GetSaveTimes100() != 0 && mParam->K2Type == K2_SUMMIT;
   optDlg.m_bReduceSuperres = mCamera->GetSaveSuperResReduced();
+  optDlg.mTakingK3Binned = m_bTakeK3Binned && mParam->K2Type == K3_TYPE;
   optDlg.m_bUse4BitMode = mCamera->GetUse4BitMrcMode();
   optDlg.m_bSaveUnnormalized = mCamera->GetSaveUnnormalizedFrames();
   optDlg.m_bUseExtensionMRCS = mCamera->GetNameFramesAsMRCS();
@@ -2523,6 +2548,10 @@ void CCameraSetupDlg::OnButFileOptions()
   optDlg.mFalconType = mParam->FEItype;
   optDlg.mCamFlags = mParam->CamFlags;
   optDlg.mK2Type = mParam->K2Type;
+  optDlg.mSaveSetting = m_bSaveFrames ? 1 : 0;
+  optDlg.mAlignSetting = m_bAlignDoseFrac ? 1 : 0;
+  optDlg.mUseFrameAlign = mCurSet->useFrameAlign;
+  optDlg.mK2mode = m_iK2Mode;
   mCamera->FixDirForFalconFrames(mParam);
   optDlg.mDEtype = mWinApp->mDEToolDlg.CanSaveFrames(mParam);
   optDlg.m_strBasename = mCamera->GetFrameBaseName();
@@ -2557,6 +2586,7 @@ void CCameraSetupDlg::OnButFileOptions()
     mCamera->SetFrameNameFormat(optDlg.mNameFormat);
     mCamera->SetFrameNumberStart(optDlg.m_iStartNumber);
     mCamera->SetDigitsForNumberedFrame(optDlg.mNumberDigits);
+    ManageK2Binning();
     ManageK2SaveSummary();
   }
   m_butFileOptions.SetButtonStyle(BS_PUSHBUTTON);
@@ -2670,6 +2700,7 @@ void CCameraSetupDlg::OnButSetupAlign()
   mWinApp->SetFrameAlignMoreOpen(dlg.mMoreParamsOpen);
   m_butSetupAlign.SetButtonStyle(BS_PUSHBUTTON);
   m_butDEsetupAlign.SetButtonStyle(BS_PUSHBUTTON);
+  ManageK2Binning();
   if (mDE_Type)
     ManageDEpanel();
   else
@@ -2702,7 +2733,10 @@ void CCameraSetupDlg::ManageK2SaveSummary(void)
   bool unNormed = m_iProcessing != GAIN_NORMALIZED || 
     (mCamera->GetSaveUnnormalizedFrames() && mCamera->GetPluginVersion(mParam) > 
     PLUGIN_CAN_GAIN_NORM);
-  bool reducing = !unNormed && IS_SUPERRES(mParam, m_iK2Mode) && 
+  bool binning = mCamera->IsK3BinningSuperResFrames(mParam->K2Type, 
+    m_bDoseFracMode ? 1 : 0, m_bSaveFrames ? 1 : 0, m_bAlignDoseFrac ? 1 : 0,
+    mCurSet->useFrameAlign,  m_iProcessing, m_iK2Mode, m_bTakeK3Binned);
+  bool reducing = !unNormed && IS_SUPERRES(mParam, m_iK2Mode) && !binning &&
     mCamera->GetSaveSuperResReduced() && mCamera->CAN_PLUGIN_DO(CAN_REDUCE_SUPER, mParam);
   if (mParam->K2Type && m_bDoseFracMode) {
     frames = B3DNINT(m_eExposure / B3DMAX(mCamera->GetMinK2FrameTime(mParam->K2Type),
@@ -2712,11 +2746,11 @@ void CCameraSetupDlg::ManageK2SaveSummary(void)
     SetDlgItemText(IDC_STAT_ALIGN_SUMMARY, str);
     if (m_bSaveK2Sums && mSummedFrameList.size() > 0)
       frames = mWinApp->mFalconHelper->GetFrameTotals(mSummedFrameList, dummy);
-    str.Format("%d %s to %s %s%s%s", frames, unNormed ? "raw" : "norm",
+    str.Format("%d %s to %s%s%s%s", frames, unNormed ? "raw" : "norm",
       tiff > 0 ? (tiff > 1 ? "TIF-ZIP" : "TIF-LZW") : "MRC", 
-      reducing ? "" : (mCamera->GetOneK2FramePerFile() ? "files" : "stack"),
+      (reducing || binning) ? "" : (mCamera->GetOneK2FramePerFile() ?" files" : " stack"),
       (unNormed && m_iK2Mode > 0 && (mCamera->GetSaveRawPacked() & 1))? ", packed" : "",
-      reducing ? ", reduced" : "");
+      reducing ? ", reduced" : (binning ? ", binned" : ""));
     SetDlgItemText(IDC_STAT_SAVE_SUMMARY, str);
   } else if (mFalconCanSave) {
     frames = mWinApp->mFalconHelper->GetFrameTotals(mSummedFrameList, dummy);
@@ -2799,6 +2833,13 @@ void CCameraSetupDlg::OnAlwaysAntialias()
 {
   UpdateData(true);
   ManageAntialias();
+}
+
+void CCameraSetupDlg::OnTakeK3Binned()
+{
+  UpdateData(true);
+  ManageK2Binning();
+  ManageK2SaveSummary();
 }
 
 // DE CAMERA:

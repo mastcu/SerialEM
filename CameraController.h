@@ -408,6 +408,7 @@ class DLL_IM_EX CCameraController
   GetSetMember(int, SaveTimes100);
   GetSetMember(int, K2SaveAsTiff);
   GetSetMember(BOOL, SaveSuperResReduced);
+  GetSetMember(BOOL, TakeK3SuperResBinned);
   GetSetMember(BOOL, NameFramesAsMRCS);
   GetSetMember(BOOL, Use4BitMrcMode);
   GetSetMember(BOOL, SaveUnnormalizedFrames);
@@ -734,6 +735,7 @@ class DLL_IM_EX CCameraController
   int mSaveTimes100;            // Flag to save times 100 in 16 bits
   int mK2SaveAsTiff;            // 1 for lzw compression, 2 for zip compression
   BOOL mSaveSuperResReduced;    // Flag to save super-res frames reduced by 2
+  BOOL mTakeK3SuperResBinned;   // Flag to take and save K3 super-res frames binned
   BOOL mUse4BitMrcMode;         // Flag to use 4-bit mode 101
   BOOL mSaveUnnormalizedFrames; // Flag to save frames as unnormalized
   BOOL mSkipK2FrameRotFlip;     // Flag to have plugin skip reorienting frames
@@ -944,6 +946,10 @@ void AdjustCountsPerElecForScale(CameraParameters * param);
 int DESumCountForConstraints(CameraParameters *camP, ControlSet *consP);
 void MakeOneFrameAlignCom(CString & localFramePath, ControlSet *conSet);
 void QueueBeamTilt(double inBTX, double inBTY);
+bool IsK3BinningSuperResFrames(int K2Type, int doseFrac, int saveFrames, 
+  int alignFrames, int useFrameAlign, int processing, int readMode, 
+  BOOL takeBinnedFlag);
+bool IsK3BinningSuperResFrames(const ControlSet *conSet, int K2Type);
 };
 
 

@@ -44,6 +44,11 @@ public:
   BOOL mCanUseExtMRCS;
   BOOL mCanGainNormSum;
   BOOL mSetIsGainNormalized;
+  BOOL mTakingK3Binned;
+  int mSaveSetting;
+  int mAlignSetting;
+  int mUseFrameAlign;
+  int mK2mode;
 
 private:
   int mPanelStart[3];
@@ -99,4 +104,5 @@ public:
   CButton m_butReduceSuperres;
   BOOL m_bReduceSuperres;
   afx_msg void OnReduceSuperres();
+  CString m_strCurSetSaves;
 };

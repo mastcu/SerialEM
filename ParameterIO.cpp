@@ -1459,10 +1459,10 @@ void CParameterIO::WriteSettings(CString strFileName)
           ldj = 0;
         }
 
-        // Set number, mag or -cam length, spot, intensity, axis offset, 
-        // 0-2 for regular/GIF/STEM or 3 for state, slit in, slit width, energy loss,
+        // Set number or - state # + 1, mag or -cam length, spot, intensity, axis offset, 
+        // 0-2 for regular/GIF/STEM or 0 for state, slit in, slit width, energy loss,
         // zero loss, beam X offset, beam Y offset, alpha, diffraction focus, beam tilt X,
-        // beam tilt Y
+        // beam tilt Y, probe mode, dark field, dark field tilt X and Y
         oneState.Format("LowDoseParameters %d %d %d %f %f %d %d %f %f %d %f %f %f %f %f"
           " %f %d %d %f %f\n",
           ldi, (ldp->magIndex ? ldp->magIndex : -ldp->camLenIndex), ldp->spotSize, 

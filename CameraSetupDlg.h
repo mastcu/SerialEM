@@ -358,6 +358,10 @@ afx_msg void OnDeSaveMaster();
 float RoundedDEframeTime(float frameTime);
 int GetMagIndexForCamAndSet(void);
 float ActualFrameTime(float roundedTime);
+void ManageK2Binning(void);
+  BOOL m_bTakeK3Binned;
+  afx_msg void OnTakeK3Binned();
+  CButton m_butTakeK3Binned;
 };
 
 //{{AFX_INSERT_LOCATION}}

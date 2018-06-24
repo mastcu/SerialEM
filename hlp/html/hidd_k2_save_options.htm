@@ -65,7 +65,8 @@
     <p>
       <b>Reduce normalized super-resolution frames by 2 with antialiasing</b></p>
     <p>
-      Select this option to save super-resolution frames with the same number of 
+      Select this option to save super-resolution frames on K2, or counting 
+      frames on K3, with the same number of 
       pixels as the camera chip has, after reducing by 2 with antialiasing.&nbsp; This 
       is the same antialias filtering that is used to reduce the summed 
       super-resolution image to binning 1 or higher for return to SerialEM.&nbsp; Such 
@@ -78,7 +79,10 @@
       super-resolution instead of counting images, plus ~0.1 second/frame to reduce 
       the frames.&nbsp; For the K3 camera, only the time per frame applies.</p>
     <p>
-      <b>Save normalized data as 16-bit with 100 times scaling of sum</b></p>
+      For a K3 camera, this option is disabled if the option to take frames binned by 
+      2 is on in the Camera Setup dialog.</p>
+    <p>
+      <b>Save normalized data as 16-bit with 100 times scaling of sum (K2 only)</b></p>
     <p>
       Select this option to have gain-normalized Dose Fractionation frames taken in 
       counting or super-resolution mode saved with 100 times the scaling that is 
@@ -101,25 +105,25 @@
       <b>Pack unnormalized data as 4-bit (Super-Res) or 4/8-bit (Counting)</b></p>
     <p>
       This option determines whether Dose Fractionation frames taken without software 
-      gain normalization on the K2 camera are saved in the form in which they are 
-      received by the plugin to DigitalMicrograph (16-bit integer for counting mode and byte 
-      for super-resolution mode) or in a packed form.&nbsp; When this option is 
-      selected and not the one described next, counting mode images are truncated into bytes 
-      (maximum 255), and super-resolution 
-      mode images are stored with pairs of 4-bit integers (maximum 15) in each byte.&nbsp; (The 
+      gain normalization are saved in the form in which they are 
+      received by the plugin to DigitalMicrograph (for K2, 16-bit integer for counting mode and byte 
+      for super-resolution mode; for K3, bytes) or in a packed form.&nbsp; When this option is 
+      selected and not the one described next, K2 counting mode images are truncated into bytes 
+      (maximum 255), and K2 super-resolution 
+      or K3 counting mode images are stored with pairs of 4-bit integers (maximum 15) in each byte.&nbsp; (The 
       left pixel in a pair is in the low 4 bits and the right pixel is in the high 4 
       bits of a packed byte.) The data will 
       be raw counts, rather than the scaled values that are saved otherwise (see <A href="about_camera.htm#directDetectors">Direct Electron Detectors,
        Especially the Gatan K2</A>.)&nbsp; Raw super-resolution images are 
       intrinsically only 4-bit, so there will be no truncation when saving them as 
       4-bit.&nbsp; Packed 4-bit data can be unpacked with the 
-      &#39;unpack&#39; command to the &#39;clip&#39; program in IMOD (version 4.6.26 or higher); 
-      also, in IMOD 4.8.41 or higher, all programs can read these 4-bit data directly.&nbsp; 
+      &#39;unpack&#39; or &#39;normalize&#39; command to the &#39;clip&#39; program in IMOD 
+      and, in IMOD 4.8.41 or higher, all programs can read these 4-bit data directly.&nbsp; 
       Note that when writing compressed TIFF files, the packing of data is mostly 
       redundant to the compression and may save little additional space, but it should 
       be faster with packed 4-bit data because fewer bytes need to be compressed.</p>
     <p>
-      <b>Pack unnormalized Counting mode data as 4-bit, not 8-bit</b></p>
+      <b>Pack unnormalized Counting mode data as 4-bit, not 8-bit (K2 only)</b></p>
     <p>
       This option allows counting mode data taken without gain normalization to be 
       further truncated at 15 and packed into 4-bit integers, instead of into bytes.&nbsp; 
@@ -143,8 +147,10 @@
       This options controls whether the plugin saves frames in the raw orientation as 
       read from the camera rather than rotating and flipping them, if necessary, into 
       the standard orientation at which images are viewed in SerialEM.&nbsp; Image 
-      flipping alone does not take significant time, but rotation does: 0.05 seconds 
-      for counting mode frames and 0.2 seconds for super-resolution frames.&nbsp; If 
+      flipping alone does not take significant time, but rotation does.&nbsp; 
+      Originally, it took 0.05 seconds 
+      for K2 counting mode frames and 0.25 seconds for super-resolution frames, but 
+      multi-threading in SerialEM 3.7 has reduced the latter to ~0.1 sec.&nbsp; If 
       you do not care about preserving orientation in the saved frames, you can select 
       this option to reduce frame processing time.&nbsp; However, handedness will be 
       changed if a flipping operation is being skipped.&nbsp; This option is enabled 
