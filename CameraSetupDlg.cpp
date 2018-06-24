@@ -2708,6 +2708,8 @@ void CCameraSetupDlg::ManageK2SaveSummary(void)
     frames = B3DNINT(m_eExposure / B3DMAX(mCamera->GetMinK2FrameTime(mParam->K2Type),
       ActualFrameTime(m_fFrameTime)));
     int tiff = mCamera->GetK2SaveAsTiff();
+    str.Format("%d frames", frames);
+    SetDlgItemText(IDC_STAT_ALIGN_SUMMARY, str);
     if (m_bSaveK2Sums && mSummedFrameList.size() > 0)
       frames = mWinApp->mFalconHelper->GetFrameTotals(mSummedFrameList, dummy);
     str.Format("%d %s to %s %s%s%s", frames, unNormed ? "raw" : "norm",
@@ -2716,8 +2718,6 @@ void CCameraSetupDlg::ManageK2SaveSummary(void)
       (unNormed && m_iK2Mode > 0 && (mCamera->GetSaveRawPacked() & 1))? ", packed" : "",
       reducing ? ", reduced" : "");
     SetDlgItemText(IDC_STAT_SAVE_SUMMARY, str);
-    str.Format("%d frames", frames);
-    SetDlgItemText(IDC_STAT_ALIGN_SUMMARY, str);
   } else if (mFalconCanSave) {
     frames = mWinApp->mFalconHelper->GetFrameTotals(mSummedFrameList, dummy);
     if (m_bDoseFracMode && m_bSaveFrames)
