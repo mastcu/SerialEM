@@ -4822,6 +4822,11 @@ void CMacroProcessor::NextCommand()
   } else if (CMD_IS(SETMONTAGEPARAMS)) {                    // SetMontageParams
     if (!mWinApp->Montaging())
       ABORT_LINE("Montaging must be on already to use this command:\n\n");
+    if (mWinApp->mStoreMRC && mWinApp->mStoreMRC->getDepth() > 0 &&
+      ((!itemEmpty[2] && itemInt[2] > 0) || (!itemEmpty[3] && itemInt[3] > 0) ||
+      (!itemEmpty[4] && itemInt[4] > 0) || (!itemEmpty[5] && itemInt[5] > 0)))
+        ABORT_LINE("Atfer writing to the file, you cannot change frame size or overlaps "
+          " in line:\n\n");
     if (itemInt[1] >= 0)
       montP->moveStage = itemInt[1] > 0;
     if (!itemEmpty[2] && itemInt[2] > 0) {
