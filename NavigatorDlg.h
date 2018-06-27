@@ -373,6 +373,8 @@ private:
   int mPostponedSubsetStart; // Subset values when postponed
   int mPostponedSubsetEnd;
   BOOL mPostposedDoSubset;
+  bool mSettingUpFullMont;   // Flag so that fitting can not add extra area if skewed
+  float mMaxAngleExtraFullMont;  // Maximum angle at which extra size will be added 
 
 public:
   BOOL RegistrationChangeOK(void);

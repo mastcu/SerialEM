@@ -241,12 +241,31 @@
       <P><A NAME="hid_load_nav_file"></A><B>Read &amp; Open command (Navigator menu)</B></P>
       <P>Use this command to read in a Navigator file as well as open the window if it is 
         not already open. The file will become the current file for saving into.</P>
+    <P>When a Navigator file is read, each map file will be located if possible.&nbsp; 
+      The program will look first at the path specified in the Navigator file.&nbsp; 
+      If this fails, it will next look in the same directory as the Navigator file.&nbsp; 
+      Next it will test whether the path starts with &#39;./&#39;. &#39;.\&#39;, &#39;../&#39;, or &#39;..\&#39;, and 
+      if so, then the program will look for the map file at this path relative to the 
+      location of the Navigator file. (SerialEM saves an absolute path for the map 
+      file, but other software might use relative paths.)&nbsp; Finally, it will use 
+      the information in the Navigator file about where it was last saved to see if 
+      there was a relative path from the Navigator file to the map file previously, 
+      and if so, it will look at this relative path from the current location of the 
+      file.</P>
+    <P>If any map file cannot be found, the program will issue a message listing such 
+      files.&nbsp;&nbsp; If each such map&nbsp; file is moved into the directory of 
+      the current Navigator file, its maps will be found when needed.</P>
       <P><A NAME="hid_navigator_mergefile"></A><B>Merge File command (Navigator menu)</B></P>
       <P>Use this command to read in the items from another Navigator file and merge 
         them in with the items currently present in the table.&nbsp; Duplicate items 
         will be eliminated.&nbsp; If an item has a label that matches that of an 
         existing item, it will be changed by adding &#39;-1&#39; to it (or &#39;-2&#39; if the label 
         with &#39;-1&#39; on it exists, etc.).</P>
+    <P>The file being merged in need not be in the same directory as the current 
+      Navigator file.&nbsp; Map files in the merged file will be located as described 
+      in the previous command, except that files not at their defined paths will be 
+      sought at locations relative to the file being merged in, not the current 
+      Navigator file.</P>
       <P><A NAME="hid_save_nav_file0"></A><B>Save command (Navigator menu)</B></P>
       <P>Use this command to save Navigator items to a file. The file is a simple 
         tab-delimited text file with the properties of each item. If there is no 

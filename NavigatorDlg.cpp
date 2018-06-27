@@ -11,6 +11,7 @@
 #include "stdafx.h"
 #include "direct.h"
 #include "SerialEM.h"
+#include <map>
 #include "SerialEMDoc.h"
 #include "SerialEMView.h"
 #include "CameraController.h"
@@ -159,6 +160,8 @@ CNavigatorDlg::CNavigatorDlg(CWnd* pParent /*=NULL*/)
   mNumExtraFileSuffixes = 0;
   mNumExtraFilesToClose = 0;
   mAcqDlgPostponed = false;
+  mMaxAngleExtraFullMont = 15.;
+  mSettingUpFullMont = false;
 }
 
 
@@ -3123,7 +3126,9 @@ void CNavigatorDlg::FullMontage()
   itmp->AppendPoint(midX, minY);
   itmp->AppendPoint(minCornerX, minCornerY);
 
+  mSettingUpFullMont = true;
   SetupMontage(itmp, NULL);
+  mSettingUpFullMont = false;
   if (mWinApp->Montaging()) {
     montp->forFullMontage = true;
     montp->fullMontStageX = itmp->mStageX;
@@ -3265,7 +3270,7 @@ int CNavigatorDlg::FitMontageToItem(MontParam *montParam, int binning, int magIn
                                     BOOL forceStage)
 {
   ScaleMat aMat;
-  float xMin, xMax, yMin, yMax, xx, yy, pixel, maxIS, tmpov;
+  float xMin, xMax, yMin, yMax, xx, yy, pixel, maxIS, tmpov, rotation;
   double maxISX, maxISY;
   int i, xNframes, yNframes, overlap, camSize, left, right, which, xFrame, yFrame;
   int top, bot, saveOverlap, set = -1;
@@ -3282,6 +3287,19 @@ int CNavigatorDlg::FitMontageToItem(MontParam *montParam, int binning, int magIn
   aMat = mShiftManager->IStoCamera(magIndex);
   if (!aMat.xpx)
     forceStage = true;
+
+  // When the image is at an oblique angle for a full montage, adding extra area can
+  // lead to corner pieces being lost due to stage coordinates out of range.  Try to
+  // solve that by setting extra factor to 0 above a certain angle
+  if (mSettingUpFullMont) {
+    rotation = (float)mShiftManager->GetImageRotation(iCam, magIndex);
+    while (rotation > 45.)
+      rotation -= 90.;
+    while (rotation < -45.)
+      rotation += 90.;
+    if (fabs(rotation) > mMaxAngleExtraFullMont)
+      extraSizeFactor = 0.;
+  }
 
   // Transform item to camera coordinates and save in second item, get min/max
   if (mWinApp->LowDoseMode() && montParam->useViewInLowDose)
@@ -6381,6 +6399,8 @@ void CNavigatorDlg::OpenAndWriteFile(bool autosave)
       adocErr++;
     if (AdocSetKeyValue(ADOC_GLOBAL_NAME, 0, "AdocVersion", NAV_FILE_VERSION))
       adocErr++;
+    if (AdocSetKeyValue(ADOC_GLOBAL_NAME, 0, "LastSavedAs", (LPCTSTR)filename))
+      adocErr++;
     for (ind = 0; ind < mItemArray.GetSize(); ind++) {
       CMapDrawItem *item = mItemArray[ind];
       sectInd = AdocAddSection("Item", item->mLabel);
@@ -6413,6 +6433,7 @@ void CNavigatorDlg::OpenAndWriteFile(bool autosave)
       return;
     }
     adocErr += AdocWriteKeyValue(fp, "AdocVersion", NAV_FILE_VERSION);
+    adocErr += AdocWriteKeyValue(fp, "LastSavedAs", (LPCTSTR)filename);
     for (ind = 0; ind < mItemArray.GetSize(); ind++) {
       CMapDrawItem *item = mItemArray[ind];
       fprintf(fp, "\n");
@@ -6460,11 +6481,12 @@ void CNavigatorDlg::OpenAndWriteFile(bool autosave)
 // Loading a file
 void CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile) 
 {
-  CString str, str2, name = "";
+  CString str, str2, navRoot, lastSavedRoot, name = "";
   CStdioFile *cFile = NULL;
   CFileStatus status;
   int retval, externalErr;
   bool hasStage;
+  BOOL found;
   int numSect, numAdocErr, numLackRequired, sectInd = 0, adocIndex = -1;
   int numToGet, numItemLack = 0, numItemErr = 0, numExtErr = 0;
   int extErrCounts[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -6481,6 +6503,11 @@ void CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile)
   int index, i, numPoints, trimCount, ind1, ind2, numFuture = 0, addIndex, highestLabel;
   float xx, yy, fvals[4];
   int numExternal, externalType;
+  std::set<std::string> filesNotFound;
+  std::set<std::string>::iterator fileIter;
+  std::map<std::string, std::string> filesFoundMap;
+  std::map<std::string, std::string>::iterator mapIter;
+  std::string stdstr, stdstr2;
   const char *externalKeys[4] = {"CoordsInMap", "CoordsInAliMont", "CoordsInAliMontVS",
     "CoordsInPiece"};
   char *adocStr;
@@ -6510,6 +6537,7 @@ void CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile)
       return;
     name = mMergeName;
   }
+  UtilSplitPath(name, navRoot, str);
 
   try {
     // Open the file for reading and verify first line; get optional version
@@ -6531,6 +6559,11 @@ void CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile)
           MB_EXCLAME);
         AdocReleaseMutex();
         return;
+      }
+      if (!AdocGetString(ADOC_GLOBAL_NAME, 0, "LastSavedAs", &adocStr) && adocStr) {
+        str = adocStr;
+        free(adocStr);
+        UtilSplitPath(str, lastSavedRoot, str2);
       }
       numSect = AdocGetNumberOfSections("Item");
       if (numSect < 0 || AdocGetFloat(ADOC_GLOBAL_NAME, 0, "AdocVersion", &xx)) {
@@ -6663,7 +6696,7 @@ void CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile)
         if (item->mType == ITEM_TYPE_MAP) {
           ADOC_REQUIRED(AdocGetString("Item", sectInd, "MapFile", &adocStr));
           ADOC_STR_ASSIGN(item->mMapFile);
-          if (!retval)
+          if (!retval) 
             UtilSplitPath(item->mMapFile, str, item->mTrimmedName);
 
           ADOC_REQUIRED(AdocGetInteger("Item", sectInd, "MapID", &item->mMapID));
@@ -6948,8 +6981,52 @@ void CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile)
 
       if (numAdocErr + numLackRequired + externalErr == 0) {
 
-        // For merging, check that the map ID is not previously present or that point is not
-        // at the same position
+        // Check that map file is there and corect name
+        if (item->mType == ITEM_TYPE_MAP && !item->mTrimmedName.IsEmpty()) {
+
+          // First see if it is in the map of found files, if so just assign name
+          stdstr = (LPCTSTR)item->mMapFile;
+          if (filesFoundMap.count(stdstr)) {
+            mapIter = filesFoundMap.find(stdstr);
+            item->mMapFile = mapIter->second.c_str();
+          } else {
+
+            // Otherwise look for it where it is supposed to be, then in dir of nav file
+            str = item->mMapFile;
+            found = CFile::GetStatus((LPCTSTR)str, status);
+            if (!found) {
+              str = navRoot + "\\" + item->mTrimmedName;
+              found = CFile::GetStatus((LPCTSTR)str, status);
+            }
+
+            // Then look for it in relative path locations indicated by ./ or ../, and
+            // then go relative to the saved location of the nav file
+            if (!found && item->mMapFile.Find("./") == 0 || item->mMapFile.Find(".\\") == 0
+              || item->mMapFile.Find("../") == 0 || item->mMapFile.Find("..\\") == 0) {
+                str = navRoot + "\\" + item->mMapFile;
+                found = CFile::GetStatus((LPCTSTR)str, status);
+            }
+            if (!found && !lastSavedRoot.IsEmpty()) {
+              UtilSplitPath(item->mMapFile, str2, str);
+              if (!UtilRelativePath(lastSavedRoot, str2, str)) {
+                str = navRoot + "\\" + str + "\\" + item->mTrimmedName;
+                found = CFile::GetStatus((LPCTSTR)str, status);
+              }
+            }
+
+            // If found add to map, if not add to set of not found ones
+            if (found) {
+              stdstr2 = (LPCTSTR)str;
+              filesFoundMap.insert(std::pair<std::string, std::string>(stdstr, stdstr2));
+              item->mMapFile = str;
+            } else if (!found) {
+              filesNotFound.insert(stdstr);
+            }
+          }
+        }
+
+        // For merging, check that the map ID is not previously present or that point is
+        // not at the same position
         index = 1;
         if (mergeFile) {
           highestLabel = -1;
@@ -7033,7 +7110,18 @@ void CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile)
         PrintfToLog("Set Debug Output to \"n\" for details on each item\r\n");
     } 
     AfxMessageBox(str, MB_EXCLAME);
-  } 
+  }
+
+  if (filesNotFound.size()) {
+    str = "The following map file(s) were not found either in \r\n"
+      "their original location or with the Navigator file:\r\n\r\n";
+    for (fileIter = filesNotFound.begin(); fileIter != filesNotFound.end(); fileIter++)
+      str += CString(fileIter->c_str()) + "\r\n";
+    str +=  "\r\nTo access these maps, move them into the directory with the current"
+      " Navigator file";
+    mWinApp->AppendToLog(str);
+    AfxMessageBox(str, MB_EXCLAME);
+  }
 
   // Set up list box and counters
   SetCurrentRegFromMax();

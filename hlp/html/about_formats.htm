@@ -353,9 +353,11 @@
       In SerialEM 3.6, the Navigator output was switched from one tab-delimited line 
       per item to an autodoc format, with an option to output as XML instead.&nbsp; 
       XML or autodoc files can be read back in, as well as the tab-delimited files 
-      from earlier versions.&nbsp; There is one line of global data,<br />
+      from earlier versions.&nbsp; There are two lines of global data,<br />
 &nbsp; AdocVersion = x.xx<br />
-      then every item is in a section of type 'Item' and with its label string as the 
+&nbsp; LastSavedAs = x\y.nav<br />
+      where the second is the full absolute path and name of the file as it was last 
+      saved.&nbsp; Then every item is in a section of type 'Item' and with its label string as the 
       value.&nbsp; The following table lists all of the keys that can occur in a 
       section, the kind of value that is expected, and whether it is required, or if 
       it is not required, what default value is set.</p>
@@ -532,7 +534,8 @@
       <TD class="style10">String</TD>
       <TD class="style7">Req if Map</TD>
       <TD class="style8">mMapFile</TD>
-      <TD class="style9">Full path of map file</TD>
+      <TD class="style9">Full or relative path of map file (see
+        <a href="menu_navigator.html#hid_load_nav_file">Read &amp; Open</a>)</TD>
     </TR>
     <TR VALIGN="top">
       <TD>MapID</TD>
