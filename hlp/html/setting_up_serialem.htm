@@ -412,24 +412,22 @@
       SerialEM tries to load any file whose name ends in 'Plugin.dll' from the same 
       folder as the executable.
       </P>
-    <P>The files that come from a framework include:<br />
-      SerialEMproperties.txt&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-      -&nbsp;&nbsp; the Properties file, read by SerialEM, edited by hand<BR>
-        SEMsystemSettings.txt&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp; &nbsp;a default settings file for users 
-      that do not have settings yet<br />
-      Admin&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-      -&nbsp; &nbsp;a subfolder with working copies of files and a shortcut for 
-      administering the program&nbsp;
+    <P>The files that come from a framework extract to either C:\Program Files\SerialEM
+ (Windows XP) or C:\ProgramData\SerialEM (Windows 7 and later) and include:<br />
+       SerialEMproperties.txt - the Properties file, read by SerialEM, edited by hand<BR>
+       SerialEMcalibrations.txt - an empty calibrations file, read and written by SerialEM<BR>
+       SEMsystemSettings.txt - a default settings file for users that do not have settings yet<BR>
+	SerialEM.lnk - a shortcut to start SerialEM with the right settings, once setup is complete<BR>
+	UserSettings - a folder that can contain several subfolders, each providing
+ a set of default settings for SerialEM for different users/applications<BR>
+	UserSettings\Setup - a folder for SerialEM default settings for installation and calibration<BR>
+	UserSettings\Setup\Setup SerialEM.lnk - a shortcut to start SerialEM with
+ using the default settings for installation and calibration (can be copied
+ anywhere)<BR> 
+	UserSettings\Setup\SerialEMsettings.txt - a settings file for installation and calibration
         <BR>
-      </P>
-    <P style="Z-INDEX: 0">
-        The Admin subfolder contains a working copy of the Properties and system 
-        settings files and the Calibrations file (SerialEMcalibrations.txt), which is 
-        read and written by SerialEM. It also has a version of SerialEMsettings.txt that 
-        will make the program use these working copies, and a shortcut that will start 
-        the program in this folder.</P>
       <P>If you did not get a 'framework' package already customized for your scope, the 
-        Properties files in both the SerialEM and the Admin folders are incomplete and 
+        Properties file in the SerialEM folder is incomplete and 
         should be edited to incorporate camera and magnification information, as 
         indicated in <A href="#setup_generic">Starting with a Generic Properties File</A>.&nbsp; 
         See this section also for instructions on modifications needed under Windows 7/Server 
@@ -515,6 +513,17 @@
           you install, you will definitely need to do this.&nbsp; </P>
       </li>
     </ol>
+        <P style="Z-INDEX: 0">
+          <a name="backup"><i>Backing up your SerialEM installation.</i></a>&nbsp;
+		      To backup your SerialEM installation on Windows 7 and later, copy
+		      C:\ProgramData\SerialEM to a safe location, a backup of C:\Program
+		      Files\SerialEM is not required if the installation was performed as
+		      described here. On Windows XP, copy the files
+		      SerialEMcalibrations.txt, SerialEMproperties.txt,
+		      SEMflybackTimes.txt (on systems with STEM), SEMsystemSettings.txt,
+		      SEMshortTermCal.txt from C:\Program Files\SerialEM, also include all
+		      user settings. 
+          </P>
         <P style="Z-INDEX: 0">
           <a name="upgradingNew"><i>Upgrading to a New Version.</i></a>&nbsp;
           What the installer will <i>NOT</i> do is update the plugin to DigitalMicrograph 
@@ -629,12 +638,9 @@
         circumstances, such as running a beta version of SerialEM. It also provides for the arrangement described 
         next.</P>
       <P>As the program administrator, you should start SerialEM with the shortcut in 
-        the Admin subfolder (copy this shortcut to the desktop if you want.) When you 
-        start SerialEM with this shortcut, you will access only the files in this 
-        folder. Use this shortcut and edit the Properties file in this folder when you 
-        are first setting up the program or later if you are redoing calibrations or 
-        experimenting with properties. Then when you are done, copy the Properties and 
-        Calibration files up to the SerialEM folder for general use.</P>
+        the UserSettings/Setup subfolder (copy this shortcut to the desktop if you want.) When you 
+        start SerialEM with this shortcut, you will access the settings in this 
+        folder that might differ significantly from what people use for production use.</P>
       <P>Whenever you start the program to do some calibrations, turn on 'Administrator 
         mode' (in the Calibration menu). In this mode (which has nothing to do with 
         running as Administrator in Windows 7), you will get extra output from 
@@ -734,10 +740,9 @@
     <ol>
       <li>In the Properties file, change 'Program Files' to 'ProgramData' in the entries 
         for GainReferencePath and LogBookPathName.</li>
-      <li>In SEMsystemSettings.txt, change 'Program Files' to 'ProgramData' in the entry 
-        for SystemPath.&nbsp; Copy this file to the upper folder if you edited the one in the 
-        Admin folder, or into the Admin folder if you edited the one in the upper folder</li>
-      <li>In the Admin folder, right click on the SerialEM shortcut and select 
+      <li>In SEMsystemSettings.txt and UserSetting/Setup/SerialEMsettings.txt,
+        change 'Program Files' to 'ProgramData' in the entry for SystemPath.</li>
+      <li>In the SerialEM and the UserSettings/Setup folder, right click on the SerialEM shortcut and select 
         properties.&nbsp; Change 'Program Files' to 'ProgramData' in the entry for the folder 
         to 'Start in'.</li>
       <li>If there are any other settings files on your system with a SystemPath entry 
@@ -850,7 +855,7 @@
       64-bit computer instead, some steps are needed in addition to the ones
       listed above:</p>
     <ul>
-      <li>Copy all the '.txt' files, the Admin folder, and gain references if desired 
+      <li>Copy all the '.txt' files, the UserSettings folder and gain references if desired 
         from C:\Program Files\SerialEM on the scope computer to C:\ProgramData\SerialEM 
         on the 64-bit computer.</li>
       <li>Modify any paths in the properties file referring to C:\Program Files\SerialEM 
@@ -870,9 +875,10 @@
       <li>If there are Gatan cameras on the scope computer, follow the instructions in 
         the section <a href="#connectDMsocket"> <i>To</i> <i>connect to
                   DigitalMicrograph through a socket interface</i></a><i> </i>below to switch the socket connection to the DM on the scope computer.</li>
-      <li>If you use the Admin folder, modify the SerialEM shortcut (right-click and 
-        select properties) and change the 'Start in' folder to 
-        C:\ProgramData\SerialEM\Admin.</li>
+      <li>If any SerialEM shortcuts pointing to settings in 'UserSettings'
+        were used, modify the shortcut (right-click and 
+        select properties) and change 'Program Files' to 'ProgramData' in the
+        'Start in' folder.</li> 
       <li>If some users ran directly from the C:\Program Files\SerialEM folder, using a 
         SerialEMsettings.txt file there, then move that settings file to 
         C:\ProgramData\SerialEM and create a shortcut for starting the program in that 
@@ -3160,15 +3166,24 @@
     <p>
       &nbsp;</p>
       <P><A name="setup_final"></A><B>Final Tasks (Priority 1)</B></P>
-      <P>When you are finished setting things up, you need to copy files from the Admin 
-        folder up to the SerialEM folder. But first check the settings in the system 
+      <P>When you are finished setting things up, check the settings in the system 
         (default) settings file. Run 'Open' in the Settings menu and load the file 
-        SEMsystemSettings.txt from the Admin folder. Check each of the camera parameter 
+        SEMsystemSettings.txt from the C:\ProgramData\SerialEM or C:\Program
+        Files\SerialEM folder. Check each of the camera parameter 
         sets. If the capture areas are wrong (too big, too small, not centered), or the 
         binnings are not appropriate for the camera, correct them. You can change any 
         other settings that you think appropriate. Exit SerialEM, or just select Save 
-        in the Settings menu. Copy SEMSystemSettings.txt, SerialEMproperties.txt, and 
-        SerialEMcalibrations.txt from the Admin folder up to the SerialEM folder.</P>
+        in the Settings menu.</P>
+    <P>If you only want to use one set of SerialEM settings, just use the
+    shortcut provided in C:\ProgramData\SerialEM\ or C:\Program Files\SerialEM
+    and copy it to the Desktop or whatever location works best for you.</P>
+    <P>If you prefer to have different settings per user/application loaded
+    automatically at SerialEM startup, create a subfolder for each set of
+    settings (preferrably in C:\ProgramData\SerialEM\UserSettings\ or
+    C:\Program Files\SerialEM\UserSettings\) and create shortcuts on the
+    Desktop using these folders as described
+    in <A HREF="#shortcutsArgs"><i>Shortcuts, Command Line Arguments, and
+    Administrator mode</A>. 
     <P>&nbsp;</P>
       <P><A name="setup_timing_optional"></A><B>Obsolete Tuning of Camera Timing (For the 
           Sake of Completeness)</B></P>
@@ -3607,10 +3622,10 @@
       card.&nbsp; Afterwards, you will need to restore two of them:</p>
     <pre wrap="">IP Addresses:
 - LOWER NIC: 	
-192.168.211.1 (set name to “K2 Base”)
-192.168.211.2 (set name to “K2 Lower”)
+192.168.211.1 (set name to 'K2 Base')
+192.168.211.2 (set name to 'K2 Lower')
 - UPPER NIC: 		
-192.168.211.3 (set name to “K2 Upper”)
+192.168.211.3 (set name to 'K2 Upper')
 
 Device Settings:
    Adaptive Interrupt Moderation (AIM):		Disabled
