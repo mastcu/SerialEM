@@ -4299,6 +4299,8 @@ void CEMscope::GotoLowDoseArea(int inArea)
 
   // Do image shift at higher mag for consistency in beam shifts, so do it now if
   // leaving a higher mag
+  // If mags are equal and alpha differs, do IS now when going to a higher alpha so the
+  // beam shift will be done at the same alpha
   // However, when using PLA, do it at the mag of a trial/focus area when either leaving
   // or going to a trial/focus area.  The problem is that the PLA needed for area 
   // separation may be out of range at a higher mag where a bigger projector shift is 
@@ -4307,8 +4309,10 @@ void CEMscope::GotoLowDoseArea(int inArea)
     (!fromFocTrial && toFocTrial) || fromSearch))
     ISdone = mLowDoseSetArea >= 0 && (fromFocTrial || fromSearch);
   else
-    ISdone = mLowDoseSetArea >= 0 && (ldArea->magIndex || ldArea->camLenIndex) &&
-      ldArea->magIndex < mLdsaParams->magIndex && 
+    ISdone = mLowDoseSetArea >= 0 && (((ldArea->magIndex || ldArea->camLenIndex) &&
+      ldArea->magIndex < mLdsaParams->magIndex) || 
+      (ldArea->magIndex == mLdsaParams->magIndex && !mHasNoAlpha && 
+      mLdsaParams->beamAlpha >= 0 && ldArea->beamAlpha > mLdsaParams->beamAlpha)) && 
       !(GetUsePLforIS(ldArea->magIndex) && inArea == SEARCH_AREA);
   if (ISdone)
     DoISforLowDoseArea(inArea, mLdsaParams->magIndex, delISX, delISY);
