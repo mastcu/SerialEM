@@ -602,8 +602,8 @@ void CCameraSetupDlg::OnDynfocus()
 void CCameraSetupDlg::OnProcessing() 
 {
   UpdateData(TRUE);
-  m_butRemoveXrays.EnableWindow(!mParam->STEMcamera && m_iProcessing == GAIN_NORMALIZED
-    || mParam->STEMcamera && m_iProcessing > 0);
+  m_butRemoveXrays.EnableWindow((!mParam->STEMcamera && m_iProcessing == GAIN_NORMALIZED)
+    || (mParam->STEMcamera && m_iProcessing > 0));
   if (mParam->K2Type) {
     ManageExposure();
     ManageK2Binning();
