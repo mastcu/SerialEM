@@ -587,11 +587,26 @@
           name of the variable in the name 
             box and the specified value in the value box.&nbsp; Press OK, Close, etc.</li>
     </ul>
-      <P><a name="shortcutsArgs"><i>Shortcuts, Command Line Arguments, and Administrator mode.</i></a>&nbsp; Users should start SerialEM by means of a shortcut on their desktops. After 
+      <P><a name="shortcutsArgs"><i>Shortcuts, Command Line Arguments, and Administrator mode.</i></a>&nbsp; 
+        When users log in to their own accounts, users should start SerialEM by means of a shortcut on their desktops. After 
         creating the shortcut, always edit its properties to start in a folder belonging 
         to the particular user. That way, each user will have their own settings file, 
         separate from the one that inevitably ends up in the SerialEM folder because 
         someone starts SerialEM by clicking on the program itself.&nbsp; </P>
+    <P>When users all share one account, they can have separate settings if there is a 
+      shortcut for each user, which can be placed either on the desktop or in a folder 
+      on the desktop.&nbsp; The frameworks files that we distribute provide a 
+      structure for holding settings files and shortcuts for each user in a folder 
+      'UserSettings' under C:\Program Files\SerialEM (Windows XP) or C:\ProgramData\SerialEM (Windows 7).&nbsp; 
+      To make files and shortcuts for a new user:</P>
+    <ol>
+      <li>Create a folder with the user's name under 'UserSettings'.</li>
+      <li>Copy the contents of another user's folder into the new folder.</li>
+      <li>Right click on the SerialEM shortcut in the new folder, select Properties, and 
+        change the 'Start in' entry from the previous user's name to the new one.</li>
+      <li>Right click and drag the shortcut to the desktop or common folder to copy it 
+        there.</li>
+    </ol>
     <P><b>Do not run the SerialEM.exe in the package subfolder, or make a shortcut to 
       that copy of the program.</b>&nbsp; If you do, the program will load all the 
       plugins in that folder.&nbsp;Then it will complain about multiple microscope 
@@ -734,29 +749,31 @@
           comments. The values for 200 KV can be used for 120 KV.</LI>
     </OL>
       <p>
-        If the program is running under Windows 7 
-        or Server 2008, you need to make the 
+        If the program is running under Windows 
+        XP or Windows 2000, you need to make the 
         following modifications.</p>
     <ol>
-      <li>In the Properties file, change 'Program Files' to 'ProgramData' in the entries 
+      <li>In the Properties file, change 'ProgramData' to 'Program Files' in the entries 
         for GainReferencePath and LogBookPathName.</li>
-      <li>In SEMsystemSettings.txt and UserSetting/Setup/SerialEMsettings.txt,
-        change 'Program Files' to 'ProgramData' in the entry for SystemPath.</li>
+      <li>In SEMsystemSettings.txt and UserSettings/Setup/SerialEMsettings.txt,
+        change 'ProgramData' to 'Program Files' in the entry for SystemPath.</li>
       <li>In the SerialEM and the UserSettings/Setup folder, right click on the SerialEM shortcut and select 
-        properties.&nbsp; Change 'Program Files' to 'ProgramData' in the entry for the folder 
+        properties.&nbsp; Change 'ProgramData' to 'Program Files' in the entry for the folder 
         to 'Start in'.</li>
       <li>If there are any other settings files on your system with a SystemPath entry 
-        of C:\Program Files\SerialEM, they should be changed similarly.&nbsp; Also, any other 
-        shortcuts that start in C:\Program Files\SerialEM should be changed.</li>
+        of C:\ProgramData\SerialEM, they should be changed similarly.&nbsp; Also, any other 
+        shortcuts that start in C:\ProgramData\SerialEM should be changed.</li>
     </ol>
       <p>
-        If you have a Gatan camera with GMS 2.x, you need these modifications to the 
+        If you have a Gatan camera with GMS 2.x 
+        or GMS 3.x, you need these modifications to the 
         Properties file:</p>
     <ol>
       <li>Fix the entry for the DigitalMicrographReferencePath.&nbsp; It should be either 
-        'C:\ProgramData\Gatan\Reference Images' under Windows 7 and Vista, or 'C:\Documents 
+        'C:\ProgramData\Gatan\Reference Images' under Windows 7/8/10 and Server 
+        2008/2012, or 'C:\Documents 
         and Settings\All 
-        Users\Application Data\Gatan\Reference Images' under Windows XP.</li>
+        Users\Application Data\Gatan\Reference Images' under Windows XP and 2000.</li>
       <li>Check the entries for DMGainReferenceName in the CameraProperties sections and 
         make sure they end in '.dm4' instead of '.dm3'.</li>
     </ol>

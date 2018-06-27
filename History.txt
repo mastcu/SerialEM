@@ -3,6 +3,16 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+6/26/18: Made Navigator find map files when loading or merging a Nav file and
+allow more flexible locations of files as long as relative locations are
+maintained.
+
+6/26/18: On JEOL, when changing low dose areas at same mag and different
+alphas, do image and beam shifts at same alpha in each direction.
+
+6/26/18: Changed Setup Full Montage to avoid loss of corner pieces when stage
+is at oblique angle.
+
 6/24/18: Additional K3 developments for using hardware binning in continuous
 mode and for saving frames; properties, dialogs, and setup documented.
 
