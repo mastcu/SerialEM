@@ -68,7 +68,7 @@ void CK2SaveOptionDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_SKIP_ROTFLIP, m_butSkipRotFlip);
   DDX_Check(pDX, IDC_SKIP_ROTFLIP, m_bSkipRotFlip);
   DDX_Text(pDX, IDC_EDIT_BASENAME, m_strBasename);
-  DDV_MaxChars(pDX, m_strBasename, 32);
+  DDV_MaxChars(pDX, m_strBasename, 40);
   DDX_Check(pDX, IDC_CHECK_ROOT_FOLDER, m_bRootFolder);
   DDX_Check(pDX, IDC_CHECK_SAVEFILE_FOLDER, m_bSavefileFolder);
   DDX_Check(pDX, IDC_CHECK_NAVLABEL_FOLDER, m_bNavLabelFolder);
