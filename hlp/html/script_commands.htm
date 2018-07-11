@@ -273,6 +273,24 @@
             entered value.</TD>
         </TR>
         <TR vAlign="top">
+          <TD class="style4">EnterString variable text</TD>
+          <TD>Opens a dialog box for the user to enter a string of text, with the
+            given text as the prompt, and assigns it to the given variable name (without a 
+            $).</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style4">CompareStrings variable text</TD>
+          <TD>Compares the strings in the given variable (without a $) and in the text on 
+            the rest of the line.&nbsp; Sets reportedValue1 to 0 if the strings are equal, a 
+            negative number if the variable is alphabetically before the text, and a 
+            positive number if it is after.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style4">CompareNoCase variable text</TD>
+          <TD>Like CompareStrings except that upper/lower&nbsp; case differences are ignored 
+            in the comparison.</TD>
+        </TR>
+       <TR vAlign="top">
           <TD class="style4">FlashDisplay [#T] [#D]</TD>
           <TD>Flashes between a yellow screen and normal image display
             several times.&nbsp; The first optional entry, #T, sets the number of times to

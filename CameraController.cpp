@@ -7360,10 +7360,6 @@ void CCameraController::DisplayNewImage(BOOL acquired)
         ticks = GetTickCount();
         message.Format("%.3f got image, %u elapsed", 0.001 * (ticks % 3600000),
           ticks - mStartTime);
-        if (mTD.PostImageShift) {
-          str.Format("  IS at %.3f", 0.001 * (mTD.ISTicks % 3600000));
-          message += str;
-        }
         mWinApp->AppendToLog(message, LOG_OPEN_IF_CLOSED);
       }
       //if (mParam->STEMcamera && !mParam->FEItype && !mTD.ContinuousSTEM)

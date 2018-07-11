@@ -37,6 +37,7 @@
 #include "ParticleTasks.h"
 #include "FilterTasks.h"
 #include "MacroControlDlg.h"
+#include "MultiShotDlg.h"
 #include "NavigatorDlg.h"
 #include "NavHelper.h"
 #include "FalconHelper.h"
@@ -220,7 +221,8 @@ enum {CME_VIEW, CME_FOCUS, CME_TRIAL, CME_RECORD, CME_PREVIEW,
   CME_CBASTIGCOMA, CME_FIXASTIGMATISMBYCTF, CME_FIXCOMABYCTF, CME_ECHOEVAL, 
   CME_REPORTFILENUMBER, CME_REPORTCOMATILTNEEDED, CME_REPORTSTIGMATORNEEDED,
   CME_SAVEBEAMTILT, CME_RESTOREBEAMTILT, CME_REPORTCOMAVSISMATRIX,CME_ADJUSTBEAMTILTFORIS,
-  CME_LOADNAVMAP, CME_LOADOTHERMAP,CME_REPORTLENSFLCSTATUS, CME_TESTNEXTMULTISHOT
+  CME_LOADNAVMAP, CME_LOADOTHERMAP,CME_REPORTLENSFLCSTATUS, CME_TESTNEXTMULTISHOT,
+  CME_ENTERSTRING, CME_COMPARESTRINGS, CME_COMPARENOCASE
 };
 
 static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0},
@@ -331,6 +333,7 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"ReportStigmatorNeeded", 0, 0}, {"SaveBeamTilt", 0, 0}, {"RestoreBeamTilt", 0, 0},
 {"ReportComaVsISmatrix", 0, 0}, {"AdjustBeamTiltforIS", 0, 0}, {"LoadNavMap", 0, 0},
 {"LoadOtherMap", 1, 0}, {"ReportLensFLCStatus", 1, 0}, {"TestNextMultiShot", 1, 0},
+{"EnterString", 2, 0}, {"CompareStrings", 2, 0}, {"CompareNoCase", 2, 0}, 
 {NULL, 0, 0}
 };
 
@@ -1791,6 +1794,8 @@ void CMacroProcessor::NextCommand()
     mTestNextMultiShot = itemInt[1];
 
   } else if (CMD_IS(MULTIPLERECORDS)) {                     // MultipleRecords
+    if (mWinApp->mNavHelper->mMultiShotDlg)
+      mWinApp->mNavHelper->mMultiShotDlg->UpdateAndUseMSparams();
     MultiShotParams *msParams = mWinApp->mNavHelper->GetMultiShotParams();
     index = (itemEmpty[6] || itemInt[6] < -8) ? msParams->doEarlyReturn : itemInt[6];
     if (!camParams->K2Type)
@@ -3715,6 +3720,29 @@ void CMacroProcessor::NextCommand()
     report.Format("%s: user entered  %g", (LPCTSTR)strCopy, backlashX);
     mWinApp->AppendToLog(report, mLogAction);
     SetReportedValues(backlashX);
+
+  } else if (CMD_IS(ENTERSTRING)) {                        // EnterString
+    strCopy = "Enter a text string:";
+    report = "";
+    mWinApp->mParamIO->StripItems(strLine, 2, strCopy);
+    if (!KGetOneString(strCopy, report))
+      SUSPEND_NOLINE("because no string was entered");
+    if (SetVariable(item1upper, report, VARTYPE_REGULAR, -1, false))
+      ABORT_NOLINE("Error setting variable " + strItems[1] + " with string " + report);
+
+                                                  // CompareStrings, CompareNoCase
+  } else if (CMD_IS(COMPARENOCASE) || CMD_IS(COMPARESTRINGS)) { 
+    var = LookupVariable(item1upper, index2);
+    if (!var)
+      ABORT_LINE("The variable " + strItems[1] + " is not defined in line:\n\n");
+    mWinApp->mParamIO->StripItems(strLine, 2, strCopy);
+    if (CMD_IS(COMPARESTRINGS))
+      index = var->value.Compare(strCopy);
+    else
+      index = var->value.CompareNoCase(strCopy);
+    report.Format("The strings %s equal", index ? "are NOT" : "ARE");
+    mWinApp->AppendToLog(report, mLogAction);
+    SetReportedValues(index);
 
   } else if (CMD_IS(MAILSUBJECT)) {                         // MailSubject
     SubstituteVariables(&strLine, 1, strLine);

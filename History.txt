@@ -3,6 +3,19 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+6/29/18: Improved sychronization between acquisition and post-actions to
+prevent image shift from starting before end of exposure on K2.  Prevented
+post-actions from starting too soon on a shot after a K2 early return, which
+is critical for multiple Records.
+
+6/29/18: Fixed multishot option to do early return only on last shot, and to
+not restore image shift/beam tilt on STOP during an acquisition, but have the
+camera module do it when the image is finished; also synchronized with current
+dialog settings if it is open.
+
+6/29/18: Added script commands to enter a string in a text box, and to compare
+strings.
+
 6/26/18: Made Navigator find map files when loading or merging a Nav file and
 allow more flexible locations of files as long as relative locations are
 maintained.
