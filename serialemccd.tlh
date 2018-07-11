@@ -1,9 +1,9 @@
-﻿// Created by Microsoft (R) C/C++ Compiler Version 15.00.30729.01 (cb6b3867).
+﻿// Created by Microsoft (R) C/C++ Compiler Version 15.00.30729.01 (34d0ebbb).
 //
-// c:\users\mast\documents\scope\serialem\release\serialemccd.tlh
+// c:\users\mast\documents\scope\serialem\x64\release\serialemccd.tlh
 //
 // C++ source equivalent of type library ..\SerialEMCCD\SerialEMCCD.tlb
-// compiler-generated file created 02/23/16 at 09:45:42 - DO NOT EDIT!
+// compiler-generated file created 06/28/18 at 14:13:34 - DO NOT EDIT!
 
 #pragma once
 #pragma pack(push, 8)
@@ -251,7 +251,7 @@ IDMCamera : IDispatch
         long * crossQuarter,
         long * crossEighth,
         long * halfNyq,
-        long * dumInt1,
+        long * frameStartEnd,
         double * dumDbl1,
         double * dumDbl2 );
     HRESULT ReturnDeferredSum (
@@ -267,6 +267,8 @@ IDMCamera : IDispatch
         long stringSize,
         long * strings,
         long * error );
+    HRESULT WaitUntilReady (
+        long which );
 
     //
     // Raw methods provided by interface
@@ -482,7 +484,7 @@ IDMCamera : IDispatch
         /*[out]*/ long * crossQuarter,
         /*[out]*/ long * crossEighth,
         /*[out]*/ long * halfNyq,
-        /*[out]*/ long * dumInt1,
+        /*[out]*/ long * frameStartEnd,
         /*[out]*/ double * dumDbl1,
         /*[out]*/ double * dumDbl2 ) = 0;
       virtual HRESULT __stdcall raw_ReturnDeferredSum (
@@ -498,6 +500,8 @@ IDMCamera : IDispatch
         /*[in]*/ long stringSize,
         /*[in]*/ long * strings,
         /*[out]*/ long * error ) = 0;
+      virtual HRESULT __stdcall raw_WaitUntilReady (
+        /*[in]*/ long which ) = 0;
 };
 
 //

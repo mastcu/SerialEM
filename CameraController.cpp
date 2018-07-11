@@ -398,6 +398,7 @@ CCameraController::CCameraController()
   mBadDarkNumRetries = 2;
   mAllowSpectroscopyImages = false;
   mASIgivesGainNormOnly = true;
+  mNeedToRestoreISandBT = 0;
 }
 
 // Set a frame align param to default values
@@ -1749,6 +1750,7 @@ int CCameraController::GetDeferredSum(void)
   mDeferredSumFailed = false;
 
   // Do the essentials for starting the thread
+  mNeedToRestoreISandBT = 0;
   mAcquiring = true;
   mAcquireThread = AfxBeginThread(AcquireProc, &mTD, THREAD_PRIORITY_HIGHEST, 0, 
     CREATE_SUSPENDED);
@@ -2547,6 +2549,7 @@ void CCameraController::Capture(int inSet, bool retrying)
   mTD.NewMagIndex = mMagIndToDo;
   mTD.TiltDuringDelay = B3DCHOICE(!FEIscope && mTiltDuringShotDelay >= 0, 
     B3DMAX(1, mTiltDuringShotDelay), 0);
+  mTD.WaitUntilK2Ready = 0;
 
   // The need for this is supposedly temporary
   if (mParam->K2Type == K3_TYPE && conSet.processing == UNPROCESSED && 
@@ -2728,8 +2731,11 @@ void CCameraController::Capture(int inSet, bool retrying)
     megaVoxel / megaVoxPerSec));
   if (mParam->K2Type) {
     double asyncUsedUp = 0.;
-    if (mLastAsyncTimeout)
+    if (mLastAsyncTimeout) {
       asyncUsedUp = SEMTickInterval(mAsyncTickStart);
+      if (CAN_PLUGIN_DO(HAS_WAIT_CALL, mParam))
+        mTD.WaitUntilK2Ready = 1 + (mTD.DoseFrac ? 1 : 0);
+    }
 
     // K2 has a basic fixed time that depends on mode, but linear mode can have dark ref
     superRes = IS_SUPERRES(mParam, conSet.K2ReadMode);
@@ -5979,6 +5985,7 @@ void CCameraController::StartAcquire()
     mScope->BlankBeam(true);
 
   // Now set flag and start thread for actual acquisition
+  mNeedToRestoreISandBT = 0;
   mAcquiring = true;
   mAcquireThread = AfxBeginThread(AcquireProc, &mTD, THREAD_PRIORITY_HIGHEST, 0, 
     CREATE_SUSPENDED);
@@ -6163,7 +6170,17 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
 
         // Or start thread to do extra blanking
         } else if (startBlanker || td->ReblankTime || td->ScanTime > 0.) {
-          StartBlankerThread(td);
+          if (td->WaitUntilK2Ready) {
+            try {
+              CallGatanCamera(pGatan, WaitUntilReady(td->WaitUntilK2Ready - 1));
+            }
+            catch (_com_error E) {
+              CCReportCOMError(td, E, "Waiting for camera to be ready for next shot");
+              retval = 1;
+            }
+          }
+          if (!retval)
+            StartBlankerThread(td, true);
         }
       }
         
@@ -6178,6 +6195,7 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
               DWORD startSTEM = GetTickCount();
               SEMTrace('s', "Start AcquireImage");
               chan = 0;
+              td->BlankerWaitForSignal = false;
               CallGatanCamera(pGatan, AcquireDSImage(td->Array[0], &arrSize, &td->DMSizeX, 
                 &td->DMSizeY, td->STEMrotation, td->PixelTime, td->LineSyncAndFlags, 
                 td->ContinuousSTEM, td->NumChannels, td->ChannelIndex, td->DivideBy2));
@@ -6261,6 +6279,7 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
               }
               //SEMTrace('1', "Calling GetAcquireImage with divideby2 %d", td->DivideBy2);
               askedForContinuous = (td->ProcessingPlus & CONTINUOUS_USE_THREAD) != 0;
+              td->BlankerWaitForSignal = false;
               CallDMCamera(pGatan, td->amtCam, GetAcquiredImage(td->Array[0], &arrSize, 
                 &td->DMSizeX, &td->DMSizeY, td->ProcessingPlus, td->Exposure, td->Binning, 
                 td->Top, td->Left, td->Bottom, td->Right, td->ShutterMode,
@@ -6559,11 +6578,13 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
 }
 
 // Common place to start blanker proc and wait for mutex
-CWinThread *CCameraController::StartBlankerThread(CameraThreadData *td)
+CWinThread *CCameraController::StartBlankerThread(CameraThreadData *td, 
+  bool waitForSignal)
 {
   DWORD startTime;
   td->GotScopeMutex = false;
   td->stopWaitingForBlanker = false;
+  td->BlankerWaitForSignal = waitForSignal;
   td->blankerThread = AfxBeginThread(BlankerProc, td, THREAD_PRIORITY_HIGHEST, 0,
     CREATE_SUSPENDED);
   TRACE("BlankerProc created with ID 0x%0x\n",td->blankerThread->m_nThreadID);
@@ -6628,7 +6649,7 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
   int retval = 0;
   DWORD startTime, curTime, lastTime;
   double interval, elapsed, baseISX, baseISY, newISX, newISY, intervalSum, intervalSumSq;
-  double destX, destY, destZ, destAlpha;
+  double destX, destY, destZ, destAlpha, dblStartTime;
   TIMECAPS tc;
   BOOL periodSet = false;
   int  numScan;
@@ -6647,6 +6668,13 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
     retval = 1;
   }
   if (!retval) {
+
+    // If wait is set, wait for it to go false
+    if (td->BlankerWaitForSignal) {
+      dblStartTime = GetTickCount();
+      while(td->BlankerWaitForSignal && SEMTickInterval(dblStartTime) < 5000.)
+        Sleep(50);
+    }
     try {
 
       // UnblankTime indicates an optional initial blanking
@@ -6813,9 +6841,9 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
 
         // Or wait the post-action time or until image returned
       } else if (td->PostActionTime && !(td->DriftISinterval || td->DynFocusInterval)) {
-        double startTime = GetTickCount();
+        dblStartTime = GetTickCount();
         while (!td->imageReturned) {
-          int elapsed = (int)SEMTickInterval(startTime);
+          int elapsed = (int)SEMTickInterval(dblStartTime);
           if (elapsed >= td->PostActionTime)
             break;
           ::Sleep(B3DMIN(50, td->PostActionTime - elapsed));
@@ -7332,6 +7360,10 @@ void CCameraController::DisplayNewImage(BOOL acquired)
         ticks = GetTickCount();
         message.Format("%.3f got image, %u elapsed", 0.001 * (ticks % 3600000),
           ticks - mStartTime);
+        if (mTD.PostImageShift) {
+          str.Format("  IS at %.3f", 0.001 * (mTD.ISTicks % 3600000));
+          message += str;
+        }
         mWinApp->AppendToLog(message, LOG_OPEN_IF_CLOSED);
       }
       //if (mParam->STEMcamera && !mParam->FEItype && !mTD.ContinuousSTEM)
@@ -8246,6 +8278,11 @@ void CCameraController::ErrorCleanup(int error)
   mStartedFalconAlign = false;
   mStartedExtraForDEalign = false;
   mDiscardImage = false;
+  if (mNeedToRestoreISandBT & 1)
+    mScope->SetImageShift(mImageShiftXtoRestore, mImageShiftYtoRestore);
+  if (mNeedToRestoreISandBT & 2)
+    mScope->SetBeamTilt(mBeamTiltXtoRestore, mBeamTiltYtoRestore);
+  mNeedToRestoreISandBT = 0;
   mMaxChannelsToGet = MAX_STEM_CHANNELS;
   if (error || mRepFlag < 0 || mHalting || mPending >= 0 ||
     (!mTD.ContinuousSTEM && !(mTD.ProcessingPlus & CONTINUOUS_USE_THREAD)))

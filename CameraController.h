@@ -57,6 +57,7 @@ struct CamPluginFuncs;
 #define PLUGIN_CAN_ALIGN_SUBSET  107
 #define PLUGIN_CAN_REDUCE_SUPER  108
 #define PLUGIN_SUPPORTS_K3       108
+#define PLUGIN_HAS_WAIT_CALL     109
 
 #define CAN_PLUGIN_DO(c, p) CanPluginDo(PLUGIN_##c, p)
 
@@ -200,6 +201,8 @@ struct CameraThreadData {
   CWinThread *blankerThread;  // blanker thread so main or acquire thread can kill it
   HANDLE blankerMutexHandle;  // Mutex for assessing state of blanker
   bool stopWaitingForBlanker; // Flag that the waiting routine should give up.
+  bool BlankerWaitForSignal;  // Flag for the blanker to wait until acquire clears it
+  int WaitUntilK2Ready;       // Flag to call WaitUntilReady with 1 + value
   DWORD cameraTimeout;        // Timeout interval for camera acquisition
   int ScanSleep;              // Sleep time between scan moves in ms
   double BeamBaseX, BeamBaseY;    // Base values (start of scan) for beam movement
@@ -263,7 +266,7 @@ class DLL_IM_EX CCameraController
 	 void AcquiredSize(ControlSet *csp, int camera, int &sizeX, int &sizeY);
 	 void StartEnsureThread(DWORD timeout);
 	 void SetupBeamScan(ControlSet *conSetp);
-  static CWinThread *StartBlankerThread(CameraThreadData *td);
+  static CWinThread *StartBlankerThread(CameraThreadData *td, bool waitForSignal = false);
   static int WaitForBlankerThread(CameraThreadData * td, DWORD timeout, CString message);
   GetMember(int, DivideBy2)
   void SetDivideBy2(int inVal);
@@ -494,6 +497,10 @@ class DLL_IM_EX CCameraController
                         int &start, int &end, int binning);
   void GetLastCoords(int &top, int &left, int &bottom, int &right) {top = mTop;
     left = mLeft; bottom = mBottom; right = mRight;};
+  void SetImageShiftToRestore(double inX, double inY) {mImageShiftXtoRestore = inX;
+    mImageShiftYtoRestore = inY; mNeedToRestoreISandBT |= 1;};
+  void SetBeamTiltToRestore(double inX, double inY) {mBeamTiltXtoRestore = inX;
+    mBeamTiltYtoRestore = inY; mNeedToRestoreISandBT |= 2;};
 
  private:
   void AdjustSizes(int &DMsizeX, int ccdSizeX, int moduloX, 
@@ -590,6 +597,11 @@ class DLL_IM_EX CCameraController
   int mDynFocusInterval;        // Minimum interval for dynamic focus in STEM
   int mStartDynFocusDelay;      // Time to wait after setting focus at start of ramp
   DWORD mStartTime;             // for reporting timing
+  double mImageShiftXtoRestore; // Image shift and beam tilt to restore from multishot
+  double mImageShiftYtoRestore; // When it gets a stop
+  double mBeamTiltXtoRestore;
+  double mBeamTiltYtoRestore;
+  int mNeedToRestoreISandBT;    // 1 to restore IS, 2 to restore BT
   int mContinuousCount;         // Count of frames in continuous mode
   double mContinStartTime;      // Time of second frame
   float mTiltBefore;            // Tilt angle acquired before shot

@@ -82,6 +82,7 @@ public:
   static int StopDSAcquisition();
   static int StopContinuousCamera();
   static int FreeK2GainReference(long which);
+  static int WaitUntilReady(long which);
 
   static int CheckReferenceTime(const char *filename, __time64_t *mtime);
 };

@@ -533,3 +533,8 @@ int CGatanSocket::CheckReferenceTime(const char *filename, __time64_t *mtime)
   return mLongArgs[sSind][0];
 }
 
+// WaitUntilReady
+int CGatanSocket::WaitUntilReady(long which)
+{
+  return SendOneArgReturnRetVal(sSind, GS_WaitUntilReady, which);
+}
