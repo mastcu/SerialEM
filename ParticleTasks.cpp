@@ -264,12 +264,18 @@ void CParticleTasks::StopMultiShot(void)
 {
   if (mMSCurIndex < -1)
     return;
-  mScope->SetImageShift(mBaseISX, mBaseISY);
+  if (mCamera->Acquiring()) {
+    mCamera->SetImageShiftToRestore(mBaseISX, mBaseISY);
+    if (mMSAdjustBeamTilt)
+      mCamera->SetBeamTiltToRestore(mBaseBeamTiltX, mBaseBeamTiltY);
+  } else {
+    mScope->SetImageShift(mBaseISX, mBaseISY);
+    if (mMSAdjustBeamTilt)
+      mScope->SetBeamTilt(mBaseBeamTiltX, mBaseBeamTiltY);
+  }
 
   // Montage does a second restore after it is no longer "Doing", so just set this
   mWinApp->mMontageController->SetBaseISXY(mBaseISX, mBaseISY);
-  if (mMSAdjustBeamTilt)
-    mScope->SetBeamTilt(mBaseBeamTiltX, mBaseBeamTiltY);
   mMSCurIndex = -2;
   mMSTestRun = 0;
   mWinApp->UpdateBufferWindows();
@@ -351,8 +357,11 @@ bool CParticleTasks::GetNextShotAndHole(int &nextShot, int &nextHole)
 int CParticleTasks::StartOneShotOfMulti(void)
 {
   CString str;
+  int nextShot, nextHole;
   int numInHole = mMSNumPeripheral + (mMSDoCenter ? 1 : 0);
-  if (mMSIfEarlyReturn && mCamera->SetNextAsyncSumFrames(mMSEarlyRetFrames < 0 ? 65535 : 
+  bool earlyRet = (mMSIfEarlyReturn == 1 && !GetNextShotAndHole(nextShot, nextHole)) ||
+    mMSIfEarlyReturn > 1;
+  if (earlyRet && mCamera->SetNextAsyncSumFrames(mMSEarlyRetFrames < 0 ? 65535 : 
     mMSEarlyRetFrames, false)) {
     StopMultiShot();
     return 1;
