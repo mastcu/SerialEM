@@ -206,7 +206,7 @@ void CCalibCameraTiming::CalibrateTiming(int setNum, float exposure, bool confir
   mConSet->binning = B3DMAX(mCamParam->binnings[0], 
     B3DMIN(mCamParam->binnings[mCamParam->numBinnings-1], mConSet->binning));
   mConSet->doseFrac = trialSet->doseFrac;
-  mConSet->K2ReadMode = (mCamParam->K2Type != K2_SUMMIT || mCamParam->K2Type == K3_TYPE) ?
+  mConSet->K2ReadMode = (mCamParam->K2Type == K2_SUMMIT || mCamParam->K2Type == K3_TYPE) ?
     K2_SUPERRES_MODE : trialSet->K2ReadMode;
   mConSet->frameTime = trialSet->frameTime;
   mConSet->alignFrames = trialSet->alignFrames;
