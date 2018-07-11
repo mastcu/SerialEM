@@ -8,7 +8,7 @@ change item labels and colors, make an anchor map, and strip digits from the
 end of a string.
 
 7/10/18: Fixed crash after getting an error setting up K2 saving/aligning,
-fixed buffer overrun and crash with long defect file names.
+fixed buffer overrun and crash with long defect file names. (In 3.6)
 
 7/2/18: Fixed returned image not being reduced correctly when aligning K2
 images with binning 3 or 6.
