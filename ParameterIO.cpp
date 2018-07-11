@@ -2026,6 +2026,8 @@ int CParameterIO::ReadProperties(CString strFileName)
             camP->builtInSettling = (float)itemDbl[1];
           else if (MatchNoCase("StartupDelay"))
             camP->startupDelay = (float)itemDbl[1];
+          else if (MatchNoCase("StartDelayPerFrame"))
+            camP->startDelayPerFrame = (float)itemDbl[1];
           else if (MatchNoCase("ExtraUnblankTime"))
             camP->extraUnblankTime = 
               (float)itemDbl[1];

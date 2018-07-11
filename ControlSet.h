@@ -158,6 +158,7 @@ struct CameraParameters {
   BOOL checkTemperature;   // Check whether temperature is stable before first acquire
   BOOL sideMount;          // No need to raise screen for side mount camera
   float startupDelay;      // Delay time between start of blanking thread and shot
+  float startDelayPerFrame; // Additional time to add per frame in K2 dose fractionation
   BOOL DMbeamShutterOK;    // Flag that we can direct DM to use beam shutter
   BOOL DMsettlingOK;       // Flag that we can set DM's awful drift settling
   BOOL DMopenShutterOK;    // Flag that it is OK to use OpenShutter

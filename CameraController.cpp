@@ -939,6 +939,10 @@ void CCameraController::InitializeDMcameras(int DMind, int *numDMListed,
                     mAllParams[i].K2Type == K3_TYPE ? ".m1." : ".m3.");
               }
 
+              // Initialize added delay per frame if not set by property
+              if (mAllParams[i].startDelayPerFrame < 0)
+                mAllParams[i].startDelayPerFrame = mAllParams[i].K2Type ? 0.005f : 0.f;
+
               if ((mAllParams[i].OneViewType || mAllParams[i].K2Type == K3_TYPE) && 
                 mPluginVersion[DMind] < PLUGIN_CAN_MAKE_SUBAREA) {
                   mAllParams[i].subareasBad = 2;
@@ -4200,9 +4204,13 @@ void CCameraController::CapSetupShutteringTiming(ControlSet & conSet, int inSet,
       // Use reblanktime as a flag, or set up time to end of exposure regardless
       if (mTD.ReblankTime)
         mTD.PostActionTime = mTD.ReblankTime;
-      else
+      else {
         mTD.PostActionTime = (int)(1000. * (mExposure + mParam->builtInSettling + 
-        mParam->startupDelay + mDelay + mParam->extraBeamTime));
+          mParam->startupDelay + mDelay + mParam->extraBeamTime));
+        if (mParam->K2Type && conSet.doseFrac)
+          mTD.PostActionTime += (int)(1000. * mParam->startDelayPerFrame * 
+          conSet.exposure / B3DMAX(conSet.frameTime, GetMinK2FrameTime(mParam->K2Type)));
+      }
 
       // Make it ensure dark reference
       bEnsureDark = conSet.processing != UNPROCESSED && !mParam->K2Type;

@@ -306,6 +306,7 @@ CSerialEMApp::CSerialEMApp()
     mCamParams[i].checkTemperature = false;
     mCamParams[i].sideMount = false;
     mCamParams[i].startupDelay = CAMERA_START_DELAY;
+    mCamParams[i].startDelayPerFrame = -0.0001;
     mCamParams[i].DMbeamShutterOK = TRUE;
     mCamParams[i].DMsettlingOK = TRUE;
     mCamParams[i].DMopenShutterOK = TRUE;
