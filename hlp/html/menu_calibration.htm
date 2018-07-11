@@ -1733,12 +1733,14 @@
       SerialEM would be considerably shorter and can lead to problems, the program 
       will not allow post-exposure actions if the StartupDelay property is less than a 
       minimum value.&nbsp; If your camera gives a startup delay less than this limit, 
-      the program will tell you that you can either set the delay above the default 
-      minimum or add the property &#39;K2MinStartupDelay&#39; with a number 
-      less than your measured delay.&nbsp; However, there is some risk that the 
-      measured time is too short with the latter approach, and it may even be too 
-      short when it is longer than the default minimum.&nbsp; Especially if you use a 
-      measured delay less than this default, watch out for signs that it is too short: 
+      the program will tell you that it is not safe to use and recommend setting the delay above the default 
+      minimum.&nbsp; Although it is possible to add the property &#39;K2MinStartupDelay&#39; with a number 
+      less than your measured delay, experience has shown that this is unreliable.&nbsp; 
+      As of SerialEM 3.7 (June 30, 2018), exposures with dose fractionation will have 
+      an added delay of 5 ms per frame by default (set by the camera property 
+      &#39;StartDelayPerFrame&#39;).&nbsp; This addition should give reliable timing even with 
+      the default minimum startup delay.&nbsp; The signs that the startup delay are 
+      too short are: 
       when calibrating image shift, images after the first one may be smeared or the 
       calibration may be bad; when taking tilt series, images after the first few 
       tilts may be smeared; when saving frames, the final frames of the exposure may 

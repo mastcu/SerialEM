@@ -65,6 +65,7 @@ void CCalibCameraTiming::CalibrateTiming(int setNum, float exposure, bool confir
   int targetSize = 1024;
   int i, ind, chan;
   float flyback, startup, fullexp;
+  static bool firstTime = true;
   CString report;
   ControlSet *trialSet = mWinApp->GetConSets() + TRIAL_CONSET;
 
@@ -151,8 +152,9 @@ void CCalibCameraTiming::CalibrateTiming(int setNum, float exposure, bool confir
 
     // Get parameters, check limits
     mNumTestShots = mSTEMcamera ? mDefSTEMTestShots : mDefRegTestShots;
-    if (mCamParam->K2Type == 1)
+    if ((mCamParam->K2Type == K2_SUMMIT || mCamParam->K2Type == K3_TYPE) && firstTime)
       mNumTestShots = (mNumTestShots * 4) / 10;
+    firstTime = false;
     if (!KGetOneFloat("Exposure time for test images (sec):", mExposure, 2))
       return;
 
@@ -204,9 +206,11 @@ void CCalibCameraTiming::CalibrateTiming(int setNum, float exposure, bool confir
   mConSet->binning = B3DMAX(mCamParam->binnings[0], 
     B3DMIN(mCamParam->binnings[mCamParam->numBinnings-1], mConSet->binning));
   mConSet->doseFrac = trialSet->doseFrac;
-  mConSet->K2ReadMode = mCamParam->K2Type == 1 ? K2_SUPERRES_MODE : trialSet->K2ReadMode;
+  mConSet->K2ReadMode = (mCamParam->K2Type != K2_SUMMIT || mCamParam->K2Type == K3_TYPE) ?
+    K2_SUPERRES_MODE : trialSet->K2ReadMode;
   mConSet->frameTime = trialSet->frameTime;
   mConSet->alignFrames = trialSet->alignFrames;
+  mConSet->useFrameAlign = trialSet->useFrameAlign;
   mConSet->saveFrames = 0;
   mConSet->filterType = trialSet->filterType;
 
@@ -592,12 +596,9 @@ void CCalibCameraTiming::CalTimeNextTask()
     mWinApp->AppendToLog(oneVal, LOG_OPEN_IF_CLOSED);
     if (mCamParam->K2Type == 1 && newDelay < mCamera->GetK2MinStartupDelay()) {
       oneVal.Format("This StartupDelay is less than the currently allowed minimum\r\n"
-        "delay for the K2, %.2f, so post-exposure actions will not be allowed.\r\n"
-        "To enable post-exposure actions, either set StartupDelay to %.2f or\r\n"
-        "add (or change) this property:\r\n  K2MinStartupDelay   %.2f\r\n"
-        "See warnings in the Help for this command before adding that property", 
-        mCamera->GetK2MinStartupDelay(), mCamera->GetK2MinStartupDelay() + 0.1,
-        newDelay - 0.1);
+        "delay for the K2, %.2f, and would not be safe to use.\r\n"
+        "Just set StartupDelay to %.2f\r\n", 
+        mCamera->GetK2MinStartupDelay(), mCamera->GetK2MinStartupDelay() + 0.1);
       mWinApp->AppendToLog(oneVal, LOG_OPEN_IF_CLOSED);
     }
 
