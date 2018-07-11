@@ -2303,6 +2303,12 @@ void CCameraController::Capture(int inSet, bool retrying)
         conSet.processing = DARK_SUBTRACTED;
   }
 
+  // For K3, unprocessed for counting mode is really raw and not the same as DS so promote
+  if (mParam->K2Type == K3_TYPE && conSet.processing == UNPROCESSED && 
+    conSet.K2ReadMode > 0)
+      conSet.processing = DARK_SUBTRACTED;
+  mTD.ProcessingPlus = mTD.Processing = conSet.processing;
+
   // Make sure camera is inserted, blocking cameras are retracted, check temperature, and
   // set up saving from K2 camera;  Again clear low dose area flag to be safe
   // Only do this once, not if come back in from settling
@@ -2554,12 +2560,6 @@ void CCameraController::Capture(int inSet, bool retrying)
   mTD.TiltDuringDelay = B3DCHOICE(!FEIscope && mTiltDuringShotDelay >= 0, 
     B3DMAX(1, mTiltDuringShotDelay), 0);
   mTD.WaitUntilK2Ready = 0;
-
-  // The need for this is supposedly temporary
-  if (mParam->K2Type == K3_TYPE && conSet.processing == UNPROCESSED && 
-    conSet.K2ReadMode > 0)
-      conSet.processing = DARK_SUBTRACTED;
-  mTD.Processing = conSet.processing;
 
   // Set up so that an error message in the post-action script, which is not issued until 
   // final cleanup, will not result in a message box if script or TS is set to avoid them
@@ -2833,7 +2833,6 @@ void CCameraController::Capture(int inSet, bool retrying)
   mTD.DRdelete = mDRdelete;
   mTD.DMbeamShutterOK = mParam->DMbeamShutterOK;
   mTD.DMsettlingOK = mParam->DMsettlingOK;
-  mTD.ProcessingPlus = mTD.Processing;
   mTD.PlugSTEMacquireFlags = (mBaseJeolSTEMflags & ~(0x3)) + 
     (mTD.DivideBy2 ? PLUGCAM_DIVIDE_BY2 : 0);
   mTD.integration = conSet.integration;
@@ -3090,6 +3089,7 @@ int CCameraController::CapManageInsertTempK2Saving(const ControlSet &conSet, int
                                                    BOOL retracting, int numActive)
 {
   BOOL blockable, STEMretract, insertingOther;
+  BOOL justReturn = false, callCleanup = false;
   bool aligning;
   int iCam, camInd;
   LowDoseParams *ldParam = mWinApp->GetLowDoseParams();
@@ -3121,9 +3121,8 @@ int CCameraController::CapManageInsertTempK2Saving(const ControlSet &conSet, int
     || (mParam->K2Type && conSet.doseFrac && conSet.saveFrames))) {
       if (mNumDMCameras[COM_IND] > 0 && CreateCamera(CREATE_FOR_ANY)) {
         ErrorCleanup(1);
-      return 1;
+        return 1;
       }
-      BOOL justReturn = false;
       try {
         long inserted;
         // Try having this be the only place this is called except for select before
@@ -3252,7 +3251,7 @@ int CCameraController::CapManageInsertTempK2Saving(const ControlSet &conSet, int
       catch (_com_error E) {
         SEMReportCOMError(E, _T("getting camera insertion position "));
         justReturn = true;
-        ErrorCleanup(1);
+        callCleanup = true;
       }
 
       // Now check temperature if required
@@ -3275,7 +3274,7 @@ int CCameraController::CapManageInsertTempK2Saving(const ControlSet &conSet, int
           SEMReportCOMError(E, _T("checking whether camera temperature is stable "));
           justReturn = true;
           mParam->checkTemperature = false;
-          ErrorCleanup(1);
+          callCleanup = true;
         }
       }
 
@@ -3289,12 +3288,16 @@ int CCameraController::CapManageInsertTempK2Saving(const ControlSet &conSet, int
           if (SetupK2SavingAligning(conSet, inSet, conSet.saveFrames != 0, aligning,
             NULL)) {
               justReturn = true;
-              ErrorCleanup(1);
+              callCleanup = true;
           }
       }
 
+      // Release camera before calling cleanup since it calls StopContinuousSTEM which
+      // could recreate it and release it
       if (mNumDMCameras[COM_IND] > 0)
         ReleaseCamera(CREATE_FOR_ANY);
+      if (callCleanup)
+        ErrorCleanup(1);
       if (justReturn)
         return 1;
   }
@@ -3363,8 +3366,7 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
 
   int numFrames = B3DNINT(conSet.exposure / conSet.frameTime);
   double numAsyncSum = 0.;
-  CString sdir, root;
-  char defName[50];
+  CString sdir, root, defName;
 
   if (saving) {
 
@@ -3456,9 +3458,9 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
       if (mParam->defectString.empty() || (!mParam->defNameHasFrameFile && 
         !mFrameFilename.IsEmpty())|| (mSkipK2FrameRotFlip ? 0 : mParam->rotationFlip) != 
         mParam->defStringRotFlip) {
-          sprintf(defName, "#defects_%s.txt\n", (LPCTSTR)mFrameFilename);
-          mParam->defectString = defName;
-          SEMTrace('r', "Made new defect string with name %s", defName);
+          defName.Format("#defects_%s.txt\n", (LPCTSTR)mFrameFilename);
+          mParam->defectString = (LPCTSTR)defName;
+          SEMTrace('r', "Made new defect string with name %s", (LPCTSTR)defName);
           mParam->defNameHasFrameFile = !mFrameFilename.IsEmpty();
           if (flags & K2_SKIP_FRAME_ROTFLIP) {
             CameraDefects defects = mParam->defects;
