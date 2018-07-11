@@ -173,6 +173,7 @@ private:
   BOOL mStartedLongOp; // Flag that long operation was started
   BOOL mMovedPiezo;    // Flag that a piezo movement was started
   BOOL mLoadingMap;    // Flag that an asynchronous map load was started
+  BOOL mMakingDualMap; // Flag that anchor map has been started
   double mDoseStart;   // Starting cumulative dose
   double mDoseTarget;  // Target dose to accumulate
   double mDoseTime;    // Time it started

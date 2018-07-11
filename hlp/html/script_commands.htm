@@ -290,6 +290,12 @@
           <TD>Like CompareStrings except that upper/lower&nbsp; case differences are ignored 
             in the comparison.</TD>
         </TR>
+        <TR vAlign="top">
+          <TD class="style4">StripEndingDigits var1 var2</TD>
+          <TD>Removes any digits from the end of the variable var1 and assigns it to the 
+            variable var2 (both named without a $).&nbsp; The digits are converted to a 
+            number and assigned to reportedValue1.</TD>
+        </TR>
        <TR vAlign="top">
           <TD class="style4">FlashDisplay [#T] [#D]</TD>
           <TD>Flashes between a yellow screen and normal image display
@@ -2132,7 +2138,14 @@
           <TD>Make the current image or montage a new Navigator map.&nbsp; If an optional #n 
             is entered, text after that replaces, or is added to, the standard note for a 
             map.&nbsp; The text replaces the standard note if #n is 0, is added before it if 
-            #n is &lt; 0, or is added after it if # &gt; 0.</TD>
+            #n is &lt; 0, or is added after it if # &gt; 0.&nbsp; Places the index of the 
+            new map in reportedValue1.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style12">MakeAnchorMap</TD>
+          <TD>Calls the routine to make an anchor map and does the same tests and operations 
+            as when run from the button in the dialog, including saving the current image 
+            and making it a map if it is not already.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style12">MoveToNavItem [#]</TD>
@@ -2236,6 +2249,12 @@
             table, i.e., -1 reports on the last item. </TD>
         </TR>
         <TR vAlign="top">
+          <TD class="style12">ReportNextNavAcqItem</TD>
+          <TD>Report similarly on the next Navigator item to be acquired.&nbsp; The 
+            Navigator must be acquiring.&nbsp; If the last item is being acquired, navIndex 
+            is set to -1.</TD>
+        </TR>
+        <TR vAlign="top">
           <TD class="style12">ReportGroupStatus</TD>
           <TD>For the current Navigator item or the item this script is being run on, reports a code for whether the
             item is first to be acquired in a group: -1 if Navigator not acquiring, 0 if
@@ -2249,6 +2268,10 @@
           <TD class="style12">ReportNumNavAcquire</TD>
           <TD>Report the number of Navigator marked for Acquire and marked for Tilt Series 
             as two values; return each as -1 if Navigator is not open.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style12">ReportNumTableItems</TD>
+          <TD>Report the number of items in the Navigator table.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style12">NavIndexWithLabel str</TD>
@@ -2274,6 +2297,17 @@
             Registrationn</a>: the registration number must be in the legal range,the item 
             cannot be a registration point, and you cannot change an item between imported 
             and regular registrations.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style12">ChangeItemColor #i #c</TD>
+          <TD>Change the color index of the Navigator item with table index #i to #c, which 
+            must be between 0 and 5.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style12">ChangeItemLabel #i text</TD>
+          <TD>Change the label of the Navigator item with table index #i to the given text.&nbsp; 
+            The text is limited to 16 characters; items with labels longer than 10 
+            characters will not display their properties in the right columns in the table. </TD>
         </TR>
         <TR vAlign="top">
           <TD class="style12">ItemForSuperCoord #</TD>
@@ -2424,13 +2458,13 @@
             be placed in ReportedValue1; if it is -1, this indicates an error in before 
             running the command, and ReportedValue2 will be set with the following values: 1 
             if argument list too big, 2 or 3 if command interpreter cannot be found or is 
-            not executable, 4 for insufficient memory or other meory problem, 5 for 
+            not executable, 4 for insufficient memory or other memory problem, 5 for 
             unidentified error.&nbsp; In any case, a non-zero exit status will not be 
-            considered a macro error, and you need to test for failure explicitly. These 
+            considered a script error, and you need to test for failure explicitly. These 
             error codes are not very helpful - it seems that the exit status is 1 if the 
             command cannot be found or cannot be started, so if you want to pass information 
             back with the exit status, you cannot use a 1, and might want to use a value 
-            beside 1 for failure of the operation to distinguish it from failure to run the 
+            besides 1 for failure of the operation to distinguish it from failure to run the 
             command.&nbsp;&nbsp; If STOP is used while the command is running, the script 
             will stop and the thread that is running the command will be killed, but the 
             command will keep running.</TD>

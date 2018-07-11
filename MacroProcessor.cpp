@@ -222,7 +222,9 @@ enum {CME_VIEW, CME_FOCUS, CME_TRIAL, CME_RECORD, CME_PREVIEW,
   CME_REPORTFILENUMBER, CME_REPORTCOMATILTNEEDED, CME_REPORTSTIGMATORNEEDED,
   CME_SAVEBEAMTILT, CME_RESTOREBEAMTILT, CME_REPORTCOMAVSISMATRIX,CME_ADJUSTBEAMTILTFORIS,
   CME_LOADNAVMAP, CME_LOADOTHERMAP,CME_REPORTLENSFLCSTATUS, CME_TESTNEXTMULTISHOT,
-  CME_ENTERSTRING, CME_COMPARESTRINGS, CME_COMPARENOCASE
+  CME_ENTERSTRING, CME_COMPARESTRINGS, CME_COMPARENOCASE, CME_REPORTNEXTNAVACQITEM,
+  CME_REPORTNUMTABLEITEMS, CME_CHANGEITEMCOLOR, CME_CHANGEITEMLABEL,CME_STRIPENDINGDIGITS,
+  CME_MAKEANCHORMAP
 };
 
 static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0},
@@ -334,6 +336,8 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"ReportComaVsISmatrix", 0, 0}, {"AdjustBeamTiltforIS", 0, 0}, {"LoadNavMap", 0, 0},
 {"LoadOtherMap", 1, 0}, {"ReportLensFLCStatus", 1, 0}, {"TestNextMultiShot", 1, 0},
 {"EnterString", 2, 0}, {"CompareStrings", 2, 0}, {"CompareNoCase", 2, 0}, 
+{"ReportNextNavAcqItem", 0, 0}, {"ReportNumTableItems", 0, 0}, {"ChangeItemColor", 2, 0},
+{"ChangeItemLabel", 2, 0}, {"StripEndingDigits", 2, 0}, {"MakeAnchorMap", 0, 0},
 {NULL, 0, 0}
 };
 
@@ -414,6 +418,7 @@ CMacroProcessor::CMacroProcessor()
   mStartedLongOp = false;
   mMovedPiezo = false;
   mLoadingMap = false;
+  mMakingDualMap = false;
   mLastCompleted = false;
   mLastAborted = false;
   mEnteredName = "";
@@ -838,6 +843,7 @@ int CMacroProcessor::TaskBusy()
     (mStartedLongOp && mScope->LongOperationBusy()) ||
     (mMovedPiezo && mWinApp->mPiezoControl->PiezoBusy() > 0) ||
     (mLoadingMap && mWinApp->mNavigator && mWinApp->mNavigator->GetLoadingMap()) ||
+    (mMakingDualMap && mWinApp->mNavHelper->GetAcquiringDual()) ||
     mWinApp->mShiftCalibrator->CalibratingIS() ||
     (mCamera->CameraBusy() && (mCamera->GetTaskWaitingForFrame() || 
     !(mUsingContinuous && mCamera->DoingContinuousAcquire()))) ||
@@ -3744,6 +3750,23 @@ void CMacroProcessor::NextCommand()
     mWinApp->AppendToLog(report, mLogAction);
     SetReportedValues(index);
 
+  } else if (CMD_IS(STRIPENDINGDIGITS)) {                   // StripEndingDigits
+    var = LookupVariable(item1upper, index2);
+    if (!var)
+      ABORT_LINE("The variable " + strItems[1] + " is not defined in line:\n\n");
+    report = var->value;
+    for (index = report.GetLength() - 1; index > 0; index--)
+      if ((int)report.GetAt(index) < '0' || (int)report.GetAt(index) > '9')
+        break;
+    strCopy = report.Right(report.GetLength() - (index + 1));
+    report = report.Left(index + 1);
+    item1upper = strItems[2];
+    item1upper.MakeUpper();
+    if (SetVariable(item1upper, report, VARTYPE_REGULAR, -1, false))
+      ABORT_LINE("Error setting variable " + strItems[2] + " with string " + report +
+      " in:\n\n");
+    SetReportedValues(atoi((LPCTSTR)strCopy));
+
   } else if (CMD_IS(MAILSUBJECT)) {                         // MailSubject
     SubstituteVariables(&strLine, 1, strLine);
     mWinApp->mParamIO->StripItems(strLine, 1, mMailSubject);
@@ -4600,14 +4623,24 @@ void CMacroProcessor::NextCommand()
       ABORT_NOLINE("Script halted due to failure to realign to item");
       navHelper->SetContinuousRealign(0);
     }
-                              // ReportNavItem, ReportOtherItem, LoadNavMap, LoadOtherMap
+         // ReportNavItem, ReportOtherItem, ReportNextNavAcqItem, LoadNavMap, LoadOtherMap
   } else if (CMD_IS(REPORTNAVITEM) || CMD_IS(REPORTOTHERITEM) || CMD_IS(LOADNAVMAP) || 
-    CMD_IS(LOADOTHERMAP)) {
+    CMD_IS(LOADOTHERMAP) || CMD_IS(REPORTNEXTNAVACQITEM)) {
       ABORT_NONAV;
+      truth = CMD_IS(REPORTNEXTNAVACQITEM);
       if (CMD_IS(REPORTNAVITEM) || CMD_IS(LOADNAVMAP)) {                            
         index = navigator->GetCurrentOrAcquireItem(navItem);
         if (index < 0)
           ABORT_LINE("There is no current Navigator item for line:\n\n.");
+      } else if (truth) {
+        if (!navigator->GetAcquiring())
+          ABORT_LINE("The Navigator must be acquiring for line:\n\n");
+        navItem = navigator->FindNextAcquireItem(index);
+        if (index < 0) {
+          mWinApp->AppendToLog("There is no next item to be acquired", mLogAction);
+          SetVariable("NAVINDEX", "-1", VARTYPE_REGULAR, -1, false);
+          SetReportedValues(-1);
+        }
       } else {
         if (itemInt[1] < 0) {
            CArray<CMapDrawItem *, CMapDrawItem *> *items = navigator->GetItemArray();
@@ -4619,10 +4652,10 @@ void CMacroProcessor::NextCommand()
           ABORT_LINE("Index is out of range in statement:\n\n");
       }
 
-
-      if (CMD_IS(REPORTNAVITEM) || CMD_IS(REPORTOTHERITEM)) {
-        report.Format("Item %d:  Stage: %.2f %.2f %2.f  Label: %s", index + 1,
-          navItem->mStageX, navItem->mStageY, navItem->mStageZ, (LPCTSTR)navItem->mLabel);
+      if (CMD_IS(REPORTNAVITEM) || CMD_IS(REPORTOTHERITEM) || (truth && index >= 0)) {
+        report.Format("%stem %d:  Stage: %.2f %.2f %2.f  Label: %s", 
+          truth ? "Next i" : "I", index + 1, navItem->mStageX, navItem->mStageY, 
+          navItem->mStageZ, (LPCTSTR)navItem->mLabel);
         if (!navItem->mNote.IsEmpty())
           report += "\r\n    Note: " + navItem->mNote;
         mWinApp->AppendToLog(report, mLogAction);
@@ -4637,10 +4670,10 @@ void CMacroProcessor::NextCommand()
         report.Format("%d", index);
         SetVariable("NAVINTLABEL", report, VARTYPE_REGULAR, -1, false);
         if (navigator->GetAcquiring()) {
-          report.Format("%d", navigator->GetNumAcquired() + 1);
+          report.Format("%d", navigator->GetNumAcquired() + truth ? 2 : 1);
           SetVariable("NAVACQINDEX", report, VARTYPE_REGULAR, -1, false);
         }
-      } else {
+      } else if (!truth) {
         if (navItem->mType != ITEM_TYPE_MAP)
           ABORT_LINE("The Navigator item is not a map for line:\n\n");
         navigator->DoLoadMap(false, navItem);
@@ -4670,6 +4703,13 @@ void CMacroProcessor::NextCommand()
       report.Format("Navigator has %d Acquire items, %d Tilt Series items", index,index2);
     mWinApp->AppendToLog(report, mLogAction);
     SetReportedValues(&strItems[1], (double)index, (double)index2);
+    
+  } else if (CMD_IS(REPORTNUMTABLEITEMS)) {                 // ReportNumTableItems
+    ABORT_NONAV;
+    index = navigator->GetNumberOfItems();
+      report.Format("Navigator table has %d items", index);
+    mWinApp->AppendToLog(report, mLogAction);
+    SetReportedValues(&strItems[1], (double)index);
 
   } else if (CMD_IS(SETNAVREGISTRATION)) {                  // SetNavRegistration
     ABORT_NONAV;
@@ -4677,20 +4717,42 @@ void CMacroProcessor::NextCommand()
       ABORT_LINE("New registration number is out of range or used for imported items "
       "in:\n\n");
 
-  } else if (CMD_IS(CHANGEITEMREGISTRATION)) {              // ChangeItemRegistration
-    ABORT_NONAV;
-    index = itemInt[1];
-    index2 = itemInt[2];
-    navItem = navigator->GetOtherNavItem(index - 1);
-    report.Format("The Navigator item index, %d, is out of range in:\n\n", index);
-    if (!navItem)
-      ABORT_LINE(report);
-    report.Format("The Navigator item with index %d is a registration point in:\n\n", 
-      index);
-    if (navItem->mRegPoint)
-      ABORT_LINE(report);
-    if (navigator->ChangeItemRegistration(index - 1, index2, report))
-      ABORT_LINE(report + " in line:\n\n");
+                              //ChangeItemColor,  ChangeItemLabel, ChangeItemRegistration
+  } else if (CMD_IS(CHANGEITEMREGISTRATION) || CMD_IS(CHANGEITEMCOLOR) || 
+    CMD_IS(CHANGEITEMLABEL)) {
+      ABORT_NONAV;
+      index = itemInt[1];
+      index2 = itemInt[2];
+      navItem = navigator->GetOtherNavItem(index - 1);
+      report.Format("The Navigator item index, %d, is out of range in:\n\n", index);
+      if (!navItem)
+        ABORT_LINE(report);
+      if (CMD_IS(CHANGEITEMREGISTRATION)) {
+        report.Format("The Navigator item with index %d is a registration point in:\n\n", 
+          index);
+        if (navItem->mRegPoint)
+          ABORT_LINE(report);
+        if (navigator->ChangeItemRegistration(index - 1, index2, report))
+          ABORT_LINE(report + " in line:\n\n");
+      } else {
+        if (CMD_IS(CHANGEITEMCOLOR)) {
+          report.Format("The Navigator item color must be between 0 and %d in:\n\n", 
+            NUM_ITEM_COLORS - 1);
+          if (index2 < 0 || index2 >= NUM_ITEM_COLORS)
+            ABORT_LINE(report);
+          navItem->mColor = index2;
+        } else {
+          SubstituteVariables(&strLine, 1, strLine);
+          mWinApp->mParamIO->StripItems(strLine, 2, strCopy);
+          report.Format("The Navigator label size must be no more than %d characters "
+            "in:\n\n", MAX_LABEL_SIZE);
+          if (strCopy.GetLength() > MAX_LABEL_SIZE)
+            ABORT_LINE(report);
+          navItem->mLabel = strCopy;
+        }
+        navigator->UpdateListString(index - 1);
+        navigator->Redraw();
+      }
 
   } else if (CMD_IS(SKIPACQUIRINGNAVITEM)) {                // SkipAcquiringNavItem
     ABORT_NONAV;
@@ -4777,7 +4839,16 @@ void CMacroProcessor::NextCommand()
       SuspendMacro();
       return;
     }
+    SetReportedValues(&strItems[1], (double)navigator->GetNumberOfItems());
 
+  } else if (CMD_IS(MAKEANCHORMAP)) {                       // MakeAnchorMap
+    ABORT_NONAV;
+    if (navigator->DoMakeDualMap()) {
+      AbortMacro();
+      return;
+    }
+    mMakingDualMap = true;
+  
   } else if (CMD_IS(SHIFTITEMSBYALIGNMENT)) {               // ShiftItemsByAlignment
     ABORT_NONAV;
     if (navigator->ShiftItemsByAlign()) {
