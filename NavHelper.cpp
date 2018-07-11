@@ -3222,15 +3222,15 @@ void CNavHelper::UpdateStateDlg(void)
 /////  DUAL MAP  (THE ORIGINAL NAME)  NOW ANCHOR MAP
 /////////////////////////////////////////////////
 
-void CNavHelper::MakeDualMap(CMapDrawItem *item)
+int CNavHelper::MakeDualMap(CMapDrawItem *item)
 {
   EMimageBuffer *imBuf;
   int err;
   mIndexAfterDual = mNav->GetCurListSel();
   if (!item) {
-    AfxMessageBox("Cannot find the item that was to be used for the map acquire state",
+    SEMMessageBox("Cannot find the item that was to be used for the map acquire state",
       MB_EXCLAME);
-    return;
+    return 1;
   }
   
   // Make a map if it is not already one and it is suitable
@@ -3238,7 +3238,7 @@ void CNavHelper::MakeDualMap(CMapDrawItem *item)
   if (!imBuf->mMapID && imBuf->mMagInd > item->mMapMagInd) {
     err = mNav->NewMap(true);
     if (err > 0)
-      return;
+      return 2;
     if (!err) {
       mWinApp->AppendToLog("Made a new map from the existing image before getting"
       " anchor map");
@@ -3259,7 +3259,7 @@ void CNavHelper::MakeDualMap(CMapDrawItem *item)
   // Go to imaging state, apply any defocus offset
   if (SetToMapImagingState(item, true, TRUE)) {
     RestoreFromMapState();
-    return;
+    return 3;
   }
   if (!mRIstayingInLD)
     SetMapOffsetsIfAny(item);
@@ -3275,6 +3275,7 @@ void CNavHelper::MakeDualMap(CMapDrawItem *item)
   mWinApp->AddIdleTask(TASK_DUAL_MAP, 0, 0);
   mWinApp->SetStatusText(COMPLEX_PANE, "MAKING ANCHOR MAP");
   mWinApp->UpdateBufferWindows();
+  return 0;
 }
 
 int CNavHelper::DualMapBusy(void)

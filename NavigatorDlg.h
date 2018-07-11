@@ -21,6 +21,8 @@ class CNavAcquireDlg;
 #define MAX_CURRENT_REG 99
 #define MAX_SAVED_REGXFORM 10
 #define MIN_INTERNAL_ID 100000
+#define NUM_ITEM_COLORS  6
+#define MAX_LABEL_SIZE  16
 enum NavAcquireTypes {ACQUIRE_TAKE_MAP = 0, ACQUIRE_IMAGE_ONLY, ACQUIRE_RUN_MACRO,
   ACQUIRE_DO_TS};
 enum NavRegTypes {NAVREG_UNUSED, NAVREG_REGULAR, NAVREG_IMPORT};
@@ -474,6 +476,7 @@ public:
   CButton m_butDualMap;
   afx_msg void OnCheckDualMap();
   afx_msg void OnButDualMap();
+  int DoMakeDualMap();
   void SendEmailIfNeeded(void);
   CString m_strItemNum;
   int OpenFileIfNeeded(CMapDrawItem * item, bool stateOnly);
@@ -557,6 +560,8 @@ void MoveStageOrDoImageShift(int axisBits);
 void SetCurrentSelection(int listInd);
 int LimitsOfContiguousGroup(int itemInd, int &groupStart, int & groupEnd);
 void IStoXYandAdvance(int &direction);
+CMapDrawItem *FindNextAcquireItem(int &index);
+bool IsItemToBeAcquired(CMapDrawItem *item, bool &skippingGroup);
 };
 
 //{{AFX_INSERT_LOCATION}}

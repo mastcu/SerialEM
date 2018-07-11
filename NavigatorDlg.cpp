@@ -191,7 +191,7 @@ void CNavigatorDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Check(pDX, IDC_CHECKROTATE, m_bRotate);
   DDX_Check(pDX, IDC_CHECK_REGPOINT, m_bRegPoint);
   DDX_Text(pDX, IDC_EDIT_PTLABEL, m_strLabel);
-  DDV_MaxChars(pDX, m_strLabel, 10);
+  DDV_MaxChars(pDX, m_strLabel, MAX_LABEL_SIZE);
   DDX_Text(pDX, IDC_EDIT_PTNOTE, m_strPtNote);
   DDX_Check(pDX, IDC_CHECKCORNER, m_bCorner);
   DDX_Text(pDX, IDC_STAT_CURRENTREG, m_strCurrentReg);
@@ -5351,21 +5351,24 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
         return 1;
       } else {
 
-        //If it can be saved, and they haven't been asked before, ask about auto save
-        if (mDocWnd->GetSaveOnNewMap() < 0) {
-          i = AfxMessageBox("This image is not saved yet and can be saved \ninto the "
-            "current file.\n\nDo you always want to save images automatically into this"
-            " file\nwhenever you press New Map and it is the current file?",
-            MB_YESNO, MB_ICONQUESTION);
-          mDocWnd->SetSaveOnNewMap(i == IDNO ? 0 : 1);
-        }
+        if (!(mWinApp->mMacroProcessor->DoingMacro() && mHelper->GetAcquiringDual())) {
 
-        // Even if they don't want auto save, ask if they want to save this one
-        if (!mDocWnd->GetSaveOnNewMap()) {
-          if (AfxMessageBox("This image is not saved yet.\n\n"
-            "Do you want to save it into the current file?", 
-            MB_YESNO, MB_ICONQUESTION) == IDNO)
-            return 2;
+          //If it can be saved, and they haven't been asked before, ask about auto save
+          if (mDocWnd->GetSaveOnNewMap() < 0) {
+            i = AfxMessageBox("This image is not saved yet and can be saved \ninto the "
+              "current file.\n\nDo you always want to save images automatically into this"
+              " file\nwhenever you press New Map and it is the current file?",
+              MB_YESNO, MB_ICONQUESTION);
+            mDocWnd->SetSaveOnNewMap(i == IDNO ? 0 : 1);
+          }
+
+          // Even if they don't want auto save, ask if they want to save this one
+          if (!mDocWnd->GetSaveOnNewMap()) {
+            if (AfxMessageBox("This image is not saved yet.\n\n"
+              "Do you want to save it into the current file?", 
+              MB_YESNO, MB_ICONQUESTION) == IDNO)
+              return 2;
+          }
         }
 
         // If we got here, they want it saved!
@@ -5931,9 +5934,14 @@ void CNavigatorDlg::ImportMap(void)
 // Call Helper to make a dual map
 void CNavigatorDlg::OnButDualMap()
 {
-  CMapDrawItem *item = FindItemWithMapID(mDualMapID, true);
   mWinApp->RestoreViewFocus();
-  mHelper->MakeDualMap(item);
+  DoMakeDualMap();
+}
+
+int CNavigatorDlg::DoMakeDualMap()
+{
+  CMapDrawItem *item = FindItemWithMapID(mDualMapID, true);
+  return mHelper->MakeDualMap(item);
 }
 
 // Load a map image
@@ -7814,81 +7822,78 @@ void CNavigatorDlg::SendEmailIfNeeded(void)
 // Find the next area marked as an acquire in this registration and go to it
 int CNavigatorDlg::GotoNextAcquireArea()
 {
+  int ind, err, axisBits = axisXY | axisZ;
+  bool skippedGroup = false, skippingGroup, acquire;
   CMapDrawItem *item;
-  int i, err, axisBits = axisXY | axisZ;
-  bool skippedGroup = false;
-  for (i = mAcquireIndex; i <= mEndingAcquireIndex; i++) {
-    item = mItemArray[i];
-    if (item->mRegistration == mCurrentRegistration && 
-      ((item->mAcquire && mParam->acquireType != ACQUIRE_DO_TS) || 
-      (item->mTSparamIndex >= 0 && mParam->acquireType == ACQUIRE_DO_TS))) {
-        if (item->mGroupID && item->mGroupID == mGroupIDtoSkip) {
-          if (!skippedGroup)
-            PrintfToLog("Skipping point(s) with group ID %d", mGroupIDtoSkip);
-          skippedGroup = true;
-          continue;
-        }
-
-        // Skip maps and remove the mark if acquiring map, but not if doing macro???
-        // But what if they want a different mag map?  This should go 
-        /*if (item->mType == ITEM_TYPE_MAP && mParam->acquireType == ACQUIRE_TAKE_MAP) {
-        item->mAcquire = false;
-        UpdateListString(i);
-        continue;
-        } */
-        SEMTrace('M', "Navigator Stage Start");
-
-        // Set the current item for the stage move!
-        mItem = item;
-
-        // It is OK to skip stage move on various conditions, but if center beam is 
-        // selected, do not do it on first item
-        if (mSkipStageMoveInAcquire && OKtoSkipStageMove(mParam) && 
-          (!mParam->acqCenterBeam || mNumAcquired))
-          axisBits = 0;
-        else if (mParam->acqSkipZmoves)
-          axisBits = axisXY;
-        err = MoveStage(axisBits);
-        if (err > 0)
-          return 1;
-        if (err < 0) {
-          item->mAcquire = false;
-          UpdateListString(i);
-          if (i == mCurrentItem)
-            ManageCurrentControls();
-          mWinApp->AppendToLog("Item " + item->mLabel + " is being skipped because it is "
-            "outside the limits for stage movement", LOG_MESSAGE_IF_CLOSED);
-          continue;
-        }
-        mAcquireIndex = i;
-
-        // Set state now
-        err = OpenFileIfNeeded(item, true);
-        if (err)
-          return err;
-
-        // Update the log file for tilt series with autosave policy
-        if (mParam->acquireType == ACQUIRE_DO_TS && 
-          mWinApp->mTSController->GetAutoSavePolicy()) {
-            if (mWinApp->mLogWindow && 
-              mWinApp->mLogWindow->SaveFileNotOnStack(item->mFileToOpen)) {
-                mWinApp->mLogWindow->DoSave();
-                mWinApp->mLogWindow->CloseLog();
-                mWinApp->AppendToLog(mWinApp->mDocWnd->DateTimeForTitle());
-            }
-            mWinApp->AppendToLog("", LOG_OPEN_IF_CLOSED);
-            mWinApp->mLogWindow->UpdateSaveFile(true, item->mFileToOpen);
-        }
-
-        // Set flag for first in group and maintain last group ID
-        mFirstInGroup = item->mGroupID > 0 && item->mGroupID != mLastGroupID;
-        mLastGroupID = item->mGroupID;
-
-        UpdateListString(i);
-        mMovingStage = true;
-        mWinApp->AddIdleTask(TASK_NAVIGATOR_ACQUIRE, 0, 60000);
-        return 0;
+  for (ind = mAcquireIndex; ind <= mEndingAcquireIndex; ind++) {
+    item = mItemArray[ind];
+    acquire = IsItemToBeAcquired(item, skippingGroup);
+    if (skippingGroup && !skippedGroup) {
+      PrintfToLog("Skipping point(s) with group ID %d", mGroupIDtoSkip);
+      skippedGroup = true;
     }
+    if (!acquire)
+      continue;
+
+    // Skip maps and remove the mark if acquiring map, but not if doing macro???
+    // But what if they want a different mag map?  This should go 
+    /*if (item->mType == ITEM_TYPE_MAP && mParam->acquireType == ACQUIRE_TAKE_MAP) {
+    item->mAcquire = false;
+    UpdateListString(i);
+    continue;
+    } */
+    SEMTrace('M', "Navigator Stage Start");
+
+    // Set the current item for the stage move!
+    mItem = item;
+
+    // It is OK to skip stage move on various conditions, but if center beam is 
+    // selected, do not do it on first item
+    if (mSkipStageMoveInAcquire && OKtoSkipStageMove(mParam) && 
+      (!mParam->acqCenterBeam || mNumAcquired))
+      axisBits = 0;
+    else if (mParam->acqSkipZmoves)
+      axisBits = axisXY;
+    err = MoveStage(axisBits);
+    if (err > 0)
+      return 1;
+    if (err < 0) {
+      item->mAcquire = false;
+      UpdateListString(ind);
+      if (ind == mCurrentItem)
+        ManageCurrentControls();
+      mWinApp->AppendToLog("Item " + item->mLabel + " is being skipped because it is "
+        "outside the limits for stage movement", LOG_MESSAGE_IF_CLOSED);
+      continue;
+    }
+    mAcquireIndex = ind;
+
+    // Set state now
+    err = OpenFileIfNeeded(item, true);
+    if (err)
+      return err;
+
+    // Update the log file for tilt series with autosave policy
+    if (mParam->acquireType == ACQUIRE_DO_TS && 
+      mWinApp->mTSController->GetAutoSavePolicy()) {
+        if (mWinApp->mLogWindow && 
+          mWinApp->mLogWindow->SaveFileNotOnStack(item->mFileToOpen)) {
+            mWinApp->mLogWindow->DoSave();
+            mWinApp->mLogWindow->CloseLog();
+            mWinApp->AppendToLog(mWinApp->mDocWnd->DateTimeForTitle());
+        }
+        mWinApp->AppendToLog("", LOG_OPEN_IF_CLOSED);
+        mWinApp->mLogWindow->UpdateSaveFile(true, item->mFileToOpen);
+    }
+
+    // Set flag for first in group and maintain last group ID
+    mFirstInGroup = item->mGroupID > 0 && item->mGroupID != mLastGroupID;
+    mLastGroupID = item->mGroupID;
+
+    UpdateListString(ind);
+    mMovingStage = true;
+    mWinApp->AddIdleTask(TASK_NAVIGATOR_ACQUIRE, 0, 60000);
+    return 0;
   }
   mAcquireEnded = 1;
   return -1;
@@ -8278,6 +8283,35 @@ CMapDrawItem * CNavigatorDlg::GetOtherNavItem(int index)
     return NULL;
   mItem = mItemArray[index];
   return mItem;
+}
+
+// Finds the next item to be acquired, returns its index
+CMapDrawItem *CNavigatorDlg::FindNextAcquireItem(int &index)
+{
+  CMapDrawItem *item;
+  bool skippingGroup;
+  for (index = mAcquireIndex + 1; index <= mEndingAcquireIndex; index++) {
+    item = mItemArray[index];
+    if (IsItemToBeAcquired(item, skippingGroup))
+      return item;
+  }
+  index = -1;
+  return NULL;
+}
+
+// Tests whether a given item is to be acquired
+bool CNavigatorDlg::IsItemToBeAcquired(CMapDrawItem *item, bool &skippingGroup)
+{
+  skippingGroup = false;
+  if (item->mRegistration == mCurrentRegistration && 
+    ((item->mAcquire && mParam->acquireType != ACQUIRE_DO_TS) || 
+    (item->mTSparamIndex >= 0 && mParam->acquireType == ACQUIRE_DO_TS))) {
+      if (item->mGroupID && item->mGroupID == mGroupIDtoSkip)
+        skippingGroup = true;
+      else
+        return true;
+  }
+  return false;
 }
 
 // Return a map or other item with the given ID if it exists, otherwise return NULL

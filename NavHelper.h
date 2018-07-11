@@ -298,7 +298,7 @@ public:
   WINDOWPLACEMENT * GetStatePlacement(void);
   void UpdateStateDlg(void);
   void ClearStateArray(void);
-  void MakeDualMap(CMapDrawItem *item);
+  int MakeDualMap(CMapDrawItem *item);
   int DualMapBusy(void);
   void DualMapDone(int param);
   void DualMapCleanup(int error);
