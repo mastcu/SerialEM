@@ -2671,7 +2671,8 @@ void CSerialEMApp::SetDebugOutput(CString keys)
 
 BOOL GetDebugOutput(char key)
 {
-  return (key == '1' || debugOutput.Find(key) >= 0);
+  return (!(debugOutput.IsEmpty() || debugOutput == "0") &&
+    (key == '1' || debugOutput.Find(key) >= 0));
 }
 
 CString CSerialEMApp::GetDebugKeys(void)
