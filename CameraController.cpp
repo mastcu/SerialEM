@@ -3267,7 +3267,7 @@ int CCameraController::CapManageInsertTempK2Saving(const ControlSet &conSet, int
           } else {
             AfxMessageBox("The camera temperature is not yet stable", MB_EXCLAME);
             justReturn = true;
-            ErrorCleanup(1);
+            callCleanup = true;
           }
         } 
         catch (_com_error E) {
