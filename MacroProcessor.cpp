@@ -4670,7 +4670,7 @@ void CMacroProcessor::NextCommand()
         report.Format("%d", index);
         SetVariable("NAVINTLABEL", report, VARTYPE_REGULAR, -1, false);
         if (navigator->GetAcquiring()) {
-          report.Format("%d", navigator->GetNumAcquired() + truth ? 2 : 1);
+          report.Format("%d", navigator->GetNumAcquired() + (truth ? 2 : 1));
           SetVariable("NAVACQINDEX", report, VARTYPE_REGULAR, -1, false);
         }
       } else if (!truth) {
