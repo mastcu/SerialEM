@@ -501,10 +501,12 @@
         calibration vectors for all magnifications where image shift has been 
         calibrated. This listing can provide a check on the accuracy of the image shift 
         calibrations and, on a JEOL, reveal magnification boundaries where there are 
-        discontinuities in the image shift calibration. A length and an angle are 
+        discontinuities in the image shift calibration.&nbsp; A length and an angle are 
         computed for a change in the X image shift and for a change in the Y image 
         shift. The vector lengths represent the estimated microns moved on the specimen 
-        per nominal micron of applied image shift, so the lengths should be near 1. The 
+        per nominal micron of applied image shift, so the lengths should be near 1, 
+        unless using projector shifts (PLA) for image shift on a JEOL, in which case 
+        they should decline continuously within a magnification range.. The 
         angles are angles on the specimen and they should stay constant as long as there 
         is no discontinuity in image shift behavior.</P>
       <P>These estimates are based on the pixel size and image rotation angle at each 

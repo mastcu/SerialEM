@@ -507,7 +507,7 @@ void CLowDoseDlg::OnRshow()
 // Go to an area when button is pressed (if test may be superfluous, they should disabled)
 void CLowDoseDlg::OnGotoArea(UINT nID)
 {
-  int area = nID - IDC_COPYTOVIEW;
+  int area = nID - IDC_GOTO_VIEW;
   UpdateData(true);
   mWinApp->RestoreViewFocus();
   if (mTrulyLowDose && !mWinApp->DoingTasks() && !mWinApp->mCamera->CameraBusy())
@@ -1055,6 +1055,11 @@ BOOL CLowDoseDlg::OnInitDialog()
   SetDlgItemText(IDC_RSHOWFOCUS, mModeNames[1].Left(abbrev) + ".");
   SetDlgItemText(IDC_RSHOWTRIAL, mModeNames[2].Left(abbrev) + ".");
   SetDlgItemText(IDC_RSHOWRECORD, mModeNames[3].Left(abbrev) + ".");
+  SetDlgItemText(IDC_GOTO_SEARCH, mSearchName.Left(abbrev) + ".");
+  SetDlgItemText(IDC_GOTO_VIEW, mModeNames[0].Left(abbrev) + ".");
+  SetDlgItemText(IDC_GOTO_FOCUS, mModeNames[1].Left(abbrev) + ".");
+  SetDlgItemText(IDC_GOTO_TRIAL, mModeNames[2].Left(abbrev) + ".");
+  SetDlgItemText(IDC_GOTO_RECORD, mModeNames[3].Left(abbrev) + ".");
   m_butShowView.SetFont(mLittleFont);
   m_butShowFocus.SetFont(mLittleFont);
   m_butShowTrial.SetFont(mLittleFont);

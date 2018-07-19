@@ -3,6 +3,20 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+7/19/18: Added ability to continue script commands onlto multiple lines by
+ending them with a backslash after a space.
+
+7/19/18: Initialized variable to prevent camera routine from trying to do a
+beam tilt in post-actions.
+
+7/19/18: Prevented error message when it fails to close clumn valves during a
+crash.
+
+7/19/18: Added separate buttons for going to a low dose area to low dose panel
+and reverted the radio buttons to just controlling show when screen down.
+
+7/19/18" Added current camera name to camera & script tools panel.
+
 7/10/18: Added script commands to report on next Nav item to be acquired,
 change item labels and colors, make an anchor map, and strip digits from the
 end of a string.

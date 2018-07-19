@@ -180,6 +180,7 @@ CCameraController::CCameraController()
   mStageQueued = false;
   mMagQueued = false;
   mISQueued = false;
+  mBeamTiltQueued = false;
   mDriftISQueued = false;
   mInsertThread = NULL;
   mAcquireThread = NULL;
@@ -1414,6 +1415,7 @@ void CCameraController::SetCurrentCamera(int currentCam, int activeCam)
     }
   }
   mAMTactive = mParam->AMTtype != 0;
+  mWinApp->mCameraMacroTools.Update();
 }
 
 // Set flag to divide 16-bit data by 2
