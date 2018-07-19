@@ -5310,21 +5310,42 @@ void CMacroProcessor::SetIntensityFactor(int iDir)
   mIntensityFactor = cos(angle * DTOR) / cos((angle + increment) * DTOR);
 }
 
+// Get the next line or multiple lines if they end with backslash
 void CMacroProcessor::GetNextLine(CString * macro, int & currentIndex, CString &strLine)
 {
-  // Find next linefeed
-  int index = macro->Find('\n', currentIndex);
-  if (index < 0) {
+  int index, testInd;
+  strLine = "";
+  for (;;) {
 
-    // If none, get rest of string, set index past end
-    strLine = macro->Mid(currentIndex);
-    currentIndex = macro->GetLength();
-  } else {
+    // Find next linefeed
+    index = macro->Find('\n', currentIndex);
+    if (index < 0) {
 
-    // otherwise get the whole line, set index past it
-    index++;
-    strLine = macro->Mid(currentIndex, index - currentIndex);
-    currentIndex = index;
+      // If none, get rest of string, set index past end
+      strLine = macro->Mid(currentIndex);
+      currentIndex = macro->GetLength();
+      break;
+    } else {
+
+      // Set index past end of line then test for space backslash after skipping a \r
+      index++;
+      testInd = index - 2;
+      if (testInd >= 0 && macro->GetAt(testInd) == '\r')
+        testInd--;
+      if (testInd > 0 && macro->GetAt(testInd) == '\\' && 
+        macro->GetAt(testInd - 1) == ' ') {
+
+          // To continue, add the line through the space then set the index to next line
+          strLine += macro->Mid(currentIndex, testInd - currentIndex);
+          currentIndex = index;
+      } else {
+
+        // otherwise get the whole line and break out
+        strLine += macro->Mid(currentIndex, index - currentIndex);
+        currentIndex = index;
+        break;
+      }
+    }
   }
 }
 
@@ -6363,7 +6384,8 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel)
   int subBlockNum[MAX_LOOP_DEPTH + 1];
   CString *macro = &mMacros[macroNum];
   int numLabels = 0, numSkips = 0;
-  int i, inloop, index, skipInd, labInd, length, currentIndex = 0;
+  int i, inloop, needVers, index, skipInd, labInd, length, currentIndex = 0;
+  int currentVersion = 201;
   CString strLine, strItems[MAX_TOKENS], errmess, intCheck;
   const char *features[] = {"variable1", "arrays", "keepcase", "zeroloop", "evalargs"};
   int numFeatures = sizeof(features) / sizeof(char *);
@@ -6418,6 +6440,20 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel)
           for (index = 0; index < numFeatures; index++)
             if (!strItems[i].CompareNoCase(features[index]))
               inloop = 1;
+          if (!inloop) {
+            needVers = atoi(strItems[1]);
+            if (needVers > 0) {
+              if (needVers <= currentVersion) {
+                inloop = 1;
+              } else {
+                 intCheck.Format("Required scripting version %d is not provided by this\n"
+                   "version of SerialEM, which has scripting version %d.\n"
+                   "If this number is right, then you need a later version."
+                   "\nThe Require command is", needVers, currentVersion);
+                 FAIL_CHECK_NOLINE(intCheck);
+              }
+            }
+          }
           if (!inloop) {
             intCheck.Format("Required feature \"%s\" is not available in this version\n"
               "of SerialEM.  If this is spelled right, then you need a later version\n\n"

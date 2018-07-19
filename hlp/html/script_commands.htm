@@ -348,17 +348,25 @@
             the feature is invoked, it cannot be turned off.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style4">Require feature [feature] ...</TD>
-          <TD>This command tests whether the given script features are available in this 
+          <TD class="style4">Require feature [feature] ...<br />
+&nbsp;&nbsp;&nbsp; or<br />
+            Require script_version_number</TD>
+          <TD>This command tests whether scripting features used in the script are available in this 
             version of SerialEM.&nbsp; Earlier versions will not generate an error when some 
             newer features are used, so including this command is the only way to test 
-            whether the script will run correctly.&nbsp; The available features are: 1) &#39;variable1&#39;, which includes two capabilities: assigning reported values 
+            whether the script will run correctly.&nbsp; Initially these features were 
+            specified by name, but this was silly and the command now takes a scripting 
+            version number, which is unrelated to the program version number.&nbsp; You can 
+            enter either the latest feature name or the version number that your script 
+            needs. The available features, in order of addition, were: 1) &#39;variable1&#39;, which includes two capabilities: assigning reported values 
             directly to variables listed after a command, and assigning function arguments 
             directly to variables listed on the &#39;Function&#39; line.&nbsp; 2) &#39;arrays&#39;, 
             which is the ability to define a variable with an indexable array of values.&nbsp; 
             3) &#39;keepcase&#39;, which means that case will be preserved when assigning text to a 
             variable.&nbsp; 4) 'zeroloop', which means that a non-positive loop count is 
-            allowed.</TD>
+            allowed.&nbsp; 5) &#39;evalargs&#39;, which means that arithmetic expressions will be 
+            evaluated in arguments to some commands.&nbsp; 6) Scripting version 201, which 
+            means commands can be continued onto multiple lines with backslash.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style4">IsVersionAtLeast #v [#d]</TD>

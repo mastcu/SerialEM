@@ -58,7 +58,16 @@
       while pressing an enabled script button in the <A HREF="hidd_camera_macro.htm">Camera 
         &amp; Script Control Panel</A> or in the toolbar that can be opened from the 
       Script menu. 
-      One command is entered per line. Blank lines and lines starting with # are 
+      </P>
+    <P>One command is entered per line, but a long command can be continued onto 
+      multiple lines by ending each line but the last with a backslash (\) after a 
+      space.  (This feature is new in SerialEM 3.7 (July 12, 2018); if there is any chance 
+      that someone would try to run your script on an earlier version, you should 
+      include the command<br />
+&nbsp;&nbsp; Require 201<br />
+      somewhere in the script, or 
+      replace whatever is listed on an existing 'Require' statement with '201'.)</P>
+    <P>Blank lines and lines starting with # are 
       ignored. Comments can also be placed after the command on a line, starting with 
       # after a space.</P>
     <P>Scripts can be run from the Script menu, from the <A HREF="hidd_camera_macro.htm">Camera 
@@ -83,7 +92,7 @@
       first added to a script, it will appear after some action is taken with the 
       script.</P>
     <P>Scripts will be saved when Settings are saved, and when a settings file is 
-      loaded, any scripts in that file will replace scripts already in the program.</P>
+      loaded, the scripts in that file will replace all of the scripts already in the program.</P>
     <P><A NAME="variables"></A><B>Using Variables</B></P>
     <P>Variables can be defined in scripts and some arithmetic can be done in a line 
       that defines a variable. There are six kinds of variables: regular ones 
