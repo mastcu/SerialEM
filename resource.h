@@ -362,7 +362,7 @@
 #define IDC_COPYTOFOCUS                 1311
 #define IDC_COPYTOTRIAL                 1312
 #define IDC_COPYTORECORD                1313
-#define IDC_RNEXTTILT                   1314
+#define IDC_COPYTOSEARCH                1314
 #define IDC_RLOWTRACKFOCUS              1315
 #define IDC_BUTHELP                     1316
 #define IDC_EDITNEWTRACKDIFF            1317
@@ -373,6 +373,7 @@
 #define ID_TESTACQUIRE                  1322
 #define IDC_BUTFLOATDOCK                1323
 #define IDC_STATCAMERA                  1324
+#define IDC_RNEXTTILT                   1325
 #define IDC_BUTCOPYCAMERA               1329
 #define IDC_STATCOPYCAMERA              1330
 #define IDC_EFTEMMODE                   1331
@@ -1412,6 +1413,7 @@
 #define IDC_CHECK_TAKE_K3_BINNED        2437
 #define IDC_STAT_CURSET1                2438
 #define IDC_STAT_CURSET2                2439
+#define IDC_CHECK1                      2440
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -1841,7 +1843,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        228
 #define _APS_NEXT_COMMAND_VALUE         33305
-#define _APS_NEXT_CONTROL_VALUE         2440
+#define _APS_NEXT_CONTROL_VALUE         2441
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

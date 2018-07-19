@@ -223,6 +223,7 @@ public:
   afx_msg void OnRadioShowOffset();
   int m_iOffsetShown;
   void SyncFocusAndTrial(int fromArea);
+  CButton m_butCopyToSearch;
 };
 
 //{{AFX_INSERT_LOCATION}}

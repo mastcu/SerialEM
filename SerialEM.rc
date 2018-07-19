@@ -1623,10 +1623,10 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,4,179,105,10
     CONTROL         "Keep Focus and Trial identical",IDC_TIEFOCUSTRIAL,
                     "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,4,189,112,10
-    PUSHBUTTON      "V",IDC_COPYTOVIEW,22,209,12,10
-    PUSHBUTTON      "F",IDC_COPYTOFOCUS,41,209,12,10
-    PUSHBUTTON      "T",IDC_COPYTOTRIAL,60,209,12,10
-    PUSHBUTTON      "R",IDC_COPYTORECORD,79,209,12,10
+    PUSHBUTTON      "V",IDC_COPYTOVIEW,16,209,12,10
+    PUSHBUTTON      "F",IDC_COPYTOFOCUS,35,209,12,10
+    PUSHBUTTON      "T",IDC_COPYTOTRIAL,54,209,12,10
+    PUSHBUTTON      "R",IDC_COPYTORECORD,73,209,12,10
     PUSHBUTTON      "Center Unshifted",IDC_CENTERUNSHIFTED,3,223,54,12
     PUSHBUTTON      "Balance Shifts",IDC_BALANCESHIFTS,62,223,54,12
     LTEXT           "Position on tilt axis:",IDC_STATPOSITION,3,64,57,8
@@ -1642,6 +1642,7 @@ BEGIN
     CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | SS_SUNKEN,0,158,6,1
     CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | SS_SUNKEN,111,158,8,1
     CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | SS_SUNKEN,118,159,1,19
+    PUSHBUTTON      "S",IDC_COPYTOSEARCH,92,209,12,10
 END
 
 IDD_SCREENMETER DIALOGEX 0, 0, 74, 26
@@ -3591,12 +3592,12 @@ STRINGTABLE
 BEGIN
     IDC_COPYTOTRIAL         "Copy parameters of current area to Trial area"
     IDC_COPYTORECORD        "Copy parameters of current area to Record area"
-    IDC_RNEXTTILT           "Consider current tilt complete and go on to next tilt"
     IDC_RLOWTRACKFOCUS      "Realign with low mag tracking image, then continue with autofocus, etc."
     IDC_EDITNEWTRACKDIFF    "Replace track reference when its alignment disagrees with that of Record"
     IDC_EDITPREDICTERRORZ   "Do autofocus when actual or computed error in focus prediction exceeds this"
     IDC_EDITPREDICTERRORXY  "Do tracking when actual or computed error exceeds this value as % of field"
     ID_TESTACQUIRE          "Take image at this setting and reopen dialog"
+    IDC_RNEXTTILT           "Consider current tilt complete and go on to next tilt"
 END
 
 STRINGTABLE

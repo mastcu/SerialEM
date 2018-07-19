@@ -153,6 +153,7 @@ void CLowDoseDlg::DoDataExchange(CDataExchange* pDX)
   DDV_MinMaxInt(pDX, m_iAxisAngle, -90, 90);
   DDX_Control(pDX, IDC_STATVIEWDEFOCUS, m_statViewDefocus);
   DDX_Radio(pDX, IDC_RVIEW_OFFSET, m_iOffsetShown);
+  DDX_Control(pDX, IDC_COPYTOSEARCH, m_butCopyToSearch);
 }
 
 
@@ -179,7 +180,7 @@ BEGIN_MESSAGE_MAP(CLowDoseDlg, CToolDlg)
 	ON_BN_CLICKED(IDC_SET_BEAM_SHIFT, OnSetBeamShift)
   ON_NOTIFY(UDN_DELTAPOS, IDC_SPINVIEWDEFOCUS, OnDeltaposSpinviewdefocus)
 	//}}AFX_MSG_MAP
-  ON_COMMAND_RANGE(IDC_COPYTOVIEW, IDC_COPYTORECORD, OnCopyArea)
+  ON_COMMAND_RANGE(IDC_COPYTOVIEW, IDC_COPYTOSEARCH, OnCopyArea)
   ON_BN_CLICKED(IDC_SET_VIEW_SHIFT, OnSetViewShift)
   ON_BN_CLICKED(IDC_ZERO_VIEW_SHIFT, OnZeroViewShift)
   ON_BN_CLICKED(IDC_LD_ROTATE_AXIS, OnLdRotateAxis)
@@ -606,12 +607,14 @@ void CLowDoseDlg::OnCopyArea(UINT nID)
   mWinApp->RestoreViewFocus();  
   int area = nID - IDC_COPYTOVIEW;
   int from = mScope->GetLowDoseArea();
+  int consInd = (area == SEARCH_AREA ? SEARCH_CONSET : area);
   LowDoseParams *ldFrom = &mLDParams[from];
   LowDoseParams *ldArea = &mLDParams[area];
   if (area < 0 || area >= MAX_LOWDOSE_SETS || from < 0)
     return;
+
   if (AfxMessageBox("Are you sure you want to copy parameters from the " +  
-    mModeNames[from] + " area to the " + mModeNames[area] + " area?",
+    mModeNames[from] + " area to the " + mModeNames[consInd] + " area?",
     MB_YESNO | MB_ICONQUESTION) == IDNO)
     return;
 
@@ -1141,6 +1144,7 @@ void CLowDoseDlg::Update()
   m_butCopyToFocus.EnableWindow(bEnable);
   m_butCopyToTrial.EnableWindow(bEnable);
   m_butCopyToRecord.EnableWindow(bEnable);
+  m_butCopyToSearch.EnableWindow(bEnable);
   m_butSetBeamShift.EnableWindow(!STEMmode && bEnable && 
     mScope->GetLowDoseArea() != RECORD_CONSET);
   m_butResetBeamShift.EnableWindow(!STEMmode && bEnable && !camBusy);
