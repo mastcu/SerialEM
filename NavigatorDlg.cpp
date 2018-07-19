@@ -289,7 +289,7 @@ END_MESSAGE_MAP()
 BOOL CNavigatorDlg::OnInitDialog() 
 {
   // label, color, X, Y, Z, type, reg, corner, extras
-  int fields[10] = {30,16,23,23,20,15,19,15,8,8};
+  int fields[10] = {37,16,23,23,20,15,19,15,8,8};
   int tabs[10], i;
 	CBaseDlg::OnInitDialog();
   mDocWnd = mWinApp->mDocWnd;

@@ -1783,7 +1783,7 @@ BEGIN
     CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME,0,191,56,1
     CONTROL         "Edit mode",IDC_EDIT_MODE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,198,91,44,10
     PUSHBUTTON      "Go To XY",IDC_GOTO_XY,3,154,50,10
-    LTEXT           "Label        Color       X             Y          Z   Type  Reg.  Acq.  Note",IDC_STATLISTHEADER,59,102,178,8
+    LTEXT           "Label            Color       X             Y          Z   Type  Reg.  Acq.  Note",IDC_STATLISTHEADER,59,102,181,8
     CONTROL         "Draw",IDC_DRAW_ONE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,75,20,32,10
     CONTROL         "None",IDC_DRAW_NONE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,176,78,29,10
     LTEXT           "Draw:",IDC_STATIC,122,79,18,8
