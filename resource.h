@@ -1414,6 +1414,12 @@
 #define IDC_STAT_CURSET1                2438
 #define IDC_STAT_CURSET2                2439
 #define IDC_CHECK1                      2440
+#define IDC_GOTO_VIEW                   2441
+#define IDC_GOTO_FOCUS                  2442
+#define IDC_STAT_CAMNAME                2442
+#define IDC_GOTO_TRIAL                  2443
+#define IDC_GOTO_RECORD                 2444
+#define IDC_GOTO_SEARCH                 2445
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -1843,7 +1849,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        228
 #define _APS_NEXT_COMMAND_VALUE         33305
-#define _APS_NEXT_CONTROL_VALUE         2441
+#define _APS_NEXT_CONTROL_VALUE         2443
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

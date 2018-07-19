@@ -224,6 +224,12 @@ public:
   int m_iOffsetShown;
   void SyncFocusAndTrial(int fromArea);
   CButton m_butCopyToSearch;
+  afx_msg void OnGotoArea(UINT nID);
+  CButton m_butGotoView;
+  CButton m_butGotoFocus;
+  CButton m_butGotoTrial;
+  CButton m_butGotoSearch;
+  CButton m_butGotoRecord;
 };
 
 //{{AFX_INSERT_LOCATION}}

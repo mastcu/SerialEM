@@ -154,6 +154,11 @@ void CLowDoseDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_STATVIEWDEFOCUS, m_statViewDefocus);
   DDX_Radio(pDX, IDC_RVIEW_OFFSET, m_iOffsetShown);
   DDX_Control(pDX, IDC_COPYTOSEARCH, m_butCopyToSearch);
+  DDX_Control(pDX, IDC_GOTO_VIEW, m_butGotoView);
+  DDX_Control(pDX, IDC_GOTO_FOCUS, m_butGotoFocus);
+  DDX_Control(pDX, IDC_GOTO_TRIAL, m_butGotoTrial);
+  DDX_Control(pDX, IDC_GOTO_RECORD, m_butGotoRecord);
+  DDX_Control(pDX, IDC_GOTO_SEARCH, m_butGotoSearch);
 }
 
 
@@ -187,6 +192,7 @@ BEGIN_MESSAGE_MAP(CLowDoseDlg, CToolDlg)
   ON_EN_KILLFOCUS(IDC_EDIT_AXISANGLE, OnKillfocusEditAxisangle)
   ON_BN_CLICKED(IDC_RVIEW_OFFSET, OnRadioShowOffset)
   ON_BN_CLICKED(IDC_RSEARCH_OFFSET, OnRadioShowOffset)
+  ON_COMMAND_RANGE(IDC_GOTO_VIEW, IDC_GOTO_SEARCH, OnGotoArea)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -495,10 +501,17 @@ void CLowDoseDlg::OnRshow()
 {
   UpdateData(true);
   mWinApp->RestoreViewFocus();
-  
   mScope->SetLowDoseDownArea(m_iShowArea); 
+}
+
+// Go to an area when button is pressed (if test may be superfluous, they should disabled)
+void CLowDoseDlg::OnGotoArea(UINT nID)
+{
+  int area = nID - IDC_COPYTOVIEW;
+  UpdateData(true);
+  mWinApp->RestoreViewFocus();
   if (mTrulyLowDose && !mWinApp->DoingTasks() && !mWinApp->mCamera->CameraBusy())
-    mScope->GotoLowDoseArea(m_iShowArea);
+    mScope->GotoLowDoseArea(area);
 }
 
 // If focus or trial is selected when this is turned on, copy the parameters
@@ -1047,6 +1060,11 @@ BOOL CLowDoseDlg::OnInitDialog()
   m_butShowTrial.SetFont(mLittleFont);
   m_butShowRecord.SetFont(mLittleFont);
   m_butShowSearch.SetFont(mLittleFont);
+  m_butGotoView.SetFont(mLittleFont);
+  m_butGotoFocus.SetFont(mLittleFont);
+  m_butGotoTrial.SetFont(mLittleFont);
+  m_butGotoRecord.SetFont(mLittleFont);
+  m_butGotoSearch.SetFont(mLittleFont);
   SetDlgItemText(IDC_COPYTOVIEW, mModeNames[0].Left(1));
   SetDlgItemText(IDC_COPYTOFOCUS, mModeNames[1].Left(1));
   SetDlgItemText(IDC_COPYTOTRIAL, mModeNames[2].Left(1));
@@ -1193,6 +1211,14 @@ void CLowDoseDlg::Update()
   m_butShowFocus.EnableWindow(bEnable);
   m_butShowTrial.EnableWindow(bEnable);
   m_butShowRecord.EnableWindow(bEnable);
+
+  // Disable go to buttons if busy
+  bEnable = mTrulyLowDose && !mWinApp->DoingTasks() && !camBusy;
+  m_butGotoSearch.EnableWindow(bEnable);
+  m_butGotoView.EnableWindow(bEnable);
+  m_butGotoFocus.EnableWindow(bEnable);
+  m_butGotoTrial.EnableWindow(bEnable);
+  m_butGotoRecord.EnableWindow(bEnable);
 
   UpdateData(false);
 }
