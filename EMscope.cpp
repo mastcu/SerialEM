@@ -5190,7 +5190,7 @@ int CEMscope::GetColumnValvesOpen()
 
 
 // Manipulate column valves
-BOOL CEMscope::SetColumnValvesOpen(BOOL state)
+BOOL CEMscope::SetColumnValvesOpen(BOOL state, bool crashing)
 {
   BOOL result = true;
   if (!sInitialized || (mNoColumnValve && state))
@@ -5201,7 +5201,8 @@ BOOL CEMscope::SetColumnValvesOpen(BOOL state)
     mPlugFuncs->SetGunValve(VAR_BOOL(state));
   }
   catch (_com_error E) {
-    SEMReportCOMError(E, _T("setting column valves "));
+    if (!crashing)
+      SEMReportCOMError(E, _T("setting column valves "));
     result = false;
   }
   ScopeMutexRelease("SetBeamValve");

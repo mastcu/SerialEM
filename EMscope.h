@@ -109,7 +109,7 @@ class DLL_IM_EX CEMscope
   const char *GetC2Name() {return (LPCTSTR)mC2Name;};
   const char *GetC2Units() {return (LPCTSTR)mC2Units;};
   void SetJeolUsePLforIS(BOOL inVal);
-  BOOL SetColumnValvesOpen(BOOL state);
+  BOOL SetColumnValvesOpen(BOOL state, bool crashing = false);
   int GetColumnValvesOpen();
   BOOL BothLMorNotLM(int mag1, BOOL stem1, int mag2, BOOL stem2);
   void AddShiftBoundary(int inVal) {mShiftBoundaries[mNumShiftBoundaries++] = inVal;};

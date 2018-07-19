@@ -1494,7 +1494,7 @@ static LONG WINAPI SEMExceptionFilter(struct _EXCEPTION_POINTERS* ExceptionInfo)
     // First try to close the valves immediately
     if (winApp->mTSController->GetMessageBoxCloseValves() && 
       winApp->mTSController->GetMessageBoxValveTime() > 0.) {
-        winApp->mScope->SetColumnValvesOpen(false);
+        winApp->mScope->SetColumnValvesOpen(false, true);
         message += "\r\n\r\nValves have been closed or beam has been turned off";
     }
   }
