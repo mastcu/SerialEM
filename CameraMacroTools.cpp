@@ -367,6 +367,8 @@ void CCameraMacroTools::Update()
 {
   int navState = GetNavigatorState();
   BOOL camBusy = true;
+  CString name;
+  CameraParameters *camParams = mWinApp->GetCamParams();
   mEnabledSearch = false;
   if (mWinApp->mCamera)
     camBusy = mWinApp->mCamera->CameraBusy();
@@ -465,6 +467,12 @@ void CCameraMacroTools::Update()
       (mEnabledSearch && idle) || (navState != NO_NAV_RUNNING && 
       navState != NAV_RUNNING_NO_SCRIPT_TS && !(navState == NAV_PAUSED && idle)) || 
       mWinApp->mMultiTSTasks->GetAssessingRange());
+
+  // Manage camera name
+  if (!mWinApp->GetNoCameras()) {
+    name = camParams[mWinApp->GetCurrentCamera()].name;
+    SetDlgItemText(IDC_STAT_CAMNAME, name);
+  }
 }
 
 // Change macro tools to tilt series tools or vice versa
