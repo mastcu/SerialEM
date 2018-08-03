@@ -20,7 +20,7 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 #define FRAMES_MAX  100
-#define TARGET_MIN  100
+#define TARGET_MIN  1
 #define TARGET_MAX  60000
 #define TARGET_INC  500
 #define MAX_DARK_AVERAGE 20
@@ -58,9 +58,9 @@ void CGainRefDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_SPINTARGET, m_sbcTarget);
   DDX_Control(pDX, IDC_SPINFRAMES, m_sbcFrames);
   DDX_Text(pDX, IDC_EDITFRAMES, m_iFrames);
-  DDV_MinMaxInt(pDX, m_iFrames, 1, 100);
+  DDV_MinMaxInt(pDX, m_iFrames, 1, FRAMES_MAX);
   DDX_Text(pDX, IDC_EDITTARGET, m_iTarget);
-  DDV_MinMaxInt(pDX, m_iTarget, 100, 60000);
+  DDV_MinMaxInt(pDX, m_iTarget, TARGET_MIN, TARGET_MAX);
   DDX_Radio(pDX, IDC_RBIN1, m_iBinning);
   DDX_Text(pDX, IDC_STATEXISTING, m_strExisting);
   DDX_Text(pDX, IDC_STATODDREF, m_strOddRef);
