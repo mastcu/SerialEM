@@ -3,6 +3,28 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+8/3/18: FIXED BEAM TILT COMPENSATION FOR IMAGE SHIFT IN MULTI_-SHOT ROUTINE,
+broken when multiple holes were added.  Fixed setting of beam tilt with
+post-actions, which never worked.
+
+8/3/18: Made the multi-shot routine set beam tilt with the same backlash used
+in the coma correction routine.
+
+8/3/18: Made calibration of beam tilt versus image shift go to Record area
+before saving scope state.
+
+8/3/18: Fixed dark subtraction when normalizing in SerialEM and a camera can
+provide dark-subtracted or normalized data.
+
+8/3/18: Added support for floating point images from plugin cameras.
+
+8/3/18: Eliminated Low Dose radio buttons for area to show when screen down.
+
+8/3/18: Added log, log base 10, and exponential script functions.
+
+8/3/18: Changed multi-shot dialog to keep display and dialog up to date when
+relevant conditions change.
+
 7/29/18: Fixed crash from the axis rotation title being too long (In 3.6).
 
 7/19/18: Added ability to continue script commands onto multiple lines by
