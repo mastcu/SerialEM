@@ -219,7 +219,12 @@ int KStoreIMOD::WriteSection(KImage * inImage)
     return 10;
   mIIfile->nx = mWidth = inImage->getWidth();
   mIIfile->ny = mHeight = inImage->getHeight();
-  mMode = inImage->getMode() == kGray ? mFileOpt.mode : MRC_MODE_RGB;
+  if (inImage->getType() == MRC_MODE_FLOAT) {
+    mMode = MRC_MODE_FLOAT;
+    if (isJpeg)
+      return 20;
+  } else
+    mMode = inImage->getMode() == kGray ? mFileOpt.mode : MRC_MODE_RGB;
   mPixSize = lookupPixSize(mMode);
   mIIfile->format = IIFORMAT_LUMINANCE;
   mIIfile->file = isJpeg ? IIFILE_JPEG : IIFILE_TIFF;

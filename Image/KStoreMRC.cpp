@@ -390,6 +390,14 @@ const char *KStoreMRC::GetTitle(int index)
 };
 
   
+int KStoreMRC::setMode(int inMode)
+{
+  if (mDepth > 0)
+    return 1;
+  mMode = inMode;
+  return 0;
+}
+
 int KStoreMRC::AppendImage(KImage *inImage)
 {
   if (inImage == NULL) 

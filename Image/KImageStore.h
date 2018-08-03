@@ -66,6 +66,7 @@ public:
   virtual int     getStageCoord(int inSect, double &outX, double &outY) {return -1;};
   virtual KImage  *getRect(void) {return NULL;};
   virtual int     InvertPieceZCoords(int zmax) {return -1;};
+  virtual int     setMode(int inMode) {return 0;};
 
   int CheckMontage(MontParam *inParam, int nx, int ny, int nz);
   virtual void    setTime(int inTime);
@@ -78,6 +79,7 @@ public:
   virtual void    SetUnsignedOption(int inOpt) {mFileOpt.unsignOpt = inOpt;};
   virtual void    SetSignedOption(int inOpt) {mFileOpt.signToUnsignOpt = inOpt;};
   virtual void    SetCompression(int inComp) {mFileOpt.compression = inComp;};
+  virtual int     GetCompression() {return mFileOpt.compression;};
 	
 	virtual float   getPixel(KCoord &inCoord);
   virtual float   getLastIntTruncation() {return mFracIntTrunc;};

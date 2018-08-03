@@ -68,7 +68,8 @@ public:
 	virtual int     AppendImage(KImage *inImage);
 	virtual int    WriteSection(KImage * inImage, int inSect);
 	virtual int    AddTitle(char *inTitle);
-	virtual int   CheckMontage(MontParam *inParam); 
+  virtual int     setMode(int inMode);
+  virtual int   CheckMontage(MontParam *inParam); 
 	virtual int   getPcoord(int inSect, int &outX, int &outY, int &outZ);
   virtual int   getStageCoord(int inSect, double &outX, double &outY);
   virtual void  BigSeek(int base, int size1, int size2, UINT flag);
