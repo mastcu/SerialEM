@@ -454,6 +454,7 @@ void CGainRefMaker::AcquiringRefNextTask(int param)
   float *arrpt, *inpt;
   unsigned short int *usdata;
   short int *sdata;
+  float *fdata;
 
   if (param == REF_SERVER_SHOTS) {
     if (mStartingServerFrames && !mDEcurReferenceType && mDEcurProcessType < 2 && 
@@ -561,6 +562,12 @@ void CGainRefMaker::AcquiringRefNextTask(int param)
       for (i = 0; i < nx * ny; i++)
         mArray[i] += usdata[i];
       break;
+
+    case kFLOAT:
+      fdata = (float *)image->getData();
+      for (i = 0; i < nx * ny; i++)
+        mArray[i] += fdata[i];
+      break;
     }
     image->UnLock();
     mFrameCount--;
@@ -659,7 +666,7 @@ void CGainRefMaker::AcquiringRefNextTask(int param)
 
   // Try to convert the data, and put data in storage places
   usdata = NULL;
-  if (mCamera->GetScaledGainRefMax())
+  if (mCamera->GetScaledGainRefMax() && !mParam->returnsFloats)
     NewArray(usdata,unsigned short,nx * ny);
   if (ProcConvertGainRef(mArray, usdata, nx * ny, mCamera->GetScaledGainRefMax(),
     mCamera->GetMinGainRefBits(), &mGainRefBits[mCurrentCamera][mRefBinInd])) {
@@ -951,7 +958,7 @@ int CGainRefMaker::GetReference(int binning, void *&gainRef, int &byteSize,
     // Convert to unsigned short if possible
     image->Lock();
     usdata = NULL;
-    if (mCamera->GetScaledGainRefMax())
+    if (mCamera->GetScaledGainRefMax() && !mParam->returnsFloats)
       NewArray(usdata,unsigned short int,nx * ny);
     if (ProcConvertGainRef((float *)image->getData(), usdata, nx * ny, 
       mCamera->GetScaledGainRefMax(), mCamera->GetMinGainRefBits(), 
@@ -1018,7 +1025,7 @@ int CGainRefMaker::GetReference(int binning, void *&gainRef, int &byteSize,
 
     // Otherwise, need to try to scale it down as usual
     usdata = NULL;
-    if (mCamera->GetScaledGainRefMax())
+    if (mCamera->GetScaledGainRefMax() && !mParam->returnsFloats)
       NewArray(usdata,unsigned short int,binnedSize);
     if (ProcConvertGainRef((float *)sdata, usdata, binnedSize, 
       mCamera->GetScaledGainRefMax(), mCamera->GetMinGainRefBits(), &scaleBits)) {
