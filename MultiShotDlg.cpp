@@ -65,6 +65,10 @@ CMultiShotDlg::CMultiShotDlg(CWnd* pParent /*=NULL*/)
   mRecordingCustom = false;
   mDisabledDialog = false;
   mWarnedIStoNav = false;
+  mLastMagIndex = 0;
+  mLastIntensity = 0.;
+  mLastDrawTime = 0.;
+  mSavedLDForCamera = -1;
 }
 
 CMultiShotDlg::~CMultiShotDlg()
@@ -215,26 +219,6 @@ void CMultiShotDlg::UpdateSettings(void)
 
   ManageEnables();
   ManagePanels();
-
-  if (comaVsIS->magInd <= 0) {
-    SetDlgItemText(IDC_STAT_COMA_IS_CAL, "Coma versus image shift is not calibrated");
-    ShowDlgItem(IDC_STAT_COMA_CONDITIONS, false);
-  } else {
-    str.Format("%.4g%s %s, spot %d", mWinApp->mScope->GetC2Percent(comaVsIS->spotSize, 
-      comaVsIS->intensity), mWinApp->mScope->GetC2Units(), mWinApp->mScope->GetC2Name(),
-      comaVsIS->spotSize);
-    if (!mWinApp->mScope->GetHasNoAlpha() && comaVsIS->alpha >= 0) {
-      str2.Format(", alpha %d", comaVsIS->alpha + 1);
-      str += str2;
-    }
-    if (comaVsIS->probeMode == 0)
-      str += ", nanoprobe";
-    if (comaVsIS->aperture > 0) {
-      str2.Format(", %d um aperture", comaVsIS->aperture);
-      str += str2;
-    }
-    SetDlgItemText(IDC_STAT_COMA_CONDITIONS, str);
-  }
 
   m_strNumShots.Format("%d", mActiveParams->numShots);
   m_strNumXholes.Format("%d", mActiveParams->numHoles[0]);
@@ -400,6 +384,7 @@ void CMultiShotDlg::OnSetCustom()
 // Common operations to start recording corners/points
 void CMultiShotDlg::StartRecording(const char *instruct)
 {
+  LowDoseParams *ldp = mWinApp->GetLowDoseParams();
   mSavedISX.clear();
   mSavedISY.clear();
   if (mWinApp->mNavigator)
@@ -408,17 +393,39 @@ void CMultiShotDlg::StartRecording(const char *instruct)
   mWinApp->mShiftManager->SetMouseMoveStage(false);
   m_statSaveInstructions.SetWindowText(instruct);
   mNavPointIncrement = -9;
+  if (mWinApp->LowDoseMode()) {
+    mSavedLDRecParams = ldp[RECORD_CONSET];
+    mSavedLDForCamera = mWinApp->GetCurrentCamera();
+    PrintfToLog("Low Dose Record parameters will be restored when you finish defining the"
+      " pattern");
+  }
   ManageEnables();
 }
 
 // Turn off flags and notify Nav when recording ends
 void CMultiShotDlg::StopRecording(void)
 {
+  LowDoseParams *ldp = mWinApp->GetLowDoseParams();
   if (mRecordingCustom || mRecordingRegular) {
     mRecordingCustom = mRecordingRegular = false;
     if (mWinApp->mNavigator)
       mWinApp->mNavigator->Update();
     mWinApp->mShiftManager->SetMouseMoveStage(mSavedMouseStage);
+    if (mSavedLDForCamera >= 0) {
+      if (!mWinApp->LowDoseMode()) {
+        PrintfToLog("Low Dose Record parameters were NOT restored because you left Low "
+          "Dose mode");
+      } else if (mWinApp->GetCurrentCamera() != mSavedLDForCamera) {
+        PrintfToLog("Low Dose Record parameters were NOT restored because you changed "
+          "cameras");
+      } else {
+        ldp[RECORD_CONSET] = mSavedLDRecParams;
+        if (mWinApp->mScope->GetLowDoseArea() == RECORD_CONSET)
+          mWinApp->mScope->GotoLowDoseArea(RECORD_CONSET);
+        PrintfToLog("Low Dose Record parameters were restored to original values");
+      }
+      mSavedLDForCamera = -1;
+    }
   }
 }
 
@@ -650,7 +657,7 @@ void CMultiShotDlg::UpdateAndUseMSparams(bool draw)
 void CMultiShotDlg::ManageEnables(void)
 {
   ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
-  CString str = "Use custom pattern (NONE DEFINED)";
+  CString str2, str = "Use custom pattern (NONE DEFINED)";
   bool enable = !(mHasIlluminatedArea && m_bUseIllumArea && mWinApp->LowDoseMode());
   bool recording = mRecordingRegular || mRecordingCustom;
   m_statBeamDiam.EnableWindow(enable);
@@ -725,5 +732,67 @@ void CMultiShotDlg::ManageEnables(void)
     }
   }
   m_statSpacing.SetWindowText(str);
+
+  // Update the calibration conditions in case they changed
+  if (comaVsIS->magInd <= 0) {
+    SetDlgItemText(IDC_STAT_COMA_IS_CAL, "Coma versus image shift is not calibrated");
+    SetDlgItemText(IDC_STAT_COMA_CONDITIONS, "");
+  } else {
+    str.Format("%.4g%s %s, spot %d", mWinApp->mScope->GetC2Percent(comaVsIS->spotSize, 
+      comaVsIS->intensity), mWinApp->mScope->GetC2Units(), mWinApp->mScope->GetC2Name(),
+      comaVsIS->spotSize);
+    if (!mWinApp->mScope->GetHasNoAlpha() && comaVsIS->alpha >= 0) {
+      str2.Format(", alpha %d", comaVsIS->alpha + 1);
+      str += str2;
+    }
+    if (comaVsIS->probeMode == 0)
+      str += ", nanoprobe";
+    if (comaVsIS->aperture > 0) {
+      str2.Format(", %d um aperture", comaVsIS->aperture);
+      str += str2;
+    }
+    SetDlgItemText(IDC_STAT_COMA_CONDITIONS, str);
+  }
+
   mWinApp->RestoreViewFocus();
+}
+
+// Check for whether condistions have changed and display should be updated
+void CMultiShotDlg::UpdateMultiDisplay(int magInd, double intensity)
+{
+  MontParam *montp;
+  LowDoseParams *ldp;
+
+  // This reproduces logic in NavigatorDlg::GetMapDrawItems for whether drawing and how to
+  // get magInd
+  bool showMulti = mWinApp->mNavigator && mActiveParams->inHoleOrMultiHole &&
+    ((mWinApp->mNavigator->m_bShowAcquireArea && 
+    (mWinApp->mNavHelper->GetEnableMultiShot() & 1)) || !RecordingISValues());
+  if (!showMulti)
+    return;
+
+  // Get the intensity and mag that apply to current conditions
+  if (mWinApp->LowDoseMode()) {
+    ldp = mWinApp->GetLowDoseParams();
+    magInd = ldp[RECORD_CONSET].magIndex;
+    intensity = ldp[RECORD_CONSET].intensity;
+  } else if (mWinApp->Montaging()) {
+    montp = mWinApp->GetMontParam();
+    magInd = montp->magIndex;
+  }
+  if (!magInd)
+    mLastDrawTime = GetTickCount();
+
+  // redraw if mag changed, or if IA changed but not too often for that
+  bool draw = magInd > 0 && magInd != mLastMagIndex;
+  if (mHasIlluminatedArea && m_bUseIllumArea && fabs(intensity - mLastIntensity) > 1.e-6){
+    if (SEMTickInterval(mLastDrawTime) > 0.5)
+      draw = true;
+  }
+  if (draw) {
+    mLastDrawTime = GetTickCount();
+    mLastIntensity = intensity;
+    mWinApp->mMainView->DrawImage();
+  }
+  mLastMagIndex = magInd;
 }

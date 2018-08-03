@@ -40,6 +40,11 @@ private:
   bool mDisabledDialog;
   int mNavPointIncrement;
   bool mWarnedIStoNav;
+  int mLastMagIndex;
+  double mLastIntensity;
+  double mLastDrawTime;
+  int mSavedLDForCamera;
+  LowDoseParams mSavedLDRecParams;
 
 public:
   bool mCanReturnEarly;
@@ -125,4 +130,5 @@ public:
   CButton m_butCancel;
   CButton m_butIStoPt;
   afx_msg void OnButIsToPt();
+  void UpdateMultiDisplay(int magInd, double intensity);
 };
