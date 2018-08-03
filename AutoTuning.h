@@ -79,6 +79,8 @@ public:
   GetMember(bool, LastCtfBasedFailed);
   SetMember(int, CtfBasedLDareaDelay);
   GetSetMember(float, ComaVsISextent);
+  GetMember(int, BacklashDelay);
+  float GetBeamTiltBacklash();
   ComaVsISCalib *GetComaVsIScal() {return &mComaVsIScal;};
   void SetBaseBeamTilt(double inX, double inY) {mBaseBeamTiltX = inX; mBaseBeamTiltY = inY;}; 
 

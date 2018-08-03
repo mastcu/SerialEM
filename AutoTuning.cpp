@@ -15,6 +15,8 @@
 #include "ShiftManager.h"
 #include "ProcessImage.h"
 #include "BeamAssessor.h"
+#include "NavHelper.h"
+#include "MultiShotDlg.h"
 #include "CameraController.h"
 #include "Shared\b3dutil.h"
 #include "Shared\ctffind.h"
@@ -995,7 +997,6 @@ void CAutoTuning::ZemlinCleanup(int error)
 int CAutoTuning::CtfBasedAstigmatismComa(int comaFree, bool calibrate, int actionType,
   bool leaveIS)
 {
-  float scaling = mWinApp->mFocusManager->EstimatedBeamTiltScaling();
   double curDefocus, tryFocus, stageX, stageY, stageZ;
   int binInd, realBin, maxMinutes = 5;
   float pixel, scanDelta = 0.1f, maxStageFocusChange = 0.05f;
@@ -1106,13 +1107,7 @@ int CAutoTuning::CtfBasedAstigmatismComa(int comaFree, bool calibrate, int actio
   if (comaFree) {
 
     // Operations with beam tilt:
-    // Set default backlash and make sure it is negative
-    if (mBeamTiltBacklash < -900) {
-      mBeamTiltBacklash = -1.0f;
-      if (!FEIscope && scaling > 0.)
-        mBeamTiltBacklash /= scaling;
-    }
-    mBeamTiltBacklash = -fabs(mBeamTiltBacklash);
+    GetBeamTiltBacklash();
     mCtfCal.amplitude = mUsersComaTilt <= 0. ? mMaxComaBeamTilt : mUsersComaTilt;
     mScope->GetBeamTilt(mBaseBeamTiltX, mBaseBeamTiltY);
     mScope->SetBeamTilt(mBaseBeamTiltX + mBeamTiltBacklash, 
@@ -1196,7 +1191,7 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
   int centralInds[4][2] = {{1, 5}, {3, 7}, {2, 6}, {4, 8}};
   float resultsArray[7], solution[4];
   float newFocus = 0, negMicrons, xCoeff, yCoeff, angle, diffPlus, diffMinus, minFocus;
-  float intercept, diff1, diff9, rotateImage;
+  float intercept, diff1, diff9, rotateImage, astig, minAstig, maxAstig;
   const int maxInLineFit = 50;
   float xfit[maxInLineFit], yfit[maxInLineFit], zfit[maxInLineFit];
   double xmax = 0., ymax = 0., nextXval, nextYval, assumedPosFocus;
@@ -1417,6 +1412,26 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
         // Loop on pairs of images, measure defocus differences at all angles, average
         // the implied beam tilt zero over all angles
         if (mCtfComaFree) {
+
+          // First check range of astigmatism values
+          maxAstig = -10000.;
+          minAstig = 10000.;
+          for (ind = 0; ind < mCtfCal.numFits; ind++) {
+            astig = mCtfCal.fitValues[3 * ind + 1] - mCtfCal.fitValues[3 * ind];
+            ACCUM_MIN(minAstig, astig);
+            ACCUM_MIN(maxAstig, astig);
+          }
+          if (maxAstig - minAstig < 0.5) {
+            str = "The range of astigmatism values is too low for a reliable"
+              " coma solution.\n\n" "You may need to increase the beam tilt set in"
+              " \"Set CTF Coma-free Params\".\n";
+            if (mWinApp->mScope->GetUseIllumAreaForC2())
+              str += "(Do not try to detect coma on a Cs-corrected microscope)";
+            SEMMessageBox(str);
+            StopCtfBased();
+            return;
+          }
+
           for (xyInd = 0; xyInd < (mDoingFullArray ? 4 : 2); xyInd++) {
             xmax = 0.;
             ymax = 0.;
@@ -1636,6 +1651,19 @@ void CAutoTuning::AstigCoefficientsFromCtfFits(float *fitValues, float angle, fl
   yCoeff = DefocusDiffFromTwoCtfFits(fitValues, 2, 3, angle) / (2.f * astig);
 }
 
+// Set default backlash and make sure it is negative, return value
+float CAutoTuning::GetBeamTiltBacklash()
+{
+  if (mBeamTiltBacklash < -900) {
+    float scaling = mWinApp->mFocusManager->EstimatedBeamTiltScaling();
+    mBeamTiltBacklash = -1.0f;
+    if (!FEIscope && scaling > 0.)
+      mBeamTiltBacklash /= scaling;
+  }
+  mBeamTiltBacklash = -fabs(mBeamTiltBacklash);
+  return mBeamTiltBacklash;
+}
+
 // Look up a calibration is the array, specific to the mag or from the closest mag
 // Currently only astigmatism cals are saved to file
 int CAutoTuning::LookupCtfBasedCal(bool coma, int magInd, bool matchMag,
@@ -1735,7 +1763,8 @@ int CAutoTuning::CalibrateComaVsImageShift(bool interactive)
     SEMMessageBox(str, MB_EXCLAME);
     return 1;
   }
-
+  if (mWinApp->LowDoseMode())
+    mScope->GotoLowDoseArea(RECORD_CONSET);
   mComaVsISindex = 0;
   mWinApp->UpdateBufferWindows();
   ComaVsISNextTask(0);
@@ -1797,6 +1826,8 @@ void CAutoTuning::ComaVsISNextTask(int param)
   mComaVsIScal.aperture = 0;
   if (mScope->GetUseIllumAreaForC2())
     mComaVsIScal.aperture = mWinApp->mBeamAssessor->RequestApertureSize();
+  if (mWinApp->mNavHelper->mMultiShotDlg)
+    mWinApp->mNavHelper->mMultiShotDlg->ManageEnables();
   StopComaVsISCal();
 }
 
