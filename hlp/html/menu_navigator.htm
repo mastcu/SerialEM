@@ -149,7 +149,7 @@
             parameters.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_transform_pts">Transform Points</A></TD>
+          <TD class="style1"><A HREF="#hid_transform_pts">Transform Items</A></TD>
           <TD>Transform items to the current registration.</TD>
         </TR>
         <TR VALIGN="top">
@@ -565,13 +565,13 @@
       points to define one polygon after another, and then set up each polygon for 
       automatic acquisition 
       into a different montage file.</P>
-      <P><A NAME="hid_transform_pts"></A><B>Transform Points command (Navigator menu)</B></P>
+      <P><A NAME="hid_transform_pts"></A><B>Transform Items command (Navigator menu)</B></P>
       <P>Use this command to transform items from one or more other registrations to the 
         current registration. The program will find a transformation whose complexity 
         depends on the number of registration points available. Just a shift will be 
         found with 1 point, a rotation and shift with 2 points, rotation, scaling, and 
         shift with 3 or 4 points, or a full linear transformation including stretching 
-        with 5 points. All items except the registration points will then be 
+        and possible image inversion with 5 points. All items except the registration points will then be 
         transformed and associated with the current registration. The program will give 
         a message about how well the points fit the transformation equation. If the fit 
         is very poor, you can undo the transformation with the command described next, 
