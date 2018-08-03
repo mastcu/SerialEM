@@ -48,7 +48,6 @@ CLowDoseDlg::CLowDoseDlg(CWnd* pParent /*=NULL*/)
 {
   SEMBuildTime(__DATE__, __TIME__);
   //{{AFX_DATA_INIT(CLowDoseDlg)
-  m_iShowArea = -1;
   m_iDefineArea = -1;
   m_strMagSpot = _T("");
   m_bLowDoseMode = FALSE;
@@ -108,11 +107,6 @@ void CLowDoseDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_BALANCESHIFTS, m_butBalanceShifts);
   DDX_Control(pDX, IDC_CENTERUNSHIFTED, m_butCenterUnshifted);
   DDX_Control(pDX, IDC_CONTINUOUSUPDATE, m_butContinuousUpdate);
-  DDX_Control(pDX, IDC_RSHOWSEARCH, m_butShowSearch);
-  DDX_Control(pDX, IDC_RSHOWRECORD, m_butShowRecord);
-  DDX_Control(pDX, IDC_RSHOWTRIAL, m_butShowTrial);
-  DDX_Control(pDX, IDC_RSHOWFOCUS, m_butShowFocus);
-  DDX_Control(pDX, IDC_RSHOWVIEW, m_butShowView);
   DDX_Control(pDX, IDC_TIEFOCUSTRIAL, m_butTieFocusTrial);
   DDX_Control(pDX, IDC_LOWDOSEMODE, m_butLowDoseMode);
   DDX_Control(pDX, IDC_STATPOSITION, m_statPosition);
@@ -124,7 +118,6 @@ void CLowDoseDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_STATOVERLAP, m_statOverlap);
   DDX_Control(pDX, IDC_STATMAGSPOTC2, m_statMagSpot);
   DDX_Control(pDX, IDC_BLANKBEAM, m_butBlankBeam);
-  DDX_Radio(pDX, IDC_RSHOWVIEW, m_iShowArea);
   DDX_Radio(pDX, IDC_RDEFINENONE, m_iDefineArea);
   DDX_Text(pDX, IDC_STATMAGSPOTC2, m_strMagSpot);
   DDX_Check(pDX, IDC_LOWDOSEMODE, m_bLowDoseMode);
@@ -167,7 +160,6 @@ BEGIN_MESSAGE_MAP(CLowDoseDlg, CToolDlg)
   ON_BN_CLICKED(IDC_BLANKBEAM, OnBlankbeam)
   ON_BN_CLICKED(IDC_LOWDOSEMODE, OnLowdosemode)
   ON_BN_CLICKED(IDC_RDEFINEFOCUS, OnRdefine)
-  ON_BN_CLICKED(IDC_RSHOWFOCUS, OnRshow)
   ON_BN_CLICKED(IDC_TIEFOCUSTRIAL, OnTiefocustrial)
   ON_EN_KILLFOCUS(IDC_EDITPOSITION, OnKillfocusEditposition)
   ON_BN_CLICKED(IDC_BALANCESHIFTS, OnBalanceshifts)
@@ -177,10 +169,6 @@ BEGIN_MESSAGE_MAP(CLowDoseDlg, CToolDlg)
 	ON_BN_CLICKED(IDC_LDNORMALIZE_BEAM, OnLdNormalizeBeam)
   ON_BN_CLICKED(IDC_RDEFINENONE, OnRdefine)
   ON_BN_CLICKED(IDC_RDEFINETRIAL, OnRdefine)
-  ON_BN_CLICKED(IDC_RSHOWRECORD, OnRshow)
-  ON_BN_CLICKED(IDC_RSHOWTRIAL, OnRshow)
-  ON_BN_CLICKED(IDC_RSHOWVIEW, OnRshow)
-  ON_BN_CLICKED(IDC_RSHOWSEARCH, OnRshow)
 	ON_BN_CLICKED(IDC_RESET_BEAM_SHIFT, OnResetBeamShift)
 	ON_BN_CLICKED(IDC_SET_BEAM_SHIFT, OnSetBeamShift)
   ON_NOTIFY(UDN_DELTAPOS, IDC_SPINVIEWDEFOCUS, OnDeltaposSpinviewdefocus)
@@ -465,10 +453,7 @@ void CLowDoseDlg::OnRdefine()
       mBaseISY -= ISY;
     }
     
-    // Set the down area equal to the area being defined
-    mShowAreaSave = m_iShowArea;
-    m_iShowArea = m_iDefineArea;
-    mScope->SetLowDoseDownArea(m_iShowArea);
+    // No longer set the down area equal to the area being defined
   } else {
     TurnOffDefine();
   }
@@ -488,8 +473,6 @@ void CLowDoseDlg::OnRdefine()
 void CLowDoseDlg::TurnOffDefine()
 {
   m_iDefineArea = 0;
-  m_iShowArea = mShowAreaSave;
-  mScope->SetLowDoseDownArea(m_iShowArea);
 
   // If balance shifts is on, turn off and back on to get them recentered
   if (ShiftsBalanced()) {
@@ -497,14 +480,6 @@ void CLowDoseDlg::TurnOffDefine()
     OnBalanceshifts();
   }
   ManageAxisPosition();
-}
-
-// Changing the show area: inform the scope and update the mag line if screen up
-void CLowDoseDlg::OnRshow() 
-{
-  UpdateData(true);
-  mWinApp->RestoreViewFocus();
-  mScope->SetLowDoseDownArea(m_iShowArea); 
 }
 
 // Go to an area when button is pressed (if test may be superfluous, they should disabled)
@@ -1066,21 +1041,11 @@ BOOL CLowDoseDlg::OnInitDialog()
   m_statLDArea.SetFont(&mBigFont);
 
   // Set names
-  SetDlgItemText(IDC_RSHOWSEARCH, mSearchName.Left(abbrev) + ".");
-  SetDlgItemText(IDC_RSHOWVIEW, mModeNames[0].Left(abbrev) + ".");
-  SetDlgItemText(IDC_RSHOWFOCUS, mModeNames[1].Left(abbrev) + ".");
-  SetDlgItemText(IDC_RSHOWTRIAL, mModeNames[2].Left(abbrev) + ".");
-  SetDlgItemText(IDC_RSHOWRECORD, mModeNames[3].Left(abbrev) + ".");
   SetDlgItemText(IDC_GOTO_SEARCH, mSearchName.Left(abbrev) + ".");
   SetDlgItemText(IDC_GOTO_VIEW, mModeNames[0].Left(abbrev) + ".");
   SetDlgItemText(IDC_GOTO_FOCUS, mModeNames[1].Left(abbrev) + ".");
   SetDlgItemText(IDC_GOTO_TRIAL, mModeNames[2].Left(abbrev) + ".");
   SetDlgItemText(IDC_GOTO_RECORD, mModeNames[3].Left(abbrev) + ".");
-  m_butShowView.SetFont(mLittleFont);
-  m_butShowFocus.SetFont(mLittleFont);
-  m_butShowTrial.SetFont(mLittleFont);
-  m_butShowRecord.SetFont(mLittleFont);
-  m_butShowSearch.SetFont(mLittleFont);
   m_butGotoView.SetFont(mLittleFont);
   m_butGotoFocus.SetFont(mLittleFont);
   m_butGotoTrial.SetFont(mLittleFont);
@@ -1106,9 +1071,7 @@ BOOL CLowDoseDlg::OnInitDialog()
   m_sbcViewDefocus.SetPos(50);
 
   // Assume all variables are set into this dialog
-  if (m_iShowArea < 0)
-    m_iShowArea = 0;
-  
+
   if (mScope->GetJeol1230()) {
     m_bBlankWhenDown = false;
     m_butBlankBeam.EnableWindow(false);
@@ -1131,10 +1094,6 @@ void CLowDoseDlg::UpdateSettings()
 {
   float defocus= mScope->GetLDViewDefocus(m_iOffsetShown);
 
-  // If defining an area, reject a change in show area
-  if (mTrulyLowDose && m_iDefineArea)
-    m_iShowArea = m_iDefineArea;
-
   mScope->SetBlankWhenDown(m_bBlankWhenDown);
   mScope->SetLDNormalizeBeam(m_bNormalizeBeam);
   if (defocus < sMinVSDefocus[m_iOffsetShown] || defocus > sMaxVSDefocus[m_iOffsetShown]){
@@ -1145,9 +1104,6 @@ void CLowDoseDlg::UpdateSettings()
 
   // Synchronize dialog to state
   UpdateData(false);
-
-  // Inform scope of down area unconditionally (8/10/15)
-  mScope->SetLowDoseDownArea(m_iShowArea);
 
   // If tie focus-trial set and one of them is now displayed, equalize them
   int area = m_iDefineArea ? m_iDefineArea : mScope->GetLowDoseArea();
@@ -1224,14 +1180,6 @@ void CLowDoseDlg::Update()
   m_butRotateAxis.EnableWindow(m_iDefineArea > 0 && !usePiezo);
   m_editAxisAngle.EnableWindow(m_iDefineArea > 0 && m_bRotateAxis);
   m_statDegrees.EnableWindow(m_iDefineArea > 0 && m_bRotateAxis);
-
-  // Disable the show box when define area is on
-  bEnable = !m_iDefineArea && !(STEMmode && mWinApp->DoDropScreenForSTEM());
-  m_butShowSearch.EnableWindow(bEnable);
-  m_butShowView.EnableWindow(bEnable);
-  m_butShowFocus.EnableWindow(bEnable);
-  m_butShowTrial.EnableWindow(bEnable);
-  m_butShowRecord.EnableWindow(bEnable);
 
   // Disable go to buttons if busy
   bEnable = mTrulyLowDose && !mWinApp->DoingTasks() && !camBusy;

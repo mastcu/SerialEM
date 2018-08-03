@@ -81,11 +81,6 @@ public:
 	CButton	m_butBalanceShifts;
 	CButton	m_butCenterUnshifted;
 	CButton	m_butContinuousUpdate;
-	CButton	m_butShowSearch;
-	CButton	m_butShowRecord;
-	CButton	m_butShowTrial;
-	CButton	m_butShowFocus;
-	CButton	m_butShowView;
 	CButton	m_butTieFocusTrial;
 	CButton	m_butLowDoseMode;
 	CStatic	m_statPosition;
@@ -98,7 +93,6 @@ public:
 	CStatic	m_statMagSpot;
 	CButton	m_butShowBox;
 	CButton	m_butDefineBox;
-	int		m_iShowArea;
 	int		m_iDefineArea;
 	CString	m_strMagSpot;
 	BOOL	m_bLowDoseMode;
@@ -130,7 +124,6 @@ protected:
 	afx_msg void OnBlankbeam();
 	afx_msg void OnLowdosemode();
 	afx_msg void OnRdefine();
-	afx_msg void OnRshow();
 	afx_msg void OnTiefocustrial();
 	virtual BOOL OnInitDialog();
 	afx_msg void OnKillfocusEditposition();
@@ -165,7 +158,6 @@ private:
 	double mLastISX, mLastISY;
 	double mBaseISX, mBaseISY;      // Base image shift while defining area
   int mBaseMag;                   // Base mag at which that shift applies
-  int mShowAreaSave;              // The show area before defining turned on
 	int mLastDefineSize;
 	int mLastRecordSize;
 	int mLastSetArea;

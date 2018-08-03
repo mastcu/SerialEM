@@ -833,11 +833,12 @@ int CParameterIO::ReadSettings(CString strFileName)
       // Retired 2/13/04 - moved to properties
       // Dose cal moved to short term cal 12/21/05
       // Retired shoot after autofocus 12/22/06
+      // Eliminated down area 8/3/18
       } else if (NAME_IS("TiltSeriesXFitInterval") ||
         NAME_IS("TiltSeriesYFitInterval") ||
         NAME_IS("TiltSeriesZFitInterval") ||
         NAME_IS("TiltSeriesXMinForQuadratic") ||
-        NAME_IS("TiltSeriesYMinForQuadratic") ||
+        NAME_IS("TiltSeriesYMinForQuadratic") || NAME_IS("LowDoseAreaToShow") ||
         NAME_IS("DoseCalibration") || NAME_IS("ShootAfterAutofocus"))
         err = 0;
 

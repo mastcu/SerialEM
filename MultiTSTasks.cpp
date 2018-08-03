@@ -795,7 +795,6 @@ void CMultiTSTasks::SetupAutocenter(bool reopen)
   } else if (lowDose) {
     mAcSavedLDDownArea = mScope->GetLowDoseDownArea();
     mScope->SetLowDoseDownArea(TRIAL_CONSET);
-    mWinApp->mLowDoseDlg.m_iShowArea = TRIAL_CONSET;
     mWinApp->mLowDoseDlg.SetContinuousUpdate(false);
     mWinApp->mLowDoseDlg.UpdateSettings();
   }
@@ -819,7 +818,6 @@ void CMultiTSTasks::SetupAutocenter(bool reopen)
     mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, TASK_TEST_AUTOCEN, 0, 0);
   } else if (lowDose) {
     mScope->SetLowDoseDownArea(mAcSavedLDDownArea);
-    mWinApp->mLowDoseDlg.m_iShowArea = mAcSavedLDDownArea;
     mWinApp->mLowDoseDlg.UpdateSettings();
   }
   mWinApp->mAutocenDlg = NULL;
