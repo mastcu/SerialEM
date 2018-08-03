@@ -305,24 +305,43 @@ void CToolDlg::OnMove(int x, int y)
 void CToolDlg::OnPaint() 
 {
   CPaintDC dc(this); // device context for painting
-  CRect winRect;
+  DrawSideBorders(dc);
+  
+  // Do not call CDialog::OnPaint() for painting messages
+}
+
+// So individual panels can do things too
+void CToolDlg::DrawSideBorders(CPaintDC &dc)
+{
   CRect clientRect;
   int lrSize = 4;
-  int topSize = 0;
-  int botSize = 0;
-  GetWindowRect(&winRect);
   GetClientRect(&clientRect);
   dc.FillSolidRect(0, 0, lrSize, clientRect.Height(), mBorderColor);
   dc.FillSolidRect(clientRect.Width() - lrSize, 0, clientRect.Width(),
     clientRect.Height(), mBorderColor);
-  if (topSize)
-    dc.FillSolidRect(0, 0, clientRect.Width(), topSize, mBorderColor);
-  if (botSize)
-    dc.FillSolidRect(0, clientRect.Height() - botSize, clientRect.Width(), 
-      clientRect.Height(), mBorderColor);
- 
-  
-  // Do not call CDialog::OnPaint() for painting messages
+}
+
+// Draw a box around a button
+void CToolDlg::DrawButtonOutline(CPaintDC &dc, CWnd *but, int thickness, COLORREF color)
+{
+  CRect winRect, clientRect, butRect;
+  int iLeft, iTop, border;
+  GetWindowRect(&winRect);
+  GetClientRect(&clientRect);
+  border = (winRect.Width() - clientRect.Width()) / 2;
+  but->GetWindowRect(&butRect);
+  iLeft = butRect.left - winRect.left - 5;
+  iTop = butRect.top - winRect.top - (winRect.Height() - clientRect.Height() - border) -2;
+  CRect dcRect(iLeft, iTop, iLeft + butRect.Width() + 4, iTop + butRect.Height() + 4);
+  CPen pen;
+  CBrush brush;
+  pen.CreatePen(PS_SOLID, 3, color);
+
+  // "transparent" brush
+  brush.CreateStockObject(HOLLOW_BRUSH);
+  dc.SelectObject(&pen);
+  dc.SelectObject(&brush); 
+  dc.Rectangle(&dcRect);
 }
 
 void CToolDlg::SetBorderColor(COLORREF inColor)

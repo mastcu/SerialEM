@@ -193,6 +193,7 @@ BEGIN_MESSAGE_MAP(CLowDoseDlg, CToolDlg)
   ON_BN_CLICKED(IDC_RVIEW_OFFSET, OnRadioShowOffset)
   ON_BN_CLICKED(IDC_RSEARCH_OFFSET, OnRadioShowOffset)
   ON_COMMAND_RANGE(IDC_GOTO_VIEW, IDC_GOTO_SEARCH, OnGotoArea)
+  ON_WM_PAINT()
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -433,6 +434,8 @@ void CLowDoseDlg::OnLowdosemode()
   mWinApp->UpdateWindowSettings();
   if (mWinApp->ScopeHasSTEM())
     mWinApp->mSTEMcontrol.UpdateEnables();
+  if (!m_bLowDoseMode)
+    Invalidate();
 }
 
 // Switching beam normalization - set the scope parameter
@@ -1028,6 +1031,19 @@ int CLowDoseDlg::NewAxisPosition(int area, double position, int angle, bool setA
   return 0;
 }
 
+void CLowDoseDlg::OnPaint() 
+{
+  CPaintDC dc(this); // device context for painting
+
+  DrawSideBorders(dc);
+  int area = mWinApp->mScope->GetLowDoseArea();
+  if (area < 0)
+    return;
+  CWnd *curBut = GetDlgItem(IDC_GOTO_VIEW + area);
+  if (!curBut)
+    return;
+  DrawButtonOutline(dc, curBut, 3, RGB(0, 255, 0));
+}
 
 // DIALOG INITALIZATION
 BOOL CLowDoseDlg::OnInitDialog() 
@@ -1247,6 +1263,7 @@ void CLowDoseDlg::ManageMagSpot(int inSetArea, BOOL screenDown)
       m_strBeamShift = "";
       UpdateData(false);
       mLastSetArea = inSetArea;
+      Invalidate();
     }
     return;
   }
@@ -1340,6 +1357,8 @@ void CLowDoseDlg::ManageMagSpot(int inSetArea, BOOL screenDown)
   mLastSpot = spotSize;
   mLastMag  = mag;
   mLastIntensity = intensity;
+  if (inSetArea != mLastSetArea)
+    Invalidate();
   mLastSetArea = inSetArea;
   mLastDose = dose;
 }

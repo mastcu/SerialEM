@@ -141,6 +141,7 @@ protected:
 	afx_msg void OnLdNormalizeBeam();
 	afx_msg void OnResetBeamShift();
 	afx_msg void OnSetBeamShift();
+  afx_msg void OnPaint();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 	afx_msg void OnCopyArea(UINT nID);

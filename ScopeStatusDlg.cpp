@@ -523,11 +523,7 @@ void CScopeStatusDlg::OnPaint()
   GetClientRect(&clientRect);
   border = (winRect.Width() - clientRect.Width()) / 2;
 
-  // Needed to copy essential stuff from CToolDlg for side bars
-  int lrSize = 4;
-  dc.FillSolidRect(0, 0, lrSize, clientRect.Height(), mBorderColor);
-  dc.FillSolidRect(clientRect.Width() - lrSize, 0, clientRect.Width(),
-    clientRect.Height(), mBorderColor);
+  DrawSideBorders(dc);
   if (mVacStatus < 0 && mIntCalStatus < 0) {
     return;
   }
