@@ -271,8 +271,9 @@
       There must be a space between the function name and the opening parenthesis. RAND is also available to obtain a random number 
       between 0 and 1; it takes no arguments and either has to be assigned to a variable 
       or written as (RAND) to 
-      use in any expressions.&nbsp;&nbsp; Arithmetic can be done only in variable assignment 
-      statements and in IF or ELSEIF statements.</P>
+      use in any expressions.&nbsp;&nbsp; Arithmetic can be done in variable assignment 
+      statements, in IF or ELSEIF statements, and in some other statements (see below</P>
+    <P>.</P>
     <P>Parentheses may be surrounded by spaces or attached to the items that they 
       enclose.&nbsp; Specifically, one or more left parentheses can be at the 
       beginning of an item, and one or more right parentheses can be at the end of an 
@@ -314,6 +315,24 @@
           ATAN</td>
         <td class="style4">
           Arc-tangent of following number, between -90 and 90 degrees</td>
+      </tr>
+      <tr>
+        <td class="style2">
+          LOG</td>
+        <td class="style4">
+          Natural logarithm of following number; generates error if it is not positive</td>
+      </tr>
+      <tr>
+        <td class="style2">
+          LOG10</td>
+        <td class="style4">
+          Base 10 logarithm of following number; generates error if it is not positive</td>
+      </tr>
+      <tr>
+        <td class="style2">
+          EXP</td>
+        <td class="style4">
+          Exponential function of the following number (e to the given power)</td>
       </tr>
       <tr>
         <td class="style2">
@@ -373,7 +392,7 @@
       </tr>
     </table>
     <P>
-      As of SerialEM 4.7 (Feb 14, 2018), arithmetic expressions can be used in a wide 
+      As of SerialEM 3.7 (Feb 14, 2018), arithmetic expressions can be used in a wide 
       variety of commands, in addition to variable assignments and conditional 
       expressions.&nbsp; Each arithmetic expression will evaluate to one numeric argument to 
       the command.&nbsp; An expression can contain parentheses and be enclosed in 

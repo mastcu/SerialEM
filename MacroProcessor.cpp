@@ -342,7 +342,8 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 };
 
 #define NUM_COMMANDS (sizeof(cmdList) / sizeof(CmdItem))
-static std::string sTmpOp1[] = {"SQRT", "COS", "SIN", "TAN", "ATAN", "ABS", "NEARINT"};
+static std::string sTmpOp1[] = {"SQRT", "COS", "SIN", "TAN", "ATAN", "ABS", "NEARINT",
+  "LOG", "LOG10", "EXP"};
 static std::string sTmpOp2[] = {"ROUND", "POWER", "ATAN2", "MODULO", "DIFFABS", 
   "FRACDIFF"};
 static std::set<std::string> sFunctionSet1(sTmpOp1, sTmpOp1 + sizeof(sTmpOp1) / 
@@ -6058,7 +6059,7 @@ int CMacroProcessor::EvaluateArithmeticClause(CString * strItems, int maxItems,
         return 1;
       if (str == "SQRT") {
         if (right < 0.) {
-          AfxMessageBox("Taking square root of negative number in script line:\n\n" +
+          SEMMessageBox("Taking square root of negative number in script line:\n\n" +
               line, MB_EXCLAME);
           return 1;
         }
@@ -6075,6 +6076,15 @@ int CMacroProcessor::EvaluateArithmeticClause(CString * strItems, int maxItems,
         result = fabs(right);
       else if (str == "NEARINT")
         result = B3DNINT(right);
+      else if (str == "LOG" || str == "LOG10") {
+        if (right <= 0.) {
+          SEMMessageBox("Taking logarithm of non-positive number in script line:\n\n" +
+              line, MB_EXCLAME);
+          return 1;
+        }
+        result = str == "LOG" ? log(right) : log10(right);
+      } else if (str == "EXP")
+        result = exp(right);
       ReplaceWithResult(result, strItems, ind, numItems, 1);
     } else if (sFunctionSet2.count(stdstr) > 0) {
       if (ItemToDouble(strItems[ind + 1], line, left) ||
