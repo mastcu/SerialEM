@@ -26,6 +26,7 @@
 #include "FalconHelper.h"
 #include "PluginManager.h"
 #include "CalibCameraTiming.h"
+#include "AutoTuning.h"
 #include "Utilities\XCorr.h"
 #include "DirectElectron\DirectElectronCamera.h"
 #include "DirectElectron\DirectElectronCamPanel.h"
@@ -1022,14 +1023,14 @@ void CCameraController::InitializeDMcameras(int DMind, int *numDMListed,
 int CCameraController::InitializeTietz(int whichCameras, int *originalList, int numOrig, 
                                         BOOL anyPreExp)
 {
-  int i, ind;
+  int i, ind, flags;
   CString mess;
   CamPluginFuncs *funcs;
 
   // Create an instance just once, even if later lock fails
   if (!mTietzInstances) {
 
-    funcs = mWinApp->mPluginManager->GetCameraFuncs("TietzPlugin");
+    funcs = mWinApp->mPluginManager->GetCameraFuncs("TietzPlugin", flags);
     if (!funcs) {
       AfxMessageBox("The TietzPlugin was not loaded; no Tietz camera will be available",
         MB_EXCLAME);
@@ -1221,7 +1222,7 @@ void CCameraController::InitializeDirectElectron(int *originalList, int numOrig)
 void CCameraController::InitializePluginCameras(int &numPlugListed, int *originalList, 
                                                 int numOrig)
 {
-  int ind, i, err, num, idum, numGain;
+  int ind, i, err, num, idum, numGain, flags;
   double minPixel, rotInc, ddum;
   CString report;
 
@@ -1231,7 +1232,7 @@ void CCameraController::InitializePluginCameras(int &numPlugListed, int *origina
     i = originalList[ind];
     if (!mAllParams[i].pluginName.IsEmpty()) {
       mPlugFuncs[i] = mWinApp->mPluginManager->GetCameraFuncs
-        (mAllParams[i].pluginName);
+        (mAllParams[i].pluginName, flags);
       if (!mPlugFuncs[i]) {
         AfxMessageBox("The camera plugin named " + mAllParams[i].pluginName + 
           " did not load so that camera will be unavailable", MB_EXCLAME);
@@ -1281,16 +1282,17 @@ void CCameraController::InitializePluginCameras(int &numPlugListed, int *origina
           " has no SetRotationFlip function", MB_EXCLAME);
         err = 1;
       }
+      mAllParams[i].returnsFloats = (flags & PLUGFLAG_RETURNS_FLOATS) != 0;
 
       // Send a gain index if that function exists and there is a non-negative value
       // Clamp it to the given range if the the plugin supplies a limit 
-      if (!err && mPlugFuncs[ind]->SetGainIndex && mAllParams[i].TietzGainIndex >= 0) {
-        if (mPlugFuncs[ind]->GetNumberOfGains) {
-          numGain = mPlugFuncs[ind]->GetNumberOfGains();
+      if (!err && mPlugFuncs[i]->SetGainIndex && mAllParams[i].TietzGainIndex >= 0) {
+        if (mPlugFuncs[i]->GetNumberOfGains) {
+          numGain = mPlugFuncs[i]->GetNumberOfGains();
           if (numGain > 0)
             B3DCLAMP(mAllParams[i].TietzGainIndex, 0, numGain);
         } 
-        if (mPlugFuncs[ind]->SetGainIndex(mAllParams[i].TietzGainIndex)) {
+        if (mPlugFuncs[i]->SetGainIndex(mAllParams[i].TietzGainIndex)) {
           AfxMessageBox("An error occurred sending the value of TietzGainIndex to the"
             " plugin camera " + mAllParams[i].pluginName);
         }
@@ -2030,11 +2032,11 @@ void CCameraController::ShowReference(int type)
 
   // Get an array and copy data; take gain ref times 1000
   size = mTD.DMSizeX * mTD.DMSizeY;
-  if (type == DARK_REFERENCE) {
-    NewArray(mTD.Array[0],short int,size);
+  if (type == DARK_REFERENCE && byteSize != 4) {
+    NewArray(mTD.Array[0], short int, size);
     mTD.ImageType = kSHORT;
   } else {
-    NewArray(fdata,float,size);
+    NewArray(fdata, float, size);
     mTD.Array[0] = (short *)fdata;
     mTD.ImageType = kFLOAT;
   }
@@ -2043,17 +2045,13 @@ void CCameraController::ShowReference(int type)
     AfxMessageBox("Failed to get memory for displaying reference image", MB_EXCLAME);
     return;
   }
-  if (type == DARK_REFERENCE)
-    memcpy(mTD.Array[0], array, size * 2);
-  else {
-    if (byteSize == 4) {
-      memcpy(mTD.Array[0], array, size * 4);
-    } else {
-      usdata = (unsigned short *)array;
-      factor = 1.f / (float)(1 << gainRefBits);
-      for (i = 0; i < size; i++)
-        fdata[i] = usdata[i] * factor;
-    }
+  if (type == DARK_REFERENCE || byteSize == 4) {
+    memcpy(mTD.Array[0], array, size * byteSize);
+  } else {
+    usdata = (unsigned short *)array;
+    factor = 1.f / (float)(1 << gainRefBits);
+    for (i = 0; i < size; i++)
+      fdata[i] = usdata[i] * factor;
   }
   
   // Roll buffers, call display final with flag that image is not acquired  
@@ -2110,11 +2108,12 @@ void CCameraController::QueueImageShift(double inISX, double inISY, int inDelay)
 }
 
 // Queue a beam tilt to compensate for the image shift
-void CCameraController::QueueBeamTilt(double inBTX, double inBTY)
+void CCameraController::QueueBeamTilt(double inBTX, double inBTY, int backlashDelay)
 {
   mBeamTiltQueued = true;
   mBTToDoX = inBTX;
-  mBTToDoX = inBTY;
+  mBTToDoY = inBTY;
+  mBTBacklashDelay = backlashDelay;
 }
 
 // Queue a mag change and normalization
@@ -2309,7 +2308,7 @@ void CCameraController::Capture(int inSet, bool retrying)
   if (mParam->K2Type == K3_TYPE && conSet.processing == UNPROCESSED && 
     conSet.K2ReadMode > 0)
       conSet.processing = DARK_SUBTRACTED;
-  mTD.ProcessingPlus = mTD.Processing = conSet.processing;
+  mTD.Processing = conSet.processing;
 
   // Make sure camera is inserted, blocking cameras are retracted, check temperature, and
   // set up saving from K2 camera;  Again clear low dose area flag to be safe
@@ -2511,6 +2510,8 @@ void CCameraController::Capture(int inSet, bool retrying)
   // load some thread data
   mTD.ImageType = (mParam->unsignedImages && mDivideBy2 <= 0) ? kUSHORT : kSHORT;
   mTD.DivideBy2 = (mParam->unsignedImages && mDivideBy2 > 0) ? mDivideBy2 : 0;
+  if (mParam->returnsFloats)
+    mTD.ImageType = kFLOAT;
 
   /*logmess.Format("Thread data divide by 2: %d", mTD.DivideBy2);
   if (mDebugMode)
@@ -2557,6 +2558,9 @@ void CCameraController::Capture(int inSet, bool retrying)
   mTD.PostBeamTilt = mBeamTiltQueued;
   mTD.BeamTiltX = mBTToDoX;
   mTD.BeamTiltY = mBTToDoY;
+  mTD.BTBacklashDelay = mBTBacklashDelay;
+  if (mBTBacklashDelay > 0)
+    mTD.BeamTiltBacklash = mWinApp->mAutoTuning->GetBeamTiltBacklash();
   mTD.PostChangeMag = mMagQueued;
   mTD.NewMagIndex = mMagIndToDo;
   mTD.TiltDuringDelay = B3DCHOICE(!FEIscope && mTiltDuringShotDelay >= 0, 
@@ -2685,6 +2689,7 @@ void CCameraController::Capture(int inSet, bool retrying)
   mStageQueued = false;
   mMagQueued = false;
   mISQueued = false;
+  mBeamTiltQueued = false;
   mNumDRdelete = 0;
   mPriorRecordDose = (float)B3DCHOICE(mWinApp->DoingTiltSeries(),
     mWinApp->mTSController->GetCumulativeDose(), -1.);
@@ -2835,6 +2840,7 @@ void CCameraController::Capture(int inSet, bool retrying)
   mTD.DRdelete = mDRdelete;
   mTD.DMbeamShutterOK = mParam->DMbeamShutterOK;
   mTD.DMsettlingOK = mParam->DMsettlingOK;
+  mTD.ProcessingPlus = mTD.Processing;     // Be sure to set this after all modifications
   mTD.PlugSTEMacquireFlags = (mBaseJeolSTEMflags & ~(0x3)) + 
     (mTD.DivideBy2 ? PLUGCAM_DIVIDE_BY2 : 0);
   mTD.integration = conSet.integration;
@@ -4538,7 +4544,7 @@ int CCameraController::CapManageDarkGainRefs(ControlSet & conSet, int inSet,
           if (mExposure == ref->Exposure) {
             mDarkp = ref;
             ref->UseCount = mUseCount;
-          } else if (mInterpDarkRefs && !conSet.forceDark) {
+          } else if (mInterpDarkRefs && !conSet.forceDark && !mParam->returnsFloats) {
 
             // If interpolating, find nearest dark reference above and below, where
             // one at minimum exposure counts as being below
@@ -4601,7 +4607,7 @@ int CCameraController::CapManageDarkGainRefs(ControlSet & conSet, int inSet,
       }
 
       // Analyze refs found for interpolating
-      if (mInterpDarkRefs) {
+      if (mInterpDarkRefs && !mParam->returnsFloats) {
 
         // If there is an exact match or neither below or above found, proceed as usual
         if (mDarkp) {
@@ -5759,6 +5765,7 @@ void CCameraController::StartAcquire()
   DarkRef *ref;
   unsigned short *usdata;
   short *sdata;
+  float *fdata, *fsum;
   float refMean, refSD;
   float darkCrit = mParam->darkXRayAbsCrit;
   StageThreadData stData;
@@ -5783,7 +5790,7 @@ void CCameraController::StartAcquire()
   if (mEnsuringDark) {
 
     // Try to convert a gain reference
-    if (mTD.GainToGet && mScaledGainRefMax) {
+    if (mTD.GainToGet && mScaledGainRefMax && !mParam->returnsFloats) {
       ref = mTD.GainToGet;
       arrSize = ref->SizeX * ref->SizeY;
 
@@ -5817,6 +5824,7 @@ void CCameraController::StartAcquire()
     }
 
     if (mTD.DarkToGet) {
+
 
       // remove X rays from a dark reference
       ref = mTD.DarkToGet;
@@ -5873,15 +5881,21 @@ void CCameraController::StartAcquire()
             LOG_MESSAGE_IF_CLOSED);
           moreDarkRefs = false;
         } else {
-          for (i = 0; i < arrSize; i++)
-            mDarkSum[i] = sdata[i];
+          memcpy(mDarkSum, sdata, arrSize * ref->ByteSize);
         }
       }
 
       // If this is a later dark reference, add the array in
       if (!redoBadRef && mAverageDarkCount > 1) {
-        for (i = 0; i < arrSize; i++)
-          mDarkSum[i] += sdata[i];
+        if (ref->ByteSize == 2) {
+          for (i = 0; i < arrSize; i++)
+            mDarkSum[i] += sdata[i];
+        } else {
+          fdata = (float *)sdata;
+          fsum = (float *)mDarkSum;
+          for (i = 0; i < arrSize; i++)
+            fsum[i] += fdata[i];
+        }
       }
 
       // If there are more to get, start thread and return
@@ -5897,8 +5911,13 @@ void CCameraController::StartAcquire()
         // Or, If this is the last dark reference of series, put average back in array
       } else if (mAverageDarkCount > 1) {
         half = mAverageDarkCount / 2;
-        for (i = 0; i < arrSize; i++)
-          sdata[i] = (mDarkSum[i] + half) / mAverageDarkCount;
+        if (ref->ByteSize == 2) {
+          for (i = 0; i < arrSize; i++)
+            sdata[i] = (mDarkSum[i] + half) / mAverageDarkCount;
+        } else {
+          for (i = 0; i < arrSize; i++)
+            fdata[i] = fsum[i] / mAverageDarkCount;
+        }
         delete [] mDarkSum;
         mDarkSum = NULL;
       }  
@@ -6912,8 +6931,14 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
         }
       }
       td->ISTicks = ::GetTickCount();
-      if (td->PostBeamTilt)
+      if (td->PostBeamTilt) {
+        if (td->BTBacklashDelay > 0) {
+          td->scopePlugFuncs->SetBeamTilt(td->BeamTiltX + td->BeamTiltBacklash,
+            td->BeamTiltY + td->BeamTiltBacklash);
+          Sleep(td->BTBacklashDelay);
+        }
         td->scopePlugFuncs->SetBeamTilt(td->BeamTiltX, td->BeamTiltY);
+      }
 
       if (td->TiltDuringDelay)
         CEMscope::WaitForStageDone(stData.info, "BlankerProc");
@@ -8250,6 +8275,7 @@ void CCameraController::ErrorCleanup(int error)
   mStageQueued = false;
   mMagQueued = false;
   mISQueued = false;
+  mBeamTiltQueued = false;
   mFocusStepToDo1 = 0.;
   mFocusStepToDo2 = 0.;
   mSettling = -1;
@@ -8935,8 +8961,8 @@ void CCameraController::SetNonGatanPostActionTime(void)
 
 int CCameraController::GetArrayForImage(CameraThreadData * td, long & arrSize, int index)
 {
-  arrSize = (td->DMSizeX + 4) * (td->DMSizeY + 4);
-  NewArray(td->Array[index],short int,arrSize);
+  arrSize = (td->DMSizeX + 4) * (td->DMSizeY + 4) * (td->ImageType == kFLOAT ? 2 : 1);
+  NewArray(td->Array[index], short int, arrSize);
   if (!td->Array[index]) {
     DeferMessage(td, "Failed to get memory for image!");
     return 1;
@@ -9405,7 +9431,7 @@ void CCameraController::TietzCCDtoUser(int geometry, int binning, int &camSizeX,
 void CCameraController::SetupNewDarkRef(int inSet, double exposure)
 {
   mDarkp = new DarkRef;
-  mDarkp->ByteSize = 2;
+  mDarkp->ByteSize = mTD.ImageType == kFLOAT ? 4 : 2;
   mDarkp->GainDark = DARK_REFERENCE;
   mDarkp->Binning = mBinning;
   mDarkp->Camera = mTD.Camera;

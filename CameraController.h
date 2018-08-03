@@ -173,6 +173,8 @@ struct CameraThreadData {
   DWORD ISTicks;              // Time when change finished
   BOOL PostBeamTilt;          // Flag to do beam tilt
   double BeamTiltX, BeamTiltY; // Beam tilt
+  float BeamTiltBacklash;     // Backlash to apply to beam tilt
+  int BTBacklashDelay;          // Sleep time for delay if setting BT with backlash
   BOOL PostChangeMag;         // Flag to change mag
   BOOL PostMagFixIS;          // Flag to fix IS after mag change
   int NewMagIndex;            // Index to change to
@@ -583,6 +585,7 @@ class DLL_IM_EX CCameraController
   int mISDelay;                 // delay for image shift
   BOOL mBeamTiltQueued;         // Beam tilt queued
   double mBTToDoX, mBTToDoY;    // Absolute beam tilt to set
+  int mBTBacklashDelay;         // Delay time if want backlash: use standard backlash
   BOOL mMagQueued;              // mag change queued
   int mMagIndToDo;              // mag to change to;
   int mTiltDuringShotDelay;     // Delay time to starting tilt during shot (< 0 for none)
@@ -957,7 +960,7 @@ int NumAllVsAllFromFAparam(FrameAliParams &faParam, int numAliFrames, int &group
 void AdjustCountsPerElecForScale(CameraParameters * param);
 int DESumCountForConstraints(CameraParameters *camP, ControlSet *consP);
 void MakeOneFrameAlignCom(CString & localFramePath, ControlSet *conSet);
-void QueueBeamTilt(double inBTX, double inBTY);
+void QueueBeamTilt(double inBTX, double inBTY, int backlashDelay);
 bool IsK3BinningSuperResFrames(int K2Type, int doseFrac, int saveFrames, 
   int alignFrames, int useFrameAlign, int processing, int readMode, 
   BOOL takeBinnedFlag);
