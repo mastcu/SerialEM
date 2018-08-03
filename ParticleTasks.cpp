@@ -288,7 +288,8 @@ void CParticleTasks::StopMultiShot(void)
 void CParticleTasks::SetUpMultiShotShift(int shotIndex, int holeIndex, BOOL queueIt)
 {
   double ISX, ISY, delBTX, delBTY, delISX = 0, delISY = 0, angle, cosAng, sinAng;
-  float delay;
+  float delay, BTbacklash;
+  int BTdelay;
   ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
 
   // Compute IS from center for a peripheral shot
@@ -302,15 +303,14 @@ void CParticleTasks::SetUpMultiShotShift(int shotIndex, int holeIndex, BOOL queu
 
   // Get full IS and delta IS and default delay for move from last position
   // Multiply by hole delay factor if doing hole; add extra delay
-  ISX = mBaseISX + mMSHoleISX[holeIndex] + delISX;
-  ISY = mBaseISY + mMSHoleISY[holeIndex] + delISY;
+  delISX += mMSHoleISX[holeIndex];
+  delISY += mMSHoleISY[holeIndex];
+  ISX = mBaseISX + delISX;
+  ISY = mBaseISY + delISY;
   if (GetDebugOutput('1') || mMSTestRun) 
    PrintfToLog("For hole %d shot %d  %s  delIS  %.3f %.3f", holeIndex, shotIndex,
-    queueIt ? "Queuing" : "Setting", mMSHoleISX[holeIndex] + delISX, 
-    mMSHoleISY[holeIndex] + delISY);
-  delISX = ISX - mLastISX;
-  delISY = ISY - mLastISY;
-  delay = mShiftManager->ComputeISDelay(delISX, delISY);
+    queueIt ? "Queuing" : "Setting", delISX, delISY);
+  delay = mShiftManager->ComputeISDelay(ISX - mLastISX, ISY - mLastISY);
   if (mMSUseHoleDelay)
     delay *= mMSParams->holeDelayFactor;
   if (mMSExtraDelay > 0.)
@@ -318,22 +318,32 @@ void CParticleTasks::SetUpMultiShotShift(int shotIndex, int holeIndex, BOOL queu
   mMSUseHoleDelay = false;
 
   if (mMSAdjustBeamTilt) {
+    BTbacklash = mWinApp->mAutoTuning->GetBeamTiltBacklash();
+    BTdelay = mWinApp->mAutoTuning->GetBacklashDelay();
     delBTX = comaVsIS->matrix.xpx * delISX + comaVsIS->matrix.xpy * delISY;
     delBTY = comaVsIS->matrix.ypx * delISX + comaVsIS->matrix.ypy * delISY;
-    SEMTrace('1', "%s incremental IS  %.3f %.3f   BT  %.3f  %.3f", 
-      queueIt ? "Queuing" : "Setting", delISX, delISY, delBTX, delBTY);
+    SEMTrace('1', "%s incremental IS  %.3f %.3f   BT  %.3f  %.3f  backlash %f  delay %d", 
+      queueIt ? "Queuing" : "Setting", delISX, delISY, delBTX, delBTY, BTbacklash, 
+      BTdelay);
   }
 
   // Queue it or do it
   if (queueIt) {
     mCamera->QueueImageShift(ISX, ISY, B3DNINT(1000. * delay));
     if (mMSAdjustBeamTilt)
-      mCamera->QueueBeamTilt(mCenterBeamTiltX + delBTX, mCenterBeamTiltY + delBTY);
+      mCamera->QueueBeamTilt(mCenterBeamTiltX + delBTX, mCenterBeamTiltY + delBTY, 
+      BTdelay);
   } else {
     mScope->SetImageShift(ISX, ISY);
     mShiftManager->SetISTimeOut(delay);
-    if (mMSAdjustBeamTilt)
+    if (mMSAdjustBeamTilt) {
+      if (BTdelay > 0) {
+        mScope->SetBeamTilt(mCenterBeamTiltX + delBTX + BTbacklash, 
+          mCenterBeamTiltY + delBTY + BTbacklash);
+        Sleep(BTdelay);
+      }
       mScope->SetBeamTilt(mCenterBeamTiltX + delBTX, mCenterBeamTiltY + delBTY);
+    }
   }
   mLastISX = ISX;
   mLastISY = ISY;
