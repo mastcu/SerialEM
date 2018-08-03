@@ -1826,6 +1826,8 @@ int ProcDarkSubtract(void *image, int type, int nx, int ny, short int *ref1,
   unsigned short int *usref1 = (unsigned short int *)ref1;
   unsigned short int *usref2 = (unsigned short int *)ref2;
   unsigned short int usrval;
+  float *fdata;
+  float *fref = (float *)ref1;
   short int srval;
   int darkBits = 12;
   int darkFac = 1 << darkBits;
@@ -1855,6 +1857,12 @@ int ProcDarkSubtract(void *image, int type, int nx, int ny, short int *ref1,
     }
     break;
 
+  case FLOAT:
+   fdata = (float *)image;
+   for (i = 0; i < nx * ny; i++)
+      fdata[i] -= fref[i];
+   break;
+
   default:
     return 1;
   }
@@ -1880,6 +1888,8 @@ int ProcGainNormalize(void *image, int type, int nxFull, int top, int left, int 
   unsigned short int *usgain;
   unsigned short int *usdark1 = (unsigned short int *)dark1;
   unsigned short int *usdark2 = (unsigned short int *)dark2;
+  float *fdark = (float *)dark1;
+  float *fdata;
   int iy, ix, itmp, rval, f1, f2;
   int darkBits = 12;
   int darkFac = 1 << darkBits;
@@ -1960,6 +1970,19 @@ int ProcGainNormalize(void *image, int type, int nxFull, int top, int left, int 
     }
     break;
 
+  case FLOAT:
+
+    // float image with float references
+    fdata = (float *)image;
+    for (iy = top; iy < bottom; iy++) {
+      gainp = (float *)gainRef + iy * nxFull + left;
+      for (ix = left; ix < right; ix++) {
+        *fdata = (*fdata - *fdark++) * *gainp++;
+        *fdata++;
+      }
+    }
+    break;
+
   default:
     return 1;
   }
@@ -1997,6 +2020,33 @@ int ProcConvertGainRef(float *fGain, unsigned short *usGain, int arrSize, int sc
   return 0;
 }
 
+#define REPLACE_ON_LINE(data) \
+  for (ix = 0; ix < nx; ix++) { \
+    if (data[ix + ixbase] > intcrit) { \
+      for (critLoop = 0; critLoop < critIterations; critLoop++) { \
+        if (data[ix + ixbase] > (int)(mean +  (1. + critLoop * critFac) * crit)) { \
+          ninPatch = ProcReplacePixels(array, type, nx, ny, nHotCol, hotCol, nHotPixel, \
+            hotX, hotY, maxPixel, minDist, maxDist, \
+            mean +  (1. + critLoop * critFac) * crit, ix, iy, listX, listY); \
+          if (ninPatch > 0) { \
+            if (totPatches < replacedSize) { \
+              replacedX[totPatches] = listX[ninPatch]; \
+              replacedY[totPatches] = listY[ninPatch]; \
+            } \
+            totPatches++; \
+            totReplaced += ninPatch; \
+          } \
+          if (ninPatch >= 0) \
+            break; \
+        } \
+      } \
+      if (ninPatch < 0) \
+        (*nSkipped)++; \
+      else if (critLoop) \
+        (*nTruncated)++; \
+    } \
+  }
+
 int ProcRemoveXRays(void *array, int type, int nx, int ny, int nHotCol, int *hotCol,
           int nHotPixel, int *hotX, int *hotY, int maxPixel, float minDist, float maxDist, 
           float absCrit, float sdCrit, int eitherBoth, int critIterations, float critFac,
@@ -2010,6 +2060,7 @@ int ProcRemoveXRays(void *array, int type, int nx, int ny, int nHotCol, int *hot
   int totReplaced = 0;
   short int *sdata = (short int *)array;
   unsigned short int *usdata = (unsigned short int *)array;
+  float *fdata = (float *)array;
   int hot, critLoop;
   int sampleIndent = 4;
   int nSample = 100;
@@ -2076,6 +2127,14 @@ int ProcRemoveXRays(void *array, int type, int nx, int ny, int nHotCol, int *hot
         dsumsq += val * val;
       }
       break;
+
+    case FLOAT:
+      for (j = 0, iySample = iyStart; j < nySample; j++, iySample += dySample) {
+        val = fdata[ixSample + nx * iySample];
+        dsum += val;
+        dsumsq += val * val;
+      }
+      break;
     }
     nsum += nySample;
   }
@@ -2108,61 +2167,16 @@ int ProcRemoveXRays(void *array, int type, int nx, int ny, int nHotCol, int *hot
     ixbase = iy * nx;
     switch (type) {
     case SIGNED_SHORT:
-      for (ix = 0; ix < nx; ix++) {
-        if (sdata[ix + ixbase] > intcrit) {
-          for (critLoop = 0; critLoop < critIterations; critLoop++) {
-            if (sdata[ix + ixbase] > (int)(mean +  (1. + critLoop * critFac) * crit)) {
-              ninPatch = ProcReplacePixels(array, type, nx, ny, nHotCol, hotCol, nHotPixel, 
-                hotX, hotY, maxPixel, minDist, maxDist, 
-                mean +  (1. + critLoop * critFac) * crit, ix, iy, listX, listY);
-              if (ninPatch > 0) {
-                if (totPatches < replacedSize) {
-                  replacedX[totPatches] = listX[ninPatch];
-                  replacedY[totPatches] = listY[ninPatch];
-                }
-                totPatches++;
-                totReplaced += ninPatch;
-              }
-              if (ninPatch >= 0)
-                break;
-            }
-          }
-          if (ninPatch < 0)
-            (*nSkipped)++;
-          else if (critLoop)
-            (*nTruncated)++;
-        }
-      }
+      REPLACE_ON_LINE(sdata)
       break;
     case UNSIGNED_SHORT:
-      for (ix = 0; ix < nx; ix++) {
-        if (usdata[ix + ixbase] > intcrit) {
-          for (critLoop = 0; critLoop < critIterations; critLoop++) {
-            if (usdata[ix + ixbase] > (int)(mean +  (1. + critLoop * critFac) * crit)) {
-              ninPatch = ProcReplacePixels(array, type, nx, ny, nHotCol, hotCol, nHotPixel, 
-                hotX, hotY, maxPixel, minDist, maxDist, 
-                mean +  (1. + critLoop * critFac) * crit, ix, iy, listX, listY);
-              if (ninPatch > 0) {
-                if (totPatches < replacedSize) {
-                  replacedX[totPatches] = listX[ninPatch];
-                  replacedY[totPatches] = listY[ninPatch];
-                }
-                totPatches++;
-                totReplaced += ninPatch;
-              }
-              if (ninPatch >= 0)
-                break;
-            }
-          }
-          if (ninPatch < 0)
-            (*nSkipped)++;
-          if (critLoop)
-            (*nTruncated)++;
-        }
-      }
+      REPLACE_ON_LINE(usdata)
+      break;
+    case FLOAT:
+      REPLACE_ON_LINE(fdata)
       break;
     }
-  }
+ }
   
   *nReplaced = totReplaced;
   return totPatches;
@@ -2319,6 +2333,9 @@ int ProcReplacePixels(void *array, int type, int nx, int ny, int nHotCol, int *h
       break;
     case UNSIGNED_SHORT:
       *((unsigned short int*)array + ind) = (unsigned short)(mean + 0.5);
+      break;
+    case FLOAT:
+      *((float*)array + ind) = (float)mean;
       break;
     }
   }
