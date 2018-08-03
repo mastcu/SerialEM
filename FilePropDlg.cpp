@@ -102,6 +102,7 @@ void CFilePropDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_RBYTE, m_butSaveByte);
   DDX_Control(pDX, IDC_RINTEGERS, m_butSaveInteger);
   DDX_Check(pDX, IDC_SKIP_FILE_DLG, m_bSkipFileDlg);
+  DDX_Control(pDX, IDC_RJPEGFILE, m_butJpegFile);
 }
 
 
@@ -121,6 +122,7 @@ BEGIN_MESSAGE_MAP(CFilePropDlg, CBaseDlg)
 	ON_BN_CLICKED(IDC_RMRCFILE, OnRbyte)
 	ON_BN_CLICKED(IDC_RTIFFFILE, OnRbyte)
 	ON_BN_CLICKED(IDC_RADOCFILE, OnRbyte)
+	ON_BN_CLICKED(IDC_RJPEGFILE, OnRbyte)
 	//}}AFX_MSG_MAP
   ON_BN_CLICKED(IDC_SAVEMDOC, OnSaveMdoc)
   ON_BN_CLICKED(IDC_RNOCOMPRESS, OnRNoCompress)
@@ -135,6 +137,11 @@ END_MESSAGE_MAP()
 void CFilePropDlg::OnRbyte() 
 {
   UpdateData(TRUE); 
+  if ((m_iFileType == 1 || m_iFileType == 2) && mFileOpt.mode == MRC_MODE_FLOAT &&
+    m_iCompress == 3) {
+    m_iCompress = 1;
+    UpdateData(false);
+  }
   ManageStates(); 
 }
 
@@ -159,22 +166,34 @@ void CFilePropDlg::OnChangeTruncwhiteedit()
 void CFilePropDlg::ManageStates()
 {
   BOOL tiffFile = (mFileOpt.TIFFallowed && m_iFileType == 1) || m_iFileType == 2;
-  BOOL bEnable = m_iByteInt == 0 || (tiffFile && compressions[m_iCompress] == 
-    COMPRESS_JPEG);
+  BOOL jpegFile = m_iFileType == 3;
+  BOOL notFloat = mFileOpt.mode != MRC_MODE_FLOAT;
+  BOOL bEnable = (m_iByteInt == 0 || (tiffFile && compressions[m_iCompress] == 
+    COMPRESS_JPEG) || jpegFile) && notFloat;
   m_groupTrunc.EnableWindow(bEnable);
   m_statTruncWhite.EnableWindow(bEnable);
   m_editTruncWhite.EnableWindow(bEnable);
   m_statTruncBlack.EnableWindow(bEnable);
   m_editTruncBlack.EnableWindow(bEnable);
+
   m_statCompress.EnableWindow(tiffFile);
   m_butNoComp.EnableWindow(tiffFile);
   m_butLZWComp.EnableWindow(tiffFile);
   m_butZIPComp.EnableWindow(tiffFile);
-  m_butJPEGComp.EnableWindow(tiffFile);
-  bEnable = !tiffFile || compressions[m_iCompress] != COMPRESS_JPEG;
+  m_butJPEGComp.EnableWindow(tiffFile && notFloat);
+
+  bEnable = (!tiffFile || compressions[m_iCompress] != COMPRESS_JPEG) && !jpegFile &&
+    notFloat;
   m_butSaveByte.EnableWindow(bEnable);
   m_butSaveInteger.EnableWindow(bEnable);
   m_butSaveUnsigned.EnableWindow(bEnable);
+
+  bEnable = (m_iByteInt == 1 && mAny16Bit) && bEnable;
+  m_groupSaving16.EnableWindow(bEnable);
+  m_butTruncate.EnableWindow(bEnable);
+  m_butDivide.EnableWindow(bEnable);
+  m_butShiftDown.EnableWindow(bEnable);
+
   bEnable = m_iFileType == 0;
   m_statExtended.EnableWindow(bEnable);
   m_butTiltangle.EnableWindow(bEnable);
@@ -191,12 +210,6 @@ void CFilePropDlg::ManageStates()
   m_statMaxSects.EnableWindow(bEnable);
   m_statGenerous.EnableWindow(bEnable);
   m_butSaveMdoc.EnableWindow(!mFileOpt.montageInMdoc && !m_iFileType);
-
-  bEnable = m_iByteInt == 1 && mAny16Bit;
-  m_groupSaving16.EnableWindow(bEnable);
-  m_butTruncate.EnableWindow(bEnable);
-  m_butDivide.EnableWindow(bEnable);
-  m_butShiftDown.EnableWindow(bEnable);
 }
 
 BOOL CFilePropDlg::OnInitDialog() 
@@ -220,16 +233,22 @@ BOOL CFilePropDlg::OnInitDialog()
 
   // Originally TIFFallowed = 2 was meant to force a tiff, leave that aside with ADOC
   m_butTiffFile.EnableWindow(mFileOpt.TIFFallowed);
+  m_butJpegFile.EnableWindow(mFileOpt.TIFFallowed && mFileOpt.mode != MRC_MODE_FLOAT);
   if ((mFileOpt.fileType == STORE_TYPE_TIFF ||  mFileOpt.fileType == STORE_TYPE_ADOC) &&
     mFileOpt.TIFFallowed)
     m_iFileType = 1;
   else if ((mFileOpt.useMont() ? mFileOpt.montFileType : mFileOpt.fileType) == 
     STORE_TYPE_ADOC)
     m_iFileType = 2;
+  if (mFileOpt.fileType == STORE_TYPE_JPEG && mFileOpt.mode == MRC_MODE_FLOAT)
+    m_iFileType = (mFileOpt.TIFFallowed ? 1 : 0);
   m_iCompress = 0;
   for (int i = 0; i < 4; i++)
     if (mFileOpt.compression == compressions[i])
       m_iCompress = i;
+  if ((m_iFileType == 1  || m_iFileType == 2) && mFileOpt.mode == MRC_MODE_FLOAT && 
+    m_iCompress == 3)
+    m_iCompress = 1;
 
   UpdateData(FALSE);
   ManageStates();
@@ -245,7 +264,8 @@ void CFilePropDlg::OnOK()
   // Unload the data and then recode it into the FileOption
   int filety = STORE_TYPE_MRC;
   UpdateData(TRUE); 
-  mFileOpt.mode = m_iByteInt < 2 ? m_iByteInt : MRC_MODE_USHORT;
+  if (mFileOpt.mode != 2) 
+    mFileOpt.mode = m_iByteInt < 2 ? m_iByteInt : MRC_MODE_USHORT;
   mFileOpt.maxSec = m_iMaxSects;
   mFileOpt.pctTruncLo = m_fTruncBlack;
   mFileOpt.pctTruncHi = m_fTruncWhite;
@@ -265,6 +285,8 @@ void CFilePropDlg::OnOK()
     filety = STORE_TYPE_TIFF;
   if (m_iFileType == 2)
     filety = STORE_TYPE_ADOC;
+  if (m_iFileType == 3)
+    filety = STORE_TYPE_JPEG;
   if (mFileOpt.useMont())
     mFileOpt.montFileType = filety;
   else

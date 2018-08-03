@@ -214,13 +214,16 @@ BOOL EMbufferManager::IsBufferSavable(EMimageBuffer *toBuf)
     return true;
   if (mWinApp->Montaging())
     return false;
-  return ((inStoreMRC->getWidth() == 0 && toBuf->mImage->getType() != kFLOAT) || 
+  return (inStoreMRC->getWidth() == 0 && !((toBuf->mImage->getType() == kFLOAT && 
+    (inStoreMRC->getStoreType() == STORE_TYPE_TIFF || 
+    inStoreMRC->getStoreType() == STORE_TYPE_ADOC) &&
+    inStoreMRC->GetCompression() == COMPRESS_JPEG))) || 
     (toBuf->mImage->getWidth() == inStoreMRC->getWidth() &&
     toBuf->mImage->getHeight() == inStoreMRC->getHeight() &&
     ((toBuf->mImage->getMode() == kGray && inStoreMRC->getMode() != MRC_MODE_RGB) ||
     (toBuf->mImage->getMode() == kRGBmode && inStoreMRC->getMode() == MRC_MODE_RGB)) &&
     ((toBuf->mImage->getType() == kFLOAT ? 1 : 0) == 
-    (inStoreMRC->getMode() == MRC_MODE_FLOAT ? 1 : 0))));
+    (inStoreMRC->getMode() == MRC_MODE_FLOAT ? 1 : 0)));
 }
 
 // Finds out if buffer is OK to destroy: if it has no image, or save flag is not 1,
@@ -332,6 +335,10 @@ int EMbufferManager::SaveImageBuffer(KImageStore *inStore, bool skipCheck, int i
       str += bidir;
     }
     inStore->AddTitle((LPCTSTR)str);
+
+    // Switch mode to float if this is a float image
+    if (toBuf->mImage && toBuf->mImage->getType() == kFLOAT)
+      inStore->setMode(MRC_MODE_FLOAT);
 
     cam = inStore->GetAdocIndex();
     if (cam >= 0 && !CheckAsyncSaving() && !AdocGetMutexSetCurrent(cam)) {
@@ -978,7 +985,7 @@ int EMbufferManager::AddToStackWindow(int bufNum, int maxSize, int secNum, bool 
   return mWinApp->AddToStackView(newBuf);
 }
 
-#define NUM_MESSAGES 20
+#define NUM_MESSAGES 21
 static char *messages[NUM_MESSAGES] = {
   "No image data", "No file open", "Extended header full", 
   "Memory error getting temporary array", "Error seeking to file position",
@@ -988,7 +995,8 @@ static char *messages[NUM_MESSAGES] = {
   "Trying to skip section number in TIFF series", "Error opening new TIFF file", 
   "Error setting current Adoc index", "Error adding values to autodoc", 
   "Error writing autodoc file", "Image is the wrong size to save into this file", 
-  "Timeout trying to save to file", "Error reading from first-half file", "Unknown error"
+  "Timeout trying to save to file", "Error reading from first-half file", 
+  "Floating point data cannot be saved to a JPEG file", "Unknown error"
 };
 
 CString EMbufferManager::ComposeErrorMessage(int inErr, char *writeType)

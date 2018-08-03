@@ -1189,10 +1189,6 @@ int CSerialEMDoc::FilePropForSaveFile(FileOptions * fileOptp)
 {
   EMimageBuffer *imBufs = mWinApp->GetImBufs();
 
-  // Bypass the dialog if the mode is float
-  if (fileOptp->mode == MRC_MODE_FLOAT)
-    return 0;
- 
   // Get file property dialog, load properties, and do dialog
   // Enable the 16-bit options if there is a camera that can make 16-bit or if
   // there is an unsigned short buffer

@@ -95,6 +95,7 @@ public:
   CButton m_butSaveByte;
   CButton m_butSaveInteger;
   BOOL m_bSkipFileDlg;
+  CButton m_butJpegFile;
 };
 
 //{{AFX_INSERT_LOCATION}}
