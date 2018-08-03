@@ -1747,8 +1747,9 @@ void CMenuTargets::OnCameraInterpolateDarkRefs()
 
 void CMenuTargets::OnUpdateCameraInterpolateDarkRefs(CCmdUI *pCmdUI)
 {
+  CameraParameters *param = mWinApp->GetCamParams() + mWinApp->GetCurrentCamera();
   pCmdUI->SetCheck(mCamera->GetInterpDarkRefs() ? 1 : 0);
-  pCmdUI->Enable(mCamera->GetProcessHere() && !DoingTasks() && 
+  pCmdUI->Enable(mCamera->GetProcessHere() && !DoingTasks() && !param->returnsFloats &&
     !mCamera->CameraBusy() && 
     !(mWinApp->StartedTiltSeries() && mWinApp->mTSController->GetChangeRecExp()));
 }
