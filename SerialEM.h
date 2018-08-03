@@ -167,6 +167,7 @@ struct JeolParams;
 #define PLUGFLAG_TSCALLS           8
 #define PLUGFLAG_PIEZO            16
 #define PLUGFLAG_DECAM            32
+#define PLUGFLAG_RETURNS_FLOATS   64
 #define PLUGCALL_TSACTION          1
 #define PLUGCAM_DIVIDE_BY2         1
 #define PLUGCAM_CONTINUOUS         2
