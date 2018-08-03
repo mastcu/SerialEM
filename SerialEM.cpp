@@ -247,6 +247,7 @@ CSerialEMApp::CSerialEMApp()
     mCamParams[i].sizeX = CAMERA_NO_DEFAULT;
     mCamParams[i].sizeY = CAMERA_NO_DEFAULT;
     mCamParams[i].unsignedImages = FALSE;
+    mCamParams[i].returnsFloats = false;
     mCamParams[i].moduloX = CAMERA_MODULO_X;
     mCamParams[i].moduloY = CAMERA_MODULO_Y;
     mCamParams[i].coordsModulo = false;

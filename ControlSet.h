@@ -82,6 +82,7 @@ struct CameraParameters {
   int sizeX;
   int sizeY;
   BOOL unsignedImages;     // For a 16-bit camera
+  BOOL returnsFloats;      // For a plugin that does or can return float images
   int moduloX;             // readout must be multiple of these
   int moduloY;             // or negative means restricted sizes
   BOOL coordsModulo;       // Coordinates must be modulo of values
