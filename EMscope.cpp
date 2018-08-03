@@ -23,6 +23,8 @@
 #include "AutocenSetupDlg.h"
 #include "StageMoveTool.h"
 #include "RemoteControl.h"
+#include "NavHelper.h"
+#include "MultiShotDlg.h"
 #include "BaseSocket.h"
 #include <assert.h>
 #include "Shared\b3dutil.h"
@@ -188,7 +190,7 @@ CEMscope::CEMscope()
   mCameraAcquiring = false;
   mBlankWhenDown = false;
   mLowDoseSetArea = -1;
-  mLowDoseDownArea = 0;
+  mLowDoseDownArea = -1;
   mLowDoseMode = false;
   mLDNormalizeBeam = false;
   mLDBeamNormDelay = 100;
@@ -1414,6 +1416,9 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
 
     if (mWinApp->mStageMoveTool)
       mWinApp->mStageMoveTool->UpdateStage(stageX, stageY);
+    if (mWinApp->mNavHelper->mMultiShotDlg)
+      mWinApp->mNavHelper->mMultiShotDlg->UpdateMultiDisplay(magIndex, rawIntensity);
+
     checkpoint = "status update";
     CHECK_TIME(10);
 
@@ -1621,7 +1626,7 @@ void CEMscope::UpdateLowDose(int screenPos, BOOL needBlank, BOOL gotoArea, int m
 
       // If screen is down, next set the desired area, then unblank if needed
       if (screenPos == spDown) {
-        if (gotoArea)
+        if (gotoArea && mLowDoseDownArea >= 0)
           GotoLowDoseArea(mLowDoseDownArea);
         if (!needBlank)
           BlankBeam(false);
@@ -4581,7 +4586,7 @@ void CEMscope::SetLowDoseDownArea(int inArea)
   BOOL needBlank, gotoArea;
   needBlank = NeedBeamBlanking(FastScreenPos(), FastSTEMmode(), gotoArea);
   mLowDoseDownArea = inArea;
-  if (gotoArea) {
+  if (gotoArea && mLowDoseDownArea >= 0) {
     GotoLowDoseArea(inArea);
     if (!mWinApp->GetSTEMMode() && mHasOmegaFilter)
       mWinApp->mCamera->SetupFilter();
