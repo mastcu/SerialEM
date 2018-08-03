@@ -2655,8 +2655,10 @@ CArray<CMapDrawItem *, CMapDrawItem *> *CNavigatorDlg::GetMapDrawItems(
   if (m_bDrawNone || !BufferStageToImage(imBuf, aMat, delX, delY))
     return NULL;
   drawAllReg = m_bDrawAllReg;
-  showMulti = (m_bShowAcquireArea && (mHelper->GetEnableMultiShot() & 1)) ||
-    (mHelper->mMultiShotDlg && !mHelper->mMultiShotDlg->RecordingISValues());
+  MultiShotParams *msParams = mHelper->GetMultiShotParams();
+  showMulti = msParams->inHoleOrMultiHole && ((m_bShowAcquireArea && 
+    (mHelper->GetEnableMultiShot() & 1)) ||
+    (mHelper->mMultiShotDlg && !mHelper->mMultiShotDlg->RecordingISValues()));
   if ((imBuf->mHasUserPt || imBuf->mHasUserLine) && (m_bShowAcquireArea || 
     showMulti) &&
     RegistrationUseType(imBuf->mRegistration) != NAVREG_IMPORT) {
@@ -2722,8 +2724,7 @@ CArray<CMapDrawItem *, CMapDrawItem *> *CNavigatorDlg::GetMapDrawItems(
         FloatVec delISX, delISY;
         is2cam = mShiftManager->IStoGivenCamera(magInd, camera);
         if (pixel && is2cam.xpx) {
-          MultiShotParams *msParams = mHelper->GetMultiShotParams();
-
+          
           // Make multihole positions relative to center
           if (msParams->inHoleOrMultiHole & MULTI_HOLES) {
             int numHoles = mWinApp->mParticleTasks->GetHolePositions(delISX, delISY, 
