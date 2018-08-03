@@ -3,9 +3,7 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
-7/29/18: Fixed crash from the axis rotation title being too long (In 3.6).
-
-7/19/18: Added ability to continue script commands onto multiple lines by
+7/19/18: Added ability to continue script commands onlto multiple lines by
 ending them with a backslash after a space.
 
 7/19/18: Initialized variable to prevent camera routine from trying to do a

@@ -485,13 +485,13 @@ void CCameraMacroTools::DoingTiltSeries(BOOL ifTS)
   m_sbcMacro2.EnableWindow(!ifTS);
   m_sbcMacro3.EnableWindow(!ifTS);
   if (ifTS) {
-    SetDlgItemText(IDC_STATTOPLINE, "Camera && Tilt Series Controls");
+    SetDlgItemText(IDC_STATTOPLINE, "Camera && TS");
     m_butMacro1.SetWindowText("1 Loop");
     m_butMacro2.SetWindowText("1 Step");
     m_butMacro3.SetWindowText("Backup");
 
   } else {
-    SetDlgItemText(IDC_STATTOPLINE, "Camera && Script Controls");
+    SetDlgItemText(IDC_STATTOPLINE, "Camera && Script");
     SetMacroLabels();
   }
   mDoingTS = ifTS;

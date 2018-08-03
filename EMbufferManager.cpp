@@ -317,21 +317,21 @@ int EMbufferManager::SaveImageBuffer(KImageStore *inStore, bool skipCheck, int i
     }
     if (!toBuf->GetSpotSize(spot))
       spot = mWinApp->mScope->FastSpotSize();
+    char title[80];
     CString str, bidir;
     if (mRotateAxisAngle)
       axisRot += 180.;
     axisRot = UtilGoodAngle(axisRot);
 
     // Separate with spaces because etomo would end up with a comma after the binning
-    // Worst case of -xxx.x axis angle, binning 0.5 and bidir -xx.x gives 79 char with 
-    // only one space before bidir
     str.Format("    Tilt axis angle = %.1f, binning = %s  spot = %d  camera = %d", 
       axisRot, toBuf->BinningText(), spot, cam);
     if (mWinApp->mTSController->GetBidirStartAngle(bidirAngle)) {
-      bidir.Format(" bidir = %.1f", bidirAngle);
+      bidir.Format("  bidir = %.1f", bidirAngle);
       str += bidir;
     }
-    inStore->AddTitle((LPCTSTR)str);
+    sprintf(title, "%s", (LPCTSTR)str); 
+    inStore->AddTitle(title);
 
     cam = inStore->GetAdocIndex();
     if (cam >= 0 && !CheckAsyncSaving() && !AdocGetMutexSetCurrent(cam)) {

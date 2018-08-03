@@ -62,7 +62,7 @@ KImageStore::~KImageStore()
 }
 
 // Accumulate titles in order to output as description for TIFF file
-int KImageStore::AddTitle(const char *inTitle)
+int KImageStore::AddTitle(char *inTitle)
 {
   CString copy;
   if (mNumTitles >= MRC_NLABELS)
