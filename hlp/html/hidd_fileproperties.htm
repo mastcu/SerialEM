@@ -19,7 +19,8 @@
       <LI>
         Data can be saved in the now-standard unsigned integer mode (mode 6). This mode 
         has been supported in IMOD for many years, but there may still be some MRC file 
-        reading software that does not read it.</LI>
+        reading software that does not read it.
+      </LI>
       <LI>
         Data can be saved in a signed integer file with truncation at 32767. If the 
         counts in the images to be saved are not expected to be higher than 32767, this 
@@ -47,7 +48,7 @@
         images with very low counts if the bias of the camera drifts downwards after 
         taking a dark reference.</LI></OL>
     <P>Independent of these choices of how to treat the numeric values, this box 
-      provides four options for the format of the file in which data can be saved.</P>
+      provides three options for the format of the file in which data can be saved.</P>
     <OL>
       <LI>
         MRC files, which can be processed in IMOD and some other software. These files 
@@ -69,14 +70,7 @@
         section number or overwritten, the file can be reopened, and montaging can also 
         be done with this file format. If you are just looking for an easy way to get a 
         series of numbered TIFF files, you can ignore all these features and, when you 
-        get to the file chooser, think of it as asking for the root name of the series.</LI>
-      <LI>
-        JPEG files for single images. This option is available only when saving a 
-        non-floating point 
-        image (either when saving if there is no open file, or when using <A HREF="menu_file.htm#hidm_file_saveother">
-          Save Single/Save to other</A> in the File menu). Data are converted to bytes 
-        with truncation of extreme values.&nbsp; The file is closed after 
-        writing one image.</LI></OL>
+        get to the file chooser, think of it as asking for the root name of the series.</LI></OL>
     <P>When saving to an MRC file, the dialog provides another option for saving 
       metadata, into a file in the autodoc format. This file will be given the full 
       name of the image stack plus the extension '.mdoc', which stands for 'metadata 
@@ -95,13 +89,11 @@
       extended header. In addition, newstack and edmont can transfer information from 
       the autodoc file associated with an input file to a new autodoc for an output 
       file.&nbsp; </P>
-    <P><B>Save non-float data as:</B></P>
-    <P>Allows integer data to be saved as bytes or 16-bit integers. If there is a 
-      16-bit camera and values are not being divided by 2, or if there are any buffers 
-      with unsigned data in them, an option to save in unsigned integer 
-      mode is also available.&nbsp; These options are not available if you are saving 
-      a floating-point image, because there is no provision yet for conversion of 
-      floats to integers or bytes.</P>
+    <P><B>Save data as:</B></P>
+    <P>Allows data to be saved as bytes or 16-bit integers. If there is a 16-bit camera 
+      and values are not being divided by 2, or if there are any buffers with 
+      unsigned data in them, an option to save in the non-standard unsigned integer 
+      mode is also available.</P>
     <P><B>When saving 16-bit data:</B></P>
     <P>Controls the treatment of unsigned 16-bit integer data being saved to a signed 
       integer file. The three options are to truncate at 32767, divide by 2, or 
@@ -118,8 +110,7 @@
       find a scaling which truncates a certain percentage of extremely dark and light 
       pixels at 0 and 255, respectively. Every image is scaled independently. </P>
     <P>If you 
-      select byte storage, saving to a TIFF file with JPEG compression, or saving to a 
-      JPEG file, you can control the 
+      select byte storage or saving to a TIFF file with JPEG compression, you can control the 
       fraction of pixels that will be 
       truncated with these text boxes.&nbsp; Your entries here will be saved in your 
       settings file, and separate values are maintained for saving a single image with 
@@ -156,11 +147,11 @@
       opened and the range of coordinates is too large to store in the extended 
       header, a '.mdoc' file is created automatically.</P>
     <P><B>Save images to:</B></P>
-    <P>Select whether to save data in an MRC file, a TIFF or JPEG&nbsp; file holding a single image 
+    <P>Select whether to save data in an MRC file, a TIFF file holding a single image 
       (not always available), or a series of TIFF files listed in an autodoc file, as 
       explained above. When you select the latter option, the file chooser for 
-      specifying the file will attach the extension '.idoc' if you type in a root 
-      name without an extension. Thus, the autodoc will be named rootname.idoc, and 
+      specifying the file will attach the extension '.adoc' if you type in a root 
+      name without an extension. Thus, the autodoc will be named rootname.adoc, and 
       the TIFF files will be named rootnameNNNN.tif, where 'NNNN' is a 4-digit number 
       starting with 0000.&nbsp; Your selection here will be saved in the settings file 
       when saving a single image with the <a href="menu_file.htm#hidm_file_saveother">

@@ -486,11 +486,8 @@ void CLowDoseDlg::TurnOffDefine()
 void CLowDoseDlg::OnGotoArea(UINT nID)
 {
   int area = nID - IDC_GOTO_VIEW;
-  CButton *button = (CButton *)GetDlgItem(nID);
   UpdateData(true);
   mWinApp->RestoreViewFocus();
-  button->SetButtonStyle(BS_PUSHBUTTON);
-  SetFocus();
   if (mTrulyLowDose && !mWinApp->DoingTasks() && !mWinApp->mCamera->CameraBusy())
     mScope->GotoLowDoseArea(area);
 }
@@ -598,10 +595,7 @@ void CLowDoseDlg::SetContinuousUpdate(BOOL state)
 void CLowDoseDlg::OnCopyArea(UINT nID) 
 {
   CString *modeNames = mWinApp->GetModeNames();
-  CButton *button = (CButton *)GetDlgItem(nID);
-  mWinApp->RestoreViewFocus();
-  button->SetButtonStyle(BS_PUSHBUTTON);
-  SetFocus();
+  mWinApp->RestoreViewFocus();  
   int area = nID - IDC_COPYTOVIEW;
   int from = mScope->GetLowDoseArea();
   int consInd = (area == SEARCH_AREA ? SEARCH_CONSET : area);
