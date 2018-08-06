@@ -43,6 +43,7 @@ CCameraMacroTools::CCameraMacroTools(CWnd* pParent /*=NULL*/)
   mMacroNumber[2] = 2;
   mDoingTS = false;
   mUserStop = FALSE;
+  mEnabledStop = false;
 }
 
 
@@ -82,6 +83,7 @@ BEGIN_MESSAGE_MAP(CCameraMacroTools, CToolDlg)
   ON_BN_CLICKED(IDC_BUTEND, OnButend)
   ON_BN_CLICKED(IDC_BUTRESUME, OnButresume)
   ON_BN_CLICKED(IDC_BUTMONTAGE, OnButmontage)
+  ON_WM_PAINT()
   //}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -122,6 +124,15 @@ BOOL CCameraMacroTools::OnInitDialog()
   
   return TRUE;  // return TRUE unless you set the focus to a control
                 // EXCEPTION: OCX Property Pages should return FALSE
+}
+
+void CCameraMacroTools::OnPaint()
+{
+  CPaintDC dc(this); // device context for painting
+
+  DrawSideBorders(dc);
+  if (mEnabledStop)
+    DrawButtonOutline(dc, &m_butStop, 3, RGB(255, 0, 0));
 }
 
 void CCameraMacroTools::OnButmontage() 
@@ -370,6 +381,7 @@ void CCameraMacroTools::Update()
   CString name;
   CameraParameters *camParams = mWinApp->GetCamParams();
   mEnabledSearch = false;
+  bool stopEnabled;
   if (mWinApp->mCamera)
     camBusy = mWinApp->mCamera->CameraBusy();
   BOOL idle = !mWinApp->DoingTasks() && !(mNav && mNav->StartedMacro());
@@ -415,10 +427,14 @@ void CCameraMacroTools::Update()
 
   // Keep STOP enabled during continuous acquires: the press event gets lost in repeated 
   // enable/disables 
-  m_butStop.EnableWindow(mWinApp->DoingTasks() || camBusy || 
+  stopEnabled = mWinApp->DoingTasks() || camBusy || 
     mWinApp->mScope->GetMovingStage() || mWinApp->mCamera->DoingContinuousAcquire() ||
     navState == NAV_TS_STOPPED || navState == NAV_PRE_TS_STOPPED || 
-    navState == NAV_SCRIPT_STOPPED);
+    navState == NAV_SCRIPT_STOPPED;
+  m_butStop.EnableWindow(stopEnabled);
+  if (!BOOL_EQUIV(stopEnabled, mEnabledStop))
+    Invalidate();
+  mEnabledStop = stopEnabled;
   m_butSetup.EnableWindow((!mWinApp->DoingTasks() || mDoingCalISO) && !camBusy);
 
   // Set the End button

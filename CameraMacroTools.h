@@ -76,6 +76,7 @@ protected:
 	afx_msg void OnButend();
 	afx_msg void OnButresume();
 	afx_msg void OnButmontage();
+	afx_msg void OnPaint();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 
@@ -88,6 +89,7 @@ private:
 	int mMacroNumber[6];
   BOOL mUserStop;     // Flag that user pushed stop
   bool mEnabledSearch;
+  bool mEnabledStop;
 public:
   void SetOneMacroLabel(int num, UINT nID);
   void MacroNameChanged(int num);
