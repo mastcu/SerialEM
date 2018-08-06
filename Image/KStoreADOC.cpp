@@ -135,7 +135,7 @@ int KStoreADOC::WriteAdoc()
   return retval;
 }
 
-int KStoreADOC::AddTitle(char *inTitle)
+int KStoreADOC::AddTitle(const char *inTitle)
 {
   if (AdocGetMutexSetCurrent(mAdocIndex) < 0)
     return 1;

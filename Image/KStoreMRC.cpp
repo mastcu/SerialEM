@@ -357,7 +357,7 @@ KStoreMRC::~KStoreMRC()
 }
 
 // Add a title to the header; assume it will be saved by the next image write
-int KStoreMRC::AddTitle(char *inTitle)
+int KStoreMRC::AddTitle(const char *inTitle)
 {
   int retval = 0;
   if (mFile == NULL)

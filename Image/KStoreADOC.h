@@ -85,7 +85,7 @@ public:
   virtual int     AppendImage(KImage *inImage);
 	virtual int     WriteSection(KImage * inImage, int inSect);
   virtual	void    SetPixelSpacing(float pixel);
-  virtual int     AddTitle(char *inTitle);
+  virtual int     AddTitle(const char *inTitle);
   virtual int     CheckMontage(MontParam *inParam); 
   virtual int     getPcoord(int inSect, int &outX, int &outY, int &outZ);
   virtual int     getStageCoord(int inSect, double &outX, double &outY);
