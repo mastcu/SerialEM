@@ -3,6 +3,14 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+8/6/18: Added ability to use Ctrl to extend the delay time for getting a
+single mag or spot change when using the spinners in the scope control panel.
+
+8/6/18: Made Unblank button in Low Dose and STEM control panels able to blank
+beam also.
+
+8/6/18: Fixed coma-free alignment test for enough astigmatism range.
+
 8/6/18: Fixed missing titles from 7/29 fix (In 3.6).
 
 8/3/18: FIXED BEAM TILT COMPENSATION FOR IMAGE SHIFT IN MULTI_-SHOT ROUTINE,
