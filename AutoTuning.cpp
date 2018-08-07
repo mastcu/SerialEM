@@ -1421,7 +1421,7 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
             ACCUM_MIN(minAstig, astig);
             ACCUM_MIN(maxAstig, astig);
           }
-          if (maxAstig - minAstig < 0.5) {
+          if (maxAstig - minAstig < 0.05) {
             str = "The range of astigmatism values is too low for a reliable"
               " coma solution.\n\n" "You may need to increase the beam tilt set in"
               " \"Set CTF Coma-free Params\".\n";
