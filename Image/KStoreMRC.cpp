@@ -365,6 +365,7 @@ int KStoreMRC::AddTitle(const char *inTitle)
   if (mHead->nttl == 10)
     return -1;
   int len = (int)strlen(inTitle);
+  len = B3DMIN(len, MRC_LABEL_SIZE);
   memcpy(&mHead->labels[mHead->nttl][0], inTitle, len);
   
   // Pad with spaces, not nulls
