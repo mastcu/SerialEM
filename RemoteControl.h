@@ -75,6 +75,8 @@ private:
   int mStartMagIndex;
   UINT_PTR mTimerID;
   int mMaxClickInterval;
+  bool mCtrlPressed;
+  bool mDidExtendedTimeout;
 public:
   CSpinButtonCtrl m_sbcBeamLeftRight;
   afx_msg void OnDeltaposSpinBeamLeftRight(NMHDR *pNMHDR, LRESULT *pResult);
@@ -82,4 +84,5 @@ public:
   bool mInitialized;
   void SetMagOrSpot(void);
   void GetPendingMagOrSpot(int &pendingMag, int &pendingSpot);
+  void CtrlChanged(bool pressed);
 };

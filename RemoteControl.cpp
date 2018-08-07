@@ -31,6 +31,7 @@ CRemoteControl::CRemoteControl(CWnd* pParent /*=NULL*/)
   mBeamIncrement = 0.05f;
   mIntensityIncrement = 0.5f;
   mMaxClickInterval = 350;
+  mDidExtendedTimeout = false;
 }
 
 CRemoteControl::~CRemoteControl()
@@ -258,6 +259,7 @@ void CRemoteControl::OnDeltaposSpinMag(NMHDR *pNMHDR, LRESULT *pResult)
   }
   mMagClicked = true;
   mNewMagIndex = index2;
+  mDidExtendedTimeout = false;
   mTimerID = ::SetTimer(NULL, mTimerID, mMaxClickInterval, TimerProc);
   if (!mTimerID)
      SetMagOrSpot();
@@ -278,7 +280,10 @@ void CRemoteControl::OnDeltaposSpinSpot(NMHDR *pNMHDR, LRESULT *pResult)
   if (!NewSpinnerValue(pNMHDR, pResult, oldVal, mScope->GetMinSpotSize(),
     mScope->GetNumSpotSizes(), mNewSpotIndex)) {
       mSpotClicked = true;
+      mDidExtendedTimeout = false;
       mTimerID = ::SetTimer(NULL, mTimerID, mMaxClickInterval, TimerProc);
+      if (!mTimerID)
+        SetMagOrSpot();
   } else if (mSpotClicked) {
     ::KillTimer(NULL, mTimerID);
     mTimerID = NULL;
@@ -299,6 +304,15 @@ void CRemoteControl::SetMagOrSpot(void)
   if (mTimerID)
     ::KillTimer(NULL, mTimerID);
   mTimerID = NULL;
+
+  // If Ctrl is down, extend the timeout for ~2 seconds 
+  if (mCtrlPressed && !mDidExtendedTimeout) {
+    mTimerID = ::SetTimer(NULL, mTimerID, 6 * mMaxClickInterval, TimerProc);
+    if (mTimerID) {
+      mDidExtendedTimeout = true;
+      return;
+    }
+  }
   if (mMagClicked) {
     m_sbcMag.EnableWindow(false);
     RedrawWindow();
@@ -331,6 +345,14 @@ void CRemoteControl::GetPendingMagOrSpot(int &pendingMag, int &pendingSpot)
     pendingSpot = mNewSpotIndex;
   if (mTimerID && mMagClicked)
     pendingMag = mNewMagIndex;
+}
+
+// Do the mag change when Ctrl is released
+void CRemoteControl::CtrlChanged(bool pressed)
+{
+  mCtrlPressed = pressed;
+  if (!pressed && (mMagClicked || mSpotClicked))
+    SetMagOrSpot();
 }
 
 // Beam up/down

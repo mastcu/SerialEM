@@ -59,6 +59,7 @@ BEGIN_MESSAGE_MAP(CSerialEMView, CView)
   ON_WM_MOUSEMOVE()
   ON_WM_MOUSEWHEEL()
   ON_WM_KEYDOWN()
+  ON_WM_KEYUP()
   ON_WM_RBUTTONDOWN()
   ON_WM_LBUTTONUP()
   ON_WM_LBUTTONDBLCLK()
@@ -1882,6 +1883,7 @@ void CSerialEMView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
   EMimageBuffer *mainBufs = mWinApp->GetImBufs();
   char cChar = char(nChar);
   bool mainOrFFT = mMainWindow || mFFTWindow;
+  bool ctrl = GetAsyncKeyState(VK_CONTROL) / 2 != 0;
   SEMTrace('k', "Code %u, char %c", nChar, cChar);
   mWinApp->mMacroProcessor->SetKeyPressed((int)cChar);
 
@@ -1890,7 +1892,9 @@ void CSerialEMView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
     mCtrlPressed = true;
   if (nChar == VK_SHIFT)
     mShiftPressed = true; */
-  mCtrlPressed = GetAsyncKeyState(VK_CONTROL) / 2 != 0;
+  if (!BOOL_EQUIV(ctrl, mCtrlPressed))
+    mWinApp->mRemoteControl.CtrlChanged(ctrl);
+  mCtrlPressed = ctrl;
   mShiftPressed = GetAsyncKeyState(VK_SHIFT) / 2 != 0;
 
   // Zoom up and down with these non standard keys
@@ -1990,6 +1994,15 @@ void CSerialEMView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
   }
 
   CView::OnKeyDown(nChar, nRepCnt, nFlags);
+}
+
+void CSerialEMView::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags) 
+{
+  bool ctrl = GetAsyncKeyState(VK_CONTROL) / 2 != 0;
+  if (!BOOL_EQUIV(ctrl, mCtrlPressed))
+    mWinApp->mRemoteControl.CtrlChanged(ctrl);
+  mCtrlPressed = ctrl;
+  CView::OnKeyUp(nChar, nRepCnt, nFlags);
 }
 
 void CSerialEMView::OnActivateView(BOOL bActivate, CView* pActivateView, CView* pDeactiveView) 
