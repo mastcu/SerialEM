@@ -91,6 +91,7 @@ BOOL CSTEMcontrolDlg::OnInitDialog()
   UpdateSettings();
   if (mWinApp->mCamera->GetInvertBrightField() <= 0)
     SetDlgItemText(IDC_CHECK_INVERT_CONTRAST, "Invert contrast unless Bright Field");
+  m_butUnblank.SetWindowText(mLastBlanked ? "Unblank" : "Blank");
   mLastProbeMode = -1;
   UpdateSTEMstate(mWinApp->mScope->GetProbeMode());
   return TRUE;
@@ -149,7 +150,8 @@ void CSTEMcontrolDlg::OnRetractToUnblank()
 void CSTEMcontrolDlg::OnUnblankStem()
 {
   mWinApp->RestoreViewFocus();  
-  mWinApp->mScope->BlankBeam(false);  
+  mWinApp->mScope->BlankBeam(!mLastBlanked);
+  BlankingUpdate(!mLastBlanked);
 }
 
 void CSTEMcontrolDlg::OnKillfocusAddedRot()
@@ -233,9 +235,9 @@ void CSTEMcontrolDlg::UpdateSTEMstate(int probeMode)
 
 void CSTEMcontrolDlg::BlankingUpdate(BOOL blanked)
 {
-  if (blanked && mLastBlanked || !blanked && !mLastBlanked)
+  if (BOOL_EQUIV(blanked, mLastBlanked))
     return;
   mLastBlanked = blanked;
-  m_butUnblank.EnableWindow(!mWinApp->mCamera->CameraBusy() && !mWinApp->DoingTasks() &&
-    blanked);
+  m_butUnblank.SetWindowText(blanked ? "Unblank" : "Blank");
+  m_butUnblank.EnableWindow(!mWinApp->mCamera->CameraBusy() && !mWinApp->DoingTasks());
 }

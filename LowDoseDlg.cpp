@@ -642,8 +642,9 @@ void CLowDoseDlg::OnCopyArea(UINT nID)
 // Unblank the beam temporarily
 void CLowDoseDlg::OnUnblank() 
 {
-  mWinApp->RestoreViewFocus();  
-  mScope->BlankBeam(false);  
+  mWinApp->RestoreViewFocus();
+  mScope->BlankBeam(!mLastBlanked);
+  BlankingUpdate(!mLastBlanked);
 }
 
 // Reset beam shift of current area to zero 
@@ -1015,7 +1016,7 @@ int CLowDoseDlg::NewAxisPosition(int area, double position, int angle, bool setA
 void CLowDoseDlg::OnPaint() 
 {
   CPaintDC dc(this); // device context for painting
-
+ 
   DrawSideBorders(dc);
   int area = mWinApp->mScope->GetLowDoseArea();
   if (area < 0)
@@ -1083,6 +1084,7 @@ BOOL CLowDoseDlg::OnInitDialog()
     m_butBlankBeam.EnableWindow(false);
     m_butUnblank.EnableWindow(false);
   }
+  m_butUnblank.SetWindowText(mLastBlanked ? "Unblank" : "Blank");
 
   // We will not start program with this on!
   // mScope->SetLowDoseMode(mTrulyLowDose);
@@ -1134,7 +1136,7 @@ void CLowDoseDlg::Update()
 
   // Enable unblank button if blanked and no tasks, and camera not busy
   BOOL bEnable = mTrulyLowDose && !mWinApp->DoingTasks();
-  m_butUnblank.EnableWindow(mLastBlanked && !mWinApp->DoingTasks() && !camBusy && 
+  m_butUnblank.EnableWindow(!mWinApp->DoingTasks() && !camBusy && 
     !mScope->GetJeol1230());
   m_butZeroViewShift.EnableWindow(!STEMmode && bEnable && !camBusy &&
     (mViewShiftX[m_iOffsetShown] != 0. || mViewShiftY[m_iOffsetShown] != 0.));
@@ -1446,11 +1448,12 @@ void CLowDoseDlg::ScopeUpdate(int magIndex, int spotSize, double intensity,
 // Routine update about blanking status regardless of low dose mode
 void CLowDoseDlg::BlankingUpdate(BOOL blanked)
 {
-  if (blanked && mLastBlanked || !blanked && !mLastBlanked)
+  if (BOOL_EQUIV(blanked, mLastBlanked))
     return;
   mLastBlanked = blanked;
   m_statBlanked.ShowWindow(blanked ? SW_SHOW : SW_HIDE);
-  m_butUnblank.EnableWindow(blanked && !mWinApp->DoingTasks() && 
+  m_butUnblank.SetWindowText(blanked ? "Unblank" : "Blank");
+  m_butUnblank.EnableWindow(!mWinApp->DoingTasks() && 
     !mWinApp->mCamera->CameraBusy() && !mScope->GetJeol1230());
 }
 
