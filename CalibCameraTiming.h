@@ -11,7 +11,7 @@
 
 #define MAX_RANGE 50
 #define MAX_DEAD_TIMES  7
-enum {FLYBACK_ERROR = 0, FLYBACK_NONE, FLYBACK_EXACT, FLYBACK_INTERP, FLYBACK_EXTRAP, 
+enum {FLYBACK_ERROR = 0, FLYBACK_NONE, FLYBACK_EXACT, FLYBACK_INTERP, FLYBACK_EXTRAP,
 FLYBACK_SINGLE};
 
 // Flyback time table
@@ -25,7 +25,7 @@ struct FlybackTime {
   float startupDelay;   // Startup delay from fit also
 };
 
-class CCalibCameraTiming  
+class CCalibCameraTiming
 {
 public:
 	void StopCalDead();
@@ -44,7 +44,7 @@ public:
   GetSetMember(BOOL, NeedToSaveFlybacks);
 	CCalibCameraTiming();
 	virtual ~CCalibCameraTiming();
-  SetMember(float, K2InitialStartup);
+  GetSetMember(float, K2InitialStartup);
 
 private:
 
@@ -75,9 +75,9 @@ private:
   int mLowQuickShots;         // Number of shots at each for low exposures
   int mHighQuickDelays;       // Number of delays to test for High exposures
   int mHighQuickShots;        // Number of shots at each for High exposures
-  float mLowHighThreshold;    // Exposure time for switching between low and high 
+  float mLowHighThreshold;    // Exposure time for switching between low and high
   float mFirstQuickStartup;   // First startup
-  bool mConfirmOK;            // Flag for whether to confirm saving 
+  bool mConfirmOK;            // Flag for whether to confirm saving
   int mCalIndex;              // Index for repetitive shots
   float *mMeanValues;         // Array to save values in
   int mNumRefShots;           // Number of reference shots
@@ -108,7 +108,7 @@ private:
   BOOL mNeedToSaveFlybacks;          // Flag that flybacks need saving
   int mMatchedFlybackInd;     // Index of one that was matched in last lookup
 public:
-  int FlybackTimeFromTable(int binning, int xSize, int magIndex, float exposure, 
+  int FlybackTimeFromTable(int binning, int xSize, int magIndex, float exposure,
     float & flyback, float & startup, CString *message = NULL);
 };
 

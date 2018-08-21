@@ -46,7 +46,7 @@ enum {lpRegular = 1, lpEFTEM};
 
 #define MAX_LONG_OPERATIONS 11
 #define MAX_LONG_THREADS 2
-enum {LONG_OP_BUFFER = 0, LONG_OP_REFILL, LONG_OP_INVENTORY, LONG_OP_LOAD_CYCLE, 
+enum {LONG_OP_BUFFER = 0, LONG_OP_REFILL, LONG_OP_INVENTORY, LONG_OP_LOAD_CYCLE,
 LONG_OP_MESSAGE_BOX, LONG_OP_HW_DARK_REF, LONG_OP_UNLOAD_CART, LONG_OP_LOAD_CART,
 LONG_OP_FILL_STAGE, LONG_OP_FILL_TRANSFER, LONG_OP_FLASH_FEG};
 
@@ -102,10 +102,11 @@ extern bool JEOLscope, LikeFEIscope, HitachiScope;
 extern bool FEIscope;
 extern bool UsingScopeMutex;      // Flag that scope mutex is being used for this scope type
 
-class DLL_IM_EX CEMscope  
+class DLL_IM_EX CEMscope
 {
  public:
   void SetMessageWhenClipIS(BOOL inVal);
+  BOOL GetMessageWhenClipIS();
   const char *GetC2Name() {return (LPCTSTR)mC2Name;};
   const char *GetC2Units() {return (LPCTSTR)mC2Units;};
   void SetJeolUsePLforIS(BOOL inVal);
@@ -118,22 +119,24 @@ class DLL_IM_EX CEMscope
   BOOL CalibratingNeutralIS() {return mCalNeutralStartMag >= 0;};
   void CalibrateNeutralIS(int calType);
   void SuspendUpdate(int duration);
-  SetMember(BOOL, ReportsSmallScreen)
-  SetMember(int, ReportsLargeScreen)
-  SetMember(double, Jeol_CLA1_to_um)
-  SetMember(double, Jeol_LMCLA1_to_um)
+  GetSetMember(BOOL, ReportsSmallScreen)
+  GetSetMember(int, ReportsLargeScreen)
+  GetSetMember(double, Jeol_CLA1_to_um)
+  GetSetMember(double, Jeol_LMCLA1_to_um)
   double GetLMBeamShiftFactor() {return mJeol_LMCLA1_to_um / mJeol_CLA1_to_um;};
   GetSetMember(double, Jeol_OLfine_to_um)
-  SetMember(double, Jeol_OM_to_um)
+  GetSetMember(double, Jeol_OM_to_um)
   GetSetMember(double, RoughPLscale)
-  SetMember(BOOL, UpdateByEvent)
-  SetMember(BOOL, SpectrumByEvent)
+  GetSetMember(BOOL, UpdateByEvent)
+  GetSetMember(BOOL, SpectrumByEvent)
   void SetJeolStageRounding(float inVal);
   void SetJeolPiezoRounding(float inVal);
-  SetMember(int, MagFixISdelay)
-  SetMember(int, JeolForceMDSmode)
-  SetMember(int, InitializeJeolDelay)
-  SetMember(int, UpdateInterval)
+  float GetJeolStageRounding();
+  float GetJeolPiezoRounding();
+  GetSetMember(int, MagFixISdelay)
+  GetSetMember(int, JeolForceMDSmode)
+  GetSetMember(int, InitializeJeolDelay)
+  GetSetMember(int, UpdateInterval)
   GetSetMember(int, JeolUpdateSleep)
   GetMember(BOOL, CanControlEFTEM)
   GetSetMember(BOOL, HasOmegaFilter)
@@ -141,7 +144,7 @@ class DLL_IM_EX CEMscope
   GetSetMember(BOOL, NoColumnValve)
   GetSetMember(BOOL, LDNormalizeBeam)
   GetSetMember(BOOL, LDBeamTiltShifts)
-  SetMember(int, LDBeamNormDelay)
+  GetSetMember(int, LDBeamNormDelay)
   float GetLDViewDefocus(int areaOrSet = VIEW_CONSET) {return areaOrSet != VIEW_CONSET ? mSearchDefocus : mLDViewDefocus;};
   void SetLDViewDefocus(float inVal, int area = VIEW_CONSET) {if (area) mSearchDefocus = inVal; else mLDViewDefocus = inVal;};
   GetSetMember(float, SearchDefocus)
@@ -156,7 +159,7 @@ class DLL_IM_EX CEMscope
   BOOL NormalizeCondenser();
   void SetJeolPostMagDelay(int inVal, int inStage) {mJeolPostMagDelay = inVal; mPostMagStageDelay = inStage;};
   GetMember(int, JeolPostMagDelay);
-  SetMember(int, JeolMagEventWait);    
+  GetSetMember(int, JeolMagEventWait);
   GetSetMember(int, JeolSTEMPreMagDelay);
   GetSetMember(int, NumSpotSizes)
   GetSetMember(int, MinSpotSize);
@@ -216,12 +219,12 @@ class DLL_IM_EX CEMscope
   BOOL GetIntensityZoom();
   GetSetMember(float, SmallScreenFactor)
   GetSetMember(float, ScreenCurrentFactor)
-  SetMember(double, StandardLMFocus)
+  GetSetMember(double, StandardLMFocus)
   double GetStandardLMFocus(int magInd, int probe = -1);
   double *GetLMFocusTable() {return &mLMFocusTable[0][0];};
   void SetFocusToStandardIfLM(int magInd);
-  SetMember(float, WarnIfKVnotAt)
-  void GetLastISChange(double &delX, double &delY) 
+  GetSetMember(float, WarnIfKVnotAt)
+  void GetLastISChange(double &delX, double &delY)
     {delX = mLastISdelX; delY = mLastISdelY;};
   GetSetMember(DWORD, LastNormalization)
   SetMember(DWORD, LastStageTime)
@@ -231,20 +234,20 @@ class DLL_IM_EX CEMscope
   GetMember(double, LastTiltChange)
   GetSetMember(float, MaxTiltAngle);
   GetMember(BOOL, MagChanged)
-  SetMember(int, MainDetectorID)
+  GetSetMember(int, MainDetectorID)
   GetSetMember(int, HasNoAlpha)
   GetSetMember(BOOL, UseIllumAreaForC2)
   GetMember(int, ProbeMode)
   SetMember(int, DiffractOrSTEMwait)
   SetMember(int, ProbeChangeWait)
-  SetMember(int, InsertDetectorDelay);
-  SetMember(int, SelectDetectorDelay);
+  GetSetMember(int, InsertDetectorDelay);
+  GetSetMember(int, SelectDetectorDelay);
   SetMember(BOOL, UsePLforIS);
-  SetMember(BOOL, UseCLA2forSTEM);
+  GetSetMember(BOOL, UseCLA2forSTEM);
   GetMember(BOOL, ChangingLDArea);
   BOOL GetClippingIS();
   GetSetMember(double, JeolSTEMdefocusFac);
-  SetMember(int, JeolSTEMrotation);
+  GetSetMember(int, JeolSTEMrotation);
   SetMember(int, JeolSwitchSTEMsleep);
   SetMember(int, JeolSwitchTEMsleep);
   SetMember(LowDoseParams *, LdsaParams);
@@ -256,24 +259,24 @@ class DLL_IM_EX CEMscope
   GetMember(bool, DoingLongOperation);
   GetSetMember(BOOL, UsePiezoForLDaxis);
   GetSetMember(bool, FocusCameFromView);
-  SetMember(int, FalconPostMagDelay);
+  GetSetMember(int, FalconPostMagDelay);
   GetSetMember(int, LowestSecondaryMag);
   GetSetMember(int, SecondaryMode);
-  SetMember(int, AlphaChangeDelay);
+  GetSetMember(int, AlphaChangeDelay);
   GetMember(bool, Disconnected);
-  SetMember(int, MagChgIntensityDelay);
-  SetMember(int, HitachiSpotStepDelay);
-  SetMember(int, HighestLMindexToScan);
-  SetMember(int, PostProbeDelay);
+  GetSetMember(int, MagChgIntensityDelay);
+  GetSetMember(int, HitachiSpotStepDelay);
+  GetSetMember(int, HighestLMindexToScan);
+  GetSetMember(int, PostProbeDelay);
   GetMember(int, LastNormMagIndex);
   GetSetMember(int, FakeMagIndex);
   GetSetMember(int, FakeScreenPos);
   GetMember(int, PluginVersion);
-  SetMember(int, PostFocusChgDelay);
+  GetSetMember(int, PostFocusChgDelay);
   GetSetMember(int, UseJeolGIFmodeCalls);
-  SetMember(int, PostJeolGIFdelay);
-  SetMember(int, UpdateBeamBlank);
-  SetMember(BOOL, BlankTransients);
+  GetSetMember(int, PostJeolGIFdelay);
+  GetSetMember(int, UpdateBeamBlank);
+  GetSetMember(BOOL, BlankTransients);
   SetMember(BOOL, SelectedEFTEM);
   GetMember(double, LastCameraLength);
   GetSetMember(float, StageRelaxation);
@@ -282,9 +285,10 @@ class DLL_IM_EX CEMscope
   GetSetMember(BOOL, UseInvertedMagRange);
   GetMember(double, InternalMagTime);
   GetMember(double, UpdateSawMagTime);
-  SetMember(BOOL, JeolHasNitrogenClass);
+  GetSetMember(BOOL, JeolHasNitrogenClass);
   void SetJeolReadStageForWait(BOOL inVal);
-  SetMember(BOOL, SkipAdvancedScripting);
+  BOOL GetJeolReadStageForWait();
+  GetSetMember(BOOL, SkipAdvancedScripting);
 
   static void SetJeolIndForMagMode(int inVal);
   static int GetJeolIndForMagMode();
@@ -302,9 +306,9 @@ class DLL_IM_EX CEMscope
   GetSetMember(BOOL, AdjustFocusForProbe);
   SetMember(double, FirstFocusForProbe);
   GetSetMember(int, NormAllOnMagChange);
-  void GetMinMaxBeamShiftSpots(int secondary, int &outMin, int &outMax) 
+  void GetMinMaxBeamShiftSpots(int secondary, int &outMin, int &outMax)
   {outMin = mMinSpotWithBeamShift[secondary], outMax = mMaxSpotWithBeamShift[secondary];};
-  void SetMinMaxBeamShiftSpots(int secondary, int inMin, int inMax) 
+  void SetMinMaxBeamShiftSpots(int secondary, int inMin, int inMax)
   {mMinSpotWithBeamShift[secondary] = inMin, mMaxSpotWithBeamShift[secondary] = inMax;};
   void CopyBacklashValid() {mBacklashValidAtStart = mXYbacklashValid;};
   void NextLDAreaOpposite() {mNextLDpolarity = -1;};
@@ -358,7 +362,7 @@ class DLL_IM_EX CEMscope
   int GetScreenPos();
   BOOL SetScreenPos(int inPos);
   int StageBusy(int ignoreOrTrustState = 0);
-  BOOL MoveStage(StageMoveInfo info, BOOL doBacklash = false, BOOL useSpeed = false, 
+  BOOL MoveStage(StageMoveInfo info, BOOL doBacklash = false, BOOL useSpeed = false,
     BOOL inBackground = false, BOOL doRelax = false);
   void TiltTo(double inVal);
   void TiltDown();
@@ -375,7 +379,7 @@ class DLL_IM_EX CEMscope
   virtual ~CEMscope();
 
   static BOOL ScopeMutexAcquire(const char *name, BOOL retry);
-  static BOOL ScopeMutexRelease(const char *name); 
+  static BOOL ScopeMutexRelease(const char *name);
   static float ConvertJEOLStage(double inMove, float &outRem);
   static int LookupMagnification(int magValue, CString units, int mode, CString name,
     int &camLenInd);
@@ -384,7 +388,7 @@ class DLL_IM_EX CEMscope
   static BOOL AcquireMagMutex();
   static void ReleaseMagMutex();
   static char *GetInstrumentName() {return mFEIInstrumentName;};
-  static void StageMoveKernel(StageThreadData *std, BOOL fromBlanker, BOOL async, 
+  static void StageMoveKernel(StageThreadData *std, BOOL fromBlanker, BOOL async,
     double &destX, double &destY, double &destZ, double &destAlpha);
 
 
@@ -462,7 +466,7 @@ private:
   int mDiffractOrSTEMwait;    // Milliseconds to wait after seeing 0 mag index if STEM
   int mLastSTEMmode;          // Last STEM mode from update loop
   bool mNeedSTEMneutral;      // Flag that STEM neutral hasn't been gotten yet
-  
+
  private:
   static UINT StageMoveProc(LPVOID pParam);
   static UINT ScreenMoveProc(LPVOID pParam);
@@ -604,7 +608,7 @@ private:
   int mHitachiMagISDelay;     // Maximum time to wait for IS change after mag change
   int mMagChgIntensityDelay;  // Delay from changing mag to changing intensity
   int mHitachiMagChgSeeTime;  // max time for internal mag change to show up in update
-  bool mISwasNewLastUpdate;   // Flag that new IS was seen on last update 
+  bool mISwasNewLastUpdate;   // Flag that new IS was seen on last update
   double mLastMagModeChgTime; // Time of last LM/M whatever boundary crossing
   int mHitachiModeChgDelay;   // Amount of time to wait before managing IS
   int mHitachiSpotStepDelay;  // Msec between stepping up in spot sizes
@@ -626,7 +630,7 @@ private:
   BOOL mBlankTransients;      // Flag to blank for mag/spot size changes & normalizations
   double mLastCameraLength;   // Camera length in last update: valid only in diff mode
   int mNormAllOnMagChange;    // Norm all lenses when in LM if 1, or always if 2
-  float mStageRelaxation;     // Default distance to relax stage from backlash 
+  float mStageRelaxation;     // Default distance to relax stage from backlash
   int mDoingStoppableRefill;  // Sum of bits for refill types
   float mFalcon3ReadoutInterval; // Frame interval for Falcon 3 camera
   float mAddToFalcon3Exposure; // Default to set addToExposure for Falcon 3
@@ -663,21 +667,21 @@ public:
   int GetJeolGIF(void);
   double GetDiffractionFocus(void);
   BOOL SetDiffractionFocus(double inVal);
-  BOOL AssessMagISchange(int fromInd, int toInd, BOOL STEMmode, double &newISX, 
-    double &newISY); 
+  BOOL AssessMagISchange(int fromInd, int toInd, BOOL STEMmode, double &newISX,
+    double &newISY);
   BOOL SaveOrRestoreIS(int saveMag, int otherMag);
   BOOL AssessRestoreIS(int fromInd, int toInd, double &newISX, double &newISY);
   void SaveISifNeeded(int fromInd, int toInd);
   int LookupRingIS(int lastMag, BOOL changedEFTEM);
   BOOL SetObjFocus(int step);
-  int LookupScriptingCamera(CameraParameters * params, bool refresh, 
+  int LookupScriptingCamera(CameraParameters * params, bool refresh,
     int restoreShutter = VALUE_NOT_SET);
   double FastDefocus(void);
   BOOL FastStagePosition(double & X, double & Y, double & Z);
   int FastScreenPos(void);
   double CloseValvesAfterInterval(double interval);
-  void FindMatchingMag(int fromCam, int toCam, float toFactor, int oldMag, int curMag, 
-    int &newMag, float &fromPixel, float &toPixel, int &fromMatchMag, int &toMatchMag, 
+  void FindMatchingMag(int fromCam, int toCam, float toFactor, int oldMag, int curMag,
+    int &newMag, float &fromPixel, float &toPixel, int &fromMatchMag, int &toMatchMag,
     BOOL doMatchPixel);
   void MatchPixelAndIntensity(int fromCam, int toCam, float toFactor, BOOL matchPixel,
     BOOL matchIntensity);
@@ -696,15 +700,15 @@ public:
   BOOL NeedBeamBlanking(int screenPos, BOOL STEMmode);
   void ScopeUpdate(DWORD dwTime);
   void UpdateStage(double &stageX, double &stageY, double &stageZ, BOOL &bReady);
-  void UpdateLastMagEftemStem(int magIndex, double defocus, int screenPos, BOOL EFTEM, 
+  void UpdateLastMagEftemStem(int magIndex, double defocus, int screenPos, BOOL EFTEM,
     int STEMmode);
   void updateEFTEMSpectroscopy(BOOL &EFTEM);
   void UpdateLowDose(int screenPos, BOOL needBlank, BOOL gotoArea, int magIndex,
-    int camLenIndex, double diffFocus, float alpha, int &spotSize, 
+    int camLenIndex, double diffFocus, float alpha, int &spotSize,
     double &rawIntensity, double &ISX, double &ISY);
   void UpdateGauges(int &vacStatus);
-  void UpdateScreenBeamFocus(int STEMmode, int &screenPos, int &smallScreen, int &spotSize, 
-                                     double &rawIntensity, double &current, 
+  void UpdateScreenBeamFocus(int STEMmode, int &screenPos, int &smallScreen, int &spotSize,
+                                     double &rawIntensity, double &current,
                                      double &defocus, double &objective, float &alpha);
   BOOL CassetteSlotStatus(int slot, int &status);
   int LoadCartridge(int slot);
@@ -735,6 +739,7 @@ public:
   BOOL NormalizeAll(int illumProj);
   int ReadProbeMode(void);
   void SetCheckPosOnScreenError(BOOL inVal);
+  BOOL GetCheckPosOnScreenError();
   void GetValuesFast(int enable);
   void RemoteControlChanged(BOOL newState);
   void SetBacklashFromNextMove(double startX, double startY, float minMove) {

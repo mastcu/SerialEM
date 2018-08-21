@@ -5074,6 +5074,66 @@ void CParameterIO::UserSetProperty(void)
 #undef FLOAT_PROP_TEST
 #undef DBL_PROP_TEST
 
+// Macros and Function for getting a property value from script
+#define INT_PROP_TEST(a, b, c) \
+  else if (name.CompareNoCase(a) == 0) \
+    value = b##Get##c();
+#define BOOL_PROP_TEST(a, b, c) \
+  else if (name.CompareNoCase(a) == 0) \
+    value = b##Get##c();
+#define FLOAT_PROP_TEST(a, b, c) \
+  else if (name.CompareNoCase(a) == 0) \
+    value = b##Get##c();
+#define DBL_PROP_TEST(a, b, c) \
+  else if (name.CompareNoCase(a) == 0) \
+    value = b##Get##c();
+int CParameterIO::MacroGetProperty(CString name, double &value)
+{
+#define PROP_MODULES
+#include "PropertyTests.h"
+#undef PROP_MODULES
+  bool recognized = true, recognized2 = true, recognized3 = true;
+  if (false) {
+  }
+#define PROP_TEST_SECT1
+#include "PropertyTests.h"
+#undef PROP_TEST_SECT1
+  else 
+    recognized = false;
+      
+  if (recognized) {
+  }
+#define PROP_TEST_SECT2
+#include "PropertyTests.h"
+#undef PROP_TEST_SECT2
+  else 
+    recognized2 = false;
+      
+  if (recognized || recognized2) {
+  }
+#define PROP_TEST_SECT3
+#include "PropertyTests.h"
+#undef PROP_TEST_SECT3
+  else 
+    recognized3 = false;
+      
+  if (recognized || recognized2 || recognized3) {
+  }
+#define PROP_TEST_SECT4
+#include "PropertyTests.h"
+#undef PROP_TEST_SECT4
+  else {
+    return 1;
+  }
+  return 0;
+}
+#undef INT_PROP_TEST
+#undef BOOL_PROP_TEST
+#undef FLOAT_PROP_TEST
+#undef DBL_PROP_TEST
+
+
+
 // Macros and function for getting a user setting from a macro
 #define INT_SETT_GETSET(a, b, c) \
   else if (name.CompareNoCase(a) == 0) \

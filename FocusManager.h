@@ -9,7 +9,7 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-enum FocusTasks {FOCUS_AUTOFOCUS = 1, FOCUS_CALIBRATE, FOCUS_REPORT, FOCUS_EXISTING, 
+enum FocusTasks {FOCUS_AUTOFOCUS = 1, FOCUS_CALIBRATE, FOCUS_REPORT, FOCUS_EXISTING,
 FOCUS_SHOW_CORR, FOCUS_SHOW_STRETCH, FOCUS_CAL_ASTIG, FOCUS_ASTIGMATISM, FOCUS_COMA_FREE};
 
 enum {FOCUS_ABORT_INCONSISTENT = 1, FOCUS_ABORT_ABS_LIMIT, FOCUS_ABORT_DELTA_LIMIT,
@@ -32,7 +32,7 @@ class CFocusManager : public CCmdTarget
 {
 public:
   BOOL CheckingAccuracy() {return mFCindex >= 0;};
-  void SetCheckDelta(float inDelta) {mCheckDelta = inDelta;};
+  GetSetMember(float, CheckDelta)
   static void TaskCheckDone(int param);
   static int TaskCheckBusy();
   void CheckDone(int param);
@@ -48,7 +48,7 @@ public:
   CArray<FocusTable, FocusTable> *GetFocusTable() {return &mFocTab;};
   GetSetMember(BOOL, Verbose)
 
-  float DefocusFromCal(FocusTable *focCal, float inX, float inY, 
+  float DefocusFromCal(FocusTable *focCal, float inX, float inY,
                 float &minDist);
   int GetFocusCal(int inMag, int inCam, int probeMode, FocusTable &focCal);
   void Initialize();
@@ -62,21 +62,21 @@ public:
   GetSetMember(float, DefocusOffset)
   GetSetMember(float, RefocusThreshold)
   GetSetMember(float, AbortThreshold);
-  SetMember(float, MaxPeakDistanceRatio)
-  SetMember(float, PadFrac)
-  SetMember(float, TaperFrac)
-  SetMember(float, Sigma1)
-  SetMember(float, Radius2)
-  SetMember(float, Sigma2)
+  GetSetMember(float, MaxPeakDistanceRatio)
+  GetSetMember(float, PadFrac)
+  GetSetMember(float, TaperFrac)
+  GetSetMember(float, Sigma1)
+  GetSetMember(float, Radius2)
+  GetSetMember(float, Sigma2)
   SetMember(BOOL, UseOppositeLDArea);
   GetSetMember(BOOL, NormalizeViaView);
-  SetMember(int, ViewNormDelay);
+  GetSetMember(int, ViewNormDelay);
   GetSetMember(int, PostTiltDelay);
   GetSetMember(BOOL, SFshowBestAtEnd);
-  SetMember(float, SFVZbacklashZ);
+  GetSetMember(float, SFVZbacklashZ);
   GetMember(int, TiltDirection);
   GetSetMember(int, DDDminBinning);
-  SetMember(float, SFcalRange);
+  GetSetMember(float, SFcalRange);
   void SetTiltDirection(int inVal);
   void SetSTEMdefocusToDelZ(float in1, float in2) {mSTEMdefocusToDelZ[0] = in1; if (in2) mSTEMdefocusToDelZ[1] = in2;};
   float GetSTEMdefocusToDelZ(int spotSize, int probeMode = -1, double absFocus = -1.);
@@ -103,7 +103,7 @@ public:
   GetMember(float, EucenMaxDefocus);
   GetSetMember(BOOL, UseEucenAbsLimits);
   GetMember(BOOL, TestOffsetEucenAbs);
-  void SetBaseBeamTilt(double inX, double inY) {mBaseTiltX = inX; mBaseTiltY = inY;}; 
+  void SetBaseBeamTilt(double inX, double inY) {mBaseTiltX = inX; mBaseTiltY = inY;};
 
 
 protected:
@@ -182,8 +182,8 @@ private:
   bool mLastWasOpposite;    // Flag set when a large focus change crosses zero
   BOOL mNormalizeViaView;   // Flag to normalize through View area in low dose
   int mViewNormDelay;       // Msec delay abetween View and Focus areas
-  BOOL mDoChangeFocus; 
-  float mMaxPeakDistanceRatio;  // Max ratio between distance from target rejecting 0 peak 
+  BOOL mDoChangeFocus;
+  float mMaxPeakDistanceRatio;  // Max ratio between distance from target rejecting 0 peak
   float mRefocusThreshold;   // Focus change at which to reiterate
   float mAbortThreshold;     // Focus change at which to apply abort logic when iterating
   int mTiltDirection;        // Tilt direction, 45-degree increments, 0 = X
@@ -288,7 +288,7 @@ public:
   int GetLastDrift(double & lastX, double & lastY);
   afx_msg void OnUpdateFocusSettarget(CCmdUI *pCmdUI);
   void SetTargetDefocus(float val);
-  int RotationAveragedSpectrum(EMimageBuffer * imBuf, float * rotav, float & background, 
+  int RotationAveragedSpectrum(EMimageBuffer * imBuf, float * rotav, float & background,
     float & totPower);
   void CalSTEMfocus(void);
   void StartSTEMfocusShot(void);
@@ -298,7 +298,7 @@ public:
   bool DoingSTEMfocus() {return mNumRotavs >= 0;};
   int MakeSincLikeCurve(void);
   float GetSFnormalizedSlope(int i) {return mSFnormalizedSlope[i];};
-  void SetSFnormalizedSlope(int i, float val) {mSFnormalizedSlope[i] = val;}; 
+  void SetSFnormalizedSlope(int i, float val) {mSFnormalizedSlope[i] = val;};
   afx_msg void OnUpdateFocusCheckautofocus(CCmdUI *pCmdUI);
   afx_msg void OnUpdateFocusShowexistingcorr(CCmdUI *pCmdUI);
   double StepForSTEMFocus(int multiple);

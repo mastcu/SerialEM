@@ -21,10 +21,10 @@ struct MontLimits
 {
   int camera;           // Camera #
   int magInd;           // Mag at which limit applies
-  int top, left, bottom, right;    // Unbinned usable area   
+  int top, left, bottom, right;    // Unbinned usable area
 };
 
-class EMmontageController  
+class EMmontageController
 {
  public:
 	 int SetPrescanBinning(int tryVal, int dir);
@@ -39,8 +39,8 @@ class EMmontageController
   void Initialize();
   GetMember(BOOL, Montaging)
   BOOL DoingMontage() {return (mPieceIndex >= 0);};
-  int StartMontage(int inTrial, BOOL inReadMont, float cookDwellTime = 0.); 
-  int ReadMontage(int inSect = NO_SUPPLIED_SECTION, MontParam *inParam = NULL, 
+  int StartMontage(int inTrial, BOOL inReadMont, float cookDwellTime = 0.);
+  int ReadMontage(int inSect = NO_SUPPLIED_SECTION, MontParam *inParam = NULL,
     KImageStore *inStoreMRC = NULL, BOOL centerOnly = false, BOOL synchronous = false);
   void StopMontage(int error = 0);
   void SavePiece();
@@ -59,16 +59,16 @@ class EMmontageController
   SetMember(float, MaxStageError)
   SetMember(BOOL, StopOnStageError)
   GetSetMember(int, CountLimit)
-  SetMember(BOOL, ShootFilmIfDark)
+  GetSetMember(BOOL, ShootFilmIfDark)
   GetSetMember(BOOL, LimitMontToUsable)
-  SetMember(int, DuplicateRetryLimit)
+  GetSetMember(int, DuplicateRetryLimit)
   GetSetMember(int, NumOverwritePieces)
   GetMember(int, NumPieces)
-  SetMember(BOOL, AlignToNearestPiece)
-  SetMember(int, DriftRepeatLimit);
-  SetMember(float, DriftRepeatDelay);
-  SetMember(BOOL, AutosaveLog);
-  SetMember(float, MinOverlapForZigzag);
+  GetSetMember(BOOL, AlignToNearestPiece)
+  GetSetMember(int, DriftRepeatLimit);
+  GetSetMember(float, DriftRepeatDelay);
+  GetSetMember(BOOL, AutosaveLog);
+  GetSetMember(float, MinOverlapForZigzag);
   GetSetMember(BOOL, DivFilterSet1By2);
   GetSetMember(BOOL, DivFilterSet2By2);
   GetSetMember(BOOL, UseFilterSet2);
@@ -158,8 +158,8 @@ class EMmontageController
   float *mLowerPatch[MAX_CORR_PIECES][2];  // Address of patch when piece is lower
   float *mUpperPatch[MAX_CORR_PIECES][2];  // Address of patch when piece is upper
   // For given piece, amount that upper piece from it is displaced from this piece
-  float  mUpperShiftX[MAX_CORR_PIECES][2], mUpperShiftY[MAX_CORR_PIECES][2];    
-  float  mUpperFirstX[MAX_CORR_PIECES][2], mUpperFirstY[MAX_CORR_PIECES][2];    
+  float  mUpperShiftX[MAX_CORR_PIECES][2], mUpperShiftY[MAX_CORR_PIECES][2];
+  float  mUpperFirstX[MAX_CORR_PIECES][2], mUpperFirstY[MAX_CORR_PIECES][2];
   float mPatchCCC[MAX_CORR_PIECES][2];
   std::vector<float> mActualErrorX, mActualErrorY; // Error from true position
   std::vector<float> mAcquiredStageX, mAcquiredStageY; // Actual position at which acquired
@@ -228,7 +228,7 @@ class EMmontageController
   CString mAnchorFilename;        // Name of anchor file
   double mAnchorStageX;           // Stage position of anchor
   double mAnchorStageY;
-  double mBacklashAdjustX;        // Adjustment for upper half images 
+  double mBacklashAdjustX;        // Adjustment for upper half images
   double mBacklashAdjustY;
   int mAddedSubbedBacklash;
   double mMoveBackX, mMoveBackY;  // Backlash entries to use in moveinfo
@@ -265,14 +265,14 @@ class EMmontageController
   float mDefocusForCal;
   BOOL mUseContinuousMode;        // Flag to use camera continuous acquisition
   double mStartTime;              // Tick time when it started
-  double mLastElapsed;            // Elapsed time and mNumDoing values when 
+  double mLastElapsed;            // Elapsed time and mNumDoing values when
   int mLastNumDoing;               // GetRemainingTime was last called
   int mInitialNumDoing;
   CArray<MontLimits, MontLimits> mMontageLimits;
 
 public:
 	void AdjustShiftInCenter(MontParam *param, float &shiftX, float &shiftY);
-  int ListMontagePieces(KImageStore * storeMRC, MontParam * param, int zValue, 
+  int ListMontagePieces(KImageStore * storeMRC, MontParam * param, int zValue,
     std::vector<int> &pieceSavedAt);
   void ReadingDone(void);
   void StartStageRestore(void);
@@ -291,17 +291,17 @@ public:
   int AutodocShiftStorage(bool write, float * upperShiftX, float * upperShiftY);
   void NextMiniZoomAndBorder(int &borderTry);
   void RetilePieces(int miniType);
-  void SetAcquiredStagePos(int piece, double stageX, double stageY, double ISX, 
+  void SetAcquiredStagePos(int piece, double stageX, double stageY, double ISX,
     double ISY);
   void FindAdjacentForISrealign(void);
-  void GetAdjustmentsForISrealign(int piece, double & stageAdjX, double & stageAdjY, 
+  void GetAdjustmentsForISrealign(int piece, double & stageAdjX, double & stageAdjY,
     double & adjISX, double & adjISY, int & ubpixOffX, int &ubpixOffY);
   int RealignToAnchor(void);
   int AutodocStageOffsetIO(bool write, int pieceInd);
   bool CalNeededForISrealign(MontParam * param);
   void GetColumnBacklash(float & backlashX, float & backlashY);
   void LimitSizesToUsable(CameraParameters * cam, int camNum, int magInd, int & xsize, int & ysize, int binning);
-  void LimitOneSizeToUsable(int &size, int camSize, int start, int end, 
+  void LimitOneSizeToUsable(int &size, int camSize, int start, int end,
                                          int binning, int modulo);
   void extractPatch(void *data, int type, int ixy, int *ind0, int *ind1, float **patch);
   void SetFramesForCenterOnly(int indX1, int indX2, int indY1, int indY2);

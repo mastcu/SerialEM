@@ -73,6 +73,7 @@ public:
   void UserSetProperty(void);
   int MacroSetSetting(CString name, double value);
   int MacroGetSetting(CString name, double &value);
+  int MacroGetProperty(CString name, double &value);
   void WriteIndexedInts(const char *keyword, int *values, int numVal);
   void WriteIndexedFloats(const char *keyword, float *values, int numVal);
 };

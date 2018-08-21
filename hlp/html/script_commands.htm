@@ -2483,16 +2483,22 @@
             command will keep running.</TD>
         </TR>
         <TR vAlign="top">
-          <TD width="210">SetProperty name value</TD>
-          <TD>Use this command to set the value of one program property.&nbsp; The command 
-            can be used with nearly all of the general (non-camera-specific) properties that 
+          <TD width="210">ReportProperty name</TD>
+          <TD>Use this command to report the value of one program property.&nbsp; The command can 
+            be used with nearly all of the general (non-camera-specific) properties that 
             contain just a single numeric entry and can be set by name in 
             SerialEMproperties.txt.&nbsp; Follow with the full name of the property (case 
-            insensitive) and with its new value.&nbsp; An error will result if the name does 
-            not match one of the properties that can be set.&nbsp; The list of available 
-            properties in the development version of SerialEM is in
+            insensitive) and with an optional variable name for the value.&nbsp;An error will 
+            result if the name does not match one of the properties that can be reported.&nbsp; 
+            The list of available properties in the development version of SerialEM is in
             <a href="http://bio3d.colorado.edu/ftp/SerialEM/Scripts/ScriptableProperties.txt">
             http://bio3d.colorado.edu/ftp/SerialEM/Scripts/ScriptableProperties.txt</a></TD>
+        </TR>
+        <TR vAlign="top">
+          <TD width="210">SetProperty name value</TD>
+          <TD>Use this command to set the value of one program property.&nbsp; This works just 
+            like &#39;ReportProperty&#39;.&nbsp; Follow with the full name of the property (case 
+            insensitive) and with its new value.&nbsp; </TD>
         </TR>
         <TR vAlign="top">
           <TD width="210">ReportUserSetting name   <TD>Use this command to report the value of one user setting, using the name for 

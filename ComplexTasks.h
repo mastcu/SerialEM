@@ -17,7 +17,7 @@
 #define MAX_FINE_STEPS       10
 #define MAX_MAG_STACK      4
 
-class CComplexTasks : public CCmdTarget 
+class CComplexTasks : public CCmdTarget
 {
  public:
   BOOL DoingTiltAfterMove() {return mDoingTASM;};
@@ -27,7 +27,7 @@ class CComplexTasks : public CCmdTarget
   void TASMCleanup(int error);
   void TiltAfterStageMove(float angle, bool reverseTilt);
   BOOL DoingBacklashAdjust() {return mDoingBASP > 0;};
-  SetMember(float, MinBASPField);
+  GetSetMember(float, MinBASPField);
   void StopBacklashAdjust();
   void BASPNextTask(int param);
   void BASPCleanup(int error);
@@ -40,13 +40,13 @@ class CComplexTasks : public CCmdTarget
   void StartCaptureAddDose(int conSet);
   BOOL InLowerMag();
   int FindMaxMagInd(float inField, int curMag = -1);
-  SetMember(float, MinLMSlitWidth)
-  SetMember(float, SlitSafetyFactor)
-  SetMember(float, MinWalkField)
-  SetMember(int, MaxRSRAIterations)
-  SetMember(float, RSRACriterion)
-  SetMember(float, RSRAHigherMagCriterion)
-    
+  GetSetMember(float, MinLMSlitWidth)
+  GetSetMember(float, SlitSafetyFactor)
+  GetSetMember(float, MinWalkField)
+  GetSetMember(int, MaxRSRAIterations)
+  GetSetMember(float, RSRACriterion)
+  GetSetMember(float, RSRAHigherMagCriterion)
+
   GetSetMember(float, MaxWalkInterval)
   GetSetMember(float, MinWalkInterval)
   GetSetMember(float, WalkShiftLimit)
@@ -55,25 +55,25 @@ class CComplexTasks : public CCmdTarget
 
   GetSetMember(float, MinRSRAField)
   GetSetMember(float, MinRTField)
-  SetMember(float, MinFECoarseField)
-  SetMember(float, MinFEFineField)
+  GetSetMember(float, MinFECoarseField)
+  GetSetMember(float, MinFEFineField)
   GetSetMember(float, MinFEFineAlignField)
 
-  SetMember(float, FEBacklashZ)
-  SetMember(double, FEInitialAngle)
-  SetMember(double, FEInitialIncrement)
-  SetMember(double, FEResetISThreshold)
-  SetMember(double, FEMaxTilt)
-  SetMember(double, FEMaxIncrement)
-  SetMember(float, FETargetShift)
-  SetMember(float, FEMaxIncrementChange)
-  SetMember(int, FEIterationLimit)
-  SetMember(double, FEMaxFineIS)
+  GetSetMember(float, FEBacklashZ)
+  GetSetMember(double, FEInitialAngle)
+  GetSetMember(double, FEInitialIncrement)
+  GetSetMember(double, FEResetISThreshold)
+  GetSetMember(double, FEMaxTilt)
+  GetSetMember(double, FEMaxIncrement)
+  GetSetMember(float, FETargetShift)
+  GetSetMember(float, FEMaxIncrementChange)
+  GetSetMember(int, FEIterationLimit)
+  GetSetMember(double, FEMaxFineIS)
   SetMember(BOOL, SkipNextBeamShift);
   GetSetMember(BOOL, FEUseTrialInLD)
   GetMember(BOOL, WalkDidResetShift)
   GetMember(BOOL, LastWalkCompleted);
-  SetMember(float, ZMicronsPerDialMark);
+  GetSetMember(float, ZMicronsPerDialMark);
   GetMember(float, LastAxisOffset);
   GetMember(bool, HitachiWithoutZ);
   GetSetMember(float, StageTimeoutFactor);
@@ -85,10 +85,10 @@ class CComplexTasks : public CCmdTarget
   BOOL DoingComplexTasks();
   BOOL DoingTasks();
   void EucentricityFineCapture();
-  void DoubleMoveStage(double finalZ, float backlashZ, BOOL doZ, double finalTilt, 
+  void DoubleMoveStage(double finalZ, float backlashZ, BOOL doZ, double finalTilt,
                        float backlashTilt, BOOL doTilt, int nextAction);
   void RestoreMagIfNeeded();
-  void LowerMagIfNeeded(int maxMagInd, float calIntSafetyFac, float intZoomSafetyFac, 
+  void LowerMagIfNeeded(int maxMagInd, float calIntSafetyFac, float intZoomSafetyFac,
     int conSetNum);
   void MakeTrackingConSet(ControlSet *theSet, int targetSize, int baseConset = TRIAL_CONSET);
   BOOL DoingEucentricity() {return mDoingEucentricity;};
@@ -191,7 +191,7 @@ class CComplexTasks : public CCmdTarget
   int mNumWalkAngles;             // Number of angles
   double mWalkStartAngle;         // Starting angle
   double *mWalkAngles;            // Array for angles
-  float mMaxWalkInterval;         // Minimum and maximum 
+  float mMaxWalkInterval;         // Minimum and maximum
   float mMinWalkInterval;
   float mMinWalkIntDflt;          // Defaults
   float mMaxWalkIntDflt;
@@ -219,7 +219,7 @@ class CComplexTasks : public CCmdTarget
   double mRTStartAngle;           // Angle to start and end up at
   double mRTReverseAngle;         // Angle to go to and return
   float mRTThreshold;             // Amount needed to eliminate backlash
-  BOOL mRTActPostExposure;     
+  BOOL mRTActPostExposure;
 
   BOOL mDoingEucentricity;
   int mMaxFECoarseMagInd;         // Mag index for coarse eucentricty

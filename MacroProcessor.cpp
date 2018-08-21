@@ -224,7 +224,7 @@ enum {CME_VIEW, CME_FOCUS, CME_TRIAL, CME_RECORD, CME_PREVIEW,
   CME_LOADNAVMAP, CME_LOADOTHERMAP,CME_REPORTLENSFLCSTATUS, CME_TESTNEXTMULTISHOT,
   CME_ENTERSTRING, CME_COMPARESTRINGS, CME_COMPARENOCASE, CME_REPORTNEXTNAVACQITEM,
   CME_REPORTNUMTABLEITEMS, CME_CHANGEITEMCOLOR, CME_CHANGEITEMLABEL,CME_STRIPENDINGDIGITS,
-  CME_MAKEANCHORMAP, CME_STAGESHIFTBYPIXELS
+  CME_MAKEANCHORMAP, CME_STAGESHIFTBYPIXELS, CME_REPORTPROPERTY
 };
 
 static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0},
@@ -338,7 +338,7 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"EnterString", 2, 0}, {"CompareStrings", 2, 0}, {"CompareNoCase", 2, 0}, 
 {"ReportNextNavAcqItem", 0, 0}, {"ReportNumTableItems", 0, 0}, {"ChangeItemColor", 2, 0},
 {"ChangeItemLabel", 2, 0}, {"StripEndingDigits", 2, 0}, {"MakeAnchorMap", 0, 0}, 
-{"StageShiftByPixels", 2, 0},
+{"StageShiftByPixels", 2, 0}, {"ReportProperty", 1, 0}, 
 {NULL, 0, 0}
 };
 
@@ -2441,12 +2441,16 @@ void CMacroProcessor::NextCommand()
     if (mWinApp->mParamIO->MacroSetProperty(strItems[1], itemDbl[2]))
       AbortMacro();
 
-  } else if (CMD_IS(REPORTUSERSETTING)) {                   // ReportUserSetting
-    if (mWinApp->mParamIO->MacroGetSetting(strItems[1], delX))
-      ABORT_LINE(strItems[1] + " is not a recognized setting or cannot be accessed by "
-      "script command in:\n\n");
+                                                    // ReportUserSetting, ReportProperty
+  } else if (CMD_IS(REPORTUSERSETTING) || CMD_IS(REPORTPROPERTY)) {                   
+    truth = CMD_IS(REPORTPROPERTY);
+    strCopy = truth ? "property" : "user setting";
+    if ((!truth && mWinApp->mParamIO->MacroGetSetting(strItems[1], delX)) ||
+      (truth && mWinApp->mParamIO->MacroGetProperty(strItems[1], delX)))
+      ABORT_LINE(strItems[1] + " is not a recognized " + strCopy + " or cannot be "
+      "accessed by script command in:\n\n");
     SetReportedValues(&strItems[2], delX);
-    report.Format("Value of user setting %s is %f", strItems[1], delX);
+    report.Format("Value of %s %s is %g", (LPCTSTR)strCopy, (LPCTSTR)strItems[1], delX);
     mWinApp->AppendToLog(report, mLogAction);
 
   } else if (CMD_IS(SETUSERSETTING)) {                      // SetUserSetting

@@ -6,7 +6,7 @@
 // instead, and so it is now OK to include DirectElectronCamera.h
 class DirectElectronCamera;
 
-#define NO_GAIN_SETTINGS 0 
+#define NO_GAIN_SETTINGS 0
 #define LOW_GAIN_SETTINGS 1
 #define MEDIUM_GAIN_SETTING 2
 #define HIGH_GAIN_SETTINGS 3
@@ -47,7 +47,7 @@ public:
   GetSetMember(int, FormatForAutoSave);
   GetMember(int, LastProtCoverSet);
   GetMember(CString, AutosaveDir);
-  SetMember(int, TemperSetpoint);
+  GetSetMember(int, TemperSetpoint);
 
   // Dialog Data
 	enum { IDD = IDD_DETOOLDLG };

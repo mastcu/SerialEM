@@ -2931,6 +2931,7 @@ void CEMscope::SetCheckPosOnScreenError(BOOL inVal)
 {
   sCheckPosOnScreenError = inVal;
 }
+BOOL CEMscope::GetCheckPosOnScreenError() {return sCheckPosOnScreenError;};
 
 // MAGNIFICATION AND PROJECTOR NORMALIZATION
 
@@ -6023,6 +6024,8 @@ void CEMscope::SetJeolPiezoRounding(float inVal)
 {
   sJEOLpiezoRounding = inVal;
 }
+float CEMscope::GetJeolStageRounding() {return sJEOLstageRounding;};
+float CEMscope::GetJeolPiezoRounding() {return sJEOLpiezoRounding;};
 
 void CEMscope::SetBlankingFlag(BOOL state)
 {
@@ -6298,6 +6301,7 @@ void CEMscope::SetMessageWhenClipIS(BOOL inVal)
 {
   sMessageWhenClipIS = inVal;
 }
+BOOL CEMscope::GetMessageWhenClipIS() {return sMessageWhenClipIS;};
 
 void CEMscope::SetJeolIndForMagMode(int inVal)
 {
@@ -6856,6 +6860,7 @@ void CEMscope::SetJeolReadStageForWait(BOOL inVal)
 {
   sJeolReadStageForWait = inVal;
 }
+BOOL CEMscope::GetJeolReadStageForWait() {return sJeolReadStageForWait;};
 
 bool CEMscope::TestSTEMshift(int type, int delx, int dely)
 {

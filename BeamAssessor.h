@@ -54,7 +54,7 @@ struct SpotTable {
   int probeMode;
 };
 
-class CBeamAssessor  
+class CBeamAssessor
 {
  public:
 	 int FindSpotTableIndex(int aboveCross, int probe);
@@ -66,13 +66,13 @@ class CBeamAssessor
 	 void SpotCalImage(int param);
 	 void CalibrateSpotIntensity();
 	 void CalSetupNextMag(float extraDelta);
-   void SetInitialIncrement(float inVal) {mInitialIncrement = inVal;};
-   void SetSpacingFactor(float inVal) {mSpacingFactor = inVal;};
-   void SetMinExposure(float inVal) {mMinExposure = inVal;};
-   void SetMaxExposure(float inVal) {mMaxExposure = inVal;};
-   void SetPostSettingDelay(int inVal) {mPostSettingDelay = inVal;};
-   void SetMinCounts(int inVal) {mMinCounts = inVal;};
-   void SetMaxCounts(int inVal) {mMaxCounts = inVal;};
+   GetSetMember(double, InitialIncrement)
+   GetSetMember(double, SpacingFactor)
+   GetSetMember(float, MinExposure)
+   GetSetMember(float, MaxExposure)
+   GetSetMember(int, PostSettingDelay);
+   GetSetMember(int, MinCounts)
+   GetSetMember(int, MaxCounts)
 	 BOOL SetAndTestIntensity();
 	 BOOL CanDoubleBinning();
 	 void MakeControlSet(int fracField, bool useCounting);
@@ -94,8 +94,8 @@ class CBeamAssessor
   void StopShiftCalibration();
   void ShiftCalCleanup(int error);
   void CalibrateBeamShift();
-  void SetCalMinField(float inVal) {mCalMinField = inVal;};
-  void SetExtraRangeAtMinMag(float inVal) {mExtraRangeAtMinMag = inVal;};
+  GetSetMember(float, CalMinField)
+  GetSetMember(float, ExtraRangeAtMinMag)
   void Initialize();
   void SortAndTakeLogs(BeamTable *inTable, BOOL printLog);
   int GetNumTables() {return mNumTables;};
@@ -115,11 +115,11 @@ class CBeamAssessor
   BeamTable *GetBeamTables() {return mBeamTables;};
   GetMember(int, CurrentAperture);
   GetSetMember(int, NumC2Apertures);
-  SetMember(BOOL, UseTrialSettling);
+  GetSetMember(BOOL, UseTrialSettling);
   int *GetCrossCalAperture(void) {return &mCrossCalAperture[0];};
   int *GetSpotCalAperture(void) {return &mSpotCalAperture[0];};
   int *GetC2Apertures(void) {return &mC2Apertures[0];};
-  SetMember(BOOL, FavorMagChanges);
+  GetSetMember(BOOL, FavorMagChanges);
   CBeamAssessor();
   virtual ~CBeamAssessor();
 
@@ -162,7 +162,7 @@ class CBeamAssessor
   int mUseMaxCounts;      // Values to use when running
   int mUseMinCounts;
   float mExposure;        // Exposure time
-  int mBinning;           // Binning 
+  int mBinning;           // Binning
   float mMinExposure;     // Minimum exposure time
   float mMaxExposure;     // Minimum exposure time
   float mCntK2MinExposure;  // Values for K2
@@ -222,11 +222,11 @@ class CBeamAssessor
 
 public:
   void CalibrateCrossover(void);
-  double GetCurrentElectronDose(int camera, int setNum, int & spotSize, 
+  double GetCurrentElectronDose(int camera, int setNum, int & spotSize,
     double & intensity);
-  double GetCurrentElectronDose(int camera, int setNum, float csExposure, float csDrift, 
+  double GetCurrentElectronDose(int camera, int setNum, float csExposure, float csDrift,
     int & spotSize, double & intensity);
-  int SetTableAccessAndLimits(int bestTable, double &leftExtrapLimit, 
+  int SetTableAccessAndLimits(int bestTable, double &leftExtrapLimit,
                               double &rightExtrapLimit, double &diffSign);
   int FindBestTable(int spotSize, double startIntensity, int probe);
   int OutOfCalibratedRange(double startIntensity, int spotSize, int probe, int & polarity,

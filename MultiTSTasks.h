@@ -136,8 +136,8 @@ public:
   void StopCooker(void);
   GetMember(BOOL, Cooking);
   GetMember(BOOL, AutoCentering);
-  SetMember(float, MinCookField);
-  SetMember(float, CkISLimit);
+  GetSetMember(float, MinCookField);
+  GetSetMember(float, CkISLimit);
   int *GetRangeConsets() {return &mRangeConsets[0];};
   GetMember(BOOL, AssessingRange)
   GetMember(float, TrUserLowAngle)

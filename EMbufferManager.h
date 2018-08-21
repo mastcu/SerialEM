@@ -37,7 +37,7 @@ public :
   GetSetMember(int, FixedZoomStep)
   GetSetMember(int, DrawScaleBar)
   GetSetMember(BOOL, DrawCrosshairs)
-  SetMember(float, UnsignedTruncLimit);
+  GetSetMember(float, UnsignedTruncLimit);
   GetSetMember(BOOL, SaveAsynchronously);
   SetMember(CString, OtherFile);
   int GetConfirmBeforeDestroy (int inWhich)
@@ -54,21 +54,21 @@ public :
   int   ReadOtherFile();
   int   RereadOtherFile(CString &message);
   BOOL IsOtherFileReadable() { return (!mOtherFile.IsEmpty()); }
-  int   ReadFromFile(KImageStore *inStore, int inSect = NO_SUPPLIED_SECTION, 
-    int inBufTo = -1, BOOL readPiece = false, BOOL synchronous = false, 
+  int   ReadFromFile(KImageStore *inStore, int inSect = NO_SUPPLIED_SECTION,
+    int inBufTo = -1, BOOL readPiece = false, BOOL synchronous = false,
     CString *message = NULL);
   EMimageBuffer *GetSaveBuffer();
-  int ReplaceImage(char *inData, int inType, int inX, int inY, 
+  int ReplaceImage(char *inData, int inType, int inX, int inY,
                    int inBuf, int inCap, int inConSet, bool fftBuf = false);
   int MainImBufIndex(EMimageBuffer *imBuf);
-  SetMember(BOOL, RotateAxisAngle);
+  GetSetMember(BOOL, RotateAxisAngle);
   void ReportError (int inErr);
   GetMember(bool, ImageAsyncFailed);
   SetMember(int, NextSecToRead);
   GetMember(int, AsyncTimeout);
   GetMember(BOOL, DoingAsyncSave);
 
-        
+
  private:
   int mShiftsOnAcquire;
   int mCopyOnSave;
@@ -114,9 +114,9 @@ public:
   void AsyncSaveCleanup(int error);
   CString ComposeErrorMessage(int inErr, char * writeType);
   int CheckAsyncSaving(void);
-  int StartAsyncCopy(KImageStore *fromStore, KImageStore *toStore, int fromSection, 
+  int StartAsyncCopy(KImageStore *fromStore, KImageStore *toStore, int fromSection,
     int toSection, bool synchronous);
-  void StartAsyncThread(KImageStore *fromStore, KImageStore *store, int section, 
+  void StartAsyncThread(KImageStore *fromStore, KImageStore *store, int section,
     bool synchronous);
   EMimageExtra *SetChangeWhenSaved(EMimageBuffer *imBuf, KImageStore *inStore, int &oldDivided);
 };

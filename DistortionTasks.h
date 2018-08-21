@@ -36,7 +36,7 @@ public:
 	void SPNextTask(int param);
 	void Initialize();
   void CalibrateDistortion();
-  SetMember(int, StageDelay);
+  GetSetMember(int, StageDelay);
 
 // Overrides
 	// ClassWizard generated virtual function overrides

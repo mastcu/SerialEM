@@ -11,9 +11,9 @@ class CShiftCalibrator
 public:
   CShiftCalibrator(void);
   ~CShiftCalibrator(void);
-  SetMember(float, StageCalBacklash)
-  SetMember(float, MaxLMCalShift)
-  SetMember(float, MaxCalShift)
+  GetSetMember(float, StageCalBacklash)
+  GetSetMember(float, MaxLMCalShift)
+  GetSetMember(float, MaxCalShift)
   GetSetMember(int,GIFofsFromMag)
   GetSetMember(int, GIFofsToMag)
   GetSetMember(double, GIFofsISX)
@@ -22,7 +22,7 @@ public:
   GetSetMember(float, StageCycleX)
   GetSetMember(float, StageCycleY)
   GetSetMember(float, CalISOstageLimit)
-  SetMember(float, MaxStageCalExtent)
+  GetSetMember(float, MaxStageCalExtent)
   GetSetMember(BOOL, UseTrialSize)
   GetSetMember(BOOL, UseTrialBinning)
   GetMember(double, ISStimeStampLast);
@@ -83,7 +83,7 @@ private:
   float mTotalShiftX[MAX_SHIFTS], mTotalShiftY[MAX_SHIFTS];  // Pixel shifts found
   float mCTFa[8193];           // CTF for autoalign
   float mCCCmin, mCCCsum;      // Minimum and sum of CCC's
-  std::set<int> mMagsTransFrom;  // List of mags that IS cal was transferred from 
+  std::set<int> mMagsTransFrom;  // List of mags that IS cal was transferred from
   BOOL mFocusModified;         // Only modify focus cals once after a request to do so
   int mCalISOindex;            // Index of image shift offset calibration
   double mCalISX[MAX_MAGS];    // Image shift values recorded during calibration steps
@@ -112,7 +112,7 @@ private:
   int mISSbinningLast;
   bool mSkipLensNormNextIScal; // Flag to skip lens normalization on next IS cal
   bool mGaveFocusMagMessage;
- 
+
 public:
 	void SetFirstCameras();
   BOOL CheckStageGetShift(void);
@@ -129,7 +129,7 @@ public:
   void InterSetShiftNextTask(int param);
   void StopInterSetShift(void);
   void InterSetShiftCleanup(int error);
-  BOOL DoingInterSetShift() {return mISSindex >= 0;}; 
+  BOOL DoingInterSetShift() {return mISSindex >= 0;};
   void SaveLastInterSetShift(void);
   void ReviseOrCancelInterSetShifts(void);
   bool MatrixIsAsymmetric(ScaleMat *mat, float symCrit);

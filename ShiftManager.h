@@ -55,7 +55,7 @@ struct HighFocusMagCal {
   int measuredAperture;
 };
 
-class CShiftManager  
+class CShiftManager
 {
 public:
   GetMember(int, NumBeamShiftCals)
@@ -85,28 +85,28 @@ public:
   void ResetISDone();
   void ResetISCleanup(int error);
   GetSetMember(float, TiltDelay)
-  SetMember(float, RegularShiftLimit)
-  SetMember(float, LowMagShiftLimit)
+  GetSetMember(float, RegularShiftLimit)
+  GetSetMember(float, LowMagShiftLimit)
   GetSetMember(BOOL, MouseMoveStage)
   GetSetMember(float, MouseStageThresh)
   GetSetMember(float, MouseStageAbsThresh)
   GetMember(BOOL, ShiftingDefineArea)
   GetSetMember(float, TrimFrac)
-  SetMember(float, TaperFrac)
+  GetSetMember(float, TaperFrac)
   GetSetMember(float, Sigma1)
   GetSetMember(float, Radius2)
   GetSetMember(float, Sigma2)
   GetSetMember(int, NormalizationDelay)
-  SetMember(int, LowMagNormDelay);
+  GetSetMember(int, LowMagNormDelay);
   GetSetMember(int, StageMovedDelay)
   GetSetMember(float, DefocusZFactor)
   SetMember(int, StageDelayToUse);
-  int ResetImageShift(BOOL bDoBacklash, BOOL bAdjustScale, int waitTime = 5000, 
+  int ResetImageShift(BOOL bDoBacklash, BOOL bAdjustScale, int waitTime = 5000,
     float relaxation = 0.);
   float *GetISmoved() {return &mISmoved[0];};
   float *GetISdelayNeeded() {return &mISdelayNeeded[0];};
   SetMember(int, NumISdelays)
-  SetMember(float, DelayPerMagDoubling)
+  GetSetMember(float, DelayPerMagDoubling)
   void SetISTimeOut(float inDelay);
   void SetGeneralTimeOut(UINT inTime);
   void SetGeneralTimeOut(UINT inTicks, int interval);
@@ -117,14 +117,14 @@ public:
   ScaleMat IStoGivenCamera(int inMagInd, int inCamera);
   double GetImageRotation(int inCamera, int inMagInd);
   int AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift = true, BOOL showCor = false,
-    float *peakVal = NULL, float expectedXshift = 0., float expectedYshift = 0., 
-    float conical = 0., float scaling = 0., float rotation = 0., float *CCC = NULL, 
-    float *fracPix = NULL, BOOL trimOutput = true, float *xShiftOut = NULL, 
+    float *peakVal = NULL, float expectedXshift = 0., float expectedYshift = 0.,
+    float conical = 0., float scaling = 0., float rotation = 0., float *CCC = NULL,
+    float *fracPix = NULL, BOOL trimOutput = true, float *xShiftOut = NULL,
     float *yShiftOut = NULL, float probSigma = 0.);
   void AutoalignCleanup();
   BOOL MemoryError(BOOL inTest);
   BOOL ImageShiftIsOK(double newX, double newY, BOOL incremental);
-  int SetAlignShifts(float inX, float inY, BOOL incremental, EMimageBuffer *imBuf, 
+  int SetAlignShifts(float inX, float inY, BOOL incremental, EMimageBuffer *imBuf,
     BOOL doImShift = true);
   void Initialize();
   ScaleMat AdjustedISmatrix(int iCamCal, int iMagCal, int iCamWant, int iMagWant);
@@ -137,8 +137,7 @@ public:
   ScaleMat IStoSpecimen(int inMagInd, int toCam = -1);
   CShiftManager();
   virtual ~CShiftManager();
-  SetMember(float, GlobalExtraRotation)
-  GetMember(float, GlobalExtraRotation)
+  GetSetMember(float, GlobalExtraRotation)
   GetSetMember(float, RoughISscale)
   GetSetMember(float, STEMRoughISscale)
   float GetLMRoughISscale() {return mLMRoughISscale ? mLMRoughISscale : mRoughISscale;};
@@ -187,7 +186,7 @@ private:
   float mPeakStrengthToEval;   // Minimum fraction of highest peak strength to evaluate
   float *mPeakHere;            // Temporary arrays for peak data
   float *mXpeaksHere;
-  float *mYpeaksHere;  
+  float *mYpeaksHere;
   BOOL mTrimDarkBorders;       // Flag to trim borders in Autoalign - default in low dose
   float mTrimFrac;             // Trimming fraction for correlation
   float mTaperFrac;            // Fraction of area to taper inside for correlation
@@ -205,7 +204,7 @@ private:
   KImage *mTmplImage;
   int mTmplBinning;
   BOOL mMouseShifting;         // Flag that image is shifting with mouse, ImShift deferred
-  float mMouseStartX;          // Starting shifts in the image when button down 
+  float mMouseStartX;          // Starting shifts in the image when button down
   float mMouseStartY;
   BOOL mMouseEnding;           // Flag that mouse has been released
   BOOL mShiftPressed;          // Flag for shift key pressed at start of mouse move
@@ -246,7 +245,7 @@ private:
   RelRotations mRelRotations[MAX_REL_ROT];
   int mMinTiltDelay;           // Minimum tilt delay
   int mDisableAutoTrim;        // Flags for kinds of trimming in autoalign to disable
-  float mHitachiStageSpecAngle;  // Angle to add to account for specimen X (tilt) onn stage Y 
+  float mHitachiStageSpecAngle;  // Angle to add to account for specimen X (tilt) onn stage Y
   int mLastAlignXTrimA, mLastAlignYTrimA;  // Trimming in last align with original binning
   int mLastAlignXTrimRef, mLastAlignYTrimRef;
   float mLastFocusForMagCal;
@@ -264,11 +263,11 @@ public:
   ScaleMat StretchCorrectedRotation(int camera, int magInd, float rotation);
   ScaleMat StretchCorrectedRotation(float rotation);
   ScaleMat UnderlyingStretch(ScaleMat raMat, float &smagMean, double & thetad, float & str, double & alpha);
-  bool GetDefocusMagAndRot(int spot, int probeMode, double intensity, float defocus, 
+  bool GetDefocusMagAndRot(int spot, int probeMode, double intensity, float defocus,
     float & scale, float & rotation, float &nearestFocus, double nearC2Dist[2], int nearC2ind[2], int &numNearC2);
-  void AddHighFocusMagCal(int spot, int probeMode, double intensity, float defocus, 
+  void AddHighFocusMagCal(int spot, int probeMode, double intensity, float defocus,
     float scale, float rotation);
-  bool ImposeImageShiftOnScope(float delX, float delY, int magInd, int camera, 
+  bool ImposeImageShiftOnScope(float delX, float delY, int magInd, int camera,
     BOOL incremental, BOOL mouseShifting);
   float GetPixelSize(EMimageBuffer * imBuf);
   int FindBoostedMagIndex(int magInd, int boostMag);

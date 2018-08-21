@@ -31,12 +31,12 @@ public:
 	void UpdateBWCriterion(EMimageBuffer *imBuf, float &crit, float derate);
 	BOOL ImageTooWeak(EMimageBuffer *imBuf, float crit);
   void FixXRaysInBuffer(BOOL doImage);
-  void SetXRayCritIterations(int inVal) {mXRayCritIterations = inVal;};
-  void SetXRayCritIncrease(float inVal) {mXRayCritIncrease = inVal;};
-  void SetInnerXRayDistance(float inVal) {mInnerXRayDistance = inVal;};
-  void SetOuterXRayDistance(float inVal) {mOuterXRayDistance = inVal;};
-  void RemoveXRays(CameraParameters *param, void *array, int type, int binning, int top, 
-                     int left, int bottom, int right, float absCrit, 
+  GetSetMember(int, XRayCritIterations)
+  GetSetMember(float, XRayCritIncrease)
+  GetSetMember(float, InnerXRayDistance)
+  GetSetMember(float, OuterXRayDistance)
+  void RemoveXRays(CameraParameters *param, void *array, int type, int binning, int top,
+                     int left, int bottom, int right, float absCrit,
                      float numSDCrit, int useBothCrit, BOOL verbose);
   float EquivalentRecordMean(int bufNum);
   float ForeshortenedMean(int nufNum);
@@ -50,7 +50,7 @@ public:
   GetSetMember(bool, SideBySideFFT);
   GetSetMember(bool, AutoSingleFFT);
   GetSetMember(int, NumCircles)
-  SetMember(float, GridLinesPerMM)
+  GetSetMember(float, GridLinesPerMM)
   SetMember(float, ShortCatalaseNM);
   SetMember(float, LongCatalaseNM);
   float *GetFFTCircleRadii() {return &mFFTCircleRadii[0];};
@@ -68,7 +68,7 @@ public:
   GetSetMember(int, ExtraCtfStats);
   GetSetMember(int, DrawExtraCtfRings);
   GetSetMember(float, UserMaxCtfFitRes);
-  SetMember(float, DefaultMaxCtfFitRes);
+  GetSetMember(float, DefaultMaxCtfFitRes);
   GetSetMember(float, TestCtfPixelSize);
 
 // Overrides
@@ -114,7 +114,7 @@ private:
   CShiftManager *mShiftManager;
   float mInnerXRayDistance;   // minimum and maximum distances from X ray patch
   float mOuterXRayDistance;   // for neighboring pixels to average
-  int mXRayCritIterations;    // Number of times to try oversized patch with higher crit 
+  int mXRayCritIterations;    // Number of times to try oversized patch with higher crit
   float mXRayCritIncrease;    // Factor that criterion increases per iteration
   BOOL mLiveFFT;              // Do automatic FFT of continuous image
   double mMoveBeamStamp;      // Time stamp of last image used for moving beam
@@ -159,14 +159,14 @@ public:
   afx_msg void OnProcessLivefft();
   afx_msg void OnUpdateProcessLivefft(CCmdUI *pCmdUI);
   int FindBeamCenter(EMimageBuffer * imBuf, float & xcen, float & ycen, float &radius,
-    float &xcenUse, float &ycenUse, 
-    float &radUse, float &fracUse, int &binning, 
+    float &xcenUse, float &ycenUse,
+    float &radUse, float &fracUse, int &binning,
     int &numQuadrant, float &shiftX, float &shiftY, float &fitErr);
   afx_msg void OnTasksCenterbeam();
   afx_msg void OnUpdateTasksCenterbeam(CCmdUI *pCmdUI);
   int MoveBeam(EMimageBuffer * imBuf, float shiftX, float shiftY);
   void EnableMoveBeam(CCmdUI * pCmdUI, bool skipUserPt);
-  int CenterBeamFromActiveImage(double maxRadius, double maxError, 
+  int CenterBeamFromActiveImage(double maxRadius, double maxError,
     BOOL useCentroid = false);
   afx_msg void OnProcessCircleonlivefft();
   afx_msg void OnUpdateProcessCircleonlivefft(CCmdUI *pCmdUI);
@@ -174,7 +174,7 @@ public:
   afx_msg void OnUpdateProcessFindpixelsize(CCmdUI *pCmdUI);
   int CorrelationToBufferA(float * array, int nxpad, int nypad, int binning,
                                         float &corMin, float &corMax);
-  void FindPeakSeries(float * Xpeaks, float * Ypeaks, float * peak, int numPeaks, 
+  void FindPeakSeries(float * Xpeaks, float * Ypeaks, float * peak, int numPeaks,
     float & delX, float & delY, int & indFar, int & numSeries, int &indNear, float &variation);
   void FindPixelSize(float markedX, float markedY, float minScale, float maxScale);
   afx_msg void OnProcessPixelsizefrommarker();
@@ -203,24 +203,24 @@ public:
   afx_msg void OnProcessCropAverage();
   afx_msg void OnUpdateProcessCropAverage(CCmdUI *pCmdUI);
   afx_msg void OnMeshForGridBars();
-  float PerpendicularLineMedian(float *acorr, int nxPad, int nyPad, float xPeak, 
+  float PerpendicularLineMedian(float *acorr, int nxPad, int nyPad, float xPeak,
     float yPeak);
   void GetPixelArrays(ShortVec **camera, ShortVec **magInd, ShortVec **addedRot,
     std::vector<float> **sizes, std::vector<float> **rotations) {*camera = &mPixSizCamera;
-    *magInd = &mPixSizMagInd; *addedRot = &mAddedRotation; *sizes = &mPixelSizes; 
+    *magInd = &mPixSizMagInd; *addedRot = &mAddedRotation; *sizes = &mPixelSizes;
     *rotations = &mGridRotations;};
     afx_msg void OnProcessSideBySide();
     afx_msg void OnUpdateProcessSideBySide(CCmdUI *pCmdUI);
     bool GetFFTZeroRadiiAndDefocus(EMimageBuffer * imBuf, FloatVec *radii, double &defocus);
 void ModifyFFTPointToFirstZero(EMimageBuffer * imBuf, float & shiftX, float & shiftY);
-bool DefocusFromPointAndZeros(double pointRad, int zeroNum, float pixel, float maxRingFreq, 
+bool DefocusFromPointAndZeros(double pointRad, int zeroNum, float pixel, float maxRingFreq,
   FloatVec * radii, double & defocus);
 afx_msg void OnProcessAutomaticFFTs();
 afx_msg void OnUpdateProcessAutomaticFFTs(CCmdUI *pCmdUI);
 afx_msg void OnProcessSetPhasePlateShift();
 afx_msg void OnProcessSetDefocusForCircles();
 float LinearizedDoseRate(int camera, float rawRate);
-int FitRatesAndCounts(float *counts, float *rates, int numVals, 
+int FitRatesAndCounts(float *counts, float *rates, int numVals,
   float &scale, float &intercp, float &base);
 int FindDoseRate(float countVal, float *counts, float *rates, int numVals,
                   float scale, float intercp, float base,

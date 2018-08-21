@@ -72,12 +72,12 @@ public:
   GetSetMember(BOOL, IgnoreShortTerm)
   SetMember(int, DefaultMontXpieces)
   SetMember(int, DefaultMontYpieces)
-  SetMember(double, OverlapFraction)
+  GetSetMember(double, OverlapFraction)
   GetMember(int, MaxMontagePieces)
   GetMember(int, MinMontageOverlap)
   GetMember(float, MaxOverlapFraction)
   SetMember(int, STEMfileMode);
-  SetMember(int, STEMunsignOpt);
+  GetSetMember(int, STEMunsignOpt);
   GetSetMember(BOOL, SkipFileDlg);
 
 	void AutoSaveFiles();
@@ -88,7 +88,7 @@ public:
   void ManageExposure();
   int GetMontageParamsAndFile(BOOL frameSet, int xNframes = -1, int yNframes = -1,
                               CString filename = "");
-  void InitMontParamsForDialog(MontParam *param, BOOL frameSet, int xNframes = -1, 
+  void InitMontParamsForDialog(MontParam *param, BOOL frameSet, int xNframes = -1,
     int yNframes = -1, CString filename = "");
   int OpenMontageDialog(BOOL locked);
   FileOptions *GetDefFileOpt() {return &mDefFileOpt;};
@@ -190,7 +190,7 @@ private:
   FileOptions  mDefFileOpt;
   FileOptions  mOtherFileOpt;    // File options for other file
   float   mMaxTrunc;
-    
+
   CParameterIO *mParamIO;
   CString mSystemPath;           // Path for system settings & properties
   CString mSysPathForSettings;   // String to rewrite into settnigs file
@@ -264,7 +264,7 @@ public:
   afx_msg void OnUpdateFileCloseMdoc(CCmdUI *pCmdUI);
   int SaveFrameDataInMdoc(KImage * image);
   afx_msg void OnUpdateFileOpenMdoc(CCmdUI *pCmdUI);
-  int GetTextFileName(bool openOld, bool originalDir, CString &pathname, 
+  int GetTextFileName(bool openOld, bool originalDir, CString &pathname,
     CString *filename = NULL);
   void DateTimeComponents(CString & date, CString & time);
   int AddValueToFrameMdoc(CString key, CString value);
@@ -299,7 +299,7 @@ struct MyFileDlgThreadData
 class MyFileDialog
 {
 public:
-  MyFileDialog(BOOL bOpenFileDialog, LPCTSTR lpszDefExt = NULL, 
+  MyFileDialog(BOOL bOpenFileDialog, LPCTSTR lpszDefExt = NULL,
     LPCTSTR lpszFileName = NULL, DWORD dwFlags = OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
     LPCTSTR lpszFilter = NULL, CWnd* pParentWnd = NULL);
   ~MyFileDialog();
@@ -323,7 +323,7 @@ class MyFileDlgThread : public CWinThread
 {
   DECLARE_DYNCREATE(MyFileDlgThread)
 public:
-  MyFileDlgThread() {}; 
+  MyFileDlgThread() {};
   BOOL InitInstance();
   MyFileDlgThreadData *mfdTDp;
 };

@@ -57,14 +57,14 @@ class CNavHelper
 public:
   CNavHelper(void);
   ~CNavHelper(void);
-  int RealignToItem(CMapDrawItem * item, BOOL restoreState, float resetISalignCrit, 
+  int RealignToItem(CMapDrawItem * item, BOOL restoreState, float resetISalignCrit,
     int maxNumResetAlign, int leaveZeroIS);
   float PointSegmentDistance(float ptX, float ptY, float x1, float y1, float x2, float y2);
   GetMember(int, Realigning)
-  SetMember(float, RImaximumIS)
-  SetMember(float, MaxMarginNeeded)
-  SetMember(float, MinMarginNeeded)
-  SetMember(float, MinMarginWanted)
+  GetSetMember(float, RImaximumIS)
+  GetSetMember(float, MaxMarginNeeded)
+  GetSetMember(float, MinMarginNeeded)
+  GetSetMember(float, MinMarginWanted)
   GetSetMember(int, TypeOfSavedState)
   GetMember(BOOL, AcquiringDual)
   GetSetMember(BOOL, SearchRotAlign)
@@ -80,18 +80,18 @@ public:
   GetSetMember(int, PointLabelDrawThresh);
   GetSetMember(int, EnableMultiShot);
   MultiShotParams *GetMultiShotParams() {return &mMultiShotParams;};
-  SetMember(float, DistWeightThresh);
-  SetMember(float, RImaxLMfield);
-  SetMember(int, RIskipCenTimeCrit);
-  SetMember(float, RIskipCenErrorCrit);
-  SetMember(float, RIweightSigma);
+  GetSetMember(float, DistWeightThresh);
+  GetSetMember(float, RImaxLMfield);
+  GetSetMember(int, RIskipCenTimeCrit);
+  GetSetMember(float, RIskipCenErrorCrit);
+  GetSetMember(float, RIweightSigma);
   GetSetMember(BOOL, RIuseBeamOffsets);
   SetMember(int, ContinuousRealign);
   GetSetMember(float, GridGroupSize);
   GetSetMember(BOOL, DivideIntoGroups);
   GetSetMember(bool, EditReminderPrinted);
-  SetMember(float, RITiltTolerance);
-  SetMember(float, RIdefocusChangeLimit);
+  GetSetMember(float, RITiltTolerance);
+  GetSetMember(float, RIdefocusChangeLimit);
   GetSetMember(BOOL, RIuseCurrentLDparams);
   GetSetMember(BOOL, CollapseGroups);
   SetMember(int, ExtDrawnOnID);
@@ -200,7 +200,7 @@ private:
   BOOL mTryRealignScaling;             // Flag to do realign with scaling centered image
   BOOL mWriteNavAsXML;                 // Flag to write Nav files as XML
   int mRealignTestOptions;             // For testing backlash and mont stage error
-  int mAutoBacklashNewMap;             // Whether to do backlash for new maps 
+  int mAutoBacklashNewMap;             // Whether to do backlash for new maps
   float mAutoBacklashMinField;         // FOV for doing backlash routine
   int mPointLabelDrawThresh;           // Threshold group size for drawing point labels
 
@@ -252,7 +252,7 @@ private:
 public:
   void PrepareToReimageMap(CMapDrawItem * item, MontParam * param, ControlSet * conSet,
     int baseNum, BOOL hideLDoff);
-  void StagePositionOfPiece(MontParam * param, ScaleMat aMat, float delX, float delY, 
+  void StagePositionOfPiece(MontParam * param, ScaleMat aMat, float delX, float delY,
     int ix, int iy, float &stageX, float & stageY, float &montErrX, float &montErrY);
   void RealignNextTask(int param);
   void RealignCleanup(int error);
@@ -285,11 +285,11 @@ public:
   ScheduledFile * GetFileTypeAndSchedule(CMapDrawItem * item, int & fileType);
   void DeleteArrays(void);
   int FindMapForRealigning(CMapDrawItem * inItem, BOOL restoreState);
-  void StoreCurrentStateInParam(StateParams * param, BOOL lowdose, 
+  void StoreCurrentStateInParam(StateParams * param, BOOL lowdose,
     bool saveLDfocusPos);
-  void StoreMapStateInParam(CMapDrawItem * item, MontParam *montP, int baseNum, 
+  void StoreMapStateInParam(CMapDrawItem * item, MontParam *montP, int baseNum,
     StateParams * param);
-  void SetStateFromParam(StateParams *param, ControlSet *conSet, int baseNum, 
+  void SetStateFromParam(StateParams *param, ControlSet *conSet, int baseNum,
     BOOL hideLDoff = FALSE);
   void SaveCurrentState(int type, bool saveLDfocusPos);
   StateParams* NewStateParam(bool navAcquire);
@@ -306,14 +306,14 @@ public:
   int AssessAcquireProblems(int startInd, int endInd);
   void ListFilesToOpen(void);
   bool NameToOpenUsed(CString name);
-  int AlignWithRotation(int buffer, float centerAngle, float angleRange, 
+  int AlignWithRotation(int buffer, float centerAngle, float angleRange,
     float &rotBest, float &shiftXbest, float &shiftYbest, float scaling = 0.);
   int OKtoAlignWithRotation(void);
   void OpenRotAlignDlg(void);
   WINDOWPLACEMENT * GetRotAlignPlacement(void);
   int BufferForRotAlign(int &registration);
   int AlignWithScaling(float & shiftX, float & shiftY, float & scaling);
-  int LookupMontStageOffset(KImageStore *storeMRC, MontParam *param, int ix, int iy, 
+  int LookupMontStageOffset(KImageStore *storeMRC, MontParam *param, int ix, int iy,
     std::vector<int> &pieceSavedAt, float &montErrX, float &montErrY);
   void InterpMontStageOffset(KImageStore *imageStore, MontParam *montP, ScaleMat aMat,
     std::vector<int> &pieceSavedAt, float delX, float delY, float &montErrX, float &montErrY);
@@ -324,12 +324,12 @@ public:
   int LoadForAlignAtTarget(CMapDrawItem *item);
   void SetMapOffsetsIfAny(CMapDrawItem * item);
   void RestoreMapOffsets();
-  int DistAndPiecesForRealign(CMapDrawItem *item, float targetX, float targetY, 
-    int pcDrawnOn, int mapInd, 
-    ScaleMat &aMat, float &delX, float &delY, float &distMin, int &ixPiece, int &iyPiece, 
-    int &ixSafer, int &iySafer, int &imageX, int &imageY, bool keepStore, int &xFrame, 
+  int DistAndPiecesForRealign(CMapDrawItem *item, float targetX, float targetY,
+    int pcDrawnOn, int mapInd,
+    ScaleMat &aMat, float &delX, float &delY, float &distMin, int &ixPiece, int &iyPiece,
+    int &ixSafer, int &iySafer, int &imageX, int &imageY, bool keepStore, int &xFrame,
     int &yFrame, int &binning);
-    
+
   void LoadPieceContainingPoint(CMapDrawItem * ptItem, int mapIndex);
   void StartRealignCapture(bool useContinuous, int nextTask);
   void GetViewOffsets(CMapDrawItem * item, float & netShiftX, float & netShiftY, float & beamShiftX, float & beamShiftY, float & beamTiltX, float & beamTiltY, int area = VIEW_CONSET);
@@ -340,7 +340,7 @@ public:
   void CountAcquireItems(int startInd, int endInd, int & numAcquire, int & numTS);
   void RestoreLowDoseConset(void);
   int ProcessExternalItem(CMapDrawItem * item, int extType);
-  int TransformExternalCoords(CMapDrawItem *item, int extType, 
+  int TransformExternalCoords(CMapDrawItem *item, int extType,
      CMapDrawItem *mapItem, float &fx, float &fy, int &pieceDrawnOn);
   void CleanupFromExternalFileAccess();
   static int TaskRealignBusy(void);

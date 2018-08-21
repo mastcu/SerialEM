@@ -193,7 +193,7 @@ struct CameraThreadData {
   long eagleIndex;            // Index from looking up this camera by name
   long startingFEIshutter;    // FEI wants the UI restored when done
   IAMTCamInterface *amtCam;   // Resident pointer to AMT camera
-  DirectElectronCamera *DE_Cam;   // Pointer to DirectElectron 4K camera    
+  DirectElectronCamera *DE_Cam;   // Pointer to DirectElectron 4K camera
   JeolStateData *JeolSD;     // So that the Jeol scope can be accessed directly
   CamPluginFuncs *plugFuncs;  // Plugin Functions for current camera
   ScopePluginFuncs *scopePlugFuncs;  // Plugin functions for plugin scope
@@ -262,7 +262,7 @@ struct InsertThreadData {
 };
 
 
-class DLL_IM_EX CCameraController  
+class DLL_IM_EX CCameraController
 {
  public:
 	 void AcquiredSize(ControlSet *csp, int camera, int &sizeX, int &sizeY);
@@ -283,56 +283,56 @@ class DLL_IM_EX CCameraController
   int SwitchTeitzToBeamShutter(int cam);
   int LockInitializeTietz(BOOL firstTime);
   BOOL IsCameraFaux();
-  void SetBlankWhenRetracting(BOOL inVal) {mBlankWhenRetracting = inVal;};
+  GetSetMember(BOOL, BlankWhenRetracting)
   GetSetMember(float, MinBlankingTime)
   GetSetMember(int, ScaledGainRefMax)
   GetSetMember(int, MinGainRefBits)
-  SetMember(float, GIFoffsetDelayCrit)
-  SetMember(float, GIFoffsetDelayBase1)
-  SetMember(float, GIFoffsetDelaySlope1)
-  SetMember(float, GIFoffsetDelayBase2)
-  SetMember(float, GIFoffsetDelaySlope2)
-  SetMember(int, GIFslitInOutDelay)
-  SetMember(BOOL, NoSpectrumOffset)
+  GetSetMember(float, GIFoffsetDelayCrit)
+  GetSetMember(float, GIFoffsetDelayBase1)
+  GetSetMember(float, GIFoffsetDelaySlope1)
+  GetSetMember(float, GIFoffsetDelayBase2)
+  GetSetMember(float, GIFoffsetDelaySlope2)
+  GetSetMember(int, GIFslitInOutDelay)
+  GetSetMember(BOOL, NoSpectrumOffset)
   GetSetMember(BOOL, IgnoreFilterDiffs);
-  SetMember(float, DarkAgeLimit)
-  SetMember(float, GainTimeLimit)
-  SetMember(int, GIFBiggestAperture)
-  SetMember(float, TietzFilmSwitchTime)
-  SetMember(float, TimeoutFactor)
-  SetMember(int, RetryLimit)
+  GetSetMember(float, DarkAgeLimit)
+  GetSetMember(float, GainTimeLimit)
+  GetSetMember(int, GIFBiggestAperture)
+  GetSetMember(float, TietzFilmSwitchTime)
+  GetSetMember(float, TimeoutFactor)
+  GetSetMember(int, RetryLimit)
   GetMember(BOOL, ShotIncomplete)
   GetSetMember(BOOL, InterpDarkRefs)
   SetMember(int, BlockOffsetSign)
-  SetMember(int, DynFocusInterval)
-  SetMember(int, StartDynFocusDelay);
+  GetSetMember(int, DynFocusInterval)
+  GetSetMember(int, StartDynFocusDelay);
   GetSetMember(int, LowerScreenForSTEM);
   SetMember(BOOL, BlankNextShot)
-  SetMember(int, DSextraShotDelay);
+  GetSetMember(int, DSextraShotDelay);
   SetMember(int, DSshouldFlip);
-  SetMember(int, DScontrolBeam);
+  GetSetMember(int, DScontrolBeam);
   SetMember(float, DSglobalRotOffset);
   SetMember(int, SubareaShiftDelay);
   GetSetMember(int, InvertBrightField);
-  SetMember(float, InsertDetShotTime);
+  GetSetMember(float, InsertDetShotTime);
   SetMember(int, MaxChannelsToGet);
   SetMember(int, RetainMagAndShift);
-  SetMember(float, DSsyncMargin);
+  GetSetMember(float, DSsyncMargin);
   GetSetMember(int, NumK2Filters);
-  SetMember(float, MinK2FrameTime);
-  SetMember(float, MinK3FrameTime);
+  GetSetMember(float, MinK2FrameTime);
+  GetSetMember(float, MinK3FrameTime);
   float GetMinK2FrameTime(int K2Type) {return K2Type == K3_TYPE ? mMinK3FrameTime : mMinK2FrameTime;};
-  SetMember(float, K2BaseModeScaling);
+  GetSetMember(float, K2BaseModeScaling);
   SetMember(BOOL, SkipNextReblank);
   SetMember(int, DefaultGIFCamera);
   SetMember(int, DefaultRegularCamera);
   GetMember(float, LastK2BaseTime);
-  SetMember(float, K2ReadoutInterval);
-  SetMember(float, K3ReadoutInterval);
+  GetSetMember(float, K2ReadoutInterval);
+  GetSetMember(float, K3ReadoutInterval);
   float GetK2ReadoutInterval(int K2Type) {return K2Type == K3_TYPE ? mK3ReadoutInterval : mK2ReadoutInterval;};
   CString *GetK2FilterNames() {return &mK2FilterNames[0];};
   GetSetMember(float, FalconReadoutInterval);
-  SetMember(int, MaxFalconFrames);
+  GetSetMember(int, MaxFalconFrames);
   int GetMaxFalconFrames(CameraParameters *params);
   SetMember(BOOL, FrameSavingEnabled);
   BOOL GetFrameSavingEnabled() {return mFrameSavingEnabled || mCanUseFalconConfig > 0;};
@@ -362,7 +362,7 @@ class DLL_IM_EX CCameraController
   int ConSetToLDArea(int inConSet);
   SetMember(int, RequiredRoll)
   SetMember(BOOL, ObeyTiltDelay)
-  SetMember(BOOL, MakeFEIerrorBeTimeout);
+  GetSetMember(BOOL, MakeFEIerrorBeTimeout);
   void QueueMagChange(int inMagInd);
   void QueueImageShift(double inISX, double inISY, int inDelay);
   void QueueStageMove(StageMoveInfo inSmi, int inDelay, bool doBacklash = false);
@@ -421,29 +421,29 @@ class DLL_IM_EX CCameraController
   SetMember(CString, CountingRef);
   GetSetMember(BOOL, RunCommandAfterSave);
   SetMember(CString, PostSaveCommand);
-  SetMember(BOOL, OtherCamerasInTIA);
+  GetSetMember(BOOL, OtherCamerasInTIA);
   GetMember(CString, FrameFilename);
   SetMember(BOOL, DeferStackingFrames);
-  SetMember(int, SmoothFocusExtraTime);
-  SetMember(BOOL, K2SynchronousSaving);
+  GetSetMember(int, SmoothFocusExtraTime);
+  GetSetMember(BOOL, K2SynchronousSaving);
   SetMember(int, NumZLPAlignChanges);
   SetMember(float, MinZLPAlignInterval);
   SetMember(BOOL, LDwasSetToArea);
   GetSetMember(int, FrameMdocForFalcon);
   GetSetMember(BOOL, SkipK2FrameRotFlip);
-  SetMember(int, BaseJeolSTEMflags);
+  GetSetMember(int, BaseJeolSTEMflags);
   GetMember(int, RepFlag);
   GetMember(double, LastImageTime);
   GetSetMember(int, WaitingForStacking);
   bool SetNextAsyncSumFrames(int inVal, bool deferSum);
-  SetMember(float, K2MaxRamStackGB);
+  GetSetMember(float, K2MaxRamStackGB);
   SetMember(bool, CancelNextContinuous);
   void SetTaskWaitingForFrame(bool inVal) {mTaskFrameWaitStart = inVal ? GetTickCount() : -1.;};
   bool GetTaskWaitingForFrame() {return mTaskFrameWaitStart >= 0.;};
   SetMember(float, ContinuousDelayFrac);
   GetSetMember(int, PreventUserToggle);
-  GetSetMember(int, FrameNumberStart); 
-  GetSetMember(int, FrameNameFormat); 
+  GetSetMember(int, FrameNumberStart);
+  GetSetMember(int, FrameNameFormat);
   GetSetMember(CString, FrameBaseName);
   GetSetMember(CString, NumberedFramePrefix);
   GetSetMember(CString, NumberedFrameFolder);
@@ -464,7 +464,7 @@ class DLL_IM_EX CCameraController
   GetSetMember(int, NumFrameAliLogLines);
   GetMember(bool, DeferredSumFailed);
   int GetDMversion(int ind) {return mDMversion[ind];};
-  SetMember(BOOL, AllowSpectroscopyImages);
+  GetSetMember(BOOL, AllowSpectroscopyImages);
   GetMember(bool, AskedDeferredSum);
   GetSetMember(BOOL, ASIgivesGainNormOnly);
   GetMember(bool, StartedFalconAlign);
@@ -473,7 +473,7 @@ class DLL_IM_EX CCameraController
   GetSetMember(int, MinAlignFractionsCounting);
   GetMember(int, NoMessageBoxOnError);
   SetMember(int, DEserverRefNextShot);
-  SetMember(float, DEPrevSetNameTimeout);
+  GetSetMember(float, DEPrevSetNameTimeout);
   int GetServerFramesLeft();
 
   int GetNumFramesSaved() {return mTD.NumFramesSaved;};
@@ -489,11 +489,11 @@ class DLL_IM_EX CCameraController
   BOOL Inserting() {return mInserting;};
   BOOL EnsuringDark() {return mEnsuringDark;};
   BOOL Acquiring() {return mAcquiring;};
-  void AdjustSizes(int &DMsizeX, int ccdSizeX, int moduloX, 
-                   int &Left, int &Right, int &DMsizeY, int ccdSizeY, int moduloY, 
+  void AdjustSizes(int &DMsizeX, int ccdSizeX, int moduloX,
+                   int &Left, int &Right, int &DMsizeY, int ccdSizeY, int moduloY,
                    int &Top, int &Bottom, int binning, int camera = -1);
-  void CenteredSizes(int &DMsizeX, int ccdSizeX, int moduloX, 
-                     int &Left, int &Right, int &DMsizeY, int ccdSizeY, int moduloY, 
+  void CenteredSizes(int &DMsizeX, int ccdSizeX, int moduloX,
+                     int &Left, int &Right, int &DMsizeY, int ccdSizeY, int moduloY,
                      int &Top, int &Bottom,int binning, int camera = -1);
   void BlockAdjustSizes(int &DMsize, int ccdSize, int sizeMod, int startMod,
                         int &start, int &end, int binning);
@@ -505,7 +505,7 @@ class DLL_IM_EX CCameraController
     mBeamTiltYtoRestore = inY; mNeedToRestoreISandBT |= 2;};
 
  private:
-  void AdjustSizes(int &DMsizeX, int ccdSizeX, int moduloX, 
+  void AdjustSizes(int &DMsizeX, int ccdSizeX, int moduloX,
                    int &Left, int &Right, int binning, int camera = -1);
   CSerialEMApp *mWinApp;
   EMbufferManager *mBufferManager;
@@ -559,7 +559,7 @@ class DLL_IM_EX CCameraController
   int mPending;           // Set number for a pending capture
   int mNumRetries;        // Number of retries after timeout
   int mRetryLimit;        // Limit on number of retries (default 0 to disable)
-    
+
   DarkRef *mDarkp;        // pointer to current dark ref
   DarkRef *mGainp;        // Pointer to gain reference
   DarkRef *mDarkBelow;    // Points to dark references for interpolation
@@ -655,7 +655,7 @@ class DLL_IM_EX CCameraController
   int *mDarkSum;                // Array for summing dark refs
   BOOL mInterpDarkRefs;         // Flag to interpolate between two dark references
   float mInterpRefInterval;     // Interval between exposure times when using two refs
-  float mMinInterpRefExp;       // Minimum exposure time 
+  float mMinInterpRefExp;       // Minimum exposure time
   float mTimeoutFactor;         // Factor to increase timeout values by
   float mBeamWidth;             // Width for scanning with a slit (unbinned pixels)
   int mScanMargin;              // Margin beyond image frame on each side (unbinned pix)
@@ -780,7 +780,7 @@ class DLL_IM_EX CCameraController
   CString mDirForDEFrames;      // Single directory name for a subfolder of main location
   float mDEPrevSetNameTimeout;  // Sec of timeout when fetching set name
   float mDESetNameTimeoutUsed;  // Actual value used for timeout
-  int mFrameNameFormat;         // Set of flags for components of folder/filename 
+  int mFrameNameFormat;         // Set of flags for components of folder/filename
   int mFrameNumberStart;        // Starting number for sequential numbers
   CString mFrameBaseName;       // User's base name
   CString mFrameFilename;       // Filename component for frame to save
@@ -840,17 +840,17 @@ public:
   void SetNonGatanPostActionTime(void);
   static int GetArrayForImage(CameraThreadData * td, long &arrsize, int index = 0);
   static int GetArrayForReference(CameraThreadData * td, DarkRef * ref, long &arrSize, CString strGainDark);
-  static int CopyFEIimage(CameraThreadData *td, SAFEARRAY * psa, void * array, 
+  static int CopyFEIimage(CameraThreadData *td, SAFEARRAY * psa, void * array,
     int sizeX, int sizeY, int imageType, int divideBy2);
-  static int GetSizeCopyFEIimage(CameraThreadData *td, SAFEARRAY * psa, void * array, 
+  static int GetSizeCopyFEIimage(CameraThreadData *td, SAFEARRAY * psa, void * array,
     int imageType, int divideBy2, int sizeX, int sizeY, int messInd);
-  static int AcquireFEIimage(CameraThreadData * td, void * array, int correction, 
+  static int AcquireFEIimage(CameraThreadData * td, void * array, int correction,
     double settling, int sizeX, int sizeY, int messInd);
   static int AcquireFEIchannels(CameraThreadData * td, int sizeX, int sizeY);
-  static void AcquirePluginImage(CameraThreadData * td, void **array, int arrSize, 
+  static void AcquirePluginImage(CameraThreadData * td, void **array, int arrSize,
     int processing, double settling, bool blanker, int &sizeX, int &sizeY, int &retval,
     int &numAcquired);
-  static void AddStatsAndSleep(CameraThreadData * td, DWORD &curTime, DWORD &lastTime, 
+  static void AddStatsAndSleep(CameraThreadData * td, DWORD &curTime, DWORD &lastTime,
     int &numScan, double &intervalSum, double &intervalSumSq, int stepInterval);
 
   BOOL PostActionsOK(ControlSet *conSet = NULL);
@@ -875,10 +875,10 @@ public:
   bool InitiateIfPending(void);
   void TestCameraInserted(int actIndex, long &inserted);
   void ComputePixelTime(CameraParameters *camParams, int sizeX, int sizeY, int lineSync,
-    float pixelSize, float maxScanRate, float &exposure, double &pixelTime, 
+    float pixelSize, float maxScanRate, float &exposure, double &pixelTime,
     double &scanRate);
   void ConstrainDriftSettling(float drift);
-  int DynamicFocusOK(float exposure, int sizeY, float flyback, int &interval, 
+  int DynamicFocusOK(float exposure, int sizeY, float flyback, int &interval,
     double &msPerLine);
   void SetupDynamicFocus(int numIntervals, double msPerLine, float flyback, float startup);
   BOOL CreateFocusRamper(void);
@@ -893,7 +893,7 @@ public:
   bool MutuallyExclusiveChannels(int chan1, int chan2);
   int ChannelMappedTo(int chan);
   void BuildEvalChannelList(int numChan, int comboSize, int ninList, int * list);
-  void InitializeDMcameras(int DMind, int *numDMListed, int *originalList, 
+  void InitializeDMcameras(int DMind, int *numDMListed, int *originalList,
     int numOrig, BOOL anyGIF, int *digiscan, double addedFlyback);
   int InitializeTietz(int whichCameras, int *originalList, int numOrig, BOOL anyPreExp);
   void InitializeFEIcameras(int &numFEIlisted, int *originalList, int numOrig);
@@ -905,23 +905,23 @@ public:
 
   // ControlSet is const here because the routine is called only the first time when
   // there is settling, so changes would be lost in that case
-  int CapManageInsertTempK2Saving(const ControlSet &conSet, int inSet, BOOL retracting, 
+  int CapManageInsertTempK2Saving(const ControlSet &conSet, int inSet, BOOL retracting,
     int numActive);
   int SetupK2SavingAligning(const ControlSet & conSet, int inSet, bool saving, bool aligning,
     CString *aliComRoot);
   int CapSetLDAreaFilterSettling(int inSet);
   void CapManageCoordinates(ControlSet &conSet, int &gainXoffset, int &gainYoffset);
   void CapSetupShutteringTiming(ControlSet & conSet, int inSet, BOOL &bEnsureDark);
-  int CapManageDarkGainRefs(ControlSet & conSet, int inSet, BOOL &bEnsureDark, 
+  int CapManageDarkGainRefs(ControlSet & conSet, int inSet, BOOL &bEnsureDark,
     int gainXoffset, int gainYoffset);
   int CapSaveStageMagSetupDynFocus(ControlSet & conSet, int inSet);
   bool ConstrainExposureTime(CameraParameters *camP, ControlSet *consP);
-  bool ConstrainExposureTime(CameraParameters *camP, BOOL doseFrac, int readMode, 
+  bool ConstrainExposureTime(CameraParameters *camP, BOOL doseFrac, int readMode,
     int binning, bool alignInCamera, int sumCount, float &exposure, float &frameTime);
   bool ConstrainFrameTime(float &frameTime, int K2Type);
   void RestoreFEIshutter(void);
   void QueueFocusSteps(float interval1, double focus1, float interval2, double focus2);
-  static void ChangeDynFocus(CameraThreadData *td, double focus, double focusBase, 
+  static void ChangeDynFocus(CameraThreadData *td, double focus, double focusBase,
     long fineBase, long coarseBase, long &last_coarse);
   float ExposureRoundingFactor(CameraParameters * camP);
   bool IsDirectDetector(CameraParameters * camP);
@@ -955,14 +955,14 @@ bool IsConSetSaving(ControlSet *conSet, int setNum, CameraParameters *param, boo
 bool CanProcessHere(CameraParameters *param);
 void FixDirForFalconFrames(CameraParameters * param);
 bool CanPluginDo(int minVersion, CameraParameters * param);
-int NumAllVsAllFromFAparam(FrameAliParams &faParam, int numAliFrames, int &groupSize, 
+int NumAllVsAllFromFAparam(FrameAliParams &faParam, int numAliFrames, int &groupSize,
   int &refineIter, int &doSpline, int &numFilters, float *radius2);
 void AdjustCountsPerElecForScale(CameraParameters * param);
 int DESumCountForConstraints(CameraParameters *camP, ControlSet *consP);
 void MakeOneFrameAlignCom(CString & localFramePath, ControlSet *conSet);
 void QueueBeamTilt(double inBTX, double inBTY, int backlashDelay);
-bool IsK3BinningSuperResFrames(int K2Type, int doseFrac, int saveFrames, 
-  int alignFrames, int useFrameAlign, int processing, int readMode, 
+bool IsK3BinningSuperResFrames(int K2Type, int doseFrac, int saveFrames,
+  int alignFrames, int useFrameAlign, int processing, int readMode,
   BOOL takeBinnedFlag);
 bool IsK3BinningSuperResFrames(const ControlSet *conSet, int K2Type);
 };

@@ -25,10 +25,12 @@ public:
 	WINDOWPLACEMENT * GetDosePlacement();
 	void DoseClosing();
 	WINDOWPLACEMENT *GetMeterPlacement();
-	void SetCurrentLogBase(float inVal) {mCurrentLogBase = inVal;};
+	GetSetMember(float, CurrentLogBase)
 	void SetCurrentSmootherThreshold1(float inVal) {mSmootherThreshold1 = inVal;};
+  float GetCurrentSmootherThreshold1() {return mSmootherThreshold1;};
 	void SetCurrentSmootherThreshold2(float inVal) {mSmootherThreshold2 = inVal;};
-	void SetFloatingMeterSmoothed(int inVal) {mFloatingMeterSmoothed = inVal;};
+  float GetCurrentSmootherThreshold2() {return mSmootherThreshold2;};
+	GetSetMember(int, FloatingMeterSmoothed)
 	void Update(double inCurrent, int inMagInd, double inDefocus, double inISX,
 		double inISY, double inStageX, double inStageY, double inStageZ, BOOL screenUp, BOOL smallScreen, BOOL blanked, 
     BOOL EFTEM, int STEM, int inSpot, double rawIntensity, double inIntensity, double inObjective, 

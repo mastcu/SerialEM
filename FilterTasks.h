@@ -27,11 +27,12 @@ class CFilterTasks : public CCmdTarget
 	 int TestRefineZLPStart(float eStart, CString scanType);
 	 int TestCalMagStart(float start);
    void SetShiftCalMinField(float inVal) {mCMSMinField = inVal;};
-  void SetRZlpStepSize(float inVal) {mRZlpStepSize = inVal;};
-  void SetRZlpSlitWidth(float inVal) {mRZlpSlitWidth = inVal;};
-  void SetRZlpMinExposure(float inVal) {mRZlpMinExposure = inVal;};
-  SetMember(float, RZlpMeanCrit)
-  SetMember(BOOL, RZlpRedoInLowDose)
+   float GetShiftCalMinField() {return mCMSMinField;};
+   GetSetMember(float, RZlpStepSize)
+   GetSetMember(float, RZlpSlitWidth)
+   GetSetMember(float, RZlpMinExposure)
+  GetSetMember(float, RZlpMeanCrit)
+  GetSetMember(BOOL, RZlpRedoInLowDose)
   BOOL AllocateArrays(int size);
   BOOL RefiningZLP() {return mRZlpIndex >= 0;};
   void CleanupArrays();

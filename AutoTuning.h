@@ -77,12 +77,12 @@ public:
   GetSetMember(BOOL, CtfDoFullArray);
   GetSetMember(float, TestCtfTuningDefocus);
   GetMember(bool, LastCtfBasedFailed);
-  SetMember(int, CtfBasedLDareaDelay);
+  GetSetMember(int, CtfBasedLDareaDelay);
   GetSetMember(float, ComaVsISextent);
   GetMember(int, BacklashDelay);
   float GetBeamTiltBacklash();
   ComaVsISCalib *GetComaVsIScal() {return &mComaVsIScal;};
-  void SetBaseBeamTilt(double inX, double inY) {mBaseBeamTiltX = inX; mBaseBeamTiltY = inY;}; 
+  void SetBaseBeamTilt(double inX, double inY) {mBaseBeamTiltX = inX; mBaseBeamTiltY = inY;};
 
   CArray <AstigCalib, AstigCalib> *GetAstigCals() {return &mAstigCals;};
   CArray <ComaCalib, ComaCalib> *GetComaCals() {return &mComaCals;};
@@ -238,7 +238,7 @@ public:
   void StopCtfBased(bool restore = true, bool failed = true);
   void CtfBasedCleanup(int error);
   int LookupCtfBasedCal(bool coma, int magInd, bool matchMag, float *rotateImage = NULL);
-  float ComaSlopeFromCalibration(float *fitValues, int index, float angle, 
+  float ComaSlopeFromCalibration(float *fitValues, int index, float angle,
   float beamTilt, float *factors);
   int SetupCtfAcquireParams(bool fromCheck);
   int CheckAndSetupCtfAcquireParams(const char *operation, bool fromSetup);

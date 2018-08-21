@@ -51,24 +51,24 @@ public:
   void DebugDump(CString message);
   BOOL CheckLDTrialMoved();
   void ResetPoleAngle() {mPoleAngle = mDirection * 90.;};
-  SetMember(float, DefaultStartAngle)
-  SetMember(float, MaxUsableAngleDiff)
-  SetMember(float, BadShotCrit)
-  SetMember(float, BadLowMagCrit)
+  GetSetMember(float, DefaultStartAngle)
+  GetSetMember(float, MaxUsableAngleDiff)
+  GetSetMember(float, BadShotCrit)
+  GetSetMember(float, BadLowMagCrit)
   GetSetMember(float, MaxTiltError)
-  SetMember(float, LowMagFieldFrac)
-  SetMember(float, StageMovedTolerance)
-  SetMember(float, UserFocusChangeTol)
-  SetMember(float, FitDropErrorRatio)
-  SetMember(float, FitDropBackoffRatio)
-  SetMember(int, MaxImageFailures)
-  SetMember(int, MaxPositionFailures)
-  SetMember(int, MaxDisturbValidChange)
-  SetMember(int, MaxDropAsShiftDisturbed)
-  SetMember(int, MaxDropAsFocusDisturbed)
-  SetMember(int, MinFitXAfterDrop)
-  SetMember(int, MinFitYAfterDrop)
-  SetMember(int, MinFitZAfterDrop)
+  GetSetMember(float, LowMagFieldFrac)
+  GetSetMember(float, StageMovedTolerance)
+  GetSetMember(float, UserFocusChangeTol)
+  GetSetMember(float, FitDropErrorRatio)
+  GetSetMember(float, FitDropBackoffRatio)
+  GetSetMember(int, MaxImageFailures)
+  GetSetMember(int, MaxPositionFailures)
+  GetSetMember(int, MaxDisturbValidChange)
+  GetSetMember(int, MaxDropAsShiftDisturbed)
+  GetSetMember(int, MaxDropAsFocusDisturbed)
+  GetSetMember(int, MinFitXAfterDrop)
+  GetSetMember(int, MinFitYAfterDrop)
+  GetSetMember(int, MinFitZAfterDrop)
   GetSetMember(int, AutoTerminatePolicy)
   GetSetMember(int, TiltFailPolicy)
   GetSetMember(int, DimRetryPolicy)
@@ -87,7 +87,7 @@ public:
   GetSetMember(BOOL, ExpSeriesFixNumFrames);
   GetMember(BOOL, ChangeRecExp);
   GetSetMember(BOOL, SkipBeamShiftOnAlign);
-  SetMember(int, MaxDelayAfterTilt);
+  GetSetMember(int, MaxDelayAfterTilt);
   GetMember(CString, BidirAnchorName);
   GetSetMember(BOOL, EndOnHighDimImage);
   GetSetMember(int, DimEndsAbsAngle);
@@ -108,12 +108,12 @@ public:
   GetSetMember(BOOL, FixedNumFrames);
   GetSetMember(BOOL, TermOnHighExposure);
   GetSetMember(float, MaxExposureIncrease);
-  SetMember(bool, CallFromThreeChoice); 
+  SetMember(bool, CallFromThreeChoice);
   SetMember(CString, TCBoxYesText);
   SetMember(CString, TCBoxNoText);
   SetMember(CString, TCBoxCancelText);
   SetMember(int, TCBoxDefault);
-  SetMember(float, TrialCenterMaxRadFrac);
+  GetSetMember(float, TrialCenterMaxRadFrac);
   GetMember(int, TerminateOnError);
   GetSetMember(BOOL, SeparateExtraRecFiles);
   double GetCumulativeDose();
@@ -121,7 +121,7 @@ public:
   bool GetBidirStartAngle(float &outVal) {outVal = mTSParam.bidirAngle; return mStartedTS && mTSParam.doBidirectional;};
 
   void BestPredFit(float *x1fit, float *x2fit, float *yfit, int &nFit, int &nDrop,
-           int minFit, int minQuadratic, float &slope, float &slope2, float &intcp, 
+           int minFit, int minQuadratic, float &slope, float &slope2, float &intcp,
            float &roCorr, float predX, float &predY, float &stdError);
   BOOL UsableLowMagRef(double angle);
   void NewLowDoseRef(int inBuf);
@@ -355,7 +355,7 @@ private:
   BOOL mNeedTilt;             // Flag that tilt is (still) needed
   BOOL mPreTilted;            // Tilt was done on record image
   float mBWMeanPerSec[MAX_LOWDOSE_SETS]; // Expected mean of black & white levels, unbinned, /sec
-  float mBadShotCrit;         // Criterion for bad shot as fraction of expected mean 
+  float mBadShotCrit;         // Criterion for bad shot as fraction of expected mean
   float mBadLowMagCrit;       // Criterion fraction for low mag shot
   int mImageFailures;         // Number of consecutive image failures
   int mMaxImageFailures;      // Maximum number allowed
@@ -451,7 +451,7 @@ private:
   double mSetupOpenedStamp;   // Time stamp when setup was last opened
   int mLastSucceeded;         // Flag that last tilt series succeeded: 1 term from menu, 2 term automatically
   BOOL mTiltedToZero;         // Flag that it started a tilt back to zero at end of external series
-  float mMessageBoxValveTime; // Time after which to close valves when message box put up 
+  float mMessageBoxValveTime; // Time after which to close valves when message box put up
   BOOL mMessageBoxCloseValves; // Flag to close message box after a time
   CString mFinalReport;       // Report string to go in email
   BOOL mSkipBeamShiftOnAlign;  // Test flag for not shifting beam during autoaligns
@@ -470,7 +470,7 @@ private:
   BOOL mEarlyK2RecordReturn;   // Flag to return early if possible from Record Dose frac
   BOOL mCallTSplugins;         // Flag to control whether plugins get called
   BOOL mAllowContinuous;       // Flag to allow continuous mode in images
-  bool mAnyContinuous;         // Flag if there are any continuous to restore  
+  bool mAnyContinuous;         // Flag if there are any continuous to restore
   int mMacroToRun;             // Number of macro to run before Record
   BOOL mRunMacroInTS;          // Flag to run the macro
   int mStepAfterMacro;         // Run macro before this step
@@ -488,7 +488,7 @@ private:
   CString mTCBoxCancelText;
   int mTCBoxDefault;           // Default button
   float mTrialCenterMaxRadFrac; // Maximum radius as fraction of diagonal to center with T
-  
+
 public:
 	void CenterBeamWithTrial();
   void EvaluateExtraRecord();
@@ -500,7 +500,7 @@ public:
   void CopyParamToMaster(TiltSeriesParam * param, bool sync);
   void CopyMasterToParam(TiltSeriesParam * param, bool sync);
   void TerminateOnError(void);
-  int TSMessageBox(CString message, UINT type = MB_OK | MB_ICONEXCLAMATION, 
+  int TSMessageBox(CString message, UINT type = MB_OK | MB_ICONEXCLAMATION,
     BOOL terminate = true, int retval = 0);
   int StartTiltSeries(BOOL singleStep, int external);
   void SendEmailIfNeeded(BOOL terminating);
