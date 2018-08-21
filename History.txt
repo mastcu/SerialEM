@@ -3,6 +3,11 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+8/21/18: Made acquire box and multi-shot drawing happen as if low dose mode is
+on in dummy mode.
+
+8/21/18: Added script command to move stage by camera pixels.
+
 8/9/18: Made script processor not try to move stage with 0 movement (In 3.6).
 
 8/6/18: Added ability to use Ctrl to extend the delay time for getting a
