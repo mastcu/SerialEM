@@ -67,6 +67,8 @@ public:
   CString mSensorSerial;
   int mReadoutDelay;
   int mIgnoredFrames;
+  float slitWidth;
+  float energyLoss;
   
   static const int Bytes[EXTRA_NTYPES];
   void ValuesIntoShorts(void);

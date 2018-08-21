@@ -7345,6 +7345,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
   ShortVec summedList;
   float frameTimeForDose;
   ControlSet *lastConSetp = mTD.GetDeferredSum ? mConsDeferred : &mConSetsp[mLastConSet];
+  FilterParams *filtParam = mWinApp->GetFilterParams();
   DWORD ticks;
   float partialExposure = (float)mExposure;
   short int *parray, *imin, *imout;
@@ -7969,6 +7970,11 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       else
         extra->mAxisAngle = (float)mShiftManager->GetImageRotation(curCam, 
         mMagBefore);
+      if (mParam->GIF || mScope->GetHasOmegaFilter()) {
+        extra->slitWidth = filtParam->slitIn ? filtParam->slitWidth : 0.f;
+        extra->energyLoss = (filtParam->slitIn && !filtParam->zeroLoss) ? 
+          filtParam->energyLoss : 0.f;
+      }
       extra->ValuesIntoShorts();
     }
 
