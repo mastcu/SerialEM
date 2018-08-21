@@ -224,7 +224,7 @@ enum {CME_VIEW, CME_FOCUS, CME_TRIAL, CME_RECORD, CME_PREVIEW,
   CME_LOADNAVMAP, CME_LOADOTHERMAP,CME_REPORTLENSFLCSTATUS, CME_TESTNEXTMULTISHOT,
   CME_ENTERSTRING, CME_COMPARESTRINGS, CME_COMPARENOCASE, CME_REPORTNEXTNAVACQITEM,
   CME_REPORTNUMTABLEITEMS, CME_CHANGEITEMCOLOR, CME_CHANGEITEMLABEL,CME_STRIPENDINGDIGITS,
-  CME_MAKEANCHORMAP
+  CME_MAKEANCHORMAP, CME_STAGESHIFTBYPIXELS
 };
 
 static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0},
@@ -337,7 +337,8 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"LoadOtherMap", 1, 0}, {"ReportLensFLCStatus", 1, 0}, {"TestNextMultiShot", 1, 0},
 {"EnterString", 2, 0}, {"CompareStrings", 2, 0}, {"CompareNoCase", 2, 0}, 
 {"ReportNextNavAcqItem", 0, 0}, {"ReportNumTableItems", 0, 0}, {"ChangeItemColor", 2, 0},
-{"ChangeItemLabel", 2, 0}, {"StripEndingDigits", 2, 0}, {"MakeAnchorMap", 0, 0},
+{"ChangeItemLabel", 2, 0}, {"StripEndingDigits", 2, 0}, {"MakeAnchorMap", 0, 0}, 
+{"StageShiftByPixels", 2, 0},
 {NULL, 0, 0}
 };
 
@@ -3069,43 +3070,57 @@ void CMacroProcessor::NextCommand()
     mWinApp->AppendToLog(report, mLogAction);
     SetReportedValues(&strItems[2], delISX);
     
-    // MoveStage, MoveStageTo
-  } else if (CMD_IS(MOVESTAGE) || CMD_IS(MOVESTAGETO) || CMD_IS(TESTRELAXINGSTAGE)) {
-    smi.z = 0.;
-    smi.alpha = 0.;
-    smi.axisBits = 0;
-    smi.backX = smi.backY = smi.relaxX = smi.relaxY = 0.;
-
-    // If stage not ready, back up and try again, otherwise do action
-    if (mScope->StageBusy() > 0)
-      mLastIndex = mCurrentIndex;
-    else {
-      if (itemEmpty[2])
-        ABORT_LINE("Stage movement command does not have at least 2 numbers: \n\n");
-      stageX = itemDbl[1];
-      stageY = itemDbl[2];
+    // MoveStage, MoveStageTo, TestRelaxingStage, StageShiftByPixels
+  } else if (CMD_IS(MOVESTAGE) || CMD_IS(MOVESTAGETO) || CMD_IS(TESTRELAXINGSTAGE) ||
+    CMD_IS(STAGESHIFTBYPIXELS)) {
+      smi.z = 0.;
+      smi.alpha = 0.;
+      smi.axisBits = 0;
+      smi.backX = smi.backY = smi.relaxX = smi.relaxY = 0.;
       truth = CMD_IS(TESTRELAXINGSTAGE);
-      stageZ = (itemEmpty[3] || truth) ? 0. : itemDbl[3];
-      if (CMD_IS(MOVESTAGE) || truth) {
-        if (!mScope->GetStagePosition(smi.x, smi.y, smi.z))
-          SUSPEND_NOLINE("because of failure to get stage position");
-        //CString report;
-        //report.Format("Start at %.2f %.2f %.2f", smi.x, smi.y, smi.z);
-        //mWinApp->AppendToLog(report, LOG_IF_ADMIN_OPEN_IF_CLOSED);
 
-        // For each of X, Y, Z, set axis bit if nonzero;
-        smi.x += stageX;
-        if (stageX != 0.)
-          smi.axisBits |= axisX;
-        smi.y += stageY;
-        if (stageY != 0.)
-          smi.axisBits |= axisY;
-        smi.z += stageZ;
-        if (stageZ != 0.)
-          smi.axisBits |= axisZ;
-        if (truth) {
-          backlashX = itemEmpty[3] ? mWinApp->mMontageController->GetStageBacklash() :
-            (float)itemDbl[3];
+      // If stage not ready, back up and try again, otherwise do action
+      if (mScope->StageBusy() > 0)
+        mLastIndex = mCurrentIndex;
+      else {
+        if (CMD_IS(STAGESHIFTBYPIXELS)) {
+          h1 = DTOR * mScope->GetTiltAngle();
+          aMat = mShiftManager->StageToCamera(mWinApp->GetCurrentCamera(), 
+            mScope->GetMagIndex());
+          if (!aMat.xpx)
+            ABORT_LINE("There is no stage to camera calibration available for line:\n\n");
+          bInv = MatInv(aMat);
+          stageX = bInv.xpx * itemDbl[1] + bInv.xpy * itemDbl[2];
+          stageY = (bInv.ypx * itemDbl[1] + bInv.ypy * itemDbl[2]) / cos(h1);
+          stageZ = 0.;
+        } else {
+
+          if (itemEmpty[2])
+            ABORT_LINE("Stage movement command does not have at least 2 numbers: \n\n");
+          stageX = itemDbl[1];
+          stageY = itemDbl[2];
+          stageZ = (itemEmpty[3] || truth) ? 0. : itemDbl[3];
+        }
+        if (CMD_IS(MOVESTAGE) || CMD_IS(STAGESHIFTBYPIXELS) || truth) {
+          if (!mScope->GetStagePosition(smi.x, smi.y, smi.z))
+            SUSPEND_NOLINE("because of failure to get stage position");
+          //CString report;
+          //report.Format("Start at %.2f %.2f %.2f", smi.x, smi.y, smi.z);
+          //mWinApp->AppendToLog(report, LOG_IF_ADMIN_OPEN_IF_CLOSED);
+
+          // For each of X, Y, Z, set axis bit if nonzero;
+          smi.x += stageX;
+          if (stageX != 0.)
+            smi.axisBits |= axisX;
+          smi.y += stageY;
+          if (stageY != 0.)
+            smi.axisBits |= axisY;
+          smi.z += stageZ;
+          if (stageZ != 0.)
+            smi.axisBits |= axisZ;
+          if (truth) {
+            backlashX = itemEmpty[3] ? mWinApp->mMontageController->GetStageBacklash() :
+              (float)itemDbl[3];
           backlashY = itemEmpty[4] ? mScope->GetStageRelaxation() : (float)itemDbl[4];
           if (backlashY <= 0)
             backlashY = 0.025f;
@@ -3119,27 +3134,27 @@ void CMacroProcessor::NextCommand()
             smi.backY = (stageY > 0. ? backlashX : -backlashX);
             smi.relaxY = (smi.backY > 0. ? backlashY : -backlashY);
           }
+          }
+        } else {
+
+          // Absolute move: set to values; set Z axis bit if entered
+          smi.x = stageX;
+          smi.y = stageY;
+          smi.z = stageZ;
+
+          smi.axisBits |= (axisX | axisY);
+          if (!itemEmpty[3])
+            smi.axisBits |= axisZ;
         }
-      } else {
 
-        // Absolute move: set to values; set Z axis bit if entered
-        smi.x = stageX;
-        smi.y = stageY;
-        smi.z = stageZ;
-
-        smi.axisBits |= (axisX | axisY);
-        if (!itemEmpty[3])
-          smi.axisBits |= axisZ;
+        // Start the movement
+        if (smi.axisBits) {
+          mScope->MoveStage(smi, truth, false, false, truth);
+          mMovedStage = true;
+        }
       }
 
-      // Start the movement
-      if (smi.axisBits) {
-        mScope->MoveStage(smi, truth, false, false, truth);
-        mMovedStage = true;
-      }
-    }
 
-    
   } else if (CMD_IS(RELAXSTAGE)) {                          // RelaxStage
     delX = itemEmpty[1] ? mScope->GetStageRelaxation() : itemDbl[1];
     if (!mScope->GetStagePosition(smi.x, smi.y, smi.z))
@@ -3414,7 +3429,8 @@ void CMacroProcessor::NextCommand()
       "dose rate = %.3f e/unbinned pixel/sec", bmin * shiftX, bmax * shiftX, 
       bmean * shiftX, bSD * shiftX, backlashY);
     mWinApp->AppendToLog(report, mLogAction);
-    SetReportedValues(&strItems[2], bmin, bmax, bmean, bSD, backlashX);
+    SetReportedValues(&strItems[2], bmin * shiftX, bmax * shiftX, bmean * shiftX, 
+      bSD * shiftX, backlashY);
  
   } else if (CMD_IS(CROPIMAGE)) {                           // CropImage
     if (ConvertBufferLetter(strItems[1], -1, true, index, report))
