@@ -1413,21 +1413,22 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
         // the implied beam tilt zero over all angles
         if (mCtfComaFree) {
 
-          // First check range of astigmatism values
+          // First check range of astigmatism values.  Defocus is now negative so 
           maxAstig = -10000.;
           minAstig = 10000.;
           for (ind = 0; ind < mCtfCal.numFits; ind++) {
             astig = mCtfCal.fitValues[3 * ind + 1] - mCtfCal.fitValues[3 * ind];
             ACCUM_MIN(minAstig, astig);
-            ACCUM_MIN(maxAstig, astig);
+            ACCUM_MAX(maxAstig, astig);
           }
           if (maxAstig - minAstig < 0.05) {
-            str = "The range of astigmatism values is too low for a reliable"
+            str.Format("The range of astigmatism values (%.2f) is too low for a reliable"
               " coma solution.\n\n" "You may need to increase the beam tilt set in"
-              " \"Set CTF Coma-free Params\".\n";
+              " \"Set CTF Coma-free Params\".\n", maxAstig - minAstig);
             if (mWinApp->mScope->GetUseIllumAreaForC2())
               str += "(Do not try to detect coma on a Cs-corrected microscope)";
             SEMMessageBox(str);
+            mWinApp->AppendToLog(str);
             StopCtfBased();
             return;
           }
