@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+8/21/18: Fixed setting of hardware binning for DE camera.
+
+8/21/18: Added script command to save navigator file.
+
 8/21/18: Added script command to report the same subset of properties that can
 be set.
 

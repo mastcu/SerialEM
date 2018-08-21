@@ -1049,7 +1049,7 @@ void CCameraSetupDlg::UnloadDialogToConset()
     mSaveCountingFPS = mParam->DE_CountingFPS;
     m_bAlignDoseFrac = m_bDEalignFrames;
   }
-  else if (mDE_Type && (mParam->CamFlags & DE_HAS_HARDWARE_BIN))
+  if (mDE_Type && (mParam->CamFlags & DE_HAS_HARDWARE_BIN))
     mCurSet->boostMag = m_bCorrectDrift ? 1 : 0;
   if (mDE_Type && (mParam->CamFlags & DE_HAS_HARDWARE_ROI))
     mCurSet->magAllShots = m_bUseHardwareROI ? 1 : 0;
