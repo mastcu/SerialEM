@@ -238,6 +238,7 @@ CSerialEMApp::CSerialEMApp()
   mActiveCamListSize = 1;
   mNumAvailCameras = 1;
   mLastCamera = 0;
+  mAssumeCamForDummy = -1;
   mInitialCurrentCamera = -1;
   mNonGIFMatchPixel = false;
   mNonGIFMatchIntensity = false;
@@ -924,6 +925,13 @@ BOOL CSerialEMApp::InitInstance()
     mScope->SetNoScope(true);
     mCamera->SetSimulationMode(true);
     mNoCameras = true;
+    if (mAssumeCamForDummy >= 0 && mAssumeCamForDummy < MAX_CAMERAS) {
+      if (mCamParams[mAssumeCamForDummy].GIF)
+        mEFTEMMode = true;
+      else if (mCamParams[mAssumeCamForDummy].STEMcamera)
+        mSTEMMode = true;
+    }
+    mInitialCurrentCamera = mAssumeCamForDummy;
   }
   if (mReopenLog)
     OnFileOpenlog();

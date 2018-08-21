@@ -108,6 +108,12 @@
           <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
+          <TD>NoCameras</TD>
+          <TD>Set to 1 if there are no cameras, to avoid trying to connect with any camera 
+            in properies.</TD>
+          <TD>&nbsp;</TD>
+        </TR>
+        <TR VALIGN="top">
           <TD>GainReferencePath</TD>
           <TD>The path to SerialEM's gain references, if it is not the system path.</TD>
           <TD>&nbsp;</TD>
@@ -519,6 +525,13 @@
             set as the current camera. Without this entry, the program will start with the 
             first camera in the active camera list, or the first nonGIF camera if that is a 
             GIF camera.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>AssumeCameraForDummy</TD>
+          <TD>The index on the CameraProperties line of the camera that should be assumed to 
+            be the current camera when the program is started with the /DUMMY command line 
+            argument.&nbsp; This entry will override &#39;InitialCurrentCamera&#39; in that case.&nbsp; 
+            Low dose parameters will be set to the EFTEM or STEM parameters if appropriate.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>KeepEFTEMstate</TD>

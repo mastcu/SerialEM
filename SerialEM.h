@@ -355,6 +355,8 @@ public:
   SetMember(BOOL, StartupInfo)
   SetMember(BOOL, ExitOnScopeError)
   void SetAdministratorMode(BOOL inVal) {mAdministrator = inVal;};
+  BOOL GetAdministratorMode() {return mAdministrator;};
+  GetMember(BOOL, Administrator);
   void SetDebugOutput(CString keys);
   BOOL ScopeHasFilter() {return mScopeHasFilter;};
   BOOL ScopeHasSTEM() {return mScopeHasSTEM;};
@@ -380,14 +382,14 @@ public:
   void CopyConSets(int inCam);
   void SetActiveCameraNumber(int inNum);
   void SetNumberOfActiveCameras(int inNum, int readIn);
-  SetMember(BOOL, RetractOnEFTEM)
+  GetSetMember(BOOL, RetractOnEFTEM)
   afx_msg LRESULT OnCommandHelp(WPARAM, LPARAM lParam);
   void SetTitleFile(CString fileName);
   BOOL LowDoseMode();
   void UpdateWindowSettings();
   BOOL StartedTiltSeries();
   BOOL DoingTiltSeries();
-  SetMember(BOOL, ActPostExposure)
+  GetSetMember(BOOL, ActPostExposure)
   BOOL ActPostExposure(ControlSet *conSet = NULL);
   BOOL DoingComplexTasks();
   GetSetMember(BOOL, SmallFontsBad)
@@ -416,7 +418,6 @@ public:
   void OnCameraParameters();
   void OnResizeMain();
   void DoResizeMain(int whichBuf = 0);
-  GetMember(BOOL, Administrator)
   GetSetMember(int, SelectedConSet)
   GetMember(int, CurrentCamera)
   GetMember(int, CurrentActiveCamera)
@@ -511,6 +512,7 @@ public:
   GetSetMember(float, RightBorderFrac);
   GetSetMember(float, BottomBorderFrac);
   GetSetMember(float, MainFFTsplitFrac);
+  GetSetMember(int, AssumeCamForDummy);
   int *GetDlgColorIndex() {return &mDlgColorIndex[0];};
   GetSetMember(bool, AbsoluteDlgIndex);
   CFont *GetLittleFont() {return &mLittleFont;};
@@ -748,6 +750,7 @@ private:
   float mMainFFTsplitFrac;      // Fraction of right-left area taken by Main with FFT open
   int mRightFrameWidth;         // difference between main and frame right edge at startup
   int mBottomFrameWidth;        // difference between main and frame bottom edge at start
+  int mAssumeCamForDummy;       // Camera to assume for dummy instance
 
 public:
   void UpdateAllEditers(void);
