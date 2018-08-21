@@ -3133,8 +3133,10 @@ void CMacroProcessor::NextCommand()
       }
 
       // Start the movement
-      mScope->MoveStage(smi, truth, false, false, truth);
-      mMovedStage = true;
+      if (smi.axisBits) {
+        mScope->MoveStage(smi, truth, false, false, truth);
+        mMovedStage = true;
+      }
     }
 
     
@@ -3152,7 +3154,7 @@ void CMacroProcessor::NextCommand()
       smi.alpha = 0.;
       smi.axisBits = axisXY;
       mScope->MoveStage(smi);
-      mMovedStage = true;
+        mMovedStage = true;
     } else {
       mWinApp->AppendToLog("Stage is not in known backlash state so RelaxStage cannot "
         "be done", mLogAction);
