@@ -70,6 +70,7 @@ public:
   GetSetMember(float, UserMaxCtfFitRes);
   GetSetMember(float, DefaultMaxCtfFitRes);
   GetSetMember(float, TestCtfPixelSize);
+  GetSetMember(float, MinCtfFitResIfPhase);
 
 // Overrides
   // ClassWizard generated virtual function overrides
@@ -152,7 +153,7 @@ private:
   float mUserMaxCtfFitRes;     // Users (setting) value of max resolution, in Angstroms
   float mDefaultMaxCtfFitRes;  // Default value if no setting
   float mTestCtfPixelSize;     // A read-in value to replace buffer value for testing
-
+  float mMinCtfFitResIfPhase;  // Minimum resolution when there is phase shift
 
 public:
   afx_msg void OnProcessMinmaxmean();

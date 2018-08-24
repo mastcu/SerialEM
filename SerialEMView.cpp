@@ -1474,6 +1474,17 @@ void CSerialEMView::OnLButtonUp(UINT nFlags, CPoint point)
               // For an FFT, run Ctffind if option selected
                 if (imX < MAX_BUFFERS && !processImg->InitializeCtffindParams(
                 &mainImBufs[imX], param)) {
+
+                  // Adjust search parameters based on options
+                  param.slower_search = processImg->GetSlowerCtfFit() > 0;
+                  param.compute_extra_stats = processImg->GetExtraCtfStats() > 0;
+                  if (processImg->GetPlatePhase() > 0.001) {
+                    param.minimum_additional_phase_shift = 
+                      param.maximum_additional_phase_shift = 
+                      (float)(processImg->GetPlatePhase() / DTOR);
+                    param.find_additional_phase_shift = true;
+                  }
+
                   processImg->SetCtffindParamsForDefocus(param, defocus, false);
 
                   // Use radii of first and second zeros to determine a smaller defocus
@@ -1491,16 +1502,6 @@ void CSerialEMView::OnLButtonUp(UINT nFlags, CPoint point)
                     if (mWinApp->mProcessImage->DefocusFromPointAndZeros(newRad, 1, 
                       param.pixel_size_of_input_image / 10.f, 0., NULL, mmDefocus))
                       ACCUM_MAX(param.minimum_defocus, (float)(mmDefocus * 10000.));
-                  }
-
-                  // Adjust search parameters based on options
-                  param.slower_search = processImg->GetSlowerCtfFit() > 0;
-                  param.compute_extra_stats = processImg->GetExtraCtfStats() > 0;
-                  if (processImg->GetPlatePhase() > 0.001) {
-                    param.minimum_additional_phase_shift = 
-                      param.maximum_additional_phase_shift = 
-                      (float)(processImg->GetPlatePhase() / DTOR);
-                    param.find_additional_phase_shift = true;
                   }
 
                   // Boost search step for big defocus ranges

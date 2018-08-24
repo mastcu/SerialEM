@@ -69,7 +69,7 @@ CProcessImage::CProcessImage()
   mPlatePhase = 0.;
   mNumFFTZeros = 5;
   mAmpRatio = 0.07f;
-  mSphericalAber = 2.;   // It is very insensitive to Cs!
+  mSphericalAber = 2.5;   // It is very insensitive to Cs!
   mKVTime = -1.;
   mFixedRingDefocus = 0.;
   mReductionFactor = 4.;
@@ -81,6 +81,7 @@ CProcessImage::CProcessImage()
   mUserMaxCtfFitRes = 0.;
   mDefaultMaxCtfFitRes = 0.;
   mTestCtfPixelSize = 0.;
+  mMinCtfFitResIfPhase = 0.;
   ctffindSetPrintFunc(ctffindPrintFunc);
   ctffindSetSliceWriteFunc(ctffindDumpFunc);
 }
@@ -407,6 +408,10 @@ void CProcessImage::OnProcessSetCtffindOptions()
     ACCUM_MAX(maxRes, 3.f);
   if (fabs(maxRes - GetMaxCtfFitRes()) > .01)
     mUserMaxCtfFitRes = maxRes;
+  if (!KGetOneFloat("This limit applies when finding phase or using fixed non-zero phase",
+    "Upper limit on minimum resolution value for fits with phase, in "
+    "Angstroms (0 for no limit):", mMinCtfFitResIfPhase, 1))
+    return;
   /*KGetOneFloat("Factor to multiply and divide clicked defocus by to set maximum and "
     "minimum defocus to search:", mCtfFitFocusRangeFac, 1);
   B3DCLAMP(mCtfFitFocusRangeFac, 0.1f, 10.f);*/
@@ -2996,7 +3001,8 @@ void CProcessImage::SetCtffindParamsForDefocus(CtffindParams &param, double defo
   FloatVec radii;
   if (!justMinRes) {
     param.minimum_defocus = (float)(10000. * B3DMAX(0.3, defocus / mCtfFitFocusRangeFac));
-    param.maximum_defocus = (float)(10000. * B3DMIN(defocus * mCtfFitFocusRangeFac, defocus + 5.));
+    param.maximum_defocus = (float)(10000. * B3DMIN(defocus * mCtfFitFocusRangeFac, 
+      defocus + 5.));
   }
   DefocusFromPointAndZeros(0., 0, param.pixel_size_of_input_image / 10.f, 0., &radii, 
     defocus);
@@ -3009,6 +3015,9 @@ void CProcessImage::SetCtffindParamsForDefocus(CtffindParams &param, double defo
   if (param.minimum_resolution > 50.)
     ACCUM_MAX(param.maximum_resolution, param.minimum_resolution / 5.f);
   ACCUM_MAX(param.maximum_resolution, GetMaxCtfFitRes());
+  if (mMinCtfFitResIfPhase > 0. && mMinCtfFitResIfPhase < param.minimum_resolution)
+    param.minimum_resolution = B3DMAX(mMinCtfFitResIfPhase, 
+    1.5f * param.maximum_resolution);
 }
 
 // Run

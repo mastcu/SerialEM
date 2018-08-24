@@ -3486,8 +3486,6 @@ void CMacroProcessor::NextCommand()
     }
     param.minimum_defocus = -(float)(10000. * itemDbl[2]);
     param.maximum_defocus = -(float)(10000. * itemDbl[3]);
-    mWinApp->mProcessImage->SetCtffindParamsForDefocus(param, 
-      0.8 * itemDbl[2] + 0.2 * itemDbl[3], true);
     param.slower_search = itemEmpty[4] || itemInt[4] == 0;
     if (!itemEmpty[5] && itemInt[5] != 0) {
       if (itemInt[5] < 128 || itemInt[5] > 640)
@@ -3517,6 +3515,8 @@ void CMacroProcessor::NextCommand()
         param.known_astigmatism_angle = 0.;
       }
     }
+    mWinApp->mProcessImage->SetCtffindParamsForDefocus(param, 
+      0.8 * itemDbl[2] + 0.2 * itemDbl[3], true);
     param.compute_extra_stats = true;
     if (mWinApp->mProcessImage->RunCtffind(&mImBufs[index], param, resultsArray))
       ABORT_LINE("Ctffind fitting returned an error for line:\n\n");

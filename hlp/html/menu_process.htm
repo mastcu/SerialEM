@@ -157,11 +157,13 @@
       the outer two circles it will always refine based on one of those two circles.&nbsp; 
       Click in one of the corners or very near the middle of the FFT to remove the circles.</P>
     <P>The defocus is computed using the voltage determined from the microscope, an 
-      objective lens spherical aberration value of 2 mm, and an amplitude contrast 
+      objective lens spherical aberration value of 2.5 mm and an amplitude contrast 
       ratio of 0.07.&nbsp; The property &#39;FFTZeroParams&#39; can be used to modify these 
       parameters or the number of circles drawn, but this is not essential.&nbsp; The 
       estimated defocus is quite insensitive to the value of the spherical aberration.&nbsp; 
-      The amplitude contrast ratio affects mostly the position of the first circle, so 
+      The default aberration was changed from 2.0 to 2.5 in SerialEM 3.7 (8/24/18)&nbsp;to 
+      be about midway between the true value for Tecnai/Polara (2.26 mm) and the value 
+      of 2.7 for Krios, Talos, and Glacios.&nbsp; The amplitude contrast ratio affects mostly the position of the first circle, so 
       an estimate refined from higher order circles will also be insensitive to this 
       parameter.</P>
     <P>The equations used currently give invalid results for higher-order zeros at a 
@@ -241,7 +243,7 @@
     <P><A NAME="hid_process_setctffindoptions"></A><B>Set Ctffind Options command (Process 
           menu)</B></P>
     <P>Use this command to set some parameters for fitting with the Ctffind module.&nbsp; 
-      There will be four entry boxes:</P>
+      There will be five entry boxes:</P>
     <ol>
       <li>Enter 1 to do the extra computations needed to determine the resolution to 
         which the Thon rings can be fit, or 0 not to.&nbsp; These computations will 
@@ -267,6 +269,15 @@
         where Thon rings may never approach this resolution, a higher value may be 
         needed here or in the properties file.&nbsp; If you click in an FFT with the middle mouse button, the 
         status bar will show the resolution (&#39;Period&#39;) at that frequency.</li>
+      <li>Enter a limiting value to the minimum resolution in Angstroms for fitting when 
+        phase is non-zero.&nbsp; This limit applies either when a constant phase shift 
+        is assumed or when the phase is being found in a fit with the &#39;Ctffind&#39; script 
+        command.&nbsp; This limit provides a maximum value for the minimum resolution 
+        and can be used to exclude the first zero from fitting, since its position may 
+        be off due to a gradual cut-on in the phase shift at low frequencies.&nbsp; 
+        However, the minimum resolution may end up being higher than this limit since it 
+        is also constrained to be least 1.5 times the maximum resolution used for a 
+        particular fit.&nbsp; Enter 0 for no limit.</li>
     </ol>
     <p>
       All fits are done with a box size of 256 for speed, and because high accuracy at 
