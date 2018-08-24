@@ -2407,6 +2407,7 @@ void CCameraSetupDlg::OnAlignDoseFrac()
 void CCameraSetupDlg::OnKillfocusEditFrameTime() 
 {
   UpdateData(TRUE);
+  float startFrame = m_fFrameTime;
   if (mParam->K2Type)
     mCamera->ConstrainFrameTime(m_fFrameTime, mParam->K2Type);
   if (m_bSaveFrames && m_bSaveK2Sums)
@@ -2414,6 +2415,8 @@ void CCameraSetupDlg::OnKillfocusEditFrameTime()
       0, m_eExposure, m_fFrameTime, mUserFrameFrac, mUserSubframeFrac, false);
   if (mParam->K2Type)
     m_fFrameTime = RoundedDEframeTime(m_fFrameTime);
+  if (fabs(startFrame - m_fFrameTime) > 1.e-5)
+    UpdateData(false);
   ManageExposure();
   ManageK2SaveSummary();
 }
