@@ -1265,6 +1265,11 @@
         correct name for an unbinned (&#39;x1&#39;) DM gain reference and that either the 
         general property &#39;DigitalMicrographReferencePath&#39; or &#39;DMRemoteReferencePath&#39; is 
         correctly set (presumably to &#39;C:\ProgramData\Gatan\Reference Images&#39;).</li>
+      <li>In SerialEM 3.7 (as of 8/24/18) TIFF files are saved as &#39;big TIFF&#39; so that 
+        files bigger than 4 GB can be written.&nbsp; This format cannot be read by 
+        version 3 of libtiff.&nbsp; If this causes a problem in some other software, you 
+        can override this behavior by setting an environment variable 
+        &#39;IMOD_ALL_BIG_TIFF&#39; to 0.</li>
       <li>To make frames be saved in packed format by default, add the general property 
         &#39;K2PackRawFramesDefault&nbsp; 1&#39;.&nbsp;&nbsp; Users can have their own settings for this choice.</li>
       <li>Making counts match between linear and counting mode requires different 
