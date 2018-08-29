@@ -641,6 +641,15 @@
             &#39;EarlyReturnNextShot&#39;.</TD>
         </TR>
         <TR>
+          <TD class="style8">FrameThresholdNextShot #</TD>
+          <TD>Skip saving frames whose mean value is below the given threshold in the next 
+            shot&nbsp; from a K2 camera.&nbsp; The mean value used for comparison with
+            the threshold will be the value that the frame would have after saving, thus 
+            a scaled electron count value when taking normalized frames or actual electron
+            counts otherwise.&nbsp; The first and last frame will be saved 
+            regardless.&nbsp; The SEMCCD plugin must be dated 8/28/18 or later.</TD>
+        </TR>
+        <TR>
           <TD class="style8">RecordAndTiltUp</TD>
           <TD>Starts a Record acquisition and tilts the stage up by the current increment 
             after the exposure is expected to be done.&nbsp; Post-exposure actions must be 

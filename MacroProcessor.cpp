@@ -224,7 +224,8 @@ enum {CME_VIEW, CME_FOCUS, CME_TRIAL, CME_RECORD, CME_PREVIEW,
   CME_LOADNAVMAP, CME_LOADOTHERMAP,CME_REPORTLENSFLCSTATUS, CME_TESTNEXTMULTISHOT,
   CME_ENTERSTRING, CME_COMPARESTRINGS, CME_COMPARENOCASE, CME_REPORTNEXTNAVACQITEM,
   CME_REPORTNUMTABLEITEMS, CME_CHANGEITEMCOLOR, CME_CHANGEITEMLABEL,CME_STRIPENDINGDIGITS,
-  CME_MAKEANCHORMAP, CME_STAGESHIFTBYPIXELS, CME_REPORTPROPERTY, CME_SAVENAVIGATOR
+  CME_MAKEANCHORMAP, CME_STAGESHIFTBYPIXELS, CME_REPORTPROPERTY, CME_SAVENAVIGATOR,
+  CME_FRAMETHRESHOLDNEXTSHOT
 };
 
 static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0},
@@ -339,6 +340,7 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"ReportNextNavAcqItem", 0, 0}, {"ReportNumTableItems", 0, 0}, {"ChangeItemColor", 2, 0},
 {"ChangeItemLabel", 2, 0}, {"StripEndingDigits", 2, 0}, {"MakeAnchorMap", 0, 0}, 
 {"StageShiftByPixels", 2, 0}, {"ReportProperty", 1, 0}, {"SaveNavigator", 0, 0},
+{"FrameThresholdNextShot", 1, 0},
 {NULL, 0, 0}
 };
 
@@ -1732,6 +1734,9 @@ void CMacroProcessor::NextCommand()
       AbortMacro();
       return;
     }
+
+  } else if (CMD_IS(FRAMETHRESHOLDNEXTSHOT)) {              // FrameThresholdNextShot
+    mCamera->SetNextFrameSkipThresh((float)itemDbl[1]);
 
   } else if (CMD_IS(RETRACTCAMERA)) {                       // RetractCamera
 

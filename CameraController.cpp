@@ -365,6 +365,7 @@ CCameraController::CCameraController()
   mNeedToSelectDM = false;
   mNextAsyncSumFrames = -1;
   mLastAsyncTimeout = 0;
+  mNextFrameSkipThresh = 0.;
   mK2MaxRamStackGB = 12.;
   mK2MinFrameForRAM = 0.05f;
   mBaseJeolSTEMflags = 0;
@@ -2353,6 +2354,7 @@ void CCameraController::Capture(int inSet, bool retrying)
   // Finally the one-shot flag can be cleared since we are done leaving and coming back
   mNextAsyncSumFrames = -1;
   mDeferSumOnNextAsync = false;
+  mNextFrameSkipThresh = 0.;
    
   // Set up Falcon saving
   mTD.FEIacquireFlags = 0;
@@ -3638,6 +3640,8 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
       mK2GainRefTimeStamp[DMind][isSuperRes ? 1 : 0] = 
         mWinApp->MinuteTimeStamp();
   }
+  if (mNextFrameSkipThresh > 0.)
+    flags |= K2_SKIP_BELOW_THRESH;
 
   // For new K2 API, determine whether to do asynchronous to RAM and how many
   // frames to grab into stack
@@ -3662,7 +3666,7 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
     // If forming a full sum, there is no grab stack and usage is limited by 
     // the original RAM stack; otherwise (early return) it is limited by the 
     // size of the grabbed frames
-    if (mNextAsyncSumFrames < 0)
+    if (mNextAsyncSumFrames < 0 || mNextFrameSkipThresh > 0.)
       maxInRAM = (int)(maxMemory / frameInRAM);
     else
       maxInRAM = (int)B3DMAX(1., (maxMemory / frameInGrab));
@@ -3674,7 +3678,7 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
       alignFlags |= K2_ASYNC_IN_RAM;
     } else
       frameInRAM = 0.;
-    if (mNextAsyncSumFrames >= 0) {
+    if (mNextAsyncSumFrames >= 0 && mNextFrameSkipThresh <= 0.) {
       numGrab = B3DMIN(numFrames, maxInRAM);
       numAsyncSum += 65536. * numGrab;
     }
@@ -3683,7 +3687,8 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
   try {
     if (saving)
       MainCallGatanCamera(SetupFileSaving2(mParam->rotationFlip, mOneK2FramePerFile, 
-      pixel, flags, numAsyncSum, 0., 0., 0., nameSize, (long *)names, &setupErr));
+        pixel, flags, numAsyncSum, mNextFrameSkipThresh, 0., 0., nameSize, (long *)names, 
+        &setupErr));
     if (aligning) {
       MainCallGatanCamera(SetupFrameAligning(
         mFalconHelper->GetFrameAlignBinning(faParam, frameSizeX, frameSizeY),
@@ -8287,6 +8292,7 @@ void CCameraController::ErrorCleanup(int error)
   mSettling = -1;
   mLDwasSetToArea = -1;
   mNextAsyncSumFrames = -1;
+  mNextFrameSkipThresh = 0.;
   mTD.NumAsyncSumFrames = -1;
   mDeferSumOnNextAsync = false;
   mStartingDeferredSum = false;

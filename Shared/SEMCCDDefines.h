@@ -37,6 +37,7 @@ WRITE_COM_ERROR, OPEN_MDOC_ERROR, WRITE_MDOC_ERROR, COPY_MDOC_ERROR, FRAMEALI_BA
 #define K2_SAVE_TIMES_100      (1 << 15)
 #define K2_MRCS_EXTENSION      (1 << 16)
 #define K2_SAVE_SUPER_REDUCED  (1 << 17)
+#define K2_SKIP_BELOW_THRESH   (1 << 18)
 
 // Flags for SetK2Parameters
 #define K2_ANTIALIAS_MASK      7

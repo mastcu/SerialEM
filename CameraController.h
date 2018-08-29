@@ -436,6 +436,7 @@ class DLL_IM_EX CCameraController
   GetMember(double, LastImageTime);
   GetSetMember(int, WaitingForStacking);
   bool SetNextAsyncSumFrames(int inVal, bool deferSum);
+  SetMember(float, NextFrameSkipThresh);
   GetSetMember(float, K2MaxRamStackGB);
   SetMember(bool, CancelNextContinuous);
   void SetTaskWaitingForFrame(bool inVal) {mTaskFrameWaitStart = inVal ? GetTickCount() : -1.;};
@@ -768,6 +769,7 @@ class DLL_IM_EX CCameraController
   DWORD mLastAsyncTimeout;      // timeout for last async shot
   double mAsyncTickStart;       // time it started
   float mLastAsyncExpTime;      // Just the exposure time of last async shot
+  float mNextFrameSkipThresh;   // Threahold for skipping frames on next shot
   float mK2MaxRamStackGB;       // Maximum GB to allow for a RAM stack/grab stack
   float mK2MinFrameForRAM;      // Minimum frame time for using RAM stack
   int mBaseJeolSTEMflags;       // Basic flags to which div by 2 and continuous are added
