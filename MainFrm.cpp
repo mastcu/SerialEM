@@ -23,6 +23,7 @@
 #include "NavHelper.h"
 #include "FalconHelper.h"
 #include "ProcessImage.h"
+#include "XFolderDialog\XWinVer.h"
 
 #include ".\MainFrm.h"
 
@@ -34,6 +35,7 @@ static char THIS_FILE[] = __FILE__;
 
 #define DIALOG_TOP_OFFSET 46
 #define DIALOG_LEFT_OFFSET 4
+#define WIN10_LEFT_OFFSET 10
 #define DIALOG_CLOSED_HEIGHT 19
 #define MIN_WIDTH_FOR_EXIT 800
 
@@ -75,6 +77,8 @@ CMainFrame::CMainFrame()
   mDialogTable = NULL;
   m_nTimer = 0;
   mDialogOffset = 0;
+  mLeftDialogOffset = IsVersion(10, VER_GREATER_EQUAL, 0, VER_GREATER_EQUAL) ?
+    WIN10_LEFT_OFFSET : DIALOG_LEFT_OFFSET;
 }
 
 CMainFrame::~CMainFrame()
@@ -296,7 +300,7 @@ void CMainFrame::SetDialogPositions()
     return;
 
   GetWindowRect(&rect);
-  xoff = rect.left + DIALOG_LEFT_OFFSET;
+  xoff = rect.left + mLeftDialogOffset;
   yoff = rect.top + (mDialogOffset ? mDialogOffset : DIALOG_TOP_OFFSET);
   
   // If the toolbar is on, add its height

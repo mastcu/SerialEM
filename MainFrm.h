@@ -75,6 +75,7 @@ private:
 	UINT m_nTimer;
 	CSerialEMApp *mWinApp;
   int mDialogOffset;
+  int mLeftDialogOffset;
 public:
   void NewWindow(void);
 };
