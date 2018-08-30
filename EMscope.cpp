@@ -727,7 +727,7 @@ int CEMscope::Initialize()
       mJeolSD.highFlagsNew = JUPD_CURRENT | JUPD_INTENSITY | JUPD_FOCUS;
       if (mJeolSD.usePLforIS )
         mJeolSD.highFlagsNew |= JUPD_IS;
-      if (mScreenByEvent && mReportsLargeScreen) {
+      if (!mScreenByEvent && mReportsLargeScreen) {
         mJeolSD.lowFlagsNew = JUPD_SCREEN;
         if (mReportsSmallScreen)
           mJeolSD.lowFlagsNew |= JUPD_SMALL_SCREEN;
