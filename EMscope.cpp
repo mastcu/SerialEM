@@ -965,7 +965,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
   int lastMag;
   float alpha = -999.;
   double diffFocus = -999.;
-  double wallStart, wallTimes[12];
+  double wallStart, wallTimes[12] = {0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.};
   bool reportTime = GetDebugOutput('u') && (mAutosaveCount % 10 == 0);
 
   if (reportTime)

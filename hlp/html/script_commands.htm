@@ -51,10 +51,15 @@
       <P>The script processor is case-insensitive; you can enter commands as ALLCAPS or 
         alllowercase, but for readability it is helpful to use MixedCase as in the 
         table. Completing a command by typing tab or ` will convert it to MixedCase.&nbsp; 
-        In the table, brackets around an entry indicate that the entry is optional; do 
-        not include the brackets in your script.&nbsp; In every case, the &#39;#&#39; symbols or 
-        letters after a command should be replaced by an actual numeric or other entry.&nbsp; 
-        </P>
+        In the table, the &#39;#&#39; symbols or letters after a command should be replaced by 
+        an actual numeric or other entry.&nbsp;&nbsp; Brackets around an entry indicate 
+        that the entry is optional; do not include the brackets in your script. When 
+        there are multiple optional entries, there needs to be an entry for every one up 
+        to the last one that you want to enter.&nbsp; If there are several entries 
+        within one set of brackets, they must all be entered if any of them are desired.&nbsp; 
+        For example, &#39;RealignToNavItem #r [#c] [#s #n #z]&#39; must have at least one entry, 
+        and can have 2 or 5, such as &#39;RealignToNavItem 0&#39;, &#39; RealignToNavItem 0 1&#39;, or 
+        &#39;RealignToNavItem 0 0 0.3 2 0&#39;.</P>
     <P>Commands starting with &#39;Report...&#39; will assign output to one or more variable 
         names listed after the command (omitting the &#39;$&#39;), except where the table notes 
         otherwise.&nbsp; For other commands, the table explicitly states when they 
