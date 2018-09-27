@@ -225,7 +225,8 @@ enum {CME_VIEW, CME_FOCUS, CME_TRIAL, CME_RECORD, CME_PREVIEW,
   CME_ENTERSTRING, CME_COMPARESTRINGS, CME_COMPARENOCASE, CME_REPORTNEXTNAVACQITEM,
   CME_REPORTNUMTABLEITEMS, CME_CHANGEITEMCOLOR, CME_CHANGEITEMLABEL,CME_STRIPENDINGDIGITS,
   CME_MAKEANCHORMAP, CME_STAGESHIFTBYPIXELS, CME_REPORTPROPERTY, CME_SAVENAVIGATOR,
-  CME_FRAMETHRESHOLDNEXTSHOT
+  CME_FRAMETHRESHOLDNEXTSHOT, CME_QUEUEFRAMETILTSERIES, CME_FRAMESERIESFROMVAR,
+  CME_WRITEFRAMESERIESANGLES
 };
 
 static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0},
@@ -340,7 +341,8 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"ReportNextNavAcqItem", 0, 0}, {"ReportNumTableItems", 0, 0}, {"ChangeItemColor", 2, 0},
 {"ChangeItemLabel", 2, 0}, {"StripEndingDigits", 2, 0}, {"MakeAnchorMap", 0, 0}, 
 {"StageShiftByPixels", 2, 0}, {"ReportProperty", 1, 0}, {"SaveNavigator", 0, 0},
-{"FrameThresholdNextShot", 1, 0},
+{"FrameThresholdNextShot", 1, 0}, {"QueueFrameTiltSeries", 3}, {"FrameSeriesFromVar", 2},
+{"WriteFrameSeriesAngles", 1, 0},
 {NULL, 0, 0}
 };
 
@@ -1737,6 +1739,134 @@ void CMacroProcessor::NextCommand()
 
   } else if (CMD_IS(FRAMETHRESHOLDNEXTSHOT)) {              // FrameThresholdNextShot
     mCamera->SetNextFrameSkipThresh((float)itemDbl[1]);
+
+                                              // QueueFrameTiltSeries, FrameSeriesFromVar
+  } else if (CMD_IS(QUEUEFRAMETILTSERIES) || CMD_IS(FRAMESERIESFROMVAR)) {
+    FloatVec openTime, tiltToAngle, waitOrInterval, focusChange, deltaISX, deltaISY;
+
+    // Get matrix for image shift conversion
+    index = mWinApp->LowDoseMode() ? ldParam[RECORD_CONSET].magIndex : 
+      mScope->GetMagIndex();
+    aMat = MatMul(MatInv(mShiftManager->CameraToSpecimen(index)), 
+      mShiftManager->CameraToIS(index));
+
+    // Set up series based on specifications
+    if (CMD_IS(QUEUEFRAMETILTSERIES)) {
+      delISX = itemEmpty[4] ? 0. : itemDbl[4];
+      for (index = 0; index < itemInt[3]; index++) {
+        tiltToAngle.push_back((float)(itemDbl[1] + itemDbl[2] * index));
+        if (!itemEmpty[5])
+          openTime.push_back((float)itemDbl[5]);
+        if (!itemEmpty[6])
+          waitOrInterval.push_back((float)itemDbl[6]);
+        if (!itemEmpty[7])
+          focusChange.push_back((float)(itemDbl[7] * index));
+        if (!itemEmpty[9]) {
+          deltaISX.push_back((float)((itemDbl[8] * aMat.xpx + itemDbl[9] * aMat.xpy) * 
+            index));
+          deltaISY.push_back((float)((itemDbl[8] * aMat.ypx + itemDbl[9] * aMat.ypy) * 
+            index));
+        }
+      }
+    
+    } else {
+
+      // Or pull the values out of the big variable array: figure out how many per step
+      delISX = itemEmpty[3] ? 0. : itemDbl[3];
+      var = LookupVariable(item1upper, index2);
+      if (!var)
+        ABORT_LINE("The variable " + strItems[1] + " is not defined in line:\n\n");
+      index = 0;
+      if (itemInt[2] > 31 || itemInt[2] < 1)
+        ABORT_LINE("The entry with flags must be between 1 and 31 in line:\n\n");
+      if (itemInt[2] & 1)
+        index++;
+      if (itemInt[2] & 2)
+        index++;
+      if (itemInt[2] & 4)
+        index++;
+      if (itemInt[2] & 8)
+        index++;
+      if (itemInt[2] & 16)
+        index += 2;
+      if (var->numElements % index) {
+        report.Format("Variable %s has %d elements, not divisible by the\n"
+          "%d values per step implied by the flags entry of %d", strItems[1], 
+          var->numElements, index, itemInt[2]);
+        ABORT_NOLINE(report);
+      }
+
+      // Load the vectors
+      iy0 = 1;
+      for (ix0 = 0; ix0 < var->numElements / index; ix0++) {
+        if (itemInt[2] & 1) {
+          FindValueAtIndex(var, iy0, ix1, iy1);
+          report = var->value.Mid(ix1, iy1 - ix1);
+          tiltToAngle.push_back((float)atof((LPCTSTR)report));
+          iy0++;
+        }
+        if (itemInt[2] & 2) {
+          FindValueAtIndex(var, iy0, ix1, iy1);
+          report = var->value.Mid(ix1, iy1 - ix1);
+          openTime.push_back((float)atof((LPCTSTR)report));
+          iy0++;
+        }
+        if (itemInt[2] & 4) {
+          FindValueAtIndex(var, iy0, ix1, iy1);
+          report = var->value.Mid(ix1, iy1 - ix1);
+          waitOrInterval.push_back((float)atof((LPCTSTR)report));
+          iy0++;
+        }
+        if (itemInt[2] & 8) {
+          FindValueAtIndex(var, iy0, ix1, iy1);
+          report = var->value.Mid(ix1, iy1 - ix1);
+          focusChange.push_back((float)atof((LPCTSTR)report));
+          iy0++;
+        }
+        if (itemInt[2] & 16) {
+          FindValueAtIndex(var, iy0, ix1, iy1);
+          report = var->value.Mid(ix1, iy1 - ix1);
+          delX = atof((LPCTSTR)report);
+          iy0++;
+          FindValueAtIndex(var, iy0, ix1, iy1);
+          report = var->value.Mid(ix1, iy1 - ix1);
+          delY = atof((LPCTSTR)report);
+          deltaISX.push_back((float)(delX * aMat.xpx + delY * aMat.xpy));
+          deltaISY.push_back((float)(delX * aMat.ypx + delY * aMat.ypy));
+          iy0++;
+        }
+      }
+    }
+
+    // Queue it: This does all the error checking
+    if (mCamera->QueueTiltSeries(openTime, tiltToAngle, waitOrInterval, focusChange, 
+      deltaISX, deltaISY, (float)delISX)) {
+        AbortMacro();
+        return;
+    }
+
+  } else if (CMD_IS(WRITEFRAMESERIESANGLES)) {              // WriteFrameSeriesAngles
+    FloatVec angles;
+    mCamera->GetFrameTSactualAngles(angles);
+    if (!angles.size())
+      ABORT_NOLINE("There are no angles available from a frame tilt series");
+    mWinApp->mParamIO->StripItems(strLine, 1, strCopy);
+    CString message = "Error opening file ";
+    CStdioFile *csFile = NULL;
+    try {
+      csFile = new CStdioFile(strCopy, CFile::modeCreate | CFile::modeWrite | 
+        CFile::shareDenyWrite);
+      message = "Writing angles to file ";
+      for (index = 0; index < (int)angles.size(); index++) {
+        report.Format("%.2f\n", angles[index]);
+        csFile->WriteString((LPCTSTR)report);
+      }
+    }
+    catch (CFileException *perr) {
+      perr->Delete();
+      ABORT_NOLINE(message + strCopy);
+    } 
+    delete csFile;
 
   } else if (CMD_IS(RETRACTCAMERA)) {                       // RetractCamera
 

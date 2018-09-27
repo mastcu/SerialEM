@@ -7045,8 +7045,11 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
         }
 
         // record focus and IS if changing them
-        if (doISinTS)
+        if (doISinTS) {
           td->scopePlugFuncs->GetImageShift(&baseISX, &baseISY);
+          td->scopePlugFuncs->SetImageShift(baseISX + td->FrameTSdeltaISX[0],
+            baseISY + td->FrameTSdeltaISY[0]);
+        }
         if (doFocusInTS) {
           if (!JEOLscope) {
             focusBase = 1.e6 * td->scopePlugFuncs->GetDefocus();
@@ -7055,6 +7058,8 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
             coarseBase = td->JeolSD->objective;
             last_coarse = coarseBase;
           }
+          ChangeDynFocus(td, focusBase, td->FrameTSfocusChange[0],
+            fineBase, coarseBase, last_coarse);
         }
 
         // Wait for initial delay
