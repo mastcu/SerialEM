@@ -467,7 +467,7 @@ void CCameraSetupDlg::SetAdjustedSize(int deltaX, int deltaY)
     update = true;
   }
   if (Top - deltaY >= 0 && Bottom + deltaY <= mCameraSizeY &&
-    2 * deltaY + Bottom - Top >= 16) {
+    2 * deltaX + Bottom - Top >= 16) {
     m_eTop -= deltaY / mCoordScaling;
     m_eBottom += deltaY / mCoordScaling;
     update = true;

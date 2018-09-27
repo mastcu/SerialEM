@@ -3,10 +3,6 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
-9/24/18: SEM_3-6-22
-9/24/18: Fixed image rastering problem with K2 in early return unaligned
-partial sum when aligning frames (In 3.6).
-
 9/7/18: Made installer detect that GMS is 64-bit from files ending in _64.* or
 _x64.* in Licenses directory (In 3.6).
 
