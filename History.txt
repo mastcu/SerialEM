@@ -3,6 +3,16 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+9/27/18: Added ability to tilt in steps, shutter the beam, and optionally
+change focus or image shift during an acquisition that saves frames. Added
+script commands: to set this up for regular tilts or for ones specified in an
+array variable that can be read from a text file; to save a file with actual
+tilt angles; to give the K2 camera a threshold below which it will skip saving
+frames.
+
+9/27/18: Added dose per frame line to camera setup dialog.
+
+9/27/18: Initial changes to support Tietz XF416.
 9/24/18: SEM_3-6-22
 9/24/18: Fixed image rastering problem with K2 in early return unaligned
 partial sum when aligning frames (In 3.6).
