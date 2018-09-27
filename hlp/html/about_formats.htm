@@ -582,7 +582,8 @@
       <TD class="style10">Integer</TD>
       <TD class="style7">Req if Map</TD>
       <TD class="style8">mMapBinning</TD>
-      <TD class="style9">Binning at which map was taken or of initial map image</TD>
+      <TD class="style9">Binning at which map was taken, or of initial overview map image 
+        for montage</TD>
     </TR>
     <TR VALIGN="top">
       <TD>MapMagInd</TD>
@@ -603,14 +604,16 @@
       <TD class="style10">Four Floats</TD>
       <TD class="style7">Req if Map</TD>
       <TD class="style8">mMapScaleMat</TD>
-      <TD class="style9">Scale matrix for drawing</TD>
+      <TD class="style9">Stage to pixel scale matrix for drawing, based on pixels of 
+        initial map image.&nbsp; For montage, needs to be adjusted by ratio of currently 
+        loaded map width/height to initial map width/height</TD>
     </TR>
     <TR VALIGN="top">
       <TD>MapWidthHeight</TD>
       <TD class="style10">Two Integers</TD>
       <TD class="style7">Req if Map</TD>
       <TD class="style8">mMapWidth/Height</TD>
-      <TD class="style9">Size of image at which scale matrix was defined</TD>
+      <TD class="style9">Size of initial map image at which scale matrix was defined</TD>
     </TR>
     <TR VALIGN="top">
       <TD>MapMinMaxScale</TD>

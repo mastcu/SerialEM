@@ -1066,7 +1066,8 @@
             15 for XF416<br />
             Entries of 8, 11, 12, and 13 imply a 
             RestrictedSizeType of 4. For these cameras, make CameraSizeX and Y be the full 
-            size of 8200, 4100, or 2050, respectively, not 8192, 4096, or 2048.</TD>
+            size of 8200, 4100, or 2050, respectively, not 8192, 4096, or 2048.&nbsp; Entry 
+            15 implies a RestrictedSizeType of 9.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>AMTcameraType</TD>
@@ -1102,17 +1103,20 @@
         </TR>
         <TR VALIGN="top">
           <TD>RotationAndFlip</TD>
-          <TD>This entry is used for STEM cameras and K2 and Falcon cameras. For a STEM camera, use it 
+          <TD>This entry is used for STEM cameras and K2 and Falcon cameras, as well as for 
+            DE cameras with a server version of 1.0.1243 or higher. <i>For a STEM camera</i>, use it 
             to indicate whether to rotate and flip images after acquisition to make them 
             match image orientation on the screen and other cameras.&nbsp; The value is the sum 
             of 0-3 for the number of 90 degree rotations counterclockwise (e.g., 3 for 90 
             degrees clockwise) plus 4 for flipping around the Y axis before the rotation.&nbsp; 
-            Set this before doing any calibrations that rely on image orientation. For a K2 
-            camera, this entry indicates operations to be applied to dose fractionation 
+            Set this before doing any calibrations that rely on image orientation. <i>For a K2 
+            camera</i>, this entry indicates operations to be applied to dose fractionation 
             images returned to SerialEM and to frames saved from the plugin by default.&nbsp; 
             Even if frames are being saved without rotation and flip, the correct entry is
-            needed here to keep DM from applying its own rotation.&nbsp; For a 
-            Falcon camera, the indicated operation is applied to intermediate frames.</TD>
+            needed here to keep DM from applying its own rotation.&nbsp; <i>For a 
+            Falcon camera</i>, the indicated operation is applied to intermediate frames.&nbsp;
+            <i>For a DE camera</i>, the operation is applied after aligning saved frames; it 
+            should match the operation being done to images in the DE server. </TD>
         </TR>
         <TR VALIGN="top">
           <TD>DMRotationAndFlip</TD>
@@ -1140,8 +1144,8 @@
         </TR>
         <TR VALIGN="top">
           <TD>UseContinuousMode</TD>
-          <TD>The entry can enable use of a fast continuous acquisition mode for a Gatan or 
-            Direct Electron 
+          <TD>The entry can enable use of a fast continuous acquisition mode for a Gatan, 
+            Direct Electron, or plugin 
             camera where this mode is not enabled by default, or to modify or disable use of 
             the mode if default parameters are available.&nbsp; For a Gatan camera, follow with up to 4 numbers: 
             1 to use the mode or 0 not to; 1 to specify continuous readout or 0 not to; a 
@@ -1153,7 +1157,10 @@
             the two halves, unless using a quality level where it is not needed.&nbsp; For a 
             DE camera, the use of live mode is specified by the first parameter, and the use 
             of a separate thread that acquires in parallel with the display operations is 
-            specified by the second parameter; both values are set to 1 by default.</TD>
+            specified by the second parameter; both values are set to 1 by default.&nbsp; 
+            For a plugin camera, just the first parameter is used to indicate that a 
+            continuous mode should be used; theplugin must have the function StopContinuous 
+            as well.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>BoundaryBetweenHalves</TD>
@@ -1169,7 +1176,9 @@
           <TD>Set to 1 if acquisitions are restricted to full, half and quarter centered 
             images. Set to 2 if subarea acquisitions simply do not work; this will set 
             SubareasAreBad to 2. Set to 3 if subareas must be centered. Set to 4 for Tietz 
-            cameras with 1024-block readout on 1025-pixel boundaries.  Set to 8 for DigiScan.</TD>
+            cameras with 1024-block readout on 1025-pixel boundaries.  Set to 8 for DigiScan.&nbsp; 
+            Set to 9 for a Tietz XF416 camera, which allows sizes of 256, 512, 1024, 2048, 
+            3072, and 4096 starting at any multiple of 256.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>TaskTargetSize</TD>
@@ -1188,8 +1197,16 @@
         </TR>
         <TR VALIGN="top">
           <TD>TietzGainIndex</TD>
-          <TD>Gain index to use for a Tietz camera. This is not the gain itself but a number 
-            between 1 and the number of gains available. The default is 1.</TD>
+          <TD>Gain index to use for a Tietz camera. This is not the gain itself but 
+            generally a number 
+            between 1 and the number of gains available, which is obtained from the camera 
+            interface. The default is 1.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>LowestGainIndex</TD>
+          <TD>Minimum value of the gain index.&nbsp; If it is not 1 (the default), then the 
+            gain index is constrained to be between this number and this number plus the 
+            number of gains minus 1.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>TietzImageGeometry</TD>
@@ -1199,8 +1216,8 @@
         </TR>
         <TR VALIGN="top">
           <TD>DMGainReferenceName</TD>
-          <TD>The full name of this camera's DM gain reference, including spaces and .dm3 or 
-            .dm4.</TD>
+          <TD>The full name of this camera&#39;s DM gain reference, including spaces and .dm3 or 
+            .dm4, but not the path.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>CameraSizeX</TD>

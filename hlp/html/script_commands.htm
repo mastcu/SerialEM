@@ -655,6 +655,43 @@
             regardless.&nbsp; The SEMCCD plugin must be dated 8/28/18 or later.</TD>
         </TR>
         <TR>
+          <TD class="style8">QueueFrameTiltSeries #S #I #N [#D] [#O] [#W] [#F] [#X #Y]</TD>
+          <TD>Sets up a tilt series with discrete tilts and other uniform changes to occur 
+            during the next shot, provided frames are saved.&nbsp; Follow with starting 
+            angle (#S), increment (#I) and number of tilt steps (#N), plus optional entries 
+            #D for the initial delay before starting the starts, #O for the time the beam 
+            should be unblanked, #W for time to wait between tilting and unblanking, #F for 
+            a change in focus per step, #X and #Y for a change in image shift values for 
+            each step.&nbsp; Image shift values are in microns in &#39;specimen&#39; coordinates, 
+            i.e. with the X axis along the tilt axis, and they will be converted to image 
+            shift units at the Record magnification if in Low Dose mode, or at the current 
+            magnification if not.&nbsp;&nbsp; All times are in seconds.</TD>
+        </TR>
+        <TR>
+          <TD class="style8">FrameSeriesFromVar var #F [#D]</TD>
+          <TD>Sets up a tilt series with all steps specified in the given array variable, 
+            which should contain 1 to 6 values per step of the series, with the values for 
+            one step followed by those for the next step, etc.&nbsp; #F is the sum of 1 if 
+            there are tilt angles, 2 if there are shutter open times, 4 if thereare&nbsp; 
+            wait times or intervals between steps, 8 if there are changes in defocus from 
+            the current value, and 16 if there are image shift changes from the current 
+            value.&nbsp; In the latter case there would be values for X and Y in microns in&nbsp; 
+            &#39;specimen&#39; coordinates, i.e. with the X axis along the tilt axis.&nbsp; The 
+            shifts will be converted to image shift units at the Record magnification if in 
+            Low Dose mode, or at the current magnification if not.&nbsp; The values must be 
+            present in the order just listed.&nbsp; If there are tilt angles, then the third 
+            item (wait times or intervals) is a delay between the end of the tilt and the 
+            opening of the shutter, if any.&nbsp; If there are no tilt angles because 
+            continuous tilt is being used, then this item sets the total interval between 
+            steps of the series.&nbsp; #D is an optional initial delay before the first 
+            step.&nbsp; All times are in seconds.</TD>
+        </TR>
+        <TR>
+          <TD class="style8">WriteFrameSeriesAngles file</TD>
+          <TD>Write the actual tilt angles from the last frame tilt series to the given 
+            file, one per line.</TD>
+        </TR>
+        <TR>
           <TD class="style8">RecordAndTiltUp</TD>
           <TD>Starts a Record acquisition and tilts the stage up by the current increment 
             after the exposure is expected to be done.&nbsp; Post-exposure actions must be 
