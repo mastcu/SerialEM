@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+9/7/18: Made installer detect that GMS is 64-bit from files ending in _64.* or
+_x64.* in Licenses directory (In 3.6).
+
 8/29/18: Fixed control panel positions for Windows 10.
 
 8/24/18: Made SerialEMCCD plugin open all TIFF files as big TIFF to be able

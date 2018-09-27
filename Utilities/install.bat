@@ -288,6 +288,14 @@ dir C:\ProgramData\Gatan\Licenses\*64-Bit* > nul 2>&1
 IF %ERRORLEVEL% EQU 0 (
   set BIT64=1
 )
+dir C:\ProgramData\Gatan\Licenses\*_x64.* > nul 2>&1
+IF %ERRORLEVEL% EQU 0 (
+  set BIT64=1
+)
+dir C:\ProgramData\Gatan\Licenses\*_64.* > nul 2>&1
+IF %ERRORLEVEL% EQU 0 (
+  set BIT64=1
+)
 
 IF %BIT64% EQU 1 IF %SEMCCD64% EQU 0 (
   echo.
