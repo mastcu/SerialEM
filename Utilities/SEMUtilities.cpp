@@ -34,7 +34,7 @@ static int SEMCCDcodes[] =
    GAIN_REF_LOAD_ERROR, BAD_FRAME_REDUCE_PARAM, FRAMEALI_INITIALIZE, FRAMEALI_NEXT_FRAME,
    FRAMEALI_FINISH_ALIGN, MAKECOM_BAD_PARAM, MAKECOM_NO_REL_PATH, OPEN_COM_ERROR,
    WRITE_COM_ERROR, OPEN_MDOC_ERROR, WRITE_MDOC_ERROR, COPY_MDOC_ERROR, 
-   FRAMEALI_BAD_SUBSET, 0};
+   FRAMEALI_BAD_SUBSET, OPEN_SAVED_LIST_ERR, WRITE_SAVED_LIST_ERR, 0};
 
 static char *SEMCCDmessages[] =
   {"Image not found from ID", "Image has unexpected data type", 
@@ -67,7 +67,9 @@ static char *SEMCCDmessages[] =
    "Error opening align com file", "Error writing align com file",
    "Error opening file to write mdoc text", "Error writing mdoc text to file", 
    "Error copying mdoc file to save directory", 
-   "Subset parameters do not define a subset of at least 2 frames"
+   "Subset parameters do not define a subset of at least 2 frames",
+   "Error opening file to write list of saved frames",
+   "Error writing file with list of saved frames"
 };
 
 static char *noDesc = "No error description available";
