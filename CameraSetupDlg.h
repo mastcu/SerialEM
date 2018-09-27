@@ -65,12 +65,14 @@ public:
   int mNumPlugShutters;
   BOOL mTietzCanPreExpose;
   int mTietzBlocks;
+  int *mTietzSizes;
+  int mNumTietzSizes;
+  int mTietzOffsetModulo;
   bool mChangedBinning;
   BOOL mAcquireAndReopen;
   BOOL mClosing;
   WINDOWPLACEMENT mPlacement;
   BOOL mUserSaveFrames;
-
     
 
 // Dialog Data
@@ -84,7 +86,6 @@ public:
 	CSpinButtonCtrl	m_spinIntegration;
 	CStatic	m_timesText;
 	CButton	m_butUpdateDose;
-	CStatic	m_statElecDose;
 	CButton	m_butRecenter;
 	CButton	m_butSwapXY;
   CStatic m_statCopyCamera;
@@ -120,6 +121,7 @@ public:
   int   m_iCamera;
   CString m_strCopyCamera;
 	CString	m_strElecDose;
+  CString m_strDosePerFrame;
 	int		m_iAverageTimes;
 	int		m_iIntegration;
 	BOOL	m_bAverageDark;

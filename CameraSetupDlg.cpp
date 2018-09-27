@@ -55,7 +55,7 @@ IDC_STATSHUTTER, IDC_RBEAMONLY, IDC_RFILMONLY, IDC_RSHUTTERCOMBO, IDC_BUTWIDEQUA
 IDC_BUTWIDEHALF, IDC_BUTSMALLER10, IDC_BUTBIGGER10, IDC_BUTABITLESS, PANEL_END,
 IDC_DARKNEXT, IDC_DARKALWAYS, IDC_EDITAVERAGE, IDC_AVERAGEDARK, IDC_SPINAVERAGE, 
 IDC_STATAVERAGE, IDC_STAT_LINE1, PANEL_END,
-IDC_BUTUPDATEDOSE, IDC_STATELECDOSE, IDC_STATDOSERATE, PANEL_END,
+IDC_BUTUPDATEDOSE, IDC_STATELECDOSE, IDC_STATDOSERATE, IDC_STAT_DOSE_PER_FRAME, PANEL_END,
 IDC_STAT_SCANRATE, IDC_BUT_MAX_SCAN_RATE, IDC_STAT_TIMING_AVAIL,
 IDC_CHECK_DYNFOCUS, IDC_CHECK_LINESYNC, IDC_STATCHANACQ, IDC_STATCHAN1, IDC_STATCHAN2,
 IDC_STATCHAN3, IDC_STATCHAN4, IDC_STATCHAN5, IDC_STATCHAN6, IDC_STATCHAN7, IDC_STATCHAN8,
@@ -157,7 +157,6 @@ void CCameraSetupDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_STATEXPTIMESINT, m_statExpTimesInt);
   DDX_Text(pDX, IDC_STATEXPTIMESINT, m_strExpTimesInt);
   DDX_Control(pDX, IDC_BUTUPDATEDOSE, m_butUpdateDose);
-  DDX_Control(pDX, IDC_STATELECDOSE, m_statElecDose);
   DDX_Control(pDX, IDC_BUTRECENTER, m_butRecenter);
   DDX_Control(pDX, IDC_BUTSWAPXY, m_butSwapXY);
   DDX_Control(pDX, IDC_STATCOPYCAMERA, m_statCopyCamera);
@@ -195,6 +194,7 @@ void CCameraSetupDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Radio(pDX, IDC_RCAMERA1, m_iCamera);
   DDX_Text(pDX, IDC_STATCOPYCAMERA, m_strCopyCamera);
   DDX_Text(pDX, IDC_STATELECDOSE, m_strElecDose);
+  DDX_Text(pDX, IDC_STAT_DOSE_PER_FRAME, m_strDosePerFrame);
   DDX_Text(pDX, IDC_EDITAVERAGE, m_iAverageTimes);
   DDV_MinMaxInt(pDX, m_iAverageTimes, 2, MAX_DARK_AVERAGE);
   DDX_Text(pDX, IDC_EDITINTEGRATION, m_iIntegration);
@@ -467,7 +467,7 @@ void CCameraSetupDlg::SetAdjustedSize(int deltaX, int deltaY)
     update = true;
   }
   if (Top - deltaY >= 0 && Bottom + deltaY <= mCameraSizeY &&
-    2 * deltaX + Bottom - Top >= 16) {
+    2 * deltaY + Bottom - Top >= 16) {
     m_eTop -= deltaY / mCoordScaling;
     m_eBottom += deltaY / mCoordScaling;
     update = true;
@@ -482,22 +482,42 @@ void CCameraSetupDlg::SetAdjustedSize(int deltaX, int deltaY)
 
 void CCameraSetupDlg::OnButsmaller10() 
 {
+  int nearInd;
   UpdateData(TRUE);
   int deltaX = (int)(0.04545 * (m_eRight - m_eLeft) + 0.5) * mCoordScaling;
   int deltaY = (int)(0.04545 * (m_eBottom - m_eTop) + 0.5) * mCoordScaling;
   if (mTietzBlocks)
     deltaX = deltaY = mTietzBlocks / 2;
+  if (mTietzSizes) {
+    nearInd = mCamera->NearestTietzSizeIndex(m_eRight - m_eLeft, mTietzSizes, 
+      mNumTietzSizes);
+    deltaX = ((m_eRight - m_eLeft) - mTietzSizes[B3DMAX(nearInd - 1, 0)]) / 2;
+    nearInd = mCamera->NearestTietzSizeIndex(m_eBottom - m_eTop, mTietzSizes, 
+      mNumTietzSizes);
+    deltaY =  ((m_eBottom - m_eTop) - mTietzSizes[B3DMAX(nearInd - 1, 0)]) / 2;
+  }
   SetAdjustedSize(-deltaX, -deltaY);
   m_butSmaller10.SetButtonStyle(BS_PUSHBUTTON);
 }
 
 void CCameraSetupDlg::OnButbigger10() 
 {
+  int nearInd;
   UpdateData(TRUE);
-  int deltaX = mCoordScaling * ((m_eRight - m_eLeft) / 20);
-  int deltaY = mCoordScaling * ((m_eBottom - m_eTop) / 20);
+  int deltaX = (int)(mCoordScaling * ((m_eRight - m_eLeft) / 20));
+  int deltaY = (int)(mCoordScaling * ((m_eBottom - m_eTop) / 20));
   if (mTietzBlocks)
     deltaX = deltaY = mTietzBlocks / 2;
+  if (mTietzSizes) {
+    nearInd = mCamera->NearestTietzSizeIndex(m_eRight - m_eLeft, mTietzSizes, 
+      mNumTietzSizes);
+    deltaX = (mTietzSizes[B3DMIN(nearInd + 1, mNumTietzSizes - 1)] - (m_eRight - m_eLeft))
+      / 2;
+    nearInd = mCamera->NearestTietzSizeIndex(m_eBottom - m_eTop, mTietzSizes, 
+      mNumTietzSizes);
+    deltaY = (mTietzSizes[B3DMIN(nearInd + 1, mNumTietzSizes - 1)] - (m_eBottom - m_eTop))
+      / 2;
+  }
   SetAdjustedSize(deltaX, deltaY);
   m_butBigger10.SetButtonStyle(BS_PUSHBUTTON);
 }
@@ -609,6 +629,7 @@ void CCameraSetupDlg::OnProcessing()
     ManageK2Binning();
     ManageK2SaveSummary();
     ManageDoseFrac();
+    ManageDose();
   }
   if (mParam->OneViewType)
     ManageIntegration();
@@ -622,7 +643,7 @@ void CCameraSetupDlg::OnButrecenter()
   m_eRight += deltaX;
   m_eTop += deltaY;
   m_eBottom += deltaY;
-  if (mTietzBlocks)
+  if (mTietzBlocks || mTietzSizes)
     AdjustCoords(mBinnings[m_iBinning]);
   UpdateData(FALSE);
   DrawBox();
@@ -637,7 +658,7 @@ void CCameraSetupDlg::OnSwapXY()
   temp = m_eRight;
   m_eRight = B3DMIN(m_eBottom, mCameraSizeX / mCoordScaling);
   m_eBottom = B3DMIN(temp, mCameraSizeY / mCoordScaling);
-  if (mTietzBlocks)
+  if (mTietzBlocks || mTietzSizes)
     AdjustCoords(mBinnings[m_iBinning]);
   UpdateData(FALSE);
   DrawBox();
@@ -650,6 +671,8 @@ void CCameraSetupDlg::OnDeltaposSpinupdown(NMHDR* pNMHDR, LRESULT* pResult)
 	NM_UPDOWN* pNMUpDown = (NM_UPDOWN*)pNMHDR;
   int sizeY = mCameraSizeY / mCoordScaling;
   int delta = pNMUpDown->iDelta * sizeY / SHIFT_FRACTION;
+  if (mTietzSizes)
+    delta = pNMUpDown->iDelta * mTietzOffsetModulo;
   if (mTietzBlocks)
     delta = pNMUpDown->iDelta * mTietzBlocks;
   if (m_eTop + delta < 0)
@@ -661,7 +684,7 @@ void CCameraSetupDlg::OnDeltaposSpinupdown(NMHDR* pNMHDR, LRESULT* pResult)
     return;
   m_eTop += delta;
   m_eBottom += delta;
-  if (mTietzBlocks)
+  if (mTietzBlocks || mTietzSizes)
     AdjustCoords(mBinnings[m_iBinning]);
   UpdateData(FALSE);
   DrawBox();
@@ -673,6 +696,8 @@ void CCameraSetupDlg::OnDeltaposSpinleftright(NMHDR* pNMHDR, LRESULT* pResult)
 	NM_UPDOWN* pNMUpDown = (NM_UPDOWN*)pNMHDR;
   int sizeX = mCameraSizeX / mCoordScaling;
   int delta = -pNMUpDown->iDelta * sizeX / SHIFT_FRACTION;
+  if (mTietzSizes)
+    delta = -pNMUpDown->iDelta * mTietzOffsetModulo;
   if (mTietzBlocks)
     delta = -pNMUpDown->iDelta * mTietzBlocks;
   if (m_eLeft + delta < 0)
@@ -684,7 +709,7 @@ void CCameraSetupDlg::OnDeltaposSpinleftright(NMHDR* pNMHDR, LRESULT* pResult)
     return;
   m_eLeft += delta;
   m_eRight += delta;
-  if (mTietzBlocks)
+  if (mTietzBlocks || mTietzSizes)
     AdjustCoords(mBinnings[m_iBinning]);
   UpdateData(FALSE);
   DrawBox();
@@ -848,6 +873,8 @@ void CCameraSetupDlg::LoadConsetToDialog()
     m_bDEsaveFrames = (mCurSet->saveFrames & DE_SAVE_SINGLE) != 0;
     m_bDEsaveFinal = (mCurSet->saveFrames & DE_SAVE_FINAL) != 0;
     mUserSaveFrames = m_bDEsaveMaster;
+    if (!(mParam->CamFlags & DE_CAM_CAN_COUNT))
+      *modeP = 0;
     m_iSumCount = (*modeP > 0) ? mCurSet->sumK2Frames : mCurSet->DEsumCount;
     m_fDEfps = (*modeP > 0 && mParam->DE_CountingFPS > 0.) ? mParam->DE_CountingFPS : 
       mParam->DE_FramesPerSec;
@@ -1044,7 +1071,7 @@ void CCameraSetupDlg::UnloadDialogToConset()
     if (*modeP)
       mCurSet->sumK2Frames = m_iSumCount;
     else
-      mCurSet->DEsumCount = m_iSumCount;
+      mCurSet->DEsumCount = m_iSumCount; 
     mSaveLinearFPS = mParam->DE_FramesPerSec;
     mSaveCountingFPS = mParam->DE_CountingFPS;
     m_bAlignDoseFrac = m_bDEalignFrames;
@@ -1283,6 +1310,7 @@ void CCameraSetupDlg::ManageCamera()
   mCameraSizeY = mParam->sizeY;
   mTietzType = mParam->TietzType;
   mTietzBlocks = mTietzType ? mParam->TietzBlocks : 0;
+  mTietzSizes = mCamera->GetTietzSizes(mParam, mNumTietzSizes, mTietzOffsetModulo);
   mPluginType = !mParam->pluginName.IsEmpty();
   if (mPluginType) {
     mPlugCanPreExpose = mParam->canPreExpose;
@@ -1621,8 +1649,8 @@ void CCameraSetupDlg::ManageDarkRefs(void)
 // Take care of size and position controls for camera or K2 mode
 void CCameraSetupDlg::ManageSizeAndPositionButtons(BOOL disableAll)
 {
-  bool enable = mParam->moduloX >= 0 && !disableAll;
-  m_butABitLess.EnableWindow(enable);
+  bool enable = (mParam->moduloX >= 0 || mTietzSizes) && !disableAll;
+  m_butABitLess.EnableWindow(enable && mParam->moduloX >= 0);
   m_butBigger10.EnableWindow(enable);
   m_butWideHalf.EnableWindow(enable && !mParam->squareSubareas);
   m_butWideQuarter.EnableWindow(enable && !mParam->squareSubareas);
@@ -1880,7 +1908,7 @@ void CCameraSetupDlg::OnPaint()
   swidth = statRect.Width();
   sheight = statRect.Height();
 
-  COLORREF fillColor = RGB(0,0,0);
+  COLORREF fillColor = RGB(0,0,128);
   COLORREF tlColor = RGB(0,0,0);
   COLORREF brColor = RGB(0,0,0);
   int iLeft = (swidth * (maxsize - mCameraSizeX)) / (2 * maxsize) + statRect.left - 
@@ -2164,7 +2192,10 @@ void CCameraSetupDlg::ManageDose()
        mWinApp->mScope->GetC2Units());
   else
     m_strElecDose = "Dose: Not calibrated";
+
+  // Do dose rate for a direct detector
   if (mCamera->IsDirectDetector(mParam)) {
+    m_strDosePerFrame = "";
     if (dose) {
       float pixel = 10000.f * BinDivisorF(mParam) * 
         mWinApp->mShiftManager->GetPixelSize(mActiveCameraList[mCurrentCamera], 
@@ -2172,10 +2203,30 @@ void CCameraSetupDlg::ManageDose()
       m_strDoseRate.Format("%.2f e/ub pixel/s at %s", (doseFac > 0. ? doseFac : 1.) *
         dose * pixel * pixel /B3DMAX(0.0025, realExp - mParam->deadTime), 
         doseFac > 0 ? "camera" : "specimen");
-    } else
+
+      // And get a dose per frame if saving frames, just divide dose by total frames
+      int dummy, frames = 0;
+      if (mParam->K2Type && m_bDoseFracMode && (m_bAlignDoseFrac || m_bSaveFrames)) {
+        frames = B3DNINT(m_eExposure / B3DMAX(mCamera->GetMinK2FrameTime(mParam->K2Type),
+          ActualFrameTime(m_fFrameTime)));
+        if (m_bSaveFrames && m_bSaveK2Sums && mSummedFrameList.size() > 0)
+          frames = mWinApp->mFalconHelper->GetFrameTotals(mSummedFrameList, dummy);
+      } else if (mFalconCanSave && m_bDoseFracMode && (m_bSaveFrames || 
+        (mWeCanAlignFalcon && m_bAlignDoseFrac))) {
+        frames = mWinApp->mFalconHelper->GetFrameTotals(mSummedFrameList, dummy);
+      } else if (mWinApp->mDEToolDlg.CanSaveFrames(mParam) && 
+        (m_bDEsaveMaster || m_bDEalignFrames)) {
+          frames = (int)floor(realExp / m_fDEframeTime) + 1;
+      }
+      if (frames)
+        m_strDosePerFrame.Format("%.2f e/A2 per frame", dose / frames);
+    } else {
       m_strDoseRate = "Dose rate: Not calibrated";
-  } else
+    }
+  } else {
     m_strDoseRate = "";
+    m_strDosePerFrame = "";
+  }
 
   UpdateData(FALSE);
 }
@@ -2352,6 +2403,7 @@ void CCameraSetupDlg::OnK2Mode()
   ManageAntialias();
   ManageExposure();
   ManageK2SaveSummary();
+  ManageDose();
 }
 
 // Checks whether binning 0.5 is allowed in current conditions, enables radio button, and
@@ -2393,6 +2445,7 @@ void CCameraSetupDlg::OnDoseFracMode()
   ManageAntialias();
   ManageExposure();
   ManageK2SaveSummary();
+  ManageDose();
 }
 
 // Align frames toggled
@@ -2419,6 +2472,7 @@ void CCameraSetupDlg::OnKillfocusEditFrameTime()
     UpdateData(false);
   ManageExposure();
   ManageK2SaveSummary();
+  ManageDose();
 }
 
 // Manage various controls depending on settings
@@ -2511,6 +2565,7 @@ void CCameraSetupDlg::OnSaveFrames()
   ManageDoseFrac();
   ManageAntialias();
   ManageK2SaveSummary();
+  ManageDose();
 }
 
 // Make sure there is a good summed frame list when save or align is turned on
@@ -2809,6 +2864,7 @@ void CCameraSetupDlg::OnSetupFalconFrames()
   ManageAntialias();
   ManageK2SaveSummary();
   ManageDoseFrac();
+  ManageDose();
   m_butSetupFalconFrames.SetButtonStyle(BS_PUSHBUTTON);
   m_butSetupK2FrameSums.SetButtonStyle(BS_PUSHBUTTON);
 }
@@ -2831,6 +2887,7 @@ void CCameraSetupDlg::OnSaveK2FrameSums()
   }
   ManageDoseFrac();
   ManageK2SaveSummary();
+  ManageDose();
 }
 
 void CCameraSetupDlg::OnAlwaysAntialias()
