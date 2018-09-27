@@ -278,6 +278,7 @@ CSerialEMApp::CSerialEMApp()
     mCamParams[i].TietzCanPreExpose = false;
     mCamParams[i].restoreBBmode = -1;
     mCamParams[i].TietzGainIndex = 1;
+    mCamParams[i].LowestGainIndex = 1;
     mCamParams[i].TietzImageGeometry = -1;  // So even a property 0 will be sent out
     mCamParams[i].TietzBlocks = 0;
     mCamParams[i].builtInSettling = BUILT_IN_SETTLING;

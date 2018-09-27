@@ -248,6 +248,16 @@ struct CameraThreadData {
   double FaRawDist, FaSmoothDist, FaResMean, FaMaxResMax, FaMeanRawMax, FaMaxRawMax;
   // FRC values/frequencies times K2FA_FRC_INT_SCALE
   long FaCrossHalf, FaCrossQuarter, FaCrossEighth, FaHalfNyq;
+  FloatVec FrameTSopenTime;       // Vectors for frame tilt series: shutter open time
+  FloatVec FrameTStiltToAngle;    // Angle to tilt to
+  FloatVec FrameTSwaitOrInterval; // Wait time after tilt, or interval between steps
+  FloatVec FrameTSfocusChange;    // Change in focus from initial value
+  FloatVec FrameTSdeltaISX;       // Change in image shift, already converted to IS units
+  FloatVec FrameTSdeltaISY;
+  float FrameTSinitialDelay;      // Initial delay before starting steps
+  FloatVec FrameTSactualAngle;    // Actual angles reached
+  bool FrameTSstopOnCamReturn;    // Flag to stop on image return (off for early return)
+
 };
 
 struct InsertThreadData {
@@ -967,6 +977,11 @@ bool IsK3BinningSuperResFrames(int K2Type, int doseFrac, int saveFrames,
   int alignFrames, int useFrameAlign, int processing, int readMode,
   BOOL takeBinnedFlag);
 bool IsK3BinningSuperResFrames(const ControlSet *conSet, int K2Type);
+int * GetTietzSizes(CameraParameters *param, int & numSizes, int & offsetModulo);
+int NearestTietzSizeIndex(int ubSize, int *tietzSizes, int numSizes);
+int QueueTiltSeries(FloatVec &openTime, FloatVec &tiltToAngle, FloatVec &waitOrInterval,
+  FloatVec &focusChange, FloatVec &deltaISX, FloatVec &deltaISY, float initialDelay);
+void GetFrameTSactualAngles(FloatVec &angles) {angles = mTD.FrameTSactualAngle;};
 };
 
 

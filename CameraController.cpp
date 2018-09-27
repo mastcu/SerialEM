@@ -2149,6 +2149,107 @@ int CCameraController::QueueTiltDuringShot(double angle, int delayToStart, doubl
   return 0;
 }
 
+// Store all the possible vectors for doing a discrete or continuous tilt series during a
+// shot with frame-saving
+int CCameraController::QueueTiltSeries(FloatVec &openTime, FloatVec &tiltToAngle, 
+  FloatVec &waitOrInterval, FloatVec &focusChange, FloatVec &deltaISX, FloatVec &deltaISY,
+  float initialDelay)
+{
+  CString mess;
+  float focusLim = 10., ISlim = 10., tiltLim = 91., openLim = 20., waitLim = 20.;
+  int ind, numSteps = (int)(tiltToAngle.size() > 0 ? tiltToAngle.size() : 
+    waitOrInterval.size());
+  if (!numSteps) {
+    mess = "neither angles to tilt to nor intervals between"
+      " actions are defined";
+  } 
+
+  // Test each entry: it must be at least as big as # of steps if present
+  if (mess.IsEmpty() && waitOrInterval.size()) {
+    if ((int)waitOrInterval.size() < numSteps) {
+      mess = "there are fewer wait times defined than tilt steps";
+    } else {
+      for (ind = 0; ind < numSteps; ind++) {
+        if (waitOrInterval[ind] < 0. || waitOrInterval[ind] > waitLim) {
+          mess.Format("wait time %d has value %f, outside the limits of 0 to %f sec",
+            ind + 1, waitOrInterval[ind], waitLim);
+          break;
+        }
+      }
+    }
+  } 
+  if (mess.IsEmpty() && tiltToAngle.size() > 0 ) {
+    for (ind = 0; ind < numSteps; ind++) {
+      if (fabs(tiltToAngle[ind]) > tiltLim) {
+        mess.Format("tilt angle %d has value %f, beyond the limit of %f deg",
+          ind + 1, tiltToAngle[ind], tiltLim);
+        break;
+      }
+    } 
+  } 
+  if (mess.IsEmpty() && openTime.size() > 0) {
+    if ((int)openTime.size() < numSteps) {
+      mess = "there are shutter opening times defined than steps in the tilt series"; 
+    } else {
+      for (ind = 0; ind < numSteps; ind++) {
+        if (openTime[ind] < 0. || openTime[ind] > openLim) {
+          mess.Format("Shutter open time %d has value %f, outside the limits of 0 to %f "
+            "sec", ind + 1, openTime[ind], openLim);
+          break;
+        }
+      }
+    }
+  } 
+  if (mess.IsEmpty() && focusChange.size() > 0) {
+    if ((int)focusChange.size() < numSteps) {
+      mess = "there are fewer focus changes defined than steps in the tilt series"; 
+    } else {
+      for (ind = 0; ind < numSteps; ind++) {
+        if (fabs(focusChange[ind]) > focusLim) {
+          mess.Format("focus change %d has value %f, beyond the limit of %f um",
+            ind + 1, focusChange[ind], focusLim);
+          break;
+        }
+      }
+    }
+  }
+
+  if (mess.IsEmpty() && (deltaISX.size() > 0 || deltaISY.size() > 0)) {
+    if ((int)deltaISX.size() < numSteps || (int)deltaISY.size() < numSteps) {
+      mess = "there are fewer image shift changes defined than steps in the tilt series";
+    } else {
+      for (ind = 0; ind < numSteps; ind++) {
+        if (sqrt(deltaISX[ind] * deltaISX[ind] + deltaISY[ind] * deltaISY[ind]) > ISlim) {
+          mess.Format("image shift change %d has value %f, %f, beyond the limit of %f um",
+            ind + 1, deltaISX[ind], deltaISY[ind], ISlim);
+          break;
+        }
+      }
+    }
+  }
+
+  if (mess.IsEmpty() && initialDelay < 0 || initialDelay > waitLim) {
+    mess.Format("initial delay has value %f, outside the limits of 0 to %f sec",
+      initialDelay, waitLim);
+  }
+  
+  if (!mess.IsEmpty()) {
+    mess = "Cannot queue a tilt series: " + mess;
+    SEMMessageBox(mess);
+    return 1;
+  }
+
+  // If everything passes, copy the vectors
+  mTD.FrameTSinitialDelay = initialDelay;
+  mTD.FrameTSopenTime = openTime;
+  mTD.FrameTStiltToAngle = tiltToAngle;
+  mTD.FrameTSwaitOrInterval = waitOrInterval;
+  mTD.FrameTSfocusChange = focusChange;
+  mTD.FrameTSdeltaISX = deltaISX;
+  mTD.FrameTSdeltaISY = deltaISY;
+  return 0;
+}
+
 ///////////////////////////////////////////////////////
 //  The main Capture routine: analyzes control set, sets up actions
 ///////////////////////////////////////////////////////
@@ -2355,7 +2456,7 @@ void CCameraController::Capture(int inSet, bool retrying)
   mNextAsyncSumFrames = -1;
   mDeferSumOnNextAsync = false;
   mNextFrameSkipThresh = 0.;
-   
+
   // Set up Falcon saving
   mTD.FEIacquireFlags = 0;
   falconHasFrames = IS_FALCON2_OR_3(mParam) && (FCAM_ADVANCED(mParam) || 
@@ -2820,6 +2921,26 @@ void CCameraController::Capture(int inSet, bool retrying)
   if (mTD.TiltDuringDelay)
     mTD.blankerTimeout += 240000;
 
+  // If a frame TS is queued and frames are being saved and nothing else conflicting is
+  // queued, then allow it proceed and set up moveinfo for tilting, otherwise clear it out
+  if (IsConSetSaving(&conSet, inSet, mParam, false) && (mTD.FrameTStiltToAngle.size() > 0
+    || mTD.FrameTSwaitOrInterval.size() > 0) && !mTD.ScanTime && !mTD.DriftISinterval &&
+    !mTD.DynFocusInterval && !mTD.FocusStep1 && !mTD.PostMoveStage) {
+      mTD.FrameTSstopOnCamReturn = !(mParam->K2Type && mTD.NumAsyncSumFrames >= 0);
+      mTD.FrameTSinitialDelay += mParam->builtInSettling + mParam->startupDelay;
+      mTD.JeolOLtoUm = mScope->GetJeol_OLfine_to_um();
+      if (mTD.FrameTStiltToAngle.size() > 0) {
+        mTD.MoveInfo.axisBits = axisA;
+        mTD.MoveInfo.doBacklash = false;
+        mTD.MoveInfo.doRelax = false;
+        mTD.MoveInfo.useSpeed = false;
+      }
+      mTD.blankerTimeout += 240000;
+  } else {
+    mTD.FrameTStiltToAngle.clear();
+    mTD.FrameTSwaitOrInterval.clear();
+  }
+   
   // Manage the dark and gain reference usage
   if (CapManageDarkGainRefs(conSet, inSet, bEnsureDark, gainXoffset, gainYoffset))
     return;
@@ -4913,7 +5034,8 @@ void CCameraController::AdjustSizes(int &DMsizeX, int ccdSizeX, int moduloX,
 {
   static int lastRestricted = -1;
   int moduloMap[] = {8,16,32,64};
-  int ind, binInd = -1, mapBase = -5;
+  int *tietzSizes;
+  int numSizes, nearInd, ind, binInd = -1, mapBase = -5;
   bool mapping = moduloX <= -5 && moduloX >= -8;
   int xMax = ccdSizeX/binning;
   CameraParameters *camParam = (camera >= 0) ? &mAllParams[camera] : mParam;
@@ -4935,31 +5057,45 @@ void CCameraController::AdjustSizes(int &DMsizeX, int ccdSizeX, int moduloX,
       }
     }
 
-    if ((DMsizeX > (xMax + 1) / 2 && lastRestricted < 0) || lastRestricted == 0 || 
-      moduloX == -2 || mapping) {
-      DMsizeX = xMax;
-      Left = 0;
-      restrictedSizeIndex = 0;
-    } else if ((DMsizeX > (xMax + 3) / 4 && lastRestricted < 0) || lastRestricted == 1) {
-      DMsizeX = xMax / 2;
-      Left = xMax / 4;
-      restrictedSizeIndex = 1;
-      if (lastRestricted < 0 && binInd >= 0 && camParam->halfSizeX[binInd])
-        DMsizeX = camParam->halfSizeX[binInd];
-      if (lastRestricted == 1 && binInd >= 0 && camParam->halfSizeY[binInd])
-        DMsizeX = camParam->halfSizeY[binInd];
-    } else {
-      DMsizeX = xMax / 4;
-      Left = (3 * xMax) / 8;
-      restrictedSizeIndex = 2;
-      if (lastRestricted < 0 && binInd >= 0 && camParam->quarterSizeX[binInd])
-        DMsizeX = camParam->quarterSizeX[binInd];
-      if (lastRestricted > 0 && binInd >= 0 && camParam->quarterSizeY[binInd])
-        DMsizeX = camParam->quarterSizeY[binInd];
-    }
+    // Intercept Tietz cameras with allowed sizes in a table
+    tietzSizes = GetTietzSizes(camParam, numSizes, moduloX);
+    if (tietzSizes) {
+      nearInd = NearestTietzSizeIndex(binning * DMsizeX, tietzSizes, numSizes);
+      DMsizeX = tietzSizes[nearInd] / binning;
+      Left = B3DMAX(0, Left - (tietzSizes[nearInd] / binning - DMsizeX) / 2);
+      Left = (moduloX / binning) * B3DNINT((double)Left / (moduloX / binning));
+      if (DMsizeX + Left > xMax)
+        Left = xMax - DMsizeX;
 
-    // Toggle index stored here between -1 and the size index
-    lastRestricted = lastRestricted < 0 ? restrictedSizeIndex : -1;
+    } else {
+
+      // This section works for restricted size types 1 to 4 and mapping
+      if ((DMsizeX > (xMax + 1) / 2 && lastRestricted < 0) || lastRestricted == 0 || 
+        moduloX == -2 || mapping) {
+          DMsizeX = xMax;
+          Left = 0;
+          restrictedSizeIndex = 0;
+      } else if ((DMsizeX > (xMax + 3) / 4 && lastRestricted < 0) || lastRestricted == 1){
+        DMsizeX = xMax / 2;
+        Left = xMax / 4;
+        restrictedSizeIndex = 1;
+        if (lastRestricted < 0 && binInd >= 0 && camParam->halfSizeX[binInd])
+          DMsizeX = camParam->halfSizeX[binInd];
+        if (lastRestricted == 1 && binInd >= 0 && camParam->halfSizeY[binInd])
+          DMsizeX = camParam->halfSizeY[binInd];
+      } else {
+        DMsizeX = xMax / 4;
+        Left = (3 * xMax) / 8;
+        restrictedSizeIndex = 2;
+        if (lastRestricted < 0 && binInd >= 0 && camParam->quarterSizeX[binInd])
+          DMsizeX = camParam->quarterSizeX[binInd];
+        if (lastRestricted > 0 && binInd >= 0 && camParam->quarterSizeY[binInd])
+          DMsizeX = camParam->quarterSizeY[binInd];
+      }
+
+      // Toggle index stored here between -1 and the size index
+      lastRestricted = lastRestricted < 0 ? restrictedSizeIndex : -1;
+    }
     Right = Left + DMsizeX;
 
     if (!mapping)
@@ -5011,6 +5147,39 @@ void CCameraController::AdjustSizes(int &DMsizeX, int ccdSizeX, int moduloX,
     }
     DMsizeX = Right - Left;
   }
+}
+
+// Return sizes for a Tietz camera with specific sizes allowed, and the number of sizes
+// and the value that unbinned offsetsmust be a multiple of
+int *CCameraController::GetTietzSizes(CameraParameters *param, int &numSizes, 
+  int &offsetModulo)
+{
+  static int xf416Sizes[] = {256, 512, 1024, 2048, 3072, 4096};
+  int xf416OffsetModulo = 256;
+  int *tietzSizes = NULL;
+  if (param->moduloX == -9) {
+    tietzSizes = xf416Sizes;
+    offsetModulo = xf416OffsetModulo;
+    numSizes = sizeof(xf416Sizes) / sizeof(int);
+  }
+  return tietzSizes;
+}
+
+// For a (Tietz) camera with specific sizes allowed, find the index of the size nearest
+// to the given unbinned size
+int CCameraController::NearestTietzSizeIndex(int ubSize, int *tietzSizes, int numSizes)
+{
+  int nearDiff = 10000000, nearInd, diff, ind;
+  if (!tietzSizes)
+    return -1;
+  for (ind = 0; ind < numSizes; ind++) {
+    diff = B3DABS(tietzSizes[ind] - ubSize);
+    if (diff < nearDiff) {
+      nearDiff = diff;
+      nearInd = ind;
+    }
+  }
+  return nearInd;
 }
 
 // Adjust sizes for crazy Tietz block readouts
@@ -6093,7 +6262,8 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
   CameraThreadData *td = (CameraThreadData *)pParam;
   CameraThreadData pdTD;
   bool startBlanker = td->PostActionTime || td->UnblankTime || td->FocusStep1 || 
-    td->TiltDuringDelay;
+    td->TiltDuringDelay || td->FrameTStiltToAngle.size() || 
+    td->FrameTSwaitOrInterval.size();
   int sizeX, sizeY, chan, numChan, retval = 0, numCopied = 0;
   CString report, str;
   long binning = td->Binning;
@@ -6688,7 +6858,16 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
   double destX, destY, destZ, destAlpha, dblStartTime;
   TIMECAPS tc;
   BOOL periodSet = false;
-  int  numScan;
+
+  // Set flags for operations in frame tilt series
+  bool stepTilts = td->FrameTStiltToAngle.size() > 0;
+  bool doFrameTS = stepTilts || td->FrameTSwaitOrInterval.size() > 0;
+  bool shutterTS = td->FrameTSopenTime.size() > 0;
+  bool doFocusInTS = td->FrameTSfocusChange.size() > 0;
+  bool doISinTS = td->FrameTSdeltaISX.size() > 0;
+  int  numScan, step, numSteps;
+  double focus, focusBase;
+  long last_coarse, fineBase, coarseBase;
   HRESULT hr = S_OK;
   stData.info = info;
   _variant_t *vFalse = new _variant_t(false);
@@ -6733,8 +6912,10 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
         CEMscope::StageMoveKernel(&stData, true, true, destX, destY, destZ, destAlpha);
       }
 
-      // set up precision timer for scan, dynamic focus, or drift
-      if (td->ScanTime || td->DriftISinterval || td->DynFocusInterval) {
+      // set up precision timer for scan, dynamic focus, drift, or frame series without
+      // tilt steps
+      if (td->ScanTime || td->DriftISinterval || td->DynFocusInterval || 
+        (doFrameTS && !stepTilts)) {
         if (timeGetDevCaps(&tc, sizeof(TIMECAPS)) == TIMERR_NOERROR) {
           periodSet = true;
           timeBeginPeriod(tc.wPeriodMin);
@@ -6803,8 +6984,6 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
 
         // Dynamic focus or 1-2 focus steps
       } else if (td->DynFocusInterval || td->FocusStep1) {
-        double focus, focusBase;
-        long last_coarse, fineBase, coarseBase;
         SEMTrace('1', "Starting %s", td->DynFocusInterval ? "Dynamic focus" :
           "focus steps");
 
@@ -6852,10 +7031,101 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
         }
         SEMTrace('1', "Done with %s", td->DynFocusInterval ? "Dynamic focus" :
           "focus steps");
+
+       // Tilt series while taking frames
+      } else if (doFrameTS) {
+        numSteps = (int)(stepTilts ? td->FrameTStiltToAngle.size() : 
+          td->FrameTSwaitOrInterval.size());
+        td->FrameTSactualAngle.clear();
+
+        // If shuttering, close shutter now
+        if (shutterTS) {
+          CEMscope::SetBlankingFlag(true);
+          td->scopePlugFuncs->SetBeamBlank(*vTrue);
+        }
+
+        // record focus and IS if changing them
+        if (doISinTS)
+          td->scopePlugFuncs->GetImageShift(&baseISX, &baseISY);
+        if (doFocusInTS) {
+          if (!JEOLscope) {
+            focusBase = 1.e6 * td->scopePlugFuncs->GetDefocus();
+          } else {
+            fineBase = td->JeolSD->objectiveFine;
+            coarseBase = td->JeolSD->objective;
+            last_coarse = coarseBase;
+          }
+        }
+
+        // Wait for initial delay
+        if (td->FrameTSinitialDelay > 0.)
+          ::Sleep(B3DMAX(1, (int)(1000. * td->FrameTSinitialDelay)));
+
+        // Record a start time for the non-step case
+        if (!stepTilts)
+          startTime = lastTime = timeGetTime();
+
+        // Loop on steps or until exposure returns
+        for (step = 0; step < numSteps; step++) {
+          if (!stepTilts)
+            curTime = timeGetTime();
+
+          // Do image shift and focus
+          if (doISinTS) 
+            td->scopePlugFuncs->SetImageShift(baseISX + td->FrameTSdeltaISX[step],
+            baseISY + td->FrameTSdeltaISY[step]);
+          if (doFocusInTS)
+            ChangeDynFocus(td, focusBase, td->FrameTSfocusChange[step],
+            fineBase, coarseBase, last_coarse);
+
+          // Do tilt step and delay if any
+          if (stepTilts) {
+            info->alpha = td->FrameTStiltToAngle[step];
+            CEMscope::StageMoveKernel(&stData, true, false, destX, destY, destZ, 
+              destAlpha);
+            if ((int)td->FrameTSwaitOrInterval.size() > step)
+              ::Sleep(B3DMAX(1, B3DNINT(1000. * td->FrameTSwaitOrInterval[step])));
+          }
+
+          // Do unblank and blank if shuttering
+          if (shutterTS && td->FrameTSopenTime[step] > 0) {
+            CEMscope::SetBlankingFlag(false);
+            td->scopePlugFuncs->SetBeamBlank(*vFalse);
+            ::Sleep(B3DMAX(1, B3DNINT(1000. * td->FrameTSopenTime[step])));
+            CEMscope::SetBlankingFlag(true);
+            td->scopePlugFuncs->SetBeamBlank(*vTrue);
+          }
+
+          // Get tilt angle FWIW when not doing tilt steps
+          if (!stepTilts && (!shutterTS || td->FrameTSopenTime[step] > 0))
+            destAlpha = td->scopePlugFuncs->GetTiltAngle();
+
+          // Save the tilt either on steps where shutter was opened, or on every step
+          // if no shuttering
+          if ((shutterTS && td->FrameTSopenTime[step] > 0) || !shutterTS)
+            td->FrameTSactualAngle.push_back((float)destAlpha);
+
+          // When not stepping, if wait was non-zero, sleep for the given interval
+          if (!stepTilts && td->FrameTSwaitOrInterval[step] > 0)
+            AddStatsAndSleep(td, curTime, lastTime, numScan, intervalSum, 
+            intervalSumSq, B3DMAX(1, B3DNINT(1000.*td->FrameTSwaitOrInterval[step])));
+
+          // Check whether to quit if flag set
+          if (td->FrameTSstopOnCamReturn && td->imageReturned)
+            break;
+        }
+
+        // Done: restore IS and focus if set
+        if (doISinTS)
+          td->scopePlugFuncs->SetImageShift(baseISX, baseISY);
+        if (doFocusInTS)
+          ChangeDynFocus(td, focusBase, 0., fineBase, coarseBase, 
+          last_coarse);
       }
 
       // Done with precision timer; get statistics
-      if (td->ScanTime || td->DriftISinterval || td->DynFocusInterval) {
+      if (td->ScanTime || td->DriftISinterval || td->DynFocusInterval || 
+        (doFrameTS && !stepTilts)) {
         if (periodSet)
           timeEndPeriod(tc.wPeriodMin);
         td->ScanIntSD = 0.;
@@ -6869,14 +7139,15 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
 
       // Now wait ReblankTime, and reblank the beam
       if (td->ReblankTime) {
-        if (!(td->DriftISinterval || td->DynFocusInterval))
+        if (!(td->DriftISinterval || td->DynFocusInterval || doFrameTS))
           ::Sleep(td->ReblankTime);
         td->scopePlugFuncs->SetBeamBlank(*vTrue);
 
         CEMscope::SetBlankingFlag(true);
 
         // Or wait the post-action time or until image returned
-      } else if (td->PostActionTime && !(td->DriftISinterval || td->DynFocusInterval)) {
+      } else if (td->PostActionTime && !(td->DriftISinterval || td->DynFocusInterval ||
+        doFrameTS)) {
         dblStartTime = GetTickCount();
         while (!td->imageReturned) {
           int elapsed = (int)SEMTickInterval(dblStartTime);
@@ -8295,6 +8566,8 @@ void CCameraController::ErrorCleanup(int error)
   mNextFrameSkipThresh = 0.;
   mTD.NumAsyncSumFrames = -1;
   mDeferSumOnNextAsync = false;
+  mTD.FrameTStiltToAngle.clear();
+  mTD.FrameTSwaitOrInterval.clear();
   mStartingDeferredSum = false;
   if (mStartedScanning) {
     if (mTD.ScanTime || mTD.DynFocusInterval || mTD.FocusStep1)
@@ -8746,7 +9019,8 @@ int CCameraController::LockInitializeTietz(BOOL firstTime)
       } else {
         numGain = mPlugFuncs[ind]->GetNumberOfGains();
         if (numGain > 0) {
-          B3DCLAMP(camP->TietzGainIndex, 1, numGain);
+          B3DCLAMP(camP->TietzGainIndex, camP->LowestGainIndex, 
+            numGain + camP->LowestGainIndex - 1);
           err = mPlugFuncs[ind]->SetGainIndex(camP->TietzGainIndex);
         }
         if (numGain < 0 || err)

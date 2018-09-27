@@ -1923,14 +1923,19 @@ int CParameterIO::ReadProperties(CString strFileName)
             camP->samePhysicalCamera = itemInt[1]; 
           else if (MatchNoCase("TietzCameraType")) {
             camP->TietzType = itemInt[1];
-            if (itemInt[1] == 8 || itemInt[1] == 11 || itemInt[1] == 12)
+            if (itemInt[1] == 8 || itemInt[1] == 11 || itemInt[1] == 12 || 
+              itemInt[1] == 13)
               camP->TietzBlocks = 1024;
+            if (itemInt[1] == 15)
+              camP->moduloX = -9;
           } else if (MatchNoCase("TietzCanPreExpose"))
             camP->TietzCanPreExpose = itemInt[1] != 0;
           else if (MatchNoCase("TietzRestoreBBmode"))
             camP->restoreBBmode = itemInt[1];
           else if (MatchNoCase("TietzGainIndex"))
             camP->TietzGainIndex = itemInt[1];
+          else if (MatchNoCase("LowestGainIndex"))
+            camP->LowestGainIndex = itemInt[1];
           else if (MatchNoCase("TietzImageGeometry"))
             camP->TietzImageGeometry = itemInt[1];
           else if (MatchNoCase("SubareasAreBad")) {

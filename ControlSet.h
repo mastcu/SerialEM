@@ -126,6 +126,7 @@ struct CameraParameters {
   BOOL TietzCanPreExpose;  // Flag that shutter mode exists for pre-exposure
   int restoreBBmode;       // Flag to restore BB shutter mode after pre-exposure
   int TietzGainIndex;      // Gain index, 1, 2, ... up to number of gains
+  int LowestGainIndex;     // Lowest allowed gain index
   int TietzImageGeometry;  // Bit sum for setting image geometry (flip, rotation)
   int TietzBlocks;         // Block size for Tietz block readout camera
   float builtInSettling;   // Clear time
