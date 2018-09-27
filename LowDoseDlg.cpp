@@ -429,6 +429,7 @@ void CLowDoseDlg::OnLowdosemode()
 // Switching beam normalization - set the scope parameter
 void CLowDoseDlg::OnLdNormalizeBeam() 
 {
+  mWinApp->RestoreViewFocus();  
   UpdateData(true);
   mScope->SetLDNormalizeBeam(m_bNormalizeBeam);
 }
