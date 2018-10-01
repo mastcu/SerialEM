@@ -756,7 +756,8 @@ void CSerialEMView::DrawImage(void)
       if (iDraw < 0 && useMultiShot) {
         float holeXoffset = 0, holeYoffset = 0;
         bool doInHole = (msParams->inHoleOrMultiHole & MULTI_IN_HOLE) > 0;
-        bool doMultiHole = (msParams->inHoleOrMultiHole & MULTI_HOLES) > 0;
+        bool doMultiHole = (msParams->inHoleOrMultiHole & MULTI_HOLES) > 0 &&
+          msParams->holeMagIndex > 0;
         int inHoleEnd = item->mNumPoints - 2;
         int inHoleStart = inHoleEnd - (doInHole ? msParams->numShots : 0);
         GetSingleAdjustmentForItem(imBuf, item, delPtX, delPtY);
@@ -1885,7 +1886,6 @@ void CSerialEMView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
   char cChar = char(nChar);
   bool mainOrFFT = mMainWindow || mFFTWindow;
   bool ctrl = GetAsyncKeyState(VK_CONTROL) / 2 != 0;
-  SEMTrace('k', "Code %u, char %c", nChar, cChar);
   mWinApp->mMacroProcessor->SetKeyPressed((int)cChar);
 
   // Keep track of ctrl and shift (ONLY IF WE GET KEYUP TOO)
@@ -1897,6 +1897,8 @@ void CSerialEMView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
     mWinApp->mRemoteControl.CtrlChanged(ctrl);
   mCtrlPressed = ctrl;
   mShiftPressed = GetAsyncKeyState(VK_SHIFT) / 2 != 0;
+  SEMTrace('k', "Code %u, char %c  ctrl %d shift %d", nChar, cChar, mCtrlPressed,
+    mShiftPressed);
 
   // Zoom up and down with these non standard keys
   if (nChar == VK_MINUS) {
@@ -1938,6 +1940,10 @@ void CSerialEMView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
     mWinApp->mNavigator->ProcessCKey();
   } else if (mWinApp->mNavigator && cChar == 'D' && !mCtrlPressed && mShiftPressed) {
     mWinApp->mNavigator->ProcessDKey();
+  } else if (mWinApp->mNavigator && cChar == 'T' && !mCtrlPressed && mShiftPressed) {
+    mWinApp->mNavigator->ProcessTKey();
+  } else if (mWinApp->mNavigator && cChar == 'N' && !mCtrlPressed && mShiftPressed) {
+    mWinApp->mNavigator->ProcessNKey();
  
     // Otherwise use arrow keys to adjust offset
   } else if (nChar >= VK_LEFT && nChar <= VK_DOWN) {
