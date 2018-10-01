@@ -440,6 +440,8 @@ BEGIN_MESSAGE_MAP(CMenuTargets, CCmdTarget)
   ON_UPDATE_COMMAND_UI(ID_FOCUSTUNING_COMAVS, OnUpdateNoTasksNoSTEM)
   ON_COMMAND(ID_MONTAGINGGRIDS_SHOWWHOLEAREAFORALLPOINTS, OnShowWholeAreaForAllPoints)
   ON_UPDATE_COMMAND_UI(ID_MONTAGINGGRIDS_SHOWWHOLEAREAFORALLPOINTS, OnUpdateShowWholeAreaForAllPoints)
+  ON_COMMAND(ID_MONTAGINGGRIDS_ADDGRIDLIKELASTONE, OnMontagingGridsAddGriLlikeLastOne)
+  ON_UPDATE_COMMAND_UI(ID_MONTAGINGGRIDS_ADDGRIDLIKELASTONE, OnUpdateOnMontagingGridsAddGriLlikeLastOne)
   END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -623,7 +625,7 @@ void CMenuTargets::OnNavigatorPolygonFromCorners()
 
 void CMenuTargets::OnPolygonMontage() 
 {
-  mNavigator->PolygonMontage(NULL);	
+  mNavigator->PolygonMontage(NULL, false);	
 }
 
 void CMenuTargets::OnUpdatePolygonMontage(CCmdUI* pCmdUI) 
@@ -870,12 +872,23 @@ void CMenuTargets::OnUpdateNavigatorAddCirclePolygon(CCmdUI *pCmdUI)
 
 void CMenuTargets::OnNavigatorAddGridOfPoints()
 {
-  mNavigator->AddGridOfPoints();
+  mNavigator->AddGridOfPoints(false);
 }
 
 void CMenuTargets::OnUpdateNavigatorAddGridOfPoints(CCmdUI *pCmdUI)
 {
-  pCmdUI->Enable(mNavigator && mNavigator->OKtoAddGrid() && !DoingTasks() &&
+  pCmdUI->Enable(mNavigator && mNavigator->OKtoAddGrid(false) && !DoingTasks() &&
+    !mNavigator->GetAcquiring());
+}
+
+void CMenuTargets::OnMontagingGridsAddGriLlikeLastOne()
+{
+  mNavigator->AddGridOfPoints(true);
+}
+
+void CMenuTargets::OnUpdateOnMontagingGridsAddGriLlikeLastOne(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(mNavigator && mNavigator->OKtoAddGrid(true) && !DoingTasks() &&
     !mNavigator->GetAcquiring());
 }
 

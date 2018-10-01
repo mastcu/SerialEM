@@ -360,6 +360,8 @@ public:
   afx_msg void OnCalibrateComaVsIS();
   afx_msg void OnShowWholeAreaForAllPoints();
   afx_msg void OnUpdateShowWholeAreaForAllPoints(CCmdUI *pCmdUI);
+  afx_msg void OnMontagingGridsAddGriLlikeLastOne();
+  afx_msg void OnUpdateOnMontagingGridsAddGriLlikeLastOne(CCmdUI *pCmdUI);
 };
 
 /////////////////////////////////////////////////////////////////////////////
