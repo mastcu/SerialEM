@@ -4976,14 +4976,17 @@ void CMacroProcessor::NextCommand()
       ABORT_NOLINE("There is no current Navigator item.");
     index2 = navItem->mGroupID;
     index = -1;
+    ix0 = navigator->CountItemsInGroup(index2, report, strCopy, ix1);
     if (navigator->GetAcquiring()) {
       index = 0;
       if (index2)
         index = navigator->GetFirstInGroup() ? 1 : 2;
     }
-    report.Format("Group acquire status %d, group ID %d", index, index2);
+    report.Format("Group acquire status %d, group ID %d, # in group %d, %d set to acquire"
+      , index, index2, ix0, ix1);
     mWinApp->AppendToLog(report, mLogAction);
-    SetReportedValues(&strItems[1], (double)index, (double)index2);
+    SetReportedValues(&strItems[1], (double)index, (double)index2, (double)ix0, 
+      (double)ix1);
 
   } else if (CMD_IS(NEWMAP)) {                              // NewMap
     ABORT_NONAV;
