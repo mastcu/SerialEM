@@ -79,6 +79,7 @@ public:
   GetMember(bool, LastCtfBasedFailed);
   GetSetMember(int, CtfBasedLDareaDelay);
   GetSetMember(float, ComaVsISextent);
+  GetSetMember(float, MinCtfBasedDefocus);
   GetMember(int, BacklashDelay);
   float GetBeamTiltBacklash();
   ComaVsISCalib *GetComaVsIScal() {return &mComaVsIScal;};
