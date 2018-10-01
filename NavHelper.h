@@ -95,6 +95,8 @@ public:
   GetSetMember(BOOL, RIuseCurrentLDparams);
   GetSetMember(BOOL, CollapseGroups);
   SetMember(int, ExtDrawnOnID);
+  GetSetMember(BOOL, SkipMontFitDlgs);
+  GetSetMember(bool, DoingMultipleFiles);
   void ForceCenterRealign() {mCenterSkipArray.RemoveAll();};
 
   CStateDlg *mStateDlg;
@@ -247,6 +249,8 @@ private:
   double mExtDelX, mExtDelY;
   MiniOffsets mExtOffsets;       // Offset values for aligned montage map
   int mExtTypeOfOffsets;         // Type of offsets loaded there
+  BOOL mSkipMontFitDlgs;         // Setting in file properties dialog to skip dialogs
+  bool mDoingMultipleFiles;      // Flag to avoid "no longer inherits" messages
 
 
 public:
@@ -274,7 +278,8 @@ public:
   void ChangeAllBufferRegistrations(int mapID, int fromReg, int toReg);
   CString NextAutoFilename(CString inStr);
   int NewAcquireFile(int itemNum, int fileType, ScheduledFile *sched);
-  int SetFileProperties(int itemNum, int fileType, ScheduledFile *sched);
+  int SetFileProperties(int itemNum, int fileType, ScheduledFile *sched, 
+    bool fromFilePropButton, bool skipFitDlgs);
   int SetOrChangeFilename(int itemNum, int fileType, ScheduledFile *sched);
   void RemoveFromArray(int which, int index);
   void ChangeRefCount(int which, int index, int dir);

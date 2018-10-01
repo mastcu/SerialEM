@@ -124,6 +124,7 @@ CNavHelper::CNavHelper(void)
   mRIuseCurrentLDparams = false;
   mNav = NULL;
   mExtDrawnOnID = 0;
+  mDoingMultipleFiles = false;
 }
 
 CNavHelper::~CNavHelper(void)
@@ -2427,18 +2428,19 @@ int CNavHelper::NewAcquireFile(int itemNum, int listType, ScheduledFile *sched)
       if (*montIndexp >= 0) 
         ChangeRefCount(NAVARRAY_MONTPARAM, *montIndexp, 1);
 
-      // Check for uniqueness of fileness
+      // Check for uniqueness of filenames
+      if (breakForFit)
+        break;
       while (NameToOpenUsed(autoName) || mDocWnd->StoreIndexFromName(autoName) >= 0)
         autoName = NextAutoFilename(autoName);
       *namep = autoName;
-      if (breakForFit)
-        break;
       return 0;
     }
   }
 
   // If nothing found, need to create file options and filename
-  index = SetFileProperties(itemNum, listType, sched);
+  index = SetFileProperties(itemNum, listType, sched, false, 
+    breakForFit && mSkipMontFitDlgs);
   if (index) {
     *propIndexp = *montIndexp = -1;
     RecomputeArrayRefs();
@@ -2562,7 +2564,8 @@ int CNavHelper::SetTSParams(int itemNum)
 
 // Set the file properties for a file to be opened for item or group, either by editing
 // existing properties for that item or by cloning shared properties and editing those
-int CNavHelper::SetFileProperties(int itemNum, int listType, ScheduledFile *sched)
+int CNavHelper::SetFileProperties(int itemNum, int listType, ScheduledFile *sched,
+  bool fromFilePropButton, bool skipFitDlgs)
 {
   CMapDrawItem *item = mItemArray->GetAt(itemNum);
   CMapDrawItem *item2;
@@ -2591,12 +2594,14 @@ int CNavHelper::SetFileProperties(int itemNum, int listType, ScheduledFile *sche
     typeDlg.m_iSingleMont = prevIndex >= 0 ? 1 : 0;
   typeDlg.mPolyFitOK = item->mType == ITEM_TYPE_POLYGON && listType == NAVFILE_ITEM;
   typeDlg.m_bFitPoly = mLastMontFitToPoly;
+  typeDlg.m_bSkipDlgs = mSkipMontFitDlgs;
   if (prevIndex >= 0 && typeDlg.mPolyFitOK)
     typeDlg.m_bFitPoly = montpSrc->wasFitToPolygon;
-  if (typeDlg.DoModal() != IDOK)
+  if (!skipFitDlgs && typeDlg.DoModal() != IDOK)
     return -1;
   mLastTypeWasMont = typeDlg.m_iSingleMont != 0;
   mLastMontFitToPoly = typeDlg.m_bFitPoly;
+  mSkipMontFitDlgs = typeDlg.m_bSkipDlgs;
 
   AddInheritingItems(itemNum, prevIndex, NAVARRAY_MONTPARAM, inheritors);
 
@@ -2615,7 +2620,7 @@ int CNavHelper::SetFileProperties(int itemNum, int listType, ScheduledFile *sche
     if (typeDlg.m_bFitPoly && typeDlg.mPolyFitOK) {
 
       // This assumes that it is the current item
-      if (mNav->PolygonMontage(&montDlg))
+      if (mNav->PolygonMontage(&montDlg, skipFitDlgs))
         return -1;
       montDlg.mParam.wasFitToPolygon = true;
     } else if (montDlg.DoModal() != IDOK)
@@ -2721,7 +2726,7 @@ int CNavHelper::SetFileProperties(int itemNum, int listType, ScheduledFile *sche
       newFileOpt->typext |= VOLT_XY_MASK;
   }
 
-  if (mDocWnd->FilePropForSaveFile(newFileOpt)) {
+  if (mDocWnd->FilePropForSaveFile(newFileOpt, fromFilePropButton)) {
     if (madeNewOpt)
       delete newFileOpt;
     return -1;
@@ -2850,6 +2855,8 @@ void CNavHelper::NoLongerInheritMessage(int itemNum, int sharedInd, char * typeT
   CString str;
   CMapDrawItem *item1 = mItemArray->GetAt(itemNum);
   CMapDrawItem *item2 = mItemArray->GetAt(sharedInd);
+  if (!mDoingMultipleFiles)
+    return;
   str.Format("Item # %d (%s) no longer inherits changes in %s from item # %d (%s)", 
     itemNum + 1, (LPCTSTR)item1->mLabel, typeText, sharedInd + 1, (LPCTSTR)item2->mLabel);
   mWinApp->AppendToLog(str);
