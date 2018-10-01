@@ -609,6 +609,14 @@ int CEMscope::Initialize()
       if (mMagChgIntensityDelay < 0)
         mMagChgIntensityDelay = 200;
 
+      // Set up array to keep track of whether IS neutral was checked
+      mCheckedNeutralIS.push_back(1);
+      for (ind = 1; ind < MAX_MAGS; ind++) {
+        if (!mMagTab[ind].mag)
+          break;
+        mCheckedNeutralIS.push_back(0);
+      }
+
     } else {
 
       // Hitachi
@@ -2340,9 +2348,10 @@ BOOL CEMscope::IncImageShift(double shiftX, double shiftY)
 BOOL CEMscope::ChangeImageShift(double shiftX, double shiftY, BOOL bInc)
 {
   BOOL success;
-  double axisISX, axisISY, plugISX, plugISY;
+  double axisISX, axisISY, plugISX, plugISY, neutISX, neutISY;
   bool needBeamShift = false;
-  int magIndex;
+  int magIndex, ind;
+  short ID = mJeolSD.usePLforIS ? 11 : 8;
   mLastISdelX = shiftX;
   mLastISdelY = shiftY;
   ScaleMat IStoBS;
@@ -2371,7 +2380,26 @@ BOOL CEMscope::ChangeImageShift(double shiftX, double shiftY, BOOL bInc)
       shiftX += axisISX;
       shiftY += axisISY;
     }
-  
+
+    // Check the neutral image shift one time at this mag
+    if (JEOLscope && !mLastSTEMmode && mLastMagIndex > 0 && 
+      mLastMagIndex < (int)mCheckedNeutralIS.size() && !mCheckedNeutralIS[mLastMagIndex]){
+        magIndex = mPlugFuncs->GetMagnificationIndex();
+        if (!mCheckedNeutralIS[magIndex]) {
+          mPlugFuncs->SetToNeutral(ID);
+          mPlugFuncs->GetImageShift(&neutISX, &neutISY);
+          mCheckedNeutralIS[magIndex] = 1;
+          if (fabs(neutISX - mMagTab[magIndex].neutralISX[mNeutralIndex]) > 0.001 || 
+            fabs(neutISY - mMagTab[magIndex].neutralISY[mNeutralIndex]) > 0.001) {
+              SEMMessageBox("The neutral image shift calibration appears to be off at "
+                "this magnification.\n\nYou should run \"Neutral IS Values\" in the "
+                "Calibration menu and save calibrations");
+              for (ind = 0; ind < (int)mCheckedNeutralIS.size(); ind++)
+                mCheckedNeutralIS[ind] = 1;
+          }
+        }
+    }
+
     // Make the movements; get mag if not STEM mode and need beam shift
     mPlugFuncs->SetImageShift(shiftX, shiftY);
     if (JEOLscope)

@@ -635,6 +635,7 @@ private:
   float mFalcon3ReadoutInterval; // Frame interval for Falcon 3 camera
   float mAddToFalcon3Exposure; // Default to set addToExposure for Falcon 3
   BOOL mSkipAdvancedScripting; // To make cameras connect by old scripting
+  std::vector<short int> mCheckedNeutralIS;
   int mPluginVersion;         // Version of plugin or server
 
   // Old static variables from UpdateProc
