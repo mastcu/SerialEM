@@ -312,7 +312,7 @@ void CMultiShotDlg::OnDoShotsInHole()
 // Number of shots spinner
 void CMultiShotDlg::OnDeltaposSpinNumShots(NMHDR *pNMHDR, LRESULT *pResult)
 {
-  FormattedSpinnerValue(pNMHDR, pResult, 2, 12, mActiveParams->numShots, 
+  FormattedSpinnerValue(pNMHDR, pResult, 2, 18, mActiveParams->numShots, 
     m_strNumShots, "%d");
   UpdateAndUseMSparams();
 }
