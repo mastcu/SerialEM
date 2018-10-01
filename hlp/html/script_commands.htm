@@ -652,7 +652,9 @@
             the threshold will be the value that the frame would have after saving, thus 
             a scaled electron count value when taking normalized frames or actual electron
             counts otherwise.&nbsp; The first and last frame will be saved 
-            regardless.&nbsp; The SEMCCD plugin must be dated 8/28/18 or later.</TD>
+            regardless.&nbsp; The plugin will write a list of frames actually saved, 
+            numbered from 0, named as the root of the frame stack name and &#39;_saved.txt&#39;.&nbsp; The SEMCCD plugin must be dated 
+            9/26/18 or later.</TD>
         </TR>
         <TR>
           <TD class="style8">QueueFrameTiltSeries #S #I #N [#D] [#O] [#W] [#F] [#X #Y]</TD>
@@ -672,7 +674,7 @@
           <TD>Sets up a tilt series with all steps specified in the given array variable, 
             which should contain 1 to 6 values per step of the series, with the values for 
             one step followed by those for the next step, etc.&nbsp; #F is the sum of 1 if 
-            there are tilt angles, 2 if there are shutter open times, 4 if thereare&nbsp; 
+            there are tilt angles, 2 if there are shutter open times, 4 if there are&nbsp; 
             wait times or intervals between steps, 8 if there are changes in defocus from 
             the current value, and 16 if there are image shift changes from the current 
             value.&nbsp; In the latter case there would be values for X and Y in microns in&nbsp; 
@@ -2320,13 +2322,14 @@
         </TR>
         <TR vAlign="top">
           <TD class="style12">ReportGroupStatus</TD>
-          <TD>For the current Navigator item or the item this script is being run on, reports a code for whether the
-            item is first to be acquired in a group: -1 if Navigator not acquiring, 0 if
-            not in a group, 1 if first to be acquired in a group, 2 if later in the group.
-            If the group would show up on more than one line with 'Collapse groups' on, a
-            value of 1 is returned for the first item to be acquired in each subgroup.&nbsp;
-            It also reports the group ID of the item&nbsp; (ID is 0 for an item not in a
-            group).</TD>
+          <TD>For the current Navigator item or the item this script is being run on, 
+            reports a code for whether the item is first to be acquired in a group: -1 if 
+            Navigator not acquiring, 0 if not in a group, 1 if first to be acquired in a 
+            group, 2 if later in the group. If the group would show up on more than one line 
+            with &#39;Collapse groups&#39; on, a value of 1 is returned for the first item to be 
+            acquired in each subgroup.&nbsp; It also reports the group ID of the item&nbsp; (ID is 0 
+            for an item not in a group), the total number in the group, and the number in 
+            the group still marked for acquisition.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style12">ReportNumNavAcquire</TD>

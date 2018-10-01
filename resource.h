@@ -1413,7 +1413,7 @@
 #define IDC_CHECK_TAKE_K3_BINNED        2437
 #define IDC_STAT_CURSET1                2438
 #define IDC_STAT_CURSET2                2439
-#define IDC_CHECK1                      2440
+#define IDC_CHECK_SKIP_DLGS             2440
 #define IDC_GOTO_VIEW                   2441
 #define IDC_GOTO_FOCUS                  2442
 #define IDC_GOTO_TRIAL                  2443
@@ -1843,6 +1843,7 @@
 #define ID_FOCUS_SET_CTF_COMA_BT        33302
 #define ID_FOCUSTUNING_COMAVS           33303
 #define ID_MONTAGINGGRIDS_SHOWWHOLEAREAFORALLPOINTS 33304
+#define ID_MONTAGINGGRIDS_ADDGRIDLIKELASTONE 33305
 
 // Next default values for new objects
 // 
@@ -1850,7 +1851,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        228
-#define _APS_NEXT_COMMAND_VALUE         33305
+#define _APS_NEXT_COMMAND_VALUE         33306
 #define _APS_NEXT_CONTROL_VALUE         2449
 #define _APS_NEXT_SYMED_VALUE           104
 #endif

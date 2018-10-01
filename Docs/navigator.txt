@@ -325,3 +325,36 @@ to set from 3 places: RestoreFromMapState before returning if no saved state,
 StartSecondRound before calling PrepareToReimageMap, and StopRealigning.  The
 only problem is when RestoreFromMapState is called without setting a map
 state. Solution is to clear out stayingInLD flag when a restore occurs
+
+FITTING MONTAGE TO POLYGON
+
+CNavigatorDlg::PolygonMontage(CMontageSetupDlg *montDlg)
+  Requires the current item to be a polygon
+  Make a copy of the polygon and calls SetupMontage with the montDlg
+  Fixes center of polygon, updates table
+  Is called from MenuTargets with no dialog and CNavHelper::SetFileProperties
+  with a dialog
+
+CNavigatorDlg::SetupMontage(item, montDlg)
+  Calls FitMontageToItem one or two times; two times if on low dose and not
+  using View or Search, it tries View the second time
+  Is called by CornerMontage and FullMontage with no dialog, and
+  PolygonMontage with a dialog
+  With a dialog, it runs the dialog.
+  Without a dialog it calls mDocWnd->GetMontageParamsAndFile(true)
+
+CNavigatorDlg::FitMontageToItem(montParam, binning, magIndex, forceStage)
+  Does the real work of fitting and sets parameters if it fits including a
+  skip list, loops twice on image shift then stage shift unless forceStage is
+  set
+  Is called by SetupMontage and by CMontageSetupDlg::CheckNavigatorFit
+  (internally used in mont dialog to check on change in conditions)
+
+CNavHelper::SetFileProperties
+
+CNavHelper::NewAcquireFile(int itemNum, int listType, ScheduledFile *sched)
+
+
+
+
+  

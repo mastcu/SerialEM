@@ -72,13 +72,18 @@
         <TR VALIGN="top">
           <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_supermontaging_polygonsupermontage">Polygon 
               Super Montage</A></TD>
-          <TD>Add polygons representing overlapping montages to fill the current polygon</TD>
+          <TD>Add polygons representing overlapping montages to fill the current polygon.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1">&nbsp;&nbsp; <A HREF="#hid_navigator_addgridofpoints">Add Grid of 
               Points</A></TD>
           <TD>Add a set of points on a regular grid either filling a polygon or in a full 
             rectangle.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1">&nbsp;&nbsp; <a href="#hid_montaginggrids_addgridlikelastone">
+            Add Grid Like Last One</a></TD>
+          <TD>Add a grid of points like the last one, with no queries to answer.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1">&nbsp;&nbsp; <a href="#hid_montaginggrids_grouppointsingrid">
@@ -480,7 +485,30 @@
         necessary.&nbsp; If you are filling an elongated region, you can reduce errors 
         from extrapolation by marking the corner with two adjacent points near the 
         middle of the region instead of near one end.</P>
-    <P>Once you have added a grid with a 5-point pattern like this, you can add a grid 
+    <P>For a large grid, it may be difficult to mark the two adjacent points 
+      accurately enough to end up with the right number of points between them and the 
+      endpoint.&nbsp; You can overcome this with a group of 7 points, where the points 
+      along one axis would look like</P>
+    <P>X&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+        X&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;o&nbsp;&nbsp;&nbsp;&nbsp; 
+        &nbsp;o&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>X</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;o&nbsp;&nbsp;&nbsp;&nbsp; 
+      &nbsp;o&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;o&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;o&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;o&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;o&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;o&nbsp;&nbsp;&nbsp;&nbsp; 
+      &nbsp;o&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;o&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;o&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;o&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;o&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;o&nbsp;&nbsp;&nbsp;&nbsp; 
+      &nbsp;o&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;o&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;X</P>
+    <P>and similarly along the other axis.&nbsp; The additional point between the 
+      adjacent pair and the endpoint (<b>X</b>) allows it to get a more accurate 
+      initial estimate of the interval between points, so that when it divides the 
+      longer distance by this interval and rounds to the nearest integer, it comes out 
+      with the right number. Placing this point at the square root of the total number 
+      of points along the line should be optimal (e.g, at the fifth point if there are 
+      25).&nbsp; (The additional point needs to be far enough out to give a 
+      sufficiently accurate initial estimate but not so far that it mis-estimates the 
+      number of points along the line to that point.)&nbsp; If you start with a 
+      5-point group and the placement fails, you can add the two points to the same 
+      group by turning on Edit mode, selecting any point in the group with the left 
+      mouse button, and adding the two intermediate points with the middle mouse 
+      button.</P>
+    <P>Once you have added a grid with a 5- or 7-point pattern like this, you can add a grid 
       in a new area with the same spacing and orientation by simply adding a single 
       point in the new area.&nbsp; It must be the only point in the group, so press 
       'Add points', add the point, and press 'Stop Adding'.&nbsp; If you are not 
@@ -510,6 +538,26 @@
         that focusing is done in areas that have already been acquired from.&nbsp; 
         However, this pattern is not used when added points are placed into separate 
         groups.</P>
+      <P><A NAME="hid_montaginggrids_addgridlikelastone"></A><B>Add Grid Like Last One command (Navigator 
+          - Montaging &amp; Grids sub-menu)</B></P>
+       <P>After adding a grid of points with the previous command, you can use this command 
+    to add another grid of the same kind without having to answer any queries.&nbsp; 
+    'Of the same kind' means that if the last grid was added on a group of points or 
+    a single point, the command can be used if a point is selected; whereas if the 
+    last grid was added with a polygon or map selected, a polygon or map must again 
+    be selected.&nbsp;&nbsp; If you added a grid with a group of points or single 
+    point selected and chose to fill a polygon or map with the grid, then the 
+    program will search for the smallest polygon or map containing the center of the 
+    pattern implied by the current point and fill that area.&nbsp; In other words, 
+    when you use a single point to reuse a previous 5 or 7 point pattern, the point 
+    does not need to be inside the polygon, as long as the position at the center of 
+    the previous pattern, starting at that point as its corner, is inside the 
+    polygon.</P>
+    <P>In sum, this command should work just the way you want: add a 
+    point at the corner of a new area to be filled and run the command, which you 
+    can do with the menu accelerator Alt-N-M-L.&nbsp; The easiest way to add a single 
+      point is to place the marker there first, then press 'Add 
+    Marker'.</P>
       <P><A NAME="hid_montaginggrids_grouppointsingrid"></A><B>Divide Points into Groups command 
           (Navigator - Montaging &amp; Grids sub-menu)</B></P>
       <P>When this option is selected, the set of points added with the

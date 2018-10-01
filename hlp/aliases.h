@@ -350,6 +350,7 @@ hid_navigator_setgridlimits			= SerialEM.chm::/html\menu_navigator.htm#hid_navig
 hid_navigator_alignedsupermontage = SerialEM.chm::/html\menu_navigator.htm#hid_navigator_alignedsupermontage
 hid_supermontaging_polygonsupermontage = SerialEM.chm::/html\menu_navigator.htm#hid_supermontaging_polygonsupermontage
 hid_navigator_addgridofpoints		= SerialEM.chm::/html\menu_navigator.htm#hid_navigator_addgridofpoints
+hid_montaginggrids_addgridlikelastone		= SerialEM.chm::/html\menu_navigator.htm#hid_montaginggrids_addgridlikelastone
 hid_montaginggrids_grouppointsingrid		= SerialEM.chm::/html\menu_navigator.htm#hid_montaginggrids_grouppointsingrid
 hid_montaginggrids_setgroupsize		= SerialEM.chm::/html\menu_navigator.htm#hid_montaginggrids_setgroupsize
 hid_montaginggrids_showwholeareaforallpoints		= SerialEM.chm::/html\menu_navigator.htm#hid_montaginggrids_showwholeareaforallpoints

@@ -3,6 +3,32 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+10/1/18: Fixed problem with skipping numbers in the filenames when fitting
+montage to polygon in New file at item.
+
+10/1/18: Changed hot key for enabling CTF fitting from Shift-D to Ctrl-D,
+which fixes multiple deletion in the Navigator with Shift-D.
+
+10/1/18: Added a menu option to add a grid of points just like the last one,
+without having to answer any queries.
+
+10/1/18: A grid of points can now be specified by 7 points instead of 5 to
+overcome inaccuracy in the inter-hole interval specified by adjacent point.
+
+10/1/18: Added an option to skip the montage dialog when fitting a montage to
+a polygon.
+
+10/1/18: Made it possible to set up tilt series or new file at items for a
+range of points by pressing Shift T or Shift N twice.
+
+10/1/18: Made the first off-center multi-shot image within a hole be taken
+along the tilt axis.
+
+10/1/18: Added smallest defocus for analysis to CTF acquire parameter
+entries.
+
+9/27/18: Added check for neutral image shift values being correct on JEOL.
+
 9/27/18: Added ability to tilt in steps, shutter the beam, and optionally
 change focus or image shift during an acquisition that saves frames. Added
 script commands: to set this up for regular tilts or for ones specified in an

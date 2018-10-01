@@ -214,7 +214,13 @@
         intensity, spot size, and energy filter settings if any.  When in
         low dose, the Record area parameters are saved as a whole, which
         encompasses those same parameters plus the magnification.
-    <P><B><A NAME="navac_newfile"></A>New file at item</B></P>
+    <P>Tilt series can be set up for a range of items by selecting an item at one end 
+      of the range, pressing &#39;Shift T&#39;, selecting the item at the other end of the 
+      range, and pressing &#39;Shift T&#39; again.&nbsp;&nbsp; If all items in the range not 
+      marked as &#39;Acquire&#39; are already set for tilt series, this operation will turn 
+      off the tilt series designations for all of them.&nbsp; Otherwise, tilt series 
+      will be set up for each file not already marked as &#39;Acquire&#39; or &#39;Tilt series&#39;.</P>
+      <P><B><A NAME="navac_newfile"></A>New file at item</B></P>
     <P>This checkbox allows you to open a new file
        for the current item if it is marked as 'Acquire'.&nbsp; These dialogs will open 
       the first time that you check this, and in some other cases:</P>
@@ -222,13 +228,15 @@
         <LI>
           A small dialog allowing you to specify whether the tilt series is a single 
           frame or a montage. If you select montage and the item is a polygon, then you 
-          also have the option to fit the montage to the polygon.</LI>
+          also have the option to fit the montage to the polygon.&nbsp; This dialog also 
+          has an option to do the fitting on future polygons without opening the <A HREF="hidd_montagesetup.htm">
+          Montage Setup dialog</A>.</LI>
         <LI>
           The <A HREF="hidd_montagesetup.htm">Montage Setup dialog box</A> , if you 
           selected a montage.</LI>
         <LI>
-          The <A HREF="hidd_fileproperties.htm">File Properties dialog box</A>
-        </LI>
+          The <A HREF="hidd_fileproperties.htm">File Properties dialog box</A>, 
+          unless the option not to show this dialog is selected there.</LI>
         <LI>
           The <A HREF="afx_hidd_filesave.htm">Save As dialog box</A> for specifying the 
           output file. The file will not be opened at this time, but the program will 
@@ -243,10 +251,25 @@
         item has a montage fit to a polygon and the current item is a point, the new 
         file will be a montage fitting the shape of that polygon but taken at the new 
         location. You can then change the automatically inherited properties with the <B>File Properties</B> or <B>Filename</B> buttons, 
-        including whether the file is single-frame or montage. The exception to this is 
-        when the preceding item has a montage fit to a polygon and the current item is 
-        a polygon. In this case, the dialogs will open so that you can choose to fit a new 
-        montage to this polygon.</P>
+        including whether the file is single-frame or montage. Dialogs will open, 
+        however, when the preceding item has a montage fit to a polygon, the current item is 
+        a polygon, and you did not select the option in the initial small dialog to fit 
+        without opening the montage dialog. </P>
+    <P>New files can be set up at a range of items marked as &#39;Acquire&#39;, or at a subset of 
+      items, by selecting an item at one end of the range, pressing &#39;Shift N&#39;, 
+      selecting the item at the other end of the range, and pressing &#39;Shift N&#39; again.&nbsp; 
+      If all eligible items in the range are already set for new files, this operation 
+      will turn off the new file designations for all of them.&nbsp; However, if only 
+      some or no items are set for files, an entry box will appear that allows three 
+      choices:</P>
+    <ol>
+      <li>&nbsp;Enter 1 to open a new file at every eligible item.</li>
+      <li>Enter a number greater than 1 to open files at the given interval between 
+        point items; files will still be opened at all polygon items.</li>
+      <li>Enter -1 to open files at polygons only, not at points.&nbsp; This entry 
+        allows you to fit a new montage to each polygon and save images at points 
+        between the polygons into the existing montage files.</li>
+    </ol>
       <P><B><A NAME="navac_newfile_group"></A>New file at group</B></P>
       <P>Use this checkbox to set up a new file to be opened when the first item in a 
         group is about to be acquired. This option operates similarly to 'New file at 
@@ -263,7 +286,8 @@
         allow you select montaging and fitting to a polygon if appropriate, then the <A HREF="hidd_montagesetup.htm">
           Montage Setup dialog box</A> , if you selected a montage, then the <A HREF="hidd_fileproperties.htm">
           File Properties dialog box</A> . If you cancel the latter box, changes made 
-        in the montaging properties will be retained.</P>
+        in the montaging properties will be retained.&nbsp; These dialogs open from this 
+        button even when you have selected options to skip them.</P>
       <P><B><A NAME="navac_imagestate"></A>(Set) Imaging State</B></P>
       <P>Use this button to store the current imaging state (microscope settings and 
         Record parameters) as a state to be set when the current item is about to be 
@@ -506,11 +530,13 @@
           mouse button down while dragging the item to the desired place. This even works 
           when groups are collapsed to a single line.</LI></UL>
       <P>Although the box does not allow selection of multiple items by the usual Shift 
-        or Ctrl clicking, a range of points can be selected for deletion or toggling of 
-        the acquisition state by pressing Shift D or Shift A twice, once at each end of 
-        the range.&nbsp; See the description of these operations under <b>
-        <a href="#navab_delete">Delete Item</a></b> 
-        and <b><a href="#navac_acquire">Acquire</a></b>.</P>
+        or Ctrl clicking, a range of points can be selected for several operations by 
+        pressing Shift and a key twice, once at each end of the range.&nbsp; These 
+        include deleting with Shift D, toggling of 
+        the acquisition state with Shift A, setting up tilt series with Shift T, and 
+        setting up new files at items with Shift N.&nbsp;&nbsp; See the description of these operations under
+        <a href="#navab_delete">Delete Item</a>, <a href="#navac_acquire">Acquire</a>, <A HREF="#navac_tiltseries">Tilt series</A>, 
+        and <A HREF="#navac_newfile">New file at item</A>.</P>
     <P>The properties shown for each item are the label, the color, the X, Y and Z 
         coordinates, and the type of item (point, polygon, or map, 'Imp' for imported 
         map, 'Anc' for item to use for anchor map state). Next is the registration number 
