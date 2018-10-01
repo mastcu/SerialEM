@@ -13,6 +13,7 @@ CNavFileTypeDlg::CNavFileTypeDlg(CWnd* pParent /*=NULL*/)
 	: CBaseDlg(CNavFileTypeDlg::IDD, pParent)
   , m_iSingleMont(0)
   , m_bFitPoly(FALSE)
+  , m_bSkipDlgs(FALSE)
 {
 }
 
@@ -26,6 +27,8 @@ void CNavFileTypeDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Radio(pDX, IDC_ROPEN_FOR_SINGLE, m_iSingleMont);
   DDX_Control(pDX, IDC_CHECK_FIT_POLY, m_butFitPoly);
   DDX_Check(pDX, IDC_CHECK_FIT_POLY, m_bFitPoly);
+  DDX_Control(pDX, IDC_CHECK_SKIP_DLGS, m_butSkipDlgs);
+  DDX_Check(pDX, IDC_CHECK_SKIP_DLGS, m_bSkipDlgs);
 }
 
 BOOL CNavFileTypeDlg::OnInitDialog()

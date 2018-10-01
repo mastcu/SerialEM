@@ -27,4 +27,6 @@ public:
   BOOL m_bFitPoly;
   BOOL mPolyFitOK;
   afx_msg void OnRopenForSingle();
+  CButton m_butSkipDlgs;
+  BOOL m_bSkipDlgs;
 };
