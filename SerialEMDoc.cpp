@@ -1170,7 +1170,7 @@ KImageStore * CSerialEMDoc::OpenSaveFile(FileOptions *fileOptp)
 {
   int err;
   CString cFilename;
-  if (FilePropForSaveFile(fileOptp)) {
+  if (FilePropForSaveFile(fileOptp, false)) {
     mWinApp->RestoreViewFocus();
     return NULL;
   }
@@ -1185,7 +1185,7 @@ KImageStore * CSerialEMDoc::OpenSaveFile(FileOptions *fileOptp)
 }
 
 // Runs the file properties dialog with the given options, returns -1 if user cancels
-int CSerialEMDoc::FilePropForSaveFile(FileOptions * fileOptp)
+int CSerialEMDoc::FilePropForSaveFile(FileOptions * fileOptp, bool openAnyway)
 {
   EMimageBuffer *imBufs = mWinApp->GetImBufs();
 
@@ -1194,7 +1194,7 @@ int CSerialEMDoc::FilePropForSaveFile(FileOptions * fileOptp)
   // there is an unsigned short buffer
   CFilePropDlg propDlg;
   propDlg.mFileOpt = *fileOptp;
-  propDlg.mShowDlgThisTime = mShowFileDlgOnce;
+  propDlg.mShowDlgThisTime = mShowFileDlgOnce || openAnyway;
   propDlg.m_bSkipFileDlg = mSkipFileDlg;
   mShowFileDlgOnce = false;
   propDlg.mAny16Bit = mWinApp->GetAny16BitCameras() && 
