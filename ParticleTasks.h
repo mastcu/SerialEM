@@ -39,6 +39,7 @@ private:
   int mMSLastShotIndex;           // Last index of multishots in hole
   MultiShotParams *mMSParams;      // Pointer to params from NavHelper
   int mMSTestRun;
+  int mMagIndex;                   // Mag index for the run
 
 public:
   void Initialize(void);

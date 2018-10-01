@@ -51,7 +51,7 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
   int inHoleOrMulti)
 {
   float pixel;
-  int magInd, nextShot, nextHole, testRun;
+  int nextShot, nextHole, testRun;
   double delISX, delISY, delBTX, delBTY;
   CameraParameters *camParam = mWinApp->GetActiveCamParam();
   ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
@@ -146,13 +146,13 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
   // Go to low dose area before recording any values
   if (mWinApp->LowDoseMode())
     mScope->GotoLowDoseArea(RECORD_CONSET);
-  magInd = mScope->GetMagIndex();
+  mMagIndex = mScope->GetMagIndex();
 
   mMSHoleIndex = 0;
   mMSHoleISX.clear();
   mMSHoleISY.clear();
   if (inHoleOrMulti & MULTI_HOLES) {
-     mMSNumHoles = GetHolePositions(mMSHoleISX, mMSHoleISY, magInd, 
+     mMSNumHoles = GetHolePositions(mMSHoleISX, mMSHoleISY, mMagIndex, 
        mWinApp->GetCurrentCamera());
      mMSUseHoleDelay = true;
   } else {
@@ -189,9 +189,9 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
   mActPostExposure = mWinApp->ActPostExposure() && !mMSTestRun;
   mLastISX = mBaseISX;
   mLastISY = mBaseISY;
-  pixel = mShiftManager->GetPixelSize(mWinApp->GetCurrentCamera(), magInd);
+  pixel = mShiftManager->GetPixelSize(mWinApp->GetCurrentCamera(), mMagIndex);
   mMSRadiusOnCam = spokeRad / pixel;
-  mCamToIS = mShiftManager->CameraToIS(magInd);
+  mCamToIS = mShiftManager->CameraToIS(mMagIndex);
   mMSCurIndex = mMSDoCenter < 0 ? -1 : 0;
   mMSLastShotIndex = mMSNumPeripheral + (mMSDoCenter > 0 ? 0 : -1);
   mWinApp->UpdateBufferWindows();
@@ -288,13 +288,15 @@ void CParticleTasks::StopMultiShot(void)
 void CParticleTasks::SetUpMultiShotShift(int shotIndex, int holeIndex, BOOL queueIt)
 {
   double ISX, ISY, delBTX, delBTY, delISX = 0, delISY = 0, angle, cosAng, sinAng;
-  float delay, BTbacklash;
+  float delay, BTbacklash, rotation;
   int BTdelay;
   ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
 
   // Compute IS from center for a peripheral shot
+  rotation = (float)mShiftManager->GetImageRotation(mWinApp->GetCurrentCamera(), 
+    mMagIndex);
   if (shotIndex < mMSNumPeripheral && shotIndex >= 0) {
-    angle = DTOR * shotIndex * 360. / mMSNumPeripheral;
+    angle = DTOR * (shotIndex * 360. / mMSNumPeripheral + rotation);
     cosAng = cos(angle);
     sinAng = sin(angle);
     delISX = mMSRadiusOnCam * (mCamToIS.xpx * cosAng + mCamToIS.xpy * sinAng);
