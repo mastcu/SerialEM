@@ -80,7 +80,7 @@ public:
   int NewMap(bool unsuitableOK = false, int addOrReplaceNote = 0, CString *newNote = NULL);
   void DeleteItem() {OnDeleteitem();};
 	void CornerMontage();
-	int PolygonMontage(CMontageSetupDlg *montDlg);
+	int PolygonMontage(CMontageSetupDlg *montDlg, bool skipSetupDlg);
 	void TransformPts();
   void DoClose() {OnCancel();};
   BOOL GetAcquiring() {return mAcquireIndex >= 0;};
@@ -91,7 +91,7 @@ public:
   BOOL NoDrawing() {return !(mAddingPoints || mAddingPoly || mMovingItem);};
 	int GetItemType();
   void LoadNavFile(bool checkAutosave, bool mergeFile);
-	int SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg);
+	int SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg, bool skipSetupDlg);
 	void XfApply(ScaleMat a, float *dxy, float inX, float inY, float &outX, float &outY);
 	int DoSaveAs();
 	int DoSave();
@@ -312,6 +312,8 @@ private:
   BOOL mLoadingMap;         // Flag that map is being loaded
   int mShiftAIndex;        // Starting index for doing shift A
   int mShiftDIndex;        // Starting index for doing shift D
+  int mShiftTIndex;        // Starting index for doing shift T
+  int mShiftNIndex;        // Starting index for doing shift N
   int mNumSavedRegXforms;  // Number of saved reg-to-reg transforms
   int mLastXformToReg;     // Registration it was transformed to
   ScaleMat mMatSaved[MAX_SAVED_REGXFORM];
@@ -359,6 +361,8 @@ private:
   int mLast5ptEnd2;
   int mLast5ptRegis;        // Registration at which it was done
   bool mLast5ptOnImage;     // Whether it was done with image coordinates
+  float mLast5ptOffsetX;    // Offset from corner of pattern to center
+  float mLast5ptOffsetY;
   float mCenX, mCenY;       // Variables for getting from index to grid image position
   float mIncX1, mIncX2, mIncY1, mIncY2;
   bool mLastSelectWasCurrent;  // Flag that last mouse up was on current point
@@ -376,7 +380,14 @@ private:
   int mPostponedSubsetEnd;
   BOOL mPostposedDoSubset;
   bool mSettingUpFullMont;   // Flag so that fitting can not add extra area if skewed
-  float mMaxAngleExtraFullMont;  // Maximum angle at which extra size will be added 
+  float mMaxAngleExtraFullMont;  // Maximum angle at which extra size will be added
+  int mMinNewFileInterval;   // Interval at which to add new files when using Shift N
+  bool mLastGridSetAcquire;  // Whether turned on a aqcuire in last grid of points
+  bool mLastGridFillItem;    // Whether last grid of points filled a specified item
+  int mLastGridPatternPoly;  // -1 if no valid last grid, 0 for pattern, 1 for polygon
+  float mLastGridInSpacing;  // Spacing entered for regular fill of polygon
+  int mLastGridAwayFromFocus;  // Whether last grid of points was laid out away from focus
+  float mLastGridPolyArea;     // Area of polygon/map in ast grid of points filling one
 
 public:
   BOOL RegistrationChangeOK(void);
@@ -437,9 +448,9 @@ public:
   int CountItemsInGroup(int curID, CString & label, CString & lastlab, int &numAcquire, 
     IntVec *indexVec = NULL);
   void CleanSchedule(void);
-  BOOL OKtoAddGrid(void);
-  void AddGridOfPoints(void);
-  void InterPointVectors(CMapDrawItem **gitem, float * vecx, float * vecy, double * length, 
+  BOOL OKtoAddGrid(bool likeLast);
+  void AddGridOfPoints(bool likeLast);
+  void InterPointVectors(CMapDrawItem **gitem, float * vecx, float * vecy, float * length, 
     int i, int num);
   CStatic m_statListHeader;
   void GetSuperCoords(int & superX, int &superY);
@@ -544,6 +555,9 @@ public:
   CMapDrawItem *FindItemWithString(CString & string, BOOL ifNote);
   void MouseDoubleClick(int button);
   void ProcessDKey(void);
+  void ProcessTKey(void);
+  void ProcessNKey(void);
+  int ProcessRangeKey(const char *key, int &shiftIndex, int &start, int &end);
   BOOL m_bDrawLabels;
   afx_msg void OnDrawLabels();
   void ManageNumDoneAcquired(void);
@@ -562,6 +576,7 @@ int LimitsOfContiguousGroup(int itemInd, int &groupStart, int & groupEnd);
 void IStoXYandAdvance(int &direction);
 CMapDrawItem *FindNextAcquireItem(int &index);
 bool IsItemToBeAcquired(CMapDrawItem *item, bool &skippingGroup);
+float ContourArea(float *ptx, float *pty, int numPoints);
 };
 
 //{{AFX_INSERT_LOCATION}}
