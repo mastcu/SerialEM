@@ -687,6 +687,12 @@ int CParameterIO::ReadSettings(CString strFileName)
         stateP->alignFrames = itemEmpty[22] ? -1 : itemInt[22];
         stateP->useFrameAlign = itemEmpty[23] ? -1 : itemInt[23];
         stateP->faParamSetInd = itemEmpty[24] ? -1 : itemInt[24];
+        stateP->readModeView = itemEmpty[25] ? -1 : itemInt[25];
+        stateP->readModeFocus = itemEmpty[26] ? -1 : itemInt[26];
+        stateP->readModeTrial = itemEmpty[27] ? -1 : itemInt[27];
+        stateP->readModePrev = itemEmpty[28] ? -1 : itemInt[28];
+        stateP->readModeSrch = itemEmpty[29] ? -1 : itemInt[29];
+        stateP->readModeMont = itemEmpty[30] ? -1 : itemInt[30];
         stateP->focusAxisPos = EXTRA_NO_VALUE;
 
       } else if (NAME_IS("StateName")) {
@@ -1429,14 +1435,16 @@ void CParameterIO::WriteSettings(CString strFileName)
     for (i = 0; i < stateArray->GetSize(); i++) {
       stateP = stateArray->GetAt(i);
       oneState.Format("StateParameters %d %d %d %d %f %d %f %f %d %d %d %d %f %f "
-        "%d %d %d %f %d %d %d %d %d %d\n", stateP->lowDose, stateP->camIndex, 
-        stateP->magIndex, 
+        "%d %d %d %f %d %d %d %d %d %d %d %d %d %d %d %d\n", stateP->lowDose, 
+        stateP->camIndex, stateP->magIndex, 
         stateP->spotSize, stateP->intensity, stateP->slitIn ? 1 : 0, stateP->energyLoss,
         stateP->slitWidth, stateP->zeroLoss ? 1 : 0, stateP->binning, stateP->xFrame, 
         stateP->yFrame, stateP->exposure, stateP->drift, stateP->shuttering,
         stateP->K2ReadMode, stateP->probeMode, stateP->frameTime, stateP->doseFrac, 
         stateP->saveFrames, stateP->processing, stateP->alignFrames, 
-        stateP->useFrameAlign, stateP->faParamSetInd);
+        stateP->useFrameAlign, stateP->faParamSetInd, stateP->readModeView, 
+        stateP->readModeFocus, stateP->readModeTrial, stateP->readModePrev, 
+        stateP->readModeSrch, stateP->readModeMont);
         mFile->WriteString(oneState);
         if (!stateP->name.IsEmpty()) {
           oneState.Format("StateName %d %s\n", i, (LPCTSTR)stateP->name);
