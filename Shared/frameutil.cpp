@@ -74,12 +74,14 @@ void utilRollSavedFrames(std::vector<float *> &savedVec, int numFrames)
  * Output an FFT, or convert to image and dump that and convert back.
  */
 void utilDumpFFT(float *fft, int nxPad, int nyPad, const char *descrip, int real,
-                 int frame)
+                 int frame, int scale)
 {
 #ifndef NO_DUMPS_IN_DLL
   MrcHeader hdr;
   char fname[320];
   FILE *fp;
+  float scaleFac = (float)(1./sqrt((double)nxPad * nyPad));
+  int ind;
   checkDumpDir();
   if (real) {
     todfftc(fft, nxPad, nyPad, 1);
@@ -91,6 +93,9 @@ void utilDumpFFT(float *fft, int nxPad, int nyPad, const char *descrip, int real
   if (!shiftTemp)
     return;
   wrapFFTslice(fft, shiftTemp, (nxPad + 2) / 2, nyPad, 0);
+  if (scale)
+    for (ind = 0; ind < (nxPad + 2) * nyPad; ind++)
+      fft[ind] *= scaleFac;
   mrc_head_new(&hdr, (nxPad + 2) / 2, nyPad, 1, MRC_MODE_COMPLEX_FLOAT);
   sprintf(fname, "%s/fafft-%d.mrc", sDumpDir, sDumpInd);
   fp = fopen(fname, "wb");
@@ -101,6 +106,9 @@ void utilDumpFFT(float *fft, int nxPad, int nyPad, const char *descrip, int real
     utilPrint("Saved %s fft frame %d in %s\n", descrip, frame, fname);
   }
   sDumpInd++;
+  if (scale)
+    for (ind = 0; ind < (nxPad + 2) * nyPad; ind++)
+      fft[ind] /= scaleFac;
   wrapFFTslice(fft, shiftTemp, (nxPad + 2) / 2, nyPad, 1);
   free(shiftTemp);
 #endif

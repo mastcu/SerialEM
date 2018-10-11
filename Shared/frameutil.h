@@ -15,7 +15,7 @@ void utilCoordsForWrap(int nxFrom, int nyFrom, int nxTo, int nyTo, int xOffset,
                          int iyTo1[4]);
 void utilRollSavedFrames(std::vector<float *> &savedVec, int numFrames);
 void utilDumpFFT(float *fft, int nxPad, int nyPad, const char *descrip, int doReal,
-                 int frame = 0);
+                 int frame = 0, int scale = 0);
 void utilDumpImage(float *buf, int nxDim, int nxPad, int nyPad, int ifCorr, 
                    const char *descrip, int frame = 0);
 void utilPrint(const char *format, ...);

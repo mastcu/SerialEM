@@ -789,7 +789,7 @@ int FrameAlign::nextFrame(void *frame, int type, float *gainRef, int nxGain, int
 
   // Substitute the save arrays for the working ones; create new and push if needed
   if (saving) {
-    if (!mGpuAligning) {
+    if (mNumAllVsAll && !mGpuAligning) {
       if (aliFrameInd < (int)mSavedBinPad.size()) {
         binArr = mSavedBinPad[aliFrameInd];
       } else {
