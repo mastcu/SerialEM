@@ -3204,7 +3204,7 @@ int CCameraController::CapManageScreen(int inSet, BOOL retracting, int numActive
         mScope->SetScreenPos(newpos);
         mRaisingScreen = (newpos == spUp) ? 1 : -1;
         mWinApp->AddIdleTask(ThreadBusy, ScreenOrInsertDone,ScreenOrInsertError,
-          inSet, 0);
+          inSet, 15000);
         mWinApp->SetStatusText(SIMPLE_PANE, newpos == spUp ? 
           "RAISING SCREEN" : "LOWERING SCREEN");
         mWinApp->UpdateBufferWindows();
