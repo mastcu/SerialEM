@@ -1738,17 +1738,19 @@ void CLowDoseDlg::ManageAxisPosition()
   int curCam = mWinApp->GetCurrentCamera();
   int area = m_iDefineArea ? m_iDefineArea : 2;
 
+  // Axis positions are supposed to be completely up to date as image shift changes
+  specX = mLDParams[area].axisPosition - mLDParams[3].axisPosition;
+  m_strPosition.Format("%.2f", specX);
+
   if (!m_iDefineArea && !m_bTieFocusTrial) {
-    m_strPosition = "";
+    if (fabs(mLDParams[3 - area].axisPosition - mLDParams[3].axisPosition - specX) > 
+      0.005)
+      m_strPosition = "";
     m_strOverlap = "";
     UpdateData(false);
     return;
   }
  
-  // Axis positions are supposed to be completely up to date as image shift changes
-  specX = mLDParams[area].axisPosition - mLDParams[3].axisPosition;
-  m_strPosition.Format("%.2f", specX);
-
   // Update the separation and save the last size values
   GetAreaSizes(recSize, defSize, angle);
   if (!recSize || !mLDParams[3].magIndex || !mLDParams[area].magIndex)
