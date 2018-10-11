@@ -159,6 +159,7 @@ class DLL_IM_EX CEMscope
   BOOL NormalizeCondenser();
   void SetJeolPostMagDelay(int inVal, int inStage) {mJeolPostMagDelay = inVal; mPostMagStageDelay = inStage;};
   GetMember(int, JeolPostMagDelay);
+  GetSetMember(int, JeolExternalMagDelay);
   GetSetMember(int, JeolMagEventWait);
   GetSetMember(int, JeolSTEMPreMagDelay);
   GetSetMember(int, NumSpotSizes)
@@ -426,7 +427,8 @@ private:
   int mLastSTEMmag;
   double mLastSTEMfocus;      // Keep track of last focus values seen too
   double mLastRegularFocus;
-  double mUpdateSawMagTime;  // Time of last mag change seen in update routine
+  double mUpdateSawMagTime;   // Time of last mag change seen in update routine
+  double mLastSeenMagInd;     // Index of last mag seen in update
   BOOL mBlankWhenDown;        // if blanking when screen down
   BOOL mLowDoseMode;          // flag for low dose
   BOOL mCameraAcquiring;      // flag to not blank when screen up in low dose
@@ -539,6 +541,7 @@ private:
   int mJeolMagEventWait;      // Full wait time for a mag event to show up after change
   int mJeolSTEMPreMagDelay;   // Delay between a JEOL STEM image and STEM mag change
   int mPostMagStageDelay;     // Delay after changing mag for accessing stage only
+  int mJeolExternalMagDelay;  // Delay after an external mag change for fixing IS
   BOOL mNoColumnValve;        // Flag for scope (JEOL) with no column/beam valve control
   CString mC2Name;            // Name of C2 lens
   CString mC2Units;           // Units to put out for intensity

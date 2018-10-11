@@ -238,6 +238,7 @@ CEMscope::CEMscope()
   mTiltAxisOffset = 0.;
   mShiftToTiltAxis = false;
   mLastMagIndex = 0;
+  mLastSeenMagInd = -1;
   mLastRegularMag = 0;
   mLastEFTEMmag = 0;
   mLastSTEMmag = 0;
@@ -331,6 +332,7 @@ CEMscope::CEMscope()
   mJeolSTEMPreMagDelay = 1500;
   mJeolMagEventWait = 5000;  // Actual times as long as 16 have been seen when VME broken
   mPostMagStageDelay = 0;
+  mJeolExternalMagDelay = 0;
   mNoColumnValve = false;
   mUpdateBeamBlank = -1;
   mBlankTransients = false;
@@ -961,7 +963,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
   BOOL EFTEM, bReady, smallScreen, manageISonMagChg, gotoArea, blanked, restoreIS = false;
   int STEMmode, gunState = -1;
   bool newISseen = false;
-  bool handleMagChange, temProbeChanged = false;
+  bool handleMagChange, deferISchange, temProbeChanged = false;
   int vacStatus = -1;
   double stageX, stageY, stageZ, delISX, delISY, axisISX, axisISY, tranISX, tranISY;
   double rawISX, rawISY, curMag, minDiff, minDiff2;
@@ -1032,6 +1034,11 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
       if (STEMmode && mNeedSTEMneutral && mLastSTEMmag)
         ResetSTEMneutral();
       mProbeMode = STEMmode ? 0 : 1;
+      if (magIndex != mLastSeenMagInd) {
+        mUpdateSawMagTime = GetTickCount();
+        SEMTrace('i', "Update saw new mag index %d, last seen %d, last handled %d",
+          magIndex, mLastSeenMagInd, mLastMagIndex);
+      }
 
     } else { // FEI-like
 
@@ -1187,7 +1194,9 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
     delISY = 0.;
     handleMagChange = (magIndex != lastMag || changedJeolEFTEM) && 
       mCalNeutralStartMag < 0 && !sScanningMags;
-    if (handleMagChange) {
+    deferISchange = JEOLscope && mJeolExternalMagDelay > 0 && 
+      SEMTickInterval(mUpdateSawMagTime) < mJeolExternalMagDelay;
+    if (handleMagChange && !deferISchange) {
       mMagChanged = true;
 
       // Record time of user change to prevent images from being taken too soon
@@ -1206,7 +1215,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
       }
     }
 
-    if (handleMagChange || temProbeChanged) {
+    if ((handleMagChange  && !deferISchange) || temProbeChanged) {
 
       // Manage IS across a mag change either if staying in LM or M, or if the offsets
       // are turned on by user
@@ -1331,7 +1340,9 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
     changedSTEM = STEMmode != mLastSTEMmode;
     if (changedSTEM && !STEMmode)
       mWinApp->mCamera->OutOfSTEMUpdate();
-    mLastMagIndex = magIndex;
+    if (!deferISchange)
+      mLastMagIndex = magIndex;
+    mLastSeenMagInd = magIndex;
     mLastSTEMmode = STEMmode;
     GetTiltAxisIS(axisISX, axisISY);
 

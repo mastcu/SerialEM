@@ -37,3 +37,66 @@ directly.  The result is that the GUI is once again quite snappy and functional.
 
 -- Tobin Fricke <tobin@splorg.org> [ http://splorg.org/people/tobin/ ]
 
+
+MAGNIFICATION CHANGE AND IS HANDLING
+
+void JeolState::SetISXY(long xADC, long yADC, int magInd):
+// Take the ADC values and convert to microns and save in structure and ring
+// If magInd is supplied (default -1), cross-index all matching mag entries
+Stores converted ISX/Y anf time at ISRingIndex and increments that
+If magInd supplied, looks in whole ring of mag indexes for that mag and sets
+that mag entry's ringCrossInd to this IS
+(Which is odd, why not look back for last on ethat matches and stop there?)
+This is called by IS event, IS update, and SetImageShift
+But only an internal set provides a cross-index mag
+
+SetMagnificationIndex 
+Sets a changedMagTime and changedMagInd when by event
+It waits for an event from that earlier mag by up to magEventWait 
+(5000, prop JeolMagEventWait), suspending update during that time.
+Has a delay postMagDelay (1250 if events, prop JeolPostMagChangeDelay)
+This is set to double or at least 3000 on a mode change
+And then it delays with update suspended
+
+SetImageShift 
+calls JeolState::SetISXY with sUseMagInNextSetISXY and sets that to -1
+
+IS event:
+If an internal IS change was posted, it skips event if it is within 
+skipISeventTime (1500, no property) and within 2 IS hex units of posted IS
+
+Mag event:
+If an internal mag time was stored in internalMagTime, it cancels that if the mag has
+arrived or if past skipMagEventTime (700, no prop); otherwise t skips that
+It also tests changedMagTime and the mag against changedMagInd and cancels 
+changedMagTime
+Clears magInvalid
+
+Mode event: 
+sets magInvalid
+
+SEMSetJeolStateMag
+ is called from GetMagnificationIndex, mage event and update in plugin
+and from SetMagIndex and camera post-action in SEM
+It assigns jsd->magIndex and puts the mag and time on ringMag[Time] with -1 cross-index
+and increments magRingIndex
+
+LookupRingIS
+is given a last mag, and it looks back to find that in the ring.  If it is cross-indexed
+to an IS, that is the returned old IS index
+If the old mag was in the ring without a cross-index, and there is one or more past that,
+look at the one just past it and then searches for shift in list
+by looking backwards in the IS ring for one with a time at least 
+mMagFixISdelay (450, no prop) BEFORE that mag's time
+
+
+Scope Update:
+When a mag change comes in where IS needs to be managed, it takes the state values as
+starting point, and tries to look up Ring IS.  If it DOES find it, it uses that one 
+but removes the neutral and IS offset values.  Huh?  The state definitely has raw numbers
+so why is it not removed from them?  Because the resulting value is not put out
+unless it does find the IS on the ring.
+Transfer the general IS with that adjusted value, make a delISX/Y from the change
+Get rawISX/Y by adding this delISX/Y to the ring value and put that out.
+And later, it gets ISX/Y from the state values and subtracts axisISX/Y for display etc
+So that earlier ISX/Y is irrelevant

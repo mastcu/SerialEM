@@ -3337,6 +3337,13 @@
             the neutralization is reported. Default is 450 ms.</TD>
         </TR>
         <TR VALIGN="top">
+          <TD>JeolExternalMagDelay</TD>
+          <TD>Delay time in msec before the periodic update routine responds fully to a 
+            mag change not imposed by SerialEM.&nbsp; When multiple mag changes occur, newer 
+            microscopes (CryoARM, F200) generate errors if SerialEM tries to restore image 
+            shift too soon.&nbsp; The default is 0, values around 1000 may be needed.</TD>
+        </TR>
+        <TR VALIGN="top">
           <TD>OtherShiftBoundaries</TD>
           <TD>List of mag indexes at which image or beam shift calibrations are not 
             congruent with the next lower mag. Just like LowestMModeMagIndex, such an index 
