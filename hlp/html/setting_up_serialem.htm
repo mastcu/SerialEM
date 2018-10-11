@@ -110,6 +110,8 @@
         <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#run64bitFEI">Running 64-bit SerialEM on a 64-bit FEI Computer</a>
         <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#upgradingK2toK3">Upgrading from a K2 to a K3 camera</a>
+        <br>
         <A href="#setup_camera">Initial Camera Setup</A>
         <BR>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#cameraOrientation">Camera
@@ -929,8 +931,71 @@
       <li>Make a shortcut to the server in C:\Users\All Users\Desktop</li>
     </ul>
     <p>
+      <a name="upgradingK2toK3"><i>Upgrading from a K2 to a K3 camera</i></a>.&nbsp;This 
+    requires a few modifications of the SerialEMproperties.txt file and 
+    recalibrating SerialEM.&nbsp; There are three cases to consider:</p>
+    <ol>
+      <li>To move SerialEM from a K2 computer to the K3 computer, copy
+        <a href="file:///C:/ProgramData/SerialEM">C:\ProgramData\SerialEM</a> from the 
+        K2 to the K3 computer, as well as any settings files elsewhere that you wish to 
+        keep.&nbsp; Be sure to acquire these files before the K2 disappears!</li>
+      <li>To move SerialEM from a microscope computer to the K3, first follow the 
+        instructions in <a href="#movingTo64">Moving an Existing
+          Installation from an FEI Computer to a 64-bit Computer</a></li>
+      <li>To keep SerialEM on the microscope computer, just modify properties as 
+        described next</li>
+    </ol>
+    <p>
+      In any case, install a new version of SerialEM, one that is up to date with K3 
+      support.</p>
+    <p>
+      &nbsp;When changing to a very different camera, it is usually a good idea to give the 
+      new camera a different number.&nbsp; This is probably not necessary for a K2 to 
+      K3 change, but all the camera parameter sets in settings files will have 
+      under-sized images and exposure times too long and will need to be adjusted 
+      appropriately.</p>
+    <p>
+      Change the properties file as follows:</p>
+    <ul>
+      <li>In any K2FilterName entries (usually just above the K2 CameraProperties 
+        section), remove the word &quot;Filter&quot; from the name.</li>
+      <li>In the CameraProperties section, change the Name from K2 to K3.</li>
+      <li>Set the K2Type to 3.</li>
+      <li>Fix the gain reference name to match what is in C:\ProgramData\Gatan\Reference 
+        Images.</li>
+      <li>Set the SizeInX and SizeInY to 5760 and 4092, or vice versa for a camera with 
+        a 90 or 270 degree rotation.</li>
+      <li>Correct the entries for RotationAndFlip and DMRotationAndFlip based on the 
+        settings for rotation and flip around Y axis in DM Camera Configuration dialog 
+        (switch to Power User mode to access the Camera menu in DM).&nbsp; See the table 
+        below.</li>
+      <li>Comment out (put a # in from of)&nbsp; 'SizeCheckSwapped'.</li>
+      <li>Change CountsPerElectron to 32.</li>
+      <li>Add the line 'LinearToCountingRatio 300' below the 'CountsPerElectron' line.</li>
+    </ul>
+    <p>
+      The required recalibrations are:</p>
+    <ul>
+      <li>Image shift and pixel size.&nbsp; For image shift, you may be able to 
+        calibrate image shift from scratch at one mag in each mag range (LM and nonLM) 
+        and allow the program to change all other calibrations in the range.&nbsp; (Turn 
+        on Administrator mode in the Calibration menu first.)&nbsp; Then you can check 
+        at one or more other mags to see if the adjustments were good.&nbsp; For pixel 
+        size, you may be able to measure several sizes, find the average ratio between 
+        the old and new pixel sizes at those mags, and apply the ratio manually to fix 
+        the sizes in the properties file.&nbsp; If these shortcuts do not seem feasible, 
+        follow the procedures described below.</li>
+      <li>Calibrated absolute rotation angle(s) in the RotationAndPixel table.&nbsp; If 
+        images have rotated from their previous orientation with the K2, adjust the 
+        angles by this rotation before trying to calibrate stage shift.</li>
+      <li>Focus calibrations.&nbsp; Again, in Administrator mode, the program will offer 
+        to change other calibrations based on the change in the first one that you do, 
+        and this may be&nbsp; adequate.</li>
+      <li>Stage shift calibrations.</li>
+    </ul>
+    <p>
       &nbsp;</p>
-      <P><A name="setup_camera"></A><B>Initial Camera Setup (Priority 1 and 2)</B></P>
+      <P><A name="setup_camera"></A><B>Initial Camera Setup (Priority 1 and 2))</B></P>
       <P>You should set the basic properties of your camera(s) in the properties file 
         before starting SerialEM. If you received a file configured for your scope, most 
         of this should be set up already, but you should go through these lists of items 
@@ -1248,8 +1313,6 @@
         around Y axis&#39; in the camera configuration in DM and the table above.&nbsp; The 
         value is the same as the recommended &#39;DMRotationAndFlip&#39; property unless there is no flipping and 
         the rotation is 90 or 270.</li>
-      <li>If DM is applying a rotation of 90 or 270 degrees, add the camera property 
-        &#39;SizeCheckSwapped&nbsp; 1&#39;.</li>
       <li>Check what filters are available for aligning frames in dose fractionation 
         mode in DM.&nbsp; Each filter should be listed with a general property 
         &#39;K2FilterName&#39; and with the exact name shown in DM (including the &#39;(default)&#39; if 

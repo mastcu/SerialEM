@@ -3,6 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+10/10/18: Added ability to delay setting IS after an external mag change on
+JEOL.
+
+10/10/18: Saved K2 and other direct detector processing modes (linear vs.
+counting) in non-low-dose states.
+
 10/1/18: Fixed problem with skipping numbers in the filenames when fitting
 montage to polygon in New file at item.
 
