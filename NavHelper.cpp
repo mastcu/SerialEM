@@ -1708,6 +1708,15 @@ void CNavHelper::StoreCurrentStateInParam(StateParams *param, BOOL lowdose,
     SEMTrace('1', "Saved focus in state: axis pos %.2f  offsets %d %d", 
       param->focusAxisPos, param->focusXoffset, param->focusYoffset);
   }
+  conSet = mWinApp->GetConSets();
+  param->readModeView = lowdose ? -1 : conSet[VIEW_CONSET].K2ReadMode;
+  param->readModeFocus = lowdose ? -1 : conSet[FOCUS_CONSET].K2ReadMode;
+  param->readModeTrial = lowdose ? -1 : conSet[TRIAL_CONSET].K2ReadMode;
+  param->readModePrev = lowdose ? -1 : conSet[PREVIEW_CONSET].K2ReadMode;
+  param->readModeSrch = (lowdose || mWinApp->GetUseViewForSearch()) ? -1 : 
+    conSet[SEARCH_CONSET].K2ReadMode;
+  param->readModeMont = (lowdose || mWinApp->GetUseRecordForMontage()) ? -1 : 
+    conSet[MONT_USER_CONSET].K2ReadMode;
 }
 
 // Store the acquire state defined in a map item into a state param, accessing the 
@@ -1896,6 +1905,19 @@ void CNavHelper::SetStateFromParam(StateParams *param, ControlSet *conSet, int b
     focusSet->top = top; 
     focusSet->bottom = bottom;
   }
+
+  if (param->readModeView >= 0)
+    workSets[VIEW_CONSET].K2ReadMode = param->readModeView;
+  if (param->readModeFocus >= 0)
+    workSets[FOCUS_CONSET].K2ReadMode = param->readModeFocus;
+  if (param->readModeTrial >= 0)
+    workSets[TRIAL_CONSET].K2ReadMode = param->readModeTrial;
+  if (param->readModePrev >= 0)
+    workSets[PREVIEW_CONSET].K2ReadMode = param->readModePrev;
+  if (param->readModeSrch >= 0 && !mWinApp->GetUseViewForSearch())
+    workSets[SEARCH_CONSET].K2ReadMode = param->readModeSrch;
+  if (param->readModeMont >= 0 && !mWinApp->GetUseRecordForMontage())
+    workSets[MONT_USER_CONSET].K2ReadMode = param->readModeMont;
 
   // Copy back to the camera sets
   for (i = 0; i < MAX_CONSETS; i++)
