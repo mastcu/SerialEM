@@ -8173,8 +8173,10 @@ int CNavigatorDlg::OpenFileIfNeeded(CMapDrawItem * item, bool stateOnly)
       *masterMont = *montp;
     }
     fileOptp = (FileOptions *)mFileOptArray.GetAt(mNextFileOptInd);
-    if (mNextMontParInd < 0)
+    if (mNextMontParInd < 0) {
       fileOptp->typext &= ~MONTAGE_MASK;
+      fileOptp->montageInMdoc = false;
+    }
 
     // Now open the extra file(s)
     for (ind = 0; ind < mNumExtraFileSuffixes; ind++) {
