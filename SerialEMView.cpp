@@ -704,7 +704,8 @@ void CSerialEMView::DrawImage(void)
   int groupThresh = mWinApp->mNavHelper->GetPointLabelDrawThresh();
   if (useMultiShot) {
     msParams = mWinApp->mNavHelper->GetMultiShotParams();
-    useMultiShot = (msParams->inHoleOrMultiHole & 3) != 0;
+    useMultiShot = (msParams->inHoleOrMultiHole & MULTI_IN_HOLE) ||
+      mWinApp->mNavHelper->MultipleHolesAreSelected();
   }
   FloatVec drawnXinHole, drawnYinHole, drawnXallHole, drawnYallHole;
   FloatVec convXinHole, convYinHole, convXallHole, convYallHole;
@@ -756,8 +757,7 @@ void CSerialEMView::DrawImage(void)
       if (iDraw < 0 && useMultiShot) {
         float holeXoffset = 0, holeYoffset = 0;
         bool doInHole = (msParams->inHoleOrMultiHole & MULTI_IN_HOLE) > 0;
-        bool doMultiHole = (msParams->inHoleOrMultiHole & MULTI_HOLES) > 0 &&
-          msParams->holeMagIndex > 0;
+        bool doMultiHole = mWinApp->mNavHelper->MultipleHolesAreSelected();
         int inHoleEnd = item->mNumPoints - 2;
         int inHoleStart = inHoleEnd - (doInHole ? msParams->numShots : 0);
         GetSingleAdjustmentForItem(imBuf, item, delPtX, delPtY);

@@ -79,6 +79,9 @@ public:
   GetSetMember(float, AutoBacklashMinField);
   GetSetMember(int, PointLabelDrawThresh);
   GetSetMember(int, EnableMultiShot);
+  bool MultipleHolesAreSelected() {return (mMultiShotParams.inHoleOrMultiHole & MULTI_HOLES) &&
+    ((mMultiShotParams.useCustomHoles && mMultiShotParams.customMagIndex > 0) || 
+    (!mMultiShotParams.useCustomHoles && mMultiShotParams.holeMagIndex > 0));};
   MultiShotParams *GetMultiShotParams() {return &mMultiShotParams;};
   GetSetMember(float, DistWeightThresh);
   GetSetMember(float, RImaxLMfield);

@@ -3,6 +3,14 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+10/17/18: Fixed a bug that crashed program trying to display custom hole
+pattern when no regular hole patteren had been set up.
+
+10/17/18: Added property to set a detector on JEOL to insert/retract
+complementary to main screen.
+
+10/17/18: Added a parameter validation call for OneView.
+
 10/14/18: Fixed bug when saving frames with K3 and using a binning that
 requires trimming the image returned to SerialEM.
 
