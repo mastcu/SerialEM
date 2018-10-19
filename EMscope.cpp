@@ -339,6 +339,7 @@ CEMscope::CEMscope()
   mManualExposure = 0.;
   mWarnIfKVnotAt = 0.;
   mMainDetectorID = 13;    // Default for main screen
+  mPairedDetectorID = -1;
   mJeol1230 = false;
   mMagIndSavedIS = -1;
   sMagMutexHandle = CreateMutex(0, 0, 0);
@@ -594,6 +595,7 @@ int CEMscope::Initialize()
       mJeolParams.emissionTimeout = mJeolEmissionTimeout;
       mJeolParams.fillNitrogenTimeout = mJeolRefillTimeout;
       mJeolSD.mainDetectorID = mMainDetectorID;
+      mJeolSD.pairedDetectorID = mPairedDetectorID;
 
       // Event stuff is subject to revision if it fails, including spectrum by event
       mScreenByEvent = mUpdateByEvent;  // This hasn't needed to be separate

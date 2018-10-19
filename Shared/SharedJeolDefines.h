@@ -129,6 +129,7 @@ struct JeolStateData {
   double changedMagTime;
   int changedMagInd;
   int valveOrFilament;
+  int pairedDetectorID;
   // Used to keep track if actual structure is smaller than what was built against
   int lastMember; 
 };

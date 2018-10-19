@@ -3253,7 +3253,15 @@
           <TD>Set this to indicate the ID of a detector whose position is reported and which 
             needs to be retracted for camera imaging. The default ID is 13 for the main 
             screen. Possible alternative IDs are 5 for upper TV camera and 17 for a lower TV 
-            camera.</TD>
+            camera.&nbsp; One way to determine IDs is have &#39;JeolUpdateByEvent&#39; set to 1 and 
+            debug output set to &#39;e&#39;, and insert or retract the screen or other detector.</TD>
+        </TR>
+         <TR VALIGN="top">
+          <TD>JeolPairedDetectorID</TD>
+          <TD>Set this to indicate the ID of a detector that moves in complementary fashion 
+            to the one specified by the JeolMainDetectorID.
+            The program will insert this detector when retracting the main one, and vice 
+            versa.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>JeolControlsBeamValve</TD>

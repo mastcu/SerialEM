@@ -236,6 +236,7 @@ class DLL_IM_EX CEMscope
   GetSetMember(float, MaxTiltAngle);
   GetMember(BOOL, MagChanged)
   GetSetMember(int, MainDetectorID)
+  GetSetMember(int, PairedDetectorID)
   GetSetMember(int, HasNoAlpha)
   GetSetMember(BOOL, UseIllumAreaForC2)
   GetMember(int, ProbeMode)
@@ -550,6 +551,7 @@ private:
   float mWarnIfKVnotAt;         // KV for warning on startup
   double mLMFocusTable[MAX_MAGS][2];  // Table of individual standard focus values
   int mMainDetectorID;        // Detector ID for main screen or equiv. on JEOL
+  int mPairedDetectorID;      // Detector that moves complementary to main screen
   BOOL mJeol1230;             // Flag for a 1230
   int mHasNoAlpha;            // Flag that scope has no alpha setting
   int mAdaExists;             // Flag that adaexp has been found
