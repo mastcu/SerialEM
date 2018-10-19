@@ -3542,6 +3542,14 @@ BOOL CEMscope::ScanMagnifications()
           report.Format("%d %8d %5d", magInd + baseIndex, magVal, rot);
          mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
       }
+      if (FEIscope && GetEFTEM()) {
+        for (; magInd < MAX_MAGS; magInd++) {
+          if (!mMagTab[magInd].mag)
+            break;
+          PrintfToLog("%d %8d %5d %8d %8d %5d", magInd, mMagTab[magInd].mag, 
+            B3DNINT(mMagTab[magInd].tecnaiRotation), mMagTab[magInd].screenMag, 0, 0);
+        }
+      }
       if (!mode || (numModes == 4 && mode == 1)) {
         if (!mode)
           firstBase = magInd;
