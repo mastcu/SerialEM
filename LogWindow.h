@@ -27,7 +27,7 @@ public:
   SetMember(BOOL, Unsaved);
   GetMember(CString, SaveFile);
   GetMember(CString, LastFilePath);
-  void Append(CString inString);
+  void Append(CString inString, int lineFlags);
   CLogWindow(CWnd* pParent = NULL);   // standard constructor
 
 // Dialog Data

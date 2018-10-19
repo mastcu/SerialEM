@@ -3,6 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+10/14/18: Fixed bug when saving frames with K3 and using a binning that
+requires trimming the image returned to SerialEM.
+
+10/14/18: When doing an early return with no return image, made it not roll
+buffers and make another copy of the last image in A.
+
 10/10/18: Added ability to delay setting IS after an external mag change on
 JEOL.
 

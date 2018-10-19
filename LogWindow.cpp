@@ -59,11 +59,16 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CLogWindow message handlers
 
-void CLogWindow::Append(CString inString)
+void CLogWindow::Append(CString inString, int lineFlags)
 {
-  int oldLen, newLen;
+  int oldLen, newLen, lastEnd;
   UpdateData(true);
   oldLen = m_strLog.GetLength();
+  if (lineFlags & 2) {
+    lastEnd = m_strLog.ReverseFind('\n');
+    if (lastEnd > 0)
+      m_strLog = m_strLog.Left(lastEnd + 1);
+  }
   m_strLog += _T(inString);
   UpdateData(false);
   mUnsaved = true;

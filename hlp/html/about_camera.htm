@@ -515,38 +515,27 @@
       <b><a name="k3problems">Remaining Problems with the K3</a></b></p>
     <p>
       This list will be continually updated and eventually removed as 
-      Gatan either solves the problem or clarifies the situation.&nbsp; (Last update July 4, 2018)</p>
+      Gatan either solves the problem or clarifies the situation.&nbsp; (Last update 
+      October 14, 2018)</p>
     <ol>
-      <li>Continuous mode does not work through SerialEM for an exposure time above 0.1 
-        sec in either linear or counting mode - it gives black images.&nbsp;&nbsp; 
-        SerialEM does not currently constrain the exposure time to stay below 0.1 sec.</li>
-      <li>When a camera is configured to reorient the image, it costs significant time 
-        to do so for every frame, particularly if a +/-90 degree rotation is involved.&nbsp; 
-        SerialEM solves this by canceling the reorientation of frames and either doing 
-        it in the plugin (which was much faster than in DM for the K2) or saving them in 
-        native orientation if te user option for that is selected.&nbsp; This is not 
-        working correctly with the K3; when the plugin cancels the reorientation, it 
-        takes even longer for frames to be returned from DM.&nbsp; There is a workaround 
-        that should solve this, changing camera configuration on each dose fractionation 
-        shot, but would require some effort to make sure the configuration gets 
-        restored.&nbsp; For now it is recommended that SerialEM be set up with the 
-        desired camera orientation, under the assumption that this will be solved one 
-        way or another.</li>
       <li>Linear mode images during continuous acquisition have an incorrect offset 
         which would give a misleading dose rate estimate.&nbsp; This is currently 
-        adjusted for in SerialEM.&nbsp; The adjustment will simply be removed when the 
-        problem is resolved.</li>
+        adjusted for in SerialEM.&nbsp; If the problem is ever resolved, there will 
+        probably be a property setting to prevent the adjustment.</li>
       <li>It is currently uncertain whether the hardware binning in counting mode will 
         be permanently constrained to producing normalized data in bytes.&nbsp; This 
         could potentially saturate frames taken with the option for hardware binning by 
         2 with long frame times.&nbsp; Also, continuous mode for counting images with a 
         binning selection of 1 or higher uses hardware binning by 2 and can saturate with high dose 
-        rates or with longer exposures than what currently works, and hardware binning 
+        rates or with longer exposures, and hardware binning 
         by 4 is simply not used for these images because it 
         saturates so easily.</li>
       <li>The table used for dose rate linearization is available only for 200 KV and 
         even that table may still be refined.&nbsp; Dose rates and doses will be off 
         somewhat at 300 KV.</li>
+      <li>SerialEM has no control over the alignment of frames by MotionCor2 available 
+        in DM as an option, and apparently cannot trigger this alignment or access the 
+        result.</li>
     </ol>
     </basefont>
   </BODY>

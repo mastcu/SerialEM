@@ -398,7 +398,7 @@ public:
   BOOL SetWindowPlacement(WINDOWPLACEMENT *winPlace);
   BOOL GetWindowPlacement(WINDOWPLACEMENT *winPlace);
   void ErrorOccurred(int error);
-  void AppendToLog(CString inString, int inAction = LOG_OPEN_IF_CLOSED);
+  void AppendToLog(CString inString, int inAction = LOG_OPEN_IF_CLOSED, int lineFlags = 0);
   void LogClosing();
   WINDOWPLACEMENT *GetLogPlacement() {return &mLogPlacement;};
   WINDOWPLACEMENT *GetNavPlacement() {return &mNavPlacement;};

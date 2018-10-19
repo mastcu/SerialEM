@@ -226,7 +226,7 @@ enum {CME_VIEW, CME_FOCUS, CME_TRIAL, CME_RECORD, CME_PREVIEW,
   CME_REPORTNUMTABLEITEMS, CME_CHANGEITEMCOLOR, CME_CHANGEITEMLABEL,CME_STRIPENDINGDIGITS,
   CME_MAKEANCHORMAP, CME_STAGESHIFTBYPIXELS, CME_REPORTPROPERTY, CME_SAVENAVIGATOR,
   CME_FRAMETHRESHOLDNEXTSHOT, CME_QUEUEFRAMETILTSERIES, CME_FRAMESERIESFROMVAR,
-  CME_WRITEFRAMESERIESANGLES
+  CME_WRITEFRAMESERIESANGLES, CME_ECHOREPLACELINE, CME_ECHONOLINEEND
 };
 
 static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0},
@@ -340,9 +340,10 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"EnterString", 2, 0}, {"CompareStrings", 2, 0}, {"CompareNoCase", 2, 0}, 
 {"ReportNextNavAcqItem", 0, 0}, {"ReportNumTableItems", 0, 0}, {"ChangeItemColor", 2, 0},
 {"ChangeItemLabel", 2, 0}, {"StripEndingDigits", 2, 0}, {"MakeAnchorMap", 0, 0}, 
-{"StageShiftByPixels", 2, 0}, {"ReportProperty", 1, 0}, {"SaveNavigator", 0, 0},
-{"FrameThresholdNextShot", 1, 0}, {"QueueFrameTiltSeries", 3}, {"FrameSeriesFromVar", 2},
-{"WriteFrameSeriesAngles", 1, 0},
+{"StageShiftByPixels", 2, 1}, {"ReportProperty", 1, 0}, {"SaveNavigator", 0, 0},
+{"FrameThresholdNextShot", 1, 1}, {"QueueFrameTiltSeries", 3, 0}, 
+{"FrameSeriesFromVar", 2, 0}, {"WriteFrameSeriesAngles", 1, 0}, {"EchoReplaceLine", 1, 1},
+{"EchoNoLineEnd", 1, 1},
 {NULL, 0, 0}
 };
 
@@ -3808,14 +3809,20 @@ void CMacroProcessor::NextCommand()
     report.Replace("\n", "  ");
     mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
 
-  } else if (CMD_IS(ECHOEVAL)) {                            // EchoEval
+                                             // EchoEval, EchoReplaceLine, EchoNoLineEnd
+  } else if (CMD_IS(ECHOEVAL) || CMD_IS(ECHOREPLACELINE) || CMD_IS(ECHONOLINEEND)) {  
     report = "";
     for (index = 1; index < MAX_TOKENS && !itemEmpty[index]; index++) {
       if (index > 1)
         report += " ";
       report += strItems[index];
     }
-    mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
+    index2 = 0;
+    if (CMD_IS(ECHOREPLACELINE))
+      index2 = 3;
+    else if (CMD_IS(ECHONOLINEEND))
+      index2 = 1;
+    mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED, index2);
 
   } else if (CMD_IS(VERBOSE)) {                             // verbose
     mVerbose = itemInt[1];

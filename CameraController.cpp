@@ -1461,7 +1461,8 @@ void CCameraController::InitiateCapture(int inSet)
   }
 
   // If the last shot was a single frame, do the auto-shift to the extent specified
-  if (mSingleContModeUsed == SINGLE_FRAME || mRequiredRoll) {
+  if ((mSingleContModeUsed == SINGLE_FRAME && 
+    !(mParam->K2Type && mNextAsyncSumFrames == 0)) || mRequiredRoll) {
     int nRoll = mBufferManager->GetShiftsOnAcquire();
     if (nRoll < mRequiredRoll)
       nRoll = mRequiredRoll;
@@ -4135,8 +4136,9 @@ void CCameraController::CapManageCoordinates(ControlSet & conSet, int &gainXoffs
 
   // For oneView, throw the flag to take a subarea if plugin can do this and it is indeed
   // a subarea
-  if ((mParam->OneViewType || (mParam->K2Type == K3_TYPE && !(mParam->coordsModulo && 
-    mParam->moduloX && mParam->moduloX % 32 == 0 && mParam->moduloY && mParam->moduloY % 16 == 0)))
+  if ((mParam->OneViewType || (mParam->K2Type == K3_TYPE && !conSet.doseFrac && 
+    !(mParam->coordsModulo && mParam->moduloX && mParam->moduloX % 32 == 0 && 
+    mParam->moduloY && mParam->moduloY % 16 == 0)))
     && !mParam->subareasBad && (tsizeX < csizeX / mBinning || tsizeY < csizeY / mBinning))
     mTD.K2ParamFlags |= K2_OVW_MAKE_SUBAREA;
 

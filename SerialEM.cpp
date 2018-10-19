@@ -3117,7 +3117,9 @@ void CSerialEMApp::OnUpdateFileOpenlog(CCmdUI* pCmdUI)
 
 // Append a string to the log window, with 3 alternatives if it is not open
 // yet: open window, put in message box, and swallow it
-void CSerialEMApp::AppendToLog(CString inString, int inAction)
+// Lineflags can include 1 suppress the line ending, and 2 to remove back to the last line
+// ending
+void CSerialEMApp::AppendToLog(CString inString, int inAction, int lineFlags)
 {
   CString str;
   double diff;
@@ -3182,7 +3184,7 @@ void CSerialEMApp::AppendToLog(CString inString, int inAction)
     if (mLogWindow) {
       diff = SEMTickInterval((double)GetTickCount(), sStartTime);
       str.Format("%.3f: ", diff / 1000.);
-      mLogWindow->Append(str);
+      mLogWindow->Append(str, 0);
     } 
     break;
 
@@ -3206,9 +3208,13 @@ void CSerialEMApp::AppendToLog(CString inString, int inAction)
     OnFileOpenlog();
   }
 
-  if (inString.IsEmpty() || inString.GetAt(inString.GetLength() - 1) != '\n')
-    inString += "\r\n";
-  mLogWindow->Append(inString);
+  if (inString.IsEmpty() || inString.GetAt(inString.GetLength() - 1) != '\n') {
+    if (lineFlags & 1)
+      inString += " ";
+    else
+      inString += "\r\n";
+  }
+  mLogWindow->Append(inString, lineFlags);
 }
 
 // Handy formatted output to log with variable arguments

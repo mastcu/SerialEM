@@ -254,6 +254,20 @@
             arithmetic expressions.&nbsp; Multiple spaces between words will be lost.</TD>
         </TR>
         <TR vAlign="top">
+          <TD class="style4">EchoNoLineEnd [text]</TD>
+          <TD>Prints the text to the log window after substituting variables and evaluating 
+            arithmetic expressions, without adding a line ending, so more text can be 
+            written to the line.&nbsp; Multiple spaces between words will be lost.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style4">EchoReplaceLine [text]</TD>
+          <TD>Removes text from the log back to the last line ending, if there is any such 
+            text, then prints the text to the log after substituting variables and 
+            evaluating arithmetic expressions, without adding a line ending.&nbsp; This 
+            command can be used repeatedly to update the text on a line, such as with a 
+            status output.</TD>
+        </TR>
+        <TR vAlign="top">
           <TD class="style4">Pause [text]</TD>
           <TD>Opens message box with optional text plus question of whether to proceed with
             script</TD>
@@ -2585,7 +2599,7 @@
       In addition to the commands starting with 'Set', these commands
     allow arithmetic arguments:
     <pre>
-AbsoluteFocusLimitssss
+AbsoluteFocusLimits
 BackgroundTilt
 BeamTiltDirection
 ChangeEnergyLoss
@@ -2597,12 +2611,15 @@ ChangeMagAndIntensity
 CircleFromPoints
 CropImage
 CtfFind
-EchoEval
 Delay
 EarlyReturnNextShot
+EchoEval
+EchoNoLineEnd
+EchoReplaceLine
 ElapsedTickTime
 ExposeFilm
 FocusChangeLimits
+FrameThresholdNextShot
 ImageShiftByMicrons
 ImageShiftByPixels
 ImageShiftByUnits
@@ -2627,6 +2644,7 @@ SetSlitIn
 ShiftItemsByMicrons
 SmoothFocusNextShot
 SpecialExposeFilm
+StageShiftByPixels
 StepFocusNextShot
 SubareaMean
 TestRelaxingStage
