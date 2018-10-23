@@ -155,6 +155,8 @@ private:
 	int mLastSpot;
 	double mLastIntensity;
   double mLastDose;
+  float mLastAlpha;
+  int mLastProbe;
 	double mLastISX, mLastISY;
 	double mBaseISX, mBaseISY;      // Base image shift while defining area
   int mBaseMag;                   // Base mag at which that shift applies

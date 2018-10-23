@@ -67,6 +67,8 @@ CLowDoseDlg::CLowDoseDlg(CWnd* pParent /*=NULL*/)
   mLastSpot = 0;
   mLastIntensity = 0.;
   mLastDose = 0.;
+  mLastAlpha = -999.;
+  mLastProbe = 0;
   mLastISX = 0.;
   mLastISY = 0.;
   mIgnoreIS = false;
@@ -1210,6 +1212,7 @@ void CLowDoseDlg::ManageMagSpot(int inSetArea, BOOL screenDown)
   LowDoseParams *ldArea = &mLDParams[inSetArea];
   ControlSet *conSet = mWinApp->GetConSets() + inSetArea;
   BOOL needUpdate = false;
+  CString str;
   CString C2units = mScope->GetC2Units();
 
   if (inSetArea < 0) {
@@ -1277,18 +1280,32 @@ void CLowDoseDlg::ManageMagSpot(int inSetArea, BOOL screenDown)
     ManageDefines(inSetArea);
 
   if (mag != mLastMag || spotSize != mLastSpot || dose != mLastDose ||
-    intensity != mLastIntensity || inSetArea != mLastSetArea) {
+    intensity != mLastIntensity || inSetArea != mLastSetArea || 
+    ldArea->probeMode != mLastProbe || ldArea->beamAlpha != mLastAlpha) {
     m_strLDArea = (inSetArea < 4 ? mModeNames[inSetArea] : mSearchName) + ":";
     if (!mag && ldArea->camLenIndex)
       m_strMagSpot.Format("DIFF   Sp %d   %s %.2f%s", spotSize, mScope->GetC2Name(), 
         mScope->GetC2Percent(spotSize, intensity), (LPCTSTR)C2units);
     else {
       for (int silly = 0; silly < 2; silly++) {
-        m_strMagSpot.Format("%d%sx   %s %d   %s %.2f%s", mag >= 100000 ? mag / 1000 : mag,
-          mag >= 100000 ? "K" : "", 
+        if (mag >= 100000)
+          str.Format("%dKx", mag / 1000);
+        else if (mag >= 10000)
+          str.Format("%.1fKx", mag / 1000.);
+        else
+          str.Format("%dx", mag);
+        m_strMagSpot.Format("%s   %s %d   %s %.2f%s", (LPCTSTR)str,
           ldArea->probeMode == 0 && !mWinApp->GetSTEMMode() ? "nP" : "Sp", spotSize, 
           mScope->GetC2Name(), mScope->GetC2Percent(spotSize, intensity), 
           (LPCTSTR)C2units);
+
+        // Add alpha for JEOL if it exists
+        if (JEOLscope && !mScope->GetHasNoAlpha() && ldArea->beamAlpha >= 0) {
+          str.Format(" a%.0f", ldArea->beamAlpha + 1);
+          m_strMagSpot += str;
+        }
+
+        // Trim units off if string too long
         if (silly || m_strMagSpot.GetLength() <= 24)
           break;
         C2units = C2units.Left(1);
@@ -1314,6 +1331,8 @@ void CLowDoseDlg::ManageMagSpot(int inSetArea, BOOL screenDown)
   mLastSpot = spotSize;
   mLastMag  = mag;
   mLastIntensity = intensity;
+  mLastProbe = ldArea->probeMode;
+  mLastAlpha = ldArea->beamAlpha;
   if (inSetArea != mLastSetArea)
     Invalidate();
   mLastSetArea = inSetArea;
