@@ -1422,6 +1422,8 @@
 #define IDC_STAT_CAMNAME                2446
 #define IDC_RJPEGFILE                   2447
 #define IDC_STAT_DOSE_PER_FRAME         2448
+#define IDC_SPIN_ALPHA                  2449
+#define IDC_STAT_ALPHA                  2450
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -1852,7 +1854,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        228
 #define _APS_NEXT_COMMAND_VALUE         33306
-#define _APS_NEXT_CONTROL_VALUE         2449
+#define _APS_NEXT_CONTROL_VALUE         2451
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

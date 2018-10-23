@@ -415,12 +415,21 @@
     <p>The operations and requirements described in&nbsp;<a href="#autotuning_by_ctf">Autotuning by CTF Fitting</a> 
       all apply here.&nbsp; Aside from getting images with good Thon rings, the main 
       challenge may be getting beam-tilted images without the objective aperture or 
-      beam edge intruding.</p>
+      beam edge intruding.&nbsp; However, getting good Thon rings along the long axis 
+      of the ellipse in astigmatic images can also be a challenge.</p>
     <p>The maximum beam tilt should be in the range of 4 to 10 milliradians, 
-      preferably between 6 and 8.&nbsp; The goal is to get defocus changes ranging up 
-      to 0.3-0.4 micron.&nbsp; The defocus changes being measured are proportional to 
+      preferably between 6 and 8.&nbsp; A common problem when first trying the routine 
+      is that the beam tilt set for use with the original image displacement-based 
+      coma-free alignment is too large for this method, giving excessively astigmatic 
+      images that cannot be fit accurately. The goal is to get defocus changes ranging up 
+      to 0.3-0.4 micron (and thus astigmatism should be in this range too).&nbsp; The defocus changes being measured are proportional to 
       the square of the beam tilt, so the reliability of the estimated misalignment 
-      will increase accordingly.&nbsp; Both the maximum beam tilt and whether to use a 
+      will increase accordingly.&nbsp; However, another common problem is that if the 
+      microscope&#39;s beam tilt is far from the coma-free value, the astigmatism imposed 
+      by additional modest beam tilts gets too big for good fitting.&nbsp; If such 
+      problems occur when first running this routine, drop back to 4 mrad of beam tilt 
+      (or whatever is needed to reduce defocus changes to the desired level).&nbsp; 
+      Once you are nearer to a coma-free alignment, a high beam tilt can be used.&nbsp; Both the maximum beam tilt and whether to use a 
       full array of images can be set with the <a href="#hid_focus_set_ctf_coma_bt">Set CTF Coma-free Params</A> 
       command.</p>
     <p>There are two reasons why you might want to use a full 3x3 array of images 

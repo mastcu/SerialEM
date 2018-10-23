@@ -585,6 +585,11 @@
         this is defined by default to be at 'eucentric focus'; on a JEOL, a 
         numeric value for the standard focus needs to be determined with the 
         'ReportFocus' script command and entered as the property StandardLowMagFocus.</P>
+    <P>The disadvantage of the calibration is that it gets off over time more easily 
+      than other calibrations, and becomes invalid when magnification alignment in the 
+      scope itself is redone.&nbsp; When working in Low Dose mode, it is possible to 
+      use Search and View offsets for all mapping and navigating, and this will 
+      obviate the need for this calibration.</P>
       <P>It is recommended that the offsets be calibrated from the highest magnification 
         where there is an obvious misalignment between magnifications, down to the 
         lowest magnification to be used for Navigator mapping. The entire range does not 
@@ -600,13 +605,17 @@
         feature. Go to the highest magnification to be calibrated and start the 
         procedure. You will see a message box with instructions, then you will be asked 
         whether you want to take a trial image automatically at each new magnification. 
-        This is convenient if Intensity Zoom is on but may be problematic otherwise.</P>
-      <P>This calibration routine is unique in that it allows you to operate the program 
+        This is convenient if Intensity Zoom or an equivalent intensity adjustment is on, but may be problematic otherwise.&nbsp; 
+        Continuous acquisition mode can also be used for the routine, and there will be 
+        blanking during the magnification changes.&nbsp; If you use continuous mode, the 
+        program will skip the Trial images.&nbsp; Use the space bar to stop continuous 
+        mode without stopping the routine.</P>
+      <P>This calibration routine is nearly unique in that it allows you to operate the program 
         and waits for notification that an image is aligned. It converts the first Script 
         button in the Camera &amp; Script Control Panel into a 'NextMag' button that you 
         press after an image is aligned. The 'End' and 'STOP' buttons in that panel are 
         used to stop the procedure. The distinction between them is that 'End' will 
-        record an image shift for the current magnification whereas 'STOP' will not.</P>
+        record an image shift for the current magnification whereas 'STOP' will not.&nbsp; </P>
       <P>After you start the routine, center the image feature by shifting with the 
         right mouse button. You can use stage shift at this point if necessary, but 
         thereafter you must shift only with image shift. (The option for moving the 
@@ -964,9 +973,12 @@
       The stigmator change should be set so as to get changes of about +/-0.4 microns 
       in the defocus values found by the fitting.&nbsp; The easiest way to determine 
       this is just to run the calibration and see how much the numbers change from the 
-      first fit to the following four.&nbsp; Then use the
+      first fit to the following four.&nbsp;&nbsp; Then use the
       <a href="#hid_autofocusfocus_setupastigmatism">Setup Astigmatism</a> command to 
-      change the stigmator value to achieve the desired defocus change instead.</p>
+      change the stigmator value to achieve the desired defocus change instead.&nbsp; 
+      However, for FEI Krios, use this command first to start with a value of 
+      0.025-0.05, instead of the default of 0.1, which works for Tecnais. The default 
+      value can be set with the second entry to the property &#39;AstigmatismParams&#39;.</p>
     <p>
       <A name="hid_autofocusfocus_astigmati"></A><B>Astigmatism by BTID command
         (Calibration - Focus &amp; Tuning sub-menu)</B></p>

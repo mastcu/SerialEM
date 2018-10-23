@@ -3,6 +3,17 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+10/21/18: Allowed continuous mode to be used for mag IS offset calibration and
+enabled everything but mag button in scope control panel during this cal.
+
+10/21/18: In continuous mode, enabled scope control panel during and made it
+blank beam during operations like mag change that make transients.
+
+10/21/18: Added alpha to low dose summary line and alpha spinner to scope
+control panel.
+
+10/21/18: Adjusted for fact that there is no nanoprobe in low mag mode.
+
 10/17/18: Fixed a bug that crashed program trying to display custom hole
 pattern when no regular hole patteren had been set up.
 

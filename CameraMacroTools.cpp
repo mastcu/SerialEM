@@ -378,12 +378,15 @@ void CCameraMacroTools::Update()
 {
   int navState = GetNavigatorState();
   BOOL camBusy = true;
+  BOOL continuous = false;
   CString name;
   CameraParameters *camParams = mWinApp->GetCamParams();
   mEnabledSearch = false;
   bool stopEnabled;
-  if (mWinApp->mCamera)
+  if (mWinApp->mCamera) {
     camBusy = mWinApp->mCamera->CameraBusy();
+    continuous = mWinApp->mCamera->DoingContinuousAcquire();
+  }
   BOOL idle = !mWinApp->DoingTasks() && !(mNav && mNav->StartedMacro());
   BOOL shotOK = mWinApp->UserAcquireOK();
   BOOL postponed = mNav && mNav->GetStartedTS() && mWinApp->mTSController->GetPostponed();
@@ -412,7 +415,7 @@ void CCameraMacroTools::Update()
     // If no tilt series
     // Enable buttons if the macros are non empty or being edited
     if (mDoingCalISO)
-      m_butMacro1.EnableWindow(!camBusy);
+      m_butMacro1.EnableWindow(!camBusy || continuous);
     else
       m_butMacro1.EnableWindow(idle && mMacProcessor->MacroRunnable(mMacroNumber[0]));
     m_butMacro2.EnableWindow((idle && mMacProcessor->MacroRunnable(mMacroNumber[1])) ||
@@ -428,14 +431,15 @@ void CCameraMacroTools::Update()
   // Keep STOP enabled during continuous acquires: the press event gets lost in repeated 
   // enable/disables 
   stopEnabled = mWinApp->DoingTasks() || camBusy || 
-    mWinApp->mScope->GetMovingStage() || mWinApp->mCamera->DoingContinuousAcquire() ||
+    mWinApp->mScope->GetMovingStage() || continuous ||
     navState == NAV_TS_STOPPED || navState == NAV_PRE_TS_STOPPED || 
     navState == NAV_SCRIPT_STOPPED;
   m_butStop.EnableWindow(stopEnabled);
   if (!BOOL_EQUIV(stopEnabled, mEnabledStop))
     Invalidate();
   mEnabledStop = stopEnabled;
-  m_butSetup.EnableWindow((!mWinApp->DoingTasks() || mDoingCalISO) && !camBusy);
+  m_butSetup.EnableWindow((!mWinApp->DoingTasks() || mDoingCalISO) && 
+    (!camBusy || continuous));
 
   // Set the End button
   if (mMacProcessor->DoingMacro() || mWinApp->DoingTiltSeries())
@@ -444,7 +448,7 @@ void CCameraMacroTools::Update()
     SetDlgItemText(IDC_BUTEND, "End TS");
   else if (mNav && mNav->StartedMacro() && mMacProcessor->IsResumable())
     SetDlgItemText(IDC_BUTEND, "End Script");
-  else if (!mWinApp->mMultiTSTasks->GetAssessingRange() && 
+  else if (!mWinApp->mMultiTSTasks->GetAssessingRange() && !mDoingCalISO &&
     (mWinApp->LowDoseMode() || !mWinApp->GetUseViewForSearch())) {
       SetDlgItemText(IDC_BUTEND, "Search");
       mEnabledSearch = true;

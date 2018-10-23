@@ -1067,25 +1067,26 @@ void CShiftCalibrator::CalibrateISoffset(void)
   }
 
   str = "To do this calibration:\r\n"
-    "   1. Before starting this routine, find a feature that can be recognized\r\n"
-    "and centered over the full mag range that is required, and go to the\r\n"
-    "highest mag to be calibrated.\r\n"
+    "   1. Before starting this routine, find a feature that can be\r\n"
+    "recognized and centered over the full mag range that is\r\n"
+    "required, and go to the highest mag to be calibrated.\r\n"
     "   2. Start this procedure, then center the feature on the\r\n"
     "camera, using stage shift and image shift as necessary.\r\n"
-    "   3. Press NextMag in the Camera & Script Tools control panel to\r\n"
-    "record the image shift and step down to the next lower mag.\r\n"
-    "   4. Center the feature on the camera using only image shift, and\r\n"
-    "press NextMag to record image shift and go on.  Repeat this step\r\n"
-    "until finished.\r\n"
-    "   5. Press End to end the procedure and record the image shift at the\r\n"
-    "last mag.  Press STOP to stop the procedure without recording\r\n"
-    "image shift at the current mag.\r\n"
+    "   3. Press NextMag in the Camera & Script Tools control panel\r\n"
+    "to record the image shift and step down to the next lower mag.\r\n"
+    "   4. Center the feature on the camera using only image shift,\r\n"
+    "and press NextMag to record image shift and go on.  Repeat\r\n"
+    "this step until finished.\r\n"
+    "   5. Press End to end the procedure and record the image\r\n"
+    "shift at the last mag.  Press STOP to stop the procedure\r\n"
+    "without recording image shift at the current mag.\r\n"
     "   6. In Low Mag mode, try to keep the beam nearly centered.";
   if (mScope->GetStandardLMFocus(mScope->GetLowestMModeMagInd() - 1) > -900.)
-    str += "  Focus\r\nwill be set to a standard value when you enter Low Mag.";
+    str += "\r\nFocus will be set to a standard value when you enter Low Mag.";
   if (mLowestISOmag > 1) {
-    str2.Format("\r\n   The calibration can only be done down to %dx because it can only\r\n"
-      "be done through a continuous set of mags with calibrated image shift.",
+    str2.Format("\r\n   The calibration can only be done down to %dx\r\n"
+      "because it can only be done through a continuous set of mags with calibrated "
+      "image shift.",
       MagOrEFTEMmag(EFTEM, mLowestISOmag));
     str += str2;
   }
@@ -1093,7 +1094,8 @@ void CShiftCalibrator::CalibrateISoffset(void)
     IDNO)
     return;
   mTakeTrial = AfxMessageBox("Do you want a " + modeNames[2] + " image taken after every"
-    " mag change\n(except when going into Low Mag mode)?", MB_YESNO | MB_ICONQUESTION) 
+    " mag change?\n\n(This will not happen when going into Low Mag mode or\nif the camera"
+    " is acquiring in continuous mode)", MB_YESNO | MB_ICONQUESTION) 
     == IDYES;
 
   mWinApp->AppendToLog(str, LOG_OPEN_IF_CLOSED);
@@ -1112,7 +1114,8 @@ void CShiftCalibrator::CalibrateISoffset(void)
 
   if (normalize) {
     mScope->NormalizeProjector();
-    mCamera->InitiateCapture(2);
+    if (!mCamera->DoingContinuousAcquire())
+      mCamera->InitiateCapture(2);
     mWinApp->AppendToLog("\r\nProjector was normalized; check position again", 
       LOG_OPEN_IF_CLOSED);
   }
@@ -1159,7 +1162,7 @@ void CShiftCalibrator::CalISoffsetNextMag(void)
   if (mMagIndex == mScope->GetLowestMModeMagInd() - 1) {
     mWinApp->AppendToLog("\r\nEntered Low Mag - check beam before taking a picture.",
       LOG_OPEN_IF_CLOSED);
-  } else if (mTakeTrial)
+  } else if (mTakeTrial && !mCamera->DoingContinuousAcquire())
     mCamera->InitiateCapture(2);
 }
 
