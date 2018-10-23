@@ -58,6 +58,8 @@ void CRemoteControl::DoDataExchange(CDataExchange* pDX)
   DDX_Text(pDX, IDC_STAT_C2DELTA, m_strC2Delta);
   DDX_Control(pDX, IDC_SPIN_BEAM_LEFT_RIGHT, m_sbcBeamLeftRight);
   DDX_Text(pDX, IDC_STAT_RCC2IA, m_strC2Name);
+  DDX_Control(pDX, IDC_STAT_ALPHA, m_statAlpha);
+  DDX_Control(pDX, IDC_SPIN_ALPHA, m_sbcAlpha);
 }
 
 
@@ -74,6 +76,7 @@ BEGIN_MESSAGE_MAP(CRemoteControl, CToolDlg)
   ON_BN_CLICKED(IDC_BUT_DELC2MINUS, OnButDelC2Minus)
   ON_BN_CLICKED(IDC_BUT_DELC2PLUS, OnButDelC2Plus)
   ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_BEAM_LEFT_RIGHT, OnDeltaposSpinBeamLeftRight)
+  ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_ALPHA, OnDeltaposSpinAlpha)
 END_MESSAGE_MAP()
 
 
@@ -87,12 +90,18 @@ BOOL CRemoteControl::OnInitDialog()
     m_butValves.ShowWindow(SW_HIDE);
   if (!FEIscope)
     m_butNanoMicro.ShowWindow(SW_HIDE);
+  if (!JEOLscope || mScope->GetHasNoAlpha()) {
+    m_sbcAlpha.ShowWindow(SW_HIDE);
+    m_statAlpha.ShowWindow(SW_HIDE);
+  }
   m_sbcMag.SetRange(1, 2000);
   m_sbcSpot.SetRange(mScope->GetMinSpotSize(), mScope->GetNumSpotSizes());
   m_sbcBeamShift.SetRange(-30000, 30000);
   m_sbcBeamShift.SetPos(0);
   m_sbcIntensity.SetRange(-30000, 30000);
   m_sbcIntensity.SetPos(0);
+  m_sbcAlpha.SetRange(-30000, 30000);
+  m_sbcAlpha.SetPos(0);
   m_butDelBeamMinus.SetFont(&mButFont);
   m_butDelBeamPlus.SetFont(&mButFont);
   m_butDelC2Minus.SetFont(&mButFont);
@@ -101,6 +110,7 @@ BOOL CRemoteControl::OnInitDialog()
   mLastMagInd = mLastSpot = mLastSTEMmode = mLastProbeMode = mLastCamera = -1;
   mLastGunOn = -2;
   mLastIntensity = -1.;
+  mLastAlpha = -999;
   mSpotClicked = mMagClicked = false;
   mTimerID = NULL;
   mInitialized = true;
@@ -112,10 +122,11 @@ BOOL CRemoteControl::OnInitDialog()
 // Called from scope update with current values; keeps track of last values seen and
 // acts on changes only
 void CRemoteControl::Update(int inMagInd, int inSpot, double inIntensity, int inProbe,
-  int inGunOn, int inSTEM)
+  int inGunOn, int inSTEM, int inAlpha)
 {
   int junk;
   bool enable;
+  CString str;
   bool baseEnable = !(mWinApp->DoingTasks() || (mWinApp->mCamera && 
     mWinApp->mCamera->CameraBusy() && !mWinApp->mCamera->DoingContinuousAcquire()));
 
@@ -134,6 +145,10 @@ void CRemoteControl::Update(int inMagInd, int inSpot, double inIntensity, int in
 
   if (inSpot != mLastSpot) {
     m_sbcSpot.SetPos(inSpot);
+  }
+  if (inAlpha != mLastAlpha && inAlpha >= 0) {
+    str.Format("Al. %d", inAlpha + 1);
+    m_statAlpha.SetWindowText(str);
   }
 
   if (inGunOn != mLastGunOn) {
@@ -167,6 +182,7 @@ void CRemoteControl::Update(int inMagInd, int inSpot, double inIntensity, int in
   mLastIntensity = inIntensity;
   mLastProbeMode = inProbe;
   mLastSTEMmode = inSTEM;
+  mLastAlpha = inAlpha;
 }
 
 // Just update the window for magIntensity if settings changed, the increments already
@@ -361,6 +377,21 @@ void CRemoteControl::CtrlChanged(bool pressed)
   mCtrlPressed = pressed;
   if (!pressed && (mMagClicked || mSpotClicked))
     SetMagOrSpot();
+}
+
+// Alpha
+void CRemoteControl::OnDeltaposSpinAlpha(NMHDR *pNMHDR, LRESULT *pResult)
+{
+  CString str;
+  int newVal;
+  SetFocus();
+  mWinApp->RestoreViewFocus();
+  if (NewSpinnerValue(pNMHDR, pResult, mScope->GetAlpha(), 0, mScope->GetNumAlphas() - 1,
+    newVal))
+    return;
+  str.Format("Al. %d", newVal + 1);
+  m_statAlpha.SetWindowText(str);
+  mScope->SetAlpha(newVal);
 }
 
 // Beam up/down

@@ -23,7 +23,7 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
   void Update(int inMag, int inSpot, double inIntensity, int inProbe, int inGun, 
-    int inSTEM);
+    int inSTEM, int inAlpha);
   void UpdateSettings();
   void UpdateEnables(void);
   void ChangeIntensityByIncrement(int delta);
@@ -65,6 +65,7 @@ private:
   int mLastSTEMmode;
   double mLastIntensity;
   int mLastCamera;
+  int mLastAlpha;
   CEMscope *mScope;
   float mBeamIncrement;
   float mIntensityIncrement;
@@ -85,4 +86,7 @@ public:
   void SetMagOrSpot(void);
   void GetPendingMagOrSpot(int &pendingMag, int &pendingSpot);
   void CtrlChanged(bool pressed);
+  CStatic m_statAlpha;
+  CSpinButtonCtrl m_sbcAlpha;
+  afx_msg void OnDeltaposSpinAlpha(NMHDR *pNMHDR, LRESULT *pResult);
 };

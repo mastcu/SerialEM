@@ -357,7 +357,7 @@
       <OutputFile>.\Release/SerialEM.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <IgnoreSpecificDefaultLibraries>LIBC;LIBCMT;VCOMP;VCOMPD;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>.\Release/SerialEM.pdb</ProgramDatabaseFile>
       <GenerateMapFile>true</GenerateMapFile>
       <SubSystem>Windows</SubSystem>
