@@ -9,6 +9,7 @@
 #include "BeamAssessor.h"
 #include "ProcessImage.h"
 #include "ShiftManager.h"
+#include "ShiftCalibrator.h"
 
 #define MIN_BEAM_DELTA  0.00625f
 #define MAX_BEAM_DELTA  0.8f
@@ -128,6 +129,7 @@ void CRemoteControl::Update(int inMagInd, int inSpot, double inIntensity, int in
     if (inMagInd)
       m_sbcMag.SetPos(inMagInd);
     m_sbcMag.EnableWindow(inMagInd > 0 && baseEnable);
+    m_butNanoMicro.EnableWindow(inMagInd >= mScope->GetLowestMModeMagInd());
   }
 
   if (inSpot != mLastSpot) {
@@ -177,27 +179,33 @@ void CRemoteControl::UpdateSettings()
 
 // Just disable everything when a task or shot starts, only re-enable intensity and spot
 // when free, and invalidate mag and spot so the regular update will re-enable
+// Leave everything but mag enabled when calibrating IS offsets
 void CRemoteControl::UpdateEnables(void)
 {
   if (!mInitialized)
     return;
-  bool enable = !(mWinApp->DoingTasks() || (mWinApp->mCamera && 
+  BOOL doingOffset = mWinApp->mShiftCalibrator->CalibratingOffset();
+  bool enable = !((mWinApp->DoingTasks() && !doingOffset) || (mWinApp->mCamera && 
     mWinApp->mCamera->CameraBusy() && !mWinApp->mCamera->DoingContinuousAcquire()));
   m_sbcIntensity.EnableWindow(enable);
   m_sbcSpot.EnableWindow(enable);
-  m_butNanoMicro.EnableWindow(enable);
+  m_butNanoMicro.EnableWindow(enable && mLastMagInd >= mScope->GetLowestMModeMagInd());
+
   if (enable) {
-    if (mScope->GetNoScope())
-      m_sbcMag.EnableWindow(true);
-    else
-      mLastMagInd = -1;
     mLastSpot = -1;
     mLastGunOn = -2;
   } else {
     m_butValves.EnableWindow(false);
-    m_sbcMag.EnableWindow(false);
     m_sbcBeamShift.EnableWindow(false);
     m_sbcBeamLeftRight.EnableWindow(false);
+  }
+  if (enable && !doingOffset) {
+    if (mScope->GetNoScope())
+      m_sbcMag.EnableWindow(true);
+    else
+      mLastMagInd = -1;
+  } else {
+    m_sbcMag.EnableWindow(false);
   }
 }
 
