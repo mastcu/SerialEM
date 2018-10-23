@@ -26,6 +26,7 @@ CRemoteControl::CRemoteControl(CWnd* pParent /*=NULL*/)
   , m_strBeamDelta(_T(""))
   , m_strC2Delta(_T(""))
   , m_strC2Name(_T(""))
+  , m_strFocusStep(_T(""))
 {
   SEMBuildTime(__DATE__, __TIME__);
   mInitialized = false;
@@ -60,6 +61,10 @@ void CRemoteControl::DoDataExchange(CDataExchange* pDX)
   DDX_Text(pDX, IDC_STAT_RCC2IA, m_strC2Name);
   DDX_Control(pDX, IDC_STAT_ALPHA, m_statAlpha);
   DDX_Control(pDX, IDC_SPIN_ALPHA, m_sbcAlpha);
+  DDX_Text(pDX, IDC_STAT_FOCUS_STEP, m_strFocusStep);
+  DDX_Control(pDX, IDC_SPIN_FOCUS, m_sbcFocus);
+  DDX_Control(pDX, IDC_BUT_DELFOCUSMINUS, m_butDelFocusMinus);
+  DDX_Control(pDX, IDC_BUT_DELFOCUSPLUS, m_butDelFocusPlus);
 }
 
 
@@ -77,6 +82,9 @@ BEGIN_MESSAGE_MAP(CRemoteControl, CToolDlg)
   ON_BN_CLICKED(IDC_BUT_DELC2PLUS, OnButDelC2Plus)
   ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_BEAM_LEFT_RIGHT, OnDeltaposSpinBeamLeftRight)
   ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_ALPHA, OnDeltaposSpinAlpha)
+  ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_FOCUS, &CRemoteControl::OnDeltaposSpinFocus)
+  ON_BN_CLICKED(IDC_BUT_DELFOCUSMINUS, &CRemoteControl::OnDelFocusMinus)
+  ON_BN_CLICKED(IDC_BUT_DELFOCUSPLUS, &CRemoteControl::OnDelFocusPlus)
 END_MESSAGE_MAP()
 
 
@@ -498,4 +506,24 @@ void CRemoteControl::ChangeIntensityByIncrement(int delta)
   }
   if (newVal > 0. && newVal < 1.0)
     mScope->SetIntensity(newVal);
+}
+
+
+void CRemoteControl::OnDeltaposSpinFocus(NMHDR *pNMHDR, LRESULT *pResult)
+{
+  LPNMUPDOWN pNMUpDown = reinterpret_cast<LPNMUPDOWN>(pNMHDR);
+  // TODO: Add your control notification handler code here
+  *pResult = 0;
+}
+
+
+void CRemoteControl::OnDelFocusMinus()
+{
+  // TODO: Add your control notification handler code here
+}
+
+
+void CRemoteControl::OnDelFocusPlus()
+{
+  // TODO: Add your control notification handler code here
 }

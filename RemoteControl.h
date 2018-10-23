@@ -89,4 +89,11 @@ public:
   CStatic m_statAlpha;
   CSpinButtonCtrl m_sbcAlpha;
   afx_msg void OnDeltaposSpinAlpha(NMHDR *pNMHDR, LRESULT *pResult);
+  CString m_strFocusStep;
+  CSpinButtonCtrl m_sbcFocus;
+  CButton m_butDelFocusMinus;
+  CButton m_butDelFocusPlus;
+  afx_msg void OnDeltaposSpinFocus(NMHDR *pNMHDR, LRESULT *pResult);
+  afx_msg void OnDelFocusMinus();
+  afx_msg void OnDelFocusPlus();
 };

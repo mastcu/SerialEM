@@ -2,6 +2,7 @@
 // Microsoft Visual C++ generated include file.
 // Used by SerialEM.rc
 //
+#define IDC_STAT_FOCUS_STEP             0
 #define IDC_BROWSE                      3
 #define ID_TASK_TIMER                   7
 #define IDD_ABOUTBOX                    100
@@ -1259,7 +1260,10 @@
 #define IDC_STAT_C2DELTA                2272
 #define IDC_SPIN_BEAM_LEFT_RIGHT        2273
 #define IDC_FIND_IN_MACRO               2274
+#define IDC_BUT_DELFOCUSPLUS            2274
 #define IDC_BUT_NEW_PARAMS              2275
+#define IDC_BUT_DELFOLUSMINUS           2275
+#define IDC_BUT_DELFOCUSMINUS           2275
 #define IDC_BUT_SETUP_ALIGN             2276
 #define IDC_CHECK_END_HIGH_EXP          2277
 #define IDC_CHECK_MAGINTENSITY          2278
@@ -1424,6 +1428,7 @@
 #define IDC_STAT_DOSE_PER_FRAME         2448
 #define IDC_SPIN_ALPHA                  2449
 #define IDC_STAT_ALPHA                  2450
+#define IDC_SPIN_FOCUS                  2451
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -1854,7 +1859,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        228
 #define _APS_NEXT_COMMAND_VALUE         33306
-#define _APS_NEXT_CONTROL_VALUE         2451
+#define _APS_NEXT_CONTROL_VALUE         2453
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
