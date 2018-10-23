@@ -225,6 +225,7 @@ CEMscope::CEMscope()
   mLowestMicroSTEMmag = 1;
   mNumShiftBoundaries = 0;
   mNumSpotSizes = -1;
+  mNumAlphas = 3;
   mMinSpotSize = 1;
   for (i = 0; i <= MAX_SPOT_SIZE; i++) {
     mC2SpotOffset[i][0] = mC2SpotOffset[i][1] = 0.; 
@@ -353,6 +354,7 @@ CEMscope::CEMscope()
   mLDBeamTiltShifts = false;
   mShutterlessCamera = 0;
   mProbeMode = 0;
+  mReturnedProbeMode = 0;
   mProbeChangeWait = 1500;
   mDiffractOrSTEMwait = 2000;
   mSTEMswitchDelay = 2000;
@@ -555,8 +557,10 @@ int CEMscope::Initialize()
       mCanControlEFTEM = mUseJeolGIFmodeCalls > 1;
       mC2Name = "C3";
       mStandardLMFocus = -999.;
-      if (mHasNoAlpha < 0)
+      if (mHasNoAlpha < 0) {
         mHasNoAlpha = 0;
+         mNumAlphas = B3DMIN(mNumAlphas, MAX_ALPHAS);
+      }
       if (mBacklashTolerance <= 0.)
         mBacklashTolerance = 0.2f;
       if (mSimulationMode) {
@@ -718,8 +722,11 @@ int CEMscope::Initialize()
       mJeolSD.smallScreen = 0;
     if (mJeol1230)
       mJeolSD.highFlags &= ~JUPD_SPOT;
-    if (mWinApp->GetShowRemoteControl())
+    if (mWinApp->GetShowRemoteControl()) {
       mJeolSD.highFlags |= JUPD_BEAM_STATE;
+      if (!mHasNoAlpha)
+        mJeolSD.highFlags |= JUPD_ALPHA;
+    }
     if (mHasOmegaFilter)
       mJeolSD.highFlags |= JUPD_ENERGY | JUPD_ENERGY_ON | JUPD_SLIT_IN | 
       JUPD_SLIT_WIDTH | JUPD_SPECTRUM;
@@ -927,13 +934,9 @@ BOOL CEMscope::GetInitialized()
 void CEMscope::SetLDContinuousUpdate(BOOL state)
 {
   sLDcontinuous = state;
-  if (JEOLscope) {
-    if (!mUpdateByEvent && !mHasNoAlpha) {
-      if (state)
-        mJeolSD.highFlags |= JUPD_ALPHA;
-      else
-       mJeolSD.highFlags &= ~JUPD_ALPHA;
-    }
+  if (JEOLscope && !mHasNoAlpha) {
+    setOrClearFlags(mUpdateByEvent ? &mJeolSD.lowerFlags : &mJeolSD.highFlags,
+      JUPD_ALPHA, (state || mWinApp->GetShowRemoteControl()) ? 1 : 0);
   }
 }
 
@@ -960,7 +963,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
 {
   int screenPos;
   int magIndex, camLenIndex, indOldIS, oldOffCalInd, newOffCalInd;
-  int spotSize, probe, tmpMag, toCam, oldNeutralInd, subMode;
+  int spotSize, probe, returnedProbe, tmpMag, toCam, oldNeutralInd, subMode;
   double intensity, objective, rawIntensity, ISX, ISY, current, defocus;
   BOOL EFTEM, bReady, smallScreen, manageISonMagChg, gotoArea, blanked, restoreIS = false;
   int STEMmode, gunState = -1;
@@ -1060,7 +1063,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
       // Get probe mode or assign proper value based on STEM or not
       if (FEIscope) {
         PLUGSCOPE_GET(ProbeMode, probe, 1);
-        probe = probe ? 1 : 0;
+        returnedProbe = probe = probe ? 1 : 0;
       } else {
         probe = STEMmode ? 0 : 1;
       }
@@ -1112,13 +1115,16 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
         // values
         PLUGSCOPE_GET(MagnificationIndex, magIndex, 1);
         CHECK_TIME(4);
-        if (probe != mProbeMode) {
+        if (FEIscope && magIndex < mLowestMModeMagInd)
+          probe = 1;
+        if (returnedProbe != mReturnedProbeMode) {
           temProbeChanged = true;
           rawISX = mLastISX;
           rawISY = mLastISY;
           mShiftManager->SetGeneralTimeOut(GetTickCount(), mPostProbeDelay);
         }
         mProbeMode = probe;
+        mReturnedProbeMode = returnedProbe;
         sProbeChangedTime = -1.;
       }
       if (lastMag && !magIndex && mWinApp->ScopeHasSTEM()) {
@@ -1428,7 +1434,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
       else if (mPlugFuncs->GetGunValve)
         gunState = mPlugFuncs->GetGunValve();
       mWinApp->mRemoteControl.Update(magIndex, spotSize, rawIntensity, mProbeMode, 
-        gunState, STEMmode);
+        gunState, STEMmode, (int)alpha);
     }
     mWinApp->mScopeStatus.Update(current, magIndex, defocus, ISX, ISY, stageX, stageY,
       stageZ, screenPos == spUp, smallScreen != 0, sBeamBlanked, EFTEM, STEMmode,spotSize, 
@@ -1563,7 +1569,7 @@ void CEMscope::UpdateScreenBeamFocus(int STEMmode, int &screenPos, int &smallScr
     spotSize = mJeolSD.spotSize;
     current = mJeolSD.current;
     smallScreen = mJeolSD.smallScreen;
-    if (sLDcontinuous)
+    if (sLDcontinuous || mWinApp->GetShowRemoteControl())
       alpha = (float)mJeolSD.alpha;
 
   } else {  // FEI-like
@@ -2362,8 +2368,10 @@ BOOL CEMscope::ChangeImageShift(double shiftX, double shiftY, BOOL bInc)
 {
   BOOL success;
   double axisISX, axisISY, plugISX, plugISY, neutISX, neutISY;
+  const double Jeol_IS1X_to_um =  0.00508;
+  const double Jeol_IS1Y_to_um =  0.00434;
   bool needBeamShift = false;
-  int magIndex, ind;
+  int magIndex, ind, neutXnew, neutYnew, neutXold, neutYold;
   short ID = mJeolSD.usePLforIS ? 11 : 8;
   mLastISdelX = shiftX;
   mLastISdelY = shiftY;
@@ -2402,13 +2410,23 @@ BOOL CEMscope::ChangeImageShift(double shiftX, double shiftY, BOOL bInc)
           mPlugFuncs->SetToNeutral(ID);
           mPlugFuncs->GetImageShift(&neutISX, &neutISY);
           mCheckedNeutralIS[magIndex] = 1;
-          if (fabs(neutISX - mMagTab[magIndex].neutralISX[mNeutralIndex]) > 0.001 || 
-            fabs(neutISY - mMagTab[magIndex].neutralISY[mNeutralIndex]) > 0.001) {
-              SEMMessageBox("The neutral image shift calibration appears to be off at "
-                "this magnification.\n\nYou should run \"Neutral IS Values\" in the "
-                "Calibration menu and save calibrations");
-              for (ind = 0; ind < (int)mCheckedNeutralIS.size(); ind++)
-                mCheckedNeutralIS[ind] = 1;
+          neutXold = NINT8000(mMagTab[magIndex].neutralISX[mNeutralIndex] / 
+            Jeol_IS1X_to_um);
+          neutYold = NINT8000(mMagTab[magIndex].neutralISY[mNeutralIndex] / 
+            Jeol_IS1Y_to_um);
+          neutXnew = NINT8000(neutISX / Jeol_IS1X_to_um);
+          neutYnew = NINT8000(neutISY / Jeol_IS1Y_to_um);
+          if (B3DABS(neutXnew - neutXold) > 1 || B3DABS(neutYnew - neutYold) > 1 ) {
+            CString mess;
+            mess.Format("The neutral image shift calibration appears to be off at "
+              "this magnification.\r\n(Stored value 0x%x  0x%x,  value now 0x%x, 0x%x)"
+              "\r\n\r\nYou should run \"Neutral IS Values\" in the "
+                "Calibration menu and save calibrations", neutXold, neutYold, neutXnew, 
+                neutYnew);
+            mWinApp->AppendToLog(mess);
+            SEMMessageBox(mess);
+            for (ind = 0; ind < (int)mCheckedNeutralIS.size(); ind++)
+              mCheckedNeutralIS[ind] = 1;
           }
         }
     }
@@ -4266,11 +4284,12 @@ void CEMscope::BlankBeam(BOOL inVal)
 // This and the unblank function are to be called from with a try block
 bool CEMscope::BlankTransientIfNeeded(const char *routine)
 {   
-  if (mBlankTransients && !sBeamBlanked && mPlugFuncs->SetBeamBlank != NULL) {
-    mPlugFuncs->SetBeamBlank(*vTrue);
-    sBeamBlanked = true;
-    SEMTrace('B', "%s set beam blank ON", routine);
-    return true;
+  if ((mBlankTransients || mWinApp->mCamera->DoingContinuousAcquire()) && !sBeamBlanked &&
+    mPlugFuncs->SetBeamBlank != NULL) {
+      mPlugFuncs->SetBeamBlank(*vTrue);
+      sBeamBlanked = true;
+      SEMTrace('B', "%s set beam blank ON", routine);
+      return true;
   }
   return false;
 }
@@ -4280,7 +4299,12 @@ void CEMscope::UnblankAfterTransient(bool needUnblank, const char *routine)
 {
   if (!needUnblank)
     return;
-  mPlugFuncs->SetBeamBlank(*vFalse);
+  try {
+    mPlugFuncs->SetBeamBlank(*vFalse);
+  }
+  catch (_com_error E) {
+    SEMReportCOMError(E, _T("unblanking after transient "));
+  }
   sBeamBlanked = false;
   SEMTrace('B', "%s set beam blank OFF", routine);
 }
@@ -4389,7 +4413,7 @@ void CEMscope::GotoLowDoseArea(int inArea)
   // and impose accumulated beam shifts from this mode after translating to new mode
   // First back off a beam shift; it didn't work to include that in the converted shift
   if (ldArea->probeMode >= 0) {
-    if (mProbeMode != ldArea->probeMode) {
+    if (mProbeMode != ldArea->probeMode && mLowDoseSetArea >= 0) {
       if ((mLdsaParams->beamDelX || mLdsaParams->beamDelY) && 
         mProbeMode == mLdsaParams->probeMode && !splitBeamShift)
         IncBeamShift(-mLdsaParams->beamDelX, -mLdsaParams->beamDelY);
@@ -5524,12 +5548,17 @@ int CEMscope::ReadProbeMode(void)
     return 0;
   ScopeMutexAcquire("ReadProbeMode", true);
   if (FEIscope) {
-    try {
-      PLUGSCOPE_GET(ProbeMode, retval, 1);
-      mProbeMode = retval;
-    }
-    catch (_com_error E) {
-      SEMReportCOMError(E, _T("getting probe mode "));
+    if (mLastMagIndex < mLowestMModeMagInd && (!mWinApp->ScopeHasSTEM() || 
+      !mPlugFuncs->GetSTEMMode())) {
+        mProbeMode = retval = 1;
+    } else {
+      try {
+        PLUGSCOPE_GET(ProbeMode, retval, 1);
+        mReturnedProbeMode = mProbeMode = retval;
+      }
+      catch (_com_error E) {
+        SEMReportCOMError(E, _T("getting probe mode "));
+      }
     }
   } else {
     retval = FastSTEMmode() ? 0 : 1;
@@ -7488,7 +7517,11 @@ int CEMscope::GetMessageBoxReturnValue(void)
 // Change what JEOL update routine looks for if remote control was added or taken away
 void CEMscope::RemoteControlChanged(BOOL newState)
 {
-  if (JEOLscope)
+  if (JEOLscope) {
     setOrClearFlags(mUpdateByEvent ? &mJeolSD.lowFlags : &mJeolSD.highFlags,
-    JUPD_BEAM_STATE, newState ? 1 : 0);
+      JUPD_BEAM_STATE, newState ? 1 : 0);
+    if (!mHasNoAlpha)
+      setOrClearFlags(mUpdateByEvent ? &mJeolSD.lowerFlags : &mJeolSD.highFlags,
+        JUPD_ALPHA, (newState || sLDcontinuous) ? 1 : 0);
+  }
 }

@@ -164,6 +164,7 @@ class DLL_IM_EX CEMscope
   GetSetMember(int, JeolSTEMPreMagDelay);
   GetSetMember(int, NumSpotSizes)
   GetSetMember(int, MinSpotSize);
+  GetSetMember(int, NumAlphas);
   GetMember(int, NumShiftBoundaries)
   int *GetShiftBoundaries() {return &mShiftBoundaries[0];};
   BOOL ScanMagnifications();
@@ -464,7 +465,8 @@ private:
   double mSavedISX, mSavedISY;  // RAW IS values to be restored at that mag
   int mHandledMag;            // Last mag handled by handle new mag
   int mShutterlessCamera;     // Copy of NoShutter property for current camera
-  int mProbeMode;             // last measured STEM mode, 0 for nanoprobe, 1 for microprobe
+  int mProbeMode;             // last measured mode, 0 for nanoprobe, 1 for microprobe
+  int mReturnedProbeMode;     // last mode returned from scope, 0 for nano, 1 for micro
   int mProbeChangeWait;       // milliseconds to wait after seeing probe change
   int mDiffractOrSTEMwait;    // Milliseconds to wait after seeing 0 mag index if STEM
   int mLastSTEMmode;          // Last STEM mode from update loop
@@ -512,6 +514,7 @@ private:
   float mC2SpotOffset[MAX_SPOT_SIZE + 1][2];    // Offset for each spot size, each probe mode
   int mNumSpotSizes;          // Number of spot size
   int mMinSpotSize;           // Minimum usable spot size
+  int mNumAlphas;             // Number of alphas
   double mCrossovers[MAX_SPOT_SIZE + 1][2];        // Intensity at crossover
   float mAlphaBeamShifts[MAX_ALPHAS][2];
   int mNumAlphaBeamShifts;    // Number of alphas with recorded beam shifts
