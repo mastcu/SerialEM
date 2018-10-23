@@ -248,6 +248,7 @@ void CSerialEMView::DrawImage(void)
   int iSrcWidth, iSrcHeight, iDestWidth, iDestHeight, crossLen, xSrc, ySrc, needWidth;
   int tmpWidth, tmpHeight, ierr, ifilt, numLines, thick, loop;
   float cenX, cenY, radius, filtMean = 128., filtSD, boost, targetSD = 40.;
+  float crossXoffset = 0., crossYoffset = 0.;
   double defocus;
   unsigned char **filtPtrs;
   int zoomFilters[] = {5, 4, 1, 0};  // lanczos3, 2, Blackman, box
@@ -314,9 +315,22 @@ void CSerialEMView::DrawImage(void)
     // This routine thinks these things are bottom-based
     b3dSetImageOffset(rect.Width(), imageRect->getWidth(), mZoom, &iSrcWidth,
       &m_iOffsetX, &mXDest, &mXSrc);
+    if (!m_iOffsetX && mXSrc > 0) {
+      crossXoffset = (float)((imageRect->getWidth() / 2. - mXSrc) * mZoom - 
+        rect.Width() / 2.);
+      if (crossXoffset > 0.5 * mZoom) {
+        mXSrc++;
+        crossXoffset -= (float)mZoom;
+      }
+    }
     mXDest += rect.left;
     b3dSetImageOffset(rect.Height(), imageRect->getHeight(), mZoom, &iSrcHeight, 
       &m_iOffsetY, &mYDest, &mYSrc);
+    if (!m_iOffsetY && mYSrc > 0)
+    crossYoffset = (float)((imageRect->getHeight() / 2. - mYSrc) * mZoom - 
+        rect.Height() / 2.);
+    if (crossYoffset > 0.5 * mZoom)
+      crossYoffset -= (float)mZoom;
   }
 
   mZoomAroundPoint = false;
@@ -472,6 +486,8 @@ void CSerialEMView::DrawImage(void)
       RGB(0, 255, 0) : RGB(255, 0, 0));
     crossLen = (rect.Width() < rect.Height() ? rect.Width() : rect.Height()) / 5;
     CPoint point = rect.CenterPoint();
+    point.x += B3DNINT(crossXoffset);
+    point.y += B3DNINT(crossYoffset);
     DrawCross(&cdc, &pnSolidPen, point, crossLen);
   }
 
@@ -1282,7 +1298,7 @@ void CSerialEMView::b3dSetImageOffset(int winsize,     /* window size in wpixels
       
       /* try and fill corners. */
       if (*drawsize < (imsize-1)) (*drawsize)++;
-      /* printf("ds do offset wo %d %d %d %d\n", *drawsize, *doff, *offset, *woff); */
+      //PrintfToLog("ds do offset wo %d %d %d %d", *drawsize, *doff, *offset, *woff);
       return;
     }
     /* Offset in upper corner */
@@ -1299,11 +1315,13 @@ void CSerialEMView::b3dSetImageOffset(int winsize,     /* window size in wpixels
         *offset   = (int)(((float)imsize * 0.5) - (float)(*doff) -
           (((float)winsize*0.5f)/(float)zoom) - 2.0f);
       }
+      //PrintfToLog("ds do offset wo %d %d %d %d", *drawsize, *doff, *offset, *woff);
       
       return;
     }
     if (*drawsize < (imsize-1)) (*drawsize)++;
   }
+  //PrintfToLog("ds do offset wo %d %d %d %d", *drawsize, *doff, *offset, *woff);
   return;
 }
 
