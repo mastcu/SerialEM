@@ -2773,8 +2773,8 @@ void CCameraController::Capture(int inSet, bool retrying)
   mTD.DoseFrac = conSet.doseFrac;
   B3DCLAMP(conSet.frameTime, GetMinK2FrameTime(mParam->K2Type), 10.f);
   mTD.FrameTime = conSet.frameTime;
-  if ((conSet.doseFrac || IS_FALCON2_OR_3(mParam)) && conSet.alignFrames && 
-    conSet.useFrameAlign) {
+  if ((conSet.doseFrac || (IS_FALCON2_OR_3(mParam) && FCAM_ADVANCED(mParam))) && 
+    conSet.alignFrames && conSet.useFrameAlign) {
     mTD.AlignFrames = 0; 
     if (conSet.useFrameAlign == 1) {
       mTD.K2ParamFlags |= K2_USE_FRAMEALIGN;
@@ -2826,6 +2826,9 @@ void CCameraController::Capture(int inSet, bool retrying)
       SEMTrace('E', "Falcon 3 scaling: divideBy2 %d float scale %f  flags %x", 
         mTD.DivideBy2, mTD.CountScaling, mTD.FEIacquireFlags);
     }
+  } else if (mParam->FEItype == FALCON3_TYPE && mParam->falcon3ScalePower > -10 &&
+    mScope->GetPluginVersion() >= FEI_PLUGIN_SCALES_DUMB_F3) {
+      mTD.DivideBy2 = mParam->falcon3ScalePower + SCALE_POWER_OFFSET - mTD.DivideBy2;
   }
 
   // Set timeout for camera acquires from exposure and readout components
