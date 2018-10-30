@@ -8,7 +8,8 @@
  * name
  */
 #ifndef FEISCOPE_PLUGIN_VERSION
-#define FEISCOPE_PLUGIN_VERSION 107
+#define FEISCOPE_PLUGIN_VERSION 108
+#define SCALE_POWER_OFFSET  12
 #endif
 
 #ifndef LINE_END
@@ -149,6 +150,10 @@ SCOPE_SAMENAME(CamOneInt, SetEmissionState);
 SCOPE_SAMENAME(CamOneInt, FlashFEG);
 SCOPE_SAMENAME(CamOneInt, GetNitrogenStatus);
 SCOPE_SAMENAME(CamTwoInt, RefillNitrogen);
+SCOPE_SAMENAME(CamOneInt, GetApertureSize);
+SCOPE_SAMENAME(ScopeSetTwoInt, SetApertureSize);
+SCOPE_SAMENAME(ScopeSetIntGetTwoDbl, GetAperturePosition);
+SCOPE_SAMENAME(ScopeSetIntTwoDbl, SetAperturePosition);
 SCOPE_SAMENAME(CamGetTwoInt, GetNumStartupErrors);
 SCOPE_SAMENAME(CamTwoInt, BeginThreadAccess);
 SCOPE_SAMENAME(ScopeSetInt, EndThreadAccess);

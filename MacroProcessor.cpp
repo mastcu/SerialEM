@@ -226,7 +226,8 @@ enum {CME_VIEW, CME_FOCUS, CME_TRIAL, CME_RECORD, CME_PREVIEW,
   CME_REPORTNUMTABLEITEMS, CME_CHANGEITEMCOLOR, CME_CHANGEITEMLABEL,CME_STRIPENDINGDIGITS,
   CME_MAKEANCHORMAP, CME_STAGESHIFTBYPIXELS, CME_REPORTPROPERTY, CME_SAVENAVIGATOR,
   CME_FRAMETHRESHOLDNEXTSHOT, CME_QUEUEFRAMETILTSERIES, CME_FRAMESERIESFROMVAR,
-  CME_WRITEFRAMESERIESANGLES, CME_ECHOREPLACELINE, CME_ECHONOLINEEND
+  CME_WRITEFRAMESERIESANGLES, CME_ECHOREPLACELINE, CME_ECHONOLINEEND, CME_REMOVEAPERTURE,
+  CME_REINSERTAPERTURE
 };
 
 static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0},
@@ -343,7 +344,7 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"StageShiftByPixels", 2, 1}, {"ReportProperty", 1, 0}, {"SaveNavigator", 0, 0},
 {"FrameThresholdNextShot", 1, 1}, {"QueueFrameTiltSeries", 3, 0}, 
 {"FrameSeriesFromVar", 2, 0}, {"WriteFrameSeriesAngles", 1, 0}, {"EchoReplaceLine", 1, 1},
-{"EchoNoLineEnd", 1, 1},
+{"EchoNoLineEnd", 1, 1}, {"RemoveAperture", 1, 0}, {"ReInsertAperture", 1, 0},
 {NULL, 0, 0}
 };
 
@@ -3495,6 +3496,20 @@ void CMacroProcessor::NextCommand()
     if (itemInt[1] < 0 || itemInt[1] > 0xFFFFFF || itemInt[2] < 0 || itemInt[2] > 15)
         ABORT_LINE("Entries must fit in 24 and 4 bits in: \n\n");
     mCamera->SetBaseJeolSTEMflags(itemInt[1] + (itemInt[2] << 24));
+
+                                                      // RemoveAperture, ReInsertAperture
+  } else if (CMD_IS(REMOVEAPERTURE) || CMD_IS(REINSERTAPERTURE)) {
+    index = itemInt[1];
+    if (strItems[1] == "CL")
+      index = 1;
+    if (strItems[1] == "OL")
+      index = 2;
+    if (CMD_IS(REINSERTAPERTURE))
+      index2 = mScope->ReInsertAperture(index);
+    else
+      index2 = mScope->RemoveAperture(index);
+    if (index2)
+      ABORT_LINE("Script aborted due to error removing aperture in:\n\n");
 
   } else if (CMD_IS(REPORTMEANCOUNTS)) {                    // ReportMeanCounts
     if (ConvertBufferLetter(strItems[1], 0, true, index, report))
