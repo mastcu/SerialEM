@@ -7016,6 +7016,8 @@ int CEMscope::LookupScriptingCamera(CameraParameters *params, bool refresh,
     restoreShutter = -950;
   err = mPlugFuncs->LookupScriptingCamera((LPCTSTR)CCDname, refresh, restoreShutter,
     &params->eagleIndex, &minDrift, &params->maximumDrift);
+
+  // TEMP FOR PROBLEM 8/29/18
   SEMTrace('E', "Returned from LSC with err %d", err);
   if (err == 3)
     SEMMessageBox(CString(mPlugFuncs->GetLastErrorString()));
@@ -7686,8 +7688,5 @@ void CEMscope::RemoteControlChanged(BOOL newState)
   if (JEOLscope) {
     setOrClearFlags(mUpdateByEvent ? &mJeolSD.lowFlags : &mJeolSD.highFlags,
       JUPD_BEAM_STATE, newState ? 1 : 0);
-    /*if (!mHasNoAlpha)
-      setOrClearFlags(mUpdateByEvent ? &mJeolSD.lowerFlags : &mJeolSD.highFlags,
-        JUPD_ALPHA, (newState || sLDcontinuous) ? 1 : 0);*/
   }
 }
