@@ -50,7 +50,7 @@ public:
 
   float DefocusFromCal(FocusTable *focCal, float inX, float inY,
                 float &minDist);
-  int GetFocusCal(int inMag, int inCam, int probeMode, FocusTable &focCal);
+  int GetFocusCal(int inMag, int inCam, int probeMode, int alpha, FocusTable &focCal);
   void Initialize();
   CFocusManager();
   ~CFocusManager();
@@ -161,6 +161,7 @@ private:
   int mFCindex;             // Counter for calibration series of calls
   int mFocusMag;            // Mag index for focusing work;
   int mFocusProbe;          // Probe mode for measuring defocus
+  int mFocusAlpha;          // Alpha setting
   int mFocusSetNum;         // Control set #
   bool mUsingExisting;      // Flag for any mode using existing images
   float *mFocusBuf[5];
@@ -318,7 +319,7 @@ public:
 afx_msg void OnUpdateFocusUseAbsoluteLimits(CCmdUI *pCmdUI);
 afx_msg void OnFocusUseAbsoluteLimits();
 afx_msg void OnFocusSetAbsoluteLimits();
-  int LookupFocusCal(int magInd, int camera, int direction, int probeMode);
+  int LookupFocusCal(int magInd, int camera, int direction, int probeMode, int alpha, bool matchNoAlpha);
   void NextFocusAbsoluteLimits(double min, double max) {mNextMinAbsFocus = min; mNextMaxAbsFocus = max;};
   void NextFocusChangeLimits(float min, float max) {mNextMinDeltaFocus = min; mNextMaxDeltaFocus = max;};
   afx_msg void OnFocusSetDddMinBinning();

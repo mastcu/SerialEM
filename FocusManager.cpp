@@ -510,8 +510,10 @@ void CFocusManager::OnFocusSetTiltDirection()
 void CFocusManager::OnFocusMovecenter() 
 {
   int nx, ny;
-  float shiftX, shiftY, specY, angle, focusFac = mShiftManager->GetDefocusZFactor();
+  float shiftX, shiftY, specY, angle, focusFac;
   double newFocus;
+  focusFac = mShiftManager->GetDefocusZFactor() * 
+    (mShiftManager->GetStageInvertsZAxis() ? -1 : 1);
   EMimageBuffer *imBuf = mWinApp->mActiveView->GetActiveImBuf();
   ScaleMat aInv = mShiftManager->CameraToSpecimen(imBuf->mMagInd);
   if (!aInv.xpx)
@@ -572,6 +574,10 @@ void CFocusManager::OnAutofocusListCalibrations()
           str.Format("%s   %d   %d   %d     %s", (LPCTSTR)camP[iCam].name,
             MagForCamera(iCam, iMag), iMag, mFocTab[ind].direction, 
             mFocTab[ind].probeMode ? "" : "nanoprobe");
+          if (!mScope->GetHasNoAlpha() || mFocTab[ind].alpha >= 0) {
+            str2.Format("  alpha %d", mFocTab[ind].alpha);
+            str += str2;
+          }
           mWinApp->AppendToLog(str);
         }
       }
@@ -595,7 +601,7 @@ void CFocusManager::OnAutofocusListCalibrations()
       "Mag  Index  Stigmator delta");
     for (ind = 0; ind < ctfAstigCals->GetSize(); ind++) {
       ctfCal = ctfAstigCals->GetAt(ind);
-       PrintfToLog("%d   %d   %.2f    %.1f", magTab[ctfCal.magInd].mag, ctfCal.magInd, 
+       PrintfToLog("%d   %d   %.3f", magTab[ctfCal.magInd].mag, ctfCal.magInd, 
         ctfCal.amplitude);
     }
   }
@@ -655,6 +661,7 @@ void CFocusManager::CalFocusStart()
   CameraParameters *camParam = mWinApp->GetCamParams() + mWinApp->GetCurrentCamera();
   mFocusMag = mScope->GetMagIndex();
   mFocusProbe = mScope->ReadProbeMode();
+  mFocusAlpha = mScope->GetAlpha();
   CString str;
   if (mWinApp->GetSTEMMode()) {
     CalSTEMfocus();
@@ -697,7 +704,7 @@ void CFocusManager::CalFocusData(float inX, float inY)
   FocusTable oldCal;
   int camera = mWinApp->GetCurrentCamera();
 
-  int wasCalibrated = GetFocusCal(mFocusMag, camera, mFocusProbe, oldCal);
+  int wasCalibrated = GetFocusCal(mFocusMag, camera, mFocusProbe, mFocusAlpha, oldCal);
   if (wasCalibrated) {
     oldSlopeX = oldCal.slopeX;
     oldSlopeY = oldCal.slopeY;
@@ -765,11 +772,17 @@ void CFocusManager::CalFocusData(float inX, float inY)
   camera = mWinApp->GetCurrentCamera();
   mNewCal.camera = camera;
   mNewCal.probeMode = mFocusProbe;
+  mNewCal.alpha = mFocusAlpha;
 
   // copy the structure or append if this is a new calibration
-  if ((focInd = LookupFocusCal(mFocusMag, camera, mTiltDirection, mFocusProbe)) >= 0)
-    mFocTab[focInd] = mNewCal;
-  else {
+  // First look for matching alpha then for one with no alpha defined, to replace
+  if ((focInd = LookupFocusCal(mFocusMag, camera, mTiltDirection, mFocusProbe, 
+    mFocusAlpha, false)) >= 0) {
+      mFocTab[focInd] = mNewCal;
+  } else if (mFocusAlpha >= 0 && (focInd = LookupFocusCal(mFocusMag, camera, 
+    mTiltDirection, mFocusAlpha, mFocusProbe, true)) >= 0) {
+      mFocTab[focInd] = mNewCal;
+  } else {
     mFocTab.Add(mNewCal);
     focInd = (int)mFocTab.GetSize() - 1;
   }
@@ -865,7 +878,7 @@ BOOL CFocusManager::FocusReady()
   if (mWinApp->GetSTEMMode())
     return (mSFnormalizedSlope[mScope->GetProbeMode()] != 0.);
   return (GetFocusCal(mScope->FastMagIndex(), mWinApp->GetCurrentCamera(), 
-    mScope->GetProbeMode(), focTmp) != 0);
+    mScope->GetProbeMode(), mScope->FastAlpha(), focTmp) != 0);
 }
 
 // Call to start autofocus or measurement of defocus
@@ -1089,12 +1102,9 @@ void CFocusManager::AutoFocusData(float inX, float inY)
       }
     }
   } else if (!mDoChangeFocus) {
-    report.Format( 
-      "The current defocus is computed to be %6.2f microns\r\r"
-      "Do you want to make that defocus the target for Autofocusing?",
+    report.Format("The current defocus is computed to be %6.2f microns", 
       mCurrentDefocus);
-    if (AfxMessageBox(report, MB_YESNO | MB_ICONQUESTION) == IDYES)
-      SetTargetDefocus(mCurrentDefocus);
+    mWinApp->AppendToLog(report, LOG_MESSAGE_IF_CLOSED);
   }
   FocusTasksFinished();
   SEMTrace('M', "Autofocus Done");
@@ -1107,7 +1117,9 @@ int CFocusManager::CurrentDefocusFromShift(float inX, float inY, float &defocus,
   float &rawDefocus)
 {
   int shiftX, shiftY;
-  float angle, specY, minDist, focusFac = mShiftManager->GetDefocusZFactor();
+  float angle, specY, minDist;
+  float focusFac = mShiftManager->GetDefocusZFactor() *
+    (mShiftManager->GetStageInvertsZAxis() ? -1 : 1);
   LowDoseParams *ldParm = mWinApp->GetLowDoseParams();
   ScaleMat aInv;
   ControlSet *conSet = &mConSets[mFocusSetNum];
@@ -1116,7 +1128,7 @@ int CFocusManager::CurrentDefocusFromShift(float inX, float inY, float &defocus,
   FocusTable useCal;
   if (!magInd)
     magInd = mScope->FastMagIndex();
-  if (!GetFocusCal(magInd, mCurrentCamera, mFocusProbe, useCal))
+  if (!GetFocusCal(magInd, mCurrentCamera, mFocusProbe, mFocusAlpha, useCal))
     return 1;
   aInv = mShiftManager->CameraToSpecimen(magInd);
   defocus = DefocusFromCal(&useCal, inX / (float)mBeamTilt, inY / (float)mBeamTilt, 
@@ -1175,10 +1187,13 @@ void CFocusManager::DetectFocus(int inWhere, int useViewInLD)
   else
     mFocusMag = mScope->FastMagIndex();
 
-  if (mWinApp->LowDoseMode())
+  if (mWinApp->LowDoseMode()) {
     mFocusProbe = ldParm[mFocusSetNum].probeMode;
-  else
+    mFocusAlpha = (int)ldParm[mFocusSetNum].beamAlpha;
+  } else {
     mFocusProbe = mScope->ReadProbeMode();
+    mFocusAlpha = mScope->GetAlpha();
+  }
   if (mCamera->CameraBusy()) 
     mCamera->StopCapture(0);
 
@@ -1305,7 +1320,7 @@ void CFocusManager::FocusDone()
   int binning = mConSets[mFocusSetNum].binning;
   int iCam = mWinApp->GetCurrentCamera();
   FocusTable focCal;
-  int ifCalibrated = GetFocusCal(mFocusMag, iCam, mFocusProbe, focCal);
+  int ifCalibrated = GetFocusCal(mFocusMag, iCam, mFocusProbe, mFocusAlpha, focCal);
   int bufnum = 0;
   CameraParameters *camParam = mWinApp->GetActiveCamParam();
   int divForK2 = BinDivisorI(camParam);
@@ -1411,7 +1426,8 @@ void CFocusManager::FocusDone()
     pixel = mShiftManager->GetPixelSize(iCam, mFocusMag);
     sinphi = (float)sin(DTOR * imRot);
     cosphi = (float)cos(DTOR * imRot);
-    tanTilt = (float)(tan(DTOR * tilt) /* (mShiftManager->GetInvertStageXAxis() ? -1 : 1)*/);
+    tanTilt = (float)(tan(DTOR * tilt) * (mShiftManager->GetStageInvertsZAxis() ? -1 :1));
+    /* (mShiftManager->GetInvertStageXAxis() ? -1 : 1)*/;
     pixel *= (float)mBeamTilt;    // Slopes are per mRad of tilt
     a11 = 1.f - focCal.slopeX * sinphi * tanTilt * pixel;
     a12 = focCal.slopeX * cosphi * tanTilt * pixel;
@@ -1710,19 +1726,23 @@ BOOL CFocusManager::GetAccuracyFactors(float &outPlus, float &outMinus)
 // ROUTINES TO WORK WITH FOCUS CALIBRATIONS 
 
 // Get the calibration for given mag and camera and currently selected direction
-int CFocusManager::GetFocusCal(int inMag, int inCam, int probeMode, FocusTable &focCal)
+int CFocusManager::GetFocusCal(int inMag, int inCam, int probeMode, int inAlpha,
+  FocusTable &focCal)
 {
-  int iDelMag, iPass, iDir, iMag, iCamTry, focInd, iAct, iCamPass;
+  int iDelMag, iPass, iDir, iMag, iCamTry, focInd, iAct, iCamPass, alphaPass;
+  int alphaSteps = (mScope->GetHasNoAlpha() ? 1 : 2);
   ScaleMat refMat, curMat, refInv, delMat;
   int numCam = mWinApp->GetNumReadInCameras();
   int *activeList = mWinApp->GetActiveCameraList();
 
   if (mCamParams[inCam].STEMcamera)
     return 0;
-  if ((focInd = LookupFocusCal(inMag, inCam, mTiltDirection, probeMode)) >= 0) {
-    focCal = mFocTab[focInd];
-    SEMTrace('C', "Returning direct focus cal for mag %d cam %d", inMag, inCam);
-    return 1; // calibrated at this mag
+  if ((focInd = LookupFocusCal(inMag, inCam, mTiltDirection, probeMode, inAlpha, false))
+    >= 0) {
+      focCal = mFocTab[focInd];
+      SEMTrace('C', "Returning direct focus cal for mag %d cam %d a %d", inMag, inCam, 
+        inAlpha);
+      return 1; // calibrated at this mag
   }
 
   // Search other mags then other cameras in two passes
@@ -1731,40 +1751,44 @@ int CFocusManager::GetFocusCal(int inMag, int inCam, int probeMode, FocusTable &
   // first going through these possibilities with both IS calibrated
   // and congruent, then going through without that requirement
   for (iPass = 0; iPass < 2; iPass++) {
-    for (iCamPass = 0; iCamPass < 2; iCamPass++) {
-      for (iAct = 0; iAct < numCam; iAct++) {
-        iCamTry = activeList[iAct];
-        if (mCamParams[iCamTry].STEMcamera)
-          continue;
-        if ((!iCamPass && iCamTry == inCam) || (iCamPass && iCamTry != inCam)) {
-          for (iDelMag = 0; iDelMag < MAX_MAGS; iDelMag++) {
-            for (iDir = -1; iDir <= 1; iDir += 2) {
-              iMag = inMag + iDelMag * iDir;
-              if (iMag < 1 || iMag >= MAX_MAGS)
-                continue;
-              
-              // On first pass, insist that both image shifts be calibrated
-              if (!iPass && (mMagTab[iMag].matIS[iCamTry].xpx == 0. ||
-                mMagTab[inMag].matIS[inCam].xpx == 0. || 
-                !mShiftManager->CanTransferIS(iMag, inMag)))
-                continue;
-              if ((focInd = LookupFocusCal(iMag, iCamTry, mTiltDirection, probeMode)) < 0)
-                continue;
-              
-              // Rotate the vector by the image shift or specimen change
-              if (iPass) {
-                refMat = mShiftManager->SpecimenToCamera(iCamTry, iMag);
-                curMat = mShiftManager->SpecimenToCamera(inCam, inMag);
-              } else {
-                refMat = mShiftManager->IStoGivenCamera(iMag, iCamTry);
-                curMat = mShiftManager->IStoCamera(inMag);
+    for (alphaPass = 0; alphaPass < alphaSteps; alphaPass++) {
+      for (iCamPass = 0; iCamPass < 2; iCamPass++) {
+        for (iAct = 0; iAct < numCam; iAct++) {
+          iCamTry = activeList[iAct];
+          if (mCamParams[iCamTry].STEMcamera)
+            continue;
+          if ((!iCamPass && iCamTry == inCam) || (iCamPass && iCamTry != inCam)) {
+            for (iDelMag = 0; iDelMag < MAX_MAGS; iDelMag++) {
+              for (iDir = -1; iDir <= 1; iDir += 2) {
+                iMag = inMag + iDelMag * iDir;
+                if (iMag < 1 || iMag >= MAX_MAGS)
+                  continue;
+
+                // On first pass, insist that both image shifts be calibrated
+                if (!iPass && (mMagTab[iMag].matIS[iCamTry].xpx == 0. ||
+                  mMagTab[inMag].matIS[inCam].xpx == 0. || 
+                  !mShiftManager->CanTransferIS(iMag, inMag)))
+                  continue;
+                if ((focInd = LookupFocusCal(iMag, iCamTry, mTiltDirection, probeMode, 
+                  inAlpha, alphaPass > 0)) < 0)
+                  continue;
+
+                // Rotate the vector by the image shift or specimen change
+                if (iPass) {
+                  refMat = mShiftManager->SpecimenToCamera(iCamTry, iMag);
+                  curMat = mShiftManager->SpecimenToCamera(inCam, inMag);
+                } else {
+                  refMat = mShiftManager->IStoGivenCamera(iMag, iCamTry);
+                  curMat = mShiftManager->IStoCamera(inMag);
+                }
+                refInv = MatInv(refMat);
+                delMat = MatMul(refInv, curMat);
+                TransformFocusCal(&mFocTab[focInd], &focCal, delMat);
+                SEMTrace('C', "Using transformed focus cal on pass %d from mag-cam-a "
+                  "%d-%d-%d to %d-%d-%d", iPass, iMag, iCamTry, mFocTab[focInd].alpha, 
+                  inMag, inCam, inAlpha);
+                return iPass + 2;
               }
-              refInv = MatInv(refMat);
-              delMat = MatMul(refInv, curMat);
-              TransformFocusCal(&mFocTab[focInd], &focCal, delMat);
-              SEMTrace('C', "Using transformed focus cal on pass %d from mag-cam %d-%d to"
-                " %d-%d", iPass, iMag, iCamTry, inMag, inCam);
-              return iPass + 2;
             }
           }
         }
@@ -1775,14 +1799,14 @@ int CFocusManager::GetFocusCal(int inMag, int inCam, int probeMode, FocusTable &
 }
 
 // Returns the table index of a calibration matching the given parameters or -1 if none
-int CFocusManager::LookupFocusCal(int magInd, int camera, int direction, int probeMode)
+int CFocusManager::LookupFocusCal(int magInd, int camera, int direction, int probeMode,
+  int alpha, bool matchNoAlpha)
 {
   for (int ind = 0; ind < mFocTab.GetSize(); ind++) {
-    int dir = mFocTab[ind].direction;
-    dir = mFocTab[ind].magInd;
-    dir = mFocTab[ind].camera;
     if (mFocTab[ind].magInd == magInd && mFocTab[ind].camera == camera &&
-      mFocTab[ind].direction == direction && mFocTab[ind].probeMode == probeMode)
+      mFocTab[ind].direction == direction && mFocTab[ind].probeMode == probeMode &&
+      ((!matchNoAlpha && (alpha < 0 || alpha == mFocTab[ind].alpha)) || 
+      (matchNoAlpha &&  mFocTab[ind].alpha < 0)))
       return ind;
   }
   return -1;
@@ -2660,16 +2684,24 @@ float CFocusManager::EstimatedBeamTiltScaling(void)
 {
   float pixel, scaleSum = 0.;
   float numScales = 0;
-  int ind, camera;
-  for (ind = 0; ind < mFocTab.GetSize(); ind++) {
-    camera = mFocTab[ind].camera;
-    if (mWinApp->LookupActiveCamera(camera) >= 0 && 
-      mFocTab[ind].probeMode == mScope->GetProbeMode()) {
-        pixel = mWinApp->mShiftManager->GetPixelSize(camera, mFocTab[ind].magInd);
-        scaleSum += (float)sqrt((double)mFocTab[ind].slopeX * mFocTab[ind].slopeX
-          + mFocTab[ind].slopeY * mFocTab[ind].slopeY) * 1000.f * pixel / 2.f;
-        numScales++;
+  int ind, loop, camera, alpha = mScope->GetAlpha();
+
+  // If alpha exists, first look for ones with matching alpha, then take anything if that
+  // gave nothing
+  for (loop = 0; loop < mScope->GetHasNoAlpha() ? 1 : 2; loop++) {
+    for (ind = 0; ind < mFocTab.GetSize(); ind++) {
+      camera = mFocTab[ind].camera;
+      if (mWinApp->LookupActiveCamera(camera) >= 0 && 
+        mFocTab[ind].probeMode == mScope->GetProbeMode() && 
+        (loop || alpha < 0 || alpha == mFocTab[ind].alpha)) {
+          pixel = mWinApp->mShiftManager->GetPixelSize(camera, mFocTab[ind].magInd);
+          scaleSum += (float)sqrt((double)mFocTab[ind].slopeX * mFocTab[ind].slopeX
+            + mFocTab[ind].slopeY * mFocTab[ind].slopeY) * 1000.f * pixel / 2.f;
+          numScales++;
+      }
     }
+    if (numScales)
+      break;
   }
   return scaleSum / (float)B3DMAX(1, numScales);
 }
