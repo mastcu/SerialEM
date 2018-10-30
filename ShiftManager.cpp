@@ -100,6 +100,7 @@ CShiftManager::CShiftManager()
   mTmplImage = NULL;
   mLastTimeoutWasIS = false;
   mBacklashMouseAndISR = false;
+  mStageInvertsZAxis = -1;
   mHitachiStageSpecAngle = -90.;
   mLastFocusForMagCal = 999.;
   mLastAlignXTrimA = mLastAlignXTrimRef = mLastAlignYTrimA = mLastAlignYTrimRef = 0;
@@ -147,11 +148,11 @@ int CShiftManager::SetAlignShifts(float newX, float newY, BOOL incremental,
                   EMimageBuffer *imBuf, BOOL doImShift)
 {
   float oldX, oldY, delX, delY, defocus = 0.;
-  double delISX, delISY, fracX, fracY, angle, roughScale, intensity;
+  double delISX, delISY, fracX, fracY, angle, intensity;
   double fieldFrac = 0.;
   double absMove = 0.;
   int limitX, limitY, magInd, camera, spot;
-  ScaleMat bMat, bInv, aMat;
+  ScaleMat bMat, bInv;
   int binning;
   MontParam *montParam = mWinApp->GetMontParam();
   int alignBuf = mBufferManager->AutoalignBasicIndex();
@@ -239,26 +240,7 @@ int CShiftManager::SetAlignShifts(float newX, float newY, BOOL incremental,
       angle = DTOR * mScope->GetTiltAngle();
       
       // If transformation exists, try to zero image shift too
-      aMat = IStoGivenCamera(magInd, camera);
-      if (aMat.xpx) {
-
-        if (mWinApp->GetSTEMMode())
-          roughScale = mSTEMRoughISscale;
-        else
-          roughScale = (magInd < mScope->GetLowestNonLMmag(&mCamParams[camera]) && 
-            mLMRoughISscale) ? mLMRoughISscale : mRoughISscale;
-        mScope->GetLDCenteredShift(fracX, fracY);
-        SEMTrace('i', "Base stage shift of %.2f %.2f with IS of %.2f %.2f",
-          delISX, delISY, fracX, fracY);
-        if (sqrt(fracX * fracX + fracY * fracY) * roughScale > 0.01) {
-          bMat = MatMul(aMat, bInv);
-          delISX += bMat.xpx * fracX + bMat.xpy * fracY;
-          delISY += bMat.ypx * fracX + bMat.ypy * fracY;
-          SEMTrace('i', "Final stage shift of %.2f %.2f", delISX, delISY);
-          mScope->IncImageShift(-fracX, -fracY);
-          SetISTimeOut(GetLastISDelay());
-        }
-      }
+      AdjustStageMoveAndClearIS(camera, magInd, delISX, delISY, bInv);
       
       // Get the stage position and change it.  Set a flag and update state
       // to prevent early pictures, use reset shift task handlers
@@ -286,6 +268,35 @@ int CShiftManager::SetAlignShifts(float newX, float newY, BOOL incremental,
     mWinApp->mMainView->DrawImage();
   return imposeShift ? 0 : 3;
 }
+
+// If transformation exists, zero image shift and adjust stage move to compensate
+void CShiftManager::AdjustStageMoveAndClearIS(int camera, int magInd, double &delStageX, 
+  double &delStageY, ScaleMat bInv)
+{
+  double fracX, fracY, roughScale;
+  ScaleMat bMat, aMat;
+  aMat = IStoGivenCamera(magInd, camera);
+  if (aMat.xpx) {
+
+    if (mWinApp->GetSTEMMode())
+      roughScale = mSTEMRoughISscale;
+    else
+      roughScale = (magInd < mScope->GetLowestNonLMmag(&mCamParams[camera]) && 
+      mLMRoughISscale) ? mLMRoughISscale : mRoughISscale;
+    mScope->GetLDCenteredShift(fracX, fracY);
+    SEMTrace('i', "Base stage shift of %.2f %.2f with IS of %.2f %.2f",
+      delStageX, delStageY, fracX, fracY);
+    if (sqrt(fracX * fracX + fracY * fracY) * roughScale > 0.01) {
+      bMat = MatMul(aMat, bInv);
+      delStageX += bMat.xpx * fracX + bMat.xpy * fracY;
+      delStageY += bMat.ypx * fracX + bMat.ypy * fracY;
+      SEMTrace('i', "Final stage shift of %.2f %.2f", delStageX, delStageY);
+      mScope->IncImageShift(-fracX, -fracY);
+      SetISTimeOut(GetLastISDelay());
+    }
+  }
+}
+
 
 // Convert the image shift (already in right-handed coordinates) to a scope image shift
 // and impose it if possible
@@ -1247,7 +1258,8 @@ int CShiftManager::ResetImageShift(BOOL bDoBacklash, BOOL bAdjustScale, int wait
   double shiftX, shiftY, delX, delY, angle, specX, specY;
   double adjustX, adjustY, roughScale;
   int magInd;
-  float defocusFac = mDefocusZFactor;
+  float defocusFac = mDefocusZFactor * (mStageInvertsZAxis ? -1 : 1);
+  float xTiltFac, yTiltFac;
   bool setBacklash;
   StageMoveInfo smi;
   ScaleMat aMat, dMat;
@@ -1294,10 +1306,12 @@ int CShiftManager::ResetImageShift(BOOL bDoBacklash, BOOL bAdjustScale, int wait
   // Compute the stage displacement with no adjustments
   // Use the nearest stage to camera matrix for this, so use IS not specimen coords
   angle = DTOR * mScope->GetTiltAngle();
+  xTiltFac = HitachiScope ? cos(angle) : 1.;
+  yTiltFac = HitachiScope ? 1. : cos(angle);
   dMat = MatMul(IStoCamera(magInd), 
     MatInv(StageToCamera(mWinApp->GetCurrentCamera(), magInd)));
-  delX = dMat.xpx * shiftX + dMat.xpy * shiftY;
-  delY = (dMat.ypx * shiftX + dMat.ypy * shiftY) / cos(angle);
+  delX = (dMat.xpx * shiftX + dMat.xpy * shiftY) / xTiltFac;
+  delY = (dMat.ypx * shiftX + dMat.ypy * shiftY) / yTiltFac;
   adjustX = adjustY = 1.;
   if (bAdjustScale) {
     // Adjust scale  based on last displacement minus amount left
@@ -1313,8 +1327,8 @@ int CShiftManager::ResetImageShift(BOOL bDoBacklash, BOOL bAdjustScale, int wait
     if (adjustY < 0.6)
       adjustY = 0.6;
     dMat = SpecimenToStage(adjustX, adjustY);
-    delX = dMat.xpx * specX + dMat.xpy * specY;
-    delY = (dMat.ypx * specX + dMat.ypy * specY) / cos(angle);
+    delX = (dMat.xpx * specX + dMat.xpy * specY) / xTiltFac;
+    delY = (dMat.ypx * specX + dMat.ypy * specY) / yTiltFac;
   }
 
   SEMTrace('i', "spec X,Y = %.2f, %.2f; delX,Y = %.2f, %.2f, adjustY = %.3f",

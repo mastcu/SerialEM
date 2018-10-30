@@ -64,6 +64,7 @@ public:
   ShortVec *GetBeamCalAlpha() {return &mBeamCalAlpha;};
   ShortVec *GetBeamCalProbe() {return &mBeamCalProbe;};
   GetSetMember(BOOL, InvertStageXAxis)
+  GetSetMember(int, StageInvertsZAxis)
   void ResetAllTimeouts();
   ScaleMat CameraToIS(int magInd);
   ScaleMat CameraToSpecimen(int magInd);
@@ -223,6 +224,7 @@ private:
   float mISdelayScaleFactor;   // Overall factor for scaling delay
   float mDefocusZFactor;       // Fudge factor to get from actual Z to defocus change
   BOOL mInvertStageXAxis;      // Flag that the X axis of stage coordinates is inverted
+  int mStageInvertsZAxis;      // Flag that Z axis in inverted (Hitachi)
   int mNormalizationDelay;     // Delay after normalizing lenses, in msec
   int mLowMagNormDelay;        // Delay after normalizing in LM, or 0 to use same
   int mStageMovedDelay;        // Delay after moving stage, in msec
@@ -285,6 +287,8 @@ public:
   ScaleMat MatScaleRotate(ScaleMat aMat, float scale, float rotation);
   void AdjustStageToCameraForTilt(ScaleMat & aMat, float angle);
   void AdjustCameraToStageForTilt(ScaleMat & aMat, float angle);
+  void AdjustStageMoveAndClearIS(int camera, int magInd, double &delStageX,
+    double & delStageY, ScaleMat bInv);
 };
 
 #endif // !defined(AFX_SHIFTMANAGER_H__FF4BB03C_5BFC_4142_BD0F_9A1A257FABE9__INCLUDED_)
