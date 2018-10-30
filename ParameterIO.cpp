@@ -561,6 +561,14 @@ int CParameterIO::ReadSettings(CString strFileName)
         mWinApp->mRemoteControl.SetIntensityIncrement((float)itemDbl[3]);
         mWinApp->mRemoteControl.m_bMagIntensity = itemInt[4] != 0;
 
+        // set the beam/stage selector before either of its increments
+        if (!itemEmpty[6])
+          mWinApp->mRemoteControl.SetBeamOrStage(itemInt[6]);
+        if (!itemEmpty[5])
+          mWinApp->mRemoteControl.SetFocusIncrementIndex(itemInt[5]);
+        if (!itemEmpty[7])
+          mWinApp->mRemoteControl.SetStageIncrementIndex(itemInt[7]);
+
       // Tool dialog placements and states now work when reading settings
       } else if (NAME_IS("ToolDialogStates") || NAME_IS("ToolDialogStates2")) {
         index = 0;
@@ -1384,10 +1392,12 @@ void CParameterIO::WriteSettings(CString strFileName)
     oneState.Format("MacroButtonNumbers %d %d %d\n", macroButtonNumbers[0],
       macroButtonNumbers[1], macroButtonNumbers[2]);
     mFile->WriteString(oneState);
-    oneState.Format("RemoteControlParams %d %f %f %d\n", mWinApp->GetShowRemoteControl() ? 
-      1 : 0, mWinApp->mRemoteControl.GetBeamIncrement(), 
+    oneState.Format("RemoteControlParams %d %f %f %d %d %d %d\n", 
+      mWinApp->GetShowRemoteControl() ? 1 : 0, mWinApp->mRemoteControl.GetBeamIncrement(), 
       mWinApp->mRemoteControl.GetIntensityIncrement(), 
-      mWinApp->mRemoteControl.m_bMagIntensity ? 1: 0);
+      mWinApp->mRemoteControl.m_bMagIntensity ? 1: 0,
+      mWinApp->mRemoteControl.GetFocusIncrementIndex(), 
+      mWinApp->mRemoteControl.m_iBeamOrStage, mWinApp->mRemoteControl.GetStageIncIndex());
     mFile->WriteString(oneState);
 
     // Get window placement and write it out
@@ -3192,10 +3202,13 @@ int CParameterIO::ReadCalibration(CString strFileName)
         nCal = itemInt[6];
         beamInd = 0;
         freeInd = 1;
+        spot = -999;
         if (!strItems[8].IsEmpty())
           beamInd = itemInt[7];
         if (!strItems[9].IsEmpty())
           freeInd = itemInt[8];
+        if (!strItems[10].IsEmpty())
+          spot = itemInt[9];
         if (index < 1 || index >= MAX_MAGS || camera < 0 
           || camera >= MAX_CAMERAS || beamInd < 0 || beamInd > 3) {
           nCal = 0;
@@ -3207,6 +3220,7 @@ int CParameterIO::ReadCalibration(CString strFileName)
           focTable.camera = camera;
           focTable.direction = beamInd;
           focTable.probeMode = freeInd;
+          focTable.alpha = spot;
           focTable.numPoints = nCal;
           focTable.slopeX = (float)itemDbl[3];
           focTable.slopeY = (float)itemDbl[4];
@@ -3784,10 +3798,10 @@ void CParameterIO::WriteCalibration(CString strFileName)
     // Write focus calibrations
     for (ind = 0; ind < mFocTab->GetSize(); ind++) {
       focTable = mFocTab->GetAt(ind);
-      string.Format("FocusCalibration %d %d %f %f %.2f %d %d %d   %d\n",
+      string.Format("FocusCalibration %d %d %f %f %.2f %d %d %d %d   %d\n",
         focTable.magInd, focTable.camera, focTable.slopeX, focTable.slopeY,
         focTable.beamTilt, focTable.numPoints, focTable.direction, focTable.probeMode,
-        MagForCamera(focTable.camera, focTable.magInd));
+        focTable.alpha, MagForCamera(focTable.camera, focTable.magInd));
       mFile->WriteString(string);
       for (k = 0; k < focTable.numPoints; k++) {
         string.Format("%f %f %f\n", focTable.defocus[k], focTable.shiftX[k], 
