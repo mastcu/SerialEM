@@ -118,6 +118,7 @@ static DWORD appThreadID;
 static CString sBuildDate;
 static CString sBuildTime;
 static int sBuildDayStamp;
+static CString sAboutVersion;
 
 CComModule _Module;
 
@@ -1389,6 +1390,9 @@ BOOL CSerialEMApp::InitInstance()
     mLogWindow->SetUnsaved(false);
   if (mDummyInstance)
     SetTitleFile("");
+  sAboutVersion = VERSION_STRING;
+  if (sAboutVersion.Find("beta") > 0)
+    sAboutVersion += " " + sBuildDate;
 
   mStartingProgram = false;
   DoResizeMain();
@@ -1597,7 +1601,7 @@ public:
 };
 
 CAboutDlg::CAboutDlg() : CDialog(CAboutDlg::IDD)
-, m_strVersion(_T(VERSION_STRING))
+, m_strVersion(_T(sAboutVersion))
 , m_strTag(_T(TAG_STRING))
 {
   //{{AFX_DATA_INIT(CAboutDlg)
