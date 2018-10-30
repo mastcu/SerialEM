@@ -1419,7 +1419,8 @@
         computer.</li>
     </ul>
     <p>
-      <i><a name="Falcon3Details">For a Falcon 3 camera:</a></i></p>
+      <i><a name="Falcon3Details">For a Falcon 3 camera with the advanced scriping 
+      interface:</a></i></p>
     <ul>
       <li>If the frame rate is not 40 FPS, 
         add the general property &#39;FalconReadoutInterval&#39; with the inverse of the 
@@ -1461,6 +1462,13 @@
         connection to the storage server and an NVIDIA card.</li>
 
     </ul>
+    <p>
+      <i>For a Falcon 3 camera with the standard scripting interface:</i> You will be 
+      able to take images in linear mode only, with no possibility of frame saving or 
+      alignment.&nbsp; SerialEM will scale images by their exposure times and adjust 
+      this scaling so that binning is done by averaging.&nbsp; The scaling can be 
+      adjusted by factors of 2 with the property &#39;<a href="about_properties.htm#scalePower">Falcon3ScalingPower</a>&#39;.&nbsp; 
+      The property &#39;RelativeGainFactors 1 0.25 0.0625&#39; is needed.</p>
     <p>
       <a name="FalconGPU"><i>To use a GPU for aligning frames in SerialEM with any of these Falcon 
       configurations:</i></p>

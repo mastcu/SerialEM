@@ -16,10 +16,9 @@
 
     <p>
       This panel contains various controls to minimize the need to access the 
-      microscope&#39;s user interface.&nbsp; Its primary use is to facilitate use of 
-      SerialEM via remote access, but it may be more generally useful for two reasons: 
-      it allows the elimination of some common scripts, and it provides a visual 
-      interface for beam operations available through obscure arrow key combinations.&nbsp; 
+      microscope&#39;s user interface.&nbsp; Its primary use is to facilitate control 
+      of the microscope via remote access, but it is more generally useful in a 
+      variety of situations, and allows the elimination of some common scripts.&nbsp; 
       This panel is unique in that it can be completely eliminated from the set of 
       tool panels if desired, using an entry in the Window menu.</p>
     <p>
@@ -48,6 +47,34 @@
       of whether an equivalent function is turned on in the microscope user interface 
       (intensity zoom, brightness zoom).</p>
     <p>
+      <b>-&gt; nPr /&nbsp; -&gt; uPr (FEI only)</b></p>
+    <p>
+      Press this button to switch to the indicated 
+      nanoprobe of microprobe mode.&nbsp; 
+      It is disabled in low magnification mode.</p>
+    <p>
+      <b>Alpha (JEOL only)</b></p>
+    <p>
+      Use this spin button to change the alpha setting; the current alpha is shown 
+      next to the button.&nbsp; It is disabled in low magnification mode.</p>
+    <p>
+      <b>Beam or Stage Up/Down, Left/Right</b></p>
+    <p>
+      Use these two spin buttons to move either the beam 
+      or the stage in the indicated direction, depending on whether the &#39;B&#39; or &#39;S&#39; 
+      button is depressed.&nbsp; The size of the step is indicated by the text below 
+      the spin buttons and can be increased or decreased with the &#39;+&#39; and &#39;-&#39; buttons. </p>
+    <p>
+      &nbsp;For beam movement, the step is expressed as a fraction of the camera field of view 
+      .&nbsp; For example, a step of 0.1 will move the beam by one-tenth of the field 
+      of view of the current camera.&nbsp; The same movements can be made with Shift 
+      and the Arrow keys, with the same step size.&nbsp; Use of these 
+      controls to move the beam require beam shift to be calibrated for the current magnification 
+      range.</p>
+    <p>
+      For stage movement, the step is in microns, and the movement is in the direction 
+      that will shift the image on the current camera in the given direction.</p>
+    <p>
       <b>Spot</b></p>
     <p>
       Use this spin button to increase or decrease the spot size number.&nbsp; 
@@ -59,16 +86,6 @@
       the button, prefixed by '-&gt;', so that you can know what spot size will be 
       reached.</p>
     <p>
-      <b>Beam Up/Down, Left/Right</b></p>
-    <p>
-      Use these two spin buttons to move the beam in the indicated direction; the size 
-      of the step as a fraction of the camera field of view is indicated by the text 
-      below the buttons.&nbsp; For example, a step of 0.1 will move the beam by 
-      one-tenth of the field of view of the current camera.&nbsp; The same movements 
-      can be made with Shift and the Arrow keys, with the same step size.&nbsp; These 
-      controls require beam shift to be calibrated for the current magnification 
-      range.</p>
-    <p>
       <b>C2/C3/IA</b></p>
     <p>
       Use this spin button to increase or decrease the value of the intensity lens 
@@ -79,15 +96,12 @@
       changes can be made with Ctrl and the Up and Down Arrow keys, with the same step 
       size.</p>
     <p>
-      <b>Nanoprobe/Microprobe (FEI only)</b></p>
+      <b>Beam or Stage step -/+</b></p>
     <p>
-      Press this button to switch to the indicated illumination mode.</p>
-    <p>
-      <b>Beam step -/+</b></p>
-    <p>
-      Use these buttons to decrease or increase the step size for beam movement by a 
+      If beam movement is selected, use these buttons to decrease or increase the step size for beam movement by a 
       factor of 1.414.&nbsp; The same changes can be made with the &lt; and &gt; keys, and 
-      changes with those keys will appear in the size indicated here.</p>
+      changes with those keys will appear in the size indicated here.&nbsp; If stage 
+      movement is selected, the step size will change to multiples of 1, 2 or 5.</p>
     <p>
       <b>Intensity step -/+</b></p>
     <p>
@@ -96,7 +110,18 @@
       (comma) or . (period) keys, and changes with those keys will appear in the size 
       indicated here.</p>
     <p>
-      &nbsp;</p>
-
+      <b>Raise/Lower Screen</b></p>
+    <p>
+      Use this button to raise or lower the screen.x</p>
+    <p>
+      <b>Focus Up/Down</b></p>
+    <p>
+      Use this spin button to change defocus.</p>
+    <p>
+      <b>Focus step -/+</b></p>
+    <p>
+      Use these buttons to change the step size for focus changes, which is shown in 
+      microns; available steps range from 0.01 to 100.</p>
+    
 </BODY>
 </HTML>

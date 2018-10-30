@@ -1695,7 +1695,8 @@
         </TR>
         <TR VALIGN="top">
           <TD><a name="scalepower">Falcon3ScalingPower</a></TD>
-          <TD>This entry does two things: it enables the scaling of data from the Falcon 3 
+          <TD>This entry does three things.&nbsp; For Falcon 3 with the Advanced Scripting 
+            interface, it enables the scaling of data from the Falcon 3 
             so that linear and counting modes give comparable counts for the same exposure; 
             and it sets the number of divisions by 2 applied to the data.&nbsp; If the value 
             is 0 or negative (but greater than -10), then counting mode data will be divided 
@@ -1706,7 +1707,11 @@
             3, etc., and counting mode data will be scaled to match.&nbsp; Enter -10 to 
             disable the scaling of both kinds of data.&nbsp; The default is 4, which will 
             divide linear mode counts by 16 and scale counting mode by ~0.4 to 0.5, 
-            depending on the entry for &#39;LinearToCountingRatio&#39;.</TD>
+            depending on the entry for &#39;LinearToCountingRatio&#39;.&nbsp; For a &#39;dumb&#39; 
+            Falcon 3 with the standard scripting interface, it activates a scaling so that 
+            images with different exposures do not all have the same counts.&nbsp; Its value 
+            is the power of 2 that will be used to scale a 1 sec exposure; it can be between 
+            -9 and 18, and its default is again 4.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>LinearOffset</TD>
@@ -2126,7 +2131,7 @@
         <TR VALIGN="top">
           <TD>MaximumTiltAngle</TD>
           <TD>Set to the maximum angle that can be tilted to without generating an error.&nbsp; 
-            The default is 79.9; Titan needs 69.9.</TD>
+            The default is 60 for Hitachi, otherwise 79.9; Titan needs 69.9.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>StageMoveDelay</TD>
@@ -2154,7 +2159,8 @@
           <TD>If the tilt axis rotation angle defined by these properties results in 
             reconstructions with inverted handedness, set this entry to 1 to rotate the 
             angle output to the image file header by 180 degrees and restore the handedness. 
-            This will probably be needed if InvertStageXAxis is set.</TD>
+            This is generally needed if InvertStageXAxis is set, and is probably needed
+            for a Hitachi HT7700 or 7800.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>FloatingCurrentMeterSmoothed</TD>
