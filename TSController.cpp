@@ -2085,7 +2085,8 @@ void CTSController::NextAction(int param)
       // Adjust the focus if this was taken after an autofocus
       if (mActIndex == mActOrder[ALIGN_POST_FOCUS] && mNeedFocus && mDidFocus[mTiltIndex])
       {
-        float focusFac = mShiftManager->GetDefocusZFactor();
+        float focusFac = mShiftManager->GetDefocusZFactor() *
+          (mShiftManager->GetStageInvertsZAxis() ? -1 : 1);
         if (mSTEMindex)
           focusFac = -1.f / mFocusManager->GetSTEMdefocusToDelZ(-1);
         mScope->IncDefocus(specErrorY * tan(DTOR * angle) * focusFac);  
