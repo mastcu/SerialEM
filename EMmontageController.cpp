@@ -1378,7 +1378,8 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
   mBaseFocus = mScope->GetDefocus();
   if (mParam->adjustFocus && !mReadingMontage && !mParam->moveStage) {
     double angle = DTOR * mScope->GetTiltAngle();
-    float defocusFac = mShiftManager->GetDefocusZFactor();
+    float defocusFac = mShiftManager->GetDefocusZFactor() * 
+      (mShiftManager->GetStageInvertsZAxis() ? -1 : 1);
     if (mWinApp->GetSTEMMode())
       defocusFac = -1. / mWinApp->mFocusManager->GetSTEMdefocusToDelZ(-1);
     aInv = mShiftManager->CameraToSpecimen(mParam->magIndex);

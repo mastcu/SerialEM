@@ -1487,8 +1487,8 @@ void CComplexTasks::EucentricityNextTask(int param)
     if (increment < 2. * mFEInitialIncrement)
       increment = 2. * mFEInitialIncrement;
     // SIGN?
-    delZ = (float)(-movedY / (sin(DTOR * (mFEInitialAngle + increment)) - 
-      sin(DTOR * mFEInitialAngle)));
+    delZ = (float)(-movedY * (mShiftManager->GetStageInvertsZAxis() ? -1. : 1.) / 
+      (sin(DTOR * (mFEInitialAngle + increment)) - sin(DTOR * mFEInitialAngle)));
     action = FE_COARSE_LAST_MOVE;
     mFEReferenceAngle = mFECurrentAngle;
 
@@ -1670,6 +1670,8 @@ void CComplexTasks::EucentricityNextTask(int param)
 
     // Issue report after negating delY for consistency with old usage
     delY = -delY;
+    if (mShiftManager->GetStageInvertsZAxis())
+      delZ = -delZ;
     report.Format("Refining eucentricity: Fit to %d positions gives tilt axis Z"
       " displacement\r\n of %.2f microns and lateral displacement of %.2f microns", 
       mFEFineIndex, delZ, delY);
@@ -1823,10 +1825,10 @@ void CComplexTasks::ReportManualZChange(float delZ, const char *roughFine)
   int backlash = B3DNINT(mManualHitachiBacklash / mZMicronsPerDialMark);
   mess.Format("%s eucentricity: Z change of %.2f microns is needed: %.1f grooves"
     " on knob %s", roughFine, delZ, fabs(delZ / mZMicronsPerDialMark), 
-    delZ < 0 ? "left" : "right");
+    delZ > 0 ? "left" : "right");
   mWinApp->AppendToLog(mess);
   delZ /= mZMicronsPerDialMark;
-  if (delZ > 0)
+  if (delZ < 0)
     mess.Format("Turn Z knob right %.1f grooves", fabs(delZ));
   else {
     overshoot = (int)ceil(fabs(delZ));
