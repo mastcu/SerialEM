@@ -3,6 +3,14 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+10/29/18: Added focus, stage, and screen control to scope control panel.
+
+10/29/18: Images from a Dumb Falcon 3 (no advanced scripting) are scaled by
+exposure time.
+
+10/29/18: Inverted direction of focus and Z height changes on Hitachi because
+tilting is around the Y, not the X, axis.
+
 10/21/18: Allowed continuous mode to be used for mag IS offset calibration and
 enabled everything but mag button in scope control panel during this cal.
 

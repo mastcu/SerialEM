@@ -679,8 +679,8 @@ CAPTION "About SerialEM"
 FONT 8, "Microsoft Sans Serif", 0, 0, 0x1
 BEGIN
     ICON            IDR_MAINFRAME,IDC_STATIC,11,17,20,20
-    LTEXT           "SerialEM Version 2.7.6",IDC_STATVERSION,35,10,91,8,SS_NOPREFIX
-    LTEXT           "Copyright (C) 2003-2014 by the Regents of the University of Colorado",IDC_STATIC,35,61,153,17
+    LTEXT           "SerialEM Version 2.7.6",IDC_STATVERSION,35,10,156,8,SS_NOPREFIX
+    LTEXT           "Copyright (C) 2003-2018 by the Regents of the University of Colorado",IDC_STATIC,35,61,153,17
     DEFPUSHBUTTON   "OK",IDOK,87,84,37,14,WS_GROUP
     LTEXT           "Written by David Mastronarde",IDC_STATIC,35,32,119,8,SS_NOPREFIX
     LTEXT           "Tagged SEM_2-7-6, 10/26/07",IDC_STATTAG,35,20,105,8
@@ -2720,7 +2720,7 @@ BEGIN
     RTEXT           "1250",IDC_STAT_ALIGN_TARGET,166,259,19,8
 END
 
-IDD_REMOTE_CONTROL DIALOGEX 0, 0, 119, 75
+IDD_REMOTE_CONTROL DIALOGEX 0, 0, 119, 76
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP
 EXSTYLE WS_EX_TOOLWINDOW
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
@@ -2729,32 +2729,35 @@ BEGIN
     PUSHBUTTON      "?",IDC_BUTHELP,107,0,9,7
     PUSHBUTTON      "F",IDC_BUTFLOATDOCK,15,0,9,7
     CTEXT           "Microscope Control",IDC_STATTOPLINE,33,0,64,8
-    RTEXT           "Mag",IDC_STATIC,55,15,15,8
-    CONTROL         "",IDC_SPIN_RCMAG,"msctls_updown32",UDS_ARROWKEYS,73,10,10,19
-    RTEXT           "Spot",IDC_STATIC,88,15,15,8
-    CONTROL         "",IDC_SPIN_RCSPOT,"msctls_updown32",UDS_ARROWKEYS,106,10,10,19
-    RTEXT           "C2",IDC_STAT_RCC2IA,61,38,11,8
-    CONTROL         "",IDC_SPIN_RCINTENSITY,"msctls_updown32",UDS_ARROWKEYS,75,33,10,19
-    LTEXT           "Step:",IDC_STATIC,3,55,17,8
-    CTEXT           "Beam shift",IDC_STATIC,4,35,19,15
-    CONTROL         "",IDC_SPIN_RCBEAM,"msctls_updown32",UDS_ARROWKEYS,25,33,10,19
-    PUSHBUTTON      "Turn Beam Off",IDC_BUT_VALVES,4,10,49,12
-    PUSHBUTTON      "+",IDC_BUT_DELBEAMPLUS,48,54,9,9
-    PUSHBUTTON      "-",IDC_BUT_DELBEAMMINUS,39,54,9,9
-    PUSHBUTTON      "+",IDC_BUT_DELC2PLUS,97,54,9,9
-    PUSHBUTTON      "-",IDC_BUT_DELC2MINUS,88,54,9,9
-    RTEXT           "0.900",IDC_STAT_BEAMDELTA,20,55,17,8
-    CONTROL         "Intensity with mag",IDC_CHECK_MAGINTENSITY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,24,68,8
-    RTEXT           "0.1000",IDC_STAT_C2DELTA,65,55,20,8
-    CONTROL         "",IDC_SPIN_BEAM_LEFT_RIGHT,"msctls_updown32",UDS_ARROWKEYS | UDS_HORZ,38,37,19,10
-    PUSHBUTTON      "Micro probe",IDC_BUT_NANO_MICRO,93,33,23,18,BS_CENTER | BS_MULTILINE
-    CONTROL         "",IDC_SPIN_ALPHA,"msctls_updown32",UDS_ARROWKEYS,106,33,10,19
-    LTEXT           "Al. 3",IDC_STAT_ALPHA,90,38,15,8
-    CONTROL         "",IDC_SPIN_FOCUS,"msctls_updown32",UDS_ARROWKEYS | UDS_HORZ,23,65,21,9
-    LTEXT           "Focus",IDC_STATIC,3,65,20,8
-    RTEXT           "0.05",IDC_STAT_FOCUS_STEP,47,65,13,8
-    PUSHBUTTON      "+",IDC_BUT_DELFOCUSPLUS,71,65,9,9
-    PUSHBUTTON      "-",IDC_BUT_DELFOCUSMINUS,62,65,9,9
+    RTEXT           "Mag",IDC_STATIC,56,14,15,8
+    CONTROL         "",IDC_SPIN_RCMAG,"msctls_updown32",UDS_ARROWKEYS,72,10,11,16
+    RTEXT           "Spot",IDC_STATIC,63,36,15,8
+    CONTROL         "",IDC_SPIN_RCSPOT,"msctls_updown32",UDS_ARROWKEYS,80,32,11,16
+    RTEXT           "C2",IDC_STAT_RCC2IA,92,36,11,8
+    CONTROL         "",IDC_SPIN_RCINTENSITY,"msctls_updown32",UDS_ARROWKEYS,105,32,11,16
+    LTEXT           "Step:",IDC_STATIC,3,52,17,8
+    CONTROL         "B",IDC_RBEAM_CONTROL,"Button",BS_AUTORADIOBUTTON | BS_PUSHLIKE | WS_GROUP,4,34,10,9
+    CONTROL         "S",IDC_RSTAGE_CONTROL,"Button",BS_AUTORADIOBUTTON | BS_PUSHLIKE,14,34,10,9
+    CTEXT           "Stage",IDC_STAT_BEAM_STAGE,4,43,19,9
+    CONTROL         "",IDC_SPIN_RCBEAM,"msctls_updown32",UDS_ARROWKEYS,27,32,11,16
+    PUSHBUTTON      "Turn Beam Off",IDC_BUT_VALVES,4,10,49,10
+    PUSHBUTTON      "+",IDC_BUT_DELBEAMPLUS,49,51,9,9
+    PUSHBUTTON      "-",IDC_BUT_DELBEAMMINUS,40,51,9,9
+    PUSHBUTTON      "+",IDC_BUT_DELC2PLUS,107,51,9,9
+    PUSHBUTTON      "-",IDC_BUT_DELC2MINUS,98,51,9,9
+    RTEXT           "0.900",IDC_STAT_BEAMDELTA,21,52,17,8
+    CONTROL         "Intensity with mag",IDC_CHECK_MAGINTENSITY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,23,68,8
+    RTEXT           "0.1000",IDC_STAT_C2DELTA,76,52,20,8
+    CONTROL         "",IDC_SPIN_BEAM_LEFT_RIGHT,"msctls_updown32",UDS_ARROWKEYS | UDS_HORZ,41,35,17,11
+    PUSHBUTTON      "-> uPr",IDC_BUT_NANO_MICRO,89,12,27,12,BS_CENTER | BS_MULTILINE
+    CONTROL         "",IDC_SPIN_ALPHA,"msctls_updown32",UDS_ARROWKEYS,105,10,11,16
+    LTEXT           "Alpha",IDC_STAT_ALPHA,86,14,18,8
+    CONTROL         "",IDC_SPIN_FOCUS,"msctls_updown32",UDS_ARROWKEYS,64,59,11,16
+    RTEXT           "Focus",IDC_STATIC,42,63,20,8
+    RTEXT           "0.05",IDC_STAT_FOCUS_STEP,77,63,13,8
+    PUSHBUTTON      "+",IDC_BUT_DELFOCUSPLUS,101,63,9,9
+    PUSHBUTTON      "-",IDC_BUT_DELFOCUSMINUS,92,63,9,9
+    PUSHBUTTON      "Lower Scrn",IDC_BUT_SCREEN_UPDOWN,4,62,36,10
 END
 
 IDD_THREE_CHOICE_BOX DIALOGEX 0, 0, 247, 68
@@ -3259,7 +3262,7 @@ BEGIN
 
     IDD_REMOTE_CONTROL, DIALOG
     BEGIN
-        BOTTOMMARGIN, 74
+        BOTTOMMARGIN, 75
     END
 
     IDD_THREE_CHOICE_BOX, DIALOG
@@ -4216,7 +4219,15 @@ STRINGTABLE
 BEGIN
     IDC_SKIP_FILE_DLG       "Use the values set here instead of opening this dialog every time"
     IDC_RSUPER_RES_REF      "Make gain reference for correcting super-resolution images"
+    IDC_RBIN_TO_SIZE        "Reduce images for correlation to be close to the specified size"
+    IDC_SPIN_BIN_TO         "Select reduction amount or target size for images being correlated"
+    IDC_RALIBIN_BY_FAC      "Reduce images for correlation by a selected amount"
     IDC_CONSECUTIVE_FILES   "Save multiple extra Records to separate files following the selected one"
+    IDC_BUT_POSTPONE        "Close dialog and save parameters so acquisition can be started from script"
+    IDC_CHECK_HARDWARE_ROI  "Acquire subarea with hardware ROI for speed"
+    IDC_EDIT_REF_FPS        "Enter the frames per second for the reference images"
+    IDC_USE_REC_HARDWARE_ROI 
+                            "Acquire reference image with hardware ROI in current Record subarea"
 END
 
 STRINGTABLE
@@ -4884,6 +4895,7 @@ BEGIN
     IDC_EDIT_SUBFRAME_TIME  "Underlying frame time at which subframes are acquired"
     IDC_SAVE_FRAME_SUMS     "Save frames that each consist of a sum of a specified # of camera frames"
     IDC_SETUP_K2_FRAME_SUMS "Set the # of subframes to be summed into each saved frame"
+    IDC_ALWAYS_ANTIALIAS    "Reduce unbinned images instead of acquiring with binning"
 END
 
 STRINGTABLE
@@ -4928,13 +4940,15 @@ END
 STRINGTABLE
 BEGIN
     IDC_SPIN_BEAM_LEFT_RIGHT 
-                            "Shift beam left or right in X on camera (hot keys Shift Left/Right arrows)"
+                            "Shift left or right in X on camera (beam hot keys Shift Left/Right arrows)"
     IDC_FIND_IN_MACRO       "Search for text in this script"
     IDC_BUT_NEW_PARAMS      "Add a new set of alignment parameters"
     IDC_BUT_SETUP_ALIGN     "Select type of alignment and set parameters"
     IDC_CHECK_END_HIGH_EXP  "End series or first half normally if exposure or intensity increase too much"
     IDC_CHECK_MAGINTENSITY  "Change intensity with magnification to keep brightness constant "
     IDC_DRAW_LABELS         "Draw labels except for points in groups above threshold size"
+    IDC_COMBO_PREMACRO      "Select script to run before doing main action"
+    IDC_COMBO_MACRO         "Select script to run for the main action"
     IDC_CHECK_LIMIT_ABS_FOCUS 
                             "Test for focus going outside absolute limits and stop series if it does"
     IDC_CHECK_LIMIT_DELTA_FOCUS 
@@ -5050,10 +5064,10 @@ BEGIN
     IDC_SPIN_RCMAG          "Increase or decrease magnification; multiple clicks do several steps at once"
     IDC_SPIN_RCSPOT         "Increase or decrease spot size; do multiple clicks for several steps at once"
     IDC_SPIN_RCINTENSITY    "Change the intensity lens value by step (hot keys Ctrl Up/Down arrows)"
-    IDC_SPIN_RCBEAM         "Shift beam up or down in Y on current camera (hot keys Shift Up/Down arrows)"
+    IDC_SPIN_RCBEAM         "Shift up or down in Y on current camera (beam hot keys Shift Up/Down arrows)"
     IDC_BUT_VALVES          "Toggle state of beam valves or filament"
-    IDC_BUT_DELBEAMPLUS     "Increase step size for beam movement by 1.4 (hot key > )"
-    IDC_BUT_DELBEAMMINUS    "Reduce step size for beam movement by 1.4 (hot key < )"
+    IDC_BUT_DELBEAMPLUS     "Increase step size for beam or stage move by 1.4 (beam hot key > )"
+    IDC_BUT_DELBEAMMINUS    "Reduce step size for beam or stage move by 1.4 (beam hot key < )"
     IDC_BUT_DELC2PLUS       "Increase step size for intensity lens change by 1.4 (hot key Ctrl period)"
     IDC_BUT_DELC2MINUS      "Decrease step size for intensity lens change by 1.4 (hot key Ctrl comma)"
 END
@@ -5070,6 +5084,58 @@ BEGIN
     IDC_RALL_EARLY          "Return as soon as possible with specified sum for all shots"
     IDC_EDIT_EXTRA_DELAY    "Additional settling time after image shift in seconds"
     IDC_EDIT_DE_FPS         "Frames per second for the current operating mode (linear versus counting)"
+END
+
+STRINGTABLE
+BEGIN
+    IDC_SPIN_ALPHA          "Increase or decrease the beam alpha setting"
+    IDC_SPIN_FOCUS          "Increase or decrease defocus by step size"
+    IDC_BUT_DELFOCUSPLUS    "Increase step size for defocus changes"
+    IDC_BUT_DELFOCUSMINUS   "Decrease step size for defocus changes"
+    IDC_BUT_SCREEN_UPDOWN   "Insert (lower) or retract (raise) the main viewing screen"
+    IDC_RBEAM_CONTROL       "Move the beam with the spin buttons to the right"
+    IDC_RSTAGE_CONTROL      "Move the stage with the spin buttons to the right"
+END
+
+STRINGTABLE
+BEGIN
+    IDC_BUT_ABORT           "Stop recording image shifts and discard the results"
+    IDC_BUT_IS_TO_PT        "Use image shift to go to the current Navigator point"
+    IDC_CHECK_REDUCE_SUPERRES 
+                            "Save super-resolution frames with antialiased reduction by 2 (norm only)"
+    IDC_CHECK_TAKE_K3_BINNED 
+                            "Use hardware binning to get frames the same size as chip (normalized only)"
+    IDC_CHECK_SKIP_DLGS     "Skip this dialog when opening a new file; select to see again in File menu"
+    IDC_GOTO_VIEW           "Change to View area without taking an image"
+    IDC_GOTO_FOCUS          "Change to Focus area without taking an image"
+    IDC_GOTO_TRIAL          "Change to Trial area without taking an image"
+    IDC_GOTO_RECORD         "Change to Record area without taking an image"
+    IDC_GOTO_SEARCH         "Change to Search area without taking an image"
+    IDC_RJPEGFILE           "Save images as JPEG, in scaled bytes, with one image per file"
+END
+
+STRINGTABLE
+BEGIN
+    IDC_BUT_SET_REGULAR     "Record image shift values of corners of a regular pattern of positions"
+    IDC_CHECK_USE_CUSTOM    "Use the currently defined custom pattern of positions"
+    IDC_BUT_SET_CUSTOM      "Record image shift values of a custom pattern of positions"
+    IDC_EDIT_HOLE_DELAY_FAC "Enter factor to scale the usual image shift delay by when going to new hole"
+    IDC_BUT_SAVE_IS         "Save the current image shift for the current position"
+    IDC_BUT_END_PATTERN     "Add the current position if not added yet and stop recording image shifts"
+END
+
+STRINGTABLE
+BEGIN
+    IDC_CHECK_ADJUST_BEAM_TILT 
+                            "Use calibration of beam tilt versus image shift to adjust beam tilt"
+    IDC_NA_POSTMACRO        "Run a script after the main action is done"
+    IDC_COMBO_POSTMACRO     "Select script to run after main action is done"
+    IDC_CHECK_DO_SHOTS_IN_HOLE 
+                            "Acquire in circular pattern around center, typically inside a hole"
+    IDC_CHECK_DO_MULTIPLE_HOLES 
+                            "Acquire in rectangular or arbitrary set of positions, typically holes"
+    IDC_SPIN_NUM_X_HOLES    "Set number of positions in X in regular pattern"
+    IDC_SPIN_NUM_Y_HOLES    "Set number of positions in Y in regular pattern"
 END
 
 STRINGTABLE
