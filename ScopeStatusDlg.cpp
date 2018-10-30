@@ -60,6 +60,7 @@ CScopeStatusDlg::CScopeStatusDlg(CWnd* pParent /*=NULL*/)
   mDoseMeter = NULL;
   mVacStatus = -1;
   mIntCalStatus = -2;
+  mBeamAlpha = -999;
   mShowIntensityCal = true;
   mTEMnanoProbe = false;
   // Made the base bigger to reduce noise at low readings
@@ -97,6 +98,7 @@ void CScopeStatusDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Text(pDX, IDC_OBJECTIVE, m_strObjective);
   DDX_Text(pDX, IDC_SPOTSIZE, m_strSpotSize);
   DDX_Text(pDX, IDC_STAT_UMMM, m_strUmMm);
+  DDX_Text(pDX, IDC_STATVACUUM, m_strVacuum);
   //}}AFX_DATA_MAP
   DDX_Control(pDX, IDC_BUTRESETDEFOCUS, m_butResetDef);
   DDX_Control(pDX, IDC_STATSPOTLABEL, m_statSpotLabel);
@@ -179,6 +181,10 @@ BOOL CScopeStatusDlg::OnInitDialog()
     m_butFloat.ShowWindow(SW_HIDE);
     m_statNano.ShowWindow(SW_HIDE);
   }
+  if (JEOLscope && !mWinApp->mScope->GetHasNoAlpha()) {
+    m_statVacuum.ShowWindow(SW_SHOW);
+    m_statVacuum.SetFont(&mBigFont);
+  }
   mCurrentSmoother.Setup(5, mSmootherThreshold1, mSmootherThreshold2);
   mInitialized = true;
 
@@ -187,7 +193,7 @@ BOOL CScopeStatusDlg::OnInitDialog()
   if (mShowIntensityCal)
     m_statSpotLabel.ShowWindow(SW_HIDE);
   Update(0., 1, 0., 0., 0., 0., 0., 0., true, false, false, false, 0, 1, 0., 0., 0., -1, 
-    0., 1, -1);
+    0., 1, -1, -999);
   mIntCalStatus = -1;
     
   return TRUE;  // return TRUE unless you set the focus to a control
@@ -209,7 +215,7 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
                              BOOL blanked, BOOL EFTEM, int STEM, int inSpot, 
                              double rawIntensity, double inIntensity, double inObjective, 
                              int inVacStatus, double cameraLength, int inProbeMode,
-                             int gunState)
+                             int gunState, int inAlpha)
 {
   double curTime = GetTickCount();
   double newDose, diffTime, dose = 0.;
@@ -437,6 +443,11 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
     m_statSpotSize.SetWindowText(m_strSpotSize);
     mSpot = inSpot;
     mPendingSpot = pendingSpot;
+  }
+  if (inAlpha >= 0 && inAlpha != mBeamAlpha) {
+    m_strVacuum.Format("a%d", inAlpha + 1);
+    m_statVacuum.SetWindowText(m_strVacuum);
+    mBeamAlpha = inAlpha;
   }
 
   // See if vacuum or intensity cal status have changed and cause a repaint

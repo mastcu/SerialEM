@@ -34,7 +34,7 @@ public:
 	void Update(double inCurrent, int inMagInd, double inDefocus, double inISX,
 		double inISY, double inStageX, double inStageY, double inStageZ, BOOL screenUp, BOOL smallScreen, BOOL blanked, 
     BOOL EFTEM, int STEM, int inSpot, double rawIntensity, double inIntensity, double inObjective, 
-    int inVacStatus, double cameraLength, int inProbeMode, int gunState);
+    int inVacStatus, double cameraLength, int inProbeMode, int gunState, int alpha);
 	CScopeStatusDlg(CWnd* pParent = NULL);   // standard constructor
 	void MeterClosing();
   GetMember(double, FullCumDose)
@@ -63,6 +63,7 @@ public:
 	CString	m_strObjective;
 	CString	m_strSpotSize;
 	CString	m_strUmMm;
+	CString	m_strVacuum;
 	//}}AFX_DATA
 
 
@@ -115,6 +116,7 @@ private:
   int mVacStatus;       // Last Vacuum status index
   int mIntCalStatus;       // Last intensity status index
   double mCamLength;    // Last camera length
+  int mBeamAlpha;       // Last alpha from JEOL
   BOOL mLastCooker;     // Flag that cooker was open last time
   BOOL mLastAutocen;    // Flag that beam autocenter was open last time
   double mRawIntensity; // Last raw intensity
