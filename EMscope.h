@@ -25,6 +25,7 @@ struct ScopePluginFuncs;
 #define STAGE_MIN_Y 2
 #define STAGE_MAX_Y 3
 #define MAX_ALPHAS  10
+#define MAX_APERTURES 6
 #define MAX_GAUGE_WATCH 6
 enum {CAL_NTRL_FIND = 0, CAL_NTRL_RESTORE, CAL_NTRL_FOCUS};
 
@@ -60,6 +61,7 @@ LONG_OP_FILL_STAGE, LONG_OP_FILL_TRANSFER, LONG_OP_FLASH_FEG};
 #define FEI_PLUGIN_DARK_FIELD      105
 #define FEI_PLUGIN_MESSAGE_BOX     105
 #define FEI_PLUGIN_DOES_FALCON3    106
+#define FEI_PLUGIN_SCALES_DUMB_F3  108
 
 struct StageMoveInfo {
   double x;
@@ -325,6 +327,7 @@ class DLL_IM_EX CEMscope
   GetMember(BOOL, CameraAcquiring);
   void SetShutterlessCamera(int inVal);
   BOOL GetBlankSet() {return mBeamBlankSet;};
+  BOOL GetBeamBlanked();
   void ScreenCleanup();
   BOOL SetDefocus(double inVal, BOOL incremental = false);
   BOOL IncDefocus(double inVal);
@@ -643,7 +646,10 @@ private:
   float mFalcon3ReadoutInterval; // Frame interval for Falcon 3 camera
   float mAddToFalcon3Exposure; // Default to set addToExposure for Falcon 3
   BOOL mSkipAdvancedScripting; // To make cameras connect by old scripting
-  std::vector<short int> mCheckedNeutralIS;
+  std::vector<short int> mCheckedNeutralIS;  // To keep track if neutral IS tested
+  int mSavedApertureSize[MAX_APERTURES];     // Size and position from "RemoveAperture"
+  float mSavedAperturePosX[MAX_APERTURES];   // Apertures are numbered from 1, 
+  float mSavedAperturePosY[MAX_APERTURES];   // subtract 1 to access array
   int mPluginVersion;         // Version of plugin or server
 
   // Old static variables from UpdateProc
@@ -736,6 +742,12 @@ public:
   bool SetObjectiveStigmator(double stigX, double stigY);
   bool GetTemperatureInfo(int type, BOOL & busy, int & time, int which, double & level);
   BOOL IsPVPRunning(BOOL & state);
+  int GetApertureSize(int kind);
+  bool SetApertureSize(int kind, int size);
+  bool SetAperturePosition(int kind, float posX, float posY);
+  bool GetAperturePosition(int kind, float &posX, float &posY);
+  int RemoveAperture(int kind);
+  int ReInsertAperture(int kind);
   int StartLongOperation(int *operations, float *hoursSinceLast, int numOps);
   int LongOperationBusy(int index = -1);
   int StopLongOperation(bool exiting, int index = -1);
