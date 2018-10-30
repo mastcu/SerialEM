@@ -2097,6 +2097,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
           mMultiTSTasks->SetupAutocenter(true);
         else if (idc->source == TASK_AUTOCEN_BEAM)
           mMultiTSTasks->AutocenNextTask(idc->param);
+        else if (idc->source == TASK_REMOTE_CTRL)
+          mRemoteControl.TaskDone(idc->param);
         else if (idc->source == TASK_MULTI_SHOT)
           mParticleTasks->MultiShotNextTask(idc->param);
         else if (idc->source == TASK_RESET_SHIFT)
@@ -2200,6 +2202,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
           mMultiTSTasks->TiltRangeCleanup(busy);
         else if (idc->source == TASK_AUTOCEN_BEAM)
           mMultiTSTasks->AutocenCleanup(busy);
+        else if (idc->source == TASK_REMOTE_CTRL)
+          mRemoteControl.TaskCleanup(busy);
         else if (idc->source == TASK_MULTI_SHOT)
           mParticleTasks->MultiShotCleanup(busy);
         else if (idc->source == TASK_RESET_SHIFT)
@@ -2351,6 +2355,8 @@ void CSerialEMApp::ErrorOccurred(int error)
     mMultiTSTasks->StopTiltRange();
   if (mMultiTSTasks->GetAutoCentering())
     mMultiTSTasks->StopAutocen();
+  if (mShowRemoteControl && mRemoteControl.GetDoingTask())
+    mRemoteControl.TaskDone(0);
   if (mBeamAssessor->CalibratingIntensity())
     mBeamAssessor->StopCalibratingIntensity();
   if (mBeamAssessor->CalibratingBeamShift())
@@ -2451,7 +2457,7 @@ void SEMReportCOMError(_com_error E, CString inString, CString *outStr, bool ski
         SEMTrace('1', (char *)((LPCTSTR)sDescription));
 
   } else if (E.Error() == SOCKET_FAKE_HRESULT) {
-    sDescription = _T("ERROR calling socket server camera: ") + inString;
+    sDescription = _T("ERROR calling socket server Gatan camera: ") + inString;
     if (outStr)
       *outStr = sDescription;
     else
@@ -2838,6 +2844,7 @@ BOOL CSerialEMApp::DoingTasks()
     mScope->CalibratingNeutralIS() ||
     mScope->GetDoingLongOperation() || mMultiTSTasks->DoingBidirCopy() > 0 ||
     (mNavigator && mNavigator->GetLoadingMap()) || 
+    (mShowRemoteControl && mRemoteControl.GetDoingTask()) ||
     (mPlugDoingFunc && mPlugDoingFunc()));
 }
 
