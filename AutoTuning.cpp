@@ -936,10 +936,11 @@ void CAutoTuning::ZemlinNextTask(int param)
     dirSave = mFocusManager->GetTiltDirection();
     for (dirTry = 0; dirTry < 4; dirTry++) {
       mFocusManager->SetTiltDirection(dirTry);
-      if (mFocusManager->GetFocusCal(mag, mWinApp->GetCurrentCamera(), probe, focCal)) {
-        rotAngle = (45. * dirTry - 90.) * DTOR - 
-          atan2((double)focCal.slopeY, (double)focCal.slopeX);
-        break;
+      if (mFocusManager->GetFocusCal(mag, mWinApp->GetCurrentCamera(), probe, 
+        mScope->FastAlpha(), focCal)) {
+          rotAngle = (45. * dirTry - 90.) * DTOR - 
+            atan2((double)focCal.slopeY, (double)focCal.slopeX);
+          break;
       }
     }
     mFocusManager->SetTiltDirection(dirSave);
