@@ -15,6 +15,10 @@
 #define MAX_BEAM_DELTA  0.8f
 #define MIN_PCTC2_DELTA 0.015625f
 #define MAX_PCTC2_DELTA 4.f
+#define MAX_FOCUS_INDEX 12
+#define MAX_FOCUS_DECIMALS 2
+#define MAX_STAGE_INDEX 14
+#define MAX_STAGE_DECIMALS 2
 
 static VOID CALLBACK TimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime);
 
@@ -27,13 +31,17 @@ CRemoteControl::CRemoteControl(CWnd* pParent /*=NULL*/)
   , m_strC2Delta(_T(""))
   , m_strC2Name(_T(""))
   , m_strFocusStep(_T(""))
+  , m_iBeamOrStage(0)
 {
   SEMBuildTime(__DATE__, __TIME__);
   mInitialized = false;
   mBeamIncrement = 0.05f;
   mIntensityIncrement = 0.5f;
+  mFocusIncrementIndex = 3 * MAX_FOCUS_DECIMALS;
+  mStageIncIndex = 3 * MAX_STAGE_DECIMALS;
   mMaxClickInterval = 350;
   mDidExtendedTimeout = false;
+  mDoingTask = 0;
 }
 
 CRemoteControl::~CRemoteControl()
@@ -65,6 +73,10 @@ void CRemoteControl::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_SPIN_FOCUS, m_sbcFocus);
   DDX_Control(pDX, IDC_BUT_DELFOCUSMINUS, m_butDelFocusMinus);
   DDX_Control(pDX, IDC_BUT_DELFOCUSPLUS, m_butDelFocusPlus);
+  DDX_Control(pDX, IDC_BUT_SCREEN_UPDOWN, m_butScreenUpDown);
+  DDX_Control(pDX, IDC_RBEAM_CONTROL, m_butBeamControl);
+  DDX_Control(pDX, IDC_RSTAGE_CONTROL, m_butStageControl);
+  DDX_Radio(pDX, IDC_RBEAM_CONTROL, m_iBeamOrStage);
 }
 
 
@@ -82,9 +94,12 @@ BEGIN_MESSAGE_MAP(CRemoteControl, CToolDlg)
   ON_BN_CLICKED(IDC_BUT_DELC2PLUS, OnButDelC2Plus)
   ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_BEAM_LEFT_RIGHT, OnDeltaposSpinBeamLeftRight)
   ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_ALPHA, OnDeltaposSpinAlpha)
-  ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_FOCUS, &CRemoteControl::OnDeltaposSpinFocus)
-  ON_BN_CLICKED(IDC_BUT_DELFOCUSMINUS, &CRemoteControl::OnDelFocusMinus)
-  ON_BN_CLICKED(IDC_BUT_DELFOCUSPLUS, &CRemoteControl::OnDelFocusPlus)
+  ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_FOCUS, OnDeltaposSpinFocus)
+  ON_BN_CLICKED(IDC_BUT_DELFOCUSMINUS, OnDelFocusMinus)
+  ON_BN_CLICKED(IDC_BUT_DELFOCUSPLUS, OnDelFocusPlus)
+  ON_BN_CLICKED(IDC_BUT_SCREEN_UPDOWN, OnButScreenUpdown)
+  ON_BN_CLICKED(IDC_RBEAM_CONTROL, OnBeamControl)
+  ON_BN_CLICKED(IDC_RSTAGE_CONTROL, OnBeamControl)
 END_MESSAGE_MAP()
 
 
@@ -94,6 +109,7 @@ BOOL CRemoteControl::OnInitDialog()
 {
   CToolDlg::OnInitDialog();
   mScope = mWinApp->mScope;
+  mShiftManager = mWinApp->mShiftManager;
   if (HitachiScope || mScope->GetNoScope())
     m_butValves.ShowWindow(SW_HIDE);
   if (!FEIscope)
@@ -110,12 +126,17 @@ BOOL CRemoteControl::OnInitDialog()
   m_sbcIntensity.SetPos(0);
   m_sbcAlpha.SetRange(-30000, 30000);
   m_sbcAlpha.SetPos(0);
+  m_sbcFocus.SetRange(-30000, 30000);
+  m_sbcFocus.SetPos(0);
   m_butDelBeamMinus.SetFont(&mButFont);
   m_butDelBeamPlus.SetFont(&mButFont);
   m_butDelC2Minus.SetFont(&mButFont);
   m_butDelC2Plus.SetFont(&mButFont);
   m_strC2Name = mScope->GetC2Name();
+  m_butDelFocusMinus.SetFont(&mButFont);
+  m_butDelFocusPlus.SetFont(&mButFont);
   mLastMagInd = mLastSpot = mLastSTEMmode = mLastProbeMode = mLastCamera = -1;
+  mLastScreenPos = -1;
   mLastGunOn = -2;
   mLastIntensity = -1.;
   mLastAlpha = -999;
@@ -123,19 +144,24 @@ BOOL CRemoteControl::OnInitDialog()
   mTimerID = NULL;
   mInitialized = true;
   SetIntensityIncrement(mIntensityIncrement);
-  SetBeamIncrement(mBeamIncrement);
+  SetBeamOrStage(m_iBeamOrStage);
+  SetBeamOrStageIncrement(1., 0);
+  SetIncrementFromIndex(mFocusIncrement, mFocusIncrementIndex, mFocusIncrementIndex,
+    MAX_FOCUS_INDEX, MAX_FOCUS_DECIMALS, m_strFocusStep);
   return TRUE;
 }
 
 // Called from scope update with current values; keeps track of last values seen and
 // acts on changes only
 void CRemoteControl::Update(int inMagInd, int inSpot, double inIntensity, int inProbe,
-  int inGunOn, int inSTEM, int inAlpha)
+  int inGunOn, int inSTEM, int inAlpha, int inScreenPos)
 {
   int junk;
   bool enable;
   CString str;
-  bool baseEnable = !(mWinApp->DoingTasks() || (mWinApp->mCamera && 
+  BOOL doingOffset = mWinApp->mShiftCalibrator && 
+    mWinApp->mShiftCalibrator->CalibratingOffset();
+  bool baseEnable = !((mWinApp->DoingTasks() && !doingOffset) || (mWinApp->mCamera && 
     mWinApp->mCamera->CameraBusy() && !mWinApp->mCamera->DoingContinuousAcquire()));
 
   if (inMagInd != mLastMagInd || mWinApp->GetCurrentCamera() != mLastCamera) {
@@ -147,16 +173,19 @@ void CRemoteControl::Update(int inMagInd, int inSpot, double inIntensity, int in
   if (inMagInd != mLastMagInd) {
     if (inMagInd)
       m_sbcMag.SetPos(inMagInd);
-    m_sbcMag.EnableWindow(inMagInd > 0 && baseEnable);
-    m_butNanoMicro.EnableWindow(inMagInd >= mScope->GetLowestMModeMagInd());
+    m_sbcMag.EnableWindow(inMagInd > 0 && baseEnable && !doingOffset);
+    if (!mWinApp->mCamera->DoingContinuousAcquire())
+    m_butNanoMicro.EnableWindow(inMagInd >= mScope->GetLowestMModeMagInd() && baseEnable);
+    m_sbcAlpha.EnableWindow(inMagInd >= mScope->GetLowestMModeMagInd() && baseEnable);
   }
 
   if (inSpot != mLastSpot) {
     m_sbcSpot.SetPos(inSpot);
   }
-  if (inAlpha != mLastAlpha && inAlpha >= 0) {
-    str.Format("Al. %d", inAlpha + 1);
-    m_statAlpha.SetWindowText(str);
+  if (inScreenPos != mLastScreenPos) {
+    m_butScreenUpDown.SetWindowText(inScreenPos == spUp ? "Lower Scrn" : "Raise Scrn");
+    if (inScreenPos == spUnknown)
+      m_butScreenUpDown.EnableWindow(false);
   }
 
   if (inGunOn != mLastGunOn) {
@@ -170,7 +199,7 @@ void CRemoteControl::Update(int inMagInd, int inSpot, double inIntensity, int in
   }
 
   if (inProbe != mLastProbeMode && FEIscope) {
-    m_butNanoMicro.SetWindowText(inProbe == 0 ? "Micro probe" : "Nano probe");
+    m_butNanoMicro.SetWindowText(inProbe == 0 ? "-> uPr" : "-> nPr");
   }
 
   if (inIntensity != mLastIntensity || inProbe != mLastProbeMode || 
@@ -191,6 +220,7 @@ void CRemoteControl::Update(int inMagInd, int inSpot, double inIntensity, int in
   mLastProbeMode = inProbe;
   mLastSTEMmode = inSTEM;
   mLastAlpha = inAlpha;
+  mLastScreenPos = inScreenPos;
 }
 
 // Just update the window for magIntensity if settings changed, the increments already
@@ -201,19 +231,24 @@ void CRemoteControl::UpdateSettings()
     UpdateData(false);
 }
 
-// Just disable everything when a task or shot starts, only re-enable intensity and spot
-// when free, and invalidate mag and spot so the regular update will re-enable
+// Just disable everything when a task or shot starts, only re-enable some items
+// when free, and invalidate mag and spot so the regular update will re-enable the rest
+// Not clear why this was done; it was originally just spot and intensity being enabled,
+// and nano/micro flashed in continuous mode, so deferred it as well as alpha
 // Leave everything but mag enabled when calibrating IS offsets
 void CRemoteControl::UpdateEnables(void)
 {
   if (!mInitialized)
     return;
-  BOOL doingOffset = mWinApp->mShiftCalibrator->CalibratingOffset();
+  BOOL doingOffset = mWinApp->mShiftCalibrator &&
+    mWinApp->mShiftCalibrator->CalibratingOffset();
+  BOOL continuous = mWinApp->mCamera->DoingContinuousAcquire();
   bool enable = !((mWinApp->DoingTasks() && !doingOffset) || (mWinApp->mCamera && 
-    mWinApp->mCamera->CameraBusy() && !mWinApp->mCamera->DoingContinuousAcquire()));
+    mWinApp->mCamera->CameraBusy() && !continuous));
   m_sbcIntensity.EnableWindow(enable);
   m_sbcSpot.EnableWindow(enable);
-  m_butNanoMicro.EnableWindow(enable && mLastMagInd >= mScope->GetLowestMModeMagInd());
+  m_sbcFocus.EnableWindow(enable);
+  m_butScreenUpDown.EnableWindow(enable && !continuous);
 
   if (enable) {
     mLastSpot = -1;
@@ -222,6 +257,8 @@ void CRemoteControl::UpdateEnables(void)
     m_butValves.EnableWindow(false);
     m_sbcBeamShift.EnableWindow(false);
     m_sbcBeamLeftRight.EnableWindow(false);
+    m_butNanoMicro.EnableWindow(false);
+    m_sbcAlpha.EnableWindow(false);
   }
   if (enable && !doingOffset) {
     if (mScope->GetNoScope())
@@ -231,6 +268,8 @@ void CRemoteControl::UpdateEnables(void)
   } else {
     m_sbcMag.EnableWindow(false);
   }
+  m_butDelFocusMinus.EnableWindow(mFocusIncrementIndex > 0);
+  m_butDelFocusPlus.EnableWindow(mFocusIncrementIndex < MAX_FOCUS_INDEX);
 }
 
 // Toggle valves/beam state
@@ -253,9 +292,9 @@ void CRemoteControl::OnButValves()
 void CRemoteControl::OnButNanoMicro()
 {
   int state = mScope->ReadProbeMode();
-  mScope->SetProbeMode(state ? 0 : 1);
   SetFocus();
   mWinApp->RestoreViewFocus();
+  mScope->SetProbeMode(state ? 0 : 1);
 }
 
 // Intensity zoom equivalent
@@ -323,12 +362,14 @@ void CRemoteControl::OnDeltaposSpinSpot(NMHDR *pNMHDR, LRESULT *pResult)
   }
 }
 
+// Proc to check for whether it is time to change mag or spot
 static VOID CALLBACK TimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
 {
   CSerialEMApp *winApp = (CSerialEMApp *)AfxGetApp();
   winApp->mRemoteControl.SetMagOrSpot();
 }
 
+// Central routine for processing a mag or spot change in time-dependent way
 void CRemoteControl::SetMagOrSpot(void)
 {
   double delta, newInt, outFac;
@@ -350,8 +391,8 @@ void CRemoteControl::SetMagOrSpot(void)
     RedrawWindow();
     curCam = mWinApp->GetCurrentCamera();
     if (m_bMagIntensity) {
-      delta = pow((double)mWinApp->mShiftManager->GetPixelSize(curCam, mStartMagIndex) /
-        mWinApp->mShiftManager->GetPixelSize(curCam, mNewMagIndex), 2.);
+      delta = pow((double)mShiftManager->GetPixelSize(curCam, mStartMagIndex) /
+        mShiftManager->GetPixelSize(curCam, mNewMagIndex), 2.);
       err = mWinApp->mBeamAssessor->AssessBeamChange(delta, newInt, outFac, -1);
     }
     mScope->SetMagIndex(mNewMagIndex);
@@ -397,30 +438,78 @@ void CRemoteControl::OnDeltaposSpinAlpha(NMHDR *pNMHDR, LRESULT *pResult)
   if (NewSpinnerValue(pNMHDR, pResult, mScope->GetAlpha(), 0, mScope->GetNumAlphas() - 1,
     newVal))
     return;
-  str.Format("Al. %d", newVal + 1);
-  m_statAlpha.SetWindowText(str);
   mScope->SetAlpha(newVal);
 }
 
-// Beam up/down
+// Beam or stage up/down
 void CRemoteControl::OnDeltaposSpinBeamShift(NMHDR *pNMHDR, LRESULT *pResult)
 {
   LPNMUPDOWN pNMUpDown = reinterpret_cast<LPNMUPDOWN>(pNMHDR);
-  mWinApp->mProcessImage->MoveBeamByCameraFraction(0, mBeamIncrement * pNMUpDown->iDelta);
-  *pResult = 0;
   SetFocus();
   mWinApp->RestoreViewFocus();
+  *pResult = 0;
+  if (m_iBeamOrStage) {
+    MoveStageByMicronsOnCamera(0., mStageIncrement * pNMUpDown->iDelta);
+  } else {
+    mWinApp->mProcessImage->MoveBeamByCameraFraction(0., mBeamIncrement * 
+      pNMUpDown->iDelta);
+  }
 }
 
-// Beam left-right: the horizontal spin box is backwrds
+// Beam or stage left-right: the horizontal spin box is backwards
 void CRemoteControl::OnDeltaposSpinBeamLeftRight(NMHDR *pNMHDR, LRESULT *pResult)
 {
   LPNMUPDOWN pNMUpDown = reinterpret_cast<LPNMUPDOWN>(pNMHDR);
-  mWinApp->mProcessImage->MoveBeamByCameraFraction(-mBeamIncrement * pNMUpDown->iDelta,
-    0.);
   *pResult = 0;
   SetFocus();
   mWinApp->RestoreViewFocus();
+  *pResult = 0;
+  if (m_iBeamOrStage) {
+    MoveStageByMicronsOnCamera(-mStageIncrement * pNMUpDown->iDelta, 0.);
+  } else {
+    mWinApp->mProcessImage->MoveBeamByCameraFraction(-mBeamIncrement * pNMUpDown->iDelta,
+      0.);
+  }
+}
+
+// Move the stage by a given number of microns in the current camera coordinate system
+void CRemoteControl::MoveStageByMicronsOnCamera(double delCamX, double delCamY)
+{
+  int area, camera = mWinApp->GetCurrentCamera();
+  float pixel = mShiftManager->GetPixelSize(camera, mLastMagInd);
+  float defocus = 0.;
+  double delX, delY, angle, delStageX, delStageY;
+  StageMoveInfo moveInfo;
+  ScaleMat bMat, bInv;
+  delX = delCamX / pixel;
+  delY = delCamY / pixel;
+  if (mWinApp->LowDoseMode()) {
+    area = mScope->GetLowDoseArea();
+    if (area == VIEW_CONSET || area == SEARCH_AREA)
+      defocus = mScope->GetLDViewDefocus(area);
+  }
+  bMat = mShiftManager->FocusAdjustedStageToCamera(camera, mLastMagInd, 
+    mLastSpot, mLastProbeMode, mScope->GetIntensity(), defocus);
+  bInv = MatInv(bMat);
+  delStageX = -(bInv.xpx * delX + bInv.xpy * delY);
+  delStageY = -(bInv.ypx * delX + bInv.ypy * delY);
+  angle = DTOR * mScope->GetTiltAngle();
+
+  // If transformation exists, try to zero image shift too
+  mShiftManager->AdjustStageMoveAndClearIS(camera, mLastMagInd, delStageX, 
+    delStageY, bInv);
+
+  // Get the stage position and change it.  Set a flag and update state
+  // to prevent early pictures, use reset shift task handlers
+  mScope->GetStagePosition(moveInfo.x, moveInfo.y, moveInfo.z);
+  mShiftManager->MaintainOrImposeBacklash(&moveInfo, delStageX, 
+    delStageY / cos(angle),
+    mShiftManager->GetBacklashMouseAndISR() && fabs(angle / DTOR) < 10.);
+  moveInfo.axisBits = axisXY;
+  mDoingTask = 2;
+  mWinApp->UpdateBufferWindows();
+  mScope->MoveStage(moveInfo, moveInfo.backX != 0. || moveInfo.backY != 0.);
+  mWinApp->AddIdleTask(CEMscope::TaskStageBusy, TASK_REMOTE_CTRL, 0, 60000);
 }
 
 // C2 or other lens value
@@ -436,21 +525,77 @@ void CRemoteControl::OnDeltaposSpinIntensity(NMHDR *pNMHDR, LRESULT *pResult)
   SetFocus();
   mWinApp->RestoreViewFocus();
 }
-// Change the step sizes...
+
+// Buttons to switch between controlling beam or stage
+void CRemoteControl::OnBeamControl()
+{
+  UpdateData(true);
+  SetBeamOrStage(m_iBeamOrStage);
+  SetBeamOrStageIncrement(1., 0);
+  SetFocus();
+  mWinApp->RestoreViewFocus();
+}
+
+// Central call to handle setting the choice of beam or stage
+void CRemoteControl::SetBeamOrStage(int inVal)
+{
+  bool needUpdate = m_iBeamOrStage != inVal;
+  m_iBeamOrStage = inVal;
+  if (!mInitialized)
+    return;
+  SetDlgItemText(IDC_STAT_BEAM_STAGE, inVal ? "Stage" : "Beam");
+  if (needUpdate)
+    UpdateData(false);
+}
+
+// Change the beam or stage step sizes
 void CRemoteControl::OnButDelBeamMinus()
 {
-  SetBeamIncrement(0.707107f * mBeamIncrement);
+  SetBeamOrStageIncrement(0.707107f, -1);
   SetFocus();
   mWinApp->RestoreViewFocus();
 }
 
 void CRemoteControl::OnButDelBeamPlus()
 {
-  SetBeamIncrement(1.414214f * mBeamIncrement);
+  SetBeamOrStageIncrement(1.414214f, 1);
   SetFocus();
   mWinApp->RestoreViewFocus();
 }
 
+// Set the appropriate increment
+void CRemoteControl::SetBeamOrStageIncrement(float beamIncFac, int stageIndAdd)
+{
+  if (m_iBeamOrStage)
+    SetStageIncrementIndex(mStageIncIndex + stageIndAdd);
+  else
+    SetBeamIncrement(beamIncFac * mBeamIncrement);
+}
+
+// Set the increment for beam shift and update display if it is open and beam is selected
+void CRemoteControl::SetBeamIncrement(float inVal)
+{
+  if (inVal < MIN_BEAM_DELTA - 0.00001 || inVal > MAX_BEAM_DELTA + 0.00001)
+    return;
+  B3DCLAMP(inVal, MIN_BEAM_DELTA, MAX_BEAM_DELTA);
+  mBeamIncrement = inVal;
+  if (!mInitialized || m_iBeamOrStage)
+    return;
+  m_strBeamDelta.Format("%.3f", mBeamIncrement);
+  UpdateData(false);
+}
+
+// Set increment for stage shift and update display if it is open and stage is selected
+void CRemoteControl::SetStageIncrementIndex(int inVal)
+{
+  if (m_iBeamOrStage)
+    SetIncrementFromIndex(mStageIncrement, mStageIncIndex, inVal, 
+      MAX_STAGE_INDEX, MAX_STAGE_DECIMALS, m_strBeamDelta);
+  else
+    mStageIncIndex = B3DMAX(0, B3DMIN(MAX_STAGE_INDEX, inVal));
+}
+
+// Set C2 step size
 void CRemoteControl::OnButDelC2Minus()
 {
   SetIntensityIncrement(0.707107f * mIntensityIncrement);
@@ -463,19 +608,6 @@ void CRemoteControl::OnButDelC2Plus()
   SetIntensityIncrement(1.414214f * mIntensityIncrement);
   SetFocus();
   mWinApp->RestoreViewFocus();
-}
-
-// Set the increment for beam shift and update the display if it is open
-void CRemoteControl::SetBeamIncrement(float inVal)
-{
-  if (inVal < MIN_BEAM_DELTA - 0.00001 || inVal > MAX_BEAM_DELTA + 0.00001)
-    return;
-  B3DCLAMP(inVal, MIN_BEAM_DELTA, MAX_BEAM_DELTA);
-  mBeamIncrement = inVal;
-  if (!mInitialized)
-    return;
-  m_strBeamDelta.Format("%.3f", mBeamIncrement);
-  UpdateData(false);
 }
 
 // Set the increment for intensity changes
@@ -508,22 +640,77 @@ void CRemoteControl::ChangeIntensityByIncrement(int delta)
     mScope->SetIntensity(newVal);
 }
 
-
+// Change focus
 void CRemoteControl::OnDeltaposSpinFocus(NMHDR *pNMHDR, LRESULT *pResult)
 {
   LPNMUPDOWN pNMUpDown = reinterpret_cast<LPNMUPDOWN>(pNMHDR);
-  // TODO: Add your control notification handler code here
+  mScope->IncDefocus(mFocusIncrement * pNMUpDown->iDelta);
   *pResult = 0;
 }
 
-
+// Decrease or increase focus increment
 void CRemoteControl::OnDelFocusMinus()
 {
-  // TODO: Add your control notification handler code here
+  SetFocusIncrementIndex(mFocusIncrementIndex - 1);
+  SetFocus();
+  mWinApp->RestoreViewFocus();
 }
-
 
 void CRemoteControl::OnDelFocusPlus()
 {
-  // TODO: Add your control notification handler code here
+  SetFocusIncrementIndex(mFocusIncrementIndex + 1);
+  SetFocus();
+  mWinApp->RestoreViewFocus();
+}
+
+void CRemoteControl::SetFocusIncrementIndex(int inVal)
+{
+  SetIncrementFromIndex(mFocusIncrement, mFocusIncrementIndex, inVal,
+    MAX_FOCUS_INDEX, MAX_FOCUS_DECIMALS, m_strFocusStep);
+}
+
+// Set an increment via its index
+void CRemoteControl::SetIncrementFromIndex(float &incrVal, int &incrInd, int newInd, 
+  int maxIndex, int maxDecimals, CString &str)
+{
+  float digits[3] = {1., 2., 5.};
+  B3DCLAMP(newInd, 0, maxIndex);
+  incrVal = digits[newInd % 3] * (float)pow(10., newInd / 3 - maxDecimals);
+  incrInd = newInd;
+  if (!mInitialized)
+    return;
+  str.Format("%g", incrVal);
+  UpdateData(false);
+}
+
+// Handle screen raise or lower
+void CRemoteControl::OnButScreenUpdown()
+{
+  SetFocus();
+  mWinApp->RestoreViewFocus();
+  if (mLastScreenPos == spUnknown)
+    return;
+  mDoingTask = 1;
+  mWinApp->UpdateBufferWindows();
+  mScope->SetScreenPos(mLastScreenPos == spUp ? spDown : spUp);
+  mWinApp->AddIdleTask(CEMscope::TaskScreenBusy, TASK_REMOTE_CTRL, 0, 60000);
+  mWinApp->SetStatusText(SIMPLE_PANE, mLastScreenPos == spUp ? "LOWERING SCREEN" :
+    "RAISING SCREEN");
+}
+
+// Task routines
+void CRemoteControl::TaskDone(int param)
+{
+  mDoingTask = 0;
+  mWinApp->UpdateBufferWindows();
+  mWinApp->SetStatusText(SIMPLE_PANE, "");
+}
+
+void CRemoteControl::TaskCleanup(int error)
+{
+  if (error == IDLE_TIMEOUT_ERROR)
+    SEMMessageBox(mDoingTask > 1 ? _T("Time out moving stage") : 
+      _T("Time out setting screen position"));
+  TaskDone(0);
+  mWinApp->ErrorOccurred(1);
 }

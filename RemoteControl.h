@@ -23,14 +23,23 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
   void Update(int inMag, int inSpot, double inIntensity, int inProbe, int inGun, 
-    int inSTEM, int inAlpha);
+    int inSTEM, int inAlpha, int inScreenPos);
   void UpdateSettings();
   void UpdateEnables(void);
   void ChangeIntensityByIncrement(int delta);
   GetMember(float, BeamIncrement);
   GetMember(float, IntensityIncrement);
   void SetBeamIncrement(float inVal);
+  void SetStageIncrementIndex(int inVal);
   void SetIntensityIncrement(float inVal);
+  void SetBeamOrStage(int inVal);
+  GetMember(int, FocusIncrementIndex);
+  GetMember(int, StageIncIndex);
+  void SetFocusIncrementIndex(int inVal);
+  GetMember(int, DoingTask);
+  void SetIncrementFromIndex(float &incrVal, int &incrInd, int newInd, 
+  int maxIndex, int maxDecimals, CString &str);
+  void SetBeamOrStageIncrement(float beamIncFac, int stageIndAdd);
   CButton m_butValves;
   afx_msg void OnButValves();
   CButton m_butNanoMicro;
@@ -58,7 +67,7 @@ public:
   CString m_strC2Delta;
 
 private:
-  int mLastMagInd;
+  int mLastMagInd;              // Values for state saved from last update
   int mLastGunOn;
   int mLastSpot;
   int mLastProbeMode;
@@ -66,18 +75,25 @@ private:
   double mLastIntensity;
   int mLastCamera;
   int mLastAlpha;
-  CEMscope *mScope;
-  float mBeamIncrement;
+  int mLastScreenPos;
+  CEMscope *mScope;             // Convenience pointers
+  CShiftManager *mShiftManager;
+  float mBeamIncrement;         // Increments for beam and C2  
   float mIntensityIncrement;
-  bool mSpotClicked;
+  float mStageIncrement;        // Increments for stage and focus 
+  int mStageIncIndex;           // and indexes used to determine it
+  float mFocusIncrement;
+  int mFocusIncrementIndex;
+  bool mSpotClicked;            // Flag that spot or mag was clicked
   bool mMagClicked;
-  int mNewSpotIndex;
+  int mNewSpotIndex;            // Current new spot or mag index
   int mNewMagIndex;
-  int mStartMagIndex;
+  int mStartMagIndex;           // Mag at start of any clicking
   UINT_PTR mTimerID;
-  int mMaxClickInterval;
-  bool mCtrlPressed;
-  bool mDidExtendedTimeout;
+  int mMaxClickInterval;        // Maximum interval between clicks befor changing
+  bool mCtrlPressed;            // Flag that Ctrl was pressed
+  bool mDidExtendedTimeout;     // Flag for long timeout with Ctrl pressed started
+  int mDoingTask;               // 1 if doing screen, 2 if doing stage
 public:
   CSpinButtonCtrl m_sbcBeamLeftRight;
   afx_msg void OnDeltaposSpinBeamLeftRight(NMHDR *pNMHDR, LRESULT *pResult);
@@ -96,4 +112,13 @@ public:
   afx_msg void OnDeltaposSpinFocus(NMHDR *pNMHDR, LRESULT *pResult);
   afx_msg void OnDelFocusMinus();
   afx_msg void OnDelFocusPlus();
+  CButton m_butScreenUpDown;
+  CButton m_butBeamControl;
+  CButton m_butStageControl;
+  afx_msg void OnButScreenUpdown();
+  void TaskDone(int param);
+  void TaskCleanup(int error);
+  afx_msg void OnBeamControl();
+  int m_iBeamOrStage;
+  void MoveStageByMicronsOnCamera(double delCamX, double delCamY);
 };
