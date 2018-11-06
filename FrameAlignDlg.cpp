@@ -350,10 +350,13 @@ int CFrameAlignDlg::CheckConditionsOnClose(int whereAlign, int curIndex, int &ne
   ControlSet *camConSets = mWinApp->GetCamConSets();
   ControlSet *conSet = &camConSets[mConSetSelected + activeList[mCameraSelected] *
     MAX_CONSETS];
+  if (whereAlign < 0)
+    whereAlign = conSet->useFrameAlign;
   if (curIndex < 0)
     curIndex = conSet->faParamSetInd;
-  notOK = UtilFindValidFrameAliParams(mReadMode,
-    whereAlign < 0 ? conSet->useFrameAlign : whereAlign, curIndex, newIndex, &mess);
+  notOK = UtilFindValidFrameAliParams(mCamParams, mReadMode,
+    mTakingK3Binned && !(whereAlign > 1 && mWinApp->mCamera->GetSaveUnnormalizedFrames()),
+    whereAlign, curIndex, newIndex, &mess);
   if (notOK || newIndex != curIndex) {
     mess += "\n\nPress:\n";
     if (notOK > 0)
@@ -383,8 +386,9 @@ void CFrameAlignDlg::OnAlignInDM()
     return;
   UnloadCurrentPanel(whereBefore);
   if (m_iWhereAlign > 0) {
-    notOK = UtilFindValidFrameAliParams(mReadMode, m_iWhereAlign, mCurParamInd, newIndex,
-      NULL);
+    notOK = UtilFindValidFrameAliParams(mCamParams, mReadMode, mTakingK3Binned  && 
+      !(m_iWhereAlign > 1 && mWinApp->mCamera->GetSaveUnnormalizedFrames()), 
+      m_iWhereAlign, mCurParamInd, newIndex, NULL);
     if (!notOK && mCurParamInd != newIndex) {
       mCurParamInd = newIndex;
       m_listSetNames.SetCurSel(newIndex);

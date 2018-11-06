@@ -621,7 +621,15 @@ void CCameraSetupDlg::OnDynfocus()
 
 void CCameraSetupDlg::OnProcessing() 
 {
+  int oldProc = m_iProcessing;
   UpdateData(TRUE);
+  if (CheckFrameAliRestrictions(m_iK2Mode, mCamera->GetSaveUnnormalizedFrames(), 
+    mUserSaveFrames, "setting for processing mode")) {
+     m_iProcessing = oldProc;
+     UpdateData(false);
+     return;
+  }
+
   m_butRemoveXrays.EnableWindow((!mParam->STEMcamera && m_iProcessing == GAIN_NORMALIZED)
     || (mParam->STEMcamera && m_iProcessing > 0));
   if (mParam->K2Type) {
@@ -2332,41 +2340,16 @@ int CCameraSetupDlg::GetFEIflybackTime(float &flyback)
 void CCameraSetupDlg::OnK2Mode()
 {
   int *modeP = mParam->DE_camType ? &m_iDEMode : &m_iK2Mode;
-  int newIndex, notOK, answ, oldMode = *modeP;
+  int oldMode = *modeP;
   CString message, str;
   UpdateData(true);
 
-  // Check the frame align parameters
-  if (mCurSet->useFrameAlign) {
-    notOK = UtilFindValidFrameAliParams(*modeP, mCurSet->useFrameAlign, 
-      mCurSet->faParamSetInd, newIndex, &message);
-    if (notOK) {
-      message += "\n\nPress:\n\"Switch Back\" to change back to the previous operating "
-        "mode\n\n";
-      if (notOK > 0)
-         message += "\"Use Set Anyway\" to use these alignment parameters anyway";
-      else {
-        str.Format("\"Use Other Set\" to use the first suitable alignment parameters "
-         "(# %d)", newIndex + 1);
-        message += str;
-      }
-      message += "\n\n\"Open Dialog\" to open the Frame Alignment Parameters dialog\n"
-        "and adjust parameters or restrictions";
-      answ = SEMThreeChoiceBox(message, "Switch Back", "Use Set Anyway", "Open Dialog",
-        MB_YESNOCANCEL | MB_ICONQUESTION);
-      if (answ == IDCANCEL) {
-        OnButSetupAlign();
-      } else if (answ == IDYES) {
-        *modeP = oldMode;
-        UpdateData(false);
-        return;
-      } else {
-        mCurSet->faParamSetInd = newIndex;
-      }
-    } else {
-      mCurSet->faParamSetInd = newIndex;
-    }
-
+  // Check the frame align parameters and restore the old mode if that is the choice
+  if (CheckFrameAliRestrictions(*modeP, mCamera->GetSaveUnnormalizedFrames(), 
+    mUserSaveFrames, "operating mode")) {
+      *modeP = oldMode;
+      UpdateData(false);
+      return;
   }
 
   // Handle DE and return
@@ -2405,6 +2388,47 @@ void CCameraSetupDlg::OnK2Mode()
   ManageK2SaveSummary();
   ManageDose();
 }
+
+// Calls routine to find valid frame align parameters given restrictions and selections,
+// then offers 
+int CCameraSetupDlg::CheckFrameAliRestrictions(int useMode, BOOL saveUnnormed, 
+  BOOL useSave, const char *descrip)
+{
+  int newIndex, notOK, answ;
+  CString message, str;
+  bool takeBinned = m_bTakeK3Binned && m_iProcessing == GAIN_NORMALIZED && 
+    !(saveUnnormed && (mCurSet->useFrameAlign > 1 || useSave));
+  if (mCurSet->useFrameAlign) {
+    notOK = UtilFindValidFrameAliParams(mParam, useMode, takeBinned, 
+      mCurSet->useFrameAlign, mCurSet->faParamSetInd, newIndex, &message);
+    if (notOK) {
+      message += "\n\nPress:\n\"Switch Back\" to change back to the previous " + 
+        CString(descrip) + "\n\n";
+      if (notOK > 0)
+         message += "\"Use Set Anyway\" to use these alignment parameters anyway";
+      else {
+        str.Format("\"Use Other Set\" to use the first suitable alignment parameters "
+         "(# %d)", newIndex + 1);
+        message += str;
+      }
+      message += "\n\n\"Open Dialog\" to open the Frame Alignment Parameters dialog\n"
+        "and adjust parameters or restrictions";
+      answ = SEMThreeChoiceBox(message, "Switch Back", notOK > 0 ? "Use Set Anyway" :
+        "Use Other Set", "Open Dialog", MB_YESNOCANCEL | MB_ICONQUESTION);
+      if (answ == IDCANCEL) {
+        OnButSetupAlign();
+      } else if (answ == IDYES) {
+        return 1;
+      } else {
+        mCurSet->faParamSetInd = newIndex;
+      }
+    } else {
+      mCurSet->faParamSetInd = newIndex;
+    }
+  }
+  return 0;
+}
+
 
 // Checks whether binning 0.5 is allowed in current conditions, enables radio button, and
 // adjusts binning to 1 if not
@@ -2557,6 +2581,12 @@ void CCameraSetupDlg::ComposeWhereAlign(CString &str)
 void CCameraSetupDlg::OnSaveFrames()
 {
   UpdateData(true);
+  if (CheckFrameAliRestrictions(m_iK2Mode, mCamera->GetSaveUnnormalizedFrames(),
+    m_bSaveFrames, "setting for saving frames")) {
+      m_bSaveFrames = false;
+      UpdateData(false);
+      return;
+  }
   mUserSaveFrames = m_bSaveFrames;
   CheckFalconFrameSumList();
   if (mParam->K2Type && m_bSaveFrames && m_bSaveK2Sums)
@@ -2637,7 +2667,9 @@ void CCameraSetupDlg::OnButFileOptions()
       mCamera->SetSaveTimes100(optDlg.m_bSaveTimes100);
     mCamera->SetSaveSuperResReduced(optDlg.m_bReduceSuperres);
     mCamera->SetUse4BitMrcMode(optDlg.m_bUse4BitMode);
-    mCamera->SetSaveUnnormalizedFrames(optDlg.m_bSaveUnnormalized);
+    if (!CheckFrameAliRestrictions(m_iK2Mode, optDlg.m_bSaveUnnormalized, mUserSaveFrames,
+      "setting for saving frames unnormalized"))
+        mCamera->SetSaveUnnormalizedFrames(optDlg.m_bSaveUnnormalized);
     mCamera->SetNameFramesAsMRCS(optDlg.m_bUseExtensionMRCS);
     mCamera->SetK2SaveAsTiff(optDlg.m_iFileType);
     mCamera->SetSkipK2FrameRotFlip(optDlg.m_bSkipRotFlip);
@@ -2647,6 +2679,7 @@ void CCameraSetupDlg::OnButFileOptions()
     mCamera->SetDigitsForNumberedFrame(optDlg.mNumberDigits);
     ManageK2Binning();
     ManageK2SaveSummary();
+    ManageDoseFrac();
   }
   m_butFileOptions.SetButtonStyle(BS_PUSHBUTTON);
 }
@@ -2738,6 +2771,11 @@ void CCameraSetupDlg::OnButSetupAlign()
   dlg.mCameraSelected = mActiveCameraList[mCurrentCamera];
   dlg.mConSetSelected = mCurrentSet;
   dlg.mReadMode = m_iK2Mode;
+  
+  // Set this so that actual value can be modified by whether aligning IMOD
+  dlg.mTakingK3Binned = m_iProcessing == GAIN_NORMALIZED && 
+    mCamera->GetTakeK3SuperResBinned() && !(mCamera->GetSaveUnnormalizedFrames() && 
+    mUserSaveFrames);
   if (dlg.DoModal() == IDOK) {
     mCurSet->filterType = dlg.mCurFiltInd;
     mCurSet->useFrameAlign = dlg.m_iWhereAlign;
@@ -2899,8 +2937,15 @@ void CCameraSetupDlg::OnAlwaysAntialias()
 void CCameraSetupDlg::OnTakeK3Binned()
 {
   UpdateData(true);
+  if (CheckFrameAliRestrictions(m_iK2Mode, mCamera->GetSaveUnnormalizedFrames(), 
+    mUserSaveFrames, "setting for binning frames")) {
+      m_bTakeK3Binned = !m_bTakeK3Binned;
+      UpdateData(false);
+      return;
+  }
   ManageK2Binning();
   ManageK2SaveSummary();
+  ManageDoseFrac();
 }
 
 // DE CAMERA:

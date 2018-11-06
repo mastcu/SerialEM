@@ -364,6 +364,7 @@ void ManageK2Binning(void);
   BOOL m_bTakeK3Binned;
   afx_msg void OnTakeK3Binned();
   CButton m_butTakeK3Binned;
+  int CheckFrameAliRestrictions(int useMode, BOOL saveUnnormed, BOOL useSave, const char *descrip);
 };
 
 //{{AFX_INSERT_LOCATION}}

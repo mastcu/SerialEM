@@ -55,6 +55,7 @@ public:
   int mCameraSelected;        // Which camera is currently selected in cam setup
   int mConSetSelected;        // And which parameters set
   int mReadMode;              // And the current read mode in the dialog
+  bool mTakingK3Binned;       // Whether current conset and setting would bin K3 frames
 
   BOOL m_bUseGPU;
   CStatic m_statPairwiseNum;
