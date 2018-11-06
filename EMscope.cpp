@@ -167,6 +167,7 @@ CEMscope::CEMscope()
   mStageThread = NULL;
   mScreenThread = NULL;
   mFilmThread = NULL;
+  mApertureThread = NULL;
   for (i = 0; i < MAX_LONG_THREADS; i++)
     mLongOpThreads[i] = NULL;
   for (i = 0; i < MAX_LONG_OPERATIONS; i++) {
@@ -388,6 +389,7 @@ CEMscope::CEMscope()
   mStageRelaxation = 0.025f;
   mMovingStage = false;
   mBkgdMovingStage = false;
+  mMovingAperture = false;
   mLastGaugeStatus = gsInvalid;
   mVacCount = 0;
   mLastSpectroscopy = false;
@@ -527,6 +529,7 @@ int CEMscope::Initialize()
   // reliably set for use
   mMoveInfo.JeolSD = &mJeolSD;
   mMoveInfo.plugFuncs = mPlugFuncs;
+  mApertureTD.plugFuncs = mPlugFuncs;
 
   if (firstTime) {
 
@@ -5514,11 +5517,15 @@ bool CEMscope::GetTemperatureInfo(int type, BOOL &busy, int &time, int which,
   return success;
 }
 
+/*
+ * Aperture functions
+ */
+
 // Get size of given aperture
 int CEMscope::GetApertureSize(int kind)
 {
   int result = -1;
-  if (!sInitialized || !JEOLscope || kind < 1 || kind > 6)
+  if (!sInitialized || !JEOLscope || kind < 1 || kind > 6 || !mPlugFuncs->GetApertureSize)
     return -1;
   ScopeMutexAcquire("GetApertureSize", true);
   try {
@@ -5532,20 +5539,17 @@ int CEMscope::GetApertureSize(int kind)
 }
 
 // Set size of given aperture, which may retract it
+// This starts a thread
 bool CEMscope::SetApertureSize(int kind, int size)
 {
-  bool result = true;
-  if (!sInitialized || !JEOLscope || kind < 1 || kind > 6)
+  if (!sInitialized || !JEOLscope || kind < 1 || kind > 6 || !mPlugFuncs->SetApertureSize)
     return false;
-  ScopeMutexAcquire("SetApertureSize", true);
-  try {
-    mPlugFuncs->SetApertureSize(kind, size);
-  }
-  catch (_com_error E) {
-    SEMReportCOMError(E, _T("setting size number of aperture "));
-  }
-  ScopeMutexRelease("SetApertureSize");
-  return result;
+  mApertureTD.actionFlags = APERTURE_SET_SIZE;
+  mApertureTD.apIndex = kind;
+  mApertureTD.sizeOrIndex = size;
+  if (StartApertureThread("setting size number of aperture "))
+    return false;
+  return true;
 }
 
 // Get X/Y position of given aperture, a value between -1 and 1
@@ -5553,7 +5557,8 @@ bool CEMscope::GetAperturePosition(int kind, float &posX, float &posY)
 {
   bool result = true;
   double xpos, ypos;
-  if (!sInitialized || !JEOLscope || kind < 1 || kind > 6)
+  if (!sInitialized || !JEOLscope || kind < 1 || kind > 6 || 
+    !mPlugFuncs->GetAperturePosition)
     return false;
   ScopeMutexAcquire("GetAperturePosition", true);
   try {
@@ -5569,25 +5574,23 @@ bool CEMscope::GetAperturePosition(int kind, float &posX, float &posY)
 
 }
 
-// Set X/Y position of given aperture
+// Set X/Y position of given aperture.  Starts a thread
 bool CEMscope::SetAperturePosition(int kind, float posX, float posY)
 {
-  bool result = true;
-  if (!sInitialized || !JEOLscope || kind < 1 || kind > 6)
+  if (!sInitialized || !JEOLscope || kind < 1 || kind > 6 || 
+    !mPlugFuncs->SetAperturePosition)
     return false;
-  ScopeMutexAcquire("SetAperturePosition", true);
-  try {
-    mPlugFuncs->SetAperturePosition(kind, (double)posX, (double)posY);
-  }
-  catch (_com_error E) {
-    SEMReportCOMError(E, _T("setting X/Y position of aperture "));
-  }
-  ScopeMutexRelease("SetAperturePosition");
-  return result;
-
+  mApertureTD.actionFlags = APERTURE_SET_POS;
+  mApertureTD.apIndex = kind;
+  mApertureTD.posX = posX;
+  mApertureTD.posY = posY;
+  if (StartApertureThread("setting position of aperture "))
+    return false;
+  return true;
 }
 
 // Higher level function to take out an aperture and save its position
+// This starts a thread too, through SetApertureSize
 int CEMscope::RemoveAperture(int kind)
 {
   int size = GetApertureSize(kind);
@@ -5597,6 +5600,8 @@ int CEMscope::RemoveAperture(int kind)
     mSavedAperturePosY[kind - 1]))
     return 2;
   mSavedApertureSize[kind - 1] = size;
+  if (!SetApertureSize(kind, 0))
+    return 1;
   return 0;
 }
 
@@ -5605,6 +5610,10 @@ int CEMscope::ReInsertAperture(int kind)
 {
   CString str;
   int retval = 0;
+  if (!sInitialized || !JEOLscope || !mPlugFuncs->SetApertureSize || 
+    !mPlugFuncs->SetAperturePosition) {
+    return 3;
+  }
   if (kind < 1 || kind > MAX_APERTURES) {
     str.Format("Aperture number %d is out of range, it must be between 1 and %d", kind,
       MAX_APERTURES);
@@ -5617,12 +5626,81 @@ int CEMscope::ReInsertAperture(int kind)
     SEMMessageBox(str);
     return 2;
   }
-  if (!SetApertureSize(kind, mSavedApertureSize[kind - 1]))
-    retval = 3;
-  else if (!SetAperturePosition(kind, mSavedAperturePosX[kind - 1], 
-    mSavedAperturePosY[kind - 1]))
+  mApertureTD.actionFlags = APERTURE_SET_SIZE | APERTURE_SET_POS;
+  mApertureTD.apIndex = kind;
+  mApertureTD.sizeOrIndex = mSavedApertureSize[kind - 1];
+  mApertureTD.posX = mSavedAperturePosX[kind - 1];
+  mApertureTD.posY = mSavedAperturePosY[kind - 1];
+  if (StartApertureThread("reinserting aperture "))
     retval = 4;
   mSavedApertureSize[kind - 1] = -1;
+  return retval;
+}
+
+bool CEMscope::MovePhasePlateToNextPos()
+{
+  if (!sInitialized || !JEOLscope || !mPlugFuncs->GoToNextPhasePlatePos)
+    return false;
+  mApertureTD.actionFlags = APERTURE_NEXT_PP_POS;
+  if (StartApertureThread("moving phase plate to next position "))
+    return false;
+  return true;
+}
+
+
+int CEMscope::StartApertureThread(const char *descrip)
+{
+  mApertureTD.description = descrip;
+  mApertureThread = AfxBeginThread(ApertureMoveProc, &mApertureTD,
+    THREAD_PRIORITY_NORMAL, 0, CREATE_SUSPENDED);
+  mApertureThread->m_bAutoDelete = false;
+  mApertureThread->ResumeThread();
+  mWinApp->AddIdleTask(TASK_MOVE_APERTURE, 0, 30000);
+  mMovingAperture = true;
+  return 0;
+}
+
+// Is the Aperture busy?
+int CEMscope::ApertureBusy()
+{
+  int retval = UtilThreadBusy(&mApertureThread);
+  mMovingAperture = retval > 0;
+  return retval;
+}
+
+// Delete the thread for moving an aperture if there is a timeout and issue message
+void CEMscope::ApertureCleanup(int error)
+{
+  UtilThreadCleanup(&mApertureThread);
+  if (error)
+    SEMMessageBox(_T(error == IDLE_TIMEOUT_ERROR ? "Time out " : "An error occurred ") + 
+      mApertureTD.description);
+  mWinApp->ErrorOccurred(error);
+  mMovingAperture = false;
+}
+
+UINT CEMscope::ApertureMoveProc(LPVOID pParam)
+{
+  ApertureThreadData *td = (ApertureThreadData *)pParam;
+  ScopeMutexAcquire("ApertureMoveProc", true);
+  int retval = 0;
+  try {
+    if (td->actionFlags & APERTURE_SET_SIZE) {
+      td->plugFuncs->SetApertureSize(td->apIndex, td->sizeOrIndex);
+    }
+    if (td->actionFlags & APERTURE_SET_POS) {
+      td->plugFuncs->SetAperturePosition(td->apIndex, (double)td->posX, (double)td->posY);
+    }
+    if (td->actionFlags & APERTURE_NEXT_PP_POS) {
+      retval = td->plugFuncs->GoToNextPhasePlatePos(0);
+    }
+  }
+  catch (_com_error E) {
+    SEMReportCOMError(E, td->description);
+    retval = 1;
+  }
+
+  ScopeMutexRelease("ApertureMoveProc");
   return retval;
 }
 

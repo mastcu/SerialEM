@@ -2051,6 +2051,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
       busy = mMacroProcessor->StartNavAvqBusy();
     else if (idc->source == TASK_MULTI_SHOT)
       busy = mParticleTasks->MultiShotBusy();
+    else if (idc->source == TASK_MOVE_APERTURE)
+      busy = mScope->ApertureBusy();
 
     // Increase timeouts after long intervals
     if (idc->extendTimeOut)
@@ -2255,6 +2257,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
           mAutoTuning->CtfBasedCleanup(idc->param);
         else if (idc->source == TASK_GAIN_REF)
           mGainRefMaker->ErrorCleanup(busy);
+        else if (idc->source == TASK_MOVE_APERTURE)
+         mScope->ApertureCleanup(busy);
      }
 
       // Delete task from memory and drop index

@@ -99,6 +99,19 @@ struct LongThreadData {
   CString errString;
 };
 
+#define APERTURE_SET_SIZE     1
+#define APERTURE_SET_POS      2
+#define APERTURE_NEXT_PP_POS  4
+
+struct ApertureThreadData {
+  int actionFlags;
+  int apIndex;
+  int sizeOrIndex;
+  float posX, posY;
+  ScopePluginFuncs *plugFuncs;
+  CString description;
+};
+
 // Globals for scope identity
 extern bool JEOLscope, LikeFEIscope, HitachiScope;
 extern bool FEIscope;
@@ -363,6 +376,7 @@ class DLL_IM_EX CEMscope
   BOOL SetDarkFieldTilt(int mode, double tiltX, double tiltY);
   double GetScreenCurrent();
   GetSetMember(int, UseTEMScripting);
+  GetMember(bool, MovingAperture);
   int *GetLastLongOpTimes() {return &mLastLongOpTimes[0];};
   int ScreenBusy();
   int GetScreenPos();
@@ -412,6 +426,7 @@ class DLL_IM_EX CEMscope
   CString mGaugeNames[MAX_GAUGE_WATCH];   // Names (P1, etc)
   double mYellowThresh[MAX_GAUGE_WATCH];  // Threshold for displaying yellow
   double mRedThresh[MAX_GAUGE_WATCH];     // Threshold for displaying red
+  bool mMovingAperture;
 
 private:
   static ScopePluginFuncs *mPlugFuncs;
@@ -478,12 +493,14 @@ private:
  private:
   static UINT StageMoveProc(LPVOID pParam);
   static UINT ScreenMoveProc(LPVOID pParam);
+  static UINT ApertureMoveProc(LPVOID pParam);
   static UINT LongOperationProc(LPVOID pParam);
 
   CShiftManager *mShiftManager;
   CWinThread * mStageThread;
   CWinThread * mScreenThread;
   CWinThread * mFilmThread;
+  CWinThread * mApertureThread;
   CWinThread *mLongOpThreads[MAX_LONG_THREADS];
   LongThreadData mLongOpData[MAX_LONG_THREADS];
   int mLastLongOpTimes[MAX_LONG_OPERATIONS];
@@ -491,6 +508,7 @@ private:
   float mIncrement;           // Tilt increment
   BOOL m_bCosineTilt;         // Flag for cosine tilt
   StageMoveInfo mMoveInfo;
+  ApertureThreadData mApertureTD;
   BOOL mBeamBlankSet;         // Keeps track of requested blank setting
   double mLastISdelX;         // Last change in image shift
   double mLastISdelY;
@@ -748,6 +766,11 @@ public:
   bool GetAperturePosition(int kind, float &posX, float &posY);
   int RemoveAperture(int kind);
   int ReInsertAperture(int kind);
+  int ApertureBusy();
+  void ApertureCleanup(int error);
+  int StartApertureThread(const char *descrip);
+  bool MovePhasePlateToNextPos();
+
   int StartLongOperation(int *operations, float *hoursSinceLast, int numOps);
   int LongOperationBusy(int index = -1);
   int StopLongOperation(bool exiting, int index = -1);
