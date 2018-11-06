@@ -711,7 +711,8 @@
           <TD class="style8">RecordAndTiltUp</TD>
           <TD>Starts a Record acquisition and tilts the stage up by the current increment 
             after the exposure is expected to be done.&nbsp; Post-exposure actions must be 
-            enabled for the current camera.</TD>
+            allowed for the current camera, at least for current Record parameters, but need 
+            not be not enabled by the user in the Camera menu.</TD>
         </TR>
         <TR>
           <TD class="style8">RecordAndTiltDown</TD>
@@ -726,8 +727,11 @@
         </TR>
         <TR>
           <TD class="style8">ArePostActionsEnabled</TD>
-          <TD>Reports whether post-exposure actions are enabled for the current camera and 
-            sets reportedValue1 to 1 if so, 0 if not.&nbsp; The value can be assigned to a 
+          <TD>Reports whether post-exposure actions are allowed for the current camera for 
+            all shots, and for Record shots specifically, and 
+            sets reportedValue1 and reportedValue2 to 1 if so, 0 if not.&nbsp; For Falcon 
+            and DE cameras, post-actions are allowed only when frames are being aligned in 
+            SerialEM.&nbsp; The values can be assigned to a 
             variable after the command.</TD>
         </TR>
         <TR>
@@ -1672,6 +1676,22 @@
             control is on and the value for the lens.</TD>
         </TR>
         <TR vAlign="top">
+          <TD class="style13">RemoveAperture #</TD>
+          <TD>Remove the aperture whose index is the given # (JEOL only). 1 and 2 are the 
+            condenser and objective apertures, others are 2:HCA, 4:SAA, 5:ENTA, 6:EDS.&nbsp; 
+            The size and position of the aperture will be recorded before it is removed.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style13">ReInsertAperture #</TD>
+          <TD>Replace the aperture whose index is the given # after it has been removed with 
+            &#39;RemoveAperture&#39; (JEOL only).&nbsp; The aperture of the stored size will be 
+            inserted and it will be set to the stored position.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style13">PhasePlateToNextPos</TD>
+          <TD>Move phase plate on JEOL to next position.&nbsp; </TD>
+        </TR>
+        <TR vAlign="top">
           <TD class="style13">ManualFilmExposure #</TD>
           <TD>Film exposure time in seconds for manual exposures, or 0 for automatic exposure
             (the default)</TD>
@@ -2126,8 +2146,10 @@
             the time since the last run is less than that interval.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">AutocenterBeam</TD>
-          <TD>Start the Beam Autocenter routine</TD>
+          <TD class="style12">AutocenterBeam [#]</TD>
+          <TD>Start the Beam Autocenter routine.&nbsp; The optional # sets a maximum 
+            diameter in microns; the beam will not be moved if the circle fit to the beam 
+            edges has a bigger diameter than this value.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style12">CookSpecimen</TD>
@@ -2141,11 +2163,13 @@
             in low dose, that the beam is unblanked.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">CenterBeamFromImage [#]</TD>
+          <TD class="style12">CenterBeamFromImage [#C] [#M]</TD>
           <TD>Center beam using the existing image in the active buffer by detecting the
-            edges of the beam, or from the centroid of the image intensities if # is
+            edges of the beam, or from the centroid of the image intensities if #C is
             nonzero. In the latter case the beam should be completely within the camera
-            field.</TD>
+            field.&nbsp; The optional #M sets a maximum diameter in microns; the beam will 
+            not be moved if the circle fit to the beam edges has a bigger diameter than this 
+            value.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style12">MeasureBeamSize [#B]</TD>

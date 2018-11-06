@@ -1658,7 +1658,7 @@ BEGIN
     PUSHBUTTON      "?",IDC_BUTHELP,64,16,10,10,NOT WS_VISIBLE
 END
 
-IDD_FILTERCONTROL DIALOGEX 0, 0, 119, 119
+IDD_FILTERCONTROL DIALOGEX 0, 0, 119, 118
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP
 EXSTYLE WS_EX_LEFTSCROLLBAR
 FONT 8, "Microsoft Sans Serif", 0, 0, 0x1
@@ -1678,19 +1678,19 @@ BEGIN
     RTEXT           "Loss",IDC_STATIC,54,47,24,8
     EDITTEXT        IDC_EDITLOSS,80,45,26,12,ES_RIGHT | ES_AUTOHSCROLL
     CONTROL         "Spin1",IDC_SPINLOSS,"msctls_updown32",UDS_ARROWKEYS,106,44,10,14
-    CONTROL         "Switch cameras automatically",IDC_AUTOCAMERA,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,109,104,10
+    CONTROL         "Switch cameras automatically",IDC_AUTOCAMERA,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,108,104,10
     PUSHBUTTON      "-",IDC_BUTMORE,4,67,9,7
     LTEXT           "Options",IDC_STATMORE,15,67,24,8
     CONTROL         "Match intensity (electrons/pixel)",IDC_MATCHINTENSITY,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,89,109,10
-    CONTROL         "Match pixel size",IDC_MATCHPIXEL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,79,63,10
-    CONTROL         "Do mag-dependent energy shifts",IDC_DOMAGSHIFTS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,99,110,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,88,109,10
+    CONTROL         "Match pixel size",IDC_MATCHPIXEL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,78,63,10
+    CONTROL         "Do mag-dependent energy shifts",IDC_DOMAGSHIFTS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,98,110,10
     LTEXT           "Adjustment = -15.5",IDC_STATMAGSHIFT,4,58,55,8
     CONTROL         "Zero Loss",IDC_ZEROLOSS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,46,46,10
     RTEXT           "Net Offset = 1234",IDC_STATOFFSET,59,58,57,8
     PUSHBUTTON      "Refine ZLP",IDC_REFINE_ZLP,77,9,39,10
     PUSHBUTTON      "Adjust Slit Offset",IDC_OFFSET_SLIT,14,9,56,10,NOT WS_VISIBLE
-    PUSHBUTTON      "Zero Adjustment",IDC_ZLPALIGNED,64,76,52,10
+    PUSHBUTTON      "Clear Adjustment",IDC_ZLPALIGNED,63,74,53,10
 END
 
 IDD_GAINREFERENCE DIALOGEX 0, 0, 196, 261
@@ -3046,7 +3046,7 @@ BEGIN
 
     IDD_FILTERCONTROL, DIALOG
     BEGIN
-        BOTTOMMARGIN, 117
+        BOTTOMMARGIN, 116
     END
 
     IDD_GAINREFERENCE, DIALOG
@@ -4022,7 +4022,7 @@ END
 STRINGTABLE
 BEGIN
     IDC_DOMAGSHIFTS         "Impose mag-dependent energy shifts when slit in (also adjust for slit width)"
-    IDC_ZLPALIGNED          "Inform SerialEM that you have Aligned ZLP - needed for mag-dependent shifts"
+    IDC_ZLPALIGNED          "Set the offset adjustment to zero at the current mag and slit width"
     IDC_UNBLANK             "Unblank the beam if it is blanked (do before Align ZLP)"
     IDC_EDITTARGET          "Enter the average counts for each picture to be taken to get gain reference"
     IDC_EDITFRAMES          "Enter number of images to average to make gain reference"

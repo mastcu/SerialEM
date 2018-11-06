@@ -227,7 +227,7 @@ enum {CME_VIEW, CME_FOCUS, CME_TRIAL, CME_RECORD, CME_PREVIEW,
   CME_MAKEANCHORMAP, CME_STAGESHIFTBYPIXELS, CME_REPORTPROPERTY, CME_SAVENAVIGATOR,
   CME_FRAMETHRESHOLDNEXTSHOT, CME_QUEUEFRAMETILTSERIES, CME_FRAMESERIESFROMVAR,
   CME_WRITEFRAMESERIESANGLES, CME_ECHOREPLACELINE, CME_ECHONOLINEEND, CME_REMOVEAPERTURE,
-  CME_REINSERTAPERTURE
+  CME_REINSERTAPERTURE, CME_PHASEPLATETONEXTPOS
 };
 
 static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0},
@@ -345,6 +345,7 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"FrameThresholdNextShot", 1, 1}, {"QueueFrameTiltSeries", 3, 0}, 
 {"FrameSeriesFromVar", 2, 0}, {"WriteFrameSeriesAngles", 1, 0}, {"EchoReplaceLine", 1, 1},
 {"EchoNoLineEnd", 1, 1}, {"RemoveAperture", 1, 0}, {"ReInsertAperture", 1, 0},
+{"PhasePlateToNextPos", 0},
 {NULL, 0, 0}
 };
 
@@ -425,6 +426,7 @@ CMacroProcessor::CMacroProcessor()
   mExposedFilm = false;
   mStartedLongOp = false;
   mMovedPiezo = false;
+  mMovedAperture = false;
   mLoadingMap = false;
   mMakingDualMap = false;
   mLastCompleted = false;
@@ -850,6 +852,7 @@ int CMacroProcessor::TaskBusy()
     (mMovedScreen && mScope->ScreenBusy()))) ||
     (mStartedLongOp && mScope->LongOperationBusy()) ||
     (mMovedPiezo && mWinApp->mPiezoControl->PiezoBusy() > 0) ||
+    (mMovedAperture && mScope->GetMovingAperture()) ||
     (mLoadingMap && mWinApp->mNavigator && mWinApp->mNavigator->GetLoadingMap()) ||
     (mMakingDualMap && mWinApp->mNavHelper->GetAcquiringDual()) ||
     mWinApp->mShiftCalibrator->CalibratingIS() ||
@@ -1099,6 +1102,7 @@ void CMacroProcessor::NextCommand()
   mMovedScreen = false;
   mExposedFilm = false;
   mStartedLongOp = false;
+  mMovedAperture = false;
   mLoadingMap = false;
 
   if (mMovedPiezo && mWinApp->mPiezoControl->GetLastMovementError()) {
@@ -1881,7 +1885,7 @@ void CMacroProcessor::NextCommand()
   } else if (CMD_IS(RECORDANDTILTUP) || CMD_IS(RECORDANDTILTDOWN) || 
     CMD_IS(RECORDANDTILTTO)) {                              // RecordAndTilt
       if (!mCamera->PostActionsOK(&mConSets[RECORD_CONSET]))
-        ABORT_LINE("Post-exposure actions are not enabled for the current camera"
+        ABORT_LINE("Post-exposure actions are not allowed for the current camera"
         " for line:\n\n");
       double increment = mScope->GetIncrement();
       doBack = false;
@@ -1912,11 +1916,13 @@ void CMacroProcessor::NextCommand()
       mTestTiltAngle = true;
 
   } else if (CMD_IS(AREPOSTACTIONSENABLED)) {               // ArePostActionsEnabled
-    truth = mCamera->PostActionsOK();
-    report.Format("Post-exposure actions %s enabled for this camera", 
-      truth ? "ARE" : "are NOT");
+    truth = mWinApp->ActPostExposure();
+    doShift = mCamera->PostActionsOK(&mConSets[RECORD_CONSET]);
+    report.Format("Post-exposure actions %s allowed %sfor this camera%s", 
+      truth ? "ARE" : "are NOT", doShift ? "in general " : "", 
+      doShift ? " but ARE for Records currently" : "");
     mWinApp->AppendToLog(report, mLogAction);
-    SetReportedValues(&strItems[1], truth ? 1. : 0.);
+    SetReportedValues(&strItems[1], truth ? 1. : 0., doShift ? 1 : 0.);
 
   } else if (CMD_IS(TILTDURINGRECORD)) {                    // TiltDuringRecord
     delX = itemEmpty[3] ? 0. : itemDbl[3];
@@ -3071,11 +3077,11 @@ void CMacroProcessor::NextCommand()
      index = BinDivisorI(camParams);
      delISX = -(delX * aMat.xpx + delY * aMat.xpy) / index;
      delISY = -(delX * aMat.ypx + delY * aMat.ypy) / index;
-     h1 = DTOR * mScope->GetTiltAngle();
+     h1 = cos(DTOR * mScope->GetTiltAngle());
      bInv = MatMul(aMat, 
        MatInv(mShiftManager->StageToCamera(mWinApp->GetCurrentCamera(), mag)));
-     stageX = bInv.xpx * delX + bInv.xpy * delY;
-     stageY = (bInv.ypx * delX + bInv.ypy * delY) / cos(h1);
+     stageX = (bInv.xpx * delX + bInv.xpy * delY) / (HitachiScope ? h1 : 1.);
+     stageY = (bInv.ypx * delX + bInv.ypy * delY) / (HitachiScope ? 1. : h1);
      report.Format("   %.1f %.1f unbinned pixels; need stage %.3f %.3f if reset", delISX, 
        delISY, stageX, stageY);
      strCopy += report;
@@ -3509,7 +3515,13 @@ void CMacroProcessor::NextCommand()
     else
       index2 = mScope->RemoveAperture(index);
     if (index2)
-      ABORT_LINE("Script aborted due to error removing aperture in:\n\n");
+      ABORT_LINE("Script aborted due to error starting aperture movement in:\n\n");
+    mMovedAperture = true;
+
+  } else if (CMD_IS(PHASEPLATETONEXTPOS)) {                  // PhasePlateToNextPos
+    if (!mScope->MovePhasePlateToNextPos())
+      ABORT_LINE("Script aborted due to error starting phase plate movement in:\n\n");
+    mMovedAperture = true;
 
   } else if (CMD_IS(REPORTMEANCOUNTS)) {                    // ReportMeanCounts
     if (ConvertBufferLetter(strItems[1], 0, true, index, report))
@@ -4045,13 +4057,24 @@ void CMacroProcessor::NextCommand()
 
   } else if (CMD_IS(CENTERBEAMFROMIMAGE)) {                 // CenterBeamFromImage
     truth = !itemEmpty[1] && itemInt[1] != 0;
-    index = mWinApp->mProcessImage->CenterBeamFromActiveImage(0., 0., truth);
+    delISX = 0.;
+
+    // Optional maximum here and in Autocenter is a diameter in microns and the routines
+    // take a radius; here in pixels, below still in microns
+    if (!itemEmpty[2]) {
+      imBuf =  mWinApp->GetActiveNonStackImBuf(); 
+      if (!imBuf || !(delISY = mShiftManager->GetPixelSize(imBuf)))
+        ABORT_LINE("Cannot determine pixel size of the active image for line:\n\n");
+      delISX = itemDbl[2] * 500. / delISY;
+    }
+    index = mWinApp->mProcessImage->CenterBeamFromActiveImage(delISX, 0., truth);
     if (index > 0 && index <= 3)
       ABORT_LINE("Script aborted centering beam because of no image,\n"
       "unusable image type, or failure to get memory");
 
   } else if (CMD_IS(AUTOCENTERBEAM)) {                      // AutoCenterBeam
-    if (mWinApp->mMultiTSTasks->AutocenterBeam()) {
+    delISX = itemEmpty[1] ? 0. : itemDbl[1] / 2.;
+    if (mWinApp->mMultiTSTasks->AutocenterBeam((float)delISX)) {
       AbortMacro();
       return;
     }

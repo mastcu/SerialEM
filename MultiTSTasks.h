@@ -70,6 +70,7 @@ private:
   double mAcIntensityToUse; // Intensity to use if have to raise screen first
   int mAcSavedLDDownArea;  // Saved value of low dose down area
   bool mAcSetupDlgOpen;    // Flag that setup dialog is open
+  float mAcMaxRadius;     // maximum radius for circle, reject movement if higher
   int mRangeConsets[6];  // Consets for range finding, regular and low dose
   BOOL mTrZeroDegConSet;  // Control set for zero-degree shots
   float mMinTrZeroDegField;  // Minimum field size for those shots
@@ -168,7 +169,7 @@ public:
     int &index);
   void SetupAutocenter(bool reopen);
   void MakeAutocenConset(AutocenParams * param);
-  int AutocenterBeam(void);
+  int AutocenterBeam(float maxRadius = 0.);
   void AutocenNextTask(int param);
   void AutocenCleanup(int error);
   void StopAutocen(void);

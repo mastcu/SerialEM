@@ -3,6 +3,17 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+11/5/18: Added optional maximum beam diameter to AutocenterBeam and
+CenterBeamFromImage commands.
+
+11/5/18: Enabled post-actions for Falcon and DE cameras when aligning frames
+in SerialEM so tilting can be done before aligning.
+
+11/4/18: Added button to clear out filter adjustment from previous session.
+
+11/4/18: Added script command to move phase plate to next position on JEOL,
+and changed aperture and phase plate movement to be done with a thread.
+
 11/4/18: Got size restrictions on frame alignment sets working correctly for
 K3.  Allowed post-actions with K3 if StartupDelay is at least 0.5.
 
