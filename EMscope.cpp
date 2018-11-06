@@ -6991,7 +6991,7 @@ int CEMscope::LookupScriptingCamera(CameraParameters *params, bool refresh,
   CString CCDname = params->name;
   static bool doMessage = true;
   int i, err;
-  float minDrift;
+  double minDrift, maxDrift;
   if (!FEIscope)
     return 2;
   if (!sInitialized)
@@ -7015,13 +7015,12 @@ int CEMscope::LookupScriptingCamera(CameraParameters *params, bool refresh,
   if (restoreShutter < -900 && mSkipAdvancedScripting)
     restoreShutter = -950;
   err = mPlugFuncs->LookupScriptingCamera((LPCTSTR)CCDname, refresh, restoreShutter,
-    &params->eagleIndex, &minDrift, &params->maximumDrift);
+    &params->eagleIndex, &minDrift, &maxDrift);
 
-  // TEMP FOR PROBLEM 8/29/18
-  SEMTrace('E', "Returned from LSC with err %d", err);
   if (err == 3)
     SEMMessageBox(CString(mPlugFuncs->GetLastErrorString()));
   if (!err) {
+    params->maximumDrift = (float)maxDrift;
     if (mPluginVersion >= FEI_PLUGIN_DOES_FALCON3) {
 
       // Entries for testing the interface for advanced scripting cameras
@@ -7046,11 +7045,11 @@ int CEMscope::LookupScriptingCamera(CameraParameters *params, bool refresh,
       }
       if (params->CamFlags & PLUGFEI_USES_ADVANCED) {
         if (fabs(params->minExposure - DEFAULT_FEI_MIN_EXPOSURE) < 1.e-5)
-          params->minExposure = minDrift;
+          params->minExposure = (float)minDrift;
         else
-          params->minExposure = B3DMAX(params->minExposure, minDrift);
+          params->minExposure = (float)B3DMAX(params->minExposure, minDrift);
       } else {
-        params->minimumDrift = B3DMAX(params->minimumDrift, minDrift);
+        params->minimumDrift = (float)B3DMAX(params->minimumDrift, minDrift);
       }
 
       // Promote a Falcon 2 to 3 automatically, and adjust the frame time if low
@@ -7063,7 +7062,7 @@ int CEMscope::LookupScriptingCamera(CameraParameters *params, bool refresh,
       if (params->FEItype == FALCON3_TYPE && !params->addToExposure)
         params->addToExposure = mAddToFalcon3Exposure;
     } else {
-      params->minimumDrift = B3DMAX(params->minimumDrift, minDrift);
+      params->minimumDrift = (float)B3DMAX(params->minimumDrift, minDrift);
     }
     params->eagleIndex &= PLUGFEI_INDEX_MASK;
   }
