@@ -1,3 +1,4 @@
+#include "afxwin.h"
 #if !defined(AFX_FILTERCONTROLDLG_H__BAEAC419_DB1F_4198_8372_577254D8C6AA__INCLUDED_)
 #define AFX_FILTERCONTROLDLG_H__BAEAC419_DB1F_4198_8372_577254D8C6AA__INCLUDED_
 
@@ -105,6 +106,7 @@ private:
   int mWarnedJeolLM;
 public:
   BOOL LossOutOfRange(double nominal, double & netLoss);
+  CButton m_butClearAdjustment;
 };
 
 //{{AFX_INSERT_LOCATION}}

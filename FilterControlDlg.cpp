@@ -61,10 +61,10 @@ void CFilterControlDlg::DoDataExchange(CDataExchange* pDX)
 {
   CToolDlg::DoDataExchange(pDX);
   //{{AFX_DATA_MAP(CFilterControlDlg)
-	DDX_Control(pDX, IDC_OFFSET_SLIT, m_butOffsetSlit);
-	DDX_Control(pDX, IDC_STATMORE, m_statMore);
-	DDX_Control(pDX, IDC_BUTMORE, m_butMore);
-	DDX_Control(pDX, IDC_REFINE_ZLP, m_butRefineZLP);
+  DDX_Control(pDX, IDC_OFFSET_SLIT, m_butOffsetSlit);
+  DDX_Control(pDX, IDC_STATMORE, m_statMore);
+  DDX_Control(pDX, IDC_BUTMORE, m_butMore);
+  DDX_Control(pDX, IDC_REFINE_ZLP, m_butRefineZLP);
   DDX_Control(pDX, IDC_STATOFFSET, m_statOffset);
   DDX_Control(pDX, IDC_ZEROLOSS, m_butZeroLoss);
   DDX_Control(pDX, IDC_STATMAGSHIFT, m_statMagShift);
@@ -95,7 +95,8 @@ void CFilterControlDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Text(pDX, IDC_STATMAGSHIFT, m_strMagShift);
   DDX_Text(pDX, IDC_STATOFFSET, m_strOffset);
   DDX_Check(pDX, IDC_ZEROLOSS, m_bZeroLoss);
-	//}}AFX_DATA_MAP
+  //}}AFX_DATA_MAP
+  DDX_Control(pDX, IDC_ZLPALIGNED, m_butClearAdjustment);
 }
 
 
@@ -299,6 +300,7 @@ void CFilterControlDlg::Update()
   m_editWidth.EnableWindow(bEnable && slitOK);
   m_sbcWidth.EnableWindow(bEnable && slitOK);
   m_butZeroLoss.EnableWindow(bEnable && m_bSlitIn && lossOK);
+  m_butClearAdjustment.EnableWindow(bEnable);
   bEnable = bEnable && m_bSlitIn && !m_bZeroLoss && lossOK;
   m_editLoss.EnableWindow(bEnable);
   m_sbcLoss.EnableWindow(bEnable);
@@ -368,6 +370,8 @@ void CFilterControlDlg::NewMagUpdate(int inMag, BOOL EFTEM)
 // Do not try to set filter if program detects a ZLP align
 void CFilterControlDlg::OnZlpaligned() 
 {
+  SetFocus();
+  mWinApp->RestoreViewFocus();
   AdjustForZLPAlign();
   if (mParam->slitIn)
      mWinApp->mCamera->SetupFilter();
