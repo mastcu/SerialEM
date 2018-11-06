@@ -1618,8 +1618,8 @@ void CCameraController::SetProcessHere(BOOL inVal)
 // Linear mode for K2 takes a new dark reference every time exposure is changed
 BOOL CCameraController::PostActionsOK(ControlSet *conSet)
 {
-  return (!mParam->FEItype && !((mParam->K2Type > 1 && mParam->startupDelay < 1.46) ||
-    (mParam->K2Type == 1 && (mParam->startupDelay < mK2MinStartupDelay ||
+  return (!mParam->FEItype && !((mParam->K2Type == K3_TYPE && mParam->startupDelay < 0.5)
+    || (mParam->K2Type == K2_SUMMIT && (mParam->startupDelay < mK2MinStartupDelay ||
     (conSet && conSet->K2ReadMode == LINEAR_MODE)))) && 
     mParam->postActionsOK && mParam->DE_camType < 2 && 
     !mParam->STEMcamera && mParam->noShutter != 1);
@@ -3467,8 +3467,9 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
     B3DCLAMP(faInd, 0, (int)mFrameAliParams.GetSize() - 1);
     mess = "WARNING: ";
     if (!mWinApp->mMacroProcessor->SkipCheckingFrameAli()) {
-      notOK = UtilFindValidFrameAliParams(conSet.K2ReadMode, conSet.useFrameAlign,
-        faInd, newIndex, &mess);
+      notOK = UtilFindValidFrameAliParams(mParam, conSet.K2ReadMode, 
+        IsK3BinningSuperResFrames(&conSet, mParam->K2Type),
+        conSet.useFrameAlign, faInd, newIndex, &mess);
       if (notOK || newIndex != faInd) {
         mWinApp->AppendToLog(mess);
         if (notOK > 0)
@@ -10254,8 +10255,8 @@ bool CCameraController::IsK3BinningSuperResFrames(int K2Type, int doseFrac,
 {
  return doseFrac && readMode != K2_LINEAR_MODE && (saveFrames ||
     (alignFrames && useFrameAlign > 0)) && processing == GAIN_NORMALIZED &&
-    !mSaveUnnormalizedFrames && K2Type == K3_TYPE &&
-    takeBinnedFlag;
+    !(mSaveUnnormalizedFrames && (saveFrames || (alignFrames && useFrameAlign > 1))) &&
+    K2Type == K3_TYPE && takeBinnedFlag;
 }
 
 bool CCameraController::IsK3BinningSuperResFrames(const ControlSet *conSet, int K2Type)
