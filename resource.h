@@ -1432,6 +1432,7 @@
 #define IDC_RBEAM_CONTROL               2457
 #define IDC_RSTAGE_CONTROL              2458
 #define IDC_STAT_BEAM_STAGE             2459
+#define IDC_BUTTON1                     2460
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -1862,7 +1863,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        228
 #define _APS_NEXT_COMMAND_VALUE         33306
-#define _APS_NEXT_CONTROL_VALUE         2460
+#define _APS_NEXT_CONTROL_VALUE         2461
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
