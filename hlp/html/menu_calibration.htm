@@ -1719,14 +1719,14 @@
         it is necessary to adjust the beam so as to give moderately high counts in such 
         an exposure without saturating the camera. This may require a relatively dim 
         beam.</P>
-    <P>For a K2 Summit camera, the procedure takes super-resolution mode images, which 
+    <P>For a K2 Summit or K3 camera, the procedure takes super-resolution mode images, which 
       have the longest startup time.&nbsp; The mean counts do not need to be very 
       high, because the mean counts in such images are very reproducible.&nbsp; The 
       binning does not matter.&nbsp;&nbsp;&nbsp; </P>
       <P>When the operation is started, the program first takes several reference 
         pictures. It then varies the timing of initial blanking to find a duration that 
         will occlude about the first half of the exposure.&nbsp; Then it takes many 
-        pictures (100 by default, or 40 for K2 Summit) after adjusting the timing 
+        pictures (100 by default, or 40 for K2 Summitor K3) after adjusting the timing 
         parameters to give this amount of extra beam blanking; the counts in such 
         pictures indicate how long this blanking occurred during each exposure. From the 
         range of values, the program estimates values for several properties: 
@@ -1740,7 +1740,7 @@
       after the image is acquired and returned.&nbsp; During the test images, it will 
       unblank at various times after the acquisition is requested, but still not 
       reblank until the image is returned.</P>
-    <P><i>For a K2 Summit camera</i>, the procedure starts with a much longer initial 
+    <P><i>For a K2 Summit camera but not K3</i>, the procedure starts with a much longer initial 
       blanking to save time.&nbsp; If this blanking is too long, a shorter value can 
       be set with the general property &#39;CalibTimingK2InitialStartup&#39;.&nbsp; Because a 
       startup delay measured in linear or counting mode with earlier versions of 
@@ -1750,17 +1750,25 @@
       the program will tell you that it is not safe to use and recommend setting the delay above the default 
       minimum.&nbsp; Although it is possible to add the property &#39;K2MinStartupDelay&#39; with a number 
       less than your measured delay, experience has shown that this is unreliable.&nbsp; 
-      As of SerialEM 3.7 (June 30, 2018), exposures with dose fractionation will have 
+      This property has no effect with a K3, where initial indications are that the 
+      startup delay is much shorter and more reliable.</P>
+    <P>As of SerialEM 3.7 (June 30, 2018), K2 and K3 exposures with dose fractionation will have 
       an added delay of 5 ms per frame by default (set by the camera property 
       &#39;StartDelayPerFrame&#39;).&nbsp; This addition should give reliable timing even with 
       the default minimum startup delay.&nbsp; The signs that the startup delay are 
       too short are: 
       when calibrating image shift, images after the first one may be smeared or the 
       calibration may be bad; when taking tilt series, images after the first few 
-      tilts may be smeared; when saving frames, the final frames of the exposure may 
-      have excessive drift within each frame.&nbsp; If turning off the Post-actions 
+      tilts may be smeared; when saving frames during tilt series, the final frames of the exposure may 
+      have excessive drift within each frame; when using the MultipleRecord script 
+      command and saving frames, the frames near the end of the exposure may shift to 
+      the next position.&nbsp; If turning off the Post-actions 
       option in the Camera menu solves the problem, then the StartupDelay is too 
       short.</P>
+    <P>Saving frames with the MultipleRecords&nbsp;command, taking two off-center 
+      shots and a center shot after them, is an efficient way to test whether the 
+      startup delay, or possibly the added time per frame, is too short.&nbsp; 
+      Problems will appear in the first two sets of frames.</P>
     <P><i>For a STEM camera</i>, the program does not use the mean counts in an exposure but 
       instead finds the line in the image where the beam was unblanked.&nbsp; To take 
       interpretable images, it cancels any contrast inversion or image rotation being 

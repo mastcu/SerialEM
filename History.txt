@@ -3,6 +3,11 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+11/4/18: Got size restrictions on frame alignment sets working correctly for
+K3.  Allowed post-actions with K3 if StartupDelay is at least 0.5.
+
+11/4/18: Fixed handling of probe mode and defocus/beam changes, broken 10.21.
+
 10/29/18: Added focus, stage, and screen control to scope control panel.
 
 10/29/18: Images from a Dumb Falcon 3 (no advanced scripting) are scaled by

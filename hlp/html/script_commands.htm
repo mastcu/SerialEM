@@ -774,7 +774,7 @@
             unconditionally; if # is negative (-1), it simply records the current time as
             the time of the last update.&nbsp; In order for the time interval to be kept 
             track of between runs of the program, the property IgnoreShortTermCals must not 
-            be set.</TD>
+            be set.  This command gives an error on a K3.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style8">AlignWholeTSOnly [#]</TD>
@@ -1791,7 +1791,7 @@
           <TD>Starts one or more time-consuming operations: Buffer cycle (Bu), Refill
             refrigerant on FEI (Re), Inventory cassettes (In), Loader buffer cycle (Lo), 
             Unload cartridge (Un), Dark
-            reference update for K2 (Da), Refill Stage tank&nbsp; (RS) or Refill Transfer 
+            reference update for K2 only, not K3 (Da), Refill Stage tank&nbsp; (RS) or Refill Transfer 
             tank (RT) on JEOL, or Flash FEG (FF) on JEOL.&nbsp; Operations are identified by the first two
             letters of whatever full word you use (case insensitive).&nbsp; Each operation
             except Inventory and Unload cartridge must be followed by an interval in hours (#).&nbsp; If # is &gt;

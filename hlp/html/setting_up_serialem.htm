@@ -1754,12 +1754,13 @@
         Camera or Gatan Camera with One Shutter (Priority 2)</B></P>
       <P>Calibration of the timing of a Tietz camera, or a Gatan camera with only one 
         shutter, is needed only to allow the program to takes actions (e.g., tilt and 
-        image shift) during image readout. It is not needed for Eagle cameras where 
+        image shift) during image readout or frame-saving. It is not needed for FEI or 
+        DE cameras where 
         these actions are not allowed because the timing is inherently more 
         unpredictable. Change the 'Trial' camera parameters so that the exposure time is 
         0.4 seconds and set the binning to get a 1024x1024 pixel image. Take a 'Trial' 
         picture without a specimen and adjust the beam to give an image with moderately 
-        high counts (between 1/3 and 3/4 of camera saturation), except on a K2.&nbsp; 
+        high counts (between 1/3 and 3/4 of camera saturation), except on a K2 or K3.&nbsp; 
         The timing routine will use super-resolution mode for a K2, and does not need very 
         high counts. Then select <A href="menu_calibration.htm#hid_calibration_cameratiming">
           Camera Timing</A> in the Calibration menu and accept the default entries. This 
@@ -1767,7 +1768,10 @@
         estimate the delay time for the exposure to start from the image intensity. It 
         will recommend values for StartupDelay and ExtraBeamTime. Insert these in the 
         properties file. If the procedure measures a delay successfully, then you can 
-        set DefaultActAfterExposures to 1.</P>
+        set DefaultActAfterExposures to 1.&nbsp; For a K2, you will probably see output 
+        that suggests just using the default minimum startup delay.&nbsp; See <A href="menu_calibration.htm#hid_calibration_cameratiming">
+          Camera Timing</A> for details on this and on the signs that the startup delay 
+        is too short.</P>
     <P>&nbsp;</P>
       <P><A name="setup_tietz_binning"></A><B>Setting Tietz and Eagle Camera Binning 
         Offsets (Priority 1 for Eagle and some Tietz)</B></P>
