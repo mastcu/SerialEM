@@ -154,6 +154,7 @@ SCOPE_SAMENAME(CamOneInt, GetApertureSize);
 SCOPE_SAMENAME(ScopeSetTwoInt, SetApertureSize);
 SCOPE_SAMENAME(ScopeSetIntGetTwoDbl, GetAperturePosition);
 SCOPE_SAMENAME(ScopeSetIntTwoDbl, SetAperturePosition);
+SCOPE_SAMENAME(ScopeGetSetInt, GoToNextPhasePlatePos);
 SCOPE_SAMENAME(CamGetTwoInt, GetNumStartupErrors);
 SCOPE_SAMENAME(CamTwoInt, BeginThreadAccess);
 SCOPE_SAMENAME(ScopeSetInt, EndThreadAccess);
