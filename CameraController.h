@@ -865,7 +865,7 @@ public:
   static void AddStatsAndSleep(CameraThreadData * td, DWORD &curTime, DWORD &lastTime,
     int &numScan, double &intervalSum, double &intervalSumSq, int stepInterval);
 
-  BOOL PostActionsOK(ControlSet *conSet = NULL);
+  BOOL PostActionsOK(ControlSet *conSet = NULL, bool alignHereOK = false);
   double RefMemoryUsage(void);
   void TestGainFactor(short * array, int sizeX, int sizeY, int binning);
   void SetAMTblanking();
@@ -964,6 +964,7 @@ int TargetSizeForTasks(CameraParameters *camParam = NULL);
 void RestoreGatanOrientations(void);
 void GetMergeK2DefectList(int DMind, CameraParameters *param, bool errToLog);
 bool IsConSetSaving(ControlSet *conSet, int setNum, CameraParameters *param, bool K2only);
+bool CanWeAlignFalcon(CameraParameters *param, BOOL savingEnabled, bool &canSave);
 bool CanProcessHere(CameraParameters *param);
 void FixDirForFalconFrames(CameraParameters * param);
 bool CanPluginDo(int minVersion, CameraParameters * param);

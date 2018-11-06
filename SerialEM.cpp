@@ -2925,9 +2925,9 @@ BOOL CSerialEMApp::LowDoseMode()
   return mScope->GetLowDoseMode();
 }
 
-BOOL CSerialEMApp::ActPostExposure(ControlSet *conSet)
+BOOL CSerialEMApp::ActPostExposure(ControlSet *conSet, bool alignHereOK)
 {
-  return mActPostExposure && mCamera->PostActionsOK(conSet);
+  return mActPostExposure && mCamera->PostActionsOK(conSet, alignHereOK);
 };
 
 

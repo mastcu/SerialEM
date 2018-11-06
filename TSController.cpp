@@ -1128,8 +1128,8 @@ int CTSController::CommonResume(int inSingle, int external, bool stoppingPart)
   mCmat = mShiftManager->IStoSpecimen(mTSParam.magIndex[mSTEMindex]);
   mCinv = mShiftManager->MatInv(mCmat);
 
-  // Get current value of this setting
-  mActPostExposure = mWinApp->ActPostExposure();
+  // Get current value of this setting and use FOR RECORDS ONLY
+  mActPostExposure = mWinApp->ActPostExposure(&mConSets[RECORD_CONSET]);
   
   // Check record parameters versus file
   mCamera->AcquiredSize(csp, camera, sizeX, sizeY);
@@ -3057,7 +3057,7 @@ void CTSController::AcquireLowMagImage(BOOL restoreMag)
     TRACKING_CONSET);
 
   // If indicated, restore the mag after the shot
-  if (restoreMag && mActPostExposure)
+  if (restoreMag && mWinApp->ActPostExposure())
     mCamera->QueueMagChange(mTSParam.magIndex[mSTEMindex]);
   
   mCamera->InitiateCapture(TRACKING_CONSET);

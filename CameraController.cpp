@@ -1614,15 +1614,23 @@ void CCameraController::SetProcessHere(BOOL inVal)
   mParam->processHere = inVal ? 1 : 0;
 }
 
-// Return whether post-actions can be taken safely
+// Return whether post-actions can be taken safely, not whether they are enabled by user
+// This should only be called by MenuTargets, not tasks wanting to use post-actions
 // Linear mode for K2 takes a new dark reference every time exposure is changed
-BOOL CCameraController::PostActionsOK(ControlSet *conSet)
+BOOL CCameraController::PostActionsOK(ControlSet *conSet, bool alignHereOK)
 {
-  return (!mParam->FEItype && !((mParam->K2Type == K3_TYPE && mParam->startupDelay < 0.5)
+  bool alignHereSelected = (conSet && conSet->alignFrames && conSet->useFrameAlign == 1)
+    || alignHereOK;
+  bool weCanAlignDE = mWinApp->mDEToolDlg.CanSaveFrames(mParam) && 
+    (mParam->CamFlags & DE_WE_CAN_ALIGN);
+  bool canSave;
+  bool weCanAlignFalcon = CanWeAlignFalcon(mParam, GetFrameSavingEnabled(), canSave);
+  return ((!mParam->FEItype || (weCanAlignFalcon && alignHereSelected)) && 
+    (mParam->DE_camType < 2 || (weCanAlignDE && alignHereSelected)) && 
+    !((mParam->K2Type == K3_TYPE && mParam->startupDelay < 0.5)
     || (mParam->K2Type == K2_SUMMIT && (mParam->startupDelay < mK2MinStartupDelay ||
     (conSet && conSet->K2ReadMode == LINEAR_MODE)))) && 
-    mParam->postActionsOK && mParam->DE_camType < 2 && 
-    !mParam->STEMcamera && mParam->noShutter != 1);
+    mParam->postActionsOK && !mParam->STEMcamera && mParam->noShutter != 1);
 }
 
 // Return whether the given camera can pre-expose with the given shuttering
@@ -2460,14 +2468,8 @@ void CCameraController::Capture(int inSet, bool retrying)
 
   // Set up Falcon saving
   mTD.FEIacquireFlags = 0;
-  falconHasFrames = IS_FALCON2_OR_3(mParam) && (FCAM_ADVANCED(mParam) || 
-    mFrameSavingEnabled);
 
-  // We can align HERE if the plugin version is sufficient and it is not a Falcon 3
-  // with no local path to server
-  weCanAlignFalcon = falconHasFrames && 
-    mWinApp->mScope->GetPluginVersion() >= PLUGFEI_ALLOWS_ALIGN_HERE &&
-    !(mParam->FEItype == FALCON3_TYPE && mLocalFalconFramePath.IsEmpty());
+  weCanAlignFalcon = CanWeAlignFalcon(mParam, mFrameSavingEnabled, falconHasFrames);
 
   mSavingFalconFrames = falconHasFrames && conSet.saveFrames;
 
@@ -3860,29 +3862,32 @@ int CCameraController::NumAllVsAllFromFAparam(FrameAliParams &faParam, int numAl
       groupSize = 1;
     numAllVsAll += groupSize - 1;
   }
+
+  numFilters = 1;
+  radius2[0] = faParam.rad2Filt1;
+  if (!radius2[0])
+    radius2[0] = 0.06f;
+  refineIter = doSpline = 0;
   mTypeOfAlignError = -1;
   if (numAllVsAll) {
     ndata = B3DMIN(numAllVsAll, numAliFrames) + 1 - groupSize;
     mTypeOfAlignError = B3DCHOICE(((ndata + 1 - groupSize) * (ndata - groupSize)) / 2 >= 
       2 * ndata, 1, 0);
-  }
 
-  refineIter = faParam.doRefine ? faParam.refineIter : 0;
-  doSpline = (faParam.doSmooth && numAliFrames >= faParam.smoothThresh) ? 1 : 0;
-  numFilters = 1;
-  radius2[0] = faParam.rad2Filt1;
-  radius2[1] = faParam.rad2Filt2;
-  radius2[2] = faParam.rad2Filt3;
-  radius2[3] = faParam.rad2Filt4;
-  if (!radius2[0])
-    radius2[0] = 0.06f;
-  for (ind = 1; ind < 4; ind++) {
-    if (radius2[ind] <= 0)
-      break;
-    numFilters++;
+    refineIter = faParam.doRefine ? faParam.refineIter : 0;
+    doSpline = (faParam.doSmooth && numAliFrames >= faParam.smoothThresh) ? 1 : 0;
+
+    radius2[1] = faParam.rad2Filt2;
+    radius2[2] = faParam.rad2Filt3;
+    radius2[3] = faParam.rad2Filt4;
+    for (ind = 1; ind < 4; ind++) {
+      if (radius2[ind] <= 0)
+        break;
+      numFilters++;
+    }
+    if (numFilters > 1)
+      rsSortFloats(radius2, numFilters);
   }
-  if (numFilters > 1)
-    rsSortFloats(radius2, numFilters);
 
   return numAllVsAll;
 }
@@ -9251,9 +9256,15 @@ void CCameraController::SetNonGatanPostActionTime(void)
       mTD.UnblankTime = 1;
   }
   if (mStageQueued || mISQueued || mBeamTiltQueued || mMagQueued || 
-    (mDriftISQueued && mBeamWidth <= 0.))
+    (mDriftISQueued && mBeamWidth <= 0.)) {
     mTD.PostActionTime = (int)(1000. * (mParam->startupDelay + mExposure + 
     mTD.DMsettling + mParam->extraBeamTime));
+
+    // If there is a post-action for a DE or Falcon, it is solely so that frames can be
+    // aligned here; so set it not to happen until the image is returned
+    if (mParam->FEItype || mParam->DE_camType >= 2)
+      mTD.PostActionTime += 60000;
+  }
 }
 
 int CCameraController::GetArrayForImage(CameraThreadData * td, long & arrSize, int index)
@@ -10224,12 +10235,8 @@ CString CCameraController::MakeFullDMRefName(CameraParameters *camP, const char 
 bool CCameraController::IsConSetSaving(ControlSet *conSet, int setNum,
   CameraParameters *param, bool K2only)
 {
-  bool falconCanSave = (IS_BASIC_FALCON2(param) && GetMaxFalconFrames(param) && 
-    mFrameSavingEnabled) || 
-    (IS_FALCON2_OR_3(param) && (param->CamFlags & PLUGFEI_CAN_DOSE_FRAC));
-  bool weCanAlignFalcon = falconCanSave && 
-    mWinApp->mScope->GetPluginVersion() >= PLUGFEI_ALLOWS_ALIGN_HERE &&
-    !(param->FEItype == FALCON3_TYPE && mLocalFalconFramePath.IsEmpty());
+  bool falconCanSave;
+  bool weCanAlignFalcon = CanWeAlignFalcon(param, mFrameSavingEnabled, falconCanSave);
   BOOL DEcanSave = mWinApp->mDEToolDlg.CanSaveFrames(param);
   bool weCanAlignDE = DEcanSave && (param->CamFlags & DE_WE_CAN_ALIGN);
 
@@ -10247,6 +10254,18 @@ bool CCameraController::IsConSetSaving(ControlSet *conSet, int setNum,
              (!K2only && (weCanAlignFalcon || weCanAlignDE))) &&
             (conSet->alignFrames || alignAnyway)))); // and align should be done
 }
+
+// Returns whether the Falcon can save frames and whether we can align HERE, which is if
+// the plugin version is sufficient and it is not a Falcon 3 with no local path to server
+bool CCameraController::CanWeAlignFalcon(CameraParameters *param, BOOL savingEnabled, 
+  bool &canSave)
+{
+  canSave = (IS_BASIC_FALCON2(param) && GetMaxFalconFrames(param) && savingEnabled) || 
+    (IS_FALCON2_OR_3(param) && (param->CamFlags & PLUGFEI_CAN_DOSE_FRAC));
+  return canSave && mWinApp->mScope->GetPluginVersion() >= PLUGFEI_ALLOWS_ALIGN_HERE &&
+    !(param->FEItype == FALCON3_TYPE && mLocalFalconFramePath.IsEmpty());
+}
+
 
 // Returns true if all conditions are satisfied for saving binned frames from K3 camera
 bool CCameraController::IsK3BinningSuperResFrames(int K2Type, int doseFrac, 

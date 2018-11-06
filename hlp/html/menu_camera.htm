@@ -388,7 +388,13 @@
         tilting. Stage tilting is the most noticeable action, because it means that 
         when you stop the Tilt Series Controller, it will often have already gone on to 
         the next tilt. If this behavior is problematic, you can disable it with this 
-        command.</P>
+        command.&nbsp; For some cameras, the timing is too unpredictable and 
+        post-actions are completely disabled.&nbsp; For Falcon and Direct Electron 
+        cameras that are configured so that frames can be aligned in SerialEM, 
+        post-actions are allowed only for images with such alignment, to allow them to 
+        be done after the summed image is returned from the camera but before the 
+        alignment is performed.&nbsp; This command will be enabled for such a camera, 
+        but the post-actions will occur only when aligning frames.</P>
       <P><A NAME="hid_camera_divideby2"></A><B>Divide 16-bit by 2 command (Camera menu)</B></P>
       <P>This command toggles a mode in which all images from a 16-bit camera are divided 
         by 2 in the camera plugin, prior to being received by SerialEM. In this mode, 

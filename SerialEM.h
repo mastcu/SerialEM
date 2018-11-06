@@ -390,7 +390,7 @@ public:
   BOOL StartedTiltSeries();
   BOOL DoingTiltSeries();
   GetSetMember(BOOL, ActPostExposure)
-  BOOL ActPostExposure(ControlSet *conSet = NULL);
+  BOOL ActPostExposure(ControlSet *conSet = NULL, bool alignHereOK = false);
   BOOL DoingComplexTasks();
   GetSetMember(BOOL, SmallFontsBad)
   GetSetMember(BOOL, DisplayNot120DPI)

@@ -1848,13 +1848,13 @@ void CMenuTargets::OnUpdateCameraMontagetrial(CCmdUI* pCmdUI)
 
 void CMenuTargets::OnCameraPostactions() 
 {
-  mWinApp->SetActPostExposure(!mWinApp->ActPostExposure()); 
+  mWinApp->SetActPostExposure(!mWinApp->ActPostExposure(NULL, true)); 
 }
 
 void CMenuTargets::OnUpdateCameraPostactions(CCmdUI* pCmdUI) 
 {
-  pCmdUI->Enable(mCamera->PostActionsOK());
-  pCmdUI->SetCheck(mWinApp->ActPostExposure() ? 1 : 0);
+  pCmdUI->Enable(mCamera->PostActionsOK(NULL, true));
+  pCmdUI->SetCheck(mWinApp->ActPostExposure(NULL, true) ? 1 : 0);
 }
 
 // Toggle camera with spacebar: either stop a continuous capture,
