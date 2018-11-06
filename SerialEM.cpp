@@ -940,7 +940,10 @@ BOOL CSerialEMApp::InitInstance()
   SEMTrace('1', "Detected system DPI of %d, using DPI %d", mag, mSystemDPI);
 
   // Create the little font for everybody so there is one place to fix this
-  if (mDisplayNot120DPI && mSystemDPI < 120)
+  if (mSmallFontsBad)
+    mLittleFont.CreatePointFont((mDisplayNot120DPI && mSystemDPI < 120) ? 80 : 70,
+      "Microsoft Sans Serif");
+  else if (mDisplayNot120DPI && mSystemDPI < 120)
      mLittleFont.CreatePointFont(80, "Microsoft Sans Serif");
   else
      mLittleFont.CreatePointFont(60, "Small Fonts");
