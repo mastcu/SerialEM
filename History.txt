@@ -3,7 +3,7 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
-11/5/18: Added optional maximum beam diameter to AutocenterBeam and
+11/5/18: Added optional maximum beam shift to AutocenterBeam and
 CenterBeamFromImage commands.
 
 11/5/18: Enabled post-actions for Falcon and DE cameras when aligning frames

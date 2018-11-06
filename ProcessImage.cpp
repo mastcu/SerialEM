@@ -952,7 +952,7 @@ void CProcessImage::OnTasksCenterbeam()
 }
 
 int CProcessImage::CenterBeamFromActiveImage(double maxRadius, double maxError, 
-                                             BOOL useCentroid)
+                                             BOOL useCentroid, double maxMicronShift)
 {
   float shiftX, shiftY, fitErr;
   EMimageBuffer *imBuf = mWinApp->GetActiveNonStackImBuf();
@@ -995,7 +995,7 @@ int CProcessImage::CenterBeamFromActiveImage(double maxRadius, double maxError,
     ProcCentroid(data, type, nx, ny, 0, nx -1 , 0, ny - 1, border, xcen, ycen);
     shiftX = (float)(nx / 2. - xcen);
     shiftY = (float)(ny / 2. - ycen);
-    MoveBeam(imBuf, shiftX, shiftY);
+    MoveBeam(imBuf, shiftX, shiftY, maxMicronShift);
     mMoveBeamStamp = imBuf->mTimeStamp;
     image->UnLock();
     return 0;
@@ -1016,7 +1016,7 @@ int CProcessImage::CenterBeamFromActiveImage(double maxRadius, double maxError,
     mWinApp->AppendToLog("Fit to beam edges has greater than allowed error; beam "
       "was not moved", LOG_OPEN_IF_CLOSED);
   } else {
-    MoveBeam(imBuf, shiftX, shiftY);
+    MoveBeam(imBuf, shiftX, shiftY, maxMicronShift);
     mMoveBeamStamp = imBuf->mTimeStamp;
   }
   return err;
@@ -1043,7 +1043,8 @@ void CProcessImage::EnableMoveBeam(CCmdUI * pCmdUI, bool skipUserPt)
 
 // Move the beam BY the given shift in X and Y, in pixels in the given buffer image
 // Or if imBuf is NULL, move beam by given number of microns in camera coordinates
-int CProcessImage::MoveBeam(EMimageBuffer *imBuf, float shiftX, float shiftY)
+int CProcessImage::MoveBeam(EMimageBuffer *imBuf, float shiftX, float shiftY, 
+  double maxMicronShift)
 {
   double bsX, bsY, bsTot;
   int magInd = imBuf != NULL ? imBuf->mMagInd : mScope->GetMagIndex();
@@ -1063,23 +1064,30 @@ int CProcessImage::MoveBeam(EMimageBuffer *imBuf, float shiftX, float shiftY)
   if (!bInv.xpx || !IStoBS.xpx)
     return 1;
 
-  ScaleMat camToBS = mShiftManager->MatMul(bInv, IStoBS);
-  
-  // Invert Y when getting beam shift - then there is the usual sign question
-  bsX = camToBS.xpx * shiftX - camToBS.xpy * shiftY;
-  bsY = camToBS.ypx * shiftX - camToBS.ypy * shiftY;
-  mScope->IncBeamShift(bsX, bsY);
-
-  // Message?
+  // First compute shift in microns for message, and to test against limit
   if (imBuf) {
     ScaleMat aInv = mShiftManager->CameraToSpecimen(magInd);
     bsX = aInv.xpx * shiftX - aInv.xpy * shiftY;
     bsY = aInv.ypx * shiftX - aInv.ypy * shiftY;
     bsTot = sqrt(bsX * bsX + bsY * bsY);
     CString message;
-    message.Format("Beam was shifted %.3f microns", bsTot);
-    mWinApp->AppendToLog(message, LOG_MESSAGE_IF_CLOSED);
+    if (maxMicronShift > 0. && bsTot > maxMicronShift) {
+      PrintfToLog("Beam shift of %.3f microns would exceed limit of %.2f; "
+        "beam was not moved", bsTot, maxMicronShift);
+      return 0;
+    } else {
+      message.Format("Beam was shifted %.3f microns", bsTot);
+      mWinApp->AppendToLog(message, LOG_MESSAGE_IF_CLOSED);
+    }
   }
+
+  ScaleMat camToBS = mShiftManager->MatMul(bInv, IStoBS);
+  
+  // Invert Y when getting beam shift - then there is the usual sign question
+  bsX = camToBS.xpx * shiftX - camToBS.xpy * shiftY;
+  bsY = camToBS.ypx * shiftX - camToBS.ypy * shiftY;
+
+  mScope->IncBeamShift(bsX, bsY);
   return 0;
 }
 

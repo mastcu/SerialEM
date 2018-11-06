@@ -4057,23 +4057,14 @@ void CMacroProcessor::NextCommand()
 
   } else if (CMD_IS(CENTERBEAMFROMIMAGE)) {                 // CenterBeamFromImage
     truth = !itemEmpty[1] && itemInt[1] != 0;
-    delISX = 0.;
-
-    // Optional maximum here and in Autocenter is a diameter in microns and the routines
-    // take a radius; here in pixels, below still in microns
-    if (!itemEmpty[2]) {
-      imBuf =  mWinApp->GetActiveNonStackImBuf(); 
-      if ((delISY = mShiftManager->GetPixelSize(imBuf)) == 0)
-        ABORT_LINE("Cannot determine pixel size of the active image for line:\n\n");
-      delISX = itemDbl[2] * 500. / delISY;
-    }
-    index = mWinApp->mProcessImage->CenterBeamFromActiveImage(delISX, 0., truth);
+    delISX = !itemEmpty[2] ? itemDbl[2] : 0.;
+    index = mWinApp->mProcessImage->CenterBeamFromActiveImage(0., 0., truth, delISX);
     if (index > 0 && index <= 3)
       ABORT_LINE("Script aborted centering beam because of no image,\n"
       "unusable image type, or failure to get memory");
 
   } else if (CMD_IS(AUTOCENTERBEAM)) {                      // AutoCenterBeam
-    delISX = itemEmpty[1] ? 0. : itemDbl[1] / 2.;
+    delISX = itemEmpty[1] ? 0. : itemDbl[1];
     if (mWinApp->mMultiTSTasks->AutocenterBeam((float)delISX)) {
       AbortMacro();
       return;

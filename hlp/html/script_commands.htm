@@ -2148,8 +2148,8 @@
         <TR vAlign="top">
           <TD class="style12">AutocenterBeam [#]</TD>
           <TD>Start the Beam Autocenter routine.&nbsp; The optional # sets a maximum 
-            diameter in microns; the beam will not be moved if the circle fit to the beam 
-            edges has a bigger diameter than this value.</TD>
+            beam shift in microns; the beam will not be moved if the shift determined 
+            from the circle fit to the beam edges exceeds this value.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style12">CookSpecimen</TD>
@@ -2167,9 +2167,9 @@
           <TD>Center beam using the existing image in the active buffer by detecting the
             edges of the beam, or from the centroid of the image intensities if #C is
             nonzero. In the latter case the beam should be completely within the camera
-            field.&nbsp; The optional #M sets a maximum diameter in microns; the beam will 
-            not be moved if the circle fit to the beam edges has a bigger diameter than this 
-            value.</TD>
+            field.&nbsp; The optional #M sets a maximum beam shift in microns; the beam will
+            not be moved if the shift determined from the circle fit to the beam edges 
+            exceeds this value.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style12">MeasureBeamSize [#B]</TD>

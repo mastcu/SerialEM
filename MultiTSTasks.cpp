@@ -850,7 +850,7 @@ void CMultiTSTasks::MakeAutocenConset(AutocenParams * param)
 }
 
 // Autocenter beam: takes an optional maximu radius in microns
-int CMultiTSTasks::AutocenterBeam(float maxRadius)
+int CMultiTSTasks::AutocenterBeam(float maxShift)
 {
   int magInd, spotSize, probe;
   int bestMag, bestSpot;
@@ -859,7 +859,7 @@ int CMultiTSTasks::AutocenterBeam(float maxRadius)
   AutocenParams *param;
   LowDoseParams *ldParm;
   FilterParams *filtParm = mWinApp->GetFilterParams();
-  mAcMaxRadius = maxRadius;
+  mAcMaxShift = maxShift;
     
   if (mWinApp->LowDoseMode()) {
     ldParm = mWinApp->GetLowDoseParams() + TRIAL_CONSET;
@@ -936,20 +936,14 @@ int CMultiTSTasks::AutocenterBeam(float maxRadius)
 // The next task is simply to center the beam based on the image
 void CMultiTSTasks::AutocenNextTask(int param)
 {
-  double radius = 0.;
-  float pixel;
   if (!mAutoCentering)
     return;
 
   // If an image was taken, center beam with it
   if (!param) {
     mImBufs->mCaptured = BUFFER_TRACKING;
-    if (mAcMaxRadius > 0.) {
-      pixel = mShiftManager->GetPixelSize(mImBufs);
-      if (pixel)
-        radius = mAcMaxRadius * 1000. / pixel;
-    }
-    mWinApp->mProcessImage->CenterBeamFromActiveImage(radius, 0., mAcUseCentroid > 0);
+    mWinApp->mProcessImage->CenterBeamFromActiveImage(0., 0., mAcUseCentroid > 0, 
+      mAcMaxShift);
   }
 
   // Need another shot if screen was raised or centroid being used; save and set 

@@ -165,10 +165,10 @@ public:
     int &numQuadrant, float &shiftX, float &shiftY, float &fitErr);
   afx_msg void OnTasksCenterbeam();
   afx_msg void OnUpdateTasksCenterbeam(CCmdUI *pCmdUI);
-  int MoveBeam(EMimageBuffer * imBuf, float shiftX, float shiftY);
+  int MoveBeam(EMimageBuffer * imBuf, float shiftX, float shiftY, double maxMicronShift = 0.);
   void EnableMoveBeam(CCmdUI * pCmdUI, bool skipUserPt);
   int CenterBeamFromActiveImage(double maxRadius, double maxError,
-    BOOL useCentroid = false);
+    BOOL useCentroid = false, double maxMicronShift = 0.);
   afx_msg void OnProcessCircleonlivefft();
   afx_msg void OnUpdateProcessCircleonlivefft(CCmdUI *pCmdUI);
   afx_msg void OnProcessFindpixelsize();
