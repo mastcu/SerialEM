@@ -3732,7 +3732,7 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
     } else {
 
       // If writing a com file, just send any flag
-      if (mUseGPUforK2Align[DMind])
+      if (mUseGPUforK2Align[2])
         gpuFlags = GPU_FOR_SUMMING;
       if (faParam.outputFloatSums)
         alignFlags |= K2FA_KEEP_PRECISION;
