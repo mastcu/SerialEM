@@ -1302,11 +1302,7 @@ void CCameraSetupDlg::ManageCamera()
   CRect rect;
   ControlSet *conSets = &mConSets[mActiveCameraList[mCurrentCamera] * MAX_CONSETS];
   CString title = "Camera Parameters   --   " + mParam->name;
-  mFalconCanSave = (IS_BASIC_FALCON2(mParam) && mCamera->GetMaxFalconFrames(mParam)) ||
-    (IS_FALCON2_OR_3(mParam) && (mParam->CamFlags & PLUGFEI_CAN_DOSE_FRAC));
-  mWeCanAlignFalcon = mFalconCanSave && 
-    mWinApp->mScope->GetPluginVersion() >= PLUGFEI_ALLOWS_ALIGN_HERE && 
-    !(mParam->FEItype == FALCON3_TYPE && mCamera->GetLocalFalconFramePath().IsEmpty());
+  mWeCanAlignFalcon = mCamera->CanWeAlignFalcon(mParam, true, mFalconCanSave); 
   states[0] = mNumCameras > 1;
   states[2] = !mParam->STEMcamera && !IS_FALCON2_OR_3(mParam);  // Shutter and other sizes
   states[4] = !mParam->STEMcamera;    // Dose
