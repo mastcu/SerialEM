@@ -92,14 +92,19 @@ void CDistortionTasks::CalibrateDistortion()
   float targetShiftX, targetShiftY;
   double ISX, ISY, stageX, stageY, stageZ;
   CString report;
-  double angle = mWinApp->mScope->GetTiltAngle();
+  double angle = DTOR * mWinApp->mScope->GetTiltAngle();
+  float xTiltFac = (float)(HitachiScope ? cos(angle) : 1.);
+  float yTiltFac = (float)(HitachiScope ? 1. : cos(angle));
+
   ScaleMat aMat = mShiftManager->StageToCamera(mWinApp->GetCurrentCamera(), 
     mScope->GetMagIndex());
 
   mBinning = conSet->binning;
   mAInv = mShiftManager->MatInv(aMat);
-  mAInv.ypx /= (float)cos(DTOR * angle);
-  mAInv.ypy /= (float)cos(DTOR * angle);
+  mAInv.xpx /= xTiltFac;
+  mAInv.xpy /= xTiltFac;
+  mAInv.ypx /= yTiltFac;
+  mAInv.ypy /= yTiltFac;
 
   if (!KGetOneInt("Direction to move (0-7; 0=right, 1=45 deg, 2=up, etc):", 
     mDirectionIndex))

@@ -339,7 +339,7 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
   int ix, iy, i, fullX, fullY, binning, numBlocksX, numBlocksY, frameDelX, frameDelY;
   int left, right, top, bottom, firstUndone, lastDone, firstPiece, area;
   double delISX, delISY, baseZ, needed, currentUsage, ISX, ISY;
-  float memoryLimit, stageX, stageY, cornX, cornY, binDiv;
+  float memoryLimit, stageX, stageY, cornX, cornY, binDiv, xTiltFac, yTiltFac;
   BOOL tryForMemory, focusFeasible, external, useHQ, alignable, useVorSinLD;
   int already, borderTry, setNum, useSetNum, cookSkip = 0;
   ScaleMat bMat, aInv;
@@ -601,11 +601,13 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
       }
       
       mBinv = mShiftManager->MatInv(bMat);
-      baseZ = mScope->GetTiltAngle();
-      mBinv.xpx = mBinv.xpx;
-      mBinv.xpy = mBinv.xpy;
-      mBinv.ypx /= cos(DTOR * baseZ);
-      mBinv.ypy /= cos(DTOR * baseZ);
+      baseZ = cos(DTOR * mScope->GetTiltAngle());
+      xTiltFac = (float)(HitachiScope ? baseZ : 1.);
+      yTiltFac = (float)(HitachiScope ? 1. : baseZ);
+      mBinv.xpx /= xTiltFac;
+      mBinv.xpy /= xTiltFac;
+      mBinv.ypx /= yTiltFac;
+      mBinv.ypy /= yTiltFac;
       
     } else {
       
