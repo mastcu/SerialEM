@@ -1004,7 +1004,7 @@ void CFocusManager::AutoFocusData(float inX, float inY)
   float closerCrit = 0.33f;
   int fullChangeIterLimit = 8;
   float nearZeroAbsCrit = 0.15f, nearZeroRelCrit = 0.1f;
-  CString report, addon;
+  CString report, driftText, addon, changeText;
   float rawDefocus, lastDefocus = mCurrentDefocus;
   bool refocus, testAbs, testDelta;
   int abort = 0;
@@ -1013,20 +1013,21 @@ void CFocusManager::AutoFocusData(float inX, float inY)
     return;
 
   report.Format("Measured defocus = %.2f microns", mCurrentDefocus);
-  if (!mVerbose && mNumShots == 3) {
-    addon.Format("                  drift = %.2f nm/sec", mLastNmPerSec);
-    report += addon;
-  }
-  mWinApp->AppendToLog(report, LOG_SWALLOW_IF_CLOSED);
+  if (!mVerbose && mNumShots == 3)
+    driftText.Format("    drift = %.2f nm/sec", mLastNmPerSec);
+  if (mDoChangeFocus <= 0)
+    mWinApp->AppendToLog(report + driftText, LOG_SWALLOW_IF_CLOSED);
   if (mDoChangeFocus > 0) {
     fullDiff = diff = mTargetDefocus - mCurrentDefocus;
 
     // Limit the change
     B3DCLAMP(diff, -changeLimit, changeLimit);
-    if (fabs(diff - fullDiff) < 0.1)
+    changeText.Format("   changed by %.2f", diff);
+    if (fabs(diff - fullDiff) < 0.1) {
       mNumFullChangeIters++;
+      changeText += " to target";
+    }
     mCumulFocusChange += (float)diff;
-
     if (fabs(rawDefocus) < B3DMAX(0.15, 0.1 * diff))
       mNumNearZeroCorr++;
       
@@ -1088,6 +1089,8 @@ void CFocusManager::AutoFocusData(float inX, float inY)
         abort = FOCUS_ABORT_TOO_MANY_ITERS;
         addon = "too may iterations have been run";
       }
+      mWinApp->AppendToLog(report + (abort ? "" : changeText) + driftText, 
+        LOG_SWALLOW_IF_CLOSED);
       if (abort) {
         mLastAborted = abort;
         mScope->SetDefocus(mOriginalDefocus);
@@ -1100,12 +1103,14 @@ void CFocusManager::AutoFocusData(float inX, float inY)
         AutoFocusStart(FOCUS_AUTOFOCUS, mUseViewInLD, mAutofocusIterNum + 1);
         return;
       }
+    } else {
+      mWinApp->AppendToLog(report + changeText + driftText, LOG_SWALLOW_IF_CLOSED);
     }
   } else if (!mDoChangeFocus) {
     report.Format("The current defocus is computed to be %6.2f microns", 
       mCurrentDefocus);
     mWinApp->AppendToLog(report, LOG_MESSAGE_IF_CLOSED);
-  }
+  } 
   FocusTasksFinished();
   SEMTrace('M', "Autofocus Done");
 }
