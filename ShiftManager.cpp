@@ -1800,7 +1800,7 @@ float CShiftManager::GetPixelSize(int inCamera, int inMagIndex)
 float CShiftManager::GetPixelSize(EMimageBuffer * imBuf)
 {
   float scale, rotation, pixel = 0.;
-  if (imBuf->mBinning && imBuf->mCamera >= 0 && imBuf->mMagInd) {
+  if (imBuf && imBuf->mBinning && imBuf->mCamera >= 0 && imBuf->mMagInd) {
     pixel = (float)(imBuf->mBinning * GetPixelSize(imBuf->mCamera, imBuf->mMagInd));
     if (GetScaleAndRotationForFocus(imBuf, scale, rotation))
       pixel /= scale;

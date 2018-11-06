@@ -4063,7 +4063,7 @@ void CMacroProcessor::NextCommand()
     // take a radius; here in pixels, below still in microns
     if (!itemEmpty[2]) {
       imBuf =  mWinApp->GetActiveNonStackImBuf(); 
-      if (!imBuf || !(delISY = mShiftManager->GetPixelSize(imBuf)))
+      if ((delISY = mShiftManager->GetPixelSize(imBuf)) == 0)
         ABORT_LINE("Cannot determine pixel size of the active image for line:\n\n");
       delISX = itemDbl[2] * 500. / delISY;
     }
