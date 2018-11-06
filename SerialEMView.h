@@ -182,7 +182,7 @@ public:
     FloatVec *drawnX, FloatVec *drawnY);
   void GetSingleAdjustmentForItem(EMimageBuffer *imBuf, CMapDrawItem *item, float &delPtX,
     float & delPtY);
-  void DrawVectorPolygon(CClientDC &cdc, CRect *rect, EMimageBuffer *imBuf,
+  void DrawVectorPolygon(CClientDC &cdc, CRect *rect, CMapDrawItem *item, EMimageBuffer *imBuf,
     FloatVec &convX, FloatVec &convY, float delXstage, float delYstage, 
     float delPtX, float delPtY, FloatVec *drawnX, FloatVec *drawnY);
 };

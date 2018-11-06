@@ -744,7 +744,7 @@ void CSerialEMView::DrawImage(void)
       numPoints = item->mNumPoints;
     }
 
-    if (!item->mNumPoints || !item->mDraw || 
+    if (!item->mNumPoints || (!item->mDraw && iDraw >= 0) || 
       (item->mRegistration != regMatch && !mDrawAllReg && iDraw >= 0))
       continue;
     SetStageErrIfRealignedOnMap(imBuf, item);
@@ -821,8 +821,9 @@ void CSerialEMView::DrawImage(void)
               item->mPtY[pt], delPtX, delPtY, &drawnXallHole, &drawnYallHole);
         } else if (doMultiHole) {
           for (int pt = numPoints; pt < inHoleStart - 1; pt++)
-            DrawVectorPolygon(cdc, &rect, imBuf, convXinHole, convYinHole, item->mPtX[pt],
-              item->mPtY[pt], delPtX, delPtY, &drawnXallHole, &drawnYallHole);
+            DrawVectorPolygon(cdc, &rect, item, imBuf, convXinHole, convYinHole, 
+            item->mPtX[pt], item->mPtY[pt], delPtX, delPtY, &drawnXallHole, 
+            &drawnYallHole);
         }
 
         // Adjust all-hole vectors to item center and get the convex boundary
@@ -852,7 +853,7 @@ void CSerialEMView::DrawImage(void)
 
         // Now if doing multiholes, draw a circle on each that is either acquire or
         // multi inhole radius
-        if (doMultiHole) {
+        if (doMultiHole && item->mDraw) {
           for (int pt = numPoints; pt < inHoleStart; pt++) {
             StageToImage(imBuf, item->mPtX[pt] + item->mStageX, 
               item->mPtY[pt] + item->mStageY, ptX, ptY);
@@ -862,7 +863,7 @@ void CSerialEMView::DrawImage(void)
         }
 
         // Inside a hole, circle around each area
-        if (doInHole) {
+        if (doInHole && item->mDraw) {
           for (int pt = inHoleStart; pt < inHoleEnd; pt++) {
             StageToImage(imBuf, item->mPtX[pt] + holeXoffset, 
               item->mPtY[pt] + holeYoffset, ptX, ptY);
@@ -883,10 +884,10 @@ void CSerialEMView::DrawImage(void)
     if (iDraw >= 0 && mAcquireBox && showMultiOnAll && item->mAcquire && 
       item->mNumPoints == 1) {
       GetSingleAdjustmentForItem(imBuf, item, delPtX, delPtY);
-      CPen pnAcquire(PS_SOLID, 1, COLORREF(RGB(255, 255, 0)));  
+      CPen pnAcquire(PS_SOLID, 1, COLORREF(RGB(255, 0, 170)));  
       CPen *pOldPen = cdc.SelectObject(&pnAcquire);
-      DrawVectorPolygon(cdc, &rect, imBuf, convXallHole, convYallHole, item->mStageX, 
-        item->mStageY, delPtX, delPtY, NULL, NULL);
+      DrawVectorPolygon(cdc, &rect, item, imBuf, convXallHole, convYallHole, 
+        item->mStageX, item->mStageY, delPtX, delPtY, NULL, NULL);
       cdc.SelectObject(pOldPen);
     }
     mAdjustPt = adjSave;
@@ -962,19 +963,21 @@ void CSerialEMView::DrawMapItemBox(CClientDC &cdc, CRect *rect, CMapDrawItem *it
       drawnX->push_back(stX);
       drawnY->push_back(stY);
     }
-    StageToImage(imBuf, stX, stY, ptX, ptY);
-    MakeDrawPoint(rect, imBuf->mImage, ptX + delPtX, ptY + delPtY, &point);
-    if (bpt)
-      cdc.LineTo(point);
-    else
-      cdc.MoveTo(point);
+    if (item->mDraw) {
+      StageToImage(imBuf, stX, stY, ptX, ptY);
+      MakeDrawPoint(rect, imBuf->mImage, ptX + delPtX, ptY + delPtY, &point);
+      if (bpt)
+        cdc.LineTo(point);
+      else
+        cdc.MoveTo(point);
+    }
   }
 }
 
 // Draw a polygon from points in a vector, with the given adjustment to the stage
 // positions, a common montage adjustment, and potentially storing in more vectors
-void CSerialEMView::DrawVectorPolygon(CClientDC &cdc, CRect *rect, EMimageBuffer *imBuf,
-  FloatVec &convX, FloatVec &convY, float delXstage, float delYstage, 
+void CSerialEMView::DrawVectorPolygon(CClientDC &cdc, CRect *rect, CMapDrawItem *item,
+  EMimageBuffer *imBuf, FloatVec &convX, FloatVec &convY, float delXstage,float delYstage, 
   float delPtX, float delPtY, FloatVec *drawnX, FloatVec *drawnY)
 {
   CPoint point;
@@ -987,12 +990,14 @@ void CSerialEMView::DrawVectorPolygon(CClientDC &cdc, CRect *rect, EMimageBuffer
       drawnX->push_back(stX);
       drawnY->push_back(stY);
     }
-    StageToImage(imBuf, stX, stY, ptX, ptY);
-    MakeDrawPoint(rect, imBuf->mImage, ptX + delPtX, ptY + delPtY, &point);
-    if (bpt)
-      cdc.LineTo(point);
-    else
-      cdc.MoveTo(point);
+    if (item->mDraw) {
+      StageToImage(imBuf, stX, stY, ptX, ptY);
+      MakeDrawPoint(rect, imBuf->mImage, ptX + delPtX, ptY + delPtY, &point);
+      if (bpt)
+        cdc.LineTo(point);
+      else
+        cdc.MoveTo(point);
+    }
   }
 }
 

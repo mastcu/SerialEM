@@ -2748,7 +2748,7 @@ CArray<CMapDrawItem *, CMapDrawItem *> *CNavigatorDlg::GetMapDrawItems(
   CMapDrawItem **acquireBox)
 {
   float angle, tiltAngle;
-  bool showMulti, asIfLowDose;
+  bool showMulti, asIfLowDose, showAcquirePolys;
   if (!SetCurrentItem())
     mItem = NULL;
   *acquireBox = NULL;
@@ -2760,8 +2760,11 @@ CArray<CMapDrawItem *, CMapDrawItem *> *CNavigatorDlg::GetMapDrawItems(
     mHelper->MultipleHolesAreSelected()) && 
     ((m_bShowAcquireArea && (mHelper->GetEnableMultiShot() & 1)) ||
     (mHelper->mMultiShotDlg && !mHelper->mMultiShotDlg->RecordingISValues()));
-  if ((imBuf->mHasUserPt || imBuf->mHasUserLine) && (m_bShowAcquireArea || 
-    showMulti) && RegistrationUseType(imBuf->mRegistration) != NAVREG_IMPORT) {
+  showAcquirePolys = showMulti && (mHelper->GetEnableMultiShot() & 2) &&
+    !(imBuf->mHasUserPt || imBuf->mHasUserLine);
+  if ((imBuf->mHasUserPt || imBuf->mHasUserLine || showAcquirePolys) && 
+    (m_bShowAcquireArea || showMulti) && 
+    RegistrationUseType(imBuf->mRegistration) != NAVREG_IMPORT) {
 
       // If there is a user point and the box is on to draw acquire area, get needed
       // parameters: camera and mag index from current state or low dose or montage params
@@ -2890,7 +2893,8 @@ CArray<CMapDrawItem *, CMapDrawItem *> *CNavigatorDlg::GetMapDrawItems(
         }
         box->mRegistration = mCurrentRegistration;
         box->mType = ITEM_TYPE_POLYGON;
-        box->mColor = DEFAULT_SUPER_COLOR;
+        box->mColor = POINT_ACQUIRE_COLOR;
+        box->mDraw = !showAcquirePolys;
       }
   }
   return &mItemArray;
