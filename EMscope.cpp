@@ -4466,8 +4466,8 @@ void CEMscope::GotoLowDoseArea(int inArea)
   // and impose accumulated beam shifts from this mode after translating to new mode
   // First back off a beam shift; it didn't work to include that in the converted shift
   if (ldArea->probeMode >= 0) {
-    if (mProbeMode != ldArea->probeMode && mLowDoseSetArea >= 0) {
-      if ((mLdsaParams->beamDelX || mLdsaParams->beamDelY) && 
+    if (mProbeMode != ldArea->probeMode) {
+      if (mLowDoseSetArea >= 0 && (mLdsaParams->beamDelX || mLdsaParams->beamDelY) && 
         mProbeMode == mLdsaParams->probeMode && !splitBeamShift)
         IncBeamShift(-mLdsaParams->beamDelX, -mLdsaParams->beamDelY);
       SetProbeMode(ldArea->probeMode, true);
@@ -5676,7 +5676,7 @@ BOOL CEMscope::SetProbeMode(int micro, BOOL fromLowDose)
         
       }
       PLUGSCOPE_SET(ProbeMode, (micro ? imMicroProbe : imNanoProbe));
-      mProbeMode = micro ? 1 : 0;
+      mReturnedProbeMode = mProbeMode = micro ? 1 : 0;
       if (!ifSTEM) {
         mShiftManager->SetGeneralTimeOut(GetTickCount(), mPostProbeDelay);
         if (success && !SetImageShift(ISX, ISY))
