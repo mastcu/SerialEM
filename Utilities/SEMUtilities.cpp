@@ -912,8 +912,8 @@ double UtilGoodAngle(double angle)
 // Finds a frame alignment parameter that fits the given restriction on size and alignment
 // Return value is 0 if originally selected one or just one other one is valid, 1-3 if
 // none are valid, and -1 to -3 if new one is one of several that are valid
-int UtilFindValidFrameAliParams(int readMode, int whereAlign,
-  int curIndex, int &newIndex, CString *message)
+int UtilFindValidFrameAliParams(CameraParameters *camParam, int readMode, 
+  bool takeK3Binned, int whereAlign, int curIndex, int &newIndex, CString *message)
 {
   CString str;
   int ind, retval = 0, numValid = 0, firstValid = -1;
@@ -924,13 +924,18 @@ int UtilFindValidFrameAliParams(int readMode, int whereAlign,
   if (!whereAlign || curIndex < 0 || curIndex >= (int)params->GetSize())
     return 0;
 
+  // The passed in boolean must combine whether the set is gain normalized, the setting of 
+  // taking K3 binned, and whether frames are to be saved unnormalized anyway
+  if (camParam->K2Type == K3_TYPE && readMode != LINEAR_MODE)
+    readMode = B3DCHOICE(takeK3Binned, COUNTING_MODE, SUPERRES_MODE);
+
   // First check, is the selected on valid with its restrictions
   if (faParam->sizeRestriction && sWinApp->GetAnySuperResMode() && 
     !BOOL_EQUIV(readMode != SUPERRES_MODE, faParam->sizeRestriction != SUPERRES_MODE)) {
       retval += 1;
       if (message) {
-        str.Format("The camera parameters are for %sresolution images but the selected"
-          "\r\nalignment parameters are marked as only for %sresolution images.", 
+        str.Format("The camera parameters will give %sresolution frames but\r\n"
+          "the selected alignment parameters are marked as only for %sresolution frames.", 
           readMode == SUPERRES_MODE ? "super-" : "normal ",
           faParam->sizeRestriction == SUPERRES_MODE ? "super-" : "normal");
         *message += str;
