@@ -3,6 +3,18 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+11/8/18: Fixed handling of focus in Low Dose on probe mode changes and going
+in and out of LM.
+
+11/8/18: Added delay in checking JEOL neutral values to prevent false alarms.
+
+11/8/18: Fixed default to be that plugin cameras cannot return processed
+images.
+
+11/8/18: Added property to switch low dose areas at zero image shift.
+
+11/8/18: Fixed averaging of dark references, broken 8/3/18.
+
 11/5/18: Added optional maximum beam shift to AutocenterBeam and
 CenterBeamFromImage commands.
 

@@ -354,6 +354,7 @@ CEMscope::CEMscope()
   mLastLDpolarity = 1;
   mNextLDpolarity = 1;
   mLdsaParams = NULL;
+  mChangeAreaAtZeroIS = false;
   mUseIllumAreaForC2 = false;
   mLDBeamTiltShifts = false;
   mShutterlessCamera = 0;
@@ -1419,7 +1420,8 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
 
     // Handle adjusting focus on a probe mode change, record first focus of mode
     if (temProbeChanged) {
-      if (mAdjustFocusForProbe && mFirstFocusForProbe > EXTRA_VALUE_TEST) {
+      if (mAdjustFocusForProbe && mFirstFocusForProbe > EXTRA_VALUE_TEST && 
+        mLastFocusInUpdate != mFirstFocusForProbe) {
         defocus += mLastFocusInUpdate - mFirstFocusForProbe;
         PLUGSCOPE_SET(Defocus, defocus * 1.e-6);
       }
@@ -2448,6 +2450,7 @@ BOOL CEMscope::ChangeImageShift(double shiftX, double shiftY, BOOL bInc)
         magIndex = mPlugFuncs->GetMagnificationIndex();
         if (!mCheckedNeutralIS[magIndex]) {
           mPlugFuncs->SetToNeutral(ID);
+          Sleep(500);
           mPlugFuncs->GetImageShift(&neutISX, &neutISY);
           mCheckedNeutralIS[magIndex] = 1;
           neutXold = NINT8000(mMagTab[magIndex].neutralISX[mNeutralIndex] / 
@@ -4369,7 +4372,7 @@ void CEMscope::UnblankAfterTransient(bool needUnblank, const char *routine)
 void CEMscope::GotoLowDoseArea(int inArea)
 {
   double delISX, delISY, beamDelX, beamDelY;
-  double curISX, curISY, newISX, newISY, focusBeforeLMnonLM;
+  double curISX, curISY, newISX, newISY, centeredISX, centeredISY;
   int curAlpha;
   DWORD magTime;
   LowDoseParams *ldParams = mWinApp->GetLowDoseParams();
@@ -4380,7 +4383,11 @@ void CEMscope::GotoLowDoseArea(int inArea)
   bool fromFocTrial = mLowDoseSetArea == FOCUS_CONSET || mLowDoseSetArea == TRIAL_CONSET;
   bool toFocTrial = inArea == FOCUS_CONSET || inArea == TRIAL_CONSET;
   bool fromSearch = mLowDoseSetArea == SEARCH_AREA;
-  bool splitBeamShift;
+  bool toSearch = inArea == SEARCH_AREA;
+  bool fromView = mLowDoseSetArea == VIEW_CONSET;
+  bool toView = inArea == VIEW_CONSET;
+  bool splitBeamShift, leavingLowMag;
+  bool probeDone = true, changingAtZeroIS;
   if (!sInitialized || mChangingLDArea || sClippingIS)
     return;
 
@@ -4389,10 +4396,15 @@ void CEMscope::GotoLowDoseArea(int inArea)
   // Use designated params if set by nav helper, otherwise use set area params
   if (!mLdsaParams)
     mLdsaParams = ldParams + mLowDoseSetArea;
-  splitBeamShift = !STEMmode && ((mLowDoseSetArea >= 0 && mLdsaParams->magIndex && 
-    mLdsaParams->magIndex < mLowestMModeMagInd && ldArea->magIndex >= mLowestMModeMagInd)
-    || ((mLowDoseSetArea < 0 || mLdsaParams->magIndex >= mLowestMModeMagInd) &&
+
+  // Get some useful flags about what is changing and what to do
+  leavingLowMag = !STEMmode && (mLowDoseSetArea >= 0 && mLdsaParams->magIndex && 
+    mLdsaParams->magIndex < mLowestMModeMagInd && ldArea->magIndex >= mLowestMModeMagInd);
+  splitBeamShift = !STEMmode && (leavingLowMag ||
+    ((mLowDoseSetArea < 0 || mLdsaParams->magIndex >= mLowestMModeMagInd) &&
     ldArea->magIndex && ldArea->magIndex < mLowestMModeMagInd));
+  changingAtZeroIS = !STEMmode &&  mChangeAreaAtZeroIS &&
+    mLowDoseSetArea >= 0 && mLdsaParams->magIndex !=  ldArea->magIndex;
 
   if (GetDebugOutput('L'))
     GetImageShift(curISX, curISY);
@@ -4411,7 +4423,7 @@ void CEMscope::GotoLowDoseArea(int inArea)
   // Keep track of whether Focus is being reached after View
   if (mWinApp->mLowDoseDlg.SameAsFocusArea(inArea) && 
     !mWinApp->mLowDoseDlg.SameAsFocusArea(mLowDoseSetArea))
-    mFocusCameFromView = mLowDoseSetArea == VIEW_CONSET;
+    mFocusCameFromView = fromView;
 
   // If normalizing beam and we are not going to or from view area and intensity is 
   // changing and everything is defined, set beam for view area
@@ -4432,6 +4444,12 @@ void CEMscope::GotoLowDoseArea(int inArea)
   if (mLowDoseSetArea >= 0 && FastMagIndex() != mLdsaParams->magIndex)
     SetMagIndex(mLdsaParams->magIndex);
 
+  // If changing area at zero IS, get the current centered shift and reset it
+  if (changingAtZeroIS) {
+    GetLDCenteredShift(centeredISX, centeredISY);
+    SetLDCenteredShift(0., 0.);
+  }
+
   // Do image shift at higher mag for consistency in beam shifts, so do it now if
   // leaving a higher mag
   // If mags are equal and alpha differs, do IS now when going to a higher alpha so the
@@ -4448,15 +4466,14 @@ void CEMscope::GotoLowDoseArea(int inArea)
       ldArea->magIndex < mLdsaParams->magIndex) || 
       (ldArea->magIndex == mLdsaParams->magIndex && !mHasNoAlpha && 
       mLdsaParams->beamAlpha >= 0 && ldArea->beamAlpha > mLdsaParams->beamAlpha)) && 
-      !(GetUsePLforIS(ldArea->magIndex) && inArea == SEARCH_AREA);
+      !(GetUsePLforIS(ldArea->magIndex) && toSearch);
   if (ISdone)
     DoISforLowDoseArea(inArea, mLdsaParams->magIndex, delISX, delISY);
 
   // If leaving view or search area, set defocus back first
-  if (!STEMmode && mLDViewDefocus && mLowDoseSetArea == VIEW_CONSET && 
-    inArea != VIEW_CONSET)
+  if (!STEMmode && mLDViewDefocus && fromView && !toView)
       IncDefocus(-(double)mLDViewDefocus);
-  if (!STEMmode && mSearchDefocus && fromSearch && inArea != SEARCH_AREA)
+  if (!STEMmode && mSearchDefocus && fromSearch && !toSearch)
       IncDefocus(-(double)mSearchDefocus);
 
   // Pull off the beam shift if leaving an area and going between LM and nonLM
@@ -4468,20 +4485,18 @@ void CEMscope::GotoLowDoseArea(int inArea)
   // and impose any change in focus that has occurred in this mode unconditionally
   // and impose accumulated beam shifts from this mode after translating to new mode
   // First back off a beam shift; it didn't work to include that in the converted shift
+  // But then defer the probe change if going out of LM
   if (ldArea->probeMode >= 0) {
     if (mProbeMode != ldArea->probeMode) {
       if (mLowDoseSetArea >= 0 && (mLdsaParams->beamDelX || mLdsaParams->beamDelY) && 
         mProbeMode == mLdsaParams->probeMode && !splitBeamShift)
         IncBeamShift(-mLdsaParams->beamDelX, -mLdsaParams->beamDelY);
-      SetProbeMode(ldArea->probeMode, true);
+      probeDone = !leavingLowMag;
+      if (probeDone)
+        SetProbeMode(ldArea->probeMode, true);
     }
   } else
     ldArea->probeMode = mProbeMode;
-
-  // After probe mode change where focus might have been managed, record focus if
-  // going across LM/nonLM boundary
-  if (splitBeamShift)
-    focusBeforeLMnonLM = GetDefocus();
 
   // Mag and spot size will be set only if they change.  Do intensity unconditionally
   // If something is not initialized, set it up with current value
@@ -4516,6 +4531,10 @@ void CEMscope::GotoLowDoseArea(int inArea)
     ldArea->magIndex = GetMagIndex();
   magTime = GetTickCount();
 
+  // Now that mag is done, do the probe change if coming out of LM
+  if (!probeDone)
+    SetProbeMode(ldArea->probeMode, true);
+
   // For FEI, set spot size (if it isn't right) again because mag range change can set 
   // spot size; afraid to just move spot size change down here because of note above
   if (!JEOLscope)
@@ -4528,21 +4547,12 @@ void CEMscope::GotoLowDoseArea(int inArea)
   } else if (!STEMmode && !alphaDone)
     ldArea->beamAlpha = (float)curAlpha;
 
-  // If going to view or search area, set defocus offset: based on previous value if
-  // going between LM and nonLM, otherwise just incrementally
-  if (!STEMmode && mLDViewDefocus && mLowDoseSetArea != VIEW_CONSET && 
-    inArea == VIEW_CONSET) {
-    if (splitBeamShift)
-      SetDefocus(focusBeforeLMnonLM + mLDViewDefocus);
-    else
-      IncDefocus((double)mLDViewDefocus);
+  // If going to view or search area, set defocus offset incrementally
+  if (!STEMmode && mLDViewDefocus && !fromView && toView) {
+    IncDefocus((double)mLDViewDefocus);
   }
-  if (!STEMmode && mSearchDefocus && mLowDoseSetArea != SEARCH_AREA && 
-    inArea == SEARCH_AREA) {
-    if (splitBeamShift)
-      SetDefocus(focusBeforeLMnonLM + mSearchDefocus);
-    else
-      IncDefocus((double)mSearchDefocus);
+  if (!STEMmode && mSearchDefocus && !fromSearch && toSearch) {
+    IncDefocus((double)mSearchDefocus);
   }
 
   // If in EFTEM mode, synchronize to the filter parameters
@@ -4615,6 +4625,15 @@ void CEMscope::GotoLowDoseArea(int inArea)
       fabs(ldArea->dfTiltX - mLdsaParams->dfTiltX) > 1.e-6 ||
       fabs(ldArea->dfTiltY - mLdsaParams->dfTiltY) > 1.e-6)
       SetDarkFieldTilt(ldArea->darkFieldMode, ldArea->dfTiltX, ldArea->dfTiltY);
+  }
+
+  // Finally, put the centered IS back at the new mag
+  if (changingAtZeroIS) {
+    mShiftManager->TransferGeneralIS(mLdsaParams->magIndex, centeredISX, centeredISY,
+      ldArea->magIndex, newISX, newISY);
+    SetLDCenteredShift(newISX, newISY);
+    SEMTrace('l', "LD centered IS before: %.3f, %.3f; after: %.3f, %.3f", centeredISX, 
+      centeredISY, newISX, newISY);
   }
 
   if (GetDebugOutput('L'))
@@ -5759,8 +5778,9 @@ BOOL CEMscope::SetProbeMode(int micro, BOOL fromLowDose)
         mShiftManager->SetGeneralTimeOut(GetTickCount(), mPostProbeDelay);
         if (success && !SetImageShift(ISX, ISY))
           success = false;
-        if (adjustFocus)
+        if (adjustFocus && delFocus) {
           IncDefocus(delFocus);
+        }
         if (success && adjustShift && GetBeamShift(beamX, beamY)) {
           SEMTrace('b', "After, beam %.3f %.3f  change to %.3f %.3f", beamX, beamY, 
             beamX + toBeamX, beamY + toBeamY);

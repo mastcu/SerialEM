@@ -307,6 +307,7 @@ class DLL_IM_EX CEMscope
   void SetJeolReadStageForWait(BOOL inVal);
   BOOL GetJeolReadStageForWait();
   GetSetMember(BOOL, SkipAdvancedScripting);
+  GetSetMember(BOOL, ChangeAreaAtZeroIS);
 
   static void SetJeolIndForMagMode(int inVal);
   static int GetJeolIndForMagMode();
@@ -559,6 +560,7 @@ private:
   float mLDViewDefocus;       // Defocus offset going to View in low dose
   float mSearchDefocus;       // Defocus offset going to Search in low dose
   LowDoseParams *mLdsaParams; // Parameters of the current set low dose area
+  BOOL mChangeAreaAtZeroIS;     
   int mJeolForceMDSmode;      // +1 to turn on MDS mode to avoid IS resets, -1 to turn off
   BOOL mCanControlEFTEM;      // Flag that EFTEM can be turned on/off (false on JEOL)
   int mSimulationMode;        // Flag that a simulator is being run; if > 1, it sets KV
