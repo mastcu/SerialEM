@@ -262,6 +262,7 @@ class CComplexTasks : public CCmdTarget
   float mManualHitachiBacklash;   // Amount to target for manual adjustment
   float mStageTimeoutFactor;      // Multiplier to idle task timeout for stage moves
   bool mHitachiWithoutZ;          // Flag that it is a Hitachi with no Z
+  int mTiltingBack;               // Set to 1 when tilting back, or -1 when done or error
 
 public:
   afx_msg void OnTasksSetincrements();

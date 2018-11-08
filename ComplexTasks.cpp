@@ -159,6 +159,7 @@ CComplexTasks::CComplexTasks()
   mWalkUseViewInLD = false;
   mSkipNextBeamShift = false;
   mStageTimeoutFactor = 1.;
+  mTiltingBack = 0;
   
   // Default minimum field of view
   mMinRSRAField = 7.0;
@@ -1394,8 +1395,13 @@ void CComplexTasks::EucentricityNextTask(int param)
   BOOL needTilt;
   CString report;
 
-  if (!mDoingEucentricity)
+  if (!mDoingEucentricity || mTiltingBack < 0)
     return;
+  if (mTiltingBack > 0) {
+    mTiltingBack = -1;
+    StopEucentricity();
+    return;
+  }
   if (mImBufs->mConSetUsed == TRACK_CONSET)
     mImBufs->mCaptured = BUFFER_TRACKING;
   mImBufs->GetTiltAngle(angle);
@@ -1798,20 +1804,30 @@ void CComplexTasks::EucentricityCleanup(int error)
 {
   if (error == IDLE_TIMEOUT_ERROR)
     mTSController->TSMessageBox(_T("Time out in the eucentricity routine"));
+  if (mTiltingBack > 0)
+    mTiltingBack = -1;
   StopEucentricity();
   mWinApp->ErrorOccurred(error);
 }
 
 void CComplexTasks::StopEucentricity()
 {
-  if (!mDoingEucentricity)
+  if (!mDoingEucentricity || mTiltingBack > 0)
     return;
-  RestoreMagIfNeeded();
-  mDoingEucentricity = false;
-  if (!mScope->WaitForStageReady(10000)) {
-    mScope->TiltTo(mFEUsersAngle);
-    mWinApp->AddIdleTask(CEMscope::TaskStageBusy, -1, 0, 0);
+  if (!mTiltingBack) {
+
+    // restore mag now but come back after tilt is done to do true end
+    RestoreMagIfNeeded();
+    if (!mScope->WaitForStageReady(10000)) {
+      mScope->TiltTo(mFEUsersAngle);
+      mTiltingBack = 1;
+      mWinApp->AddIdleTask(TASK_EUCENTRICITY, 0, 
+        B3DNINT(mStageTimeoutFactor * (HitachiScope ? 120000 : 30000)));
+      return;
+    }
   }
+  mDoingEucentricity = false;
+  mTiltingBack = 0;
   mCamera->SetRequiredRoll(0);
   mCamera->SetObeyTiltDelay(false);
   mWinApp->UpdateBufferWindows();
