@@ -1338,8 +1338,12 @@ void CCameraSetupDlg::ManageCamera()
     mCanProcess = GAIN_NORMALIZED | DARK_SUBTRACTED;
   else if (mFEItype)
     mCanProcess = GAIN_NORMALIZED;
+  else if (mAMTtype && mCamera->GetDMversion(2) >= AMT_VERSION_CAN_NORM)
+    mCanProcess = GAIN_NORMALIZED | DARK_SUBTRACTED;
+  else if (mDE_Type >= 2)
+    mCanProcess = GAIN_NORMALIZED | DARK_SUBTRACTED;
   else if (mPluginType)
-    mCanProcess = mParam->canDoProcessing;
+    mCanProcess = mParam->pluginCanProcess;
 
   // Dark reference section
   states[3] = !mParam->STEMcamera && mCamera->CanProcessHere(mParam) && 
