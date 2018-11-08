@@ -1604,7 +1604,7 @@ BOOL CCameraController::GetProcessHere()
   return (mProcessHere || mParam->TietzType || 
     (mParam->AMTtype && mDMversion[AMT_IND] < AMT_VERSION_CAN_NORM) ||
     mParam->DE_camType == 1 || 
-    (mTD.plugFuncs && !mParam->canDoProcessing)) && CanProcessHere(mParam);
+    (mTD.plugFuncs && !mParam->pluginCanProcess)) && CanProcessHere(mParam);
 }
 
 // Set whether processing here from menu
@@ -4437,10 +4437,10 @@ void CCameraController::CapSetupShutteringTiming(ControlSet & conSet, int inSet,
 
     // Fix processing requests in case setup dialog didn't
     if (!mParam->processHere && conSet.processing == DARK_SUBTRACTED && 
-      mParam->canDoProcessing && !(mParam->canDoProcessing & DARK_SUBTRACTED))
+      mParam->pluginCanProcess && !(mParam->pluginCanProcess & DARK_SUBTRACTED))
       conSet.processing = GAIN_NORMALIZED;
     if (!mParam->processHere && conSet.processing == GAIN_NORMALIZED && 
-      mParam->canDoProcessing && !(mParam->canDoProcessing & GAIN_NORMALIZED))
+      mParam->pluginCanProcess && !(mParam->pluginCanProcess & GAIN_NORMALIZED))
       conSet.processing = DARK_SUBTRACTED;
     SetNonGatanPostActionTime();
   }
@@ -6066,7 +6066,11 @@ void CCameraController::StartAcquire()
             LOG_MESSAGE_IF_CLOSED);
           moreDarkRefs = false;
         } else {
-          memcpy(mDarkSum, sdata, arrSize * ref->ByteSize);
+          if (ref->ByteSize == 4)
+            memcpy(mDarkSum, sdata, arrSize * ref->ByteSize);
+          else
+            for (i = 0; i < arrSize; i++)
+              mDarkSum[i] = sdata[i];
         }
       }
 
