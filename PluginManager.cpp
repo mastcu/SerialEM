@@ -347,12 +347,12 @@ int CPluginManager::LoadPlugins(void)
       if (flags & PLUGFLAG_PIEZO)
         typeStr = "piezo ";
       if (numFuncs)
-        mess.Format("Loaded %splugin %s (named %s) and resolved %d of %d script-callable "
-        "functions", (LPCTSTR)typeStr, FindFileData.cFileName,
-        newPlug->shortName, newPlug->calls.GetSize(), numFuncs);
+        mess.Format("Loaded %splugin %s (named %s, flags %x) and resolved %d of %d script-callable "
+        "functions", (LPCTSTR)typeStr, FindFileData.cFileName, 
+        newPlug->shortName, flags, newPlug->calls.GetSize(), numFuncs);
       else
-        mess.Format("Loaded %splugin %s (named %s)%s", (LPCTSTR)typeStr,
-        FindFileData.cFileName, newPlug->shortName, 
+        mess.Format("Loaded %splugin %s (named %s, flags %x)%s", (LPCTSTR)typeStr,
+        FindFileData.cFileName, newPlug->shortName, flags,
         (flags & (PLUGFLAG_CAMERA | PLUGFLAG_SCOPE)) ? 
         "" : " with no script-callable functions");
       mWinApp->AppendToLog(mess, action);
