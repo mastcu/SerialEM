@@ -1983,7 +1983,7 @@ int CParameterIO::ReadProperties(CString strFileName)
           else if (MatchNoCase("ShutterLabel3"))
             StripItems(strLine, 1, camP->shutterLabel3);
           else if (MatchNoCase("PluginCanProcess"))
-            camP->canDoProcessing = itemInt[1];
+            camP->pluginCanProcess = itemInt[1];
           else if (MatchNoCase("PluginCanPreExpose"))
             camP->canPreExpose = itemInt[1] != 0;
           else if (MatchNoCase("RotationAndFlip"))

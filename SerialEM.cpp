@@ -365,7 +365,7 @@ CSerialEMApp::CSerialEMApp()
     mCamParams[i].cameraNumber = 0;
     mCamParams[i].pluginName = "";
     mCamParams[i].noShutter = false;
-    mCamParams[i].canDoProcessing = 3;
+    mCamParams[i].pluginCanProcess = 0;
     mCamParams[i].canPreExpose = false;
     mCamParams[i].rotationFlip = 0;
     mCamParams[i].imageRotation = 0;

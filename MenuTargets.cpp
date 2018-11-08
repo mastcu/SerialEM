@@ -1750,7 +1750,7 @@ void CMenuTargets::OnUpdateCameraNormalizehere(CCmdUI* pCmdUI)
     (param->AMTtype && mCamera->GetDMversion(2) >= AMT_VERSION_CAN_NORM)) && 
     (!param->DE_camType || param->DE_camType >= 2) && 
     mCamera->CanProcessHere(param) && (param->pluginName.IsEmpty() || 
-     param->canDoProcessing) && !DoingTasks() && !mCamera->CameraBusy());
+     param->pluginCanProcess) && !DoingTasks() && !mCamera->CameraBusy());
 }
 
 void CMenuTargets::OnCameraInterpolateDarkRefs()

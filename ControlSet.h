@@ -220,7 +220,7 @@ struct CameraParameters {
   CString pluginName;         // Name for a plugin camera
   int cameraNumber;           // Camera number to select by
   int noShutter;              // No shutter at all, use blanking
-  int canDoProcessing;        // Flags that camera can return processed images (1=ds+2=gn)
+  int pluginCanProcess;        // Flags that plugin camera can return processed (1=ds+2=gn)
   BOOL canPreExpose;          // Flag that the camera can manage pre-exposure
   CString shutterLabel1;      // Labels for shutter options in setup dialog
   CString shutterLabel2;
