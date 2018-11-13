@@ -8754,7 +8754,7 @@ int CCameraController::SetupFilter(BOOL acquiring)
       }
 
       // Set slit width
-      if (delWidth > 0.1)
+      if (delWidth > 0.1 && filtParam->slitIn)
         mTD.scopePlugFuncs->SetSlitWidth((double)filtParam->slitWidth);
 
       // Set energy shift
@@ -8814,7 +8814,7 @@ int CCameraController::SetupFilter(BOOL acquiring)
           "   IFCSetSlitIn(%d)\n"
           "   Delay(%d)\n"
           "}\n"
-          "if (abs(IFCGetSlitWidth() - %f) > 0.1)\n"
+          "if (abs(IFCGetSlitWidth() - %f) > %f)\n"
           "   IFCSetSlitWidth(%f)\n"
           "number delOffset = abs(IFCGet%s() - (%f))\n"
           "if (delOffset > 0.1) {\n"
@@ -8828,7 +8828,7 @@ int CCameraController::SetupFilter(BOOL acquiring)
           mGIFBiggestAperture, mGIFBiggestAperture,
           filtParam->slitIn ? 1 : 0, filtParam->slitIn ? 1 : 0,
           mGIFslitInOutDelay,
-          filtParam->slitWidth, filtParam->slitWidth, 
+          filtParam->slitWidth, filtParam->slitIn ? 0.1 : 1000., filtParam->slitWidth, 
           (LPCTSTR)offsetFunc, loss, (LPCTSTR)offsetFunc, loss,
           mGIFoffsetDelayCrit,
           delayBase1, delaySlope1, delayBase2, delaySlope2);
