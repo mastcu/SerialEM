@@ -693,6 +693,8 @@ int CEMscope::Initialize()
   try {
     if (mPlugFuncs->InitializeScope)
       mPlugFuncs->InitializeScope();
+    if (mPlugFuncs->SkipAdvancedScripting && mSkipAdvancedScripting)
+      mPlugFuncs->SkipAdvancedScripting();
   }
   catch (_com_error E) {
     SEMReportCOMError(E, "initializing scope plugin ");

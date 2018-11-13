@@ -111,6 +111,7 @@ SCOPE_SAMENAME(ScopeGetGauge, GetGaugePressure);
 SCOPE_SAMENAME(ScopeGetDblSetInt, GetRefrigerantLevel);
 SCOPE_SAMENAME(ScopeGetSetInt, LoaderSlotStatus);
 SCOPE_SAMENAME(ScopeNoArg, InitializeScope);
+SCOPE_SAMENAME(ScopeNoArg, SkipAdvancedScripting);
 SCOPE_SAMENAME(ScopeNoArg, UninitializeScope);
 SCOPE_SAMENAME(ScopeSetInt, DoingUpdate);
 SCOPE_SAMENAME(ScopeSetInt, GetValuesFast);
