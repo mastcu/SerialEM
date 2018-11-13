@@ -860,6 +860,7 @@ void CShiftCalibrator::ShiftDone()
 
   if (mess == 3 && AfxMessageBox("Do you want the program to forget about this "
     "calibration?\n\n(Try rerunning with \"IS from scratch\")", MB_QUESTION) == IDYES) {
+      mat->xpx = mat->xpy = 0.;
       StopCalibrating();
       return;
   }
