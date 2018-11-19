@@ -478,6 +478,7 @@ void CEMscope::KillUpdateTimer()
 int CEMscope::Initialize()
 {
   int startErr = 0, startCall = 0;
+  int needVers = FEISCOPE_NOCAM_VERSION;
   static bool firstTime = true;
   double htval;
   int ind, ind2;
@@ -693,14 +694,21 @@ int CEMscope::Initialize()
   try {
     if (mPlugFuncs->InitializeScope)
       mPlugFuncs->InitializeScope();
-    if (mPlugFuncs->SkipAdvancedScripting && mSkipAdvancedScripting)
-      mPlugFuncs->SkipAdvancedScripting();
   }
   catch (_com_error E) {
     SEMReportCOMError(E, "initializing scope plugin ");
     return 1;
   }
   sInitialized = true;
+
+  try {
+    if (mPlugFuncs->SkipAdvancedScripting)
+      mPlugFuncs->SkipAdvancedScripting(mSkipAdvancedScripting);
+  }
+  catch (_com_error E) {
+    if (needVers == FEISCOPE_CAM_VERSION)
+      SEMReportCOMError(E, "setting whether to skip advanced scripting ");
+  }
 
   // Now set up a lot of things for TEMCON JEOL scope
   if (JEOLscope) {
@@ -863,7 +871,6 @@ int CEMscope::Initialize()
     if (FEIscope) {
       int plugVers = 0;
       int servVers = CBaseSocket::LookupTypeID(FEI_SOCK_ID) >= 0 ? 0 : -1;
-      int needVers = FEISCOPE_NOCAM_VERSION;
       for (ind = 0; ind < mWinApp->GetActiveCamListSize(); ind++)
         if (camParam[activeList[ind]].FEItype)
           needVers = FEISCOPE_CAM_VERSION;
@@ -1943,6 +1950,34 @@ DWORD CEMscope::GetLastStageTime()
   return mLastStageTime;
 }
 
+// Get the B axis of an FEI stage, which could be Krios flip-flop, assume it is radians
+double CEMscope::GetStageBAxis(void)
+{
+  double retval = 0.;
+  if (!sInitialized || !mPlugFuncs->GetStageBAxis)
+    return 0.0;
+
+  ScopeMutexAcquire("GetStageBAxis",true);
+
+  try {
+    retval = mPlugFuncs->GetStageBAxis() / DTOR;
+  }
+  catch (_com_error E) {
+    SEMReportCOMError(E, _T("getting B axis of stage "));    
+  }
+  ScopeMutexRelease("GetStageBAxis");
+  return retval;
+}
+
+// Set the B axis value, leave as degrees in the structure
+BOOL CEMscope::SetStageBAxis(double inVal)
+{
+  StageMoveInfo info;
+  info.speed = inVal;
+  info.axisBits = axisB;
+  return MoveStage(info, false);
+}
+
 // External call to move stage
 BOOL CEMscope::MoveStage(StageMoveInfo info, BOOL doBacklash, BOOL useSpeed, 
   BOOL inBackground, BOOL doRelax)
@@ -1966,6 +2001,10 @@ BOOL CEMscope::MoveStage(StageMoveInfo info, BOOL doBacklash, BOOL useSpeed,
     return false;
   }
   
+  if ((mMoveInfo.axisBits & axisB) && (useSpeed || !mPlugFuncs->SetStagePositionExtra)) {
+    SEMMessageBox("Program error - MoveStage called with B axis set AND useSpeed set");
+    return false;
+  }
   mMoveInfo = info;
   mMoveInfo.JeolSD = &mJeolSD;
   mMoveInfo.plugFuncs = mPlugFuncs;
@@ -1976,7 +2015,11 @@ BOOL CEMscope::MoveStage(StageMoveInfo info, BOOL doBacklash, BOOL useSpeed,
   if (!doRelax)
     mMoveInfo.relaxX = mMoveInfo.relaxY = 0.;
   mMoveInfo.useSpeed = useSpeed && mPlugFuncs->SetStagePositionExtra;
-  if (!useSpeed)
+
+  // Here change B to radians, or make sure speed is 1
+  if (mMoveInfo.axisBits & axisB)
+    mMoveInfo.speed *= DTOR;
+  else if (!useSpeed)
     mMoveInfo.speed = 1.;
   mMoveInfo.inBackground = inBackground;
   mRequestedStageX = (float)info.x;
@@ -3180,7 +3223,10 @@ BOOL CEMscope::SetMagIndex(int inIndex)
   // First see if need to save the current IS and then whether to restore it
   ifSTEM = GetSTEMmode();
   lowestM = ifSTEM ? mLowestSTEMnonLMmag[mProbeMode] : mLowestMModeMagInd;
-  if (FEIscope && ifSTEM && inIndex < lowestM)
+
+  // There is no way to set the projection submode (which is psmLAD in STEM low mag and 
+  // psmD in nonLM) so we cannot go between LM and nonLM
+  if (FEIscope && ifSTEM && !BOOL_EQUIV(inIndex < lowestM, currentIndex < lowestM))
     return false;
   convertIS = AssessMagISchange(currentIndex, inIndex, ifSTEM, tranISX, tranISY);
   ScopeMutexAcquire(routine, true);
@@ -3332,6 +3378,24 @@ BOOL CEMscope::SetMagIndex(int inIndex)
   return result;
 }
 
+bool CEMscope::SetSTEMMagnification(double magVal)
+{
+  bool success = true;
+  if (!sInitialized || !mPlugFuncs->SetSTEMMagnification)
+    return false;
+  ScopeMutexAcquire("SetSTEMMagnification", true);
+  
+  try {
+    mPlugFuncs->SetSTEMMagnification(magVal);
+  }
+  catch (_com_error E) {
+    SEMReportCOMError(E, _T("setting STEM magnification "));
+    success = false;
+  }
+  ScopeMutexRelease("SetSTEMMagnification");
+  return success;
+
+}
 // Assesses the IS change for a change in mag from fromInd to toInd, returns new RAW IS
 // (including the axis, etc, offsets) and the axis offsets for the current mag.  
 BOOL CEMscope::AssessMagISchange(int fromInd, int toInd, BOOL STEMmode, double &newISX, 

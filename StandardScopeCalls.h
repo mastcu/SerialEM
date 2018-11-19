@@ -66,6 +66,7 @@ SET_ONE_DBL(SetManualExposureTime) LINE_END
 CALL_NO_ARGS(TakeExposure) LINE_END
 GET_ONE_INT(GetStageStatus) LINE_END
 GET_ONE_DBL(GetTiltAngle) LINE_END
+GET_ONE_DBL(GetStageBAxis) LINE_END
 GET_ONE_DBL(GetIlluminatedArea) LINE_END
 SET_ONE_DBL(SetIlluminatedArea) LINE_END
 GET_ONE_DBL(GetImageDistanceOffset) LINE_END
@@ -91,6 +92,7 @@ CALL_NO_ARGS(LoaderBufferCycle) LINE_END
 GET_ONE_INT(NumberOfLoaderSlots) LINE_END
 SET_ONE_BOOL(SetScreenDim) LINE_END
 GET_ONE_INT(GetFilmStock) LINE_END
+SET_ONE_BOOL(SkipAdvancedScripting) LINE_END
 
 #undef GET_ONE_INT
 #undef GET_ONE_BOOL
@@ -111,7 +113,6 @@ SCOPE_SAMENAME(ScopeGetGauge, GetGaugePressure);
 SCOPE_SAMENAME(ScopeGetDblSetInt, GetRefrigerantLevel);
 SCOPE_SAMENAME(ScopeGetSetInt, LoaderSlotStatus);
 SCOPE_SAMENAME(ScopeNoArg, InitializeScope);
-SCOPE_SAMENAME(ScopeNoArg, SkipAdvancedScripting);
 SCOPE_SAMENAME(ScopeNoArg, UninitializeScope);
 SCOPE_SAMENAME(ScopeSetInt, DoingUpdate);
 SCOPE_SAMENAME(ScopeSetInt, GetValuesFast);

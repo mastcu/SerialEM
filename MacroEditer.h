@@ -110,6 +110,7 @@ public:
     int & curIndent);
   static void HandleCompletionsAndIndent(CString &strMacro, CString &strCompletions,
     int &sel2, bool &setCompletions, bool &completing);
+  void JustCloseWindow(void);
 };
 
 //{{AFX_INSERT_LOCATION}}
