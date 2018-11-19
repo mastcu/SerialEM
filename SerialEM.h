@@ -89,6 +89,7 @@ enum CalTypes {CAL_DONE_IS = 0, CAL_DONE_STAGE, CAL_DONE_FOCUS, CAL_DONE_BEAM,
 #define axisXY 3
 #define axisZ 4
 #define axisA 8
+#define axisB 16
 enum {spUnknown = 1, spUp, spDown};
 enum JeolScreenPosition 
   {
@@ -404,7 +405,8 @@ public:
   WINDOWPLACEMENT *GetNavPlacement() {return &mNavPlacement;};
   WINDOWPLACEMENT *GetStageToolPlacement();
   void OpenStageMoveTool();
-  SetMember(bool, ReopenLog)
+  SetMember(bool, ReopenLog);
+  void SetReopenMacroEditor(int index, bool open) {mReopenMacroEditor[index] = open;};
   void StartMontageOrTrial(BOOL inTrial);
   void SetMontaging(BOOL inVal);
   void UserRequestedCapture(int whichMode);
@@ -704,6 +706,7 @@ private:
   BOOL mTestGainFactors;       // Flag to multiply images by gain factors
   BOOL mSkipGainRefWarning;    // Flag to skip warning about normalized spot
   BOOL mReopenMacroToolbar;    // Flag to reopen macro toolbar on startup
+  bool mReopenMacroEditor[MAX_MACROS];   // Flags for reopening macro editors
   BOOL mDeferBufWinUpdates;    // Ignore calls to UpdateBufferWindows
   BOOL mContinuousSaveLog;     // Do continuous save of log file
   int mTssPanelStates[NUM_TSS_PANELS];   // States of tilt series dialog panels
@@ -801,6 +804,7 @@ int GetBuildDayStamp(void);
 int GetIntegerVersion(void);
 void AdjustSizesForSuperResolution(int iCam);
 void MainViewResizing(CRect &winRect, bool FFTwin);
+void OpenOrCloseMacroEditors(void);
 };
 
 

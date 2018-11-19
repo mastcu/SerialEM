@@ -629,6 +629,8 @@ CSerialEMApp::CSerialEMApp()
   mReopenLog =  false;
   mExitWithUnsavedLog = false;
   mReopenMacroToolbar = false;
+  for (i = 0; i < MAX_MACROS; i++)
+    mReopenMacroEditor[i] = false;
   mOpenStateWithNav = true;
   mSkipGainRefWarning = false;
   mTestGainFactors = false;
@@ -1235,6 +1237,7 @@ BOOL CSerialEMApp::InitInstance()
   mPiezoControl->Initialize();
   if (mReopenMacroToolbar)
     mMacroProcessor->OpenMacroToolbar();
+  OpenOrCloseMacroEditors();
 
   mDocWnd->AppendToProgramLog(true);
   
@@ -1296,27 +1299,34 @@ BOOL CSerialEMApp::InitInstance()
     // For Falcon 2 or DE that can't align, if align is ON without using framealign, 
     // turn it off
     for (iSet = 0; iSet < NUMBER_OF_USER_CONSETS; iSet++) {
+      ControlSet *cs = &mCamConSets[iCam][iSet];
       if (mCamParams[iCam].FEItype == FALCON2_TYPE || (mCamParams[iCam].DE_camType && 
         !(mCamParams[iCam].CamFlags & DE_CAM_CAN_ALIGN))) {
-        if (!mCamConSets[iCam][iSet].useFrameAlign && 
-          mCamConSets[iCam][iSet].alignFrames > 0)
-          mCamConSets[iCam][iSet].alignFrames = 0;
+        if (!cs->useFrameAlign && cs->alignFrames > 0)
+          cs->alignFrames = 0;
       }
       if (mCamParams[iCam].FEItype == FALCON3_TYPE)
-        mCamConSets[iCam][iSet].numSkipBefore = mCamConSets[iCam][iSet].numSkipAfter = 0;
+        cs->numSkipBefore = cs->numSkipAfter = 0;
 
       // Transition DE saving flags to new form
       if (mCamParams[iCam].DE_camType) {
-        if ((mCamConSets[iCam][iSet].saveFrames & DE_SAVE_FRAMES) &&
-          (mCamConSets[iCam][iSet].saveFrames & DE_SAVE_SUMS))
-            mCamConSets[iCam][iSet].saveFrames |= DE_SAVE_MASTER | DE_SAVE_SINGLE;
-        else if (mCamConSets[iCam][iSet].saveFrames & DE_SAVE_FRAMES) {
-          mCamConSets[iCam][iSet].saveFrames |= DE_SAVE_MASTER;
-          mCamConSets[iCam][iSet].DEsumCount = 1;
-        } else if (mCamConSets[iCam][iSet].saveFrames & DE_SAVE_SUMS) {
-          mCamConSets[iCam][iSet].saveFrames |= DE_SAVE_MASTER;
+        if ((cs->saveFrames & DE_SAVE_FRAMES) && (cs->saveFrames & DE_SAVE_SUMS))
+           cs->saveFrames |= DE_SAVE_MASTER | DE_SAVE_SINGLE;
+        else if (cs->saveFrames & DE_SAVE_FRAMES) {
+          cs->saveFrames |= DE_SAVE_MASTER;
+          cs->DEsumCount = 1;
+        } else if (cs->saveFrames & DE_SAVE_SUMS) {
+          cs->saveFrames |= DE_SAVE_MASTER;
         }
-        mCamConSets[iCam][iSet].saveFrames &= ~(DE_SAVE_FRAMES | DE_SAVE_SUMS) ;
+        cs->saveFrames &= ~(DE_SAVE_FRAMES | DE_SAVE_SUMS) ;
+      }
+
+      // Make sure there are valid binnings
+      if (!BinningIsValid(cs->binning, iCam, false)) {
+        int newBin = NextValidBinning(cs->binning, -1, iCam, false);
+        if (newBin == cs->binning)
+          newBin = NextValidBinning(cs->binning, 1, iCam, false);
+        cs->binning = newBin;
       }
     }
   }
@@ -3616,7 +3626,8 @@ void CSerialEMApp::TransferConSet(int inSet, int fromCam, int toCam)
   if (!BinningIsValid(tocs->binning, toCam, false)) {
     int newbin = NextValidBinning(tocs->binning, -1, toCam, false);
     if (newbin == tocs->binning)
-      tocs->binning = NextValidBinning(tocs->binning, 1, toCam, false);
+      newbin = NextValidBinning(tocs->binning, 1, toCam, false);
+    tocs->binning = newbin;
   }
 }
 
@@ -3937,4 +3948,19 @@ void CSerialEMApp::SetMaxDialogWidth(void)
   mMaxDialogWidth = 0;
   for (int ind = 0; ind < mNumToolDlg; ind++)
     ACCUM_MAX(mMaxDialogWidth, mDialogTable[ind].width);
+}
+
+// To be called on startup or after reading settings: opens ones set to be opened and
+// closes ones that are open if needed
+void CSerialEMApp::OpenOrCloseMacroEditors(void)
+{
+  if (!mMacroProcessor->GetRestoreMacroEditors())
+    return;
+  for (int ind = 0; ind < MAX_MACROS; ind++) {
+    if (mReopenMacroEditor[ind] && !mMacroEditer[ind]) 
+      mMacroProcessor->OpenMacroEditor(ind);
+    else if (!mReopenMacroEditor[ind] && mMacroEditer[ind])
+      mMacroEditer[ind]->JustCloseWindow();
+  }
+  UpdateBufferWindows();
 }
