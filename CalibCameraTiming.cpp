@@ -586,9 +586,8 @@ void CCalibCameraTiming::CalTimeNextTask()
       mLineString.Format("\r\nAddedFlybackTime   %.1f", mFlyback-mCamParam->basicFlyback);
       oneVal += mLineString;
       if (mBlankCycleTime > 0.025) {
-        mLineString.Format("\r\nAlso, in the general properties (before CameraProperties) "
-          "set:\r\nMinimumBlankingTime  %.3f", mBlankCycleTime);
-        mWinApp->AppendToLog(oneVal, LOG_OPEN_IF_CLOSED);
+        mLineString.Format("\r\nAlso, in the general properties (before CameraProperties)"
+          " set:\r\nMinimumBlankingTime  %.3f", mBlankCycleTime);
         oneVal += mLineString;
       }
     } else if (mCamParam->GatanCam)
