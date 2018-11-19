@@ -55,6 +55,7 @@ public:
   double mTimeStamp;
   float mSampleMean;
   float mSampleSD;
+  float mDoseRatePerUBPix;  // Dose rate per unbinned pixel
   float mEffectiveBin;  // Set for a montage overview to make it display nicely
   int mOverviewBin;     // Binning of a montage overview
   BOOL mDynamicFocused;

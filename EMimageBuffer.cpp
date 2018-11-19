@@ -37,6 +37,7 @@ EMimageBuffer::EMimageBuffer()
   mBacklashX = 0.;
   mBacklashY = 0.;
 	mTimeStamp = 0.;
+  mDoseRatePerUBPix = 0.;
   mSampleMean = EXTRA_NO_VALUE;
   mSampleSD = EXTRA_NO_VALUE;
 	mUserPtX = 0.;
