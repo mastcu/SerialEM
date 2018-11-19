@@ -227,7 +227,7 @@ enum {CME_VIEW, CME_FOCUS, CME_TRIAL, CME_RECORD, CME_PREVIEW,
   CME_MAKEANCHORMAP, CME_STAGESHIFTBYPIXELS, CME_REPORTPROPERTY, CME_SAVENAVIGATOR,
   CME_FRAMETHRESHOLDNEXTSHOT, CME_QUEUEFRAMETILTSERIES, CME_FRAMESERIESFROMVAR,
   CME_WRITEFRAMESERIESANGLES, CME_ECHOREPLACELINE, CME_ECHONOLINEEND, CME_REMOVEAPERTURE,
-  CME_REINSERTAPERTURE, CME_PHASEPLATETONEXTPOS
+  CME_REINSERTAPERTURE, CME_PHASEPLATETONEXTPOS, CME_SETSTAGEBAXIS, CME_REPORTSTAGEBAXIS
 };
 
 static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0},
@@ -345,7 +345,7 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"FrameThresholdNextShot", 1, 1}, {"QueueFrameTiltSeries", 3, 0}, 
 {"FrameSeriesFromVar", 2, 0}, {"WriteFrameSeriesAngles", 1, 0}, {"EchoReplaceLine", 1, 1},
 {"EchoNoLineEnd", 1, 1}, {"RemoveAperture", 1, 0}, {"ReInsertAperture", 1, 0},
-{"PhasePlateToNextPos", 0},
+{"PhasePlateToNextPos", 0, 0}, {"SetStageBAxis", 1, 1}, {"ReportStageBAxis", 0, 0},
 {NULL, 0, 0}
 };
 
@@ -395,6 +395,8 @@ BEGIN_MESSAGE_MAP(CMacroProcessor, CCmdTarget)
   ON_UPDATE_COMMAND_UI(ID_SCRIPT_CLEARPERSISTENTVARS, OnUpdateClearPersistentVars)
   ON_COMMAND(ID_SCRIPT_RUNONECOMMAND, OnScriptRunOneCommand)
   ON_UPDATE_COMMAND_UI(ID_SCRIPT_RUNONECOMMAND, OnUpdateScriptRunOneCommand)
+  ON_COMMAND(ID_SCRIPT_OPENEDITORSONSTART, OnOpenEditorsOnStart)
+  ON_UPDATE_COMMAND_UI(ID_SCRIPT_OPENEDITORSONSTART, OnUpdateOpenEditorsOnStart)
 END_MESSAGE_MAP()
 
 //////////////////////////////////////////////////////////////////////
@@ -436,7 +438,7 @@ CMacroProcessor::CMacroProcessor()
   mNumToolButtons = 10;
   mToolButHeight = 0;
   mAutoIndentSize = 3;
-  mEditerPlacement.rcNormalPosition.right = 0;
+  mRestoreMacroEditors = true;
   mOneLinePlacement.rcNormalPosition.right = 0;
   mMailSubject = "Message from SerialEM script";
   for (i = 0; i < 5; i++)
@@ -455,6 +457,7 @@ CMacroProcessor::CMacroProcessor()
   for (i = 0; i < MAX_MACROS; i++) {
     mStrNum[i].Format("%d", i + 1);
     mFuncArray[i].SetSize(0, 4);
+    mEditerPlacement[i].rcNormalPosition.right = 0;
   }
   srand(GetTickCount());
   mProcessThread = NULL;
@@ -526,7 +529,6 @@ void CMacroProcessor::OnMacroEdit20()
   OnMacroEdit(ID_MACRO_EDIT20);
 }
 
-
 void CMacroProcessor::OnMacroToolbar()
 {
   if (mWinApp->mMacroToolbar) {
@@ -570,6 +572,17 @@ void CMacroProcessor::OnScriptSetIndentSize()
 {
   KGetOneInt("Number of spaces for automatic indentation, or 0 to disable:", 
     mAutoIndentSize);
+}
+
+void CMacroProcessor::OnOpenEditorsOnStart()
+{
+  mRestoreMacroEditors = !mRestoreMacroEditors;
+}
+
+void CMacroProcessor::OnUpdateOpenEditorsOnStart(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable();
+  pCmdUI->SetCheck(mRestoreMacroEditors ? 1 : 0);
 }
 
 void CMacroProcessor::OnMacroVerbose()
@@ -648,15 +661,11 @@ void CMacroProcessor::ToolbarClosing(void)
   mWinApp->mMacroToolbar = NULL;
 }
 
-WINDOWPLACEMENT * CMacroProcessor::FindEditerPlacement(void)
+WINDOWPLACEMENT *CMacroProcessor::FindEditerPlacement(int index)
 {
-  for (int i = 0; i < MAX_MACROS; i++) {
-    if (mMacroEditer[i]) {
-      mMacroEditer[i]->GetWindowPlacement(&mEditerPlacement);
-      break;
-    }
-  }
-  return &mEditerPlacement;
+  if (mMacroEditer[index])
+    mMacroEditer[index]->GetWindowPlacement(&mEditerPlacement[index]);
+  return &mEditerPlacement[index];
 }
 
 // List all the functions defined in macros
@@ -1642,6 +1651,16 @@ void CMacroProcessor::NextCommand()
     } else
       mLastIndex = mCurrentIndex;
 
+  } else if (CMD_IS(SETSTAGEBAXIS)) {                       // SetStageBAxis
+    if (mScope->StageBusy() <= 0) {
+      if (!mScope->SetStageBAxis(itemDbl[1])) {
+        AbortMacro();
+        return;
+      }
+      mMovedStage = true;
+    } else
+      mLastIndex = mCurrentIndex;
+      
   } else if (CMD_IS(OPENDECAMERACOVER)) {                   // OpenDECameraCover
     mOpenDE12Cover = true;
     mWinApp->mDEToolDlg.Update();
@@ -2721,10 +2740,14 @@ void CMacroProcessor::NextCommand()
 
   } else if (CMD_IS(SETMAG)) {                              // SetMag
     index = B3DNINT(itemDbl[1]);
-    i = FindIndexForMagValue(index, -1, -2);
-    if (!i)
-      ABORT_LINE("The value is not near enough to an existing mag in:\n\n");
-    mScope->SetMagIndex(i);
+    if (!itemEmpty[2] && mWinApp->GetSTEMMode()) {
+      mScope->SetSTEMMagnification(itemDbl[1]);
+    } else {
+      i = FindIndexForMagValue(index, -1, -2);
+      if (!i)
+        ABORT_LINE("The value is not near enough to an existing mag in:\n\n");
+      mScope->SetMagIndex(i);
+    }
 
   } else if (CMD_IS(SETMAGINDEX)) {                         // SetMagIndex
     index = itemInt[1];
@@ -3362,6 +3385,12 @@ void CMacroProcessor::NextCommand()
     report.Format("Stage is %s", index > 0 ? "BUSY" : "NOT busy");
     mWinApp->AppendToLog(report, mLogAction);
     SetReportedValues(&strItems[1], index > 0 ? 1 : 0);
+
+  } else if (CMD_IS(REPORTSTAGEBAXIS)) {                    // ReportStageBAxis
+    delX = mScope->GetStageBAxis();
+    report.Format("B axis = %.2f degrees", delX);
+    mWinApp->AppendToLog(report, mLogAction);
+    SetReportedValues(&strItems[1], delX);
 
   } else if (CMD_IS(REPORTMAG)) {                           // ReportMag
     index2 = mScope->GetMagIndex();

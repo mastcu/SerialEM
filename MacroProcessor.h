@@ -77,6 +77,7 @@ class CMacroProcessor : public CCmdTarget
   GetMember(bool, DisableAlignTrim);
   GetMember(bool, CompensatedBTforIS);
   GetMember(bool, NoMessageBoxOnError);
+  GetSetMember(BOOL, RestoreMacroEditors);
   bool GetAlignWholeTSOnly() {return DoingMacro() && mAlignWholeTSOnly;};
   bool SkipCheckingFrameAli() {return DoingMacro() && mSkipFrameAliCheck;};
   COneLineScript *mOneLineScript;
@@ -154,7 +155,7 @@ private:
   WINDOWPLACEMENT mToolPlacement;
   int mNumToolButtons;    // Number of tool bottons to show
   int mToolButHeight;     // Height of tool buttons
-  WINDOWPLACEMENT mEditerPlacement;
+  WINDOWPLACEMENT mEditerPlacement[MAX_MACROS];
   WINDOWPLACEMENT mOneLinePlacement;
   int mLogErrAction;      // Log argument for error messages
   int mLogAction;         // Parameterized log argument for suppressing reports
@@ -224,6 +225,7 @@ private:
   bool mStartNavAcqAtEnd;    // Flag to start Nav acquire on successful completion 
   int mTestNextMultiShot;    // 1 or 2 to test image area or coma
   bool mDisableAlignTrim;    // Flag to disable trimming in autoalign
+  BOOL mRestoreMacroEditors;    // Flag to reopen the editor windows on startup/settings
 
 public:
   void GetNextLine(CString * macro, int & currentIndex, CString &strLine);
@@ -246,7 +248,7 @@ public:
     double val5 = MACRO_NO_VALUE, double val6 = MACRO_NO_VALUE);
   void ToolbarMacroRun(UINT nID);
   WINDOWPLACEMENT * GetToolPlacement(void);
-  WINDOWPLACEMENT * GetEditerPlacement(void) {return &mEditerPlacement;};
+  WINDOWPLACEMENT * GetEditerPlacement(void) {return &mEditerPlacement[0];};
   WINDOWPLACEMENT * GetOneLinePlacement(void);
   void ToolbarClosing(void);
   void OneLineClosing(void);
@@ -260,7 +262,7 @@ public:
     int numDrop);
   void OpenMacroToolbar(void);
   void SetComplexPane(void);
-  WINDOWPLACEMENT *FindEditerPlacement(void);
+  WINDOWPLACEMENT *FindEditerPlacement(int index);
   BOOL MacroRunnable(int index);
   afx_msg void OnUpdateMacroEnd(CCmdUI *pCmdUI);
   int FindCalledMacro(CString strLine, bool scanning);
@@ -309,6 +311,8 @@ public:
   int CheckLegalCommandAndArgNum(CString * strItems, CString strLine, int macroNum);
   bool ArithmeticIsAllowed(CString & str);
   int AdjustBeamTiltIfSelected(double delISX, double delISY, BOOL doAdjust, CString &message);
+  afx_msg void OnOpenEditorsOnStart();
+  afx_msg void OnUpdateOpenEditorsOnStart(CCmdUI *pCmdUI);
 };
 
 #endif // !defined(AFX_MACROPROCESSOR_H__33178182_58A1_4F3A_B8F4_D41F94866517__INCLUDED_)
