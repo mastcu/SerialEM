@@ -170,9 +170,10 @@ BEGIN
         MENUITEM "&Save",                       ID_SETTINGS_SAVE
         MENUITEM "S&ave As...",                 ID_SETTINGS_SAVEAS
         MENUITEM "&Close",                      ID_SETTINGS_CLOSE
+        MENUITEM "&Discard on Exit",            ID_SETTINGS_DISCARDONEXIT
         MENUITEM SEPARATOR
         MENUITEM "R&ead Defaults",              ID_SETTINGS_READDEFAULTS
-        MENUITEM "Autosave",                    ID_SETTINGS_AUTOSAVE
+        MENUITEM "A&utosave",                   ID_SETTINGS_AUTOSAVE
         MENUITEM SEPARATOR
         MENUITEM "Set a &Property",             ID_SETTINGS_SETAPROPERTY
     END
@@ -414,6 +415,7 @@ BEGIN
         MENUITEM "List &Functions",             ID_MACRO_LISTFUNCTIONS
         MENUITEM "Clear &Persistent Vars",      ID_SCRIPT_CLEARPERSISTENTVARS
         MENUITEM "Set I&ndent Size",            ID_SCRIPT_SETINDENTSIZE
+        MENUITEM "Open E&ditors on Start",      ID_SCRIPT_OPENEDITORSONSTART
         MENUITEM "&Verbose",                    ID_MACRO_VERBOSE
     END
     POPUP "&Tasks"
@@ -5182,6 +5184,10 @@ BEGIN
                             "Show circle around all shots for all acquire points"
     ID_MONTAGINGGRIDS_ADDGRIDLIKELASTONE 
                             "Add grid of points with same option responses as previously"
+    ID_SCRIPT_OPENEDITORSONSTART 
+                            "Restore editors when starting program or reading settings"
+    ID_SETTINGS_DISCARDONEXIT 
+                            "Do not autosave or save settings on exit or when reading settings"
 END
 
 #endif    // English (United States) resources

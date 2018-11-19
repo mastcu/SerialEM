@@ -241,6 +241,7 @@ private:
   int mLastFrameSect;            // Index of last section in frame mdoc
   BOOL mSkipFileDlg;             // Settings flag to skip the file dialog
   bool mShowFileDlgOnce;         // Flag to be able to show it once
+  bool mAbandonSettings;         // Flag not to save settings on exit or autosave
 
 public:
   KImageStore * OpenNewFileByName(CString cFilename, FileOptions * fileOptp);
@@ -277,6 +278,8 @@ public:
   afx_msg void OnSkipFilePropertiesDlg();
   afx_msg void OnUpdateSkipFilePropertiesDlg(CCmdUI *pCmdUI);
 void CopyDefaultToOtherFileOpts(void);
+afx_msg void OnSettingsDiscardOnExit();
+afx_msg void OnUpdateSettingsDiscardOnExit(CCmdUI *pCmdUI);
 };
 
 // FILE DIALOG CLASS and associated thread class and data

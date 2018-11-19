@@ -161,6 +161,8 @@ int CParameterIO::ReadSettings(CString strFileName)
   mWinApp->SetAbsoluteDlgIndex(false);
   msParams->customHoleX.clear();
   msParams->customHoleY.clear();
+  for (index = 0; index < MAX_MACROS; index++)
+    mWinApp->SetReopenMacroEditor(index, false);
 
   try {
     // Open the file for reading, verify that it is a settings file
@@ -625,8 +627,11 @@ int CParameterIO::ReadSettings(CString strFileName)
         NAME_IS("RotAlignPlacement") ||NAME_IS("StageToolPlacement") ||
         NAME_IS("ReadDlgPlacement") || NAME_IS("StatePlacement") ||
         NAME_IS("MacroToolPlacement") || NAME_IS("MacroEditerPlacement") ||
-        NAME_IS("OneLinePlacement") || NAME_IS("MultiShotPlacement")) {
-        if (strItems[10].IsEmpty()) {
+        NAME_IS("OneLinePlacement") || NAME_IS("MultiShotPlacement") ||
+        NAME_IS("OneEditerPlacement")) {
+        index = NAME_IS("OneEditerPlacement") ? 1 : 0;
+        if (strItems[index + 10].IsEmpty() || 
+          (index && (itemInt[1] < 0 || itemInt[1] >= MAX_MACROS))) {
             AfxMessageBox("Error in window placement line in settings file "
               + strFileName + " :\n" + strLine, MB_EXCLAME);
         } else {
@@ -648,7 +653,10 @@ int CParameterIO::ReadSettings(CString strFileName)
             place = mWinApp->GetStageToolPlacement();
           else if (NAME_IS("MacroEditerPlacement"))
             place = mWinApp->mMacroProcessor->GetEditerPlacement();
-          else if (NAME_IS("OneLinePlacement"))
+          else if (NAME_IS("OneEditerPlacement")) {
+            place = mWinApp->mMacroProcessor->GetEditerPlacement() + itemInt[1];
+            mWinApp->SetReopenMacroEditor(itemInt[1], itemInt[2] != 0);
+          } else if (NAME_IS("OneLinePlacement"))
             place = mWinApp->mMacroProcessor->GetOneLinePlacement();
           else if (NAME_IS("MacroToolPlacement")) {
             mWinApp->SetReopenMacroToolbar(itemInt[1] != 0);
@@ -657,16 +665,20 @@ int CParameterIO::ReadSettings(CString strFileName)
             mWinApp->SetReopenLog(itemInt[1] != 0);
             place = mWinApp->GetLogPlacement();
           }
-          place->showCmd = itemInt[2];
-          place->ptMaxPosition.x = itemInt[3];
-          place->ptMaxPosition.y = itemInt[4];
-          place->ptMinPosition.x = itemInt[5];
-          place->ptMinPosition.y = itemInt[6];
-          place->rcNormalPosition.left = itemInt[7];
-          place->rcNormalPosition.top = itemInt[8];
-          place->rcNormalPosition.right = itemInt[9];
-          place->rcNormalPosition.bottom = atoi((LPCTSTR)strItems[10]);
+          place->showCmd = itemInt[index + 2];
+          place->ptMaxPosition.x = itemInt[index + 3];
+          place->ptMaxPosition.y = itemInt[index + 4];
+          place->ptMinPosition.x = itemInt[index + 5];
+          place->ptMinPosition.y = itemInt[index + 6];
+          place->rcNormalPosition.left = itemInt[index + 7];
+          place->rcNormalPosition.top = itemInt[index + 8];
+          place->rcNormalPosition.right = itemInt[index + 9];
+          place->rcNormalPosition.bottom = itemInt[index + 10];
           ConstrainWindowPlacement(place);
+          if (NAME_IS("MacroEditerPlacement")) {
+            for (index = 1; index < MAX_MACROS; index++)
+              place[index] = place[0];
+          }
         }
 
       } else if (NAME_IS("StateParameters")) {
@@ -1434,8 +1446,11 @@ void CParameterIO::WriteSettings(CString strFileName)
     WritePlacement("StageToolPlacement", 0, stageToolPlace);
     WritePlacement("MacroToolPlacement", mWinApp->mMacroToolbar ? 1 : 0, toolPlace);
     WritePlacement("OneLinePlacement", 0, oneLinePlace);
-    WritePlacement("MacroEditerPlacement", 0, 
-      mWinApp->mMacroProcessor->FindEditerPlacement());
+    for (i = 0; i < MAX_MACROS; i++) {
+      oneState.Format("OneEditerPlacement %d", i);
+      WritePlacement((LPCTSTR)oneState, mWinApp->mMacroEditer[i] != NULL ? 1 : 0,
+        mWinApp->mMacroProcessor->FindEditerPlacement(i));
+    }
     oneState.Format("MacroToolbarButtons %d %d\n", 
       mWinApp->mMacroProcessor->GetNumToolButtons(), 
       mWinApp->mMacroProcessor->GetToolButHeight());
@@ -4667,7 +4682,7 @@ void CParameterIO::StripItems(CString strLine, int numItems, CString & strCopy)
 }
 
 
-void CParameterIO::WritePlacement(char *string, int open, WINDOWPLACEMENT *place)
+void CParameterIO::WritePlacement(const char *string, int open, WINDOWPLACEMENT *place)
 {
   CString oneState;
   if (place->rcNormalPosition.right <= 0)

@@ -350,6 +350,7 @@ class DLL_IM_EX CEMscope
   BOOL SetUnoffsetDefocus(double inVal);
   BOOL ResetDefocus(BOOL assumeInit = false);
   BOOL SetMagIndex(int inIndex);
+  bool SetSTEMMagnification(double magVal);
   int FastMagIndex();
   int GetMagIndex(BOOL forceGet = false);
   BOOL SetCamLenIndex(int inIndex);
@@ -795,6 +796,8 @@ public:
   BOOL SetFreeLensControl(int lens, int arg);
   BOOL SetLensWithFLC(int lens, double inVal, bool relative);
   BOOL GetLensFLCStatus(int lens, int &state, double &lensVal);
+  double GetStageBAxis(void);
+  BOOL SetStageBAxis(double inVal);
 };
 
 

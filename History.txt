@@ -3,6 +3,15 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+11/19/18: Added script commands to access the B axis of the holder.
+
+11/19/18: Fixed ability to set mag in STEM on FEI scopes when staying in LM,
+and to switch from STEM nanoprobe to microprobe when in LM.
+
+11/19/18: Started storing size and position for individual script editors and
+added an option (defaulted on) for editors to be restored when the program is
+started or settings are read.
+
 11/13/18: Fixed SkipAdvancedScripting to work with STEM.
 
 11/12/18: Made it not change slit width when slit is out.

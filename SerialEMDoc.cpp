@@ -131,6 +131,8 @@ BEGIN_MESSAGE_MAP(CSerialEMDoc, CDocument)
   ON_UPDATE_COMMAND_UI(ID_FILE_OPEN_MDOC, OnUpdateFileOpenMdoc)
   ON_COMMAND(ID_FILE_SKIPFILEPROPERTIESDIALOG, OnSkipFilePropertiesDlg)
   ON_UPDATE_COMMAND_UI(ID_FILE_SKIPFILEPROPERTIESDIALOG, OnUpdateSkipFilePropertiesDlg)
+  ON_COMMAND(ID_SETTINGS_DISCARDONEXIT, &CSerialEMDoc::OnSettingsDiscardOnExit)
+  ON_UPDATE_COMMAND_UI(ID_SETTINGS_DISCARDONEXIT, &CSerialEMDoc::OnUpdateSettingsDiscardOnExit)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -201,6 +203,7 @@ CSerialEMDoc::CSerialEMDoc()
   mNumCalsAskThresh[CAL_DONE_STAGE] = 2;
   mNumCalsAskThresh[CAL_DONE_BEAM] = 1;
   mNumCalsAskThresh[CAL_DONE_SPOT] = 1;
+  mAbandonSettings = false;
 }
 
 CSerialEMDoc::~CSerialEMDoc()
@@ -1913,6 +1916,7 @@ void CSerialEMDoc::OnSettingsSave()
   ManageBackupFile(mCurrentSettingsPath, mSettingsBackedUp);
   mParamIO->WriteSettings(mCurrentSettingsPath);
   SaveShortTermCal();
+  mAbandonSettings = false;
 }
 
 // Save to a new specified file
@@ -1930,6 +1934,7 @@ int CSerialEMDoc::SettingsSaveAs()
   // Force a backup if it exists
   mSettingsBackedUp = false;    
   ManageBackupFile(newFile, mSettingsBackedUp);
+  mAbandonSettings = false;
 
   mParamIO->WriteSettings(newFile);
 
@@ -2005,11 +2010,22 @@ void CSerialEMDoc::OnUpdateSettingsRecent(CCmdUI* pCmdUI)
   mRecentSettings->UpdateMenu(pCmdUI);
 }
 
+void CSerialEMDoc::OnSettingsDiscardOnExit()
+{
+  mAbandonSettings = !mAbandonSettings;
+}
+
+void CSerialEMDoc::OnUpdateSettingsDiscardOnExit(CCmdUI *pCmdUI)
+{
+  pCmdUI->SetCheck(mAbandonSettings);
+}
 
 // Find out whether user wants to save settings before next action
 int CSerialEMDoc::OfferToSaveSettings(CString strWhy)
 {
   int result;
+  if (mAbandonSettings)
+    return 0;
   CString message = "Do you want to save your settings "
     "before proceeding\n to " + strWhy;
   result = AfxMessageBox(message, MB_ICONQUESTION | MB_YESNOCANCEL);
@@ -2042,6 +2058,7 @@ void CSerialEMDoc::PostSettingsRead()
   RECT *dlgPlacements = mWinApp->GetDlgPlacements();
   int *colorIndex = mWinApp->GetDlgColorIndex();
   BOOL saveRemote = mWinApp->GetShowRemoteControl();
+  mAbandonSettings = false;
 
   // Copy low dose params, restore low dose area, copy camera params and update windows
   mWinApp->CopyCameraToCurrentLDP();
@@ -2058,6 +2075,7 @@ void CSerialEMDoc::PostSettingsRead()
     mWinApp->SetShowRemoteControl(saveRemote);
     ((CMainFrame *)(mWinApp->m_pMainWnd))->InitializeDialogPositions(initialState, 
       dlgPlacements, colorIndex);
+    mWinApp->OpenOrCloseMacroEditors();
   }
 }
 
@@ -2219,8 +2237,9 @@ void CSerialEMDoc::AutoSaveFiles()
 {
   if (mWinApp->mNavigator && mAutoSaveNav)
     mWinApp->mNavigator->AutoSave();
-  if (mAutoSaveSettings && mSettingsOpen && !mWinApp->mTSController->StartedTiltSeries())
-    OnSettingsSave();
+  if (mAutoSaveSettings && mSettingsOpen && !mAbandonSettings &&
+    !mWinApp->mTSController->StartedTiltSeries())
+      OnSettingsSave();
   if (mWinApp->mTSController->GetAutosaveLog() && mWinApp->mLogWindow)
     mWinApp->mLogWindow->UpdateSaveFile(false);
   SaveShortTermCal();

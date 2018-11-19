@@ -89,7 +89,7 @@ END_MESSAGE_MAP()
 
 BOOL CMacroEditer::OnInitDialog() 
 {
-  WINDOWPLACEMENT *place = mProcessor->GetEditerPlacement();
+  WINDOWPLACEMENT *place = mProcessor->GetEditerPlacement() + m_iMacroNumber;
   CBaseDlg::OnInitDialog();
   
   // Get initial size of client area and edit box to determine borders for resizing
@@ -188,7 +188,7 @@ void CMacroEditer::OnOK()
   }
   mEditer[m_iMacroNumber] = NULL;
   mWinApp->UpdateMacroButtons();
-  GetWindowPlacement(mProcessor->GetEditerPlacement());
+  GetWindowPlacement(mProcessor->GetEditerPlacement() + m_iMacroNumber);
   DestroyWindow();
 }
 
@@ -198,7 +198,15 @@ void CMacroEditer::OnCancel()
     mWinApp->mCameraMacroTools.MacroNameChanged(m_iMacroNumber);
   mEditer[m_iMacroNumber] = NULL;
   mWinApp->UpdateMacroButtons();
-  GetWindowPlacement(mProcessor->GetEditerPlacement());
+  GetWindowPlacement(mProcessor->GetEditerPlacement() + m_iMacroNumber);
+  DestroyWindow();
+}
+
+// Set pointer to NULL and close window: this is called when reading new settings and 
+// the old state has already been saved or abandoned
+void CMacroEditer::JustCloseWindow(void)
+{
+  mEditer[m_iMacroNumber] = NULL;
   DestroyWindow();
 }
 

@@ -5,6 +5,10 @@
     <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
     <style type="text/css"> <!-- BODY { font-family:"Arial" }
   TD { font-size:16 }
+      .style1
+      {
+        width: 114px;
+      }
   --></style>
   </HEAD>
   <BODY BGCOLOR="#ffffff" TEXT="#000000">
@@ -13,35 +17,39 @@
       <P>The Settings menu offers the following commands:</P>
       <TABLE BORDER cols="2">
         <TR VALIGN="top">
-          <TD width="104"><A HREF="#hid_settings_open">Open</A></TD>
+          <TD class="style1"><A HREF="#hid_settings_open">Open</A></TD>
           <TD>Opens and reads a settings file.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD width="104"><A HREF="#hid_settings_readagain">Read Again</A></TD>
+          <TD class="style1"><A HREF="#hid_settings_readagain">Read Again</A></TD>
           <TD>Rereads settings from the current file.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD width="104"><A HREF="#hid_settings_save">Save</A></TD>
+          <TD class="style1"><A HREF="#hid_settings_save">Save</A></TD>
           <TD>Saves settings to file.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD width="104"><A HREF="#hid_settings_saveas">Save As</A></TD>
+          <TD class="style1"><A HREF="#hid_settings_saveas">Save As</A></TD>
           <TD>Saves settings to a new file.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD width="104"><A HREF="#hid_settings_close">Close</A></TD>
+          <TD class="style1"><A HREF="#hid_settings_close">Close</A></TD>
           <TD>Closes settings file to prevent saving to it upon exit.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD width="104"><A HREF="#hid_settings_readdefaults">Read Defaults</A></TD>
+          <TD class="style1"><a href="#hid_settings_discardonexit">Discard on Exit</a></TD>
+          <TD>Prevents autosaving, saving on exit, and offers to save when reading settings</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_settings_readdefaults">Read Defaults</A></TD>
           <TD>Reads system default settings file.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD width="104"><A HREF="#hid_settings_autosave">Autosave</A></TD>
+          <TD class="style1"><A HREF="#hid_settings_autosave">Autosave</A></TD>
           <TD>Periodically save settings to currently open file.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD width="104"><a href="#hid_settings_setaproperty">Set a Property</a></TD>
+          <TD class="style1"><a href="#hid_settings_setaproperty">Set a Property</a></TD>
           <TD>Changes the value of one program property setting.</TD>
         </TR>
       </TABLE>
@@ -102,6 +110,14 @@
         to when the program exits, which you might want to do if you are going to 
         experiment with parameters that you will not want to save. You will be asked 
         whether you want to save your current settings to the file before closing it.</P>
+      <P><A NAME="hid_settings_discardonexit"></A><B>Discard on Exit command (Settings menu)</B></P>
+      <P>This command works like closing the file except that the program will not ask 
+        if you want to save settings first, and it will not ask if you want to save 
+        settings on exit or when loading new settings.&nbsp; It is useful when settings 
+        have reached a state that you do not want saved.&nbsp; It will prevent 
+        autosaving as well.&nbsp; The selection will be toggled off again by reading or 
+        writing settings, and it does not persist from one run of the program to the 
+        next.</P>
       <P><A NAME="hid_settings_readdefaults"></A><B>Read Defaults command (Settings menu)</B></P>
       <P>Use this command to read the System Defaults settings file. If there is a 
         settings file currently open, you will be asked whether you want to save your 

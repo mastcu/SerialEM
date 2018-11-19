@@ -1294,6 +1294,14 @@
             stage backlash state is not known.</TD>
         </TR>
         <TR vAlign="top">
+          <TD class="style13">ReportStageBAxis</TD>
+          <TD>Reports the B axis value of the stage in degrees, if such an item exists.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style13">SetStageBAxis #</TD>
+          <TD>Sets the stage B axis to the given value in degrees.</TD>
+        </TR>
+        <TR vAlign="top">
           <TD colspan="2"><A name="focus_commands"></A><B>Focus-Related Commands</B></TD>
         </TR>
         <TR vAlign="top">
@@ -1368,8 +1376,10 @@
           <TD colspan="2"><A name="mag_commands"></A><B>Magnification-Related Commands</B></TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style13">SetMag #</TD>
-          <TD>Set the mag to an actual film mag value</TD>
+          <TD class="style13">SetMag #M [#D]</TD>
+          <TD>Set the mag to an actual mag value in #M.&nbsp; In STEM mode, set the optional 
+            #D non-zero to set STEM mag directly to the given value, without trying to find 
+            it in the mag table.</TD>
         </TR>
        <TR vAlign="top">
           <TD class="style13">SetMagIndex #</TD>
