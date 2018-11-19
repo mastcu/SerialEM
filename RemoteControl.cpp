@@ -175,7 +175,8 @@ void CRemoteControl::Update(int inMagInd, int inSpot, double inIntensity, int in
       m_sbcMag.SetPos(inMagInd);
     m_sbcMag.EnableWindow(inMagInd > 0 && baseEnable && !doingOffset);
     if (!mWinApp->mCamera->DoingContinuousAcquire())
-    m_butNanoMicro.EnableWindow(inMagInd >= mScope->GetLowestMModeMagInd() && baseEnable);
+    m_butNanoMicro.EnableWindow(mWinApp->GetSTEMMode() || 
+      (inMagInd >= mScope->GetLowestMModeMagInd() && baseEnable));
     m_sbcAlpha.EnableWindow(inMagInd >= mScope->GetLowestMModeMagInd() && baseEnable);
   }
 
