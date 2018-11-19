@@ -561,6 +561,9 @@ void CFocusManager::OnAutofocusListCalibrations()
   CArray <ComaCalib, ComaCalib> *comaCal = mWinApp->mAutoTuning->GetComaCals();
   CArray <CtfBasedCalib, CtfBasedCalib> *ctfAstigCals =
     mWinApp->mAutoTuning->GetCtfBasedCals();
+  CArray<STEMFocusZTable, STEMFocusZTable> *focusZtables = 
+    mWinApp->mFocusManager->GetSFfocusZtables();
+  STEMFocusZTable sfzTable;
   CtfBasedCalib ctfCal;
   AstigCalib astig;
   ComaCalib coma;
@@ -594,6 +597,19 @@ void CFocusManager::OnAutofocusListCalibrations()
     }
     if (!str.IsEmpty())
       mWinApp->AppendToLog(str);
+    PrintfToLog("There are %d tables of STEM focus versus Z", focusZtables->GetSize());
+    if (focusZtables->GetSize()) {
+      mWinApp->AppendToLog("Spot  Probe   middle slope");
+      for (ind = 0; ind < (int)focusZtables->GetSize(); ind++) {
+        sfzTable = focusZtables->GetAt(ind);
+        iCam = B3DMAX(0, sfzTable.numPoints / 2 - 2);
+        iMag = B3DMIN(sfzTable.numPoints - 1, sfzTable.numPoints / 2 + 2);
+        PrintfToLog("%2d       %s      %.3f", sfzTable.spotSize, 
+          sfzTable.probeMode ? "micro" : "nano", 
+          (sfzTable.defocus[iMag] - sfzTable.defocus[iCam]) / 
+          B3DMAX(0.01, sfzTable.stageZ[iMag] - sfzTable.stageZ[iCam]));
+      }
+    }
   }
 
   if (ctfAstigCals->GetSize()) {
