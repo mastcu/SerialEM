@@ -400,12 +400,14 @@
               J for complete listing of JEOL calls<BR>
               K for socket interface<BR>
               L for more verbose low dose<BR>
-              M for Moran montaging time stamps<BR>
+              M for Moran montaging time stamps<br />
+              P reserved for general plugins<BR>
               R for camera retraction<BR>
               S for stage and montaging information<BR>
               T for Tietz setup/reset time, camera coords, auotoalign time<BR>
               V for vacuum gauge status output<br />
-              W for Winkler's bug/autoloader<BR>
+              W for Winkler's bug/autoloader<br />
+              X for EMSIS and DECTRIS cameras<BR>
               a for alignment correlation coefficients<br />
               b for beam shift<BR>
               c for calibration and scale matrix derivation<BR>
@@ -1468,7 +1470,10 @@
         <TR VALIGN="top">
           <TD>NoShutter</TD>
           <TD>Set this entry to 1 or 2 if the camera has no shutter, to have SerialEM keep 
-            the beam blanked when the screen is up, except when taking an image.&nbsp; With a 
+            the beam blanked when the screen is up, except when taking an image.&nbsp; If 
+            the &#39;SideMounted&#39; property is also 1, the beam will be blanked when the screen 
+            is down as well, unless in Low Dose mode, where it is governed by the checkbox 
+            in the low dose panel.&nbsp; With a 
             value of 1, the program will unblank before requesting an image and reblank 
             after receiving one.&nbsp; With a value of 2, it will unblank just for the exposure 
             time in a separate thread; this can be used if the camera has predictable timing 

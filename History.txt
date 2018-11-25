@@ -3,6 +3,13 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+11/25/18: Possibly fix switching of low dose areas at zero image shift.
+
+11/25/18: Prevented log from being opened twice on startup.
+
+11/25/18: Made NoShutter keep beam blanked with screen down for a side-mounted
+camera.
+
 11/19/18: Added script commands to access the B axis of the holder.
 
 11/19/18: Fixed ability to set mag in STEM on FEI scopes when staying in LM,
