@@ -937,8 +937,14 @@ BOOL CSerialEMApp::InitInstance()
     }
     mInitialCurrentCamera = mAssumeCamForDummy;
   }
-  if (mReopenLog)
-    OnFileOpenlog();
+  if (mReopenLog) {
+    if (mLogWindow) {
+      if (mLogPlacement.rcNormalPosition.right > 0)
+        mLogWindow->SetWindowPlacement(&mLogPlacement);
+    } else {
+      OnFileOpenlog();
+    }
+  }
   SEMTrace('1', "Detected system DPI of %d, using DPI %d", mag, mSystemDPI);
 
   // Create the little font for everybody so there is one place to fix this
@@ -2620,11 +2626,13 @@ int SEMThreeChoiceBox(CString message, CString yesText, CString noText,
 //   K for socket interface
 //   L for verbose low dose
 //   M for Moran/montage time reports
+//   P Reserved for other plugins
 //   R for retraction
 //   S for stage and montage info
 //   T for Tietz setup/reset time, camera coords, auotoalign time
 //   V for vacuum gauge status and output
 //   W for Winkler's typing into axis pos bug or autoloader or leave DE inserted on exit
+//   X for EMSIS and Dectris cameras
 //   a for alignment correlation coefficients
 //   b for beam shift
 //   c for calibrations
