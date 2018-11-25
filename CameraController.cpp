@@ -1387,7 +1387,7 @@ void CCameraController::SetCurrentCamera(int currentCam, int activeCam)
     SwitchTeitzToBeamShutter(currentCam);
 
   // Inform scope about the shutterless status
-  mScope->SetShutterlessCamera(mParam->noShutter);
+  mScope->SetShutterlessCamera(mParam->noShutter * (mParam->sideMount ? -1 : 1));
    
   //Had to add this for DE camera switching TM.
   //3_28_11 for DE12
@@ -8754,8 +8754,10 @@ int CCameraController::SetupFilter(BOOL acquiring)
       }
 
       // Set slit width
-      if (delWidth > 0.1 && filtParam->slitIn)
+      if (delWidth > 0.1 && filtParam->slitIn) {
+        SEMTrace('l', "Changing slit to %.0f", filtParam->slitWidth);
         mTD.scopePlugFuncs->SetSlitWidth((double)filtParam->slitWidth);
+      }
 
       // Set energy shift
       if (delOffset > 0.1) {
