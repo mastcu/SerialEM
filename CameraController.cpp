@@ -2010,7 +2010,7 @@ int CCameraController::SaveFrameStackMdoc(KImage *image)
 
   // Now send the string to DM for a K2
   if (message.IsEmpty() && mParam->K2Type) {
-    stringSize = strlen(buffer) / 4 + 1;
+    stringSize = (int)strlen(buffer) / 4 + 1;
     if (!mParam->useSocket && CreateCamera(CREATE_FOR_CURRENT, false))
       message = "connecting with Gatan camera";
     else {
