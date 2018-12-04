@@ -79,6 +79,7 @@ public:
   SetMember(int, STEMfileMode);
   GetSetMember(int, STEMunsignOpt);
   GetSetMember(BOOL, SkipFileDlg);
+  SetMember(bool, DeferWritingFrameMdoc);
 
 	void AutoSaveFiles();
 	int AppendToLogBook(CString inString, CString title);
@@ -239,6 +240,8 @@ private:
   CString mFrameFilename;         // Filename for frame mdoc
   int mDfltUseMdoc;              // Default setting for whether to use mdoc
   int mLastFrameSect;            // Index of last section in frame mdoc
+  int mLastWrittenFrameSect;     // Sect index of last set written to file
+  bool mDeferWritingFrameMdoc;   // Flag to wait until write call and do last section only
   BOOL mSkipFileDlg;             // Settings flag to skip the file dialog
   bool mShowFileDlgOnce;         // Flag to be able to show it once
   bool mAbandonSettings;         // Flag not to save settings on exit or autosave

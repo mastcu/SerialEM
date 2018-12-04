@@ -2336,6 +2336,8 @@ void CSerialEMDoc::OnFileOpenMdoc()
   }
   mFrameSetIndex = 0;
   mLastFrameSect = -1;
+  mLastWrittenFrameSect = -1;
+  mDeferWritingFrameMdoc = false;
   if (mFrameAdocIndex < 0)
     AfxMessageBox("Failed to get a new autodoc structure for the .mdoc file", MB_EXCLAME);
   return;
@@ -2364,7 +2366,7 @@ void CSerialEMDoc::OnUpdateFileCloseMdoc(CCmdUI *pCmdUI)
 // Saves extra data from the image into the autodoc file
 int CSerialEMDoc::SaveFrameDataInMdoc(KImage *image)
 {
-  int err, sectInd;
+  int err = 0, sectInd;
   char setNum[15];
   if (mFrameAdocIndex < 0)
     return 0;
@@ -2378,10 +2380,13 @@ int CSerialEMDoc::SaveFrameDataInMdoc(KImage *image)
   }
   mLastFrameSect = sectInd;
   RELEASE_RETURN_ON_ERR(KStoreADOC::SetValuesFromExtra(image, "FrameSet", sectInd), 2);
-  if (mFrameSetIndex)
-    err = AdocAppendSection((LPCTSTR)mFrameFilename);
-  else
-    err = AdocWrite((LPCTSTR)mFrameFilename);
+  if (!mDeferWritingFrameMdoc) {
+    if (mFrameSetIndex)
+      err = AdocAppendSection((LPCTSTR)mFrameFilename);
+    else
+      err = AdocWrite((LPCTSTR)mFrameFilename);
+    mLastWrittenFrameSect = sectInd;
+  }
   AdocReleaseMutex();
   mFrameSetIndex++;
   if (err < 0)
@@ -2402,8 +2407,12 @@ int CSerialEMDoc::UpdateLastMdocFrame(KImage *image)
     return 1;
   RELEASE_RETURN_ON_ERR(KStoreADOC::SetValuesFromExtra(image, "FrameSet", mLastFrameSect),
     2);
-  if (AdocWrite((LPCTSTR)mFrameFilename) < 0)
-    retval = 3;
+  if (!(mDeferWritingFrameMdoc && mLastFrameSect == mLastWrittenFrameSect + 1)) {
+    if (AdocWrite((LPCTSTR)mFrameFilename) < 0)
+      retval = 3;
+    mLastWrittenFrameSect = mLastFrameSect;
+    mDeferWritingFrameMdoc = false;
+  }
   AdocReleaseMutex();
   return retval;
 }
@@ -2431,8 +2440,15 @@ int CSerialEMDoc::WriteFrameMdoc(void)
     return 1;
   if (AdocGetMutexSetCurrent(mFrameAdocIndex) < 0)
     return 2;
-  if (AdocWrite((LPCTSTR)mFrameFilename) < 0)
-    retval = 5;
+  if (mDeferWritingFrameMdoc && mLastFrameSect == mLastWrittenFrameSect + 1) {
+    if (AdocAppendSection((LPCTSTR)mFrameFilename) < 0)
+      retval = 5;
+  } else {
+    if (AdocWrite((LPCTSTR)mFrameFilename) < 0)
+      retval = 5;
+  }
+  mLastWrittenFrameSect = mLastFrameSect;
+  mDeferWritingFrameMdoc = false;
   AdocReleaseMutex();
   return retval;
 }
