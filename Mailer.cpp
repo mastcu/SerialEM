@@ -123,7 +123,7 @@ bool CMailer::SendMail(CString subject, CString message)
     Check(recv(hServer, szBuffer, sizeof(szBuffer), 0), "recv() HELO");
 
     // Send MAIL FROM: <sender@mydomain.com>
-    sprintf(szMsgLine, "MAIL FROM:<%s>%s", fromAddress, CRLF);
+    sprintf(szMsgLine, "MAIL FROM:<%s>%s", (LPCTSTR)fromAddress, CRLF);
     Check(send(hServer, szMsgLine, (int)strlen(szMsgLine), 0), "send() MAIL FROM");
     Check(recv(hServer, szBuffer, sizeof(szBuffer), 0), "recv() MAIL FROM");
 

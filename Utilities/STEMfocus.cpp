@@ -282,7 +282,7 @@ int findFocus(float **rotavs, int numRotavs, int numRotPts, float *focusVals,
     for (i = 0; i < numRotavs; i++) {
       if (i == indLow)
         continue;
-      expected1 = expected2 + estSlope * fabs(focusVals[i] - focusVals[indLow]);
+      expected1 = expected2 + estSlope * (float)fabs(focusVals[i] - focusVals[indLow]);
       setupDefocusFit(rotavs[i], rotavs[indLow], numRotPts, bkgds[i], bkgds[indLow],
                       fitStart, fitEnd, sincCurve, numSincPts, numSincNodes, expected1,
                       expected2, (varyScale ? -3 : 3), varyBkgd, weightPow);
@@ -322,7 +322,7 @@ int findFocus(float **rotavs, int numRotavs, int numRotPts, float *focusVals,
     // Limit the fitted size for the purpose of computing next size; this is better than
     // trying to prevent size increases
     size0 = B3DMIN(size0, maxSize0);
-    diff = size0 + *fitSlope * fabs(*fitFocus - focusVals[indLow]);
+    diff = size0 + *fitSlope * (float)fabs(*fitFocus - focusVals[indLow]);
     /* printf("focus %.2f  size0 %.2f  diff %.2f\n", *fitFocus, size0, diff);
        fflush(stdout); */
     sizeIter++;

@@ -112,7 +112,8 @@ void CStageMoveTool::OnPaint()
   CPen pnSolid2(PS_SOLID, 2, busy ? disableColor : innerColor);
   CPen pnOuter(PS_SOLID, 1, busy ? disableColor : outerColor);
   CPen pnDots(PS_DOT, 1, busy ? disableColor : outerColor);
-  CBrush brush = CBrush(fillColor);
+  CBrush brush;
+  brush.CreateSolidBrush(fillColor);
   CPen *oldPen = dc.SelectObject(&pnSolid1);
   CBrush *oldBrush = dc.SelectObject(&brush);
 

@@ -1271,8 +1271,8 @@ void ProcFFT(void *array, int type, int nx, int ny, int binning, float *fftarray
 #endif
   double val, cenMax;  
   double scale, sum;
-  int i, ixbase, iyin, iyout, iyinBase;
-  short int *sdata, *sdata2;
+  int i, ixbase = 0, iyin, iyout, iyinBase;
+  short int *sdata = NULL, *sdata2 = NULL;
   int cenLim;
   double wallStart = wallTime();
 

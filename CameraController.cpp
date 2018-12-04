@@ -9141,7 +9141,7 @@ double CCameraController::EasyRunScript(CString command, int selectCamera, int D
   double scriptRet;
   long strSize = command.GetLength() / 4 + 1;
   long *strTemp = new long[strSize];
-  sprintf((char *)strTemp, "%s", command);
+  sprintf((char *)strTemp, "%s", (LPCTSTR)command);
   try {
     MainCallDMIndCamera(DMindex, ExecuteScript(strSize, strTemp, selectCamera, 
       &scriptRet));

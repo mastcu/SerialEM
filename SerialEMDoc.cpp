@@ -2249,7 +2249,7 @@ void CSerialEMDoc::AutoSaveFiles()
 void CSerialEMDoc::AppendToProgramLog(BOOL starting)
 {
   CStdioFile *cFile = NULL;
-  CString name = CString(defaultSysPath) + "\\"PROGRAM_LOG;
+  CString name = CString(defaultSysPath) + "\\" PROGRAM_LOG;
   CString string;
   CTime ctdt = CTime::GetCurrentTime();
   CTimeSpan ts;
