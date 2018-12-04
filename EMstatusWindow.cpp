@@ -75,6 +75,8 @@ void EMstatusWindow::Update()
 {
   int whichBuf = 0;
   int indStat = 1;
+  int width, height;
+  bool spaceIt;
   mBufText[0] = (CStatic *)GetDlgItem(IDC_DISPLAYEDBUF);
   mBufText[1] = (CStatic *)GetDlgItem(IDC_OTHERBUF1);
   mBufText[2] = (CStatic *)GetDlgItem(IDC_OTHERBUF2);
@@ -92,9 +94,12 @@ void EMstatusWindow::Update()
       m_sStageText = "Stage:";
       m_sTiltText = "Tilt:";
       m_strDefocus = "Def:";
+      width = buf->mImage->getWidth();
+      height = buf->mImage->getHeight();
+      spaceIt = width < 10000 && height < 10000;
       if (buf->mImage) {
-        m_sSizeText.Format("Size: %d x %d  bin %s", buf->mImage->getWidth(), 
-          buf->mImage->getHeight(), (LPCTSTR)buf->BinningText());
+        m_sSizeText.Format("Size: %d%sx%s%d  bin %s", width, spaceIt ? " " : "", height,
+          spaceIt ? " " : "", (LPCTSTR)buf->BinningText());
         EMimageExtra *extra = (EMimageExtra *)buf->mImage->GetUserData();
         if (extra) {
           if (extra->m_fTilt > EXTRA_VALUE_TEST)
