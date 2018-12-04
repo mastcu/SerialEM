@@ -44,6 +44,7 @@ public:
   float mBinning;
   int mCamera;
   int mDividedBy2;
+  int mReadMode;
   int mMagIndex;
   float mCountsPerElectron;
   float mMin, mMax, mMean;
