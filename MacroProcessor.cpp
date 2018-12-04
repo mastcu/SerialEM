@@ -227,7 +227,8 @@ enum {CME_VIEW, CME_FOCUS, CME_TRIAL, CME_RECORD, CME_PREVIEW,
   CME_MAKEANCHORMAP, CME_STAGESHIFTBYPIXELS, CME_REPORTPROPERTY, CME_SAVENAVIGATOR,
   CME_FRAMETHRESHOLDNEXTSHOT, CME_QUEUEFRAMETILTSERIES, CME_FRAMESERIESFROMVAR,
   CME_WRITEFRAMESERIESANGLES, CME_ECHOREPLACELINE, CME_ECHONOLINEEND, CME_REMOVEAPERTURE,
-  CME_REINSERTAPERTURE, CME_PHASEPLATETONEXTPOS, CME_SETSTAGEBAXIS, CME_REPORTSTAGEBAXIS
+  CME_REINSERTAPERTURE, CME_PHASEPLATETONEXTPOS, CME_SETSTAGEBAXIS, CME_REPORTSTAGEBAXIS,
+  CME_DEFERWRITINGFRAMEMDOC, CME_ADDTONEXTFRAMESTACKMDOC, CME_STARTNEXTFRAMESTACKMDOC
 };
 
 static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0},
@@ -345,7 +346,9 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"FrameThresholdNextShot", 1, 1}, {"QueueFrameTiltSeries", 3, 0}, 
 {"FrameSeriesFromVar", 2, 0}, {"WriteFrameSeriesAngles", 1, 0}, {"EchoReplaceLine", 1, 1},
 {"EchoNoLineEnd", 1, 1}, {"RemoveAperture", 1, 0}, {"ReInsertAperture", 1, 0},
-{"PhasePlateToNextPos", 0, 0}, {"SetStageBAxis", 1, 1}, {"ReportStageBAxis", 0, 0},
+{"PhasePlateToNextPos", 0, 0}, {"SetStageBAxis", 1, 1}, {"ReportStageBAxis", 0, 0}, 
+{"DeferWritingFrameMdoc", 0, 0}, {"AddToNextFrameStackMdoc", 2, 0}, 
+{"StartNextFrameStackMdoc", 2, 0},
 {NULL, 0, 0}
 };
 
@@ -2555,6 +2558,18 @@ void CMacroProcessor::NextCommand()
     report.Format("Autodoc for frames %s open", index ? "IS" : "is NOT");
     mWinApp->AppendToLog(report, mLogAction);
 
+  } else if (CMD_IS(DEFERWRITINGFRAMEMDOC)) {               // DeferWritingFrameMdoc
+    mWinApp->mDocWnd->SetDeferWritingFrameMdoc(true);
+
+    // AddToNextFrameStackMdoc, StartNextFrameStackMdoc
+  } else if (CMD_IS(ADDTONEXTFRAMESTACKMDOC) || CMD_IS(STARTNEXTFRAMESTACKMDOC)) {
+    doBack = CMD_IS(STARTNEXTFRAMESTACKMDOC);
+    SubstituteVariables(&strLine, 1, strLine);
+    mWinApp->mParamIO->StripItems(strLine, 2, strCopy);
+    mWinApp->mParamIO->ParseString(strLine, strItems, MAX_TOKENS);
+    if (mCamera->AddToNextFrameStackMdoc(strItems[1], strCopy, doBack, &report))
+      ABORT_LINE(report + " in:\n\n");
+
   } else if (CMD_IS(ALIGNWHOLETSONLY)) {                 // SetAlignWholeTSOnly 
     index  = (itemEmpty[1] || itemInt[1] != 0) ? 1 : 0;
     if (mCamera->IsConSetSaving(&mConSets[RECORD_CONSET], RECORD_CONSET, camParams, false)
@@ -3620,6 +3635,8 @@ void CMacroProcessor::NextCommand()
     if (CMD_IS(ELECTRONSTATS) && mImBufs[index].mK2ReadMode > 0)
       backlashY = mWinApp->mProcessImage->LinearizedDoseRate(mImBufs[index].mCamera, 
         backlashX);
+    if (mImBufs[index].mDoseRatePerUBPix > 0.)
+      backlashY = mImBufs[index].mDoseRatePerUBPix;
     shiftX = backlashY / backlashX;
     report.Format("Min = %.3f  max = %.3f  mean = %.3f  SD = %.3f electrons/pixel; "
       "dose rate = %.3f e/unbinned pixel/sec", bmin * shiftX, bmax * shiftX, 
@@ -5529,6 +5546,7 @@ void CMacroProcessor::SuspendMacro(BOOL abort)
     "STOPPED NAV SCRIPT" : "");
   mWinApp->SetStatusText(SIMPLE_PANE, "");
   mWinApp->mScopeStatus.SetWatchDose(false);
+  mWinApp->mDocWnd->SetDeferWritingFrameMdoc(false);
 }
 
 
