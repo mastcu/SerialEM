@@ -3,6 +3,16 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+12/2/18: Added option to save an mdoc file along with each frame stack.
+
+12/2/18: Made changes so that the program can get dose rate from DM for K2 and
+K3 cameras with GMS 3.31.
+
+12/2/18: Added properties to offset the camera area being acquired.
+
+12/2/18: Added property for setting the size of tilt steps in a bidirectional
+return.
+
 11/25/18: Possibly fix switching of low dose areas at zero image shift.
 
 11/25/18: Prevented log from being opened twice on startup.

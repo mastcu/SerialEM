@@ -256,6 +256,8 @@ CSerialEMApp::CSerialEMApp()
     mCamParams[i].squareSubareas = false;
     mCamParams[i].refSizeEvenX = 0;
     mCamParams[i].refSizeEvenY = 0;
+    mCamParams[i].leftOffset = 0;
+    mCamParams[i].topOffset = 0;
     mCamParams[i].fourPort = false;     // Wasn't initialized
     mCamParams[i].TietzType = 0;
     mCamParams[i].failedToInitialize = false;

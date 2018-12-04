@@ -13,18 +13,31 @@
 
 
     <p>
-      This dialog has two sections.&nbsp; The upper section, which appears only for 
-      K2 cameras, presents choices about the files produced when the SerialEM plugin 
+      This dialog has two sections.&nbsp; The upper section presents choices about the files produced when the SerialEM plugin 
       to DigitalMicrograph saves subframes for a Dose Fractionation exposure.&nbsp; 
+      Everything except one option in this section appears only for K2 cameras.&nbsp; 
       The lower section, which appears for K2, Falcon, and Direct Electron cameras, allows you to 
       control the name of these files.&nbsp; For K2 and Falcon, you can also put subsets of the 
       files into different 
       folders automatically.&nbsp; These are global settings that apply to all camera parameter sets in which 
       frames are saved.</p>
     <p>
+      <b>Save metadata (.mdoc) file for each frame stack</b></p>
+    <p>
+      Select this option to have a metadata file in the autodoc format, with extension 
+      &#39;.mdoc&#39;, saved along with each set of frames.&nbsp; The file will named with 
+      &#39;.mdoc&#39; appended to a frame stack name or to the name of the folder containing 
+      single-frame files.&nbsp; This file will have the same format as the file opened 
+      with <a href="menu_file.htm#hid_file_open_mdoc">Open .mdoc for Frames</a> in the 
+      file menu, namely the one section in the file will be named &#39;Frameset&#39;.&nbsp; It 
+      will also have the gain reference and defect file names if K2 frames are taken 
+      without normalization.&nbsp; Additional entries can be added to the file with 
+      the script commands &#39;StartNextFrameStackMdoc&#39; and &#39;AddToNextFrameStackMdoc&#39;, but 
+      these commands must be given before acquisition.</p>
+    <p>
       &nbsp;</p>
     <p>
-      <i><b>K2 Camera Options</b></i></p>
+      <i><b>Other K2 Camera Options</b></i></p>
     <p>
       <b>File type</b></p>
     <p>
@@ -53,7 +66,8 @@
       <b>Save one frame per file</b></p>
     <p>
       Select this option to have each saved subframe written as a separate file 
-      instead of having all subframes for an acquisition written to one image stack.</p>
+      instead of having all subframes for an acquisition written to one image stack.&nbsp; 
+      They will be written in a uniquely named folder.</p>
     <p>
       <b>Save unnormalized frames even if Gain Normalized is selected</b></p>
     <p>

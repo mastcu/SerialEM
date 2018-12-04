@@ -1432,7 +1432,7 @@
 #define IDC_RBEAM_CONTROL               2457
 #define IDC_RSTAGE_CONTROL              2458
 #define IDC_STAT_BEAM_STAGE             2459
-#define IDC_BUTTON1                     2460
+#define IDC_FRAME_STACK_MDOC            2460
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773

@@ -203,6 +203,9 @@ void CBaseDlg::OnRButtonDblClk(UINT nFlags, CPoint point)
     mWinApp->RestoreViewFocus();
 }
 
+// Setup call for the panel tables
+// The first item in the section for panel is recorded as the panelStart so it better be
+// the top item; probably best to end panel section with the bottom item too
 void CBaseDlg::SetupPanelTables(int * idTable, int * leftTable, int * topTable, 
                                 int * numInPanel, int * panelStart)
 {

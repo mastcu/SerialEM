@@ -34,7 +34,8 @@ static int SEMCCDcodes[] =
    GAIN_REF_LOAD_ERROR, BAD_FRAME_REDUCE_PARAM, FRAMEALI_INITIALIZE, FRAMEALI_NEXT_FRAME,
    FRAMEALI_FINISH_ALIGN, MAKECOM_BAD_PARAM, MAKECOM_NO_REL_PATH, OPEN_COM_ERROR,
    WRITE_COM_ERROR, OPEN_MDOC_ERROR, WRITE_MDOC_ERROR, COPY_MDOC_ERROR, 
-   FRAMEALI_BAD_SUBSET, OPEN_SAVED_LIST_ERR, WRITE_SAVED_LIST_ERR, GRAB_AND_SKIP_ERR, 0};
+   FRAMEALI_BAD_SUBSET, OPEN_SAVED_LIST_ERR, WRITE_SAVED_LIST_ERR, GRAB_AND_SKIP_ERR, 
+   FRAMEDOC_NO_SAVING, FRAMEDOC_OPEN_ERR, FRAMEDOC_WRITE_ERR, 0};
 
 static char *SEMCCDmessages[] =
   {"Image not found from ID", "Image has unexpected data type", 
@@ -71,6 +72,8 @@ static char *SEMCCDmessages[] =
    "Error opening file to write list of saved frames",
    "Error writing file with list of saved frames", 
    "Program error: a grab stack was specified and that is not allowed with frame skipping"
+   , "Cannot save frame stack mdoc file, there is no current information about a frame"
+   " stack", "Error opening frame stack mdoc file", "Error writing frame stack mdoc file"
 };
 
 static char *noDesc = "No error description available";

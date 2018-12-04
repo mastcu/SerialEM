@@ -17,7 +17,8 @@ DS_CHANNEL_NOT_ACQUIRED, NO_DEFERRED_SUM, NO_GPU_AVAILABLE, DEFECT_PARSE_ERROR,
 GAIN_REF_LOAD_ERROR, BAD_FRAME_REDUCE_PARAM, FRAMEALI_INITIALIZE, FRAMEALI_NEXT_FRAME,
 FRAMEALI_FINISH_ALIGN, MAKECOM_BAD_PARAM, MAKECOM_NO_REL_PATH, OPEN_COM_ERROR,
 WRITE_COM_ERROR, OPEN_MDOC_ERROR, WRITE_MDOC_ERROR, COPY_MDOC_ERROR, FRAMEALI_BAD_SUBSET,
-OPEN_SAVED_LIST_ERR, WRITE_SAVED_LIST_ERR, GRAB_AND_SKIP_ERR};
+OPEN_SAVED_LIST_ERR, WRITE_SAVED_LIST_ERR, GRAB_AND_SKIP_ERR, FRAMEDOC_NO_SAVING, 
+FRAMEDOC_OPEN_ERR, FRAMEDOC_WRITE_ERR};
 
 // Flags for SetupFileSaving
 #define K2_SAVE_RAW_PACKED       1
@@ -96,7 +97,7 @@ enum {GS_ExecuteScript = 1, GS_SetDebugMode, GS_SetDMVersion, GS_SetCurrentCamer
       GS_SetupFileSaving2, GS_GetDefectList, GS_SetK2Parameters2, GS_StopContinuousCamera,
       GS_GetPluginVersion, GS_GetLastError, GS_FreeK2GainReference, GS_IsGpuAvailable,
       GS_SetupFrameAligning, GS_FrameAlignResults, GS_ReturnDeferredSum, 
-      GS_MakeAlignComFile, GS_WaitUntilReady
+      GS_MakeAlignComFile, GS_WaitUntilReady, GS_GetLastDoseRate, GS_SaveFrameMdoc
 };
 
 #endif
