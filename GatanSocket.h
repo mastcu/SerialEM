@@ -83,6 +83,7 @@ public:
   static int StopContinuousCamera();
   static int FreeK2GainReference(long which);
   static int WaitUntilReady(long which);
-
+  static int GetLastDoseRate(double *dose);
+  static int SaveFrameMdoc(int strSize, long buffer[], long flags);
   static int CheckReferenceTime(const char *filename, __time64_t *mtime);
 };

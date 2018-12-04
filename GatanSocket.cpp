@@ -538,3 +538,24 @@ int CGatanSocket::WaitUntilReady(long which)
 {
   return SendOneArgReturnRetVal(sSind, GS_WaitUntilReady, which);
 }
+
+// GetLastDoseRate
+int CGatanSocket::GetLastDoseRate(double *dose)
+{
+  InitializePacking(sSind, GS_GetLastDoseRate);
+  SendAndReceiveArgs(sSind);
+  if (!mLongArgs[sSind][0])
+    *dose = mDoubleArgs[sSind][0];
+  return mLongArgs[sSind][0];
+}
+
+int CGatanSocket::SaveFrameMdoc(int strSize, long buffer[], long flags)
+{
+  InitializePacking(sSind, GS_GetLastDoseRate);
+  InitializePacking(sSind, GS_CheckReferenceTime);
+  LONG_ARG(sSind, strSize);
+  LONG_ARG(sSind, flags);
+  mLongArray[sSind] = buffer;
+  SendAndReceiveArgs(sSind);
+  return mLongArgs[sSind][0];
+}
