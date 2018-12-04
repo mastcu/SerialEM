@@ -116,6 +116,7 @@ public:
   GetSetMember(float, TrialCenterMaxRadFrac);
   GetMember(int, TerminateOnError);
   GetSetMember(BOOL, SeparateExtraRecFiles);
+  GetSetMember(float, StepForBidirReturn);
   double GetCumulativeDose();
 
   bool GetBidirStartAngle(float &outVal) {outVal = mTSParam.bidirAngle; return mStartedTS && mTSParam.doBidirectional;};
