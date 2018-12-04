@@ -58,6 +58,8 @@ struct CamPluginFuncs;
 #define PLUGIN_CAN_REDUCE_SUPER  108
 #define PLUGIN_SUPPORTS_K3       108
 #define PLUGIN_HAS_WAIT_CALL     109
+#define PLUGIN_CAN_SAVE_MDOC     110
+#define PLUGIN_HAS_DOSE_CALL     110
 
 #define CAN_PLUGIN_DO(c, p) CanPluginDo(PLUGIN_##c, p)
 
@@ -242,6 +244,8 @@ struct CameraThreadData {
   long NumFramesSaved;          // Results from saving
   long ErrorFromSave;
   int NumAsyncSumFrames;        // -1 no async, 0 async no image, or # of frames to sum
+  bool GetDoseRate;             // Flag to call for dose rate from image/frames
+  double LastDoseRate;          // and returned dose rate
   BOOL imageReturned;           // Flag that blanker proc can proceed
   bool GetDeferredSum;          // Just get a deferred sum and ignore most other items
   bool UseFrameAlign;
@@ -425,6 +429,7 @@ class DLL_IM_EX CCameraController
   GetSetMember(BOOL, SaveSuperResReduced);
   GetSetMember(BOOL, TakeK3SuperResBinned);
   GetSetMember(BOOL, NameFramesAsMRCS);
+  GetSetMember(BOOL, SaveFrameStackMdoc);
   GetSetMember(BOOL, Use4BitMrcMode);
   GetSetMember(BOOL, SaveUnnormalizedFrames);
   SetMember(CString, SuperResRef);
@@ -556,9 +561,9 @@ class DLL_IM_EX CCameraController
   CameraThreadData mTD;   // Parameters to pass to the threads
   InsertThreadData mITD;
   int mBinning;
-  int mDMsizeX, mDMsizeY;
+  int mDMsizeX, mDMsizeY; // Binned size of image being requested
   double mExposure;
-  int   mTop;
+  int   mTop;             // Binned coordinates of image being requested
   int   mLeft;
   int   mBottom;
   int   mRight;
@@ -766,6 +771,7 @@ class DLL_IM_EX CCameraController
   BOOL mSaveUnnormalizedFrames; // Flag to save frames as unnormalized
   BOOL mSkipK2FrameRotFlip;     // Flag to have plugin skip reorienting frames
   BOOL mNameFramesAsMRCS;       // Flag to have plugin use extension .mrcs for frame stack
+  BOOL mSaveFrameStackMdoc;     // Flag to save one mdoc per frame stack/directory
   BOOL mK2SynchronousSaving;    // Flag to save the old way, synchronously
   CString mSuperResRef;         // Name of super-res reference to save with packed bytes
   CString mCountingRef;         // Name of counting mode reference file
@@ -836,6 +842,7 @@ class DLL_IM_EX CCameraController
   bool mStartedExtraForDEalign;  // Flag that an extra header was made to start DE align
   int mDoingDEframeAlign;        // Flag that align is being done here or IMOD
   bool mRemoveAlignedDEframes;   // Flag to remove DE frames if aligning only
+  int mFrameStackMdocInd;        // Flag 
   float mDarkMaxSDcrit;          // Sd for testing dark reference against if > 0
   float mDarkMaxMeanCrit;        // Mean for testing dark reference against if > 0
   int mBadDarkNumRetries;        // Number of retries if there is a bad dark reference
@@ -982,7 +989,10 @@ int * GetTietzSizes(CameraParameters *param, int & numSizes, int & offsetModulo)
 int NearestTietzSizeIndex(int ubSize, int *tietzSizes, int numSizes);
 int QueueTiltSeries(FloatVec &openTime, FloatVec &tiltToAngle, FloatVec &waitOrInterval,
   FloatVec &focusChange, FloatVec &deltaISX, FloatVec &deltaISY, float initialDelay);
+int SaveFrameStackMdoc(KImage *image);
 void GetFrameTSactualAngles(FloatVec &angles) {angles = mTD.FrameTSactualAngle;};
+int AddToNextFrameStackMdoc(CString key, CString value, bool startIt, CString *retMess);
+bool CanSaveFrameStackMdoc(CameraParameters * param);
 };
 
 

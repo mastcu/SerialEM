@@ -1,9 +1,9 @@
-﻿// Created by Microsoft (R) C/C++ Compiler Version 15.00.30729.01 (34d0ebbb).
+﻿// Created by Microsoft (R) C/C++ Compiler Version 15.00.30729.01 (cb6b3867).
 //
-// c:\users\mast\documents\scope\serialem\x64\release\serialemccd.tlh
+// c:\users\mast\documents\scope\serialem\release\serialemccd.tlh
 //
 // C++ source equivalent of type library ..\SerialEMCCD\SerialEMCCD.tlb
-// compiler-generated file created 06/28/18 at 14:13:34 - DO NOT EDIT!
+// compiler-generated file created 11/29/18 at 22:30:31 - DO NOT EDIT!
 
 #pragma once
 #pragma pack(push, 8)
@@ -269,6 +269,12 @@ IDMCamera : IDispatch
         long * error );
     HRESULT WaitUntilReady (
         long which );
+    HRESULT GetLastDoseRate (
+        double * doseRate );
+    HRESULT SaveFrameMdoc (
+        long size,
+        long * mdoc,
+        long flags );
 
     //
     // Raw methods provided by interface
@@ -502,6 +508,12 @@ IDMCamera : IDispatch
         /*[out]*/ long * error ) = 0;
       virtual HRESULT __stdcall raw_WaitUntilReady (
         /*[in]*/ long which ) = 0;
+      virtual HRESULT __stdcall raw_GetLastDoseRate (
+        /*[out]*/ double * doseRate ) = 0;
+      virtual HRESULT __stdcall raw_SaveFrameMdoc (
+        /*[in]*/ long size,
+        /*[in]*/ long * mdoc,
+        /*[in]*/ long flags ) = 0;
 };
 
 //

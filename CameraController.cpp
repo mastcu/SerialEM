@@ -28,11 +28,14 @@
 #include "CalibCameraTiming.h"
 #include "AutoTuning.h"
 #include "Utilities\XCorr.h"
+#include "Utilities\SEMUtilities.h"
+#include "Image\KStoreADOC.h"
 #include "DirectElectron\DirectElectronCamera.h"
 #include "DirectElectron\DirectElectronCamPanel.h"
 #include "GatanSocket.h"
 #include <mmsystem.h>
 #include "Shared\b3dutil.h"
+#include "Shared\autodoc.h"
 #include "Shared\SEMCCDDefines.h"
 
 
@@ -50,6 +53,7 @@ static char THIS_FILE[]=__FILE__;
 #define DM_RETURNS_DEFECT_LIST 40301
 #define DM_OVW_DRIFT_CORRECT_OK 50001
 #define DM_DS_CONTROLS_BEAM   40200
+#define DM_HAS_ELECTRON_DOSE  50331
 #define MAX_ESHIFT_TIMES  10
 #define BLANKER_MUTEX_WAIT 50
 
@@ -402,6 +406,7 @@ CCameraController::CCameraController()
   mAllowSpectroscopyImages = false;
   mASIgivesGainNormOnly = true;
   mNeedToRestoreISandBT = 0;
+  mFrameStackMdocInd = -1;
 }
 
 // Set a frame align param to default values
@@ -1766,6 +1771,9 @@ int CCameraController::GetDeferredSum(void)
   mLastConSet = mLastDeferredConSet;
   mAskedDeferredSum = false;
   mDeferredSumFailed = false;
+  mTD.GetDoseRate = mParam->K2Type && CAN_PLUGIN_DO(HAS_DOSE_CALL, mParam) && 
+    mDMversion[CAMP_DM_INDEX(mParam)] >= DM_HAS_ELECTRON_DOSE && 
+    mReadModeDeferred != LINEAR_MODE;
 
   // Do the essentials for starting the thread
   mNeedToRestoreISandBT = 0;
@@ -1946,6 +1954,121 @@ void CCameraController::MakeOneFrameAlignCom(CString &localFramePath, ControlSet
   if (err)
     PrintfToLog("WARNING: The com file for aligning was not saved: %s",
     SEMCCDErrorMessage(err));
+}
+
+// Save an mdoc file for a frame stack
+int CCameraController::SaveFrameStackMdoc(KImage *image)
+{
+  CString message, str;
+  char buffer[20000];
+  long stringSize, retVal, sectInd;
+  EMimageExtra *extra;
+
+  // First build up the autodoc structure and convert to a string
+  if (AdocAcquireMutex()) {
+
+    // Start a new autodoc or clear out section 0
+    if (mFrameStackMdocInd < 0) {
+      mFrameStackMdocInd = AdocNew();
+      if (mFrameStackMdocInd < 0)
+        message = "getting new autodoc structure";
+    } else if (AdocSetCurrent(mFrameStackMdocInd) < 0) {
+      message = "setting current autodoc structure";
+    }
+    if (message.IsEmpty()) {
+      if (AdocGetNumberOfSections("FrameSet") > 0 && AdocDeleteSection("FrameSet", 0))
+        message = "deleting existing section of autodoc";
+    }
+
+    // Add the section (back) and put values in it
+    if (message.IsEmpty()) {
+      sectInd = AdocAddSection("FrameSet", "0");
+      if (sectInd < 0)
+        message = "adding section to autodoc";
+    }
+    if (message.IsEmpty()) {
+      if (KStoreADOC::SetValuesFromExtra(image, "FrameSet", 0))
+        message = "putting extra data into autodoc structure";
+    }
+
+    // Convert to string for K2 or just write it
+    if (message.IsEmpty()) {
+      if (mParam->K2Type) {
+        if (AdocPrintToString(buffer, 20000, 1))
+          message = "converting autodoc to string";
+      } else {
+        extra = image->GetUserData();
+        str = extra->mSubFramePath + ".mdoc";
+        if (AdocWrite((LPCTSTR)str) < 0)
+          message = "calling AdocWrite";
+      }
+    }
+    AdocDeleteSection("FrameSet", 0);
+    AdocReleaseMutex();
+  } else
+    message = "getting mutex for";
+
+  // Now send the string to DM for a K2
+  if (message.IsEmpty() && mParam->K2Type) {
+    stringSize = strlen(buffer) / 4 + 1;
+    if (!mParam->useSocket && CreateCamera(CREATE_FOR_CURRENT, false))
+      message = "connecting with Gatan camera";
+    else {
+      try {
+        MainCallGatanCamera(SaveFrameMdoc(stringSize, (long *)buffer, 0));
+      }
+      catch (_com_error E) {
+        retVal = -1;
+        try {
+          MainCallGatanCamera(GetLastError(&retVal));
+        }
+        catch (_com_error E) {
+        }
+        message.Format("(%s) calling SEMCCD plugin", 
+        retVal >= 0 ? SEMCCDErrorMessage(retVal) : "");
+      }
+    }
+    if (!mParam->useSocket)
+      ReleaseCamera(CREATE_FOR_CURRENT);
+  }
+  if (!message.IsEmpty()) {
+    message = "Error " + message + " for writing frame stack mdoc file";
+    mWinApp->AppendToLog(message);
+    return 1;
+  }
+  return 0;
+}
+
+// Script-callable function to add a key-value pair to the global section of the autodoc
+// either clearing out existing globals or just adding it
+int CCameraController::AddToNextFrameStackMdoc(CString key, CString value, bool startIt,
+  CString *report)
+{
+  CString message;
+  if (AdocAcquireMutex()) {
+    if (startIt && mFrameStackMdocInd >= 0)
+      AdocClear(mFrameStackMdocInd);
+    if (mFrameStackMdocInd < 0 || startIt) {
+      mFrameStackMdocInd = AdocNew();
+      if (mFrameStackMdocInd < 0)
+        message = "getting new autodoc structure";
+    } else if (AdocSetCurrent(mFrameStackMdocInd) < 0) {
+      message = "setting current autodoc structure";
+    }
+    if (message.IsEmpty() && AdocSetKeyValue(ADOC_GLOBAL, 0, (LPCTSTR)key, (LPCTSTR)value))
+      message = "adding value to autodoc";
+    AdocReleaseMutex();
+  } else
+    message = "getting mutex for";
+  if (!message.IsEmpty()) {
+    message = "Error " + message + " for writing in frame stack mdoc file";
+    if (report)
+      *report = message;
+    else
+      SEMMessageBox(message);
+    return 1;
+  }
+  return 0;
 }
 
 // Set the next shot for early return with full sum if possible and appropriate
@@ -2656,6 +2779,9 @@ void CCameraController::Capture(int inSet, bool retrying)
   mTD.imageReturned = false;
   mTD.GetDeferredSum = false;
   mDeferredSumFailed = false;
+  mTD.GetDoseRate = mParam->K2Type && CAN_PLUGIN_DO(HAS_DOSE_CALL, mParam) && 
+    mDMversion[CAMP_DM_INDEX(mParam)] >= DM_HAS_ELECTRON_DOSE &&
+    conSet.K2ReadMode != LINEAR_MODE;
   mTD.MoveInfo = mSmiToDo;
   mTD.MoveInfo.JeolSD = mTD.JeolSD;
   mTD.PostImageShift = mISQueued;
@@ -3989,7 +4115,7 @@ int CCameraController::CapSetLDAreaFilterSettling(int inSet)
 void CCameraController::CapManageCoordinates(ControlSet & conSet, int &gainXoffset, 
                                              int &gainYoffset)
 {
-  int csizeX, csizeY, block, operation = 0;
+  int csizeX, csizeY, block, leftOffset = 0, topOffset = 0, operation = 0;
   int tLeft, tTop, tBot, tRight, tsizeX, tsizeY, reducedSizeX, reducedSizeY;
   BOOL unbinnedK2, doseFrac, superRes, antialiasInPlugin, swapXYinAcquire = false;
   bool reduceAligned, binInPlugin;
@@ -4138,10 +4264,16 @@ void CCameraController::CapManageCoordinates(ControlSet & conSet, int &gainXoffs
       mTD.K2ParamFlags |= K2_TAKE_BINNED_FRAMES;
   }
 
-  mTD.Left = tLeft;
-  mTD.Top = tTop;
-  mTD.Right = tRight;
-  mTD.Bottom = tBot;
+  if (!(mParam->K2Type || mParam->FEItype || mParam->subareasBad || 
+    mParam->TietzType == 8 || mParam->TietzType > 11)) {
+    leftOffset = mParam->leftOffset / mBinning;
+    topOffset = mParam->topOffset / mBinning;
+  }
+
+  mTD.Left = tLeft + leftOffset;
+  mTD.Top = tTop + topOffset;
+  mTD.Right = tRight + leftOffset;
+  mTD.Bottom = tBot + topOffset;
 
   // For oneView, throw the flag to take a subarea if plugin can do this and it is indeed
   // a subarea
@@ -6317,6 +6449,9 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
               &td->FaCrossHalf, &td->FaCrossQuarter, &td->FaCrossEighth, &td->FaHalfNyq,
               &ldum1, &ddum1, &ddum2));
           }
+          if (td->GetDoseRate) {
+            CallGatanCamera(pGatan, GetLastDoseRate(&td->LastDoseRate));
+          }
 
         }
         catch (_com_error E) {
@@ -6519,6 +6654,10 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
                       &td->FaCrossQuarter, &td->FaCrossEighth, &td->FaHalfNyq,
                       &ldum1, &ddum1, &ddum2));
                   }
+              }
+              if (td->GetDoseRate) {
+                imageOK = true;
+                CallGatanCamera(pGatan, GetLastDoseRate(&td->LastDoseRate));
               }
             }
           }
@@ -8147,6 +8286,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       else
         imBuf->mSampleMean = EXTRA_NO_VALUE;
       CUR_OR_DEFD_TO_BUF(mTimeStamp, mLastImageTime);
+      imBuf->mDoseRatePerUBPix = (float)(mTD.GetDoseRate ? mTD.LastDoseRate : 0.);
       imBuf->mStageShiftedByMouse = false;
       hasUserPtSave = imBuf->mHasUserPt;
       imBuf->mHasUserPt = false;
@@ -8252,6 +8392,9 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       extra->mExposure = (float)mExposure;
       extra->mBinning = (float)mBinning / BinDivisorF(mParam);
       extra->mCamera = curCam;
+      if (mParam->K2Type || (mParam->FEItype == FALCON3_TYPE && FCAM_CAN_COUNT(mParam)) ||
+        (mParam->DE_camType && (mParam->CamFlags & DE_CAM_CAN_COUNT)))
+        extra->mReadMode = lastConSetp->K2ReadMode;
       extra->mPixel = pixelSize;
       if (mTD.NumAsyncSumFrames != 0 && imBuf->mSampleMean > EXTRA_VALUE_TEST && 
         IsDirectDetector(mParam) && extra->m_fDose > 0 &&
@@ -8457,7 +8600,15 @@ void CCameraController::DisplayNewImage(BOOL acquired)
         extra->mCountsPerElectron /= 2.;
     }
 
-    // Save to autodoc file if one is designated
+    // Save to autodoc file if one is designated, adjusting pixel/binning first
+    axoff = extra->mBinning;
+    ayoff = extra->mPixel;
+    if (mParam->K2Type) {
+      extra->mBinning = B3DCHOICE(lastConSetp->K2ReadMode == K2_SUPERRES_MODE && 
+        !((mSaveSuperResReduced && CAN_PLUGIN_DO(CAN_REDUCE_SUPER, mParam)) ||
+        (mParam->K2Type == K3_TYPE && mTakeK3SuperResBinned)), 0.5f, 1.f);
+      extra->mPixel *= extra->mBinning / axoff;
+    }
     if (extra->mNumSubFrames > 0 || (IS_FALCON2_OR_3(mParam) && (mFrameMdocForFalcon > 1 
       || (mFrameMdocForFalcon && mLastConSet == RECORD_CONSET)))) {
         if (mTD.GetDeferredSum)
@@ -8471,6 +8622,13 @@ void CCameraController::DisplayNewImage(BOOL acquired)
           SEMMessageBox(message);
         }
     }
+
+    // Save to frame stack mdoc
+    if (extra->mNumSubFrames > 0 && mSaveFrameStackMdoc && CanSaveFrameStackMdoc(mParam)){
+      SaveFrameStackMdoc(image);
+    }
+    extra->mBinning = axoff;
+    extra->mPixel = ayoff;
 
     // If making a deferred sum, now is the time to copy the extra
     if (mStartingDeferredSum) {
@@ -10272,6 +10430,13 @@ bool CCameraController::CanWeAlignFalcon(CameraParameters *param, BOOL savingEna
     !(param->FEItype == FALCON3_TYPE && mLocalFalconFramePath.IsEmpty());
 }
 
+// Returns whether we can save an mdoc for the frame stack
+bool CCameraController::CanSaveFrameStackMdoc(CameraParameters * param)
+{
+  return (param->K2Type && CAN_PLUGIN_DO(CAN_SAVE_MDOC, param)) || (param->FEItype && 
+      !(param->FEItype == FALCON3_TYPE && mLocalFalconFramePath.IsEmpty())) ||
+      (param->DE_camType && mTD.DE_Cam->ServerIsLocal());
+}
 
 // Returns true if all conditions are satisfied for saving binned frames from K3 camera
 bool CCameraController::IsK3BinningSuperResFrames(int K2Type, int doseFrac, 

@@ -94,6 +94,8 @@ struct CameraParameters {
   int quarterSizeX[MAX_BINNINGS];
   int quarterSizeY[MAX_BINNINGS];
   BOOL fourPort;           // Four-port readout camera
+  int leftOffset;          // Offsets to add to the final coordinates sent to camera
+  int topOffset;    
   int TietzType;           // Number of Tietz camera type if not 0
   BOOL failedToInitialize; // Flag that Tietz camera failed to initialize
   int AMTtype;             // Flag for AMT camera
