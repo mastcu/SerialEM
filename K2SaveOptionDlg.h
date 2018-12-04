@@ -42,6 +42,7 @@ public:
   BOOL mCanSaveTimes100;
   BOOL mCanReduceSuperres;
   BOOL mCanUseExtMRCS;
+  BOOL mCanSaveFrameStackMdoc;
   BOOL mCanGainNormSum;
   BOOL mSetIsGainNormalized;
   BOOL mTakingK3Binned;
@@ -51,8 +52,8 @@ public:
   int mK2mode;
 
 private:
-  int mPanelStart[3];
-  int mNumInPanel[3];
+  int mPanelStart[5];
+  int mNumInPanel[5];
 
 public:
   CString m_strBasename;
@@ -96,6 +97,8 @@ public:
   BOOL m_bSaveTimes100;
   CButton m_butUseExtensionMRCS;
   BOOL m_bUseExtensionMRCS;
+  CButton m_butSaveFrameStackMdoc;
+  BOOL m_bSaveFrameStackMdoc;
   CButton m_butSaveUnnormalized;
   BOOL m_bSaveUnnormalized;
   afx_msg void OnSaveUnnormalized();

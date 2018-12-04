@@ -12,9 +12,12 @@
 // CK2SaveOptionDlg dialog
 
 static int idTable[] = {IDC_STAT_FILETYPE, IDC_SAVE_MRC, IDC_COMPRESSED_TIFF, 
-  IDC_TIFF_ZIP_COMPRESS, IDC_ONE_FRAME_PER_FILE, IDC_PACK_RAW_FRAME, IDC_SKIP_ROTFLIP, 
-  IDC_PACK_COUNTING_4BIT, IDC_USE_4BIT_MRC_MODE, IDC_SAVE_TIMES_100, IDC_SAVE_UNNORMALIZED
-  , IDC_USE_EXTENSION_MRCS, IDC_TSS_LINE1, PANEL_END, 
+  IDC_TIFF_ZIP_COMPRESS, IDC_STAT_CURSET2, IDC_STAT_CURSET1,
+  IDC_USE_EXTENSION_MRCS, IDC_ONE_FRAME_PER_FILE, PANEL_END,
+  IDC_FRAME_STACK_MDOC, IDC_TSS_LINE2, PANEL_END, 
+  IDC_SAVE_UNNORMALIZED, IDC_PACK_COUNTING_4BIT, IDC_USE_4BIT_MRC_MODE, IDC_SAVE_TIMES_100,
+  IDC_PACK_RAW_FRAME, IDC_CHECK_REDUCE_SUPERRES, IDC_SKIP_ROTFLIP, IDC_TSS_LINE1, 
+  PANEL_END, 
   IDC_STAT_COMPTITLE, IDC_STAT_USE_COMP, IDC_STAT_FOLDER, IDC_STAT_FILE, IDC_STAT_EXAMPLE,
   IDC_CHECK_ROOT_FOLDER, IDC_EDIT_BASENAME, IDC_CHECK_ROOT_FILE,
   IDC_CHECK_SAVEFILE_FILE, IDC_CHECK_SAVEFILE_FOLDER, IDC_CHECK_NAVLABEL_FOLDER, 
@@ -51,6 +54,7 @@ CK2SaveOptionDlg::CK2SaveOptionDlg(CWnd* pParent /*=NULL*/)
   , m_bSaveUnnormalized(FALSE)
   , m_bReduceSuperres(FALSE)
   , m_strCurSetSaves(_T(""))
+  , m_bSaveFrameStackMdoc(FALSE)
 {
 
 }
@@ -103,6 +107,8 @@ void CK2SaveOptionDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Check(pDX, IDC_SAVE_TIMES_100, m_bSaveTimes100);
   DDX_Control(pDX, IDC_USE_EXTENSION_MRCS, m_butUseExtensionMRCS);
   DDX_Check(pDX, IDC_USE_EXTENSION_MRCS, m_bUseExtensionMRCS);
+  DDX_Control(pDX, IDC_FRAME_STACK_MDOC, m_butSaveFrameStackMdoc);
+  DDX_Check(pDX, IDC_FRAME_STACK_MDOC, m_bSaveFrameStackMdoc);
   DDX_Control(pDX, IDC_SAVE_UNNORMALIZED, m_butSaveUnnormalized);
   DDX_Check(pDX, IDC_SAVE_UNNORMALIZED, m_bSaveUnnormalized);
   DDX_Control(pDX, IDC_PACK_RAW_FRAME, m_butPackRawFrame);
@@ -138,14 +144,15 @@ END_MESSAGE_MAP()
 // CK2SaveOptionDlg message handlers
 BOOL CK2SaveOptionDlg::OnInitDialog()
 {
-  BOOL states[3] = {true, true, true};
+  BOOL states[5] = {true, true, true, true, true};
   int show = (mDEtype && !mCanCreateDir) ? SW_HIDE : SW_SHOW;
   CString str;
   CBaseDlg::OnInitDialog();
   m_butSkipRotFlip.EnableWindow(mEnableSkipRotFlip);
   m_butSaveUnnormalized.EnableWindow(mCanGainNormSum);
   SetupPanelTables(idTable, leftTable, topTable, mNumInPanel, mPanelStart);
-  states[0] = !mFalconType && !mDEtype;
+  states[0] = states[2] = !mFalconType && !mDEtype;
+  states[1] = mCanSaveFrameStackMdoc || mK2Type;
   AdjustPanels(states, idTable, leftTable, topTable, mNumInPanel, mPanelStart, 0);
   m_butSavesTimes100.ShowWindow(mK2Type == K2_SUMMIT);
   m_butPackCounting4Bits.ShowWindow(mK2Type == K2_SUMMIT);
@@ -312,6 +319,7 @@ void CK2SaveOptionDlg::ManagePackOptions(void)
   m_butReduceSuperres.EnableWindow(!unNormed && mCanReduceSuperres && !mTakingK3Binned);
   m_butSavesTimes100.EnableWindow(!unNormed && mCanSaveTimes100 && !m_bReduceSuperres);
   m_butUseExtensionMRCS.EnableWindow(!m_iFileType && mCanUseExtMRCS);
+  m_butSaveFrameStackMdoc.EnableWindow(mCanSaveFrameStackMdoc);
   m_strCurSetSaves.Format("%s to %s%s%s%s", unNormed ? "raw" : "norm",
       m_iFileType > 0 ? (m_iFileType > 2 ? "TIF-ZIP" : "TIF-LZW") : "MRC", 
       (reducing || binning) ? "" : (m_bOneFramePerFile ? " files" : " stack"),

@@ -2632,6 +2632,7 @@ void CCameraSetupDlg::OnButFileOptions()
   optDlg.m_bUse4BitMode = mCamera->GetUse4BitMrcMode();
   optDlg.m_bSaveUnnormalized = mCamera->GetSaveUnnormalizedFrames();
   optDlg.m_bUseExtensionMRCS = mCamera->GetNameFramesAsMRCS();
+  optDlg.m_bSaveFrameStackMdoc = mCamera->GetSaveFrameStackMdoc();
   optDlg.m_bSkipRotFlip = mCamera->GetSkipK2FrameRotFlip();
   optDlg.mEnableSkipRotFlip = mParam->rotationFlip;
   optDlg.mFalconType = mParam->FEItype;
@@ -2656,6 +2657,7 @@ void CCameraSetupDlg::OnButFileOptions()
   optDlg.mCanSaveTimes100 = 
     mCamera->CAN_PLUGIN_DO(SAVES_TIMES_100, mParam) && mParam->K2Type == K2_SUMMIT;
   optDlg.mCanUseExtMRCS = mCamera->CAN_PLUGIN_DO(CAN_SET_MRCS_EXT, mParam);
+  optDlg.mCanSaveFrameStackMdoc = mCamera->CanSaveFrameStackMdoc(mParam);
   optDlg.mCanGainNormSum = mCamera->CAN_PLUGIN_DO(CAN_GAIN_NORM, mParam);
   optDlg.mCanReduceSuperres = mCamera->CAN_PLUGIN_DO(CAN_REDUCE_SUPER, mParam);
   optDlg.mSetIsGainNormalized = m_iProcessing == GAIN_NORMALIZED;
@@ -2671,6 +2673,7 @@ void CCameraSetupDlg::OnButFileOptions()
       "setting for saving frames unnormalized"))
         mCamera->SetSaveUnnormalizedFrames(optDlg.m_bSaveUnnormalized);
     mCamera->SetNameFramesAsMRCS(optDlg.m_bUseExtensionMRCS);
+    mCamera->SetSaveFrameStackMdoc(optDlg.m_bSaveFrameStackMdoc);
     mCamera->SetK2SaveAsTiff(optDlg.m_iFileType);
     mCamera->SetSkipK2FrameRotFlip(optDlg.m_bSkipRotFlip);
     mCamera->SetFrameBaseName(optDlg.m_strBasename);
