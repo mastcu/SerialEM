@@ -692,9 +692,9 @@ int FrameAlign::nextFrame(void *frame, int type, float *gainRef, int nxGain, int
   float *fullArr = mWorkFullSize;
   float *tempBin, *groupArr;
   int nxBin, nyBin, nxTaper, nyTaper, ind, ref, xOffset, yOffset, useInd;
-  int top, left, bottom, right, gainXoff, gainYoff, ix, iy, filt, useFilt, base;
+  int top, left, bottom, right, gainXoff, gainYoff, ix, iy, filt, useFilt, base = 0;
   int numThreads, maxThreads;
-  float xShift, yShift, val, nearXshift = 0., nearYshift = 0.;
+  float xShift, yShift, val = 0., nearXshift = 0., nearYshift = 0.;
   bool needExtract = true;
   bool addToFull = mSummingMode < 0 || (mSummingMode == 0 &&  !mDeferSumming);
   bool filterSubarea = mCumAlignAtEnd || (mGpuFlags & GPU_FOR_ALIGNING) != 0;
@@ -707,7 +707,7 @@ int FrameAlign::nextFrame(void *frame, int type, float *gainRef, int nxGain, int
   int nxDimForBP = mNx;
   int nxForBP = mNx, nyForBP = mNy;
   float *useFrame = (float *)frame;
-  float *fOut, *gainp;
+  float *fOut, *gainp = NULL;
   unsigned char *bFrame = (unsigned char *)frame;
   short *sFrame = (short *)frame;
   unsigned short *usFrame = (unsigned short *)frame;
@@ -2334,9 +2334,9 @@ void FrameAlign::analyzeFRCcrossings(float *ringCorrs, float frcDeltaR, float &h
 void FrameAlign::filterAndAddToSum(float *fft, float *array, int nx, int ny, float *ctf, 
                        float delta)
 {
-  float x, delx, dely, y, s, maxFreq;
-  double ysq;
-  int ix, iy, index, ind, indp1, indf, nxDiv2, nxDiv2p1, nyMinus1;
+  float x = 0, delx, dely, y = 0., s = 0., maxFreq;
+  double ysq = 0.;
+  int ix, iy, index = 0, ind = 0, indp1 = 0, indf = 0, nxDiv2, nxDiv2p1, nyMinus1;
   int nxMax;
   int numThreads, maxThreads = 16;
 
