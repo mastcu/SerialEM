@@ -78,11 +78,11 @@ BOOL CBaseDlg::OnInitDialog()
 BOOL CBaseDlg::OnToolTipNotify( UINT id, NMHDR * pNMHDR, LRESULT * pResult )
 {
   TOOLTIPTEXT *pTTT = (TOOLTIPTEXT *)pNMHDR;
-  UINT nID = (UINT)pNMHDR->idFrom;
+  int nID;
   if (pTTT->uFlags & TTF_IDISHWND)
     {
       // idFrom is actually the HWND of the tool
-      nID = ::GetDlgCtrlID((HWND)nID);
+      nID = ::GetDlgCtrlID((HWND)pNMHDR->idFrom);
       if(nID)
         {
           pTTT->lpszText = MAKEINTRESOURCE(nID);
