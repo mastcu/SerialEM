@@ -1224,11 +1224,28 @@
         </TR>
         <TR VALIGN="top">
           <TD>CameraSizeX</TD>
-          <TD>Number of pixels in X.</TD>
+          <TD>Size of camera or maximum number of pixels to acquire in X.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>CameraSizeY</TD>
-          <TD>Number of pixels in Y</TD>
+          <TD>Size of camera or maximum number of pixels to acquire in Y.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>LeftOffset</TD>
+          <TD>Number of pixels to add to unbinned left and right coordinates for each camera 
+            acquisition.&nbsp; If this entry or the next is used, the camera size can be set 
+            less than its true size to trim off large borders that are unusable.&nbsp; The 
+            sum of &#39;CameraSizeX&#39; and this entry must be no more than the true camera size in 
+            X.&nbsp; This entry must be a multiple of the &#39;XMustBeMultipleOf&#39; and the 
+            maximum binning.&nbsp; Offsets cannot be entered for K2, FEI, or Tietz 
+            F216/416/816 cameras.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>TopOffset</TD>
+          <TD>Number of pixels to add to unbinned top and bottom coordinates for each camera 
+            acquisition.&nbsp; The sum of &#39;CameraSizeY&#39; and this entry must be no more than 
+            the true camera size in Y.&nbsp; This entry must be a multiple of the &#39;YMustBeMultipleOf&#39; 
+            and the maximum binning. </TD>
         </TR>
         <TR VALIGN="top">
           <TD>XMustBeMultipleOf</TD>

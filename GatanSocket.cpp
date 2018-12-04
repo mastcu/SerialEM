@@ -549,6 +549,7 @@ int CGatanSocket::GetLastDoseRate(double *dose)
   return mLongArgs[sSind][0];
 }
 
+// SaveFrameMdoc
 int CGatanSocket::SaveFrameMdoc(int strSize, long buffer[], long flags)
 {
   InitializePacking(sSind, GS_GetLastDoseRate);

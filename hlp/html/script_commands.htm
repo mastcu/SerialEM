@@ -1185,6 +1185,27 @@
           <TD>Reports whether a frame .mdoc file is open; sets ReportedValue1 to 1 if so.</TD>
         </TR>
         <TR vAlign="top">
+          <TD class="style7">DeferWritingFrameMdoc</TD>
+          <TD>Prevents the program from appending a new section to the frame .mdoc file 
+            after frames are acquired.&nbsp; If you use this command before starting the 
+            acquisition, add values after acquisition with &#39;AddToFrameMdoc &#39;, and finish 
+            with &#39;WriteFrameMdoc&#39;, the new section with your additions can be appended to 
+            the file rather than rewriting the whole file.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style7">StartNextFrameStackMdoc key value</TD>
+          <TD>Adds a key-value pair to the global section of the .mdoc file written with 
+            each frame stack when the option for such a file is selected in the
+            <a href="#hidd_k2_save_options.htm">Frame File Options</a> dialog, after 
+            clearing out any previous entries in the global section.&nbsp; This command and 
+            the next must be given before acquiring.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style7">AddToNextFrameStackMdoc key value</TD>
+          <TD>Adds a key-value pair to the global section of the frame stack .mdoc file 
+            while retaining previous entries there.</TD>
+        </TR>
+        <TR vAlign="top">
           <TD class="style7">WriteComForTSAlign</TD>
           <TD>Writes the command file for aliging a whole tilt series if this mode of 
             operation was selected with the AlignWholeTSOnly command; otherwise it has no 
