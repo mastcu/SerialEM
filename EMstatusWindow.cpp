@@ -94,12 +94,12 @@ void EMstatusWindow::Update()
       m_sStageText = "Stage:";
       m_sTiltText = "Tilt:";
       m_strDefocus = "Def:";
-      width = buf->mImage->getWidth();
-      height = buf->mImage->getHeight();
-      spaceIt = width < 10000 && height < 10000;
       if (buf->mImage) {
-        m_sSizeText.Format("Size: %d%sx%s%d  bin %s", width, spaceIt ? " " : "", height,
-          spaceIt ? " " : "", (LPCTSTR)buf->BinningText());
+		    width = buf->mImage->getWidth();
+		    height = buf->mImage->getHeight();
+		    spaceIt = width < 10000 && height < 10000;
+        m_sSizeText.Format("Size: %d%sx%s%d  bin %s", width, spaceIt ? " " : "", 
+          spaceIt ? " " : "", height, (LPCTSTR)buf->BinningText());
         EMimageExtra *extra = (EMimageExtra *)buf->mImage->GetUserData();
         if (extra) {
           if (extra->m_fTilt > EXTRA_VALUE_TEST)
