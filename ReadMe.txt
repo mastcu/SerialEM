@@ -1,7 +1,8 @@
 SerialEM is currently developed in Visual Studio 2010 with the v90 (VS 2008)
 platform toolset, which is required for it to run under Windows 2000 and XP
 below SP3.  To compile it with VS 2010, change the platform toolset to v100
-for each configuration being compiled.
+for each configuration being compiled.  To compile it with VS2015, use the
+solution SerialEM14.sln.
 
 There are 5 project configurations:
 Debug (Win 32 & x64)
@@ -28,7 +29,8 @@ license for them.  Namely, libifft-MKL.lib and libifft-MKL-64.lib are import
 libraries for the corresponding DLLs in the binary SerialEM distributions,
 which incorporate Intel Math Kernel Library FFT routines from version 11.1 of
 the Intel compiler collection.  If you do not have a license for these, you
-should change the project configuration under Linker - Input as follows:
+should change the project configuration under Linker - Input as follows
+(unless using the SerialEM14 project in VS 2015):
   1) Remove "-MKL" from the entry for libifft in "Additional Dependencies".
   2) Remove "-IOMP" from the entries there for libiimod and libcfshr.
   3) Completely remove the entry there for libiomp5md.lib.
@@ -44,10 +46,14 @@ RFFTW2st.lib, making the changes in steps 2-5 above, and defining USE_FFTW2 at
 least for the compilation of Xcorr.cpp.
 
 
-
 SerialEM can be compiled in VS 2013 by reading in the current solution file,
 allowing it to upgrade the project, and changing preprocessor definition
 _WIN32_WINNT=0x0500 to 0x0501.
+
+A 64-bit version of SerialEM can be compiled in VS 2015 with the solution
+file SerialEM14.sln.  The configuration should not require any modifications,
+and the needed libraries for a build without MKL or FFTW are all in
+SerialEMLibs, named with "-14".
 
 
 The rest of this file contains a description of the modules in SerialEM.
