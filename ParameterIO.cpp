@@ -1896,6 +1896,10 @@ int CParameterIO::ReadProperties(CString strFileName)
             camP->refSizeEvenX = itemInt[1];
           else if (MatchNoCase("GainRefYsizeEven"))
             camP->refSizeEvenY = itemInt[1];
+          else if (MatchNoCase("LeftOffset"))
+            camP->leftOffset = itemInt[1];
+          else if (MatchNoCase("TopOffset"))
+            camP->topOffset = itemInt[1];
           else if (MatchNoCase("XMustBeMultipleOf")) {
             if (camP->moduloX >= 0)
               camP->moduloX = itemInt[1];
@@ -1918,7 +1922,7 @@ int CParameterIO::ReadProperties(CString strFileName)
                 camP->subareasBad = 2;
               }
             }
-          }  else if (MatchNoCase("BasicCorrections"))
+          } else if (MatchNoCase("BasicCorrections"))
             camP->corrections = itemInt[1];
           else if (MatchNoCase("SizeCheckSwapped"))
             camP->sizeCheckSwapped = itemInt[1];
