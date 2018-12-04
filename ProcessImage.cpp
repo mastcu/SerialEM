@@ -3124,6 +3124,11 @@ int CProcessImage::DoseRateFromMean(EMimageBuffer *imBuf, float mean, float &dos
     imBuf->mBinning * imBuf->mBinning / (CamHasDoubledBinnings(camParam) ? 4. : 1.)));
   if ((camParam->K2Type || camParam->FEItype == FALCON3_TYPE) && imBuf->mK2ReadMode > 0)
     doseRate = LinearizedDoseRate(imBuf->mCamera, doseRate);
+  if (imBuf->mDoseRatePerUBPix > 0.) {
+    SEMTrace('1', "Dose rate computed from mean %.3f  returned from DM %.3f", doseRate,
+      imBuf->mDoseRatePerUBPix);
+    doseRate = imBuf->mDoseRatePerUBPix;
+  }
   return 0;
 }
 
