@@ -155,9 +155,12 @@ BOOL CK2SaveOptionDlg::OnInitDialog()
   states[1] = mCanSaveFrameStackMdoc || mK2Type;
   AdjustPanels(states, idTable, leftTable, topTable, mNumInPanel, mPanelStart, 0);
   m_butSavesTimes100.ShowWindow(mK2Type == K2_SUMMIT);
-  m_butPackCounting4Bits.ShowWindow(mK2Type == K2_SUMMIT);
-  if (mK2Type == K3_TYPE)
+  m_butPackCounting4Bits.ShowWindow(mK2Type == K2_SUMMIT || 
+    (mK2Type == K3_TYPE && mWinApp->mCamera->CAN_PLUGIN_DO(CAN_BIN_K3_REF, mCamParams)));
+  if (mK2Type == K3_TYPE) {
     m_butPackRawFrame.SetWindowText("Pack unnormalized data as 4-bit");
+    ReplaceDlgItemText(IDC_PACK_COUNTING_4BIT, "Counting mode", "binned by 2");
+  }
   m_bRootFolder = (mNameFormat & FRAME_FOLDER_ROOT) != 0;
   m_bSavefileFolder = (mNameFormat & FRAME_FOLDER_SAVEFILE) != 0;
   m_bNavLabelFolder = (mNameFormat & FRAME_FOLDER_NAVLABEL) != 0;

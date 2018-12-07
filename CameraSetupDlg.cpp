@@ -2398,8 +2398,8 @@ int CCameraSetupDlg::CheckFrameAliRestrictions(int useMode, BOOL saveUnnormed,
   CString message, str;
   bool takeBinned = m_bTakeK3Binned && (mCamera->CAN_PLUGIN_DO(CAN_BIN_K3_REF, mParam) ||
     (m_iProcessing == GAIN_NORMALIZED && 
-    !(saveUnnormed && (mCurSet->useFrameAlign > 1 || useSave))));
-  if (mCurSet->useFrameAlign) {
+    !(saveUnnormed && ((m_bAlignDoseFrac && mCurSet->useFrameAlign > 1) || useSave))));
+  if (mCurSet->useFrameAlign && m_bAlignDoseFrac) {
     notOK = UtilFindValidFrameAliParams(mParam, useMode, takeBinned, 
       mCurSet->useFrameAlign, mCurSet->faParamSetInd, newIndex, &message);
     if (notOK) {
@@ -2621,6 +2621,7 @@ void CCameraSetupDlg::CheckFalconFrameSumList(void)
   }
 }
 
+// Open the frame file options dialog
 void CCameraSetupDlg::OnButFileOptions()
 {
   CK2SaveOptionDlg optDlg;

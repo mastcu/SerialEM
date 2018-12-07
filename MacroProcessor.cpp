@@ -3635,8 +3635,11 @@ void CMacroProcessor::NextCommand()
     if (CMD_IS(ELECTRONSTATS) && mImBufs[index].mK2ReadMode > 0)
       backlashY = mWinApp->mProcessImage->LinearizedDoseRate(mImBufs[index].mCamera, 
         backlashX);
-    if (mImBufs[index].mDoseRatePerUBPix > 0.)
+    if (mImBufs[index].mDoseRatePerUBPix > 0.) {
+      SEMTrace('1', "Dose rate computed from mean %.3f  returned from DM %.3f", backlashY,
+        mImBufs[index].mDoseRatePerUBPix);
       backlashY = mImBufs[index].mDoseRatePerUBPix;
+    }
     shiftX = backlashY / backlashX;
     report.Format("Min = %.3f  max = %.3f  mean = %.3f  SD = %.3f electrons/pixel; "
       "dose rate = %.3f e/unbinned pixel/sec", bmin * shiftX, bmax * shiftX, 

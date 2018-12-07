@@ -116,7 +116,9 @@
       <a href="about_camera.htm#directDetectors">Direct Electron Detectors, Especially the Gatan K2</a>).&nbsp; 
       The option is not available for K3 cameras.</p>
     <p>
-      <b>Pack unnormalized data as 4-bit (Super-Res) or 4/8-bit (Counting)</b></p>
+      <b>Pack unnormalized data as 4-bit (Super-Res) or 4/8-bit (Counting)&nbsp;&nbsp;&nbsp; 
+      (K2)<br />
+      Pack unnormalized data as 4-bit&nbsp;&nbsp;&nbsp; (K3)</b></p>
     <p>
       This option determines whether Dose Fractionation frames taken without software 
       gain normalization are saved in the form in which they are 
@@ -124,7 +126,7 @@
       for super-resolution mode; for K3, bytes) or in a packed form.&nbsp; When this option is 
       selected and not the one described next, K2 counting mode images are truncated into bytes 
       (maximum 255), and K2 super-resolution 
-      or K3 counting mode images are stored with pairs of 4-bit integers (maximum 15) in each byte.&nbsp; (The 
+      or K3 unbinned counting mode images are stored with pairs of 4-bit integers (maximum 15) in each byte.&nbsp; (The 
       left pixel in a pair is in the low 4 bits and the right pixel is in the high 4 
       bits of a packed byte.) The data will 
       be raw counts, rather than the scaled values that are saved otherwise (see <A href="about_camera.htm#directDetectors">Direct Electron Detectors,
@@ -137,9 +139,11 @@
       redundant to the compression and may save little additional space, but it should 
       be faster with packed 4-bit data because fewer bytes need to be compressed.</p>
     <p>
-      <b>Pack unnormalized Counting mode data as 4-bit, not 8-bit (K2 only)</b></p>
+      <b>Pack unnormalized Counting mode data as 4-bit, not 8-bit&nbsp;&nbsp; (K2)<br />
+      Pack unnormalized binned by 2 data as 4-bit, not 8-bit&nbsp;&nbsp; (K3)</b></p>
     <p>
-      This option allows counting mode data taken without gain normalization to be 
+      This option allows counting mode data 
+      on a K2, or binned by 2 data on a K3, that is taken without gain normalization to be 
       further truncated at 15 and packed into 4-bit integers, instead of into bytes.&nbsp; 
       This option is enabled and relevant only when the first packing option is 
       selected.&nbsp; If the mean of a frame is only a few electrons per pixel, then 
