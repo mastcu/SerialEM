@@ -3663,7 +3663,7 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
   int reflen = 0, comlen = 0, defectLen = 0, sumLen = 0;
   int alignFlags = 0, gpuFlags = 0, aliRefLen = 0, aliComLen;
   CString refFile, sumList, tmpStr, aliComName;
-  if (isSuperRes)
+  if (isSuperRes || mParam->K2Type)
     refFile = mParam->superResRefForK2;
   else if (conSet.K2ReadMode == COUNTING_MODE)
     refFile = mParam->countingRefForK2;

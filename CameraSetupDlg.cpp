@@ -2517,7 +2517,8 @@ void CCameraSetupDlg::ManageDoseFrac(void)
   m_statFrameTime.EnableWindow(m_bDoseFracMode);
   m_statFrameSec.EnableWindow(m_bDoseFracMode);
   m_editFrameTime.EnableWindow(m_bDoseFracMode);
-  m_butTakeK3Binned.EnableWindow(m_bDoseFracMode);
+  m_butTakeK3Binned.EnableWindow(m_bDoseFracMode && (m_bSaveFrames || (m_bAlignDoseFrac &&
+    mCurSet->useFrameAlign)));
   m_butAlignDoseFrac.EnableWindow(m_bDoseFracMode && (m_bSaveFrames || !mFEItype || 
     mWeCanAlignFalcon) &&
     !(mCurrentSet == RECORD_CONSET && mWinApp->mTSController->GetFrameAlignInIMOD()));
