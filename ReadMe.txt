@@ -53,7 +53,9 @@ _WIN32_WINNT=0x0500 to 0x0501.
 A 64-bit version of SerialEM can be compiled in VS 2015 with the solution
 file SerialEM14.sln.  The configuration should not require any modifications,
 and the needed libraries for a build without MKL or FFTW are all in
-SerialEMLibs, named with "-14".
+SerialEMLibs, named with "-14".  To run it, copy the file
+libctffind-VCOMP-14.dll from SerialEMLibs/x64 to the executable directory and
+rename it libctffind-VCOMP.dll.
 
 
 The rest of this file contains a description of the modules in SerialEM.
