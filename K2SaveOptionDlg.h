@@ -31,6 +31,7 @@ public:
   CButton m_butSkipRotFlip;
   BOOL m_bSkipRotFlip;
   BOOL mEnableSkipRotFlip;
+  CameraParameters *mCamParams;   // Why wasn't this put here a lot sooner?
   int mFalconType;
   int mCamFlags;
   BOOL mDEtype;

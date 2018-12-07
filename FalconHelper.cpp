@@ -1375,7 +1375,7 @@ void CFalconHelper::GetSavedFrameSizes(CameraParameters *camParams,
   const ControlSet *conSet, int &frameX, int &frameY, bool acquiredSize)
 {
   int superResDiv = (IS_SUPERRES(camParams, conSet->K2ReadMode) && 
-    !mCamera->IsK3BinningSuperResFrames(conSet, camParams->K2Type)) ? 1 : 2;
+    !mCamera->IsK3BinningSuperResFrames(conSet, camParams)) ? 1 : 2;
   BOOL maybeSwap;
   if (camParams->K2Type) {
     if (!acquiredSize && conSet->processing == GAIN_NORMALIZED && 

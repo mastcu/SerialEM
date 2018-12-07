@@ -307,7 +307,7 @@ void CK2SaveOptionDlg::ManagePackOptions(void)
 {
   bool unNormed = !mSetIsGainNormalized || (mCanGainNormSum && m_bSaveUnnormalized);
   m_butPackRawFrame.EnableWindow(unNormed);
-  bool binning = mWinApp->mCamera->IsK3BinningSuperResFrames(mK2Type, 1, mSaveSetting,
+  bool binning = mWinApp->mCamera->IsK3BinningSuperResFrames(mCamParams, 1, mSaveSetting,
     mAlignSetting, mUseFrameAlign, unNormed ? DARK_SUBTRACTED : GAIN_NORMALIZED, 
     mK2mode, mTakingK3Binned);
   bool reducing = !unNormed && (mK2Type == K3_TYPE || mK2mode == K2_SUPERRES_MODE) && 

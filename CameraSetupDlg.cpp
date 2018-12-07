@@ -2396,8 +2396,9 @@ int CCameraSetupDlg::CheckFrameAliRestrictions(int useMode, BOOL saveUnnormed,
 {
   int newIndex, notOK, answ;
   CString message, str;
-  bool takeBinned = m_bTakeK3Binned && m_iProcessing == GAIN_NORMALIZED && 
-    !(saveUnnormed && (mCurSet->useFrameAlign > 1 || useSave));
+  bool takeBinned = m_bTakeK3Binned && (mCamera->CAN_PLUGIN_DO(CAN_BIN_K3_REF, mParam) ||
+    (m_iProcessing == GAIN_NORMALIZED && 
+    !(saveUnnormed && (mCurSet->useFrameAlign > 1 || useSave))));
   if (mCurSet->useFrameAlign) {
     notOK = UtilFindValidFrameAliParams(mParam, useMode, takeBinned, 
       mCurSet->useFrameAlign, mCurSet->faParamSetInd, newIndex, &message);
@@ -2438,7 +2439,7 @@ void CCameraSetupDlg::ManageK2Binning(void)
     return;
   CButton *radio = (CButton *)GetDlgItem(IDC_RBIN1);
   bool superResOK = IS_SUPERRES(mParam, m_iK2Mode) && !mCamera->IsK3BinningSuperResFrames(
-    mParam->K2Type, m_bDoseFracMode ? 1 : 0, m_bSaveFrames ? 1 : 0, m_bAlignDoseFrac ? 1 : 0,
+    mParam, m_bDoseFracMode ? 1 : 0, m_bSaveFrames ? 1 : 0, m_bAlignDoseFrac ? 1 : 0,
     mCurSet->useFrameAlign,  m_iProcessing, m_iK2Mode, m_bTakeK3Binned);
   radio->EnableWindow(mBinningEnabled && superResOK);
   if (!superResOK && !m_iBinning) {
@@ -2516,6 +2517,7 @@ void CCameraSetupDlg::ManageDoseFrac(void)
   m_statFrameTime.EnableWindow(m_bDoseFracMode);
   m_statFrameSec.EnableWindow(m_bDoseFracMode);
   m_editFrameTime.EnableWindow(m_bDoseFracMode);
+  m_butTakeK3Binned.EnableWindow(m_bDoseFracMode);
   m_butAlignDoseFrac.EnableWindow(m_bDoseFracMode && (m_bSaveFrames || !mFEItype || 
     mWeCanAlignFalcon) &&
     !(mCurrentSet == RECORD_CONSET && mWinApp->mTSController->GetFrameAlignInIMOD()));
@@ -2634,6 +2636,7 @@ void CCameraSetupDlg::OnButFileOptions()
   optDlg.m_bUseExtensionMRCS = mCamera->GetNameFramesAsMRCS();
   optDlg.m_bSaveFrameStackMdoc = mCamera->GetSaveFrameStackMdoc();
   optDlg.m_bSkipRotFlip = mCamera->GetSkipK2FrameRotFlip();
+  optDlg.mCamParams = mParam;
   optDlg.mEnableSkipRotFlip = mParam->rotationFlip;
   optDlg.mFalconType = mParam->FEItype;
   optDlg.mCamFlags = mParam->CamFlags;
@@ -2833,7 +2836,7 @@ void CCameraSetupDlg::ManageK2SaveSummary(void)
   bool unNormed = m_iProcessing != GAIN_NORMALIZED || 
     (mCamera->GetSaveUnnormalizedFrames() && mCamera->GetPluginVersion(mParam) > 
     PLUGIN_CAN_GAIN_NORM);
-  bool binning = mCamera->IsK3BinningSuperResFrames(mParam->K2Type, 
+  bool binning = mCamera->IsK3BinningSuperResFrames(mParam, 
     m_bDoseFracMode ? 1 : 0, m_bSaveFrames ? 1 : 0, m_bAlignDoseFrac ? 1 : 0,
     mCurSet->useFrameAlign,  m_iProcessing, m_iK2Mode, m_bTakeK3Binned);
   bool reducing = !unNormed && IS_SUPERRES(mParam, m_iK2Mode) && !binning &&

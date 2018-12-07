@@ -60,6 +60,7 @@ struct CamPluginFuncs;
 #define PLUGIN_HAS_WAIT_CALL     109
 #define PLUGIN_CAN_SAVE_MDOC     110
 #define PLUGIN_HAS_DOSE_CALL     110
+#define PLUGIN_CAN_BIN_K3_REF    110
 
 #define CAN_PLUGIN_DO(c, p) CanPluginDo(PLUGIN_##c, p)
 
@@ -981,10 +982,10 @@ void AdjustCountsPerElecForScale(CameraParameters * param);
 int DESumCountForConstraints(CameraParameters *camP, ControlSet *consP);
 void MakeOneFrameAlignCom(CString & localFramePath, ControlSet *conSet);
 void QueueBeamTilt(double inBTX, double inBTY, int backlashDelay);
-bool IsK3BinningSuperResFrames(int K2Type, int doseFrac, int saveFrames,
+bool IsK3BinningSuperResFrames(CameraParameters *param, int doseFrac, int saveFrames,
   int alignFrames, int useFrameAlign, int processing, int readMode,
   BOOL takeBinnedFlag);
-bool IsK3BinningSuperResFrames(const ControlSet *conSet, int K2Type);
+bool IsK3BinningSuperResFrames(const ControlSet *conSet, CameraParameters *param);
 int * GetTietzSizes(CameraParameters *param, int & numSizes, int & offsetModulo);
 int NearestTietzSizeIndex(int ubSize, int *tietzSizes, int numSizes);
 int QueueTiltSeries(FloatVec &openTime, FloatVec &tiltToAngle, FloatVec &waitOrInterval,
