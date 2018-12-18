@@ -1036,7 +1036,7 @@ void CCameraController::InitializeDMcameras(int DMind, int *numDMListed,
 int CCameraController::InitializeTietz(int whichCameras, int *originalList, int numOrig, 
                                         BOOL anyPreExp)
 {
-  int i, ind, flags;
+  int i, ind, flags, type;
   CString mess;
   CamPluginFuncs *funcs;
 
@@ -1066,11 +1066,16 @@ int CCameraController::InitializeTietz(int whichCameras, int *originalList, int 
       // Get the functions into array, cancel property if shutterbox creation failed
       for (i = 0; i < numOrig; i++) {
         ind = originalList[i];
-        if (mAllParams[ind].TietzType) {
+        type = mAllParams[ind].TietzType;
+        if (type) {
           if (anyPreExp && !mShutterInstance)
             mAllParams[ind].TietzCanPreExpose = false;
           mPlugFuncs[ind] = funcs;
           mAllParams[ind].cameraNumber = mAllParams[ind].TietzType;
+
+          // Set this if the test for processing ability passes
+          mAllParams[ind].pluginCanProcess = !mAllParams[ind].TietzFlatfieldDir.IsEmpty()
+            && type >= 11 && type != 13;
         }
       }
     } else {
@@ -1534,7 +1539,9 @@ void CCameraController::StopCapture(int ifNow)
   }
   
   // DNM: call the DE camera only if it is the current camera	
-  if (mParam->DE_camType  && mParam->DE_camType < 2 && mTD.DE_Cam) {
+  // 12/17/18: This is ready to use when the server doesn't crash/hang
+  if (mParam->DE_camType && mTD.DE_Cam && (mParam->DE_camType < 2 || 
+    mTD.DE_Cam->GetServerVersion() >= DE_ABORT_WORKS)) {
     mWinApp->AppendToLog("Going to try to stop acquisition of camera.");
     mTD.DE_Cam->StopAcquistion();
     mHalting = true;
@@ -1613,10 +1620,9 @@ BOOL CCameraController::GetInitialized()
 // Return whether processing is being done here
 BOOL CCameraController::GetProcessHere()
 {
-  return (mProcessHere || mParam->TietzType || 
-    (mParam->AMTtype && mDMversion[AMT_IND] < AMT_VERSION_CAN_NORM) ||
-    mParam->DE_camType == 1 || 
-    (mTD.plugFuncs && !mParam->pluginCanProcess)) && CanProcessHere(mParam);
+  return (mProcessHere || (mParam->AMTtype && mDMversion[AMT_IND] < AMT_VERSION_CAN_NORM)
+    || mParam->DE_camType == 1 || (mTD.plugFuncs && !mParam->pluginCanProcess)) && 
+    CanProcessHere(mParam);
 }
 
 // Set whether processing here from menu
@@ -1977,8 +1983,13 @@ int CCameraController::SaveFrameStackMdoc(KImage *image)
     // Start a new autodoc or clear out section 0
     if (mFrameStackMdocInd < 0) {
       mFrameStackMdocInd = AdocNew();
-      if (mFrameStackMdocInd < 0)
+      if (mFrameStackMdocInd < 0) {
         message = "getting new autodoc structure";
+      } else {
+        mWinApp->mDocWnd->MakeSerialEMTitle(mWinApp->mDocWnd->GetTitle(), buffer);
+        if (AdocSetKeyValue(ADOC_GLOBAL, 0, "T", buffer))
+          message = "adding title to autodoc";
+      }
     } else if (AdocSetCurrent(mFrameStackMdocInd) < 0) {
       message = "setting current autodoc structure";
     }
@@ -2052,6 +2063,8 @@ int CCameraController::AddToNextFrameStackMdoc(CString key, CString value, bool 
   CString *report)
 {
   CString message;
+  bool addTitle = startIt || mFrameStackMdocInd < 0;
+  char title[80];
   if (AdocAcquireMutex()) {
     if (startIt && mFrameStackMdocInd >= 0)
       AdocClear(mFrameStackMdocInd);
@@ -2061,6 +2074,11 @@ int CCameraController::AddToNextFrameStackMdoc(CString key, CString value, bool 
         message = "getting new autodoc structure";
     } else if (AdocSetCurrent(mFrameStackMdocInd) < 0) {
       message = "setting current autodoc structure";
+    }
+    if (addTitle && message.IsEmpty()) {
+      mWinApp->mDocWnd->MakeSerialEMTitle(mWinApp->mDocWnd->GetTitle(), title);
+      if (AdocSetKeyValue(ADOC_GLOBAL, 0, "T", title))
+        message = "adding title to autodoc";
     }
     if (message.IsEmpty() && AdocSetKeyValue(ADOC_GLOBAL, 0, (LPCTSTR)key, (LPCTSTR)value))
       message = "adding value to autodoc";
@@ -2281,7 +2299,7 @@ int CCameraController::QueueTiltDuringShot(double angle, int delayToStart, doubl
   mSmiToDo.axisBits = axisA;
   mSmiToDo.doBacklash = false;
   mSmiToDo.doRelax = false;
-  if (speed > 0. && (!FEIscope || mScope->GetPluginVersion() < FEI_PLUGIN_STAGE_SPEED))
+  if (speed > 0. && FEIscope && mScope->GetPluginVersion() < FEI_PLUGIN_STAGE_SPEED)
     return 1;
   mSmiToDo.useSpeed = speed > 0.;
   mSmiToDo.speed = speed;
@@ -2766,6 +2784,7 @@ void CCameraController::Capture(int inSet, bool retrying)
   mTD.FEItype = mParam->FEItype;
   mTD.CamFlags = mParam->CamFlags;
   mTD.DE_camType = mParam->DE_camType;
+  mTD.TietzFlatfieldDir = mParam->pluginCanProcess ? mParam->TietzFlatfieldDir : "";
 
   // DNM: this was added for NCMIR camera
   mWinApp->SetStatusText(SIMPLE_PANE, "");
@@ -4787,7 +4806,8 @@ int CCameraController::CapManageDarkGainRefs(ControlSet & conSet, int inSet,
     mDarkp = NULL;
     mGainp = NULL;
 
-    if (GetProcessHere() && !(mFrameSavingEnabled && IS_BASIC_FALCON2(mParam) &&
+    if ((GetProcessHere() || (mParam->TietzType && conSet.processing == DARK_SUBTRACTED)) 
+      && !(mFrameSavingEnabled && IS_BASIC_FALCON2(mParam) &&
       !mWinApp->mGainRefMaker->GetPreparingGainRef())) {
       double currentTicks = GetTickCount();
 
@@ -5974,6 +5994,8 @@ void CCameraController::AcquirePluginImage(CameraThreadData *td, void **array,
   int flags = td->DivideBy2 ? PLUGCAM_DIVIDE_BY2 : 0;
   if (tietzImage && td->RestoreBBmode)
     flags |= TIETZ_RESTORE_BBMODE;
+  if (td->TietzType == 15)
+    flags |= TIETZ_SET_READ_MODE;
 
   // Do the selection for Tietz dark reference but not image
   if (!retval && td->plugFuncs->SelectCamera && !tietzImage)
@@ -5999,6 +6021,11 @@ void CCameraController::AcquirePluginImage(CameraThreadData *td, void **array,
   }
 
   // Do preliminary steps for Tietz that were always before starting blanker
+  if (!retval && td->TietzType && td->plugFuncs->SetExtraParams1 &&
+    (td->TietzType == 15 || !td->TietzFlatfieldDir.IsEmpty())) {
+      td->plugFuncs->SetExtraParams1(1, 1, 0, tietzDark ? 0 : processing, 
+        (LPCTSTR)td->TietzFlatfieldDir);
+  }
   if (!retval && tietzImage)
     retval = td->plugFuncs->PrepareForAcquire(td->TietzType, td->ShutterMode);
   if (!retval && blanker)
@@ -8611,11 +8638,17 @@ void CCameraController::DisplayNewImage(BOOL acquired)
     // Save to autodoc file if one is designated, adjusting pixel/binning first
     axoff = extra->mBinning;
     ayoff = extra->mPixel;
+    ixoff = extra->mDividedBy2;
+    camRate = extra->mCountsPerElectron;
     if (mParam->K2Type) {
       extra->mBinning = B3DCHOICE(lastConSetp->K2ReadMode == K2_SUPERRES_MODE && 
         !((mSaveSuperResReduced && CAN_PLUGIN_DO(CAN_REDUCE_SUPER, mParam)) ||
         (mParam->K2Type == K3_TYPE && mTakeK3SuperResBinned)), 0.5f, 1.f);
       extra->mPixel *= extra->mBinning / axoff;
+      if (lastConSetp->processing != GAIN_NORMALIZED || mSaveUnnormalizedFrames) {
+        extra->mDividedBy2 = 0;
+        extra->mCountsPerElectron = 1.;
+      }
     }
     if (extra->mNumSubFrames > 0 || (IS_FALCON2_OR_3(mParam) && (mFrameMdocForFalcon > 1 
       || (mFrameMdocForFalcon && mLastConSet == RECORD_CONSET)))) {
@@ -8637,6 +8670,8 @@ void CCameraController::DisplayNewImage(BOOL acquired)
     }
     extra->mBinning = axoff;
     extra->mPixel = ayoff;
+    extra->mDividedBy2 = ixoff;
+    extra->mCountsPerElectron = camRate;
 
     // If making a deferred sum, now is the time to copy the extra
     if (mStartingDeferredSum) {

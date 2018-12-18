@@ -136,6 +136,7 @@ struct CameraThreadData {
   int STEMcamera;             // Flag for STEM camera
   CString errMess;            // Error message for deferred message boxes
   int errFlag;                // Flag set by testing routines or threads
+  CString TietzFlatfieldDir;  // Flatfield directory for Tietz
   long Left, Right, Top, Bottom;     // binned CCD coordinates of the image
   long DMSizeX, DMSizeY;      // Binned size in X and Y
   long CallSizeX, CallSizeY;  // Sizes to use in calls for DE and Tietz
