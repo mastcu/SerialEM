@@ -89,11 +89,12 @@ private:
   CSerialEMApp *mWinApp;
   CMacroProcessor * mProcessor;
   CMacroEditer **mEditer;
-  CString *myMacro;
+  CString *mMyMacro;
   CString *mSaveFile;  // Full path of save file
   CString *mFileName;  // Filename only for title bar
   CString *mMacroName; // Macro name
   CString mLastFindString;
+  bool mLoadUncommitted;   // Flag that script loaded from file hasn't been transferred
 public:
   afx_msg void OnEnChangeEditmacro();
   CButton m_butShiftUp;

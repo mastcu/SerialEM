@@ -35,6 +35,7 @@ CMacroEditer::CMacroEditer(CWnd* pParent /*=NULL*/)
   m_strTitle = "";
   mInitialized = false;
   mNonModal = true;
+  mLoadUncommitted = false;
   mWinApp = (CSerialEMApp *)AfxGetApp();
   mSaveFile = mWinApp->GetMacroSaveFiles();
   mFileName = mWinApp->GetMacroFileNames();
@@ -120,7 +121,7 @@ BOOL CMacroEditer::OnInitDialog()
   m_iSaveLeft = OKRect.left - wndRect.left - iXoffset;
 
   mInitialized = true;
-  myMacro = mWinApp->GetMacros() + m_iMacroNumber;
+  mMyMacro = mWinApp->GetMacros() + m_iMacroNumber;
   CEdit *editBox = (CEdit *)GetDlgItem(IDC_EDITMACRO);
   GotoDlgCtrl(editBox);
   editBox->SetSel(0, 0);
@@ -197,6 +198,10 @@ void CMacroEditer::OnCancel()
   if (mProcessor->ScanForName(m_iMacroNumber))
     mWinApp->mCameraMacroTools.MacroNameChanged(m_iMacroNumber);
   mEditer[m_iMacroNumber] = NULL;
+  if (mLoadUncommitted) {
+    mSaveFile[m_iMacroNumber] = "";
+    mFileName[m_iMacroNumber] = "";
+  }
   mWinApp->UpdateMacroButtons();
   GetWindowPlacement(mProcessor->GetEditerPlacement() + m_iMacroNumber);
   DestroyWindow();
@@ -322,6 +327,7 @@ void CMacroEditer::OnLoadmacro()
     UpdateData(false);
     mSaveFile[m_iMacroNumber] = cPathname;
     mFileName[m_iMacroNumber] = filename;
+    mLoadUncommitted = true;
     if (mProcessor->ScanForName(m_iMacroNumber, &m_strMacro))
       mWinApp->mCameraMacroTools.MacroNameChanged(m_iMacroNumber);
     SetTitle();
@@ -411,9 +417,10 @@ void CMacroEditer::TransferMacro(BOOL fromEditor)
 {
   if (fromEditor) {
     UpdateData(true);
-    *myMacro = m_strMacro;
+    *mMyMacro = m_strMacro;
+    mLoadUncommitted = false;
   } else {
-    m_strMacro = *myMacro;
+    m_strMacro = *mMyMacro;
     UpdateData(false);
   }
   if (mProcessor->ScanForName(m_iMacroNumber)) {
@@ -496,7 +503,13 @@ void CMacroEditer::ShiftMacro(int dir)
   CMacroEditer *tempEd = mEditer[m_iMacroNumber];
   mEditer[m_iMacroNumber] = mEditer[newNum];
   mEditer[newNum] = tempEd;
-  
+  tempStr = mFileName[m_iMacroNumber];
+  mFileName[m_iMacroNumber] = mFileName[newNum];
+  mFileName[newNum] = tempStr;
+  tempStr = mSaveFile[m_iMacroNumber];
+  mSaveFile[m_iMacroNumber] = mSaveFile[newNum];
+  mSaveFile[newNum] = tempStr;
+ 
   // Fix up each editor: m_iMacroNumber now refers to the other macro
   if (mEditer[m_iMacroNumber])
     mEditer[m_iMacroNumber]->AdjustForNewNumber(m_iMacroNumber);
@@ -512,7 +525,7 @@ void CMacroEditer::ShiftMacro(int dir)
 void CMacroEditer::AdjustForNewNumber(int newNum)
 {
   m_iMacroNumber = newNum;
-  myMacro = mWinApp->GetMacros() + m_iMacroNumber;
+  mMyMacro = mWinApp->GetMacros() + m_iMacroNumber;
   TransferMacro(false);
   SetTitle();
 }
