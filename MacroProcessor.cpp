@@ -4790,8 +4790,6 @@ void CMacroProcessor::NextCommand()
   } else if (CMD_IS(SETCOLUMNORGUNVALVE)) {                 // SetColumnOrGunValve
     if (itemEmpty[1])
       ABORT_LINE("Entry requires a number for setting valve open or closed: \n\n");
-    if (mScope->GetNoColumnValve() && itemInt[1])
-      ABORT_LINE("This command can only be used to turn the filament off, not on: \n\n");
     if (!mScope->SetColumnValvesOpen(itemInt[1] != 0))
       ABORT_NOLINE(itemInt[1] ? "An error occurred opening the valve" :
       "An error occurred closing the valve");
