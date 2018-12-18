@@ -1468,7 +1468,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
       if (mLastScreen != screenPos)
         mWinApp->mCamera->SetAMTblanking(screenPos == spUp);
       if (!mLowDoseMode || changedSTEM)
-        BlankBeam(needBlank);
+        BlankBeam(needBlank, "ScopeUpdate");
     }
 
     intensity = GetC2Percent(spotSize, rawIntensity);
@@ -1696,14 +1696,14 @@ void CEMscope::UpdateLowDose(int screenPos, BOOL needBlank, BOOL gotoArea, int m
 
       // First apply a blank if needed, regardless of screen            
       if (needBlank)
-        BlankBeam(true);
+        BlankBeam(true, "UpdateLowDose");
 
       // If screen is down, next set the desired area, then unblank if needed
       if (screenPos == spDown) {
         if (gotoArea && mLowDoseDownArea >= 0)
           GotoLowDoseArea(mLowDoseDownArea);
         if (!needBlank)
-          BlankBeam(false);
+          BlankBeam(false), "UpdateLowDose";
 
         // For omega filter, assert the filter settings
         if (GetHasOmegaFilter())
@@ -4326,7 +4326,7 @@ void CEMscope::SetFocusToStandardIfLM(int magInd)
 void CEMscope::SetBlankWhenDown(BOOL inVal)
 {
   mBlankWhenDown = inVal;
-  BlankBeam(NeedBeamBlanking(GetScreenPos(), GetSTEMmode()));
+  BlankBeam(NeedBeamBlanking(GetScreenPos(), GetSTEMmode()), "SetBlankWhenDown");
 }
 
 // Unblank or blank beam depending on camera acquire if in low dose mode and camera module
@@ -4339,7 +4339,7 @@ void CEMscope::SetCameraAcquiring(BOOL inVal, float waitTime)
   mCameraAcquiring = inVal;
   if (blankBefore != (NeedBeamBlanking(screenPos, mWinApp->GetSTEMMode()) ? 1 : 0) ||
     inVal && sBeamBlanked) {
-      BlankBeam(!inVal);
+      BlankBeam(!inVal, "SetCameraAcquiring");
       if (waitTime >= 0.001)
         Sleep(B3DNINT(1000. * waitTime));
   }
@@ -4352,7 +4352,8 @@ void CEMscope::SetShutterlessCamera(int inVal)
 {
   CameraParameters *camParam = mWinApp->GetCamParams() + mWinApp->GetCurrentCamera();
   mShutterlessCamera = inVal;
-  BlankBeam(NeedBeamBlanking(GetScreenPos(), camParam->STEMcamera));
+  BlankBeam(NeedBeamBlanking(GetScreenPos(), camParam->STEMcamera), 
+    "SetShutterlessCamera");
 }
 
 // Set mode, let Update figure out what to do
@@ -4362,24 +4363,25 @@ void CEMscope::SetLowDoseMode(BOOL inVal, BOOL hidingOffState)
   if (mLowDoseMode && !inVal) {
     int screenPos = FastScreenPos();
     if (hidingOffState && screenPos == spDown)
-      BlankBeam(true);
+      BlankBeam(true, "SetLowDoseMode");
     GotoLowDoseArea(3);
     if (!hidingOffState && !NeedBeamBlanking(GetScreenPos(), FastSTEMmode()))
-      BlankBeam(false);
+      BlankBeam(false, "SetLowDoseMode");
     mLowDoseSetArea = -1;
   }
   mLowDoseMode = inVal;
 }
 
 // Blank or unblank the beam; keep track of requested setting
-void CEMscope::BlankBeam(BOOL inVal)
+void CEMscope::BlankBeam(BOOL inVal, const char *fromWhere)
 {
   if (!sInitialized || mJeol1230)
     return;
   ScopeMutexAcquire("BlankBeam", true);
   try {
     PLUGSCOPE_SET(BeamBlank, VAR_BOOL(inVal));
-    SEMTrace('B', "Set beam blank %s", inVal ? "ON" : "OFF");
+    SEMTrace('B', "%s Set beam blank %s", fromWhere ? fromWhere : "", 
+      inVal ? "ON" : "OFF");
   }
   catch (_com_error E) {
     SEMReportCOMError(E, _T("setting beam blank "));
@@ -5687,6 +5689,7 @@ int CEMscope::RemoveAperture(int kind)
     mSavedAperturePosY[kind - 1]))
     return 2;
   mSavedApertureSize[kind - 1] = size;
+  SEMTrace('1', "RemoveAperture %d: size %d, at %f  %f", kind, size, mSavedAperturePosX[kind - 1], mSavedAperturePosY[kind - 1]);
   if (!SetApertureSize(kind, 0))
     return 1;
   return 0;

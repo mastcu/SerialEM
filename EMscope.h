@@ -333,7 +333,7 @@ class DLL_IM_EX CEMscope
   void NextLDAreaOpposite() {mNextLDpolarity = -1;};
   BOOL NormalizeProjector();
   BOOL NormalizeObjective();
-  void BlankBeam(BOOL inVal);
+  void BlankBeam(BOOL inVal, const char *fromWhere = NULL);
   void SetBlankWhenDown(BOOL inVal);
   void SetLowDoseMode(BOOL inVal, BOOL hidingOffState = FALSE);
   GetMember(BOOL, LowDoseMode);
