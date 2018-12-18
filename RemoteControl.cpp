@@ -280,7 +280,7 @@ void CRemoteControl::OnButValves()
   if (state >= 0) {
     mScope->SetColumnValvesOpen(state == 0);
     if (mScope->GetNoColumnValve())
-      PrintfToLog("Beam is now %s", state ? "OFF" : "ON");
+      PrintfToLog("Beam should now be turning %s", state ? "OFF" : "ON");
     else
       PrintfToLog("Valve%s now %s", JEOLscope ? " is" : "s are", 
         state ? "CLOSED" : "OPEN");

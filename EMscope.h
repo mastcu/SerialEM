@@ -25,7 +25,7 @@ struct ScopePluginFuncs;
 #define STAGE_MIN_Y 2
 #define STAGE_MAX_Y 3
 #define MAX_ALPHAS  10
-#define MAX_APERTURES 6
+#define MAX_APERTURE_NUM 11
 #define MAX_GAUGE_WATCH 6
 enum {CAL_NTRL_FIND = 0, CAL_NTRL_RESTORE, CAL_NTRL_FOCUS};
 
@@ -304,6 +304,7 @@ class DLL_IM_EX CEMscope
   GetMember(double, InternalMagTime);
   GetMember(double, UpdateSawMagTime);
   GetSetMember(BOOL, JeolHasNitrogenClass);
+  GetSetMember(BOOL, JeolHasExtraApertures);
   void SetJeolReadStageForWait(BOOL inVal);
   BOOL GetJeolReadStageForWait();
   GetSetMember(BOOL, SkipAdvancedScripting);
@@ -653,6 +654,7 @@ private:
   int mPostFocusChgDelay;     // Delay after changing focus
   int mUseJeolGIFmodeCalls;   // 1 to rely on state from calls, 2 to change EFTEM with it
   BOOL mJeolHasNitrogenClass; // Flag to create the nitrogen class
+  BOOL mJeolHasExtraApertures; // Flag to use Ex aperture calls
   int mJeolRefillTimeout;     // Timeout for refilling
   int mJeolFlashFegTimeout;   // Timeout for flashing FEG
   int mJeolEmissionTimeout;   // Timeout for turning emission off or on
@@ -668,9 +670,9 @@ private:
   float mAddToFalcon3Exposure; // Default to set addToExposure for Falcon 3
   BOOL mSkipAdvancedScripting; // To make cameras connect by old scripting
   std::vector<short int> mCheckedNeutralIS;  // To keep track if neutral IS tested
-  int mSavedApertureSize[MAX_APERTURES];     // Size and position from "RemoveAperture"
-  float mSavedAperturePosX[MAX_APERTURES];   // Apertures are numbered from 1, 
-  float mSavedAperturePosY[MAX_APERTURES];   // subtract 1 to access array
+  int mSavedApertureSize[MAX_APERTURE_NUM + 1];     // Size and position from "RemoveAperture"
+  float mSavedAperturePosX[MAX_APERTURE_NUM + 1];   // Apertures are numbered from 1, 
+  float mSavedAperturePosY[MAX_APERTURE_NUM + 1];   // subtract 1 to access array
   int mPluginVersion;         // Version of plugin or server
 
   // Old static variables from UpdateProc
@@ -798,6 +800,7 @@ public:
   BOOL GetLensFLCStatus(int lens, int &state, double &lensVal);
   double GetStageBAxis(void);
   BOOL SetStageBAxis(double inVal);
+  int CheckApertureKind(int kind);
 };
 
 

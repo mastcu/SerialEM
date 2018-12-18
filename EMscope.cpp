@@ -233,7 +233,7 @@ CEMscope::CEMscope()
     mC2SpotOffset[i][0] = mC2SpotOffset[i][1] = 0.; 
     mCrossovers[i][0] = mCrossovers[i][1] = 0.;
   }
-  for (i = 0; i < MAX_APERTURES; i++)
+  for (i = 0; i <= MAX_APERTURE_NUM; i++)
     mSavedApertureSize[i] = -1;
   mNumAlphaBeamShifts = 0;
   mNumAlphaBeamTilts = 0;
@@ -379,6 +379,7 @@ CEMscope::CEMscope()
   mJeolSTEMunitsX = false;
   mUsePLforIS = false;
   mJeolHasNitrogenClass = false;
+  mJeolHasExtraApertures = false;
   mJeolRefillTimeout = 2400;
   mJeolFlashFegTimeout = 30;
   mJeolEmissionTimeout = 120;
@@ -604,7 +605,8 @@ int CEMscope::Initialize()
       mJeolParams.hasOmegaFilter = mHasOmegaFilter;
       mJeolParams.initializeJeolDelay = mInitializeJeolDelay;
       mJeolParams.useGIFmodeCalls = mUseJeolGIFmodeCalls;
-      mJeolParams.flags = (mJeolHasNitrogenClass ? JEOL_HAS_NITROGEN_CLASS : 0);
+      mJeolParams.flags = (mJeolHasNitrogenClass ? JEOL_HAS_NITROGEN_CLASS : 0) |
+        (mJeolHasExtraApertures ? JEOL_HAS_EXTRA_APERTURES : 0);
       mJeolParams.flashFegTimeout = mJeolFlashFegTimeout;
       mJeolParams.emissionTimeout = mJeolEmissionTimeout;
       mJeolParams.fillNitrogenTimeout = mJeolRefillTimeout;
@@ -2001,8 +2003,13 @@ BOOL CEMscope::MoveStage(StageMoveInfo info, BOOL doBacklash, BOOL useSpeed,
     return false;
   }
   
-  if ((mMoveInfo.axisBits & axisB) && (useSpeed || !mPlugFuncs->SetStagePositionExtra)) {
+  if ((mMoveInfo.axisBits & axisB) && useSpeed) {
     SEMMessageBox("Program error - MoveStage called with B axis set AND useSpeed set");
+    return false;
+  }
+  if (((mMoveInfo.axisBits & axisB) || useSpeed) && !mPlugFuncs->SetStagePositionExtra) {
+    SEMMessageBox("Current scope plugin version does not support setting speed or B "
+      "axis");
     return false;
   }
   mMoveInfo = info;
@@ -5417,7 +5424,7 @@ int CEMscope::GetColumnValvesOpen()
 BOOL CEMscope::SetColumnValvesOpen(BOOL state, bool crashing)
 {
   BOOL result = true;
-  if (!sInitialized || (mNoColumnValve && state))
+  if (!sInitialized)
     return false;
   ScopeMutexAcquire("SetBeamValve", true);
 
@@ -5610,11 +5617,34 @@ bool CEMscope::GetTemperatureInfo(int type, BOOL &busy, int &time, int which,
  * Aperture functions
  */
 
+
+
+int CEMscope::CheckApertureKind(int kind)
+{
+  CString str;
+  if (!sInitialized)
+    return 1;
+  if (!JEOLscope) {
+    SEMMessageBox("Aperture movement is available only a JEOL");
+    return 1;
+  }
+  if (kind < 0 || kind > 11 || (!mJeolHasExtraApertures && (kind < 1 || kind > 6))) {
+    str.Format("Aperture number %d is out of range, it must be between %d and %d", kind,
+      mJeolHasExtraApertures ? 0 : 1, mJeolHasExtraApertures ? 11 : 6);
+    SEMMessageBox(str);
+    return 1;
+  }
+  return 0;
+}
+
+#define CHECK_APERTURE_KIND(k) (!sInitialized || !JEOLscope || k < 0 || k > 11 || \
+    (!mJeolHasExtraApertures && (k < 1 || k > 6)))
+
 // Get size of given aperture
 int CEMscope::GetApertureSize(int kind)
 {
   int result = -1;
-  if (!sInitialized || !JEOLscope || kind < 1 || kind > 6 || !mPlugFuncs->GetApertureSize)
+  if (CheckApertureKind(kind) || !mPlugFuncs->GetApertureSize)
     return -1;
   ScopeMutexAcquire("GetApertureSize", true);
   try {
@@ -5631,7 +5661,7 @@ int CEMscope::GetApertureSize(int kind)
 // This starts a thread
 bool CEMscope::SetApertureSize(int kind, int size)
 {
-  if (!sInitialized || !JEOLscope || kind < 1 || kind > 6 || !mPlugFuncs->SetApertureSize)
+  if (CheckApertureKind(kind) || !mPlugFuncs->SetApertureSize)
     return false;
   mApertureTD.actionFlags = APERTURE_SET_SIZE;
   mApertureTD.apIndex = kind;
@@ -5646,8 +5676,7 @@ bool CEMscope::GetAperturePosition(int kind, float &posX, float &posY)
 {
   bool result = true;
   double xpos, ypos;
-  if (!sInitialized || !JEOLscope || kind < 1 || kind > 6 || 
-    !mPlugFuncs->GetAperturePosition)
+  if (CheckApertureKind(kind) || !mPlugFuncs->GetAperturePosition)
     return false;
   ScopeMutexAcquire("GetAperturePosition", true);
   try {
@@ -5660,14 +5689,12 @@ bool CEMscope::GetAperturePosition(int kind, float &posX, float &posY)
   }
   ScopeMutexRelease("GetAperturePosition");
   return result;
-
 }
 
 // Set X/Y position of given aperture.  Starts a thread
 bool CEMscope::SetAperturePosition(int kind, float posX, float posY)
 {
-  if (!sInitialized || !JEOLscope || kind < 1 || kind > 6 || 
-    !mPlugFuncs->SetAperturePosition)
+  if (CheckApertureKind(kind) || !mPlugFuncs->SetAperturePosition)
     return false;
   mApertureTD.actionFlags = APERTURE_SET_POS;
   mApertureTD.apIndex = kind;
@@ -5685,11 +5712,12 @@ int CEMscope::RemoveAperture(int kind)
   int size = GetApertureSize(kind);
   if (size < 0)
     return 1;
-  if (!GetAperturePosition(kind, mSavedAperturePosX[kind - 1], 
-    mSavedAperturePosY[kind - 1]))
+  if (!GetAperturePosition(kind, mSavedAperturePosX[kind], 
+    mSavedAperturePosY[kind]))
     return 2;
-  mSavedApertureSize[kind - 1] = size;
-  SEMTrace('1', "RemoveAperture %d: size %d, at %f  %f", kind, size, mSavedAperturePosX[kind - 1], mSavedAperturePosY[kind - 1]);
+  mSavedApertureSize[kind] = size;
+  SEMTrace('1', "RemoveAperture %d: size %d, at %f  %f", kind, size, 
+    mSavedAperturePosX[kind], mSavedAperturePosY[kind]);
   if (!SetApertureSize(kind, 0))
     return 1;
   return 0;
@@ -5700,17 +5728,11 @@ int CEMscope::ReInsertAperture(int kind)
 {
   CString str;
   int retval = 0;
-  if (!sInitialized || !JEOLscope || !mPlugFuncs->SetApertureSize || 
-    !mPlugFuncs->SetAperturePosition) {
-    return 3;
-  }
-  if (kind < 1 || kind > MAX_APERTURES) {
-    str.Format("Aperture number %d is out of range, it must be between 1 and %d", kind,
-      MAX_APERTURES);
-    SEMMessageBox(str);
+  if (CheckApertureKind(kind))
     return 1;
-  }
-  if (mSavedApertureSize[kind - 1] < 0) {
+  if (!mPlugFuncs->SetApertureSize || !mPlugFuncs->SetAperturePosition)
+    return 3;
+   if (mSavedApertureSize[kind] < 0) {
     str.Format("No size and position has been saved for aperture number %d by the "
       "function to remove an aperture", kind);
     SEMMessageBox(str);
@@ -5718,12 +5740,12 @@ int CEMscope::ReInsertAperture(int kind)
   }
   mApertureTD.actionFlags = APERTURE_SET_SIZE | APERTURE_SET_POS;
   mApertureTD.apIndex = kind;
-  mApertureTD.sizeOrIndex = mSavedApertureSize[kind - 1];
-  mApertureTD.posX = mSavedAperturePosX[kind - 1];
-  mApertureTD.posY = mSavedAperturePosY[kind - 1];
+  mApertureTD.sizeOrIndex = mSavedApertureSize[kind];
+  mApertureTD.posX = mSavedAperturePosX[kind];
+  mApertureTD.posY = mSavedAperturePosY[kind];
   if (StartApertureThread("reinserting aperture "))
     retval = 4;
-  mSavedApertureSize[kind - 1] = -1;
+  mSavedApertureSize[kind] = -1;
   return retval;
 }
 
