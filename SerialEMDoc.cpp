@@ -2149,6 +2149,9 @@ int CSerialEMDoc::SaveSettingsOnExit()
     }
   }
 
+  if (mAbandonSettings)
+    return 0;
+
   if (!mSettingsOpen)
     return (OfferToSaveSettings("exit the program?"));
 
