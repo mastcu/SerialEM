@@ -1330,11 +1330,13 @@ BOOL CSerialEMApp::InitInstance()
       }
 
       // Make sure there are valid binnings
-      if (!BinningIsValid(cs->binning, iCam, false)) {
-        int newBin = NextValidBinning(cs->binning, -1, iCam, false);
-        if (newBin == cs->binning)
-          newBin = NextValidBinning(cs->binning, 1, iCam, false);
-        cs->binning = newBin;
+      if (!BinningIsValid(cs->binning, iCam, 
+        (mCamParams[iCam].K2Type && cs->K2ReadMode == SUPERRES_MODE) || 
+        (mCamParams[iCam].K2Type == K3_TYPE && cs->K2ReadMode > LINEAR_MODE))) {
+          int newBin = NextValidBinning(cs->binning, -1, iCam, false);
+          if (newBin == cs->binning)
+            newBin = NextValidBinning(cs->binning, 1, iCam, false);
+          cs->binning = newBin;
       }
     }
   }
@@ -3861,7 +3863,9 @@ bool CSerialEMApp::BinningIsValid(int binning, int camera, bool allowFractional)
   CameraParameters *cam = &mCamParams[camera];
   for (int i = 0; i < cam->numBinnings; i++) {
     if (binning == cam->binnings[i] && (i > 0 || !cam->K2Type || (allowFractional &&
-      mCamConSets[camera][RECORD_CONSET].K2ReadMode == SUPERRES_MODE)))
+      (mCamConSets[camera][RECORD_CONSET].K2ReadMode == SUPERRES_MODE ||
+      (cam->K2Type == K3_TYPE && mCamConSets[camera][RECORD_CONSET].K2ReadMode > 
+      LINEAR_MODE)))))
       return true;
   }
   return false;
