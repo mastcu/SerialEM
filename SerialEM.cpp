@@ -3977,4 +3977,5 @@ void CSerialEMApp::OpenOrCloseMacroEditors(void)
       mMacroEditer[ind]->JustCloseWindow();
   }
   UpdateBufferWindows();
+  RestoreViewFocus();
 }
