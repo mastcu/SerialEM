@@ -83,7 +83,7 @@ public:
 
 	void AutoSaveFiles();
 	int AppendToLogBook(CString inString, CString title);
-  SetMember(CString, Title)
+  GetSetMember(CString, Title)
   int DoOpenNewFile(CString filename = "");
   void DoCloseFile();
   void ManageExposure();
