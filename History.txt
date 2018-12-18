@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+12/9/18: Added workaround for K3 but with 90 or 270 degree rotation and flip.
+
+12/8/18: Fixed losing a setting of binning 0.5 for K3 between sessions.
+
 12/5/18: Made it possible to save unnormalized hardware binned frames from K3
 and get a gain reference for normalizing them.
 

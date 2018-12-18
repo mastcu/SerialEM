@@ -74,6 +74,9 @@ struct CamPluginFuncs;
 #define DE_NORM_IN_SERVER         0x40
 #define DE_HAS_HARDWARE_ROI       0x80
 
+// Camera flags for Gatan cameras
+#define K3_CAM_ROTFLIP_BUG        0x2
+
 #define AMT_VERSION_CAN_NORM     700
 
 enum {INIT_ALL_CAMERAS, INIT_CURRENT_CAMERA, INIT_GIF_CAMERA, INIT_TIETZ_CAMERA};

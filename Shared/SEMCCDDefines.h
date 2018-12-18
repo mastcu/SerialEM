@@ -84,6 +84,7 @@ FRAMEDOC_OPEN_ERR, FRAMEDOC_WRITE_ERR};
 #define CONTINUOUS_USE_THREAD  (1 << 6)
 #define CONTINUOUS_SET_MODE    (1 << 7)
 #define CONTINUOUS_ACQUIS_OBJ  (1 << 8)
+#define CONTIN_K3_ROTFLIP_BUG  (1 << 10)
 #define CONTINUOUS_RETURN_TIMEOUT  2000
 
 // Codes for the socket calls

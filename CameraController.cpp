@@ -965,6 +965,13 @@ void CCameraController::InitializeDMcameras(int DMind, int *numDMListed,
                   mAllParams[i].linear2CountingRatio = 350.;
               }
 
+              // Set a flag for the K3 rot/flip bug if negative rotflip, make it positive
+              if (mAllParams[i].rotationFlip < 0) {
+                if (mAllParams[i].K2Type == K3_TYPE)
+                  mAllParams[i].CamFlags |= K3_CAM_ROTFLIP_BUG;
+                mAllParams[i].rotationFlip = -mAllParams[i].rotationFlip;
+              }
+
               // For all Gatan cameras, identify bad pixels that touch rows/columns
               if (!gotDefectList) {
                 div = BinDivisorI(&mAllParams[i]);
@@ -3116,6 +3123,7 @@ void CCameraController::Capture(int inSet, bool retrying)
           mTD.ProcessingPlus += CONTINUOUS_USE_THREAD + 
             (mParam->setContinuousReadout ? CONTINUOUS_SET_MODE : 0) +
             (mParam->useFastAcquireObject ? CONTINUOUS_ACQUIS_OBJ : 0) +
+            ((mParam->CamFlags & K3_CAM_ROTFLIP_BUG) ? CONTIN_K3_ROTFLIP_BUG : 0) +
             (mParam->continuousQuality << QUALITY_BITS_SHIFT);
 
           // Make sure the camera timeout is appropriately longer than the return time
@@ -3203,7 +3211,7 @@ void CCameraController::Capture(int inSet, bool retrying)
     
     // Need to blank beam during this operation
     if (!mScope->GetBlankSet()) {
-      mScope->BlankBeam(true);
+      mScope->BlankBeam(true, "Capture for dark ref");
       if (mParam->postBlankerDelay >= 0.001)
         Sleep(B3DNINT(1000. * mParam->postBlankerDelay));
     }
@@ -6043,7 +6051,7 @@ void CCameraController::EnsureCleanup(int error)
   }
   mEnsuringDark = false;
   if (!mParam->noShutter)
-    mScope->BlankBeam(false);
+    mScope->BlankBeam(false, "EnsureCleanup");
   if (error == IDLE_TIMEOUT_ERROR) {
 
     // Restart whole capture two more times on timeout
@@ -6135,7 +6143,7 @@ void CCameraController::StartAcquire()
     // set before starting dark references) then process dark reference if any
     moreDarkRefs = !mHalting && mTD.DarkToGet && mAverageDarkCount + 1 < mNumAverageDark;
     if (!moreDarkRefs && mParam->noShutter < 2) {
-      mScope->BlankBeam(false);
+      mScope->BlankBeam(false, "StartAcquire after dark ref");
       if (mParam->postBlankerDelay >= 0.001)
         Sleep(B3DNINT(1000. * mParam->postBlankerDelay));
     }
@@ -6181,9 +6189,9 @@ void CCameraController::StartAcquire()
 
           // Otherwise toggle the blanker after some delays
           mWinApp->AppendToLog(message);
-          mScope->BlankBeam(false);
+          mScope->BlankBeam(false, "Bad dark ref");
           Sleep(retrySleep);
-          mScope->BlankBeam(true);
+          mScope->BlankBeam(true, "Bad dark ref");
           Sleep(retrySleep);
         }
       }
@@ -6332,9 +6340,9 @@ void CCameraController::StartAcquire()
   // Unblank now for noShutter = 2 camera with known timing; it will get reblanked in
   // the blanker thread
   if (mParam->noShutter == 2 && mTD.UnblankTime <= mTD.MinBlankTime)
-    mScope->BlankBeam(false);
+    mScope->BlankBeam(false, "For NoShutter 2");
   if (mBlankNextShot)
-    mScope->BlankBeam(true);
+    mScope->BlankBeam(true, "For BlankNextShot");
 
   // Now set flag and start thread for actual acquisition
   mNeedToRestoreISandBT = 0;
@@ -7597,7 +7605,7 @@ void CCameraController::AcquireCleanup(int error)
     DisplayNewImage(true);
   } else {
     if (mTD.ReblankTime && !mParam->noShutter)
-      mScope->BlankBeam(false);
+      mScope->BlankBeam(false, "AcquireCleanup");
 
     // Restart capture up to 2 times on timeout
     if (error == IDLE_TIMEOUT_ERROR) {
@@ -7666,7 +7674,7 @@ void CCameraController::ScreenOrInsertCleanup(int error)
 
   // Unblank beam if it was blanked
   if (mInserting && !mITD.insert && mBlankWhenRetracting && !mParam->noShutter)
-    mScope->BlankBeam(false);
+    mScope->BlankBeam(false, "ScreenOrInsertCleanup");
   mRaisingScreen = 0;
   mInserting = false;
   mHalting = false;
@@ -7817,7 +7825,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       !mStartedExtraForDEalign) {
 
       if (mTD.ReblankTime && !mParam->noShutter)
-        mScope->BlankBeam(false);
+        mScope->BlankBeam(false, "DisplayNewImage for reblanktime");
 
       // Take care of delay times from postactions and record XY backlash
       if (mTD.PostChangeMag)
@@ -8766,7 +8774,7 @@ void CCameraController::ErrorCleanup(int error)
   mAdjustShiftX = mAdjustShiftY = 0.;
 
   if (mBlankNextShot)
-    mScope->BlankBeam(false);
+    mScope->BlankBeam(false, "ErrorCleanup for BlankNextShot");
   mBlankNextShot = false;
   mDEserverRefNextShot = 0;
   mBlankWhenRetracting = false;
