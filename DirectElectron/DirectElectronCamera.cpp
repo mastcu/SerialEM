@@ -799,6 +799,7 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, int imageSizeX,
     return -1;
   }
 
+  m_STOPPING_ACQUISITION = false;
   if (m_DE_CLIENT_SERVER) {
     // Need to take the negative of the rotation because of Y inversion, 90 with the CImg
     // library was producing clockwise rotation of image
@@ -950,18 +951,20 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, int imageSizeX,
     // If doing ref in server, loop until all the acquisitions are done
     double maxInterval = 2. * SEMTickInterval(startTime);
     maxInterval = B3DMAX(maxInterval, 15000. * mLastExposureTime);
-    while (mNumLeftServerRef > 0) {
+    while (mNumLeftServerRef > 0 && !m_STOPPING_ACQUISITION) {
       int remaining;
       bool ret1;
       startTime = GetTickCount();
       mDateInPrevSetName = 0;
-      while (SEMTickInterval(startTime) < maxInterval) {
+      while (SEMTickInterval(startTime) < maxInterval && !m_STOPPING_ACQUISITION) {
         ret1 = mDeServer->getIntProperty("Auto Repeat Reference - Remaining Acquisitions",
           &remaining);
         if (ret1 && remaining != mNumLeftServerRef)
           break;
         Sleep(100);
       }
+      if (m_STOPPING_ACQUISITION)
+        break;
       if (remaining != mNumLeftServerRef)
         mNumLeftServerRef = remaining;
       else {
@@ -1491,8 +1494,10 @@ int DirectElectronCamera::SetLiveMode(int mode)
 ///////////////////////////////////////////////////////////////////
 void DirectElectronCamera::StopAcquistion()
 {
-  if (m_DE_CLIENT_SERVER) {
-  } else {
+  if (m_DE_CLIENT_SERVER && mServerVersion >= DE_ABORT_WORKS) {
+    mDeServer->abortAcquisition();
+    m_STOPPING_ACQUISITION = true;
+  } else if (!m_DE_CLIENT_SERVER) {
     m_LCCaptureInterface->AbortReadout();
     m_LCCaptureInterface->ClearFrame();
     m_STOPPING_ACQUISITION = true;

@@ -101,11 +101,12 @@ struct LiveThreadData {
 #define DE_PROP_AUTOSAVE_DIR "Autosave Directory"
 
 // DE server versions for capabilities
-#define DE_CAN_SAVE_MRC 1000715
-#define DE_HAS_REPEAT_REF 1000768
-#define DE_SUFFIX_KEEPS_PT 9999999
-#define DE_CAN_SET_FOLDER 1000943
+#define DE_CAN_SAVE_MRC     1000715
+#define DE_HAS_REPEAT_REF   1000768
+#define DE_SUFFIX_KEEPS_PT  9999999
+#define DE_CAN_SET_FOLDER   1000943
 #define DE_ALL_NORM_IN_SERVER 1001243
+#define DE_ABORT_WORKS      9999999
 
 //The following define the different
 //gain/dsi setting modes for the LC1100
