@@ -400,9 +400,7 @@
         by 2 in the camera plugin, prior to being received by SerialEM. In this mode, 
         negative numbers in a dark-subtracted or gain-normalized image will be 
         preserved instead of truncated at zero. This could be important for 
-        low-exposure images if the dark reference drifts downward. Another advantage of 
-        this mode is that the numbers shown in SerialEM will match those saved to a 
-        file. When this mode is selected, the options for treatment of 16-bit data in 
+        low-exposure images if the dark reference drifts downward.&nbsp; When this mode is selected, the options for treatment of 16-bit data in 
         the <A HREF="hidd_fileproperties.htm">File Properties dialog box</A> will be 
         disabled because they are no longer relevant. (The image has already been 
         divided by 2 and will not be recognized as an unsigned 16-bit image.)</P>
@@ -411,10 +409,20 @@
         images within SerialEM. This setting is initially determined by the global 
         'GainNormalizeInSerialEM' property or by the 'NormalizeInSerialEM' property for 
         individual cameras. When it is off, processed images are acquired from 
-        DigitalMicrograph (or TIA for an Eagle camera). When it is on, raw images and 
-        dark references are acquired from DigitalMicrograph, and the processing is done 
-        in SerialEM. In the latter case, the gain reference could come from 
+        the camera interface. When it is on, raw images and 
+        dark references are acquired from the camera, and the processing is done in 
+        SerialEM. In the case of Gatan cameras, the gain reference could come from 
         DigitalMicrograph or from one prepared in SerialEM, depending on which exists.</P>
+    <P>This command is disabled either because normalized images cannot be obtained 
+      from the interface for the current camera, or because normalization is always 
+      done by the camera software for the particular camera.&nbsp; The latter is the 
+      case when the normalization by that software is more sophisticated than what can 
+      be done in SerialEM, or when it is important to have the camera acquire 
+      normalized images to enable other functionality (e.g., for using drift 
+      correction with a OneView camera).</P>
+    <P>For Tietz F216, F416, and XF416 cameras, normalized images can be acquired from 
+      the camera by adding a property &#39;TietzFlatfieldDir&#39; specifying the directory 
+      where the TVIPS flatfield images are located.</P>
       <P><A NAME="hid_camera_interpolate_dark_refs"></A><B>Interpolate Dark Refs command 
           (Camera menu)</B></P>
       <P>This command toggles whether the program will compute a dark reference for a 

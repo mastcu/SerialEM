@@ -3,6 +3,19 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+12/18/18: XF416 is now supported in normal shutter mode, and ability to get
+normalized images from Tietz interface.
+
+12/18/18: Added a title line to frame stack mdoc.
+
+12/18/18: Added possible support for controlling tilt speed on JEOL.
+
+12/18/18: Fixed treatment of associated filenames in script editor.
+
+12/18/18: Fixed aperture control to use different calls for some JEOL scopes.
+
+12/18/18: Fixed turning beam on and off for non-FEG JEOLs.
+
 12/9/18: Added workaround for K3 but with 90 or 270 degree rotation and flip.
 
 12/8/18: Fixed losing a setting of binning 0.5 for K3 between sessions.

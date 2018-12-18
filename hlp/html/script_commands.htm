@@ -66,6 +66,14 @@
       accept variable names.&nbsp; Arithmetic expressions can be used after virtually 
       all commands starting with 'Set' and with the commands listed in
       <A HREF="#arithForArgs">Commands Allowing Arithmetic Expressions for Arguments</A>.</P>
+    <P>Some commands will call functions that may not be supported by the FEI 
+      scripting adapter or JEOL scripting interface on your scope.&nbsp; In either 
+      case, the program will crash if it calls a function that does not exist in the 
+      scripting interface.&nbsp; (Neither of these interfaces has a version number 
+      that could be used to prevent this.)&nbsp; For a JEOL, the version of TemExt.dll 
+      that provides the interface may be new enough to have the function, but the call 
+      will fail with an error if it is not supported by the microscope 
+      software/hardware.</P>
       <BR>
       <A href="#macro_control_commands">Script Control Commands</A>
       <BR>
@@ -738,7 +746,7 @@
           <TD class="style8">TiltDuringRecord #A #D [#S]</TD>
           <TD>Starts a Record acquisition and starts the stage tilting to angle #A after the 
             delay #D in milliseconds.&nbsp; On FEI scopes with recent enough versions of FEI 
-            scripting, #S can be added with a speed multiplier (&lt; 1 for slower, &gt; 1 for 
+            scripting, or JEOL scopes with recent versions of TemExt.dll, #S can be added with a speed multiplier (&lt; 1 for slower, &gt; 1 for 
             faster).&nbsp; On FEI scopes this command will freeze the user 
             interface and prevent scope updates while the stage is tilting.</TD>
         </TR>
@@ -1264,7 +1272,7 @@
           <TD class="style13">BackgroundTilt #A [#S]</TD>
           <TD>Start tilting stage in the background; images can be taken and scripts can run 
             during the tilt.&nbsp; Follow with #A, the angle to tilt to, and optionally with 
-            #S, a speed factor for FEI scopes (&lt; 1 for slower than normal tilting).&nbsp; 
+            #S, a speed factor for FEI or JEOL scopes that support this (&lt; 1 for slower than normal tilting).&nbsp; 
             On FEI scopes, background stage movement requires the property 
             &#39;BackgroundSocketToFEI&#39; set to 1 so that the fourth socket for background stage 
             operations is opened when the program starts.</TD>
@@ -1708,8 +1716,12 @@
         </TR>
         <TR vAlign="top">
           <TD class="style13">RemoveAperture #</TD>
-          <TD>Remove the aperture whose index is the given # (JEOL only). 1 and 2 are the 
-            condenser and objective apertures, others are 2:HCA, 4:SAA, 5:ENTA, 6:EDS.&nbsp; 
+          <TD>Remove the aperture whose index is the given # (JEOL only).&nbsp; If the 
+            property JeolHasExtraApertures is not set, 1 and 2 are the 
+            condenser and objective apertures, others are 3:HCA, 4:SAA, 5:ENTA, 6:EDS.&nbsp; 
+            If that property is set (e.g., for CryoARM), indexes are 0:CL1, 1:CL2, 
+            2:OL(OL Upper), 3:HC(OL Lower), 4:SA, 5:ENT, 6:HX, 7:BF, 8:AUX1, 
+             9:AUX2, 10:AUX3, 11:AUX4.&nbsp;
             The size and position of the aperture will be recorded before it is removed.</TD>
         </TR>
         <TR vAlign="top">

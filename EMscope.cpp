@@ -5617,8 +5617,7 @@ bool CEMscope::GetTemperatureInfo(int type, BOOL &busy, int &time, int which,
  * Aperture functions
  */
 
-
-
+// Function to check for support and whether kind value is within limits
 int CEMscope::CheckApertureKind(int kind)
 {
   CString str;
@@ -5732,7 +5731,7 @@ int CEMscope::ReInsertAperture(int kind)
     return 1;
   if (!mPlugFuncs->SetApertureSize || !mPlugFuncs->SetAperturePosition)
     return 3;
-   if (mSavedApertureSize[kind] < 0) {
+  if (mSavedApertureSize[kind] < 0) {
     str.Format("No size and position has been saved for aperture number %d by the "
       "function to remove an aperture", kind);
     SEMMessageBox(str);
