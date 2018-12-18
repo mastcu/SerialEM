@@ -131,6 +131,7 @@ struct CameraParameters {
   int LowestGainIndex;     // Lowest allowed gain index
   int TietzImageGeometry;  // Bit sum for setting image geometry (flip, rotation)
   int TietzBlocks;         // Block size for Tietz block readout camera
+  CString TietzFlatfieldDir;  // Directory for flatfield data
   float builtInSettling;   // Clear time
   float pixelMicrons;      // Actual pixel size in microns
   float magRatio;          // Mag relative to reported film mag

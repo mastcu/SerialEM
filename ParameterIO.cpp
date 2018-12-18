@@ -1975,6 +1975,8 @@ int CParameterIO::ReadProperties(CString strFileName)
             camP->LowestGainIndex = itemInt[1];
           else if (MatchNoCase("TietzImageGeometry"))
             camP->TietzImageGeometry = itemInt[1];
+          else if (MatchNoCase("TietzFlatfieldDir"))
+            StripItems(strLine, 1, camP->TietzFlatfieldDir);
           else if (MatchNoCase("SubareasAreBad")) {
             if (camP->subareasBad < 2)
               camP->subareasBad = itemInt[1];

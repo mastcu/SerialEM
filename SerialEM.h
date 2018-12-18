@@ -218,6 +218,7 @@ typedef bool (*PlugDoingFunc)(void);
 #define TIETZ_USE_SHUTTERBOX (1)
 #define TIETZ_GET_DARK_REF    4
 #define TIETZ_RESTORE_BBMODE (1 << 1)
+#define TIETZ_SET_READ_MODE  (1 << 2)
 
 // A macro for getting a new array and ending up with null if it fails
 #define NewArray(a,b,c) try { \

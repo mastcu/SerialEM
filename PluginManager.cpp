@@ -222,6 +222,7 @@ int CPluginManager::LoadPlugins(void)
         CAMERA_PROC(CamOneInt, SetGainIndex);
         CAMERA_PROC(CamGetTwoInt, GetCameraSize);
         CAMERA_PROC(CamGetTwoInt, GetPluginVersion);
+        CAMERA_PROC(CamFourIntString, SetExtraParams1);
 
         if (!cfuncs->AcquireImage || !cfuncs->GetNumberOfCameras || !cfuncs->SetExposure ||
           !cfuncs->SetAcquiredArea) {
@@ -269,6 +270,7 @@ int CPluginManager::LoadPlugins(void)
           DECAM_PROC(DEgetString, getProperty);
           DECAM_PROC(DEsetMode, setLiveMode);
           mDEcamFuncs.getIsInLiveMode = (DEnoArg)GetProcAddress(module, "getIsInLiveMode");
+          DECAM_PROC(DEnoArg, abortAcquisition);
           DECAM_PROC(CamNoArg, getLastErrorCode);
           DECAM_PROC(DEerrString, getLastErrorDescription);
 
