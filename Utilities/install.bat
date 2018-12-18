@@ -72,7 +72,8 @@ IF EXIST "C:\ProgramData\SerialEM\SerialEMproperties.txt" (
   IF NOT ERRORLEVEL 1 set NEEDDECAM=1
 )
 
-COPY /Y SerialEM.exe ..
+IF EXIST SerialEM.exe COPY /Y SerialEM.exe ..
+IF EXIST SerialEM.DontRunHere.bin COPY /Y SerialEM.DontRunHere.bin ..\SerialEM.exe
 COPY /Y SerialEM.chm ..
 COPY /Y libifft-*.dll ..
 COPY /Y libiomp5md.dll ..
@@ -263,7 +264,11 @@ FOR /F "tokens=3 delims= " %%A IN ('reg QUERY "HKLM\SOFTWARE\Gatan" /v Version')
 set Major=%FullVers:~0,1%
 
 set BIT64=0
-IF %Major% EQU 3 (
+IF %Major% EQU 3 IF %Minor% GEQ 31 IF EXIST SEMCCD-GMS3.31-64.dll (
+  set versRange64=3.31 and higher
+  set SEMCCD64=SEMCCD-GMS3.31-64.dll
+  set BIT64=1
+) ELSE IF %Major% EQU 3 (
   set versRange64=3.01 and higher
   set SEMCCD64=SEMCCD-GMS3.01-64.dll
   set BIT64=1
