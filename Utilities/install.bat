@@ -264,11 +264,16 @@ FOR /F "tokens=3 delims= " %%A IN ('reg QUERY "HKLM\SOFTWARE\Gatan" /v Version')
 set Major=%FullVers:~0,1%
 
 set BIT64=0
+
+Rem YOU CANNOT DO AN ELSE AFTER A COMPOUND IF
 IF %Major% EQU 3 IF %Minor% GEQ 31 IF EXIST SEMCCD-GMS3.31-64.dll (
   set versRange64=3.31 and higher
   set SEMCCD64=SEMCCD-GMS3.31-64.dll
   set BIT64=1
-) ELSE IF %Major% EQU 3 (
+  GOTO :SetupSEMCCDdone  
+)
+
+IF %Major% EQU 3 (
   set versRange64=3.01 and higher
   set SEMCCD64=SEMCCD-GMS3.01-64.dll
   set BIT64=1
@@ -288,6 +293,8 @@ IF %Major% EQU 3 IF %Minor% GEQ 31 IF EXIST SEMCCD-GMS3.31-64.dll (
   set versRange64=2.31 and higher
   set SEMCCD64=SEMCCD-GMS2.31-64.dll
 )
+
+:SetupSEMCCDdone
 
 dir C:\ProgramData\Gatan\Licenses\*64-Bit* > nul 2>&1
 IF %ERRORLEVEL% EQU 0 (
