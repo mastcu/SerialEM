@@ -2782,7 +2782,7 @@ void CCameraSetupDlg::OnButSetupAlign()
   
   // Set this so that actual value can be modified by whether aligning IMOD
   dlg.mTakingK3Binned = m_iProcessing == GAIN_NORMALIZED && 
-    mCamera->GetTakeK3SuperResBinned() && !(mCamera->GetSaveUnnormalizedFrames() && 
+    m_bTakeK3Binned && !(mCamera->GetSaveUnnormalizedFrames() && 
     mUserSaveFrames);
   if (dlg.DoModal() == IDOK) {
     mCurSet->filterType = dlg.mCurFiltInd;
