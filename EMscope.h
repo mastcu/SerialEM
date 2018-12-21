@@ -801,6 +801,7 @@ public:
   double GetStageBAxis(void);
   BOOL SetStageBAxis(double inVal);
   int CheckApertureKind(int kind);
+  int GetCurrentPhasePlatePos(void);
 };
 
 

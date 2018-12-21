@@ -5748,9 +5748,10 @@ int CEMscope::ReInsertAperture(int kind)
   return retval;
 }
 
+// Go to the next phase plate position
 bool CEMscope::MovePhasePlateToNextPos()
 {
-  if (!sInitialized || !JEOLscope || !mPlugFuncs->GoToNextPhasePlatePos)
+  if (!sInitialized || !mPlugFuncs->GoToNextPhasePlatePos)
     return false;
   mApertureTD.actionFlags = APERTURE_NEXT_PP_POS;
   if (StartApertureThread("moving phase plate to next position "))
@@ -5758,7 +5759,23 @@ bool CEMscope::MovePhasePlateToNextPos()
   return true;
 }
 
+// Return the current position of the phase plate
+int CEMscope::GetCurrentPhasePlatePos(void)
+{
+  int pos = -1;
+  if (!sInitialized || !mPlugFuncs->GetCurPhasePlatePos)
+    return -1;
+  ScopeMutexAcquire("GetCurrentPhasePlatePos", true);
+  try {
+    pos = mPlugFuncs->GetCurPhasePlatePos();
+  }
+  catch (_com_error E) {
+    SEMReportCOMError(E, _T("getting current phase plate position "));
+  }
+  return pos;
+}
 
+// Start thread for aperture or phase plate movement
 int CEMscope::StartApertureThread(const char *descrip)
 {
   mApertureTD.description = descrip;
@@ -5790,27 +5807,45 @@ void CEMscope::ApertureCleanup(int error)
   mMovingAperture = false;
 }
 
+// The procedure for aperture or phase plate movement
 UINT CEMscope::ApertureMoveProc(LPVOID pParam)
 {
   ApertureThreadData *td = (ApertureThreadData *)pParam;
-  ScopeMutexAcquire("ApertureMoveProc", true);
   int retval = 0;
-  try {
-    if (td->actionFlags & APERTURE_SET_SIZE) {
-      td->plugFuncs->SetApertureSize(td->apIndex, td->sizeOrIndex);
-    }
-    if (td->actionFlags & APERTURE_SET_POS) {
-      td->plugFuncs->SetAperturePosition(td->apIndex, (double)td->posX, (double)td->posY);
-    }
-    if (td->actionFlags & APERTURE_NEXT_PP_POS) {
-      retval = td->plugFuncs->GoToNextPhasePlatePos(0);
+  CoInitializeEx(NULL, COINIT_MULTITHREADED);
+
+  ScopeMutexAcquire("ApertureMoveProc", true);
+  if (FEIscope) {
+    if (td->plugFuncs->BeginThreadAccess(1, 0)) {
+      sThreadErrString = "Error creating second instance of microscope object for"
+        " moving phase plate";
+      SEMErrorOccurred(1);
+      retval = 1;
     }
   }
-  catch (_com_error E) {
-    SEMReportCOMError(E, td->description);
-    retval = 1;
+  if (!retval) {
+    try {
+      if (td->actionFlags & APERTURE_SET_SIZE) {
+        td->plugFuncs->SetApertureSize(td->apIndex, td->sizeOrIndex);
+      }
+      if (td->actionFlags & APERTURE_SET_POS) {
+        td->plugFuncs->SetAperturePosition(td->apIndex, (double)td->posX, 
+          (double)td->posY);
+      }
+      if (td->actionFlags & APERTURE_NEXT_PP_POS) {
+        retval = td->plugFuncs->GoToNextPhasePlatePos(0);
+      }
+    }
+    catch (_com_error E) {
+      SEMReportCOMError(E, td->description);
+      retval = 1;
+    }
   }
 
+  if (FEIscope) {
+    td->plugFuncs->EndThreadAccess(1);
+  }
+  CoUninitialize();
   ScopeMutexRelease("ApertureMoveProc");
   return retval;
 }
