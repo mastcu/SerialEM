@@ -228,7 +228,8 @@ enum {CME_VIEW, CME_FOCUS, CME_TRIAL, CME_RECORD, CME_PREVIEW,
   CME_FRAMETHRESHOLDNEXTSHOT, CME_QUEUEFRAMETILTSERIES, CME_FRAMESERIESFROMVAR,
   CME_WRITEFRAMESERIESANGLES, CME_ECHOREPLACELINE, CME_ECHONOLINEEND, CME_REMOVEAPERTURE,
   CME_REINSERTAPERTURE, CME_PHASEPLATETONEXTPOS, CME_SETSTAGEBAXIS, CME_REPORTSTAGEBAXIS,
-  CME_DEFERWRITINGFRAMEMDOC, CME_ADDTONEXTFRAMESTACKMDOC, CME_STARTNEXTFRAMESTACKMDOC
+  CME_DEFERWRITINGFRAMEMDOC, CME_ADDTONEXTFRAMESTACKMDOC, CME_STARTNEXTFRAMESTACKMDOC,
+  CME_REPORTPHASEPLATEPOS
 };
 
 static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0},
@@ -348,7 +349,7 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"EchoNoLineEnd", 1, 1}, {"RemoveAperture", 1, 0}, {"ReInsertAperture", 1, 0},
 {"PhasePlateToNextPos", 0, 0}, {"SetStageBAxis", 1, 1}, {"ReportStageBAxis", 0, 0}, 
 {"DeferWritingFrameMdoc", 0, 0}, {"AddToNextFrameStackMdoc", 2, 0}, 
-{"StartNextFrameStackMdoc", 2, 0},
+{"StartNextFrameStackMdoc", 2, 0}, {"ReportPhasePlatePos", 0, 0},
 {NULL, 0, 0}
 };
 
@@ -3567,6 +3568,14 @@ void CMacroProcessor::NextCommand()
       ABORT_LINE("Script aborted due to error starting phase plate movement in:\n\n");
     mMovedAperture = true;
 
+  } else if (CMD_IS(REPORTPHASEPLATEPOS)) {                 // ReportPhasePlatePos
+    index = mScope->GetCurrentPhasePlatePos();
+    if (index < 0)
+      ABORT_LINE("Script aborted due to error in:\n\n");
+    report.Format("Current phase plate position is %d", index);
+    mWinApp->AppendToLog(report, mLogAction);
+    SetReportedValues(&strItems[1], (double)index);
+
   } else if (CMD_IS(REPORTMEANCOUNTS)) {                    // ReportMeanCounts
     if (ConvertBufferLetter(strItems[1], 0, true, index, report))
       ABORT_LINE(report);
@@ -3704,23 +3713,27 @@ void CMacroProcessor::NextCommand()
         ABORT_LINE("The box size must be between 128 and 640 in the line:\n\n");
       param.box_size = itemInt[5];
     }
+
+    // Phase entries.  Convert all from degrees to radians.  The assumed phase shift is
+    // in radians and was being converted to degrees and passed that way (12/20/18)
     if (!itemEmpty[6]) {
-      delX = itemDbl[6];
+      delX = itemDbl[6] * DTOR;
       if (delX == 0)
-        delX = mWinApp->mProcessImage->GetPlatePhase() / DTOR;
+        delX = mWinApp->mProcessImage->GetPlatePhase();
       param.minimum_additional_phase_shift = param.maximum_additional_phase_shift = 
         (float)(delX);
       param.find_additional_phase_shift = true;
       if (!itemEmpty[7] && (itemDbl[6] != 0 || itemDbl[7] != 0)) {
-        if (itemDbl[7] < delX)
+        delY = itemDbl[7] * DTOR;
+        if (delY < delX)
           ABORT_LINE("The maximum phase shift is less than the minimum in line:\n\n");
-        if (itemDbl[7] - delX > 1.5)
-          ABORT_LINE("The range of phase shift to search is more than 1.5 radians in "
+        if (delY - delX > 1.571)
+          ABORT_LINE("The range of phase shift to search is more than 90 degrees in "
           "line:\n\n");
-        param.maximum_additional_phase_shift = (float)itemDbl[7];
+        param.maximum_additional_phase_shift = (float)delY;
       }
       if (!itemEmpty[8] && itemDbl[8])
-        param.additional_phase_shift_search_step = (float)itemDbl[8];
+        param.additional_phase_shift_search_step = (float)(itemDbl[8] * DTOR);
       if (!itemEmpty[9] && itemInt[9]) {
         param.astigmatism_is_known = true;
         param.known_astigmatism = 0.;
@@ -3732,8 +3745,9 @@ void CMacroProcessor::NextCommand()
     param.compute_extra_stats = true;
     if (mWinApp->mProcessImage->RunCtffind(&mImBufs[index], param, resultsArray))
       ABORT_LINE("Ctffind fitting returned an error for line:\n\n");
-    SetReportedValues(resultsArray[0], resultsArray[1], resultsArray[2], resultsArray[3],
-      resultsArray[4], resultsArray[5]);
+    SetReportedValues(-(resultsArray[0] + resultsArray[1]) / 20000., 
+      (resultsArray[0] - resultsArray[1]) / 10000., resultsArray[2], 
+      resultsArray[3] / DTOR, resultsArray[4], resultsArray[5]);
      
   } else if (CMD_IS(IMAGEPROPERTIES)) {                     // ImageProperties
     if (ConvertBufferLetter(strItems[1], 0, true, index, report))

@@ -3085,7 +3085,7 @@ int CProcessImage::RunCtffind(EMimageBuffer *imBuf, CtffindParams &params,
       (results_array[0] - results_array[1]) / 10000., results_array[2]);
     if (params.find_additional_phase_shift && params.minimum_additional_phase_shift < 
       params.maximum_additional_phase_shift) {
-      str.Format("phase shift %.3f rad,  ", results_array[3]);
+      str.Format("phase shift %.1f deg,  ", results_array[3] / DTOR);
       mess += str;
     }
     str.Format("score %.4f", results_array[4]);

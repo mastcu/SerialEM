@@ -142,7 +142,7 @@ private:
   float mSphericalAber;
   double mVoltage;
   double mKVTime;
-  float mPlatePhase;
+  float mPlatePhase;           // Phase plate to assume, stored in radians, entered in deg
   float mFixedRingDefocus;
   float mReductionFactor;      // factor for reducing image
   BOOL mCtffindOnClick;        // Flag to do CTF fitting when click FFT
