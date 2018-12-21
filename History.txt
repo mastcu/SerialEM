@@ -3,6 +3,15 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+12/20/18: Added basic support for moving to next phase plate position on FEI
+scopes.
+
+12/20/18: Changed phase output to log from Ctffind to degrees.  Made "reported
+value" variables set after command match the output to the log; i.e., mean
+defocus and astigmatism in microns, and phase in degrees.  Made phase entries
+to Ctffind command be in degrees instead of radians.  Fixed bad scaling of
+fixed phase shift value for use in the command.
+
 12/18/18: XF416 is now supported in normal shutter mode, and ability to get
 normalized images from Tietz interface.
 
