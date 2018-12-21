@@ -940,7 +940,7 @@ int UtilFindValidFrameAliParams(CameraParameters *camParam, int readMode,
         str.Format("The camera parameters will give %sresolution frames but\r\n"
           "the selected alignment parameters are marked as only for %sresolution frames.", 
           readMode == SUPERRES_MODE ? "super-" : "normal ",
-          faParam->sizeRestriction == SUPERRES_MODE ? "super-" : "normal");
+          faParam->sizeRestriction == SUPERRES_MODE ? "super-" : "normal ");
         *message += str;
       }
   }
