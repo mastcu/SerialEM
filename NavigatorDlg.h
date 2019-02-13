@@ -148,6 +148,8 @@ public:
   SetMember(int, GroupIDtoSkip);
   SetMember(BOOL, SkipStageMoveInAcquire);
   GetSetMember(bool, PausedAcquire);
+  GetMember(CString, NavFilename);
+
   void ResumeFromPause() {mResumedFromPause = true; mPausedAcquire = false;};
   BOOL InEditMode() {return m_bEditMode;};
   BOOL TakingMousePoints() {return m_bEditMode || mAddingPoints || mAddingPoly || mMovingItem;};
