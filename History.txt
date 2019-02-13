@@ -3,6 +3,14 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+2/4/19: SEM_3-7-1
+2/4/19: Fixed library problem with shrmemframe by switching to different
+Microsoft libraries, fixed manifest in nohang version, fixed stage moving to
+not try to call command that takes speed when it shouldn't (In 3.7).
+
+2/3/19: Fixed treatment of GIF mode on JEOL when mag call does not indicate
+GIF (In 3.7).
+
 1/30/19: SEM_3-7-0
 1/30/19: Check properties, setting, calibrations for being UTF-8 and accept
 that, but give specific message for other non-ASCII encodings.

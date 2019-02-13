@@ -276,6 +276,21 @@
     <CustomBuildAfterTargets Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Build</CustomBuildAfterTargets>
     <CustomBuildAfterTargets Condition="'$(Configuration)|$(Platform)'=='v140 Release|Win32'">Build</CustomBuildAfterTargets>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='NoHang|Win32'">
+    <EmbedManifest>false</EmbedManifest>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='JEOL Release|Win32'">
+    <EmbedManifest>false</EmbedManifest>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='v140 Release|x64'">
+    <EmbedManifest>false</EmbedManifest>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <EmbedManifest>false</EmbedManifest>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='JEOL Release|x64'">
+    <EmbedManifest>false</EmbedManifest>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <BuildLog>
       <Path>
@@ -684,8 +699,12 @@
       <TargetMachine>MachineX64</TargetMachine>
     </Link>
     <Manifest>
-      <AdditionalManifestFiles>Utilities\win10.manifest</AdditionalManifestFiles>
+      <AdditionalManifestFiles>
+      </AdditionalManifestFiles>
     </Manifest>
+    <PostBuildEvent>
+      <Command>mt -nologo -manifest ./Utilities/x64-Release-NOOMP.manifest  -manifest Utilities/win10.manifest "-outputresource:x64/Release/SerialEM.exe;#1"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='v140 Release|x64'">
     <BuildLog>
@@ -741,8 +760,12 @@
       <TargetMachine>MachineX64</TargetMachine>
     </Link>
     <Manifest>
-      <AdditionalManifestFiles>Utilities\win10.manifest</AdditionalManifestFiles>
+      <AdditionalManifestFiles>
+      </AdditionalManifestFiles>
     </Manifest>
+    <PostBuildEvent>
+      <Command>mt -nologo  -manifest Utilities/win10.manifest "-outputresource:x64/Release/SerialEM.exe;#1"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='NoHang|Win32'">
     <BuildLog>
@@ -797,8 +820,12 @@
       <GenerateDebugInformation>false</GenerateDebugInformation>
     </Link>
     <Manifest>
-      <AdditionalManifestFiles>Utilities\win10.manifest</AdditionalManifestFiles>
+      <AdditionalManifestFiles>
+      </AdditionalManifestFiles>
     </Manifest>
+    <PostBuildEvent>
+      <Command>mt -nologo -manifest ./Utilities/Release-NOOMP.manifest  -manifest Utilities/win10.manifest "-outputresource:Release/SerialEM.exe;#1"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='NoHang|x64'">
     <BuildLog>
@@ -907,8 +934,12 @@
       <GenerateDebugInformation>false</GenerateDebugInformation>
     </Link>
     <Manifest>
-      <AdditionalManifestFiles>Utilities\win10.manifest</AdditionalManifestFiles>
+      <AdditionalManifestFiles>
+      </AdditionalManifestFiles>
     </Manifest>
+    <PostBuildEvent>
+      <Command>mt -nologo -manifest ./Utilities/Release-NOOMP.manifest  -manifest Utilities/win10.manifest "-outputresource:Release/SerialEM.exe;#1"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='JEOL Release|x64'">
     <BuildLog>
@@ -963,8 +994,12 @@
       <GenerateDebugInformation>false</GenerateDebugInformation>
     </Link>
     <Manifest>
-      <AdditionalManifestFiles>Utilities\win10.manifest</AdditionalManifestFiles>
+      <AdditionalManifestFiles>
+      </AdditionalManifestFiles>
     </Manifest>
+    <PostBuildEvent>
+      <Command>mt -nologo -manifest ./Utilities/x64-Release-NOOMP.manifest  -manifest Utilities/win10.manifest "-outputresource:x64/Release/SerialEM.exe;#1"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='JEOL Debug|Win32'">
     <BuildLog>

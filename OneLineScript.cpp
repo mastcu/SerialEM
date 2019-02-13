@@ -81,7 +81,7 @@ BOOL COneLineScript::OnInitDialog()
   // Resize to a bit longer than the last non-empty string: this is overriden by the
   // placement once that exists in settings
   if (lastOne < MAX_ONE_LINE_SCRIPTS - 1) {
-    ind = wndRect.Height() + m_iRunTop[lastOne] - m_iRunTop[MAX_ONE_LINE_SCRIPTS - 1] + 2;
+    ind = wndRect.Height() + m_iRunTop[lastOne] - m_iRunTop[MAX_ONE_LINE_SCRIPTS - 1] + 5;
     SetWindowPos(NULL, 0, 0, wndRect.Width(), ind, SWP_NOMOVE);
   }
   UpdateData(false);

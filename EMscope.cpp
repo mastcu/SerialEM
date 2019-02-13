@@ -1998,8 +1998,9 @@ BOOL CEMscope::MoveStage(StageMoveInfo info, BOOL doBacklash, BOOL useSpeed,
   }
   if (inBackground && FEIscope && SEMNumFEIChannels() < 4) {
     SEMMessageBox("The stage cannot be moved in the background.\n"
-      "You must have the property BackgroundSocketToFEI set to open\n"
-      "the socket connection for background stage movement when\nthe program starts.");
+      "You must have the property BackgroundSocketToFEI set to\n"
+      "open the socket connection for background stage movement\n"
+      "when the program starts.");
     return false;
   }
   
@@ -2229,7 +2230,7 @@ void CEMscope::StageMoveKernel(StageThreadData *std, BOOL fromBlanker, BOOL asyn
 {
   StageMoveInfo *info = std->info;
   bool xyBacklash = info->doBacklash && (info->axisBits & axisXY);
-  double xpos = 0., ypos = 0., zpos = 0., alpha, timeout, beta, speed;
+  double xpos = 0., ypos = 0., zpos = 0., alpha, timeout, beta;
   double startTime = GetTickCount();
   int step, back, relax;
   destX = 0.;
@@ -2266,36 +2267,40 @@ void CEMscope::StageMoveKernel(StageThreadData *std, BOOL fromBlanker, BOOL asyn
     // destX, destY are used to decide on "stage near end of range" message upon error
     // They are supposed to be in meters; leave at 0 to disable 
     if ((info->useSpeed || (info->axisBits & axisB)) && info->plugFuncs->SetStagePositionExtra) {
-      try {
-        beta = (info->axisBits & axisB) ? info->beta : 0.;
-        speed = info->useSpeed ? info->speed : 1.;
-        info->plugFuncs->SetStagePositionExtra(destX, destY, destZ, alpha * DTOR, 
-          beta * DTOR, speed, info->axisBits);
-      }
-      catch (_com_error E) {
+      beta = (info->axisBits & axisB) ? info->beta : 0.;
+      if (info->useSpeed) {
+        try {
+          info->plugFuncs->SetStagePositionExtra(destX, destY, destZ, alpha * DTOR,
+            beta * DTOR, info->speed, info->axisBits);
+        }
+        catch (_com_error E) {
 
-        // If there is an error with the speed setting and conditions are right, wait
-        // for a time that depends on the speed before throwing the error on
-        if (std->info->speed > sStageErrSpeedThresh || SEMTickInterval(startTime) <
-          1000. * sStageErrTimeThresh) {
+          // If there is an error with the speed setting and conditions are right, wait
+          // for a time that depends on the speed before throwing the error on
+          if (info->speed > sStageErrSpeedThresh || SEMTickInterval(startTime) <
+            1000. * sStageErrTimeThresh) {
             SEMTrace('S', "Stage error occurred at %.1f sec with speed factor %.3f",
               SEMTickInterval(startTime) / 1000., std->info->speed);
             throw E;
+          }
+          timeout = 1000. * sStageErrWaitFactor / info->speed;
+          SEMTrace('S', "Caught stage error at %.1f, waiting up to %.f sec for stage ready",
+            SEMTickInterval(startTime) / 1000., timeout / 1000.);
+          startTime = GetTickCount();
+          while (SEMTickInterval(startTime) < timeout) {
+            if (!info->plugFuncs->GetStageStatus())
+              break;
+            Sleep(100);
+          }
+          if (SEMTickInterval(startTime) > timeout) {
+            SEMTrace('S', "Timeout expired at %.1f, passing on error",
+              SEMTickInterval(startTime) / 1000.);
+            throw E;
+          }
         }
-        timeout = 1000. * sStageErrWaitFactor / std->info->speed;
-        SEMTrace('S', "Caught stage error at %.1f, waiting up to %.f sec for stage ready", 
-          SEMTickInterval(startTime) / 1000., timeout / 1000.);
-        startTime = GetTickCount();
-        while (SEMTickInterval(startTime) < timeout) {
-          if (!std->info->plugFuncs->GetStageStatus())
-            break;
-          Sleep(100);
-        }
-        if (SEMTickInterval(startTime) > timeout) {
-          SEMTrace('S', "Timeout expired at %.1f, passing on error", 
-            SEMTickInterval(startTime) / 1000.);
-          throw E;
-        }
+      } else {
+        info->plugFuncs->SetStagePositionExtra(destX, destY, destZ, alpha * DTOR,
+          beta * DTOR, 1., info->axisBits);
       }
 
     } else {
