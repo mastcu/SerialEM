@@ -173,7 +173,8 @@ void CMacroEditer::OnSize(UINT nType, int cx, int cy)
 void CMacroEditer::PostNcDestroy() 
 {
   mEditer[m_iMacroNumber] = NULL;
-  mWinApp->UpdateAllEditers();
+  if (!mWinApp->GetAppExiting())
+    mWinApp->UpdateAllEditers();
   delete this;  
   CDialog::PostNcDestroy();
 }
