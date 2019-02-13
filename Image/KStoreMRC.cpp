@@ -319,17 +319,25 @@ KStoreMRC::KStoreMRC(CFile *inFile)
         AdocReleaseMutex();
         throw(-1);
       }
-      if (AdocGetString(ADOC_GLOBAL, 0, ADOC_SINGLE, &single)) {
+
+      // Ignore Frame stack mdoc
+      if (AdocGetNumberOfSections("FrameSet")) {
         AdocClear(mAdocIndex);
         mAdocIndex = -1;
-        AdocReleaseMutex();
-        throw(-1);
-      }
-      free(single);
+      } else {
 
-      // Determine if montage coords solely in mdoc
-      AdocGetInteger(ADOC_GLOBAL, 0, ADOC_ISMONT, &ifmont);
-      mMontCoordsInMdoc = (!(mHead->typext & MONTAGE_MASK) && ifmont);
+        if (AdocGetString(ADOC_GLOBAL, 0, ADOC_SINGLE, &single)) {
+          AdocClear(mAdocIndex);
+          mAdocIndex = -1;
+          AdocReleaseMutex();
+          throw(-1);
+        }
+        free(single);
+
+        // Determine if montage coords solely in mdoc
+        AdocGetInteger(ADOC_GLOBAL, 0, ADOC_ISMONT, &ifmont);
+        mMontCoordsInMdoc = (!(mHead->typext & MONTAGE_MASK) && ifmont);
+      }
       AdocReleaseMutex();
     }
   } 
@@ -337,6 +345,7 @@ KStoreMRC::KStoreMRC(CFile *inFile)
   catch(CFileException *perr) {
     mPixSize = mWidth = mHeight = mDepth = 0;
     delete head;
+    mHead = NULL;
     Close();
     perr->Delete();
     return;
@@ -344,6 +353,7 @@ KStoreMRC::KStoreMRC(CFile *inFile)
   catch( int ) {
     mPixSize = mWidth = mHeight = mDepth = 0;
     delete head;
+    mHead = NULL;
     Close();
   }
 }
