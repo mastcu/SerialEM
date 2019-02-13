@@ -96,13 +96,14 @@
       loaded, the scripts in that file will replace all of the scripts already in the program.</P>
     <P><A NAME="variables"></A><B>Using Variables</B></P>
     <P>Variables can be defined in scripts and some arithmetic can be done in a line 
-      that defines a variable. There are six kinds of variables: regular ones 
-      defined on a line with an equals sign; persistent ones defined on a line with 
-      ':=' which will persist from one script run to another; loop index variables 
-      defined in a LOOP statement; variables set when values are reported with 
-      almost all of the 'Information Output Commands' listed below; and regular or 
+      that defines a variable. There are a variety of different kinds of variables: 
+        regular ones defined on a line with an equals sign; persistent ones defined on a 
+        line with &#39;:=&#39; which will persist from one script run to another; loop index 
+        variables defined in a LOOP statement; local ones that are defined only within a 
+        function or called script; variables set when values are reported with commands 
+        starting with &#39;Report&#39; and many others; regular or 
       persistent string variables that are defined on a line with &#39;@=&#39; or &#39;:@=&#39;, 
-      respectively. The value of a variable can be 
+      respectively; and variables with one- or two-dimensional arrays. A variable can be 
       used in any command by putting a '$' in front of the variable name; all 
       commands are scanned first to substitute the values of variables.&nbsp; However, the 
         variable name is used without the &#39;$&#39; in numerous commands that operate o
@@ -112,7 +113,7 @@
       like commands, variables are not case-sensitive and can be referred to as 
       '$Name', '$name', '$NAME', etc.</P>
     <OL>
-      <LI>
+        <LI>
       A regular variable can be defined with an expression of the form 'Name = 
       value'. In general, everything in such an expression must be separated by 
       spaces. There must be spaces between the name and the equals, and between the 
@@ -203,6 +204,13 @@
         to variables after commands and will just not work correctly, so this command is 
         a good way to catch the problem.&nbsp; (This feature was added to the 3.6.0 beta 
         version on about March 10, 2016).</LI>
+        <LI>
+            Variable names should not match the names of scripting control commands (like 
+            &#39;Loop&#39;) or arithmetic functions (like &#39;SQRT&#39;).&nbsp; When such a &#39;reserved&#39; name 
+            is used on the left side of an assignment statement, the script will fail during 
+            initial checking.&nbsp; Otherwise it will run, but if such a variable name is 
+            assigned to by a command, such as in the mechanism just described, the program 
+            will print a warning in the log.</LI>
     </OL>
     <P><A NAME="arrayVars"></A><b>Array Variables</b></P>
     <P>Variables can also be set to an array of values, and individual values can be 
