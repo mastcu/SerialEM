@@ -474,9 +474,10 @@ FRC crossings 0.5: 0.0335  0.25: 0.0468  0.125: 0.0898  is 0.1025 at 0.25/pix   
     <p>
       <b>Always process gain-normalized frames with full precision (K2 only)</b></p>
     <p>
-      This option is available only when aligning in the plugin and only for GMS 2.31 
-      or higher.&nbsp; It is only relevant there when acquiring a gain-normalized 
-      image with an 'early return'.&nbsp; In all other cases, the plugin passes a 
+      This option should not be used; just make sure that you have <i>not</i> selected 
+      &#39;Divide 16-bit by 2&#39; and the precision will be as good as with a K3.&nbsp; This option is available only when aligning in the plugin and 
+      for K2 frames only.&nbsp; It is relevant there when acquiring a gain-normalized 
+      image with an 'early return', and when using the GPU.&nbsp; In all other cases, the plugin passes a 
       gain-normalized image to the framealign module in its original floating point 
       form, before possibly scaling it to integers.&nbsp; With an early return, the 
       plugin has to fetch frames from DM as fast as possible and store them in a local 
@@ -486,8 +487,14 @@ FRC crossings 0.5: 0.0335  0.25: 0.0468  0.125: 0.0898  is 0.1025 at 0.25/pix   
       super-resolution frames will be multiplied by 4096 and saved as 2-byte integers, 
       so the precision will be fully preserved, but the stack will occupy twice the 
       memory.&nbsp; Choosing this option may delay the early return unless there is 
-      enough memory.&nbsp; However, this option is overridden by the option to scale 
-      saved frames by an additional factor of 100; if there is an early return and 
+      enough memory.&nbsp; When using a GPU, the plugin will do the usual scaling of 
+      frames to bytes or 2-byte integers before copying to the GPU, in order to reduce 
+      the copying time and allow more frames to be stacked on the GPU between the 
+      alignment and summing steps.&nbsp; With this option, floating point numbers will 
+      be copied, which will take longer and limit the number of frames that can be 
+      stack.&nbsp; However, this option is overridden by the option to scale 
+      saved frames by an additional factor of 100; if there is an early return or GPU 
+      use and 
       frames are being saved with such scaling, the scaled frames will be passed to 
       the framealign module.</p>
     <p>

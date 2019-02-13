@@ -11,7 +11,7 @@ filename, and report if it is open.
 1/8/19: Fixed problem moving stage from scope control in continuous mode.
 
 1/8/19: Initial processing steps for frame alignment can now be done on the
-GPU, which can greatly speed it up for faster cards with more memory.
+GPU, which can greatly speed it up for faster cards with enough memory.
 
 1/8/19: Enabled shift buttons for stage movement in scope control dialog when
 there is no beam calibration.
