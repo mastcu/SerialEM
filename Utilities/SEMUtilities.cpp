@@ -647,8 +647,11 @@ float UtilEvaluateGpuCapability(int nx, int ny, int dataSize, bool gainNorm, boo
 {
   float fullPadSize, sumPadSize, alignPadSize;
   float needForGpuSum, needForGpuAli;
-  float gpuUnusable = 3.5e8;
-  float totAliMem = 0., needed = 0., gpuUsableMem, gpuFracMem = 0.85f;
+
+  // 500 MB can be used with a large monitor, allow one more float array worth of space as
+  // overhead to represent possible difficulty of finding contiguous memory for big FFTs
+  float gpuUnusable = 6.e8f + (float)(4. * nx * ny);
+  float totAliMem = 0., needed = 0., temp, gpuUsableMem, gpuFracMem = 0.85f;
   float fullTaperFrac = 0.02f;
   bool bdum, sumWithAlign;
   bool doTrunc = (faParam.truncate && faParam.truncLimit > 0);
@@ -719,13 +722,17 @@ float UtilEvaluateGpuCapability(int nx, int ny, int dataSize, bool gainNorm, boo
     }
 
     if (gpuFlags) {
+      temp = needed;
       needed += FrameAlign::findPreprocPadGpuFlags(nx, ny, dataSize, 
         UtilGetFrameAlignBinning(faParam, nx, ny), gainNorm, defects, doTrunc, 
         B3DMAX(numHoldFull, 1), gpuUsableMem - needed, 
         0.5f * (1.f - gpuFracMem) * gpuUsableMem, gpuFlags, gpuFlags);
+      SEMTrace('a', "GPU mem total %.1f  usable %.1f  need ali/sum %.1f  initial %.1f  "
+        "total %.1f", gpuMemory/1.e6, gpuUsableMem/1.e6, temp/1.e6, (needed - temp)/1.e6,
+        needed/1.e6);
       ind = (gpuFlags >> GPU_STACK_LIM_SHIFT) & GPU_STACK_LIM_MASK;
       if (gpuFlags & (GPU_DO_NOISE_TAPER | GPU_DO_BIN_PAD))
-        SEMTrace('1', "%s  %s  %s  %s %s %d on GPU", (gpuFlags & GPU_DO_NOISE_TAPER) ?
+        SEMTrace('a', "%s  %s  %s  %s %s %d on GPU", (gpuFlags & GPU_DO_NOISE_TAPER) ?
         "noise-pad" : "", (gpuFlags & GPU_DO_BIN_PAD) ? "bin-pad" : "",
         (gpuFlags & GPU_DO_PREPROCESS) ? "preprocess" : "",
         (gpuFlags & STACK_FULL_ON_GPU) ? "stack" : "",
