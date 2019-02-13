@@ -33,7 +33,7 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-#define KV_CHECK_SECONDS 120.
+#define KV_CHECK_SECONDS 60.
 static void ctffindPrintFunc(const char *strMessage);
 static int ctffindDumpFunc(const char *filename, float *data, int xsize, int ysize);
 
@@ -3164,12 +3164,21 @@ float CProcessImage::LinearizedDoseRate(int camera, float rawRate)
     13.014f, 16.514f, 21.21f, 25.32f, 28.20f, 29.25f};
   const float K2rates300KV[] = {0.789f, 1.890f, 3.107f, 4.092f, 6.388f, 9.252f, 13.213f,
     18.480f, 25.744f, 39.14f, 56.29f, 72.61f, 79.76f};
-  const float K3counts200KV[] = {2.153f, 3.24f, 4.321f, 5.29f, 6.175f, 7.141f,
+  /*const float K3counts200KV[] = {2.153f, 3.24f, 4.321f, 5.29f, 6.175f, 7.141f,
     8.194f, 9.1f, 10.144f, 12.03f, 14.540f, 17.340f, 21.608f, 26.200f,
     29.832f, 34.058f, 41.526f, 49.123f, 57.474f, 72.784f, 86.110f};
   const float K3rates200KV[] = {1.962f, 3.165f, 4.095f, 5.274f, 5.943f, 6.984f,
     8.029f, 8.97f, 10.013f, 11.984f, 14.600f, 17.655f, 22.581f, 27.962f,
-    32.744f, 38.213f, 48.847f, 61.181f, 76.710f, 113.502f, 163.196f};
+    32.744f, 38.213f, 48.847f, 61.181f, 76.710f, 113.502f, 163.196f};*/
+  const float K3counts200KV[] = {2.998f, 3.589f, 4.887f, 6.687f, 9.386f, 11.849f, 14.381f,
+    17.529f, 20.673f, 23.612f, 26.410f, 29.450f, 31.929f, 34.500f, 36.979f, 39.313f,
+    41.685f, 43.987f, 46.835f, 49.421f, 51.901f, 54.197f, 56.508f, 59.514f, 62.553f,
+    64.054f, 68.587f, 70.656f, 72.707f, 74.697f, 76.611f, 78.490f};
+  const float K3rates200KV[] = {2.956f, 3.617f, 5.078f, 7.132f, 10.281f, 13.230f, 16.341f,
+    20.329f, 24.452f, 28.442f, 32.373f, 36.797f, 40.533f, 44.539f, 48.536f, 52.427f,
+    56.519f, 60.633f, 65.931f, 70.959f, 75.993f, 80.853f, 85.959f, 92.952f, 100.477f,
+    104.378f, 117.021f, 123.277f, 129.833f, 136.559f, 143.420f, 150.570f};
+
   const float FalconCounts200KV[] = {0.103f, 0.119f, 0.159f, 0.199f, 0.259f, 0.352f,
     0.418f, 0.502f, 0.575f, 0.663f, 0.734f, 0.818f, 0.875f, 0.94f, 1.007f, 1.075f,
     1.123f, 1.157f, 1.189f, 1.219f, 1.248f};
