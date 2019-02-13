@@ -173,9 +173,9 @@ int CParameterIO::ReadSettings(CString strFileName)
     err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, MAX_TOKENS);
     if (err)
       retval = 1;
-    else if (strItems[0] != "SerialEMSettings") {
-      retval = 1;
-      AfxMessageBox("File not recognized as a settings file", MB_EXCLAME);
+    else if (CheckForByteOrderMark(strItems[0], "SerialEMSettings", strFileName, 
+      "settings")) {
+        retval = 1;
     }
 
     // Clear out low dose params now in case there are none in the file
@@ -1813,9 +1813,9 @@ int CParameterIO::ReadProperties(CString strFileName)
     err = ReadAndParse(strLine, strItems, MAX_TOKENS);
     if (err)
       retval = 1;
-    else if (strItems[0] != "SerialEMProperties") {
+    else if (CheckForByteOrderMark(strItems[0], "SerialEMProperties", strFileName,
+      "properties")) {
       retval = 1;
-      AfxMessageBox("File not recognized as a properties file", MB_EXCLAME);
     }
 
     while (retval == 0 && 
@@ -3154,9 +3154,9 @@ int CParameterIO::ReadCalibration(CString strFileName)
     err = ReadAndParse(strLine, strItems, MAX_TOKENS);
     if (err)
       retval = 1;
-    else if (strItems[0] != "SerialEMCalibrations") {
+    else if (CheckForByteOrderMark(strItems[0], "SerialEMCalibrations", strFileName,
+      "calibration")) {
       retval = 1;
-      AfxMessageBox("File not recognized as a calibrations file", MB_EXCLAME);
     }
 
     while (retval == 0 && 
@@ -4205,9 +4205,9 @@ int CParameterIO::ReadShortTermCal(CString strFileName, BOOL ignoreCals)
     err = ReadAndParse(strLine, strItems, MAX_TOKENS);
     if (err)
       retval = 1;
-    else if (strItems[0] != "SerialEMShortTermCal") {
+    else if (CheckForByteOrderMark(strItems[0], "SerialEMShortTermCal", strFileName,
+      "short term calibration")) {
       retval = 1;
-      AfxMessageBox("File not recognized as a short-term calibrations file", MB_EXCLAME);
     }
     while (retval == 0 && 
       (err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, 
@@ -4731,6 +4731,30 @@ void CParameterIO::StripItems(CString strLine, int numItems, CString & strCopy)
   strCopy.TrimRight(" \t\r\n");
 }
 
+// Check that the file starts with the given tag.  Check for UTF-8 and remove that for
+// checking.  Check for other encoding BOM's from Wikipedia and give specific message
+// Otherwise give generic message
+int CParameterIO::CheckForByteOrderMark(CString &item0, const char * tag,
+  CString &filename, const char *descrip)
+{
+  CString mess;
+  unsigned char first = (unsigned char)item0.GetAt(0);
+  if (first == 0xEF && (unsigned char)item0.GetAt(1) == 0xBB && 
+    (unsigned char)item0.GetAt(2) == 0xBF)
+    item0 = item0.Mid(3);
+  if (item0 == tag)
+    return 0;
+  if (first == 0xFE || first == 0xFF || first == 0xF7 || first == 0xDD || first == 0x0E
+    || first == 0xFB || first == 0x84 || 
+    (!first && (unsigned char)item0.GetAt(2) == 0xFE))
+    mess.Format("%s is in a strange encoding and cannot be read as a %s file",
+    (LPCTSTR)filename, descrip);
+  else 
+    mess.Format("%s does not start with %s and cannot be read as a %s file",
+      (LPCTSTR)filename, tag, descrip);
+  AfxMessageBox(mess, MB_EXCLAME);
+  return 1;
+}
 
 void CParameterIO::WritePlacement(const char *string, int open, WINDOWPLACEMENT *place)
 {
@@ -5356,5 +5380,3 @@ int CParameterIO::MacroSetSetting(CString name, double value)
 #undef INT_SETT_ASSIGN
 #undef BOOL_SETT_ASSIGN
 #undef FLOAT_SETT_ASSIGN
-
-

@@ -4,6 +4,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 significance.
 ============================================================================
 1/30/19: SEM_3-7-0
+1/30/19: Check properties, setting, calibrations for being UTF-8 and accept
+that, but give specific message for other non-ASCII encodings.
+
 1/29/19: Made camera setup dialog check frame alignment parameters when align
 is turned on and change them if appropriate.
 
