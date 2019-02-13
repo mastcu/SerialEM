@@ -13,6 +13,9 @@ IF "%CD%" == "C:\Program Files\SerialEM" (
   exit
 )
 
+set CUDA4DLL=cudart64_41_28.dll
+set CUDA8DLL=cudart64_80.dll
+
 rem Find out if there is an FEI or JEOL plugin already
 set HASFEIPLUG=1
 IF NOT EXIST ..\FEIScopePlugin.dll IF NOT EXIST ../Plugins\FEIScopePlugin.dll SET HASFEIPLUG=0
@@ -237,13 +240,8 @@ IF EXIST JeolCamPlugin.dll IF EXIST  ..\JeolCamPlugin.dll (
 )
 
 Rem # Update FrameGPU.dll if it is there
-IF EXIST FrameGPU.dll IF EXIST  C:\ProgramData\Gatan\Plugins\FrameGPU.dll (
-  echo.
-  echo Copying FrameGPU.dll to ProgramData\Gatan\Plugins because it is already there
-  DEL C:\ProgramData\Gatan\Plugins\FrameGPU.dll
-  COPY /Y FrameGPU.dll C:\ProgramData\Gatan\Plugins
-)
-
+call :UpdateFrameGPU C:\ProgramData\Gatan\Plugins
+call :UpdateFrameGPU ..
 
 set REGISTER=0
 IF EXIST "C:\Program Files\Gatan\DigitalMicrograph\Plugins" (
@@ -269,7 +267,7 @@ Rem YOU CANNOT DO AN ELSE AFTER A COMPOUND IF
 IF %Major% EQU 3 IF %Minor% GEQ 30 GOTO :VS2015GM3
 
 IF %Major% EQU 3 (
-  set versRange64=2.31 to 3.2
+  set versRange64=2.31 to 3.2x
   set SEMCCD64=SEMCCD-GMS2.31-64.dll
   set BIT64=1
 ) ELSE IF %Minor% LSS 30 (
@@ -285,7 +283,7 @@ IF %Major% EQU 3 (
 ) ELSE (
   set versRange32=2.30 and higher
   set SEMCCD32=SEMCCD-GMS2.30-32.dll
-  set versRange64=2.31 to 3.2
+  set versRange64=2.31 to 3.2x
   set SEMCCD64=SEMCCD-GMS2.31-64.dll
 )
 GOTO :SetupSEMCCDdone
@@ -410,3 +408,34 @@ IF %NOSHRMEM% == 1 (
   echo ...
 )
 pause
+EXIT /B 0
+
+Rem # Update FrameGPU.dll if it is there
+:UpdateFrameGPU
+set CUDA4LIB=%~1\%CUDA4DLL%
+set CUDA8LIB=%~1\%CUDA8DLL%
+set PLUGFRAME=%~1\FrameGPU.dll
+IF NOT EXIST  %PLUGFRAME% GOTO :FrameGPUdone
+if EXIST %CUDA4LIB% IF EXIST %CUDA8LIB% (
+  echo.
+  echo Not updating %PLUGFRAME% because you have both CUDA 4
+  echo and CUDA 8 libraries.  You will have to do this manually
+  GOTO :FrameGPUdone
+)
+
+IF EXIST  %CUDA4LIB% IF EXIST FrameGPU4.dll (
+  echo.
+  echo Updating %PLUGFRAME% with FrameGPU4.dll for CUDA 4
+  DEL %PLUGFRAME%
+  COPY /Y FrameGPU4.dll %PLUGFRAME%
+  GOTO :FrameGPUdone
+)
+IF EXIST  %CUDA8LIB% IF EXIST FrameGPU8.dll (
+  echo.
+  echo Updating %PLUGFRAME% with FrameGPU8.dll for CUDA 8
+  DEL %PLUGFRAME%
+  COPY /Y FrameGPU8.dll %PLUGFRAME%
+)
+
+:FrameGPUdone
+EXIT /B 0
