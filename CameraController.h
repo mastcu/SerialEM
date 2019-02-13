@@ -61,6 +61,7 @@ struct CamPluginFuncs;
 #define PLUGIN_CAN_SAVE_MDOC     110
 #define PLUGIN_HAS_DOSE_CALL     110
 #define PLUGIN_CAN_BIN_K3_REF    110
+#define PLUGIN_CAN_ADD_TITLE     111
 
 #define CAN_PLUGIN_DO(c, p) CanPluginDo(PLUGIN_##c, p)
 

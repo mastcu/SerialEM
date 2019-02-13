@@ -36,6 +36,7 @@
 #include <mmsystem.h>
 #include "Shared\b3dutil.h"
 #include "Shared\autodoc.h"
+#include "Shared\framealign.h"
 #include "Shared\SEMCCDDefines.h"
 
 
@@ -1986,9 +1987,7 @@ int CCameraController::SaveFrameStackMdoc(KImage *image)
       if (mFrameStackMdocInd < 0) {
         message = "getting new autodoc structure";
       } else {
-        mWinApp->mDocWnd->MakeSerialEMTitle(mWinApp->mDocWnd->GetTitle(), buffer);
-        if (AdocSetKeyValue(ADOC_GLOBAL, 0, "T", buffer))
-          message = "adding title to autodoc";
+        mWinApp->mDocWnd->AddTitlesToFrameMdoc(message);
       }
     } else if (AdocSetCurrent(mFrameStackMdocInd) < 0) {
       message = "setting current autodoc structure";
@@ -2062,9 +2061,8 @@ int CCameraController::SaveFrameStackMdoc(KImage *image)
 int CCameraController::AddToNextFrameStackMdoc(CString key, CString value, bool startIt,
   CString *report)
 {
-  CString message;
+  CString str, message;
   bool addTitle = startIt || mFrameStackMdocInd < 0;
-  char title[80];
   if (AdocAcquireMutex()) {
     if (startIt && mFrameStackMdocInd >= 0)
       AdocClear(mFrameStackMdocInd);
@@ -2076,9 +2074,7 @@ int CCameraController::AddToNextFrameStackMdoc(CString key, CString value, bool 
       message = "setting current autodoc structure";
     }
     if (addTitle && message.IsEmpty()) {
-      mWinApp->mDocWnd->MakeSerialEMTitle(mWinApp->mDocWnd->GetTitle(), title);
-      if (AdocSetKeyValue(ADOC_GLOBAL, 0, "T", title))
-        message = "adding title to autodoc";
+      mWinApp->mDocWnd->AddTitlesToFrameMdoc(message);
     }
     if (message.IsEmpty() && AdocSetKeyValue(ADOC_GLOBAL, 0, (LPCTSTR)key, (LPCTSTR)value))
       message = "adding value to autodoc";
@@ -3687,8 +3683,8 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
   int rootlen = root.GetLength() + 1;
   int nameSize = sdlen + rootlen + 4;
   int stringSize = 4;
-  int reflen = 0, comlen = 0, defectLen = 0, sumLen = 0;
-  int alignFlags = 0, gpuFlags = 0, aliRefLen = 0, aliComLen;
+  int reflen = 0, comlen = 0, defectLen = 0, sumLen = 0, titleLen = 0;
+  int alignFlags = 0, gpuFlags = 0, aliRefLen = 0, aliComLen, dataSize;
   CString refFile, sumList, tmpStr, aliComName;
   if (isSuperRes || mParam->K2Type == K3_TYPE)
     refFile = mParam->superResRefForK2;
@@ -3788,6 +3784,14 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
       sumLen = sumList.GetLength() + 1;
       nameSize += sumLen;
   }
+  if (saving && CAN_PLUGIN_DO(CAN_ADD_TITLE, mParam)) {
+    tmpStr = mWinApp->mDocWnd->GetFrameTitle();
+    if (!tmpStr.IsEmpty()) {
+      flags |= K2_ADD_FRAME_TITLE;
+      titleLen = tmpStr.GetLength() + 1;
+      nameSize += titleLen;
+    }
+  }
 
   // Set up for align com file if one is needed
   if (aligning && conSet.useFrameAlign > 1) {
@@ -3824,6 +3828,9 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
     if (sumLen)
       sprintf(names + sdlen + rootlen + reflen + defectLen + comlen, "%s", 
       (LPCTSTR)sumList);
+    if (titleLen)
+      sprintf(names + sdlen + rootlen + reflen + defectLen + comlen + sumLen, "%s", 
+      (LPCTSTR)mWinApp->mDocWnd->GetFrameTitle());
   }
 
   mGettingFRC = false;
@@ -3870,13 +3877,28 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
     // Do things when truly aligning
     if (trulyAligning) {
 
-      // Let plugin figure out whether it needs to do anything with this
+      // This is the plugin's test for keeping precision:
+      // userKeepPrecision = mTD.bFaKeepPrecision && !mTD.bSaveTimes100;
+      // bFaKeepPrecision = (!mTD.iNumGrabAndStack || userKeepPrecision) && !mTD.K3type && 
+      // mTD.bUseFrameAlign && (!mTD.iFaGpuFlags || userKeepPrecision) &&
+      //sReadModes[mTD.iReadMode] != K2_LINEAR_READ_MODE && processing == GAIN_NORMALIZED;
+
+      // Set the flag and let the plugin sort it out...
       if (faParam.keepPrecision && mParam->K2Type != K3_TYPE)
         alignFlags |= K2FA_KEEP_PRECISION;
 
+      // But anticipate that the plugin will pass floats to GPU only if user really wants
+      if (mParam->K2Type == K3_TYPE)
+        dataSize = 1;
+      else if (gainNormed && faParam.keepPrecision && !savingTimes100)
+        dataSize = 4;
+      else
+        dataSize = isSuperRes ? 1 : 2;
+
       // Evaluate all memory needs
       totAliMem = UtilEvaluateGpuCapability(frameSizeX, 
-        frameSizeY, conSet.binning / (isSuperRes ? 1 : 2), 
+        frameSizeY, dataSize, !gainNormed, (alignFlags & K2_SAVE_DEFECTS) != 0, 
+        conSet.binning / (isSuperRes ? 1 : 2), 
         faParam, numAllVsAll, numAliFrames, refineIter, groupSize, numFilt, doSpline, 
         mUseGPUforK2Align[DMind] ? mGpuMemory[DMind] : 0., maxMemory, gpuFlags, 
         deferGpuSum, mGettingFRC);
@@ -3972,7 +3994,7 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
         &setupErr));
     if (aligning) {
       MainCallGatanCamera(SetupFrameAligning(
-        mFalconHelper->GetFrameAlignBinning(faParam, frameSizeX, frameSizeY),
+        UtilGetFrameAlignBinning(faParam, frameSizeX, frameSizeY),
         faParam.rad2Filt1, numAllVsAll ? faParam.rad2Filt2 : 0., 
         numAllVsAll ? faParam.rad2Filt3 : 0., faParam.sigmaRatio, 
         faParam.truncate ? faParam.truncLimit : 0., alignFlags, gpuFlags, numAllVsAll,
@@ -8641,9 +8663,10 @@ void CCameraController::DisplayNewImage(BOOL acquired)
     ixoff = extra->mDividedBy2;
     camRate = extra->mCountsPerElectron;
     if (mParam->K2Type) {
-      extra->mBinning = B3DCHOICE(lastConSetp->K2ReadMode == K2_SUPERRES_MODE && 
-        !((mSaveSuperResReduced && CAN_PLUGIN_DO(CAN_REDUCE_SUPER, mParam)) ||
-        (mParam->K2Type == K3_TYPE && mTakeK3SuperResBinned)), 0.5f, 1.f);
+      extra->mBinning = B3DCHOICE(IS_SUPERRES(mParam, lastConSetp->K2ReadMode) && 
+        !((mSaveSuperResReduced && CAN_PLUGIN_DO(CAN_REDUCE_SUPER, mParam) &&
+        lastConSetp->processing == GAIN_NORMALIZED && !mSaveUnnormalizedFrames) ||
+        IsK3BinningSuperResFrames(lastConSetp, mParam)), 0.5f, 1.f);
       extra->mPixel *= extra->mBinning / axoff;
       if (lastConSetp->processing != GAIN_NORMALIZED || mSaveUnnormalizedFrames) {
         extra->mDividedBy2 = 0;
