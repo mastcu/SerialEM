@@ -5762,16 +5762,24 @@ bool CEMscope::MovePhasePlateToNextPos()
 // Return the current position of the phase plate
 int CEMscope::GetCurrentPhasePlatePos(void)
 {
+  CString mess;
   int pos = -1;
   if (!sInitialized || !mPlugFuncs->GetCurPhasePlatePos)
     return -1;
   ScopeMutexAcquire("GetCurrentPhasePlatePos", true);
   try {
     pos = mPlugFuncs->GetCurPhasePlatePos();
+    if (pos < 0) {
+      mess = "Error getting current phase plate position";
+      if (mPlugFuncs->GetLastErrorString)
+        mess += mPlugFuncs->GetLastErrorString();
+      SEMMessageBox(mess);
+    }
   }
   catch (_com_error E) {
     SEMReportCOMError(E, _T("getting current phase plate position "));
   }
+  ScopeMutexRelease("GetCurrentPhasePlatePos");
   return pos;
 }
 
@@ -5834,6 +5842,8 @@ UINT CEMscope::ApertureMoveProc(LPVOID pParam)
       }
       if (td->actionFlags & APERTURE_NEXT_PP_POS) {
         retval = td->plugFuncs->GoToNextPhasePlatePos(0);
+        if (retval && td->plugFuncs->GetLastErrorString)
+          td->description += td->plugFuncs->GetLastErrorString();
       }
     }
     catch (_com_error E) {
