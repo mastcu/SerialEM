@@ -2699,7 +2699,7 @@ void CMacroProcessor::NextCommand()
     SetVariable("REPORTEDVALUE1", strCopy, VARTYPE_REPORT, 1, true);
     SetVariable("REPVAL1", strCopy, VARTYPE_REPORT, 1, true);
     if (!itemEmpty[1])
-      SetVariable(strItems[1], strCopy, VARTYPE_REGULAR, -1, true);
+      SetVariable(strItems[1], strCopy, VARTYPE_REGULAR, -1, false);
     break;
   }
     
