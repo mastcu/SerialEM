@@ -428,6 +428,9 @@
     <ClInclude Include="Shared\ctffind.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ExternalTools.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\bitmap1.bmp">
@@ -722,6 +725,9 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="hlp\html\hidd_de_reference.htm">
+      <Filter>HTML Help Topics</Filter>
+    </None>
+    <None Include="hlp\html\menu_tools.htm">
       <Filter>HTML Help Topics</Filter>
     </None>
   </ItemGroup>
@@ -1069,6 +1075,9 @@
       <Filter>CSource Files</Filter>
     </ClCompile>
     <ClCompile Include="OneLineScript.cpp">
+      <Filter>CSource Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ExternalTools.cpp">
       <Filter>CSource Files</Filter>
     </ClCompile>
   </ItemGroup>

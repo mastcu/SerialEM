@@ -52,6 +52,7 @@ menu_tasks											= SerialEM.chm::/html\menu_tasks.htm
 menu_tilt_series								= SerialEM.chm::/html\menu_tilt_series.htm
 menu_process										= SerialEM.chm::/html\menu_process.htm
 menu_navigator									= SerialEM.chm::/html\menu_navigator.htm
+menu_tools											= SerialEM.chm::/html\menu_tools.htm
 menu_window											= SerialEM.chm::/html\menu_window.htm
 menu_help												= SerialEM.chm::/html\menu_help.htm
 hidm_file_opennew								= SerialEM.chm::/html\menu_file.htm#hidm_file_opennew
