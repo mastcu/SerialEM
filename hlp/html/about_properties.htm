@@ -2431,6 +2431,10 @@
             follow, then there must be that many lines of the following form:
             <BR>
             &nbsp;&nbsp;&nbsp; Distance in microns&nbsp;&nbsp;&nbsp;&nbsp; Delay in seconds
+            <br /> The default with no table entry is a linear delay of 1 sec per micron of 
+            movement, which is excessively long for large image shifts.  With at least two 
+            entries, it will interpolate between them and extrapolate beyond them; with one
+            entry it will use the single delay at all moves.
           </TD>
         </TR>
         <TR>

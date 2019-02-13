@@ -361,7 +361,14 @@
         relatively low magnification.</P>
       <P>This procedure may fail if existing calibrations are far off, which can happen 
         when the microscope alignment has been changed. If this happens, you should run 
-        the <A href="#hid_calibration_isfromscratch">IS from Scratch command</A> .</P>
+        the <A href="#hid_calibration_isfromscratch">IS from Scratch command</A> .&nbsp; 
+        Also, if there is a lot of distortion, the procedure may report a relatively 
+        poor result; this is common in the bottom two SA magnifications of a Krios in 
+        EFTEM mode.&nbsp; A remedy here is to use a half area, or even a quarter area if 
+        necessary.&nbsp; Turn on <a href="#hid_imagestageshift_usetrialsize">Use 
+            Trial Size</a>, adjust the binning if necessary so that there are still ~500 
+        pixels, and increase the beam intensity to compensate for the loss in image 
+        area.</P>
       <P><A name="hid_calibration_isfromscratch"></A><B>IS from Scratch command 
         (Calibration - Image &amp; Stage Shift sub-menu)</B></P>
       <P>This command will calibrate image shift in two rounds (13 pictures), without 

@@ -58,6 +58,16 @@
       {
         height: 22px;
       }
+      .style13
+      {
+        width: 303px;
+        height: 24px;
+      }
+      .style14
+      {
+        width: 896px;
+        height: 24px;
+      }
     --></style>
   </HEAD>
   <BODY bgColor="#ffffff" text="#000000">
@@ -196,8 +206,10 @@
         <BR>
         <A href="#separate_kv">Setting Up for a Separate Voltage</A><br />
         <a href="#nanoprobe">Setting Up to Use Nanoprobe TEM on FEI Scopes </a>&nbsp;<BR>
-        <a href="#adding_nvidia">Adding an NVIDIA card to a K2 Computer</a>&nbsp;<BR>
-        <A href="#using_film_setup">Using Film</A></P>
+        <a href="#using_gpu">Setting Up to Use a GPU for Frame Alignment</a>&nbsp;<BR>
+        <a href="#adding_nvidia">Adding an NVIDIA card to a K2/K3 Computer</a>&nbsp;<BR>
+        <A href="#using_film_setup">Using Film</A><BR>
+        <A href="#package_files">Files in a SerialEM Install Package</A></P>
       <P><A name="setup_install"></A><B>Program Installation</B></P>
     <P><a name="packagesContents"><i>The Packages and their Contents</i></a>.&nbsp; 
       The files needed to run SerialEM consist of executable programs and libraries, 
@@ -211,202 +223,14 @@
       custom framework file, it should be set up to unpack in C:\ProgramData, but if 
       not, you should change 'Program Files' to 'ProgramData' before unzipping. </P>
     <P>The SerialEM_3-x-x.exe package will create a subfolder SerialEM_3-x-x under 
-      C:\Program Files\SerialEM with the following files (not all included in a 64-bit 
-      SerialEM package): </P>
-      <table class="style1">
-        <tr>
-          <td class="style2">
-            SerialEM.exe</td>
-          <td class="style3">
-            &nbsp;the executable
-          </td>
-        </tr>
-        <tr>
-          <td class="style2">
-            SerialEM.chm</td>
-          <td class="style3">
-            the help file
-          </td>
-        </tr>
-        <tr>
-          <td class="style2">
-            Microsoft.VC90.CRT, Microsoft.VC90.MFC, Microsoft.VC90.OPENMP</td>
-          <td class="style3">
-            Folders with DLL's and manifests for running the program compiled with Visual 
-            Studio 2008</td>
-        </tr>
-        <tr>
-          <td class="style2">
-            FEIScopePlugin.dll</td>
-          <td class="style3">
-            A plugin for communicating with an FEI microscope locally or remotely</td>
-        </tr>
-        <tr>
-          <td class="style2">
-            FEI-SEMserver.exe</td>
-          <td class="style3">
-            A server that is copied to a remote FEI microscope computer and run there</td>
-        </tr>
-        <tr>
-          <td class="style2">
-            JeolScopePlugin.dll</td>
-          <td class="style3">
-            A plugin for communicating with a JEOL microscope</td>
-        </tr>
-        <tr>
-          <td class="style2">
-            HitachiPlugin.dll</td>
-          <td class="style3">
-            A plugin for communicating with a Hitachi HT7700 microscope</td>
-        </tr>
-        <tr>
-          <td class="style2">
-            ShMemSEMserver.exe</td>
-          <td class="style3">
-            A server for shared memory values that is copied to the HT7700 computer when 
-            running on another computer</td>
-        </tr>
-        <tr>
-          <td class="style2">
-            SerialEMCCD.dll</td>
-          <td class="style3">
-            the plugin to DigitalMicrograph for GMS 1.x</td>
-        </tr>
-        <tr>
-          <td class="style2">
-            SEMCCD-GMS2.0-32.dll</td>
-          <td class="style3">
-            the plugin to DigitalMicrograph for 32-bit GMS 2.0 - 2.2</td>
-        </tr>
-        <tr>
-          <td class="style2">
-            SEMCCD-GMS2.3-32.dll</td>
-          <td class="style3">
-            the plugin to DigitalMicrograph for 32-bit GMS 2.3 and above</td>
-        </tr>
-        <tr>
-          <td class="style2">
-            SEMCCD-GMS2.31-64.dll</td>
-          <td class="style3">
-            The plugin to DigitalMicrograph for 64-bit GMS 2.31 and above</td>
-        </tr>
-        <tr>
-          <td class="style2">
-            SEMCCD-GMS3.01-64.dll</td>
-          <td class="style3">
-            The plugin to DigitalMicrograph for 64-bit GMS 3</td>
-        </tr>
-        <tr>
-          <td class="style2">
-            SerialEMCCDps.dll</td>
-          <td class="style3">
-            a&nbsp;DLL for communicating with the plugin for GMS 1.x</td>
-        </tr>
-        <tr>
-          <td class="style2">
-            SEMCCDps-GMS2-32.dll</td>
-          <td class="style3">
-            a&nbsp;DLL for communicating with the plugin for both 32-bit and 64-bit GMS 2</td>
-        </tr>
-        <tr>
-          <td class="style2">
-            SEMCCDps-GMS2-64.dll</td>
-          <td class="style3">
-            a&nbsp;DLL for communicating with the plugin for 64-bit GMS 2</td>
-        </tr>
-        <tr>
-          <td class="style2">
-            FrameGPU.dll</td>
-          <td class="style3">
-            A DLL for using&nbsp; the GPU of an NVIDIA card for doing frame alignment in the 
-            plugin to DM </td>
-        </tr>
-        <tr>
-          <td class="style2">
-            register-GMS1.bat</td>
-          <td class="style3">
-            a batch file for copying the plugin and registering both DLL's for GMS 1.x</td>
-        </tr>
-        <tr>
-          <td class="style2">
-            register-GMS2-32.bat</td>
-          <td class="style3">
-            a batch file for copying the plugin and registering both&nbsp;DLL's&nbsp;for 32-bit GMS 2</td>
-        </tr>
-        <tr>
-          <td class="style2">
-            register-GMS2-64.bat</td>
-          <td class="style3">
-            a batch file for copying the plugin and registering three&nbsp;DLL's&nbsp;for 64-bit GMS 2</td>
-        </tr>
-        <tr>
-          <td class="style2">
-            b3dregsvr32.exe</td>
-          <td class="style3">
-            Program run by the batch file for registering the plugin for 32-bit and 64-bit GMS 2</td>
-        </tr>
-        <tr>
-          <td class="style2">
-            b3dregsvr64.exe</td>
-          <td class="style3">
-            Program run by the batch file for registering the plugin for 64-bit GMS 2</td>
-        </tr>
-        <tr>
-          <td class="style2">
-            FocusRamper.exe</td>
-          <td class="style3">
-            A COM executable for doing dynamic focus with FEI STEM</td>
-        </tr>
-        <tr>
-          <td class="style2">
-            register-Ramper.bat</td>
-          <td class="style3">
-            A batch file for registering the FocusRamper on a remote microscope</td>
-        </tr>
-        <tr>
-          <td class="style2">
-            JeolCamPlugin.dll</td>
-          <td class="style3">
-            A plugin for accessing a JEOL camera or JEOL STEM signals on some scopes</td>
-        </tr>
-        <tr>
-          <td class="style2">
-            JEOL-SEMCamServer32.exe</td>
-          <td class="style3">
-            A server that is copied to a remote JEOL PC for accessing JEOL camera or STEM 
-            signals</td>
-        </tr>
-        <tr>
-          <td class="style2">
-            JEOL-SEMCamServer64.exe</td>
-          <td class="style3">
-            A camera server that is copied to a remote JEOL PC running 64-bit JEOL software</td>
-        </tr>
-        <tr>
-          <td class="style2">
-            TietzPlugin.dll</td>
-          <td class="style3">
-            A plugin for accessing Tietz (TVIPS) cameras</td>
-        </tr>
-        <tr>
-          <td class="style2">
-            Tietz-SEMServer.exe</td>
-          <td class="style3">
-            A camera server that is copied to a remote PC running a Tietz camera</td>
-        </tr>
-        <tr>
-          <td class="style2">
-            install.bat</td>
-          <td class="style3">
-            a batch file for copying appropriate files to the folder above and registering 
-            needed items</td>
-        </tr>
-    </table>
-    <P>There are two distinct kinds of plugins here.&nbsp; One is the plugin to 
+      C:\Program Files\SerialEM.&nbsp; See&nbsp;
+        <A href="package_files">Files in a SerialEM Install Package</A> for a 
+      description of the package contents.</P>
+    <P>There are two distinct kinds of plugins in the package.&nbsp; One is the plugin to 
       DigitalMicrograph, which runs when DM loads it from one of its Plugins folders.&nbsp; 
       The other is the collection of microscope and camera plugins to SerialEM.&nbsp; 
       SerialEM tries to load any file whose name ends in 'Plugin.dll' from the same 
-      folder as the executable.
+      folder as the executable. 
       </P>
     <P>The files that come from a framework extract to either C:\Program Files\SerialEM
  (Windows XP) or C:\ProgramData\SerialEM (Windows 7 and later) and include:<br />
@@ -429,6 +253,14 @@
         See this section also for instructions on modifications needed under Windows 7/Server 
         2008 
         and with GMS 2.x.</P>
+    <P>Depending on your situation, you may need one or two other packages.&nbsp; If 
+      you are running a K2 or K3 camera and SerialEM is either running on a different 
+      computer or is a 32-bit version on the K2/3 computer, then you need a 
+      Shrmemframe package specific to your version of GMS.&nbsp; Simply run this 
+      package on the K2/3 computer and it will place the needed files in 
+      C:\ProgramData\Gatan\Plugins.  To do frame alignment with a GPU for any camera, 
+      you will need a FrameGPU package.&nbsp;  See <a href="#using_gpu">Setting Up to 
+      Use a GPU for Frame Alignment</a>.</P>
     <P><a name="pluginVersions"><i>Versions of the DigitalMicrograph Plugin and Compatibility with Leginon</i></a>.&nbsp; 
       The version number on the SEMCCD plugin does not need to match the GMS version 
       exactly; the versions provided in the package are compatible with the full range 
@@ -449,8 +281,8 @@
       <P style="Z-INDEX: 0">
         <a name="runningInstaller"><i>Running the Installer.</i></a>&nbsp;
         For initial installation or upgrading to a new version, simply click on 
-        'install.bat' in the SerialEM_3-x-x subfolder.&nbsp; In Windows 7/Server 2008 you 
-        will need to right click and select 'Run as Adminstrator'.&nbsp; If you have a 
+        'install.bat' in the SerialEM_3-x-x subfolder.&nbsp; In Windows 7/10/Server 2008/2012 you 
+        will need to right click and select 'Run as Administrator'.&nbsp; If you have a 
         Gatan camera, make sure that DigitalMicrograph is not running.&nbsp; The 
         installer does the following: </P>
     <ol>
@@ -479,8 +311,16 @@
       </li>
       <li>
         <P style="Z-INDEX: 0">
-          The Tietz plugin is copied up unconditionally, and one for running JEOL cameras 
+          The Tietz plugin is copied up 
+          if the SerialEM properties file contains an entry for a Tietz camera or if the 
+          properties are not found; the DE camera plugin and interface DLL are handled 
+          similarly; and a plugin for running JEOL cameras 
           is copied if it is already present.</P>
+      </li>
+      <li>
+        <P style="Z-INDEX: 0">
+          The module for frame alignment in the GPU, FrameGPU.dll, is updated if it is 
+          present in either the SerialEM directory or C:\ProgramData\Gatan\Plugins</P>
       </li>
       <li>
         <P style="Z-INDEX: 0">
@@ -496,9 +336,10 @@
           folder&nbsp;(C:\Program Files\Gatan\DigitalMicrograph\Plugins in GMS 1.x, C:\Program 
           Files\Gatan\Plugins for GMS 2 32-bit, and C:\ProgramData\Gatan\Plugins for GMS 2 
           64-bit) and register the DLL's; this should result in 2 or 
-          3 message boxes saying that registration succeeded.&nbsp; For GMS 2, the plugin 
-          will be renamed to remove the GMS minor version number before it is copied (e.g., 
-          SEMCCD-GMS2-32.dll).</P>
+          3 message boxes saying that registration succeeded.&nbsp; For GMS 2 or 3, the plugin 
+          will be renamed before it is copied to just the generic name for a GMS2 plugin (e.g., 
+          SEMCCD-GMS2-32.dll).&nbsp; For 64-bit versions, it will also copy or update 
+          components needed for alignment of K2/K3 frames through the CPU.</P>
       </li>
       <li>
         <P style="Z-INDEX: 0">
@@ -1247,7 +1088,7 @@
           pre-exposure of the specimen, using the film shutter and beam blanker.</LI></UL>
       <P><a name="connectDMsocket"><i>To connect to 
         DigitalMicrograph through a socket interface</i></a> on the same or a different 
-        computer, <i>such as</i> <i>for a K2/K3 camera on an FEI microscope</i>, you need to do the following:</P>
+        computer, <i>such as</i> <i>for a K2/K3 camera with SerialEM running on an FEI microscope</i>, you need to do the following:</P>
     <ul>
       <li>Determine the IP address of the computer running DM on the network which that 
         computer shares with the computer running SerialEM.&nbsp; If SerialEM and DM are 
@@ -1257,11 +1098,12 @@
         with that number</li>
       <li>Set a property &#39;UseSocket&nbsp; 1&#39; for each camera being accessed through the 
         socket interface.</li>
-      <li>If DM and SerialEM are running on different computers, copy the appropriate SerialEMCDD plugin from the SerialEM_3-x-x folder to a 
+      <li>If DM and SerialEM are running on different computers, install the Shrmemframe package mentioned above for
+      a K2/K3 camera, otherwise copy the appropriate SerialEMCDD plugin from the SerialEM_3-x-x folder to a 
         Plugins folder on the other computer (the one running DM).&nbsp; Specifically:<ul>
-          <li>For a K2/K3 camera or if the other computer is running Windows 7 64-bit, copy&nbsp; 
+          <li>If the other computer is running 64-bit Windows, copy&nbsp; 
             SEMCCD-GMS2.31-64.dll, 
-            SEMCCD-GMS3.01-64.dll, or 
+            SEMCCD-GMS3.30-64.dll, or 
             SEMCCD-GMS3.31-64.dll to C:\ProgramData\Gatan\Plugins and rename it to 
             SEMCCD-GMS2-64.dll</li>
           <li>If the other computer is running GMS2 on Windows XP or Windows 7 32-bit, copy SEMCCD-GMS2.0-32.dll 
@@ -1332,6 +1174,12 @@
       <li>Making counts match between linear and counting mode requires different 
         procedures for K2 and K3 cameras, described in
         <a href="#setup_camera_gain">Measuring Camera Gain</a>.</li>
+      <li>To use frame alignment with the CPU when SerialEM is 32-bit on the K2/K3 
+        computer, or running on a different computer,&nbsp; you need to download and run 
+        Shrmemframe-GMSxxx.exe on the K2/K3 computer, where 'xxx' should match your 
+        version of GMS.</li>
+      <li>To use a GPU for frame alignment, see <a href="#using_gpu">Setting Up to Use a 
+        GPU for Frame Alignment</a>.</li>
     </ul>
     <p>
       <a name="DEdetails"><i>For a Direct Electron direct detection camera</i></a>, particularly if you are 
@@ -1360,6 +1208,8 @@
         controls two shutters, remove this setting.&nbsp; If you have a single shutter, you 
         can also enable pre-exposure by removing this setting, but the beam will be on 
         the chip during the pre-exposure and reduce its life accordingly.</li>
+      <li>To use a GPU for frame alignment, see <a href="#using_gpu">Setting Up to Use a 
+        GPU for Frame Alignment</a>.</li>
     </ul>
       <p>
         <a name="FalconDetails"><i>For a Falcon 2 camera that can save 
@@ -1475,12 +1325,10 @@
       <li>The GPU currently works only with 64-bit SerialEM but could be available for 
         32-bit SerialEM if there is enough need.</li>
       <li>You need to have a CUDA-capable NVIDIA card and appropriate NVIDIA drivers 
-        installed.&nbsp; Even modest cards should be effective.</li>
-      <li>Copy FrameGPU.dll from the SerialEM package folder up into the main SerialEM 
-        folder where SerialEM.exe is located (C:\Program Files\SerialEM by default).</li>
-      <li>Download compatible CUDA runtime libraries (currently cudart64_41_28.dll and 
-        cufft64_41_28.dll) from the Tools folder on the SerialEM download site and place 
-        them in the same folder as FrameGPU.dll and SerialEM.exe.</li>
+        installed.&nbsp; Even modest cards should be somewhat effective, but more a powerful 
+        card will align faster up to a point.</li>
+      <li>Follow the instructions in <a href="#using_gpu">Setting Up to Use a GPU for 
+        Frame Alignment</a>.</li>
       <li>If the property DebugOutput is set to 1, there will be a message on program 
         startup about whether this GPU is available.&nbsp; If it is not, set DebugOutput 
         to E for diagnostic output.</li>
@@ -2085,6 +1933,9 @@
         correlation coefficient in the procedure and warn if it falls below 0.4.</li>
       <li>Use the kind of cross-line grating with latex spheres and include enough 
         spheres in the field of view to help protect against spurious correlations.</li>
+      <li>If you use a grating with 2000 lines per mm, set the property 'GridLinesPerMM' 
+        to 2000 and be sure to have latex spheres: these grids can be too close to 
+        perfect to give correct cross-correlations.</li>
       <li>We all like to try to run programs without reading the help, but the problem 
         here is that you need to be able to recognize when one of the procedures is not 
         giving the right result.&nbsp; It can be helpful to read through the 
@@ -3376,7 +3227,8 @@
       <li> <A href="menu_calibration.htm#hid_calibration_beamshift">Beam Shift</A></li>
       <li> <A href="menu_calibration.htm#hid_calibration_autofocus">Autofocus</A></li>
       <li><A href="menu_calibration.htm#hid_calibration_electrondose">Electron Dose</A></li>
-      <li> <A href="menu_calibration.htm#hid_calibration_standardlmfocus">Standard Focus</A></li>
+      <li> <A href="menu_calibration.htm#hid_calibration_standardlmfocus">Standard Focus</A> 
+        if used to set eucentric focus in nonLM</li>
       <li><A href="menu_calibration.htm#hid_autofocusfocus_astigmati">Astigmatism Correction 
         by BTID</A></li>
       <li><A href="menu_calibration.htm#hid_autofocusfocus_coma">Old coma-free Alignment 
@@ -3426,22 +3278,80 @@
       mode.&nbsp; After establishing the basic beam position in each mode with this 
       procedure, you can then apply additional beam shifts as necessary.</p>
       <P>&nbsp;</P>
-    <P><A name="adding_nvidia"></A><B>Adding an NVIDIA card to a K2 Computer</B></P>
+    <P><A name="using_gpu"></A><B>Setting Up to Use a GPU for Frame Alignment</B></P>
+    <P>Frame alignment can happen in two places: in the SerialEMCCD plugin to 
+      DigitalMicrograph for K2/K3 cameras, and in SerialEM itself for Falcon and DE 
+      cameras.&nbsp; The GPU of an NVIDIA card can be used if the module FrameGPU.dll 
+      and the matching CUDA libraries are found in the right place: in the same folder 
+      as the SerialEMCCD plugin or the SerialEM executable, respectively.&nbsp; To enable 
+      GPU use:</P>
+    <ol>
+      <li>Get FrameGPU-CUDA4.exe or FrameGPU-CUDA8.exe from the SerialEM download site.&nbsp; 
+      The CUDA 8 version is much bigger and has not shown any speed advantage, so 
+      there is no reason to get it unless the CUDA 4 version does not work, or you 
+      want to do a speed comparison.</li>
+      <li>Run the package.&nbsp; Extract the files to
+      C:\ProgramData\Gatan\Plugins for use with a K2/K3, or to C:\Program Files\SerialEM 
+      or other SerialEM install location for DE and Falcon.</li>
+      <li>Restart DigitalMicrograph for a K2/K3. </li>
+      <li>Restart SerialEM.&nbsp; There should be a message in the log that the 
+        GPU IS available for frame alignment for the relevant camera.</li>
+      <li>To see debug output from frame alignment and get diagnostic information about a failure to connect to 
+        the GPU:</li>
+        <ul>
+        <li>For K2/K3, add or set the property 'StartCameraInDebugMode 1' and restart 
+          SerialEM.&nbsp; There will be several lines from the framealign module in the DM 
+          Output window as it looks for GPUs.&nbsp; To get timing output from the plugin 
+          during alignment, however, you need to set the environment variable 
+          SERIALEMCCD_DEBUG to 10.</li>
+        <li>For Falcon or DE, set the property DebugOutput to 'E' or 'D', respectively, 
+          and restart SerialEM. The initial lines from framealign will appear in the 
+          SerialEM log.&nbsp; Timing output will also go into the log.</li>
+        </ul>
+    </ol>
+    <P>The SerialEM install package comes with files named FrameGPU4.dll and 
+      FramGPU8.dll for the two CUDA versions.&nbsp; When you update SerialEM, the 
+      installer will update FrameGPU.dll as long as it can tell which CUDA version you 
+      have libraries for.&nbsp; This module MUST be named FrameGPU.dll to be loaded by 
+      the framealign module.</P>
+    <P>&nbsp;</P>
+    <P><A name="adding_nvidia"></A><B>Adding an NVIDIA card to a K2/K3 Computer</B></P>
     <P>If you are using the frame alignment module in the SerialEMCCD plugin to 
       DigitalMicrograph for aligning K2 frames, you can speed up this processing by 
-      using the GPU of an NVIDIA card added to the computer.&nbsp; Because most of the 
-      processing is done as frames (slowly) become available from DM, the speed gains 
-      from the GPU are modest, about 0.4 second per frame for super-resolution frames 
-      and 0.1 sec per frame for counting mode frames.&nbsp; For example, with a&nbsp; 
-      Quadro M4000, acquiring and aligning 14 super-resolution frames takes 17.2 sec 
-      with CPU and 12.3 sec with GPU; 14 counting mode frames take 9.4 sec with CPU and 8.0 sec with GPU.&nbsp; 
-      The speedup is very similar with a&nbsp; GeForce GTX 960.&nbsp; If you are using the option for frame alignment 
-      in IMOD, the speed gains with a GPU are more substantial, about 2-3 fold.&nbsp; 
-      Most of these gains can be achieved by mid-range cards and it is not necessary 
+      using the GPU of an NVIDIA card added to the computer.&nbsp; The K3
+      computer by default comes with a low-end K2200 card, but much better
+      performance will be obtained with a more powerful card.  Alignment with
+      the GPU was considerably improved in SerialEM 3.7 (January 11, 2019) by
+      moving the initial processing from CPU to GPU, so the speedup from more
+      powerful cards is more apparent.
+      Because most of the 
+      processing is done as frames become available from DM, the speed gains 
+      from the GPU are somewhat limited with a K2 (where frames become available
+      slowly).&nbsp; </P>
+    <P>For example, with a&nbsp; 
+      Quadro P2000 in GMS 3.2, acquiring and aligning 14 super-resolution
+      0.1 sec frames takes 10.0 sec
+      with CPU and 6.8 sec with GPU; 14 counting mode frames take 5.5 sec with
+      CPU and 5.0 sec with GPU.&nbsp; The optimized design of the K3 makes the
+      gains from having a GPU be a larger fraction of the overall acquire
+      time.&nbsp; With the GP100 included when the K3 comes with the MotionCor2
+      option, acquiring and aligning 14 frames of 0.05 sec takes 10 sec on CPU
+      and only 2.9 sec on GPU.
+      Most of these gains can be achieved by mid-high range cards and it is not necessary 
       to have one of the most powerful cards.&nbsp; Specifically, there is no need to 
-      have a dedicated GPU card, so the NVIDIA card can serve as the graphics card and 
-      substitute for the ATI card that comes with the computer.</P>
-    <P>A typical arrangement of cards in the K2 computer is:</P>
+      have a dedicated GPU card, so in the K2 the NVIDIA card can serve as the
+      graphics card and substitute for the ATI card that comes with the
+      computer.</P>
+    <P>With a K3, the situation is easy.  There should be two open spots for a
+    double-height graphics card, plus space for a double-height card where the
+    K2200 is.  It is probably better to add a card and leave the K2200 to run
+    the display.  The frame alignment module will automatically pick the more
+    powerful card.  A GTX 1080 Ti would be a good choice, or a mid-range
+      GeForce card down to a 1060 if cost is an issue.</P>
+    <P>With a K2, you have to choose between substituting a single-height card
+    for the existing graphics card, and moving cards around to create space for
+    a more powerful double-height card.
+    A typical arrangement of cards in the K2 computer is:</P>
     &nbsp;
     <div dir="ltr">
       <div class="gmail_quote">
@@ -3636,8 +3546,8 @@
       1) If you get a single-height card and your graphics card is already in slot 4, 
       the process is simple; just substitute the card.&nbsp; Unfortunately 
       single-height cards have limited capability.&nbsp; The best ones available as of 
-      Dec. 2016 are all Quadro cards, which all have worse price/performance ratios 
-      than GeForce cards. The choices are:</p>
+      Jan. 2019 are all Quadro cards, which all have worse price/performance ratios 
+      than GeForce cards (typically around a factor of two worse). The choices are:</p>
     <table class="style11">
       <tr>
         <td class="style12">
@@ -3655,51 +3565,62 @@
       </tr>
       <tr>
         <td>
-          K1200</td>
+          P1000</td>
         <td>
           $300</td>
         <td>
-          512</td>
+          640</td>
         <td>
           4 GB</td>
         <td>
-          80 GB/s</td>
+          82 GB/s</td>
         <td>
-          45 w</td>
+          47 w</td>
       </tr>
       <tr>
         <td>
-          M2000</td>
+          P2000</td>
         <td>
           $450</td>
         <td>
-          768</td>
+          1024</td>
         <td>
-          4 GB</td>
+          5 GB</td>
         <td>
-          106 GB/s</td>
+          140 GB/s</td>
         <td>
           75 w</td>
       </tr>
       <tr>
         <td>
-          M4000</td>
+          P4000</td>
         <td>
-          $800</td>
+          $750</td>
         <td>
-          1664</td>
+          1792</td>
         <td>
           8 GB</td>
         <td>
-          192 GB/s</td>
+          243 GB/s</td>
         <td>
-          120 w</td>
+          105 w</td>
+      </tr>
+      <tr>
+        <td>
+          RTX4000</td>
+        <td>
+          $950</td>
+        <td>
+          2304</td>
+        <td>
+          8 GB</td>
+        <td>
+          ?</td>
+        <td>
+          160 w</td>
       </tr>
     </table>
-    <P>The M4000 has about half the performance of a GeForce 980 Ti, for example, but 
-      because of the way that the frame alignment works, the speedup is far from 
-      proportional to increased card capability.&nbsp; More data are needed to say 
-      what card is most worth getting.</P>
+    <P>Most likely these choices will evolve into a set of RTX cards.</P>
     <P>2) If you want to get more performance for the money with a double-height 
       GeForce card, you must move a card out of slot 3, which will typically be a NIC.&nbsp; 
       This NIC must stay on processor 1, not be moved to slot 6 if it is empty.&nbsp; 
@@ -3757,13 +3678,8 @@ Device Settings:
       or other anti-static precautions while transferring the video card from its 
       protective packaging to the computer.</p>
     <p>
-      Copy the file FrameGPU.dll from the current SerialEM package folder to
-      C:\ProgramData\Gatan\Plugins.&nbsp; 
-      The SerialEM installer will update this file when you upgrade.&nbsp; You also 
-      need to download compatible CUDA runtime libraries (currently cudart64_41_28.dll 
-      and cufft64_41_28.dll) from the Tools folder on the SerialEM download site and 
-      place them in the same Gatan Plugins folder.&nbsp; These files are not included 
-      in the SerialEM package because of their size.</p>
+      Follow the instructions in <a href="#using_gpu">Setting Up to Use a GPU for Frame Alignment</a>
+      to install the FrameGPU.dll module and CUDA runtime libraries.</p>
     <P>&nbsp;</P>
       <P><A name="using_film_setup"></A><B>Using Film</B></P>
       <P>There are several script commands that allow taking pictures on film. One problem 
@@ -3787,5 +3703,282 @@ Device Settings:
         all set. Otherwise, the right version of the module for your microscope needs 
         to be obtained from Max Otten at FEI. (The wrong version will do bad things 
         like disable the HT until the computer is rebooted.)</P>
+    <P>&nbsp;</P>
+    <P><A name="package_files"></A><B>Files in the SerialEM Install Package</B></P>
+    <P>The SerialEM_3-7-x.exe package will create a subfolder SerialEM_3-7-x under 
+      C:\Program Files\SerialEM with the following files (not all included in a 64-bit 
+      SerialEM package).&nbsp; The &#39;Microsoft.VC90&#39; folders and all of the DLL&#39;s above 
+      that line below are required for SerialEM to run.</P>
+    <table class="style1">
+        <tr>
+          <td class="style2">
+            SerialEM.DontRunHere.bin</td>
+          <td class="style3">
+            The SerialEM executable, which is renamed to SerialEM.exe for use.&nbsp; It will 
+            not run in this folder unless multiple scope plugins are removed.</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            libifft-MKL.dll</td>
+          <td class="style3">
+            FFT library incorporating Intel Math Kernel Library FFT routines</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            libctffind.dll</td>
+          <td class="style3">
+            Library based on Ctffind4, compiled in IMOD for better performance</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            libmmd.dll</td>
+          <td class="style3">
+            Intel math libary</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            libiomp5md.dll</td>
+          <td class="style3">
+            Intel OpenMP library</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            Microsoft.VC90.CRT, Microsoft.VC90.MFC</td>
+          <td class="style3">
+            Folders with DLL's and manifests for running the program compiled with Visual 
+            Studio 2008</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            SerialEM.chm</td>
+          <td class="style3">
+            The help file</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            FEIScopePlugin.dll</td>
+          <td class="style3">
+            A plugin for communicating with an FEI microscope locally or remotely</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            FEI-SEMserver.exe</td>
+          <td class="style3">
+            A server that is copied to a remote FEI microscope computer and run there</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            JeolScopePlugin.dll</td>
+          <td class="style3">
+            A plugin for communicating with a JEOL microscope</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            HitachiPlugin.dll</td>
+          <td class="style3">
+            A plugin for communicating with a Hitachi HT7700 microscope</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            ShMemSEMserver.exe</td>
+          <td class="style3">
+            A server for shared memory values that is copied to the HT7700 computer when 
+            running on another computer</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            SerialEMCCD.dll</td>
+          <td class="style3">
+            The plugin to DigitalMicrograph for GMS 1.x</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            SEMCCD-GMS2.0-32.dll</td>
+          <td class="style3">
+            The plugin to DigitalMicrograph for 32-bit GMS 2.0 - 2.2</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            SEMCCD-GMS2.3-32.dll</td>
+          <td class="style3">
+            The plugin to DigitalMicrograph for 32-bit GMS 2.3 and above</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            SEMCCD-GMS2.31-64.dll</td>
+          <td class="style3">
+            The plugin to DigitalMicrograph for 64-bit GMS 2.31 - 3.2</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            SEMCCD-GMS3.30-64.dll</td>
+          <td class="style3">
+            The plugin to DigitalMicrograph for 64-bit GMS 3.30</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            SEMCCD-GMS3.31-64.dll</td>
+          <td class="style3">
+            The plugin to DigitalMicrograph for 64-bit GMS 3.31 and above</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            SerialEMCCDps.dll</td>
+          <td class="style3">
+            A&nbsp;DLL for communicating with the plugin for GMS 1.x</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            SEMCCDps-GMS2-32.dll</td>
+          <td class="style3">
+            A&nbsp;DLL for communicating with the plugin for both 32-bit and 64-bit GMS 2-3</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            SEMCCDps-GMS2-64.dll</td>
+          <td class="style3">
+            A&nbsp;DLL for communicating with the plugin for 64-bit GMS 2-3</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            shrmemframe.exe</td>
+          <td class="style3">
+            A program that the plugin to 64-bit DM uses for frame alignment with the CPU, 
+            with data passed through shared memory.&nbsp; Requires libmmd.dll, 
+            libiomp5md.dll, and Microsoft.VC90.CRT</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            FrameGPU.dll</td>
+          <td class="style3">
+            A DLL for using&nbsp; the GPU of an NVIDIA card for doing frame alignment in the 
+            plugin to DM or in SerialEM itself</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            register-GMS1.bat</td>
+          <td class="style3">
+            A batch file for copying the plugin and registering both DLL's for GMS 1.x</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            register-GMS2-32.bat</td>
+          <td class="style3">
+            A batch file for copying the plugin and registering both&nbsp;DLL's&nbsp;for 32-bit GMS 2</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            register-GMS2-64.bat</td>
+          <td class="style3">
+            A batch file for copying the plugin and registering two or three&nbsp;DLL's&nbsp;for 64-bit GMS 2</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            b3dregsvr32.exe</td>
+          <td class="style3">
+            Program run by the batch file for registering the plugin for 32-bit and 64-bit GMS 2</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            b3dregsvr64.exe</td>
+          <td class="style3">
+            Program run by the batch file for registering the plugin for 64-bit GMS 2</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            FocusRamper.exe</td>
+          <td class="style3">
+            A COM executable for doing dynamic focus on an FEI scope</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            register-Ramper.bat</td>
+          <td class="style3">
+            A batch file for registering the FocusRamper on a remote microscope</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            JeolCamPlugin.dll</td>
+          <td class="style3">
+            A plugin for accessing a JEOL camera or JEOL STEM signals on some scopes</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            JEOL-SEMCamServer32.exe</td>
+          <td class="style3">
+            A server that is copied to a remote JEOL PC for accessing JEOL camera or STEM 
+            signals</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            JEOL-SEMCamServer64.exe</td>
+          <td class="style3">
+            A camera server that is copied to a remote JEOL PC running 64-bit JEOL software</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            TietzPlugin.dll</td>
+          <td class="style3">
+            A plugin for accessing Tietz (TVIPS) cameras</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            Tietz-SEMServer.exe</td>
+          <td class="style3">
+            A camera server that is copied to a remote PC running a Tietz camera</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            DEcamPlugin.dll</td>
+          <td class="style3">
+            A simple wrapper plugin for accessing Direct Electron cameras without linking 
+            the DE DLL into SerialEM</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            DeInterface.Win32.dll</td>
+          <td class="style3">
+            A DLL from Direct Electron for connecting with the DE server</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            install.bat</td>
+          <td class="style3">
+            A batch file for copying appropriate files to the folder above and registering 
+            needed items</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            Copyright.txt</td>
+          <td class="style3">
+            Describes the MIT-style license covering SerialEM and the copyright and license 
+            terms for associated components</td>
+        </tr>
+        <tr>
+          <td class="style13">
+            GPL.txt</td>
+          <td class="style14">
+            GPL license covering the SerialEMCCD plugin to DM</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            LGPL.txt</td>
+          <td class="style3">
+            LGPL licence covering libcfshr, libiimod, and libifft libraries
+            from IMOD</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            Mini-XML.txt</td>
+          <td class="style3">
+            License covering the libimxml library from IMOD</td>
+        </tr>
+        <tr>
+          <td class="style2">
+            Janelia.txt</td>
+          <td class="style3">
+            License covering the libctffind library from IMOD</td>
+        </tr>
+    </table>
   </BODY>
 </HTML>
