@@ -24,6 +24,7 @@ protected:
 	virtual BOOL OnInitDialog();
   virtual void PostNcDestroy();
   virtual BOOL PreTranslateMessage(MSG* pMsg);
+  virtual void OnSize(UINT nType, int cx, int cy);
 
 	DECLARE_MESSAGE_MAP()
 public:
@@ -33,4 +34,11 @@ public:
   afx_msg void OnEnChangeEditOneLine();
   CString *mMacros;
   void Update();
+private:
+  int m_iRunLeftOrig, m_iRunTop;
+  int m_iEditXorig, m_iEditHeight;
+  int m_iWinXorig;
+  bool mInitialized;
+public:
+  CButton m_butRun;
 };

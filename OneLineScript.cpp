@@ -15,6 +15,7 @@ COneLineScript::COneLineScript(CWnd* pParent /*=NULL*/)
   , m_strOneLine(_T(""))
 {
   mNonModal = true;
+  mInitialized = false;
 }
 
 COneLineScript::~COneLineScript()
@@ -27,17 +28,35 @@ void COneLineScript::DoDataExchange(CDataExchange* pDX)
   DDX_Text(pDX, IDC_STAT_COMPLETIONS, m_strCompletions);
   DDX_Control(pDX, IDC_EDIT_ONE_LINE, m_editOneLine);
   DDX_Text(pDX, IDC_EDIT_ONE_LINE, m_strOneLine);
+  DDX_Control(pDX, IDOK, m_butRun);
 }
 
 
 BEGIN_MESSAGE_MAP(COneLineScript, CDialog)
   ON_EN_CHANGE(IDC_EDIT_ONE_LINE, OnEnChangeEditOneLine)
+  ON_WM_SIZE()
 END_MESSAGE_MAP()
 
 BOOL COneLineScript::OnInitDialog()
 {
   CBaseDlg::OnInitDialog();
+
+  // Here is the obscure set of information needed to reposition the Run button and resize
+  // the text box when the width changes
+  CRect wndRect, editRect, runRect, clientRect;
+  GetClientRect(clientRect);
+  GetWindowRect(wndRect);
+  int iXoffset = (wndRect.Width() - clientRect.Width()) / 2;
+  m_butRun.GetWindowRect(runRect);
+  m_iRunTop = (runRect.top - wndRect.top) - (wndRect.Height() - clientRect.Height())
+    + iXoffset;
+  m_iRunLeftOrig = runRect.left - wndRect.left - iXoffset;
+  m_editOneLine.GetWindowRect(editRect);
+  m_iWinXorig = wndRect.Width();
+  m_iEditXorig = editRect.Width();
+  m_iEditHeight = editRect.Height();
   UpdateData(false);
+  mInitialized = true;
   return FALSE;
 }
 
@@ -66,6 +85,20 @@ void COneLineScript::PostNcDestroy()
 {
   delete this;  
   CDialog::PostNcDestroy();
+}
+
+void COneLineScript::OnSize(UINT nType, int cx, int cy)
+{
+  if (!mInitialized)
+    return;
+  CRect wndRect, editRect, runRect;
+  CDialog::OnSize(nType, cx, cy);
+  GetWindowRect(wndRect);
+  int delta = wndRect.Width() - m_iWinXorig;
+  int newx = B3DMAX(5, m_iEditXorig + delta);
+  m_editOneLine.SetWindowPos(NULL, 0, 0, newx, m_iEditHeight, SWP_NOZORDER | SWP_NOMOVE);
+  m_butRun.SetWindowPos(NULL, B3DMAX(5, m_iRunLeftOrig + delta), m_iRunTop, 0, 0, 
+    SWP_NOZORDER | SWP_NOSIZE);
 }
 
 // Translate tab to our completion character.  It is good on US standard keyboards only
