@@ -125,6 +125,19 @@
           <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
+          <TD>FrameFileTitle</TD>
+          <TD>String to use for one or more additional titles in the header of frame stacks 
+            saved for a K2 camera, in a frame mdoc file written to for each stack, and for 
+            the frame stack mdoc file that can be written for each set of frames.&nbsp; The 
+            entry must be all one line but the entry can specify multiple title lines, 
+            separated by &#39;\n&#39; (the backslash is typed in, this is not a newline character).&nbsp; 
+            For MRC file headers, the lines will be truncated at 80 characters, and there 
+            can be at most 9 lines (or 7 for unnnormalized data).&nbsp; For a TIFF file description 
+            entry, these limitations do not apply in the file entry itself, only in the 
+            title listing by the IMOD &#39;header&#39; command.</TD>
+          <TD>&nbsp;</TD>
+        </TR>
+        <TR VALIGN="top">
           <TD>LogBookPathName</TD>
           <TD>Full path name of a text file in which tilt series information will be logged. 
             The 'log book' contains tab-separated entries as follows: Date/time, image 
@@ -459,6 +472,30 @@
             save the log.&nbsp; Set this to 1 to not set up the unhandled exception handler for 
             this; or -1 to skip the Microsoft error&nbsp; report box that comes up after 
             SerialEM's message box.</TD>
+          <TD>&nbsp;</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>ExternalTool</TD>
+          <TD>Follow with the text of an entry to insert into the Tools menu, which will
+           appear when at least one entry has been created.</TD>
+          <TD>&nbsp;</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>ToolCommand</TD>
+          <TD>Follow with the number of an entry in the Tools menu (numbered from 1) that
+           will be used
+          to run the command, then with a program to run.  The program will be started 
+          asynchronously; i.e., SerialEM will not wait for it to finish. See 
+          <a href = menu_tools.htm>The Tools Menu and Running External Commands</a> 
+            for a description of the rules governing this command.</TD>
+          <TD>&nbsp;</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>ToolArguments</TD>
+          <TD>Follow with number of a associated entry in the Tools menu (numbered from 1)
+          and then with a list of arguments ot include when running the command. &nbsp;See
+           <a href = menu_tools.htm>The Tools Menu and Running External Commands</a> for a 
+           description of what can be included in this arguments entry.</TD>
           <TD>&nbsp;</TD>
         </TR>
       </TABLE>

@@ -882,6 +882,9 @@
       </TABLE>
       <BR>
       <P><A name="buffer_file_commands"></A><B>Buffer and File Commands</B></P>
+    <P>In all commands including a buffer to operate on, the buffer can be specified 
+      with either the buffer letter or the corresponding number, where A corresponds 
+      to 1.</P>
       <TABLE border="1" cols="2">
         <TR vAlign="top">
           <TD colspan="2"><A name="buffer_image"></A><B>Buffer and Image Commands</B></TD>
@@ -916,7 +919,7 @@
           <TD class="style7">ImageProperties [buf]</TD>
           <TD>Report size in X and Y, binning, exposure, pixel size, and parameter set
             used&nbsp;for the image in buffer A or in the buffer indicated by 'buf'.
-            &nbsp; Values can be assigned to variables after a buffer letter.</TD>
+            &nbsp; Values can be assigned to variables after a buffer letter/number.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style7">ImageLowDoseSet [buf]</TD>
@@ -927,7 +930,7 @@
             report View if the mag matches that of View in Low Dose; if the mag matches
             Record in Low Dose, it will report Record or Preview depending on which has an
             closest exposure time closest to that of the image.
-            &nbsp; Values can be assigned to variables after a buffer letter.</TD>
+            &nbsp; Values can be assigned to variables after a buffer letter/number.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style7">ReportMeanCounts [buf] [#]</TD>
@@ -942,12 +945,12 @@
             per second.&nbsp; The camera must have a defined counts per electron.  Values 
             recorded in electron counting mode will be linearized if possible 
             (corrected for decreasing counting efficiency at higher dose rates).
-            &nbsp; Values can be assigned to variables after a buffer letter.</TD>
+            &nbsp; Values can be assigned to variables after a buffer letter/number.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style7">RawElectronStats [buf]</TD>
           <TD>Report the same items as 'ElectronStats' without linearizing them for loss in
-          counting mode.&nbsp; Values can be assigned to variables after a buffer letter.</TD>
+          counting mode.&nbsp; Values can be assigned to variables after a buffer letter/number.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style7">SubareaMean x0 x1 y0 y1</TD>
@@ -968,7 +971,7 @@
           <TD class="style7">CtfFind buf dmin dmax [fast] [box] [phmin] [phmax] [phstep] 
             [afix]</TD>
           <TD>Determines defocus and astigmatism by fitting to Thon rings in an FFT of the 
-            image in the given buffer.&nbsp; Follow the buffer letter with the minimum and 
+            image in the given buffer.&nbsp; Follow the buffer letter/number with the minimum and 
             maximum defocus for the search (in microns, underfocus negative), and with these 
             optional entries: 
             <br />&nbsp; &#39;fast&#39; non-zero to do a 1-D initial search instead of a slower 2D one<br />
@@ -1119,7 +1122,7 @@
         <TR vAlign="top">
           <TD class="style7">ReadOtherFile # buf file</TD>
           <TD>Reads the given section # (numbered from 0) from a file into the given buffer 
-            buf and leaves the file closed; buf can be a buffer letter or -1 to use the 
+            buf and leaves the file closed; buf can be a buffer letter/number or -1 to use the 
             standard Read buffer; end with filename.&nbsp; This command can read from a TIFF 
             file, which cannot be opened otherwise.</TD>
         </TR>
@@ -1178,6 +1181,13 @@
           <TD class="style7">WriteAutodoc</TD>
           <TD>Writes the autodoc associated with the current open file.&nbsp; Use this
             command once after adding one or more values to a section of the autodoc.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style7">OpenFrameMdoc filename</TD>
+          <TD>Opens an '.mdoc' file with the given name for information about image 
+            acquisitions that save frames, the same as using the
+            <a href="menu_file.htm#hid_file_open_mdoc">Open .mdoc for Frames</a> command.&nbsp; 
+            An error is generated if such a file is already open.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style7">AddToFrameMdoc key value</TD>
@@ -1240,8 +1250,9 @@
           <TD class="style7">ReportCurrentFilename [#]</TD>
           <TD>Reports the full path and filename of the current open file and sets it into 
             ReportedValue1; or if the optional # is entered with a 1, sets the root of the 
-            filename in ReportedValue1 and the extension (including the dot) in 
-            ReportedValue2.&nbsp; No optional assignment to variable.</TD>
+            filename including the path in ReportedValue1, the extension (including the dot) in 
+            ReportedValue2, the path only in ReportedValue3, and the rest of the rootname 
+            in ReportedValue4.&nbsp; No optional assignment to variable.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style7">ReportLastFrameFile</TD>
@@ -1740,7 +1751,7 @@
         </TR>
         <TR vAlign="top">
           <TD class="style13">ReportPhasePlatePos</TD>
-          <TD>Report the current phase plate position number (FEI scopes only)</TD>
+          <TD>Report the current phase plate position number, numbered from 1 (FEI scopes only)</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style13">ManualFilmExposure #</TD>
@@ -1923,8 +1934,8 @@
           <TD>Align buffer A to autoalign buffer</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">AlignTo buffer_letter [#IS] [#T]</TD>
-          <TD>Align buffer A to given buffer (e.g. B). Optionally, enter 1 for '#IS' to
+          <TD class="style12">AlignTo buf [#IS] [#T]</TD>
+          <TD>Align buffer A to given buffer (e.g. B or 2). Optionally, enter 1 for '#IS' to
             avoid changing microscope image shift, and 1 for &#39;#T&#39; to prevent trimming of 
             dark borders.</TD>
         </TR>
@@ -2629,6 +2640,27 @@
             command.&nbsp;&nbsp; If STOP is used while the command is running, the script 
             will stop and the thread that is running the command will be killed, but the 
             command will keep running.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD width="210">CreateProcess command</TD>
+          <TD>Start the program given by 'command' without waiting for it to finish, using 
+            the argument list defined previously with the 'NextProcessArgs' command.&nbsp; 
+            See <a href = menu_tools.htm>The Tools Menu and Running External Commands</a> 
+            for a description of the rules governing this command.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD width="210">NextProcessArgs arg arg...</TD>
+          <TD>Set arguments for the next process run with 'CreateProcess'.&nbsp; The argument 
+          list can contain script variables that are substituted, as well as several keywords
+          that are replaced with path entries. &nbsp;See <a href = menu_tools.htm>The Tools
+           Menu and Running External Commands</a> for a description of these keywords and
+           the rules governing the arguments entry. The arguments are
+          used up by running the process and must be defined with this command each time a 
+          process is run. </TD>
+        </TR>
+        <TR vAlign="top">
+          <TD width="210">RunExternalTool #N</TD>
+          <TD>Run the Nth external tool shown in the Tools menu, where N is numbered from 1.</TD>
         </TR>
         <TR vAlign="top">
           <TD width="210">ReportProperty name</TD>

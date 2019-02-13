@@ -3,6 +3,32 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+1/8/19: Fixed problem moving stage from scope control in continuous mode.
+
+1/8/19: Initial processing steps for frame alignment can now be done on the
+GPU, which can greatly speed it up for faster cards with more memory.
+
+1/8/19: Enabled shift buttons for stage movement in scope control dialog when
+there is no beam calibration.
+
+1/8/19: Fixed providing extension .jpg for jpeg files.
+
+1/7/19: Buffers can be specified by number or letter in script commands.
+
+1/7/19: Added properties for defining entries in a Tools menu for running
+external programs, and script commands for running programs similarly.
+
+1/7/19: Added script command to open .mdoc for frames.
+
+1/7/19: Added property to specify a possibly multiline title entry to be
+included in frame files saved from K2/K3 and in frame stack mdoc files.
+
+1/7/19: Fixed crash when exiting with one-line script open.
+
+1/7/19: Fixed defect correct of isolated bad pixels.
+
+1/7/19: Fixed binning shown in frame mdocs for K3.
+
 12/20/18: Added basic support for moving to next phase plate position on FEI
 scopes.
 
@@ -25,7 +51,8 @@ normalized images from Tietz interface.
 
 12/18/18: Fixed turning beam on and off for non-FEG JEOLs.
 
-12/9/18: Added workaround for K3 but with 90 or 270 degree rotation and flip.
+12/9/18: Added workaround for K3 configured with 90 or 270 degree rotation and
+flip.
 
 12/8/18: Fixed losing a setting of binning 0.5 for K3 between sessions.
 
