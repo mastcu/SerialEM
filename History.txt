@@ -3,6 +3,14 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+1/25/19: Fixed variable substitution into the string argument of a function
+call.
+
+1/25/19: Fixed crash from ReduceImage command.
+
+1/25/19: Fixed preserving walk-up reference during walk-down of bidirectional
+series if it does image shift reset or STEM focusing.
+
 1/22/19: The one-line script window is now resizable and can contain up to 5
 scripts.  The window will reopen on program startup if script windows do.
 

@@ -606,8 +606,7 @@
           <TD class="style8">CameraProperties [#]</TD>
           <TD>Reports unbinned size in X and Y, RotationAndFlip property, and size of 
             detector pixel in microns of the current camera, or of the active camera whose 
-            number is given by the optional #, numbered from 1.
-          &nbsp; Values can be assigned to variables at end of command.</TD>
+            number is given by the optional #, numbered from 1.</TD>
         </TR>
         <TR>
           <TD class="style8">SelectCamera #</TD>
@@ -834,14 +833,14 @@
         </TR>
         <TR vAlign="top">
           <TD class="style8">ReportNumFramesSaved</TD>
-          <TD>Reports the number of frames saved, or beng saved, in the last acquisition 
+          <TD>Reports the number of frames saved, or being saved, in the last acquisition 
             that saved frames.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style8">ReportFrameAliParams</TD>
           <TD>Reports six values for the frame alignment parameter set selected to be used 
-            for Record images: the binning for alignment, whether to keep precision for 
-            gain-normalized images when doing early returns, the strategy (0 to 3, 
+            for Record images: the binning or target size for alignment, whether to keep precision for 
+            gain-normalized images when doing early returns or GPU frame alignment, the strategy (0 to 3, 
             corresponding to the radio buttons in the Frame Alignment dialog), the number of 
             frames to align all pairs among, the number of iterations to refine (negative if 
             refinement off), and the group size (negative if using groups is off).</TD>
@@ -850,8 +849,8 @@
           <TD class="style8">SetFrameAliParams #B [#K]<br />
 &nbsp;&nbsp;&nbsp; [#S] [#A] [#R] [#G]</TD>
           <TD>In the frame alignment parameter set selected to be used for Record images, 
-            sets the binning to B, and optionally sets whether to keep precision during 
-            early returns if K is 1, the strategy from S, the number of frames for all pairs 
+            sets the binning to B if B is 1-16 or the target size to B otherwise, and optionally sets whether to keep precision during 
+            early returns or GPU frame alignment if K is 1, the strategy from S, the number of frames for all pairs 
             from A, the number of refinement iterations from |R| and to do refinement if R 
             is positive, and the group size from |G| and the whether to use groups if G is 
             positive.&nbsp; </TD>
@@ -860,7 +859,7 @@
           <TD class="style8">ReportFrameAli2</TD>
           <TD>Reports more values for frame alignment: whether GPU use is selected, and for 
             the Record parameter set: truncation limit (negative if truncation is off), 
-            whether to use hybrid shifts, and the three flter radii.</TD>
+            whether to use hybrid shifts, and the three filter radii.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style8">SetFrameAli2 #G [#T] [#H]<br />

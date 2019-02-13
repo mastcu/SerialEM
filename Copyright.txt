@@ -1,5 +1,5 @@
 SerialEM and associated documentation and plugins are
-copyright (C) 2003-2018 by the Regents of the University of Colorado.
+copyright (C) 2003-2019 by the Regents of the University of Colorado.
 
 The following license applies to the SerialEM executable and it source code:
 
