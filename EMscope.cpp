@@ -1975,7 +1975,7 @@ double CEMscope::GetStageBAxis(void)
 BOOL CEMscope::SetStageBAxis(double inVal)
 {
   StageMoveInfo info;
-  info.speed = inVal;
+  info.beta = inVal;
   info.axisBits = axisB;
   return MoveStage(info, false);
 }
@@ -2003,10 +2003,6 @@ BOOL CEMscope::MoveStage(StageMoveInfo info, BOOL doBacklash, BOOL useSpeed,
     return false;
   }
   
-  if ((info.axisBits & axisB) && useSpeed) {
-    SEMMessageBox("Program error - MoveStage called with B axis set AND useSpeed set");
-    return false;
-  }
   if (((info.axisBits & axisB) || useSpeed) && !mPlugFuncs->SetStagePositionExtra) {
     SEMMessageBox("Current scope plugin version does not support setting speed or B "
       "axis");
@@ -2023,11 +2019,6 @@ BOOL CEMscope::MoveStage(StageMoveInfo info, BOOL doBacklash, BOOL useSpeed,
     mMoveInfo.relaxX = mMoveInfo.relaxY = 0.;
   mMoveInfo.useSpeed = useSpeed && mPlugFuncs->SetStagePositionExtra;
 
-  // Here change B to radians, or make sure speed is 1
-  if (mMoveInfo.axisBits & axisB)
-    mMoveInfo.speed *= DTOR;
-  else if (!useSpeed)
-    mMoveInfo.speed = 1.;
   mMoveInfo.inBackground = inBackground;
   mRequestedStageX = (float)info.x;
   mRequestedStageY = (float)info.y;
@@ -2238,7 +2229,7 @@ void CEMscope::StageMoveKernel(StageThreadData *std, BOOL fromBlanker, BOOL asyn
 {
   StageMoveInfo *info = std->info;
   bool xyBacklash = info->doBacklash && (info->axisBits & axisXY);
-  double xpos = 0., ypos = 0., zpos = 0., alpha, timeout;
+  double xpos = 0., ypos = 0., zpos = 0., alpha, timeout, beta, speed;
   double startTime = GetTickCount();
   int step, back, relax;
   destX = 0.;
@@ -2274,10 +2265,12 @@ void CEMscope::StageMoveKernel(StageThreadData *std, BOOL fromBlanker, BOOL asyn
      
     // destX, destY are used to decide on "stage near end of range" message upon error
     // They are supposed to be in meters; leave at 0 to disable 
-    if (std->info->useSpeed && std->info->plugFuncs->SetStagePosition) {
+    if ((info->useSpeed || (info->axisBits & axisB)) && info->plugFuncs->SetStagePositionExtra) {
       try {
-        std->info->plugFuncs->SetStagePositionExtra(destX, destY, destZ, alpha * DTOR, 0.,
-          std->info->speed, info->axisBits);
+        beta = (info->axisBits & axisB) ? info->beta : 0.;
+        speed = info->useSpeed ? info->speed : 1.;
+        info->plugFuncs->SetStagePositionExtra(destX, destY, destZ, alpha * DTOR, 
+          beta * DTOR, speed, info->axisBits);
       }
       catch (_com_error E) {
 

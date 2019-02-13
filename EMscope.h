@@ -68,6 +68,7 @@ struct StageMoveInfo {
   double y;
   double z;
   double alpha;
+  double beta;
   double speed;
   int axisBits;
   BOOL doBacklash;
