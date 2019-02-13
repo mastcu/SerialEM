@@ -2003,11 +2003,11 @@ BOOL CEMscope::MoveStage(StageMoveInfo info, BOOL doBacklash, BOOL useSpeed,
     return false;
   }
   
-  if ((mMoveInfo.axisBits & axisB) && useSpeed) {
+  if ((info.axisBits & axisB) && useSpeed) {
     SEMMessageBox("Program error - MoveStage called with B axis set AND useSpeed set");
     return false;
   }
-  if (((mMoveInfo.axisBits & axisB) || useSpeed) && !mPlugFuncs->SetStagePositionExtra) {
+  if (((info.axisBits & axisB) || useSpeed) && !mPlugFuncs->SetStagePositionExtra) {
     SEMMessageBox("Current scope plugin version does not support setting speed or B "
       "axis");
     return false;
