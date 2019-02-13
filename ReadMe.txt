@@ -4,7 +4,9 @@ below SP3.  The solution can still be opened in VS 2010 and presumably with
 2012 and 2013 too.  To compile it with VS 2015 alone, use the v140
 configurations.  To compile with earlier versions, you must either have the
 V90 toolset or change the selected toolset for the configurations you want to
-build.
+build.  Beware: the first time that you open the solution in VS 2015, it will
+want to upgrade the project to use the current toolset on all configurations,
+even though there is a v140 configuration.  Just cancel this message.
 
 There are 7 project configurations:
 Debug (Win 32 & x64)
@@ -55,7 +57,8 @@ least for the compilation of Xcorr.cpp.
 
 If you modify a configuration to use other than the v90 toolset, you will
 probably have to change preprocessor definition _WIN32_WINNT=0x0500 to
-0x0501.
+0x0501.  However, the libraries used with v90 should still work up to the VS
+2013 toolset.
 
 Both 32 and 64-bit versions of SerialEM can be compiled in VS 2015 with the
 v140 configurations, which use libraries without MKL or FFTW in SerialEMLibs,
