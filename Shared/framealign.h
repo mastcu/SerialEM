@@ -32,7 +32,9 @@
 #define GPU_STACK_LIMITED   (1 << 9)
 #define GPU_DO_UNWGT_SUM    (1 << 10)
 #define GPU_STACK_LIM_SHIFT 20
-#define GPU_STACK_LIM_MASK  0xFFF;
+#define GPU_STACK_LIM_MASK  0xFFF
+#define GPU_NUMBER_SHIFT    16           // This is used by SerialEM -> SerialEMCCD
+#define GPU_NUMBER_MASK     0x7          // in calling SetupFrameAligning
 
 class FrameAlign {
  public:
@@ -115,6 +117,7 @@ class FrameAlign {
   int recoverGpuFullStack(bool stacking, float **binArr);
   int recoverGpuAlignFFTs(bool saving, int aliFrameInd, float *alignSum,
                           float *workArr, float **binArr, bool stacking);
+  int recoverFromSummingFailure(float **fullArr, int frameInd, int sumInd);
   void cancelInitialStepsOnGPU();
 
   CharArgType mPrintFunc;
@@ -155,6 +158,7 @@ class FrameAlign {
   float mSigma2[MAX_FILTERS];
   int mGpuFlags;
   int mFlagsForUnpadCall;      // Save the flags for consistency  in the two calls
+  int mEvenOddForSumSetup;     // Similarly here for setupSumming calls
   int mNxGain, mNyGain;        // Saved size of last gain reference
   float *mGainRef;             // Pointer to last gain ref
   int mCamSizeX, mCamSizeY;    // Camera size non-zero for defect correction

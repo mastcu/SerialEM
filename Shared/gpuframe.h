@@ -84,7 +84,7 @@ class FrameGPU {
   void normalize(float *data, float scale, int numPix);
   float frameEdgeMean(void *array, int type, int nxdim, int ixlo, int ixhi, int iylo,
                       int iyhi);
-  int manageRawTempArray();
+  int manageRawTempArray(int aligning);
   int manageUnpadWorkArray();
   int shiftAddCommon(float *fullArr, float *sumArr, int needBound, 
                      int fullXpad, int fullYpad, int sumXpad, int sumYpad,
@@ -108,6 +108,8 @@ class FrameGPU {
   float *mSubareaCorr;
   float *mBoundToFull;
   float *mHostSubarea;
+  float *mReducedInXlinear;           // Output array for reduction in X if no surfaces
+  float *mProcessedLinear;            // Output array for pre-processing if no surfaces
   
   float *mXshiftTrig;
   float *mYshiftTrig;
@@ -153,6 +155,7 @@ class FrameGPU {
   int mDoAlignSum;
   int mGroupSize;
   int mAliFiltSize, mBigSubareaSize;
+  int mNoSurfaces;            // Flag that there are no surfaces
   size_t mFullBytes, mSumBytes, mAlignBytes;
   double mWallStart, mWallCopy, mWallFFT, mWallShift, mWallFilt, mWallConj, mWallExtract;
   double mWallSubtract, mWallAddEO, mWallGroup, mWallPreproc, mWallRedPad, mWallNoise;

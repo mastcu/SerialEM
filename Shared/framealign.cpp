@@ -478,10 +478,13 @@ int FrameAlign::initialize(int binSum, int binAlign, float trimFrac, int numAllV
       gpuFlags = 0;
 
     // Set up summing unless it is deferred
-    if (gpuFlags && mGpuSumming && !mDeferSumming && sFgpuSetupSumming
-        (fullXpad, fullYpad, sumXpad, sumYpad, ((gpuFlags & GPU_DO_EVEN_ODD) ? 1 : 0) +
-         (((gpuFlags & GPU_DO_UNWGT_SUM) != 0 && makeUnwgtSum) ? 2 :0)))
+    mEvenOddForSumSetup = ((gpuFlags & GPU_DO_EVEN_ODD) ? 1 : 0) +
+      (((gpuFlags & GPU_DO_UNWGT_SUM) != 0 && makeUnwgtSum) ? 2 :0);
+    if (gpuFlags && mGpuSumming && !mDeferSumming && 
+        sFgpuSetupSumming(fullXpad, fullYpad, sumXpad, sumYpad, mEvenOddForSumSetup)) {
+      sFgpuCleanup();
       gpuFlags = 0;
+    }
   }
 
   // Save all members for current state
@@ -2024,9 +2027,10 @@ int FrameAlign::finishAlignAndSum(float refineRadius2, float refineSigma2,
         sFgpuSetUnpaddedSize(mNx, mNy, mFlagsForUnpadCall,
                              (mDebug ? 1 : 0) + (mReportTimes ? 10 : 0));
         if (sFgpuSetupSumming(mFullXpad, mFullYpad, mSumXpad, mSumYpad, 
-                              ((mGpuFlags & GPU_DO_EVEN_ODD) ? 1 : 0) +
-                              (((mGpuFlags & GPU_DO_UNWGT_SUM) && mMakeUnwgtSum) ? 2 :0)))
-          mGpuSumming = false;
+                              mEvenOddForSumSetup)) {
+          if (recoverFromSummingFailure(NULL, 0, 0))
+            return 3;
+        }
       }
       for (frame = 0; frame < mNumFrames; frame++)
         if (addToSums(NULL, frame, -9, frame, useFilt))
@@ -2360,38 +2364,8 @@ int FrameAlign::addToSums(float *fullArr, int sumInd, int binInd, int frameNum,
       ind = (int)mDoseWgtFilter.size();
       if (sFgpuSetupDoseWeighting(ind > 0 ? &mDoseWgtFilter[0] : NULL, ind, mDWFdelta)
           || sFgpuAddToFullSum(fullArr, xShift, yShift)) {
-
-        // Recover by getting existing sum back and taking FFT of current array
-        if (mDebug)
-          utilPrint("Switching to summing on CPU\n");
-        if (mNoisePadOnGpu) {
-          if (recoverGpuFullStack(false, NULL)) {
-            cleanup();
-            return 3;
-          }
-          if (mSavedFullFrameNum[0] == frameNum) {
-            fullArr = mSavedFullSize[0];
-          } else {
-            utilPrint("After recovering from GPU failure, frame to be summed is not "
-                      "first in stack\n");
-            cleanup();
-            return 3;
-          }
-        }
-        cancelInitialStepsOnGPU();
-        if (sFgpuReturnSums(mFullEvenSum, mFullEvenSum, mFullOddSum, 1)) { 
-          if (frameNum > 0)
-            return 3;
-          memset(mFullEvenSum, 0, (mSumXpad + 2) * mSumYpad);
-          memset(mFullOddSum, 0, (mSumXpad + 2) * mSumYpad);
-        }
-        //utilDumpFFT(mFullEvenSum, mFullXpad, mFullYpad, "recovered even", 1, mNumFrames);
-        //utilDumpFFT(mFullOddSum, mFullXpad, mFullYpad, "recovered odd", 1, mNumFrames);
-        mGpuSumming = false;
-        if (sumInd < 0)
-          todfftc(fullArr, mFullXpad, mFullYpad, 0);
-        for (ind = 0; ind < mNumFullSaved; ind++)
-          todfftc(mSavedFullSize[ind], mFullXpad, mFullYpad, 0);
+        if (recoverFromSummingFailure(&fullArr, frameNum, sumInd))
+          return 3;
       }
     }
 
@@ -2706,6 +2680,53 @@ void FrameAlign::cancelInitialStepsOnGPU()
   mFlagsForUnpadCall &= ~(GPU_DO_NOISE_TAPER | GPU_DO_BIN_PAD | STACK_FULL_ON_GPU |
                           GPU_DO_PREPROCESS);
   sFgpuSetUnpaddedSize(mNx, mNy, 0, (mDebug ? 1 : 0) + (mReportTimes ? 10 : 0));
+}
+
+/*
+ * Higher-level return for recovering when deferred summing setup OR adding to sums
+ * fails; pass the current fullArr address which may be modified, or NULL during setup,
+ * pass the absolute frame number frameNum during summing or 0 in setup, pass the sumInd 
+ * when summing.  Does cleanup on failures
+ */
+int FrameAlign::recoverFromSummingFailure(float **fullArr, int frameNum, int sumInd)
+{
+  int ind;
+
+  // Recover by getting existing sum back and taking FFT of current array
+  utilPrint("Switching to summing on CPU\n");
+  if (mNoisePadOnGpu) {
+    if (recoverGpuFullStack(false, NULL)) {
+      cleanup();
+      return 3;
+    }
+    if (mSavedFullFrameNum[0] == frameNum) {
+      if (fullArr)
+        *fullArr = mSavedFullSize[0];
+    } else {
+      utilPrint("After recovering from GPU failure, frame to be summed is not "
+                "first in stack\n");
+      cleanup();
+      return 3;
+    }
+  }
+  cancelInitialStepsOnGPU();
+  if (frameNum > 0) {
+    if (sFgpuReturnSums(mFullEvenSum, mFullEvenSum, mFullOddSum, 1)) { 
+      cleanup();    // It didn't cleanup before
+      return 3;
+    }
+  } else {
+    memset(mFullEvenSum, 0, (mSumXpad + 2) * mSumYpad);
+    memset(mFullOddSum, 0, (mSumXpad + 2) * mSumYpad);
+  }
+  //utilDumpFFT(mFullEvenSum, mFullXpad, mFullYpad, "recovered even", 1, mNumFrames);
+  //utilDumpFFT(mFullOddSum, mFullXpad, mFullYpad, "recovered odd", 1, mNumFrames);
+  mGpuSumming = false;
+  if (sumInd < 0 && fullArr)
+    todfftc(*fullArr, mFullXpad, mFullYpad, 0);
+  for (ind = 0; ind < mNumFullSaved; ind++)
+    todfftc(mSavedFullSize[ind], mFullXpad, mFullYpad, 0);
+  return 0;
 }
  
 /*
@@ -3035,8 +3056,8 @@ void FrameAlign::gpuMemoryNeeds(float fullPadSize, float sumPadSize, float align
 {
   int numHoldAlign;
 
-  // The FFTs require as much memory as the image, so allow for the biggest
-  needForGpuSum = fullPadSize + sumPadSize + B3DMAX(fullPadSize, sumPadSize);
+  // The FFTs require TWICE as much memory as the image, so allow for the biggest
+  needForGpuSum = fullPadSize + sumPadSize + 2.f * B3DMAX(fullPadSize, sumPadSize);
 
   // Get needs for aligning on GPU
   // Simple cumulative sum needs all 5 arrays and FFT work area
@@ -3126,9 +3147,9 @@ float FrameAlign::findPreprocPadGpuFlags(int unpaddedX, int unpaddedY, int dataS
   bool needsProc = hasGain || hasDefect || hasTrunc;
   bool doAlign = (inFlags & GPU_FOR_ALIGNING) != 0;
   bool doSum = (inFlags & GPU_FOR_SUMMING) != 0;
-  int passSize, maxAdded, unpadBytes;
+  int passSize, maxAdded;
   int stackLimit = 0;
-  float tempNeeds;
+  float tempNeeds, unpadBytes;
   int preprocFlags = GPU_DO_PREPROCESS | (hasGain ? GPU_DO_GAIN_NORM : 0) |
     (hasDefect ? GPU_CORRECT_DEFECTS : 0);
   outFlags = inFlags;
@@ -3203,14 +3224,14 @@ float FrameAlign::findPreprocPadGpuFlags(int unpaddedX, int unpaddedY, int dataS
   // Now see if a stack can fit and how much
   // One frame on stack replaces the temp raw array, hence compute added number amd add 1
   passSize = (needsProc && !(outFlags & preprocFlags)) ? sizeof(float) : dataSize;
-  unpadBytes = passSize * unpaddedX * unpaddedY;
+  unpadBytes = (float)(passSize * unpaddedX * unpaddedY);
   maxAdded = (int)((freeMem - tempNeeds - stackMargin) / unpadBytes);
   if (maxAdded >= numExpected - 1) {
     tempNeeds += (numExpected - 1) * unpadBytes;
     outFlags |= STACK_FULL_ON_GPU;
   } else if (maxAdded > 0) {
     stackLimit = maxAdded + 1;
-    tempNeeds += maxAdded * unpadBytes;
+    tempNeeds += (float)maxAdded * unpadBytes;
     outFlags |= STACK_FULL_ON_GPU | GPU_STACK_LIMITED | 
       (stackLimit << GPU_STACK_LIM_SHIFT);
   }
@@ -3228,18 +3249,18 @@ bool FrameAlign::preprocPadGpuMemoryFits(int unpaddedX, int unpaddedY, int dataS
 {
   bool needsProc = hasGain || hasDefect || hasTrunc;
   int passSize = (needsProc && !doPreProc) ? sizeof(float) : dataSize;
-  int unpadBytes = unpaddedX * unpaddedY;
+  float unpadBytes = (float)(unpaddedX * unpaddedY);
   needsMem = 0.;
 
   // A gain reference needs a float array, defects need a byte array, noise or bin pad
   // needs the raw temp array if not stacking, binning needs the reduced in X float array
   if (doPreProc && hasGain)
-    needsMem += sizeof(float) * unpadBytes;
+    needsMem += 4.f * unpadBytes;
   if (doPreProc && hasDefect)
     needsMem += unpadBytes;
   if (doNoise || doBinPad)
-    needsMem += passSize * unpadBytes;
+    needsMem += (float)passSize * unpadBytes;
   if (doBinPad && binning > 1)
-    needsMem += sizeof(float) * unpadBytes / binning;
+    needsMem += 4.f * unpadBytes / (float)binning;
   return needsMem < freeMem;
 }
