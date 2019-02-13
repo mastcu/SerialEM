@@ -4092,7 +4092,7 @@ int CCameraController::NumAllVsAllFromFAparam(FrameAliParams &faParam, int numAl
 int CCameraController::CapSetLDAreaFilterSettling(int inSet)
 {
   int ldArea, filtErr;
-  CString logmess;
+  CString logmess, mess2;
 
   // If in low dose and this is not the settling re-entry, set the acquisition area
   // unless it matches what we were just told about
@@ -4131,6 +4131,7 @@ int CCameraController::CapSetLDAreaFilterSettling(int inSet)
   // get for an additional delay with a 795 camera
   int timeSet = mObeyTiltDelay ? RECORD_CONSET : inSet;
   UINT genTimeOut = mShiftManager->GetGeneralTimeOut(timeSet);
+  UINT genTOorig = genTimeOut;
   UINT tickCount = GetTickCount();
   float startUp = 0.;
 
@@ -4158,7 +4159,7 @@ int CCameraController::CapSetLDAreaFilterSettling(int inSet)
 
     // 3/21/13: just compare against this constant regardless of user's tilt delay
     UINT delayLim = MAX_SCOPE_SETTLING;
-    logmess.Format("delay %u  ticks %u  time out %u", ISdelay, tickCount, genTimeOut);
+    logmess.Format("delay %u  ticks %u  time out at %u", ISdelay, tickCount, genTimeOut);
     // If delay is too long, cut it back and change the general time out too
     // Could give error message
     if (ISdelay > delayLim) {
@@ -4166,6 +4167,8 @@ int CCameraController::CapSetLDAreaFilterSettling(int inSet)
       mWinApp->AppendToLog("Warning: settling time had unreasonable value:",
         LOG_OPEN_IF_CLOSED);
       mWinApp->AppendToLog(logmess, LOG_OPEN_IF_CLOSED);
+      mess2.Format("  (orig time out %u + sud %d)", genTOorig, (int)(1000. * startUp));
+      logmess += mess2;
       mShiftManager->ResetAllTimeouts();
       mShiftManager->SetGeneralTimeOut(tickCount, ISdelay);
     } else if (mDebugMode)

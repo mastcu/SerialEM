@@ -239,10 +239,6 @@ IF EXIST JeolCamPlugin.dll IF EXIST  ..\JeolCamPlugin.dll (
   COPY /Y  JeolCamPlugin.dll "..\"
 )
 
-Rem # Update FrameGPU.dll if it is there
-call :UpdateFrameGPU C:\ProgramData\Gatan\Plugins
-call :UpdateFrameGPU ..
-
 set REGISTER=0
 IF EXIST "C:\Program Files\Gatan\DigitalMicrograph\Plugins" (
 
@@ -353,6 +349,7 @@ Rem # Run the register batch file if one was defined
 set packDir=%cd%
 IF NOT %REGISTER% == 0 (
   echo First make sure DigitalMicrograph is not running!
+  echo Allow a little extra time if you have to close it.
   pause
   COPY /Y %REGISTER% ..
   CD ..
@@ -360,6 +357,10 @@ IF NOT %REGISTER% == 0 (
   CALL %REGISTER%
 )
 CD "%packDir%"
+
+Rem # Update FrameGPU.dll if it is there
+call :UpdateFrameGPU C:\ProgramData\Gatan\Plugins
+call :UpdateFrameGPU ..
 
 Rem # Only 64-bit package will have shrmemframe since it has the right libraries
 set NOSHRMEM=0
