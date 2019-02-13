@@ -1,0 +1,76 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+  <HEAD>
+    <TITLE>Window Menu Commands</TITLE>
+    <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
+    <style type="text/css"> <!-- BODY { font-family:"Arial" }
+  TD { font-size:16 }
+      --></style>
+  </HEAD>
+  <BODY BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+      <P><A NAME="menu_tool"></A><B><FONT size="3">The Tools Menu and Running External 
+        Commands</FONT></B></P>
+      <P>The Tools menu contains items added by &#39;ExternalTool&#39; entries in the 
+        SerialEMproperties.txt file.&nbsp; This page describes how to add such entries, 
+        but has no information on the specific commands that you may see there.&nbsp; 
+        The entries in the properties file for specifying the command to run and its 
+        arguments, &#39;ToolCommand&#39; and &#39;ToolArguments&#39;, have the same format as the script 
+        commands for starting an external process, &#39;CreateProcess&#39; and 
+        &#39;NextProcessArgs&#39;, respectively.</P>
+    <P>Selecting an entry in this menu, or running the &#39;CreateProcess&#39; command, will 
+      start the external program, but SerialEM will not wait for it to exit.</P>
+    <P><b>The command entry</b></P>
+    <P>The command entry specifies the program to run.&nbsp; It can be an executable 
+      program, or it can be a DOS batch file with extension &#39;.bat&#39; or &#39;.cmd&#39;.&nbsp; It 
+      should not be enclosed in quotes even it contains spaces, as SerialEM will 
+      automatically wrap it in quotes.&nbsp; The extension &#39;.exe&#39; may be omitted on 
+      any executable ending in that, but otherwise the extension must be included.&nbsp; 
+      For .&#39;bat&#39; and &#39;.cmd&#39; files, the program knows how to run these with &#39;cmd.exe&#39;; 
+      for any other kind of script, the script interpreter (e.g., &#39;python.exe&#39;)&nbsp; 
+      must be entered for the command, and the script name must be entered as an 
+      argument.&nbsp; The command name alone will work if the program is on the search 
+      path (i.e., the PATH variable), but otherwise the full path to the executable 
+      must be given.&nbsp; The full path to a batch file should be entered unless the 
+      file is in the current directory, which will not be the case in general.</P>
+    <P><b>The arguments entry</b></P>
+    <P>This entry specifies a list of arguments to be supplied when running the 
+      command.&nbsp; If a single argument such as filename might contain spaces, it 
+      should be enclosed in double quotes (single quotes will not work).&nbsp; When 
+      running from script, the arguments can include variables that are evaluated (but 
+      not arithmetic expressions).&nbsp; This is obviously not an option for Tools 
+      menu entries, but both kinds of argument lists can contain special keywords that 
+      will be substituted with a value.&nbsp; These keywords are</P>
+    <ul>
+      <li>%imagefile% will be substituted with the full path of the current image file, 
+        but it will generate an error if there is no current file open..</li>
+      <li>%currentdir% will be substituted with the full path to the current directory,</li>
+      <li>%navfile% will be subsituted with the full path of the Navigator file, ifthe 
+        Navigator is open and there is a Navigator file defined; otherwise it will 
+        generate an error.</li>
+    </ul>
+    <p>
+      The keyword can be embedded in a longer string.&nbsp; The whole &#39;word&#39; (set of 
+      characters not containing a space) containing the keyword will be enclosed in 
+      quotes automatically, as long as there is no double quote at either end of the 
+      word.&nbsp; If you are following the current directory, for example, with a 
+      filename that might have spaces, you should put quotes around the '%curdir%' and 
+      filename yourself to 
+      prevent quotes from being in the wrong place.</p>
+    <p>
+      <b>Examples</b></p>
+      <pre>ExternalTool Open Mdoc File
+ToolCommand 1 notepad
+ToolArguments 1 %imagefile%.mdoc
+ExternalTool Open Nav File
+ToolCommand 2 notepad
+ToolArguments 2 %navfile%
+ExternalTool 3dmod Image File
+ToolCommand 3 C:\Program Files\3dmod\3dmod
+ToolArguments 3 %imagefile%
+</pre>These property entries will put three entries in the Tools menu.&nbsp; The 
+    first will open the '.mdoc' file associated wit the current image file in 
+    Notepad; the second will open the Navigator file in Notepad, and the third will 
+    open the current file in 3dmod, installed from the standalone 3dmod package.</p>
+  </BODY>
+</HTML>

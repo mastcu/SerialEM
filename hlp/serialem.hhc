@@ -153,6 +153,11 @@
 			</OBJECT>
 			<A HREF="html/menu_navigator.htm">Navigator menu</A><BR>
 		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Tools menu">
+			<param name="Local" value="html/menu_tools.htm">
+			</OBJECT>
+			<A HREF="html/menu_tools.htm">Tools menu</A><BR>
+		<LI><OBJECT type="text/sitemap">
 			<param name="Name" value="Window menu">
 			<param name="Local" value="html/menu_window.htm">
 			</OBJECT>

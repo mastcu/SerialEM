@@ -37,6 +37,7 @@
 #include "MultiShotDlg.h"
 #include "MultiTSTasks.h"
 #include "NavBacklashDlg.h"
+#include "ExternalTools.h"
 #include "Mailer.h"
 #include "PluginManager.h"
 #include "Utilities\KGetOne.h"
@@ -442,6 +443,8 @@ BEGIN_MESSAGE_MAP(CMenuTargets, CCmdTarget)
   ON_UPDATE_COMMAND_UI(ID_MONTAGINGGRIDS_SHOWWHOLEAREAFORALLPOINTS, OnUpdateShowWholeAreaForAllPoints)
   ON_COMMAND(ID_MONTAGINGGRIDS_ADDGRIDLIKELASTONE, OnMontagingGridsAddGriLlikeLastOne)
   ON_UPDATE_COMMAND_UI(ID_MONTAGINGGRIDS_ADDGRIDLIKELASTONE, OnUpdateOnMontagingGridsAddGriLlikeLastOne)
+  ON_COMMAND_RANGE(ID_EXTERNAL_TOOL1, ID_EXTERNAL_TOOL25, OnExternalTool)
+  ON_UPDATE_COMMAND_UI_RANGE(ID_EXTERNAL_TOOL1, ID_EXTERNAL_TOOL25, OnUpdateNoTasks)
   END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -2792,4 +2795,9 @@ void CMenuTargets::OnCalibrateComaVsIS()
 void CMenuTargets::OnSettingsSetProperty()
 {
   mWinApp->mParamIO->UserSetProperty();
+}
+
+void CMenuTargets::OnExternalTool(UINT nID)
+{
+  mWinApp->mExternalTools->RunToolCommand(nID - ID_EXTERNAL_TOOL1);
 }

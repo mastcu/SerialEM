@@ -58,6 +58,7 @@
 #include "StageMoveTool.h"
 #include "PiezoAndPPControl.h"
 #include "AutoTuning.h"
+#include "ExternalTools.h"
 #include "Shared\b3dutil.h"
 #include "XFolderDialog/XWinVer.h"
 
@@ -737,6 +738,7 @@ CSerialEMApp::~CSerialEMApp()
   delete mFalconHelper;
   delete mPiezoControl;
   delete mAutoTuning;
+  delete mExternalTools;
   CBaseSocket::UninitializeWSA();
   delete mPluginManager;
   for (int i = 0; i < mIdleArray.GetSize(); i++)
@@ -903,6 +905,7 @@ BOOL CSerialEMApp::InitInstance()
   mFalconHelper = new CFalconHelper();
   mPiezoControl = new CPiezoAndPPControl();
   mAutoTuning = new CAutoTuning();
+  mExternalTools = new CExternalTools();
   mMailer = new CMailer();
   mGatanSocket = new CGatanSocket();
   mPluginManager = new CPluginManager();
@@ -1417,6 +1420,7 @@ BOOL CSerialEMApp::InitInstance()
   if (sAboutVersion.Find("beta") > 0)
     sAboutVersion += " " + sBuildDate;
 
+  mExternalTools->AddMenuItems();
   mStartingProgram = false;
   DoResizeMain();
   return TRUE;

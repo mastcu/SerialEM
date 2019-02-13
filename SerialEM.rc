@@ -596,6 +596,34 @@ BEGIN
         MENUITEM "For&ce Center Align",         ID_NAVIGATOR_FORCE_CENTER_ALIGN
         MENUITEM "Tr&y Scaling in Realign",     ID_NAVIGATOR_REALIGN_SCALING
     END
+    POPUP "Too&ls"
+    BEGIN
+        MENUITEM "Tool 1",                      ID_EXTERNAL_TOOL1
+        MENUITEM "Tool 2",                      ID_EXTERNAL_TOOL2
+        MENUITEM "Tool 3",                      ID_EXTERNAL_TOOL3
+        MENUITEM "Tool 4",                      ID_EXTERNAL_TOOL4
+        MENUITEM "Tool 5",                      ID_EXTERNAL_TOOL5
+        MENUITEM "Tool 6",                      ID_EXTERNAL_TOOL6
+        MENUITEM "Tool 7",                      ID_EXTERNAL_TOOL7
+        MENUITEM "Tool 8",                      ID_EXTERNAL_TOOL8
+        MENUITEM "Tool 9",                      ID_EXTERNAL_TOOL9
+        MENUITEM "Tool 10",                     ID_EXTERNAL_TOOL10
+        MENUITEM "Tool 11",                     ID_EXTERNAL_TOOL11
+        MENUITEM "Tool 12",                     ID_EXTERNAL_TOOL12
+        MENUITEM "Tool 13",                     ID_EXTERNAL_TOOL13
+        MENUITEM "Tool 14",                     ID_EXTERNAL_TOOL14
+        MENUITEM "Tool 15",                     ID_EXTERNAL_TOOL15
+        MENUITEM "Tool 16",                     ID_EXTERNAL_TOOL16
+        MENUITEM "Tool 17",                     ID_EXTERNAL_TOOL17
+        MENUITEM "Tool 18",                     ID_EXTERNAL_TOOL18
+        MENUITEM "Tool 19",                     ID_EXTERNAL_TOOL19
+        MENUITEM "Tool 20",                     ID_EXTERNAL_TOOL20
+        MENUITEM "Tool 21",                     ID_EXTERNAL_TOOL21
+        MENUITEM "Tool 22",                     ID_EXTERNAL_TOOL22
+        MENUITEM "Tool 23",                     ID_EXTERNAL_TOOL23
+        MENUITEM "Tool 24",                     ID_EXTERNAL_TOOL24
+        MENUITEM "Tool 25",                     ID_EXTERNAL_TOOL25
+    END
     POPUP "&Window"
     BEGIN
         MENUITEM "&New Window",                 ID_WINDOW_NEW

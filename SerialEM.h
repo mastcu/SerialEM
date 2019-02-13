@@ -282,6 +282,7 @@ class CFalconHelper;
 class CPiezoAndPPControl;
 class CStageMoveTool;
 class CAutoTuning;
+class CExternalTools;
 
 /////////////////////////////////////////////////////////////////////////////
 // CSerialEMApp:
@@ -581,6 +582,7 @@ public:
   CPiezoAndPPControl *mPiezoControl;
   CStageMoveTool *mStageMoveTool;
   CAutoTuning *mAutoTuning;
+  CExternalTools *mExternalTools;
   CString  m_strTitle;
   HitachiParams mHitachiParams;
   CString mStartupMessage;     // Message to display in box or log window on startup

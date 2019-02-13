@@ -362,6 +362,7 @@ public:
   afx_msg void OnUpdateShowWholeAreaForAllPoints(CCmdUI *pCmdUI);
   afx_msg void OnMontagingGridsAddGriLlikeLastOne();
   afx_msg void OnUpdateOnMontagingGridsAddGriLlikeLastOne(CCmdUI *pCmdUI);
+  afx_msg void OnExternalTool(UINT nID);
 };
 
 /////////////////////////////////////////////////////////////////////////////
