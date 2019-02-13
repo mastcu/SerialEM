@@ -37,6 +37,7 @@
 #include "Mailer.h"
 #include "BaseSocket.h"
 #include "AutoTuning.h"
+#include "ExternalTools.h"
 #include "TSVariationsDlg.h"
 #include "PiezoAndPPControl.h"
 #include "Shared\b3dutil.h"
@@ -1770,7 +1771,8 @@ int CParameterIO::ReadProperties(CString strFileName)
     "importtiffyfield", "importtiffidfield", "k2filtername", "controlsetname", 
     "othershiftboundaries", "watchgauge", "mappedtodschannel", "detectorblocks", 
     "mutuallyexcludedetectors", "socketserverip", "socketserveripif64", 
-    "socketserverport", "socketserverportif64"};
+    "socketserverport", "socketserverportif64", "externaltool", "toolcommand", 
+    "toolarguments"};
   std::set<std::string> dupOKgenProps(tmpg, tmpg + sizeof(tmpg) / sizeof(tmpg[0]));
   std::string tmpc[] = {"hotpixels", "rotationandpixel", "detectorname", "channelname",
     "rotationstretchxform", "specialrelativerotation", "binningoffset", "hotcolumns",
@@ -2814,6 +2816,11 @@ int CParameterIO::ReadProperties(CString strFileName)
         message = message.Left(45);
         mWinApp->mDocWnd->SetTitle(message);
 
+      } else if (MatchNoCase("FrameFileTitle")) {
+        StripItems(strLine, 1, message);
+        message.Replace("\\n", "\n");
+        mWinApp->mDocWnd->SetFrameTitle(message);
+
       } else if (MatchNoCase("LogBookPathName")) {
         StripItems(strLine, 1, message);
         mWinApp->mDocWnd->SetLogBook(message);
@@ -2830,6 +2837,27 @@ int CParameterIO::ReadProperties(CString strFileName)
       } else if (MatchNoCase("PluginPath2")) {
         StripItems(strLine, 1, message);
         mWinApp->mDocWnd->SetPluginPath2(message);
+
+      } else if (MatchNoCase("ExternalTool")) {
+        StripItems(strLine, 1, message);
+        mWinApp->mExternalTools->AddTool(message);
+      
+      } else if (MatchNoCase("ToolCommand")) {
+        if (itemEmpty[2]) {
+          AfxMessageBox("ToolCommand property entry must have a number then a command");
+        } else {
+          StripItems(strLine, 2, message);
+          mWinApp->mExternalTools->AddCommand(itemInt[1] - 1, message);
+        }
+
+      } else if (MatchNoCase("ToolArguments")) {
+         if (itemEmpty[2]) {
+          AfxMessageBox("ToolArguments property entry must have a number then an argument"
+            " list");
+        } else {
+          StripItems(strLine, 2, message);
+          mWinApp->mExternalTools->AddArgString(itemInt[1] - 1, message);
+        }
 
       } else if (MatchNoCase("FFTCircleRadii")) {
         for (ind = 1; ind < MAX_FFT_CIRCLES; ind++) {
