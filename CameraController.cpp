@@ -318,14 +318,23 @@ CCameraController::CCameraController()
   mBaseK3SuperResTime = 0.0106525f;
 
   // Set these to values in simple DM user interface except for first incrment
-  mOneViewMinExposure[0] = 0.04f;
-  mOneViewDeltaExposure[0] = 0.01f;
-  mOneViewDeltaExposure[1] = mOneViewMinExposure[1] = 0.01f;
-  mOneViewDeltaExposure[2] = mOneViewMinExposure[2] = 0.005f;
-  mOneViewDeltaExposure[3] = mOneViewMinExposure[3] = 0.005f;
+  mOneViewMinExposure[0][0] = 0.04f;
+  mOneViewDeltaExposure[0][0] = 0.01f;
+  mOneViewDeltaExposure[0][1] = mOneViewMinExposure[0][1] = 0.01f;
+  mOneViewDeltaExposure[0][2] = mOneViewMinExposure[0][2] = 0.005f;
+  mOneViewDeltaExposure[0][3] = mOneViewMinExposure[0][3] = 0.005f;
+
+  // 3K Rio
+  mOneViewMinExposure[1][0] = 0.067f;
+  mOneViewMinExposure[1][1] = mOneViewMinExposure[1][2] = mOneViewMinExposure[1][3] = 
+    0.017f;
+  mOneViewDeltaExposure[1][0] = mOneViewDeltaExposure[1][1] = 
+    mOneViewDeltaExposure[1][2] = mOneViewDeltaExposure[1][3] = 0.001f;
   for (int l = 4; l < MAX_BINNINGS; l++) {
-    mOneViewDeltaExposure[l] = 0.;
-    mOneViewMinExposure[l] = 0.;
+    for (int k = 0; k < MAX_1VIEW_TYPES; k++) {
+      mOneViewDeltaExposure[k][l] = 0.;
+      mOneViewMinExposure[k][l] = 0.;
+    }
   }
   mFalconReadoutInterval = 0.055771f;
   mMaxFalconFrames = 7;
@@ -603,8 +612,10 @@ int CCameraController::Initialize(int whichCameras)
         mNeedsReadMode[DMind] = true;
         anyK2Type = mAllParams[ind].K2Type;
       }
-      if (mAllParams[ind].OneViewType)
+      if (mAllParams[ind].OneViewType) {
         mNeedsReadMode[DMind] = true;
+        B3DCLAMP(mAllParams[ind].OneViewType, 1, MAX_1VIEW_TYPES);
+      }
     }
     if (mAllParams[ind].GIF)
       anyGIF = true;
@@ -5430,7 +5441,7 @@ bool CCameraController::ConstrainExposureTime(CameraParameters *camP, BOOL doseF
   bool retval = false;
   float ftime, baseTime, minExp;
   double fps = 0., epsilon = 0.;
-  int num, minFracs;
+  int num, minFracs, ovInd;
 
   // For all cameras, enforce the minimum exposure
   if (exposure < camP->minExposure) {
@@ -5466,13 +5477,14 @@ bool CCameraController::ConstrainExposureTime(CameraParameters *camP, BOOL doseF
   } else if (camP->OneViewType) {
 
     // OneView 
-    baseTime = B3DMAX(0.0001f, mOneViewDeltaExposure[0]);
-    minExp = B3DMAX(0.0001f, mOneViewMinExposure[0]);
+    ovInd = camP->OneViewType - 1;
+    baseTime = B3DMAX(0.0001f, mOneViewDeltaExposure[ovInd][0]);
+    minExp = B3DMAX(0.0001f, mOneViewMinExposure[ovInd][0]);
     for (num = 0; num < camP->numBinnings; num++) {
-      if (!mOneViewMinExposure[num] || !mOneViewDeltaExposure[num])
+      if (!mOneViewMinExposure[ovInd][num] || !mOneViewDeltaExposure[ovInd][num])
         break;
-      baseTime = mOneViewDeltaExposure[num];
-      minExp = mOneViewMinExposure[num];
+      baseTime = mOneViewDeltaExposure[ovInd][num];
+      minExp = mOneViewMinExposure[ovInd][num];
       if (camP->binnings[num] == binning)
         break;
     }

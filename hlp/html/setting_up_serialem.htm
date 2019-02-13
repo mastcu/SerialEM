@@ -1693,12 +1693,13 @@
       and for Ceta2 it needs 0.015625 at the end.&nbsp; With the new FEI camera 
       scripting interface, the same behavior can be imposed for Falcon 2 and Ceta 1 
       camera by adding the camera property &#39;AutoGainFactors 1&#39;.</P>
-    <P>Gain factors may also be needed for a Gatan OneView camera, so the relative 
+    <P>Gain factors may also be needed for a Gatan OneView or Rio camera, so the relative 
       gains should be measured as described above.&nbsp; Be sure to turn off &#39;Correct 
       drift&#39; in the Camera Setup dialog before taking images without alignable 
       features, since intensities will be wrong if some frames cannot be aligned.&nbsp; If a factor is not 1, it will be 
-      exactly the inverse of a power of 2.&nbsp; On one camera these factors were &#39;1 0.25 0.125 0.0625&#39;; 
-      on another, no factors were needed.</P>
+      exactly the inverse of a power of 2.&nbsp; On some OneView cameras these factors 
+      have been &#39;1 0.25 0.125 0.0625&#39;; 
+      on others, no factors were needed.</P>
     <P>&nbsp;</P>
       <P><A name="setup_timing"></A><B>Tuning Timing of Gatan Camera with Two Shutters 
         (Priority 1)</B></P>

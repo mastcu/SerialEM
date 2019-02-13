@@ -32,6 +32,7 @@ struct CamPluginFuncs;
 #define MAX_IGNORE_GATAN 10
 #define MAX_K2_FILTERS  8
 #define MAX_FILTER_NAME_LEN 64
+#define MAX_1VIEW_TYPES   2
 #define DARK_REFERENCE  0
 #define GAIN_REFERENCE  1
 #define NEW_GAIN_REFERENCE 2
@@ -501,8 +502,8 @@ class DLL_IM_EX CCameraController
   int GetNumFramesSaved() {return mTD.NumFramesSaved;};
   BOOL *GetUseGPUforK2Align() {return &mUseGPUforK2Align[0];};
   BOOL GetGpuAvailable(int DMind) {return mGpuMemory[DMind] > 0;};
-  float *GetOneViewMinExposure() {return &mOneViewMinExposure[0];};
-  float *GetOneViewDeltaExposure() {return &mOneViewDeltaExposure[0];};
+  float *GetOneViewMinExposure(int type) {return &mOneViewMinExposure[type][0];};
+  float *GetOneViewDeltaExposure(int type) {return &mOneViewDeltaExposure[type][0];};
   CArray<FrameAliParams, FrameAliParams> *GetFrameAliParams() {return &mFrameAliParams;};
   int GetNumFrameAliParams() {return (int)mFrameAliParams.GetSize() - 1;};
   void ChangePreventToggle(int incr)
@@ -735,8 +736,8 @@ class DLL_IM_EX CCameraController
   float mScalingForK2Counts;    // Scaling if different from counts per electron
   float mK2BaseModeScaling;     // Linear scaling factor for K2 Base camera
   BOOL mAntialiasBinning;       // Flag to use antialiasing in plugin for non SR/dosefrac
-  float mOneViewDeltaExposure[MAX_BINNINGS];   // Exposure time increments for OneView
-  float mOneViewMinExposure[MAX_BINNINGS];    // Minimum exposure times
+  float mOneViewDeltaExposure[MAX_1VIEW_TYPES][MAX_BINNINGS];   // Exposure time increments for OneView
+  float mOneViewMinExposure[MAX_1VIEW_TYPES][MAX_BINNINGS];    // Minimum exposure times
   int mMaxFalconFrames;         // Maximum number of intermediate Falcon frames
   float mFalconReadoutInterval; // Frame interval for Falcon camera
   BOOL mFrameSavingEnabled;     // Flag that frame-saving is enabled in the FEI dialog

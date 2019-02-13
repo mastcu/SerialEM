@@ -2177,10 +2177,16 @@ int CParameterIO::ReadProperties(CString strFileName)
               camP->gainFactor);
           } else if (MatchNoCase("OneViewMinExposures")) {
             StoreFloatsPerBinning(strItems, "OneView minimum exposure", -1, strFileName, 
-              camera->GetOneViewMinExposure());
+              camera->GetOneViewMinExposure(0));
           } else if (MatchNoCase("OneViewDeltaExposures")) {
             StoreFloatsPerBinning(strItems, "OneView exposure increment", -1, strFileName, 
-              camera->GetOneViewDeltaExposure());
+              camera->GetOneViewDeltaExposure(0));
+          } else if (MatchNoCase("RioMinExposures")) {
+            StoreFloatsPerBinning(strItems, "Rio minimum exposure", -1, strFileName, 
+              camera->GetOneViewMinExposure(1));
+          } else if (MatchNoCase("RioDeltaExposures")) {
+            StoreFloatsPerBinning(strItems, "Rio exposure increment", -1, strFileName, 
+              camera->GetOneViewDeltaExposure(1));
           } else if (MatchNoCase("Name")) {
             StripItems(strLine, 1, camP->name);
 

@@ -762,6 +762,16 @@
             supported by Gatan over time. </TD>
         </TR>
         <TR VALIGN="top">
+          <TD>RioMinExposures</TD>
+          <TD>Minimum exposure times for Rio camera at each binning, in seconds.&nbsp; 
+            The defaults are 0.067, 0.017, 0.017, 0.017, found for a 3K Rio.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>RioDeltaExposures</TD>
+          <TD>Allowed increment in exposure times for Rio camera at each binning, in 
+            seconds.&nbsp; The defaults are 0.001, 0.001, 0.001, 0.001.</TD>
+        </TR>
+        <TR VALIGN="top">
           <TD>SmoothFocusExtraTime</TD>
           <TD>Set the extra time in millisec for the focus ramp activated by the script 
             command SmoothFocusNextShot.&nbsp; The ramp will start prior to the expected 
@@ -1139,7 +1149,7 @@
         </TR>
         <TR VALIGN="top">
           <TD>OneViewType</TD>
-          <TD>Set to 1 for a OneView camera.</TD>
+          <TD>Set to 1 for a OneView camera or 2 for a Rio camera.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>RotationAndFlip</TD>
@@ -1263,7 +1273,10 @@
         <TR VALIGN="top">
           <TD>DMGainReferenceName</TD>
           <TD>The full name of this camera&#39;s DM gain reference, including spaces and .dm3 or 
-            .dm4, but not the path.</TD>
+            .dm4, but not the path.  For cameras with many reference names, just pick one.&nbsp; If the name is long or has strange characters, the 
+            best way to enter this is to right click on the name, select &#39;Rename&#39;, then do 
+            Ctrl-C to copy the name.&nbsp; Paste this in to this property and add the 
+            extension.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>CameraSizeX</TD>

@@ -3,6 +3,8 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+1/11/19: Added exposure time parameters for Rio camera.
+
 1/11/19: Added script commands to load or merge a Navigator file, report the
 filename, and report if it is open.
 
