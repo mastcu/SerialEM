@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+1/11/19: Added script commands to load or merge a Navigator file, report the
+filename, and report if it is open.
+
 1/8/19: Fixed problem moving stage from scope control in continuous mode.
 
 1/8/19: Initial processing steps for frame alignment can now be done on the

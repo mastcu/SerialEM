@@ -43,6 +43,7 @@
 #include "FalconHelper.h"
 #include "OneLineScript.h"
 #include "ExternalTools.h"
+#include "MenuTargets.h"
 #include "Mailer.h"
 #include "PluginManager.h"
 #include "PiezoAndPPControl.h"
@@ -231,9 +232,11 @@ enum {CME_VIEW, CME_FOCUS, CME_TRIAL, CME_RECORD, CME_PREVIEW,
   CME_REINSERTAPERTURE, CME_PHASEPLATETONEXTPOS, CME_SETSTAGEBAXIS, CME_REPORTSTAGEBAXIS,
   CME_DEFERWRITINGFRAMEMDOC, CME_ADDTONEXTFRAMESTACKMDOC, CME_STARTNEXTFRAMESTACKMDOC,
   CME_REPORTPHASEPLATEPOS, CME_OPENFRAMEMDOC, CME_NEXTPROCESSARGS, CME_CREATEPROCESS,
-  CME_RUNEXTERNALTOOL
+  CME_RUNEXTERNALTOOL, CME_REPORTSPECIMENSHIFT, CME_REPORTNAVFILE, CME_READNAVFILE,
+  CME_MERGENAVFILE, CME_REPORTIFNAVOPEN
 };
 
+// The two numbers are the minimum arguments and whether arithmetic is allowed
 static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0},
 {"A",0,0}, {"AlignTo",1,0}, {"AutoAlign",0,0}, {"AutoFocus",0,0}, {"Break",0,0}, 
 {"Call",1,0}, {"CallMacro",1,0},{"CenterBeamFromImage",0,0}, {"ChangeEnergyLoss",1,1},
@@ -353,6 +356,8 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"DeferWritingFrameMdoc", 0, 0}, {"AddToNextFrameStackMdoc", 2, 0}, 
 {"StartNextFrameStackMdoc", 2, 0}, {"ReportPhasePlatePos", 0, 0}, {"OpenFrameMdoc", 1, 0},
 {"NextProcessArgs", 1, 0}, {"CreateProcess", 1, 0}, {"RunExternalTool", 1, 0},
+{"ReportSpecimenShift", 0, 0}, {"ReportNavFile", 0, 0}, {"ReadNavFile", 1, 0}, 
+{"MergeNavFile", 1, 0}, {"ReportIfNavOpen",0, 0},
 {NULL, 0, 0}
 };
 
@@ -2422,24 +2427,32 @@ void CMacroProcessor::NextCommand()
       pEx->Delete();
       PrintfToLog("WARNING: File %s cannot be removed", (LPCTSTR)report);
     }
-                                              // ReportCurrentFilename, ReportLastFrameFile
-  } else if (CMD_IS(REPORTCURRENTFILENAME) || CMD_IS(REPORTLASTFRAMEFILE)) { 
-    truth = CMD_IS(REPORTCURRENTFILENAME);
-    if (truth) {
+                              // ReportCurrentFilename, ReportLastFrameFile, ReportNavFile
+  } else if (CMD_IS(REPORTCURRENTFILENAME) || CMD_IS(REPORTLASTFRAMEFILE) || 
+    CMD_IS(REPORTNAVFILE)) { 
+    truth = !CMD_IS(REPORTLASTFRAMEFILE);
+    if (CMD_IS(REPORTCURRENTFILENAME)) {
       if (!mWinApp->mStoreMRC)
         SUSPEND_LINE("because there is no file open currently for statement:\n\n");
       report = mWinApp->mStoreMRC->getFilePath();
+      strCopy = "Current open image file is: ";
+    } else if (truth) {
+      ABORT_NONAV;
+      report = mWinApp->mNavigator->GetCurrentNavFile();
+      if (report.IsEmpty())
+        ABORT_LINE("There is no Navigator file open for:\n\n");
+      strCopy = "Current open Navigator file is: ";
     } else {
       report = mCamera->GetPathForFrames();
       if (report.IsEmpty())
         ABORT_LINE("There is no last frame file name available for:\n\n");
+      strCopy = "Last frame file is: ";
     }
+    mWinApp->AppendToLog(strCopy + report, mLogAction);
     CString root = report;
     CString ext;
     if (!itemEmpty[1] && itemInt[1] && truth)
       UtilSplitExtension(report, root, ext);
-    mWinApp->AppendToLog((truth ? "Current open file is: " : "Last frame file is: ")
-      + report, mLogAction);
     ClearVariables(VARTYPE_REPORT);
     SetVariable("REPORTEDVALUE1", root, VARTYPE_REPORT, 1, true);
     SetVariable("REPVAL1", root, VARTYPE_REPORT, 1, true);
@@ -3156,7 +3169,24 @@ void CMacroProcessor::NextCommand()
       return;
     }
 
- } else if (CMD_IS(REPORTOBJECTIVESTIGMATOR)) {             // ReportObjectiveStigmator
+  } else if (CMD_IS(REPORTSPECIMENSHIFT)) {                  // ReportSpecimenShift
+    if (!mScope->GetLDCenteredShift(delISX, delISY)) {
+      AbortMacro();
+      return;
+    }
+    aMat = mShiftManager->IStoSpecimen(mScope->GetMagIndex());
+    if (aMat.xpx) {
+      delX = aMat.xpx * delISX + aMat.xpy * delISY;
+      delY = aMat.ypx * delISX + aMat.ypy * delISY;
+      report.Format("Image shift is %.3f  %.3f in specimen coordinates",  delX, delY);
+      SetReportedValues(&strItems[1], delX, delY);
+      mWinApp->AppendToLog(report, mLogAction);
+    } else {
+      mWinApp->AppendToLog("There is no calibration for converting image shift to "
+        "specimen coordinates", mLogAction);
+    }
+
+  } else if (CMD_IS(REPORTOBJECTIVESTIGMATOR)) {             // ReportObjectiveStigmator
    if (!mScope->GetObjectiveStigmator(delX, delY)) {
      AbortMacro();
      return;
@@ -4995,6 +5025,35 @@ void CMacroProcessor::NextCommand()
   } else if (CMD_IS(SAVENAVIGATOR)) {                       // SaveNavigator
     ABORT_NONAV;
     navigator->DoSave();
+
+  } else if (CMD_IS(REPORTIFNAVOPEN)) {                     // ReportIfNavOpen
+    index = 0;
+    report = "Navigator is NOT open";
+    if (mWinApp->mNavigator) {
+      index = 1;
+      report = "Navigator IS open";
+      if (mWinApp->mNavigator->GetCurrentNavFile()) {
+        report += "; file is defined";
+        index = 2;
+      }
+    }
+    mWinApp->AppendToLog(report, mLogAction);
+    SetReportedValues(&strItems[1], (double)index);
+
+  } else if (CMD_IS(READNAVFILE) || CMD_IS(MERGENAVFILE)) {  // ReadNavFile, MergeNavFile
+    truth = CMD_IS(MERGENAVFILE);
+    if (truth) {
+      ABORT_NONAV;
+    } else  {
+      mWinApp->mMenuTargets.OpenNavigatorIfClosed();
+    }
+    SubstituteVariables(&strLine, 1, strLine);
+    mWinApp->mParamIO->StripItems(strLine, 1, strCopy);
+    if (!CFile::GetStatus((LPCTSTR)strCopy, status))
+      ABORT_LINE("The file " + strCopy + " does not exist in line:\n\n");
+    if (mWinApp->mNavigator->LoadNavFile(false, CMD_IS(MERGENAVFILE), &strCopy))
+      ABORT_LINE("Script stopped due to error processing Navigator file for line:\n\n");
+
                               //ChangeItemColor,  ChangeItemLabel, ChangeItemRegistration
   } else if (CMD_IS(CHANGEITEMREGISTRATION) || CMD_IS(CHANGEITEMCOLOR) || 
     CMD_IS(CHANGEITEMLABEL)) {

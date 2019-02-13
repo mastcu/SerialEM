@@ -1647,6 +1647,12 @@
             camera shift will result from an image shift 
             imposed by dragging an image to the upper right.</TD>
         </TR>
+        <TR vAlign="top">
+          <TD class="style13">ReportSpecimenShift</TD>
+          <TD>Report the image shift, as just described, in the &quot;specimen&quot; coordinates used 
+            internally by the program, which are coordinates in microns with X along the tilt 
+            axis.</TD>
+        </TR>
         <TR  vAlign="top">
           <TD colspan="2"><A name="misc_scope"></A><B>Miscellaneous Scope Commands</B></TD>
         </TR>
@@ -2300,6 +2306,12 @@
           <TD colspan="2"><A name="navigator"></A><B>Navigator-Related Commands</B></TD>
         </TR>
         <TR vAlign="top">
+          <TD class="style12">ReportIfNavOpen</TD>
+          <TD>Report whether the Navigator is open; sets reportedValue1 to 1 if it is open 
+            and 2 if there is a Navigator file defined 2.&nbsp; Virtually all of the commands 
+            described in this section will generate an error if the Navigator is not open.</TD>
+        </TR>
+        <TR vAlign="top">
           <TD class="style12">NewMap [#n&nbsp; text]</TD>
           <TD>Make the current image or montage a new Navigator map.&nbsp; If an optional #n 
             is entered, text after that replaces, or is added to, the standard note for a 
@@ -2531,6 +2543,28 @@
           <TD class="style12">SaveNavigator</TD>
           <TD>Saves the Navigator data to the current file or opens a file chooser for 
             saving if a file is not yet defined.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style12">ReadNavFile name</TD>
+          <TD>Reads in the Navigator file with the given name, opening the Navigator if 
+            necessary.&nbsp; If there are unsaved changes in the Navigator, the user is 
+            asked whether to save those first as usual.&nbsp; A cancel from that, or an 
+            error opening, reading, or processing the file will generate an error message.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style12">MergeNavFile</TD>
+          <TD>Merges the Navigator file with the given name into the current items in the 
+            Navigator, which must be open.&nbsp; An error opening, reading, or processing the 
+            file will generate an error message.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style12">ReportNavFile [#]</TD>
+          <TD>Reports the name of current Navigator file or generates an error if the 
+            Navigator is not open with a file defined.&nbsp; Sets the full name into 
+            ReportedValue1; or if the optional # is entered with a 1, sets the root of the 
+            filename including the path in ReportedValue1, the extension (including the dot) in 
+            ReportedValue2, the path only in ReportedValue3, and the rest of the rootname 
+            in ReportedValue4.&nbsp; No optional assignment to variable.</TD>
         </TR>
       </TABLE>
       <BR>

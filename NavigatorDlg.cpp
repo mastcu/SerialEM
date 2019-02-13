@@ -6688,12 +6688,12 @@ void CNavigatorDlg::OpenAndWriteFile(bool autosave)
 
 
 // Loading a file
-void CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile) 
+int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFilename) 
 {
   CString str, str2, navRoot, lastSavedRoot, name = "";
   CStdioFile *cFile = NULL;
   CFileStatus status;
-  int retval, externalErr;
+  int retval, externalErr, returnVal = 0;
   bool hasStage;
   BOOL found;
   int numSect, numAdocErr, numLackRequired, sectInd = 0, adocIndex = -1;
@@ -6728,22 +6728,34 @@ void CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile)
 
   if (checkAutosave) {
     if (mParam->autosaveFile.IsEmpty())
-      return;
+      return 1;
     if (!CFile::GetStatus((LPCTSTR)mParam->autosaveFile, status))
-      return;
+      return 1;
     if (AfxMessageBox("There is an autosaved Navigator file from your previous session:"
       "\n" + mParam->autosaveFile + "\n\nDo you want to recover this file?",
       MB_YESNO | MB_ICONQUESTION) == IDNO) {
       mParam->autosaveFile = "";
-      return;
+      return 1;
     } else
       name = mParam->autosaveFile;
   } else {
 
     if (!mergeFile && AskIfSave("loading new data?"))
-      return;
-    if (GetNavFilename(true, OFN_HIDEREADONLY, mergeFile))
-      return;
+      return 1;
+
+    // If name is supplied, assign to mergeName as happens when get filename from user,
+    // and assign to navFilename if not merging
+    if (inFilename) {
+      mMergeName = *inFilename;
+      if (!mergeFile) {
+        mNavFilename = *inFilename;
+        UtilSplitPath(mNavFilename, str, str2);
+        SetWindowText("Navigator:  " + str2);
+      }
+    } else {
+      if (GetNavFilename(true, OFN_HIDEREADONLY, mergeFile))
+        return 1;
+    }
     name = mMergeName;
   }
   UtilSplitPath(name, navRoot, str);
@@ -6758,16 +6770,16 @@ void CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile)
       cFile->Close();
       delete cFile;
       if (!AdocAcquireMutex()) {
-        AfxMessageBox("The Navigator file is an autodoc and the mutex for accessing it "
+        SEMMessageBox("The Navigator file is an autodoc and the mutex for accessing it "
           "could not be acquired", MB_EXCLAME);
-        return;
+        return 1;
       }
       adocIndex = AdocRead((LPCTSTR)name);
       if (adocIndex< 0) {
-        AfxMessageBox("An error occurred reading in the Navigator file as an autodoc",
+        SEMMessageBox("An error occurred reading in the Navigator file as an autodoc",
           MB_EXCLAME);
         AdocReleaseMutex();
-        return;
+        return 1;
       }
       if (!AdocGetString(ADOC_GLOBAL_NAME, 0, "LastSavedAs", &adocStr) && adocStr) {
         str = adocStr;
@@ -6777,11 +6789,11 @@ void CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile)
       numSect = AdocGetNumberOfSections("Item");
       if (numSect < 0 || AdocGetFloat(ADOC_GLOBAL_NAME, 0, "AdocVersion", &xx)) {
         AdocClear(adocIndex);
-        AfxMessageBox(numSect < 0 ? "An error occurred reading the number of items in "
+        SEMMessageBox(numSect < 0 ? "An error occurred reading the number of items in "
           "the Navigator file" : "This file is missing the AdocVersion entry "
           "required for a Navigator file", MB_EXCLAME);
         AdocReleaseMutex();
-        return;
+        return 1;
       }
       version = B3DNINT(100. * xx);
 
@@ -6793,20 +6805,20 @@ void CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile)
         NextTabField(str, index);
         version = (int)(100. * atof(NextTabField(str, index)) + 0.5);
         if (version > VERSION_TIMES_100) {
-          AfxMessageBox("The version number of this Navigator file is higher than can be "
+          SEMMessageBox("The version number of this Navigator file is higher than can be "
             "read by this version of SerialEM", MB_EXCLAME);
           cFile->Close();
           delete cFile;
-          return;
+          return 1;
         } 
         retval = cFile->ReadString(str);
       }
       if (!retval || str.Left(5) != "Label") {
-        AfxMessageBox("This file does not have the right starting line\n"
+        SEMMessageBox("This file does not have the right starting line\n"
           " to be a Navigator file", MB_EXCLAME);
         cFile->Close();
         delete cFile;
-        return;
+        return 1;
       }
       
       // ADD AN ENTRY HERE WHEN YOU ADD MAP ITEMS
@@ -7288,7 +7300,8 @@ void CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile)
   catch(CFileException *perr) {
     perr->Delete();
     str = "Error reading from file " + mNavFilename;
-    AfxMessageBox(str, MB_EXCLAME);
+    SEMMessageBox(str, MB_EXCLAME);
+    returnVal = 1;
   } 
   if (adocIndex >= 0) {
     AdocClear(adocIndex);
@@ -7318,7 +7331,8 @@ void CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile)
       else
         PrintfToLog("Set Debug Output to \"n\" for details on each item\r\n");
     } 
-    AfxMessageBox(str, MB_EXCLAME);
+    SEMMessageBox(str, MB_EXCLAME);
+    returnVal = 1;
   }
 
   if (filesNotFound.size()) {
@@ -7329,7 +7343,8 @@ void CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile)
     str +=  "\r\nTo access these maps, move them into the directory with the current"
       " Navigator file";
     mWinApp->AppendToLog(str);
-    AfxMessageBox(str, MB_EXCLAME);
+    SEMMessageBox(str, MB_EXCLAME);
+    returnVal = 1;
   }
 
   // Set up list box and counters
@@ -7345,11 +7360,13 @@ void CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile)
     mHelper->CountAcquireItems(originalSize, mEndingAcquireIndex, numSect, numToGet);
     mInitialNumAcquire += (mParam->acquireType == ACQUIRE_DO_TS ? numToGet : numSect);
   }
+  return returnVal;
 }
 
 // Get the filename for reading or writing
 int CNavigatorDlg::GetNavFilename(BOOL openFile, DWORD flags, bool mergeFile)
 {
+  CString str, str2;
   static char BASED_CODE szFilter[] = 
     "Navigator files (*.nav)|*.nav|All files (*.*)|*.*||";
   MyFileDialog fileDlg(openFile, ".nav", NULL, flags, szFilter);
@@ -7363,9 +7380,8 @@ int CNavigatorDlg::GetNavFilename(BOOL openFile, DWORD flags, bool mergeFile)
   if (mergeFile)
     return 0;
   mNavFilename = mMergeName;
-  int trimCount = mNavFilename.GetLength() - (mNavFilename.ReverseFind('\\') + 1);
-  CString trimmedName = mNavFilename.Right(trimCount);
-  SetWindowText("Navigator:  " + trimmedName);
+  UtilSplitPath(mNavFilename, str, str2);
+  SetWindowText("Navigator:  " + str2);
   return 0;
 }
 

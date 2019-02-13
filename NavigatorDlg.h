@@ -90,7 +90,7 @@ public:
 	BOOL TransformOK();
   BOOL NoDrawing() {return !(mAddingPoints || mAddingPoly || mMovingItem);};
 	int GetItemType();
-  void LoadNavFile(bool checkAutosave, bool mergeFile);
+  int LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFilename = NULL);
 	int SetupMontage(CMapDrawItem *item, CMontageSetupDlg *montDlg, bool skipSetupDlg);
 	void XfApply(ScaleMat a, float *dxy, float inX, float inY, float &outX, float &outY);
 	int DoSaveAs();
@@ -148,7 +148,7 @@ public:
   SetMember(int, GroupIDtoSkip);
   SetMember(BOOL, SkipStageMoveInAcquire);
   GetSetMember(bool, PausedAcquire);
-  GetMember(CString, NavFilename);
+  CString GetCurrentNavFile() {return mNavFilename;};
 
   void ResumeFromPause() {mResumedFromPause = true; mPausedAcquire = false;};
   BOOL InEditMode() {return m_bEditMode;};

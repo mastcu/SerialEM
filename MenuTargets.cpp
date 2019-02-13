@@ -509,6 +509,13 @@ void CMenuTargets::OnTasksNavigator()
   mWinApp->RestoreViewFocus();
 }
 
+// External call to get the Navigator open
+void CMenuTargets::OpenNavigatorIfClosed(void)
+{
+  if (!mNavigator)
+    OnTasksNavigator();
+}
+
 void CMenuTargets::OnUpdateTasksNavigator(CCmdUI* pCmdUI) 
 {
   pCmdUI->Enable(mNavigator == NULL); 

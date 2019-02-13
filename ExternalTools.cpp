@@ -149,7 +149,7 @@ int CExternalTools::RunCreateProcess(CString &command, CString argString)
         "list for running a process; the Navigator is not open");
       return 1;
     }
-    report = mWinApp->mNavigator->GetNavFilename();
+    report = mWinApp->mNavigator->GetCurrentNavFile();
     if (report.IsEmpty()) {
       SEMMessageBox("Cannot substitute for %navfile% in argument\n"
         "list for running a process; there is no current Navigator file");
