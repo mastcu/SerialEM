@@ -4291,6 +4291,7 @@ void CMacroProcessor::NextCommand()
         report += " ";
       report += strItems[index];
     }
+    report.Replace("\n", "  ");
     index2 = 0;
     if (CMD_IS(ECHOREPLACELINE))
       index2 = 3;
