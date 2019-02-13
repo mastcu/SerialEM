@@ -380,7 +380,7 @@ CCameraController::CCameraController()
   mNextAsyncSumFrames = -1;
   mLastAsyncTimeout = 0;
   mNextFrameSkipThresh = 0.;
-  mK2MaxRamStackGB = 12.;
+  mK2MaxRamStackGB = -1.;
   mK2MinFrameForRAM = 0.05f;
   mBaseJeolSTEMflags = 0;
   mFalconAsyncStacking = true;
@@ -408,6 +408,7 @@ CCameraController::CCameraController()
   mBufDeferred = NULL;
   mExtraDeferred = NULL;
   mUseGPUforK2Align[0] = mUseGPUforK2Align[1] = false;
+  mTestGpuInShrmemframe = false;
   mAlignWholeSeriesInIMOD = false;
   mNumFrameAliLogLines = 2;
   mDarkMaxMeanCrit = 0.;
@@ -544,6 +545,7 @@ int CCameraController::Initialize(int whichCameras)
   long num;
   BOOL anyGIF = false;
   BOOL anyPreExp = false;
+  bool differentK2s = false;
   int anyK2Type = 0;
   FilterParams *filtParam = mWinApp->GetFilterParams();
   if (mWinApp->GetNoCameras())
@@ -610,6 +612,8 @@ int CCameraController::Initialize(int whichCameras)
         sGIFisSocket = DMind;
       if (mAllParams[ind].K2Type) {
         mNeedsReadMode[DMind] = true;
+        if (anyK2Type > 0 && mAllParams[ind].K2Type != anyK2Type)
+          differentK2s = true;
         anyK2Type = mAllParams[ind].K2Type;
       }
       if (mAllParams[ind].OneViewType) {
@@ -630,7 +634,12 @@ int CCameraController::Initialize(int whichCameras)
     mK2ReadoutInterval = anyK2Type == K2_BASE ? 0.1138f : 0.0025f;
   if (mK2BaseModeScaling < 0)
     mK2BaseModeScaling = 0.25f;
-
+  if (mK2MaxRamStackGB < 0) {
+    if (anyK2Type == K3_TYPE && !differentK2s)
+      mK2MaxRamStackGB = 32;
+    else
+      mK2MaxRamStackGB = 12;
+  }
 
   // Try to initialize DM type cameras if any are listed and not initialized yet
   for (DMind = 0; DMind < 3; DMind++) {
@@ -1011,7 +1020,7 @@ void CCameraController::InitializeDMcameras(int DMind, int *numDMListed,
       if (anyK2 && mPluginVersion[DMind] >= PLUGIN_CAN_ALIGN_FRAMES) {
         CallDMIndGatan(DMind, mGatanCamera, IsGpuAvailable(0, &available, 
           &mGpuMemory[DMind]));
-        SEMTrace('1', "GPU %s available for K2 aligning", available ? "IS" : "IS NOT");
+        SEMTrace('1', "GPU %s available for K2/K3 aligning", available ? "IS" : "IS NOT");
       }
 
 
@@ -1732,7 +1741,7 @@ bool CCameraController::OppositeLDAreaNextShot(void)
 bool CCameraController::SetNextAsyncSumFrames(int inVal, bool deferSum)
 {
   if (!mParam->K2Type) {
-    SEMMessageBox("Early return works only with a K2 camera");
+    SEMMessageBox("Early return works only with a K2/K3 camera");
     return true;
   }
   if (inVal == 65535 && mDMversion[CAMP_DM_INDEX(mParam)] < DM_K2_API_CHANGED_LOTS) {
@@ -1759,7 +1768,7 @@ int CCameraController::GetDeferredSum(void)
     return 1;
   }
   if (!mParam->K2Type) {
-    SEMMessageBox("A deferred sum can only be obtained with a K2 camera as current"
+    SEMMessageBox("A deferred sum can only be obtained with a K2/K3 camera as current"
       " camera");
     return 2;
   }
@@ -1832,7 +1841,7 @@ int CCameraController::MakeMdocFrameAlignCom(void)
   // Check parameters
   if (!mParam->K2Type && !IS_FALCON2_OR_3(mParam)) {
     SEMMessageBox("Cannot make a com file for aligning tilt series frames\n"
-      "unless the K2 or Falcon camera is still selected");
+      "unless the K2/K3 or Falcon camera is still selected");
     return 1;
   }
   if (mParam->K2Type && GetPluginVersion(mParam) < PLUGIN_CAN_ALIGN_FRAMES) {
@@ -3997,6 +4006,8 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
       numAsyncSum += 65536. * numGrab;
     }
   }
+  if (gpuFlags && mTestGpuInShrmemframe)
+    gpuFlags |= GPU_RUN_SHRMEMFRAME;
 
   try {
     if (saving)
@@ -8069,7 +8080,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
             mDMsizeY = mTD.DMSizeY * mTD.Binning / mBinning;
           } else if (mParam->rotationFlip && 
             RotateAndReplaceArray(chan, mParam->rotationFlip,0))
-              SEMMessageBox("Failed to get memory for rotating K2 image", MB_EXCLAME);
+              SEMMessageBox("Failed to get memory for rotating K2/K3 image", MB_EXCLAME);
 
           // need to adjust sizes again without the full frame constraint to get size the
           // same as it would be without dose frac on
@@ -10249,7 +10260,7 @@ void CCameraController::GetMergeK2DefectList(int DMind, CameraParameters *param,
 
   NewArray(xyPairs, short int, pairSize);
   if (!xyPairs) {
-    str = "Failed to allocate array for getting K2 camera defects";
+    str = "Failed to allocate array for getting K2/K3 camera defects";
     if (errToLog)
       mWinApp->AppendToLog(CString("WARNING: ") + str);
     else

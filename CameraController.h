@@ -498,6 +498,7 @@ class DLL_IM_EX CCameraController
   SetMember(int, DEserverRefNextShot);
   GetSetMember(float, DEPrevSetNameTimeout);
   int GetServerFramesLeft();
+  GetSetMember(BOOL, TestGpuInShrmemframe);
 
   int GetNumFramesSaved() {return mTD.NumFramesSaved;};
   BOOL *GetUseGPUforK2Align() {return &mUseGPUforK2Align[0];};
@@ -861,6 +862,7 @@ class DLL_IM_EX CCameraController
   float mPriorRecordDose;        // Cumulative dose prior to shot if doing tilt series
   int mNumSubsetAligned;         // Number of frames aligned and returned in sum, 0 if all
   int mAlignStart, mAlignEnd;    // Starting and ending frames numbered from 1 as in UI
+  BOOL mTestGpuInShrmemframe;    // Flag to do GPU alignment in shrmemframe
 
 public:
   void SetNonGatanPostActionTime(void);
