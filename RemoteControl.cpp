@@ -508,6 +508,8 @@ void CRemoteControl::MoveStageByMicronsOnCamera(double delCamX, double delCamY)
     mShiftManager->GetBacklashMouseAndISR() && fabs(angle / DTOR) < 10.);
   moveInfo.axisBits = axisXY;
   mDoingTask = 2;
+  m_sbcBeamShift.EnableWindow(false);
+  m_sbcBeamLeftRight.EnableWindow(false);
   mWinApp->UpdateBufferWindows();
   mScope->MoveStage(moveInfo, moveInfo.backX != 0. || moveInfo.backY != 0.);
   mWinApp->AddIdleTask(CEMscope::TaskStageBusy, TASK_REMOTE_CTRL, 0, 60000);
