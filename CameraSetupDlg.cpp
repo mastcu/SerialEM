@@ -2781,9 +2781,9 @@ void CCameraSetupDlg::OnButSetupAlign()
   dlg.mReadMode = m_iK2Mode;
   
   // Set this so that actual value can be modified by whether aligning IMOD
-  dlg.mTakingK3Binned = m_iProcessing == GAIN_NORMALIZED && 
-    m_bTakeK3Binned && !(mCamera->GetSaveUnnormalizedFrames() && 
-    mUserSaveFrames);
+  dlg.mTakingK3Binned = mCamera->IsK3BinningSuperResFrames(mParam, 
+    m_bDoseFracMode ? 1 : 0, m_bSaveFrames ? 1 : 0, m_bAlignDoseFrac ? 1 : 0,
+    mCurSet->useFrameAlign,  m_iProcessing, m_iK2Mode, m_bTakeK3Binned);
   if (dlg.DoModal() == IDOK) {
     mCurSet->filterType = dlg.mCurFiltInd;
     mCurSet->useFrameAlign = dlg.m_iWhereAlign;
