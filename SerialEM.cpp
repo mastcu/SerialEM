@@ -918,7 +918,7 @@ BOOL CSerialEMApp::InitInstance()
 
   // Detect if display is not 120 DPI and initialize accordingly
   HDC screen = GetDC(0);
-  mSystemDPI = GetDeviceCaps (screen, LOGPIXELSX);
+  mSystemDPI = GetDeviceCaps(screen, LOGPIXELSX);
   ReleaseDC(0, screen);
   mDisplayNot120DPI = mSystemDPI != 120;
   mag = mSystemDPI;
@@ -964,6 +964,12 @@ BOOL CSerialEMApp::InitInstance()
   // Set constants based on DPI if not supplied by user
   if (!mToolTitleHeight) {
     mToolTitleHeight = mSystemDPI <= 120 ? 24 : 40;
+
+    // This is based on a post about what is used in Firefox for a resizeable window,
+    // where a commenter found that scaling the resizing frame by a dpi ratio worked 
+    mag = (int)ceil(GetSystemMetrics(SM_CYCAPTION) + GetSystemMetrics(SM_CYFIXEDFRAME) * 
+      mSystemDPI / 96.);
+    mToolTitleHeight = B3DMAX(mToolTitleHeight, mag);
     if (mSystemDPI < 120) {
       mToolExtraWidth = 8;
       mToolExtraHeight = 5;
