@@ -478,7 +478,8 @@ void CRemoteControl::OnDeltaposSpinBeamLeftRight(NMHDR *pNMHDR, LRESULT *pResult
 void CRemoteControl::MoveStageByMicronsOnCamera(double delCamX, double delCamY)
 {
   int area, camera = mWinApp->GetCurrentCamera();
-  float pixel = mShiftManager->GetPixelSize(camera, mLastMagInd);
+  int magIndex = mLastMagInd <= 0 ? mScope->GetMagIndex() : mLastMagInd;
+  float pixel = mShiftManager->GetPixelSize(camera, magIndex);
   float defocus = 0.;
   double delX, delY, angle, delStageX, delStageY;
   StageMoveInfo moveInfo;
@@ -490,7 +491,7 @@ void CRemoteControl::MoveStageByMicronsOnCamera(double delCamX, double delCamY)
     if (area == VIEW_CONSET || area == SEARCH_AREA)
       defocus = mScope->GetLDViewDefocus(area);
   }
-  bMat = mShiftManager->FocusAdjustedStageToCamera(camera, mLastMagInd, 
+  bMat = mShiftManager->FocusAdjustedStageToCamera(camera, magIndex, 
     mLastSpot, mLastProbeMode, mScope->GetIntensity(), defocus);
   bInv = MatInv(bMat);
   delStageX = -(bInv.xpx * delX + bInv.xpy * delY);
@@ -498,7 +499,7 @@ void CRemoteControl::MoveStageByMicronsOnCamera(double delCamX, double delCamY)
   angle = DTOR * mScope->GetTiltAngle();
 
   // If transformation exists, try to zero image shift too
-  mShiftManager->AdjustStageMoveAndClearIS(camera, mLastMagInd, delStageX, 
+  mShiftManager->AdjustStageMoveAndClearIS(camera, magIndex, delStageX, 
     delStageY, bInv);
 
   // Get the stage position and change it.  Set a flag and update state
