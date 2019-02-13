@@ -145,6 +145,8 @@ INT_SETT_ASSIGN("LowDoseAxisAngle", mWinApp->mLowDoseDlg.m_iAxisAngle)
 FLOAT_SETT_GETSET("WalkUpTargetAngle", mWinApp->mComplexTasks->, WalkTarget)
 FLOAT_SETT_GETSET("WalkUpMaxInterval", mWinApp->mComplexTasks->, MaxWalkInterval)
 FLOAT_SETT_GETSET("WalkUpMinInterval", mWinApp->mComplexTasks->, MinWalkInterval)
+FLOAT_SETT_GETSET("WalkSTEMfocusInterval", mWinApp->mComplexTasks->, 
+            WalkSTEMfocusInterval)
 BOOL_SETT_GETSET("ResetRealignUseTrialInLowDose", mWinApp->mComplexTasks->,
             RSRAUseTrialInLDMode)
 BOOL_SETT_GETSET("FineEucenUseTrialInLowDose", mWinApp->mComplexTasks->, FEUseTrialInLD)
