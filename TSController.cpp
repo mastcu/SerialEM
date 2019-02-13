@@ -1890,7 +1890,10 @@ void CTSController::NextAction(int param)
               message += "This could be"; 
             else
               message += "This is probably"; 
-            message += " due to a pole touch.\n\n"
+            message += " due to a pole touch";
+            if (JEOLscope)
+              message += " or\nthe wrong holder being chosen in the scope interface";
+            message += ".\n\n"
               "Press:\n\"Stop && Set Limit\" to stop and set this as a limiting "
               "('pole touch') angle,\n\n\"Go On\" to try to go on.";
             policy = mPolicyID[mTiltFailPolicy];
