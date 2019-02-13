@@ -4,7 +4,7 @@
  */
 #ifndef SEMCCD_DEFINES_H
 
-#define SEMCCD_PLUGIN_VERSION    109
+#define SEMCCD_PLUGIN_VERSION    111
 
 // Error codes
 enum {IMAGE_NOT_FOUND = 1, WRONG_DATA_TYPE, DM_CALL_EXCEPTION, NO_STACK_ID, STACK_NOT_3D,
@@ -40,6 +40,7 @@ FRAMEDOC_OPEN_ERR, FRAMEDOC_WRITE_ERR};
 #define K2_MRCS_EXTENSION      (1 << 16)
 #define K2_SAVE_SUPER_REDUCED  (1 << 17)
 #define K2_SKIP_BELOW_THRESH   (1 << 18)
+#define K2_ADD_FRAME_TITLE     (1 << 19)
 
 // Flags for SetK2Parameters
 #define K2_ANTIALIAS_MASK      7
