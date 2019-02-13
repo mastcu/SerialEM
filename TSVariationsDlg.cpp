@@ -292,7 +292,7 @@ void CTSVariationsDlg::OnButTsvAddSeries()
       baseTime = mWinApp->mCamera->GetLastK2BaseTime();
     }
     CString mess;
-    mess.Format("With your current settings for the K2 camera,\n"
+    mess.Format("With your current settings for the K2/K3 camera,\n"
       " exposure times are constrained to a multiple of %.4f sec\n\n"
       "If this is not OK, change the parameter settings or the selected camera",
       baseTime);

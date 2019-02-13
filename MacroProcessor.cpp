@@ -4511,7 +4511,7 @@ void CMacroProcessor::NextCommand()
 
       // Adjusting frame time to keep constant number of frames
       if (!camParams->K2Type || !mConSets[index].doseFrac)
-        ABORT_LINE("Frame time can be adjusted only for K2 camera"
+        ABORT_LINE("Frame time can be adjusted only for K2/K3 camera"
         " with dose fractionation mode on in line:\n\n");
       index2 = B3DNINT(mConSets[index].exposure /
         B3DMAX(0.001, mConSets[index].frameTime));
@@ -4596,7 +4596,7 @@ void CMacroProcessor::NextCommand()
     if (!camParams->K2Type)
       ABORT_NOLINE("Frame time can be set only if the current camera is a K2");
     if (itemInt[2] < 0 || itemInt[2] > 2)
-      ABORT_LINE("K2 Read mode must 0, 1, or 2 in:\n\n");
+      ABORT_LINE("K2/K3 Read mode must 0, 1, or 2 in:\n\n");
     SaveControlSet(index);
     mConSets[index].K2ReadMode = itemInt[2];
 

@@ -24,9 +24,9 @@
 
     <p>
       This dialog allows you to set parameters to control alignment of frames taken 
-      from a K2 camera in Dose Fractionation mode, or from a Falcon or Direct Electron camera.&nbsp; </p>
+      from a K2 or K3 camera in Dose Fractionation mode, or from a Falcon or Direct Electron camera.&nbsp; </p>
     <p>
-      <i>With a K2 camera</i>, the alignment can be done in 
+      <i>With a K2/K3 camera</i>, the alignment can be done in 
       three different ways: with the native alignment procedures in DigitalMicrograph, 
       with the &#39;framealign&#39; module in SerialEM&#39;s plugin to DM, or 
       independently of SerialEM with the Alignframes 
@@ -70,7 +70,7 @@
     <p class="style2">
       Aligning in DigitalMicrograph or FEI or DE Software</p>
     <p>
-      For a K2, the alignment in DM has only one parameter, the filter that is used in the 
+      For a K2/K3, the alignment in DM has only one parameter, the filter that is used in the 
       alignment procedure.&nbsp; The combo box should show the same set of filters 
       that are available in DM; if not, the SerialEMproperties file needs to be 
       modified to list the correct filters.</p>
@@ -235,9 +235,9 @@ FRC crossings 0.5: 0.0335  0.25: 0.0468  0.125: 0.0898  is 0.1025 at 0.25/pix   
       frames needs aligning.&nbsp; Thus you can use refinement, smoothing, or multiple 
       filters routinely without worrying about whether they are actually helping.</p>
     <p>
-      K2 frames can be taken unnormalized in order to save efficiently in compressed 
+      K2/K3 frames can be taken unnormalized in order to save efficiently in compressed 
       TIFF files.&nbsp; The command file will contain options to apply 
-      gain-normalization, plus defect correction for GMS 2.31 and higher.</p>
+      gain-normalization and defect correction.</p>
     <p class="style1">
       Global Settings</p>
     <p>
@@ -251,11 +251,11 @@ FRC crossings 0.5: 0.0335  0.25: 0.0468  0.125: 0.0898  is 0.1025 at 0.25/pix   
       Select whether to use the GPU on an NVIDIA card for the frame alignment.&nbsp; 
       This setting is kept track of separately for aligning immediately versus 
       aligning in IMOD, because the latter could be done by any computer with access 
-      to the frame data.&nbsp; In fact, if there are two K2&#39;s, or a K2 and a Falcon, 
-      it is kept track of separately for each camera.&nbsp; This option should 
+      to the frame data.&nbsp; In fact, if there are two K2/K3&#39;s, or a K2/K3 and a Falcon, 
+      it is kept track of separately for each camera.&nbsp; This option should be
       available if NVIDIA drivers are installed, and the files FrameGPU.dll, 
       cudart64_41_28.dll and cufft64_41_28.dll are in the correct location: 
-      specifically, for a K2 camera, in
+      specifically, for a K2/K3 camera, in
       C:\ProgramData\Gatan\Plugins along with the SEMCCD-GM2-64.dll plugin; and for a 
       Falcon or DE camera, in the same folder as the SerialEM executable.</p>
     <p>
@@ -273,9 +273,9 @@ FRC crossings 0.5: 0.0335  0.25: 0.0468  0.125: 0.0898  is 0.1025 at 0.25/pix   
       Press this button to select the folder where the command files will be written 
       when aligning in IMOD.&nbsp; This folder must be on the same drive as the frame 
       files, because the command file needs to be written with relative paths that 
-      would be meaningful if processing on another machine.&nbsp; With a K2 camera, if SerialEM is 
+      would be meaningful if processing on another machine.&nbsp; With a K2/K3 camera, if SerialEM is 
       running on a microscope computer, then the folder name must be typed into the 
-      dialog box that comes up.&nbsp; If it is running on the K2 computer, then a 
+      dialog box that comes up.&nbsp; If it is running on the K2/K3 computer, then a 
       folder chooser will come up just as it does for selecting the frame folder.&nbsp; 
       A folder chooser comes up for a DE camera, and for a Falcon 2 camera when 
       SerialEM is running on the microscope computer.</p>
@@ -335,7 +335,7 @@ FRC crossings 0.5: 0.0335  0.25: 0.0468  0.125: 0.0898  is 0.1025 at 0.25/pix   
     <p>
       The use of restrictions will work most conveniently if you have only one 
       parameter set for each kind of situation, each one marked with different 
-      restrictions.&nbsp; For a K2 or DE, if you have just the &quot;4K default set&quot; and &quot;8K default set&quot;, 
+      restrictions.&nbsp; For a K2/K3 or DE, if you have just the &quot;4K default set&quot; and &quot;8K default set&quot;, 
       simply restrict each one to the respective size of frames, and the parameter set 
       will switch automatically when you switch between super-resolution and counting 
       mode.&nbsp; However, if all the parameters except binning are the same, it may 

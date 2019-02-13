@@ -1001,7 +1001,8 @@ BOOL CSerialEMApp::InitInstance()
         mCamParams[iCam].countsPerElectron < 2.) {
           message.Format("The camera property CountsPerElectron is set to %1.f for camera"
             " %d\n\nFor a K2 camera, it needs to be the number of\nlinear mode counts per"
-            " electron, not a value near 1.", mCamParams[iCam].countsPerElectron, iCam);
+            " electron, not a value near 1.\nFor a K3, it needs to be 32 and the entry"
+            " is not needed", mCamParams[iCam].countsPerElectron, iCam);
           AfxMessageBox(message, MB_EXCLAME);
       }
     }

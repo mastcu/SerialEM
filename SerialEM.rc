@@ -481,7 +481,7 @@ BEGIN
         MENUITEM "Sen&d Email at End",          ID_TILTSERIES_SENDEMAIL
         MENUITEM "Set Ema&il Address",          ID_TILTSERIES_SETADDRESS
         MENUITEM SEPARATOR
-        MENUITEM "&Fixed # of K2 Frames",       ID_TILTSERIES_FIXED_NUM_FRAMES
+        MENUITEM "&Fixed # of K2/3 Frames",     ID_TILTSERIES_FIXED_NUM_FRAMES
         MENUITEM SEPARATOR
         MENUITEM "S&TOP",                       ID_TILTSERIES_STOP
         MENUITEM "&End Loop",                   ID_TILTSERIES_ENDLOOP
@@ -2821,7 +2821,7 @@ BEGIN
     CONTROL         "Early return on all shots",IDC_RALL_EARLY,"Button",BS_AUTORADIOBUTTON,21,257,94,10
     LTEXT           "Number of frames in return (-1 for all):",IDC_STAT_NUM_EARLY,23,268,130,8
     EDITTEXT        IDC_EDIT_EARLY_FRAMES,156,265,25,14,ES_AUTOHSCROLL
-    GROUPBOX        "Early Returns for K2",IDC_STAT_EARLY_GROUP,15,227,173,55
+    GROUPBOX        "Early Returns for K2/K3",IDC_STAT_EARLY_GROUP,15,227,173,55
     DEFPUSHBUTTON   "OK",IDOK,36,359,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,116,359,50,14
     LTEXT           "Number of shots around center:",IDC_STAT_NUM_PERIPHERAL,9,20,106,8
@@ -4733,7 +4733,7 @@ BEGIN
     ID_DE_antosaveFinal     "Autosave the final summed image"
     ID_CALIBRATION_SET_APERTURE_SIZE 
                             "Enter C2 aperture size so intensity cals are valid"
-    ID_CAMERA_SAVERAWPACKED "Save unnormalized K2 frames in packed form"
+    ID_CAMERA_SAVERAWPACKED "Save unnormalized K2/K3 frames in packed form"
     ID_FOCUS_SET_TILT_DIRECTION "Set which coils are used for beam tilt"
 END
 
@@ -4766,7 +4766,7 @@ BEGIN
                             "Use View camera and scope parameters in Low Dose mode"
     IDC_SHOW_ACQUIRE_AREA   "Show acquisition area around marker or line endpoint"
     IDC_CORRECT_BACKLASH    "Correct for backlash when moving stage with mouse or resetting IS"
-    IDC_TSV_FRAME_TIME      "Change frame time for K2 camera dose fractionation"
+    IDC_TSV_FRAME_TIME      "Change frame time for K2/K3 camera dose fractionation"
     IDC_CHECK_TSV_NFRAMES_FIXED 
                             "Add frame time and exposure time changes to give constant # of frames"
     IDC_EDIT_EXPOSURE       "Total exposure time (sum of all subframe times)"

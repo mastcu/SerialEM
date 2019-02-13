@@ -13,6 +13,10 @@
 #include <string.h>
 #if defined(_WIN32) && defined(DELAY_LOAD_FGPU)
 #include <Windows.h>
+#include <sys/stat.h>
+#ifndef _delayimp_h
+extern "C" IMAGE_DOS_HEADER __ImageBase;
+#endif
 #endif
 #include "b3dutil.h"
 #include "cppdefs.h"
@@ -647,6 +651,7 @@ int FrameAlign::gpuAvailable(int nGPU, float *memory, int debug)
   int err = 0;
 #if defined(_WIN32) && defined(DELAY_LOAD_FGPU)
   int lastErr = 0;
+  struct _stat statbuf;
   *memory = 0.;
   if (mGpuLibLoaded == 0)
     return 0;
@@ -654,7 +659,21 @@ int FrameAlign::gpuAvailable(int nGPU, float *memory, int debug)
     sGpuModule = LoadLibrary(GPU_DLL_NAME);
     if (!sGpuModule) {
       lastErr = GetLastError();
-      if (lastErr != ERROR_MOD_NOT_FOUND)
+      if (lastErr == ERROR_MOD_NOT_FOUND) {
+
+        // Look for the file in the current directory, if it IS there it is worthy of
+        // a message
+        HMODULE thisModule = reinterpret_cast<HMODULE>(&__ImageBase);
+        TCHAR dllPath[MAX_PATH];
+        if (GetModuleFileName(thisModule, &dllPath[0], MAX_PATH)) {
+          std::string hereStr = dllPath;
+          hereStr += "\\";
+          hereStr += GPU_DLL_NAME;
+          if (!_stat(hereStr.c_str(), &statbuf))
+            err = 1;
+        }
+      }
+      if (err || lastErr != ERROR_MOD_NOT_FOUND)
         utilPrint("GPU is not available: error %d occurred trying to load %s\n",
                   lastErr, GPU_DLL_NAME);
       mGpuLibLoaded = 0;

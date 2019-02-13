@@ -266,16 +266,11 @@ set Major=%FullVers:~0,1%
 set BIT64=0
 
 Rem YOU CANNOT DO AN ELSE AFTER A COMPOUND IF
-IF %Major% EQU 3 IF %Minor% GEQ 31 IF EXIST SEMCCD-GMS3.31-64.dll (
-  set versRange64=3.31 and higher
-  set SEMCCD64=SEMCCD-GMS3.31-64.dll
-  set BIT64=1
-  GOTO :SetupSEMCCDdone  
-)
+IF %Major% EQU 3 IF %Minor% GEQ 30 GOTO :VS2015GM3
 
 IF %Major% EQU 3 (
-  set versRange64=3.01 and higher
-  set SEMCCD64=SEMCCD-GMS3.01-64.dll
+  set versRange64=2.31 to 3.2
+  set SEMCCD64=SEMCCD-GMS2.31-64.dll
   set BIT64=1
 ) ELSE IF %Minor% LSS 30 (
   set versRange32=2.0-2.2
@@ -290,8 +285,20 @@ IF %Major% EQU 3 (
 ) ELSE (
   set versRange32=2.30 and higher
   set SEMCCD32=SEMCCD-GMS2.30-32.dll
-  set versRange64=2.31 and higher
+  set versRange64=2.31 to 3.2
   set SEMCCD64=SEMCCD-GMS2.31-64.dll
+)
+GOTO :SetupSEMCCDdone
+
+:VS2015GM3
+IF %Minor GEQ 31 (
+  set versRange64=3.31 and higher
+  set SEMCCD64=SEMCCD-GMS3.31-64.dll
+  set BIT64=1
+) ELSE (
+  set versRange64=3.30
+  set SEMCCD64=SEMCCD-GMS3.30-64.dll
+  set BIT64=1
 )
 
 :SetupSEMCCDdone
@@ -345,6 +352,7 @@ if %BIT64% EQU 1 (
 :CheckPlugDone
 
 Rem # Run the register batch file if one was defined
+set packDir=%cd%
 IF NOT %REGISTER% == 0 (
   echo First make sure DigitalMicrograph is not running!
   pause
@@ -353,6 +361,28 @@ IF NOT %REGISTER% == 0 (
   Rem # Use call to return to here
   CALL %REGISTER%
 )
+CD "%packDir%"
+
+Rem # Only 64-bit package will have shrmemframe since it has the right libraries
+set NOSHRMEM=0
+IF %REGISTER% == 0 GOTO :ShrMemDone
+IF %BIT64% == 0 GOTO :ShrMemDone
+
+IF NOT EXIST shrmemframe.exe (
+  set NOSHRMEM=1
+  GOTO :ShrMemDone
+)
+
+echo Copying frame alignment components
+set SHRMEMDIR=C:\ProgramData\Gatan\Plugins\Shrmemframe
+IF EXIST %SHRMEMDIR% RMDIR /Q /S %SHRMEMDIR%
+MKDIR %SHRMEMDIR%
+COPY /Y shrmemframe.exe %SHRMEMDIR%
+COPY /Y libiomp5md.dll %SHRMEMDIR%
+COPY /Y libmmd.dll %SHRMEMDIR%
+XCOPY /Q /S /Y /I Microsoft.VC90.CRT  %SHRMEMDIR%\Microsoft.VC90.CRT
+
+:ShrMemDone
 
 echo.
 echo All Done.
@@ -372,5 +402,11 @@ if NOT %REMOTEHITACHI% == 0 (
   echo C:\Program Files\SerialEM
   echo Run it to start the server before starting SerialEM.
   echo ... 
+)
+IF %NOSHRMEM% == 1 (
+  echo ...
+  echo If you have a K2 or K3 camera, for CPU-based frame alignment
+  echo you need to install a Shrmemframe package for GMS %versRange64%
+  echo ...
 )
 pause

@@ -145,7 +145,7 @@
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><a href="#hid_camera_setframealignlines">Set Frame Align Lines</a></TD>
-          <TD>Set amount of detail (# of lines of output) in log from K2 frame alignment</TD>
+          <TD>Set amount of detail (# of lines of output) in log from K2/K3 frame alignment</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><b>Special Settings</b></TD>
@@ -180,7 +180,7 @@
         <TR VALIGN="top">
           <TD class="style1">&nbsp;&nbsp;&nbsp; <A HREF="#hid_camera_nonormofdsdosefrac">No Norm of 
             DS Dose Frac</A></TD>
-          <TD>Turn off normalization of unnormalized K2 dose-fractionated images.</TD>
+          <TD>Turn off normalization of unnormalized K2/K3 dose-fractionated images.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1">&nbsp;&nbsp;&nbsp; <A HREF="#hid_camera_simulation">Simulation</A></TD>
@@ -443,7 +443,7 @@
         only when gain normalization is being done in SerialEM.</P>
     <P><A NAME="hid_camera_setframealignlines"></A><B>Set Frame Align Lines command (Camera menu)</B></P>
     <P>This command allows you to control how much detail is printed to the log window 
-      after K2 frame alignment done in the SerialEMCCD plugin to DM.&nbsp; The default 
+      after K2/K3 frame alignment done in the SerialEMCCD plugin to DM.&nbsp; The default 
       is two lines of output: one with the raw and smoothed movement distance implied 
       by the frame shifts; one with selected residual values.&nbsp; If enough frames 
       are included when fitting the shifts to allow robust fitting, the residuals 
@@ -491,7 +491,7 @@
         exposure.</P>
     <P><A NAME="hid_camera_nonormofdsdosefrac"></A><B>No Norm of DS Dose Frac command (Camera menu)</B></P>
     <P>This command can be used to turn off the normalization of the summed image that 
-      is returned from a K2 dose fractionation shot taken without gain normalization.</P>
+      is returned from a K2/K3 dose fractionation shot taken without gain normalization.</P>
       <P><A NAME="hid_camera_simulation"></A><B>Simulation command (Camera menu)</B></P>
       <P>This command is used to toggle simulation mode, in which fake images are 
         produced within SerialEM rather than acquired from DigitalMicrograph. It should 

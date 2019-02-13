@@ -31,6 +31,7 @@
 #define GPU_DO_PREPROCESS   (1 << 8)
 #define GPU_STACK_LIMITED   (1 << 9)
 #define GPU_DO_UNWGT_SUM    (1 << 10)
+#define GPU_RUN_SHRMEMFRAME (1 << 15)
 #define GPU_STACK_LIM_SHIFT 20
 #define GPU_STACK_LIM_MASK  0xFFF
 #define GPU_NUMBER_SHIFT    16           // This is used by SerialEM -> SerialEMCCD

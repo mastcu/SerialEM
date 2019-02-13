@@ -2382,7 +2382,7 @@ int CParameterIO::ReadProperties(CString strFileName)
           StripItems(strLine, 1, K2FilterNames[ind]);
           camera->SetNumK2Filters(ind + 1);
         } else
-          AfxMessageBox("Too many K2 filter names for arrays", MB_EXCLAME);
+          AfxMessageBox("Too many K2/K3 filter names for arrays", MB_EXCLAME);
       } else if (MatchNoCase("K2SuperResReference")) {
         StripItems(strLine, 1, message);
         camera->SetSuperResRef(message);

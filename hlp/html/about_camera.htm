@@ -12,14 +12,14 @@
       and Direct Electron Detectors</FONT></B></P>
     <P>Sections of interest below:</P>
     <ul>
-      <li> <A href="#directDetectors">Direct Electron Detectors, Especially the Gatan K2</A></li>
+      <li> <A href="#directDetectors">Direct Electron Detectors, Especially the Gatan K2/K3</A></li>
       <li><a href="#norm_frames">Gain-normalizing frames during post-processing.</a></li>
       <li><a href="#k3differences">Principal Differences between K2 and K3</a></li>
       <li><a href="#k3problems">Remaining Problems with the K3</a></li>
     </ul>
       <P>The first part of this page explains some features of CCD cameras.  Direct 
       electron detectors have significantly different behavior and some of their features
-      are explained in <A href="#directDetectors">Direct Electron Detectors, Especially the Gatan K2</A>.&nbsp; 
+      are explained in <A href="#directDetectors">Direct Electron Detectors, Especially the Gatan K2/K3</A>.&nbsp; 
         Newer CMOS-based cameras also have different behavior, so this first section 
         mostly applies to traditional, high-quality CCD cameras.&nbsp; The principal 
         differences for CMOS cameras are that readout happens continuously during the 
@@ -92,11 +92,11 @@
       the buttons in the <A HREF="hidd_camerasetup.htm">Camera Setup dialog</A>. 
       Their readouts are only somewhat longer than the readout for square images that 
       are half as big, not twice as long.</P>
-      <P><B><A NAME="directDetectors">Direct Electron Detectors, Especially the Gatan K2</A></B></P>
+      <P><B><A NAME="directDetectors">Direct Electron Detectors, Especially the Gatan K2/K3</A></B></P>
       
     <p>
       The first part of this section describes features common to direct detector 
-      cameras, but most of it is specific to the Gatan K2 camera.&nbsp; If you are 
+      cameras, but most of it is specific to the Gatan K2 or K3 camera.&nbsp; If you are 
       familiar with the K2, see the section <a href="#k3differences">Principal Differences between K2 and K3</a>.</p>
     <p>
       <b>Binning and summing of signals.</b>&nbsp; Binning and integration over time behave quite differently for direct 
@@ -146,8 +146,8 @@
             by 4.</p>
     <p>
             Antialiased reduction is used by default instead of true binning for all 
-            &quot;binned&quot; images in K2 counting mode as well as super-resolution mode, and the 
-            reduction is done by the SerialEMCCD plugin on the K2 computer, where it can 
+            &quot;binned&quot; images in K2 counting and super-resolution modes and for K3 counting images, and the 
+            reduction is done by the SerialEMCCD plugin on the K2 or K3 computer, where it can 
             run quickly.&nbsp; At the bottom of the <A HREF="hidd_camerasetup.htm">Camera Setup dialog</A>, 
             there is a checkbox to turn off this behavior, followed by an indicator in bold 
             about whether a reduction will use <b>Anti-aliasing</b> or <b>Binning</b>. </p>
@@ -169,7 +169,7 @@
     <p>
       <b>Dose rate for effective electron counting.</b>&nbsp; Electron counting is effective only over a limited range of dose rates.&nbsp; 
       For the K2, 
-        It is best to keep the dose rate between 2 and 10 electrons per unbinned pixel 
+        it is best to keep the dose rate between 2 and 10 electrons per unbinned pixel 
         per second; at some point (roughly around 20 e/ubpixel/sec) counting becomes 
         less efficient than integrating in linear mode.&nbsp; The K3 has 3.75 times 
       faster readout rate, which means all these dose rates would be that much higher, 
@@ -206,7 +206,7 @@
         time.&nbsp; A super-resolution shot takes ~6 sec plus the exposure time, plus 
         the time required to return the 7.6K image to SerialEM, which is generally at 
         least 1.3 sec over a fast gigabit network.&nbsp; For a K3, the basic time is 
-      longer (~4 sec) but there is no penalty for getting the super-resolution images. </p>
+      shorter (~2 sec) and is no penalty for getting the super-resolution images. </p>
     <p>
       <b>Dark and gain correction.</b>&nbsp; Because of the complexity of the dark and gain corrections in DM, all gain 
         normalization is done in DM instead of SerialEM, and it is not possible to take 
@@ -235,9 +235,9 @@
       restrictions on images in Dose Fractionation mode, with one exception: it allows 
       electron counting frames being saved or aligned to be taken with fast hardware 
       binning by 2, thus providing the same kind of frames as counting mode gives on 
-      the K2.&nbsp; However, this option exists only when taking normalized images, 
-      since there is no gain reference of the right size for correcting unnormalized 
-      frames after acquisition.</p>
+      the K2.&nbsp; When unnormalized frames are saved, the plugin creates and saves a 
+      binned reference appropriate for correcting these 
+      frames from the Dm super-resolution reference.</p>
     <p>
       <b>Saving frames from the plugin.</b>&nbsp; The ability to save frames in Dose 
       Fractionation mode is implemented by having SerialEM's plugin to DM 
@@ -268,7 +268,7 @@
       the gain correction, DM passes the plugin frames with electron counts in integer 
       or byte format in counting or super-resolution mode, respectively, and the 
       plugin saves these data without scaling.&nbsp; The state of the <b>Pack 
-      unnormalized data</b> option in the <a href="hidd_k2_save_options.htm">K2 Frame 
+      unnormalized data</b> option in the <a href="hidd_k2_save_options.htm">Frame 
       File Options dialog</a> 
       determines whether these raw counts are saved in a packed form.&nbsp; 
       If this option is selected, the plugin truncates the integers in counting mode 
@@ -279,13 +279,13 @@
       For K3 cameras, normalized data are passed to the plugin as bytes with the fixed 
       scaling of 32, so they are ready to save as bytes.&nbsp; This is still the case 
       if the frames are taken with binning by 2 (to mimic K2 counting mode).&nbsp; 
-      Unnormakized frames are always bytes as well, so they can be saved as is or 
+      Unnormalized frames are always bytes as well, so they can be saved as is or 
       packed two per byte.<p>
       By default, the packed 4-bit data files will look like 
       ordinary byte files, but with half the true size in X; thus other programs will 
       be able to open them just like any other byte file but they will appear squeezed 
       by a factor of 2 in X.&nbsp; For MRC files, the
-      <a href="hidd_k2_save_options.htm">K2 Frame File Options dialogg</a allows you 
+      <a href="hidd_k2_save_options.htm">Frame File Options dialog</a> allows you 
       to save 4-bit data as mode 101, which IMOD and MotionCor2 support but other 
       programs might not.&nbsp; That dialog also allows you to save the data as TIFF files with LZW 
       or ZIP compression; LZW is best for unnormalized data and is also much faster.&nbsp; 
@@ -298,7 +298,7 @@
       dark-subtracted).&nbsp;&nbsp; A more convenient approach is to leave the 
       selection as normalized in that dialog, but turn on
       <b>Save unnormalized frames even if Gain Normalized is selected</b> in the&nbsp;
-      <a href="hidd_k2_save_options.htm">K2 Frame File Options dialog</a>.&nbsp; There is actually no dark-subtraction involved, and 
+      <a href="hidd_k2_save_options.htm">Frame File Options dialog</a>.&nbsp; There is actually no dark-subtraction involved, and 
       these two selections now produce the same result.&nbsp; When frames are saved 
       unnormalized, the plugin will return a gain-normalized sum of the frames even 
       though the normalization is not selected, so that this image will not have artifacts 
@@ -451,12 +451,12 @@
          <ol>
         <li> All times (exposure, drift settling, frame time in Dose Fractionation mode)
           must be multiples of the readout interval, 2.5 ms for K2 and 0.666 ms for K3.</li>
-        <li> When  <i>not</i doing Dose Fractionation, exposure time for K2 must be a multiple of
+        <li> When  <i>not</i> doing Dose Fractionation, exposure time for K2 must be a multiple of
           0.1 sec in linear or counting mode and a multiple of 0.5 sec in super-resolution mode (yes, 0.5
           sec!).&nbsp; For K3, exposure time must be a multiple of 0.013 sec in linear 
           mode&nbsp; or 0.011 sec in electron counting mode.</li>
         <li> In Dose Fractionation mode,&nbsp;exposure time must be a multiple of the frame 
-          time, and it must be at least 0.025 sec for K2 or 0.013 sec for K3..</li>
+          time, and it must be at least 0.025 sec for K2 or 0.013 sec for K3.</li>
         </ol>
      <p>
       It is possible to overcome the constraints on exposure time in 
@@ -487,9 +487,7 @@
         late in the development of SerialEM support for K3.&nbsp; I decided not to 
         recreate a distinction between counting and super-resolution modes, which would 
         have been largely artificial.&nbsp; Instead, SerialEM provides an option to 
-        acquire frames with binning by 2 for either saving or aligning.&nbsp; This is 
-        available only when gain-normalizing, because there is no gain reference for 
-        correcting unnormalized binned images.</li>
+        acquire frames with &#39;hardware&#39; binning by 2 for either saving or aligning.</li>
       <li>SerialEM includes another option for getting frames the same size as the 
         sensor: saving super-resolution frames with antialiased reduction by 2, which 
         takes about 0.1 sec per frame.&nbsp; This option is available for K2 as well, 

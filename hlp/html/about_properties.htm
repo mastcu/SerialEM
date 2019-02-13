@@ -127,7 +127,7 @@
         <TR VALIGN="top">
           <TD>FrameFileTitle</TD>
           <TD>String to use for one or more additional titles in the header of frame stacks 
-            saved for a K2 camera, in a frame mdoc file written to for each stack, and for 
+            saved for a K2/K3 camera, in a frame mdoc file written to for each stack, and for 
             the frame stack mdoc file that can be written for each set of frames.&nbsp; The 
             entry must be all one line but the entry can specify multiple title lines, 
             separated by &#39;\n&#39; (the backslash is typed in, this is not a newline character).&nbsp; 
@@ -778,7 +778,7 @@
             start of the exposure by half of this value.&nbsp; The default is 400.</TD>
         </TR>
        <TR VALIGN="top">
-          <TD><b>K2 General Properties</b></TD>
+          <TD><b>K2/K3 General Properties</b></TD>
           <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
@@ -793,13 +793,13 @@
         </TR>
         <TR VALIGN="top">
           <TD>K2FilterName</TD>
-          <TD>The name of one filter that can be used for aligning K2 camera images in Dose 
+          <TD>The name of one filter that can be used for aligning K2/K3 camera images in Dose 
             Fractionation mode.&nbsp; The name must exactly match the name in DM, including 
             '(Default)' if present, or DM may crash if the filter is used. </TD>
         </TR>
         <TR VALIGN="top">
           <TD>NoK2SaveFolderBrowse</TD>
-          <TD>If the K2 camera is on another computer and there are no shared filesystems 
+          <TD>If the K2/K3 camera is on another computer and there are no shared filesystems 
             accessible from the both that computer and the one running SerialEM, set this to 1 to suppress the 
             'Browse' button that appears in the dialog for entering the folder to save 
             frames into.</TD>
@@ -811,11 +811,21 @@
             if K2Type is 2 (for a K2 Base camera, or Summit in Base mode).</TD>
         </TR>
         <TR VALIGN="top">
+          <TD>MinimumK3FrameTime</TD>
+          <TD>Minimum duration for a frame in Dose Fractionation mode on the K3 camera.&nbsp; The 
+            default is 0.01332 sec.</TD>
+        </TR>
+        <TR VALIGN="top">
           <TD>K2ReadoutInterval</TD>
           <TD>Value which exposure time is constrained to be a multiple of in Linear mode on 
             the K2 camera.&nbsp; The default is 0.0025 sec if K2Type is 1 (for a K2 Summit 
             camera) or 0.1138 sec if K2Type is 2 (for a K2 Base camera, or Summit in Base 
             mode).</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>K3ReadoutInterval</TD>
+          <TD>The interval between readouts on the K3; exposures are constrained to a 
+            multiple of this.&nbsp; The default is 0.000666 sec.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>K2BaseModeScaling</TD>
@@ -840,11 +850,11 @@
           <TD>K2MaxRamStackGB</TD>
           <TD>Maximum number of GB available for keeping dose-fractionation frames in 
             memory, including frames held within DM and within the SerialEMCCD plugin.&nbsp; 
-            This setting is relevant for GMS 2.31 and above.&nbsp; The default is 12.</TD>
+            The default is 12 for K2, or 32 for K3 (if there is not also a K2).</TD>
         </TR>
         <TR VALIGN="top">
           <TD>K2CountingReference</TD>
-          <TD>Full path and name of counting mode software gain reference on the K2 
+          <TD>Full path and name of counting mode software gain reference for K2 camera on the K2 
             computer, so that the reference can be saved along with data when taking dose 
             fractionation images without gain normalization in counting mode.&nbsp; This 
             property and the next one are no longer needed for a standard arrangement; if 
@@ -854,7 +864,7 @@
         </TR>
         <TR VALIGN="top">
           <TD>K2SuperResReference</TD>
-          <TD>Full path and name of super-resolution mode software gain reference on the K2 
+          <TD>Full path and name of super-resolution mode software gain reference on the K2 or K3 
             computer, so that the reference can be saved along with data when taking dose 
             fractionation images without gain normalization in super-resolution mode.</TD>
         </TR>
@@ -868,6 +878,10 @@
           <TD>CalibTimingK2InitialStartup</TD>
           <TD>Initial startup delay time when calibrating camera timing with a K2 Summit 
             camera, in seconds.&nbsp; The default is 2.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>TestGpuInShrmemframe</TD>
+          <TD>Run GPU frame alignment in shrmemframe instead of plugin.</TD>
         </TR>
         <TR VALIGN="top">
           <TD><b>Falcon General Properties</b></TD>
@@ -1153,13 +1167,13 @@
         </TR>
         <TR VALIGN="top">
           <TD>RotationAndFlip</TD>
-          <TD>This entry is used for STEM cameras and K2 and Falcon cameras, as well as for 
+          <TD>This entry is used for STEM cameras and K2/K3 and Falcon cameras, as well as for 
             DE cameras with a server version of 1.0.1243 or higher. <i>For a STEM camera</i>, use it 
             to indicate whether to rotate and flip images after acquisition to make them 
             match image orientation on the screen and other cameras.&nbsp; The value is the sum 
             of 0-3 for the number of 90 degree rotations counterclockwise (e.g., 3 for 90 
             degrees clockwise) plus 4 for flipping around the Y axis before the rotation.&nbsp; 
-            Set this before doing any calibrations that rely on image orientation. <i>For a K2 
+            Set this before doing any calibrations that rely on image orientation. <i>For a K2/K3 
             camera</i>, this entry indicates operations to be applied to dose fractionation 
             images returned to SerialEM and to frames saved from the plugin by default.&nbsp; 
             Even if frames are being saved without rotation and flip, the correct entry is
@@ -1201,7 +1215,7 @@
             1 to use the mode or 0 not to; 1 to specify continuous readout or 0 not to; a 
             quality level from 1 to 7 or 0 not to set quality; and 1 to balance intensity 
             between two halves of the field.&nbsp; If no property is entered, the defaults are &#39;1 1 1 1&#39; for Orius 
-            cameras, &#39;1 1 0 0&#39; for K2, and &#39;1 0 0 0&#39; for US4000 and US1000 cameras, where the camera 
+            cameras, &#39;1 1 0 0&#39; for K2/K3, and &#39;1 0 0 0&#39; for US4000 and US1000 cameras, where the camera 
             type is determined from the &#39;DMGainReferenceName&#39; property.&nbsp; If a 
             property is entered for an Orius, be sure to include the fourth value to balance 
             the two halves, unless using a quality level where it is not needed.&nbsp; For a 
@@ -1235,7 +1249,7 @@
           <TD>Target size to bin to for task images.&nbsp; Trial parameters are used as a 
             basis, and binning is increased if necessary to make the image no bigger than 
             the target size, with exposure time reduced to compensate. (This is not done for 
-            K2 cameras). The default is 512.&nbsp; Set this higher for a specific camera to 
+            K2/K3 cameras). The default is 512.&nbsp; Set this higher for a specific camera to 
             allow less binned images to be used.</TD>
         </TR>
         <TR VALIGN="top">
@@ -1293,7 +1307,7 @@
             less than its true size to trim off large borders that are unusable.&nbsp; The 
             sum of &#39;CameraSizeX&#39; and this entry must be no more than the true camera size in 
             X.&nbsp; This entry must be a multiple of the &#39;XMustBeMultipleOf&#39; and the 
-            maximum binning.&nbsp; Offsets cannot be entered for K2, FEI, or Tietz 
+            maximum binning.&nbsp; Offsets cannot be entered for K2/K3, FEI, or Tietz 
             F216/416/816 cameras.</TD>
         </TR>
         <TR VALIGN="top">
@@ -1572,7 +1586,7 @@
         <TR VALIGN="top">
           <TD>StartDelayPerFrame</TD>
           <TD>Amount to add to the startup delay per frame when doing dose fractionation 
-            with a K2 camera; the default is 0.005 sec.</TD>
+            with a K2 or K3 camera; the default is 0.005 sec.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>AllowPostActions</TD>
@@ -1748,14 +1762,14 @@
         </TR>
         <TR VALIGN="top">
           <TD>DoseRateTable</TD>
-          <TD>Start of an alternative table for linearizing the counts in K2 or Falcon 3 electron 
+          <TD>Start of an alternative table for linearizing the counts in K2/K3 or Falcon 3 electron 
             counting images so that dose rate reports are correct.&nbsp; Follow with the 
             number of lines to follow, and an optional scaling.&nbsp; Each following line 
             should have a raw mean number of counts per unbinned pixel per second, then the 
             corrected dose rate in electrons/unbinned pixel/sec. The raw mean counts will be 
             divided by the scaling (1 by default), so if the mean counts are obtained from 
             SerialEM, the scaling entered on the first line should be the scaling that was 
-            applied to the raw electron counts from DM.&nbsp; The default tables in SerialEM 
+            applied to the raw electron counts from DM.&nbsp; The default tables for K2 in SerialEM 
             are based on the mean of images taken in DM and the dose rate readout in DM, 
             recorded for 200 and 300 KV.&nbsp; Values are included for dose rate readouts 
             around 1, 2, 3, 4, 6, 9, 13, 18, 26, 39, 56, 73, and 80 for 300 KV.&nbsp; There 
@@ -2467,7 +2481,7 @@
           <TD>BlankDuringTransients</TD>
           <TD>Set to 1 to blank the beam during spot size and magnification changes and lens 
             normalizations.&nbsp; Transients during these operations may get through the 
-            normal camera blanking and cause a K2 to retract.</TD>
+            normal camera blanking and cause a K2 or K3 to retract.</TD>
         </TR>
         <TR>
           <TD>CheckPosOnScreenError</TD>
@@ -3063,7 +3077,7 @@
         </TR>
         <TR VALIGN="top">
           <TD>TSEarlyK2RecordReturn</TD>
-          <TD>Set to 1 to have Record or Extra Record images on a K2 camera with saving of 
+          <TD>Set to 1 to have Record or Extra Record images on a K2/K3 camera with saving of 
             dose-fractionation frames return as soon as the full summed image is ready, with 
             frame saving done asynchronously.&nbsp; This can allow tracking shots to be done 
             earlier, the time difference is especially significant when saving 
@@ -3299,7 +3313,7 @@
         <TR VALIGN="top">
           <TD>BeamCalFavorMagChanges</TD>
           <TD>Set to 1 to change magnification in favor of increasing exposure or spreading 
-            the beam much, as is done with the K2 camera.</TD>
+            the beam much, as is done with the K2/K3 camera.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>BeamCalUseTrialSettling</TD>

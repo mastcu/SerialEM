@@ -11,8 +11,8 @@
     <P><A NAME="hidd_camerasetup"></A><B><FONT size="3">Camera Setup Dialog</FONT></B></P>
     <P>This dialog box allows you to specify exposure parameters for image 
       acquisition. The controls for a CCD camera are described first.&nbsp; Options 
-      specific to the Gatan K2 Summit camera are described in <A HREF="#K2controls">
-      Controls for Gatan K2 Camera</A>, one for Direct Electron direct detector 
+      specific to the Gatan K2 Summit and K3 cameras are described in <A HREF="#K2controls">
+      Controls for Gatan K2 and K3 Cameras</A>, one for Direct Electron direct detector 
       cameras in <a href="#DEcontrols">Controls for Direct Electron Cameras</a>, and 
       ones for Falcon cameras in <a href="#FalconControls">Controls for FEI Falcon 
       Camera</a>. Controls for STEM acquisition, and modifications of the existing 
@@ -127,7 +127,7 @@
     <P>If this option is selected, SerialEM will take a new dark reference itself, or 
       force DM to take a new dark reference, the next time a picture is taken with 
       this parameter set, and then the option will be cleared.&nbsp; There is no 
-      control over dark references with a K2 or OneView camera.</P>
+      control over dark references with a K2/K3 or OneView camera.</P>
     <P><B>Take new dark reference each time</B></P>
     <P>If this option is selected, SerialEM will take a new dark reference itself, or 
       force DM to take a new dark reference, each time a picture is taken with this 
@@ -205,12 +205,12 @@
       being shown, depending on whether Low Dose is currently in the Search area or a 
       different area.</P>
     <P>&nbsp;</P>
-    <P><i><A NAME="K2controls"></A><B><FONT size="3">Controls for Gatan K2 Camera</FONT></B></i></P>
+    <P><i><A NAME="K2controls"></A><B><FONT size="3">Controls for Gatan K2 and K3 Cameras</FONT></B></i></P>
     <P>When a K2 camera is selected, the bottom section of this dialog provides 
       options for accessing the special features of this camera.&nbsp; Some general 
       features of the camera images and of SerialEM&#39;s interface to this camera are 
       explained in <A href="about_camera.htm#directDetectors">Direct Electron Detectors,
-       Especially the Gatan K2</A>.  The most salient points are these:</P>
+       Especially the Gatan K2/K3</A>.  The most salient points are these:</P>
     <ul>
       <li>Binning values are relative to the native pixels of the camera (3838 x 3710 
         for K2; 5760 x 4092 for K3).&nbsp; An image in 
@@ -303,7 +303,7 @@
     <P><b>Set Folder</b></P>
     <P>Press this button to select the directory where subframes will be saved as a 
       stack, or where a container directory will be created for saving subframes in 
-      single files.&nbsp; If the SerialEM is running on the K2 computer, a directory 
+      single files.&nbsp; If the SerialEM is running on the K2/K3 computer, a directory 
       browser will open.&nbsp; Otherwise, a small dialog will appear with a text box in which 
       any directory name may be typed, even one not accessible to the computer running 
       SerialEM.&nbsp; The dialog may also have a 'Browse' button that will open the directory 
@@ -316,7 +316,7 @@
       as its parent directory exists. However, if you do select options for automatic 
       folder creation in that dialog, the directory you select here does need to exist before image acquisition. 
       In this situation,&nbsp;if you enter into the text box a 
-      new directory that is accessible only from a separate computer hosting the K2, 
+      new directory that is accessible only from a separate computer hosting the K2/K3, 
       be sure to create this directory before trying to acquire.</P>
     <P><b>Save variable frame sums</b></P>
     <P>Select this option to save sums of camera frames of variable size, e.g., single 

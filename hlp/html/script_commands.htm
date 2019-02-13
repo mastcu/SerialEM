@@ -533,21 +533,21 @@
         </TR>
         <TR>
           <TD class="style8">&nbsp;&nbsp;&nbsp; SetK2ReadMode S #M&nbsp;</TD>
-          <TD>Set the processing mode for exposure set S to the given value.&nbsp; For a K2, 
-            this should be 
+          <TD>Set the processing mode for exposure set S to the given value.&nbsp; For a K2 
+          or DE camera, this should be 
             0 for linear, 1 for counting, or 2 for super-resolution mode.&nbsp; For a Falcon 
-            camera, it would be 0 for linear or 1 for counting mode.</TD>
+            or K3 camera, it would be 0 for linear or 1 for counting mode.</TD>
         </TR>
         <TR>
           <TD class="style8">&nbsp;&nbsp;&nbsp; SetFrameTime &nbsp;S #F</TD>
-          <TD>Set the frame time for a K2 camera to the given number.</TD>
+          <TD>Set the frame time for a K2/K3 camera to the given number.</TD>
         </TR>
         <TR>
           <TD class="style8">&nbsp;&nbsp;&nbsp; SetDoseFracParams S #D<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [#S] [#A] [#M] [#C]&nbsp;</TD>
           <TD>Set dose fractionation parametes for exposure set S; follow with up to 5 
-            numbers: D non-zero for dose-fractionation mode on K2; S non-zero to save frames 
-            (not just for K2); A non-zero to align frames; M 0 to align in DM, 1 to align in 
+            numbers: D non-zero for dose-fractionation mode on K2/K3; S non-zero to save frames 
+            (not just for K2/K3); A non-zero to align frames; M 0 to align in DM, 1 to align in 
             plugin, or 2 to save a command file for alignframes; C non-zero to combine 
             frames into sums.</TD>
         </TR>
@@ -651,7 +651,7 @@
         <TR>
           <TD class="style8">EarlyReturnNextShot # [#]</TD>
           <TD>Return as early as possible from the next acquisition, which must involve
-            either aligning or saving dose-fractionation frames from a K2 camera.&nbsp; Follow with the number
+            either aligning or saving dose-fractionation frames from a K2/K3 camera.&nbsp; Follow with the number
             of frames to be summed in the returned image, 0 to return without any summed
             image, or -1 to return with the full sum (the latter is available only on GMS
             2.31 or higher).&nbsp; The second optional number should be 1 to make a deferred 
@@ -670,7 +670,7 @@
         <TR>
           <TD class="style8">FrameThresholdNextShot #</TD>
           <TD>Skip saving frames whose mean value is below the given threshold in the next 
-            shot&nbsp; from a K2 camera.&nbsp; The mean value used for comparison with
+            shot&nbsp; from a K2/K3 camera.&nbsp; The mean value used for comparison with
             the threshold will be the value that the frame would have after saving, thus 
             a scaled electron count value when taking normalized frames or actual electron
             counts otherwise.&nbsp; The first and last frame will be saved 
@@ -790,7 +790,7 @@
         </TR>
         <TR vAlign="top">
           <TD class="style8">AlignWholeTSOnly [#]</TD>
-          <TD>Allows a whole tilt series taken from a K2 or Falcon through the script to be 
+          <TD>Allows a whole tilt series taken from a K2/K3, Falcon, or DE camera through the script to be 
             aligned with one command file in IMOD, just as when using the tilt series 
             controller.&nbsp; Specifically, no command files will be written for individual 
             Record images taken after the command is given, and a single command file to 
@@ -814,7 +814,7 @@
         <TR vAlign="top">
           <TD class="style8">SetK2FileParams #T [#P]<br />
 &nbsp;&nbsp;&nbsp; [#M] [#N] [#R] [#O]</TD>
-          <TD>Set values to control K2 frame file saving.&nbsp; Follow with up to 6 values: 
+          <TD>Set values to control K2/K3 frame file saving.&nbsp; Follow with up to 6 values: 
             T 0 for MRC, 1 for TIFF LZW, or 2 for TIFF ZIP; P as the sum of 1 to pack 
             unnormalized data at all, plus 2 to pack counting mode to bytes; M non-zero to 
             save MRC files in 4-bit mode 101; N non-zero to save normalized data times 100; 
@@ -1101,7 +1101,7 @@
         <TR>
           <TD class="style7">OpenFrameSumFile suffix</TD>
           <TD>Open a file whose name starts with the last name used for saving
-            frames from a K2 or Falcon camera, and ends with the string given in the command.&nbsp;
+            frames from a K2/K3, DE, or Falcon camera, and ends with the string given in the command.&nbsp;
             The string can contain spaces and variables. </TD>
         </TR>
         <TR>
@@ -1256,7 +1256,7 @@
         </TR>
         <TR vAlign="top">
           <TD class="style7">ReportLastFrameFile</TD>
-          <TD>Reports the full path and filename of the last frame file saved from a K2 or 
+          <TD>Reports the full path and filename of the last frame file saved from a K2/K3, DE, or 
             Falcon camera and sets it into ReportedValue1.</TD>
         </TR>
       </TABLE>
@@ -1533,7 +1533,7 @@
           <TD class="style13">SetExposureForMean #M [#K]</TD>
           <TD>Adjust Record exposure time to yield the gven number of counts #M, based on 
             counts in the tilt-foreshortened area of the image in A, which must be a Record 
-            image in Low Dose mode.&nbsp; For a K2 camera taking dose-fractionated images, a 
+            image in Low Dose mode.&nbsp; For a K2/K3 camera taking dose-fractionated images, a 
             non-zero value can be given for the optional #K to modify frame time so as to 
             keep the same number of frames.</TD>
         </TR>
@@ -2256,7 +2256,7 @@
             center; #C -1 or 1 for a shot in the center before or after the off-center 
             shots; #O for the distance from center of the off-center shots, in microns; #D 
             for the extra delay after the image shift, in seconds; #S 1 to save a Record 
-            image at each position or 0 not to; #E 1 or 2 to use early return for a K2 
+            image at each position or 0 not to; #E 1 or 2 to use early return for a K2/K3 
             camera after the last shot or after all shots; #F for the number of frames in 
             the early returned image (or -1 for all, 0 for none); #H the sum of 1 to do 
             shots around a center (within a hole) and 2 to do shots in multiple holes or 

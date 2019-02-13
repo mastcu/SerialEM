@@ -435,9 +435,9 @@
       of GMS versions.&nbsp; Specifically, the 32-bit version built with GMS 2.30 
       works with GMS 2.31 and 2.32; the 64-bit version built with GMS 2.31 works with 
       GMS 2.32 and GMS 3.</P>
-    <P>Leginon uses the SerialEM plugin for communicating with K2 cameras.&nbsp; 
+    <P>Leginon uses the SerialEM plugin for communicating with K2/K3 cameras.&nbsp; 
       However, it is generally compatible with any plugins 
-      distributed in SerialEM 3.5 or 3.6, because it does not rely on the newest 
+      distributed in SerialEM 3.6 or 3.7, because it does not rely on the newest 
       features in these plugins.&nbsp; New versions of the plugin are always backwards 
       compatible; i.e., they will work with older versions of connecting software 
       (SerialEM or Leginon) that are unaware of new features.&nbsp; SerialEM, however, 
@@ -781,7 +781,7 @@
         Ordinarily SerialEM's 
         FEI scope plugin interacts with an FEI microscope using a COM connection to the 
         FEI scripting adapter, but this is not possible when running SerialEM on a 
-        separate 64-bit computer, such as a Gatan K2 or Direct Electron camera computer, or 
+        separate 64-bit computer, such as a Gatan K2/K3 or Direct Electron camera computer, or 
         on older 
         64-bit FEI systems.&nbsp; A 
         connection is possible in these cases by using a network socket connection to a small server 
@@ -877,13 +877,13 @@
         as appropriate.</li>
       <li>If moving to a Direct Electron server, change the 'DECameraServerIP' property 
         to '127.0.0.1'.</li>
-      <li>If moving to a K2 camera computer and there are no Gatan cameras on the scope 
+      <li>If moving to a K2/K3 camera computer and there are no Gatan cameras on the scope 
         computer, you can continue to use the socket connection; change the
         &#39;GatanServerIP&#39; property to &#39;127.0.0.1&#39;.</li>
-      <li>If moving to a K2 camera computer and there <i>are</i> Gatan cameras on the 
-        scope computer, then the COM connection must now be used for the K2 computer so 
+      <li>If moving to a K2/K3 camera computer and there <i>are</i> Gatan cameras on the 
+        scope computer, then the COM connection must now be used for the K2/K3 computer so 
         that the socket connection is available for connecting with those other cameras.&nbsp; 
-        Change the &#39;UseSocket&#39; camera property for the K2 and any other cameras on this 
+        Change the &#39;UseSocket&#39; camera property for the K2/K3 and any other cameras on this 
         computer from 1 to 0.</li>
       <li>If there are Gatan cameras on the scope computer, follow the instructions in 
         the section <a href="#connectDMsocket"> <i>To</i> <i>connect to
@@ -1003,7 +1003,7 @@
         dark reference per binning, which may force a lot of unneeded dark reference 
         acquisitions when switching between parameter sets, unless dark references are 
         coming from a file.)&nbsp; Newer Gatan cameras 
-        (K2 and OneView) will always normalize in DigitalMicrograph.</P>
+        (K2/K3 and OneView/Rio) will always normalize in DigitalMicrograph.</P>
       <P><a name="cameraOrientation"><i>Camera Configuration for Image Orientation</i></a>.&nbsp; Before you start any calibrations, make sure that your camera is configured so 
         that images acquired on the camera have the same orientation as images on the 
         viewing screen. If you have a Gatan 4-port readout camera with First Light 
@@ -1029,7 +1029,7 @@
         <td class="style6">
           DMRotationAndFlip</td>
         <td class="style8">
-          RotationAndFlip&nbsp; for K2</td>
+          RotationAndFlip&nbsp; for K2/K3</td>
       </tr>
       <tr>
         <td class="style10">
@@ -1226,7 +1226,7 @@
           Set CountsPerElectron when you have a good estimate of the camera gain (see
         <A href="#setup_camera_gain">Measuring Camera Gain</A>). These 
           would be counts before division by 2 for a 16-bit camera. The program needs this 
-          value to compute electron dose, except for K2 cameras. It also needs beam intensity calibrations and 
+          value to compute electron dose, except for K2/K3 cameras. It also needs beam intensity calibrations and 
           spot intensity calibrations. In addition, a daily dose calibration is required; 
           this can now be done automatically when taking the gain reference.
         <LI>
@@ -1247,7 +1247,7 @@
           pre-exposure of the specimen, using the film shutter and beam blanker.</LI></UL>
       <P><a name="connectDMsocket"><i>To connect to 
         DigitalMicrograph through a socket interface</i></a> on the same or a different 
-        computer, <i>such as</i> <i>for a K2 camera on an FEI microscope</i>, you need to do the following:</P>
+        computer, <i>such as</i> <i>for a K2/K3 camera on an FEI microscope</i>, you need to do the following:</P>
     <ul>
       <li>Determine the IP address of the computer running DM on the network which that 
         computer shares with the computer running SerialEM.&nbsp; If SerialEM and DM are 
@@ -1259,10 +1259,10 @@
         socket interface.</li>
       <li>If DM and SerialEM are running on different computers, copy the appropriate SerialEMCDD plugin from the SerialEM_3-x-x folder to a 
         Plugins folder on the other computer (the one running DM).&nbsp; Specifically:<ul>
-          <li>For a K2 camera or if the other computer is running Windows 7 64-bit, copy&nbsp; 
-            SEMCCD-GMS2.2-64.dll, 
-            SEMCCD-GMS2.30-64.dll, or 
-            SEMCCD-GMS2.31-64.dll to C:\ProgramData\Gatan\Plugins and rename it to 
+          <li>For a K2/K3 camera or if the other computer is running Windows 7 64-bit, copy&nbsp; 
+            SEMCCD-GMS2.31-64.dll, 
+            SEMCCD-GMS3.01-64.dll, or 
+            SEMCCD-GMS3.31-64.dll to C:\ProgramData\Gatan\Plugins and rename it to 
             SEMCCD-GMS2-64.dll</li>
           <li>If the other computer is running GMS2 on Windows XP or Windows 7 32-bit, copy SEMCCD-GMS2.0-32.dll 
             or SEMCCD-GMS2.3-32.dll to 
@@ -1297,13 +1297,12 @@
       </li>
     </ul>
     <p>
-      <a name="K2details"><i>For a K2 camera in particular</i></a>, there is more to do:</p>
+      <a name="K2details"><i>For a K2/K3 camera in particular</i></a>, there is more to do:</p>
     <ul>
-      <li>Before GMS 2.3.1, dose fractionation images need to be rotated by SerialEM and 
-        the plugin to DM, and the camera property 
+      <li>The camera property 
         &#39;RotationAndFlip&#39; (see <A href="about_properties.htm#per_camera_properties">Properties for one camera</A>) 
-        is needed to achieve this.&nbsp; The same value of the property is needed for 
-        GMS 2.3.1 onward to make sure that other things are handled correctly.&nbsp; You 
+        is needed to
+        make sure that dose fractionation images are handled correctly and efficiently.&nbsp; You 
         should be able to determine the value from the settings for &#39;Rotation&#39; and &#39;Flip 
         around Y axis&#39; in the camera configuration in DM and the table above.&nbsp; The 
         value is the same as the recommended &#39;DMRotationAndFlip&#39; property unless there is no flipping and 
@@ -1318,7 +1317,7 @@
         saved without gain normalization, the plugin to DM will copy the appropriate 
         gain reference to the folder where the images are being saved. This used to 
         require the general properties &#39;K2CountingReference&#39; and &#39;K2SuperResReference&#39; 
-        to be defined, but this would only work with a single K2.&nbsp; 
+        to be defined, but this would only work with a single K2/K3.&nbsp; 
         Instead, make sure that the camera property &#39;DMGainReferenceName&#39; contains the 
         correct name for an unbinned (&#39;x1&#39;) DM gain reference and that either the 
         general property &#39;DigitalMicrographReferencePath&#39; or &#39;DMRemoteReferencePath&#39; is 
@@ -1725,7 +1724,7 @@
         readout cameras (Megascan 795 and Ultrascan 890, 2Kx2K 30-micron pixel or 4Kx4K 
         15-micron pixel) or 0.065 second for the four-port readout Ultrascan 895. These 
         correction factors are based on the 4 cameras that I have been able to run the 
-        script with.&nbsp; The script is of no use with CMOS cameras like the K2 and 
+        script with.&nbsp; The script is of no use with CMOS cameras like the K2/K3 and 
         OneView.</P>
       <P>If you have more than one camera, change the 'cameraNumber' value at the top of 
         the script and rerun it.</P>
@@ -2651,7 +2650,7 @@
         <i>For a K2 Summit camera</i>, the situation is complicated because counting 
         mode gives a nonlinear response, and because counting mode only detects a 
         fraction of the electrons 
-        (see <A href="about_camera.htm#directDetectors">Direct Electron Detectors, Especially the Gatan K2</A>).&nbsp; 
+        (see <A href="about_camera.htm#directDetectors">Direct Electron Detectors, Especially the Gatan K2 and K3</A>).&nbsp; 
         In SerialEM 3.6, dose rate estimates based on electron counting images are all 
         'linearized' and should closely match the dose rate outputs in 
         DigitalMicrograph. The program contains two tables of image counts versus dose 
@@ -2724,7 +2723,7 @@
         CountsToElectrons and use that for the CountsPerElectron (it is typically ~105).&nbsp; 
         It is not known whether there is loss in detecting electrons even at the lowest 
         dose rates such as there is 
-        for the K2; if this becomes established or you have measurements indicating that 
+        for the K2/K3; if this becomes established or you have measurements indicating that 
         it occurs, multiply the value by the efficiency factor (1 minus the fraction 
         lost).</p>
     <p>

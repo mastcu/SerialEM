@@ -10,8 +10,11 @@
     <basefont size="2">
     <P><A NAME="hidd_gainreference"></A><B><FONT size="3">Gain Reference Dialog</FONT></B></P>
     <P>This dialog box allows you to acquire a gain reference for the current camera. 
-      References are needed for Tietz and AMT cameras and are optional for Eagle and 
-      Gatan cameras (except K2 and OneView, where they cannot be taken). This reference is separate from the gain reference that 
+      References are needed for older Tietz cameras, DE cameras with an older server version, Falcon 3,
+      EMSIS, and DECTRIS cameras, and 
+      are optional for other 
+      cameras (except K2/K3 and OneView/Rio, where they cannot be taken). With a Gatan camera,
+      this reference is separate from the gain reference that 
       DigitalMicrograph maintains, and once a reference has been obtained through 
       SerialEM, SerialEM will use this reference instead of DigitalMicrograph's 
       reference. There are two advantages to using a SerialEM gain reference:</P>
@@ -22,8 +25,8 @@
       camera (e.g., fiber optic camera at 300 KV), SerialEM allows you take just a 
       gain reference binned by 2, which is much faster than taking a reference in 
       DigitalMicrograph.</P>
-    <P>Normalization is always done in DM for images from a K2 camera because of the 
-      complexity of the processing there.&nbsp; For a OneView camera, drift correction 
+    <P>Normalization is always done in DM for images from a K2/K3 camera because of the 
+      complexity of the processing there.&nbsp; For a OneView or Rio camera, drift correction 
       can be done only with normalization within DM, so there seems to be no point in 
       having a separate reference within SerialEM for images where drift correction is 
       not needed.</P>

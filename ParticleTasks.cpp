@@ -109,7 +109,7 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
 
   // Then test other conditions
   if (mMSIfEarlyReturn && !camParam->K2Type) {
-    SEMMessageBox("The current camera must be a K2 to use early return for multiple "
+    SEMMessageBox("The current camera must be a K2/K3 to use early return for multiple "
        "shots");
     return 1;
   }

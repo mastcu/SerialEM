@@ -1,6 +1,6 @@
 <HTML>
   <HEAD>
-    <TITLE>K2 Frame File Options Dialog</TITLE>
+    <TITLE>Frame File Options Dialog</TITLE>
     <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
     <style type="text/css"> <!-- BODY { font-family:"Arial" }
   TD { font-size:16 }
@@ -15,9 +15,9 @@
     <p>
       This dialog has two sections.&nbsp; The upper section presents choices about the files produced when the SerialEM plugin 
       to DigitalMicrograph saves subframes for a Dose Fractionation exposure.&nbsp; 
-      Everything except one option in this section appears only for K2 cameras.&nbsp; 
-      The lower section, which appears for K2, Falcon, and Direct Electron cameras, allows you to 
-      control the name of these files.&nbsp; For K2 and Falcon, you can also put subsets of the 
+      Everything except one option in this section appears only for K2/K3 cameras.&nbsp; 
+      The lower section, which appears for K2/K3, Falcon, and Direct Electron cameras, allows you to 
+      control the name of these files.&nbsp; For K2/K3 and Falcon, you can also put subsets of the 
       files into different 
       folders automatically.&nbsp; These are global settings that apply to all camera parameter sets in which 
       frames are saved.</p>
@@ -30,14 +30,14 @@
       single-frame files.&nbsp; This file will have the same format as the file opened 
       with <a href="menu_file.htm#hid_file_open_mdoc">Open .mdoc for Frames</a> in the 
       file menu, namely the one section in the file will be named &#39;Frameset&#39;.&nbsp; It 
-      will also have the gain reference and defect file names if K2 frames are taken 
+      will also have the gain reference and defect file names if K2/K3 frames are taken 
       without normalization.&nbsp; Additional entries can be added to the file with 
       the script commands &#39;StartNextFrameStackMdoc&#39; and &#39;AddToNextFrameStackMdoc&#39;, but 
       these commands must be given before acquisition.</p>
     <p>
       &nbsp;</p>
     <p>
-      <i><b>Other K2 Camera Options</b></i></p>
+      <i><b>Other K2/K3 Camera Options</b></i></p>
     <p>
       <b>File type</b></p>
     <p>
@@ -115,7 +115,7 @@
       This option was added before simulations revealed that the efficiency loss from 
       the regular conversion of scaled normalized values to integers was so small (see 
       &#39;Signal loss from saving normalized frames as integers&#39; in
-      <a href="about_camera.htm#directDetectors">Direct Electron Detectors, Especially the Gatan K2</a>).&nbsp; 
+      <a href="about_camera.htm#directDetectors">Direct Electron Detectors, Especially the Gatan K2 and K3</a>).&nbsp; 
       The option is not available for K3 cameras.</p>
     <p>
       <b>Pack unnormalized data as 4-bit (Super-Res) or 4/8-bit (Counting)&nbsp;&nbsp;&nbsp; 
@@ -132,7 +132,7 @@
       left pixel in a pair is in the low 4 bits and the right pixel is in the high 4 
       bits of a packed byte.) The data will 
       be raw counts, rather than the scaled values that are saved otherwise (see <A href="about_camera.htm#directDetectors">Direct Electron Detectors,
-       Especially the Gatan K2</A>.)&nbsp; Raw super-resolution images are 
+       Especially the Gatan K2 and K3</A>.)&nbsp; Raw super-resolution images are 
       intrinsically only 4-bit, so there will be no truncation when saving them as 
       4-bit.&nbsp; Packed 4-bit data can be unpacked with the 
       &#39;unpack&#39; or &#39;normalize&#39; command to the &#39;clip&#39; program in IMOD 

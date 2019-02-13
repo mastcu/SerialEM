@@ -19,7 +19,8 @@
       <LI>
         Data can be saved in the now-standard unsigned integer mode (mode 6). This mode 
         has been supported in IMOD for many years, but there may still be some MRC file 
-        reading software that does not read it.</LI>
+        reading software that does not read it.  Unless you know that your data are destined 
+        for such software, this is the best option to use.</LI>
       <LI>
         Data can be saved in a signed integer file with truncation at 32767. If the 
         counts in the images to be saved are not expected to be higher than 32767, this 
@@ -32,7 +33,7 @@
         signal from the CCD chip 4 times as much as the 14-bit cameras, dividing by 2 
         probably just removes one bit of noise, which makes this an acceptable option 
         for current US1000/US4000 cameras.&nbsp; This option should not be used for 
-        electron counting data such as from the K2 camera.</LI>
+        electron counting data from a direct detector camera.</LI>
       <LI>
         Subtracting 32768 and storing with the signed file mode will preserve the 
         camera values completely, at the cost of producing negative values in the 
