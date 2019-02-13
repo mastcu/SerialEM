@@ -40,6 +40,7 @@
 #include "CalibCameraTiming.h"
 #include "TSController.h"
 #include "MacroProcessor.h"
+#include "ProcessImage.h"
 #include "ReadFileDlg.h"
 #include "NavHelper.h"
 #include "MultiShotDlg.h"
@@ -1260,10 +1261,12 @@ int CSerialEMDoc::FilenameForSaveFile(int fileType, LPCTSTR lpszFileName,
     "MRC image stacks (*.mrc, *.st, *.map)|*.mrc; *.st; *.map|All files (*.*)|*.*||";
   static char BASED_CODE tiffFilter[] = 
     "TIFF files (*.tif)|*.tif|All files (*.*)|*.*||";
+  static char BASED_CODE jpegFilter[] = 
+    "JPEG files (*.jpg)|*.jpg|All files (*.*)|*.*||";
   static char BASED_CODE adocFilter[] = 
     "Image Autodoc files (*.idoc)|*.idoc|All files (*.*)|*.*||";
   char *mrcExceptions[] = {".st", ".map"};
-  char *extensions[] = {".tif", ".idoc", ".mrc"} ;
+  char *extensions[] = {".tif", ".idoc", ".mrc", ".jpg"};
   char *filter = &szFilter[0];
 
   // If a filename is supplied, do not add an extension to it
@@ -1276,6 +1279,9 @@ int CSerialEMDoc::FilenameForSaveFile(int fileType, LPCTSTR lpszFileName,
   } else if (fileType == STORE_TYPE_ADOC) {
     filter = &adocFilter[0];
     ext = extensions[1];
+  } else if (fileType == STORE_TYPE_JPEG) {
+    filter = &jpegFilter[0];
+    ext = extensions[3];
   }
 
   // It will attach the default extension unless the user enteres a RECOGNIZED extension
@@ -2333,22 +2339,71 @@ void CSerialEMDoc::OnFileOpenMdoc()
   mFrameFilename = fileDlg.GetPathName();
   if (mFrameFilename.IsEmpty())
     return;
+  DoOpenFrameMdoc(mFrameFilename);
+}
+
+// Actually opens the mdoc and sets up parameters
+int CSerialEMDoc::DoOpenFrameMdoc(CString &filename)
+{
+  CString mess;
+  mFrameFilename = filename;
   if (AdocAcquireMutex()) {
     mFrameAdocIndex = AdocNew();
+    if (AddTitlesToFrameMdoc(mess))
+      SEMMessageBox(mess, MB_EXCLAME);
     AdocReleaseMutex();
   }
   mFrameSetIndex = 0;
   mLastFrameSect = -1;
   mLastWrittenFrameSect = -1;
   mDeferWritingFrameMdoc = false;
-  if (mFrameAdocIndex < 0)
-    AfxMessageBox("Failed to get a new autodoc structure for the .mdoc file", MB_EXCLAME);
-  return;
+  if (mFrameAdocIndex < 0) {
+    SEMMessageBox("Failed to get a new autodoc structure for the .mdoc file", MB_EXCLAME);
+    return 1;
+  }
+  return 0;
 }
 
 void CSerialEMDoc::OnUpdateFileOpenMdoc(CCmdUI *pCmdUI)
 {
   pCmdUI->Enable(mFrameAdocIndex < 0);
+}
+
+// Add the standard SerialEM title and frame file title(s) to an mdoc
+int CSerialEMDoc::AddTitlesToFrameMdoc(CString &message)
+{
+  char title[80];
+  CString str, line;
+  int ind, tInd = 1;
+  MakeSerialEMTitle(mTitle, title);
+  if (AdocSetKeyValue(ADOC_GLOBAL, 0, "T", title)) {
+    message = "adding title to autodoc";  
+    return 1;
+  }
+  str = mFrameTitle;
+  while (!str.IsEmpty()) {
+    line = str;
+    ind = line.Find('\n');
+    if (ind >= 0) {
+      line = str.Left(ind);
+      str = str.Right(str.GetLength() - (ind + 1));
+    } else
+      str = "";
+    if (!line.IsEmpty()) {
+      sprintf(title, "T%d", tInd);
+      tInd++;
+      if (AdocSetKeyValue(ADOC_GLOBAL, 0, title, (LPCTSTR)line)) {
+        message = "adding title to autodoc";  
+        return 1;
+      }
+    }
+  }
+  if (AdocSetFloat(ADOC_GLOBAL, 0, ADOC_VOLTAGE, 
+    (float)mWinApp->mProcessImage->GetRecentVoltage())) {
+      message = "adding voltage to autodoc";  
+      return 1;
+  }
+  return 0;
 }
 
 // Closes the file: clears it out and sets index -1

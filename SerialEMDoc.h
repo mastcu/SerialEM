@@ -83,7 +83,8 @@ public:
 
 	void AutoSaveFiles();
 	int AppendToLogBook(CString inString, CString title);
-  GetSetMember(CString, Title)
+  GetSetMember(CString, Title);
+  GetSetMember(CString, FrameTitle);
   int DoOpenNewFile(CString filename = "");
   void DoCloseFile();
   void ManageExposure();
@@ -202,6 +203,7 @@ private:
   CString mCalibrationName;      // Root name of calibration file
   CString mOriginalCwd;          // Original working directory
   CString mTitle;                // Title string
+  CString mFrameTitle;           // Title for frame files
   CString mLogBook;              // Name of file to log tilt series in
   CString mShortTermName;        // Name of file for short term calibrations (dose)
   CString mPluginPath;           // Path name for plugins; replaces PF/SEM/Plugins
@@ -283,6 +285,8 @@ public:
 void CopyDefaultToOtherFileOpts(void);
 afx_msg void OnSettingsDiscardOnExit();
 afx_msg void OnUpdateSettingsDiscardOnExit(CCmdUI *pCmdUI);
+int AddTitlesToFrameMdoc(CString &message);
+int DoOpenFrameMdoc(CString & filename);
 };
 
 // FILE DIALOG CLASS and associated thread class and data
