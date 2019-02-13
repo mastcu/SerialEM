@@ -2390,7 +2390,8 @@ void CCameraSetupDlg::OnK2Mode()
 }
 
 // Calls routine to find valid frame align parameters given restrictions and selections,
-// then offers 
+// then changes it if there is just one that fits, or offers to change them or open the
+// dialog if not.  With a NULL descrip, 
 int CCameraSetupDlg::CheckFrameAliRestrictions(int useMode, BOOL saveUnnormed, 
   BOOL useSave, const char *descrip)
 {
@@ -2403,7 +2404,9 @@ int CCameraSetupDlg::CheckFrameAliRestrictions(int useMode, BOOL saveUnnormed,
     notOK = UtilFindValidFrameAliParams(mParam, useMode, takeBinned, 
       mCurSet->useFrameAlign, mCurSet->faParamSetInd, newIndex, &message);
     if (notOK) {
-      message += "\n\nPress:\n\"Switch Back\" to change back to the previous " + 
+      message += "\n\nPress:\n";
+      if (descrip)
+        message += "\"Switch Back\" to change back to the previous " + 
         CString(descrip) + "\n\n";
       if (notOK > 0)
          message += "\"Use Set Anyway\" to use these alignment parameters anyway";
@@ -2414,14 +2417,24 @@ int CCameraSetupDlg::CheckFrameAliRestrictions(int useMode, BOOL saveUnnormed,
       }
       message += "\n\n\"Open Dialog\" to open the Frame Alignment Parameters dialog\n"
         "and adjust parameters or restrictions";
-      answ = SEMThreeChoiceBox(message, "Switch Back", notOK > 0 ? "Use Set Anyway" :
-        "Use Other Set", "Open Dialog", MB_YESNOCANCEL | MB_ICONQUESTION);
-      if (answ == IDCANCEL) {
-        OnButSetupAlign();
-      } else if (answ == IDYES) {
-        return 1;
+      if (descrip) {
+        answ = SEMThreeChoiceBox(message, "Switch Back", notOK > 0 ? "Use Set Anyway" :
+          "Use Other Set", "Open Dialog", MB_YESNOCANCEL | MB_ICONQUESTION);
+        if (answ == IDCANCEL) {
+          OnButSetupAlign();
+        } else if (answ == IDYES) {
+          return 1;
+        } else {
+          mCurSet->faParamSetInd = newIndex;
+        }
       } else {
-        mCurSet->faParamSetInd = newIndex;
+        answ = SEMThreeChoiceBox(message, notOK > 0 ? "Use Set Anyway" : "Use Other Set",
+          "Open Dialog", "", MB_YESNO | MB_ICONQUESTION);
+        if (answ == IDNO) {
+          OnButSetupAlign();
+        } else {
+          mCurSet->faParamSetInd = newIndex;
+        }
       }
     } else {
       mCurSet->faParamSetInd = newIndex;
@@ -2473,10 +2486,13 @@ void CCameraSetupDlg::OnDoseFracMode()
   ManageDose();
 }
 
-// Align frames toggled
+// Align frames toggled for K2 or Falcon
 void CCameraSetupDlg::OnAlignDoseFrac()
 {
   UpdateData(true);
+  if (m_bAlignDoseFrac)
+    CheckFrameAliRestrictions(m_iK2Mode, mCamera->GetSaveUnnormalizedFrames(), 
+      mUserSaveFrames, NULL);
   CheckFalconFrameSumList();
   ManageK2Binning();
   ManageDoseFrac();
@@ -2991,6 +3007,9 @@ void CCameraSetupDlg::OnDeAlignFrames()
   UpdateData(true);
   if (!m_bDEalignFrames && !m_bDEsaveMaster && m_iDEMode == SUPERRES_MODE)
     m_iDEMode = COUNTING_MODE;
+  if (m_bDEalignFrames)
+    CheckFrameAliRestrictions(m_iDEMode, mCamera->GetSaveUnnormalizedFrames(), 
+      mUserSaveFrames, NULL);
   ManageDEpanel();
   ManageExposure();
   UpdateData(false);
