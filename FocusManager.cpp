@@ -578,7 +578,7 @@ void CFocusManager::OnAutofocusListCalibrations()
             MagForCamera(iCam, iMag), iMag, mFocTab[ind].direction, 
             mFocTab[ind].probeMode ? "" : "nanoprobe");
           if (!mScope->GetHasNoAlpha() || mFocTab[ind].alpha >= 0) {
-            str2.Format("  alpha %d", mFocTab[ind].alpha);
+            str2.Format("  alpha %d", mFocTab[ind].alpha + 1);
             str += str2;
           }
           mWinApp->AppendToLog(str);
