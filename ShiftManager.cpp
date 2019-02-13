@@ -2849,6 +2849,7 @@ float CShiftManager::ComputeISDelay(double delX, double delY)
 {
   int i;
   int ind = mScope->FastMagIndex();
+  float delay, frac;
   if (!delX && !delY)
     return 0.;
 
@@ -2873,8 +2874,12 @@ float CShiftManager::ComputeISDelay(double delX, double delY)
   }
 
   // Interpolate/extrapolate from this segment
-  float frac = (delSpecX - mISmoved[i]) / (mISmoved[i + 1] - mISmoved[i]);
-  float delay = (1.f - frac) * mISdelayNeeded[i] + frac * mISdelayNeeded[i + 1];
+  if (mNumISdelays < 2) {
+    delay = mISdelayNeeded[0];
+  } else {
+    frac = (delSpecX - mISmoved[i]) / (mISmoved[i + 1] - mISmoved[i]);
+    delay = (1.f - frac) * mISdelayNeeded[i] + frac * mISdelayNeeded[i + 1];
+  }
   if (delay < 0.)
     delay = 0.;
 
