@@ -41,20 +41,11 @@ bool UtilInvertedMagRangeLimits(BOOL EFTEM, int &lowInd, int &highInd);
 bool UtilMagInInvertedRange(int magInd, BOOL EFTEM);
 void ConstrainWindowPlacement(int *left, int *top, int *right, int *bottom);
 void ConstrainWindowPlacement(WINDOWPLACEMENT *place);
-void UtilGpuMemoryNeeds(float fullPadSize, float sumPadSize, float alignPadSize,
-                    int numAllVsAll, int nzAlign, int refineAtEnd, int groupSize,
-                    float &needForGpuSum, float &needForGpuAli);
-float UtilTotalMemoryNeeds(float fullPadSize, float sumPadSize, float alignPadSize,
-                       int numAllVsAll, int nzAlign, int refineAtEnd, int numBinTests,
-                       int numFiltTests, int hybridShifts, int groupSize, int doSpline,
-                       int gpuFlags, int deferSum, int testMode, int startAssess,
-                       bool &sumInOnePass);
-void UtilGetPadSizesBytes(int nx, int ny, float fullTaperFrac, int sumBin, int alignBin,
-                      float &fullPadSize, float &sumPadSize, float &alignPadSize);
-float UtilEvaluateGpuCapability(int nx, int ny, int sumBinning, 
-  FrameAliParams &faParam, int numAllVsAll, int numAliFrames, int refineIter, 
-  int groupSize, int numFilt, int doSpline, double gpuMemory, double maxMemory, 
-  int &gpuFlags, int &deferGpuSum, bool &gettingFRC);
+float UtilEvaluateGpuCapability(int nx, int ny, int dataSize, bool gainNorm, bool defects,
+  int sumBinning,  FrameAliParams &faParam, int numAllVsAll, int numAliFrames, 
+  int refineIter, int groupSize, int numFilt, int doSpline, double gpuMemory, 
+  double maxMemory, int &gpuFlags, int &deferGpuSum, bool &gettingFRC);
+int UtilGetFrameAlignBinning(FrameAliParams & param, int frameSizeX, int frameSizeY);
 int AdocGetMutexSetCurrent(int index);
 void AdocReleaseMutex();
 BOOL AdocAcquireMutex();

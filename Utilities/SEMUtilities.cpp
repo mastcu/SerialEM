@@ -7,6 +7,7 @@
 #include "..\EMBufferManager.h"
 #include "..\Shared\SEMCCDDefines.h"
 #include "..\Shared\autodoc.h"
+#include "..\Shared\framealign.h"
 
 
 static CSerialEMApp *sWinApp;
@@ -637,90 +638,12 @@ void ConstrainWindowPlacement(WINDOWPLACEMENT *place)
 }
 
 /*
- * Routines from alignframes.ccp in IMOD
+ * Evaluation needed for any frame alignmnet, base on code from alignframes.ccp in IMOD
  */
-// Return the bytes needed for full, sum, and align images
-void UtilGetPadSizesBytes(int nx, int ny, float fullTaperFrac, int sumBin, int alignBin,
-                      float &fullPadSize, float &sumPadSize, float &alignPadSize)
-{
-  fullPadSize = (float)(4. * (1. + 2. * fullTaperFrac) * (1. + 2. * fullTaperFrac) * 
-    nx * ny);
-  sumPadSize = (float)(fullPadSize / (sumBin * sumBin));
-  alignPadSize = (float)(4. * nx * ny / ((float)alignBin * alignBin));
-}
-
-// Return the memory needed for aligning and summing on the GPU based on the conditions
-void UtilGpuMemoryNeeds(float fullPadSize, float sumPadSize, float alignPadSize,
-                    int numAllVsAll, int nzAlign, int refineAtEnd, int groupSize,
-                    float &needForGpuSum, float &needForGpuAli)
-{
-  int numHoldAlign;
-
-  // The FFTs require as much memory as the image, so allow for the biggest
-  needForGpuSum = fullPadSize + sumPadSize + B3DMAX(fullPadSize, sumPadSize);
-
-  // Get needs for aligning on GPU
-  // Simple cumulative sum needs all 5 arrays and FFT work area
-  // Refining needs all arrays too plus one for each frame
-  // Otherwise only 3 arrays and FFT and number of rolling frames
-  if (!numAllVsAll && !refineAtEnd)
-    numHoldAlign = 6;
-  else if (refineAtEnd)
-    numHoldAlign = 6 + nzAlign;
-  else
-    numHoldAlign = 4 + B3DMIN(numAllVsAll, nzAlign);
-  if (groupSize > 1) {
-
-    // If doing groups, refinement requires space for the group sums, and
-    // no refinement requires space for groupSize single frames
-    if (refineAtEnd)
-      numHoldAlign += B3DMIN(numAllVsAll, nzAlign);
-    else
-      numHoldAlign += groupSize;
-  }
-  needForGpuAli = numHoldAlign * alignPadSize;
-}
-
-// Return the computer memory in GB needed based on the conditions
-float UtilTotalMemoryNeeds(float fullPadSize, float sumPadSize, float alignPadSize,
-                       int numAllVsAll, int nzAlign, int refineAtEnd, int numBinTests,
-                       int numFiltTests, int hybridShifts, int groupSize, int doSpline,
-                       int gpuFlags, int deferSum, int testMode, int startAssess,
-                       bool &sumInOnePass)
-{
-  int numHoldFull, numHoldAlign;
-  float memTot;
-
-  // Make sums as you go if there is one binning and no subset assessment
-  sumInOnePass = numBinTests == 1 && !testMode && startAssess < 0;
-  numHoldFull = numHoldAlign = B3DMIN(numAllVsAll, nzAlign);
-  if (numAllVsAll) {
-    if (refineAtEnd)
-      numHoldAlign = nzAlign;
-    if (groupSize > 1 && refineAtEnd)
-      numHoldAlign += numAllVsAll;
-    else if (groupSize > 1)
-      numHoldAlign += groupSize;
-  } else if (refineAtEnd) {
-    numHoldAlign = nzAlign;
-  }
-  if (gpuFlags & GPU_FOR_ALIGNING)
-    numHoldAlign = 0;
-  if ((!hybridShifts && numFiltTests > 1 && sumInOnePass && numAllVsAll) ||
-      refineAtEnd || deferSum || doSpline)
-    numHoldFull = nzAlign;
-  if ((numBinTests > 1 || testMode) && numAllVsAll && startAssess < 0)
-    numHoldFull = 0;
-  memTot = (float)((2. * sumPadSize + (numHoldAlign + 4.) * alignPadSize + 
-    (numHoldFull + 1.) * fullPadSize) / (1024. * 1024. * 1024.));
-  return memTot;
-}
-
-// NOT from alignframes, code needed for K2/Falcon
-float UtilEvaluateGpuCapability(int nx, int ny, int sumBinning,  
-  FrameAliParams &faParam, int numAllVsAll, int numAliFrames, int refineIter, 
-  int groupSize, int numFilt, int doSpline, double gpuMemory, double maxMemory, 
-  int &gpuFlags, int &deferGpuSum, bool &gettingFRC)
+float UtilEvaluateGpuCapability(int nx, int ny, int dataSize, bool gainNorm, bool defects,
+  int sumBinning, FrameAliParams &faParam, int numAllVsAll, int numAliFrames, 
+  int refineIter, int groupSize, int numFilt, int doSpline, double gpuMemory, 
+  double maxMemory, int &gpuFlags, int &deferGpuSum, bool &gettingFRC)
 {
   float fullPadSize, sumPadSize, alignPadSize;
   float needForGpuSum, needForGpuAli;
@@ -728,15 +651,18 @@ float UtilEvaluateGpuCapability(int nx, int ny, int sumBinning,
   float totAliMem = 0., needed = 0., gpuUsableMem, gpuFracMem = 0.85f;
   float fullTaperFrac = 0.02f;
   bool bdum, sumWithAlign;
+  bool doTrunc = (faParam.truncate && faParam.truncLimit > 0);
+  bool needPreprocess = gainNorm || defects || doTrunc;
+  int ind, numHoldFull, fullDataSize = sizeof(float);
 
   // Get memory for components then evaluate the GPU needs
-  UtilGetPadSizesBytes(nx, ny, fullTaperFrac, sumBinning, faParam.aliBinning, 
+  FrameAlign::getPadSizesBytes(nx, ny, fullTaperFrac, sumBinning, faParam.aliBinning, 
     fullPadSize, sumPadSize, alignPadSize);
   gettingFRC = sWinApp->mCamera->GetNumFrameAliLogLines() > 2;
 
   if (gpuMemory > 0) {
-    UtilGpuMemoryNeeds(fullPadSize, sumPadSize, alignPadSize, numAllVsAll, numAliFrames,
-      refineIter, groupSize, needForGpuSum, needForGpuAli);
+    FrameAlign::gpuMemoryNeeds(fullPadSize, sumPadSize, alignPadSize, numAllVsAll, 
+      numAliFrames, refineIter, groupSize, needForGpuSum, needForGpuAli);
     gpuUnusable = B3DMAX(gpuUnusable, (float)gpuMemory * (1.f - gpuFracMem));
     gpuUsableMem = (float)gpuMemory - gpuUnusable;
     sumWithAlign = (faParam.hybridShifts || numFilt == 1) && !doSpline && !refineIter;
@@ -750,13 +676,19 @@ float UtilEvaluateGpuCapability(int nx, int ny, int sumBinning,
         "of %.0f MB total)\n", needForGpuSum / 1.048e6, gpuMemory / 1.048e6);
     }
 
+    // Call this just to get number of frames that need to be held
+    FrameAlign::totalMemoryNeeds(fullPadSize, sizeof(float), sumPadSize, alignPadSize, 
+          numAllVsAll, numAliFrames, refineIter, 1, numFilt, faParam.hybridShifts, 
+          groupSize, doSpline, GPU_FOR_ALIGNING, 0, 0, -1, bdum, numHoldFull);
+
     // If summing is supposed to be done with align and alignment would fit but both
     // would not, get total memory needs and make sure THAT fits
     if (sumWithAlign && needForGpuAli < gpuUsableMem && needForGpuAli + needed >
       gpuUsableMem) {
-        totAliMem =  UtilTotalMemoryNeeds(fullPadSize, sumPadSize, alignPadSize, 
-          numAllVsAll, numAliFrames, refineIter, 1, numFilt, faParam.hybridShifts, 
-          groupSize, doSpline, GPU_FOR_ALIGNING, 1, 0, -1, bdum);
+        totAliMem =  FrameAlign::totalMemoryNeeds(fullPadSize, sizeof(float), sumPadSize, 
+          alignPadSize, numAllVsAll, numAliFrames, refineIter, 1, numFilt, 
+          faParam.hybridShifts, groupSize, doSpline, GPU_FOR_ALIGNING, 1, 0, -1, bdum,
+          numHoldFull);
         if (totAliMem < maxMemory) {
           sumWithAlign = false;
           deferGpuSum = 1;
@@ -785,12 +717,42 @@ float UtilEvaluateGpuCapability(int nx, int ny, int sumBinning,
         gpuFlags |= GPU_DO_EVEN_ODD;
       }
     }
+
+    if (gpuFlags) {
+      needed += FrameAlign::findPreprocPadGpuFlags(nx, ny, dataSize, 
+        UtilGetFrameAlignBinning(faParam, nx, ny), gainNorm, defects, doTrunc, 
+        B3DMAX(numHoldFull, 1), gpuUsableMem - needed, 
+        0.5f * (1.f - gpuFracMem) * gpuUsableMem, gpuFlags, gpuFlags);
+      ind = (gpuFlags >> GPU_STACK_LIM_SHIFT) & GPU_STACK_LIM_MASK;
+      if (gpuFlags & (GPU_DO_NOISE_TAPER | GPU_DO_BIN_PAD))
+        SEMTrace('1', "%s  %s  %s  %s %s %d on GPU", (gpuFlags & GPU_DO_NOISE_TAPER) ?
+        "noise-pad" : "", (gpuFlags & GPU_DO_BIN_PAD) ? "bin-pad" : "",
+        (gpuFlags & GPU_DO_PREPROCESS) ? "preprocess" : "",
+        (gpuFlags & STACK_FULL_ON_GPU) ? "stack" : "",
+        (gpuFlags & GPU_STACK_LIMITED) ? "limit" : "   ",
+        (gpuFlags & GPU_STACK_LIMITED) ? ind : 0);
+
+      // Can stack smaller size if doing either operation on GPU and either there is
+      // no preprocess or preprocessing is on GPU
+      if ((gpuFlags & (GPU_DO_BIN_PAD | GPU_DO_NOISE_TAPER)) &&
+        (!needPreprocess || (gpuFlags & GPU_DO_PREPROCESS)))
+        fullDataSize = dataSize;
+    }
+
   }
-  return UtilTotalMemoryNeeds(fullPadSize, sumPadSize, alignPadSize, numAllVsAll, 
-    numAliFrames, refineIter, 1, numFilt, faParam.hybridShifts, groupSize, doSpline,
-    gpuFlags, deferGpuSum, 0, -1, bdum);
+  return FrameAlign::totalMemoryNeeds(fullPadSize, fullDataSize, sumPadSize, alignPadSize,
+    numAllVsAll, numAliFrames, refineIter, 1, numFilt, faParam.hybridShifts, groupSize, 
+    doSpline, gpuFlags, deferGpuSum, 0, -1, bdum, numHoldFull);
 }
 
+// Return the alignment binning for the given parameters and frame size
+int UtilGetFrameAlignBinning(FrameAliParams &param, int frameSizeX, 
+  int frameSizeY)
+{
+  if (!param.binToTarget || param.targetSize < 100)
+    return param.aliBinning;
+  return B3DNINT(sqrt((double)frameSizeX * frameSizeY) / param.targetSize);
+}
 
 // Returns FALSE when the mutex could not be acquired or created
 BOOL AdocAcquireMutex()
