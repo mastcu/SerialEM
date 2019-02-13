@@ -579,7 +579,7 @@ int CCameraController::Initialize(int whichCameras)
       return 1;
     return 0;
   }
-  
+
   // Count up cameras of each type listed, clear retractability of Tietz cameras
   // FEI retractability now cleared in initialize function
   for (i = 0; i < numOrig; i++) {
@@ -1628,7 +1628,6 @@ BOOL CCameraController::GetInitialized()
   CameraParameters *camP = &mAllParams[mWinApp->GetCurrentCamera()];
   if (camP->TietzType) 
     return mTietzInitialized && !camP->failedToInitialize;
-
   if (camP->DE_camType)
   	return mDEInitialized;
   if (camP->FEItype)
@@ -2429,7 +2428,7 @@ int CCameraController::QueueTiltSeries(FloatVec &openTime, FloatVec &tiltToAngle
 
 void CCameraController::Capture(int inSet, bool retrying)
 {
-  int ind, error, setState, binInd, sumCount;
+  int ind, error, setState, binIndex, sumCount, binDiv;
   BOOL bEnsureDark = false;
   CString logmess;
   int numActive = mWinApp->GetNumActiveCameras();
@@ -2551,7 +2550,7 @@ void CCameraController::Capture(int inSet, bool retrying)
   mExposure = conSet.exposure;
 
   // Make sure binning is legal too
-  if (!retracting && FindNearestBinning(mParam, &conSet, binInd, mBinning)) {
+  if (!retracting && FindNearestBinning(mParam, &conSet, binIndex, mBinning)) {
     logmess.Format("WARNING: Parameter set has an illegal binning (%d), using binning %d",
       conSet.binning, mBinning);
     mWinApp->AppendToLog(logmess);
@@ -2812,11 +2811,11 @@ void CCameraController::Capture(int inSet, bool retrying)
   mTD.MakeFEIerrorTimeout = mMakeFEIerrorBeTimeout;
   mTD.checkFEIname = mOtherCamerasInTIA;
   mTD.oneFEIshutter = mParam->onlyOneShutter;
-  binInd = BinDivisorI(mParam);
+  binDiv = BinDivisorI(mParam);
 
   // Pass the native chip size and let plugin adjust for image type
-  mTD.fullSizeX = mParam->sizeX / binInd;
-  mTD.fullSizeY = mParam->sizeY / binInd;
+  mTD.fullSizeX = mParam->sizeX / binDiv;
+  mTD.fullSizeY = mParam->sizeY / binDiv;
   mTD.PostMoveStage = mStageQueued;
   mTD.imageReturned = false;
   mTD.GetDeferredSum = false;
@@ -2972,9 +2971,9 @@ void CCameraController::Capture(int inSet, bool retrying)
   mDivBy2ForExtra = mDivBy2ForImBuf = mTD.DivideBy2;
   if (mParam->FEItype && FCAM_ADVANCED(mParam)) { 
     if (mParam->autoGainAtBinning > 0) {
-      mTD.DivideBy2 += B3DNINT(log((double)mParam->gainFactor[binInd]) / log(0.5));
+      mTD.DivideBy2 += B3DNINT(log((double)mParam->gainFactor[binIndex]) / log(0.5));
       SEMTrace('E', "Divide by 2 set to %d for binning %d (factor %f)", mTD.DivideBy2, 
-        mBinning, mParam->gainFactor[binInd]);
+        mBinning, mParam->gainFactor[binIndex]);
     }
     mDivBy2ForExtra = mTD.DivideBy2;
     mTD.CountScaling = 0.;
