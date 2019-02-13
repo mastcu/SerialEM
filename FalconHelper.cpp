@@ -338,19 +338,19 @@ int CFalconHelper::SetupFrameAlignment(ControlSet &conSet, CameraParameters *cam
   maxMemory = memoryLimit - (float)mWinApp->mBufferWindow.MemorySummary();
 
   // Evaluate all memory needs. PROBLEM: binned data and alignment binning
-  totAliMem = UtilEvaluateGpuCapability(nx, ny, mSumBinning,
-    param, numAllVsAll, numAliFrames, refineIter, groupSize, numFilters, doSpline, 
-    useGPU[0] ? mGpuMemory : 0., maxMemory, gpuFlags, deferGpuSum, mGettingFRC);
+  totAliMem = UtilEvaluateGpuCapability(nx, ny, sizeof(short int), false, false,
+    mSumBinning, param, numAllVsAll, numAliFrames, refineIter, groupSize, numFilters, 
+    doSpline, useGPU[0] ? mGpuMemory : 0., maxMemory, gpuFlags, deferGpuSum, mGettingFRC);
   if (totAliMem > maxMemory)
     PrintfToLog("WARNING: With current parameters, memory needed for aligning "
     "(%.1f GB) exceeds allowed\r\n  memory usage (%.1f GB), controlled by MemoryLimit"
     " property if it is set", totAliMem, maxMemory);
 
-  ind = mFrameAli->initialize(mSumBinning, GetFrameAlignBinning(param, nx, ny), trimFrac,
-    numAllVsAll, refineIter, 
+  ind = mFrameAli->initialize(mSumBinning, UtilGetFrameAlignBinning(param, nx, ny), 
+    trimFrac, numAllVsAll, refineIter, 
     param.hybridShifts, (deferGpuSum | doSpline) ? 1 : 0, groupSize, nx, ny, 
     fullTaperFrac, taperFrac, param.antialiasType, 0., radius2, sigma1, sigma2, 
-    numFilters, param.shiftLimit, kFactor, maxMaxWeight, 0, numFrames, gpuFlags, 
+    numFilters, param.shiftLimit, kFactor, maxMaxWeight, 0, numFrames, 0, gpuFlags, 
     (GetDebugOutput('E') || GetDebugOutput('D')) ? 11 : 0);
   if (ind) {
     str.Format("The framealign routine failed to initialize (error %d)", ind);
@@ -1284,7 +1284,7 @@ int CFalconHelper::WriteAlignComFile(CString inputFile, CString comName, int faP
     "FilterRadius2 %f\n"
     "FilterSigma2 %f\n"
     "VaryFilter %f", useGPU ? 0 : -1, numAllVsAll, param.useGroups ? param.groupSize : 1, 
-    GetFrameAlignBinning(param, frameX, frameY), param.antialiasType, 
+    UtilGetFrameAlignBinning(param, frameX, frameY), param.antialiasType, 
     refineIter, param.stopIterBelow,
     param.shiftLimit, param.doSmooth ? param.smoothThresh : 0, radius2[0], 
     radius2[0] * param.sigmaRatio, radius2[0]);
@@ -1357,15 +1357,6 @@ int CFalconHelper::WriteAlignComFile(CString inputFile, CString comName, int faP
   else if (error == 2)
     error = WRITE_COM_ERROR;
   return error;
-}
-
-// Return the alignment binning for the given parameters and frame size
-int CFalconHelper::GetFrameAlignBinning(FrameAliParams &param, int frameSizeX, 
-  int frameSizeY)
-{
-  if (!param.binToTarget || param.targetSize < 100)
-    return param.aliBinning;
-  return B3DNINT(sqrt((double)frameSizeX * frameSizeY) / param.targetSize);
 }
 
 // Return the size that frames will be saved for the given camera and parameters

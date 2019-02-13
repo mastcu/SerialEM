@@ -132,7 +132,6 @@ public:
   int AlignFramesFromFile(CString filename, ControlSet &conSet, int rotateFlip, int divideBy2, 
     float scaling, int &numFrames, CameraThreadData *td);
   void AlignNextFrameTask(int param);
-  int GetFrameAlignBinning(FrameAliParams & param, int frameSizeX, int frameSizeY);
   void GetSavedFrameSizes(CameraParameters *camParams, const ControlSet *conSet, 
     int & frameX, int & frameY, bool acquiredSize);
   int SuperResHardwareBinDivisor(CameraParameters *camParams, const ControlSet *conSet);
