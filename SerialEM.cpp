@@ -2641,7 +2641,7 @@ int SEMThreeChoiceBox(CString message, CString yesText, CString noText,
 //   V for vacuum gauge status and output
 //   W for Winkler's typing into axis pos bug or autoloader or leave DE inserted on exit
 //   X for EMSIS and Dectris cameras
-//   a for alignment correlation coefficients
+//   a for alignment correlation coefficients; GPU frame alignment choices/memory usage
 //   b for beam shift
 //   c for calibrations
 //   d for electron dose

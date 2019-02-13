@@ -431,6 +431,12 @@
     <ClInclude Include="ExternalTools.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Shared\framealign.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Shared\gpuframe.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\bitmap1.bmp">
