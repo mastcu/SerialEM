@@ -78,6 +78,7 @@ class CComplexTasks : public CCmdTarget
   GetMember(bool, HitachiWithoutZ);
   GetSetMember(float, StageTimeoutFactor);
   GetMember(double, OnAxisDose);
+  GetSetMember(float, WalkSTEMfocusInterval);
   void GetBacklashDelta(float &deltaX, float &deltaY) {deltaX = mBASPDeltaX; deltaY = mBASPDeltaY;};
 
   float GetTiltBacklash() {return mRTThreshold;};
@@ -200,6 +201,7 @@ class CComplexTasks : public CCmdTarget
   int mWalkIndex;                 // Index to next angle to tilt to
   BOOL mWUActPostExposure;
   int mWalkAlignBuffer;           // Buffer to use for alignment
+  int mWUSavedShiftsOnAcquire;    // Saved value of Shifts on acquire if have to use C
   float mWalkShiftLimit;          // Limit for image shift on specimen
   float mWULowDoseISLimit;        // Limit in low dose mode
   int mWUAnchorBuf;               // Buffer to copy an anchor image to

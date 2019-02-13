@@ -909,9 +909,13 @@ BOOL CComplexTasks::WalkUp(float targetAngle, int anchorBuf, float anchorAngle)
   
   // Have to align to buffer past the roll except in bidir series return phase
   mWalkAlignBuffer = mBufferManager->GetShiftsOnAcquire() + 1;
+  mWUSavedShiftsOnAcquire = -1;
   if (mWalkAlignBuffer == 1 || (mWinApp->DoingTiltSeries() && 
-    mWinApp->mTSController->GetBidirSeriesPhase() == BIDIR_RETURN_PHASE))
+    mWinApp->mTSController->GetBidirSeriesPhase() == BIDIR_RETURN_PHASE)) {
     mWalkAlignBuffer = 2;
+    mWUSavedShiftsOnAcquire = mBufferManager->GetShiftsOnAcquire();
+    mBufferManager->SetShiftsOnAcquire(1);
+  }
 
   // This works even with DM drift settling
   mWUActPostExposure = mWinApp->ActPostExposure();
@@ -1164,6 +1168,8 @@ void CComplexTasks::StopWalkUp()
     RestoreMagIfNeeded();
   mWalkIndex = -1;
   mCamera->SetRequiredRoll(0);
+  if (mWUSavedShiftsOnAcquire >= 0)
+    mBufferManager->SetShiftsOnAcquire(mWUSavedShiftsOnAcquire);
   mCamera->SetObeyTiltDelay(false);
   mWinApp->UpdateBufferWindows();
   mWinApp->SetStatusText(MEDIUM_PANE, "");
