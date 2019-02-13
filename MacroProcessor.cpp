@@ -8,8 +8,6 @@
 
 #include "stdafx.h"
 #include <direct.h>
-#include <set>
-#include <string>
 #include <process.h>
 #include "SerialEM.h"
 #include "SerialEMDoc.h"
@@ -50,6 +48,7 @@
 #include "Utilities\XCorr.h"
 #include "Utilities\KGetOne.h"
 #include "Shared\autodoc.h"
+#include "Shared\b3dutil.h"
 #include "Shared\ctffind.h"
 #include "Image\KStoreADOC.h"
 #include "XFolderDialog\XFolderDialog.h"
@@ -238,7 +237,8 @@ enum {CME_SCRIPTEND = -7, CME_LABEL, CME_SETVARIABLE, CME_SETSTRINGVAR, CME_DOKE
   CME_DEFERWRITINGFRAMEMDOC, CME_ADDTONEXTFRAMESTACKMDOC, CME_STARTNEXTFRAMESTACKMDOC,
   CME_REPORTPHASEPLATEPOS, CME_OPENFRAMEMDOC, CME_NEXTPROCESSARGS, CME_CREATEPROCESS,
   CME_RUNEXTERNALTOOL, CME_REPORTSPECIMENSHIFT, CME_REPORTNAVFILE, CME_READNAVFILE,
-  CME_MERGENAVFILE, CME_REPORTIFNAVOPEN
+  CME_MERGENAVFILE, CME_REPORTIFNAVOPEN, CME_NEWARRAY, CME_NEW2DARRAY, CME_APPENDTOARRAY,
+  CME_TRUNCATEARRAY, CME_READ2DTEXTFILE, CME_ARRAYSTATISTICS
 };
 
 // The two numbers are the minimum arguments and whether arithmetic is allowed
@@ -363,18 +363,12 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"NextProcessArgs", 1, 0}, {"CreateProcess", 1, 0}, {"RunExternalTool", 1, 0},
 {"ReportSpecimenShift", 0, 0}, {"ReportNavFile", 0, 0}, {"ReadNavFile", 1, 0}, 
 {"MergeNavFile", 1, 0}, {"ReportIfNavOpen",0, 0}, /* End in 3.7 */
+{"NewArray", 3, 0}, {"New2DArray", 1, 0}, {"AppendToArray", 2, 0},{"TruncateArray", 2, 0}, 
+{"Read2DTextFile", 2, 0}, {"ArrayStatistics", 1, 0},
 {NULL, 0, 0}
 };
 
 #define NUM_COMMANDS (sizeof(cmdList) / sizeof(CmdItem))
-static std::string sTmpOp1[] = {"SQRT", "COS", "SIN", "TAN", "ATAN", "ABS", "NEARINT",
-  "LOG", "LOG10", "EXP"};
-static std::string sTmpOp2[] = {"ROUND", "POWER", "ATAN2", "MODULO", "DIFFABS", 
-  "FRACDIFF"};
-static std::set<std::string> sFunctionSet1(sTmpOp1, sTmpOp1 + sizeof(sTmpOp1) / 
-                                           sizeof(sTmpOp1[0]));
-static std::set<std::string> sFunctionSet2(sTmpOp2, sTmpOp2 + sizeof(sTmpOp2) / 
-                                           sizeof(sTmpOp2[0]));
 
 static int sProcessExitStatus;
 static int sProcessErrno;
@@ -424,6 +418,13 @@ CMacroProcessor::CMacroProcessor()
 {
   int i;
   unsigned int hash;
+  std::string tmpOp1[] = { "SQRT", "COS", "SIN", "TAN", "ATAN", "ABS", "NEARINT",
+    "LOG", "LOG10", "EXP" };
+  std::string tmpOp2[] = { "ROUND", "POWER", "ATAN2", "MODULO", "DIFFABS",
+    "FRACDIFF", "MIN", "MAX" };
+  std::string keywords[] = { "REPEAT", "ENDLOOP", "DOMACRO", "LOOP", "CALLMACRO",
+    "ENDIF", "IF", "ELSE", "BREAK", "CONTINUE", "CALL", "EXIT", "RETURN", "KEYBREAK",
+    "SKIPTO", "FUNCTION", "CALLFUNCTION", "ENDFUNCTION", "CALLSCRIPT", "DOSCRIPT" };
   SEMBuildTime(__DATE__, __TIME__);
   mWinApp = (CSerialEMApp *)AfxGetApp();
   mModeNames = mWinApp->GetModeNames();
@@ -435,6 +436,11 @@ CMacroProcessor::CMacroProcessor()
   mMacroEditer = &(mWinApp->mMacroEditer[0]);
   mConSets = mWinApp->GetConSets();
   mOneLineScript = NULL;
+  mFunctionSet1.insert(tmpOp1, tmpOp1 + sizeof(tmpOp1) / sizeof(std::string));
+  mFunctionSet2.insert(tmpOp2 , tmpOp2 + sizeof(tmpOp2) / sizeof(std::string));
+  mReservedWords.insert(tmpOp1, tmpOp1 + sizeof(tmpOp1) / sizeof(std::string));
+  mReservedWords.insert(tmpOp2, tmpOp2 + sizeof(tmpOp2) / sizeof(std::string));
+  mReservedWords.insert(keywords, keywords + sizeof(keywords) / sizeof(std::string));
   mDoingMacro = false;
   mCurrentMacro = -1;
   mInitialVerbose = false;
@@ -1151,6 +1157,8 @@ void CMacroProcessor::NextCommand()
   CNavHelper *navHelper = mWinApp->mNavHelper;
   MacroFunction *func;
   Variable *var;
+  CString *valPtr;
+  int *numElemPtr;
   CFileStatus status;
   StageMoveInfo smi;
   int readOtherSleep = 2000;
@@ -1602,6 +1610,7 @@ void CMacroProcessor::NextCommand()
     break;
     
   case CME_SETVARIABLE:                                     // Variable assignment
+  case CME_APPENDTOARRAY:                                   // AppendToArray
 
     // Do assignment to variable before any non-reserved commands
     index2 = 2;
@@ -1624,10 +1633,119 @@ void CMacroProcessor::NextCommand()
     }
 
     // Set the variable
-    index = strItems[1] == "=" ? VARTYPE_REGULAR : VARTYPE_PERSIST;
-    if (SetVariable(strItems[0], strItems[index2], index, -1, false, &report))
-      ABORT_LINE(report + " in script line: \n\n");
+    if (CMD_IS(SETVARIABLE)) {
+      index = strItems[1] == "=" ? VARTYPE_REGULAR : VARTYPE_PERSIST;
+      if (SetVariable(strItems[0], strItems[index2], index, -1, false, &report))
+        ABORT_LINE(report + " in script line: \n\n");
+
+    } else {
+
+      // Append to array: Split off an index to look it up
+      ArrayRow newRow;
+
+      var = GetVariableValuePointers(item1upper, &valPtr, &numElemPtr, "append to", 
+        report);
+      if (!var)
+        ABORT_LINE(report + " for line:\n\n");
+      truth = valPtr == NULL;
+      if (truth) {
+        valPtr = &newRow.value;
+        numElemPtr = &newRow.numElements;
+      }
+
+      // Add the string to the value and compute the number of elements
+      if (!valPtr->IsEmpty())
+        *valPtr += "\n";
+      *valPtr += strItems[index2];
+      *numElemPtr = 1;
+      ix0 = -1;
+      while ((ix0 = valPtr->Find('\n', ix0 + 1)) >= 0)
+        *numElemPtr += 1;
+
+      // Both 1D array and existing row of 2D array should be done: add new row to 2D
+      if (truth)
+        var->rowsFor2d->Add(newRow);
+    }
     break;
+
+  case CME_TRUNCATEARRAY:                                   // TruncateArray
+    index = itemInt[2];
+    if (index < 1)
+      ABORT_LINE("The number to truncate to must be at least 1 for line:\n\n");
+    var = GetVariableValuePointers(item1upper, &valPtr, &numElemPtr, "truncate", report);
+    if (!var)
+      ABORT_LINE(report + " for line:\n\n");
+    if (!valPtr) {
+      if (var->rowsFor2d->GetSize() > index)
+        var->rowsFor2d->SetSize(index);
+    } else if (*numElemPtr > index) {
+      FindValueAtIndex(*valPtr, index, ix0, ix1);
+      *valPtr = valPtr->Left(ix1);
+      *numElemPtr = index;
+    }
+    break;
+
+  case CME_ARRAYSTATISTICS:                                 // ArrayStatistics
+  {
+    int numRows = 1, numVals = 0;
+    float *fvalues;
+    char *endPtr;
+    var = GetVariableValuePointers(item1upper, &valPtr, &numElemPtr, "get statistics of",
+      report);
+    if (!var)
+      ABORT_LINE(report + " for line:\n\n");
+    truth = !valPtr;
+    if (truth) {
+      numRows = var->rowsFor2d->GetSize();
+      for (index = 0; index < numRows; index++) {
+        ArrayRow& arrRow = var->rowsFor2d->ElementAt(index);
+        numVals += arrRow.numElements;
+      }
+    } else
+      numVals = *numElemPtr;
+    if (!numVals) 
+      ABORT_LINE("There are no array elements for line:\n\n")
+    fvalues = new float[numVals];
+    numVals = 0;
+    bmin = 1.e37f;
+    bmax = -1.e37f;
+    for (index = 0; index < numRows; index++) {
+      if (truth) {
+        ArrayRow& arrRow = var->rowsFor2d->ElementAt(index);
+        valPtr = &arrRow.value;
+        numElemPtr = &arrRow.numElements;
+      }
+
+      // This function wants array indexes from 1
+      for (index2 = 1; index2 <= *numElemPtr; index2++) {
+        FindValueAtIndex(*valPtr, index2, ix0, ix1);
+        report = valPtr->Mid(ix0, ix1 - ix0);
+        shiftX = (float)strtod((LPCTSTR)report, &endPtr);
+        if (endPtr - (LPCTSTR)report < report.GetLength()) {
+          strCopy = "";
+          if (truth)
+            strCopy.Format(" in row %d", index);
+          report.Format("Cannot get array statistics: item %s at index %d%s of array %s"
+            " has non-numeric characters", (LPCTSTR)report, index2 + 1, (LPCTSTR)strCopy,
+            (LPCTSTR)item1upper);
+          ABORT_NOLINE(report);
+        }
+
+        fvalues[numVals++] = shiftX;
+        ACCUM_MIN(bmin, shiftX);
+        ACCUM_MAX(bmax, shiftX);
+      }
+    }
+    avgSD(fvalues, numVals, &bmean, &bSD, &cpe);
+    rsFastMedianInPlace(fvalues, numVals, &cpe);
+    report.Format("n= %d  min= %.6g  max = %.6g  mean= %.6g  sd= %.6g  median= %.6g",
+      numVals, bmin, bmax, bmean, bSD, cpe);
+    mWinApp->AppendToLog(report, mLogAction);
+    SetReportedValues(&strItems[2], numVals, bmin, bmax, bmean, bSD, cpe);
+
+    delete fvalues;
+    break;
+  }
 
   case CME_SETSTRINGVAR:                                    // String Assignment
     SubstituteVariables(&strLine, 1, strLine);
@@ -1650,17 +1768,62 @@ void CMacroProcessor::NextCommand()
     SetReportedValues(&strItems[2], index);
     mWinApp->AppendToLog(report, mLogAction);
     break;
+
+  case CME_NEWARRAY:                                        // NewArray
+  case CME_NEW2DARRAY:                                      // New2DArray
+  {
+    CArray<ArrayRow, ArrayRow> *rowsFor2d = NULL;
+    ArrayRow arrRow;
+
+    // Process local vesus persistent property
+    ix0 = VARTYPE_REGULAR;
+    if (!itemEmpty[2] && itemInt[2] < 0) {
+      ix0 = VARTYPE_LOCAL;
+      if (LocalVarAlreadyDefined(strItems[1], strLine) > 0)
+        return;
+    }
+    if (!itemEmpty[2] && itemInt[2] > 0)
+      ix0 = VARTYPE_PERSIST;
+
+    // Get number of elements: 3 for 1D and 4 for 2D 
+    truth = CMD_IS(NEW2DARRAY);
+    index = !itemEmpty[3] ? itemInt[3] : 0;
+    if (truth) {
+      index2 = !itemEmpty[3] ? itemInt[3] : 0;
+      index = !itemEmpty[4] ? itemInt[4] : 0;
+      if (index > 0 && !index2)
+        ABORT_LINE("The number of elements per row must be 0 because no rows are created"
+        " in:\n\n");
+    }
+    if (index <= 0 || index2 < 0)
+      ABORT_LINE("The number of elements to create must be positive in:\n\n");
+    strCopy = "0";
+    for (ix1 = 1; ix1 < index; ix1++)
+      strCopy += "\n0";
     
+    // Create the 2D array rows and add string to the rows
+    if (truth) {
+      rowsFor2d = new CArray<ArrayRow, ArrayRow>;
+      arrRow.value = strCopy;
+      arrRow.numElements = index;
+      for (iy0 = 0; iy0 < index2; iy0++)
+        rowsFor2d->Add(arrRow);
+    }
+    if (SetVariable(item1upper, truth ? "0" : strCopy, ix0, -1, false, &report,
+      rowsFor2d)) {
+      delete rowsFor2d;
+      ABORT_LINE(report + " in script line: \n\n");
+    }
+    break;
+  }
+
   case CME_LOCALVAR:                                        // LocalVar
     for (index = 1; index < MAX_TOKENS && !itemEmpty[index]; index++) {
-      var = LookupVariable(strItems[index], index2);
-      if (var && var->type != VARTYPE_LOCAL && var->callLevel == mCallLevel &&
-        var->definingFunc == mCallFunction[mCallLevel] && (var->index == mCurrentMacro || 
-        var->type == VARTYPE_INDEX || var->type == VARTYPE_REPORT))
-        ABORT_LINE("Variable " + strItems[index] + " has already been defined as global"
-        "\nin this script/function and cannot be made local in line:\n\n");
-      if ((!var || var->type != VARTYPE_LOCAL) && 
-        SetVariable(strItems[index], "0", VARTYPE_LOCAL, mCurrentMacro, true, &report))
+      index2 = LocalVarAlreadyDefined(strItems[index], strLine);
+      if (index2 > 0)
+        return;
+      if (!index2 && SetVariable(strItems[index], "0", VARTYPE_LOCAL, mCurrentMacro, true,
+        &report))
         ABORT_LINE(report + " in script line: \n\n");
     }
     break;
@@ -1943,60 +2106,79 @@ void CMacroProcessor::NextCommand()
       var = LookupVariable(item1upper, index2);
       if (!var)
         ABORT_LINE("The variable " + strItems[1] + " is not defined in line:\n\n");
-      index = 0;
+      sizeX = 0;
       if (itemInt[2] > 31 || itemInt[2] < 1)
         ABORT_LINE("The entry with flags must be between 1 and 31 in line:\n\n");
       if (itemInt[2] & 1)
-        index++;
+        sizeX++;
       if (itemInt[2] & 2)
-        index++;
+        sizeX++;
       if (itemInt[2] & 4)
-        index++;
+        sizeX++;
       if (itemInt[2] & 8)
-        index++;
+        sizeX++;
       if (itemInt[2] & 16)
-        index += 2;
-      if (var->numElements % index) {
-        report.Format("Variable %s has %d elements, not divisible by the\n"
-          "%d values per step implied by the flags entry of %d", strItems[1], 
-          var->numElements, index, itemInt[2]);
-        ABORT_NOLINE(report);
+        sizeX += 2;
+      if (var->rowsFor2d) {
+        sizeY = var->rowsFor2d->GetSize();
+        for (ix0 = 0; ix0 < sizeY; ix0++) {
+          ArrayRow& tempRow = var->rowsFor2d->ElementAt(ix0);
+          if (tempRow.numElements < sizeX) {
+            report.Format("Row %d or the 2D array %s has only %d elements, not the %d"
+              " required", ix0, item1upper, tempRow.numElements, sizeX);
+            ABORT_NOLINE(report);
+          }
+        }
+      } else {
+        sizeY = var->numElements / sizeX;
+        valPtr = &var->value;
+        if (var->numElements % sizeX) {
+          report.Format("Variable %s has %d elements, not divisible by the\n"
+            "%d values per step implied by the flags entry of %d", strItems[1],
+            var->numElements, sizeX, itemInt[2]);
+          ABORT_NOLINE(report);
+        }
       }
 
       // Load the vectors
       iy0 = 1;
-      for (ix0 = 0; ix0 < var->numElements / index; ix0++) {
+      for (ix0 = 0; ix0 < sizeY; ix0++) {
+        if (var->rowsFor2d) {
+          ArrayRow& tempRow = var->rowsFor2d->ElementAt(ix0);
+          valPtr = &tempRow.value;
+          iy0 = 1;
+        }
         if (itemInt[2] & 1) {
-          FindValueAtIndex(var, iy0, ix1, iy1);
-          report = var->value.Mid(ix1, iy1 - ix1);
+          FindValueAtIndex(*valPtr, iy0, ix1, iy1);
+          report = valPtr->Mid(ix1, iy1 - ix1);
           tiltToAngle.push_back((float)atof((LPCTSTR)report));
           iy0++;
         }
         if (itemInt[2] & 2) {
-          FindValueAtIndex(var, iy0, ix1, iy1);
-          report = var->value.Mid(ix1, iy1 - ix1);
+          FindValueAtIndex(*valPtr, iy0, ix1, iy1);
+          report = valPtr->Mid(ix1, iy1 - ix1);
           openTime.push_back((float)atof((LPCTSTR)report));
           iy0++;
         }
         if (itemInt[2] & 4) {
-          FindValueAtIndex(var, iy0, ix1, iy1);
-          report = var->value.Mid(ix1, iy1 - ix1);
+          FindValueAtIndex(*valPtr, iy0, ix1, iy1);
+          report = valPtr->Mid(ix1, iy1 - ix1);
           waitOrInterval.push_back((float)atof((LPCTSTR)report));
           iy0++;
         }
         if (itemInt[2] & 8) {
-          FindValueAtIndex(var, iy0, ix1, iy1);
-          report = var->value.Mid(ix1, iy1 - ix1);
+          FindValueAtIndex(*valPtr, iy0, ix1, iy1);
+          report = valPtr->Mid(ix1, iy1 - ix1);
           focusChange.push_back((float)atof((LPCTSTR)report));
           iy0++;
         }
         if (itemInt[2] & 16) {
-          FindValueAtIndex(var, iy0, ix1, iy1);
-          report = var->value.Mid(ix1, iy1 - ix1);
+          FindValueAtIndex(*valPtr, iy0, ix1, iy1);
+          report = valPtr->Mid(ix1, iy1 - ix1);
           delX = atof((LPCTSTR)report);
           iy0++;
-          FindValueAtIndex(var, iy0, ix1, iy1);
-          report = var->value.Mid(ix1, iy1 - ix1);
+          FindValueAtIndex(*valPtr, iy0, ix1, iy1);
+          report = valPtr->Mid(ix1, iy1 - ix1);
           delY = atof((LPCTSTR)report);
           deltaISX.push_back((float)(delX * aMat.xpx + delY * aMat.xpy));
           deltaISY.push_back((float)(delX * aMat.ypx + delY * aMat.ypy));
@@ -2521,21 +2703,34 @@ void CMacroProcessor::NextCommand()
     break;
     
   case CME_READTEXTFILE:                                    // ReadTextFile
+  case CME_READ2DTEXTFILE:                                  // Read2DTextFile
   {
     mWinApp->mParamIO->StripItems(strLine, 2, strCopy);
     CString newVar, message = "Error opening file ";
     CStdioFile *csFile = NULL;
+    CArray<ArrayRow, ArrayRow> *rowsFor2d = NULL;
+    ArrayRow arrRow;
+    truth = CMD_IS(READ2DTEXTFILE);
+    if (truth)
+      rowsFor2d = new CArray<ArrayRow, ArrayRow>;
     try {
       csFile = new CStdioFile(strCopy, CFile::modeRead | CFile::shareDenyWrite);
       message = "Reading text from file ";
       while ((index = mWinApp->mParamIO->ReadAndParse(csFile, report, strItems,
         MAX_TOKENS)) == 0) {
+        if (truth)
+          newVar = "";
         for (index2 = 0; index2 < MAX_TOKENS; index2++) {
           if (strItems[index2].IsEmpty())
             break;
           if (newVar.GetLength())
             newVar += '\n';
           newVar += strItems[index2];
+        }
+        if (truth && index2 > 0) {
+          arrRow.value = newVar;
+          arrRow.numElements = index2;
+          rowsFor2d->Add(arrRow);
         }
       }
     }
@@ -2547,8 +2742,12 @@ void CMacroProcessor::NextCommand()
     if (index > 0)
       ABORT_NOLINE("Error parsing text in file " + strCopy);
 
-    if (SetVariable(item1upper, newVar, VARTYPE_REGULAR, -1, false))
-      ABORT_NOLINE("Error setting an array variable with text from file " + strCopy);
+    if (SetVariable(item1upper, truth ? "0" : newVar, VARTYPE_REGULAR, -1, false, &report,
+      rowsFor2d)) {
+      delete rowsFor2d;
+      ABORT_NOLINE("Error setting an array variable with text from file " + strCopy +
+        ":\n" + report);
+    }
     break;
   }
     
@@ -4279,12 +4478,11 @@ void CMacroProcessor::NextCommand()
     mWinApp->mParamIO->StripItems(strLine, 1, report);
     report.Replace("\n", "  ");
     mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
-
     break;
-    // EchoEval, EchoReplaceLine, EchoNoLineEnd
-  case CME_ECHOEVAL:
-  case CME_ECHOREPLACELINE:
-  case CME_ECHONOLINEEND:
+
+  case CME_ECHOEVAL:                                        // EchoEval
+  case CME_ECHOREPLACELINE:                                 // EchoReplaceLine
+  case CME_ECHONOLINEEND:                                   // EchoNoLineEnd
     report = "";
     for (index = 1; index < MAX_TOKENS && !itemEmpty[index]; index++) {
       if (index > 1)
@@ -6406,9 +6604,11 @@ MacroFunction *CMacroProcessor::FindCalledFunction(CString strLine, bool scannin
 // The variable must not exist if mustBeNew is true; returns true for error and fills
 // in errStr if it is non-null
 bool CMacroProcessor::SetVariable(CString name, CString value, int type, 
-  int index, bool mustBeNew, CString *errStr)
+  int index, bool mustBeNew, CString *errStr, CArray<ArrayRow, ArrayRow> *rowsFor2d)
 {
-  int ind, leftInd, rightInd,arrInd, numElements = 1;
+  int ind, leftInd, rightInd, rightInd2, arrInd, rowInd, numElements = 1;
+  int *oldNumElemPtr;
+  CString *oldValuePtr;
   CString temp;
   name.MakeUpper();
   if (name[0] == '$' || value[0] == '$') {
@@ -6417,6 +6617,9 @@ bool CMacroProcessor::SetVariable(CString name, CString value, int type,
       "Is it an undefined variable?", name[0] == '$' ? "variable name" : "value");
     return true;
   }
+  if (WordIsReserved(name))
+    PrintfToLog("WARNING: assigning to a variable %s, which is named the same as a "
+      "reserved keyword", (LPCTSTR)name);
   if (index == -1)
     index = mCurrentMacro;
 
@@ -6428,8 +6631,13 @@ bool CMacroProcessor::SetVariable(CString name, CString value, int type,
   // See if this is an assignment to an array element and check legality
   leftInd = name.Find('[');
   rightInd = name.Find(']');
-  if ((leftInd < 0 && rightInd >= 0) || (leftInd >= 0 && rightInd < 0) || leftInd == 0 ||
-    rightInd >= 0 && rightInd < name.GetLength() - 1) {
+  if (leftInd > 0 && FindAndCheckArrayIndexes(name, leftInd, rightInd, rightInd2, errStr)
+    < 0)
+      return true;
+    
+  if ((leftInd < 0 && rightInd >= 0) || leftInd == 0 ||
+    (rightInd >= 0 && ((rightInd2 <= 0 && rightInd < name.GetLength() - 1) || 
+    (rightInd2 > 0 && rightInd2 < name.GetLength() - 1)))) {
       if (errStr)
         errStr->Format("Illegal use or placement of [ and/or ] in variable name %s", 
           (LPCTSTR)name);
@@ -6460,8 +6668,15 @@ bool CMacroProcessor::SetVariable(CString name, CString value, int type,
     var->callLevel = mCallLevel;
     var->index = index;
     var->definingFunc = mCallFunction[mCallLevel];
+    var->rowsFor2d = rowsFor2d;
     mVarArray.Add(var);
     return false;
+  }
+
+  // Clear out any existing 2D array if not assigning to an array element
+  if (leftInd < 0) {
+    delete var->rowsFor2d;
+    var->rowsFor2d = rowsFor2d;
   }
 
   // There is a set error if it must be new or if a user variable is using the name
@@ -6487,27 +6702,51 @@ bool CMacroProcessor::SetVariable(CString name, CString value, int type,
   }
 
   if (leftInd > 0) {
+    oldNumElemPtr = &var->numElements;
+    oldValuePtr = &var->value;
 
-    // If assigning to an array element, get the index value and the starting and
-    // ending (+1) indexes in the value of that element
-    arrInd = ConvertArrayIndex(name, leftInd, rightInd, var, &temp);
-    if (!arrInd) {
-      if (errStr)
-        *errStr = temp;
+    // For 2D array assignment, get row index, element and value pointers for that row
+    if (rightInd2 > 0) {
+      rowInd = ConvertArrayIndex(name, leftInd, rightInd, var->name, 
+        var->rowsFor2d->GetSize(), errStr);
+      if (!rowInd)
+        return true;
+      ArrayRow& arrRow = var->rowsFor2d->ElementAt(rowInd - 1);
+      oldNumElemPtr = &arrRow.numElements;
+      oldValuePtr = &arrRow.value;
+      leftInd = rightInd + 1;
+      rightInd = rightInd2;
+    } 
+
+    // If assigning to an array element, get the index value 
+    arrInd = ConvertArrayIndex(name, leftInd, rightInd, var->name, 
+      (var->rowsFor2d && rightInd2 <= 0) ? var->rowsFor2d->GetSize() : *oldNumElemPtr,
+      errStr);
+    if (!arrInd)
       return true;
-    }
-    FindValueAtIndex(var, arrInd, leftInd, rightInd);
+    if (var->rowsFor2d && rightInd2 <= 0) {
 
-    // Substitute the new value for the existing element and adjust numElements
-    temp = "";
-    if (leftInd)
-      temp = var->value.Left(leftInd);
-    temp += value;
-    ind = var->value.GetLength();
-    if (rightInd < ind)
-      temp += var->value.Mid(rightInd, ind - rightInd);
-    var->value = temp;
-    var->numElements += numElements - 1;
+      // If assigning (array) to row of 2D array, just set it into the value
+      ArrayRow& arrRow = var->rowsFor2d->ElementAt(arrInd - 1);
+      arrRow.numElements = numElements;
+      arrRow.value = value;
+    } else {
+
+      // For assignment to a single element, get the starting and
+      // ending (+1) indexes in the value of that element
+      FindValueAtIndex(*oldValuePtr, arrInd, leftInd, rightInd);
+
+      // Substitute the new value for the existing element and adjust numElements
+      temp = "";
+      if (leftInd)
+        temp = oldValuePtr->Left(leftInd);
+      temp += value;
+      ind = oldValuePtr->GetLength();
+      if (rightInd < ind)
+        temp += oldValuePtr->Mid(rightInd, ind - rightInd);
+      *oldValuePtr = temp;
+      *oldNumElemPtr += numElements - 1;
+    }
   } else {
 
     // Regular assignment to variable value
@@ -6517,6 +6756,7 @@ bool CMacroProcessor::SetVariable(CString name, CString value, int type,
 
   // If value is empty, remove a persistent variable
   if (type == VARTYPE_PERSIST && value.IsEmpty()) {
+    delete var->rowsFor2d;
     delete var;
     mVarArray.RemoveAt(ind);
   }
@@ -6525,12 +6765,32 @@ bool CMacroProcessor::SetVariable(CString name, CString value, int type,
 
 // Overloaded function can be passed a double instead of string value
 bool CMacroProcessor::SetVariable(CString name, double value, int type,  
-  int index, bool mustBeNew, CString *errStr)
+  int index, bool mustBeNew, CString *errStr, CArray<ArrayRow, ArrayRow> *rowsFor2d)
 {
   CString str;
   str.Format("%f", value);
   TrimTrailingZeros(str);
-  return SetVariable(name, str, type, index, mustBeNew, errStr);
+  return SetVariable(name, str, type, index, mustBeNew, errStr, rowsFor2d);
+}
+
+// Test whether a local variable is already defined as global, issue message and 
+// return 1 if it is, return 0 if not defined, -1 if already local
+int CMacroProcessor::LocalVarAlreadyDefined(CString & item, CString &strLine)
+{
+  int index2;
+  CString mess;
+  Variable *var = LookupVariable(item, index2);
+  if (var && var->type != VARTYPE_LOCAL && var->callLevel == mCallLevel &&
+    var->definingFunc == mCallFunction[mCallLevel] && (var->index == mCurrentMacro ||
+      var->type == VARTYPE_INDEX || var->type == VARTYPE_REPORT)) {
+    mess = "Variable " + item + " has already been defined as global"
+      "\nin this script/function and cannot be made local in line:\n\n" + strLine;
+    mWinApp->AppendToLog(mess, mLogAction);
+    SEMMessageBox(mess);
+    AbortMacro();
+    return -1;
+  }
+  return var ? -1 : 0;
 }
 
 // Looks up a variable by name and returns pointer if found, NULL if not, and index in ind
@@ -6570,11 +6830,63 @@ void CMacroProcessor::ClearVariables(int type, int level, int index)
     var = mVarArray[ind];
     if (((type < 0 && var->type != VARTYPE_PERSIST) || var->type == type) &&
       (index < 0 || index == var->index)  && (level < 0 || var->callLevel >= level)) {
+      delete var->rowsFor2d;
       delete var;
       mVarArray.RemoveAt(ind);
     }
   }
 }
+
+// Given a variable reference that could include an array subscript, look up the variable
+// and row of a 2D array return pointers to the value and numElements elements, or return
+// NULL for those pointers for a 2D array without subscript.  Returns NULL for the 
+// variable for any error condition
+Variable * CMacroProcessor::GetVariableValuePointers(CString & name, CString **valPtr, 
+  int **numElemPtr, const char *action, CString & errStr)
+{
+  CString strCopy = name;
+  Variable *var;
+  int rightInd, right2, index;
+  int leftInd = strCopy.Find('[');
+  if (leftInd > 0) {
+    if (FindAndCheckArrayIndexes(strCopy, leftInd, rightInd, right2, &errStr) < 0)
+      return NULL;
+    if (right2 > 0) {
+      errStr = CString("Cannot ") + action + " to a single element of a 2D array";
+      return NULL;
+    }
+    strCopy = strCopy.Left(leftInd);
+  }
+  var = LookupVariable(strCopy, right2);
+  if (!var) {
+    errStr = "Could not find variable " + strCopy;
+    return NULL;
+  }
+
+  // Get pointers to value and number of elements for all cases
+  if (var->rowsFor2d) {
+    if (leftInd > 0) {
+      index = ConvertArrayIndex(name, leftInd, rightInd, strCopy,
+        var->rowsFor2d->GetSize(), &errStr);
+      if (!index)
+        return NULL;
+      ArrayRow& tempRow = var->rowsFor2d->ElementAt(index - 1);
+      *valPtr = &tempRow.value;
+      *numElemPtr = &tempRow.numElements;
+    } else {
+      *valPtr = NULL;
+      *numElemPtr = NULL;
+    }
+  } else {
+    if (leftInd > 0) {
+      errStr = CString("Cannot ") + action + "to a single element of an array";
+      return NULL;
+    }
+    *valPtr = &var->value;
+    *numElemPtr = &var->numElements;
+  }
+  return var;
+  }
 
 // Looks for variables and substitutes them in each string item
 int CMacroProcessor::SubstituteVariables(CString * strItems, int maxItems, CString line)
@@ -6582,8 +6894,8 @@ int CMacroProcessor::SubstituteVariables(CString * strItems, int maxItems, CStri
   Variable *var;
   CString newstr, value;
   int subInd, varInd, maxlen, maxInd, nright, varlen, arrInd, beginInd, endInd, nameInd;
-  int itemLen, global;
-  bool localVar;
+  int itemLen, global, nright2, leftInd, numElements;
+  bool localVar, subArrSize;
 
   // For each item, look for $ repeatedly
   for (int ind = 0; ind < maxItems && !strItems[ind].IsEmpty(); ind++) {
@@ -6595,31 +6907,29 @@ int CMacroProcessor::SubstituteVariables(CString * strItems, int maxItems, CStri
         break;
 
       // Set index of actual name and adjust it if this is looking for # of elements
-      nameInd = subInd + 1;
       itemLen = strItems[ind].GetLength();
-      if (subInd < itemLen - 1 && 
-        strItems[ind].GetAt(subInd + 1) == '#')
-        nameInd++;
+      subArrSize = subInd < itemLen - 1 && strItems[ind].GetAt(subInd + 1) == '#';
+      nameInd = subInd + (subArrSize ? 2 : 1);
 
       // Now look for the longest matching variable, first looking for local, then global
       for (global = 0; global < 2; global++) {
         maxlen = 0;
         for (varInd = 0; varInd < mVarArray.GetSize(); varInd++) {
           var = mVarArray[varInd];
-          localVar = var->type == VARTYPE_LOCAL || 
+          localVar = var->type == VARTYPE_LOCAL ||
             (mLoopIndsAreLocal && var->type == VARTYPE_INDEX);
-          if ((global && !localVar) || (!global && localVar && 
-            var->callLevel == mCallLevel && 
-            (var->index == mCurrentMacro || var->type == VARTYPE_INDEX) && 
+          if ((global && !localVar) || (!global && localVar &&
+            var->callLevel == mCallLevel &&
+            (var->index == mCurrentMacro || var->type == VARTYPE_INDEX) &&
             var->definingFunc == mCallFunction[mCallLevel])) {
-              varlen = var->name.GetLength();
-              if (itemLen - nameInd >= varlen) {
-                newstr = strItems[ind].Mid(nameInd, varlen);
-                if (!newstr.CompareNoCase(var->name) && maxlen < varlen) {
-                  maxInd = varInd;
-                  maxlen = varlen;
-                }
+            varlen = var->name.GetLength();
+            if (itemLen - nameInd >= varlen) {
+              newstr = strItems[ind].Mid(nameInd, varlen);
+              if (!newstr.CompareNoCase(var->name) && maxlen < varlen) {
+                maxInd = varInd;
+                maxlen = varlen;
               }
+            }
           }
         }
         if (maxlen)
@@ -6628,7 +6938,7 @@ int CMacroProcessor::SubstituteVariables(CString * strItems, int maxItems, CStri
 
       if (!maxlen) {
         AfxMessageBox("Undefined variable in script line:\n\n" +
-             line, MB_EXCLAME);
+          line, MB_EXCLAME);
         return 1;
       }
       var = mVarArray[maxInd];
@@ -6638,7 +6948,7 @@ int CMacroProcessor::SubstituteVariables(CString * strItems, int maxItems, CStri
         if (var->index < 0 || var->index >= MAX_LOOP_DEPTH) {
           AfxMessageBox("The variable " + var->name + " is apparently a loop index "
             "variable,\nbut the pointer to the loop is out of range in script line:\n\n" +
-             line, MB_EXCLAME);
+            line, MB_EXCLAME);
           return 2;
         }
         var->value.Format("%d", mLoopCount[var->index]);
@@ -6646,37 +6956,76 @@ int CMacroProcessor::SubstituteVariables(CString * strItems, int maxItems, CStri
 
       // If it is an array element, first check usage
       value = var->value;
-      if (itemLen > subInd + maxlen + 1 && 
-        strItems[ind].GetAt(nameInd + maxlen) == '[') {
-          if (nameInd > subInd + 1) {
-            AfxMessageBox("Illegal use of $# with an array element in line:\n\n" + line,
-              MB_EXCLAME);
-            return 2;
-          }
-          nright = strItems[ind].Find(']', nameInd + maxlen);
-          if (nright < 0) {
-            AfxMessageBox("Unbalanced array index delimiters: [ without ] in line:\n\n" +
-              line, MB_EXCLAME);
-            return 2;
-          }
+      leftInd = nameInd + maxlen;
+      numElements = var->numElements;
+      if (FindAndCheckArrayIndexes(strItems[ind], leftInd, nright, nright2, &newstr) < 0) {
+        SEMMessageBox(newstr + " in line:\n\n" + line, MB_EXCLAME);
+        return 2;
+      }
+      if (nright > 0) {
+        if (subArrSize && (!var->rowsFor2d || nright2 > 0)) {
+          SEMMessageBox("Illegal use of $# with an array element in line:\n\n" + line,
+            MB_EXCLAME);
+          return 2;
+        }
 
-          // Get the array index
-          arrInd = ConvertArrayIndex(strItems[ind], nameInd + maxlen, nright, var,
-            &newstr);
+        // 2D array reference: make sure it IS 2D array, then get the index of the row
+        if (nright2 > 0) {
+          if (!var->rowsFor2d) {
+            SEMMessageBox("Reference to 2D array element, but " + var->name + "is not"
+              "a 2D array in line:\n\n" + line, MB_EXCLAME);
+            return 2;
+          }
+          arrInd = ConvertArrayIndex(strItems[ind], leftInd, nright, var->name,
+            var->rowsFor2d->GetSize(), &newstr);
           if (!arrInd) {
             AfxMessageBox(newstr + " in line:\n\n" + line, MB_EXCLAME);
             return 2;
           }
+          ArrayRow& arrRow = var->rowsFor2d->ElementAt(arrInd - 1);
+          numElements = arrRow.numElements;
+          value = arrRow.value;
+          leftInd = nright + 1;
+          nright = nright2;
+        } else if (var->rowsFor2d) {
+          numElements = var->rowsFor2d->GetSize();
+        }
+
+        // Get the array index
+        arrInd = ConvertArrayIndex(strItems[ind], leftInd, nright, var->name,
+          numElements, &newstr);
+        if (!arrInd) {
+          SEMMessageBox(newstr + " in line:\n\n" + line, MB_EXCLAME);
+          return 2;
+        }
+
+        // The returned value for 1D reference without index or 2D with one index is the
+        // raw string including newlines so that it can be assigned to a new array
+        // variable.  echo and its variants convert them to two spaces; other output like
+        // to a file will need conversion too.
+        if (var->rowsFor2d && nright2 <= 0) {
+          ArrayRow& arrRow = var->rowsFor2d->ElementAt(arrInd - 1);
+          value = arrRow.value;
+          numElements = arrRow.numElements;
+        } else {
 
           // Get the starting index of the value and of its terminator
-          FindValueAtIndex(var, arrInd, beginInd, endInd);
-          value = var->value.Mid(beginInd, endInd - beginInd);
-          maxlen += nright - (subInd + maxlen);
+          FindValueAtIndex(value, arrInd, beginInd, endInd);
+          value = value.Mid(beginInd, endInd - beginInd);
+        }
+        maxlen += nright - (subInd + maxlen);
+      } else if (var->rowsFor2d) {
+        if (!subArrSize) {
+          SEMMessageBox("Reference to 2D array variable " + var->name +
+            " without any subscripts in line:\n\n" + line, MB_EXCLAME);
+          return 2;
+        }
+        numElements = var->rowsFor2d->GetSize();
       }
 
       // If doing $#, now substitute the number of elements
-      if (nameInd > subInd + 1)
-        value.Format("%d", var->numElements);
+      if (subArrSize)
+        value.Format("%d", numElements);
 
       // Build up the substituted string
       newstr = "";
@@ -6722,20 +7071,61 @@ int CMacroProcessor::CheckForArrayAssignment(CString *strItems, int &firstInd)
   return 1;
 }
 
+// Finds array indexes, if any, starting at position leftInd in item.  Returns 0 if there
+// is no index there or it is beyond end of string; 1 for an index, and -1 for various
+// errors.  Returns right1 with the index of the first right bracket or 0 for no index, 
+// returns right2 with the index a second right brack or 0 if there is no 2nd index
+int CMacroProcessor::FindAndCheckArrayIndexes(CString &item, int leftIndex, int &right1,
+  int &right2, CString *errStr)
+{
+  right1 = right2 = 0;
+  if (leftIndex >= item.GetLength() || item.GetAt(leftIndex) != '[')
+    return 0;
+  right1 = item.Find(']', leftIndex);
+  if (right1 < 0) {
+    if (errStr)
+      *errStr = "Unbalanced array index delimiters: [ without ] (is there a space between [ and ]?)";
+    return -1;
+  }
+  if (item.Left(right1).ReverseFind('[') != leftIndex) {
+    if (errStr)
+      *errStr = "Unbalanced or extra array delimiters: [ followed by two ]";
+    return -1;
+  }
+  if (right1 == item.GetLength() - 1 || item.GetAt(right1 + 1) != '[')
+    return 1;
+  right2 = item.Find(']', right1 + 1);
+  if (right2 < 0) {
+    if (errStr)
+      *errStr = "Unbalanced array index delimiters for second dimension: [ without ]";
+    return -1;
+  }
+  if (item.Left(right2).ReverseFind('[') != right1 + 1) {
+    if (errStr)
+      *errStr = "Unbalanced or extra array delimiters: [ followed by two ]";
+    return -1;
+  }
+  return 1;
+}
+
 // Convert an array index in a string item given the index of left and right delimiters
 // Fill in an error message and return 0 if there is a problem
 int CMacroProcessor::ConvertArrayIndex(CString strItem, int leftInd, int rightInd,
-  Variable *var, CString *errMess)
+  CString name, int numElements, CString *errMess)
 {
   int arrInd;
   double dblInd;
   CString temp;
   char *endPtr;
   if (rightInd == leftInd + 1) {
-    errMess->Format("Empty array index for variable %s", var->name);
+    errMess->Format("Empty array index for variable %s", name);
     return 0;
   }
   temp = strItem.Mid(leftInd + 1, rightInd - (leftInd + 1));
+  if (temp.FindOneOf("()-+*/") >= 0 && EvalExpressionInIndex(temp)) {
+    *errMess = "Error doing arithmetic in array index " + temp;
+    return 0;
+  }
   dblInd = strtod((LPCTSTR)temp, &endPtr);
   if (endPtr - (LPCTSTR)temp < temp.GetLength()) {
     errMess->Format("Illegal character in array index %s", (LPCTSTR)temp);
@@ -6746,9 +7136,9 @@ int CMacroProcessor::ConvertArrayIndex(CString strItem, int leftInd, int rightIn
     errMess->Format("Array index %s is not close enough to an integer", (LPCTSTR)temp);
     return 0;
   }
-  if (arrInd < 1 || arrInd > var->numElements) {
+  if (arrInd < 1 || arrInd > numElements) {
     errMess->Format("Array index evaluates to %d and is out of range for variable %s",
-      arrInd, (LPCTSTR)var->name);
+      arrInd, (LPCTSTR)name);
     return 0;
   }
   return arrInd;
@@ -6757,18 +7147,99 @@ int CMacroProcessor::ConvertArrayIndex(CString strItem, int leftInd, int rightIn
 // For a variable with possible multiple elements, find element at index arrInd
 // (numbered from 1, must be legal) and return starting index and index of terminator
 // which is null or \n
-void CMacroProcessor::FindValueAtIndex(Variable *var, int arrInd, int &beginInd, 
+void CMacroProcessor::FindValueAtIndex(CString &value, int arrInd, int &beginInd, 
   int &endInd)
 {
   endInd = -1;
   for (int valInd = 0; valInd < arrInd; valInd++) {
     beginInd = endInd + 1;
-    endInd = var->value.Find('\n', beginInd);
+    endInd = value.Find('\n', beginInd);
     if (endInd < 0) {
-      endInd = var->value.GetLength();
+      endInd = value.GetLength();
       return;
     }
   }
+}
+
+// Evaluate an arithmetic expression inside array index delimiters, which cannot contain
+// spaces, but expanding all parenthese and operators into separate tokens so that the
+// regular arithmetic function can be used.
+int CMacroProcessor::EvalExpressionInIndex(CString &indStr)
+{
+  const int maxItems = 40;
+  CString strItems[maxItems];
+  CString strLeft, temp = indStr.Mid(1);
+  int numItems, opInd, splitInd = -1;
+  char opChar;
+  bool atStartOfClause = true;
+  bool lastWasOp = false;
+  if ((indStr.GetAt(0) == '-' || indStr.GetAt(0) == '+') && temp.FindOneOf("()+-*/") < 0)
+    return 0;
+  strLeft = indStr;
+  while (1) {
+    opInd = strLeft.FindOneOf("()+-*/");
+
+    // Process operator at start first: if it is + or -, see if last was true operator
+    // or we are at start of clause and next is a digit;
+    // if so keep it together with next and find operator after that
+    if (opInd == 0) {
+      opChar = strLeft.GetAt(0);
+      if (opChar == '-' || opChar == '+') {
+        if (lastWasOp || (atStartOfClause && strLeft.GetLength() > 1 &&
+          (char)strLeft.GetAt(1) >= '0' && (char)strLeft.GetAt(1) <= '9')) {
+          temp = strLeft.Mid(1);
+          opInd = temp.FindOneOf("()+-*/");
+          if (opInd > 0)
+            opInd++;
+        }
+      }
+    }
+
+    // If no more operators, assign the remaining string
+    if (opInd < 0) {
+      if (strLeft.GetLength() > 0) {
+        splitInd++;
+        if (splitInd >= maxItems)
+          break;
+        strItems[splitInd] = strLeft;
+      }
+      break;
+    }
+
+    // Split to the left of the operator off if any
+    if (opInd > 0) {
+      splitInd++;
+      if (splitInd >= maxItems)
+        break;
+      strItems[splitInd] = strLeft.Left(opInd);
+      lastWasOp = false;
+      strLeft = strLeft.Mid(opInd);
+      opInd = 0;
+    }
+
+    // Record if this was an operator or start of parentheses and split it off
+    opChar = strLeft.GetAt(0);
+    lastWasOp = opChar == '+' || opChar == '-' || opChar == '*' || opChar == '/';
+    atStartOfClause = opChar == '(';
+    splitInd++;
+    if (splitInd >= maxItems)
+      break;
+    strItems[splitInd] = opChar;
+    strLeft = strLeft.Mid(1);
+  }
+
+  if (splitInd >= maxItems) {
+    SEMMessageBox("Too many components to evaluate expression in array index");
+    return 1;
+  }
+  if (EvaluateExpression(strItems, splitInd + 1, "", 0, numItems, opInd))
+    return 1;
+  if (numItems > 1) {
+    SEMMessageBox("Array index still has multiple components after doing arithmetic");
+    return 1;
+  }
+  indStr = strItems[0];
+  return 0;
 }
 
 // Evaluates an arithmetic expression in the array of items
@@ -6778,6 +7249,7 @@ int CMacroProcessor::EvaluateExpression(CString *strItems, int maxItems, CString
   int ind, left, right, maxLevel, level;
   CString cstr;
   std::string str;
+  bool noLine = line.GetLength() == 0;
 
   // Count original number of items
   numItems = 0;
@@ -6808,8 +7280,8 @@ int CMacroProcessor::EvaluateExpression(CString *strItems, int maxItems, CString
     }
 
     if (level) {
-      AfxMessageBox("Unbalanced parentheses while evaluating an expression in script"
-        " line:\n\n" + line, MB_EXCLAME);
+      SEMMessageBox("Unbalanced parentheses while evaluating an expression in script" +
+        CString(noLine ? "" : " line:\n\n") + line, MB_EXCLAME);
         return 1;
     }
 
@@ -6825,7 +7297,7 @@ int CMacroProcessor::EvaluateExpression(CString *strItems, int maxItems, CString
     cstr = strItems[left - 1];
     cstr.MakeUpper();
     str = std::string((LPCTSTR)cstr);
-    if (left > 0 && (sFunctionSet1.count(str) > 0 || sFunctionSet2.count(str) > 0)) {
+    if (left > 0 && (mFunctionSet1.count(str) > 0 || mFunctionSet2.count(str) > 0)) {
       strItems[left] = strItems[left - 1];
       left--;
       strItems[left] = "(";
@@ -6860,36 +7332,48 @@ int CMacroProcessor::EvaluateArithmeticClause(CString * strItems, int maxItems,
       strp = &strItems[ind];
       if ((!loop && (*strp == "*" || *strp == "/")) ||
         (loop && (*strp == "+" || *strp == "-"))) {
-        if (!ind || ind == numItems - 1) {
-           AfxMessageBox("Arithmetic operator at beginning or end of script line or "
+
+        // Process minus at start, reject other operators at start/end
+        if (!ind && *strp == "-") {
+          if (ItemToDouble(strItems[1], line, right))
+            return 1;
+          result = -right;
+
+          // Replace minus sign and shift strings down by 1
+          ReplaceWithResult(result, strItems, 0, numItems, 1);
+          ind--;
+
+        }  else if (!ind || ind == numItems - 1) {
+           SEMMessageBox("Arithmetic operator at beginning or end of script line or "
              "clause:\n\n" + line, MB_EXCLAME);
            return 1;
-        }
+        } else {
 
-        // Get the values on either side
-        if (ItemToDouble(strItems[ind - 1], line, left) ||
-          ItemToDouble(strItems[ind + 1], line, right))
-          return 1;
-
-        // Compute value
-        if (*strp == "*")
-          result = left * right;
-        else if (*strp == "+")
-          result = left + right;
-        else if (*strp == "-")
-          result = left - right;
-        else {
-          if (fabs(right) < 1.e-30 * fabs(left)) {
-            AfxMessageBox("Division by 0 or very small number in script line:\n\n" +
-              line, MB_EXCLAME);
+          // Get the values on either side
+          if (ItemToDouble(strItems[ind - 1], line, left) ||
+            ItemToDouble(strItems[ind + 1], line, right))
             return 1;
-          }
-          result = left / right;
-        }
 
-        // Replace left value and shift strings down by 2
-        ReplaceWithResult(result, strItems, ind - 1, numItems, 2);
-        ind--;
+          // Compute value
+          if (*strp == "*")
+            result = left * right;
+          else if (*strp == "+")
+            result = left + right;
+          else if (*strp == "-")
+            result = left - right;
+          else {
+            if (fabs(right) < 1.e-30 * fabs(left)) {
+              SEMMessageBox("Division by 0 or very small number in script line:\n\n" +
+                line, MB_EXCLAME);
+              return 1;
+            }
+            result = left / right;
+          }
+
+          // Replace left value and shift strings down by 2
+          ReplaceWithResult(result, strItems, ind - 1, numItems, 2);
+          ind--;
+        }
       }
     }
   }
@@ -6907,7 +7391,7 @@ int CMacroProcessor::EvaluateArithmeticClause(CString * strItems, int maxItems,
     if (ind == numItems - 1)
       break;
     stdstr = std::string((LPCTSTR)str);
-    if (sFunctionSet1.count(stdstr) > 0) {
+    if (mFunctionSet1.count(stdstr) > 0) {
       if (ItemToDouble(strItems[ind + 1], line, right))
         return 1;
       if (str == "SQRT") {
@@ -6939,7 +7423,7 @@ int CMacroProcessor::EvaluateArithmeticClause(CString * strItems, int maxItems,
       } else if (str == "EXP")
         result = exp(right);
       ReplaceWithResult(result, strItems, ind, numItems, 1);
-    } else if (sFunctionSet2.count(stdstr) > 0) {
+    } else if (mFunctionSet2.count(stdstr) > 0) {
       if (ItemToDouble(strItems[ind + 1], line, left) ||
         ItemToDouble(strItems[ind + 2], line, right))
         return 1;
@@ -6960,6 +7444,12 @@ int CMacroProcessor::EvaluateArithmeticClause(CString * strItems, int maxItems,
         result = B3DNINT(left * result) / result;
       } else if (str == "POWER")
         result = pow(left, right);
+      else if (str == "MIN")
+        result = B3DMIN(left, right);
+      else if (str == "MIN")
+        result = B3DMIN(left, right);
+      else if (str == "MAX")
+        result = B3DMAX(left, right);
       ReplaceWithResult(result, strItems, ind, numItems, 2);
     }
   }
@@ -7161,7 +7651,7 @@ BOOL CMacroProcessor::ItemToDouble(CString str, CString line, double & value)
   char *invalid;
   value = strtod(strptr, &invalid);
   if (invalid - strptr != str.GetLength()) {
-    AfxMessageBox("Invalid character in " +  str +
+    SEMMessageBox("Invalid character in " +  str +
       " which you are trying to do arithmetic with in script line:\n\n" +
       line, MB_EXCLAME);
     return true;
@@ -7248,7 +7738,7 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel)
   CString *macro = &mMacros[macroNum];
   int numLabels = 0, numSkips = 0;
   int i, inloop, needVers, index, skipInd, labInd, length, cmdIndex, currentIndex = 0;
-  int currentVersion = 201;
+  int currentVersion = 202;
   CString strLine, strItems[MAX_TOKENS], errmess, intCheck;
   const char *features[] = {"variable1", "arrays", "keepcase", "zeroloop", "evalargs"};
   int numFeatures = sizeof(features) / sizeof(char *);
@@ -7746,12 +8236,8 @@ void CMacroProcessor::InsertDomacro(CString * strItems)
 // Common place to check for reserved control commands
 BOOL CMacroProcessor::WordIsReserved(CString str)
 {
-  return (str == "REPEAT" || str == "ENDLOOP" || str == "DOMACRO" || str == "LOOP" ||
-          str == "CALLMACRO" || str == "ENDIF" || str == "IF" || str == "ELSE" ||
-          str == "BREAK" || str == "CONTINUE" || str == "CALL" || str == "EXIT" ||
-          str == "RETURN" || str == "KEYBREAK" || str == "SKIPTO" || str == "FUNCTION" ||
-          str == "CALLFUNCTION" || str == "ENDFUNCTION" || str == "CALLSCRIPT" || 
-          str == "DOSCRIPT");
+  std::string stdStr = (LPCTSTR)str;
+  return mReservedWords.count(stdStr) > 0;
 }
 
 // Common place to check if arithmetic is allowed for a command

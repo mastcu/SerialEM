@@ -369,10 +369,48 @@
         <TR vAlign="top">
           <TD class="style4">LocalLoopIndexes</TD>
           <TD>Make loop indexes local; this means that a called function or script cannot 
-            access the index value in the caller and is free to reuse the variable name as a 
-            loop index or other variable.&nbsp; If this feature is used, this command should 
+            access the index value in the caller and is free to reuse the variable name 
+              as a loop index or other variable.&nbsp; If this feature is used, this 
+              command should 
             be near the start of any script that may be started independently.&nbsp; Once 
             the feature is invoked, it cannot be turned off.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style4">NewArray var #PL #E</TD>
+          <TD>Creates a new variable with the given name, making it persistent or local if
+               #PL is 1 or -1, respectively, and initialize it with an array of #E zeros.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style4">New2DArray var [#PL] [#R #E]</TD>
+          <TD>Creates a 2D array variable with the given name, making it persistent or 
+              local if #PL is 1 or -1, respectively.&nbsp; If the optional #R and #C are
+               given, the array is initialized with #R rows of #E zeros each, where both
+               must be positive.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style4">AppendToArray var item</TD>
+          <TD>Appends one item or an array or items either to a 1D variable, which may
+               already be an array or not, or to a row of a 2D array, specified with var
+              [row], or as a new row of a 2D array, specified without a subscript.&nbsp;
+               As with setting a variable, if there are multiple items on the line not 
+              specified as an array, only the first item will be added, whereas if there 
+              the multiple items are enclosed in { }, all items will be added to the 
+              array.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style4">TruncateArray var #</TD>
+          <TD>Truncates the given array variable to # elements; # must be positive. For a
+               1D array,&nbsp; the values is truncated to # elements; for a row of a 2D
+               array,&nbsp; specified by var[row], the row of values is truncated; for a 
+              2D array given without a subscript, the number of rows is truncated to #.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style4">ArrayStatistics var</TD>
+          <TD>For the set of values in the given array variable, computes and reports the
+              total number of values, the minimum, the maximum, the mean, the standard deviation
+              and the median.  For a 2D array, the statistics can be of the whole array, or of
+              one row if the variable is given with a row subscript. Values can be assigned
+               to variables at end of commmand.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style4">Require feature [feature] ...<br />
@@ -385,7 +423,8 @@
             specified by name, but this was silly and the command now takes a scripting 
             version number, which is unrelated to the program version number.&nbsp; You can 
             enter either the latest feature name or the version number that your script 
-            needs. The available features, in order of addition, were: 1) &#39;variable1&#39;, which includes two capabilities: assigning reported values 
+            needs. The available features, in order of addition, were: 1) &#39;variable1&#39;,
+               which includes two capabilities: assigning reported values 
             directly to variables listed after a command, and assigning function arguments 
             directly to variables listed on the &#39;Function&#39; line.&nbsp; 2) &#39;arrays&#39;, 
             which is the ability to define a variable with an indexable array of values.&nbsp; 
@@ -393,7 +432,9 @@
             variable.&nbsp; 4) 'zeroloop', which means that a non-positive loop count is 
             allowed.&nbsp; 5) &#39;evalargs&#39;, which means that arithmetic expressions will be 
             evaluated in arguments to some commands.&nbsp; 6) Scripting version 201, which 
-            means commands can be continued onto multiple lines with backslash.</TD>
+            means commands can be continued onto multiple lines with backslash.&nbsp; 
+              7) Scripting version 202, which means that limited arithmetic can be done in 
+              array subscripts (without spaces) and that arithmetic clauses can start with a minus sign.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style4">IsVersionAtLeast #v [#d]</TD>
@@ -1157,6 +1198,10 @@
           <TD>Reads the contents of the given text file, breaks it up by spaces or tabs, and 
             stores the words or numbers as an array in the variable &#39;var&#39;.&nbsp; All lines 
             will be read and combined into the one variable.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style7">Read2DTextFile</TD>
+          <TD>Reads the contents of the given text file, breaks it up by spaces or tabs, and stores the words or numbers of each line as a separate row of a 2D array in the variable &#39;var&#39;.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style7">SetMontageParams # [# # # # #]</TD>

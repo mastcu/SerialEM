@@ -12,6 +12,7 @@
 #include <afxtempl.h>
 #include <set>
 #include <map>
+#include <string>
 class COneLineScript;
 
 #define MAX_LOOP_DEPTH  40
@@ -29,6 +30,11 @@ struct MacroFunction {
   CArray<CString, CString> argNames;
 };
 
+struct ArrayRow {
+  CString value;
+  int numElements;
+};
+
 struct Variable {
   CString name;
   CString value;
@@ -36,7 +42,8 @@ struct Variable {
   int callLevel;   // call level at which variable defined
   int index;       // index with loop level for index, or for report, or script #
   MacroFunction *definingFunc;   // Function it was defined in
-  int numElements;
+  int numElements;  // Number of elements for a 1D array
+  CArray<ArrayRow, ArrayRow> *rowsFor2d;    // Pointer to array of rows for 2D array
 };
 
 struct CmdItem {
@@ -123,6 +130,9 @@ private:
   std::set<std::string> mArithAllowed;
   std::set<std::string> mArithDenied;
   std::map<unsigned int, int> mCmdHashMap;
+  std::set<std::string> mFunctionSet1;
+  std::set<std::string> mFunctionSet2;
+  std::set<std::string> mReservedWords;
 
   CString *mMacros;
 
@@ -234,9 +244,9 @@ public:
   void GetNextLine(CString * macro, int & currentIndex, CString &strLine);
   int ScanForName(int macroNumber, CString *macro = NULL);
   bool SetVariable(CString name, CString value, int type, int index, bool mustBeNew,
-    CString *errStr = NULL);
+    CString *errStr = NULL, CArray<ArrayRow, ArrayRow> *rowsFor2d = NULL);
   bool SetVariable(CString name, double value, int type, int index, bool mustBeNew,
-    CString *errStr = NULL);
+    CString *errStr = NULL, CArray<ArrayRow, ArrayRow> *rowsFor2d = NULL);
   Variable *LookupVariable(CString name, int &ind);
   void ClearVariables(int type = -1, int level = -1, int index = -1);
   int SubstituteVariables(CString * strItems, int maxItems, CString line);
@@ -302,8 +312,9 @@ public:
   void SendEmailIfNeeded(void);
   int TestAndStartFuncOnStop(void);
   int CheckForArrayAssignment(CString * strItems, int &firstInd);
-  void FindValueAtIndex(Variable * var, int arrInd, int & beginInd, int & endInd);
-  int ConvertArrayIndex(CString strItem, int leftInd, int rightInd, Variable * var, CString * errMess);
+  void FindValueAtIndex(CString &value, int arrInd, int & beginInd, int & endInd);
+  int ConvertArrayIndex(CString strItem, int leftInd, int rightInd, CString name, int numElements, 
+    CString * errMess);
   static UINT RunInShellProc(LPVOID pParam);
   afx_msg void OnScriptSetIndentSize();
   afx_msg void OnScriptClearPersistentVars();
@@ -320,6 +331,12 @@ public:
   void OpenOrJustCloseOneLiners(bool reopen);
   unsigned int StringHashValue(const char * str);
   int LookupCommandIndex(CString & item);
+  int LocalVarAlreadyDefined(CString & item, CString &strLine);
+  int FindAndCheckArrayIndexes(CString & item, int leftIndex, int & right1, int & right2,
+    CString *errStr);
+  int EvalExpressionInIndex(CString & indStr);
+  Variable * GetVariableValuePointers(CString & name, CString ** valPtr, int ** numElemPtr,
+    const char *action, CString & errStr);
 };
 
 #endif // !defined(AFX_MACROPROCESSOR_H__33178182_58A1_4F3A_B8F4_D41F94866517__INCLUDED_)
