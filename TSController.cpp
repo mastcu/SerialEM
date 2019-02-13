@@ -3588,7 +3588,7 @@ void CTSController::CenterBeamWithTrial()
 {
   int nx, ny;
   double minRadius;
-  if (!mTSParam.centerBeamFromTrial)
+  if (!mTSParam.centerBeamFromTrial || mSTEMindex)
     return;
   mImBufs->mImage->getSize(nx, ny);
   minRadius = mTrialCenterMaxRadFrac * sqrt((double)(nx *nx + ny * ny));
