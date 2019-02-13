@@ -802,10 +802,10 @@ void CMontageSetupDlg::OnOK()
     mWinApp->mShiftManager->GetPixelSize(mCurrentCamera, magIndex) / 2.;
   if (!m_bMoveStage && !mFittingItem && montIS > maxIS) {
     CString mess;
-    mess.Format("The largest image shift needed for the montage is %.1f microns,\n"
-      "bigger than the maximum image shift of %.1f microns allowed when\n"
-      "fitting a montage to a polygon.\n"
-      "     (This limit is controlled by the property %s)\n\n"
+    mess.Format("The largest image shift needed for the montage is\n"
+      "%.1f microns, bigger than the maximum image shift of\n"
+      "%.1f microns allowed when fitting a montage to a polygon.\n"
+      " (This limit is controlled by the property %s)\n\n"
       "Do you want to use stage movement instead for this montage?", montIS, maxIS,
       magIndex >= lowestM ? "NavigatorMaxMontageIS" : "NavigatorMaxLMMontageIS");
     if (AfxMessageBox(mess, MB_YESNO | MB_ICONQUESTION) == IDYES) {
