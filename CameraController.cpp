@@ -2880,7 +2880,7 @@ void CCameraController::Capture(int inSet, bool retrying)
   } else if (mParam->K2Type == K3_TYPE) {
     mTD.GatanReadMode = K3_COUNTING_SET_MODE;
     if (conSet.processing == DARK_SUBTRACTED)
-      mTD.CountScaling = mParam->countsPerElectron;
+      mTD.CountScaling = mScope->GetSimulationMode() ? 1. : mParam->countsPerElectron;
   }
 
   // DE cameras: Handle numerous items
