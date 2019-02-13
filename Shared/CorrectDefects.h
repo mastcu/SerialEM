@@ -1,7 +1,7 @@
 // Declarations for CorrectDefects.cpp and the CameraDefects structure
 //
-//  $Id$
-//
+// This file is the same between IMOD and SEMCCD but SerialEM needs its own copy with
+// a FloatVec typedef, DLL_IM_EX definition and DLL_IM_EX on CorDefUserToRotFlipCCD
 #ifndef CORRECT_DEFECTS_H
 #define CORRECT_DEFECTS_H
 #include <vector>
@@ -82,4 +82,6 @@ int CorDefParseDefects(const char *strng, int fromString, CameraDefects &defects
 int CorDefSetupToCorrect(int nxFull, int nyFull, CameraDefects &defects, int &camSizeX,
                        int &camSizeY, int scaleDefects, float setBinning,
                        int &useBinning, const char *binOpt);
+int CorDefFillDefectArray(CameraDefects *param, int camSizeX, int camSizeY,
+                          unsigned char *array, int nx, int ny);
 #endif

@@ -595,7 +595,8 @@ static void CorrectPixels2Ways(CameraDefects *param, void *array, int type, int 
 {
   int i, xx, yy;
   for (i = 0; i < (int)param->badPixelX.size(); i++) {
-    if (i < (int)param->pixUseMean.size() && param->pixUseMean[i] == useMean) {
+    if ((i < (int)param->pixUseMean.size() && param->pixUseMean[i] == useMean) ||
+        (i >= (int)param->pixUseMean.size() && !useMean)) {
       xx = param->badPixelX[i] / binning - left;
       yy = param->badPixelY[i] / binning - top;
       if (xx >= 0 && yy >= 0 && xx < sizeX && yy < sizeY) {
@@ -1478,6 +1479,108 @@ int CorDefParseDefects(const char *strng, int fromString, CameraDefects &defects
         CorDefAddBadColumn(values[ind], defects.badRowStart, defects.badRowHeight);
     }
   }
+  return 0;
+}
+
+#define SET_PIXEL(x, y) { ix = (x) + ixOffset;    \
+    iy = (y) + iyOffset;                          \
+    if (ix >= 0 && ix < nx && iy >= 0 && iy < ny) \
+      array[ix + iy * nx] = 1; }
+
+// Fill an array with a binary map (0 and 1) of all pixels contained in defects.  The 
+// camera size (after scaling, if any) is taken from the arguments rather than the defect
+// list.  The array must have size nx x ny.  These sizes need not match the camera size;
+// the image is assumed to be centered on the camera, and defects at the edge are extended
+// if an image is oversized
+int CorDefFillDefectArray(CameraDefects *param, int camSizeX, int camSizeY,
+                          unsigned char *array, int nx, int ny)
+{
+  int ix, iy, badX, badY, ind, row, col, xLowExtra, xHighExtra, yLowExtra, yHighExtra;
+  int ixOffset = (nx - camSizeX) / 2;
+  int iyOffset = (ny - camSizeY) / 2;
+  if (nx <= 0 || ny <= 0 || camSizeX <= 0 || camSizeY <= 0)
+    return 1;
+  memset(array, 0, nx * ny);
+
+  // Get the limits for defects at edge if the image is oversized
+  xLowExtra = 0;
+  xHighExtra = camSizeX;
+  yLowExtra = 0;
+  yHighExtra = camSizeY;
+  if (ixOffset > 0) {
+    xLowExtra = -ixOffset;
+    xHighExtra = nx - ixOffset;
+  }
+  if (iyOffset > 0) {
+    yLowExtra = -iyOffset;
+    yHighExtra = ny - iyOffset;
+  }
+
+  // Bad pixels
+  for (ind = 0; ind < (int)param->badPixelX.size(); ind++) {
+    badX = param->badPixelX[ind];
+    badY = param->badPixelY[ind];
+    SET_PIXEL(badX, badY);
+    if (param->wasScaled > 0) {
+      SET_PIXEL(badX + 1, badY);
+      SET_PIXEL(badX, badY + 1);    
+      SET_PIXEL(badX + 1, badY + 1);
+    }
+  }
+
+  // Bad columns and rows
+  for (col = 0; col < (int)param->badColumnStart.size(); col++) {
+    for (ind = 0; ind < param->badColumnWidth[col]; ind++) {
+      badX = param->badColumnStart[col] + ind;
+      for (badY = yLowExtra; badY < yHighExtra; badY++)
+        SET_PIXEL(badX, badY);
+    }
+  }
+  for (row = 0; row < (int)param->badRowStart.size(); row++) {
+    for (ind = 0; ind < param->badRowHeight[row]; ind++) {
+      badY = param->badRowStart[row] + ind;
+      for (badX = xLowExtra; badX < xHighExtra; badX++)
+        SET_PIXEL(badX, badY);
+    }
+  }
+
+  // Partial bad columns and rows
+  for (col = 0; col < (int)param->partialBadCol.size(); col++) {
+    for (ind = 0; ind < param->partialBadWidth[col]; ind++) {
+      badX = param->partialBadCol[col] + ind;
+      for (badY = param->partialBadStartY[col]; badY <= param->partialBadEndY[col];
+           badY++)
+        SET_PIXEL(badX, badY);
+    }
+  }
+  
+  for (row = 0; row < (int)param->partialBadRow.size(); row++) {
+    for (ind = 0; ind < param->partialBadHeight[row]; ind++) {
+      badY = param->partialBadRow[row] + ind;
+      for (badX = param->partialBadStartX[row]; badX <= param->partialBadEndX[row]; 
+           badX++)
+        SET_PIXEL(badX, badY);
+    }
+  }
+
+  // Region outside usable area
+  if (param->usableLeft > 0)
+    for (badX = xLowExtra; badX < param->usableLeft; badX++)
+      for (badY = yLowExtra; badY < yHighExtra; badY++)
+        SET_PIXEL(badX, badY);
+  if (param->usableRight > 0)
+    for (badX = param->usableRight + 1; badX < xHighExtra; badX++)
+      for (badY = yLowExtra; badY < yHighExtra; badY++)
+        SET_PIXEL(badX, badY);
+  if (param->usableTop > 0)
+    for (badY = yLowExtra; badY < param->usableTop; badY++)
+      for (badX = xLowExtra; badX < xHighExtra; badX++)
+        SET_PIXEL(badX, badY);
+  if (param->usableBottom > 0)
+    for (badY = param->usableBottom + 1; badY < xHighExtra; badY++)
+      for (badX = xLowExtra; badX < xHighExtra; badX++)
+        SET_PIXEL(badX, badY);
+  
   return 0;
 }
 
