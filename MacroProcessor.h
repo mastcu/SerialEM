@@ -11,6 +11,7 @@
 
 #include <afxtempl.h>
 #include <set>
+#include <map>
 class COneLineScript;
 
 #define MAX_LOOP_DEPTH  40
@@ -121,6 +122,7 @@ private:
   CArray <MacroFunction *, MacroFunction *> mFuncArray[MAX_MACROS];
   std::set<std::string> mArithAllowed;
   std::set<std::string> mArithDenied;
+  std::map<unsigned int, int> mCmdHashMap;
 
   CString *mMacros;
 
@@ -316,6 +318,8 @@ public:
   afx_msg void OnUpdateOpenEditorsOnStart(CCmdUI *pCmdUI);
   void TransferOneLiners(bool fromDialog);
   void OpenOrJustCloseOneLiners(bool reopen);
+  unsigned int StringHashValue(const char * str);
+  int LookupCommandIndex(CString & item);
 };
 
 #endif // !defined(AFX_MACROPROCESSOR_H__33178182_58A1_4F3A_B8F4_D41F94866517__INCLUDED_)
