@@ -317,7 +317,7 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"ReportK2FileParams", 0, 0}, {"SetK2FileParams", 1, 0}, {"SetDoseFracParams", 1, 0}, 
 {"SetK2ReadMode", 2, 0}, {"SetProcessing", 2, 0}, {"SetFrameTime", 2, 0},
 {"ReportCountScaling", 0, 0}, {"SetDivideBy2", 1, 0}, {"ReportNumFramesSaved", 0, 0},
-{"RemoveFile", 1, 0}, {"ReportFrameAliParams", 0, 0}, {"SetFrameAliParams", 2, 0},
+{"RemoveFile", 1, 0}, {"ReportFrameAliParams", 0, 0}, {"SetFrameAliParams", 1, 0},
 {"Require", 1, 0}, {"OnStopCallFunc", 1,0}, {"RetryReadOtherFile",1,0}, {"DoScript",1,0},
 {"CallScript",1,0}, {"ScriptName", 1, 0}, {"SetFrameAli2", 1,0}, {"ReportFrameAli2", 0,0},
 {"ReportMinuteTime", 0, 0}, {"ReportColumnOrGunValve", 0, 0}, {"NavIndexWithLabel", 1,0 },
@@ -1472,9 +1472,13 @@ void CMacroProcessor::NextCommand()
         index = itemInt[1] - 1;
 
       // Save the current index at this level and move up a level
+      // If doing a function with string arg, substitute in line for that first so the
+      // pre-existing level applies
       if (!(CMD_IS(DOMACRO) || CMD_IS(DOSCRIPT))) {
         if (mCallLevel >= MAX_CALL_DEPTH)
           ABORT_LINE("Trying to call too many levels of scripts/functions in line: \n\n");
+        if (func && func->ifStringArg)
+          SubstituteVariables(&strLine, 1, strLine);
         mCallIndex[mCallLevel++] = mCurrentIndex;
         mCallMacro[mCallLevel] = index;
         mLoopDepths[mCallLevel] = -1;
@@ -1500,7 +1504,6 @@ void CMacroProcessor::NextCommand()
           }
         }
         if (!truth && func->ifStringArg) {
-          SubstituteVariables(&strLine, 1, strLine);
           mWinApp->mParamIO->StripItems(strLine, index + ix0, strCopy);
           truth = SetVariable(func->argNames[index], strCopy, VARTYPE_LOCAL, 
             -1, false, &report);
@@ -4781,18 +4784,24 @@ void CMacroProcessor::NextCommand()
       if (CMD_IS(REPORTFRAMEALIPARAMS)) {                   // ReportFrameAliParams
         index = (faParam->doRefine ? 1 : -1) * faParam->refineIter;
         index2 = (faParam->useGroups ? 1 : -1) * faParam->groupSize;
-        report.Format("Frame alignment for Record has binning %d, keep precision %d"
-          ", strategy %d, all-vs-all %d, refine %d, group %d",
-          faParam->aliBinning, faParam->keepPrecision, faParam->strategy, 
+        report.Format("Frame alignment for Record has %s %d, keep precision %d"
+          ", strategy %d, all-vs-all %d, refine %d, group %d", 
+          faParam->binToTarget ? "target" : "binning",
+          faParam->binToTarget ? faParam->targetSize : faParam->aliBinning, 
+          faParam->keepPrecision, faParam->strategy, 
           faParam->numAllVsAll, index, index2);
         SetReportedValues(&strItems[1], faParam->aliBinning, faParam->keepPrecision,
           faParam->strategy, faParam->numAllVsAll, index, index2);
         mWinApp->AppendToLog(report, mLogAction);
 
       } else if (CMD_IS(SETFRAMEALIPARAMS)) {                 // SetFrameAliParams
-        if (itemInt[1] < 1 || itemInt[1] > 16)
+        if (itemInt[1] < 1 || (itemInt[1] > 16 && itemInt[1] < 100))
           ABORT_LINE("Alignment binning is out of range in:\n\n");
-        faParam->aliBinning = itemInt[1];
+        if (itemInt[1] > 16)
+          faParam->targetSize = itemInt[1];
+        else
+          faParam->aliBinning = itemInt[1];
+        faParam->binToTarget = itemInt[1] > 16;
         if (!itemEmpty[2])
           faParam->keepPrecision = itemInt[2] > 0;
         if (!itemEmpty[3]) {
@@ -4841,6 +4850,8 @@ void CMacroProcessor::NextCommand()
   } else if (CMD_IS(REPORTCOUNTSCALING)) {                  // ReportCountScaling
     index = mCamera->GetDivideBy2();
     delX = mCamera->GetCountScaling(camParams);
+    if (camParams->K2Type == K3_TYPE)
+      delX = camParams->countsPerElectron;
     SetReportedValues(&strItems[1], index, delX);
     report.Format("Division by 2 is %s; count scaling is %.3f", index ? "ON" : "OFF", 
       delX);
