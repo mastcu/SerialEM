@@ -3,6 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+1/30/19: SEM_3-7-0
+1/29/19: Made camera setup dialog check frame alignment parameters when align
+is turned on and change them if appropriate.
+
+1/29/19: Fixed AutoGainFactors and scaling of Ceta images, broken 5/29/18.
+
 1/25/19: Fixed variable substitution into the string argument of a function
 call.
 
@@ -11,10 +17,10 @@ call.
 1/25/19: Fixed preserving walk-up reference during walk-down of bidirectional
 series if it does image shift reset or STEM focusing.
 
-1/22/19: The one-line script window is now resizable and can contain up to 5
+* 1/22/19: The one-line script window is now resizable and can contain up to 5
 scripts.  The window will reopen on program startup if script windows do.
 
-1/22/19: CPU-based frame alignment for K2/K3 is now done through a separate
+* 1/22/19: CPU-based frame alignment for K2/K3 is now done through a separate
 program to solve memory leaks in DM, allow faster FFTs with Intel libraries,
 and eliminate license issues with using FFTW.
 
@@ -25,7 +31,7 @@ filename, and report if it is open.
 
 1/8/19: Fixed problem moving stage from scope control in continuous mode.
 
-1/8/19: Initial processing steps for frame alignment can now be done on the
+* 1/8/19: Initial processing steps for frame alignment can now be done on the
 GPU, which can greatly speed it up for faster cards with enough memory.
 
 1/8/19: Enabled shift buttons for stage movement in scope control dialog when
@@ -35,12 +41,12 @@ there is no beam calibration.
 
 1/7/19: Buffers can be specified by number or letter in script commands.
 
-1/7/19: Added properties for defining entries in a Tools menu for running
+* 1/7/19: Added properties for defining entries in a Tools menu for running
 external programs, and script commands for running programs similarly.
 
 1/7/19: Added script command to open .mdoc for frames.
 
-1/7/19: Added property to specify a possibly multiline title entry to be
+* 1/7/19: Added property to specify a possibly multiline title entry to be
 included in frame files saved from K2/K3 and in frame stack mdoc files.
 
 1/7/19: Fixed crash when exiting with one-line script open.
@@ -49,7 +55,7 @@ included in frame files saved from K2/K3 and in frame stack mdoc files.
 
 1/7/19: Fixed binning shown in frame mdocs for K3.
 
-12/20/18: Added basic support for moving to next phase plate position on FEI
+* 12/20/18: Added basic support for moving to next phase plate position on FEI
 scopes.
 
 12/20/18: Changed phase output to log from Ctffind to degrees.  Made "reported
@@ -76,10 +82,10 @@ flip.
 
 12/8/18: Fixed losing a setting of binning 0.5 for K3 between sessions.
 
-12/5/18: Made it possible to save unnormalized hardware binned frames from K3
+* 12/5/18: Made it possible to save unnormalized hardware binned frames from K3
 and get a gain reference for normalizing them.
 
-12/2/18: Added option to save an mdoc file along with each frame stack.
+* 12/2/18: Added option to save an mdoc file along with each frame stack.
 
 12/2/18: Made changes so that the program can get dose rate from DM for K2 and
 K3 cameras with GMS 3.31.
@@ -101,7 +107,7 @@ camera.
 11/19/18: Fixed ability to set mag in STEM on FEI scopes when staying in LM,
 and to switch from STEM nanoprobe to microprobe when in LM.
 
-11/19/18: Started storing size and position for individual script editors and
+* 11/19/18: Started storing size and position for individual script editors and
 added an option (defaulted on) for editors to be restored when the program is
 started or settings are read.
 
@@ -124,12 +130,12 @@ images.
 11/5/18: Added optional maximum beam shift to AutocenterBeam and
 CenterBeamFromImage commands.
 
-11/5/18: Enabled post-actions for Falcon and DE cameras when aligning frames
+* 11/5/18: Enabled post-actions for Falcon and DE cameras when aligning frames
 in SerialEM so tilting can be done before aligning.
 
 11/4/18: Added button to clear out filter adjustment from previous session.
 
-11/4/18: Added script command to move phase plate to next position on JEOL,
+* 11/4/18: Added script command to move phase plate to next position on JEOL,
 and changed aperture and phase plate movement to be done with a thread.
 
 11/4/18: Got size restrictions on frame alignment sets working correctly for
@@ -137,7 +143,7 @@ K3.  Allowed post-actions with K3 if StartupDelay is at least 0.5.
 
 11/4/18: Fixed handling of probe mode and defocus/beam changes, broken 10.21.
 
-10/29/18: Added focus, stage, and screen control to scope control panel.
+* 10/29/18: Added focus, stage, and screen control to scope control panel.
 
 10/29/18: Images from a Dumb Falcon 3 (no advanced scripting) are scaled by
 exposure time.
@@ -145,10 +151,10 @@ exposure time.
 10/29/18: Inverted direction of focus and Z height changes on Hitachi because
 tilting is around the Y, not the X, axis.
 
-10/21/18: Allowed continuous mode to be used for mag IS offset calibration and
+* 10/21/18: Allowed continuous mode to be used for mag IS offset calibration and
 enabled everything but mag button in scope control panel during this cal.
 
-10/21/18: In continuous mode, enabled scope control panel during and made it
+* 10/21/18: In continuous mode, enabled scope control panel and made it
 blank beam during operations like mag change that make transients.
 
 10/21/18: Added alpha to low dose summary line and alpha spinner to scope
@@ -182,19 +188,19 @@ montage to polygon in New file at item.
 10/1/18: Changed hot key for enabling CTF fitting from Shift-D to Ctrl-D,
 which fixes multiple deletion in the Navigator with Shift-D.
 
-10/1/18: Added a menu option to add a grid of points just like the last one,
+* 10/1/18: Added a menu option to add a grid of points just like the last one,
 without having to answer any queries.
 
-10/1/18: A grid of points can now be specified by 7 points instead of 5 to
+* 10/1/18: A grid of points can now be specified by 7 points instead of 5 to
 overcome inaccuracy in the inter-hole interval specified by adjacent point.
 
 10/1/18: Added an option to skip the montage dialog when fitting a montage to
 a polygon.
 
-10/1/18: Made it possible to set up tilt series or new file at items for a
+* 10/1/18: Made it possible to set up tilt series or new file at items for a
 range of points by pressing Shift T or Shift N twice.
 
-10/1/18: Made the first off-center multi-shot image within a hole be taken
+* 10/1/18: Made the first off-center multi-shot image within a hole be taken
 along the tilt axis.
 
 10/1/18: Added smallest defocus for analysis to CTF acquire parameter
@@ -202,7 +208,7 @@ entries.
 
 9/27/18: Added check for neutral image shift values being correct on JEOL.
 
-9/27/18: Added ability to tilt in steps, shutter the beam, and optionally
+* 9/27/18: Added ability to tilt in steps, shutter the beam, and optionally
 change focus or image shift during an acquisition that saves frames. Added
 script commands: to set this up for regular tilts or for ones specified in an
 array variable that can be read from a text file; to save a file with actual
@@ -212,6 +218,7 @@ frames.
 9/27/18: Added dose per frame line to camera setup dialog.
 
 9/27/18: Initial changes to support Tietz XF416.
+
 9/24/18: SEM_3-6-22
 9/24/18: Fixed image rastering problem with K2 in early return unaligned
 partial sum when aligning frames (In 3.6).
@@ -221,7 +228,7 @@ _x64.* in Licenses directory (In 3.6).
 
 8/29/18: Fixed control panel positions for Windows 10.
 
-8/24/18: Made SerialEMCCD plugin open all TIFF files as big TIFF to be able
+* 8/24/18: Made SerialEMCCD plugin open all TIFF files as big TIFF to be able
 to save > 4 GB.
 
 8/24/18: Added ability to set limit on minimum resolution for CTF fitting when
@@ -243,10 +250,10 @@ on in dummy mode.
 
 8/9/18: Made script processor not try to move stage with 0 movement (In 3.6).
 
-8/6/18: Added ability to use Ctrl to extend the delay time for getting a
+* 8/6/18: Added ability to use Ctrl to extend the delay time for getting a
 single mag or spot change when using the spinners in the scope control panel.
 
-8/6/18: Made Unblank button in Low Dose and STEM control panels able to blank
+* 8/6/18: Made Unblank button in Low Dose and STEM control panels able to blank
 beam also.
 
 8/6/18: Fixed coma-free alignment test for enough astigmatism range.
@@ -268,7 +275,7 @@ provide dark-subtracted or normalized data.
 
 8/3/18: Added support for floating point images from plugin cameras.
 
-8/3/18: Eliminated Low Dose radio buttons for area to show when screen down.
+* 8/3/18: Eliminated Low Dose radio buttons for area to show when screen down.
 
 8/3/18: Added log, log base 10, and exponential script functions.
 
@@ -277,7 +284,7 @@ relevant conditions change.
 
 7/29/18: Fixed crash from the axis rotation title being too long (In 3.6).
 
-7/19/18: Added ability to continue script commands onto multiple lines by
+* 7/19/18: Added ability to continue script commands onto multiple lines by
 ending them with a backslash after a space.
 
 7/19/18: Initialized variable to prevent camera routine from trying to do a
@@ -286,10 +293,10 @@ beam tilt in post-actions.
 7/19/18: Prevented error message when it fails to close clumn valves during a
 crash.
 
-7/19/18: Added separate buttons for going to a low dose area to low dose panel
+* 7/19/18: Added separate buttons for going to a low dose area to low dose panel
 and reverted the radio buttons to just controlling show when screen down.
 
-7/19/18" Added current camera name to camera & script tools panel.
+7/19/18: Added current camera name to camera & script tools panel.
 
 7/10/18: Added script commands to report on next Nav item to be acquired,
 change item labels and colors, make an anchor map, and strip digits from the
@@ -301,7 +308,7 @@ fixed buffer overrun and crash with long defect file names. (In 3.6)
 7/2/18: Fixed returned image not being reduced correctly when aligning K2
 images with binning 3 or 6.
 
-7/2/18: Added a small delay per frame to startup delay in K2 with dose
+* 7/2/18: Added a small delay per frame to startup delay in K2 with dose
 fractionation.  Revised camera timing output and instructions to tell people
 just to use the minimum StartupDelay instead of changing the allowed minimum.
 
@@ -349,7 +356,7 @@ no license for it.
 is not allowed.
 
 5/29/18: SEM_3-6-17
-5/29/18: Added support for K3 camera.  Parallelized several frame-processing
+** 5/29/18: Added support for K3 camera.  Parallelized several frame-processing
 steps, with modest time-savings on K2 and good savings on K3.
 
 5/29/18: Fixed JEOL scope plugin to connect with older TemExt64 versions by
@@ -357,7 +364,7 @@ using the old class ID after failing with the new one.
 
 5/29/18: Fixed loss of OneView drift correction setting, broken 11/3/17.
 
-5/29/18: Made beam intensity calibration use counting mode for K2 when dose
+* 5/29/18: Made beam intensity calibration use counting mode for K2 when dose
 rate is low enough and set exposure and count parameters automatically.
 
 5/29/18: Fixed CTF-based astigmatism correction to account for rotation
@@ -368,7 +375,7 @@ montage piece and rotate on load is set.
 
 5/29/18: Fixed lookup of astigmatism/coma calibration at nearest mag (In 3.6).
 
-5/25/18: Sped up saving from K2 by computing min/max/mean from samples instead
+* 5/25/18: Sped up saving from K2 by computing min/max/mean from samples instead
 of whole image (In 3.6).
 
 5/23/18: Fixed test in tilt series for whether stage tilted to correct angle
@@ -397,15 +404,15 @@ probe mode change before saving any values.
 
 5/6/18: Added script commands to load a map.
 
-5/6/18: Made autofocus abort if too many iterations measure a defocus near
+* 5/6/18: Made autofocus abort if too many iterations measure a defocus near
 zero, and if there are too many iterations where the change was not limited.
 
-5/6/18: Made Montage Prescan not increase the binning by more than 2 for some
+* 5/6/18: Made Montage Prescan not increase the binning by more than 2 for some
 CMOS cameras with fast readouts (direct detectors, OneView, Ceta), and made it
 not drop the exposure time so much in low dose mode by allowing counts to
 increase up to 4-fold.
 
-4/27/18: Multiple records can now be taken from multiple holes as well as
+** 4/27/18: Multiple records can now be taken from multiple holes as well as
 from multiple positions in a hole.
 
 4/27/18: Added script commands to load a map and added option to adjust note
@@ -433,7 +440,7 @@ one detector.
 3/28/18: If a low dose map is used for anchor state, new anchor map will be
 taken in low dose mode too, instead of just matching parameters (In 3.6).
 
-3/28/18: Added ability to run a script after each acquisition in acquire at
+* 3/28/18: Added ability to run a script after each acquisition in acquire at
 items.
 
 3/28/18: Added long operations for filling nitrogen or flashing FEG on
@@ -448,16 +455,17 @@ correctly.
 
 3/21/18: A few more tweaks in the CTF-based astigmatism/coma routine.
 
-3/21/18: Added calibration of beam tilt needed to compensate image shift, made
+* 3/21/18: Added calibration of beam tilt needed to compensate image shift, made
 multi-shot routine able to use this, added some related script commands and
-options on image shift commands to do compensation for he image shift.
+options on image shift commands to do compensation for the image shift.
 
-3/21/18: Switched Ctffind outout from showing defocus 1 and 2 to showing
+3/21/18: Switched Ctffind output from showing defocus 1 and 2 to showing
 average defocus and astigmatism (difference between the two).
 
-3/21/18: Added ability to make a true JPEG file because ImageJ will not
-display JPEG-compressed TIFFs and mad JPEG/JPG an allowed file type on the
+* 3/21/18: Added ability to make a true JPEG file because ImageJ will not
+display JPEG-compressed TIFFs and made JPEG/JPG an allowed file type on the
 SaveToOtherFile command.
+
 3/18/18: Prevented right click in edit mode from moving map or polygon
 (In 3.6).
 
@@ -469,7 +477,7 @@ SaveToOtherFile command.
 3/1/18: Added script commands for reporting current file number and last
 measured astigmatism or beam tilt.
 
-2/18/18 Added script command that behaves like Echo but evaluates arithmetic
+* 2/18/18 Added script command that behaves like Echo but evaluates arithmetic
 expressions.
 
 2/18/18: SEM_3-6-15
@@ -477,7 +485,7 @@ expressions.
 Record and from 2 to 1.5 for Focus.  Fixed Focus using Trial factor of 0.6 if
 the two are tied together.
 
-2/16/18: Arithmetic expressions are now allowed on all script commands
+* 2/16/18: Arithmetic expressions are now allowed on all script commands
 starting with "Set" and many others.
 
 2/16/18: In camera setup dialog, fixed estimate of dose rate at camera for
@@ -487,7 +495,7 @@ difference in mag between low dose areas.
 including focusing with Record and adding a big settling time when not
 starting in Record.
 
-2/10/18: Added routines for astigmatism correction and coma-free alignment by
+** 2/10/18: Added routines for astigmatism correction and coma-free alignment by
 CTF fitting to images with Thon rings.  The latter is much better than the old
 coma-free alignment routine and requires no calibration.
 
@@ -506,10 +514,10 @@ than 40 words (In 3.6).
 1/24/18: Stopped calling DM to ensure existence of dark reference for a K2
 camera when post-actions are going to occur (In 3.6).
 
-1/23/18: Added output on status bar of frequency and resolution for a point
+* 1/23/18: Added output on status bar of frequency and resolution for a point
 clicked in FFT with middle mouse button.
 
-1/23/18: Added ctffind module, options to support fitting to Thon rings when
+** 1/23/18: Added ctffind module, options to support fitting to Thon rings when
 click in FFT, and CtfFind script command to run it with specified parameters.
 
 1/10/18: Made non-calibration parameters saved in the short-term calibration
@@ -521,22 +529,22 @@ polygons at specific mags.
 1/3/18: Fixed bug in limiting K2 coordinates entered with SetCameraArea (In
 3.6).
 
-1/3/18: Added menu option and script command to reduce an image in size with
+* 1/3/18: Added menu option and script command to reduce an image in size with
 an antialiasing filter.
 
-1/3/18: Added script command to start Navigator Acquire when the script ends,
+* 1/3/18: Added script command to start Navigator Acquire when the script ends,
 and a Postpone button to the Acquire dialog for setting parameters only.
 
 1/1/18: Expanded SuffixForExtraFile command to provide suffixes for more than
 one extra file to open during Navigator acquisition.
 
-1/1/18: Added option to save multiple extra Records into separate stack
+* 1/1/18: Added option to save multiple extra Records into separate stack
 files instead of all into one.
 
-1/1/18: Allowed up to 6 STEM channels to be obtained simultaneously during
+* 1/1/18: Allowed up to 6 STEM channels to be obtained simultaneously during
 tilt series.  Added STEM channel name to mdoc file.
 
-12/29/17: Made truncation when saving as bytes be expressed as percentage
+* 12/29/17: Made truncation when saving as bytes be expressed as percentage
 instead of number of pixels, be saved as a setting, and have a separate value
 for single-file saving so JPEG-compressed TIFFs can look OK without adjusting
 contrast.
@@ -544,13 +552,13 @@ contrast.
 12/29/17: Made low dose do image shift change before leaving search mode on
 JEOL using PLA.
 
-12/18/17: Add frame alignment parameters for binning to a target size to avoid
+* 12/18/17: Add frame alignment parameters for binning to a target size to avoid
 a set binning becoming inappropriate for different size frames.
 
 12/8/17: SEM_3-6-14
 12/6/17: Changed script beam size measurement from radius to diameter.
 
-12/3/17: Added frame alignment for DE camera frames.
+** 12/3/17: Added frame alignment for DE camera frames.
 
 12/3/17: Fixed coordinates in piece put into nav file.
 
@@ -560,12 +568,12 @@ is high enough (In 3.6).
 11/30/17: Fixed crash from using drift correction with OneView with a
 non-square subarea (In 3.6).
 
-11/26/17: Added option to skip file properties dialog.  Started saving file
+* 11/26/17: Added option to skip file properties dialog.  Started saving file
 type and compression type for save single/other in settings so it would be
 easy to save a particular type of compressed tiff from that command without
 having to revisit the file properties dialog.
 
-11/24/17: Made the program store the fraction of the area in the frame
+* 11/24/17: Made the program store the fraction of the area in the frame
 occupied by the main image window so that the window can be kept reliably
 smaller than the frame; the allocation of width between the main and
 FFT window is also stored and can be easily adjusted.
@@ -573,7 +581,7 @@ FFT window is also stored and can be easily adjusted.
 11/20/17: Fixed potential problems with spot intensity calibrations that do
 not start at spot 1 (In 3.6).
 
-11/19/17: Added small dialog for entering and running a single-line script
+* 11/19/17: Added small dialog for entering and running a single-line script
 command.
 
 11/9/17: Substituted variables in SaveLogOpenNew command (In 3.6).
@@ -585,17 +593,17 @@ first part of bidirectional tilt series.
 11/5/17: Fixed the lack of defect correction when drift correction is used in
 the OneView if there is no BasicCorrections property entry (In 3.6).
 
-11/3/17: Preliminary version with changes for DE camera
+** 11/3/17: Preliminary version with changes for DE camera
 counting/super-resolution modes and ability to set save folder.
 
-11/3/17: Rearranged camera setup so that dark reference options could be
+* 11/3/17: Rearranged camera setup so that dark reference options could be
 hidden when inappropriate, also hide shuttering and lower size buttons for
 Falcon.
 
 10/22/17: Prevented DE camera FPS value from being put in wrong camera's
 parameters (In 3.6).
 
-10/21/17: Added a task to take multiple Record shots in a hole with image
+** 10/21/17: Added a task to take multiple Record shots in a hole with image
 shift, a script command to run the task, an option to draw the pattern of
 shots when showing the Acquire area in Navigator, and a dialog to set the
 parameters for the task and for drawing.
@@ -650,7 +658,7 @@ unlinearized values.
 9/16/17: Stopped function for getting dose rate from image mean from getting
 relative gain factor from the wrong buffer (In 3.6).
 
-9/12/17: Added ability to align frames from Falcon cameras in SerialEM and
+** 9/12/17: Added ability to align frames from Falcon cameras in SerialEM and
 write command files for aligning with IMOD, just as with K2.
 
 9/12/17: Added script commands for suppressing the check on frame alignment
@@ -664,7 +672,7 @@ and realign until IS is below a threshold, and to leave IS at 0.
 
 9/1/17: Added script menu option to clear persistent variables.
 
-8/31/17: Added option to save frame align com files to same folder as frames.
+* 8/31/17: Added option to save frame align com files to same folder as frames.
 
 8/31/17: Added checks for beam intensity calibrations with 0 intensities.
 
@@ -679,7 +687,7 @@ from message box to log window output (In 3.6).
 8/28/17: When an image that was already saved is saved to single/other file,
 retain the previous save information so that it can be made into a map.
 
-8/28/17: Started using Intel FFT routines.
+* 8/28/17: Started using faster Intel FFT routines.
 
 8/18/17: Fixed autofocus to apply change limits and absolute focus limits
 after first iteration instead of clearing them (In 3.6).
@@ -700,14 +708,14 @@ backlash.
 the current item and resume; relabeled more buttons in Camera and Script
 control panel to make it easier to control Navigator acquisition.
 
-8/8/17: Added ability to set View or Search shift offsets by placing the
+* 8/8/17: Added ability to set View or Search shift offsets by placing the
 marker at corresponding points in two images.
 
-8/7/17: Search mode in Low Dose now has almost all the capabilities as View,
+** 8/7/17: Search mode in Low Dose now has almost all the capabilities as View,
 with the ability to take montages in Search, set defocus and shift offsets for
 it, and have those offsets used properly in Realign to Item.
 
-8/7/17: Added separate camera parameters for Search, and a new parameter set
+** 8/7/17: Added separate camera parameters for Search, and a new parameter set
 that can be selected to be used for montages.  If fewer options are desired in
 the camera setup dialog, each of these can be hidden.
 
@@ -731,10 +739,10 @@ routines that step through spots (In 3.6).
 7/19/17: Stopped it from turning off Low Dose when switching back to a montage
 file after changing the Record binning (In 3.6).
 
-7/14/17: Added ability to align subset of frames either in plugin or in IMOD
+* 7/14/17: Added ability to align subset of frames either in plugin or in IMOD
 when saving K2 frames.
 
-7/14/17: Added ability to restrict frame alignment parameters to 4K or 8K
+* 7/14/17: Added ability to restrict frame alignment parameters to 4K or 8K
 frames, or to aligning in plugin versus IMOD, with some automatic switching
 when appropriate.
 
@@ -751,21 +759,20 @@ area being put into the overview (In 3.6).
 them up again (In 3.6).
 
 7/9/17: SEM_3-6-10
-7/8/17: Add Navigator option to all current Low Dose parameters to be used
+7/8/17: Add Navigator option for current Low Dose parameters to be used
 instead of the map parameters for Realign to Item.
 
 7/7/17: Fix fitting of View mode montage to polygon and drawing of Trial/Focus
 areas on View image to take account of high defocus mag calibration (In 3.6).
 
-7/5/17: In Navigator Acquire at Items, added options for doing a subset of
+* 7/5/17: In Navigator Acquire at Items, added options for doing a subset of
 items, skipping stage move if possible, and skipping stage move in Z.  There
 is also a script command to enable skipping the stage move.
-
 
 7/4/17: Fixed tilt series variations dialog to constrain exposure time series
 to multiple of frame time for Falcon and DE cameras (In 3.6).
 
-7/4/17: Added to mdoc file the dose per frame when frames saved, and
+* 7/4/17: Added to mdoc file the dose per frame when frames saved, and
 prior cumulative dose in Record area for tilt series images.
 
 7/3/17: Added special option to normalize all lenses when changing mag within
@@ -802,7 +809,7 @@ there are no images yet.
 5/23/17: Fixed SetUserSetting command for integer value, added update call
 after this command so changes propagate through system.
 
-5/17/17: Script processor now searches in current script first for a
+* 5/17/17: Script processor now searches in current script first for a
 function with no script name in front of it, thus allowing duplicate
 function names in other scripts.
 
@@ -837,20 +844,20 @@ there is an energy filter (In 3.6).
 
 4/17/17: Added script command to skip points in the current group.
 
-4/15/17: Added script command for writing a single-image file of specified
+* 4/15/17: Added script command for writing a single-image file of specified
 type and compression.
 
-4/15/17: Added option for saving TIFF files with JPEG compression.
+* 4/15/17: Added option for saving TIFF files with JPEG compression.
 
 4/13/17: SEM-3-6-6
 4/13/17: Fix TIFF writing, broken 4/5/17 (In 3.6).
 
 4/13/17: Fixed writing of long summed frame lists (In 3.6).
 
-4/13/17: Added automatic indentation of scripts with Tab/` and stabilized line
+* 4/13/17: Added automatic indentation of scripts with Tab/` and stabilized line
 in editor window when Tab is used.
 
-4/13/17: Changed dose rate output in microscope status panel to be per sqaure
+* 4/13/17: Changed dose rate output in microscope status panel to be per square
 Angstrom and appear unconditionally, and changed dose rate output in camera
 setup dialog to be rate at camera, estimated from prior images.
 
@@ -863,7 +870,7 @@ be run as one of the LongOperation entries.
 4/10/17: Fixed UpdateHardwareDarkRef command to treat its hours value properly
 and to keep script from plowing ahead after starting it (In 3.6).
 
-4/9/17: Added ability to import navigator items with positions defined by
+* 4/9/17: Added ability to import navigator items with positions defined by
 image coordinates on maps.
 
 4/8/17: Updated MiniXML library to eliminate bad memory leaks when reading or
@@ -909,7 +916,7 @@ for detecting ZLP alignment in DM from 5 to 6 seconds. (In 3.6).
 3/9/17: Fixed wrong checkboxes showing up in file-saving option dialog for
 Falcon (In 3.6).
 
-3/8/17: Fixed transformations used in Navigator to account for tilted images;
+* 3/8/17: Fixed transformations used in Navigator to account for tilted images;
 basic navigation, polygon montages, and Realign to Item seem to work.
 
 3/8/17: Made the program monitor the beam blanker state for external changes
@@ -929,7 +936,7 @@ noise (In 3.6).
 3/8/17: Made it draw navigator label unconditionally if point is more than 40
 microns from previous one so labels still show up on low mag maps (In 3.6).
 
-3/6/17: Implemented use of live mode for continous acquisition from DE cameras
+* 3/6/17: Implemented use of live mode for continous acquisition from DE cameras
 and enabled acquisition of normalized images from server.
 
 3/5/17: Fixed taking tilt angle and stage position from buffer if available
@@ -945,7 +952,7 @@ short-term calibrations (In 3.6).
 3/2/17: Made it retry opening Falcon frame files since they may still be
 locked for writing on the first attempt (In 3.6).
 
-3/2/17: Added output of aligned piece coordinates in montage overview to mdoc
+* 3/2/17: Added output of aligned piece coordinates in montage overview to mdoc
 file.
 
 3/1/17: Make sure beam stays blanked except when acquiring for Realign to Item
@@ -954,13 +961,13 @@ when it goes out of Low Dose (In 3.6).
 2/26/17: Added script command to wait until a specified time after midnight or
 an alternative time.
 
-2/26/17: Added script commands to report and set the value of many user
+* 2/26/17: Added script commands to report and set the value of many user
 settings by the name used in the settings file.
 
 2/26/17: Made coma-free alignment routine average the estimated misalignment
 over multiple iterations, and added a menu option to run one more iteration.
 
-2/26/17: Added Focus menu option to make an array of FFTs of images with beam
+* 2/26/17: Added Focus menu option to make an array of FFTs of images with beam
 tilt in 8 different directions (a Zemlin tableau).
 
 2/26/17: Fixed SetCameraArea script command to take F, H, etc sizes (In 3.6).
@@ -968,7 +975,7 @@ tilt in 8 different directions (a Zemlin tableau).
 2/21/17: Changed message from SEMCCD plugin about two copies to refer to
 looking for a hung copy of DM; released mutex earlier (In 3.6).
 
-2/20/17: Fixed copying of remote K2 references when there just a
+2/20/17: Fixed copying of remote K2 references when there is just a
 DigitalMicrographReferencePath and no RemoteDMRefererencePath entry (In 3.6).
 
 * 2/20/17: Increased size of FFT stack to 8 (In 3.6).
@@ -979,7 +986,7 @@ meaningful (In 3.6).
 2/19/17: Added report of difference from previous calibration when doing
 coma-free calibration (In 3.6).
 
-2/18/17: Switched to using standard API for Direct Electron camera instead of
+* 2/18/17: Switched to using standard API for Direct Electron camera instead of
 COM interface.  To use a DE camera, a small plugin, DEcamPlugin.dll, and the
 interface library, DeInterface.Win32.dll, must be put in the directory with
 SerialEM, but these are not required to run the program.
@@ -996,7 +1003,7 @@ target mag or spot immediately with -> in front of it, until the change is
 finished.  Increased multiple click interval to 0.35 sec.  Changed mag output
 to show K at 100K and above (In 3.6).
 
-2/10/17: Implemented local variables and local loop indexes that are defined
+* 2/10/17: Implemented local variables and local loop indexes that are defined
 and accessible only within one function or script.
 
 2/10/17: It is now allowed for script loop counts to be 0 or negative.

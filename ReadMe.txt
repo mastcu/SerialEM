@@ -1,10 +1,12 @@
-SerialEM is currently developed in Visual Studio 2010 with the v90 (VS 2008)
+SerialEM is currently developed in Visual Studio 2015 with the v90 (VS 2008)
 platform toolset, which is required for it to run under Windows 2000 and XP
-below SP3.  To compile it with VS 2010, change the platform toolset to v100
-for each configuration being compiled.  To compile it with VS2015, use the
-solution SerialEM14.sln.
+below SP3.  The solution can still be opened in VS 2010 and presumably with
+2012 and 2013 too.  To compile it with VS 2015 alone, use the v140
+configurations.  To compile with earlier versions, you must either have the
+V90 toolset or change the selected toolset for the configurations you want to
+build.
 
-There are 5 project configurations:
+There are 7 project configurations:
 Debug (Win 32 & x64)
    A Debug build that will start in the top source directory and read
    SerialEMsettings.txt there.
@@ -21,6 +23,12 @@ NoHang (Win32 only; x64 properties are not maintained)
    A Release build that compiles the MyFileDialog class in SerialEMDoc.cpp to
    use the SDK file dialog instead of CFileDialog, which hangs on some Windows
    2000 machines
+v140 Debug (Win 32 & x64)
+   A Debug build for building in VS 2015 with the open source versions of all
+   libraries.
+v140 Release (Win 32 & x64)
+   A release build for building in VS 2015 with the open source versions of all
+   libraries.
 
 You must have the library collection SerialEMLibs in an adjacent directory, or
 change the project properties to access this repository elsewhere.  This
@@ -29,8 +37,8 @@ license for them.  Namely, libifft-MKL.lib and libifft-MKL-64.lib are import
 libraries for the corresponding DLLs in the binary SerialEM distributions,
 which incorporate Intel Math Kernel Library FFT routines from version 11.1 of
 the Intel compiler collection.  If you do not have a license for these, you
-should change the project configuration under Linker - Input as follows
-(unless using the SerialEM14 project in VS 2015):
+should either compile with the v140 configurations, or change the project
+configuration under Linker - Input as follows:
   1) Remove "-MKL" from the entry for libifft in "Additional Dependencies".
   2) Remove "-IOMP" from the entries there for libiimod and libcfshr.
   3) Completely remove the entry there for libiomp5md.lib.
@@ -45,17 +53,15 @@ you could use it by removing libifft.lib, adding in FFTW2st.lib and
 RFFTW2st.lib, making the changes in steps 2-5 above, and defining USE_FFTW2 at
 least for the compilation of Xcorr.cpp.
 
+If you modify a configuration to use other than the v90 toolset, you will
+probably have to change preprocessor definition _WIN32_WINNT=0x0500 to
+0x0501.
 
-SerialEM can be compiled in VS 2013 by reading in the current solution file,
-allowing it to upgrade the project, and changing preprocessor definition
-_WIN32_WINNT=0x0500 to 0x0501.
-
-A 64-bit version of SerialEM can be compiled in VS 2015 with the solution
-file SerialEM14.sln.  The configuration should not require any modifications,
-and the needed libraries for a build without MKL or FFTW are all in
-SerialEMLibs, named with "-14".  To run it, copy the file
-libctffind-VCOMP-14.dll from SerialEMLibs/x64 to the executable directory and
-rename it libctffind-VCOMP.dll.
+Both 32 and 64-bit versions of SerialEM can be compiled in VS 2015 with the
+v140 configurations, which use libraries without MKL or FFTW in SerialEMLibs,
+named with "-14".  To run it, copy the file libctffind-VCOMP-14.dll from
+SerialEMLibs or SerialEMLibs/x64 to the executable directory and rename it
+libctffind-VCOMP.dll.
 
 
 The rest of this file contains a description of the modules in SerialEM.
@@ -84,6 +90,7 @@ EMmontageController.cpp  The montage routine
 EMscope.cpp           The microscope module, performs all interactions with
                          microscope except ones by threads that need their
                          own instance of the Tecnai
+ExternalTools.cpp     Runs external programs with specified arguments
 FalconHelper.cpp      Performs communication with plugin and frame stacking
                          for Falcon camera
 FilterTasks.cpp       GIF-related tasks, specifically calibrating mag-dependent
@@ -105,6 +112,7 @@ MultiTSTasks.cpp      Has specimen cooking and autocentering routines
 NavHelper.cpp         Helper routines for the Navigator
 ParameterIO.cpp       Reads property file, reads and writes settings and
                          calibration files
+ParticleTasks.cpp     Acquires multiple images from one hole or multiple holes
 PiezoAndPPControl.cpp Module for communicating with JEOL piezos associated
                          with phase plates
 PluginManager.cpp     Handles loading and calling of plugins
@@ -134,8 +142,10 @@ DoseMeter.cpp        A system-modal cumulative dose meter
 LogWindow.cpp        The log window
 MacroEditer.cpp      Macro editing window
 MacroToolbar.cpp     Toolbar with macro buttons
+MultiShotDlg.cpp     Dialog for setting parameters for multiple records
 NavigatorDlg.cpp     The Navigator for storing positions and maps
 NavRotAlignDlg.cpp   Window for finding alignment with rotation
+OneLineScript.cpp    Window for entering and running up to 5 one-line scripts
 ReadFileDlg.cpp      Window for reading sections from file
 ScreenMeter.cpp      A system-modal screen meter with control on averaging
 StageMoveTool.cpp    Window for moving stage in large steps
@@ -186,7 +196,7 @@ ImageLevelDlg.cpp     Shows information about and allows control of image
                           display
 LowDoseDlg.cpp        Has controls for working in low dose mode
 MontageWindow.cpp     Has controls for montaging
-RemoteControl.cpp
+RemoteControl.cpp     Has convenient microscope controls
 ScopeStatusDlg.cpp    Shows various critical microscope parameters
 STEMcontrolDlg.cpp    Has controls for working in STEM mode
 TiltWindow.cpp        Has controls for tilting and setting increments
