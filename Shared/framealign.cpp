@@ -2606,7 +2606,7 @@ int FrameAlign::recoverGpuFullStack(bool stacking, float **binArr)
   for (ind = 0; ind < numSavedStart + mNumStackedOnGpu + (stacking ? 1 : 0); ind++) {
 
     // Allocate an array if stack is not floats or stack not big enough
-    if (mStackType != MRC_MODE_FLOAT || ind >= mSavedFullSize.size()) {
+    if (mStackType != MRC_MODE_FLOAT || ind >= (int)mSavedFullSize.size()) {
       allocedArr = B3DMALLOC(float, (mFullXpad + 2) * mFullYpad);
       if (!allocedArr)
         return 1;
