@@ -656,20 +656,22 @@ int CProcessImage::ReduceImage(EMimageBuffer *imBuf, float factor, CString *errS
     if (!filtImage || !linePtrs) {
       retval = 4;
       delete [] filtImage;
+      image->UnLock();
     }
   }
 
   // Do the reduction
   if (!retval) {
-    if ((zoomErr = zoomWithFilter(linePtrs, nx, ny, sxOff, syOff, newX, newY, newX, 0,
-      mode, filtImage, NULL, NULL)) != 0) {
-        retval = 5;
-        delete [] filtImage;
+    zoomErr = zoomWithFilter(linePtrs, nx, ny, sxOff, syOff, newX, newY, newX, 0,
+      mode, filtImage, NULL, NULL);
+    image->UnLock();
+    if (zoomErr != 0) {
+      retval = 5;
+      delete [] filtImage;
     } else {
       NewProcessedImage(imBuf, (short *)filtImage, mode, newX, newY, B3DNINT(factor));
     }
   }
-  image->UnLock();
   B3DFREE(linePtrs);
   if (retval) {
     mess = CString("Error trying to reduce image: ") + messages[retval - 2];
