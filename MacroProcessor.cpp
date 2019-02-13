@@ -42,6 +42,7 @@
 #include "NavHelper.h"
 #include "FalconHelper.h"
 #include "OneLineScript.h"
+#include "ExternalTools.h"
 #include "Mailer.h"
 #include "PluginManager.h"
 #include "PiezoAndPPControl.h"
@@ -229,7 +230,8 @@ enum {CME_VIEW, CME_FOCUS, CME_TRIAL, CME_RECORD, CME_PREVIEW,
   CME_WRITEFRAMESERIESANGLES, CME_ECHOREPLACELINE, CME_ECHONOLINEEND, CME_REMOVEAPERTURE,
   CME_REINSERTAPERTURE, CME_PHASEPLATETONEXTPOS, CME_SETSTAGEBAXIS, CME_REPORTSTAGEBAXIS,
   CME_DEFERWRITINGFRAMEMDOC, CME_ADDTONEXTFRAMESTACKMDOC, CME_STARTNEXTFRAMESTACKMDOC,
-  CME_REPORTPHASEPLATEPOS
+  CME_REPORTPHASEPLATEPOS, CME_OPENFRAMEMDOC, CME_NEXTPROCESSARGS, CME_CREATEPROCESS,
+  CME_RUNEXTERNALTOOL
 };
 
 static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0},
@@ -349,7 +351,8 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"EchoNoLineEnd", 1, 1}, {"RemoveAperture", 1, 0}, {"ReInsertAperture", 1, 0},
 {"PhasePlateToNextPos", 0, 0}, {"SetStageBAxis", 1, 1}, {"ReportStageBAxis", 0, 0}, 
 {"DeferWritingFrameMdoc", 0, 0}, {"AddToNextFrameStackMdoc", 2, 0}, 
-{"StartNextFrameStackMdoc", 2, 0}, {"ReportPhasePlatePos", 0, 0},
+{"StartNextFrameStackMdoc", 2, 0}, {"ReportPhasePlatePos", 0, 0}, {"OpenFrameMdoc", 1, 0},
+{"NextProcessArgs", 1, 0}, {"CreateProcess", 1, 0}, {"RunExternalTool", 1, 0},
 {NULL, 0, 0}
 };
 
@@ -977,6 +980,7 @@ void CMacroProcessor::RunOrResume()
   mFocusOffsetToRestore = -9999.;
   mDEframeRateToRestore = -1.;
   mDEcamIndToRestore = -1;
+  mNextProcessArgs = "";
   mBeamTiltXtoRestore[0] = mBeamTiltXtoRestore[1] = EXTRA_NO_VALUE;
   mBeamTiltYtoRestore[0] = mBeamTiltXtoRestore[1] = EXTRA_NO_VALUE;
   mCompensatedBTforIS = false;
@@ -2433,7 +2437,7 @@ void CMacroProcessor::NextCommand()
     CString root = report;
     CString ext;
     if (!itemEmpty[1] && itemInt[1] && truth)
-     UtilSplitExtension(report, root, ext);
+      UtilSplitExtension(report, root, ext);
     mWinApp->AppendToLog((truth ? "Current open file is: " : "Last frame file is: ")
       + report, mLogAction);
     ClearVariables(VARTYPE_REPORT);
@@ -2444,6 +2448,13 @@ void CMacroProcessor::NextCommand()
     if (!ext.IsEmpty()) {
       SetVariable("REPORTEDVALUE2", ext, VARTYPE_REPORT, 2, true);
       SetVariable("REPVAL2", ext, VARTYPE_REPORT, 2, true);
+    }
+    if (!itemEmpty[1] && itemInt[1] && truth) {
+      UtilSplitPath(root, report, ext);
+      SetVariable("REPORTEDVALUE3", report, VARTYPE_REPORT, 3, true);
+      SetVariable("REPVAL3", report, VARTYPE_REPORT, 3, true);
+      SetVariable("REPORTEDVALUE4", ext, VARTYPE_REPORT, 4, true);
+      SetVariable("REPVAL4", ext, VARTYPE_REPORT, 4, true);
     }
 
   } else if (CMD_IS(ALLOWFILEOVERWRITE)) {                  // AllowFileOverwrite
@@ -2562,7 +2573,16 @@ void CMacroProcessor::NextCommand()
   } else if (CMD_IS(DEFERWRITINGFRAMEMDOC)) {               // DeferWritingFrameMdoc
     mWinApp->mDocWnd->SetDeferWritingFrameMdoc(true);
 
-    // AddToNextFrameStackMdoc, StartNextFrameStackMdoc
+  } else if (CMD_IS(OPENFRAMEMDOC)) {                       // OpenFrameMdoc
+    SubstituteVariables(&strLine, 1, strLine);
+    if (mWinApp->mDocWnd->GetFrameAdocIndex() >= 0)
+      ABORT_LINE("The frame mdoc file is already open for line:\n\n");
+    if (CheckConvertFilename(strItems, strLine, 1, report))
+      return;
+    if (mWinApp->mDocWnd->DoOpenFrameMdoc(report))
+      SUSPEND_LINE("because of error opening frame mdoc file in statement:\n\n")
+
+                                    // AddToNextFrameStackMdoc, StartNextFrameStackMdoc
   } else if (CMD_IS(ADDTONEXTFRAMESTACKMDOC) || CMD_IS(STARTNEXTFRAMESTACKMDOC)) {
     doBack = CMD_IS(STARTNEXTFRAMESTACKMDOC);
     SubstituteVariables(&strLine, 1, strLine);
@@ -3572,9 +3592,9 @@ void CMacroProcessor::NextCommand()
     index = mScope->GetCurrentPhasePlatePos();
     if (index < 0)
       ABORT_LINE("Script aborted due to error in:\n\n");
-    report.Format("Current phase plate position is %d", index);
+    report.Format("Current phase plate position is %d", index + 1);
     mWinApp->AppendToLog(report, mLogAction);
-    SetReportedValues(&strItems[1], (double)index);
+    SetReportedValues(&strItems[1], index + 1.);
 
   } else if (CMD_IS(REPORTMEANCOUNTS)) {                    // ReportMeanCounts
     if (ConvertBufferLetter(strItems[1], 0, true, index, report))
@@ -5396,7 +5416,25 @@ void CMacroProcessor::NextCommand()
        0, CREATE_SUSPENDED);
     mProcessThread->m_bAutoDelete = false;
     mProcessThread->ResumeThread();
-    
+     
+  } else if (CMD_IS(NEXTPROCESSARGS)) {                     // NextProcessArgs
+    SubstituteVariables(&strLine, 1, strLine);
+    mWinApp->mParamIO->StripItems(strLine, 1, mNextProcessArgs);
+
+  } else if (CMD_IS(CREATEPROCESS)) {                       // CreateProcess
+    SubstituteVariables(&strLine, 1, strLine);
+    mWinApp->mParamIO->StripItems(strLine, 1, strCopy);
+    index = mWinApp->mExternalTools->RunCreateProcess(strCopy, mNextProcessArgs);
+    mNextProcessArgs = "";
+    if (index)
+      ABORT_LINE("Script aborted due to failure to run process for line:\n\n");
+
+  } else if (CMD_IS(RUNEXTERNALTOOL)) {                     // RunExternalTool
+    SubstituteVariables(&strLine, 1, strLine);
+    mWinApp->mParamIO->StripItems(strLine, 1, strCopy);
+    if(mWinApp->mExternalTools->RunToolCommand(strCopy))
+      ABORT_LINE("Script aborted due to failure to run command for line:\n\n");
+
   } else if (CMD_IS(SAVEFOCUS)) {                           // SaveFocus
     if (mFocusToRestore > -2.)
       ABORT_NOLINE("There is a second SaveFocus without a RestoreFocus");
@@ -7248,11 +7286,21 @@ bool CMacroProcessor::ConvertBufferLetter(CString strItem, int emptyDefault,
       return true;
     }
   } else {
-    bufIndex = (int)strItem.GetAt(0) - (int)'A';
-    if (bufIndex < 0 || bufIndex >= MAX_BUFFERS || strItem.GetLength() > 1) {
-      message = "Improper buffer letter " + strItem + " in statement: \r\n\r\n";
-      return true;
-    }
+    bufIndex = atoi((LPCTSTR)strItem);
+    if (!bufIndex) {
+      bufIndex = (int)strItem.GetAt(0) - (int)'A';
+      if (bufIndex < 0 || bufIndex >= MAX_BUFFERS || strItem.GetLength() > 1) {
+        message = "Improper buffer letter " + strItem + " in statement: \r\n\r\n";
+        return true;
+      }
+    } else {
+      if (bufIndex < 1 || bufIndex > MAX_BUFFERS || strItem.GetLength() > 
+        1 + (bufIndex / 10)) {
+          message = "Improper buffer number " + strItem + " in statement: \r\n\r\n";
+          return true;
+      }
+      bufIndex--;
+   }
   }
   if (checkImage && !mImBufs[bufIndex].mImage) {
     message = "There is no image in buffer " + strItem + " in statement: \r\n\r\n";

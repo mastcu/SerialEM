@@ -225,7 +225,8 @@ private:
   bool mStartNavAcqAtEnd;    // Flag to start Nav acquire on successful completion 
   int mTestNextMultiShot;    // 1 or 2 to test image area or coma
   bool mDisableAlignTrim;    // Flag to disable trimming in autoalign
-  BOOL mRestoreMacroEditors;    // Flag to reopen the editor windows on startup/settings
+  BOOL mRestoreMacroEditors; // Flag to reopen the editor windows on startup/settings
+  CString mNextProcessArgs;  // Argument string for next process to create
 
 public:
   void GetNextLine(CString * macro, int & currentIndex, CString &strLine);
