@@ -732,11 +732,15 @@ void CMacroProcessor::OnScriptRunOneCommand()
     return;
   }
   mOneLineScript = new COneLineScript();
-  mOneLineScript->m_strOneLine = mMacros[MAX_MACROS];
-  mOneLineScript->m_strOneLine.TrimRight("\r\n");
+  for (int ind = 0; ind < MAX_ONE_LINE_SCRIPTS; ind++) {
+    mOneLineScript->m_strOneLine[ind] = mMacros[MAX_MACROS + ind];
+    mOneLineScript->m_strOneLine[ind].TrimRight("\r\n");
+  }
   mOneLineScript->mMacros = mMacros;
   mOneLineScript->Create(IDD_ONELINESCRIPT);
-  mWinApp->SetPlacementFixSize(mOneLineScript, &mOneLinePlacement);
+  if (mOneLinePlacement.rcNormalPosition.right > 0)
+    mOneLineScript->SetWindowPlacement(&mOneLinePlacement);
+  mOneLineScript->ShowWindow(SW_SHOW);
   mWinApp->RestoreViewFocus();
 }
 
@@ -756,6 +760,31 @@ void CMacroProcessor::OneLineClosing(void)
 {
   mOneLineScript->GetWindowPlacement(&mOneLinePlacement);
   mOneLineScript = NULL;
+}
+
+// Transfer all one-line scripts to or from the dialog if it is open
+void CMacroProcessor::TransferOneLiners(bool fromDialog)
+{
+  if (!mOneLineScript)
+    return;
+  for (int ind = 0; ind < MAX_ONE_LINE_SCRIPTS; ind++) {
+    mOneLineScript->UpdateData(fromDialog);
+    if (fromDialog)
+      mMacros[MAX_MACROS + ind] = mOneLineScript->m_strOneLine[ind];
+    else
+      mOneLineScript->m_strOneLine[ind] = mMacros[MAX_MACROS + ind];
+  }
+}
+
+// This is called on startup or after reading settings
+void CMacroProcessor::OpenOrJustCloseOneLiners(bool reopen)
+{
+  if (reopen && !mOneLineScript) {
+    OnScriptRunOneCommand();
+  } else if (!reopen && mOneLineScript) {
+    mOneLineScript->DestroyWindow();
+    mOneLineScript = NULL;
+  }
 }
 
 // Central place to determine if a macro is theoretically runnable

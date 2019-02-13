@@ -1433,6 +1433,11 @@
 #define IDC_RSTAGE_CONTROL              2458
 #define IDC_STAT_BEAM_STAGE             2459
 #define IDC_FRAME_STACK_MDOC            2460
+#define IDC_RUN_ONE_LINE1               2461
+#define IDC_RUN_ONE_LINE2               2462
+#define IDC_RUN_ONE_LINE3               2463
+#define IDC_RUN_ONE_LINE4               2464
+#define IDC_RUN_ONE_LINE5               2465
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -1857,31 +1862,31 @@
 #define ID_MONTAGINGGRIDS_ADDGRIDLIKELASTONE 33305
 #define ID_SCRIPT_OPENEDITORSONSTART    33306
 #define ID_SETTINGS_DISCARDONEXIT       33307
-#define ID_EXTERNAL_TOOL1              33308
-#define ID_EXTERNAL_TOOL2              33309
-#define ID_EXTERNAL_TOOL3              33310
-#define ID_EXTERNAL_TOOL4              33311
-#define ID_EXTERNAL_TOOL5              33312
-#define ID_EXTERNAL_TOOL6              33313
-#define ID_EXTERNAL_TOOL7              33314
-#define ID_EXTERNAL_TOOL8              33315
-#define ID_EXTERNAL_TOOL9              33316
-#define ID_EXTERNAL_TOOL10             33317
-#define ID_EXTERNAL_TOOL11             33318
-#define ID_EXTERNAL_TOOL12             33319
-#define ID_EXTERNAL_TOOL13             33320
-#define ID_EXTERNAL_TOOL14             33321
-#define ID_EXTERNAL_TOOL15             33322
-#define ID_EXTERNAL_TOOL16             33323
-#define ID_EXTERNAL_TOOL17             33324
-#define ID_EXTERNAL_TOOL18             33325
-#define ID_EXTERNAL_TOOL19             33326
-#define ID_EXTERNAL_TOOL20             33327
-#define ID_EXTERNAL_TOOL21             33328
-#define ID_EXTERNAL_TOOL22             33329
-#define ID_EXTERNAL_TOOL23             33330
-#define ID_EXTERNAL_TOOL24             33331
-#define ID_EXTERNAL_TOOL25             33332
+#define ID_EXTERNAL_TOOL1               33308
+#define ID_EXTERNAL_TOOL2               33309
+#define ID_EXTERNAL_TOOL3               33310
+#define ID_EXTERNAL_TOOL4               33311
+#define ID_EXTERNAL_TOOL5               33312
+#define ID_EXTERNAL_TOOL6               33313
+#define ID_EXTERNAL_TOOL7               33314
+#define ID_EXTERNAL_TOOL8               33315
+#define ID_EXTERNAL_TOOL9               33316
+#define ID_EXTERNAL_TOOL10              33317
+#define ID_EXTERNAL_TOOL11              33318
+#define ID_EXTERNAL_TOOL12              33319
+#define ID_EXTERNAL_TOOL13              33320
+#define ID_EXTERNAL_TOOL14              33321
+#define ID_EXTERNAL_TOOL15              33322
+#define ID_EXTERNAL_TOOL16              33323
+#define ID_EXTERNAL_TOOL17              33324
+#define ID_EXTERNAL_TOOL18              33325
+#define ID_EXTERNAL_TOOL19              33326
+#define ID_EXTERNAL_TOOL20              33327
+#define ID_EXTERNAL_TOOL21              33328
+#define ID_EXTERNAL_TOOL22              33329
+#define ID_EXTERNAL_TOOL23              33330
+#define ID_EXTERNAL_TOOL24              33331
+#define ID_EXTERNAL_TOOL25              33332
 
 // Next default values for new objects
 // 
@@ -1890,7 +1895,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        228
 #define _APS_NEXT_COMMAND_VALUE         33333
-#define _APS_NEXT_CONTROL_VALUE         2461
+#define _APS_NEXT_CONTROL_VALUE         2467
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

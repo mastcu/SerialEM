@@ -113,7 +113,7 @@ struct JeolParams;
 #define LAD_INDEX_BASE  30
 #define IDLE_TIMEOUT_ERROR  -99
 #define MAX_MACROS 20
-#define MAX_ONE_LINE_SCRIPTS 1
+#define MAX_ONE_LINE_SCRIPTS 5
 #define SCOPE_PANEL_INDEX    3
 #define REMOTE_PANEL_INDEX   4
 #define MONTAGE_DIALOG_INDEX 9
@@ -709,7 +709,7 @@ private:
   BOOL mTestGainFactors;       // Flag to multiply images by gain factors
   BOOL mSkipGainRefWarning;    // Flag to skip warning about normalized spot
   BOOL mReopenMacroToolbar;    // Flag to reopen macro toolbar on startup
-  bool mReopenMacroEditor[MAX_MACROS];   // Flags for reopening macro editors
+  bool mReopenMacroEditor[MAX_MACROS + 1];   // Flags for reopening macro editors
   BOOL mDeferBufWinUpdates;    // Ignore calls to UpdateBufferWindows
   BOOL mContinuousSaveLog;     // Do continuous save of log file
   int mTssPanelStates[NUM_TSS_PANELS];   // States of tilt series dialog panels

@@ -632,7 +632,7 @@ CSerialEMApp::CSerialEMApp()
   mReopenLog =  false;
   mExitWithUnsavedLog = false;
   mReopenMacroToolbar = false;
-  for (i = 0; i < MAX_MACROS; i++)
+  for (i = 0; i <= MAX_MACROS; i++)
     mReopenMacroEditor[i] = false;
   mOpenStateWithNav = true;
   mSkipGainRefWarning = false;
@@ -3981,6 +3981,7 @@ void CSerialEMApp::OpenOrCloseMacroEditors(void)
     else if (!mReopenMacroEditor[ind] && mMacroEditer[ind])
       mMacroEditer[ind]->JustCloseWindow();
   }
+  mMacroProcessor->OpenOrJustCloseOneLiners(mReopenMacroEditor[MAX_MACROS]);
   UpdateBufferWindows();
   RestoreViewFocus();
 }

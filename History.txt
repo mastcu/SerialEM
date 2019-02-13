@@ -3,6 +3,13 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+1/22/19: The one-line script window is now resizable and can contain up to 5
+scripts.  The window will reopen on program startup if script windows do.
+
+1/22/19: CPU-based frame alignment for K2/K3 is now done through a separate
+program to solve memory leaks in DM, allow faster FFTs with Intel libraries,
+and eliminate license issues with using FFTW.
+
 1/11/19: Added exposure time parameters for Rio camera.
 
 1/11/19: Added script commands to load or merge a Navigator file, report the

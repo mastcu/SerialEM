@@ -2119,7 +2119,7 @@ void CSerialEMDoc::ManageBackupFile(CString strFile, BOOL &bBackedUp)
 // or just save to open file
 int CSerialEMDoc::SaveSettingsOnExit()
 {
-  int result, i, ind;
+  int result, ind;
   const char *calType[NUM_CAL_DONE_TYPES] = {"image shift", "stage shift", "focus", 
     "beam intensity", "spot intensity"};
   CString str, str2;
@@ -2161,10 +2161,6 @@ int CSerialEMDoc::SaveSettingsOnExit()
   if (!mSettingsOpen)
     return (OfferToSaveSettings("exit the program?"));
 
-  // Transfer macros from any open editing windows
-  for (i = 0; i < MAX_MACROS; i++)
-    if (mWinApp->mMacroEditer[i])
-      mWinApp->mMacroEditer[i]->TransferMacro(true);
   OnSettingsSave();
   return 0;
 }

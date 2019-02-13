@@ -23,22 +23,24 @@ protected:
 	virtual void OnCancel();
 	virtual BOOL OnInitDialog();
   virtual void PostNcDestroy();
+  virtual void OnRunClicked(UINT nID);
   virtual BOOL PreTranslateMessage(MSG* pMsg);
   virtual void OnSize(UINT nType, int cx, int cy);
 
 	DECLARE_MESSAGE_MAP()
 public:
   CString m_strCompletions;
-  CEdit m_editOneLine;
-  CString m_strOneLine;
-  afx_msg void OnEnChangeEditOneLine();
+  CEdit m_editOneLine[MAX_ONE_LINE_SCRIPTS];
+  CString m_strOneLine[MAX_ONE_LINE_SCRIPTS];
+  afx_msg void OnEnChangeEditOneLine(UINT nID);
   CString *mMacros;
   void Update();
 private:
-  int m_iRunLeftOrig, m_iRunTop;
+  int m_iRunLeftOrig;
+  int m_iRunTop[MAX_ONE_LINE_SCRIPTS];
   int m_iEditXorig, m_iEditHeight;
   int m_iWinXorig;
   bool mInitialized;
 public:
-  CButton m_butRun;
+  CButton m_butRun[MAX_ONE_LINE_SCRIPTS];
 };

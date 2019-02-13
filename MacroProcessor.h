@@ -314,6 +314,8 @@ public:
   int AdjustBeamTiltIfSelected(double delISX, double delISY, BOOL doAdjust, CString &message);
   afx_msg void OnOpenEditorsOnStart();
   afx_msg void OnUpdateOpenEditorsOnStart(CCmdUI *pCmdUI);
+  void TransferOneLiners(bool fromDialog);
+  void OpenOrJustCloseOneLiners(bool reopen);
 };
 
 #endif // !defined(AFX_MACROPROCESSOR_H__33178182_58A1_4F3A_B8F4_D41F94866517__INCLUDED_)

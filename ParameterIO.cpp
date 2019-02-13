@@ -162,7 +162,7 @@ int CParameterIO::ReadSettings(CString strFileName)
   mWinApp->SetAbsoluteDlgIndex(false);
   msParams->customHoleX.clear();
   msParams->customHoleY.clear();
-  for (index = 0; index < MAX_MACROS; index++)
+  for (index = 0; index <= MAX_MACROS; index++)
     mWinApp->SetReopenMacroEditor(index, false);
 
   try {
@@ -657,9 +657,10 @@ int CParameterIO::ReadSettings(CString strFileName)
           else if (NAME_IS("OneEditerPlacement")) {
             place = mWinApp->mMacroProcessor->GetEditerPlacement() + itemInt[1];
             mWinApp->SetReopenMacroEditor(itemInt[1], itemInt[2] != 0);
-          } else if (NAME_IS("OneLinePlacement"))
+          } else if (NAME_IS("OneLinePlacement")) {
             place = mWinApp->mMacroProcessor->GetOneLinePlacement();
-          else if (NAME_IS("MacroToolPlacement")) {
+            mWinApp->SetReopenMacroEditor(MAX_MACROS, itemInt[1] != 0);
+          } else if (NAME_IS("MacroToolPlacement")) {
             mWinApp->SetReopenMacroToolbar(itemInt[1] != 0);
             place = mWinApp->mMacroProcessor->GetToolPlacement();
           } else if (NAME_IS("LogPlacement")) {
@@ -1065,6 +1066,8 @@ int CParameterIO::ReadSettings(CString strFileName)
   index = -1;
   CTSVariationsDlg::PurgeVariations(mTSParam->varyArray, mTSParam->numVaryItems, index);
 
+  mWinApp->mMacroProcessor->TransferOneLiners(false);
+
   // Return -1 if only one line was read (system path)
   if (!retval && nLines == 1) retval = -1;
   if (retval >= 0 && !mWinApp->GetStartingProgram())
@@ -1148,6 +1151,12 @@ void CParameterIO::WriteSettings(CString strFileName)
   BOOL *useGPU4K2Ali = mWinApp->mCamera->GetUseGPUforK2Align();
   MultiShotParams *msParams = mWinApp->mNavHelper->GetMultiShotParams();
   ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
+
+  // Transfer macros from any open editing windows
+  for (i = 0; i < MAX_MACROS; i++)
+    if (mWinApp->mMacroEditer[i])
+      mWinApp->mMacroEditer[i]->TransferMacro(true);
+  mWinApp->mMacroProcessor->TransferOneLiners(true);
 
   try {
     // Open the file for writing, 
@@ -1446,7 +1455,8 @@ void CParameterIO::WriteSettings(CString strFileName)
     WritePlacement("ReadDlgPlacement", 0, readPlace);
     WritePlacement("StageToolPlacement", 0, stageToolPlace);
     WritePlacement("MacroToolPlacement", mWinApp->mMacroToolbar ? 1 : 0, toolPlace);
-    WritePlacement("OneLinePlacement", 0, oneLinePlace);
+    WritePlacement("OneLinePlacement", mWinApp->mMacroProcessor->mOneLineScript ? 1 : 0, 
+      oneLinePlace);
     for (i = 0; i < MAX_MACROS; i++) {
       oneState.Format("OneEditerPlacement %d", i);
       WritePlacement((LPCTSTR)oneState, mWinApp->mMacroEditer[i] != NULL ? 1 : 0,
