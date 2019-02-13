@@ -165,7 +165,8 @@ void CRemoteControl::Update(int inMagInd, int inSpot, double inIntensity, int in
     mWinApp->mCamera->CameraBusy() && !mWinApp->mCamera->DoingContinuousAcquire()));
 
   if (inMagInd != mLastMagInd || mWinApp->GetCurrentCamera() != mLastCamera) {
-    enable = mWinApp->mProcessImage->MoveBeamByCameraFraction(0., 0.) == 0;
+    enable = m_iBeamOrStage || 
+      mWinApp->mProcessImage->MoveBeamByCameraFraction(0., 0.) == 0;
     m_sbcBeamShift.EnableWindow(enable && baseEnable);
     m_sbcBeamLeftRight.EnableWindow(enable && baseEnable);
   }
