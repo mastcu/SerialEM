@@ -3,11 +3,17 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+3/5/19: Substituted variables in NewMap, CompareStrings, ReadTextFile, and
+WriteFrameTiltSeries commands (In 3.7).
+
+3/5/19: Fixed stage calibration in STEM to use the right implied tilt axis
+angle, based on ImageRotation entry (In 3.7).
+
 3/1/19: Fixed handling of diffraction mode in Low Dose with regard to nP/uP,
 diffraction focus, and defocus offsets (In 3.7).
 
 2/25/19: Fixed handling of Search shift offset when toggling Apply image shift
-offset or defining a a View/Search shift offset.  Prevented the IS of the
+offset or defining a View/Search shift offset.  Prevented the IS of the
 Search offset from being applied before going to the Search mag (In 3.7).
 
 2/17/19: Fixed saving frame stack mdoc and getting last dose rate from K2/K3

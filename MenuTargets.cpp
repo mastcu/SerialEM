@@ -1369,8 +1369,9 @@ void CMenuTargets::OnCalibrationListstagecals()
   MagTable *magTab = mWinApp->GetMagTable();
   ScaleMat mat;
   int iCam, iMag;
+  double xtheta, ytheta, angle;
   bool needCam;
-  str = CString("\r\nSpecimen to stage matrices");
+  str = CString("\r\nSpecimen to stage matrices  -   implied tilt axis angles");
   mWinApp->AppendToLog(str, LOG_OPEN_IF_CLOSED);
   for (int actCam = 0; actCam < numCam; actCam++) {
     iCam = active[actCam];
@@ -1381,10 +1382,15 @@ void CMenuTargets::OnCalibrationListstagecals()
         if (needCam)
           mWinApp->AppendToLog(str);
         needCam = false;
+        mat = MatMul(mShiftManager->FallbackSpecimenToStage(1., 1.), 
+          magTab[iMag].matStage[iCam]);
+        xtheta = atan2(mat.ypx, mat.xpx) / DTOR;
+        ytheta = atan2(-mat.xpy, mat.ypy) / DTOR;
+        angle = UtilGoodAngle(xtheta + 0.5 * UtilGoodAngle(ytheta - xtheta));
         mat = mShiftManager->MatMul(mShiftManager->SpecimenToCamera(iCam, iMag), 
           mShiftManager->MatInv(magTab[iMag].matStage[iCam]));
-        str.Format("    %2d %7d   %9.5f  %9.5f  %9.5f  %9.5f", iMag, 
-          MagForCamera(iCam, iMag), mat.xpx, mat.xpy, mat.ypx, mat.ypy);
+        str.Format("    %2d %7d   %9.5f  %9.5f  %9.5f  %9.5f   %7.2f deg", iMag, 
+          MagForCamera(iCam, iMag), mat.xpx, mat.xpy, mat.ypx, mat.ypy, angle);
         mWinApp->AppendToLog(str, LOG_OPEN_IF_CLOSED);
       }
     }

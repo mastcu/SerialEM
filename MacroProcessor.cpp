@@ -2202,6 +2202,7 @@ void CMacroProcessor::NextCommand()
     mCamera->GetFrameTSactualAngles(angles);
     if (!angles.size())
       ABORT_NOLINE("There are no angles available from a frame tilt series");
+    SubstituteVariables(&strLine, 1, strLine);
     mWinApp->mParamIO->StripItems(strLine, 1, strCopy);
     CString message = "Error opening file ";
     CStdioFile *csFile = NULL;
@@ -2705,6 +2706,7 @@ void CMacroProcessor::NextCommand()
   case CME_READTEXTFILE:                                    // ReadTextFile
   case CME_READ2DTEXTFILE:                                  // Read2DTextFile
   {
+    SubstituteVariables(&strLine, 1, strLine);
     mWinApp->mParamIO->StripItems(strLine, 2, strCopy);
     CString newVar, message = "Error opening file ";
     CStdioFile *csFile = NULL;
@@ -4591,6 +4593,7 @@ void CMacroProcessor::NextCommand()
     var = LookupVariable(item1upper, index2);
     if (!var)
       ABORT_LINE("The variable " + strItems[1] + " is not defined in line:\n\n");
+    SubstituteVariables(&strLine, 1, strLine);
     mWinApp->mParamIO->StripItems(strLine, 2, strCopy);
     if (CMD_IS(COMPARESTRINGS))
       index = var->value.Compare(strCopy);
@@ -5820,6 +5823,7 @@ void CMacroProcessor::NextCommand()
       index = itemInt[1];
       if (itemEmpty[2])
         ABORT_LINE("There must be text for the Navigator note after the number in:\n\n");
+      SubstituteVariables(&strLine, 1, strLine);
       mWinApp->mParamIO->StripItems(strLine, 2, strCopy);
     }
     if (navigator->NewMap(false, index, itemEmpty[1] ? NULL : &strCopy)) {

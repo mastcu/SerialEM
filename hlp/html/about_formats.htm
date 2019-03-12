@@ -341,7 +341,7 @@
           </TR>
     </TBODY></TABLE>
     <p>
-      &nbsp;</p>
+        &nbsp;</p>
     <p>
       If an &quot;.idoc&quot; file is being constructed for a set of TIFF files, the essential 
       elements are the &quot;DataMode&quot;, &quot;ImageSize&quot;, and &quot;ImageSeries&quot; entries, as well as 
@@ -882,7 +882,7 @@
       This section is for lengthy entries to calibration file that sometimes need to 
       be interpreted.&nbsp; Entries will be added upon need or request.</p>
     <p>
-      LowDoseParameters: 
+        <em>LowDoseParameters</em>: 
       <br />
 &nbsp;&nbsp; low dose set number 0 to 4 for V F T R S, or negative of state number 
       (numbered from 1)<br />
@@ -903,8 +903,8 @@
 &nbsp;&nbsp; dark field mode flag<br />
 &nbsp;&nbsp; dark field tilt X &amp; Y</p>
     <p>
-      StandardLMFocus: This entry contains the recorded standard focus in LM or the 
-      eucentric focus is nonLM.<br />
+        <em>StandardLMFocus</em>: This entry contains the recorded standard focus in LM or
+         the eucentric focus is nonLM.<br />
 &nbsp;&nbsp; Magnification index<br />
 &nbsp;&nbsp; Focus value in microprobe, -999 if none<br />
 &nbsp;&nbsp; Focus value in nanoprobe, -999 if none<br />
@@ -912,7 +912,7 @@
       Focus values are either absolute values between 0 and 1, or on JEOL, a large 
       value that encodes coarse and fine focus components</p>
     <p>
-      FocusCalibration:<br />
+        <em>FocusCalibration</em>:<br />
 &nbsp;&nbsp;
       mag index<br />
 &nbsp;&nbsp; camera number<br />
@@ -924,7 +924,58 @@
 &nbsp;&nbsp; probe mode<br />
 &nbsp;&nbsp; alpha<br />
 &nbsp;&nbsp; magnification</p>
-    
-    </basefont>
+      <p>
+          <em>Stage Calibration, matrices, image rotation: </em></p>
+      <p>
+          The stage calibration consists of 4 matrix terms, and like all such matrices, 
+          they are expressed as a change in output X value per change in X input value (xpx),
+           change in X per change in Y (xpy), change in Y per change in X (ypyx), and change
+           in Y per change in Y (ypy).&nbsp; They are written to file in this order.
+          &nbsp; In this case the input value is the change in stage position in microns, 
+          and the output value is the negative of the amount that the image shifts in 
+          unbinned pixels, or the position of the new centered coordinate in the image 
+          relative to the original center.&nbsp; This negative value is unfortunate in that
+           it inverts the typical stage coordinate system relative to the underlying 
+          &quot;specimen&quot; coordinate system that has X along the tilt axis.</p>
+      <p>
+          The calibration line has<br />
+          &nbsp;&nbsp;
+          Mag index<br />
+          &nbsp;&nbsp;
+          Camera number<br />
+          &nbsp;&nbsp;
+          xpx<br />
+          &nbsp;&nbsp;
+          xpy<br />
+          &nbsp;&nbsp;
+          ypx<br />
+          &nbsp;&nbsp;
+          ypy<br />
+          &nbsp;&nbsp;
+          Absolute focus at which calibration taken (compound of coarse and fine values for JEOL)<br />
+&nbsp;&nbsp; Magnification</p>
+      <p>The image rotation value is intimately related to the stage calibration.&nbsp; 
+          For an FEI scope or JEOL scope without omega filter, an image rotation of 0 produces this pattern of image movement</p>
+      <pre>  ^  image movement for positive Y stage move
+  |
+  |
+  |
+  |
+  --------->   image movement for positive X stage move
+</pre>
+          The image rotation angle is the amount by which the axes of image movement are rotated counterclockwise relative to this pattern.&nbsp; 
+      The the image rotation (and the tilt axis angle) should equal&nbsp; atan2(-ypx, 
+      -xpx) (from the X axis rotation) or atan2(-ypy, -xpy) - 90 ( from the Y axis 
+      rotation); the program averages these two estimates when it reports the rotation 
+      angle with a stage calibration.&nbsp; For a JEOL with omega filter, the pattern is this: <pre>           ^  image movement for positive Y stage move
+           |
+           |
+           |
+           |
+  <---------   image movement for positive X stage move
+</pre>
+      The X axis is inverted and this requires the property InvertStageXAxis to be 
+      set.&nbsp; In this case the image rotation is estimated from atan2(ypx, xpx) and 
+      atan2(-ypy, -xpy) - 90.</p>
   </BODY>
 </HTML>

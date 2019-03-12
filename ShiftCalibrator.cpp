@@ -668,6 +668,8 @@ void CShiftCalibrator::ShiftDone()
     if (fabs(UtilGoodAngle(ytheta - xtheta)) < 90) {
       rotmess.Format("The implied rotation angle is %8.1f degrees", angle);
       diff = mMagTab[mCalIndex].rotation[mCurrentCamera];
+      if (mCamParams[mCurrentCamera].STEMcamera)
+        diff = mCamParams[mCurrentCamera].imageRotation;
       if (fabs(UtilGoodAngle(angle - diff)) > 75) {
         report += rotmess + "\r\n\r\n";
         rotmess.Format("The rotation angle from this calibration, %.1f, is far from the"
