@@ -136,6 +136,7 @@ BOOL CRemoteControl::OnInitDialog()
   m_butDelFocusMinus.SetFont(&mButFont);
   m_butDelFocusPlus.SetFont(&mButFont);
   mLastMagInd = mLastSpot = mLastSTEMmode = mLastProbeMode = mLastCamera = -1;
+  mLastCamLenInd = -1;
   mLastScreenPos = -1;
   mLastGunOn = -2;
   mLastIntensity = -1.;
@@ -153,8 +154,8 @@ BOOL CRemoteControl::OnInitDialog()
 
 // Called from scope update with current values; keeps track of last values seen and
 // acts on changes only
-void CRemoteControl::Update(int inMagInd, int inSpot, double inIntensity, int inProbe,
-  int inGunOn, int inSTEM, int inAlpha, int inScreenPos)
+void CRemoteControl::Update(int inMagInd, int inCamLen, int inSpot, double inIntensity, 
+  int inProbe, int inGunOn, int inSTEM, int inAlpha, int inScreenPos)
 {
   int junk;
   bool enable;
@@ -171,13 +172,14 @@ void CRemoteControl::Update(int inMagInd, int inSpot, double inIntensity, int in
     m_sbcBeamLeftRight.EnableWindow(enable && baseEnable);
   }
 
-  if (inMagInd != mLastMagInd) {
+  if (inMagInd != mLastMagInd || inCamLen != mLastCamLenInd) {
     if (inMagInd)
       m_sbcMag.SetPos(inMagInd);
     m_sbcMag.EnableWindow(inMagInd > 0 && baseEnable && !doingOffset);
     if (!mWinApp->mCamera->DoingContinuousAcquire())
-    m_butNanoMicro.EnableWindow(mWinApp->GetSTEMMode() || 
-      (inMagInd >= mScope->GetLowestMModeMagInd() && baseEnable));
+    m_butNanoMicro.EnableWindow((mWinApp->GetSTEMMode() || 
+      inMagInd >= mScope->GetLowestMModeMagInd() || 
+      (!inMagInd && inCamLen < LAD_INDEX_BASE)) && baseEnable);
     m_sbcAlpha.EnableWindow(inMagInd >= mScope->GetLowestMModeMagInd() && baseEnable);
   }
 

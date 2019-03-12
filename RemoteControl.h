@@ -22,7 +22,7 @@ protected:
 
 	DECLARE_MESSAGE_MAP()
 public:
-  void Update(int inMag, int inSpot, double inIntensity, int inProbe, int inGun, 
+  void Update(int inMag, int inCamLen, int inSpot, double inIntensity, int inProbe, int inGun, 
     int inSTEM, int inAlpha, int inScreenPos);
   void UpdateSettings();
   void UpdateEnables(void);
@@ -68,6 +68,7 @@ public:
 
 private:
   int mLastMagInd;              // Values for state saved from last update
+  int mLastCamLenInd;
   int mLastGunOn;
   int mLastSpot;
   int mLastProbeMode;

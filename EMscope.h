@@ -444,6 +444,7 @@ private:
   static double mLastISY;
   static double mPreviousISX;  // IS before the last one seen in update
   static double mPreviousISY;
+  int mLastCamLenIndex;        // Last value of camera length index
   static char *mFEIInstrumentName;
   int mUseTEMScripting;
   int mLastRegularMag;        // Keep track of last regular and EFTEM mags
@@ -743,7 +744,7 @@ public:
     int STEMmode);
   void updateEFTEMSpectroscopy(BOOL &EFTEM);
   void UpdateLowDose(int screenPos, BOOL needBlank, BOOL gotoArea, int magIndex,
-    int camLenIndex, double diffFocus, float alpha, int &spotSize,
+    double diffFocus, float alpha, int &spotSize,
     double &rawIntensity, double &ISX, double &ISY);
   void UpdateGauges(int &vacStatus);
   void UpdateScreenBeamFocus(int STEMmode, int &screenPos, int &smallScreen, int &spotSize,

@@ -1011,7 +1011,7 @@ static VOID CALLBACK UpdateProc(
 void CEMscope::ScopeUpdate(DWORD dwTime)
 {
   int screenPos;
-  int magIndex, camLenIndex, indOldIS, oldOffCalInd, newOffCalInd;
+  int magIndex, indOldIS, oldOffCalInd, newOffCalInd;
   int spotSize, probe, returnedProbe, tmpMag, toCam, oldNeutralInd, subMode;
   double intensity, objective, rawIntensity, ISX, ISY, current, defocus;
   BOOL EFTEM, bReady, smallScreen, manageISonMagChg, gotoArea, blanked, restoreIS = false;
@@ -1083,7 +1083,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
       else
         magIndex = mJeolSD.magIndex;
       mLastCameraLength = mJeolSD.camLenValue;
-      camLenIndex = mJeolSD.camLenIndex;
+      mLastCamLenIndex = mJeolSD.camLenIndex;
       STEMmode = mJeolSD.JeolSTEM ? 1 : 0;
       if (STEMmode && mNeedSTEMneutral && mLastSTEMmag)
         ResetSTEMneutral();
@@ -1160,11 +1160,26 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
         mWinApp->mSTEMcontrol.UpdateSTEMstate(mProbeMode);
       } else {
 
-        // TEM mode.  If the probe mode changed, set flag and just restore the raw IS 
-        // values
+        // TEM mode.  Need mag index and diffraction values here
+        // If the probe mode changed, set flag and just restore the raw IS values
         PLUGSCOPE_GET(MagnificationIndex, magIndex, 1);
+
+        // Diffraction
+        if (!magIndex) {
+          PLUGSCOPE_GET(CameraLength, mLastCameraLength, 1);
+          PLUGSCOPE_GET(CameraLengthIndex, mLastCamLenIndex, 1);
+          if (FEIscope) {
+            PLUGSCOPE_GET(SubMode, subMode, 1);
+            if (subMode == psmLAD)
+              mLastCamLenIndex += LAD_INDEX_BASE;
+          }
+          if (sLDcontinuous)
+            PLUGSCOPE_GET(AbsFocus, diffFocus, 1.);
+        }
         CHECK_TIME(4);
-        if (FEIscope && magIndex < mLowestMModeMagInd)
+
+        if (FEIscope && magIndex < mLowestMModeMagInd && 
+          (magIndex > 0 || subMode == psmLAD))
           probe = 1;
         if (returnedProbe != mReturnedProbeMode) {
           temProbeChanged = true;
@@ -1216,19 +1231,6 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
         newISseen = rawISX != mLastISX || rawISY != mLastISY;
       else 
         mLastMagModeChgTime = GetTickCount();
-
-      // Diffraction
-      if (!magIndex) {
-        PLUGSCOPE_GET(CameraLength, mLastCameraLength, 1);
-        PLUGSCOPE_GET(CameraLengthIndex, camLenIndex, 1);
-        if (FEIscope) {
-          PLUGSCOPE_GET(SubMode, subMode, 1);
-          if (subMode == psmLAD)
-             camLenIndex += LAD_INDEX_BASE;
-        }
-        if (sLDcontinuous)
-          PLUGSCOPE_GET(AbsFocus, diffFocus, 1.);
-      }
     }
     checkpoint = "mag";
     CHECK_TIME(5);
@@ -1457,7 +1459,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
 
     // Take care of screen-dependent changes in low dose and update low dose panel
     needBlank = NeedBeamBlanking(screenPos, STEMmode != 0, gotoArea);
-    UpdateLowDose(screenPos, needBlank, gotoArea, magIndex, camLenIndex, diffFocus, 
+    UpdateLowDose(screenPos, needBlank, gotoArea, magIndex, diffFocus, 
       alpha, spotSize, rawIntensity, ISX, ISY);
 
     checkpoint = "low dose";
@@ -1483,8 +1485,8 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
         gunState = mJeolSD.valveOrFilament;
       else if (mPlugFuncs->GetGunValve)
         gunState = mPlugFuncs->GetGunValve();
-      mWinApp->mRemoteControl.Update(magIndex, spotSize, rawIntensity, mProbeMode, 
-        gunState, STEMmode, (int)alpha, screenPos);
+      mWinApp->mRemoteControl.Update(magIndex, mLastCamLenIndex, spotSize, rawIntensity,
+        mProbeMode, gunState, STEMmode, (int)alpha, screenPos);
     }
     mWinApp->mScopeStatus.Update(current, magIndex, defocus, ISX, ISY, stageX, stageY,
       stageZ, screenPos == spUp, smallScreen != 0, sBeamBlanked, EFTEM, STEMmode,spotSize, 
@@ -1687,7 +1689,7 @@ void CEMscope::UpdateGauges(int &vacStatus)
 
 // Manage things when screen changes in low dose, update low dose panel
 void CEMscope::UpdateLowDose(int screenPos, BOOL needBlank, BOOL gotoArea, int magIndex,
-                             int camLenIndex, double diffFocus, float alpha, 
+                             double diffFocus, float alpha, 
                              int &spotSize, double &rawIntensity, double &ISX,double &ISY)
 {
   double delISX, delISY;
@@ -1719,7 +1721,8 @@ void CEMscope::UpdateLowDose(int screenPos, BOOL needBlank, BOOL gotoArea, int m
 
     // After those potential changes, send update to low dose window
     mWinApp->mLowDoseDlg.ScopeUpdate(magIndex, spotSize, rawIntensity, ISX, ISY,
-      screenPos == spDown, mLowDoseSetArea, camLenIndex, diffFocus, alpha, mProbeMode);
+      screenPos == spDown, mLowDoseSetArea, mLastCamLenIndex, diffFocus, alpha, 
+      mProbeMode);
 
     // Subtract the current image shift from the IS sent to scope window
     if (mLowDoseSetArea >= 0 && (!mUsePiezoForLDaxis || !mLowDoseSetArea)) {
@@ -3752,6 +3755,7 @@ int CEMscope::GetCamLenIndex()
       if (subMode == psmLAD)
         result += LAD_INDEX_BASE;
     }
+    mLastCameraLength = result;
   }
   catch (_com_error E) {
     SEMReportCOMError(E, _T("getting camera length index "));
@@ -3766,6 +3770,7 @@ int CEMscope::GetCamLenIndex()
 BOOL CEMscope::SetCamLenIndex(int inIndex)
 {
   BOOL result = true;
+  int indCalled = inIndex;
 
   if (!sInitialized)
     return false;
@@ -3814,6 +3819,7 @@ BOOL CEMscope::SetCamLenIndex(int inIndex)
       mPlugFuncs->SetCameraLengthIndex(inIndex);
     }
     PLUGSCOPE_GET(CameraLength, mLastCameraLength, 1.);
+    mLastCamLenIndex = indCalled;
   }
   catch (_com_error E) {
     SEMReportCOMError(E, _T("setting camera length index "));
@@ -4526,7 +4532,8 @@ void CEMscope::GotoLowDoseArea(int newArea)
 
   // If we are not at the mag of the current area, just go back so the image shift gets
   // set appropriately before the coming changes
-  if (oldArea >= 0 && FastMagIndex() != mLdsaParams->magIndex)
+  if (oldArea >= 0 && FastMagIndex() != mLdsaParams->magIndex && 
+    mLdsaParams->magIndex > 0)
     SetMagIndex(mLdsaParams->magIndex);
 
   // If changing area at zero IS, get the current centered shift and reset it
@@ -4555,9 +4562,9 @@ void CEMscope::GotoLowDoseArea(int newArea)
     DoISforLowDoseArea(newArea, mLdsaParams->magIndex, delISX, delISY);
 
   // If leaving view or search area, set defocus back first
-  if (!STEMmode && mLDViewDefocus && fromView && !toView)
+  if (!STEMmode && mLDViewDefocus && fromView && !toView && mLdsaParams->magIndex > 0)
       IncDefocus(-(double)mLDViewDefocus);
-  if (!STEMmode && mSearchDefocus && fromSearch && !toSearch)
+  if (!STEMmode && mSearchDefocus && fromSearch && !toSearch && mLdsaParams->magIndex > 0)
       IncDefocus(-(double)mSearchDefocus);
 
   // Pull off the beam shift if leaving an area and going between LM and nonLM
@@ -4604,15 +4611,20 @@ void CEMscope::GotoLowDoseArea(int newArea)
   
   if (ldArea->magIndex)
     SetMagIndex(ldArea->magIndex);
-  else if (ldArea->camLenIndex) {
-    SetCamLenIndex(ldArea->camLenIndex);
+  else if (!ldArea->camLenIndex)
+    ldArea->magIndex = GetMagIndex();
+ 
+  if (!ldArea->magIndex) {
+    if (ldArea->camLenIndex)
+      SetCamLenIndex(ldArea->camLenIndex);
+    else 
+      ldArea->camLenIndex = GetCamLenIndex();
 
     if (ldArea->diffFocus > -990.)
       SetDiffractionFocus(ldArea->diffFocus);
     else
       ldArea->diffFocus = GetDiffractionFocus();
-  } else
-    ldArea->magIndex = GetMagIndex();
+  }
   magTime = GetTickCount();
 
   // Now that mag is done, do the probe change if coming out of LM
@@ -4632,10 +4644,10 @@ void CEMscope::GotoLowDoseArea(int newArea)
     ldArea->beamAlpha = (float)curAlpha;
 
   // If going to view or search area, set defocus offset incrementally
-  if (!STEMmode && mLDViewDefocus && !fromView && toView) {
+  if (!STEMmode && mLDViewDefocus && !fromView && toView && ldArea->magIndex > 0) {
     IncDefocus((double)mLDViewDefocus);
   }
-  if (!STEMmode && mSearchDefocus && !fromSearch && toSearch) {
+  if (!STEMmode && mSearchDefocus && !fromSearch && toSearch && ldArea->magIndex > 0) {
     IncDefocus((double)mSearchDefocus);
   }
 
@@ -5951,22 +5963,24 @@ BOOL CEMscope::SetProbeMode(int micro, BOOL fromLowDose)
 // Get microprobe/nanoprobe on FEI or return the default value for TEM/STEM on other scope
 int CEMscope::ReadProbeMode(void)
 {
-  int retval = 1;
+  int subMode, retval = 1;
   if (!sInitialized)
     return 0;
   ScopeMutexAcquire("ReadProbeMode", true);
   if (FEIscope) {
-    if (mLastMagIndex < mLowestMModeMagInd && (!mWinApp->ScopeHasSTEM() || 
-      !mPlugFuncs->GetSTEMMode())) {
+    try {
+      if (!mLastMagIndex)
+        PLUGSCOPE_GET(SubMode, subMode, 1);
+      if (mLastMagIndex < mLowestMModeMagInd && (mLastMagIndex > 0 || subMode == psmLAD) &&
+        (!mWinApp->ScopeHasSTEM() || !mPlugFuncs->GetSTEMMode())) {
         mProbeMode = retval = 1;
-    } else {
-      try {
+      } else {
         PLUGSCOPE_GET(ProbeMode, retval, 1);
         mReturnedProbeMode = mProbeMode = retval;
       }
-      catch (_com_error E) {
-        SEMReportCOMError(E, _T("getting probe mode "));
-      }
+    }
+    catch (_com_error E) {
+      SEMReportCOMError(E, _T("getting probe mode "));
     }
   } else {
     retval = FastSTEMmode() ? 0 : 1;

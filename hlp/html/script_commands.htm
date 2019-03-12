@@ -788,7 +788,11 @@
             delay #D in milliseconds.&nbsp; On FEI scopes with recent enough versions of FEI 
             scripting, or JEOL scopes with recent versions of TemExt.dll, #S can be added with a speed multiplier (&lt; 1 for slower, &gt; 1 for 
             faster).&nbsp; On FEI scopes this command will freeze the user 
-            interface and prevent scope updates while the stage is tilting.</TD>
+            interface and prevent scope updates while the stage is tilting.  If the command 
+              crashes SerialEM or FEI-SEMserver with 
+              a speed multiplier but runs OK with one, it means 
+              that the FEI scripting version is too old to support the speed command.
+          </TD>
         </TR>
         <TR>
           <TD class="style8">DeferStackingNextShot</TD>
@@ -1333,7 +1337,10 @@
             #S, a speed factor for FEI or JEOL scopes that support this (&lt; 1 for slower than normal tilting).&nbsp; 
             On FEI scopes, background stage movement requires the property 
             &#39;BackgroundSocketToFEI&#39; set to 1 so that the fourth socket for background stage 
-            operations is opened when the program starts.</TD>
+            operations is opened when the program starts.  If the command 
+              crashes SerialEM or FEI-SEMserver with 
+              a speed multiplier but runs OK with one, it means 
+              that the FEI scripting version is too old to support the speed command.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style13">ReportTiltAngle</TD>

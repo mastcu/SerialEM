@@ -1135,6 +1135,7 @@ void CLowDoseDlg::Update()
   BOOL STEMmode = mWinApp->GetSTEMMode();
   BOOL camBusy = mWinApp->mCamera->CameraBusy();
   BOOL usePiezo =  mScope->GetUsePiezoForLDaxis();
+  LowDoseParams *ldShown = &mLDParams[m_iOffsetShown ? SEARCH_AREA : VIEW_CONSET];
   ManageDefines(mScope->GetLowDoseArea());
 
   // Enable unblank button if blanked and no tasks, and camera not busy
@@ -1156,8 +1157,9 @@ void CLowDoseDlg::Update()
   m_butResetBeamShift.EnableWindow(!STEMmode && bEnable && !camBusy);
 
   m_butSetViewShift.EnableWindow(!STEMmode && bEnable && OKtoSetViewShift());
-  m_sbcViewDefocus.EnableWindow(!STEMmode && !mWinApp->DoingTasks() && !camBusy);
-  m_statViewDefocus.EnableWindow(!STEMmode);
+  bEnable = !STEMmode && ldShown->magIndex > 0;
+  m_sbcViewDefocus.EnableWindow(bEnable && !mWinApp->DoingTasks() && !camBusy);
+  m_statViewDefocus.EnableWindow(bEnable);
 
   // Make mag-spot line visible if mode on
   m_statMagSpot.ShowWindow(mTrulyLowDose ? SW_SHOW : SW_HIDE);

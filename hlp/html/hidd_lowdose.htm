@@ -26,11 +26,11 @@
       grayed out and be hard to read.</P>
     <P><B>Continuous update (see tooltip)</B></P>
     <P>When this option is selected, any change of magnification, spot size, 
-      brightness, energy filter settings, probe mode on an FEI scope, or alpha on a JEOL 
+      brightness, diffraction focus in diffraction mode, energy filter settings, probe mode on an FEI scope, or alpha on a JEOL 
       scope will immediately change the parameters of 
       the current area. Otherwise, such changes will be lost when a new image is 
       acquired from the given area.&nbsp;  
-      Beam shift, beam tilt, focus settings, and image shift displacements for a 
+      Beam shift, beam tilt, focus settings in imaging mode, and image shift displacements for a 
       particular area are <b>NOT</b> recorded when this option is on, but can be 
       introduced by other options in this panel. </P>
     <P><B>Define position of area</B></P>
@@ -128,6 +128,7 @@
       the magnification change.&nbsp; In particular, when going between nonLM and LM, 
       the microscope may restore the last defocus seen in the new magnification range, 
       and the offset is then applied to that.</P>
+      <P>Defocus offsets are disabled in diffraction mode.&nbsp; An absolute diffraction focus value is recorded as part of the area settings, and can be modified when continuous update is turned on.&nbsp; This absolute value is restored whenever going back to an area in diffraction mode.</P>
     <P><a name="viewShiftOffset"></a><B>Shift offset for View or Search</B></a></P>
     <P>If image features shift when going between the View or Search and Record areas, the <B>Set</B>
       button allows you to correct for this shift. The are two methods for setting the 
