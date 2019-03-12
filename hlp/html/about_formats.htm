@@ -60,13 +60,14 @@
   <BODY BGCOLOR="#ffffff" TEXT="#000000">
     <basefont size="2">
       <P><A NAME="about_formats"></A><span class="style12">File
-          Formats</span></P>
+          Formats and Other Documentation</span></P>
       <P>
         <a href="#metadata">Image Metadata Files</a><br>
         <a href="#navigator">Navigator Files</a><br>
         <a href="#importing">Importing Externally Defined Navigator
           Items</a><br>
         <a href="#calfile">Calibration File Entries</a><br>
+        <a href="#otherNotes">Other Notes</a><br>
       </p>
     <P><a name="metadata"></a><b>Image Metadata Files</b></P>
       <P>SerialEM stores metadata about images in text files in the IMOD &quot;autodoc&quot; format.&nbsp; 
@@ -925,9 +926,10 @@
 &nbsp;&nbsp; alpha<br />
 &nbsp;&nbsp; magnification</p>
       <p>
-          <em>Stage Calibration, matrices, image rotation: </em></p>
+          <em>Stage Calibration and 2x2 transformation matrices </em></p>
       <p>
-          The stage calibration consists of 4 matrix terms, and like all such matrices, 
+          The stage calibration consists of 4 matrix terms, and like all such 
+          2x2 transformation matrices, 
           they are expressed as a change in output X value per change in X input value (xpx),
            change in X per change in Y (xpy), change in Y per change in X (ypyx), and change
            in Y per change in Y (ypy).&nbsp; They are written to file in this order.
@@ -936,9 +938,9 @@
           unbinned pixels, or the position of the new centered coordinate in the image 
           relative to the original center.&nbsp; This negative value is unfortunate in that
            it inverts the typical stage coordinate system relative to the underlying 
-          &quot;specimen&quot; coordinate system that has X along the tilt axis.</p>
+          &quot;specimen&quot; coordinate system that has its X along the tilt axis.</p>
       <p>
-          The calibration line has<br />
+          The StageCalibration line has<br />
           &nbsp;&nbsp;
           Mag index<br />
           &nbsp;&nbsp;
@@ -954,8 +956,48 @@
           &nbsp;&nbsp;
           Absolute focus at which calibration taken (compound of coarse and fine values for JEOL)<br />
 &nbsp;&nbsp; Magnification</p>
+      <a name="otherNotes"></a><p><strong>Other Notes</strong></p>
+      <p><em>Image Rotation</em></p>
+      <p>The 'specimen' coordinate system is a right-handed system with its X axis along 
+          the positive tilt axis.&nbsp; (Looking toward the origin along the positive tilt 
+          axis, a positive tilt rotates the stage counterclockwise).&nbsp; Image rotation 
+          is defined as the amount that the camera image has rotated CCW from the image at 
+          the specimen plane, i.e., the angle (CCW positive) from the positive X axis of 
+          the image to the positive tilt axis in the image.</p>
+      <p>If there is only one camera and there is no RotationAndPixel line with a 
+          calibrated absolute rotation, the rotation at one magnification is estimated 
+          from a fallback value, the sum of that mag's rotation value in the 
+          MagnificationTable, the GlobalExtraRotation, and the ExtraRotation for that 
+          camera.&nbsp; If there are relative rotations in the table, the fallback is assigned 
+          to one mag as the absolute rotation, and this allows a rotation to be derived 
+          for the others.&nbsp; This is an ambiguous situation because there is no way to know 
+          just which mag that fallback angle should apply to.&nbsp;</p>
+      <p>Once there is a calibrated absolute angle, the MagnificationTable rotation, 
+          GlobalExtraRotation, and ExtraRotation become irrelevant for all the mags that 
+          are listed in the RotationAndPixel table and linked by relative rotations to a 
+          mag with an absolute rotation.&nbsp; The relative rotation for a mag equals the 
+          rotation angle of that mag minus the rotation of the next lower mag; this 
+          relationship allows a rotation angle to be propagated outward from the mag with 
+          the calibrated absolute angle. If any of these mags have an image shift 
+          calibration, other mags in the same mag range that have an image shift 
+          calibration can also be assigned a rotation by assuming that image shift is 
+          invariant at the specimen within that mag range.&nbsp; On an FEI scope, the mag 
+          ranges are LM and nonLM; on a JEOL using image shift deflections there are other 
+          boundaries across which rotation cannot be transferred; on a JEOL scope using 
+          PLA, rotation cannot be transferred at all. The MagnificationTable rotations 
+          retain a fallback role for other mags that have not been assigned a rotation by 
+          one of these mechanisms; the rotation for such a mag is derived from the nearest 
+          mag with an assigned rotation by adding the difference between the 
+          MagnificationTable rotation of the mag in question and that of the nearby mag.</p>
+      <p>The situation is even more complicated when there is more than one camera at the 
+          same level, i.e., more than one nonGIF camera or more than one GIF camera, and 
+          one lacks a calibrated absolute angle.&nbsp; The program will use image shift 
+          calibrations if possible to get an absolute angle from another camera.&nbsp; All 
+          of the assignments described here are listed when the program is started with 
+          DebugOutput set to 'c'.&nbsp; See also ShiftManager::PropagateRotations().&nbsp; </p>
       <p>The image rotation value is intimately related to the stage calibration.&nbsp; 
-          For an FEI scope or JEOL scope without omega filter, an image rotation of 0 produces this pattern of image movement</p>
+          For an FEI scope or JEOL scope without omega filter, an image rotation of 0 produces
+           this pattern of image movement</p>
       <pre>  ^  image movement for positive Y stage move
   |
   |
@@ -963,11 +1005,13 @@
   |
   --------->   image movement for positive X stage move
 </pre>
-          The image rotation angle is the amount by which the axes of image movement are rotated counterclockwise relative to this pattern.&nbsp; 
-      The the image rotation (and the tilt axis angle) should equal&nbsp; atan2(-ypx, 
+          The image rotation angle is the amount by which the axes of image movement are
+       rotated counterclockwise relative to this pattern.&nbsp; 
+      The image rotation (and the tilt axis angle) should equal&nbsp; atan2(-ypx, 
       -xpx) (from the X axis rotation) or atan2(-ypy, -xpy) - 90 ( from the Y axis 
       rotation); the program averages these two estimates when it reports the rotation 
-      angle with a stage calibration.&nbsp; For a JEOL with omega filter, the pattern is this: <pre>           ^  image movement for positive Y stage move
+      angle with a stage calibration.&nbsp; For a JEOL with omega filter, the pattern is this:
+<pre>           ^  image movement for positive Y stage move
            |
            |
            |
@@ -976,6 +1020,8 @@
 </pre>
       The X axis is inverted and this requires the property InvertStageXAxis to be 
       set.&nbsp; In this case the image rotation is estimated from atan2(ypx, xpx) and 
-      atan2(-ypy, -xpy) - 90.</p>
+      atan2(-ypy, -xpy) - 90.&nbsp; These estimates are simply reported and never used 
+      directly by the program; they must be placed into the RotationAndPixel&nbsp; 
+      lines to have any effect.</p>
   </BODY>
 </HTML>

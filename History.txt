@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+3/6/19: SEM_3-7-2
+3/6/19: Revised instructions on setting rotations angles in STEM (In 3.7).
+
 3/5/19: Substituted variables in NewMap, CompareStrings, ReadTextFile, and
 WriteFrameTiltSeries commands (In 3.7).
 
