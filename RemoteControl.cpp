@@ -404,6 +404,7 @@ void CRemoteControl::SetMagOrSpot(void)
       mScope->DelayedSetIntensity(newInt, GetTickCount());
     mMagClicked = false;
     m_sbcMag.EnableWindow(true);
+    mWinApp->mAlignFocusWindow.Update();
   }
   if (mSpotClicked) {
     m_sbcSpot.EnableWindow(false);
@@ -443,6 +444,7 @@ void CRemoteControl::OnDeltaposSpinAlpha(NMHDR *pNMHDR, LRESULT *pResult)
     newVal))
     return;
   mScope->SetAlpha(newVal);
+  mWinApp->mAlignFocusWindow.Update();
 }
 
 // Beam or stage up/down

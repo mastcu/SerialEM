@@ -828,7 +828,7 @@
       </AdditionalManifestFiles>
     </Manifest>
     <PostBuildEvent>
-      <Command>mt -nologo -manifest ./Utilities/Release-NOOMP.manifest  -manifest Utilities/win10.manifest "-outputresource:Release/SerialEM.exe;#1" &gt; nul 2&gt;&amp;1</Command>
+      <Command>mt -nologo -manifest ./Utilities/Release-NOOMP.manifest  -manifest Utilities/win10.manifest "-outputresource:NoHang_Release/SerialEM.exe;#1" &gt; nul 2&gt;&amp;1</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='NoHang|x64'">

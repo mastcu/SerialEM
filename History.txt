@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+3/11/19: Enabled autofocus in Low Mag if there is a standard focus, instead of
+looking for a focus calibration that can be transformed, and made sure the
+button got updated when Scope control or Low Dose changes mag. (In 3.7).
+
 3/6/19: SEM_3-7-2
 3/6/19: Revised instructions on setting rotations angles in STEM (In 3.7).
 

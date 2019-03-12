@@ -232,7 +232,7 @@
       SerialEM tries to load any file whose name ends in 'Plugin.dll' from the same 
       folder as the executable. 
       </P>
-    <P>The files that come from a framework extract to either C:\Program Files\SerialEM
+    <li>The files that come from a framework extract to either C:\Program Files\SerialEM
  (Windows XP) or C:\ProgramData\SerialEM (Windows 7 and later) and include:<br />
        SerialEMproperties.txt - the Properties file, read by SerialEM, edited by hand<BR>
        SerialEMcalibrations.txt - an empty calibrations file, read and written by SerialEM<BR>
@@ -1691,7 +1691,7 @@
           by 2 reference. In this case, you need an entry like 'BinningOffset 4 2 999 0'. 
           The '999' tells the program not to make a reference for binning 4 from the 
           binned by 2 reference.</LI></OL>
-      <P>Binning offsets are also needed for Gatan 4-port readout cameras but these 
+      <li>Binning offsets are also needed for Gatan 4-port readout cameras but these 
         offsets are predictable and the program will set them up automatically.
     <P>&nbsp;</P>
       <P><A name="setup_standard_focus"></A><B>Assessing Standard Focus for Low Mag Mode 
@@ -2909,41 +2909,55 @@
       the tilt axis.</P>
     <P><i>Rotating to the tilt axis, part 1.</i> If the direction of the scan is not 
       somewhere near parallel to the tilt axis, it should be rotated first so that you 
-      can do the following steps correctly.&nbsp; Before you start, make sure that the 
+      can do the following steps correctly.&nbsp; </P>
+      <ol>
+      <li>Before you start, make sure that the 
       camera properties contain 0 on the ExtraRotation line and on the ImageRotation and 
         RotationAndFlip lines, if any, and do not have 
       RotationAndPixel lines with non-zero rotations (at least at the magnifications 
-      you will use).&nbsp; Take a STEM image of an area with recognizable features at a 
+      you will use).&nbsp; </li>
+          <li>Take a STEM image of an area with recognizable features at a 
         low enough magnification so that you can move the stage by a few microns and see 
-        how the image moves.&nbsp; Move the stage in positive Y (use a script with 
-        MoveStage).&nbsp; Take another image and note the direction of movement of image 
+        how the image moves.&nbsp; </li>
+          <li>Move the stage in positive Y (use a script with 
+        MoveStage).&nbsp; </li>
+          <li>Take another image and note the direction of movement of image 
         features relative to the positive Y axis of the image.&nbsp; 
-        Place the the angle from the axis of movement to the Y axis (counterclockwise 
+        </li>
+          <li>Place the the angle from the axis of movement to the Y axis (counterclockwise 
         positive) into the &#39;Added rotation&#39; box of the STEM Control 
-      panel.&nbsp; Take another image, move the stage again, take another image, and 
+      panel.&nbsp; </li>
+          <li>Take another image, move the stage again, take another image, and 
         verify that the movement is in the direction of the positive Y axis and along 
         the Y axis within about 10 degrees.&nbsp; (Using the X axes instead for this 
-        measurement will produce the wrong result on a JEOL with omega filter).&nbsp; 
-        Place the <em>negative</em> of the final value of &#39;Added rotation&#39; into the 
-        ExtraRotation line of the STEM camera properties and restart the program.</P>
-      <P><em>Option 1: Refining tilt axis rotation with a stage calibration.</em> To use 
+        measurement will produce the wrong result on a JEOL with omega filter).</li>
+          <li>Place the <em>negative</em> of the final value of &#39;Added rotation&#39; into the 
+        ExtraRotation line of the STEM camera properties and restart the program.</li>
+      </ol>
+          <P>
+      <em>Option 1: Refining tilt axis rotation with a stage calibration.</em> To use 
           this method, you need to be at a magnification suitable for doing an accurate 
           stage calibration in a few stage moves, have an image area with enough unique 
-          features, and give the program some idea of what the pixel size is.&nbsp; The 
-          easiest way to do the latter is to take an image of the cross-line grating and 
+          features, and give the program some idea of what the pixel size is.</P>
+      <ol>
+      <li> The 
+          easiest way to set the pixel size is to take an image of the cross-line grating and 
           run <a href="menu_calibration.htm#hid_process_findpixelsize">Find Pixel Size</a> 
-          in the Process menu at the chosen magnification.&nbsp; Run 
-      <a href="menu_calibration.htm#hid_process_listrelativerotations">List Relative Rotations</a> 
-          and copy and paste the RotationAndPixel line into the camera properties, replace 
-          the second 999 with a 0, and restart the program.&nbsp; Then turn off &#39;Whole 
+          in the Process menu at the chosen magnification.&nbsp;
+          <li> Run 
+      <a href="menu_calibration.htm#hid_process_listrelativerotations">List Relative Rotations</a>, copy and paste the RotationAndPixel line into the camera properties, replace 
+          the second 999 with a 0, and restart the program.&nbsp;
+          <li> Then turn off &#39;Whole 
           image correlations&#39; to minimize correlation problems, run the stage calibration, 
           and make sure it aligns images correctly. The rotation angle that it reports 
-          should be within ~10 degrees of 0.&nbsp; Place the <em>negative</em> of this 
+          should be within ~10 degrees of 0.&nbsp;
+          <li> Place the <em>negative</em> of this 
           angle in the &#39;Added rotation&#39; box and do another stage calibration to check that 
           it produces an angle of essentially 0.&nbsp; You can refine the angle in the 
           &#39;Added rotation&#39; box if necessary by <em>subtracting</em> a new reported angle 
-          from calibration.&nbsp; <em>Subtract</em> the angle in the &#39;Added rotation&#39; box 
-          from the value in the ExtraRotation line and restart the program. </P>
+          from calibration.&nbsp;<li> &nbsp;<em>Subtract</em> the final angle in the &#39;Added rotation&#39; box 
+          from the value in the ExtraRotation line and restart the program. </li>
+          </ol>
     <P><em>Option 2: Refining tilt axis rotation by comparison with another camera</em><i>.</i> 
         To use this method, you need another camera at a magnification where you know 
         the tilt axis angle, either from the angle in a file header or mdoc file, or 
@@ -2952,27 +2966,38 @@
         <em>add</em> to the absolute angle the relative angles from the mag above the 
         calibrated one through the one at the current mag.&nbsp; To get the angle from a 
         calibrated one at a higher mag, <em>subtract</em> from the absolute value the 
-        relative angles from the calibrated mag down to the mag above the current one.&nbsp; 
-        Put the tilt axis angle into the &#39;Added rotation&#39; box.&nbsp; Take an image on 
+        relative angles from the calibrated mag down to the mag above the current one.&nbsp; </P>
+          <ol>
+        <li>Put the tilt axis angle into the &#39;Added rotation&#39; box.&nbsp; </li>
+              <li>Take an image on 
         the other camera and copy it to the Align buffer so that it can be compared 
-      easily with images in buffer A.&nbsp; Take a STEM image of the same area at a 
+      easily with images in buffer A.&nbsp;</li>
+              <li>&nbsp;Take a STEM image of the same area at a 
       comparable scale (if you are using a cross-line grating, it is not necessary to 
-      find the same area).&nbsp; You can find the additional rotation that makes the STEM image 
+      find the same area).&nbsp; </li>
+              <li>You can find the additional rotation that makes the STEM image 
       match the other camera image in two different ways.&nbsp; You can estimate the amount 
       that the STEM image needs to be rotated, <em>add</em> that into the 'Added rotation' box, 
       take another image and use it to adjust the estimate, repeating until the images 
       match adequately.&nbsp; Or, you can find two features to draw a line between in 
       both images and get an angle for each image (press Shift, click and drag with 
       the left mouse button; the angle will be reported in the status bar and in the 
-      log window).&nbsp; The angle to rotate (<em>add</em> to the &#39;Added rotation&#39; 
+      log window).&nbsp; </li>
+              <li>The angle to rotate (<em>add</em> to the &#39;Added rotation&#39; 
         value) is the angle in the other camera image <em>minus</em> the 
-      angle in the STEM image.&nbsp; After you find the rotation that makes the images 
+      angle in the STEM image.</li>
+              <li>&nbsp;After you find the rotation that makes the images 
       match, <em>subtract</em> the tilt axis angle of the other camera from the &#39;Added 
-        rotation&#39; value.&nbsp; The value should be within ~10 degrees of 0.&nbsp; Take another image 
-        to verify that it brings the tilt axis to horizontal.&nbsp; Adjust the 
+        rotation&#39; value.&nbsp; The value should be within ~10 degrees of 0.&nbsp;</li>
+              <li>&nbsp;Take another image 
+        to verify that it brings the tilt axis to horizontal.</li>
+              <li>&nbsp;Adjust the 
         ExtraRotation camera property by <em>subtracting</em> this &#39;Added rotation&#39; 
         angle and restart 
-      SerialEM. </P>
+      SerialEM. </li>
+</ol>
+      <P>Whichever option you choose, you can test the result by moving the stage a few 
+          microns in Y: the move should produce a strict upwards movement in the image.</P>
     <P><i>Choosing whether to rotate..</i>&nbsp; You need to make an initial decision 
       about whether to have STEM images rotated in SerialEM so that their orientation 
       is approximately the same as that of images on the viewing screen or CCD camera.&nbsp; 
