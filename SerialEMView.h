@@ -98,6 +98,8 @@ private:
   BOOL  mFirstDraw;              // Flag that first draw is being done
   double mZoom;
   double mEffectiveZoom;         // Effective zoom for unbinned images
+  double mViewEffectiveZoom;     // Separate effective zooms for low dose view/search
+  double mSearchEffectiveZoom;
   EMimageBuffer *mImBufs;
   BOOL mMainWindow;              // Flag that this is the main window
   BOOL mStackWindow;             // Flag that this is THE active stack view

@@ -94,7 +94,9 @@ CSerialEMView::CSerialEMView()
   mFFTWindow = false;
   mShiftPressed = false;
   mCtrlPressed = false;
-  mPanning = false;         
+  mPanning = false;  
+  mViewEffectiveZoom = 0.;
+  mSearchEffectiveZoom = 0.;
   mScaleParams.draw = true;
   mScaleParams.white = false;
   mScaleParams.minLength = 50;
@@ -1399,13 +1401,23 @@ void CSerialEMView::SetZoom(double inZoom)
 // Notify image level window of new zoom
 void CSerialEMView::NewZoom()
 {
+  double effZoom;
   DrawImage();
   if (mImBufs[mImBufIndex].mImageScale)
     mWinApp->mImageLevel.NewZoom(mZoom);
   
-  // Set effective zoom unless it is a map
-  if (GetBufferBinning() > 0. && !mImBufs[mImBufIndex].mMapID)
-    mEffectiveZoom = mZoom / GetBufferBinning();
+  // Set effective zoom unless it is a map or View/Search
+  if (GetBufferBinning() > 0. && !mImBufs[mImBufIndex].mMapID) {
+    effZoom = mZoom / GetBufferBinning();
+    if (mImBufs[mImBufIndex].mLowDoseArea &&
+      mImBufs[mImBufIndex].mConSetUsed == VIEW_CONSET)
+      mViewEffectiveZoom = effZoom;
+    if (mImBufs[mImBufIndex].mLowDoseArea &&
+      mImBufs[mImBufIndex].mConSetUsed == SEARCH_CONSET)
+      mSearchEffectiveZoom = effZoom;
+    else
+      mEffectiveZoom = effZoom;
+  }
   mImBufs[mImBufIndex].mZoom = mZoom;
 }
 
@@ -2143,9 +2155,15 @@ void CSerialEMView::SetCurrentBuffer(int inIndex)
   // times the binning; notify level window of new zoom
   if (mWinApp->mBufferManager->GetAutoZoom() && GetBufferBinning() > 0.) {
 
-    // But if it is a map with a defined zoom, use previous zoom
+    // But if it is a map with a defined zoom, or View or Search, use previous zoom
     if (mImBufs[mImBufIndex].mMapID && mImBufs[mImBufIndex].mZoom > 0.001)
       mZoom = mImBufs[mImBufIndex].mZoom;
+    else if (mImBufs[mImBufIndex].mLowDoseArea &&
+      mImBufs[mImBufIndex].mConSetUsed == VIEW_CONSET && mViewEffectiveZoom > 0.)
+      mZoom = mViewEffectiveZoom * GetBufferBinning();
+    else if (mImBufs[mImBufIndex].mLowDoseArea &&
+      mImBufs[mImBufIndex].mConSetUsed == SEARCH_CONSET && mSearchEffectiveZoom > 0.)
+      mZoom = mSearchEffectiveZoom * GetBufferBinning();
     else
       mZoom = mEffectiveZoom * GetBufferBinning();
 
