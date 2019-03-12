@@ -1888,7 +1888,17 @@ void CLowDoseDlg::ShiftImageInA(double delAxis)
 // If filtParam is NULL or omitted the master set is used
 void CLowDoseDlg::SyncFilterSettings(int inArea, FilterParams *filtParam)
 {
-  LowDoseParams *ldArea = &mLDParams[inArea];
+  LowDoseParams *ldArea;
+  if (inArea < 0) {
+    if (!mWinApp->GetFilterMode() || !mWinApp->LowDoseMode() ||
+      mScope->GetChangingLDArea() ||
+      (JEOLscope && mScope->GetHasOmegaFilter() && mScope->mJeolSD.spectroscopy))
+      return;
+    inArea = mScope->GetLowDoseArea();
+    if (inArea < 0 || !m_bContinuousUpdate)
+      return;
+  }
+  ldArea = &mLDParams[inArea];
 
   if (!filtParam)
     filtParam = mWinApp->GetFilterParams();
