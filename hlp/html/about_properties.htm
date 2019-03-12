@@ -2922,6 +2922,14 @@
             &#39;StageMoveDelay&#39;, whose default is 2000.</TD>
         </TR>
         <TR VALIGN="top">
+          <TD>DistortionMaxMoveToCheck</TD>
+          <TD>Maximum stage move in microns to check for whether the shift determined by 
+            correlation is close enough to the target; namely if this value is 0 or the 
+            stage move is less than this value, it will check and repeat the move if 
+            necessary, but if the move is greater than this value it will ignore the 
+            measured shift and trust the stage move. </TD>
+        </TR>
+        <TR VALIGN="top">
           <TD>StageTimeoutFactor</TD>
           <TD>Factor by which to multiply allowed time for stage movements to complete; 
             default is 1.&nbsp; Originally applied only to stage movements in eucentricity 

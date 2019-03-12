@@ -165,6 +165,7 @@ BOOL_PROP_TEST("UseTrialSizeForShiftCal", mWinApp->mShiftCalibrator->, UseTrialS
 BOOL_PROP_TEST("UseTrialBinningForShiftCal", mWinApp->mShiftCalibrator->, UseTrialBinning)
 FLOAT_PROP_TEST("StageCalibrationBacklash", mWinApp->mShiftCalibrator->, StageCalBacklash)
 INT_PROP_TEST("DistortionStageDelay", mWinApp->mDistortionTasks->, StageDelay)
+FLOAT_PROP_TEST("DistortionMaxMoveToCheck", mWinApp->mDistortionTasks->, MaxMoveToCheck)
 FLOAT_PROP_TEST("ISoffsetCalStageLimit", mWinApp->mShiftCalibrator->, CalISOstageLimit)
 FLOAT_PROP_TEST("StageMontageBacklash", mWinApp->mMontageController->, StageBacklash)
 BOOL_PROP_TEST("LimitMontageToUsable", mWinApp->mMontageController->, LimitMontToUsable)

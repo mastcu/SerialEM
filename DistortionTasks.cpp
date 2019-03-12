@@ -3,6 +3,7 @@
 
 #include "stdafx.h"
 #include "SerialEM.h"
+#include "SerialEMView.h"
 #include "SerialEMDoc.h"
 #include "DistortionTasks.h"
 #include "ShiftManager.h"
@@ -43,6 +44,7 @@ CDistortionTasks::CDistortionTasks()
   mDirectionIndex = 0;
   mStageBacklash = 5.;
   mStageDelay = 0;   // Use default
+  mMaxMoveToCheck = 0.;
 }
 
 CDistortionTasks::~CDistortionTasks()
@@ -242,7 +244,7 @@ void CDistortionTasks::CalibrateDistortion()
 
 void CDistortionTasks::SPNextTask(int param)
 {
-  float shiftX, shiftY, actualMoveX, actualMoveY;
+  float shiftX, shiftY, bShiftX, bShiftY, actualMoveX, actualMoveY;
   int numAvg, ind, maxAvg = 3;
   CString report;
 
@@ -283,19 +285,28 @@ void CDistortionTasks::SPNextTask(int param)
 
   case SP_SECOND_SHOT:
     // 11/30/11: Call with argument not to shift so it doesn't need to be restored
-    mShiftManager->AutoAlign(1, 0, false);
+    mShiftManager->AutoAlign(1, 0, false, false, NULL, (mMinShiftX + mMaxShiftX) / 2.f,
+      -(mMinShiftY + mMaxShiftY) / 2.f);
     mImBufs->mImage->getShifts(shiftX, shiftY);
+    mImBufs[1].mImage->getShifts(bShiftX, bShiftY);
+    shiftX -= bShiftX;
+    shiftY -= bShiftY;
+    mImBufs[1].mImage->setShifts(0., 0.);
+    mImBufs->mImage->setShifts(shiftX, shiftY);
+    mImBufs->SetImageChanged(1);
+    mWinApp->mMainView->DrawImage();
     shiftY = -shiftY;
 
     report.Format("Trial %d: shift between images is %.0f in X, %.0f in Y", 
       mIterCount, shiftX, shiftY);
     mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
 
-    if (shiftX > mMinShiftX && shiftX < mMaxShiftX && 
-      shiftY > mMinShiftY && shiftY < mMaxShiftY) {
+    if ((mMaxMoveToCheck > 0. && sqrt(pow(mTargetMoveX, 2.f) + pow(mTargetMoveY, 2.f)) >
+      mMaxMoveToCheck) || (shiftX > mMinShiftX && shiftX < mMaxShiftX &&
+      shiftY > mMinShiftY && shiftY < mMaxShiftY)) {
       // Save images
       mWinApp->SetCurrentBuffer(1);
-      mWinApp->mDocWnd->SaveActiveBuffer(); 
+      mWinApp->mDocWnd->SaveActiveBuffer();
       mWinApp->SetCurrentBuffer(0);
       mWinApp->mDocWnd->SaveRegularBuffer();
       mWinApp->AppendToLog("Shifts acceptable, pair saved to file", LOG_OPEN_IF_CLOSED);

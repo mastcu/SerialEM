@@ -37,6 +37,7 @@ public:
 	void Initialize();
   void CalibrateDistortion();
   GetSetMember(int, StageDelay);
+  GetSetMember(float, MaxMoveToCheck);
 
 // Overrides
 	// ClassWizard generated virtual function overrides
@@ -73,6 +74,7 @@ private:
   float mMinorDimMinOverlap;       // Minimum overlap in cross-dimension
   float mTargetMoveX, mTargetMoveY; // Target move in stage coordinates
   float mStageMoveX, mStageMoveY;   // Amount stage was moved in this trial
+  float mMaxMoveToCheck;            // Maximum stage move to align to test if at target
   StageMoveInfo mCenterInfo;        // Starting stage position
   StageMoveInfo mMoveInfo;          // working copy of moving stage
   float mCumMoveDiffX, mCumMoveDiffY;  // Sum of differences between stage and actual move
