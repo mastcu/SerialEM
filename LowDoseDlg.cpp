@@ -230,8 +230,8 @@ void CLowDoseDlg::ConvertAxisPosition(BOOL axisToIS)
   double delX, delY;
   MagTable *magTab = mWinApp->GetMagTable();
 
-  // Convert axis to IS or back for all but the View set
-  for (i = 1; i < MAX_LOWDOSE_SETS; i++) {
+  // Convert axis to IS or back for all but the View and Search sets
+  for (i = FOCUS_CONSET; i <= RECORD_CONSET; i++) {
     mag = mLDParams[i].magIndex;
     if (!mag)
       continue;
@@ -266,7 +266,7 @@ void CLowDoseDlg::ConvertAxisPosition(BOOL axisToIS)
       mLDParams[area].axisPosition = mLDParams[RECORD_CONSET].axisPosition;
     }
   }
-  for (i = 0; i < 4; i++)
+  for (i = 0; i < MAX_LOWDOSE_SETS; i++)
     SEMTrace('l', "%d: mag %d  axisPos %.2f  IS  %f  %f", i, mLDParams[i].magIndex, 
       mLDParams[i].axisPosition, mLDParams[i].ISX, mLDParams[i].ISY);
 }

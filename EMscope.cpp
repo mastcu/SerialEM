@@ -3203,6 +3203,7 @@ int CEMscope::LookupSTEMmagFEI(double curMag, int curMode, double & minDiff)
 BOOL CEMscope::SetMagIndex(int inIndex)
 {
   double tranISX, tranISY, focusStart, startTime, startISX, startISY, curISX, curISY;
+  double axisISX, axisISY;
   BOOL result = true;
   BOOL convertIS, restoreIS, ifSTEM, normAll;
   bool focusChanged = false, ISchanged, unblankAfter;
@@ -3233,6 +3234,13 @@ BOOL CEMscope::SetMagIndex(int inIndex)
   // psmD in nonLM) so we cannot go between LM and nonLM
   if (FEIscope && ifSTEM && !BOOL_EQUIV(inIndex < lowestM, currentIndex < lowestM))
     return false;
+  if (GetDebugOutput('i')) {
+    GetTiltAxisIS(axisISX, axisISY);
+    GetImageShift(curISX, curISY);
+    PrintfToLog("SetMagIndex: IS at start raw %.3f %.3f  net %.3f %.3f", curISX + axisISX,
+      curISY + axisISY, curISX, curISY);
+  }
+
   convertIS = AssessMagISchange(currentIndex, inIndex, ifSTEM, tranISX, tranISY);
   ScopeMutexAcquire(routine, true);
   SaveISifNeeded(currentIndex, inIndex);
@@ -3372,10 +3380,13 @@ BOOL CEMscope::SetMagIndex(int inIndex)
       }
 
     } else {  // FEIlike
-      double axisISX, axisISY;
       GetTiltAxisIS(axisISX, axisISY);
-      SEMTrace('i', "SetMagIndex: converting to new net IS %.3f %.3f",
-        tranISX - axisISX, tranISY - axisISY);
+      if (GetDebugOutput('i')) {
+        GetImageShift(curISX, curISY);
+        PrintfToLog("SetMagIndex: IS after raw %.3f %.3f  net %.3f %.3f  setting to "
+          "r %.3f %.3f  n %.3f %.3f", curISX + axisISX, curISY + axisISY, curISX, curISY,
+          tranISX, tranISY, tranISX - axisISX, tranISY - axisISY);
+      }
       SetImageShift(tranISX - axisISX, tranISY - axisISY);
     }
   }
@@ -4472,7 +4483,7 @@ void CEMscope::GotoLowDoseArea(int newArea)
     mLdsaParams = ldParams + oldArea;
 
   // Get some useful flags about what is changing and what to do
-  leavingLowMag = !STEMmode && (oldArea >= 0 && mLdsaParams->magIndex && 
+  leavingLowMag = !STEMmode && (oldArea >= 0 && mLdsaParams->magIndex &&
     mLdsaParams->magIndex < mLowestMModeMagInd && ldArea->magIndex >= mLowestMModeMagInd);
   splitBeamShift = !STEMmode && (leavingLowMag ||
     ((oldArea < 0 || mLdsaParams->magIndex >= mLowestMModeMagInd) &&
@@ -4532,15 +4543,14 @@ void CEMscope::GotoLowDoseArea(int newArea)
   // or going to a trial/focus area.  The problem is that the PLA needed for area 
   // separation may be out of range at a higher mag where a bigger projector shift is 
   // needed for the given IS offset
-  if (GetUsePLforIS(ldArea->magIndex) && ((fromFocTrial && !toFocTrial) || 
-    (!fromFocTrial && toFocTrial) || fromSearch))
+  if (GetUsePLforIS(ldArea->magIndex) && ((fromFocTrial && !toFocTrial) ||
+    (!fromFocTrial && toFocTrial) || fromSearch || toSearch))
     ISdone = oldArea >= 0 && (fromFocTrial || fromSearch);
   else
     ISdone = oldArea >= 0 && (((ldArea->magIndex || ldArea->camLenIndex) &&
-      ldArea->magIndex < mLdsaParams->magIndex) || 
-      (ldArea->magIndex == mLdsaParams->magIndex && !mHasNoAlpha && 
-      mLdsaParams->beamAlpha >= 0 && ldArea->beamAlpha > mLdsaParams->beamAlpha)) && 
-      !(GetUsePLforIS(ldArea->magIndex) && toSearch);
+    ((ldArea->magIndex < mLdsaParams->magIndex && !toSearch)) || fromSearch) ||
+    (ldArea->magIndex == mLdsaParams->magIndex && !mHasNoAlpha &&
+    mLdsaParams->beamAlpha >= 0 && ldArea->beamAlpha > mLdsaParams->beamAlpha));
   if (ISdone)
     DoISforLowDoseArea(newArea, mLdsaParams->magIndex, delISX, delISY);
 

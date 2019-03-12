@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+2/25/19: Fixed handling of Search shift offset when toggling Apply image shift
+offset or defining a a View/Search shift offset.  Prevented the IS of the
+Search offset from being applied before going to the Search mag (In 3.7).
+
 2/17/19: Fixed saving frame stack mdoc and getting last dose rate from K2/K3
 through socket interface (In 3.7).
 

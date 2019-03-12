@@ -1740,7 +1740,7 @@
         calibrating image shift and pixel size, it may also be helpful to have a focus 
         calibration at the mag where these calibrations will be started. Set up the 
         Focus parameter set to give moderately good, quick pictures with a binning of at 
-        least 2. Wide quarter and center half are two possibilities; if you have a smaller 
+        least 2. For a camera where smaller images come out significantly faster, wide quarter and center half are two possibilities; if you have a smaller 
         format camera, use a center 
         half area. </P>
     <P>Before calibrating focus, you should adjust the beam tilt so that the beam-tilt 
@@ -1925,15 +1925,23 @@
       experienced ones too).&nbsp; There are several things you can do to minimize 
       problems:</P>
     <ul>
-      <li>Use enough dose to get good correlation coefficients.&nbsp; New owners of 
+      <li>Set aside your practices from doing high-resolution low-dose microscopy.&nbsp; 
+          These calibrations, like many others, other not meant to be done in Low Dose 
+          mode.&nbsp; In non-LM mode, <em><strong>use an objective aperture</strong></em> 
+          small enough to give good contrast when the replica grating is near focus.</li>
+        <li><em><strong>Use enough dose</strong></em> to get good correlation coefficients.&nbsp; New owners of 
         direct detectors are often reluctant to apply enough dose at this stage.&nbsp; If 
         there is not enough dose, the procedure will likely fail, and you may have to 
         redo it so many times that you will end up with more total dose than if you had 
         used enough in the first place.&nbsp; The program will report the mean 
         correlation coefficient in the procedure and warn if it falls below 0.4.</li>
-      <li>Use the kind of cross-line grating with latex spheres and include enough 
-        spheres in the field of view to help protect against spurious correlations.</li>
-      <li>If you use a grating with 2000 lines per mm, set the property 'GridLinesPerMM' 
+      <li>Use the kind of cross-line grating with <strong><em>latex spheres</em></strong> and include enough 
+        spheres in the field of view to help protect against spurious correlations.&nbsp; 
+          Generally, the more spheres, the better, as long as they do not obscure the 
+          grating pattern.</li>
+      <li>Do not use a grating with 2000 lines per mm if you can avoid it, it can cause 
+          many problems.&nbsp; Get the 2160 line/mm grating with latex spheres, Ted Pella 
+          product #603.&nbsp; If you do use a 2000 line grating, set the property 'GridLinesPerMM' 
         to 2000 and be sure to have latex spheres: these grids can be too close to 
         perfect to give correct cross-correlations.</li>
       <li>We all like to try to run programs without reading the help, but the problem 
@@ -2076,7 +2084,9 @@
         LM mode, it is best to switch to a non-periodic specimen, and preferably one 
         with larger grid spacing suitable for calibrating stage shift.&nbsp; However, 
         you can try to finish the image shift calibrations with the replica grating if 
-        that is more convenient.&nbsp; </p>
+        that is more convenient.&nbsp; If you do, follow the procedures in the next 
+        section,
+        <b><i>On a JEOL or Hitachi.</i></b></p>
     <p>
         There is one potential problem to watch out for on Titan microscopes, mostly at 
         the top of LM mode.&nbsp; A very long settling time after lens normalization has 
