@@ -4635,6 +4635,8 @@ int CParameterIO::ReadAndParse(CString &strLine, CString *strItems, int maxItems
   return ReadAndParse(mFile, strLine, strItems, maxItems);
 }
 
+// Read a line from the given file into strLine and parse into strItems, at most maxItems 
+// Returns 0 for something read, -1 for EOF, and 1 for error
 int CParameterIO::ReadAndParse(CStdioFile *file, CString &strLine, CString *strItems, 
   int maxItems)
 {

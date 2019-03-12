@@ -3,6 +3,14 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+3/11/19: Added collection of script commands for reading and writing text
+files line by line.
+
+3/11/19: Changed distortion pair routine to use the expected shift when
+correlating between the two images of a pair.
+
+3/11/19: Made zoom be remembered separately for View and Search images.
+
 3/11/19: Enabled autofocus in Low Mag if there is a standard focus, instead of
 looking for a focus calibration that can be transformed, and made sure the
 button got updated when Scope control or Low Dose changes mag. (In 3.7).

@@ -46,6 +46,14 @@ struct Variable {
   CArray<ArrayRow, ArrayRow> *rowsFor2d;    // Pointer to array of rows for 2D array
 };
 
+// For keeping track of open text files
+struct FileForText {
+  CStdioFile *csFile;   // Pointer to file
+  BOOL readOnly;        // If read-only, otherwise write-only
+  bool persistent;      // If kept open at end of script
+  CString ID;           // Arbitrary ID
+};
+
 struct CmdItem {
   const char *mixedCase;
   int minargs;
@@ -157,6 +165,7 @@ private:
   DWORD mStartClock;      // Clock at start of macro
   double mIntensityFactor;  // Cosine factor for last tilt change
   CArray<Variable *, Variable *> mVarArray;     // Array of variable structures
+  CArray<FileForText *, FileForText *> mTextFileArray;   // Array of open text files
   int mLoopLevel;         // Index for loop level, 0 in top loop or -1 if not in loop
   int mCallLevel;         // Index for call level, 0 in main macro
   int mLoopDepths[MAX_CALL_DEPTH];  // Loop level reached in current macro
@@ -337,6 +346,14 @@ public:
   int EvalExpressionInIndex(CString & indStr);
   Variable * GetVariableValuePointers(CString & name, CString ** valPtr, int ** numElemPtr,
     const char *action, CString & errStr);
+  void SetOneReportedValue(CString * strItem, CString * ValtStr, double value, int index);
+  void SetOneReportedValue(CString &valStr, int index);
+  void SetOneReportedValue(double value, int index);
+  void SetOneReportedValue(CString *strItem, CString &valStr, int index);
+  void SetOneReportedValue(CString *strItem, double value, int index);
+  FileForText *LookupFileForText(CString & ID, int checkReadOrWrite, CString &strLine, int &index);
+  void CloseFileForText(int index);
+  void SubstituteLineStripItems(CString & strLine, int numStrip, CString & strCopy);
 };
 
 #endif // !defined(AFX_MACROPROCESSOR_H__33178182_58A1_4F3A_B8F4_D41F94866517__INCLUDED_)

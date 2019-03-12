@@ -11,8 +11,7 @@
       }
       .style7
       {
-        width: 231px;
-      }
+        }
       .style8
       {
         width: 215px;
@@ -87,7 +86,10 @@
       <A href="#buffer_file_commands">Buffer and File Commands</A>
       <BR>
       &nbsp;&nbsp;&nbsp;&nbsp; <A href="#buffer_image">Buffer and Image Commands</A><br>
-      &nbsp;&nbsp;&nbsp;&nbsp; <A href="#file_dir">File and Directory Commands</A><br>
+      &nbsp;&nbsp;&nbsp;&nbsp; <A href="#directory">Directory and Miscellaneous Commands</A><br>
+      &nbsp;&nbsp;&nbsp;&nbsp; <A href="#imagefile">Image File Commands</A><br>
+      &nbsp;&nbsp;&nbsp;&nbsp; <A href="#textfile">Text File Commands</A><br>
+      &nbsp;&nbsp;&nbsp;&nbsp; <A href="#autodoc">Autodoc/.mdoc File Commands</A><br>
       <A href="#scope_filter_commands">Microscope and Filter Commands</A>
       <BR>
       &nbsp;&nbsp;&nbsp;&nbsp; <A href="#stage_commands">Stage-Related Commands</A><br>
@@ -1039,15 +1041,7 @@
             resolution in Angstroms to which Thon rings fit.</TD>
         </TR>
         <TR vAlign="top">
-          <TD colspan="2"><A name="file_dir"></A><B>File and Directory Commands</B></TD>
-        </TR>
-        <TR vAlign="top">
-          <TD class="style7">S or Save [buf] [file #]</TD>
-          <TD>Save image in A or in buf to current open file, or to the given file number</TD>
-        </TR>
-        <TR vAlign="top">
-          <TD class="style7">&nbsp;</TD>
-          <TD>&nbsp;</TD>
+          <TD colspan="2"><A name="directory"></A><B>Directory and Miscellaneous Commands</B></TD>
         </TR>
         <TR vAlign="top">
           <TD class="style7">SetDirectory dir</TD>
@@ -1075,7 +1069,44 @@
           <TD>Create a directory named by the date and time (e.g., Aug15_12.23.15) under the
             current directory and change to this as the new working directory.</TD>
         </TR>
+        <TR>
+          <TD class="style7">AllowFileOverwrite #</TD>
+          <TD>Allow 'OpenNewFile' and 'OpenNewMontage' to overwrite an existing file if # is
+            1, or disallow it again if # is 0.</TD>
+        </TR>
         <TR vAlign="top">
+          <TD class="style7">RemoveFile file</TD>
+          <TD>Removes the given file unconditionally, prints a warning if it cannot be 
+            removed.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style7">WriteComForTSAlign</TD>
+          <TD>Writes the command file for aliging a whole tilt series if this mode of 
+            operation was selected with the AlignWholeTSOnly command; otherwise it has no 
+            effect.  The tilt series file with associated .mdoc must still be the current 
+            open file.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style7">SaveLogOpenNew [newFile]</TD>
+          <TD>Closes the log window and opens a new one.&nbsp; If a log file has been saved, 
+            the log is automatically saved to it before closing.&nbsp; If there is no log 
+            file and the log has new contents since program startup, the program will ask 
+            the user whether to save to log first; if the user cancels, the script is 
+            aborted.&nbsp; If a filename (newFile) is added, the new log will be saved with 
+            that name.&nbsp; Variables will be substituted before using the name.  
+            An extension in this name will be stripped off before adding 
+            '.log', so if you want to preserve extensions or other text after a period, add 
+            '.log' to the end of the name.&nbsp; If the file already exists, a number will 
+            be added to get a unique new name.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD colspan="2"><A name="imagefile"></A><B>Image File Commands</B></TD>
+        </TR>
+         <TR vAlign="top">
+          <TD class="style7">S or Save [buf] [file #]</TD>
+          <TD>Save image in A or in buf to current open file, or to the given file number</TD>
+        </TR>
+       <TR vAlign="top">
           <TD class="style7">SetNewFileType # [#]</TD>
           <TD>Set to 0 to open files as MRC, or 1 to open files as a TIFF series described in
             an image autodoc file. The optional second value sets whether to open montaged
@@ -1148,11 +1179,6 @@
             frames from a K2/K3, DE, or Falcon camera, and ends with the string given in the command.&nbsp;
             The string can contain spaces and variables. </TD>
         </TR>
-        <TR>
-          <TD class="style7">AllowFileOverwrite #</TD>
-          <TD>Allow 'OpenNewFile' and 'OpenNewMontage' to overwrite an existing file if # is
-            1, or disallow it again if # is 0.</TD>
-        </TR>
         <TR vAlign="top">
           <TD class="style7">OpenOldFile file</TD>
           <TD>Open an existing MRC or ADOC file with the given name, which can contain
@@ -1189,23 +1215,8 @@
           <TD>Make the given file number, numbered from 1, be the current open file.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style7">RemoveFile file</TD>
-          <TD>Removes the given file unconditionally, prints a warning if it cannot be 
-            removed.</TD>
-        </TR>
-        <TR vAlign="top">
           <TD class="style7">ReportFileZsize</TD>
           <TD>Report the number of frames in currently open file</TD>
-        </TR>
-        <TR vAlign="top">
-          <TD class="style7">ReadTextFile var file</TD>
-          <TD>Reads the contents of the given text file, breaks it up by spaces or tabs, and 
-            stores the words or numbers as an array in the variable &#39;var&#39;.&nbsp; All lines 
-            will be read and combined into the one variable.</TD>
-        </TR>
-        <TR vAlign="top">
-          <TD class="style7">Read2DTextFile</TD>
-          <TD>Reads the contents of the given text file, breaks it up by spaces or tabs, and stores the words or numbers of each line as a separate row of a 2D array in the variable &#39;var&#39;.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style7">SetMontageParams # [# # # # #]</TD>
@@ -1216,9 +1227,109 @@
             acquiring into the file.</TD>
         </TR>
         <TR vAlign="top">
+          <TD class="style7">ReportCurrentFilename [#]</TD>
+          <TD>Reports the full path and filename of the current open file and sets it into 
+            ReportedValue1; or if the optional # is entered with a 1, sets the root of the 
+            filename including the path in ReportedValue1, the extension (including the dot) in 
+            ReportedValue2, the path only in ReportedValue3, and the rest of the rootname 
+            in ReportedValue4.&nbsp; No optional assignment to variable.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style7">ReportLastFrameFile</TD>
+          <TD>Reports the full path and filename of the last frame file saved from a K2/K3, DE, or 
+            Falcon camera and sets it into ReportedValue1.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD colspan="2"><A name="textfile"></A><B>Text File Commands</B></TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style7">ReadTextFile var file</TD>
+          <TD>Reads the entire contents of the given text file, breaks it up by spaces or tabs, and 
+            stores the words or numbers as an array in the variable &#39;var&#39;.&nbsp; All lines 
+            will be read and combined into the one variable.&nbsp; The file will be closed 
+              after reading.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style7">ReadStringsFromFile var file</TD>
+          <TD>Reads the entire contents of the given text file as a whole string per line, and 
+              stores the lines as an array in the variable 'var'.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style7">Read2DTextFile var file</TD>
+          <TD>Reads the entire contents of the given text file, breaks it up by spaces or tabs, and 
+              stores the words or numbers of each line as a separate row of a 2D array in the
+               variable &#39;var&#39;.&nbsp; The file will be closed after reading.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style7" colspan="2">&nbsp;&nbsp;&nbsp;&nbsp; The following commands allow 
+              multiple files to be opened for either reading or writing (not both) and 
+              accessed one line at a time.&nbsp; Each 
+              file is referred to by an arbitrary one-word identifier (ID) that immediately follows 
+              the command; the ID is case-insensitive.</TD>
+        </TR>
+       <TR vAlign="top">
+          <TD class="style7">OpenTextFile ID Mode #K file</TD>
+           <td>Opens a file with the given name and ID in the given mode, closing it when the 
+               script ends if #K is 0 or keeping it open if #K is non-zero.&nbsp; The mode can 
+               be: <br />
+               &nbsp;&nbsp;
+               R or r to open for reading, giving an error if the file does not exist; <br />
+               &nbsp;&nbsp;
+               T or t to try to open for reading, setting reportedValue1 to 1 if the file exists
+                or 0 if it does not;
+               <br />
+&nbsp;&nbsp; W or w to open for writing, giving an error if the file exists unless 
+               'AllowFileOverwrite 1' has been used;<br />
+&nbsp;&nbsp; O or o to open for writing, overwriting an existing file if any;<br />
+&nbsp;&nbsp; A or a to open for appending (writing at the end), giving an error if the file 
+               does not exist.<br />
+               The same file cannot be opened under two different ID's.&nbsp; The 'T' mode can 
+               be used to avoid a script error and also can be used in a loop to wait for a 
+               file to appear from an external source</td>
+        </TR>
+       <TR vAlign="top">
+          <TD class="style7">WriteLineToFile ID line</TD>
+           <td>Writes the remainder of the text on the script line (after variable 
+               substitution) to the file with the given ID.&nbsp; The comment character '#' can 
+               be included and text after it will be written.</td>
+        </TR>
+       <TR vAlign="top">
+          <TD class="style7">ReadLineAsArray ID var</TD>
+           <td>Reads the next line of the file with the given ID, breaks it into words, and 
+               sets up an array variable with each word as an element.&nbsp; '#' is treated as 
+               the start of comment and the rest of the line is discarded. Blank lines and 
+               lines starting with '#' will be skipped.&nbsp; Reaching the end of the file does 
+               not give a script error; instead, reportedValue1 is set to 1 when a line is read 
+               or 0 if nothing was read.&nbsp; This command could be used in a loop to wait for 
+               a file to be added to by external source.</td>
+        </TR>
+       <TR vAlign="top">
+          <TD class="style7">ReadLineAsString ID var</TD>
+           <td>Like 'ReadLineAsArray ', but the line is stored in the variable exactly as it is 
+               in the file, including a line starting with '#'.&nbsp; Blank lines will still be 
+               skipped.</td>
+        </TR>
+       <TR vAlign="top">
+          <TD class="style7">FlushTextFile ID</TD>
+           <td>Flushes the output added to the file with the given ID to disk .</td>
+        </TR>
+       <TR vAlign="top">
+          <TD class="style7">CloseTextFile ID</TD>
+           <td>Closes the file with the given ID.</td>
+        </TR>
+       <TR vAlign="top">
+          <TD class="style7">IsTextFileOpen ID [file]</TD>
+           <td>Sets reportedValue1 to 1 if there is an open file with the given ID, or with the 
+               given optional name, and to 0 otherwise.&nbsp; The ID can be nonsense when 
+               testing with a filename.</td>
+        </TR>
+        <TR vAlign="top">
+          <TD colspan="2"><A name="autodoc"></A><B>Autodoc/.mdoc File Commands</B></TD>
+        </TR>
+        <TR vAlign="top">
           <TD class="style7">AddToAutodoc key value</TD>
           <TD>Adds a key-value pair to the last section of the autodoc associated with the
-            current open file, if any.&nbsp; The next word after the command is the key, and
+            current open image file, if any.&nbsp; The next word after the command is the key, and
             the remainder of the text on the line is taken as the value.&nbsp; Variables are
             substituted before using the text.&nbsp; After one or more additions to a
             section of the autodoc, a WriteAutodoc command must be used to save the values
@@ -1227,7 +1338,7 @@
         </TR>
         <TR vAlign="top">
           <TD class="style7">WriteAutodoc</TD>
-          <TD>Writes the autodoc associated with the current open file.&nbsp; Use this
+          <TD>Writes the autodoc associated with the current open image file.&nbsp; Use this
             command once after adding one or more values to a section of the autodoc.</TD>
         </TR>
         <TR vAlign="top">
@@ -1273,39 +1384,6 @@
           <TD class="style7">AddToNextFrameStackMdoc key value</TD>
           <TD>Adds a key-value pair to the global section of the frame stack .mdoc file 
             while retaining previous entries there.</TD>
-        </TR>
-        <TR vAlign="top">
-          <TD class="style7">WriteComForTSAlign</TD>
-          <TD>Writes the command file for aliging a whole tilt series if this mode of 
-            operation was selected with the AlignWholeTSOnly command; otherwise it has no 
-            effect.  The tilt series file with associated .mdoc must still be the current 
-            open file.</TD>
-        </TR>
-        <TR vAlign="top">
-          <TD class="style7">SaveLogOpenNew [newFile]</TD>
-          <TD>Closes the log window and opens a new one.&nbsp; If a log file has been saved, 
-            the log is automatically saved to it before closing.&nbsp; If there is no log 
-            file and the log has new contents since program startup, the program will ask 
-            the user whether to save to log first; if the user cancels, the script is 
-            aborted.&nbsp; If a filename (newFile) is added, the new log will be saved with 
-            that name.&nbsp; Variables will be substituted before using the name.  
-            An extension in this name will be stripped off before adding 
-            '.log', so if you want to preserve extensions or other text after a period, add 
-            '.log' to the end of the name.&nbsp; If the file already exists, a number will 
-            be added to get a unique new name.</TD>
-        </TR>
-        <TR vAlign="top">
-          <TD class="style7">ReportCurrentFilename [#]</TD>
-          <TD>Reports the full path and filename of the current open file and sets it into 
-            ReportedValue1; or if the optional # is entered with a 1, sets the root of the 
-            filename including the path in ReportedValue1, the extension (including the dot) in 
-            ReportedValue2, the path only in ReportedValue3, and the rest of the rootname 
-            in ReportedValue4.&nbsp; No optional assignment to variable.</TD>
-        </TR>
-        <TR vAlign="top">
-          <TD class="style7">ReportLastFrameFile</TD>
-          <TD>Reports the full path and filename of the last frame file saved from a K2/K3, DE, or 
-            Falcon camera and sets it into ReportedValue1.</TD>
         </TR>
       </TABLE>
       <BR>

@@ -131,6 +131,8 @@ static char THIS_FILE[]=__FILE__;
 
 enum {VARTYPE_REGULAR, VARTYPE_PERSIST, VARTYPE_INDEX, VARTYPE_REPORT, VARTYPE_LOCAL};
 enum {SKIPTO_ENDIF, SKIPTO_ELSE_ENDIF, SKIPTO_ENDLOOP};
+enum {TXFILE_READ_ONLY, TXFILE_WRITE_ONLY, TXFILE_MUST_EXIST, TXFILE_MUST_NOT_EXIST,
+  TXFILE_QUERY_ONLY};
 
 // An enum with indexes to true commands, preceded by special operations that need to be
 // processed with a case within the big switch.  Be sure to adjust the starting number
@@ -238,7 +240,9 @@ enum {CME_SCRIPTEND = -7, CME_LABEL, CME_SETVARIABLE, CME_SETSTRINGVAR, CME_DOKE
   CME_REPORTPHASEPLATEPOS, CME_OPENFRAMEMDOC, CME_NEXTPROCESSARGS, CME_CREATEPROCESS,
   CME_RUNEXTERNALTOOL, CME_REPORTSPECIMENSHIFT, CME_REPORTNAVFILE, CME_READNAVFILE,
   CME_MERGENAVFILE, CME_REPORTIFNAVOPEN, CME_NEWARRAY, CME_NEW2DARRAY, CME_APPENDTOARRAY,
-  CME_TRUNCATEARRAY, CME_READ2DTEXTFILE, CME_ARRAYSTATISTICS
+  CME_TRUNCATEARRAY, CME_READ2DTEXTFILE, CME_ARRAYSTATISTICS, CME_REPORTFRAMEBASENAME,
+  CME_OPENTEXTFILE, CME_WRITELINETOFILE, CME_READLINETOARRAY, CME_READLINETOSTRING,
+  CME_CLOSETEXTFILE, CME_FLUSHTEXTFILE, CME_READSTRINGSFROMFILE, CME_ISTEXTFILEOPEN
 };
 
 // The two numbers are the minimum arguments and whether arithmetic is allowed
@@ -364,7 +368,10 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"ReportSpecimenShift", 0, 0}, {"ReportNavFile", 0, 0}, {"ReadNavFile", 1, 0}, 
 {"MergeNavFile", 1, 0}, {"ReportIfNavOpen",0, 0}, /* End in 3.7 */
 {"NewArray", 3, 0}, {"New2DArray", 1, 0}, {"AppendToArray", 2, 0},{"TruncateArray", 2, 0}, 
-{"Read2DTextFile", 2, 0}, {"ArrayStatistics", 1, 0},
+{"Read2DTextFile", 2, 0}, {"ArrayStatistics", 1, 0}, {"ReportFrameBaseName", 0, 0},
+{"OpenTextFile", 4, 0}, {"WriteLineToFile", 1, 0}, {"ReadLineToArray", 2, 0}, 
+{"ReadLineToString", 2, 0}, {"CloseTextFile", 1, 0}, {"FlushTextFile", 1, 0},
+{"ReadStringsFromFile", 2, 0}, {"IsTextFileOpen", 1, 0},
 {NULL, 0, 0}
 };
 
@@ -499,6 +506,7 @@ CMacroProcessor::~CMacroProcessor()
   ClearVariables();
   ClearVariables(VARTYPE_PERSIST);
   ClearFunctionArray(-1);
+  CloseFileForText(-2);
 }
 
 void CMacroProcessor::Initialize()
@@ -1009,6 +1017,7 @@ void CMacroProcessor::Run(int which)
   mStartClock = GetTickCount();
   mOverwriteOK = false;
   mVerbose = mInitialVerbose ? 1 : 0;
+  CloseFileForText(-1);
   RunOrResume();
 }
 
@@ -1160,6 +1169,7 @@ void CMacroProcessor::NextCommand()
   CString *valPtr;
   int *numElemPtr;
   CFileStatus status;
+  FileForText *txFile;
   StageMoveInfo smi;
   int readOtherSleep = 2000;
 
@@ -1696,7 +1706,7 @@ void CMacroProcessor::NextCommand()
       ABORT_LINE(report + " for line:\n\n");
     truth = !valPtr;
     if (truth) {
-      numRows = var->rowsFor2d->GetSize();
+      numRows = (int)var->rowsFor2d->GetSize();
       for (index = 0; index < numRows; index++) {
         ArrayRow& arrRow = var->rowsFor2d->ElementAt(index);
         numVals += arrRow.numElements;
@@ -2120,7 +2130,7 @@ void CMacroProcessor::NextCommand()
       if (itemInt[2] & 16)
         sizeX += 2;
       if (var->rowsFor2d) {
-        sizeY = var->rowsFor2d->GetSize();
+        sizeY = (int)var->rowsFor2d->GetSize();
         for (ix0 = 0; ix0 < sizeY; ix0++) {
           ArrayRow& tempRow = var->rowsFor2d->ElementAt(ix0);
           if (tempRow.numElements < sizeX) {
@@ -2705,23 +2715,32 @@ void CMacroProcessor::NextCommand()
     
   case CME_READTEXTFILE:                                    // ReadTextFile
   case CME_READ2DTEXTFILE:                                  // Read2DTextFile
+  case CME_READSTRINGSFROMFILE:                             // ReadStringsFromFile
   {
-    SubstituteVariables(&strLine, 1, strLine);
-    mWinApp->mParamIO->StripItems(strLine, 2, strCopy);
-    CString newVar, message = "Error opening file ";
+    SubstituteLineStripItems(strLine, 2, strCopy);
+    CString newVar;
     CStdioFile *csFile = NULL;
     CArray<ArrayRow, ArrayRow> *rowsFor2d = NULL;
     ArrayRow arrRow;
     truth = CMD_IS(READ2DTEXTFILE);
-    if (truth)
-      rowsFor2d = new CArray<ArrayRow, ArrayRow>;
     try {
       csFile = new CStdioFile(strCopy, CFile::modeRead | CFile::shareDenyWrite);
-      message = "Reading text from file ";
-      while ((index = mWinApp->mParamIO->ReadAndParse(csFile, report, strItems,
-        MAX_TOKENS)) == 0) {
-        if (truth)
-          newVar = "";
+    }
+    catch (CFileException *perr) {
+      perr->Delete();
+      ABORT_NOLINE("Error opening file " + strCopy);
+    }
+    if (truth)
+      rowsFor2d = new CArray<ArrayRow, ArrayRow>;
+    while ((index = mWinApp->mParamIO->ReadAndParse(csFile, report, strItems,
+      MAX_TOKENS)) == 0) {
+      if (truth)
+        newVar = "";
+      if (CMD_IS(READSTRINGSFROMFILE)) {
+        if (newVar.GetLength())
+          newVar += '\n';
+        newVar += report;
+      } else {
         for (index2 = 0; index2 < MAX_TOKENS; index2++) {
           if (strItems[index2].IsEmpty())
             break;
@@ -2729,20 +2748,18 @@ void CMacroProcessor::NextCommand()
             newVar += '\n';
           newVar += strItems[index2];
         }
-        if (truth && index2 > 0) {
-          arrRow.value = newVar;
-          arrRow.numElements = index2;
-          rowsFor2d->Add(arrRow);
-        }
+      }
+      if (truth && index2 > 0) {
+        arrRow.value = newVar;
+        arrRow.numElements = index2;
+        rowsFor2d->Add(arrRow);
       }
     }
-    catch (CFileException *perr) {
-      perr->Delete();
-      ABORT_NOLINE(message + strCopy);
-    }
     delete csFile;
-    if (index > 0)
-      ABORT_NOLINE("Error parsing text in file " + strCopy);
+    if (index > 0) {
+      delete rowsFor2d;
+      ABORT_NOLINE("Error reading text from file " + strCopy);
+    }
 
     if (SetVariable(item1upper, truth ? "0" : newVar, VARTYPE_REGULAR, -1, false, &report,
       rowsFor2d)) {
@@ -2752,7 +2769,162 @@ void CMacroProcessor::NextCommand()
     }
     break;
   }
+
+  case CME_OPENTEXTFILE:                                    // OpenTextFile
+  {
+    UINT openFlags = CFile::typeText;
+    if (LookupFileForText(item1upper, TXFILE_MUST_NOT_EXIST, strLine, index))
+      return;
+    report = strItems[2].MakeUpper();
+    if (report.GetLength() > 1 || CString("RTWAO").Find(report) < 0)
+      ABORT_LINE("The second entry must be R, T, W, A, or O in line\n\n:");
+    SubstituteLineStripItems(strLine, 4, strCopy);
+
+    // Set up flags and read/write from mode entry
+    if (report == "R" || report == "T") {
+      openFlags |= CFile::shareDenyNone | CFile::modeRead;
+      truth = true;
+    } else {
+      truth = false;
+      openFlags |= CFile::shareDenyWrite;
+      if (report == "A") {
+        openFlags |= CFile::modeReadWrite;
+      } else {
+        openFlags |= CFile::modeWrite | CFile::modeCreate;
+        if (report == "W" && !mOverwriteOK && CFile::GetStatus((LPCTSTR)strCopy, status))
+          ABORT_LINE("File already exists and you entered W instead of O for line:\n\n");
+      }
+    }
+
+    // Create new entry aand try to open file; allowing  failure with 'T'
+    txFile = new FileForText;
+    txFile->readOnly = truth;
+    txFile->ID = item1upper;
+    txFile->persistent = itemInt[3] != 0;
+    txFile->csFile = NULL;
+    try {
+      txFile->csFile = new CStdioFile(strCopy, openFlags);
+      if (report == "A")
+        txFile->csFile->SeekToEnd();
+    }
+    catch (CFileException *perr) {
+      perr->Delete();
+      delete txFile->csFile;
+      delete txFile;
+      if (report != "T")
+        ABORT_NOLINE("Error opening file " + strCopy);
+      txFile = NULL;
+    }
+
+    // Add to array if success; set value for 'T'
+    if (txFile)
+      mTextFileArray.Add(txFile);
+    if (report == "T")
+      SetReportedValues(txFile ? 1 : 0);
+    break;
+  }
+
+  case CME_WRITELINETOFILE:                                 // WriteLineToFile
+    txFile = LookupFileForText(item1upper, TXFILE_WRITE_ONLY, strLine, index);
+    if (!txFile)
+      return;
+
+    // To allow comments to be written, there is only one required argument in initial
+    // check so we need to check here
+    SubstituteLineStripItems(strLine, 2, strCopy);
+    if (strCopy.IsEmpty())
+      ABORT_LINE("You must enter some text after the ID for line:\n\n");
+    try {
+      txFile->csFile->WriteString(strCopy + "\n");
+    }
+    catch (CFileException *perr) {
+      perr->Delete();
+      ABORT_LINE("Error writing string to file for line:\n\n");
+    }
+    break;
+
+  case CME_READLINETOARRAY:                                 // ReadLineToArray
+  case CME_READLINETOSTRING:                                // ReadLineToString
+    txFile = LookupFileForText(item1upper, TXFILE_READ_ONLY, strLine, index);
+    if (!txFile)
+      return;
+    strLine = strItems[2];
+    truth = CMD_IS(READLINETOARRAY);
+
+    // Skip blank lines, skip comment lines if reading into array
+    for (;;) {
+      index = mWinApp->mParamIO->ReadAndParse(txFile->csFile, report, strItems,
+        MAX_TOKENS);
+      if (index || !strItems[0].IsEmpty() || (!truth && !report.IsEmpty()))
+        break;
+    }
+
+    // Check error conditions
+    if (index > 0)
+      ABORT_LINE("Error reading from file for line:\n\n");
+    if (index) {
+      mWinApp->AppendToLog("End of file reached for file with ID " + txFile->ID,
+        mLogAction);
+    } else {
+
+      // For array, concatenate items into report; otherwise report is all set
+      if (truth) {
+        report = "";
+        for (index2 = 0; index2 < MAX_TOKENS; index2++) {
+          if (strItems[index2].IsEmpty())
+            break;
+          if (report.GetLength())
+            report += '\n';
+          report += strItems[index2];
+        }
+      }
+      if (SetVariable(strLine, report, VARTYPE_REGULAR, -1, false, &strCopy))
+        ABORT_NOLINE("Error setting a variable with line from file:\n" + strCopy);
+    }
+    SetReportedValues(index ? 0 : 1);
+    break;
+
+  case CME_CLOSETEXTFILE:                                   // CloseTextFile
+    if (!LookupFileForText(item1upper, TXFILE_MUST_EXIST, strLine, index))
+      return;
+    CloseFileForText(index);
+    break;
     
+  case CME_FLUSHTEXTFILE:                                   // FlushTextFile
+    txFile = LookupFileForText(item1upper, TXFILE_MUST_EXIST, strLine, index);
+    if (!txFile)
+      return;
+    txFile->csFile->Flush();
+    break;
+
+  case CME_ISTEXTFILEOPEN:                                  // IsTextFileOpen
+    txFile = LookupFileForText(item1upper, TXFILE_QUERY_ONLY, strLine, index);
+    truth = false;
+    if (!txFile && !itemEmpty[2]) {
+
+      // Check the file name if the it doesn't match ID
+      char fullBuf[_MAX_PATH];
+      SubstituteLineStripItems(strLine, 2, strCopy);
+      if (GetFullPathName((LPCTSTR)strCopy, _MAX_PATH, fullBuf, NULL) > 0) {
+        for (index = 0; index < mTextFileArray.GetSize(); index++) {
+          txFile = mTextFileArray.GetAt(index);
+          if (!(txFile->csFile->GetFilePath()).CompareNoCase(fullBuf)) {
+            truth = true;
+            break;
+          }
+        }
+      }
+      report.Format("Text file with name %s %s open", (LPCTSTR)strCopy, truth ? "IS" :
+        "is NOT");
+      SetReportedValues(truth ? 1 : 0);
+    } else {
+      report.Format("Text file with identifier %s %s open", (LPCTSTR)item1upper, 
+        txFile ? "IS" : "is NOT");
+      SetReportedValues(txFile ? 1 : 0);
+    }
+    mWinApp->AppendToLog(report, mLogAction);
+    break;
+
   case CME_USERSETDIRECTORY:                                // UserSetDirectory
   {
     strCopy = "Choose a new current working directory:";
@@ -2766,9 +2938,7 @@ void CMacroProcessor::NextCommand()
       if (_chdir((LPCTSTR)dlg.GetPath()))
         SUSPEND_NOLINE("because of failure to change directory to " + dlg.GetPath());
     }
-    ClearVariables(VARTYPE_REPORT);
-    SetVariable("REPORTEDVALUE1", dlg.GetPath(), VARTYPE_REPORT, 1, true);
-    SetVariable("REPVAL1", dlg.GetPath(), VARTYPE_REPORT, 1, true);
+    SetOneReportedValue(dlg.GetPath(), 1);
     break;
   }
     
@@ -2844,24 +3014,31 @@ void CMacroProcessor::NextCommand()
     CString ext;
     if (!itemEmpty[1] && itemInt[1] && truth)
       UtilSplitExtension(report, root, ext);
-    ClearVariables(VARTYPE_REPORT);
-    SetVariable("REPORTEDVALUE1", root, VARTYPE_REPORT, 1, true);
-    SetVariable("REPVAL1", root, VARTYPE_REPORT, 1, true);
-    if (!truth && !itemEmpty[1])
-      SetVariable(strItems[1], root, VARTYPE_REGULAR, 0, false);
-    if (!ext.IsEmpty()) {
-      SetVariable("REPORTEDVALUE2", ext, VARTYPE_REPORT, 2, true);
-      SetVariable("REPVAL2", ext, VARTYPE_REPORT, 2, true);
-    }
+    SetOneReportedValue(!truth ? &strItems[1] : NULL, root, 1);
+
+    if (!ext.IsEmpty())
+      SetOneReportedValue(ext, 2);
     if (!itemEmpty[1] && itemInt[1] && truth) {
       UtilSplitPath(root, report, ext);
-      SetVariable("REPORTEDVALUE3", report, VARTYPE_REPORT, 3, true);
-      SetVariable("REPVAL3", report, VARTYPE_REPORT, 3, true);
-      SetVariable("REPORTEDVALUE4", ext, VARTYPE_REPORT, 4, true);
-      SetVariable("REPVAL4", ext, VARTYPE_REPORT, 4, true);
+      SetOneReportedValue(report, 3);
+      SetOneReportedValue(ext, 4);
     }
     break;
   }
+
+  case CME_REPORTFRAMEBASENAME:                             // ReportFrameBaseName
+    strCopy = mCamera->GetFrameBaseName();
+    index = mCamera->GetFrameNameFormat();
+    if ((index & FRAME_FILE_ROOT) && !strCopy.IsEmpty()) {
+      report = "The frame base name is " + strCopy;
+      SetOneReportedValue(&strItems[1], 1., 1);
+      SetOneReportedValue(&strItems[1], strCopy, 2);
+    } else {
+      report = "The base name is not being used in frame file names";
+      SetOneReportedValue(&strItems[1], 0., 1);
+    }
+    mWinApp->AppendToLog(report, mLogAction);
+    break;
 
   case CME_ALLOWFILEOVERWRITE:                              // AllowFileOverwrite
     mOverwriteOK = itemInt[1] != 0;
@@ -2896,11 +3073,7 @@ void CMacroProcessor::NextCommand()
     strCopy = cwd;
     free(cwd);
     mWinApp->AppendToLog("Current directory is " + strCopy, mLogAction);
-    ClearVariables(VARTYPE_REPORT);
-    SetVariable("REPORTEDVALUE1", strCopy, VARTYPE_REPORT, 1, true);
-    SetVariable("REPVAL1", strCopy, VARTYPE_REPORT, 1, true);
-    if (!itemEmpty[1])
-      SetVariable(strItems[1], strCopy, VARTYPE_REGULAR, -1, false);
+    SetOneReportedValue(&strItems[1], strCopy, 1);
     break;
   }
     
@@ -6345,6 +6518,8 @@ void CMacroProcessor::SuspendMacro(BOOL abort)
   RestoreCameraSet(-1, mCurrentMacro < 0);
   if (mCurrentMacro < 0 && mUsingContinuous)
     mCamera->ChangePreventToggle(-1);
+  if (mCurrentMacro < 0)
+    CloseFileForText(-1);
   mDoingMacro = false;
   if (mStoppedContSetNum >= 0)
     mCamera->InitiateCapture(mStoppedContSetNum);
@@ -6712,7 +6887,7 @@ bool CMacroProcessor::SetVariable(CString name, CString value, int type,
     // For 2D array assignment, get row index, element and value pointers for that row
     if (rightInd2 > 0) {
       rowInd = ConvertArrayIndex(name, leftInd, rightInd, var->name, 
-        var->rowsFor2d->GetSize(), errStr);
+        (int)var->rowsFor2d->GetSize(), errStr);
       if (!rowInd)
         return true;
       ArrayRow& arrRow = var->rowsFor2d->ElementAt(rowInd - 1);
@@ -6724,8 +6899,8 @@ bool CMacroProcessor::SetVariable(CString name, CString value, int type,
 
     // If assigning to an array element, get the index value 
     arrInd = ConvertArrayIndex(name, leftInd, rightInd, var->name, 
-      (var->rowsFor2d && rightInd2 <= 0) ? var->rowsFor2d->GetSize() : *oldNumElemPtr,
-      errStr);
+      (var->rowsFor2d && rightInd2 <= 0) ? (int)var->rowsFor2d->GetSize() : 
+      *oldNumElemPtr, errStr);
     if (!arrInd)
       return true;
     if (var->rowsFor2d && rightInd2 <= 0) {
@@ -6871,7 +7046,7 @@ Variable * CMacroProcessor::GetVariableValuePointers(CString & name, CString **v
   if (var->rowsFor2d) {
     if (leftInd > 0) {
       index = ConvertArrayIndex(name, leftInd, rightInd, strCopy,
-        var->rowsFor2d->GetSize(), &errStr);
+        (int)var->rowsFor2d->GetSize(), &errStr);
       if (!index)
         return NULL;
       ArrayRow& tempRow = var->rowsFor2d->ElementAt(index - 1);
@@ -6981,7 +7156,7 @@ int CMacroProcessor::SubstituteVariables(CString * strItems, int maxItems, CStri
             return 2;
           }
           arrInd = ConvertArrayIndex(strItems[ind], leftInd, nright, var->name,
-            var->rowsFor2d->GetSize(), &newstr);
+            (int)var->rowsFor2d->GetSize(), &newstr);
           if (!arrInd) {
             AfxMessageBox(newstr + " in line:\n\n" + line, MB_EXCLAME);
             return 2;
@@ -6992,7 +7167,7 @@ int CMacroProcessor::SubstituteVariables(CString * strItems, int maxItems, CStri
           leftInd = nright + 1;
           nright = nright2;
         } else if (var->rowsFor2d) {
-          numElements = var->rowsFor2d->GetSize();
+          numElements = (int)var->rowsFor2d->GetSize();
         }
 
         // Get the array index
@@ -7024,7 +7199,7 @@ int CMacroProcessor::SubstituteVariables(CString * strItems, int maxItems, CStri
             " without any subscripts in line:\n\n" + line, MB_EXCLAME);
           return 2;
         }
-        numElements = var->rowsFor2d->GetSize();
+        numElements = (int)var->rowsFor2d->GetSize();
       }
 
       // If doing $#, now substitute the number of elements
@@ -7683,45 +7858,63 @@ void CMacroProcessor::SetReportedValues(double val1, double val2, double val3,
 }
 
 void CMacroProcessor::SetReportedValues(CString *strItems, double val1, double val2, double val3,
-                                       double val4, double val5, double val6)
+  double val4, double val5, double val6)
 {
-  ClearVariables(VARTYPE_REPORT);
-  if (val1 != MACRO_NO_VALUE) {
-    SetVariable("REPORTEDVALUE1", val1, VARTYPE_REPORT, 1, true);
-    SetVariable("REPVAL1", val1, VARTYPE_REPORT, 1, true);
-    if (strItems && !strItems[0].IsEmpty())
-      SetVariable(strItems[0], val1, VARTYPE_REGULAR, -1, false);
+  if (val1 != MACRO_NO_VALUE)
+    SetOneReportedValue(strItems, val1, 1);
+  if (val2 != MACRO_NO_VALUE)
+    SetOneReportedValue(strItems, val2, 2);
+  if (val3 != MACRO_NO_VALUE)
+    SetOneReportedValue(strItems, val3, 3);
+  if (val4 != MACRO_NO_VALUE)
+    SetOneReportedValue(strItems, val4, 4);
+  if (val5 != MACRO_NO_VALUE)
+    SetOneReportedValue(strItems, val5, 5);
+  if (val6 != MACRO_NO_VALUE)
+    SetOneReportedValue(strItems, val6, 6);
+}
+
+// Sets one reported value with a numeric or string value, also sets an optional variable
+// Pass the address of the FIRST optional variable
+// Clears all report variables when index is 1 and then requires report variables to
+// be new, so call with 1 first
+void CMacroProcessor::SetOneReportedValue(CString *strItems, CString *valStr, 
+  double value, int index)
+{
+  CString num, str;
+  if (index < 1 || index > 6)
+    return;
+  num.Format("%d", index);
+  if (valStr)
+    str = *valStr;
+  else {
+    str.Format("%f", value);
+    TrimTrailingZeros(str);
   }
-  if (val2 != MACRO_NO_VALUE) {
-    SetVariable("REPORTEDVALUE2", val2, VARTYPE_REPORT, 2, true);
-    SetVariable("REPVAL2", val2, VARTYPE_REPORT, 2, true);
-    if (strItems && !strItems[1].IsEmpty())
-      SetVariable(strItems[1], val2, VARTYPE_REGULAR, -1, false);
-  }
-  if (val3 != MACRO_NO_VALUE) {
-    SetVariable("REPORTEDVALUE3", val3, VARTYPE_REPORT, 3, true);
-    SetVariable("REPVAL3", val3, VARTYPE_REPORT, 3, true);
-    if (strItems && !strItems[2].IsEmpty())
-      SetVariable(strItems[2], val3, VARTYPE_REGULAR, -1, false);
-  }
-  if (val4 != MACRO_NO_VALUE) {
-    SetVariable("REPORTEDVALUE4", val4, VARTYPE_REPORT, 4, true);
-    SetVariable("REPVAL4", val4, VARTYPE_REPORT, 4, true);
-    if (strItems && !strItems[3].IsEmpty())
-      SetVariable(strItems[3], val4, VARTYPE_REGULAR, -1, false);
-  }
-  if (val5 != MACRO_NO_VALUE) {
-    SetVariable("REPORTEDVALUE5", val5, VARTYPE_REPORT, 5, true);
-    SetVariable("REPVAL5", val5, VARTYPE_REPORT, 5, true);
-    if (strItems && !strItems[4].IsEmpty())
-      SetVariable(strItems[4], val5, VARTYPE_REGULAR, -1, false);
-  }
-  if (val6 != MACRO_NO_VALUE) {
-    SetVariable("REPORTEDVALUE6", val6, VARTYPE_REPORT, 6, true);
-    SetVariable("REPVAL6", val6, VARTYPE_REPORT, 6, true);
-    if (strItems && !strItems[5].IsEmpty())
-      SetVariable(strItems[5], val6, VARTYPE_REGULAR, -1, false);
-  }
+  if (index == 1)
+    ClearVariables(VARTYPE_REPORT);
+  SetVariable("REPORTEDVALUE" + num, str, VARTYPE_REPORT, index, true);
+  SetVariable("REPVAL" + num, str, VARTYPE_REPORT, index, true);
+  if (strItems && !strItems[index - 1].IsEmpty())
+    SetVariable(strItems[index - 1], str, VARTYPE_REGULAR, -1, false);
+}
+
+// Overloads for convenience
+void CMacroProcessor::SetOneReportedValue(CString &valStr, int index)
+{
+  SetOneReportedValue(NULL, &valStr, 0., index);
+}
+void CMacroProcessor::SetOneReportedValue(double value, int index)
+{
+  SetOneReportedValue(NULL, NULL, value, index);
+}
+void CMacroProcessor::SetOneReportedValue(CString *strItem, CString &valStr, int index)
+{
+  SetOneReportedValue(strItem, &valStr, 0., index);
+}
+void CMacroProcessor::SetOneReportedValue(CString *strItem, double value, int index)
+{
+  SetOneReportedValue(strItem, NULL, value, index);
 }
 
 // Checks the nesting of IF and LOOP blocks in the given macro, as well
@@ -8574,4 +8767,66 @@ int CMacroProcessor::LookupCommandIndex(CString & item)
       return ind;
   }
   return CME_NOTFOUND;
+}
+
+
+FileForText *CMacroProcessor::LookupFileForText(CString &ID, int checkType, 
+  CString &strLine, int &index)
+{
+  FileForText *tfile;
+  CString errStr;
+  for (index = 0; index < (int)mTextFileArray.GetSize(); index++) {
+    tfile = mTextFileArray.GetAt(index);
+    if (tfile->ID == ID) {
+      if (checkType == TXFILE_MUST_NOT_EXIST)
+        errStr = "There is already an open file with identifier " + ID;
+      if (checkType == TXFILE_READ_ONLY && !tfile->readOnly)
+        errStr = "The file with identifier " + ID + " cannot be read from";
+      if (checkType == TXFILE_WRITE_ONLY && tfile->readOnly)
+        errStr = "The file with identifier " + ID + " cannot be written to";
+      if (!errStr.IsEmpty())
+        break;
+      return tfile;
+    }
+  }
+  if (errStr.IsEmpty() && checkType != TXFILE_MUST_NOT_EXIST && 
+    checkType != TXFILE_QUERY_ONLY)
+      errStr = "There is no open file with identifier " + ID;
+  if (!errStr.IsEmpty()) {
+    errStr += " for line:\n\n" + strLine;
+    mWinApp->AppendToLog(errStr, mLogAction);
+    SEMMessageBox(errStr);
+    AbortMacro();
+  }
+  return NULL;
+}
+
+
+void CMacroProcessor::CloseFileForText(int index)
+{
+  FileForText *txFile;
+  int startInd = index, endInd = index, ind;
+  if (index >= mTextFileArray.GetSize())
+    return;
+  if (index < 0) {
+    startInd = 0;
+    endInd = (int)mTextFileArray.GetSize() - 1;
+  }
+  for (ind = endInd; ind >= startInd; ind--) {
+    txFile = mTextFileArray.GetAt(ind);
+    if (index != -1 || !txFile->persistent) {
+      txFile->csFile->Close();
+      delete txFile->csFile;
+      delete txFile;
+      mTextFileArray.RemoveAt(ind);
+    }
+  }
+}
+
+
+void CMacroProcessor::SubstituteLineStripItems(CString & strLine, int numStrip, 
+  CString &strCopy)
+{
+  SubstituteVariables(&strLine, 1, strLine);
+  mWinApp->mParamIO->StripItems(strLine, numStrip, strCopy);
 }
