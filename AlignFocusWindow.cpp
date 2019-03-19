@@ -296,6 +296,6 @@ void CAlignFocusWindow::Update()
 void CAlignFocusWindow::UpdateAutofocus(int magInd)
 {
   // Autofocus requires focus ready
-  m_butFocus.EnableWindow(mWinApp->mFocusManager->FocusReady() && !mWinApp->DoingTasks()
-    && (!mWinApp->mScope || !mWinApp->mScope->GetMovingStage()));
+  m_butFocus.EnableWindow(mWinApp->mFocusManager->FocusReady(magInd) && 
+    !mWinApp->DoingTasks() && (!mWinApp->mScope || !mWinApp->mScope->GetMovingStage()));
 }
