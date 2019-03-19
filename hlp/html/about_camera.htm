@@ -512,9 +512,9 @@
     <p>
       <b><a name="k3problems">Remaining Problems with the K3</a></b></p>
     <p>
-      This list will be continually updated and eventually removed as 
-      Gatan either solves the problem or clarifies the situation.&nbsp; (Last update 
-      December 9, 2018)</p>
+      This list will be continually updated and eventually removed as Gatan either 
+        solves the problem or clarifies the situation.&nbsp; (Last update March 19, 
+        2019)</p>
     <ol>
       <li>When the camera configuration is set for rotation by 90 or 270 and flip around 
         Y, the operation is done incorrectly in DM and the image is rotated 180 degrees 
@@ -523,6 +523,10 @@
         continuous mode images will all be turned by 180 degrees.&nbsp; There is a 
         workaround in the Dec. 9 version. The procedure is:</li>
         <ul>
+            <li>First check if the problem is still present in your version by taking an image 
+                without dose-fractionation, then one with dose-fractionation selected (no saving 
+                is needed).&nbsp; If they do not have the same orientation, proceed to change 
+                RotationAndFlip as indicated next.</li>
         <li>If necessary, upgrade to the 3-7-0beta14 package or higher</li>
           <li>Set RotationAndFlip to -7 if it 5, or -5 if it is 7.&nbsp; Leave 
             DMRotationAndFlip at 5 or 7, respectively</li>
@@ -543,11 +547,8 @@
         rates or with longer exposures, and hardware binning 
         by 4 is simply not used for these images because it 
         saturates so easily.</li>
-      <li>The table used for dose rate linearization was available only for 200 KV and 
-        was preliminary.&nbsp; Dose rates and doses will be off 
-        somewhat at 300 KV.&nbsp; SerialEM will obtain the dose rate directly from DM in 
-        GMS 3.31, eliminating the need for the dose rate tables, but this is still being 
-        tested.</li>
+      <li>The dose rate table used for 300 KV is inaccurate.&nbsp; With GMS 3.31, SerialEM obtains the dose rate directly from DM in 
+        GMS 3.31, eliminating the need for the dose rate tables.</li>
       <li>SerialEM has no control over the alignment of frames by MotionCor2 available 
         in DM as an option, and apparently cannot trigger this alignment or access the 
         result.</li>

@@ -77,6 +77,7 @@ CMainFrame::CMainFrame()
   mDialogTable = NULL;
   m_nTimer = 0;
   mDialogOffset = 0;
+  mClosingProgram = false;
   mLeftDialogOffset = IsVersion(10, VER_GREATER_EQUAL, 0, VER_GREATER_EQUAL) ?
     WIN10_LEFT_OFFSET : DIALOG_LEFT_OFFSET;
 }
@@ -296,7 +297,7 @@ void CMainFrame::SetDialogPositions()
   int i, height, xoff, yoff;
   CRect rect;
 
-  if (!mDialogTable)
+  if (!mDialogTable || mClosingProgram)
     return;
 
   GetWindowRect(&rect);
@@ -375,23 +376,22 @@ void CMainFrame::OnMove(int x, int y)
 void CMainFrame::OnClose() 
 {
   WINDOWPLACEMENT winPlace;
-  static bool closing = false;
   int magInd;
   bool skipReset = false;
 
-  if (closing)
+  if (  mClosingProgram)
     return;
-  closing = true;
+    mClosingProgram = true;
 
   if (mWinApp->mTSController->TerminateOnExit()) {
-    closing = false;
+      mClosingProgram = false;
     return;
   }
 
   if (mWinApp->mFalconHelper->GetStackingFrames()) {
     if (AfxMessageBox("It SEEMS that frames from the Falcon are still being stacked\n"
       "Do you really want to exit?", MB_QUESTION) != IDYES) {
-      closing = false;
+        mClosingProgram = false;
       return;
     }
   }
@@ -409,7 +409,7 @@ void CMainFrame::OnClose()
 
   if (mWinApp->mScope->GetDoingLongOperation() && 
     mWinApp->mScope->StopLongOperation(true)) {
-      closing = false;
+        mClosingProgram = false;
       return;
   }
   
@@ -417,14 +417,14 @@ void CMainFrame::OnClose()
     (!mWinApp->GetExitWithUnsavedLog() && 
     mWinApp->mLogWindow && mWinApp->mLogWindow->AskIfSave("exiting?")) ||
     mWinApp->mNavigator && mWinApp->mNavigator->AskIfSave("exiting?")) {
-    closing = false;
+      mClosingProgram = false;
     return;
   }
 
   if (mWinApp->mBufferManager->CheckAsyncSaving()) {
     if (AfxMessageBox("Do want to save that image somewhere before exiting?", 
       MB_QUESTION) == IDYES) {
-      closing = false;
+        mClosingProgram = false;
       return;
     }
   }
@@ -495,6 +495,8 @@ void CMainFrame::OnClose()
 void CMainFrame::OnSize(UINT nType, int cx, int cy) 
 {
   CMDIFrameWnd::OnSize(nType, cx, cy);
+  if (mClosingProgram)
+    return;
   mWinApp->DoResizeMain();
   mWinApp->RestoreViewFocus();    
 }

@@ -421,6 +421,9 @@ int KStoreADOC::SetValuesFromExtra(KImage *inImage, char *sectName, int index)
   if (!extra->mChannelName.IsEmpty() && AdocSetKeyValue(sectName, index, ADOC_CHAN_NAME, 
     (LPCTSTR)extra->mChannelName))
     return 1;
+  if (extra->mMultiHoleNum > 0 && AdocSetTwoIntegers(sectName, index, ADOC_MULTI_POS,
+    extra->mMultiHoleNum, extra->mMultiPosInHole))
+    return 1;
   if (!extra->mDE12Version.IsEmpty() && AdocSetKeyValue(sectName, index, 
     ADOC_DE12_VERSION, (char *)(LPCTSTR)extra->mDE12Version))
     return 1;

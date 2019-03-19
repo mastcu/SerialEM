@@ -21,6 +21,7 @@
 #include "ProcessImage.h"
 #include "GainRefMaker.h"
 #include "NavigatorDlg.h"
+#include "ParticleTasks.h"
 #include "BeamAssessor.h"
 #include "MacroProcessor.h"
 #include "FalconHelper.h"
@@ -8496,6 +8497,8 @@ void CCameraController::DisplayNewImage(BOOL acquired)
         extra->energyLoss = (filtParam->slitIn && !filtParam->zeroLoss) ? 
           filtParam->energyLoss : 0.f;
       }
+      mWinApp->mParticleTasks->CurrentHoleAndPosition(extra->mMultiHoleNum, 
+        extra->mMultiPosInHole);
       extra->ValuesIntoShorts();
     }
 

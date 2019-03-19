@@ -809,6 +809,10 @@
       <li>Change CountsPerElectron to 32.</li>
       <li>Add the line 'LinearToCountingRatio 300' below the 'CountsPerElectron' line.</li>
     </ul>
+    <p>If there is a rotation by 90 or 270 and a flip in the camera configuration, check 
+        if your version of DM still has the rotation bug described in
+        <a href="about_camera.htm#k3problems">Remaining Problems with the K3</a> by taking an image 
+        without and with dose fractionation to see if they have the same orientation.</p>
     <p>
       The required recalibrations are:</p>
     <ul>
@@ -1940,7 +1944,7 @@
           Generally, the more spheres, the better, as long as they do not obscure the 
           grating pattern.</li>
       <li>Do not use a grating with 2000 lines per mm if you can avoid it, it can cause 
-          many problems.&nbsp; Get the 2160 line/mm grating with latex spheres, Ted Pella 
+          many problems.&nbsp; Get the <strong>2160 line/mm grating </strong>with latex spheres, Ted Pella 
           product #603.&nbsp; If you do use a 2000 line grating, set the property 'GridLinesPerMM' 
         to 2000 and be sure to have latex spheres: these grids can be too close to 
         perfect to give correct cross-correlations.</li>

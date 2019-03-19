@@ -141,10 +141,14 @@ BOOL CScopeStatusDlg::OnInitDialog()
       CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
       FF_DONTCARE, mBigFontName);
   m_statObjective.GetWindowRect(&rect);
-  mMedFont.CreateFont((rect.Height()), 0, 0, 0, FW_MEDIUM,
+  mMedFont.CreateFont(rect.Height(), 0, 0, 0, FW_MEDIUM,
       0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
       CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
       FF_DONTCARE, mBigFontName);
+  mProbeFont.CreateFont(B3DNINT(0.8 * rect.Height()), 0, 0, 0, FW_MEDIUM,
+    0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
+    CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
+    FF_DONTCARE, mBigFontName);
   
   // Set the fonts
   m_statCurrent.SetFont(&mBigFont);
@@ -547,7 +551,7 @@ void CScopeStatusDlg::OnPaint()
     iLeft = statRect.left - winRect.left;
     iTop = statRect.top - winRect.top - (winRect.Height() - clientRect.Height() - border);
     CRect dcRecti(iLeft, iTop, iLeft + statRect.Width(), iTop + statRect.Height());
-    dc.SelectObject(GetFont());
+    dc.SelectObject(&mProbeFont);
     dc.FillSolidRect(&dcRecti, intColors[mIntCalStatus]);
     dc.DrawText(mTEMnanoProbe ? "nPr" : "Spot", &dcRecti, 
       DT_SINGLELINE | DT_CENTER | DT_VCENTER);

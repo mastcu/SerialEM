@@ -954,12 +954,11 @@ BOOL CSerialEMApp::InitInstance()
 
   // Create the little font for everybody so there is one place to fix this
   if (mSmallFontsBad)
-    mLittleFont.CreatePointFont((mDisplayNot120DPI && mSystemDPI < 120) ? 80 : 70,
-      "Microsoft Sans Serif");
-  else if (mDisplayNot120DPI && mSystemDPI < 120)
+    mLittleFont.CreatePointFont(B3DNINT(7680. / mSystemDPI), "Microsoft Sans Serif");
+  else if (mDisplayNot120DPI && mSystemDPI < 120)    // Keep this since 96 dpi has had it
      mLittleFont.CreatePointFont(80, "Microsoft Sans Serif");
   else
-     mLittleFont.CreatePointFont(60, "Small Fonts");
+     mLittleFont.CreatePointFont(B3DNINT(7200. / mSystemDPI), "Small Fonts");
 
   // Set constants based on DPI if not supplied by user
   if (!mToolTitleHeight) {
@@ -1868,7 +1867,7 @@ void CSerialEMApp::DoResizeMain(int whichBuf)
 {
   // ResizeToFit crashes on very small screens (<= 800x600) on some systems so skip during
   // startup and do at very end of startup
-  if (mStartingProgram)
+  if (mStartingProgram || ((CMainFrame *)m_pMainWnd)->GetClosingProgram())
     return;
   CRect rect;
   m_pMainWnd->GetWindowRect(rect);

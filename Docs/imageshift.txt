@@ -1,0 +1,87 @@
+SetMagIndex
+   calls AssessMagISchange  which sets transIS
+   calls AssessRestoreIS  which overlays its own transIS
+   After the mag change, if either of these said to do it, it gets
+   the axisIS, subtracts from the transIS and sets image shift
+
+AssessMagISchange: given from and to mag, computes delIS from change in
+neutral IS and offsetIS which is 0 if not applying (real offset stored in
+calOffsetIS)
+Sets flag to convert if both LM or nonLM, apply is on, or low dose mode
+Then if that is set or there is a nonzero result or mag change resets IS,
+it gets the current image shift and computes the AxisIS
+if converting, it adds back axisIS and subtracts its neutral/offset components
+to get the raw plus tilt axis offset if shifting to axis, called a "real"
+shift.  This is transferred to the new mag and the CHANGE is added to the delIS
+The newIS is a raw value which is the old raw value plus this delta, and will
+need to be adjusted by new AxisIS
+It is applied if (nonzero or mag change resets IS) AND (staying in LM/M,
+applying offset, or in low dose mode)  [Low dose added 2749]
+
+GetImageShift gets raw IS and subtracts current TiltAxisIS
+
+GetTiltAxisIS works off the last mag index:
+Starts with neutralIS + offsetIS  (in JEOL EFTEM it explicitly bases this on
+neutral index in case of switching)
+Adds in the tilt axis offset converted to IS at this mag if shifting to axis
+
+SaveOrRestoreIS happens for JEOL going (from nonLM to diff) or (from LM to diff
+if applying offset) or if going between LM/nonLM and not applying offset and
+not low dose mode (latter in Jan 2018).
+Otherwise (noJEOL) it only happens going to diffraction from any mag AND
+applying offsets
+WTF?
+
+SaveISifNeeded checks whether it is supposed to save, and gets the IS and
+adds on the axisIS to get the rawIS to save.
+
+AssessRestoreIS checks whether there is supposed to be a restore and there
+is a saved IS
+From the rawIS it subtracts neutralIS and offsetIS to get real IS at saved mag
+This is transferred to the new mag and neutralIS and offsetIS added back on to
+get new raw IS to apply at new mag
+
+Low dose:
+Search mode history:
+2749 initial: Low dose added to AssessMagISchange, only split beam shift dealt
+with
+2943, PLA before leaving search not after
+2966: fixed for search on JEOL: also do it later if PLA and going to search
+
+Initially added low dose to the
+Do IS at higher mag for consistency in beam shifts, BUT original logic was to
+do PLA AFTER IF going to focus/trial from another area
+Does IS first if:
+1) When using PLA and either going between F/T and not, or coming to or from
+search:
+ do it if coming from focus/trial or search
+2) Otherwise: do it first in two cases:
+  a) (Going to DIFF or to a lower mag and NOT entering low mag) or I added
+     leaving low mag!
+  b) Staying at same mag index and increasing alpha!
+
+So if doing it first it calls DoISforLowDoseArea which makes the net change
+Then it changes mag
+Then does the IS change if doing after.
+
+DoISforLowDoseArea 
+convert image shift at new area to the current mag into delIS
+converting image shift at current area to current mag, subytract from delIS
+Apply delIS
+
+OK: why not just compute the delIS at the new mag after you know what it is,
+applying it if is the same mag or STEM mode OR
+telling AssessMagISchange what it is which it will add on if mChangingLDArea
+is set
+And the reason this won't work is that THIS change involves beam shift!
+
+Split beam shift if either leaving low mag from known area or entering low
+mag from known or unknown area
+Which means it pulls off beam shift of curren area before changing mag and
+afterwards, it applies the full image shift instead of a change
+All this stuff can stay the same is it is complicated by probe mode
+Really just want it to find out what beam shift accompanies the image shift
+and add it to the final beam shift.
+Also, theoretically the image shift to align V or S should not be accompanied
+by a beam shift, just the IS involved in going to or from T/F/R
+Is balanced shift applied to V also?

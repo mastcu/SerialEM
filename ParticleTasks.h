@@ -53,5 +53,6 @@ public:
   bool GetNextShotAndHole(int &nextShot, int &nextHole);
   int GetHolePositions(FloatVec & delIsX, FloatVec & delISY, int magInd, int camera);
   int MultiShotBusy(void);
+  bool CurrentHoleAndPosition(int &curHole, int &curPos);
 };
 

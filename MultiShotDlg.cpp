@@ -69,6 +69,8 @@ CMultiShotDlg::CMultiShotDlg(CWnd* pParent /*=NULL*/)
   mLastIntensity = 0.;
   mLastDrawTime = 0.;
   mSavedLDForCamera = -1;
+  for (int ind = 0; ind < 7; ind++)
+    mLastPanelStates[ind] = true;
 }
 
 CMultiShotDlg::~CMultiShotDlg()
@@ -218,12 +220,12 @@ void CMultiShotDlg::UpdateSettings(void)
   m_sbcNumYholes.SetPos(50);
 
   ManageEnables();
-  ManagePanels();
 
   m_strNumShots.Format("%d", mActiveParams->numShots);
   m_strNumXholes.Format("%d", mActiveParams->numHoles[0]);
   m_strNumYholes.Format("by %2d", mActiveParams->numHoles[1]);
   UpdateData(false);
+  ManagePanels();
   mWinApp->mMainView->DrawImage();
 }
 
@@ -272,7 +274,6 @@ BOOL CMultiShotDlg::PreTranslateMessage(MSG* pMsg)
 void CMultiShotDlg::ManagePanels(void)
 {
   BOOL states[7] = {true, true, true, true, true, true, true};
-  static BOOL lastStates[7] = {true, true, true, true, true, true, true};
   int ind, numStates = sizeof(states) / sizeof(BOOL);
   states[1] = m_bDoShotsInHoles;
   states[3] = m_bDoMultipleHoles;
@@ -290,14 +291,14 @@ void CMultiShotDlg::ManagePanels(void)
     ManageEnables();
   }
   for (ind = 0; ind < numStates; ind++) {
-    if (!BOOL_EQUIV(states[ind], lastStates[ind])) {
+    if (!BOOL_EQUIV(states[ind], mLastPanelStates[ind])) {
       AdjustPanels(states, idTable, leftTable, topTable, mNumInPanel, mPanelStart, 0);
       mWinApp->RestoreViewFocus();
       break;
     }
   }
   for (ind = 0; ind < numStates; ind++)
-    lastStates[ind] = states[ind];
+    mLastPanelStates[ind] = states[ind];
 }
 
 // Do multiple shots in hole check box

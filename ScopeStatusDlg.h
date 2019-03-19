@@ -103,6 +103,7 @@ private:
   bool mShowedDose;     // Flag that dose was shown last time
 	CFont mBigFont;			// Font for bigger values
 	CFont mMedFont;			// Medium font for others
+  CFont mProbeFont;   // Font for the Spot/nPr indicator
 	CScreenMeter *mScreenMeter;
 	double mMeterCurrent;	// Current last displayed on floating meter
 	int mFloatingMeterSmoothed;

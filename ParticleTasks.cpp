@@ -192,6 +192,10 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
   pixel = mShiftManager->GetPixelSize(mWinApp->GetCurrentCamera(), mMagIndex);
   mMSRadiusOnCam = spokeRad / pixel;
   mCamToIS = mShiftManager->CameraToIS(mMagIndex);
+
+  // Current index runs from -1 to mMSNumPeripheral - 1 for center before
+  //                          0 to mMSNumPeripheral - 1 for no center
+  //                          0 to mMSNumPeripheral for center after
   mMSCurIndex = mMSDoCenter < 0 ? -1 : 0;
   mMSLastShotIndex = mMSNumPeripheral + (mMSDoCenter > 0 ? 0 : -1);
   mWinApp->UpdateBufferWindows();
@@ -461,4 +465,19 @@ int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, int mag
     delISY.push_back((float)transISY);
   }
   return numHoles;
+}
+
+// Returns true and the number of the current hole and peripheral position numbered from
+// 1, and 0 for the center position; or returns false if not doing multishot
+bool CParticleTasks::CurrentHoleAndPosition(int &curHole, int &curPos)
+{
+  curHole = curPos = -1;
+  if (mMSCurIndex < -1)
+    return false;
+  curHole = mMSHoleIndex + 1;
+  if (mMSNumPeripheral)
+    curPos = (mMSCurIndex + 1) % (mMSNumPeripheral + 1);
+  else
+    curPos = 0;
+  return true;
 }

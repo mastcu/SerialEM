@@ -76,6 +76,7 @@
 #define ADOC_FILTER "FilterState"
 #define ADOC_VOLTAGE "Voltage"
 #define ADOC_NAV_LABEL "NavigatorLabel"
+#define ADOC_MULTI_POS "MultishotHoleAndPosition"
 
 class KStoreADOC :
   public KImageStore

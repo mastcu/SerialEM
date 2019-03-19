@@ -43,6 +43,7 @@ public:
   void InsertOneDialog(CToolDlg *dlg, int colorInd, COLORREF *borderColors);
 	void DialogChangedState(CToolDlg *inDialog, int inState);
 	virtual ~CMainFrame();
+  bool GetClosingProgram() {return mClosingProgram;};
 #ifdef _DEBUG
 	virtual void AssertValid() const;
 	virtual void Dump(CDumpContext& dc) const;
@@ -76,6 +77,7 @@ private:
 	CSerialEMApp *mWinApp;
   int mDialogOffset;
   int mLeftDialogOffset;
+  bool mClosingProgram;
 public:
   void NewWindow(void);
 };

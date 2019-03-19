@@ -3,6 +3,19 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+3/19/19: Added hole number and position in hole to mdoc files when using
+MultipleRecords (In 3.7).
+
+3/19/19: Made program appear DPI-aware to Windows 10, fixed problems with
+length of closed-up control panels when floating them with a high DPI, and
+made the small fonts be scaled properly by DPI (In 3.7).
+
+3/19/19: Fixed scripting when assigning to variables starting with "set" (In
+3.7).
+
+3/19/19: Fixed crashes opening or closing program with window too small (In
+3.7).
+
 3/11/19: Added collection of script commands for reading and writing text
 files line by line.
 

@@ -20,6 +20,9 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+// In order to measure title bar height the first time a panel floats
+static bool sFirstFloatDlg = true;
+
 /////////////////////////////////////////////////////////////////////////////
 // CToolDlg dialog
 
@@ -76,6 +79,8 @@ END_MESSAGE_MAP()
 void CToolDlg::SetOpenClosed(int inState)
 {
   CRect rcWin;
+  CButton *openBut;
+  int dockHeight, floatHeight;
   mState = inState;
   if (mState & TOOL_OPENCLOSED) {
     SetDlgItemText(IDC_BUTOPEN, "-");
@@ -91,6 +96,10 @@ void CToolDlg::SetOpenClosed(int inState)
   }
 
   if (mState & TOOL_FLOATDOCK) {
+    if (sFirstFloatDlg) {
+      openBut = (CButton *)GetDlgItem(IDC_BUTOPEN);
+      dockHeight = CurrentButHeight(openBut);
+    }
     ModifyStyle(0, WS_CAPTION);
     ModifyStyleEx(0, WS_EX_TOOLWINDOW);
     SetDlgItemText(IDC_BUTFLOATDOCK, "D");
@@ -100,6 +109,11 @@ void CToolDlg::SetOpenClosed(int inState)
     GetWindowRect( rcWin );
     SetWindowPos(NULL, rcWin.left, rcWin.top, rcWin.right - rcWin.left,
       rcWin.bottom - rcWin.top, SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOZORDER);
+    if (sFirstFloatDlg) {
+      floatHeight = CurrentButHeight(openBut);
+      sFirstFloatDlg = false;
+      mWinApp->SetToolTitleHeight(1 + floatHeight - dockHeight);
+    }
   } else {
     ModifyStyle(WS_CAPTION, 0);
     SetDlgItemText(IDC_BUTFLOATDOCK, "F");
@@ -149,11 +163,20 @@ int CToolDlg::GetMidHeight()
       CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
       FF_DONTCARE, "Microsoft Sans Serif");
   butOpen->SetFont(&mButFont);
-
   CButton *butMore = (CButton *)GetDlgItem(IDC_BUTMORE);
   if (!butMore)
     return 0;
   butMore->SetFont(&mButFont);
+  return CurrentButHeight(butMore);
+}
+
+// Get the mid-height or equivalent value for a different button
+int CToolDlg::CurrentButHeight(CButton *butMore)
+{
+  if (!butMore)
+    butMore = (CButton *)GetDlgItem(IDC_BUTMORE);
+  if (!butMore)
+    return 0;
   CRect winRect;
   CRect butRect;
   GetWindowRect(&winRect);

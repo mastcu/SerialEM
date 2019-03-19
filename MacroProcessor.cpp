@@ -1287,13 +1287,18 @@ void CMacroProcessor::NextCommand()
   cmdIndex = LookupCommandIndex(strItems[0]);
 
   // Do arithmetic on selected commands
-  if (ArithmeticIsAllowed(strItems[0])) {
+  if (ArithmeticIsAllowed(strItems[0]) && strItems[1] != "=" && strItems[1] != ":=" && 
+    strItems[1] != "@=" && strItems[1] != "@:=") {
     if (SeparateParentheses(&strItems[1], MAX_TOKENS - 1))
       ABORT_LINE("Too many items on line after separating out parentheses in line: \n\n");
     EvaluateExpression(&strItems[1], MAX_TOKENS - 1, strLine, 0, index, index2);
     for (i = index + 1; i <= index2; i++)
       strItems[i] = "";
-    if (CheckLegalCommandAndArgNum(&strItems[0], strLine, mCurrentMacro)) {
+    index = CheckLegalCommandAndArgNum(&strItems[0], strLine, mCurrentMacro);
+    if (index) {
+      if (index == 1)
+        ABORT_LINE("There is no longer a legal command after evaluating arithmetic on "
+          "this line:\n\n");
       AbortMacro();
       return;
     }

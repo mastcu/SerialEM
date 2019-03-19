@@ -70,6 +70,8 @@ public:
   int mIgnoredFrames;
   float slitWidth;
   float energyLoss;
+  int mMultiHoleNum;
+  int mMultiPosInHole;
   
   static const int Bytes[EXTRA_NTYPES];
   void ValuesIntoShorts(void);
