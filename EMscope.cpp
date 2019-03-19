@@ -4752,7 +4752,7 @@ void CEMscope::GotoLowDoseArea(int newArea)
 
   mLdsaParams = NULL;
   mChangingLDArea = false;
-  mWinApp->mAlignFocusWindow.Update();
+  mWinApp->mAlignFocusWindow.UpdateAutofocus(ldArea->magIndex);
 }
 
 // Get change in image shift; set delay; tell low dose dialog to ignore this shift

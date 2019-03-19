@@ -253,9 +253,7 @@ void CAlignFocusWindow::Update()
     imBufs[mWinApp->mBufferManager->AutoalignBufferIndex()].mImage;
   m_butAlign.EnableWindow(bEnable && !bTasks);
 
-  // Autofocus requires focus ready
-  m_butFocus.EnableWindow(mWinApp->mFocusManager->FocusReady() && !bTasks && 
-    (!mWinApp->mScope || !mWinApp->mScope->GetMovingStage()));
+  UpdateAutofocus(-1);
   m_statDefTarget.EnableWindow(!mWinApp->GetSTEMMode());
 
   // Clear align requires an active image
@@ -292,4 +290,12 @@ void CAlignFocusWindow::Update()
 
   // Mouse moving of stage disabled in calibrating IS offset
   m_butMouseStage.EnableWindow(!mWinApp->mShiftCalibrator->CalibratingOffset());
+}
+
+// Update the autofocus button: it is the only thing here that depends on scope state
+void CAlignFocusWindow::UpdateAutofocus(int magInd)
+{
+  // Autofocus requires focus ready
+  m_butFocus.EnableWindow(mWinApp->mFocusManager->FocusReady() && !mWinApp->DoingTasks()
+    && (!mWinApp->mScope || !mWinApp->mScope->GetMovingStage()));
 }

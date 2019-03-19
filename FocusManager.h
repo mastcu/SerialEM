@@ -87,7 +87,7 @@ public:
   void CalFocusData(float inX, float inY);
   void AutoFocusStart(int inChange, int useViewInLD = 0, int iterNum = 1);
   void AutoFocusData(float inX, float inY);
-  BOOL FocusReady();
+  BOOL FocusReady(int magInd = -1);
   void DetectFocus(int inWhere, int useViewInLD = 0);
   void FocusDone();
   static void TaskFocusDone(int param);

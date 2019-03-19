@@ -886,15 +886,15 @@ void CFocusManager::CalFocusData(float inX, float inY)
 }
 
 
-BOOL CFocusManager::FocusReady()
+BOOL CFocusManager::FocusReady(int magInd)
 {
   FocusTable focTmp;
-  int magInd;
   if (!mScope)
     return false;
   if (mWinApp->GetSTEMMode())
     return (mSFnormalizedSlope[mScope->GetProbeMode()] != 0.);
-  magInd = mScope->FastMagIndex();
+  if (magInd < 0)
+    magInd = mScope->FastMagIndex();
   if (magInd < mScope->GetLowestMModeMagInd())
     return magInd > 0 && mScope->GetStandardLMFocus(magInd) > -900.;
   return (GetFocusCal(magInd, mWinApp->GetCurrentCamera(), 

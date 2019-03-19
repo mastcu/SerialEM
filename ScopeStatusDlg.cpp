@@ -252,7 +252,10 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
       mCameraIndex = mWinApp->GetCurrentCamera();
       SEMTrace('i', "Scope status: IS %f %f units,  %.2f um", mISX, mISY, specTotal);
   }
-  
+
+  if (!noScope && mIntCalStatus > -2 && (inMagInd != mMagInd || inAlpha != mBeamAlpha || 
+    temNano != (mTEMnanoProbe ? 1 : 0)))
+    mWinApp->mAlignFocusWindow.UpdateAutofocus(inMagInd);
   if (inMagInd) {
     MagTable *magTab = mWinApp->GetMagTable();
     int inMag = screenUp ? magTab[inMagInd].mag : magTab[inMagInd].screenMag;

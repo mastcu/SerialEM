@@ -72,6 +72,7 @@ public:
   CStatic m_statDefTarget;
   BOOL m_bCorrectBacklash;
   afx_msg void OnCorrectBacklash();
+  void UpdateAutofocus(int magInd);
 };
 
 //{{AFX_INSERT_LOCATION}}
