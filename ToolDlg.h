@@ -82,7 +82,7 @@ private:
 public:
   void DrawSideBorders(CPaintDC & dc);
   void DrawButtonOutline(CPaintDC & dc, CWnd * but, int thickness, COLORREF color);
-  int CurrentMidHeight(CButton *butMore);
+  int CurrentButHeight(CButton *butMore);
 };
 
 //{{AFX_INSERT_LOCATION}}
