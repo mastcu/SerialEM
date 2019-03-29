@@ -64,6 +64,7 @@ public:
   static int IsCameraInserted(long camera, long *inserted);
   static int InsertCamera(long camera, long state);
   static int GetDMVersion(long *version);
+  static int GetDMVersionAndBuild(long *version, long *build);
   static int GetPluginVersion(long *version);
   static int GetLastError(long *error);
   static int GetDMCapabilities(long *canSelectShutter, long *canSetSettling,

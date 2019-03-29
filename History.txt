@@ -3,6 +3,17 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+3/28/19: Added script commands to change and restore low dose parameters and
+to impose current scope settings on a low dose area.
+
+3/28/19: Moved option for antialias reduction on all shots for K2/K3 from
+dialog to Camera - Special Options submenu and set it on if it was off
+before this change.
+
+3/28/19: Added support for correlated double sampling in K3.
+
+3/28/19: Allowed LongOperation to return time since last operation.
+
 3/23/19: SEM_3-7-3
 3/23/19: Added version function to SEMCCD that can return build (In 3.7).
 

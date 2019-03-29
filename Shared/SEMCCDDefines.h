@@ -4,7 +4,7 @@
  */
 #ifndef SEMCCD_DEFINES_H
 
-#define SEMCCD_PLUGIN_VERSION    112
+#define SEMCCD_PLUGIN_VERSION    112   // TEMP! UNTIL MORE THAN ONE SITE HAS CDS
 
 // Error codes
 enum {IMAGE_NOT_FOUND = 1, WRONG_DATA_TYPE, DM_CALL_EXCEPTION, NO_STACK_ID, STACK_NOT_3D,
@@ -47,6 +47,7 @@ FRAMEDOC_OPEN_ERR, FRAMEDOC_WRITE_ERR};
 #define K2_OVW_MAKE_SUBAREA    (1 << 3)
 #define K2_USE_FRAMEALIGN      (1 << 4)
 #define K2_TAKE_BINNED_FRAMES  (1 << 5)
+#define K3_USE_CORR_DBL_SAMP   (1 << 6)
 #define K2_MAKE_ALIGN_COM      (1 << 11)
 #define K2_REDUCED_Y_SCALE     100000.
 
@@ -87,6 +88,10 @@ FRAMEDOC_OPEN_ERR, FRAMEDOC_WRITE_ERR};
 #define CONTINUOUS_ACQUIS_OBJ  (1 << 8)
 #define CONTIN_K3_ROTFLIP_BUG  (1 << 10)
 #define CONTINUOUS_RETURN_TIMEOUT  2000
+
+// Version information needed in both places
+#define DM_VERSION_WITH_CDS   50301   // 50202 to test
+#define DM_BUILD_WITH_CDS      2270   // 1461 to test
 
 // Codes for the socket calls
 enum {GS_ExecuteScript = 1, GS_SetDebugMode, GS_SetDMVersion, GS_SetCurrentCamera,

@@ -305,7 +305,7 @@ CCameraController::CCameraController()
   mMakeFEIerrorBeTimeout = false;
   mNumK2Filters = 1;
   mK2FilterNames[0] = "None";
-  mAntialiasBinning = true;
+  mAntialiasBinning = 1;
 
   // These are initialized below in Initialize() after determining if base or summit
   mMinK2FrameTime = -1.;
@@ -317,6 +317,7 @@ CCameraController::CCameraController()
   mBaseK2SuperResTime = 0.5f;
   mBaseK3LinearTime = 0.01331558f;
   mBaseK3SuperResTime = 0.0106525f;
+  mUseK3CorrDblSamp = false;
 
   // Set these to values in simple DM user interface except for first incrment
   mOneViewMinExposure[0][0] = 0.04f;
@@ -419,6 +420,7 @@ CCameraController::CCameraController()
   mASIgivesGainNormOnly = true;
   mNeedToRestoreISandBT = 0;
   mFrameStackMdocInd = -1;
+  mLastShotUsedCDS = -1;
 }
 
 // Set a frame align param to default values
@@ -553,6 +555,9 @@ int CCameraController::Initialize(int whichCameras)
     return 1;
   if (mFalconFrameConfig.IsEmpty())
     mMaxFalconFrames = 0;
+  if (mAntialiasBinning == 0)
+    mAntialiasBinning = 1;
+
   
   CameraParameters *camP = &mAllParams[mWinApp->GetCurrentCamera()];
   if (mDynFocusInterval < 0)
@@ -768,22 +773,19 @@ void CCameraController::InitializeDMcameras(int DMind, int *numDMListed,
 
   if(!SEMTestHResult(hr, report)) {
     try {
-      long version, plugVersion;
+      long version, plugVersion, build;
       long canSelectShutter, canSetSettling, openShutterWorks;
       mPluginVersion[DMind] = 0;
       MainCallDMIndCamera(DMind, GetNumberOfCameras(&allnum));
       MainCallDMIndCamera(DMind, SetDebugMode(mDebugMode));
 
-      // The plugin knows the DM version, so get it from there.  And AMT has a version too
-      MainCallDMIndCamera(DMind, GetDMVersion(&version));
-      mDMversion[DMind] = version;
-
+      // Get the plugin version first
       if (DMind != AMT_IND) {
 
         // See if latest version is required instead of what is OK if no K2
         for (ind = 0, num = 0; ind < numOrig; ind++) {
           i = originalList[ind];
-          if (mAllParams[i].GatanCam && mAllParams[i].K2Type && 
+          if (mAllParams[i].GatanCam && mAllParams[i].K2Type &&
             DMind == CAMP_DM_INDEX(&mAllParams[i]))
             needVers = SEMCCD_PLUGIN_VERSION;
         }
@@ -795,26 +797,38 @@ void CCameraController::InitializeDMcameras(int DMind, int *numDMListed,
           if (plugVersion < needVers) {
             if (DMind == SOCK_IND && CBaseSocket::ServerIsRemote(GATAN_SOCK_ID))
               report.Format("The SerialEMCCD plugin to DigitalMicrograph on the other "
-              "computer\nis version %d and should be upgraded to the current version (%d)"
-              "\n\nCopy the appropriate file from a current SerialEM installation package"
-              "\n(normally in a folder C:\\Program Files\\SerialEM\\SerialEM_3-x-x...)\n" 
-              "to the Gatan Plugins folder on the other computer and replace\n"
-              "the version that is currently there (exit DM first)",
-              plugVersion, SEMCCD_PLUGIN_VERSION);
+                "computer\nis version %d and should be upgraded to the current version "
+                "(%d)\n\nCopy the appropriate file from a current SerialEM installation"
+                " package\n"
+                "(normally in a folder C:\\Program Files\\SerialEM\\SerialEM_3-x-x...)\n"
+                "to the Gatan Plugins folder on the other computer and replace\n"
+                "the version that is currently there (exit DM first)",
+                plugVersion, SEMCCD_PLUGIN_VERSION);
             else
               report.Format("The SerialEMCCD plugin to DigitalMicrograph on this computer"
-              "\nis version %d and should be upgraded to the current version (%d)\n\n"
-              "This is usually accomplished by exiting DM and running\n"
-              "install.bat in a current SerialEM installation package\n"
-              "(normally in a folder C:\\Program Files\\SerialEM\\SerialEM_3-x-x...)", 
-              plugVersion, SEMCCD_PLUGIN_VERSION);
+                "\nis version %d and should be upgraded to the current version (%d)\n\n"
+                "This is usually accomplished by exiting DM and running\n"
+                "install.bat in a current SerialEM installation package\n"
+                "(normally in a folder C:\\Program Files\\SerialEM\\SerialEM_3-x-x...)",
+                plugVersion, SEMCCD_PLUGIN_VERSION);
             AfxMessageBox(report, MB_ICONINFORMATION | MB_OK);
           }
         }
         catch (...) {
         }
         mNewFunctionCalled = "";
+      }
 
+      // The plugin knows the DM version, so get it from there.  And AMT has a version too
+      if (DMind == AMT_IND || mPluginVersion[DMind] < PLUGIN_CAN_GIVE_BUILD) {
+        MainCallDMIndCamera(DMind, GetDMVersion(&version));
+      } else {
+        CallDMIndGatan(DMind, mGatanCamera, GetDMVersionAndBuild(&version, &build));
+        mDMbuild[DMind] = build;
+      }
+      mDMversion[DMind] = version;
+
+      if (DMind != AMT_IND) {
         if (digiscan[DMind]) {
           CallDMIndGatan(DMind, mGatanCamera, GetDSProperties(mDSextraShotDelay, 
             addedFlyback, mDSsyncMargin, &flyback, &mDSlineFreq, &rotOffset, &doFlip));
@@ -2941,7 +2955,7 @@ void CCameraController::Capture(int inSet, bool retrying)
   }
 
   mTD.DoseFrac = conSet.doseFrac;
-  B3DCLAMP(conSet.frameTime, GetMinK2FrameTime(mParam->K2Type), 10.f);
+  B3DCLAMP(conSet.frameTime, GetMinK2FrameTime(mParam), 10.f);
   mTD.FrameTime = conSet.frameTime;
   if ((conSet.doseFrac || (IS_FALCON2_OR_3(mParam) && FCAM_ADVANCED(mParam))) && 
     conSet.alignFrames && conSet.useFrameAlign) {
@@ -3061,6 +3075,14 @@ void CCameraController::Capture(int inSet, bool retrying)
     } else if (mLastAsyncTimeout && asyncUsedUp < mLastAsyncTimeout) {
       mTD.cameraTimeout += mLastAsyncTimeout - (DWORD)asyncUsedUp;
     }
+
+    // Switching CDS can take 10 seconds
+    if (CanK3DoCorrDblSamp(mParam)) {
+      if (mLastShotUsedCDS != ((mTD.K2ParamFlags & K3_USE_CORR_DBL_SAMP) ? 1 : 0))
+        mTD.cameraTimeout += 12000;
+      mLastShotUsedCDS = (mTD.K2ParamFlags & K3_USE_CORR_DBL_SAMP) ? 1 : 0;
+    }
+
     if (mDebugMode) {
       logmess.Format("K2 timeout %d  readmode %d  dosefrac %d  align %d", 
         mTD.cameraTimeout, conSet.K2ReadMode, mTD.DoseFrac?1:0, mTD.AlignFrames?1:0);
@@ -4203,10 +4225,10 @@ void CCameraController::CapManageCoordinates(ControlSet & conSet, int &gainXoffs
     conSet.binning = 2;
   antialiasInPlugin = mParam->K2Type && CAN_PLUGIN_DO(CAN_ANTIALIAS, mParam)  
     && (conSet.mode == SINGLE_FRAME || mParam->K2Type == K3_TYPE) && 
-    (doseFrac || superRes || mAntialiasBinning || mParam->K2Type == K3_TYPE) &&
+    (doseFrac || superRes || mAntialiasBinning > 0 || mParam->K2Type == K3_TYPE) &&
     conSet.binning > (superRes ? 1 : 2) && mTD.NumAsyncSumFrames != 0;
   binInPlugin = mParam->K2Type == K3_TYPE && (!(doseFrac || superRes || 
-     mAntialiasBinning) || conSet.mode == CONTINUOUS);
+     mAntialiasBinning > 0) || conSet.mode == CONTINUOUS);
    
   reduceAligned = doseFrac && conSet.alignFrames && conSet.useFrameAlign == 1;
   unbinnedK2 = mParam->K2Type && (superRes || doseFrac || antialiasInPlugin);
@@ -4336,6 +4358,8 @@ void CCameraController::CapManageCoordinates(ControlSet & conSet, int &gainXoffs
       mTD.Binning /= 2;
     if (IsK3BinningSuperResFrames(&conSet, mParam))
       mTD.K2ParamFlags |= K2_TAKE_BINNED_FRAMES;
+    if (mUseK3CorrDblSamp && CanK3DoCorrDblSamp(mParam))
+      mTD.K2ParamFlags |= K3_USE_CORR_DBL_SAMP;
   }
 
   if (!(mParam->K2Type || mParam->FEItype || mParam->subareasBad || 
@@ -4461,8 +4485,8 @@ void CCameraController::CapSetupShutteringTiming(ControlSet & conSet, int inSet,
         if (mDelay < 0.01)
           mDelay = 0.01f;
         if (mParam->K2Type)
-          mDelay = (float)(GetK2ReadoutInterval(mParam->K2Type) * B3DNINT(conSet.drift / 
-          GetK2ReadoutInterval(mParam->K2Type)));
+          mDelay = (float)(GetK2ReadoutInterval(mParam) * B3DNINT(conSet.drift / 
+          GetK2ReadoutInterval(mParam)));
       }
       mTD.ShutterMode = mParam->beamShutter;
       if (mParam->extraBeamTime < 0.)
@@ -4562,7 +4586,7 @@ void CCameraController::CapSetupShutteringTiming(ControlSet & conSet, int inSet,
           mParam->startupDelay + mDelay + mParam->extraBeamTime));
         if (mParam->K2Type && conSet.doseFrac)
           mTD.PostActionTime += (int)(1000. * mParam->startDelayPerFrame * 
-          conSet.exposure / B3DMAX(conSet.frameTime, GetMinK2FrameTime(mParam->K2Type)));
+          conSet.exposure / B3DMAX(conSet.frameTime, GetMinK2FrameTime(mParam)));
       }
 
       // Make it ensure dark reference
@@ -5474,10 +5498,11 @@ bool CCameraController::ConstrainExposureTime(CameraParameters *camP, BOOL doseF
     // For K2, first fix the frame time if it is used and set it as base time for 
     // exposure, otherwise set base time based on mode
     if (doseFrac) {
-      if (ConstrainFrameTime(frameTime, camP->K2Type))
+      if (ConstrainFrameTime(frameTime, camP))
         retval = true;
       baseTime = frameTime;
 
+      // TODO: Is this doubled for CDS?
     } else if (camP->K2Type == K3_TYPE) {
       baseTime = readMode == LINEAR_MODE ? mBaseK3LinearTime :  mBaseK3SuperResTime;
     } else if (readMode == COUNTING_MODE) {
@@ -5558,12 +5583,13 @@ bool CCameraController::IsDirectDetector(CameraParameters *camP)
 }
 
 // Constrain a frame time for the K2 camera and return true if changed
-bool CCameraController::ConstrainFrameTime(float &frameTime, int K2Type)
+bool CCameraController::ConstrainFrameTime(float &frameTime, CameraParameters *camP)
 {
   float ftime = frameTime;
-  int num = B3DNINT(frameTime / GetK2ReadoutInterval(K2Type));
-  frameTime = (float)(num * GetK2ReadoutInterval(K2Type));
-  B3DCLAMP(frameTime, GetMinK2FrameTime(K2Type), 10.f);
+  int K2Type = camP->K2Type;
+  int num = B3DNINT(frameTime / (GetK2ReadoutInterval(camP)));
+  frameTime = (float)(num * GetK2ReadoutInterval(camP));
+  B3DCLAMP(frameTime, GetMinK2FrameTime(camP), 10.f);
   return fabs(frameTime - ftime) > 1.e-5;
 }
 
@@ -5617,6 +5643,27 @@ bool CCameraController::CanPluginDo(int minVersion, CameraParameters *param)
 {
   return GetPluginVersion(param) >= minVersion;
 }
+
+// The test for whether correlated double sampling is available
+bool CCameraController::CanK3DoCorrDblSamp(CameraParameters * param)
+{
+  int DMind = param->useSocket ? SOCK_IND : COM_IND;
+  return param->K2Type == K3_TYPE && mPluginVersion[DMind] >= PLUGIN_CAN_SET_CDS &&
+    ((mDMversion[DMind] == DM_VERSION_WITH_CDS && mDMbuild[DMind] >= DM_BUILD_WITH_CDS) ||
+      mDMversion[DMind] > DM_VERSION_WITH_CDS);
+}
+float CCameraController::GetMinK2FrameTime(CameraParameters *param)
+{ 
+  float CDSfac = 1.f;
+  return B3DCHOICE(param->K2Type == K3_TYPE, CDSfac * mMinK3FrameTime, mMinK2FrameTime);
+};
+
+float CCameraController::GetK2ReadoutInterval(CameraParameters *param)
+{ 
+  float CDSfac = (CanK3DoCorrDblSamp(param) && mUseK3CorrDblSamp) ? 2.f : 1.f;
+  return B3DCHOICE(param->K2Type == K3_TYPE, CDSfac * mK3ReadoutInterval, 
+    mK2ReadoutInterval);
+};
 
 // For cameras with no special handling, fix and transfer the drift settling entry
 void CCameraController::ConstrainDriftSettling(float drift)

@@ -395,6 +395,17 @@ int CGatanSocket::GetDMVersion(long *version)
   return mLongArgs[sSind][0];
 }
 
+// GetDMVersionAndBuild
+int CGatanSocket::GetDMVersionAndBuild(long *version, long *build)
+{
+  InitializePacking(sSind, GS_GetDMVersionAndBuild);
+  mNumLongRecv[sSind] = 2;
+  SendAndReceiveArgs(sSind);
+  *version = mLongArgs[sSind][1];
+  *build = mLongArgs[sSind][2];
+  return mLongArgs[sSind][0];
+}
+
 // GetPluginVersion
 int CGatanSocket::GetPluginVersion(long *version)
 {

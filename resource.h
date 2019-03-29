@@ -1438,6 +1438,7 @@
 #define IDC_RUN_ONE_LINE3               2463
 #define IDC_RUN_ONE_LINE4               2464
 #define IDC_RUN_ONE_LINE5               2465
+#define IDC_CHECK_USE_CORR_DBL_SAMP     2467
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -1887,15 +1888,16 @@
 #define ID_EXTERNAL_TOOL23              33330
 #define ID_EXTERNAL_TOOL24              33331
 #define ID_EXTERNAL_TOOL25              33332
+#define ID_SPECIALSETTINGS_ALWAYSANTIALIASK2 33333
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        228
-#define _APS_NEXT_COMMAND_VALUE         33333
-#define _APS_NEXT_CONTROL_VALUE         2467
+#define _APS_NEXT_RESOURCE_VALUE        229
+#define _APS_NEXT_COMMAND_VALUE         33334
+#define _APS_NEXT_CONTROL_VALUE         2468
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

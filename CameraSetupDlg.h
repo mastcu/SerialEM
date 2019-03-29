@@ -215,6 +215,7 @@ private:
   float mSaveLinearFPS;
   float mSaveCountingFPS;
   BOOL mLowDoseMode;
+  bool mWarnedOnCDS;
 
 public:
   afx_msg void OnAcquireReopen();
@@ -344,8 +345,9 @@ public:
 afx_msg void OnDeltaposSpinDeSumNum(NMHDR *pNMHDR, LRESULT *pResult);
 afx_msg void OnKillfocusEditDeFPS();
 afx_msg void OnKillfocusDeFrameTime();
-  afx_msg void OnAlwaysAntialias();
-  CButton m_butAlwaysAntialias;
+  afx_msg void OnUseCorrDblSamp();
+  CButton m_butUseCorrDblSamp;
+  BOOL m_bUseCorrDblSamp;
   BOOL m_bAlwaysAntialias;
   CFont mBoldFont;
   CFont mLittleFont;

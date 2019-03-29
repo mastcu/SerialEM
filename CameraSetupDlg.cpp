@@ -35,6 +35,19 @@ static char THIS_FILE[] = __FILE__;
 #define MAX_DARK_AVERAGE 20
 #define MAX_DE_SUM_COUNT 250
 
+/* NOTE ON THE MESS BETWEEN PROCESSING BOX AND EXPOSURE TIME
+  "Sum will be gain normalized" label IDC_STAT_NORM_DSDF
+  "Increased by 3x" radio IDC_RBOOSTMAG3
+  "Increased by 4x" radio IDC_RBOOSTMAG4
+  "Correct Drift" checkbox  IDC_CHECK_CORRECT_DRIFT  m_bCorrectDrift  used for OneView
+    and DE hardware binning
+  "Remove X rays" check box  IDC_REMOVEXRAYS  m_bRemoveXrays used for that and for STEM
+     mag all shots.
+  "Integration" label  IDC_STATINTEGRATION
+  Integration edit box and spin box  IDC_EDITINTEGRATION  and IDC_SPININTEGRATION
+  "Use Hardware ROI" check box  IDC_CHECK_HARDWARE_ROI  m_bUseHardwareROI  used for DE
+  */
+
 static int idTable[] = {IDC_STATCAMERA, IDC_RCAMERA1, IDC_RCAMERA2, IDC_RCAMERA3,
 IDC_RCAMERA4, IDC_RCAMERA5, IDC_RCAMERA6, IDC_MATCH_REG_PIXEL, IDC_MATCH_REG_INTENSITY,
 PANEL_END,
@@ -65,7 +78,8 @@ IDC_STAT_K2MODE, IDC_RLINEAR, IDC_RCOUNTING, IDC_RSUPERRES, IDC_DOSE_FRAC_MODE,
 IDC_STAT_FRAME_TIME, IDC_EDIT_FRAME_TIME, IDC_STAT_FRAME_SEC, IDC_ALIGN_DOSE_FRAC,
 IDC_BUT_SETUP_ALIGN, IDC_SAVE_FRAMES, IDC_SET_SAVE_FOLDER, IDC_BUT_FILE_OPTIONS,
 IDC_STAT_SAVE_SUMMARY, IDC_STAT_ANTIALIAS, IDC_SETUP_FALCON_FRAMES,
-IDC_SETUP_K2_FRAME_SUMS, IDC_SAVE_FRAME_SUMS, IDC_ALWAYS_ANTIALIAS, IDC_STAT_WHERE_ALIGN,
+IDC_SETUP_K2_FRAME_SUMS, IDC_SAVE_FRAME_SUMS, IDC_CHECK_USE_CORR_DBL_SAMP, 
+IDC_STAT_WHERE_ALIGN,
 IDC_STAT_INTERMEDIATE_ONOFF, IDC_STAT_ALIGN_SUMMARY, IDC_CHECK_TAKE_K3_BINNED, PANEL_END,
 IDC_STAT_DEMODE, IDC_RDE_LINEAR, IDC_RDE_COUNTING, IDC_RDE_SUPERRES, IDC_EDIT_DE_FPS,
 IDC_DE_SAVE_FRAMES, IDC_EDIT_DE_SUM_COUNT, IDC_DE_SAVE_MASTER,
@@ -109,7 +123,7 @@ CCameraSetupDlg::CCameraSetupDlg(CWnd* pParent /*=NULL*/)
   , m_bCorrectDrift(FALSE)
   , m_bUseHardwareROI(FALSE)
   , m_bSaveK2Sums(FALSE)
-  , m_bAlwaysAntialias(FALSE)
+  , m_bUseCorrDblSamp(FALSE)
   , m_bTakeK3Binned(FALSE)
 {
   //{{AFX_DATA_INIT(CCameraSetupDlg)
@@ -139,6 +153,7 @@ CCameraSetupDlg::CCameraSetupDlg(CWnd* pParent /*=NULL*/)
 	//}}AFX_DATA_INIT
   mClosing = FALSE;
   mMinExposure = 0.0001f;
+  mWarnedOnCDS = false;
 }
 
 
@@ -287,8 +302,8 @@ void CCameraSetupDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Check(pDX, IDC_SAVE_FRAME_SUMS, m_bSaveK2Sums);
   DDX_Control(pDX, IDC_SAVE_FRAME_SUMS, m_butSaveFrameSums);
   DDX_Control(pDX, IDC_SETUP_K2_FRAME_SUMS, m_butSetupK2FrameSums);
-  DDX_Control(pDX, IDC_ALWAYS_ANTIALIAS, m_butAlwaysAntialias);
-  DDX_Check(pDX, IDC_ALWAYS_ANTIALIAS, m_bAlwaysAntialias);
+  DDX_Control(pDX, IDC_CHECK_USE_CORR_DBL_SAMP, m_butUseCorrDblSamp);
+  DDX_Check(pDX, IDC_CHECK_USE_CORR_DBL_SAMP, m_bUseCorrDblSamp);
   DDX_Control(pDX, IDC_STAT_NORM_DSDF, m_statNormDSDF);
   DDX_Control(pDX, IDC_BUT_SETUP_ALIGN, m_butSetupAlign);
   DDX_Control(pDX, IDC_STAT_WHERE_ALIGN, m_statWhereAlign);
@@ -394,7 +409,7 @@ BEGIN_MESSAGE_MAP(CCameraSetupDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_BUT_NAME_SUFFIX, OnButFileOptions)
   ON_BN_CLICKED(IDC_SAVE_FRAME_SUMS, OnSaveK2FrameSums)
   ON_BN_CLICKED(IDC_SETUP_K2_FRAME_SUMS, OnSetupFalconFrames)
-  ON_BN_CLICKED(IDC_ALWAYS_ANTIALIAS, OnAlwaysAntialias)
+  ON_BN_CLICKED(IDC_CHECK_USE_CORR_DBL_SAMP, OnUseCorrDblSamp)
   ON_BN_CLICKED(IDC_BUT_SETUP_ALIGN, OnButSetupAlign)
   ON_BN_CLICKED(IDC_BUT_DE_SETUP_ALIGN, OnButSetupAlign)
   ON_BN_CLICKED(IDC_DE_SAVE_MASTER, OnDeSaveMaster)
@@ -402,7 +417,7 @@ BEGIN_MESSAGE_MAP(CCameraSetupDlg, CBaseDlg)
   ON_EN_KILLFOCUS(IDC_EDIT_DE_FPS, OnKillfocusEditDeFPS)
   ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_DE_SUM_NUM, OnDeltaposSpinDeSumNum)
   ON_BN_CLICKED(IDC_CHECK_TAKE_K3_BINNED, OnTakeK3Binned)
-END_MESSAGE_MAP()
+  END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
 // CCameraSetupDlg message handlers
@@ -787,7 +802,6 @@ void CCameraSetupDlg::OnOK()
   // This gets OnKillfocus called for an edit box if it has focus.
   SetFocus();
   UnloadDialogToConset(); 
-  mCamera->SetAntialiasBinning(m_bAlwaysAntialias);
   mCamera->SetTakeK3SuperResBinned(m_bTakeK3Binned);
   GetWindowPlacement(&mPlacement);
   CBaseDlg::OnOK();
@@ -1228,8 +1242,7 @@ void CCameraSetupDlg::ManageDrift(bool useMinRate)
     // or if Tietz beam shutter
     if (mCamera->CanPreExpose(mParam, m_iShuttering)) {
       if (mParam->K2Type)
-        limit.Format("Minimum %.4f if not 0.0", mCamera->GetK2ReadoutInterval
-        (mParam->K2Type));
+        limit.Format("Minimum %.4f if not 0.0", mCamera->GetK2ReadoutInterval(mParam));
       else
         limit.Format("Minimum %.2f if not 0.0", mMinimumSettling);
       m_driftText1.EnableWindow(true);
@@ -1252,8 +1265,8 @@ void CCameraSetupDlg::ManageDrift(bool useMinRate)
 
     // For K2, constrain settling to multiple of frame time
     if (m_eSettling > 0.0 && mParam->K2Type) {
-      float newSettling = (float)(mCamera->GetK2ReadoutInterval(mParam->K2Type) * 
-        B3DNINT(m_eSettling / mCamera->GetK2ReadoutInterval(mParam->K2Type)));
+      float newSettling = (float)(mCamera->GetK2ReadoutInterval(mParam) * 
+        B3DNINT(m_eSettling / mCamera->GetK2ReadoutInterval(mParam)));
       if (fabs(newSettling - m_eSettling) > 1.e-5) {
         m_eSettling = newSettling;
         m_strSettling.Format("%.4f", m_eSettling);
@@ -1292,7 +1305,7 @@ void CCameraSetupDlg::ManageCamera()
   int hideForFalcon[] = {IDC_STAT_FRAME_TIME, IDC_EDIT_FRAME_TIME, IDC_STAT_FRAME_SEC,
     IDC_STAT_K2MODE, IDC_BUT_SETUP_ALIGN, IDC_RLINEAR, IDC_RCOUNTING, IDC_RSUPERRES, 
     IDC_ALIGN_DOSE_FRAC, IDC_STAT_ANTIALIAS, IDC_STAT_SAVE_SUMMARY, IDC_SAVE_FRAME_SUMS,
-    IDC_SETUP_K2_FRAME_SUMS, IDC_ALWAYS_ANTIALIAS, IDC_STAT_ALIGN_SUMMARY, 
+    IDC_SETUP_K2_FRAME_SUMS, IDC_CHECK_USE_CORR_DBL_SAMP, IDC_STAT_ALIGN_SUMMARY, 
     IDC_CHECK_TAKE_K3_BINNED};
   CButton *radio;
   CString strBin;
@@ -1351,7 +1364,7 @@ void CCameraSetupDlg::ManageCamera()
   
   mBuiltInSettling = mParam->builtInSettling;
   mDMbeamShutterOK = mParam->DMbeamShutterOK || !mParam->GatanCam;
-  mMinDualSettling = mParam->K2Type ? mCamera->GetK2ReadoutInterval(mParam->K2Type) : 
+  mMinDualSettling = mParam->K2Type ? mCamera->GetK2ReadoutInterval(mParam) : 
     mParam->minimumDrift;
   mMinExposure = mParam->minExposure;
   mDMsettlingOK = mParam->DMsettlingOK;
@@ -1488,8 +1501,8 @@ void CCameraSetupDlg::ManageCamera()
     radio->ShowWindow(mParam->K2Type == K2_SUMMIT ? SW_SHOW : SW_HIDE);
     radio->EnableWindow(mParam->K2Type == K2_SUMMIT);
     SetDlgItemText(IDC_DOSE_FRAC_MODE, "Dose Fractionation mode");
-    m_butAlwaysAntialias.EnableWindow(mCamera->GetPluginVersion(mParam) >= 
-      PLUGIN_CAN_ANTIALIAS);
+    m_butUseCorrDblSamp.ShowWindow(mCamera->CanK3DoCorrDblSamp(mParam) ? 
+      SW_SHOW : SW_HIDE);
     m_butTakeK3Binned.ShowWindow(mParam->K2Type == K3_TYPE ? SW_SHOW : SW_HIDE);
   } else {
     SetDlgItemText(IDC_DOSE_FRAC_MODE, "Intermediate frame saving is ON in FEI dialog");
@@ -1714,6 +1727,7 @@ BOOL CCameraSetupDlg::OnInitDialog()
   CBaseDlg::OnInitDialog();
   mCamera = mWinApp->mCamera;
   mLowDoseMode = mWinApp->LowDoseMode();
+  m_bAlwaysAntialias = mCamera->GetAntialiasBinning() > 0;
   
   SetupPanelTables(idTable, leftTable, topTable, mNumInPanel, mPanelStart);
 
@@ -1876,7 +1890,7 @@ BOOL CCameraSetupDlg::OnInitDialog()
   m_butRemoveXrays.GetWindowRect(&butrect);
   mProcSTEMHeight = mProcBaseHeight + (butrect.top - boxrect.top);
 
-  m_bAlwaysAntialias = mCamera->GetAntialiasBinning();
+  m_bUseCorrDblSamp = mCamera->GetUseK3CorrDblSamp();
   m_bTakeK3Binned = mCamera->GetTakeK3SuperResBinned();
 
   mParam = &mCamParam[mActiveCameraList[mCurrentCamera]];
@@ -2215,7 +2229,7 @@ void CCameraSetupDlg::ManageDose()
       // And get a dose per frame if saving frames, just divide dose by total frames
       int dummy, frames = 0;
       if (mParam->K2Type && m_bDoseFracMode && (m_bAlignDoseFrac || m_bSaveFrames)) {
-        frames = B3DNINT(m_eExposure / B3DMAX(mCamera->GetMinK2FrameTime(mParam->K2Type),
+        frames = B3DNINT(m_eExposure / B3DMAX(mCamera->GetMinK2FrameTime(mParam),
           ActualFrameTime(m_fFrameTime)));
         if (m_bSaveFrames && m_bSaveK2Sums && mSummedFrameList.size() > 0)
           frames = mWinApp->mFalconHelper->GetFrameTotals(mSummedFrameList, dummy);
@@ -2503,7 +2517,7 @@ void CCameraSetupDlg::OnKillfocusEditFrameTime()
   UpdateData(TRUE);
   float startFrame = m_fFrameTime;
   if (mParam->K2Type)
-    mCamera->ConstrainFrameTime(m_fFrameTime, mParam->K2Type);
+    mCamera->ConstrainFrameTime(m_fFrameTime, mParam);
   if (m_bSaveFrames && m_bSaveK2Sums)
     mWinApp->mFalconHelper->AdjustForExposure(mSummedFrameList, 0,
       0, m_eExposure, m_fFrameTime, mUserFrameFrac, mUserSubframeFrac, false);
@@ -2860,7 +2874,7 @@ void CCameraSetupDlg::ManageK2SaveSummary(void)
   bool reducing = !unNormed && IS_SUPERRES(mParam, m_iK2Mode) && !binning &&
     mCamera->GetSaveSuperResReduced() && mCamera->CAN_PLUGIN_DO(CAN_REDUCE_SUPER, mParam);
   if (mParam->K2Type && m_bDoseFracMode) {
-    frames = B3DNINT(m_eExposure / B3DMAX(mCamera->GetMinK2FrameTime(mParam->K2Type),
+    frames = B3DNINT(m_eExposure / B3DMAX(mCamera->GetMinK2FrameTime(mParam),
       ActualFrameTime(m_fFrameTime)));
     int tiff = mCamera->GetK2SaveAsTiff();
     str.Format("%d frames", frames);
@@ -2952,10 +2966,22 @@ void CCameraSetupDlg::OnSaveK2FrameSums()
   ManageDose();
 }
 
-void CCameraSetupDlg::OnAlwaysAntialias()
+// Use CDS is toggled.  Because of the widespread effects, we need to make it take effect
+// immediately.
+void CCameraSetupDlg::OnUseCorrDblSamp()
 {
   UpdateData(true);
+  mCamera->SetUseK3CorrDblSamp(m_bUseCorrDblSamp);
   ManageAntialias();
+  ManageExposure();
+  ManageDrift();
+  ManageK2SaveSummary();
+  ManageDose();
+  if (m_bUseCorrDblSamp && !mWarnedOnCDS) {
+    AfxMessageBox("Check the other camera parameter sets; exposure or frame time may have"
+      " changed", MB_OK | MB_ICONINFORMATION);
+    mWarnedOnCDS = true;
+  }
 }
 
 void CCameraSetupDlg::OnTakeK3Binned()
@@ -3090,6 +3116,6 @@ float CCameraSetupDlg::RoundedDEframeTime(float frameTime)
 float CCameraSetupDlg::ActualFrameTime(float roundedTime)
 {
   if (mParam->K2Type)
-    mCamera->ConstrainFrameTime(roundedTime, mParam->K2Type);
+    mCamera->ConstrainFrameTime(roundedTime, mParam);
   return roundedTime;
 }

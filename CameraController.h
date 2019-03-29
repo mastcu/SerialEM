@@ -63,6 +63,8 @@ struct CamPluginFuncs;
 #define PLUGIN_HAS_DOSE_CALL     110
 #define PLUGIN_CAN_BIN_K3_REF    110
 #define PLUGIN_CAN_ADD_TITLE     111
+#define PLUGIN_CAN_GIVE_BUILD    112
+#define PLUGIN_CAN_SET_CDS       113
 
 #define CAN_PLUGIN_DO(c, p) CanPluginDo(PLUGIN_##c, p)
 
@@ -342,7 +344,6 @@ class DLL_IM_EX CCameraController
   GetSetMember(int, NumK2Filters);
   GetSetMember(float, MinK2FrameTime);
   GetSetMember(float, MinK3FrameTime);
-  float GetMinK2FrameTime(int K2Type) {return K2Type == K3_TYPE ? mMinK3FrameTime : mMinK2FrameTime;};
   GetSetMember(float, K2BaseModeScaling);
   SetMember(BOOL, SkipNextReblank);
   SetMember(int, DefaultGIFCamera);
@@ -350,7 +351,8 @@ class DLL_IM_EX CCameraController
   GetMember(float, LastK2BaseTime);
   GetSetMember(float, K2ReadoutInterval);
   GetSetMember(float, K3ReadoutInterval);
-  float GetK2ReadoutInterval(int K2Type) {return K2Type == K3_TYPE ? mK3ReadoutInterval : mK2ReadoutInterval;};
+  float GetMinK2FrameTime(CameraParameters *param);
+  float GetK2ReadoutInterval(CameraParameters *param);
   CString *GetK2FilterNames() {return &mK2FilterNames[0];};
   GetSetMember(float, FalconReadoutInterval);
   GetSetMember(int, MaxFalconFrames);
@@ -473,7 +475,7 @@ class DLL_IM_EX CCameraController
   GetSetMember(int, LastFrameNumberStart);
   GetSetMember(int, LastUsedFrameNumber);
   GetSetMember(int, DigitsForNumberedFrame);
-  GetSetMember(BOOL, AntialiasBinning);
+  GetSetMember(int, AntialiasBinning);
   GetMember(CString, NewFunctionCalled);
   GetSetMember(BOOL, NoNormOfDSdoseFrac);
   GetSetMember(float, K2MinStartupDelay);
@@ -499,6 +501,7 @@ class DLL_IM_EX CCameraController
   GetSetMember(float, DEPrevSetNameTimeout);
   int GetServerFramesLeft();
   GetSetMember(BOOL, TestGpuInShrmemframe);
+  GetSetMember(BOOL, UseK3CorrDblSamp);
 
   int GetNumFramesSaved() {return mTD.NumFramesSaved;};
   BOOL *GetUseGPUforK2Align() {return &mUseGPUforK2Align[0];};
@@ -736,7 +739,7 @@ class DLL_IM_EX CCameraController
   CString mPathForFrames;       // Name actually used on this acquisition
   float mScalingForK2Counts;    // Scaling if different from counts per electron
   float mK2BaseModeScaling;     // Linear scaling factor for K2 Base camera
-  BOOL mAntialiasBinning;       // Flag to use antialiasing in plugin for non SR/dosefrac
+  int mAntialiasBinning;       // Flag to use antialiasing in plugin for non SR/dosefrac
   float mOneViewDeltaExposure[MAX_1VIEW_TYPES][MAX_BINNINGS];   // Exposure time increments for OneView
   float mOneViewMinExposure[MAX_1VIEW_TYPES][MAX_BINNINGS];    // Minimum exposure times
   int mMaxFalconFrames;         // Maximum number of intermediate Falcon frames
@@ -769,6 +772,7 @@ class DLL_IM_EX CCameraController
   float mBaseK3LinearTime;      // And for K3
   float mBaseK3SuperResTime;
   float mLastK2BaseTime;        // Base time last time that exposure time was constrained
+  BOOL mUseK3CorrDblSamp;       // Flag to use CDS on a K3
   BOOL mNoK2SaveFolderBrowse;   // Flag not to show the Browse button when picking folder
   int mSaveRawPacked;           // Pack flags: 1 bytes->4bits/ints->bytes + 2 ints->4bits
   int mSaveTimes100;            // Flag to save times 100 in 16 bits
@@ -788,6 +792,7 @@ class DLL_IM_EX CCameraController
   bool mInDisplayNewImage;      // Flag for proper testing of continuous mode
   int mNoMessageBoxOnError;     // -1 for macro processor no MB set, 1 for TS with term
   int mDMversion[3];
+  int mDMbuild[3];
   int mPluginVersion[3];
   int mNextAsyncSumFrames;      // 0 for async next shot, > 0 to return partial sum
   DWORD mLastAsyncTimeout;      // timeout for last async shot
@@ -821,6 +826,7 @@ class DLL_IM_EX CCameraController
   int mK2GainRefLifetime;       // minutes before purging
   BOOL mNoNormOfDSdoseFrac;     // Flag not to do normalization
   float mK2MinStartupDelay;     // Minimum startup delay to allow post-actions for K2
+  int mLastShotUsedCDS;         // Flag for whether last K3 shot used CDS
   double mGpuMemory[2];         // GPU memory for K2 frame alignment, each channel
   BOOL mUseGPUforK2Align[3];    // Channel-specific flag to use GPU; third one for IMOD
   CString mAlignFramesComPath;  // Path where com files should be written
@@ -946,7 +952,7 @@ public:
   bool ConstrainExposureTime(CameraParameters *camP, ControlSet *consP);
   bool ConstrainExposureTime(CameraParameters *camP, BOOL doseFrac, int readMode,
     int binning, bool alignInCamera, int sumCount, float &exposure, float &frameTime);
-  bool ConstrainFrameTime(float &frameTime, int K2Type);
+  bool ConstrainFrameTime(float &frameTime, CameraParameters *camP);
   void RestoreFEIshutter(void);
   void QueueFocusSteps(float interval1, double focus1, float interval2, double focus2);
   static void ChangeDynFocus(CameraThreadData *td, double focus, double focusBase,
@@ -984,6 +990,7 @@ bool CanWeAlignFalcon(CameraParameters *param, BOOL savingEnabled, bool &canSave
 bool CanProcessHere(CameraParameters *param);
 void FixDirForFalconFrames(CameraParameters * param);
 bool CanPluginDo(int minVersion, CameraParameters * param);
+bool CanK3DoCorrDblSamp(CameraParameters * param);
 int NumAllVsAllFromFAparam(FrameAliParams &faParam, int numAliFrames, int &groupSize,
   int &refineIter, int &doSpline, int &numFilters, float *radius2);
 void AdjustCountsPerElecForScale(CameraParameters * param);

@@ -130,7 +130,7 @@ void CFalconFrameDlg::OnKillfocusEditExposure()
 void CFalconFrameDlg::OnKillfocusSubframeTime()
 {
   UpdateData(TRUE);
-  mWinApp->mCamera->ConstrainFrameTime(m_fSubframeTime, mK2Type);
+  mWinApp->mCamera->ConstrainFrameTime(m_fSubframeTime, mCamParams);
   mReadoutInterval = m_fSubframeTime;
   mHelper->AdjustForExposure(mSummedFrameList, mNumSkipBefore, mNumSkipAfter,
     m_fExposure, mReadoutInterval, mUserFrameFrac, mUserSubframeFrac, false);
@@ -195,7 +195,7 @@ void CFalconFrameDlg::OnKillfocusEditReadouts()
 
       // Make sure the exposure time is valid and if it changes, redistribute frames
       if (mCamParams->K2Type)
-        mWinApp->mCamera->ConstrainFrameTime(realFrame, mCamParams->K2Type); 
+        mWinApp->mCamera->ConstrainFrameTime(realFrame, mCamParams); 
       m_fExposure = realFrame * totSubframes;
       if (mWinApp->mCamera->ConstrainExposureTime(mCamParams, true, mReadMode, 1, 
         mAligningInFalcon, 1, m_fExposure, realFrame))

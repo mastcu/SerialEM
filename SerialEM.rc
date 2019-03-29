@@ -68,7 +68,9 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDR_MAINFRAME           ICON                    "res\\SerialEM.ico"
+
 IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -76,7 +78,9 @@ IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
 //
 
 IDR_MAINFRAME           BITMAP                  "res\\Toolbar.bmp"
+
 IDB_BITMAP1             BITMAP                  "res\\bitmap1.bmp"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -219,13 +223,15 @@ BEGIN
         MENUITEM "Set Frame Align Lines",       ID_CAMERA_SETFRAMEALIGNLINES
         POPUP "Specia&l Settings"
         BEGIN
+            MENUITEM "&No Norm of DS Dose Frac",    ID_CAMERA_NONORMOFDSDOSEFRAC
+            MENUITEM "&Always Antialias K2/K3",     ID_SPECIALSETTINGS_ALWAYSANTIALIASK2
+            MENUITEM SEPARATOR
             MENUITEM "Set Timing",                  ID_CAMERA_SETTIMING
             MENUITEM "Set &Quality",                ID_CAMERA_SET_QUALITY
             MENUITEM "Set Scanning",                ID_CAMERA_SETSCANNING
             MENUITEM "Set Drift Interval",          ID_CAMERA_SETDRIFTINTERVAL
             MENUITEM "Set Corrections",             ID_CAMERA_SETCORRECTIONS
             MENUITEM "Screen Down",                 ID_CAMERA_SCREENDOWN
-            MENUITEM "&No Norm of DS Dose Frac",    ID_CAMERA_NONORMOFDSDOSEFRAC
             MENUITEM "Simulation",                  ID_CAMERA_SIMULATION
         END
         MENUITEM "De&bug Mode",                 ID_CAMERA_DEBUGMODE
@@ -1040,8 +1046,6 @@ BEGIN
     CONTROL         "Correct Drift",IDC_CHECK_CORRECT_DRIFT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,152,81,10
     CONTROL         "Save variable frame sums",IDC_SAVE_FRAME_SUMS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,154,438,90,10
     PUSHBUTTON      "Set Up",IDC_SETUP_K2_FRAME_SUMS,246,436,26,14
-    CONTROL         "Always reduce to ""Binned size"" with anti-aliasing",IDC_ALWAYS_ANTIALIAS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,427,158,10
     CTEXT           "Anti-aliasing",IDC_STAT_ANTIALIAS,165,428,46,8
     RTEXT           "Sum will be gain-normalized",IDC_STAT_NORM_DSDF,0,150,89,8
     PUSHBUTTON      "Set Up",IDC_BUT_SETUP_ALIGN,139,407,26,12
@@ -1069,6 +1073,8 @@ BEGIN
     CONTROL         "Bin counting frames by 2 in hardware",IDC_CHECK_TAKE_K3_BINNED,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,438,136,10
     LTEXT           "99.99 e/sq A per frame",IDC_STAT_DOSE_PER_FRAME,27,302,97,8
+    CONTROL         "Use correlated double sampling (CDS)",IDC_CHECK_USE_CORR_DBL_SAMP,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,427,135,10
 END
 
 IDD_ALIGNFOCUS DIALOGEX 0, 0, 119, 127
@@ -2967,7 +2973,9 @@ END
 //
 
 IDC_CURSOR1             CURSOR                  "res\\cursor1.cur"
+
 IDC_CURSOR2             CURSOR                  "res\\cursor2.cur"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3387,6 +3395,17 @@ BEGIN
 0x6f4d, 0x6564, 0x3120, "\000" 
     IDC_AttenCombo4K, 0x403, 7, 0
 0x6f4d, 0x6564, 0x3220, "\000" 
+    0
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AFX_DIALOG_LAYOUT
+//
+
+IDD_CAMERASETUP AFX_DIALOG_LAYOUT
+BEGIN
     0
 END
 
@@ -5228,6 +5247,12 @@ BEGIN
                             "Restore editors when starting program or reading settings"
     ID_SETTINGS_DISCARDONEXIT 
                             "Do not autosave or save settings on exit or when reading settings"
+END
+
+STRINGTABLE
+BEGIN
+    ID_SPECIALSETTINGS_ALWAYSANTIALIASK2 
+                            "Always reduce with antialiasing instead of binning"
 END
 
 #endif    // English (United States) resources
