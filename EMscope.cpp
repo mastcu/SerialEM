@@ -7677,8 +7677,11 @@ int CEMscope::StartLongOperation(int *operations, float *hoursSinceLast, int num
         if (longOp == LONG_OP_FILL_TRANSFER)
           mDoingStoppableRefill |= 2;
     }
-    if (sinceLast < 0) {
-      mLastLongOpTimes[longOp] = now;
+    if (sinceLast < -1.5) {
+      hoursSinceLast[ind] = (float)(now - mLastLongOpTimes[longOp]) / 60.f;
+      return 0;
+    } else if (sinceLast < 0) {
+        mLastLongOpTimes[longOp] = now;
       mWinApp->mDocWnd->SetShortTermNotSaved();
     }
   }
