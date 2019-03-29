@@ -9788,7 +9788,7 @@ int CCameraController::AcquireFEIchannels(CameraThreadData * td, int sizeX, int 
   numAlloc = chan;
   if (!retval) {
     retval = td->scopePlugFuncs->AcquireFEIchannels(&td->Array[0], &chanNames[0], 
-      td->NumChannels, &numCopied, sizeX, sizeY, td->Exposure, td->STEMrotation * DTOR, 
+      td->NumChannels, &numCopied, sizeX, sizeY, td->PixelTime, td->STEMrotation * DTOR, 
       td->Binning, td->restrictedSize, td->ImageType, td->DivideBy2);
     if (retval)
       DeferMessage(td, CString(td->scopePlugFuncs->GetLastErrorString()));

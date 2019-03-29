@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+3/22/19: Fixed acquisition from FEI STEM, which was passing exposure time
+instead of pixel time to the plugin, broken in 2015 (In 3.7).
+
 3/19/19: Added hole number and position in hole to mdoc files when using
 MultipleRecords (In 3.7).
 
