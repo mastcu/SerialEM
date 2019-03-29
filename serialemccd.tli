@@ -1,9 +1,9 @@
-﻿// Created by Microsoft (R) C/C++ Compiler Version 15.00.30729.01 (cb6b3867).
+﻿// Created by Microsoft (R) C/C++ Compiler Version 15.00.30729.01 (34d0ebbb).
 //
-// c:\users\mast\documents\scope\serialem\release\serialemccd.tli
+// c:\users\mast\documents\scope\serialem\x64\release\serialemccd.tli
 //
 // Wrapper implementations for type library ..\SerialEMCCD\SerialEMCCD.tlb
-// compiler-generated file created 11/29/18 at 22:30:31 - DO NOT EDIT!
+// compiler-generated file created 03/23/19 at 10:04:31 - DO NOT EDIT!
 
 #pragma once
 
@@ -247,6 +247,12 @@ inline HRESULT IDMCamera::GetLastDoseRate ( double * doseRate ) {
 
 inline HRESULT IDMCamera::SaveFrameMdoc ( long size, long * mdoc, long flags ) {
     HRESULT _hr = raw_SaveFrameMdoc(size, mdoc, flags);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IDMCamera::GetDMVersionAndBuild ( long * version, long * build ) {
+    HRESULT _hr = raw_GetDMVersionAndBuild(version, build);
     if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
     return _hr;
 }

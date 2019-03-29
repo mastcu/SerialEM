@@ -1,9 +1,9 @@
-﻿// Created by Microsoft (R) C/C++ Compiler Version 15.00.30729.01 (cb6b3867).
+﻿// Created by Microsoft (R) C/C++ Compiler Version 15.00.30729.01 (34d0ebbb).
 //
-// c:\users\mast\documents\scope\serialem\release\serialemccd.tlh
+// c:\users\mast\documents\scope\serialem\x64\release\serialemccd.tlh
 //
 // C++ source equivalent of type library ..\SerialEMCCD\SerialEMCCD.tlb
-// compiler-generated file created 11/29/18 at 22:30:31 - DO NOT EDIT!
+// compiler-generated file created 03/23/19 at 10:04:31 - DO NOT EDIT!
 
 #pragma once
 #pragma pack(push, 8)
@@ -275,6 +275,9 @@ IDMCamera : IDispatch
         long size,
         long * mdoc,
         long flags );
+    HRESULT GetDMVersionAndBuild (
+        long * version,
+        long * build );
 
     //
     // Raw methods provided by interface
@@ -514,6 +517,9 @@ IDMCamera : IDispatch
         /*[in]*/ long size,
         /*[in]*/ long * mdoc,
         /*[in]*/ long flags ) = 0;
+      virtual HRESULT __stdcall raw_GetDMVersionAndBuild (
+        /*[out]*/ long * version,
+        /*[out]*/ long * build ) = 0;
 };
 
 //

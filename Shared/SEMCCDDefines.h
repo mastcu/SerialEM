@@ -4,7 +4,7 @@
  */
 #ifndef SEMCCD_DEFINES_H
 
-#define SEMCCD_PLUGIN_VERSION    111
+#define SEMCCD_PLUGIN_VERSION    112
 
 // Error codes
 enum {IMAGE_NOT_FOUND = 1, WRONG_DATA_TYPE, DM_CALL_EXCEPTION, NO_STACK_ID, STACK_NOT_3D,
@@ -99,7 +99,8 @@ enum {GS_ExecuteScript = 1, GS_SetDebugMode, GS_SetDMVersion, GS_SetCurrentCamer
       GS_SetupFileSaving2, GS_GetDefectList, GS_SetK2Parameters2, GS_StopContinuousCamera,
       GS_GetPluginVersion, GS_GetLastError, GS_FreeK2GainReference, GS_IsGpuAvailable,
       GS_SetupFrameAligning, GS_FrameAlignResults, GS_ReturnDeferredSum, 
-      GS_MakeAlignComFile, GS_WaitUntilReady, GS_GetLastDoseRate, GS_SaveFrameMdoc
+      GS_MakeAlignComFile, GS_WaitUntilReady, GS_GetLastDoseRate, GS_SaveFrameMdoc,
+      GS_GetDMVersionAndBuild
 };
 
 #endif
