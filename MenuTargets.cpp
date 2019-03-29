@@ -445,6 +445,8 @@ BEGIN_MESSAGE_MAP(CMenuTargets, CCmdTarget)
   ON_UPDATE_COMMAND_UI(ID_MONTAGINGGRIDS_ADDGRIDLIKELASTONE, OnUpdateOnMontagingGridsAddGriLlikeLastOne)
   ON_COMMAND_RANGE(ID_EXTERNAL_TOOL1, ID_EXTERNAL_TOOL25, OnExternalTool)
   ON_UPDATE_COMMAND_UI_RANGE(ID_EXTERNAL_TOOL1, ID_EXTERNAL_TOOL25, OnUpdateNoTasks)
+  ON_COMMAND(ID_SPECIALSETTINGS_ALWAYSANTIALIASK2, OnCameraAlwaysAntialiasK23)
+  ON_UPDATE_COMMAND_UI(ID_SPECIALSETTINGS_ALWAYSANTIALIASK2, OnUpdateCameraAlwaysAntialiasK23)
   END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1833,6 +1835,17 @@ void CMenuTargets::OnCameraNoNormOfDSdoseFrac()
 void CMenuTargets::OnUpdateCameraNoNormOfDSdoseFrac(CCmdUI *pCmdUI)
 {
   pCmdUI->SetCheck(mCamera->GetNoNormOfDSdoseFrac() ? 1 : 0);
+  pCmdUI->Enable(!DoingTasks() && !mCamera->CameraBusy());
+}
+
+void CMenuTargets::OnCameraAlwaysAntialiasK23()
+{
+  mCamera->SetAntialiasBinning(mCamera->GetAntialiasBinning() > 0 ? -1 : 1);
+}
+
+void CMenuTargets::OnUpdateCameraAlwaysAntialiasK23(CCmdUI *pCmdUI)
+{
+  pCmdUI->SetCheck(mCamera->GetAntialiasBinning() > 0 ? 1 : 0);
   pCmdUI->Enable(!DoingTasks() && !mCamera->CameraBusy());
 }
 

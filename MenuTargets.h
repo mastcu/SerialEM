@@ -364,6 +364,8 @@ public:
   afx_msg void OnUpdateOnMontagingGridsAddGriLlikeLastOne(CCmdUI *pCmdUI);
   afx_msg void OnExternalTool(UINT nID);
   void OpenNavigatorIfClosed(void);
+  afx_msg void OnCameraAlwaysAntialiasK23();
+  afx_msg void OnUpdateCameraAlwaysAntialiasK23(CCmdUI *pCmdUI);
 };
 
 /////////////////////////////////////////////////////////////////////////////

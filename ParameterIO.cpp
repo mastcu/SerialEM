@@ -4991,6 +4991,9 @@ void CParameterIO::ReportSpecialOptions(void)
   if (mWinApp->mCamera->GetNoNormOfDSdoseFrac())
     mWinApp->AppendToLog("Special option is set for no gain normalization of returned"
     " sum for dark-subtracted K2 dose frac shots");
+  if (mWinApp->mCamera->GetAntialiasBinning() <= 0)
+    mWinApp->AppendToLog("Special option is set NOT to use antialiased reduction instead"
+      " of binning for all K2/K3 shots");
   if (mWinApp->mScope->GetNormAllOnMagChange())
     PrintfToLog("Special option is set to normalize all lenses on %s", 
     mWinApp->mScope->GetNormAllOnMagChange() > 1 ? "all mag changes" : 
