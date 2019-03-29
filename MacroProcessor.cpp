@@ -8835,7 +8835,8 @@ int CMacroProcessor::LookupCommandIndex(CString & item)
   return CME_NOTFOUND;
 }
 
-
+// Find a text file given the ID, performing a check on its existent specified by 
+// checkType and returning its index in the array
 FileForText *CMacroProcessor::LookupFileForText(CString &ID, int checkType, 
   CString &strLine, int &index)
 {
@@ -8863,7 +8864,7 @@ FileForText *CMacroProcessor::LookupFileForText(CString &ID, int checkType,
   return NULL;
 }
 
-
+// Close a text file given its index
 void CMacroProcessor::CloseFileForText(int index)
 {
   FileForText *txFile;
@@ -8914,7 +8915,8 @@ int CMacroProcessor::CheckAndConvertLDAreaLetter(CString &item, int needOnOrOff,
   return index < 0 ? 1 : 0;
 }
 
-
+// Restore saved low dose parameters for the set given by index, or for all sets if index
+// is -1, or for ones marked to be restored if index is < -1
 void CMacroProcessor::RestoreLowDoseParams(int index)
 {
   LowDoseParams *ldParam = mWinApp->GetLowDoseParams();
@@ -8948,13 +8950,13 @@ void CMacroProcessor::RestoreLowDoseParams(int index)
   }
 }
 
-
+// External call to find out if a low dose area is saved/free to modify
 bool CMacroProcessor::IsLowDoseAreaSaved(int which)
 {
   return mKeepOrRestoreArea[which] != 0;
 }
 
-
+// Call to update the current Low dose area if it was saved
 void CMacroProcessor::UpdateLDAreaIfSaved()
 {
   BOOL saveContinuous = mWinApp->mLowDoseDlg.GetContinuousUpdate();

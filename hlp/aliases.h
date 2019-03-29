@@ -111,6 +111,7 @@ hid_camera_set_quality					= SerialEM.chm::/html\menu_camera.htm#hid_camera_set_
 hid_camera_setscanning					= SerialEM.chm::/html\menu_camera.htm#hid_camera_setscanning
 hid_camera_nonormofdsdosefrac		= SerialEM.chm::/html\menu_camera.htm#hid_camera_nonormofdsdosefrac
 hid_camera_setdriftinterval			= SerialEM.chm::/html\menu_camera.htm#hid_camera_setdriftinterval
+hid_specialsettings_alwaysantialiask2 = SerialEM.chm::/html\menu_camera.htm#hid_specialsettings_alwaysantialiask2
 hid_camera_setcorrections				= SerialEM.chm::/html\menu_camera.htm#hid_camera_setcorrections
 hid_camera_screendown						= SerialEM.chm::/html\menu_camera.htm#hid_camera_screendown
 hid_camera_simulation						= SerialEM.chm::/html\menu_camera.htm#hid_camera_simulation

@@ -244,10 +244,14 @@
       super-resolution mode, or when switching out of it if the binning is above 0.5.&nbsp; 
       For K3, the same applies when switching in or out of counting mode, or when 
       turning on &#39;Bin normalized counting frames by 2&#39;.</P>
-    <P><b>Always reduce to &quot;Binned size&quot; with anti-aliasing instead of binning</b></P>
-    <P>Select this option to have anti-aliasing applied to all binned images returned 
-      to SerialEM; namely in counting and linear modes as well as in super-resolution 
-      mode for K2, and in linear mode for K3.</P>
+    <P><b>Use correlated double sampling (CDS) (K3 only)</b></P>
+    <P>With a K3 camera, use this checkbox to turn on correlated double sampling for all 
+        kinds of images.&nbsp; CDS will reduce noise and improve the DQE but cuts the 
+        basic readout rate of the K3 in half, to 750 FPS, requiring half the dose rate 
+        for optimal imaging.&nbsp; Frame times will be constrained to a multiple of this 
+        longer readout time, so exposure or frame times may change.&nbsp; You will be 
+        warned to check other parameter sets for changes in these times.&nbsp; This 
+        checkbox appears only if the version of GMS and the SEMCCD plugin support CDS.</P>
     <P><b>Bin counting frames by 2 in hardware (K3 only)</b></P>
     <P>With a K3 camera, use this checkbox to acquire frames for saving or 
       aligning with fast hardware binning by 2 into a size that corresponds to the 
