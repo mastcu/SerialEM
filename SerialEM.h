@@ -761,6 +761,7 @@ private:
 public:
   void UpdateAllEditers(void);
   void InitializeLDParams(void);
+  void InitializeOneLDParam(LowDoseParams &ldParam);
   CString GetDebugKeys(void);
   int AddToStackView(EMimageBuffer * imBuf);
   void ViewClosing(BOOL stackView, BOOL FFTview);

@@ -676,29 +676,7 @@ void CSerialEMApp::InitializeLDParams(void)
 {
   for (int j = 0; j < 3; j++) {
     for (int i = 0; i < MAX_LOWDOSE_SETS; i++) {
-      mCamLowDoseParams[j][i].magIndex = 0;
-      mCamLowDoseParams[j][i].camLenIndex = 0;
-      mCamLowDoseParams[j][i].spotSize = 0;
-      mCamLowDoseParams[j][i].intensity = 0.0;
-      mCamLowDoseParams[j][i].probeMode = -1;
-      mCamLowDoseParams[j][i].ISX = 0.;
-      mCamLowDoseParams[j][i].ISY = 0.;
-      mCamLowDoseParams[j][i].axisPosition = 0.;
-      mCamLowDoseParams[j][i].beamDelX = 0.;
-      mCamLowDoseParams[j][i].beamDelY = 0.;
-      mCamLowDoseParams[j][i].axisPosition = 0.;
-      mCamLowDoseParams[j][i].delayFactor = 1.0f;
-      mCamLowDoseParams[j][i].slitIn = false;
-      mCamLowDoseParams[j][i].slitWidth = 0.;
-      mCamLowDoseParams[j][i].energyLoss = 0.;
-      mCamLowDoseParams[j][i].zeroLoss = false;
-      mCamLowDoseParams[j][i].beamAlpha = -999.;
-      mCamLowDoseParams[j][i].diffFocus = -999.;
-      mCamLowDoseParams[j][i].beamTiltDX = 0.;
-      mCamLowDoseParams[j][i].beamTiltDY = 0.;
-      mCamLowDoseParams[j][i].darkFieldMode = 0;
-      mCamLowDoseParams[j][i].dfTiltX = 0.;
-      mCamLowDoseParams[j][i].dfTiltY = 0.;
+      InitializeOneLDParam(mCamLowDoseParams[j][i]);
     }
     mCamLowDoseParams[j][VIEW_CONSET].delayFactor = 0.3f;
     mCamLowDoseParams[j][FOCUS_CONSET].delayFactor = 1.5f;
@@ -707,6 +685,33 @@ void CSerialEMApp::InitializeLDParams(void)
     mCamLowDoseParams[j][SEARCH_AREA].delayFactor = 0.05f;
   }
 
+}
+
+void CSerialEMApp::InitializeOneLDParam(LowDoseParams &ldParam)
+{
+  ldParam.magIndex = 0;
+  ldParam.camLenIndex = 0;
+  ldParam.spotSize = 0;
+  ldParam.intensity = 0.0;
+  ldParam.probeMode = -1;
+  ldParam.ISX = 0.;
+  ldParam.ISY = 0.;
+  ldParam.axisPosition = 0.;
+  ldParam.beamDelX = 0.;
+  ldParam.beamDelY = 0.;
+  ldParam.axisPosition = 0.;
+  ldParam.delayFactor = 1.0f;
+  ldParam.slitIn = false;
+  ldParam.slitWidth = 0.;
+  ldParam.energyLoss = 0.;
+  ldParam.zeroLoss = false;
+  ldParam.beamAlpha = -999.;
+  ldParam.diffFocus = -999.;
+  ldParam.beamTiltDX = 0.;
+  ldParam.beamTiltDY = 0.;
+  ldParam.darkFieldMode = 0;
+  ldParam.dfTiltX = 0.;
+  ldParam.dfTiltY = 0.;
 }
 
 // Clean up everything so we can detect memory leaks
