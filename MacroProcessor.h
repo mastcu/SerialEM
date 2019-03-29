@@ -187,6 +187,9 @@ private:
   std::vector<double> mNewSettingValues;         // and value sthey were changed to
   ShortVec mConsetNums;      // #'s of control sets saved
   int mCamWithChangedSets;   // Number of camera with changed sets on suspend
+  std::vector<LowDoseParams> mLDParamsSaved;    // Saved low dose sets
+  ShortVec mLDareasSaved;    // Numbers of areas saved
+  short int mKeepOrRestoreArea[MAX_LOWDOSE_SETS];    // -1 to keep or 1 to restore an area
   double mSleepStart;  // Starting time to sleep from
   double mSleepTime;   // Number of ticks (msec) to sleep
   BOOL mMovedStage;       // Flag that stage should be checked
@@ -354,6 +357,10 @@ public:
   FileForText *LookupFileForText(CString & ID, int checkReadOrWrite, CString &strLine, int &index);
   void CloseFileForText(int index);
   void SubstituteLineStripItems(CString & strLine, int numStrip, CString & strCopy);
+  int CheckAndConvertLDAreaLetter(CString & item, int needOnOrOff, int & index, CString &strLine);
+  void RestoreLowDoseParams(int index);
+  bool IsLowDoseAreaSaved(int which);
+  void UpdateLDAreaIfSaved();
 };
 
 #endif // !defined(AFX_MACROPROCESSOR_H__33178182_58A1_4F3A_B8F4_D41F94866517__INCLUDED_)

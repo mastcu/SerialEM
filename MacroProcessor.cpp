@@ -76,6 +76,13 @@ static char THIS_FILE[]=__FILE__;
   return; \
 }
 
+#define ABORT_NORET_LINE(a) \
+{ \
+  mWinApp->AppendToLog((a) + strLine, mLogErrAction);  \
+  SEMMessageBox((a) + strLine, MB_EXCLAME); \
+  AbortMacro(); \
+}
+
 #define ABORT_NONAV \
 { if (!mWinApp->mNavigator) \
   { \
@@ -242,7 +249,8 @@ enum {CME_SCRIPTEND = -7, CME_LABEL, CME_SETVARIABLE, CME_SETSTRINGVAR, CME_DOKE
   CME_MERGENAVFILE, CME_REPORTIFNAVOPEN, CME_NEWARRAY, CME_NEW2DARRAY, CME_APPENDTOARRAY,
   CME_TRUNCATEARRAY, CME_READ2DTEXTFILE, CME_ARRAYSTATISTICS, CME_REPORTFRAMEBASENAME,
   CME_OPENTEXTFILE, CME_WRITELINETOFILE, CME_READLINETOARRAY, CME_READLINETOSTRING,
-  CME_CLOSETEXTFILE, CME_FLUSHTEXTFILE, CME_READSTRINGSFROMFILE, CME_ISTEXTFILEOPEN
+  CME_CLOSETEXTFILE, CME_FLUSHTEXTFILE, CME_READSTRINGSFROMFILE, CME_ISTEXTFILEOPEN,
+  CME_CURRENTSETTINGSTOLDAREA, CME_UPDATELOWDOSEPARAMS, CME_RESTORELOWDOSEPARAMS,
 };
 
 // The two numbers are the minimum arguments and whether arithmetic is allowed
@@ -272,7 +280,7 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"SetColumnOrGunValve", 1, 0}, {"SetDefocus", 1, 0}, {"SetDirectory", 1, -1},
 {"SetEnergyLoss", 1, 0}, {"SetExposure", 2, 0}, {"SetIntensityByLastTilt", 0, -1},
 {"SetIntensityForMean", 0,0}, {"SetMag",1,0}, {"SetObjFocus",1,0}, {"SetPercentC2", 1,0},
-{"SetSlitIn",0,1}, {"SetSlitWidth", 1, 0}, {"SetSpotSize", 1, 0}, {"Show", 1, 0},
+{"SetSlitIn", 0, 1}, {"SetSlitWidth", 1, 0}, {"SetSpotSize", 1, 0}, {"Show", 1, 0},
 {"SubareaMean", 4, 1}, {"SuppressReports", 0,0}, {"SwitchToFile", 1,0}, {"T", 0, 0},
 {"TiltBy", 1, 1}, {"TiltDown", 0, 0}, {"TiltTo", 1, 1}, {"TiltUp", 0, 0},
 {"U",0,0}, {"V",0,0}, {"WaitForDose",1,1}, {"WalkUpTo",1,1}, {"Return",0,0}, {"Exit",0,0},
@@ -289,7 +297,7 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"OppositeAutoFocus", 0, 0}, {"ReportAutoFocus", 0, 0}, {"ReportTargetDefocus", 0, 0},
 {"Plugin",2,0}, {"ListPluginCalls",0,0}, {"SetStandardFocus",1,0}, {"SetCameraArea",2,0},
 {"SetIlluminatedArea", 1, 0}, {"ReportIlluminatedArea", 0, 0}, {"SelectCamera", 1, 0},
-{"SetLowDoseMode",1,0},{"TestSTEMshift",3,1},{"QuickFlyback",2,1},{"NormalizeLenses",1,0},
+{"SetLowDoseMode",1,0}, {"TestSTEMshift",3,1}, {"QuickFlyback",2,1}, {"NormalizeLenses",1,0},
 {"ReportSlotStatus", 1, 0}, {"LoadCartridge", 1, 0}, {"UnloadCartridge", 0, 0},
 {"BacklashAdjust", 0, 0}, {"SaveFocus", 0, 0}, {"MakeDateTimeDir", 0, 0},
 {"EnterNameOpenFile", 0, 0}, {"FindPixelSize", 0, 0}, {"SetEucentricFocus", 0, 0},
@@ -305,43 +313,43 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"KeyBreak", 0, 0}, {"ReportAlpha", 0, 0}, {"SetAlpha", 1, 0}, {"SetSTEMDetectors", 2, 0},
 {"SetCenteredSize", 4, 0}, {"ImageLowDoseSet", 0, 0}, {"ForceCenterRealign", 0, 0},
 {"SetTargetDefocus", 1, 0}, {"FocusChangeLimits", 2, 1}, {"AbsoluteFocusLimits", 2, 1},
-{"ReportColumnMode",0,0},{"ReportLens",1,0},{"ReportCoil",1,0},{"ReportAbsoluteFocus",0,0},
+{"ReportColumnMode",0,0}, {"ReportLens",1,0}, {"ReportCoil",1,0}, {"ReportAbsoluteFocus",0,0},
 {"SetAbsoluteFocus", 1, 0}, {"ReportEnergyFilter", 0, 0}, {"ReportBeamTilt", 0, 0},
-{"UserSetDirectory", 0, 0}, {"SetJeolSTEMflags", 2, -1}, {"ProgramTimeStamps", 0, 0}, 
+{"UserSetDirectory", 0, 0}, {"SetJeolSTEMflags", 2, -1}, {"ProgramTimeStamps", 0, 0},
 {"SetContinuous", 2, -1}, {"UseContinuousFrames", 1, 0}, {"WaitForNextFrame", 0, 0},
 {"StopContinuous", 0, 0}, {"ReportContinuous", 0, 0}, {"SetLiveSettleFraction", 1, 0},
-{"SkipTo", 1, 0}, {"Function", 1, 0}, {"EndFunction", 0, 0}, {"CallFunction", 1, 0}, 
+{"SkipTo", 1, 0}, {"Function", 1, 0}, {"EndFunction", 0, 0}, {"CallFunction", 1, 0},
 {"PreCookMontage", 1, 1}, {"ReportAlignTrimming", 0, 0}, {"NormalizeAllLenses", 0, 0},
 {"AddToAutodoc", 2}, {"IsVariableDefined", 1, 0}, {"EnterDefaultedNumber", 3, 0},
 {"SetupWaffleMontage", 2, -1}, {"IncMagIfFoundPixel", 1, 0}, {"ResetDefocus", 0, 0},
 {"WriteAutodoc",0,0}, {"ElectronStats",1,0}, {"ErrorsToLog", 0,0}, {"FlashDisplay", 0,0},
-{"ReportProbeMode",0,0},{"SetProbeMode",1,0},{"SaveLogOpenNew",0,0},{"SetAxisPosition",2,0}
+{"ReportProbeMode",0,0}, {"SetProbeMode",1,0}, {"SaveLogOpenNew",0,0}, {"SetAxisPosition",2,0}
 , {"AddToFrameMdoc", 2, 0}, {"WriteFrameMdoc", 0, 0}, {"ReportFrameMdocOpen", 0, 0},
-{"ShiftCalSkipLensNorm",0,0},{"ReportLastAxisOffset",0,0},{"SetBeamTilt",2,0},//end in 3.5
+{"ShiftCalSkipLensNorm",0,0}, {"ReportLastAxisOffset",0,0}, {"SetBeamTilt",2,0},//end in 3.5
 {"CorrectAstigmatism", 0, 0}, {"CorrectComa", 0, 0}, {"ShiftItemsByCurrentDiff", 1, 0},
 {"ReportCurrentFilename", 0, 0}, {"SuffixForExtraFile", 1, 0}, {"ReportScreen", 0, 0},
-{"GetDeferredSum",0,0},{"ReportJeolGIF",0,0},{"SetJeolGIF",1,0},{"TiltDuringRecord",2,1},
+{"GetDeferredSum",0,0}, {"ReportJeolGIF",0,0}, {"SetJeolGIF",1,0}, {"TiltDuringRecord",2,1},
 {"SetLDContinuousUpdate", 1, 0}, {"ErrorBoxSendEmail", 1,0}, {"ReportLastFrameFile", 0,0},
 {"Test", 1, 0}, {"AbortIfFailed", 1, 0}, {"PauseIfFailed", 0, 0}, {"ReadOtherFile", 3, 0},
-{"ReportK2FileParams", 0, 0}, {"SetK2FileParams", 1, 0}, {"SetDoseFracParams", 1, 0}, 
+{"ReportK2FileParams", 0, 0}, {"SetK2FileParams", 1, 0}, {"SetDoseFracParams", 1, 0},
 {"SetK2ReadMode", 2, 0}, {"SetProcessing", 2, 0}, {"SetFrameTime", 2, 0},
 {"ReportCountScaling", 0, 0}, {"SetDivideBy2", 1, 0}, {"ReportNumFramesSaved", 0, 0},
 {"RemoveFile", 1, 0}, {"ReportFrameAliParams", 0, 0}, {"SetFrameAliParams", 1, 0},
 {"Require", 1, 0}, {"OnStopCallFunc", 1,0}, {"RetryReadOtherFile",1,0}, {"DoScript",1,0},
 {"CallScript",1,0}, {"ScriptName", 1, 0}, {"SetFrameAli2", 1,0}, {"ReportFrameAli2", 0,0},
-{"ReportMinuteTime", 0, 0}, {"ReportColumnOrGunValve", 0, 0}, {"NavIndexWithLabel", 1,0 },
+{"ReportMinuteTime", 0, 0}, {"ReportColumnOrGunValve", 0, 0}, {"NavIndexWithLabel", 1,0},
 {"NavIndexWithNote", 1, 0}, {"SetDiffractionFocus", 1, 0}, {"ReportDirectory", 0, 0},
 {"BackgroundTilt",1,1}, {"ReportStageBusy",0,0}, {"SetExposureForMean",1,0}, {"FFT",1,0},
 {"ReportNumNavAcquire", 0, 0}, {"StartFrameWaitTimer", 0,0}, {"ReportTickTime", 0, 0},
-{"ReadTextFile",2,0},{"RunInShell",1,0},{"ElapsedTickTime",1,1},{"NoMessageBoxOnError",0,0},
-{"ReportAutofocusOffset", 0, 0}, {"SetAutofocusOffset", 1, 0}, {"ChooserForNewFile", 2,0}, 
+{"ReadTextFile",2,0}, {"RunInShell",1,0}, {"ElapsedTickTime",1,1}, {"NoMessageBoxOnError",0,0},
+{"ReportAutofocusOffset", 0, 0}, {"SetAutofocusOffset", 1, 0}, {"ChooserForNewFile", 2,0},
 {"SkipAcquiringNavItem", 0, 0}, {"ShowMessageOnScope", 1, 0}, {"SetupScopeMessage", 1,-1},
-{"Search", 0, 0}, {"SetProperty", 2, 0}, /* End in 3.6 */ {"SetMagIndex", 1, 0},
-{"SetNavRegistration",1,0},{"LocalVar",1,0},{"LocalLoopIndexes",0,0},{"ZemlinTableau",1,1},
-{"WaitForMidnight", 0, 1}, {"ReportUserSetting", 1, 0}, {"SetUserSetting", 2, 0}, 
+{"Search", 0, 0}, {"SetProperty", 2, 0}, /* End in 3.6 */{"SetMagIndex", 1, 0},
+{"SetNavRegistration",1,0}, {"LocalVar",1,0}, {"LocalLoopIndexes",0,0}, {"ZemlinTableau",1,1},
+{"WaitForMidnight", 0, 1}, {"ReportUserSetting", 1, 0}, {"SetUserSetting", 2, 0},
 {"ChangeItemRegistration",2,1}, {"ShiftItemsByMicrons",2,1}, {"SetFreeLensControl", 2, 1},
 {"SetLensWithFLC", 2, 0}, {"SaveToOtherFile", 4, 0}, {"SkipAcquiringGroup", 0, 0},
-{"ReportImageDistanceOffset", 0, 0}, {"SetImageDistanceOffset", 1, 0}, 
+{"ReportImageDistanceOffset", 0, 0}, {"SetImageDistanceOffset", 1, 0},
 {"ReportCameraLength", 0, 0}, {"SetDECamFrameRate", 1, 0}, {"SkipMoveInNavAcquire", 0, 0},
 {"TestRelaxingStage", 2, 1}, {"RelaxStage", 0, 1}, {"SkipFrameAliParamCheck", 0, 0},
 {"IsVersionAtLeast", 1, 0}, {"SkipIfVersionLessThan", 1, 0}, {"RawElectronStats", 1, 0},
@@ -350,28 +358,29 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"MoveBeamByMicrons",2,1}, {"MoveBeamByFieldFraction", 2, 1}, {"NewDEserverDarkRef", 2,0},
 {"StartNavAcquireAtEnd", 0, 0}, {"ReduceImage", 2, 1}, {"ReportAxisPosition", 1, 0},
 {"CtfFind",3,1}, {"CBAstigComa",3,0}, {"FixAstigmatismByCTF",0,0}, {"FixComaByCTF", 0, 0},
-{"EchoEval", 0, 1}, {"ReportFileNumber", 0, 0}, {"ReportComaTiltNeeded", 0, 0}, 
+{"EchoEval", 0, 1}, {"ReportFileNumber", 0, 0}, {"ReportComaTiltNeeded", 0, 0},
 {"ReportStigmatorNeeded", 0, 0}, {"SaveBeamTilt", 0, 0}, {"RestoreBeamTilt", 0, 0},
 {"ReportComaVsISmatrix", 0, 0}, {"AdjustBeamTiltforIS", 0, 0}, {"LoadNavMap", 0, 0},
 {"LoadOtherMap", 1, 0}, {"ReportLensFLCStatus", 1, 0}, {"TestNextMultiShot", 1, 0},
-{"EnterString", 2, 0}, {"CompareStrings", 2, 0}, {"CompareNoCase", 2, 0}, 
+{"EnterString", 2, 0}, {"CompareStrings", 2, 0}, {"CompareNoCase", 2, 0},
 {"ReportNextNavAcqItem", 0, 0}, {"ReportNumTableItems", 0, 0}, {"ChangeItemColor", 2, 0},
-{"ChangeItemLabel", 2, 0}, {"StripEndingDigits", 2, 0}, {"MakeAnchorMap", 0, 0}, 
+{"ChangeItemLabel", 2, 0}, {"StripEndingDigits", 2, 0}, {"MakeAnchorMap", 0, 0},
 {"StageShiftByPixels", 2, 1}, {"ReportProperty", 1, 0}, {"SaveNavigator", 0, 0},
-{"FrameThresholdNextShot", 1, 1}, {"QueueFrameTiltSeries", 3, 0}, 
+{"FrameThresholdNextShot", 1, 1}, {"QueueFrameTiltSeries", 3, 0},
 {"FrameSeriesFromVar", 2, 0}, {"WriteFrameSeriesAngles", 1, 0}, {"EchoReplaceLine", 1, 1},
 {"EchoNoLineEnd", 1, 1}, {"RemoveAperture", 1, 0}, {"ReInsertAperture", 1, 0},
-{"PhasePlateToNextPos", 0, 0}, {"SetStageBAxis", 1, 1}, {"ReportStageBAxis", 0, 0}, 
-{"DeferWritingFrameMdoc", 0, 0}, {"AddToNextFrameStackMdoc", 2, 0}, 
+{"PhasePlateToNextPos", 0, 0}, {"SetStageBAxis", 1, 1}, {"ReportStageBAxis", 0, 0},
+{"DeferWritingFrameMdoc", 0, 0}, {"AddToNextFrameStackMdoc", 2, 0},
 {"StartNextFrameStackMdoc", 2, 0}, {"ReportPhasePlatePos", 0, 0}, {"OpenFrameMdoc", 1, 0},
 {"NextProcessArgs", 1, 0}, {"CreateProcess", 1, 0}, {"RunExternalTool", 1, 0},
-{"ReportSpecimenShift", 0, 0}, {"ReportNavFile", 0, 0}, {"ReadNavFile", 1, 0}, 
+{"ReportSpecimenShift", 0, 0}, {"ReportNavFile", 0, 0}, {"ReadNavFile", 1, 0},
 {"MergeNavFile", 1, 0}, {"ReportIfNavOpen",0, 0}, /* End in 3.7 */
-{"NewArray", 3, 0}, {"New2DArray", 1, 0}, {"AppendToArray", 2, 0},{"TruncateArray", 2, 0}, 
+{"NewArray", 3, 0}, {"New2DArray", 1, 0}, {"AppendToArray", 2, 0}, {"TruncateArray", 2, 0},
 {"Read2DTextFile", 2, 0}, {"ArrayStatistics", 1, 0}, {"ReportFrameBaseName", 0, 0},
-{"OpenTextFile", 4, 0}, {"WriteLineToFile", 1, 0}, {"ReadLineToArray", 2, 0}, 
+{"OpenTextFile", 4, 0}, {"WriteLineToFile", 1, 0}, {"ReadLineToArray", 2, 0},
 {"ReadLineToString", 2, 0}, {"CloseTextFile", 1, 0}, {"FlushTextFile", 1, 0},
-{"ReadStringsFromFile", 2, 0}, {"IsTextFileOpen", 1, 0},
+{"ReadStringsFromFile", 2, 0}, {"IsTextFileOpen", 1, 0}, {"CurrentSettingsToLDArea", 1},
+{"UpdateLowDoseParams", 1}, {"RestoreLowDoseParams", 0},
 {NULL, 0, 0}
 };
 
@@ -991,6 +1000,10 @@ void CMacroProcessor::Run(int which)
   mSavedSettingNames.clear();
   mSavedSettingValues.clear();
   mNewSettingValues.clear();
+  mLDareasSaved.clear();
+  mLDParamsSaved.clear();
+  for (mac = 0; mac < MAX_LOWDOSE_SETS; mac++)
+    mKeepOrRestoreArea[mac] = 0;
   ClearVariables();
   mUsingContinuous = false;
   mShowedScopeBox = false;
@@ -1287,8 +1300,7 @@ void CMacroProcessor::NextCommand()
   cmdIndex = LookupCommandIndex(strItems[0]);
 
   // Do arithmetic on selected commands
-  if (ArithmeticIsAllowed(strItems[0]) && strItems[1] != "=" && strItems[1] != ":=" && 
-    strItems[1] != "@=" && strItems[1] != "@:=") {
+  if (cmdIndex >= 0 && ArithmeticIsAllowed(strItems[0])) {
     if (SeparateParentheses(&strItems[1], MAX_TOKENS - 1))
       ABORT_LINE("Too many items on line after separating out parentheses in line: \n\n");
     EvaluateExpression(&strItems[1], MAX_TOKENS - 1, strLine, 0, index, index2);
@@ -3394,6 +3406,7 @@ void CMacroProcessor::NextCommand()
     
   case CME_SETDIFFRACTIONFOCUS:                             // SetDiffractionFocus
     mScope->SetDiffractionFocus(itemDbl[1]);
+    UpdateLDAreaIfSaved();
     break;
     
   case CME_RESETDEFOCUS:                                    // ResetDefocus
@@ -3410,6 +3423,7 @@ void CMacroProcessor::NextCommand()
       if (!i)
         ABORT_LINE("The value is not near enough to an existing mag in:\n\n");
       mScope->SetMagIndex(i);
+      UpdateLDAreaIfSaved();
     }
     break;
     
@@ -3423,6 +3437,7 @@ void CMacroProcessor::NextCommand()
     if (!delX)
       ABORT_LINE("There is a zero in the magnification table at the index given in:\n\n");
     mScope->SetMagIndex(index);
+    UpdateLDAreaIfSaved();
     break;
     
   case CME_CHANGEMAG:                                       // ChangeMag
@@ -3443,6 +3458,7 @@ void CMacroProcessor::NextCommand()
         ABORT_LINE("Improper mag change in statement: \n\n");
       mScope->SetMagIndex(index2);
     }
+    UpdateLDAreaIfSaved();
     break;
                               
   case CME_CHANGEMAGANDINTENSITY:                           // ChangeMagAndIntensity
@@ -3483,6 +3499,7 @@ void CMacroProcessor::NextCommand()
       "needed %.3f", mScope->GetC2Name(), delISX, mScope->GetC2Units(), delY);
     mWinApp->AppendToLog(strCopy, mLogAction);
     SetReportedValues(delISX, delY);
+    UpdateLDAreaIfSaved();
     break;
 
   case CME_SETCAMLENINDEX:                                  // SetCamLenIndex
@@ -3491,6 +3508,7 @@ void CMacroProcessor::NextCommand()
       ABORT_LINE("Improper camera length index in statement: \n\n");
     if (!mScope->SetCamLenIndex(index))
       ABORT_LINE("Error setting camera length index in statement: \n\n");
+    UpdateLDAreaIfSaved();
     break;
     
   case CME_SETSPOTSIZE:                                     // SetSpotSize
@@ -3502,6 +3520,7 @@ void CMacroProcessor::NextCommand()
       AbortMacro();
       return;
     }
+    UpdateLDAreaIfSaved();
     break;
     
   case CME_SETPROBEMODE:                                    // SetProbeMode
@@ -3516,6 +3535,7 @@ void CMacroProcessor::NextCommand()
       AbortMacro();
       return;
     }
+    UpdateLDAreaIfSaved();
     break;
     
   case CME_DELAY:                                           // Delay
@@ -4955,6 +4975,7 @@ void CMacroProcessor::NextCommand()
     index = mWinApp->mBeamAssessor->ChangeBeamStrength(delISX, index2);
     if (CheckIntensityChangeReturn(index))
       return;
+    UpdateLDAreaIfSaved();
     break;
 
   case CME_SETPERCENTC2:   // Set/IncPercentC2
@@ -4982,6 +5003,7 @@ void CMacroProcessor::NextCommand()
     report.Format("Intensity set to %.3f%s  -  %.5f", delISX, mScope->GetC2Units(),
       delISY);
     mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
+    UpdateLDAreaIfSaved();
     break;
 
   case CME_SETILLUMINATEDAREA:                              // SetIlluminatedArea
@@ -4989,6 +5011,7 @@ void CMacroProcessor::NextCommand()
       AbortMacro();
       return;
     }
+    UpdateLDAreaIfSaved();
     break;
     
   case CME_SETIMAGEDISTANCEOFFSET:                          // SetImageDistanceOffset
@@ -5003,6 +5026,7 @@ void CMacroProcessor::NextCommand()
       AbortMacro();
       return;
     }
+    UpdateLDAreaIfSaved();
     break;
     
   case CME_REPORTJEOLGIF:                                   // ReportJeolGIF
@@ -5114,6 +5138,7 @@ void CMacroProcessor::NextCommand()
     filtParam->slitWidth = (float)delISX;
     mWinApp->mFilterControl.UpdateSettings();
     mCamera->SetupFilter();
+    UpdateLDAreaIfSaved();
 
     break;
     // SetEnergyLoss, ChangeEnergyLoss
@@ -5136,6 +5161,7 @@ void CMacroProcessor::NextCommand()
     filtParam->zeroLoss = false;
     mWinApp->mFilterControl.UpdateSettings();
     mCamera->SetupFilter();
+    UpdateLDAreaIfSaved();
     break;
 
   case CME_SETSLITIN:                                       // SetSlitIn
@@ -5145,6 +5171,7 @@ void CMacroProcessor::NextCommand()
     filtParam->slitIn = index != 0;
     mWinApp->mFilterControl.UpdateSettings();
     mCamera->SetupFilter();
+    UpdateLDAreaIfSaved();
     break;
     
   case CME_REFINEZLP:                                       // RefineZLP
@@ -5282,7 +5309,7 @@ void CMacroProcessor::NextCommand()
       index2 = B3DNINT(mConSets[index].exposure /
         B3DMAX(0.001, mConSets[index].frameTime));
       bmin = (float)(delISY / index2);
-      mCamera->ConstrainFrameTime(bmin, camParams->K2Type);
+      mCamera->ConstrainFrameTime(bmin, camParams);
       if (fabs(bmin - mConSets[index].frameTime) < 0.0001) {
         PrintfToLog("In SetExposureForMean %s, change by a factor of %.4f would require "
           "too small a change in frame time", (LPCTSTR)strItems[1], delISX);
@@ -5357,7 +5384,7 @@ void CMacroProcessor::NextCommand()
       ABORT_NOLINE("Frame time can be set only if the current camera is a K2");
     SaveControlSet(index);
     mConSets[index].frameTime = (float)itemDbl[2];
-    mCamera->ConstrainFrameTime(mConSets[index].frameTime, camParams->K2Type);
+    mCamera->ConstrainFrameTime(mConSets[index].frameTime, camParams);
     break;
     
   case CME_SETK2READMODE:                                   // SetK2ReadMode
@@ -6158,12 +6185,8 @@ void CMacroProcessor::NextCommand()
     break;
 
   case CME_GOTOLOWDOSEAREA:                                 // GoToLowDoseArea
-    if (!mWinApp->LowDoseMode())
-      ABORT_NOLINE("You must be in low dose mode to use GoToLowDoseArea");
-
-    index = CString("VFTRS").Find(strItems[1].Left(1));
-    if (index < 0)
-      ABORT_NOLINE("GoToLowDoseArea must be followed by one of V, F, T, R, or S");
+    if (CheckAndConvertLDAreaLetter(strItems[1], 1, index, strLine))
+      return;
     mScope->GotoLowDoseArea(index);
     break;
     
@@ -6178,15 +6201,12 @@ void CMacroProcessor::NextCommand()
     if (index != (itemInt[1] ? 1 : 0))
       mWinApp->mLowDoseDlg.SetLowDoseMode(itemInt[1] != 0);
     SetReportedValues(&strItems[2], (double)index);
-
     break;
-    // ReportAxisPosition, SetAxisPosition
-  case CME_SETAXISPOSITION:
-  case CME_REPORTAXISPOSITION:
-    truth = CMD_IS(REPORTAXISPOSITION);
-    if (!mWinApp->LowDoseMode())
-      ABORT_LINE("You must be in low dose mode to use this command:\n\n");
-    index = CString("VFTRS").Find(strItems[1].Left(1));
+
+  case CME_SETAXISPOSITION:                                 // SetAxisPosition
+  case CME_REPORTAXISPOSITION:                              // ReportAxisPosition
+    if (CheckAndConvertLDAreaLetter(strItems[1], 1, index, strLine))
+      return;
     if ((index + 1) / 2 != 1)
       ABORT_LINE("This command must be followed by F or T:\n\n");
     if (CMD_IS(REPORTAXISPOSITION)) {
@@ -6228,7 +6248,34 @@ void CMacroProcessor::NextCommand()
     SetReportedValues(&strItems[1], (double)index, (double)index2);
     break;
   }
-    
+
+  case CME_CURRENTSETTINGSTOLDAREA:                         // CurrentSettingsToLDArea
+    if (CheckAndConvertLDAreaLetter(strItems[1], -1, index, strLine))
+      return;
+    mWinApp->InitializeOneLDParam(ldParam[index]);
+    mWinApp->mLowDoseDlg.SetLowDoseMode(true);
+    mScope->GotoLowDoseArea(index);
+    break;
+
+  case CME_UPDATELOWDOSEPARAMS:                             // UpdateLowDoseParams
+    if (mWinApp->mTSController->DoingTiltSeries())
+      ABORT_NOLINE("You cannot use ChangeLowDoseParams during a tilt series");
+    if (CheckAndConvertLDAreaLetter(strItems[1], 0, index, strLine))
+      return;
+    if (mKeepOrRestoreArea[index])
+      return;
+    mLDParamsSaved.push_back(ldParam[index]);
+    mLDareasSaved.push_back(index);
+    mKeepOrRestoreArea[index] = (itemEmpty[2] || !itemInt[2]) ? 1 : -1;
+    UpdateLDAreaIfSaved();
+    break;
+
+  case CME_RESTORELOWDOSEPARAMS:                            // RestoreLowDoseParams
+    if (CheckAndConvertLDAreaLetter(strItems[1], 0, index, strLine))
+      return;
+    RestoreLowDoseParams(index);
+    break;
+
   case CME_SHOWMESSAGEONSCOPE:                              // ShowMessageOnScope
     SubstituteVariables(&strLine, 1, strLine);
     mWinApp->mParamIO->StripItems(strLine, 1, strCopy);
@@ -6267,18 +6314,28 @@ void CMacroProcessor::NextCommand()
     if (index == 1)
       ABORT_LINE("The thread is already busy for this operation:\n\n")
     mStartedLongOp = !index;
- 
     break;
     
   case CME_LONGOPERATION:                                   // LongOperation
   {
     ix1 = 0;
+    iy1 = 1;
     int used[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
     int operations[MAX_LONG_OPERATIONS + 1];
     float intervals[MAX_LONG_OPERATIONS + 1];
     for (index = 1; index < MAX_TOKENS && !itemEmpty[index]; index++) {
       for (index2 = 0; index2 < MAX_LONG_OPERATIONS; index2++) {
         if (!strItems[index].Left(2).CompareNoCase(CString(longKeys[index2]))) {
+          if (longHasTime[index2] && itemDbl[index + 1] < -1.5) {
+            backlashX = (float)itemDbl[index + 1];
+            mScope->StartLongOperation(&index2, &backlashX, 1);
+            SetOneReportedValue(backlashX, iy1++);
+            report.Format("Time since last long operation %s is %.2f hours", 
+              (LPCTSTR)strItems[index], backlashX);
+            mWinApp->AppendToLog(report, mLogAction);
+            index++;
+            break;
+          }
           if (used[index2])
             ABORT_LINE("The same operation is specified twice in:\n\n");
           used[index2]++;
@@ -6466,21 +6523,25 @@ void CMacroProcessor::AbortMacro()
 void CMacroProcessor::SuspendMacro(BOOL abort)
 {
   CameraParameters *camParams = mWinApp->GetCamParams();
-  int probe;
+  int probe, ind;
+  bool restoreArea = false;
   if (!mDoingMacro)
     return;
   if (TestAndStartFuncOnStop())
     return;
 
   // restore user settings
-  for (int ind = 0; ind < (int)mSavedSettingNames.size(); ind++)
+  for (ind = 0; ind < (int)mSavedSettingNames.size(); ind++)
     mWinApp->mParamIO->MacroSetSetting(CString(mSavedSettingNames[ind].c_str()), 
       mSavedSettingValues[ind]);
   if (mSavedSettingNames.size())
     mWinApp->UpdateWindowSettings();
+  for (ind = 0; ind < MAX_LOWDOSE_SETS; ind++)
+    if (mKeepOrRestoreArea[ind] > 0)
+      restoreArea = true;
 
   // Restore other things and make it non-resumable as they have no mechanism to resume
-  if (abort || mNumStatesToRestore > 0) {
+  if (abort || mNumStatesToRestore > 0 || restoreArea) {
     mCurrentMacro = -1;
     mLastAborted = !mLastCompleted;
     if (mNumStatesToRestore) {
@@ -6517,6 +6578,8 @@ void CMacroProcessor::SuspendMacro(BOOL abort)
     mSavedSettingNames.clear();
     mSavedSettingValues.clear();
     mNewSettingValues.clear();
+    if (restoreArea)
+      RestoreLowDoseParams(-2);
   }
 
   // restore camera sets, clear if non-resumable
@@ -6968,10 +7031,8 @@ int CMacroProcessor::LocalVarAlreadyDefined(CString & item, CString &strLine)
     var->definingFunc == mCallFunction[mCallLevel] && (var->index == mCurrentMacro ||
       var->type == VARTYPE_INDEX || var->type == VARTYPE_REPORT)) {
     mess = "Variable " + item + " has already been defined as global"
-      "\nin this script/function and cannot be made local in line:\n\n" + strLine;
-    mWinApp->AppendToLog(mess, mLogAction);
-    SEMMessageBox(mess);
-    AbortMacro();
+      "\nin this script/function and cannot be made local in line:\n\n";
+    ABORT_NORET_LINE(mess);
     return -1;
   }
   return var ? -1 : 0;
@@ -8797,12 +8858,8 @@ FileForText *CMacroProcessor::LookupFileForText(CString &ID, int checkType,
   if (errStr.IsEmpty() && checkType != TXFILE_MUST_NOT_EXIST && 
     checkType != TXFILE_QUERY_ONLY)
       errStr = "There is no open file with identifier " + ID;
-  if (!errStr.IsEmpty()) {
-    errStr += " for line:\n\n" + strLine;
-    mWinApp->AppendToLog(errStr, mLogAction);
-    SEMMessageBox(errStr);
-    AbortMacro();
-  }
+  if (!errStr.IsEmpty())
+    ABORT_NORET_LINE(errStr + " for line:\n\n");
   return NULL;
 }
 
@@ -8828,10 +8885,85 @@ void CMacroProcessor::CloseFileForText(int index)
   }
 }
 
-
+// Convenience function to extract part of entered line after substituting variables
 void CMacroProcessor::SubstituteLineStripItems(CString & strLine, int numStrip, 
   CString &strCopy)
 {
   SubstituteVariables(&strLine, 1, strLine);
   mWinApp->mParamIO->StripItems(strLine, numStrip, strCopy);
+}
+
+// Convert letter after command to LD area # or abort if not legal.  Tests for whether
+// Low dose is on or off if needOnOrOff >0 or <0.  Returns index -1 and no error if item
+// is empty
+int CMacroProcessor::CheckAndConvertLDAreaLetter(CString &item, int needOnOrOff,
+  int &index, CString &strLine)
+{
+  if (needOnOrOff && !BOOL_EQUIV(mWinApp->LowDoseMode(), needOnOrOff > 0)) {
+    ABORT_NORET_LINE("You must" + CString(needOnOrOff > 0 ? "" : " NOT") + 
+      " be in low dose mode to use this command:\n\n");
+    return 1;
+  }
+  if (item.IsEmpty()) {
+    index = -1;
+    return 0;
+  }
+  index = CString("VFTRS").Find(item.Left(1));
+  if (index < 0)
+    ABORT_NORET_LINE("Command must be followed by one of V, F, T, R, or S in line:\n\n");
+  return index < 0 ? 1 : 0;
+}
+
+
+void CMacroProcessor::RestoreLowDoseParams(int index)
+{
+  LowDoseParams *ldParam = mWinApp->GetLowDoseParams();
+  LowDoseParams ldsaParams;
+  int ind, set;
+  int curArea = mWinApp->LowDoseMode() ? mScope->GetLowDoseArea() : -1;
+  for (ind = 0; ind < (int)mLDareasSaved.size(); ind++) {
+    set = mLDareasSaved[ind];
+    if (set == index || index == -1 || (index < -1 && mKeepOrRestoreArea[set] > 0)) {
+
+      // When going to the current area, save the current params in the local variable
+      // and tell LD that is the current set of parameters to use, then set in new
+      // parameters and go to the area to get them handled right
+      if (set == curArea) {
+        ldsaParams = ldParam[set];
+        mScope->SetLdsaParams(&ldsaParams);
+      }
+      ldParam[set] = mLDParamsSaved[ind];
+      if (set == curArea)
+        mScope->GotoLowDoseArea(curArea);
+      if (index >= 0) {
+        mLDareasSaved.erase(mLDareasSaved.begin() + ind);
+        mLDParamsSaved.erase(mLDParamsSaved.begin() + ind);
+        return;
+      }
+    }
+  }
+  if (index < 0) {
+    mLDareasSaved.clear();
+    mLDParamsSaved.clear();
+  }
+}
+
+
+bool CMacroProcessor::IsLowDoseAreaSaved(int which)
+{
+  return mKeepOrRestoreArea[which] != 0;
+}
+
+
+void CMacroProcessor::UpdateLDAreaIfSaved()
+{
+  BOOL saveContinuous = mWinApp->mLowDoseDlg.GetContinuousUpdate();
+  int curArea = mWinApp->LowDoseMode() ? mScope->GetLowDoseArea() : -1;
+  if (curArea < 0 || !mKeepOrRestoreArea[curArea])
+    return;
+  if (!saveContinuous)
+    mWinApp->mLowDoseDlg.SetContinuousUpdate(true);
+  mScope->ScopeUpdate(GetTickCount());
+  if (!saveContinuous)
+    mWinApp->mLowDoseDlg.SetContinuousUpdate(false);
 }

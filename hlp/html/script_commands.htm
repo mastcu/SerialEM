@@ -42,6 +42,9 @@
       {
         height: 78px;
       }
+        .auto-style1 {
+            width: 230px;
+        }
   --></style>
   </HEAD>
   <BODY bgColor="#ffffff" text="#000000">
@@ -2013,8 +2016,10 @@
             letters of whatever full word you use (case insensitive).&nbsp; Each operation
             except Inventory and Unload cartridge must be followed by an interval in hours (#).&nbsp; If # is &gt;
             0, the operation is done only if the time since the last such operation is
-            greater than #; if # is 0, the operation is done unconditionally; if # is &lt; 0, it
-            simply records the current time as the time of the last operation.&nbsp;&nbsp; The scope operations will occur sequentially
+            greater than #; if # is 0, the operation is done unconditionally; if # is -1, it
+            simply records the current time as the time of the last operation; if # is &lt; -1, 
+              it reports the time in hours since the last operation and places it into one of 
+              the reportedValue variables.&nbsp;&nbsp; The scope operations will occur sequentially
             and be started in &nbsp;the order that they are listed. The dark reference update
             will be done simultaneously with scope operations.&nbsp; If an error occurs in a
             scope operation, other operations will be finished and the error reported at the
@@ -2065,27 +2070,27 @@
           <TD colspan="2"><A name="autoalign"></A><B>Autoalign-Related Commands</B></TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">A or Autoalign</TD>
+          <TD class="auto-style1">A or Autoalign</TD>
           <TD>Align buffer A to autoalign buffer</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">AlignTo buf [#IS] [#T]</TD>
+          <TD class="auto-style1">AlignTo buf [#IS] [#T]</TD>
           <TD>Align buffer A to given buffer (e.g. B or 2). Optionally, enter 1 for '#IS' to
             avoid changing microscope image shift, and 1 for &#39;#T&#39; to prevent trimming of 
             dark borders.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">ClearAlignment [#IS]</TD>
+          <TD class="auto-style1">ClearAlignment [#IS]</TD>
           <TD>Clear the alignment shift of the image in buffer A.&nbsp; Optionally, enter 1 
             for &#39;#IS&#39; to avoid changing microscope image shift.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">ConicalAlignTo buf # [show]</TD>
+          <TD class="auto-style1">ConicalAlignTo buf # [show]</TD>
           <TD>Align buffer A to the given buffer 'buf' assuming a specimen rotation given by
             #. Optionally, enter 1 for 'show' to show the cross-correlation.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">ReportAlignTrimming</TD>
+          <TD class="auto-style1">ReportAlignTrimming</TD>
           <TD>Report the sum of left and right borders and the sum of top and bottom borders
             in the last autoalign for the image in A and for the reference image.&nbsp; The
             numbers are in pixels of the respective images before the additional binning
@@ -2093,31 +2098,31 @@
             the autoalign routine.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">ReportAlignShift</TD>
+          <TD class="auto-style1">ReportAlignShift</TD>
           <TD>Report the X and Y alignment shift of the current image in A in unbinned pixels
             on image, in nanometers along the image shift axes, and in nanometers on the
             specimen, where the tilt axis is along X.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">ReportShiftDiffFrom #</TD>
+          <TD class="auto-style1">ReportShiftDiffFrom #</TD>
           <TD>Report the difference between the alignment shift of the current image and the
             given value in microns, as percentage of the value; the cumulative sum of
             differences in microns, and the total sum of shifts in microns. For monitoring
             variability in successive stage movements.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">ReportAccumShift</TD>
+          <TD class="auto-style1">ReportAccumShift</TD>
           <TD>Report sum of shifts given by ReportAlignShift or ReportShiftDiffFrom</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">ResetAccumShift</TD>
+          <TD class="auto-style1">ResetAccumShift</TD>
           <TD>Reset the sum of shifts given by ReportAlignShift to 0 or ReportShiftDiffFrom</TD>
         </TR>
         <TR  vAlign="top">
           <TD colspan="2"><A name="autofocus"></A><B>Autofocus/Autotuning-Related Commands</B></TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">G or Autofocus [#] [#]</TD>
+          <TD class="auto-style1">G or Autofocus [#] [#]</TD>
           <TD>Autofocus; set optional first # to -2 to measure shift and drift, -1 to just measure defocus without changing,
             or 1 for normal autofocus that changes focus to target; set optional second # to 1
             or 2 to focus with View area in Low Dose mode, or -1 to focus with Record area. With&nbsp; &#39;-1 1&#39;, the measured 
@@ -2126,42 +2131,42 @@
             of defocus in the Record area. </TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">IncTargetDefocus #</TD>
+          <TD class="auto-style1">IncTargetDefocus #</TD>
           <TD>Change the defocus target by #</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">SetTargetDefocus #</TD>
+          <TD class="auto-style1">SetTargetDefocus #</TD>
           <TD>Set the defocus target to #</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">ReportAutofocusOffset</TD>
+          <TD class="auto-style1">ReportAutofocusOffset</TD>
           <TD>Report the current value of the defocus offset used for autofocusing</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">SetAutofocusOffset #</TD>
+          <TD class="auto-style1">SetAutofocusOffset #</TD>
           <TD>Set the defocus offset for autofocusing to the given #.&nbsp; The first time 
             it is set, the current value is saved, and it will be restored automatically 
             when the script ends.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">BeamTiltDirection #</TD>
+          <TD class="auto-style1">BeamTiltDirection #</TD>
           <TD>Set beam tilt direction for autofocusing to # (a value from 0 to 3)</TD>
         </TR>
         <TR>
-          <TD class="style12">OppositeAutofocus [#]</TD>
+          <TD class="auto-style1">OppositeAutofocus [#]</TD>
           <TD>In low dose mode, autofocus in area on opposite side of Record from the defined
             Focus area; if optional # is -1, just measure defocus without changing.&nbsp;
             Not available if Balance Shifts is on.</TD>
         </TR>
         <TR>
-          <TD class="style12">FocusChangeLimits # #</TD>
+          <TD class="auto-style1">FocusChangeLimits # #</TD>
           <TD>Set limits on the focus change during autofocus runs for the remainder of the
             script; follow with a negative and a positive number for the limits in microns.&nbsp;
             When an autofocus run exceeds a limit, it will abort and return to the starting
             defocus.&nbsp; Enter with 0 0 to cancel these limits.</TD>
         </TR>
         <TR>
-          <TD class="style12">AbsoluteFocusLimits # #</TD>
+          <TD class="auto-style1">AbsoluteFocusLimits # #</TD>
           <TD>Set limits on the absolute focus reached during autofocus runs.&nbsp; Follow
             with a lower and a upper limit as given by ReportAbsoluteFocus, or 0 0 to cancel
             these limits.&nbsp; Autofocus will abort when a limit is exceeded.&nbsp; These 
@@ -2169,28 +2174,28 @@
             Focus menu, but a 0 0 will not prevent those limits from being applied.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">ReportFocusDrift</TD>
+          <TD class="auto-style1">ReportFocusDrift</TD>
           <TD>Report the drift estimate from the last autofocus, if available</TD>
         </TR>
         <TR>
-          <TD class="style12">ReportAutofocus</TD>
+          <TD class="auto-style1">ReportAutofocus</TD>
           <TD>Report measured defocus from last autofocus, or whether it failed.&nbsp; The 
             defocus is placed into reportedValue1 and a failure code in reportedValue2 (1 
             for inconsistent focus, 2 for absolute limits exceeded, 3 for focus change 
             limits exceeded, or -1 for other error).</TD>
         </TR>
         <TR>
-          <TD class="style12">ReportTargetDefocus</TD>
+          <TD class="auto-style1">ReportTargetDefocus</TD>
           <TD>Report the defocus target</TD>
         </TR>
         <TR>
-          <TD class="style12">FixAstigmatismByCTF [#M] [#L]</TD>
+          <TD class="auto-style1">FixAstigmatismByCTF [#M] [#L]</TD>
           <TD>Measure astigmatism by CTF fitting, report the stigmation change, and correct 
             for those values (or just measure, if the optional #M is nonzero).&nbsp; Image 
             shift is set to 0 unless the optional #L is non-zero.</TD>
         </TR>
         <TR>
-          <TD class="style12">FixComaByCtf&nbsp; [#M] [#L] [#F]</TD>
+          <TD class="auto-style1">FixComaByCtf&nbsp; [#M] [#L] [#F]</TD>
           <TD>Measure beam-tilt misalignment by CTF fitting, report beam tilt change needed, 
             and correct for it (or just measure, if the optional #M is nonzero).&nbsp; Image 
             shift is set to 0 unless the optional #L is non-zero.&nbsp; The user setting for 
@@ -2198,12 +2203,12 @@
             images &gt; 0 for a full array. </TD>
         </TR>
         <TR>
-          <TD class="style12">CorrectAstigmatism [#]</TD>
+          <TD class="auto-style1">CorrectAstigmatism [#]</TD>
           <TD>Measure astigmatism by beam-tilt-induced displacements (BTID), report the stigmator values, and correct for those values 
             (or do not correct, if the optional # is -1)</TD>
         </TR>
         <TR>
-          <TD class="style12">CorrectComa [#]</TD>
+          <TD class="auto-style1">CorrectComa [#]</TD>
           <TD>Measure beam-tilt misalignment by beam-tilt-induced displacements (BTID), report the estimated beam tilt, and correct to 
             bring beam tilt to zero. If the optional # is -1, it will simply measure the 
             misalignment once and report it without correcting it.&nbsp; If the # is 1, it 
@@ -2211,20 +2216,20 @@
             the previous iterations.</TD>
         </TR>
         <TR>
-          <TD class="style12">ReportStigmatorNeeded</TD>
+          <TD class="auto-style1">ReportStigmatorNeeded</TD>
           <TD>Report the needed stigmator change in X and Y that was measured only, but not 
             imposed, after running &#39;FixAstigmatismByCTF 1&#39; or &#39;CorrectAstigmatism 1&#39;.&nbsp; 
             The last run of either astigmatism routine must be by one of these commands; 
             otherwise it will return 0 and 0.</TD>
         </TR>
         <TR>
-          <TD class="style12">ReportComaTiltNeeded</TD>
+          <TD class="auto-style1">ReportComaTiltNeeded</TD>
           <TD>Report the needed change in X and Y beam tilt that was measured only, but not 
             imposed, after running &#39;FixComaByCTF 1&#39;.&nbsp; If the last run of the coma 
             routine applied rather than just measured the tilt, it will return 0 and 0.</TD>
         </TR>
         <TR>
-          <TD class="style12">ZemlinTableau #T [#S] [#C]</TD>
+          <TD class="auto-style1">ZemlinTableau #T [#S] [#C]</TD>
           <TD>Make an array of 8 FFTs of beam-tilted images around a central FFT without 
             beam tilt.&nbsp; The first value #T specifies the beam tilt to use, in 
             milliradians on an FEI scope or percent of full scale on other scopes.&nbsp; The 
@@ -2233,7 +2238,7 @@
             <a href="menu_focus.htm#hid_focus_zemlintableau">Beam-Tilted FFT Array</a> for other details.</TD>
         </TR>
         <TR>
-          <TD class="style12">ReportComaVsISmatrix</TD>
+          <TD class="auto-style1">ReportComaVsISmatrix</TD>
           <TD>Report the matrix computed from the
             <a href="menu_calibration.htm#hid_focustuning_comavs">Coma vs. Image Shift</a> 
             calibration.&nbsp; The 4 values are xpx, xpy, ypx, and ypy, where the change in 
@@ -2242,7 +2247,7 @@
 &nbsp; BTy = ISx * ypx + ISy * ypy</TD>
         </TR>
         <TR>
-          <TD class="style12">AdjustBeamTiltforIS</TD>
+          <TD class="auto-style1">AdjustBeamTiltforIS</TD>
           <TD>&nbsp;Adjusts beam tilt to compensate for the current image shift (as 
             displayed in the Scope Status panel), provided that the
             <a href="menu_calibration.htm#hid_focustuning_comavs">Coma vs. Image Shift</a> 
@@ -2251,7 +2256,7 @@
             when the script exits.</TD>
         </TR>
         <TR>
-          <TD class="style12">CBAstigComa #T #C [#A] [#L] </TD>
+          <TD class="auto-style1">CBAstigComa #T #C [#A] [#L] </TD>
           <TD>FOR TESTING: Runs the routine for astigmatism and coma by CTF fitting.&nbsp; Set #T 
             0 for astigmatism, 1 for coma with 5 images, 2 for coma with full array; #C 0/1 to measure/calibrate; #A 0 to apply a 
             measurement, 1 to just measure, 2 to measure from images in the buffers; #L 
@@ -2262,24 +2267,42 @@
           <TD colspan="2"><A name="low_dose"></A><B>Low Dose Commands</B></TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">GoToLowDoseArea area</TD>
+          <TD class="auto-style1">GoToLowDoseArea area</TD>
           <TD>Switches to the low dose area given by 'area', which must be one of V, F, T, R,
             or S. This will not work if the screen is down.
           </TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">SetLowDoseMode #</TD>
+          <TD class="auto-style1">SetLowDoseMode #</TD>
           <TD>Turns low dose mode on for # nonzero or off for # 0; the previous state of low
             dose is saved in ReportedValue1 as a 0 or 1.&nbsp; This value can be assigned 
             to a variable at the end of the command.</TD>
         </TR>
         <TR>
-          <TD class="style12">ReportLowDose</TD>
+          <TD class="auto-style1">ReportLowDose</TD>
           <TD>Report whether low dose is on or not and the current area, if it is defined.&nbsp;
             The number of the area (0 for V, etc.) is placed in ReportedValue2.</TD>
         </TR>
         <TR>
-          <TD class="style12">SetLDContinuousUpdate #</TD>
+          <TD class="auto-style1">UpdateLowDoseParams A [#K]</TD>
+          <TD>Activates continuous update of the area given by &#39;A&#39; whenever necessary to 
+              reflect changes made by the script to any of the parameters that are recorded 
+              when &#39;Continuous update&#39; is on the Low Dose panel.&nbsp; Specifically, the area 
+              is updated to the current parameters if it is the current area when this command 
+              is given (thus recording changes made before this entry), and also updated 
+              thereafter whenever one of the commands are used to change a relevant parameter.&nbsp; 
+              Set the optional #K non-zero to keep the parameter changes when the script ends; 
+              otherwise the parameters saved when this command is first given will be restored 
+              on script end.&nbsp; A must be one of V, F, T, R, or S.</TD>
+        </TR>
+        <TR>
+          <TD class="auto-style1">RestoreLowDoseParams [A]</TD>
+          <TD>Restores parameters saved for the given area when &#39;UpdateLowDoseParams&#39; was 
+              entered for this area.&nbsp; Omit &#39;A&#39; to restore parameters for all areas, 
+              including ones marked to be kept when the script ends.</TD>
+        </TR>
+        <TR>
+          <TD class="auto-style1">SetLDContinuousUpdate #</TD>
           <TD>Turns &quot;Continuous update&quot; in the Low Dose panel on if # is 
             non-zero or off if # is 0.&nbsp; Continuous update is not active while any script 
             is running.&nbsp; If it is on, microscope parameter changes will have no effect on
@@ -2287,14 +2310,14 @@
                the current Low Dose area.</TD>
         </TR>
         <TR>
-          <TD class="style12">ReportAxisPosition F/T</TD>
+          <TD class="auto-style1">ReportAxisPosition F/T</TD>
           <TD>Reports the axis position in microns and the rotation of the inter-area axis, 
             for the Focus and/or Trial area as specified by F or T.&nbsp;The offset from center 
             of the camera acquisition subarea is also reported in unbinned pixels (in 
             left-handed camera coordinates).</TD>
         </TR>
         <TR>
-          <TD class="style12">SetAxisPosition F/T #D [#A]</TD>
+          <TD class="auto-style1">SetAxisPosition F/T #D [#A]</TD>
           <TD>Modifies the axis position, and optionally the rotation of the inter-area 
             axis, for the Focus and/or Trial area.&nbsp; Follow with F or T to specify the 
             area (both will be changed if Focus and Trial settings are being kept 
@@ -2303,11 +2326,19 @@
             in the Low Dose control panel.&nbsp; Low dose mode must be on to use this 
             command.</TD>
         </TR>
+        <TR>
+          <TD class="auto-style1">CurrentSettingsToLDArea A</TD>
+          <TD>Sets the parameters for low dose area A, which must be one of V, F, T, R, or S, 
+              from the current microscope settings.&nbsp; It must be run while not in low dose 
+              mode and after adjusting to scope state to the desired settings for the area.&nbsp; 
+              It clears out the parameters for the area, enters low dose mode, and goes to the 
+              area so that it is assigned the current state.</TD>
+        </TR>
         <TR  vAlign="top">
           <TD colspan="2"><A name="task_commands"></A><B>Task-Related Commands</B></TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">ResetImageShift [#B] [#R]</TD>
+          <TD class="auto-style1">ResetImageShift [#B] [#R]</TD>
           <TD>Reset image shift and move stage to compensate.&nbsp; Follow with a 1 or 2 for 
             the optional B to move the stage so as to retain or impose backlash, even if the user has not 
             selected the option to do so in the Image Alignment &amp; Focus control panel.&nbsp; 
@@ -2316,54 +2347,54 @@
             default).</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">ResetShiftIfAbove #</TD>
+          <TD class="auto-style1">ResetShiftIfAbove #</TD>
           <TD>Reset image shift and realign image if image shift is greater than the given #
             in microns</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">Eucentricity [#]</TD>
+          <TD class="auto-style1">Eucentricity [#]</TD>
           <TD>Refine eucentricity, or if optional # is entered, do rough eucentricity only
             (1), refine only (2), both steps (3), or refine and realign (6)</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">ReportLastAxisOffset</TD>
+          <TD class="auto-style1">ReportLastAxisOffset</TD>
           <TD>Reports the total lateral offset of the tilt axis estimated from the last Refine 
             Eucentricity run; aborts the script if no offset is available.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">WalkUpTo #</TD>
+          <TD class="auto-style1">WalkUpTo #</TD>
           <TD>Tilt up to given angle in steps and track image position</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">ReverseTilt [#]</TD>
+          <TD class="auto-style1">ReverseTilt [#]</TD>
           <TD>Work out backlash and realign image after reversing tilt direction; enter
             optional 1 or -1 to specify a specific direction for further tilts</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">RefineZLP [#]</TD>
+          <TD class="auto-style1">RefineZLP [#]</TD>
           <TD>Report time of day and run Refine Zero Loss Peak procedure.&nbsp; If the 
             optional # is entered with an interval in minutes, the procedure is not run if 
             the time since the last run is less than that interval.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">AutocenterBeam [#]</TD>
+          <TD class="auto-style1">AutocenterBeam [#]</TD>
           <TD>Start the Beam Autocenter routine.&nbsp; The optional # sets a maximum 
             beam shift in microns; the beam will not be moved if the shift determined 
             from the circle fit to the beam edges exceeds this value.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">CookSpecimen</TD>
+          <TD class="auto-style1">CookSpecimen</TD>
           <TD>Run the Specimen Cooker routine</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">WaitForDose #d [#r]</TD>
+          <TD class="auto-style1">WaitForDose #d [#r]</TD>
           <TD>Start accumulating dose and wait until it reaches the given #d in electrons per
             square Angstrom. Enter the optional #r to set how many times it reports
             progress while waiting (default is 10). Be sure that the screen is down and, if
             in low dose, that the beam is unblanked.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">CenterBeamFromImage [#C] [#M]</TD>
+          <TD class="auto-style1">CenterBeamFromImage [#C] [#M]</TD>
           <TD>Center beam using the existing image in the active buffer by detecting the
             edges of the beam, or from the centroid of the image intensities if #C is
             nonzero. In the latter case the beam should be completely within the camera
@@ -2372,12 +2403,12 @@
             exceeds this value.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">MeasureBeamSize [#B]</TD>
+          <TD class="auto-style1">MeasureBeamSize [#B]</TD>
           <TD>Measures the beam diameter by detecting its edges in the image in buffer A, or in 
             the buffer given by the optional #B.&nbsp; The value is reported in microns.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">MultipleRecords [#N] [#C] [#O] [#D] [#S] [#E] [#F] [#H]</TD>
+          <TD class="auto-style1">MultipleRecords [#N] [#C] [#O] [#D] [#S] [#E] [#F] [#H]</TD>
           <TD>Acquire multiple Record images around the periphery of a hole, using image 
             shift to move to each off-center position.&nbsp; The parameters set in the 
             <a href="hidd_multi_shot_setup.htm">Multiple Record Setup dialog</a> control the 
@@ -2398,7 +2429,7 @@
             Records, but take all other parameters from the dialog.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">TestNextMultiShot #</TD>
+          <TD class="auto-style1">TestNextMultiShot #</TD>
           <TD>Set a variable so that the next MultipleRecords command will test image 
             location by acquiring a Record or montage at each location (if # is 1) or by 
             measuring coma at each location (if # is 2).&nbsp; See
@@ -2406,22 +2437,22 @@
             this testing.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">CalibrateImageShift [#]</TD>
+          <TD class="auto-style1">CalibrateImageShift [#]</TD>
           <TD>Calibrate image shift at the current mag. Do the calibration from scratch if
             the optional # is nonzero.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">ShiftCalSkipLensNorm [0]</TD>
+          <TD class="auto-style1">ShiftCalSkipLensNorm [0]</TD>
           <TD>Keeps projector lens normalization from being done before the next image or 
             stage shift calibration provided that normalization was last done at the current 
             magnification.&nbsp; Follow with an optional 0 to NOT skip normalization.</TD>
         </TR>
         <TR>
-          <TD class="style12">FindPixelSize</TD>
+          <TD class="auto-style1">FindPixelSize</TD>
           <TD>Run the routine to find the pixel size in an image of a cross-line grating.</TD>
         </TR>
         <TR>
-          <TD class="style12">QuickFlyback set# #e</TD>
+          <TD class="auto-style1">QuickFlyback set# #e</TD>
           <TD>Run the camera timing calibration routine in quick flyback mode for an FEI
             STEM camera, where 'set#' specifies the camera parameter set and must be V, F,
             T, R, or P, and #e is the exposure time to use.&nbsp; The routine will not ask for
@@ -2429,7 +2460,7 @@
             master list of flyback times.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">ShiftImageForDrift # # #</TD>
+          <TD class="auto-style1">ShiftImageForDrift # # #</TD>
           <TD>Apply image shift during the next exposure to compensate for a drift in X and Y
             given by the first and second numbers; the third number should be 0 if the
             drift is in unbinned pixels/sec and 1 if it is in nm/sec</TD>
@@ -2438,13 +2469,13 @@
           <TD colspan="2"><A name="navigator"></A><B>Navigator-Related Commands</B></TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">ReportIfNavOpen</TD>
+          <TD class="auto-style1">ReportIfNavOpen</TD>
           <TD>Report whether the Navigator is open; sets reportedValue1 to 1 if it is open 
             and 2 if there is a Navigator file defined 2.&nbsp; Virtually all of the commands 
             described in this section will generate an error if the Navigator is not open.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">NewMap [#n&nbsp; text]</TD>
+          <TD class="auto-style1">NewMap [#n&nbsp; text]</TD>
           <TD>Make the current image or montage a new Navigator map.&nbsp; If an optional #n 
             is entered, text after that replaces, or is added to, the standard note for a 
             map.&nbsp; The text replaces the standard note if #n is 0, is added before it if 
@@ -2452,19 +2483,19 @@
             new map in reportedValue1.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">MakeAnchorMap</TD>
+          <TD class="auto-style1">MakeAnchorMap</TD>
           <TD>Calls the routine to make an anchor map and does the same tests and operations 
             as when run from the button in the dialog, including saving the current image 
             and making it a map if it is not already.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">MoveToNavItem [#]</TD>
+          <TD class="auto-style1">MoveToNavItem [#]</TD>
           <TD>Move the stage to a Navigator item; if no # is entered, move to the current
             Navigator item or to the item that this script is being run on, otherwise move
             to the item whose index in the table is # (numbered from 1)</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">RealignToNavItem #r [#c] [#s #n #z]</TD>
+          <TD class="auto-style1">RealignToNavItem #r [#c] [#s #n #z]</TD>
           <TD>Realign to the current Navigator item, or to the item that this script is being
             run on. For #r, enter 1 to restore the microscope state to the current state
             after the procedure, or 0 not to.&nbsp; For optional #c, enter 1 to use
@@ -2481,7 +2512,7 @@
             stage to the target position and skip the regular realignment there.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">RealignToOtherItem #i #r [#c] [#s #n #z]</TD>
+          <TD class="auto-style1">RealignToOtherItem #i #r [#c] [#s #n #z]</TD>
           <TD>Realign to the Navigator item whose index in the table is #i, numbered from 1.
             For #r, enter 1 to restore the microscope state to the current state after the
             procedure, or 0 not to.&nbsp; For optional #c, enter 1 to use continuous
@@ -2490,36 +2521,36 @@
             aligning to a single map, as decribed for &#39;RealignToNavItem&#39;.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">ForceCenterRealign</TD>
+          <TD class="auto-style1">ForceCenterRealign</TD>
           <TD>Makes Realign to Item align to the map center instead of skipping the first
             round because it was aligned to recently</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">ShiftItemsByAlignment</TD>
+          <TD class="auto-style1">ShiftItemsByAlignment</TD>
           <TD>Shift items at the current registration by the alignment shift of the image in
             buffer A. If rerun on the same image, it applied the change in shift between
             the current and previous run.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">ShiftItemsByCurrentDiff #</TD>
+          <TD class="auto-style1">ShiftItemsByCurrentDiff #</TD>
           <TD>Shift items at the current registration by the difference between the current 
             stage position and the recorded position of the current Navigator item or the 
             item that this script is being run on.&nbsp; The shift is done only if the 
             difference is less than the # in microns.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">ShiftItemsByMicrons #x #y [#r]</TD>
+          <TD class="auto-style1">ShiftItemsByMicrons #x #y [#r]</TD>
           <TD>Shift items at the current registration, or at the registration given by the 
             optional #r, by the amount in microns in #x and #y.&nbsp; Each component of the 
             shift must be less than 100 microns.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">UpdateItemZ</TD>
+          <TD class="auto-style1">UpdateItemZ</TD>
           <TD>Assign current stage Z value to the current Navigator item, or item that this
             script is being run on.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">UpdateGroupZ</TD>
+          <TD class="auto-style1">UpdateGroupZ</TD>
           <TD>Assign current stage Z value to the whole group that the current Navigator
             item, or item that this script is being run on, belongs to. The item must have a
             non-zero group ID. If the group would show up on more than one line with
@@ -2527,18 +2558,18 @@
             'Update Z' button.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">LoadNavMap</TD>
+          <TD class="auto-style1">LoadNavMap</TD>
           <TD>Load the current Navigator item, or the item this script is being run on, if 
             it is a map.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">LoadOtherMap #</TD>
+          <TD class="auto-style1">LoadOtherMap #</TD>
           <TD>Load the Navigator item whose index in the table is #, if it is a map; ; or if 
             # is negative, load the item that many items from the end of the table, i.e., 
             -1 loads on the last item. </TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">ReportNavItem</TD>
+          <TD class="auto-style1">ReportNavItem</TD>
           <TD>Report the index, stage X, Y, Z, label, and note string for the current 
             Navigator item, or the item this script is being run on. The index and stage 
             coordinates are placed in &#39;reportedValue&#39; variables as usual, and the item type 
@@ -2553,19 +2584,19 @@
             used in arithmetic and IF statements.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">ReportOtherItem #</TD>
+          <TD class="auto-style1">ReportOtherItem #</TD>
           <TD>Report similarly on the Navigator item whose index in the table is #, numbered 
             from 1; or if # is negative, reports on item that many items from the end of the 
             table, i.e., -1 reports on the last item. </TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">ReportNextNavAcqItem</TD>
+          <TD class="auto-style1">ReportNextNavAcqItem</TD>
           <TD>Report similarly on the next Navigator item to be acquired.&nbsp; The 
             Navigator must be acquiring.&nbsp; If the last item is being acquired, navIndex 
             is set to -1.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">ReportGroupStatus</TD>
+          <TD class="auto-style1">ReportGroupStatus</TD>
           <TD>For the current Navigator item or the item this script is being run on, 
             reports a code for whether the item is first to be acquired in a group: -1 if 
             Navigator not acquiring, 0 if not in a group, 1 if first to be acquired in a 
@@ -2576,32 +2607,32 @@
             the group still marked for acquisition.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">ReportNumNavAcquire</TD>
+          <TD class="auto-style1">ReportNumNavAcquire</TD>
           <TD>Report the number of Navigator marked for Acquire and marked for Tilt Series 
             as two values; return each as -1 if Navigator is not open.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">ReportNumTableItems</TD>
+          <TD class="auto-style1">ReportNumTableItems</TD>
           <TD>Report the number of items in the Navigator table.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">NavIndexWithLabel str</TD>
+          <TD class="auto-style1">NavIndexWithLabel str</TD>
           <TD>Report the index in the Navigator table of the item whose label is the given 
             string, or 0 if there is none.&nbsp; Sets reportedValue1 with the index.&nbsp; 
             The string can contain spaces and the comparison is not case-sensitive.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">NavIndexWithNote str</TD>
+          <TD class="auto-style1">NavIndexWithNote str</TD>
           <TD>Report the Navigator index of the item whose note is the given string, 
             otherwise just like ItemIndexWithLabel.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">SetNavRegistration #</TD>
+          <TD class="auto-style1">SetNavRegistration #</TD>
           <TD>Set the current registration of the Navigator window to the given number.&nbsp; 
             No item registration values are changed.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">ChangeItemRegistration #i #r</TD>
+          <TD class="auto-style1">ChangeItemRegistration #i #r</TD>
           <TD>Change the registration number of the Navigator item with table index #i to 
             #r.&nbsp; This works just like the Navigator menu entry
             <a href="menu_navigator.htm#hid_navigator_changeregistration">Change 
@@ -2610,30 +2641,30 @@
             and regular registrations.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">ChangeItemColor #i #c</TD>
+          <TD class="auto-style1">ChangeItemColor #i #c</TD>
           <TD>Change the color index of the Navigator item with table index #i to #c, which 
             must be between 0 and 5.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">ChangeItemLabel #i text</TD>
+          <TD class="auto-style1">ChangeItemLabel #i text</TD>
           <TD>Change the label of the Navigator item with table index #i to the given text.&nbsp; 
             The text is limited to 16 characters; items with labels longer than 10 
             characters will not display their properties in the right columns in the table. </TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">ItemForSuperCoord #</TD>
+          <TD class="auto-style1">ItemForSuperCoord #</TD>
           <TD>Set the item number that Navigator supplies supermontage coordinates from when
             a montage image is acquired. Set the number to 0 to restore Navigator to using
             coordinates from the item currently being acquired.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">SkipPiecesOutsideItem #</TD>
+          <TD class="auto-style1">SkipPiecesOutsideItem #</TD>
           <TD>Sets the current montage to skip pieces outside the Navigator item whose
             position in the table is # (numbered from 1). If # is 0, uses the current item.
             If # is &lt; 0, disables the skipping of pieces.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">SuffixForExtraFile</TD>
+          <TD class="auto-style1">SuffixForExtraFile</TD>
           <TD>Sets one or more suffixes so that the Acquire at Points routine will open the 
             corresponding number of extra files whenever it opens a regular file for 
             output.&nbsp;Follow with the suffices, separated by spaces (and thus a suffix cannot 
@@ -2644,19 +2675,19 @@
             the end of acquisition or before opening a new file).</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">SkipAcquiringNavItem</TD>
+          <TD class="auto-style1">SkipAcquiringNavItem</TD>
           <TD>Tells the Navigator to skip the current item and move on to the next.&nbsp; 
             This command has an effect only when included in a script being run as a 
             preliminary action before the main action.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">SkipAcquiringGroup [ID]</TD>
+          <TD class="auto-style1">SkipAcquiringGroup [ID]</TD>
           <TD>Tells the Navigator to skip points whose group ID match either the group ID of 
             the current acquire item, or the optional ID entered with the command.&nbsp; The 
             Navigator must be acquiring at points.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">SkipMoveInNavAcquire [#]</TD>
+          <TD class="auto-style1">SkipMoveInNavAcquire [#]</TD>
           <TD>Tells the Navigator to enable skipping the initial stage move for each 
             following item to be acquired.&nbsp; This command is allowed only when the 
             Navigator is already acquiring at items.&nbsp; It does not affect the user&#39;s 
@@ -2665,32 +2696,32 @@
             stage move and there is no need for the user to make this selection.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">StartNavAcquireAtEnd</TD>
+          <TD class="auto-style1">StartNavAcquireAtEnd</TD>
           <TD>Starts the Navigator Acquire at Items operation after the script ends 
             successfully, using the parameters last defined in the
       <A HREF="hidd_navacquire.htm">Navigator Acquire</A> dialog.&nbsp; The command cannot 
             be used when Navigator is already acquiring or a tilt series is running.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">SaveNavigator</TD>
+          <TD class="auto-style1">SaveNavigator</TD>
           <TD>Saves the Navigator data to the current file or opens a file chooser for 
             saving if a file is not yet defined.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">ReadNavFile name</TD>
+          <TD class="auto-style1">ReadNavFile name</TD>
           <TD>Reads in the Navigator file with the given name, opening the Navigator if 
             necessary.&nbsp; If there are unsaved changes in the Navigator, the user is 
             asked whether to save those first as usual.&nbsp; A cancel from that, or an 
             error opening, reading, or processing the file will generate an error message.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">MergeNavFile</TD>
+          <TD class="auto-style1">MergeNavFile</TD>
           <TD>Merges the Navigator file with the given name into the current items in the 
             Navigator, which must be open.&nbsp; An error opening, reading, or processing the 
             file will generate an error message.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style12">ReportNavFile [#]</TD>
+          <TD class="auto-style1">ReportNavFile [#]</TD>
           <TD>Reports the name of current Navigator file or generates an error if the 
             Navigator is not open with a file defined.&nbsp; Sets the full name into 
             ReportedValue1; or if the optional # is entered with a 1, sets the root of the 

@@ -17,6 +17,7 @@
 #include "EMmontageController.h"
 #include "BeamAssessor.h"
 #include "NavHelper.h"
+#include "MacroProcessor.h"
 #include "NavigatorDlg.h"
 #include "MultiTSTasks.h"
 #include "PiezoAndPPControl.h"
@@ -1373,7 +1374,8 @@ void CLowDoseDlg::ScopeUpdate(int magIndex, int spotSize, double intensity,
   // modify the current set mode unconditionally
   // Disable changes in spectroscopy mode
   if (m_bContinuousUpdate && !mScope->GetChangingLDArea()  && !mScope->GetClippingIS() &&
-    !mWinApp->DoingTasks() && inSetArea >= 0 && 
+    (!mWinApp->DoingTasks() || (mWinApp->mMacroProcessor->DoingMacro() && 
+      mWinApp->mMacroProcessor->IsLowDoseAreaSaved(inSetArea))) && inSetArea >= 0 &&
     !(JEOLscope && mScope->GetHasOmegaFilter() && mScope->mJeolSD.spectroscopy)) {
     ldArea = &mLDParams[inSetArea];
     TransferISonAxis(ldArea->magIndex, ldArea->ISX, ldArea->ISY, magIndex,

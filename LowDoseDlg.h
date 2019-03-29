@@ -24,6 +24,7 @@ public:
   void SetSearchName(CString inStr) {mSearchName = inStr;};
 	void SyncFilterSettings(int inArea, FilterParams *filtParam = NULL);
 	void SetContinuousUpdate(BOOL state);
+  BOOL GetContinuousUpdate() {return m_bContinuousUpdate;};
 	void TransferBaseIS(int mag, double &ISX, double &ISY);
 	void TransferISonAxis(int fromMag, double fromX, double fromY, int toMag, double &toX,
     double &toY);
