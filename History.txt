@@ -3,6 +3,8 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+4/7/19: Added commands to store or run an array of strings as a script.
+
 3/28/19: Added script commands to change and restore low dose parameters and
 to impose current scope settings on a low dose area.
 

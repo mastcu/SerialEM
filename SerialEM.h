@@ -114,6 +114,8 @@ struct JeolParams;
 #define IDLE_TIMEOUT_ERROR  -99
 #define MAX_MACROS 20
 #define MAX_ONE_LINE_SCRIPTS 5
+#define MAX_TEMP_MACROS 5
+#define MAX_TOT_MACROS (MAX_MACROS + MAX_ONE_LINE_SCRIPTS + MAX_TEMP_MACROS)
 #define SCOPE_PANEL_INDEX    3
 #define REMOTE_PANEL_INDEX   4
 #define MONTAGE_DIALOG_INDEX 9
@@ -637,8 +639,8 @@ private:
   NavParams mNavParams;
   CookParams mCookParams;
   RangeFinderParams mTSRangeParams[2];
-  CString mMacroName[MAX_MACROS + MAX_ONE_LINE_SCRIPTS];
-  CString mLongMacroName[MAX_MACROS + MAX_ONE_LINE_SCRIPTS];
+  CString mMacroName[MAX_TOT_MACROS];
+  CString mLongMacroName[MAX_TOT_MACROS];
   CString mMacroFileName[MAX_MACROS];
   CString mMacroSaveFile[MAX_MACROS];
   int mSelectedConSet;
@@ -687,7 +689,7 @@ private:
   BOOL mProcessHere;                   // Global default flag for processing here
 
   CArray<IdleCallBack *, IdleCallBack *> mIdleArray;
-  CString mMacros[MAX_MACROS + MAX_ONE_LINE_SCRIPTS];
+  CString mMacros[MAX_TOT_MACROS];
   MacroControl mMacControl;
 
   float mMemoryLimit;                  // Limit on memory available for buffers

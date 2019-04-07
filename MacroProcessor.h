@@ -16,7 +16,7 @@
 class COneLineScript;
 
 #define MAX_LOOP_DEPTH  40
-#define MAX_CALL_DEPTH  (2 * MAX_MACROS)
+#define MAX_CALL_DEPTH  (2 * MAX_TOT_MACROS)
 #define MAX_MACRO_LABELS 100
 #define MAX_MACRO_SKIPS  100
 #define MACRO_NO_VALUE  -123456789.
@@ -134,7 +134,7 @@ private:
   CString mModeCaps[5];
   CString *mMacNames;
   CString mStrNum[MAX_MACROS];
-  CArray <MacroFunction *, MacroFunction *> mFuncArray[MAX_MACROS];
+  CArray <MacroFunction *, MacroFunction *> mFuncArray[MAX_TOT_MACROS];
   std::set<std::string> mArithAllowed;
   std::set<std::string> mArithDenied;
   std::map<unsigned int, int> mCmdHashMap;
@@ -172,7 +172,7 @@ private:
   int mCallMacro[MAX_CALL_DEPTH];   // Current macro for given call level
   int mCallIndex[MAX_CALL_DEPTH];   // Current index into macro for given call level
   MacroFunction *mCallFunction[MAX_CALL_DEPTH];  // Pointer to function being called
-  BOOL mAlreadyChecked[MAX_MACROS]; // Flag that this macro was already checked
+  BOOL mAlreadyChecked[MAX_TOT_MACROS]; // Flag that this macro was already checked
   WINDOWPLACEMENT mToolPlacement;
   int mNumToolButtons;    // Number of tool bottons to show
   int mToolButHeight;     // Height of tool buttons
@@ -251,6 +251,7 @@ private:
   bool mDisableAlignTrim;    // Flag to disable trimming in autoalign
   BOOL mRestoreMacroEditors; // Flag to reopen the editor windows on startup/settings
   CString mNextProcessArgs;  // Argument string for next process to create
+  int mNumTempMacros;        // Number of temporary macros assigned from script
 
 public:
   void GetNextLine(CString * macro, int & currentIndex, CString &strLine);
@@ -361,6 +362,7 @@ public:
   void RestoreLowDoseParams(int index);
   bool IsLowDoseAreaSaved(int which);
   void UpdateLDAreaIfSaved();
+  int MakeNewTempMacro(CString &strVar, CString &strIndex, bool tempOnly, CString &strLine);
 };
 
 #endif // !defined(AFX_MACROPROCESSOR_H__33178182_58A1_4F3A_B8F4_D41F94866517__INCLUDED_)

@@ -251,6 +251,7 @@ enum {CME_SCRIPTEND = -7, CME_LABEL, CME_SETVARIABLE, CME_SETSTRINGVAR, CME_DOKE
   CME_OPENTEXTFILE, CME_WRITELINETOFILE, CME_READLINETOARRAY, CME_READLINETOSTRING,
   CME_CLOSETEXTFILE, CME_FLUSHTEXTFILE, CME_READSTRINGSFROMFILE, CME_ISTEXTFILEOPEN,
   CME_CURRENTSETTINGSTOLDAREA, CME_UPDATELOWDOSEPARAMS, CME_RESTORELOWDOSEPARAMS,
+  CME_CALLSTRINGARRAY, CME_STRINGARRAYTOSCRIPT, CME_MAKEVARPERSISTENT
 };
 
 // The two numbers are the minimum arguments and whether arithmetic is allowed
@@ -380,7 +381,8 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"OpenTextFile", 4, 0}, {"WriteLineToFile", 1, 0}, {"ReadLineToArray", 2, 0},
 {"ReadLineToString", 2, 0}, {"CloseTextFile", 1, 0}, {"FlushTextFile", 1, 0},
 {"ReadStringsFromFile", 2, 0}, {"IsTextFileOpen", 1, 0}, {"CurrentSettingsToLDArea", 1},
-{"UpdateLowDoseParams", 1}, {"RestoreLowDoseParams", 0},
+{"UpdateLowDoseParams", 1}, {"RestoreLowDoseParams", 0}, {"CallStringArray", 1},
+{"StringArrayToScript", 1}, {"MakeVarPersistent", 1},
 {NULL, 0, 0}
 };
 
@@ -978,11 +980,13 @@ void CMacroProcessor::Run(int which)
     return;
 
   // Clear out wasCalled flags
-  for (mac = 0; mac < MAX_MACROS; mac++) {
+  for (mac = 0; mac < MAX_TOT_MACROS; mac++) {
     for (ind = 0; ind < mFuncArray[mac].GetSize(); ind++) {
       func = mFuncArray[mac].GetAt(ind);
       func->wasCalled = false;
     }
+    if (mac >= MAX_MACROS)
+      mMacNames[mac] = "";
   }
   mCurrentMacro = which;
   mLoopLevel = -1;
@@ -1025,6 +1029,7 @@ void CMacroProcessor::Run(int which)
   mMaxDeltaFocus = 0.;
   mMinAbsFocus = 0.;
   mMaxAbsFocus = 0.;
+  mNumTempMacros = 0;
   mLogAction = LOG_OPEN_IF_CLOSED;
   mLogErrAction = LOG_IGNORE;
   mStartClock = GetTickCount();
@@ -1535,10 +1540,11 @@ void CMacroProcessor::NextCommand()
   case CME_CALLSCRIPT:                                      // CallScript
   case CME_CALL:                                            // Call
   case CME_CALLFUNCTION:                                    // CallFunction
+  case CME_CALLSTRINGARRAY:                                 // CallStringArray
 
     // Skip any of these operations if we are in a termination function
     if (!mExitAtFuncEnd) {
-  
+
       // Calling a macro or function: rely on initial error checks, get the number
       index2 = 0;
       func = NULL;
@@ -1550,10 +1556,20 @@ void CMacroProcessor::NextCommand()
         if (func->wasCalled)
           ABORT_LINE("Trying to call a function already being called in line: \n\n");
         func->wasCalled = true;
-      } else if (CMD_IS(CALL))
+      } else if (CMD_IS(CALL)) {
         index = FindCalledMacro(strLine, false);
-      else
+      } else if (CMD_IS(CALLSTRINGARRAY)) {
+        index = MakeNewTempMacro(strItems[1], strItems[2], true, strLine);
+        if (!index)
+          return;
+        if (CheckBlockNesting(index, -1)) {
+          AbortMacro();
+          return;
+        }
+
+      } else {
         index = itemInt[1] - 1;
+      }
 
       // Save the current index at this level and move up a level
       // If doing a function with string arg, substitute in line for that first so the
@@ -1602,6 +1618,12 @@ void CMacroProcessor::NextCommand()
         SetVariable("NUMCALLARGS", index, VARTYPE_LOCAL, -1, false);
      }
     }
+    break;
+
+  case CME_STRINGARRAYTOSCRIPT:                             // StringArrayToScript
+    index = MakeNewTempMacro(strItems[1], strItems[2], false, strLine);
+    if (!index)
+      return;
     break;
 
   case CME_ONSTOPCALLFUNC:                                  // OnStopCallFunc
@@ -1784,6 +1806,20 @@ void CMacroProcessor::NextCommand()
 
   case CME_CLEARPERSISTENTVARS:                             // ClearPersistentVars
     ClearVariables(VARTYPE_PERSIST);
+    break;
+
+  case CME_MAKEVARPERSISTENT:                               // MakeVarPersistent
+    var = LookupVariable(strItems[1], ix0);
+    if (!var)
+      ABORT_LINE("The variable " + strItems[1] + " is not defined in line:\n\n");
+    index = 1;
+    if (!itemEmpty[2] && !itemInt[2])
+      index = 0;
+    if ((index && var->type != VARTYPE_REGULAR) ||
+      (!index && var->type != VARTYPE_PERSIST))
+      ABORT_LINE("The variable " + strItems[1] + " must be " + 
+        CString(index ? "regular" : "persistent") + " to change its type in line:\n\n");
+    var->type = index ? VARTYPE_PERSIST : VARTYPE_REGULAR;
     break;
     
   case CME_ISVARIABLEDEFINED:                               // IsVariableDefined
@@ -6591,6 +6627,10 @@ void CMacroProcessor::SuspendMacro(BOOL abort)
   mDoingMacro = false;
   if (mStoppedContSetNum >= 0)
     mCamera->InitiateCapture(mStoppedContSetNum);
+  if (abort) {
+    for (ind = MAX_MACROS + MAX_ONE_LINE_SCRIPTS; ind < MAX_TOT_MACROS; ind++)
+      ClearFunctionArray(ind);
+  }
   mWinApp->UpdateBufferWindows();
   mWinApp->SetStatusText(mWinApp->DoingTiltSeries() &&
     mWinApp->mTSController->GetRunningMacro() ? MEDIUM_PANE : COMPLEX_PANE, 
@@ -6658,7 +6698,7 @@ int CMacroProcessor::ScanForName(int macroNumber, CString *macro)
   CString *longMacNames = mWinApp->GetLongMacroNames();
   MacroFunction *funcP;
   int currentIndex = 0;
-  if (macroNumber >= MAX_MACROS)
+  if (macroNumber >= MAX_MACROS && macroNumber < MAX_MACROS + MAX_ONE_LINE_SCRIPTS)
     return 0;
   if (!macro)
     macro = &mMacros[macroNumber];
@@ -6681,6 +6721,7 @@ int CMacroProcessor::ScanForName(int macroNumber, CString *macro)
         funcP->numNumericArgs = strItem[2].IsEmpty() ? 0 : atoi((LPCTSTR)strItem[2]);
         funcP->ifStringArg = !strItem[3].IsEmpty() && strItem[3] != "0";
         funcP->startIndex = currentIndex;  // Trust that this can be used for call
+        funcP->wasCalled = false;
         for (int arg = 0; arg < funcP->numNumericArgs + (funcP->ifStringArg ? 1 : 0); 
           arg++) {
            if (strItem[4 + arg].IsEmpty())
@@ -6705,7 +6746,7 @@ int CMacroProcessor::ScanForName(int macroNumber, CString *macro)
 void CMacroProcessor::ClearFunctionArray(int index)
 {
   int start = index < 0 ? 0 : index;
-  int end = index < 0 ? MAX_MACROS - 1 : index;
+  int end = index < 0 ? MAX_TOT_MACROS - 1 : index;
   for (int mac = start; mac <= end; mac++) {
     for (int ind = (int)mFuncArray[mac].GetSize() - 1; ind >= 0; ind--)
       delete mFuncArray[mac].GetAt(ind);
@@ -6722,7 +6763,9 @@ int CMacroProcessor::FindCalledMacro(CString strLine, bool scanning)
 
   // Look for the name
   index = -1;
-  for (index2 = 0; index2 < MAX_MACROS; index2++) {
+  for (index2 = 0; index2 < MAX_TOT_MACROS; index2++) {
+    if (index >= MAX_MACROS && index < MAX_MACROS + MAX_ONE_LINE_SCRIPTS)
+      continue;
     ScanMacroIfNeeded(index2, scanning);
     if (strCopy == mMacNames[index2]) {
       if (index >= 0) {
@@ -6757,7 +6800,7 @@ MacroFunction *CMacroProcessor::FindCalledFunction(CString strLine, bool scannin
   int &macroNum, int &argInd, int currentMac)
 {
   int colonLineInd = strLine.Find("::");
-  int num, mac, ind, loop, colonItemInd, start = 0, end = MAX_MACROS - 1;
+  int num, mac, ind, loop, colonItemInd, start = 0, end = MAX_TOT_MACROS - 1;
   CString funcName, macName, strItems[MAX_TOKENS];
   MacroFunction *func, *retFunc = NULL;
   macroNum = -1;
@@ -8397,7 +8440,7 @@ int CMacroProcessor::SeparateParentheses(CString *strItems, int maxItems)
 
 void CMacroProcessor::PrepareForMacroChecking(int which)
 {
-  for (int i = 0; i < MAX_MACROS; i++)
+  for (int i = 0; i < MAX_TOT_MACROS; i++)
     mAlreadyChecked[i] = false;
   mCallLevel = 0;
   mCallMacro[0] = which;
@@ -8968,4 +9011,67 @@ void CMacroProcessor::UpdateLDAreaIfSaved()
   mScope->ScopeUpdate(GetTickCount());
   if (!saveContinuous)
     mWinApp->mLowDoseDlg.SetContinuousUpdate(false);
+}
+
+
+int CMacroProcessor::MakeNewTempMacro(CString &strVar, CString &strIndex, bool tempOnly,
+  CString &strLine)
+{
+  int ix0, index, endInd, lastEnd, nextEnd, length;
+  int lowLim = tempOnly ? 0 : -MAX_MACROS;
+  Variable *var = LookupVariable(strVar.MakeUpper(), ix0);
+  if (!var) {
+    ABORT_NORET_LINE("The variable " + strVar + " is not defined in line:\n\n");
+    return 0;
+  }
+  if (var->rowsFor2d) {
+    ABORT_NORET_LINE("The variable " + strVar + " is a 2D array and cannot be run "
+      "as a script in line:\n\n");
+    return 0;
+  }
+  index = mNumTempMacros;
+  if (!strIndex.IsEmpty()) {
+    index = atoi((LPCTSTR)strIndex);
+    if (!index || index > MAX_TEMP_MACROS || index < lowLim) {
+      ABORT_NORET_LINE("The specified extra script number is out of range in line:\n\n");
+      return 0;
+    }
+    if (index < 0) {
+      index = -index - 1;
+    } else {
+      index--;
+      if (index > mNumTempMacros) {
+        ABORT_NORET_LINE("The script number must specify the number of an existing "
+          "\r\nextra script or the next unused number in line:\n\n");
+        return 1;
+      }
+      mNumTempMacros = B3DMAX(mNumTempMacros, index + 1);
+      index += MAX_MACROS + MAX_ONE_LINE_SCRIPTS;
+    }
+  } else {
+    if (mNumTempMacros == MAX_TEMP_MACROS) {
+      ABORT_NORET_LINE("Too many extra scripts are defined to use another in line:\n\n");
+      return 0;
+    }
+    mNumTempMacros++;
+    index += MAX_MACROS + MAX_ONE_LINE_SCRIPTS;
+  }
+  mMacros[index] = "";
+  lastEnd = 0;
+  length = var->value.GetLength();
+  for (;;) {
+    endInd = var->value.Find("\n", lastEnd);
+    if (endInd < 0)
+      endInd = length;
+    nextEnd = endInd + 1;
+    if (endInd > 0 && var->value.GetAt(endInd - 1) == '\r')
+      endInd--;
+    mMacros[index] += var->value.Mid(lastEnd, endInd - lastEnd) + "\r\n";
+    lastEnd = nextEnd;
+    if (lastEnd >= length)
+      break;
+  }
+
+  ScanForName(index, &mMacros[index]);
+  return index;
 }

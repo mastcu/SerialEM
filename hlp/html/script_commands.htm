@@ -151,6 +151,17 @@
             including spaces</TD>
         </TR>
         <TR vAlign="top">
+          <TD class="style4">CallStringArray var [#e]</TD>
+          <TD>
+            Places the array of strings in variable &#39;var&#39; into an &#39;extra&#39; script and runs 
+            it.&nbsp; Extra scripts are temporary and available only until a script ends.&nbsp; Up to 
+              5 extra scripts can be defined; they are added sequentially to positions 
+              numbered 1 to 5.&nbsp; The optional '#e' can be entered to place a script into a 
+              previously used position or the next unused position.&nbsp; If the script 
+              depends on other temporary scripts, they can be loaded first with 
+              'StringArrayToScript'.</TD>
+        </TR>
+        <TR vAlign="top">
           <TD class="style4">Function name [#n] [s] [args]</TD>
           <TD>Defines a function with the given name (without embedded spaces).&nbsp; The
             optional #n indicates the number of numeric arguments and s is non-zero to
@@ -360,6 +371,11 @@
           <TD>Removes all persistent variables defined with :=</TD>
         </TR>
         <TR vAlign="top">
+          <TD class="style4">MakeVarPersistent [#]</TD>
+          <TD>Changes a regular variable to persistent, or if a 0 is entered for #, makes a 
+              persistent variable non-persistent.</TD>
+        </TR>
+        <TR vAlign="top">
           <TD class="style4">IsVariableDefined Var</TD>
           <TD>Reports whether a variable is defined, placing a 1 in
             reportedValue1 if it is and a 0 if it is not.&nbsp; Follow with the variable
@@ -416,6 +432,16 @@
               and the median.  For a 2D array, the statistics can be of the whole array, or of
               one row if the variable is given with a row subscript. Values can be assigned
                to variables at end of commmand.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style4">StringArrayToScript var [#e]</TD>
+          <TD>Loads the array of strings in 'var' into an 'extra' or regular script.&nbsp; Use 
+              this command to make functions in an extra script available, such as to another 
+              extra script.&nbsp; Extra scripts are added sequentially to positions numbered 1 
+              to 5.&nbsp; A positive value '#e' can be entered to place a script into a 
+              previously used position or the next unused position.&nbsp; A negative value (-1 
+              to -20) can be used to replace the script in one of the regular script positions 
+              that are editable and saved to settings.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style4">Require feature [feature] ...<br />
