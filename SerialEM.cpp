@@ -2640,6 +2640,7 @@ int SEMThreeChoiceBox(CString message, CString yesText, CString noText,
 //   C for focus calibrations
 //   D for Direct Electron camera
 //   E for Eagle camera
+//   F for filter (refine ZLP)
 //   G for verbose GIF and JEOL mag lookups
 //   H for Hitachi
 //   I for intensity changes during state changes and autocentering

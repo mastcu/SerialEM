@@ -51,8 +51,11 @@
         the current area, if it has the slit in, then examine the properties of the 
         Record area.</P>
     <P>If the procedure fails to detect the ZLP, you may need to set or adjust the 
-      property RefineZLPMaxMeanRatio.&nbsp; Turn on Administrator mode to see output 
-      from the procedure; the second column shows the mean counts and the third column 
+      property RefineZLPMaxMeanRatio.&nbsp; Run
+        <a href="menu_calibration.htm#hid_calibration_setdebugoutput">Set Debug Output</a> 
+        in the Calibration menu and enter &#39;F&#39; to see output 
+      from the procedure (or turn on Administrator mode in SerialEM 3.7.3 or earlier).&nbsp; 
+        The second column shows the mean counts and the third column 
       shows the difference in mean counts from the previous step, referred to as the 
       delta.&nbsp; The procedure finds the ZLP when the mean falls below the biggest 
       mean value by the RefineZLPMaxMeanRatio, which is 0.02 by default, <i>and</i> 

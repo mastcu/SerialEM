@@ -348,8 +348,7 @@ void CFilterTasks::CalMagShiftNextTask()
   // Get and save the mean count of the image
   curMean = (float)mWinApp->mProcessImage->WholeImageMean(mImBufs);
   mMeanCounts[mEnergyCount] = curMean;
-  report.Format("%7.1f  %7.1f", mCurEnergy, curMean);
-  mWinApp->AppendToLog(report, LOG_IF_ADMIN_OPEN_IF_CLOSED);
+  SEMTrace('c', "%7.1f  %7.1f", mCurEnergy, curMean);
   mEnergies[mEnergyCount++] = mCurEnergy;
   mCurEnergy += mCMSStepSize;
 
@@ -731,8 +730,7 @@ void CFilterTasks::RefineZLPNextTask()
   if (mPeakMean < curMean)
     mPeakMean = curMean;
 
-  report.Format("%7.1f  %7.1f  %7.1f", mCurEnergy + mRZlpSlitWidth / 2., curMean, delta);
-  mWinApp->AppendToLog(report, LOG_IF_ADMIN_OPEN_IF_CLOSED);
+  SEMTrace('F', "%7.1f  %7.1f  %7.1f", mCurEnergy + mRZlpSlitWidth / 2., curMean, delta);
   mEnergies[mRZlpIndex++] = mCurEnergy;
   mCurEnergy -= mRZlpStepSize;
 

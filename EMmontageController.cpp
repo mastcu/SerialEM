@@ -366,7 +366,6 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
     if (cookSkip == 1)
       cookSkip = 10 * mParam->yNframes;
   }
-  mUseContinuousMode = mParam->useContinuousMode;
   if (!mReadingMontage) {
     mParam = mWinApp->GetMontParam();
     mReadStoreMRC = mWinApp->mStoreMRC;
@@ -418,6 +417,7 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
       SEMMessageBox("A montage cannot be saved into this file with the current camera");
       return 1;
     }
+    mUseContinuousMode = mParam->useContinuousMode && cam->useContinuousMode > 0;
 
     // Set mag index now from current low dose params (note this allows a change!)
     setNum = MontageConSetNum(mParam, true);

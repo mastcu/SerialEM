@@ -985,6 +985,8 @@ void CSerialEMView::DrawVectorPolygon(CClientDC &cdc, CRect *rect, CMapDrawItem 
   CPoint point;
   float stX, stY, ptX, ptY;
   int numPoints = (int)convX.size();
+  if (!numPoints)
+    return;
   for (int bpt = 0; bpt <= numPoints; bpt++) {
     stX = convX[bpt % numPoints] + delXstage;
     stY = convY[bpt % numPoints] + delYstage;

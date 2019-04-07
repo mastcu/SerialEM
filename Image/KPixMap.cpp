@@ -130,7 +130,7 @@ int KPixMap::useRect(KImage *inRect, bool keepBGRorder)
     }
     
     if (theType != kFLOAT && theType != kRGB)
-      SetLut(theType, theMin, theRange);
+      SetLut(theType, theMin, B3DMAX(1, theRange));
     
     // Copy data row by row with look-up    
     for (j = 0; j < startFillY; j++) {
