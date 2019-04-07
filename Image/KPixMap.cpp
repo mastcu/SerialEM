@@ -97,8 +97,8 @@ int KPixMap::useRect(KImage *inRect, bool keepBGRorder)
 
   mScale.GetScaleFactors(fMin, fRange);
   fScale = 255.f / fRange;
-  theMin = (int)floor((double)fMin + 0.5);
-  theRange = (int)floor((double)fRange + 0.5);
+  theMin = B3DNINT(fMin);
+  theRange = B3DNINT(fRange);
   inRect->Lock();
   
   // If there's no scaling and the image is already the right size for
