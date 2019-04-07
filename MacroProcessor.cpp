@@ -6742,7 +6742,7 @@ int CMacroProcessor::FindCalledMacro(CString strLine, bool scanning)
 // Make sure macro is unloaded and name scanned for any macros being edited
 void CMacroProcessor::ScanMacroIfNeeded(int index, bool scanning)
 {
-  if (mMacroEditer[index] && scanning) {
+  if (index < MAX_MACROS && mMacroEditer[index] && scanning) {
     for (int ix0 = 0; ix0 <= mCallLevel; ix0++)
       if (mCallMacro[ix0] == index)
         return;
