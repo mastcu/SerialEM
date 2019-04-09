@@ -1026,6 +1026,7 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external)
       (mTSParam.lowMagIndex[mSTEMindex] < mTSParam.magIndex[mSTEMindex]);
     mDidResetIS = false;
     mDidTiltAfterMove = false;
+    mRunningMacro = false;
     mOriginalAngle = mTSParam.intensitySetAtZero ? 0. : angle;
     mRestoredTrackBuf = 0;
     mLDTrialWasMoved = false;
@@ -3791,6 +3792,7 @@ void CTSController::CommonStop(BOOL terminating)
   // No longer need to fix copy on save
   mDoingTS = false;
   mPostponed = true;
+  mRunningMacro = false;
   mWinApp->UpdateBufferWindows();
   mWinApp->SetStatusText(COMPLEX_PANE, "STOPPED TILT SERIES");
   SendEmailIfNeeded(terminating);

@@ -8759,7 +8759,7 @@ bool CMacroProcessor::RestoreCameraSet(int index, BOOL erase)
     mChangedConsets.clear();
     mCamWithChangedSets = mWinApp->GetCurrentCamera();
   }
-  for (int ind = 0; ind < (int)mConsetNums.size(); ind++) {
+  for (int ind = (int)mConsetNums.size() - 1; ind >= 0; ind--) {
     if (mConsetNums[ind] == index || index < 0) {
       if (index < 0 && !erase)
         mChangedConsets.push_back(mConSets[mConsetNums[ind]]);

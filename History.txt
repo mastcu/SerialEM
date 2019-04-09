@@ -3,6 +3,11 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+4/9/19: Fixed restoration of multiple camera sets on script end (In 3.7).
+
+4/8/19: Fixed Tilt series controller becoming unusable when stopped while
+running a script (In 3.7).
+
 4/7/19: Added commands to store or run an array of strings as a script.
 
 3/28/19: Added script commands to change and restore low dose parameters and
