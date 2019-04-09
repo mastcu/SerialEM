@@ -251,7 +251,8 @@ enum {CME_SCRIPTEND = -7, CME_LABEL, CME_SETVARIABLE, CME_SETSTRINGVAR, CME_DOKE
   CME_OPENTEXTFILE, CME_WRITELINETOFILE, CME_READLINETOARRAY, CME_READLINETOSTRING,
   CME_CLOSETEXTFILE, CME_FLUSHTEXTFILE, CME_READSTRINGSFROMFILE, CME_ISTEXTFILEOPEN,
   CME_CURRENTSETTINGSTOLDAREA, CME_UPDATELOWDOSEPARAMS, CME_RESTORELOWDOSEPARAMS,
-  CME_CALLSTRINGARRAY, CME_STRINGARRAYTOSCRIPT, CME_MAKEVARPERSISTENT
+  CME_CALLSTRINGARRAY, CME_STRINGARRAYTOSCRIPT, CME_MAKEVARPERSISTENT,
+  CME_SETLDADDEDBEAMBUTTON, CME_KEEPCAMERASETCHANGES
 };
 
 // The two numbers are the minimum arguments and whether arithmetic is allowed
@@ -382,7 +383,8 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"ReadLineToString", 2, 0}, {"CloseTextFile", 1, 0}, {"FlushTextFile", 1, 0},
 {"ReadStringsFromFile", 2, 0}, {"IsTextFileOpen", 1, 0}, {"CurrentSettingsToLDArea", 1},
 {"UpdateLowDoseParams", 1}, {"RestoreLowDoseParams", 0}, {"CallStringArray", 1},
-{"StringArrayToScript", 1}, {"MakeVarPersistent", 1},
+{"StringArrayToScript", 1}, {"MakeVarPersistent", 1}, {"SetLDAddedBeamButton", 0},
+{"KeepCameraSetChanges", 0},
 {NULL, 0, 0}
 };
 
@@ -1060,6 +1062,7 @@ void CMacroProcessor::RunOrResume()
   mFocusOffsetToRestore = -9999.;
   mDEframeRateToRestore = -1.;
   mDEcamIndToRestore = -1;
+  mLDSetAddedBeamRestore = -1;
   mNextProcessArgs = "";
   mBeamTiltXtoRestore[0] = mBeamTiltXtoRestore[1] = EXTRA_NO_VALUE;
   mBeamTiltYtoRestore[0] = mBeamTiltXtoRestore[1] = EXTRA_NO_VALUE;
@@ -5550,6 +5553,24 @@ void CMacroProcessor::NextCommand()
     }
     break;
     
+  case CME_KEEPCAMERASETCHANGES:                            // KeepCameraSetChanges
+  {
+    ControlSet *masterSets = mWinApp->GetCamConSets() +
+      MAX_CONSETS * mWinApp->GetCurrentCamera();
+    index = -1;
+    if (!itemEmpty[1] && CheckAndConvertCameraSet(strItems[1], itemInt[1], index,
+      strCopy))
+      ABORT_LINE(strCopy);
+    for (ix0 = (int)mConsetNums.size() - 1; ix0 >= 0; ix0--) {
+      if (mConsetNums[ix0] == index || index < 0) {
+        masterSets[mConsetNums[ix0]] = mConSets[mConsetNums[ix0]];
+        mConsetsSaved.erase(mConsetsSaved.begin() + ix0);
+        mConsetNums.erase(mConsetNums.begin() + ix0);
+      }
+    }
+  }
+  break;
+
   case CME_REPORTK2FILEPARAMS:                              // ReportK2FileParams
     index = mCamera->GetK2SaveAsTiff();
     index2 = mCamera->GetSaveRawPacked();
@@ -6312,6 +6333,21 @@ void CMacroProcessor::NextCommand()
     RestoreLowDoseParams(index);
     break;
 
+  case CME_SETLDADDEDBEAMBUTTON:                            // SetLDAddedBeamButton
+    truth = itemEmpty[1] || itemInt[1];
+    if (!mWinApp->LowDoseMode() || mScope->GetLowDoseArea() < 0)
+      ABORT_LINE("You must be in Low Dose mode and in a defined area for line:\n\n");
+    if (mLDSetAddedBeamRestore < 0) {
+      mLDSetAddedBeamRestore = mWinApp->mLowDoseDlg.m_bSetBeamShift ? 1 : 0;
+      mNumStatesToRestore++;
+    }
+    mWinApp->mLowDoseDlg.SetBeamShiftButton(truth);
+    if ((truth ? 1 : 0) == mLDSetAddedBeamRestore) {
+      mLDSetAddedBeamRestore = -1;
+      mNumStatesToRestore--;
+    }
+    break;
+
   case CME_SHOWMESSAGEONSCOPE:                              // ShowMessageOnScope
     SubstituteVariables(&strLine, 1, strLine);
     mWinApp->mParamIO->StripItems(strLine, 1, strCopy);
@@ -6610,6 +6646,8 @@ void CMacroProcessor::SuspendMacro(BOOL abort)
           mBeamTiltYtoRestore[1 - probe]);
         mScope->SetProbeMode(probe);
       }
+      if (mLDSetAddedBeamRestore >= 0)
+        mWinApp->mLowDoseDlg.SetBeamShiftButton(mLDSetAddedBeamRestore > 0);
     }
     mSavedSettingNames.clear();
     mSavedSettingValues.clear();

@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+4/9/19: Added commands to retain camera set changes on script end, and to
+control the button in Low Dose for recording added beam shift.
+
 4/9/19: Fixed restoration of multiple camera sets on script end (In 3.7).
 
 4/8/19: Fixed Tilt series controller becoming unusable when stopped while

@@ -692,6 +692,17 @@ void CLowDoseDlg::OnSetBeamShift()
     FinishSettingBeamShift(true);
 }
 
+// External call for manipulating recording of beam shift
+void CLowDoseDlg::SetBeamShiftButton(BOOL state)
+{
+  if (!m_bLowDoseMode || BOOL_EQUIV(state, m_bSetBeamShift) || 
+    mScope->GetLowDoseArea() < 0)
+    return;
+  m_bSetBeamShift = state;
+  UpdateData(false);
+  OnSetBeamShift();
+}
+
 // Change the view defocus
 void CLowDoseDlg::OnDeltaposSpinviewdefocus(NMHDR *pNMHDR, LRESULT *pResult)
 {

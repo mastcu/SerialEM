@@ -218,6 +218,7 @@ private:
   float mFocusOffsetToRestore;  // Saved value of autofocus offset to restore
   float mDEframeRateToRestore;  // Saved frame rate of DE camera
   int mDEcamIndToRestore; // Index of that camera
+  int mLDSetAddedBeamRestore;   // Saved state of low dose SET function for beam shift
   double mBeamTiltXtoRestore[2];   // Saved beam tilt values to restore for two probe
   double mBeamTiltYtoRestore[2];   // modes
   bool mCompensatedBTforIS; // Flag that beam tilt was compensated for an IS change

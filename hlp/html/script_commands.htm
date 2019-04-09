@@ -629,6 +629,14 @@
             above.&nbsp; If S is omitted, all modified sets will be restored.</TD>
         </TR>
         <TR vAlign="top">
+          <TD class="style8">KeepCameraSetChanges [S]</TD>
+          <TD>Retain changes in one or all modified camera parameter sets when script ends.&nbsp; 
+              If S is omitted, all modified sets will be retained.&nbsp; &#39;RestoreCameraSet&#39; 
+              cannot be used on a set that has been retained.&nbsp; Subsequent changes by the 
+              &#39;Set&#39; commands will be restored on script end or by &#39;RestoreCameraSet&#39;,&nbsp; 
+              unless this command is given again. </TD>
+        </TR>
+        <TR vAlign="top">
           <TD colspan="2"><A name="continuous_mode"></A><B>Continuous Mode Control</B></TD>
         </TR>
         <TR vAlign="top">
@@ -2320,6 +2328,12 @@
               Set the optional #K non-zero to keep the parameter changes when the script ends; 
               otherwise the parameters saved when this command is first given will be restored 
               on script end.&nbsp; A must be one of V, F, T, R, or S.</TD>
+        </TR>
+        <TR>
+          <TD class="auto-style1">SetLDAddedBeamButton [#]</TD>
+          <TD>Turns the &#39;Set&#39; button in the Low Dose panel for recording additional beam shift 
+              on, or turns it off if the optional # is 0.&nbsp; The original state of the 
+              button will be restored on script end.</TD>
         </TR>
         <TR>
           <TD class="auto-style1">RestoreLowDoseParams [A]</TD>

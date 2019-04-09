@@ -226,6 +226,7 @@ public:
   CButton m_butGotoTrial;
   CButton m_butGotoSearch;
   CButton m_butGotoRecord;
+  void SetBeamShiftButton(BOOL state);
 };
 
 //{{AFX_INSERT_LOCATION}}
