@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+4/15/19: Made it create a file with stack name and .openTS extension when
+starting a tilt series, and remove it when the file is closed.
+
 4/15/19: When reusing a grid a points, or filling a polygon with a grid, it
 will now test both the center point of the grid and its original corner for
 being inside the polygon (In 3.7).
