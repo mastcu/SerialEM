@@ -299,7 +299,7 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"OppositeAutoFocus", 0, 0}, {"ReportAutoFocus", 0, 0}, {"ReportTargetDefocus", 0, 0},
 {"Plugin",2,0}, {"ListPluginCalls",0,0}, {"SetStandardFocus",1,0}, {"SetCameraArea",2,0},
 {"SetIlluminatedArea", 1, 0}, {"ReportIlluminatedArea", 0, 0}, {"SelectCamera", 1, 0},
-{"SetLowDoseMode",1,0}, {"TestSTEMshift",3,1}, {"QuickFlyback",2,1}, {"NormalizeLenses",1,0},
+{"SetLowDoseMode",1,0},{"TestSTEMshift",3,1},{"QuickFlyback",2,1},{"NormalizeLenses",1,0},
 {"ReportSlotStatus", 1, 0}, {"LoadCartridge", 1, 0}, {"UnloadCartridge", 0, 0},
 {"BacklashAdjust", 0, 0}, {"SaveFocus", 0, 0}, {"MakeDateTimeDir", 0, 0},
 {"EnterNameOpenFile", 0, 0}, {"FindPixelSize", 0, 0}, {"SetEucentricFocus", 0, 0},
@@ -315,7 +315,7 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"KeyBreak", 0, 0}, {"ReportAlpha", 0, 0}, {"SetAlpha", 1, 0}, {"SetSTEMDetectors", 2, 0},
 {"SetCenteredSize", 4, 0}, {"ImageLowDoseSet", 0, 0}, {"ForceCenterRealign", 0, 0},
 {"SetTargetDefocus", 1, 0}, {"FocusChangeLimits", 2, 1}, {"AbsoluteFocusLimits", 2, 1},
-{"ReportColumnMode",0,0}, {"ReportLens",1,0}, {"ReportCoil",1,0}, {"ReportAbsoluteFocus",0,0},
+{"ReportColumnMode",0,0},{"ReportLens",1,0},{"ReportCoil",1,0},{"ReportAbsoluteFocus",0,0},
 {"SetAbsoluteFocus", 1, 0}, {"ReportEnergyFilter", 0, 0}, {"ReportBeamTilt", 0, 0},
 {"UserSetDirectory", 0, 0}, {"SetJeolSTEMflags", 2, -1}, {"ProgramTimeStamps", 0, 0},
 {"SetContinuous", 2, -1}, {"UseContinuousFrames", 1, 0}, {"WaitForNextFrame", 0, 0},
@@ -325,12 +325,12 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"AddToAutodoc", 2}, {"IsVariableDefined", 1, 0}, {"EnterDefaultedNumber", 3, 0},
 {"SetupWaffleMontage", 2, -1}, {"IncMagIfFoundPixel", 1, 0}, {"ResetDefocus", 0, 0},
 {"WriteAutodoc",0,0}, {"ElectronStats",1,0}, {"ErrorsToLog", 0,0}, {"FlashDisplay", 0,0},
-{"ReportProbeMode",0,0}, {"SetProbeMode",1,0}, {"SaveLogOpenNew",0,0}, {"SetAxisPosition",2,0}
+{"ReportProbeMode",0,0},{"SetProbeMode",1,0},{"SaveLogOpenNew",0,0},{"SetAxisPosition",2,0}
 , {"AddToFrameMdoc", 2, 0}, {"WriteFrameMdoc", 0, 0}, {"ReportFrameMdocOpen", 0, 0},
 {"ShiftCalSkipLensNorm",0,0}, {"ReportLastAxisOffset",0,0}, {"SetBeamTilt",2,0},//end in 3.5
 {"CorrectAstigmatism", 0, 0}, {"CorrectComa", 0, 0}, {"ShiftItemsByCurrentDiff", 1, 0},
 {"ReportCurrentFilename", 0, 0}, {"SuffixForExtraFile", 1, 0}, {"ReportScreen", 0, 0},
-{"GetDeferredSum",0,0}, {"ReportJeolGIF",0,0}, {"SetJeolGIF",1,0}, {"TiltDuringRecord",2,1},
+{"GetDeferredSum",0,0}, {"ReportJeolGIF",0,0},{"SetJeolGIF",1,0},{"TiltDuringRecord",2,1},
 {"SetLDContinuousUpdate", 1, 0}, {"ErrorBoxSendEmail", 1,0}, {"ReportLastFrameFile", 0,0},
 {"Test", 1, 0}, {"AbortIfFailed", 1, 0}, {"PauseIfFailed", 0, 0}, {"ReadOtherFile", 3, 0},
 {"ReportK2FileParams", 0, 0}, {"SetK2FileParams", 1, 0}, {"SetDoseFracParams", 1, 0},
@@ -343,11 +343,11 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"NavIndexWithNote", 1, 0}, {"SetDiffractionFocus", 1, 0}, {"ReportDirectory", 0, 0},
 {"BackgroundTilt",1,1}, {"ReportStageBusy",0,0}, {"SetExposureForMean",1,0}, {"FFT",1,0},
 {"ReportNumNavAcquire", 0, 0}, {"StartFrameWaitTimer", 0,0}, {"ReportTickTime", 0, 0},
-{"ReadTextFile",2,0}, {"RunInShell",1,0}, {"ElapsedTickTime",1,1}, {"NoMessageBoxOnError",0,0},
+{"ReadTextFile",2,0},{"RunInShell",1,0},{"ElapsedTickTime",1,1},{"NoMessageBoxOnError",0,0},
 {"ReportAutofocusOffset", 0, 0}, {"SetAutofocusOffset", 1, 0}, {"ChooserForNewFile", 2,0},
 {"SkipAcquiringNavItem", 0, 0}, {"ShowMessageOnScope", 1, 0}, {"SetupScopeMessage", 1,-1},
 {"Search", 0, 0}, {"SetProperty", 2, 0}, /* End in 3.6 */{"SetMagIndex", 1, 0},
-{"SetNavRegistration",1,0}, {"LocalVar",1,0}, {"LocalLoopIndexes",0,0}, {"ZemlinTableau",1,1},
+{"SetNavRegistration",1,0},{"LocalVar",1,0},{"LocalLoopIndexes",0,0},{"ZemlinTableau",1,1},
 {"WaitForMidnight", 0, 1}, {"ReportUserSetting", 1, 0}, {"SetUserSetting", 2, 0},
 {"ChangeItemRegistration",2,1}, {"ShiftItemsByMicrons",2,1}, {"SetFreeLensControl", 2, 1},
 {"SetLensWithFLC", 2, 0}, {"SaveToOtherFile", 4, 0}, {"SkipAcquiringGroup", 0, 0},
@@ -377,14 +377,14 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"NextProcessArgs", 1, 0}, {"CreateProcess", 1, 0}, {"RunExternalTool", 1, 0},
 {"ReportSpecimenShift", 0, 0}, {"ReportNavFile", 0, 0}, {"ReadNavFile", 1, 0},
 {"MergeNavFile", 1, 0}, {"ReportIfNavOpen",0, 0}, /* End in 3.7 */
-{"NewArray", 3, 0}, {"New2DArray", 1, 0}, {"AppendToArray", 2, 0}, {"TruncateArray", 2, 0},
+{"NewArray", 3, 0}, {"New2DArray", 1, 0}, {"AppendToArray", 2, 0},{"TruncateArray", 2, 0},
 {"Read2DTextFile", 2, 0}, {"ArrayStatistics", 1, 0}, {"ReportFrameBaseName", 0, 0},
 {"OpenTextFile", 4, 0}, {"WriteLineToFile", 1, 0}, {"ReadLineToArray", 2, 0},
 {"ReadLineToString", 2, 0}, {"CloseTextFile", 1, 0}, {"FlushTextFile", 1, 0},
-{"ReadStringsFromFile", 2, 0}, {"IsTextFileOpen", 1, 0}, {"CurrentSettingsToLDArea", 1},
-{"UpdateLowDoseParams", 1}, {"RestoreLowDoseParams", 0}, {"CallStringArray", 1},
-{"StringArrayToScript", 1}, {"MakeVarPersistent", 1}, {"SetLDAddedBeamButton", 0},
-{"KeepCameraSetChanges", 0},
+{"ReadStringsFromFile", 2, 0}, {"IsTextFileOpen", 1, 0},{"CurrentSettingsToLDArea", 1, 0},
+{"UpdateLowDoseParams", 1, 0}, {"RestoreLowDoseParams", 0, 0}, {"CallStringArray", 1, 0},
+{"StringArrayToScript", 1, 0}, {"MakeVarPersistent", 1, 0},{"SetLDAddedBeamButton", 0, 0},
+{"KeepCameraSetChanges", 0, 0},
 {NULL, 0, 0}
 };
 
@@ -6319,12 +6319,12 @@ void CMacroProcessor::NextCommand()
       ABORT_NOLINE("You cannot use ChangeLowDoseParams during a tilt series");
     if (CheckAndConvertLDAreaLetter(strItems[1], 0, index, strLine))
       return;
-    if (mKeepOrRestoreArea[index])
-      return;
-    mLDParamsSaved.push_back(ldParam[index]);
-    mLDareasSaved.push_back(index);
-    mKeepOrRestoreArea[index] = (itemEmpty[2] || !itemInt[2]) ? 1 : -1;
-    UpdateLDAreaIfSaved();
+    if (!mKeepOrRestoreArea[index]) {
+      mLDParamsSaved.push_back(ldParam[index]);
+      mLDareasSaved.push_back(index);
+      mKeepOrRestoreArea[index] = (itemEmpty[2] || !itemInt[2]) ? 1 : -1;
+      UpdateLDAreaIfSaved();
+    }
     break;
 
   case CME_RESTORELOWDOSEPARAMS:                            // RestoreLowDoseParams
