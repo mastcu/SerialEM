@@ -49,6 +49,7 @@ struct StoreData
   bool montage;           // flag if montaging
   int protectNum;         // Original file index if protected, -1 if not
   int saveOnNewMap;       // Flag to autosave when new map (-1 not asked yet)
+  bool hasOpenTSfile;     // Flag that a .openTS file was created and needs to be removed
 };
 
 #endif
