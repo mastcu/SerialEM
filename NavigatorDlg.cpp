@@ -2027,7 +2027,7 @@ void CNavigatorDlg::OnAddMarker()
   if (!OKtoAddMarkerPoint())
     return;
   BufferStageToImage(imBuf, aMat, delX, delY);
-  MarkerStagePosition(imBuf, aMat, delX, delY, stageX, stageY, false, &pcInd, &xInPiece,
+  MarkerStagePosition(imBuf, aMat, delX, delY, stageX, stageY, 0, &pcInd, &xInPiece,
     &yInPiece);
   CMapDrawItem *item = AddPointMarkedOnBuffer(imBuf, stageX, stageY, MakeUniqueID());
   item->mPieceDrawnOn = pcInd;
@@ -2109,13 +2109,19 @@ void CNavigatorDlg::OnGotoMarker()
 
 // Return the image marker as a stage position
 void CNavigatorDlg::MarkerStagePosition(EMimageBuffer * imBuf, ScaleMat aMat, float delX, 
-  float delY, float & stageX, float & stageY, BOOL useLineEnd, int *pcInd, 
+  float delY, float & stageX, float & stageY, int useLineEnd, int *pcInd, 
   float *xInPiece, float *yInPiece)
 {
   float ptX, ptY;
   ScaleMat aInv;
-  ptX = useLineEnd ? imBuf->mLineEndX : imBuf->mUserPtX;
-  ptY = useLineEnd ? imBuf->mLineEndY : imBuf->mUserPtY;
+
+  // Use the end of the line if the value is positive, or keep it in screen middle if < 0
+  ptX = useLineEnd > 0 ? imBuf->mLineEndX : imBuf->mUserPtX;
+  ptY = useLineEnd > 0 ? imBuf->mLineEndY : imBuf->mUserPtY;
+  if (useLineEnd < 0 && imBuf->mImage) {
+    ptX = (float)(imBuf->mImage->getWidth() / 2.);
+    ptY = (float)(imBuf->mImage->getHeight() / 2.);
+  }
   AdjustMontImagePos(imBuf, ptX, ptY, pcInd, xInPiece, yInPiece);
   aInv = MatInv(aMat);
   stageX = aInv.xpx * (ptX - delX) + aInv.xpy * (ptY - delY);
@@ -2632,7 +2638,7 @@ BOOL CNavigatorDlg::UserMousePoint(EMimageBuffer *imBuf, float inX, float inY,
       }
     }
     if (distMin > 1.e9)
-      return true;
+      return false;
 
     // If doing multiple selection and this item is already in selection, remove it and
     // switch current item to previous or next one
@@ -2775,7 +2781,7 @@ CArray<CMapDrawItem *, CMapDrawItem *> *CNavigatorDlg::GetMapDrawItems(
       BOOL montaging = mWinApp->Montaging();
       int *activeList;
       LowDoseParams *ldp;
-      int magInd, sizeX, sizeY, ind;
+      int magInd, sizeX, sizeY, ind, useLineEnd;
       float ptX, ptY, cornX, cornY, rotation;
       asIfLowDose = mWinApp->LowDoseMode() || mWinApp->GetDummyInstance();
       if (montaging)
@@ -2802,8 +2808,11 @@ CArray<CMapDrawItem *, CMapDrawItem *> *CNavigatorDlg::GetMapDrawItems(
           mShiftManager->AdjustCameraToStageForTilt(c2s, tiltAngle);
         CMapDrawItem *box = new CMapDrawItem;
         *acquireBox = box;
+        useLineEnd = imBuf->mHasUserLine ? 1 : 0;
+        if (showMulti && mWinApp->LowDoseMode() && mWinApp->mLowDoseDlg.m_iDefineArea)
+          useLineEnd = -1;
         MarkerStagePosition(imBuf, aMat, delX, delY, box->mStageX, box->mStageY,
-          imBuf->mHasUserLine);
+          useLineEnd);
         sizeX = conSet->right - conSet->left;
         sizeY = conSet->bottom - conSet->top;
         if (montaging && !showMulti) {
@@ -4039,17 +4048,18 @@ void CNavigatorDlg::AddCirclePolygon(float radius)
 void CNavigatorDlg::AddGridOfPoints(bool likeLast)
 {
   CString label;
-  CMapDrawItem *item, *poly, *patItems[8];
+  CMapDrawItem *item, *poly, *patItems[8], *searchPoly[2];
   int i, j, k, icen, kstart, kend, dir, registration, groupID, startnum, numInPat = 0;
   int jmin, kmin, jmn, kmn, imin, start1, start2, end1, end2, num;
   int jdir, jstart, jend, drawnOnID, jmax, kmax, krange, jrange, midj, midk, kdir;
   int numJgroups, numKgroups, jgroup, kgroup, numInKgroup, numInJgroup;
   int numPairsOnAxes, numPairs, indPair[15], pairJ[15], pairK[15];
   int groupInd, groupNum[6], grpj, grpk, numInGrp[6], groupTmp[6][6], lineGroup[6][6];
-  float vecx[6], vecy[6], length[6], angles[15], stageZ, polyArea, itemArea;
+  float vecx[6], vecy[6], length[6], angles[15], stageZ, polyArea[2], itemArea;
   float xx, yy, spacing, xmin, xmax, ymin, ymax, range, delX, delY, xcen, ycen;
   float inSpacing = mLastGridInSpacing > 0. ? mLastGridInSpacing : 1.0f;
   float incStageX1, incStageX2, incStageY1, incStageY2, groupExtent, jSpacing, kSpacing;
+  float xcorner, ycorner;
   bool acquire, refresh, awayFromFocus = false;
   double err, errmin, diff, diffmax, axis;
   double specX, specY, stageX, stageY;
@@ -4206,7 +4216,8 @@ void CNavigatorDlg::AddGridOfPoints(bool likeLast)
         mLast5ptOnImage = mDrawnOnMontBufInd >= 0;
         mLast5ptOffsetX = xcen - mItem->mPtX[imin];
         mLast5ptOffsetY = ycen - mItem->mPtY[imin];
-
+        xcorner = mItem->mPtX[imin];
+        ycorner = mItem->mPtX[imin];
       } else {
 
         // One point: reuse last 5-point geometry
@@ -4216,6 +4227,8 @@ void CNavigatorDlg::AddGridOfPoints(bool likeLast)
         end2 = mLast5ptEnd2;
         mIncX2 = mLast5ptIncX2;
         mIncY2 = mLast5ptIncY2;
+        xcorner = xcen;
+        ycorner = ycen;
         xcen += mLast5ptOffsetX;
         ycen += mLast5ptOffsetY;
         imin = 0;
@@ -4227,24 +4240,58 @@ void CNavigatorDlg::AddGridOfPoints(bool likeLast)
       if (likeLast) {
         if (mLastGridFillItem) {
 
-          // Search for smallest polygon or map that center point is in
-          for (i = 0; i < mItemArray.GetSize(); i++) {
-            item = mItemArray[i];
-            if ((item->mType == ITEM_TYPE_POLYGON || item->mType == ITEM_TYPE_MAP) &&
-              item->mRegistration == registration && InsideContour(item->mPtX, item->mPtY, 
-              item->mNumPoints, xcen, ycen)) {
+          // Search for smallest polygon or map that either center point or current point 
+          // is in.  Loop on corner ([0]) then center ([1])
+          for (j = 0; j < 2; j++) {
+            searchPoly[j] = NULL;
+            for (i = 0; i < mItemArray.GetSize(); i++) {
+              item = mItemArray[i];
+              if ((item->mType == ITEM_TYPE_POLYGON || item->mType == ITEM_TYPE_MAP) &&
+                item->mRegistration == registration && InsideContour(item->mPtX, 
+                  item->mPtY, item->mNumPoints, j ? xcen : xcorner, j ? ycen : ycorner)) {
                 itemArea = ContourArea(item->mPtX, item->mPtY, item->mNumPoints);
-                if (itemArea < 10. * mLastGridPolyArea && (!poly || itemArea < polyArea)){
-                  poly = item;
-                  polyArea = itemArea;
+                if (itemArea < 10. * mLastGridPolyArea &&
+                  (!searchPoly[j] || itemArea < polyArea[j])) {
+                    searchPoly[j] = item;
+                    polyArea[j] = itemArea;
+                    poly = item;
                 }
+              }
             }
           }
           if (!poly) {
-            AfxMessageBox("The last grid filled a map or polygon, but the middle\n of the"
-              " points in the group is not inside any map or polygon.", MB_EXCLAME);
+            AfxMessageBox("The last grid filled a map or polygon, but neither\n"
+              "the current point nor the middle of the grid that\n"
+              "would extend from the current point as a corner are\n"
+              "inside any map or polygon.", MB_EXCLAME);
             mLastGridPatternPoly = -1;
             return;
+          }
+
+          // If both points are in different polygons, see if one point is in both 
+          // polygons, and if so its smallest polygon is the right one
+          if (searchPoly[0] && searchPoly[1] && searchPoly[0] != searchPoly[1]) {
+            if (InsideContour(searchPoly[1]->mPtX,  searchPoly[1]->mPtY, 
+              searchPoly[1]->mNumPoints, xcorner, ycorner)) {
+              poly = searchPoly[0];
+            } else if (InsideContour(searchPoly[0]->mPtX, searchPoly[0]->mPtY,
+              searchPoly[0]->mNumPoints, xcen, ycen)) {
+              poly = searchPoly[1];
+            } else {
+
+              // Otherwise it is ambiguous, have to ask
+              if (SEMThreeChoiceBox("It is ambiguous whether you want to fill polygon " +
+                searchPoly[0]->mLabel + " or polygon " + searchPoly[1]->mLabel,
+                "Use Polygon " + searchPoly[0]->mLabel, "Use Polygon " +
+                searchPoly[1]->mLabel, "", MB_YESNO | MB_ICONQUESTION) == IDYES)
+                poly = searchPoly[0];
+              else
+                poly = searchPoly[1];
+              if (mDrawnOnMontBufInd >= 0)
+                mWinApp->mMainView->GetMapItemsForImageCoords(&mImBufs[mDrawnOnMontBufInd],
+                  true);
+              SetCurrentItem(true);
+            }
           }
         }
 
@@ -4287,9 +4334,10 @@ void CNavigatorDlg::AddGridOfPoints(bool likeLast)
             mLastGridPatternPoly = -1;
             return;
           }
-          if (!InsideContour(poly->mPtX, poly->mPtY, poly->mNumPoints, xcen, ycen)) { 
-            AfxMessageBox("The middle of the points in the group is not inside the "
-              "polygon", MB_EXCLAME);
+          if (!(InsideContour(poly->mPtX, poly->mPtY, poly->mNumPoints, xcen, ycen) ||
+            InsideContour(poly->mPtX, poly->mPtY, poly->mNumPoints, xcorner, ycorner))) {
+            AfxMessageBox("Neither the middle of the points in the group\n"
+              "nor the corner point is inside the polygon", MB_EXCLAME);
             mLastGridPatternPoly = -1;
             return;
           }
@@ -4786,9 +4834,9 @@ void CNavigatorDlg::AddGridOfPoints(bool likeLast)
     // See if this is a good division
     if (numJgroups && !likeLast) {
      Redraw();
-     label.Format("There are %d groups with %.1f points per group\n\nDo you want to keep this"
-        " set of groups?", numJgroups, (float)(mItemArray.GetSize() - mNumberBeforeAdd) / 
-        numJgroups);
+     label.Format("There are %d groups with %.1f points per group\n\n"
+       "Do you want to keep this set of groups?", numJgroups, 
+       (float)(mItemArray.GetSize() - mNumberBeforeAdd) / numJgroups);
       if (AfxMessageBox(label, MB_QUESTION) == IDNO) {
         for (k = mNumberBeforeAdd; k < mItemArray.GetSize(); k++) {
           item = mItemArray[k];

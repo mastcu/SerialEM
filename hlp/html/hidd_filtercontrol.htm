@@ -111,13 +111,15 @@
       </P>
       <P><B>Adjustment readout</B></P>
       <P>This text shows the energy shift that will be applied to compensate for 
-        magnification, slit width, and ZLP alignment changes if the 'Do mag-dependent 
+          ZLP alignment changes and also for magnification and slit width changes if the 'Do mag-dependent 
         energy shifts' option is selected. The value is set to zero when SerialEM 
         detects that you have aligned the zero loss peak through 
         DigitalMicrograph or the FEI interface, it changes by the 
         calibrated amount of mag-dependent energy shift when you change magnification, 
-        it changes by half of any change in slit width that you make, and it changes by 
-        the amount determined by the Refine ZLP procedure. On a JEOL, the adjustment 
+        it changes by half of any change in slit width that you make if the slit does not 
+          open around its center, and it changes by 
+        the amount determined by the Refine ZLP procedure. When &#39;Do mag-dependent energy 
+          shifts&#39; is not selected, only the latter changes should affect it.&nbsp; On a JEOL, the adjustment 
         will include the offset imposed to keep energy shifts positive. The factors 
         determining the adjustment value will be retained for up to 1 hour between 
         sessions of the program, so you should be able to exit and restart without 
@@ -156,8 +158,7 @@
       <P>If this option is selected, the program will adjust spectrum offset to keep the 
         slit centered on a desired energy loss when magnification or slit width is 
         changed. In order for this to work correctly, mag-dependent energy shifts need 
-        to be calibrated and you need to be sure to inform SerialEM whenever you align 
-        the ZLP.</P>
+        to be calibrated and SerialEM needs to be aware of when the ZLP is aligned.</P>
       <P><B>Switch cameras automatically (GIF only)</B></P>
       <P>With this option selected, the program will automatically select the GIF or 
         upper camera when EFTEM mode is turned on or off, and it turns EFTEM mode on or 

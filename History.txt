@@ -3,6 +3,22 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+4/15/19: When reusing a grid a points, or filling a polygon with a grid, it
+will now test both the center point of the grid and its original corner for
+being inside the polygon (In 3.7).
+
+4/15/19: Made it show multishot pattern at center of screen when defining
+focus/trial area offset (In 3.7).
+
+4/15/19: Fixed setting marker point when Navigator edit mode is on but no
+selectable points are within the display (In 3.7).
+
+4/15/19: Made Filter Control panel include only the actual adjustments being
+applied in the net adjustment that it shows (In 3.7).
+
+4/15/19: Made blanking during dark reference take priority over other logic
+about whether blanking is needed, in case screen signals are bad (In 3.7).
+
 4/9/19: Added commands to retain camera set changes on script end, and to
 control the button in Low Dose for recording added beam shift.
 

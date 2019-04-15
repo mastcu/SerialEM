@@ -419,10 +419,10 @@ void CFilterControlDlg::ManageMagShift()
   if (mParam->alignedSlitWidth && mParam->adjustForSlitWidth)
     shift -= (mParam->slitWidth - mParam->alignedSlitWidth) / 2.f;
   mParam->currentMagShift = shift;
-  shift += mParam->refineZLPOffset;
   double loss = LossToApply();
   // VS2015 did not want to concatenate these strings
-  m_strMagShift.Format("Adjustment = " LOSS_FORMAT, shift);
+  m_strMagShift.Format("Adjustment = " LOSS_FORMAT, (m_bDoMagShifts ? shift : 0) +
+    mParam->refineZLPOffset);
   m_strOffset.Format("Net %s = " LOSS_FORMAT, 
     mWinApp->mScope->GetHasOmegaFilter() ? "Shift" : "Offset", loss);
   UpdateData(false);

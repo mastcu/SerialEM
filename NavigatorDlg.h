@@ -521,7 +521,7 @@ public:
   bool OKtoAdjustBacklash(bool fastStage);
   void AdjustBacklash(int index = -1, bool showC = false);
   void MarkerStagePosition(EMimageBuffer * imBuf, ScaleMat aMat, float delX, float delY, 
-    float & stageX, float & stageY, BOOL useLineEnd = false, int *pcInd = NULL,
+    float & stageX, float & stageY, int useLineEnd = 0, int *pcInd = NULL,
     float *xInPiece = NULL, float *yInPiece = NULL);
   BOOL m_bShowAcquireArea;
   CButton m_butAddMarker;

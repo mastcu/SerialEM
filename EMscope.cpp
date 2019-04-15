@@ -7507,6 +7507,10 @@ BOOL CEMscope::NeedBeamBlanking(int screenPos, BOOL STEMmode, BOOL &goToLDarea)
   bool mustBeDown = screenPos == spDown && mWinApp->DoDropScreenForSTEM() != 0;
   goToLDarea = false;
 
+  // Blanking during a dark reference takes priority, in case screen signals are screwed
+  if (mWinApp->mCamera->EnsuringDark())
+    return true;
+
   // Don't blank if camera is acquiring unless it is being managed by the camera
   // If screen is up blank in low dose, while pretending to be in LD, or for shutterless
   if (mCameraAcquiring && B3DABS(mShutterlessCamera) < 2)

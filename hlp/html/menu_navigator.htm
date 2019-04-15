@@ -514,8 +514,11 @@
       'Add points', add the point, and press 'Stop Adding'.&nbsp; If you are not 
       filling a polygon, the point should be at the same corner of the region to fill 
       as the corner of the 5-point pattern with two adjacent points.&nbsp; If you are 
-      filling a polygon, put the point near the middle of the polygon to reduce 
-      extrapolation errors.</P>
+      filling a polygon, the program will test for whether either this point itself, or 
+        the center of the grid that would extend from that point as its corner, is in 
+        the polygon.&nbsp; Thus, you can put the point near the middle of the polygon to reduce 
+      extrapolation errors.&nbsp; (The test for the point itself being in the polygon 
+        was added in SerialEM 3.7.4).</P>
       <P>To add a line of points, simply add a group of three points to indicate the 
         extent and spacing of the line, such as:</P>
       <P>X&nbsp;&nbsp;&nbsp; X&nbsp;&nbsp;&nbsp; o&nbsp;&nbsp;&nbsp; o &nbsp;&nbsp; o 
@@ -541,16 +544,18 @@
       <P><A NAME="hid_montaginggrids_addgridlikelastone"></A><B>Add Grid Like Last One command (Navigator 
           - Montaging &amp; Grids sub-menu)</B></P>
        <P>After adding a grid of points with the previous command, you can use this command 
-    to add another grid of the same kind without having to answer any queries.&nbsp; 
-    'Of the same kind' means that if the last grid was added on a group of points or 
-    a single point, the command can be used if a point is selected; whereas if the 
-    last grid was added with a polygon or map selected, a polygon or map must again 
-    be selected.&nbsp;&nbsp; If you added a grid with a group of points or single 
-    point selected and chose to fill a polygon or map with the grid, then the 
-    program will search for the smallest polygon or map containing the center of the 
-    pattern implied by the current point and fill that area.&nbsp; In other words, 
-    when you use a single point to reuse a previous 5 or 7 point pattern, the point 
-    does not need to be inside the polygon, as long as the position at the center of 
+           to add another grid of the same kind without having to answer any queries.&nbsp; 
+           &#39;Of the same kind&#39; means that if the last grid was added on a group of points or 
+           a single point, the command can be used if a point is selected; whereas if the 
+           last grid was added with a polygon or map selected, a polygon or map must again 
+           be selected.&nbsp;&nbsp; If you added a grid with a group of points or single 
+           point selected and chose to fill a polygon or map with the grid, then the 
+           program will search for the smallest polygon or map containing either the point 
+           itself or the center of the 
+    pattern extending from the current point as its corner and fill that area.&nbsp; In other words, 
+    when you use a single point to reuse a previous 5 or 7 point pattern, you can put the point 
+           right in the middle (as of SerialEM 3.7.4) or you can put it in the corner of 
+           the grid square, even outside the polygon, as long as the position at the center of 
     the previous pattern, starting at that point as its corner, is inside the 
     polygon.</P>
     <P>In sum, this command should work just the way you want: add a 
