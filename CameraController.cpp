@@ -2880,14 +2880,17 @@ void CCameraController::Capture(int inSet, bool retrying)
 
       // For K3 linear mode, it needs to scale by the linear / counting ratio
       mTD.CountScaling = 1. / mParam->linear2CountingRatio;
+      if (mUseK3CorrDblSamp)
+        mTD.CountScaling /= mParam->K3CDSLinearRatio;
 
       // Add the offset per 10 ms of exposure to the scaling; compute per ms and multiply
       // by 10 just in case there is a scale between 1 and 10.
       // Possibly temporary workaround to extra frame of offset in continuous mode
       scaleFac = 0.001f;
       if (conSet.mode == CONTINUOUS)
-        scaleFac *= (float)((mExposure + mK3ReadoutInterval) / mExposure);
-      offsetPerMs = B3DNINT(mParam->linearOffset * scaleFac / mK3ReadoutInterval);
+        scaleFac *= (float)((mExposure + GetK2ReadoutInterval(mParam)) / mExposure);
+      offsetPerMs = B3DNINT(mParam->linearOffset * scaleFac / 
+        GetK2ReadoutInterval(mParam));
       mTD.CountScaling += 10 * offsetPerMs;
       mTD.GatanReadMode = K3_LINEAR_SET_MODE;
     }

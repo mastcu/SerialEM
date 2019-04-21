@@ -351,6 +351,7 @@ class DLL_IM_EX CCameraController
   GetMember(float, LastK2BaseTime);
   GetSetMember(float, K2ReadoutInterval);
   GetSetMember(float, K3ReadoutInterval);
+  GetSetMember(float, K3CDSLinearRatio);
   float GetMinK2FrameTime(CameraParameters *param);
   float GetK2ReadoutInterval(CameraParameters *param);
   CString *GetK2FilterNames() {return &mK2FilterNames[0];};
@@ -731,6 +732,7 @@ class DLL_IM_EX CCameraController
   int mNumK2Filters;
   float mMinK2FrameTime;        // Minimum frame time allowed in dose fractionation
   float mK2ReadoutInterval;       // Actual readout interval, base for all times
+  float mK3CDSLinearRatio;      // Ratio of CDS to non-CDS shots in linera mode
   float mMinK3FrameTime;        // Minimum frame time for K3
   float mK3ReadoutInterval;     // Actual readout interval for K3
   int mZoomFilterType;          // Type for antialias filter

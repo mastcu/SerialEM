@@ -2147,6 +2147,8 @@ int CParameterIO::ReadProperties(CString strFileName)
             camP->linear2CountingRatio = (float)itemDbl[1];
           else if (MatchNoCase("LinearOffset"))
             camP->linearOffset = (float)itemDbl[1];
+          else if (MatchNoCase("K3CDSLinearRatio"))
+            camP->K3CDSLinearRatio = (float)itemDbl[1];
           else if (MatchNoCase("ExtraRotation"))
             camP->extraRotation = (float)itemDbl[1];
           else if (MatchNoCase("ExtraGainReferences"))
