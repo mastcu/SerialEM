@@ -3133,9 +3133,13 @@
         <TR>
           <TD height="20">RealignItemMaxLMField</TD>
           <TD height="20">Maximum camera field of view to allow when considering whether to 
-            realign to an LM map.&nbsp; This can be set to about half the size of the 
-            smallest objective aperture that might be present during the realign operation.&nbsp; 
-            The default is 15 microns, suitable with a 30-micron aperture. </TD>
+            realign to an LM map.&nbsp; This can be set to 0.7 times the size of the 
+            smallest objective aperture that might be present during the realign operation, 
+              minus a few microns of allowance for error in aperture position.&nbsp;Or, if 
+              there is a magnification that you know can be imaged without an aperture 
+              intruding, you can set it to a number larger than the maximum of the X and Y 
+              sizes of the camera field at that magnification.&nbsp; The default is 15 
+              microns, which is very conservative. </TD>
         </TR>
         <TR>
           <TD height="20">RealignItemWeightCCCThresh</TD>

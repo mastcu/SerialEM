@@ -459,7 +459,7 @@ CSerialEMApp::CSerialEMApp()
   mDisplayNot120DPI = false;
   mToolTitleHeight = mToolExtraWidth = mToolExtraHeight = 0;
   mFilterParams.autoCamera = true;
-  mFilterParams.autoMag = true;
+  mFilterParams.autoMag = false;
   mFilterParams.energyLoss = 0.;
   mFilterParams.zeroLoss = false;
   mFilterParams.slitIn = false;
@@ -959,11 +959,12 @@ BOOL CSerialEMApp::InitInstance()
 
   // Create the little font for everybody so there is one place to fix this
   if (mSmallFontsBad)
-    mLittleFont.CreatePointFont(B3DNINT(7680. / mSystemDPI), "Microsoft Sans Serif");
-  else if (mDisplayNot120DPI && mSystemDPI < 120)    // Keep this since 96 dpi has had it
-     mLittleFont.CreatePointFont(80, "Microsoft Sans Serif");
+    mLittleFont.CreatePointFont((mDisplayNot120DPI && mSystemDPI < 120) ? 80 : 70,
+      "Microsoft Sans Serif");
+  else if (mDisplayNot120DPI && mSystemDPI < 120)
+    mLittleFont.CreatePointFont(80, "Microsoft Sans Serif");
   else
-     mLittleFont.CreatePointFont(B3DNINT(7200. / mSystemDPI), "Small Fonts");
+    mLittleFont.CreatePointFont(60, "Small Fonts");
 
   // Set constants based on DPI if not supplied by user
   if (!mToolTitleHeight) {
