@@ -478,7 +478,7 @@ BOOL CTSSetupDialog::OnInitDialog()
   CRect idRect;
   CWnd *wnd;
   int index, panel, j;
-  CFont *littleFont = mWinApp->GetLittleFont();
+  CFont *littleFont = mWinApp->GetLittleFont(GetDlgItem(IDC_STATSTARTAT));
   CBaseDlg::OnInitDialog();
   mMagTab = mWinApp->GetMagTable();
   mCamParams = mWinApp->GetCamParams();

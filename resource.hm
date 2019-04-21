@@ -1,8 +1,7 @@
-// Microsoft Developer Studio generated Help ID include file.
+// Microsoft Visual C++ generated Help ID include file.
 // Used by SerialEM.rc
 //
 #define HIDC_SPINBIN                    0x808c045c    // IDD_MONTAGESETUP
-#define HIDC_SPINCOPY                   0x808603f9    // IDD_BUFFERCONTROL
 #define HIDC_SPINMAG                    0x808c045b    // IDD_MONTAGESETUP
 #define HIDC_SPINXFRAMES                0x808c045f    // IDD_MONTAGESETUP
 #define HIDC_SPINYFRAMES                0x808c0460    // IDD_MONTAGESETUP

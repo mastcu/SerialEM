@@ -398,7 +398,7 @@ public:
   BOOL ActPostExposure(ControlSet *conSet = NULL, bool alignHereOK = false);
   BOOL DoingComplexTasks();
   GetSetMember(BOOL, SmallFontsBad)
-  GetSetMember(BOOL, DisplayNot120DPI)
+  GetSetMember(BOOL, DisplayNotTruly120DPI)
   void SetStatusText(int iPane, CString strText);
   BOOL SetWindowPlacement(WINDOWPLACEMENT *winPlace);
   BOOL GetWindowPlacement(WINDOWPLACEMENT *winPlace);
@@ -521,7 +521,6 @@ public:
   GetSetMember(int, AssumeCamForDummy);
   int *GetDlgColorIndex() {return &mDlgColorIndex[0];};
   GetSetMember(bool, AbsoluteDlgIndex);
-  CFont *GetLittleFont() {return &mLittleFont;};
 
   HitachiParams *GetHitachiParams() {return &mHitachiParams;};
 
@@ -700,7 +699,7 @@ private:
   DWORD mCheckThreshold;       // Threshold interval for adding time to timeouts
   BOOL mActPostExposure;       // Flag to live dangerously
   BOOL mSmallFontsBad;         // Flag to use MS Sans Serif instead (laptop?)
-  BOOL mDisplayNot120DPI;      // Flag that dialogs need to set 120 DPI
+  BOOL mDisplayNotTruly120DPI;      // Flag that dialogs need to set 120 DPI
   BOOL mEFTEMMode;             // State flag for EFTEM mode
   BOOL mSTEMMode;              // Flag for STEM mode
   BOOL mSettingSTEM;           // Flags to prevent double calls into set routines
@@ -749,6 +748,7 @@ private:
   int mToolTitleHeight;
   BOOL mShowRemoteControl;      // Flag to show remote control dialog
   CFont mLittleFont;            // Central place to get the right font
+  bool mMadeLittleFont;         // Flag that it was made already
   bool mHasFEIcamera;           // Flag that there is an FEI camera
   BOOL mKeepEFTEMstate;         // Flag to stay in or out of EFTEM on startup/shutdown
   BOOL mUseRecordForMontage;    // Flag to use Record parameters for Montage
@@ -811,6 +811,8 @@ int GetIntegerVersion(void);
 void AdjustSizesForSuperResolution(int iCam);
 void MainViewResizing(CRect &winRect, bool FFTwin);
 void OpenOrCloseMacroEditors(void);
+CFont * GetLittleFont(CWnd *stat);
+float GetScalingForDPI();
 };
 
 

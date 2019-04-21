@@ -202,7 +202,7 @@ void CMainFrame::InitializeOneDialog(DialogTable &inTable, int colorIndex,
   inTable.fullHeight = rect.Height();
   /*if (colorIndex == SCOPE_PANEL_INDEX && !mWinApp->GetAnyDirectDetectors())
     inTable.fullHeight -= ((CScopeStatusDlg *)dlg)->DoseHeightAdjustment();*/
-  if (mWinApp->GetDisplayNot120DPI()) {
+  if (!mWinApp->GetDisplayNotTruly120DPI()) {
     inTable.width += mWinApp->GetToolExtraWidth();
     inTable.fullHeight += mWinApp->GetToolExtraHeight();
   }
@@ -311,14 +311,14 @@ void CMainFrame::SetDialogPositions()
   }
 
   for (i = 0; i < mNumDialogs; i++) {
-    if (mDialogTable[i].state & TOOL_OPENCLOSED && 
+    if (mDialogTable[i].state & TOOL_OPENCLOSED &&
       !(mDialogTable[i].state & TOOL_FULLOPEN) &&
       mDialogTable[i].midHeight != 0)
       height = mDialogTable[i].midHeight;
     else if (mDialogTable[i].state & TOOL_OPENCLOSED)
       height = mDialogTable[i].fullHeight;
     else
-      height = DIALOG_CLOSED_HEIGHT;
+      height = B3DNINT(DIALOG_CLOSED_HEIGHT * mWinApp->GetScalingForDPI());
 
     if (mDialogTable[i].state & TOOL_FLOATDOCK) {
       height += mWinApp->GetToolTitleHeight();

@@ -136,31 +136,15 @@ BOOL CImageLevelDlg::OnInitDialog()
 
   CRect rect;
   m_eBlackLevel.GetWindowRect(&rect);
-  mFont.CreateFont((rect.Height() - 4), 0, 0, 0, FW_MEDIUM,
-      0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
+  mFont.CreateFont(rect.Height() - (int)(4 * mWinApp->GetScalingForDPI()), 0, 0, 0, 
+    FW_MEDIUM, 0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
       CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
       FF_DONTCARE, "Microsoft Sans Serif");
   m_eBlackLevel.SetFont(&mFont);
   m_eWhiteLevel.SetFont(&mFont);
   m_eZoom.SetFont(&mFont);
 
-  // Make the font bigger for all the text
-  mFont2.CreatePointFont(B3DCHOICE(mWinApp->GetDisplayNot120DPI(), 
-    9600 / mWinApp->GetSystemDPI(), 80), "Microsoft Sans Serif", NULL);
-  m_statZoom.SetFont(&mFont2);
-  m_statBlack.SetFont(&mFont2);
-  m_statWhite.SetFont(&mFont2);
-  m_statCon.SetFont(&mFont2);
-  m_statBri.SetFont(&mFont2);
-  m_butInvertCon.SetFont(&mFont2);
-  m_butAutozoom.SetFont(&mFont2);
-  m_butAntialias.SetFont(&mFont2);
-  m_butAreaFrac.SetFont(&mFont2);
-  m_butTruncation.SetFont(&mFont2);
-  m_butScaleBars.SetFont(&mFont2);
-  m_butCrosshairs.SetFont(&mFont2);
-
-  // Set up the spin control and a zoom
+    // Set up the spin control and a zoom
   m_sbcZoom.SetRange(0,100);
   m_sbcZoom.SetPos(50);
 

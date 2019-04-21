@@ -272,7 +272,7 @@ BOOL CMontageSetupDlg::OnInitDialog()
   int ind, i, delta, camPosInds[MAX_DLG_CAMERAS];
   CRect butrect;
   bool needFont;
-  CFont *littleFont = mWinApp->GetLittleFont();
+  CFont *littleFont = mWinApp->GetLittleFont(GetDlgItem(IDC_STATICY1));
   CString *modeName = mWinApp->GetModeNames();
   mLowDoseMode = mWinApp->LowDoseMode();
   mMagTab = mWinApp->GetMagTable();

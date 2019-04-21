@@ -67,9 +67,9 @@ END_MESSAGE_MAP()
 
 BOOL CBaseDlg::OnInitDialog() 
 {
-  if (mWinApp->GetDisplayNot120DPI())
+  if (!mWinApp->GetDisplayNotTruly120DPI())
     mSetDPI.Attach(AfxFindResourceHandle(MAKEINTRESOURCE(mIDD), RT_DIALOG),
-                  m_hWnd, mIDD, 120.0);
+                  m_hWnd, mIDD, B3DNINT(1.25 *mWinApp->GetSystemDPI()));
   CDialog::OnInitDialog();
   EnableToolTips(true);
   return TRUE;

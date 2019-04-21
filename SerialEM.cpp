@@ -380,6 +380,7 @@ CSerialEMApp::CSerialEMApp()
     mCamParams[i].falcon3ScalePower = 4;
     mCamParams[i].linear2CountingRatio = 8.;
     mCamParams[i].linearOffset = 0.;
+    mCamParams[i].K3CDSLinearRatio = 1.685f;
     mCamParams[i].origDefects = NULL;
     mCamParams[i].defNameHasFrameFile = false;
     mCamParams[i].taskTargetSize = 512;
@@ -456,7 +457,7 @@ CSerialEMApp::CSerialEMApp()
   mSelectedConSet = 3;
   mActPostExposure = true;
   mSmallFontsBad = false;
-  mDisplayNot120DPI = false;
+  mDisplayNotTruly120DPI = false;
   mToolTitleHeight = mToolExtraWidth = mToolExtraHeight = 0;
   mFilterParams.autoCamera = true;
   mFilterParams.autoMag = false;
@@ -664,6 +665,7 @@ CSerialEMApp::CSerialEMApp()
   mUseRecordForMontage = false;
   mUseViewForSearch = false;
   mIdleBaseCount = 0;
+  mMadeLittleFont = false;
   SEMUtilInitialize();
   traceMutexHandle = CreateMutex(0, 0, 0);
   sStartTime = GetTickCount();
@@ -925,7 +927,7 @@ BOOL CSerialEMApp::InitInstance()
   HDC screen = GetDC(0);
   mSystemDPI = GetDeviceCaps(screen, LOGPIXELSX);
   ReleaseDC(0, screen);
-  mDisplayNot120DPI = mSystemDPI != 120;
+  mDisplayNotTruly120DPI = mSystemDPI == 120;
   mag = mSystemDPI;
   b3dSetStoreError(1);
 
@@ -955,16 +957,10 @@ BOOL CSerialEMApp::InitInstance()
       OnFileOpenlog();
     }
   }
-  SEMTrace('1', "Detected system DPI of %d, using DPI %d", mag, mSystemDPI);
-
-  // Create the little font for everybody so there is one place to fix this
-  if (mSmallFontsBad)
-    mLittleFont.CreatePointFont((mDisplayNot120DPI && mSystemDPI < 120) ? 80 : 70,
-      "Microsoft Sans Serif");
-  else if (mDisplayNot120DPI && mSystemDPI < 120)
-    mLittleFont.CreatePointFont(80, "Microsoft Sans Serif");
-  else
-    mLittleFont.CreatePointFont(60, "Small Fonts");
+  if (mSystemDPI != 120)
+    mDisplayNotTruly120DPI = false;
+  SEMTrace('1', "Detected system DPI of %d, using DPI %d%s", mag, mSystemDPI, 
+    mDisplayNotTruly120DPI ? " but not scaling for 120" : "");
 
   // Set constants based on DPI if not supplied by user
   if (!mToolTitleHeight) {
@@ -3998,4 +3994,34 @@ void CSerialEMApp::OpenOrCloseMacroEditors(void)
   mMacroProcessor->OpenOrJustCloseOneLiners(mReopenMacroEditor[MAX_MACROS]);
   UpdateBufferWindows();
   RestoreViewFocus();
+}
+
+// Returns the little font based on the size of a regaulr font static text box
+// creates it the first time it is asked for
+CFont * CSerialEMApp::GetLittleFont(CWnd *stat)
+{
+  CRect rect;
+  int height = 8;
+  if (mMadeLittleFont)
+    return &mLittleFont;
+  CString fontName = "Small Fonts";
+  if (mSmallFontsBad || (mSystemDPI >= 120 && !mDisplayNotTruly120DPI))
+    fontName = "Microsoft Sans Serif";
+  height = B3DNINT(height * GetScalingForDPI());
+  if (stat) {
+    stat->GetWindowRect(&rect);
+    height = rect.Height();
+  }
+  mLittleFont.CreateFont(B3DNINT(0.77 * height), 0, 0, 0, FW_MEDIUM,
+    0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
+    CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
+    FF_DONTCARE, fontName);
+  mMadeLittleFont = true;
+  return &mLittleFont;
+}
+
+// Returns the scaling that is being applied for DPI
+float CSerialEMApp::GetScalingForDPI()
+{
+  return (float)B3DCHOICE(mDisplayNotTruly120DPI, 1., mSystemDPI / 96.);
 }

@@ -136,12 +136,12 @@ BOOL CScopeStatusDlg::OnInitDialog()
   // Get the fonts for big and medium windows
   CRect rect;
   m_statCurrent.GetWindowRect(&rect);
-  mBigFont.CreateFont((rect.Height()), 0, 0, 0, FW_MEDIUM,
+  mBigFont.CreateFont(B3DNINT(0.95 * rect.Height()), 0, 0, 0, FW_MEDIUM,
       0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
       CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
       FF_DONTCARE, mBigFontName);
   m_statObjective.GetWindowRect(&rect);
-  mMedFont.CreateFont(rect.Height(), 0, 0, 0, FW_MEDIUM,
+  mMedFont.CreateFont(B3DNINT(0.95 * rect.Height()), 0, 0, 0, FW_MEDIUM,
       0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
       CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
       FF_DONTCARE, mBigFontName);

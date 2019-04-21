@@ -1711,7 +1711,7 @@ BOOL CCameraSetupDlg::OnInitDialog()
   float scale;
   CRect boxrect, butrect;
   CButton *radio;
-  CFont *littleFont = mWinApp->GetLittleFont();
+  CFont *littleFont = mWinApp->GetLittleFont(GetDlgItem(IDC_STATLEFT));
   BOOL useViewForSearch = mWinApp->GetUseViewForSearch();
   int camPosInds[MAX_DLG_CAMERAS];
   int posButtonIDs[6] = {IDC_BUTQUARTER, IDC_BUTHALF, IDC_BUTFULL, IDC_BUTSMALLER10, 

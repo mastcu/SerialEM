@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+4/21/19: Implemented proper font and dialog scaling for high DPI and made the
+AssumeDPI property work to set any desired scaling.
+
 4/17/19: SEM_3-7-4
 4/17/19: Backed out DPI-awareness changes in 3.7.3, it wasn't right (In 3.7).
 

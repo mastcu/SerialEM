@@ -199,19 +199,23 @@
           <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
-          <TD>DisplayIsNot120DPI</TD>
-          <TD>The program detects the display resolution (DPI, dots per inch) when it starts 
-            and by default it modifies font sizes and some constants if it is not 120 DPI.&nbsp; Set this 
-            property to 0 to use the default font sizes and dialog scalings even if the 
-            detected DPI is different from 120.&nbsp; Set it to 1 if the detected DPI is 120 
-            and you enter a different value in the &#39;AssumeDPI&#39;&nbsp; property, so that both 
-            dialog and font scaling will occur.</TD>
+          <TD>AssumeDPI</TD>
+          <TD>Follow with a DPI value to use in font and dialog scaling instead of the 
+              detected one.&nbsp; This enables the program to be scaled independently of the 
+              Windows scaling or DPI setting.&nbsp; If you want to scale for 120 DPI, you will also need 
+              to set &#39;DisplayIsNot120DPI 0&#39;</TD>
           <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
-          <TD>AssumeDPI</TD>
-          <TD>Follow with a DPI value to use in font and dialog scaling instead of the 
-            detected one, see previous property. </TD>
+          <TD>DisplayIsNot120DPI</TD>
+          <TD>The program detects the display resolution (DPI, dots per inch) when it starts 
+            and by default it modifies font sizes and some constants if it is not 120 DPI.&nbsp; 
+              When it is 120 DPI, it assumes that this is an FEI scope where monitor scaling 
+              was set to 120 DPI even though the monitor was probably 96 DPI, and it sets the 
+              variable controlled by this property to 1 to prevent the scaling.&nbsp; Set this 
+              property to 0 if the display really is 120 DPI (e.g., a laptop screen) and you 
+              want the program to scale just as for other DPIs.&nbsp; Setting to 1 will 
+              prevent scaling if you enter 120 for the &#39;AssumeDPI&#39;&nbsp; property.</TD>
           <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
@@ -1811,6 +1815,11 @@
           <TD>For a K3 camera, the offset that needs to be subtracted from linear mode 
             images per camera readout.&nbsp; The default is 8192; this number is defined by 
             the algorithm in the software and should not need adjusting.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>K3CDSLinearRatio</TD>
+          <TD>For a K3 camera, ratio of counts in linear mode with correlated double sample on 
+              to counts with it off; the default is 1.685.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>EndCameraProperties</TD>

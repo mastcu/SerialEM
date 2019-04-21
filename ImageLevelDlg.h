@@ -86,7 +86,6 @@ private:
   float mSampleMin, mSampleMax;
 	float mAreaFrac;
 	CFont mFont;
-	CFont mFont2;
 public:
   afx_msg void OnScalebar();
   BOOL m_bScaleBars;

@@ -250,9 +250,9 @@ void CToolDlg::OnRButtonDblClk(UINT nFlags, CPoint point)
 
 BOOL CToolDlg::OnInitDialog() 
 {
-  if (mWinApp->GetDisplayNot120DPI())
+  if (!mWinApp->GetDisplayNotTruly120DPI())
     mSetDPI.Attach(AfxFindResourceHandle(MAKEINTRESOURCE(mIDD), RT_DIALOG),
-                    m_hWnd, mIDD, 120.0);
+                    m_hWnd, mIDD, B3DNINT(1.25 *mWinApp->GetSystemDPI()));
   CDialog::OnInitDialog();
 
   // Make the font smaller for the title and "more" message
@@ -265,7 +265,7 @@ BOOL CToolDlg::OnInitDialog()
       mBigFontName = "MS Sans Serif";
 
     // And the right small font for laptop or 120 DPI
-    mLittleFont = mWinApp->GetLittleFont();
+    mLittleFont = mWinApp->GetLittleFont(topLine);
 
     topLine->SetFont(mLittleFont);
     topLine = (CStatic *)GetDlgItem(IDC_STATMORE);
@@ -337,7 +337,7 @@ void CToolDlg::OnPaint()
 void CToolDlg::DrawSideBorders(CPaintDC &dc)
 {
   CRect clientRect;
-  int lrSize = 4;
+  int lrSize = (int)(4 * mWinApp->GetScalingForDPI());
   GetClientRect(&clientRect);
   dc.FillSolidRect(0, 0, lrSize, clientRect.Height(), mBorderColor);
   dc.FillSolidRect(clientRect.Width() - lrSize, 0, clientRect.Width(),
@@ -349,16 +349,19 @@ void CToolDlg::DrawButtonOutline(CPaintDC &dc, CWnd *but, int thickness, COLORRE
 {
   CRect winRect, clientRect, butRect;
   int iLeft, iTop, border;
+  thickness = (int)(thickness * mWinApp->GetScalingForDPI());
   GetWindowRect(&winRect);
   GetClientRect(&clientRect);
   border = (winRect.Width() - clientRect.Width()) / 2;
   but->GetWindowRect(&butRect);
-  iLeft = butRect.left - winRect.left - 5;
-  iTop = butRect.top - winRect.top - (winRect.Height() - clientRect.Height() - border) -2;
-  CRect dcRect(iLeft, iTop, iLeft + butRect.Width() + 4, iTop + butRect.Height() + 4);
+  iLeft = butRect.left - winRect.left - (thickness + 2);
+  iTop = butRect.top - winRect.top - (winRect.Height() - clientRect.Height() - border) -
+    (thickness - 1);
+  CRect dcRect(iLeft, iTop, iLeft + butRect.Width() + (thickness + 1), 
+    iTop + butRect.Height() + (thickness + 1));
   CPen pen;
   CBrush brush;
-  pen.CreatePen(PS_SOLID, 3, color);
+  pen.CreatePen(PS_SOLID, thickness, color);
 
   // "transparent" brush
   brush.CreateStockObject(HOLLOW_BRUSH);

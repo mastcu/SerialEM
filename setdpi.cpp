@@ -218,7 +218,8 @@ struct dialogdata_t
     LPCWSTR    faceName;    
 };
 
-static void getptsize( HDC &dc, HFONT &font, SIZE *pSize )
+// DNM Modified to return average width per character as floating point
+static void getptsize( HDC &dc, HFONT &font, double *width, int *height )
 {
     HFONT oldfont = 0;
     static char *sym = "abcdefghijklmnopqrstuvwxyz"
@@ -228,8 +229,8 @@ static void getptsize( HDC &dc, HFONT &font, SIZE *pSize )
     oldfont = (HFONT)SelectObject(dc,font);
     GetTextMetricsA(dc,&t);
     GetTextExtentPointA(dc,sym, 52, &sz);
-    pSize->cy = t.tmHeight;
-    pSize->cx = (sz.cx / 26 + 1) / 2;
+    *height = t.tmHeight;
+    *width = sz.cx / 52.;
     SelectObject(dc,oldfont);    
 }
 
@@ -329,7 +330,8 @@ CSetDPI::~CSetDPI()
 
 void CSetDPI::Attach(HINSTANCE hInst,HWND _hwnd,int _IDD,double dpi)
 {
-    int t;
+    int t, height;
+    double width;
 
     if (hwnd) Detach();
 
@@ -379,18 +381,21 @@ void CSetDPI::Attach(HINSTANCE hInst,HWND _hwnd,int _IDD,double dpi)
     oldfont=(HFONT)::SendMessage(hwnd, WM_GETFONT, 0, 0);
     SendMessage(hwnd, WM_SETFONT, (LPARAM)font, TRUE);
   
-	SIZE szf;
+	//SIZE szf;
 
 	
     PAINTSTRUCT ps;
     HDC dc=BeginPaint(hwnd, &ps);
-    getptsize(dc,font,&szf);
+
+    // DNM modified to use floating point width and scale based on mean width that was
+    // obtained with a reference DPI, plus a little extra
+    getptsize(dc,font,&width, &height);
     EndPaint(hwnd, &ps);
 	
 
-    double x_n=szf.cx,
+    double x_n=width * (8. / 7.79) * 1.02,
            x_d=4,
-           y_n=szf.cy,
+           y_n=height,
            y_d=8;
 
 	RECT rect;
