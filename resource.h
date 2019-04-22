@@ -1439,6 +1439,14 @@
 #define IDC_RUN_ONE_LINE4               2464
 #define IDC_RUN_ONE_LINE5               2465
 #define IDC_CHECK_USE_CORR_DBL_SAMP     2467
+#define IDC_STATLISTHEADER2             2468
+#define IDC_STATLISTHEADER3             2469
+#define IDC_STATLISTHEADER4             2470
+#define IDC_STATLISTHEADER5             2471
+#define IDC_STATLISTHEADER6             2472
+#define IDC_STATLISTHEADER7             2473
+#define IDC_STATLISTHEADER8             2474
+#define IDC_STATLISTHEADER9             2475
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -1897,7 +1905,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        230
 #define _APS_NEXT_COMMAND_VALUE         33334
-#define _APS_NEXT_CONTROL_VALUE         2468
+#define _APS_NEXT_CONTROL_VALUE         2476
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

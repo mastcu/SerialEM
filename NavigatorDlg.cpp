@@ -295,7 +295,7 @@ END_MESSAGE_MAP()
 BOOL CNavigatorDlg::OnInitDialog() 
 {
   // label, color, X, Y, Z, type, reg, corner, extras
-  int fields[10] = {37,16,23,23,20,15,19,15,8,8};
+  int fields[10] = {37,16,25,25,21,15,19,15,8,8};
   int tabs[10], i;
 	CBaseDlg::OnInitDialog();
   mDocWnd = mWinApp->mDocWnd;
@@ -322,12 +322,11 @@ BOOL CNavigatorDlg::OnInitDialog()
   mFilenameBorderX = clientRect.Width() - editRect.Width();
   mInitialized = true;
   m_bCollapseGroups = mHelper->GetCollapseGroups();
-
   m_iColor = 0;
 
   tabs[0] = fields[0];
   for (i = 1; i < 10; i++)
-    tabs[i] = tabs[i - 1] + fields[i]; 
+    tabs[i] = tabs[i - 1] + fields[i];
   m_listViewer.SetTabStops(10, tabs);
   m_sbcCurrentReg.SetRange(1,MAX_CURRENT_REG);
   m_sbcRegPtNum.SetRange(1,MAX_REGPT_NUM);
@@ -566,7 +565,7 @@ void CNavigatorDlg::Update()
       else
         str += ts.Format(";  Estimated completion in %H:%M:%S");
     }
-    m_statListHeader.SetWindowText(str);
+    ManageListHeader(str);
   }
 
   // Determine if it is OK to turn on file at group
@@ -1643,8 +1642,7 @@ int CNavigatorDlg::ProcessRangeKey(const char *key, int &shiftIndex, int &start,
     if (mShiftTIndex >= 0 || mShiftDIndex >= 0 || mShiftAIndex >= 0 || mShiftNIndex > 0)
       return 1;
     shiftIndex = mCurrentItem;
-    m_statListHeader.GetWindowText(mSavedListHeader);
-    m_statListHeader.SetWindowText(CString("Select other end of range, press Shift ") + 
+    ManageListHeader(CString("Select other end of range, press Shift ") + 
       key);
     return 1;
   }
@@ -1652,7 +1650,7 @@ int CNavigatorDlg::ProcessRangeKey(const char *key, int &shiftIndex, int &start,
   // Get ordered range
   start = B3DMIN(shiftIndex, mCurrentItem);
   end = B3DMAX(shiftIndex, mCurrentItem);
-  m_statListHeader.SetWindowText(mSavedListHeader);
+  ManageListHeader();
   shiftIndex = -1;
   return 0;
 }
@@ -1805,7 +1803,7 @@ CString CNavigatorDlg::FormatCoordinate(float inVal, int maxLen)
   str.Format("%.1f\t", inVal);
   int nadd = maxLen + 1 - str.GetLength();
   for (int i = 0; i < nadd; i++)
-    str.Insert(0, "  ");
+    str.Insert(0, i ? "  " : " ");
   return str;
 }
 
@@ -2374,10 +2372,9 @@ void CNavigatorDlg::OnDrawPoints()
   mNumberBeforeAdd = (int)mItemArray.GetSize();
   mAddPointID = MakeUniqueID();
   if (mAddingPoints) {
-    m_statListHeader.GetWindowText(mSavedListHeader);
-    m_statListHeader.SetWindowText("Use Backspace to remove added points one by one");
+    ManageListHeader("Use Backspace to remove added points one by one");
   } else
-    m_statListHeader.SetWindowText(mSavedListHeader);
+    ManageListHeader();
 
   Update();
   mWinApp->RestoreViewFocus();
@@ -2394,7 +2391,7 @@ void CNavigatorDlg::OnDrawPolygon()
 
     // If finishing with a polygon, turn off flag, delete item if empty
     mAddingPoly = 0;
-    m_statListHeader.SetWindowText(mSavedListHeader);
+    ManageListHeader();
     if (SetCurrentItem()) {
       if (!mItem->mNumPoints) {
         OnDeleteitem();
@@ -2423,8 +2420,7 @@ void CNavigatorDlg::OnDrawPolygon()
 
     // Starting poly, just set the flag
     mAddingPoly = 1;
-    m_statListHeader.GetWindowText(mSavedListHeader);
-    m_statListHeader.SetWindowText("Use Backspace to remove added points one by one");
+    ManageListHeader("Use Backspace to remove added points one by one");
   }
   Update();
   mWinApp->RestoreViewFocus();
@@ -7642,7 +7638,6 @@ void CNavigatorDlg::AcquireAreas(bool fromMenu)
   mLastAcqDoneTime = GetTickCount();
   mNumDoneAcq = 0;
   mLastMontLeft = -1.;
-  m_statListHeader.GetWindowText(mSavedListHeader);
 
   if (mParam->acquireType != ACQUIRE_RUN_MACRO) {
     mSaveAlignOnSave = mBufferManager->GetAlignOnSave();
@@ -7976,7 +7971,7 @@ void CNavigatorDlg::StopAcquiring(BOOL testMacro)
   CloseFileOpenedByAcquire();
   mAcquireIndex = -1;
   mPausedAcquire = false;
-  m_statListHeader.SetWindowText(mSavedListHeader);
+  ManageListHeader();
   SetCollapsing(mSaveCollapsed);
   mWinApp->UpdateBufferWindows();
   if (mParam->acqCloseValves && !HitachiScope && !mScope->SetColumnValvesOpen(false))
@@ -9084,6 +9079,19 @@ void CNavigatorDlg::SetCollapsing(BOOL state)
   m_bCollapseGroups = state;
   UpdateData(false);
   OnCollapseGroups();
+}
+
+// Replace the title line with a string and hide its patrs, or restore the parts if
+// str in Label, its default value.  Separate parts stay lined up at different DPIs
+void CNavigatorDlg::ManageListHeader(CString str)
+{
+  int ind, hideShow = str == "Label" ? SW_SHOW : SW_HIDE;
+  m_statListHeader.SetWindowText(str);
+  for (ind = 0; ind < 8; ind++) {
+    CStatic *part = (CStatic *)GetDlgItem(IDC_STATLISTHEADER2 + ind);
+    if (part)
+      part->ShowWindow(hideShow);
+  }
 }
 
 // Store suffixes of extra files to open

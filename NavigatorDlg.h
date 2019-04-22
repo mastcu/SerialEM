@@ -321,7 +321,6 @@ private:
   ScaleMat mMatSaved[MAX_SAVED_REGXFORM];
   float mDxySaved[MAX_SAVED_REGXFORM][2];
   int mFromRegSaved[MAX_SAVED_REGXFORM];
-  CString mSavedListHeader;
   int mSuperCoordIndex;     // Item index to return supermont coordinates for
   double mShiftByAlignStamp;  // Image time stamp and align shift for last
   float mShiftByAlignX;     // shift by align operation
@@ -579,6 +578,7 @@ void IStoXYandAdvance(int &direction);
 CMapDrawItem *FindNextAcquireItem(int &index);
 bool IsItemToBeAcquired(CMapDrawItem *item, bool &skippingGroup);
 float ContourArea(float *ptx, float *pty, int numPoints);
+void ManageListHeader(CString str = "Label");
 };
 
 //{{AFX_INSERT_LOCATION}}
