@@ -820,6 +820,8 @@ void CCameraController::InitializeDMcameras(int DMind, int *numDMListed,
       }
 
       // The plugin knows the DM version, so get it from there.  And AMT has a version too
+      mNewFunctionCalled = "a new function to get the build number: try closing DM"
+        " and rerunning install.bat";
       if (DMind == AMT_IND || mPluginVersion[DMind] < PLUGIN_CAN_GIVE_BUILD) {
         MainCallDMIndCamera(DMind, GetDMVersion(&version));
       } else {
@@ -827,6 +829,7 @@ void CCameraController::InitializeDMcameras(int DMind, int *numDMListed,
         mDMbuild[DMind] = build;
       }
       mDMversion[DMind] = version;
+      mNewFunctionCalled = "";
 
       if (DMind != AMT_IND) {
         if (digiscan[DMind]) {
