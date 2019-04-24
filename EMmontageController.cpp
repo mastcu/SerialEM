@@ -265,6 +265,7 @@ void EMmontageController::SetMontaging(BOOL inVal)
         mParam->xOverlap) + miniTarget - 1) / miniTarget;
     int zoomY = (mParam->yFrame + (mParam->yNframes - 1) * (mParam->yFrame -
         mParam->yOverlap) + miniTarget - 1) / miniTarget;
+    zoomX = B3DMAX(zoomX, 1);
     mParam->overviewBinning = zoomX > zoomY ? zoomX : zoomY;
     mParam->maxOverviewBin = mParam->overviewBinning;
     mWinApp->mMontageWindow.UpdateSettings();

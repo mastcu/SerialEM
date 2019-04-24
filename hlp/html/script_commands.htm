@@ -1141,8 +1141,8 @@
           <TD colspan="2"><A name="imagefile"></A><B>Image File Commands</B></TD>
         </TR>
          <TR vAlign="top">
-          <TD class="style7">S or Save [buf] [file #]</TD>
-          <TD>Save image in A or in buf to current open file, or to the given file number</TD>
+          <TD class="style11">S or Save [buf] [file #]</TD>
+          <TD class="style11">Save image in A or in buf to current open file, or to the given file number</TD>
         </TR>
        <TR vAlign="top">
           <TD class="style7">SetNewFileType # [#]</TD>
@@ -1168,7 +1168,16 @@
             will be taken from the last montage that was open. The file properties and
             montage setup dialogs will be bypassed, and some properties like overlap and
             whether to do a stage montage will be taken from the last montage that was
-            open.</TD>
+            open.  If no montage has been opened through the dialogs, some parameter settings with&nbsp; 
+              SetMontageParams will work, some will crash the program.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style7">SetMontageParams # [# # # # # #]</TD>
+          <TD>Sets up to 7 montage parameters after a montage file has been opened; enter a value or -1 to leave the parameter
+            unchanged. The entries are: 1 to use stage movement or 0 not to; overlap in X;
+            overlap in Y; frame size in X; frame size in Y, 1 to skip correlations or 0 not
+            to; a binning.&nbsp; The frame sizes, overlaps, and binnings cannot validly be changed after 
+            acquiring into the file.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style7">SetupWaffleMontage #B file</TD>
@@ -1255,14 +1264,6 @@
         <TR vAlign="top">
           <TD class="style7">ReportFileZsize</TD>
           <TD>Report the number of frames in currently open file</TD>
-        </TR>
-        <TR vAlign="top">
-          <TD class="style7">SetMontageParams # [# # # # #]</TD>
-          <TD>Sets up to 6 montage parameters after a montage file has been opened; enter a value or -1 to leave the parameter
-            unchanged. The entries are: 1 to use stage movement or 0 not to; overlap in X;
-            overlap in Y; frame size in X; frame size in Y, 1 to skip correlations or 0 not
-            to.&nbsp; Neither the frame sizes nor the overlaps can validly be changed after 
-            acquiring into the file.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style7">ReportCurrentFilename [#]</TD>

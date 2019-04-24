@@ -6190,16 +6190,6 @@ void CMacroProcessor::NextCommand()
           " in line:\n\n");
     if (itemInt[1] >= 0)
       montP->moveStage = itemInt[1] > 0;
-    if (!itemEmpty[2] && itemInt[2] > 0) {
-      if (itemInt[2] > montP->xFrame / 2)
-        ABORT_LINE("X overlap is more than half the frame size in statement:\n\n");
-      montP->xOverlap = itemInt[2];
-    }
-    if (!itemEmpty[3] && itemInt[3] > 0) {
-      if (itemInt[3] > montP->yFrame / 2)
-        ABORT_LINE("Y overlap is more than half the frame size in statement:\n\n");
-      montP->yOverlap = itemInt[3];
-    }
     if (!itemEmpty[4] && itemInt[4] > 0) {
       if (itemInt[4] < montP->xOverlap * 2)
         ABORT_LINE("The X frame size is less than twice the overlap in statement:\n\n");
@@ -6210,8 +6200,23 @@ void CMacroProcessor::NextCommand()
         ABORT_LINE("The Y frame size is less than twice the overlap in statement:\n\n");
       montP->yFrame = itemInt[5];
     }
+    if (!itemEmpty[2] && itemInt[2] > 0) {
+      if (itemInt[2] > montP->xFrame / 2)
+        ABORT_LINE("X overlap is more than half the frame size in statement:\n\n");
+      montP->xOverlap = itemInt[2];
+    }
+    if (!itemEmpty[3] && itemInt[3] > 0) {
+      if (itemInt[3] > montP->yFrame / 2)
+        ABORT_LINE("Y overlap is more than half the frame size in statement:\n\n");
+      montP->yOverlap = itemInt[3];
+    }
     if (!itemEmpty[6] && itemInt[6] >= 0)
       montP->skipCorrelations = itemInt[6] != 0;
+    if (!itemEmpty[7] && itemDbl[7] >= 0.5) {
+      if (CheckCameraBinning(itemDbl[7], index, report))
+        ABORT_LINE(report);
+      montP->binning = index;
+    }
     mWinApp->mMontageWindow.UpdateSettings();
     break;
     
