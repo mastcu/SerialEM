@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+4/23/19: Fixed dose per frame output in camera setup dialog when aligning but
+not saving (In 3.7).
+
 4/21/19: Implemented proper font and dialog scaling for high DPI and made the
 AssumeDPI property work to set any desired scaling.
 

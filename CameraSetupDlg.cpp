@@ -2510,6 +2510,7 @@ void CCameraSetupDlg::OnAlignDoseFrac()
   CheckFalconFrameSumList();
   ManageK2Binning();
   ManageDoseFrac();
+  ManageDose();
 }
 
 void CCameraSetupDlg::OnKillfocusEditFrameTime() 
