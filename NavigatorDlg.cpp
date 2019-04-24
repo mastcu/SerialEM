@@ -9081,7 +9081,7 @@ void CNavigatorDlg::SetCollapsing(BOOL state)
   OnCollapseGroups();
 }
 
-// Replace the title line with a string and hide its patrs, or restore the parts if
+// Replace the title line with a string and hide its parts, or restore the parts if
 // str in Label, its default value.  Separate parts stay lined up at different DPIs
 void CNavigatorDlg::ManageListHeader(CString str)
 {

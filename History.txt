@@ -3,6 +3,11 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+4/24/19: Added checkbox for using diffraction mode in OneView/Rio.
+
+4/24/19: Added a binning parameter to SetMontageParams and fixed some but not
+all issues when OpenNewMontage is used with no prior montaging.
+
 4/23/19: Fixed dose per frame output in camera setup dialog when aligning but
 not saving (In 3.7).
 

@@ -41,11 +41,12 @@ static char THIS_FILE[] = __FILE__;
   "Increased by 4x" radio IDC_RBOOSTMAG4
   "Correct Drift" checkbox  IDC_CHECK_CORRECT_DRIFT  m_bCorrectDrift  used for OneView
     and DE hardware binning
-  "Remove X rays" check box  IDC_REMOVEXRAYS  m_bRemoveXrays used for that and for STEM
-     mag all shots.
+  "Remove X rays" check box  IDC_REMOVEXRAYS  m_bRemoveXrays used for that and stored in
+     removeXrays in TEM and, in STEM, for mag all shots, stored in magAllShots
   "Integration" label  IDC_STATINTEGRATION
   Integration edit box and spin box  IDC_EDITINTEGRATION  and IDC_SPININTEGRATION
-  "Use Hardware ROI" check box  IDC_CHECK_HARDWARE_ROI  m_bUseHardwareROI  used for DE
+  "Use Hardware ROI" check box  IDC_CHECK_HARDWARE_ROI  m_bUseHardwareROI  used for DE and
+     stored in magAllShots, or for OneView and store in K2ReadMode
   */
 
 static int idTable[] = {IDC_STATCAMERA, IDC_RCAMERA1, IDC_RCAMERA2, IDC_RCAMERA3,
@@ -875,9 +876,10 @@ void CCameraSetupDlg::LoadConsetToDialog()
     radio = (CButton *)GetDlgItem(IDC_RBIN1);
     radio->EnableWindow(mBinningEnabled && IS_SUPERRES(mParam, *modeP));
   }
-  if (mParam->OneViewType)
+  if (mParam->OneViewType) {
     m_bCorrectDrift = mCurSet->alignFrames != 0;
-  else if (mDE_Type && (mParam->CamFlags & DE_HAS_HARDWARE_BIN))
+    m_bUseHardwareROI = mCurSet->K2ReadMode != 0;
+  } else if (mDE_Type && (mParam->CamFlags & DE_HAS_HARDWARE_BIN))
     m_bCorrectDrift = mCurSet->boostMag != 0;
   if (mDE_Type && (mParam->CamFlags & DE_HAS_HARDWARE_ROI))
     m_bUseHardwareROI = mCurSet->magAllShots != 0;
@@ -1106,8 +1108,10 @@ void CCameraSetupDlg::UnloadDialogToConset()
   // First set alignFrames for direct detectors, then override that for OneView
   if (!(mCurrentSet == RECORD_CONSET && mWinApp->mTSController->GetFrameAlignInIMOD()))
     mCurSet->alignFrames = m_bAlignDoseFrac ? 1 : 0;
-  if (mParam->OneViewType)
+  if (mParam->OneViewType) {
     mCurSet->alignFrames = m_bCorrectDrift ? 1 : 0;
+    mCurSet->K2ReadMode = m_bUseHardwareROI ? 1 : 0;
+  }
 
   mCurSet->lineSync = m_bLineSync ? 1 : 0;
   mCurSet->dynamicFocus = m_bDynFocus ? 1 : 0;
@@ -1543,8 +1547,10 @@ void CCameraSetupDlg::ManageCamera()
   m_butCorrectDrift.SetWindowText(mParam->OneViewType ? "Correct drift" : 
     "Use hardware binning");
 
-  m_butUseHardwareROI.ShowWindow((mDE_Type && (mParam->CamFlags & DE_HAS_HARDWARE_ROI)) ?
-    SW_SHOW : SW_HIDE);
+  m_butUseHardwareROI.ShowWindow((mParam->OneViewType ||
+    (mDE_Type && (mParam->CamFlags & DE_HAS_HARDWARE_ROI))) ? SW_SHOW : SW_HIDE);
+  m_butUseHardwareROI.SetWindowText(mParam->OneViewType ? "Diffraction mode" :
+    "Use Hardware ROI");
 
   // Disable many things for restricted sizes
   ManageSizeAndPositionButtons(m_bDoseFracMode && mParam->K2Type);
