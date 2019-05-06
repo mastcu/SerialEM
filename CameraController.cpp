@@ -10430,6 +10430,7 @@ void CCameraController::ComposeFramePathAndName(bool temporary)
   char numFormat[6];
   int trimCount;
   CMapDrawItem *item;
+  bool prefixDate = (mFrameNameFormat & FRAME_FILE_DATE_PREFIX) != 0;
   B3DCLAMP(mDigitsForNumberedFrame, 3, 5);
   sprintf(numFormat, "%%0%dd", mDigitsForNumberedFrame);
 
@@ -10507,12 +10508,19 @@ void CCameraController::ComposeFramePathAndName(bool temporary)
     UtilAppendWithSeparator(filename, date, "_");
   }
   if (!mParam->DE_camType) {
-    if ((mFrameNameFormat & (FRAME_FILE_MONTHDAY | FRAME_FILE_HOUR_MIN_SEC)) || temporary)
-      mWinApp->mDocWnd->DateTimeComponents(date, time);
-    if ((mFrameNameFormat & FRAME_FILE_MONTHDAY) || temporary)
-      UtilAppendWithSeparator(filename, date, "_");
-    if ((mFrameNameFormat & FRAME_FILE_HOUR_MIN_SEC) || temporary)
-      UtilAppendWithSeparator(filename, time, "_");
+    if ((mFrameNameFormat & (FRAME_FILE_MONTHDAY | FRAME_FILE_HOUR_MIN_SEC)) || 
+      temporary || prefixDate)
+      mWinApp->mDocWnd->DateTimeComponents(date, time, prefixDate);
+    if (prefixDate) {
+      if (!filename.IsEmpty())
+        filename = '_' + filename;
+      filename = date + "_" + time + filename;
+    } else {
+      if ((mFrameNameFormat & FRAME_FILE_MONTHDAY) || temporary)
+        UtilAppendWithSeparator(filename, date, "_");
+      if ((mFrameNameFormat & FRAME_FILE_HOUR_MIN_SEC) || temporary)
+        UtilAppendWithSeparator(filename, time, "_");
+    }
   }
   mFrameFilename = filename;
 }

@@ -55,6 +55,7 @@ CK2SaveOptionDlg::CK2SaveOptionDlg(CWnd* pParent /*=NULL*/)
   , m_bReduceSuperres(FALSE)
   , m_strCurSetSaves(_T(""))
   , m_bSaveFrameStackMdoc(FALSE)
+  , m_bDatePrefix(FALSE)
 {
 
 }
@@ -116,6 +117,8 @@ void CK2SaveOptionDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_CHECK_REDUCE_SUPERRES, m_butReduceSuperres);
   DDX_Check(pDX, IDC_CHECK_REDUCE_SUPERRES, m_bReduceSuperres);
   DDX_Text(pDX, IDC_STAT_CURSET2, m_strCurSetSaves);
+  DDX_Control(pDX, IDC_CHECK_DATE_PREFIX, m_butDatePrefix);
+  DDX_Check(pDX, IDC_CHECK_DATE_PREFIX, m_bDatePrefix);
 }
 
 
@@ -138,6 +141,7 @@ BEGIN_MESSAGE_MAP(CK2SaveOptionDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_TIFF_ZIP_COMPRESS, OnSaveMrc)
   ON_BN_CLICKED(IDC_SAVE_UNNORMALIZED, OnSaveUnnormalized)
   ON_BN_CLICKED(IDC_CHECK_REDUCE_SUPERRES, OnReduceSuperres)
+  ON_BN_CLICKED(IDC_CHECK_DATE_PREFIX, OnCheckDatePrefix)
 END_MESSAGE_MAP()
 
 
@@ -171,6 +175,7 @@ BOOL CK2SaveOptionDlg::OnInitDialog()
   m_bTiltAngle = (mNameFormat & FRAME_FILE_TILT_ANGLE) != 0;
   m_bMonthDay = (mNameFormat & FRAME_FILE_MONTHDAY) != 0;
   m_bHourMinSec = (mNameFormat & FRAME_FILE_HOUR_MIN_SEC) || !m_bNumber;
+  m_bDatePrefix = (mNameFormat & FRAME_FILE_DATE_PREFIX) != 0;
   m_bOnlyWhenAcquire = (mNameFormat & FRAME_LABEL_IF_ACQUIRE) != 0;
   if (!mCanCreateDir && !mDEtype)
     SetDlgItemText(IDC_STAT_MUST_EXIST, B3DCHOICE(mFalconType, 
@@ -205,6 +210,9 @@ BOOL CK2SaveOptionDlg::OnInitDialog()
   m_statFile.ShowWindow(show);
   m_butHourMinSec.ShowWindow(mDEtype ? SW_HIDE : SW_SHOW);
   m_butMonthDay.ShowWindow(mDEtype ? SW_HIDE : SW_SHOW);
+  m_butDatePrefix.ShowWindow(mDEtype ? SW_HIDE : SW_SHOW);
+  m_butHourMinSec.EnableWindow(!m_bDatePrefix);
+  m_butMonthDay.EnableWindow(!m_bDatePrefix);
   UpdateFormat();
   ManagePackOptions();
   return TRUE;
@@ -225,6 +233,7 @@ void CK2SaveOptionDlg::OnOK()
     (m_bTiltAngle ? FRAME_FILE_TILT_ANGLE : 0) |
     (m_bMonthDay ? FRAME_FILE_MONTHDAY : 0) |
     (m_bHourMinSec ? FRAME_FILE_HOUR_MIN_SEC : 0) |
+    (m_bDatePrefix ? FRAME_FILE_DATE_PREFIX : 0) |
     (m_bOnlyWhenAcquire ? FRAME_LABEL_IF_ACQUIRE : 0);
   CBaseDlg::OnOK();
 }
@@ -265,7 +274,7 @@ void CK2SaveOptionDlg::UpdateFormat(void)
   CString date, time, filename, folders;
   char digHash[6] = "#####";
   CTime ctDateTime = CTime::GetCurrentTime();
-  mWinApp->mDocWnd->DateTimeComponents(date, time);
+  mWinApp->mDocWnd->DateTimeComponents(date, time, m_bDatePrefix);
   m_strExample = (m_bRootFolder && !m_strBasename.IsEmpty() && mCanCreateDir) ? 
     "Base" : "";
   if (mFalconType && (mCamFlags & PLUGFEI_USES_ADVANCED) && !mCanCreateDir)
@@ -292,10 +301,16 @@ void CK2SaveOptionDlg::UpdateFormat(void)
     UtilAppendWithSeparator(filename, &digHash[5 - mNumberDigits], "_");
   if (m_bTiltAngle)
     UtilAppendWithSeparator(filename, "Tilt", "_");
-  if (m_bMonthDay && !mDEtype)
-    UtilAppendWithSeparator(filename, date, "_");
-  if (m_bHourMinSec && !mDEtype)
-    UtilAppendWithSeparator(filename, time, "_");
+  if (m_bDatePrefix && !mDEtype) {
+    if (!filename.IsEmpty())
+      filename = "_" + filename;
+    filename = date + "_" + time + filename;
+  } else {
+    if (m_bMonthDay && !mDEtype)
+      UtilAppendWithSeparator(filename, date, "_");
+    if (m_bHourMinSec && !mDEtype)
+      UtilAppendWithSeparator(filename, time, "_");
+  }
   if (mDEtype) {
     if (!filename.IsEmpty())
       filename += "_";
@@ -353,4 +368,12 @@ void CK2SaveOptionDlg::OnReduceSuperres()
 {
   UpdateData(true);
   ManagePackOptions();
+}
+
+void CK2SaveOptionDlg::OnCheckDatePrefix()
+{
+  UpdateData(true);
+  m_butHourMinSec.EnableWindow(!m_bDatePrefix);
+  m_butMonthDay.EnableWindow(!m_bDatePrefix);
+  UpdateFormat();
 }

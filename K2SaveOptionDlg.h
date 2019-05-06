@@ -109,4 +109,7 @@ public:
   BOOL m_bReduceSuperres;
   afx_msg void OnReduceSuperres();
   CString m_strCurSetSaves;
+  CButton m_butDatePrefix;
+  BOOL m_bDatePrefix;
+  afx_msg void OnCheckDatePrefix();
 };
