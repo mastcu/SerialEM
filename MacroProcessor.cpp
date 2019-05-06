@@ -252,7 +252,7 @@ enum {CME_SCRIPTEND = -7, CME_LABEL, CME_SETVARIABLE, CME_SETSTRINGVAR, CME_DOKE
   CME_CLOSETEXTFILE, CME_FLUSHTEXTFILE, CME_READSTRINGSFROMFILE, CME_ISTEXTFILEOPEN,
   CME_CURRENTSETTINGSTOLDAREA, CME_UPDATELOWDOSEPARAMS, CME_RESTORELOWDOSEPARAMS,
   CME_CALLSTRINGARRAY, CME_STRINGARRAYTOSCRIPT, CME_MAKEVARPERSISTENT,
-  CME_SETLDADDEDBEAMBUTTON, CME_KEEPCAMERASETCHANGES
+  CME_SETLDADDEDBEAMBUTTON, CME_KEEPCAMERASETCHANGES, CME_REPORTDATETIME
 };
 
 // The two numbers are the minimum arguments and whether arithmetic is allowed
@@ -384,7 +384,7 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"ReadStringsFromFile", 2, 0}, {"IsTextFileOpen", 1, 0},{"CurrentSettingsToLDArea", 1, 0},
 {"UpdateLowDoseParams", 1, 0}, {"RestoreLowDoseParams", 0, 0}, {"CallStringArray", 1, 0},
 {"StringArrayToScript", 1, 0}, {"MakeVarPersistent", 1, 0},{"SetLDAddedBeamButton", 0, 0},
-{"KeepCameraSetChanges", 0, 0},
+{"KeepCameraSetChanges", 0, 0}, {"ReportDateTime", 0, 0},
 {NULL, 0, 0}
 };
 
@@ -4027,6 +4027,18 @@ void CMacroProcessor::NextCommand()
     mWinApp->AppendToLog(report, mLogAction);
     SetReportedValues(&strItems[2], delISX);
     break;
+
+  case CME_REPORTDATETIME:                                  // ReportDateTime
+  {
+    CTime ctDateTime = CTime::GetCurrentTime();
+    index = 10000 * ctDateTime.GetYear() + 100 * ctDateTime.GetMonth() +
+      ctDateTime.GetDay();
+    index2 = 100 * ctDateTime.GetHour() + ctDateTime.GetMinute();
+    report.Format("%d  %04d", index, index2);
+    mWinApp->AppendToLog(report, mLogAction);
+    SetReportedValues(&strItems[1], index, index2);
+    break;
+  }
 
   case CME_MOVESTAGE:                                       // MoveStage
   case CME_MOVESTAGETO:                                     // MoveStageTo 
