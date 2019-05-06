@@ -2347,8 +2347,6 @@ void CMacroProcessor::NextCommand()
     
   case CME_TILTDURINGRECORD:                               // TiltDuringRecord
     delX = itemEmpty[3] ? 0. : itemDbl[3];
-    if (delX && !FEIscope)
-      ABORT_LINE("Variable stage speed is available only on FEI scopes for line:\n\n");
     if (mCamera->QueueTiltDuringShot(itemDbl[1], itemInt[2], delX)) {
       report.Format("Moving the stage with variable speed requires\n"
         "FEI plugin version %d (and same for server, if relevant)\n"

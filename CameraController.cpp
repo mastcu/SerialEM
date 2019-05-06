@@ -6095,7 +6095,7 @@ void CCameraController::AcquirePluginImage(CameraThreadData *td, void **array,
   int flags = td->DivideBy2 ? PLUGCAM_DIVIDE_BY2 : 0;
   if (tietzImage && td->RestoreBBmode)
     flags |= TIETZ_RESTORE_BBMODE;
-  if (td->TietzType == 15)
+  if (td->TietzType == 15 || td->TietzType == 16)
     flags |= TIETZ_SET_READ_MODE;
 
   // Do the selection for Tietz dark reference but not image
@@ -6123,7 +6123,7 @@ void CCameraController::AcquirePluginImage(CameraThreadData *td, void **array,
 
   // Do preliminary steps for Tietz that were always before starting blanker
   if (!retval && td->TietzType && td->plugFuncs->SetExtraParams1 &&
-    (td->TietzType == 15 || !td->TietzFlatfieldDir.IsEmpty())) {
+    (td->TietzType == 15 || td->TietzType == 16 || !td->TietzFlatfieldDir.IsEmpty())) {
       td->plugFuncs->SetExtraParams1(1, 1, 0, tietzDark ? 0 : processing, 
         (LPCTSTR)td->TietzFlatfieldDir);
   }
