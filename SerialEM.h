@@ -209,6 +209,7 @@ typedef bool (*PlugDoingFunc)(void);
 #define FRAME_FILE_HOUR_MIN_SEC  (1 << 8)
 #define FRAME_LABEL_IF_ACQUIRE   (1 << 9)
 #define FRAME_FILE_TILT_ANGLE    (1 << 10)
+#define FRAME_FILE_DATE_PREFIX   (1 << 11)
 
 // Definitions for Tietz errors
 #define TIETZ_NO_LOCK      1
@@ -813,6 +814,7 @@ void MainViewResizing(CRect &winRect, bool FFTwin);
 void OpenOrCloseMacroEditors(void);
 CFont * GetLittleFont(CWnd *stat);
 float GetScalingForDPI();
+int ScaleValueForDPI(int value);
 };
 
 

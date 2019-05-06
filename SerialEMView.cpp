@@ -88,6 +88,7 @@ CSerialEMView::CSerialEMView()
   mNonMapPanY = 0;
   mWinApp = (CSerialEMApp *)AfxGetApp();
   mFirstDraw = true;
+  mMadeFonts = false;
   mMouseShifting = false;
   mMainWindow = false;
   mStackWindow = false;
@@ -177,18 +178,6 @@ BOOL CSerialEMView::PreCreateWindow(CREATESTRUCT& cs)
     //childFrame->SetChildView(this);
   }
 
-  // Get font for drawing letter in corner
-  CString fontName;
-  fontName = Is2000OrGreater() ? "Microsoft Sans Serif" : "MS Sans Serif";
-  mFont.CreateFont(36, 0, 0, 0, FW_MEDIUM,
-    0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
-    CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
-    FF_DONTCARE, fontName);
-  mLabelFont.CreateFont(24, 0, 0, 0, FW_MEDIUM,
-    0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
-    CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
-    FF_DONTCARE, fontName);
-
   if (mFFTWindow) {
     mCreateTime = GetTickCount();
     mFFTresizeCount = 0;
@@ -265,6 +254,9 @@ void CSerialEMView::DrawImage(void)
   COLORREF bkgColor = RGB(48, 0, 48);
   COLORREF flashColor = RGB(192, 192, 0);
   COLORREF areaColors[3] = {RGB(255, 255, 0), RGB(255, 0, 0), RGB(0, 255, 0)};
+  int scaled5 = mWinApp->ScaleValueForDPI(5);
+  int scaled10 = mWinApp->ScaleValueForDPI(10);
+  int scaled140 = mWinApp->ScaleValueForDPI(140);
 
   // If this is the first draw, set up the zoom optimally
   // 7/7/03: no longer need to fix main frame window title; set child titles
@@ -295,6 +287,28 @@ void CSerialEMView::DrawImage(void)
     cdc.FillSolidRect(rect, mFlashNextDisplay ? flashColor : bkgColor);
     mFlashNextDisplay = false;
     return;
+  }
+
+  // Get fonts for drawing letter in corner and other text on first real draw
+  if (!mMadeFonts) {
+    CString fontName;
+    fontName = Is2000OrGreater() ? "Microsoft Sans Serif" : "MS Sans Serif";
+    mFont.CreateFont(mWinApp->ScaleValueForDPI(36), 0, 0, 0, FW_MEDIUM,
+      0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
+      CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
+      FF_DONTCARE, fontName);
+    mLabelFont.CreateFont(mWinApp->ScaleValueForDPI(24), 0, 0, 0, FW_MEDIUM,
+      0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
+      CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
+      FF_DONTCARE, fontName);
+    mMadeFonts = true;
+
+    // Also scale the scale bar constants
+    mScaleParams.minLength = mWinApp->ScaleValueForDPI(mScaleParams.minLength);
+    mScaleParams.thickness = mWinApp->ScaleValueForDPI(mScaleParams.thickness);
+    mScaleParams.indentX = mWinApp->ScaleValueForDPI(mScaleParams.indentX);
+    mScaleParams.indentY = mWinApp->ScaleValueForDPI(mScaleParams.indentY);
+
   }
 
   // Get the device context for the bitmap drawing calls
@@ -559,12 +573,12 @@ void CSerialEMView::DrawImage(void)
       letString = letter;
       if (mFFTWindow)
         letString += "F";
-      cdc.TextOut(5, 5, letString);
+      cdc.TextOut(scaled5, scaled5, letString);
       if (imBuf->mCaptured > 0 && imBuf->mConSetUsed >= 0 && 
         imBuf->mConSetUsed < NUMBER_OF_USER_CONSETS && imBuf->mLowDoseArea) {
           cdc.SelectObject(&mLabelFont);
           letString = CString(" - ") + (mWinApp->GetModeNames())[imBuf->mConSetUsed];
-          cdc.TextOut(25, 10, letString);
+          cdc.TextOut(mWinApp->ScaleValueForDPI(25), scaled10, letString);
       }
 
       // Dose rate output for direct detector and channel name for STEM
@@ -581,19 +595,19 @@ void CSerialEMView::DrawImage(void)
             !mWinApp->mProcessImage->DoseRateFromMean(imBuf, imBuf->mSampleMean, boost)) {
               if (mWinApp->mCamera->IsDirectDetector(camP)) {
                 letString.Format("%.2f e/ubpix/s at camera", boost);
-                cdc.TextOut(140, 10, letString);
+                cdc.TextOut(scaled140, scaled10, letString);
               } else if (mWinApp->mScope->GetNoScope() && imBuf->mMagInd > 0) {
                 letString.Format("%.3f e/sq A at camera", boost / 
                   pow(10000. * mWinApp->mShiftManager->GetPixelSize(imBuf), 2.));
-                cdc.TextOut(140, 10, letString);
+                cdc.TextOut(scaled140, scaled10, letString);
               }
           }
           if (mWinApp->GetNumActiveCameras() > 1)
-            cdc.TextOut(420, 10, camP->name);
+            cdc.TextOut(mWinApp->ScaleValueForDPI(420), scaled10, camP->name);
           if (bufferOK && camP->STEMcamera && camP->numChannels > 1) {
             EMimageExtra *extra = imBuf->mImage->GetUserData();
             if (!extra->mChannelName.IsEmpty())
-              cdc.TextOut(140, 10, extra->mChannelName);
+              cdc.TextOut(scaled140, scaled10, extra->mChannelName);
           }
       }
     } else {
@@ -603,7 +617,7 @@ void CSerialEMView::DrawImage(void)
         mImBufs[mImBufIndex].mTiltAngleOrig);
       else
         letString.Format("%d: Z = %d", mImBufIndex + 1, mImBufs[mImBufIndex].mSecNumber);
-      cdc.TextOut(5, 5, letString);
+      cdc.TextOut(scaled5, scaled5, letString);
     }
     cdc.SelectObject(def_font);
     cdc.SetTextColor(defColor);
@@ -1253,16 +1267,18 @@ void CSerialEMView::DrawScaleBar(CClientDC *cdc, CRect *rect, EMimageBuffer *imB
     label.Format("%g nm", truelen * 1000.);
   else
     label.Format("%g um", truelen);
-  CSize labsize = cdc->GetTextExtent(label);
-
   CFont *def_font = cdc->SelectObject(&mFont);
   int defMode = cdc->SetBkMode(TRANSPARENT);
   COLORREF defColor = cdc->SetTextColor(RGB(0, 0, 0));
+  CSize labsize = cdc->GetTextExtent(label);
+
   //cdc->TextOut(xst + xsize / 2 - labsize.cx / 2 - 4, yst - ysize - labsize.cy, label);
-  cdc->TextOut(xst + xsize / 2 - labsize.cx / 2 - 20, yst - ysize - labsize.cy - 10, label);
+  cdc->TextOut(xst + xsize / 2 - labsize.cx / 2 - mWinApp->ScaleValueForDPI(10), 
+    yst - ysize - labsize.cy - mWinApp->ScaleValueForDPI(4), label);
   cdc->SetTextColor(RGB(255, 255, 255));
   //cdc->TextOut(xst + xsize / 2 - labsize.cx / 2 - 1, yst - ysize - labsize.cy - 3, label);
-  cdc->TextOut(xst + xsize / 2 - labsize.cx / 2 - 18, yst - ysize - labsize.cy - 12, label);
+  cdc->TextOut(xst + xsize / 2 - labsize.cx / 2 - mWinApp->ScaleValueForDPI(8),
+    yst - ysize - labsize.cy - mWinApp->ScaleValueForDPI(6), label);
   cdc->SelectObject(def_font);
   cdc->SetTextColor(defColor);
   cdc->SetBkMode(defMode);

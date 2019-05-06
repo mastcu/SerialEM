@@ -949,6 +949,8 @@ BOOL CSerialEMApp::InitInstance()
     }
     mInitialCurrentCamera = mAssumeCamForDummy;
   }
+  if (mSystemDPI != 120)
+    mDisplayNotTruly120DPI = false;
   if (mReopenLog) {
     if (mLogWindow) {
       if (mLogPlacement.rcNormalPosition.right > 0)
@@ -957,9 +959,7 @@ BOOL CSerialEMApp::InitInstance()
       OnFileOpenlog();
     }
   }
-  if (mSystemDPI != 120)
-    mDisplayNotTruly120DPI = false;
-  SEMTrace('1', "Detected system DPI of %d, using DPI %d%s", mag, mSystemDPI, 
+  SEMTrace('1', "Detected system DPI of %d, using DPI %d%s", mag, mSystemDPI,
     mDisplayNotTruly120DPI ? " but not scaling for 120" : "");
 
   // Set constants based on DPI if not supplied by user
@@ -4007,7 +4007,7 @@ CFont * CSerialEMApp::GetLittleFont(CWnd *stat)
   CString fontName = "Small Fonts";
   if (mSmallFontsBad || (mSystemDPI >= 120 && !mDisplayNotTruly120DPI))
     fontName = "Microsoft Sans Serif";
-  height = B3DNINT(height * GetScalingForDPI());
+  height = ScaleValueForDPI(height);
   if (stat) {
     stat->GetWindowRect(&rect);
     height = rect.Height();
@@ -4024,4 +4024,10 @@ CFont * CSerialEMApp::GetLittleFont(CWnd *stat)
 float CSerialEMApp::GetScalingForDPI()
 {
   return (float)B3DCHOICE(mDisplayNotTruly120DPI, 1., mSystemDPI / 96.);
+}
+
+// Scale one integer for DPI
+int CSerialEMApp::ScaleValueForDPI(int value)
+{
+  return B3DNINT(value * GetScalingForDPI());
 }

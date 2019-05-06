@@ -498,11 +498,10 @@ BOOL CTSSetupDialog::OnInitDialog()
 
   SetupPanelTables(idTable, leftTable, topTable, mNumInPanel, mPanelStart);
 
-  // Don't know why this one works without a member variable; the title font did NOT work
+  // The +/- bold used to work without a member variable, but not for high DPI
   wnd = GetDlgItem(IDC_TSS_PLUS1);
   wnd->GetClientRect(idRect);
-  CFont font;
-  font.CreateFont((idRect.Height()+4), 0, 0, 0, FW_BOLD,
+  mBoldFont.CreateFont((idRect.Height()+ mWinApp->ScaleValueForDPI(4)), 0, 0, 0, FW_BOLD,
       0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
       CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
       FF_DONTCARE, "Microsoft Sans Serif");
@@ -515,7 +514,7 @@ BOOL CTSSetupDialog::OnInitDialog()
   for (panel = 0; panel < mNumPanels - 1; panel++) {
     index = mPanelStart[panel];
     wnd = GetDlgItem(idTable[index]);
-    wnd->SetFont(&font);
+    wnd->SetFont(&mBoldFont);
     for (index = index + 1; index < mPanelStart[panel] + 3; index++) {
       if (idTable[index] > 0) {
         wnd = GetDlgItem(idTable[index]);
@@ -1532,7 +1531,7 @@ void CTSSetupDialog::ManageAnchorMag(int camera)
     m_strBidirFieldSize = star + m_strBidirFieldSize + star;
     m_statBidirFieldSize.SetFont(&mTitleFont);
   } else
-    m_statBidirFieldSize.SetFont(GetFont());
+    m_statBidirFieldSize.SetFont(m_statBDMagLabel.GetFont());
   if (fov < mWinApp->mTSController->GetAlarmBidirFieldSize())
     m_strBidirFieldSize = star + m_strBidirFieldSize + star;
 

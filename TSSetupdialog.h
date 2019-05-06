@@ -250,6 +250,7 @@ private:
   BOOL mChangeRecExposure;   // User's value of this setting
   CFont mLittleFont;
   CFont mTitleFont;
+  CFont mBoldFont;
   int *mActiveCameraList;
   int mNumCameras;
   int mCosPower;

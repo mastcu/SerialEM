@@ -1,6 +1,7 @@
 #pragma once
 #include "BaseDlg.h"
 #include "afxwin.h"
+#include "..\setdpi.h"
 
 // CThreeChoiceBox dialog
 
@@ -39,4 +40,7 @@ public:
   CString m_strMessage;
   CStatic m_statMessage;
   CStatic m_statGrayPanel;
+
+private:
+  CSetDPI mSetDPI;
 };

@@ -76,6 +76,10 @@ void CAskOneDlg::OnCancel()
 
 BOOL CAskOneDlg::OnInitDialog() 
 {
+  CSerialEMApp *winApp = (CSerialEMApp *)AfxGetApp();
+  if (!winApp->GetDisplayNotTruly120DPI())
+    mSetDPI.Attach(AfxFindResourceHandle(MAKEINTRESOURCE(IDD), RT_DIALOG),
+      m_hWnd, IDD, B3DNINT(1.25 * winApp->GetSystemDPI()));
   CDialog::OnInitDialog();
   bool showBrowse = !m_strBrowserTitle.IsEmpty();
   CString str = m_sEditString;

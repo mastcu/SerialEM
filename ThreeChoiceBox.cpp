@@ -48,11 +48,14 @@ END_MESSAGE_MAP()
 // CThreeChoiceBox message handlers
 BOOL CThreeChoiceBox::OnInitDialog() 
 {
+  if (!mWinApp->GetDisplayNotTruly120DPI())
+    mSetDPI.Attach(AfxFindResourceHandle(MAKEINTRESOURCE(IDD), RT_DIALOG),
+      m_hWnd, IDD, B3DNINT(1.25 * mWinApp->GetSystemDPI()));
   CBaseDlg::OnInitDialog();
   CRect butRect, rect2, rect3, statRect, winRect, clientRect, panelRect;
   int butHeight, yesWidth, noWidth, cancelWidth, gutter, ixOffset, rightEdge, messLeft;
   int allButWidth, addedWidth, pixPerLine, totLines, numWrap, endInd, addedHeight;
-  int margin = (16 * mWinApp->GetSystemDPI()) / 120;
+  int margin = mWinApp->ScaleValueForDPI(16);
   int allButTop, butRight, panelTop, numLinesOrig = 4;
   CSize size;
   CString line, mess;

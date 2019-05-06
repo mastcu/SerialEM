@@ -318,7 +318,7 @@ void CMainFrame::SetDialogPositions()
     else if (mDialogTable[i].state & TOOL_OPENCLOSED)
       height = mDialogTable[i].fullHeight;
     else
-      height = B3DNINT(DIALOG_CLOSED_HEIGHT * mWinApp->GetScalingForDPI());
+      height = mWinApp->ScaleValueForDPI(DIALOG_CLOSED_HEIGHT);
 
     if (mDialogTable[i].state & TOOL_FLOATDOCK) {
       height += mWinApp->GetToolTitleHeight();

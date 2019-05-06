@@ -216,6 +216,7 @@ private:
   float mSaveCountingFPS;
   BOOL mLowDoseMode;
   bool mWarnedOnCDS;
+  CFont mBigModeFont;
 
 public:
   afx_msg void OnAcquireReopen();

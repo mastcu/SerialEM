@@ -35,6 +35,7 @@ private:
   int mCurSpot;
   int mCurMagInd;
   double mCurIntensity;
+  CFont mBigFont;
 
 public:
   CString m_strMag;

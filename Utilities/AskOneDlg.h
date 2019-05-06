@@ -8,6 +8,8 @@
 // AskOneDlg.h : header file
 //
 
+#include "..\setdpi.h"
+
 /////////////////////////////////////////////////////////////////////////////
 // CAskOneDlg dialog
 
@@ -54,6 +56,8 @@ public:
   CButton m_butBrowse;
   CString m_strBrowserTitle;
   afx_msg void OnBrowse();
+private:
+  CSetDPI mSetDPI;
 };
 
 //{{AFX_INSERT_LOCATION}}

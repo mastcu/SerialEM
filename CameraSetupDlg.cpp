@@ -1833,14 +1833,13 @@ BOOL CCameraSetupDlg::OnInitDialog()
     mCurrentSet = RECORD_CONSET;
   
   // Make text big for set name
-  CFont font;
   CRect rect;
   m_statBigMode.GetWindowRect(&rect);
-  font.CreateFont((rect.Height()), 0, 0, 0, FW_MEDIUM,
+  mBigModeFont.CreateFont((rect.Height()), 0, 0, 0, FW_MEDIUM,
       0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
       CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
       FF_DONTCARE, "Microsoft Sans Serif");
-  m_statBigMode.SetFont(&font);
+  m_statBigMode.SetFont(&mBigModeFont);
 
   // Make bolder text for antialiasing
   CWnd *wnd = GetDlgItem(IDC_STAT_ANTIALIAS);

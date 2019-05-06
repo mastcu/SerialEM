@@ -95,15 +95,14 @@ END_MESSAGE_MAP()
 BOOL CCookerSetupDlg::OnInitDialog()
 {
 	CBaseDlg::OnInitDialog();
-  CFont font;
   CRect rect;
   m_statDoseTime.GetWindowRect(&rect);
-  font.CreateFont((rect.Height()), 0, 0, 0, FW_MEDIUM,
+  mBigFont.CreateFont((rect.Height()), 0, 0, 0, FW_MEDIUM,
       0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
       CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
       FF_DONTCARE, "Microsoft Sans Serif");
-  m_statDoseTime.SetFont(&font);
-  m_statTotalTime.SetFont(&font);
+  m_statDoseTime.SetFont(&mBigFont);
+  m_statTotalTime.SetFont(&mBigFont);
 
   // Set parameters with current values if uninitialized
   if (mCookP->magIndex <= 0)

@@ -96,6 +96,7 @@ private:
   void NewZoom();
   CSerialEMApp * mWinApp;
   BOOL  mFirstDraw;              // Flag that first draw is being done
+  bool  mMadeFonts;              // Flag that fonts were created
   double mZoom;
   double mEffectiveZoom;         // Effective zoom for unbinned images
   double mViewEffectiveZoom;     // Separate effective zooms for low dose view/search
