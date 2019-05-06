@@ -272,7 +272,7 @@ public:
   afx_msg void OnUpdateFileOpenMdoc(CCmdUI *pCmdUI);
   int GetTextFileName(bool openOld, bool originalDir, CString &pathname,
     CString *filename = NULL);
-  void DateTimeComponents(CString & date, CString & time);
+  void DateTimeComponents(CString & date, CString & time, BOOL numericDate);
   int AddValueToFrameMdoc(CString key, CString value);
   int WriteFrameMdoc(void);
   int UpdateLastMdocFrame(KImage * image);

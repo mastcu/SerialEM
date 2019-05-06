@@ -7,6 +7,7 @@
 #define IDD_ABOUTBOX                    100
 #define IDR_MAINFRAME                   128
 #define IDR_SERIALTYPE                  129
+#define IDS_STRING130                   130
 #define IDD_ASKONE_DIALOG               132
 #define IDD_IMAGELEVEL                  133
 #define IDD_BUFFERCONTROL               134
@@ -1447,6 +1448,7 @@
 #define IDC_STATLISTHEADER7             2473
 #define IDC_STATLISTHEADER8             2474
 #define IDC_STATLISTHEADER9             2475
+#define IDC_CHECK_DATE_PREFIX           2476
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -1903,9 +1905,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        230
+#define _APS_NEXT_RESOURCE_VALUE        232
 #define _APS_NEXT_COMMAND_VALUE         33334
-#define _APS_NEXT_CONTROL_VALUE         2476
+#define _APS_NEXT_CONTROL_VALUE         2477
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

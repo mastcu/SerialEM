@@ -1378,16 +1378,20 @@ static char *months[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul",
 CString CSerialEMDoc::DateTimeForFrameSaving(void)
 {
   CString date, time;
-  DateTimeComponents(date, time);
+  DateTimeComponents(date, time, false);
   return date + "_" + time;
 }
 
 // Return the two components for date-time based filenames
-void CSerialEMDoc::DateTimeComponents(CString &date, CString &time)
+void CSerialEMDoc::DateTimeComponents(CString &date, CString &time, BOOL numericDate)
 {
   CTime ctDateTime = CTime::GetCurrentTime();
-  date.Format("%s%02d", months[ctDateTime.GetMonth() - 1], ctDateTime.GetDay());
-  time.Format("%02d.%02d.%02d", ctDateTime.GetHour(), ctDateTime.GetMinute(), 
+  if (numericDate)
+    date.Format("%04d-%02d-%02d", ctDateTime.GetYear(), ctDateTime.GetMonth(),
+      ctDateTime.GetDay());
+  else
+    date.Format("%s%02d", months[ctDateTime.GetMonth() - 1], ctDateTime.GetDay());
+  time.Format("%02d.%02d.%02d", ctDateTime.GetHour(), ctDateTime.GetMinute(),
     ctDateTime.GetSecond());
 }
 
