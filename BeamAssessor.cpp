@@ -257,6 +257,8 @@ void CBeamAssessor::CalIntensityCCD()
   fracField = mCamera->IsDirectDetector(mCamParam) ? 2 : 8;
   if (mCamParam->subareasBad)
     fracField = mCamParam->subareasBad > 1 ? 1 : 2;
+  mSaveUseK3CDS = mCamera->GetUseK3CorrDblSamp();
+  mCamera->SetUseK3CorrDblSamp(false);
   MakeControlSet(fracField, false);
   mCamera->InitiateCapture(TRACK_CONSET);
   mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, TASK_CCD_CAL_INTENSITY, 
@@ -618,6 +620,7 @@ void CBeamAssessor::CalIntensityCCDCleanup(int error)
   if (!HitachiScope)
     mScope->SetIntensityZoom(mUsersIntensityZoom);
   mCalibratingIntensity = false;
+  mCamera->SetUseK3CorrDblSamp(mSaveUseK3CDS);
   mWinApp->UpdateBufferWindows();
   mWinApp->SetStatusText(MEDIUM_PANE, "");
   if (mNumIntensities)

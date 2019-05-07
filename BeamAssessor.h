@@ -219,6 +219,7 @@ class CBeamAssessor
   int mCrossCalAperture[2];  // Apertures at which crossover and spot size calibrated
   int mSpotCalAperture[4];
   int mNumExpectedCals;   // Number of non-empty calibrations expected to exist
+  BOOL mSaveUseK3CDS;     // Saved value to avoid CDS mode for calibrating
 
 public:
   void CalibrateCrossover(void);
