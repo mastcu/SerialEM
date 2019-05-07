@@ -1309,7 +1309,7 @@ void CCameraController::InitializePluginCameras(int &numPlugListed, int *origina
         err = 1;
       }
       if (!err && mAllParams[i].cameraNumber >= num) {
-        report.Format("The CameraNumber property for a plugin camera is %d but the "
+        report.Format("The PluginCameraIndex property for a plugin camera is %d but the "
           "plugin named %s only reports %d cameras", 
           mAllParams[i].cameraNumber, (LPCTSTR)mAllParams[i].pluginName, num);
         AfxMessageBox(report, MB_EXCLAME);
