@@ -522,6 +522,7 @@ public:
   GetSetMember(int, AssumeCamForDummy);
   int *GetDlgColorIndex() {return &mDlgColorIndex[0];};
   GetSetMember(bool, AbsoluteDlgIndex);
+  GetSetMember(BOOL, AllowCameraInSTEMmode);
 
   HitachiParams *GetHitachiParams() {return &mHitachiParams;};
 
@@ -760,6 +761,7 @@ private:
   int mRightFrameWidth;         // difference between main and frame right edge at startup
   int mBottomFrameWidth;        // difference between main and frame bottom edge at start
   int mAssumeCamForDummy;       // Camera to assume for dummy instance
+  BOOL mAllowCameraInSTEMmode;  // Allow a true camera to be used in STEM mode
 
 public:
   void UpdateAllEditers(void);

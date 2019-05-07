@@ -666,6 +666,7 @@ CSerialEMApp::CSerialEMApp()
   mUseViewForSearch = false;
   mIdleBaseCount = 0;
   mMadeLittleFont = false;
+  mAllowCameraInSTEMmode = false;
   SEMUtilInitialize();
   traceMutexHandle = CreateMutex(0, 0, 0);
   sStartTime = GetTickCount();
@@ -3427,7 +3428,8 @@ void CSerialEMApp::SetActiveCameraNumber(int inNum)
     SetEFTEMMode(false);
   if (mSTEMMode && mCamParams[mCurrentCamera].GIF)
     SetSTEMMode(false);
-  if (!mSettingEFTEM && !mSettingSTEM)
+  if (!mSettingEFTEM && !mSettingSTEM && 
+    (mCamParams[mCurrentCamera].STEMcamera || !mAllowCameraInSTEMmode))
     SetSTEMMode(mCamParams[mCurrentCamera].STEMcamera);
   if ((mFilterParams.autoCamera || eitherSTEM) && !mSettingEFTEM && !mSettingSTEM) {
     SetEFTEMMode(mCamParams[mCurrentCamera].GIF);
