@@ -150,6 +150,8 @@ BOOL CRemoteControl::OnInitDialog()
   SetBeamOrStageIncrement(1., 0);
   SetIncrementFromIndex(mFocusIncrement, mFocusIncrementIndex, mFocusIncrementIndex,
     MAX_FOCUS_INDEX, MAX_FOCUS_DECIMALS, m_strFocusStep);
+  m_butDelFocusPlus.EnableWindow(mFocusIncrementIndex < MAX_FOCUS_INDEX);
+  m_butDelFocusMinus.EnableWindow(mFocusIncrementIndex > 0);
   return TRUE;
 }
 
@@ -623,8 +625,8 @@ void CRemoteControl::OnButDelC2Plus()
 // Set the increment for intensity changes
 void CRemoteControl::SetIntensityIncrement(float inVal)
 {
-  float maxDelta = mWinApp->mScope->GetUseIllumAreaForC2() ? MAX_IA_DELTA : 
-    MAX_PCTC2_DELTA;
+  float maxDelta = (mWinApp->mScope && mWinApp->mScope->GetUseIllumAreaForC2()) ?
+    MAX_IA_DELTA : MAX_PCTC2_DELTA;
   if (inVal < MIN_PCTC2_DELTA - 0.0001 || inVal > maxDelta + 0.0001)
     return;
   B3DCLAMP(inVal, MIN_PCTC2_DELTA, maxDelta);
@@ -632,7 +634,7 @@ void CRemoteControl::SetIntensityIncrement(float inVal)
   if (!mInitialized)
     return;
   m_strC2Delta.Format("%.3f", mIntensityIncrement);
-  UpdateData(false);
+ UpdateData(false);
 }
 
 // Do intensity change by a step
@@ -658,6 +660,8 @@ void CRemoteControl::OnDeltaposSpinFocus(NMHDR *pNMHDR, LRESULT *pResult)
   LPNMUPDOWN pNMUpDown = reinterpret_cast<LPNMUPDOWN>(pNMHDR);
   mScope->IncDefocus(mFocusIncrement * pNMUpDown->iDelta);
   *pResult = 0;
+  SetFocus();
+  mWinApp->RestoreViewFocus();
 }
 
 // Decrease or increase focus increment
@@ -679,6 +683,10 @@ void CRemoteControl::SetFocusIncrementIndex(int inVal)
 {
   SetIncrementFromIndex(mFocusIncrement, mFocusIncrementIndex, inVal,
     MAX_FOCUS_INDEX, MAX_FOCUS_DECIMALS, m_strFocusStep);
+  if (!mInitialized)
+    return;
+  m_butDelFocusPlus.EnableWindow(mFocusIncrementIndex < MAX_FOCUS_INDEX);
+  m_butDelFocusMinus.EnableWindow(mFocusIncrementIndex > 0);
 }
 
 // Set an increment via its index

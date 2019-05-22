@@ -423,17 +423,17 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
     }
   }
 
-  if (inStageX != mStageX) {
+  if (B3DNINT(inStageX * 100.) != B3DNINT(mStageX * 100.)) {
     format.Format("%.2f", inStageX);
     m_statStageX.SetWindowText(format);
     mStageX = inStageX;
   }
-  if (inStageY != mStageY) {
+  if (B3DNINT(inStageY * 100.) != B3DNINT(mStageY * 100.)) {
     format.Format("%.2f", inStageY);
     m_statStageY.SetWindowText(format);
     mStageY = inStageY;
   }
-  if (inStageZ != mStageZ) {
+  if (B3DNINT(inStageZ * 100.) != B3DNINT(mStageZ * 100.)) {
     format.Format("%.2f", inStageZ);
     m_statStageZ.SetWindowText(format);
     mStageZ = inStageZ;
