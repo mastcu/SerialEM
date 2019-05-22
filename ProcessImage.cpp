@@ -3025,9 +3025,10 @@ void CProcessImage::SetCtffindParamsForDefocus(CtffindParams &param, double defo
   if (param.minimum_resolution > 50.)
     ACCUM_MAX(param.maximum_resolution, param.minimum_resolution / 5.f);
   ACCUM_MAX(param.maximum_resolution, GetMaxCtfFitRes());
-  if (mMinCtfFitResIfPhase > 0. && mMinCtfFitResIfPhase < param.minimum_resolution)
+  if (param.find_additional_phase_shift && mMinCtfFitResIfPhase > 0. && 
+    mMinCtfFitResIfPhase < param.minimum_resolution)
     param.minimum_resolution = B3DMAX(mMinCtfFitResIfPhase, 
-    1.5f * param.maximum_resolution);
+      1.5f * param.maximum_resolution);
 }
 
 // Run

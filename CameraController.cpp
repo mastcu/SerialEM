@@ -6092,10 +6092,11 @@ void CCameraController::AcquirePluginImage(CameraThreadData *td, void **array,
 {
   bool tietzDark = td->TietzType && processing == TIETZ_GET_DARK_REF;
   bool tietzImage = td->TietzType && !tietzDark;
+  bool XF416 = td->TietzType == 15 || td->TietzType == 16;
   int flags = td->DivideBy2 ? PLUGCAM_DIVIDE_BY2 : 0;
   if (tietzImage && td->RestoreBBmode)
     flags |= TIETZ_RESTORE_BBMODE;
-  if (td->TietzType == 15 || td->TietzType == 16)
+  if (XF416)
     flags |= TIETZ_SET_READ_MODE;
 
   // Do the selection for Tietz dark reference but not image
@@ -6123,8 +6124,12 @@ void CCameraController::AcquirePluginImage(CameraThreadData *td, void **array,
 
   // Do preliminary steps for Tietz that were always before starting blanker
   if (!retval && td->TietzType && td->plugFuncs->SetExtraParams1 &&
-    (td->TietzType == 15 || td->TietzType == 16 || !td->TietzFlatfieldDir.IsEmpty())) {
-      td->plugFuncs->SetExtraParams1(1, 1, 0, tietzDark ? 0 : processing, 
+    (XF416 || !td->TietzFlatfieldDir.IsEmpty())) {
+
+      // The speed and mode values may be specific to XF416 for now but they are only
+      // relevant now when setting a read mode in plugin
+      // TVIPS indicated to use a 1 for flatfield parameter
+      td->plugFuncs->SetExtraParams1(3, 2, 0, (tietzDark || !processing) ? 0 : 1, 
         (LPCTSTR)td->TietzFlatfieldDir);
   }
   if (!retval && tietzImage)
