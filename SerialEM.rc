@@ -7,7 +7,8 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "afxres.h"
+#include "afxres.h"
+
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
@@ -588,7 +589,7 @@ BEGIN
         MENUITEM "Set Ma&p Acquire State",      ID_NAVIGATOR_SETACQUIRESTATE
         MENUITEM "&Restore State",              ID_NAVIGATOR_RESTORESTATE
         MENUITEM SEPARATOR
-        MENUITEM "&Acquire at Points...",       ID_NAVIGATOR_ACQUIRE
+        MENUITEM "&Acquire at Items...",       ID_NAVIGATOR_ACQUIRE
         MENUITEM "End Ac&quire",                ID_NAVIGATOR_ENDACQUIRE
         MENUITEM "List &Files/Series/States",   ID_MONTAGE_LISTFILESTOOPEN
         MENUITEM SEPARATOR
@@ -2635,7 +2636,7 @@ BEGIN
     LTEXT           "Format: Base-File-Label\\Base-File-Label-###-Mar06-10:15:20",IDC_STAT_EXAMPLE,10,299,222,8
     LTEXT           "Folder will be created inside folder specified in Set Folder dialog,",IDC_STAT_MUST_EXIST,11,311,213,8
     EDITTEXT        IDC_EDIT_START_NUMBER,162,237,34,12,ES_AUTOHSCROLL
-    CONTROL         "Only when Acquiring at Points",IDC_CHECK_ONLY_ACQUIRE,
+    CONTROL         "Only when Acquiring at Items",IDC_CHECK_ONLY_ACQUIRE,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,129,226,113,10
     LTEXT           "but the folder specified in Set Folder dialog must exist",IDC_STAT_MUST_EXIST2,11,321,177,8
     CONTROL         "Tilt angle",IDC_CHECK_TILT_ANGLE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,37,250,46,10
@@ -5000,7 +5001,7 @@ BEGIN
     IDC_CHECK_MONTHDAY      "Add month and day to unique file or folder name"
     IDC_CHECK_HOUR_MIN_SEC  "Add time to unique file or folder name"
     IDC_EDIT_START_NUMBER   "Enter value with which to start sequential numbering"
-    IDC_CHECK_ONLY_ACQUIRE  "Use Navigator item label only when running Acquire at Points"
+    IDC_CHECK_ONLY_ACQUIRE  "Use Navigator item label only when running Acquire at Items"
     IDC_CHECK_TILT_ANGLE    "Add tilt angle to unique file or folder name"
 END
 
@@ -5324,7 +5325,8 @@ LANGUAGE 9, 1
 #include "res\SerialEM.rc2"  // non-Microsoft Visual C++ edited resources
 #include "afxres.rc"         // Standard components
 #include "XFolderDialog\XFolderDialog.rc"
-#endif
+#endif
+
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

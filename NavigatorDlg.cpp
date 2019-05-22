@@ -8072,7 +8072,7 @@ void CNavigatorDlg::SendEmailIfNeeded(void)
   if (!((mParam->acquireType == ACQUIRE_DO_TS && mParam->acqSendEmail) ||
     (mParam->acquireType != ACQUIRE_DO_TS && mParam->acqSendEmailNonTS)) || mEmailWasSent)
     return;
-  mess.Format("Your Navigator Acquire at Points operation %s %d areas",
+  mess.Format("Your Navigator Acquire at Items operation %s %d areas",
     mAcquireEnded ? "successfully acquired from" : "stopped with an error "
     "after acquiring from", mNumAcquired);
   mWinApp->mMailer->SendMail("Message from SerialEM Navigator", mess);

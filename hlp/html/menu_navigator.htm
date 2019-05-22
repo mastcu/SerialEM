@@ -210,7 +210,7 @@
           <TD>Restore mag, beam, and Record parameters from setting to map state</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_navigator_acquire">Acquire at Points</A></TD>
+          <TD class="style1"><A HREF="#hid_navigator_acquire">Acquire at Items</A></TD>
           <TD>Acquire images or maps or run a tilt series or script at a sequence of areas 
             automatically.</TD>
         </TR>
@@ -430,7 +430,7 @@
         alignment elsewhere). Also, only select this option if you are going to use the 
         'Realign to Item' routine at some point to get to individual montage positions. 
         One approach would be to check 'Acquire' for each of the new montage position 
-        items and then run the <A HREF="#hid_navigator_acquire">Acquire at Points command</A>
+        items and then run the <A HREF="#hid_navigator_acquire">Acquire at Items command</A>
         with the option checked to 'Realign at item'. This will yield montages that can 
         be blended and analyzed for overlap.</P>
       <P>The Setup Super Montage command was originally called Aligned Super Montage, and 
@@ -571,7 +571,7 @@
         first point, and its distance to every other point in the group will be less 
         than the maximum radius set with the <a href="#hid_montaginggrids_setgroupsize">
         Set Group Radius</a> command.&nbsp; With this arrangement, you can use the 
-        option in the Acquire at Points dialog to focus only on the first point in a 
+        option in the Acquire at Items dialog to focus only on the first point in a 
         group, and other points will be within a certain distance of the location where 
         focus was last done. </P>
     <P>When points are divided into groups, the program will display the result, tell 
@@ -799,8 +799,8 @@
         its state prior to the state changes. This command does the same thing as the <B>Restore 
           Prior State</B> button in the <A HREF="hidd_statedlg.htm">Imaging State dialog 
           box</A>.</P>
-      <P><A NAME="hid_navigator_acquire"></A><B>Acquire at Points command (Navigator menu)</B></P>
-      <P>Use this command to acquire images or maps or run a script or tilt series at a series of points 
+      <P><A NAME="hid_navigator_acquire"></A><B>Acquire at Items command (Navigator menu)</B></P>
+      <P>Use this command to acquire images or maps or run a script or tilt series at a series of items 
         marked for acquisition with the &#39;Acquire&#39; or &#39;Tilt series&#39; check box in the 
         Navigator window. There must be an image file 
         open before the command can be used to acquire images or maps, unless &#39;New file 
@@ -810,14 +810,14 @@
         acquisition, unless an imaging state has been set for the first item. This command opens the <A HREF="hidd_navacquire.htm">Navigator Acquire 
           dialog box</A>, which allows various options to be set.</P>
       <P><A NAME="hid_navigator_endacquire"></A><B>End Acquire command (Navigator menu)</B></P>
-      <P>After starting an 'Acquire at Points', use this command to stop the Navigator 
+      <P>After starting an 'Acquire at Items', use this command to stop the Navigator 
         from going on to the next item after finishing the current one.&nbsp; If the 
         acquisition is already paused after finishing an item, the command will stop 
         acquisition immediately.</P>
       <P><A NAME="hid_montage_listfilestoopen"></A><B>List Files/Series/States command 
           (Navigator menu)</B></P>
       <P>Use this command to get a list in the Log window of everything that has been 
-        scheduled to happen in the course of running an 'Acquire at Points' operation. 
+        scheduled to happen in the course of running an 'Acquire at Items' operation. 
         Specifically, the list will show the files that will be opened and their 
         properties, the imaging states to be set when files are opened, and the tilt 
         series that are set up to run.&nbsp; For a Low Dose state (maked as LD), the 
