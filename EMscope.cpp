@@ -393,7 +393,7 @@ CEMscope::CEMscope()
   mBkgdMovingStage = false;
   mMovingAperture = false;
   mLastGaugeStatus = gsInvalid;
-  mVacCount = 0;
+  mVacCount = 100;
   mLastSpectroscopy = false;
   mErrCount = 0;
   mLastReport = 0;
@@ -1648,7 +1648,7 @@ void CEMscope::UpdateScreenBeamFocus(int STEMmode, int &screenPos, int &smallScr
 // Determine vacuum status for gauges for FEI
 void CEMscope::UpdateGauges(int &vacStatus)
 {
-  static int lastVacStatus = 0;
+  static int lastVacStatus = -1;
   if (mVacCount++ >= 1700 / mUpdateInterval ||
     (GetDebugOutput('u') && (mAutosaveCount % 50 == 0))) {
       mVacCount = 0;
