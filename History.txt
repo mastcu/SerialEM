@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+5/12/19: Stopped converting the fixed phase from degrees to radians when doing
+a fit on clicking an FFT since it is already in radians; allowed fitting
+phase range of 120 degrees in Ctffind command (In 3.7).
+
 5/7/19: Added property to allow real camera to be used with scope in STEM
 mode.
 

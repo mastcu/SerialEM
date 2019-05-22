@@ -1532,10 +1532,13 @@ void CSerialEMView::OnLButtonUp(UINT nFlags, CPoint point)
                   // Adjust search parameters based on options
                   param.slower_search = processImg->GetSlowerCtfFit() > 0;
                   param.compute_extra_stats = processImg->GetExtraCtfStats() > 0;
+
+                  // Assumed phase is stored in radians, passed here in radians and 
+                  // the params to ctffid are in radians
                   if (processImg->GetPlatePhase() > 0.001) {
                     param.minimum_additional_phase_shift = 
                       param.maximum_additional_phase_shift = 
-                      (float)(processImg->GetPlatePhase() / DTOR);
+                      (float)(processImg->GetPlatePhase());
                     param.find_additional_phase_shift = true;
                   }
 

@@ -4548,8 +4548,8 @@ void CMacroProcessor::NextCommand()
         delY = itemDbl[7] * DTOR;
         if (delY < delX)
           ABORT_LINE("The maximum phase shift is less than the minimum in line:\n\n");
-        if (delY - delX > 1.571)
-          ABORT_LINE("The range of phase shift to search is more than 90 degrees in "
+        if (delY - delX > 125 * DTOR)
+          ABORT_LINE("The range of phase shift to search is more than 125 degrees in "
           "line:\n\n");
         param.maximum_additional_phase_shift = (float)delY;
       }
