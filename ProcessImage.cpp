@@ -3086,9 +3086,10 @@ int CProcessImage::RunCtffind(EMimageBuffer *imBuf, CtffindParams &params,
     mess.Format("Ctffind: defocus: %.3f,  astig: %.3f um,  angle: %.1f,  ",  
       -(results_array[0] + results_array[1]) / 20000., 
       (results_array[0] - results_array[1]) / 10000., results_array[2]);
-    if (params.find_additional_phase_shift && params.minimum_additional_phase_shift < 
-      params.maximum_additional_phase_shift) {
-      str.Format("phase shift %.1f deg,  ", results_array[3] / DTOR);
+    if (params.find_additional_phase_shift) {
+      str.Format("%s %.1f deg,  ", params.minimum_additional_phase_shift <
+        params.maximum_additional_phase_shift ? "phase shift" : "fixed phase",
+        results_array[3] / DTOR);
       mess += str;
     }
     str.Format("score %.4f", results_array[4]);
