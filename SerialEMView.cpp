@@ -1585,7 +1585,7 @@ void CSerialEMView::OnLButtonUp(UINT nFlags, CPoint point)
               }
             }
             if (processImg->GetPlatePhase() > 0.001)
-              lenstr += "  (PP)";
+              lenstr += ": PP";
             mWinApp->SetStatusText(MEDIUM_PANE, lenstr);
         } else {
           imX = (int)imBuf->mUserPtX;
