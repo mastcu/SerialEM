@@ -3,6 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+5/20/19: Fixed scope control dialog setting illuminated area when it is above
+the upper limit, which happens in LM (In 3.7).
+
+5/20/19: Fixed dose meter adding dose when screen is down in the Trial/Focus
+area (In 3.7). 
+
 5/19/19: Fixed Ctffind module when fitting with a fixed non-zero phase value
 (In 3.7).
 

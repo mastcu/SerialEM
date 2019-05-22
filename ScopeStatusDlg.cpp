@@ -489,11 +489,17 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
     Invalidate();
 
   if (!screenUp && !blanked && gunState != 0 && WatchingDose()) {
-    diffTime = SEMTickInterval(curTime, mLastDoseTime);
-    newDose = mWinApp->mBeamAssessor->GetElectronDose(inSpot, rawIntensity, 
-      (float)(diffTime / 1000.));
-    if (newDose)
-      AddToDose(newDose);
+    int area;
+    BOOL lowDose = mWinApp->LowDoseMode();
+    if (lowDose)
+      area = mWinApp->mScope->GetLowDoseArea();
+    if (!lowDose || !(area == FOCUS_CONSET || area == TRIAL_CONSET)) {
+      diffTime = SEMTickInterval(curTime, mLastDoseTime);
+      newDose = mWinApp->mBeamAssessor->GetElectronDose(inSpot, rawIntensity,
+        (float)(diffTime / 1000.));
+      if (newDose)
+        AddToDose(newDose);
+    }
   }
   mLastDoseTime = curTime;
 }

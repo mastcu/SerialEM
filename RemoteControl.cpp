@@ -15,6 +15,7 @@
 #define MAX_BEAM_DELTA  0.8f
 #define MIN_PCTC2_DELTA 0.015625f
 #define MAX_PCTC2_DELTA 4.f
+#define MAX_IA_DELTA   32.f
 #define MAX_FOCUS_INDEX 12
 #define MAX_FOCUS_DECIMALS 2
 #define MAX_STAGE_INDEX 14
@@ -622,9 +623,11 @@ void CRemoteControl::OnButDelC2Plus()
 // Set the increment for intensity changes
 void CRemoteControl::SetIntensityIncrement(float inVal)
 {
-  if (inVal < MIN_PCTC2_DELTA - 0.0001 || inVal > MAX_PCTC2_DELTA + 0.0001)
+  float maxDelta = mWinApp->mScope->GetUseIllumAreaForC2() ? MAX_IA_DELTA : 
+    MAX_PCTC2_DELTA;
+  if (inVal < MIN_PCTC2_DELTA - 0.0001 || inVal > maxDelta + 0.0001)
     return;
-  B3DCLAMP(inVal, MIN_PCTC2_DELTA, MAX_PCTC2_DELTA);
+  B3DCLAMP(inVal, MIN_PCTC2_DELTA, maxDelta);
   mIntensityIncrement = inVal;
   if (!mInitialized)
     return;
@@ -645,7 +648,7 @@ void CRemoteControl::ChangeIntensityByIncrement(int delta)
     newVal = mScope->GetIntensity() + 0.01 * mIntensityIncrement * delta /
       mScope->GetC2IntensityFactor();
   }
-  if (newVal > 0. && newVal < 1.0)
+  if (newVal > 0. && (newVal < 1.0 || mWinApp->mScope->GetUseIllumAreaForC2()))
     mScope->SetIntensity(newVal);
 }
 
