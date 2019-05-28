@@ -63,7 +63,9 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDR_MAINFRAME           ICON                    "res\\SerialEM.ico"
+
 IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -71,7 +73,9 @@ IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
 //
 
 IDR_MAINFRAME           BITMAP                  "res\\Toolbar.bmp"
+
 IDB_BITMAP1             BITMAP                  "res\\bitmap1.bmp"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -507,7 +511,6 @@ BEGIN
         MENUITEM "S&et Defocus for Circles",    ID_PROCESS_SETDEFOCUSFORCIRCLES
         MENUITEM "Do CTF Fit o&n Click\tCtrl+D", ID_PROCESS_DOCTFFINDFITONCLICK
         MENUITEM "Set &CTF Fit Options...",     ID_PROCESS_SETCTFFINDOPTIONS
-        MENUITEM "Set &Phase Plate Shift",      ID_PROCESS_SETPHASEPLATESHIFT
         MENUITEM SEPARATOR
         MENUITEM "Rotate &Left",                ID_PROCESS_ROTATELEFT
         MENUITEM "&Rotate Right",               ID_PROCESS_ROTATERIGHT
@@ -2930,9 +2933,9 @@ BEGIN
 END
 
 IDD_CTFFINDDLG DIALOGEX 0, 0, 209, 128
-STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "CTF Fitting Parameters"
-FONT 8, "MS Shell Dlg", 400, 0, 0x1
+FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,38,112,50,12
     PUSHBUTTON      "Cancel",IDCANCEL,123,112,50,12
@@ -3010,7 +3013,9 @@ END
 //
 
 IDC_CURSOR1             CURSOR                  "res\\cursor1.cur"
+
 IDC_CURSOR2             CURSOR                  "res\\cursor2.cur"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3448,49 +3453,49 @@ END
 // AFX_DIALOG_LAYOUT
 //
 
-IDD_CAMERASETUP AFX_DIALOG_LAYOUT 
+IDD_CAMERASETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_IMAGELEVEL AFX_DIALOG_LAYOUT 
+IDD_IMAGELEVEL AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_BUFFERCONTROL AFX_DIALOG_LAYOUT 
+IDD_BUFFERCONTROL AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_SCOPESTATUS AFX_DIALOG_LAYOUT 
+IDD_SCOPESTATUS AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_LOWDOSE AFX_DIALOG_LAYOUT 
+IDD_LOWDOSE AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_REMOTE_CONTROL AFX_DIALOG_LAYOUT 
+IDD_REMOTE_CONTROL AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_NAVIGATOR AFX_DIALOG_LAYOUT 
+IDD_NAVIGATOR AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_K2_SAVE_OPTIONS AFX_DIALOG_LAYOUT 
+IDD_K2_SAVE_OPTIONS AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_CTFFINDDLG AFX_DIALOG_LAYOUT 
+IDD_CTFFINDDLG AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
 
