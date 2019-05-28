@@ -523,6 +523,7 @@ public:
   int *GetDlgColorIndex() {return &mDlgColorIndex[0];};
   GetSetMember(bool, AbsoluteDlgIndex);
   GetSetMember(BOOL, AllowCameraInSTEMmode);
+  GetSetMember(int, DoseLifetimeHours);
 
   HitachiParams *GetHitachiParams() {return &mHitachiParams;};
 
@@ -762,6 +763,7 @@ private:
   int mBottomFrameWidth;        // difference between main and frame bottom edge at start
   int mAssumeCamForDummy;       // Camera to assume for dummy instance
   BOOL mAllowCameraInSTEMmode;  // Allow a true camera to be used in STEM mode
+  int mDoseLifetimeHours;       // Validity of electron dose calibration in hours
 
 public:
   void UpdateAllEditers(void);

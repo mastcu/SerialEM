@@ -667,6 +667,7 @@ CSerialEMApp::CSerialEMApp()
   mIdleBaseCount = 0;
   mMadeLittleFont = false;
   mAllowCameraInSTEMmode = false;
+  mDoseLifetimeHours = 24;
   SEMUtilInitialize();
   traceMutexHandle = CreateMutex(0, 0, 0);
   sStartTime = GetTickCount();
