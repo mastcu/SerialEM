@@ -368,6 +368,11 @@
 			</OBJECT>
 			<A HREF="html/hidd_statedlg.htm">Imaging State dialog</A><BR>
 		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="CTF Fitting Parameters dialog">
+			<param name="Local" value="html/hidd_ctffinddlg.htm">
+			</OBJECT>
+			<A HREF="html/hidd_ctffinddlg.htm">CTF Fitting Parameters dialog</A><BR>
+		<LI><OBJECT type="text/sitemap">
 			<param name="Name" value="Macro Control dialog">
 			<param name="Local" value="html/hidd_macrocontrol.htm">
 			</OBJECT>

@@ -7,8 +7,7 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "afxres.h"
-
+#include "afxres.h"
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
@@ -511,7 +510,7 @@ BEGIN
         MENUITEM "Circle on Live FF&T",         ID_PROCESS_CIRCLEONLIVEFFT
         MENUITEM "S&et Defocus for Circles",    ID_PROCESS_SETDEFOCUSFORCIRCLES
         MENUITEM "Do CTF Fit o&n Click\tCtrl+D", ID_PROCESS_DOCTFFINDFITONCLICK
-        MENUITEM "Set Ctffind Fit Options",     ID_PROCESS_SETCTFFINDOPTIONS
+        MENUITEM "Set &CTF Fit Options...",     ID_PROCESS_SETCTFFINDOPTIONS
         MENUITEM "Set &Phase Plate Shift",      ID_PROCESS_SETPHASEPLATESHIFT
         MENUITEM SEPARATOR
         MENUITEM "Rotate &Left",                ID_PROCESS_ROTATELEFT
@@ -526,7 +525,7 @@ BEGIN
         MENUITEM "A&utocorrelation",            ID_PROCESS_AUTOCORRELATION
         MENUITEM SEPARATOR
         MENUITEM "Fix Dark &X-rays",            ID_PROCESS_FIXDARKXRAYS
-        MENUITEM "Set Dark &Criteria",          ID_PROCESS_SETDARKCRITERIA
+        MENUITEM "Set Dark Criteria",           ID_PROCESS_SETDARKCRITERIA
         MENUITEM "Fix &Image X-rays",           ID_PROCESS_FIXIMAGEXRAYS
         MENUITEM "&Set Image Criteria",         ID_PROCESS_SETIMAGECRITERIA
     END
@@ -589,7 +588,7 @@ BEGIN
         MENUITEM "Set Ma&p Acquire State",      ID_NAVIGATOR_SETACQUIRESTATE
         MENUITEM "&Restore State",              ID_NAVIGATOR_RESTORESTATE
         MENUITEM SEPARATOR
-        MENUITEM "&Acquire at Items...",       ID_NAVIGATOR_ACQUIRE
+        MENUITEM "&Acquire at Items...",        ID_NAVIGATOR_ACQUIRE
         MENUITEM "End Ac&quire",                ID_NAVIGATOR_ENDACQUIRE
         MENUITEM "List &Files/Series/States",   ID_MONTAGE_LISTFILESTOOPEN
         MENUITEM SEPARATOR
@@ -2934,6 +2933,38 @@ BEGIN
     DEFPUSHBUTTON   "Run",IDC_RUN_ONE_LINE5,121,66,27,12
 END
 
+IDD_CTFFINDDLG DIALOGEX 0, 0, 211, 122
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "CTF Fitting Parameters"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,38,104,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,123,104,50,14
+    CONTROL         "Compute resolution to which Thon rings fit",IDC_CHECK_EXTRA_STATS,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,81,155,10
+    CONTROL         "Draw rings to computed resolution",IDC_CHECK_DRAW_RINGS,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,93,129,10
+    CONTROL         "Use slower search, needed for high astigmatism",IDC_CHECK_SLOW_SEARCH,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,3,174,10
+    LTEXT           "Custom value of highest resolution to fit:",IDC_STATIC,9,16,134,8
+    EDITTEXT        IDC_EDIT_MAX_FIT_RES,143,14,30,12,ES_AUTOHSCROLL
+    LTEXT           "(0 for default value of  A; applies to script fitting)",IDC_STAT_DEFAULT_MAX_RES,15,26,187,8
+    LTEXT           "Lowest resolution to fit when fitting with phase:",IDC_STATIC,9,37,156,8
+    EDITTEXT        IDC_EDIT_PHASE_MIN_RES,166,35,30,12,ES_AUTOHSCROLL
+    CONTROL         "Find phase with search limits",IDC_CHECK_FIND_PHASE,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,57,108,10
+    EDITTEXT        IDC_EDIT_MIN_PHASE,116,56,30,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_MAX_PHASE,159,56,30,12,ES_AUTOHSCROLL
+    LTEXT           "deg",IDC_STATIC,192,58,13,8
+    LTEXT           "to",IDC_STATIC,149,57,8,8
+    CONTROL         "Omit astigmatism when searching for phase",IDC_CHECK_FIX_ASTIG_FOR_PHASE,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,69,160,10
+    LTEXT           "A",IDC_STATIC,176,16,8,8
+    LTEXT           "A",IDC_STATIC,199,37,8,8
+    PUSHBUTTON      "?",IDC_BUTHELP,194,106,11,10
+    LTEXT           "(0 for default below first zero; applies to script fitting)",IDC_STATIC,15,47,177,8
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3357,6 +3388,14 @@ BEGIN
         RIGHTMARGIN, 147
         BOTTOMMARGIN, 79
     END
+
+    IDD_CTFFINDDLG, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 207
+        TOPMARGIN, 3
+        BOTTOMMARGIN, 118
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -3447,6 +3486,11 @@ BEGIN
 END
 
 IDD_K2_SAVE_OPTIONS AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_CTFFINDDLG AFX_DIALOG_LAYOUT
 BEGIN
     0
 END
@@ -5300,6 +5344,20 @@ END
 STRINGTABLE
 BEGIN
     IDC_CHECK_DATE_PREFIX   "IDC"
+    IDC_CHECK_EXTRA_STATS   "Do extra computations to find resolution that Thon rings fit to"
+    IDC_CHECK_DRAW_RINGS    "Draw more than 5 rings on FFT, out to the resolution fit to"
+END
+
+STRINGTABLE
+BEGIN
+    IDC_CHECK_SLOW_SEARCH   "Do slower search in 2D image; recommended unless too slow"
+    IDC_EDIT_MAX_FIT_RES    "Highest resolution to fit to; smaller value fits farther"
+    IDC_EDIT_PHASE_MIN_RES  "Lowest resolution to fit to whne phase is non-zero; smaller value fits less"
+    IDC_CHECK_FIND_PHASE    "Search for phase in the given range (may be time consuming)"
+    IDC_EDIT_MIN_PHASE      "Lower end of phase range to search when finding phase, in degrees"
+    IDC_EDIT_MAX_PHASE      "Upper end of phase range to search when finding phase, in degrees"
+    IDC_CHECK_FIX_ASTIG_FOR_PHASE 
+                            "Fix astigmatism at 0 when searching for phase to speed up search"
 END
 
 #endif    // English (United States) resources
@@ -5325,8 +5383,7 @@ LANGUAGE 9, 1
 #include "res\SerialEM.rc2"  // non-Microsoft Visual C++ edited resources
 #include "afxres.rc"         // Standard components
 #include "XFolderDialog\XFolderDialog.rc"
-#endif
-
+#endif
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

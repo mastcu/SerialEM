@@ -1,0 +1,82 @@
+<html>
+  <head>
+    <title>CTF Fitting Parameters Dialog</title>
+    <meta HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252"/>
+    <style type="text/css"> <!-- BODY { font-family:"Arial" }
+  TD { font-size:16 }
+      .style1
+      {
+        font-size: larger;
+        font-weight: bold;
+      }
+      --></style>
+  </head>
+  <body BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+    <p><a NAME="hidd_multi_shot_setup"></a><span class="style1">CTF
+        Fitting Parameters Dialog</span></p>
+    <p>This dialog allows you to set parameters controlling CTF fitting to
+    FFTs; they all affect the fitting when clicking in an FFT, and some also
+    affect fitting with the Ctffind script command.&nbsp; The dialog can be kept open 
+        while getting images and fitting to them.&nbsp; If an FFT is being displayed 
+        with a CTF fit drawn on it, then the program will redo the fit whenever you 
+        change a value in this dialog.</p>
+    <p><b>Use slower search, needed for high astigmatism </b></p>
+    <p>Select this option to do a slower 2-D initial exhaustive search instead of the default 
+        1-D search with a rotational averaged spectrum.&nbsp; This search is needed if 
+        the astigmatism is large (for example, if analyzing images with beam-tilt). 
+        Although it 
+        should not be needed for ordinary amounts of astigmatism, fitting is apparently 
+        more reliable with it on, so the 2-D search is recommended unless you find it 
+        too slow.&nbsp; The 2-D search 
+        is parallelized so its speed will depend heavily on the number of computer cores 
+        available.&nbsp; Including phase in the search will slow it down considerably.</p>
+    <p><b>Custom value of highest resolution to fit </b></p>
+    <p>Enter a limiting value to the maximum resolution to which to fit the amplitude 
+        spectrum, in Angstroms.&nbsp; A smaller value fits farther out in frequency 
+        space.&nbsp; The minimum allowed value is 3 unless you enter 0 to revert to the 
+        default.&nbsp; The line below this text box shows the default value that will be 
+        used if the entry here is 0.&nbsp; This default may be set in the SerialEM 
+        properties file. If there is no property setting, the default is 5 if the voltage on program 
+        startup is above 120 KV, which is the same as the default 
+        maximum resolution in Ctffind4, and 10 otherwise.&nbsp; SerialEM will choose a maximum resolution 
+        higher than this value when the defocus is high and the minimum resolution is a 
+        high number as well.&nbsp; However, with a non-FEG microscope or other situation 
+        where Thon rings may never approach this resolution, a higher value may be 
+        needed here or in the properties file.&nbsp; If you click in an FFT with the middle mouse button, the 
+        status bar will show the resolution (&#39;Period&#39;) at that frequency.</p>
+      <p>The value set here applies when fitting with the Ctffind script command.</p>
+    <p><b>Lowest resolution to fit when fitting with phase </b></p>
+    <p>Enter a limiting value to the minimum resolution in Angstroms for fitting when 
+        phase is non-zero, i.e., when searching for phase or using a fixed phase shift.&nbsp; 
+        A smaller value starts the fit farther from the origin in frequency space.&nbsp; This limit applies either when a constant phase shift 
+        is assumed or when the phase is being found in a fit with the &#39;Ctffind&#39; script 
+        command.&nbsp; This limit provides a maximum value for the minimum resolution 
+        and can be used to exclude the region before the first zero, or even the first 
+        zero from fitting, since the spectrum here may be distorted due to a gradual cut-on in the phase shift at low frequencies.&nbsp; 
+        However, the minimum resolution may end up being higher than this limit since it 
+        is also constrained to be least 1.5 times the maximum resolution used for a 
+        particular fit.&nbsp; Enter 0 for no limit.&nbsp; The standard value used by 
+        some phase plate experts seems to be 20 A.</p>
+      <p>The value set here applies when fitting with the Ctffind script command.</p>
+    <p><b>Find phase with search limits </b></p>
+    <p>Select this option to find the phase shift as well as defocus and astigmatism.&nbsp; 
+        An initial exhaustive coarse search for the best fit will be done with a step 
+        size of 6 degrees, followed by a conjugate gradient minimization.&nbsp; In the 
+        text boxes, set the minimum and maximum phase of the initial search, in degrees.&nbsp; 
+        This search will be slower and may be unreliable with weaker data unless the 
+        following option is used to fix the astigmatism at 0.</p>
+    <p><b>Omit astigmatism when searching for phase </b></p>
+    <p>Select this option to fix astigmatism at zero when searching for phase.&nbsp; 
+        This will reduce the dimensionality of searches from 4 to 2, increasing the 
+        speed and reliability of the fitting.</p>
+    <p><b>Compute resolution to which Thon rings fit </b></p>
+    <p>Select this option do the extra computations needed to determine the resolution to 
+        which the Thon rings can be fit, or 0 not to.&nbsp; These computations will 
+        increase the fitting time by 10-20%, which may be noticeable.</p>
+    <p><b>Draw rings to computed resolution </b></p>
+    <p>Select this option to draw half-rings on the image out to the resolution determined by 
+        these extra computations if they were done, or 0 not to.</p>
+
+</body>
+</html>

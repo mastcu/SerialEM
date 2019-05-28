@@ -39,6 +39,7 @@ hidd_macro											= SerialEM.chm::/html\hidd_macro.htm
 hidd_falcon_frames							= SerialEM.chm::/html\hidd_falcon_frames.htm
 hidd_k2_save_options  					= SerialEM.chm::/html\hidd_k2_save_options.htm
 hidd_framealign  		      			= SerialEM.chm::/html\hidd_framealign.htm
+hidd_ctffinddlg                 = SerialEM.chm::/html\hidd_ctffind.htm
 hidd_multi_shot_setup      			= SerialEM.chm::/html\hidd_multi_shot_setup.htm
 hidd_de_reference         			= SerialEM.chm::/html\hidd_de_reference.htm
 hidd_detooldlg									= SerialEM.chm::/html\hidd_detoolpanel.htm

@@ -26,6 +26,7 @@
 #include "EMscope.h"
 #include "NavigatorDlg.h"
 #include "GainRefMaker.h"
+#include "CtffindParamDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -75,13 +76,19 @@ CProcessImage::CProcessImage()
   mReductionFactor = 4.;
   mCtffindOnClick = false;
   mCtfFitFocusRangeFac = 2.5f;
-  mSlowerCtfFit = false;
+  mSlowerCtfFit = true;
   mExtraCtfStats = false;
   mDrawExtraCtfRings = false;
   mUserMaxCtfFitRes = 0.;
   mDefaultMaxCtfFitRes = 0.;
   mTestCtfPixelSize = 0.;
   mMinCtfFitResIfPhase = 0.;
+  mCtffindParamDlg = NULL;
+  mCtffindDlgPlace.rcNormalPosition.right = 0;
+  mCtfMinPhase = 30;
+  mCtfMaxPhase = 120;
+  mCtfFindPhaseOnClick = false;
+  mCtfFixAstigForPhase = true;
   ctffindSetPrintFunc(ctffindPrintFunc);
   ctffindSetSliceWriteFunc(ctffindDumpFunc);
 }
@@ -383,38 +390,23 @@ void CProcessImage::OnUpdateProcessDoCtffindFitOnClick(CCmdUI *pCmdUI)
   pCmdUI->SetCheck(mCtffindOnClick ? 1 : 0);
 }
 
-
+// Open the Ctffind option window if it is not open, leave it open
 void CProcessImage::OnProcessSetCtffindOptions()
 {
-  float maxRes = GetMaxCtfFitRes();
-  CString str;
-  if (!KGetOneInt("1 to compute resolution to which Thon rings fit, 0 not to:", 
-    mExtraCtfStats))
+  if (mCtffindParamDlg)
     return;
-  if (!KGetOneInt("1 to draw rings out to the computed resolution that Thon rings fit, "
-    "0 not to:", mDrawExtraCtfRings))
-    return;
-  if (!KGetOneInt("1 for slower search for very astigmatic images, 0 for fast search:",
-    mSlowerCtfFit))
-    return;
-  str.Format(" (0 to use default from properties, %.1f):", mDefaultMaxCtfFitRes);
-  if (!KGetOneFloat(mUserMaxCtfFitRes > 0 ? "A higher number will make it fit over a "
-    "smaller range of frequencies" : "Higher value fits over smaller range. "
-    "Leave unchanged to use the default value from properties.", 
-    CString("Limit on maximum resolution for fitting, in Angstroms") + 
-    (mUserMaxCtfFitRes > 0 ? str : ":"), maxRes, 1))
-    return;
-  if (maxRes)
-    ACCUM_MAX(maxRes, 3.f);
-  if (fabs(maxRes - GetMaxCtfFitRes()) > .01)
-    mUserMaxCtfFitRes = maxRes;
-  if (!KGetOneFloat("This limit applies when finding phase or using fixed non-zero phase",
-    "Upper limit on minimum resolution value for fits with phase, in "
-    "Angstroms (0 for no limit):", mMinCtfFitResIfPhase, 1))
-    return;
-  /*KGetOneFloat("Factor to multiply and divide clicked defocus by to set maximum and "
-    "minimum defocus to search:", mCtfFitFocusRangeFac, 1);
-  B3DCLAMP(mCtfFitFocusRangeFac, 0.1f, 10.f);*/
+  mCtffindParamDlg = new CCtffindParamDlg;
+  mCtffindParamDlg->Create(IDD_CTFFINDDLG);
+  mWinApp->SetPlacementFixSize(mCtffindParamDlg, &mCtffindDlgPlace);
+  mWinApp->RestoreViewFocus();
+}
+
+WINDOWPLACEMENT *CProcessImage::GetCtffindPlacement(void)
+{
+  if (mCtffindParamDlg) {
+    mCtffindParamDlg->GetWindowPlacement(&mCtffindDlgPlace);
+  }
+  return &mCtffindDlgPlace;
 }
 
 void CProcessImage::OnProcessRotateleft() 
@@ -2803,7 +2795,7 @@ void CProcessImage::OnUpdateProcessCropAverage(CCmdUI *pCmdUI)
 // provided for drawing rings at zeros.  Returns ring radii as fractions of Nyquist if
 // radii is not NULL.
 bool CProcessImage::GetFFTZeroRadiiAndDefocus(EMimageBuffer *imBuf, FloatVec *radii, 
-  double &defocus)
+  double &defocus, float phase)
 {
   double pointRad, xcen, ycen, dx, dy;
   int nx, ny;
@@ -2825,7 +2817,7 @@ bool CProcessImage::GetFFTZeroRadiiAndDefocus(EMimageBuffer *imBuf, FloatVec *ra
   pointRad = sqrt(dx * dx + dy * dy);
   if (pointRad > 1.2)
     return false;
-  return DefocusFromPointAndZeros(pointRad, 1, pixel, 0., radii, defocus);
+  return DefocusFromPointAndZeros(pointRad, 1, pixel, 0., radii, defocus, phase);
 }
 
 // If there are already rings at zeros and en existing user point, takes the values for
@@ -2882,7 +2874,7 @@ void CProcessImage::ModifyFFTPointToFirstZero(EMimageBuffer *imBuf, float &shift
 // Returns false if the radius is in a range where the equations have broken down
 // pixel is in nm, radii are in fraction of Nyquist
 bool CProcessImage::DefocusFromPointAndZeros(double pointRad, int zeroNum, float pixel,
-  float maxRingFreq, FloatVec *radii, double & defocus)
+  float maxRingFreq, FloatVec *radii, double & defocus, float phase)
 {
   double wavelength, csOne, csTwo, ampAngle, theta, thetaNew, delz, rootTemp;
   int ind, numZeros = mNumFFTZeros;
@@ -2890,6 +2882,8 @@ bool CProcessImage::DefocusFromPointAndZeros(double pointRad, int zeroNum, float
   GetRecentVoltage();
   if (radii)
     radii->clear();
+  if (phase < EXTRA_VALUE_TEST)
+    phase = mPlatePhase;
 
  // This is adopted as closely as possible from defocusfinder in ctfplotter
   wavelength = 1.241 / sqrt(mVoltage * (mVoltage +  1022.0));
@@ -2902,7 +2896,7 @@ bool CProcessImage::DefocusFromPointAndZeros(double pointRad, int zeroNum, float
     // Empirically, the defocus given by this equation is wrong when theta > 1
     if (theta > 1.)
       return false;
-    defocus = csOne * (pow(theta, 4.) + 2. * zeroNum - ampAngle - 2. * mPlatePhase / PI) / 
+    defocus = csOne * (pow(theta, 4.) + 2. * zeroNum - ampAngle - 2. * phase / PI) / 
       (2. * theta * theta);
   }
   if (!radii)
@@ -2911,7 +2905,7 @@ bool CProcessImage::DefocusFromPointAndZeros(double pointRad, int zeroNum, float
   if (zeroNum <= 0 && maxRingFreq > 0)
     numZeros = 50;
   for (ind = 0; ind < numZeros; ind++) {
-    rootTemp = delz * delz + ampAngle + 2. * mPlatePhase / PI - 2. * (ind + 1);
+    rootTemp = delz * delz + ampAngle + 2. * phase / PI - 2. * (ind + 1);
     if (rootTemp < 0. || sqrt(rootTemp) > delz)
       return true;
     thetaNew = sqrt(delz - sqrt(rootTemp));

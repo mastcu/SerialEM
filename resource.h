@@ -70,6 +70,7 @@
 #define IDD_MULTI_SHOT_SETUP            225
 #define IDD_DE_REFERENCE                226
 #define IDD_ONELINESCRIPT               227
+#define IDD_CTFFINDDLG                  232
 #define IDC_EDITXSIZE                   1000
 #define IDC_EDITYSIZE                   1002
 #define IDC_EDITYOVERLAP                1003
@@ -1449,6 +1450,16 @@
 #define IDC_STATLISTHEADER8             2474
 #define IDC_STATLISTHEADER9             2475
 #define IDC_CHECK_DATE_PREFIX           2476
+#define IDC_CHECK_EXTRA_STATS           2477
+#define IDC_CHECK_DRAW_RINGS            2478
+#define IDC_CHECK_SLOW_SEARCH           2480
+#define IDC_EDIT_MAX_FIT_RES            2481
+#define IDC_STAT_DEFAULT_MAX_RES        2482
+#define IDC_EDIT_PHASE_MIN_RES          2483
+#define IDC_CHECK_FIND_PHASE            2484
+#define IDC_EDIT_MIN_PHASE              2485
+#define IDC_EDIT_MAX_PHASE              2486
+#define IDC_CHECK_FIX_ASTIG_FOR_PHASE   2487
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -1905,9 +1916,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        232
+#define _APS_NEXT_RESOURCE_VALUE        234
 #define _APS_NEXT_COMMAND_VALUE         33334
-#define _APS_NEXT_CONTROL_VALUE         2477
+#define _APS_NEXT_CONTROL_VALUE         2488
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

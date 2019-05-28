@@ -437,6 +437,9 @@
     <ClInclude Include="Shared\gpuframe.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="CtffindParamDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\bitmap1.bmp">
@@ -734,6 +737,9 @@
       <Filter>HTML Help Topics</Filter>
     </None>
     <None Include="hlp\html\menu_tools.htm">
+      <Filter>HTML Help Topics</Filter>
+    </None>
+    <None Include="hlp\html\hidd_ctffinddlg.htm">
       <Filter>HTML Help Topics</Filter>
     </None>
   </ItemGroup>
@@ -1084,6 +1090,9 @@
       <Filter>CSource Files</Filter>
     </ClCompile>
     <ClCompile Include="ExternalTools.cpp">
+      <Filter>CSource Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CtffindParamDlg.cpp">
       <Filter>CSource Files</Filter>
     </ClCompile>
   </ItemGroup>

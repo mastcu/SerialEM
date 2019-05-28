@@ -69,6 +69,7 @@ public:
   float mLineEndY;
   float mCtfFocus1, mCtfFocus2;
   float mCtfAngle;
+  float mCtfPhase;     // In radians
   float mMaxRingFreq;
   double mZoom;
   int mPanX, mPanY;

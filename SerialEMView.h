@@ -188,6 +188,7 @@ public:
   void DrawVectorPolygon(CClientDC &cdc, CRect *rect, CMapDrawItem *item, EMimageBuffer *imBuf,
     FloatVec &convX, FloatVec &convY, float delXstage, float delYstage, 
     float delPtX, float delPtY, FloatVec *drawnX, FloatVec *drawnY);
+  int FitCtfAtMarkedPoint(EMimageBuffer *imBuf, CString &lenstr, double &defocus, FloatVec &radii);
 };
 
 #ifndef _DEBUG  // debug version in SerialEMView.cpp

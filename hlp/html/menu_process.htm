@@ -9,6 +9,13 @@
       {
         width: 171px;
       }
+        .auto-style1 {
+            width: 171px;
+            height: 25px;
+        }
+        .auto-style2 {
+            height: 25px;
+        }
   --></style>
   </HEAD>
   <BODY BGCOLOR="#ffffff" TEXT="#000000">
@@ -29,8 +36,8 @@
           <TD>Computes full-sized Fourier Transform of image in active window</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_process_binnedfft">Binned FFT</A></TD>
-          <TD>Computes FFT of image binned to 1024 or binned by 2-4.</TD>
+          <TD class="auto-style1"><A HREF="#hid_process_binnedfft">Binned FFT</A></TD>
+          <TD class="auto-style2">Computes FFT of image binned to 1024 or binned by 2-4.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_process_livefft">Live FFT</A></TD>
@@ -63,7 +70,7 @@
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_process_setphaseplateshift">Set Phase Plate Shift</A></TD>
-          <TD>Allows you to enter the phase shift from a phase plate</TD>
+          <TD>Allows you to enter a fixed phase shift from a phase plate</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_process_rotateleft">Rotate Left</A></TD>
@@ -233,66 +240,43 @@
       defocus and astigmatism, draw ellipses (5 by default) at the zeros, and show the 
       maximum and minimum defocus values in the status bar.&nbsp; The log will also 
       have the following output:<br />
-&nbsp;&nbsp; defocus 1 &amp; 2: the maximum and minimum defocus values<br />
+&nbsp;&nbsp; defocus:&nbsp; the 
+        mean of maximum and minimum defocus values on the short and long axes of the 
+        ellipse<br />
+&nbsp;&nbsp; astig:&nbsp; asigmatism, the difference between maximum and minimum defocus values<br />
 &nbsp;&nbsp; angle:&nbsp; the angle of the maximum defocus (minor axis of ellipse)<br />
 &nbsp;&nbsp; score:&nbsp; the correlation coefficient between the 2D image and 
       computed CTF</P>
-    <P>In addition, if the option to compute the extent of good fitting to the Thon 
-      rings is turned on with the next command, the log will show the resolution in 
+    <P>If the option to compute the extent of good fitting to the Thon 
+      rings is turned on with the <a href="hidd_ctffinddlg">CTF
+    Fitting Parameters dialog box</a>, the log will show the resolution in 
       Angstroms to which the Thon rings can be fit.</P>
+      <P>If the option to find phase shift is turned on in that dialog, the phase shift in 
+          degrees will also be shown.&nbsp; If that option is not turned on but there is a 
+          fixed phase shift set, that shift will be included in the fitting and shown 
+          in the log as &#39;fixed phase&#39;.</P>
     <P>Shortcut Key: CTRL+D</P>
     <P><A NAME="hid_process_setctffindoptions"></A><B>Set Ctffind Options command (Process 
           menu)</B></P>
-    <P>Use this command to set some parameters for fitting with the Ctffind module.&nbsp; 
-      There will be five entry boxes:</P>
-    <ol>
-      <li>Enter 1 to do the extra computations needed to determine the resolution to 
-        which the Thon rings can be fit, or 0 not to.&nbsp; These computations will 
-        increase the fitting time by 10-20%, which may be noticeable.</li>
-      <li>Enter 1 to draw half-rings on the image out to the resolution determined by 
-        these extra computaions if they were done, or 0 not to.</li>
-      <li>Enter 1 to do a slower 2-D initial exhaustive search instead of the default 
-        1-D search with a rotational averaged spectrum.&nbsp; This search is needed if 
-        the astigmatism is large (for example, if analyzing images with beam-tilt) but 
-        should not be needed for ordinary amounts of astigmatism.&nbsp; The 2-D search 
-        is parallelized so its speed will depend heavily on the number of computer cores 
-        available.</li>
-      <li>Enter a limiting value to the maximum resolution to which to fit the amplitude 
-        spectrum, in Angstroms.&nbsp; This setting is unusual in that there is a default that 
-        may be set in the SerialEM properties file, and you will continue to use the 
-        default (even if it is changed) unless you enter a different value here.&nbsp; 
-        If you do enter a different value, you can return to the default by entering 0.&nbsp; 
-        If there is no property setting, the default is 5 if the voltage on program 
-        startup is above 120 KV, which is the same as the default 
-        maximum resolution in Ctffind4, and 10 otherwise.&nbsp; SerialEM will choose a maximum resolution 
-        higher than this value when the defocus is high and the minimum resolution is a 
-        high number as well.&nbsp; However, with a non-FEG microscope or other situation 
-        where Thon rings may never approach this resolution, a higher value may be 
-        needed here or in the properties file.&nbsp; If you click in an FFT with the middle mouse button, the 
-        status bar will show the resolution (&#39;Period&#39;) at that frequency.</li>
-      <li>Enter a limiting value to the minimum resolution in Angstroms for fitting when 
-        phase is non-zero.&nbsp; This limit applies either when a constant phase shift 
-        is assumed or when the phase is being found in a fit with the &#39;Ctffind&#39; script 
-        command.&nbsp; This limit provides a maximum value for the minimum resolution 
-        and can be used to exclude the first zero from fitting, since its position may 
-        be off due to a gradual cut-on in the phase shift at low frequencies.&nbsp; 
-        However, the minimum resolution may end up being higher than this limit since it 
-        is also constrained to be least 1.5 times the maximum resolution used for a 
-        particular fit.&nbsp; Enter 0 for no limit.</li>
-    </ol>
+    <P>Use this command to open the <a href="hidd_ctffinddlg">CTF
+    Fitting Parameters dialog box</a> with parameters for fitting with
+    the Ctffind module.&nbsp; Most entries govern the fitting when clicking in an an 
+        FFT; some also affect fitting from the Ctffind script command.&nbsp; </p>
     <p>
-      All fits are done with a box size of 256 for speed, and because high accuracy at 
-      the highest frequencies is not needed.&nbsp; The &#39;CtfFind&#39; script command gives 
+      The box size is not included here; all fits are done with a box size of 256 for speed, and because high accuracy at 
+      the highest frequencies is not needed.&nbsp; The &#39;Ctffind&#39; script command gives 
       more flexibility with regard to the fitting parameters, including the ability to 
       set the box size.</p>
       <P><A NAME="hid_process_setphaseplateshift"></A><B>Set Phase Plate Shift command (Process 
           menu)</B></P>
-      <P>Use this command to define the phase shift imposed by a phase plate (a positive 
-        value in degrees).&nbsp; This phase shift will be taken into account when 
-        circles are drawn on a live FFT for the fixed defocus defined by the previous 
-        command, or when a defocus is reported after left-clicking on an FFT.&nbsp; If a 
+      <P>Use this command to define a fixed phase shift imposed by a phase plate (a 
+          positive value in degrees).&nbsp; This phase shift will be taken into account 
+          when circles are drawn on a live FFT for the fixed defocus defined by the 
+          previous command, when a defocus is reported after left-clicking on an FFT 
+          without CTF fitting turned on, and when doing CTF fitting by clicking in the FFT 
+          if phase is not being searched for.&nbsp; If a 
         non-zero shift has been entered, the defocus in the status bar will be followed 
-        by &#39;(PP)&#39;.</P>
+        by &#39;: PP&#39;.</P>
       <P><A NAME="hid_process_rotateleft"></A><B>Rotate Left command (Process menu)</B></P>
       <P><A NAME="hid_process_rotateright"></A><B>Rotate Right command (Process menu)</B></P>
       <P>Use these commands to rotate the image in the active buffer counterclockwise 

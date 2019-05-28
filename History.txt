@@ -3,6 +3,14 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+5/24/19: Added ability to restore original stage X/Y position after tilting
+and added options to the tilt script commands for using it.
+
+5/24/19: Moved option-setting for Ctffind fitting to a dialog.
+
+5/24/19: Added property to set interval over which dose calibration is
+considered valid.
+
 5/24/19: Fixed Setup supermontage, broken 8/16/17 (In 3.7).
 
 5/22/19: Made RecordAndTiltTo command set sign of backlash properly (In 3.7).

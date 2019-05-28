@@ -10,6 +10,7 @@
 #define MAX_FFT_CIRCLES 8
 
 struct CtffindParams;
+class CCtffindParamDlg;
 
 /////////////////////////////////////////////////////////////////////////////
 // CProcessImage command target
@@ -71,6 +72,11 @@ public:
   GetSetMember(float, DefaultMaxCtfFitRes);
   GetSetMember(float, TestCtfPixelSize);
   GetSetMember(float, MinCtfFitResIfPhase);
+  GetSetMember(int, CtfMinPhase);
+  GetSetMember(int, CtfMaxPhase);
+  GetSetMember(BOOL, CtfFindPhaseOnClick);
+  GetSetMember(BOOL, CtfFixAstigForPhase);
+
 
 // Overrides
   // ClassWizard generated virtual function overrides
@@ -106,6 +112,9 @@ protected:
 	//}}AFX_MSG
 
   DECLARE_MESSAGE_MAP()
+
+public:
+  CCtffindParamDlg *mCtffindParamDlg;
 
 private:
   CSerialEMApp * mWinApp;
@@ -154,6 +163,11 @@ private:
   float mDefaultMaxCtfFitRes;  // Default value if no setting
   float mTestCtfPixelSize;     // A read-in value to replace buffer value for testing
   float mMinCtfFitResIfPhase;  // Minimum resolution when there is phase shift
+  WINDOWPLACEMENT mCtffindDlgPlace;
+  int mCtfMinPhase;
+  int mCtfMaxPhase;
+  BOOL mCtfFindPhaseOnClick;
+  BOOL mCtfFixAstigForPhase;
 
 public:
   afx_msg void OnProcessMinmaxmean();
@@ -212,10 +226,11 @@ public:
     *rotations = &mGridRotations;};
     afx_msg void OnProcessSideBySide();
     afx_msg void OnUpdateProcessSideBySide(CCmdUI *pCmdUI);
-    bool GetFFTZeroRadiiAndDefocus(EMimageBuffer * imBuf, FloatVec *radii, double &defocus);
+    bool GetFFTZeroRadiiAndDefocus(EMimageBuffer * imBuf, FloatVec *radii, double &defocus,
+    float phase = EXTRA_NO_VALUE);
 void ModifyFFTPointToFirstZero(EMimageBuffer * imBuf, float & shiftX, float & shiftY);
 bool DefocusFromPointAndZeros(double pointRad, int zeroNum, float pixel, float maxRingFreq,
-  FloatVec * radii, double & defocus);
+  FloatVec * radii, double & defocus, float phase = EXTRA_NO_VALUE);
 afx_msg void OnProcessAutomaticFFTs();
 afx_msg void OnUpdateProcessAutomaticFFTs(CCmdUI *pCmdUI);
 afx_msg void OnProcessSetPhasePlateShift();
@@ -239,6 +254,7 @@ afx_msg void OnProcessSetCtffindOptions();
 void SetCtffindParamsForDefocus(CtffindParams & param, double defocus, bool justMinRes);
 void Initialize(void);
 float GetMaxCtfFitRes(void);
+WINDOWPLACEMENT *GetCtffindPlacement(void);
 };
 
 /////////////////////////////////////////////////////////////////////////////
