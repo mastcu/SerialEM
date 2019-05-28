@@ -849,7 +849,7 @@ void CMenuTargets::OnNavigatorSkewedsupermontage()
 void CMenuTargets::OnUpdateNavigatorSkewedsupermontage(CCmdUI* pCmdUI) 
 {
  	EMimageBuffer *imBuf = mWinApp->mActiveView->GetActiveImBuf();
-  pCmdUI->Enable(mNavigator && mNavigator->NoDrawing()	&& !!mNavigator->GetAcquiring() &&
+  pCmdUI->Enable(mNavigator && mNavigator->NoDrawing()	&& !mNavigator->GetAcquiring() &&
     !DoingTasks() && imBuf && imBuf->mHasUserPt && mWinApp->Montaging());
 }
 
