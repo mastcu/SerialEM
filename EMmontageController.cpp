@@ -688,7 +688,7 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
       }
 
       // If skipping outside a Nav item, compute adjusted stage position of center
-      if (mParam->skipOutsidePoly && mWinApp->mNavigator) {
+      if (mParam->skipOutsidePoly && mWinApp->mNavigator && mNumPieces > 1) {
         stageX = mBaseStageX;
         stageY = mBaseStageY;
         if (mParam->moveStage) {

@@ -3515,6 +3515,8 @@ int CNavigatorDlg::FitMontageToItem(MontParam *montParam, int binning, int magIn
   mCamCenY = (yMax + yMin) / 2.f;
   mExtraX = 0.5f * extraSizeFactor * (xMax - xMin);
   mExtraY = 0.5f * extraSizeFactor * (yMax - yMin);
+  montParam->xOverlap = B3DMAX(montParam->xOverlap, 0);
+  montParam->yOverlap = B3DMAX(montParam->yOverlap, 0);
   SetupSkipList(montParam);
   return 0;
 }
@@ -3569,6 +3571,8 @@ void CNavigatorDlg::SetupSkipList(MontParam * montParam)
   montParam->skipPieceX.swap(std::vector<short int>(montParam->skipPieceX));
   montParam->skipPieceY.clear();
   montParam->skipPieceY.swap(std::vector<short int>(montParam->skipPieceY));
+  if (xNframes == 1 && yNframes == 1)
+    return;
 
   for (iy = 0; iy < yNframes; iy++) {
     for (ix = 0; ix < xNframes; ix++) {
@@ -3630,7 +3634,7 @@ bool CNavigatorDlg::IsFrameNeeded(CMapDrawItem * item, int xFrame, int yFrame,
     LineInsideContour(item->mPtX, item->mPtY, item->mNumPoints, xEnd, yEnd, xEnd, 
     yStart) ||
     LineInsideContour(item->mPtX, item->mPtY, item->mNumPoints, xEnd, yStart, xStart, 
-    yStart) ||
+    yStart) || InsideContour(item->mPtX, item->mPtY, item->mNumPoints, xCen, yCen) ||
     InsideContour(item->mPtX, item->mPtY, item->mNumPoints, cenf * xCen + cornf * xStart,
     cenf * yCen + cornf * yStart) ||
     InsideContour(item->mPtX, item->mPtY, item->mNumPoints, cenf * xCen + cornf * xEnd,
