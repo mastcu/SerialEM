@@ -391,7 +391,7 @@ void CCalibCameraTiming::CalTimeNextTask()
     // Get an adjusted reference based on the first point that is definitely dropped
     // 12/31/11: Don't understand this, but it's clearly wrong for STEM
     threshold = 1.f - mStartupIncrement / mExposure;
-    if (!mSTEMcamera && mLowerRefRatio < -0.9 && meanRatio <= threshold)
+    if (!mSTEMcamera && mLowerRefRatio < -0.9 && meanRatio <= threshold && meanRatio >0.5)
       mLowerRefRatio = meanRatio / threshold;
     adjFactor = meanRatio;
     if (mLowerRefRatio > 0.)
