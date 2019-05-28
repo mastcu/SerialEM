@@ -809,9 +809,10 @@
         <TR>
           <TD class="style8">RecordAndTiltTo #T [#B]</TD>
           <TD>Like 'RecordAndTiltUp', but tilts the stage to the given angle #T.&nbsp; If an 
-            optional backlash is entered in #B, the stage will tilt first to #T + #B, then 
-            back to #T, where the sign of #B must be set to correct the backlash for the 
-            desired direction.</TD>
+            optional backlash is entered in #B, the stage will tilt first to #T +/- #B, then 
+            back to #T. Prior to 5/23/19, #T + #B was used and the sign of #B had to be set
+            to correct the backlash for the desired direction; after then, the program sets
+            the sign properly and a positive value can always be entered. </TD>
         </TR>
         <TR>
           <TD class="style8">ArePostActionsEnabled</TD>

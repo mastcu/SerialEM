@@ -2312,7 +2312,9 @@ void CMacroProcessor::NextCommand()
         increment = itemDbl[1] - delISX;
         if (!itemEmpty[2]) {
           doBack = true;
-          backlashX = (float)itemDbl[2];
+          backlashX = (float)fabs(itemDbl[2]);
+          if (increment < 0)
+            backlashX = -backlashX;
         }
       }
       int delay = mShiftManager->GetAdjustedTiltDelay(increment);
