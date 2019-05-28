@@ -1,7 +1,6 @@
 // TSController.cpp:      The tilt series controller
 //
-// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2003-2019 by  the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -280,6 +279,16 @@ CTSController::CTSController()
   mTSParam.anchorBidirWithView = true;
   mTSParam.walkBackForBidir = false;
   mTSParam.retainBidirAnchor = false;
+  mTSParam.doDoseSymmetric = false;
+  mTSParam.dosymBaseGroupSize = 1;
+  mTSParam.dosymIncreaseGroups = false;
+  mTSParam.dosymGroupIncInterval = 1;
+  mTSParam.dosymGroupIncAmount = 1;
+  mTSParam.dosymIncStartAngle = 30.;
+  mTSParam.dosymDoRunToEnd = false;
+  mTSParam.dosymRunToEndAngle = 45.;
+  mTSParam.dosymAnchorIfRunToEnd = false;
+  mTSParam.dosymMinUniForAnchor = 5;
   mTSParam.doEarlyReturn = false;
   mTSParam.earlyReturnNumFrames = 1;
   mTSParam.initialized = false;

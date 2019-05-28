@@ -1165,6 +1165,7 @@
     <ClInclude Include="Shared\SEMCCDDefines.h" />
     <ClInclude Include="Shared\SharedJeolDefines.h" />
     <ClInclude Include="ThreeChoiceBox.h" />
+    <ClInclude Include="TSDoseSymDlg.h" />
     <ClInclude Include="Utilities\AskOneDlg.h" />
     <ClInclude Include="AutocenSetupDlg.h" />
     <ClInclude Include="Shared\b3dutil.h" />
@@ -2110,6 +2111,7 @@ echo.
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Template|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="ThreeChoiceBox.cpp" />
+    <ClCompile Include="TSDoseSymDlg.cpp" />
     <ClCompile Include="Utilities\AskOneDlg.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Disabled</Optimization>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='v140 Debug|Win32'">Disabled</Optimization>

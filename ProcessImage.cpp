@@ -167,7 +167,6 @@ BEGIN_MESSAGE_MAP(CProcessImage, CCmdTarget)
   ON_UPDATE_COMMAND_UI(ID_PROCESS_SIDE_BY_SIDE, OnUpdateProcessSideBySide)
   ON_COMMAND(ID_PROCESS_AUTOMATICFFTS, OnProcessAutomaticFFTs)
   ON_UPDATE_COMMAND_UI(ID_PROCESS_AUTOMATICFFTS, OnUpdateProcessAutomaticFFTs)
-  ON_COMMAND(ID_PROCESS_SETPHASEPLATESHIFT, OnProcessSetPhasePlateShift)
   ON_COMMAND(ID_PROCESS_SETDEFOCUSFORCIRCLES, OnProcessSetDefocusForCircles)
   ON_COMMAND(ID_PROCESS_REDUCEIMAGE, OnProcessReduceimage)
   ON_UPDATE_COMMAND_UI(ID_PROCESS_REDUCEIMAGE, OnUpdateProcess)
@@ -368,13 +367,6 @@ void CProcessImage::OnProcessSetDefocusForCircles()
   float defocus = -mFixedRingDefocus;
   if(KGetOneFloat("Fixed defocus at which to draw circles (-microns):", defocus, 1))
     mFixedRingDefocus = -(float)defocus;
-}
-
-void CProcessImage::OnProcessSetPhasePlateShift()
-{
-  float shift = (float)(mPlatePhase / DTOR);
-  if (KGetOneFloat("Phase shift to assume for phase plate (degrees):", shift, 1))
-    mPlatePhase = (float)fabs(DTOR * shift);
 }
 
 

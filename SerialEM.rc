@@ -1363,31 +1363,31 @@ BEGIN
     LTEXT           "e/A2/s at specimen",IDC_STAT_UBPIX,47,67,59,8
 END
 
-IDD_TILTSERIES DIALOGEX 0, 0, 230, 764
+IDD_TILTSERIES DIALOGEX 0, 0, 230, 778
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_LEFTSCROLLBAR
 CAPTION "Tilt Series Setup"
 FONT 8, "Microsoft Sans Serif", 0, 0, 0x1
 BEGIN
-    CONTROL         "Keep beam intensity constant",IDC_RCONSTANTBEAM,"Button",BS_AUTORADIOBUTTON | WS_GROUP,14,218,103,10
+    CONTROL         "Keep beam intensity constant",IDC_RCONSTANTBEAM,"Button",BS_AUTORADIOBUTTON | WS_GROUP,14,231,103,10
     CONTROL         "Vary intensity as 1/cosine of tilt angle to the 1/1",IDC_RINTENSITYCOSINE,
-                    "Button",BS_AUTORADIOBUTTON,14,229,151,10
+                    "Button",BS_AUTORADIOBUTTON,14,242,151,10
     CONTROL         "Set intensity to keep mean counts of  Record images at",IDC_RINTENSITYMEAN,
-                    "Button",BS_AUTORADIOBUTTON,14,242,179,10
-    LTEXT           "Beam Intensity or Exposure Control",IDC_TSS_TITLE3,25,196,168,8
+                    "Button",BS_AUTORADIOBUTTON,14,255,179,10
+    LTEXT           "Beam Intensity or Exposure Control",IDC_TSS_TITLE3,25,209,168,8
     CONTROL         "Average Record dark references",IDC_AVERAGERECREF,
-                    "Button",BS_AUTOCHECKBOX,10,369,112,10
-    CONTROL         "Camera 1",IDC_RCAMERA1,"Button",BS_AUTORADIOBUTTON | WS_GROUP,10,358,52,10
-    CONTROL         "Camera 2",IDC_RCAMERA2,"Button",BS_AUTORADIOBUTTON,62,358,52,10
-    CONTROL         "Camera 3",IDC_RCAMERA3,"Button",BS_AUTORADIOBUTTON,114,358,52,10
-    CONTROL         "Camera 4",IDC_RCAMERA4,"Button",BS_AUTORADIOBUTTON,166,358,52,10
-    CONTROL         "Camera 5",IDC_RCAMERA5,"Button",BS_AUTORADIOBUTTON,114,368,52,10
-    CONTROL         "Camera 6",IDC_RCAMERA6,"Button",BS_AUTORADIOBUTTON,166,369,52,10
-    LTEXT           "Camera and Acquisition Parameters",IDC_TSS_TITLE4,25,348,160,8,WS_TABSTOP
-    CONTROL         "Before",IDC_RTRACKBEFORE,"Button",BS_AUTORADIOBUTTON | WS_GROUP,34,638,33,10
-    CONTROL         "After",IDC_RTRACKAFTER,"Button",BS_AUTORADIOBUTTON,70,638,28,10
-    CONTROL         "Before && after     Autofocusing",IDC_RTRACKBOTH,"Button",BS_AUTORADIOBUTTON,101,638,103,10
-    LTEXT           "Track:",IDC_STATTRACKWHEN,11,638,19,8
+                    "Button",BS_AUTOCHECKBOX,10,382,112,10
+    CONTROL         "Camera 1",IDC_RCAMERA1,"Button",BS_AUTORADIOBUTTON | WS_GROUP,10,371,52,10
+    CONTROL         "Camera 2",IDC_RCAMERA2,"Button",BS_AUTORADIOBUTTON,62,371,52,10
+    CONTROL         "Camera 3",IDC_RCAMERA3,"Button",BS_AUTORADIOBUTTON,114,371,52,10
+    CONTROL         "Camera 4",IDC_RCAMERA4,"Button",BS_AUTORADIOBUTTON,166,371,52,10
+    CONTROL         "Camera 5",IDC_RCAMERA5,"Button",BS_AUTORADIOBUTTON,114,381,52,10
+    CONTROL         "Camera 6",IDC_RCAMERA6,"Button",BS_AUTORADIOBUTTON,166,382,52,10
+    LTEXT           "Camera and Acquisition Parameters",IDC_TSS_TITLE4,25,361,160,8,WS_TABSTOP
+    CONTROL         "Before",IDC_RTRACKBEFORE,"Button",BS_AUTORADIOBUTTON | WS_GROUP,34,652,33,10
+    CONTROL         "After",IDC_RTRACKAFTER,"Button",BS_AUTORADIOBUTTON,70,652,28,10
+    CONTROL         "Before && after     Autofocusing",IDC_RTRACKBOTH,"Button",BS_AUTORADIOBUTTON,101,652,103,10
+    LTEXT           "Track:",IDC_STATTRACKWHEN,11,652,19,8
     LTEXT           "Start at",IDC_STATSTARTAT,10,16,22,8
     EDITTEXT        IDC_EDITSTARTANGLE,33,14,27,12,ES_AUTOHSCROLL
     LTEXT           "End at",IDC_STATENDAT,65,16,20,8
@@ -1397,153 +1397,153 @@ BEGIN
     CONTROL         "Increment proportional to cosine of angle",IDC_COSINEINC,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,28,137,10
     RTEXT           "Total # of tilts: 599",IDC_STATTOTALTILT,152,29,63,8
-    LTEXT           "Delay time after tilting by basic increment:",IDC_STATDELAY,10,66,123,8
-    EDITTEXT        IDC_EDITTILTDELAY,134,64,24,12,ES_CENTER | ES_AUTOHSCROLL
-    LTEXT           "seconds",IDC_STATDELSEC,160,66,27,8
-    LTEXT           "Magnification:",IDC_STATMAGLABEL,10,106,42,8
-    RTEXT           "800000",IDC_STATRECORDMAG,53,106,22,8
-    CONTROL         "Spin1",IDC_SPINRECORDMAG,"msctls_updown32",UDS_ARROWKEYS,77,103,10,14
-    LTEXT           "Binning:",IDC_STATBINLABEL,97,106,25,8
-    RTEXT           "2",IDC_STATBINNING,123,106,9,8
-    CONTROL         "Spin2",IDC_SPINBIN,"msctls_updown32",UDS_ARROWKEYS,133,103,10,14
-    CTEXT           "Pixel size: 1 nm",IDC_STATPIXEL,149,106,67,8
+    LTEXT           "Delay time after tilting by basic increment:",IDC_STATDELAY,10,79,123,8
+    EDITTEXT        IDC_EDITTILTDELAY,134,77,24,12,ES_CENTER | ES_AUTOHSCROLL
+    LTEXT           "seconds",IDC_STATDELSEC,160,79,27,8
+    LTEXT           "Magnification:",IDC_STATMAGLABEL,10,119,42,8
+    RTEXT           "800000",IDC_STATRECORDMAG,53,119,22,8
+    CONTROL         "Spin1",IDC_SPINRECORDMAG,"msctls_updown32",UDS_ARROWKEYS,77,116,10,14
+    LTEXT           "Binning:",IDC_STATBINLABEL,97,119,25,8
+    RTEXT           "2",IDC_STATBINNING,123,119,9,8
+    CONTROL         "Spin2",IDC_SPINBIN,"msctls_updown32",UDS_ARROWKEYS,133,116,10,14
+    CTEXT           "Pixel size: 1 nm",IDC_STATPIXEL,149,119,67,8
     CONTROL         "At start and when needed, track at magnification: ",IDC_LOWMAGTRACK,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,119,155,10
-    RTEXT           "800000",IDC_STATLOWMAG,164,120,24,8
-    CONTROL         "Spin3",IDC_SPINTRACKMAG,"msctls_updown32",UDS_ARROWKEYS,191,117,10,14
-    LTEXT           "Limit image shift to ",IDC_STATLIMITIS,10,132,57,8
-    EDITTEXT        IDC_EDITLIMITIS,68,130,24,12,ES_CENTER | ES_AUTOHSCROLL
-    LTEXT           "microns",IDC_STATISMICRONS,95,132,25,8
-    CONTROL         "Spin1",IDC_SPINCOSINEPOWER,"msctls_updown32",UDS_ARROWKEYS | WS_GROUP,171,227,10,14
-    LTEXT           "power",IDC_STATPOWER,185,229,20,8
-    EDITTEXT        IDC_EDITCOUNTS,194,241,25,12,ES_AUTOHSCROLL | WS_GROUP
-    CTEXT           "The image in buffer A implies a Record zero-tilt mean of",IDC_STATCURRENTCOUNTS,6,254,216,8
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,132,155,10
+    RTEXT           "800000",IDC_STATLOWMAG,164,133,24,8
+    CONTROL         "Spin3",IDC_SPINTRACKMAG,"msctls_updown32",UDS_ARROWKEYS,191,130,10,14
+    LTEXT           "Limit image shift to ",IDC_STATLIMITIS,10,145,57,8
+    EDITTEXT        IDC_EDITLIMITIS,68,143,24,12,ES_CENTER | ES_AUTOHSCROLL
+    LTEXT           "microns",IDC_STATISMICRONS,95,145,25,8
+    CONTROL         "Spin1",IDC_SPINCOSINEPOWER,"msctls_updown32",UDS_ARROWKEYS | WS_GROUP,171,240,10,14
+    LTEXT           "power",IDC_STATPOWER,185,242,20,8
+    EDITTEXT        IDC_EDITCOUNTS,194,254,25,12,ES_AUTOHSCROLL | WS_GROUP
+    CTEXT           "The image in buffer A implies a Record zero-tilt mean of",IDC_STATCURRENTCOUNTS,6,267,216,8
     CONTROL         "Keep intensity below current value (use if intensity already set up)",IDC_LIMITTOCURRENT,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,278,208,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,291,208,10
     CONTROL         "Do not increase intensity above value for first saved image",IDC_LIMITINTENSITY,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,290,191,10
-    LTEXT           "Defocus target:",IDC_STATDEFTARG,10,411,46,8
-    EDITTEXT        IDC_EDITFOCUSTARGET,62,409,24,12,ES_CENTER | ES_AUTOHSCROLL
-    LTEXT           "microns",IDC_STATTARGMICRONS,88,411,25,8
-    LTEXT           "Beam tilt:",IDC_STATBEAMTILT,125,411,28,8
-    EDITTEXT        IDC_EDITBEAMTILT,155,409,24,12,ES_CENTER | ES_AUTOHSCROLL
-    LTEXT           "milliradians",IDC_STATMILLIRAD,181,411,35,8
-    LTEXT           "Autofocus offset:",IDC_STATFOCUSOFFSET,11,425,50,8
-    EDITTEXT        IDC_EDITFOCUSOFFSET,62,423,24,12,ES_CENTER | ES_AUTOHSCROLL
-    LTEXT           "microns",IDC_STATOFFSETMICRONS,88,425,25,8
-    CONTROL         "Skip Autofocusing",IDC_SKIPAUTOFOCUS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,126,424,70,10
-    LTEXT           "Do autofocus at least every ",IDC_STATCHECKEVERY,10,438,84,8
-    EDITTEXT        IDC_EDITCHECKFOCUS,98,436,24,12,ES_CENTER | ES_AUTOHSCROLL
-    LTEXT           "degrees",IDC_STATCHECKDEG,124,438,27,8
-    CONTROL         "Focus every time above",IDC_ALWAYSFOCUS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,451,85,10
-    EDITTEXT        IDC_EDITALWAYSFOCUS,98,450,24,12,ES_CENTER | ES_AUTOHSCROLL
-    LTEXT           "degrees",IDC_STATALWAYSFOCUS,124,452,27,8
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,303,191,10
+    LTEXT           "Defocus target:",IDC_STATDEFTARG,10,424,46,8
+    EDITTEXT        IDC_EDITFOCUSTARGET,62,422,24,12,ES_CENTER | ES_AUTOHSCROLL
+    LTEXT           "microns",IDC_STATTARGMICRONS,88,424,25,8
+    LTEXT           "Beam tilt:",IDC_STATBEAMTILT,125,424,28,8
+    EDITTEXT        IDC_EDITBEAMTILT,155,422,24,12,ES_CENTER | ES_AUTOHSCROLL
+    LTEXT           "milliradians",IDC_STATMILLIRAD,181,424,35,8
+    LTEXT           "Autofocus offset:",IDC_STATFOCUSOFFSET,11,439,50,8
+    EDITTEXT        IDC_EDITFOCUSOFFSET,62,437,24,12,ES_CENTER | ES_AUTOHSCROLL
+    LTEXT           "microns",IDC_STATOFFSETMICRONS,88,439,25,8
+    CONTROL         "Skip Autofocusing",IDC_SKIPAUTOFOCUS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,126,438,70,10
+    LTEXT           "Do autofocus at least every ",IDC_STATCHECKEVERY,10,452,84,8
+    EDITTEXT        IDC_EDITCHECKFOCUS,98,450,24,12,ES_CENTER | ES_AUTOHSCROLL
+    LTEXT           "degrees",IDC_STATCHECKDEG,124,452,27,8
+    CONTROL         "Focus every time above",IDC_ALWAYSFOCUS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,465,85,10
+    EDITTEXT        IDC_EDITALWAYSFOCUS,98,464,24,12,ES_CENTER | ES_AUTOHSCROLL
+    LTEXT           "degrees",IDC_STATALWAYSFOCUS,124,466,27,8
     CONTROL         "Check autofocus, stop if measured  <",IDC_CHECKAUTOFOCUS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,464,123,10
-    EDITTEXT        IDC_EDITMINFOCUSRATIO,136,463,24,12,ES_CENTER | ES_AUTOHSCROLL
-    LTEXT           "X  actual defocus",IDC_STATTIMESACTUAL,162,465,52,8
-    CONTROL         "Refine eucentricity",IDC_REFINEEUCEN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,525,71,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,478,123,10
+    EDITTEXT        IDC_EDITMINFOCUSRATIO,136,477,24,12,ES_CENTER | ES_AUTOHSCROLL
+    LTEXT           "X  actual defocus",IDC_STATTIMESACTUAL,162,479,52,8
+    CONTROL         "Refine eucentricity",IDC_REFINEEUCEN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,539,71,10
     CONTROL         "Leave mid-tilt anchor near plus or minus",IDC_LEAVEANCHOR,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,537,128,10
-    EDITTEXT        IDC_EDITANCHOR,140,536,24,12,ES_CENTER | ES_AUTOHSCROLL
-    LTEXT           "degrees",IDC_STATANCHORDEG,166,538,27,8
-    CONTROL         "Align to image now in Buffer A",IDC_USEAFORREF,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,513,118,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,551,128,10
+    EDITTEXT        IDC_EDITANCHOR,140,550,24,12,ES_CENTER | ES_AUTOHSCROLL
+    LTEXT           "degrees",IDC_STATANCHORDEG,166,552,27,8
+    CONTROL         "Align to image now in Buffer A",IDC_USEAFORREF,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,527,118,10
     CONTROL         "Use mid-tilt anchor that you have left in buffer ",IDC_USEANCHOR,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,553,142,10
-    CTEXT           "D",IDC_STATANCHORBUF,152,553,8,10,SS_CENTERIMAGE
-    CONTROL         "Spin2",IDC_SPINANCHOR,"msctls_updown32",UDS_ARROWKEYS,162,551,10,14
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,567,142,10
+    CTEXT           "D",IDC_STATANCHORBUF,152,567,8,10,SS_CENTERIMAGE
+    CONTROL         "Spin2",IDC_SPINANCHOR,"msctls_updown32",UDS_ARROWKEYS,162,565,10,14
     CONTROL         "Repeat Record if percentage of field lost is more than",IDC_REPEATRECORD,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,589,169,10
-    EDITTEXT        IDC_EDITREPEATRECORD,182,588,24,12,ES_CENTER | ES_AUTOHSCROLL
-    LTEXT           "Get tracking image when error in X/Y prediction is >",IDC_STATGETTRACK,10,626,151,8
-    EDITTEXT        IDC_EDITPREDICTERRORXY,164,624,24,12,ES_CENTER | ES_AUTOHSCROLL
-    LTEXT           "% of field",IDC_STATPCTFIELD,190,626,28,8
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,603,169,10
+    EDITTEXT        IDC_EDITREPEATRECORD,182,602,24,12,ES_CENTER | ES_AUTOHSCROLL
+    LTEXT           "Get tracking image when error in X/Y prediction is >",IDC_STATGETTRACK,10,640,151,8
+    EDITTEXT        IDC_EDITPREDICTERRORXY,164,638,24,12,ES_CENTER | ES_AUTOHSCROLL
+    LTEXT           "% of field",IDC_STATPCTFIELD,190,640,28,8
     CONTROL         "Align only with tracking images, not Record images",IDC_ALIGNTRACKONLY,
-                    "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,10,661,163,10
+                    "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,10,675,163,10
     CONTROL         "Align with Preview before getting new track reference",IDC_PREVIEWBEFOREREF,
-                    "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,10,673,171,10
-    LTEXT           "Get new track reference if Record alignment differs by >",IDC_STATNEWTRACK,10,685,164,8
-    EDITTEXT        IDC_EDITNEWTRACKDIFF,182,683,24,12,ES_CENTER | ES_AUTOHSCROLL
-    LTEXT           "%",IDC_STATPERCENT,207,685,8,8
+                    "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,10,687,171,10
+    LTEXT           "Get new track reference if Record alignment differs by >",IDC_STATNEWTRACK,10,699,164,8
+    EDITTEXT        IDC_EDITNEWTRACKDIFF,182,697,24,12,ES_CENTER | ES_AUTOHSCROLL
+    LTEXT           "%",IDC_STATPERCENT,207,699,8,8
     CONTROL         "Repeat autofocus if focus differs from prediction by > ",IDC_REPEATFOCUS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,698,172,10
-    EDITTEXT        IDC_EDITREPEATFOCUS,182,697,24,12,ES_CENTER | ES_AUTOHSCROLL
-    LTEXT           "um",IDC_STATREPFOCUSUM,208,699,10,8
-    LTEXT           "Do autofocus when error in focus prediction exceeds ",IDC_STATDOAUTOFOC,10,714,157,8
-    EDITTEXT        IDC_EDITPREDICTERRORZ,169,712,24,12,ES_CENTER | ES_AUTOHSCROLL
-    LTEXT           "um",IDC_STATDOFOCUSUM,195,714,10,8
-    CONTROL         "Taper counts down to ",IDC_RAMPBEAM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,266,77,10
-    EDITTEXT        IDC_EDITTAPERCOUNTS,95,265,25,12,ES_AUTOHSCROLL
-    LTEXT           "above +/-",IDC_STATTAPERFTA,127,267,31,8
-    EDITTEXT        IDC_EDITTAPERANGLE,163,265,25,12,ES_AUTOHSCROLL
-    LTEXT           "degrees",IDC_STATTAPERDEG,190,267,27,8
-    PUSHBUTTON      "GO",IDC_TSGO,17,744,42,14
-    PUSHBUTTON      "Single Loop",IDC_SINGLESTEP,68,744,42,14
-    DEFPUSHBUTTON   "Postpone",IDC_POSTPONE,119,744,42,14
-    PUSHBUTTON      "Cancel",IDCANCEL,170,744,42,14
-    PUSHBUTTON      "?",IDC_BUTHELP,217,748,10,10
-    LTEXT           "Total dose:",IDC_STATTOTALDOSE,12,313,198,8
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,712,172,10
+    EDITTEXT        IDC_EDITREPEATFOCUS,182,711,24,12,ES_CENTER | ES_AUTOHSCROLL
+    LTEXT           "um",IDC_STATREPFOCUSUM,208,713,10,8
+    LTEXT           "Do autofocus when error in focus prediction exceeds ",IDC_STATDOAUTOFOC,10,728,157,8
+    EDITTEXT        IDC_EDITPREDICTERRORZ,169,726,24,12,ES_CENTER | ES_AUTOHSCROLL
+    LTEXT           "um",IDC_STATDOFOCUSUM,195,728,10,8
+    CONTROL         "Taper counts down to ",IDC_RAMPBEAM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,279,77,10
+    EDITTEXT        IDC_EDITTAPERCOUNTS,95,278,25,12,ES_AUTOHSCROLL
+    LTEXT           "above +/-",IDC_STATTAPERFTA,127,280,31,8
+    EDITTEXT        IDC_EDITTAPERANGLE,163,278,25,12,ES_AUTOHSCROLL
+    LTEXT           "degrees",IDC_STATTAPERDEG,190,280,27,8
+    PUSHBUTTON      "GO",IDC_TSGO,17,758,42,14
+    PUSHBUTTON      "Single Loop",IDC_SINGLESTEP,68,758,42,14
+    DEFPUSHBUTTON   "Postpone",IDC_POSTPONE,119,758,42,14
+    PUSHBUTTON      "Cancel",IDCANCEL,170,758,42,14
+    PUSHBUTTON      "?",IDC_BUTHELP,217,762,10,10
+    LTEXT           "Total dose:",IDC_STATTOTALDOSE,12,326,198,8
     CONTROL         "Use current intensity at zero tilt (increase to start series)",IDC_USEINTENSITYATZERO,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,302,177,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,315,177,10
     CONTROL         "Refine the zero-loss  peak every",IDC_AUTO_REFINE_ZLP,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,181,110,10
-    EDITTEXT        IDC_EDIT_ZLP_INTERVAL,123,180,24,12,ES_AUTOHSCROLL | WS_GROUP
-    LTEXT           "minutes",IDC_STATMINUTES,149,182,24,8
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,194,110,10
+    EDITTEXT        IDC_EDIT_ZLP_INTERVAL,123,193,24,12,ES_AUTOHSCROLL | WS_GROUP
+    LTEXT           "minutes",IDC_STATMINUTES,149,195,24,8
     CONTROL         "Stop if Autoalign shifts more than ",IDC_STOPONBIGSHIFT,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,613,110,10
-    EDITTEXT        IDC_EDITBIGSHIFT,121,612,24,12,ES_CENTER | ES_AUTOHSCROLL
-    LTEXT           "% of image size",IDC_STATPCTIMAGE,148,614,48,8
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,627,110,10
+    EDITTEXT        IDC_EDITBIGSHIFT,121,626,24,12,ES_CENTER | ES_AUTOHSCROLL
+    LTEXT           "% of image size",IDC_STATPCTIMAGE,148,628,48,8
     CONTROL         "Close column valves at end of series",IDC_CLOSE_VALVES,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,565,125,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,579,125,10
     CONTROL         "Stop after aligning tracking image to allow manual adjustment",IDC_MANUAL_TRACKING,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,650,197,10
-    PUSHBUTTON      "+",IDC_TSS_PLUS4,7,349,9,7
-    CONTROL         "",IDC_TSS_LINE4,"Static",SS_BLACKFRAME | SS_SUNKEN,7,395,216,1
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,664,197,10
+    PUSHBUTTON      "+",IDC_TSS_PLUS4,7,362,9,7
+    CONTROL         "",IDC_TSS_LINE4,"Static",SS_BLACKFRAME | SS_SUNKEN,7,408,216,1
     LTEXT           "Tilt Angle Specifications",IDC_TSS_TITLE1,25,2,135,8
     PUSHBUTTON      "-",IDC_TSS_PLUS1,7,3,9,7
-    CONTROL         "",IDC_TSS_LINE1,"Static",SS_BLACKFRAME | SS_SUNKEN,7,90,216,1
-    LTEXT           "Size, Image Shift, and Recentering Specifications",IDC_TSS_TITLE2,25,92,198,8
-    PUSHBUTTON      "+",IDC_TSS_PLUS2,7,93,9,7
-    CONTROL         "",IDC_TSS_LINE2,"Static",SS_BLACKFRAME | SS_SUNKEN,7,194,216,1
-    PUSHBUTTON      "+",IDC_TSS_PLUS3,7,197,9,7
-    CONTROL         "",IDC_TSS_LINE3,"Static",SS_BLACKFRAME | SS_SUNKEN,7,346,216,1
-    LTEXT           "Autofocus Control",IDC_TSS_TITLE5,25,397,138,8
-    PUSHBUTTON      "+",IDC_TSS_PLUS5,7,398,9,7
-    CONTROL         "",IDC_TSS_LINE5,"Static",SS_BLACKFRAME | SS_SUNKEN,8,500,216,1
-    LTEXT           "Initial and Final Actions",IDC_TSS_TITLE6,25,502,131,8
-    PUSHBUTTON      "+",IDC_TSS_PLUS6,7,503,9,7
-    CONTROL         "",IDC_TSS_LINE6,"Static",SS_BLACKFRAME | SS_SUNKEN,8,576,216,1
-    LTEXT           "Tracking Control Parameters",IDC_TSS_TITLE7,25,578,148,8
-    PUSHBUTTON      "+",IDC_TSS_PLUS7,7,579,9,7
-    CONTROL         "",IDC_TSS_LINE7,"Static",SS_BLACKFRAME | SS_SUNKEN,7,725,216,1
-    PUSHBUTTON      "First Half",IDC_BUT_TSS_LEFT,98,729,37,10
-    PUSHBUTTON      "Second Half",IDC_BUT_TSS_RIGHT,142,729,37,10
-    CONTROL         "",IDC_TSS_VERTLINE,"Static",SS_BLACKFRAME | SS_SUNKEN,226,29,1,289
-    PUSHBUTTON      "Previous",IDC_BUT_TSS_PREV,10,729,37,10
-    PUSHBUTTON      "Next",IDC_BUT_TSS_NEXT,54,729,37,10
-    PUSHBUTTON      "Full",IDC_BUT_TSS_FULL,186,729,37,10
+    CONTROL         "",IDC_TSS_LINE1,"Static",SS_BLACKFRAME | SS_SUNKEN,7,103,216,1
+    LTEXT           "Size, Image Shift, and Recentering Specifications",IDC_TSS_TITLE2,25,105,198,8
+    PUSHBUTTON      "+",IDC_TSS_PLUS2,7,106,9,7
+    CONTROL         "",IDC_TSS_LINE2,"Static",SS_BLACKFRAME | SS_SUNKEN,7,207,216,1
+    PUSHBUTTON      "+",IDC_TSS_PLUS3,7,210,9,7
+    CONTROL         "",IDC_TSS_LINE3,"Static",SS_BLACKFRAME | SS_SUNKEN,7,359,216,1
+    LTEXT           "Autofocus Control",IDC_TSS_TITLE5,25,410,138,8
+    PUSHBUTTON      "+",IDC_TSS_PLUS5,7,411,9,7
+    CONTROL         "",IDC_TSS_LINE5,"Static",SS_BLACKFRAME | SS_SUNKEN,8,514,216,1
+    LTEXT           "Initial and Final Actions",IDC_TSS_TITLE6,25,516,131,8
+    PUSHBUTTON      "+",IDC_TSS_PLUS6,7,517,9,7
+    CONTROL         "",IDC_TSS_LINE6,"Static",SS_BLACKFRAME | SS_SUNKEN,8,590,216,1
+    LTEXT           "Tracking Control Parameters",IDC_TSS_TITLE7,25,592,148,8
+    PUSHBUTTON      "+",IDC_TSS_PLUS7,7,593,9,7
+    CONTROL         "",IDC_TSS_LINE7,"Static",SS_BLACKFRAME | SS_SUNKEN,7,739,216,1
+    PUSHBUTTON      "First Half",IDC_BUT_TSS_LEFT,98,743,37,10
+    PUSHBUTTON      "Second Half",IDC_BUT_TSS_RIGHT,142,743,37,10
+    CONTROL         "",IDC_TSS_VERTLINE,"Static",SS_BLACKFRAME | SS_SUNKEN,226,28,1,289
+    PUSHBUTTON      "Previous",IDC_BUT_TSS_PREV,10,743,37,10
+    PUSHBUTTON      "Next",IDC_BUT_TSS_NEXT,54,743,37,10
+    PUSHBUTTON      "Full",IDC_BUT_TSS_FULL,186,743,37,10
     CONTROL         "Change some settings as a function of angle",IDC_CHECK_VARY_PARAMS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,78,147,10
-    PUSHBUTTON      "Set Changes",IDC_BUT_SET_CHANGES,159,78,50,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,91,147,10
+    PUSHBUTTON      "Set Changes",IDC_BUT_SET_CHANGES,159,91,50,10
     CONTROL         "Change other exposures proportional to Record change",IDC_CHANGE_ALL_EXP,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,323,182,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,336,182,10
     CONTROL         "Change drift settling proportional to exposure change",IDC_CHANGE_SETTLING,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,335,172,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,348,172,10
     CONTROL         "Change Record exposure time instead of beam intensity",IDC_CHANGE_EXPOSURE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,206,182,10
-    CONTROL         "Autocenter beam every",IDC_AUTOCEN_AT_INTERVAL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,155,82,10
-    EDITTEXT        IDC_EDIT_AC_INTERVAL,95,154,24,12,ES_AUTOHSCROLL
-    LTEXT           "minutes",IDC_STAT_ACMINUTES,121,156,24,8
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,219,182,10
+    CONTROL         "Autocenter beam every",IDC_AUTOCEN_AT_INTERVAL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,168,82,10
+    EDITTEXT        IDC_EDIT_AC_INTERVAL,95,167,24,12,ES_AUTOHSCROLL
+    LTEXT           "minutes",IDC_STAT_ACMINUTES,121,169,24,8
     CONTROL         "Autocenter beam in second half of series at",IDC_AUTOCEN_AT_CROSSING,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,167,140,10
-    EDITTEXT        IDC_EDIT_AC_ANGLE,151,166,24,12,ES_AUTOHSCROLL
-    LTEXT           "degrees",IDC_STAT_ACDEGREES,178,168,27,8
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,180,140,10
+    EDITTEXT        IDC_EDIT_AC_ANGLE,151,179,24,12,ES_AUTOHSCROLL
+    LTEXT           "degrees",IDC_STAT_ACDEGREES,178,181,27,8
     PUSHBUTTON      "Swap",IDC_BUT_SWAP_ANGLES,119,14,22,12
     CONTROL         "Stop and ask before repeating Record in Low Dose mode",IDC_CONFIRM_LOWDOSE_REPEAT,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,601,188,10
-    LTEXT           "Interset shifts are not available  and so will                                               not b",IDC_STAT_INTERSET,12,144,211,8
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,615,188,10
+    LTEXT           "Interset shifts are not available  and so will                                               not b",IDC_STAT_INTERSET,12,157,211,8
     CONTROL         "Recenter beam from Low Dose tracking images",IDC_CENTER_FROM_TRIAL,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,143,158,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,156,158,10
     CONTROL         "Run series in two directions from",IDC_DO_BIDIR,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,40,108,10
     EDITTEXT        IDC_BIDIR_ANGLE,120,39,24,12,ES_AUTOHSCROLL
     CONTROL         "Return with Walk Up",IDC_BIDIR_WALK_BACK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,151,40,72,10
@@ -1553,16 +1553,18 @@ BEGIN
     CONTROL         "Use View for anchor",IDC_BIDIR_USE_VIEW,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,151,52,72,10
     CTEXT           "22. um",IDC_STAT_BIDIR_FIELD_SIZE,115,53,36,8
     CONTROL         "Stop if autofocus exceeds absolute focus limits",IDC_CHECK_LIMIT_ABS_FOCUS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,476,154,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,490,154,10
     CONTROL         "Stop if autofocus change exceeds",IDC_CHECK_LIMIT_DELTA_FOCUS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,488,113,10
-    EDITTEXT        IDC_EDIT_FOCUS_MAX_DELTA,125,487,25,12,ES_AUTOHSCROLL
-    LTEXT           "microns",IDC_STAT_DELTA_MICRONS,153,489,25,8
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,502,113,10
+    EDITTEXT        IDC_EDIT_FOCUS_MAX_DELTA,125,501,25,12,ES_AUTOHSCROLL
+    LTEXT           "microns",IDC_STAT_DELTA_MICRONS,153,503,25,8
     CONTROL         "If taking frames, get initial partial sum of ",IDC_DO_EARLY_RETURN,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,381,126,10
-    RTEXT           "99",IDC_STAT_NUM_EARLY_FRAMES,136,382,8,8
-    CONTROL         "",IDC_SPIN_EARLY_FRAMES,"msctls_updown32",UDS_ARROWKEYS,145,379,10,14
-    LTEXT           "frames",IDC_STAT_FRAME_LABEL,157,382,22,8
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,394,126,10
+    RTEXT           "99",IDC_STAT_NUM_EARLY_FRAMES,136,395,8,8
+    CONTROL         "",IDC_SPIN_EARLY_FRAMES,"msctls_updown32",UDS_ARROWKEYS,145,392,10,14
+    LTEXT           "frames",IDC_STAT_FRAME_LABEL,157,395,22,8
+    CONTROL         "Use dose-symmetric scheme",IDC_USE_DOSE_SYM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,65,102,10
+    PUSHBUTTON      "Set Up",IDC_BUT_SETUP_DOSE_SYM,113,65,26,10
 END
 
 IDD_TSRESUME DIALOGEX 0, 0, 187, 215
@@ -2932,40 +2934,71 @@ BEGIN
     DEFPUSHBUTTON   "Run",IDC_RUN_ONE_LINE5,121,66,27,12
 END
 
-IDD_CTFFINDDLG DIALOGEX 0, 0, 209, 128
+IDD_CTFFINDDLG DIALOGEX 0, 0, 180, 131
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "CTF Fitting Parameters"
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,38,112,50,12
-    PUSHBUTTON      "Cancel",IDCANCEL,123,112,50,12
+    DEFPUSHBUTTON   "OK",IDOK,29,115,42,12
+    PUSHBUTTON      "Cancel",IDCANCEL,98,115,42,12
     CONTROL         "Compute resolution to which Thon rings fit",IDC_CHECK_EXTRA_STATS,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,14,155,10
     CONTROL         "Draw rings to computed resolution",IDC_CHECK_DRAW_RINGS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,25,129,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,25,118,10
     CONTROL         "Use slower search, needed for high astigmatism",IDC_CHECK_SLOW_SEARCH,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,3,174,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,4,3,174,10
     LTEXT           "Custom value of highest resolution to fit:",IDC_STATIC,7,35,134,8
-    EDITTEXT        IDC_EDIT_MAX_FIT_RES,141,33,30,12,ES_AUTOHSCROLL
-    LTEXT           "(0 for default value of  A; applies to script fitting)",IDC_STAT_DEFAULT_MAX_RES,13,45,187,8
-    LTEXT           "Lowest resolution to fit when fitting with phase:",IDC_STATIC,7,92,156,8
-    EDITTEXT        IDC_EDIT_PHASE_MIN_RES,164,90,30,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_MAX_FIT_RES,125,33,24,12,ES_AUTOHSCROLL
+    LTEXT           "(0 for default value of  A; applies to script fitting)",IDC_STAT_DEFAULT_MAX_RES,13,45,144,8
+    LTEXT           "Lowest resolution to fit when fitting with phase:",IDC_STATIC,7,94,137,8
+    EDITTEXT        IDC_EDIT_PHASE_MIN_RES,143,92,24,12,ES_AUTOHSCROLL
     CONTROL         "Find phase with search limits",IDC_CHECK_FIND_PHASE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,71,108,10
-    EDITTEXT        IDC_EDIT_MIN_PHASE,116,70,30,12,ES_AUTOHSCROLL
-    EDITTEXT        IDC_EDIT_MAX_PHASE,159,70,30,12,ES_AUTOHSCROLL
-    LTEXT           "deg",IDC_STATIC,192,72,13,8
-    LTEXT           "to",IDC_STATIC,149,72,8,8
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,71,98,10
+    EDITTEXT        IDC_EDIT_MIN_PHASE,103,70,24,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_MAX_PHASE,138,70,24,12,ES_AUTOHSCROLL
+    LTEXT           "deg",IDC_STATIC,163,72,13,8
+    LTEXT           "to",IDC_STATIC,130,72,8,8
     CONTROL         "Omit astigmatism when searching for phase",IDC_CHECK_FIX_ASTIG_FOR_PHASE,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,82,157,10
-    LTEXT           "A",IDC_STATIC,174,35,8,8
-    LTEXT           "A",IDC_STATIC,197,92,8,8
-    PUSHBUTTON      "?",IDC_BUTHELP,194,113,11,10
-    LTEXT           "(0 for default below first zero; applies to script fitting)",IDC_STATIC,13,102,177,8
-    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | SS_SUNKEN,4,54,201,1
-    LTEXT           "Fixed phase shift when not finding phase:",IDC_STATIC,7,58,137,8
-    LTEXT           "deg",IDC_STATIC,178,58,13,8
-    EDITTEXT        IDC_EDIT_FIXED_PHASE,145,56,30,12,ES_AUTOHSCROLL
+    LTEXT           "A",IDC_STATIC,151,35,8,8
+    LTEXT           "A",IDC_STATIC,168,94,8,8
+    PUSHBUTTON      "?",IDC_BUTHELP,165,117,11,10
+    LTEXT           "(0 for default below first zero; applies to script fitting)",IDC_STATIC,13,104,156,8
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | SS_SUNKEN,4,54,169,1
+    LTEXT           "Fixed phase shift when not finding phase:",IDC_STATIC,7,58,127,8
+    LTEXT           "deg",IDC_STATIC,155,58,13,8
+    EDITTEXT        IDC_EDIT_FIXED_PHASE,130,56,24,12,ES_AUTOHSCROLL
+END
+
+IDD_TSDOSESYM DIALOGEX 0, 0, 227, 124
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dose Symmetric Tilt Series Parameters"
+FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,48,103,40,14
+    PUSHBUTTON      "Cancel",IDCANCEL,131,103,40,14
+    LTEXT           "Initial group size (tilts to acquire on each side):",IDC_STATIC,9,10,137,8
+    RTEXT           "99",IDC_STAT_GROUP_SIZE,145,10,9,8
+    CONTROL         "",IDC_SPIN_GROUP_SIZE,"msctls_updown32",UDS_ARROWKEYS,156,7,10,14
+    CONTROL         "Increase group size beyond ",IDC_CHECK_INC_GROUP,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,23,104,10
+    EDITTEXT        IDC_EDIT_INC_GROUP_ANGLE,103,21,30,14,ES_AUTOHSCROLL
+    LTEXT           "deg from initial angle",IDC_STAT_INC_ANGLE,135,24,65,8
+    LTEXT           "Increase group size by ",IDC_STAT_INC_LABEL1,22,42,76,8
+    CTEXT           "9",IDC_STAT_INC_AMOUNT,91,42,8,8
+    CONTROL         "",IDC_SPIN_INC_INTERVAL,"msctls_updown32",UDS_ARROWKEYS,142,39,10,14
+    CONTROL         "",IDC_SPIN_INC_AMOUNT,"msctls_updown32",UDS_ARROWKEYS,100,39,10,14
+    RTEXT           "every 2",IDC_STAT_INC_INTERVAL,115,42,25,8
+    LTEXT           "groups",IDC_STAT_INC_LABEL2,155,42,23,8
+    CONTROL         "Stop alternating directions beyond:",IDC_CHECK_RUN_TO_END,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,60,127,10
+    EDITTEXT        IDC_EDIT_RUN_TO_END,122,58,30,14,ES_AUTOHSCROLL
+    LTEXT           "deg from initial angle",IDC_STAT_RUN_TO_END,154,61,66,8
+    LTEXT           "30 tilt reversals involving 150 deg total tilt",IDC_STAT_SUMMARY,10,88,158,8
+    PUSHBUTTON      "?",IDC_BUTHELP,209,106,11,10
+    CONTROL         "Use View anchor if first unidirectional part has >=",IDC_CHECK_USE_ANCHOR,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,73,154,10
+    EDITTEXT        IDC_EDIT_MIN_FOR_ANCHOR,173,71,20,14,ES_AUTOHSCROLL
+    LTEXT           "tilts",IDC_STAT_ANCHOR_TILTS,195,74,12,8
 END
 
 
@@ -3103,7 +3136,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 223
         TOPMARGIN, 3
-        BOTTOMMARGIN, 758
+        BOTTOMMARGIN, 772
         HORZGUIDE, 159
         HORZGUIDE, 226
     END
@@ -3372,9 +3405,9 @@ BEGIN
     IDD_MULTI_SHOT_SETUP, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 196
+        RIGHTMARGIN, 178
         TOPMARGIN, 7
-        BOTTOMMARGIN, 374
+        BOTTOMMARGIN, 375
     END
 
     IDD_DE_REFERENCE, DIALOG
@@ -3395,9 +3428,17 @@ BEGIN
     IDD_CTFFINDDLG, DIALOG
     BEGIN
         LEFTMARGIN, 4
-        RIGHTMARGIN, 205
+        RIGHTMARGIN, 176
         TOPMARGIN, 3
-        BOTTOMMARGIN, 124
+        BOTTOMMARGIN, 127
+    END
+
+    IDD_TSDOSESYM, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 220
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 117
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -3453,47 +3494,17 @@ END
 // AFX_DIALOG_LAYOUT
 //
 
-IDD_CAMERASETUP AFX_DIALOG_LAYOUT
-BEGIN
-    0
-END
-
-IDD_IMAGELEVEL AFX_DIALOG_LAYOUT
-BEGIN
-    0
-END
-
-IDD_BUFFERCONTROL AFX_DIALOG_LAYOUT
-BEGIN
-    0
-END
-
-IDD_SCOPESTATUS AFX_DIALOG_LAYOUT
-BEGIN
-    0
-END
-
-IDD_LOWDOSE AFX_DIALOG_LAYOUT
-BEGIN
-    0
-END
-
-IDD_REMOTE_CONTROL AFX_DIALOG_LAYOUT
-BEGIN
-    0
-END
-
-IDD_NAVIGATOR AFX_DIALOG_LAYOUT
-BEGIN
-    0
-END
-
-IDD_K2_SAVE_OPTIONS AFX_DIALOG_LAYOUT
+IDD_TSDOSESYM AFX_DIALOG_LAYOUT
 BEGIN
     0
 END
 
 IDD_CTFFINDDLG AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_MULTI_SHOT_SETUP AFX_DIALOG_LAYOUT
 BEGIN
     0
 END

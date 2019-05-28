@@ -467,6 +467,8 @@ private:
   float mAlarmBidirFieldSize;  // Size of field below which to warn or alarm user
   BOOL mWalkBackForBidir;      // Flag for whether to return with walk up
   float mStepForBidirReturn;   // Step size when returning in tilt steps
+  int mDosymBacklashDir;       // Backlash direction for dose symmetric
+  FloatVec mIdealDosymAngles;  // List of expected angles for dose-sym
   int mMaxDelayAfterTilt;      // Maximum delay for tilt during TS, in seconds
   BOOL mEarlyK2RecordReturn;   // Flag to return early if possible from Record Dose frac
   BOOL mCallTSplugins;         // Flag to control whether plugins get called

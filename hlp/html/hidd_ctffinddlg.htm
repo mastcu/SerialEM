@@ -31,6 +31,13 @@
         too slow.&nbsp; The 2-D search 
         is parallelized so its speed will depend heavily on the number of computer cores 
         available.&nbsp; Including phase in the search will slow it down considerably.</p>
+    <p><b>Compute resolution to which Thon rings fit </b></p>
+    <p>Select this option do the extra computations needed to determine the resolution to 
+        which the Thon rings can be fit, or 0 not to.&nbsp; These computations will 
+        increase the fitting time by 10-20%, which may be noticeable.</p>
+    <p><b>Draw rings to computed resolution </b></p>
+    <p>Select this option to draw half-rings on the image out to the resolution determined by 
+        these extra computations if they were done, or 0 not to.</p>
     <p><b>Custom value of highest resolution to fit </b></p>
     <p>Enter a limiting value to the maximum resolution to which to fit the amplitude 
         spectrum, in Angstroms.&nbsp; A smaller value fits farther out in frequency 
@@ -46,6 +53,14 @@
         needed here or in the properties file.&nbsp; If you click in an FFT with the middle mouse button, the 
         status bar will show the resolution (&#39;Period&#39;) at that frequency.</p>
       <p>The value set here applies when fitting with the Ctffind script command.</p>
+      <p><b>Fixed phase shift when not finding phase</b></p>
+      <p>Enter a fixed phase shift imposed by a phase plate (a positive value in degrees).&nbsp; 
+          This phase shift will be taken into account when circles are drawn on a live FFT 
+          for the fixed defocus defined by the&nbsp;<A HREF="menu_process.htm#hid_process_setdefocusforcircles">Set Defocus for Circles</A> command, when a defocus is reported after left-clicking on an FFT 
+          without CTF fitting turned on, and when doing CTF fitting by clicking in the FFT 
+          if phase is not being searched for.&nbsp; If a 
+        non-zero shift has been entered, the defocus in the status bar will be followed 
+        by &#39;: PP&#39;.</p>
     <p><b>Lowest resolution to fit when fitting with phase </b></p>
     <p>Enter a limiting value to the minimum resolution in Angstroms for fitting when 
         phase is non-zero, i.e., when searching for phase or using a fixed phase shift.&nbsp; 
@@ -70,13 +85,5 @@
     <p>Select this option to fix astigmatism at zero when searching for phase.&nbsp; 
         This will reduce the dimensionality of searches from 4 to 2, increasing the 
         speed and reliability of the fitting.</p>
-    <p><b>Compute resolution to which Thon rings fit </b></p>
-    <p>Select this option do the extra computations needed to determine the resolution to 
-        which the Thon rings can be fit, or 0 not to.&nbsp; These computations will 
-        increase the fitting time by 10-20%, which may be noticeable.</p>
-    <p><b>Draw rings to computed resolution </b></p>
-    <p>Select this option to draw half-rings on the image out to the resolution determined by 
-        these extra computations if they were done, or 0 not to.</p>
-
 </body>
 </html>

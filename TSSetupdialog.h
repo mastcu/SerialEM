@@ -330,6 +330,11 @@ afx_msg void OnCheckLimitDeltaFocus();
 afx_msg void OnDoEarlyReturn();
 afx_msg void OnDeltaposSpinEarlyFrames(NMHDR *pNMHDR, LRESULT *pResult);
 void ManageEarlyReturn(void);
+CButton m_butUseDoseSym;
+afx_msg void OnUseDoseSym();
+BOOL m_bUseDoseSym;
+CButton m_butSetupDoseSym;
+afx_msg void OnButSetupDoseSym();
 };
 
 //{{AFX_INSERT_LOCATION}}

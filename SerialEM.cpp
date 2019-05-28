@@ -380,7 +380,7 @@ CSerialEMApp::CSerialEMApp()
     mCamParams[i].falcon3ScalePower = 4;
     mCamParams[i].linear2CountingRatio = 8.;
     mCamParams[i].linearOffset = 0.;
-    mCamParams[i].K3CDSLinearRatio = 1.685f;
+    mCamParams[i].K3CDSLinearRatio = 1.5f;
     mCamParams[i].origDefects = NULL;
     mCamParams[i].defNameHasFrameFile = false;
     mCamParams[i].taskTargetSize = 512;
