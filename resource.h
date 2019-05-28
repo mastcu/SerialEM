@@ -1460,6 +1460,8 @@
 #define IDC_EDIT_MIN_PHASE              2485
 #define IDC_EDIT_MAX_PHASE              2486
 #define IDC_CHECK_FIX_ASTIG_FOR_PHASE   2487
+#define IDC_EDIT1                       2488
+#define IDC_EDIT_FIXED_PHASE            2488
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -1918,7 +1920,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        234
 #define _APS_NEXT_COMMAND_VALUE         33334
-#define _APS_NEXT_CONTROL_VALUE         2488
+#define _APS_NEXT_CONTROL_VALUE         2489
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

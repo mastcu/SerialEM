@@ -63,9 +63,7 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDR_MAINFRAME           ICON                    "res\\SerialEM.ico"
-
 IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -73,9 +71,7 @@ IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
 //
 
 IDR_MAINFRAME           BITMAP                  "res\\Toolbar.bmp"
-
 IDB_BITMAP1             BITMAP                  "res\\bitmap1.bmp"
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -2933,36 +2929,40 @@ BEGIN
     DEFPUSHBUTTON   "Run",IDC_RUN_ONE_LINE5,121,66,27,12
 END
 
-IDD_CTFFINDDLG DIALOGEX 0, 0, 211, 122
+IDD_CTFFINDDLG DIALOGEX 0, 0, 209, 128
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "CTF Fitting Parameters"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,38,104,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,123,104,50,14
+    DEFPUSHBUTTON   "OK",IDOK,38,112,50,12
+    PUSHBUTTON      "Cancel",IDCANCEL,123,112,50,12
     CONTROL         "Compute resolution to which Thon rings fit",IDC_CHECK_EXTRA_STATS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,81,155,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,14,155,10
     CONTROL         "Draw rings to computed resolution",IDC_CHECK_DRAW_RINGS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,93,129,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,25,129,10
     CONTROL         "Use slower search, needed for high astigmatism",IDC_CHECK_SLOW_SEARCH,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,3,174,10
-    LTEXT           "Custom value of highest resolution to fit:",IDC_STATIC,9,16,134,8
-    EDITTEXT        IDC_EDIT_MAX_FIT_RES,143,14,30,12,ES_AUTOHSCROLL
-    LTEXT           "(0 for default value of  A; applies to script fitting)",IDC_STAT_DEFAULT_MAX_RES,15,26,187,8
-    LTEXT           "Lowest resolution to fit when fitting with phase:",IDC_STATIC,9,37,156,8
-    EDITTEXT        IDC_EDIT_PHASE_MIN_RES,166,35,30,12,ES_AUTOHSCROLL
+    LTEXT           "Custom value of highest resolution to fit:",IDC_STATIC,7,35,134,8
+    EDITTEXT        IDC_EDIT_MAX_FIT_RES,141,33,30,12,ES_AUTOHSCROLL
+    LTEXT           "(0 for default value of  A; applies to script fitting)",IDC_STAT_DEFAULT_MAX_RES,13,45,187,8
+    LTEXT           "Lowest resolution to fit when fitting with phase:",IDC_STATIC,7,92,156,8
+    EDITTEXT        IDC_EDIT_PHASE_MIN_RES,164,90,30,12,ES_AUTOHSCROLL
     CONTROL         "Find phase with search limits",IDC_CHECK_FIND_PHASE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,57,108,10
-    EDITTEXT        IDC_EDIT_MIN_PHASE,116,56,30,12,ES_AUTOHSCROLL
-    EDITTEXT        IDC_EDIT_MAX_PHASE,159,56,30,12,ES_AUTOHSCROLL
-    LTEXT           "deg",IDC_STATIC,192,58,13,8
-    LTEXT           "to",IDC_STATIC,149,57,8,8
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,71,108,10
+    EDITTEXT        IDC_EDIT_MIN_PHASE,116,70,30,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_MAX_PHASE,159,70,30,12,ES_AUTOHSCROLL
+    LTEXT           "deg",IDC_STATIC,192,72,13,8
+    LTEXT           "to",IDC_STATIC,149,72,8,8
     CONTROL         "Omit astigmatism when searching for phase",IDC_CHECK_FIX_ASTIG_FOR_PHASE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,69,160,10
-    LTEXT           "A",IDC_STATIC,176,16,8,8
-    LTEXT           "A",IDC_STATIC,199,37,8,8
-    PUSHBUTTON      "?",IDC_BUTHELP,194,106,11,10
-    LTEXT           "(0 for default below first zero; applies to script fitting)",IDC_STATIC,15,47,177,8
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,82,157,10
+    LTEXT           "A",IDC_STATIC,174,35,8,8
+    LTEXT           "A",IDC_STATIC,197,92,8,8
+    PUSHBUTTON      "?",IDC_BUTHELP,194,113,11,10
+    LTEXT           "(0 for default below first zero; applies to script fitting)",IDC_STATIC,13,102,177,8
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | SS_SUNKEN,4,54,201,1
+    LTEXT           "Fixed phase shift when not finding phase:",IDC_STATIC,7,58,137,8
+    LTEXT           "deg",IDC_STATIC,178,58,13,8
+    EDITTEXT        IDC_EDIT_FIXED_PHASE,145,56,30,12,ES_AUTOHSCROLL
 END
 
 
@@ -3010,9 +3010,7 @@ END
 //
 
 IDC_CURSOR1             CURSOR                  "res\\cursor1.cur"
-
 IDC_CURSOR2             CURSOR                  "res\\cursor2.cur"
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3392,9 +3390,9 @@ BEGIN
     IDD_CTFFINDDLG, DIALOG
     BEGIN
         LEFTMARGIN, 4
-        RIGHTMARGIN, 207
+        RIGHTMARGIN, 205
         TOPMARGIN, 3
-        BOTTOMMARGIN, 118
+        BOTTOMMARGIN, 124
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -3450,49 +3448,49 @@ END
 // AFX_DIALOG_LAYOUT
 //
 
-IDD_CAMERASETUP AFX_DIALOG_LAYOUT
+IDD_CAMERASETUP AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_IMAGELEVEL AFX_DIALOG_LAYOUT
+IDD_IMAGELEVEL AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_BUFFERCONTROL AFX_DIALOG_LAYOUT
+IDD_BUFFERCONTROL AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_SCOPESTATUS AFX_DIALOG_LAYOUT
+IDD_SCOPESTATUS AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_LOWDOSE AFX_DIALOG_LAYOUT
+IDD_LOWDOSE AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_REMOTE_CONTROL AFX_DIALOG_LAYOUT
+IDD_REMOTE_CONTROL AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_NAVIGATOR AFX_DIALOG_LAYOUT
+IDD_NAVIGATOR AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_K2_SAVE_OPTIONS AFX_DIALOG_LAYOUT
+IDD_K2_SAVE_OPTIONS AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_CTFFINDDLG AFX_DIALOG_LAYOUT
+IDD_CTFFINDDLG AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
 
