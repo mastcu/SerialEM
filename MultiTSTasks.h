@@ -118,9 +118,6 @@ private:
   int mBfcCopyIndex;              // Index of next section to copy
   int mBfcDoingCopy;              // 1 if doing synchronous, -1 if doing asynchronous
   bool mBfcStopFlag;              // One-shot flag to stop either kind of copy
-  IntVec mBfcSectOrder;           // Section numbers to copy in order
-  KImageStore *mBfcSortedStore;   // Output file for sorted images
-  bool mBfcReorderWholeFile;      // Flag to close dose-symmetric output file when done
 
   // Bidirection anchor image (mBai) variables
   int mBaiSavedViewMag;           // View mag if used a lower mag for anchor
@@ -128,6 +125,7 @@ private:
   double mBaiISX, mBaiISY;        // Image shift of anchor image
   StageMoveInfo mBaiMoveInfo;     // Stage position, backlash state for returning
   BOOL mSkipNextBeamShift;        // Flag to skip beam shift on align or image shift
+
 
 public:
   CTSViewRange *mRangeViewer;
@@ -202,7 +200,7 @@ public:
   void StopAnchorImage();
   void BidirAnchorCleanup(int error);
   void BidirAnchorNextTask(int param);
-  int InvertFileInZ(int zmax, float *tiltAngles = NULL);
+  int InvertFileInZ(int zmax);
   void BidirFileCopyClearFlags(void);
   void SetAnchorStageXYMove(StageMoveInfo & smi);
 };

@@ -121,16 +121,6 @@ struct TiltSeriesParam {
   BOOL anchorBidirWithView;    // Flag to anchor with View in Low Dose
   BOOL walkBackForBidir;       // Use walkup to return to starting angle
   BOOL retainBidirAnchor;      // Flag to store second image and keep file
-  BOOL doDoseSymmetric;        // Flag to do alternating images on both sides of start
-  int dosymBaseGroupSize;      // Initial size of group to do on each side
-  BOOL dosymIncreaseGroups;    // Flag to use parameters for increasing group size
-  int dosymGroupIncInterval;   // Interval between groups at which to increase group size
-  int dosymGroupIncAmount;     // Amount to increase group size each time
-  float dosymIncStartAngle;    // Angle above which to increment group size
-  BOOL dosymDoRunToEnd;        // Flag to go to endabove an angle
-  float dosymRunToEndAngle;    // Angle above which to finish the side
-  BOOL dosymAnchorIfRunToEnd;  // Use View anchor between 1st and 2nd part when run to end
-  int dosymMinUniForAnchor;    // Minimum size of first unidirectional part to use anchor
   BOOL doEarlyReturn;          // Flag to do early return from K2
   int earlyReturnNumFrames;    // Number of frames to return with
   BOOL initialized;            // Setup has been run

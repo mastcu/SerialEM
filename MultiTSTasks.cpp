@@ -1467,21 +1467,14 @@ void CMultiTSTasks::StoreLimitAngle(bool userAuto, float angle)
 
 // Top-level routine starts file inversion for single-frame and inverts piece list Z for
 // montage
-int CMultiTSTasks::InvertFileInZ(int zmax, float *tiltAngles)
+int CMultiTSTasks::InvertFileInZ(int zmax)
 {
-  int ind, err = 0;
+  int err = 0;
   CString mess;
   if (mBufferManager->CheckAsyncSaving())
     return 1;
-  mBfcReorderWholeFile = tiltAngles != NULL;
-  CLEAR_RESIZE(mBfcSectOrder, int, zmax);
-  for (ind = 0; ind < zmax; ind++)
-    mBfcSectOrder[ind] = tiltAngles ? ind : (zmax - 1 - ind);
-  if (tiltAngles)
-    rsSortIndexedFloats(tiltAngles, &mBfcSectOrder[0], zmax);
-  
   if (mWinApp->Montaging()) {
-    err = mWinApp->mStoreMRC->ReorderPieceZCoords(&mBfcSectOrder[0]);
+    err = mWinApp->mStoreMRC->InvertPieceZCoords(zmax);
     if (err && err < 3)
       mess.Format("An error (code %d) occurred trying to invert the\nZ coordinates in the"
       " image file header.\nThe state of the file is unknown.\n\n", err);
@@ -1519,7 +1512,6 @@ int CMultiTSTasks::SetupBidirFileCopy(int zmax)
 {
   int err, savedBufToSave = mBufferManager->GetBufToSave();
   CString ext, root, adocName;
-  FileOptions *fileOptp;
   if (!mWinApp->mStoreMRC)
     return 1;
   if (mBfcCopyIndex >= 0)
@@ -1527,13 +1519,10 @@ int CMultiTSTasks::SetupBidirFileCopy(int zmax)
   CString filename = mWinApp->mStoreMRC->getFilePath();
   if (filename.IsEmpty())
     return 3;
-  if (mBfcReorderWholeFile)
-    fileOptp = mWinApp->mDocWnd->GetStoreFileOptions(mWinApp->mDocWnd->GetCurrentStore());
-
 
   // Compose the filename for the first half
   UtilSplitExtension(filename, root, ext);
-  mBfcNameFirstHalf = root + (mBfcReorderWholeFile ? "-unsorted" : "-half1") + ext;
+  mBfcNameFirstHalf = root + "-half1" + ext;
   mBfcAdocFirstHalf = "";
 
   if (mWinApp->mStoreMRC->GetAdocIndex() >= 0) {
@@ -1569,36 +1558,24 @@ int CMultiTSTasks::SetupBidirFileCopy(int zmax)
     return 5;
   }
   mBfcStoreFirstHalf->MarkAsOpenWithFile(OPEN_TS_EXT);
-  if (mBfcReorderWholeFile) {
-    mBfcSortedStore = mWinApp->mDocWnd->OpenNewFileByName(filename, fileOptp);
-    if (!mBfcSortedStore) {
-      delete mBfcStoreFirstHalf;
-      return 6;
-    }
-
-  } else {
-    if (mWinApp->mDocWnd->OpenNewReplaceCurrent(filename, !adocName.IsEmpty())) {
-      delete mBfcStoreFirstHalf;
-      return 6;
-    }
-    mBfcSortedStore = mWinApp->mStoreMRC;
+  if (mWinApp->mDocWnd->OpenNewReplaceCurrent(filename, !adocName.IsEmpty())) {
+    delete mBfcStoreFirstHalf;
+    return 6;
   }
   mBfcNumToCopy = zmax;
   mBfcCopyIndex = 0;
-  mBfcSortedStore->MarkAsOpenWithFile(OPEN_TS_EXT);
+  mWinApp->mStoreMRC->MarkAsOpenWithFile(OPEN_TS_EXT);
 
   // Now we need to read first image into the read buffer and save it out
-  err = mBufferManager->ReadFromFile(mBfcStoreFirstHalf, mBfcSectOrder[0]);
+  err = mBufferManager->ReadFromFile(mBfcStoreFirstHalf, zmax - 1);
   if (!err) {
     mBufferManager->SetBufToSave(mBufferManager->GetBufToReadInto());
-    err = mBufferManager->SaveImageBuffer(mBfcSortedStore, true);
+    err = mBufferManager->SaveImageBuffer(mWinApp->mStoreMRC, true);
     mBufferManager->SetBufToSave(savedBufToSave);
   }
   if (err) {
     mBfcCopyIndex = -1;
     delete mBfcStoreFirstHalf;
-    if (mBfcReorderWholeFile)
-      delete mBfcSortedStore;
     return 7;
   }
   mBufferManager->CheckAsyncSaving();
@@ -1617,7 +1594,7 @@ int CMultiTSTasks::StartBidirFileCopy(bool synchronous)
   // Return if no longer doing any copy, give error and clean up if file closed
   if (mBfcCopyIndex < 0)
     return 0;
-  if (!mBfcReorderWholeFile && !mWinApp->mStoreMRC) {
+  if (!mWinApp->mStoreMRC) {
     ResetFromBidirFileCopy();
     return 1;
   }
@@ -1641,8 +1618,8 @@ int CMultiTSTasks::StartBidirFileCopy(bool synchronous)
     } 
 
     // Launch or do the copy
-    err = mBufferManager->StartAsyncCopy(mBfcStoreFirstHalf, mBfcSortedStore,
-      mBfcSectOrder[mBfcCopyIndex], mBfcCopyIndex, doSynchro);
+    err = mBufferManager->StartAsyncCopy(mBfcStoreFirstHalf, mWinApp->mStoreMRC, 
+      mBfcNumToCopy - 1 - mBfcCopyIndex, mBfcCopyIndex, doSynchro);
     if (err) {
       BidirFileCopyClearFlags();
       return err > 0 ? err : -err;
@@ -1714,8 +1691,6 @@ void CMultiTSTasks::ResetFromBidirFileCopy(void)
 {
   mBfcCopyIndex = -1;
   delete mBfcStoreFirstHalf;
-  if (mBfcReorderWholeFile)
-    delete mBfcSortedStore;
   BidirFileCopyClearFlags();
 }
 
