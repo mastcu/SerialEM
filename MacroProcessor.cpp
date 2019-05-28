@@ -1955,7 +1955,8 @@ void CMacroProcessor::NextCommand()
     // For tilting, if stage is ready, do the action; otherwise back up the index
     if (mScope->StageBusy() <= 0) {
       SetIntensityFactor(1);
-      mScope->TiltUp();
+      SetupStageRestoreAfterTilt(&strItems[1], delISX, delISY);
+      mScope->TiltUp(delISX, delISY);
       mMovedStage = true;
       mTestTiltAngle = true;
     } else
@@ -1966,7 +1967,8 @@ void CMacroProcessor::NextCommand()
   case CME_TILTDOWN:                                        // TiltDown
     if (mScope->StageBusy() <= 0) {
       SetIntensityFactor(-1);
-      mScope->TiltDown();
+      SetupStageRestoreAfterTilt(&strItems[1], delISX, delISY);
+      mScope->TiltDown(delISX, delISY);
       mMovedStage = true;
       mTestTiltAngle = true;
     } else
@@ -1988,7 +1990,8 @@ void CMacroProcessor::NextCommand()
       return;
     }
     if (mScope->StageBusy() <= 0) {
-      mScope->TiltTo(angle);
+      SetupStageRestoreAfterTilt(&strItems[2], delISX, delISY);
+      mScope->TiltTo(angle, delISX, delISY);
       mMovedStage = true;
       mTestTiltAngle = true;
     }
@@ -2308,9 +2311,11 @@ void CMacroProcessor::NextCommand()
       double increment = mScope->GetIncrement();
       doBack = false;
       delISX = mScope->GetTiltAngle();
+      index = 1;
       if (CMD_IS(RECORDANDTILTTO)) {
+        index = 3;
         increment = itemDbl[1] - delISX;
-        if (!itemEmpty[2]) {
+        if (!itemEmpty[2] && itemDbl[2]) {
           doBack = true;
           backlashX = (float)fabs(itemDbl[2]);
           if (increment < 0)
@@ -2329,7 +2334,8 @@ void CMacroProcessor::NextCommand()
       smiRAT.axisBits = axisA;
       smiRAT.alpha = delISX + increment;
       smiRAT.backAlpha = backlashX;
-      mCamera->QueueStageMove(smiRAT, delay, doBack);
+      truth = SetupStageRestoreAfterTilt(&strItems[index], smiRAT.x, smiRAT.y);
+      mCamera->QueueStageMove(smiRAT, delay, doBack, truth);
       mCamera->InitiateCapture(RECORD_CONSET);
       mTestScale = true;
       mMovedStage = true;
@@ -5874,6 +5880,7 @@ void CMacroProcessor::NextCommand()
         SetVariable("NAVINDEX", report, VARTYPE_REGULAR, -1, false);
         SetVariable("NAVLABEL", navItem->mLabel, VARTYPE_REGULAR, -1, false);
         SetVariable("NAVNOTE", navItem->mNote, VARTYPE_REGULAR, -1, false);
+        SetVariable("NAVCOLOR", navItem->mColor, VARTYPE_REGULAR, -1, false);
         SetVariable("NAVREGIS", navItem->mRegistration, VARTYPE_REGULAR, -1, false);
         index = atoi(navItem->mLabel);
         report.Format("%d", index);
@@ -9068,7 +9075,7 @@ void CMacroProcessor::UpdateLDAreaIfSaved()
     mWinApp->mLowDoseDlg.SetContinuousUpdate(false);
 }
 
-
+// Store string variable into an extra script
 int CMacroProcessor::MakeNewTempMacro(CString &strVar, CString &strIndex, bool tempOnly,
   CString &strLine)
 {
@@ -9129,4 +9136,22 @@ int CMacroProcessor::MakeNewTempMacro(CString &strVar, CString &strIndex, bool t
 
   ScanForName(index, &mMacros[index]);
   return index;
+}
+
+// Test whether a stage restore is specified in the first passed item, and use the current
+// stage position if the next passed items do not have one
+bool CMacroProcessor::SetupStageRestoreAfterTilt(CString *strItems, double &stageX, 
+  double &stageY)
+{
+  double stageZ;
+  stageX = stageY = EXTRA_NO_VALUE;
+  if (strItems[0].IsEmpty() || !atoi((LPCTSTR)strItems[0])) {
+    return false;
+  } else if (strItems[1].IsEmpty() || strItems[2].IsEmpty()) {
+    mScope->GetStagePosition(stageX, stageY, stageZ);
+  } else {
+    stageX = atof((LPCTSTR)strItems[1]);
+    stageY = atof((LPCTSTR)strItems[2]);
+  }
+  return true;
 }

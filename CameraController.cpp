@@ -2275,7 +2275,8 @@ double CCameraController::RefMemoryUsage(void)
 ///////////////////////////////////////////////////////
 
 // queue a tilt or stage move with a given delay
-void CCameraController::QueueStageMove(StageMoveInfo inSmi, int inDelay, bool doBacklash)
+void CCameraController::QueueStageMove(StageMoveInfo inSmi, int inDelay, bool doBacklash, 
+  BOOL doRestoreXY)
 {
   mStageQueued = true;
   mStageDelay = inDelay;
@@ -2283,6 +2284,7 @@ void CCameraController::QueueStageMove(StageMoveInfo inSmi, int inDelay, bool do
   mSmiToDo.doBacklash = doBacklash;
   mSmiToDo.doRelax = false;
   mSmiToDo.useSpeed = false;
+  mSmiToDo.doRestoreXY = doRestoreXY && !(inSmi.axisBits & axisXY);
   if (!doBacklash)
     mSmiToDo.backX = mSmiToDo.backY = mSmiToDo.backZ = mSmiToDo.backAlpha = 0.;
 }

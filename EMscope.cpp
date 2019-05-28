@@ -1923,22 +1923,28 @@ float CEMscope::GetIncrement()
 }
 
 
-void CEMscope::TiltUp()
+void CEMscope::TiltUp(double restoreX, double restoreY)
 {
   TiltTo(GetTiltAngle() + GetIncrement());
 }
 
-void CEMscope::TiltDown()
+void CEMscope::TiltDown(double restoreX, double restoreY)
 {
   TiltTo(GetTiltAngle() - GetIncrement());
 }
 
-void CEMscope::TiltTo(double inVal)
+void CEMscope::TiltTo(double inVal, double restoreX, double restoreY)
 {
   StageMoveInfo info;
+  BOOL restore = false;
   info.alpha = inVal;
   info.axisBits = axisA;
-  MoveStage(info, false);
+  if (restoreX > EXTRA_VALUE_TEST && restoreY > EXTRA_VALUE_TEST) {
+    info.x = restoreX;
+    info.y = restoreY;
+    restore = true;
+  }
+  MoveStage(info, false, false, false, false, restore);
 }
 
 DWORD CEMscope::GetLastTiltTime() 
@@ -1985,7 +1991,7 @@ BOOL CEMscope::SetStageBAxis(double inVal)
 
 // External call to move stage
 BOOL CEMscope::MoveStage(StageMoveInfo info, BOOL doBacklash, BOOL useSpeed, 
-  BOOL inBackground, BOOL doRelax)
+  BOOL inBackground, BOOL doRelax, BOOL doRestore)
 {
   // This call is not supposed to happen unless stage is ready, so don't wait long
   // 5/17/11: Hah.  Nothing is too long for a JEOL...  increased from 4000 to 12000
@@ -2017,6 +2023,7 @@ BOOL CEMscope::MoveStage(StageMoveInfo info, BOOL doBacklash, BOOL useSpeed,
   mMoveInfo.plugFuncs = mPlugFuncs;
   mMoveInfo.doBacklash = doBacklash;
   mMoveInfo.doRelax = doRelax && (mMoveInfo.relaxX != 0. || mMoveInfo.relaxY != 0.);
+  mMoveInfo.doRestoreXY = doRestore && !(info.axisBits & axisXY);
   if (!doBacklash)
     mMoveInfo.backX = mMoveInfo.backY = mMoveInfo.backZ = mMoveInfo.backAlpha = 0.;
   if (!doRelax)
@@ -2235,7 +2242,7 @@ void CEMscope::StageMoveKernel(StageThreadData *std, BOOL fromBlanker, BOOL asyn
   bool xyBacklash = info->doBacklash && (info->axisBits & axisXY);
   double xpos = 0., ypos = 0., zpos = 0., alpha, timeout, beta;
   double startTime = GetTickCount();
-  int step, back, relax;
+  int step, back, relax, restore, axisBitsUse;
   destX = 0.;
   destY = 0.;
   destZ = 0.;
@@ -2244,15 +2251,18 @@ void CEMscope::StageMoveKernel(StageThreadData *std, BOOL fromBlanker, BOOL asyn
   // Only change axes that are specified in axisBits
   // First do a backlash move if specified, then do the move to an overshoot if relaxing
   // and finally the move to the target
-  for (step = 0; step < 3; step++) {
+  for (step = 0; step < 4; step++) {
     back = step == 0 ? 1 : 0;
     relax = step == 1 ? 1 : 0;
-    if ((back && !info->doBacklash) || (relax && !info->doRelax))
+    restore = step == 3 ? 1 : 0;
+    axisBitsUse = restore ? axisXY : info->axisBits;
+    if ((back && !info->doBacklash) || (relax && !info->doRelax) || 
+      (restore && !info->doRestoreXY))
       continue;
 
     // Adding backX/Y makes the second move be opposite to the direction of backX/Y
     // Subtracting relax makes the final move be in the direction of relaxX/Y
-    if (info->axisBits & (axisX | axisY)) {
+    if (axisBitsUse & (axisX | axisY)) {
       xpos = info->x + back * info->backX - relax * info->relaxX;
       ypos = info->y + back * info->backY - relax * info->relaxY;
       destX = xpos * 1.e-6;
@@ -2264,8 +2274,9 @@ void CEMscope::StageMoveKernel(StageThreadData *std, BOOL fromBlanker, BOOL asyn
     destAlpha = alpha;
     if (fromBlanker && (info->axisBits & (axisX | axisY)))
       SEMTrace('S', "BlankerProc stage move to %.2f %.2f", xpos, ypos);
-    if (info->doRelax || info->doBacklash)
-      SEMTrace('n', "Step %d, move to %.3f %.3f", step + 1, xpos, ypos);
+    if (info->doRelax || info->doBacklash || info->doRestoreXY)
+      SEMTrace('n', "Step %d, move to %.3f %.3f", step + 1, 
+      (axisBitsUse & axisA) ? alpha : xpos, ypos);
      
     // destX, destY are used to decide on "stage near end of range" message upon error
     // They are supposed to be in meters; leave at 0 to disable 
@@ -2274,7 +2285,7 @@ void CEMscope::StageMoveKernel(StageThreadData *std, BOOL fromBlanker, BOOL asyn
       if (info->useSpeed) {
         try {
           info->plugFuncs->SetStagePositionExtra(destX, destY, destZ, alpha * DTOR,
-            beta * DTOR, info->speed, info->axisBits);
+            beta * DTOR, info->speed, axisBitsUse);
         }
         catch (_com_error E) {
 
@@ -2303,12 +2314,12 @@ void CEMscope::StageMoveKernel(StageThreadData *std, BOOL fromBlanker, BOOL asyn
         }
       } else {
         info->plugFuncs->SetStagePositionExtra(destX, destY, destZ, alpha * DTOR,
-          beta * DTOR, 1., info->axisBits);
+          beta * DTOR, 1., axisBitsUse);
       }
 
     } else {
       std->info->plugFuncs->SetStagePosition(destX, destY, destZ, alpha * DTOR,
-        info->axisBits);
+        axisBitsUse);
     }
     if (async && (JEOLscope || FEIscope))
       return;
@@ -2316,7 +2327,7 @@ void CEMscope::StageMoveKernel(StageThreadData *std, BOOL fromBlanker, BOOL asyn
       WaitForStageDone(info, fromBlanker ? "BlankerProc" : "StageMoveProc");         
     sTiltAngle = std->info->plugFuncs->GetTiltAngle() / DTOR;
     ManageTiltReversalVars();
-    if (step == 2) {
+    if ((step == 2 && !info->doRestoreXY) || (restore && step == 3)) {
       std->info->plugFuncs->GetStagePosition(&xpos, &ypos, &zpos);
       info->x = xpos * 1.e6;
       info->y = ypos * 1.e6;

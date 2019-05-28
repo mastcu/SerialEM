@@ -796,20 +796,23 @@
             file, one per line.</TD>
         </TR>
         <TR>
-          <TD class="style8">RecordAndTiltUp</TD>
+          <TD class="style8">RecordAndTiltUp [#R] [#X #Y]</TD>
           <TD>Starts a Record acquisition and tilts the stage up by the current increment 
             after the exposure is expected to be done.&nbsp; Post-exposure actions must be 
             allowed for the current camera, at least for current Record parameters, but need 
-            not be not enabled by the user in the Camera menu.</TD>
+            not be not enabled by the user in the Camera menu.&nbsp; If optional #R is 
+              non-zero, then the program will restore the stage X and Y positions after 
+              tilting, either to the position before starting or to #X, #Y if they are 
+              entered.</TD>
         </TR>
         <TR>
-          <TD class="style8">RecordAndTiltDown</TD>
+          <TD class="style8">RecordAndTiltDown [#R] [#X #Y]</TD>
           <TD>Like 'RecordAndTiltUp', but tilts the stage down by the current increment.</TD>
         </TR>
         <TR>
-          <TD class="style8">RecordAndTiltTo #T [#B]</TD>
+          <TD class="style8">RecordAndTiltTo #T [#B] [#R] [#X #Y]</TD>
           <TD>Like 'RecordAndTiltUp', but tilts the stage to the given angle #T.&nbsp; If an 
-            optional backlash is entered in #B, the stage will tilt first to #T +/- #B, then 
+            optional non-zero backlash is entered in #B, the stage will tilt first to #T +/- #B, then 
             back to #T. Prior to 5/23/19, #T + #B was used and the sign of #B had to be set
             to correct the backlash for the desired direction; after then, the program sets
             the sign properly and a positive value can always be entered. </TD>
@@ -1433,20 +1436,22 @@
           <TD colspan="2"><A name="stage_commands"></A><B>Stage-Related Commands</B></TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style13">U or TiltUp</TD>
-          <TD>Tilt up by preset increment</TD>
+          <TD class="style13">U or TiltUp [#R] [#X #Y]</TD>
+          <TD>Tilt up by preset increment.&nbsp; If optional #R is non-zero, then the program 
+              will restore the stage X and Y positions after tilting, either to the position 
+              before starting or to #X, #Y if they are entered.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style13">D or TiltDown</TD>
-          <TD>Tilt down by preset increment</TD>
+          <TD class="style13">D or TiltDown&nbsp; [#R] [#X #Y]</TD>
+          <TD>Like TiltUp, but tilt down by preset increment</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style10">TiltTo #</TD>
-          <TD class="style11">Tilt to given angle</TD>
+          <TD class="style10">TiltTo #A&nbsp; [#R] [#X #Y]</TD>
+          <TD class="style11">Like TiltUp, but tilt to given angle #A</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style13">TiltBy #</TD>
-          <TD>Change tilt by the given amount</TD>
+          <TD class="style13">TiltBy #A&nbsp; [#R] [#X #Y]</TD>
+          <TD>Like TiltUp, but change tilt by the given amount #A</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style13">BackgroundTilt #A [#S]</TD>
@@ -2620,7 +2625,8 @@
             addition, variables &#39;navLabel&#39;, and &#39;navNote&#39; are set with the label and note 
             strings, variables 'navIndex' and 'navIntLabel' are set with integer values
             of the item index (numbered from 1) and of the label (up to any non-numeric characters), 
-            and variable &#39;navRegis&#39; is set with the item&#39;s registration value.
+            variable &#39;navRegis&#39; is set with the item&#39;s registration value, and 
+              variable &#39;navColor&#39; is set with the item&#39;s color (a value from 0 to 5).
             If the Navigator is currently acquiring at points, a variable &#39;navAcqIndex&#39; is
             set with the number of items already acquired plus 1.&nbsp; Any of
             these variables can then be used to make filenames, and the latter two can be

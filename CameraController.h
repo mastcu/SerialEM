@@ -389,7 +389,7 @@ class DLL_IM_EX CCameraController
   GetSetMember(BOOL, MakeFEIerrorBeTimeout);
   void QueueMagChange(int inMagInd);
   void QueueImageShift(double inISX, double inISY, int inDelay);
-  void QueueStageMove(StageMoveInfo inSmi, int inDelay, bool doBacklash = false);
+  void QueueStageMove(StageMoveInfo inSmi, int inDelay, bool doBacklash = false, BOOL doRestoreXY  = false);
   void RestartCapture();
   BOOL Settling() {return mSettling >= 0;};
   void ErrorCleanup(int error);

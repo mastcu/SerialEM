@@ -73,6 +73,7 @@ struct StageMoveInfo {
   int axisBits;
   BOOL doBacklash;
   BOOL doRelax;
+  BOOL doRestoreXY;
   BOOL useSpeed;
   BOOL inBackground;
   float backX;
@@ -387,10 +388,10 @@ class DLL_IM_EX CEMscope
   BOOL SetScreenPos(int inPos);
   int StageBusy(int ignoreOrTrustState = 0);
   BOOL MoveStage(StageMoveInfo info, BOOL doBacklash = false, BOOL useSpeed = false,
-    BOOL inBackground = false, BOOL doRelax = false);
-  void TiltTo(double inVal);
-  void TiltDown();
-  void TiltUp();
+    BOOL inBackground = false, BOOL doRelax = false, BOOL doRestore = false);
+  void TiltTo(double inVal, double restoreX = EXTRA_NO_VALUE, double restoreY = EXTRA_NO_VALUE);
+  void TiltDown(double restoreX = EXTRA_NO_VALUE, double restoreY = EXTRA_NO_VALUE);
+  void TiltUp(double restoreX = EXTRA_NO_VALUE, double restoreY = EXTRA_NO_VALUE);
   double GetTiltAngle(BOOL forceGet = false);
   double FastTiltAngle();
   void SetIncrement(float increment) {mIncrement = increment;};
