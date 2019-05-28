@@ -52,7 +52,6 @@ static char THIS_FILE[]=__FILE__;
 #endif
 
 #define MAX_TOKENS 40
-#define DOSE_LIFETIME_HOURS  24
 #define FILTER_LIFETIME_MINUTES  60
 #define IS_STAGE_LIFETIME_HOURS 22
 #define PIXEL_LIFETIME_HOURS 24
@@ -558,6 +557,12 @@ int CParameterIO::ReadSettings(CString strFileName)
         mWinApp->mProcessImage->SetExtraCtfStats(itemInt[3]);
         mWinApp->mProcessImage->SetDrawExtraCtfRings(itemInt[4]); 
         mWinApp->mProcessImage->SetCtfFitFocusRangeFac((float)itemDbl[5]);
+        if (!itemEmpty[6]) {
+          mWinApp->mProcessImage->SetCtfFindPhaseOnClick(itemInt[6] != 0);
+          mWinApp->mProcessImage->SetCtfFixAstigForPhase(itemInt[7] != 0);
+          mWinApp->mProcessImage->SetCtfMinPhase(itemInt[8]);
+          mWinApp->mProcessImage->SetCtfMaxPhase(itemInt[9]);
+        }
       } else if (NAME_IS("RemoteControlParams")) {
         mWinApp->SetShowRemoteControl(itemInt[1] != 0);
         mWinApp->mRemoteControl.SetBeamIncrement((float)itemDbl[2]);
@@ -629,7 +634,7 @@ int CParameterIO::ReadSettings(CString strFileName)
         NAME_IS("ReadDlgPlacement") || NAME_IS("StatePlacement") ||
         NAME_IS("MacroToolPlacement") || NAME_IS("MacroEditerPlacement") ||
         NAME_IS("OneLinePlacement") || NAME_IS("MultiShotPlacement") ||
-        NAME_IS("OneEditerPlacement")) {
+        NAME_IS("CtffindPlacement") || NAME_IS("OneEditerPlacement")) {
         index = NAME_IS("OneEditerPlacement") ? 1 : 0;
         if (strItems[index + 10].IsEmpty() || 
           (index && (itemInt[1] < 0 || itemInt[1] >= MAX_MACROS))) {
@@ -645,6 +650,8 @@ int CParameterIO::ReadSettings(CString strFileName)
             place = mWinApp->mNavHelper->GetRotAlignPlacement();
           else if (NAME_IS("MultiShotPlacement"))
             place = mWinApp->mNavHelper->GetMultiShotPlacement(false);
+          else if (NAME_IS("CtffindPlacement"))
+            place = mWinApp->mProcessImage->GetCtffindPlacement();
           else if (NAME_IS("StatePlacement")) {
             mWinApp->SetOpenStateWithNav(itemInt[1] != 0);
             place = mWinApp->mNavHelper->GetStatePlacement();
@@ -1128,6 +1135,7 @@ void CParameterIO::WriteSettings(CString strFileName)
   WINDOWPLACEMENT *oneLinePlace = mWinApp->mMacroProcessor->GetOneLinePlacement();
   WINDOWPLACEMENT *readPlace = mWinApp->mDocWnd->GetReadDlgPlacement();
   WINDOWPLACEMENT *stageToolPlace = mWinApp->GetStageToolPlacement();
+  WINDOWPLACEMENT *ctffindPlace = mWinApp->mProcessImage->GetCtffindPlacement();
   WINDOWPLACEMENT *rotAlignPlace = mWinApp->mNavHelper->GetRotAlignPlacement();
   WINDOWPLACEMENT *multiShotPlace = mWinApp->mNavHelper->GetMultiShotPlacement(true);
   int *macroButtonNumbers = mWinApp->mCameraMacroTools.GetMacroNumbers();
@@ -1381,12 +1389,15 @@ void CParameterIO::WriteSettings(CString strFileName)
     oneState.Format("ProcessOverlayChannels %s\n", 
       mWinApp->mProcessImage->GetOverlayChannels());
     mFile->WriteString(oneState);
-    oneState.Format("CtffindParams %d %d %d %d %f\n", 
+    oneState.Format("CtffindParams %d %d %d %d %f %d %d %d %d\n", 
       mWinApp->mProcessImage->GetCtffindOnClick() ? 1 : 0,
       mWinApp->mProcessImage->GetSlowerCtfFit(),
       mWinApp->mProcessImage->GetExtraCtfStats(),
       mWinApp->mProcessImage->GetDrawExtraCtfRings(), 
-      mWinApp->mProcessImage->GetCtfFitFocusRangeFac());
+      mWinApp->mProcessImage->GetCtfFitFocusRangeFac(),
+      mWinApp->mProcessImage->GetCtfFindPhaseOnClick(),
+      mWinApp->mProcessImage->GetCtfFixAstigForPhase(),
+      mWinApp->mProcessImage->GetCtfMinPhase(), mWinApp->mProcessImage->GetCtfMaxPhase());
     mFile->WriteString(oneState);
 
     // Save states of tool windows, but set montage closed
@@ -1454,6 +1465,7 @@ void CParameterIO::WriteSettings(CString strFileName)
     WritePlacement("MultiShotPlacement", 0, multiShotPlace);
     WritePlacement("ReadDlgPlacement", 0, readPlace);
     WritePlacement("StageToolPlacement", 0, stageToolPlace);
+    WritePlacement("CtffindPlacement", 0, ctffindPlace);
     WritePlacement("MacroToolPlacement", mWinApp->mMacroToolbar ? 1 : 0, toolPlace);
     WritePlacement("OneLinePlacement", mWinApp->mMacroProcessor->mOneLineScript ? 1 : 0, 
       oneLinePlace);
@@ -2372,9 +2384,10 @@ int CParameterIO::ReadProperties(CString strFileName)
 
       if (recognizedc) {
 
-      } else if (MatchNoCase("NumberOfCameras"))
-        err = 0;
-      else if (MatchNoCase("DigitalMicrographVersion"))
+      } else if (MatchNoCase("NumberOfCameras") || MatchNoCase("DigitalMicrographVersion")
+        || MatchNoCase("FileOptionsPixelsTruncatedLo") ||
+        MatchNoCase("FileOptionsPixelsTruncatedHi") || MatchNoCase("ScopeIsFEI") ||
+        MatchNoCase("ScopeIsJEOL"))
         err = 0;
 #define PROP_TEST_SECT1
 #include "PropertyTests.h"
@@ -2516,9 +2529,7 @@ int CParameterIO::ReadProperties(CString strFileName)
         defFileOpt->typext = (short)itemInt[1];
       else if (MatchNoCase("FileOptionsMaxSections"))
         defFileOpt->maxSec = itemInt[1];
-      else if (MatchNoCase("FileOptionsPixelsTruncatedLo")) {
-      } else if (MatchNoCase("FileOptionsPixelsTruncatedHi")) {
-      } else if (MatchNoCase("FileOptionsUnsignedOption"))
+      else if (MatchNoCase("FileOptionsUnsignedOption"))
         defFileOpt->unsignOpt = itemInt[1];
       else if (MatchNoCase("FileOptionsSignToUnsignOption"))
         defFileOpt->signToUnsignOpt = itemInt[1];
@@ -2541,10 +2552,6 @@ int CParameterIO::ReadProperties(CString strFileName)
       else if (MatchNoCase("UseTEMScripting")) {
         scope->SetUseTEMScripting(itemInt[1]);
         //JEOLscope = false;
-      } else if (MatchNoCase("ScopeIsFEI")) {
-        //JEOLscope = false;
-      } else if (MatchNoCase("ScopeIsJEOL")) {
-        //JEOLscope = true;
       } else 
         recognized = false;
       
@@ -4250,9 +4257,10 @@ int CParameterIO::ReadShortTermCal(CString strFileName, BOOL ignoreCals)
         } else {
           doseTables[index].timeStamp = itemInt[5];
           doseTables[index].currentAperture = itemEmpty[7] ? 0 : itemInt[7];
-          if (timeStamp - doseTables[index].timeStamp < 60 * DOSE_LIFETIME_HOURS) {
-            doseTables[index].intensity = itemDbl[3];
-            doseTables[index].dose = itemDbl[4];
+          if (timeStamp - doseTables[index].timeStamp < 
+            60 * mWinApp->GetDoseLifetimeHours()) {
+              doseTables[index].intensity = itemDbl[3];
+              doseTables[index].dose = itemDbl[4];
           }
         }
 
