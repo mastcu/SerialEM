@@ -809,7 +809,11 @@
       <li>Change CountsPerElectron to 32.</li>
       <li>Add the line 'LinearToCountingRatio 300' below the 'CountsPerElectron' line.</li>
     </ul>
-    <p>If there is a rotation by 90 or 270 and a flip in the camera configuration, check 
+    <p>The section <a href="#setup_camera_gain">Measuring Camera Gain</a> 
+        describes procedures for determining LinearToCountingRatio and 
+        K3CDSLinearRatio (relevant with GMS 3.31.2336 or higher, which support 
+        correlated double sampling).</p>
+        <p>If there is a rotation by 90 or 270 and a flip in the camera configuration, check 
         if your version of DM still has the rotation bug described in
         <a href="about_camera.htm#k3problems">Remaining Problems with the K3</a> by taking an image 
         without and with dose fractionation to see if they have the same orientation.&nbsp; 
@@ -1179,10 +1183,13 @@
         &#39;K2PackRawFramesDefault&nbsp; 1&#39;.&nbsp;&nbsp; Users can have their own settings for this choice.</li>
       <li>Making counts match between linear and counting mode requires different 
         procedures for K2 and K3 cameras, described in
-        <a href="#setup_camera_gain">Measuring Camera Gain</a>.</li>
+        <a href="#setup_camera_gain">Measuring Camera Gain</a>.&nbsp; That section also 
+          describes how to make counts match in linear mode with correlated double 
+          sampling (CDS) on or off.</li>
       <li>To use frame alignment with the CPU when SerialEM is 32-bit on the K2/K3 
         computer, or running on a different computer,&nbsp; you need to download and run 
-        Shrmemframe-GMSxxx.exe on the K2/K3 computer, where 'xxx' should match your 
+        Shrmemframe-GMSxxx.exe on the K2/K3 computer, where 'xxx' should be compatible 
+          with your 
         version of GMS.</li>
       <li>To use a GPU for frame alignment, see <a href="#using_gpu">Setting Up to Use a 
         GPU for Frame Alignment</a>.</li>
@@ -1397,7 +1404,7 @@
       monitor, try to set the text size in Windows to achieve a DPI of 144, or set a 
       custom DPI size to 144.</P>
     <P>&nbsp;</P>
-    <P><A name="setup_hitachi"></A><B>Initial Actions and Other Special Features for Hitachi HT7700 
+    <P><A name="setup_hitachi"></A><B>Initial Actions and Other Special Features for Hitachi HT7700/HT7800 
       (Priority 1)</B></P>
     <P>The Hitachi HT7700 has some design features that require special calibrations 
       and particular care when first setting up SerialEM for it.&nbsp; A number of 
@@ -2584,7 +2591,24 @@
         dose rate).</li>
       </ol>
     <p>
-        <i>For a Falcon 3 camera:</i> The procedure for setting CountsPerElectron is, to 
+        If you have GMS 3.31.2336 or higher, which supports correlated double sampling 
+        (CDS), then there is an additional scaling factor needed, the ratio between 
+        linear mode counts with CDS on and CDS off.&nbsp; The default in the program is 
+        1.5.&nbsp; The procedure is:</p>
+          <ol>
+              <li>Check if the property K3CDSLinearRatio is present in the K3 properties section; 
+                  if so set it to 1.5 and restart SerialEM.</li>
+              <li>Adjust the beam to get a dose rate readout of about 30 electrons/unbinned pixel/sec.</li>
+              <li>With CDS off, set exposure to 0.04 sec and take an image, then get the image 
+                  mean with 'Ctrl-I'.</li>
+              <li>Set exposure to 0.16 sec, take an image, and get the mean.</li>
+              <li>Turn on CDS mode and get image means at the same two exposure times.</li>
+              <li>The ratio is 1.5 * (CDSmean.16 - CDSmean.04) (nonCDSmean.16 - nonCDSmean.04).&nbsp; 
+                  If the ratio differs from 1.5 by more than 1-2%, add the property 
+                  K3CDSLinearRatio or adjust it with the new ratio.</li>
+          </ol>
+          <p>
+              <i>For a Falcon 3 camera:</i> The procedure for setting CountsPerElectron is, to 
         first order, simple.&nbsp; Take an image in counting mode with frame-saving 
         turned on and open the .xml file.&nbsp; Take the inverse of the value for 
         CountsToElectrons and use that for the CountsPerElectron (it is typically ~105).&nbsp; 

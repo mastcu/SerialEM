@@ -92,8 +92,8 @@ private:
   EMimageBuffer *mImBufs;
   CCameraController *mCamera;
   CameraParameters *mParam;
-  BOOL mRefExists[MAX_CAMERAS][MAX_EXTRA_REFS + 3];  // Properties of the gain ref files (third is DM ref)
-  CTime mRefTime[MAX_CAMERAS][MAX_EXTRA_REFS + 3];
+  BOOL mRefExists[MAX_CAMERAS][MAX_EXTRA_REFS + 4];  // Properties of the gain ref files (third is DM ref)
+  CTime mRefTime[MAX_CAMERAS][MAX_EXTRA_REFS + 4];
   int mByteSize[MAX_CAMERAS][MAX_EXTRA_REFS + 2];    // Properties of gain refs in memory
   void *mGainRef[MAX_CAMERAS][MAX_EXTRA_REFS + 3];
   int mGainRefBits[MAX_CAMERAS][MAX_EXTRA_REFS + 2];

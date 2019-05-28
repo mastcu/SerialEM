@@ -1140,12 +1140,12 @@ BOOL CGainRefMaker::CheckDMReference(int binInd, BOOL optional)
 void CGainRefMaker::UpdateDMReferenceTimes(void)
 {
   CFileStatus status;
-  CString name;
+  CString name, mode;
   CString refPath = mDMRefPath;
   CTime cmtime;
   __time64_t mtime;
   BOOL exists;
-  int i;
+  int i, cdsInd, numLoop = mCamera->CanK3DoCorrDblSamp(mParam) ? 2 : 1;
   if (mParam->useSocket && CBaseSocket::ServerIsRemote(GATAN_SOCK_ID) && 
     !mRemoteRefPath.IsEmpty())
     refPath = mRemoteRefPath;
@@ -1155,59 +1155,64 @@ void CGainRefMaker::UpdateDMReferenceTimes(void)
     name = refPath + "\\" + mParam->DMRefName;
     SEMTrace('r', "Looking for DM gain reference");
 
-    // Look for counting reference for K2
-    if (mParam->K2Type) {
-      name = mCamera->MakeFullDMRefName(mParam, mParam->K2Type == K3_TYPE ? ".m1." : 
-        ".m2.");
-      SEMTrace('r', "Prop name  -%s-  look for  -%s-", (LPCTSTR)(refPath + "\\" +
-        mParam->DMRefName), name);
-    }
-    if (mParam->useSocket && CBaseSocket::ServerIsRemote(GATAN_SOCK_ID)) {
-      i = mWinApp->mGatanSocket->CheckReferenceTime((LPCTSTR)name, &mtime);
-      exists = i == 0;
-      if (i < 0 && !mWarnedNoDM[mCurrentCamera]) {
-        name.Format("WARNING: An error occurred (%d) trying to find out about the "
-          "DigitalMicrograph\r\n  gain reference file  %s on the remote socket server",
-          i, (LPCTSTR)mParam->DMRefName);
-        mWinApp->AppendToLog(name);
-        mWarnedNoDM[mCurrentCamera] = true;
+    for (cdsInd = 0; cdsInd < numLoop; cdsInd++) {
+
+      // Look for counting reference for K2
+      if (mParam->K2Type) {
+        mode = ".m2.";
+        if (mParam->K2Type == K3_TYPE)
+          mode = cdsInd ? ".m3." : ".m1.";
+        name = mCamera->MakeFullDMRefName(mParam, mode);
+        SEMTrace('r', "Prop name  -%s-  look for  -%s-", (LPCTSTR)(refPath + "\\" +
+          mParam->DMRefName), name);
+      }
+      if (mParam->useSocket && CBaseSocket::ServerIsRemote(GATAN_SOCK_ID)) {
+        i = mWinApp->mGatanSocket->CheckReferenceTime((LPCTSTR)name, &mtime);
+        exists = i == 0;
+        if (i < 0 && !mWarnedNoDM[mCurrentCamera]) {
+          name.Format("WARNING: An error occurred (%d) trying to find out about the "
+            "DigitalMicrograph\r\n  gain reference file  %s on the remote socket server",
+            i, (LPCTSTR)mParam->DMRefName);
+          mWinApp->AppendToLog(name);
+          mWarnedNoDM[mCurrentCamera] = true;
+        }
+        if (exists) {
+          try {
+            cmtime = CTime(mtime);
+          }
+          catch (...) {
+            exists = FALSE;
+          }
+        }
+
+      } else {
+        exists = CFile::GetStatus((LPCTSTR)name, status);
+        if (exists)
+          cmtime = status.m_mtime;
       }
       if (exists) {
-        try {
-          cmtime = CTime(mtime);
-        }
-        catch (...) {
-          exists = FALSE;
-        }
-      }
 
-    } else {
-      exists = CFile::GetStatus((LPCTSTR)name, status);
-      if (exists)
-        cmtime = status.m_mtime;
-    }
-    if (exists) {
-
-      // The reference exists.  Set that each binning needs checking if it
-      // did not exist before or if it is newer than last time we saw it
-      if (!mRefExists[mCurrentCamera][mDMind] || 
-        mRefTime[mCurrentCamera][mDMind] < cmtime) {
+        // The reference exists.  Set that each binning needs checking if it
+        // did not exist before or if it is newer than last time we saw it
+        if (!mRefExists[mCurrentCamera][mDMind] ||
+          mRefTime[mCurrentCamera][mDMind] < cmtime) {
           for (i = 0; i < mNumBinnings[mCurrentCamera]; i++)
             mUseDMRef[mCurrentCamera][i] = -1;
-      }
+        }
 
-      // Set that it exists and record the time
-      mRefExists[mCurrentCamera][mDMind] = true;
-      mRefTime[mCurrentCamera][mDMind] = cmtime;
-    } else {
+        // Set that it exists and record the time
+        mRefExists[mCurrentCamera][mDMind] = true;
+        mRefTime[mCurrentCamera][mDMind] = cmtime;
+      } else {
 
-      // If not OK, need to clear existence flag
-      mRefExists[mCurrentCamera][mDMind] = false;
-      if (!mWarnedNoDM[mCurrentCamera]) {
-        PrintfToLog("WARNING: Did not find DigitalMicrograph gain reference file:   %s"
-          "\r\n    in folder:   %s\r\n    Are the name and location correct in the "
-          "SerialEM properties file?", (LPCTSTR)name,(LPCTSTR)refPath);
-        mWarnedNoDM[mCurrentCamera] = true;
+        // If not OK, need to clear existence flag
+        mRefExists[mCurrentCamera][mDMind] = false;
+        if (!mWarnedNoDM[mCurrentCamera]) {
+          PrintfToLog("WARNING: Did not find DigitalMicrograph gain reference file:   %s"
+            "\r\n    in folder:   %s\r\n    Are the name and location correct in the "
+            "SerialEM properties file?", (LPCTSTR)name, (LPCTSTR)refPath);
+          mWarnedNoDM[mCurrentCamera] = true;
+        }
       }
     }
   }
@@ -1217,21 +1222,24 @@ void CGainRefMaker::UpdateDMReferenceTimes(void)
 bool CGainRefMaker::IsDMReferenceNew(int camNum)
 {
   CString str;
+  int refInd;
   mCurrentCamera = camNum;
   mParam = mWinApp->GetCamParams() + mCurrentCamera;
-  mDMind = mNumBinnings[mCurrentCamera];
-  BOOL didExist = mRefExists[mCurrentCamera][mDMind];
-  CTime oldTime = mRefTime[mCurrentCamera][mDMind];
+  mDMind = refInd = mNumBinnings[mCurrentCamera];
+  if (mCamera->CanK3DoCorrDblSamp(mParam) && mCamera->GetUseK3CorrDblSamp())
+    refInd++;
+  BOOL didExist = mRefExists[mCurrentCamera][refInd];
+  CTime oldTime = mRefTime[mCurrentCamera][refInd];
   UpdateDMReferenceTimes();
   str.Format("IsDMReferenceNew: didexist %d exist %d  times", didExist ? 1 : 0, 
-    mRefExists[camNum][mDMind] ? 1:0);
+    mRefExists[camNum][refInd] ? 1:0);
   str += oldTime.Format(" %B %d, %Y %H:%M:%S") + "   " + 
-    mRefTime[camNum][mDMind].Format("%B %d, %Y %H:%M:%S");
+    mRefTime[camNum][refInd].Format("%B %d, %Y %H:%M:%S");
   SEMTrace('r', "%s", (LPCTSTR)str);
 
   // This does not really need to be restored...
   mCurrentCamera = mWinApp->GetCurrentCamera(); 
-  return (mRefExists[camNum][mDMind] && (!didExist || mRefTime[camNum][mDMind] > oldTime));
+  return (mRefExists[camNum][refInd] && (!didExist || mRefTime[camNum][refInd] > oldTime));
 }
 
 // Return the binning offsets for the given camera, for going from a reference

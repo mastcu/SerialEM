@@ -3086,8 +3086,10 @@ void CCameraController::Capture(int inSet, bool retrying)
 
     // Switching CDS can take 10 seconds
     if (CanK3DoCorrDblSamp(mParam)) {
-      if (mLastShotUsedCDS != ((mTD.K2ParamFlags & K3_USE_CORR_DBL_SAMP) ? 1 : 0))
+      if (mLastShotUsedCDS != ((mTD.K2ParamFlags & K3_USE_CORR_DBL_SAMP) ? 1 : 0)) {
         mTD.cameraTimeout += 12000;
+        CheckAndFreeK2References(true);
+      }
       mLastShotUsedCDS = (mTD.K2ParamFlags & K3_USE_CORR_DBL_SAMP) ? 1 : 0;
     }
 
@@ -3740,6 +3742,8 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
     refFile = mParam->superResRefForK2;
   else if (conSet.K2ReadMode == COUNTING_MODE)
     refFile = mParam->countingRefForK2;
+  if (mUseK3CorrDblSamp && CanK3DoCorrDblSamp(mParam))
+    refFile.Replace(".m1.", ".m3.");
   if (mSaveRawPacked & 1)
     flags |= K2_SAVE_RAW_PACKED;
   if ((mSaveRawPacked & 1) && (mSaveRawPacked & 2) && 
@@ -3776,45 +3780,56 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
     flags |= K2_SKIP_FRAME_ROTFLIP;
   if ((saving || aligning) && !gainNormed && 
     mDMversion[DMind] >= DM_RETURNS_DEFECT_LIST) {
-      flags |= K2_SAVE_DEFECTS;
-      alignFlags |= K2_SAVE_DEFECTS;
 
       // Check for a new reference if enough idle time has passed and if it is new,
-      // fetch a new defect list and merge it into original list
+      // fetch a new defect list and merge it into original list; but not for K3
       if (SEMTickInterval(1000. * mLastImageTime) / 1000. > mGainTimeLimit &&
-        mWinApp->mGainRefMaker->IsDMReferenceNew(mWinApp->GetCurrentCamera())) {
+        mWinApp->mGainRefMaker->IsDMReferenceNew(mWinApp->GetCurrentCamera()) &&
+        mParam->K2Type != K3_TYPE) {
           SEMTrace('r', "Getting new defect list");
           GetMergeK2DefectList(CAMP_DM_INDEX(mParam), mParam, true);
           mParam->defectString.clear();
       }
 
-      // Save defects for new GMS, non-normalized images
-      // Make up a defect string if it is empty or if the current rotation/flip 
-      // for frames does not match that used when making the string, or if one was made
-      // up just for aligning and now one is needed with a name for saving
-      if (mParam->defectString.empty() || (!mParam->defNameHasFrameFile && 
-        !mFrameFilename.IsEmpty())|| (mSkipK2FrameRotFlip ? 0 : mParam->rotationFlip) != 
-        mParam->defStringRotFlip) {
-          defName.Format("#defects_%s.txt\n", (LPCTSTR)mFrameFilename);
-          mParam->defectString = (LPCTSTR)defName;
-          SEMTrace('r', "Made new defect string with name %s", (LPCTSTR)defName);
-          mParam->defNameHasFrameFile = !mFrameFilename.IsEmpty();
-          if (flags & K2_SKIP_FRAME_ROTFLIP) {
-            CameraDefects defects = mParam->defects;
-            sizeX = (mParam->rotationFlip % 2) ? mParam->sizeY : mParam->sizeX;
-            sizeY = (mParam->rotationFlip % 2) ? mParam->sizeX : mParam->sizeY;
-            CorDefRotateFlipDefects(defects, 0, sizeX, sizeY);
-            CorDefDefectsToString(defects, mParam->defectString, sizeX, sizeY);
-            mParam->defStringRotFlip = 0;
-          } else {
-            CorDefDefectsToString(mParam->defects, mParam->defectString,
-              mParam->sizeX, mParam->sizeY);
-            mParam->defStringRotFlip = mParam->rotationFlip;
+      // A defect file is needed only if the defect list has something in it
+      CameraDefects *defp = &mParam->defects;
+      if (defp->partialBadCol.size() || defp->partialBadRow.size() ||
+        defp->badColumnStart.size() || defp->badRowStart.size() || defp->badPixelX.size()
+        || defp->usableLeft > 0 || defp->usableTop > 0 || (defp->usableRight > 0 && 
+          defp->usableRight < (mParam->sizeX / (defp->wasScaled ? 1 : 2) - 1)) ||
+        (defp->usableBottom > 0 && 
+          defp->usableBottom < (mParam->sizeY / (defp->wasScaled ? 1 : 2) - 1))) {
+          flags |= K2_SAVE_DEFECTS;
+          alignFlags |= K2_SAVE_DEFECTS;
+
+          // Save defects for new GMS, non-normalized images
+          // Make up a defect string if it is empty or if the current rotation/flip 
+          // for frames does not match that used when making the string, or if one was
+          // made up just for aligning and now one is needed with a name for saving
+          if (mParam->defectString.empty() || (!mParam->defNameHasFrameFile &&
+            !mFrameFilename.IsEmpty()) || (mSkipK2FrameRotFlip ? 0 : mParam->rotationFlip)
+            != mParam->defStringRotFlip) {
+            defName.Format("#defects_%s.txt\n", (LPCTSTR)mFrameFilename);
+            mParam->defectString = (LPCTSTR)defName;
+            SEMTrace('r', "Made new defect string with name %s", (LPCTSTR)defName);
+            mParam->defNameHasFrameFile = !mFrameFilename.IsEmpty();
+            if (flags & K2_SKIP_FRAME_ROTFLIP) {
+              CameraDefects defects = mParam->defects;
+              sizeX = (mParam->rotationFlip % 2) ? mParam->sizeY : mParam->sizeX;
+              sizeY = (mParam->rotationFlip % 2) ? mParam->sizeX : mParam->sizeY;
+              CorDefRotateFlipDefects(defects, 0, sizeX, sizeY);
+              CorDefDefectsToString(defects, mParam->defectString, sizeX, sizeY);
+              mParam->defStringRotFlip = 0;
+            } else {
+              CorDefDefectsToString(mParam->defects, mParam->defectString,
+                mParam->sizeX, mParam->sizeY);
+              mParam->defStringRotFlip = mParam->rotationFlip;
+            }
           }
+          defectLen = (int)mParam->defectString.length() + 1;
+          nameSize += defectLen;
+          stringSize += defectLen;
       }
-      defectLen = (int)mParam->defectString.length() + 1;
-      nameSize += defectLen;
-      stringSize += defectLen;
   }
   if (mRunCommandAfterSave) {
     flags |= K2_RUN_COMMAND;
@@ -10332,20 +10347,23 @@ void CCameraController::GetMergeK2DefectList(int DMind, CameraParameters *param,
       AfxMessageBox(str, MB_EXCLAME);
   } else {
     numPoints = numTotal = 0;
-    CallDMIndGatan(DMind, mGatanCamera, GetDefectList(xyPairs, &pairSize, &numPoints, 
-      &numTotal));
-    if (numPoints < numTotal) {
-      str.Format("WARNING: The array for getting defect points is not large enough:\n"
-        "   it only fit %d of %d points", numPoints, numTotal);
-      if (errToLog)
-        mWinApp->AppendToLog(str);
-      else
-        AfxMessageBox(str, MB_EXCLAME);
-    }
-    if (IsCameraFaux()) {
-      xyPairs[2 * numPoints] = GetTickCount() % 1024;
-      xyPairs[2 * numPoints + 1] = GetTickCount() % 1967;
-      numPoints++;
+
+    if (param->K2Type != K3_TYPE) {
+      CallDMIndGatan(DMind, mGatanCamera, GetDefectList(xyPairs, &pairSize, &numPoints,
+        &numTotal));
+      if (numPoints < numTotal) {
+        str.Format("WARNING: The array for getting defect points is not large enough:\n"
+          "   it only fit %d of %d points", numPoints, numTotal);
+        if (errToLog)
+          mWinApp->AppendToLog(str);
+        else
+          AfxMessageBox(str, MB_EXCLAME);
+      }
+      if (IsCameraFaux()) {
+        xyPairs[2 * numPoints] = GetTickCount() % 1024;
+        xyPairs[2 * numPoints + 1] = GetTickCount() % 1967;
+        numPoints++;
+      }
     }
 
     // Merge with the existing list; this encodes the rotation/flip value
