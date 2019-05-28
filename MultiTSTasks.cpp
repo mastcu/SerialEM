@@ -1557,12 +1557,14 @@ int CMultiTSTasks::SetupBidirFileCopy(int zmax)
     mWinApp->mDocWnd->DoCloseFile();
     return 5;
   }
+  mBfcStoreFirstHalf->MarkAsOpenWithFile(OPEN_TS_EXT);
   if (mWinApp->mDocWnd->OpenNewReplaceCurrent(filename, !adocName.IsEmpty())) {
     delete mBfcStoreFirstHalf;
     return 6;
   }
   mBfcNumToCopy = zmax;
   mBfcCopyIndex = 0;
+  mWinApp->mStoreMRC->MarkAsOpenWithFile(OPEN_TS_EXT);
 
   // Now we need to read first image into the read buffer and save it out
   err = mBufferManager->ReadFromFile(mBfcStoreFirstHalf, zmax - 1);

@@ -63,7 +63,6 @@ static char THIS_FILE[] = __FILE__;
 #define PROGRAM_LOG "SEMRunLog.txt"
 #define SHORT_TERM_NAME "SEMshortTermCal.txt"
 #define FLYBACK_NAME "SEMflybackTimes.txt"
-#define OPEN_TS_EXT ".openTS"
 #define MAX_SETTINGS_MRU 4
 
 static char *defaultSysPath = NULL;
@@ -777,8 +776,6 @@ void CSerialEMDoc::DoCloseFile()
 {
   if (mWinApp->mStoreMRC && mBufferManager->CheckAsyncSaving())
     return;
-  if (mCurrentStore >= 0 && mStoreList[mCurrentStore].hasOpenTSfile)
-    CFile::Remove(mStoreList[mCurrentStore].store->getFilePath() + OPEN_TS_EXT);
   delete mWinApp->mStoreMRC;
   mWinApp->mStoreMRC = NULL;
 
@@ -1478,7 +1475,6 @@ void CSerialEMDoc::AddCurrentStore()
   file->montage = mWinApp->Montaging() != 0;
   file->protectNum = -1;
   file->saveOnNewMap = -1;
-  file->hasOpenTSfile = false;
   file->montParam = NULL;
   if (file->montage) {
     file->montParam = new MontParam;
@@ -1530,15 +1526,8 @@ void CSerialEMDoc::RestoreCurrentFile()
 // Protect this file from being closed and also create a ...openTS file
 void CSerialEMDoc::ProtectStore(int which)
 {
-  FILE *fp;
   mStoreList[which].protectNum = which;
-  if (!mStoreList[which].hasOpenTSfile) {
-    fp = fopen((LPCTSTR)(mStoreList[which].store->getFilePath() + OPEN_TS_EXT), "w");
-    if (fp) {
-      fclose(fp);
-      mStoreList[which].hasOpenTSfile = true;
-    }
-  }
+  mStoreList[which].store->MarkAsOpenWithFile(OPEN_TS_EXT);
 }
 
 // Remove protection flag for one file, or for all if which < 0 (default)

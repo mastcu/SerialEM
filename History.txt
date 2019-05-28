@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+5/25/19: Capability to make a file marking that an image file is open for a
+tilt series (added 4/15/19) was fixed for bidirectional series (In 3.7).
+
 5/24/19: Added ability to restore original stage X/Y position after tilting
 and added options to the tilt script commands for using it.
 

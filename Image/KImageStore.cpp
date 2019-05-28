@@ -54,6 +54,7 @@ void KImageStore::CommonInit(void)
   mFracIntTrunc = 0.;
   mNumTitles = 0;
   mTitles = "";
+  mOpenMarkerExt = NULL;
 }
 
 KImageStore::~KImageStore()
@@ -98,6 +99,10 @@ int KImageStore::Open(CFile *inFile, int inWidth, int inHeight, int inDepth)
 
 void KImageStore::Close()
 {
+  if (mOpenMarkerExt) {
+    UtilRemoveFile(getFilePath() + mOpenMarkerExt);
+    B3DFREE(mOpenMarkerExt);
+  }
   if (mFile) {
     mFile->Close();
     delete mFile;
@@ -116,6 +121,25 @@ int KImageStore::Flush()
   if (mFile)
     mFile->Flush();
   return 0;
+}
+
+// Create a lock file to last as long as this file is open with given extension
+int KImageStore::MarkAsOpenWithFile(const char *extension)
+{
+  FILE *fp;
+  if (!mOpenMarkerExt) {
+    mOpenMarkerExt = _strdup(extension);
+    if (!mOpenMarkerExt)
+      return 1;
+    fp = fopen((LPCTSTR)(getFilePath() + extension), "w");
+    if (fp) {
+      PrintfToLog("Created %s", (LPCTSTR)(getFilePath() + mOpenMarkerExt));
+      fclose(fp);
+      return 0;
+    }
+    B3DFREE(mOpenMarkerExt);
+  }
+  return 1;
 }
 
 // Compute a simple weighted sum of the filename characters as a good enough checksum

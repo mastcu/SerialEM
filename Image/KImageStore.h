@@ -40,7 +40,8 @@ protected:
   BOOL  mMontCoordsInMdoc;   // Flag for montage if piece coords not in header
   int mNumTitles;
   CString mTitles;
-	
+  char *mOpenMarkerExt;      // Extension if there is an .openTS file or similar temp file
+
 public:
 	         KImageStore(CString inFilename);
  	         KImageStore(CFile *inFile);
@@ -95,6 +96,7 @@ public:
   virtual unsigned int getChecksum();
   virtual int getUnsignOpt() {return mFileOpt.unsignOpt;};
   virtual int getSignToUnsignOpt() {return mFileOpt.signToUnsignOpt;};
+  virtual int MarkAsOpenWithFile(const char *extension);
 };
 
 

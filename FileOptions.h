@@ -17,6 +17,7 @@ class KImageStore;
 #define COPY_FROM_MASTER 0
 #define COPY_TO_MASTER 1
 #define SIGNED_SHIFTED 3
+#define OPEN_TS_EXT ".openTS"
 
 // File option structure
 // Remember to initialize new values in GainRefMaker if necessary
@@ -49,7 +50,6 @@ struct StoreData
   bool montage;           // flag if montaging
   int protectNum;         // Original file index if protected, -1 if not
   int saveOnNewMap;       // Flag to autosave when new map (-1 not asked yet)
-  bool hasOpenTSfile;     // Flag that a .openTS file was created and needs to be removed
 };
 
 #endif
