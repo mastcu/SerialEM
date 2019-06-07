@@ -288,6 +288,15 @@ void CLowDoseDlg::GetNetViewShift(double &shiftX, double &shiftY, int area)
   shiftY += mViewShiftY[areaInd] - magTab[magv].calOffsetISY[camp->GIF];
 }
 
+// Get the net or the full view shift depending on whether IS offsets are being applied
+void CLowDoseDlg::GetEitherViewShift(double &shiftX, double &shiftY, int area)
+{
+  if (mScope->GetApplyISoffset())
+    GetNetViewShift(shiftX, shiftY, area);
+  else
+    GetFullViewShift(shiftX, shiftY, area);
+}
+
 double CLowDoseDlg::ConvertOneIStoAxis(int mag, double ISX, double ISY)
 {
   double specx, specy;

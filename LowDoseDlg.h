@@ -211,6 +211,7 @@ public:
   bool ShiftsBalanced(void);
   CStatic m_statViewDefocus;
   void GetNetViewShift(double &shiftX, double &shiftY, int area = VIEW_CONSET);
+  void GetEitherViewShift(double &shiftX, double &shiftY, int area = VIEW_CONSET);
   void GetFullViewShift(double &shiftX, double &shiftY, int area = VIEW_CONSET) {shiftX = mViewShiftX[area ? 1 : 0]; shiftY = mViewShiftY[area ? 1 : 0];};
   void CheckAndActivatePiezoShift(void);
   bool GoToPiezoPosForLDarea(int area);
