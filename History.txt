@@ -3,6 +3,11 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+6/6/19: Started taking account of changes in beam shift calibration when
+changing alpha and mag on JEOL to apply the right amount of beam shift for the
+image shift; also excluded the View/Search shift offsets from the image shift
+used to determine needed beam shift.
+
 6/5/19: Started keeping image and beam shift values as doubles on JEOL to
 reduce creep from rounding errors over repeated cycles (In 3.7).
 
