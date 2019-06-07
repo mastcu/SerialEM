@@ -1509,6 +1509,13 @@ MontParam * CSerialEMDoc::GetStoreMontParam(int which)
   return mStoreList[which].montParam;
 }
 
+FileOptions *CSerialEMDoc::GetStoreFileOptions(int which)
+{
+  if (which < 0 || which >= mNumStores)
+    return NULL;
+  return &mStoreList[which].fileOpt;
+}
+
 
 BOOL CSerialEMDoc::StoreIsMontage(int which)
 {

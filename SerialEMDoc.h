@@ -121,6 +121,7 @@ public:
 #endif
   KImageStore * OpenSaveFile(FileOptions *fileOptp);
   WINDOWPLACEMENT * GetReadDlgPlacement(void);
+  FileOptions *GetStoreFileOptions(int which);
 
   CReadFileDlg *mReadFileDlg;
 

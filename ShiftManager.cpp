@@ -2746,6 +2746,43 @@ ScaleMat CShiftManager::GetBeamShiftCal(int magInd, int inAlpha, int inProbe)
   return mat;
 }
 
+// List the beam shift calibrations
+void CShiftManager::ListBeamShiftCals()
+{
+  int ind, iCam = mWinApp->GetCurrentCamera();
+  CString str1, str2;
+  ScaleMat prod, specToIS;
+  if (!mNumBeamShiftCals)
+    return;
+  mWinApp->AppendToLog("\r\nBeam shift calibrations as specimen to beam shift matrices:");
+  str1 = "Ind ";
+  if (FEIscope)
+    str1 += "Probe";
+  else if (JEOLscope && !mScope->GetHasNoAlpha())
+    str1 += "Alpha";
+  mWinApp->AppendToLog(str1 + "    Matrix                                           Mag");
+  for (ind = 0; ind < mNumBeamShiftCals; ind++) {
+    str1.Format("%2d  ", mBeamCalMagInd[ind]);
+    if (FEIscope)
+      str2 = mBeamCalProbe[ind] ? "   uP   " : "   nP   ";
+    else if (JEOLscope && !mScope->GetHasNoAlpha())
+      str2.Format("    %d   ", mBeamCalAlpha[ind] + 1);
+    str1 += str2;
+    specToIS = MatInv(IStoSpecimen(mBeamCalMagInd[ind]));
+    if (specToIS.xpx) {
+      prod = MatMul(specToIS, mIStoBS[ind]);
+      str2.Format(" %9.3f %9.3f %9.3f %9.3f  %15d", prod.xpx, prod.xpy, prod.ypx, prod.ypy,
+        MagForCamera(iCam, mBeamCalMagInd[ind]));
+    } else {
+      str2.Format(" No image shift to specimen matrix available  %15d",
+        MagForCamera(iCam, mBeamCalMagInd[ind]));
+    }
+    str1 += str2;
+    PrintfToLog("%s", (LPCTSTR)str1);
+  }
+}
+
+
 // Given any angle, returns a value between -180 and 180.
 double CShiftManager::GoodAngle(double angle)
 {
@@ -2768,7 +2805,7 @@ ScaleMat MatInv(ScaleMat aa)
 {
   ScaleMat inv;
   float det = aa.xpx * aa.ypy - aa.xpy * aa.ypx;
-  inv.xpx;
+  inv.xpx = 0.;
   if (!aa.xpx)
     return inv;
   inv.xpx = aa.ypy / det;

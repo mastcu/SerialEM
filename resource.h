@@ -71,6 +71,7 @@
 #define IDD_DE_REFERENCE                226
 #define IDD_ONELINESCRIPT               227
 #define IDD_CTFFINDDLG                  232
+#define IDD_TSDOSESYM                   234
 #define IDC_EDITXSIZE                   1000
 #define IDC_EDITYSIZE                   1002
 #define IDC_EDITYOVERLAP                1003
@@ -1462,6 +1463,24 @@
 #define IDC_CHECK_FIX_ASTIG_FOR_PHASE   2487
 #define IDC_EDIT1                       2488
 #define IDC_EDIT_FIXED_PHASE            2488
+#define IDC_EDIT_MIN_FOR_ANCHOR         2488
+#define IDC_CHECK_INC_GROUP             2490
+#define IDC_EDIT_INC_GROUP_ANGLE        2491
+#define IDC_STAT_INC_ANGLE              2492
+#define IDC_STAT_INC_LABEL1             2493
+#define IDC_STAT_INC_AMOUNT             2494
+#define IDC_SPIN_INC_INTERVAL           2495
+#define IDC_SPIN_INC_AMOUNT             2496
+#define IDC_STAT_INC_INTERVAL           2497
+#define IDC_STAT_INC_LABEL2             2498
+#define IDC_CHECK_RUN_TO_END            2499
+#define IDC_EDIT_RUN_TO_END             2500
+#define IDC_STAT_RUN_TO_END             2501
+#define IDC_STAT_SUMMARY                2502
+#define IDC_USE_DOSE_SYM                2504
+#define IDC_BUT_SETUP_DOSE_SYM          2505
+#define IDC_STAT_ANCHOR_TILTS           2506
+#define IDC_ANIMATE1                    2507
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -1918,9 +1937,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        234
+#define _APS_NEXT_RESOURCE_VALUE        237
 #define _APS_NEXT_COMMAND_VALUE         33334
-#define _APS_NEXT_CONTROL_VALUE         2489
+#define _APS_NEXT_CONTROL_VALUE         2508
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

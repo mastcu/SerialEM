@@ -265,7 +265,7 @@ class DLL_IM_EX CEMscope
   GetSetMember(int, SelectDetectorDelay);
   SetMember(BOOL, UsePLforIS);
   GetSetMember(BOOL, UseCLA2forSTEM);
-  GetMember(BOOL, ChangingLDArea);
+  GetMember(int, ChangingLDArea);
   BOOL GetClippingIS();
   GetSetMember(double, JeolSTEMdefocusFac);
   GetSetMember(int, JeolSTEMrotation);
@@ -381,6 +381,9 @@ class DLL_IM_EX CEMscope
   BOOL GetDarkFieldTilt(int &mode, double &tiltX, double &tiltY);
   BOOL SetDarkFieldTilt(int mode, double tiltX, double tiltY);
   double GetScreenCurrent();
+  double GetFilamentCurrent();
+  BOOL SetFilamentCurrent(double current);
+  GetSetMember(float, FilamentCurrentScale);
   GetSetMember(int, UseTEMScripting);
   GetMember(bool, MovingAperture);
   int *GetLastLongOpTimes() {return &mLastLongOpTimes[0];};
@@ -461,8 +464,11 @@ private:
   BOOL mCameraAcquiring;      // flag to not blank when screen up in low dose
   int mLowDoseDownArea;       // Area (mode) to display when screen down
   int mLowDoseSetArea;        // Currently displayed area
-  BOOL mChangingLDArea;       // Flag that area is changing, to stop double calls/updates
+  int mChangingLDArea;       // Flag that area is changing, to stop double calls/updates
   int mLastLDpolarity;        // Polarity of last low dose area setting
+  double mLDChangeCumulBeamX;
+  double mLDChangeCumulBeamY;
+  int mLDChangeCurArea;
   BOOL mSelectedEFTEM;        // flag that we turned on EFTEM lens settings
   int mSelectedSTEM;          // flag that we turned on STEM in scope; -1 while setting
   FilterParams *mFiltParam;
@@ -521,6 +527,7 @@ private:
   double mLastISdelY;
   DWORD mLastNormalization;   // Time of last normalization
   float mScreenCurrentFactor; // Correction factor for screen current
+  float mFilamentCurrentScale; // Scale factor for filament current
   DWORD mLastTiltTime;        // Time of last tilt
   DWORD mLastStageTime;       // Time of last stage move
   double mLastTiltChange;     // Amount tilted by
@@ -806,6 +813,8 @@ public:
   BOOL SetStageBAxis(double inVal);
   int CheckApertureKind(int kind);
   int GetCurrentPhasePlatePos(void);
+  void PositionChangingPartOfIS(double curISX, double curISY, float &posChangingISX, float &posChangingISY);
+  void IncOrAccumulateBeamShift(double beamDelX, double beamDelY, const char *descrip);
 };
 
 

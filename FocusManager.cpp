@@ -655,6 +655,8 @@ void CFocusManager::OnAutofocusListCalibrations()
       mWinApp->AppendToLog(str);
     }
   }
+
+  mShiftManager->ListBeamShiftCals();
 }
 
 void CFocusManager::OnNormalizeViaView()

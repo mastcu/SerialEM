@@ -858,7 +858,7 @@ int KStoreMRC::getPcoord(int inSect, int &outX, int &outY, int &outZ)
 }
 
 // Invert the Z values of montage coordinates for a bidirectional tilt series
-int KStoreMRC::InvertPieceZCoords(int zmax)
+int KStoreMRC::ReorderPieceZCoords(int *sectOrder)
 {
   short int sTemp;
   int ind, pcX, pcY, pcZ, retval = 0;
@@ -873,11 +873,11 @@ int KStoreMRC::InvertPieceZCoords(int zmax)
     if ((mHead->typext & TILT_MASK) != 0) 
       idata +=   EMimageExtra::Bytes[0];
 
-    // Loop through the extra data, fetch out a Z avlue, invert it, put it back
+    // Loop through the extra data, fetch out a Z value, map it, put it back
     for (ind = 0; ind < mHead->nz; ind++) {
       edata[0] = *idata;
       edata[1] = *(idata + 1);
-      sTemp = zmax - 1 - sTemp;
+      sTemp = (short)sectOrder[sTemp];
       *idata = edata[0];
       *(idata + 1) = edata[1];
       idata += mHead->nbytext;
@@ -901,7 +901,7 @@ int KStoreMRC::InvertPieceZCoords(int zmax)
     for (ind = 0; ind < mHead->nz; ind++) {
       RELEASE_RETURN_ON_ERR(AdocGetThreeIntegers(ADOC_ZVALUE, ind, ADOC_PCOORD, &pcX, 
         &pcY, &pcZ), 4);
-      pcZ = zmax - 1 - pcZ;
+      pcZ = sectOrder[pcZ];
       RELEASE_RETURN_ON_ERR(AdocSetThreeIntegers(ADOC_ZVALUE, ind, ADOC_PCOORD, pcX, pcY, 
         pcZ), 5);
     }

@@ -380,7 +380,7 @@ CSerialEMApp::CSerialEMApp()
     mCamParams[i].falcon3ScalePower = 4;
     mCamParams[i].linear2CountingRatio = 8.;
     mCamParams[i].linearOffset = 0.;
-    mCamParams[i].K3CDSLinearRatio = 1.685f;
+    mCamParams[i].K3CDSLinearRatio = 1.5f;
     mCamParams[i].origDefects = NULL;
     mCamParams[i].defNameHasFrameFile = false;
     mCamParams[i].taskTargetSize = 512;
@@ -4005,6 +4005,10 @@ CFont * CSerialEMApp::GetLittleFont(CWnd *stat)
 {
   CRect rect;
   int height = 8;
+
+  // On UTMB 2200 XP system, 96 DPI, height of stat was 16 and a size of 12 was bad,
+  // scaling 0.715 just gets it down to 11.  But this scaling made MSSF too small, so
+  // keep the 0.77 worked out before for that.  Just revert to doing 80 MSSF for 96 DPI!
   if (mMadeLittleFont)
     return &mLittleFont;
   CString fontName = "Small Fonts";
@@ -4015,10 +4019,13 @@ CFont * CSerialEMApp::GetLittleFont(CWnd *stat)
     stat->GetWindowRect(&rect);
     height = rect.Height();
   }
-  mLittleFont.CreateFont(B3DNINT(0.77 * height), 0, 0, 0, FW_MEDIUM,
-    0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
-    CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
-    FF_DONTCARE, fontName);
+  if (fontName == "Small Fonts" && mSystemDPI == 96)
+    mLittleFont.CreatePointFont(80, "Microsoft Sans Serif");
+  else
+    mLittleFont.CreateFont(B3DNINT(0.77 * height), 0, 0, 0, FW_MEDIUM,
+      0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
+      CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
+      FF_DONTCARE, fontName);
   mMadeLittleFont = true;
   return &mLittleFont;
 }

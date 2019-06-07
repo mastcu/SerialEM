@@ -18,6 +18,7 @@
 #include "ComplexTasks.h"
 #include "MultiTSTasks.h"
 #include "TSVariationsDlg.h"
+#include "TSDoseSymDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -48,7 +49,7 @@ static int idTable[] = {
   IDC_STATDELSEC, IDC_CHECK_VARY_PARAMS, IDC_BUT_SET_CHANGES, IDC_BUT_SWAP_ANGLES, 
   IDC_DO_BIDIR, IDC_BIDIR_ANGLE, IDC_BIDIR_WALK_BACK, IDC_STAT_BDMAG_LABEL,
   IDC_STAT_BIDIR_MAG, IDC_SPIN_BIDIR_MAG, IDC_BIDIR_USE_VIEW, IDC_STAT_BIDIR_FIELD_SIZE,
-  PANEL_END, 
+  IDC_USE_DOSE_SYM, IDC_BUT_SETUP_DOSE_SYM, PANEL_END, 
   IDC_TSS_PLUS2, 0, 0, IDC_TSS_TITLE2, IDC_TSS_LINE2,
   IDC_STATMAGLABEL, IDC_STATRECORDMAG,IDC_SPINRECORDMAG,  IDC_STATBINLABEL, 
   IDC_STATBINNING, IDC_SPINBIN, IDC_STATPIXEL, IDC_LOWMAGTRACK, IDC_STATLOWMAG,
@@ -106,6 +107,7 @@ CTSSetupDialog::CTSSetupDialog(CWnd* pParent /*=NULL*/)
   , m_fAutocenAngle(0)
   , m_bConfirmLowDoseRepeat(FALSE)
   , m_strInterset(_T(""))
+  , m_bUseDoseSym(FALSE)
 {
   //{{AFX_DATA_INIT(CTSSetupDialog)
   m_bCosineInc = FALSE;
@@ -385,6 +387,9 @@ void CTSSetupDialog::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_STAT_NUM_EARLY_FRAMES, m_statNumEarlyFrames);
   DDX_Control(pDX, IDC_SPIN_EARLY_FRAMES, m_sbcEarlyFrames);
   DDX_Control(pDX, IDC_STAT_FRAME_LABEL, m_statFrameLabel);
+  DDX_Control(pDX, IDC_USE_DOSE_SYM, m_butUseDoseSym);
+  DDX_Check(pDX, IDC_USE_DOSE_SYM, m_bUseDoseSym);
+  DDX_Control(pDX, IDC_BUT_SETUP_DOSE_SYM, m_butSetupDoseSym);
 }
 
 
@@ -468,6 +473,8 @@ BEGIN_MESSAGE_MAP(CTSSetupDialog, CBaseDlg)
   ON_BN_CLICKED(IDC_CHECK_LIMIT_DELTA_FOCUS, OnCheckLimitDeltaFocus)
   ON_BN_CLICKED(IDC_DO_EARLY_RETURN, OnDoEarlyReturn)
   ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_EARLY_FRAMES, OnDeltaposSpinEarlyFrames)
+  ON_BN_CLICKED(IDC_USE_DOSE_SYM, OnUseDoseSym)
+  ON_BN_CLICKED(IDC_BUT_SETUP_DOSE_SYM, OnButSetupDoseSym)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -549,6 +556,7 @@ BOOL CTSSetupDialog::OnInitDialog()
   m_bDoBidir = mTSParam.doBidirectional;
   m_bBidirUseView = mTSParam.anchorBidirWithView;
   m_bBidirWalkBack = mTSParam.walkBackForBidir;
+  m_bUseDoseSym = mTSParam.doDoseSymmetric;
   ConstrainBidirAngle(false, false);
 
   m_iCamera = mTSParam.cameraIndex;
@@ -1460,12 +1468,17 @@ void CTSSetupDialog::OnDeltaposSpinBidirMag(NMHDR *pNMHDR, LRESULT *pResult)
 void CTSSetupDialog::ManageBidirectional(void)
 {
   bool enable = !mDoingTS && m_bDoBidir;
+  bool doingDosym = m_bDoBidir && m_bUseDoseSym && mLowDoseMode;
   m_butDoBidir.EnableWindow(!mDoingTS);
   m_editBidirAngle.EnableWindow(enable);
-  m_butBidirWalkBack.EnableWindow(enable || mBidirStage == BIDIR_FIRST_PART);
-  m_butBidirUseView.EnableWindow(enable && mLowDoseMode);
-  m_statBidirFieldSize.EnableWindow(enable);
-  enable = enable  && !(m_bBidirUseView && mLowDoseMode);
+  m_butBidirWalkBack.EnableWindow((enable || mBidirStage == BIDIR_FIRST_PART) && 
+    !doingDosym);
+  m_butBidirUseView.EnableWindow(enable && mLowDoseMode && !doingDosym);
+  m_statBidirFieldSize.EnableWindow(enable && (!doingDosym || (mTSParam.dosymDoRunToEnd &&
+    mTSParam.dosymAnchorIfRunToEnd)));
+  m_butUseDoseSym.EnableWindow(enable && mLowDoseMode);
+  m_butSetupDoseSym.EnableWindow(enable && doingDosym);
+  enable = enable && !(m_bBidirUseView && mLowDoseMode) && !doingDosym;
   m_statBidirMag.EnableWindow(enable);
   m_statBDMagLabel.EnableWindow(enable);
   m_sbcBidirMag.EnableWindow(enable);
@@ -1539,6 +1552,34 @@ void CTSSetupDialog::ManageAnchorMag(int camera)
 }
 
 
+
+void CTSSetupDialog::OnUseDoseSym()
+{
+  UpdateData(true);
+  ManageBidirectional();
+}
+
+
+void CTSSetupDialog::OnButSetupDoseSym()
+{
+  CTSDoseSymDlg dlg;
+  FixButtonStyle(IDC_BUT_SETUP_DOSE_SYM);
+  dlg.mTSparam = mTSParam;
+  dlg.mTSparam.startingTilt = m_fStartAngle;
+  dlg.mTSparam.endingTilt = m_fEndAngle;
+  dlg.mTSparam.tiltIncrement = m_fIncrement;
+  dlg.mTSparam.bidirAngle = m_fBidirAngle;
+  if (dlg.DoModal() == IDOK) {
+    dlg.mTSparam.startingTilt = mTSParam.startingTilt;
+    dlg.mTSparam.endingTilt = mTSParam.endingTilt;
+    dlg.mTSparam.tiltIncrement = mTSParam.tiltIncrement;
+    dlg.mTSparam.bidirAngle = mTSParam.bidirAngle;
+    mTSParam = dlg.mTSparam;
+  }
+  ManageBidirectional();
+}
+
+
 int CTSSetupDialog::RegularOrEFTEMMag(int magIndex)
 {
   return MagForCamera(&mCamParams[mCurrentCamera], magIndex);
@@ -1583,6 +1624,7 @@ void CTSSetupDialog::OnOK()
   mTSParam.doBidirectional = m_bDoBidir;
   mTSParam.anchorBidirWithView = m_bBidirUseView;
   mTSParam.walkBackForBidir = m_bBidirWalkBack;
+  mTSParam.doDoseSymmetric = m_bUseDoseSym;
   mTSParam.cameraIndex = m_iCamera;
   mTSParam.probeMode = mProbeMode;
   for (int j = 0; j < 3; j++) {
