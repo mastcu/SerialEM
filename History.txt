@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+5/31/19: Fixed picking beam shift calibration at same mag and different alpha
+instead of transforming one at same alpha when using PLA (In 3.7).
+
 5/28/19: Fixed handling of K3 references with CDS mode, stopped getting defect
 list for K3, and stopped writing a defect file if it has nothing to correct.
 

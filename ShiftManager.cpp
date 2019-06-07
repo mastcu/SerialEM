@@ -2672,6 +2672,7 @@ ScaleMat CShiftManager::GetBeamShiftCal(int magInd, int inAlpha, int inProbe)
   if (!mNumBeamShiftCals)
     return mat;
 
+  currIStoSpec = IStoSpecimen(magInd);
   if (inAlpha < -1000)
     inAlpha = mScope->FastAlpha();
   if (inProbe < 0)
@@ -2682,8 +2683,9 @@ ScaleMat CShiftManager::GetBeamShiftCal(int magInd, int inAlpha, int inProbe)
   if (JEOLscope && !mScope->GetHasOmegaFilter() && mWinApp->GetEFTEMMode())
     calSign = -1;
 
-  // Look through calibrations, and if there is one that can transfer IS, use its matrix
-  // But loop twice if alpha; first try to match alpha
+  // Loop through this twice if alpha; first try to match alpha
+  // First look through calibrations, and if there is one that can transfer IS, use its
+  // matrix directly; then fall back to specimen transformations 
   for (loop = 1; loop <= numLoop; loop++) {
     for (j = 0; j < mNumBeamShiftCals; j++) {
       calMag = calSign * mBeamCalMagInd[j];
@@ -2699,20 +2701,19 @@ ScaleMat CShiftManager::GetBeamShiftCal(int magInd, int inAlpha, int inProbe)
       // Assume old calibration is from M mode range
       if (!calMag)
         calMag = mScope->GetLowestMModeMagInd();
-      if (CanTransferIS(calMag, magInd))
+      if (CanTransferIS(calMag, magInd)) {
         return mIStoBS[j];
+      }
     }
-  }
 
-  // Must have a IS to specimen transformation for this mag
-  currIStoSpec = IStoSpecimen(magInd);
-  if (!currIStoSpec.xpx)
-    return mat;
-  
-  // Look at calibrations, from closest to farther mags, and find one with an
-  // IS to specimen transformation and use it to transform the calibrated BS matrix
-  // But loop twice if alpha; first try to match alpha
-  for (loop = 1; loop <= numLoop; loop++) {
+
+    // Must have a IS to specimen transformation for this mag for next loops
+    if (!currIStoSpec.xpx)
+      continue;
+
+    // Look at calibrations, from closest to farther mags, and find one with an
+    // IS to specimen transformation and use it to transform the calibrated BS matrix
+    // But loop twice if alpha; first try to match alpha
     for (diff = 1; diff < MAX_MAGS; diff++) {
       for (dir = 1; dir >= -1; dir -= 2) {
         for (j = 0; j < mNumBeamShiftCals; j++) {
@@ -2727,20 +2728,21 @@ ScaleMat CShiftManager::GetBeamShiftCal(int magInd, int inAlpha, int inProbe)
             calMag = mScope->GetLowestMModeMagInd();
 
           // Check a mag only if it is on the same side of LM-M as given mag
-          if (magInd + dir * diff == calMag && 
+          if (magInd + dir * diff == calMag &&
             mScope->BothLMorNotLM(calMag, false, magInd, false)) {
               mat2 = IStoSpecimen(calMag);
               if (mat2.xpx) {
-                calSpecToIS =  MatInv(mat2);
+                calSpecToIS = MatInv(mat2);
                 mat2 = MatMul(calSpecToIS, mIStoBS[j]);
                 mat = MatMul(currIStoSpec, mat2);
                 return mat;
-              }
+            }
           }
         }
       }
     }
   }
+  
   return mat;
 }
 

@@ -411,12 +411,11 @@ int DirectElectronCamera::initDEServer()
   for (int i = 0; i < (int)cameras.size(); i++)
     listCameras += CString(cameras[i].c_str()) + "\r\n";
 
-  SEMTrace('D', "Camera list: %s", listCameras);
+  SEMTrace('D', "%s", (LPCTSTR)listCameras);
 
   std::string propValue;
   if (mDeServer->getProperty(std::string(psServerVersion), &propValue))
     SetSoftwareAndServerVersion(propValue);
-
   return 1;
 }
 

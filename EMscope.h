@@ -245,9 +245,10 @@ class DLL_IM_EX CEMscope
   GetSetMember(float, WarnIfKVnotAt)
   void GetLastISChange(double &delX, double &delY)
     {delX = mLastISdelX; delY = mLastISdelY;};
-  GetSetMember(DWORD, LastNormalization)
-  SetMember(DWORD, LastStageTime)
-  SetMember(DWORD, LastTiltTime)
+  GetSetMember(DWORD, LastNormalization);
+  SetMember(DWORD, LastStageTime);
+  SetMember(DWORD, LastTiltTime);
+  GetMember(bool, GettingValuesFast);
   DWORD GetLastTiltTime();
   DWORD GetLastStageTime();
   GetMember(double, LastTiltChange)
