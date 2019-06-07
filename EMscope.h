@@ -464,11 +464,11 @@ private:
   BOOL mCameraAcquiring;      // flag to not blank when screen up in low dose
   int mLowDoseDownArea;       // Area (mode) to display when screen down
   int mLowDoseSetArea;        // Currently displayed area
-  int mChangingLDArea;       // Flag that area is changing, to stop double calls/updates
+  int mChangingLDArea;        // Flag that area is changing, to stop double calls/updates
   int mLastLDpolarity;        // Polarity of last low dose area setting
-  double mLDChangeCumulBeamX;
-  double mLDChangeCumulBeamY;
-  int mLDChangeCurArea;
+  double mLDChangeCumulBeamX; // Sum of beam shift changes needed when changing low dose
+  double mLDChangeCumulBeamY; // area on the JEOL
+  int mLDChangeCurArea;       // Area to assume when accounting for beam shift and offsets
   BOOL mSelectedEFTEM;        // flag that we turned on EFTEM lens settings
   int mSelectedSTEM;          // flag that we turned on STEM in scope; -1 while setting
   FilterParams *mFiltParam;
