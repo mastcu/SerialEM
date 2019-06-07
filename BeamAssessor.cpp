@@ -43,6 +43,7 @@ enum CalChanges {CAL_CHANGE_MAG = 1, CAL_CHANGE_BIN, CAL_CHANGE_EXP};
 
 CBeamAssessor::CBeamAssessor()
 {
+  int i, j;
   SEMBuildTime(__DATE__, __TIME__);
   mWinApp = (CSerialEMApp *)AfxGetApp();
   mLDParam = mWinApp->GetLowDoseParams();
@@ -76,7 +77,7 @@ CBeamAssessor::CBeamAssessor()
   mNumMatchBefore = 3;
   mMagMaxDelCurrent = 8.;
   mMagExtraDelta = 8.;
-  for (int i = 0; i <= MAX_SPOT_SIZE; i++) {
+  for (i = 0; i <= MAX_SPOT_SIZE; i++) {
     mDoseTables[i][0][0].dose = 0.;
     mDoseTables[i][1][0].dose = 0.;
     mDoseTables[i][0][1].dose = 0.;
@@ -88,9 +89,11 @@ CBeamAssessor::CBeamAssessor()
   mNumSpotTables = 0;
   mCurrentAperture = 0;
   mNumC2Apertures = 0;
-  for (int j = 0; j < 4; j++)
+  for (j = 0; j < 4; j++)
     mSpotCalAperture[j] = 0;
   mCrossCalAperture[0] = mCrossCalAperture[1] = 0;
+  for (i = 0; i < MAX_ALPHAS;i++)
+    mBSCalAlphaFactors[i] = 1.;
 }
 
 CBeamAssessor::~CBeamAssessor()
@@ -1532,8 +1535,8 @@ void CBeamAssessor::CalibrateBeamShift()
     + modeNames[SHIFT_CAL_CONSET] + " parameter set.\n\n"
     "You must have the spot condensed so that its diameter is less\n"
     "than half of the size of a " + modeNames[SHIFT_CAL_CONSET] + " image.\n\n"
-    "You should also choose a spot size that gives a moderate number\n"
-    "of counts in a " + modeNames[SHIFT_CAL_CONSET] + " image.\n\n"
+    "You should also choose a spot size that gives a moderate\n"
+    "number of counts in a " + modeNames[SHIFT_CAL_CONSET] + " image.\n\n"
     "Are you ready to proceed?", MB_ICONQUESTION | MB_YESNO) == IDNO)
     return;
     
@@ -1596,6 +1599,8 @@ void CBeamAssessor::ShiftCalImage()
     // Set up the shifts as 1/30 of field since the scope alignment could be off by 10
     if (magInd < mScope->GetLowestMModeMagInd() && mScope->GetLMBeamShiftFactor())
       pixel /= (float)mScope->GetLMBeamShiftFactor();
+    if (magInd >= mScope->GetLowestMModeMagInd() && JEOLscope && !mScope->GetHasNoAlpha())
+      pixel *= mBSCalAlphaFactors[mScope->GetAlpha()];
     mBSCshiftX[0] = mBSCshiftY[1] = 0.03f * size * pixel * binning;
   } else {
     // Every other shot, get the centroid

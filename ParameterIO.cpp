@@ -1756,6 +1756,7 @@ int CParameterIO::ReadProperties(CString strFileName)
   int *camLengths = mWinApp->GetCamLenTable();
   int *C2apertures = mWinApp->mBeamAssessor->GetC2Apertures();
   float *radii = mWinApp->mProcessImage->GetFFTCircleRadii();
+  float *alphaFacs = mWinApp->mBeamAssessor->GetBSCalAlphaFactors();
   BOOL recognized, recognized2, recognized3, recognizedc, recognizedc1;
   CString strLine;
   CString strItems[MAX_TOKENS];
@@ -2584,8 +2585,14 @@ int CParameterIO::ReadProperties(CString strFileName)
           scope->AddShiftBoundary(atoi((LPCTSTR)strItems[index]));
         }
 
-      }
-      else if (MatchNoCase("STEMdefocusToDeltaZ"))
+      } else if (MatchNoCase("BeamShiftCalAlphaFactors")) {
+        for (index = 1; index < MAX_TOKENS; index++) {
+          if (strItems[index].IsEmpty())
+            break;
+          alphaFacs[index - 1] = (float)itemDbl[index];
+        }
+
+      } else if (MatchNoCase("STEMdefocusToDeltaZ"))
         mWinApp->mFocusManager->SetSTEMdefocusToDelZ((float)itemDbl[1],(float)itemDbl[1]);
       else if (MatchNoCase("IntensityToC2Factor")) {
       }

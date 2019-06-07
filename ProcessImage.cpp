@@ -1869,7 +1869,8 @@ void CProcessImage::FindPixelSize(float markedX, float markedY, float minScale,
   while (B3DMAX(nx, ny) > targetSize * needBin)
     needBin++;
   if (needBin > 1) {
-    NewArray(temp, short int, (nx / needBin) * (ny / needBin));
+    NewArray(temp, short int, (nx / needBin) * (ny / needBin) * 
+      (imType == kFLOAT ? 2 : 1));
     if (!temp) {
       AfxMessageBox("Failed to get memory for binned image", MB_EXCLAME);
       return;

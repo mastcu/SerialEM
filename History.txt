@@ -3,6 +3,11 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+6/4/19: Added property to set factors for the initial spot size movement when
+calibrating beam shift at different alphas on a JEOL (In 3.7).
+
+6/4/19: Fixed crash measuring pixel size from a float image (In 3.7).
+
 6/2/19: Added ability to report and set filament current on JEOL.
 
 5/31/19: Fixed picking beam shift calibration at same mag and different alpha

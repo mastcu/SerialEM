@@ -120,6 +120,7 @@ class CBeamAssessor
   int *GetSpotCalAperture(void) {return &mSpotCalAperture[0];};
   int *GetC2Apertures(void) {return &mC2Apertures[0];};
   GetSetMember(BOOL, FavorMagChanges);
+  float *GetBSCalAlphaFactors() { return &mBSCalAlphaFactors[0];};
   CBeamAssessor();
   virtual ~CBeamAssessor();
 
@@ -203,6 +204,7 @@ class CBeamAssessor
   float mBSCcenY[7];
   float mBSCshiftX[6];    // NEXT shift value
   float mBSCshiftY[6];
+  float mBSCalAlphaFactors[MAX_ALPHAS];
   DoseTable mDoseTables[MAX_SPOT_SIZE + 2][2][2];
   int mNumDoseTables;
   int mNumSpotTables;

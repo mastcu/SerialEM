@@ -3570,13 +3570,22 @@
             is 0.025, the value for 300 KV, which also works at 200 KV. It needs to be 
             changed to get big enough spot movements in the first round of calibrating beam 
             shift.
-          </TD>
+              Decrease the value to increase the movement.&nbsp; Changing this will invalidate 
+              existing beam shift calibrations; use &#39;BeamShiftCalAlphaFactors&#39; if you need a 
+              different scaling for an alpha after calibrating at another alpha.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>JEOLLowMagBeamShiftToMicrons</TD>
           <TD>Scale factor needed for calibrating beam shift in low mag mode. If this is 
             omitted, the factor specified in JEOLBeamShiftToMicrons is used. A value of 0.15 
             works at 200 KV.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>BeamShiftCalAlphaFactors</TD>
+          <TD>Amount by which to scale the initial spot movement when calibrating beam shift 
+              for different alpha values.&nbsp; Enter values for the alphas in order starting 
+              with alpha 1; values are not needed for all alphas and the default is 1.&nbsp; 
+              On a 2200, factors of 10, 2, and 1 are appropriate.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>MicronsPerUnitImageShift</TD>
