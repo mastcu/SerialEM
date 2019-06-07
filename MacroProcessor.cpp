@@ -252,7 +252,8 @@ enum {CME_SCRIPTEND = -7, CME_LABEL, CME_SETVARIABLE, CME_SETSTRINGVAR, CME_DOKE
   CME_CLOSETEXTFILE, CME_FLUSHTEXTFILE, CME_READSTRINGSFROMFILE, CME_ISTEXTFILEOPEN,
   CME_CURRENTSETTINGSTOLDAREA, CME_UPDATELOWDOSEPARAMS, CME_RESTORELOWDOSEPARAMS,
   CME_CALLSTRINGARRAY, CME_STRINGARRAYTOSCRIPT, CME_MAKEVARPERSISTENT,
-  CME_SETLDADDEDBEAMBUTTON, CME_KEEPCAMERASETCHANGES, CME_REPORTDATETIME
+  CME_SETLDADDEDBEAMBUTTON, CME_KEEPCAMERASETCHANGES, CME_REPORTDATETIME,
+  CME_REPORTFILAMENTCURRENT, CME_SETFILAMENTCURRENT
 };
 
 // The two numbers are the minimum arguments and whether arithmetic is allowed
@@ -384,7 +385,8 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"ReadStringsFromFile", 2, 0}, {"IsTextFileOpen", 1, 0},{"CurrentSettingsToLDArea", 1, 0},
 {"UpdateLowDoseParams", 1, 0}, {"RestoreLowDoseParams", 0, 0}, {"CallStringArray", 1, 0},
 {"StringArrayToScript", 1, 0}, {"MakeVarPersistent", 1, 0},{"SetLDAddedBeamButton", 0, 0},
-{"KeepCameraSetChanges", 0, 0}, {"ReportDateTime", 0, 0},
+{"KeepCameraSetChanges", 0, 0}, {"ReportDateTime", 0, 0}, {"ReportFilamentCurrent", 0, 0},
+{"SetFilamentCurrent", 1, 0},
 {NULL, 0, 0}
 };
 
@@ -5759,7 +5761,21 @@ void CMacroProcessor::NextCommand()
       ABORT_NOLINE(itemInt[1] ? "An error occurred opening the valve" :
       "An error occurred closing the valve");
     break;
-    
+
+  case CME_REPORTFILAMENTCURRENT:                           // ReportFilamentCurrent
+    delISX = mScope->GetFilamentCurrent();
+    if (delISX < 0)
+      ABORT_NOLINE("An error occurred getting the filament current");
+    SetReportedValues(&strItems[1], delISX);
+    report.Format("Filament current is %.5g", delISX);
+    mWinApp->AppendToLog(report, mLogAction);
+    break;
+
+  case CME_SETFILAMENTCURRENT:                              // SetFilamentCurrent
+    if (!mScope->SetFilamentCurrent(itemDbl[1]))
+      ABORT_NOLINE("An error occurred setting the filament current");
+    break;
+
   case CME_ISPVPRUNNING:                                    // IsPVPRunning
     if (!mScope->IsPVPRunning(truth))
       ABORT_NOLINE("An error occurred determining whether the PVP is running");

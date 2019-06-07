@@ -1857,14 +1857,25 @@
         </TR>
         <TR vAlign="top">
           <TD class="style13">ReportColumnOrGunValve</TD>
-          <TD>Reports 0 or 1 if column/gun valve is closed or open on FEG scopes, or if 
+          <TD>Report 0 or 1 if column/gun valve is closed or open on FEG scopes, or if 
             filament on JEOL is clearly off or on.&nbsp; Reports -1 if the filament current 
             is inconsistent with the beam switch state.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style13">SetColumnOrGunValve #</TD>
-          <TD>Close column/gun valve on FEG scope or turn off filament on JEOL if # is 0; open valve if # is 1 
-            (turning on filament does not work).</TD>
+          <TD>Close column/gun valve on FEG scope or turn off filament on JEOL if # is 0; open valve or turn on filament if # is 1.
+          </TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style13">ReportFilamentCurrent</TD>
+          <TD>Report the filament current on a non-FEG JEOL scope.&nbsp; The value is between 
+              0 and 1 unless the property 'FilamentCurrentScale' is set with an appropriate 
+              scaling.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style13">SetFilamentCurrent #</TD>
+          <TD>Set the filament current on a non-FEG JEOL to #, in the same units as&nbsp; 
+              'ReportFilamentCurrent'.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style13">ScreenUp</TD>
