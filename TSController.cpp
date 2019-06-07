@@ -84,6 +84,7 @@ static const char *actionText[] =
 
 #define NO_PREVIOUS_ACTION   -1
 #define DFLT_ROLLING_BUFFERS  3
+#define BUFFERS_FOR_USER   3
 
 // provisionally:
 #define TRACKING_CONSET      2
@@ -1092,7 +1093,7 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external)
 
     // If low dose, set up more buffers for tracking stack
     if (mLowDoseMode) {
-      mTrackStackBuf = mReadBuf + 1 + mNumRollingBuf;
+      mTrackStackBuf = mReadBuf + 1 + BUFFERS_FOR_USER;
       mNumTrackStack = MAX_BUFFERS - mTrackStackBuf - 
         ((mHaveAnchor || mTSParam.leaveAnchor || mTSParam.doBidirectional) ? 1 : 0);
       for (i = mTrackStackBuf; i < mNumTrackStack + mTrackStackBuf; i++) {
