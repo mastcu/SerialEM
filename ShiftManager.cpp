@@ -2768,6 +2768,9 @@ ScaleMat MatInv(ScaleMat aa)
 {
   ScaleMat inv;
   float det = aa.xpx * aa.ypy - aa.xpy * aa.ypx;
+  inv.xpx;
+  if (!aa.xpx)
+    return inv;
   inv.xpx = aa.ypy / det;
   inv.xpy = -aa.xpy / det;
   inv.ypx = -aa.ypx / det;
@@ -2783,6 +2786,19 @@ ScaleMat CShiftManager::MatMul(ScaleMat aa, ScaleMat bb)
 ScaleMat CShiftManager::MatInv(ScaleMat aa)
 {
   return ::MatInv(aa);
+}
+
+// Apply a scale matrix to x and Y values, adding to existing values if incremental is set
+// (default false)
+void CShiftManager::ApplyScaleMatrix(ScaleMat &mat, float xFrom, float yFrom,
+  float &xTo, float &yTo, bool incremental)
+{
+  if (!incremental)
+    xTo = yTo = 0.;
+  if (!mat.xpx)
+    return;
+  xTo += mat.xpx * xFrom + mat.xpy * yFrom;
+  yTo += mat.ypx * xFrom + mat.ypy * yFrom;
 }
 
 // Scales and rotates a matrix
