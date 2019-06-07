@@ -66,7 +66,7 @@ public:
   virtual int     getPcoord(int inSect, int &outX, int &outY, int &outZ) {return -1;};
   virtual int     getStageCoord(int inSect, double &outX, double &outY) {return -1;};
   virtual KImage  *getRect(void) {return NULL;};
-  virtual int     ReorderPieceZCoords(int *sectOrder) {return -1;};
+  virtual int     InvertPieceZCoords(int zmax) {return -1;};
   virtual int     setMode(int inMode) {return 0;};
 
   int CheckMontage(MontParam *inParam, int nx, int ny, int nz);

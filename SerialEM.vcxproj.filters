@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Header Files">
@@ -438,9 +438,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CtffindParamDlg.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="TSDoseSymDlg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -1096,9 +1093,6 @@
       <Filter>CSource Files</Filter>
     </ClCompile>
     <ClCompile Include="CtffindParamDlg.cpp">
-      <Filter>CSource Files</Filter>
-    </ClCompile>
-    <ClCompile Include="TSDoseSymDlg.cpp">
       <Filter>CSource Files</Filter>
     </ClCompile>
   </ItemGroup>

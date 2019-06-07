@@ -916,18 +916,6 @@ int CParameterIO::ReadSettings(CString strFileName)
         mTSParam->walkBackForBidir = itemInt[4] != 0;
         if (!itemEmpty[5])
           mTSParam->retainBidirAnchor = itemInt[5] != 0;
-      } else if (NAME_IS("TiltSeriesDoseSymParams")) {
-        mTSParam->doDoseSymmetric = itemInt[1] != 0;
-        mTSParam->dosymBaseGroupSize = itemInt[2];
-        mTSParam->dosymIncreaseGroups = itemInt[3] != 0;
-        mTSParam->dosymIncStartAngle = (float)itemDbl[4];
-        mTSParam->dosymGroupIncAmount = itemInt[5];
-        mTSParam->dosymGroupIncInterval = itemInt[6];
-        mTSParam->dosymDoRunToEnd = itemInt[7] != 0;
-        mTSParam->dosymRunToEndAngle = (float)itemDbl[8];
-        mTSParam->dosymAnchorIfRunToEnd = itemInt[9] != 0;
-        mTSParam->dosymMinUniForAnchor = itemInt[10];
-
       } else if (NAME_IS("TiltSeriesBDAnchorMags")) {
         for (index = 0; index < 6; index++)
           mTSParam->bidirAnchorMagInd[index] = itemInt[index + 1];
@@ -1585,13 +1573,6 @@ void CParameterIO::WriteSettings(CString strFileName)
       mTSParam->bidirAngle, mTSParam->anchorBidirWithView ? 1 : 0, 
       mTSParam->walkBackForBidir ? 1 : 0, mTSParam->retainBidirAnchor ? 1 : 0);
     WriteString("TiltSeriesBidirParams", oneState);
-    oneState.Format("%d %d %d %f %d %d %d %f %d %d", mTSParam->doDoseSymmetric ? 1 : 0,
-      mTSParam->dosymBaseGroupSize, mTSParam->dosymIncreaseGroups ? 1 : 0,
-      mTSParam->dosymIncStartAngle, mTSParam->dosymGroupIncAmount, 
-      mTSParam->dosymGroupIncInterval, mTSParam->dosymDoRunToEnd ? 1 : 0, 
-      mTSParam->dosymRunToEndAngle, mTSParam->dosymAnchorIfRunToEnd ? 1 : 0,
-      mTSParam->dosymMinUniForAnchor);
-    WriteString("TiltSeriesDoseSymParams", oneState);
     WriteIndexedInts("TiltSeriesBDAnchorMags", mTSParam->bidirAnchorMagInd, 6);
     oneState.Format("%d %d %d", mWinApp->mTSController->GetRunMacroInTS() ? 1 : 0,
       mWinApp->mTSController->GetMacroToRun(), 

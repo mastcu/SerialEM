@@ -12,8 +12,7 @@
 #define MAX_TS_ACTIONS 65
 #define MAX_TS_TILTS 720
 #define MAX_COSINE_POWER 5
-enum {BIDIR_NONE = 0, BIDIR_FIRST_PART, BIDIR_RETURN_PHASE, BIDIR_SECOND_PART, 
-  DOSYM_FIRST_DIR, DOSYM_SECOND_DIR};
+enum {BIDIR_NONE = 0, BIDIR_FIRST_PART, BIDIR_RETURN_PHASE, BIDIR_SECOND_PART};
 enum {TSMACRO_PRE_TRACK1 = 1, TSMACRO_PRE_FOCUS, TSMACRO_PRE_TRACK2, TSMACRO_PRE_RECORD};
 #define MAX_TSMACRO_STEPS 5
 enum {DEFSUM_LOOP, DEFSUM_NORMAL_STOP, DEFSUM_ERROR_STOP, DEFSUM_TERM_ERROR};
@@ -118,7 +117,6 @@ public:
   GetMember(int, TerminateOnError);
   GetSetMember(BOOL, SeparateExtraRecFiles);
   GetSetMember(float, StepForBidirReturn);
-  GetSetMember(int, RestoreStageXYonTilt);
   double GetCumulativeDose();
 
   bool GetBidirStartAngle(float &outVal) {outVal = mTSParam.bidirAngle; return mStartedTS && mTSParam.doBidirectional;};
@@ -290,8 +288,6 @@ private:
   int mAlignBuf;              // Alignment buffer
   int mReadBuf;               // Read buffer
   int mExtraRefBuf;           // For low mag or other ref
-  int mDosymAlignBufs[2];
-  int mDosymExtraRefBufs[2];
   int mAnchorBuf;             // Buf for anchor
   float mAnchorAngle;         // Actual angle of anchor image
   BOOL mCanFindEucentricity;  // Flag that start was near enough to zero to do eucen.
@@ -471,19 +467,6 @@ private:
   float mAlarmBidirFieldSize;  // Size of field below which to warn or alarm user
   BOOL mWalkBackForBidir;      // Flag for whether to return with walk up
   float mStepForBidirReturn;   // Step size when returning in tilt steps
-  int mDosymBacklashDir;       // Backlash direction for dose symmetric
-  float mDosymCurrentTilts[2];
-  double mDosymSavedISX[2], mDosymSavedISY[2];
-  double mDosymDefocuses[2];
-  int mNextDirection;
-  float mBaseAngleForVarying;  // Vary intensity/impose changes relative to this angle 
-  FloatVec mIdealDosymAngles;  // List of expected angles for dose-sym
-  ShortVec mDosymDirections;
-  bool mDoingDoseSymmetric;
-  int mDosymAnchorIndex;
-  int mDosymFinalPartIndex;
-  float mDosymTiltOfFinalPart;
-  BOOL mDosymFitPastReversals;
   int mMaxDelayAfterTilt;      // Maximum delay for tilt during TS, in seconds
   BOOL mEarlyK2RecordReturn;   // Flag to return early if possible from Record Dose frac
   BOOL mCallTSplugins;         // Flag to control whether plugins get called
@@ -506,9 +489,6 @@ private:
   CString mTCBoxCancelText;
   int mTCBoxDefault;           // Default button
   float mTrialCenterMaxRadFrac; // Maximum radius as fraction of diagonal to center with T
-  int mRestoreStageXYonTilt;   // Flag to restore stage position after tilt
-  double mStageXtoRestore;
-  double mStageYtoRestore;
 
 public:
 	void CenterBeamWithTrial();
@@ -538,8 +518,6 @@ public:
   void SetupExtraOverwriteSec(void);
   int CheckAndLimitAbsFocus(void);
   int StartGettingDeferredSum(int fromWhere);
-  double CosineIntensityChangeFac(double fromAngle, double toAngle);
-  double MaxUsableDiffFromAngle(double angle);
 };
 
 
