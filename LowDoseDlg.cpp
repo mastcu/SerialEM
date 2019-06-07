@@ -248,11 +248,10 @@ void CLowDoseDlg::ConvertAxisPosition(BOOL axisToIS)
   for (i = 0; i < 2; i ++) {
     area = i ? SEARCH_AREA : VIEW_CONSET;
     if (axisToIS) {
-      TransferISonAxis(mLDParams[RECORD_CONSET].magIndex, mLDParams[RECORD_CONSET].ISX, 
-        mLDParams[RECORD_CONSET].ISY,
-        mLDParams[area].magIndex, mLDParams[area].ISX, mLDParams[area].ISY);
       mag = mLDParams[RECORD_CONSET].magIndex;
-      magv = mLDParams[0].magIndex;
+      magv = mLDParams[area].magIndex;
+      TransferISonAxis(mag, mLDParams[RECORD_CONSET].ISX, mLDParams[RECORD_CONSET].ISY,
+        magv, mLDParams[area].ISX, mLDParams[area].ISY);
       if ((mViewShiftX[i] != 0. || mViewShiftY[i] != 0.) && mag && magv) {
         delX = mViewShiftX[i];      
         delY = mViewShiftY[i];
