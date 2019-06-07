@@ -35,7 +35,7 @@ static char THIS_FILE[]=__FILE__;
 #define new DEBUG_NEW
 #endif
 
-#define AUTOSAVE_INTERVAL_MIN 5
+#define AUTOSAVE_INTERVAL_MIN 1
 #define MUTEX_TIMEOUT_MS 502
 #define DATA_MUTEX_WAIT  100
 

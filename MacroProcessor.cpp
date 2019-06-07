@@ -6776,8 +6776,9 @@ int CMacroProcessor::ScanForName(int macroNumber, CString *macro)
   CString *longMacNames = mWinApp->GetLongMacroNames();
   MacroFunction *funcP;
   int currentIndex = 0;
-  if (macroNumber >= MAX_MACROS && macroNumber < MAX_MACROS + MAX_ONE_LINE_SCRIPTS)
-    return 0;
+  if ((macroNumber >= MAX_MACROS && macroNumber < MAX_MACROS + MAX_ONE_LINE_SCRIPTS) ||
+    (mDoingMacro && mCallLevel > 0))
+      return 0;
   if (!macro)
     macro = &mMacros[macroNumber];
   ClearFunctionArray(macroNumber);

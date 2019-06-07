@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+6/7/19: Fixed problem with calling script functions when autosave settings is
+turned on (In 3.7).
+
 6/6/19: Started taking account of changes in beam shift calibration when
 changing alpha and mag on JEOL to apply the right amount of beam shift for the
 image shift; also excluded the View/Search shift offsets from the image shift
