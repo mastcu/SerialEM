@@ -133,7 +133,6 @@ int KImageStore::MarkAsOpenWithFile(const char *extension)
       return 1;
     fp = fopen((LPCTSTR)(getFilePath() + extension), "w");
     if (fp) {
-      PrintfToLog("Created %s", (LPCTSTR)(getFilePath() + mOpenMarkerExt));
       fclose(fp);
       return 0;
     }
