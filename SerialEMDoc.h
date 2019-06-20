@@ -291,6 +291,7 @@ afx_msg void OnSettingsDiscardOnExit();
 afx_msg void OnUpdateSettingsDiscardOnExit(CCmdUI *pCmdUI);
 int AddTitlesToFrameMdoc(CString &message);
 int DoOpenFrameMdoc(CString & filename);
+void DoCloseFrameMdoc();
 };
 
 // FILE DIALOG CLASS and associated thread class and data

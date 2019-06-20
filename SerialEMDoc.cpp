@@ -2421,7 +2421,12 @@ int CSerialEMDoc::AddTitlesToFrameMdoc(CString &message)
 // Closes the file: clears it out and sets index -1
 void CSerialEMDoc::OnFileCloseMdoc()
 {
-  if (AdocAcquireMutex()) {
+  DoCloseFrameMdoc();
+}
+
+void CSerialEMDoc::DoCloseFrameMdoc()
+{
+  if (mFrameAdocIndex >= 0 && AdocAcquireMutex()) {
     AdocClear(mFrameAdocIndex);
     AdocReleaseMutex();
   }
