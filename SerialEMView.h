@@ -56,10 +56,10 @@ public:
 	void StageToImage(EMimageBuffer *imBuf, float inX, float inY, float &outX, float &outY, 
     int pcInd = -1);
 	BOOL ConvertMousePoint(CRect *rect, KImage *image, CPoint *point, float &outX, float &outY);
-	void MakeDrawPoint(CRect *rect, KImage *image, float inX, float inY, CPoint *point);
+	void MakeDrawPoint(CRect *rect, KImage *image, float inX, float inY, CPoint *point, bool skipShift = false);
   void DrawCross(CClientDC *cdc, CPen *pNewPen, CPoint point, int crossLen);
   void DrawCircle(CClientDC *cdc, CPen *pNewPen, CRect *rect, KImage *image, float cenX, 
-    float cenY, float radius);
+    float cenY, float radius, bool skipShift = false);
   void DrawEllipse(CClientDC *cdc, CPen *pNewPen, CRect *rect, KImage *image, float cenX, 
     float cenY, float radius1, float radius2, float angle, bool drawHalf);
   float GetBufferBinning();
@@ -164,7 +164,7 @@ protected:
 //}}AFX_MSG
   DECLARE_MESSAGE_MAP()
 public:
-  int AddBufferToStack(EMimageBuffer * imBuf);
+  int AddBufferToStack(EMimageBuffer * imBuf, int angleOrder);
   double BufferMemoryUsage(CPtrArray *refArray);
   void ChangeAllRegistrations(int mapID, int fromReg, int toReg);
   void DrawScaleBar(CClientDC * cdc, CRect * rect, EMimageBuffer * imBuf);

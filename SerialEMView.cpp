@@ -636,7 +636,8 @@ void CSerialEMView::DrawImage(void)
           CPen pnSolidPen (PS_SOLID, 1, areaColors[area - 1]);
           CPen *pOldPen = cdc.SelectObject(&pnSolidPen);
           for (int pt = 0; pt < 5; pt++) {
-            MakeDrawPoint(&rect, imBuf->mImage, cornerX[pt % 4], cornerY[pt % 4], &point);
+            MakeDrawPoint(&rect, imBuf->mImage, cornerX[pt % 4], cornerY[pt % 4], &point,
+              true);
             if (pt)
               cdc.LineTo(point);
             else
@@ -646,7 +647,7 @@ void CSerialEMView::DrawImage(void)
 
           // Draw circle around center for area being defined
           if (!type)
-            DrawCircle(&cdc, &pnSolidPen, &rect, imBuf->mImage, cenX, cenY, radius);
+            DrawCircle(&cdc, &pnSolidPen, &rect, imBuf->mImage, cenX, cenY, radius, true);
         }
       }
     }
@@ -1022,10 +1023,11 @@ void CSerialEMView::DrawVectorPolygon(CClientDC &cdc, CRect *rect, CMapDrawItem 
 }
 
 void CSerialEMView::MakeDrawPoint(CRect *rect, KImage *image, float inX, float inY, 
-                                  CPoint *point)
+                                  CPoint *point, bool skipShift)
 {
-  float shiftX, shiftY;
-  image->getShifts(shiftX, shiftY);
+  float shiftX = 0., shiftY = 0.;
+  if (!skipShift)
+    image->getShifts(shiftX, shiftY);
 
   // Need to convert from image coordinates to pixmap coordinate, hence add shifts
   // Need to invert the Y pixmap coordinate, apply equation, then invert resulting
@@ -1168,7 +1170,7 @@ void CSerialEMView::DrawCross(CClientDC *cdc, CPen *pNewPen, CPoint point, int c
 
 // Draw a circle with the given pen
 void CSerialEMView::DrawCircle(CClientDC *cdc, CPen *pNewPen, CRect *rect, KImage *image,
-                               float cenX, float cenY, float radius)
+                               float cenX, float cenY, float radius, bool skipShift)
 {
   CPoint point;
   float ptX, ptY;
@@ -1176,7 +1178,7 @@ void CSerialEMView::DrawCircle(CClientDC *cdc, CPen *pNewPen, CRect *rect, KImag
   for (int pt = 0; pt < 91; pt++) {
     ptX = (float)(cenX + radius * cos(DTOR * pt * 4));
     ptY = (float)(cenY + radius * sin(DTOR * pt * 4));
-    MakeDrawPoint(rect, image, ptX, ptY, &point);
+    MakeDrawPoint(rect, image, ptX, ptY, &point, skipShift);
     if (pt)
       cdc->LineTo(point);
     else
@@ -2330,7 +2332,7 @@ float CSerialEMView::GetBufferBinning()
 // 7/7/03: Eliminate task to refresh title of main frame
 
 
-int CSerialEMView::AddBufferToStack(EMimageBuffer * imBuf)
+int CSerialEMView::AddBufferToStack(EMimageBuffer * imBuf, int angleOrder)
 {
   EMimageBuffer *newBufs;
   int i, ind = mImBufNumber;
@@ -2371,10 +2373,20 @@ int CSerialEMView::AddBufferToStack(EMimageBuffer * imBuf)
     mImBufArraySize += 10;
   }
 
+  // If an angle order is specified, add it before the appropriate one
+  if (angleOrder && ind == mImBufNumber) {
+    for (i = 0; i < mImBufNumber; i++)
+      if (angleOrder * (mImBufs[i].mTiltAngleOrig - imBuf->mTiltAngleOrig) > 0)
+        break;
+    ind = i;
+    for (i = mImBufNumber; i > ind; i--)
+      mImBufs[i] = mImBufs[i - 1];
+    mImBufNumber++;
+  } else if (ind == mImBufNumber)
+    mImBufNumber++;
+
   // Add to the array and clean up imbuf
   mImBufs[ind] = *imBuf;
-  if (ind == mImBufNumber)
-    mImBufNumber++;
   SetCurrentBuffer(ind);
   imBuf->ClearForDeletion();
   delete imBuf;
