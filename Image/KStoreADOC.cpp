@@ -385,7 +385,10 @@ int KStoreADOC::SetValuesFromExtra(KImage *inImage, char *sectName, int index)
   if (extra->mReadMode >= 0 && 
     AdocSetInteger(sectName, index, ADOC_READ_MODE, extra->mReadMode))
     return 1;
-  if (extra->mMagIndex >= 0 && 
+  if (extra->mCorrDblSampMode >= 0 &&
+    AdocSetInteger(sectName, index, ADOC_CDS_MODE, extra->mCorrDblSampMode))
+    return 1;
+  if (extra->mMagIndex >= 0 &&
     AdocSetInteger(sectName, index, ADOC_MAGIND, extra->mMagIndex))
     return 1;
   if (extra->mCountsPerElectron >= 0. && AdocSetFloat(sectName, index, ADOC_COUNT_ELEC, 
@@ -518,6 +521,7 @@ int KStoreADOC::LoadExtraFromValues(EMimageExtra *extra, int &typext, char *sect
   AdocGetInteger(sectName, index, ADOC_CAMERA, &extra->mCamera);
   AdocGetInteger(sectName, index, ADOC_DIVBY2, &extra->mDividedBy2);
   AdocGetInteger(sectName, index, ADOC_READ_MODE, &extra->mReadMode);
+  AdocGetInteger(sectName, index, ADOC_CDS_MODE, &extra->mCorrDblSampMode);
   AdocGetInteger(sectName, index, ADOC_MAGIND, &extra->mMagIndex);
   AdocGetFloat(sectName, index, ADOC_COUNT_ELEC, &extra->mCountsPerElectron);
   AdocGetThreeFloats(sectName, index, ADOC_MINMAXMEAN, &extra->mMin, &extra->mMax,

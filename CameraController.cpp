@@ -8556,6 +8556,8 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       if (mParam->K2Type || (mParam->FEItype == FALCON3_TYPE && FCAM_CAN_COUNT(mParam)) ||
         (mParam->DE_camType && (mParam->CamFlags & DE_CAM_CAN_COUNT)))
         extra->mReadMode = lastConSetp->K2ReadMode;
+      if (CanK3DoCorrDblSamp(mParam))
+        extra->mCorrDblSampMode = mUseK3CorrDblSamp ? 1 : 0;
       extra->mPixel = pixelSize;
       if (mTD.NumAsyncSumFrames != 0 && imBuf->mSampleMean > EXTRA_VALUE_TEST && 
         IsDirectDetector(mParam) && extra->m_fDose > 0 &&

@@ -29,6 +29,7 @@
 #define ADOC_CAMERA "CameraIndex"
 #define ADOC_DIVBY2 "DividedBy2"
 #define ADOC_READ_MODE "OperatingMode"
+#define ADOC_CDS_MODE "UsingCDS"
 #define ADOC_MAGIND "MagIndex"
 #define ADOC_ZVALUE "ZValue"
 #define ADOC_COUNT_ELEC "CountsPerElectron"

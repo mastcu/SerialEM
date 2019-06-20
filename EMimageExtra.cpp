@@ -31,6 +31,7 @@ EMimageExtra::EMimageExtra()
   mCamera = -1;
   mDividedBy2 = -1;
   mReadMode = -1;
+  mCorrDblSampMode = -1;
   mMagIndex = -1;
   mCountsPerElectron = -1.;
   mMin = mMax = mMean = EXTRA_NO_VALUE;

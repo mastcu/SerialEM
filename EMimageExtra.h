@@ -45,6 +45,7 @@ public:
   int mCamera;
   int mDividedBy2;
   int mReadMode;
+  int mCorrDblSampMode;
   int mMagIndex;
   float mCountsPerElectron;
   float mMin, mMax, mMean;
