@@ -922,7 +922,8 @@ int EMbufferManager::ReplaceImage(char *inData, int inType, int inX, int inY,
 }
 
 // Prepare a buffer to add to a stack window and pass it to App
-int EMbufferManager::AddToStackWindow(int bufNum, int maxSize, int secNum, bool convert)
+int EMbufferManager::AddToStackWindow(int bufNum, int maxSize, int secNum, bool convert,
+  int angleOrder)
 {
   EMimageBuffer *imBuf = &mImBufsp[bufNum];
   KImage *image = imBuf->mImage;
@@ -982,7 +983,7 @@ int EMbufferManager::AddToStackWindow(int bufNum, int maxSize, int secNum, bool 
   }
 
   // Tell App to add it to the stack view
-  return mWinApp->AddToStackView(newBuf);
+  return mWinApp->AddToStackView(newBuf, angleOrder);
 }
 
 #define NUM_MESSAGES 21
@@ -1028,12 +1029,15 @@ int EMbufferManager::MainImBufIndex(EMimageBuffer *imBuf)
 // Get the index of the buffer that is the default for autoalign
 int EMbufferManager::AutoalignBufferIndex()
 {
+  int buf = mShiftsOnAcquire + 1;
   if (mAlignToB)
     return 1;
+  if (mWinApp->LowDoseMode() && mWinApp->StartedTiltSeries())
+    buf = mWinApp->mTSController->GetAlignBuf();
   if (mWinApp->LowDoseMode() && mImBufsp->mCaptured && mImBufsp->mImage && 
     (mImBufsp->mConSetUsed + 1) / 2 != 2)
-    return mShiftsOnAcquire + 2;
-  return mShiftsOnAcquire + 1;
+    return buf + 1;
+  return buf;
 }
 
 int EMbufferManager::AutoalignBasicIndex()

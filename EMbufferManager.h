@@ -103,7 +103,7 @@ public :
   int mNextSecToRead;
 
 public:
-  int AddToStackWindow(int bufNum, int binning, int secNum, bool convert);
+  int AddToStackWindow(int bufNum, int binning, int secNum, bool convert, int angleOrder);
   void FindScaling(EMimageBuffer * imBuf);
   void DeleteOtherStore() {delete mOtherStoreMRC;};
   int StartAsyncSave(KImageStore *store, EMimageBuffer *buf, int section);
