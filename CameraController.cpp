@@ -1563,6 +1563,9 @@ void CCameraController::SetPending(int whichMode)
 // final image that comes in
 void CCameraController::StopCapture(int ifNow)
 {
+  if (!GetInitialized())
+    return;
+
   // Set to discard final image if in continuous mode
   if (ifNow < 0 && mRepFlag >= 0)
     mDiscardImage = true;

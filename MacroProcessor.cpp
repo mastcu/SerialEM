@@ -948,7 +948,8 @@ int CMacroProcessor::TaskBusy()
     (mLoadingMap && mWinApp->mNavigator && mWinApp->mNavigator->GetLoadingMap()) ||
     (mMakingDualMap && mWinApp->mNavHelper->GetAcquiringDual()) ||
     mWinApp->mShiftCalibrator->CalibratingIS() ||
-    (mCamera->CameraBusy() && (mCamera->GetTaskWaitingForFrame() || 
+    (mCamera->GetInitialized() && mCamera->CameraBusy() && 
+    (mCamera->GetTaskWaitingForFrame() || 
     !(mUsingContinuous && mCamera->DoingContinuousAcquire()))) ||
     mWinApp->mMontageController->DoingMontage() || 
     mWinApp->mParticleTasks->DoingMultiShot() ||

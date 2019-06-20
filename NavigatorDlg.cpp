@@ -7955,7 +7955,7 @@ void CNavigatorDlg::AcquireCleanup(int error)
 {
   if (error == IDLE_TIMEOUT_ERROR)
     SEMMessageBox(B3DCHOICE(mParam->acquireType != ACQUIRE_RUN_MACRO, 
-    _T("Time out acquiring images"), _T("Time out running macro")));
+    _T("Time out acquiring images"), _T("Time out running script")));
 
   // Should this be called?  ErrorOccurred will call it too
   StopAcquiring();
@@ -8155,7 +8155,7 @@ int CNavigatorDlg::GotoNextAcquireArea()
     mLastGroupID = item->mGroupID;
 
     UpdateListString(ind);
-    mMovingStage = true;
+    mMovingStage = axisBits != 0;
     mWinApp->AddIdleTask(TASK_NAVIGATOR_ACQUIRE, 0, 60000);
     return 0;
   }
