@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+6/18/19: Changed property StepForBidirReturn to be TSStepForBidirReturn to
+match help (In 3.7).
+
 6/16/19: Fixed running scripts from Acquire at Items in dummy copy (In 3.7).
 
 6/12/19: Changed some defaults (In 3.7)
