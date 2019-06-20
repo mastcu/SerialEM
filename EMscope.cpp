@@ -2260,6 +2260,8 @@ void CEMscope::StageMoveKernel(StageThreadData *std, BOOL fromBlanker, BOOL asyn
     if ((back && !info->doBacklash) || (relax && !info->doRelax) || 
       (restore && !info->doRestoreXY))
       continue;
+    if (restore)
+      Sleep(100);
 
     // Adding backX/Y makes the second move be opposite to the direction of backX/Y
     // Subtracting relax makes the final move be in the direction of relaxX/Y
