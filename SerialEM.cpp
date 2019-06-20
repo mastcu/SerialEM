@@ -1706,6 +1706,8 @@ int CSerialEMApp::GetNewViewProperties(CSerialEMView *inView, int &iBordLeft,
 {
   CRect rect;
   int userRight, userBot, fullWidth, needStatic = mNeedStaticWindow ? 1 : 0;
+  float dpiScale = GetScalingForDPI();
+  int nonStatAddBot = 25;
   iBordLeft = STATIC_BORDER_LEFT;
   iBordRight = STATIC_BORDER_RIGHT;
   iBordTop = STATIC_BORDER_TOP;
@@ -1740,14 +1742,12 @@ int CSerialEMApp::GetNewViewProperties(CSerialEMView *inView, int &iBordLeft,
     // Here, store the view pointer; main view pointer was deferred until active signal
     imBufs = mStackViewImBuf;
     iBordLeft = mMaxDialogWidth;
-    iBordRight = 256;
-    iBordBottom = 256;
     if (mMultiTSTasks->GetAssessingRange()) {
-      iBordRight = 256;
-      iBordBottom = 256;
+      iBordRight = B3DNINT(256 * dpiScale);
+      iBordBottom = B3DNINT((256 + nonStatAddBot) * dpiScale);
     } else {
-      iBordRight = imBufs->mImage->getWidth() / 2;
-      iBordBottom = imBufs->mImage->getHeight() / 2 + 25;
+      iBordRight = B3DNINT(dpiScale * imBufs->mImage->getWidth() / 2);
+      iBordBottom = B3DNINT(dpiScale * imBufs->mImage->getHeight() / 2 + nonStatAddBot);
     }
     iImBufNumber = 1;
     iImBufIndex = 0;
@@ -1758,14 +1758,14 @@ int CSerialEMApp::GetNewViewProperties(CSerialEMView *inView, int &iBordLeft,
 
     // Otherwise copy active buffer and send a size
     iBordLeft = mMaxDialogWidth;
-    iBordRight = 512;
-    iBordBottom = 512;
+    iBordRight = B3DNINT(512 * dpiScale);
+    iBordBottom = B3DNINT(512 * dpiScale + nonStatAddBot);
     imBufs = new EMimageBuffer;
     EMimageBuffer *fromBuf = mActiveView->GetActiveImBuf();
     mBufferManager->CopyImBuf(fromBuf, imBufs);
     if (fromBuf->mImage) {
-      int width = fromBuf->mImage->getWidth();
-      int height = fromBuf->mImage->getHeight() + 25;
+      int width = B3DNINT(dpiScale * fromBuf->mImage->getWidth());
+      int height = B3DNINT(dpiScale * fromBuf->mImage->getHeight() + nonStatAddBot);
       if (width < iBordRight)
         iBordRight = width;
       if (height < iBordBottom)
@@ -1804,10 +1804,10 @@ void CSerialEMApp::GetMainRect(CRect * rect, int & dialogOffset)
 }
 
 // Add a buffer to the stack view; first time, set pointer and open window
-int CSerialEMApp::AddToStackView(EMimageBuffer * imBuf)
+int CSerialEMApp::AddToStackView(EMimageBuffer * imBuf, int angleOrder)
 {
   if (mStackView) {
-    return mStackView->AddBufferToStack(imBuf);
+    return mStackView->AddBufferToStack(imBuf, angleOrder);
   }
   mStackViewImBuf = imBuf;
   ViewOpening();

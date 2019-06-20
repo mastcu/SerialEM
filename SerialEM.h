@@ -770,7 +770,7 @@ public:
   void InitializeLDParams(void);
   void InitializeOneLDParam(LowDoseParams &ldParam);
   CString GetDebugKeys(void);
-  int AddToStackView(EMimageBuffer * imBuf);
+  int AddToStackView(EMimageBuffer * imBuf, int angleOrder);
   void ViewClosing(BOOL stackView, BOOL FFTview);
   void DetachStackView(void);
   BOOL UserAcquireOK(void);
