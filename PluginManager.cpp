@@ -357,7 +357,7 @@ int CPluginManager::LoadPlugins(void)
         FindFileData.cFileName, newPlug->shortName, flags,
         (flags & (PLUGFLAG_CAMERA | PLUGFLAG_SCOPE)) ? 
         "" : " with no script-callable functions");
-      mWinApp->AppendToLog(mess, action);
+      SEMTrace('1', "%s", (LPCTSTR)mess);
 
     } while (FindNextFile(hFind, &FindFileData) != 0);
 

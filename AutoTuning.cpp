@@ -35,7 +35,7 @@ CAutoTuning::CAutoTuning(void)
   mAstigCenterFocus = -1.;
   mAstigFocusRange = 10.;
   mCalComaFocus = -1.;
-  mAstigToApply = 0.1f;
+  mAstigToApply = 0.04f;
   mAstigBeamTilt = 3.2f;
   mUsersAstigTilt = -1.;
   mUsersComaTilt = -1.;

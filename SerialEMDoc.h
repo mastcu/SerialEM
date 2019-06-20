@@ -99,10 +99,12 @@ public:
   int SaveSettingsOnExit();
   void ManageBackupFile(CString strFile, BOOL &bBackedUp);
   int OfferToSaveSettings(CString strWhy);
-  SetMember(CString, LogBook)
+  SetMember(CString, LogBook);
   GetMember(CString, SystemPath);
+  GetMember(CString, FullSystemDir);
   void SetSystemPath(CString sysPath);
   GetMember(CString, SysPathForSettings);
+  GetMember(CString, CurrentSettingsPath);
   GetSetMember(CString, PluginPath)
   GetSetMember(CString, PluginPath2)
   GetMember(CString, FlybackName);
@@ -197,6 +199,7 @@ private:
   CParameterIO *mParamIO;
   CString mSystemPath;           // Path for system settings & properties
   CString mSysPathForSettings;   // String to rewrite into settnigs file
+  CString mFullSystemDir;        // Full system directory path
   CString mSettingsName;         // Root name of default settings files
   CString mSystemSettingsName;   // Root name of system settings file
   CString mCurrentSettingsPath;  // Full name of current settings file

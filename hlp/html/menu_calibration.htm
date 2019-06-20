@@ -980,11 +980,14 @@
       The stigmator change should be set so as to get 
         an astigmatism value of ~0.8 microns values from the CTF fitting.&nbsp; The easiest way to determine 
       this is just to run the calibration and see how big the &#39;astig&#39; value is after the 
-        first fit with no stigmation applied.&nbsp;&nbsp; Then use the
+        first fit with stigmation applied.&nbsp;&nbsp; Then use the
       <a href="#hid_autofocusfocus_setupastigmatism">Setup Astigmatism</a> command to 
-      change the stigmator value to achieve the desired defocus change instead.&nbsp; 
-      However, for FEI Krios, use this command first to start with a value of 
-      0.025-0.05, instead of the default of 0.1, which works for Tecnais. The default 
+      change the stigmator value to achieve the desired defocus change instead.&nbsp; If 
+        the calibration gives astigmatism that cannot be fit (a non-elliptical pattern) 
+        then use that command to reduce the value by a factor of ~3.&nbsp; The default 
+        is 0.04 as of SerialEM 3.7.6, 6/12/19.&nbsp;&nbsp; These values have been found 
+        useful for FEI scopes: 0.1 for Tecnais, 0.3 for Krios, 0.3 for a Glacios, 0.5 
+        for a Talos 120C. Once an appropriate value is determined, the default 
       value can be set with the second entry to the property &#39;AstigmatismParams&#39;.</p>
     <p>
       <A name="hid_autofocusfocus_astigmati"></A><B>Astigmatism by BTID command
@@ -1026,8 +1029,8 @@
         tilt by the scaling and round to the nearest 0.1 to get the percentage value to 
         enter.</li>
       <li>The amount to change the stigmators needs to be large enough to get sizable 
-        differences in beam-tilt induced shift, but not unrealistically large.&nbsp; On 
-        FEI scopes, values of 0.1 - 0.15 are appropriate.&nbsp; On non-FEI scopes, or if 
+        differences in beam-tilt induced shift, but not unrealistically large.&nbsp; See 
+          the section above for values that should work on &nbsp;some FEI scopes.&nbsp; On non-FEI scopes, or if 
         you want to check the effect of a value on an FEI scope, use the following 
         script:<br />
         ReportObjectiveStigmator<br />
@@ -1044,7 +1047,8 @@
         the script.&nbsp; Compute the FFT and click at the first minimum along the minor 
         axis of the ellipse to measure the maximum defocus, and along the major axis to 
         measure the minimum defocus.&nbsp; The difference should be 0.7 - 1 microns.&nbsp; 
-        Adjust the value &#39;0.1&#39; in the script to achieve this.</li>
+          (If you have the option for CTF fitting turned on, click at the first minimum 
+          midway between the axes and use the &#39;astig&#39; value that it reports.)&nbsp; Adjust the value &#39;0.1&#39; in the script to achieve this.</li>
     </ol>
     <p>
       Calibrations are stored separately for different magnifications, probe mode on 

@@ -586,10 +586,11 @@
         </TR>
         <TR VALIGN="top">
           <TD>KeepEFTEMstate</TD>
-          <TD>Set to 1 to avoid switching between EFTEM and normal lens mode when starting 
-            or exiting the program.&nbsp; If &#39;InitialCurrentCamera&#39; is not set, then it will 
+          <TD>Set to 0 to revert to original program behavior, which was to leave EFTEM state
+            when starting and exiting the program. (Changed for 3.7.6, 6/12/19)&nbsp; 
+              With its default of 1, if &#39;InitialCurrentCamera&#39; is not set, then it will 
             stay in the current state and pick an initial camera appropiate for that state.&nbsp; 
-            If &#39;InitialCurrentCamera&#39; is set, it overrides this entry on program startup.&nbsp; 
+            If &#39;InitialCurrentCamera&#39; is set, it will still switch if necessary on program startup.&nbsp; 
             In either case, the program will stay in EFTEM when exiting.</TD>
         </TR>
         <TR VALIGN="top">
@@ -2630,7 +2631,7 @@
             BTID Astig 
         Beam Tilt</a> will be retained in the settings file and override this default.&nbsp; 
             Additional entries are optional: &#39;A&#39; for stigmator values to apply (default 
-            0.1); &#39;T&#39; for threshold stigmator change above which the correction is iterated 
+              was 0.1, became 0.04 as of 3.7.6, 6/12/19); &#39;T&#39; for threshold stigmator change above which the correction is iterated 
             (default 0.015); &#39;F&#39; for middle focus value at which stigmators are varied 
             (default -1 microns); &#39;R&#39; for focus range to assess (default 10 microns).</TD>
         </TR>

@@ -242,6 +242,8 @@ void EMmontageController::SetMontaging(BOOL inVal)
 
   mParam = mWinApp->GetMontParam();
   int iCam = activeList[mParam->cameraIndex];
+  if (mParam->useViewInLowDose)
+    mParam->useSearchInLowDose = false;
 
   if (inVal) {
     mVerySloppy = mParam->verySloppy;

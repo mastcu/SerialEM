@@ -1684,7 +1684,7 @@ void CSerialEMDoc::ReadSetPropCalFiles()
   CFileStatus status;
   mCurrentSettingsPath = "";
   mOriginalCwd = "";
-  CString strSys, firstSys;
+  CString strSys, firstSys, fname;
 
   // Adjust the system path for shared application data for Windows Vista/7
   if (IsVersion(6, VER_GREATER_EQUAL, 0, VER_GREATER_EQUAL))
@@ -1750,8 +1750,10 @@ void CSerialEMDoc::ReadSetPropCalFiles()
       if (mParamIO->ReadProperties(strSys)) {
         if (trial)
           AfxMessageBox("Error reading properties file", MB_EXCLAME);
-      } else
+      } else {
+        UtilSplitPath(status.m_szFullName, mFullSystemDir, fname);
         break;
+      }
     } else if (trial)
       AfxMessageBox("No properties file found", MB_EXCLAME);
     mSystemPath = defaultSysPath;
@@ -2095,6 +2097,8 @@ void CSerialEMDoc::PostSettingsRead()
       dlgPlacements, colorIndex);
     mWinApp->OpenOrCloseMacroEditors();
   }
+  mWinApp->AppendToLog("Read settings from: " + mCurrentSettingsPath,
+    LOG_SWALLOW_IF_CLOSED);
 }
 
 

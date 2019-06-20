@@ -1,8 +1,7 @@
 // SerialEM.cpp          The main module, has top level routines and
 //                          miscellaneous message handlers
 //
-// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2003-2019 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -661,7 +660,7 @@ CSerialEMApp::CSerialEMApp()
   mFrameAlignMoreOpen = false;
   mShowRemoteControl = true;
   mHasFEIcamera = false;
-  mKeepEFTEMstate = false;
+  mKeepEFTEMstate = true;   // Changed for 3.7.6
   mUseRecordForMontage = false;
   mUseViewForSearch = false;
   mIdleBaseCount = 0;
@@ -961,6 +960,10 @@ BOOL CSerialEMApp::InitInstance()
       OnFileOpenlog();
     }
   }
+  AppendToLog("Read settings from: " + mDocWnd->GetCurrentSettingsPath(),
+    LOG_SWALLOW_IF_CLOSED);
+  AppendToLog("Read properties/calibrations from: " + mDocWnd->GetFullSystemDir(),
+    LOG_SWALLOW_IF_CLOSED);
   SEMTrace('1', "Detected system DPI of %d, using DPI %d%s", mag, mSystemDPI,
     mDisplayNotTruly120DPI ? " but not scaling for 120" : "");
 

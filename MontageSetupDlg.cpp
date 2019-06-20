@@ -290,6 +290,8 @@ BOOL CMontageSetupDlg::OnInitDialog()
   mMinOverlap = mWinApp->mDocWnd->GetMinMontageOverlap();
   mMaxPieces = mWinApp->mDocWnd->GetMaxMontagePieces();
   CBaseDlg::OnInitDialog();
+  if (mParam.useViewInLowDose)
+    mParam.useSearchInLowDose = false;
 
   SetupPanelTables(idTable, leftTable, topTable, mNumInPanel, mPanelStart);
   if (mNumCameras > 4) {
