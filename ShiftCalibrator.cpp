@@ -285,8 +285,8 @@ void CShiftCalibrator::CalibrateIS(int ifRep, BOOL calStage, BOOL fromMacro)
   
   message = "To calibrate, " + numToDo + " images will be acquired using\nthe "
     + mModeNames[CAL_BASE_CONSET] + " parameter set.\nBefore starting, be sure that the"
-    " beam brightness and exposure\n time are set so as to give "
-    "an image with moderately\nhigh counts with " + mModeNames[CAL_BASE_CONSET] + ".\n\n";
+    " beam brightness and\nexposure time are set so as to give "
+    "an image\nwith moderately high counts with " + mModeNames[CAL_BASE_CONSET] + ".\n\n";
    if (mCalStage) {
      if (mNumShiftCal > 6) {
        numToDo.Format("The stage will be moved %.0f microns in X and %0.f microns in Y."
