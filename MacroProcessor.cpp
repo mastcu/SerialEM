@@ -253,7 +253,7 @@ enum {CME_SCRIPTEND = -7, CME_LABEL, CME_SETVARIABLE, CME_SETSTRINGVAR, CME_DOKE
   CME_CURRENTSETTINGSTOLDAREA, CME_UPDATELOWDOSEPARAMS, CME_RESTORELOWDOSEPARAMS,
   CME_CALLSTRINGARRAY, CME_STRINGARRAYTOSCRIPT, CME_MAKEVARPERSISTENT,
   CME_SETLDADDEDBEAMBUTTON, CME_KEEPCAMERASETCHANGES, CME_REPORTDATETIME,
-  CME_REPORTFILAMENTCURRENT, CME_SETFILAMENTCURRENT
+  CME_REPORTFILAMENTCURRENT, CME_SETFILAMENTCURRENT, CME_CLOSEFRAMEMDOC 
 };
 
 // The two numbers are the minimum arguments and whether arithmetic is allowed
@@ -386,7 +386,7 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"UpdateLowDoseParams", 1, 0}, {"RestoreLowDoseParams", 0, 0}, {"CallStringArray", 1, 0},
 {"StringArrayToScript", 1, 0}, {"MakeVarPersistent", 1, 0},{"SetLDAddedBeamButton", 0, 0},
 {"KeepCameraSetChanges", 0, 0}, {"ReportDateTime", 0, 0}, {"ReportFilamentCurrent", 0, 0},
-{"SetFilamentCurrent", 1, 0},
+{"SetFilamentCurrent", 1, 0}, {"CloseFrameMdoc", 0, 0},
 {NULL, 0, 0}
 };
 
@@ -3242,6 +3242,12 @@ void CMacroProcessor::NextCommand()
       return;
     if (mWinApp->mDocWnd->DoOpenFrameMdoc(report))
       SUSPEND_LINE("because of error opening frame mdoc file in statement:\n\n")
+    break;
+
+  case CME_CLOSEFRAMEMDOC:                                  // CloseFrameMdoc
+    if (!itemEmpty[1] && itemInt[1] && mWinApp->mDocWnd->GetFrameAdocIndex() < 0)
+      ABORT_LINE("There is no frame mdoc file open for line:\n\n");
+    mWinApp->mDocWnd->DoCloseFrameMdoc();
     break;
     
   case CME_ADDTONEXTFRAMESTACKMDOC:                         // AddToNextFrameStackMdoc

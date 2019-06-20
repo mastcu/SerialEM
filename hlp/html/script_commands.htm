@@ -1392,9 +1392,16 @@
             An error is generated if such a file is already open.</TD>
         </TR>
         <TR vAlign="top">
+          <TD class="style7">OpenFrameMdoc [#]</TD>
+            <td>Closes the '.mdoc' file for acquisitions that save frames, if one is open. 
+                If the optional # is non-zero, an error is generated if no file is open.
+            </TD>
+        </TR>
+         <TR vAlign="top">
           <TD class="style7">AddToFrameMdoc key value</TD>
           <TD>Adds a key-value pair to the last section of the autodoc opened with the
-            <a href="menu_file.htm#hid_file_open_mdoc">Open .mdoc for Frames</a> command.&nbsp; 
+            <a href="menu_file.htm#hid_file_open_mdoc">Open .mdoc for Frames</a> or 
+              'OpenFrameMdoc' command.&nbsp; 
             This works just like AddToAutodoc, but the WriteFrameMdoc command must be used 
             instead after adding values.</TD>
         </TR>
