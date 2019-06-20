@@ -12,7 +12,9 @@
 #define MAX_TS_ACTIONS 65
 #define MAX_TS_TILTS 720
 #define MAX_COSINE_POWER 5
-enum {BIDIR_NONE = 0, BIDIR_FIRST_PART, BIDIR_RETURN_PHASE, BIDIR_SECOND_PART};
+#define NUM_CHGD_CONSETS 5
+enum {BIDIR_NONE = 0, BIDIR_FIRST_PART, BIDIR_RETURN_PHASE, BIDIR_SECOND_PART, 
+  DOSYM_ALTERNATING_PART, DOSYM_TO_BIDIR_PHASE};
 enum {TSMACRO_PRE_TRACK1 = 1, TSMACRO_PRE_FOCUS, TSMACRO_PRE_TRACK2, TSMACRO_PRE_RECORD};
 #define MAX_TSMACRO_STEPS 5
 enum {DEFSUM_LOOP, DEFSUM_NORMAL_STOP, DEFSUM_ERROR_STOP, DEFSUM_TERM_ERROR};
@@ -117,6 +119,13 @@ public:
   GetMember(int, TerminateOnError);
   GetSetMember(BOOL, SeparateExtraRecFiles);
   GetSetMember(float, StepForBidirReturn);
+  GetSetMember(int, RestoreStageXYonTilt);
+  GetSetMember(BOOL, ReorderDoseSymFile);
+  GetSetMember(int, DoingDosymFileReorder);
+  GetSetMember(int, DosymFitPastReversals);
+  GetMember(int, AlignBuf);
+  GetSetMember(int, DosymBacklashDir);
+
   double GetCumulativeDose();
 
   bool GetBidirStartAngle(float &outVal) {outVal = mTSParam.bidirAngle; return mStartedTS && mTSParam.doBidirectional;};
@@ -125,7 +134,7 @@ public:
            int minFit, int minQuadratic, float &slope, float &slope2, float &intcp,
            float &roCorr, float predX, float &predY, float &stdError);
   BOOL UsableLowMagRef(double angle);
-  void NewLowDoseRef(int inBuf);
+  void NewLowDoseRef(int inBuf, int refBuf = -1);
   TiltSeriesParam *GetTiltSeriesParam() {return &mTSParam;};
   BOOL TerminateOnExit();
   BOOL OKtoBackUpTilt() {return mTiltIndex > 0;};
@@ -140,8 +149,8 @@ public:
   BOOL IsResumable();
   int FitAndPredict(int nvar, int npnt, float &rsq, int npred);
   void ComputePredictions(double angle);
-  void StartBackingUp(int inStep);
-  void EndControl(BOOL terminating);
+  void StartBackingUp(int inStep, int tiltIndForDosym);
+  int EndControl(BOOL terminating, BOOL startReorder);
   void ExternalStop(int error);
   void CommonStop(BOOL terminating);
   void ErrorStop();
@@ -178,6 +187,7 @@ private:
   CSerialEMApp * mWinApp;
   CSerialEMDoc *mDocWnd;
   ControlSet * mConSets;
+  ControlSet * mCamConSets;
   EMimageBuffer *mImBufs;
   MontParam *mMontParam;
   int *mActiveCameraList;
@@ -288,6 +298,8 @@ private:
   int mAlignBuf;              // Alignment buffer
   int mReadBuf;               // Read buffer
   int mExtraRefBuf;           // For low mag or other ref
+  int mDosymAlignBufs[2];     // Align buffers for neg and positive direction of dose-sym
+  int mDosymExtraRefBufs[2];  // Track buffers for dose-sym
   int mAnchorBuf;             // Buf for anchor
   float mAnchorAngle;         // Actual angle of anchor image
   BOOL mCanFindEucentricity;  // Flag that start was near enough to zero to do eucen.
@@ -346,6 +358,7 @@ private:
   BOOL mNeedRegularTrack;     // Flag that need a regular track on this round
   BOOL mNeedFocus;            // Flag that need autofocus on this round
   BOOL mExtraRefShifted;      // Flag that low-dose track or low mag ref has been shifted
+  int mSecondResetTiltInd;    // Tilt index at which second reset shift was already done
   int mOverwriteSec;          // Section number to overwrite
   BOOL mStopAtLoopEnd;        // Flag to end at logical end of loop
   double mCurrentTilt;        // Current tilt angle
@@ -370,6 +383,7 @@ private:
   int mPositionFailures;      // Number of consecutive failures in Record position
   int mMaxPositionFailures;   // Maximum number allowed
   int mBackingUpTilt;         // Indicator of 2-step process of backing up
+  int mBackingUpTiltInd;      // Tilt index value to pass if haven't started actual backup
   float mMaxTiltError;        // Maximum amount result could be off after a good tilt
   float mLastIncrement;       // Last actual tilt increment
   double mStopStageX;         // Stage position when controller stopped
@@ -403,13 +417,12 @@ private:
   int mBackingUpZ;            // Z value to load if backing up
   float mStageMovedTolerance; // change in stage position that counts as a user move
   float mUserFocusChangeTol;  // change in focus - target that implies user change
-  double mLastLDTrackAngle;   // Angle of last low dose track
+  double mLastLDTrackAngle[2]; // Angle of last low dose track, by direction
   int mNumTrackStack;         // Size of stack for low dose tracking shots
   int mTrackStackBuf;         // First buffer of stack
   float mLastMean;            // Last mean computed for intensity
   BOOL mHaveRecordRef;        // flag that reference for Record autoalign exists
   BOOL mHaveTrackRef;         // flag that reference for LD tracking is to be used
-  BOOL mStackedLDRef;         // flag that current reference was already put on stack
   int mRestoredTrackBuf;      // Buffer from which track was restored when backed up
   BOOL mDidRegularTrack;      // Flag that a track was done before record on this round
   BOOL mRoughLowMagRef;       // Flag that we are getting, or got, an unaligned low mag ref
@@ -467,6 +480,37 @@ private:
   float mAlarmBidirFieldSize;  // Size of field below which to warn or alarm user
   BOOL mWalkBackForBidir;      // Flag for whether to return with walk up
   float mStepForBidirReturn;   // Step size when returning in tilt steps
+  int mDosymBacklashDir;       // Backlash direction for dose symmetric
+  FloatVec mDosymCurrentTilts; // mCurrentTilt values when the states were saved
+  std::vector<double> mDosymSavedISX, mDosymSavedISY;     // Saved image shift
+  std::vector<double> mDosymDefocuses;                    // Saved defocus
+  std::vector<double> mDosymIntensities;                  // Saved intensities
+  FloatVec mDosymExposures[NUM_CHGD_CONSETS];             // Saved exposure times
+  FloatVec mDosymDriftSettlings[NUM_CHGD_CONSETS];        // Saved drifts FWIW
+  FloatVec mDosymRecFrameTimes;                           //  Saved frame times for Record
+  int mLastDosymReversalInd;   // Last saved state index before a reversal (OK ON BACKUP?)
+  int mNextDirection;          // Tilt direction on next tilt set by AssessNextTilt
+  float mBaseAngleForVarying;  // Vary intensity/impose changes relative to this angle 
+  FloatVec mIdealDosymAngles;  // List of expected angles for dose-sym
+  ShortVec mDosymDirections;   // List of directions
+  int mNumDoseSymTilts;        // Size of arrays of angles and directions
+  bool mDoingDoseSymmetric;    // Master flag of dose-symmetric
+  int mDosymTakeAnchorIndex;   // Tilt index at which to take an anchor image
+  int mDosymAlignAnchorIndex;  // Tilt index at at which to align the anchor
+  bool mMadeDosymAnchor;       // Flag that an anchor was made
+  int mDosymIndexOfFinalPart;  // Index in dosym angle/direction arrays of start of bidir
+  bool mDosymSwitchNeedsTilt;  // Flag that the switch to bidir actually needs to tilt
+  int mDosymIndexTiltedTo;     // Index actually tilt to in postaction or end of loop
+  int mDosymFitPastReversals;  // Property to fit X/Y past reversal (1) or Z also (2)
+  int mHighestDosymStateInd;   // Highest index at which dosym state was saved
+  BOOL mReorderDoseSymFile;    // User option to reorder file
+  int mDoingDosymFileReorder;  // Flag that reorder is under way
+  bool mClosedDoseSymFile;     // Flag that the file was closed by reordering
+  bool mFinishingLastReorder;  // Flag that last reorder was switched to synchronous
+  bool mNeedFinalTermTasks;    // Flag to do final termination tasks when reorder is done
+  CString mEndCtlFilePath;     // Things that need to be known about the file in the
+  int mEndCtlWidth, mEndCtlHeight;   // second trip through EndControl where file is gone
+
   int mMaxDelayAfterTilt;      // Maximum delay for tilt during TS, in seconds
   BOOL mEarlyK2RecordReturn;   // Flag to return early if possible from Record Dose frac
   BOOL mCallTSplugins;         // Flag to control whether plugins get called
@@ -489,6 +533,9 @@ private:
   CString mTCBoxCancelText;
   int mTCBoxDefault;           // Default button
   float mTrialCenterMaxRadFrac; // Maximum radius as fraction of diagonal to center with T
+  int mRestoreStageXYonTilt;   // Flag to restore stage position after tilt
+  double mStageXtoRestore;     // X and Y positions, or NO_EXTRA_VALUE when not set
+  double mStageYtoRestore;
 
 public:
 	void CenterBeamWithTrial();
@@ -518,6 +565,17 @@ public:
   void SetupExtraOverwriteSec(void);
   int CheckAndLimitAbsFocus(void);
   int StartGettingDeferredSum(int fromWhere);
+  double CosineIntensityChangeFac(double fromAngle, double toAngle);
+  double MaxUsableDiffFromAngle(double angle);
+  int RestoreDoseSymmetricState(int newTiltInd, int restoreInd, double forTiltAngle = -999.);
+  void TiltWithDoseSymBacklash(StageMoveInfo &smi, double tiltAngle, bool justSetup = false);
+  bool TimeToTakeDoseSymAnchor(int tiltIndex);
+  void ResizeDosymVectors(int size);
+  int SwitchToSynchronousBidirCopy();
+  void DoFinalTerminationTasks();
+  int ManageDoseSymmetricOnTilt();
+  int RestoreStageXYafterTilt();
+  int FindClosestStackReference(double curAngle, int direction, float & bufAngle);
 };
 
 

@@ -305,6 +305,7 @@ FLOAT_PROP_TEST("TSTrialCenterMaxRadFrac", tsController->, TrialCenterMaxRadFrac
 FLOAT_PROP_TEST("TSStepForBidirReturn", tsController->, StepForBidirReturn)
 INT_PROP_TEST("TSRestoreStageXYonTilt", tsController->, RestoreStageXYonTilt)
 INT_PROP_TEST("TSDosymFitPastReversals", tsController->, DosymFitPastReversals)
+INT_PROP_TEST("TSDosymBacklashDir", tsController->, DosymBacklashDir)
 FLOAT_PROP_TEST("BeamCalMinField", beamAssessor->, CalMinField)
 FLOAT_PROP_TEST("BeamCalExtraRangeNeeded", beamAssessor->, ExtraRangeAtMinMag)
 INT_PROP_TEST("BeamCalMinCounts", beamAssessor->, MinCounts)

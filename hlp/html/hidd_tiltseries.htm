@@ -70,16 +70,25 @@
       <P>This grouping contains various controls related to tilting and tilt angle. The 
         increment, delay time, and choice of cosine tilting duplicate the entries that 
         can be made through the <A HREF="hidd_tiltcontrol.htm">Tilt Control panel</A> .</P>
-      <P><B>Start at</B></P>
-      <P>Enter the starting tilt angle in this text box. If you are already at high tilt 
+      <P><B>Start at / Tilt To</B></P>
+      <P>Enter the starting tilt angle in this text box for a unidirectional series, or 
+          the highest angle to go to on the first side for bidirectional or dose-symmetric 
+          series. This angle can be positive 
+        or negative.&nbsp; If you are already at high tilt 
         when you first start the setup dialog, the box will show the current tilt 
-        angle; otherwise it will contain a default angle. After a tilt series is 
-        started, this value cannot be changed. The starting tilt angle can be positive 
-        or negative.</P>
+        angle; otherwise it will contain a default angle or one based on previous tilt 
+          series. This value cannot be changed after a unidirectional tilt series is 
+        started, after a bidirectional series has finished its first part going to this 
+          angle, or after a dose-symmetric series has reached this angle and taken at 
+          least one image on the second side.</P>
       <P><B>End at</B></P>
-      <P>Enter the ending tilt angle in this text box. When you first start the setup 
-        dialog, this box will contain the negative of the value in the starting tilt 
-        angle text box. The ending angle can be changed at any time.</P>
+      <P>Enter the ending tilt angle in this text box for a unidirectional series, or the 
+          highest angle to go to on the second side for other series. When you first start 
+          the setup dialog, this box will contain the negative of the value in the 
+          starting tilt angle text box. The ending angle can be changed at any time for 
+          unidirectional or bidirectional series, but it cannot be changed after a 
+          dose-symmetric series has reached this angle and taken at least one image on the 
+          first side. </P>
       <P><STRONG>Swap</STRONG></P>
       <P>Use this button to exchange the starting and ending tilt angles in the two text 
         boxes.</P>
@@ -92,17 +101,19 @@
       <P><B>Increment proportional to cosine of angle</B></P>
       <P>Select this option to have tilt increments proportional to the cosine of the 
         tilt angle. The increment would have its basic value at zero tilt, half of that 
-        at 60 degrees, and one-third of it at 70 degrees.</P>
+        at 60 degrees, and one-third of it at 70 degrees.&nbsp; Cosine tilting is not 
+          available for dose-symmetric series.</P>
       <P><B>Total # of tilts</B></P>
       <P>This status message will show the total number tilts for the given starting and 
         ending angles, increment, and choice of regular or cosine tilting. If you make 
         a change in one of the text boxes, this message will be updated when you leave 
         the text box.</P>
     <P> <b>Run series in two directions from</b></P>
-    <P>Turning on this option 
-      will result in a bidirectional series that starts at the angle indicated in the text box, 
-      tilts up to the angle in the <b>Start at</b> text box (now labeled <b>Tilt to</b>), returns to the 
-      starting angle, and tilts to the ending angle.&nbsp; If you want the series to 
+    <P>Turn this option 
+        on for either a bidirectional or a dose-symmetric series.&nbsp; A bidirectional series 
+        will start at the angle indicated in the text box, 
+      tilt up to the angle in the <b>Start at</b> text box (now labeled <b>Tilt to</b>), return to the 
+      starting angle, and tilt to the ending angle.&nbsp; If you want the series to 
       start at an intermediate angle and go through zero degrees in the first segment, 
       you must put an angle of the right sign in the text box (the same sign as the 
       ending angle).&nbsp; The program will take a lower magnification &#39;anchor&#39; image 
@@ -118,6 +129,8 @@
     <P>By default, the program will return to the starting angle of a bidirectional 
       series by tilting back in steps and restoring the stage position and image shift 
       at which the anchor was taken, with adjustments for backlash if possible.&nbsp; 
+        (Tilting in steps is probably needed only for side-entry holders and can be 
+        bypassed by setting the SerialEM property &#39;TSStepForBidirReturn&#39; to 100.) &nbsp; 
       However, if Return with Walk Up is checked, it will use the Walk Up task to 
       return instead, but it will still realign to the anchor.&nbsp; This option 
       should be used only if necessary.&nbsp; Particularly in Low Dose mode, there is 
@@ -143,6 +156,35 @@
       and it will use View parameters as the basis for taking that image.&nbsp; Do not 
       assume that a View image will be reliable for the anchor just because it works 
       for other operations.</P>
+      <P><strong>Use dose-symmetric scheme</strong></P>
+      <P>Turn on this option for a dose-symmetric series, where the program will alternate 
+          between the two directions of tilting based on parameters set in the <a href="hidd_tsdosesym.htm">Dose Symmetric Tilt Series Parameters dialog</a>, 
+          starting at the angle specified in the <b>Run series in two directions from</b> 
+          text box.&nbsp; Background and details on this tilting method are available in
+          <a href="about_tilt_series.htm#doseSymmetric">Acquiring Tilt Series</a> as well 
+          as in the help for that setup dialog.&nbsp;&nbsp; This is a form of bidirectional series, so this check box is not 
+          enabled unless the option for that is selected.&nbsp; Also, the dose-symmetric 
+          option is available only in Low Dose mode.&nbsp; Changes in this dialog that you 
+          will see after selecting this option are:</P>
+      <ul>
+          <li>The option for cosine tilting is disabled.</li>
+          <li>Controls for the anchor image and returning with Walk Up are disabled.&nbsp; 
+              There is an option to use an anchor image when the series has to return to the 
+              second side after finishing the first side with a relatively long unidirectional 
+              segment.&nbsp; However, only View images can be used for that anchor.</li>
+          <li>Image shift will not be reset once the tilt series is underway, but it can be 
+              reset before taking the first Record if the image shift is too large.&nbsp; This 
+              initial reset is controlled by a separate setting for the image shift limit.&nbsp; 
+              This setting is placed in the <B>Limit image shift</B> text box and the label 
+              after the box changes to 'um at start' when the dose-symmetric option is 
+              selected.</li>
+          <li>The option for autocentering the beam when reaching a specified angle in the 
+              second half of the series is not available.</li>
+      </ul>
+      <P><strong>Set Up</strong></P>
+      <P>Once a dose-symmetric series is selected, press this button to open the <a href="hidd_tsdosesym.htm">Dose Symmetric Tilt Series Parameters dialog</a> 
+          and specify the sequence of alternations between the two sides of the series, as 
+          well as few other parameters.</P>
       <P><B>Delay time after tilting by basic increment</B></P>
       <P>Enter a delay time in seconds in this text box. This delay will be applied 
         before taking an image, but only under certain circumstances, i.e, when taking 
@@ -154,7 +196,8 @@
         Record exposure time and drift settling time, the target for autofocusing, and 
         energy loss and slit width when using an energy filter. If you have already 
         defined some changes, this option must be selected for them to be used during 
-        the series.</P>
+        the series.&nbsp; For a dose-symmetric series, the tilt angles for making changes 
+          are all relative to the initial angle of the series.</P>
       <P><B>Set Changes</B></P>
       <P>Once you have enabled the use of scheduled changes with the adjacent check box, 
         use this button to set, adjust, or view the changes in the <A HREF="hidd_tsvariations.htm">
@@ -187,7 +230,8 @@
         magnification where tracking occurs reliably.</P>
       <P><B>Limit image shift</B></P>
       <P>Enter the maximum image shift that should be allowed to accumulate before the 
-        program resets image shifts.</P>
+        program resets image shifts.&nbsp; For a dose-symmetric series, the limit shown 
+          applies only at the start of the series.</P>
       <P><B>Recenter beam from Low Dose tracking images</B></P>
       <P>This option is available in Low Dose mode for keeping the beam centered during a 
         tilt series. When the program takes a new track reference or a tracking image 
@@ -214,8 +258,8 @@
       <P>Select this option to have the beam autocentering routine run once when the tilt 
         series crosses back above the angle specified in the text box. This option 
         allows the beam to be centered before it becomes constricted at high angles. 
-        Enter a positive angle even if angles are negative the second half of the 
-        series.</P>
+        Enter a positive angle even if angles are negative in the second half of the 
+        series.&nbsp; This option is unavailable for dose-symmetric series.</P>
       <P><B>Refine zero-loss peak</B></P>
       <P>If you have an energy filter, this option is available to refine the alignment 
         of the zero-loss peak periodically during the tilt series. After selecting the 
@@ -230,17 +274,21 @@
         compensate. Traditionally, SerialEM has used changes in beam intensity 
         (brightness, C2 or illuminated area on FEI scopes, or C3 on JEOL) to 
         compensate for changes in 
-        beam attenuation. It is now also possible to have exposure time changed 
+        beam attenuation. It is also possible to have exposure time changed 
         instead. Changing exposure time only will leave the beam in a constant state, 
         which would allow one to stay in parallel illumination. However, increasing 
         exposure time may lead to drift in the images, and for plastic sections, it 
         will generally require longer drift settling times.&nbsp; If you have a direct 
         electron detector, changing exposure time presents additional complications 
         because it may be constrained to be a multiple of a certain value.</P>
+      <P>When doing a dose-symmetric series, the changes described in this section that 
+          depend on angle (cosine variation and tapering of counts) are done relative to 
+          the starting angle of the tlit series.</P>
       <P><B>Change Record exposure time instead of beam intensity</B></P>
       <P>Select this option to vary the exposure time of Record images instead of beam 
         intensity to achieve whatever control of specimen exposure is specified in the 
-        options below this. With this alternative, the program will use interpolation 
+        options below this. When using this alternative with a CCD camera where dark 
+          references are specific to the exposure time, the program will use interpolation 
         between dark references, if possible, to avoid having to take a new dark 
         reference for each image. This is the same interpolation that can be activated 
         with the <A HREF="menu_camera.htm#hid_camera_interpolate_dark_refs">Interpolate 
@@ -288,7 +336,8 @@
         the specimen and objective aperture is about 0.5 at zero tilt. With a higher 
         power, the variation in specimen exposure will be less; for example, with a 
         power of two the specimen exposure will vary by the square root of the inverse 
-        cosine and thus change by a factor of 1.41 from 0 to 60&deg;</P>
+        cosine and thus change by a factor of 1.41 from 0 to 60&deg;; for a power of 4 the 
+          factor is only 1.19.</P>
       <P><B>Set intensity to keep mean counts constant</B></P>
       <P>Select this option to have the beam or exposure time continually adjusted during 
         the series so that Record images will have the mean value specified in the text 
@@ -405,7 +454,9 @@
       <P><B>Focus every time at high tilt</B></P>
       <P>If this option is selected, the program will do autofocus at every tilt angle 
         above the value entered in the text box. Enter a positive angle; it will apply 
-        on both the positive and negative sides of the tilt series.</P>
+        on both the positive and negative sides of the tilt series.&nbsp; With 
+          dose-symmetric tilting, the starting angle of the series will be added to the 
+          specified number to determine the actual threshold angles.</P>
       <P><B>Check autofocus and stop if inadequate</B></P>
       <P>If this option is selected, the program will run a routine to check the accuracy 
         of autofocus at high tilt, and stop the tilt series if the accuracy is not 

@@ -1,7 +1,6 @@
 // TSController.cpp:      The tilt series controller
 //
-// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2003-2019 by  the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -16,6 +15,7 @@
 #include "TSResumeDlg.h"
 #include "TSBackupDlg.h"
 #include "TSvariationsDlg.h"
+#include "TSDoseSymDlg.h"
 #include "MultiTSTasks.h"
 #include "TSExtraFile.h"
 #include "ComplexTasks.h"
@@ -48,39 +48,74 @@ static char THIS_FILE[] = __FILE__;
 
 // The defines for the actions.  Order is arbitrary here, and numbers just have to
 // be less than MAX_TS_ACTIONS
-enum {LOOP_START_CHECKS = 1, CHECK_RESET_SHIFT, IMPOSE_VARIATIONS, CHECK_REFINE_ZLP, 
-      COMPUTE_PREDICTIONS, LOW_MAG_FOR_TRACKING, ALIGN_LOW_MAG_SHOT, TRACKING_SHOT, 
-      ALIGN_TRACKING_SHOT, AUTOFOCUS, CHECK_AUTOCENTER,
-      POST_FOCUS_TRACKING, ALIGN_POST_FOCUS, RECORD_OR_MONTAGE, SAVE_RECORD_SHOT, 
-      TRACK_BEFORE_LOWMAG_REF, ALIGN_LOWMAG_PRETRACK, LOW_MAG_REFERENCE, COPY_LOW_MAG_REF,
-      LOWDOSE_PREVIEW, ALIGN_LOWDOSE_PREVIEW, LOWDOSE_TRACK_REF, COPY_LOWDOSE_REF, 
-      TILT_IF_NEEDED, SAVE_AUTOFOCUS, ZEROTILT_TRACK_SHOT, ALIGN_ZEROTILT_TRACK, 
-      ZEROTILT_PREVIEW, ALIGN_ZEROTILT_PREVIEW, WALK_UP, STARTUP_AUTOFOCUS, 
-      SAVE_STARTUP_AUTOFOCUS, STARTUP_PREVIEW, ALIGN_STARTUP_PREVIEW, STARTUP_TRACK_SHOT,
-      POST_WALKUP_SHOT, STARTUP_ALIGN_TRACK, REVERSE_TILT, EUCENTRICITY, CHECK_AUTOFOCUS, 
-      EVALUATE_AUTOFOCUS, EXTRA_RECORD, SAVE_EXTRA_RECORD, FINISH_STARTUP, 
-      BIDIR_ANCHOR_SHOT, BIDIR_INVERT_FILE, BIDIR_RETURN_TO_START, BIDIR_REALIGN_SHOT,
-      BIDIR_CHECK_SHIFT, BIDIR_TRACK_SHOT, BIDIR_ALIGN_TRACK, BIDIR_RELOAD_REFS,
-      BIDIR_LOWMAG_REF, BIDIR_COPY_LOWMAG_REF, BIDIR_AUTOFOCUS, BIDIR_REVERSE_TILT,
-      BIDIR_FINISH_INVERT, GET_DEFERRED_SUM
+enum {
+  LOOP_START_CHECKS = 1, CHECK_RESET_SHIFT, IMPOSE_VARIATIONS, CHECK_REFINE_ZLP,
+  COMPUTE_PREDICTIONS, LOW_MAG_FOR_TRACKING, ALIGN_LOW_MAG_SHOT, TRACKING_SHOT,
+  ALIGN_TRACKING_SHOT, AUTOFOCUS, CHECK_AUTOCENTER,
+  POST_FOCUS_TRACKING, ALIGN_POST_FOCUS, RECORD_OR_MONTAGE, SAVE_RECORD_SHOT,
+  TRACK_BEFORE_LOWMAG_REF, ALIGN_LOWMAG_PRETRACK, LOW_MAG_REFERENCE, COPY_LOW_MAG_REF,
+  LOWDOSE_PREVIEW, ALIGN_LOWDOSE_PREVIEW, LOWDOSE_TRACK_REF, COPY_LOWDOSE_REF,
+  TILT_IF_NEEDED, SAVE_AUTOFOCUS, ZEROTILT_TRACK_SHOT, ALIGN_ZEROTILT_TRACK,
+  ZEROTILT_PREVIEW, ALIGN_ZEROTILT_PREVIEW, WALK_UP, STARTUP_AUTOFOCUS,
+  SAVE_STARTUP_AUTOFOCUS, STARTUP_PREVIEW, ALIGN_STARTUP_PREVIEW, STARTUP_TRACK_SHOT,
+  POST_WALKUP_SHOT, STARTUP_ALIGN_TRACK, REVERSE_TILT, EUCENTRICITY, CHECK_AUTOFOCUS,
+  EVALUATE_AUTOFOCUS, EXTRA_RECORD, SAVE_EXTRA_RECORD, FINISH_STARTUP,
+  BIDIR_ANCHOR_SHOT, BIDIR_INVERT_FILE, BIDIR_RETURN_TO_START, BIDIR_REALIGN_SHOT,
+  BIDIR_CHECK_SHIFT, BIDIR_TRACK_SHOT, BIDIR_ALIGN_TRACK, BIDIR_RELOAD_REFS,
+  BIDIR_LOWMAG_REF, BIDIR_COPY_LOWMAG_REF, BIDIR_AUTOFOCUS, BIDIR_REVERSE_TILT,
+  BIDIR_FINISH_INVERT, GET_DEFERRED_SUM, DOSYM_SWITCH_TO_BIDIR, DOSYM_ANCHOR_SHOT,
+  DOSYM_REALIGN_SHOT,
 };
 
-static const char *actionText[] = 
-{"LOOP_START_CHECKS", "CHECK_RESET_SHIFT", "IMPOSE_VARIATIONS", "CHECK_REFINE_ZLP", 
-"COMPUTE_PREDICTIONS", "LOW_MAG_FOR_TRACKING", "ALIGN_LOW_MAG_SHOT", "TRACKING_SHOT", 
-"ALIGN_TRACKING_SHOT", "AUTOFOCUS", "CHECK_AUTOCENTER", 
-"POST_FOCUS_TRACKING", "ALIGN_POST_FOCUS", "RECORD_OR_MONTAGE", "SAVE_RECORD_SHOT", 
-"TRACK_BEFORE_LOWMAG_REF", "ALIGN_LOWMAG_PRETRACK", "LOW_MAG_REFERENCE", "COPY_LOW_MAG_REF",
-"LOWDOSE_PREVIEW", "ALIGN_LOWDOSE_PREVIEW", "LOWDOSE_TRACK_REF", "COPY_LOWDOSE_REF", 
-"TILT_IF_NEEDED", "SAVE_AUTOFOCUS", "ZEROTILT_TRACK_SHOT", "ALIGN_ZEROTILT_TRACK", 
-"ZEROTILT_PREVIEW", "ALIGN_ZEROTILT_PREVIEW", "WALK_UP", "STARTUP_AUTOFOCUS", 
-"SAVE_STARTUP_AUTOFOCUS", "STARTUP_PREVIEW", "ALIGN_STARTUP_PREVIEW", "STARTUP_TRACK_SHOT",
-"POST_WALKUP_SHOT", "STARTUP_ALIGN_TRACK", "REVERSE_TILT", "EUCENTRICITY", "CHECK_AUTOFOCUS", 
-"EVALUATE_AUTOFOCUS", "EXTRA_RECORD", "SAVE_EXTRA_RECORD", "FINISH_STARTUP", 
-"BIDIR_ANCHOR_SHOT", "BIDIR_INVERT_FILE", "BIDIR_RETURN_TO_START", "BIDIR_REALIGN_SHOT",
-"BIDIR_CHECK_SHIFT", "BIDIR_TRACK_SHOT", "BIDIR_ALIGN_TRACK", "BIDIR_RELOAD_REFS",
-"BIDIR_LOWMAG_REF", "BIDIR_COPY_LOWMAG_REF", "BIDIR_AUTOFOCUS", "BIDIR_REVERSE_TILT",
-"BIDIR_FINISH_INVERT", "GET_DEFERRED_SUM"};
+// Every item in enum should have an entry, with text for the phrase in the resume dialog
+// or empty if it is handled specially or if it is not a valid resume point
+static const char *actionText[][2] = 
+{{"LOOP_START_CHECKS", "check image shift, then track."},
+{"CHECK_RESET_SHIFT", "check image shift, then track."},
+{"IMPOSE_VARIATIONS", "change parameters based on angle, then track."},
+{"CHECK_REFINE_ZLP", "check for refining ZLP, then track."},
+{"COMPUTE_PREDICTIONS", "compute predictions, then track."},
+{"LOW_MAG_FOR_TRACKING", "get low mag tracking shot."},
+{"ALIGN_LOW_MAG_SHOT", "align low mag tracking shot."},
+{"TRACKING_SHOT", "get regular tracking shot."},
+{"ALIGN_TRACKING_SHOT", "align regular tracking shot."},
+{"AUTOFOCUS", "autofocus."},
+{"CHECK_AUTOCENTER", "check for autocentering beam , then track."},
+{"POST_FOCUS_TRACKING", "get post-focus tracking shot."},
+{"ALIGN_POST_FOCUS", "align post-focus tracking shot."},
+{"RECORD_OR_MONTAGE", ""}, {"SAVE_RECORD_SHOT", ""},
+{"TRACK_BEFORE_LOWMAG_REF", "take a Trial before getting a new low mag reference."},
+{"ALIGN_LOWMAG_PRETRACK", "align the Trial to Record reference."},
+{"LOW_MAG_REFERENCE", "get reference for low mag tracking."},
+{"COPY_LOW_MAG_REF", "copy low mag reference to its buffer."},
+{"LOWDOSE_PREVIEW", "take a Preview before getting a new tracking reference."},
+{"ALIGN_LOWDOSE_PREVIEW", "align the Preview to Record reference."},
+{"LOWDOSE_TRACK_REF", "get new tracking area reference."},
+{"COPY_LOWDOSE_REF", "copy tracking reference to its buffer."},
+{"TILT_IF_NEEDED", ""}, {"SAVE_AUTOFOCUS", ""}, {"ZEROTILT_TRACK_SHOT", ""},
+{"ALIGN_ZEROTILT_TRACK", ""}, {"ZEROTILT_PREVIEW", ""}, {"ALIGN_ZEROTILT_PREVIEW", ""},
+{"WALK_UP", ""}, {"STARTUP_AUTOFOCUS", ""}, {"SAVE_STARTUP_AUTOFOCUS", ""},
+{"STARTUP_PREVIEW", ""}, {"ALIGN_STARTUP_PREVIEW", ""}, {"STARTUP_TRACK_SHOT", ""},
+{"POST_WALKUP_SHOT", ""}, {"STARTUP_ALIGN_TRACK", ""}, {"REVERSE_TILT", ""}, 
+{"EUCENTRICITY", ""}, {"CHECK_AUTOFOCUS", ""}, {"EVALUATE_AUTOFOCUS", ""},
+{"EXTRA_RECORD", ""}, {"SAVE_EXTRA_RECORD", ""}, {"FINISH_STARTUP", ""},
+{"BIDIR_ANCHOR_SHOT", ""}, 
+{"BIDIR_INVERT_FILE", "start copying file and/or inverting Z."},
+{"BIDIR_RETURN_TO_START", "return to the starting tilt angle"},
+{"BIDIR_REALIGN_SHOT", "realign to bidirectional anchor image"},
+{"BIDIR_CHECK_SHIFT", "check for resetting image shift"}, 
+{"BIDIR_TRACK_SHOT", "take a tracking shot"},
+{"BIDIR_ALIGN_TRACK", ""}, {"BIDIR_RELOAD_REFS", "reload reference image(s)"},
+{"BIDIR_LOWMAG_REF", "take a new low mag reference"},
+{"BIDIR_COPY_LOWMAG_REF", "save the low mag reference"},
+{"BIDIR_AUTOFOCUS", "autofocus before starting second part of series"},
+{"BIDIR_REVERSE_TILT", "reverse tilt for other direction"},
+{"BIDIR_FINISH_INVERT", "finish copying file to invert Z"},
+{"GET_DEFERRED_SUM", "get the full summed Record image"},
+{"DOSYM_SWITCH_TO_BIDIR", "Switch from dose-symmetric to unidirectional tilting."},
+{"DOSYM_ANCHOR_SHOT", "take an anchor for returning to this tilt."},
+{"DOSYM_REALIGN_SHOT", "realign to the anchor."}, 
+{"", ""}};   // End with empty strings
 
 #define NO_PREVIOUS_ACTION   -1
 #define DFLT_ROLLING_BUFFERS  3
@@ -102,6 +137,8 @@ static const char *actionText[] =
 
 #define MAX_BACKUP_LIST_ENTRIES  20
 
+#define DOSYM_DIRECTION(ind) (ind < mNumDoseSymTilts ? mDosymDirections[ind] : mDirection)
+
 // Here, list the default actions in order, regular loop then startup
 // End with a zero
 // IF YOU ADD TO THE STARTUP SECTION, BE SURE TO CHANGE mNumActStartup
@@ -109,6 +146,8 @@ static int actions[MAX_TS_ACTIONS] = {
   LOOP_START_CHECKS,
   CHECK_RESET_SHIFT,
   IMPOSE_VARIATIONS,
+  DOSYM_SWITCH_TO_BIDIR,
+  DOSYM_REALIGN_SHOT,
   CHECK_REFINE_ZLP,
   CHECK_AUTOCENTER,
   COMPUTE_PREDICTIONS,
@@ -133,7 +172,8 @@ static int actions[MAX_TS_ACTIONS] = {
   ALIGN_LOWDOSE_PREVIEW,
   LOWDOSE_TRACK_REF,
   COPY_LOWDOSE_REF,
-  BIDIR_RELOAD_REFS,
+  DOSYM_ANCHOR_SHOT,
+  BIDIR_RELOAD_REFS,      // Keep these together so CanBackup can exclude these steps
   BIDIR_INVERT_FILE,
   BIDIR_RETURN_TO_START,
   BIDIR_REALIGN_SHOT,
@@ -193,6 +233,7 @@ CTSController::CTSController()
   SEMBuildTime(__DATE__, __TIME__);
   mWinApp = (CSerialEMApp *)AfxGetApp();
   mConSets = mWinApp->GetConSets();
+  mCamConSets = mWinApp->GetCamConSets();
   mImBufs = mWinApp->GetImBufs();
   mMontParam = mWinApp->GetMontParam();
   mActiveCameraList = mWinApp->GetActiveCameraList();
@@ -258,7 +299,7 @@ CTSController::CTSController()
   mTSParam.numExtraFocus = 0;
   mTSParam.numExtraExposures = 0;
   mTSParam.numExtraChannels = 0;
-  mTSParam.stackRecords = false;
+  mTSParam.stackRecords = true;
   mTSParam.stackBinSize = 512;
   mTSParam.extraSetExposure = false;
   mTSParam.extraSetSpot = false;
@@ -281,9 +322,22 @@ CTSController::CTSController()
   mTSParam.anchorBidirWithView = true;
   mTSParam.walkBackForBidir = false;
   mTSParam.retainBidirAnchor = false;
+  mTSParam.doDoseSymmetric = false;
+  mTSParam.dosymBaseGroupSize = 1;
+  mTSParam.dosymIncreaseGroups = false;
+  mTSParam.dosymGroupIncInterval = 1;
+  mTSParam.dosymGroupIncAmount = 1;
+  mTSParam.dosymIncStartAngle = 30.;
+  mTSParam.dosymDoRunToEnd = false;
+  mTSParam.dosymRunToEndAngle = 45.;
+  mTSParam.dosymAnchorIfRunToEnd = false;
+  mTSParam.dosymMinUniForAnchor = 10;
+  mTSParam.dosymStartingISLimit = 1.;
   mTSParam.doEarlyReturn = false;
   mTSParam.earlyReturnNumFrames = 1;
   mTSParam.initialized = false;
+  mReorderDoseSymFile = true;
+  mDosymBacklashDir = 0;
   mPostponed = false;
   mDoingTS = false;
   mStartedTS = false;
@@ -353,6 +407,7 @@ CTSController::CTSController()
   mRunMacroInTS = false;
   mMacroToRun = 0;
   mFrameAlignInIMOD = false;
+  mDosymFitPastReversals = 2;
   mStepAfterMacro = TSMACRO_PRE_RECORD;
   for (i = 0; i < MAX_TSMACRO_STEPS; i++)
     mTableOfSteps[i] = -1;
@@ -363,6 +418,7 @@ CTSController::CTSController()
   mFixedNumFrames = false;
   mTermOnHighExposure = false;
   mMaxExposureIncrease = 3.;
+  mRestoreStageXYonTilt = -1;
   mTiltIndex = -1;
   mSetupOpenedStamp = GetTickCount();
   FillActOrder(actions);
@@ -391,6 +447,8 @@ void CTSController::Initialize()
     mTiltFailPolicy = JEOLscope ? 1 : 0;
   if (!mStepForBidirReturn)
     mStepForBidirReturn = JEOLscope ? 10.f : 5.f;
+  if (mRestoreStageXYonTilt < 0)
+    mRestoreStageXYonTilt = FEIscope ? 1 : 0;
 }
 
 // Clear out all the flags for individual actions
@@ -446,8 +504,10 @@ void CTSController::EndLoop()
 
 BOOL CTSController::CanBackUp()
 {
-  return mStartedTS && !mDoingTS && mTiltIndex > 0 && 
-    (mActIndex < mActOrder[BIDIR_INVERT_FILE] || mActIndex >= mActOrder[TILT_IF_NEEDED]);
+  return mStartedTS && !mDoingTS && mTiltIndex > mPartStartTiltIndex && 
+    mActIndex != mActOrder[DOSYM_SWITCH_TO_BIDIR] && 
+    mActIndex != mActOrder[DOSYM_REALIGN_SHOT] &&
+    (mActIndex < mActOrder[BIDIR_RELOAD_REFS] || mActIndex >= mActOrder[TILT_IF_NEEDED]);
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -459,13 +519,12 @@ int CTSController::SetupTiltSeries(int future, int futureLDstate, int ldMagIndex
   CTSSetupDialog tsDialog;
   float fangle, fangl2;
   double angle;
-  int iDir, i, index, lowest;
-  BOOL montaging, lowNewer, highNewer;
+  int iDir, i, index, lowest, curDir;
+  BOOL montaging, lowNewer, highNewer, reversal = false;
   CString message;
   int *panelStates = mWinApp->GetTssPanelStates();
   mLowDoseMode = mWinApp->LowDoseMode();
   CameraParameters *camParam = mWinApp->GetCamParams();
-  ControlSet *camConSets = mWinApp->GetCamConSets();
   if (future && futureLDstate >= 0)
     mLowDoseMode = futureLDstate > 0;
 
@@ -593,7 +652,7 @@ int CTSController::SetupTiltSeries(int future, int futureLDstate, int ldMagIndex
 
    // Set up binning from control set of selected camera
   if (!(future && mTSParam.magLocked))
-    mTSParam.binning = camConSets[mActiveCameraList[mTSParam.cameraIndex] * MAX_CONSETS
+    mTSParam.binning = mCamConSets[mActiveCameraList[mTSParam.cameraIndex] * MAX_CONSETS
       + RECORD_CONSET].binning;
 
   // Transfer parameters - this first sets parameters in master record from other places
@@ -609,6 +668,59 @@ int CTSController::SetupTiltSeries(int future, int futureLDstate, int ldMagIndex
   tsDialog.mMaxDelayAfterTilt = (float)mMaxDelayAfterTilt;
   if (mPostponed && mWinApp->NavigatorStartedTS())
     tsDialog.mFuture = -1;
+  tsDialog.mDisableStartOrEnd = 0;
+  tsDialog.mMinDosymStart = -999.;
+  tsDialog.mMinDosymEnd = -999.;
+
+  // Handling enabling and limits for bidirectional series
+  if (mStartedTS && mTSParam.doBidirectional) {
+    if (mDoingDoseSymmetric) {
+      index = mTiltIndex;
+      if (index > 0 && mActIndex > mActOrder[SAVE_RECORD_SHOT])
+        index--;
+      curDir = DOSYM_DIRECTION(index);
+
+      // For dose-symmetric, need to limit angle changes to avoid getting a change
+      // in part of arrays alread used up
+      // Limit the current direction to the current angle
+      iDir = curDir == mDosymDirections[0] ? 1 : -1;
+      if (iDir > 0)
+        tsDialog.mMinDosymStart = mTiltAngles[index];
+      else
+        tsDialog.mMinDosymEnd = mTiltAngles[index];
+
+      // If still alternating, look for a reversal.  If there is one, the other direction
+      // gets limited by the angle at the previous reversal; if not, the other direction
+      // is just disabled
+      if (mBidirSeriesPhase == DOSYM_ALTERNATING_PART) {
+        for (i = index; i < mNumDoseSymTilts; i++)
+          if (mDosymDirections[i] != curDir)
+            reversal = true;
+        if (reversal) {
+          for (i = index; i > 0; i--) {
+            if (mDosymDirections[i] != curDir) {
+              if (iDir > 0)
+                tsDialog.mMinDosymEnd = mTiltAngles[i];
+              else
+                tsDialog.mMinDosymStart = mTiltAngles[i];
+              break;
+            }
+          }
+
+        } else {
+          tsDialog.mDisableStartOrEnd = iDir;
+        }
+      } else {
+
+        // If dose-symmetric failed over, disable other direction
+        tsDialog.mDisableStartOrEnd = -iDir;
+      }
+    } else {
+
+      // Regular bidirectional: disable the start if past the first phase
+      tsDialog.mDisableStartOrEnd = mBidirSeriesPhase != BIDIR_FIRST_PART ? -1 : 0;
+    }
+  }
 
   // 2/13/04: Set the mean in A but no longer use as the target intensity
   tsDialog.mMeanInBufferA = (int)mProcessImage->EquivalentRecordMean(0);
@@ -629,6 +741,20 @@ int CTSController::SetupTiltSeries(int future, int futureLDstate, int ldMagIndex
   if (montaging && !mTSParam.magLocked)
     mMontParam->magIndex = mTSParam.magIndex[mSTEMindex];
 
+  // Get a new set of angles and directions that may be shorter or long in undone parts
+  if (mStartedTS && mBidirSeriesPhase == DOSYM_ALTERNATING_PART) {
+    CTSDoseSymDlg::FindDoseSymmetricAngles(mTSParam, mIdealDosymAngles,
+      mDosymDirections, mDosymTakeAnchorIndex, mDosymAlignAnchorIndex);
+
+    // If the size changed, prevent going forward and accessing states that may be wrong
+    if (mNumDoseSymTilts != (int)mDosymDirections.size()) {
+      mHighestIndex = mTiltIndex;
+      ACCUM_MIN(mHighestDosymStateInd, mTiltIndex);
+    }
+    mNumDoseSymTilts = (int)mDosymDirections.size();
+    ResizeDosymVectors(mNumDoseSymTilts + 10);
+  }
+
   StartTiltSeries(tsDialog.mSingleStep, 0);
   return 0;
 } 
@@ -638,9 +764,8 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external)
   float ratio, derate;
   double angle, curIntensity;
   int error, spot, probe, newBaseZ, i, magToSet = 0;
-  CString message, str;
+  CString message, str, bidirStr;
   mLowDoseMode = mWinApp->LowDoseMode();
-  ControlSet *camConSets = mWinApp->GetCamConSets();
   mInInitialChecks = true;
   mUserPresent = !external;
   mErrorEmailSent = false;
@@ -691,10 +816,10 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external)
   // Check for binning change and issue warning and offer to abort
   // Need to operate on the camera-specific conset and copy to master consets
   i = RECORD_CONSET + mWinApp->GetCurrentCamera() * MAX_CONSETS;
-  if (camConSets[i].binning != mTSParam.binning) {
-    ratio = (float)camConSets[i].binning / mTSParam.binning;
-    camConSets[i].exposure *= ratio * ratio;
-    camConSets[i].binning = mTSParam.binning;
+  if (mCamConSets[i].binning != mTSParam.binning) {
+    ratio = (float)mCamConSets[i].binning / mTSParam.binning;
+    mCamConSets[i].exposure *= ratio * ratio;
+    mCamConSets[i].binning = mTSParam.binning;
     mWinApp->CopyConSets(mWinApp->GetCurrentCamera());
     message = "You have changed the binning of the " + mModeNames[RECORD_CONSET] +
       " parameter set.\nThe exposure time has been changed to compensate,\n"
@@ -754,14 +879,17 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external)
     mStartingTilt = mTSParam.startingTilt;
     mEndingTilt = mTSParam.endingTilt;
     mBidirSeriesPhase = BIDIR_NONE;
+    mBaseAngleForVarying = 0.;
     if (mTSParam.doBidirectional) {
-      mBidirSeriesPhase = BIDIR_FIRST_PART;
+      mDoingDoseSymmetric = mTSParam.doDoseSymmetric && mLowDoseMode;
+      mBidirSeriesPhase = mDoingDoseSymmetric ? DOSYM_ALTERNATING_PART : BIDIR_FIRST_PART;
       mStartingTilt = mTSParam.bidirAngle;
       mEndingTilt = mTSParam.startingTilt;
-      mWalkBackForBidir = mTSParam.walkBackForBidir;
+      mWalkBackForBidir = mTSParam.walkBackForBidir && !mDoingDoseSymmetric;
+      bidirStr = mDoingDoseSymmetric ? "dose symmetric" : "bidirectional";
       if (fabs(mStartingTilt - mTSParam.startingTilt) < 1. || 
         fabs(mStartingTilt - mTSParam.endingTilt) < 1.) {
-        TSMessageBox("The starting angle for bidirectional tilting is too \n"
+        TSMessageBox("The starting angle for " + bidirStr + " tilting is too \n"
           "close to the starting or ending angle");
         mPostponed = !mAlreadyTerminated;
         return 1;
@@ -769,9 +897,18 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external)
 
       if (mWinApp->mStoreMRC && mWinApp->mStoreMRC->getDepth() > 0 && mExternalControl) {
         TSMessageBox("Cannot proceed: The image file already has data in it;\n"
-          "bidirectional tilt series cannot append to a file.");
+          + bidirStr + " tilt series cannot append to a file.");
         mPostponed = !mAlreadyTerminated;
         return 1;
+      }
+
+      if (mDoingDoseSymmetric) {
+        CTSDoseSymDlg::FindDoseSymmetricAngles(mTSParam, mIdealDosymAngles,
+          mDosymDirections, mDosymTakeAnchorIndex, mDosymAlignAnchorIndex);
+        if (mDosymBacklashDir > -2 && mDosymBacklashDir < 2)
+          mDosymBacklashDir = mIdealDosymAngles[1] > mIdealDosymAngles[0] ? 1 : -1;
+        mBaseAngleForVarying = mStartingTilt;
+        mNumDoseSymTilts = (int)mDosymDirections.size();
       }
     }
 
@@ -795,7 +932,7 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external)
       if (!mWinApp->Montaging() && mWinApp->mStoreMRC && 
         mWinApp->mStoreMRC->getDepth() > 0) {
         message = mTSParam.doBidirectional ? "which WILL BE OVERWRITTEN if you proceed"
-          " with a bidirectional series\n" : "";
+          " with a " + bidirStr + " series\n" : "";
         str = mTSParam.doBidirectional ? "\n (data WILL BE OVERWRITTEN if you answer"
           " NO)" : "";
         if (mDocWnd->GetNumStores() == 1) {
@@ -830,12 +967,13 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external)
     }
     if (mTSParam.doBidirectional) {
       if (mWinApp->mStoreMRC->getStoreType() == STORE_TYPE_ADOC) {
-        TSMessageBox("Cannot proceed: Cannot do a bidirectional tilt series with a\r\n"
+        TSMessageBox("Cannot proceed: Cannot do a " + bidirStr + " tilt series with a\r\n"
           "series of numbered TIFF files as output.\r\nOpen a regular image file.");
         mPostponed = !mAlreadyTerminated;
         return 1;
       }
-      mBidirAnchorName = mWinApp->mStoreMRC->getFilePath() + ".anchor";
+      if (!mDoingDoseSymmetric || mDosymTakeAnchorIndex >= 0)
+        mBidirAnchorName = mWinApp->mStoreMRC->getFilePath() + ".anchor";
     }
 
     // Set the current output file, then test the output files and set the protections
@@ -858,6 +996,8 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external)
       if (external) {
         mWinApp->AppendToLog("WARNING: The image file already has data in it; "
           "proceeding anyway", LOG_OPEN_IF_CLOSED);
+        if (mDoingDoseSymmetric)
+          mBaseZ = 0;
       } else if (mTSParam.doBidirectional) {
 
         // Confirm they want to overwrite a montage (single-frame was confirmed above)
@@ -894,7 +1034,7 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external)
        mFrameAlignInIMOD = true;
        mConSets[RECORD_CONSET].alignFrames = 0;
        i = RECORD_CONSET + mWinApp->GetCurrentCamera() * MAX_CONSETS;
-       camConSets[i].alignFrames = 0;
+       mCamConSets[i].alignFrames = 0;
     }
 
     // Put out starting message.  Navigator took care of the log file change
@@ -905,7 +1045,7 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external)
     }
 
     // Save parameters that might vary and initialize zero-degree values for variations
-    for (i = 0; i < 5; i++) {
+    for (i = 0; i < NUM_CHGD_CONSETS; i++) {
       mSaveExposures[i] = mConSets[i].exposure;
       mSaveDrifts[i] = mConSets[i].drift;
       mSaveFrameTimes[i] = mConSets[i].frameTime;
@@ -966,6 +1106,18 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external)
     mAlignBuf = mNumRollingBuf;
     mExtraRefBuf = mAlignBuf + 1;
     mReadBuf = mAlignBuf + 2;
+
+    // Set up extra buffers for dose-symmetric
+    if (mDoingDoseSymmetric) {
+      mDosymAlignBufs[0] = mAlignBuf;
+      mDosymAlignBufs[1] = mAlignBuf + 2;
+      mDosymExtraRefBufs[0] = mExtraRefBuf;
+      mDosymExtraRefBufs[1] = mExtraRefBuf + 2;
+      mReadBuf += 2;
+      mWinApp->mBufferWindow.ProtectBuffer(mDosymAlignBufs[1], true);
+      mWinApp->mBufferWindow.ProtectBuffer(mDosymExtraRefBufs[1], true);
+      ResizeDosymVectors(mNumDoseSymTilts + 10);
+    }
     mBufferManager->SetBufToReadInto(mReadBuf);
     mAnchorBuf = MAX_BUFFERS - 1;
 
@@ -1038,6 +1190,14 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external)
     mTrueStartTilt = mStartingTilt;
     mPartStartTiltIndex = 0;
     mLastBidirReturnTilt = false;
+    mMadeDosymAnchor = false;
+    mLastDosymReversalInd = 0;
+    mHighestDosymStateInd = -1;
+    mDosymIndexOfFinalPart = -1;
+    mDoingDosymFileReorder = false;
+    mClosedDoseSymFile = false;
+    mFinishingLastReorder = false;
+    mNeedFinalTermTasks = false;
     mWinApp->mCameraMacroTools.DoingTiltSeries(true);
     mWinApp->UpdateWindowSettings();
     mActIndex = mNumActLoop;
@@ -1048,13 +1208,15 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external)
     mAccumDeltaForMean = 1.;
     mStoppedForAccumDelta = false;
     mMinAccumDeltaForMean = 1.;
+    mStageXtoRestore = mStageYtoRestore = EXTRA_NO_VALUE;
     for (i = 0; i < 5; i++)
       mDoseSums[i] = 0.;
     mComplexTasks->GetAndClearDose();
     mOneShotCloseValves = 0;
     mUseNewRefOnResume = false;
     probe = mLowDoseMode ? mLDParam[TRIAL_CONSET].probeMode : mScope->GetProbeMode();
-    mAutocenteringBeam = (mTSParam.cenBeamPeriodically || mTSParam.cenBeamAbove) &&
+    mAutocenteringBeam = (mTSParam.cenBeamPeriodically || 
+      (mTSParam.cenBeamAbove && !mDoingDoseSymmetric)) &&
       mMultiTSTasks->AutocenParamExists(mActiveCameraList[mTSParam.cameraIndex], 
       mTSParam.magIndex[mSTEMindex], probe) && !mSTEMindex;
     mAutocenStamp = 0.001 * GetTickCount();
@@ -1100,7 +1262,7 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external)
         mWinApp->mBufferWindow.ProtectBuffer(i, true);
         mImBufs[i].DeleteImage();
       }
-      mLastLDTrackAngle = 0.;
+      mLastLDTrackAngle[0] = mLastLDTrackAngle[1] = 0.;
 
     }
 
@@ -1118,8 +1280,8 @@ int CTSController::CommonResume(int inSingle, int external, bool stoppingPart)
   int i, camera, sizeX, sizeY, fileX, fileY;
   CString report;
   camera = mActiveCameraList[mTSParam.cameraIndex];
-  ControlSet *csp = mWinApp->GetCamConSets() + camera * MAX_CONSETS + RECORD_CONSET;
-  ControlSet *csets = mWinApp->GetCamConSets() + camera * MAX_CONSETS;
+  ControlSet *csp = mCamConSets + camera * MAX_CONSETS + RECORD_CONSET;
+  ControlSet *csets = mCamConSets + camera * MAX_CONSETS;
   mInInitialChecks = true;
   mUserPresent = !external;
   mErrorEmailSent = false;
@@ -1223,6 +1385,7 @@ int CTSController::CommonResume(int inSingle, int external, bool stoppingPart)
         mNeedLowMagTrack = true;
         mNeedRegularTrack = !UsableLowMagRef(mScope->GetTiltAngle());
       }
+      mStageXtoRestore = mStageYtoRestore = EXTRA_NO_VALUE;
     }
 
     // Get target defocus and check for focus changes
@@ -1280,7 +1443,6 @@ int CTSController::CommonResume(int inSingle, int external, bool stoppingPart)
   mUserStop = false;
   mErrorStop = false;
   mStartupStop = false;
-  mStackedLDRef = false;
   mNeedGoodAngle = true;
   //mExtraRefShifted = true;      // Disable shifting of extra reference on any resume
   
@@ -1293,6 +1455,7 @@ int CTSController::CommonResume(int inSingle, int external, bool stoppingPart)
   mLastStartedIndex = mTiltIndex;
   mLastRedoIndex = mTiltIndex;
   mSwitchedToMontFrom = -1;
+  mSecondResetTiltInd = -1;
   mWinApp->mPluginManager->ResumingTiltSeries(mTiltIndex);
 
   // If valves haven't been closed ever, set one-shot based on the current state of flag 
@@ -1324,7 +1487,7 @@ void CTSController::NextAction(int param)
   int anchorBuf, nx, ny, delay, error, refBuf, bwIndex, conSet, maxImageFailures;
   int policy, extraSet, magIndex = mTSParam.magIndex[mSTEMindex];
   int curCamera = mWinApp->GetCurrentCamera();
-  float binRatio, refShiftX, refShiftY, delX, delY;
+  float binRatio, refShiftX, refShiftY, delX, delY, shotExp;
   StageMoveInfo smi;
   BOOL needRedo, actionIncomplete, lastOrOnly;
   CString message, message2;
@@ -1337,6 +1500,20 @@ void CTSController::NextAction(int param)
   CString reason = " because of insufficient counts";
   ScaleMat aMat, aInv;
   EMimageBuffer *refImBuf = mImBufs + mExtraRefBuf;
+
+  // Intercept the completion of synchronous stacking for dose-symmetric series and 
+  // go finish the termination of the series
+  if (mInvertingFile) {
+    mInvertingFile = false;
+    if (mDoingDoseSymmetric) {
+      if (EndControl(true, mFinishingLastReorder))
+        return;
+      if (mNeedFinalTermTasks)
+        DoFinalTerminationTasks();
+    } else {
+      mKeepActIndexSame = true;
+    }
+  }
 
   DebugDump("Start of NextAction");
 
@@ -1359,11 +1536,14 @@ void CTSController::NextAction(int param)
     mBufferManager->CopyImageBuffer(0, mExtraRefBuf);
     mHaveLowMagRef = true;    // Should this be set?
     mLowMagRefTilt = angle;
-    StartBackingUp(mBackingUpTilt);
+
+    // Pass tilt index for first time into real backup (should not matter since we don't 
+    // get here in low dose)
+    StartBackingUp(mBackingUpTilt, mBackingUpTiltInd);
     return;
   
   } else if (mBackingUpTilt == 1) {
-    StartBackingUp(2);
+    StartBackingUp(2, -1);
     return;
   } else if (mBackingUpTilt == 2) {
     mBackingUpTilt = 0;
@@ -1396,9 +1576,13 @@ void CTSController::NextAction(int param)
       else
         error = mBufferManager->OverwriteImage(mWinApp->mStoreMRC, mSecForDeferredSum);
     }
-    if (mTSParam.stackRecords)
-        mBufferManager->AddToStackWindow(0, mTSParam.stackBinSize, mDeferredSumStackSec,
-        true);
+    if (mTSParam.stackRecords) {
+      nx = 0;
+      if (mTSParam.doBidirectional)
+        nx = mTSParam.startingTilt < mTSParam.endingTilt ? 1 : -1;
+      mBufferManager->AddToStackWindow(0, mTSParam.stackBinSize, mDeferredSumStackSec,
+        true, nx);
+    }
 
     // Dispatch to where call started from, or to error stop on error
     if (mWhereDefSumStarted == DEFSUM_TERM_ERROR) {
@@ -1433,7 +1617,7 @@ void CTSController::NextAction(int param)
   // If an error or stop came in during one of the initialization steps, just quit
   // and relinquish control, back to postpone state
   if ((mUserStop || mErrorStop) && mActIndex >= mNumActLoop) {
-    EndControl(false);
+    EndControl(false, false);
     mPostponed = true;
     return;
   }
@@ -1455,6 +1639,9 @@ void CTSController::NextAction(int param)
   maxImageFailures = mMaxImageFailures;
   if (mMontaging && maxImageFailures > 2)
     maxImageFailures = 2;
+
+  if (mTakingBidirAnchor && mDoingDoseSymmetric)
+    mMadeDosymAnchor = true;
 
   // The error checking section on the previous action
   if (param != NO_PREVIOUS_ACTION) {
@@ -1790,8 +1977,9 @@ void CTSController::NextAction(int param)
         mWinApp->AppendToLog("Backing up to redo " + recordMontage + reason,
           LOG_OPEN_IF_CLOSED);
 
-      // Tracking flags will be set properly by this routine
-      StartBackingUp(1);
+      // Tracking flags will be set properly by this routine.  
+      // Set dosym state to that prior to the Record in case it helps recover.
+      StartBackingUp(1, mTiltIndex - 1);
       if (mTrackLowMag)
         mActIndex = mActOrder[LOW_MAG_FOR_TRACKING];
       else
@@ -1945,13 +2133,15 @@ void CTSController::NextAction(int param)
     } else if (NextActionIs(mActIndex, CHECK_RESET_SHIFT, 1) ||
       NextActionIs(mActIndex, BIDIR_CHECK_SHIFT, 1)) {
         mScope->GetLDCenteredShift(ISX, ISY);
-        if (mShiftManager->RadialShiftOnSpecimen(ISX, ISY, magIndex) > mTSParam.ISlimit) {
+        if (mShiftManager->RadialShiftOnSpecimen(ISX, ISY, magIndex) > 
+          (mDoingDoseSymmetric ? mTSParam.dosymStartingISLimit : mTSParam.ISlimit)) {
           if (mSkipBeamShiftOnAlign)
             mComplexTasks->SetSkipNextBeamShift(true);
           mComplexTasks->ResetShiftRealign();
           mWinApp->AddIdleTask(TASK_TILT_SERIES, 0, 0);
           mResettingShift = true;
           mDidResetIS = true;
+          mStageXtoRestore = mStageYtoRestore = EXTRA_NO_VALUE;
           if (mTiltIndex > 0) 
             mDisturbance[mTiltIndex - 1] |= IMAGE_SHIFT_RESET;
           if (mVerbose)
@@ -2063,7 +2253,7 @@ void CTSController::NextAction(int param)
         if (lastOrOnly) {
           CenterBeamWithTrial();
           NewLowDoseRef(0);
-          mLastLDTrackAngle = angle;
+          mLastLDTrackAngle[(mDirection + 1) / 2] = angle;
         }
       } else
         if (AutoAlignAndTest(mAlignBuf, 0, "Trial"))
@@ -2106,6 +2296,23 @@ void CTSController::NextAction(int param)
       if (lastOrOnly && mTSParam.manualTracking) {
         mUseNewRefOnResume = true;
         mUserStop = true;
+      }
+
+      // Check image shift again on first tracking shot
+      if ((!mDoingDoseSymmetric || !mTiltIndex) && mSecondResetTiltInd < mTiltIndex &&
+        ((mTSParam.trackAfterFocus != TRACK_AFTER_FOCUS &&
+        mActIndex == mActOrder[ALIGN_TRACKING_SHOT]) ||
+        (mTSParam.trackAfterFocus == TRACK_AFTER_FOCUS &&
+          mActIndex == mActOrder[ALIGN_POST_FOCUS]))) {
+        mScope->GetLDCenteredShift(ISX, ISY);
+        if (mShiftManager->RadialShiftOnSpecimen(ISX, ISY, magIndex) >
+          (mDoingDoseSymmetric ? mTSParam.dosymStartingISLimit : mTSParam.ISlimit)) {
+
+          // Here, just back up the action index to redo predictions, and set index so
+          // this won't happen again
+          mActIndex = mActOrder[CHECK_RESET_SHIFT] - 1;
+          mSecondResetTiltInd = mTiltIndex;
+        }
       }
 
     // AUTOFOCUS IF NEEDED    
@@ -2174,13 +2381,17 @@ void CTSController::NextAction(int param)
           !((mNeedLowMagTrack && !mUsableLowMagRef) || mRoughLowMagRef) &&
           !(mLowDoseMode && !mHaveTrackRef) && !mTSParam.manualTracking &&
           !mNeedTiltAfterMove && mTiltIndex - mLastStartedIndex > 2 &&
-          mTiltIndex - mLastRedoIndex > 1 && !mNumExtraRecords) {
-          smi.axisBits = axisA;
-          smi.alpha = mNextTilt;
-          delay = mShiftManager->GetAdjustedTiltDelay(fabs(mNextTilt - mCurrentTilt));
-          mCamera->QueueStageMove(smi, delay);
-          mPreTilted = true;
-          mNeedGoodAngle = true;
+          mTiltIndex - mLastRedoIndex > 1 && !mNumExtraRecords && 
+          !TimeToTakeDoseSymAnchor(mTiltIndex)) {
+            TiltWithDoseSymBacklash(smi, mNextTilt, true);
+            delay = mShiftManager->GetAdjustedTiltDelay(fabs(mNextTilt - mCurrentTilt));
+            mCamera->QueueStageMove(smi, delay,
+              mDoingDoseSymmetric && mNextDirection != mDosymBacklashDir,
+              RestoreStageXYafterTilt() > 0);
+            mPreTilted = true;
+            mNeedGoodAngle = true;
+            if (mBidirSeriesPhase == DOSYM_ALTERNATING_PART)
+              mDosymIndexTiltedTo = mTiltIndex + 1;
         }
         mCamera->SetMaxChannelsToGet(mTSParam.extraRecordType == TS_OTHER_CHANNELS ? 
           mNumRollingBuf : 1);
@@ -2225,8 +2436,11 @@ void CTSController::NextAction(int param)
       // don't become 0/255
       if (mTSParam.stackRecords) {
         mDeferredSumStackSec = mTiltIndex + mBaseZ;
+        nx = 0;
+        if (mTSParam.doBidirectional)
+          nx = mTSParam.startingTilt < mTSParam.endingTilt ? 1 : -1;
         mBufferManager->AddToStackWindow(mMontaging ? 1 : 0, mTSParam.stackBinSize, 
-        mTiltIndex + mBaseZ, true);
+        mTiltIndex + mBaseZ, true, nx);
         mWinApp->SetCurrentBuffer(mWinApp->GetImBufIndex());
       }
 
@@ -2247,6 +2461,7 @@ void CTSController::NextAction(int param)
       // One way or another, get the mean
       shotIntensity = mLowDoseMode 
         ? mLDParam[RECORD_CONSET].intensity : mScope->FastIntensity();
+      shotExp = mConSets[RECORD_CONSET].exposure;
       mLastMean = -1000.;
       error = SetIntensityForMean(angle);
       if (mLastMean == -1000.)
@@ -2262,10 +2477,17 @@ void CTSController::NextAction(int param)
         mBaseZ + mTiltIndex - 1,(mImBufs->mTimeStamp - mTimes[0]) / 60.,
         mShotAngle, mLastMean); 
       if (mLowDoseMode) {
-        message2.Format("%s = %.2f%s  ", mScope->GetC2Name(), 
-          mScope->GetC2Percent(spotSize, shotIntensity), mScope->GetC2Units());
+        if (mUseExpForIntensity)
+          message2.Format("Exp = %.3f  ", shotExp);
+        else
+          message2.Format("%s = %.2f%s  ", mScope->GetC2Name(),
+            mScope->GetC2Percent(spotSize, shotIntensity), mScope->GetC2Units());
         message += message2;
       }
+
+      // Get stage position to restore if it is needed
+      if (RestoreStageXYafterTilt() < 0)
+        mScope->GetStagePosition(mStageXtoRestore, mStageYtoRestore, delFac);
 
       // Add dose in any mode if calibrated
       dose = AddToDoseSum(RECORD_CONSET);
@@ -2432,7 +2654,57 @@ void CTSController::NextAction(int param)
       CenterBeamWithTrial();
       NewLowDoseRef(0);
       mHaveTrackRef = true;
-      mLastLDTrackAngle = angle;
+      mLastLDTrackAngle[(mDirection + 1) / 2] = angle;
+
+    // DO ACTIONS NEEDED FOR DOSE-SYMMETRIC SERIES
+ 
+    // END ONE SIDE AND SWITCH TO REMAINING SIDE OF DOSE-SYMMETRIC SERIES
+    } else if (NextActionIs(mActIndex, DOSYM_SWITCH_TO_BIDIR, 1)) {
+
+      // Return to the state after the last angle on the other side and set other
+      // parameters for second part of bidir, modify index for aligning to anchor
+      mCurrentTilt = mIdealDosymAngles[mDosymIndexOfFinalPart];
+      if (RestoreDoseSymmetricState(mDosymIndexOfFinalPart, mLastDosymReversalInd,
+        mCurrentTilt))
+        return;
+      mBidirSeriesPhase = BIDIR_SECOND_PART;
+      ManageTerminateMenu();
+      mPoleAngle = mDirection * 90.;
+      mPartStartTiltIndex = mTiltIndex;
+      mDosymAlignAnchorIndex = mTiltIndex;
+      mCheckFocusPrediction = false;
+
+      // Remove the references for the other direction from the stack and pack stack
+      ny = mTrackStackBuf;
+      for (nx = mTrackStackBuf; nx < mNumTrackStack + mTrackStackBuf; nx++) {
+        if (mImBufs[nx].GetTiltAngle(delX) && mDirection * (delX - mStartingTilt) > 0) {
+          if (nx != ny)
+            mBufferManager->CopyImageBuffer(nx, ny++);
+        } else {
+          mImBufs[nx].DeleteImage();
+        }
+      }
+      AssessNextTilt(false);
+      if (mDosymSwitchNeedsTilt) {
+        TiltWithDoseSymBacklash(smi, mCurrentTilt);
+        mWinApp->AddIdleTask(TASK_TILT_SERIES, 0, 60000);
+        mTilting = true;
+        mNeedGoodAngle = true;
+        return;
+      }
+
+      // OPTIONAL ANCHOR IMAGE SHOT OR REALIGN FOR DOSE-SYMMETRIC
+    } else if (NextActionIs(mActIndex, DOSYM_ANCHOR_SHOT) ||
+      NextActionIs(mActIndex, DOSYM_REALIGN_SHOT)) {
+      if (mMultiTSTasks->BidirAnchorImage(
+        mTSParam.bidirAnchorMagInd[2 * mSTEMindex + (mLowDoseMode ? 1 : 0)],
+        true, mTiltIndex == mDosymAlignAnchorIndex, false)) {
+          ErrorStop();
+          return;
+      }
+      mTakingBidirAnchor = true;
+      mWinApp->AddIdleTask(TASK_TILT_SERIES, 0, 0);
+      return;
 
     // START ACTIONS FOR TURNING AROUND IN BIDIR SERIES
     // LOAD THE STARTING IMAGE AS REFERENCE BEFORE TOUCHING THE FILE
@@ -2450,7 +2722,8 @@ void CTSController::NextAction(int param)
         mCheckFocusPrediction = false;
         for (nx = mTrackStackBuf; nx < mNumTrackStack + mTrackStackBuf; nx++)
           mImBufs[nx].DeleteImage();
-      } 
+        mStageXtoRestore = mStageYtoRestore = EXTRA_NO_VALUE;
+      }
 
       if (mMontaging) {
         error = mMontageController->ReadMontage(0, NULL, NULL, false, true);
@@ -2469,8 +2742,14 @@ void CTSController::NextAction(int param)
     // INVERT THE FILE OR THE PIECE LIST
     } else if (NextActionIs(mActIndex, BIDIR_INVERT_FILE, 1)) {
 
+      // If there is still an asynchronous copy from a dose-symmetric series, do it sync
+      if (mDoingDosymFileReorder > 0 && SwitchToSynchronousBidirCopy() > 0) {
+        mDoingDosymFileReorder = -1;
+        return;
+      }
+
       // Start or resume the copying of the file
-      error = mMultiTSTasks->InvertFileInZ(mBaseZ + mTiltIndex);
+      error = mMultiTSTasks->InvertFileInZ(mBaseZ + mTiltIndex, NULL);
       if (error > 0) {
         if (error > 10)
           ErrorStop();
@@ -2570,7 +2849,7 @@ void CTSController::NextAction(int param)
       if (mLowDoseMode) {
         mBufferManager->CopyImageBuffer(mAnchorBuf, mExtraRefBuf);
         NewLowDoseRef(mExtraRefBuf);
-        mLastLDTrackAngle = angle;
+        mLastLDTrackAngle[(mDirection + 1) / 2] = angle;
         if (AutoAlignAndTest(mExtraRefBuf, 0, "tracking"))
           return;
         mExtraRefShifted = false;  // WHAT DOES THIS MEAN?
@@ -2590,25 +2869,16 @@ void CTSController::NextAction(int param)
 
     // FINISH INVERTING THE FILE
     } else if (NextActionIs(mActIndex, BIDIR_FINISH_INVERT, 1)) {
-      if (mMultiTSTasks->BidirCopyPending()) {
-        mMultiTSTasks->StopBidirFileCopy();
-
-        // On failure, it should already have stopped or whatever
-        if (mBufferManager->CheckAsyncSaving())
-          return;
-      }
-
-      // Restart synchronously and set task with big timeout
-      if (mMultiTSTasks->BidirCopyPending()) {
-        mMultiTSTasks->StartBidirFileCopy(true);
-        mInvertingFile = true;
-        mWinApp->AddIdleTask(TASK_TILT_SERIES, 0, (mBaseZ + mTiltIndex) * (20000 + 
-          4 * mWinApp->mStoreMRC->getWidth() *  mWinApp->mStoreMRC->getHeight() / 1000));
-        return; 
-      }
+      if (SwitchToSynchronousBidirCopy())
+        return;
 
     // TILT IF THAT IS STILL NEEDED: but stop first if single-step
     } else if (NextActionIs(mActIndex, TILT_IF_NEEDED, 1)) {
+
+      // If pretilted, manage the dose-symmetric state now before possible stop
+      if (mDoingDoseSymmetric && mPreTilted && ManageDoseSymmetricOnTilt())
+        return;
+
       if (mStopAtLoopEnd) {
         mUserStop = !mReachedEndAngle;
         if (mTermAtLoopEnd) {
@@ -2622,10 +2892,13 @@ void CTSController::NextAction(int param)
       }
       mStopAtLoopEnd = mSingleStep > 0;
 
-      // Now change intensity if doing cosine
+      // Or manage the state here if not pretilted
+      if (mDoingDoseSymmetric && !mPreTilted && ManageDoseSymmetricOnTilt())
+        return;
+
+      // Now change intensity if doing cosine: after the state might have been set
       if (mTSParam.beamControl == BEAM_INVERSE_COSINE) {
-        delFac = pow(cos(DTOR * mCurrentTilt) / cos(DTOR * mNextTilt), 
-          1. / mTSParam.cosinePower);
+        delFac = CosineIntensityChangeFac(mCurrentTilt, mNextTilt);
         if (SetIntensity(delFac, mNextTilt))
           return;
       }
@@ -2637,13 +2910,21 @@ void CTSController::NextAction(int param)
           if (mSkipBeamShiftOnAlign)
             mComplexTasks->SetSkipNextBeamShift(true);
           mComplexTasks->TiltAfterStageMove((float)mNextTilt, mNeedTiltAfterMove < 0);
-        } else
-          mScope->TiltTo(mNextTilt);
+        } else {
+          if (mDoingDoseSymmetric && mDirection != mDosymBacklashDir) {
+            TiltWithDoseSymBacklash(smi, mNextTilt);
+
+          } else {
+            mScope->TiltTo(mNextTilt, mStageXtoRestore, mStageYtoRestore);
+          }
+        }
         mWinApp->AddIdleTask(TASK_TILT_SERIES, 0, mNeedTiltAfterMove != 0 ? 0 : 60000);
         mDidTiltAfterMove = mNeedTiltAfterMove != 0;
         mNeedTiltAfterMove = 0;
         mTilting = true;
         mNeedGoodAngle = true;
+        if (mBidirSeriesPhase == DOSYM_ALTERNATING_PART)
+          mDosymIndexTiltedTo = mTiltIndex;
         return;
       }
       mPreTilted = false;
@@ -2793,8 +3074,7 @@ void CTSController::NextAction(int param)
     // on this adjusted value
     } else if (NextActionIs(mActIndex, REVERSE_TILT)) {
       if (mTSParam.beamControl == BEAM_INVERSE_COSINE) {
-        delFac = pow(cos(DTOR * mOriginalAngle) / cos(DTOR * angle),
-          1. / mTSParam.cosinePower);
+        delFac = CosineIntensityChangeFac(mOriginalAngle, angle);
         if (SetIntensity(delFac, angle))
           return;
         mStartingIntensity = mLowDoseMode 
@@ -2805,7 +3085,8 @@ void CTSController::NextAction(int param)
       mCurrentTilt = angle;
       if (mSkipBeamShiftOnAlign)
         mComplexTasks->SetSkipNextBeamShift(true);
-      if (mComplexTasks->ReverseTilt(mDirection)) {
+      if (mComplexTasks->ReverseTilt(B3DCHOICE(mDoingDoseSymmetric, mDosymBacklashDir,
+        mDirection))) {
         mWinApp->AddIdleTask(TASK_TILT_SERIES, 0, 0);
         mReversingTilt = true;
         mNeedGoodAngle = true;
@@ -2867,10 +3148,10 @@ BOOL CTSController::NextActionIs(int nextIndex, int action, int testStep)
 {
   BOOL retval = NextActionIsReally(nextIndex, action, testStep);
   if (retval) {
-    DebugDump(actionText[B3DMAX(0, action - 1)]);
+    DebugDump(actionText[B3DMAX(0, action - 1)][0]);
     if (testStep > 0 && mSingleStep < 0) {
       if (!mDebugMode)
-        PrintfToLog("Executing step: %s", actionText[B3DMAX(0, action - 1)]);
+        PrintfToLog("Executing step: %s", actionText[B3DMAX(0, action - 1)][0]);
       mUserStop = true;
     }
   }
@@ -2884,9 +3165,11 @@ BOOL CTSController::NextActionIsReally(int nextIndex, int action, int testStep)
 
   switch (action) {
   case LOOP_START_CHECKS:
-  case CHECK_RESET_SHIFT:
   case COMPUTE_PREDICTIONS:
     return true;
+
+  case CHECK_RESET_SHIFT:
+    return !mDoingDoseSymmetric || !mTiltIndex;
 
   case IMPOSE_VARIATIONS:
     return mTSParam.doVariations;
@@ -2905,7 +3188,8 @@ BOOL CTSController::NextActionIsReally(int nextIndex, int action, int testStep)
       return true;
     return (mTSParam.cenBeamAbove && mTiltIndex > 0 && !mDidCrossingAutocen &&
       fabs((double)mTiltAngles[mTiltIndex - 1]) < mTSParam.cenBeamAngle &&
-      fabs(mCurrentTilt) >= fabs((double)mTSParam.cenBeamAngle));
+      fabs(mCurrentTilt) >= fabs((double)mTSParam.cenBeamAngle) && 
+      mBidirSeriesPhase != BIDIR_FIRST_PART);
 
   // LOW MAG PICTURE FOR TRACKING IF NEEDED
   case LOW_MAG_FOR_TRACKING:
@@ -2962,7 +3246,12 @@ BOOL CTSController::NextActionIsReally(int nextIndex, int action, int testStep)
   case LOWDOSE_TRACK_REF:
   case COPY_LOWDOSE_REF:
     return (mLowDoseMode && !mHaveTrackRef);
-  
+
+  // DOSE SYMMETRIC SWITCHING TO SECOND PHASE BIDIR
+  case DOSYM_SWITCH_TO_BIDIR:
+    return (mBidirSeriesPhase == DOSYM_ALTERNATING_PART && !mNeedTilt && 
+      mDosymIndexOfFinalPart >= 0 && mTiltIndex < mNumDoseSymTilts - 1);
+
   // BIDIRECTIONAL RETURN PHASE ACTIONS
   case BIDIR_RELOAD_REFS:
     return ((mBidirSeriesPhase == BIDIR_FIRST_PART || 
@@ -2988,7 +3277,8 @@ BOOL CTSController::NextActionIsReally(int nextIndex, int action, int testStep)
       mTiltIndex == mPartStartTiltIndex;
 
   case BIDIR_FINISH_INVERT:
-    return mBidirSeriesPhase == BIDIR_SECOND_PART && mTiltIndex == mPartStartTiltIndex;
+    return mBidirSeriesPhase == BIDIR_SECOND_PART && mTiltIndex == mPartStartTiltIndex &&
+      !mDoingDoseSymmetric;
 
   // TILT AT END OF LOOP
   case TILT_IF_NEEDED:
@@ -3042,7 +3332,15 @@ BOOL CTSController::NextActionIsReally(int nextIndex, int action, int testStep)
 
   // BIDIRECTIONAL ANCHOR SHOT
   case BIDIR_ANCHOR_SHOT:
-    return mBidirSeriesPhase != BIDIR_NONE;
+    return mBidirSeriesPhase != BIDIR_NONE && !mDoingDoseSymmetric;
+
+  // DOSE SYMMETRIC ANCHOR SHOT
+  case DOSYM_ANCHOR_SHOT:
+    return TimeToTakeDoseSymAnchor(mTiltIndex - 1);
+  
+  // ALIGN TO DOSE SYMMETRIC ANCHOR SHOT
+  case DOSYM_REALIGN_SHOT:
+    return mMadeDosymAnchor && mTiltIndex == mDosymAlignAnchorIndex;
   }
   return false;
 }
@@ -3087,6 +3385,7 @@ BOOL CTSController::SetIntensityForMean(double angle)
   float termAngle;
   double delFac, target, frac;
   BOOL retval;
+  double angleDev = angle - mBaseAngleForVarying;
 
   if (mTSParam.beamControl != BEAM_INTENSITY_FOR_MEAN)
     return false;
@@ -3095,24 +3394,20 @@ BOOL CTSController::SetIntensityForMean(double angle)
   target = mTSParam.meanCounts;
   
   // If the tapering is active and we are above the taper angle, figure out ramp
-  if (mTSParam.taperCounts && fabs(angle) > mTSParam.taperAngle) {
-    frac = 0.;
-    
-    // At the starting side, use real start angle if available
-    if (-mDirection * angle > mTSParam.taperAngle) {
+  if (mTSParam.taperCounts && fabs(angleDev) > mTSParam.taperAngle) {
+    if (angleDev * mTSParam.startingTilt > 0) {
+
+      // At the starting side, use real start angle if available, but not for 
+      // bidirectional
       termAngle = mStartingOut ? mStartingTilt : mTrueStartTilt;
-      if (-mDirection * termAngle > mTSParam.taperAngle)
-        frac = (-mDirection * angle - mTSParam.taperAngle) / 
-          (-mDirection * termAngle - mTSParam.taperAngle);
-  
-    // At the ending side
-    } else if (mDirection * mTSParam.endingTilt > mTSParam.taperAngle)
-      frac = (mDirection * angle - mTSParam.taperAngle) / 
-          (mDirection * mTSParam.endingTilt - mTSParam.taperAngle);
-    if (frac > 1.)
-      frac = 1.;
-    if (frac < 0.)
-      frac = 0.;
+      if (mBidirSeriesPhase != BIDIR_NONE)
+        termAngle = mTSParam.startingTilt;
+    } else {
+      termAngle = mTSParam.endingTilt;
+    }
+    frac = (fabs(angleDev) - mTSParam.taperAngle) /
+      (fabs(termAngle - mBaseAngleForVarying) - mTSParam.taperAngle);
+    B3DCLAMP(frac, 0., 1.);
     target = (1.f - frac) * mTSParam.meanCounts + frac * mTSParam.highCounts;
   }
 
@@ -3200,13 +3495,13 @@ void CTSController::ChangeExposure(double &delFac, double angle, double limit)
   bool oneFrame;
   int numFrames, newNum;
   bool restoreFirst = delFac == 0. && mBidirSeriesPhase == BIDIR_RETURN_PHASE;
-  ControlSet *csets = mWinApp->GetCamConSets() + 
+  ControlSet *csets = mCamConSets + 
     MAX_CONSETS * mActiveCameraList[mTSParam.cameraIndex];
   ControlSet *recSet = &csets[RECORD_CONSET];
  
   if (mTSParam.doVariations) {
     CTSVariationsDlg::FindValuesToSet(mTSParam.varyArray, mTSParam.numVaryItems, 
-      mZeroDegValues, (float)angle, mTypeVaries, setValues);
+      mZeroDegValues, (float)angle - mBaseAngleForVarying, mTypeVaries, setValues);
     if (delFac <= 0. && !restoreFirst) {
       delFac = 1.;
       if (fabs(recSet->exposure - setValues[TS_VARY_EXPOSURE]) < 1.e-6)
@@ -3295,7 +3590,7 @@ void CTSController::ChangeExposure(double &delFac, double angle, double limit)
 
   // If changing other exposures, now scale those too, and drift if requested
   if (mChangeAllExp) {
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < NUM_CHGD_CONSETS; i++) {
       if (i == RECORD_CONSET)
         continue;
       oneFrame = mCamParams->K2Type && csets[i].doseFrac && 
@@ -3319,11 +3614,11 @@ int CTSController::ImposeVariations(double angle)
   double tryLoss, netLoss, delFac = 0.;
   bool changed = false;
   LowDoseParams *ldp = &mLDParam[RECORD_CONSET];
-  ControlSet *csets = mWinApp->GetCamConSets() + 
+  ControlSet *csets = mCamConSets + 
     MAX_CONSETS * mActiveCameraList[mTSParam.cameraIndex];
 
-  CTSVariationsDlg::FindValuesToSet(mTSParam.varyArray, mTSParam.numVaryItems, 
-    mZeroDegValues, (float)angle, mTypeVaries, setValues);
+  CTSVariationsDlg::FindValuesToSet(mTSParam.varyArray, mTSParam.numVaryItems,
+    mZeroDegValues, (float)angle - mBaseAngleForVarying, mTypeVaries, setValues);
 
   // Change exposure here if it is not being changed elsewhere
   if ((mTSParam.beamControl == BEAM_CONSTANT || mBidirSeriesPhase == BIDIR_RETURN_PHASE)
@@ -3413,8 +3708,12 @@ int CTSController::ImposeVariations(double angle)
 
 
 // Do the first or second step of backing up tilt, and set flags
-void CTSController::StartBackingUp(int inStep)
+void CTSController::StartBackingUp(int inStep, int tiltIndForDosym)
 {
+  int ind, revInd;
+  StageMoveInfo smi;
+  mBackingUpTiltInd = tiltIndForDosym;
+
   // First evaluate need for an emergency low mag reference
   if (mTrackLowMag && !mRoughLowMagRef) {
     
@@ -3441,9 +3740,31 @@ void CTSController::StartBackingUp(int inStep)
     ErrorStop();
     return;
   }
-  mBackingUpTilt = inStep;
-  mScope->TiltTo(mCurrentTilt - (2 - inStep) * mDirection * 
-    mComplexTasks->GetTiltBacklash());
+  if (mDoingDoseSymmetric) {
+    if (tiltIndForDosym >= 0) {
+
+      // Restore the state for reimaging at this tilt index
+      ind = B3DMAX(0, tiltIndForDosym - 1);
+      if (mBidirSeriesPhase == DOSYM_ALTERNATING_PART ||
+        tiltIndForDosym == mPartStartTiltIndex) {
+        for (; ind > 0; ind--)
+          if (mDosymDirections[ind] == mDosymDirections[tiltIndForDosym])
+            break;
+        for (revInd = ind - 1; revInd > 0; revInd--)
+          if (mDosymDirections[ind] != mDosymDirections[tiltIndForDosym])
+            break;
+        mLastDosymReversalInd = revInd;
+      }
+      if (ind <= mHighestDosymStateInd &&
+        RestoreDoseSymmetricState(tiltIndForDosym, ind, mCurrentTilt))
+        return;
+    }
+    TiltWithDoseSymBacklash(smi, mCurrentTilt);
+  } else {
+    mScope->TiltTo(mCurrentTilt - (2 - inStep) * mDirection *
+      mComplexTasks->GetTiltBacklash(), mStageXtoRestore, mStageYtoRestore);
+  }
+  mBackingUpTilt = mDoingDoseSymmetric ? 2 : inStep;
   mWinApp->AddIdleTask(TASK_TILT_SERIES, 0, 25000);
   mPreTilted = false;
   if (mTiltIndex > 0) 
@@ -3485,9 +3806,24 @@ void CTSController::AssessNextTilt(BOOL preTest)
     addIndex--;
   }
 
+  // For dose-symmetric, get the next angle in the array or compute angle from start of
+  // final part
   // For cosine tilt, get the next tilt implied by the current angle;
   // for regular tilt set based on increment from regular starting tilt
-  if (mTSParam.cosineTilt) {
+  mNeedTilt = true;
+  if (mDoingDoseSymmetric) {
+    if (mBidirSeriesPhase == BIDIR_SECOND_PART) {
+      mNextTilt = mIdealDosymAngles[mDosymIndexOfFinalPart] + mDirection * 
+        mTSParam.tiltIncrement * (mTiltIndex + addIndex - mPartStartTiltIndex);
+      mNextDirection = mDirection;
+    } else {
+      mNeedTilt = mTiltIndex + addIndex < mNumDoseSymTilts;
+      if (mNeedTilt) {
+        mNextTilt = mIdealDosymAngles[mTiltIndex + addIndex];
+        mNextDirection = mDosymDirections[mTiltIndex + addIndex];
+      }
+    }
+  } else if (mTSParam.cosineTilt) {
     mLastIncrement = (float)(mTSParam.tiltIncrement * cos(DTOR * mCurrentTilt));
     mNextTilt = currentTilt + mDirection * mLastIncrement;
   } else
@@ -3497,14 +3833,17 @@ void CTSController::AssessNextTilt(BOOL preTest)
   // Need a next tilt if it does not go past the pole angle and either it is not past
   // the ending angle or it is time to tilt (could require a single step/loop request)
   // Let it overshoot by up to half the tilt increment but not more than a fixed amount
-  overshoot = mDirection * (mNextTilt - mEndingTilt);
-  mNeedTilt = ((overshoot < 0.5 * mLastIncrement && overshoot < 0.25)
-    || (mActIndex == mActOrder[TILT_IF_NEEDED])) &&
-    mDirection * (mNextTilt - mPoleAngle) < 0.05;
+  if (!(mDoingDoseSymmetric && mBidirSeriesPhase == DOSYM_ALTERNATING_PART)) {
+    overshoot = mDirection * (mNextTilt - mEndingTilt);
+    if (mNeedTilt)
+      mNeedTilt = ((overshoot < 0.5 * mLastIncrement && overshoot < 0.25)
+        || (mActIndex == mActOrder[TILT_IF_NEEDED])) &&
+      mDirection * (mNextTilt - mPoleAngle) < 0.05;
+  }
   
   // Set stop at "loop end" if not tilting and set up for closing valves
-  if (!mNeedTilt && (mBidirSeriesPhase == BIDIR_NONE || 
-    mBidirSeriesPhase == BIDIR_SECOND_PART)) {
+  if (!mNeedTilt && mBidirSeriesPhase != BIDIR_FIRST_PART && mBidirSeriesPhase != 
+    BIDIR_RETURN_PHASE && mBidirSeriesPhase != DOSYM_SWITCH_TO_BIDIR) {
     mStopAtLoopEnd = true;
     mTermAtLoopEnd = mExternalControl != 0;
     mCloseValvesOnStop = mOneShotCloseValves > 0;
@@ -3524,22 +3863,36 @@ void CTSController::IncActIndex()
 }
 
 // Make a buffer be a new low dose reference
-void CTSController::NewLowDoseRef(int inBuf)
+void CTSController::NewLowDoseRef(int inBuf, int refBuf)
 {
-  // Copy the stack down, then copy current reference to stack, then copy new ref
-  for (int i = mTrackStackBuf + mNumTrackStack - 1; i > mTrackStackBuf; i--)
-    mBufferManager->CopyImageBuffer(i - 1, i);
-  mBufferManager->CopyImageBuffer(mExtraRefBuf, mTrackStackBuf);
-  if (inBuf != mExtraRefBuf)
-    mBufferManager->CopyImageBuffer(inBuf, mExtraRefBuf);
+  int i;
+  bool already = false;
+  if (refBuf < 0)
+    refBuf = mExtraRefBuf;
+
+  // See if image is already in stack
+  for (i = mTrackStackBuf + mNumTrackStack - 1; i >= mTrackStackBuf; i--)
+    if (mImBufs[refBuf].mTimeStamp && mImBufs[refBuf].mTimeStamp == mImBufs[i].mTimeStamp)
+      already = true;
+  if (!already) {
+
+    // If not, copy the stack down, then copy current reference to stack
+    for (i = mTrackStackBuf + mNumTrackStack - 1; i > mTrackStackBuf; i--)
+      mBufferManager->CopyImageBuffer(i - 1, i);
+    mBufferManager->CopyImageBuffer(refBuf, mTrackStackBuf);
+  }
+
+  // Copy new one to extra ref buf unless it IS that
+  if (inBuf != refBuf)
+    mBufferManager->CopyImageBuffer(inBuf, refBuf);
 }
 
 // Set and return the value of mUsableLowMagRef based on existence and angle of ref
 BOOL CTSController::UsableLowMagRef(double angle)
 {
-  mUsableLowMagRef = mHaveLowMagRef && !mRoughLowMagRef && 
+  mUsableLowMagRef = mHaveLowMagRef && !mRoughLowMagRef &&
     (fabs(angle - mLowMagRefTilt) < 1.5 * mLastIncrement ||
-    fabs(angle - mLowMagRefTilt) < mMaxUsableAngleDiff * cos(DTOR * angle));
+      fabs(angle - mLowMagRefTilt) < MaxUsableDiffFromAngle(angle));
   return mUsableLowMagRef;
 }
 
@@ -3727,12 +4080,13 @@ void CTSController::NormalStop()
   }
 
   // If a pretilt has occurred, find out if we should go back
+  // If so, set dosym state for previous tilt index
   if (mPreTilted && AfxMessageBox("The stage has already tilted after the last Record "
     "image.\nIt would have to be tilted back to be at the tilt angle of that image.\n"
     "Do not do this unless you need to, because it may require\n"
     "additional focusing and tracking shots for several tilts.\n\n"
     "Do you want to tilt back?", MB_YESNO, MB_ICONQUESTION) == IDYES) {
-    StartBackingUp(1);
+    StartBackingUp(1, mTiltIndex - 1);
     return;
   }
 
@@ -3754,16 +4108,17 @@ void CTSController::ErrorStop()
     return;
   // If it happened in startup, end the controller just like a user stop
   if (mActIndex >= mNumActLoop)
-    EndControl(false);
+    EndControl(false, false);
   else {
 
     // If need a deferred sum, get that
     if (StartGettingDeferredSum(DEFSUM_ERROR_STOP) == 1)
       return;
 
-    // If pretilted, need to back up; set flags to come back through here
+    // If pretilted, need to back up; set flags to come back through here, set dosym state 
+    // for previous tilt index
     if (mPreTilted) {
-      StartBackingUp(1);
+      StartBackingUp(1, mTiltIndex - 1);
       mUserStop = false;
       mErrorStop = true;
       return;
@@ -3794,6 +4149,7 @@ void CTSController::CommonStop(BOOL terminating)
   mDoingTS = false;
   mPostponed = true;
   mRunningMacro = false;
+  ManageTerminateMenu();
   mWinApp->UpdateBufferWindows();
   mWinApp->SetStatusText(COMPLEX_PANE, "STOPPED TILT SERIES");
   SendEmailIfNeeded(terminating);
@@ -3847,28 +4203,60 @@ void CTSController::ExternalStop(int error)
 }
 
 // End the controller's modifications
-void CTSController::EndControl(BOOL terminating)
+int CTSController::EndControl(BOOL terminating, BOOL startReorder)
 {
   float slitWidth = 0.;
   float energyLoss = 0.;
   MontParam mp = *mMontParam;
   int iCam = mActiveCameraList[mTSParam.cameraIndex];
-  ControlSet *csets = mWinApp->GetCamConSets() + MAX_CONSETS * iCam;
+  ControlSet *csets = mCamConSets + MAX_CONSETS * iCam;
   CString report, str, xyzName;
   float pixelSize;
-  int sizeX, sizeY, mbSaved, filmMag, i;
+  int sizeX, sizeY, mbSaved, filmMag, i, error;
   CTime ctdt = CTime::GetCurrentTime();
+  if (!mClosedDoseSymFile) {
+    mEndCtlFilePath = mWinApp->mStoreMRC->getFilePath();
+    mEndCtlWidth = mWinApp->mStoreMRC->getWidth();
+    mEndCtlHeight = mWinApp->mStoreMRC->getHeight();
+    mDocWnd->SetCurrentStore(mCurrentStore);
+    mDocWnd->EndStoreProtection();
+  }
 
-  if (!mBidirAnchorName.IsEmpty()) {
+  if (startReorder && mDoingDoseSymmetric && mStartedTS && mTiltIndex > 0) {
+
+    // If there was a previous asynchronous copy, switch it to synchronous and return 1;
+    if (SwitchToSynchronousBidirCopy() > 0) {
+      mFinishingLastReorder = true;
+      return 1;
+    }
+    mFinishingLastReorder = false;
+
+    // Base Z is not allowed for these files, so leave it out
+    error = mMultiTSTasks->InvertFileInZ(mTiltIndex, mTiltAngles);
+    if ((error < 1 || error > 3) && error != 11)
+      mClosedDoseSymFile = true;
+
+    // Set a task for synchronous copy with VERY generous timeout
+    if (error < 0) {
+      mInvertingFile = true;
+      mWinApp->AddIdleTask(TASK_TILT_SERIES, 0, (mBaseZ + mTiltIndex) * (20000 +
+        4 * mEndCtlWidth *  mEndCtlHeight / 1000));
+      mDoingDosymFileReorder = -1;
+      return 1;
+    }
+    mDoingDosymFileReorder = (error == 0 ? 1 : 0);
+  }
+
+   UtilSplitExtension(mEndCtlFilePath, xyzName, str);
+   xyzName += "_xyz.txt";
+
+   if (!mBidirAnchorName.IsEmpty()) {
     if (mTSParam.retainBidirAnchor)
       mWinApp->AppendToLog("Left anchor images in " + mBidirAnchorName);
     else
       UtilRemoveFile(mBidirAnchorName);
   }
-  report = mWinApp->mStoreMRC->getFilePath();
-  UtilSplitExtension(report, xyzName, str);
-  xyzName += "_xyz.txt";
-  if (mStartedTS && mBidirSeriesPhase > BIDIR_FIRST_PART && 
+  if (mStartedTS && mBidirSeriesPhase > BIDIR_FIRST_PART && !mDoingDoseSymmetric &&
     mMultiTSTasks->BidirCopyPending())
     mMultiTSTasks->CleanupBidirFileCopy();
 
@@ -3878,8 +4266,8 @@ void CTSController::EndControl(BOOL terminating)
     mp.yNframes = 1;
     mp.xOverlap = 0;
     mp.yOverlap = 0;
-    mp.xFrame = mWinApp->mStoreMRC->getWidth();
-    mp.yFrame = mWinApp->mStoreMRC->getHeight();
+    mp.xFrame = mEndCtlWidth;
+    mp.yFrame = mEndCtlHeight;
   }
   sizeX = mp.xFrame + (mp.xNframes - 1) * (mp.xFrame - mp.xOverlap);  
   sizeY = mp.yFrame + (mp.yNframes - 1) * (mp.yFrame - mp.yOverlap);  
@@ -3895,14 +4283,18 @@ void CTSController::EndControl(BOOL terminating)
       energyLoss =  mLowDoseMode ? mLDParam[3].energyLoss : mFilterParams->energyLoss;
   }
 
+  str = mLowDoseMode ? "LD" : "ND";
+  if (mTSParam.doBidirectional)
+    str += mDoingDoseSymmetric ? "-DS" : "-BD";
   report.Format("%4d/%02d/%02d %02d:%02d\t%s\t%d\t%d\t%d\t%d\t%d\t%.1f\t%.1f\t%.2f\t%s"
     "\t%.1f\t%dx%d\t%s\t%d\t%d\t%.2f\t%s\t%.1f\t%.1f\n",
     ctdt.GetYear(), ctdt.GetMonth(), ctdt.GetDay(), ctdt.GetHour(), ctdt.GetMinute(),
-    (LPCTSTR)mWinApp->mStoreMRC->getFilePath(), mBaseZ, mBaseZ + mTiltIndex, sizeX,
+    (LPCTSTR)mEndCtlFilePath, mBaseZ, mBaseZ + mTiltIndex, sizeX,
     sizeY, mbSaved, mTiltAngles[0], mTiltAngles[mTiltIndex - 1], mTSParam.tiltIncrement, 
-    mTSParam.cosineTilt ? "COS" : "REG", (mTimes[mTiltIndex - 1] - mTimes[0]) / 60., 
+    mTSParam.cosineTilt && !mDoingDoseSymmetric ? "COS" : "REG", 
+    (mTimes[mTiltIndex - 1] - mTimes[0]) / 60., 
     mp.xNframes, mp.yNframes, (LPCTSTR)mCamParams->name, filmMag, 
-    mTSParam.binning, pixelSize, mLowDoseMode ? "LD" : "ND", slitWidth, energyLoss);
+    mTSParam.binning, pixelSize, (LPCTSTR)str, slitWidth, energyLoss);
   mFinalReport = report;
   mFinalReport.Replace("\t", "  ");
   mFinalReport.Replace("\n", "");
@@ -3955,7 +4347,7 @@ void CTSController::EndControl(BOOL terminating)
     csets[RECORD_CONSET].frameTime = mSaveFrameTimes[RECORD_CONSET];
     csets[RECORD_CONSET].summedFrameList = mSaveFrameList;
     if (mChangeAllExp) {
-      for (i = 0; i < 5; i++) {
+      for (i = 0; i < NUM_CHGD_CONSETS; i++) {
         csets[i].exposure = mSaveExposures[i];
         csets[i].frameTime = mSaveFrameTimes[i];
       }
@@ -3966,7 +4358,7 @@ void CTSController::EndControl(BOOL terminating)
   if (mChangeRecDrift)
     csets[RECORD_CONSET].drift = mSaveDrifts[RECORD_CONSET];
   if (mChangeAllDrift)
-    for (i = 0; i < 5; i++)
+    for (i = 0; i < NUM_CHGD_CONSETS; i++)
       csets[i].drift = mSaveDrifts[i];
 
   // Restore frame time
@@ -3994,12 +4386,25 @@ void CTSController::EndControl(BOOL terminating)
   mExternalControl = 0;
   mWinApp->UpdateWindowSettings();
   mTSParam.lastStartingTilt = mTSParam.startingTilt;
-  mDocWnd->SetCurrentStore(mCurrentStore);
-  mDocWnd->EndStoreProtection();
+
+  // Clean up vectors from dose-symmetric
+  if (mDoingDoseSymmetric) {
+    CLEAR_RESIZE(mDosymDirections, short, 1);
+    CLEAR_RESIZE(mIdealDosymAngles, float, 1);
+    CLEAR_RESIZE(mDosymSavedISX, double, 1);
+    CLEAR_RESIZE(mDosymSavedISY, double, 1);
+    CLEAR_RESIZE(mDosymDefocuses, double, 1);
+    CLEAR_RESIZE(mDosymIntensities, double, 1);
+    CLEAR_RESIZE(mDosymRecFrameTimes, float, 1);
+    for (i = 0; i < NUM_CHGD_CONSETS; i++) {
+      CLEAR_RESIZE(mDosymExposures[i], float, 1);
+      CLEAR_RESIZE(mDosymDriftSettlings[i], float, 1);
+    }
+  }
 
   // Dump logbook entry if anything is saved
   if (!mTiltIndex)
-    return;
+    return 0;
   CString title = "Date\tFile\tZstart\tNZ\tNX\tNY\tMBytes\tStart\tEnd\tInc\tCosine\tMinutes"
     "\tFrames\tCamera\tMag\tBin\tPixel\tLowdose\tSlit\tLoss\n";
   mDocWnd->AppendToLogBook(report, title);
@@ -4022,13 +4427,16 @@ void CTSController::EndControl(BOOL terminating)
   // Autosave xyz file
   if (mAutosaveXYZ)
     WriteTiltXYZFile(&xyzName);
+  return 0;
 }
 
 // Termination from the menu
 void CTSController::Terminate()
 {
   CString str;
-  int i, minIndex, err, answer;
+  const char *mess[3][2] = {{"go on to the second part", "end just one side"},
+  {"Second Part", "One Side" }, {"negative", "positive"}};
+  int i, minIndex, err, answer, posInd;
   double minAngle = 200;
   mErrorEmailSent = false;
 
@@ -4041,24 +4449,64 @@ void CTSController::Terminate()
     return;
   }
 
-  if (mStartedTS && mBidirSeriesPhase == BIDIR_FIRST_PART) {
-    answer = SEMThreeChoiceBox(_T("Do you want to go on to the second part of the \ntilt "
-      "series instead of terminating it?\n\n"
-      "Press:\n\"Second Part\" to go on to the second part,\n\n"
+  if (mStartedTS && (mBidirSeriesPhase == BIDIR_FIRST_PART || 
+    (mBidirSeriesPhase == DOSYM_ALTERNATING_PART && 
+      (mNeedTilt || mTiltIndex < mNumDoseSymTilts - 1)))) {
+    i = mDoingDoseSymmetric ? 1 : 0;
+    str.Format(_T("Do you want to %s of the \n"
+      "tilt series instead of terminating it?\n\n"
+      "Press:\n\"%s\" to %s,\n\n"
       "\"Terminate\" to terminate the whole series,\n\n"
-      "\"Cancel\" to avoid either action."), "Second Part", "Terminate", "Cancel", 
+      "\"Cancel\" to avoid either action."), mess[0][i], mess[1][i], mess[0][i]);
+      answer = SEMThreeChoiceBox(str, mess[1][i], "Terminate", "Cancel",
       MB_YESNOCANCEL | MB_ICONQUESTION);
+    if (answer == IDYES && mDoingDoseSymmetric) {
+      posInd = (SEMThreeChoiceBox("Do you want to end the negative-tilt side\n"
+        "or the positive-tilt side?", "Negative", "Positive", "", MB_QUESTION) == IDYES) ?
+        1 : 0;
+
+      // Find next tilt in the specified direction then the previous one in same direction
+      // used to set state in the switch to bidir
+      for (i = mTiltIndex; i < mNumDoseSymTilts; i++)
+        if (mDosymDirections[i] == (posInd ? 1 : -1))
+          break;
+      if (i < mNumDoseSymTilts) {
+        mDosymIndexOfFinalPart = i;
+        mDosymSwitchNeedsTilt = i != mDosymIndexTiltedTo;
+        for (err = i - 1; err > 0; err--)
+          if (mDosymDirections[err] == mDosymDirections[i])
+            break;
+        mLastDosymReversalInd = err;
+
+      } else {
+        str.Format("There is no tilts left to do on the %s side.\n\n"
+          "You can do more tilts on the %s side by:\n"
+          "   1) Canceling this operation\n"
+          "   2) Opening Tilt Series Setup and making the %s angle higher\n"
+          "   3) Selecting Terminate again\n\n"
+          "Press:\n\n"
+          "\"Terminate\" to terminate the series,\n\n"
+          "\"Cancel\" to do more tilts on the %s side.", mess[2][posInd], mess[2][posInd],
+          BOOL_EQUIV(mTSParam.startingTilt > mTSParam.endingTilt, posInd > 0) ? 
+          "starting" : "ending"  , mess[2][posInd]);
+        if (SEMThreeChoiceBox(str, "Terminate", "Cancel", "", MB_QUESTION) == IDYES)
+          answer = IDNO;
+        else
+          answer = IDCANCEL;
+      }
+    }
     if (answer == IDCANCEL)
       return;
     if (answer == IDYES) {
-      mActIndex = mActOrder[BIDIR_RELOAD_REFS];
+      mActIndex = mActOrder[mDoingDoseSymmetric ? DOSYM_SWITCH_TO_BIDIR : 
+        BIDIR_RELOAD_REFS];
       mNeedTilt = false;
       CommonResume(0, 0, true);
       return;
     }
   }
 
-  if (mStartedTS && mBidirSeriesPhase > BIDIR_FIRST_PART && 
+  if (mStartedTS && mBidirSeriesPhase > BIDIR_FIRST_PART && !mDoingDoseSymmetric &&
     mMultiTSTasks->BidirCopyPending()) {
       if (AfxMessageBox("The inversion of the file from the first\n"
         "part of the series is not complete.\n\n"
@@ -4066,14 +4514,17 @@ void CTSController::Terminate()
           return;
   }
 
-  answer = SEMThreeChoiceBox(_T("Do you want the image file to be closed when\n"
-    "the tilt series controller is terminated?\n\n"
-    "Press:\n\"Close File\" to terminate and close the file,\n\n"
-    "\"Leave Open\" to terminate and leave the file open,\n\n"
-    "\"Cancel\" to avoid terminating the controller."), "Close File", "Leave Open",
-    "Cancel", MB_YESNOCANCEL | MB_ICONQUESTION);
-  if (answer == IDCANCEL)
-    return;
+  answer = IDYES;
+  if (!mDoingDoseSymmetric) {
+    answer = SEMThreeChoiceBox(_T("Do you want the image file to be closed when\n"
+      "the tilt series controller is terminated?\n\n"
+      "Press:\n\"Close File\" to terminate and close the file,\n\n"
+      "\"Leave Open\" to terminate and leave the file open,\n\n"
+      "\"Cancel\" to avoid terminating the controller."), "Close File", "Leave Open",
+      "Cancel", MB_YESNOCANCEL | MB_ICONQUESTION);
+    if (answer == IDCANCEL)
+      return;
+  }
 
   // Option to read in zero-tilt view and rotate it 90 degrees
   if (mTiltIndex > 0 && ((mTiltAngles[0] >= 0. && mTiltAngles[mTiltIndex - 1] <= 0. ||
@@ -4139,7 +4590,7 @@ void CTSController::Terminate()
     }
   }
   mTermFromMenu = true;
-  EndControl(true);
+  EndControl(true, mReorderDoseSymFile);
   if (answer == IDYES)
     mDocWnd->DoCloseFile();
   mWinApp->DetachStackView();
@@ -4148,24 +4599,46 @@ void CTSController::Terminate()
 // Termination on exit
 BOOL CTSController::TerminateOnExit()
 {
-  bool inverting = mBidirSeriesPhase > BIDIR_FIRST_PART && 
-    mMultiTSTasks->BidirCopyPending();
+  BOOL saveAsync = mBufferManager->GetSaveAsynchronously();
+  bool inverting = (mBidirSeriesPhase > BIDIR_FIRST_PART && 
+    mMultiTSTasks->BidirCopyPending()) || mDoingDosymFileReorder;
+  bool unordered = false;
   CString str;
   if (!mStartedTS)
     return false;
+  if (mDoingDoseSymmetric && !mDoingDosymFileReorder && mReorderDoseSymFile) {
+    if (AfxMessageBox("The last tilt series file has not been reordered yet.\n\n"
+      "Do you want to terminate the tilt series and reorder the file instead of exiting?",
+      MB_QUESTION) == IDYES) {
+      mBufferManager->SetSaveAsynchronously(false);
+      EndControl(true, true);
+      mBufferManager->SetSaveAsynchronously(saveAsync);
+      mDocWnd->DoCloseFile();
+      return true;
+    }
+    unordered = true;
+  }
+
   if (mNeedDeferredSum || inverting) {
     if (mNeedDeferredSum)
       str = "The full summed image from the last Record still\n"
-        "needs to be retrieved and saved.\n\n";
-    if (inverting)
+      "needs to be retrieved and saved.\n\n";
+    if (inverting && mTSParam.doBidirectional && !mDoingDoseSymmetric)
       str += "The inversion of the file from the first\n"
       "part of the series is not complete.\n\n";
+    if (mDoingDosymFileReorder || mDoingDoseSymmetric)
+      str += "The reordering of the file from the last tilt series is not complete.\n\n";
   }
-  if (AfxMessageBox(str + "Are you sure you want to terminate the\n"
-    "tilt series and exit the program?", MB_YESNO, MB_ICONQUESTION) != IDYES)
+  if (!(str.IsEmpty() && unordered)) {
+    str += "Are you sure you want to terminate the\ntilt series";
+    if (mNeedDeferredSum || inverting)
+      str += ", stop these operations,";
+    if (AfxMessageBox(str + " and exit the program?", MB_YESNO,
+      MB_ICONQUESTION) != IDYES)
       return true;
+  }
   
-  EndControl(true);
+  EndControl(true, false);
   return false;
 }
 
@@ -4179,8 +4652,16 @@ void CTSController::TerminateOnError(void)
   mPostponed = false;
   mInStartup = false;
   mWinApp->mCameraMacroTools.DoingTiltSeries(false);
-  if (mStartedTS)
-    EndControl(true);
+  if (mStartedTS && EndControl(true, mReorderDoseSymFile)) {
+    mNeedFinalTermTasks = true;
+    return;
+  }
+  DoFinalTerminationTasks();
+ }
+
+
+void CTSController::DoFinalTerminationTasks()
+{
   if (mLowDoseMode)
     mLDParam[RECORD_CONSET].intensity = mOriginalIntensity;
   else
@@ -4194,6 +4675,7 @@ void CTSController::TerminateOnError(void)
   if (mWinApp->mStackView)
     mWinApp->mStackView->CloseFrame();
 }
+
 
 // Set complex pane if  doing initial checks under external
 // control, and clear the flags that should be cleared when leaving from initial checks
@@ -4305,36 +4787,55 @@ int CTSController::TSMessageBox(CString message, UINT type, BOOL terminate, int 
 int CTSController::EndFirstPartOnDimImage(double angle, CString message, BOOL &needRedo, 
   bool highExp)
 {
+  bool endable = mBidirSeriesPhase == BIDIR_FIRST_PART;
+  int reversalInd;
+
+  // For dose-symmetric, find next reversal if any, that makes it possible to end also
+  if (mBidirSeriesPhase == DOSYM_ALTERNATING_PART) {
+    for (reversalInd = mTiltIndex + 1; reversalInd < mNumDoseSymTilts; 
+      reversalInd++)
+      if (mDosymDirections[reversalInd] != mDosymDirections[mTiltIndex]) {
+        endable = true;
+        break;
+      }
+  }
+
   // The test that rules out ending on either kind of call
-  if (mBidirSeriesPhase == BIDIR_RETURN_PHASE || 
-    (fabs(angle) < mDimEndsAbsAngle && fabs(mEndingTilt - angle) > mDimEndsAngleDiff))
+  if (mBidirSeriesPhase == BIDIR_RETURN_PHASE || mBidirSeriesPhase == DOSYM_TO_BIDIR_PHASE
+    || (fabs(angle) < mDimEndsAbsAngle && fabs(mEndingTilt - angle) > mDimEndsAngleDiff))
     return 0;
 
   // The test for not ending on a dim image/bad autofocus
-  if (!highExp && (!mEndOnHighDimImage || !(mBidirSeriesPhase == BIDIR_FIRST_PART || 
+  if (!highExp && (!mEndOnHighDimImage || !(endable || 
     (mExternalControl && (mTerminateOnError || mTermNotAskOnDim)))))
     return 0;
 
   // The test for not ending with a high exposure - it already tested if we are supposed 
   // to end on high exposures and if we already stopped
-  if (highExp && !(mBidirSeriesPhase == BIDIR_FIRST_PART || mExternalControl))
+  if (highExp && !(endable || mExternalControl))
     return 0;
 
   mWinApp->AppendToLog(message);
-  if (mBidirSeriesPhase == BIDIR_FIRST_PART) {
-    mWinApp->AppendToLog("\r\nTHE FIRST PART OF THE SERIES IS BEING ENDED;\r\nGOING ON TO"
-      " SECOND PART BASED ON TILT SERIES POLICY SETTINGS\r\n");
+  if (endable) {
+    if (mDoingDoseSymmetric) {
+      mWinApp->AppendToLog("\r\nONE SIDE OF THE SERIES IS BEING ENDED;\r\nGOING ON TO"
+        " FINISH THE OTHER SIDE BASED ON TILT SERIES POLICY SETTINGS\r\n");
+      mDosymIndexOfFinalPart = reversalInd;
+      mDosymSwitchNeedsTilt = true;
+    } else
+      mWinApp->AppendToLog("\r\nTHE FIRST PART OF THE SERIES IS BEING ENDED;\r\nGOING ON"
+        " TO SECOND PART BASED ON TILT SERIES POLICY SETTINGS\r\n");
 
     // Set the index for return; stop thinking a redo is needed, but hijack the partial
     // return flag to avoid other checks and incrementing index
     // Also cancel a walkup since tracking is compromised
-    mActIndex = mActOrder[BIDIR_RELOAD_REFS];
+    mActIndex = mActOrder[mDoingDoseSymmetric ? DOSYM_SWITCH_TO_BIDIR: BIDIR_RELOAD_REFS];
     needRedo = false;
     mKeepActIndexSame = true;
     mNeedTilt = false;
     if (mWalkBackForBidir)
       mWinApp->AppendToLog("RETURNING TO STARTING ANGLE WITH TILT STEPS INSTEAD "
-      "OF WALKUP\r\n");
+        "OF WALKUP\r\n");
     mWalkBackForBidir = false;
     return 1;
   }
@@ -4357,54 +4858,29 @@ void CTSController::Resume()
 {
   CTSResumeDlg resumeDlg;
   resumeDlg.m_strStatus = "The next regular action will be to ";
-  int nextIndex = mActIndex;
+  int i, nextIndex = mActIndex;
   float bufAngle;
+  bool found = false;
   bool skipOK = mActIndex < mActOrder[BIDIR_INVERT_FILE] || 
     mActIndex >= mActOrder[TILT_IF_NEEDED];
 
   // Invalidate the reference if trial area moved
   CheckLDTrialMoved();
 
+  // Get next action text for top line
   for (;;) {
-
-    if (NextActionIs(nextIndex, CHECK_RESET_SHIFT) || 
-      NextActionIs(nextIndex, LOOP_START_CHECKS)) {
-      resumeDlg.m_strStatus += "check image shift, then track.";
+    for (i = 0; actionText[i][0][0] != 0x00; i++) {
+      if (actionText[i][1][0] != 0x00 && NextActionIs(nextIndex, i)) {
+        found = true;
+        break;
+      }
+    } 
+    if (found) {
+      resumeDlg.m_strStatus += actionText[i][1];
       break;
-    } else if (NextActionIs(nextIndex, IMPOSE_VARIATIONS)) {
-      resumeDlg.m_strStatus += "change parameters based on angle, then track.";
-      break;
-    } else if (NextActionIs(nextIndex, CHECK_REFINE_ZLP)) {
-      resumeDlg.m_strStatus += "check for refining ZLP, then track.";
-      break;
-    } else if (NextActionIs(nextIndex, CHECK_AUTOCENTER)) {
-      resumeDlg.m_strStatus += "check for autocentering beam , then track.";
-      break;
-    } else if (NextActionIs(nextIndex, COMPUTE_PREDICTIONS)) {
-      resumeDlg.m_strStatus += "compute predictions, then track.";
-      break;
-    } else if (NextActionIs(nextIndex, LOW_MAG_FOR_TRACKING)) {
-      resumeDlg.m_strStatus += "get low mag tracking shot.";
-      break;
-    } else if (NextActionIs(nextIndex, ALIGN_LOW_MAG_SHOT)) {
-      resumeDlg.m_strStatus += "align low mag tracking shot.";
-      break;
-    } else if (NextActionIs(nextIndex, TRACKING_SHOT)) {
-      resumeDlg.m_strStatus += "get regular tracking shot.";
-      break;
-    } else if (NextActionIs(nextIndex, ALIGN_TRACKING_SHOT)) {
-      resumeDlg.m_strStatus += "align regular tracking shot.";
-      break;
-    } else if (NextActionIs(nextIndex, AUTOFOCUS)) {
-      resumeDlg.m_strStatus += "autofocus.";
-      break;
-    } else if (NextActionIs(nextIndex, POST_FOCUS_TRACKING)) {
-      resumeDlg.m_strStatus += "get post-focus tracking shot.";
-      break;
-    } else if (NextActionIs(nextIndex, ALIGN_POST_FOCUS)) {
-      resumeDlg.m_strStatus += "align post-focus tracking shot.";
-      break;
-   } else if (NextActionIs(nextIndex, RECORD_OR_MONTAGE)) {
+    }
+      
+    if (NextActionIs(nextIndex, RECORD_OR_MONTAGE)) {
       if (mMontaging)
         resumeDlg.m_strStatus += "take montage.";
       else
@@ -4423,66 +4899,6 @@ void CTSController::Resume()
           "image #%d", NextActionIs(nextIndex, EXTRA_RECORD) ? "acquire" : "save", 
           (LPCTSTR)mModeNames[RECORD_CONSET], mExtraRecIndex + 1);
         break;
-    } else if (NextActionIs(nextIndex, TRACK_BEFORE_LOWMAG_REF)) {
-      resumeDlg.m_strStatus += "take a Trial before getting a new low mag reference.";
-      break;
-    } else if (NextActionIs(nextIndex, ALIGN_LOWMAG_PRETRACK)) {
-      resumeDlg.m_strStatus += "align the Trial to Record reference.";
-      break;
-    } else if (NextActionIs(nextIndex, LOW_MAG_REFERENCE)) {
-      resumeDlg.m_strStatus += "get reference for low mag tracking.";
-      break;
-    } else if (NextActionIs(nextIndex, COPY_LOW_MAG_REF)) {
-      resumeDlg.m_strStatus += "copy low mag reference to its buffer.";
-      break;
-    } else if (NextActionIs(nextIndex, LOWDOSE_PREVIEW)) {
-      resumeDlg.m_strStatus += "take a Preview before getting a new tracking reference.";
-      break;
-    } else if (NextActionIs(nextIndex, ALIGN_LOWDOSE_PREVIEW)) {
-      resumeDlg.m_strStatus += "align the Preview to Record reference.";
-      break;
-    } else if (NextActionIs(nextIndex, LOWDOSE_TRACK_REF)) {
-      resumeDlg.m_strStatus += "get new tracking area reference.";
-      break;
-    } else if (NextActionIs(nextIndex, COPY_LOWDOSE_REF)) {
-      resumeDlg.m_strStatus += "copy tracking reference to its buffer.";
-      break;
-    } else if (NextActionIs(nextIndex, BIDIR_INVERT_FILE)) {
-      resumeDlg.m_strStatus += "start copying file and/or inverting Z.";
-      break;
-    } else if (NextActionIs(nextIndex, BIDIR_RETURN_TO_START)) {
-      resumeDlg.m_strStatus += "return to the starting tilt angle";
-      break;
-    } else if (NextActionIs(nextIndex, BIDIR_REALIGN_SHOT)) {
-      resumeDlg.m_strStatus += "realign to bidirectional anchor image";
-      break;
-    } else if (NextActionIs(nextIndex, BIDIR_CHECK_SHIFT)) {
-      resumeDlg.m_strStatus += "check for resetting image shift";
-      break;
-    } else if (NextActionIs(nextIndex, BIDIR_REVERSE_TILT)) {
-      resumeDlg.m_strStatus += "reverse tilt for other direction";
-      break;
-    } else if (NextActionIs(nextIndex, BIDIR_RELOAD_REFS)) {
-      resumeDlg.m_strStatus += "reload reference image(s)";
-      break;
-    } else if (NextActionIs(nextIndex, BIDIR_TRACK_SHOT)) {
-      resumeDlg.m_strStatus += "take a tracking shot";
-      break;
-    } else if (NextActionIs(nextIndex, BIDIR_AUTOFOCUS)) {
-      resumeDlg.m_strStatus += "autofocus before starting second part of series";
-      break;
-    } else if (NextActionIs(nextIndex, BIDIR_LOWMAG_REF)) {
-      resumeDlg.m_strStatus += "take a new low mag reference";
-      break;
-    } else if (NextActionIs(nextIndex, BIDIR_COPY_LOWMAG_REF)) {
-      resumeDlg.m_strStatus += "save the low mag reference";
-      break;
-    } else if (NextActionIs(nextIndex, BIDIR_FINISH_INVERT)) {
-      resumeDlg.m_strStatus += "finish copying file to invert Z";
-      break;
-    } else if (NextActionIs(nextIndex, GET_DEFERRED_SUM)) {
-      resumeDlg.m_strStatus += "get the full summed Record image";
-      break;
     } else if (NextActionIs(nextIndex, TILT_IF_NEEDED)) {
       if (mPreTilted)
         resumeDlg.m_strStatus += "check image shifts at the new tilt."
@@ -4587,7 +5003,7 @@ void CTSController::Resume()
     if (mLowDoseMode && !mHaveTrackRef && !mLDTrialWasMoved &&
       mImBufs[mExtraRefBuf].GetTiltAngle(bufAngle))
       mHaveTrackRef = fabs(mScope->GetTiltAngle() - bufAngle) < 
-        mMaxUsableAngleDiff * cos(DTOR * bufAngle);
+        MaxUsableDiffFromAngle(bufAngle);
     break;
 
   case 6:   // do low mag track
@@ -4626,36 +5042,62 @@ void CTSController::BackUpSeries()
   CTSBackupDlg backupDlg;
   float bufAngle;
   double limitAngle, delFac;
-  int newIndex, thisZ, lastError, thisError, i;
+  int newIndex, thisZ, lastError, thisError, i, ind, tiltInd, startIndex, alignBuf;
+  int alterInd, otherBuf, otherZ = -1, otherError = 0;
+  int newDirection = mDirection;
+  float otherAngle, increment = mTSParam.tiltIncrement;
+  float matchCrit = 0.33f * increment;
+  bool gotOther = false, gotThis = false;
   int numEntries = MAX_BACKUP_LIST_ENTRIES;
-  double minDiff;
+  double curTilt = mCurrentTilt;
 
   CheckLDTrialMoved();
+  if (mLDTrialWasMoved && mDoingDoseSymmetric) {
+    AfxMessageBox("You cannot back up because you have changed the location of the"
+      " tracking area", MB_EXCLAME);
+    return;
+  }
 
   // set starting index in list based on maximum allowed for display,
   // or on whatever is in reach of existing tracking images for low dose
   if (mLowDoseMode && !mLDTrialWasMoved) {
     
     // First copy existing reference to stack if it is not already there
-    if (!mStackedLDRef)
-      NewLowDoseRef(mExtraRefBuf);
-    mStackedLDRef = true;
+    NewLowDoseRef(mExtraRefBuf);
 
-    // then find oldest angle in stack
-    for (i = mTrackStackBuf; i < mNumTrackStack + mTrackStackBuf; i++) {
-      if (mImBufs[i].GetTiltAngle(bufAngle))
-        limitAngle = bufAngle;
-      else
-        break;
+    if (mDoingDoseSymmetric) {
+
+      // Copy other track reference to stack too to simplify looking
+      ind = mExtraRefBuf == mDosymExtraRefBufs[0] ? 1 : 0;
+      NewLowDoseRef(mDosymExtraRefBufs[ind], mDosymExtraRefBufs[ind]);
+
+      // For dose-symmetric, look backward and find first tilt that does not have a usable
+      // reference in stack
+      for (tiltInd = mHighestIndex - 1; tiltInd > 0; tiltInd--)
+        if (FindClosestStackReference(mTiltAngles[tiltInd], DOSYM_DIRECTION(tiltInd),
+          bufAngle) < 0)
+          break;
+       numEntries = (mHighestIndex - 1) - tiltInd;
+      B3DCLAMP(numEntries, 0, MAX_BACKUP_LIST_ENTRIES);
+
+    } else {
+
+      // regular series: find oldest angle in stack
+      for (i = mTrackStackBuf; i < mNumTrackStack + mTrackStackBuf; i++) {
+        if (mImBufs[i].GetTiltAngle(bufAngle))
+          limitAngle = bufAngle;
+        else
+          break;
+      }
+      // Extend the angle to usable limit
+      limitAngle -= mDirection * MaxUsableDiffFromAngle(limitAngle);
+
+      // Now look back for last angle that falls within limit
+      for (i = 1; i < mHighestIndex && i <= numEntries; i++)
+        if (mDirection * (mTiltAngles[mHighestIndex - i - 1] - limitAngle) <= 0.)
+          break;
+      numEntries = i;
     }
-    // Extend the angle to usable limit
-    limitAngle -= mDirection * mMaxUsableAngleDiff * cos(DTOR * limitAngle);
-
-    // Now look back for last angle that falls within limit
-    for (i = 1; i < mHighestIndex && i <= numEntries; i++)
-      if (mDirection * (mTiltAngles[mHighestIndex - i - 1] - limitAngle) <= 0.)
-        break;
-    numEntries = i;
 
     // If trial was moved, issue a warning and allow full range of angles
   } else if (mLowDoseMode) {
@@ -4664,15 +5106,18 @@ void CTSController::BackUpSeries()
        "tracking area", MB_EXCLAME);
   }
   
-  int startIndex = mHighestIndex - numEntries;
-  if (startIndex < mPartStartTiltIndex)
-    startIndex = mPartStartTiltIndex;
+  startIndex = B3DMAX(mPartStartTiltIndex, mHighestIndex - numEntries);
 
   // Set the base Z value based on this, and provide pointers to tilt angles
   // and set the selection to the current index, not the highest
   backupDlg.m_iBaseZ = mBaseZ + startIndex;
   backupDlg.m_fpTilts = &mTiltAngles[startIndex];
   backupDlg.m_iNumEntries = mHighestIndex - startIndex;
+  if (!backupDlg.m_iNumEntries) {
+    AfxMessageBox("It is not possible to back up at this point in the tilt series", 
+      MB_EXCLAME);
+    return;
+  }
 
   // Have to back up the pointer if and only if the tilt index is at the
   // highest index, because there is no tilt angle at that index
@@ -4684,18 +5129,57 @@ void CTSController::BackUpSeries()
   newIndex = startIndex + backupDlg.m_iSelection;
 
   // Get the previous Z and put in align buffer
-  mBackingUpZ = newIndex + mBaseZ - 1;
-  if (mBackingUpZ < 0)
-    mBackingUpZ = 0;
+  mBackingUpZ = B3DMAX(0, newIndex + mBaseZ - 1);
   thisZ = newIndex + mBaseZ;
+  alignBuf = mAlignBuf;
+
+  if (mDoingDoseSymmetric) {
+    newDirection = DOSYM_DIRECTION(newIndex);
+    alterInd = newDirection == mDosymDirections[0] ? 0 : 1;
+    alignBuf = mDosymAlignBufs[alterInd];
+    otherBuf = mDosymAlignBufs[1 - alterInd];
+
+    // Look backward, find last tilt in the same direction and last reversal if any
+    for (ind = newIndex - 1; ind > 0 && !(gotOther && gotThis); ind--) {
+      if (DOSYM_DIRECTION(ind) == newDirection && !gotThis) {
+        mBackingUpZ = ind;
+        gotThis = true;
+      }
+      if (DOSYM_DIRECTION(ind) != newDirection && !gotOther) {
+        otherAngle = mIdealDosymAngles[ind];
+        gotOther = true;
+        if (mImBufs[otherBuf].GetTiltAngle(bufAngle) ||
+          fabs(bufAngle - otherAngle) > matchCrit) {
+
+          // If found reversal and its reference is not in the other align buffer,
+          // then get tilt index that it corresponds to and hence Z in file
+          for (i = 0; i < mHighestIndex; i++) {
+            if (fabs(mTiltAngles[i] - otherAngle) < matchCrit) {
+              otherZ = i + mBaseZ;
+              break;
+            }
+          }
+        }
+      }
+    }
+  }
 
   if (mMontaging) {
-    lastError = mMontageController->ReadMontage(mBackingUpZ, NULL, NULL, false, 
+    if (otherZ >= 0) {
+      otherError = mMontageController->ReadMontage(otherZ, NULL, NULL, false,
+        true);
+      if (!otherError) {
+        mImBufs->mImage->setShifts(mAlignShiftX[otherZ - mBaseZ],
+          mAlignShiftY[otherZ - mBaseZ]);
+        mBufferManager->CopyImageBuffer(0, otherBuf);
+      }
+    }
+    lastError = mMontageController->ReadMontage(mBackingUpZ, NULL, NULL, false,
       true);
     if (!lastError) {
       mImBufs->mImage->setShifts(mAlignShiftX[mBackingUpZ - mBaseZ], 
         mAlignShiftY[mBackingUpZ - mBaseZ]);
-      mBufferManager->CopyImageBuffer(0, mAlignBuf);
+      mBufferManager->CopyImageBuffer(0, alignBuf);
     }
     
     // Get the new Z if it is not the same
@@ -4708,9 +5192,16 @@ void CTSController::BackUpSeries()
   } else {
 
     // single frame
-    lastError = mBufferManager->ReadFromFile(mWinApp->mStoreMRC, mBackingUpZ, mAlignBuf);
+    if (otherZ >= 0) {
+      otherError = mBufferManager->ReadFromFile(mWinApp->mStoreMRC, otherZ, otherBuf);
+      if (!otherError)
+        mImBufs[otherBuf].mImage->setShifts(mAlignShiftX[otherZ - mBaseZ],
+          mAlignShiftY[otherZ - mBaseZ]);
+    }
+
+    lastError = mBufferManager->ReadFromFile(mWinApp->mStoreMRC, mBackingUpZ, alignBuf);
     if (!lastError) {
-      mImBufs[mAlignBuf].mImage->setShifts(mAlignShiftX[mBackingUpZ - mBaseZ], 
+      mImBufs[alignBuf].mImage->setShifts(mAlignShiftX[mBackingUpZ - mBaseZ], 
         mAlignShiftY[mBackingUpZ - mBaseZ]);
     }
 
@@ -4721,52 +5212,59 @@ void CTSController::BackUpSeries()
     }
   }
 
+  if (otherError)
+    AfxMessageBox("Error reading tilt needed for reference in the other direction", 
+      MB_EXCLAME);
   if (lastError)
     AfxMessageBox("Error reading previous tilt for reference", MB_EXCLAME);
   if (thisError)
     AfxMessageBox("Error reading image for this tilt", MB_EXCLAME);
 
   // Change beam intensity or exposure back to where it was at new angle
-  // and restore any other variations
   if (mTSParam.beamControl == BEAM_INVERSE_COSINE) {
-    delFac = pow(cos(DTOR * mCurrentTilt) / cos(DTOR * mTiltAngles[newIndex]), 
-      1. / mTSParam.cosinePower);
+    delFac = CosineIntensityChangeFac(mCurrentTilt, mTiltAngles[newIndex]);
     SetIntensity(delFac, mTiltAngles[newIndex]);
   }
-  if (mTSParam.doVariations)
-    ImposeVariations(mTiltAngles[newIndex]);
 
   // This is needed for the backing up calls
   mCurrentTilt = mTiltAngles[newIndex];
 
-  // For low dose, find the closest reference in stack
+  // For low dose, need to restore other reference(s)
+  // Look in stack for the buffer that is best reference for the new current angle
   if (mLowDoseMode && !mLDTrialWasMoved) {
-    minDiff = 10000.;
-    for (i = mTrackStackBuf; i < mNumTrackStack + mTrackStackBuf; i++) {
-      if (mImBufs[i].GetTiltAngle(bufAngle)) {
-        if (fabs(mCurrentTilt - bufAngle) < minDiff) {
-          minDiff = fabs(mCurrentTilt - bufAngle);
-          mRestoredTrackBuf = i;
-        }
-      } else
-        break;
+    mRestoredTrackBuf = FindClosestStackReference(mCurrentTilt, newDirection, bufAngle);
+    if (mRestoredTrackBuf > 0) {
+      alignBuf = mDoingDoseSymmetric ? mDosymExtraRefBufs[alterInd] : mExtraRefBuf;
+      mBufferManager->CopyImageBuffer(mRestoredTrackBuf, alignBuf);
+      mHaveTrackRef = true;
     }
-    mBufferManager->CopyImageBuffer(mRestoredTrackBuf, mExtraRefBuf);
-    mHaveTrackRef = true;
+
+    // For dose-symmetric, find the one that matches the other side's angle
+    if (otherZ >= 0) {
+      i = FindClosestStackReference(otherAngle, -newDirection, bufAngle);
+      if (i > 0)
+        mBufferManager->CopyImageBuffer(i, mDosymExtraRefBufs[1 - alterInd]);
+    }
   }
 
   // Need to change tilt angle unless there is no change in index, or
   // the index is dropping by one simply due to moving the action index back
+  // But play it safe and do it for dose-symmetric too
   if (!((newIndex == mTiltIndex) || (newIndex == mTiltIndex - 1 &&
-    mActIndex > mActOrder[SAVE_RECORD_SHOT] && !mPreTilted))) {
+    mActIndex > mActOrder[SAVE_RECORD_SHOT] && !mPreTilted)) || mDoingDoseSymmetric) {
 
     // If index is less than the last, do full backup with backlash,
-    // otherwise just tilt once forward 
+    // otherwise just tilt once forward; set state for new index
     if (newIndex < mTiltIndex)
-      StartBackingUp(1);
+      StartBackingUp(1, newIndex);
     else
-      StartBackingUp(2);
+      StartBackingUp(2, newIndex);
   }
+
+  // Restore any other variations for new angle now that changes are done for cosine
+  // intensities either way (may not matter)
+  if (mTSParam.doVariations)
+    ImposeVariations(mTiltAngles[newIndex]);
 
   // Set new index, set the file writing position, set to start at the
   // beginning of the loop, get the next tilt value, and disable predictions
@@ -4776,6 +5274,34 @@ void CTSController::BackUpSeries()
 
   mHaveFocusPrediction = false;
   mHaveXYPrediction = false;
+}
+
+// Find a reference for the current angle in the tracking stack, looking first for one
+// at a previous angle in the series and then allowing one at the given tilt
+// To do this, it has to test if it is at a usable tilt difference
+int CTSController::FindClosestStackReference(double curAngle, int direction,
+  float &bufAngle)
+{
+  double absDiff, minDiff = 10000.;
+  float tmpAngle;
+  int minInd = -1, i, loop;
+  for (loop = 0; loop < 2; loop++) {
+    for (i = mTrackStackBuf; i < mNumTrackStack + mTrackStackBuf; i++) {
+      if (mImBufs[i].mImage && mImBufs[i].GetTiltAngle(tmpAngle) &&
+        direction * (curAngle - tmpAngle) >= (loop ? 0. : 0.1) &&
+        direction * (tmpAngle - mStartingTilt) >= 0.) {
+        absDiff = fabs(curAngle - tmpAngle);
+        if (absDiff < minDiff && absDiff <= MaxUsableDiffFromAngle(tmpAngle)) {
+          minDiff = absDiff;
+          bufAngle = tmpAngle;
+          minInd = i;
+        }
+      }
+    }
+    if (minInd > 0)
+      break;
+  }
+  return minInd;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -4987,11 +5513,11 @@ int CTSController::CheckExtraFiles()
           continue;
 
         actual = i;
-        csp = mWinApp->GetCamConSets() + camera * MAX_CONSETS + csNum;
+        csp = mCamConSets + camera * MAX_CONSETS + csNum;
         binning = csp->binning;
         if (csNum == RECORD_CONSET && mTSParam.extraRecordType == TS_OPPOSITE_TRIAL) {
           actual = TRIAL_CONSET;
-          csp = mWinApp->GetCamConSets() + camera * MAX_CONSETS + TRIAL_CONSET;
+          csp = mCamConSets + camera * MAX_CONSETS + TRIAL_CONSET;
           binning = csp->binning;
           if (mTSParam.extraSetBinning)
             csp->binning = mCamParams->binnings
@@ -5492,31 +6018,35 @@ void CTSController::RestoreFromExtraRec(void)
 // Compute predictions and evaluate need for track and focus shots
 void CTSController::ComputePredictions(double angle)
 {
-  int i, numDisturbed, nFitX, nFitY, nFitZ, nDropX, nDropY, nDropZ;
-  int ixStart, iyStart, izStart, izFirst, izLast, firstUsable, toArea;
+  int i, izz, nFitX, nFitY, nFitZ, nDropX, nDropY, nDropZ;
+  int firstUsable, toArea;
   float trackSize, trackCrit;
   int nUsable = 0;
-  BOOL foundValid = false;
-  float lastValidX, lastValidY, lowMagTolerance, stdErrorX, stdErrorY, stdErrorZ;
+  float previousFitX, previousFitY, lowMagTolerance, stdErrorX, stdErrorY, stdErrorZ;
   float lastErrorX, lastErrorY, lastErrorZ, delX, delY, slope, slope2, intcp, roCorr;
+  float firstFitAngle, lastFitAngle, increment;
   double delISX, delISY;
   float x1fit[MAX_PRED_FITS], x2fit[MAX_PRED_FITS], yfit[MAX_PRED_FITS];
+  float tmpFit[MAX_PRED_FITS];
   CString message, messadd;
   BOOL recentlyReversed = mDirection * (angle - mScope->GetReversalTilt()) < 
     mComplexTasks->GetTiltBacklash() - 3. * mMaxTiltError;
-  double usableAngleDiff = mMaxUsableAngleDiff * cos(DTOR * angle);
+  double usableAngleDiff = MaxUsableDiffFromAngle(angle);
+  bool reversingDosym = mBidirSeriesPhase == DOSYM_ALTERNATING_PART;
+  bool secondPart = mBidirSeriesPhase == BIDIR_SECOND_PART;
     
   if (recentlyReversed)
     SEMTrace('1', "recentlyReversed: dir %d ang %f revtilt %f back %f 3mte %f",
       mDirection,  angle, mScope->GetReversalTilt(), mComplexTasks->GetTiltBacklash(),
       3. * mMaxTiltError);
-  ixStart = mConSets[TRACKING_CONSET].right - mConSets[TRACKING_CONSET].left;
-  iyStart = mConSets[TRACKING_CONSET].bottom - mConSets[TRACKING_CONSET].top;
-  trackSize = (ixStart < iyStart ? ixStart : iyStart) * 
+  nFitX = mConSets[TRACKING_CONSET].right - mConSets[TRACKING_CONSET].left;
+  nFitY = mConSets[TRACKING_CONSET].bottom - mConSets[TRACKING_CONSET].top;
+  trackSize = (nFitX < nFitY ? nFitX : nFitY) *
     mShiftManager->GetPixelSize(mWinApp->GetCurrentCamera(), mTSParam.magIndex[mSTEMindex]);
   trackCrit = mTSParam.maxPredictErrorXY * trackSize;
 
   message = "";
+
   // Compute errors from last predictions unless disturbed
   if (mHaveXYPrediction) {
     lastErrorX = mSpecimenX[mTiltIndex - 1] - mPredictedX;
@@ -5552,27 +6082,21 @@ void CTSController::ComputePredictions(double angle)
     
     // Count how much data are available since last disturbance
     for (i = mTiltIndex - 1; i >= 0; i--) {
-      if (mDisturbance[i] & SHIFT_DISTURBANCES)
-        break;
-      else
-        nUsable++;
-    }
-
-    // Look for last valid change in X/Y: an interval over which there was no
-    // disturbance.  Do not look past too many disturbances
-    numDisturbed = B3DCHOICE(mDisturbance[mTiltIndex - 1] & SHIFT_DISTURBANCES, 1, 0);
-    for (i = mTiltIndex - 1; i > 0 ; i--) {
-      if (numDisturbed > mMaxDisturbValidChange)
-        break;
-      if (mDisturbance[i - 1] & SHIFT_DISTURBANCES) {
-        numDisturbed++;
-      } else {
-        foundValid = true;
-        lastValidX = mSpecimenX[i] - mSpecimenX[i - 1];
-        lastValidY = mSpecimenY[i] - mSpecimenY[i - 1];
+      if (reversingDosym && mDirection != mDosymDirections[i]) {
+        if (mDosymFitPastReversals)
+          continue;
         break;
       }
+      if ((mDisturbance[i] & SHIFT_DISTURBANCES) ||
+        (secondPart && i < mPartStartTiltIndex)) {
+          break;
+      } else {
+        nUsable++;
+        firstUsable = i;
+      }
     }
+
+    // 6/5/19: deleted code looking for last valid single X/Y change, dead since 2012
   }
 
   if (nUsable > MAX_PRED_FITS)
@@ -5588,42 +6112,61 @@ void CTSController::ComputePredictions(double angle)
   } else {
 
     // Drop points right after disturbance, as long as at least 3 are left
-    if (nUsable >= 3) {
-      nUsable -= mMaxDropAsShiftDisturbed;
-      if (nUsable < 3)
-        nUsable = 3;
-    }
+    if (nUsable >= 3 && (!reversingDosym || mDosymFitPastReversals))
+      nUsable = B3DMAX(3, nUsable - mMaxDropAsShiftDisturbed);
 
     // Do X first.  Look back beyond second point for first one outside the
     // selected fitting interval
-    for (ixStart = mTiltIndex - 2; ixStart > mTiltIndex - nUsable; ixStart--)
-      if (fabs(angle - mTiltAngles[ixStart - 1]) > mTSParam.fitIntervalX)
+    nFitX = 0;
+    for (i = mTiltIndex - 1; i >= firstUsable; i--) {
+      if (reversingDosym && mDirection != mDosymDirections[i]) {
+        if (mDosymFitPastReversals)
+          continue;
+        else
+          break;
+      }
+      if (nFitX >= 2 && fabs(angle - mTiltAngles[i]) > mTSParam.fitIntervalX)
         break;
-    nFitX = mTiltIndex - ixStart;
+      tmpFit[nFitX++] = mSpecimenX[i];
+      if (nFitX >= nUsable)
+        break;
+    }
 
-    // Fill arrays
+    // Save previous tilt value and reorder like they used to be
+    previousFitX = tmpFit[0];
     for (i = 0; i < nFitX; i++) {
       x1fit[i] = (float)i;
       x2fit[i] = (float)(i * i);
-      yfit[i] = mSpecimenX[i + ixStart];
+      yfit[i] = tmpFit[(nFitX - 1) - i];
     }
-  
+
     // get the prediction
     BestPredFit(x1fit, x2fit, yfit, nFitX, nDropX, mMinFitXAfterDrop, 
       mTSParam.minFitXQuadratic, slope, slope2, intcp, roCorr, (float)nFitX,
       mPredictedX, stdErrorX);
 
     // Now do the same for Y, with a potentially different interval
-    for (iyStart = mTiltIndex - 2; iyStart > mTiltIndex - nUsable; iyStart--)
-      if (fabs(angle - mTiltAngles[iyStart - 1]) > mTSParam.fitIntervalY)
+    nFitY = 0;
+    for (i = mTiltIndex - 1; i >= firstUsable; i--) {
+      if (reversingDosym && mDirection != mDosymDirections[i]) {
+        if (mDosymFitPastReversals)
+          continue;
+        else
+          break;
+      }
+      if (nFitY >= 2 && fabs(angle - mTiltAngles[i]) > mTSParam.fitIntervalY)
         break;
-    nFitY = mTiltIndex - iyStart;
+      tmpFit[nFitY++] = mSpecimenY[i];
+      if (nFitY >= nUsable)
+        break;
+    }
+    previousFitY = tmpFit[0];
     for (i = 0; i < nFitY; i++) {
       x1fit[i] = (float)i;
       x2fit[i] = (float)(i * i);
-      yfit[i] = mSpecimenY[i + iyStart];
+      yfit[i] = tmpFit[(nFitY - 1) - i];
     }
-  
+
     BestPredFit(x1fit, x2fit, yfit, nFitY, nDropY, mMinFitYAfterDrop, 
       mTSParam.minFitYQuadratic, slope, slope2, intcp, roCorr, (float)nFitY,
       mPredictedY, stdErrorY);
@@ -5652,9 +6195,14 @@ void CTSController::ComputePredictions(double angle)
   // Count how much data are available since last disturbance
   nUsable = 0;
   for (i = mTiltIndex - 1; i >= 0; i--) {
-    if (mDisturbance[i] & FOCUS_DISTURBANCES)
+    if (mDisturbance[i] & FOCUS_DISTURBANCES || (secondPart && i < mPartStartTiltIndex))
       break;
-    else if (mDidFocus[i]) {
+    if (reversingDosym && mDirection != mDosymDirections[i]) {
+      if (mDosymFitPastReversals < 2)
+        break;
+      else
+        continue;
+    } else if (mDidFocus[i]) {
       nUsable++;
       firstUsable = i;
     }
@@ -5671,43 +6219,48 @@ void CTSController::ComputePredictions(double angle)
   // 2 or more points: do linear fit to Z's
   } else {
 
+
     // Drop points right after disturbance, as long as at least 3 are left
-    if (nUsable >= 3) {
-      nUsable -= mMaxDropAsFocusDisturbed;
-      if (nUsable < 3)
-        nUsable = 3;
-    }
+    if (nUsable >= 3 && (!reversingDosym || mDosymFitPastReversals > 1))
+      nUsable = B3DMAX(3, nUsable - mMaxDropAsFocusDisturbed);
 
     // Get the number of points in the fitting interval for Z, but insist on at
     // least three before enforcing interval.  
-    // Keep track of the first and last indexes where focus measured
+    // Loop backwards and save angles and Z values
     nFitZ = 0;
-    izLast = -1;
-    for (izStart = mTiltIndex -1 ; izStart >= firstUsable; izStart--) {
-      if (nFitZ >= 3 && (fabs((double)(mTiltAngles[izLast] - 
-        mTiltAngles[izStart])) > mTSParam.fitIntervalZ || nFitZ >= nUsable))
+    for (izz = mTiltIndex - 1; izz >= firstUsable; izz--) {
+      if (reversingDosym && mDirection != mDosymDirections[izz]) {
+        if (mDosymFitPastReversals > 1)
+          continue;
+        else
+          break;
+      }
+      if (nFitZ >= 3 && (fabs((double)(x2fit[0] - mTiltAngles[izz])) > 
+        mTSParam.fitIntervalZ || nFitZ >= nUsable))
         break;
-      if (mDidFocus[izStart]) {
-        nFitZ++;
-        izFirst = izStart;
-        if (izLast < 0)
-          izLast = izStart;
+      if (mDidFocus[izz]) {
+        tmpFit[nFitZ] = mSpecimenZ[izz];
+        x2fit[nFitZ++] = mTiltAngles[izz];
       }
     }
-  
-    // Fill arrays
-    nFitZ = 0;
-    for (i = izFirst; i < mTiltIndex; i++) {
-      if (mDidFocus[i]) {
-        x1fit[nFitZ] = (float)(i - izFirst);
-        yfit[nFitZ++] = mSpecimenZ[i];
-      }
+
+    // Reorder the data to be like they used to be
+    lastFitAngle = x2fit[0];
+    firstFitAngle = x2fit[nFitZ - 1];
+    if (!mDoingDoseSymmetric && mTSParam.cosineTilt)
+      increment = mTiltAngles[mTiltIndex - 1] - mTiltAngles[mTiltIndex - 2];
+    else
+      increment = mDirection * mTSParam.tiltIncrement;
+    for (i = 0; i < nFitZ; i++) {
+      izz = (nFitZ - 1) - i;
+      x1fit[i] = (x2fit[izz] - firstFitAngle) / increment;
+      yfit[i] = tmpFit[izz];
     }
-  
-    // get the prediction
-    BestPredFit(x1fit, x2fit, yfit, nFitZ, nDropZ, mMinFitZAfterDrop, 
+
+    BestPredFit(x1fit, x2fit, yfit, nFitZ, nDropZ, mMinFitZAfterDrop,
       10000, slope, slope2, intcp, roCorr,
-      (float)(mTiltIndex - izFirst), mPredictedZ, stdErrorZ);
+      ((float)angle - firstFitAngle) / increment, mPredictedZ, stdErrorZ);
+    firstFitAngle = x2fit[(nFitZ - 1) - nDropZ];
 
     // Focus if last Error is big or twice standard error is big, or
     // if the span since the last focus is bigger than the span of the predictions
@@ -5716,10 +6269,10 @@ void CTSController::ComputePredictions(double angle)
     mNeedFocus = nUsable == 2 || 
       fabs((double)lastErrorZ) > mTSParam.maxPredictErrorZ[mSTEMindex] ||
       2. * stdErrorZ > mTSParam.maxPredictErrorZ[mSTEMindex] ||
-      fabs(angle - mTiltAngles[izLast]) > 
-      fabs((double)(mTiltAngles[izLast] - mTiltAngles[izFirst + nDropZ])) ||
-      fabs(angle - mTiltAngles[izLast]) >= mTSParam.focusCheckInterval ||
-      (mTSParam.alwaysFocusHigh && fabs(angle) > mTSParam.alwaysFocusAngle);
+      fabs(angle - lastFitAngle) > fabs((double)(lastFitAngle - firstFitAngle)) ||
+      fabs(angle - lastFitAngle) >= mTSParam.focusCheckInterval ||
+      (mTSParam.alwaysFocusHigh && 
+        fabs(angle - mBaseAngleForVarying) > mTSParam.alwaysFocusAngle);
 
     mHaveFocusPrediction = true;
 
@@ -5740,8 +6293,9 @@ void CTSController::ComputePredictions(double angle)
   
   // If low dose, force a new track reference at regular intervals, unless we were
   // getting a regular track anyway
-  if (mLowDoseMode && fabs(angle - mLastLDTrackAngle) > 1.5 * mLastIncrement &&
-    fabs(angle - mLastLDTrackAngle) > usableAngleDiff && !mNeedRegularTrack)
+  if (mLowDoseMode && fabs(angle - mLastLDTrackAngle[(mDirection + 1) / 2]) > 
+    1.5 * mLastIncrement && fabs(angle - mLastLDTrackAngle[(mDirection + 1) / 2]) > 
+      usableAngleDiff && !mNeedRegularTrack)
     mHaveTrackRef = false;
   
 
@@ -5772,8 +6326,8 @@ void CTSController::ComputePredictions(double angle)
   }
 
   if (mHaveXYPrediction) {
-    delX = mPredictedX - mSpecimenX[mTiltIndex - 1];
-    delY = mPredictedY - mSpecimenY[mTiltIndex - 1];
+    delX = mPredictedX - previousFitX;
+    delY = mPredictedY - previousFitY;
     delISX = mCinv.xpx * delX + mCinv.xpy * delY;
     delISY = mCinv.ypx * delX + mCinv.ypy * delY;
     if (mSkipBeamShiftOnAlign)
@@ -5807,7 +6361,7 @@ void CTSController::ComputePredictions(double angle)
   // Use tilt after move routine if recently reversed, every time until reversal is done
   if (!mTrackLowMag || mDidTiltAfterMove || recentlyReversed) {
     mNeedLowMagTrack = false;
-    if (recentlyReversed)
+    if (recentlyReversed && !mDoingDoseSymmetric)
       mNeedTiltAfterMove = -1;
   }
 
@@ -5816,7 +6370,7 @@ void CTSController::ComputePredictions(double angle)
 
   // Need to call tilt after move routine if did a reset or stage was moved: but if 
   // already set to use due to tilt reversal, set up to use the bigger field size
-  if (mComplexTasks->GetMinTASMField() > 0. && 
+  if (mComplexTasks->GetMinTASMField() > 0. && !mDoingDoseSymmetric &&
     (mDidResetIS || (mTiltIndex > 0 && 
     (mDisturbance[mTiltIndex - 1] & (IMAGE_SHIFT_RESET | USER_MOVED_STAGE)))) &&
     (!mNeedTiltAfterMove || 
@@ -5930,8 +6484,178 @@ BOOL CTSController::UsableRefInA(double angle, int magIndex)
     (mImBufs->mConSetUsed != RECORD_CONSET && mImBufs->mConSetUsed != TRIAL_CONSET && 
     mImBufs->mConSetUsed != PREVIEW_CONSET))))
     return false;
-  return fabs(angle - imAngle) < mMaxUsableAngleDiff * cos(DTOR * angle);
+  return fabs(angle - imAngle) < MaxUsableDiffFromAngle(angle);
 }
+
+/////////////////////////////////////////////////////////////////////////
+//  DOSE-SYMMETRIC TILTING ROUTINES
+
+// Set the dose-symmetric state for going to a new tilt index, restoring state from the
+// restoreInd, and optionally applying the cosine intensity change from the tilt angle
+// of the state to the angle in forTiltAngle
+int CTSController::RestoreDoseSymmetricState(int newTiltInd, int restoreInd,
+  double forTiltAngle)
+{
+  double delFac;
+  CString mess;
+  ControlSet *cset = mCamConSets + MAX_CONSETS * mActiveCameraList[mTSParam.cameraIndex];
+  int ind;
+
+  // Sanity checks to avoid 0 exposure times, which happened twice in testing
+  if (restoreInd > mHighestDosymStateInd || !mDosymExposures[RECORD_CONSET][restoreInd]) {
+    if (restoreInd > mHighestDosymStateInd)
+      mess.Format("Program error: attempting to restore state %d\n(for tilt index %d)"
+        " but highest state saved is %d", restoreInd, newTiltInd, mHighestDosymStateInd);
+    else
+      mess.Format("Program error: attempting to restore state %d\n(for tilt index %d)"
+        " but the exposure time is 0 in that state", restoreInd, newTiltInd);
+    TSMessageBox(mess);
+    ErrorStop();
+    return 1;
+  }
+
+  if (mBidirSeriesPhase == DOSYM_ALTERNATING_PART) {
+    if (mDosymDirections[newTiltInd] == mDosymDirections[0]) {
+      ind = 0;
+      mEndingTilt = mTSParam.startingTilt;
+    } else {
+      ind = 1;
+      mEndingTilt = mTSParam.endingTilt;
+    }
+    mDirection = mDosymDirections[newTiltInd];
+    mAlignBuf = mDosymAlignBufs[ind];
+    mExtraRefBuf = mDosymExtraRefBufs[ind];
+  }
+
+  // Restore items: skip currentTilt, let the one place that needs it do it
+  mScope->SetLDCenteredShift(mDosymSavedISX[restoreInd], mDosymSavedISY[restoreInd]);
+  mScope->SetUnoffsetDefocus(mDosymDefocuses[restoreInd]);
+  mScope->SetIntensity(mDosymIntensities[restoreInd]);
+  for (ind = 0; ind < NUM_CHGD_CONSETS; ind++) {
+    cset[ind].exposure = mDosymExposures[ind][restoreInd];
+    cset[ind].drift = mDosymDriftSettlings[ind][restoreInd];
+  }
+  cset[RECORD_CONSET].frameTime = mDosymRecFrameTimes[restoreInd];
+  mWinApp->CopyConSets(mActiveCameraList[mTSParam.cameraIndex]);
+  SEMTrace('1', "Restored state %d at %.1f for tiltInd %d  def %.3f  IS %.3f %.3f",
+    restoreInd, mDosymCurrentTilts[restoreInd], newTiltInd, mDosymDefocuses[restoreInd],
+    mDosymSavedISX[restoreInd], mDosymSavedISY[restoreInd]);
+  if (forTiltAngle > -900. && mTSParam.beamControl == BEAM_INVERSE_COSINE) {
+    delFac = CosineIntensityChangeFac(mDosymCurrentTilts[restoreInd], forTiltAngle);
+    if (SetIntensity(delFac, mNextTilt))
+      return 1;
+  }
+  return 0;
+}
+
+// Tilt with proper backlash for dose-symmetric tilting, or just set up an SMI for it
+void CTSController::TiltWithDoseSymBacklash(StageMoveInfo &smi, double tiltAngle,
+  bool justSetup)
+{
+  ;
+  smi.axisBits = axisA;
+  smi.x = mStageXtoRestore;
+  smi.y = mStageYtoRestore;
+  smi.alpha = tiltAngle;
+  smi.backAlpha = -mDosymBacklashDir * mComplexTasks->GetTiltBacklash();
+  if (!justSetup)
+    mScope->MoveStage(smi, true, false, false, false, RestoreStageXYafterTilt() > 0);
+}
+
+// Returns whether it is the right tilt index at which to take dose-symmetric anchor
+bool CTSController::TimeToTakeDoseSymAnchor(int tiltIndex)
+{
+  return (mBidirSeriesPhase == DOSYM_ALTERNATING_PART
+    && mDosymTakeAnchorIndex > 0 && tiltIndex == mDosymTakeAnchorIndex);
+}
+
+// Manage the size of the vectors with dose-symmetric state
+void CTSController::ResizeDosymVectors(int size)
+{
+  if (size < (int)mDosymCurrentTilts.size())
+    return;
+  mDosymCurrentTilts.resize(size);
+  mDosymSavedISX.resize(size);
+  mDosymSavedISY.resize(size);
+  mDosymDefocuses.resize(size);
+  mDosymIntensities.resize(size);
+  mDosymRecFrameTimes.resize(size);
+  for (int i = 0; i < NUM_CHGD_CONSETS; i++) {
+    mDosymExposures[i].resize(size, 0.);
+    mDosymDriftSettlings[i].resize(size);
+  }
+}
+
+// Change file copying/reordering from asynchronous to synchronous
+// Returns -1 if there was an error on a previous async save, 1 if started a synchronous
+// copy, 0 if not
+int CTSController::SwitchToSynchronousBidirCopy()
+{
+  if (mMultiTSTasks->BidirCopyPending()) {
+    mMultiTSTasks->StopBidirFileCopy();
+
+    // On failure, it should already have stopped or whatever
+    if (mBufferManager->CheckAsyncSaving())
+      return -1;
+  }
+
+  // Restart synchronously and set task with big timeout
+  if (mMultiTSTasks->BidirCopyPending()) {
+    mMultiTSTasks->StartBidirFileCopy(true);
+    mInvertingFile = true;
+    mWinApp->AddIdleTask(TASK_TILT_SERIES, 0, (mBaseZ + mTiltIndex) * (20000 +
+      4 * mWinApp->mStoreMRC->getWidth() *  mWinApp->mStoreMRC->getHeight() / 1000));
+    return 1;
+  }
+  return 0;
+}
+
+// Do operations at the tilting step for saving dose-symmetric state and restoring the
+// state from the other direction when switching
+int CTSController::ManageDoseSymmetricOnTilt()
+{
+  ControlSet *cset = mCamConSets + MAX_CONSETS * mActiveCameraList[mTSParam.cameraIndex];
+  int ind, dosymInd = mTiltIndex - 1;
+  if (mTiltIndex <= 1) {
+
+    // On first tilt, copy starting reference
+    mBufferManager->CopyImageBuffer(mAlignBuf, mDosymAlignBufs[1]);
+    mBufferManager->CopyImageBuffer(mExtraRefBuf, mDosymExtraRefBufs[1]);
+  }
+
+  // Save current state unconditionally
+  if (dosymInd >= 0) {
+    if (dosymInd >= (int)mDosymDefocuses.size())
+      ResizeDosymVectors((int)mDosymDefocuses.size() + 10);
+    mDosymDefocuses[dosymInd] = mScope->GetUnoffsetDefocus();
+    mScope->GetLDCenteredShift(mDosymSavedISX[dosymInd], mDosymSavedISY[dosymInd]);
+    mDosymIntensities[dosymInd] = mScope->GetIntensity();
+    for (ind = 0; ind < NUM_CHGD_CONSETS; ind++) {
+      mDosymExposures[ind][dosymInd] = cset[ind].exposure;
+      mDosymDriftSettlings[ind][dosymInd] = cset[ind].drift;
+    }
+    mDosymRecFrameTimes[dosymInd] = cset[RECORD_CONSET].frameTime;
+    mDosymCurrentTilts[dosymInd] = (float)mCurrentTilt;
+    ACCUM_MAX(mHighestDosymStateInd, dosymInd);
+    SEMTrace('1', "Saved state %d at %.1f: def %.3f  IS %.3f %.3f  int %.5f  exp %.3f"
+      , dosymInd, mCurrentTilt, mDosymDefocuses[dosymInd], mDosymSavedISX[dosymInd],
+      mDosymSavedISY[dosymInd], mDosymIntensities[dosymInd],
+      cset[RECORD_CONSET].exposure);
+  }
+
+  // Set state if direction is changing
+  if (mTiltIndex < mNumDoseSymTilts && mBidirSeriesPhase == DOSYM_ALTERNATING_PART &&
+    mDosymDirections[mTiltIndex] != mDirection) {
+    if (RestoreDoseSymmetricState(mTiltIndex, mLastDosymReversalInd))
+      return 1;
+    mCurrentTilt = mDosymCurrentTilts[mLastDosymReversalInd];
+    mLastDosymReversalInd = dosymInd;
+  }
+  return 0;
+}
+
+//////////////////////////////////////////////////////////////////////
+//  MORE VARIOUS HELPER FUNCTIONS
 
 // Test for whether walkup will be asked to take an anchor
 BOOL CTSController::WalkupCanTakeAnchor(double curAngle, float anchorAngle,
@@ -5949,12 +6673,12 @@ void CTSController::DebugDump(CString message)
     return;
   double angle = mScope->GetTiltAngle();
   report.Format("\r\n%s:  ActIndex %d  TiltIndex %d  CurrentTilt %.2f actual angle %.2f\r\n"
-    "NextTilt %.2f  NeedTilt %d  PreTilted %d  Tilting %d  BackingUpTilt %d\r\n"
+    "NextTilt %.2f  NeedTilt %d  PreTilted %d  Tilting %d  BackingUpTilt %d  BidirPart %d\r\n"
     "SingleStep %d  StopAtLoopEnd %d  UserStop %d  ErrorStop %d  HaveTrackRef %d\r\n"
     "HaveRecordRef %d  AcquiringImage %d  DoingMontage %d  Focusing %d  DidRegularTrack %d\r\n"
     "BWMeanPerSec[0] %.1f  BWmean in A %.1f\r\n",
     (LPCTSTR)message, mActIndex, mTiltIndex, mCurrentTilt, angle, mNextTilt, mNeedTilt ? 1 : 0,
-    mPreTilted ? 1 : 0, mTilting ? 1 : 0, mBackingUpTilt ? 1 : 0, mSingleStep, 
+    mPreTilted ? 1 : 0, mTilting ? 1 : 0, mBackingUpTilt ? 1 : 0, mBidirSeriesPhase, mSingleStep,
     mStopAtLoopEnd ? 1 : 0, mUserStop ? 1 : 0, mErrorStop ? 1 : 0, mHaveTrackRef ? 1 : 0,
     mHaveRecordRef ? 1 : 0, mAcquiringImage ? 1 : 0, mDoingMontage ? 1 : 0,
     mFocusing ? 1 : 0, mDidRegularTrack ? 1 : 0,  mBWMeanPerSec[0], 
@@ -6075,17 +6799,25 @@ int CTSController::MontageMagIntoTSparam(MontParam *montParam, TiltSeriesParam *
   return STEMindex;
 }
 
+// Change menu entry for terminate depending on type of series and segment of it
 void CTSController::ManageTerminateMenu(void)
 {
-  UtilModifyMenuItem(7, ID_TILTSERIES_TERMINATE, mStartedTS && 
-    mBidirSeriesPhase == BIDIR_FIRST_PART ? "Ter&minate Part/Whole" : "Ter&minate");
+  const char *entries[3] = {"Ter&minate", "Ter&minate Part/Whole",
+    "Ter&minate Side/Whole"};
+  int ind = 0;
+  if (mStartedTS && mBidirSeriesPhase == BIDIR_FIRST_PART)
+    ind = 1;
+  if (mStartedTS && mBidirSeriesPhase == DOSYM_ALTERNATING_PART && 
+    (mNeedTilt || mTiltIndex < mNumDoseSymTilts - 1))
+    ind = 2;
+  UtilModifyMenuItem(7, ID_TILTSERIES_TERMINATE, entries[ind]);
 }
 
-// Looks up the name of an action from and return its corresponding action index
+// Looks up the name of an action from string array, return its corresponding action index
 int CTSController::LookupActionFromText(const char *actionName)
 {
-  for (int i = 0; i < sizeof(actionText) / sizeof(const char *); i++)
-    if (!strcmp(actionText[i], actionName))
+  for (int i = 0; actionText[i][0] != NULL; i++)
+    if (!strcmp(actionText[i][0], actionName))
       return mActOrder[i + 1];
   return -1;
 }
@@ -6118,3 +6850,28 @@ void CTSController::WriteTiltXYZFile(CString *inFile)
   if (cFile)
     delete cFile;
 }
+
+// Compute factor for changing exposure/intensity by cosine-power, taking the base angle
+// into account
+double CTSController::CosineIntensityChangeFac(double fromAngle, double toAngle)
+{
+  return pow(cos(DTOR * B3DMIN(80., fabs(fromAngle - mBaseAngleForVarying))) / 
+    cos(DTOR * B3DMIN(80., fabs(toAngle - mBaseAngleForVarying))), 
+    1. / mTSParam.cosinePower);
+}
+
+// Compute maximum alignable difference from angle, taking the base angle into account
+double CTSController::MaxUsableDiffFromAngle(double angle)
+{
+  return mMaxUsableAngleDiff * cos(DTOR * B3DMIN(80., fabs(angle -mBaseAngleForVarying)));
+}
+
+// Return -1 if restore is enabled but position needs to be saved, or 1 if enabled and
+// position available
+int CTSController::RestoreStageXYafterTilt()
+{
+  if ((mRestoreStageXYonTilt > 0 && mDoingDoseSymmetric) || mRestoreStageXYonTilt > 1)
+    return (mStageXtoRestore < EXTRA_VALUE_TEST ? -1 : 1);
+  return 0;
+}
+

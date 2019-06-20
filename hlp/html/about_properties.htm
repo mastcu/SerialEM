@@ -3019,6 +3019,26 @@
           enter a large value to return in one step.</TD>
         </TR>
         <TR VALIGN="top">
+          <TD>TSRestoreStageXYonTilt</TD>
+          <TD>Set to 1 to restore stage X/Y position after tilting during dose-symmetric 
+              series only, 2 to do so in all tilt series, or 0 to disable this feature.&nbsp; 
+              The default is 1 for FEI scopes, 0 otherwise.&nbsp; Restoring the stage position 
+              may help with tracking on modern stages and be detrimental on older stages.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>TSDosymFitPastReversals</TD>
+          <TD>Set to 0 to do predictions only based on positions since a tilt direction 
+              reversal, 1 to include positions before the reversal for predicting X and Y, or 
+              2 to also include focus values before a reversal when predicting Z.&nbsp; The 
+              default is 2.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>TSDosymBacklashDir</TD>
+          <TD>Set to -1 or 1 to have the direction of backlash in dose-symmetric tilting be 
+              toward negative or positive tilts, respectively.&nbsp; The default is for the 
+              backlash direction to be the same as the first direction of tilting. </TD>
+        </TR>
+        <TR VALIGN="top">
           <TD>TSLowMagFieldFrac</TD>
           <TD>When low mag tracking is enabled, it will be used if the error in the last 
             prediction was bigger than this fraction of the field (default 0.3).</TD>

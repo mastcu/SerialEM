@@ -71,12 +71,12 @@
       as reference for alignments' in the <A HREF="hidd_tsresume.htm">Tilt Series Resume 
         dialog box</A>, and push the 'GO' button.</P>
     <P><b>Bidirectional tilt series</b></P>
-    <P>A different strategy, running the tilt series in both directions from zero 
-      tilt, can be used to avoiding problems in reaching an initial high tilt angle 
+    <P>A different strategy, running the tilt series in both directions from zero tilt, 
+        can be used to avoid problems in reaching an initial high tilt angle 
       and in tracking accurately when coming down from a high angle.&nbsp; This 
       strategy is most useful in two situations, running multiple tilt series with 
       cryo-specimens automatically, or taking tilt series at very high magnifications, 
-      but it may also be preferred even for single tilt series with some cryo-samples.&nbsp; 
+      but it may also be preferred for single tilt series with many cryo-samples.&nbsp; 
       Its main disadvantage is that it introduces a discontinuity in the tilt series 
       at the starting angle.&nbsp; Almost certainly, tilt angles will not be evenly 
       spaced across this discontinuity because of backlash.&nbsp; Plastic sections 
@@ -112,6 +112,105 @@
       before tilting to the first angle of the second half.&nbsp; If a metadata 
       autodoc (.mdoc) file is being written, a new file will also be produced in the 
       proper order. </P>
+      <P><A NAME="doseSymmetric"></A><strong>Dose-symmetric tilt series</strong></P>
+      <P>Dose-symmetric tilting is designed to maximize the acquisition of useful 
+          high-resolution information, with the least beam damage, from the lowest tilt 
+          views where the images have the highest quality.&nbsp; This is often referred to 
+          as the 'Hagen scheme', first described in Hagen, Wan, and Briggs, J. Struct 
+          Biol. 2017, 197: 191-198.&nbsp; SerialEM expands on the basic approach there, 
+          provides more flexible tilting options than are available with scripting, and 
+          implements it in the Tilt Series Controller, so that nearly all the usual 
+          features of tilt series acquisition are available (most notably, predictive 
+          tracking, stopping, backing up, and resuming).&nbsp; This tilt scheme is 
+          available only in Low Dose mode.&nbsp; This method has previously been suitable 
+          only on well-performing equipment; while the implementation here may expand its 
+          applicability somewhat, there is no guarantee that it will produce superior 
+          rather than worse overall results when used with less well-behaved equipment.&nbsp; 
+          Whether this tilting method actually helps or hurts should be evaluated in such 
+          cases.</P>
+      <P>Here are some more details on the features of this tilting method.&nbsp; 
+          Additional details can be found in the help for the <A HREF="hidd_tsvariations.htm">
+          Tilt Series Scheduled Changes dialog</A> and for the first section 
+          of the <a href="hidd_tiltseries.htm#tss_tilt_angle">Tilt Series Setup dialog</a>.</P>
+      <ul>
+          <li>Instead of taking a fixed number of tilt steps on each side of the starting 
+              angle, the program allows you to define up to three segments of the tilt series: 
+              1) initially alternating between the two sides after a chosen number of 
+              consecutive steps; 2) continuing to alternate after increasing the number of 
+              consecutive steps on each side by a chosen amount above a specified angle, 
+              either once at that angle or repeatedly at an angular interval; 3) ending the 
+              alternations at a chosen angle and completing first one side, then the other.&nbsp; 
+              The entries for all these choices are made in the <a href="hidd_tsdosesym.htm">Dose Symmetric Tilt Series Parameters dialog</a>, 
+              which includes a line summarizing the angles at which the number of tilt steps 
+              change.</li>
+          <li>In its original form, dose-symmetric series were not feasible or sensible for 
+              side-entry holders, where large tilts radically change the location of nitrogen 
+              in the dewar.&nbsp; The features here may be useful for implementing a strategy 
+              that minimizes such large tilts but still provides some of the benefits of 
+              dose-symmetric tilting - but see the caution above.</li>
+          <li>The program saves various information before switching to the other direction of 
+              tilt and restores the corresponding information from the other direction: the 
+              image shift and defocus so that the position in X, Y and Z is restored; and 
+              intensities and frame times for a direct detector so that any of the methods of 
+              changing specimen exposure during the series can be used.&nbsp; In fact, these 
+              value are saved after every tilt so that it is possible to return to any angle.</li>
+          <li>The program stores four alignment references: the Record and tracking references 
+              for negative tilting in the usual buffers D and E, and Record and tracking 
+              references for positive tilting in buffers F and G.&nbsp; While Record 
+              references are saved there on each tilt, the tracking references may not be 
+              updated that often if the predictions of specimen position indicate that 
+              tracking can be skipped.&nbsp; If you stop during the series, the program will 
+              know what tilt direction is active, and will autoalign a Trial or Record image 
+              to the appropriate buffer (the <strong>Align To</strong> button in the
+              <a href="hidd_alignfocus.htm">Image Alignment and Focus</a> control panel 
+              is always labeled to indicate the appropriate buffer).&nbsp; In addition to the 
+              active references, the program uses most of the rest of the buffers to keep a 
+              stack of previous tracking references, which can be moved into place when 
+              backing up to a previous angle.</li>
+          <li>When either an excessively dark image is acquired or autofocus fails close to 
+              the highest tilt angle on one side, the program ends the tilting on that side 
+              and continues with tilts on the other side, behaving in many ways like the 
+              second half of a bidirectional series.&nbsp; You can also use
+              <a href="menu_tilt_series.htm#hid_tiltseries_terminate">Terminate</a> in the 
+              Tilt Series menu to end the tilting on one side and finish the other side.&nbsp; 
+              In either case, when the series reaches its designated end, you can use the
+              <strong>One Loop</strong> button in the <a href="hidd_camera_macro.htm">Camera &amp; 
+              Script Tools</a> panel to extend the series one image at a time, or open the <A HREF="hidd_tiltseries.htm">Tilt Series Setup dialog</A> 
+              and raise the tilt range on that side of the series, just as for a bidirectional 
+              series.&nbsp; However, if the series reaches its defined end on both sides and 
+              stops, the <strong>One Loop</strong> button cannot be used since the sequence of 
+              further tilt angles is not defined; the only option is to open the dialog and 
+              extend the range on the side that just reached its end.&nbsp; (To extend the 
+              range on the side that finished first, you would have to back up to the tilt 
+              just after the last one on that side, at which point either tilt limit can be 
+              extended; but then you would have to reacquire images on the side that finished 
+              second.)</li>
+          <li>The program assumes that a starting angle other than 0 represents the tilt angle 
+              at which the specimen itself is near zero tilt (i.e., it assumes that 
+              dose-symmetric tilting around any other angle but zero tilt of the specimen 
+              makes no sense).&nbsp; Thus, all changes in parameters that depend on the 
+              absolute value of the tilt angle, such as change of exposure by an inverse 
+              cosine to a power or changes imposed in the <A HREF="hidd_tsvariations.htm">
+          Tilt Series Scheduled Changes dialog box</A>, are applied based on the 
+              current angle minus the starting angle of the series.</li>
+          <li>Stage backlash is handled by making sure that the tilt angle is always 
+              approached from one direction, namely by applying a backlash correction whenever 
+              tilting in the other direction.&nbsp; By default, the backlash direction is 
+              toward the first tilt limit, specified in the <strong>Tilt to</strong> text box 
+              in the <A HREF="hidd_tiltseries.htm">Tilt Series Setup dialog</A>, which is the 
+              direction of the first tilt.&nbsp; If one backlash direction is preferable for 
+              mechanical reasons, the direction can be specified with an entry in the 
+              SerialEMproperties.txt file, 'TSDosymBacklashDir', followed by -1 or 1 for 
+              backlash in the negative or positive direction (i.e., backlash correction 
+              applied when tilting in the opposite direction).</li>
+          <li>Another property setting may be needed or desired.&nbsp; The Hagen scripts restore the 
+              stage position in X and Y after each tilt because this position can change 
+              slightly during tilting.&nbsp; SerialEM will do this by default for series taken 
+              with the dose-symmetric tilting, but not other series.&nbsp; However, restoring 
+              stage position was found to give less predictable positions on an old F20.&nbsp; 
+              The default can be overridden by setting the property 'TSRestoreStageXYonTilt' 
+              to 0 to prevent the restoration, or 2 to have it occur for all tilt series.</li>
+      </ul>
     <P><b>Control of specimen exposure</b></P>
     <P>Because a sample becomes thicker in the direction of the beam when tilted, a 
       smaller fraction of incident electrons reaches the camera at higher tilts.&nbsp; 

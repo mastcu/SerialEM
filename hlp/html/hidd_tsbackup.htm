@@ -32,7 +32,13 @@
       Specifically, it will place the stored image from the previous tilt in D and 
       one of the tracking reference images in E. You can then autoalign either Trial 
       or Record images at the new tilt angle. Your choice of angles to back up to may 
-      be constrained because of the limited number of tracking references available.</P>
+      be constrained because of the limited number of tracking references available. 
+        When doing dose-symmetric tilt series, there are four reference buffers: D and E 
+        for the references when tilting in the negative direction, and F and G for the 
+        Record and tracking references when tilting the positive direction.&nbsp; The 
+        program will restore references all of these buffers when backing up.&nbsp; 
+        Autoalign will align a new image to the appropriate buffer, and the <strong>
+        Align To</strong> button will be labeled accordingly.</P>
     <P>If you are working at a high magnification and need low mag tracking, you may 
       have to get the specimen aligned manually after backing up, since there is not 
       guaranteed to be an appropriate low mag reference in the second autoalign 

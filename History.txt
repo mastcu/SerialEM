@@ -3,6 +3,24 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+6/19/19: The stage X/Y position can be restored after tilting in a tilt
+series, controlled by a property and on by default for dose-symmetric series
+on FEI scopes.
+
+6/19/19: Dose-symmetric series added to tilt series controller with flexible
+tilting parameters and almost all of the usual features available.
+
+6/19/19: Stopped bidirectional series from centering beam at a specified angle
+on both sides instead of just second side.
+
+6/19/19: Tilt series controller will check for image shift within limits both
+at start of cycle and after the tracking shot if any.
+
+6/18/19: Added script command to close the frame mdoc file.
+
+6/18/19: Bidirectional tilt series now appear in the little stack window in
+proper order.
+
 6/18/19: Changed property StepForBidirReturn to be TSStepForBidirReturn to
 match help (In 3.7).
 
