@@ -1,0 +1,79 @@
+<html>
+  <head>
+    <title>Dose Symmetric Tilt Series Parameters Dialog</title>
+    <meta HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252"/>
+    <style type="text/css"> <!-- BODY { font-family:"Arial" }
+  TD { font-size:16 }
+      .style1
+      {
+        font-size: larger;
+        font-weight: bold;
+      }
+      --></style>
+  </head>
+  <body BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+    <p><a NAME="hidd_tysdosesym"></a><span class="style1">
+        Dose Symmetric Tilt Series Parameters Dialog</span></p>
+    <p>This dialog allows you to set parameters for acquiring a dose-symmetric tilt 
+        series, where images are taken on alternating sides of zero tilt so as to 
+        minimize the accumulated electron dose on low-tilt images.&nbsp; In this dialog, 
+        the set of images taken contiguously on one side of the series is referred to as 
+        a &#39;group&#39;.</p>
+      <p><strong>Initial group size</strong></p>
+      <p>Use the spinner to select the size of the groups at the start of the series.&nbsp; 
+          For example, with a size of 2, images would be take at angles 0, -2, -4, +2, +4, 
+          -6, -8, 6, 8, etc.</p>
+      <p><strong>Increase group size beyond an angle</strong></p>
+      <p>Select this option to have groups increase in size once the angle specified in 
+          the text box is reached.&nbsp; This angle is relative to the initial angle of 
+          the tilt series, which need not be zero and is specified in the angle text box 
+          for the <strong>Run series in two directions from</strong>&#39; option of the main 
+          tilt series setup dialog.&nbsp; For exmaple, with an initial angle of 10 and an 
+          entry of 15 here, the groups would begin to increase in size at -5 and 25 
+          degrees.</p>
+      <p><strong>Increase group size by n every m degrees</strong></p>
+      <p>With an increase in group size enabled, use the spinner to set how much the 
+          group size should increase when the criterion angle is reached, and the text box to set the angular increment at which the group size should increase by 
+          the same amount thereafter.&nbsp; Set the increment to 0 or to a large 
+          number to prevent further increases in group size after the first one.</p>
+      <p><strong>Stop alternating directions beyond an angle</strong></p>
+      <p>Select this option to convert to unidirectional tilting once the angle in the 
+          text box is reached and run to the terminal angle of the series on the first 
+          side, then on the second side.&nbsp; This angle is also relative to the initial 
+          angle of the series.&nbsp; The unidirectional tilting starts at the end of a 
+          group, not necessarily at the angle specified.</p>
+      <p><strong>Use View anchor if first unidirectional part has &gt;= n tilts</strong></p>
+      <p>Use this option to use an anchor image to guarantee returning from the end of the 
+          first unidirectional segment to the beginning of the final unidirectional 
+          segment.&nbsp; Such an anchor image would ordinarily not be needed with dose 
+          symmetric tilting, but could be used if the unidirectional segments are 
+          sufficiently time-consuming and circumstances are less than ideal (e.g., large 
+          sample drift or poor stage performance).&nbsp; Use the spinner to set a minimum 
+          size for the unidirectional part below which an anchor will not be used.&nbsp; 
+          An anchor will also not be used if the first unidirectional segment is not 
+          bigger than the largest alternating group size.&nbsp; Note that only View images 
+          can be used for anchors, unlike for regular bidirectional series.</p>
+      <p><strong>Reorder file when finished</strong></p>
+      <p>SerialEM can produce an image file and associated &#39;.mdoc&#39; file with tilt angles 
+          in order from a dose-symmetric series.&nbsp; Unlike a bidirectional series, the 
+          tilt series file cannot be rewritten in order until the whole series is done, 
+          namely when it is terminated.&nbsp; Whether this reordering takes away from 
+          acquisition time depends on whether saving in the background is disabled in the 
+          SerialEM properties file with the property &#39;BackgroundSaveToFile 0&#39;.&nbsp; If 
+          background saving is enabled, the option will be labeled <strong>Reorder file in 
+          background when finished (allowing other operations)</strong>, which means that 
+          manual and automatic acquisitions can proceed unimpeded.&nbsp; Otherwise, it 
+          will be labeled <strong>Reorder file synchronously when finished (blocking other 
+          operations)</strong>, which means that nothing else can happen while the program 
+          is reading and rewriting the file.</p>
+      <p><strong>Summary lines</strong></p>
+      <p>The first line at the bottom summarizes the tilt strategy, showing the actual 
+          angles at which the transition in group size and to unidirectional tilting will 
+          occur.&nbsp; Again, these are all relative to the initial angle of the tilt 
+          series.&nbsp; The second line shows how many tilt reversals there are, and the 
+          total amount of tilting that they involve, which would govern both the 
+          additional time and the extra wear imposed on the goniometer by using 
+          dose-symmetric tilting.</p>
+</body>
+</html>

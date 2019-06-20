@@ -18,6 +18,7 @@
 #include "ComplexTasks.h"
 #include "MultiTSTasks.h"
 #include "TSVariationsDlg.h"
+#include "TSDoseSymDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -48,7 +49,7 @@ static int idTable[] = {
   IDC_STATDELSEC, IDC_CHECK_VARY_PARAMS, IDC_BUT_SET_CHANGES, IDC_BUT_SWAP_ANGLES, 
   IDC_DO_BIDIR, IDC_BIDIR_ANGLE, IDC_BIDIR_WALK_BACK, IDC_STAT_BDMAG_LABEL,
   IDC_STAT_BIDIR_MAG, IDC_SPIN_BIDIR_MAG, IDC_BIDIR_USE_VIEW, IDC_STAT_BIDIR_FIELD_SIZE,
-  PANEL_END, 
+  IDC_USE_DOSE_SYM, IDC_BUT_SETUP_DOSE_SYM, PANEL_END, 
   IDC_TSS_PLUS2, 0, 0, IDC_TSS_TITLE2, IDC_TSS_LINE2,
   IDC_STATMAGLABEL, IDC_STATRECORDMAG,IDC_SPINRECORDMAG,  IDC_STATBINLABEL, 
   IDC_STATBINNING, IDC_SPINBIN, IDC_STATPIXEL, IDC_LOWMAGTRACK, IDC_STATLOWMAG,
@@ -106,6 +107,7 @@ CTSSetupDialog::CTSSetupDialog(CWnd* pParent /*=NULL*/)
   , m_fAutocenAngle(0)
   , m_bConfirmLowDoseRepeat(FALSE)
   , m_strInterset(_T(""))
+  , m_bUseDoseSym(FALSE)
 {
   //{{AFX_DATA_INIT(CTSSetupDialog)
   m_bCosineInc = FALSE;
@@ -223,6 +225,7 @@ void CTSSetupDialog::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_EDITCOUNTS, m_editCounts);
   DDX_Control(pDX, IDC_USEANCHOR, m_butUseAnchor);
   DDX_Control(pDX, IDC_STATSTARTAT, m_statStartAt);
+  DDX_Control(pDX, IDC_STATENDAT, m_statEndAt);
   DDX_Control(pDX, IDC_STATRECORDMAG, m_statRecordMag);
   DDX_Control(pDX, IDC_STATMAGLABEL, m_statMagLabel);
   DDX_Control(pDX, IDC_STATBINNING, m_statBinning);
@@ -238,6 +241,7 @@ void CTSSetupDialog::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_LOWMAGTRACK, m_butLowMagTrack);
   DDX_Control(pDX, IDC_LEAVEANCHOR, m_butLeaveAnchor);
   DDX_Control(pDX, IDC_EDITSTARTANGLE, m_editStartAngle);
+  DDX_Control(pDX, IDC_EDITENDANGLE, m_editEndAngle);
   DDX_Control(pDX, IDC_EDITINCREMENT, m_editIncrement);
   DDX_Control(pDX, IDC_EDITANCHOR, m_editAnchor);
   DDX_Control(pDX, IDC_COSINEINC, m_butCosineInc);
@@ -260,6 +264,8 @@ void CTSSetupDialog::DoDataExchange(CDataExchange* pDX)
   DDV_MinMaxFloat(pDX, m_fEndAngle, -mMaxTiltAngle, mMaxTiltAngle);
   DDX_Text(pDX, IDC_EDITINCREMENT, m_fIncrement);
   DDV_MinMaxFloat(pDX, m_fIncrement, 0.05f, 30.f);
+  DDX_Control(pDX, IDC_STATLIMITIS, m_statLimitIS);
+  DDX_Control(pDX, IDC_EDITLIMITIS, m_editLimitIS);
   DDX_Text(pDX, IDC_EDITLIMITIS, m_fLimitIS);
   DDV_MinMaxFloat(pDX, m_fLimitIS, 0.f, 25.f);
   DDX_Text(pDX, IDC_EDITREPEATFOCUS, m_fRepeatFocus);
@@ -385,6 +391,9 @@ void CTSSetupDialog::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_STAT_NUM_EARLY_FRAMES, m_statNumEarlyFrames);
   DDX_Control(pDX, IDC_SPIN_EARLY_FRAMES, m_sbcEarlyFrames);
   DDX_Control(pDX, IDC_STAT_FRAME_LABEL, m_statFrameLabel);
+  DDX_Control(pDX, IDC_USE_DOSE_SYM, m_butUseDoseSym);
+  DDX_Check(pDX, IDC_USE_DOSE_SYM, m_bUseDoseSym);
+  DDX_Control(pDX, IDC_BUT_SETUP_DOSE_SYM, m_butSetupDoseSym);
 }
 
 
@@ -468,6 +477,8 @@ BEGIN_MESSAGE_MAP(CTSSetupDialog, CBaseDlg)
   ON_BN_CLICKED(IDC_CHECK_LIMIT_DELTA_FOCUS, OnCheckLimitDeltaFocus)
   ON_BN_CLICKED(IDC_DO_EARLY_RETURN, OnDoEarlyReturn)
   ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_EARLY_FRAMES, OnDeltaposSpinEarlyFrames)
+  ON_BN_CLICKED(IDC_USE_DOSE_SYM, OnUseDoseSym)
+  ON_BN_CLICKED(IDC_BUT_SETUP_DOSE_SYM, OnButSetupDoseSym)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -549,6 +560,7 @@ BOOL CTSSetupDialog::OnInitDialog()
   m_bDoBidir = mTSParam.doBidirectional;
   m_bBidirUseView = mTSParam.anchorBidirWithView;
   m_bBidirWalkBack = mTSParam.walkBackForBidir;
+  m_bUseDoseSym = mTSParam.doDoseSymmetric;
   ConstrainBidirAngle(false, false);
 
   m_iCamera = mTSParam.cameraIndex;
@@ -602,7 +614,8 @@ BOOL CTSSetupDialog::OnInitDialog()
   m_sbcAnchor.SetRange(0, 100);
   m_sbcAnchor.SetPos(50);
   ManageAnchorBuffer();
-  m_fLimitIS = mTSParam.ISlimit;
+  m_fLimitIS = (mLowDoseMode && mTSParam.doBidirectional && mTSParam.doDoseSymmetric) ?
+    mTSParam.dosymStartingISLimit : mTSParam.ISlimit;
   m_fBeamTilt = (float)mTSParam.beamTilt;
   m_fTargetDefocus = mTSParam.targetDefocus;
   m_fFocusOffset = mTSParam.autofocusOffset;
@@ -729,8 +742,10 @@ BOOL CTSSetupDialog::OnInitDialog()
 
   // Now disable lots of things if doing series
   if (mDoingTS) {
-    m_statStartAt.EnableWindow(mBidirStage == BIDIR_FIRST_PART);
-    m_editStartAngle.EnableWindow(mBidirStage == BIDIR_FIRST_PART);
+    m_statStartAt.EnableWindow(mDisableStartOrEnd >= 0);
+    m_editStartAngle.EnableWindow(mDisableStartOrEnd >= 0);
+    m_statEndAt.EnableWindow(mDisableStartOrEnd <= 0);
+    m_editEndAngle.EnableWindow(mDisableStartOrEnd <= 0);
     m_statbasicInc.EnableWindow(false);
     m_editIncrement.EnableWindow(false);
     m_butCosineInc.EnableWindow(false);
@@ -964,7 +979,7 @@ void CTSSetupDialog::SetTotalTilts()
   // so that dose could be computed too.
   total = 0;
   while (iDir * (angle - m_fEndAngle) <= 0.1 * m_fIncrement) {
-    if (m_bCosineInc)
+    if (m_bCosineInc && !(m_bUseDoseSym && m_bDoBidir && mLowDoseMode))
       angle += (float)(signedInc * cos(DTOR * angle));
     else
       angle += signedInc;
@@ -1206,12 +1221,13 @@ void CTSSetupDialog::ManageAutocen(void)
     mWinApp->mScope->GetProbeMode();
   bool enable = mWinApp->mMultiTSTasks->AutocenParamExists(mActiveCameraList[m_iCamera],
     mMagIndex[mSTEMindex], probe) && !mSTEMindex;
+  bool doingDosym = m_bDoBidir && m_bUseDoseSym && mLowDoseMode;
   m_butAutocenInterval.EnableWindow(enable);
-  m_butAutocenCrossing.EnableWindow(enable);
+  m_butAutocenCrossing.EnableWindow(enable && !doingDosym);
   m_editAutocenInterval.EnableWindow(enable && m_bAutocenInterval);
-  m_editAutocenAngle.EnableWindow(enable && m_bAutocenCrossing);
   m_statACminutes.EnableWindow(enable && m_bAutocenInterval);
-  m_statACdegrees.EnableWindow(enable && m_bAutocenCrossing);
+  m_editAutocenAngle.EnableWindow(enable && m_bAutocenCrossing && !doingDosym);
+  m_statACdegrees.EnableWindow(enable && m_bAutocenCrossing && !doingDosym);
 }
 
 void CTSSetupDialog::OnCheckautofocus() 
@@ -1460,16 +1476,23 @@ void CTSSetupDialog::OnDeltaposSpinBidirMag(NMHDR *pNMHDR, LRESULT *pResult)
 void CTSSetupDialog::ManageBidirectional(void)
 {
   bool enable = !mDoingTS && m_bDoBidir;
+  bool doingDosym = m_bDoBidir && m_bUseDoseSym && mLowDoseMode;
+  m_butCosineInc.EnableWindow(!mDoingTS && !doingDosym);
   m_butDoBidir.EnableWindow(!mDoingTS);
   m_editBidirAngle.EnableWindow(enable);
-  m_butBidirWalkBack.EnableWindow(enable || mBidirStage == BIDIR_FIRST_PART);
-  m_butBidirUseView.EnableWindow(enable && mLowDoseMode);
-  m_statBidirFieldSize.EnableWindow(enable);
-  enable = enable  && !(m_bBidirUseView && mLowDoseMode);
+  m_butBidirWalkBack.EnableWindow((enable || mBidirStage == BIDIR_FIRST_PART) && 
+    !doingDosym);
+  m_butBidirUseView.EnableWindow(enable && mLowDoseMode && !doingDosym);
+  m_statBidirFieldSize.EnableWindow(enable && (!doingDosym || (mTSParam.dosymDoRunToEnd &&
+    mTSParam.dosymAnchorIfRunToEnd)));
+  m_butUseDoseSym.EnableWindow(enable && mLowDoseMode);
+  m_butSetupDoseSym.EnableWindow(enable && doingDosym);
+  enable = enable && !(m_bBidirUseView && mLowDoseMode) && !doingDosym;
   m_statBidirMag.EnableWindow(enable);
   m_statBDMagLabel.EnableWindow(enable);
   m_sbcBidirMag.EnableWindow(enable);
   SetDlgItemText(IDC_STATSTARTAT, m_bDoBidir ? "Tilt to" : "Start at");
+  SetDlgItemText(IDC_STATISMICRONS, doingDosym ? "um at start" : "microns");
 }
 
 // Keeps the angles legal when bidirectional is enabled
@@ -1478,8 +1501,31 @@ void CTSSetupDialog::ConstrainBidirAngle(bool warningIfShift, bool anglesChanged
   float minAngle = B3DMIN(m_fStartAngle, m_fEndAngle);
   float maxAngle = B3DMAX(m_fStartAngle, m_fEndAngle);
   bool changed = false;
-  if (!m_bDoBidir || mDoingTS)
+  int dir;
+  float minSegment = 6.;
+  if (!m_bDoBidir)
     return;
+
+  // If doing a dose-symmetric series, check against supplied limits if any
+  if (mDoingTS) {
+    if (mMinDosymStart > -900.) {
+      dir = mMinDosymStart > m_fBidirAngle ? 1 : -1;
+      if (dir * (m_fStartAngle - mMinDosymStart) < 0) {
+        m_fStartAngle = (float)(0.01 * B3DNINT(100. * mMinDosymStart));
+        changed = true;
+      }
+    }
+    if (mMinDosymEnd > -900.) {
+      dir = mMinDosymEnd > m_fBidirAngle ? 1 : -1;
+      if (dir * (m_fEndAngle - mMinDosymEnd) < 0) {
+        m_fEndAngle = (float)(0.01 * B3DNINT(100. * mMinDosymEnd));
+        changed = true;
+      }
+    }
+    if (changed)
+      UpdateData(false);
+    return;
+  }
 
   // Angles are actively being edited and one is still zero, let it go
   if (anglesChanged && fabs((double)m_fBidirAngle) < 0.1 && 
@@ -1487,20 +1533,22 @@ void CTSSetupDialog::ConstrainBidirAngle(bool warningIfShift, bool anglesChanged
     return;
 
   // Otherwise if the range is less than 20, set bidir to the midpoint
-  if (maxAngle - minAngle < 20.) {
+  if (maxAngle - minAngle < 2. * minSegment) {
     changed = fabs(m_fBidirAngle - 0.5 * (maxAngle + minAngle)) > 
       B3DMIN(0.5, maxAngle - minAngle);
     if (changed)
       m_fBidirAngle = 0.5f * (maxAngle + minAngle);
 
     // Otherwise move it in so it is 10 degrees from one end
-  } else if (m_fBidirAngle < minAngle + 9.99 || m_fBidirAngle > maxAngle - 9.99) {
+  } else if (m_fBidirAngle < minAngle + (minSegment - 0.01) || 
+    m_fBidirAngle > maxAngle - (minSegment - 0.01)) {
     changed = true;
-    B3DCLAMP(m_fBidirAngle, minAngle + 10.f, maxAngle - 10.f);
+    B3DCLAMP(m_fBidirAngle, minAngle + minSegment, maxAngle - minSegment);
     if (warningIfShift) {
       CString mess;
       mess.Format("The starting angle for bidirectional tilting should be at least\n"
-        "10 degrees from either end; it has been changed to %.1f", m_fBidirAngle);
+        "%.0f degrees from either end; it has been changed to %.1f", minSegment,
+        m_fBidirAngle);
       AfxMessageBox(mess, MB_EXCLAME);
     }
   }
@@ -1519,7 +1567,7 @@ void CTSSetupDialog::ManageAnchorMag(int camera)
   // to get the actual field of view
   int magInd = mBidirMagInd[2 * mSTEMindex + (mLowDoseMode ? 1 : 0)];
   m_strBidirMag.Format("%d", MagForCamera(camParam, magInd));
-  if (mLowDoseMode && m_bBidirUseView)
+  if (mLowDoseMode && (m_bBidirUseView || m_bUseDoseSym))
     magInd = ldp->magIndex;
   float fov = size * mWinApp->mShiftManager->GetPixelSize(camera, magInd);
   if (fov < 10.)
@@ -1536,6 +1584,41 @@ void CTSSetupDialog::ManageAnchorMag(int camera)
     m_strBidirFieldSize = star + m_strBidirFieldSize + star;
 
   // I tried using OnPaint and drawing colored backgrounds, it was never called.
+}
+
+// Dose-symmetric tilting turned on or off: swap the IS limits
+void CTSSetupDialog::OnUseDoseSym()
+{
+  UpdateData(true);
+  if (m_bUseDoseSym) {
+    mTSParam.ISlimit = m_fLimitIS;
+    m_fLimitIS = mTSParam.dosymStartingISLimit;
+  } else {
+    mTSParam.dosymStartingISLimit = m_fLimitIS;
+    m_fLimitIS = mTSParam.ISlimit;
+  }
+  UpdateData(false);
+  ManageBidirectional();
+}
+
+// Open dialog to set dose-symmetric parameters
+void CTSSetupDialog::OnButSetupDoseSym()
+{
+  CTSDoseSymDlg dlg;
+  FixButtonStyle(IDC_BUT_SETUP_DOSE_SYM);
+  dlg.mTSparam = mTSParam;
+  dlg.mTSparam.startingTilt = m_fStartAngle;
+  dlg.mTSparam.endingTilt = m_fEndAngle;
+  dlg.mTSparam.tiltIncrement = m_fIncrement;
+  dlg.mTSparam.bidirAngle = m_fBidirAngle;
+  if (dlg.DoModal() == IDOK) {
+    dlg.mTSparam.startingTilt = mTSParam.startingTilt;
+    dlg.mTSparam.endingTilt = mTSParam.endingTilt;
+    dlg.mTSparam.tiltIncrement = mTSParam.tiltIncrement;
+    dlg.mTSparam.bidirAngle = mTSParam.bidirAngle;
+    mTSParam = dlg.mTSparam;
+  }
+  ManageBidirectional();
 }
 
 
@@ -1583,6 +1666,7 @@ void CTSSetupDialog::OnOK()
   mTSParam.doBidirectional = m_bDoBidir;
   mTSParam.anchorBidirWithView = m_bBidirUseView;
   mTSParam.walkBackForBidir = m_bBidirWalkBack;
+  mTSParam.doDoseSymmetric = m_bUseDoseSym;
   mTSParam.cameraIndex = m_iCamera;
   mTSParam.probeMode = mProbeMode;
   for (int j = 0; j < 3; j++) {
@@ -1605,7 +1689,10 @@ void CTSSetupDialog::OnOK()
   mTSParam.refIsInA = m_bUseAForRef;
   mTSParam.useAnchor = m_bUseAnchor;
   mTSParam.anchorBuffer = mAnchorBuf;
-  mTSParam.ISlimit = m_fLimitIS;
+  if (m_bDoBidir && m_bUseDoseSym && mLowDoseMode)
+    mTSParam.dosymStartingISLimit = m_fLimitIS;
+  else
+    mTSParam.ISlimit = m_fLimitIS;
   mTSParam.beamTilt = m_fBeamTilt;
   mTSParam.targetDefocus = m_fTargetDefocus;
   mTSParam.autofocusOffset = m_fFocusOffset;

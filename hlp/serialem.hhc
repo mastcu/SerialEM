@@ -318,6 +318,11 @@
 			</OBJECT>
 			<A HREF="html/hidd_tiltseries.htm">Tilt Series Setup dialog</A><BR>
 		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Dose Symmetric Tilt Series Parameters dialog">
+			<param name="Local" value="html/hidd_tsdosesym.htm">
+			</OBJECT>
+			<A HREF="html/hidd_tsdosesym.htm">Dose Symmetric Tilt Series Parameters dialog</A><BR>
+		<LI><OBJECT type="text/sitemap">
 			<param name="Name" value="Tilt Series Scheduled Changes dialog">
 			<param name="Local" value="html/hidd_tsvariations.htm">
 			</OBJECT>

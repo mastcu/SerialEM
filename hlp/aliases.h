@@ -29,6 +29,7 @@ hidd_tsresume										= SerialEM.chm::/html\hidd_tsresume.htm
 hidd_tsbackup										= SerialEM.chm::/html\hidd_tsbackup.htm
 hidd_tsextrafile								= SerialEM.chm::/html\hidd_tsextrafile.htm
 hidd_tspolicies									= SerialEM.chm::/html\hidd_tspolicies.htm
+hidd_tsdosesym                  = SerialEM.chm::/html\hidd_tsdosesym.htm
 hidd_navigator									= SerialEM.chm::/html\hidd_navigator.htm
 hidd_navacquire									= SerialEM.chm::/html\hidd_navacquire.htm
 hidd_navimport									= SerialEM.chm::/html\hidd_navimport.htm

@@ -42,6 +42,9 @@ public:
   BOOL mMontaging;              // Should be set by the caller
   float mMaxTiltAngle;
   float mMaxDelayAfterTilt;
+  int mDisableStartOrEnd;
+  float mMinDosymStart;
+  float mMinDosymEnd;
 
 // Dialog Data
   //{{AFX_DATA(CTSSetupDialog)
@@ -97,6 +100,7 @@ public:
   CButton m_butUseAnchor;
   CButton m_butWalkBox;
   CStatic m_statStartAt;
+  CStatic m_statEndAt;
   CStatic m_statRecordMag;
   CStatic m_statMagLabel;
   CStatic m_statBinning;
@@ -112,6 +116,7 @@ public:
   CButton m_butLowMagTrack;
   CButton m_butLeaveAnchor;
   CEdit m_editStartAngle;
+  CEdit m_editEndAngle;
   CEdit m_editIncrement;
   CEdit m_editAnchor;
   CButton m_butCosineInc;
@@ -330,6 +335,13 @@ afx_msg void OnCheckLimitDeltaFocus();
 afx_msg void OnDoEarlyReturn();
 afx_msg void OnDeltaposSpinEarlyFrames(NMHDR *pNMHDR, LRESULT *pResult);
 void ManageEarlyReturn(void);
+CButton m_butUseDoseSym;
+afx_msg void OnUseDoseSym();
+BOOL m_bUseDoseSym;
+CButton m_butSetupDoseSym;
+afx_msg void OnButSetupDoseSym();
+CStatic m_statLimitIS;
+CEdit m_editLimitIS;
 };
 
 //{{AFX_INSERT_LOCATION}}
