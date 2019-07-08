@@ -7,7 +7,8 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "afxres.h"
+#include "afxres.h"
+
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
@@ -63,7 +64,9 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDR_MAINFRAME           ICON                    "res\\SerialEM.ico"
+
 IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -71,7 +74,9 @@ IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
 //
 
 IDR_MAINFRAME           BITMAP                  "res\\Toolbar.bmp"
+
 IDB_BITMAP1             BITMAP                  "res\\bitmap1.bmp"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1848,631 +1853,631 @@ BEGIN
     PUSHBUTTON      "?",IDC_BUTHELP,0,0,10,10,NOT WS_VISIBLE
 END
 
-IDD_TSEXTRAFILE DIALOGEX 0, 0, 171, 413
-STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+IDD_TSEXTRAFILE DIALOGEX 0, 0, 155, 413
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Tilt Series Extra Output"
-FONT 8, "MS Shell Dlg", 400, 0, 0x0
+FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
-    CONTROL         "None",IDC_NOEXTRA,"Button",BS_AUTORADIOBUTTON | WS_GROUP,18,173,33,10
-    CONTROL         "Focus Series",IDC_FOCUSSERIES,"Button",BS_AUTORADIOBUTTON,18,184,56,10
-    CONTROL         "Filter Series",IDC_FILTERSERIES,"Button",BS_AUTORADIOBUTTON,18,196,52,10
+    CONTROL         "None",IDC_NOEXTRA,"Button",BS_AUTORADIOBUTTON | WS_GROUP,17,173,30,10
+    CONTROL         "Focus Series",IDC_FOCUSSERIES,"Button",BS_AUTORADIOBUTTON,17,184,51,10
+    CONTROL         "Filter Series",IDC_FILTERSERIES,"Button",BS_AUTORADIOBUTTON,17,196,47,10
     CONTROL         "Pair of Trials from opposite areas",IDC_OPPOSITETRIAL,
-                    "Button",BS_AUTORADIOBUTTON,18,208,126,10
-    CONTROL         "Other STEM detectors",IDC_OTHERCHANNELS,"Button",BS_AUTORADIOBUTTON,18,220,101,10
-    GROUPBOX        "Type of Extra Records/Trials",IDC_GRPEXTRAREC,12,163,146,70,WS_GROUP
-    LTEXT           "Select an image type to save it",IDC_STATIC,7,39,54,17
-    LTEXT           "Select the file to save images in",IDC_STATIC,69,39,54,17
-    CONTROL         "View",IDC_TSSAVEVIEW,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,59,31,10
-    CONTROL         "Spin1",IDC_SPINVIEW,"msctls_updown32",UDS_ARROWKEYS,57,57,10,14
-    LTEXT           "10",IDC_STATVIEWNUM,71,60,92,8
-    CONTROL         "Focus",IDC_SAVEFOCUS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,76,35,10
-    CONTROL         "Spin1",IDC_SPINFOCUS,"msctls_updown32",UDS_ARROWKEYS,57,74,10,14
-    LTEXT           "10",IDC_STATFOCUSNUM,71,77,92,8
-    CONTROL         "Trial",IDC_SAVETRIAL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,93,30,10
-    CONTROL         "Spin1",IDC_SPINTRIAL,"msctls_updown32",UDS_ARROWKEYS,57,91,10,14
-    LTEXT           "10",IDC_STATTRIALNUM,72,94,91,8
-    CONTROL         "Preview",IDC_SAVEPREVIEW,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,110,40,10
-    CONTROL         "Spin1",IDC_SPINPREVIEW,"msctls_updown32",UDS_ARROWKEYS,57,108,10,14
-    LTEXT           "10",IDC_STATPREVIEWNUM,72,111,91,8
-    LTEXT           "Extra Records",IDC_STATEXTRAREC,8,128,48,8
-    CONTROL         "Spin1",IDC_SPINRECORD,"msctls_updown32",UDS_ARROWKEYS,57,125,10,14
-    LTEXT           "10",IDC_STATRECORDNUM,72,128,91,8
-    LTEXT           "Each entry controls one extra Record image",IDC_STATEXTRAINSTR1,7,237,156,8
-    LTEXT           "Separate multiple entries with spaces",IDC_STATIC,7,247,156,8
-    LTEXT           "",IDC_STATINSTRUCT1,7,257,156,8
-    LTEXT           "",IDC_STATINSTRUCT2,8,267,155,8
-    EDITTEXT        IDC_EDITENTRIES,7,276,156,14,ES_AUTOHSCROLL
-    DEFPUSHBUTTON   "OK",IDOK,26,392,36,14
-    PUSHBUTTON      "Cancel",IDCANCEL,96,392,36,14
-    PUSHBUTTON      "?",IDC_BUTHELP,158,396,10,10
+                    "Button",BS_AUTORADIOBUTTON,17,208,113,10
+    CONTROL         "Other STEM detectors",IDC_OTHERCHANNELS,"Button",BS_AUTORADIOBUTTON,17,220,91,10
+    GROUPBOX        "Type of Extra Records/Trials",IDC_GRPEXTRAREC,11,163,131,70,WS_GROUP
+    LTEXT           "Select an image type to save it",IDC_STATIC,7,39,49,17
+    LTEXT           "Select the file to save images in",IDC_STATIC,62,39,49,17
+    CONTROL         "View",IDC_TSSAVEVIEW,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,59,28,10
+    CONTROL         "Spin1",IDC_SPINVIEW,"msctls_updown32",UDS_ARROWKEYS,52,57,9,14
+    LTEXT           "10",IDC_STATVIEWNUM,64,60,83,8
+    CONTROL         "Focus",IDC_SAVEFOCUS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,76,32,10
+    CONTROL         "Spin1",IDC_SPINFOCUS,"msctls_updown32",UDS_ARROWKEYS,52,74,9,14
+    LTEXT           "10",IDC_STATFOCUSNUM,64,77,83,8
+    CONTROL         "Trial",IDC_SAVETRIAL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,93,27,10
+    CONTROL         "Spin1",IDC_SPINTRIAL,"msctls_updown32",UDS_ARROWKEYS,52,91,9,14
+    LTEXT           "10",IDC_STATTRIALNUM,65,94,82,8
+    CONTROL         "Preview",IDC_SAVEPREVIEW,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,110,36,10
+    CONTROL         "Spin1",IDC_SPINPREVIEW,"msctls_updown32",UDS_ARROWKEYS,52,108,9,14
+    LTEXT           "10",IDC_STATPREVIEWNUM,65,111,82,8
+    LTEXT           "Extra Records",IDC_STATEXTRAREC,8,128,43,8
+    CONTROL         "Spin1",IDC_SPINRECORD,"msctls_updown32",UDS_ARROWKEYS,52,125,9,14
+    LTEXT           "10",IDC_STATRECORDNUM,65,128,82,8
+    LTEXT           "Each entry controls one extra Record image",IDC_STATEXTRAINSTR1,7,237,140,8
+    LTEXT           "Separate multiple entries with spaces",IDC_STATIC,7,247,140,8
+    LTEXT           "",IDC_STATINSTRUCT1,7,257,140,8
+    LTEXT           "",IDC_STATINSTRUCT2,8,267,139,8
+    EDITTEXT        IDC_EDITENTRIES,7,276,140,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,24,392,33,14
+    PUSHBUTTON      "Cancel",IDCANCEL,86,392,33,14
+    PUSHBUTTON      "?",IDC_BUTHELP,142,396,9,10
     CONTROL         "Stack Record/Overview in separate window",IDC_STACKRECORD,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,7,154,10
-    LTEXT           "Bin to",IDC_STATIC,7,21,18,8
-    CONTROL         "",IDC_SPINBINSIZE,"msctls_updown32",UDS_ARROWKEYS,27,18,10,14
-    LTEXT           "256 KB/image (e.g., 512 x512)",IDC_STATKBPIMAGE,41,21,122,8
-    CONTROL         "Change spot size to",IDC_CHECK_SETSPOT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,317,78,10
-    LTEXT           "Change intensity by factor of",IDC_STATIC,24,303,70,8
-    EDITTEXT        IDC_EDIT_DELTAC2,92,301,33,12,ES_AUTOHSCROLL
-    CONTROL         "Set exposure(s) to",IDC_CHECK_SETEXPOSURE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,332,74,10
-    EDITTEXT        IDC_EDIT_NEWEXPOSURE,87,331,72,12,ES_AUTOHSCROLL
-    LTEXT           "Drift settling to",IDC_STATIC,36,348,49,8
-    EDITTEXT        IDC_EDIT_NEWDRIFT,87,346,29,12,ES_AUTOHSCROLL
-    CONTROL         "",IDC_SPIN_NEWSPOT,"msctls_updown32",UDS_ARROWKEYS,100,315,10,14
-    LTEXT           "99",IDC_STAT_NEWSPOT,91,318,8,8
-    CONTROL         "",IDC_SPIN_TRIAL_BIN,"msctls_updown32",UDS_ARROWKEYS,99,360,10,14
-    CONTROL         "Set Trial binning to",IDC_CHECK_TRIAL_BIN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,362,76,10
-    LTEXT           "16",IDC_STAT_TRIAL_BIN,89,363,9,8
-    GROUPBOX        "Changes for Extra Records/Trials",IDC_GRPCHANGES,7,292,156,85
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,7,139,10
+    LTEXT           "Bin to",IDC_STATIC,7,21,17,8
+    CONTROL         "",IDC_SPINBINSIZE,"msctls_updown32",UDS_ARROWKEYS,25,18,9,14
+    LTEXT           "256 KB/image (e.g., 512 x512)",IDC_STATKBPIMAGE,37,21,110,8
+    CONTROL         "Change spot size to",IDC_CHECK_SETSPOT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,317,70,10
+    LTEXT           "Change intensity by factor of",IDC_STATIC,22,303,63,8
+    EDITTEXT        IDC_EDIT_DELTAC2,83,301,30,12,ES_AUTOHSCROLL
+    CONTROL         "Set exposure(s) to",IDC_CHECK_SETEXPOSURE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,332,67,10
+    EDITTEXT        IDC_EDIT_NEWEXPOSURE,78,331,65,12,ES_AUTOHSCROLL
+    LTEXT           "Drift settling to",IDC_STATIC,33,348,44,8
+    EDITTEXT        IDC_EDIT_NEWDRIFT,78,346,26,12,ES_AUTOHSCROLL
+    CONTROL         "",IDC_SPIN_NEWSPOT,"msctls_updown32",UDS_ARROWKEYS,90,315,9,14
+    LTEXT           "99",IDC_STAT_NEWSPOT,82,318,8,8
+    CONTROL         "",IDC_SPIN_TRIAL_BIN,"msctls_updown32",UDS_ARROWKEYS,89,360,9,14
+    CONTROL         "Set Trial binning to",IDC_CHECK_TRIAL_BIN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,362,69,10
+    LTEXT           "16",IDC_STAT_TRIAL_BIN,80,363,9,8
+    GROUPBOX        "Changes for Extra Records/Trials",IDC_GRPCHANGES,7,292,140,85
     CONTROL         "Keep file with bidirectional anchor images",IDC_CHECK_KEEP_ANCHOR,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,379,152,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,379,137,10
     CONTROL         "Save multiple Records in consecutive files",IDC_CONSECUTIVE_FILES,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,141,152,10
-    LTEXT           "1,2,3 ",IDC_STAT_CONSEC_LIST,20,152,134,8
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,141,137,10
+    LTEXT           "1,2,3 ",IDC_STAT_CONSEC_LIST,18,152,120,8
 END
 
-IDD_REFPOLICY DIALOGEX 0, 0, 275, 122
+IDD_REFPOLICY DIALOGEX 0, 0, 248, 122
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Gain Reference Policy"
-FONT 8, "MS Shell Dlg", 400, 0, 0x1
+FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
     CONTROL         "Do not use references with binning higher than 2",IDC_CHECK_IGNORE_HIGH,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,10,175,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,10,157,10
     CONTROL         "Use binned by 2 reference even if older than unbinned reference",IDC_CHECK_PREFER_BIN2,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,23,227,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,23,204,10
     CONTROL         "Ask about using DM reference when it is newer than SerialEM reference",IDC_RADIO_ASK_IF_NEWER,
-                    "Button",BS_AUTORADIOBUTTON | WS_GROUP,11,51,251,10
+                    "Button",BS_AUTORADIOBUTTON | WS_GROUP,10,51,225,10
     CONTROL         "Always ask about using DM reference instead of SerialEM reference",IDC_RADIO_ASK_ALWAYS,
-                    "Button",BS_AUTORADIOBUTTON,11,63,237,10
+                    "Button",BS_AUTORADIOBUTTON,10,63,213,10
     CONTROL         "Never ask about using DM reference instead of SerialEM reference",IDC_RADIO_ASK_NEVER,
-                    "Button",BS_AUTORADIOBUTTON,11,76,233,10
-    DEFPUSHBUTTON   "OK",IDOK,78,101,50,14,WS_GROUP
-    PUSHBUTTON      "Cancel",IDCANCEL,146,101,50,14
-    PUSHBUTTON      "?",IDC_BUTHELP,263,105,11,10
-    GROUPBOX        "Choosing DigitalMicrograph instead of SerialEM reference",IDC_STAT_DMGROUP,7,40,261,52
+                    "Button",BS_AUTORADIOBUTTON,10,76,209,10
+    DEFPUSHBUTTON   "OK",IDOK,70,101,45,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,131,101,45,14
+    PUSHBUTTON      "?",IDC_BUTHELP,236,105,10,10
+    GROUPBOX        "Choosing DigitalMicrograph instead of SerialEM reference",IDC_STAT_DMGROUP,7,40,234,52
 END
 
-IDD_MACROTOOLBAR DIALOGEX 0, 0, 55, 238
+IDD_MACROTOOLBAR DIALOGEX 0, 0, 51, 238
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_TOOLWINDOW
 CAPTION "Scripts"
-FONT 8, "MS Shell Dlg", 400, 0, 0x1
+FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
-    PUSHBUTTON      "Script 1",ID_MACRO_RUN1,0,0,55,10,NOT WS_TABSTOP
-    PUSHBUTTON      "Script 2",ID_MACRO_RUN2,0,12,55,10,NOT WS_TABSTOP
-    PUSHBUTTON      "Script 3",ID_MACRO_RUN3,0,24,55,10,NOT WS_TABSTOP
-    PUSHBUTTON      "Script 4",ID_MACRO_RUN4,0,36,55,10,NOT WS_TABSTOP
-    PUSHBUTTON      "Script 5",ID_MACRO_RUN5,0,48,55,10,NOT WS_TABSTOP
-    PUSHBUTTON      "Script 6",ID_MACRO_RUN6,0,60,55,10,NOT WS_TABSTOP
-    PUSHBUTTON      "Script 7",ID_MACRO_RUN7,0,72,55,10,NOT WS_TABSTOP
-    PUSHBUTTON      "Script 8",ID_MACRO_RUN8,0,84,55,10,NOT WS_TABSTOP
-    PUSHBUTTON      "Script 9",ID_MACRO_RUN9,0,96,55,10,NOT WS_TABSTOP
-    PUSHBUTTON      "Longer Name 5",ID_MACRO_RUN10,0,108,55,10,NOT WS_TABSTOP
-    PUSHBUTTON      "Script 1",ID_MACRO_RUN11,0,120,55,10,NOT WS_TABSTOP
-    PUSHBUTTON      "Script 2",ID_MACRO_RUN12,0,132,55,10,NOT WS_TABSTOP
-    PUSHBUTTON      "Script 3",ID_MACRO_RUN13,0,144,55,10,NOT WS_TABSTOP
-    PUSHBUTTON      "Script 4",ID_MACRO_RUN14,0,156,55,10,NOT WS_TABSTOP
-    PUSHBUTTON      "Script 5",ID_MACRO_RUN15,0,168,55,10,NOT WS_TABSTOP
-    PUSHBUTTON      "Script 6",ID_MACRO_RUN16,0,180,55,10,NOT WS_TABSTOP
-    PUSHBUTTON      "Script 7",ID_MACRO_RUN17,0,192,55,10,NOT WS_TABSTOP
-    PUSHBUTTON      "Script 8",ID_MACRO_RUN18,0,204,55,10,NOT WS_TABSTOP
-    PUSHBUTTON      "Script 9",ID_MACRO_RUN19,0,216,55,10,NOT WS_TABSTOP
-    PUSHBUTTON      "Longer Name 5",ID_MACRO_RUN20,0,228,55,10,NOT WS_TABSTOP
-    PUSHBUTTON      "?",IDC_BUTHELP,0,34,11,10,NOT WS_VISIBLE
+    PUSHBUTTON      "Script 1",ID_MACRO_RUN1,0,0,50,10,NOT WS_TABSTOP
+    PUSHBUTTON      "Script 2",ID_MACRO_RUN2,0,12,50,10,NOT WS_TABSTOP
+    PUSHBUTTON      "Script 3",ID_MACRO_RUN3,0,24,50,10,NOT WS_TABSTOP
+    PUSHBUTTON      "Script 4",ID_MACRO_RUN4,0,36,50,10,NOT WS_TABSTOP
+    PUSHBUTTON      "Script 5",ID_MACRO_RUN5,0,48,50,10,NOT WS_TABSTOP
+    PUSHBUTTON      "Script 6",ID_MACRO_RUN6,0,60,50,10,NOT WS_TABSTOP
+    PUSHBUTTON      "Script 7",ID_MACRO_RUN7,0,72,50,10,NOT WS_TABSTOP
+    PUSHBUTTON      "Script 8",ID_MACRO_RUN8,0,84,50,10,NOT WS_TABSTOP
+    PUSHBUTTON      "Script 9",ID_MACRO_RUN9,0,96,50,10,NOT WS_TABSTOP
+    PUSHBUTTON      "Longer Name 5",ID_MACRO_RUN10,0,108,50,10,NOT WS_TABSTOP
+    PUSHBUTTON      "Script 1",ID_MACRO_RUN11,0,120,50,10,NOT WS_TABSTOP
+    PUSHBUTTON      "Script 2",ID_MACRO_RUN12,0,132,50,10,NOT WS_TABSTOP
+    PUSHBUTTON      "Script 3",ID_MACRO_RUN13,0,144,50,10,NOT WS_TABSTOP
+    PUSHBUTTON      "Script 4",ID_MACRO_RUN14,0,156,50,10,NOT WS_TABSTOP
+    PUSHBUTTON      "Script 5",ID_MACRO_RUN15,0,168,50,10,NOT WS_TABSTOP
+    PUSHBUTTON      "Script 6",ID_MACRO_RUN16,0,180,50,10,NOT WS_TABSTOP
+    PUSHBUTTON      "Script 7",ID_MACRO_RUN17,0,192,50,10,NOT WS_TABSTOP
+    PUSHBUTTON      "Script 8",ID_MACRO_RUN18,0,204,50,10,NOT WS_TABSTOP
+    PUSHBUTTON      "Script 9",ID_MACRO_RUN19,0,216,50,10,NOT WS_TABSTOP
+    PUSHBUTTON      "Longer Name 5",ID_MACRO_RUN20,0,228,50,10,NOT WS_TABSTOP
+    PUSHBUTTON      "?",IDC_BUTHELP,0,34,10,10,NOT WS_VISIBLE
 END
 
-IDD_TSPOLICIES DIALOGEX 0, 0, 227, 282
-STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+IDD_TSPOLICIES DIALOGEX 0, 0, 209, 283
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Batch Tilt Series & Other Policies"
-FONT 8, "MS Shell Dlg", 400, 0, 0x1
+FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
     CONTROL         "Stop with the usual message box and allow intervention",IDC_ERRORMESSAGE,
-                    "Button",BS_AUTORADIOBUTTON | WS_GROUP,14,16,198,10
+                    "Button",BS_AUTORADIOBUTTON | WS_GROUP,13,16,178,10
     CONTROL         "Terminate series or take specific action selected below",IDC_ERRORTERM,
-                    "Button",BS_AUTORADIOBUTTON,14,27,195,10
-    GROUPBOX        "General response to error during series",IDC_STATIC,7,7,213,33,WS_GROUP
-    CONTROL         "Stop with message box",IDC_DIM_DO_MESSAGE,"Button",BS_AUTORADIOBUTTON | WS_GROUP,14,56,92,10
-    CONTROL         "Terminate",IDC_DIM_TERM_NOT_BOX,"Button",BS_AUTORADIOBUTTON,125,56,50,10
-    GROUPBOX        "After 3 images too dim or one dim Record in Low Dose mode",IDC_STAT_DIM_TERM_NOT_BOX,7,45,213,25,WS_GROUP
-    CONTROL         "Terminate",IDC_TILTTERM,"Button",BS_AUTORADIOBUTTON | WS_GROUP,14,86,50,10
-    CONTROL         "Continue",IDC_TILTCONT,"Button",BS_AUTORADIOBUTTON,74,86,45,10
-    GROUPBOX        "After failure to tilt to expected angle (possible pole touch)",IDC_STAT_TILT_FAIL,7,75,214,25,WS_GROUP
-    CONTROL         "Take again",IDC_LDLOSSREPEAT,"Button",BS_AUTORADIOBUTTON | WS_GROUP,14,116,52,10
-    CONTROL         "Continue",IDC_LDLOSSCONT,"Button",BS_AUTORADIOBUTTON,74,116,45,10
-    CONTROL         "Terminate",IDC_LDLOSSTERM,"Button",BS_AUTORADIOBUTTON,125,116,50,10
-    GROUPBOX        "When Record image is too misaligned in Low Dose mode",IDC_STAT_LD_LOSS,7,105,214,25,WS_GROUP
-    CONTROL         "Take again",IDC_LDDIMREPEAT,"Button",BS_AUTORADIOBUTTON | WS_GROUP,14,147,52,10
-    CONTROL         "Continue",IDC_LDDIMCONT,"Button",BS_AUTORADIOBUTTON,74,147,45,10
-    CONTROL         "Terminate",IDC_LDDIMTERM,"Button",BS_AUTORADIOBUTTON,125,147,50,10
-    GROUPBOX        "When Record image is too dim in Low Dose mode",IDC_STAT_LD_DIM,7,136,214,25,WS_GROUP
-    DEFPUSHBUTTON   "OK",IDOK,46,261,50,14,WS_GROUP
-    PUSHBUTTON      "Cancel",IDCANCEL,130,261,50,14
-    PUSHBUTTON      "?",IDC_BUTHELP,215,265,11,10
+                    "Button",BS_AUTORADIOBUTTON,13,27,175,10
+    GROUPBOX        "General response to error during series",IDC_STATIC,7,7,195,33,WS_GROUP
+    CONTROL         "Stop with message box",IDC_DIM_DO_MESSAGE,"Button",BS_AUTORADIOBUTTON | WS_GROUP,13,56,83,10
+    CONTROL         "Terminate",IDC_DIM_TERM_NOT_BOX,"Button",BS_AUTORADIOBUTTON,112,56,45,10
+    GROUPBOX        "After 3 images too dim or one dim Record in Low Dose mode",IDC_STAT_DIM_TERM_NOT_BOX,7,45,195,25,WS_GROUP
+    CONTROL         "Terminate",IDC_TILTTERM,"Button",BS_AUTORADIOBUTTON | WS_GROUP,13,86,45,10
+    CONTROL         "Continue",IDC_TILTCONT,"Button",BS_AUTORADIOBUTTON,67,86,41,10
+    GROUPBOX        "After failure to tilt to expected angle (possible pole touch)",IDC_STAT_TILT_FAIL,7,75,195,25,WS_GROUP
+    CONTROL         "Take again",IDC_LDLOSSREPEAT,"Button",BS_AUTORADIOBUTTON | WS_GROUP,13,116,47,10
+    CONTROL         "Continue",IDC_LDLOSSCONT,"Button",BS_AUTORADIOBUTTON,67,116,41,10
+    CONTROL         "Terminate",IDC_LDLOSSTERM,"Button",BS_AUTORADIOBUTTON,112,116,45,10
+    GROUPBOX        "When Record image is too misaligned in Low Dose mode",IDC_STAT_LD_LOSS,7,105,195,25,WS_GROUP
+    CONTROL         "Take again",IDC_LDDIMREPEAT,"Button",BS_AUTORADIOBUTTON | WS_GROUP,13,147,47,10
+    CONTROL         "Continue",IDC_LDDIMCONT,"Button",BS_AUTORADIOBUTTON,67,147,41,10
+    CONTROL         "Terminate",IDC_LDDIMTERM,"Button",BS_AUTORADIOBUTTON,112,147,45,10
+    GROUPBOX        "When Record image is too dim in Low Dose mode",IDC_STAT_LD_DIM,7,136,195,25,WS_GROUP
+    DEFPUSHBUTTON   "OK",IDOK,42,261,45,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,117,261,45,14
+    PUSHBUTTON      "?",IDC_BUTHELP,197,265,10,10
     CONTROL         "Autosave log and start new log for each tilt series",IDC_CHECK_AUTO_NEW_LOG,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,165,178,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,165,160,10
     CONTROL         "Close column valves after message box is open",IDC_CHECK_MB_VALVES,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,247,170,10
-    EDITTEXT        IDC_EDIT_MB_MINUTES,182,246,25,12,ES_AUTOHSCROLL
-    LTEXT           "min",IDC_STATIC,209,247,13,8
-    CONTROL         "",IDC_TSS_LINE2,"Static",SS_BLACKFRAME | SS_SUNKEN,8,182,76,1
-    LTEXT           "Other Policies",IDC_STATIC,90,178,46,8
-    CONTROL         "",IDC_TSS_LINE3,"Static",SS_BLACKFRAME | SS_SUNKEN,144,182,75,1
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,247,153,10
+    EDITTEXT        IDC_EDIT_MB_MINUTES,167,246,23,12,ES_AUTOHSCROLL
+    LTEXT           "min",IDC_STATIC,192,247,12,8
+    CONTROL         "",IDC_TSS_LINE2,"Static",SS_BLACKFRAME | SS_SUNKEN,8,182,69,1
+    LTEXT           "Other Policies",IDC_STATIC,82,178,42,8
+    CONTROL         "",IDC_TSS_LINE3,"Static",SS_BLACKFRAME | SS_SUNKEN,129,182,72,1
     CONTROL         "Consider batch series successful or end first part of a",IDC_CHECK_END_BIDIR,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,188,190,10
-    LTEXT           "above ",IDC_STATIC,26,209,23,8
-    EDITTEXT        IDC_EDIT_BIDIR_ABS_ANGLE,49,207,25,12,ES_AUTOHSCROLL
-    LTEXT           "or within ",IDC_STATIC,79,209,32,8
-    EDITTEXT        IDC_EDIT_BIDIR_END_DIFF,111,207,25,12,ES_AUTOHSCROLL
-    LTEXT           "degrees of ending tilt",IDC_STATIC,139,209,70,8
-    LTEXT           "bidirectional series if dim image or bad autofocus occurs",IDC_STATIC,27,198,185,8
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,188,171,10
+    LTEXT           "above ",IDC_STATIC,24,209,21,8
+    EDITTEXT        IDC_EDIT_BIDIR_ABS_ANGLE,44,207,23,12,ES_AUTOHSCROLL
+    LTEXT           "or within ",IDC_STATIC,71,209,29,8
+    EDITTEXT        IDC_EDIT_BIDIR_END_DIFF,100,207,23,12,ES_AUTOHSCROLL
+    LTEXT           "degrees of ending tilt",IDC_STATIC,125,209,63,8
+    LTEXT           "bidirectional series if dim image or bad autofocus occurs",IDC_STATIC,25,198,166,8
     CONTROL         "Do similar at high tilt if intensity/exposure set for mean",IDC_CHECK_END_HIGH_EXP,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,222,195,10
-    LTEXT           "exceeds",IDC_STAT_MAX_DELTA1,27,234,27,8
-    EDITTEXT        IDC_EDIT_MAX_DELTA_EXP,56,232,25,12,ES_AUTOHSCROLL
-    LTEXT           "times its minimum value",IDC_STAT_MAX_DELTA2,84,234,80,8
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,222,175,10
+    LTEXT           "exceeds",IDC_STAT_MAX_DELTA1,25,234,26,8
+    EDITTEXT        IDC_EDIT_MAX_DELTA_EXP,52,232,23,12,ES_AUTOHSCROLL
+    LTEXT           "times its minimum value",IDC_STAT_MAX_DELTA2,77,234,72,8
 END
 
-IDD_NAVACQUIRE DIALOGEX 0, 0, 171, 307
-STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+IDD_NAVACQUIRE DIALOGEX 0, 0, 155, 307
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Acquire at Items"
-FONT 8, "MS Shell Dlg", 400, 0, 0x1
+FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
-    CONTROL         "Rough eucentricity",IDC_NA_ROUGH_EUCEN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,18,76,10
-    CONTROL         "Autocenter beam",IDC_NA_CENTERBEAM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,30,72,10
-    CONTROL         "Realign to item",IDC_NA_REALIGNITEM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,42,65,10
-    CONTROL         "Cook specimen",IDC_NA_COOKSPECIMEN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,54,65,10
-    CONTROL         "Fine eucentricity",IDC_NA_FINE_EUCEN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,66,69,10
-    CONTROL         "Autofocus",IDC_NA_AUTOFOCUS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,78,48,10
-    CONTROL         "Run script",IDC_NA_PREMACRO,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,90,49,10
-    CONTROL         "Only at start of group",IDC_NA_GROUP_FOCUS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,68,78,86,10
-    GROUPBOX        "Initial Actions after Moving Stage",IDC_STATIC,7,8,157,100
-    CONTROL         "Acquire map image or montage",IDC_NA_ACQUIREMAP,"Button",BS_AUTORADIOBUTTON | WS_GROUP,14,118,119,10
+    CONTROL         "Rough eucentricity",IDC_NA_ROUGH_EUCEN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,18,69,10
+    CONTROL         "Autocenter beam",IDC_NA_CENTERBEAM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,30,65,10
+    CONTROL         "Realign to item",IDC_NA_REALIGNITEM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,42,59,10
+    CONTROL         "Cook specimen",IDC_NA_COOKSPECIMEN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,54,59,10
+    CONTROL         "Fine eucentricity",IDC_NA_FINE_EUCEN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,66,62,10
+    CONTROL         "Autofocus",IDC_NA_AUTOFOCUS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,78,43,10
+    CONTROL         "Run script",IDC_NA_PREMACRO,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,90,44,10
+    CONTROL         "Only at start of group",IDC_NA_GROUP_FOCUS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,61,78,77,10
+    GROUPBOX        "Initial Actions after Moving Stage",IDC_STATIC,7,8,141,100
+    CONTROL         "Acquire map image or montage",IDC_NA_ACQUIREMAP,"Button",BS_AUTORADIOBUTTON | WS_GROUP,13,118,107,10
     CONTROL         "Just acquire and save image or montage",IDC_NA_JUSTACQUIRE,
-                    "Button",BS_AUTORADIOBUTTON,14,130,149,10
-    CONTROL         "Run script",IDC_NA_RUNMACRO,"Button",BS_AUTORADIOBUTTON,14,142,49,10
-    CONTROL         "Acquire tilt series",IDC_NA_ACQUIRE_TS,"Button",BS_AUTORADIOBUTTON,14,154,73,10
-    GROUPBOX        "Primary Task",IDC_STATIC,7,108,158,60,WS_GROUP
-    DEFPUSHBUTTON   "GO",IDOK,7,288,40,14
-    PUSHBUTTON      "Cancel",IDCANCEL,111,288,40,14
+                    "Button",BS_AUTORADIOBUTTON,13,130,134,10
+    CONTROL         "Run script",IDC_NA_RUNMACRO,"Button",BS_AUTORADIOBUTTON,13,142,44,10
+    CONTROL         "Acquire tilt series",IDC_NA_ACQUIRE_TS,"Button",BS_AUTORADIOBUTTON,13,154,66,10
+    GROUPBOX        "Primary Task",IDC_STATIC,7,108,142,60,WS_GROUP
+    DEFPUSHBUTTON   "GO",IDOK,7,288,36,14
+    PUSHBUTTON      "Cancel",IDCANCEL,100,288,36,14
     CONTROL         "Restore scope state after aligning to item",IDC_NA_RESTORE_STATE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,247,151,10
-    PUSHBUTTON      "?",IDC_BUTHELP,158,292,11,10
-    CONTROL         "Close column valves at end",IDC_NA_CLOSE_VALVES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,259,105,10
-    CONTROL         "Send email at end",IDC_NA_SENDEMAIL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,271,75,10
-    COMBOBOX        IDC_COMBO_PREMACRO,65,89,92,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    COMBOBOX        IDC_COMBO_MACRO,65,141,92,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Images will be saved to:",IDC_STAT_SAVING_FATE,10,186,154,8
-    LTEXT           "This open file",IDC_STAT_FILE_SAVING_INTO,10,196,154,8
-    CONTROL         "Do subset from index",IDC_NA_DO_SUBSET,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,209,84,10
-    EDITTEXT        IDC_EDIT_SUBSET_START,98,207,29,14,ES_AUTOHSCROLL
-    LTEXT           "to",IDC_STATIC,129,209,8,10
-    EDITTEXT        IDC_EDIT_SUBSET_END,136,207,29,14,ES_AUTOHSCROLL
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,247,136,10
+    PUSHBUTTON      "?",IDC_BUTHELP,142,292,10,10
+    CONTROL         "Close column valves at end",IDC_NA_CLOSE_VALVES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,259,94,10
+    CONTROL         "Send email at end",IDC_NA_SENDEMAIL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,271,68,10
+    COMBOBOX        IDC_COMBO_PREMACRO,59,89,83,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_COMBO_MACRO,59,141,83,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Images will be saved to:",IDC_STAT_SAVING_FATE,9,186,138,8
+    LTEXT           "This open file",IDC_STAT_FILE_SAVING_INTO,9,196,138,8
+    CONTROL         "Do subset from index",IDC_NA_DO_SUBSET,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,209,76,10
+    EDITTEXT        IDC_EDIT_SUBSET_START,88,207,26,14,ES_AUTOHSCROLL
+    LTEXT           "to",IDC_STATIC,116,209,8,10
+    EDITTEXT        IDC_EDIT_SUBSET_END,122,207,26,14,ES_AUTOHSCROLL
     CONTROL         "Skip initial stage move to item",IDC_NA_SKIP_INITIAL_MOVE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,223,114,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,223,103,10
     CONTROL         "Skip Z moves in initial move and Realign",IDC_NA_SKIP_Z_MOVES,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,235,147,10
-    PUSHBUTTON      "Postpone",IDC_BUT_POSTPONE,59,288,40,14
-    CONTROL         "Run script after:",IDC_NA_POSTMACRO,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,173,63,10
-    COMBOBOX        IDC_COMBO_POSTMACRO,82,172,84,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,235,132,10
+    PUSHBUTTON      "Postpone",IDC_BUT_POSTPONE,53,288,36,14
+    CONTROL         "Run script after:",IDC_NA_POSTMACRO,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,173,57,10
+    COMBOBOX        IDC_COMBO_POSTMACRO,73,172,76,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
 END
 
-IDD_NAVIMPORT DIALOGEX 0, 0, 179, 134
+IDD_NAVIMPORT DIALOGEX 0, 0, 162, 134
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Import Navigator Map"
-FONT 8, "MS Shell Dlg", 400, 0, 0x1
+FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,34,113,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,95,113,50,14
-    COMBOBOX        IDC_XFORMCOMBO,7,67,165,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Section (0-1000)",IDC_STATSECTION,11,10,56,8
-    EDITTEXT        IDC_EDITSECTION,72,7,34,14,ES_AUTOHSCROLL
-    LTEXT           "Stage position, X:",IDC_STATIC,11,27,59,8
-    EDITTEXT        IDC_EDIT_STAGEX,72,24,34,14,ES_AUTOHSCROLL
-    LTEXT           "Y:",IDC_STATIC,112,27,8,8
-    EDITTEXT        IDC_EDIT_STAGEY,123,24,33,14,ES_AUTOHSCROLL
-    LTEXT           "um",IDC_STATIC,159,27,11,8
-    LTEXT           "Registration #",IDC_STATIC,11,44,47,8
-    RTEXT           "990",IDC_STAT_REGNUM,62,44,13,8
-    CONTROL         "",IDC_SPIN_REGNUM,"msctls_updown32",UDS_ARROWKEYS,81,41,10,14
-    LTEXT           "Stage to Image transformation:",IDC_STATIC,11,57,104,8
-    PUSHBUTTON      "?",IDC_BUTHELP,161,117,11,10
+    DEFPUSHBUTTON   "OK",IDOK,31,113,45,14
+    PUSHBUTTON      "Cancel",IDCANCEL,86,113,45,14
+    COMBOBOX        IDC_XFORMCOMBO,7,67,148,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Section (0-1000)",IDC_STATSECTION,10,10,51,8
+    EDITTEXT        IDC_EDITSECTION,65,7,31,14,ES_AUTOHSCROLL
+    LTEXT           "Stage position, X:",IDC_STATIC,10,27,53,8
+    EDITTEXT        IDC_EDIT_STAGEX,65,24,31,14,ES_AUTOHSCROLL
+    LTEXT           "Y:",IDC_STATIC,101,27,8,8
+    EDITTEXT        IDC_EDIT_STAGEY,111,24,30,14,ES_AUTOHSCROLL
+    LTEXT           "um",IDC_STATIC,143,27,10,8
+    LTEXT           "Registration #",IDC_STATIC,10,44,43,8
+    RTEXT           "990",IDC_STAT_REGNUM,56,44,12,8
+    CONTROL         "",IDC_SPIN_REGNUM,"msctls_updown32",UDS_ARROWKEYS,73,41,9,14
+    LTEXT           "Stage to Image transformation:",IDC_STATIC,10,57,94,8
+    PUSHBUTTON      "?",IDC_BUTHELP,145,117,10,10
     CONTROL         "Make color overlay with current map item",IDC_CHECK_OVERLAY,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,82,154,10
-    EDITTEXT        IDC_EDIT_OVERLAY,134,94,27,14,ES_AUTOHSCROLL
-    LTEXT           "Images to use for red, green, blue:",IDC_STAT_OVERLAY1,16,93,116,8
-    LTEXT           "(1 for current, 2 for this, 0 for none)",IDC_STAT_OVERLAY2,13,101,120,8
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,82,138,10
+    EDITTEXT        IDC_EDIT_OVERLAY,120,94,25,14,ES_AUTOHSCROLL
+    LTEXT           "Images to use for red, green, blue:",IDC_STAT_OVERLAY1,15,93,104,8
+    LTEXT           "(1 for current, 2 for this, 0 for none)",IDC_STAT_OVERLAY2,12,101,108,8
 END
 
-IDD_COOKSETUP DIALOGEX 0, 0, 167, 173
+IDD_COOKSETUP DIALOGEX 0, 0, 151, 173
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Specimen Cooking Setup"
-FONT 8, "MS Shell Dlg", 400, 0, 0x1
+FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
-    CONTROL         "Setup mag and beam on scope",IDC_SET_TRACK_STATE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,10,118,10
-    LTEXT           "Mag:",IDC_STATIC,10,23,18,8
-    LTEXT           "mag",IDC_COOKMAG,46,23,29,8
-    LTEXT           "Spot size:",IDC_STATIC,10,33,34,8
-    LTEXT           "spot",IDC_COOKSPOT,46,33,29,8
-    LTEXT           "Intensity:",IDC_STATIC,11,43,31,8
-    LTEXT           "% C3",IDC_COOKINTENSITY,46,43,29,8
-    LTEXT           "Dose rate:",IDC_STATIC,11,53,35,8
-    RTEXT           "1.67",IDC_COOKDOSERATE,48,53,25,8
-    LTEXT           "e-/s/A",IDC_STATIC,76,53,22,8
-    LTEXT           "2",IDC_STATIC,97,51,8,8
-    CONTROL         "Expose for dose of",IDC_RADIODOSE,"Button",BS_AUTORADIOBUTTON | WS_GROUP,11,68,77,10
-    CONTROL         "Expose for time of",IDC_RADIOTIME,"Button",BS_AUTORADIOBUTTON,11,85,75,10
-    EDITTEXT        IDC_EDITCOOKDOSE,88,66,32,14,ES_AUTOHSCROLL | WS_GROUP
-    EDITTEXT        IDC_EDITCOOKTIME,88,83,32,14,ES_AUTOHSCROLL
-    CONTROL         "",IDC_SPINCOOKDOSE,"msctls_updown32",UDS_ARROWKEYS,120,66,10,14
-    CONTROL         "",IDC_SPINCOOKTIME,"msctls_updown32",UDS_ARROWKEYS,120,83,10,14
-    LTEXT           "e-/A",IDC_STATIC,134,69,15,8
-    LTEXT           "2",IDC_STATIC,149,66,8,8
-    LTEXT           "minutes",IDC_STATIC,133,86,27,8
-    DEFPUSHBUTTON   "Close",IDOK,65,152,36,14
-    PUSHBUTTON      "Cancel",IDCANCEL,111,152,36,14
-    PUSHBUTTON      "?",IDC_BUTHELP,154,152,11,10
+    CONTROL         "Setup mag and beam on scope",IDC_SET_TRACK_STATE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,10,106,10
+    LTEXT           "Mag:",IDC_STATIC,9,23,17,8
+    LTEXT           "mag",IDC_COOKMAG,42,23,26,8
+    LTEXT           "Spot size:",IDC_STATIC,9,33,31,8
+    LTEXT           "spot",IDC_COOKSPOT,42,33,26,8
+    LTEXT           "Intensity:",IDC_STATIC,10,43,28,8
+    LTEXT           "% C3",IDC_COOKINTENSITY,42,43,26,8
+    LTEXT           "Dose rate:",IDC_STATIC,10,53,32,8
+    RTEXT           "1.67",IDC_COOKDOSERATE,43,53,23,8
+    LTEXT           "e-/s/A",IDC_STATIC,69,53,20,8
+    LTEXT           "2",IDC_STATIC,87,51,8,8
+    CONTROL         "Expose for dose of",IDC_RADIODOSE,"Button",BS_AUTORADIOBUTTON | WS_GROUP,10,68,69,10
+    CONTROL         "Expose for time of",IDC_RADIOTIME,"Button",BS_AUTORADIOBUTTON,10,85,68,10
+    EDITTEXT        IDC_EDITCOOKDOSE,79,66,29,14,ES_AUTOHSCROLL | WS_GROUP
+    EDITTEXT        IDC_EDITCOOKTIME,79,83,29,14,ES_AUTOHSCROLL
+    CONTROL         "",IDC_SPINCOOKDOSE,"msctls_updown32",UDS_ARROWKEYS,108,66,9,14
+    CONTROL         "",IDC_SPINCOOKTIME,"msctls_updown32",UDS_ARROWKEYS,108,83,9,14
+    LTEXT           "e-/A",IDC_STATIC,120,69,14,8
+    LTEXT           "2",IDC_STATIC,134,66,8,8
+    LTEXT           "minutes",IDC_STATIC,120,86,25,8
+    DEFPUSHBUTTON   "Close",IDOK,59,152,33,14
+    PUSHBUTTON      "Cancel",IDCANCEL,100,152,33,14
+    PUSHBUTTON      "?",IDC_BUTHELP,138,152,10,10
     CONTROL         "Restore specimen position after cooking",IDC_ALIGNCOOKED,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,137,146,10
-    RTEXT           "3600. min",IDC_COOKTOTALTIME,61,102,48,11
-    LTEXT           "Total time:",IDC_STATDOSETIME,11,102,50,11
-    CONTROL         "Tilt to",IDC_TILTFORCOOK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,121,35,10
-    EDITTEXT        IDC_EDITCOOKTILT,46,119,30,14,ES_AUTOHSCROLL
-    LTEXT           "degrees for cooking",IDC_STATIC,80,122,66,8
-    PUSHBUTTON      "GO",IDC_COOKGO,19,152,36,14
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,137,131,10
+    RTEXT           "3600. min",IDC_COOKTOTALTIME,55,102,43,11
+    LTEXT           "Total time:",IDC_STATDOSETIME,10,102,45,11
+    CONTROL         "Tilt to",IDC_TILTFORCOOK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,121,32,10
+    EDITTEXT        IDC_EDITCOOKTILT,42,119,27,14,ES_AUTOHSCROLL
+    LTEXT           "degrees for cooking",IDC_STATIC,72,122,60,8
+    PUSHBUTTON      "GO",IDC_COOKGO,18,152,33,14
 END
 
-IDD_AUTOCENSETUP DIALOGEX 0, 0, 175, 208
+IDD_AUTOCENSETUP DIALOGEX 0, 0, 158, 208
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Beam Autocentering Setup"
-FONT 8, "MS Shell Dlg", 400, 0, 0x1
+FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
-    LTEXT           "Separate settings can be stored for each mag",IDC_STATIC,11,10,151,8
-    LTEXT           "and for each camera",IDC_STATCAMLABEL,57,19,69,8
-    LTEXT           "Camera:",IDC_STATCAMLABEL2,10,28,30,8
-    LTEXT           "Name",IDC_STATCAMNAME,43,28,67,8
+    LTEXT           "Separate settings can be stored for each mag",IDC_STATIC,10,10,136,8
+    LTEXT           "and for each camera",IDC_STATCAMLABEL,52,19,62,8
+    LTEXT           "Camera:",IDC_STATCAMLABEL2,9,28,27,8
+    LTEXT           "Name",IDC_STATCAMNAME,39,28,60,8
     CONTROL         "Setup beam on scope and track scope state",IDC_SETBEAMSTATE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,40,159,10
-    LTEXT           "Spot size:",IDC_STATIC,10,54,34,8
-    RTEXT           "99",IDC_AUTOCENSPOT,46,54,9,8
-    CONTROL         "",IDC_SPINACBSPOT,"msctls_updown32",UDS_ARROWKEYS,58,51,10,14
-    LTEXT           "Mag:",IDC_STATIC,86,54,18,8
-    RTEXT           "120000",IDC_STATACBMAG,106,54,25,8
-    CONTROL         "",IDC_SPINACBMAG,"msctls_updown32",UDS_ARROWKEYS,134,51,10,14
-    LTEXT           "Intensity:",IDC_STATIC,10,72,31,8
-    LTEXT           "65.47% C2",IDC_STATACBPCTC2,46,72,39,8
-    LTEXT           "Binning:",IDC_STATIC,10,91,27,8
-    RTEXT           "16",IDC_STATACBBINNING,42,91,9,8
-    CONTROL         "",IDC_SPINACBBINNING,"msctls_updown32",UDS_ARROWKEYS,54,88,10,14
-    LTEXT           "Exposure:",IDC_STATIC,77,90,34,8
-    EDITTEXT        IDC_EDITACBEXPOSURE,113,87,30,14,ES_AUTOHSCROLL
-    LTEXT           "sec",IDC_STATIC,147,90,12,8
-    CONTROL         "Center by finding beam edges",IDC_RADIOUSEEDGE,"Button",BS_AUTORADIOBUTTON | WS_GROUP,26,116,114,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,40,143,10
+    LTEXT           "Spot size:",IDC_STATIC,9,54,31,8
+    RTEXT           "99",IDC_AUTOCENSPOT,42,54,9,8
+    CONTROL         "",IDC_SPINACBSPOT,"msctls_updown32",UDS_ARROWKEYS,52,51,9,14
+    LTEXT           "Mag:",IDC_STATIC,77,54,17,8
+    RTEXT           "120000",IDC_STATACBMAG,95,54,23,8
+    CONTROL         "",IDC_SPINACBMAG,"msctls_updown32",UDS_ARROWKEYS,120,51,9,14
+    LTEXT           "Intensity:",IDC_STATIC,9,72,28,8
+    LTEXT           "65.47% C2",IDC_STATACBPCTC2,42,72,35,8
+    LTEXT           "Binning:",IDC_STATIC,9,91,25,8
+    RTEXT           "16",IDC_STATACBBINNING,38,91,9,8
+    CONTROL         "",IDC_SPINACBBINNING,"msctls_updown32",UDS_ARROWKEYS,49,88,9,14
+    LTEXT           "Exposure:",IDC_STATIC,69,90,31,8
+    EDITTEXT        IDC_EDITACBEXPOSURE,102,87,27,14,ES_AUTOHSCROLL
+    LTEXT           "sec",IDC_STATIC,132,90,11,8
+    CONTROL         "Center by finding beam edges",IDC_RADIOUSEEDGE,"Button",BS_AUTORADIOBUTTON | WS_GROUP,24,116,103,10
     CONTROL         "Use centroid of image intensities",IDC_RADIOUSECENTROID,
-                    "Button",BS_AUTORADIOBUTTON,26,129,122,10
-    GROUPBOX        "Beam centering method",IDC_STATIC,22,106,130,36,WS_GROUP
-    CTEXT           "Directly set at this mag",IDC_STATSOURCE,7,149,161,8
-    DEFPUSHBUTTON   "Test Acquire",ID_TESTACQUIRE,24,165,60,14
-    DEFPUSHBUTTON   "Delete Settings",ID_DELETESETTINGS,91,165,60,14
-    DEFPUSHBUTTON   "OK",IDOK,29,187,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,96,187,50,14
-    PUSHBUTTON      "?",IDC_BUTHELP,163,189,11,10
-    LTEXT           "and spot size",IDC_STATIC,11,19,44,8
-    PUSHBUTTON      "Smaller",IDC_BUT_AC_MORE,96,69,32,14
-    PUSHBUTTON      "Bigger",IDC_BUT_AC_LESS,136,69,32,14
-    LTEXT           "Nanoprobe",IDC_STAT_NANOPROBE,10,63,36,8
+                    "Button",BS_AUTORADIOBUTTON,24,129,110,10
+    GROUPBOX        "Beam centering method",IDC_STATIC,20,106,117,36,WS_GROUP
+    CTEXT           "Directly set at this mag",IDC_STATSOURCE,7,149,145,8
+    DEFPUSHBUTTON   "Test Acquire",ID_TESTACQUIRE,22,165,54,14
+    DEFPUSHBUTTON   "Delete Settings",ID_DELETESETTINGS,82,165,54,14
+    DEFPUSHBUTTON   "OK",IDOK,26,187,45,14
+    PUSHBUTTON      "Cancel",IDCANCEL,86,187,45,14
+    PUSHBUTTON      "?",IDC_BUTHELP,146,189,10,10
+    LTEXT           "and spot size",IDC_STATIC,10,19,40,8
+    PUSHBUTTON      "Smaller",IDC_BUT_AC_MORE,86,69,29,14
+    PUSHBUTTON      "Bigger",IDC_BUT_AC_LESS,122,69,29,14
+    LTEXT           "Nanoprobe",IDC_STAT_NANOPROBE,9,63,33,8
 END
 
-IDD_READFILEDLG DIALOGEX 0, 0, 125, 48
+IDD_READFILEDLG DIALOGEX 0, 0, 113, 48
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_TOOLWINDOW
 CAPTION "Read from Current File"
-FONT 8, "MS Shell Dlg", 400, 0, 0x1
+FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,23,32,36,12
-    PUSHBUTTON      "Cancel",IDCANCEL,64,32,36,12
-    PUSHBUTTON      "?",IDC_BUTHELP,110,34,11,10
-    LTEXT           "Section number to read:",IDC_STATIC,4,5,81,8
-    EDITTEXT        IDC_EDITSECTION,87,2,33,14,ES_AUTOHSCROLL
-    PUSHBUTTON      "Read",IDC_BUTREADSEC,3,17,36,12
-    PUSHBUTTON      "Next",IDC_BUTNEXTSEC,44,17,36,12
-    PUSHBUTTON      "Previous",IDC_BUTPREVSEC,85,17,36,12
+    DEFPUSHBUTTON   "OK",IDOK,21,32,33,12
+    PUSHBUTTON      "Cancel",IDCANCEL,58,32,33,12
+    PUSHBUTTON      "?",IDC_BUTHELP,99,34,10,10
+    LTEXT           "Section number to read:",IDC_STATIC,4,5,73,8
+    EDITTEXT        IDC_EDITSECTION,78,2,30,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "Read",IDC_BUTREADSEC,3,17,33,12
+    PUSHBUTTON      "Next",IDC_BUTNEXTSEC,40,17,33,12
+    PUSHBUTTON      "Previous",IDC_BUTPREVSEC,77,17,33,12
 END
 
-IDD_DirectElectronDialog DIALOGEX 0, 0, 300, 185
+IDD_DirectElectronDialog DIALOGEX 0, 0, 270, 185
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_MINIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Direct Electron Camera Panel"
-FONT 8, "MS Shell Dlg", 400, 0, 0x1
+FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
-    GROUPBOX        "Gain/Attenuation",IDC_GainGroupBox,7,7,93,42
-    GROUPBOX        "Camera Attributes",IDC_CameraAttGroup,109,7,161,53
-    LTEXT           "Camera Temp(C):",IDC_STATIC,116,16,58,8
-    LTEXT           "BackPlate Temp(C):",IDC_STATIC,116,31,64,8
-    LTEXT           "Pressure:",IDC_STATIC,116,44,32,8
-    LTEXT           "0",IDC_CAMTEMP,183,15,33,8
-    LTEXT           "0",IDC_CAMBACKPLATETEMP,184,30,41,12
-    LTEXT           "0",IDC_CAMPRESSURE,153,44,42,12
-    COMBOBOX        IDC_AttenCombo,18,19,48,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    GROUPBOX        "Config Parameters",IDC_STATIC,7,88,248,53
-    LTEXT           "Inst Model: ",IDC_STATIC,14,99,39,8
-    LTEXT           "Head Serial: ",IDC_STATIC,14,112,42,8
-    LTEXT           "Shutter Close Delay(ms): ",IDC_STATIC,14,127,83,8
-    LTEXT           "Pre-Exposure Delay(ms): ",IDC_STATIC,136,99,83,8
-    LTEXT           "CCD Temp SetPoint(C):  ",IDC_STATIC,135,113,80,8
-    LTEXT           "Window Heater:  ",IDC_STATIC,136,127,57,8
-    LTEXT           "0",IDC_INST_MODEL,57,99,52,8
-    LTEXT           "0",IDC_HEAD_SERIAL,57,113,52,8
-    LTEXT           "0",IDC_Shutter_Delay,101,127,28,8
-    LTEXT           "0",IDC_PreExposureDelay,220,99,26,8
-    LTEXT           "0",IDC_CCDSetPoint,215,114,29,8
-    LTEXT           "0",IDC_WindowHeater,194,128,37,8
-    LTEXT           "0",IDC_TIME_STAMP,7,160,200,18
-    LTEXT           "Shutter Close Delay (ms):",IDC_STATIC,7,72,83,8
-    EDITTEXT        IDC_ShutterCloseEdit,94,68,50,14,ES_AUTOHSCROLL
-    PUSHBUTTON      "Set",IDC_ShutterSetButton,150,68,36,14
-    PUSHBUTTON      "Read Values",IDC_ReadPressure,193,68,70,14
+    GROUPBOX        "Gain/Attenuation",IDC_GainGroupBox,7,7,84,42
+    GROUPBOX        "Camera Attributes",IDC_CameraAttGroup,98,7,145,53
+    LTEXT           "Camera Temp(C):",IDC_STATIC,104,16,52,8
+    LTEXT           "BackPlate Temp(C):",IDC_STATIC,104,31,58,8
+    LTEXT           "Pressure:",IDC_STATIC,104,44,29,8
+    LTEXT           "0",IDC_CAMTEMP,164,15,30,8
+    LTEXT           "0",IDC_CAMBACKPLATETEMP,165,30,37,12
+    LTEXT           "0",IDC_CAMPRESSURE,137,44,38,12
+    COMBOBOX        IDC_AttenCombo,17,19,43,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "Config Parameters",IDC_STATIC,7,88,222,53
+    LTEXT           "Inst Model: ",IDC_STATIC,13,99,35,8
+    LTEXT           "Head Serial: ",IDC_STATIC,13,112,38,8
+    LTEXT           "Shutter Close Delay(ms): ",IDC_STATIC,13,127,75,8
+    LTEXT           "Pre-Exposure Delay(ms): ",IDC_STATIC,122,99,75,8
+    LTEXT           "CCD Temp SetPoint(C):  ",IDC_STATIC,121,113,72,8
+    LTEXT           "Window Heater:  ",IDC_STATIC,122,127,52,8
+    LTEXT           "0",IDC_INST_MODEL,52,99,47,8
+    LTEXT           "0",IDC_HEAD_SERIAL,52,113,47,8
+    LTEXT           "0",IDC_Shutter_Delay,91,127,26,8
+    LTEXT           "0",IDC_PreExposureDelay,197,99,24,8
+    LTEXT           "0",IDC_CCDSetPoint,193,114,26,8
+    LTEXT           "0",IDC_WindowHeater,174,128,34,8
+    LTEXT           "0",IDC_TIME_STAMP,7,160,179,18
+    LTEXT           "Shutter Close Delay (ms):",IDC_STATIC,7,72,75,8
+    EDITTEXT        IDC_ShutterCloseEdit,85,68,45,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "Set",IDC_ShutterSetButton,135,68,33,14
+    PUSHBUTTON      "Read Values",IDC_ReadPressure,173,68,63,14
 END
 
-IDD_TSRANGE DIALOGEX 0, 0, 187, 188
+IDD_TSRANGE DIALOGEX 0, 0, 169, 188
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Tilt Series Range Finder"
-FONT 8, "MS Shell Dlg", 400, 0, 0x1
+FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
-    CONTROL         "REGULAR mode",IDC_RADIOREGMODE,"Button",BS_AUTORADIOBUTTON | WS_GROUP,16,14,67,10
-    CONTROL         "LOW DOSE mode",IDC_RADIOTSRLOWDOSE,"Button",BS_AUTORADIOBUTTON,97,14,73,10
-    GROUPBOX        "Parameters for",IDC_STATIC,7,3,173,25,WS_GROUP
-    CONTROL         "Refine eucentricity",IDC_TSR_EUCENTRICITY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,40,76,10
+    CONTROL         "REGULAR mode",IDC_RADIOREGMODE,"Button",BS_AUTORADIOBUTTON | WS_GROUP,15,14,60,10
+    CONTROL         "LOW DOSE mode",IDC_RADIOTSRLOWDOSE,"Button",BS_AUTORADIOBUTTON,87,14,66,10
+    GROUPBOX        "Parameters for",IDC_STATIC,7,3,155,25,WS_GROUP
+    CONTROL         "Refine eucentricity",IDC_TSR_EUCENTRICITY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,40,69,10
     CONTROL         "Walk up (keeps alignment during series too)",IDC_TSR_WALKUP,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,52,161,10
-    CONTROL         "Autofocus",IDC_TSR_AUTOFOCUS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,64,48,10
-    GROUPBOX        "Actions before taking image series",IDC_STATIC,7,31,173,47
-    LTEXT           "Low",IDC_STATIC,12,93,14,8
-    EDITTEXT        IDC_EDIT_TSR_LOWANGLE,29,90,28,14,ES_AUTOHSCROLL
-    LTEXT           "High",IDC_STATIC,64,93,15,8
-    EDITTEXT        IDC_EDIT_TSR_HIGHANGLE,81,90,28,14,ES_AUTOHSCROLL
-    LTEXT           "Increment",IDC_STATIC,114,93,34,8
-    EDITTEXT        IDC_EDIT_TSR_INCANGLE,151,90,28,14,ES_AUTOHSCROLL
-    GROUPBOX        "Image series angles",IDC_STATIC,7,81,173,27
-    CONTROL         "Both",IDC_RADIO_TSR_BOTHDIR,"Button",BS_AUTORADIOBUTTON | WS_GROUP,16,121,30,10
-    CONTROL         "Minus only",IDC_RADIO_TSR_MINUSDIR,"Button",BS_AUTORADIOBUTTON,68,121,50,10
-    CONTROL         "Plus only",IDC_RADIO_TSR_PLUSDIR,"Button",BS_AUTORADIOBUTTON,123,121,45,10
-    GROUPBOX        "Directions to sample",IDC_STATIC,7,111,173,24,WS_GROUP
-    CONTROL         "Trial",IDC_RADIO_TSRTRIAL,"Button",BS_AUTORADIOBUTTON | WS_GROUP,15,148,42,10
-    CONTROL         "Record",IDC_RADIO_TSRRECORD,"Button",BS_AUTORADIOBUTTON,68,148,39,10
-    CONTROL         "Preview",IDC_RADIO_TSRPREVIEW,"Button",BS_AUTORADIOBUTTON,123,148,42,10
-    GROUPBOX        "Take image series with",IDC_STATIC,7,138,173,24,WS_GROUP
-    DEFPUSHBUTTON   "Acquire",IDOK,32,167,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,103,167,50,14
-    PUSHBUTTON      "?",IDC_BUTHELP,175,168,11,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,52,145,10
+    CONTROL         "Autofocus",IDC_TSR_AUTOFOCUS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,64,43,10
+    GROUPBOX        "Actions before taking image series",IDC_STATIC,7,31,155,47
+    LTEXT           "Low",IDC_STATIC,11,93,13,8
+    EDITTEXT        IDC_EDIT_TSR_LOWANGLE,26,90,26,14,ES_AUTOHSCROLL
+    LTEXT           "High",IDC_STATIC,58,93,14,8
+    EDITTEXT        IDC_EDIT_TSR_HIGHANGLE,73,90,26,14,ES_AUTOHSCROLL
+    LTEXT           "Increment",IDC_STATIC,103,93,31,8
+    EDITTEXT        IDC_EDIT_TSR_INCANGLE,136,90,26,14,ES_AUTOHSCROLL
+    GROUPBOX        "Image series angles",IDC_STATIC,7,81,155,27
+    CONTROL         "Both",IDC_RADIO_TSR_BOTHDIR,"Button",BS_AUTORADIOBUTTON | WS_GROUP,15,121,27,10
+    CONTROL         "Minus only",IDC_RADIO_TSR_MINUSDIR,"Button",BS_AUTORADIOBUTTON,61,121,45,10
+    CONTROL         "Plus only",IDC_RADIO_TSR_PLUSDIR,"Button",BS_AUTORADIOBUTTON,111,121,41,10
+    GROUPBOX        "Directions to sample",IDC_STATIC,7,111,155,24,WS_GROUP
+    CONTROL         "Trial",IDC_RADIO_TSRTRIAL,"Button",BS_AUTORADIOBUTTON | WS_GROUP,14,148,38,10
+    CONTROL         "Record",IDC_RADIO_TSRRECORD,"Button",BS_AUTORADIOBUTTON,61,148,35,10
+    CONTROL         "Preview",IDC_RADIO_TSRPREVIEW,"Button",BS_AUTORADIOBUTTON,111,148,38,10
+    GROUPBOX        "Take image series with",IDC_STATIC,7,138,155,24,WS_GROUP
+    DEFPUSHBUTTON   "Acquire",IDOK,29,167,45,14
+    PUSHBUTTON      "Cancel",IDCANCEL,93,167,45,14
+    PUSHBUTTON      "?",IDC_BUTHELP,157,168,10,10
 END
 
-IDD_TSSETANGLE DIALOGEX 0, 0, 203, 17
+IDD_TSSETANGLE DIALOGEX 0, 0, 183, 17
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_TOOLWINDOW
 CAPTION "Tilt Series Range Viewer"
-FONT 8, "MS Shell Dlg", 400, 0, 0x1
+FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
-    DEFPUSHBUTTON   "Close",IDOK,153,2,33,12
-    PUSHBUTTON      "Use as Angle Limit",IDC_BUTUSEANGLE,4,2,70,12
-    PUSHBUTTON      "?",IDC_BUTHELP,190,3,11,10
-    PUSHBUTTON      "Close && Keep Stack",IDC_BUT_CLOSE_KEEP,79,2,70,12
+    DEFPUSHBUTTON   "Close",IDOK,137,2,30,12
+    PUSHBUTTON      "Use as Angle Limit",IDC_BUTUSEANGLE,4,2,63,12
+    PUSHBUTTON      "?",IDC_BUTHELP,171,3,10,10
+    PUSHBUTTON      "Close && Keep Stack",IDC_BUT_CLOSE_KEEP,71,2,63,12
 END
 
-IDD_NAVFILETYPE DIALOGEX 0, 0, 201, 91
+IDD_NAVFILETYPE DIALOGEX 0, 0, 181, 91
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Properties of File to Open"
-FONT 8, "MS Shell Dlg", 400, 0, 0x1
+FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
-    CONTROL         "Single frame images",IDC_ROPEN_FOR_SINGLE,"Button",BS_AUTORADIOBUTTON | WS_GROUP,14,17,83,10
-    CONTROL         "Montaged images",IDC_ROPEN_FOR_MONTAGE,"Button",BS_AUTORADIOBUTTON,14,27,74,11
-    GROUPBOX        "Open file for",IDC_STATIC,7,7,187,34,WS_GROUP
-    DEFPUSHBUTTON   "OK",IDOK,32,70,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,120,70,50,14
-    CONTROL         "Fit montage to polygon",IDC_CHECK_FIT_POLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,44,91,10
-    PUSHBUTTON      "?",IDC_BUTHELP,189,75,11,10,NOT WS_VISIBLE
+    CONTROL         "Single frame images",IDC_ROPEN_FOR_SINGLE,"Button",BS_AUTORADIOBUTTON | WS_GROUP,13,17,75,10
+    CONTROL         "Montaged images",IDC_ROPEN_FOR_MONTAGE,"Button",BS_AUTORADIOBUTTON,13,27,67,11
+    GROUPBOX        "Open file for",IDC_STATIC,7,7,168,34,WS_GROUP
+    DEFPUSHBUTTON   "OK",IDOK,29,70,45,14
+    PUSHBUTTON      "Cancel",IDCANCEL,108,70,45,14
+    CONTROL         "Fit montage to polygon",IDC_CHECK_FIT_POLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,44,82,10
+    PUSHBUTTON      "?",IDC_BUTHELP,170,75,10,10,NOT WS_VISIBLE
     CONTROL         "Skip montage setup dialog when fitting in future",IDC_CHECK_SKIP_DLGS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,56,169,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,56,152,10
 END
 
-IDD_STATEDLG DIALOGEX 0, 0, 174, 115
+IDD_STATEDLG DIALOGEX 0, 0, 157, 115
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
 CAPTION "Imaging States"
-FONT 8, "MS Shell Dlg", 400, 0, 0x1
+FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
-    LISTBOX         IDC_LIST_STATES,3,69,168,42,LBS_USETABSTOPS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "Add Current State",IDC_BUT_ADDCURSTATE,4,3,80,10
-    PUSHBUTTON      "Add Nav Item State",IDC_BUT_ADDNAVSTATE,91,3,80,10
-    PUSHBUTTON      "Delete",IDC_BUT_DELSTATE,4,17,30,10
-    PUSHBUTTON      "Imaging",IDC_BUT_SETIMSTATE,37,31,35,10
-    PUSHBUTTON      "Map Acquire",IDC_BUT_SETMAPSTATE,76,31,49,10
-    PUSHBUTTON      "Restore Prior State",IDC_BUT_RESTORESTATE,4,44,80,10
-    PUSHBUTTON      "Forget Prior State",IDC_BUT_FORGETSTATE,91,44,80,10
-    LTEXT           "Name:",IDC_STATIC,73,17,23,8
-    EDITTEXT        IDC_EDIT_STATENAME,96,16,75,12,ES_AUTOHSCROLL
-    LTEXT           "Cam  Mag  Sp   C2    Exp  Bin  Frame   Name",IDC_STAT_TITLELINE,7,59,149,8
-    PUSHBUTTON      "?",IDC_BUTHELP,160,57,11,10
-    PUSHBUTTON      "Scheduled",IDC_BUT_SETSCHEDSTATE,129,31,42,10
-    LTEXT           "Set state:",IDC_STATIC,3,31,33,8
-    PUSHBUTTON      "Update",IDC_BUT_UPDATE_STATE,38,17,30,10
+    LISTBOX         IDC_LIST_STATES,3,69,151,42,LBS_USETABSTOPS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Add Current State",IDC_BUT_ADDCURSTATE,4,3,72,10
+    PUSHBUTTON      "Add Nav Item State",IDC_BUT_ADDNAVSTATE,82,3,72,10
+    PUSHBUTTON      "Delete",IDC_BUT_DELSTATE,4,17,27,10
+    PUSHBUTTON      "Imaging",IDC_BUT_SETIMSTATE,34,31,32,10
+    PUSHBUTTON      "Map Acquire",IDC_BUT_SETMAPSTATE,69,31,44,10
+    PUSHBUTTON      "Restore Prior State",IDC_BUT_RESTORESTATE,4,44,72,10
+    PUSHBUTTON      "Forget Prior State",IDC_BUT_FORGETSTATE,82,44,72,10
+    LTEXT           "Name:",IDC_STATIC,66,17,21,8
+    EDITTEXT        IDC_EDIT_STATENAME,86,16,68,12,ES_AUTOHSCROLL
+    LTEXT           "Cam  Mag  Sp   C2    Exp  Bin  Frame   Name",IDC_STAT_TITLELINE,7,59,134,8
+    PUSHBUTTON      "?",IDC_BUTHELP,144,57,10,10
+    PUSHBUTTON      "Scheduled",IDC_BUT_SETSCHEDSTATE,116,31,38,10
+    LTEXT           "Set state:",IDC_STATIC,3,31,30,8
+    PUSHBUTTON      "Update",IDC_BUT_UPDATE_STATE,35,17,27,10
 END
 
-IDD_NAVROTALIGN DIALOGEX 0, 0, 183, 64
-STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+IDD_NAVROTALIGN DIALOGEX 0, 0, 166, 65
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_TOOLWINDOW
 CAPTION "Align with Rotation"
-FONT 8, "MS Shell Dlg", 400, 0, 0x1
+FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
-    DEFPUSHBUTTON   "Transform",IDC_BUT_TRANSFORM,25,48,50,12
-    PUSHBUTTON      "Cancel",IDCANCEL,93,48,50,12
-    PUSHBUTTON      "?",IDC_BUTHELP,167,50,11,10
+    DEFPUSHBUTTON   "Transform",IDC_BUT_TRANSFORM,23,48,45,12
+    PUSHBUTTON      "Cancel",IDCANCEL,84,48,45,12
+    PUSHBUTTON      "?",IDC_BUTHELP,151,50,10,10
     CONTROL         "Search angles over range of ",IDC_CHECK_SEARCH_RANGE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,18,111,10
-    PUSHBUTTON      "Align to Map",IDC_BUT_ALIGN_TO_MAP,6,32,61,12
-    LTEXT           "Starting angle to rotate by",IDC_STATIC,6,3,87,8
-    EDITTEXT        IDC_EDIT_CENTER_ANGLE,96,2,32,12,ES_AUTOHSCROLL
-    LTEXT           "degrees",IDC_STATIC,130,4,27,8
-    LTEXT           "degrees",IDC_STATIC,151,19,27,8
-    EDITTEXT        IDC_EDIT_SEARCH_RANGE,116,17,32,12,ES_AUTOHSCROLL
-    PUSHBUTTON      "Apply Image Shift on Scope",IDC_BUT_APPLY_IS,78,32,98,12
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,18,100,10
+    PUSHBUTTON      "Align to Map",IDC_BUT_ALIGN_TO_MAP,6,32,55,12
+    LTEXT           "Starting angle to rotate by",IDC_STATIC,6,3,78,8
+    EDITTEXT        IDC_EDIT_CENTER_ANGLE,86,2,29,12,ES_AUTOHSCROLL
+    LTEXT           "degrees",IDC_STATIC,117,4,25,8
+    LTEXT           "degrees",IDC_STATIC,136,19,25,8
+    EDITTEXT        IDC_EDIT_SEARCH_RANGE,104,17,29,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "Apply Image Shift on Scope",IDC_BUT_APPLY_IS,70,32,88,12
 END
 
-IDD_TSVARIATIONS DIALOGEX 0, 0, 178, 287
+IDD_TSVARIATIONS DIALOGEX 0, 0, 161, 287
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
 CAPTION "Tilt Series Scheduled Changes"
-FONT 8, "MS Shell Dlg", 400, 0, 0x1
+FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
-    LTEXT           "Tilt angle",IDC_STATIC,7,7,31,8
-    EDITTEXT        IDC_EDIT_TSV_ANGLE,42,5,40,14,ES_AUTOHSCROLL
-    LTEXT           "Value",IDC_STATIC,93,7,19,8
-    EDITTEXT        IDC_EDIT_TSV_VALUE,116,5,40,14,ES_AUTOHSCROLL
+    LTEXT           "Tilt angle",IDC_STATIC,7,7,28,8
+    EDITTEXT        IDC_EDIT_TSV_ANGLE,38,5,36,14,ES_AUTOHSCROLL
+    LTEXT           "Value",IDC_STATIC,84,7,18,8
+    EDITTEXT        IDC_EDIT_TSV_VALUE,104,5,36,14,ES_AUTOHSCROLL
     CONTROL         "Change at both plus and minus angles",IDC_CHECK_TSV_PLUS_MINUS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,22,141,10
-    CONTROL         "Exposure time",IDC_TSV_EXPOSURE,"Button",BS_AUTORADIOBUTTON | WS_GROUP,9,43,62,10
-    CONTROL         "Drift settling",IDC_TSV_DRIFT,"Button",BS_AUTORADIOBUTTON,9,54,55,10
-    CONTROL         "Defocus target",IDC_TSV_DEFOCUS,"Button",BS_AUTORADIOBUTTON,9,65,63,10
-    CONTROL         "Energy loss",IDC_TSV_ENERGY,"Button",BS_AUTORADIOBUTTON,9,76,53,10
-    CONTROL         "Slit width",IDC_TSV_SLIT_WIDTH,"Button",BS_AUTORADIOBUTTON,9,87,46,10
-    CONTROL         "Frame time",IDC_TSV_FRAME_TIME,"Button",BS_AUTORADIOBUTTON,9,98,54,10
-    GROUPBOX        "Set",IDC_STATIC,3,34,73,77,WS_GROUP
-    CONTROL         "Use fixed value",IDC_TSV_FIXED_VALUE,"Button",BS_AUTORADIOBUTTON | WS_GROUP,96,43,65,10
-    CONTROL         "Change linearly",IDC_TSV_LINEAR_CHANGE,"Button",BS_AUTORADIOBUTTON,96,56,66,10
-    GROUPBOX        "Above angle",IDC_STATIC,91,34,80,39,WS_GROUP
-    PUSHBUTTON      "Add Item",IDC_BUT_TSV_ADD_ITEM,3,130,44,14
-    PUSHBUTTON      "Remove",IDC_BUT_TSV_REMOVE,3,152,44,14
-    LISTBOX         IDC_LIST_TSV_TABLE,3,190,171,75,LBS_USETABSTOPS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
-    DEFPUSHBUTTON   "OK",IDOK,31,269,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,97,269,50,14
-    PUSHBUTTON      "?",IDC_BUTHELP,163,273,11,10
-    PUSHBUTTON      "Add Series",IDC_BUT_TSV_ADD_SERIES,93,167,45,14
-    LTEXT           "Step factor",IDC_STATIC,63,130,37,8
-    EDITTEXT        IDC_EDIT_TSV_SERIES_STEP,104,128,27,12,ES_AUTOHSCROLL
-    LTEXT           "Use cosine to the 1/1",IDC_STAT_SERIES_POWER,63,142,70,8
-    CONTROL         "",IDC_SPIN_TSV_SERIES_POWER,"msctls_updown32",UDS_ARROWKEYS,135,139,10,14
-    LTEXT           "power",IDC_STATIC,148,142,22,8
-    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | SS_SUNKEN,3,115,171,1
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,22,127,10
+    CONTROL         "Exposure time",IDC_TSV_EXPOSURE,"Button",BS_AUTORADIOBUTTON | WS_GROUP,9,43,56,10
+    CONTROL         "Drift settling",IDC_TSV_DRIFT,"Button",BS_AUTORADIOBUTTON,9,54,50,10
+    CONTROL         "Defocus target",IDC_TSV_DEFOCUS,"Button",BS_AUTORADIOBUTTON,9,65,57,10
+    CONTROL         "Energy loss",IDC_TSV_ENERGY,"Button",BS_AUTORADIOBUTTON,9,76,48,10
+    CONTROL         "Slit width",IDC_TSV_SLIT_WIDTH,"Button",BS_AUTORADIOBUTTON,9,87,42,10
+    CONTROL         "Frame time",IDC_TSV_FRAME_TIME,"Button",BS_AUTORADIOBUTTON,9,98,49,10
+    GROUPBOX        "Set",IDC_STATIC,3,34,66,77,WS_GROUP
+    CONTROL         "Use fixed value",IDC_TSV_FIXED_VALUE,"Button",BS_AUTORADIOBUTTON | WS_GROUP,86,43,59,10
+    CONTROL         "Change linearly",IDC_TSV_LINEAR_CHANGE,"Button",BS_AUTORADIOBUTTON,86,56,60,10
+    GROUPBOX        "Above angle",IDC_STATIC,82,34,72,39,WS_GROUP
+    PUSHBUTTON      "Add Item",IDC_BUT_TSV_ADD_ITEM,3,130,40,14
+    PUSHBUTTON      "Remove",IDC_BUT_TSV_REMOVE,3,152,40,14
+    LISTBOX         IDC_LIST_TSV_TABLE,3,190,154,75,LBS_USETABSTOPS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,28,269,45,14
+    PUSHBUTTON      "Cancel",IDCANCEL,87,269,45,14
+    PUSHBUTTON      "?",IDC_BUTHELP,146,273,10,10
+    PUSHBUTTON      "Add Series",IDC_BUT_TSV_ADD_SERIES,84,167,41,14
+    LTEXT           "Step factor",IDC_STATIC,57,130,34,8
+    EDITTEXT        IDC_EDIT_TSV_SERIES_STEP,94,128,25,12,ES_AUTOHSCROLL
+    LTEXT           "Use cosine to the 1/1",IDC_STAT_SERIES_POWER,57,142,63,8
+    CONTROL         "",IDC_SPIN_TSV_SERIES_POWER,"msctls_updown32",UDS_ARROWKEYS,121,139,9,14
+    LTEXT           "power",IDC_STATIC,133,142,20,8
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | SS_SUNKEN,3,115,154,1
     CONTROL         "Keep # of frames constant",IDC_CHECK_TSV_NFRAMES_FIXED,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,64,155,103,10
-    GROUPBOX        "Cosine exposure series",IDC_STATIC,57,118,117,68
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,58,155,93,10
+    GROUPBOX        "Cosine exposure series",IDC_STATIC,52,118,105,68
 END
 
-IDD_NCMIR4K DIALOGEX 0, 0, 355, 198
+IDD_NCMIR4K DIALOGEX 0, 0, 319, 198
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "NCMIR 4K CCD Camera"
-FONT 8, "MS Shell Dlg", 400, 0, 0x1
+FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
-    GROUPBOX        "Camera Attributes:",IDC_STATIC,7,14,117,56
-    GROUPBOX        "Config Parameters of Camera:",IDC_STATIC,131,14,164,122
-    GROUPBOX        "Chiller Information:",IDC_STATIC,7,73,119,27
-    COMBOBOX        IDC_AttenCombo4K,7,121,107,30,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Attenuation/Gain Setting:",IDC_STATIC,7,108,107,8
-    LTEXT           "Camera Temp(C):",IDC_STATIC,9,25,59,8
-    LTEXT           "0",IDC_CAMTEMP,77,25,33,8
-    LTEXT           "Cam BackPlate Temp(C):",IDC_STATIC,9,36,79,8
-    LTEXT           "0",IDC_CAMBACKPLATETEMP,95,36,23,8
-    LTEXT           "Pressure:",IDC_STATIC,10,50,36,8
-    LTEXT           "0",IDC_CAMPRESSURE,52,50,41,8
-    LTEXT           "Inst Model:",IDC_STATIC,135,29,41,8
-    LTEXT           "0",IDC_INST_MODEL,229,29,41,8
-    LTEXT           "Head Serial:",IDC_STATIC,135,42,41,8
-    LTEXT           "0",IDC_HEAD_SERIAL,229,42,41,8
-    LTEXT           "Shutter Close Delay(ms):",IDC_STATIC,135,55,87,8
-    LTEXT           "Pre-Exposure Delay(ms):",IDC_STATIC,135,68,86,8
-    LTEXT           "0",IDC_Shutter_Delay,229,55,41,8
-    LTEXT           "0",IDC_PreExposureDelay,229,67,41,8
-    LTEXT           "CCD Temp Set Point(C):",IDC_STATIC,136,81,81,8
-    LTEXT           "0",IDC_CCDSetPoint,229,81,41,8
-    LTEXT           "Voltage Suppy(V):",IDC_STATIC,136,94,79,8
-    LTEXT           "0",IDC_CamVoltage,229,94,41,8
-    LTEXT           "DSI Sample Time:",IDC_STATIC,136,107,75,8
-    LTEXT           "Window Heater:",IDC_STATIC,136,121,71,8
-    LTEXT           "0",IDC_DSI_Sample_Time,229,107,41,8
-    LTEXT           "0",IDC_WindowHeater,229,121,41,8
-    LTEXT           "0",IDC_TIME_STAMP,7,183,147,8
-    LTEXT           "UNBLANKED",IDC_BLANKSTATE,123,142,106,8
-    PUSHBUTTON      "Blank Beam",IDC_BlankButton,121,156,50,14
-    PUSHBUTTON      "UnBlank Beam",IDC_UnBlankButton,174,156,50,14,WS_DISABLED
-    LTEXT           "Flow Rate(Liters):",IDC_STATIC,13,84,66,8
-    LTEXT           "0",IDC_CHILLERFLOW,79,85,41,8
-    LTEXT           "WebPage:",IDC_STATIC,237,142,61,8
-    EDITTEXT        IDC_WEB_URL,237,156,96,14,ES_AUTOHSCROLL
+    GROUPBOX        "Camera Attributes:",IDC_STATIC,7,14,105,56
+    GROUPBOX        "Config Parameters of Camera:",IDC_STATIC,118,14,147,122
+    GROUPBOX        "Chiller Information:",IDC_STATIC,7,73,107,27
+    COMBOBOX        IDC_AttenCombo4K,7,121,96,30,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Attenuation/Gain Setting:",IDC_STATIC,7,108,96,8
+    LTEXT           "Camera Temp(C):",IDC_STATIC,9,25,53,8
+    LTEXT           "0",IDC_CAMTEMP,69,25,30,8
+    LTEXT           "Cam BackPlate Temp(C):",IDC_STATIC,9,36,71,8
+    LTEXT           "0",IDC_CAMBACKPLATETEMP,86,36,21,8
+    LTEXT           "Pressure:",IDC_STATIC,9,50,33,8
+    LTEXT           "0",IDC_CAMPRESSURE,47,50,37,8
+    LTEXT           "Inst Model:",IDC_STATIC,121,29,37,8
+    LTEXT           "0",IDC_INST_MODEL,205,29,37,8
+    LTEXT           "Head Serial:",IDC_STATIC,121,42,37,8
+    LTEXT           "0",IDC_HEAD_SERIAL,205,42,37,8
+    LTEXT           "Shutter Close Delay(ms):",IDC_STATIC,121,55,78,8
+    LTEXT           "Pre-Exposure Delay(ms):",IDC_STATIC,121,68,77,8
+    LTEXT           "0",IDC_Shutter_Delay,205,55,37,8
+    LTEXT           "0",IDC_PreExposureDelay,205,67,37,8
+    LTEXT           "CCD Temp Set Point(C):",IDC_STATIC,122,81,73,8
+    LTEXT           "0",IDC_CCDSetPoint,205,81,37,8
+    LTEXT           "Voltage Suppy(V):",IDC_STATIC,122,94,71,8
+    LTEXT           "0",IDC_CamVoltage,205,94,37,8
+    LTEXT           "DSI Sample Time:",IDC_STATIC,122,107,68,8
+    LTEXT           "Window Heater:",IDC_STATIC,122,121,64,8
+    LTEXT           "0",IDC_DSI_Sample_Time,205,107,37,8
+    LTEXT           "0",IDC_WindowHeater,205,121,37,8
+    LTEXT           "0",IDC_TIME_STAMP,7,183,132,8
+    LTEXT           "UNBLANKED",IDC_BLANKSTATE,111,142,95,8
+    PUSHBUTTON      "Blank Beam",IDC_BlankButton,109,156,45,14
+    PUSHBUTTON      "UnBlank Beam",IDC_UnBlankButton,156,156,45,14,WS_DISABLED
+    LTEXT           "Flow Rate(Liters):",IDC_STATIC,12,84,60,8
+    LTEXT           "0",IDC_CHILLERFLOW,71,85,37,8
+    LTEXT           "WebPage:",IDC_STATIC,213,142,55,8
+    EDITTEXT        IDC_WEB_URL,213,156,86,14,ES_AUTOHSCROLL
 END
 
-IDD_8KDialog DIALOGEX 0, 0, 464, 225
+IDD_8KDialog DIALOGEX 0, 0, 417, 225
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "8K Camera Dialog"
-FONT 8, "MS Shell Dlg", 400, 0, 0x1
+FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
-    GROUPBOX        "Camera Attributes:",IDC_STATIC,7,12,190,60
-    LTEXT           "Camera:",IDC_STATIC,14,27,28,8
-    LTEXT           "0",IDC_CAMTEMP_CAM1,54,27,26,8
-    LTEXT           "0",IDC_CAMTEMP_CAM3,125,27,30,8
-    LTEXT           "0",IDC_CAMTEMP_CAM2,87,27,32,8
-    LTEXT           "0",IDC_CAMTEMP_CAM4,161,27,28,8
-    LTEXT           "BackPlate:",IDC_STATIC,14,42,34,8
-    LTEXT           "0",IDC_CAMBACKPLATETEMP_CAM1,54,42,26,8
-    LTEXT           "0",IDC_CAMBACKPLATETEMP_CAM3,125,42,30,8
-    LTEXT           "0",IDC_CAMBACKPLATETEMP_CAM2,87,42,32,8
-    LTEXT           "0",IDC_CAMBACKPLATETEMP_CAM4,161,42,28,8
-    LTEXT           "Pressure:",IDC_STATIC,14,57,32,8
-    LTEXT           "0",IDC_CAMPRESSURE_CAM1,54,57,26,8
-    LTEXT           "0",IDC_CAMPRESSURE_CAM3,125,57,30,8
-    LTEXT           "0",IDC_CAMPRESSURE_CAM2,87,57,32,8
-    LTEXT           "0",IDC_CAMPRESSURE_CAM4,161,57,28,8
-    GROUPBOX        "Configuration Parameters of Camera",IDC_STATIC,239,11,210,132
-    LTEXT           "Inst Model:",IDC_STATIC,249,26,37,8
-    LTEXT           "0",IDC_INST_MODEL_CAM1,301,26,26,8
-    LTEXT           "0",IDC_INST_MODEL_CAM3,369,26,30,8
-    LTEXT           "0",IDC_INST_MODEL_CAM2,331,26,32,8
-    LTEXT           "0",IDC_INST_MODEL_CAM4,408,25,28,8
-    LTEXT           "Head:",IDC_STATIC,248,42,20,8
-    LTEXT           "0",IDC_HEAD_SERIAL_CAM1,301,42,26,8
-    LTEXT           "0",IDC_HEAD_SERIAL_CAM3,372,42,30,8
-    LTEXT           "0",IDC_HEAD_SERIAL_CAM2,334,42,32,8
-    LTEXT           "0",IDC_HEAD_SERIAL_CAM4,408,42,28,8
-    LTEXT           "Shutter Delay:",IDC_STATIC,247,57,48,8
-    LTEXT           "0",IDC_Shutter_Delay_CAM1,301,57,26,8
-    LTEXT           "0",IDC_Shutter_Delay_CAM3,372,57,30,8
-    LTEXT           "0",IDC_Shutter_Delay_CAM2,334,57,32,8
-    LTEXT           "0",IDC_Shutter_Delay_CAM4,408,57,28,8
-    LTEXT           "Pre-Exp Delay:",IDC_STATIC,247,71,49,8
-    LTEXT           "0",IDC_PreExposureDelay_CAM1,301,71,26,8
-    LTEXT           "0",IDC_PreExposureDelay_CAM3,372,71,30,8
-    LTEXT           "0",IDC_PreExposureDelay_CAM2,334,71,32,8
-    LTEXT           "0",IDC_PreExposureDelay_CAM4,408,71,28,8
-    LTEXT           "SetPoint(C):",IDC_STATIC,247,86,40,8
-    LTEXT           "0",IDC_CCDSetPoint_CAM1,302,86,26,8
-    LTEXT           "0",IDC_CCDSetPoint_CAM3,373,86,30,8
-    LTEXT           "0",IDC_CCDSetPoint_CAM2,335,86,32,8
-    LTEXT           "0",IDC_CCDSetPoint_CAM4,409,86,28,8
-    LTEXT           "Voltage(V):",IDC_STATIC,247,100,37,8
-    LTEXT           "0",IDC_CamVoltage_CAM1,302,100,26,8
-    LTEXT           "0",IDC_CamVoltage_CAM3,373,100,30,8
-    LTEXT           "0",IDC_CamVoltage_CAM2,335,100,32,8
-    LTEXT           "0",IDC_CamVoltage_CAM4,409,100,28,8
-    LTEXT           "DSI Time:",IDC_STATIC,247,115,32,8
-    LTEXT           "0",IDC_DSI_Sample_Time_CAM1,301,115,26,8
-    LTEXT           "0",IDC_DSI_Sample_Time_CAM3,372,115,30,8
-    LTEXT           "0",IDC_DSI_Sample_Time_CAM2,334,115,32,8
-    LTEXT           "0",IDC_DSI_Sample_Time_CAM4,408,115,28,8
-    LTEXT           "Heater:",IDC_STATIC,247,130,26,8
-    LTEXT           "0",IDC_WindowHeater_CAM1,302,130,26,8
-    LTEXT           "0",IDC_WindowHeater_CAM3,373,130,30,8
-    LTEXT           "0",IDC_WindowHeater_CAM2,335,130,32,8
-    LTEXT           "0",IDC_WindowHeater_CAM4,409,130,28,8
-    GROUPBOX        "FlatFields and Bias Images",IDC_STATIC,198,150,252,48
-    COMBOBOX        IDC_FocusCameraSelection,7,122,84,30,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    COMBOBOX        IDC_TrialSelectionCamera,99,122,86,30,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    COMBOBOX        IDC_AttenCombo,7,156,99,30,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "0",IDC_TIME_STAMP,7,208,198,10
-    EDITTEXT        IDC_EDIT_URL,7,94,162,14,ES_AUTOHSCROLL
-    LTEXT           "URL",IDC_STATIC,7,83,14,8
-    CONTROL         "Remap Images",IDC_RemapImages,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,106,76,90,10
-    LTEXT           "Camera Focus Setting:",IDC_STATIC,7,111,74,8
-    LTEXT           "Camera Trial Setting:",IDC_STATIC,103,111,68,8
-    LTEXT           "Attenuation/Gain Setting:",IDC_STATIC,10,145,99,8
-    PUSHBUTTON      "Run",IDC_RunFlat8K,209,166,58,14
-    EDITTEXT        IDC_CORR_SEC,275,166,47,14,ES_AUTOHSCROLL
-    CONTROL         "Corrected",IDC_CORRECTED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,366,168,48,10
-    LTEXT           "Status: Waiting for you to run the routine....",IDC_FLAT_STATUS,211,185,172,8
-    LTEXT           "sec.",IDC_STATIC,329,170,14,8
+    GROUPBOX        "Camera Attributes:",IDC_STATIC,7,12,171,60
+    LTEXT           "Camera:",IDC_STATIC,13,27,26,8
+    LTEXT           "0",IDC_CAMTEMP_CAM1,49,27,24,8
+    LTEXT           "0",IDC_CAMTEMP_CAM3,112,27,27,8
+    LTEXT           "0",IDC_CAMTEMP_CAM2,78,27,29,8
+    LTEXT           "0",IDC_CAMTEMP_CAM4,145,27,26,8
+    LTEXT           "BackPlate:",IDC_STATIC,13,42,31,8
+    LTEXT           "0",IDC_CAMBACKPLATETEMP_CAM1,49,42,24,8
+    LTEXT           "0",IDC_CAMBACKPLATETEMP_CAM3,112,42,27,8
+    LTEXT           "0",IDC_CAMBACKPLATETEMP_CAM2,78,42,29,8
+    LTEXT           "0",IDC_CAMBACKPLATETEMP_CAM4,145,42,26,8
+    LTEXT           "Pressure:",IDC_STATIC,13,57,29,8
+    LTEXT           "0",IDC_CAMPRESSURE_CAM1,49,57,24,8
+    LTEXT           "0",IDC_CAMPRESSURE_CAM3,112,57,27,8
+    LTEXT           "0",IDC_CAMPRESSURE_CAM2,78,57,29,8
+    LTEXT           "0",IDC_CAMPRESSURE_CAM4,145,57,26,8
+    GROUPBOX        "Configuration Parameters of Camera",IDC_STATIC,214,11,188,132
+    LTEXT           "Inst Model:",IDC_STATIC,223,26,34,8
+    LTEXT           "0",IDC_INST_MODEL_CAM1,270,26,24,8
+    LTEXT           "0",IDC_INST_MODEL_CAM3,331,26,27,8
+    LTEXT           "0",IDC_INST_MODEL_CAM2,297,26,29,8
+    LTEXT           "0",IDC_INST_MODEL_CAM4,366,25,26,8
+    LTEXT           "Head:",IDC_STATIC,222,42,18,8
+    LTEXT           "0",IDC_HEAD_SERIAL_CAM1,270,42,24,8
+    LTEXT           "0",IDC_HEAD_SERIAL_CAM3,333,42,27,8
+    LTEXT           "0",IDC_HEAD_SERIAL_CAM2,299,42,29,8
+    LTEXT           "0",IDC_HEAD_SERIAL_CAM4,366,42,26,8
+    LTEXT           "Shutter Delay:",IDC_STATIC,222,57,43,8
+    LTEXT           "0",IDC_Shutter_Delay_CAM1,270,57,24,8
+    LTEXT           "0",IDC_Shutter_Delay_CAM3,333,57,27,8
+    LTEXT           "0",IDC_Shutter_Delay_CAM2,299,57,29,8
+    LTEXT           "0",IDC_Shutter_Delay_CAM4,366,57,26,8
+    LTEXT           "Pre-Exp Delay:",IDC_STATIC,222,71,44,8
+    LTEXT           "0",IDC_PreExposureDelay_CAM1,270,71,24,8
+    LTEXT           "0",IDC_PreExposureDelay_CAM3,333,71,27,8
+    LTEXT           "0",IDC_PreExposureDelay_CAM2,299,71,29,8
+    LTEXT           "0",IDC_PreExposureDelay_CAM4,366,71,26,8
+    LTEXT           "SetPoint(C):",IDC_STATIC,222,86,36,8
+    LTEXT           "0",IDC_CCDSetPoint_CAM1,271,86,24,8
+    LTEXT           "0",IDC_CCDSetPoint_CAM3,334,86,27,8
+    LTEXT           "0",IDC_CCDSetPoint_CAM2,300,86,29,8
+    LTEXT           "0",IDC_CCDSetPoint_CAM4,367,86,26,8
+    LTEXT           "Voltage(V):",IDC_STATIC,222,100,34,8
+    LTEXT           "0",IDC_CamVoltage_CAM1,271,100,24,8
+    LTEXT           "0",IDC_CamVoltage_CAM3,334,100,27,8
+    LTEXT           "0",IDC_CamVoltage_CAM2,300,100,29,8
+    LTEXT           "0",IDC_CamVoltage_CAM4,367,100,26,8
+    LTEXT           "DSI Time:",IDC_STATIC,222,115,29,8
+    LTEXT           "0",IDC_DSI_Sample_Time_CAM1,270,115,24,8
+    LTEXT           "0",IDC_DSI_Sample_Time_CAM3,333,115,27,8
+    LTEXT           "0",IDC_DSI_Sample_Time_CAM2,299,115,29,8
+    LTEXT           "0",IDC_DSI_Sample_Time_CAM4,366,115,26,8
+    LTEXT           "Heater:",IDC_STATIC,222,130,24,8
+    LTEXT           "0",IDC_WindowHeater_CAM1,271,130,24,8
+    LTEXT           "0",IDC_WindowHeater_CAM3,334,130,27,8
+    LTEXT           "0",IDC_WindowHeater_CAM2,300,130,29,8
+    LTEXT           "0",IDC_WindowHeater_CAM4,367,130,26,8
+    GROUPBOX        "FlatFields and Bias Images",IDC_STATIC,178,150,226,48
+    COMBOBOX        IDC_FocusCameraSelection,7,122,76,30,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_TrialSelectionCamera,89,122,77,30,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_AttenCombo,7,156,89,30,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "0",IDC_TIME_STAMP,7,208,178,10
+    EDITTEXT        IDC_EDIT_URL,7,94,145,14,ES_AUTOHSCROLL
+    LTEXT           "URL",IDC_STATIC,7,83,13,8
+    CONTROL         "Remap Images",IDC_RemapImages,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,95,76,81,10
+    LTEXT           "Camera Focus Setting:",IDC_STATIC,7,111,67,8
+    LTEXT           "Camera Trial Setting:",IDC_STATIC,93,111,61,8
+    LTEXT           "Attenuation/Gain Setting:",IDC_STATIC,9,145,89,8
+    PUSHBUTTON      "Run",IDC_RunFlat8K,188,166,52,14
+    EDITTEXT        IDC_CORR_SEC,247,166,43,14,ES_AUTOHSCROLL
+    CONTROL         "Corrected",IDC_CORRECTED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,328,168,43,10
+    LTEXT           "Status: Waiting for you to run the routine....",IDC_FLAT_STATUS,189,185,154,8
+    LTEXT           "sec.",IDC_STATIC,295,170,13,8
 END
 
 IDD_STEMCONTROL DIALOGEX 0, 0, 119, 100
@@ -2537,229 +2542,229 @@ BEGIN
     COMBOBOX        ID_DE_autosaveF,51,78,63,35,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
-IDD_NAVBACKLASH DIALOGEX 0, 0, 257, 99
+IDD_NAVBACKLASH DIALOGEX 0, 0, 232, 99
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Navigator Backlash Settings"
-FONT 8, "MS Shell Dlg", 400, 0, 0x1
+FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
     CONTROL         "Do not run and do not ask about running adjustment routine",IDC_RBACKLASH_NONE,
-                    "Button",BS_AUTORADIOBUTTON | WS_GROUP,14,15,212,10
+                    "Button",BS_AUTORADIOBUTTON | WS_GROUP,13,15,190,10
     CONTROL         "Ask whether to run adjustment routine when necessary",IDC_RBACKLASH_ASK,
-                    "Button",BS_AUTORADIOBUTTON,14,26,197,10
+                    "Button",BS_AUTORADIOBUTTON,13,26,177,10
     CONTROL         "Run adjustment routine automatically when necessary",IDC_RBACKLASH_AUTO,
-                    "Button",BS_AUTORADIOBUTTON,14,37,193,10
-    GROUPBOX        "Whether to adjust new map positions for stage backlash",IDC_STATIC,7,3,243,50,WS_GROUP
-    DEFPUSHBUTTON   "OK",IDOK,67,78,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,139,78,50,14
-    LTEXT           "Minimum field of view for asking or running routine",IDC_STAT_MIN_FIELD,11,60,168,8
-    LTEXT           "microns",IDC_STAT_MICRONS,214,60,27,8
-    EDITTEXT        IDC_EDIT_MIN_FIELD,181,58,29,13,ES_AUTOHSCROLL
-    PUSHBUTTON      "?",IDC_BUTHELP,239,82,11,10,NOT WS_VISIBLE
+                    "Button",BS_AUTORADIOBUTTON,13,37,173,10
+    GROUPBOX        "Whether to adjust new map positions for stage backlash",IDC_STATIC,7,3,218,50,WS_GROUP
+    DEFPUSHBUTTON   "OK",IDOK,60,78,45,14
+    PUSHBUTTON      "Cancel",IDCANCEL,125,78,45,14
+    LTEXT           "Minimum field of view for asking or running routine",IDC_STAT_MIN_FIELD,10,60,151,8
+    LTEXT           "microns",IDC_STAT_MICRONS,192,60,25,8
+    EDITTEXT        IDC_EDIT_MIN_FIELD,162,58,26,13,ES_AUTOHSCROLL
+    PUSHBUTTON      "?",IDC_BUTHELP,214,82,10,10,NOT WS_VISIBLE
 END
 
-IDD_FALCON_FRAMES DIALOGEX 0, 0, 143, 287
+IDD_FALCON_FRAMES DIALOGEX 0, 0, 129, 287
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Frame Summing Selector"
-FONT 8, "MS Shell Dlg", 400, 0, 0x1
+FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,7,266,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,65,266,50,14
-    RTEXT           "Exposure time",IDC_STATIC,29,35,47,8
-    EDITTEXT        IDC_EDIT_EXPOSURE,79,32,43,14,ES_AUTOHSCROLL
-    LTEXT           "# of summed frames to save:",IDC_STATIC,9,84,99,8
-    RTEXT           "999",IDC_STAT_NUM_FRAMES,107,84,14,8
-    CONTROL         "",IDC_SPIN_NUM_FRAMES,"msctls_updown32",UDS_ARROWKEYS,124,81,10,14
-    RTEXT           "# to skip before start:",IDC_STAT_STARTLABEL,20,111,73,8
-    RTEXT           "99",IDC_STAT_SKIP_START,93,111,10,8
-    CONTROL         "",IDC_SPIN_SKIP_START,"msctls_updown32",UDS_ARROWKEYS,106,108,10,14
-    RTEXT           "Total saved in sums:",IDC_STATIC,16,128,69,8
-    RTEXT           "9999",IDC_STAT_TOTAL_SAVE,86,128,17,8
-    CONTROL         "",IDC_SPIN_TOTAL_SAVE,"msctls_updown32",UDS_ARROWKEYS,106,125,10,14
-    RTEXT           "# to skip after end:",IDC_STAT_ENDLABEL,29,145,64,8
-    RTEXT           "99",IDC_STAT_SKIP_END,93,145,10,8
-    CONTROL         "",IDC_SPIN_SKIP_AFTER,"msctls_updown32",UDS_ARROWKEYS,106,142,10,14
-    EDITTEXT        IDC_EDIT_READOUTS,14,178,113,62,ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_WANTRETURN
-    PUSHBUTTON      "?",IDC_BUTHELP,125,270,11,10
-    LTEXT           "# camera frames in each summed frame",IDC_STATIC,58,160,69,15
-    LTEXT           "# summed frames",IDC_STATIC,15,160,39,15
-    RTEXT           "Camera frame time",IDC_STAT_SUBFRAME_TIME,8,52,68,8
-    PUSHBUTTON      "Equalize",IDC_BUT_EQUALIZE,45,243,50,14
-    EDITTEXT        IDC_EDIT_SUBFRAME_TIME,79,49,43,14,ES_AUTOHSCROLL
-    GROUPBOX        "Number of camera frames",IDC_STATIC,7,98,129,164
-    LTEXT           "This dialog controls how to save variable-sized sums of the basic camera frames",IDC_STAT_EXPLANATION,11,5,121,26
-    LTEXT           "min: 0.125",IDC_STAT_MIN_FRAME_TIME,87,64,49,8
-    LTEXT           "max: 0.125",IDC_STAT_MAX_FRAME_TIME,86,72,50,8
-    LTEXT           "Summed frame time",IDC_STATIC,14,68,68,8
+    DEFPUSHBUTTON   "OK",IDOK,7,266,45,14
+    PUSHBUTTON      "Cancel",IDCANCEL,59,266,45,14
+    RTEXT           "Exposure time",IDC_STATIC,26,35,43,8
+    EDITTEXT        IDC_EDIT_EXPOSURE,71,32,39,14,ES_AUTOHSCROLL
+    LTEXT           "# of summed frames to save:",IDC_STATIC,9,84,89,8
+    RTEXT           "999",IDC_STAT_NUM_FRAMES,96,84,13,8
+    CONTROL         "",IDC_SPIN_NUM_FRAMES,"msctls_updown32",UDS_ARROWKEYS,111,81,9,14
+    RTEXT           "# to skip before start:",IDC_STAT_STARTLABEL,18,111,66,8
+    RTEXT           "99",IDC_STAT_SKIP_START,84,111,9,8
+    CONTROL         "",IDC_SPIN_SKIP_START,"msctls_updown32",UDS_ARROWKEYS,95,108,9,14
+    RTEXT           "Total saved in sums:",IDC_STATIC,15,128,62,8
+    RTEXT           "9999",IDC_STAT_TOTAL_SAVE,77,128,16,8
+    CONTROL         "",IDC_SPIN_TOTAL_SAVE,"msctls_updown32",UDS_ARROWKEYS,95,125,9,14
+    RTEXT           "# to skip after end:",IDC_STAT_ENDLABEL,26,145,58,8
+    RTEXT           "99",IDC_STAT_SKIP_END,84,145,9,8
+    CONTROL         "",IDC_SPIN_SKIP_AFTER,"msctls_updown32",UDS_ARROWKEYS,95,142,9,14
+    EDITTEXT        IDC_EDIT_READOUTS,13,178,102,62,ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_WANTRETURN
+    PUSHBUTTON      "?",IDC_BUTHELP,112,270,10,10
+    LTEXT           "# camera frames in each summed frame",IDC_STATIC,52,160,62,15
+    LTEXT           "# summed frames",IDC_STATIC,14,160,35,15
+    RTEXT           "Camera frame time",IDC_STAT_SUBFRAME_TIME,8,52,61,8
+    PUSHBUTTON      "Equalize",IDC_BUT_EQUALIZE,41,243,45,14
+    EDITTEXT        IDC_EDIT_SUBFRAME_TIME,71,49,39,14,ES_AUTOHSCROLL
+    GROUPBOX        "Number of camera frames",IDC_STATIC,7,98,116,164
+    LTEXT           "This dialog controls how to save variable-sized sums of the basic camera frames",IDC_STAT_EXPLANATION,10,5,109,26
+    LTEXT           "min: 0.125",IDC_STAT_MIN_FRAME_TIME,78,64,44,8
+    LTEXT           "max: 0.125",IDC_STAT_MAX_FRAME_TIME,77,72,45,8
+    LTEXT           "Summed frame time",IDC_STATIC,13,68,61,8
 END
 
-IDD_K2_SAVE_OPTIONS DIALOGEX 0, 0, 255, 357
+IDD_K2_SAVE_OPTIONS DIALOGEX 0, 0, 230, 357
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Frame File Options"
-FONT 8, "MS Shell Dlg", 400, 0, 0x1
+FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
-    CONTROL         "Use extension .mrcs",IDC_USE_EXTENSION_MRCS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,65,14,78,10
-    CONTROL         "MRC file",IDC_SAVE_MRC,"Button",BS_AUTORADIOBUTTON | WS_GROUP,15,14,43,10
-    CONTROL         "TIFF (LZW compression)",IDC_COMPRESSED_TIFF,"Button",BS_AUTORADIOBUTTON,15,25,97,10
-    CONTROL         "TIFF (ZIP compression)",IDC_TIFF_ZIP_COMPRESS,"Button",BS_AUTORADIOBUTTON,15,36,93,10
-    GROUPBOX        "File type",IDC_STAT_FILETYPE,7,3,138,46,WS_GROUP
-    CONTROL         "Save one frame per file",IDC_ONE_FRAME_PER_FILE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,52,94,10
+    CONTROL         "Use extension .mrcs",IDC_USE_EXTENSION_MRCS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,60,14,70,10
+    CONTROL         "MRC file",IDC_SAVE_MRC,"Button",BS_AUTORADIOBUTTON | WS_GROUP,14,14,39,10
+    CONTROL         "TIFF (LZW compression)",IDC_COMPRESSED_TIFF,"Button",BS_AUTORADIOBUTTON,14,25,87,10
+    CONTROL         "TIFF (ZIP compression)",IDC_TIFF_ZIP_COMPRESS,"Button",BS_AUTORADIOBUTTON,14,36,84,10
+    GROUPBOX        "File type",IDC_STAT_FILETYPE,7,3,124,46,WS_GROUP
+    CONTROL         "Save one frame per file",IDC_ONE_FRAME_PER_FILE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,52,85,10
     CONTROL         "Save mdoc file for each frame stack",IDC_FRAME_STACK_MDOC,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,65,134,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,65,120,10
     CONTROL         "Pack unnormalized data as 4-bit (Super-Res) or 4/8-bit (Counting)",IDC_PACK_RAW_FRAME,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,118,233,10
-    DEFPUSHBUTTON   "OK",IDOK,57,336,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,139,336,50,14
-    PUSHBUTTON      "?",IDC_BUTHELP,237,340,11,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,118,209,10
+    DEFPUSHBUTTON   "OK",IDOK,52,336,45,14
+    PUSHBUTTON      "Cancel",IDCANCEL,125,336,25,14
+    PUSHBUTTON      "?",IDC_BUTHELP,213,340,10,10
     CONTROL         "Save frames without rotation/flip to standard orientation",IDC_SKIP_ROTFLIP,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,157,200,10
-    CTEXT           "Components for Folder and File Names",IDC_STAT_COMPTITLE,40,174,174,8
-    CONTROL         "",IDC_TSS_LINE1,"Static",SS_BLACKFRAME | SS_SUNKEN,7,169,241,1
-    LTEXT           "Use component in name of:",IDC_STAT_USE_COMP,11,184,91,8
-    LTEXT           "Folder",IDC_STAT_FOLDER,11,193,22,8
-    LTEXT           "File",IDC_STAT_FILE,37,193,12,8
-    CONTROL         "",IDC_CHECK_ROOT_FOLDER,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,202,12,10
-    CONTROL         "",IDC_CHECK_SAVEFILE_FOLDER,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,214,12,10
-    CONTROL         "",IDC_CHECK_NAVLABEL_FOLDER,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,226,13,10
-    CONTROL         "Base name:",IDC_CHECK_ROOT_FILE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,37,202,55,10
-    EDITTEXT        IDC_EDIT_BASENAME,92,201,115,12,ES_AUTOHSCROLL
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,157,179,10
+    CTEXT           "Components for Folder and File Names",IDC_STAT_COMPTITLE,36,174,156,8
+    CONTROL         "",IDC_TSS_LINE1,"Static",SS_BLACKFRAME | SS_SUNKEN,7,169,216,1
+    LTEXT           "Use component in name of:",IDC_STAT_USE_COMP,10,184,82,8
+    LTEXT           "Folder",IDC_STAT_FOLDER,10,193,20,8
+    LTEXT           "File",IDC_STAT_FILE,34,193,11,8
+    CONTROL         "",IDC_CHECK_ROOT_FOLDER,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,202,11,10
+    CONTROL         "",IDC_CHECK_SAVEFILE_FOLDER,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,214,11,10
+    CONTROL         "",IDC_CHECK_NAVLABEL_FOLDER,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,226,12,10
+    CONTROL         "Base name:",IDC_CHECK_ROOT_FILE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,34,202,50,10
+    EDITTEXT        IDC_EDIT_BASENAME,83,201,103,12,ES_AUTOHSCROLL
     CONTROL         "File name of current open file (minus extension)",IDC_CHECK_SAVEFILE_FILE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,37,214,173,10
-    CONTROL         "Label of Navigator item",IDC_CHECK_NAVLABEL_FILE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,37,226,91,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,34,214,155,10
+    CONTROL         "Label of Navigator item",IDC_CHECK_NAVLABEL_FILE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,34,226,82,10
     CONTROL         "Sequential number starting from:",IDC_CHECK_NUMBER,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,37,238,125,10
-    CONTROL         "Month and day",IDC_CHECK_MONTHDAY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,37,262,64,10
-    CONTROL         "Hour, minute, second",IDC_CHECK_HOUR_MIN_SEC,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,37,274,86,10
-    LTEXT           "Format: Base-File-Label\\Base-File-Label-###-Mar06-10:15:20",IDC_STAT_EXAMPLE,10,299,222,8
-    LTEXT           "Folder will be created inside folder specified in Set Folder dialog,",IDC_STAT_MUST_EXIST,11,311,213,8
-    EDITTEXT        IDC_EDIT_START_NUMBER,162,237,34,12,ES_AUTOHSCROLL
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,34,238,112,10
+    CONTROL         "Month and day",IDC_CHECK_MONTHDAY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,34,262,58,10
+    CONTROL         "Hour, minute, second",IDC_CHECK_HOUR_MIN_SEC,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,34,274,77,10
+    LTEXT           "Format: Base-File-Label\\Base-File-Label-###-Mar06-10:15:20",IDC_STAT_EXAMPLE,9,299,199,8
+    LTEXT           "Folder will be created inside folder specified in Set Folder dialog,",IDC_STAT_MUST_EXIST,10,311,191,8
+    EDITTEXT        IDC_EDIT_START_NUMBER,145,237,31,12,ES_AUTOHSCROLL
     CONTROL         "Only when Acquiring at Items",IDC_CHECK_ONLY_ACQUIRE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,129,226,113,10
-    LTEXT           "but the folder specified in Set Folder dialog must exist",IDC_STAT_MUST_EXIST2,11,321,177,8
-    CONTROL         "Tilt angle",IDC_CHECK_TILT_ANGLE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,37,250,46,10
-    LTEXT           "Digits: 3",IDC_STAT_DIGITS,203,239,28,8
-    CONTROL         "",IDC_SPIN_DIGITS,"msctls_updown32",UDS_ARROWKEYS,232,236,10,14
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,116,226,102,10
+    LTEXT           "but the folder specified in Set Folder dialog must exist",IDC_STAT_MUST_EXIST2,10,321,159,8
+    CONTROL         "Tilt angle",IDC_CHECK_TILT_ANGLE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,34,250,42,10
+    LTEXT           "Digits: 3",IDC_STAT_DIGITS,182,239,26,8
+    CONTROL         "",IDC_SPIN_DIGITS,"msctls_updown32",UDS_ARROWKEYS,208,236,9,14
     CONTROL         "Pack unnormalized Counting mode data as 4-bit, not 8-bit",IDC_PACK_COUNTING_4BIT,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,29,131,204,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,26,131,183,10
     CONTROL         "Use non-standard mode 101 for 4-bit MRC files",IDC_USE_4BIT_MRC_MODE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,29,144,170,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,26,144,153,10
     CONTROL         "Save unnormalized frames even if Gain Normalized is selected",IDC_SAVE_UNNORMALIZED,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,79,219,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,79,197,10
     CONTROL         "Reduce normalized super-resolution frames by 2 with antialiasing",IDC_CHECK_REDUCE_SUPERRES,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,92,230,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,92,206,10
     CONTROL         "Save normalized data as 16-bit with 100 times scaling of sum",IDC_SAVE_TIMES_100,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,105,217,10
-    CTEXT           "Current settings will save",IDC_STAT_CURSET1,156,15,84,9
-    CTEXT           " TIF LZW stack, packed",IDC_STAT_CURSET2,145,25,103,8
-    CONTROL         "",IDC_TSS_LINE2,"Static",SS_BLACKFRAME | SS_SUNKEN,7,76,241,1
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,105,195,10
+    CTEXT           "Current settings will save",IDC_STAT_CURSET1,140,15,76,9
+    CTEXT           " TIF LZW stack, packed",IDC_STAT_CURSET2,130,25,93,8
+    CONTROL         "",IDC_TSS_LINE2,"Static",SS_BLACKFRAME | SS_SUNKEN,7,76,216,1
     CONTROL         "Numeric date (including year) and time at start of name",IDC_CHECK_DATE_PREFIX,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,37,286,190,10
 END
 
-IDD_STAGEMOVETOOL DIALOGEX 0, 0, 94, 106
+IDD_STAGEMOVETOOL DIALOGEX 0, 0, 86, 106
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Stage Move Tool"
-FONT 8, "MS Shell Dlg", 400, 0, 0x1
+FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
-    PUSHBUTTON      "?",IDC_BUTHELP,81,94,11,10
-    LTEXT           "-1200.02",IDC_STATSTAGEx,11,95,29,8,0,WS_EX_RIGHT
-    LTEXT           "-1220.02",IDC_STATSTAGEY,51,95,29,8,0,WS_EX_RIGHT
+    PUSHBUTTON      "?",IDC_BUTHELP,73,94,10,10
+    LTEXT           "-1200.02",IDC_STATSTAGEx,11,86,29,8,0,WS_EX_RIGHT
+    LTEXT           "-1220.02",IDC_STATSTAGEY,51,86,29,8,0,WS_EX_RIGHT
     LTEXT           "X:",IDC_STATIC,2,95,8,8
-    LTEXT           "Y:",IDC_STATIC,43,95,8,8
-    CONTROL         "Take Trial after move",IDC_IMAGE_AFTER_MOVE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,2,84,90,10
+    LTEXT           "Y:",IDC_STATIC,39,95,8,8
+    CONTROL         "Take Trial after move",IDC_IMAGE_AFTER_MOVE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,2,84,81,10
 END
 
-IDD_FRAMEALIGN DIALOGEX 0, 0, 251, 475
+IDD_FRAMEALIGN DIALOGEX 0, 0, 226, 475
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Frame Alignment Parameters"
-FONT 8, "MS Shell Dlg", 400, 0, 0x1
+FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
-    CONTROL         "In DigitalMicrograph",IDC_RALIGN_IN_DM,"Button",BS_AUTORADIOBUTTON | WS_GROUP,10,14,81,10
-    CONTROL         "In SerialEMCCD plugin",IDC_USE_FRAME_ALIGN,"Button",BS_AUTORADIOBUTTON,94,14,89,10
-    CONTROL         "With IMOD",IDC_RWITH_IMOD,"Button",BS_AUTORADIOBUTTON,186,14,51,10
-    GROUPBOX        "Where to align frames",IDC_STAT_WHERE_ALIGN,7,3,234,27,WS_GROUP
-    CONTROL         "Fit pairwise shifts of ",IDC_RPAIRWISE_NUM,"Button",BS_AUTORADIOBUTTON | WS_GROUP,54,206,81,10
+    CONTROL         "In DigitalMicrograph",IDC_RALIGN_IN_DM,"Button",BS_AUTORADIOBUTTON | WS_GROUP,9,14,73,10
+    CONTROL         "In SerialEMCCD plugin",IDC_USE_FRAME_ALIGN,"Button",BS_AUTORADIOBUTTON,85,14,80,10
+    CONTROL         "With IMOD",IDC_RWITH_IMOD,"Button",BS_AUTORADIOBUTTON,167,14,46,10
+    GROUPBOX        "Where to align frames",IDC_STAT_WHERE_ALIGN,7,3,210,27,WS_GROUP
+    CONTROL         "Fit pairwise shifts of ",IDC_RPAIRWISE_NUM,"Button",BS_AUTORADIOBUTTON | WS_GROUP,49,206,73,10
     CONTROL         "Fit pairwise shifts of HALF the frames",IDC_RPAIRWISE_HALF,
-                    "Button",BS_AUTORADIOBUTTON,54,217,138,10
+                    "Button",BS_AUTORADIOBUTTON,49,217,124,10
     CONTROL         "Fit pairwise shifts of ALL frames",IDC_RPAIRWISE_ALL,
-                    "Button",BS_AUTORADIOBUTTON,54,228,121,10
-    CONTROL         "Align to cumulative reference",IDC_RACCUM_REF,"Button",BS_AUTORADIOBUTTON,54,239,111,10
-    GROUPBOX        "Alignment strategy",IDC_STAT_ALIGN_METHOD,49,196,148,56,WS_GROUP
-    CONTROL         "By",IDC_RALIBIN_BY_FAC,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,72,258,23,10
-    CONTROL         "To about",IDC_RBIN_TO_SIZE,"Button",BS_AUTORADIOBUTTON,122,258,43,10
-    LTEXT           "Alignment binning:",IDC_STAT_ALIBIN,8,259,62,8
-    DEFPUSHBUTTON   "OK",IDOK,47,455,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,154,455,50,14
-    CONTROL         "",IDC_SPIN_PAIRWISE_NUM,"msctls_updown32",UDS_ARROWKEYS,149,203,10,14
-    RTEXT           "99",IDC_STAT_PAIRWISE_NUM,137,206,9,8
-    LTEXT           "frames",IDC_STAT_FRAME_LABEL,163,206,24,8
-    LTEXT           "Filter cutoff",IDC_STAT_CUTOFF_LABEL,8,275,38,8
-    EDITTEXT        IDC_EDIT_CUTOFF,51,273,40,12,ES_AUTOHSCROLL
-    RTEXT           "  4",IDC_STAT_ALIGN_BIN,92,259,10,8,NOT WS_GROUP
-    CONTROL         "",IDC_SPIN_ALIGN_BIN,"msctls_updown32",UDS_ARROWKEYS,106,256,10,14
+                    "Button",BS_AUTORADIOBUTTON,49,228,109,10
+    CONTROL         "Align to cumulative reference",IDC_RACCUM_REF,"Button",BS_AUTORADIOBUTTON,49,239,100,10
+    GROUPBOX        "Alignment strategy",IDC_STAT_ALIGN_METHOD,44,196,133,56,WS_GROUP
+    CONTROL         "By",IDC_RALIBIN_BY_FAC,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,65,258,21,10
+    CONTROL         "To about",IDC_RBIN_TO_SIZE,"Button",BS_AUTORADIOBUTTON,110,258,39,10
+    LTEXT           "Alignment binning:",IDC_STAT_ALIBIN,8,259,56,8
+    DEFPUSHBUTTON   "OK",IDOK,43,455,45,14
+    PUSHBUTTON      "Cancel",IDCANCEL,138,455,45,14
+    CONTROL         "",IDC_SPIN_PAIRWISE_NUM,"msctls_updown32",UDS_ARROWKEYS,134,203,9,14
+    RTEXT           "99",IDC_STAT_PAIRWISE_NUM,123,206,9,8
+    LTEXT           "frames",IDC_STAT_FRAME_LABEL,146,206,22,8
+    LTEXT           "Filter cutoff",IDC_STAT_CUTOFF_LABEL,8,275,35,8
+    EDITTEXT        IDC_EDIT_CUTOFF,46,273,36,12,ES_AUTOHSCROLL
+    RTEXT           "  4",IDC_STAT_ALIGN_BIN,83,259,9,8,NOT WS_GROUP
+    CONTROL         "",IDC_SPIN_ALIGN_BIN,"msctls_updown32",UDS_ARROWKEYS,95,256,9,14
     CONTROL         "Refine alignment with up to",IDC_REFINE_ALIGNMENT,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,318,106,10
-    CONTROL         "",IDC_SPIN_REFINE_ITER,"msctls_updown32",UDS_ARROWKEYS,124,316,10,14
-    RTEXT           "10",IDC_STAT_REFINE_ITER,112,319,9,8
-    LTEXT           "iterations",IDC_STAT_ITER_LABEL,137,319,31,8
-    CONTROL         "Group frames by ",IDC_GROUP_FRAMES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,304,70,10
-    RTEXT           "5",IDC_STAT_GROUP_SIZE,77,305,8,8
-    CONTROL         "",IDC_SPIN_GROUP_SIZE,"msctls_updown32",UDS_ARROWKEYS,88,302,10,14
-    LTEXT           "(Requires at least 8 frames)",IDC_STAT_GROUP_NEEDS,106,305,93,8
-    CONTROL         "Smooth shifts if at least ",IDC_SMOOTH_SHIFTS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,333,95,10
-    LTEXT           "15",IDC_STAT_SMOOTH_CRIT,101,334,9,8
-    CONTROL         "",IDC_SPIN_SMOOTH_CRIT,"msctls_updown32",UDS_ARROWKEYS,113,331,10,14
-    LTEXT           "frames",IDC_STAT_SMOOTH_LABEL,126,334,24,8
-    PUSHBUTTON      "?",IDC_BUTHELP,233,459,11,10
-    CONTROL         "Use the GPU",IDC_USE_GPU,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,49,56,10
-    CONTROL         "Refine in groups",IDC_REFINE_GROUPS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,369,69,10
-    LTEXT           "Filter cutoff for refining",IDC_STAT_REFINE_CUTOFF,102,369,76,8
-    EDITTEXT        IDC_EDIT_REFINE_CUTOFF,181,368,28,12,ES_AUTOHSCROLL
-    LTEXT           "Maximum shift between frames",IDC_STAT_MAX_SHIFT,8,289,104,8
-    EDITTEXT        IDC_EDIT_MAX_SHIFT,116,287,40,12,ES_AUTOHSCROLL
-    LTEXT           "unbinned pixels",IDC_STAT_PIXEL_LABEL,160,289,51,8
-    CONTROL         "Truncate values above",IDC_TRUNCATE_ABOVE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,182,90,10
-    EDITTEXT        IDC_EDIT_TRUNCATION,100,181,40,12,ES_AUTOHSCROLL
-    LTEXT           "electrons",IDC_STAT_COUNT_LABEL,144,183,31,8
-    LTEXT           "Other filter cutoffs",IDC_STAT_OTHER_CUTS,8,403,60,8
-    EDITTEXT        IDC_EDIT_CUTOFF2,72,401,28,12,ES_AUTOHSCROLL
-    EDITTEXT        IDC_EDIT_CUTOFF3,105,401,28,12,ES_AUTOHSCROLL
-    CONTROL         "Use hybrid shifts",IDC_HYBRID_SHIFTS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,151,402,70,10
-    EDITTEXT        IDC_EDIT_SIGMA_RATIO,130,417,29,12,ES_AUTOHSCROLL
-    LTEXT           "Ratio of falloff sigma to filter cutoffs",IDC_STAT_SIGMA_RATIO,8,419,118,8
-    LTEXT           "Stop refining when changes are below ",IDC_STAT_STOP_ITER,8,386,129,8
-    EDITTEXT        IDC_EDIT_STOP_ITER,138,384,34,12,ES_AUTOHSCROLL
-    LTEXT           "unbinned pixels",IDC_STAT_STOP_LABEL,177,386,51,8
-    COMBOBOX        IDC_COMBOFILTER,114,35,75,80,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Filter to use:",IDC_STAT_FILTER,67,35,43,12,SS_CENTERIMAGE
-    PUSHBUTTON      "New Parameter Set",IDC_BUT_NEW_PARAMS,7,104,71,14
-    LISTBOX         IDC_LIST_SET_NAMES,114,49,130,68,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Parameter set name:",IDC_STAT_PARAM_NAME,42,125,71,8
-    EDITTEXT        IDC_EDIT_NAME,114,122,130,14,ES_AUTOHSCROLL
-    LTEXT           "More parameters",IDC_STAT_MORE_PARAMS,22,360,58,8
-    PUSHBUTTON      "-",IDC_BUTMORE,9,361,10,7
-    PUSHBUTTON      "Delete",IDC_BUT_DELETE_SET,81,104,29,14
-    PUSHBUTTON      "Set Folder for Align Com Files",IDC_BUT_SET_FOLDER,7,74,103,14
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,318,95,10
+    CONTROL         "",IDC_SPIN_REFINE_ITER,"msctls_updown32",UDS_ARROWKEYS,111,316,9,14
+    RTEXT           "10",IDC_STAT_REFINE_ITER,101,319,9,8
+    LTEXT           "iterations",IDC_STAT_ITER_LABEL,123,319,28,8
+    CONTROL         "Group frames by ",IDC_GROUP_FRAMES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,304,63,10
+    RTEXT           "5",IDC_STAT_GROUP_SIZE,69,305,8,8
+    CONTROL         "",IDC_SPIN_GROUP_SIZE,"msctls_updown32",UDS_ARROWKEYS,79,302,9,14
+    LTEXT           "(Requires at least 8 frames)",IDC_STAT_GROUP_NEEDS,95,305,84,8
+    CONTROL         "Smooth shifts if at least ",IDC_SMOOTH_SHIFTS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,333,86,10
+    LTEXT           "15",IDC_STAT_SMOOTH_CRIT,91,334,9,8
+    CONTROL         "",IDC_SPIN_SMOOTH_CRIT,"msctls_updown32",UDS_ARROWKEYS,102,331,9,14
+    LTEXT           "frames",IDC_STAT_SMOOTH_LABEL,113,334,22,8
+    PUSHBUTTON      "?",IDC_BUTHELP,209,459,10,10
+    CONTROL         "Use the GPU",IDC_USE_GPU,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,49,51,10
+    CONTROL         "Refine in groups",IDC_REFINE_GROUPS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,369,62,10
+    LTEXT           "Filter cutoff for refining",IDC_STAT_REFINE_CUTOFF,92,369,69,8
+    EDITTEXT        IDC_EDIT_REFINE_CUTOFF,162,368,26,12,ES_AUTOHSCROLL
+    LTEXT           "Maximum shift between frames",IDC_STAT_MAX_SHIFT,8,289,94,8
+    EDITTEXT        IDC_EDIT_MAX_SHIFT,104,287,36,12,ES_AUTOHSCROLL
+    LTEXT           "unbinned pixels",IDC_STAT_PIXEL_LABEL,144,289,46,8
+    CONTROL         "Truncate values above",IDC_TRUNCATE_ABOVE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,182,81,10
+    EDITTEXT        IDC_EDIT_TRUNCATION,90,181,36,12,ES_AUTOHSCROLL
+    LTEXT           "electrons",IDC_STAT_COUNT_LABEL,129,183,28,8
+    LTEXT           "Other filter cutoffs",IDC_STAT_OTHER_CUTS,8,403,54,8
+    EDITTEXT        IDC_EDIT_CUTOFF2,65,401,26,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_CUTOFF3,94,401,26,12,ES_AUTOHSCROLL
+    CONTROL         "Use hybrid shifts",IDC_HYBRID_SHIFTS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,136,402,63,10
+    EDITTEXT        IDC_EDIT_SIGMA_RATIO,117,417,26,12,ES_AUTOHSCROLL
+    LTEXT           "Ratio of falloff sigma to filter cutoffs",IDC_STAT_SIGMA_RATIO,8,419,106,8
+    LTEXT           "Stop refining when changes are below ",IDC_STAT_STOP_ITER,8,386,116,8
+    EDITTEXT        IDC_EDIT_STOP_ITER,124,384,31,12,ES_AUTOHSCROLL
+    LTEXT           "unbinned pixels",IDC_STAT_STOP_LABEL,159,386,46,8
+    COMBOBOX        IDC_COMBOFILTER,103,35,68,80,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Filter to use:",IDC_STAT_FILTER,60,35,39,12,SS_CENTERIMAGE
+    PUSHBUTTON      "New Parameter Set",IDC_BUT_NEW_PARAMS,7,104,64,14
+    LISTBOX         IDC_LIST_SET_NAMES,103,49,117,68,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Parameter set name:",IDC_STAT_PARAM_NAME,38,125,64,8
+    EDITTEXT        IDC_EDIT_NAME,103,122,117,14,ES_AUTOHSCROLL
+    LTEXT           "More parameters",IDC_STAT_MORE_PARAMS,20,360,52,8
+    PUSHBUTTON      "-",IDC_BUTMORE,9,361,9,7
+    PUSHBUTTON      "Delete",IDC_BUT_DELETE_SET,73,104,26,14
+    PUSHBUTTON      "Set Folder for Align Com Files",IDC_BUT_SET_FOLDER,7,74,93,14
     CONTROL         "Always process gain-normalized frames with full precision",IDC_KEEP_PRECISION,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,430,206,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,430,185,10
     CONTROL         "Output aligned sums as floating point",IDC_SAVE_FLOAT_SUMS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,442,137,10
-    CONTROL         "Align only whole tilt series",IDC_WHOLE_SERIES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,61,101,10
-    GROUPBOX        "Use parameter set only for",IDC_STAT_USE_ONLY_GROUP,7,136,237,35
-    CONTROL         "Aligning in plugin",IDC_ONLY_IN_PLUGIN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,146,89,10
-    CONTROL         "Aligning with IMOD",IDC_ONLY_WITH_IMOD,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,158,78,10
-    CONTROL         "Non super-resolution frames",IDC_ONLY_NON_SUPER,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,115,146,109,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,442,123,10
+    CONTROL         "Align only whole tilt series",IDC_WHOLE_SERIES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,61,91,10
+    GROUPBOX        "Use parameter set only for",IDC_STAT_USE_ONLY_GROUP,7,136,213,35
+    CONTROL         "Aligning in plugin",IDC_ONLY_IN_PLUGIN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,146,80,10
+    CONTROL         "Aligning with IMOD",IDC_ONLY_WITH_IMOD,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,158,70,10
+    CONTROL         "Non super-resolution frames",IDC_ONLY_NON_SUPER,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,103,146,98,10
     CONTROL         "Super-resolution frames",IDC_ONLY_SUPERRESOLUTION,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,115,158,95,10
-    CONTROL         "",IDC_STAT_LINE1,"Static",SS_BLACKFRAME | SS_SUNKEN,7,175,237,1
-    CONTROL         "Align subset of frames from ",IDC_ALIGN_SUBSET,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,347,105,10
-    EDITTEXT        IDC_FA_EDIT_SUB_START,115,346,26,12,ES_AUTOHSCROLL
-    LTEXT           "to",IDC_STAT_SUBSET_TO,142,348,8,8
-    EDITTEXT        IDC_FA_EDIT_SUB_END,151,346,28,12,ES_AUTOHSCROLL
-    LTEXT           "(only when saving)",IDC_STAT_SUBSET_PAREN,182,348,63,8
-    CONTROL         "Use same folder as frames",IDC_USE_FRAME_FOLDER,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,90,104,10
-    CONTROL         "",IDC_SPIN_BIN_TO,"msctls_updown32",UDS_ARROWKEYS,188,256,10,14
-    LTEXT           "pixels",IDC_STAT_ALIBIN_PIX,201,259,19,8
-    RTEXT           "1250",IDC_STAT_ALIGN_TARGET,166,259,19,8
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,103,158,86,10
+    CONTROL         "",IDC_STAT_LINE1,"Static",SS_BLACKFRAME | SS_SUNKEN,7,175,213,1
+    CONTROL         "Align subset of frames from ",IDC_ALIGN_SUBSET,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,347,94,10
+    EDITTEXT        IDC_FA_EDIT_SUB_START,103,346,24,12,ES_AUTOHSCROLL
+    LTEXT           "to",IDC_STAT_SUBSET_TO,128,348,8,8
+    EDITTEXT        IDC_FA_EDIT_SUB_END,136,346,26,12,ES_AUTOHSCROLL
+    LTEXT           "(only when saving)",IDC_STAT_SUBSET_PAREN,163,348,57,8
+    CONTROL         "Use same folder as frames",IDC_USE_FRAME_FOLDER,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,90,94,10
+    CONTROL         "",IDC_SPIN_BIN_TO,"msctls_updown32",UDS_ARROWKEYS,169,256,9,14
+    LTEXT           "pixels",IDC_STAT_ALIBIN_PIX,180,259,18,8
+    RTEXT           "1250",IDC_STAT_ALIGN_TARGET,149,259,18,8
 END
 
 IDD_REMOTE_CONTROL DIALOGEX 0, 0, 119, 76
@@ -2802,17 +2807,17 @@ BEGIN
     PUSHBUTTON      "Lower Scrn",IDC_BUT_SCREEN_UPDOWN,4,62,38,12
 END
 
-IDD_THREE_CHOICE_BOX DIALOGEX 0, 0, 247, 68
+IDD_THREE_CHOICE_BOX DIALOGEX 0, 0, 223, 68
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
 CAPTION "SerialEM Choice"
-FONT 8, "MS Shell Dlg", 400, 0, 0x1
+FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
-    PUSHBUTTON      "?",IDC_BUTHELP,0,0,11,10,NOT WS_VISIBLE
-    LTEXT           "Here is a long line of text\nHere is another line\nHere is line three\nHere is long juicy line 4",IDC_STAT_MESSAGE,23,7,217,33
-    LTEXT           "",IDC_STAT_GRAY_PANEL,0,40,246,28
-    PUSHBUTTON      "OK",IDOK,79,47,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,191,47,50,14
-    PUSHBUTTON      "No",IDC_BUTMIDDLE,135,47,50,14
+    PUSHBUTTON      "?",IDC_BUTHELP,0,0,10,10,NOT WS_VISIBLE
+    LTEXT           "Here is a long line of text\nHere is another line\nHere is line three\nHere is long juicy line 4",IDC_STAT_MESSAGE,21,7,195,33
+    LTEXT           "",IDC_STAT_GRAY_PANEL,0,40,221,28
+    PUSHBUTTON      "OK",IDOK,71,47,45,14
+    PUSHBUTTON      "Cancel",IDCANCEL,171,47,45,14
+    PUSHBUTTON      "No",IDC_BUTMIDDLE,121,47,45,14
 END
 
 IDD_MULTI_SHOT_SETUP DIALOGEX 0, 0, 185, 382
@@ -2878,56 +2883,56 @@ BEGIN
     PUSHBUTTON      "IS to Nav Pt",IDC_BUT_IS_TO_PT,11,183,40,12
 END
 
-IDD_DE_REFERENCE DIALOGEX 0, 0, 191, 210
+IDD_DE_REFERENCE DIALOGEX 0, 0, 172, 210
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Direct Electron Server Reference Maker"
-FONT 8, "MS Shell Dlg", 400, 0, 0x1
+FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
-    CONTROL         "Linear mode",IDC_RLINEAR_REF,"Button",BS_AUTORADIOBUTTON | WS_GROUP,14,15,57,10
-    CONTROL         "Pre-counting",IDC_RPRE_COUNTING,"Button",BS_AUTORADIOBUTTON,14,26,57,10
-    CONTROL         "Post-counting",IDC_RPOST_COUNTING,"Button",BS_AUTORADIOBUTTON,14,37,60,10
-    CONTROL         "Super-resolution",IDC_RSUPER_RES_REF,"Button",BS_AUTORADIOBUTTON,14,48,70,10
-    GROUPBOX        "Type of Processing",IDC_STAT_PROC_TYPE,7,5,98,57,WS_GROUP
-    CONTROL         "Dark",IDC_RDARK_REF,"Button",BS_AUTORADIOBUTTON | WS_GROUP,120,26,31,10
-    CONTROL         "Gain",IDC_RGAIN_REF,"Button",BS_AUTORADIOBUTTON,120,37,30,10
-    GROUPBOX        "Type of Reference",IDC_STAT_REF_TYPE,112,16,71,35,WS_GROUP
-    DEFPUSHBUTTON   "YES",IDOK,34,189,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,105,189,50,14
-    LTEXT           "Reference for",IDC_STAT_REF_FPS,35,68,45,8
-    LTEXT           "Exposure time:",IDC_STATIC,41,115,50,8
-    LTEXT           "sec",IDC_STATIC,136,115,12,8
-    EDITTEXT        IDC_EDIT_REF_EXPOSURE,93,112,40,14,ES_AUTOHSCROLL
-    LTEXT           "Number of acquisitions:",IDC_STATIC,36,133,78,8
-    CONTROL         "",IDC_SPIN_NUM_REPEATS,"msctls_updown32",UDS_ARROWKEYS,142,131,10,14
-    EDITTEXT        IDC_EDIT_NUM_REPEATS,116,131,25,14,ES_AUTOHSCROLL
-    PUSHBUTTON      "?",IDC_BUTHELP,172,193,11,10
-    CTEXT           "ARE YOU READY TO PROCEED?",IDC_STATIC,7,176,176,8
-    CTEXT           "To acquire a gain reference, be sure that the beam is uniform over the whole field of the camera and has a suitable intensity, and that no specimen is in the way.",IDC_STAT_GAIN_ADVICE,7,149,176,28
-    CONTROL         "With hardware binning by 2",IDC_USE_HARDWARE_BIN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,42,81,106,10
-    EDITTEXT        IDC_EDIT_REF_FPS,82,65,30,14,ES_AUTOHSCROLL
-    LTEXT           "frames/sec",IDC_STATIC,116,68,38,8
+    CONTROL         "Linear mode",IDC_RLINEAR_REF,"Button",BS_AUTORADIOBUTTON | WS_GROUP,13,15,52,10
+    CONTROL         "Pre-counting",IDC_RPRE_COUNTING,"Button",BS_AUTORADIOBUTTON,13,26,52,10
+    CONTROL         "Post-counting",IDC_RPOST_COUNTING,"Button",BS_AUTORADIOBUTTON,13,37,54,10
+    CONTROL         "Super-resolution",IDC_RSUPER_RES_REF,"Button",BS_AUTORADIOBUTTON,13,48,63,10
+    GROUPBOX        "Type of Processing",IDC_STAT_PROC_TYPE,7,5,88,57,WS_GROUP
+    CONTROL         "Dark",IDC_RDARK_REF,"Button",BS_AUTORADIOBUTTON | WS_GROUP,108,26,28,10
+    CONTROL         "Gain",IDC_RGAIN_REF,"Button",BS_AUTORADIOBUTTON,108,37,27,10
+    GROUPBOX        "Type of Reference",IDC_STAT_REF_TYPE,101,16,64,35,WS_GROUP
+    DEFPUSHBUTTON   "YES",IDOK,31,189,45,14
+    PUSHBUTTON      "Cancel",IDCANCEL,94,189,45,14
+    LTEXT           "Reference for",IDC_STAT_REF_FPS,32,68,41,8
+    LTEXT           "Exposure time:",IDC_STATIC,37,115,45,8
+    LTEXT           "sec",IDC_STATIC,122,115,11,8
+    EDITTEXT        IDC_EDIT_REF_EXPOSURE,84,112,36,14,ES_AUTOHSCROLL
+    LTEXT           "Number of acquisitions:",IDC_STATIC,33,133,70,8
+    CONTROL         "",IDC_SPIN_NUM_REPEATS,"msctls_updown32",UDS_ARROWKEYS,128,131,9,14
+    EDITTEXT        IDC_EDIT_NUM_REPEATS,104,131,23,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "?",IDC_BUTHELP,154,193,10,10
+    CTEXT           "ARE YOU READY TO PROCEED?",IDC_STATIC,7,176,158,8
+    CTEXT           "To acquire a gain reference, be sure that the beam is uniform over the whole field of the camera and has a suitable intensity, and that no specimen is in the way.",IDC_STAT_GAIN_ADVICE,7,149,158,28
+    CONTROL         "With hardware binning by 2",IDC_USE_HARDWARE_BIN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,38,81,95,10
+    EDITTEXT        IDC_EDIT_REF_FPS,74,65,27,14,ES_AUTOHSCROLL
+    LTEXT           "frames/sec",IDC_STATIC,104,68,35,8
     CONTROL         "Use hardware ROI with current Record subarea",IDC_USE_REC_HARDWARE_ROI,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,92,171,10
-    LTEXT           "(2048 x 2048)",IDC_STAT_REC_AREA,23,102,161,8
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,92,154,10
+    LTEXT           "(2048 x 2048)",IDC_STAT_REC_AREA,21,102,145,8
 END
 
-IDD_ONELINESCRIPT DIALOGEX 0, 0, 151, 81
+IDD_ONELINESCRIPT DIALOGEX 0, 0, 137, 81
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_TOOLWINDOW
 CAPTION "Five One-line Scripts"
-FONT 8, "MS Shell Dlg", 400, 0, 0x1
+FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
-    LTEXT           "Tab or  `  to complete command",IDC_STAT_COMPLETIONS,3,1,146,8
-    EDITTEXT        IDC_EDIT_ONE_LINE,3,10,115,12,ES_AUTOHSCROLL
-    DEFPUSHBUTTON   "Run",IDC_RUN_ONE_LINE1,121,10,27,12
-    EDITTEXT        IDC_EDIT_ONE_LINE2,3,24,115,12,ES_AUTOHSCROLL
-    DEFPUSHBUTTON   "Run",IDC_RUN_ONE_LINE2,121,24,27,12
-    EDITTEXT        IDC_EDIT_ONE_LINE3,3,38,115,12,ES_AUTOHSCROLL
-    DEFPUSHBUTTON   "Run",IDC_RUN_ONE_LINE3,121,38,27,12
-    EDITTEXT        IDC_EDIT_ONE_LINE4,3,52,115,12,ES_AUTOHSCROLL
-    DEFPUSHBUTTON   "Run",IDC_RUN_ONE_LINE4,121,52,27,12
-    EDITTEXT        IDC_EDIT_ONE_LINE5,3,66,115,12,ES_AUTOHSCROLL
-    DEFPUSHBUTTON   "Run",IDC_RUN_ONE_LINE5,121,66,27,12
+    LTEXT           "Tab or  `  to complete command",IDC_STAT_COMPLETIONS,3,1,131,8
+    EDITTEXT        IDC_EDIT_ONE_LINE,3,10,103,12,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "Run",IDC_RUN_ONE_LINE1,109,10,25,12
+    EDITTEXT        IDC_EDIT_ONE_LINE2,3,24,103,12,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "Run",IDC_RUN_ONE_LINE2,109,24,25,12
+    EDITTEXT        IDC_EDIT_ONE_LINE3,3,38,103,12,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "Run",IDC_RUN_ONE_LINE3,109,38,25,12
+    EDITTEXT        IDC_EDIT_ONE_LINE4,3,52,103,12,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "Run",IDC_RUN_ONE_LINE4,109,52,25,12
+    EDITTEXT        IDC_EDIT_ONE_LINE5,3,66,103,12,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "Run",IDC_RUN_ONE_LINE5,109,66,25,12
 END
 
 IDD_CTFFINDDLG DIALOGEX 0, 0, 180, 131
@@ -3080,7 +3085,9 @@ END
 //
 
 IDC_CURSOR1             CURSOR                  "res\\cursor1.cur"
+
 IDC_CURSOR2             CURSOR                  "res\\cursor2.cur"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3150,6 +3157,10 @@ BEGIN
     END
 
     IDD_MACRO, DIALOG
+    BEGIN
+    END
+
+    IDD_MACROCONTROL, DIALOG
     BEGIN
     END
 
@@ -3236,7 +3247,7 @@ BEGIN
     IDD_TSEXTRAFILE, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 164
+        RIGHTMARGIN, 148
         TOPMARGIN, 7
         BOTTOMMARGIN, 406
     END
@@ -3244,7 +3255,7 @@ BEGIN
     IDD_REFPOLICY, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 268
+        RIGHTMARGIN, 241
         TOPMARGIN, 7
         BOTTOMMARGIN, 115
     END
@@ -3257,15 +3268,15 @@ BEGIN
     IDD_TSPOLICIES, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 220
+        RIGHTMARGIN, 202
         TOPMARGIN, 7
-        BOTTOMMARGIN, 275
+        BOTTOMMARGIN, 276
     END
 
     IDD_NAVACQUIRE, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 164
+        RIGHTMARGIN, 148
         TOPMARGIN, 7
         BOTTOMMARGIN, 302
     END
@@ -3273,7 +3284,7 @@ BEGIN
     IDD_NAVIMPORT, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 172
+        RIGHTMARGIN, 155
         TOPMARGIN, 7
         BOTTOMMARGIN, 127
     END
@@ -3281,7 +3292,7 @@ BEGIN
     IDD_COOKSETUP, DIALOG
     BEGIN
         LEFTMARGIN, 10
-        RIGHTMARGIN, 160
+        RIGHTMARGIN, 144
         TOPMARGIN, 7
         BOTTOMMARGIN, 166
     END
@@ -3289,7 +3300,7 @@ BEGIN
     IDD_AUTOCENSETUP, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 168
+        RIGHTMARGIN, 151
         TOPMARGIN, 7
         BOTTOMMARGIN, 201
     END
@@ -3297,7 +3308,7 @@ BEGIN
     IDD_READFILEDLG, DIALOG
     BEGIN
         LEFTMARGIN, 3
-        RIGHTMARGIN, 121
+        RIGHTMARGIN, 109
         TOPMARGIN, 2
         BOTTOMMARGIN, 44
     END
@@ -3312,7 +3323,7 @@ BEGIN
     IDD_TSRANGE, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 180
+        RIGHTMARGIN, 162
         TOPMARGIN, 7
         BOTTOMMARGIN, 181
     END
@@ -3320,7 +3331,7 @@ BEGIN
     IDD_TSSETANGLE, DIALOG
     BEGIN
         LEFTMARGIN, 4
-        RIGHTMARGIN, 200
+        RIGHTMARGIN, 180
         TOPMARGIN, 2
         BOTTOMMARGIN, 14
     END
@@ -3328,7 +3339,7 @@ BEGIN
     IDD_NAVFILETYPE, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 194
+        RIGHTMARGIN, 174
         TOPMARGIN, 7
         BOTTOMMARGIN, 84
     END
@@ -3336,7 +3347,7 @@ BEGIN
     IDD_STATEDLG, DIALOG
     BEGIN
         LEFTMARGIN, 3
-        RIGHTMARGIN, 171
+        RIGHTMARGIN, 154
         TOPMARGIN, 3
         BOTTOMMARGIN, 111
     END
@@ -3344,15 +3355,15 @@ BEGIN
     IDD_NAVROTALIGN, DIALOG
     BEGIN
         LEFTMARGIN, 3
-        RIGHTMARGIN, 178
+        RIGHTMARGIN, 161
         TOPMARGIN, 2
-        BOTTOMMARGIN, 60
+        BOTTOMMARGIN, 61
     END
 
     IDD_TSVARIATIONS, DIALOG
     BEGIN
         LEFTMARGIN, 3
-        RIGHTMARGIN, 174
+        RIGHTMARGIN, 157
         TOPMARGIN, 2
         BOTTOMMARGIN, 283
     END
@@ -3360,7 +3371,7 @@ BEGIN
     IDD_NCMIR4K, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 348
+        RIGHTMARGIN, 312
         TOPMARGIN, 7
         BOTTOMMARGIN, 191
     END
@@ -3368,7 +3379,7 @@ BEGIN
     IDD_8KDialog, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 457
+        RIGHTMARGIN, 410
         TOPMARGIN, 7
         BOTTOMMARGIN, 218
     END
@@ -3385,7 +3396,7 @@ BEGIN
     IDD_NAVBACKLASH, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 250
+        RIGHTMARGIN, 225
         TOPMARGIN, 7
         BOTTOMMARGIN, 92
     END
@@ -3393,7 +3404,7 @@ BEGIN
     IDD_FALCON_FRAMES, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 136
+        RIGHTMARGIN, 122
         TOPMARGIN, 7
         BOTTOMMARGIN, 280
     END
@@ -3401,7 +3412,7 @@ BEGIN
     IDD_K2_SAVE_OPTIONS, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 248
+        RIGHTMARGIN, 223
         TOPMARGIN, 7
         BOTTOMMARGIN, 350
     END
@@ -3409,14 +3420,14 @@ BEGIN
     IDD_STAGEMOVETOOL, DIALOG
     BEGIN
         LEFTMARGIN, 2
-        RIGHTMARGIN, 92
+        RIGHTMARGIN, 84
         BOTTOMMARGIN, 104
     END
 
     IDD_FRAMEALIGN, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 244
+        RIGHTMARGIN, 219
         TOPMARGIN, 7
         BOTTOMMARGIN, 469
     END
@@ -3429,7 +3440,7 @@ BEGIN
     IDD_THREE_CHOICE_BOX, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 240
+        RIGHTMARGIN, 216
         TOPMARGIN, 7
         BOTTOMMARGIN, 61
     END
@@ -3445,7 +3456,7 @@ BEGIN
     IDD_DE_REFERENCE, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 184
+        RIGHTMARGIN, 165
         TOPMARGIN, 7
         BOTTOMMARGIN, 203
     END
@@ -3453,7 +3464,7 @@ BEGIN
     IDD_ONELINESCRIPT, DIALOG
     BEGIN
         LEFTMARGIN, 3
-        RIGHTMARGIN, 147
+        RIGHTMARGIN, 133
         BOTTOMMARGIN, 79
     END
 
@@ -3525,6 +3536,32 @@ BEGIN
 0x6f4d, 0x6564, 0x3120, "\000" 
     IDC_AttenCombo4K, 0x403, 7, 0
 0x6f4d, 0x6564, 0x3220, "\000" 
+    0
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AFX_DIALOG_LAYOUT
+//
+
+IDD_TSEXTRAFILE AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_NAVACQUIRE AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_NAVROTALIGN AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_TSPOLICIES AFX_DIALOG_LAYOUT
+BEGIN
     0
 END
 
@@ -5461,7 +5498,8 @@ LANGUAGE 9, 1
 #include "res\SerialEM.rc2"  // non-Microsoft Visual C++ edited resources
 #include "afxres.rc"         // Standard components
 #include "XFolderDialog\XFolderDialog.rc"
-#endif
+#endif
+
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 
