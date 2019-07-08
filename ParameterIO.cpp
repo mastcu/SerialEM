@@ -531,7 +531,7 @@ int CParameterIO::ReadSettings(CString strFileName)
         acParmP->spotSize = itemInt[3];
         acParmP->intensity = itemDbl[4];
         acParmP->binning = itemInt[5];
-        acParmP->exposure = itemDbl[6];
+        acParmP->exposure = (float)itemDbl[6];
         acParmP->useCentroid = itemInt[7];
         acParmP->probeMode = itemInt[8] < 0 ? 1 : itemInt[8];
         acParmP->shiftBeamForCen = itemInt[9] < 0 ? 0 : itemInt[9];

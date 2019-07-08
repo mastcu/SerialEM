@@ -321,7 +321,7 @@ CCameraController::CCameraController()
   mBaseK3LinearTime = 0.01331558f;
   mBaseK3SuperResTime = 0.0106525f;
   mUseK3CorrDblSamp = false;
-  mK3HWDarkRefExposure = 0.;
+  mK3HWDarkRefExposure = 10.;
 
   // Set these to values in simple DM user interface except for first incrment
   mOneViewMinExposure[0][0] = 0.04f;
@@ -10288,10 +10288,6 @@ CWinThread *CCameraController::StartHWDarkRefThread(void)
   mITD.DMindex = CAMP_DM_INDEX(mParam);
   mITD.FEItype = 0;
   if (mParam->K2Type == K3_TYPE) {
-
-    // For K3, use Record exposure, override with property
-    mITD.exposure = mConSetsp[RECORD_CONSET].exposure;
-    if (mK3HWDarkRefExposure > 0.)
       mITD.exposure = mK3HWDarkRefExposure;
 
     // Pass the read mode in this parameter, which is flag for K3 also
