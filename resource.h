@@ -1500,6 +1500,9 @@
 #define IDC_CHECK_THROW_ERROR           2524
 #define IDC_STAT_EXP_SEC                2525
 #define IDC_STAT_TRIAL_EXP              2526
+#define IDC_CHECK1                      2527
+#define IDC_ACS_SHIFT_BEAM              2527
+#define IDC_EDIT1                       2528
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -1958,7 +1961,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        239
 #define _APS_NEXT_COMMAND_VALUE         33334
-#define _APS_NEXT_CONTROL_VALUE         2527
+#define _APS_NEXT_CONTROL_VALUE         2529
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
