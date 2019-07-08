@@ -128,7 +128,7 @@ CFocusManager::CFocusManager()
   mBeamTilt = 5.;
   mPostTiltDelay = 0;
   mLastFailed = false;
-  mLastAborted = false;
+  mLastAborted = 0;
   mRequiredBWMean = -1.;
   mVerbose = false;
   mAccuracyMeasured = false;
@@ -1229,7 +1229,7 @@ void CFocusManager::DetectFocus(int inWhere, int useViewInLD)
     inWhere == FOCUS_COMA_FREE)) ? 3 : 2;
   mFocusIndex = 0;
   mLastFailed = true;
-  mLastAborted = false;
+  mLastAborted = 0;
   mCamera->SetObeyTiltDelay(true);
   if (mUseOppositeLDArea)
     mCamera->OppositeLDAreaNextShot();
