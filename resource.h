@@ -72,6 +72,8 @@
 #define IDD_ONELINESCRIPT               227
 #define IDD_CTFFINDDLG                  232
 #define IDD_TSDOSESYM                   234
+#define IDD_DIALOG1                     237
+#define IDD_DRIFTWAITSETUP              237
 #define IDC_EDITXSIZE                   1000
 #define IDC_EDITYSIZE                   1002
 #define IDC_EDITYOVERLAP                1003
@@ -1461,7 +1463,6 @@
 #define IDC_EDIT_MIN_PHASE              2485
 #define IDC_EDIT_MAX_PHASE              2486
 #define IDC_CHECK_FIX_ASTIG_FOR_PHASE   2487
-#define IDC_EDIT_FIXED_PHASE            2507
 #define IDC_EDIT_INC_INTERVAL           2488
 #define IDC_CHECK_INC_GROUP             2490
 #define IDC_EDIT_INC_GROUP_ANGLE        2491
@@ -1479,6 +1480,7 @@
 #define IDC_USE_DOSE_SYM                2504
 #define IDC_BUT_SETUP_DOSE_SYM          2505
 #define IDC_STAT_ANCHOR_TILTS           2506
+#define IDC_EDIT_FIXED_PHASE            2507
 #define IDC_CHECK_REORDER_FILE          2508
 #define IDC_STAT_ANGLE_SUMMARY          2509
 #define IDC_STATEVERY                   2510
@@ -1938,7 +1940,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        237
+#define _APS_NEXT_RESOURCE_VALUE        239
 #define _APS_NEXT_COMMAND_VALUE         33334
 #define _APS_NEXT_CONTROL_VALUE         2511
 #define _APS_NEXT_SYMED_VALUE           104

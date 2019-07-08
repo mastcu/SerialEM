@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -1150,6 +1150,7 @@
     <ClInclude Include="AutoTuning.h" />
     <ClInclude Include="CtffindParamDlg.h" />
     <ClInclude Include="DERefMakerDlg.h" />
+    <ClInclude Include="DriftWaitSetupDlg.h" />
     <ClInclude Include="ExternalTools.h" />
     <ClInclude Include="FrameAlignDlg.h" />
     <ClInclude Include="MultiShotDlg.h" />
@@ -2058,6 +2059,7 @@ echo.
     <ClCompile Include="AutoTuning.cpp" />
     <ClCompile Include="CtffindParamDlg.cpp" />
     <ClCompile Include="DERefMakerDlg.cpp" />
+    <ClCompile Include="DriftWaitSetupDlg.cpp" />
     <ClCompile Include="ExternalTools.cpp" />
     <ClCompile Include="FrameAlignDlg.cpp" />
     <ClCompile Include="MultiShotDlg.cpp" />

@@ -7,8 +7,7 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "afxres.h"
-
+#include "afxres.h"
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
@@ -3006,6 +3005,15 @@ BEGIN
     LTEXT           "every",IDC_STATEVERY,114,42,18,8
 END
 
+IDD_DRIFTWAITSETUP DIALOGEX 0, 0, 310, 176
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,199,155,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,253,155,50,14
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3445,6 +3453,14 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 142
     END
+
+    IDD_DRIFTWAITSETUP, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 303
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 169
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -3515,6 +3531,11 @@ BEGIN
 END
 
 IDD_TILTSERIES AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_DRIFTWAITSETUP AFX_DIALOG_LAYOUT
 BEGIN
     0
 END
@@ -5382,19 +5403,18 @@ BEGIN
     IDC_EDIT_MAX_PHASE      "Upper end of phase range to search when finding phase, in degrees"
     IDC_CHECK_FIX_ASTIG_FOR_PHASE 
                             "Fix astigmatism at 0 when searching for phase to speed up search"
+    IDC_EDIT_INC_INTERVAL   "Tilt interval at which to increase group sizes by same amount (0 for none)"
+    IDC_CHECK_INC_GROUP     "Start increasing group sizes when the given angle is reached"
+    IDC_EDIT_INC_GROUP_ANGLE "Angle at which to start increasing group sizes"
+    IDC_SPIN_MIN_FOR_ANCHOR "Minimum number of tilts in first non-alternating segment for taking anchor"
 END
 
 STRINGTABLE
 BEGIN
-    IDC_SPIN_MIN_FOR_ANCHOR "Minimum number of tilts in first non-alternating segment for taking anchor"
-    IDC_EDIT_INC_GROUP_ANGLE
-                            "Angle at which to start increasing group sizes"
-    IDC_CHECK_INC_GROUP     "Start increasing group sizes when the given angle is reached"
-    IDC_EDIT_INC_INTERVAL   "Tilt interval at which to increase group sizes by same amount (0 for none)"
     IDC_SPIN_INC_AMOUNT     "Set amount by which to increase group size each time"
     IDC_CHECK_RUN_TO_END    "Stop alternating and tilt sequentially to ending angles at given tilt"
     IDC_EDIT_RUN_TO_END     "Tilt angle at which to stop alternating and tilt sequentially to ends"
-    IDC_USE_DOSE_SYM        "Use dose-symmetric tilting, alternating between two sides from starting tilt"
+    IDC_USE_DOSE_SYM        "Alternate between two sides from starting tilt (bidirectional must be on)"
     IDC_BUT_SETUP_DOSE_SYM  "Set parameters on when to alternate for dose-symmetric tilting"
     IDC_CHECK_REORDER_FILE  "Make copy of tilt series file in order by angle after terminating series"
 END
@@ -5422,8 +5442,7 @@ LANGUAGE 9, 1
 #include "res\SerialEM.rc2"  // non-Microsoft Visual C++ edited resources
 #include "afxres.rc"         // Standard components
 #include "XFolderDialog\XFolderDialog.rc"
-#endif
-
+#endif
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 
