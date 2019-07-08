@@ -8058,8 +8058,8 @@ int CEMscope::LongOperationBusy(int index)
             busy = 0;
         } else
           mWinApp->AppendToLog("Call for " + CString(longOpDescription[longOp]) + 
-             B3DCHOICE(busy && !mLongOpData[thread].finished[op], " ended with error", 
-             " finished successfully"));
+             B3DCHOICE(busy && (!mLongOpData[thread].finished[op] || thread == 1), 
+               " ended with error", " finished successfully"));
 
         // Record time if completed, throw error if not and error not OK
         if (mLongOpData[thread].finished[op]) {
