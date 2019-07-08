@@ -1,7 +1,6 @@
 // MultiTSTasks.cpp  - module for more complex tasks related to multiple tilt series
 //
-// Copyright (C) 2008 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2008-2109 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -65,7 +64,6 @@ CMultiTSTasks::CMultiTSTasks(void)
   mTiltRangeLowStamp = 0.;
   mTiltRangeHighStamp = 0.;
   mAcPostSettingDelay = 200;
-  mAcSetupDlgOpen = false;
   mBfcCopyIndex = -1;
   mBfcDoingCopy = 0;
   mBfcStopFlag = false;
@@ -561,7 +559,7 @@ AutocenParams *CMultiTSTasks::GetAutocenSettings(int camera, int magInd, int spo
   double maxSpotChg = 5.;
   double maxMagChg = 5.;
   double maxExposure = 2.;
-  float pixel2, ratio, useRatio;
+  float pixel2, ratio, useRatio, roundFac;
   float deadTime = camParam->deadTime;
   float minExposure = B3DMAX(mComplexTasks->GetMinTaskExposure(), camParam->minExposure);
   float pixelSize = mShiftManager->GetPixelSize(camera, magInd);
@@ -586,8 +584,14 @@ AutocenParams *CMultiTSTasks::GetAutocenSettings(int camera, int magInd, int spo
   acParams.spotSize = spot;
   acParams.intensity = -1.;
   acParams.binning = conSet->binning;
-  acParams.exposure = 0.25 * (conSet->exposure - deadTime) + deadTime;
+  acParams.exposure = ((mWinApp->LowDoseMode() ? 1.f : 0.25f) * conSet->exposure - 
+    deadTime) + deadTime;
   acParams.exposure = B3DMAX(acParams.exposure, minExposure);
+  mCamera->ConstrainExposureTime(camParam, false, conSet->K2ReadMode, conSet->binning,
+    false, 2, acParams.exposure, conSet->frameTime);
+  roundFac = mCamera->ExposureRoundingFactor(camParam);
+  if (roundFac)
+    acParams.exposure = (float)(B3DNINT(acParams.exposure * roundFac) / roundFac); 
   acParams.useCentroid = false;
   acParams.probeMode = probe;
 
@@ -689,7 +693,11 @@ AutocenParams *CMultiTSTasks::GetAutocenSettings(int camera, int magInd, int spo
       bestSpot = parmP->spotSize;
       acParams.intensity = newIntensity;
       acParams.binning = newbin;
-      acParams.exposure = 0.001 * B3DNINT(1000. * newexp);
+      acParams.exposure = (float)(0.001 * B3DNINT(1000. * newexp));
+      mCamera->ConstrainExposureTime(camParam, false, conSet->K2ReadMode, conSet->binning,
+        false, 2, acParams.exposure, conSet->frameTime);
+      if (roundFac)
+        acParams.exposure = (float)(B3DNINT(acParams.exposure * roundFac) / roundFac);
       acParams.useCentroid = parmP->useCentroid;
     }
   }
@@ -748,13 +756,11 @@ bool CMultiTSTasks::AutocenParamExists(int camera, int magInd, int probe)
   return false;
 }
 
-// Open or reopen the autocenter setup dialog
-void CMultiTSTasks::SetupAutocenter(bool reopen)
+// Open the autocenter setup dialog
+void CMultiTSTasks::SetupAutocenter()
 {
-  bool synth;
   BOOL lowDose = mWinApp->LowDoseMode();
-  int bestMag, bestSpot, magInd, probe, alpha;
-  AutocenParams *param;
+  int magInd, probe, alpha;
   LowDoseParams *ldParm = mWinApp->GetLowDoseParams() + TRIAL_CONSET;
   ScaleMat bsCal;
   if (lowDose) {
@@ -780,48 +786,107 @@ void CMultiTSTasks::SetupAutocenter(bool reopen)
   }
   CAutocenSetupDlg *dlg = new CAutocenSetupDlg;
   mWinApp->mAutocenDlg = dlg;
-  if (reopen) {
-    dlg->m_bSetState = true;
-    dlg->mSavedMagInd = mAcSavedMagInd;
-    dlg->mSavedSpot = mAcSavedSpot;
-    dlg->mSavedProbe = mAcSavedProbe;
-    dlg->mSavedIntensity = mAcSavedIntensity;
-
-    // Do not drop screen again in low dose mode, intensity gets set to the Trial value
-    if (mWinApp->LowDoseMode())
-      ldParm->intensity = mAcLDTrialIntensity;
-    else if (mAcSavedScreen == spDown)
-      mScope->SetScreenPos(spDown);
-  } else if (lowDose) {
+  if (lowDose) {
     mAcSavedLDDownArea = mScope->GetLowDoseDownArea();
-    mScope->SetLowDoseDownArea(TRIAL_CONSET);
     mWinApp->mLowDoseDlg.SetContinuousUpdate(false);
     mWinApp->mLowDoseDlg.UpdateSettings();
   }
-  mAcSetupDlgOpen = true;
-  dlg->DoModal();
-  mAcSetupDlgOpen = false;
-  if (dlg->mTestAcquire) {
-    mAcSavedMagInd = dlg->mSavedMagInd;
-    mAcSavedSpot = dlg->mSavedSpot;
-    mAcSavedProbe = dlg->mSavedProbe;
-    mAcSavedIntensity = dlg->mSavedIntensity;
-    mAcSavedScreen = mScope->GetScreenPos();
-    param = GetAutocenSettings(dlg->mCamera, dlg->mCurMagInd, dlg->mCurSpot, 
-      dlg->mCurProbe, dlg->mParam->intensity, synth, bestMag, bestSpot);
-    MakeAutocenConset(param);
-    if (mWinApp->LowDoseMode()) {
-      mAcLDTrialIntensity = ldParm->intensity;
-      ldParm->intensity = param->intensity;
-    }
-    mCamera->InitiateCapture(TRACK_CONSET);
-    mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, TASK_TEST_AUTOCEN, 0, 0);
-  } else if (lowDose) {
+  mWinApp->mLowDoseDlg.Update();
+  dlg->Create(IDD_AUTOCENSETUP);
+  mWinApp->SetPlacementFixSize(dlg, &mAutocenDlgPlace);
+  mWinApp->RestoreViewFocus();
+  if (lowDose)
+    mScope->SetLowDoseDownArea(TRIAL_CONSET);
+}
+
+// Do appropriate things like restoring state and getting placement when dialog closes
+void CMultiTSTasks::AutocenClosing()
+{
+  if (!mWinApp->mAutocenDlg)
+    return;
+  GetAutocenPlacement();
+  if (AutocenTrackingState() && !mWinApp->GetAppExiting() && !mWinApp->LowDoseMode())
+    mWinApp->mAutocenDlg->RestoreScopeState();
+  mWinApp->mAutocenDlg->DestroyWindow();
+  if (mWinApp->LowDoseMode()) {
     mScope->SetLowDoseDownArea(mAcSavedLDDownArea);
     mWinApp->mLowDoseDlg.UpdateSettings();
   }
   mWinApp->mAutocenDlg = NULL;
-  delete dlg;
+  mWinApp->mLowDoseDlg.Update();
+}
+
+WINDOWPLACEMENT *CMultiTSTasks::GetAutocenPlacement(void)
+{
+  if (mWinApp->mAutocenDlg) {
+    mWinApp->mAutocenDlg->GetWindowPlacement(&mAutocenDlgPlace);
+  }
+  return &mAutocenDlgPlace;
+}
+
+// Test for whether autocenter setup is tracking the state in general:
+// when not doing tsaks, and either with option on in non-low dose, or if the area is
+// Trial or we are going to Trial in Low dose
+bool CMultiTSTasks::AutocenTrackingState(int changing)
+{
+  return mWinApp->mAutocenDlg && !mWinApp->DoingTasks() && 
+    ((!mWinApp->LowDoseMode() && mWinApp->mAutocenDlg->m_bSetState) ||
+    (mWinApp->LowDoseMode() && 
+      (mScope->GetLowDoseArea() == TRIAL_CONSET || changing == ACTRACK_TO_TRIAL)));
+}
+
+// Test for whether intensity specifically is being tracked: in low dose mode this is only
+// when screen is down or camera is in continuous mode
+bool CMultiTSTasks::AutocenMatchingIntensity(int changing)
+{
+  LowDoseParams *ldParm = mWinApp->GetLowDoseParams() + TRIAL_CONSET;
+  return AutocenTrackingState(changing) && (!mWinApp->LowDoseMode() ||
+    (!mWinApp->mLowDoseDlg.m_bContinuousUpdate && (mCamera->DoingContinuousAcquire() ||
+      changing == ACTRACK_START_CONTIN || mScope->FastScreenPos() == spDown) &&
+      (changing || (ldParm->magIndex == mScope->FastMagIndex() && ldParm->spotSize == 
+        mScope->FastSpotSize() && ldParm->probeMode == mScope->GetProbeMode()))));
+}
+
+// Call from the dialog to do the test shot
+void CMultiTSTasks::TestAutocenAcquire()
+{
+  CAutocenSetupDlg *dlg = mWinApp->mAutocenDlg;
+  AutocenParams *param;
+  LowDoseParams *ldParm = mWinApp->GetLowDoseParams() + TRIAL_CONSET;
+  bool synth;
+  int bestMag, bestSpot;
+  mAcSavedMagInd = dlg->mSavedMagInd;
+  mAcSavedSpot = dlg->mSavedSpot;
+  mAcSavedProbe = dlg->mSavedProbe;
+  mAcSavedIntensity = dlg->mSavedIntensity;
+  mAcSavedScreen = mScope->GetScreenPos();
+  param = GetAutocenSettings(dlg->mCamera, dlg->mCurMagInd, dlg->mCurSpot,
+    dlg->mCurProbe, dlg->mParam->intensity, synth, bestMag, bestSpot);
+  MakeAutocenConset(param);
+  if (mWinApp->LowDoseMode()) {
+    mAcLDTrialIntensity = ldParm->intensity;
+    ldParm->intensity = param->intensity;
+    mScope->GotoLowDoseArea(TRIAL_CONSET);
+  }
+  ShiftBeamForCentering(param);
+  mCamera->InitiateCapture(TRACK_CONSET);
+  mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, TASK_TEST_AUTOCEN, 0, 0);
+
+}
+
+// Restore beam position and intensity after shot
+void CMultiTSTasks::AutocenTestAcquireDone()
+{
+  LowDoseParams *ldParm = mWinApp->GetLowDoseParams() + TRIAL_CONSET;
+
+  if (mAcShiftedBeamX || mAcShiftedBeamY)
+    mWinApp->mProcessImage->MoveBeam(NULL, -mAcShiftedBeamX, -mAcShiftedBeamY);
+
+  // Do not drop screen again in low dose mode, intensity gets set to the Trial value
+  if (mWinApp->LowDoseMode())
+    ldParm->intensity = mAcLDTrialIntensity;
+  else if (mAcSavedScreen == spDown)
+    mScope->SetScreenPos(spDown);
 }
 
 // Make a control set for taking an autocenter image
@@ -849,7 +914,29 @@ void CMultiTSTasks::MakeAutocenConset(AutocenParams * param)
   conSets[TRACK_CONSET].bottom = bottom * param->binning;
 }
 
-// Autocenter beam: takes an optional maximu radius in microns
+// Apply a beam shift for autocentering if one is specified and beam edges are being used
+void CMultiTSTasks::ShiftBeamForCentering(AutocenParams *param)
+{
+  double angle = 45.;
+  LowDoseParams *ldParm = mWinApp->GetLowDoseParams() + TRIAL_CONSET;
+  mAcShiftedBeamX = mAcShiftedBeamY = 0.;
+  if (!param->shiftBeamForCen || param->useCentroid || !param->beamShiftUm)
+    return;
+
+  // Put it on diagonalfor perhaps more edges for normal dose, but in low dose move the
+  // beam perpendicular to the low dose axis
+  if (mWinApp->LowDoseMode()) {
+    angle = mShiftManager->GetImageRotation(mWinApp->GetCurrentCamera(), ldParm->magIndex)
+      - 90.;
+    if (mWinApp->mLowDoseDlg.m_bRotateAxis)
+      angle += mWinApp->mLowDoseDlg.m_iAxisAngle;
+  }
+  mAcShiftedBeamX = param->beamShiftUm * (float)cos(DTOR * angle);
+  mAcShiftedBeamY = param->beamShiftUm * (float)sin(DTOR * angle);
+  mWinApp->mProcessImage->MoveBeam(NULL, mAcShiftedBeamX, mAcShiftedBeamY);
+}
+
+// Autocenter beam: takes an optional maximum radius in microns
 int CMultiTSTasks::AutocenterBeam(float maxShift)
 {
   int magInd, spotSize, probe;
@@ -901,6 +988,7 @@ int CMultiTSTasks::AutocenterBeam(float maxShift)
     mScope->IncImageShift(-mAcISX, -mAcISY);
   }
   MakeAutocenConset(param);
+  mAcUseParam = param;
 
   // Have to raise screen before setting intensity if in EFTEM with auto mag changes
   // Otherwise set it now or set LD intensity
@@ -920,13 +1008,13 @@ int CMultiTSTasks::AutocenterBeam(float maxShift)
   mWinApp->UpdateBufferWindows();
   mWinApp->SetStatusText(MEDIUM_PANE, "AUTOCENTERING BEAM");
   if (raise) {
-
-    // If raising screen, save the intensity that needs to be used
-    mAcIntensityToUse = param->intensity;
     mScope->SetScreenPos(spUp);
     mWinApp->AddIdleTask(CEMscope::TaskScreenBusy, TASK_AUTOCEN_BEAM, 1, 60000);
     mWinApp->SetStatusText(SIMPLE_PANE, "RAISING SCREEN");
   } else {
+    if (mWinApp->LowDoseMode())
+      mScope->GotoLowDoseArea(TRIAL_CONSET);
+    ShiftBeamForCentering(param);
     mCamera->InitiateCapture(TRACK_CONSET);
     mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, TASK_AUTOCEN_BEAM, 0, 0);
   }
@@ -936,14 +1024,30 @@ int CMultiTSTasks::AutocenterBeam(float maxShift)
 // The next task is simply to center the beam based on the image
 void CMultiTSTasks::AutocenNextTask(int param)
 {
+  LowDoseParams *ldp = mWinApp->GetLowDoseParams() + TRIAL_CONSET;
+  float postShiftX = 0, postShiftY = 0;
   if (!mAutoCentering)
     return;
 
   // If an image was taken, center beam with it
   if (!param) {
     mImBufs->mCaptured = BUFFER_TRACKING;
-    mWinApp->mProcessImage->CenterBeamFromActiveImage(0., 0., mAcUseCentroid > 0, 
-      mAcMaxShift);
+
+    // But if there is post-shift, add it to the original shift so the report from 
+    // MoveBeam can be compensated for both shifts
+    if (mAcUseCentroid != 1 && (mAcUseParam->addedShiftX || mAcUseParam->addedShiftY)) {
+      postShiftX = mAcUseParam->addedShiftX;
+      postShiftY = mAcUseParam->addedShiftY;
+      mAcShiftedBeamX += postShiftX;
+      mAcShiftedBeamY += postShiftY;
+    }
+
+    // Center the beam: if it fails, remove the post-shift to undo the original shift
+    if (mWinApp->mProcessImage->CenterBeamFromActiveImage(0., 0., mAcUseCentroid > 0, 
+      mAcMaxShift)) {
+      postShiftX = -(mAcShiftedBeamX - postShiftX);
+      postShiftY = -(mAcShiftedBeamY - postShiftY);
+    }
   }
 
   // Need another shot if screen was raised or centroid being used; save and set 
@@ -952,15 +1056,23 @@ void CMultiTSTasks::AutocenNextTask(int param)
     if (param) {
       mAcSavedIntensity = mScope->GetIntensity();
       SEMTrace('I', "AutocenNextTask saving intensity %.5f  setting %.5f", 
-        mAcSavedIntensity, mAcIntensityToUse);
-      mScope->SetIntensity(mAcIntensityToUse);
+        mAcSavedIntensity, mAcUseParam->intensity);
+      mScope->SetIntensity(mAcUseParam->intensity);
       Sleep(mAcPostSettingDelay);
-    }else
+      if (mWinApp->LowDoseMode())
+        mScope->GotoLowDoseArea(TRIAL_CONSET);
+      ShiftBeamForCentering(mAcUseParam);
+    } else
       mAcUseCentroid++;
     mCamera->InitiateCapture(TRACK_CONSET);
     mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, TASK_AUTOCEN_BEAM, 0, 0);
     return;
   }
+
+  // If there is an added beam shift after centering, apply it now (or restore after err)
+  if (postShiftX || postShiftY)
+    mWinApp->mProcessImage->MoveBeam(NULL, postShiftX, postShiftY);
+
   StopAutocen();
 }
 

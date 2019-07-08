@@ -24,6 +24,8 @@
 #include "ParticleTasks.h"
 #include "BeamAssessor.h"
 #include "MacroProcessor.h"
+#include "MultiTSTasks.h"
+#include "AutocenSetupDlg.h"
 #include "FalconHelper.h"
 #include "PluginManager.h"
 #include "CalibCameraTiming.h"
@@ -2456,7 +2458,7 @@ void CCameraController::Capture(int inSet, bool retrying)
   CString logmess;
   int numActive = mWinApp->GetNumActiveCameras();
   int gainXoffset, gainYoffset, offsetPerMs;
-  double exposure, megaVoxel, megaVoxPerSec = 0.15;
+  double intensity,exposure, megaVoxel, megaVoxPerSec = 0.15;
   float scaleFac;
   bool superRes, falconHasFrames, weCanAlignFalcon, aligningOnly;
   BOOL retracting = inSet == RETRACT_BLOCKERS || inSet == RETRACT_ALL;
@@ -3208,10 +3210,16 @@ void CCameraController::Capture(int inSet, bool retrying)
       }
     }
 
-    // Start a counter and get start time for FPS output
-    if (mRepFlag < 0)
+    // When continuous is starting, start a counter and get start time for FPS output
+    // Also switch to autocenter intensity if intensity being tracked by autocenter
+    if (mRepFlag < 0) {
       mContinuousCount = 0;
-    else if (mContinuousCount == 1)
+      if (mWinApp->mMultiTSTasks->AutocenMatchingIntensity(ACTRACK_START_CONTIN)) {
+        intensity = mWinApp->mAutocenDlg->GetParamIntensity();
+        if (intensity)
+          mScope->SetIntensity(intensity);
+      }
+    } else if (mContinuousCount == 1)
       mContinStartTime = GetTickCount();
     mRepFlag = inSet;
   } else {
@@ -4151,7 +4159,9 @@ int CCameraController::CapSetLDAreaFilterSettling(int inSet)
     ldArea = ConSetToLDArea(inSet);
     if (mOppositeAreaNextShot)
       mScope->NextLDAreaOpposite();
-    if (ldArea != mLDwasSetToArea)
+
+    // Only go to low dose area on first shot of continuous mode
+    if (ldArea != mLDwasSetToArea && !(mRepFlag == inSet && mContinuousCount > 0))
         mScope->GotoLowDoseArea(ldArea);
     mOppositeAreaNextShot = false;
     mLDwasSetToArea = -1;
@@ -5704,9 +5714,16 @@ void CCameraController::ConstrainDriftSettling(float drift)
 bool CCameraController::FindNearestBinning(CameraParameters *camParam, 
                                            ControlSet *conSet, int &binInd, int &realBin)
 {
+  return FindNearestBinning(camParam, conSet->binning, conSet->K2ReadMode, binInd, 
+    realBin);
+}
+
+bool CCameraController::FindNearestBinning(CameraParameters *camParam, int binning,
+  int readMode, int &binInd, int &realBin)
+{
   int i, diff, minDiff = 100;
   for (i = 0; i < camParam->numBinnings; i++) {
-    diff = conSet->binning - camParam->binnings[i];
+    diff = binning - camParam->binnings[i];
     if (diff < 0)
       diff = -diff;
     if (minDiff > diff) {
@@ -5714,10 +5731,11 @@ bool CCameraController::FindNearestBinning(CameraParameters *camParam,
       binInd = i;
     }
   }
-  if (camParam->K2Type && !IS_SUPERRES(camParam, conSet->K2ReadMode) && !binInd)
+  if (camParam->K2Type && !IS_SUPERRES(camParam, readMode) && !binInd)
     binInd = 1;
   realBin = camParam->binnings[binInd];
-  return realBin != conSet->binning;
+  return realBin != binning;
+
 }
 
 // Add a reference to the array, computing total memory occupied and deleting any

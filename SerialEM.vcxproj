@@ -1566,6 +1566,9 @@ makehm /h /a afxhh.h IDW_,HIDW_,0x50000 "%(Filename)%(Extension)" &gt;&gt; "hlp\
     <None Include="hlp\html\hidd_de_reference.htm">
       <DeploymentContent>true</DeploymentContent>
     </None>
+    <None Include="hlp\html\hidd_driftwaitsetup.htm">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
     <None Include="hlp\html\hidd_multi_shot_setup.htm">
       <DeploymentContent>true</DeploymentContent>
     </None>

@@ -16,6 +16,7 @@
 #include "ChildFrm.h"
 #include "LogWindow.h"
 #include "EMscope.h"
+#include "AutocenSetupDlg.h"
 #include "shiftManager.h"
 #include "TSController.h"
 #include "CameraController.h"
@@ -378,6 +379,7 @@ void CMainFrame::OnClose()
   WINDOWPLACEMENT winPlace;
   int magInd;
   bool skipReset = false;
+  BOOL wasLD = mWinApp->LowDoseMode();
 
   if (  mClosingProgram)
     return;
@@ -409,22 +411,28 @@ void CMainFrame::OnClose()
 
   if (mWinApp->mScope->GetDoingLongOperation() && 
     mWinApp->mScope->StopLongOperation(true)) {
+    if (wasLD)
+      mWinApp->mLowDoseDlg.SetLowDoseMode(true);
         mClosingProgram = false;
-      return;
+        return;
   }
   
   if (mWinApp->mDocWnd->SaveSettingsOnExit() ||
     (!mWinApp->GetExitWithUnsavedLog() && 
     mWinApp->mLogWindow && mWinApp->mLogWindow->AskIfSave("exiting?")) ||
     mWinApp->mNavigator && mWinApp->mNavigator->AskIfSave("exiting?")) {
-      mClosingProgram = false;
+    if (wasLD)
+      mWinApp->mLowDoseDlg.SetLowDoseMode(true);
+    mClosingProgram = false;
     return;
   }
 
   if (mWinApp->mBufferManager->CheckAsyncSaving()) {
     if (AfxMessageBox("Do want to save that image somewhere before exiting?", 
       MB_QUESTION) == IDYES) {
-        mClosingProgram = false;
+      if (wasLD)
+        mWinApp->mLowDoseDlg.SetLowDoseMode(true);
+      mClosingProgram = false;
       return;
     }
   }

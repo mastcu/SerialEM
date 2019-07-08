@@ -227,6 +227,7 @@ public:
   afx_msg void OnTasksSetupcooker();
   afx_msg void OnTasksCookspecimen();
   afx_msg void OnTasksSetupAutocenter();
+  afx_msg void OnUpdateTasksSetupAutocenter(CCmdUI *pCmdUI);
   afx_msg void OnTasksAutocenterBeam();
   afx_msg void OnUpdateTasksAutocenterbeam(CCmdUI *pCmdUI);
   afx_msg void OnCameraSetdriftinterval();
@@ -366,6 +367,8 @@ public:
   void OpenNavigatorIfClosed(void);
   afx_msg void OnCameraAlwaysAntialiasK23();
   afx_msg void OnUpdateCameraAlwaysAntialiasK23(CCmdUI *pCmdUI);
+  afx_msg void OnBeamSpotListCalibrations();
+  afx_msg void OnTasksSetupWaitForDrift();
 };
 
 /////////////////////////////////////////////////////////////////////////////

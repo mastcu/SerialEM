@@ -28,6 +28,7 @@
 #include "MacroProcessor.h"
 #include "GainRefMaker.h"
 #include "LogWindow.h"
+#include "ParticleTasks.h"
 #include "FilterTasks.h"
 #include "NavigatorDlg.h"
 #include "NavHelper.h"
@@ -155,6 +156,7 @@ int CParameterIO::ReadSettings(CString strFileName)
   FrameAliParams faParam, *faData;
   BOOL *useGPU4K2Ali = mWinApp->mCamera->GetUseGPUforK2Align();
   MultiShotParams *msParams = mWinApp->mNavHelper->GetMultiShotParams();
+  DriftWaitParams *dwParams = mWinApp->mParticleTasks->GetDriftWaitParams();
   ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
   int faLastFileIndex = -1, faLastArrayIndex = -1;
   mWinApp->mCamera->SetFrameAliDefaults(faParam, "4K default set", 4, 0.06f, 1);
@@ -457,6 +459,17 @@ int CParameterIO::ReadSettings(CString strFileName)
       } else if (NAME_IS("CustomHoleY")) {
         for (index = 1; index < MAX_TOKENS && !itemEmpty[index]; index++)
           msParams->customHoleY.push_back((float)itemDbl[index]);
+      } else if (NAME_IS("DriftWaitParams")) {
+        dwParams->measureType = itemInt[1];
+          dwParams->driftRate = (float)itemDbl[2];
+          dwParams->useAngstroms = itemInt[3] != 0;
+          dwParams->interval = (float)itemDbl[4];
+          dwParams->maxWaitTime = (float)itemDbl[5];
+          dwParams->failureAction = itemInt[6];
+          dwParams->setTrialParams = itemInt[7] != 0;
+          dwParams->exposure = (float)itemDbl[8];
+          dwParams->binning = itemInt[9];
+          dwParams->changeIS = itemInt[10] != 0;
 
       } else if (NAME_IS("NavigatorAcquireParams")) {
         navParams->acqAutofocus = itemInt[1] != 0;
@@ -520,6 +533,10 @@ int CParameterIO::ReadSettings(CString strFileName)
         acParmP->exposure = itemDbl[6];
         acParmP->useCentroid = itemInt[7];
         acParmP->probeMode = itemInt[8] < 0 ? 1 : itemInt[8];
+        acParmP->shiftBeamForCen = itemInt[9] < 0 ? 0 : itemInt[9];
+        acParmP->beamShiftUm = itemInt[9] < 0 ? 1.f : itemInt[10];
+        acParmP->addedShiftX = itemInt[9] < 0 ? 0.f : (float)itemDbl[11];
+        acParmP->addedShiftY = itemInt[9] < 0 ? 0.f : (float)itemDbl[12];
         mWinApp->mMultiTSTasks->AddAutocenParams(acParmP);
 
       } else if (NAME_IS("RangeFinderParams")) {
@@ -634,7 +651,8 @@ int CParameterIO::ReadSettings(CString strFileName)
         NAME_IS("ReadDlgPlacement") || NAME_IS("StatePlacement") ||
         NAME_IS("MacroToolPlacement") || NAME_IS("MacroEditerPlacement") ||
         NAME_IS("OneLinePlacement") || NAME_IS("MultiShotPlacement") ||
-        NAME_IS("CtffindPlacement") || NAME_IS("OneEditerPlacement")) {
+        NAME_IS("CtffindPlacement") || NAME_IS("OneEditerPlacement") ||
+        NAME_IS("AutocenPlacement")) {
         index = NAME_IS("OneEditerPlacement") ? 1 : 0;
         if (strItems[index + 10].IsEmpty() || 
           (index && (itemInt[1] < 0 || itemInt[1] >= MAX_MACROS))) {
@@ -652,6 +670,8 @@ int CParameterIO::ReadSettings(CString strFileName)
             place = mWinApp->mNavHelper->GetMultiShotPlacement(false);
           else if (NAME_IS("CtffindPlacement"))
             place = mWinApp->mProcessImage->GetCtffindPlacement();
+          else if (NAME_IS("AutocenPlacement"))
+            place = mWinApp->mMultiTSTasks->GetAutocenPlacement();
           else if (NAME_IS("StatePlacement")) {
             mWinApp->SetOpenStateWithNav(itemInt[1] != 0);
             place = mWinApp->mNavHelper->GetStatePlacement();
@@ -1151,6 +1171,7 @@ void CParameterIO::WriteSettings(CString strFileName)
   WINDOWPLACEMENT *ctffindPlace = mWinApp->mProcessImage->GetCtffindPlacement();
   WINDOWPLACEMENT *rotAlignPlace = mWinApp->mNavHelper->GetRotAlignPlacement();
   WINDOWPLACEMENT *multiShotPlace = mWinApp->mNavHelper->GetMultiShotPlacement(true);
+  WINDOWPLACEMENT *autocenPlace = mWinApp->mMultiTSTasks->GetAutocenPlacement();
   int *macroButtonNumbers = mWinApp->mCameraMacroTools.GetMacroNumbers();
   mWinApp->CopyCurrentToCameraLDP();
   DoseTable *doseTables = mWinApp->mBeamAssessor->GetDoseTables();
@@ -1171,6 +1192,7 @@ void CParameterIO::WriteSettings(CString strFileName)
   FrameAliParams faParam;
   BOOL *useGPU4K2Ali = mWinApp->mCamera->GetUseGPUforK2Align();
   MultiShotParams *msParams = mWinApp->mNavHelper->GetMultiShotParams();
+  DriftWaitParams *dwParams = mWinApp->mParticleTasks->GetDriftWaitParams();
   ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
 
   // Transfer macros from any open editing windows
@@ -1344,6 +1366,11 @@ void CParameterIO::WriteSettings(CString strFileName)
       OutputVector("CustomHoleY", (int)msParams->customHoleY.size(), NULL, 
         &msParams->customHoleY);
     }
+    oneState.Format("DriftWaitParams %d %f %d %f %f %d %d %f %d %d\n", dwParams->measureType,
+      dwParams->driftRate, dwParams->useAngstroms, dwParams->interval,
+      dwParams->maxWaitTime, dwParams->failureAction, dwParams->setTrialParams,
+      dwParams->exposure, dwParams->binning, dwParams->changeIS);
+    mFile->WriteString(oneState);
     oneState.Format("NavigatorAcquireParams %d %d %d %d %d %d %d %d %d %d %d %d %d %d"
       " %d %d %d %d %d %d %d\n", navParams->acqAutofocus ? 1 : 0, 
       navParams->acqFineEucen ? 1 : 0,
@@ -1375,10 +1402,11 @@ void CParameterIO::WriteSettings(CString strFileName)
           acParams->magIndex, acParams->spotSize, acParams->probeMode, 
           acParams->intensity, j);
         if (j == i) {
-          oneState.Format("AutocenterParams %d %d %d %f %d %f %d %d -999\n", 
+          oneState.Format("AutocenterParams %d %d %d %f %d %f %d %d %d %f %f %f -999\n", 
             acParams->camera, acParams->magIndex, acParams->spotSize, acParams->intensity,
             acParams->binning, acParams->exposure, acParams->useCentroid ? 1 : 0, 
-            acParams->probeMode);
+            acParams->probeMode, acParams->shiftBeamForCen ? 1 : 0, acParams->beamShiftUm,
+            acParams->addedShiftX, acParams->addedShiftY);
           mFile->WriteString(oneState);
         }
       }
@@ -1479,6 +1507,7 @@ void CParameterIO::WriteSettings(CString strFileName)
     WritePlacement("ReadDlgPlacement", 0, readPlace);
     WritePlacement("StageToolPlacement", 0, stageToolPlace);
     WritePlacement("CtffindPlacement", 0, ctffindPlace);
+    WritePlacement("AutocenPlacement", 0, autocenPlace);
     WritePlacement("MacroToolPlacement", mWinApp->mMacroToolbar ? 1 : 0, toolPlace);
     WritePlacement("OneLinePlacement", mWinApp->mMacroProcessor->mOneLineScript ? 1 : 0, 
       oneLinePlace);

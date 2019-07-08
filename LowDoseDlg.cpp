@@ -12,11 +12,13 @@
 #include "SerialEMView.h"
 #include ".\LowDoseDlg.h"
 #include "EMscope.h"
+#include "MainFrm.h"
 #include "ShiftManager.h"
 #include "CameraController.h"
 #include "EMmontageController.h"
 #include "BeamAssessor.h"
 #include "NavHelper.h"
+#include "AutocenSetupDlg.h"
 #include "MacroProcessor.h"
 #include "NavigatorDlg.h"
 #include "MultiTSTasks.h"
@@ -214,6 +216,13 @@ void CLowDoseDlg::SetLowDoseMode(BOOL inVal, BOOL hideOffState)
     return;
   if (inVal && mWinApp->GetSTEMMode() && mWinApp->DoSwitchSTEMwithScreen())
     return;
+
+  if (mWinApp->mAutocenDlg && !((CMainFrame *)mWinApp->m_pMainWnd)->GetClosingProgram()) {
+    SEMMessageBox("You cannot turn Low Dose mode on or off with\n"
+      "the Beam Autocenter Setup dialog open");
+    mWinApp->ErrorOccurred(1);
+    return;
+  }
 
   // Set a one-shot flag for hiding the off state; only set the variable for 
   // the checkbox if it is not being hidden
@@ -587,9 +596,27 @@ bool CLowDoseDlg::ShiftsBalanced(void)
 
 void CLowDoseDlg::OnContinuousupdate() 
 {
+  double intensity = 0.;
+  bool manage = false;
   UpdateData(true); 
   mWinApp->RestoreViewFocus();  
   m_statMagSpot.EnableWindow(m_bContinuousUpdate);
+
+  // If the autocenter setup dialog is open and we are in Trial, the intensity is the
+  // autocen one when turning on continuous, so reassert the Trial one first; but when
+  // turning it off, reassert the centering if screen is down
+  if (mWinApp->mAutocenDlg && mScope->GetLowDoseArea() == TRIAL_CONSET) {
+    if (m_bContinuousUpdate) {
+      intensity = mLDParams[TRIAL_CONSET].intensity;
+    } else if (mWinApp->mMultiTSTasks->AutocenMatchingIntensity()) {
+      intensity = mWinApp->mAutocenDlg->GetParamIntensity();
+      manage = true;
+    }
+    if (intensity)
+      mScope->SetIntensity(intensity);
+    if (mWinApp->mAutocenDlg)
+      mWinApp->mAutocenDlg->ManageLDtrackText(manage);
+  }
   mScope->SetLDContinuousUpdate(m_bContinuousUpdate);
 }
 
@@ -1191,7 +1218,7 @@ void CLowDoseDlg::Update()
   // Disable continuous update, tying focus/trial and shifting center if tasks
   bEnable = !mWinApp->DoingTasks();
   m_butLowDoseMode.EnableWindow(bEnable && !mWinApp->DoingComplexTasks() &&
-    !mScope->GetJeol1230() &&
+    !mScope->GetJeol1230() && !mWinApp->mAutocenDlg &&
     (!mWinApp->GetSTEMMode() || !mWinApp->DoSwitchSTEMwithScreen()));
   m_butContinuousUpdate.EnableWindow(bEnable);
   m_butNormalizeBeam.EnableWindow(!STEMmode && bEnable);
@@ -1229,8 +1256,9 @@ void CLowDoseDlg::Update()
 void CLowDoseDlg::ManageMagSpot(int inSetArea, BOOL screenDown)
 {
   int mag, spotSize;
-  double intensity, dose, beamX, beamY;
-  ScaleMat BStoIS, IStoBS, IStoSpec, BStoSpec;
+  double intensity, dose;
+  float beamX, beamY;
+  ScaleMat IStoBS;
   LowDoseParams *ldArea = &mLDParams[inSetArea];
   ControlSet *conSet = mWinApp->GetConSets() + inSetArea;
   BOOL needUpdate = false;
@@ -1279,12 +1307,8 @@ void CLowDoseDlg::ManageMagSpot(int inSetArea, BOOL screenDown)
     }
   } else {
     if (IStoBS.xpx && ldArea->magIndex) {
-      BStoIS = mShiftManager->MatInv(IStoBS);
-      IStoSpec = mShiftManager->IStoSpecimen(ldArea->magIndex);
-      if (IStoSpec.xpx) {
-        BStoSpec = mShiftManager->MatMul(BStoIS, IStoSpec);
-        beamX = BStoSpec.xpx * ldArea->beamDelX + BStoSpec.xpy * ldArea->beamDelY;
-        beamY = BStoSpec.ypx * ldArea->beamDelX + BStoSpec.ypy * ldArea->beamDelY;
+      if (mShiftManager->BeamShiftToSpecimenShift(IStoBS, ldArea->magIndex, 
+        ldArea->beamDelX, ldArea->beamDelY, beamX, beamY)) {
         if (inSetArea != mLastSetArea || beamX != mLastBeamX || beamY != mLastBeamY) {
           m_strBeamShift.Format("%.2f, %.2f", beamX, beamY);
           needUpdate = true;

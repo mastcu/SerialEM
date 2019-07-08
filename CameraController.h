@@ -968,6 +968,8 @@ public:
   void SetFullSumAsyncIfOK(int inSet);
   bool FindNearestBinning(CameraParameters *camParam, ControlSet *conSet, int &binInd,
     int &realBin);
+  bool FindNearestBinning(CameraParameters *camParam, int binning, int readMode, int &binInd,
+    int &realBin);
   void ComposeFramePathAndName(bool temporary);
   int GetPluginVersion(CameraParameters *camP);
   static int StartFocusRamp(CameraThreadData * td, bool & rampStarted);

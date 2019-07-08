@@ -455,8 +455,11 @@ struct AutocenParams {
   int probeMode;
   double intensity;
   int binning;
-  double exposure;
+  float exposure;
   BOOL useCentroid;
+  BOOL shiftBeamForCen;
+  float beamShiftUm;
+  float addedShiftX, addedShiftY;
 };
 
 // Tilt range finder params

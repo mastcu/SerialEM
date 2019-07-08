@@ -11,6 +11,9 @@ class CBeamAssessor;
 class EMbufferManager;
 struct StageMoveInfo;
 class CTSViewRange;
+class CAutocenSetupDlg;
+
+enum { ACTRACK_TO_TRIAL = 1, ACTRACK_START_CONTIN };
 
 class CMultiTSTasks
 {
@@ -67,10 +70,12 @@ private:
   int mAcUseCentroid;    // Flag that current operation should use centroid
   BOOL mAutoCentering;    // Flag for taking image when autocentering
   int mAcPostSettingDelay;  // Delay after setting intensity
-  double mAcIntensityToUse; // Intensity to use if have to raise screen first
+  AutocenParams * mAcUseParam;  // Save param for later use
   int mAcSavedLDDownArea;  // Saved value of low dose down area
-  bool mAcSetupDlgOpen;    // Flag that setup dialog is open
   float mAcMaxShift;      // maximum shift in microns, reject movement if higher
+  float mAcShiftedBeamX;  // Amount of beam shift in microns on camera imposed
+  float mAcShiftedBeamY;
+  WINDOWPLACEMENT mAutocenDlgPlace;
   int mRangeConsets[6];   // Consets for range finding, regular and low dose
   BOOL mTrZeroDegConSet;  // Control set for zero-degree shots
   float mMinTrZeroDegField;  // Minimum field size for those shots
@@ -148,7 +153,6 @@ public:
   GetMember(double, TiltRangeLowStamp)
   GetMember(double, TiltRangeHighStamp)
   SetMember(BOOL, EndTiltRange);
-  GetMember(bool, AcSetupDlgOpen);
   SetMember(BOOL, SkipNextBeamShift);
   GetSetMember(int, CkNumAlignSteps);
   GetSetMember(float, CkAlignStep);
@@ -169,7 +173,7 @@ public:
   int DeleteAutocenParams(int camera, int magInd, int spot, int probe, double roughInt);
   AutocenParams *LookupAutocenParams(int camera, int magInd, int spot, int probe, double roughInt, 
     int &index);
-  void SetupAutocenter(bool reopen);
+  void SetupAutocenter();
   void MakeAutocenConset(AutocenParams * param);
   int AutocenterBeam(float maxShift = 0.);
   void AutocenNextTask(int param);
@@ -205,4 +209,13 @@ public:
   int InvertFileInZ(int zmax, float *tiltAngles = NULL);
   void BidirFileCopyClearFlags(void);
   void SetAnchorStageXYMove(StageMoveInfo & smi);
+  void TestAutocenAcquire();
+  void AutocenTestAcquireDone();
+  void AutocenClosing();
+  bool AutocenTrackingState(int changing = 0);
+  bool AutocenMatchingIntensity(int changing = 0);
+  WINDOWPLACEMENT *GetAutocenPlacement(void);
+  void ShiftBeamForCentering(AutocenParams * param);
+  void GetCenteringBeamShift(float &cenShiftX, float &cenShiftY) {
+    cenShiftX = mAcShiftedBeamX; cenShiftY = mAcShiftedBeamY;};
 };

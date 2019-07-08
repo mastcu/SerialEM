@@ -36,6 +36,7 @@
 #include "CookerSetupDlg.h"
 #include "MultiShotDlg.h"
 #include "MultiTSTasks.h"
+#include "DriftWaitSetupDlg.h"
 #include "NavBacklashDlg.h"
 #include "ExternalTools.h"
 #include "Mailer.h"
@@ -303,7 +304,7 @@ BEGIN_MESSAGE_MAP(CMenuTargets, CCmdTarget)
   ON_UPDATE_COMMAND_UI(ID_CAMERA_GAINREFPOLICY, OnUpdateCameraGainrefpolicy)
   ON_COMMAND(ID_CALIBRATION_SET_IS_DELAY_FACTOR, OnCalibrationSetIsDelayFactor)
   ON_COMMAND(ID_NAVIGATOR_POLYGON_FROM_CORNERS, OnNavigatorPolygonFromCorners)
-  ON_UPDATE_COMMAND_UI(ID_TASKS_SETUPAUTOCENTER, OnUpdateNoTasksNoSTEM)
+  ON_UPDATE_COMMAND_UI(ID_TASKS_SETUPAUTOCENTER, OnUpdateTasksSetupAutocenter)
   ON_UPDATE_COMMAND_UI(ID_TASKS_SETUPCOOKER, OnUpdateNoTasksNoSTEM)
   ON_UPDATE_COMMAND_UI(ID_TASKS_COOKSPECIMEN, OnUpdateNoTasksNoTSnoSTEM)
   ON_COMMAND(ID_TASKS_ASSESS_INTERSET_SHIFTS, OnTasksAssessIntersetShifts)
@@ -447,7 +448,11 @@ BEGIN_MESSAGE_MAP(CMenuTargets, CCmdTarget)
   ON_UPDATE_COMMAND_UI_RANGE(ID_EXTERNAL_TOOL1, ID_EXTERNAL_TOOL25, OnUpdateNoTasks)
   ON_COMMAND(ID_SPECIALSETTINGS_ALWAYSANTIALIASK2, OnCameraAlwaysAntialiasK23)
   ON_UPDATE_COMMAND_UI(ID_SPECIALSETTINGS_ALWAYSANTIALIASK2, OnUpdateCameraAlwaysAntialiasK23)
-  END_MESSAGE_MAP()
+    ON_COMMAND(ID_BEAMSPOT_LISTCALIBRATIONS, OnBeamSpotListCalibrations)
+    ON_UPDATE_COMMAND_UI(ID_BEAMSPOT_LISTCALIBRATIONS, OnUpdateNoTasks)
+    ON_COMMAND(ID_TASKS_SETUPWAITFORDRIFT, OnTasksSetupWaitForDrift)
+    ON_UPDATE_COMMAND_UI(ID_TASKS_SETUPWAITFORDRIFT, OnUpdateNoTasks)
+    END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
 // CMenuTargets message handlers
@@ -2395,7 +2400,13 @@ void CMenuTargets::OnTasksCookspecimen()
 
 void CMenuTargets::OnTasksSetupAutocenter()
 {
-  mWinApp->mMultiTSTasks->SetupAutocenter(false);
+  mWinApp->mMultiTSTasks->SetupAutocenter();
+}
+
+void CMenuTargets::OnUpdateTasksSetupAutocenter(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(!mWinApp->mAutocenDlg && !mWinApp->DoingTasks() && 
+    !mWinApp->GetSTEMMode());
 }
 
 void CMenuTargets::OnTasksAutocenterBeam()
@@ -2460,6 +2471,13 @@ void CMenuTargets::OnUpdateTasksReviseCancel(CCmdUI *pCmdUI)
       anyset = true;
   pCmdUI->Enable(anyset || (mWinApp->GetImBufs())->mTimeStamp == 
     mWinApp->mShiftCalibrator->GetISStimeStampLast());
+}
+
+
+void CMenuTargets::OnTasksSetupWaitForDrift()
+{
+  CDriftWaitSetupDlg dlg;
+  dlg.DoModal();
 }
 
 void CMenuTargets::OnSpecialSkipBeamShiftInTs()
@@ -2826,4 +2844,9 @@ void CMenuTargets::OnSettingsSetProperty()
 void CMenuTargets::OnExternalTool(UINT nID)
 {
   mWinApp->mExternalTools->RunToolCommand(nID - ID_EXTERNAL_TOOL1);
+}
+
+void CMenuTargets::OnBeamSpotListCalibrations()
+{
+  mShiftManager->ListBeamShiftCals();
 }

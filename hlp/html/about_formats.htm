@@ -932,6 +932,18 @@
 &nbsp;&nbsp; alpha<br />
 &nbsp;&nbsp; magnification</p>
       <p>
+          <em>SpotIntensities:</em>&nbsp; There may be two tables if either nanoprobe or 
+          microprobe has two calibrations, one below crossover and 
+          one above crossover.&nbsp; However, a table can have one condition done below 
+          crossover and the other above.&nbsp; It all gets sorted out into seprate tables 
+          internally.&nbsp; Each row contains:<br />
+&nbsp;&nbsp; Spot size<br />
+&nbsp;&nbsp; Microprobe intensity ratio, intensity at which acquired, and crossover intensity<br />
+&nbsp;&nbsp; Nanoprobe intensity ratio, intensity at which acquired, and crossover intensity</p>
+      <p>
+          where a ratio of 0 indicates no measurement for that spot size.<br />
+      </p>
+      <p>
           <em>Stage Calibration and 2x2 transformation matrices </em></p>
       <p>
           The stage calibration consists of 4 matrix terms, and like all such 

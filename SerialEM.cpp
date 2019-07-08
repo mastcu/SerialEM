@@ -44,6 +44,7 @@
 #include "NavigatorDlg.h"
 #include "NavHelper.h"
 #include "MultiShotDlg.h"
+#include "AutocenSetupDlg.h"
 #include "CalibCameraTiming.h"
 #include "MultiTSTasks.h"
 #include "ParticleTasks.h"
@@ -2092,6 +2093,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
       busy = mParticleTasks->MultiShotBusy();
     else if (idc->source == TASK_MOVE_APERTURE)
       busy = mScope->ApertureBusy();
+    else if (idc->source == TASK_WAIT_FOR_DRIFT)
+      busy = mParticleTasks->WaitForDriftBusy();
 
     // Increase timeouts after long intervals
     if (idc->extendTimeOut)
@@ -2142,13 +2145,15 @@ BOOL CSerialEMApp::CheckIdleTasks()
         else if (idc->source == TASK_TILT_RANGE)
           mMultiTSTasks->TiltRangeNextTask(idc->param);
         else if (idc->source == TASK_TEST_AUTOCEN)
-          mMultiTSTasks->SetupAutocenter(true);
+          mMultiTSTasks->AutocenTestAcquireDone();
         else if (idc->source == TASK_AUTOCEN_BEAM)
           mMultiTSTasks->AutocenNextTask(idc->param);
         else if (idc->source == TASK_REMOTE_CTRL)
           mRemoteControl.TaskDone(idc->param);
         else if (idc->source == TASK_MULTI_SHOT)
           mParticleTasks->MultiShotNextTask(idc->param);
+        else if (idc->source == TASK_WAIT_FOR_DRIFT)
+          mParticleTasks->WaitForDriftNextTask(idc->param);
         else if (idc->source == TASK_RESET_SHIFT)
           mShiftManager->ResetISDone();
         else if (idc->source == TASK_CAL_IMAGESHIFT)
@@ -2254,6 +2259,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
           mRemoteControl.TaskCleanup(busy);
         else if (idc->source == TASK_MULTI_SHOT)
           mParticleTasks->MultiShotCleanup(busy);
+        else if (idc->source == TASK_WAIT_FOR_DRIFT)
+          mParticleTasks->WaitForDriftCleanup(busy);
         else if (idc->source == TASK_RESET_SHIFT)
           mShiftManager->ResetISCleanup(busy);
         else if (idc->source == TASK_CAL_IMAGESHIFT)
@@ -2444,6 +2451,8 @@ void CSerialEMApp::ErrorOccurred(int error)
     mMultiTSTasks->StopAnchorImage();
   if (mParticleTasks->DoingMultiShot())
     mParticleTasks->StopMultiShot();
+  if (mParticleTasks->GetWaitingForDrift())
+    mParticleTasks->StopWaitForDrift();
   if (mStageMoveTool && mStageMoveTool->GetGoingToAcquire())
     mStageMoveTool->StopNextAcquire();
   if (mCamera->GetWaitingForStacking())
@@ -2817,6 +2826,8 @@ void CSerialEMApp::UpdateBufferWindows()
     mDocWnd->mReadFileDlg->Update();
   if (mStageMoveTool)
     mStageMoveTool->Update();
+  if (mAutocenDlg)
+    mAutocenDlg->UpdateEnables();
   UpdateAllEditers();
   UpdateMacroButtons();
 }
@@ -2857,6 +2868,8 @@ void CSerialEMApp::UpdateWindowSettings()
     mSTEMcontrol.UpdateSettings();
   if (mMacroToolbar)
     mMacroToolbar->UpdateSettings();
+  if (mAutocenDlg)
+    mAutocenDlg->UpdateSettings();
 }
 
 
@@ -2880,7 +2893,7 @@ BOOL CSerialEMApp::DoingImagingTasks()
     mDistortionTasks->DoingStagePairs() ||
     mCalibTiming->Calibrating() ||
     mCalibTiming->DoingDeadTime() ||
-    mParticleTasks->DoingMultiShot() ||
+    mParticleTasks->DoingMultiShot() || mParticleTasks->GetWaitingForDrift() ||
     (mNavigator && ((mNavigator->GetAcquiring() && !mNavigator->GetStartedTS() && 
     !mNavigator->StartedMacro() && !mNavigator->GetPausedAcquire()) ||
     mNavHelper->GetRealigning() ||
@@ -3413,6 +3426,13 @@ void CSerialEMApp::SetActiveCameraNumber(int inNum)
   bool eitherSTEM, matchPixel, matchIntensity;
   if (inNum >= mNumActiveCameras)
     inNum = mNumActiveCameras - 1;
+  if (mAutocenDlg && mCurrentActiveCamera != inNum && !mAppExiting) {
+    SEMMessageBox("You cannot change the current camera while\n"
+      "the Beam Autocentering Setup Dialog is open");
+    ErrorOccurred(1);
+    return;
+  }
+
   if (mNoCameras) {
     mCurrentActiveCamera = inNum;
     mCurrentCamera = mActiveCameraList[mCurrentActiveCamera];

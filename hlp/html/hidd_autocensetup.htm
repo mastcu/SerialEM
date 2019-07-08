@@ -9,25 +9,35 @@
   <BODY BGCOLOR="#ffffff" TEXT="#000000">
     <basefont size="2">
     <P><A NAME="hidd_autocensetup"></A><B><FONT size="3">Beam Autocenter Setup Dialog</FONT></B></P>
-    <P>This dialog box allows you to set the beam intensity, exposure time and binning 
-      that will be used to acquire an image for centering the beam automatically. 
-      Essentially, you need to set the beam to a size appropriate for the method of 
-      autocentering to be used, then you need adjust the exposure time and binning to 
-      avoid saturating the camera, where you can take pictures from within this 
+    <P>This dialog box allows you to set the beam intensity and other conditions for 
+        centering the beam automatically. Essentially, you need to set the beam to a size appropriate for the method of 
+      autocentering to be used, then you may need to adjust the exposure time and binning to 
+      avoid saturating the camera.&nbsp; You can take pictures from within this 
       dialog to check both of these adjustments. The autocentering routine can use 
       two methods: finding the edges of the beam, as the <A HREF="menu_tasks.htm#hid_tasks_centerbeam">
         Center Beam command</A> does, or simply measuring the average location 
-      (centroid) of all the counts in an image containing the whole beam. The 
-      edge-finding method is preferred unless the beam edges are not sharp enough for 
-      it to work, because the centroid method requires a greater intensity change and 
+      (centroid) of all the counts in an image containing the whole beam. When the beam 
+        edges are sharp enough, which may be the case only for FEG microscopes, the 
+        edge-finding method is preferred because the centroid method requires a greater intensity change and 
       requires two images to avoid an error if part of the beam is out of the image. 
-      The centroid will also be off from the beam center if the sample causes large 
-      gradients in intensity.</P>
-    <P>To use the edge-finding method, adjust the beam so that you can see a majority 
-      of its edge, or until it is just inscribed in the camera field of view. There 
-      should be no need to make it smaller than that. To use to centroid method, you 
+        To use the centroid method, you 
       need to make the beam substantially smaller than the camera field, with the 
-      diameter perhaps half to two-thirds the size of the camera.</P>
+      diameter perhaps half to two-thirds the size of the camera.&nbsp; The centroid will also be off from the beam center if the sample causes large 
+      gradients in intensity.</P>
+      <P>The edge-finding method can be applied with or without shifting the beam to bring 
+          a large portion of edge into view.&nbsp; If no initial shift is applied, the 
+          beam needs to be adjusted so that you can see a substantial fraction (1/3 to 
+          1/2) of its edge in the four corners of the field.&nbsp; If the beam is not 
+          reliably close to circular, it should be adjusted&nbsp;until it is just 
+          inscribed in the camera field of view; there should be no need to make it 
+          smaller than that.</P>
+      <P>With an initial shift applied, the beam can be larger than the camera field, 
+          perhaps up to twice as big.&nbsp; This option provides one solution if the beam 
+          shifts its position when condensed small enough to use it without any shift.&nbsp; 
+          An amount of shift should be applied that will bring the edge close to the 
+          center of the field when the beam starts out centered.&nbsp; A non-circular beam 
+          will definitely give a biased result when analyzing much less than half the beam 
+          edge, but in practice this may be acceptable. </P>
     <P>The program can store the settings to control the autocentering separately for 
       each spot size, magnification, and camera. In addition, separate settings can 
       be stored for intensities on either side of condenser crossover. This does not 
@@ -36,36 +46,93 @@
       spot size from the settings for a nearby mag and spot. However, it cannot 
       transfer settings from one camera to another or from one side of crossover to 
       another.</P>
+      <P>This dialog is non-modal (as of SerialEM 3.8.0, 7/1/19), which means other 
+          operations are allowed while the dialog is open.&nbsp; Two incompatible 
+          operations are prevented when the dialog is open: changing the current camera 
+          and turning Low Dose mode on or off.&nbsp; Other tasks and complex operations will 
+          temporarily disable all the controls in the dialog.</P>
+      <P>There are some fundamental differences in the way the dialog behaves and how you 
+          can adjust settings depending on whether Low Dose mode is on or off.</P>
+      <P><em><strong>With Low Dose mode off</strong></em>, beam adjustment is enabled by turning on the option <B>Setup beam on scope and track scope state</B>, 
+          which links the settings shown in the dialog to the state of the microscope.&nbsp; 
+          When the option is turned on, the microscope is switched to the state specified 
+          by the dialog parameters. Changes in the dialog will be imposed on the 
+          microscope; changes on the microscope will be reflected in the dialog.&nbsp;&nbsp; 
+          The <strong>Bigger</strong> and <strong>Smaller</strong> buttons will be enabled 
+          to adjust beam size, and the <strong>Test Acquire</strong> button is enabled 
+          because the scope is already in the needed state.&nbsp; Changing the spot size, 
+          magnification, or probe mode in either the dialog or the microscope will switch 
+          the dialog to a different parameter set, and scope intensity will be set to the 
+          intensity setting of the new parameter set.</P>
     <P>You can set up these parameters by adjusting the beam to a likely size on the 
-      viewing screen, then taking an image with 'Test Acquire'. Adjust the beam size 
-      as needed, and reduce the exposure time or binning to avoid camera saturation. 
+      viewing screen, then taking an image with <strong>Test Acquire</strong>. Adjust the beam size 
+      as needed using the buttons or the
+        <a href="menu_tasks.htm#hid_process_setintensity">Set Intensity</a> command in 
+        the Tasks menu, and reduce the exposure time or binning to avoid camera saturation. 
       These latter values are originally based on the Trial camera parameter set.</P>
-    <P>You can open this dialog while in Low Dose mode.&nbsp; In Low Dose, 
-      autocentering images will be taken with Trial area parameters, except with the 
-      intensity needed for autocentering.&nbsp; Thus, when you open the dialog, the 
-      program will set the area to show when the screen is down to Trial; this 
-      original area choice will be restored when you are done.&nbsp; The program will 
-      also turn off continuous update.&nbsp; If you drop the screen with the dialog 
-      open, the Trial area will be shown with the autocentering intensity.</P>
+      <P><strong>&nbsp;<em>In Low Dose mode</em></strong>, autocentering images are taken 
+          with the Trial area microscope parameters, and only the intensity can be changed 
+          from the current Trial microscope state.&nbsp; The exposure time and binning can 
+          also be changed; they are initially based on those of the Trial parameter set.&nbsp; 
+          Here are points to be aware of:</P>
+      <ul>
+          <li>The magnification and spot size spin buttons are disabled and only reflect the 
+              current settings of the Trial area.&nbsp; </li>
+          <li>There is no specific option to control whether changes in intensity will be 
+              linked between the scope and dialog.&nbsp; Instead, this tracking of state is 
+              enabled in two conditions: when the screen is down and Trial is the current 
+              area; or when Trial images are being taken in continuous mode.&nbsp; 
+              Essentially, state is tracked when you can immediately assess the affects of 
+              intensity changes, so one way of setting the beam size is to adjust intensity 
+              while the screen is down or in continuous mode.</li>
+          <li>If the screen is lowered, or is down when the dialog is opened, the program 
+              switches to the Trial area and intensity is tracked.&nbsp; You will still need 
+              to unblank the beam if it is blanked.</li>
+          <li>If intensity is being tracked by either means, turning on <strong>Continuous 
+              update</strong> in the Low Dose panel will stop the intensity tracking and 
+              re-apply the stored Trial intensity.&nbsp; After that, changes in intensity will 
+              change the Trial parameters, not the autocentering intensity.&nbsp; (The program 
+              turns off <strong>Continuous update</strong> when you open this dialog.)</li>
+          <li>Intensity tracking will also be stopped if you change magnification, spot size, 
+              or probe mode away from their values in the Trial area.&nbsp; This prevents 
+              changes in intensity associated with those changes from affecting the autocentering intensity.</li>
+          <li>Instead of the checkbox to track the scope state, the program has a status line 
+              to indicate whether state is being tracked.</li>
+          <li>The <strong>Bigger,</strong> <strong>Smaller</strong> and <strong>Test Acquire</strong> 
+              buttons are all enabled regardless of whether state is being tracked.&nbsp; 
+              Thus, another way to set the intensity for autocentering is to use the first two 
+              buttons to adjust the intensity and the <strong>Test Acquire</strong> button to 
+              take an image with that intensity applied.&nbsp; If you take single Trial images 
+              by any other means, the current Trial intensity is used instead.</li>
+      </ul>
+    <P><B>Source of settings</B></P>
+    <P>This line reports whether the currently shown settings are stored values 
+      specific to this spot size and magnification, or whether they have been derived 
+      from a different spot size and/or magnification. If settings are derived, then 
+      as soon as you modify them in any way (i.e., change intensity, binning, 
+      exposure, or centering method), they will be stored and shown as directly set.</P>
     <P><B>Setup beam on scope and track scope state</B></P>
-    <P>This option links the settings shown in the dialog to the state of the 
-      microscope. Turn it on to have the state specified by the current parameters 
-      imposed on the scope, and to be able to adjust the intensity setting. With the 
-      option on, changing the spot size or magnification in the dialog will cause the 
-      corresponding change on the microscope, and vice versa. In addition, these 
-      changes will switch the dialog to a different parameter set, and scope 
-      intensity will be set to the intensity setting of the new parameter set. With 
+    <P>As explained above, this option appears only outside of Low Dose mode and 
+        sychronizes the dialog and 
+      microscope states.&nbsp; With 
       the option off, you can change the mag or spot size selectors to look at 
       different parameter sets without affecting the microscope; you can also change 
       binning or exposure time but not intensity.</P>
     <P><B>Spot size and Mag readouts and selectors</B></P>
-    <P>The controls let you see and change the current magnification and spot size of 
-      the dialog, which determine which parameter set is displayed.</P>
+    <P>The controls let you see the current magnification and spot size of 
+      the dialog, which determine which parameter set is displayed.&nbsp; Outside of low 
+        dose, you can also change these parameters with the spin buttons.&nbsp; If you 
+        want to use these buttons to browse through the parameter sets and possibly 
+        delete some, you should open the dialog with Low Dose mode off.&nbsp; Even the 
+        sets added in Low Dose mode will be displayed.</P>
     <P><B>Intensity readout</B></P>
     <P>The intensity setting in the current parameter set is displayed but can only be 
-      modified when the 'Track scope state' option is on.</P>
+        modified when the scope state is being tracked.</P>
     <P><B>Smaller - Bigger</B></P>
-    <P>The buttons will decrease or increase the beam diameter by about 10%.</P>
+    <P>The buttons will decrease or increase the beam diameter by about 10%.&nbsp; For 
+        smaller changes, use the <a href="menu_tasks.htm#hid_process_setintensity">Set Intensity</a> 
+        command in the Tasks menu or the intensity spin button in the
+        <a href="hidd_remotecontrol.htm">Microscope Control</a> panel.</P>
     <P><B>Binning</B></P>
     <P>Use the spin buttons to set the binning of the exposure. Binning can be reduced 
       to avoid saturation from a bright beam when exposure time is already as low as 
@@ -76,16 +143,49 @@
     <P><B>Beam centering method</B></P>
     <P>These radio buttons allow you to choose between finding edges and using 
       centroids, as described above.</P>
-    <P><B>Source of settings</B></P>
-    <P>This line reports whether the currently shown settings are stored values 
-      specific to this spot size and magnification, or whether they have been derived 
-      from a different spot size and/or magnification. If settings are derived, then 
-      as soon as you modify them in any way (i.e., change intensity, binning, 
-      exposure, or centering method), they will be stored and shown as directly set.</P>
-    <P><B>Test Acquire</B></P>
+      <P><strong>Find edges with beam shifted</strong></P>
+      <P>Use this option to shift the beam before finding the edges, which allows a beam 
+          larger than the field of view to be used for centering.&nbsp; This provides a 
+          way to avoid problems with the beam being constricted so that enough edges show, 
+          such as the beam shifting when condensed that much.&nbsp; The shift should be 
+          enough to bring the edge of the beam near the center of the field.&nbsp; With 
+          Low Dose mode off, the beam is shifted on a diagonal to maximize the beam edge 
+          in the field; in Low Dose mode, the beam is shifted perpendicular to the axis 
+          between Record and Trial to avoid impinging on either the Record area or another 
+          more distant area.&nbsp; The shift can be either negative or positive and 
+          determines the direction of movement.</P>
+      <P><strong>Record shift</strong></P>
+      <P>This feature can be used to leave the beam miscentered by a desired amount after 
+          centering it.&nbsp; This would provide a second way to deal with a consistent 
+          shift between the beam used for centering and the uncondensed beam, but it can 
+          also be used to bias the position of the beam away from the Record area for an 
+          extra margin of safety.&nbsp; It works like the <strong>Set</strong> button in 
+          the Low Dose panel: the program will keep track of the beam shift from when you 
+          turn on the checkbox to when you turn it off.&nbsp; After you turn it off, the 
+          shift will be shown to the right of the <strong>Reset</strong> button, in microns on the camera.</P>
+      <P>To correct for a consistent shift in the condensed beam used for autocentering:</P>
+      <ol>
+          <li>&nbsp;Autocenter the beam.</li>
+          <li>Turn on the checkbox.</li>
+          <li>If in Low Dose mode, turn on <strong>Continuous update</strong> to stop tracking 
+              state and see the uncondensed beam wth the screen down.&nbsp; If not in Low 
+              Dose, turn off tracking of the scope state.</li>
+          <li>Center the uncondensed beam.&nbsp; </li>
+          <li>Turn off the checkbox.</li>
+      </ol>
+      <p>
+          To mis-center the beam deliberately, you need to follow the same steps if you 
+          want to see the beam with the screen down or in continuous mode, except that 
+          step 4 would be to mis-center the beam.&nbsp; If you want to take single-shot 
+          images and move the beam in steps manually or with the Microscope Control panel buttons, you 
+          can omit step 3 in Low Dose mode.</p>
+      <P><strong>Reset/Abort</strong></P>
+      <P>When not recording a shift, this button is labeled 'Reset' and will clear out a 
+          recorded shift.&nbsp; When recording a shift, it is labeled 'Abort' and lets you 
+          stop recording a shift without losing the previous value.</P>
+      <P><B>Test Acquire</B></P>
     <P>Use this button to take an image with the current settings and see how large the 
-      beam is and whether it is saturating the camera. The dialog will close and 
-      reopen.&nbsp; The screen will be restored to its state before taking the picture 
+      beam is and whether it is saturating the camera. The screen will be restored to its state before taking the picture 
       unless you are in Low Dose mode.</P>
     <P><B>Delete Settings</B></P>
     <P>The button can be used to delete stored settings, which might be useful if you 

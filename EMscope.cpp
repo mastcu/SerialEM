@@ -1705,8 +1705,14 @@ void CEMscope::UpdateLowDose(int screenPos, BOOL needBlank, BOOL gotoArea, int m
 
       // If screen is down, next set the desired area, then unblank if needed
       if (screenPos == spDown) {
-        if (gotoArea && mLowDoseDownArea >= 0)
+        if (gotoArea && mLowDoseDownArea >= 0) {
           GotoLowDoseArea(mLowDoseDownArea);
+          if (mWinApp->mMultiTSTasks->AutocenMatchingIntensity()) {
+            delISX = mWinApp->mAutocenDlg->GetParamIntensity();
+            if (delISX > 0.)
+              SetIntensity(delISX);
+          }
+        }
         if (!needBlank)
           BlankBeam(false), "UpdateLowDose";
 
@@ -1819,7 +1825,7 @@ void CEMscope::UpdateLastMagEftemStem(int magIndex, double defocus, int screenPo
     // down and auto mag change disabled, it needs to be on
     else if (mWinApp->GetEFTEMMode() && mCanControlEFTEM) {
       needed = (screenPos == spUp || !mFiltParam->autoMag ||
-        (mWinApp->mAutocenDlg && mWinApp->mAutocenDlg->m_bSetState));
+        mWinApp->mMultiTSTasks->AutocenTrackingState());
       if (needed && !EFTEM || !needed && EFTEM) 
         SetEFTEM(needed);
     }
@@ -2703,7 +2709,6 @@ BOOL CEMscope::ChangeBeamShift(double shiftX, double shiftY, BOOL bInc)
     return false;
   
   ScopeMutexAcquire("ChangeBeamShift", true);
-
   try {
     if (bInc) {  // incremental
       mPlugFuncs->GetBeamShift(&oldX, &oldY);
@@ -2992,7 +2997,7 @@ BOOL CEMscope::SetScreenPos(int inPos)
 
   if (mWinApp->GetEFTEMMode() && mCanControlEFTEM) {
     BOOL needed = (inPos == spUp || !mFiltParam->autoMag ||
-      (mWinApp->mAutocenDlg && mWinApp->mAutocenDlg->m_bSetState));
+      mWinApp->mMultiTSTasks->AutocenTrackingState());
     SetEFTEM(needed);
   }
   
@@ -4532,7 +4537,7 @@ void CEMscope::UnblankAfterTransient(bool needUnblank, const char *routine)
 void CEMscope::GotoLowDoseArea(int newArea)
 {
   double delISX, delISY, beamDelX, beamDelY, startBeamX, startBeamY;
-  double curISX, curISY, newISX, newISY, centeredISX, centeredISY;
+  double curISX, curISY, newISX, newISY, centeredISX, centeredISY, intensity;
   int curAlpha;
   DWORD magTime;
   LowDoseParams *ldParams = mWinApp->GetLowDoseParams();
@@ -4546,7 +4551,7 @@ void CEMscope::GotoLowDoseArea(int newArea)
   bool toSearch = newArea == SEARCH_AREA;
   bool fromView = mLowDoseSetArea == VIEW_CONSET;
   bool toView = newArea == VIEW_CONSET;
-  bool splitBeamShift, leavingLowMag;
+  bool splitBeamShift, leavingLowMag, manage = false;
   bool probeDone = true, changingAtZeroIS;
   BOOL bDebug = GetDebugOutput('b');
   BOOL lDebug = GetDebugOutput('l');
@@ -4765,9 +4770,17 @@ void CEMscope::GotoLowDoseArea(int newArea)
   }
   
   // Now set intensity after all the changes JEOL might have imposed from spot or filter
-  if (!STEMmode && ldArea->intensity) {
-    if (!mWinApp->mMultiTSTasks->GetAcSetupDlgOpen())
-      DelayedSetIntensity(ldArea->intensity, magTime);
+  intensity = ldArea->intensity;
+  if (!STEMmode && intensity) {
+    if (newArea == TRIAL_CONSET && mWinApp->mMultiTSTasks->AutocenMatchingIntensity(
+      ACTRACK_TO_TRIAL)) {
+      intensity = mWinApp->mAutocenDlg->GetParamIntensity();
+      manage = true;
+    }
+    if (intensity)
+      DelayedSetIntensity(intensity, magTime);
+    if (mWinApp->mAutocenDlg)
+      mWinApp->mAutocenDlg->ManageLDtrackText(manage);
   } else if (!STEMmode)
     ldArea->intensity = GetIntensity();
 

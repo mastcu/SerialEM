@@ -19,6 +19,7 @@
 #include "Utilities\KGetOne.h"
 #include "SerialEMView.h"
 #include "SerialEMDoc.h"
+#include "MultiTSTasks.h"
 #include "EMbufferManager.h"
 #include "ShiftManager.h"
 #include "BeamAssessor.h"
@@ -824,6 +825,8 @@ void CProcessImage::DoSetIntensity(bool doseRate)
         "(a value > 10) for the " + modeNames[ldArea] + " area :";
     }
     oldMean = fullMean;
+    if (mWinApp->mMultiTSTasks->AutocenMatchingIntensity())
+      ldArea = -1;
   }
 
   if (!KGetOneFloat(infoLine, query, factor, 1))
@@ -1027,21 +1030,25 @@ void CProcessImage::EnableMoveBeam(CCmdUI * pCmdUI, bool skipUserPt)
    (skipUserPt || imBuf->mHasUserPt) && imBuf->mMagInd && imBuf->mBinning);
 }
 
-// Move the beam BY the given shift in X and Y, in pixels in the given buffer image
-// Or if imBuf is NULL, move beam by given number of microns in camera coordinates
+// Move the beam BY the given shift in X and Y, in pixels in the given buffer image, where
+// Y is inverted as typical for image pixels
+// Or if imBuf is NULL, move beam by given number of microns in camera coordinates, where
+// Y is NOT inverted
 int CProcessImage::MoveBeam(EMimageBuffer *imBuf, float shiftX, float shiftY, 
   double maxMicronShift)
 {
-  double bsX, bsY, bsTot;
+  double bsTot;
+  float cenShiftX = 0., cenShiftY = 0., bsX, bsY;
   int magInd = imBuf != NULL ? imBuf->mMagInd : mScope->GetMagIndex();
+  float pixel = mShiftManager->GetPixelSize(mWinApp->GetCurrentCamera(), magInd);
+
+  // Invert Y for buffer coordinates here
   if (imBuf) {
     shiftX *= imBuf->mBinning;
-    shiftY *= imBuf->mBinning;
+    shiftY *= -imBuf->mBinning;
   } else {
-    float pixel = mShiftManager->GetPixelSize(mWinApp->GetCurrentCamera(), 
-      magInd);
     shiftX /= pixel;
-    shiftY /= -pixel;
+    shiftY /= pixel;
   }
 
   // Get the matrix for going from camera to Beam shift through image shift
@@ -1053,8 +1060,10 @@ int CProcessImage::MoveBeam(EMimageBuffer *imBuf, float shiftX, float shiftY,
   // First compute shift in microns for message, and to test against limit
   if (imBuf) {
     ScaleMat aInv = mShiftManager->CameraToSpecimen(magInd);
-    bsX = aInv.xpx * shiftX - aInv.xpy * shiftY;
-    bsY = aInv.ypx * shiftX - aInv.ypy * shiftY;
+    if (mWinApp->mMultiTSTasks->GetAutoCentering())
+      mWinApp->mMultiTSTasks->GetCenteringBeamShift(cenShiftX, cenShiftY);
+    mShiftManager->ApplyScaleMatrix(aInv, shiftX + cenShiftX / pixel, 
+      shiftY + cenShiftY / pixel, bsX, bsY);
     bsTot = sqrt(bsX * bsX + bsY * bsY);
     CString message;
     if (maxMicronShift > 0. && bsTot > maxMicronShift) {
@@ -1068,11 +1077,7 @@ int CProcessImage::MoveBeam(EMimageBuffer *imBuf, float shiftX, float shiftY,
   }
 
   ScaleMat camToBS = mShiftManager->MatMul(bInv, IStoBS);
-  
-  // Invert Y when getting beam shift - then there is the usual sign question
-  bsX = camToBS.xpx * shiftX - camToBS.xpy * shiftY;
-  bsY = camToBS.ypx * shiftX - camToBS.ypy * shiftY;
-
+  mShiftManager->ApplyScaleMatrix(camToBS, shiftX, shiftY, bsX, bsY);
   mScope->IncBeamShift(bsX, bsY);
   return 0;
 }
