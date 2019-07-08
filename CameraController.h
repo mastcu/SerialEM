@@ -68,6 +68,8 @@ struct CamPluginFuncs;
 
 #define CAN_PLUGIN_DO(c, p) CanPluginDo(PLUGIN_##c, p)
 
+#define DM_HAS_K3_HW_DARK_REF  50301
+
 // DE Camera flags
 #define DE_CAM_CAN_COUNT          0x1
 #define DE_CAM_CAN_ALIGN          0x2
@@ -281,6 +283,7 @@ struct InsertThreadData {
   CamPluginFuncs *plugFuncs;  // Plugin Functions for current camera
   BOOL insert;                // flag to insert rather than retract
   DWORD delay;                // delay time, msec
+  float exposure;             // Exposure time for K3 hardware dark reference
   CameraThreadData *td;
 };
 
@@ -503,6 +506,7 @@ class DLL_IM_EX CCameraController
   int GetServerFramesLeft();
   GetSetMember(BOOL, TestGpuInShrmemframe);
   GetSetMember(BOOL, UseK3CorrDblSamp);
+  GetSetMember(float, K3HWDarkRefExposure);
 
   int GetNumFramesSaved() {return mTD.NumFramesSaved;};
   BOOL *GetUseGPUforK2Align() {return &mUseGPUforK2Align[0];};
@@ -775,6 +779,7 @@ class DLL_IM_EX CCameraController
   float mBaseK3SuperResTime;
   float mLastK2BaseTime;        // Base time last time that exposure time was constrained
   BOOL mUseK3CorrDblSamp;       // Flag to use CDS on a K3
+  float mK3HWDarkRefExposure;   // Exposure time for K3 hardware dark ref: use Record if 0
   BOOL mNoK2SaveFolderBrowse;   // Flag not to show the Browse button when picking folder
   int mSaveRawPacked;           // Pack flags: 1 bytes->4bits/ints->bytes + 2 ints->4bits
   int mSaveTimes100;            // Flag to save times 100 in 16 bits
@@ -1013,6 +1018,7 @@ int SaveFrameStackMdoc(KImage *image);
 void GetFrameTSactualAngles(FloatVec &angles) {angles = mTD.FrameTSactualAngle;};
 int AddToNextFrameStackMdoc(CString key, CString value, bool startIt, CString *retMess);
 bool CanSaveFrameStackMdoc(CameraParameters * param);
+bool CanDoK2HardwareDarkRef(CameraParameters *param, CString &errstr);
 };
 
 

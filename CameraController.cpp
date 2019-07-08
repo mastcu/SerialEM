@@ -58,6 +58,7 @@ static char THIS_FILE[]=__FILE__;
 #define DM_OVW_DRIFT_CORRECT_OK 50001
 #define DM_DS_CONTROLS_BEAM   40200
 #define DM_HAS_ELECTRON_DOSE  50301
+#define DM_HAS_K3_HW_DARK_REF 50301
 #define MAX_ESHIFT_TIMES  10
 #define BLANKER_MUTEX_WAIT 50
 
@@ -320,6 +321,7 @@ CCameraController::CCameraController()
   mBaseK3LinearTime = 0.01331558f;
   mBaseK3SuperResTime = 0.0106525f;
   mUseK3CorrDblSamp = false;
+  mK3HWDarkRefExposure = 0.;
 
   // Set these to values in simple DM user interface except for first incrment
   mOneViewMinExposure[0][0] = 0.04f;
@@ -10256,18 +10258,47 @@ void CCameraController::ReportOnSizeCheck(int paramInd, int xsize, int ysize)
 int CCameraController::UpdateK2HWDarkRef(float hoursSinceLast)
 {
   int oper = LONG_OP_HW_DARK_REF;
-  if (mParam->K2Type != 1) {
-    SEMMessageBox("Cannot update K2 hardware dark reference, the current camera is not"
-      " a K2");
+  CString str;
+  if (!CanDoK2HardwareDarkRef(mParam, str)) {
+    SEMMessageBox(str);
     return 2;
   }
   return(mScope->StartLongOperation(&oper, &hoursSinceLast, 1));
+}
+
+bool CCameraController::CanDoK2HardwareDarkRef(CameraParameters *param, CString &errstr)
+{
+  if (param->K2Type != K2_SUMMIT && param->K2Type != K3_TYPE) {
+    errstr = "Cannot update hardware dark reference, the current camera is not"
+      " a K2 or a K3";
+      return false;
+  }
+  if (param->K2Type == K3_TYPE && 
+    GetDMversion(CAMP_DM_INDEX(param)) < DM_HAS_K3_HW_DARK_REF) {
+    errstr = "Cannot update hardware dark reference, the version of DigitalMicrograph"
+      " does not support it";
+      return false;
+  }
+  return true;
 }
 
 // Starts the thread for the long operation routine
 CWinThread *CCameraController::StartHWDarkRefThread(void)
 {
   mITD.DMindex = CAMP_DM_INDEX(mParam);
+  mITD.FEItype = 0;
+  if (mParam->K2Type == K3_TYPE) {
+
+    // For K3, use Record exposure, override with property
+    mITD.exposure = mConSetsp[RECORD_CONSET].exposure;
+    if (mK3HWDarkRefExposure > 0.)
+      mITD.exposure = mK3HWDarkRefExposure;
+
+    // Pass the read mode in this parameter, which is flag for K3 also
+    mITD.FEItype = 1;
+    if (mUseK3CorrDblSamp && CanK3DoCorrDblSamp(mParam))
+      mITD.FEItype = 3;
+  }
   return (AfxBeginThread(HWDarkRefProc, &mITD, THREAD_PRIORITY_NORMAL, 0, 
     CREATE_SUSPENDED));
 }
@@ -10280,8 +10311,8 @@ UINT CCameraController::HWDarkRefProc(LPVOID pParam)
   IDMCamera *pGatan;
   HRESULT hr = S_OK;
   double scriptRet;
-  long strTemp[12];
-  sprintf((char *)strTemp, "K2_UpdateHardwareDarkReference(camera)\n");
+  long *strTemp;
+  CString str = "K2_UpdateHardwareDarkReference(camera)\n";
   if (itd->DMindex == COM_IND) {
     CoInitializeEx(NULL, COINIT_MULTITHREADED);
     CreateDMCamera(pGatan);
@@ -10290,6 +10321,15 @@ UINT CCameraController::HWDarkRefProc(LPVOID pParam)
       retval = 1;
   }
   if (!retval){
+    if (itd->FEItype) {
+      str.Format("Object acqParams = CM_CreateAcquisitionParameters_FullCCD(camera, 3, "
+        "%f, 1, 1)\n"
+        "CM_SetReadMode(acqParams, %d)\n"
+        "K3_UpdateHardwareDarkReference(camera, acqParams, %f, 1, 1)\n", 
+        itd->exposure, itd->FEItype, itd->exposure);
+    }
+    strTemp = new long[str.GetLength() / 4 + 2];
+    strcpy((char *)strTemp, (LPCTSTR)str);
     try {
       CallDMIndCamera(itd->DMindex, pGatan, itd->td->amtCam,
         ExecuteScript(12, strTemp, 1, &scriptRet));
@@ -10303,6 +10343,7 @@ UINT CCameraController::HWDarkRefProc(LPVOID pParam)
   }
   if (itd->DMindex == COM_IND)
     CoUninitialize();
+  delete[] strTemp;
   return retval;
 }
 
