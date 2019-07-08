@@ -24,6 +24,12 @@ protected:
   virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 
 	DECLARE_MESSAGE_MAP()
+private:
+  DriftWaitParams mParams;
+  int mBinIndex;
+  int mBinDivisor;
+  CameraParameters *mCamParam;
+
 public:
   int m_iMeasureType;
   afx_msg void OnMeasureType();
@@ -44,4 +50,10 @@ public:
   BOOL m_bThrowError;
   BOOL m_bUseAngstroms;
   afx_msg void OnCheckUseAngstroms();
+
+
+  void ManageTrialEntries();
+  CString m_strRateUnits;
+  CButton m_butChangeIS;
+  BOOL m_bChangeIS;
 };

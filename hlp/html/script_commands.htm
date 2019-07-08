@@ -159,7 +159,7 @@
               numbered 1 to 5.&nbsp; The optional '#e' can be entered to place a script into a 
               previously used position or the next unused position.&nbsp; If the script 
               depends on other temporary scripts, they can be loaded first with 
-              'StringArrayToScript'.</TD>
+              'StringArrayToScript'.&nbsp; Command added in 3.8.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style4">Function name [#n] [s] [args]</TD>
@@ -373,7 +373,7 @@
         <TR vAlign="top">
           <TD class="style4">MakeVarPersistent [#]</TD>
           <TD>Changes a regular variable to persistent, or if a 0 is entered for #, makes a 
-              persistent variable non-persistent.</TD>
+              persistent variable non-persistent.&nbsp; Command added in 3.8.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style4">IsVariableDefined Var</TD>
@@ -399,14 +399,14 @@
         <TR vAlign="top">
           <TD class="style4">NewArray var #PL #E</TD>
           <TD>Creates a new variable with the given name, making it persistent or local if
-               #PL is 1 or -1, respectively, and initialize it with an array of #E zeros.</TD>
+               #PL is 1 or -1, respectively, and initialize it with an array of #E zeros.&nbsp; Command added in 3.8.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style4">New2DArray var [#PL] [#R #E]</TD>
           <TD>Creates a 2D array variable with the given name, making it persistent or 
               local if #PL is 1 or -1, respectively.&nbsp; If the optional #R and #C are
                given, the array is initialized with #R rows of #E zeros each, where both
-               must be positive.</TD>
+               must be positive.&nbsp; Command added in 3.8.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style4">AppendToArray var item</TD>
@@ -416,14 +416,14 @@
                As with setting a variable, if there are multiple items on the line not 
               specified as an array, only the first item will be added, whereas if there 
               the multiple items are enclosed in { }, all items will be added to the 
-              array.</TD>
+              array.&nbsp; Command added in 3.8.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style4">TruncateArray var #</TD>
           <TD>Truncates the given array variable to # elements; # must be positive. For a
                1D array,&nbsp; the values is truncated to # elements; for a row of a 2D
                array,&nbsp; specified by var[row], the row of values is truncated; for a 
-              2D array given without a subscript, the number of rows is truncated to #.</TD>
+              2D array given without a subscript, the number of rows is truncated to #.&nbsp; Command added in 3.8.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style4">ArrayStatistics var</TD>
@@ -431,7 +431,7 @@
               total number of values, the minimum, the maximum, the mean, the standard deviation
               and the median.  For a 2D array, the statistics can be of the whole array, or of
               one row if the variable is given with a row subscript. Values can be assigned
-               to variables at end of commmand.</TD>
+               to variables at end of commmand.&nbsp; Command added in 3.8.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style4">StringArrayToScript var [#e]</TD>
@@ -441,7 +441,7 @@
               to 5.&nbsp; A positive value '#e' can be entered to place a script into a 
               previously used position or the next unused position.&nbsp; A negative value (-1 
               to -20) can be used to replace the script in one of the regular script positions 
-              that are editable and saved to settings.</TD>
+              that are editable and saved to settings.&nbsp; Command added in 3.8.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style4">Require feature [feature] ...<br />
@@ -635,7 +635,7 @@
               retain.&nbsp; If S is omitted, all modified sets will be retained.&nbsp; &#39;RestoreCameraSet&#39; 
               cannot be used on a set that has been retained.&nbsp; Subsequent changes by the 
               &#39;Set&#39; commands will be restored on script end or by &#39;RestoreCameraSet&#39;,&nbsp; 
-              unless this command is given again. </TD>
+              unless this command is given again.&nbsp; Command added in 3.8. </TD>
         </TR>
         <TR vAlign="top">
           <TD colspan="2"><A name="continuous_mode"></A><B>Continuous Mode Control</B></TD>
@@ -1283,6 +1283,12 @@
             Falcon camera and sets it into ReportedValue1.</TD>
         </TR>
         <TR vAlign="top">
+          <TD class="style7">ReportFrameBaseName</TD>
+          <TD>Reports the base name if one is included in frame file names; sets 
+              reportedValue1 to 1 if it is included and 0 if not, and if it is included, sets 
+              reportedValue2 to the base name.</TD>
+        </TR>
+        <TR vAlign="top">
           <TD colspan="2"><A name="textfile"></A><B>Text File Commands</B></TD>
         </TR>
         <TR vAlign="top">
@@ -1301,7 +1307,7 @@
           <TD class="style7">Read2DTextFile var file</TD>
           <TD>Reads the entire contents of the given text file, breaks it up by spaces or tabs, and 
               stores the words or numbers of each line as a separate row of a 2D array in the
-               variable &#39;var&#39;.&nbsp; The file will be closed after reading.</TD>
+               variable &#39;var&#39;.&nbsp; The file will be closed after reading.&nbsp; Command added in 3.8.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style7" colspan="2">&nbsp;&nbsp;&nbsp;&nbsp; The following commands allow 
@@ -1328,13 +1334,13 @@
                does not exist.<br />
                The same file cannot be opened under two different ID's.&nbsp; The 'T' mode can 
                be used to avoid a script error and also can be used in a loop to wait for a 
-               file to appear from an external source</td>
+               file to appear from an external source.&nbsp; Command added in 3.8.</td>
         </TR>
        <TR vAlign="top">
           <TD class="style7">WriteLineToFile ID line</TD>
            <td>Writes the remainder of the text on the script line (after variable 
                substitution) to the file with the given ID.&nbsp; The comment character '#' can 
-               be included and text after it will be written.</td>
+               be included and text after it will be written.&nbsp; Command added in 3.8.</td>
         </TR>
        <TR vAlign="top">
           <TD class="style7">ReadLineAsArray ID var</TD>
@@ -1344,27 +1350,27 @@
                lines starting with '#' will be skipped.&nbsp; Reaching the end of the file does 
                not give a script error; instead, reportedValue1 is set to 1 when a line is read 
                or 0 if nothing was read.&nbsp; This command could be used in a loop to wait for 
-               a file to be added to by external source.</td>
+               a file to be added to by external source.&nbsp; Command added in 3.8.</td>
         </TR>
        <TR vAlign="top">
           <TD class="style7">ReadLineAsString ID var</TD>
            <td>Like 'ReadLineAsArray ', but the line is stored in the variable exactly as it is 
                in the file, including a line starting with '#'.&nbsp; Blank lines will still be 
-               skipped.</td>
+               skipped.&nbsp; Command added in 3.8.</td>
         </TR>
        <TR vAlign="top">
           <TD class="style7">FlushTextFile ID</TD>
-           <td>Flushes the output added to the file with the given ID to disk .</td>
+           <td>Flushes the output added to the file with the given ID to disk .&nbsp; Command added in 3.8.</td>
         </TR>
        <TR vAlign="top">
           <TD class="style7">CloseTextFile ID</TD>
-           <td>Closes the file with the given ID.</td>
+           <td>Closes the file with the given ID.&nbsp; Command added in 3.8.</td>
         </TR>
        <TR vAlign="top">
           <TD class="style7">IsTextFileOpen ID [file]</TD>
            <td>Sets reportedValue1 to 1 if there is an open file with the given ID, or with the 
                given optional name, and to 0 otherwise.&nbsp; The ID can be nonsense when 
-               testing with a filename.</td>
+               testing with a filename.&nbsp; Command added in 3.8.</td>
         </TR>
         <TR vAlign="top">
           <TD colspan="2"><A name="autodoc"></A><B>Autodoc/.mdoc File Commands</B></TD>
@@ -1392,9 +1398,9 @@
             An error is generated if such a file is already open.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style7">OpenFrameMdoc [#]</TD>
+          <TD class="style7">CloseFrameMdoc [#]</TD>
             <td>Closes the '.mdoc' file for acquisitions that save frames, if one is open. 
-                If the optional # is non-zero, an error is generated if no file is open.
+                If the optional # is non-zero, an error is generated if no file is open.&nbsp; Command added in 3.8.
             </TD>
         </TR>
          <TR vAlign="top">
@@ -1877,12 +1883,12 @@
           <TD class="style13">ReportFilamentCurrent</TD>
           <TD>Report the filament current on a non-FEG JEOL scope.&nbsp; The value is between 
               0 and 100 unless the property 'FilamentCurrentScale' is set with a scaling 
-              other than 100.</TD>
+              other than 100.&nbsp; Command added in 3.8.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style13">SetFilamentCurrent #</TD>
           <TD>Set the filament current on a non-FEG JEOL to #, in the same units as&nbsp; 
-              'ReportFilamentCurrent'.</TD>
+              'ReportFilamentCurrent'.&nbsp; Command added in 3.8.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style13">ScreenUp</TD>
@@ -2353,19 +2359,19 @@
               thereafter whenever one of the commands are used to change a relevant parameter.&nbsp; 
               Set the optional #K non-zero to keep the parameter changes when the script ends; 
               otherwise the parameters saved when this command is first given will be restored 
-              on script end.&nbsp; A must be one of V, F, T, R, or S.</TD>
+              on script end.&nbsp; A must be one of V, F, T, R, or S.&nbsp; Command added in 3.8.</TD>
         </TR>
         <TR>
           <TD class="auto-style1">SetLDAddedBeamButton [#]</TD>
           <TD>Turns the &#39;Set&#39; button in the Low Dose panel for recording additional beam shift 
               on, or turns it off if the optional # is 0.&nbsp; The original state of the 
-              button will be restored on script end.</TD>
+              button will be restored on script end.&nbsp; Command added in 3.8.</TD>
         </TR>
         <TR>
           <TD class="auto-style1">RestoreLowDoseParams [A]</TD>
           <TD>Restores parameters saved for the given area when &#39;UpdateLowDoseParams&#39; was 
               entered for this area.&nbsp; Omit &#39;A&#39; to restore parameters for all areas, 
-              including ones marked to be kept when the script ends.</TD>
+              including ones marked to be kept when the script ends.&nbsp; Command added in 3.8.</TD>
         </TR>
         <TR>
           <TD class="auto-style1">SetLDContinuousUpdate #</TD>
@@ -2398,7 +2404,7 @@
               from the current microscope settings.&nbsp; It must be run while not in low dose 
               mode and after adjusting to scope state to the desired settings for the area.&nbsp; 
               It clears out the parameters for the area, enters low dose mode, and goes to the 
-              area so that it is assigned the current state.</TD>
+              area so that it is assigned the current state.&nbsp; Command added in 3.8.</TD>
         </TR>
         <TR  vAlign="top">
           <TD colspan="2"><A name="task_commands"></A><B>Task-Related Commands</B></TD>
@@ -2472,6 +2478,26 @@
           <TD class="auto-style1">MeasureBeamSize [#B]</TD>
           <TD>Measures the beam diameter by detecting its edges in the image in buffer A, or in 
             the buffer given by the optional #B.&nbsp; The value is reported in microns.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="auto-style1">DriftWaitTask [#R] [U] [#I] [#M] [#G] [T] [#C] [#E] [#B]</TD>
+          <TD>Runs the Wait for Drift task using parameters set in the 
+            <a href="hidd_driftwaitsetup.htm">Wait for Drift Setup dialog</a> if there are no 
+              optional entries.&nbsp; Any optional entry that is not zero overrides the 
+              parameter set in the dialog; enter a 0 to use the dialog setting for any 
+              parameter.&nbsp; The parameters are: #R for target drift rate; U nm or A; #I for 
+              interval between measurements in sec; #M for maximum time to wait in sec; #G 1 
+              to generate and error when maximum time reached or -1 not to; T for type of 
+              measurement (T for Trial, F for Focus, A or B for between autofocus runs, W for 
+              within autofocus runs, or 0 for dialog setting; #C to correct drift with image 
+              shift; #E for Trial exposure, #B for Trial binning.&nbsp; Command added in 3.8.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="auto-style1">GetWaitTaskDrift</TD>
+          <TD>Places the final drift measurement from te last Wiat for Drift task into 
+              reportedValue1 and a non-zero number if the task failed in reportedValue2.
+              Values can be assigned to variables after command.
+              Command added in 3.8.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="auto-style1">MultipleRecords [#N] [#C] [#O] [#D] [#S] [#E] [#F] [#H]</TD>
@@ -2843,7 +2869,7 @@
          <TR vAlign="top">
           <TD width="210">ReportDateTime</TD>
           <TD>Report a numeric date in the form YYYYMMDD and a time to the minute in the form
-              HHMM.</TD>
+              HHMM.&nbsp; Command added in 3.8.</TD>
         </TR>
         <TR vAlign="top">
           <TD width="210">ProgramTimeStamps</TD>

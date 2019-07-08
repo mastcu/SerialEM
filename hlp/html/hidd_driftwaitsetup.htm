@@ -1,0 +1,84 @@
+<html>
+  <head>
+    <title>Wait for Drift Setup Dialog</title>
+    <meta HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252"/>
+    <style type="text/css"> <!-- BODY { font-family:"Arial" }
+  TD { font-size:16 }
+      .style1
+      {
+        font-size: larger;
+        font-weight: bold;
+      }
+      --></style>
+  </head>
+  <body BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+    <p><a NAME="hidd_driftwaitsetup"></a><span class="style1">
+        Wait for Drift Setup Dialog</span></p>
+    <p>This dialog allows you to set parameters for the Wait for Drift task, which 
+        measures drift repeatedly until it reaches a criterion level or a time limit is 
+        reached.&nbsp; These parameters are used by the DriftWaitTask script command 
+        unless they are overridden by non-zero entries to the command.</p>
+      <p><strong>Images to measure drift between</strong></p>
+      <p>Use these radio buttons to select what kind of images to use for measuring drift.&nbsp; 
+          The choices are:</p>
+      <ul>
+          <li>Between successive Trial images, possibly with a modified exposure time and 
+              binning.</li>
+          <li>Between successive Focus images, using the Focus parameters.</li>
+          <li>Between the last images of successive autofocus runs.&nbsp; This choice allows 
+              focus to be refined at the same time as drift is measured, while still giving an 
+              accurate measure of low drift rates because the time between correlated images 
+              is as long as you specify.</li>
+          <li>Within individual autofocus runs, using the drift estimated by the shift between 
+              the first and the third image.&nbsp; This method is suitable only for measuring 
+              higher drift rates, unless the time between those images is relatively long.&nbsp; 
+              It is the only method that can finish in less than the time between successive 
+              measurements.</li>
+      </ul>
+      <p>
+          For both of the autofocus options, the program will take 3 Focus images for 
+          &#39;drift protection&#39; regardless of the setting of the option for this in the Focus 
+          menu.</p>
+      <p>
+          <strong>Change Trial parameters</strong></p>
+      <p>
+          Select this option to use a specified exposure time and binning whenever using 
+          Trial images.&nbsp; Use the text box to set the <strong>Trial exposure </strong>
+          and the spin button to set the <strong>Binning</strong>.</p>
+      <p>
+          <strong>Time between drift measurements</strong></p>
+      <p>
+          Enter the time between successive measurements in the text box.&nbsp; When 
+          measuring drift within autofocus runs, this is the interval between the start of 
+          the autofocus runs; otherwise, it is the time over which drift is measured.</p>
+      <p>
+          <strong>Drift rate to reach</strong></p>
+      <p>
+          Enter the criterion (target) drift rate in the text box, in the units show after 
+          the box (nm versus Angstroms).</p>
+      <p>
+          <strong>Maximum time to wait</strong></p>
+      <p>
+          Enter the maximum total time to wait for the drift to reach the target rate.</p>
+      <p>
+          <strong>Generate error if target drift rate is not reached</strong></p>
+      <p>
+          Select this option to have the program put up a message box and issue a general 
+          stop command to anything else running when the target drift rate is not achieved 
+          after the maximum wait time has elapsed.&nbsp; With the option off, the program 
+          will print a failure message to the log and scripts can test for success with 
+          the &#39;GetLastTaskDrift&#39; command.</p>
+      <p>
+          <strong>Correct drift with image shift</strong></p>
+      <p>
+          Select this option to have image shift applied to correct for the drift between 
+          each pair of successive images; this option is not available when measuring 
+          within autofocuses.</p>
+      <p>
+          <strong>Show Angstroms/sec instead of nm/sec</strong></p>
+      <p>
+          This option is here because nm/sec, used elsewhere in the program, becomes 
+          awkward at low drift rates.</p>
+</body>
+</html>

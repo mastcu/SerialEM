@@ -1,13 +1,28 @@
 #pragma once
 #include "NavHelper.h"
 
+enum { WFD_USE_TRIAL, WFD_USE_FOCUS, WFD_BETWEEN_AUTOFOC, WFD_WITHIN_AUTOFOC };
+
+struct DriftWaitParams {
+  int measureType;              // Type of image/operation to assess with
+  float driftRate;              // Drift rate in nm/sec
+  BOOL useAngstroms;            // Show in Angtroms not nm
+  float interval;               // Interval between tests in sec
+  float maxWaitTime;            // Maximum time to wait
+  int failureAction;            // 0 to go on, 1 for error
+  BOOL setTrialParams;          // Flag to set trial parameters
+  float exposure;               // Trial exposure
+  int binning;                  // Trial binning
+  BOOL changeIS;                // Flag to apply image shift in each alignment
+};
+
 class CParticleTasks
 {
 public:
   CParticleTasks(void);
   ~CParticleTasks(void);
-  bool DoingMultiShot() {return mMSCurIndex > -2;};
-  void SetBaseBeamTilt(double inX, double inY) {mBaseBeamTiltX = inX; mBaseBeamTiltY = inY;}; 
+  bool DoingMultiShot() { return mMSCurIndex > -2; };
+  void SetBaseBeamTilt(double inX, double inY) { mBaseBeamTiltX = inX; mBaseBeamTiltY = inY; };
 
 private:
   CSerialEMApp * mWinApp;
@@ -16,6 +31,7 @@ private:
   CCameraController *mCamera;
   CComplexTasks *mComplexTasks;
   CShiftManager *mShiftManager;
+  CFocusManager *mFocusManager;
   int mMSNumPeripheral;           // Number of shots around the center
   int mMSDoCenter;                // -1 to do center before, 1 to do it after
   float mMSSpokeRad;              // Radius from center to periheral shots
@@ -41,6 +57,18 @@ private:
   int mMSTestRun;
   int mMagIndex;                   // Mag index for the run
 
+  DriftWaitParams mWDDfltParams;   // Resident parameters
+  DriftWaitParams mWDParm;         // Run-time parameters
+  double mWDInitialStartTime;      // Time when task started
+  double mWDLastStartTime;         // Time when last acquisition started
+  int mWaitingForDrift;            // Flag/counter that we are waiting
+  bool mWDSleeping;                // Flag for being in sleep phase
+  EMimageBuffer *mWDFocusBuffer;   // Buffer to save last autofocus image in
+  BOOL mWDSavedTripleMode;         // Saved value of user setting
+  int mWDLastFailed;               // Failure code from last run
+  float mWDLastDriftRate;          // Drift rate reached in last run
+  bool mWDUpdateStatus;            // Flag to update status pane with drift rate
+  
 public:
   void Initialize(void);
   int StartMultiShot(int numPeripheral, int doCenter, float spokeRad, float extraDelay,
@@ -54,5 +82,16 @@ public:
   int GetHolePositions(FloatVec & delIsX, FloatVec & delISY, int magInd, int camera);
   int MultiShotBusy(void);
   bool CurrentHoleAndPosition(int &curHole, int &curPos);
+  int WaitForDrift(DriftWaitParams &param);
+  void WaitForDriftNextTask(int param);
+  void StopWaitForDrift(void);
+  void WaitForDriftCleanup(int error);
+  int WaitForDriftBusy(void);
+  GetMember(int, WaitingForDrift);
+  GetMember(int, WDLastFailed);
+  GetMember(float, WDLastDriftRate);
+  void DriftWaitFailed(int type, CString reason);
+  CString FormatDrift(float drift);
+  DriftWaitParams *GetDriftWaitParams() {return &mWDDfltParams;};
 };
 

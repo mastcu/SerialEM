@@ -253,7 +253,8 @@ enum {CME_SCRIPTEND = -7, CME_LABEL, CME_SETVARIABLE, CME_SETSTRINGVAR, CME_DOKE
   CME_CURRENTSETTINGSTOLDAREA, CME_UPDATELOWDOSEPARAMS, CME_RESTORELOWDOSEPARAMS,
   CME_CALLSTRINGARRAY, CME_STRINGARRAYTOSCRIPT, CME_MAKEVARPERSISTENT,
   CME_SETLDADDEDBEAMBUTTON, CME_KEEPCAMERASETCHANGES, CME_REPORTDATETIME,
-  CME_REPORTFILAMENTCURRENT, CME_SETFILAMENTCURRENT, CME_CLOSEFRAMEMDOC 
+  CME_REPORTFILAMENTCURRENT, CME_SETFILAMENTCURRENT, CME_CLOSEFRAMEMDOC,
+  CME_DRIFTWAITTASK, CME_GETWAITTASKDRIFT
 };
 
 // The two numbers are the minimum arguments and whether arithmetic is allowed
@@ -386,7 +387,8 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"UpdateLowDoseParams", 1, 0}, {"RestoreLowDoseParams", 0, 0}, {"CallStringArray", 1, 0},
 {"StringArrayToScript", 1, 0}, {"MakeVarPersistent", 1, 0},{"SetLDAddedBeamButton", 0, 0},
 {"KeepCameraSetChanges", 0, 0}, {"ReportDateTime", 0, 0}, {"ReportFilamentCurrent", 0, 0},
-{"SetFilamentCurrent", 1, 0}, {"CloseFrameMdoc", 0, 0},
+{"SetFilamentCurrent", 1, 0}, {"CloseFrameMdoc", 0, 0}, {"DriftWaitTask", 0, 1},
+{"GetWaitTaskDrift", 0, 0},
 {NULL, 0, 0}
 };
 
@@ -4988,6 +4990,59 @@ void CMacroProcessor::NextCommand()
     mWinApp->mComplexTasks->ReverseTilt(index);
     break;
     
+  case CME_DRIFTWAITTASK:                                   // DriftWaitTask
+  {
+    DriftWaitParams *dfltParam = mWinApp->mParticleTasks->GetDriftWaitParams();
+    DriftWaitParams dwparm = *dfltParam;
+    if (!itemEmpty[2]) {
+      if (strItems[2] == "nm")
+        dwparm.useAngstroms = false;
+      else if (strItems[2] == "A")
+        dwparm.useAngstroms = true;
+      else if (strItems[2] != "0")
+        ABORT_LINE("The second entry should be \"nm\", \"A\", or \"0\" in line:\n\n");
+    }
+    if (!itemEmpty[1] && itemDbl[1] > 0.) {
+      dwparm.driftRate = (float)itemDbl[1] / (dwparm.useAngstroms ? 10.f : 1.f);
+    }
+    if (!itemEmpty[3] && itemDbl[3] > 0.) {
+      dwparm.maxWaitTime = (float)itemDbl[3];
+    }
+    if (!itemEmpty[4] && itemDbl[4] > 0.) {
+      dwparm.interval = (float)itemDbl[4];
+    }
+    if (!itemEmpty[5] && itemInt[5])
+      dwparm.failureAction = itemInt[5] > 0 ? 1 : 0;
+    if (!itemEmpty[6]) {
+      if (strItems[6] == "T")
+        dwparm.measureType = WFD_USE_TRIAL;
+      else if (strItems[6] == "F")
+        dwparm.measureType = WFD_USE_FOCUS;
+      else if (strItems[6] == "A" || strItems[6] == "B")
+        dwparm.measureType = WFD_BETWEEN_AUTOFOC;
+      else if (strItems[6] == "W")
+        dwparm.measureType = WFD_WITHIN_AUTOFOC;
+      else if (strItems[6] != "0")
+        ABORT_LINE("The image type to measure defocus from must be one of T, F, "
+          "A, B, W, or 0 in line:\n\n");
+    }
+    if (!itemEmpty[7] && itemInt[7])
+      dwparm.changeIS = itemInt[7] > 0 ? 1 : 0;
+    if (!itemEmpty[8]) {
+      dwparm.setTrialParams = true;
+      dwparm.exposure = (float)itemDbl[8];
+      if (!itemEmpty[9])
+        dwparm.binning = itemInt[9];
+    }
+    mWinApp->mParticleTasks->WaitForDrift(dwparm);
+    break;
+  }
+
+  case CME_GETWAITTASKDRIFT:                                // GetWaitTaskDrift
+    SetReportedValues(&strItems[1], mWinApp->mParticleTasks->GetWDLastDriftRate(),
+      mWinApp->mParticleTasks->GetWDLastFailed());
+    break;
+
   case CME_BACKLASHADJUST:                                  // BacklashAdjust
     mWinApp->mMontageController->GetColumnBacklash(backlashX, backlashY);
     mWinApp->mComplexTasks->BacklashAdjustStagePos(backlashX, backlashY, false, false);

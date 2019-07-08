@@ -12,6 +12,8 @@
 #include "ParticleTasks.h"
 #include "ComplexTasks.h"
 #include "EMscope.h"
+#include "FocusManager.h"
+#include "ShiftManager.h"
 #include "MacroProcessor.h"
 #include "AutoTuning.h"
 #include "ShiftManager.h"
@@ -26,6 +28,17 @@ CParticleTasks::CParticleTasks(void)
   mImBufs = mWinApp->GetImBufs();
   mMSCurIndex = -2;             // Index when it is not doing anything must be < -1
   mMSTestRun = 0;
+  mWDFocusBuffer = NULL;
+  mWaitingForDrift = 0;
+  mWDDfltParams.measureType = WFD_USE_FOCUS;
+  mWDDfltParams.driftRate = 1.;
+  mWDDfltParams.useAngstroms = false;
+  mWDDfltParams.interval = 10.;
+  mWDDfltParams.maxWaitTime = 60.;
+  mWDDfltParams.failureAction = 1;
+  mWDDfltParams.setTrialParams = false;
+  mWDDfltParams.exposure = 0.2f;
+  mWDDfltParams.binning = 4;
 }
 
 
@@ -40,6 +53,7 @@ void CParticleTasks::Initialize(void)
   mCamera = mWinApp->mCamera;
   mComplexTasks = mWinApp->mComplexTasks;
   mShiftManager = mWinApp->mShiftManager;
+  mFocusManager = mWinApp->mFocusManager;
   mMSParams = mWinApp->mNavHelper->GetMultiShotParams();
 }
 
@@ -480,4 +494,221 @@ bool CParticleTasks::CurrentHoleAndPosition(int &curHole, int &curPos)
   else
     curPos = 0;
   return true;
+}
+
+///////////////////////////////////////////////////////////////////////
+// WAITING FOR DRIFT
+
+// The routine to statr it with given parameters
+int CParticleTasks::WaitForDrift(DriftWaitParams &param)
+{
+  ControlSet *conSets = mWinApp->GetConSets();
+  CameraParameters *camParam = mWinApp->GetActiveCamParam();
+  int binInd, realBin, shotType = FOCUS_CONSET;
+
+  mWDParm = param;
+
+  // Set trial parameters
+  if (param.measureType == WFD_USE_TRIAL) {
+    shotType = TRACK_CONSET;
+    conSets[TRACK_CONSET] = conSets[TRIAL_CONSET];
+    if (param.setTrialParams && param.exposure > 0.)
+      conSets[TRACK_CONSET].exposure = param.exposure;
+    if (param.setTrialParams && param.binning > 0) {
+      conSets[TRACK_CONSET].binning = param.binning;
+      mCamera->FindNearestBinning(camParam, &conSets[TRACK_CONSET], binInd, realBin);
+    }
+    conSets[TRACK_CONSET].mode = SINGLE_FRAME;
+  }
+
+  // Initialize
+  mWDSavedTripleMode = mFocusManager->GetTripleMode();
+  mWDInitialStartTime = mWDLastStartTime = GetTickCount();
+  mWDSleeping = false;
+  mWaitingForDrift = 1;
+  mWDLastDriftRate = -1.;
+  mWDLastFailed = 5;
+  mWDUpdateStatus = false;
+  if (param.measureType == WFD_BETWEEN_AUTOFOC)
+    mWDFocusBuffer = new EMimageBuffer;
+  mWinApp->UpdateBufferWindows();
+  mWinApp->SetStatusText(MEDIUM_PANE, "WAITING for Drift");
+
+  // Take image or autofocus
+  if (param.measureType == WFD_USE_TRIAL || param.measureType == WFD_USE_FOCUS) {
+    mCamera->SetRequiredRoll(1);
+    mCamera->InitiateCapture(shotType);
+  } else {
+    mFocusManager->SetTripleMode(true);
+    mFocusManager->AutoFocusStart(1);
+  }
+  mWinApp->AddIdleTask(TASK_WAIT_FOR_DRIFT, 0, 0);
+  return 0;
+}
+
+// Next task when waiting for drift
+void CParticleTasks::WaitForDriftNextTask(int param)
+{
+  CameraParameters *camParam = mWinApp->GetActiveCamParam();
+  CString str;
+  double driftX, driftY, delta, pixel;
+  float shiftX, shiftY;
+  double elapsed = 0.001 * SEMTickInterval(mWDInitialStartTime);
+  if (!mWaitingForDrift)
+    return;
+  if (mWDSleeping) {
+
+    // If sleeping, now start the next measurement
+    if (mWDParm.measureType == WFD_USE_TRIAL || mWDParm.measureType == WFD_USE_FOCUS)
+      mCamera->InitiateCapture(mWDParm.measureType == WFD_USE_TRIAL ? 
+        TRACK_CONSET : FOCUS_CONSET);
+    else
+      mFocusManager->AutoFocusStart(1);
+    mWDLastStartTime = GetTickCount();
+    mWDSleeping = false;
+    mWDUpdateStatus = mWDLastDriftRate > 0;
+  } else {
+
+    // Otherwise first check for focus failure
+    if ((mWDParm.measureType == WFD_WITHIN_AUTOFOC || 
+      mWDParm.measureType == WFD_BETWEEN_AUTOFOC) &&
+      (mFocusManager->GetLastFailed() || mFocusManager->GetLastAborted())) {
+      DriftWaitFailed(3, "autofocus failed");
+      return;
+    }
+
+    // If this is not the first round, get the drift
+    if (mWaitingForDrift > 1) {
+      if (mWDParm.measureType == WFD_WITHIN_AUTOFOC) {
+
+        // From autofocus itself
+        if (mFocusManager->GetLastDrift(driftX, driftY)) {
+          DriftWaitFailed(4, "no drift value available "
+            "from last autofocus ");
+          return;
+        }
+      } else {
+
+        // If between autofocus, copy last buffer A to B
+        if (mWDParm.measureType == WFD_BETWEEN_AUTOFOC)
+          mWinApp->mBufferManager->CopyImBuf(mWDFocusBuffer, &mImBufs[1]);
+
+        // Autoalign to B, apply image shift if option set
+        if (mShiftManager->AutoAlign(1, 1, mWDParm.changeIS)) {
+          DriftWaitFailed(2, "autoalignment failed");
+          return;
+        }
+
+        // Get the image shift then clear it, and convert to nm/sec
+        pixel = mShiftManager->GetPixelSize(mImBufs);
+        delta = mImBufs[0].mTimeStamp - mImBufs[2].mTimeStamp;
+        if (!pixel || delta <= 0.) {
+          DriftWaitFailed(4, "images are missing needed information");
+          return;
+        }
+        mImBufs->mImage->getShifts(shiftX, shiftY);
+        mImBufs->mImage->setShifts(0., 0.);
+        pixel *= 1000. / delta;
+        driftX = shiftX * pixel;
+        driftY = shiftY * pixel;
+      }
+
+      // Drift rate: has it passed the criterion?
+      mWDLastDriftRate = (float)sqrt(driftX * driftX + driftY * driftY);
+      if (mWDLastDriftRate <= mWDParm.driftRate) {
+        mWinApp->AppendToLog(str);
+        str.Format("Drift reached %s after %.1f sec, going on",
+          (LPCTSTR)FormatDrift(mWDLastDriftRate), elapsed);
+        mWDLastFailed = 0;
+        StopWaitForDrift();
+        mWinApp->AppendToLog(str, LOG_SWALLOW_IF_CLOSED);
+        return;
+      }
+
+      // Or is the time up?
+      if (elapsed + mWDParm.interval / 3. > mWDParm.maxWaitTime) {
+        str.Format("drift is still %s after %.0f sec", 
+          (LPCTSTR)FormatDrift(mWDLastDriftRate), elapsed);
+        DriftWaitFailed(1, str);
+        return;
+      }
+    }
+
+    // If not, copy the buffer if using autofocus images, then start sleeping
+    if (mWDParm.measureType == WFD_BETWEEN_AUTOFOC)
+      mWinApp->mBufferManager->CopyImBuf(&mImBufs[0], mWDFocusBuffer);
+    mWDSleeping = true;
+    mWaitingForDrift++;
+    str = "";
+    if (mWDLastDriftRate > 0) {
+      str = FormatDrift(mWDLastDriftRate);
+      if (mWinApp->mComplexTasks->GetVerbose() && 
+        mWDParm.measureType != WFD_WITHIN_AUTOFOC)
+        PrintfToLog("Elapsed time %.1f sec: drift %s", elapsed, (LPCTSTR)str);
+    }
+    mWinApp->SetStatusText(MEDIUM_PANE, "WAITING for Drift" + str);
+  }
+  mWinApp->AddIdleTask(TASK_WAIT_FOR_DRIFT, 0, 0);
+}
+
+int CParticleTasks::WaitForDriftBusy(void)
+{
+  CString str;
+  if (mWaitingForDrift && mWDSleeping) {
+    return (SEMTickInterval(mWDLastStartTime) < 1000. * mWDParm.interval) ? 1 : 0;
+  }
+  if (mWaitingForDrift && mWDUpdateStatus && SEMTickInterval(mWDLastStartTime) > 1500) {
+    str = FormatDrift(mWDLastDriftRate);
+    mWinApp->SetStatusText(MEDIUM_PANE, "WAITING for Drift" + str);
+    mWDUpdateStatus = false;
+  }
+  return (mWaitingForDrift && (mWinApp->mCamera->CameraBusy() ||
+    ((mWDParm.measureType == WFD_BETWEEN_AUTOFOC || 
+      mWDParm.measureType == WFD_WITHIN_AUTOFOC) && mFocusManager->DoingFocus())));
+}
+
+// Cleanup call on error/timeout
+void CParticleTasks::WaitForDriftCleanup(int error)
+{
+  if (error == IDLE_TIMEOUT_ERROR)
+    SEMMessageBox(_T("Time out getting an image with wait for drift routine"));
+  StopWaitForDrift();
+  mWinApp->ErrorOccurred(error);
+}
+
+// Stop call 
+void CParticleTasks::StopWaitForDrift(void)
+{
+  if (!mWaitingForDrift)
+    return;
+  mWaitingForDrift = 0;
+  mWinApp->UpdateBufferWindows();
+  mWinApp->SetStatusText(MEDIUM_PANE, "");
+  mCamera->SetRequiredRoll(0);
+  mFocusManager->SetTripleMode(mWDSavedTripleMode);
+  delete mWDFocusBuffer;
+  mWDFocusBuffer = NULL;
+}
+
+// Call to handle failure
+void CParticleTasks::DriftWaitFailed(int type, CString reason)
+{
+  mWDLastFailed = type;
+  reason = "Stopping the wait for drift: " + reason;
+  StopWaitForDrift();
+  if (mWDParm.failureAction)
+    SEMMessageBox(reason, MB_EXCLAME, true);  // TODO: consult policy
+  else
+    mWinApp->AppendToLog(reason + "; going on");
+}
+
+// Produce properly formatted string
+CString CParticleTasks::FormatDrift(float drift)
+{
+  CString str;
+  if (mWDParm.useAngstroms)
+    str.Format(" %.1f A/sec", 10. * drift);
+  else
+    str.Format(" %.2f nm/sec", drift);
+  return str;
 }
