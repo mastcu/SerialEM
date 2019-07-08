@@ -1041,7 +1041,7 @@ int CProcessImage::MoveBeam(EMimageBuffer *imBuf, float shiftX, float shiftY,
     float pixel = mShiftManager->GetPixelSize(mWinApp->GetCurrentCamera(), 
       magInd);
     shiftX /= pixel;
-    shiftY /= pixel;
+    shiftY /= -pixel;
   }
 
   // Get the matrix for going from camera to Beam shift through image shift
