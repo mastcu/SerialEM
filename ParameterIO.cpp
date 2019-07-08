@@ -4850,6 +4850,11 @@ int CParameterIO::ReadOneMacro(int iset, CString &strLine, CString *strItems,
     return 1;
   CString *macros = mWinApp->GetMacros();
 
+  // If the set number is past the max in the version that wrote the file, it is a 
+  // one-line script and should be shifted to be in same relative spot here
+  if (mMaxReadInMacros && iset >= mMaxReadInMacros)
+    iset += MAX_MACROS - mMaxReadInMacros;
+
   // For forward compatibility, it is not an error to have too many macros; just flush it
   if (iset < maxMacros)
     macros[iset] = "";
