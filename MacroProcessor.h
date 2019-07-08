@@ -302,6 +302,10 @@ public:
   CmdItem * GetCommandList(int & numCommands);
   afx_msg void OnMacroEdit15();
   afx_msg void OnMacroEdit20();
+  afx_msg void OnMacroEdit25();
+  afx_msg void OnMacroEdit30();
+  afx_msg void OnMacroEdit35();
+  afx_msg void OnMacroEdit40();
   void PrepareForMacroChecking(int which);
   afx_msg void OnMacroReadMany();
   afx_msg void OnUpdateMacroReadMany(CCmdUI *pCmdUI);

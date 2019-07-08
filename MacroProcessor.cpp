@@ -419,6 +419,14 @@ BEGIN_MESSAGE_MAP(CMacroProcessor, CCmdTarget)
   ON_UPDATE_COMMAND_UI(ID_MACRO_EDIT15, OnUpdateMacroEdit)
   ON_UPDATE_COMMAND_UI(ID_MACRO_EDIT20, OnUpdateMacroEdit)
   ON_COMMAND(ID_MACRO_EDIT20, OnMacroEdit20)
+  ON_COMMAND(ID_MACRO_EDIT25, OnMacroEdit25)
+  ON_UPDATE_COMMAND_UI(ID_MACRO_EDIT25, OnUpdateMacroEdit)
+  ON_UPDATE_COMMAND_UI(ID_MACRO_EDIT30, OnUpdateMacroEdit)
+  ON_COMMAND(ID_MACRO_EDIT30, OnMacroEdit30)
+  ON_COMMAND(ID_MACRO_EDIT35, OnMacroEdit35)
+  ON_UPDATE_COMMAND_UI(ID_MACRO_EDIT35, OnUpdateMacroEdit)
+  ON_UPDATE_COMMAND_UI(ID_MACRO_EDIT40, OnUpdateMacroEdit)
+  ON_COMMAND(ID_MACRO_EDIT40, OnMacroEdit40)
   ON_COMMAND(ID_MACRO_READMANY, OnMacroReadMany)
   ON_UPDATE_COMMAND_UI(ID_MACRO_READMANY, OnUpdateMacroReadMany)
   ON_COMMAND(ID_MACRO_WRITEALL, OnMacroWriteAll)
@@ -548,6 +556,14 @@ void CMacroProcessor::OnMacroEdit(UINT nID)
     index = 14;
   if (nID == ID_MACRO_EDIT20)
     index = 19;
+  if (nID == ID_MACRO_EDIT25)
+    index = 24;
+  if (nID == ID_MACRO_EDIT30)
+    index = 29;
+  if (nID == ID_MACRO_EDIT35)
+    index = 34;
+  if (nID == ID_MACRO_EDIT40)
+    index = 39;
   OpenMacroEditor(index);
 }
 
@@ -583,6 +599,26 @@ void CMacroProcessor::OnMacroEdit15()
 void CMacroProcessor::OnMacroEdit20()
 {
   OnMacroEdit(ID_MACRO_EDIT20);
+}
+
+void CMacroProcessor::OnMacroEdit25()
+{
+  OnMacroEdit(ID_MACRO_EDIT25);
+}
+
+void CMacroProcessor::OnMacroEdit30()
+{
+  OnMacroEdit(ID_MACRO_EDIT30);
+}
+
+void CMacroProcessor::OnMacroEdit35()
+{
+  OnMacroEdit(ID_MACRO_EDIT35);
+}
+
+void CMacroProcessor::OnMacroEdit40()
+{
+  OnMacroEdit(ID_MACRO_EDIT40);
 }
 
 void CMacroProcessor::OnMacroToolbar()
@@ -6514,9 +6550,9 @@ void CMacroProcessor::NextCommand()
             ABORT_LINE("The same operation is specified twice in:\n\n");
           used[index2]++;
           operations[ix1] = index2;
-          if (index2 == LONG_OP_HW_DARK_REF && camParams->K2Type != 1)
-            ABORT_LINE("Cannot update K2 hardware dark reference, the current camera is "
-              "not a K2");
+          if (index2 == LONG_OP_HW_DARK_REF && 
+            !mCamera->CanDoK2HardwareDarkRef(camParams, report))
+            ABORT_LINE(report);
           if (longHasTime[index2]) {
             if (index == MAX_TOKENS - 1 || itemEmpty[index + 1])
               ABORT_LINE("The last operation must be followed by an interval in hours "
