@@ -3666,7 +3666,7 @@ int CParameterIO::ReadCalibration(CString strFileName)
       } else if (NAME_IS("SpotIntensities")) {
 
         // Clear out the temporary tables
-        for (i = 0; i <= mWinApp->mScope->GetNumSpotSizes(); i++) {
+        for (i = 0; i <= MAX_SPOT_SIZE; i++) {
           tmpTable[0].ratio[i] = tmpTable[1].ratio[i] = 0;
           tmpTable[0].intensity[i] = tmpTable[1].intensity[i] = 0;
           tmpTable[0].crossover[i] = tmpTable[1].crossover[i] = 0;
