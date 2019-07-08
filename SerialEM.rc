@@ -63,7 +63,9 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDR_MAINFRAME           ICON                    "res\\SerialEM.ico"
+
 IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -71,7 +73,9 @@ IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
 //
 
 IDR_MAINFRAME           BITMAP                  "res\\Toolbar.bmp"
+
 IDB_BITMAP1             BITMAP                  "res\\bitmap1.bmp"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -2170,6 +2174,7 @@ BEGIN
     CONTROL         "Record shift",IDC_RECORD_ADDED_SHIFT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,172,52,10
     PUSHBUTTON      "Reset",IDC_RESET_ADDED_SHIFT,65,171,24,12
     LTEXT           "Static",IDC_STAT_ACS_ADDED_SHIFT,97,173,52,8
+    CTEXT           "Not tracking intensity on scope ",IDC_STAT_LD_TRACK_SCOPE,22,40,112,8
 END
 
 IDD_READFILEDLG DIALOGEX 0, 0, 113, 48
@@ -3093,7 +3098,9 @@ END
 //
 
 IDC_CURSOR1             CURSOR                  "res\\cursor1.cur"
+
 IDC_CURSOR2             CURSOR                  "res\\cursor2.cur"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3550,56 +3557,6 @@ END
 //
 // AFX_DIALOG_LAYOUT
 //
-
-IDD_TSEXTRAFILE AFX_DIALOG_LAYOUT 
-BEGIN
-    0x0000
-END
-
-IDD_NAVACQUIRE AFX_DIALOG_LAYOUT 
-BEGIN
-    0x0000
-END
-
-IDD_NAVROTALIGN AFX_DIALOG_LAYOUT 
-BEGIN
-    0x0000
-END
-
-IDD_TSPOLICIES AFX_DIALOG_LAYOUT 
-BEGIN
-    0x0000
-END
-
-IDD_AUTOCENSETUP AFX_DIALOG_LAYOUT 
-BEGIN
-    0x0000
-END
-
-IDD_TSDOSESYM AFX_DIALOG_LAYOUT 
-BEGIN
-    0x0000
-END
-
-IDD_CTFFINDDLG AFX_DIALOG_LAYOUT 
-BEGIN
-    0x0000
-END
-
-IDD_MULTI_SHOT_SETUP AFX_DIALOG_LAYOUT 
-BEGIN
-    0x0000
-END
-
-IDD_TILTSERIES AFX_DIALOG_LAYOUT 
-BEGIN
-    0x0000
-END
-
-IDD_DRIFTWAITSETUP AFX_DIALOG_LAYOUT 
-BEGIN
-    0x0000
-END
 
 
 /////////////////////////////////////////////////////////////////////////////
