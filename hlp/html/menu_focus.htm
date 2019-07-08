@@ -360,19 +360,19 @@
     <p>Defocus should be in the range of -1.0 to -2.5 microns, or more underfocused at 
       lower magnifications (e.g., with a pixel size in the range of 1 nm or more).</p>
     <p>You should verify that the CTF fitting is reasonably accurate with the 
-      acquisition parameters and defocus being used by turning on <a href="#hid_process_doctffindfitonclick">Do Ctffind On Click</a> 
+      acquisition parameters and defocus being used by turning on <a href="menu_focus.htm#hid_process_doctffindfitonclick">Do Ctffind On Click</a> 
       and checking that the fits work when clicking, and that the defocus varies by 
       only about 3-10 nm between successive images (e.g., for focus near -2 microns).&nbsp; 
       Larger variations will occur at lower magnifications and higher defocus, 
       situations where the lower accuracy of fitting may be acceptable.&nbsp; </p>
-    <p>It is a good idea to open the side-by-side FFT display (see <a href="#hid_process_side_by_side">Side by Side</a>) 
+    <p>It is a good idea to open the side-by-side FFT display (see <a href="menu_focus.htm#hid_process_side_by_side">Side by Side</a>) 
       when you are first using these routines.&nbsp; When this window is open, the 
       program will show the CTF fit for each image, taking an FFT if it is not being 
-      done automatically (i.e., with <a href="#hid_process_automaticffts">Automatic Single FFTs</a> 
+      done automatically (i.e., with <a href="menu_focus.htm#hid_process_automaticffts">Automatic Single FFTs</a> 
       turned on).</p>
-    <p>Fitting will be done with the slower 2D search, which is not the default when 
+    <p>Fitting will be done with the slower 2D search, which may not be turned on when 
       clicking in an image.&nbsp; If you see bad fits when running these routines, you 
-      should enable the 2D search when clicking with the <a href="#hid_process_setctffindoptions">Set Ctffind Options</a> 
+      should make sure the 2D search is enabled when clicking with the <a href="menu_focus.htm#hid_process_setctffindoptions">Set Ctffind Options</a> 
       command, and adjust parameters until fitting works when clicking in an image.</p>
     <p>If there are few Thon rings and they do not extend out very far, the fitting 
       may fail because the resolution range for fitting is set too high.&nbsp; The 
@@ -384,7 +384,7 @@
     <p>The astigmatism correction routine will measure defocus, take a single image, 
       and correct the astigmatism.&nbsp; If the change in stigmators is above a 
       threshold, it will take another image and refine the correction.&nbsp; You can 
-      check the result by taking an image and clicking near the first zero with <a href="#hid_process_doctffindfitonclick">Do Ctffind On Click</a> 
+      check the result by taking an image and clicking near the first zero with <a href="menu_focus.htm#hid_process_doctffindfitonclick">Do Ctffind On Click</a> 
       enabled.</p>
     <p>Technically, if you are going to correct coma as well, you should correct that 
       first, then astigmatism. In practice, this matters only if the the beam tilt 

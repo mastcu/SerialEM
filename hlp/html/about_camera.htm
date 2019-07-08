@@ -516,12 +516,12 @@
         solves the problem or clarifies the situation.&nbsp; (Last update May 28, 
         2019)</p>
     <ol>
-      <li>For GMS 3.30 at least, when the camera configuration is set for rotation by 90 or 270 and flip around 
+      <li>For GMS 3.30 and 3.31.2162, when the camera configuration is set for rotation by 90 or 270 and flip around 
         Y, the operation is done incorrectly in DM and the image is rotated 180 degrees 
         from what it should be.&nbsp; As a result, the summed images returned to 
         SerialEM from dose-fractionation,&nbsp;frames saved with reoriention, and 
         continuous mode images will all be turned by 180 degrees.&nbsp; The problem is 
-          gone in 3.31.2336 but whether it is in earlier versions of 3.31 is not known.&nbsp; There is a 
+          gone in 3.31.2336.&nbsp; There is a 
         workaround in the Dec. 9 version of SerialEM. The procedure is:</li>
         <ul>
             <li>First check if the problem is still present in your version by taking an image 
