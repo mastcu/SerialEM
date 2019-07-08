@@ -63,9 +63,7 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDR_MAINFRAME           ICON                    "res\\SerialEM.ico"
-
 IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -73,9 +71,7 @@ IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
 //
 
 IDR_MAINFRAME           BITMAP                  "res\\Toolbar.bmp"
-
 IDB_BITMAP1             BITMAP                  "res\\bitmap1.bmp"
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -2127,54 +2123,54 @@ BEGIN
     PUSHBUTTON      "GO",IDC_COOKGO,18,152,33,14
 END
 
-IDD_AUTOCENSETUP DIALOGEX 0, 0, 158, 249
+IDD_AUTOCENSETUP DIALOGEX 0, 0, 150, 208
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Beam Autocentering Setup"
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
-    LTEXT           "Separate settings can be stored for each mag",IDC_STATIC,10,10,136,8
-    LTEXT           "and for each camera",IDC_STATCAMLABEL,52,19,62,8
-    LTEXT           "Camera:",IDC_STATCAMLABEL2,9,28,27,8
-    LTEXT           "Name",IDC_STATCAMNAME,39,28,60,8
+    LTEXT           "Separate settings can be stored for each mag",IDC_STATIC,7,6,136,8
+    LTEXT           "and for each camera",IDC_STATCAMLABEL,49,15,62,8
+    LTEXT           "Camera:",IDC_STATCAMLABEL2,6,24,27,8
+    LTEXT           "Name",IDC_STATCAMNAME,36,24,60,8
     CONTROL         "Setup beam on scope and track scope state",IDC_SETBEAMSTATE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,40,143,10
-    LTEXT           "Spot size:",IDC_STATIC,9,54,31,8
-    RTEXT           "99",IDC_AUTOCENSPOT,42,54,9,8
-    CONTROL         "",IDC_SPINACBSPOT,"msctls_updown32",UDS_ARROWKEYS,52,51,9,14
-    LTEXT           "Mag:",IDC_STATIC,77,54,17,8
-    RTEXT           "120000",IDC_STATACBMAG,95,54,23,8
-    CONTROL         "",IDC_SPINACBMAG,"msctls_updown32",UDS_ARROWKEYS,120,51,9,14
-    LTEXT           "Intensity:",IDC_STATIC,9,72,28,8
-    LTEXT           "65.47% C2",IDC_STATACBPCTC2,42,72,35,8
-    LTEXT           "Binning:",IDC_STATIC,9,91,25,8
-    RTEXT           "16",IDC_STATACBBINNING,38,91,9,8
-    CONTROL         "",IDC_SPINACBBINNING,"msctls_updown32",UDS_ARROWKEYS,49,88,9,14
-    LTEXT           "Exposure:",IDC_STATIC,69,90,31,8
-    EDITTEXT        IDC_EDITACBEXPOSURE,102,87,27,14,ES_AUTOHSCROLL
-    LTEXT           "sec",IDC_STATIC,132,90,11,8
-    CONTROL         "Center by finding beam edges",IDC_RADIOUSEEDGE,"Button",BS_AUTORADIOBUTTON | WS_GROUP,24,116,103,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,44,143,10
+    LTEXT           "Spot size:",IDC_STATIC,6,57,31,8
+    RTEXT           "99",IDC_AUTOCENSPOT,39,57,9,8
+    CONTROL         "",IDC_SPINACBSPOT,"msctls_updown32",UDS_ARROWKEYS,49,54,9,14
+    LTEXT           "Mag:",IDC_STATIC,74,57,17,8
+    RTEXT           "120000",IDC_STATACBMAG,92,57,23,8
+    CONTROL         "",IDC_SPINACBMAG,"msctls_updown32",UDS_ARROWKEYS,117,54,9,14
+    LTEXT           "Intensity:",IDC_STATIC,6,74,28,8
+    LTEXT           "65.47% C2",IDC_STATACBPCTC2,39,74,35,8
+    LTEXT           "Binning:",IDC_STATIC,6,90,25,8
+    RTEXT           "16",IDC_STATACBBINNING,35,90,9,8
+    CONTROL         "",IDC_SPINACBBINNING,"msctls_updown32",UDS_ARROWKEYS,46,87,9,14
+    LTEXT           "Exposure:",IDC_STATIC,66,90,31,8
+    EDITTEXT        IDC_EDITACBEXPOSURE,99,87,27,14,ES_AUTOHSCROLL
+    LTEXT           "sec",IDC_STATIC,129,90,11,8
+    CONTROL         "Center by finding beam edges",IDC_RADIOUSEEDGE,"Button",BS_AUTORADIOBUTTON | WS_GROUP,21,111,103,10
     CONTROL         "Use centroid of image intensities",IDC_RADIOUSECENTROID,
-                    "Button",BS_AUTORADIOBUTTON,24,129,110,10
-    GROUPBOX        "Beam centering method",IDC_STATIC,20,106,117,36,WS_GROUP
-    CTEXT           "Directly set at this mag",IDC_STATSOURCE,7,191,145,8
-    DEFPUSHBUTTON   "Test Acquire",ID_TESTACQUIRE,22,206,54,14
-    DEFPUSHBUTTON   "Delete Settings",ID_DELETESETTINGS,82,206,54,14
-    DEFPUSHBUTTON   "OK",IDOK,26,228,45,14
-    PUSHBUTTON      "Cancel",IDCANCEL,86,228,45,14
-    PUSHBUTTON      "?",IDC_BUTHELP,146,230,10,10
-    LTEXT           "and spot size",IDC_STATIC,10,19,40,8
-    PUSHBUTTON      "Smaller",IDC_BUT_AC_MORE,86,69,29,14
-    PUSHBUTTON      "Bigger",IDC_BUT_AC_LESS,122,69,29,14
-    LTEXT           "Nanoprobe",IDC_STAT_NANOPROBE,9,63,36,8
+                    "Button",BS_AUTORADIOBUTTON,21,121,110,10
+    GROUPBOX        "Beam centering method",IDC_STATIC,17,102,117,31,WS_GROUP
+    CTEXT           "Directly set at this mag",IDC_STATSOURCE,2,34,145,8
+    DEFPUSHBUTTON   "Test Acquire",ID_TESTACQUIRE,19,175,54,12
+    DEFPUSHBUTTON   "Delete Settings",ID_DELETESETTINGS,79,175,54,12
+    DEFPUSHBUTTON   "OK",IDOK,23,193,45,12
+    PUSHBUTTON      "Cancel",IDCANCEL,83,193,45,12
+    PUSHBUTTON      "?",IDC_BUTHELP,137,194,10,10
+    LTEXT           "and spot size",IDC_STATIC,7,15,40,8
+    PUSHBUTTON      "Smaller",IDC_BUT_AC_MORE,83,72,29,12
+    PUSHBUTTON      "Bigger",IDC_BUT_AC_LESS,119,72,29,12
+    LTEXT           "Nanoprobe",IDC_STAT_NANOPROBE,6,66,36,8
     CONTROL         "Find edges with beam shifted by",IDC_ACS_SHIFT_BEAM,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,148,107,10
-    EDITTEXT        IDC_EDIT_ACS_BEAM_SHIFT,117,146,24,14,ES_AUTOHSCROLL
-    LTEXT           "um",IDC_STAT_ACS_MICRONS,142,149,10,8
-    GROUPBOX        "Beam shift to add after centering",IDC_STATIC,7,161,144,25
-    CONTROL         "Record shift",IDC_RECORD_ADDED_SHIFT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,172,52,10
-    PUSHBUTTON      "Reset",IDC_RESET_ADDED_SHIFT,65,171,24,12
-    LTEXT           "Static",IDC_STAT_ACS_ADDED_SHIFT,97,173,52,8
-    CTEXT           "Not tracking intensity on scope ",IDC_STAT_LD_TRACK_SCOPE,22,40,112,8
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,138,107,10
+    EDITTEXT        IDC_EDIT_ACS_BEAM_SHIFT,114,136,24,14,ES_AUTOHSCROLL
+    LTEXT           "um",IDC_STAT_ACS_MICRONS,139,139,10,8
+    GROUPBOX        "Beam shift to add after centering",IDC_STATIC,0,149,148,23
+    CONTROL         "Record shift",IDC_RECORD_ADDED_SHIFT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,159,52,10
+    PUSHBUTTON      "Reset",IDC_RESET_ADDED_SHIFT,62,159,24,10
+    LTEXT           "Static",IDC_STAT_ACS_ADDED_SHIFT,94,160,52,8
+    CTEXT           "Not tracking intensity on scope ",IDC_STAT_LD_TRACK_SCOPE,19,44,112,8
 END
 
 IDD_READFILEDLG DIALOGEX 0, 0, 113, 48
@@ -3098,9 +3094,7 @@ END
 //
 
 IDC_CURSOR1             CURSOR                  "res\\cursor1.cur"
-
 IDC_CURSOR2             CURSOR                  "res\\cursor2.cur"
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3312,10 +3306,10 @@ BEGIN
 
     IDD_AUTOCENSETUP, DIALOG
     BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 151
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 242
+        LEFTMARGIN, 3
+        RIGHTMARGIN, 147
+        TOPMARGIN, 3
+        BOTTOMMARGIN, 205
     END
 
     IDD_READFILEDLG, DIALOG
@@ -3551,12 +3545,6 @@ BEGIN
 0x6f4d, 0x6564, 0x3220, "\000" 
     0
 END
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// AFX_DIALOG_LAYOUT
-//
 
 
 /////////////////////////////////////////////////////////////////////////////
