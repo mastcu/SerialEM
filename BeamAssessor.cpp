@@ -226,6 +226,7 @@ void CBeamAssessor::CalIntensityCCD()
   mCalTable->crossover = mScope->GetCrossover(mCalSpotSize, probe);
   mCalTable->measuredAperture = 0;
   mCalTable->probeMode = probe;
+  mCalTable->aboveCross = aboveCross;
   
   // Get total range of intensity that needs to be covered to be able to work
   // at the minimum mag: based on pixel size and extra range desired
@@ -426,6 +427,9 @@ void CBeamAssessor::CalIntensityImage(int param)
       report.Format("%9.2f  %9.5f   %d", testCurrent, mTestIntensity, mNumTry + 1);
       mWinApp->AppendToLog(report, LOG_IF_ADMIN_OPEN_IF_CLOSED);
       mNumTry = 0;
+      mCalTable->numIntensities = mNumIntensities;
+      CheckCalForZeroIntensities(mBeamTables[mTableInd], "While doing the calibration", 
+        1);
       
       if (testCurrent / mStartCurrent < mChangeNeeded)
         break;
@@ -2237,8 +2241,8 @@ int CBeamAssessor::CheckCalForZeroIntensities(BeamTable &table, const char *mess
     if (table.intensities[ind])
       return 0;
   str.Format("%s, the beam calibration table has all zero intensities\r\n"
-    "  for spot %d, starting mag %d, extrap flags %d", message, 
-    table.spotSize, table.magIndex, table.dontExtrapFlags);
+    "  for spot %d, # values %d, starting mag %d, extrap flags %d", message, 
+    table.spotSize, table.numIntensities, table.magIndex, table.dontExtrapFlags);
   if (table.aboveCross / 2 == 0) {
     str2.Format(", aboveCross %d", table.aboveCross);
     str += str2;
