@@ -2782,6 +2782,23 @@ void CShiftManager::ListBeamShiftCals()
   }
 }
 
+// Convert a beam shift at the given mag to a specimen shift, return true if possible
+bool CShiftManager::BeamShiftToSpecimenShift(ScaleMat & IStoBS, int magInd,
+  double beamDelX, double beamDelY, float & specX, float & specY)
+{
+  ScaleMat BStoIS, IStoSpec, BStoSpec;
+  specX = specY = 0;
+  if (IStoBS.xpx && magInd) {
+    BStoIS = MatInv(IStoBS);
+    IStoSpec = IStoSpecimen(magInd);
+    if (IStoSpec.xpx) {
+      BStoSpec = MatMul(BStoIS, IStoSpec);
+      ApplyScaleMatrix(BStoSpec, beamDelX, beamDelY, specX, specY);
+      return true;
+    }
+  }
+  return false;
+}
 
 // Given any angle, returns a value between -180 and 180.
 double CShiftManager::GoodAngle(double angle)
