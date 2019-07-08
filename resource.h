@@ -1496,13 +1496,13 @@
 #define IDC_EDIT_DRIFT_RATE             2521
 #define IDC_STAT_RATE_UNITS             2522
 #define IDC_EDIT_MAX_WAIT               2523
-#define IDC_CHECK3                      2524
 #define IDC_CHECK_THROW_ERROR           2524
 #define IDC_STAT_EXP_SEC                2525
 #define IDC_STAT_TRIAL_EXP              2526
-#define IDC_CHECK1                      2527
-#define IDC_ACS_SHIFT_BEAM              2527
-#define IDC_EDIT1                       2528
+#define IDC_CHECK_CHANGE_IS             2527
+#define IDC_ACS_SHIFT_BEAM              2528
+#define IDC_EDIT_ACS_BEAM_SHIFT         2529
+#define IDC_STAT_ACS_MICRONS            2530
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -1953,6 +1953,8 @@
 #define ID_EXTERNAL_TOOL24              33331
 #define ID_EXTERNAL_TOOL25              33332
 #define ID_SPECIALSETTINGS_ALWAYSANTIALIASK2 33333
+#define ID_BEAMSPOT_LISTCALIBRATIONS    33334
+#define ID_TASKS_SETUPWAITFORDRIFT      33335
 
 // Next default values for new objects
 // 
@@ -1960,8 +1962,8 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        239
-#define _APS_NEXT_COMMAND_VALUE         33334
-#define _APS_NEXT_CONTROL_VALUE         2529
+#define _APS_NEXT_COMMAND_VALUE         33336
+#define _APS_NEXT_CONTROL_VALUE         2531
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
