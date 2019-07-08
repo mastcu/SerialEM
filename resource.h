@@ -1484,6 +1484,22 @@
 #define IDC_CHECK_REORDER_FILE          2508
 #define IDC_STAT_ANGLE_SUMMARY          2509
 #define IDC_STATEVERY                   2510
+#define IDC_RWD_TRIAL                   2511
+#define IDC_RWD_FOCUS                   2512
+#define IDC_RWD_BETWEEN_AF              2513
+#define IDC_RWD_WITHIN_AF               2514
+#define IDC_EDIT_INTERVAL               2515
+#define IDC_CHECK_USE_ANGSTROMS         2516
+#define IDC_CHECK_SET_TRIAL             2517
+#define IDC_EDIT_TRIAL_EXP              2518
+#define IDC_STAT_TRIAL_BINNING          2520
+#define IDC_EDIT_DRIFT_RATE             2521
+#define IDC_STAT_RATE_UNITS             2522
+#define IDC_EDIT_MAX_WAIT               2523
+#define IDC_CHECK3                      2524
+#define IDC_CHECK_THROW_ERROR           2524
+#define IDC_STAT_EXP_SEC                2525
+#define IDC_STAT_TRIAL_EXP              2526
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -1942,7 +1958,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        239
 #define _APS_NEXT_COMMAND_VALUE         33334
-#define _APS_NEXT_CONTROL_VALUE         2511
+#define _APS_NEXT_CONTROL_VALUE         2527
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
