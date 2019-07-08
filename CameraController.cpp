@@ -10288,7 +10288,7 @@ CWinThread *CCameraController::StartHWDarkRefThread(void)
   mITD.DMindex = CAMP_DM_INDEX(mParam);
   mITD.FEItype = 0;
   if (mParam->K2Type == K3_TYPE) {
-      mITD.exposure = mK3HWDarkRefExposure;
+    mITD.exposure = mK3HWDarkRefExposure;
 
     // Pass the read mode in this parameter, which is flag for K3 also
     mITD.FEItype = 1;
@@ -10308,6 +10308,7 @@ UINT CCameraController::HWDarkRefProc(LPVOID pParam)
   HRESULT hr = S_OK;
   double scriptRet;
   long *strTemp;
+  long strSize;
   CString str = "K2_UpdateHardwareDarkReference(camera)\n";
   if (itd->DMindex == COM_IND) {
     CoInitializeEx(NULL, COINIT_MULTITHREADED);
@@ -10324,11 +10325,12 @@ UINT CCameraController::HWDarkRefProc(LPVOID pParam)
         "K3_UpdateHardwareDarkReference(camera, acqParams, %f, 1, 1)\n", 
         itd->exposure, itd->FEItype, itd->exposure);
     }
-    strTemp = new long[str.GetLength() / 4 + 2];
+    strSize = str.GetLength() / 4 + 1;
+    strTemp = new long[strSize];
     strcpy((char *)strTemp, (LPCTSTR)str);
     try {
       CallDMIndCamera(itd->DMindex, pGatan, itd->td->amtCam,
-        ExecuteScript(12, strTemp, 1, &scriptRet));
+        ExecuteScript(strSize, strTemp, 1, &scriptRet));
     }
     catch (_com_error E) {
       SEMReportCOMError(E, _T("Error running script to update hardware dark reference "));
