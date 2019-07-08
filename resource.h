@@ -1503,6 +1503,10 @@
 #define IDC_ACS_SHIFT_BEAM              2528
 #define IDC_EDIT_ACS_BEAM_SHIFT         2529
 #define IDC_STAT_ACS_MICRONS            2530
+#define IDC_RECORD_ADDED_SHIFT          2531
+#define IDC_RESET_ADDED_SHIFT           2532
+#define IDC_STAT_ACS_ADDED_SHIT         2533
+#define IDC_STAT_ACS_ADDED_SHIFT        2533
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -1963,7 +1967,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        239
 #define _APS_NEXT_COMMAND_VALUE         33336
-#define _APS_NEXT_CONTROL_VALUE         2531
+#define _APS_NEXT_CONTROL_VALUE         2534
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

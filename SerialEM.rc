@@ -63,9 +63,7 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDR_MAINFRAME           ICON                    "res\\SerialEM.ico"
-
 IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -73,9 +71,7 @@ IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
 //
 
 IDR_MAINFRAME           BITMAP                  "res\\Toolbar.bmp"
-
 IDB_BITMAP1             BITMAP                  "res\\bitmap1.bmp"
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -2127,7 +2123,7 @@ BEGIN
     PUSHBUTTON      "GO",IDC_COOKGO,18,152,33,14
 END
 
-IDD_AUTOCENSETUP DIALOGEX 0, 0, 158, 224
+IDD_AUTOCENSETUP DIALOGEX 0, 0, 158, 249
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Beam Autocentering Setup"
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
@@ -2156,12 +2152,12 @@ BEGIN
     CONTROL         "Use centroid of image intensities",IDC_RADIOUSECENTROID,
                     "Button",BS_AUTORADIOBUTTON,24,129,110,10
     GROUPBOX        "Beam centering method",IDC_STATIC,20,106,117,36,WS_GROUP
-    CTEXT           "Directly set at this mag",IDC_STATSOURCE,7,165,145,8
-    DEFPUSHBUTTON   "Test Acquire",ID_TESTACQUIRE,22,181,54,14
-    DEFPUSHBUTTON   "Delete Settings",ID_DELETESETTINGS,82,181,54,14
-    DEFPUSHBUTTON   "OK",IDOK,26,203,45,14
-    PUSHBUTTON      "Cancel",IDCANCEL,86,203,45,14
-    PUSHBUTTON      "?",IDC_BUTHELP,146,205,10,10
+    CTEXT           "Directly set at this mag",IDC_STATSOURCE,7,191,145,8
+    DEFPUSHBUTTON   "Test Acquire",ID_TESTACQUIRE,22,206,54,14
+    DEFPUSHBUTTON   "Delete Settings",ID_DELETESETTINGS,82,206,54,14
+    DEFPUSHBUTTON   "OK",IDOK,26,228,45,14
+    PUSHBUTTON      "Cancel",IDCANCEL,86,228,45,14
+    PUSHBUTTON      "?",IDC_BUTHELP,146,230,10,10
     LTEXT           "and spot size",IDC_STATIC,10,19,40,8
     PUSHBUTTON      "Smaller",IDC_BUT_AC_MORE,86,69,29,14
     PUSHBUTTON      "Bigger",IDC_BUT_AC_LESS,122,69,29,14
@@ -2170,6 +2166,10 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,148,107,10
     EDITTEXT        IDC_EDIT_ACS_BEAM_SHIFT,117,146,24,14,ES_AUTOHSCROLL
     LTEXT           "um",IDC_STAT_ACS_MICRONS,142,149,10,8
+    GROUPBOX        "Beam shift to add after centering",IDC_STATIC,7,161,144,25
+    CONTROL         "Record shift",IDC_RECORD_ADDED_SHIFT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,172,52,10
+    PUSHBUTTON      "Reset",IDC_RESET_ADDED_SHIFT,65,171,24,12
+    LTEXT           "Static",IDC_STAT_ACS_ADDED_SHIFT,97,173,52,8
 END
 
 IDD_READFILEDLG DIALOGEX 0, 0, 113, 48
@@ -3093,9 +3093,7 @@ END
 //
 
 IDC_CURSOR1             CURSOR                  "res\\cursor1.cur"
-
 IDC_CURSOR2             CURSOR                  "res\\cursor2.cur"
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3310,7 +3308,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 151
         TOPMARGIN, 7
-        BOTTOMMARGIN, 217
+        BOTTOMMARGIN, 242
     END
 
     IDD_READFILEDLG, DIALOG
@@ -3553,54 +3551,54 @@ END
 // AFX_DIALOG_LAYOUT
 //
 
-IDD_TSEXTRAFILE AFX_DIALOG_LAYOUT
+IDD_TSEXTRAFILE AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_NAVACQUIRE AFX_DIALOG_LAYOUT
+IDD_NAVACQUIRE AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_NAVROTALIGN AFX_DIALOG_LAYOUT
+IDD_NAVROTALIGN AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_TSPOLICIES AFX_DIALOG_LAYOUT
+IDD_TSPOLICIES AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_AUTOCENSETUP AFX_DIALOG_LAYOUT
+IDD_AUTOCENSETUP AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_TSDOSESYM AFX_DIALOG_LAYOUT
+IDD_TSDOSESYM AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_CTFFINDDLG AFX_DIALOG_LAYOUT
+IDD_CTFFINDDLG AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_MULTI_SHOT_SETUP AFX_DIALOG_LAYOUT
+IDD_MULTI_SHOT_SETUP AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_TILTSERIES AFX_DIALOG_LAYOUT
+IDD_TILTSERIES AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_DRIFTWAITSETUP AFX_DIALOG_LAYOUT
+IDD_DRIFTWAITSETUP AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
 
