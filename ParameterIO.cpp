@@ -80,6 +80,7 @@ CParameterIO::CParameterIO()
   mTSParam = mWinApp->mTSController->GetTiltSeriesParam();
   mFilterParam = mWinApp->GetFilterParams();
   mNumLDSets = 5;
+  mMaxReadInMacros = 0;
 }
 
 CParameterIO::~CParameterIO()
@@ -868,8 +869,10 @@ int CParameterIO::ReadSettings(CString strFileName)
       } else if (NAME_IS("LDSearchShift")) {
         mWinApp->mLowDoseDlg.mViewShiftX[1] = itemDbl[1];
         mWinApp->mLowDoseDlg.mViewShiftY[1] = itemDbl[2];
-      } else if(NAME_IS("ResetRealignIterationCriterion")) {
+      } else if (NAME_IS("ResetRealignIterationCriterion")) {
         mWinApp->mComplexTasks->SetRSRAUserCriterion((float)itemDbl[1]);
+      } else if (NAME_IS("MaxMacros")) {
+        mMaxReadInMacros = itemInt[1];
       } else
         recognized2 = false;
 
@@ -1763,9 +1766,9 @@ void CParameterIO::ReadMacrosFromFile(CString filename)
     mFile = NULL;
   }
   if (retval)
-    AfxMessageBox("An error occurred reading macros from the file", MB_EXCLAME);
+    AfxMessageBox("An error occurred reading scripts from the file", MB_EXCLAME);
   else {
-    strLine.Format("Loaded %d macros from the file", numLoaded);
+    strLine.Format("Loaded %d scripts from the file", numLoaded);
     AfxMessageBox(strLine, MB_OK | MB_ICONINFORMATION);
   }
 }
@@ -1782,7 +1785,7 @@ void CParameterIO::WriteMacrosToFile(CString filename)
   }
   catch(CFileException *perr) {
     perr->Delete();
-    CString message = "Error writing macros to file " + filename;
+    CString message = "Error writing scripts to file " + filename;
     AfxMessageBox(message, MB_EXCLAME);
   } 
   if (mFile) {
@@ -4874,6 +4877,7 @@ void CParameterIO::WriteAllMacros(int numWrite)
 {
   CString *macros = mWinApp->GetMacros();
   CString macCopy;
+  WriteInt("MaxMacros", MAX_MACROS);
   for (int i = 0; i < numWrite; i++) {
     if (!macros[i].IsEmpty()) {
       WriteInt("Macro", i);

@@ -52,6 +52,7 @@ private:
   TiltSeriesParam *mTSParam;
   FilterParams *mFilterParam;
   CString mDupMessage;
+  int mMaxReadInMacros;
 public:
   void StripItems(CString strLine, int numItems, CString & strCopy);
   int ReadSuperParse(CString & strLine, CString * strItems, BOOL * itemEmpty, int * itemInt, double * itemDbl, int maxItems);
