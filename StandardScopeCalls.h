@@ -38,8 +38,6 @@ GET_ONE_INT(GetEFTEMMode) LINE_END
 SET_ONE_INT(SetEFTEMMode) LINE_END
 SET_ONE_BOOL(SetManualExposureMode) LINE_END
 GET_ONE_DBL(GetHighVoltage) LINE_END
-GET_ONE_DBL(GetFilamentCurrent) LINE_END
-SET_ONE_DBL(SetFilamentCurrent) LINE_END
 GET_ONE_INT(GetGunValve) LINE_END
 SET_ONE_BOOL(SetGunValve) LINE_END
 GET_TWO_DBL(GetBeamShift) LINE_END
@@ -149,6 +147,8 @@ SCOPE_SAMENAME(ScopeGetThreeDbl, GetFilterRanges);
 SCOPE_SAMENAME(ScopeSetTwoInt, SetFreeLensControl);
 SCOPE_SAMENAME(ScopeSetTwoIntDbl, SetLensWithFLC);
 SCOPE_SAMENAME(ScopeSetIntGetIntDbl, GetLensFLCStatus);
+SCOPE_SAMENAME(ScopeGetDbl, GetFilamentCurrent);
+SCOPE_SAMENAME(ScopeSetDbl, SetFilamentCurrent);
 SCOPE_SAMENAME(ScopeGetInt, GetEmissionState);
 SCOPE_SAMENAME(CamOneInt, SetEmissionState);
 SCOPE_SAMENAME(CamOneInt, FlashFEG);
