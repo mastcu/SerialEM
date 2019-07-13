@@ -5054,13 +5054,11 @@ void CMacroProcessor::NextCommand()
         dwparm.measureType = WFD_USE_TRIAL;
       else if (strItems[6] == "F")
         dwparm.measureType = WFD_USE_FOCUS;
-      else if (strItems[6] == "A" || strItems[6] == "B")
-        dwparm.measureType = WFD_BETWEEN_AUTOFOC;
-      else if (strItems[6] == "W")
+      else if (strItems[6] == "A")
         dwparm.measureType = WFD_WITHIN_AUTOFOC;
       else if (strItems[6] != "0")
         ABORT_LINE("The image type to measure defocus from must be one of T, F, "
-          "A, B, W, or 0 in line:\n\n");
+          "A, or 0 in line:\n\n");
     }
     if (!itemEmpty[7] && itemInt[7])
       dwparm.changeIS = itemInt[7] > 0 ? 1 : 0;
@@ -5070,7 +5068,7 @@ void CMacroProcessor::NextCommand()
       if (!itemEmpty[9])
         dwparm.binning = itemInt[9];
     }
-    mWinApp->mParticleTasks->WaitForDrift(dwparm);
+    mWinApp->mParticleTasks->WaitForDrift(dwparm, false);
     break;
   }
 
