@@ -24,6 +24,7 @@
 #include "MacroProcessor.h"
 #include "TSController.h"
 #include "ComplexTasks.h"
+#include "ParticleTasks.h"
 #include "EMmontageController.h"
 #include "AutoTuning.h"
 #include "Utilities\STEMfocus.h"
@@ -1028,12 +1029,18 @@ void CFocusManager::AutoFocusData(float inX, float inY)
   float rawDefocus, lastDefocus = mCurrentDefocus;
   bool refocus, testAbs, testDelta;
   int abort = 0;
-  double lastFullDiff, lastDiff, diff, fullDiff;
+  double lastFullDiff, lastDiff, diff, fullDiff, elapsed;
+  int waiting = mWinApp->mParticleTasks->GetWaitingForDrift();
   if (CurrentDefocusFromShift(inX, inY, mCurrentDefocus, rawDefocus))
     return;
 
-  report.Format("Measured defocus = %.2f microns", mCurrentDefocus);
-  if (!mVerbose && mNumShots == 3)
+  report.Format("Measured defocus = %.2f %s", mCurrentDefocus, waiting ? "um" :"microns");
+  if (waiting) {
+    driftText = "    drift = " + mWinApp->mParticleTasks->FormatDrift(mLastNmPerSec);
+    elapsed = 0.001 * SEMTickInterval(mWinApp->mParticleTasks->GetWDInitialStartTime());
+    addon.Format("  at %.1f sec", elapsed);
+    driftText += addon;
+  } else if (!mVerbose && mNumShots == 3)
     driftText.Format("    drift = %.2f nm/sec", mLastNmPerSec);
   if (mDoChangeFocus <= 0)
     mWinApp->AppendToLog(report + driftText, LOG_SWALLOW_IF_CLOSED);
@@ -1045,8 +1052,10 @@ void CFocusManager::AutoFocusData(float inX, float inY)
     changeText.Format("   changed by %.2f", diff);
     if (fabs(diff - fullDiff) < 0.1) {
       mNumFullChangeIters++;
-      changeText += " to target";
+      if (!waiting)
+        changeText += " to target";
     }
+    mLastAutofocusDiff = (float)diff;
     mCumulFocusChange += (float)diff;
     if (fabs(rawDefocus) < B3DMAX(0.15, 0.1 * diff))
       mNumNearZeroCorr++;
@@ -1329,7 +1338,7 @@ void CFocusManager::FocusDone()
   KImage *imA;
   void *data, *temp;
   float xPeak1[2], yPeak1[2], xPeak2[2], yPeak2[2], peak1[2], peak2[2];
-  float xShift, yShift, xDrift, yDrift;
+  float xShift, yShift, xDrift, yDrift, interval;
   CString report;
   int trim =4;   // 3/19/06: set to 4 from 0 for Ultracam with bad lines
   int pad, minBinning, needBin = 1;
@@ -1340,7 +1349,8 @@ void CFocusManager::FocusDone()
   void *stretchData = NULL;
   BOOL doStretch;
   bool removeData = false;
-  double imRot, CCC;
+  double imRot, CCC, elapsed;
+  UINT tickTime;
   float tilt, pixel, cosphi, sinphi, tanTilt, a11, a12, a21, a22;
   int binning = mConSets[mFocusSetNum].binning;
   int iCam = mWinApp->GetCurrentCamera();
@@ -1510,6 +1520,13 @@ void CFocusManager::FocusDone()
       mBaseTiltY + mNextYtiltOffset + mFracTiltY * sign * mBeamTilt);
     if (mPostTiltDelay > 0)
       Sleep(mPostTiltDelay);
+    if (mWinApp->mParticleTasks->GetWaitingForDrift()) {
+      interval = 500.f * mWinApp->mParticleTasks->GetDriftInterval();
+      tickTime = GetTickCount();
+      elapsed = SEMTickInterval(tickTime, mCamera->GetLastAcquireStartTime());
+      if (interval > elapsed + 1.)
+        mShiftManager->SetGeneralTimeOut(tickTime, (int)(interval - elapsed));
+    }
     mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, TaskFocusDone, 
       TaskFocusError, 0, 0);
     if (!mUsingExisting && mUseOppositeLDArea)
@@ -1600,7 +1617,7 @@ void CFocusManager::FocusDone()
       break;
   
     case FOCUS_AUTOFOCUS:
-      if (mVerbose)
+      if (mVerbose && !mWinApp->mParticleTasks->GetWaitingForDrift())
         mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
       AutoFocusData(xShift, yShift);
       break;

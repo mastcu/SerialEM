@@ -38,10 +38,11 @@ public:
   void CheckDone(int param);
   void CheckAccuracy(int logging);
   BOOL GetAccuracyFactors(float &outPlus, float &outMinus);
-  GetMember(float, CurrentDefocus)
-  GetMember(BOOL, LastFailed)
-  GetMember(int, LastAborted)
-  SetMember(float, RequiredBWMean)
+  GetMember(float, CurrentDefocus);
+  GetMember(BOOL, LastFailed);
+  GetMember(int, LastAborted);
+  SetMember(float, RequiredBWMean);
+  GetMember(float, LastAutofocusDiff);
   void FocusTasksFinished();
   void ModifyAllCalibrations(ScaleMat delMat, int iCam, int direction = -1);
   void TransformFocusCal(FocusTable *inCal, FocusTable *outCal, ScaleMat delMat);
@@ -180,6 +181,7 @@ private:
   float mCurrentDefocus;    // Measured defocus value
   double mOriginalDefocus;  // Original defocus value, in case it needs to bail out
   int mAutofocusIterNum;    // Iteration number of autofocus
+  float mLastAutofocusDiff; // Change appplied in last autofocus
   bool mLastWasOpposite;    // Flag set when a large focus change crosses zero
   BOOL mNormalizeViaView;   // Flag to normalize through View area in low dose
   int mViewNormDelay;       // Msec delay abetween View and Focus areas
