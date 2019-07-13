@@ -29,7 +29,10 @@
       brightness, diffraction focus in diffraction mode, energy filter settings, probe mode on an FEI scope, or alpha on a JEOL 
       scope will immediately change the parameters of 
       the current area. Otherwise, such changes will be lost when a new image is 
-      acquired from the given area.&nbsp;  
+      acquired from the given area, except for intensity changes made with
+        <a href="menu_tasks.htm#hid_process_setintensity">Set Intensity</a> or
+        <a href="menu_tasks.htm#hid_tasks_set_dose_rate">Set Dose Rate</a> in the Tasks 
+        menu.&nbsp;  
       Beam shift, beam tilt, focus settings in imaging mode, and image shift displacements for a 
       particular area are <b>NOT</b> recorded when this option is on, but can be 
       introduced by other options in this panel. </P>
@@ -46,7 +49,7 @@
     <OL>
       <LI>
         by clicking with the left mouse button in a View image or in an image from the 
-        area being defined;
+        area being defined, for an image in buffer A;
       </LI>
       <LI>
         by entering a positive or negative distance in the 'Position on tilt axis' text 
@@ -57,11 +60,12 @@
         (although shifting a Record or View will still change image shift as usual);</LI>
       <LI>
         and even by adjusting image shift through microscope controls when the screen 
-        is down.</LI></OL>
-    <P>When you start defining an area, the area that will be shown when the screen is 
-      down will be changed to the area being defined. The previous area to show will 
-      be restored after you stop defining the area.</P>
-    <P>You should select 'None' after adjusting the area to avoid inadvertent changes, 
+        is down.</LI>
+      </OL>
+      <P>When you click in a View image, the marked position will be projected onto the 
+          axis between Record and the area being defined, and that projection will define 
+          the distance of the area along the axis.</P>
+      <P>You should select 'None' after adjusting the area to avoid inadvertent changes, 
       and to restore the expected behavior when shifting an image with the right 
       mouse button. Note that shifting the area being defined would change its offset 
       until defining is turned off.</P>
@@ -97,12 +101,11 @@
       tilt is also recorded at the same time as a change in beam shift, and it is 
       applied when changing between areas.&nbsp; (This feature is enabled by setting 
       the property &#39;LowDoseBeamTiltShifts&#39; in the properties file; as of SerialEM 
-      3.4.0, it is no longer restricted to Trial and Focus areas). On FEI scopes, the 
+      3.4, it is no longer restricted to Trial and Focus areas). On FEI scopes, the 
       beam tilt recorded in this case would be adjusted by the Rotation Center 
       alignment.&nbsp; The &#39;Reset&#39; button will return these beam tilts to 0.</P>
     <P>For FEI scopes, Dark Field beam tilt provides a better way to adjust beam tilt 
-      for the Trial and Focus areas; it is available as of SerialEM&nbsp; 3.6.0 (Dec 
-      20, 2016) and the group box title will be <b>Additional beam shift (and DF tilt)</b> 
+      for the Trial and Focus areas; it is available as of SerialEM&nbsp; 3.6 and the group box title will be <b>Additional beam shift (and DF tilt)</b> 
       unless the &#39;LowDoseBeamTiltShifts&#39; property is set.&nbsp; In this case, an 
       absolute setting is stored, not a difference between starting and ending values, 
       so the only the dark field state when &#39;Set&#39; is turned off matters.&nbsp; This 
@@ -110,11 +113,11 @@
       clear it out, just turn Dark Field off and turn &#39;Set&#39; on then off.&nbsp; This 
       feature may be useful for allowing larger image shift with a small objective 
       aperture on 300 KV Tecnais and Polaras.</P>
-    <P>Beam shifts and tilts could be set for the Record area prior to SerialEM 3.6.0 
+    <P>Beam shifts and tilts could be set for the Record area prior to SerialEM 3.6 
       and can no longer be, to avoid inadvertently setting undesired values for Record 
       and reduce confusion.&nbsp; Existing values from a previous version will be used 
       until they are cleared out with &#39;Reset&#39;.</P>
-    <P>&nbsp;<B>Defocus offset for View or Search</B></P>
+    <P><B>Defocus offset for View or Search</B></P>
     <P>You can use this control to set an additional underfocus for the View or Search area, 
       depending on which radio button is selected. 
       Focus will be changed by this amount when going to the View or Search area 

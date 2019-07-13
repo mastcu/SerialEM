@@ -181,13 +181,17 @@
         the beam will become too small to cover the camera area. If you increase the 
         intensity by a substantial amount, you should check whether the beam still 
         covers the area before going on to tasks that rely on full exposures.</P>
+      <P>In Low Dose mode, this command will change the intensity setting for the Low Dose 
+          area from which the image was acquired, regardless of whether &#39;Continuous 
+          update&#39; is on in the Low Dose control panel.</P>
     <P><A NAME="hid_tasks_set_dose_rate"></A><B>Set Dose Rate command (Tasks menu)</B></P>
     <P>Use this command to change the beam intensity to give a desired dose rate on 
       the camera, in electrons per unbinned pixel per second, based on the counts in 
       the image in buffer A.&nbsp; The mean of the tilt-foreshortened area will be 
       used, as for the <a href="#hid_process_setintensity">Set Intensity</a> command.&nbsp; 
       The programs presents a dialog box showing the dose rate in that image and 
-      asking for the new value.</P>
+      asking for the new value.&nbsp; In Low Dose mode, this command will also change 
+        the intensity setting for the Low Dose area from which the image was acquired.</P>
       <P><A NAME="hid_process_movebeam"></A><B>Move Beam command (Tasks menu)</B></P>
       <P>Use this command to move the beam by a controlled amount. You can use it to 
         center the beam by first taking a picture with the beam condensed enough to 
