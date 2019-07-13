@@ -328,9 +328,7 @@ void CAutocenSetupDlg::MoreOrLessIntensity(double factor)
     mLowDoseMode ? ldp->probeMode : mParam->probeMode, factor, newIntensity, outFactor);
   if (err && err != BEAM_ENDING_OUT_OF_RANGE)
     return;
-  if ((!mLowDoseMode && mMultiTasks->AutocenTrackingState()) ||
-    (mLowDoseMode && mScope->GetLowDoseArea() == TRIAL_CONSET && 
-      !mWinApp->mLowDoseDlg.m_bContinuousUpdate && mScope->FastScreenPos() == spDown))
+  if (mMultiTasks->AutocenMatchingIntensity())
     mScope->SetIntensity(newIntensity);
   mParam->intensity = newIntensity;
   mCurIntensity = newIntensity;
