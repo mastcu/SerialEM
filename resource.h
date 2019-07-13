@@ -1512,7 +1512,25 @@
 #define IDC_DRIFT_WAIT_ABOVE            2537
 #define IDC_EDIT1                       2539
 #define IDC_EDIT_WAIT_ABOVE_ANGLE       2539
+#define IDC_EDIT_RUN_BELOW              2539
 #define IDC_STAT_DW_DEGREES             2540
+#define IDC_STAT_TYPE_BOX               2541
+#define IDC_STAT_SEC1                   2542
+#define IDC_STAT_SEC2                   2543
+#define IDC_STAT_INTERVAL               2544
+#define IDC_STAT_TARGET                 2545
+#define IDC_LINE1                       2546
+#define IDC_STAT_ANGLE_BOX              2547
+#define IDC_RANY_ANGLE                  2548
+#define IDC_RRUN_BELOW                  2549
+#define IDC_RRUN_ABOVE                  2550
+#define IDC_STAT_DEG1                   2551
+#define IDC_STAT_DEG2                   2552
+#define IDC_EDIT_RUN_ABOVE              2553
+#define IDC_CHECK_AT_REVERSALS          2554
+#define IDC_STAT_DOSYM_BOX              2555
+#define IDC_CHECK_DOSYM_IGNORE          2556
+#define IDC_CHECK_IGNORE_ANGLES         2556
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -1987,7 +2005,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        239
 #define _APS_NEXT_COMMAND_VALUE         33377
-#define _APS_NEXT_CONTROL_VALUE         2541
+#define _APS_NEXT_CONTROL_VALUE         2557
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

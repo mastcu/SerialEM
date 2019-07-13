@@ -63,9 +63,7 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDR_MAINFRAME           ICON                    "res\\SerialEM.ico"
-
 IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -73,9 +71,7 @@ IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
 //
 
 IDR_MAINFRAME           BITMAP                  "res\\Toolbar.bmp"
-
 IDB_BITMAP1             BITMAP                  "res\\bitmap1.bmp"
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3066,7 +3062,7 @@ BEGIN
     LTEXT           "every",IDC_STATEVERY,114,42,18,8
 END
 
-IDD_DRIFTWAITSETUP DIALOGEX 0, 0, 162, 180
+IDD_DRIFTWAITSETUP DIALOGEX 0, 0, 162, 272
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Wait for Drift Setup"
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
@@ -3074,12 +3070,12 @@ BEGIN
     CONTROL         "Between Trial images",IDC_RWD_TRIAL,"Button",BS_AUTORADIOBUTTON | WS_GROUP,40,12,87,10
     CONTROL         "Between Focus images",IDC_RWD_FOCUS,"Button",BS_AUTORADIOBUTTON,40,22,91,10
     CONTROL         "Within autofocus runs",IDC_RWD_WITHIN_AF,"Button",BS_AUTORADIOBUTTON,40,32,87,10
-    GROUPBOX        "Measure drift",IDC_STATIC,34,3,91,42,WS_GROUP
-    DEFPUSHBUTTON   "OK",IDOK,22,159,46,14
-    PUSHBUTTON      "Cancel",IDCANCEL,86,159,45,14
-    LTEXT           "Time span of drift measurements",IDC_STATIC,9,77,101,8
+    GROUPBOX        "Measure drift",IDC_STAT_TYPE_BOX,34,3,91,42,WS_GROUP
+    DEFPUSHBUTTON   "OK",IDOK,22,251,46,14
+    PUSHBUTTON      "Cancel",IDCANCEL,86,251,45,14
+    LTEXT           "Time span of drift measurements",IDC_STAT_INTERVAL,9,77,101,8
     EDITTEXT        IDC_EDIT_INTERVAL,107,74,28,14,ES_AUTOHSCROLL
-    LTEXT           "sec",IDC_STATIC,137,77,12,8
+    LTEXT           "sec",IDC_STAT_SEC1,137,77,12,8
     CONTROL         "Show Angstroms/sec instead of nm/sec",IDC_CHECK_USE_ANGSTROMS,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,145,141,10
     CONTROL         "Change Trial parameters",IDC_CHECK_SET_TRIAL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,47,98,10
@@ -3087,18 +3083,32 @@ BEGIN
     LTEXT           "sec",IDC_STAT_EXP_SEC,93,61,12,8
     RTEXT           "Binning 16",IDC_STAT_TRIAL_BINNING,109,61,35,8
     CONTROL         "",IDC_SPIN_TRIAL_BIN,"msctls_updown32",UDS_ARROWKEYS,145,58,10,14
-    LTEXT           "Drift rate to reach",IDC_STATIC,9,92,51,8
+    LTEXT           "Drift rate to reach",IDC_STAT_TARGET,9,92,51,8
     EDITTEXT        IDC_EDIT_DRIFT_RATE,62,89,24,14,ES_AUTOHSCROLL
     LTEXT           "nm/sec",IDC_STAT_RATE_UNITS,88,92,55,8
     LTEXT           "Maximum time to wait ",IDC_STATIC,9,109,64,8
     EDITTEXT        IDC_EDIT_MAX_WAIT,75,106,24,14,ES_AUTOHSCROLL
-    LTEXT           "sec",IDC_STATIC,101,109,12,8
+    LTEXT           "sec",IDC_STAT_SEC2,101,109,12,8
     CONTROL         "Generate error if target drift rate is not reached",IDC_CHECK_THROW_ERROR,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,121,147,10
     LTEXT           "Trial exposure",IDC_STAT_TRIAL_EXP,17,61,45,8
-    PUSHBUTTON      "?",IDC_BUTHELP,142,160,13,10
+    PUSHBUTTON      "?",IDC_BUTHELP,142,253,13,10
     CONTROL         "Correct drift with image shift",IDC_CHECK_CHANGE_IS,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,133,96,10
+    GROUPBOX        "Tilt series angular restrictions",IDC_STAT_ANGLE_BOX,21,160,119,49
+    CONTROL         "",IDC_LINE1,"Static",SS_BLACKFRAME | SS_SUNKEN,7,157,148,1
+    CONTROL         "Run at any angle",IDC_RANY_ANGLE,"Button",BS_AUTORADIOBUTTON,27,169,66,10
+    CONTROL         "Run only below",IDC_RRUN_BELOW,"Button",BS_AUTORADIOBUTTON,27,194,62,10
+    CONTROL         "Run only above",IDC_RRUN_ABOVE,"Button",BS_AUTORADIOBUTTON,27,180,63,10
+    EDITTEXT        IDC_EDIT_RUN_BELOW,87,194,24,12,ES_AUTOHSCROLL
+    LTEXT           "deg",IDC_STAT_DEG1,112,181,13,8
+    LTEXT           "deg",IDC_STAT_DEG2,112,196,13,8
+    EDITTEXT        IDC_EDIT_RUN_ABOVE,87,179,24,12,ES_AUTOHSCROLL
+    GROUPBOX        "Dose-symmetric series",IDC_STAT_DOSYM_BOX,21,211,119,35
+    CONTROL         "Run only at tilt reversals",IDC_CHECK_AT_REVERSALS,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,27,221,104,10
+    CONTROL         "Ignore angular restrictions above",IDC_CHECK_IGNORE_ANGLES,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,27,233,111,10
 END
 
 
@@ -3146,9 +3156,7 @@ END
 //
 
 IDC_CURSOR1             CURSOR                  "res\\cursor1.cur"
-
 IDC_CURSOR2             CURSOR                  "res\\cursor2.cur"
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3550,7 +3558,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 155
         TOPMARGIN, 7
-        BOTTOMMARGIN, 173
+        BOTTOMMARGIN, 265
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -3606,19 +3614,19 @@ END
 // AFX_DIALOG_LAYOUT
 //
 
-IDD_AUTOCENSETUP AFX_DIALOG_LAYOUT
+IDD_AUTOCENSETUP AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_TILTSERIES AFX_DIALOG_LAYOUT
+IDD_TILTSERIES AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_DRIFTWAITSETUP AFX_DIALOG_LAYOUT
+IDD_DRIFTWAITSETUP AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
 
