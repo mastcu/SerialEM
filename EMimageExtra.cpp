@@ -33,6 +33,7 @@ EMimageExtra::EMimageExtra()
   mReadMode = -1;
   mCorrDblSampMode = -1;
   mMagIndex = -1;
+  mLowDoseConSet = -999;
   mCountsPerElectron = -1.;
   mMin = mMax = mMean = EXTRA_NO_VALUE;
   mTargetDefocus = EXTRA_NO_VALUE;

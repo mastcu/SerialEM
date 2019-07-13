@@ -47,6 +47,7 @@ public:
   int mReadMode;
   int mCorrDblSampMode;
   int mMagIndex;
+  int mLowDoseConSet;
   float mCountsPerElectron;
   float mMin, mMax, mMean;
   float mTargetDefocus;

@@ -776,6 +776,11 @@ int EMbufferManager::ReadFromFile(KImageStore *inStore, int inSect, int inToBuf,
       toBuf->mMagInd = extra->mMagIndex;
     if (extra->mExposure >= 0.)
       toBuf->mExposure = extra->mExposure;
+    if (extra->mLowDoseConSet > -999) {
+      toBuf->mLowDoseArea = extra->mLowDoseConSet > 0;
+      toBuf->mConSetUsed = extra->mLowDoseConSet > 0 ? extra->mLowDoseConSet - 1 :
+        -extra->mLowDoseConSet;
+    }
   }
   if (mWinApp->mNavigator)
     toBuf->mRegistration = mWinApp->mNavigator->GetCurrentRegistration();
