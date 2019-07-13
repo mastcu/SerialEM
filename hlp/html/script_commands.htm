@@ -827,7 +827,7 @@
             variable after the command.</TD>
         </TR>
         <TR>
-          <TD class="style8">TiltDuringRecord #A #D [#S]</TD>
+          <TD class="style8"><a name="tiltDuringRecord">TiltDuringRecord #A #D [#S]</a></TD>
           <TD>Starts a Record acquisition and starts the stage tilting to angle #A after the 
             delay #D in milliseconds.&nbsp; On FEI scopes with recent enough versions of FEI 
             scripting, or JEOL scopes with recent versions of TemExt.dll, #S can be added with a speed multiplier (&lt; 1 for slower, &gt; 1 for 
@@ -835,7 +835,10 @@
             interface and prevent scope updates while the stage is tilting.  If the command 
               crashes SerialEM or FEI-SEMserver with 
               a speed multiplier but runs OK with one, it means 
-              that the FEI scripting version is too old to support the speed command.
+              that the FEI scripting version is too old to support the speed command.  In that case,
+              define an environment variable SEM_USE_TOMMONIKER with the value of 1 on the 
+              microscope computer to use an alternate interface (as of SerialEM 3.8.0, 7/8/19, 
+              FEI-SEMserver version 109).
           </TD>
         </TR>
         <TR>
@@ -1474,9 +1477,8 @@
             On FEI scopes, background stage movement requires the property 
             &#39;BackgroundSocketToFEI&#39; set to 1 so that the fourth socket for background stage 
             operations is opened when the program starts.  If the command 
-              crashes SerialEM or FEI-SEMserver with 
-              a speed multiplier but runs OK with one, it means 
-              that the FEI scripting version is too old to support the speed command.</TD>
+              crashes SerialEM or FEI-SEMserver, see notes under <a href="#tiltDuringRecord">TiltDuringRecord</a>.
+              </TD>
         </TR>
         <TR vAlign="top">
           <TD class="style13">ReportTiltAngle</TD>

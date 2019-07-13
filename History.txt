@@ -3,6 +3,8 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+7/8/19: Added support for variable-speed tilting on older Tecnais.
+
 7/8/19: Increased number of scripts to 40.
 
 7/8/19: Made updating hardware dark reference available for K3 with GMS 3.31.
