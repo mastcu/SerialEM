@@ -24,6 +24,7 @@ public:
   virtual void DecrementSaveCopy();
   virtual void NegateSaveCopy();
   virtual void DeleteImage();
+  bool ImageWasReadIn();
   float GetUnbinnedBWMeanPerSec();
   BOOL IsMontageOverview();
   BOOL IsMontageCenter();

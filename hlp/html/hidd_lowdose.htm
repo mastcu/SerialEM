@@ -49,7 +49,8 @@
     <OL>
       <LI>
         by clicking with the left mouse button in a View image or in an image from the 
-        area being defined, for an image in buffer A;
+        area being defined.&nbsp; A View image can be in any buffer or even read in from a 
+          file; an image of the area being defined must be in buffer A;
       </LI>
       <LI>
         by entering a positive or negative distance in the 'Position on tilt axis' text 
@@ -62,9 +63,15 @@
         and even by adjusting image shift through microscope controls when the screen 
         is down.</LI>
       </OL>
-      <P>When you click in a View image, the marked position will be projected onto the 
-          axis between Record and the area being defined, and that projection will define 
-          the distance of the area along the axis.</P>
+      <P>When you click in a View image, the behavior depends on whether the axis between 
+          areas is free to rotate away from the tilt axis, with the 'Rotate interarea 
+          axis' option. If that option is off, the marked position will be projected onto the 
+          tilt axis and that projection will define 
+          the distance of the area along the axis.&nbsp; If the option is on, the marked 
+          position will be used as is, changing both the angle of the axis and the 
+          location on the axis.&nbsp; When you click in an image of the area being 
+          defined, the axis rotation is not changed, and the clicked point is projected 
+          onto the interarea axis.</P>
       <P>You should select 'None' after adjusting the area to avoid inadvertent changes, 
       and to restore the expected behavior when shifting an image with the right 
       mouse button. Note that shifting the area being defined would change its offset 

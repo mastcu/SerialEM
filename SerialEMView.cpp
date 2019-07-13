@@ -627,7 +627,8 @@ void CSerialEMView::DrawImage(void)
   if (mMainWindow) {
 
     // If this is a view image in low dose, draw record and trial/focus areas
-    if (imBuf->mCaptured > 0 && imBuf->mConSetUsed == 0 && imBuf->mLowDoseArea) {
+    if ((imBuf->mCaptured > 0 || imBuf->ImageWasReadIn()) &&
+      imBuf->mConSetUsed == 0 && imBuf->mLowDoseArea) {
       float cornerX[4], cornerY[4];
       for (int type  = 0; type < 2; type++) {
         int area = mWinApp->mLowDoseDlg.DrawAreaOnView(type, imBuf,

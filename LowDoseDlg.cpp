@@ -1544,7 +1544,7 @@ BOOL CLowDoseDlg::ImageAlignmentChange(float &newX, float &newY,
   // If this is image from define area, constrain shift to axis and revise the
   // alignment values
   if (UsefulImageInA() > 0) {
-    SnapCameraShiftToAxis(shiftX, shiftY);
+    SnapCameraShiftToAxis(shiftX, shiftY, false);
     newX = oldX + shiftX;
     newY = oldY + shiftY;
   }
@@ -1588,7 +1588,9 @@ void CLowDoseDlg::UserPointChange(float &ptX, float &ptY, EMimageBuffer *imBuf)
   int nx, ny, conSet;
   LowDoseParams *ldArea = &mLDParams[m_iDefineArea];
   
-  if (!mTrulyLowDose || !m_iDefineArea || imBuf != mImBufs || !UsefulImageInA())
+  if (!mTrulyLowDose || !m_iDefineArea || !((UsefulImageInA() && imBuf == mImBufs) ||
+    ((imBuf->mCaptured > 0 || imBuf->ImageWasReadIn()) && imBuf->mConSetUsed == 0 && 
+      imBuf->mLowDoseArea)))
     return;
   bInv = mShiftManager->CameraToIS(mImBufs->mMagInd);
   if (!bInv.xpx)
@@ -1599,7 +1601,7 @@ void CLowDoseDlg::UserPointChange(float &ptX, float &ptY, EMimageBuffer *imBuf)
   imBuf->mImage->getSize(nx, ny);
   offsetX = ptX + shiftX - nx / 2.f;
   offsetY = ptY + shiftY - ny / 2.f;
-  SnapCameraShiftToAxis(offsetX, offsetY);
+  SnapCameraShiftToAxis(offsetX, offsetY, imBuf->mConSetUsed == 0);
   ptX = offsetX + nx / 2.f - shiftX;
   ptY = offsetY + ny / 2.f - shiftY;
 
@@ -1767,7 +1769,7 @@ int CLowDoseDlg::UsefulImageInA()
 
 // Given a shift on camera, get the X coordinate on specimen and convert that
 // back to a shift on the camera along the tilt axis
-void CLowDoseDlg::SnapCameraShiftToAxis(float &shiftX, float &shiftY)
+void CLowDoseDlg::SnapCameraShiftToAxis(float &shiftX, float &shiftY, bool viewImage)
 {
   ScaleMat aMat, aInv;
   double specX, specY, tiltAxisX, maxRange;
@@ -1780,19 +1782,34 @@ void CLowDoseDlg::SnapCameraShiftToAxis(float &shiftX, float &shiftY)
   
   // We can ignore the binning.  But we do need to invert Y going in and out
   specX = aInv.xpx * shiftX - aInv.xpy * shiftY;
+  specY = aInv.ypx * shiftX - aInv.ypy * shiftY;
   if (mScope->GetUsePiezoForLDaxis()) {
     maxRange =  mPiezoMaxToUse - mPiezoMinToUse;
     B3DCLAMP(specX, -maxRange, maxRange);
   }
-  specY = 0.;
-  if (m_bRotateAxis && m_iAxisAngle) {
-    specY = aInv.ypx * shiftX - aInv.ypy * shiftY;
-    tiltAxisX = specX * cos(DTOR * m_iAxisAngle) + specY * sin(DTOR * m_iAxisAngle);
-    specX = tiltAxisX * cos(DTOR * m_iAxisAngle);
-    specY = tiltAxisX * sin(DTOR * m_iAxisAngle);
+
+  // If rotate axis is on and it is View, change to the new angle of the point
+  if (m_bRotateAxis && viewImage) {
+    ConvertAxisPosition(false);
+    m_iAxisAngle = B3DNINT(atan2(specY, specX) / DTOR);
+    if (m_iAxisAngle < -90)
+      m_iAxisAngle += 180;
+    if (m_iAxisAngle > 90)
+      m_iAxisAngle -= 180;
+    ConvertAxisPosition(true);
+  } else {
+
+    // Otherwise if rotating get the component on the interarea axis, if not rotating
+    // use just the X component only and get the shift on image back
+    if (m_bRotateAxis && m_iAxisAngle) {
+      tiltAxisX = specX * cos(DTOR * m_iAxisAngle) + specY * sin(DTOR * m_iAxisAngle);
+      specX = tiltAxisX * cos(DTOR * m_iAxisAngle);
+      specY = tiltAxisX * sin(DTOR * m_iAxisAngle);
+    } else
+      specY = 0.;
+    shiftX = (float)(aMat.xpx * specX + aMat.xpy * specY);
+    shiftY = -(float)(aMat.ypx * specX + aMat.ypy * specY);
   }
-  shiftX = (float)(aMat.xpx * specX + aMat.xpy * specY);
-  shiftY = -(float)(aMat.ypx * specX + aMat.ypy * specY);
 }
 
 // Update the output to the position edit box and separation message

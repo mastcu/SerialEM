@@ -160,6 +160,11 @@ int EMimageBuffer::GetSaveCopyFlag()
 		return *mSaveCopyp;
 }
 
+// Returns true if an image was read in from file
+bool EMimageBuffer::ImageWasReadIn() {
+  return (!mCaptured && !GetSaveCopyFlag()); 
+}
+
 // Delete the image in the buffer if it exists
 void EMimageBuffer::DeleteImage()
 {
