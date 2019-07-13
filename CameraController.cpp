@@ -6436,8 +6436,8 @@ void CCameraController::StartAcquire()
     return;
   }
 
+  ticks = mLastAcquireStartTime = GetTickCount();
   if (mDebugMode) {
-    DWORD ticks = GetTickCount();
     message.Format("%.3f start acquiring, %u elapsed", 0.001 * (ticks % 3600000),
       ticks - mStartTime);
     mWinApp->AppendToLog(message, LOG_OPEN_IF_CLOSED);
@@ -8533,6 +8533,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       extra->m_iMag = MagOrEFTEMmag(mWinApp->GetEFTEMMode(), mMagBefore, 
         mParam->STEMcamera);
       extra->mMagIndex = mMagBefore;
+      extra->mLowDoseConSet = lowDoseMode ? mLastConSet + 1 : -mLastConSet;
       typext = TILT_MASK | VOLT_XY_MASK | INTENSITY_MASK | MAG100_MASK | DOSE_MASK;
       if (mWinApp->mMontageController->DoingMontage() && 
         !mWinApp->mMontageController->GetFocusing()) {

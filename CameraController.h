@@ -507,6 +507,7 @@ class DLL_IM_EX CCameraController
   GetSetMember(BOOL, TestGpuInShrmemframe);
   GetSetMember(BOOL, UseK3CorrDblSamp);
   GetSetMember(float, K3HWDarkRefExposure);
+  GetMember(DWORD, LastAcquireStartTime);
 
   int GetNumFramesSaved() {return mTD.NumFramesSaved;};
   BOOL *GetUseGPUforK2Align() {return &mUseGPUforK2Align[0];};
@@ -876,6 +877,7 @@ class DLL_IM_EX CCameraController
   int mNumSubsetAligned;         // Number of frames aligned and returned in sum, 0 if all
   int mAlignStart, mAlignEnd;    // Starting and ending frames numbered from 1 as in UI
   BOOL mTestGpuInShrmemframe;    // Flag to do GPU alignment in shrmemframe
+  DWORD mLastAcquireStartTime;   // Tick count of last acquire starting
 
 public:
   void SetNonGatanPostActionTime(void);
