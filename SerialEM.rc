@@ -63,7 +63,9 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDR_MAINFRAME           ICON                    "res\\SerialEM.ico"
+
 IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -71,7 +73,9 @@ IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
 //
 
 IDR_MAINFRAME           BITMAP                  "res\\Toolbar.bmp"
+
 IDB_BITMAP1             BITMAP                  "res\\bitmap1.bmp"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1592,7 +1596,7 @@ BEGIN
     PUSHBUTTON      "Set Up",IDC_BUT_SETUP_DRIFT_WAIT,82,630,26,10
     CONTROL         "Only above",IDC_DRIFT_WAIT_ABOVE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,120,630,48,10
     EDITTEXT        IDC_EDIT_WAIT_ABOVE_ANGLE,169,629,24,12,ES_AUTOHSCROLL
-    LTEXT           "degrees",IDC_STAT_DW_DEGREES,195,631,27,8
+    LTEXT           "degrees",IDC_STAT_DW_DEGREES,196,632,27,8
 END
 
 IDD_TSRESUME DIALOGEX 0, 0, 187, 215
@@ -3062,40 +3066,39 @@ BEGIN
     LTEXT           "every",IDC_STATEVERY,114,42,18,8
 END
 
-IDD_DRIFTWAITSETUP DIALOGEX 0, 0, 162, 190
+IDD_DRIFTWAITSETUP DIALOGEX 0, 0, 162, 180
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Wait for Drift Setup"
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
     CONTROL         "Between Trial images",IDC_RWD_TRIAL,"Button",BS_AUTORADIOBUTTON | WS_GROUP,40,12,87,10
     CONTROL         "Between Focus images",IDC_RWD_FOCUS,"Button",BS_AUTORADIOBUTTON,40,22,91,10
-    CONTROL         "Between autofocus runs",IDC_RWD_BETWEEN_AF,"Button",BS_AUTORADIOBUTTON,40,32,94,10
-    CONTROL         "Within autofocus runs",IDC_RWD_WITHIN_AF,"Button",BS_AUTORADIOBUTTON,40,42,87,10
-    GROUPBOX        "Measure drift",IDC_STATIC,34,3,91,52,WS_GROUP
-    DEFPUSHBUTTON   "OK",IDOK,22,169,46,14
-    PUSHBUTTON      "Cancel",IDCANCEL,86,169,45,14
-    LTEXT           "Time between drift measurements",IDC_STATIC,9,87,101,8
-    EDITTEXT        IDC_EDIT_INTERVAL,112,84,28,14,ES_AUTOHSCROLL
-    LTEXT           "sec",IDC_STATIC,142,87,12,8
+    CONTROL         "Within autofocus runs",IDC_RWD_WITHIN_AF,"Button",BS_AUTORADIOBUTTON,40,32,87,10
+    GROUPBOX        "Measure drift",IDC_STATIC,34,3,91,42,WS_GROUP
+    DEFPUSHBUTTON   "OK",IDOK,22,159,46,14
+    PUSHBUTTON      "Cancel",IDCANCEL,86,159,45,14
+    LTEXT           "Time span of drift measurements",IDC_STATIC,9,77,101,8
+    EDITTEXT        IDC_EDIT_INTERVAL,107,74,28,14,ES_AUTOHSCROLL
+    LTEXT           "sec",IDC_STATIC,137,77,12,8
     CONTROL         "Show Angstroms/sec instead of nm/sec",IDC_CHECK_USE_ANGSTROMS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,155,141,10
-    CONTROL         "Change Trial parameters",IDC_CHECK_SET_TRIAL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,57,98,10
-    EDITTEXT        IDC_EDIT_TRIAL_EXP,63,68,28,14,ES_AUTOHSCROLL
-    LTEXT           "sec",IDC_STAT_EXP_SEC,93,71,12,8
-    RTEXT           "Binning 16",IDC_STAT_TRIAL_BINNING,109,71,35,8
-    CONTROL         "",IDC_SPIN_TRIAL_BIN,"msctls_updown32",UDS_ARROWKEYS,145,68,10,14
-    LTEXT           "Drift rate to reach",IDC_STATIC,9,102,51,8
-    EDITTEXT        IDC_EDIT_DRIFT_RATE,62,99,24,14,ES_AUTOHSCROLL
-    LTEXT           "nm/sec",IDC_STAT_RATE_UNITS,88,102,25,8
-    LTEXT           "Maximum time to wait ",IDC_STATIC,9,119,64,8
-    EDITTEXT        IDC_EDIT_MAX_WAIT,75,116,24,14,ES_AUTOHSCROLL
-    LTEXT           "sec",IDC_STATIC,101,119,12,8
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,145,141,10
+    CONTROL         "Change Trial parameters",IDC_CHECK_SET_TRIAL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,47,98,10
+    EDITTEXT        IDC_EDIT_TRIAL_EXP,63,58,28,14,ES_AUTOHSCROLL
+    LTEXT           "sec",IDC_STAT_EXP_SEC,93,61,12,8
+    RTEXT           "Binning 16",IDC_STAT_TRIAL_BINNING,109,61,35,8
+    CONTROL         "",IDC_SPIN_TRIAL_BIN,"msctls_updown32",UDS_ARROWKEYS,145,58,10,14
+    LTEXT           "Drift rate to reach",IDC_STATIC,9,92,51,8
+    EDITTEXT        IDC_EDIT_DRIFT_RATE,62,89,24,14,ES_AUTOHSCROLL
+    LTEXT           "nm/sec",IDC_STAT_RATE_UNITS,88,92,55,8
+    LTEXT           "Maximum time to wait ",IDC_STATIC,9,109,64,8
+    EDITTEXT        IDC_EDIT_MAX_WAIT,75,106,24,14,ES_AUTOHSCROLL
+    LTEXT           "sec",IDC_STATIC,101,109,12,8
     CONTROL         "Generate error if target drift rate is not reached",IDC_CHECK_THROW_ERROR,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,131,147,10
-    LTEXT           "Trial exposure",IDC_STAT_TRIAL_EXP,17,71,45,8
-    PUSHBUTTON      "?",IDC_BUTHELP,142,170,13,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,121,147,10
+    LTEXT           "Trial exposure",IDC_STAT_TRIAL_EXP,17,61,45,8
+    PUSHBUTTON      "?",IDC_BUTHELP,142,160,13,10
     CONTROL         "Correct drift with image shift",IDC_CHECK_CHANGE_IS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,143,96,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,133,96,10
 END
 
 
@@ -3143,7 +3146,9 @@ END
 //
 
 IDC_CURSOR1             CURSOR                  "res\\cursor1.cur"
+
 IDC_CURSOR2             CURSOR                  "res\\cursor2.cur"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3545,7 +3550,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 155
         TOPMARGIN, 7
-        BOTTOMMARGIN, 183
+        BOTTOMMARGIN, 173
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -3601,9 +3606,19 @@ END
 // AFX_DIALOG_LAYOUT
 //
 
-IDD_AUTOCENSETUP AFX_DIALOG_LAYOUT 
+IDD_AUTOCENSETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
+END
+
+IDD_TILTSERIES AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_DRIFTWAITSETUP AFX_DIALOG_LAYOUT
+BEGIN
+    0
 END
 
 
