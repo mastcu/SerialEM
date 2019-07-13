@@ -3,11 +3,6 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
-7/13/19: When the low dose axis is free to rotae from the tilt axis, clicking
-a View image when defining Focus or Trial position will rotate the axis and
-change the position of the area.  CLicking in a View image now works for an
-image in any buffer and for a read-in image.
-
 7/12/19: Increased number of montage pieces for which pieces can be aligned
 can to 512 (In 3.7).
 
