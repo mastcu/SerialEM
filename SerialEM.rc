@@ -63,9 +63,7 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDR_MAINFRAME           ICON                    "res\\SerialEM.ico"
-
 IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -73,9 +71,7 @@ IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
 //
 
 IDR_MAINFRAME           BITMAP                  "res\\Toolbar.bmp"
-
 IDB_BITMAP1             BITMAP                  "res\\bitmap1.bmp"
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1594,7 +1590,7 @@ BEGIN
     PUSHBUTTON      "Set Up",IDC_BUT_SETUP_DOSE_SYM,113,65,26,10
     CONTROL         "Wait for drift to settle",IDC_TSWAITFORDRIFT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,630,72,10
     PUSHBUTTON      "Set Up",IDC_BUT_SETUP_DRIFT_WAIT,82,630,26,10
-    CTEXT           "degrees",IDC_STAT_DW_DEGREES,114,632,109,8
+    LTEXT           "degrees",IDC_STAT_DW_DEGREES,114,632,109,8
 END
 
 IDD_TSRESUME DIALOGEX 0, 0, 187, 215
@@ -3074,8 +3070,8 @@ BEGIN
     CONTROL         "Within autofocus runs",IDC_RWD_WITHIN_AF,"Button",BS_AUTORADIOBUTTON,40,32,87,10
     GROUPBOX        "Measure drift",IDC_STAT_TYPE_BOX,34,3,91,42,WS_GROUP
     CONTROL         "Run at any angle",IDC_RANY_ANGLE,"Button",BS_AUTORADIOBUTTON | WS_GROUP,27,169,66,10
-    CONTROL         "Run only above",IDC_RRUN_ABOVE,"Button",BS_AUTORADIOBUTTON,27,180,63,10
-    CONTROL         "Run only below",IDC_RRUN_BELOW,"Button",BS_AUTORADIOBUTTON,27,194,62,10
+    CONTROL         "Run only above",IDC_RRUN_ABOVE,"Button",BS_AUTORADIOBUTTON,27,180,61,10
+    CONTROL         "Run only below",IDC_RRUN_BELOW,"Button",BS_AUTORADIOBUTTON,27,194,61,10
     GROUPBOX        "Tilt series angular restrictions",IDC_STAT_ANGLE_BOX,21,160,119,49,WS_GROUP
     DEFPUSHBUTTON   "OK",IDOK,22,251,46,14
     PUSHBUTTON      "Cancel",IDCANCEL,86,251,45,14
@@ -3102,10 +3098,10 @@ BEGIN
     CONTROL         "Correct drift with image shift",IDC_CHECK_CHANGE_IS,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,133,96,10
     CONTROL         "",IDC_LINE1,"Static",SS_BLACKFRAME | SS_SUNKEN,7,157,148,1
-    EDITTEXT        IDC_EDIT_RUN_BELOW,87,194,24,12,ES_AUTOHSCROLL
-    LTEXT           "deg",IDC_STAT_DEG1,112,181,13,8
-    LTEXT           "deg",IDC_STAT_DEG2,112,196,13,8
-    EDITTEXT        IDC_EDIT_RUN_ABOVE,87,179,24,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_RUN_BELOW,89,194,24,12,ES_AUTOHSCROLL
+    LTEXT           "deg",IDC_STAT_DEG1,114,181,13,8
+    LTEXT           "deg",IDC_STAT_DEG2,114,196,13,8
+    EDITTEXT        IDC_EDIT_RUN_ABOVE,89,179,24,12,ES_AUTOHSCROLL
     GROUPBOX        "Dose-symmetric series",IDC_STAT_DOSYM_BOX,21,211,119,35
     CONTROL         "Run only at tilt reversals",IDC_CHECK_AT_REVERSALS,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,27,221,104,10
@@ -3158,9 +3154,7 @@ END
 //
 
 IDC_CURSOR1             CURSOR                  "res\\cursor1.cur"
-
 IDC_CURSOR2             CURSOR                  "res\\cursor2.cur"
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3618,19 +3612,19 @@ END
 // AFX_DIALOG_LAYOUT
 //
 
-IDD_AUTOCENSETUP AFX_DIALOG_LAYOUT
+IDD_AUTOCENSETUP AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_TILTSERIES AFX_DIALOG_LAYOUT
+IDD_TILTSERIES AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_DRIFTWAITSETUP AFX_DIALOG_LAYOUT
+IDD_DRIFTWAITSETUP AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
 
