@@ -789,6 +789,8 @@
 #define IDC_BUT_TSS_PREV                1760
 #define IDC_BUT_TSS_NEXT                1761
 #define IDC_CHECK_NAV_FILEATITEM        1762
+#define IDC_STATOFFSETMICRONS2          1762
+#define IDC_STATTHRESHMICRONS           1762
 #define IDC_CHECK_NAV_FILEATGROUP       1763
 #define IDC_BUT_TSS_FULL                1764
 #define IDC_BUT_NAV_STATE               1765
@@ -1513,6 +1515,7 @@
 #define IDC_EDIT1                       2539
 #define IDC_EDIT_WAIT_ABOVE_ANGLE       2539
 #define IDC_EDIT_RUN_BELOW              2539
+#define IDC_EDIT_ITER_THRESH            2539
 #define IDC_STAT_DW_DEGREES             2540
 #define IDC_STAT_TYPE_BOX               2541
 #define IDC_STAT_SEC1                   2542
@@ -1532,6 +1535,7 @@
 #define IDC_CHECK_DOSYM_IGNORE          2556
 #define IDC_CHECK_IGNORE_ANGLES         2556
 #define IDC_STAT_MAX_WAIT               2557
+#define IDC_STAT_ITER_THRESH            2558
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2006,7 +2010,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        239
 #define _APS_NEXT_COMMAND_VALUE         33377
-#define _APS_NEXT_CONTROL_VALUE         2558
+#define _APS_NEXT_CONTROL_VALUE         2559
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
