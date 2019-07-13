@@ -461,16 +461,16 @@ int CParameterIO::ReadSettings(CString strFileName)
         for (index = 1; index < MAX_TOKENS && !itemEmpty[index]; index++)
           msParams->customHoleY.push_back((float)itemDbl[index]);
       } else if (NAME_IS("DriftWaitParams")) {
-        dwParams->measureType = itemInt[1];
-          dwParams->driftRate = (float)itemDbl[2];
-          dwParams->useAngstroms = itemInt[3] != 0;
-          dwParams->interval = (float)itemDbl[4];
-          dwParams->maxWaitTime = (float)itemDbl[5];
-          dwParams->failureAction = itemInt[6];
-          dwParams->setTrialParams = itemInt[7] != 0;
-          dwParams->exposure = (float)itemDbl[8];
-          dwParams->binning = itemInt[9];
-          dwParams->changeIS = itemInt[10] != 0;
+        dwParams->measureType = B3DMAX(0, B3DMIN(2, itemInt[1]));
+        dwParams->driftRate = (float)itemDbl[2];
+        dwParams->useAngstroms = itemInt[3] != 0;
+        dwParams->interval = (float)itemDbl[4];
+        dwParams->maxWaitTime = (float)itemDbl[5];
+        dwParams->failureAction = itemInt[6];
+        dwParams->setTrialParams = itemInt[7] != 0;
+        dwParams->exposure = (float)itemDbl[8];
+        dwParams->binning = itemInt[9];
+        dwParams->changeIS = itemInt[10] != 0;
 
       } else if (NAME_IS("NavigatorAcquireParams")) {
         navParams->acqAutofocus = itemInt[1] != 0;
