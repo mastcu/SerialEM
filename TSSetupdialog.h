@@ -342,6 +342,13 @@ CButton m_butSetupDoseSym;
 afx_msg void OnButSetupDoseSym();
 CStatic m_statLimitIS;
 CEdit m_editLimitIS;
+afx_msg void OnWaitForDrift();
+afx_msg void OnButSetupDriftWait();
+CStatic m_statDWdegrees;
+BOOL m_bWaitForDrift;
+CButton m_butSetupDriftWait;
+void ManageDriftWait();
+float m_fIterThresh;
 };
 
 //{{AFX_INSERT_LOCATION}}

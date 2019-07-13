@@ -5,6 +5,9 @@
     <META HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252">
     <style type="text/css"> <!-- BODY { font-family:"Arial" }
   TD { font-size:16 }
+        .auto-style1 {
+            height: 24px;
+        }
   --></style>
   </HEAD>
   <BODY BGCOLOR="#ffffff" TEXT="#000000">
@@ -41,8 +44,8 @@
           <TD>Select the camera for the tilt series and set camera-related options</TD>
         </TR>
         <TR VALIGN="top">
-          <TD width="256"><A HREF="#tss_autofocus">Autofocus Control</A></TD>
-          <TD>Control autofocus behavior.</TD>
+          <TD width="256" class="auto-style1"><A HREF="#tss_autofocus">Autofocus Control</A></TD>
+          <TD class="auto-style1">Control autofocus behavior.</TD>
         </TR>
         <TR VALIGN="top">
           <TD width="256"><A HREF="#tss_initial_actions">Initial and Final Actions</A></TD>
@@ -66,7 +69,8 @@
         dialog, it will be appear in a form similar to way you last left it: with the 
         full dialog if the full dialog was showing before; with the left half if one 
         half was showing before, otherwise with the first group open.</P>
-      <P><i><A NAME="tss_tilt_angle"></A><B><FONT size="3">Tilt Angle Specifications</FONT></B></i></P>
+      <P><i><A NAME="tss_tilt_angle"></A></i></P>
+      <P><i><B><FONT size="3">Tilt Angle Specifications</FONT></B></i></P>
       <P>This grouping contains various controls related to tilting and tilt angle. The 
         increment, delay time, and choice of cosine tilting duplicate the entries that 
         can be made through the <A HREF="hidd_tiltcontrol.htm">Tilt Control panel</A> .</P>
@@ -202,7 +206,8 @@
       <P>Once you have enabled the use of scheduled changes with the adjacent check box, 
         use this button to set, adjust, or view the changes in the <A HREF="hidd_tsvariations.htm">
           Tilt Series Scheduled Changes dialog box</A> .</P>
-      <P><A NAME="tss_size_shift"></A><i><B><FONT size="3">Size, Image Shift, and Recentering 
+      <P><A NAME="tss_size_shift"></A></P>
+      <P><i><B><FONT size="3">Size, Image Shift, and Recentering 
             Specifications</FONT></B></i></P>
       <P><B>Magnification</B></P>
       <P>Use the up and down arrows to change the magnification at which the tilt series 
@@ -267,7 +272,8 @@
         be done with a series of highly binned, low-exposure pictures. In low-dose 
         mode, the pictures are taken at the Record area and are based on the Preview 
         parameters, but with even lower exposure if possible.</P>
-      <P><i><A NAME="tss_beam_control"></A><B><FONT size="3">Beam Intensity Control</FONT></B></i></P>
+      <P><i><A NAME="tss_beam_control"></A></i></P>
+      <P><i><B><FONT size="3">Beam Intensity Control</FONT></B></i></P>
       <P>This grouping controls how the specimen exposure will be changed during the tilt 
         series. For a typical thick section, the transmitted intensity will decrease by 
         a factor of 2-3 at the highest tilts unless the beam intensity is changed to 
@@ -403,7 +409,8 @@
         will control the Record drift settling regardless of whether this option is 
         selected. If you stop the series, you are still free to change the settling 
         times in the Camera Parameters dialog box.</P>
-      <H1><A NAME="tss_camera"></A><i><FONT size="3">Camera Selection and Options</FONT></i></H1>
+      <P>&nbsp;</P>
+      <H1><i><FONT size="3">Camera Selection and Options</FONT></i></H1>
       <P>If you have multiple cameras, each available camera will be listed here so that 
         you can specify or see what camera will be used for the series. The current 
         camera will be the one initially selected. If you select a different camera, it 
@@ -432,7 +439,12 @@
       frames, or saving with compression, and if the program needs to do some 
       operations between Record images.&nbsp; There may be no speedup with counting 
       mode images.</P>
-      <P><i><A NAME="tss_autofocus"></A><B><FONT size="3">Autofocus Control</FONT></B></i></P>
+      <P><i><A NAME="tss_autofocus"></A></i></P>
+      <P><i><B><FONT size="3">Autofocus Control</FONT></B></i></P>
+      <P>The first four parameters are synchronized with the corresponding values set in 
+          the Focus/Tune menu: they are initialized with the values set there, and setting 
+          a new value here will change the value used in the program generally, except 
+          when setting parameters for a batch acquisition.</P>
       <P><B>Defocus target</B></P>
       <P>The target defocus value for autofocusing will appear in this text box and a new 
         value can be entered.</P>
@@ -442,22 +454,39 @@
       <P><B>Autofocus offset</B></P>
       <P>The defocus change that will be applied before autofocusing will appear in this 
         text box and a new value can be entered.</P>
-      <P><B>Skip autofocus</B></P>
-      <P>This option can be selected to skip autofocusing during the 
-        series, which can be useful if autofocusing is not reliable. The initial 
-        autofocus during the startup of the tilt series will also be skipped.</P>
+      <P><strong>Iteration threshold</strong></P>
+      <P>The threshold change for the autofocus routine to do another iteration will 
+          appear in this text box and a new value can be entered.</P>
       <P><B>Do autofocus at certain interval</B></P>
       <P>The Tilt Series Controller will skip autofocusing when the prediction for focus 
         seems reliable enough; however, it will always do an autofocus when the tilt 
         interval since the last time it was done is longer than the value entered in 
         this text box.</P>
+      <P><B>Skip autofocus</B></P>
+      <P>This option can be selected to skip autofocusing during the 
+        series, which can be useful if autofocusing is not reliable. The initial 
+        autofocus during the startup of the tilt series will also be skipped.</P>
       <P><B>Focus every time at high tilt</B></P>
       <P>If this option is selected, the program will do autofocus at every tilt angle 
         above the value entered in the text box. Enter a positive angle; it will apply 
         on both the positive and negative sides of the tilt series.&nbsp; With 
           dose-symmetric tilting, the starting angle of the series will be added to the 
           specified number to determine the actual threshold angles.</P>
-      <P><B>Check autofocus and stop if inadequate</B></P>
+      <P><B>Repeat autofocus if error is high</B></P>
+      <P>When this option is selected, the program will repeat the autofocus procedure 
+        when the defocus measured by a first autofocus differs from the predicted value 
+        by more than the criterion entered in the text box. It does this even if the 
+        prediction had a high standard error and was likely to be in error itself.</P>
+      <P><B>Do autofocus when prediction error is high</B></P>
+      <P>This entry determines when the program will autofocus rather than relying on the 
+        prediction of the focus on the next tilt. This criterion is compared with two 
+        different errors. At every tilt, the program computes a predicted defocus and a 
+        standard error for this prediction. Autofocus will be done if twice this 
+        standard error is greater than the criterion. In addition, if autofocus was 
+        done at the previous tilt, there is an actual error, the difference between the 
+        measured defocus and the predicted value. Autofocus will be done if this actual 
+        error exceeded the criterion.</P>
+      <P><A NAME="tss_action_buttons"></A><B>Check autofocus and stop if inadequate</B></P>
       <P>If this option is selected, the program will run a routine to check the accuracy 
         of autofocus at high tilt, and stop the tilt series if the accuracy is not 
         greater than the specified amount. The routine measures defocus at the current 
@@ -481,7 +510,8 @@
       box, the autofocus will fail, focus will be restored to its original value, and 
       the tilt series will stop.&nbsp; This option also applies to any autofocus done 
       at the start or during the course of the series.</P>
-      <P><i><A NAME="tss_initial_actions"></A><B><FONT size="3">Initial and Final Actions</FONT></B></i></P>
+      <P><i><A NAME="tss_initial_actions"></A></i></P>
+      <P><i><B><FONT size="3">Initial and Final Actions</FONT></B></i></P>
       <P>The options in this group will be enabled as appropriate, depending on whether 
         you are at zero tilt or at the starting tilt of the series.</P>
       <P><B>Buffer A has image of desired area</B></P>
@@ -513,10 +543,39 @@
         valves again and take additional pictures one tilt at a time with the One Loop 
         button, they will remain open. On a JEOL without a FEG, this option can be used 
         to turn the filament off instead.</P>
-      <P><A NAME="tss_tracking_control"></A><i><B><FONT size="3">Tracking Control Parameters</FONT></B></i></P>
+      <P><A NAME="tss_tracking_control"></A></P>
+      <P><i><B><FONT size="3">Tracking Control Parameters</FONT></B></i></P>
       <P>This grouping contains various parameters that govern the Tilt Series 
-        Controller's behavior with regard to predictions for positional and focus 
-        changes. The typical user needs to pay attention to just the first three.</P>
+          Controller&#39;s behavior with regard to predictions for positional changes and the 
+          tracking steps that it will do.</P>
+      <P><strong>Wait for drift to settle</strong></P>
+      <P>Select this option to run the Wait for Drift task, and press the <strong>Set Up</strong> 
+          button to open the <a href="hidd_driftwaitsetup.htm">Wait for Drift 
+          Setup</a> dialog and set parameters that control both the operation of the task 
+          and at what angles it is run during tilt series.&nbsp; This task is run between 
+          initial tracking and autofocusing.&nbsp; Unless you have selected to track only 
+          after focusing, any drift measured by the routine will be corrected with image 
+          shift to maintain specimen alignment during the procedure.&nbsp; (The setting to 
+          correct drift in the <a href="hidd_driftwaitsetup.htm">Wait for Drift 
+          Setup</a> dialog is ignored here.)&nbsp;&nbsp; The task is integrated into the 
+          tilt series operations to the extent possible, depending on the type of image 
+          that you choose for measuring drift: </P>
+      <P>1) If drift is measured with Trial images, and an initial tracking image was 
+          taken, that image is used as the first one for measuring drift.&nbsp; This 
+          happens regardless of whether you have set a different binning or exposure for 
+          the drift measurement.&nbsp; In addition, when you have not set different 
+          parameters for the drift Trials and have selected tracking before focusing, a 
+          tracking image will be taken even when the predictions indicate no tracking is 
+          needed; it will be aligned with the reference then used as the first image of 
+          the drift measurement.</P>
+      <P>2) If drift is measured between the the first and third image of autofocus runs, 
+          then the results from the last run will be used to evaluate whether focusing is 
+          still needed.&nbsp; On the one hand, if that run satisfies the criteria that 
+          would be used for a run by the Tilt Series Controller, then autofocus will be 
+          skipped.&nbsp; On the other hand, if the focus change in that run exceeded the 
+          threshold for iterating within the autofocus routine, autofocus will be done 
+          even if predictions indicated that it could be skipped.&nbsp; (Iterations with 
+          the autofocus routine are suppressed when it run to measure drift).</P>
       <P><B>Repeat Record if certain percentage of field is lost</B></P>
       <P>With this option selected, the program will repeat the acquisition of a Record 
         image when its error in position is sufficiently high. The error is expressed 
@@ -608,21 +667,8 @@
         Record on the next tilt and use this image as a new reference. This criterion 
         should be set rather high, because minor misalignments are handled 
         automatically by simply shifting the existing reference.</P>
-      <P><B>Repeat autofocus if error is high</B></P>
-      <P>When this option is selected, the program will repeat the autofocus procedure 
-        when the defocus measured by a first autofocus differs from the predicted value 
-        by more than the criterion entered in the text box. It does this even if the 
-        prediction had a high standard error and was likely to be in error itself.</P>
-      <P><B>Do autofocus when prediction error is high</B></P>
-      <P>This entry determines when the program will autofocus rather than relying on the 
-        prediction of the focus on the next tilt. This criterion is compared with two 
-        different errors. At every tilt, the program computes a predicted defocus and a 
-        standard error for this prediction. Autofocus will be done if twice this 
-        standard error is greater than the criterion. In addition, if autofocus was 
-        done at the previous tilt, there is an actual error, the difference between the 
-        measured defocus and the predicted value. Autofocus will be done if this actual 
-        error exceeded the criterion.</P>
-      <P><A NAME="tss_action_buttons"></A><i><B><FONT size="3">Dialog Control and Action Buttons</FONT></B></i></P>
+      <P>&nbsp;</P>
+      <P><i><B><FONT size="3">Dialog Control and Action Buttons</FONT></B></i></P>
       <P><B>Previous - Next</B></P>
       <P>Press these buttons to close up the last group of controls currently open and 
         open up either the previous or the next group, respectively.</P>

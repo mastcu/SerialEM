@@ -9,7 +9,7 @@
         font-size: larger;
         font-weight: bold;
       }
-      --></style>
+        --></style>
   </head>
   <body BGCOLOR="#ffffff" TEXT="#000000">
     <basefont size="2">
@@ -18,7 +18,16 @@
     <p>This dialog allows you to set parameters for the Wait for Drift task, which 
         measures drift repeatedly until it reaches a criterion level or a time limit is 
         reached.&nbsp; These parameters are used by the DriftWaitTask script command 
-        unless they are overridden by non-zero entries to the command.</p>
+        unless they are overridden by non-zero entries to the command.&nbsp; The 
+        successive drift measurements are shown in the status bar.&nbsp; When measuring 
+        with Focus or Trial images, the drift is also printed to the log if the Verbose 
+        option is on in the Tasks menu.&nbsp; When measuring with autofocus runs, the 
+        drift and elapsed time are included in each autofocus report in the log.</p>
+      <p>The top part of the dialog is always present.&nbsp; The bottom part has options 
+          specific to tilt series that are stored in the tilt series parameters.&nbsp; It 
+          appears only when this dialog is opened from the <A HREF="hidd_tiltseries.htm">Tilt Series Setup dialog</A> 
+          or when a tilt series is stopped.</p>
+      <p><strong><em>Parameters Controlling the Drift Task</em></strong></p>
       <p><strong>Images to measure drift between</strong></p>
       <p>Use these radio buttons to select what kind of images to use for measuring drift.&nbsp; 
           The choices are:</p>
@@ -26,18 +35,14 @@
           <li>Between successive Trial images, possibly with a modified exposure time and 
               binning.</li>
           <li>Between successive Focus images, using the Focus parameters.</li>
-          <li>Between the last images of successive autofocus runs.&nbsp; This choice allows 
-              focus to be refined at the same time as drift is measured, while still giving an 
-              accurate measure of low drift rates because the time between correlated images 
-              is as long as you specify.</li>
           <li>Within individual autofocus runs, using the drift estimated by the shift between 
-              the first and the third image.&nbsp; This method is suitable only for measuring 
-              higher drift rates, unless the time between those images is relatively long.&nbsp; 
-              It is the only method that can finish in less than the time between successive 
-              measurements.</li>
+              the first and the third image.&nbsp; Defocus will be adjusted to the target in each 
+              run.&nbsp; This option should be used with caution when trying to achieve low 
+              drift rates for high resolution (see note under
+          <strong>Time span of drift measurements</strong>).</li>
       </ul>
       <p>
-          For both of the autofocus options, the program will take 3 Focus images for 
+          For the autofocus option, the program will take 3 Focus images for 
           &#39;drift protection&#39; regardless of the setting of the option for this in the Focus 
           menu.</p>
       <p>
@@ -45,13 +50,42 @@
       <p>
           Select this option to use a specified exposure time and binning whenever using 
           Trial images.&nbsp; Use the text box to set the <strong>Trial exposure </strong>
-          and the spin button to set the <strong>Binning</strong>.</p>
+          and the spin button to set the <strong>Binning</strong>.&nbsp; Longer exposure 
+          time will improve the signal-to-noise ratio and lower binning may improve the 
+          accuracy of correlations somewhat, both of which should improve the accuracy of 
+          the measurement.</p>
       <p>
-          <strong>Time between drift measurements</strong></p>
+          This option applies only to Trial images under the assumption that Focus 
+          parameters should already be set to give a good signal-to-noise ratio for 
+          measurement of small shifts.&nbsp; Aside from the exposure and binning, the 
+          accuracy of measurements with Focus images should be improved with full-field 
+          rather than subarea images.</p>
       <p>
-          Enter the time between successive measurements in the text box.&nbsp; When 
-          measuring drift within autofocus runs, this is the interval between the start of 
-          the autofocus runs; otherwise, it is the time over which drift is measured.</p>
+          <strong>Time span of drift measurements</strong></p>
+      <p>
+          Enter the time interval between the two images being correlated to measure drift 
+          in the text box.</p>
+      <p>
+          &nbsp;When autofocusing, a delay will be imposed between the 
+          images of the autofocus run to make the time between the first and third images 
+          as long as this interval.&nbsp;&nbsp; This makes the defocus measurement more 
+          vulnerable to a decay in the drift rate within the autofocus run because some of 
+          the shift due to drift will be attributed to defocus instead.&nbsp; For example, 
+          if the beam-tilt-induced shift is 10 pixels and drift decays from 5 pixels 
+          between the first two images to 3 pixels between the second pair, then the 
+          beam-tilt-induced shift will be estimated at 11, off by 10%.&nbsp; Intervals 
+          long enough to increase the autofocus time substantially should be used only 
+          when the shifts induced by the beam tilt are much bigger than the shift 
+          attributable to drift, such as with a relatively large defocus, very high 
+          magnification, or high beam tilt.&nbsp; Use <a href="menu_focus.htm#hid_focus_reportshiftdrift">Report Shift &amp; Drift</a> 
+          or <a href="menu_focus.htm#hid_focus_reportonexisting">Report On Existing</a>, 
+          or autofocus with Verbose on in the Focus/Tune menu to assess the relative 
+          size of these shifts. </p>
+      <p>
+          The actual time span of the drift measurement 
+          may be longer than this interval if the basic acquisition time is more than the 
+          interval when using Trial or Focus images, or more than half the interval when 
+          using autofocus runs.</p>
       <p>
           <strong>Drift rate to reach</strong></p>
       <p>
@@ -72,13 +106,80 @@
       <p>
           <strong>Correct drift with image shift</strong></p>
       <p>
-          Select this option to have image shift applied to correct for the drift between 
-          each pair of successive images; this option is not available when measuring 
-          within autofocuses.</p>
+          Select this option to have image shift applied to correct for the 
+          drift between each pair of successive images.&nbsp; When measuring with 
+          autofocus, only the drift between the first and third image of an autofocus
+           run is corrected, not the drift between the third image of one run and the 
+          first of the next run.</p>
       <p>
           <strong>Show Angstroms/sec instead of nm/sec</strong></p>
       <p>
           This option is here because nm/sec, used elsewhere in the program, becomes 
           awkward at low drift rates.</p>
+      <p>
+          <strong><em>Parameters Controlling When to Wait in Tilt Series</em></strong></p>
+      <p>
+          Waiting for drift is a time-consuming step and the controls here provide 
+          different ways to restrict when it is run.&nbsp; It may be possible to tell that 
+          an option is appropriate from the drift rates in tilt series where the step is 
+          run at every tilt.&nbsp; In other cases, it might be necessary to evaluate the 
+          quality of the final result in order to determine whether an option is an acceptable way to save time.</p>
+      <p>
+          <strong>Tilt series angular restrictions</strong></p>
+      <p>
+          Select <strong>Run at any angle</strong> to wait for drift regardless of tilt 
+          angle in a tilt series, <strong>Run only above</strong> to wait only above the 
+          angle given in the text box, or <strong>Run only below</strong> to wait only 
+          below the angle in its respective text box.&nbsp; Waiting for drift only above 
+          an angle would be appropriate for situations where drift is much higher at high 
+          tilt (such as with side-entry holders) and not a concern at lower angles (e.g., 
+          if frame alignment handles the drift adequately).&nbsp; Waiting only below an 
+          angle might be appropriate if the higher tilt images contribute little of the 
+          high-frequency information that is impaired by drift.</p>
+      <p>
+          <strong>Dose-symmetric series: Run only at tilt reversals</strong></p>
+      <p>
+          Select this option to wait for drift only after the tilt direction changes in 
+          dose-symmetric series, or more specifically, to skip waiting after tilting 
+          between adjacent angles on the same side of the series.&nbsp; This option would 
+          be appropriate if drift is found to be low after such tilt changes.</p>
+      <p>
+          <strong>Dose-symmetric series: Ignore angular restrictions</strong></p>
+      <p>
+          Select this option to wait for drift regardless of tilt angle in a 
+          dose-symmetric series, even if a restriction is selected with the radio buttons 
+          above.&nbsp; This option allows you to set up a different behavior for 
+          dose-symmetric and other tilt series without having to revisit this dialog and 
+          change the angular restriction choice.</p>
+      <p>
+          Suppose the option <strong>Run only below</strong> is selected with an angle X.&nbsp; 
+          This matrix shows when the task will be run in a dose-symmetric series for the 
+          different combinations:</p>
+      <table BORDER style="Z-INDEX: 0" cols="3">
+          <tr>
+              <td>
+                  &nbsp;</td>
+              <td>
+                  Only at Reversals <strong>OFF</strong></td>
+              <td>
+                  Only at Reversals <strong>ON</strong></td>
+          </tr>
+          <tr>
+              <td>
+                  Ignore restrictions<strong> OFF</strong></td>
+              <td>
+                  At all angles below X</td>
+              <td>
+                  At reversals below X</td>
+          </tr>
+          <tr>
+              <td>
+                  Ignore restrictions <strong>ON</strong></td>
+              <td>
+                  At all angles</td>
+              <td>
+                  At all reversals</td>
+          </tr>
+      </table>
 </body>
 </html>

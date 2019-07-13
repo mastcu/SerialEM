@@ -45,7 +45,7 @@ public:
 	void GetAreaSizes(int &recSize, int &defSize, double &angle);
 	void UserPointChange(float &ptX, float &ptY, EMimageBuffer *imBuf);
 	void ManageAxisPosition();
-	void SnapCameraShiftToAxis(float &shiftX, float &shiftY);
+	void SnapCameraShiftToAxis(float &shiftX, float &shiftY, bool viewImage);
 	int UsefulImageInA();
 	void FixUserPoint(int needDraw);
 	BOOL ImageAlignmentChange(float &newX, float &newY, float oldX, float oldY,

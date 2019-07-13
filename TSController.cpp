@@ -19,6 +19,7 @@
 #include "MultiTSTasks.h"
 #include "TSExtraFile.h"
 #include "ComplexTasks.h"
+#include "ParticleTasks.h"
 #include "ShiftManager.h"
 #include "FocusManager.h"
 #include "EMMontageController.h"
@@ -46,8 +47,7 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-// The defines for the actions.  Order is arbitrary here, and numbers just have to
-// be less than MAX_TS_ACTIONS
+// The defines for the actions.  Order is arbitrary here
 enum {
   LOOP_START_CHECKS = 1, CHECK_RESET_SHIFT, IMPOSE_VARIATIONS, CHECK_REFINE_ZLP,
   COMPUTE_PREDICTIONS, LOW_MAG_FOR_TRACKING, ALIGN_LOW_MAG_SHOT, TRACKING_SHOT,
@@ -64,7 +64,7 @@ enum {
   BIDIR_CHECK_SHIFT, BIDIR_TRACK_SHOT, BIDIR_ALIGN_TRACK, BIDIR_RELOAD_REFS,
   BIDIR_LOWMAG_REF, BIDIR_COPY_LOWMAG_REF, BIDIR_AUTOFOCUS, BIDIR_REVERSE_TILT,
   BIDIR_FINISH_INVERT, GET_DEFERRED_SUM, DOSYM_SWITCH_TO_BIDIR, DOSYM_ANCHOR_SHOT,
-  DOSYM_REALIGN_SHOT,
+  DOSYM_REALIGN_SHOT, WAIT_FOR_DRIFT
 };
 
 // Every item in enum should have an entry, with text for the phrase in the resume dialog
@@ -115,6 +115,7 @@ static const char *actionText[][2] =
 {"DOSYM_SWITCH_TO_BIDIR", "Switch from dose-symmetric to unidirectional tilting."},
 {"DOSYM_ANCHOR_SHOT", "take an anchor for returning to this tilt."},
 {"DOSYM_REALIGN_SHOT", "realign to the anchor."}, 
+{"WAIT_FOR_DRIFT", "wait for drift to settle"},
 {"", ""}};   // End with empty strings
 
 #define NO_PREVIOUS_ACTION   -1
@@ -142,7 +143,7 @@ static const char *actionText[][2] =
 // Here, list the default actions in order, regular loop then startup
 // End with a zero
 // IF YOU ADD TO THE STARTUP SECTION, BE SURE TO CHANGE mNumActStartup
-static int actions[MAX_TS_ACTIONS] = {
+static int actions[] = {
   LOOP_START_CHECKS,
   CHECK_RESET_SHIFT,
   IMPOSE_VARIATIONS,
@@ -155,6 +156,7 @@ static int actions[MAX_TS_ACTIONS] = {
   ALIGN_LOW_MAG_SHOT,
   TRACKING_SHOT,
   ALIGN_TRACKING_SHOT,
+  WAIT_FOR_DRIFT,
   AUTOFOCUS,
   SAVE_AUTOFOCUS,
   POST_FOCUS_TRACKING, 
@@ -333,6 +335,12 @@ CTSController::CTSController()
   mTSParam.dosymAnchorIfRunToEnd = false;
   mTSParam.dosymMinUniForAnchor = 10;
   mTSParam.dosymStartingISLimit = 1.;
+  mTSParam.waitForDrift = false;
+  mTSParam.onlyWaitDriftAboveBelow = 0;
+  mTSParam.waitDriftAboveAngle = 45.;
+  mTSParam.waitDriftBelowAngle = 30.;
+  mTSParam.waitAtDosymReversals = false;
+  mTSParam.waitDosymIgnoreAngles = false;
   mTSParam.doEarlyReturn = false;
   mTSParam.earlyReturnNumFrames = 1;
   mTSParam.initialized = false;
@@ -421,13 +429,14 @@ CTSController::CTSController()
   mRestoreStageXYonTilt = -1;
   mTiltIndex = -1;
   mSetupOpenedStamp = GetTickCount();
-  FillActOrder(actions);
+  FillActOrder(actions, sizeof(actions) / sizeof(int));
   ClearActionFlags();
   mRunningMacro = false;
 }
 
 CTSController::~CTSController()
 {
+  delete[] mActOrder;
 }
 
 void CTSController::Initialize()
@@ -470,14 +479,16 @@ void CTSController::ClearActionFlags()
   mDoingPlugCall = false;
   mKeepActIndexSame = false;
   mGettingDeferredSum = false;
+  mWaitingForDrift = false;
 }
 
 // Turn a list of actions into an array of order numbers for each action
-void CTSController::FillActOrder(int *inActions)
+void CTSController::FillActOrder(int *inActions, int numActions)
 {
-  // Fill the order array with zeros, then populate with the list of actions
+  // Create and fill the order array with zeros, then populate with the list of actions
   int i;
-  for (i = 0; i < MAX_TS_ACTIONS; i++)
+  mActOrder = new int[numActions];
+  for (i = 0; i < numActions; i++)
     mActOrder[i] = 0;
   i = 0;
   while (inActions[i]) {
@@ -1456,6 +1467,8 @@ int CTSController::CommonResume(int inSingle, int external, bool stoppingPart)
   mLastRedoIndex = mTiltIndex;
   mSwitchedToMontFrom = -1;
   mSecondResetTiltInd = -1;
+  mDidTrackBefore = false;
+  mFocusForDriftWasOK = false;
   mWinApp->mPluginManager->ResumingTiltSeries(mTiltIndex);
 
   // If valves haven't been closed ever, set one-shot based on the current state of flag 
@@ -1484,13 +1497,14 @@ void CTSController::NextAction(int param)
 {
   double delFac, ISX, ISY, missingX, missingY, angleError;
   float anchorAngle, imageCrit, shiftX, shiftY, maxError, derate, plusFactor, minusFactor;
-  int anchorBuf, nx, ny, delay, error, refBuf, bwIndex, conSet, maxImageFailures;
+  int anchorBuf, nx, ny, delay, error, refBuf, bwIndex, conSet, maxImageFailures, dwErr;
   int policy, extraSet, magIndex = mTSParam.magIndex[mSTEMindex];
   int curCamera = mWinApp->GetCurrentCamera();
   float binRatio, refShiftX, refShiftY, delX, delY, shotExp;
   StageMoveInfo smi;
   BOOL needRedo, actionIncomplete, lastOrOnly;
   CString message, message2;
+  DriftWaitParams dwParams, *dwParmP = mWinApp->mParticleTasks->GetDriftWaitParams();
   KImage *image;
   ControlSet *cset;
   double cosRot, sinRot, rotation, fsY0, dose, angle, oldAngle;
@@ -1759,6 +1773,52 @@ void CTSController::NextAction(int param)
         TSMessageBox(message, MB_EXCLAME);
         ErrorStop();
         return;
+      }
+    }
+
+    // Check for failure in wait for drift
+    if (mWaitingForDrift) {
+      dwErr = mWinApp->mParticleTasks->GetWDLastFailed();
+      if (dwErr && dwErr != DW_EXTERNAL_STOP) {
+        if (dwErr == DW_FAILED_NO_INFO && dwParmP->failureAction) {
+          TSMessageBox("Waiting for drift has failed due to missing information");
+          ErrorStop();
+          return;
+
+        } else if (dwParmP->failureAction ||
+          !(dwErr == DW_FAILED_NO_INFO || dwErr == DW_FAILED_TOO_LONG)) {
+          message = "Waiting for drift has failed";
+          error = EndFirstPartOnDimImage(angle, message, needRedo, false);
+          if (error < 0)
+            return;
+          if (!error && dwParmP->failureAction) {
+            TSMessageBox(message, MB_EXCLAME);
+            ErrorStop();
+            return;
+          }
+        }
+      } else if (!dwErr && dwParmP->measureType == WFD_WITHIN_AUTOFOC) {
+
+        // If no failure and autofocus was done, see if conditions are met for saying
+        // focus was done here
+        if (mFocusManager->GetLastAutofocusDiff() < mFocusManager->GetRefocusThreshold()){
+          if (!(mCheckFocusPrediction && 
+            mWinApp->mParticleTasks->GetWDLastIterations() < 2 &&
+            fabs(mScope->GetUnoffsetDefocus() -mPredictedFocus) > mTSParam.maxFocusDiff)){
+            mFocusForDriftWasOK = true;
+            mDidFocus[mTiltIndex] = true;
+            if (mNeedFocus && mVerbose)
+              mWinApp->AppendToLog("Last autofocus of drift measurement gave "
+                "adequate focus");
+          }
+        } else if (!mNeedFocus) {
+
+          // Or make sure autofocus is done if iteration was still needed
+          if (mVerbose)
+            mWinApp->AppendToLog("Need to autofocus; last autofocus of drift measurement "
+              "had too large a change");
+          mNeedFocus = true;
+        }
       }
     }
 
@@ -2231,22 +2291,22 @@ void CTSController::NextAction(int param)
         return;
 
     // ALIGN FROM TRACKING SHOT
-    } else if (NextActionIs(mActIndex, ALIGN_TRACKING_SHOT, 1) || 
+    } else if (NextActionIs(mActIndex, ALIGN_TRACKING_SHOT, 1) ||
       NextActionIs(mActIndex, ALIGN_POST_FOCUS, 1)) {
-      lastOrOnly = (mActIndex == mActOrder[ALIGN_POST_FOCUS]) || 
+      lastOrOnly = (mActIndex == mActOrder[ALIGN_POST_FOCUS]) ||
         (mTSParam.trackAfterFocus == TRACK_BEFORE_FOCUS);
       if (SaveExtraImage(TRACKING_CONSET, "Tracking"))
         return;
       if (mLowDoseMode) {
 
         // If this is the first align in regular loop, save track reference
-        if (mNeedFirstTrackRef) 
+        if (mNeedFirstTrackRef)
           mBufferManager->CopyImageBuffer(mExtraRefBuf, mAnchorBuf);
         mNeedFirstTrackRef = false;
-          
-       // If low dose, autoalign to the extra buffer, and if this is the
-        // last or only tracking shot, copy buffers
-        // so as to roll the stack and make this the next reference
+
+        // If low dose, autoalign to the extra buffer, and if this is the
+         // last or only tracking shot, copy buffers
+         // so as to roll the stack and make this the next reference
         if (AutoAlignAndTest(mExtraRefBuf, 0, "tracking"))
           return;
         mExtraRefShifted = false;
@@ -2260,7 +2320,7 @@ void CTSController::NextAction(int param)
           return;
 
       // Update the BW mean value if low dose or accurate and it is last track
-      if ((bwIndex ||!mBeamShutterJitters) && lastOrOnly)
+      if ((bwIndex || !mBeamShutterJitters) && lastOrOnly)
         mProcessImage->UpdateBWCriterion(mImBufs, mBWMeanPerSec[bwIndex], derate);
 
       // Compute  position error  
@@ -2284,11 +2344,11 @@ void CTSController::NextAction(int param)
           (mShiftManager->GetStageInvertsZAxis() ? -1 : 1);
         if (mSTEMindex)
           focusFac = -1.f / mFocusManager->GetSTEMdefocusToDelZ(-1);
-        mScope->IncDefocus(specErrorY * tan(DTOR * angle) * focusFac);  
+        mScope->IncDefocus(specErrorY * tan(DTOR * angle) * focusFac);
       }
 
       // If doing intensity for mean, do it now unless low dose or inaccurate
-      if (!mLowDoseMode && !mBeamShutterJitters && lastOrOnly && 
+      if (!mLowDoseMode && !mBeamShutterJitters && lastOrOnly &&
         SetIntensityForMean(angle))
         return;
 
@@ -2298,12 +2358,16 @@ void CTSController::NextAction(int param)
         mUserStop = true;
       }
 
+      // Set flag that a track is available for drift waiting
+      if (mActIndex == mActOrder[ALIGN_TRACKING_SHOT])
+        mDidTrackBefore = true;
+
       // Check image shift again on first tracking shot
       if ((!mDoingDoseSymmetric || !mTiltIndex) && mSecondResetTiltInd < mTiltIndex &&
         ((mTSParam.trackAfterFocus != TRACK_AFTER_FOCUS &&
-        mActIndex == mActOrder[ALIGN_TRACKING_SHOT]) ||
-        (mTSParam.trackAfterFocus == TRACK_AFTER_FOCUS &&
-          mActIndex == mActOrder[ALIGN_POST_FOCUS]))) {
+          mActIndex == mActOrder[ALIGN_TRACKING_SHOT]) ||
+          (mTSParam.trackAfterFocus == TRACK_AFTER_FOCUS &&
+            mActIndex == mActOrder[ALIGN_POST_FOCUS]))) {
         mScope->GetLDCenteredShift(ISX, ISY);
         if (mShiftManager->RadialShiftOnSpecimen(ISX, ISY, magIndex) >
           (mDoingDoseSymmetric ? mTSParam.dosymStartingISLimit : mTSParam.ISlimit)) {
@@ -2314,6 +2378,25 @@ void CTSController::NextAction(int param)
           mSecondResetTiltInd = mTiltIndex;
         }
       }
+
+    // WAIT FOR DRIFT
+    } else if (NextActionIs(mActIndex, WAIT_FOR_DRIFT)) {
+      dwParams = *dwParmP;
+      dwParams.changeIS = mDidTrackBefore;
+      dwParams.failureAction = 0;
+      bwIndex = 0;
+      if (mLowDoseMode)
+        bwIndex = (dwParams.measureType == WFD_USE_TRIAL) ? TRIAL_CONSET : FOCUS_CONSET;
+      if (mWinApp->mParticleTasks->WaitForDrift(dwParams,
+        dwParams.measureType == WFD_USE_TRIAL && mDidTrackBefore, 
+        mSTEMindex ? 0.f : (mBWMeanPerSec[bwIndex] * mBadShotCrit), 
+        mTSParam.limitDefocusChange ? mTSParam.defocusChangeLimit : 0.f)) {
+        ErrorStop();
+        return;
+      }
+      mWinApp->AddIdleTask(TASK_TILT_SERIES, 0, 0);
+      mWaitingForDrift = true;
+      return;
 
     // AUTOFOCUS IF NEEDED    
     } else if (NextActionIs(mActIndex, AUTOFOCUS, 1) || 
@@ -3202,10 +3285,16 @@ BOOL CTSController::NextActionIsReally(int nextIndex, int action, int testStep)
     return (mNeedRegularTrack && (!mLowDoseMode || mHaveTrackRef) && 
       mTSParam.trackAfterFocus != TRACK_AFTER_FOCUS);
 
+  // WAIT FOR DRIFT
+  case WAIT_FOR_DRIFT:
+    return DoWaitForDrift(mCurrentTilt);
+
   case SAVE_STARTUP_AUTOFOCUS:
   case SAVE_AUTOFOCUS:
-  case AUTOFOCUS:
     return mNeedFocus;
+
+  case AUTOFOCUS:
+    return mNeedFocus && !mFocusForDriftWasOK;
 
   // SECOND TRACKING SHOT IF NEEDED AND REFERENCE EXISTS
   case POST_FOCUS_TRACKING:
@@ -4059,6 +4148,8 @@ int CTSController::TiltSeriesBusy()
     return (mMultiTSTasks->GetAutoCentering() ? 1 : 0);
   if (mTakingBidirAnchor)
     return (mMultiTSTasks->DoingAnchorImage() ? 1 : 0);
+  if (mWaitingForDrift)
+    return (mWinApp->mParticleTasks->GetWaitingForDrift() ? 1 : 0);
   if (mRunningMacro)
     return (mWinApp->mMacroProcessor->DoingMacro() ? 1 : 0);
   if (mDoingPlugCall)
@@ -4161,12 +4252,13 @@ void CTSController::SendEmailIfNeeded(BOOL terminating)
   CString mess;
   CString title = "SerialEM tilt series ";
   if (mSendEmail && !mUserStop && !mFinishEmailSent && !mErrorEmailSent && 
-    (!mStopAtLoopEnd || mReachedEndAngle)) {
+    (!mStopAtLoopEnd || mReachedEndAngle || mReachedHighAngle)) {
     mess.Format("The tilt series being saved to file %s\r\n", mWinApp->m_strTitle);
-    if (mReachedEndAngle) {
+    if (mReachedEndAngle || mReachedHighAngle) {
       mFinishEmailSent = true;
       title += "completed successfully";
-      mess += "successfully reached the ending tilt angle";
+      mess += mReachedEndAngle ? "successfully reached the ending tilt angle" :
+        "stopped close to the ending tilt angle";
       if (!mFinalReport.IsEmpty())
         mess += "\r\n" + mFinalReport;
     } else if (mTermFromMenu) {
@@ -4232,7 +4324,7 @@ int CTSController::EndControl(BOOL terminating, BOOL startReorder)
     mFinishingLastReorder = false;
 
     // Base Z is not allowed for these files, so leave it out
-    error = mMultiTSTasks->InvertFileInZ(mTiltIndex, mTiltAngles);
+    error = mMultiTSTasks->InvertFileInZ(mTiltIndex, mTiltAngles, mFrameAlignInIMOD);
     if ((error < 1 || error > 3) && error != 11)
       mClosedDoseSymFile = true;
 
@@ -4694,8 +4786,9 @@ int CTSController::TSMessageBox(CString message, UINT type, BOOL terminate, int 
 
   // Intercept error from macros if the flag is set, make sure there is a \r before at
   // least one \n in a row, print message and return
-  if (mWinApp->mCamera->GetNoMessageBoxOnError() < 0 || (mWinApp->mMacroProcessor->DoingMacro() && 
-    mWinApp->mMacroProcessor->GetNoMessageBoxOnError())) {
+  if (mWinApp->mCamera->GetNoMessageBoxOnError() < 0 || 
+    (mWinApp->mMacroProcessor->DoingMacro() && 
+      mWinApp->mMacroProcessor->GetNoMessageBoxOnError())) {
       for (int ind = 0; ind < message.GetLength(); ind++) {
         if (message.GetAt(ind) == '\n' && (!ind || (message.GetAt(ind - 1) != '\r' &&
           message.GetAt(ind - 1) != '\n'))) {
@@ -4806,14 +4899,18 @@ int CTSController::EndFirstPartOnDimImage(double angle, CString message, BOOL &n
     return 0;
 
   // The test for not ending on a dim image/bad autofocus
-  if (!highExp && (!mEndOnHighDimImage || !(endable || 
-    (mExternalControl && (mTerminateOnError || mTermNotAskOnDim)))))
+  if (!highExp && (!mEndOnHighDimImage || !(endable ||
+    (mExternalControl && (mTerminateOnError || mTermNotAskOnDim))))) {
+    mReachedHighAngle = mBidirSeriesPhase == BIDIR_SECOND_PART;
     return 0;
+  }
 
   // The test for not ending with a high exposure - it already tested if we are supposed 
   // to end on high exposures and if we already stopped
-  if (highExp && !(endable || mExternalControl))
+  if (highExp && !(endable || mExternalControl)) {
+    mReachedHighAngle = mBidirSeriesPhase == BIDIR_SECOND_PART;
     return 0;
+  }
 
   mWinApp->AppendToLog(message);
   if (endable) {
@@ -6034,6 +6131,8 @@ void CTSController::ComputePredictions(double angle)
   double usableAngleDiff = MaxUsableDiffFromAngle(angle);
   bool reversingDosym = mBidirSeriesPhase == DOSYM_ALTERNATING_PART;
   bool secondPart = mBidirSeriesPhase == BIDIR_SECOND_PART;
+  DriftWaitParams *dwParam = mWinApp->mParticleTasks->GetDriftWaitParams();
+  bool trackingForDrift = false;
     
   if (recentlyReversed)
     SEMTrace('1', "recentlyReversed: dir %d ang %f revtilt %f back %f 3mte %f",
@@ -6044,6 +6143,8 @@ void CTSController::ComputePredictions(double angle)
   trackSize = (nFitX < nFitY ? nFitX : nFitY) *
     mShiftManager->GetPixelSize(mWinApp->GetCurrentCamera(), mTSParam.magIndex[mSTEMindex]);
   trackCrit = mTSParam.maxPredictErrorXY * trackSize;
+  mDidTrackBefore = false;
+  mFocusForDriftWasOK = false;
 
   message = "";
 
@@ -6298,6 +6399,11 @@ void CTSController::ComputePredictions(double angle)
       usableAngleDiff && !mNeedRegularTrack)
     mHaveTrackRef = false;
   
+  if (!mNeedRegularTrack && DoWaitForDrift(angle) && dwParam->measureType == WFD_USE_TRIAL 
+    && !dwParam->setTrialParams) {
+    mNeedRegularTrack = true;
+    trackingForDrift = true;
+  }
 
   // IMPLEMENT THE CHANGES
   mCheckFocusPrediction = false;
@@ -6380,7 +6486,7 @@ void CTSController::ComputePredictions(double angle)
   mDidTiltAfterMove = false;
 
   // Cancel the regular track if there is a low mag tracking set up
-  if (mNeedLowMagTrack && mUsableLowMagRef)
+  if (mNeedLowMagTrack && mUsableLowMagRef && !trackingForDrift)
     mNeedRegularTrack = false;
 
   // restore mag if needed at this point if no low mag track needed
@@ -6391,7 +6497,8 @@ void CTSController::ComputePredictions(double angle)
   if (mNeedLowMagTrack || mRoughLowMagRef)
     message += "Need low mag tracking  -";
   if (mNeedRegularTrack)
-    message += "  Need regular tracking  -";
+    message += trackingForDrift ? "  Doing regular tracking for drift -" : 
+    "  Need regular tracking  -";
   if (mLowDoseMode && !mHaveTrackRef)
     message += "  Need new track reference  -";
   if (mNeedTiltAfterMove)
@@ -6743,6 +6850,7 @@ void CTSController::SyncOtherModulesToParam(void)
   mTSParam.targetDefocus = (float)(0.01 * floor(100. * 
     mFocusManager->GetTargetDefocus() + 0.5));
   mTSParam.autofocusOffset = mFocusManager->GetDefocusOffset();
+  mTSParam.refocusThreshold = mFocusManager->GetRefocusThreshold();
   mTSParam.applyAbsFocusLimits = mFocusManager->GetUseEucenAbsLimits();
   mTSParam.cosineTilt = mScope->GetCosineTilt();
   mTSParam.tiltIncrement = mScope->GetBaseIncrement();
@@ -6755,6 +6863,7 @@ void CTSController::SyncParamToOtherModules(void)
   mFocusManager->SetBeamTilt(mTSParam.beamTilt);
   mFocusManager->SetTargetDefocus((float)mTSParam.targetDefocus);
   mFocusManager->SetDefocusOffset(mTSParam.autofocusOffset);
+  mFocusManager->SetRefocusThreshold(mTSParam.refocusThreshold);
   mFocusManager->SetUseEucenAbsLimits(mTSParam.applyAbsFocusLimits);
   mScope->SetCosineTilt(mTSParam.cosineTilt);
   mScope->SetIncrement(mTSParam.tiltIncrement);
@@ -6875,3 +6984,32 @@ int CTSController::RestoreStageXYafterTilt()
   return 0;
 }
 
+// Returns true if Wait for Drift should be done at the given angle (uses mTiltIndex also
+// to determine directions).
+bool CTSController::DoWaitForDrift(double angle)
+{
+  double fang = fabs(angle);
+  if (!mTSParam.waitForDrift)
+    return false;
+  if (mDoingDoseSymmetric) {
+
+    // For dose symmetric at reversals only, return true for the first tilt only of a 
+    // unidirectional part, otherwise false if it isn't a reversal
+    if (mTSParam.waitAtDosymReversals) {
+      if (mBidirSeriesPhase == BIDIR_SECOND_PART)
+        return mTiltIndex <= mPartStartTiltIndex;
+      if (mTiltIndex >= mNumDoseSymTilts)
+        return false;
+      if (mTiltIndex && mDosymDirections[mTiltIndex] == mDosymDirections[mTiltIndex - 1])
+        return false;
+    }
+
+    // For dose-symmetric, now return true if ignoring angular restrictions
+    if (mTSParam.waitDosymIgnoreAngles)
+      return true;
+  }
+
+  // Return true if angular restrictions are met
+  return (!((mTSParam.onlyWaitDriftAboveBelow < 0 && fang > mTSParam.waitDriftBelowAngle)
+    || (mTSParam.onlyWaitDriftAboveBelow > 0 && fang < mTSParam.waitDriftAboveAngle)));
+}

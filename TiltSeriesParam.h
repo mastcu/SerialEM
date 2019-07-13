@@ -54,6 +54,7 @@ struct TiltSeriesParam {
   double beamTilt;             // specified beam tilt
   float targetDefocus;         // Target for autofocus
   float autofocusOffset;       // Offset for doing autofocus
+  float refocusThreshold;      // Threshold for iterating inside autofocus run
   float focusCheckInterval;    // Max interval to check focus
   BOOL skipAutofocus;          // Flag to skip autofocus completely
   BOOL limitDefocusChange;     // Whether to limit defocus changes
@@ -132,6 +133,12 @@ struct TiltSeriesParam {
   BOOL dosymAnchorIfRunToEnd;  // Use View anchor between 1st and 2nd part when run to end
   int dosymMinUniForAnchor;    // Minimum size of first unidirectional part to use anchor
   float dosymStartingISLimit;  // Limit for image shift at start of series
+  BOOL waitForDrift;           // Flag to wait for drift with task
+  int onlyWaitDriftAboveBelow; // Flag to do so only bloew (-1) or above (1) an angle
+  float waitDriftAboveAngle;   // Angle above which to wait if flag 1
+  float waitDriftBelowAngle;   // Angle below which to wait if flag -1
+  BOOL waitAtDosymReversals;   // Flag to wait for dose-symmetric series only at reversals
+  BOOL waitDosymIgnoreAngles;  // Flag for angle restrictions to be ignore for dose-sym
   BOOL doEarlyReturn;          // Flag to do early return from K2
   int earlyReturnNumFrames;    // Number of frames to return with
   BOOL initialized;            // Setup has been run

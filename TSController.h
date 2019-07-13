@@ -9,7 +9,6 @@
 #include "TiltSeriesParam.h"
 #include "EMscope.h"
 
-#define MAX_TS_ACTIONS 65
 #define MAX_TS_TILTS 720
 #define MAX_COSINE_POWER 5
 #define NUM_CHGD_CONSETS 5
@@ -106,7 +105,7 @@ public:
   GetSetMember(BOOL, RunMacroInTS);
   GetSetMember(int, StepAfterMacro);
   GetMember(BOOL, RunningMacro);
-  GetMember(BOOL, FrameAlignInIMOD);
+  GetMember(bool, FrameAlignInIMOD);
   GetSetMember(BOOL, FixedNumFrames);
   GetSetMember(BOOL, TermOnHighExposure);
   GetSetMember(float, MaxExposureIncrease);
@@ -166,7 +165,7 @@ public:
   int TiltSeriesBusy();
   void TiltSeriesError(int error);
   void NextAction(int param);
-  void FillActOrder(int *inActions);
+  void FillActOrder(int *inActions, int numActions);
   void Initialize();
 
   // Overrides
@@ -218,7 +217,7 @@ private:
   float mStartAngleCrit1;     // Angle above which to assume it is desired start angle
   float mStartAngleCrit2;     // Angle above which to assume same sign for start angle
   float mDefaultStartAngle;   // Default starting angle to offer when not at high tilt
-  int mActOrder[MAX_TS_ACTIONS];  //Array with the order for each action in sequence
+  int *mActOrder;             //Array with the order for each action in sequence
   int mNumActTotal;           // Total actions in sequence
   int mNumActLoop;            // Actions in regular loop
   int mNumActStartup;         // Actions for startup
@@ -291,7 +290,7 @@ private:
   BOOL mUseExpForIntensity;   // Flag for whether changing exposure instead of intensity
   BOOL mVaryFilter;           // Flag for whether varying filter settings
   BOOL mVaryFrameTime;        // Flag for whether varying frame time
-  BOOL mFrameAlignInIMOD;     // Flag to put out mdoc and com file to align TS frames
+  bool mFrameAlignInIMOD;     // Flag to put out mdoc and com file to align TS frames
   double mCenBeamTimeStamp;   // Time beam center was last done, or start of series
   BOOL mCrossedBeamCenAngle;  // Flag that
   int mNumRollingBuf;         // Number of rolling buffers
@@ -319,6 +318,7 @@ private:
   BOOL mCenteringBeam;        // Flag that autocenter is running
   BOOL mTakingBidirAnchor;    // Flag for taking image to be anchor or align with anchor
   BOOL mInvertingFile;        // Flag that file is being inverted synchronously
+  bool mWaitingForDrift;      // Flag that drift task is running
   BOOL mRunningMacro;         // Flag that macro was run
   BOOL mDoingPlugCall;        // Flag that a plugin call was started
   BOOL mNeedDeferredSum;      // Flag that early return was taken and deferred sum needed
@@ -335,6 +335,7 @@ private:
   BOOL mTermAtLoopEnd;        // Flag to terminate on loop end when stopping
   BOOL mAlreadyTerminated;    // Flag to prevent double termination after error
   BOOL mReachedEndAngle;      // Flag that we are stopping because it is at end angle
+  BOOL mReachedHighAngle;     // Flag that stop is at high angle in second part
   BOOL mFinishEmailSent;      // Flag that an email for being at end was sent
   BOOL mErrorEmailSent;       // Flag that an email was already sent on this error
   BOOL mInStartup;            // Flag that we are in startup sequence
@@ -357,6 +358,8 @@ private:
   BOOL mInLowMag;             // Flag that we are at low mag
   BOOL mNeedRegularTrack;     // Flag that need a regular track on this round
   BOOL mNeedFocus;            // Flag that need autofocus on this round
+  bool mDidTrackBefore;       // Flag that a track before focus (and drift wait) was done
+  bool mFocusForDriftWasOK;   // Flag that wait for drift handled focusing well enough
   BOOL mExtraRefShifted;      // Flag that low-dose track or low mag ref has been shifted
   int mSecondResetTiltInd;    // Tilt index at which second reset shift was already done
   int mOverwriteSec;          // Section number to overwrite
@@ -576,6 +579,7 @@ public:
   int ManageDoseSymmetricOnTilt();
   int RestoreStageXYafterTilt();
   int FindClosestStackReference(double curAngle, int direction, float & bufAngle);
+  bool DoWaitForDrift(double angle);
 };
 
 

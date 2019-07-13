@@ -19,6 +19,7 @@
 #include "MultiTSTasks.h"
 #include "TSVariationsDlg.h"
 #include "TSDoseSymDlg.h"
+#include "DriftWaitSetupDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -69,23 +70,25 @@ static int idTable[] = {
   IDC_STAT_NUM_EARLY_FRAMES, PANEL_END,
   IDC_TSS_PLUS5, 0, 0, IDC_TSS_TITLE5, IDC_TSS_LINE5,
   IDC_STATDEFTARG, IDC_STATTARGMICRONS, IDC_STATBEAMTILT, IDC_STATFOCUSOFFSET, 
-  IDC_STATOFFSETMICRONS, 
-  IDC_EDITFOCUSTARGET, IDC_EDITBEAMTILT, IDC_STATMILLIRAD, IDC_EDITFOCUSOFFSET,
+  IDC_STATOFFSETMICRONS, IDC_STAT_ITER_THRESH, IDC_STATTHRESHMICRONS, IDC_EDIT_ITER_THRESH
+  , IDC_EDITFOCUSTARGET, IDC_EDITBEAMTILT, IDC_STATMILLIRAD, IDC_EDITFOCUSOFFSET,
   IDC_SKIPAUTOFOCUS, IDC_STATCHECKEVERY, IDC_EDITCHECKFOCUS, IDC_STATCHECKDEG,
   IDC_ALWAYSFOCUS, IDC_EDITALWAYSFOCUS, IDC_STATALWAYSFOCUS, IDC_CHECKAUTOFOCUS,
+  IDC_STATREPFOCUSUM, IDC_STATDOFOCUSUM, IDC_REPEATFOCUS, IDC_STATDOAUTOFOC,
+  IDC_EDITREPEATFOCUS, IDC_EDITPREDICTERRORZ,
   IDC_EDITMINFOCUSRATIO, IDC_STATTIMESACTUAL, IDC_CHECK_LIMIT_DELTA_FOCUS,
   IDC_CHECK_LIMIT_ABS_FOCUS, IDC_EDIT_FOCUS_MAX_DELTA, IDC_STAT_DELTA_MICRONS, PANEL_END,
   IDC_TSS_PLUS6, 0, 0, IDC_TSS_TITLE6, IDC_TSS_LINE6,
   IDC_REFINEEUCEN, IDC_LEAVEANCHOR, IDC_EDITANCHOR, IDC_STATANCHORDEG,IDC_USEAFORREF,
   IDC_USEANCHOR, IDC_STATANCHORBUF, IDC_SPINANCHOR, IDC_CLOSE_VALVES, PANEL_END,
-  IDC_TSS_PLUS7, 0, 0, IDC_TSS_TITLE7, IDC_TSS_LINE7,
+  IDC_TSS_PLUS7, 0, 0, IDC_TSS_TITLE7, IDC_TSS_LINE7, IDC_TSWAITFORDRIFT,
+  IDC_BUT_SETUP_DRIFT_WAIT,
   IDC_REPEATRECORD, IDC_EDITREPEATRECORD, IDC_CONFIRM_LOWDOSE_REPEAT,
-  IDC_EDITPREDICTERRORXY, IDC_RTRACKBEFORE,
+  IDC_EDITPREDICTERRORXY, IDC_RTRACKBEFORE, IDC_STAT_DW_DEGREES,
   IDC_RTRACKAFTER, IDC_RTRACKBOTH, IDC_ALIGNTRACKONLY, IDC_PREVIEWBEFOREREF,
-  IDC_STATNEWTRACK, IDC_EDITNEWTRACKDIFF, IDC_STATPERCENT, IDC_REPEATFOCUS,
-  IDC_EDITREPEATFOCUS, IDC_EDITPREDICTERRORZ, IDC_STOPONBIGSHIFT, IDC_STATDOAUTOFOC,
+  IDC_STATNEWTRACK, IDC_EDITNEWTRACKDIFF, IDC_STATPERCENT, IDC_STOPONBIGSHIFT, 
   IDC_EDITBIGSHIFT, IDC_MANUAL_TRACKING, IDC_STATPCTIMAGE, IDC_STATGETTRACK,
-  IDC_STATPCTFIELD, IDC_STATTRACKWHEN, IDC_STATREPFOCUSUM, IDC_STATDOFOCUSUM, PANEL_END,
+  IDC_STATPCTFIELD, IDC_STATTRACKWHEN, PANEL_END,
   IDC_BUT_TSS_PREV, IDC_BUT_TSS_NEXT, IDC_BUT_TSS_LEFT, IDC_BUT_TSS_RIGHT, 
   IDC_BUT_TSS_FULL, IDC_TSGO, IDC_SINGLESTEP, IDC_POSTPONE, IDCANCEL, 
   IDC_BUTHELP, PANEL_END, TABLE_END};
@@ -108,6 +111,8 @@ CTSSetupDialog::CTSSetupDialog(CWnd* pParent /*=NULL*/)
   , m_bConfirmLowDoseRepeat(FALSE)
   , m_strInterset(_T(""))
   , m_bUseDoseSym(FALSE)
+  , m_bWaitForDrift(FALSE)
+  , m_fIterThresh(1.)
 {
   //{{AFX_DATA_INIT(CTSSetupDialog)
   m_bCosineInc = FALSE;
@@ -394,6 +399,11 @@ void CTSSetupDialog::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_USE_DOSE_SYM, m_butUseDoseSym);
   DDX_Check(pDX, IDC_USE_DOSE_SYM, m_bUseDoseSym);
   DDX_Control(pDX, IDC_BUT_SETUP_DOSE_SYM, m_butSetupDoseSym);
+  DDX_Control(pDX, IDC_STAT_DW_DEGREES, m_statDWdegrees);
+  DDX_Check(pDX, IDC_TSWAITFORDRIFT, m_bWaitForDrift);
+  DDX_Control(pDX, IDC_BUT_SETUP_DRIFT_WAIT, m_butSetupDriftWait);
+  DDX_Text(pDX, IDC_EDIT_ITER_THRESH, m_fIterThresh);
+	DDV_MinMaxFloat(pDX, m_fIterThresh, 0.05f, 50.f);
 }
 
 
@@ -434,6 +444,7 @@ BEGIN_MESSAGE_MAP(CTSSetupDialog, CBaseDlg)
   ON_EN_KILLFOCUS(IDC_EDITREPEATRECORD, OnKillfocus)
   ON_EN_KILLFOCUS(IDC_EDITTILTDELAY, OnKillfocus)
   ON_EN_KILLFOCUS(IDC_EDITFOCUSTARGET, OnKillfocus)
+  ON_EN_KILLFOCUS(IDC_EDIT_ITER_THRESH, OnKillfocus)
   ON_BN_CLICKED(IDC_RINTENSITYCOSINE, OnRintensitymean)
   ON_BN_CLICKED(IDC_RCONSTANTBEAM, OnRintensitymean)
   ON_EN_KILLFOCUS(IDC_EDITTAPERCOUNTS, OnKillfocus)
@@ -479,6 +490,8 @@ BEGIN_MESSAGE_MAP(CTSSetupDialog, CBaseDlg)
   ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_EARLY_FRAMES, OnDeltaposSpinEarlyFrames)
   ON_BN_CLICKED(IDC_USE_DOSE_SYM, OnUseDoseSym)
   ON_BN_CLICKED(IDC_BUT_SETUP_DOSE_SYM, OnButSetupDoseSym)
+  ON_BN_CLICKED(IDC_TSWAITFORDRIFT, OnWaitForDrift)
+  ON_BN_CLICKED(IDC_BUT_SETUP_DRIFT_WAIT, OnButSetupDriftWait)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -619,6 +632,7 @@ BOOL CTSSetupDialog::OnInitDialog()
   m_fBeamTilt = (float)mTSParam.beamTilt;
   m_fTargetDefocus = mTSParam.targetDefocus;
   m_fFocusOffset = mTSParam.autofocusOffset;
+  m_fIterThresh = mTSParam.refocusThreshold;
   m_bSkipAutofocus = mTSParam.skipAutofocus;
   m_fCheckFocus = mTSParam.focusCheckInterval;
   m_bLimitDeltaFocus = mTSParam.limitDefocusChange;
@@ -665,6 +679,7 @@ BOOL CTSSetupDialog::OnInitDialog()
   m_iAutocenInterval = mTSParam.cenBeamInterval;
   m_fAutocenAngle = mTSParam.cenBeamAngle;
   m_bDoEarlyReturn = mTSParam.doEarlyReturn;
+  m_bWaitForDrift = mTSParam.waitForDrift;
   m_sbcEarlyFrames.SetRange(0, 1000);
   m_sbcEarlyFrames.SetPos(500);
   mTSParam.earlyReturnNumFrames = B3DMAX(1, mTSParam.earlyReturnNumFrames);
@@ -689,6 +704,7 @@ BOOL CTSSetupDialog::OnInitDialog()
   ManageCamDependents();
   ManageIntersetStatus();
   ManageEarlyReturn();
+  ManageDriftWait();
 
   // Set up the camera buttons
   int i = 0;
@@ -760,6 +776,7 @@ BOOL CTSSetupDialog::OnInitDialog()
   m_butSwapAngles.EnableWindow(!mDoingTS && mFuture >= 0 && 
     (mFuture > 0 || fabs(mCurrentAngle) < 20.));
   ManageBidirectional();
+  ManageDriftWait();
 
   // Fix strings
   ReplaceDlgItemText(IDC_RINTENSITYMEAN, "Record", modeNames[RECORD_CONSET]);
@@ -1445,6 +1462,7 @@ void CTSSetupDialog::OnDoBidir()
   UpdateData(true);
   ManageBidirectional();
   ManageInitialActions();
+  ManageDriftWait();
   ConstrainBidirAngle(true, false);
 }
 
@@ -1599,6 +1617,7 @@ void CTSSetupDialog::OnUseDoseSym()
   }
   UpdateData(false);
   ManageBidirectional();
+  ManageDriftWait();
 }
 
 // Open dialog to set dose-symmetric parameters
@@ -1621,6 +1640,43 @@ void CTSSetupDialog::OnButSetupDoseSym()
   ManageBidirectional();
 }
 
+// Wait for drift checkbox handler and setup opener
+void CTSSetupDialog::OnWaitForDrift()
+{
+  UpdateData(true);
+  ManageDriftWait();
+}
+
+void CTSSetupDialog::OnButSetupDriftWait()
+{
+  CDriftWaitSetupDlg dlg;
+  dlg.mTSparam = &mTSParam;
+  dlg.DoModal();
+  ManageDriftWait();
+}
+
+// Enable setup button and make the summary of when it will happen
+void CTSSetupDialog::ManageDriftWait()
+{
+  bool doingDosym = m_bDoBidir && m_bUseDoseSym && mLowDoseMode;
+  int aboveBelow = (doingDosym && mTSParam.waitDosymIgnoreAngles) ?
+    0 : mTSParam.onlyWaitDriftAboveBelow;
+  CString str2;
+  CString str = aboveBelow ? "Wait only " : "Wait at every angle";
+  m_butSetupDriftWait.EnableWindow(m_bWaitForDrift);
+  m_statDWdegrees.EnableWindow(m_bWaitForDrift);
+  if (!m_bWaitForDrift) {
+    SetDlgItemText(IDC_STAT_DW_DEGREES, "");
+    return;
+  }
+  if (doingDosym && mTSParam.waitAtDosymReversals)
+    str = aboveBelow ? "Wait at reversals, only " : "Wait at tilt reversals";
+  if (aboveBelow < 0)
+    str2.Format("below %.1f deg", mTSParam.waitDriftBelowAngle);
+  if (aboveBelow > 0)
+    str2.Format("above %.1f deg", mTSParam.waitDriftAboveAngle);
+  SetDlgItemText(IDC_STAT_DW_DEGREES, str + str2);
+}
 
 int CTSSetupDialog::RegularOrEFTEMMag(int magIndex)
 {
@@ -1696,6 +1752,7 @@ void CTSSetupDialog::OnOK()
   mTSParam.beamTilt = m_fBeamTilt;
   mTSParam.targetDefocus = m_fTargetDefocus;
   mTSParam.autofocusOffset = m_fFocusOffset;
+  mTSParam.refocusThreshold = m_fIterThresh;
   mTSParam.skipAutofocus = m_bSkipAutofocus;
   mTSParam.focusCheckInterval = m_fCheckFocus;
   mTSParam.repeatRecord = m_bRepeatRecord;
@@ -1734,6 +1791,7 @@ void CTSSetupDialog::OnOK()
   mTSParam.cenBeamPeriodically = m_bAutocenInterval;
   mTSParam.cenBeamInterval = m_iAutocenInterval;
   mTSParam.cenBeamAngle = m_fAutocenAngle;
+  mTSParam.waitForDrift = m_bWaitForDrift;
   mTSParam.doEarlyReturn = m_bDoEarlyReturn;
   
   CDialog::OnOK();

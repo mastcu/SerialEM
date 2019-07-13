@@ -1,7 +1,9 @@
 #pragma once
 #include "NavHelper.h"
 
-enum { WFD_USE_TRIAL, WFD_USE_FOCUS, WFD_BETWEEN_AUTOFOC, WFD_WITHIN_AUTOFOC };
+enum { WFD_USE_TRIAL, WFD_USE_FOCUS, WFD_WITHIN_AUTOFOC };
+enum { DW_FAILED_TOO_LONG = 1, DW_FAILED_AUTOALIGN, DW_FAILED_AUTOFOCUS,
+  DW_FAILED_TOO_DIM, DW_FAILED_NO_INFO, DW_EXTERNAL_STOP };
 
 struct DriftWaitParams {
   int measureType;              // Type of image/operation to assess with
@@ -63,11 +65,14 @@ private:
   double mWDLastStartTime;         // Time when last acquisition started
   int mWaitingForDrift;            // Flag/counter that we are waiting
   bool mWDSleeping;                // Flag for being in sleep phase
-  EMimageBuffer *mWDFocusBuffer;   // Buffer to save last autofocus image in
   BOOL mWDSavedTripleMode;         // Saved value of user setting
+  float mWDRefocusThreshold;       // Saved value of autofocus refocus threshold 
   int mWDLastFailed;               // Failure code from last run
   float mWDLastDriftRate;          // Drift rate reached in last run
   bool mWDUpdateStatus;            // Flag to update status pane with drift rate
+  float mWDRequiredMean;           // Required mean for focus or trial shots
+  float mWDFocusChangeLimit;       // Change limit to apply in autofocusing
+  int mWDLastIterations;           // Iterations in last run
   
 public:
   void Initialize(void);
@@ -82,7 +87,8 @@ public:
   int GetHolePositions(FloatVec & delIsX, FloatVec & delISY, int magInd, int camera);
   int MultiShotBusy(void);
   bool CurrentHoleAndPosition(int &curHole, int &curPos);
-  int WaitForDrift(DriftWaitParams &param);
+  int WaitForDrift(DriftWaitParams &param, bool useImageInA, 
+    float requiredMean = 0., float changeLimit = 0.);
   void WaitForDriftNextTask(int param);
   void StopWaitForDrift(void);
   void WaitForDriftCleanup(int error);
@@ -90,8 +96,12 @@ public:
   GetMember(int, WaitingForDrift);
   GetMember(int, WDLastFailed);
   GetMember(float, WDLastDriftRate);
+  GetMember(int, WDLastIterations);
+  GetMember(double, WDInitialStartTime);
   void DriftWaitFailed(int type, CString reason);
   CString FormatDrift(float drift);
   DriftWaitParams *GetDriftWaitParams() {return &mWDDfltParams;};
+  void StartAutofocus();
+  float GetDriftInterval() {return mWDParm.interval;};
 };
 

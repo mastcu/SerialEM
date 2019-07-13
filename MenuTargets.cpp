@@ -2477,6 +2477,8 @@ void CMenuTargets::OnUpdateTasksReviseCancel(CCmdUI *pCmdUI)
 void CMenuTargets::OnTasksSetupWaitForDrift()
 {
   CDriftWaitSetupDlg dlg;
+  if (mWinApp->StartedTiltSeries())
+    dlg.mTSparam = mWinApp->mTSController->GetTiltSeriesParam();
   dlg.DoModal();
 }
 

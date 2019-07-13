@@ -29,8 +29,11 @@ private:
   int mBinIndex;
   int mBinDivisor;
   CameraParameters *mCamParam;
+  int mPanelStart[3];
+  int mNumInPanel[3];
 
 public:
+  TiltSeriesParam *mTSparam;
   int m_iMeasureType;
   afx_msg void OnMeasureType();
   CButton m_butSetTrial;
@@ -56,4 +59,12 @@ public:
   CString m_strRateUnits;
   CButton m_butChangeIS;
   BOOL m_bChangeIS;
+  BOOL m_bAtReversals;
+  BOOL m_bIgnoreAngles;
+  int m_iAngleChoice;
+  CEdit m_editRunAbove;
+  CEdit m_editRunBelow;
+  float m_fRunAbove;
+  float m_fRunBelow;
+  afx_msg void OnRadioAngle();
 };

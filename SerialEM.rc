@@ -63,7 +63,9 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDR_MAINFRAME           ICON                    "res\\SerialEM.ico"
+
 IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -71,7 +73,9 @@ IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
 //
 
 IDR_MAINFRAME           BITMAP                  "res\\Toolbar.bmp"
+
 IDB_BITMAP1             BITMAP                  "res\\bitmap1.bmp"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1592,8 +1596,8 @@ BEGIN
     PUSHBUTTON      "Set Up",IDC_BUT_SETUP_DRIFT_WAIT,82,628,26,10
     LTEXT           "degrees",IDC_STAT_DW_DEGREES,114,629,109,8
     LTEXT           "Iteration threshold:",IDC_STAT_ITER_THRESH,126,437,55,8
-    EDITTEXT        IDC_EDIT_ITER_THRESH,182,435,24,12,ES_AUTOHSCROLL
     LTEXT           "um",IDC_STATTHRESHMICRONS,208,437,10,8
+    EDITTEXT        IDC_EDIT_ITER_THRESH,182,435,24,12,ES_AUTOHSCROLL
 END
 
 IDD_TSRESUME DIALOGEX 0, 0, 187, 215
@@ -3157,7 +3161,9 @@ END
 //
 
 IDC_CURSOR1             CURSOR                  "res\\cursor1.cur"
+
 IDC_CURSOR2             CURSOR                  "res\\cursor2.cur"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3615,19 +3621,19 @@ END
 // AFX_DIALOG_LAYOUT
 //
 
-IDD_AUTOCENSETUP AFX_DIALOG_LAYOUT 
+IDD_AUTOCENSETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_TILTSERIES AFX_DIALOG_LAYOUT 
+IDD_TILTSERIES AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_DRIFTWAITSETUP AFX_DIALOG_LAYOUT 
+IDD_DRIFTWAITSETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
 
