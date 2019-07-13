@@ -14,6 +14,7 @@
 #include "EMscope.h"
 #include "FocusManager.h"
 #include "ShiftManager.h"
+#include "ProcessImage.h"
 #include "MacroProcessor.h"
 #include "AutoTuning.h"
 #include "ShiftManager.h"
@@ -28,7 +29,6 @@ CParticleTasks::CParticleTasks(void)
   mImBufs = mWinApp->GetImBufs();
   mMSCurIndex = -2;             // Index when it is not doing anything must be < -1
   mMSTestRun = 0;
-  mWDFocusBuffer = NULL;
   mWaitingForDrift = 0;
   mWDDfltParams.measureType = WFD_USE_FOCUS;
   mWDDfltParams.driftRate = 1.;
@@ -504,12 +504,14 @@ bool CParticleTasks::CurrentHoleAndPosition(int &curHole, int &curPos)
 ///////////////////////////////////////////////////////////////////////
 // WAITING FOR DRIFT
 
-// The routine to statr it with given parameters
-int CParticleTasks::WaitForDrift(DriftWaitParams &param)
+// The routine to start it with given parameters
+int CParticleTasks::WaitForDrift(DriftWaitParams &param, bool useImageInA, 
+  float requiredMean, float changeLimit)
 {
   ControlSet *conSets = mWinApp->GetConSets();
   CameraParameters *camParam = mWinApp->GetActiveCamParam();
-  int binInd, realBin, shotType = FOCUS_CONSET;
+  int binInd, realBin, delay, shotType = FOCUS_CONSET;
+  UINT tickTime, genTimeOut;
 
   mWDParm = param;
 
@@ -526,23 +528,49 @@ int CParticleTasks::WaitForDrift(DriftWaitParams &param)
     conSets[TRACK_CONSET].mode = SINGLE_FRAME;
   }
 
-  // Initialize
+  // Make sure conditions are all met for using  the image in A
+  if (useImageInA && !mImBufs->mImage || !mImBufs->mBinning ||
+    (shotType == TRACK_CONSET && mImBufs->mConSetUsed != TRIAL_CONSET) ||
+    (shotType == FOCUS_CONSET && mImBufs->mConSetUsed != FOCUS_CONSET) ||
+    !(param.measureType == WFD_USE_TRIAL || param.measureType == WFD_USE_FOCUS) ||
+    ((conSets[shotType].binning > mImBufs->mBinning &&
+      conSets[shotType].binning % mImBufs->mBinning != 0) ||
+      (mImBufs->mBinning > conSets[shotType].binning &&
+        mImBufs->mBinning % conSets[shotType].binning != 0)))
+    useImageInA = false;
+
+
+  // Initialize: save focus parameters
   mWDSavedTripleMode = mFocusManager->GetTripleMode();
-  mWDInitialStartTime = mWDLastStartTime = GetTickCount();
+  mWDRefocusThreshold = mFocusManager->GetRefocusThreshold();
+
+  // Use time when last acquire actually started, or figure out when shot will start
+  if (useImageInA) {
+    mWDInitialStartTime = mWDLastStartTime = mCamera->GetLastAcquireStartTime();
+  } else {
+    if (mWinApp->LowDoseMode())
+      mScope->GotoLowDoseArea(param.measureType == WFD_USE_TRIAL ? 
+        TRIAL_CONSET : FOCUS_CONSET);
+    tickTime = GetTickCount();
+    genTimeOut = mShiftManager->GetGeneralTimeOut(shotType);
+    delay = (int)SEMTickInterval(genTimeOut, tickTime);
+    if (delay > 0)
+      tickTime = mShiftManager->AddIntervalToTickTime(tickTime, delay);
+    mWDInitialStartTime = mWDLastStartTime = tickTime;
+  }
   mWDSleeping = false;
   mWaitingForDrift = 1;
   mWDLastDriftRate = -1.;
-  mWDLastFailed = 5;
+  mWDLastFailed = DW_EXTERNAL_STOP;
   mWDUpdateStatus = false;
-  if (param.measureType == WFD_BETWEEN_AUTOFOC)
-    mWDFocusBuffer = new EMimageBuffer;
   mWinApp->UpdateBufferWindows();
   mWinApp->SetStatusText(MEDIUM_PANE, "WAITING for Drift");
 
   // Take image or autofocus
   if (param.measureType == WFD_USE_TRIAL || param.measureType == WFD_USE_FOCUS) {
     mCamera->SetRequiredRoll(1);
-    mCamera->InitiateCapture(shotType);
+    if (!useImageInA)
+      mCamera->InitiateCapture(shotType);
   } else {
     mFocusManager->SetTripleMode(true);
     mFocusManager->AutoFocusStart(1);
@@ -574,33 +602,44 @@ void CParticleTasks::WaitForDriftNextTask(int param)
     mWDUpdateStatus = mWDLastDriftRate > 0;
   } else {
 
-    // Otherwise first check for focus failure
-    if ((mWDParm.measureType == WFD_WITHIN_AUTOFOC || 
-      mWDParm.measureType == WFD_BETWEEN_AUTOFOC) &&
+    // Otherwise first check image intensity
+    if (mImBufs->mImage && mWDRequiredMean > 0.
+      && mWinApp->mProcessImage->ImageTooWeak(mImBufs, mWDRequiredMean)) {
+      DriftWaitFailed(DW_FAILED_TOO_DIM, "image is too dim");
+      return;
+    }
+
+    // Then check for focus failure
+    if (mWDParm.measureType == WFD_WITHIN_AUTOFOC &&
       (mFocusManager->GetLastFailed() || mFocusManager->GetLastAborted())) {
-      DriftWaitFailed(3, "autofocus failed");
+      DriftWaitFailed(DW_FAILED_AUTOFOCUS, "autofocus failed");
       return;
     }
 
     // If this is not the first round, get the drift
-    if (mWaitingForDrift > 1) {
+    if (mWaitingForDrift > 1 || mWDParm.measureType == WFD_WITHIN_AUTOFOC) {
       if (mWDParm.measureType == WFD_WITHIN_AUTOFOC) {
 
         // From autofocus itself
         if (mFocusManager->GetLastDrift(driftX, driftY)) {
-          DriftWaitFailed(4, "no drift value available "
-            "from last autofocus ");
+          DriftWaitFailed(DW_FAILED_NO_INFO, 
+            "no drift value available from last autofocus");
           return;
         }
+
+        // If trying to maintain alignment, align to C to take out measured drift
+        if (mWDParm.changeIS) {
+          if (mShiftManager->AutoAlign(2, 1, true)) {
+            DriftWaitFailed(DW_FAILED_AUTOALIGN, "autoalignment failed");
+            return;
+          }
+        }
+
       } else {
 
-        // If between autofocus, copy last buffer A to B
-        if (mWDParm.measureType == WFD_BETWEEN_AUTOFOC)
-          mWinApp->mBufferManager->CopyImBuf(mWDFocusBuffer, &mImBufs[1]);
-
-        // Autoalign to B, apply image shift if option set
+         // Autoalign to B, apply image shift if option set
         if (mShiftManager->AutoAlign(1, 1, mWDParm.changeIS)) {
-          DriftWaitFailed(2, "autoalignment failed");
+          DriftWaitFailed(DW_FAILED_AUTOALIGN, "autoalignment failed");
           return;
         }
 
@@ -608,11 +647,12 @@ void CParticleTasks::WaitForDriftNextTask(int param)
         pixel = mShiftManager->GetPixelSize(mImBufs);
         delta = mImBufs[0].mTimeStamp - mImBufs[2].mTimeStamp;
         if (!pixel || delta <= 0.) {
-          DriftWaitFailed(4, "images are missing needed information");
+          DriftWaitFailed(DW_FAILED_NO_INFO, "images are missing needed information");
           return;
         }
         mImBufs->mImage->getShifts(shiftX, shiftY);
-        mImBufs->mImage->setShifts(0., 0.);
+        if (!mWDParm.changeIS)
+          mImBufs->mImage->setShifts(0., 0.);
         pixel *= 1000. / delta;
         driftX = shiftX * pixel;
         driftY = shiftY * pixel;
@@ -621,7 +661,6 @@ void CParticleTasks::WaitForDriftNextTask(int param)
       // Drift rate: has it passed the criterion?
       mWDLastDriftRate = (float)sqrt(driftX * driftX + driftY * driftY);
       if (mWDLastDriftRate <= mWDParm.driftRate) {
-        mWinApp->AppendToLog(str);
         str.Format("Drift reached %s after %.1f sec, going on",
           (LPCTSTR)FormatDrift(mWDLastDriftRate), elapsed);
         mWDLastFailed = 0;
@@ -634,14 +673,12 @@ void CParticleTasks::WaitForDriftNextTask(int param)
       if (elapsed + mWDParm.interval / 3. > mWDParm.maxWaitTime) {
         str.Format("drift is still %s after %.0f sec", 
           (LPCTSTR)FormatDrift(mWDLastDriftRate), elapsed);
-        DriftWaitFailed(1, str);
+        DriftWaitFailed(DW_FAILED_TOO_LONG, str);
         return;
       }
     }
 
-    // If not, copy the buffer if using autofocus images, then start sleeping
-    if (mWDParm.measureType == WFD_BETWEEN_AUTOFOC)
-      mWinApp->mBufferManager->CopyImBuf(&mImBufs[0], mWDFocusBuffer);
+    // If not, then start sleeping
     mWDSleeping = true;
     mWaitingForDrift++;
     str = "";
@@ -668,8 +705,7 @@ int CParticleTasks::WaitForDriftBusy(void)
     mWDUpdateStatus = false;
   }
   return (mWaitingForDrift && (mWinApp->mCamera->CameraBusy() ||
-    ((mWDParm.measureType == WFD_BETWEEN_AUTOFOC || 
-      mWDParm.measureType == WFD_WITHIN_AUTOFOC) && mFocusManager->DoingFocus())));
+    (mWDParm.measureType == WFD_WITHIN_AUTOFOC && mFocusManager->DoingFocus())));
 }
 
 // Cleanup call on error/timeout
@@ -686,13 +722,13 @@ void CParticleTasks::StopWaitForDrift(void)
 {
   if (!mWaitingForDrift)
     return;
+  mWDLastIterations = mWaitingForDrift;
   mWaitingForDrift = 0;
   mWinApp->UpdateBufferWindows();
   mWinApp->SetStatusText(MEDIUM_PANE, "");
   mCamera->SetRequiredRoll(0);
   mFocusManager->SetTripleMode(mWDSavedTripleMode);
-  delete mWDFocusBuffer;
-  mWDFocusBuffer = NULL;
+  mFocusManager->SetRefocusThreshold(mWDRefocusThreshold);
 }
 
 // Call to handle failure
@@ -716,4 +752,14 @@ CString CParticleTasks::FormatDrift(float drift)
   else
     str.Format(" %.2f nm/sec", drift);
   return str;
+}
+
+// Set required mean and change limits if appropriate hten start autofocus
+void CParticleTasks::StartAutofocus()
+{
+  if (mWDRequiredMean > EXTRA_VALUE_TEST)
+    mFocusManager->SetRequiredBWMean(mWDRequiredMean);
+  if (mWDFocusChangeLimit > 0.)
+    mFocusManager->NextFocusChangeLimits(-mWDFocusChangeLimit, mWDFocusChangeLimit);
+  mFocusManager->AutoFocusStart(1);
 }
