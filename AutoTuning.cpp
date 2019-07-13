@@ -1783,28 +1783,32 @@ void CAutoTuning::ComaVsISNextTask(int param)
   int delx[4] = {-1, 1, 0, 0};
   int dely[4] = {0, 0, -1, 1};
   float delayFactor = 2.;
+  int index = mComaVsISindex;
   ScaleMat aMat = mWinApp->mShiftManager->IStoSpecimen(mScope->FastMagIndex());
   double ISX = mComaVsISextent / sqrt(aMat.xpx * aMat.xpx + aMat.ypx * aMat.ypx);
   double ISY = mComaVsISextent / sqrt(aMat.ypx * aMat.ypx + aMat.ypy * aMat.ypy);
 
-  if (mComaVsISindex < 0)
+  if (index < 0)
     return;
 
   // Save results of last measurement or stop if it failed
-  if (mComaVsISindex > 0) {
+  if (index > 0) {
     if (mLastCtfBasedFailed) {
       StopComaVsISCal();
       return;
     }
-    mComaVsISXTiltNeeded[mComaVsISindex - 1] = mLastXTiltNeeded;
-    mComaVsISYTiltNeeded[mComaVsISindex - 1] = mLastYTiltNeeded;
+    mComaVsISXTiltNeeded[index - 1] = mLastXTiltNeeded;
+    mComaVsISYTiltNeeded[index - 1] = mLastYTiltNeeded;
   }
 
   // Set IS for next measurement and start the routine
-  if (mComaVsISindex < 4) {
-    PrintfToLog("Measuring at image shift %.1f  %.1f", 
-      delx[mComaVsISindex] * mComaVsISextent, dely[mComaVsISindex] * mComaVsISextent);
-    mScope->SetImageShift(delx[mComaVsISindex] * ISX, dely[mComaVsISindex] * ISY);
+  if (index < 4) {
+    mComaVsISAppliedISX[index] = (float)(delx[index] * ISX);
+    mComaVsISAppliedISY[index] = (float)(dely[index] * ISY);
+    PrintfToLog("Measuring at image shift %.1f  %.1f um (%.1f %.1f IS units)",
+      delx[index] * mComaVsISextent, dely[index] * mComaVsISextent, 
+      mComaVsISAppliedISX[index], mComaVsISAppliedISY[index]);
+    mScope->SetImageShift(mComaVsISAppliedISX[index], mComaVsISAppliedISY[index]);
     mWinApp->mShiftManager->SetISTimeOut(delayFactor *
       mWinApp->mShiftManager->GetLastISDelay());
     mWinApp->AddIdleTask(TASK_CAL_COMA_VS_IS, 0, 0);
@@ -1815,13 +1819,13 @@ void CAutoTuning::ComaVsISNextTask(int param)
 
   // Finished; save the calibration
   mComaVsIScal.matrix.xpx = (mComaVsISXTiltNeeded[1] - mComaVsISXTiltNeeded[0]) /
-    (2.f * mComaVsISextent);
+    (mComaVsISAppliedISX[1] - mComaVsISAppliedISX[0]);
   mComaVsIScal.matrix.ypx = (mComaVsISYTiltNeeded[1] - mComaVsISYTiltNeeded[0]) /
-    (2.f * mComaVsISextent);
+    (mComaVsISAppliedISX[1] - mComaVsISAppliedISX[0]);
   mComaVsIScal.matrix.xpy = (mComaVsISXTiltNeeded[3] - mComaVsISXTiltNeeded[2]) /
-    (2.f * mComaVsISextent);
+    (mComaVsISAppliedISY[3] - mComaVsISAppliedISY[2]);
   mComaVsIScal.matrix.ypy = (mComaVsISYTiltNeeded[3] - mComaVsISYTiltNeeded[2]) /
-    (2.f * mComaVsISextent);
+    (mComaVsISAppliedISY[3] - mComaVsISAppliedISY[2]);
   PrintfToLog("IS to beam tilt matrix: %f  %f  %f  %f", mComaVsIScal.matrix.xpx,
     mComaVsIScal.matrix.xpy, mComaVsIScal.matrix.ypx, mComaVsIScal.matrix.ypy);
   mComaVsIScal.magInd = mMagIndex;

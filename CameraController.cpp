@@ -2140,7 +2140,8 @@ int CCameraController::AddToNextFrameStackMdoc(CString key, CString value, bool 
 void CCameraController::SetFullSumAsyncIfOK(int inSet)
 {
   if (!mParam->K2Type || mDMversion[CAMP_DM_INDEX(mParam)] < DM_K2_API_CHANGED_LOTS ||
-    mK2SynchronousSaving || !mConSetsp[inSet].doseFrac || !mConSetsp[inSet].saveFrames)
+    mK2SynchronousSaving || !mConSetsp[inSet].doseFrac || !mConSetsp[inSet].saveFrames ||
+    (mConSetsp[inSet].alignFrames && mConSetsp[inSet].useFrameAlign == 1))
     return;
   mNextAsyncSumFrames = 65535;
   mAskedDeferredSum = false;
@@ -8816,7 +8817,8 @@ void CCameraController::DisplayNewImage(BOOL acquired)
     }
 
     // Save to frame stack mdoc
-    if (extra->mNumSubFrames > 0 && mSaveFrameStackMdoc && CanSaveFrameStackMdoc(mParam)){
+    if (extra->mNumSubFrames > 0 && !mTD.GetDeferredSum && mSaveFrameStackMdoc && 
+      CanSaveFrameStackMdoc(mParam)) {
       SaveFrameStackMdoc(image);
     }
     extra->mBinning = axoff;

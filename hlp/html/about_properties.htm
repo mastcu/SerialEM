@@ -3146,8 +3146,9 @@
             dose-fractionation frames return as soon as the full summed image is ready, with 
             frame saving done asynchronously.&nbsp; This can allow tracking shots to be done 
             earlier, the time difference is especially significant when saving 
-            super-resolution frames and/or compressed TIFF files.&nbsp; Works only with GMS 
-            2.3.1 or higher.</TD>
+            super-resolution frames and/or compressed TIFF files.&nbsp; The asynchronous 
+              saving will not be done when aligning frames, or when the option for 
+              an initial partial sum is set in the setup dialog.&nbsp; </TD>
         </TR>
       </TABLE>
       <BR>

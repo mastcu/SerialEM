@@ -3,6 +3,16 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+7/9/19: Stored calibration of coma versus image shift in IS units instead of
+microns so it will work on JEOLs (In 3.7).
+
+7/9/19: Fixed getting an initial partial sum during tilt series in Low Dose
+mode; fixed frames not being aligned when property TSEarlyK2RecordReturn is
+set; eliminated error report from trying to save the frame stack mdoc twice
+after an early return.  (In 3.7).
+
+7/4/19: Kept the Navigator table selection the same after a merge (In 3.7).
+
 7/8/19: Added support for variable-speed tilting on older Tecnais.
 
 7/8/19: Increased number of scripts to 40.

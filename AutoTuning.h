@@ -200,6 +200,8 @@ private:
   float mLastYTiltNeeded;
   float mComaVsISextent;
   int mComaVsISindex;
+  float mComaVsISAppliedISX[4];
+  float mComaVsISAppliedISY[4];
   float mComaVsISXTiltNeeded[4];
   float mComaVsISYTiltNeeded[4];
 

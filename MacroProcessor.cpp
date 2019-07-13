@@ -8895,7 +8895,7 @@ bool CMacroProcessor::CheckAndConvertCameraSet(CString &strItem, int &itemInt, i
 int CMacroProcessor::AdjustBeamTiltIfSelected(double delISX, double delISY, BOOL doAdjust,
   CString &message)
 {
-  double delBTX, delBTY;
+  double delBTX, delBTY, transISX, transISY;
   int probe = mScope->GetProbeMode();
   ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
   if (!doAdjust)
@@ -8909,8 +8909,10 @@ int CMacroProcessor::AdjustBeamTiltIfSelected(double delISX, double delISY, BOOL
     mScope->GetBeamTilt(mBeamTiltXtoRestore[probe], mBeamTiltYtoRestore[probe]);
     mNumStatesToRestore++;
   }
-  delBTX = comaVsIS->matrix.xpx * delISX + comaVsIS->matrix.xpy * delISY;
-  delBTY = comaVsIS->matrix.ypx * delISX + comaVsIS->matrix.ypy * delISY;
+  mShiftManager->TransferGeneralIS(mScope->FastMagIndex(), delISX, delISY, 
+    comaVsIS->magInd, transISX, transISY);
+  delBTX = comaVsIS->matrix.xpx * transISX + comaVsIS->matrix.xpy * transISY;
+  delBTY = comaVsIS->matrix.ypx * transISX + comaVsIS->matrix.ypy * transISY;
   mScope->IncBeamTilt(delBTX, delBTY);
   mCompensatedBTforIS = true;
   return 0;

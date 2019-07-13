@@ -2367,7 +2367,7 @@ void CTSController::NextAction(int param)
               cset->saveFrames) && B3DNINT(cset->exposure / cset->frameTime) > 
               mTSParam.earlyReturnNumFrames && !mConSets[FOCUS_CONSET].doseFrac && 
               !mConSets[TRIAL_CONSET].doseFrac && !(mLowDoseMode && 
-              (!mConSets[VIEW_CONSET].doseFrac || !mConSets[PREVIEW_CONSET].doseFrac))) {
+              (mConSets[VIEW_CONSET].doseFrac || mConSets[PREVIEW_CONSET].doseFrac))) {
                 mCamera->SetNextAsyncSumFrames(mTSParam.earlyReturnNumFrames, true);
                 mNeedDeferredSum = true;
                 mSecForDeferredSum = mOverwriteSec < 0 ? mWinApp->mStoreMRC->getDepth() :
@@ -2395,7 +2395,7 @@ void CTSController::NextAction(int param)
         }
         mCamera->SetMaxChannelsToGet(mTSParam.extraRecordType == TS_OTHER_CHANNELS ? 
           mNumRollingBuf : 1);
-        if (mEarlyK2RecordReturn)
+        if (mEarlyK2RecordReturn && !mTSParam.doEarlyReturn)
           mCamera->SetFullSumAsyncIfOK(RECORD_CONSET);
         mCamera->InitiateCapture(RECORD_CONSET);
         mAcquiringImage = true;

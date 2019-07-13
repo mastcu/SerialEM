@@ -1755,14 +1755,13 @@ void CNavigatorDlg::UpdateGroupStrings(int groupID)
 }
 
 // Fill the list box with all of the items in the array
-void CNavigatorDlg::FillListBox(bool skipManage)
+// Skip managing current controls by default, reset selection to 0
+void CNavigatorDlg::FillListBox(bool skipManage, bool keepSel)
 {
   CString string;
   int updated = -1;
   int i;
   m_listViewer.ResetContent();
-  mCurrentItem = -1;
-  mCurListSel = -1;
   if (mItemArray.GetSize()) {
     for (i = 0; i < mItemArray.GetSize(); i++) {
       if (!m_bCollapseGroups || mItemToList[i] != updated) {
@@ -1772,10 +1771,15 @@ void CNavigatorDlg::FillListBox(bool skipManage)
           updated = mItemToList[i];
       }
     }
-    mCurrentItem = 0;
-    mCurListSel = 0;
-    m_listViewer.SetCurSel(0);
+    if (!keepSel) {
+      mCurrentItem = 0;
+      mCurListSel = 0;
+    }
+    m_listViewer.SetCurSel(mCurListSel);
     ManageListScroll();
+  } else {
+    mCurrentItem = -1;
+    mCurListSel = -1;
   }
   if (!skipManage)
     ManageCurrentControls();
@@ -7400,7 +7404,7 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
   SetRegPtNum(GetFreeRegPtNum(mCurrentRegistration, 0));
   if (m_bCollapseGroups)
     MakeListMappings();
-  FillListBox();
+  FillListBox(false, mergeFile);
   Redraw();
   mChanged = false;
   if (resetAcquireEnd) {

@@ -66,7 +66,7 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
 {
   float pixel;
   int nextShot, nextHole, testRun;
-  double delISX, delISY, delBTX, delBTY;
+  double delISX, delISY, transISX, transISY, delBTX, delBTY;
   CameraParameters *camParam = mWinApp->GetActiveCamParam();
   ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
   MontParam *montP = mWinApp->GetMontParam();
@@ -190,8 +190,10 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
     if (!(mWinApp->mMacroProcessor->DoingMacro() && 
       mWinApp->mMacroProcessor->GetCompensatedBTforIS())) {
       mScope->GetLDCenteredShift(delISX, delISY);
-      delBTX = comaVsIS->matrix.xpx * delISX + comaVsIS->matrix.xpy * delISY;
-      delBTY = comaVsIS->matrix.ypx * delISX + comaVsIS->matrix.ypy * delISY;
+      mShiftManager->TransferGeneralIS(mMagIndex, delISX, delISY, comaVsIS->magInd,
+        transISX, transISY);
+      delBTX = comaVsIS->matrix.xpx * transISX + comaVsIS->matrix.xpy * transISY;
+      delBTY = comaVsIS->matrix.ypx * transISX + comaVsIS->matrix.ypy * transISY;
       mCenterBeamTiltX = mBaseBeamTiltX + delBTX;
       mCenterBeamTiltY = mBaseBeamTiltY + delBTY;
       mScope->SetBeamTilt(mCenterBeamTiltX, mCenterBeamTiltY);
@@ -306,11 +308,12 @@ void CParticleTasks::StopMultiShot(void)
 void CParticleTasks::SetUpMultiShotShift(int shotIndex, int holeIndex, BOOL queueIt)
 {
   double ISX, ISY, delBTX, delBTY, delISX = 0, delISY = 0, angle, cosAng, sinAng;
+  double transISX, transISY;
   float delay, BTbacklash, rotation;
   int BTdelay;
   ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
 
-  // Compute IS from center for a peripheral shot
+  // Compute IS from center for a peripheral shot: rotate (rad,0) by the angle
   rotation = (float)mShiftManager->GetImageRotation(mWinApp->GetCurrentCamera(), 
     mMagIndex);
   if (shotIndex < mMSNumPeripheral && shotIndex >= 0) {
@@ -340,9 +343,11 @@ void CParticleTasks::SetUpMultiShotShift(int shotIndex, int holeIndex, BOOL queu
   if (mMSAdjustBeamTilt) {
     BTbacklash = mWinApp->mAutoTuning->GetBeamTiltBacklash();
     BTdelay = mWinApp->mAutoTuning->GetBacklashDelay();
-    delBTX = comaVsIS->matrix.xpx * delISX + comaVsIS->matrix.xpy * delISY;
-    delBTY = comaVsIS->matrix.ypx * delISX + comaVsIS->matrix.ypy * delISY;
-    SEMTrace('1', "%s incremental IS  %.3f %.3f   BT  %.3f  %.3f  backlash %f  delay %d", 
+    mShiftManager->TransferGeneralIS(mMagIndex, delISX, delISY, comaVsIS->magInd,
+      transISX, transISY);
+    delBTX = comaVsIS->matrix.xpx * transISX + comaVsIS->matrix.xpy * transISY;
+    delBTY = comaVsIS->matrix.ypx * transISX + comaVsIS->matrix.ypy * transISY;
+    SEMTrace('1', "%s incremental IS  %.3f %.3f   BT  %.3f  %.3f  backlash %f  delay %d",
       queueIt ? "Queuing" : "Setting", delISX, delISY, delBTX, delBTY, BTbacklash, 
       BTdelay);
   }

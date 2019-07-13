@@ -117,7 +117,7 @@ public:
 	CString FormatCoordinate(float inVal, int maxLen);
 	void ManageListScroll();
 	void ManageCurrentControls();
-	void FillListBox(bool skipManage = false);
+	void FillListBox(bool skipManage = false, bool keepSel = false);
 	void UpdateListString(int index);
 	void ItemToListString(int index, CString &string);
 	BOOL UserMousePoint(EMimageBuffer *imBuf, float inX, float inY, BOOL nearCenter, int button);
