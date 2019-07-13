@@ -206,7 +206,7 @@ public:
   void StopAnchorImage();
   void BidirAnchorCleanup(int error);
   void BidirAnchorNextTask(int param);
-  int InvertFileInZ(int zmax, float *tiltAngles = NULL);
+  int InvertFileInZ(int zmax, float *tiltAngles = NULL, bool synchronous = false);
   void BidirFileCopyClearFlags(void);
   void SetAnchorStageXYMove(StageMoveInfo & smi);
   void TestAutocenAcquire();

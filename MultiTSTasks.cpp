@@ -1579,7 +1579,7 @@ void CMultiTSTasks::StoreLimitAngle(bool userAuto, float angle)
 
 // Top-level routine starts file inversion for single-frame and inverts piece list Z for
 // montage
-int CMultiTSTasks::InvertFileInZ(int zmax, float *tiltAngles)
+int CMultiTSTasks::InvertFileInZ(int zmax, float *tiltAngles, bool synchronous)
 {
   int ind, err = 0;
   CString mess;
@@ -1613,7 +1613,7 @@ int CMultiTSTasks::InvertFileInZ(int zmax, float *tiltAngles)
         mess += "The file is probably open in another program;\n"
         " try closing any other program accessing the file";
     } else {
-      err = StartBidirFileCopy(false);
+      err = StartBidirFileCopy(synchronous);
       if (err > 0)
         mess.Format("An error (code %d) occurred trying to start or resume copying\n"
         "the file to a new one with inverted Z values.\n\n", err);
