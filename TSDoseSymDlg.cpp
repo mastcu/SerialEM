@@ -11,6 +11,7 @@
 #include "TSDoseSymDlg.h"
 #include "TSController.h"
 #include "EMbufferManager.h"
+#include "CameraController.h"
 #include "Shared\b3dutil.h"
 
 
@@ -90,6 +91,8 @@ END_MESSAGE_MAP()
 // CTSDoseSymDlg message handlers
 BOOL CTSDoseSymDlg::OnInitDialog()
 {
+  ControlSet *cset = mWinApp->GetConSets() + RECORD_CONSET;
+  BOOL async = mWinApp->mBufferManager->GetSaveAsynchronously();
   CBaseDlg::OnInitDialog();
   m_bIncGroup = mTSparam.dosymIncreaseGroups;
   m_bRunToEnd = mTSparam.dosymDoRunToEnd;
@@ -107,7 +110,16 @@ BOOL CTSDoseSymDlg::OnInitDialog()
   m_sbcIncAmount.SetPos(500);
   m_sbcMinForAnchor.SetRange(0, 1000);
   m_sbcMinForAnchor.SetPos(500);
-  if (mWinApp->mBufferManager->GetSaveAsynchronously()) {
+  if (async) {
+    if (mWinApp->StartedTiltSeries()) {
+      async = !mWinApp->mTSController->GetFrameAlignInIMOD();
+    } else {
+      async = !(mWinApp->mCamera->IsConSetSaving(cset, RECORD_CONSET,
+        mWinApp->GetActiveCamParam(), false) && cset->alignFrames &&
+        cset->useFrameAlign > 1 && mWinApp->mCamera->GetAlignWholeSeriesInIMOD());
+    }
+  }
+  if (async) {
     ReplaceWindowText(&m_butReorderFile, "synchronously", "in background");
     ReplaceWindowText(&m_butReorderFile, "block", "allow");
   }

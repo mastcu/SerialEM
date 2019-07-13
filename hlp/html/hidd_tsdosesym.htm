@@ -61,14 +61,17 @@
           in order from a dose-symmetric series.&nbsp; Unlike a bidirectional series, the 
           tilt series file cannot be rewritten in order until the whole series is done, 
           namely when it is terminated.&nbsp; Whether this reordering takes away from 
-          acquisition time depends on whether saving in the background is disabled in the 
-          SerialEM properties file with the property &#39;BackgroundSaveToFile 0&#39;.&nbsp; If 
-          background saving is enabled, the option will be labeled <strong>Reorder file in 
+          acquisition time depends on two factors: whether saving in the background is disabled in the 
+          SerialEM properties file with the property &#39;BackgroundSaveToFile 0&#39;; and 
+          whether frames are being saved and whole tilt series are being aligned in IMOD.&nbsp; If 
+          background saving is enabled and the current settings indicate that whole series 
+          will not be aligned, the option will be labeled <strong>Reorder file in 
           background when finished (allowing other operations)</strong>, which means that 
           manual and automatic acquisitions can proceed unimpeded.&nbsp; Otherwise, it 
           will be labeled <strong>Reorder file synchronously when finished (blocking other 
           operations)</strong>, which means that nothing else can happen while the program 
-          is reading and rewriting the file.</p>
+          is reading and rewriting the file.&nbsp; Aligning whole tilt series requires 
+          that the file be reordered before the command file for the alignment is written.</p>
       <p><strong>Summary lines</strong></p>
       <p>The first line at the bottom summarizes the tilt strategy, showing the actual 
           angles at which the transition in group size and to unidirectional tilting will 
