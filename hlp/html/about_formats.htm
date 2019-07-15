@@ -578,7 +578,29 @@
       <TD class="style10">Integer</TD>
       <TD class="style7">Req if Map</TD>
       <TD class="style8">mMapID</TD>
-      <TD class="style9">Unique ID (all items get one now)</TD>
+      <TD class="style9">Unique ID (all items get one, not just maps)</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>FocusAxisPos</TD>
+      <TD class="style10">Float</TD>
+      <TD class="style7">-1.e9</TD>
+      <TD class="style8">mFocusAxisPos</TD>
+      <TD class="style9">Stored position of Focus area on inter-area axis</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>LDAxisAngle</TD>
+      <TD class="style10">Two integers</TD>
+      <TD class="style7">0,0</TD>
+      <TD class="style8">mRotateFocusAxis, mFocusAxisAngle</TD>
+      <TD class="style9">First value: 1 to rotate inter-area axis from tilt axis, 0 not 
+          to; second value: angle of rotation</TD>
+    </TR>
+    <TR VALIGN="top">
+      <TD>FocusOffsets</TD>
+      <TD class="style10">Two Floats</TD>
+      <TD class="style7">0,0</TD>
+      <TD class="style8">mFocusX/Yoffset</TD>
+      <TD class="style9">Offset of focus subarea in X and Y (Y inverted)</TD>
     </TR>
     <TR VALIGN="top">
       <TD>MapMontage</TD>

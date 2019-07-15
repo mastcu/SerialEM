@@ -112,6 +112,11 @@ public:
   int mOldDrawnOnID;      // Value of mDrawnOnMapID before transform for point on import
   int mOldRegToID;        // Value of mRegisteredToID before transform
   int mImageType;         // STORE_TYPE flag for image
+  float mFocusAxisPos;    // Axis position of low dose focus area
+  BOOL mRotateFocusAxis;  // Whether rotate axis is on
+  int mFocusAxisAngle;    // Angle of rotation if rotating, 0 otherwise
+  int mFocusXoffset;      // X and Y displacement of focus area on camera
+  int mFocusYoffset;
   int mSuperMontX;        // Camera coordinate of this montage in supermontage
   int mSuperMontY;
   int mMoveStageID;       // Temporary flag to keep track of item stage was moved to

@@ -117,6 +117,13 @@
     if (item->mMapID)
       ADOC_PUT(Integer(ADOC_ARG, "MapID", item->mMapID));
   }
+  if (item->mFocusAxisPos > EXTRA_VALUE_TEST) {
+    ADOC_PUT(Float(ADOC_ARG, "FocusAxisPos", (float)item->mFocusAxisPos));
+    ADOC_PUT(TwoIntegers(ADOC_ARG, "LDAxisAngle", item->mRotateFocusAxis,
+      item->mFocusAxisAngle));
+    ADOC_PUT(TwoIntegers(ADOC_ARG, "FocusOffsets", item->mFocusXoffset, 
+      item->mFocusYoffset));
+  }
   ADOC_PUT(FloatArray(ADOC_ARG, "PtsX", &item->mPtX[0], item->mNumPoints));
   ADOC_PUT(FloatArray(ADOC_ARG, "PtsY", &item->mPtY[0], item->mNumPoints));
 }

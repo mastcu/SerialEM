@@ -1694,20 +1694,8 @@ void CNavHelper::StoreCurrentStateInParam(StateParams *param, BOOL lowdose,
   param->xFrame = (conSet->right - conSet->left) / param->binning;
   param->yFrame = (conSet->bottom - conSet->top) / param->binning;
 
-  param->focusXoffset = param->focusYoffset = 0;
-  param->focusAxisPos = EXTRA_NO_VALUE;
-  if (lowdose && saveLDfocusPos) {
-    ldp = mWinApp->GetLowDoseParams() + FOCUS_CONSET;
-    if (mWinApp->LowDoseMode() && ldp->magIndex)
-      ldp->axisPosition = mWinApp->mLowDoseDlg.ConvertOneIStoAxis(ldp->magIndex, ldp->ISX,
-      ldp->ISY);
-    conSet = mWinApp->GetConSets() + FOCUS_CONSET;
-    param->focusXoffset = (conSet->right + conSet->left) / 2 - camParam->sizeX / 2;
-    param->focusYoffset = (conSet->bottom + conSet->top) / 2 - camParam->sizeY / 2;
-    param->focusAxisPos = ldp->axisPosition;
-    SEMTrace('1', "Saved focus in state: axis pos %.2f  offsets %d %d", 
-      param->focusAxisPos, param->focusXoffset, param->focusYoffset);
-  }
+  SaveLDFocusPosition(lowdose && saveLDfocusPos, param->focusAxisPos, param->rotateAxis,
+    param->axisRotation, param->focusXoffset, param->focusYoffset);
   conSet = mWinApp->GetConSets();
   param->readModeView = lowdose ? -1 : conSet[VIEW_CONSET].K2ReadMode;
   param->readModeFocus = lowdose ? -1 : conSet[FOCUS_CONSET].K2ReadMode;
@@ -1717,6 +1705,32 @@ void CNavHelper::StoreCurrentStateInParam(StateParams *param, BOOL lowdose,
     conSet[SEARCH_CONSET].K2ReadMode;
   param->readModeMont = (lowdose || mWinApp->GetUseRecordForMontage()) ? -1 : 
     conSet[MONT_USER_CONSET].K2ReadMode;
+}
+
+// Save the low dose focus area for the current camera in the given parameters
+void CNavHelper::SaveLDFocusPosition(bool saveIt, float &axisPos, BOOL &rotateAxis, 
+  int &axisRotation, int &xOffset, int &yOffset)
+{
+  ControlSet *conSet = mWinApp->GetConSets() + FOCUS_CONSET;
+  LowDoseParams *ldp = mWinApp->GetLowDoseParams() + FOCUS_CONSET;
+  CameraParameters *camParam = mWinApp->GetActiveCamParam();
+  xOffset = yOffset = 0;
+  axisPos = EXTRA_NO_VALUE;
+  rotateAxis = false;
+  axisRotation = 0;
+  if (saveIt) {
+    if (mWinApp->LowDoseMode() && ldp->magIndex)
+      ldp->axisPosition = mWinApp->mLowDoseDlg.ConvertOneIStoAxis(ldp->magIndex, ldp->ISX,
+        ldp->ISY);
+    xOffset = (conSet->right + conSet->left) / 2 - camParam->sizeX / 2;
+    yOffset = (conSet->bottom + conSet->top) / 2 - camParam->sizeY / 2;
+    axisPos = (float)ldp->axisPosition;
+    rotateAxis = mWinApp->mLowDoseDlg.m_bRotateAxis;
+    axisRotation = rotateAxis ? mWinApp->mLowDoseDlg.m_iAxisAngle : 0;
+    SEMTrace('1', "Saved focus in state: axis pos %.2f rot %d offsets %d %d",
+      axisPos, axisRotation, xOffset, yOffset);
+  }
+
 }
 
 // Store the acquire state defined in a map item into a state param, accessing the 
@@ -1783,13 +1797,13 @@ void CNavHelper::StoreMapStateInParam(CMapDrawItem *item, MontParam *montP, int 
 void CNavHelper::SetStateFromParam(StateParams *param, ControlSet *conSet, int baseNum,
                                    BOOL hideLDoff)
 {
-  int left, right, top, bottom, xFrame, yFrame, i;
+  int i;
   FilterParams *filtParam = mWinApp->GetFilterParams();
   CameraParameters *camP = &mCamParams[param->camIndex];
   int *activeList = mWinApp->GetActiveCameraList();
   LowDoseParams *ldp = mWinApp->GetLowDoseParams() + RECORD_CONSET;
   LowDoseParams ldsaParams;
-  bool changed, gotoArea = false;
+  bool gotoArea = false;
   ControlSet *workSets = mWinApp->GetConSets();
   ControlSet *camSets = mWinApp->GetCamConSets();
   ControlSet *focusSet = mWinApp->GetConSets() + FOCUS_CONSET;
@@ -1828,7 +1842,7 @@ void CNavHelper::SetStateFromParam(StateParams *param, ControlSet *conSet, int b
     if (param->probeMode >= 0)
       mScope->SetProbeMode(param->probeMode, true);
 
-    // Set the spot size before intensity tp make sure the intensity is legal for this
+    // Set the spot size before intensity to make sure the intensity is legal for this
     // spot size on a FEI, and maybe to handle spot-size dependent changes elsewhere
     mScope->SetSpotSize(param->spotSize);
     if (!camP->STEMcamera)
@@ -1877,33 +1891,8 @@ void CNavHelper::SetStateFromParam(StateParams *param, ControlSet *conSet, int b
 
   // Set axis position and subarea of focus area if it was stored in param
   if (param->lowDose && param->focusAxisPos > EXTRA_VALUE_TEST) {
-    ldp = mWinApp->GetLowDoseParams() + FOCUS_CONSET;
-    changed = ldp->axisPosition != param->focusAxisPos;
-    ldp->axisPosition = param->focusAxisPos;
-    if (mWinApp->LowDoseMode() && ldp->magIndex)
-      mWinApp->mLowDoseDlg.ConvertOneAxisToIS(ldp->magIndex, ldp->axisPosition, ldp->ISX,
-      ldp->ISY);
-    if (mWinApp->mLowDoseDlg.m_bTieFocusTrial) {
-      ldp = mWinApp->GetLowDoseParams();
-      ldp[TRIAL_CONSET] = ldp[FOCUS_CONSET];
-    }
-    mWinApp->mLowDoseDlg.ManageAxisPosition();
-    xFrame = focusSet->right - focusSet->left;
-    yFrame = focusSet->bottom - focusSet->top;
-    left = B3DMAX(0, (camP->sizeX - xFrame) / 2 + param->focusXoffset);
-    right = B3DMIN(camP->sizeX, left + xFrame);
-    left = right - xFrame;
-    top = B3DMAX(0, (camP->sizeY - yFrame) / 2 + param->focusYoffset);
-    bottom = B3DMIN(camP->sizeY, top + yFrame);
-    top = bottom - yFrame;
-    if (top != focusSet->top || bottom != focusSet->bottom || left != focusSet->left ||
-      right != focusSet->right || changed)
-      PrintfToLog("Focus area changed from stored state, axis position %.2f, "
-      "left %d right %d top %d bottom %d", param->focusAxisPos, left, right, top, bottom);
-    focusSet->left = left;
-    focusSet->right = right;
-    focusSet->top = top; 
-    focusSet->bottom = bottom;
+    SetLDFocusPosition(param->camIndex, param->focusAxisPos, param->rotateAxis,
+      param->axisRotation, param->focusXoffset, param->focusYoffset, "state");
   }
 
   if (param->readModeView >= 0)
@@ -1922,6 +1911,55 @@ void CNavHelper::SetStateFromParam(StateParams *param, ControlSet *conSet, int b
   // Copy back to the camera sets
   for (i = 0; i < MAX_CONSETS; i++)
     camSets[param->camIndex * MAX_CONSETS + i] = workSets[i];
+}
+
+// Set the low dose axis position and Focus area offset from given parameters
+void CNavHelper::SetLDFocusPosition(int camIndex, float axisPos, BOOL rotateAxis, 
+  int axisRotation, int xOffset, int yOffset, const char *descrip)
+{
+  int left, right, top, bottom, xFrame, yFrame;
+  LowDoseParams *ldp = mWinApp->GetLowDoseParams() + FOCUS_CONSET;
+  ControlSet *camSets = mWinApp->GetCamConSets();
+  ControlSet *focusSet = mWinApp->GetConSets() + FOCUS_CONSET;
+  CameraParameters *camP = &mCamParams[camIndex];
+  int oldRotation = mWinApp->mLowDoseDlg.m_bRotateAxis ?
+    mWinApp->mLowDoseDlg.m_iAxisAngle : 0;
+  bool changed = ldp->axisPosition != axisPos || oldRotation != axisRotation;
+  bool needConversions = mWinApp->LowDoseMode() && ldp->magIndex;
+  if (oldRotation != axisRotation && needConversions)
+    mWinApp->mLowDoseDlg.ConvertAxisPosition(false);
+  mWinApp->mLowDoseDlg.m_bRotateAxis = rotateAxis;
+  if (rotateAxis)
+    mWinApp->mLowDoseDlg.m_iAxisAngle = axisRotation;
+  if (oldRotation != axisRotation && needConversions)
+    mWinApp->mLowDoseDlg.ConvertAxisPosition(true);
+  ldp->axisPosition = axisPos;
+  if (needConversions)
+    mWinApp->mLowDoseDlg.ConvertOneAxisToIS(ldp->magIndex, ldp->axisPosition, ldp->ISX,
+      ldp->ISY);
+  if (mWinApp->mLowDoseDlg.m_bTieFocusTrial) {
+    ldp = mWinApp->GetLowDoseParams();
+    ldp[TRIAL_CONSET] = ldp[FOCUS_CONSET];
+  }
+  mWinApp->mLowDoseDlg.ManageAxisPosition();
+  xFrame = focusSet->right - focusSet->left;
+  yFrame = focusSet->bottom - focusSet->top;
+  left = B3DMAX(0, (camP->sizeX - xFrame) / 2 + xOffset);
+  right = B3DMIN(camP->sizeX, left + xFrame);
+  left = right - xFrame;
+  top = B3DMAX(0, (camP->sizeY - yFrame) / 2 + yOffset);
+  bottom = B3DMIN(camP->sizeY, top + yFrame);
+  top = bottom - yFrame;
+  if (top != focusSet->top || bottom != focusSet->bottom || left != focusSet->left ||
+    right != focusSet->right || changed)
+    PrintfToLog("Focus area changed from stored %s, axis position %.2f angle %d, subarea"
+      " offset %d %d", descrip, axisPos, axisRotation, xOffset / focusSet->binning,
+      yOffset / focusSet->binning);
+  focusSet->left = left;
+  focusSet->right = right;
+  focusSet->top = top;
+  focusSet->bottom = bottom;
+  camSets[camIndex * MAX_CONSETS + FOCUS_CONSET] = *focusSet;
 }
 
 // Save the current state if it is not already saved
@@ -3595,7 +3633,8 @@ void CNavHelper::ListFilesToOpen(void)
   CameraParameters *camp;
   int montParInd, stateInd, num, numacq;
   int i, j, k, numGroups = 0;
-  bool seen;
+  ControlSet *focusSet = mWinApp->GetConSets() + FOCUS_CONSET;
+  bool seen, single = false;
 
   if (!mItemArray->GetSize())
     return;
@@ -3632,55 +3671,68 @@ void CNavHelper::ListFilesToOpen(void)
         }
       }
 
-      if (!namep)
-        continue;
-      if (j >= 0) {
-        num = mNav->CountItemsInGroup(sched->groupID, label, lastlab, numacq);
-        mess.Format("Group of %d items (%d set to Acquire), labels from %s to %s",
-          num, numacq, (LPCTSTR)label, (LPCTSTR)lastlab);
-      } else if (item->mTSparamIndex >= 0) {
-        tsp = mTSparamArray->GetAt(item->mTSparamIndex);
-        camp = mWinApp->GetActiveCamParam(tsp->cameraIndex);
-        mess.Format("Tilt series with camera %d,   binning %d,   %.1f to %.1f at %.2f "
-          "deg,  item # %d,  label %s", tsp->cameraIndex + 1, 
-          tsp->binning / BinDivisorI(camp), tsp->startingTilt, 
-          tsp->endingTilt, tsp->tiltIncrement, i, (LPCTSTR)item->mLabel);
-      } else {
-        mess.Format("Single item # %d,  label %s", i, (LPCTSTR)item->mLabel);
-      }
-      mWinApp->AppendToLog(mess, LOG_OPEN_IF_CLOSED);
-      mess = CString("   ") + *namep;
-      if (montParInd >= 0) {
-        montp = mMontParArray->GetAt(montParInd);
-        mess2.Format("     %d x %d montage", montp->xNframes, montp->yNframes);
-        mess += mess2;
-        if (item->mTSparamIndex < 0) {
-          camp = mWinApp->GetActiveCamParam(montp->cameraIndex);
-          mess2.Format("   with camera %d   binning %d", montp->cameraIndex+1, 
-            montp->binning / BinDivisorI(camp));
-          mess += mess2;
+      if (namep) {
+        if (j >= 0) {
+          num = mNav->CountItemsInGroup(sched->groupID, label, lastlab, numacq);
+          mess.Format("Group of %d items (%d set to Acquire), labels from %s to %s",
+            num, numacq, (LPCTSTR)label, (LPCTSTR)lastlab);
+        } else if (item->mTSparamIndex >= 0) {
+          tsp = mTSparamArray->GetAt(item->mTSparamIndex);
+          camp = mWinApp->GetActiveCamParam(tsp->cameraIndex);
+          mess.Format("Tilt series with camera %d,   binning %d,   %.1f to %.1f at %.2f "
+            "deg,  item # %d,  label %s", tsp->cameraIndex + 1,
+            tsp->binning / BinDivisorI(camp), tsp->startingTilt,
+            tsp->endingTilt, tsp->tiltIncrement, i, (LPCTSTR)item->mLabel);
+          single = true;
+        } else {
+          mess.Format("Single item # %d,  label %s", i, (LPCTSTR)item->mLabel);
+          single = true;
         }
-      }
-      mWinApp->AppendToLog(mess, LOG_OPEN_IF_CLOSED);
-      if (stateInd >= 0) {
-        state = mAcqStateArray->GetAt(stateInd);
-        magInd = state->lowDose ? state->ldParams.magIndex : state->magIndex;
-        camp = mWinApp->GetCamParams() + state->camIndex;
-        mag = MagForCamera(camp, magInd);
-        active = mWinApp->LookupActiveCamera(state->camIndex) + 1;
-        spot = state->lowDose ? state->ldParams.spotSize : state->spotSize;
-        intensity = state->lowDose ? state->ldParams.intensity : state->intensity;
+        mWinApp->AppendToLog(mess, LOG_OPEN_IF_CLOSED);
+        mess = CString("   ") + *namep;
+        if (montParInd >= 0) {
+          montp = mMontParArray->GetAt(montParInd);
+          mess2.Format("     %d x %d montage", montp->xNframes, montp->yNframes);
+          mess += mess2;
+          if (item->mTSparamIndex < 0) {
+            camp = mWinApp->GetActiveCamParam(montp->cameraIndex);
+            mess2.Format("   with camera %d   binning %d", montp->cameraIndex + 1,
+              montp->binning / BinDivisorI(camp));
+            mess += mess2;
+          }
+        }
+        mWinApp->AppendToLog(mess, LOG_OPEN_IF_CLOSED);
+        if (stateInd >= 0) {
+          state = mAcqStateArray->GetAt(stateInd);
+          magInd = state->lowDose ? state->ldParams.magIndex : state->magIndex;
+          camp = mWinApp->GetCamParams() + state->camIndex;
+          mag = MagForCamera(camp, magInd);
+          active = mWinApp->LookupActiveCamera(state->camIndex) + 1;
+          spot = state->lowDose ? state->ldParams.spotSize : state->spotSize;
+          intensity = state->lowDose ? state->ldParams.intensity : state->intensity;
 
-        mess.Format("   New state:  %s   cam %d   mag %d   spot %d   %s %.2f%s   exp "
-          "%.3f   bin %d   %dx%d", state->lowDose ? "LD" : "", active, mag, spot, 
-          mScope->GetC2Name(), mScope->GetC2Percent(spot, intensity), 
-          mScope->GetC2Units(), state->exposure,
-          state->binning / BinDivisorI(camp), state->xFrame, state->yFrame);
-        if (state->lowDose) {
-          mess2.Format("  F pos %.2f off %d %d", state->focusAxisPos, state->focusXoffset / state->binning, 
-            state->focusYoffset / state->binning);
-          mess += mess2;
+          mess.Format("   New state:  %s   cam %d   mag %d   spot %d   %s %.2f%s   exp "
+            "%.3f   bin %d   %dx%d", state->lowDose ? "LD" : "", active, mag, spot,
+            mScope->GetC2Name(), mScope->GetC2Percent(spot, intensity),
+            mScope->GetC2Units(), state->exposure,
+            state->binning / BinDivisorI(camp), state->xFrame, state->yFrame);
+          if (state->lowDose) {
+            mess2.Format("  F pos %.2f angle %d off %d %d", state->focusAxisPos,
+              state->axisRotation, state->focusXoffset / focusSet->binning,
+              state->focusYoffset / focusSet->binning);
+            mess += mess2;
+          }
+          mWinApp->AppendToLog(mess, LOG_OPEN_IF_CLOSED);
         }
+      }
+      if (item->mFocusAxisPos > EXTRA_VALUE_TEST) {
+        mess = "";
+        if (!single)
+          mess.Format("Item # %d,  label %s", i, (LPCTSTR)item->mLabel);
+        mess2.Format("  F pos %.2f angle %d off %d %d", item->mFocusAxisPos,
+          item->mFocusAxisAngle, item->mFocusXoffset / focusSet->binning,
+          item->mFocusYoffset / focusSet->binning);
+        mess += mess2;
         mWinApp->AppendToLog(mess, LOG_OPEN_IF_CLOSED);
       }
     }
@@ -3711,6 +3763,20 @@ void CNavHelper::CountAcquireItems(int startInd, int endInd, int & numAcquire, i
         numTS++;
     }
   }
+}
+
+// Return true if there are any montage maps 
+bool CNavHelper::AnyMontageMapsInNavTable()
+{
+  CMapDrawItem *item;
+  if (!mNav)
+    return false;
+  for (int ind = 0; ind < (int)mItemArray->GetSize(); ind++) {
+    item = mItemArray->GetAt(ind);
+    if (item->mType == ITEM_TYPE_MAP && item->mMapMontage)
+      return true;
+  }
+  return false;
 }
 
 // Align an image, searching for best rotation, with possible scaling as well

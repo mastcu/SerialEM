@@ -220,7 +220,7 @@
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_montage_listfilestoopen">List Files/Series/States</A></TD>
-          <TD>List the tilt series to run, files to open, or states to set during an acquire</TD>
+          <TD>List the tilt series to run, files to open, or states or Focus area positions to set during an acquire</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_deleteitem">Delete Item</A></TD>
@@ -820,9 +820,12 @@
         scheduled to happen in the course of running an 'Acquire at Items' operation. 
         Specifically, the list will show the files that will be opened and their 
         properties, the imaging states to be set when files are opened, and the tilt 
-        series that are set up to run.&nbsp; For a Low Dose state (maked as LD), the 
-        list will include the focus position on the tilt axis (after &#39;F pos&#39;) and the 
-        offset from center of a Focus subarea in binned pixels.</P>
+        series that are set up to run.&nbsp; For a Low Dose state (marked as LD), the 
+        list will include (after 'F pos') the focus position along the axis between 
+          low-dose areas, the rotation of the axis if any, and the offset from center of a 
+          Focus subarea in binned pixels. In addition, the Focus position will be listed 
+          for any items that have it stored, regardless of whether a file is to be opened 
+          or a state set.</P>
       <P><A NAME="hid_deleteitem"></A><B>Delete Item command (Navigator menu)</B></P>
       <P>Use this command to delete the current item from the list, or to delete the 
         group of items summarized on the current line of the table if 'Collapse groups' 

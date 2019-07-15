@@ -3,12 +3,19 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+7/15/19: Added button to Navigator to save Focus area position as part of the
+item for any item being acquired, so no state needs to be set.  The axis
+rotation is also saved, as it is in a state now.
+
+7/15/19: Started keeping track of overview binning for each montage that is
+open so it isn't reset when switching between files.
+
 7/13/19: Changed drift waiting task in various ways and integrated it into
 tilt series operation.
 
 7/13/19: When the low dose axis is free to rotae from the tilt axis, clicking
 a View image when defining Focus or Trial position will rotate the axis and
-change the position of the area.  CLicking in a View image now works for an
+change the position of the area.  Clicking in a View image now works for an
 image in any buffer and for a read-in image.
 
 7/12/19: Increased number of montage pieces for which pieces can be aligned

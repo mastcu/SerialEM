@@ -348,7 +348,9 @@ struct StateParams {
   int faParamSetInd;
   int focusXoffset;        // Offsets from center of focus area, in unbinned pixels
   int focusYoffset;
-  double focusAxisPos;     // Axis position of focus area
+  float focusAxisPos;      // Axis position of focus area
+  BOOL rotateAxis;         // Whether axis is rotated from tilt axis
+  int axisRotation;        // Amount of rotation, or 0 if not rotated
   // Camera modes for other parameter sets when not a low dose state
   int readModeView, readModeFocus, readModeTrial, readModePrev, readModeSrch,readModeMont;
   CString name;

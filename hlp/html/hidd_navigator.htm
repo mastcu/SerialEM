@@ -280,7 +280,7 @@
         is marked as 'Tilt Series' or is set to have a new file opened at it. 
         Similarly, once a new file is scheduled for a group, the 'Tilt series' and 'New 
         file at item' options are not available for any items in the group.</P>
-      <P><B><A NAME="navac_fileprops"></A>(Set) File Properties</B></P>
+      <P><B><A NAME="navac_fileprops"></A>(Set) File Props</B></P>
       <P>Use this button to check or adjust the properties of a file that is scheduled to 
         be opened for image or tilt series acquisition. The small dialog will open to 
         allow you select montaging and fitting to a polygon if appropriate, then the <A HREF="hidd_montagesetup.htm">
@@ -292,21 +292,42 @@
       <P>Use this button to store the current imaging state (microscope settings and 
         Record parameters) as a state to be set when the current item is about to be 
         acquired.&nbsp; When in Low Dose mode, the state also includes the axis position 
-        of the Focus area and the amount that a subarea is displaced from the center in 
+        of the Focus area, including rotation of the axis if any, and the amount that a subarea is displaced from the center in 
         the Focus camera parameters.&nbsp; One or both of these settings can thus be 
-        varied between tilt series to focus on favorable locations.&nbsp; This button is enabled whenever there is a file set to be opened for 
+        varied between tilt series to focus on favorable locations, but if there is no 
+          other reason to save the state, it is preferable to use the <strong>Focus Pos</strong> 
+          button instead.&nbsp; The <strong>Imaging State</strong> button is enabled whenever there is a file set to be opened for 
         the current item or group of items (including for a tilt series). The state is 
         set when the Navigator first moves to the item position. Once you have a state 
         set, the acquisition code in the item table (in the Acq column) will have an S 
-        at the end. To assess and modify the stored state for the current item, press <B>Scheduled 
-          State</B> in the <A HREF="hidd_statedlg.htm">Imaging State dialog box</A> , 
+        at the end. To assess and modify the stored state for the current item, press <B>Scheduled</B> in the <A HREF="hidd_statedlg.htm">Imaging State dialog box</A> , 
         modify the state as desired, and press this <B>Imaging State</B> button to 
         store the modified state.</P>
-      <P><B>(Set) TS Parameters</B></P>
+      <P><B>(Set) TS Params</B></P>
       <P>Use this button to check or adjust the parameters for the tilt series set to be 
         acquired at the current item. The <A HREF="hidd_tiltseries.htm">Tilt Series Setup 
           dialog box</A> will open, and new settings will be stored unless you Cancel 
         out of the dialog.</P>
+      <P><strong>(Set) Focus Pos</strong></P>
+      <P>Use this button to store a specific location of the Low Dose Focus area for the 
+          item to be acquired.&nbsp; Just as for an imaging state, the position along the 
+          inter-area axis, rotation of the axis from the tilt axis if any, and offset of 
+          the subarea from the center of the camera field are stored and set when the item 
+          is about to be acquired.&nbsp; Unlike the imaging state, this information is 
+          stored as part of the Navigator item itself and saved in the Navigator file, so 
+          it is not lost when the program is restarted.&nbsp; It is thus preferable to 
+          save it this way instead of in a state, which is not stored to file.&nbsp; If 
+          you do save a state as well, the state will be set first, then the parameters 
+          saved with this button, overriding the values in the state.</P>
+      <P>If the Focus position is saved for one item, it will stay the same for later 
+          items being acquired, until the next one that has its own Focus position.</P>
+      <P>Stored Focus positions are listed for every item by
+          <a href="menu_navigator.htm#hid_montage_listfilestoopen">List Files/Series/States</a>.&nbsp; 
+          To set a stored position, select the item in the table and press <B>Scheduled</B> in the <A HREF="hidd_statedlg.htm">Imaging State dialog box</A>.&nbsp; 
+          You can see the position by reloading a View map at that position, or taking a 
+          new View image there, and selecting Focus as the area to be defined in the Low 
+          Dose control panel.&nbsp; At that you can also modify the position by clicking 
+          in such a View image, and store it by pressing this button again.</P>
       <P><B>(Set) Filename</B></P>
       <P>Use this button to change the name of the file that is set to be opened for this 
         item or group. The existing filename is shown just to the right of this button.</P>
@@ -553,6 +574,10 @@
         TS: Tilt series to be acquired<BR>
         AFS, AGS, TSS: A stored state will be set when the file is opened, or earlier 
         for a tilt series<BR>
+        AP, AFP, AGP, TSP: A stored Low Dose Focus area position and subarea offset will 
+          be set before the item is acquired or tilt series is started<BR>
+        AFSP, AGSP, TSSP: A stored state will be set then a stored Focus position will be set,
+          overriding the FOcus position in the state<BR>
       </P>
       <P>Finally, the note will appear at the end of the line.</P>
     </basefont>

@@ -579,6 +579,8 @@ CMapDrawItem *FindNextAcquireItem(int &index);
 bool IsItemToBeAcquired(CMapDrawItem *item, bool &skippingGroup);
 float ContourArea(float *ptx, float *pty, int numPoints);
 void ManageListHeader(CString str = "Label");
+CButton m_butNavFocusPos;
+afx_msg void OnButNavFocusPos();
 };
 
 //{{AFX_INSERT_LOCATION}}

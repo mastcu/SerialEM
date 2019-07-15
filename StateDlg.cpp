@@ -170,6 +170,8 @@ void CStateDlg::Update(void)
         sched = schedFiles->GetAt(j);
         schedItem = sched->stateIndex >= 0;
       }
+      if (item->mFocusAxisPos > EXTRA_VALUE_TEST && mWinApp->LowDoseMode())
+        schedItem = true;
     }
   }
   m_butAddCurState.EnableWindow(noTasks);
@@ -324,8 +326,10 @@ void CStateDlg::OnButSetSchedState()
 {
   ScheduledFile *sched;
   ControlSet *conSet = mWinApp->GetConSets() + RECORD_CONSET;
-  CArray<ScheduledFile *, ScheduledFile *> *schedFiles = mWinApp->mNavigator->GetScheduledFiles();
-  CArray<StateParams *, StateParams *> *stateArray = mWinApp->mNavigator->GetAcqStateArray();
+  CArray<ScheduledFile *, ScheduledFile *> *schedFiles = 
+    mWinApp->mNavigator->GetScheduledFiles();
+  CArray<StateParams *, StateParams *> *stateArray = 
+    mWinApp->mNavigator->GetAcqStateArray();
   StateParams *state = NULL;
   int j;
 
@@ -348,6 +352,10 @@ void CStateDlg::OnButSetSchedState()
     DisableUpdateButton();
     Update();
   }
+  if (item->mFocusAxisPos > EXTRA_VALUE_TEST)
+    mHelper->SetLDFocusPosition(mWinApp->GetCurrentCamera(), item->mFocusAxisPos,
+      item->mRotateFocusAxis, item->mFocusAxisAngle, item->mFocusXoffset,
+      item->mFocusYoffset, "position for item");
 }
 
 // Restore state in the appropriate way

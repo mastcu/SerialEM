@@ -237,6 +237,7 @@ void CNavigatorDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_EDIT_MODE, m_butEditMode);
   DDX_Check(pDX, IDC_EDIT_MODE, m_bEditMode);
   DDX_Check(pDX, IDC_DRAW_LABELS, m_bDrawLabels);
+  DDX_Control(pDX, IDC_BUT_NAV_FOCUS_POS, m_butNavFocusPos);
 }
 
 
@@ -287,6 +288,7 @@ BEGIN_MESSAGE_MAP(CNavigatorDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_SHOW_ACQUIRE_AREA, OnShowAcquireArea)
   ON_BN_CLICKED(IDC_EDIT_MODE, OnEditMode)
   ON_BN_CLICKED(IDC_DRAW_LABELS, OnDrawLabels)
+  ON_BN_CLICKED(IDC_BUT_NAV_FOCUS_POS, OnButNavFocusPos)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -634,6 +636,8 @@ void CNavigatorDlg::Update()
   m_butFilename.EnableWindow(propsNameStateOK);
   m_butTSparams.EnableWindow(fileOK && mItem->mTSparamIndex >= 0);
   m_butScopeState.EnableWindow(propsNameStateOK);
+  m_butNavFocusPos.EnableWindow(curExists && noTasks && mWinApp->LowDoseMode() &&
+    (mItem->mAcquire || mItem->mTSparamIndex >= 0));
   m_sbcCurrentReg.EnableWindow(noTasks);
   m_butCollapse.EnableWindow(mAcquireIndex < 0);
   mHelper->UpdateStateDlg();
@@ -1135,6 +1139,7 @@ void CNavigatorDlg::OnCheckAcquire()
   }
   ManageCurrentControls();
   UpdateListString(mCurrentItem);
+  mChanged = true;
   Redraw();
 }
 
@@ -1167,6 +1172,7 @@ void CNavigatorDlg::ToggleGroupAcquire(bool collapsedGroup)
     }
   }
   ManageCurrentControls();
+  mChanged = true;
   Redraw();
 }
 
@@ -1312,6 +1318,18 @@ void CNavigatorDlg::OnButFilename()
     mHelper->SetOrChangeFilename(mCurrentItem, fileType, sched);
   mWinApp->RestoreViewFocus();
   ManageCurrentControls();
+}
+
+// Store focus position
+void CNavigatorDlg::OnButNavFocusPos()
+{
+  mWinApp->RestoreViewFocus();
+  if (!SetCurrentItem())
+    return;
+  mHelper->SaveLDFocusPosition(true, mItem->mFocusAxisPos, mItem->mRotateFocusAxis,
+    mItem->mFocusAxisAngle, mItem->mFocusXoffset, mItem->mFocusYoffset);
+  UpdateListString(mCurrentItem);
+  mChanged = true;
 }
 
 // Turn the collapsing of groups on or off
@@ -1716,6 +1734,8 @@ void CNavigatorDlg::ItemToListString(int index, CString &string)
       string += "TS";
     if (item->mStateIndex >= 0)
       string += "S";
+    if (item->mFocusAxisPos > EXTRA_VALUE_TEST)
+      string += "P";
     string += CString(item->mCorner ? "C\t" : "\t") + item->mNote;
   }
   item->mTextExtent = (pDC->GetTextExtent(string)).cx;
@@ -6966,6 +6986,11 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
         ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "PieceOn", &item->mPieceDrawnOn));
         ADOC_OPTIONAL(AdocGetTwoFloats("Item", sectInd, "XYinPc", &item->mXinPiece, 
           &item->mYinPiece));
+        ADOC_OPTIONAL(AdocGetFloat("Item", sectInd, "FocusAxisPos",&item->mFocusAxisPos));
+        ADOC_OPTIONAL(AdocGetTwoIntegers("Item", sectInd, "LDAxisAngle", 
+          &item->mRotateFocusAxis, &item->mFocusAxisAngle));
+        ADOC_OPTIONAL(AdocGetTwoIntegers("Item", sectInd, "FocusOffsets", 
+          &item->mFocusXoffset, &item->mFocusYoffset));
         if (item->mType == ITEM_TYPE_MAP) {
           ADOC_REQUIRED(AdocGetString("Item", sectInd, "MapFile", &adocStr));
           ADOC_STR_ASSIGN(item->mMapFile);
@@ -8168,6 +8193,7 @@ int CNavigatorDlg::GotoNextAcquireArea()
 }
 
 // Open file and set state if called for for this item
+// This is called once for state only when going to next item, and again at File Open step
 int CNavigatorDlg::OpenFileIfNeeded(CMapDrawItem * item, bool stateOnly)
 {
   int j, ind;
@@ -8208,6 +8234,15 @@ int CNavigatorDlg::OpenFileIfNeeded(CMapDrawItem * item, bool stateOnly)
         " states");
       return 1;
     }
+  }
+
+  // Set low dose focus area if parameter was saved, overrides one in the state
+  // This needs to be done the first time in when setting state only since autofocus step
+  // is before File Open step
+  if (item->mFocusAxisPos > EXTRA_VALUE_TEST && stateOnly) {
+    mHelper->SetLDFocusPosition(mWinApp->GetCurrentCamera(), item->mFocusAxisPos,
+      item->mRotateFocusAxis, item->mFocusAxisAngle, item->mFocusXoffset, 
+      item->mFocusYoffset, "position for item");
   }
   if (stateOnly) {
     UpdateListString(mAcquireIndex);

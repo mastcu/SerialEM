@@ -70,6 +70,10 @@ CMapDrawItem::CMapDrawItem()
   mMapProbeMode = -1;
   mMapLowDoseConSet = -1;
   mK2ReadMode = 0;
+  mFocusAxisPos = EXTRA_NO_VALUE;
+  mRotateFocusAxis = false;
+  mFocusAxisAngle = 0;
+  mFocusXoffset = mFocusYoffset = 0;
   mFilePropIndex =  mTSparamIndex = mMontParamIndex =  mStateIndex = -1;
   mFileToOpen = "";
 }

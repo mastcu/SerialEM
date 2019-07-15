@@ -355,5 +355,10 @@ public:
   void StartResetISorFinish(int magInd);
   void OpenMultishotDlg(void);
   WINDOWPLACEMENT *GetMultiShotPlacement(bool update);
+  void SaveLDFocusPosition(bool saveIt, float & axisPos, BOOL & rotateAxis, int & axisRotation, 
+    int & xOffset, int & yOffset);
+  void SetLDFocusPosition(int camIndex, float axisPos, BOOL rotateAxis, int axisRotation, 
+    int xOffset, int yOffset, const char *descrip);
+  bool AnyMontageMapsInNavTable();
 };
 
