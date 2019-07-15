@@ -471,6 +471,7 @@ int CSerialEMDoc::OpenOldFile(CFile *file, CString cFilename, int err)
           param->warnedCalAcquire = false;
           param->warnedConSetBin = false;
           param->offerToMakeMap = false;
+          param->overviewBinning = 0;
 
           // Set to current state or to proper state for low dose
           if (lowDose < 0) {
@@ -648,6 +649,7 @@ void CSerialEMDoc::InitMontParamsForDialog(MontParam *param, BOOL frameSet, int 
   param->skipOutsidePoly = false;
   param->wasFitToPolygon = false;
   param->forFullMontage = false;
+  param->overviewBinning = 0;
   param->setupInLowDose = mWinApp->LowDoseMode();
   param->insideNavItem = -1;
   param->warnedCalOpen = !filename.IsEmpty();

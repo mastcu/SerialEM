@@ -234,7 +234,7 @@ void EMmontageController::SetupOverlapBoxes()
 // Turn montaging on or off
 void EMmontageController::SetMontaging(BOOL inVal)
 {
-  int miniTarget = 1024;    // Target size for miniview
+  int miniTarget = 2048;    // Target size for miniview
   DialogTable *dlgTable = mWinApp->GetDialogTable();
   int dlgState = dlgTable[MONTAGE_DIALOG_INDEX].state;
   int *activeList = mWinApp->GetActiveCameraList();
@@ -268,15 +268,18 @@ void EMmontageController::SetMontaging(BOOL inVal)
     int zoomY = (mParam->yFrame + (mParam->yNframes - 1) * (mParam->yFrame -
         mParam->yOverlap) + miniTarget - 1) / miniTarget;
     zoomX = B3DMAX(zoomX, 1);
-    mParam->overviewBinning = zoomX > zoomY ? zoomX : zoomY;
-    mParam->maxOverviewBin = mParam->overviewBinning;
+    mParam->maxOverviewBin = B3DMAX(zoomX, zoomY);
+    if (!mParam->overviewBinning)
+      mParam->overviewBinning = mParam->maxOverviewBin;
+    B3DCLAMP(mParam->overviewBinning, 1, mParam->overviewBinning);
     mWinApp->mMontageWindow.UpdateSettings();
 
   } else if (mMontaging) {
     // Do this only if montaging was on
     CleanPatches();
 
-    dlgState &= ~1; // Close the window
+    if (!mWinApp->mNavHelper->AnyMontageMapsInNavTable())
+      dlgState &= ~1; // Close the window
     menuText = "Overwrite";
   }
   mMontaging = inVal;
