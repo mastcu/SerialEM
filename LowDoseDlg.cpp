@@ -439,7 +439,7 @@ void CLowDoseDlg::OnLowdosemode()
     else
       mWinApp->mBufferManager->SetShiftsOnAcquire(nRoll - 1);
   }
-  mWinApp->UpdateWindowSettings();
+  mWinApp->UpdateBufferWindows();
   if (mWinApp->ScopeHasSTEM())
     mWinApp->mSTEMcontrol.UpdateEnables();
   if (!m_bLowDoseMode)
@@ -1819,7 +1819,7 @@ void CLowDoseDlg::ManageAxisPosition()
   double angle, specX;
   float recUm, defUm, cenX, cenY, rh, sep1, sep2;
   int curCam = mWinApp->GetCurrentCamera();
-  int area = m_iDefineArea ? m_iDefineArea : 2;
+  int area = m_iDefineArea ? m_iDefineArea : FOCUS_CONSET;
 
   // Axis positions are supposed to be completely up to date as image shift changes
   specX = mLDParams[area].axisPosition - mLDParams[3].axisPosition;
