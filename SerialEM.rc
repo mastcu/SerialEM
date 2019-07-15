@@ -63,9 +63,7 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDR_MAINFRAME           ICON                    "res\\SerialEM.ico"
-
 IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -73,9 +71,7 @@ IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
 //
 
 IDR_MAINFRAME           BITMAP                  "res\\Toolbar.bmp"
-
 IDB_BITMAP1             BITMAP                  "res\\bitmap1.bmp"
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1834,11 +1830,11 @@ BEGIN
     CONTROL         "New file at item",IDC_CHECK_NAV_FILEATITEM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,102,49,61,10
     CONTROL         "New file at group",IDC_CHECK_NAV_FILEATGROUP,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,171,49,66,10
     LTEXT           "Set:",IDC_STATIC,5,61,13,9
-    PUSHBUTTON      "File Properties",IDC_BUT_NAV_FILEPROPS,19,61,50,10
-    PUSHBUTTON      "Imaging State",IDC_BUT_NAV_STATE,73,61,47,10
-    PUSHBUTTON      "TS Parameters",IDC_BUT_NAV_TSPARAMS,124,61,52,10
-    PUSHBUTTON      "Filename",IDC_BUT_NAV_FILENAME,180,61,35,10
-    LTEXT           "(A name for you)",IDC_STAT_NAV_FILENAME,224,61,13,8
+    PUSHBUTTON      "File Props",IDC_BUT_NAV_FILEPROPS,18,61,35,10
+    PUSHBUTTON      "Imaging State",IDC_BUT_NAV_STATE,57,61,45,10
+    PUSHBUTTON      "TS Params",IDC_BUT_NAV_TSPARAMS,106,61,38,10
+    PUSHBUTTON      "Filename",IDC_BUT_NAV_FILENAME,148,61,32,10
+    LTEXT           "(A name for you)",IDC_STAT_NAV_FILENAME,223,61,17,8
     CONTROL         "",IDC_STAT_NAV_HORIZLINE,"Static",SS_BLACKFRAME | SS_SUNKEN,2,73,235,1
     PUSHBUTTON      "Update Z",IDC_BUT_UPDATEZ,3,141,50,10
     CONTROL         "For anchor state",IDC_CHECK_DUALMAP,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,176,20,61,10
@@ -1865,6 +1861,7 @@ BEGIN
     CONTROL         "None",IDC_DRAW_NONE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,176,78,29,10
     LTEXT           "Draw:",IDC_STATIC,122,79,18,8
     CONTROL         "Labels",IDC_DRAW_LABELS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,208,78,34,10
+    PUSHBUTTON      "Focus Pos",IDC_BUT_NAV_FOCUS_POS,184,61,36,10
 END
 
 IDD_DUMMYDLG DIALOG 0, 0, 44, 26
@@ -3161,9 +3158,7 @@ END
 //
 
 IDC_CURSOR1             CURSOR                  "res\\cursor1.cur"
-
 IDC_CURSOR2             CURSOR                  "res\\cursor2.cur"
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3621,19 +3616,19 @@ END
 // AFX_DIALOG_LAYOUT
 //
 
-IDD_AUTOCENSETUP AFX_DIALOG_LAYOUT
+IDD_AUTOCENSETUP AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_TILTSERIES AFX_DIALOG_LAYOUT
+IDD_TILTSERIES AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_DRIFTWAITSETUP AFX_DIALOG_LAYOUT
+IDD_DRIFTWAITSETUP AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
 
