@@ -80,7 +80,7 @@ CParameterIO::CParameterIO()
   mTSParam = mWinApp->mTSController->GetTiltSeriesParam();
   mFilterParam = mWinApp->GetFilterParams();
   mNumLDSets = 5;
-  mMaxReadInMacros = 0;
+  mMaxReadInMacros = 20;
 }
 
 CParameterIO::~CParameterIO()
