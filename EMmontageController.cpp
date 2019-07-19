@@ -2819,10 +2819,12 @@ void EMmontageController::SavePiece()
   } else {
     if (extra0)
       mImBufs->mImage->SetUserData(extra1);
-    mImBufs->mBinning = mParam->binning;
-    mImBufs->mMagInd = mParam->magIndex;
-    mImBufs->mEffectiveBin = mParam->binning;
-    mImBufs->mDefocus = mBaseFocus;
+    if (!mReadingMontage) {
+      mImBufs->mBinning = mParam->binning;
+      mImBufs->mMagInd = mParam->magIndex;
+      mImBufs->mEffectiveBin = mParam->binning;
+      mImBufs->mDefocus = mBaseFocus;
+    }
   }
   mCenterData = NULL;
   if (mAddMiniOffsetToCenter) {
@@ -4375,6 +4377,7 @@ int EMmontageController::MapParamsToAutodoc(void)
       beamShiftY);
     errSum -= AdocSetTwoFloats(ADOC_MONT_SECT, index, ADOC_VIEW_BEAM_TILT, beamTiltX, 
       beamTiltY);
+    errSum -= AdocSetFloat(ADOC_MONT_SECT, index, ADOC_VIEW_DEFOCUS, mImBufs[1].mViewDefocus);
   }
   errSum -= AdocSetInteger(ADOC_MONT_SECT, index, ADOC_ALPHA, mScope->GetAlpha());
   errSum -= AdocSetTwoFloats(ADOC_MONT_SECT, index, ADOC_FILTER,
@@ -4417,6 +4420,7 @@ void EMmontageController::MapParamsToOverview(int sectInd)
   mImBufs[1].mLowDoseArea = typext != 0;
   AdocGetTwoFloats(ADOC_MONT_SECT, sectInd, ADOC_VALID_BACKLASH, 
     &mImBufs[1].mBacklashX, &mImBufs[1].mBacklashY);
+  AdocGetFloat(ADOC_MONT_SECT, sectInd, ADOC_VIEW_DEFOCUS, &mImBufs[1].mViewDefocus);
 }
 
 // Adjust zoom or border/retiling strategy when get overview array
