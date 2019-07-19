@@ -8533,7 +8533,6 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       extra->m_iMag = MagOrEFTEMmag(mWinApp->GetEFTEMMode(), mMagBefore, 
         mParam->STEMcamera);
       extra->mMagIndex = mMagBefore;
-      extra->mLowDoseConSet = lowDoseMode ? mLastConSet + 1 : -mLastConSet;
       typext = TILT_MASK | VOLT_XY_MASK | INTENSITY_MASK | MAG100_MASK | DOSE_MASK;
       if (mWinApp->mMontageController->DoingMontage() && 
         !mWinApp->mMontageController->GetFocusing()) {
@@ -8563,7 +8562,8 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       } else {
         spotSize = mScope->FastSpotSize();
       }
-      extra->m_fDose = (float)mWinApp->mBeamAssessor->GetElectronDose(spotSize, stZ, 
+      extra->mLowDoseConSet = lowDoseMode ? imBuf->mConSetUsed + 1 : -imBuf->mConSetUsed;
+      extra->m_fDose = (float)mWinApp->mBeamAssessor->GetElectronDose(spotSize, stZ,
         SpecimenBeamExposure(curCam, lastConSetp, true));
       extra->m_fDose *= (float)mExposure / lastConSetp->exposure;
       extra->mPriorRecordDose = mPriorRecordDose;
@@ -8889,6 +8889,8 @@ void CCameraController::DisplayNewImage(BOOL acquired)
     } else
       mWinApp->SetCurrentBuffer(0);
     mWinApp->SetDeferBufWinUpdates(false);
+    if (mWinApp->mNavigator)
+      mWinApp->mNavigator->AddFocusAreaPoint(false);
   }
   ErrorCleanup(0);
   mInDisplayNewImage = false;
