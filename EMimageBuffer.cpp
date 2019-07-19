@@ -341,6 +341,7 @@ BOOL EMimageBuffer::ConvertToByte(float minScale, float maxScale)
   mImageScale->SetMinMax(0., 255.);
   mImageScale->SetSampleMinMax(0., 255.);
   mImage->setShifts(shiftX, shiftY);
+  mSampleMean = EXTRA_NO_VALUE;
   SetImageChanged(1);
   return true;
 }
