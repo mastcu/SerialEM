@@ -2572,7 +2572,7 @@ void EMmontageController::SavePiece()
 
       sectInd = -1;
       if (mReadingMontage)
-        sectInd = AccessMontSectInAdoc(mReadStoreMRC, B3DABS(mImBufs[1].mSecNumber));
+        sectInd = AccessMontSectInAdoc(mReadStoreMRC, mParam->zCurrent);
 
       if (!mReadingMontage || sectInd >= 0) {
         extra1 = (EMimageExtra *)mImBufs[1].mImage->GetUserData();

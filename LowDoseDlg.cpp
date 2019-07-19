@@ -1031,6 +1031,7 @@ void CLowDoseDlg::OnLdRotateAxis()
   m_editAxisAngle.EnableWindow(m_bRotateAxis);
   m_statDegrees.EnableWindow(m_bRotateAxis);
   mWinApp->mMainView->DrawImage();
+  mWinApp->RestoreViewFocus();
 }
 
 // A new axis angle is entered
@@ -1041,6 +1042,7 @@ void CLowDoseDlg::OnKillfocusEditAxisangle()
   ConvertAxisPosition(true);
   ManageAxisPosition();
   mWinApp->mMainView->DrawImage();
+  mWinApp->RestoreViewFocus();
 }
 
 // External call for modifying the axis position of T/F area and optionally, angle also
