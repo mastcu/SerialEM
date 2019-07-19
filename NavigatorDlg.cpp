@@ -106,6 +106,7 @@ CNavigatorDlg::CNavigatorDlg(CWnd* pParent /*=NULL*/)
   , m_bShowAcquireArea(FALSE)
   , m_bEditMode(FALSE)
   , m_bDrawLabels(TRUE)
+  , m_bEditFocus(FALSE)
 {
 	//{{AFX_DATA_INIT(CNavigatorDlg)
 	m_bRegPoint = FALSE;
@@ -238,6 +239,8 @@ void CNavigatorDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Check(pDX, IDC_EDIT_MODE, m_bEditMode);
   DDX_Check(pDX, IDC_DRAW_LABELS, m_bDrawLabels);
   DDX_Control(pDX, IDC_BUT_NAV_FOCUS_POS, m_butNavFocusPos);
+  DDX_Control(pDX, IDC_EDIT_FOCUS, m_butEditFocus);
+  DDX_Check(pDX, IDC_EDIT_FOCUS, m_bEditFocus);
 }
 
 
@@ -289,6 +292,7 @@ BEGIN_MESSAGE_MAP(CNavigatorDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_EDIT_MODE, OnEditMode)
   ON_BN_CLICKED(IDC_DRAW_LABELS, OnDrawLabels)
   ON_BN_CLICKED(IDC_BUT_NAV_FOCUS_POS, OnButNavFocusPos)
+  ON_BN_CLICKED(IDC_EDIT_FOCUS, OnEditFocus)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -311,6 +315,7 @@ BOOL CNavigatorDlg::OnInitDialog()
   mBufferManager = mWinApp->mBufferManager;
   mParam = mWinApp->GetNavParams();
   mHelper = mWinApp->mNavHelper;
+  mLowDoseDlg = &mWinApp->mLowDoseDlg;
 
   CRect editRect, clientRect;
   GetClientRect(clientRect);
@@ -638,6 +643,9 @@ void CNavigatorDlg::Update()
   m_butScopeState.EnableWindow(propsNameStateOK);
   m_butNavFocusPos.EnableWindow(curExists && noTasks && mWinApp->LowDoseMode() &&
     (mItem->mAcquire || mItem->mTSparamIndex >= 0));
+  mEditFocusEnabled = noTasks && noDrawing && mLowDoseDlg->GetTrulyLowDose() &&
+    !mLowDoseDlg->m_iDefineArea;
+  m_butEditFocus.EnableWindow(mEditFocusEnabled);
   m_sbcCurrentReg.EnableWindow(noTasks);
   m_butCollapse.EnableWindow(mAcquireIndex < 0);
   mHelper->UpdateStateDlg();
@@ -1119,7 +1127,35 @@ void CNavigatorDlg::OnEditMode()
       "    Backspace to delete current point\r\n");
     mHelper->SetEditReminderPrinted(true);
   }
+  if (m_bEditFocus) {
+    m_bEditFocus = false;
+    UpdateData(false);
+  }
   Update();
+}
+
+// Edit Focus changed
+void CNavigatorDlg::OnEditFocus()
+{
+  UpdateData(true);
+  mWinApp->RestoreViewFocus();
+  if (m_bEditMode) {
+    m_bEditMode = false;
+    UpdateData(false);
+  }
+  AddFocusAreaPoint(true);
+}
+
+// If edit focus is on and active, set that there is a user point and get it positioned
+void CNavigatorDlg::AddFocusAreaPoint(bool drawFirst)
+{
+  EMimageBuffer *imBuf = mWinApp->mMainView->GetActiveImBuf();
+  if (m_bEditFocus && mEditFocusEnabled) {
+    if (drawFirst)
+      Redraw();
+    imBuf->mHasUserPt = true;
+    mLowDoseDlg->FixUserPoint(imBuf, 0);
+  }
 }
 
 // Flag to acquire changed
@@ -1134,13 +1170,14 @@ void CNavigatorDlg::OnCheckAcquire()
     return;
   }
   mItem->mAcquire = m_bAcquire;
-  if (!m_bAcquire) {
+  if (!m_bAcquire)
     mHelper->EndAcquireOrNewFile(mItem);
-  }
   ManageCurrentControls();
   UpdateListString(mCurrentItem);
   mChanged = true;
   Redraw();
+  if (m_bAcquire)
+    AddFocusAreaPoint(false);
 }
 
 // Call from menu to toggle the acquire state of current whole group, or from acquire
@@ -1148,7 +1185,7 @@ void CNavigatorDlg::OnCheckAcquire()
 void CNavigatorDlg::ToggleGroupAcquire(bool collapsedGroup)
 {
   CMapDrawItem *item;
-  BOOL acquire;
+  BOOL acquire, needFocusArea = false;
   int start = 0, end = (int)mItemArray.GetSize() - 1;
   if (!SetCurrentItem(true)) 
     return;
@@ -1163,6 +1200,8 @@ void CNavigatorDlg::ToggleGroupAcquire(bool collapsedGroup)
     if (item->mType != ITEM_TYPE_POLYGON && item->mGroupID == mItem->mGroupID && 
       mItem->mTSparamIndex < 0) {
       if (acquire) {
+        if (!item->mAcquire)
+          needFocusArea = true;
         item->mAcquire = true;
       } else if (item->mAcquire) {
         item->mAcquire = false;
@@ -1174,6 +1213,8 @@ void CNavigatorDlg::ToggleGroupAcquire(bool collapsedGroup)
   ManageCurrentControls();
   mChanged = true;
   Redraw();
+  if (needFocusArea)
+    AddFocusAreaPoint(false);
 }
 
 // Flag to take tilt series changed
@@ -1192,6 +1233,7 @@ void CNavigatorDlg::OnCheckTiltSeries()
   ManageCurrentControls();
   UpdateListString(mCurrentItem);
   Redraw();
+  AddFocusAreaPoint(false);
 }
 
 // Open a file at the single item
@@ -1384,6 +1426,7 @@ void CNavigatorDlg::OnSelchangeListviewer()
     ManageCurrentControls();
   }
   mWinApp->RestoreViewFocus();
+  AddFocusAreaPoint(true);
 }
 
 // An item has been dragged from the old index to the new
@@ -1473,6 +1516,7 @@ void CNavigatorDlg::MoveListSelection(int direction)
   mSelectedItems.clear();
   ManageCurrentControls();
   Redraw();
+  AddFocusAreaPoint(false);
 }
 
 
@@ -1493,7 +1537,7 @@ void CNavigatorDlg::ProcessAkey(BOOL ctrl, BOOL shift)
   CMapDrawItem *item;
   int start = 0;
   int end = (int)mItemArray.GetSize() - 1;
-  BOOL oldAcquire, acquire, toggle = false;
+  BOOL oldAcquire, acquire, toggle = false, needFocusArea = false;
   if (!SetCurrentItem(true))
     return;
 
@@ -1518,12 +1562,16 @@ void CNavigatorDlg::ProcessAkey(BOOL ctrl, BOOL shift)
       item->mAcquire = acquire;
     if (!item->mAcquire && oldAcquire)
       mHelper->EndAcquireOrNewFile(item);
+    if (item->mAcquire && !oldAcquire)
+      needFocusArea = true;
     UpdateListString(index);
     mChanged = true;
   }
   mShiftAIndex = -1;
   ManageCurrentControls();
   Redraw();
+  if (needFocusArea)
+    AddFocusAreaPoint(false);
 }
 
 // Delete a contiguous set of points with Shift D at both ends of range
@@ -1564,6 +1612,7 @@ void CNavigatorDlg::ProcessDKey(void)
 void CNavigatorDlg::ProcessTKey(void)
 {
   CMapDrawItem *item;
+  bool needFocusArea = false;
   int start, end, ind, allOn = true;
   if (ProcessRangeKey("T again for TS", mShiftTIndex, start, end))
     return;
@@ -1583,6 +1632,7 @@ void CNavigatorDlg::ProcessTKey(void)
     if (item->mTSparamIndex < 0 && !item->mAcquire) {
       mHelper->NewAcquireFile(ind, NAVFILE_TS, NULL);
       UpdateListString(ind);
+      needFocusArea = true;
     } else if (allOn && !item->mAcquire) {
       mHelper->EndAcquireOrNewFile(item);
       UpdateListString(ind);
@@ -1590,6 +1640,8 @@ void CNavigatorDlg::ProcessTKey(void)
   }
   ManageCurrentControls();
   Redraw();
+  if (needFocusArea)
+    AddFocusAreaPoint(false);
 }
 
 // Start new file at item at contiguous set of points with Shift N at both ends of range
@@ -2208,7 +2260,7 @@ void CNavigatorDlg::AdjustAndMoveStage(float stageX, float stageY, float stageZ,
   if (mWinApp->LowDoseMode()) {
     LowDoseParams *ldp = mWinApp->GetLowDoseParams() + RECORD_CONSET;
     int area = mScope->GetLowDoseArea();
-    if (mWinApp->mLowDoseDlg.ShiftsBalanced()) {
+    if (mLowDoseDlg->ShiftsBalanced()) {
       leaveISX += ldp->ISX;
       leaveISY += ldp->ISY;
     }
@@ -2216,8 +2268,8 @@ void CNavigatorDlg::AdjustAndMoveStage(float stageX, float stageY, float stageZ,
     // And unless the compensation has been done (painfully) in realign or there are no
     // view offsets set in View or Search, set up to compensate to the Record area in the
     // next call
-    mWinApp->mLowDoseDlg.GetFullViewShift(viewX, viewY, VIEW_CONSET);
-    mWinApp->mLowDoseDlg.GetFullViewShift(searchX, searchY, SEARCH_AREA);
+    mLowDoseDlg->GetFullViewShift(viewX, viewY, VIEW_CONSET);
+    mLowDoseDlg->GetFullViewShift(searchX, searchY, SEARCH_AREA);
     if (!mHelper->GetRealigning() && ldp->magIndex && !(area == VIEW_CONSET && 
       !viewX && !viewY) && !(area == SEARCH_AREA && !searchX && !searchY))
         magInd = ldp->magIndex;
@@ -2289,7 +2341,7 @@ void CNavigatorDlg::MoveStageOrDoImageShift(int axisBits)
     if (mWinApp->LowDoseMode()) {
       area = mScope->GetLowDoseArea();
       if (area == VIEW_CONSET || area == SEARCH_AREA)
-        mWinApp->mLowDoseDlg.GetNetViewShift(areaX, areaY, area);
+        mLowDoseDlg->GetNetViewShift(areaX, areaY, area);
     }
     magInd = mScope->GetMagIndex();
     stage2IS = MatMul(mShiftManager->StageToCamera(mWinApp->GetCurrentCamera(), magInd),
@@ -2774,7 +2826,7 @@ CArray<CMapDrawItem *, CMapDrawItem *> *CNavigatorDlg::GetMapDrawItems(
   CMapDrawItem **acquireBox)
 {
   float angle, tiltAngle;
-  bool showMulti, asIfLowDose, showAcquirePolys;
+  bool showMulti, asIfLowDose, showAcquirePolys, showLDareas;
   if (!SetCurrentItem())
     mItem = NULL;
   *acquireBox = NULL;
@@ -2788,7 +2840,15 @@ CArray<CMapDrawItem *, CMapDrawItem *> *CNavigatorDlg::GetMapDrawItems(
     (mHelper->mMultiShotDlg && !mHelper->mMultiShotDlg->RecordingISValues()));
   showAcquirePolys = showMulti && (mHelper->GetEnableMultiShot() & 2) &&
     !(imBuf->mHasUserPt || imBuf->mHasUserLine);
-  if ((imBuf->mHasUserPt || imBuf->mHasUserLine || showAcquirePolys) && 
+  showLDareas = mItem && (mItem->mAcquire || mItem->mTSparamIndex >= 0) && m_bEditFocus &&
+    mEditFocusEnabled && mLowDoseDlg->ViewImageOKForEditingFocus(imBuf);
+
+  // Showing low dose area in edit mode: just provide a copy of current item
+  if (showLDareas) {
+    *acquireBox = new CMapDrawItem(mItem);
+    (*acquireBox)->AppendPoint(mItem->mStageX, mItem->mStageY);
+
+  } else if ((imBuf->mHasUserPt || imBuf->mHasUserLine || showAcquirePolys) &&
     (m_bShowAcquireArea || showMulti) && 
     RegistrationUseType(imBuf->mRegistration) != NAVREG_IMPORT) {
 
@@ -2829,7 +2889,7 @@ CArray<CMapDrawItem *, CMapDrawItem *> *CNavigatorDlg::GetMapDrawItems(
         CMapDrawItem *box = new CMapDrawItem;
         *acquireBox = box;
         useLineEnd = imBuf->mHasUserLine ? 1 : 0;
-        if (showMulti && mWinApp->LowDoseMode() && mWinApp->mLowDoseDlg.m_iDefineArea)
+        if (showMulti && mWinApp->LowDoseMode() && mLowDoseDlg->m_iDefineArea)
           useLineEnd = -1;
         MarkerStagePosition(imBuf, aMat, delX, delY, box->mStageX, box->mStageY,
           useLineEnd);
@@ -4509,9 +4569,9 @@ void CNavigatorDlg::AddGridOfPoints(bool likeLast)
     // Get specimen then stage coordinates of vector pointing away from LD focus area
     specX = -axis;
     specY = 0.;
-    if (mWinApp->mLowDoseDlg.m_bRotateAxis) {
-      specX = -axis * cos(DTOR * mWinApp->mLowDoseDlg.m_iAxisAngle);
-      specY = -axis * sin(DTOR * mWinApp->mLowDoseDlg.m_iAxisAngle);
+    if (mLowDoseDlg->m_bRotateAxis) {
+      specX = -axis * cos(DTOR * mLowDoseDlg->m_iAxisAngle);
+      specY = -axis * sin(DTOR * mLowDoseDlg->m_iAxisAngle);
     }
     cInv = MatInv(mShiftManager->SpecimenToStage(1., 1.));
     stageX = cInv.xpx * specX + cInv.xpy * specY;
@@ -6227,6 +6287,7 @@ void CNavigatorDlg::OnLoadMap()
   }
   if (mItem->mType == ITEM_TYPE_POINT) {
     mHelper->LoadPieceContainingPoint(mItem, mFoundItem);
+    AddFocusAreaPoint(false);
   } else
     DoLoadMap(false, NULL);
 }

@@ -76,6 +76,15 @@ CMapDrawItem::CMapDrawItem()
   mFocusXoffset = mFocusYoffset = 0;
   mFilePropIndex =  mTSparamIndex = mMontParamIndex =  mStateIndex = -1;
   mFileToOpen = "";
+ }
+
+CMapDrawItem::CMapDrawItem(CMapDrawItem *item)
+{
+  *this = *item;
+  mPtX = NULL;
+  mPtY = NULL;
+  mNumPoints = 0;
+  mMaxPoints = 0;
 }
 
 CMapDrawItem::~CMapDrawItem()

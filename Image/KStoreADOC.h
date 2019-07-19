@@ -74,6 +74,7 @@
 #define ADOC_NET_VIEW_SHIFT "NetViewShifts"
 #define ADOC_VIEW_BEAM_SHIFT "ViewBeamShifts"
 #define ADOC_VIEW_BEAM_TILT "ViewBeamTilts"
+#define ADOC_VIEW_DEFOCUS "ViewDefocus"
 #define ADOC_ALPHA "Alpha"
 #define ADOC_FILTER "FilterState"
 #define ADOC_VOLTAGE "Voltage"

@@ -45,9 +45,10 @@ public:
 	void GetAreaSizes(int &recSize, int &defSize, double &angle);
 	void UserPointChange(float &ptX, float &ptY, EMimageBuffer *imBuf);
 	void ManageAxisPosition();
-	void SnapCameraShiftToAxis(float &shiftX, float &shiftY, bool viewImage);
+	void SnapCameraShiftToAxis(EMimageBuffer *imBuf, float &shiftX, float &shiftY, bool viewImage,
+    int camIndex, BOOL &rotateAxis, int &axisAngle);
 	int UsefulImageInA();
-	void FixUserPoint(int needDraw);
+	void FixUserPoint(EMimageBuffer *imBuf, int needDraw);
 	BOOL ImageAlignmentChange(float &newX, float &newY, float oldX, float oldY,
 		BOOL mouseShifting);
 	void SetIgnoreIS() {mIgnoreIS = true;};
@@ -181,10 +182,11 @@ private:
   float mTVPiezoDelayFac;     // Amount to cut it by for trial/focus
 
 public:
-  int DrawAreaOnView(int type, EMimageBuffer *imBuf, float * cornerX, 
+  GetMember(BOOL, TrulyLowDose);
+  int DrawAreaOnView(int type, EMimageBuffer *imBuf, StateParams &state, float * cornerX,
     float * cornerY, float & cenX, float & cenY, float &radius);
   void AreaAcqCoordToView(int inArea, int binning, int sizeX, int sizeY, ScaleMat aMat,
-    ScaleMat vMat, int acqX, int acqY, float & imX, float & imY);
+    ScaleMat vMat, int acqX, int acqY, StateParams &state, float & imX, float & imY);
   void ManageDefines(int area);
   CButton m_butBlankBeam;
   void ToggleBlankWhenDown(void);
@@ -228,6 +230,8 @@ public:
   CButton m_butGotoSearch;
   CButton m_butGotoRecord;
   void SetBeamShiftButton(BOOL state);
+  bool UsableDefineImageInAOrView(EMimageBuffer *imBuf);
+  bool ViewImageOKForEditingFocus(EMimageBuffer * imBuf);
 };
 
 //{{AFX_INSERT_LOCATION}}

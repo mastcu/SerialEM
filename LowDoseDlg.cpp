@@ -461,6 +461,7 @@ void CLowDoseDlg::OnRdefine()
   int lastArea = mScope->GetLowDoseArea();
   UpdateData(true);
   mWinApp->RestoreViewFocus();  
+  EMimageBuffer *imBuf = mWinApp->mMainView->GetActiveImBuf();
 
   // Get the base image shift and matching mag
   if (m_iDefineArea) {
@@ -473,7 +474,9 @@ void CLowDoseDlg::OnRdefine()
       mBaseISX -= ISX;
       mBaseISY -= ISY;
     }
-    
+    if (mWinApp->mNavigator)
+      mWinApp->mNavigator->Update();
+
     // No longer set the down area equal to the area being defined
   } else {
     TurnOffDefine();
@@ -483,9 +486,9 @@ void CLowDoseDlg::OnRdefine()
 
   // (No longer go through a show cycle) and set up user point
   if (m_iDefineArea) {
-    if (UsefulImageInA()) {
+    if (UsableDefineImageInAOrView(imBuf)) {
       mImBufs->mHasUserPt = true;
-      FixUserPoint(0);
+      FixUserPoint(imBuf, 0);
     }
   }
 }
@@ -501,6 +504,11 @@ void CLowDoseDlg::TurnOffDefine()
     OnBalanceshifts();
   }
   ManageAxisPosition();
+  if (mWinApp->mNavigator) {
+    mWinApp->mNavigator->Update();
+    mWinApp->mMainView->DrawImage();
+    mWinApp->mNavigator->AddFocusAreaPoint(false);
+  }
 }
 
 // Go to an area when button is pressed (if test may be superfluous, they should disabled)
@@ -1030,7 +1038,7 @@ void CLowDoseDlg::OnLdRotateAxis()
   ManageAxisPosition();
   m_editAxisAngle.EnableWindow(m_bRotateAxis);
   m_statDegrees.EnableWindow(m_bRotateAxis);
-  mWinApp->mMainView->DrawImage();
+  FixUserPoint(mWinApp->mMainView->GetActiveImBuf(), 0);
   mWinApp->RestoreViewFocus();
 }
 
@@ -1041,7 +1049,7 @@ void CLowDoseDlg::OnKillfocusEditAxisangle()
   UpdateData(true);
   ConvertAxisPosition(true);
   ManageAxisPosition();
-  mWinApp->mMainView->DrawImage();
+  FixUserPoint(mWinApp->mMainView->GetActiveImBuf(), 0);
   mWinApp->RestoreViewFocus();
 }
 
@@ -1407,6 +1415,7 @@ void CLowDoseDlg::ScopeUpdate(int magIndex, int spotSize, double intensity,
   double specX, specY, tiltAxisX, newISX, newISY, baseTransX, baseTransY;
   int shiftedA;
   MultiShotParams *msParams;
+  EMimageBuffer *imBuf;
 
   if (!mInitialized || !mTrulyLowDose)
     return;
@@ -1490,7 +1499,8 @@ void CLowDoseDlg::ScopeUpdate(int magIndex, int spotSize, double intensity,
         mScope->GetImageShift(ISX, ISY);
 
         // If A has an image from defining area, change the shift of the image
-        shiftedA = UsefulImageInA() > 0 ? 1 : 0;
+        imBuf = mWinApp->mMainView->GetActiveImBuf();
+        shiftedA = (UsefulImageInA() > 0 && imBuf == mImBufs) ? 1 : 0;
         if (shiftedA)
           ShiftImageInA(specX - ldArea->axisPosition);
 
@@ -1498,7 +1508,7 @@ void CLowDoseDlg::ScopeUpdate(int magIndex, int spotSize, double intensity,
         ldArea->axisPosition = tiltAxisX;
         ConvertOneAxisToIS(ldArea->magIndex, tiltAxisX, ldArea->ISX, ldArea->ISY);
         SyncFocusAndTrial(m_iDefineArea);
-        FixUserPoint(shiftedA);
+        FixUserPoint(imBuf, shiftedA);
         ManageAxisPosition();
       }
     
@@ -1546,7 +1556,8 @@ BOOL CLowDoseDlg::ImageAlignmentChange(float &newX, float &newY,
   // If this is image from define area, constrain shift to axis and revise the
   // alignment values
   if (UsefulImageInA() > 0) {
-    SnapCameraShiftToAxis(shiftX, shiftY, false);
+    SnapCameraShiftToAxis(mImBufs, shiftX, shiftY, false, mWinApp->GetCurrentCamera(),
+      m_bRotateAxis, m_iAxisAngle);
     newX = oldX + shiftX;
     newY = oldY + shiftY;
   }
@@ -1576,7 +1587,7 @@ BOOL CLowDoseDlg::ImageAlignmentChange(float &newX, float &newY,
   // Fix up user points and do not draw
   // Need to set the shifts now for the fix to work - could unset them but what's the point?
   mImBufs->mImage->setShifts(newX, newY);
-  FixUserPoint(-1);
+  FixUserPoint(mImBufs, -1);
   mIgnoreIS = true;
   return true;
 }
@@ -1584,38 +1595,62 @@ BOOL CLowDoseDlg::ImageAlignmentChange(float &newX, float &newY,
 // If there is a change in user point, possibly snap to axis and affect shifts
 void CLowDoseDlg::UserPointChange(float &ptX, float &ptY, EMimageBuffer *imBuf)
 {
-  ScaleMat bInv;
-  float shiftX, shiftY, offsetX, offsetY;
-  double delISX, delISY;
+  ScaleMat aMat, aInv;
+  float shiftX, shiftY, offsetX, offsetY, xcen, ycen, scale, rotation, specX, specY;
+  double newAxis;
   int nx, ny, conSet;
   LowDoseParams *ldArea = &mLDParams[m_iDefineArea];
-  
-  if (!mTrulyLowDose || !m_iDefineArea || !((UsefulImageInA() && imBuf == mImBufs) ||
-    ((imBuf->mCaptured > 0 || imBuf->ImageWasReadIn()) && imBuf->mConSetUsed == 0 && 
-      imBuf->mLowDoseArea)))
+  StateParams state;
+  CMapDrawItem *item;
+  bool navArea = mWinApp->mMainView->GetDrewLDAreasAtNavPt();
+
+  if (!mTrulyLowDose || !(m_iDefineArea || navArea) || !UsableDefineImageInAOrView(imBuf))
     return;
-  bInv = mShiftManager->CameraToIS(mImBufs->mMagInd);
-  if (!bInv.xpx)
+
+  // Get the focus position that applies here, and a modified camera to specimen matrix
+  mWinApp->mNavHelper->FindFocusPosForCurrentItem(state, !navArea);
+  aMat = mShiftManager->SpecimenToCamera(state.camIndex, imBuf->mMagInd);
+  if (!aMat.xpx)
     return;
+  mShiftManager->GetScaleAndRotationForFocus(imBuf, scale, rotation);
+  aMat = mShiftManager->MatScaleRotate(aMat, scale, rotation);
+  aInv = MatInv(aMat);
 
   // Get offset from center of display area and snap it to axis; revise user point
   imBuf->mImage->getShifts(shiftX, shiftY);
   imBuf->mImage->getSize(nx, ny);
-  offsetX = ptX + shiftX - nx / 2.f;
-  offsetY = ptY + shiftY - ny / 2.f;
-  SnapCameraShiftToAxis(offsetX, offsetY, imBuf->mConSetUsed == 0);
-  ptX = offsetX + nx / 2.f - shiftX;
-  ptY = offsetY + ny / 2.f - shiftY;
+  xcen = (float)nx / 2.f;
+  ycen = (float)ny / 2.f;
+  if (navArea)
+    mWinApp->mMainView->GetCenterForLDAreas(xcen, ycen);
+  offsetX = ptX + shiftX - xcen;
+  offsetY = ptY + shiftY - ycen;
+  SnapCameraShiftToAxis(imBuf, offsetX, offsetY, imBuf->mConSetUsed == 0, state.camIndex,
+    state.rotateAxis, state.axisRotation);
+  ptX = offsetX + xcen - shiftX;
+  ptY = offsetY + ycen - shiftY;
 
-  // Convert to a change in image shift and use that to modify the mode shift
+  // Convert to a change in specimen shift and use that to set item shift and other focus
+  // position parameters or modify the mode shift
   conSet = mWinApp->mCamera->ConSetToLDArea(imBuf->mConSetUsed);
-  delISX = imBuf->mBinning * (bInv.xpx * offsetX - bInv.xpy * offsetY);
-  delISY = imBuf->mBinning * (bInv.ypx * offsetX - bInv.ypy * offsetY);
-
-  ldArea->axisPosition = mLDParams[conSet].axisPosition +
-    ConvertOneIStoAxis(imBuf->mMagInd, delISX, delISY);
-  ConvertOneAxisToIS(ldArea->magIndex, ldArea->axisPosition, ldArea->ISX, ldArea->ISY);
-  SyncFocusAndTrial(m_iDefineArea);
+  mShiftManager->ApplyScaleMatrix(aInv, offsetX, -offsetY, specX, specY);
+  newAxis = imBuf->mBinning * (specX < 0 ? -1 : 1.) * sqrt(specX * specX + specY * specY);
+  if (navArea) {
+    item = mWinApp->mNavigator->GetCurrentItem();
+    item->mFocusAxisPos = (float)newAxis;
+    item->mRotateFocusAxis = state.rotateAxis;
+    item->mFocusAxisAngle = state.axisRotation;
+    item->mFocusXoffset = state.focusXoffset;
+    item->mFocusYoffset = state.focusYoffset;
+    mWinApp->mNavigator->SetChanged(true);
+    mWinApp->mNavigator->UpdateListString(mWinApp->mNavigator->GetCurrentIndex());
+  } else {
+    ldArea->axisPosition = mLDParams[conSet].axisPosition + newAxis;
+    if (m_bRotateAxis)
+      m_iAxisAngle = state.axisRotation;
+    ConvertOneAxisToIS(ldArea->magIndex, ldArea->axisPosition, ldArea->ISX, ldArea->ISY);
+    SyncFocusAndTrial(m_iDefineArea);
+  }
 
   /*
   CString message;
@@ -1629,7 +1664,7 @@ void CLowDoseDlg::UserPointChange(float &ptX, float &ptY, EMimageBuffer *imBuf)
   */
 
   // If displaying the define area, shift this point to center
-  if (UsefulImageInA() > 0) {
+  if (UsefulImageInA() > 0 && imBuf == mImBufs) {
     imBuf->mImage->setShifts(shiftX - offsetX, shiftY - offsetY);
     imBuf->SetImageChanged(1);
   }
@@ -1652,6 +1687,7 @@ void CLowDoseDlg::OnKillfocusEditposition()
   double newAxis, specX, maxRange;
   int shiftedA;
   LowDoseParams *ldArea = &mLDParams[m_iDefineArea];
+  EMimageBuffer *imBuf = mWinApp->mMainView->GetActiveImBuf();
 
   UpdateData(true);
   mWinApp->RestoreViewFocus();
@@ -1667,7 +1703,7 @@ void CLowDoseDlg::OnKillfocusEditposition()
   newAxis = specX + mLDParams[3].axisPosition;
   
   // If define area is in buffer A, shift it by the change in mode shift
-  shiftedA = UsefulImageInA() > 0 ? 1 : 0;
+  shiftedA = (UsefulImageInA() > 0 && imBuf == mImBufs) ? 1 : 0;
   if (shiftedA) 
     ShiftImageInA(newAxis - ldArea->axisPosition);
 
@@ -1679,7 +1715,7 @@ void CLowDoseDlg::OnKillfocusEditposition()
 
   // Output new image shift if the defined area is current
   ApplyNewISifDefineArea();
-  FixUserPoint(shiftedA);
+  FixUserPoint(imBuf, shiftedA);
   ManageAxisPosition();
   SEMTrace('W', "OnKillfocusEditposition setting axis IS");
 }
@@ -1708,22 +1744,28 @@ void CLowDoseDlg::AddDefineAreaPoint()
   if (!m_iDefineArea)
     return;
   mImBufs->mHasUserPt = true;
-  FixUserPoint(-1);
+  FixUserPoint(mImBufs, -1);
 }
 
 // Redisplay the user point at center of define area if there is one, or at correct point
 // in the view area
-void CLowDoseDlg::FixUserPoint(int needDraw)
+void CLowDoseDlg::FixUserPoint(EMimageBuffer *imBuf, int needDraw)
 {
   ScaleMat aMat;
-  float shiftX, shiftY, offsetX, offsetY;
+  float shiftX, shiftY, offsetX, offsetY, scale, rotation;
   int nx, ny, conSet;
   double delAxis, delX, delY;
+  float xcen, ycen;
+  bool drawZero = needDraw > 0;
+  StateParams state;
+  bool navArea = mWinApp->mMainView->GetDrewLDAreasAtNavPt() && !m_iDefineArea;
 
-  if (mImBufs->mHasUserPt && UsefulImageInA()) {
-    mImBufs->mImage->getShifts(shiftX, shiftY);
-    mImBufs->mImage->getSize(nx, ny);
-    if (UsefulImageInA() > 0) {
+  if (imBuf->mHasUserPt && (UsableDefineImageInAOrView(imBuf) || navArea)) {
+    imBuf->mImage->getShifts(shiftX, shiftY);
+    imBuf->mImage->getSize(nx, ny);
+    xcen = (float)nx / 2.f;
+    ycen = (float)ny / 2.f;
+    if (UsefulImageInA() > 0 && imBuf == mImBufs) {
 
       // If defining area is shown, put point in the middle of display
       offsetX = 0;
@@ -1732,54 +1774,85 @@ void CLowDoseDlg::FixUserPoint(int needDraw)
 
       // for any other area, find location of point relative to center of that area
       aMat = mShiftManager->SpecimenToCamera(mWinApp->GetCurrentCamera(),
-        mImBufs->mMagInd);
+        imBuf->mMagInd);
       if (!aMat.xpx)
         return;
-      conSet = mWinApp->mCamera->ConSetToLDArea(mImBufs->mConSetUsed);
-      delAxis = mLDParams[m_iDefineArea].axisPosition - mLDParams[conSet].axisPosition;
+      mShiftManager->GetScaleAndRotationForFocus(imBuf, scale, rotation);
+      aMat = mShiftManager->MatScaleRotate(aMat, scale, rotation);
+      conSet = mWinApp->mCamera->ConSetToLDArea(imBuf->mConSetUsed);
+      mWinApp->mNavHelper->FindFocusPosForCurrentItem(state, !navArea);
+      delAxis = state.focusAxisPos;
       delX = delAxis;
       delY = 0.;
       if (m_bRotateAxis && m_iAxisAngle) {
-        delX = delAxis * cos(DTOR * m_iAxisAngle);
-        delY = delAxis * sin(DTOR * m_iAxisAngle);
+        delX = delAxis * cos(DTOR * state.axisRotation);
+        delY = delAxis * sin(DTOR * state.axisRotation);
       }
-      offsetX = (float)(aMat.xpx * delX + aMat.xpy * delY) / mImBufs->mBinning;
-      offsetY = (float)(aMat.ypx * delX + aMat.ypy * delY) / mImBufs->mBinning;
+      offsetX = (float)(aMat.xpx * delX + aMat.xpy * delY) / imBuf->mBinning;
+      offsetY = (float)(aMat.ypx * delX + aMat.ypy * delY) / imBuf->mBinning;
+      if (navArea)
+        mWinApp->mMainView->GetCenterForLDAreas(xcen, ycen);
     }
-    mImBufs->mUserPtX = offsetX + nx / 2.f - shiftX;
-    mImBufs->mUserPtY = -offsetY + ny / 2.f - shiftY;
+    imBuf->mUserPtX = offsetX + xcen - shiftX;
+    imBuf->mUserPtY = -offsetY + ycen - shiftY;
     if (!needDraw) 
       needDraw = 1;
   } 
 
   // Draw if set a point or if asked to by caller, but not if asked not to (-1)
-  if (needDraw > 0)
-    mWinApp->SetCurrentBuffer(0);
+  if (needDraw > 0) {
+    if (drawZero)
+      mWinApp->SetCurrentBuffer(0);
+    else
+      mWinApp->mMainView->DrawImage();
+    }
 }
 
 // return 1 if A has an image from defining area, or -1 if it is from another area
+// which would be View, since Record is now excluded
 int CLowDoseDlg::UsefulImageInA()
 {
   int conSet = mWinApp->mCamera->ConSetToLDArea(mImBufs->mConSetUsed);
-  if (!mImBufs->mBinning || !mImBufs->mCaptured || !mImBufs->mMagInd)
+  if (!mImBufs->mBinning || !mImBufs->mCaptured || !mImBufs->mMagInd || 
+    conSet == RECORD_CONSET)
     return 0;
-  if (conSet == m_iDefineArea || (m_bTieFocusTrial &&
-    conSet == 3 - m_iDefineArea))
+  if (m_iDefineArea && (conSet == m_iDefineArea || (m_bTieFocusTrial &&
+    conSet == 3 - m_iDefineArea)))
     return 1;
   return -1;
 }
 
+// Return true if there is "useful" image in A and A is the given buffer, or if
+// this is a View that would be suitable for editing focus position
+bool CLowDoseDlg::UsableDefineImageInAOrView(EMimageBuffer *imBuf)
+{
+  return (UsefulImageInA() && imBuf == mImBufs) || ViewImageOKForEditingFocus(imBuf);
+}
+
+// Return true if buffer has a low dose view image with the right mag, and could thus
+// be used for adjusting focus position
+bool CLowDoseDlg::ViewImageOKForEditingFocus(EMimageBuffer * imBuf)
+{
+  return ((imBuf->mCaptured > 0 || imBuf->mCaptured == BUFFER_MONTAGE_OVERVIEW ||
+    imBuf->mCaptured == BUFFER_MONTAGE_PIECE || imBuf->ImageWasReadIn()) &&
+    imBuf->mConSetUsed == 0 && imBuf->mLowDoseArea &&
+    imBuf->mMagInd == mLDParams[0].magIndex);
+}
+
 // Given a shift on camera, get the X coordinate on specimen and convert that
-// back to a shift on the camera along the tilt axis
-void CLowDoseDlg::SnapCameraShiftToAxis(float &shiftX, float &shiftY, bool viewImage)
+// back to a shift on the camera along the tilt axis or interarea axis
+void CLowDoseDlg::SnapCameraShiftToAxis(EMimageBuffer *imBuf, float &shiftX, 
+  float &shiftY, bool viewImage, int camIndex, BOOL &rotateAxis, int &axisAngle)
 {
   ScaleMat aMat, aInv;
   double specX, specY, tiltAxisX, maxRange;
+  float scale, rotation;
 
-  aMat = mShiftManager->SpecimenToCamera(mWinApp->GetCurrentCamera(),
-    mImBufs->mMagInd);
+  aMat = mShiftManager->SpecimenToCamera(camIndex, imBuf->mMagInd);
   if (!aMat.xpx)
     return;
+  mShiftManager->GetScaleAndRotationForFocus(imBuf, scale, rotation);
+  aMat = mShiftManager->MatScaleRotate(aMat, scale, rotation);
   aInv = mShiftManager->MatInv(aMat);
   
   // We can ignore the binning.  But we do need to invert Y going in and out
@@ -1791,19 +1864,21 @@ void CLowDoseDlg::SnapCameraShiftToAxis(float &shiftX, float &shiftY, bool viewI
   }
 
   // If rotate axis is on and it is View, change to the new angle of the point
-  if (m_bRotateAxis && viewImage) {
-    ConvertAxisPosition(false);
-    m_iAxisAngle = B3DNINT(atan2(specY, specX) / DTOR);
-    if (m_iAxisAngle < -90)
-      m_iAxisAngle += 180;
-    if (m_iAxisAngle > 90)
-      m_iAxisAngle -= 180;
-    ConvertAxisPosition(true);
+  if (rotateAxis && viewImage) {
+    if (m_iDefineArea)
+      ConvertAxisPosition(false);
+    axisAngle = B3DNINT(atan2(specY, specX) / DTOR);
+    if (axisAngle < -90)
+      axisAngle += 180;
+    if (axisAngle > 90)
+      axisAngle -= 180;
+    if (m_iDefineArea)
+      ConvertAxisPosition(true);
   } else {
 
     // Otherwise if rotating get the component on the interarea axis, if not rotating
     // use just the X component only and get the shift on image back
-    if (m_bRotateAxis && m_iAxisAngle) {
+    if (rotateAxis && axisAngle) {
       tiltAxisX = specX * cos(DTOR * m_iAxisAngle) + specY * sin(DTOR * m_iAxisAngle);
       specX = tiltAxisX * cos(DTOR * m_iAxisAngle);
       specY = tiltAxisX * sin(DTOR * m_iAxisAngle);
@@ -1976,20 +2051,21 @@ void CLowDoseDlg::SyncFilterSettings(int inArea, FilterParams *filtParam)
 // being defined.  type = 0 for the area, 1 for Record.  Binning and sizeX, sizeY
 // describe the View image.  Four corner points in image coordinates are returned
 // in corner[XY], and for the define area, 
-int CLowDoseDlg::DrawAreaOnView(int type, EMimageBuffer *imBuf, 
+int CLowDoseDlg::DrawAreaOnView(int type, EMimageBuffer *imBuf, StateParams &state,
                                 float * cornerX, float * cornerY,
                                 float & cenX, float & cenY, float &radius)
 {
   int binning = imBuf->mBinning;
   int sizeX = imBuf->mImage->getWidth();
   int sizeY = imBuf->mImage->getHeight();
-  int curCam = mWinApp->GetCurrentCamera();
-  ControlSet *conSets = mWinApp->GetConSets();
+  int curCam = state.camIndex;
+  ControlSet *conSets = mWinApp->GetCamConSets() + curCam * MAX_CONSETS;
   ControlSet *csp;
   ScaleMat aMat, vMat;
-  int boxArea, cenArea, delX, delY, diamSq;
+  int boxArea, cenArea, delX, delY, diamSq, top, left, bottom, right, camXcen, camYcen;
   float scale, rotation, pixel;
-  if (!m_iDefineArea || !mTrulyLowDose)
+  bool drawingNav = mWinApp->mMainView->GetDrewLDAreasAtNavPt();
+  if ((!m_iDefineArea && !drawingNav) || !mTrulyLowDose)
     return 0;
   vMat = mShiftManager->SpecimenToCamera(curCam, mLDParams[0].magIndex);
   mShiftManager->GetScaleAndRotationForFocus(imBuf, scale, rotation);
@@ -1997,39 +2073,54 @@ int CLowDoseDlg::DrawAreaOnView(int type, EMimageBuffer *imBuf,
 
   // First fill the corner array with the actual define area
   boxArea = type ? RECORD_CONSET : m_iDefineArea;
+  if (drawingNav && !type)
+    boxArea = FOCUS_CONSET;
   csp = &conSets[boxArea];
+  top = csp->top;
+  bottom = csp->bottom;
+  left = csp->left;
+  right = csp->right;
   aMat = mShiftManager->CameraToSpecimen(mLDParams[boxArea].magIndex);
   if (!aMat.xpx || !vMat.xpx)
     return 0;
-  AreaAcqCoordToView(boxArea, binning, sizeX, sizeY, aMat, vMat, 
-    csp->left, csp->top, cornerX[0], cornerY[0]);
-  AreaAcqCoordToView(boxArea, binning, sizeX, sizeY, aMat, vMat, 
-    csp->right, csp->top, cornerX[1], cornerY[1]);
-  AreaAcqCoordToView(boxArea, binning, sizeX, sizeY, aMat, vMat, 
-    csp->right, csp->bottom, cornerX[2], cornerY[2]);
-  AreaAcqCoordToView(boxArea, binning, sizeX, sizeY, aMat, vMat, 
-    csp->left, csp->bottom, cornerX[3], cornerY[3]);
+  if (boxArea == FOCUS_CONSET)
+    mWinApp->mNavHelper->ModifySubareaForOffset(curCam, state.focusXoffset,
+      state.focusYoffset, left, top, right, bottom);
 
-  if (type)
+  AreaAcqCoordToView(boxArea, binning, sizeX, sizeY, aMat, vMat, 
+    left, top, state, cornerX[0], cornerY[0]);
+  AreaAcqCoordToView(boxArea, binning, sizeX, sizeY, aMat, vMat, 
+    right, top, state, cornerX[1], cornerY[1]);
+  AreaAcqCoordToView(boxArea, binning, sizeX, sizeY, aMat, vMat, 
+    right, bottom, state, cornerX[2], cornerY[2]);
+  AreaAcqCoordToView(boxArea, binning, sizeX, sizeY, aMat, vMat, 
+    left, bottom, state, cornerX[3], cornerY[3]);
+
+  if (type > 0)
     return boxArea;
   
   // Get squared diameter of area for radius
-  cenArea = m_iDefineArea;
-  delX = csp->right - csp->left;
-  delY = csp->bottom - csp->top;
+  cenArea = boxArea;
+  delX = right - left;
+  delY = bottom - top;
   diamSq = delX * delX + delY * delY;
+  camXcen = (left + right) / 2;
+  camYcen = (bottom + top) / 2;
 
-  // If focus/trial tied, find which one has bigger radius
+  // If focus/trial tied, find which one has bigger radius, set the center from the 
+  // bigger one too
   if (m_bTieFocusTrial) {
-    delX = conSets[3 - m_iDefineArea].right - conSets[3 - m_iDefineArea].left;
-    delY = conSets[3 - m_iDefineArea].bottom - conSets[3 - m_iDefineArea].top;
+    delX = conSets[3 - boxArea].right - conSets[3 - boxArea].left;
+    delY = conSets[3 - boxArea].bottom - conSets[3 - boxArea].top;
     if (delX * delX + delY * delY > diamSq) {
-      cenArea = 3 - m_iDefineArea;
+      cenArea = 3 - boxArea;
       diamSq = delX * delX + delY * delY;
       csp = &conSets[cenArea];
       aMat = mShiftManager->CameraToSpecimen(mLDParams[cenArea].magIndex);
       if (!aMat.xpx)
         return 0;
+      camXcen = (csp->left + csp->right) / 2;
+      camYcen = (csp->bottom + csp->top) / 2;
     }
   }
 
@@ -2039,8 +2130,8 @@ int CLowDoseDlg::DrawAreaOnView(int type, EMimageBuffer *imBuf,
     pixel = binning * mShiftManager->GetPixelSize(curCam, mLDParams[0].magIndex);
   radius = (float)(sqrt(0.25 * diamSq) * 
     mShiftManager->GetPixelSize(curCam, mLDParams[cenArea].magIndex) / pixel);
-  AreaAcqCoordToView(cenArea, binning, sizeX, sizeY, aMat, vMat, 
-    (csp->left + csp->right) / 2, (csp->bottom + csp->top) / 2, cenX, cenY);
+  AreaAcqCoordToView(boxArea, binning, sizeX, sizeY, aMat, vMat, 
+    camXcen, camYcen, state, cenX, cenY);
 
   return boxArea;
 }
@@ -2048,10 +2139,10 @@ int CLowDoseDlg::DrawAreaOnView(int type, EMimageBuffer *imBuf,
 // Convert from camera acquisition coordinates (inverted Y) in the given inArea to
 // image coordinates in the View image with given sizeX, sizeY and binning
 void CLowDoseDlg::AreaAcqCoordToView(int inArea, int binning, int sizeX, int sizeY,
-                                     ScaleMat aMat, ScaleMat vMat, int acqX, int acqY,
-                                     float & imX, float & imY)
+  ScaleMat aMat, ScaleMat vMat, int acqX, int acqY,
+  StateParams &state, float & imX, float & imY)
 {
-  CameraParameters *camP = mWinApp->GetCamParams() + mWinApp->GetCurrentCamera();
+  CameraParameters *camP = mWinApp->GetCamParams() + state.camIndex;
   double camX, camY, specX, specY, delX, delY;
 
   // Convert to centered camera coordinates
@@ -2059,11 +2150,14 @@ void CLowDoseDlg::AreaAcqCoordToView(int inArea, int binning, int sizeX, int siz
   camY = camP->sizeY / 2. - acqY;
 
   // Convert to specimen coordinates and add difference of axis positions
-  delX = mLDParams[inArea].axisPosition - mLDParams[0].axisPosition;
+  if (inArea == FOCUS_CONSET)
+    delX = state.focusAxisPos;
+  else
+    delX = mLDParams[inArea].axisPosition - mLDParams[0].axisPosition;
   delY = 0.;
-  if (m_bRotateAxis && m_iAxisAngle) {
-    delY = delX * sin(DTOR * m_iAxisAngle);
-    delX = delX * cos(DTOR * m_iAxisAngle);
+  if (state.rotateAxis && state.axisRotation) {
+    delY = delX * sin(DTOR * state.axisRotation);
+    delX = delX * cos(DTOR * state.axisRotation);
   }
   specX = aMat.xpx * camX + aMat.xpy * camY + delX;
   specY = aMat.ypx * camX + aMat.ypy * camY + delY;

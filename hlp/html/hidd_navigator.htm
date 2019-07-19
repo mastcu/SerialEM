@@ -326,8 +326,14 @@
           To set a stored position, select the item in the table and press <B>Scheduled</B> in the <A HREF="hidd_statedlg.htm">Imaging State dialog box</A>.&nbsp; 
           You can see the position by reloading a View map at that position, or taking a 
           new View image there, and selecting Focus as the area to be defined in the Low 
-          Dose control panel.&nbsp; At that you can also modify the position by clicking 
-          in such a View image, and store it by pressing this button again.</P>
+          Dose control panel.&nbsp; At that point you can also modify the position by clicking 
+          in such a View image, and store it by pressing this button again.&nbsp; Set the 
+          Edit Focus description below for an alternative way to see and adjust the Focus 
+          positions for items, which should be more convenient when working with maps.</P>
+      <P>If you turn off&nbsp; &#39;Acquire&#39; or &#39;Tilt series&#39; for an item, the stored position 
+          will be removed and not restored if you turn the check box back on, so toggling 
+          the acquisition is a way to delete a stored position.&nbsp; When items are 
+          acquired, their stored positions are not removed.</P>
       <P><B>(Set) Filename</B></P>
       <P>Use this button to change the name of the file that is set to be opened for this 
         item or group. The existing filename is shown just to the right of this button.</P>
@@ -346,7 +352,7 @@
       <P><B>(Draw:) None</B></P>
       <P>Use this check box to turn off drawing of all items.</P>
     <P><b>(Draw:) Labels</b></P>
-    <P>Use this checkbox to turn on or off the drawing of labels.&nbsp; With it off, 
+    <P>Use this check box to turn on or off the drawing of labels.&nbsp; With it off, 
       no labels will appear.&nbsp; With it on, labels will appear except for 
       closely-spaced points in 
       groups larger than a threshold size that can be set with the 
@@ -378,7 +384,7 @@
         montaging is on, otherwise by the size of a Record image at the current 
         magnification or at the magnification of the Record area when in Low Dose mode.</P>
     <P><B><A NAME="navgb_editmode"></A>Edit Mode</B></P>
-    <P>Use this button to turn on a mode in which the mouse can be used for editing 
+    <P>Use this check box to turn on a mode in which the mouse can be used for editing 
       points in a way similar to modeling mode in 3dmod.&nbsp; Ordinarily, Ctrl-left 
       button click can be used to select the nearest point or polygon as the current 
       item, which is drawn with thicker lines in the display.&nbsp; In Edit mode:</P>
@@ -401,6 +407,43 @@
         in Edit mode, and the left button will no longer select a point during those 
         operations.</li>
     </ul>
+      <p>
+          <strong>Edit Focus</strong></p>
+      <p>
+          Turn on this check box to be able to visualize and adjust the position of the 
+          Low Dose Focus area for individual Navigator items by clicking in View images.&nbsp; 
+          The View image can be a single frame image, a montage overview, or a piece from 
+          a montage map loaded for a selected point.&nbsp; When the current item is marked 
+          for acquisition (A or TS), a box representing the Record area is drawn with the 
+          item at its center, and a box and circle for the Focus area are drawn at the 
+          appropriate distance from the item, similar to what is shown when defining the 
+          Focus area with the button in the Low Dose control panel but with dashed instead 
+          of solid lines.&nbsp; The marker point will generally be placed at the center of 
+          the Focus area.&nbsp; Clicking with the left mouse button to set the marker will 
+          move the Focus area.&nbsp; If the axis between Low Dose areas is not free to 
+          rotate, only the position on the tilt axis will change.&nbsp; If axis rotation 
+          is enabled for this item&#39;s Focus position, the angle will be changed as well.</p>
+      <p>
+          The Focus position initially shown for an item will be based on the position 
+          stored for that item, if any; or on the position stored for the last preceding 
+          acquisition item having a defined Focus position, if any.&nbsp; If no positions 
+          have been store for the current or preceding items , the position shown will be 
+          that of Focus area currently defined&nbsp; in the Low Dose panel.&nbsp; When you 
+          change the position for an item, a new position will be stored for that item or 
+          the existing position will be updated.&nbsp; Although these stored positions 
+          include a possible subarea offset in the Focus camera parameters, clicking will 
+          change only the image shift to the Focus area.</p>
+      <p>
+          There are some restrictions.&nbsp; Low dose mode must be on.&nbsp; &#39;Edit Focus&#39; 
+          and &#39;Edit mode&#39; are mutually exclusive and turn each other off when selected.&nbsp; 
+          Turning on &#39;Define area&#39; in the Low Dose panel disables the editing of Focus 
+          areas here, but it is enabled again when the &#39;Define area&#39; returns to &#39;None&#39;.&nbsp; 
+          There is no way to enable axis rotation here if it is not already enabled.&nbsp; 
+          To do so, you would have to turn on &#39;Define area&#39; and enable rotation in the Low 
+          Dose panel, then use the <strong>Focus</strong> button described above to store the 
+          parameters currently defined in that panel.&nbsp; Similarly, to change the 
+          camera subarea, you would need to use the <strong>Focus</strong> button after 
+          changing the camera parameters.</p>
       <P><i><A NAME="nav_action_buttons"></A><B><FONT size="3">Action Buttons</FONT></B></i></P>
       <P><B>Add Stage Pos</B></P>
       <P>Use this button to add the current stage position as a point item. Note that the 

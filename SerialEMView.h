@@ -28,11 +28,11 @@ typedef struct scale_bar {
 
 class DLL_IM_EX CSerialEMView : public CView
 {
- protected: // create from serialization only
+protected: // create from serialization only
   CSerialEMView();
   DECLARE_DYNCREATE(CSerialEMView)
 
-	// Attributes
+  // Attributes
 public:
   CSerialEMDoc* GetDocument();
 
@@ -51,16 +51,16 @@ protected:
 
   // Implementation
 public:
-  void StopBeingActiveStack() {mStackWindow = false;};
+  void StopBeingActiveStack() { mStackWindow = false; };
   void CloseFrame();
-	void StageToImage(EMimageBuffer *imBuf, float inX, float inY, float &outX, float &outY, 
+  void StageToImage(EMimageBuffer *imBuf, float inX, float inY, float &outX, float &outY,
     int pcInd = -1);
-	BOOL ConvertMousePoint(CRect *rect, KImage *image, CPoint *point, float &outX, float &outY);
-	void MakeDrawPoint(CRect *rect, KImage *image, float inX, float inY, CPoint *point, bool skipShift = false);
+  BOOL ConvertMousePoint(CRect *rect, KImage *image, CPoint *point, float &outX, float &outY);
+  void MakeDrawPoint(CRect *rect, KImage *image, float inX, float inY, CPoint *point, bool skipShift = false);
   void DrawCross(CClientDC *cdc, CPen *pNewPen, CPoint point, int crossLen);
-  void DrawCircle(CClientDC *cdc, CPen *pNewPen, CRect *rect, KImage *image, float cenX, 
+  void DrawCircle(CClientDC *cdc, CPen *pNewPen, CRect *rect, KImage *image, float cenX,
     float cenY, float radius, bool skipShift = false);
-  void DrawEllipse(CClientDC *cdc, CPen *pNewPen, CRect *rect, KImage *image, float cenX, 
+  void DrawEllipse(CClientDC *cdc, CPen *pNewPen, CRect *rect, KImage *image, float cenX,
     float cenY, float radius1, float radius2, float angle, bool drawHalf);
   float GetBufferBinning();
   void FindEffectiveZoom();
@@ -72,6 +72,8 @@ public:
   void ZoomDown();
   void ZoomUp();
   SetMember(bool, FlashNextDisplay);
+  GetMember(bool, DrewLDAreasAtNavPt);
+  void GetCenterForLDAreas(float &xcen, float &ycen) { xcen = mNavLDAreasXcenter; ycen = mNavLDAreasYcenter; };
   virtual ~CSerialEMView();
   double GetZoom() {return mZoom; };
   void SetImBufIndex(int inImBufIndex) {mImBufIndex = inImBufIndex; };
@@ -143,6 +145,10 @@ private:
   bool mFlashNextDisplay;        // Flag to draw yellow screen on next draw
   int mWheelDeltaPending;        // Delta sum below threshold
   BOOL mNavUsedLastLButtonUp;    // Flag that Navigator used last button up event
+  bool mDrewLDAreasAtNavPt;      // Flag that low dose areas were drawn at a Navigator pt
+  float mNavLDAreasXcenter;      // Image position around which areas were drawn
+  float mNavLDAreasYcenter;
+
 protected:
 
   // Generated message map functions
@@ -189,6 +195,8 @@ public:
     FloatVec &convX, FloatVec &convY, float delXstage, float delYstage, 
     float delPtX, float delPtY, FloatVec *drawnX, FloatVec *drawnY);
   int FitCtfAtMarkedPoint(EMimageBuffer *imBuf, CString &lenstr, double &defocus, FloatVec &radii);
+  void DrawLowDoseAreas(CClientDC &cdc, CRect &rect, EMimageBuffer *imBuf, float xOffset, 
+    float yOffset);
 };
 
 #ifndef _DEBUG  // debug version in SerialEMView.cpp

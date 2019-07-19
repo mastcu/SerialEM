@@ -250,6 +250,7 @@ private:
   CNavHelper *mHelper;
   NavParams *mParam;
   CCameraController *mCamera;
+  CLowDoseDlg *mLowDoseDlg;
 
   int mListBorderX, mListBorderY;
   int mNoteBorderX;  int mNoteHeight;
@@ -389,6 +390,7 @@ private:
   float mLastGridInSpacing;  // Spacing entered for regular fill of polygon
   int mLastGridAwayFromFocus;  // Whether last grid of points was laid out away from focus
   float mLastGridPolyArea;     // Area of polygon/map in ast grid of points filling one
+  bool mEditFocusEnabled;    // Keep track if Edit Focus is enabled, required for drawing
 
 public:
   BOOL RegistrationChangeOK(void);
@@ -581,6 +583,11 @@ float ContourArea(float *ptx, float *pty, int numPoints);
 void ManageListHeader(CString str = "Label");
 CButton m_butNavFocusPos;
 afx_msg void OnButNavFocusPos();
+CButton m_butEditFocus;
+BOOL m_bEditFocus;
+afx_msg void OnEditFocus();
+SetMember(BOOL, Changed);
+void AddFocusAreaPoint(bool drawFirst);
 };
 
 //{{AFX_INSERT_LOCATION}}

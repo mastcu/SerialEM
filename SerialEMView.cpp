@@ -238,7 +238,7 @@ void CSerialEMView::DrawImage(void)
 {
   int iSrcWidth, iSrcHeight, iDestWidth, iDestHeight, crossLen, xSrc, ySrc, needWidth;
   int tmpWidth, tmpHeight, ierr, ifilt, numLines, thick, loop;
-  float cenX, cenY, radius, filtMean = 128., filtSD, boost, targetSD = 40.;
+  float cenX, cenY, filtMean = 128., filtSD, boost, targetSD = 40.;
   float crossXoffset = 0., crossYoffset = 0.;
   double defocus;
   unsigned char **filtPtrs;
@@ -248,12 +248,12 @@ void CSerialEMView::DrawImage(void)
   bool bufferOK, filtering = false;
   CNavigatorDlg *navigator = mWinApp->mNavigator;
   CProcessImage *processImg = mWinApp->mProcessImage;
+  CArray<CMapDrawItem *, CMapDrawItem *> *itemArray = NULL;
   FloatVec zeroRadii, zeroRadii2;
   CPoint point;
   CString letString, firstLabel, lastLabel;
   COLORREF bkgColor = RGB(48, 0, 48);
   COLORREF flashColor = RGB(192, 192, 0);
-  COLORREF areaColors[3] = {RGB(255, 255, 0), RGB(255, 0, 0), RGB(0, 255, 0)};
   int scaled5 = mWinApp->ScaleValueForDPI(5);
   int scaled10 = mWinApp->ScaleValueForDPI(10);
   int scaled140 = mWinApp->ScaleValueForDPI(140);
@@ -582,8 +582,8 @@ void CSerialEMView::DrawImage(void)
       }
 
       // Dose rate output for direct detector and channel name for STEM
-      bufferOK = !imBuf->IsProcessed() && (imBuf->mCaptured > 0 || 
-        imBuf->mCaptured == BUFFER_CALIBRATION || imBuf->mCaptured == BUFFER_TRACKING ||
+      bufferOK = !imBuf->IsProcessed() && (imBuf->mCaptured > 0 || imBuf->ImageWasReadIn()
+        ||imBuf->mCaptured == BUFFER_CALIBRATION || imBuf->mCaptured == BUFFER_TRACKING ||
         imBuf->mCaptured == BUFFER_MONTAGE_CENTER || imBuf->mCaptured == BUFFER_ANCHOR ||
         imBuf->mCaptured == BUFFER_MONTAGE_PIECE);
       if (mMainWindow && imBuf->mCamera >= 0 && scaleCrit > 0 && (bufferOK ||
@@ -609,6 +609,18 @@ void CSerialEMView::DrawImage(void)
             if (!extra->mChannelName.IsEmpty())
               cdc.TextOut(scaled140, scaled10, extra->mChannelName);
           }
+
+          // Image black-white and mean if available
+          if (imBuf->mImageScale) {
+            letString.Format("B - W: %.5g - %.5g", imBuf->mImageScale->GetMinScale(),
+              imBuf->mImageScale->GetMaxScale());
+            if (imBuf->mSampleMean > EXTRA_VALUE_TEST) {
+              firstLabel.Format("  mean: %.5g", imBuf->mSampleMean);
+              letString += firstLabel;
+            }
+            cdc.TextOut(mWinApp->ScaleValueForDPI(25), 
+              rect.Height() - mWinApp->ScaleValueForDPI(40), letString);
+          }
       }
     } else {
       cdc.SelectObject(&mLabelFont);
@@ -624,33 +636,19 @@ void CSerialEMView::DrawImage(void)
     cdc.SetBkMode(defMode);
   }
 
+  // Get navigator array now so that we can tell if there is an LD area draw
+  if (navigator && !(mFFTWindow || imBuf->mCaptured == BUFFER_FFT ||
+    imBuf->mCaptured == BUFFER_LIVE_FFT || imBuf->mCaptured == BUFFER_AUTOCOR_OVERVIEW))
+    itemArray = GetMapItemsForImageCoords(imBuf, false);
+  mDrewLDAreasAtNavPt = itemArray && mAcquireBox && mAcquireBox->mNumPoints == 1;
+
   if (mMainWindow) {
 
-    // If this is a view image in low dose, draw record and trial/focus areas
-    if ((imBuf->mCaptured > 0 || imBuf->ImageWasReadIn()) &&
-      imBuf->mConSetUsed == 0 && imBuf->mLowDoseArea) {
-      float cornerX[4], cornerY[4];
-      for (int type  = 0; type < 2; type++) {
-        int area = mWinApp->mLowDoseDlg.DrawAreaOnView(type, imBuf,
-          cornerX, cornerY, cenX, cenY, radius);
-        if (area) {
-          CPen pnSolidPen (PS_SOLID, 1, areaColors[area - 1]);
-          CPen *pOldPen = cdc.SelectObject(&pnSolidPen);
-          for (int pt = 0; pt < 5; pt++) {
-            MakeDrawPoint(&rect, imBuf->mImage, cornerX[pt % 4], cornerY[pt % 4], &point,
-              true);
-            if (pt)
-              cdc.LineTo(point);
-            else
-              cdc.MoveTo(point);
-          }
-          cdc.SelectObject(pOldPen);
-
-          // Draw circle around center for area being defined
-          if (!type)
-            DrawCircle(&cdc, &pnSolidPen, &rect, imBuf->mImage, cenX, cenY, radius, true);
-        }
-      }
+    // If this is a view image in low dose, draw record and trial/focus areas as long as
+    // there won't be a 
+    if ((imBuf->mCaptured > 0 || imBuf->ImageWasReadIn()) && imBuf->mConSetUsed == 0 && 
+      imBuf->mLowDoseArea && !mDrewLDAreasAtNavPt) {
+      DrawLowDoseAreas(cdc, rect, imBuf, 0., 0.);
     }
   }
 
@@ -715,17 +713,12 @@ void CSerialEMView::DrawImage(void)
     && imBuf->mCaptured != BUFFER_STACK_IMAGE)
     DrawScaleBar(&cdc, &rect, imBuf);
 
-  if (!navigator || mFFTWindow || imBuf->mCaptured == BUFFER_FFT || 
-    imBuf->mCaptured == BUFFER_LIVE_FFT || imBuf->mCaptured == BUFFER_AUTOCOR_OVERVIEW)
+  if (!itemArray)
     return;
 
   // Now draw navigator items
   float ptX, ptY, lastStageX, lastStageY, acquireRadii[2], labelDistThresh = 40.;
   int lastGroupID = -1, lastGroupSize, size, numPoints;
-  CArray<CMapDrawItem *,CMapDrawItem *> *itemArray = GetMapItemsForImageCoords
-    (imBuf, false);
-  if (!itemArray)
-    return;
   int regMatch = imBuf->mRegistration ? 
     imBuf->mRegistration : navigator->GetCurrentRegistration();
   std::set<int> *selectedItems = navigator->GetSelectedItems();
@@ -770,12 +763,24 @@ void CSerialEMView::DrawImage(void)
     SetStageErrIfRealignedOnMap(imBuf, item);
     int crossLen = item->mType == ITEM_TYPE_POINT ? 9 : 5;
     CPen pnSolidPen(PS_SOLID, thick, item->GetColor(highlight));
-    if (item->mNumPoints == 1) {
 
-      // Draw a cross at a single point
+    // Single point
+    if (item->mNumPoints == 1) {
       StageToImage(imBuf, item->mPtX[0], item->mPtY[0], ptX, ptY, item->mPieceDrawnOn);
-      MakeDrawPoint(&rect, imBuf->mImage, ptX, ptY, &point);
-      DrawCross(&cdc, &pnSolidPen, point, crossLen);
+
+      // Draw low dose areas around current point
+      if (iDraw < 0 && mDrewLDAreasAtNavPt) {
+        cenX = imBuf->mImage->getWidth() / 2.f;
+        cenY = imBuf->mImage->getHeight() / 2.f;
+        DrawLowDoseAreas(cdc, rect, imBuf, ptX - cenX, ptY - cenY);
+        mNavLDAreasXcenter = ptX;
+        mNavLDAreasYcenter = ptY;
+      } else {
+
+        // Otherwise draw a cross at a single point
+        MakeDrawPoint(&rect, imBuf->mImage, ptX, ptY, &point);
+        DrawCross(&cdc, &pnSolidPen, point, crossLen);
+      }
     } else {
 
       // For a map, find the adjust that applies to the center, turn off adjustment for
@@ -1037,6 +1042,41 @@ void CSerialEMView::MakeDrawPoint(CRect *rect, KImage *image, float inX, float i
   point->x = (int)((inX + shiftX - mXSrc) * mZoom + mXDest);
   point->y = rect->Height() - 1 - (int)((pixMapY- mYSrc) * mZoom + mYDest) +
     ZoomedPixelYAdjustment(rect, image);
+}
+
+// Draw Record and area being defined for low dose
+void CSerialEMView::DrawLowDoseAreas(CClientDC &cdc, CRect &rect, EMimageBuffer *imBuf, 
+  float xOffset, float yOffset)
+{
+  COLORREF areaColors[3] = {RGB(255, 255, 0), RGB(255, 0, 0), RGB(0, 255, 0)};
+  float cornerX[4], cornerY[4], cenX, cenY, radius;
+  CPoint point;
+  StateParams state;
+  state.camIndex = mWinApp->GetCurrentCamera();
+  mWinApp->mNavHelper->FindFocusPosForCurrentItem(state, !mDrewLDAreasAtNavPt);
+  for (int type = 0; type < 2; type++) {
+    int area = mWinApp->mLowDoseDlg.DrawAreaOnView(type, imBuf, state,
+      cornerX, cornerY, cenX, cenY, radius);
+    if (area) {
+      CPen pnSolidPen(mDrewLDAreasAtNavPt ? PS_DASHDOT : PS_SOLID, 1, 
+        areaColors[area - 1]);
+      CPen *pOldPen = cdc.SelectObject(&pnSolidPen);
+      for (int pt = 0; pt < 5; pt++) {
+        MakeDrawPoint(&rect, imBuf->mImage, cornerX[pt % 4] + xOffset, 
+          cornerY[pt % 4] + yOffset, &point, true);
+        if (pt)
+          cdc.LineTo(point);
+        else
+          cdc.MoveTo(point);
+      }
+      cdc.SelectObject(pOldPen);
+
+      // Draw circle around center for area being defined
+      if (!type)
+        DrawCircle(&cdc, &pnSolidPen, &rect, imBuf->mImage, cenX + xOffset, 
+          cenY + yOffset, radius, true);
+    }
+  }
 }
 
 // Since coordinates are referenced to the bottom of the image when computing their
@@ -1499,7 +1539,8 @@ void CSerialEMView::OnLButtonUp(UINT nFlags, CPoint point)
 
       // Navigator gets first crack if it is either a legal point or a valid hit for
       // selection
-      if (mWinApp->mNavigator && (legal || (!(GetAsyncKeyState(VK_SHIFT) / 2) &&
+      if (!mDrewLDAreasAtNavPt && mWinApp->mNavigator && (legal || 
+        (!(GetAsyncKeyState(VK_SHIFT) / 2) &&
         (GetAsyncKeyState(VK_CONTROL) / 2 || mWinApp->mNavigator->InEditMode()))))
           mNavUsedLastLButtonUp = mWinApp->mNavigator->UserMousePoint(imBuf, shiftX,
             shiftY, mPointNearImageCenter, VK_LBUTTON);

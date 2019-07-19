@@ -1917,7 +1917,6 @@ void CNavHelper::SetStateFromParam(StateParams *param, ControlSet *conSet, int b
 void CNavHelper::SetLDFocusPosition(int camIndex, float axisPos, BOOL rotateAxis, 
   int axisRotation, int xOffset, int yOffset, const char *descrip)
 {
-  int left, right, top, bottom, xFrame, yFrame;
   LowDoseParams *ldp = mWinApp->GetLowDoseParams() + FOCUS_CONSET;
   ControlSet *camSets = mWinApp->GetCamConSets();
   ControlSet *focusSet = mWinApp->GetConSets() + FOCUS_CONSET;
@@ -1926,6 +1925,7 @@ void CNavHelper::SetLDFocusPosition(int camIndex, float axisPos, BOOL rotateAxis
     mWinApp->mLowDoseDlg.m_iAxisAngle : 0;
   bool changed = ldp->axisPosition != axisPos || oldRotation != axisRotation;
   bool needConversions = mWinApp->LowDoseMode() && ldp->magIndex;
+  bool subChanged;
   if (oldRotation != axisRotation && needConversions)
     mWinApp->mLowDoseDlg.ConvertAxisPosition(false);
   mWinApp->mLowDoseDlg.m_bRotateAxis = rotateAxis;
@@ -1942,23 +1942,12 @@ void CNavHelper::SetLDFocusPosition(int camIndex, float axisPos, BOOL rotateAxis
     ldp[TRIAL_CONSET] = ldp[FOCUS_CONSET];
   }
   mWinApp->mLowDoseDlg.ManageAxisPosition();
-  xFrame = focusSet->right - focusSet->left;
-  yFrame = focusSet->bottom - focusSet->top;
-  left = B3DMAX(0, (camP->sizeX - xFrame) / 2 + xOffset);
-  right = B3DMIN(camP->sizeX, left + xFrame);
-  left = right - xFrame;
-  top = B3DMAX(0, (camP->sizeY - yFrame) / 2 + yOffset);
-  bottom = B3DMIN(camP->sizeY, top + yFrame);
-  top = bottom - yFrame;
-  if (top != focusSet->top || bottom != focusSet->bottom || left != focusSet->left ||
-    right != focusSet->right || changed)
+  subChanged = ModifySubareaForOffset(camIndex, xOffset, yOffset, focusSet->left,
+    focusSet->top, focusSet->bottom, focusSet->right);
+  if (subChanged || changed)
     PrintfToLog("Focus area changed from stored %s, axis position %.2f angle %d, subarea"
       " offset %d %d", descrip, axisPos, axisRotation, xOffset / focusSet->binning,
       yOffset / focusSet->binning);
-  focusSet->left = left;
-  focusSet->right = right;
-  focusSet->top = top;
-  focusSet->bottom = bottom;
   camSets[camIndex * MAX_CONSETS + FOCUS_CONSET] = *focusSet;
 }
 
@@ -3132,6 +3121,8 @@ void CNavHelper::EndAcquireOrNewFile(CMapDrawItem * item, bool endGroupFile)
     ChangeRefCount(NAVARRAY_TSPARAM, item->mTSparamIndex, -1);
     item->mTSparamIndex = -1;
   }
+  if (!item->mAcquire)
+    item->mFocusAxisPos = EXTRA_NO_VALUE;
   if (item->mFilePropIndex >= 0) {
     ChangeRefCount(NAVARRAY_FILEOPT, item->mFilePropIndex, -1);
     item->mFilePropIndex = -1;
@@ -4229,5 +4220,87 @@ void CNavHelper::CleanupFromExternalFileAccess()
     if (mCurStoreInd < 0)
       delete mMapStore;
     mExtDrawnOnID = 0;
+  }
+}
+
+// Shift the subarea defined by the given coordinates by the offsets and keep it within
+// legal bounds
+bool CNavHelper::ModifySubareaForOffset(int camera, int xOffset, int yOffset, int &left,
+  int &top, int &right, int &bottom)
+{
+  bool retval;
+  CameraParameters *camP = &mCamParams[camera];
+  int xFrame, yFrame, tleft, tright, ttop, tbottom;
+  xFrame = right - left;
+  yFrame = bottom - top;
+  tleft = B3DMAX(0, (camP->sizeX - xFrame) / 2 + xOffset);
+  tright = B3DMIN(camP->sizeX, tleft + xFrame);
+  tleft = tright - xFrame;
+  ttop = B3DMAX(0, (camP->sizeY - yFrame) / 2 + yOffset);
+  tbottom = B3DMIN(camP->sizeY, ttop + yFrame);
+  ttop = tbottom - yFrame;
+  retval = (top != ttop || bottom != tbottom || left != tleft || right != tright);
+  left = tleft;
+  right = tright;
+  top = ttop;
+  bottom = tbottom;
+  return retval;
+}
+
+// Get to focus position for the current item based on its state or the focus position
+// stored in it, or the state or stored focus position for a previous acquire item of the
+// type.  If there is no current or prior setting, or Nav is not open or there is no 
+// current item, it returns the defined Low Dose focus position
+void CNavHelper::FindFocusPosForCurrentItem(StateParams &state, bool justLDstate)
+{
+  CMapDrawItem *item;
+  StateParams *statePtr;
+  int curInd, ind, firstInd;
+  bool tilts;
+
+  // initialize to current state
+  state.camIndex = mWinApp->GetCurrentCamera();
+  SaveLDFocusPosition(true, state.focusAxisPos, state.rotateAxis, state.axisRotation,
+    state.focusXoffset, state.focusYoffset);
+
+  if (!mNav || justLDstate)
+    return;
+  curInd = mNav->GetCurrentIndex();
+  if (curInd < 0 || curInd >= (int)mItemArray->GetSize())
+    return;
+
+
+  item = mItemArray->GetAt(curInd);
+  tilts = item->mTSparamIndex >= 0;
+  
+  // Look back for last state if any
+  for (ind = curInd; ind >= 0; ind--) {
+    item = mItemArray->GetAt(ind);
+    if (item->mRegistration == mNav->GetCurrentRegistration() &&
+      (BOOL_EQUIV(item->mAcquire, !tilts) ||
+        BOOL_EQUIV(item->mTSparamIndex >= 0, tilts))) {
+      if (item->mFilePropIndex >= 0 && item->mStateIndex >= 0) {
+        statePtr = mAcqStateArray->GetAt(item->mStateIndex);
+        state = *statePtr;
+        break;
+      }
+    }
+  }
+
+  // Now look back for item focus set
+  firstInd = B3DMAX(0, ind);
+  for (ind = curInd; ind >= firstInd; ind--) {
+    item = mItemArray->GetAt(ind);
+    if (item->mRegistration == mNav->GetCurrentRegistration() &&
+      (BOOL_EQUIV(item->mAcquire, !tilts) ||
+        BOOL_EQUIV(item->mTSparamIndex >= 0, tilts)) &&
+      item->mFocusAxisPos > EXTRA_VALUE_TEST) {
+      state.focusAxisPos = item->mFocusAxisPos;
+      state.rotateAxis = item->mRotateFocusAxis;
+      state.axisRotation = item->mFocusAxisAngle;
+      state.focusXoffset = item->mFocusXoffset;
+      state.focusYoffset = item->mFocusYoffset;
+      break;
+    }
   }
 }

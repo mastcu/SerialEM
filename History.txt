@@ -3,6 +3,15 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+7/18/19: Added ability to see focus area for current Navigator acquire item
+on a View image and edit it with the mouse.
+
+7/18/19: If there is a high-defocus mag calibration, the display of
+Focus/Trial areas on a View image will now be adjusted for it.
+
+7/18/19: Added Black - White and estimated image mean values to the image
+display.
+
 7/15/19: Added button to Navigator to save Focus area position as part of the
 item for any item being acquired, so no state needs to be set.  The axis
 rotation is also saved, as it is in a state now.

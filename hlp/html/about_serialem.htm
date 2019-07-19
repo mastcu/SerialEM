@@ -38,7 +38,7 @@
       first three buffers. In other words, when a new image comes in, the existing 
       image in buffer A is moved to buffer B, the image previously in buffer B is 
       moved to buffer C, and the image in buffer C is lost.&nbsp; However, it is often 
-      desireable to increase the number of images kept in rolling buffers, which can 
+      desirable to increase the number of images kept in rolling buffers, which can 
       be done with a spin button in the Options section of the
       <a href="hidd_buffercontrol.htm">Buffer Control</a> panel. </P>
     <P>It is also possible to copy an image to a new, free-standing window, which could 
@@ -50,8 +50,12 @@
       maintained as the program window is resized, and it will be remembered between 
       sessions of the program.&nbsp; The image window is kept in the top-left corner 
       of the frame when the program adjusts the window size.</P>
+      <P>The lower left corner of the image will show the image values corresponding to 
+          black (0) and white (255) in the display.&nbsp; These are the same as the 
+          Black/White values in the <a href="hidd_imagelevel.htm">Image Display</a> 
+          control panel.&nbsp; The estimated image mean will also be shown.</P>
     <P><B><I>Camera control:</I></B> The camera controls are patterned after those 
-      available in DigitalMicrograph, but there are some important enhancements that 
+        originally available in DigitalMicrograph, but there are some important enhancements that 
       provide more flexible control of the specimen exposure, make it easier to 
       select subareas of the camera, and allow control of whether a dark reference is 
       taken. General information about image capture is available in the section on <A HREF="about_camera.htm">

@@ -30,8 +30,9 @@ public:
 	void DeletePoint(int index);
 	void AppendPoint(float inX, float inY);
 	void AddPoint(float inX, float inY, int index);
-	CMapDrawItem();
-	virtual ~CMapDrawItem();
+  CMapDrawItem();
+  CMapDrawItem(CMapDrawItem *item);
+  virtual ~CMapDrawItem();
 
   int mNumPoints;         // Number of points
   int mMaxPoints;         // Current size of point array

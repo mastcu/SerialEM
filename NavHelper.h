@@ -360,5 +360,8 @@ public:
   void SetLDFocusPosition(int camIndex, float axisPos, BOOL rotateAxis, int axisRotation, 
     int xOffset, int yOffset, const char *descrip);
   bool AnyMontageMapsInNavTable();
+  bool ModifySubareaForOffset(int camera, int xOffset, int yOffset, int &left,
+    int &top, int &right, int &bottom);
+  void FindFocusPosForCurrentItem(StateParams & state, bool justLDstate);
 };
 
