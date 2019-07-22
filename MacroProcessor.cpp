@@ -987,10 +987,10 @@ int CMacroProcessor::TaskBusy()
     (mMakingDualMap && mWinApp->mNavHelper->GetAcquiringDual()) ||
     mWinApp->mShiftCalibrator->CalibratingIS() ||
     (mCamera->GetInitialized() && mCamera->CameraBusy() && 
-    (mCamera->GetTaskWaitingForFrame() || 
+    (mCamera->GetTaskWaitingForFrame() || mWinApp->mParticleTasks->GetWaitingForDrift() ||
     !(mUsingContinuous && mCamera->DoingContinuousAcquire()))) ||
     mWinApp->mMontageController->DoingMontage() || 
-    mWinApp->mParticleTasks->DoingMultiShot() ||
+    mWinApp->mParticleTasks->DoingMultiShot() || 
     mWinApp->mFocusManager->DoingFocus() || mWinApp->mAutoTuning->DoingAutoTune() ||
     mShiftManager->ResettingIS() || mWinApp->mCalibTiming->Calibrating() ||
     mWinApp->mFilterTasks->RefiningZLP() ||
@@ -5066,7 +5066,7 @@ void CMacroProcessor::NextCommand()
       dwparm.setTrialParams = true;
       dwparm.exposure = (float)itemDbl[8];
       if (!itemEmpty[9])
-        dwparm.binning = itemInt[9];
+        dwparm.binning = itemInt[9] * BinDivisorI(camParams);
     }
     mWinApp->mParticleTasks->WaitForDrift(dwparm, false);
     break;
