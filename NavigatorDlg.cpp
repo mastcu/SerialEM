@@ -5589,13 +5589,13 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
   if (!mWinApp->mStoreMRC) {
     if (unsuitableOK)
       return -1;
-    AfxMessageBox("There must be an image file currently open to specify a map",
+    SEMMessageBox("There must be an image file currently open to specify a map",
       MB_EXCLAME);
     return 1;
   }
   imBuf = &mImBufs[mWinApp->Montaging() ? 1 : 0];
   if (imBuf->mMapID) {
-    if (AfxMessageBox("This image already has a map ID identifying it as a map.\n\n"
+    if (SEMMessageBox("This image already has a map ID identifying it as a map.\n\n"
       "Are you sure you want to create another map from this image?",
       MB_YESNO, MB_ICONQUESTION) == IDNO)
       return 2;
@@ -5607,7 +5607,7 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
     imBuf->mCurStoreChecksum != mWinApp->mStoreMRC->getChecksum()) {
       if (unsuitableOK)
         return -1;
-      AfxMessageBox("In order to use this image as a map, it must be\n"
+      SEMMessageBox("In order to use this image as a map, it must be\n"
         "either saved into or read in from the current image file.\n"
         "This image is in a different file from the current one.\n\n"
         "Switch to the appropriate file if it is already open,\n"
@@ -5625,7 +5625,7 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
       imBuf->mSecNumber < 0) {
       if (unsuitableOK)
         return -1;
-      AfxMessageBox("In order to use a montaged image as a map,\n"
+      SEMMessageBox("In order to use a montaged image as a map,\n"
         "Buffer B must contain a montage overview that was either\n"
         "newly captured into or read in from the current image file.\n\n"
         "This is not the case; no map was created.", MB_EXCLAME);
@@ -5635,7 +5635,7 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
     if (!hasStage) {
       if (unsuitableOK)
         return -1;
-      if (AfxMessageBox("This image was read in from the file.\n"
+      if (SEMMessageBox("This image was read in from the file.\n"
         "Use it for a map only if the current stage position\n"
         "and the magnification, camera selection, and binning in\n"
         "the montage setup are the same as when the image was taken.\n\n"
@@ -5654,7 +5654,7 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
     if (!imBuf->mImage || imBuf->mCaptured < 0) {
       if (unsuitableOK)
         return -1;
-      AfxMessageBox("Buffer A does not contain an image that can be saved as a map\n"
+      SEMMessageBox("Buffer A does not contain an image that can be saved as a map\n"
         "(one that is newly captured or read in from a file).", MB_EXCLAME);
       return 1;
     }
@@ -5671,14 +5671,14 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
           "magnification are the same as when the image was taken.\n\n"
           "Are you sure you want to create a map from this image?", 
           hasStage ? "" : "stage position, ");
-        if (AfxMessageBox(report, MB_YESNO, MB_ICONQUESTION) == IDNO)
+        if (SEMMessageBox(report, MB_YESNO, MB_ICONQUESTION) == IDNO)
           return 2;
       } else if (!mBufferManager->IsBufferSavable(imBuf)) {
         
         // Next complain if it can't be saved
         if (unsuitableOK)
           return -1;
-        AfxMessageBox("Buffer A cannot be saved in the current file.\n\n"
+        SEMMessageBox("Buffer A cannot be saved in the current file.\n\n"
           "Open or switch to a file that it can be saved in, save it, and try again.",
           MB_EXCLAME);
         return 1;
@@ -5688,7 +5688,7 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
 
           //If it can be saved, and they haven't been asked before, ask about auto save
           if (mDocWnd->GetSaveOnNewMap() < 0) {
-            i = AfxMessageBox("This image is not saved yet and can be saved \ninto the "
+            i = SEMMessageBox("This image is not saved yet and can be saved \ninto the "
               "current file.\n\nDo you always want to save images automatically into this"
               " file\nwhenever you press New Map and it is the current file?",
               MB_YESNO, MB_ICONQUESTION);
@@ -5697,7 +5697,7 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
 
           // Even if they don't want auto save, ask if they want to save this one
           if (!mDocWnd->GetSaveOnNewMap()) {
-            if (AfxMessageBox("This image is not saved yet.\n\n"
+            if (SEMMessageBox("This image is not saved yet.\n\n"
               "Do you want to save it into the current file?", 
               MB_YESNO, MB_ICONQUESTION) == IDNO)
               return 2;
@@ -5715,7 +5715,7 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
   // Now check that the image isn't a map reduced to bytes
   if (imBuf->mImage->getType() == kUBYTE && mWinApp->mStoreMRC->getMode() != 
     MRC_MODE_BYTE) {
-      AfxMessageBox("It seems that the image being displayed has been converted to\n"
+      SEMMessageBox("It seems that the image being displayed has been converted to\n"
         "bytes, so its scaling will not be correct when read in as a map.\n"
         "To fix this, turn off \"Convert Maps to Bytes\" in the Navigator menu,\n"
         "load this map item, and make a new map again.\n"
@@ -5971,7 +5971,7 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
     delY >= mHelper->GetAutoBacklashMinField()) {
       i = 1;
       if (mHelper->GetAutoBacklashNewMap() == 1) {
-        if (AfxMessageBox("Do you want to run the routine to adjust the\nstage position"
+        if (SEMMessageBox("Do you want to run the routine to adjust the\nstage position"
           " of this map for backlash?\n\n(Use Navigator - Backlash Settings to set "
           "whether this question is asked)", MB_QUESTION) == IDNO)
           i = 0;
