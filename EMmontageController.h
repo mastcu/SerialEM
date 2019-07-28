@@ -312,6 +312,7 @@ public:
   int AccessMontSectInAdoc(KImageStore *store, int secNum);
   int StoreAlignedCoordsInAdoc(void);
   void SetMiniOffsetsParams(MiniOffsets & mini, int xNframes, int xFrame, int xDelta, int yNframes, int yFrame, int yDelta);
+  int TestStageError(double ISX, double ISY, double &sterr);
 };
 
 #endif // !defined(AFX_EMMONTAGECONTROLLER_H__F50578E7_DA31_4D56_B16C_C01548ED89E2__INCLUDED_)

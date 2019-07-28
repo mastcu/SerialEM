@@ -1667,14 +1667,11 @@ int EMmontageController::DoNextPiece(int param)
         if (!gotStageXY)
           mScope->FastStagePosition(stageX, stageY, sterr);
         gotStageXY = true;
-        ISX = stageX - mMoveInfo.x;
-        ISY = stageY - mMoveInfo.y;
-        sterr = sqrt(ISX * ISX + ISY * ISY);
-        if (sterr > mMaxStageError) {
-          mNumStageErrors++;
+        ix = TestStageError(stageX, stageY, sterr);
+        if (ix > 0) {
           report.Format("Stage is %.2f microns from intended position; %s", sterr,
             mNumStageErrors >= 3 ? (mStopOnStageError ? "giving up and stopping" :
-          "giving up and going on") : "trying again");
+              "giving up and going on") : "trying again");
           mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
           if (mNumStageErrors < 3) {
             mMovingStage = true;
@@ -1685,7 +1682,7 @@ int EMmontageController::DoNextPiece(int param)
           }
           if (mStopOnStageError) {
             mMovingStage = false;
-            StopMontage();  
+            StopMontage();
             return 1;
           }
         }
@@ -3629,20 +3626,17 @@ void EMmontageController::RealignNextTask(int param)
     return;
   }
 
-  if ((param == EXIST_CHECKPOS_ACQUIRE || param == ANCHALI_CHECK_ACQUIRE || 
+  if ((param == EXIST_CHECKPOS_ACQUIRE || param == ANCHALI_CHECK_ACQUIRE ||
     param == BACKLASH_CHECK_ACQUIRE) && mMaxStageError > 0.) {
     mScope->FastStagePosition(ISX, ISY, sterr);
-    ISX -= mMoveInfo.x;
-    ISY -= mMoveInfo.y;
-    sterr = sqrt(ISX * ISX + ISY * ISY);
-    if (sterr > mMaxStageError) {
-      mNumStageErrors++;
+    i = TestStageError(ISX, ISY, sterr);
+    if (i > 0) {
       mess.Format("Stage is %.2f microns from intended position; %s", sterr,
         mNumStageErrors >= 3 ? "giving up on realigning" : "trying again");
       mWinApp->AppendToLog(mess, LOG_OPEN_IF_CLOSED);
       if (mNumStageErrors < 3) {
         mScope->MoveStage(mMoveInfo, true);
-        mWinApp->AddIdleTask(CEMscope::TaskStageBusy, TASK_MONTAGE_REALIGN, param, 
+        mWinApp->AddIdleTask(CEMscope::TaskStageBusy, TASK_MONTAGE_REALIGN, param,
           timeOut);
         return;
       } else {
@@ -4613,4 +4607,31 @@ double EMmontageController::GetRemainingTime()
   mLastElapsed = interval;
   mLastNumDoing = mNumDoing;
   return  interval * (numTot / (double)numDone - 1.);
+}
+
+// Test for whether the stage position is sufficiently close to the target; if not 
+// increment error count then try getting the position again after a wait; put out message
+// and return -1 if that succeeds, or return 1 if that fails or count reaches 3
+int EMmontageController::TestStageError(double ISX, double ISY, double &sterr)
+{
+  ISX -= mMoveInfo.x;
+  ISY -= mMoveInfo.y;
+  sterr = sqrt(ISX * ISX + ISY * ISY);
+  if (sterr <= mMaxStageError)
+    return 0;
+  mNumStageErrors++;
+  if (mNumStageErrors < 3) {
+    Sleep(1000);    // In case done signal is in too soon
+    mScope->WaitForStageReady(10000);
+    mScope->GetStagePosition(ISX, ISY, sterr);
+    ISX -= mMoveInfo.x;
+    ISY -= mMoveInfo.y;
+    sterr = sqrt(ISX * ISX + ISY * ISY);
+    if (sterr <= mMaxStageError) {
+      mWinApp->AppendToLog("WARNING: Initial stage position incorrect; discrepancy"
+        " resolved by waiting and reading position again");
+      return -1;
+    }
+  }
+  return 1;
 }

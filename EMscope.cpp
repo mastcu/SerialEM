@@ -6739,7 +6739,7 @@ void CEMscope::SetBlankingFlag(BOOL state)
 void CEMscope::WaitForStageDone(StageMoveInfo *smi, char *procName)
 {
   double sx, sy, sz;
-  int i, ntry = 10, ntryReady = 300;
+  int i, status, ntry = 10, ntryReady = 300;
   int waitTime = 100;
   JeolStateData *jsd = smi->JeolSD;
 
@@ -6751,7 +6751,11 @@ void CEMscope::WaitForStageDone(StageMoveInfo *smi, char *procName)
     if (!sJeolReadStageForWait)
       smi->plugFuncs->GetValuesFast(1);
     for (i = 0; i < ntry; i++) {
-      if (smi->plugFuncs->GetStageStatus())
+      status = smi->plugFuncs->GetStageStatus();
+      if (sJeolReadStageForWait && !status)
+        SEMTrace('w', "WaitForStageDone: wait for nonready, status %d at %.3f", status,
+          SEMSecondsSinceStart());
+      if (status)
         break;
       if (i < ntry - 1) {
         ScopeMutexRelease(procName);
@@ -6763,32 +6767,45 @@ void CEMscope::WaitForStageDone(StageMoveInfo *smi, char *procName)
     // If not ready was seen, wait on ready flag to avoid load on system,
     // then fall back to getting status for safety's sake
     if (i < ntry) {
+      SEMTrace('w', "WaitForStageDone: Not ready %s seen (status %d) in %d ms at %.3f", 
+        sJeolReadStageForWait ? "reading":"event", status, i * waitTime, 
+        SEMSecondsSinceStart());
       for (i = 0; i < ntryReady; i++) {
-        if (!smi->plugFuncs->GetStageStatus())
+        status = smi->plugFuncs->GetStageStatus();
+        if (sJeolReadStageForWait && status)
+          SEMTrace('w', "WaitForStageDone: wait for ready, status %d at %.3f", status,
+            SEMSecondsSinceStart());
+        if (!status)
           break;
         ScopeMutexRelease(procName);
         Sleep(waitTime);
         ScopeMutexAcquire(procName, true);
       }
-      if (i == ntryReady)
-        SEMTrace('S', "WaitForStageDone: Ready event not seen in %d ms", 
-          ntryReady * waitTime);
+      SEMTrace('w', "WaitForStageDone: Ready %s %sseen in %d ms at %.3f", 
+        sJeolReadStageForWait ? "reading" : "event", i == ntryReady ? "not " : "",
+        i * waitTime, SEMSecondsSinceStart());
 
       if (sJeolReadStageForWait)
         Sleep(waitTime);
 
     } else
-      SEMTrace('S', "WaitForStageDone: Not ready event not seen in %d ms", 
-        (ntry - 1) * waitTime);
+      SEMTrace('w', "WaitForStageDone: Not ready %s not seen in %d ms at %.3f", 
+        sJeolReadStageForWait ? "reading" : "event", (ntry - 1) * waitTime,
+        SEMSecondsSinceStart());
     smi->plugFuncs->GetValuesFast(0);
   }
 
   // If no event update or didn't see busy, or events never came through,
-  // check status until it clears
+  // check status until it clears; otherwise just do a direct status read to make sure
   while (1) {
     try {
-      if (!SEMCheckStageTimeout() && !smi->plugFuncs->GetStageStatus())
-        break;
+      if (!SEMCheckStageTimeout()) {
+        status = smi->plugFuncs->GetStageStatus();
+        if (!status)
+          break;
+        SEMTrace('w', "WaitForStageDone: checking ready, status %d at %.3f", status,
+          SEMSecondsSinceStart());
+      }
     }
     catch (_com_error E) {
 
@@ -6802,10 +6819,12 @@ void CEMscope::WaitForStageDone(StageMoveInfo *smi, char *procName)
   if (JEOLscope) {
     try {
       smi->plugFuncs->GetStagePosition(&sx, &sy, &sz);
+      if (smi->axisBits & axisXY)
+        SEMTrace('w', "WaitForStageDone: move to %.3f %.3f ended at %.3f %.3f at %.3f",
+          smi->x, smi->y, 1.e6 * sx, 1.e6 * sy, SEMSecondsSinceStart());
     }
     catch (_com_error E) {
     }
-    USE_DATA_MUTEX(jsd->stageReady = true);
   }
 }
 

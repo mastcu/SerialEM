@@ -4175,7 +4175,8 @@ void CMacroProcessor::NextCommand()
 
         // Start the movement
         if (smi.axisBits) {
-          mScope->MoveStage(smi, truth, false, false, truth);
+          if (!mScope->MoveStage(smi, truth, false, false, truth))
+            SUSPEND_NOLINE("because of failure to start stage movement");
           mMovedStage = true;
         }
       }
