@@ -14,7 +14,7 @@ struct DriftWaitParams {
   int failureAction;            // 0 to go on, 1 for error
   BOOL setTrialParams;          // Flag to set trial parameters
   float exposure;               // Trial exposure
-  int binning;                  // Trial binning
+  int binning;                  // Trial binning, user-displayed value
   BOOL changeIS;                // Flag to apply image shift in each alignment
 };
 

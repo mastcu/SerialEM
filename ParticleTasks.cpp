@@ -522,7 +522,7 @@ int CParticleTasks::WaitForDrift(DriftWaitParams &param, bool useImageInA,
     if (param.setTrialParams && param.exposure > 0.)
       conSets[TRACK_CONSET].exposure = param.exposure;
     if (param.setTrialParams && param.binning > 0) {
-      conSets[TRACK_CONSET].binning = param.binning;
+      conSets[TRACK_CONSET].binning = param.binning * BinDivisorI(camParam);
       mCamera->FindNearestBinning(camParam, &conSets[TRACK_CONSET], binInd, realBin);
     }
     conSets[TRACK_CONSET].mode = SINGLE_FRAME;

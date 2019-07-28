@@ -588,6 +588,14 @@ void CMacroProcessor::OnUpdateMacroEdit(CCmdUI* pCmdUI)
     index = 14;
   if (pCmdUI->m_nID == ID_MACRO_EDIT20)
     index = 19;
+  if (pCmdUI->m_nID == ID_MACRO_EDIT25)
+    index = 24;
+  if (pCmdUI->m_nID == ID_MACRO_EDIT30)
+    index = 29;
+  if (pCmdUI->m_nID == ID_MACRO_EDIT35)
+    index = 34;
+  if (pCmdUI->m_nID == ID_MACRO_EDIT40)
+    index = 39;
   pCmdUI->Enable(!DoingMacro() && !mMacroEditer[index]);
 }
 
@@ -987,10 +995,11 @@ int CMacroProcessor::TaskBusy()
     (mMakingDualMap && mWinApp->mNavHelper->GetAcquiringDual()) ||
     mWinApp->mShiftCalibrator->CalibratingIS() ||
     (mCamera->GetInitialized() && mCamera->CameraBusy() && 
-    (mCamera->GetTaskWaitingForFrame() || mWinApp->mParticleTasks->GetWaitingForDrift() ||
+    (mCamera->GetTaskWaitingForFrame() || 
     !(mUsingContinuous && mCamera->DoingContinuousAcquire()))) ||
     mWinApp->mMontageController->DoingMontage() || 
     mWinApp->mParticleTasks->DoingMultiShot() || 
+    mWinApp->mParticleTasks->GetWaitingForDrift() ||
     mWinApp->mFocusManager->DoingFocus() || mWinApp->mAutoTuning->DoingAutoTune() ||
     mShiftManager->ResettingIS() || mWinApp->mCalibTiming->Calibrating() ||
     mWinApp->mFilterTasks->RefiningZLP() ||
@@ -3319,7 +3328,7 @@ void CMacroProcessor::NextCommand()
   case CME_WRITECOMFORTSALIGN:                              //  WriteComForTSAlign
     if (mAlignWholeTSOnly) {
       mConSets[RECORD_CONSET].alignFrames = 1;
-      if (mCamera->MakeMdocFrameAlignCom())
+      if (mCamera->MakeMdocFrameAlignCom(""))
         ABORT_NOLINE("Problem writing com file for aligning whole tilt series");
       mConSets[RECORD_CONSET].alignFrames = 0;
     }
@@ -5065,9 +5074,10 @@ void CMacroProcessor::NextCommand()
       dwparm.changeIS = itemInt[7] > 0 ? 1 : 0;
     if (!itemEmpty[8]) {
       dwparm.setTrialParams = true;
-      dwparm.exposure = (float)itemDbl[8];
+      if (itemDbl[8] > 0)
+        dwparm.exposure = (float)itemDbl[8];
       if (!itemEmpty[9])
-        dwparm.binning = itemInt[9] * BinDivisorI(camParams);
+        dwparm.binning = itemInt[9];
     }
     mWinApp->mParticleTasks->WaitForDrift(dwparm, false);
     break;
