@@ -2603,6 +2603,12 @@ double SEMTickInterval(UINT now, UINT then)
   return SEMTickInterval((double)now, (double)then);
 }
 
+// Returns time in seconds since program start
+double DLL_IM_EX SEMSecondsSinceStart()
+{
+  return SEMTickInterval((double)GetTickCount(), sStartTime) / 1000.;
+}
+
 double SEMWallTime()
 {
   return wallTime();
@@ -2685,13 +2691,13 @@ int SEMThreeChoiceBox(CString message, CString yesText, CString noText,
 //   s for STEM in general
 //   t for exposure time/intensity changes in tasks and continuous timing
 //   u for updates
+//   w for JEOL stage wait
 //   y for background save start/end reports
 //   % list script commands allowing arithmetic
 //   } Crash program on next image acquire
 void SEMTrace(char key, char *fmt, ...)
 {
   va_list args;
-  double diff;
   CString str;
   if (debugOutput.IsEmpty() || debugOutput == "0" || 
     (key != '1' && debugOutput.Find(key) < 0))
@@ -2702,9 +2708,7 @@ void SEMTrace(char key, char *fmt, ...)
   if (sNumTraceMsg >= MAX_TRACE_LIST)
     sNumTraceMsg = MAX_TRACE_LIST - 1;
   
-  diff = SEMTickInterval((double)GetTickCount(), sStartTime);
-  
-  sTraceMsg[sNumTraceMsg].Format("%.3f: ", diff / 1000.);
+  sTraceMsg[sNumTraceMsg].Format("%.3f: ", SEMSecondsSinceStart());
   va_start(args, fmt);
   VarArgToCString(str, fmt, args);
   va_end(args);
@@ -3195,7 +3199,6 @@ void CSerialEMApp::OnUpdateFileOpenlog(CCmdUI* pCmdUI)
 void CSerialEMApp::AppendToLog(CString inString, int inAction, int lineFlags)
 {
   CString str;
-  double diff;
   if (mAppExiting)
     return;
 
@@ -3255,8 +3258,7 @@ void CSerialEMApp::AppendToLog(CString inString, int inAction, int lineFlags)
       return;
     inAction = LOG_OPEN_IF_CLOSED;
     if (mLogWindow) {
-      diff = SEMTickInterval((double)GetTickCount(), sStartTime);
-      str.Format("%.3f: ", diff / 1000.);
+      str.Format("%.3f: ", SEMSecondsSinceStart());
       mLogWindow->Append(str, 0);
     } 
     break;
