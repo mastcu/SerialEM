@@ -1836,7 +1836,7 @@ bool CLowDoseDlg::ViewImageOKForEditingFocus(EMimageBuffer * imBuf)
   return ((imBuf->mCaptured > 0 || imBuf->mCaptured == BUFFER_MONTAGE_OVERVIEW ||
     imBuf->mCaptured == BUFFER_MONTAGE_PIECE || imBuf->ImageWasReadIn()) &&
     imBuf->mConSetUsed == 0 && imBuf->mLowDoseArea &&
-    imBuf->mMagInd == mLDParams[0].magIndex);
+    (imBuf->mMagInd == mLDParams[0].magIndex || mWinApp->GetDummyInstance()));
 }
 
 // Given a shift on camera, get the X coordinate on specimen and convert that
@@ -2056,6 +2056,7 @@ int CLowDoseDlg::DrawAreaOnView(int type, EMimageBuffer *imBuf, StateParams &sta
                                 float & cenX, float & cenY, float &radius)
 {
   int binning = imBuf->mBinning;
+  int magInd = imBuf->mMagInd > 0 ? imBuf->mMagInd : mLDParams[0].magIndex;
   int sizeX = imBuf->mImage->getWidth();
   int sizeY = imBuf->mImage->getHeight();
   int curCam = state.camIndex;
@@ -2067,7 +2068,7 @@ int CLowDoseDlg::DrawAreaOnView(int type, EMimageBuffer *imBuf, StateParams &sta
   bool drawingNav = mWinApp->mMainView->GetDrewLDAreasAtNavPt();
   if ((!m_iDefineArea && !drawingNav) || !mTrulyLowDose)
     return 0;
-  vMat = mShiftManager->SpecimenToCamera(curCam, mLDParams[0].magIndex);
+  vMat = mShiftManager->SpecimenToCamera(curCam, magInd);
   mShiftManager->GetScaleAndRotationForFocus(imBuf, scale, rotation);
   vMat = mShiftManager->MatScaleRotate(vMat, scale, rotation);
 
@@ -2139,8 +2140,8 @@ int CLowDoseDlg::DrawAreaOnView(int type, EMimageBuffer *imBuf, StateParams &sta
 // Convert from camera acquisition coordinates (inverted Y) in the given inArea to
 // image coordinates in the View image with given sizeX, sizeY and binning
 void CLowDoseDlg::AreaAcqCoordToView(int inArea, int binning, int sizeX, int sizeY,
-  ScaleMat aMat, ScaleMat vMat, int acqX, int acqY,
-  StateParams &state, float & imX, float & imY)
+  ScaleMat aMat, ScaleMat vMat, int acqX, int acqY, StateParams &state, float &imX, 
+  float &imY)
 {
   CameraParameters *camP = mWinApp->GetCamParams() + state.camIndex;
   double camX, camY, specX, specY, delX, delY;

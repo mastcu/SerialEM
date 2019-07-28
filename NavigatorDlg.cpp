@@ -1618,9 +1618,11 @@ void CNavigatorDlg::ProcessTKey(void)
     return;
 
   // See if they are all already on, in which case they will be turned off
+  // Here and in next loop, ignore a map if there is a higher mag map in range
   for (ind = start; ind <= end; ind++) {
     item = mItemArray[ind];
-    if (item->mTSparamIndex < 0 && !item->mAcquire) {
+    if (item->mTSparamIndex < 0 && !item->mAcquire && 
+      !AtSamePosAsHigherMagMapInRange(ind, start, end)) {
       allOn = false;
       break;
     }
@@ -1628,6 +1630,8 @@ void CNavigatorDlg::ProcessTKey(void)
 
   // Then loop and turn on ones not on, or turn off if all on
   for (ind = start; ind <= end; ind++) {
+    if (AtSamePosAsHigherMagMapInRange(ind, start, end))
+      continue;
     item = mItemArray[ind];
     if (item->mTSparamIndex < 0 && !item->mAcquire) {
       mHelper->NewAcquireFile(ind, NAVFILE_TS, NULL);
@@ -1643,6 +1647,25 @@ void CNavigatorDlg::ProcessTKey(void)
   if (needFocusArea)
     AddFocusAreaPoint(false);
 }
+
+// Returns true if this item is a map and there is a higher mag map within the given range
+// of items
+bool CNavigatorDlg::AtSamePosAsHigherMagMapInRange(int itemInd, int startInd, int endInd)
+{
+  CMapDrawItem *check, *item = mItemArray[itemInd];
+  if (!item->mAtSamePosID || item->mType != ITEM_TYPE_MAP)
+    return false;
+  for (int ind = startInd; ind <= endInd; ind++) {
+    if (ind == itemInd)
+      continue;
+    check = mItemArray[ind];
+    if (item->mAtSamePosID == check->mAtSamePosID && check->mType == ITEM_TYPE_MAP &&
+      item->mMapMagInd < check->mMapMagInd)
+      return true;
+  }
+  return false;
+}
+
 
 // Start new file at item at contiguous set of points with Shift N at both ends of range
 void CNavigatorDlg::ProcessNKey(void)
@@ -6385,6 +6408,10 @@ void CNavigatorDlg::FinishLoadMap(void)
   imBuf->mLoadHeight = imBuf->mImage->getHeight();
   imBuf->mCamera = mLoadItem->mMapCamera;
   imBuf->mMagInd = mLoadItem->mMapMagInd;
+  if (mLoadItem->mMapLowDoseConSet >= 0) {
+    imBuf->mLowDoseArea = true;
+    imBuf->mConSetUsed = mLoadItem->mMapLowDoseConSet;
+  }
 
   // Attach the map stage position to the image if it is missing
   noStage = !imBuf->GetStagePosition(stageX, stageY);

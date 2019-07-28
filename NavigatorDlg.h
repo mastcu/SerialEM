@@ -588,6 +588,7 @@ BOOL m_bEditFocus;
 afx_msg void OnEditFocus();
 SetMember(BOOL, Changed);
 void AddFocusAreaPoint(bool drawFirst);
+bool AtSamePosAsHigherMagMapInRange(int itemInd, int startInd, int endInd);
 };
 
 //{{AFX_INSERT_LOCATION}}

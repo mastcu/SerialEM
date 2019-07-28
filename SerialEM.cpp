@@ -939,6 +939,8 @@ BOOL CSerialEMApp::InitInstance()
   mDocWnd->ReadSetPropCalFiles();
   if (mNoExceptionHandler <= 0)
     SetUnhandledExceptionFilter(SEMExceptionFilter);
+  if (mScope->GetNoScope() && mNoCameras && mScope->GetSimulationMode())
+    mDummyInstance = true;
   if (mDummyInstance) {
     mScope->SetNoScope(true);
     mCamera->SetSimulationMode(true);

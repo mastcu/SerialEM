@@ -216,10 +216,14 @@
         encompasses those same parameters plus the magnification.
     <P>Tilt series can be set up for a range of items by selecting an item at one end 
       of the range, pressing &#39;Shift T&#39;, selecting the item at the other end of the 
-      range, and pressing &#39;Shift T&#39; again.&nbsp;&nbsp; If all items in the range not 
-      marked as &#39;Acquire&#39; are already set for tilt series, this operation will turn 
-      off the tilt series designations for all of them.&nbsp; Otherwise, tilt series 
-      will be set up for each file not already marked as &#39;Acquire&#39; or &#39;Tilt series&#39;.</P>
+      range, and pressing &#39;Shift T&#39; again.&nbsp;&nbsp; If the range contains 
+        multiple maps at the same stage position, any map at the same position as one 
+        taken at higher magnification will be ignored.&nbsp; Thus, you can have Anchor 
+        maps and high-mag maps interleaved in the range, and Anchor maps will be 
+        ignored.&nbsp; If all items in the range not being ignored and not marked as 
+        &#39;Acquire&#39; are already set for tilt series, this operation will turn off the tilt 
+        series designations for all of them.&nbsp; Otherwise, tilt series will be set up 
+        for each item not being ignored and not already marked as &#39;Acquire&#39; or &#39;Tilt series&#39;.</P>
       <P><B><A NAME="navac_newfile"></A>New file at item</B></P>
     <P>This checkbox allows you to open a new file
        for the current item if it is marked as 'Acquire'.&nbsp; These dialogs will open 
@@ -444,6 +448,22 @@
           parameters currently defined in that panel.&nbsp; Similarly, to change the 
           camera subarea, you would need to use the <strong>Focus</strong> button after 
           changing the camera parameters.</p>
+      <p>
+          It is possible to set and edit focus positions in View maps loaded into an 
+          off-line (&#39;dummy&#39;) instance of SerialEM.&nbsp; It is necessary to turn on Low 
+          Dose mode there.&nbsp;&nbsp; The same camera should be selected, using either 
+          the &#39;InitialCurrentCamera&#39; or &#39;AssumeCameraForDummy&#39; properties in the property 
+          file or the &#39;SelectCamera&#39; script command.&nbsp; The Low Dose magnification 
+          settings need not match between the offline and real settings, but the boxes 
+          draw for the areas will not be the right size unless Focus and Record 
+          magnifications match.&nbsp; If you are doing tilt series, you can set items as 
+          either Tilt Series or Acquire to enable saving and editing focus.&nbsp; The Tilt 
+          Series designation will be lost, but an Acquire will be retained and needs to be 
+          turned off in order to set an item as Tilt Series in the real session.&nbsp; <em>
+          If you set such items as Acquire, you must turn off the Acquire before saving 
+          from the offline instance, because the focus positions will be lost if you turn 
+          off Acquire in the real session</em>.&nbsp; If you are not doing tilt series, 
+          then there is no problem and you can leave the items set as Acquire.</p>
       <P><i><A NAME="nav_action_buttons"></A><B><FONT size="3">Action Buttons</FONT></B></i></P>
       <P><B>Add Stage Pos</B></P>
       <P>Use this button to add the current stage position as a point item. Note that the 

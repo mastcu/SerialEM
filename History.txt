@@ -3,6 +3,22 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+7/27/19: Allowed focus positions to be set and editing in dummy version.
+
+7/27/19: Fixing saving a focus position for near full-frame image from
+non-square camera.
+
+7/27/19: Shift T to turn on tilt series in a range can now ignore lower mag
+maps in favor of higher mag ones at same stage position.
+
+7/27/19: Fixes to waiting for drift: handled Trial binning properly for K2,
+tested in script processor for task done.
+
+7/27/19: Fixed enabling of emenu items to edit script above 20.
+
+7/27/19: Added option to sip backlash in dose-symmetric series.  Fixed writing
+of alignment command file after reordering file.
+
 7/27/19: When testing if stage is at right place in a montage, wait and read
 stage position again (In 3.7).
 
@@ -28,13 +44,13 @@ open so it isn't reset when switching between files.
 7/13/19: Changed drift waiting task in various ways and integrated it into
 tilt series operation.
 
-7/13/19: When the low dose axis is free to rotae from the tilt axis, clicking
+7/13/19: When the low dose axis is free to rotate from the tilt axis, clicking
 a View image when defining Focus or Trial position will rotate the axis and
 change the position of the area.  Clicking in a View image now works for an
 image in any buffer and for a read-in image.
 
 7/12/19: Increased number of montage pieces for which pieces can be aligned
-can to 512 (In 3.7).
+to 512 (In 3.7).
 
 7/9/19: Stored calibration of coma versus image shift in IS units instead of
 microns so it will work on JEOLs (In 3.7).

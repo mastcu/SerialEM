@@ -1943,7 +1943,7 @@ void CNavHelper::SetLDFocusPosition(int camIndex, float axisPos, BOOL rotateAxis
   }
   mWinApp->mLowDoseDlg.ManageAxisPosition();
   subChanged = ModifySubareaForOffset(camIndex, xOffset, yOffset, focusSet->left,
-    focusSet->top, focusSet->bottom, focusSet->right);
+    focusSet->top, focusSet->right, focusSet->bottom);
   if (subChanged || changed)
     PrintfToLog("Focus area changed from stored %s, axis position %.2f angle %d, subarea"
       " offset %d %d", descrip, axisPos, axisRotation, xOffset / focusSet->binning,
@@ -3121,7 +3121,7 @@ void CNavHelper::EndAcquireOrNewFile(CMapDrawItem * item, bool endGroupFile)
     ChangeRefCount(NAVARRAY_TSPARAM, item->mTSparamIndex, -1);
     item->mTSparamIndex = -1;
   }
-  if (!item->mAcquire)
+  if (!item->mAcquire && !mWinApp->GetDummyInstance())
     item->mFocusAxisPos = EXTRA_NO_VALUE;
   if (item->mFilePropIndex >= 0) {
     ChangeRefCount(NAVARRAY_FILEOPT, item->mFilePropIndex, -1);
@@ -4247,7 +4247,7 @@ bool CNavHelper::ModifySubareaForOffset(int camera, int xOffset, int yOffset, in
   return retval;
 }
 
-// Get to focus position for the current item based on its state or the focus position
+// Get the focus position for the current item based on its state or the focus position
 // stored in it, or the state or stored focus position for a previous acquire item of the
 // type.  If there is no current or prior setting, or Nav is not open or there is no 
 // current item, it returns the defined Low Dose focus position
