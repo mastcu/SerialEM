@@ -573,6 +573,8 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
   if (mWinApp->LowDoseMode() && !mReadingMontage)
     mScope->GotoLowDoseArea(mCamera->ConSetToLDArea(setNum));
   mScope->GetImageShift(mBaseISX, mBaseISY);
+  SEMTrace('S', "Montage base stage %.3f %.3f  IS %.3f %.3f", mBaseStageX, mBaseStageY,
+    mBaseISX, mBaseISY);
 
   // Set up skip list to read in only the center
   mNumToSkip = 0;
