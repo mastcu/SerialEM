@@ -3874,8 +3874,9 @@ BOOL CEMscope::SetCamLenIndex(int inIndex)
         PLUGSCOPE_GET(MagnificationIndex, magInd, 1);
 
         // Go to a mag in the right range if necessary then go to diffraction
+        // 7/25/19: diffraction shift may be bad if you come from M, come from SA instead
         if (magInd < mLowestMModeMagInd && inIndex < LAD_INDEX_BASE) {
-          PLUGSCOPE_SET(MagnificationIndex, mLowestMModeMagInd);
+          PLUGSCOPE_SET(MagnificationIndex, mLowestMModeMagInd + 5);
         } else if (magInd >= mLowestMModeMagInd && inIndex > LAD_INDEX_BASE) {
           PLUGSCOPE_SET(MagnificationIndex, mLowestMModeMagInd - 1);
         }
