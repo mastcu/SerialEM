@@ -56,6 +56,15 @@
           An anchor will also not be used if the first unidirectional segment is not 
           bigger than the largest alternating group size.&nbsp; Note that only View images 
           can be used for anchors, unlike for regular bidirectional series.</p>
+      <p><strong>Skip backlash tilt on second side of series</strong></p>
+      <p>When this option is not selected, the program will do a tilt backlash step on the 
+          second side of the series so that the stage is always tilted in one direction, 
+          following the original formulation for dose-symmetric tilting by Hagen et al.&nbsp; 
+          Backlashing has the advantage of avoiding a discontinuity in tilt angles and 
+          also the possibility of a small tilt around the orthogonal axis (referred to as 
+          X-axis tilt when analyzing in IMOD).&nbsp; Select this option to skip the 
+          backlash step, which would save a little time and wear on the stage.&nbsp; Such 
+          a series would need to be aligned like a regular bidirectional series.</p>
       <p><strong>Reorder file when finished</strong></p>
       <p>SerialEM can produce an image file and associated &#39;.mdoc&#39; file with tilt angles 
           in order from a dose-symmetric series.&nbsp; Unlike a bidirectional series, the 

@@ -64,4 +64,5 @@ public:
   BOOL m_bReorderFile;
   CString m_strAngleSummary;
   CStatic m_statEvery;
+  BOOL m_bSkipBacklash;
 };

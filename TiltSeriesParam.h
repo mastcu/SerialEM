@@ -132,6 +132,7 @@ struct TiltSeriesParam {
   float dosymRunToEndAngle;    // Angle above which to finish the side
   BOOL dosymAnchorIfRunToEnd;  // Use View anchor between 1st and 2nd part when run to end
   int dosymMinUniForAnchor;    // Minimum size of first unidirectional part to use anchor
+  BOOL dosymSkipBacklash;      // Flag not to do the classic backlash on one side
   float dosymStartingISLimit;  // Limit for image shift at start of series
   BOOL waitForDrift;           // Flag to wait for drift with task
   int onlyWaitDriftAboveBelow; // Flag to do so only bloew (-1) or above (1) an angle

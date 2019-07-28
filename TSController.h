@@ -513,6 +513,7 @@ private:
   bool mNeedFinalTermTasks;    // Flag to do final termination tasks when reorder is done
   CString mEndCtlFilePath;     // Things that need to be known about the file in the
   int mEndCtlWidth, mEndCtlHeight;   // second trip through EndControl where file is gone
+  CString mEndCtlMdocPath;     // Name of mdoc file for making frame alignment com file
 
   int mMaxDelayAfterTilt;      // Maximum delay for tilt during TS, in seconds
   BOOL mEarlyK2RecordReturn;   // Flag to return early if possible from Record Dose frac

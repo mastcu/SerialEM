@@ -180,6 +180,8 @@ CTSSetupDialog::CTSSetupDialog(CWnd* pParent /*=NULL*/)
   m_strNumEarlyFrames = _T("");
   m_bDoEarlyReturn = FALSE;
   mMaxTiltAngle = ((CSerialEMApp *)AfxGetApp())->mScope->GetMaxTiltAngle();
+  if (mMaxTiltAngle < -900.)
+    mMaxTiltAngle = 90.f;
   mMaxDelayAfterTilt = 15.f;
 	//}}AFX_DATA_INIT
 }

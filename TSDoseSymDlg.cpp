@@ -31,6 +31,7 @@ CTSDoseSymDlg::CTSDoseSymDlg(CWnd* pParent /*=NULL*/)
   , m_iIncInterval(0)
   , m_bReorderFile(FALSE)
   , m_strAngleSummary(_T(""))
+  , m_bSkipBacklash(FALSE)
 {
 
 }
@@ -72,6 +73,7 @@ void CTSDoseSymDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Check(pDX, IDC_CHECK_REORDER_FILE, m_bReorderFile);
   DDX_Text(pDX, IDC_STAT_ANGLE_SUMMARY, m_strAngleSummary);
   DDX_Control(pDX, IDC_STATEVERY, m_statEvery);
+  DDX_Check(pDX, IDC_CHECK_SKIP_BACKLASH, m_bSkipBacklash);
 }
 
 
@@ -103,6 +105,7 @@ BOOL CTSDoseSymDlg::OnInitDialog()
   m_strGroupSize.Format("%d", mTSparam.dosymBaseGroupSize);
   m_strIncAmount.Format("%d", mTSparam.dosymGroupIncAmount);
   m_strMinForAnchor.Format("%d", mTSparam.dosymMinUniForAnchor);
+  m_bSkipBacklash = mTSparam.dosymSkipBacklash;
   m_bReorderFile = mWinApp->mTSController->GetReorderDoseSymFile();
   m_sbcGroupSize.SetRange(0, 1000);
   m_sbcGroupSize.SetPos(500);
@@ -131,6 +134,8 @@ BOOL CTSDoseSymDlg::OnInitDialog()
 void CTSDoseSymDlg::OnOK()
 {
   SetFocus();
+  UpdateData(true);
+  mTSparam.dosymSkipBacklash = m_bSkipBacklash;
   mWinApp->mTSController->SetReorderDoseSymFile(m_bReorderFile);
   CBaseDlg::OnOK();
 }

@@ -334,6 +334,7 @@ CTSController::CTSController()
   mTSParam.dosymRunToEndAngle = 45.;
   mTSParam.dosymAnchorIfRunToEnd = false;
   mTSParam.dosymMinUniForAnchor = 10;
+  mTSParam.dosymSkipBacklash = false;
   mTSParam.dosymStartingISLimit = 1.;
   mTSParam.waitForDrift = false;
   mTSParam.onlyWaitDriftAboveBelow = 0;
@@ -345,7 +346,6 @@ CTSController::CTSController()
   mTSParam.earlyReturnNumFrames = 1;
   mTSParam.initialized = false;
   mReorderDoseSymFile = true;
-  mDosymBacklashDir = 0;
   mPostponed = false;
   mDoingTS = false;
   mStartedTS = false;
@@ -891,6 +891,7 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external)
     mEndingTilt = mTSParam.endingTilt;
     mBidirSeriesPhase = BIDIR_NONE;
     mBaseAngleForVarying = 0.;
+    mDosymBacklashDir = 0;
     if (mTSParam.doBidirectional) {
       mDoingDoseSymmetric = mTSParam.doDoseSymmetric && mLowDoseMode;
       mBidirSeriesPhase = mDoingDoseSymmetric ? DOSYM_ALTERNATING_PART : BIDIR_FIRST_PART;
@@ -2468,8 +2469,8 @@ void CTSController::NextAction(int param)
           !TimeToTakeDoseSymAnchor(mTiltIndex)) {
             TiltWithDoseSymBacklash(smi, mNextTilt, true);
             delay = mShiftManager->GetAdjustedTiltDelay(fabs(mNextTilt - mCurrentTilt));
-            mCamera->QueueStageMove(smi, delay,
-              mDoingDoseSymmetric && mNextDirection != mDosymBacklashDir,
+            mCamera->QueueStageMove(smi, delay, mDoingDoseSymmetric && 
+              mNextDirection != mDosymBacklashDir && !mTSParam.dosymSkipBacklash,
               RestoreStageXYafterTilt() > 0);
             mPreTilted = true;
             mNeedGoodAngle = true;
@@ -4306,10 +4307,13 @@ int CTSController::EndControl(BOOL terminating, BOOL startReorder)
   float pixelSize;
   int sizeX, sizeY, mbSaved, filmMag, i, error;
   CTime ctdt = CTime::GetCurrentTime();
+  mEndCtlMdocPath = "":
   if (!mClosedDoseSymFile) {
     mEndCtlFilePath = mWinApp->mStoreMRC->getFilePath();
     mEndCtlWidth = mWinApp->mStoreMRC->getWidth();
     mEndCtlHeight = mWinApp->mStoreMRC->getHeight();
+    if (mWinApp->mStoreMRC->GetAdocIndex() >= 0)
+      mEndCtlMdocPath = mWinApp->mStoreMRC->getAdocName();
     mDocWnd->SetCurrentStore(mCurrentStore);
     mDocWnd->EndStoreProtection();
   }
@@ -4472,7 +4476,7 @@ int CTSController::EndControl(BOOL terminating, BOOL startReorder)
     mAnyContinuous || mFrameAlignInIMOD)
     mWinApp->CopyConSets(iCam);
   if (mFrameAlignInIMOD && mTiltIndex)
-    mCamera->MakeMdocFrameAlignCom();
+    mCamera->MakeMdocFrameAlignCom(mEndCtlMdocPath);
   mFrameAlignInIMOD = false;
   mWinApp->mCameraMacroTools.DoingTiltSeries(mExternalControl && mPostponed);
   mExternalControl = 0;
@@ -6666,7 +6670,8 @@ void CTSController::TiltWithDoseSymBacklash(StageMoveInfo &smi, double tiltAngle
   smi.alpha = tiltAngle;
   smi.backAlpha = -mDosymBacklashDir * mComplexTasks->GetTiltBacklash();
   if (!justSetup)
-    mScope->MoveStage(smi, true, false, false, false, RestoreStageXYafterTilt() > 0);
+    mScope->MoveStage(smi, mDoingDoseSymmetric && !mTSParam.dosymSkipBacklash, false, 
+      false, false, RestoreStageXYafterTilt() > 0);
 }
 
 // Returns whether it is the right tilt index at which to take dose-symmetric anchor
