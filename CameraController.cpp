@@ -1850,9 +1850,9 @@ int CCameraController::GetDeferredSum(void)
 /*
  * Make plugin write an align com file to work with an mdoc at the end of a tilt series
  */
-int CCameraController::MakeMdocFrameAlignCom(void)
+int CCameraController::MakeMdocFrameAlignCom(CString mdocPath)
 {
-  CString mdocPath, mdocName, tempStr, comRoot;
+  CString mdocName, tempStr, comRoot;
   int nameLen, textLen, stringSize, frameX, frameY;
   long retVal = 0;
   UINT numRead;
@@ -1879,16 +1879,18 @@ int CCameraController::MakeMdocFrameAlignCom(void)
         "in IMOD in order to make a com file for aligning frames");
       return 1;
   }
-  if (!mWinApp->mStoreMRC || mWinApp->mStoreMRC->GetAdocIndex() < 0) {
-    SEMMessageBox("There needs to be a current open file with an associated mdoc file\n"
-      "to make a com file for aligning tilt series frames");
+  if (mdocPath.IsEmpty() && (!mWinApp->mStoreMRC || mWinApp->mStoreMRC->GetAdocIndex() 
+    < 0)) {
+    SEMMessageBox("There needs to be a current open file with an associated mdoc\n"
+      "file to make a com file for aligning tilt series frames");
     return 1;
   }
 
   // Set path and start working with mdoc file
   if (mAlignFramesComPath.IsEmpty())
     mAlignFramesComPath = mDirForK2Frames;
-  mdocPath = mWinApp->mStoreMRC->getAdocName();
+  if (mdocPath.IsEmpty())
+    mdocPath = mWinApp->mStoreMRC->getAdocName();
   UtilSplitPath(mdocPath, tempStr, mdocName);
   UtilSplitExtension(mdocName, comRoot, tempStr);
   if (!mParam->K2Type) {

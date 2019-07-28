@@ -989,7 +989,7 @@ void RollBuffers(int nRoll, int keepIndexCurrent);
 bool HasNewK2API(CameraParameters * param);
 void SetFrameAliDefaults(FrameAliParams & faParam, const char *name,
   int binning, float filt1, int sizeRestrict);
-int MakeMdocFrameAlignCom(void);
+int MakeMdocFrameAlignCom(CString mdocPath);
 int QueueTiltDuringShot(double angle, int delayToStart, double speed);
 void RetractAllCameras(void);
 float GetCountScaling(CameraParameters * camParam);
