@@ -92,11 +92,14 @@ static int sJeolSecondaryModeInd = JEOL_SAMAG_MODE;  // Index to use for seconda
 static BOOL sCheckPosOnScreenError = false;
 static BOOL sJeolReadStageForWait = false;
 static CString sThreadErrString;   // Error string from thread (stage move)
-CString sMessageBoxTitle;   // Arguments for calling message box function
-CString sMessageBoxText;
-int sMessageBoxType;
-int sMessageBoxReturn;
-int sCartridgeToLoad = -1;
+static CString sMessageBoxTitle;   // Arguments for calling message box function
+static CString sMessageBoxText;
+static int sMessageBoxType;
+static int sMessageBoxReturn;
+static int sCartridgeToLoad = -1;
+static bool sGettingValuesFast = false;    // Keep track of whether getting values fast
+static bool sLastGettingFast = false;
+
 
 // Parameters controlling whether to wait for stage ready if error on slow movement
 static float sStageErrSpeedThresh = 0.15f;  // For speed factors below this
@@ -440,8 +443,6 @@ CEMscope::CEMscope()
   mUseInvertedMagRange = false;
   mFalcon3ReadoutInterval = 0.024923f;
   mAddToFalcon3Exposure = 0.013f;
-  mGettingValuesFast = false;
-  mLastGettingFast = false;
   mPluginVersion = 0;
   mPlugFuncs = NULL;
   mScopeMutexHandle = NULL;
@@ -1066,7 +1067,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
     return;
   if (mPlugFuncs->DoingUpdate) {
     mPlugFuncs->DoingUpdate(1);
-    mGettingValuesFast = true;
+    sGettingValuesFast = true;
   }
 
   try {
@@ -1565,7 +1566,7 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
 
   if (mPlugFuncs->DoingUpdate) {
      mPlugFuncs->DoingUpdate(0);
-     mGettingValuesFast = false;
+     sGettingValuesFast = false;
   }
   if (JEOLscope) 
     SEMReleaseJeolDataMutex();
@@ -1878,13 +1879,13 @@ static void ManageTiltReversalVars()
 double CEMscope::GetTiltAngle(BOOL forceGet)
 {
   int getFast = 0;
-  bool wasGettingFast = mGettingValuesFast;
+  bool wasGettingFast = sGettingValuesFast;
   if (!sInitialized)
     return 0.0;
 
   // Plugin uses state value only if getting fast is set
   if (JEOLscope) {
-    if ((mJeolSD.eventDataIsGood && !forceGet) || mGettingValuesFast) {
+    if ((mJeolSD.eventDataIsGood && !forceGet) || sGettingValuesFast) {
       if (!wasGettingFast)
         GetValuesFast(1);
       getFast = 1;
@@ -2157,8 +2158,12 @@ int CEMscope::StageBusy(int ignoreOrTrustState)
       if (JEOLscope)
         GetValuesFast(getFast);
       retval = mPlugFuncs->GetStageStatus();
-      if (JEOLscope)
+      if (JEOLscope) {
+        if (!sGettingValuesFast)
+          SEMTrace('w', "StageBusy: read status %d at %.3f", retval,
+            SEMSecondsSinceStart());
         GetValuesFast(-1);
+      }
     }
   }
   catch (_com_error E) {
@@ -2373,7 +2378,7 @@ BOOL CEMscope::GetStagePosition(double &X, double &Y, double &Z)
 
   // Plugin will use state value if update by event or getting fast
   if (JEOLscope) {
-    needMutex = !(mJeolSD.eventDataIsGood || mGettingValuesFast);
+    needMutex = !(mJeolSD.eventDataIsGood || sGettingValuesFast);
     while (SEMCheckStageTimeout())
       Sleep(200);
   }
@@ -2441,7 +2446,7 @@ BOOL CEMscope::GetImageShift(double &shiftX, double &shiftY)
 
   // Plugin will return from state if it is true IS and updating by event, or getting fast
   bool needMutex = !(JEOLscope && ((mJeolSD.eventDataIsGood && !mJeolSD.usePLforIS) ||
-    mGettingValuesFast));
+    sGettingValuesFast));
   if (needMutex)
     ScopeMutexAcquire("GetImageShift", true);
   
@@ -2917,7 +2922,7 @@ BOOL CEMscope::SmallScreenIn()
 
   // Plugin will use state value if update by event or getting fast
   bool needMutex = !(JEOLscope && ((mScreenByEvent && mJeolSD.eventDataIsGood) || 
-    mGettingValuesFast));
+    sGettingValuesFast));
   if (!sInitialized)
     return false;
   
@@ -2950,7 +2955,7 @@ int CEMscope::GetScreenPos()
 
   // Plugin will use state value if update by event or getting fast
   bool needMutex = !(JEOLscope && ((mScreenByEvent && mJeolSD.eventDataIsGood) || 
-    mGettingValuesFast || !mReportsLargeScreen));
+    sGettingValuesFast || !mReportsLargeScreen));
   if (needMutex)
     ScopeMutexAcquire("GetScreenPos", true);
   try {
@@ -3152,7 +3157,7 @@ double CEMscope::GetMagnification()
     return 0.;
 
   // Plugin will use state value if update by event or getting fast, and not scanning
-  bool needMutex = !(JEOLscope && (mJeolSD.eventDataIsGood || mGettingValuesFast) && 
+  bool needMutex = !(JEOLscope && (mJeolSD.eventDataIsGood || sGettingValuesFast) && 
     !sScanningMags);
   if (needMutex)
     ScopeMutexAcquire("GetMagnification", true);
@@ -3192,7 +3197,7 @@ int CEMscope::GetMagIndex(BOOL forceGet)
     return -1;
 
   // Plugin will use state value only if getting fast and mag is valid
-  if (JEOLscope && (mJeolSD.eventDataIsGood || mGettingValuesFast) && !forceGet && 
+  if (JEOLscope && (mJeolSD.eventDataIsGood || sGettingValuesFast) && !forceGet && 
     !mJeolSD.magInvalid)
     gettingFast = 1;
 
@@ -4188,7 +4193,7 @@ double CEMscope::GetDefocus()
 
   // 11/30/10: There is no focus value by event! Eliminate forceread, use of stored value
   // Plugin recomputes it when getting fast
-  bool needMutex = !(JEOLscope && mGettingValuesFast);
+  bool needMutex = !(JEOLscope && sGettingValuesFast);
   if (needMutex)
     ScopeMutexAcquire("GetDefocus", true);
 
@@ -5106,7 +5111,7 @@ double CEMscope::GetIntensity()
   }
 
   //Plugin  uses state value if getting fast
-  bool needMutex = !(JEOLscope && mGettingValuesFast);
+  bool needMutex = !(JEOLscope && sGettingValuesFast);
   if (needMutex)
     ScopeMutexAcquire("GetIntensity", true);
 
@@ -5296,7 +5301,7 @@ int CEMscope::GetSpotSize()
 
   // Plugin will use state value if update by event, getting fast, or Jeol 1230
   bool needMutex = !(JEOLscope && (mJeolSD.eventDataIsGood || mJeol1230 || 
-    mGettingValuesFast));
+    sGettingValuesFast));
   if (needMutex)
     ScopeMutexAcquire("GetSpotSize", true);
 
@@ -5423,7 +5428,7 @@ int CEMscope::GetAlpha(void)
     return -999;
 
   // Plugin will use state value if updating by event or getting fast
-  BOOL needMutex = !(mJeolSD.eventDataIsGood || mGettingValuesFast);
+  BOOL needMutex = !(mJeolSD.eventDataIsGood || sGettingValuesFast);
   if (needMutex)
     ScopeMutexAcquire("GetAlpha", true);
 
@@ -6202,7 +6207,7 @@ BOOL CEMscope::GetSTEMmode(void)
     return false;
 
   // Plugin will use state value if getting fast
-  bool needMutex = !(JEOLscope && mGettingValuesFast);
+  bool needMutex = !(JEOLscope && sGettingValuesFast);
   if (needMutex)
     ScopeMutexAcquire("GetSTEMmode", true);
   try {
@@ -6739,21 +6744,24 @@ void CEMscope::SetBlankingFlag(BOOL state)
 
 void CEMscope::WaitForStageDone(StageMoveInfo *smi, char *procName)
 {
-  double sx, sy, sz;
+  double sx, sy, sz, errx, erry;
   int i, status, ntry = 10, ntryReady = 300;
   int waitTime = 100;
   JeolStateData *jsd = smi->JeolSD;
+  bool useEvents = jsd->eventDataIsGood && !sJeolReadStageForWait;
 
   if (FEIscope)
     return;
 
   // If updating by event, first wait to see it go non-ready, using the ready state flag
-  if (JEOLscope && jsd->eventDataIsGood) {
-    if (!sJeolReadStageForWait)
-      smi->plugFuncs->GetValuesFast(1);
+  if (JEOLscope) {
     for (i = 0; i < ntry; i++) {
+      if (useEvents)
+        GetValuesFast(1);
       status = smi->plugFuncs->GetStageStatus();
-      if (sJeolReadStageForWait && !status)
+      if (useEvents)
+        GetValuesFast(-1);
+      if (!useEvents && !status)
         SEMTrace('w', "WaitForStageDone: wait for nonready, status %d at %.3f", status,
           SEMSecondsSinceStart());
       if (status)
@@ -6765,35 +6773,41 @@ void CEMscope::WaitForStageDone(StageMoveInfo *smi, char *procName)
       }
     }
 
-    // If not ready was seen, wait on ready flag to avoid load on system,
-    // then fall back to getting status for safety's sake
-    if (i < ntry) {
-      SEMTrace('w', "WaitForStageDone: Not ready %s seen (status %d) in %d ms at %.3f", 
-        sJeolReadStageForWait ? "reading":"event", status, i * waitTime, 
-        SEMSecondsSinceStart());
-      for (i = 0; i < ntryReady; i++) {
-        status = smi->plugFuncs->GetStageStatus();
-        if (sJeolReadStageForWait && status)
-          SEMTrace('w', "WaitForStageDone: wait for ready, status %d at %.3f", status,
-            SEMSecondsSinceStart());
-        if (!status)
-          break;
-        ScopeMutexRelease(procName);
-        Sleep(waitTime);
-        ScopeMutexAcquire(procName, true);
-      }
-      SEMTrace('w', "WaitForStageDone: Ready %s %sseen in %d ms at %.3f", 
-        sJeolReadStageForWait ? "reading" : "event", i == ntryReady ? "not " : "",
-        i * waitTime, SEMSecondsSinceStart());
+    if (jsd->eventDataIsGood) {
 
-      if (sJeolReadStageForWait)
-        Sleep(waitTime);
+      // If not ready was seen, wait on ready flag to avoid load on system,
+      // then fall back to getting status for safety's sake
+      if (i < ntry) {
+        SEMTrace('w', "WaitForStageDone: Not ready %s seen (status %d) in %d ms at %.3f",
+          sJeolReadStageForWait ? "reading" : "event", status, i * waitTime,
+          SEMSecondsSinceStart());
+        for (i = 0; i < ntryReady; i++) {
+          if (useEvents)
+            GetValuesFast(1);
+          status = smi->plugFuncs->GetStageStatus();
+          if (useEvents)
+            GetValuesFast(-1);
+          if (!useEvents && status)
+            SEMTrace('w', "WaitForStageDone: wait for ready, status %d at %.3f", status,
+              SEMSecondsSinceStart());
+          if (!status)
+            break;
+          ScopeMutexRelease(procName);
+          Sleep(waitTime);
+          ScopeMutexAcquire(procName, true);
+        }
+        SEMTrace('w', "WaitForStageDone: Ready %s %sseen in %d ms at %.3f",
+          sJeolReadStageForWait ? "reading" : "event", i == ntryReady ? "NOT " : "",
+          i * waitTime, SEMSecondsSinceStart());
 
-    } else
-      SEMTrace('w', "WaitForStageDone: Not ready %s not seen in %d ms at %.3f", 
-        sJeolReadStageForWait ? "reading" : "event", (ntry - 1) * waitTime,
-        SEMSecondsSinceStart());
-    smi->plugFuncs->GetValuesFast(0);
+        if (sJeolReadStageForWait)
+          Sleep(waitTime);
+
+      } else
+        SEMTrace('w', "WaitForStageDone: Not ready %s NOT seen in %d ms at %.3f",
+          sJeolReadStageForWait ? "reading" : "event", (ntry - 1) * waitTime,
+          SEMSecondsSinceStart());
+    }
   }
 
   // If no event update or didn't see busy, or events never came through,
@@ -6820,9 +6834,18 @@ void CEMscope::WaitForStageDone(StageMoveInfo *smi, char *procName)
   if (JEOLscope) {
     try {
       smi->plugFuncs->GetStagePosition(&sx, &sy, &sz);
-      if (smi->axisBits & axisXY)
-        SEMTrace('w', "WaitForStageDone: move to %.3f %.3f ended at %.3f %.3f at %.3f",
-          smi->x, smi->y, 1.e6 * sx, 1.e6 * sy, SEMSecondsSinceStart());
+      if (smi->axisBits & axisXY) {
+        errx = 1.e6 * sx - smi->x;
+        erry = 1.e6 * sy - smi->y;
+        SEMTrace('w', "WaitForStageDone: move to %.3f %.3f  error %.3f %.3f  at %.3f",
+          smi->x, smi->y, errx, erry, SEMSecondsSinceStart());
+        if (fabs(errx) > 1. || fabs(erry) > 1.) {
+          Sleep(600);
+          smi->plugFuncs->GetStagePosition(&sx, &sy, &sz);
+          SEMTrace('w', "WaitForStageDone:     error %.3f %.3f  at %.3f",
+            1.e6 * sx - smi->x, erry = 1.e6 * sy - smi->y, SEMSecondsSinceStart());
+        }
+      }
     }
     catch (_com_error E) {
     }
@@ -7778,13 +7801,19 @@ void CEMscope::GetValuesFast(int enable)
     return;
   mPlugFuncs->GetValuesFast(enable);
   if (enable < 0) {
-    mGettingValuesFast = mLastGettingFast;
-    mLastGettingFast = false;
+    sGettingValuesFast = sLastGettingFast;
+    sLastGettingFast = false;
   } else {
-    mLastGettingFast = mGettingValuesFast;
-    mGettingValuesFast = enable > 0;
+    sLastGettingFast = sGettingValuesFast;
+    sGettingValuesFast = enable > 0;
   }
 }
+
+bool CEMscope::GetGettingValuesFast()
+{
+  return sGettingValuesFast;
+}
+
 
 // Process a moveInfo after a stage move to record a valid X/Y backlash or set as invalid
 // or, if one-shot flag is set that it was valid at start, check if move was in same

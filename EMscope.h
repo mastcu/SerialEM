@@ -248,7 +248,7 @@ class DLL_IM_EX CEMscope
   GetSetMember(DWORD, LastNormalization);
   SetMember(DWORD, LastStageTime);
   SetMember(DWORD, LastTiltTime);
-  GetMember(bool, GettingValuesFast);
+  bool GetGettingValuesFast();
   DWORD GetLastTiltTime();
   DWORD GetLastStageTime();
   GetMember(double, LastTiltChange)
@@ -660,8 +660,6 @@ private:
   int mHighestLMindexToScan;  // Last index of enabled LM mags, if any are disabled
   int mCheckFreeK2RefCount;   // Counter for checking K2 reference freeing
   int mLastNormMagIndex;      // Mag of last normalization
-  bool mGettingValuesFast;    // Keep track of whether getting values fast
-  bool mLastGettingFast;
   int mPostFocusChgDelay;     // Delay after changing focus
   int mUseJeolGIFmodeCalls;   // 1 to rely on state from calls, 2 to change EFTEM with it
   BOOL mJeolHasNitrogenClass; // Flag to create the nitrogen class
@@ -800,7 +798,7 @@ public:
   int ReadProbeMode(void);
   void SetCheckPosOnScreenError(BOOL inVal);
   BOOL GetCheckPosOnScreenError();
-  void GetValuesFast(int enable);
+  static void GetValuesFast(int enable);
   void RemoteControlChanged(BOOL newState);
   void SetBacklashFromNextMove(double startX, double startY, float minMove) {
     mStartForMinMoveX = startX; mStartForMinMoveY = startY; mMinMoveForBacklash = minMove;};
