@@ -2888,7 +2888,7 @@ BEGIN
     CONTROL         "Center shot at end",IDC_RCENTER_AFTER,"Button",BS_AUTORADIOBUTTON,59,50,72,10
     CONTROL         "Center shot at start",IDC_RCENTER_BEFORE,"Button",BS_AUTORADIOBUTTON,59,60,71,10
     GROUPBOX        "Shot in center",IDC_STAT_CENTER_GROUP,54,30,77,42,WS_GROUP
-    CONTROL         "No early return",IDC_RNO_EARLY,"Button",BS_AUTORADIOBUTTON | WS_GROUP,21,237,65,10
+    CONTROL         "Full sum returned on all shots",IDC_RNO_EARLY,"Button",BS_AUTORADIOBUTTON | WS_GROUP,21,237,65,10
     CONTROL         "Early return only on last shot",IDC_RLAST_EARLY,"Button",BS_AUTORADIOBUTTON,21,247,110,10
     CONTROL         "Early return on all shots",IDC_RALL_EARLY,"Button",BS_AUTORADIOBUTTON,21,257,94,10
     LTEXT           "Number of frames in return (-1 for all):",IDC_STAT_NUM_EARLY,23,268,117,8
