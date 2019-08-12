@@ -10,7 +10,7 @@ plugin; changed title to indicate fixed version (In 3.7).
 7/28/19: Improved wait for stage done function on JEOL when either updating by
 event or not (In 3.7).
 
-7/27/19: Allowed focus positions to be set and editing in dummy version.
+7/27/19: Allowed focus positions to be set and edited in dummy version.
 
 7/27/19: Fixing saving a focus position for near full-frame image from
 non-square camera.

@@ -4307,7 +4307,7 @@ int CTSController::EndControl(BOOL terminating, BOOL startReorder)
   float pixelSize;
   int sizeX, sizeY, mbSaved, filmMag, i, error;
   CTime ctdt = CTime::GetCurrentTime();
-  mEndCtlMdocPath = "":
+  mEndCtlMdocPath = "";
   if (!mClosedDoseSymFile) {
     mEndCtlFilePath = mWinApp->mStoreMRC->getFilePath();
     mEndCtlWidth = mWinApp->mStoreMRC->getWidth();
