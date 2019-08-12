@@ -3,6 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+8/12/19: Fixed crashes when doing unidirectional after dose-symmetric series,
+and doing dose-symmetric series with fewer angles than previous one.
+
+8/12/19: Fixed using toolbar buttons to run or edit scripts above 20 and the
+menu entries for running those scripts.
+
 8/1/19: SEM_3-7-7
 8/1/19: Fixed orientation of K3 binned gain reference written by SEMCCD
 plugin; changed title to indicate fixed version (In 3.7).
