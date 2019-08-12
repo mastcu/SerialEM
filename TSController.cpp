@@ -892,6 +892,7 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external)
     mBidirSeriesPhase = BIDIR_NONE;
     mBaseAngleForVarying = 0.;
     mDosymBacklashDir = 0;
+    mDoingDoseSymmetric = false;
     if (mTSParam.doBidirectional) {
       mDoingDoseSymmetric = mTSParam.doDoseSymmetric && mLowDoseMode;
       mBidirSeriesPhase = mDoingDoseSymmetric ? DOSYM_ALTERNATING_PART : BIDIR_FIRST_PART;
@@ -4487,6 +4488,7 @@ int CTSController::EndControl(BOOL terminating, BOOL startReorder)
   if (mDoingDoseSymmetric) {
     CLEAR_RESIZE(mDosymDirections, short, 1);
     CLEAR_RESIZE(mIdealDosymAngles, float, 1);
+    CLEAR_RESIZE(mDosymCurrentTilts, float, 1);
     CLEAR_RESIZE(mDosymSavedISX, double, 1);
     CLEAR_RESIZE(mDosymSavedISY, double, 1);
     CLEAR_RESIZE(mDosymDefocuses, double, 1);
