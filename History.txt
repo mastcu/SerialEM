@@ -21,9 +21,9 @@ maps in favor of higher mag ones at same stage position.
 7/27/19: Fixes to waiting for drift: handled Trial binning properly for K2,
 tested in script processor for task done.
 
-7/27/19: Fixed enabling of emenu items to edit script above 20.
+7/27/19: Fixed enabling of menu items to edit scripts above 20.
 
-7/27/19: Added option to sip backlash in dose-symmetric series.  Fixed writing
+7/27/19: Added option to skip backlash in dose-symmetric series.  Fixed writing
 of alignment command file after reordering file.
 
 7/27/19: When testing if stage is at right place in a montage, wait and read
