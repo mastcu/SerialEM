@@ -2241,10 +2241,13 @@ int CBeamAssessor::CheckCalForZeroIntensities(BeamTable &table, const char *mess
     if (table.intensities[ind])
       return 0;
   str.Format("%s, the beam calibration table has all zero intensities\r\n"
-    "  for spot %d, # values %d, starting mag %d, extrap flags %d", message, 
-    table.spotSize, table.numIntensities, table.magIndex, table.dontExtrapFlags);
+    "  for spot %d, # values %d, starting mag %d, extrap flags %d\r\n"
+    "(table %p, calTable is %p)\r\n", message, 
+    table.spotSize, table.numIntensities, table.magIndex, table.dontExtrapFlags,
+    &table, mCalTable);
   if (table.aboveCross / 2 == 0) {
-    str2.Format(", aboveCross %d", table.aboveCross);
+    str2.Format(", aboveCross %d, start intensity %.5f, crossover %.5f", table.aboveCross,
+      mStartIntensity, mScope->GetCrossover(table.spotSize));
     str += str2;
   }
   if (FEIscope)
@@ -2257,7 +2260,7 @@ int CBeamAssessor::CheckCalForZeroIntensities(BeamTable &table, const char *mess
     str += "\r\nPlease report this problem and the steps leading up to it to the "
     "SerialEM developer";
   if (postMessType == 2)
-    str += "\r\nTo eliminate this calibration from the file, turn on Administrator\r\n"
+    str += "\r\nTo eliminate this calibration from the file, turn on\r\nAdministrator"
     "  mode in the Calibration menu and save calibrations";
   if (postMessType == 3)
     str += "\r\nThis calibration will be removed when calibrations are saved again.";
