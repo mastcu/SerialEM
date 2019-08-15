@@ -5431,6 +5431,7 @@ BEGIN
     IDC_RNO_EARLY           "Return image after frame saving is complete, if any"
     IDC_RLAST_EARLY         "Return as soon as possible with specified sum for last shot only"
     IDC_RALL_EARLY          "Return as soon as possible with specified sum for all shots"
+    IDC_RFIRST_FULL         "Get full image only for first shot, return as soon as possible for others"
     IDC_EDIT_EXTRA_DELAY    "Additional settling time after image shift in seconds"
     IDC_EDIT_DE_FPS         "Frames per second for the current operating mode (linear versus counting)"
 END
