@@ -44,7 +44,7 @@ enum {JEOL_MDS_OFF = 0, JEOL_MDS_SEARCH, JEOL_MDS_FOCUS, JEOL_MDS_PHOTOSET};
 
 struct JeolStateData {
   double tiltAngle;  // x-axis tilt, in degrees
-  BOOL stageReady;
+  int stageStatus;
   int magIndex;
   int magValue;
   int magMode;

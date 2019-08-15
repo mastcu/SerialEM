@@ -256,7 +256,7 @@ CEMscope::CEMscope()
 
   // JEOL initializations
   mJeolSD.tiltAngle = 0;
-  mJeolSD.stageReady = false;
+  mJeolSD.stageStatus = 1;
   mJeolSD.magIndex = 0;
   mJeolSD.spotSize = 1;
   mJeolSD.alpha = -999;
@@ -1592,7 +1592,7 @@ void CEMscope::UpdateStage(double &stageX, double &stageY, double &stageZ, BOOL 
     stageX = mJeolSD.stageX;
     stageY = mJeolSD.stageY;
     stageZ = mJeolSD.stageZ;
-    bReady = mJeolSD.stageReady;
+    bReady = mJeolSD.stageStatus == 0;
 
   } else {  // Plugin
     mPlugFuncs->GetStagePosition(&stageX, &stageY, &stageZ);
@@ -2059,7 +2059,9 @@ BOOL CEMscope::MoveStage(StageMoveInfo info, BOOL doBacklash, BOOL useSpeed,
     //TEMCON selection
     // Update is too slow to disable the buttons so do it explicitly
     // Also set ready flag false since thread may hang on timeout
-    USE_DATA_MUTEX(mJeolSD.stageReady = false);
+    USE_DATA_MUTEX(mJeolSD.stageStatus = ((info.axisBits & axisX) ? 1 : 0) + 
+      ((info.axisBits & axisY) ? 10 : 0) + ((info.axisBits & axisZ) ? 100 : 0) +
+      ((info.axisBits & axisA) ? 1000 : 0));
     mWinApp->mTiltWindow.TiltUpdate(mJeolSD.tiltAngle, false);
   }
   sThreadErrString = "";
