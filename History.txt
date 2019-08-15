@@ -3,6 +3,11 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+8/14/19: Added option to multi-shot dialog to do early return on all but first
+shot.
+
+8/14/19: Added script commands to close log and save log to file.
+
 8/14/19: SEM_3-7-8
 8/14/19: Fixed enabling of buttons in Tilt Control on JEOL, broken 7/28
 (In 3.7).

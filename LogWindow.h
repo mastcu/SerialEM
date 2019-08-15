@@ -19,7 +19,8 @@ public:
 	int GetFileName(BOOL oldFile, UINT flags);
 	int ReadAndAppend();
 	int OpenAndWriteFile(UINT flags, int length, int offset);
-	int UpdateSaveFile(BOOL createIfNone, CString stackName = "");
+	int UpdateSaveFile(BOOL createIfNone, CString stackName = "", BOOL replace = false, 
+    BOOL overwrite = false);
   int AskIfSave(CString strReason);
   int Save();
   int SaveAs();

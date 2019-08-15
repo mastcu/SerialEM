@@ -137,14 +137,15 @@ int CLogWindow::DoSave()
 
 // Flush new text to the save file, asking for a new one if createifNone is true and no
 // stack name is supplied, or deriving a name from the stack name
-int CLogWindow::UpdateSaveFile(BOOL createIfNone, CString stackName)
+int CLogWindow::UpdateSaveFile(BOOL createIfNone, CString stackName, BOOL replace,
+  BOOL overwrite)
 {
   int dirInd, extInd, fileNo;
   CString name;
   CFileStatus status;
   if (!mUnsaved)
     return 0;
-  if (mSaveFile.IsEmpty()) {
+  if (mSaveFile.IsEmpty() || (createIfNone && !stackName.IsEmpty() && replace)) {
     if (createIfNone) {
       if (stackName.IsEmpty())
         return (SaveAs());
@@ -156,25 +157,31 @@ int CLogWindow::UpdateSaveFile(BOOL createIfNone, CString stackName)
       if (extInd > dirInd && extInd > 0)
         stackName = stackName.Left(extInd);
 
-      // Then loop until finding a file name that does not exist
-      for (fileNo = 0; fileNo < 1000; fileNo++) {
-        if (fileNo)
-          name.Format("%s-%d.log", (LPCTSTR)stackName, fileNo);
-        else
-          name.Format("%s.log", (LPCTSTR)stackName, fileNo);
-        if (!CFile::GetStatus((LPCTSTR)name, status))
-          break;
-      }
-      if (fileNo == 1000)
-        return 1;
+      // Use name as is now if overwrite flag is set
+      if (overwrite) {
+        mSaveFile = stackName + ".log";
+      } else {
 
-      // Set up the name and the window text, and do the save
-      mSaveFile = name;
+        // Othewise loop until finding a file name that does not exist
+        for (fileNo = 0; fileNo < 1000; fileNo++) {
+          if (fileNo)
+            name.Format("%s-%d.log", (LPCTSTR)stackName, fileNo);
+          else
+            name.Format("%s.log", (LPCTSTR)stackName, fileNo);
+          if (!CFile::GetStatus((LPCTSTR)name, status))
+            break;
+        }
+        if (fileNo == 1000)
+          return 1;
+        mSaveFile = name;
+      }
+
+      // Set up the window text, and do the save
       dirInd = mSaveFile.GetLength() - (mSaveFile.ReverseFind('\\') + 1);
       name = mSaveFile.Right(dirInd);
       SetWindowText("Log:  " + name);
       return (DoSave());
-   }
+    }
     return 0;
   }
 

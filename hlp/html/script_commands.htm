@@ -1146,6 +1146,27 @@
             be added to get a unique new name.</TD>
         </TR>
         <TR vAlign="top">
+          <TD class="style7">CloseLogOpenNew [#]</TD>
+          <TD>Closes the log window and opens a new one.&nbsp; If a log file has been saved, the 
+              log is automatically saved to it before closing.&nbsp; If there is no log file and 
+              the log has new contents since program startup, the program will ask the user 
+              whether to save to log first unless a non-zero value is entered for the optional 
+              #, in which case the contents of the log are discarded. If the user cancels the 
+              query, the script is aborted.&nbsp;&nbsp;</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style7">SaveLog [#O newFile]</TD>
+          <TD>Saves the log to a file.&nbsp; If no optional entries are made, it will be saved 
+              to the current file if there is one; otherwise the user will be asked for a 
+              filename in which to save.&nbsp; If a filename is entered on this command, the 
+              log will be saved to a new file with that name.&nbsp; Variables will be substituted 
+              before using the name. An extension in this name will be stripped off before 
+              adding &#39;.log&#39;, so if you want to preserve extensions or other text after a 
+              period, add &#39;.log&#39; to the end of the name.&nbsp; Enter a non-zero value for #O to 
+              overwrite the file if it already exists, or zero to have a number added to get a 
+              unique new name.</TD>
+        </TR>
+        <TR vAlign="top">
           <TD colspan="2"><A name="imagefile"></A><B>Image File Commands</B></TD>
         </TR>
          <TR vAlign="top">

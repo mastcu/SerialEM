@@ -254,7 +254,7 @@ enum {CME_SCRIPTEND = -7, CME_LABEL, CME_SETVARIABLE, CME_SETSTRINGVAR, CME_DOKE
   CME_CALLSTRINGARRAY, CME_STRINGARRAYTOSCRIPT, CME_MAKEVARPERSISTENT,
   CME_SETLDADDEDBEAMBUTTON, CME_KEEPCAMERASETCHANGES, CME_REPORTDATETIME,
   CME_REPORTFILAMENTCURRENT, CME_SETFILAMENTCURRENT, CME_CLOSEFRAMEMDOC,
-  CME_DRIFTWAITTASK, CME_GETWAITTASKDRIFT
+  CME_DRIFTWAITTASK, CME_GETWAITTASKDRIFT, CME_CLOSELOGOPENNEW, CME_SAVELOG
 };
 
 // The two numbers are the minimum arguments and whether arithmetic is allowed
@@ -388,7 +388,7 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"StringArrayToScript", 1, 0}, {"MakeVarPersistent", 1, 0},{"SetLDAddedBeamButton", 0, 0},
 {"KeepCameraSetChanges", 0, 0}, {"ReportDateTime", 0, 0}, {"ReportFilamentCurrent", 0, 0},
 {"SetFilamentCurrent", 1, 0}, {"CloseFrameMdoc", 0, 0}, {"DriftWaitTask", 0, 1},
-{"GetWaitTaskDrift", 0, 0},
+{"GetWaitTaskDrift", 0, 0}, {"CloseLogOpenNew", 0, 0}, {"SaveLog", 0, 0},
 {NULL, 0, 0}
 };
 
@@ -3333,27 +3333,48 @@ void CMacroProcessor::NextCommand()
       mConSets[RECORD_CONSET].alignFrames = 0;
     }
     break;
-    
+
   case CME_SAVELOGOPENNEW:                                  // SaveLogOpenNew
+  case CME_CLOSELOGOPENNEW:                                 // CloseLogOpenNew
+    truth = CMD_IS(CLOSELOGOPENNEW);
     if (mWinApp->mLogWindow) {
       report = mWinApp->mLogWindow->GetSaveFile();
       if (!report.IsEmpty())
         mWinApp->mLogWindow->DoSave();
-      else if (mWinApp->mLogWindow->AskIfSave("closing and opening it again?")) {
+      else if ((!truth || itemEmpty[1] || !itemInt[1]) && 
+        mWinApp->mLogWindow->AskIfSave("closing and opening it again?")) {
         AbortMacro();
         return;
       }
       mWinApp->mLogWindow->SetUnsaved(false);
-      mWinApp->mLogWindow->CloseLog();
+        mWinApp->mLogWindow->CloseLog();
     }
     mWinApp->AppendToLog(mWinApp->mDocWnd->DateTimeForTitle());
-    if (!itemEmpty[1]) {
+    if (!itemEmpty[1] && !truth) {
       SubstituteVariables(&strLine, 1, strLine);
       mWinApp->mParamIO->StripItems(strLine, 1, report);
       mWinApp->mLogWindow->UpdateSaveFile(true, report);
     }
     break;
     
+  case CME_SAVELOG:                                         // SaveLog
+    if (!mWinApp->mLogWindow)
+      ABORT_LINE("The log window must already be open for line:\n\n");
+    if (itemEmpty[2]) {
+      report = mWinApp->mLogWindow->GetSaveFile();
+      if (!report.IsEmpty())
+        mWinApp->mLogWindow->DoSave();
+      else
+        mWinApp->OnFileSavelog();
+    } else {
+      SubstituteVariables(&strLine, 1, strLine);
+      mWinApp->mParamIO->StripItems(strLine, 2, report);
+      mWinApp->mLogWindow->UpdateSaveFile(true, report, true, itemInt[1] != 0);
+      mWinApp->mLogWindow->DoSave();
+    }
+
+    break;
+
   case CME_SETPROPERTY:                                     // SetProperty
     if (mWinApp->mParamIO->MacroSetProperty(strItems[1], itemDbl[2]))
       AbortMacro();
