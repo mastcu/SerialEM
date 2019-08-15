@@ -4011,7 +4011,7 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
     alignFlags |= K2_EARLY_RETURN;
     if (mDeferSumOnNextAsync)
       flags |= K2_MAKE_DEFERRED_SUM;
-    if (mDeferSumOnNextAsync || trulyAligning) {
+    if (mDeferSumOnNextAsync || aligning) {
       mSetDeferredSize = true;
     }
   }

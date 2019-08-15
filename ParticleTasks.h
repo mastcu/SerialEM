@@ -34,7 +34,6 @@ private:
   CComplexTasks *mComplexTasks;
   CShiftManager *mShiftManager;
   CFocusManager *mFocusManager;
-  ControlSet *mRecConSet;
   int mMSNumPeripheral;           // Number of shots around the center
   int mMSDoCenter;                // -1 to do center before, 1 to do it after
   float mMSSpokeRad;              // Radius from center to periheral shots
@@ -59,7 +58,6 @@ private:
   MultiShotParams *mMSParams;      // Pointer to params from NavHelper
   int mMSTestRun;
   int mMagIndex;                   // Mag index for the run
-  int mSavedAlignFlag;
 
   DriftWaitParams mWDDfltParams;   // Resident parameters
   DriftWaitParams mWDParm;         // Run-time parameters

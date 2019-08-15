@@ -2879,7 +2879,7 @@ BEGIN
     PUSHBUTTON      "No",IDC_BUTMIDDLE,121,47,45,14
 END
 
-IDD_MULTI_SHOT_SETUP DIALOGEX 0, 0, 185, 382
+IDD_MULTI_SHOT_SETUP DIALOGEX 0, 0, 185, 391
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Multiple Record Setup"
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
@@ -2891,11 +2891,11 @@ BEGIN
     CONTROL         "Full sum returned on all shots",IDC_RNO_EARLY,"Button",BS_AUTORADIOBUTTON | WS_GROUP,21,237,120,10
     CONTROL         "Early return only on last shot",IDC_RLAST_EARLY,"Button",BS_AUTORADIOBUTTON,21,247,110,10
     CONTROL         "Early return on all shots",IDC_RALL_EARLY,"Button",BS_AUTORADIOBUTTON,21,257,94,10
-    LTEXT           "Number of frames in return (-1 for all):",IDC_STAT_NUM_EARLY,23,268,117,8
-    EDITTEXT        IDC_EDIT_EARLY_FRAMES,134,265,22,14,ES_AUTOHSCROLL
-    GROUPBOX        "Early Returns for K2/K3",IDC_STAT_EARLY_GROUP,15,227,150,55
-    DEFPUSHBUTTON   "OK",IDOK,36,359,40,14
-    PUSHBUTTON      "Cancel",IDCANCEL,112,359,40,14
+    LTEXT           "Number of frames in return (-1 for all):",IDC_STAT_NUM_EARLY,23,279,117,8
+    EDITTEXT        IDC_EDIT_EARLY_FRAMES,134,277,22,12,ES_AUTOHSCROLL
+    GROUPBOX        "Early Returns for K2/K3",IDC_STAT_EARLY_GROUP,15,227,150,64
+    DEFPUSHBUTTON   "OK",IDOK,36,369,40,14
+    PUSHBUTTON      "Cancel",IDCANCEL,112,369,40,14
     LTEXT           "Number of shots around center:",IDC_STAT_NUM_PERIPHERAL,9,20,95,8
     LTEXT           "99",IDC_STAT_NUM_SHOTS,104,20,9,8
     CONTROL         "",IDC_SPIN_NUM_SHOTS,"msctls_updown32",UDS_ARROWKEYS,115,17,10,14
@@ -2903,19 +2903,19 @@ BEGIN
     EDITTEXT        IDC_EDIT_SPOKE_DIST,128,75,30,14,ES_AUTOHSCROLL
     LTEXT           "um",IDC_STAT_CENTER_UM,160,77,11,8
     CONTROL         "Save Record image",IDC_CHECK_SAVE_RECORD,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,217,79,10
-    LTEXT           "Diameter of circles to draw:",IDC_STAT_BEAM_DIAM,8,334,92,8
-    EDITTEXT        IDC_EDIT_BEAM_DIAM,91,331,26,14,ES_AUTOHSCROLL
-    LTEXT           "um",IDC_STAT_BEAM_UM,121,334,11,8
+    LTEXT           "Diameter of circles to draw:",IDC_STAT_BEAM_DIAM,8,344,92,8
+    EDITTEXT        IDC_EDIT_BEAM_DIAM,91,341,26,14,ES_AUTOHSCROLL
+    LTEXT           "um",IDC_STAT_BEAM_UM,121,344,11,8
     CONTROL         "Use Record illuminated area for circles in Low Dose",IDC_CHECK_USE_ILLUM_AREA,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,346,166,10
-    PUSHBUTTON      "?",IDC_BUTHELP,167,363,11,10
-    LTEXT           "Extra delay after image shift:",IDC_STAT_EXTRA_DELAY,8,288,89,8
-    LTEXT           "sec",IDC_STAT_SEC,123,288,12,8
-    EDITTEXT        IDC_EDIT_EXTRA_DELAY,94,285,26,14,ES_AUTOHSCROLL
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,356,166,10
+    PUSHBUTTON      "?",IDC_BUTHELP,167,373,11,10
+    LTEXT           "Extra delay after image shift:",IDC_STAT_EXTRA_DELAY,8,298,89,8
+    LTEXT           "sec",IDC_STAT_SEC,123,298,12,8
+    EDITTEXT        IDC_EDIT_EXTRA_DELAY,94,295,26,14,ES_AUTOHSCROLL
     CONTROL         "Adjust beam tilt to compensate for image shift",IDC_CHECK_ADJUST_BEAM_TILT,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,300,160,10
-    LTEXT           " Coma versus image shift was calibrated with:",IDC_STAT_COMA_IS_CAL,16,310,152,8
-    LTEXT           "0.8 um IA, spot 8, nanoprobe, 70 um aperture",IDC_STAT_COMA_CONDITIONS,17,318,157,8
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,310,160,10
+    LTEXT           " Coma versus image shift was calibrated with:",IDC_STAT_COMA_IS_CAL,16,320,152,8
+    LTEXT           "0.8 um IA, spot 8, nanoprobe, 70 um aperture",IDC_STAT_COMA_CONDITIONS,17,328,157,8
     CONTROL         "Do multiple Records within each hole",IDC_CHECK_DO_SHOTS_IN_HOLE,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,7,137,10
     CONTROL         "Do Records in multiple holes",IDC_CHECK_DO_MULTIPLE_HOLES,
@@ -2940,6 +2940,8 @@ BEGIN
     PUSHBUTTON      "Abort",IDC_BUT_ABORT,154,183,21,12
     LTEXT           "Image shift should be measured near focus",IDC_STAT_SAVE_INSTRUCTIONS,7,197,169,10
     PUSHBUTTON      "IS to Nav Pt",IDC_BUT_IS_TO_PT,11,183,40,12
+    CONTROL         "Early return, except for full sum on first shot",IDC_RADIO1,
+                    "Button",BS_AUTORADIOBUTTON,21,267,140,10
 END
 
 IDD_DE_REFERENCE DIALOGEX 0, 0, 172, 210
@@ -3524,7 +3526,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 178
         TOPMARGIN, 7
-        BOTTOMMARGIN, 375
+        BOTTOMMARGIN, 384
     END
 
     IDD_DE_REFERENCE, DIALOG

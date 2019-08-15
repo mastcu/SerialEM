@@ -80,8 +80,6 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
   mMSIfEarlyReturn = ifEarlyReturn;
   mMSEarlyRetFrames = earlyRetFrames;
   mMSAdjustBeamTilt = adjustBT && comaVsIS->magInd > 0;
-  mRecConSet = mWinApp->GetConSets() + RECORD_CONSET;
-  mSavedAlignFlag = mRecConSet->alignFrames;
 
   // Check conditions, first for test runs
   if (testImage && testComa) {
@@ -240,7 +238,6 @@ void CParticleTasks::MultiShotNextTask(int param)
     return;
 
   // Save Record
-  mRecConSet->alignFrames = mSavedAlignFlag;
   if (mMSSaveRecord && mWinApp->mBufferManager->SaveImageBuffer(mWinApp->mStoreMRC)) {
     StopMultiShot();
     return;
@@ -299,7 +296,6 @@ void CParticleTasks::StopMultiShot(void)
 
   // Montage does a second restore after it is no longer "Doing", so just set this
   mWinApp->mMontageController->SetBaseISXY(mBaseISX, mBaseISY);
-  mRecConSet->alignFrames = mSavedAlignFlag;
   mMSCurIndex = -2;
   mMSTestRun = 0;
   mWinApp->UpdateBufferWindows();
@@ -405,8 +401,6 @@ int CParticleTasks::StartOneShotOfMulti(void)
     StopMultiShot();
     return 1;
   }
-  if (earlyRet && mRecConSet->alignFrames && mRecConSet->useFrameAlign == 1)
-    mRecConSet->alignFrames = 0;
   if (mMSTestRun & MULTI_TEST_COMA) {
     mWinApp->mAutoTuning->CtfBasedAstigmatismComa(1, 0, 1, 1);
   } else if (mMSTestRun && mWinApp->Montaging()) {

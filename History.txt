@@ -3,9 +3,6 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
-8/12/19: Prevented a deferred sum from being made on multiple Record shots
-with early return when aligning in plugin is selected (In 3.7).
-
 8/12/19: Fixed crashes when doing unidirectional after dose-symmetric series,
 and doing dose-symmetric series with fewer angles than previous one.
 
