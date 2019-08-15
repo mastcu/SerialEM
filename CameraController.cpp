@@ -7968,6 +7968,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
   DWORD ticks;
   float partialExposure = (float)mExposure;
   short int *parray, *imin, *imout;
+  int conSetUsed = mLastConSet;
   LowDoseParams *ldParam = mWinApp->GetLowDoseParams();
   int curCam = mWinApp->GetCurrentCamera();
   float pixelSize = (float)(mBinning * 10000. * 
@@ -8378,6 +8379,8 @@ void CCameraController::DisplayNewImage(BOOL acquired)
         mStartingISX -= ISX;
         mStartingISY -= ISY;
       }
+      if ((ldSet == VIEW_CONSET || ldSet == SEARCH_AREA) && mLastConSet == MONTAGE_CONSET)
+        conSetUsed = ldSet == VIEW_CONSET ? VIEW_CONSET : SEARCH_CONSET;
     }
 
     mLastImageTime = 0.001 * GetTickCount();
@@ -8451,7 +8454,11 @@ void CCameraController::DisplayNewImage(BOOL acquired)
         CUR_OR_DEFD_TO_BUF(mEffectiveBin, imBuf->mEffectiveBin * 
           mShiftManager->GetPixelSize(curCam, mMagBefore) /
           mShiftManager->GetPixelSize(curCam, mMagToRestore));
-      imBuf->mConSetUsed = mLastConSet;
+      imBuf->mConSetUsed = conSetUsed;
+      if (lowDoseMode) {
+        if (ldSet == VIEW_CONSET || ldSet == SEARCH_AREA)
+          imBuf->mViewDefocus = mScope->GetLDViewDefocus(ldSet);
+      }
       CUR_OR_DEFD_TO_BUF(mDynamicFocused, mTD.STEMcamera && mTD.DynFocusInterval > 0);
       CUR_OR_DEFD_TO_BUF(mMagInd, mMagBefore);
       CUR_OR_DEFD_TO_BUF(mISX, mStartingISX);
@@ -8554,17 +8561,11 @@ void CCameraController::DisplayNewImage(BOOL acquired)
 
       // Store the exposure dose, adjust for difference between requested and actual time
       if (lowDoseMode) {
-        ldSet = ConSetToLDArea(mLastConSet);
         spotSize = ldParam[ldSet].spotSize;
-        if ((ldSet == VIEW_CONSET || ldSet == SEARCH_AREA) && 
-          mLastConSet == MONTAGE_CONSET)
-          imBuf->mConSetUsed = ldSet == VIEW_CONSET ? VIEW_CONSET : SEARCH_CONSET;
-        if (ldSet == VIEW_CONSET || ldSet == SEARCH_AREA)
-          mImBufs->mViewDefocus = mScope->GetLDViewDefocus(ldSet);
       } else {
         spotSize = mScope->FastSpotSize();
       }
-      extra->mLowDoseConSet = lowDoseMode ? imBuf->mConSetUsed + 1 : -imBuf->mConSetUsed;
+      extra->mLowDoseConSet = lowDoseMode ? conSetUsed + 1 : -conSetUsed;
       extra->m_fDose = (float)mWinApp->mBeamAssessor->GetElectronDose(spotSize, stZ,
         SpecimenBeamExposure(curCam, lastConSetp, true));
       extra->m_fDose *= (float)mExposure / lastConSetp->exposure;
