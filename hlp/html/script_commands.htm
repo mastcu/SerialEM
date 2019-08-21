@@ -544,19 +544,19 @@
             camera parameters.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style8">PreCookMontage #D [#R] [#C]&nbsp; [#S]</TD>
+          <TD class="style8">PreCookMontage #D [#P] [#C]&nbsp; [#S]</TD>
           <TD>If montaging is enabled with stage movement, this command lowers the screen to
             expose the specimen, then moves the stage to each piece position and waits there
             for the number of seconds indicated by #D, if the number is positive.&nbsp; If 
-              #D is negative or #R is entered, it skips pieces within each row, with an interval given by the 
-              #R or the negative 
+              #D is negative or #P is entered, it skips pieces within each column, with an interval given by the 
+              #P or the negative 
             of #D: 2 will stop at every second piece, 3 at every third, etc.&nbsp; 
-            For&nbsp; convenience, 1 is equivalent to a large interval and will make 
+            For convenience, 1 is equivalent to a large interval and will make 
             it stop only at the bottom and top of each column.&nbsp; Set #C non-zero to skip 
               columns partially or 0 not to: in every other column, the stage will be moved 
-              only to the first and last piece and to any piece does not have an adjacent 
+              only to the first and last piece and to any piece that does not have an adjacent 
               piece in the columns on both sides.&nbsp; This entry will make no difference if 
-              you 1 for the skip interval.&nbsp; Set #S with a stage movement speed factor or 
+              you use 1 or a very large number for the skip interval.&nbsp; Set #S with a stage movement speed factor or 
               0 for normal speed.&nbsp; If setting a speed factor crashes SerialEM or 
               FEI-SEMserver, see notes under <a href="#tiltDuringRecord">TiltDuringRecord</a>.</TD>
         </TR>
@@ -803,8 +803,9 @@
           <TD>Sets optional parameters for frame tilt series.&nbsp; Set #B non-zero to use 
               backlash for all tilt steps not in the same direction as the first one, 0 
               otherwise; #S with a tilting speed factor or 0 for normal speed, and #X and #Y 
-              for X and Y stage coordinates to restore after the tilt or -9999, -9999 for no 
-              stage restoration.</TD>
+              for X and Y stage coordinates to restore after the tilt or values greater than 9000 for no 
+              stage restoration.&nbsp; If setting a speed factor crashes SerialEM or 
+              FEI-SEMserver, see notes under <a href="#tiltDuringRecord">TiltDuringRecord</a>.</TD>
         </TR>
         <TR>
           <TD class="style8">WriteFrameSeriesAngles file</TD>
@@ -2906,7 +2907,7 @@
           <TD width="210">ReportCustomInterval name [#M]</TD>
           <TD>Report the time elapsed, in minutes, from the custom time with the given name to either 
               the current time or the absolute time in minutes given by optional #M.&nbsp; If 
-              a time with that name has not be set, an interva of 40000 is returned.&nbsp; No optional assignment to variable.
+              a time with that name has not be set, an interval of 40000 is returned.&nbsp; No optional assignment to variable.
           </TD>
         </TR>
          <TR vAlign="top">

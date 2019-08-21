@@ -2330,11 +2330,11 @@ void CMacroProcessor::NextCommand()
     if (!itemEmpty[2])
       backlashX = (float)itemDbl[2];
     if (!itemEmpty[3] && itemEmpty[4] ||
-      !BOOL_EQUIV(itemDbl[3] < -9000, itemDbl[4] < -9000.))
+      !BOOL_EQUIV(fabs(itemDbl[3]) > 9000., fabs(itemDbl[4]) > 9000.))
       ABORT_LINE("A Y position to restore must be entered when X is on line:\n\n");
     if (mCamera->SetFrameTSparams(truth, backlashX,
-      (itemEmpty[3] || itemDbl[3] < -9000) ? EXTRA_NO_VALUE : itemDbl[3],
-      (itemEmpty[4] || itemDbl[4] < -9000) ? EXTRA_NO_VALUE : itemDbl[4]))
+      (itemEmpty[3] || fabs(itemDbl[3]) > 9000.) ? EXTRA_NO_VALUE : itemDbl[3],
+      (itemEmpty[4] || fabs(itemDbl[4]) > 9000.) ? EXTRA_NO_VALUE : itemDbl[4]))
       ABORT_LINE("The FEI scope plugin version is not new enough to support variable"
         " speed for line:\n\n");
     break;

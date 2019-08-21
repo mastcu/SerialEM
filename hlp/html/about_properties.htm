@@ -260,13 +260,15 @@
             buffers and camera reference images, in megabytes. This limit is applied when 
             the program is requesting memory for a montage overview image, acquisition 
             image, or display buffer, the situations where the largest images can get 
-            created.&nbsp; If the computer has 2 GB or memory or less, set this to the highest 
+            created.&nbsp; If the computer has 2 GB of memory or less, set this to the highest 
             amount of memory that the program can comfortably use without causing swapping 
             (e.g., perhaps 1200 for a 1.5 GB system). For a 3 GB system or a 4 GB system 
             without the /3GB boot parameter, a value near 1900 might be appropriate to keep 
             the program from running into the 2 GB memory limit. For a 4 GB system with the 
             /3GB boot option set, this entry may not be needed, but 2700 would probably be a 
-            good value.</TD>
+            good value.&nbsp; The default&nbsp; is 75% of system memory for 32-bit versions 
+              with less than 2.4 GB and for 64-bit versions; for 32-bit versions with more 
+              memory, the default is 1.8 GB on a 32-bit system and 3.7 GB on a 64-bit system.</TD>
           <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">

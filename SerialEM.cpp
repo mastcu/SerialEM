@@ -1443,7 +1443,7 @@ BOOL CSerialEMApp::InitInstance()
   if (mMemoryLimit <= 0.) {
     mMemoryLimit = 0.75f * (float)b3dPhysicalMemory();
 #ifndef _WIN64
-    if (mMemoryLimit > 1.6e9) {
+    if (mMemoryLimit > 1.8e9) {
       LPFN_ISWOW64PROCESS fnIsWow64Process;
       BOOL bIsWow64 = false;
       fnIsWow64Process = (LPFN_ISWOW64PROCESS)GetProcAddress(

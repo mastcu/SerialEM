@@ -3,6 +3,11 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+8/21/19: Changed montage pre-cooking with ability to skip every other column,
+set a dwell time when skipping pieces, and change the stage speed.
+
+8/21/19: Set default for program memory limit.
+
 8/21/19: Added script command to move to the last hole center done by
 MultipleRecords.
 
