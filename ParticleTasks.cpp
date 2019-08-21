@@ -39,6 +39,7 @@ CParticleTasks::CParticleTasks(void)
   mWDDfltParams.setTrialParams = false;
   mWDDfltParams.exposure = 0.2f;
   mWDDfltParams.binning = 4;
+  mMSLastHoleStageX = EXTRA_NO_VALUE;
 }
 
 
@@ -64,7 +65,7 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
   float extraDelay, BOOL saveRec, int ifEarlyReturn, int earlyRetFrames, BOOL adjustBT,
   int inHoleOrMulti)
 {
-  float pixel;
+  float pixel, xTiltFac, yTiltFac;
   int nextShot, nextHole, testRun;
   double delISX, delISY, transISX, transISY, delBTX, delBTY;
   CameraParameters *camParam = mWinApp->GetActiveCamParam();
@@ -74,6 +75,7 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
   bool multiHoles = (inHoleOrMulti & MULTI_HOLES) != 0;
   int testImage = inHoleOrMulti & MULTI_TEST_IMAGE;
   bool testComa = (inHoleOrMulti & MULTI_TEST_COMA) != 0;
+  ScaleMat dMat;
   mMSNumPeripheral = multiInHole ? numPeripheral : 0;
   mMSDoCenter = multiInHole ? doCenter : 1;
   mMSExtraDelay = extraDelay;
@@ -226,6 +228,17 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
   // Queue the next position if post-actions and there IS a next position
   if (mActPostExposure && GetNextShotAndHole(nextShot, nextHole))
     SetUpMultiShotShift(nextShot, nextHole, true);
+
+  // Save stage position of the last hole
+  mShiftManager->GetStageTiltFactors(xTiltFac, yTiltFac);
+  dMat = MatMul(mShiftManager->IStoCamera(mMagIndex),
+    MatInv(mShiftManager->StageToCamera(mWinApp->GetCurrentCamera(), mMagIndex)));
+  mScope->GetStagePosition(mMSLastHoleStageX, mMSLastHoleStageY, delISX);
+  mShiftManager->ApplyScaleMatrix(dMat, mMSHoleISX[mMSNumHoles - 1],
+    mMSHoleISY[mMSNumHoles - 1], delISX, delISY);
+  mMSLastHoleStageX += delISX / xTiltFac;
+  mMSLastHoleStageY += delISY / yTiltFac;
+
 
   return StartOneShotOfMulti();
 }
