@@ -196,8 +196,6 @@ private:
   double mNextXtiltOffset;   // Offset from center of beam tilt on next run
   double mNextYtiltOffset;
   int mPostTiltDelay;        // Delay after tilting, in milliseconds
-  int mContinuousTiltDelay;  // Minimum delay to use of continuous mode
-  int mUseTiltDelay;         // Value to use
   float mCTFa[8193];
   FocusTable mNewCal;        // Holding structure while doing new cal
   CArray<FocusTable, FocusTable> mFocTab;  // The table of calibrations
@@ -221,7 +219,6 @@ private:
   float mLastNmPerSec;       // Drift usefully scaled
   BOOL mDriftStored;        // Flag that drift was stored
   BOOL mUseOppositeLDArea;  // Flag to use opposite area on next focus
-  bool mUseContinuous;      // Flag for regular autofocus to use continuous mode
   float mNextMinDeltaFocus; // Defocus change and absolute focus limits on next autofocus
   float mNextMaxDeltaFocus;
   double mNextMinAbsFocus;
@@ -333,9 +330,6 @@ afx_msg void OnFocusSetAbsoluteLimits();
 float EstimatedBeamTiltScaling(void);
 afx_msg void OnUpdateLimitOffsetDefocus(CCmdUI *pCmdUI);
 afx_msg void OnLimitOffsetDefocus();
-
-void StartCaptureOrNextFrame(BOOL LDwasSet);
-void AutofocusCleanup();
 };
 
 #endif // !defined(AFX_FOCUSMANAGER_H__CA46C954_8EBF_4D29_95A1_2386A5EF747E__INCLUDED_)
