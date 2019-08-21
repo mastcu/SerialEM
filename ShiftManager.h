@@ -289,10 +289,12 @@ public:
   void AdjustCameraToStageForTilt(ScaleMat & aMat, float angle);
   void AdjustStageMoveAndClearIS(int camera, int magInd, double &delStageX,
     double & delStageY, ScaleMat bInv);
-  void ApplyScaleMatrix(ScaleMat & mat, float xFrom, float yFrom, float & xTo, float & yTo, bool incremental = false);
+  void ApplyScaleMatrix(ScaleMat & mat, float xFrom, float yFrom, float &xTo, float &yTo, bool incremental = false);
+  void ApplyScaleMatrix(ScaleMat & mat, float xFrom, float yFrom, double &xTo, double &yTo, bool incremental = false);
   void ListBeamShiftCals();
 
   bool BeamShiftToSpecimenShift(ScaleMat & IStoBS, int magInd, double beamDelX, double beamDelY, float & specX, float & specY);
+  double GetStageTiltFactors(float &xTiltFac, float &yTiltFac);
 };
 
 #endif // !defined(AFX_SHIFTMANAGER_H__FF4BB03C_5BFC_4142_BD0F_9A1A257FABE9__INCLUDED_)

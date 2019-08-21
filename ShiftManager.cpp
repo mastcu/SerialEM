@@ -1305,9 +1305,7 @@ int CShiftManager::ResetImageShift(BOOL bDoBacklash, BOOL bAdjustScale, int wait
   
   // Compute the stage displacement with no adjustments
   // Use the nearest stage to camera matrix for this, so use IS not specimen coords
-  angle = DTOR * mScope->GetTiltAngle();
-  xTiltFac = HitachiScope ? cos(angle) : 1.;
-  yTiltFac = HitachiScope ? 1. : cos(angle);
+  angle = GetStageTiltFactors(xTiltFac, yTiltFac);
   dMat = MatMul(IStoCamera(magInd), 
     MatInv(StageToCamera(mWinApp->GetCurrentCamera(), magInd)));
   delX = (dMat.xpx * shiftX + dMat.xpy * shiftY) / xTiltFac;
@@ -2800,6 +2798,17 @@ bool CShiftManager::BeamShiftToSpecimenShift(ScaleMat & IStoBS, int magInd,
   return false;
 }
 
+// Returns factors needed to adjust a camera or IS to stage matrix for stage tilt, the
+// return value is the tilt angle
+double CShiftManager::GetStageTiltFactors(float & xTiltFac, float & yTiltFac)
+{
+  double angle = mScope->GetTiltAngle();
+  float cosa = cos(DTOR * mScope->GetTiltAngle());
+  xTiltFac = (HitachiScope ? cosa : 1.f);
+  yTiltFac = (HitachiScope ? 1.f : cosa);
+  return angle;
+}
+
 // Given any angle, returns a value between -180 and 180.
 double CShiftManager::GoodAngle(double angle)
 {
@@ -2853,6 +2862,16 @@ void CShiftManager::ApplyScaleMatrix(ScaleMat &mat, float xFrom, float yFrom,
     return;
   xTo += mat.xpx * xFrom + mat.xpy * yFrom;
   yTo += mat.ypx * xFrom + mat.ypy * yFrom;
+}
+
+void CShiftManager::ApplyScaleMatrix(ScaleMat &mat, float xFrom, float yFrom,
+  double &xTo, double &yTo, bool incremental)
+{
+  float fxTo = (float)xTo;
+  float fyTo = (float)yTo;
+  ApplyScaleMatrix(mat, xFrom, yFrom, fxTo, fyTo, incremental);
+  xTo = fxTo;
+  yTo = fyTo;
 }
 
 // Scales and rotates a matrix
