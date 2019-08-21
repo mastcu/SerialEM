@@ -92,6 +92,7 @@ static char THIS_FILE[] = __FILE__;
 #define EXTRA_OPEN_SHUTTER_TIME 0.12f
 
 static LONG WINAPI SEMExceptionFilter(struct _EXCEPTION_POINTERS* ExceptionInfo);
+typedef BOOL(WINAPI *LPFN_ISWOW64PROCESS) (HANDLE, PBOOL);
 
 // Initial state of tool dialogs
 static int  initialDlgState[MAX_DIALOGS] = 
@@ -1437,6 +1438,25 @@ BOOL CSerialEMApp::InitInstance()
   sAboutVersion = VERSION_STRING;
   if (sAboutVersion.Find("beta") > 0)
     sAboutVersion += " " + sBuildDate;
+
+  // Set memory limit
+  if (mMemoryLimit <= 0.) {
+    mMemoryLimit = 0.75f * (float)b3dPhysicalMemory();
+#ifndef _WIN64
+    if (mMemoryLimit > 1.6e9) {
+      LPFN_ISWOW64PROCESS fnIsWow64Process;
+      BOOL bIsWow64 = false;
+      fnIsWow64Process = (LPFN_ISWOW64PROCESS)GetProcAddress(
+        GetModuleHandle(TEXT("kernel32")), "IsWow64Process");
+      if (NULL != fnIsWow64Process)
+        fnIsWow64Process(GetCurrentProcess(), &bIsWow64);
+      if (bIsWow64)
+        mMemoryLimit = B3DMIN(3.7e9f, mMemoryLimit);
+      else if (mMemoryLimit)
+        mMemoryLimit = 1.9e9f;
+    }
+#endif // _WIN64
+  }
 
   mExternalTools->AddMenuItems();
   mStartingProgram = false;

@@ -381,6 +381,9 @@ CCameraController::CCameraController()
   mFocusStepToDo2 = 0.;
   mLDwasSetToArea = -1;
   mSmoothFocusExtraTime = 400;
+  mTD.FrameTSdoBacklash = false;
+  mFrameTSspeed = 0.;
+  mFrameTSrestoreX = EXTRA_NO_VALUE;
   mInDisplayNewImage = false;
   mNeedToSelectDM = false;
   mNextAsyncSumFrames = -1;
@@ -2452,6 +2455,19 @@ int CCameraController::QueueTiltSeries(FloatVec &openTime, FloatVec &tiltToAngle
   return 0;
 }
 
+// Set ancillary parameters for frame series
+int CCameraController::SetFrameTSparams(BOOL doBacklash, float speed, double stageXrestore,
+  double stageYrestore)
+{
+  if (speed > 0. && FEIscope && mScope->GetPluginVersion() < FEI_PLUGIN_STAGE_SPEED)
+    return 1;
+  mTD.FrameTSdoBacklash = doBacklash;
+  mFrameTSspeed = speed;
+  mFrameTSrestoreX = stageXrestore;
+  mFrameTSrestoreY = stageYrestore;
+  return 0;
+}
+
 ///////////////////////////////////////////////////////
 //  The main Capture routine: analyzes control set, sets up actions
 ///////////////////////////////////////////////////////
@@ -3147,9 +3163,20 @@ void CCameraController::Capture(int inSet, bool retrying)
       mTD.JeolOLtoUm = mScope->GetJeol_OLfine_to_um();
       if (mTD.FrameTStiltToAngle.size() > 0) {
         mTD.MoveInfo.axisBits = axisA;
-        mTD.MoveInfo.doBacklash = false;
+        mTD.FrameTSdoBacklash = mTD.FrameTSdoBacklash && mTD.FrameTStiltToAngle.size() >
+          1;
+        if (mTD.FrameTSdoBacklash)
+          mTD.MoveInfo.backAlpha = mWinApp->mComplexTasks->GetTiltBacklash() *
+          (mTD.FrameTStiltToAngle[1] > mTD.FrameTStiltToAngle[0] ? -1.f : 1.f);
         mTD.MoveInfo.doRelax = false;
-        mTD.MoveInfo.useSpeed = false;
+        mTD.MoveInfo.useSpeed = mFrameTSspeed > 0.;
+        if (mFrameTSspeed > 0.)
+          mTD.MoveInfo.speed = mFrameTSspeed;
+        mTD.MoveInfo.doRestoreXY = mFrameTSrestoreX > EXTRA_VALUE_TEST;
+        if (mTD.MoveInfo.doRestoreXY) {
+          mTD.MoveInfo.x = mFrameTSrestoreX;
+          mTD.MoveInfo.y = mFrameTSrestoreY;
+        }
       }
       mTD.blankerTimeout += 240000;
   } else {
@@ -7424,6 +7451,9 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
           // Do tilt step and delay if any
           if (stepTilts) {
             info->alpha = td->FrameTStiltToAngle[step];
+            info->doBacklash = td->FrameTSdoBacklash && step > 0 && 
+              !BOOL_EQUIV(td->FrameTStiltToAngle[1] > td->FrameTStiltToAngle[0], 
+                td->FrameTStiltToAngle[step] > td->FrameTStiltToAngle[step - 1]);
             CEMscope::StageMoveKernel(&stData, true, false, destX, destY, destZ, 
               destAlpha);
             if ((int)td->FrameTSwaitOrInterval.size() > step)
@@ -8454,6 +8484,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
         CUR_OR_DEFD_TO_BUF(mEffectiveBin, imBuf->mEffectiveBin * 
           mShiftManager->GetPixelSize(curCam, mMagBefore) /
           mShiftManager->GetPixelSize(curCam, mMagToRestore));
+      imBuf->mViewDefocus = 0.;
       imBuf->mConSetUsed = conSetUsed;
       if (lowDoseMode) {
         if (ldSet == VIEW_CONSET || ldSet == SEARCH_AREA)
@@ -8490,7 +8521,6 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       imBuf->mZoom = 0.;
       CUR_OR_DEFD_TO_BUF(mDefocus, defocus);
       imBuf->mLowDoseArea = lowDoseMode;
-      imBuf->mViewDefocus = 0.;
       imBuf->mCurStoreChecksum = 0;
       CUR_OR_DEFD_TO_BUF(mProbeMode, mScope->GetProbeMode());
       if (mWinApp->mNavigator)
@@ -8948,6 +8978,9 @@ void CCameraController::ErrorCleanup(int error)
   mDeferSumOnNextAsync = false;
   mTD.FrameTStiltToAngle.clear();
   mTD.FrameTSwaitOrInterval.clear();
+  mTD.FrameTSdoBacklash = false;
+  mFrameTSspeed = 0.;
+  mFrameTSrestoreX = EXTRA_NO_VALUE;
   mStartingDeferredSum = false;
   if (mStartedScanning) {
     if (mTD.ScanTime || mTD.DynFocusInterval || mTD.FocusStep1)

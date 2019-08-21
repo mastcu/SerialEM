@@ -585,6 +585,7 @@ int CSerialEMDoc::GetMontageParamsAndFile(BOOL frameSet, int xNframes, int yNfra
   InitMontParamsForDialog(param, frameSet, xNframes, yNframes, filename);
   
   if (filename.IsEmpty() && OpenMontageDialog(false)) {
+    param->overviewBinning = 1;
     RestoreCurrentFile();
     return 1;
   }
@@ -608,6 +609,7 @@ int CSerialEMDoc::GetMontageParamsAndFile(BOOL frameSet, int xNframes, int yNfra
     mWinApp->mStoreMRC = OpenNewFileByName(filename, &mFileOpt);
   RestoreFileOptsFromSTEM();
   if (!mWinApp->mStoreMRC) {
+    param->overviewBinning = 1;
     RestoreCurrentFile();
     return 1;
   }

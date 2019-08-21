@@ -4258,6 +4258,7 @@ int CParameterIO::ReadShortTermCal(CString strFileName, BOOL ignoreCals)
   int itemInt[MAX_TOKENS];
   double itemDbl[MAX_TOKENS];
   int *times = mWinApp->mScope->GetLastLongOpTimes();
+  std::map<std::string, int> *customTimes = mWinApp->mMacroProcessor->GetCustomTimeMap();
   int *DEdarkRefTimes = mWinApp->mGainRefMaker->GetLastDEdarkRefTime();
   int timeStamp = mWinApp->MinuteTimeStamp();
   DoseTable *doseTables = mWinApp->mBeamAssessor->GetDoseTables();
@@ -4265,6 +4266,7 @@ int CParameterIO::ReadShortTermCal(CString strFileName, BOOL ignoreCals)
   NavParams *navP = mWinApp->GetNavParams();
   ShortVec *pixSizCamera, *pixSizMagInd, *addedRotation;
   std::vector<float> *pixelSizes, *gridRotations;
+  std::string sstr;
   mWinApp->mProcessImage->GetPixelArrays(&pixSizCamera, &pixSizMagInd, &addedRotation,
     &pixelSizes, &gridRotations);
 
@@ -4303,6 +4305,12 @@ int CParameterIO::ReadShortTermCal(CString strFileName, BOOL ignoreCals)
       } else if (NAME_IS("LastLongOpTimes")) {
         for (index = 1; index <= MAX_LONG_OPERATIONS && !itemEmpty[index]; index++)
           times[index - 1] = itemInt[index];
+      } else if (NAME_IS("LastCustomTime")) {
+        if (!itemEmpty[2] && itemInt[2] > 0 &&
+          timeStamp - itemInt[2] < MAX_CUSTOM_INTERVAL) {
+          sstr = (LPCTSTR)strItems[1];
+          customTimes->insert(std::pair<std::string, int>(sstr, itemInt[2]));
+        }
 
       } else if (NAME_IS("LastDEdarkRefTimes")) {
         DEdarkRefTimes[0] = itemInt[1];
@@ -4404,6 +4412,7 @@ void CParameterIO::WriteShortTermCal(CString strFileName)
 {
   int i, j, k, index;
   int *times = mWinApp->mScope->GetLastLongOpTimes();
+  std::map<std::string, int> *customTimes = mWinApp->mMacroProcessor->GetCustomTimeMap();
   CString oneState, oneTime;
   DoseTable *doseTables = mWinApp->mBeamAssessor->GetDoseTables();
   FilterParams *filtP = mWinApp->GetFilterParams();
@@ -4496,6 +4505,12 @@ void CParameterIO::WriteShortTermCal(CString strFileName)
     }
     if (err > 0)
       mFile->WriteString(oneState + "\n");
+    
+    for (std::map<std::string, int>::iterator it = customTimes->begin();
+      it != customTimes->end(); it++) {
+      oneState.Format("LastCustomTime %s %d\n", it->first.c_str(), it->second);
+      mFile->WriteString(oneState);
+    }
 
     if (DEdarkRefTimes[0] > 0 || DEdarkRefTimes[1] > 0) {
       oneState.Format("LastDEdarkRefTimes %d %d\n", DEdarkRefTimes[0], DEdarkRefTimes[1]);

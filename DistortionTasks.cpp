@@ -91,12 +91,10 @@ void CDistortionTasks::CalibrateDistortion()
   ControlSet *conSet = mConSets + USER_CONSET;
   float sizeX, sizeY;
   int which;
-  float targetShiftX, targetShiftY;
+  float targetShiftX, targetShiftY, xTiltFac, yTiltFac;
   double ISX, ISY, stageX, stageY, stageZ;
   CString report;
-  double angle = DTOR * mWinApp->mScope->GetTiltAngle();
-  float xTiltFac = (float)(HitachiScope ? cos(angle) : 1.);
-  float yTiltFac = (float)(HitachiScope ? 1. : cos(angle));
+  mShiftManager->GetStageTiltFactors(xTiltFac, yTiltFac);
 
   ScaleMat aMat = mShiftManager->StageToCamera(mWinApp->GetCurrentCamera(), 
     mScope->GetMagIndex());

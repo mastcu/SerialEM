@@ -39,7 +39,8 @@ class EMmontageController
   void Initialize();
   GetMember(BOOL, Montaging)
   BOOL DoingMontage() {return (mPieceIndex >= 0);};
-  int StartMontage(int inTrial, BOOL inReadMont, float cookDwellTime = 0.);
+  int StartMontage(int inTrial, BOOL inReadMont, float cookDwellTime = 0., 
+    int cookSkip = 0, bool skipColumn = false, float cookSpeed = 0.);
   int ReadMontage(int inSect = NO_SUPPLIED_SECTION, MontParam *inParam = NULL,
     KImageStore *inStoreMRC = NULL, BOOL centerOnly = false, BOOL synchronous = false);
   void StopMontage(int error = 0);

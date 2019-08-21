@@ -3,6 +3,18 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+8/21/19: Added script command to move to the last hole center done by
+MultipleRecords.
+
+8/21/19: Added script command to set additional parameters for frame tilt
+series: backlash for dose-symmetric, a tilt speed setting, and stage position
+to restore after tilt.
+
+8/21/19: Fixed loss of View defocus from image buffer.
+
+8/15/19: Fixed crash reading piece from montage map after canceling opening a
+new montage, broken 7/15.
+
 8/14/19: Added option to multi-shot dialog to do early return on all but first
 shot.
 

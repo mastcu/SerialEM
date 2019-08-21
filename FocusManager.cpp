@@ -128,6 +128,8 @@ CFocusManager::CFocusManager()
   mTiltDirection = 0;
   mBeamTilt = 5.;
   mPostTiltDelay = 0;
+  mContinuousTiltDelay = 100;
+  mUseContinuous = false;
   mLastFailed = false;
   mLastAborted = 0;
   mRequiredBWMean = -1.;
@@ -1208,12 +1210,20 @@ void CFocusManager::DetectFocus(int inWhere, int useViewInLD)
   ControlSet  *set = mConSets + mFocusSetNum;
   CameraParameters *camParam = mWinApp->GetCamParams() + mWinApp->GetCurrentCamera();
 
+  mUsingExisting = inWhere == FOCUS_EXISTING || inWhere == FOCUS_SHOW_CORR ||
+    inWhere == FOCUS_SHOW_STRETCH;
   mModeWasContinuous = set->mode == CONTINUOUS;
-  set->mode = SINGLE_FRAME;
+  mUseContinuous = mModeWasContinuous && !mUseOppositeLDArea && !mUsingExisting && 
+    camParam->useContinuousMode > 0 && !mWinApp->mParticleTasks->GetWaitingForDrift();
+  if (mUseContinuous) {
+    mUseTiltDelay = B3DMAX(mPostTiltDelay, mContinuousTiltDelay);
+    mCamera->ChangePreventToggle(1);
+  } else {
+    mUseTiltDelay = mPostTiltDelay;
+    set->mode = SINGLE_FRAME;
+  }
   mFocusWhere = inWhere;
   mUseViewInLD = useViewInLD;
-  mUsingExisting = inWhere == FOCUS_EXISTING || inWhere == FOCUS_SHOW_CORR || 
-    inWhere == FOCUS_SHOW_STRETCH;
   if (mUsingExisting && mImBufs->mMagInd > 0)
     mFocusMag = mImBufs->mMagInd;
   else if (mWinApp->LowDoseMode())
@@ -1298,15 +1308,27 @@ void CFocusManager::DetectFocus(int inWhere, int useViewInLD)
   //  mBaseTiltY + mNextYtiltOffset - mFracTiltY * mBeamTilt);
   mScope->SetBeamTilt(mBaseTiltX + mNextXtiltOffset - mFracTiltX * mBeamTilt, 
     mBaseTiltY + mNextYtiltOffset - mFracTiltY * mBeamTilt);
-  if (mPostTiltDelay > 0)
-    Sleep(mPostTiltDelay);
+  if (mUseTiltDelay > 0)
+    Sleep(mUseTiltDelay);
 
-  mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, TaskFocusDone, 
-    TaskFocusError, 0, 0);
+  StartCaptureOrNextFrame(setLowDose);
+}
+
+void CFocusManager::StartCaptureOrNextFrame(BOOL LDwasSet)
+{
+  if (mUsingExisting || !mUseContinuous)
+    mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, TaskFocusDone,
+      TaskFocusError, 0, 0);
   if (!mUsingExisting) {
-    if (setLowDose)
+    if (LDwasSet)
       mCamera->SetLDwasSetToArea(mFocusSetNum);
-    mCamera->InitiateCapture(mFocusSetNum);
+    if (!mUseContinuous || !mCamera->DoingContinuousAcquire())
+      mCamera->InitiateCapture(mFocusSetNum);
+    if (mUseContinuous) {
+      mCamera->SetTaskWaitingForFrame(true);
+      mWinApp->AddIdleTask(CCameraController::TaskGettingFrame, TaskFocusDone,
+        TaskFocusError, 0, 0);
+    }
   }
 }
 
@@ -1518,8 +1540,8 @@ void CFocusManager::FocusDone()
     //  mBaseTiltY + mNextYtiltOffset + mFracTiltY * sign * mBeamTilt);
     mScope->SetBeamTilt(mBaseTiltX + mNextXtiltOffset + mFracTiltX * sign * mBeamTilt,
       mBaseTiltY + mNextYtiltOffset + mFracTiltY * sign * mBeamTilt);
-    if (mPostTiltDelay > 0)
-      Sleep(mPostTiltDelay);
+    if (mUseTiltDelay > 0)
+      Sleep(mUseTiltDelay);
     if (mWinApp->mParticleTasks->GetWaitingForDrift()) {
       interval = 500.f * mWinApp->mParticleTasks->GetDriftInterval();
       tickTime = GetTickCount();
@@ -1527,15 +1549,9 @@ void CFocusManager::FocusDone()
       if (interval > elapsed + 1.)
         mShiftManager->SetGeneralTimeOut(tickTime, (int)(interval - elapsed));
     }
-    mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, TaskFocusDone, 
-      TaskFocusError, 0, 0);
     if (!mUsingExisting && mUseOppositeLDArea)
       mCamera->OppositeLDAreaNextShot();
-    if (!mUsingExisting) {
-        if (!mUseOppositeLDArea)
-          mCamera->SetLDwasSetToArea(mFocusSetNum);
-        mCamera->InitiateCapture(mFocusSetNum);
-    }
+    StartCaptureOrNextFrame(!mUseOppositeLDArea);
     return;
   }
 
@@ -1576,20 +1592,10 @@ void CFocusManager::FocusDone()
   CCC = XCorrCCCoefficient(mFocusBuf[3], mFocusBuf[4], nxpad + 2, nxpad, nypad, 
     -xPeak1[ind1], -yPeak1[ind1], (nxpad + 1 - nxuse) / 2, (nypad + 1 - nyuse) /2, &ix0);
 
-  for (int ibuf = 0; ibuf < 5; ibuf++) {
-    if (mFocusBuf[ibuf])
-      delete [] mFocusBuf[ibuf];
-    mFocusBuf[ibuf] = NULL;
-  }
 
   mLastFailed = false;
   mDriftStored = mNumShots == 3;
-  mRequiredBWMean = -1.;
-  mFocusIndex = -1;
-  mScope->SetBeamTilt(mBaseTiltX, mBaseTiltY);
-  if (mAppliedOffset)
-    mScope->IncDefocus(-mAppliedOffset);
-  mAppliedOffset = 0.;
+  AutofocusCleanup();
 
   // Prepare report and store the drift values
   CString strBin = binning > divForK2 ? "unbinned" : "";
@@ -1638,6 +1644,7 @@ void CFocusManager::FocusDone()
   }
 }
 
+// This is only used on failure
 void CFocusManager::StopFocusing()
 {
   mCamera->StopCapture(1);
@@ -1648,6 +1655,13 @@ void CFocusManager::StopFocusing()
   if (mFCindex >= 0)
     mScope->IncDefocus(-mCalDefocus);
   mFCindex = -1;
+  AutofocusCleanup();
+  FocusTasksFinished();
+}
+
+// Collect actions when one run of autofocus is finished
+void CFocusManager::AutofocusCleanup()
+{
   mScope->SetBeamTilt(mBaseTiltX, mBaseTiltY);
   mFocusIndex = -1;
   if (mAppliedOffset)
@@ -1656,13 +1670,12 @@ void CFocusManager::StopFocusing()
   mRequiredBWMean = -1.;
   for (int i = 0; i < 5; i++)
     if (mFocusBuf[i] != NULL) {
-      delete [] mFocusBuf[i];
+      delete[] mFocusBuf[i];
       mFocusBuf[i] = NULL;
     }
-  FocusTasksFinished();
 }
 
-// Collect all the routine actions here
+// Collect all the routine actions here: this is called after iterations if any
 void CFocusManager::FocusTasksFinished()
 {
   mCamera->SetObeyTiltDelay(false);
@@ -1674,6 +1687,10 @@ void CFocusManager::FocusTasksFinished()
   if (mModeWasContinuous)
     mConSets[mFocusSetNum].mode = CONTINUOUS;
   mModeWasContinuous = false;
+  if (mUseContinuous)
+    mCamera->StopCapture(0);
+  mUseContinuous = false;
+  mCamera->ChangePreventToggle(-1);
 }
 
 

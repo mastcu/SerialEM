@@ -544,14 +544,21 @@
             camera parameters.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style8">PreCookMontage #</TD>
+          <TD class="style8">PreCookMontage #D [#R] [#C]&nbsp; [#S]</TD>
           <TD>If montaging is enabled with stage movement, this command lowers the screen to
             expose the specimen, then moves the stage to each piece position and waits there
-            for the number of seconds indicated by #, if the number is positive.&nbsp; If 
-            the number is negative, it skips pieces, with an interval given by the negative 
-            of the number: -2 will stop at every second piece, -3 at every third, etc.&nbsp; 
-            For&nbsp; convenience, -1 is equivalent to a large negative number and will make 
-            it stop only at the bottom and top of each column.</TD>
+            for the number of seconds indicated by #D, if the number is positive.&nbsp; If 
+              #D is negative or #R is entered, it skips pieces within each row, with an interval given by the 
+              #R or the negative 
+            of #D: 2 will stop at every second piece, 3 at every third, etc.&nbsp; 
+            For&nbsp; convenience, 1 is equivalent to a large interval and will make 
+            it stop only at the bottom and top of each column.&nbsp; Set #C non-zero to skip 
+              columns partially or 0 not to: in every other column, the stage will be moved 
+              only to the first and last piece and to any piece does not have an adjacent 
+              piece in the columns on both sides.&nbsp; This entry will make no difference if 
+              you 1 for the skip interval.&nbsp; Set #S with a stage movement speed factor or 
+              0 for normal speed.&nbsp; If setting a speed factor crashes SerialEM or 
+              FEI-SEMserver, see notes under <a href="#tiltDuringRecord">TiltDuringRecord</a>.</TD>
         </TR>
          <TR vAlign="top">
           <TD class="style8"><b>Set Parameter Commands</b>&nbsp;</TD>
@@ -790,6 +797,14 @@
             continuous tilt is being used, then this item sets the total interval between 
             steps of the series.&nbsp; #D is an optional initial delay before the first 
             step.&nbsp; All times are in seconds.</TD>
+        </TR>
+        <TR>
+          <TD class="style8">SetFrameSeriesParams #B [#S] [#X #Y]</TD>
+          <TD>Sets optional parameters for frame tilt series.&nbsp; Set #B non-zero to use 
+              backlash for all tilt steps not in the same direction as the first one, 0 
+              otherwise; #S with a tilting speed factor or 0 for normal speed, and #X and #Y 
+              for X and Y stage coordinates to restore after the tilt or -9999, -9999 for no 
+              stage restoration.</TD>
         </TR>
         <TR>
           <TD class="style8">WriteFrameSeriesAngles file</TD>
@@ -2553,6 +2568,13 @@
             this testing.</TD>
         </TR>
         <TR vAlign="top">
+          <TD class="auto-style1">MoveToLastMultiHole</TD>
+          <TD>Moves the stage to the center of the last hole position acquired with 
+              MultipleRecords.&nbsp; This command can be used to position over a hole for 
+              occasional post-acquisition tasks when using a hole pattern centered on the 
+              support film.</TD>
+        </TR>
+        <TR vAlign="top">
           <TD class="auto-style1">CalibrateImageShift [#]</TD>
           <TD>Calibrate image shift at the current mag. Do the calibration from scratch if
             the optional # is nonzero.</TD>
@@ -2870,6 +2892,21 @@
            two such values will give an elapsed time in minutes.  If a variable name is
            included after the command, the value will automatically be assigned to a 
            persistent variable so that it is available across multiple runs of the script.
+          </TD>
+        </TR>
+         <TR vAlign="top">
+          <TD width="210">SetCustomTime name [#M]</TD>
+          <TD>Store an absolute time in minutes in a 'custom time' with the given name.&nbsp; The current time is stored, or the time given by the optional #M.&nbsp; 
+              Custom times are stored in the short-term calibration file, like the times 
+              since the last long operations of various kinds.&nbsp; They can be used to 
+              perform actions periodically during Navigator acquisitions.&nbsp; ENtries older 
+              than 20000 minutes will be removed when the file is read on program startup.</TD>
+        </TR>
+         <TR vAlign="top">
+          <TD width="210">ReportCustomInterval name [#M]</TD>
+          <TD>Report the time elapsed, in minutes, from the custom time with the given name to either 
+              the current time or the absolute time in minutes given by optional #M.&nbsp; If 
+              a time with that name has not be set, an interva of 40000 is returned.&nbsp; No optional assignment to variable.
           </TD>
         </TR>
          <TR vAlign="top">

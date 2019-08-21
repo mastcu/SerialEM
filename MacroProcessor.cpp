@@ -254,10 +254,15 @@ enum {CME_SCRIPTEND = -7, CME_LABEL, CME_SETVARIABLE, CME_SETSTRINGVAR, CME_DOKE
   CME_CALLSTRINGARRAY, CME_STRINGARRAYTOSCRIPT, CME_MAKEVARPERSISTENT,
   CME_SETLDADDEDBEAMBUTTON, CME_KEEPCAMERASETCHANGES, CME_REPORTDATETIME,
   CME_REPORTFILAMENTCURRENT, CME_SETFILAMENTCURRENT, CME_CLOSEFRAMEMDOC,
-  CME_DRIFTWAITTASK, CME_GETWAITTASKDRIFT, CME_CLOSELOGOPENNEW, CME_SAVELOG
+  CME_DRIFTWAITTASK, CME_GETWAITTASKDRIFT, CME_CLOSELOGOPENNEW, CME_SAVELOG,
+  CME_SETFRAMESERIESPARAMS, CME_SETCUSTOMTIME, CME_REPORTCUSTOMINTERVAL, 
+  CME_MOVETOLASTMULTIHOLE
 };
 
 // The two numbers are the minimum arguments and whether arithmetic is allowed
+// Arithmetic is allowed for any command with the second number 1, and for any "Set"
+// command that does not have a -1 there.  Starting with % lists all explicitly allowed
+// commands.  It is redundant to put a 1 in for Set command
 static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0},
 {"A",0,0}, {"AlignTo",1,0}, {"AutoAlign",0,0}, {"AutoFocus",0,0}, {"Break",0,0}, 
 {"Call",1,0}, {"CallMacro",1,0},{"CenterBeamFromImage",0,0}, {"ChangeEnergyLoss",1,1},
@@ -389,6 +394,8 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"KeepCameraSetChanges", 0, 0}, {"ReportDateTime", 0, 0}, {"ReportFilamentCurrent", 0, 0},
 {"SetFilamentCurrent", 1, 0}, {"CloseFrameMdoc", 0, 0}, {"DriftWaitTask", 0, 1},
 {"GetWaitTaskDrift", 0, 0}, {"CloseLogOpenNew", 0, 0}, {"SaveLog", 0, 0},
+{"SetFrameSeriesParams", 1, 0}, {"SetCustomTime", 1, 0}, {"ReportCustomInterval", 1, 0},
+{"MoveToLastMultiHole", 0, 0},
 {NULL, 0, 0}
 };
 
@@ -2114,7 +2121,9 @@ void CMacroProcessor::NextCommand()
       ABORT_NOLINE("The script contains a montage statement and \n"
         "montaging is not activated");
     if (mWinApp->mMontageController->StartMontage(index, false, 
-      (float)(truth ? itemDbl[1] : 0.)))
+      (float)(truth ? itemDbl[1] : 0.), (truth && !itemEmpty[2]) ? itemInt[2] : 0, 
+      truth && !itemEmpty[3] && itemInt[3] != 0, 
+      (truth && !itemEmpty[4]) ? (float)itemDbl[4] : 0.f))
       AbortMacro();
     mTestMontError = !truth;
     mTestScale = !truth;
@@ -2314,6 +2323,21 @@ void CMacroProcessor::NextCommand()
     }
     break;
   }
+
+  case CME_SETFRAMESERIESPARAMS:                            // SetFrameSeriesParams
+    truth = itemInt[1] != 0;
+    backlashX = 0.;
+    if (!itemEmpty[2])
+      backlashX = (float)itemDbl[2];
+    if (!itemEmpty[3] && itemEmpty[4] ||
+      !BOOL_EQUIV(itemDbl[3] < -9000, itemDbl[4] < -9000.))
+      ABORT_LINE("A Y position to restore must be entered when X is on line:\n\n");
+    if (mCamera->SetFrameTSparams(truth, backlashX,
+      (itemEmpty[3] || itemDbl[3] < -9000) ? EXTRA_NO_VALUE : itemDbl[3],
+      (itemEmpty[4] || itemDbl[4] < -9000) ? EXTRA_NO_VALUE : itemDbl[4]))
+      ABORT_LINE("The FEI scope plugin version is not new enough to support variable"
+        " speed for line:\n\n");
+    break;
 
   case CME_WRITEFRAMESERIESANGLES:                          // WriteFrameSeriesAngles
   {
@@ -4095,6 +4119,39 @@ void CMacroProcessor::NextCommand()
         ABORT_LINE(report + "\n(This command assigns to a persistent variable):\n\n");
     break;
     
+  case CME_SETCUSTOMTIME:                                   // SetCustomTime
+  case CME_REPORTCUSTOMINTERVAL:                            // ReportCustomInterval
+  {
+    std::string sstr = (LPCTSTR)item1upper;
+    std::map<std::string, int>::iterator custIter;
+    index = mWinApp->MinuteTimeStamp();
+    if (!itemEmpty[2])
+      index = itemInt[2];
+    index2 = mCustomTimeMap.count(sstr);
+    if (index2)
+      custIter = mCustomTimeMap.find(sstr);
+    if (CMD_IS(SETCUSTOMTIME)) {
+
+      // Insert does not replace a value!  You have to get the iterator and assign it
+      if (index2)
+        custIter->second = index;
+      else
+        mCustomTimeMap.insert(std::pair<std::string, int>(sstr, index));
+      mWinApp->mDocWnd->SetShortTermNotSaved();
+    } else {
+      if (index2) {
+        index -= custIter->second;
+        report.Format("%d minutes elapsed since custom time %s set", index, (LPCTSTR)strItems[1]);
+      } else {
+        index = 2 * MAX_CUSTOM_INTERVAL;
+        report = "Custom time " + strItems[1] + " has not been set";
+      }
+      mWinApp->AppendToLog(report, mLogAction);
+      SetReportedValues(index);
+    }
+    break;
+  }
+
   case CME_REPORTTICKTIME:                                  // ReportTickTime
     delISX = SEMTickInterval(mWinApp->ProgramStartTime()) / 1000.;
     report.Format("Tick time from program start = %.3f", delISX);
@@ -4129,6 +4186,7 @@ void CMacroProcessor::NextCommand()
   case CME_MOVESTAGETO:                                     // MoveStageTo 
   case CME_TESTRELAXINGSTAGE:                               // TestRelaxingStage
   case CME_STAGESHIFTBYPIXELS:                              // StageShiftByPixels
+  case CME_MOVETOLASTMULTIHOLE:                             // MoveToLastMultiHole
       smi.z = 0.;
       smi.alpha = 0.;
       smi.axisBits = 0;
@@ -4141,13 +4199,18 @@ void CMacroProcessor::NextCommand()
       else {
         if (CMD_IS(STAGESHIFTBYPIXELS)) {
           h1 = DTOR * mScope->GetTiltAngle();
-          aMat = mShiftManager->StageToCamera(mWinApp->GetCurrentCamera(), 
+          aMat = mShiftManager->StageToCamera(mWinApp->GetCurrentCamera(),
             mScope->GetMagIndex());
           if (!aMat.xpx)
             ABORT_LINE("There is no stage to camera calibration available for line:\n\n");
           bInv = MatInv(aMat);
           stageX = bInv.xpx * itemDbl[1] + bInv.xpy * itemDbl[2];
           stageY = (bInv.ypx * itemDbl[1] + bInv.ypy * itemDbl[2]) / cos(h1);
+          stageZ = 0.;
+        } else if (CMD_IS(MOVETOLASTMULTIHOLE)) {
+          mWinApp->mParticleTasks->GetLastHoleStagePos(stageX, stageY);
+          if (stageX < EXTRA_VALUE_TEST)
+            ABORT_LINE("The multiple Record routine has not been run for line:\n\n");
           stageZ = 0.;
         } else {
 
@@ -4199,7 +4262,7 @@ void CMacroProcessor::NextCommand()
           smi.z = stageZ;
 
           smi.axisBits |= (axisX | axisY);
-          if (!itemEmpty[3])
+          if (!itemEmpty[3] && !CMD_IS(MOVETOLASTMULTIHOLE))
             smi.axisBits |= axisZ;
         }
 

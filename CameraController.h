@@ -272,7 +272,7 @@ struct CameraThreadData {
   float FrameTSinitialDelay;      // Initial delay before starting steps
   FloatVec FrameTSactualAngle;    // Actual angles reached
   bool FrameTSstopOnCamReturn;    // Flag to stop on image return (off for early return)
-
+  BOOL FrameTSdoBacklash;
 };
 
 struct InsertThreadData {
@@ -878,6 +878,9 @@ class DLL_IM_EX CCameraController
   int mAlignStart, mAlignEnd;    // Starting and ending frames numbered from 1 as in UI
   BOOL mTestGpuInShrmemframe;    // Flag to do GPU alignment in shrmemframe
   DWORD mLastAcquireStartTime;   // Tick count of last acquire starting
+  float mFrameTSspeed;
+  double mFrameTSrestoreX;
+  double mFrameTSrestoreY;
 
 public:
   void SetNonGatanPostActionTime(void);
@@ -1016,6 +1019,7 @@ int * GetTietzSizes(CameraParameters *param, int & numSizes, int & offsetModulo)
 int NearestTietzSizeIndex(int ubSize, int *tietzSizes, int numSizes);
 int QueueTiltSeries(FloatVec &openTime, FloatVec &tiltToAngle, FloatVec &waitOrInterval,
   FloatVec &focusChange, FloatVec &deltaISX, FloatVec &deltaISY, float initialDelay);
+int SetFrameTSparams(BOOL doBacklash, float speed, double stageXrestore, double stageYrestore);
 int SaveFrameStackMdoc(KImage *image);
 void GetFrameTSactualAngles(FloatVec &angles) {angles = mTD.FrameTSactualAngle;};
 int AddToNextFrameStackMdoc(CString key, CString value, bool startIt, CString *retMess);

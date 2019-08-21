@@ -271,7 +271,7 @@ void EMmontageController::SetMontaging(BOOL inVal)
     mParam->maxOverviewBin = B3DMAX(zoomX, zoomY);
     if (!mParam->overviewBinning)
       mParam->overviewBinning = mParam->maxOverviewBin;
-    B3DCLAMP(mParam->overviewBinning, 1, mParam->overviewBinning);
+    B3DCLAMP(mParam->overviewBinning, 1, mParam->maxOverviewBin);
     mWinApp->mMontageWindow.UpdateSettings();
 
   } else if (mMontaging) {
@@ -339,7 +339,8 @@ int EMmontageController::ReadMontage(int inSect, MontParam *inParam,
 }
 
 // START ACQUIRING OR READING IN A MONTAGE
-int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDwellTime)
+int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDwellTime,
+  int cookSkip, bool skipColumn, float cookSpeed)
 {
   int ind, icx1, icx2, icy1, icy2, first, last, j, iDir, notSkipping;
   int ix, iy, i, fullX, fullY, binning, numBlocksX, numBlocksY, frameDelX, frameDelY;
@@ -347,10 +348,11 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
   double delISX, delISY, baseZ, needed, currentUsage, ISX, ISY;
   float memoryLimit, stageX, stageY, cornX, cornY, binDiv, xTiltFac, yTiltFac;
   BOOL tryForMemory, focusFeasible, external, useHQ, alignable, useVorSinLD;
-  int already, borderTry, setNum, useSetNum, cookSkip = 0;
+  int already, borderTry, setNum, useSetNum;
   ScaleMat bMat, aInv;
   bool definedCenter = mDefinedCenterFrames;
   bool preCooking = inTrial == MONT_TRIAL_PRECOOK;
+  IntVec p2vOrig;
   CString statText = "MONTAGING";
   CString statPiece, mess;
   CMapDrawItem *navItem;
@@ -367,11 +369,11 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
 
   mReadingMontage = inReadMont;
   mDwellTimeMsec = (int)(1000. * B3DMAX(0., cookDwellTime));
-  if (cookDwellTime < 0) {
+  if (cookDwellTime < 0)
     cookSkip = B3DNINT(-cookDwellTime);
-    if (cookSkip == 1)
-      cookSkip = 10 * mParam->yNframes;
-  }
+  if (cookSkip == 1)
+    cookSkip = 10 * mParam->yNframes;
+  mMoveInfo.speed = cookSpeed;
   if (!mReadingMontage) {
     mParam = mWinApp->GetMontParam();
     mReadStoreMRC = mWinApp->mStoreMRC;
@@ -609,9 +611,7 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
       }
       
       mBinv = mShiftManager->MatInv(bMat);
-      baseZ = cos(DTOR * mScope->GetTiltAngle());
-      xTiltFac = (float)(HitachiScope ? baseZ : 1.);
-      yTiltFac = (float)(HitachiScope ? 1. : baseZ);
+      mShiftManager->GetStageTiltFactors(xTiltFac, yTiltFac);
       mBinv.xpx /= xTiltFac;
       mBinv.xpy /= xTiltFac;
       mBinv.ypx /= yTiltFac;
@@ -782,9 +782,10 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
     mIndSequence[ix] = ix;
     mFocusBlockInd[ix] = -1;
   }
+  p2vOrig = mPieceToVar;
 
   // For precooking with skipping, loop on columns and first find last actual piece
-  if (preCooking && cookSkip) {
+  if (preCooking && (cookSkip || skipColumn)) {
     for (ix = 0; ix < mParam->xNframes; ix++) {
       last = -1;
       for (iy = 0; iy < mParam->yNframes; iy++)
@@ -796,7 +797,11 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
       for (iy = 0; iy < mParam->yNframes; iy++) {
         ind = ix * mParam->yNframes + iy;
         if (mPieceToVar[ind] >= 0) {
-          if (icx1 % cookSkip && iy != last) {
+          if (icx1 && iy != last && 
+            ((cookSkip && (ix + iy) % cookSkip != 0) || cookSkip >= mParam->yNframes || 
+            (skipColumn && ix % 2 && ix < mParam->xNframes - 1 && 
+              p2vOrig[ind + mParam->yNframes] >= 0 && 
+              p2vOrig[ind - mParam->yNframes] >= 0))) {
             mPieceToVar[ind] = -1;
             mNumToSkip++;
           }
@@ -1678,7 +1683,8 @@ int EMmontageController::DoNextPiece(int param)
           if (mNumStageErrors < 3) {
             mMovingStage = true;
             mAction = MOVE_STAGE;
-            mScope->MoveStage(mMoveInfo, mNeedBacklash);
+            mScope->MoveStage(mMoveInfo, mNeedBacklash, 
+              precooking && mMoveInfo.speed > 0.);
             mWinApp->AddIdleTask(CEMscope::TaskStageBusy, TASK_MONTAGE, 0, timeOut);
             return 0;
           }

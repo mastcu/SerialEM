@@ -20,6 +20,7 @@ class COneLineScript;
 #define MAX_MACRO_LABELS 100
 #define MAX_MACRO_SKIPS  100
 #define MACRO_NO_VALUE  -123456789.
+#define MAX_CUSTOM_INTERVAL 20000 
 
 struct MacroFunction {
   CString name;
@@ -94,6 +95,7 @@ class CMacroProcessor : public CCmdTarget
   GetMember(bool, CompensatedBTforIS);
   GetMember(bool, NoMessageBoxOnError);
   GetSetMember(BOOL, RestoreMacroEditors);
+  std::map<std::string, int> *GetCustomTimeMap() { return &mCustomTimeMap;};
   bool GetAlignWholeTSOnly() {return DoingMacro() && mAlignWholeTSOnly;};
   bool SkipCheckingFrameAli() {return DoingMacro() && mSkipFrameAliCheck;};
   COneLineScript *mOneLineScript;
@@ -141,6 +143,7 @@ private:
   std::set<std::string> mFunctionSet1;
   std::set<std::string> mFunctionSet2;
   std::set<std::string> mReservedWords;
+  std::map<std::string, int> mCustomTimeMap;
 
   CString *mMacros;
 
