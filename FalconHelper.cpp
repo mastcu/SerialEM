@@ -853,7 +853,6 @@ void CFalconHelper::CheckAsyncSave(void)
 // Clean up memory when done stacking, plus delete files when asynchronous saving used
 void CFalconHelper::CleanupStacking(void)
 {
-  std::map<int, std::string>::iterator iter;
   CString str;
 
   if (mReadLocally) {
