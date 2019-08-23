@@ -79,6 +79,7 @@ class CComplexTasks : public CCmdTarget
   GetSetMember(float, StageTimeoutFactor);
   GetMember(double, OnAxisDose);
   GetSetMember(float, WalkSTEMfocusInterval);
+  GetSetMember(int, EucenRestoreStageXY);
   void GetBacklashDelta(float &deltaX, float &deltaY) {deltaX = mBASPDeltaX; deltaY = mBASPDeltaY;};
 
   float GetTiltBacklash() {return mRTThreshold;};
@@ -265,6 +266,9 @@ class CComplexTasks : public CCmdTarget
   float mStageTimeoutFactor;      // Multiplier to idle task timeout for stage moves
   bool mHitachiWithoutZ;          // Flag that it is a Hitachi with no Z
   int mTiltingBack;               // Set to 1 when tilting back, or -1 when done or error
+  int mEucenRestoreStageXY;       // 1 to restore XY in fine eucentricity, 2 for both
+  double mStageXtoRestore;        // Position to restore
+  double mStageYtoRestore;
 
 public:
   afx_msg void OnTasksSetincrements();

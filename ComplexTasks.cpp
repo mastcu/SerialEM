@@ -160,6 +160,8 @@ CComplexTasks::CComplexTasks()
   mSkipNextBeamShift = false;
   mStageTimeoutFactor = 1.;
   mTiltingBack = 0;
+  mEucenRestoreStageXY = -1;
+  mStageXtoRestore =  mStageYtoRestore = EXTRA_NO_VALUE;
   
   // Default minimum field of view
   mMinRSRAField = 7.0;
@@ -1359,6 +1361,10 @@ void CComplexTasks::FindEucentricity(int coarseFine)
     action = FE_FINE_RESET;
   }
 
+  if ((mEucenRestoreStageXY > 0 && (mFECoarseFine & FIND_EUCENTRICITY_FINE) ||
+    mEucenRestoreStageXY > 1))
+    mScope->GetStagePosition(mStageXtoRestore, mStageYtoRestore, ISX);
+
   mFEActPostExposure = mWinApp->ActPostExposure();
   mDoingEucentricity = true;
   mWinApp->UpdateBufferWindows();
@@ -1487,7 +1493,7 @@ void CComplexTasks::EucentricityNextTask(int param)
     // Do tilt if needed in either case
     if (needTilt) {
       mFECurrentAngle = mFEReferenceAngle + mFECoarseIncrement;
-      mScope->TiltTo(mFECurrentAngle);
+      mScope->TiltTo(mFECurrentAngle, mStageXtoRestore, mStageYtoRestore);
       mWinApp->AddIdleTask(TASK_EUCENTRICITY, FE_COARSE_MOVED, 
         B3DNINT(mStageTimeoutFactor * 30000));
       return;
@@ -1619,7 +1625,7 @@ void CComplexTasks::EucentricityNextTask(int param)
       if (mFEActPostExposure)
         EucentricityFineCapture();
       else {
-        mScope->TiltTo(mFETargetAngles[mFEFineIndex]);
+        mScope->TiltTo(mFETargetAngles[mFEFineIndex], mStageXtoRestore, mStageYtoRestore);
         mWinApp->AddIdleTask(TASK_EUCENTRICITY, FE_FINE_TILTED, 
           B3DNINT(mStageTimeoutFactor * 30000));
       }
@@ -1726,7 +1732,7 @@ void CComplexTasks::EucentricityNextTask(int param)
     if (mRepeatFine)
       FindEucentricity(FIND_EUCENTRICITY_FINE);
     else if (mFECoarseFine & REFINE_EUCENTRICITY_ALIGN) {
-      mScope->TiltTo(mFEUsersAngle);
+      mScope->TiltTo(mFEUsersAngle, mStageXtoRestore, mStageYtoRestore);
       mWinApp->AddIdleTask(TASK_EUCENTRICITY, FE_FINE_ALIGNTILT, 
         B3DNINT(mStageTimeoutFactor * 30000));
     } else
@@ -1759,7 +1765,9 @@ void CComplexTasks::EucentricityFineCapture()
     smi.alpha = mFETargetAngles[mFEFineIndex + 1];
     delay = mShiftManager->GetAdjustedTiltDelay(fabs((double)
       (mFETargetAngles[mFEFineIndex + 1] - mFEFineAngles[mFEFineIndex])));
-    mCamera->QueueStageMove(smi, delay);
+    smi.x = mStageXtoRestore;
+    smi.y = mStageYtoRestore;
+    mCamera->QueueStageMove(smi, delay, false, mStageXtoRestore > EXTRA_VALUE_TEST);
   } 
   
   // Start capture and return
@@ -1792,8 +1800,11 @@ void CComplexTasks::DoubleMoveStage(double finalZ, float backlashZ, BOOL doZ,
     smi.axisBits |= axisA;
     smi.alpha = finalTilt;
     smi.backAlpha = backlashTilt;
+    smi.x = mStageXtoRestore;
+    smi.y = mStageYtoRestore;
   }
-  mScope->MoveStage(smi, backlashZ != 0. || backlashTilt != 0.);
+  mScope->MoveStage(smi, backlashZ != 0. || backlashTilt != 0., false, false, false, 
+    doTilt && mStageXtoRestore > EXTRA_VALUE_TEST);
   mWinApp->AddIdleTask(TASK_EUCENTRICITY, nextAction, 
     B3DNINT(mStageTimeoutFactor * (HitachiScope ? 120000 : 30000)));
 }
@@ -1825,7 +1836,7 @@ void CComplexTasks::StopEucentricity()
     // restore mag now but come back after tilt is done to do true end
     RestoreMagIfNeeded();
     if (!mScope->WaitForStageReady(10000)) {
-      mScope->TiltTo(mFEUsersAngle);
+      mScope->TiltTo(mFEUsersAngle, mStageXtoRestore, mStageYtoRestore);
       mTiltingBack = 1;
       mWinApp->AddIdleTask(TASK_EUCENTRICITY, 0, 
         B3DNINT(mStageTimeoutFactor * (HitachiScope ? 120000 : 30000)));
@@ -1834,6 +1845,7 @@ void CComplexTasks::StopEucentricity()
   }
   mDoingEucentricity = false;
   mTiltingBack = 0;
+  mStageXtoRestore = mStageYtoRestore = EXTRA_NO_VALUE;
   mCamera->SetRequiredRoll(0);
   mCamera->SetObeyTiltDelay(false);
   mWinApp->UpdateBufferWindows();
