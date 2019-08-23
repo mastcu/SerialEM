@@ -3836,12 +3836,7 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
 
       // A defect file is needed only if the defect list has something in it
       CameraDefects *defp = &mParam->defects;
-      if (defp->partialBadCol.size() || defp->partialBadRow.size() ||
-        defp->badColumnStart.size() || defp->badRowStart.size() || defp->badPixelX.size()
-        || defp->usableLeft > 0 || defp->usableTop > 0 || (defp->usableRight > 0 && 
-          defp->usableRight < (mParam->sizeX / (defp->wasScaled ? 1 : 2) - 1)) ||
-        (defp->usableBottom > 0 && 
-          defp->usableBottom < (mParam->sizeY / (defp->wasScaled ? 1 : 2) - 1))) {
+      if (DefectListHasEntries(defp)) {
           flags |= K2_SAVE_DEFECTS;
           alignFlags |= K2_SAVE_DEFECTS;
 
@@ -8264,6 +8259,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
             err = 1;
           }
           B3DFREE(linePtrs);
+
           if (err && mRepFlag >= 0) {
             TurnOffRepeatFlag();
             StopContinuousSTEM();
@@ -8281,6 +8277,11 @@ void CCameraController::DisplayNewImage(BOOL acquired)
           }
           mTD.DMSizeX = mDMsizeX;
           mTD.DMSizeY = mDMsizeY;
+        }
+
+        if (DefectListHasEntries(mParam->origDefects)) {
+          CorDefCorrectDefects(&mParam->defects, mTD.Array[chan], mTD.ImageType,
+            mBinning, mTop, mLeft, mBottom, mRight);
         }
 
       } else if (!mSimulationMode && mTD.Processing != lastConSetp->processing){
@@ -10761,6 +10762,17 @@ void CCameraController::FixDirForFalconFrames(CameraParameters *param)
     // For old scripting the default is to inherit from K2 path
     mDirForFalconFrames = mDirForK2Frames;
   }    
+}
+
+// test whether there are any entries in defect list for current camera
+bool CCameraController::DefectListHasEntries(CameraDefects * defp)
+{
+  return defp->partialBadCol.size() || defp->partialBadRow.size() ||
+    defp->badColumnStart.size() || defp->badRowStart.size() || defp->badPixelX.size()
+    || defp->usableLeft > 0 || defp->usableTop > 0 || (defp->usableRight > 0 &&
+      defp->usableRight < (mParam->sizeX / (defp->wasScaled ? 1 : 2) - 1)) ||
+      (defp->usableBottom > 0 &&
+        defp->usableBottom < (mParam->sizeY / (defp->wasScaled ? 1 : 2) - 1));
 }
 
 ////////////////////////////////////////////////////////////////////

@@ -1025,6 +1025,7 @@ void GetFrameTSactualAngles(FloatVec &angles) {angles = mTD.FrameTSactualAngle;}
 int AddToNextFrameStackMdoc(CString key, CString value, bool startIt, CString *retMess);
 bool CanSaveFrameStackMdoc(CameraParameters * param);
 bool CanDoK2HardwareDarkRef(CameraParameters *param, CString &errstr);
+bool DefectListHasEntries(CameraDefects *defp);
 };
 
 

@@ -3,13 +3,17 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+8/21/19: Improved defect correction of more than 4 lines to reduce structure
+in corrected patch; added defect correction of K2/K3 images if there are any
+bad line or pixel entries in properties.
+
 8/21/19: Changed montage pre-cooking with ability to skip every other column,
 set a dwell time when skipping pieces, and change the stage speed.
 
 8/21/19: Set default for program memory limit.
 
-8/21/19: Added script command to move to the last hole center done by
-MultipleRecords.
+8/21/19: Added script commands to move to the last hole center done by
+MultipleRecords with either stage or image shift.
 
 8/21/19: Added script command to set additional parameters for frame tilt
 series: backlash for dose-symmetric, a tilt speed setting, and stage position
