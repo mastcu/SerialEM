@@ -256,7 +256,7 @@ enum {CME_SCRIPTEND = -7, CME_LABEL, CME_SETVARIABLE, CME_SETSTRINGVAR, CME_DOKE
   CME_REPORTFILAMENTCURRENT, CME_SETFILAMENTCURRENT, CME_CLOSEFRAMEMDOC,
   CME_DRIFTWAITTASK, CME_GETWAITTASKDRIFT, CME_CLOSELOGOPENNEW, CME_SAVELOG,
   CME_SETFRAMESERIESPARAMS, CME_SETCUSTOMTIME, CME_REPORTCUSTOMINTERVAL, 
-  CME_MOVETOLASTMULTIHOLE
+  CME_STAGETOLASTMULTIHOLE, CME_IMAGESHIFTTOLASTMULTIHOLE
 };
 
 // The two numbers are the minimum arguments and whether arithmetic is allowed
@@ -395,9 +395,10 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"SetFilamentCurrent", 1, 0}, {"CloseFrameMdoc", 0, 0}, {"DriftWaitTask", 0, 1},
 {"GetWaitTaskDrift", 0, 0}, {"CloseLogOpenNew", 0, 0}, {"SaveLog", 0, 0},
 {"SetFrameSeriesParams", 1, 0}, {"SetCustomTime", 1, 0}, {"ReportCustomInterval", 1, 0},
-{"MoveToLastMultiHole", 0, 0},
+{"StageToLastMultiHole", 0, 0}, {"ImageShiftToLastMultiHole", 0, 0}, 
 {NULL, 0, 0}
 };
+// The longest is now 25 characters but 23 is a more common limit
 
 #define NUM_COMMANDS (sizeof(cmdList) / sizeof(CmdItem))
 
@@ -3815,6 +3816,11 @@ void CMacroProcessor::NextCommand()
     if (!itemEmpty[3] && itemDbl[3] > 0)
       mShiftManager->SetISTimeOut((float)itemDbl[3] * mShiftManager->GetLastISDelay());
     break;
+
+  case CME_IMAGESHIFTTOLASTMULTIHOLE:                       // ImageShiftToLastMultiHole
+    mWinApp->mParticleTasks->GetLastHoleImageShift(backlashX, backlashY);
+    mScope->IncImageShift(backlashX, backlashY);
+    break;
     
   case CME_SHIFTIMAGEFORDRIFT:                              // ShiftImageForDrift
     mCamera->QueueDriftRate(itemDbl[1], itemDbl[2], itemInt[3] != 0);
@@ -4127,7 +4133,7 @@ void CMacroProcessor::NextCommand()
     index = mWinApp->MinuteTimeStamp();
     if (!itemEmpty[2])
       index = itemInt[2];
-    index2 = mCustomTimeMap.count(sstr);
+    index2 = (int)mCustomTimeMap.count(sstr);
     if (index2)
       custIter = mCustomTimeMap.find(sstr);
     if (CMD_IS(SETCUSTOMTIME)) {
@@ -4186,7 +4192,7 @@ void CMacroProcessor::NextCommand()
   case CME_MOVESTAGETO:                                     // MoveStageTo 
   case CME_TESTRELAXINGSTAGE:                               // TestRelaxingStage
   case CME_STAGESHIFTBYPIXELS:                              // StageShiftByPixels
-  case CME_MOVETOLASTMULTIHOLE:                             // MoveToLastMultiHole
+  case CME_STAGETOLASTMULTIHOLE:                            // StageToLastMultiHole
       smi.z = 0.;
       smi.alpha = 0.;
       smi.axisBits = 0;
@@ -4207,7 +4213,7 @@ void CMacroProcessor::NextCommand()
           stageX = bInv.xpx * itemDbl[1] + bInv.xpy * itemDbl[2];
           stageY = (bInv.ypx * itemDbl[1] + bInv.ypy * itemDbl[2]) / cos(h1);
           stageZ = 0.;
-        } else if (CMD_IS(MOVETOLASTMULTIHOLE)) {
+        } else if (CMD_IS(STAGETOLASTMULTIHOLE)) {
           mWinApp->mParticleTasks->GetLastHoleStagePos(stageX, stageY);
           if (stageX < EXTRA_VALUE_TEST)
             ABORT_LINE("The multiple Record routine has not been run for line:\n\n");
@@ -4262,7 +4268,7 @@ void CMacroProcessor::NextCommand()
           smi.z = stageZ;
 
           smi.axisBits |= (axisX | axisY);
-          if (!itemEmpty[3] && !CMD_IS(MOVETOLASTMULTIHOLE))
+          if (!itemEmpty[3] && !CMD_IS(STAGETOLASTMULTIHOLE))
             smi.axisBits |= axisZ;
         }
 

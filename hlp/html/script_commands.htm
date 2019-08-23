@@ -2569,11 +2569,18 @@
             this testing.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="auto-style1">MoveToLastMultiHole</TD>
-          <TD>Moves the stage to the center of the last hole position acquired with 
+          <TD class="auto-style1">StageToLastMultiHole</TD>
+          <TD>Move the stage to the center of the last hole position acquired with 
               MultipleRecords.&nbsp; This command can be used to position over a hole for 
               occasional post-acquisition tasks when using a hole pattern centered on the 
-              support film.</TD>
+              support film.&nbsp; There is no backlash correction.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="auto-style1">ImageShiftToLastMultiHole</TD>
+          <TD>Change image shift by the offset to the last hole position acquired with 
+              MultipleRecords.&nbsp; This command combined with &#39;ResetImageShift&#39; will be more 
+              accurate than &#39;StageToLastMultiHole&#39; if backlash correction is needed and 
+              enabled in the Image Alignment &amp; Focus control panel.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="auto-style1">CalibrateImageShift [#]</TD>

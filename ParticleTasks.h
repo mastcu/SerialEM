@@ -27,6 +27,7 @@ public:
   void SetBaseBeamTilt(double inX, double inY) { mBaseBeamTiltX = inX; mBaseBeamTiltY = inY; };
   void GetLastHoleStagePos(double &stageX, double &stageY) { stageX = mMSLastHoleStageX; 
   stageY = mMSLastHoleStageY; };
+  void GetLastHoleImageShift(float &ISX, float &ISY) {ISX = mMSLastHoleISX; ISY = mMSLastHoleISY; };
 
 private:
   CSerialEMApp * mWinApp;
@@ -64,6 +65,7 @@ private:
   int mSavedAlignFlag;
   double mMSLastHoleStageX;        // Equivalent stage position of last hole center
   double mMSLastHoleStageY;
+  float mMSLastHoleISX, mMSLastHoleISY;   // Simply save positions of last hole center
 
   DriftWaitParams mWDDfltParams;   // Resident parameters
   DriftWaitParams mWDParm;         // Run-time parameters

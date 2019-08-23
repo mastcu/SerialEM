@@ -40,6 +40,7 @@ CParticleTasks::CParticleTasks(void)
   mWDDfltParams.exposure = 0.2f;
   mWDDfltParams.binning = 4;
   mMSLastHoleStageX = EXTRA_NO_VALUE;
+  mMSLastHoleISX = mMSLastHoleISY = 0.;
 }
 
 
@@ -238,7 +239,8 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
     mMSHoleISY[mMSNumHoles - 1], delISX, delISY);
   mMSLastHoleStageX += delISX / xTiltFac;
   mMSLastHoleStageY += delISY / yTiltFac;
-
+  mMSLastHoleISX = mMSHoleISX[mMSNumHoles - 1];
+  mMSLastHoleISY = mMSHoleISY[mMSNumHoles - 1];
 
   return StartOneShotOfMulti();
 }
