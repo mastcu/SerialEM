@@ -5,7 +5,7 @@
 // Depends on IMOD library libcfshr (uses parse_params.c and samplemeansd.c)
 // This module is shared between IMOD and SerialEM and is thus GPL.
 //
-// Copyright (C) 2014 by the Regents of the University of Colorado.
+// Copyright (C) 2014-2019 by the Regents of the University of Colorado.
 //
 // Author: David Mastronarde
 //
@@ -28,6 +28,8 @@ static void ScaleRowsOrColumns(UShortVec &colStart, ShortVec &colWidth,
 
 static void CorrectEdge(void *array, int type, int numBad, int taper, int length,
                      int sumLength, int indStart, int stepAlong, int stepBetween);
+static int RandomIntFillFromIntSum(int isum, int nsum);
+static int RandomIntFillFromFloat(float value);
 static void CorrectColumn(void *array, int type, int nx, int xstride, int ystride, 
                        int indStart, int num, int ystart, int yend);
 static void CorrectPixel(void *array, int type, int nxdim, int nx, int ny, int xpix, 
@@ -178,6 +180,27 @@ void CorDefCorrectDefects(CameraDefects *param, void *array, int type,
   CorrectPixels2Ways(param, array, type, sizeX, sizeY, binning, top, left, 0, 0.);
 }
 
+// Macro to get initial sum at beginning of last good row
+#define BEGINNING_ROW_SUM(swty, data)                                   \
+  case swty:                                                            \
+  for (i = 0, ind = indStart; i < sumLength; i++, ind += stepAlong)     \
+    sum += data[ind];                                                   \
+  break;                                                                \
+  
+// Macro to correct a whole edge row
+#define CORRECT_EDGE_ROW(swty, data, typ, csty, func)                   \
+  case swty:                                                            \
+  for (i = 0, ind = indStart; i < length; i++, ind += stepAlong, indDest += stepAlong) { \
+    if (i >= addStart && i < addEnd) {                                  \
+      sum += (csty)data[indAdd] - data[indDrop];                        \
+      indAdd += stepAlong;                                              \
+      indDrop += stepAlong;                                             \
+    }                                                                   \
+    data[indDest] = (typ)func(frac * (float)data[ind] + (float)(sumFac * sum)); \
+  }                                                                     \
+  break;
+
+
 // Correct one edge of an image
 static void CorrectEdge(void *array, int type, int numBad, int taper, int length,
               int sumLength, int indStart, int stepAlong, int stepBetween)
@@ -186,36 +209,24 @@ static void CorrectEdge(void *array, int type, int numBad, int taper, int length
   unsigned short int *usdata = (unsigned short int *)array;
   float *fdata = (float *)array;
   unsigned char *bdata = (unsigned char *)array;
-  double sum;
-  double sumFac, frac;
+  double sum, sumFac;
+  float frac;
   int ind, i, indDest, row, indDrop, indAdd, addStart, addEnd;
 
   if (sumLength > length)
     sumLength = length;
   addStart = sumLength / 2;
   addEnd = length - (sumLength - sumLength / 2);
-  
+
   for (row = 0; row < numBad; row++) {
     
     // First get the mean at beginning of the last good row
     sum = 0;
     switch (type) {
-    case SLICE_MODE_BYTE:
-      for (i = 0, ind = indStart; i < sumLength; i++, ind += stepAlong)
-        sum += bdata[ind];
-      break;
-    case SLICE_MODE_SHORT:
-      for (i = 0, ind = indStart; i < sumLength; i++, ind += stepAlong)
-        sum += sdata[ind];
-      break;
-    case SLICE_MODE_USHORT:
-      for (i = 0, ind = indStart; i < sumLength; i++, ind += stepAlong)
-        sum += usdata[ind];
-      break;
-    case SLICE_MODE_FLOAT:
-      for (i = 0, ind = indStart; i < sumLength; i++, ind += stepAlong)
-        sum += fdata[ind];
-      break;
+      BEGINNING_ROW_SUM(SLICE_MODE_BYTE, bdata);
+      BEGINNING_ROW_SUM(SLICE_MODE_SHORT, sdata);
+      BEGINNING_ROW_SUM(SLICE_MODE_USHORT, usdata);
+      BEGINNING_ROW_SUM(SLICE_MODE_FLOAT, fdata);
     }
     indDrop = indStart;
     indAdd = ind;
@@ -225,7 +236,7 @@ static void CorrectEdge(void *array, int type, int numBad, int taper, int length
     frac = 1.;
     sumFac = 0.;
     if (taper > 0) {
-      frac = (double)(taper - row - 1.) / taper;
+      frac = (float)((taper - row - 1.) / taper);
       if (frac < 0.)
         frac = 0.;
       sumFac = (1. - frac) / sumLength;
@@ -233,106 +244,139 @@ static void CorrectEdge(void *array, int type, int numBad, int taper, int length
     
     // Replace the row
     switch (type) {
-    case SLICE_MODE_BYTE:
-      for (i = 0, ind = indStart; i < length; i++, ind += stepAlong,
-        indDest += stepAlong) {
-        if (i >= addStart && i < addEnd) {
-          sum += (int)bdata[indAdd] - bdata[indDrop];
-          indAdd += stepAlong;
-          indDrop += stepAlong;
-        }
-        bdata[indDest] = (unsigned char)(frac * bdata[ind] + sumFac * sum);
-      }
-      break;
-    case SLICE_MODE_SHORT:
-      for (i = 0, ind = indStart; i < length; i++, ind += stepAlong,
-        indDest += stepAlong) {
-        if (i >= addStart && i < addEnd) {
-          sum += sdata[indAdd] - sdata[indDrop];
-          indAdd += stepAlong;
-          indDrop += stepAlong;
-        }
-        sdata[indDest] = (short int)(frac * sdata[ind] + sumFac * sum);
-      }
-      break;
-    case SLICE_MODE_USHORT:
-      for (i = 0, ind = indStart; i < length; i++, ind += stepAlong, 
-        indDest += stepAlong) {
-        if (i >= addStart && i < addEnd) {
-          sum += usdata[indAdd] - usdata[indDrop];
-          indAdd += stepAlong;
-          indDrop += stepAlong;
-        }
-        usdata[indDest] = (unsigned short int)(frac * usdata[ind] + sumFac * sum);
-      }
-      break;
-    case SLICE_MODE_FLOAT:
-      for (i = 0, ind = indStart; i < length; i++, ind += stepAlong, 
-        indDest += stepAlong) {
-        if (i >= addStart && i < addEnd) {
-          sum += fdata[indAdd] - fdata[indDrop];
-          indAdd += stepAlong;
-          indDrop += stepAlong;
-        }
-        fdata[indDest] = (float)(frac * fdata[ind] + sumFac * sum);
-      }
-      break;
+      CORRECT_EDGE_ROW(SLICE_MODE_BYTE, bdata, unsigned char, int,
+                       RandomIntFillFromFloat);
+      CORRECT_EDGE_ROW(SLICE_MODE_SHORT, sdata, short, int, RandomIntFillFromFloat);
+      CORRECT_EDGE_ROW(SLICE_MODE_USHORT, usdata, unsigned short, int, 
+                       RandomIntFillFromFloat);
+      CORRECT_EDGE_ROW(SLICE_MODE_FLOAT, fdata, float, float, +);
     }
   }
 }
 
+/*  For debugging the 5+ column correction
+void  PrintfToLog(char *fmt, ...);
+if (i == fullStart + 5)
+PrintfToLog("col %d  pseudo %d  vary %f flUse %f %d %d %d %d", col,
+pseudo & 0x3FFFF, ranFac  * (pseudo & 0x3FFFF) - maxVary, flUse, iy1, ifx1, iy2,
+ifx2);*/
+/* A note on the linear congruential generator:
+  The full 20 bit value had a bad bias to higher values, 20% more than half in small
+  sample.  The 18-bit value used here had a 3% bias to lower half in two samples of 
+  320-384 values.  The bits picked out for generating the random int fill and the 
+  index factors for 5+ row correction are fairly unbiased.
+  GPUtest2018/Dec06_16.02.21.tif has a mean of 0.0617 and middle mean of 0.0624 
+  corrected bad pixels averaged 0.0597, central 2-row correction averaged 0.0631
+  GPUtest2018/Dec27_13.33.00.tif has a mean of 0.905 and middle mean of 0.930
+  corrected bad pixels averaged 0.893, central 2-row correction averaged 0.934
+  The row results have lots of samples and may reflect the bias in the generator.
+  Verified that >= in the comparisons gives much bigger result; > is correct
+ */
+
+// Generate an int value that will average out to the floating point value of isum / nsum
+// by comparison or remainder with reaminder from a random number
+static int RandomIntFillFromIntSum(int isum, int nsum)
+{
+  int ranInt, retval;
+  static int pseudo = 482945;
+  pseudo = (197 * (pseudo + 1)) & 0xFFFFF;
+  ranInt = (pseudo >> 2) % nsum;
+  retval = isum / nsum;
+  if (isum % nsum > ranInt)
+    retval++;
+  return retval;
+}
+
+// Generate an int value from the given float that will average out to the float value
+// by comparison with a random number
+static int RandomIntFillFromFloat(float value)
+{
+  int retval;
+  static int pseudo = 843295;
+  pseudo = (197 * (pseudo + 1)) & 0xFFFFF;
+  retval = (int)value;
+  if ((value - retval) * (float)0x3FFFF > (pseudo & 0x3FFFF))
+    retval++;
+  return retval;
+}
+
+
 // Macros for computing the column correction, with summing of one or two rows of
 // edge values for thicker columns
 // Arguments are MRC type, array, type for cast assignment, [type for cast to start sum],
-// and amount to add for rounding of integers
+// either RandomIntFillFromFloat or "+" as a no-op
 #define CORRECT_ONE_TWO_COL(c, a, b, e)                                 \
   case c:                                                               \
   for (i = ystart; i <= yend; i++, ind += yStride, indLeft += yStride,  \
-         indRight += yStride)                                           \
-    a[ind] = (b)(fLeft * a[indLeft] + fRight * a[indRight] + e);        \
+         indRight += yStride) {                                         \
+    fill = (fLeft * (float)a[indLeft] + fRight * (float)a[indRight]);   \
+    a[ind] = (b)e(fill);                                                \
+  }                                                                     \
   break;
 
 #define CORRECT_THREE_FOUR_COL(c, a, b, d, e)                           \
   case c:                                                               \
-  a[ind] = (b)((fLeft * ((d)a[indLeft] + a[indLeft + yStride]) +        \
-                fRight * ((d)a[indRight] + a[indRight + yStride])) / 2. + e); \
-  ind += yStride;                                                       \
-  indLeft += yStride;                                                   \
-  indRight += yStride;                                                  \
-  for (i = ystart; i <= yend; i++, ind += yStride, indLeft += yStride,  \
-         indRight += yStride)                                           \
-    a[ind] = (b)((fLeft * ((d)a[indLeft - yStride] + a[indLeft] +       \
-                           a[indLeft + yStride]) +                      \
-                  fRight * ((d)a[indRight - yStride] + a[indRight] +    \
-                            a[indRight + yStride])) / 3. + e);          \
-  a[ind] = (b)((fLeft * ((d)a[indLeft - yStride] + a[indLeft]) +        \
-                fRight * ((d)a[indRight - yStride] + a[indRight])) / 2. + e); \
+  if (ystart < fullStart) {                                             \
+    fill = ((fLeft * ((d)a[indLeft] + a[indLeft + yStride]) +           \
+             fRight * ((d)a[indRight] + a[indRight + yStride])) / 2.f); \
+    a[ind] = (b)e(fill);                                                \
+    ind += yStride;                                                     \
+    indLeft += yStride;                                                 \
+    indRight += yStride;                                                \
+  }                                                                     \
+  for (i = fullStart; i <= fullEnd; i++, ind += yStride, indLeft += yStride, \
+         indRight += yStride) {                                         \
+    fill = ((fLeft * (float)((d)a[indLeft - yStride] + a[indLeft] +     \
+                             a[indLeft + yStride]) +                    \
+             fRight * (float)((d)a[indRight - yStride] + a[indRight] +  \
+                              a[indRight + yStride])) / 3.f);           \
+    a[ind] = (b)e(fill);                                                \
+  }                                                                     \
+  if (yend > fullEnd) {                                                 \
+    fill = ((fLeft * ((d)a[indLeft - yStride] + a[indLeft]) +           \
+             fRight * ((d)a[indRight - yStride] + a[indRight])) / 2.f); \
+    a[ind] = (b)e(fill);                                                \
+  }                                                                     \
   break;
 
+// This one uses up to 4 columns x 3 rows on each side to sample pixels with random
+// indexes, but still averages the two sides.  However, the averaging factor also
+// randomly varies from the linear ramp
 #define CORRECT_FIVE_PLUS_COL(c, a, b, d, e)                            \
   case c:                                                               \
-  a[ind] = (b)((fLeft * ((d)a[indLeft] + a[indLeft + yStride] +         \
-                         a[indLeft - xStride] + a[indLeft + yStride - xStride]) + \
-                fRight * ((d)a[indRight] + a[indRight + yStride] +      \
-                          a[indRight + xStride] +                       \
-                          a[indRight + yStride + xStride])) / 4. + e);  \
-  ind += yStride;                                                       \
-  indLeft += yStride;                                                   \
-  indRight += yStride;                                                  \
-  for (i = ystart; i <= yend; i++, ind += yStride, indLeft += yStride,  \
-         indRight += yStride)                                           \
-    a[ind] = (b)((fLeft * ((d)a[indLeft - yStride] + a[indLeft] + a[indLeft + yStride] + \
-                           a[indLeft - xStride - yStride] + a[indLeft - xStride] + \
-                           a[indLeft - xStride + yStride]) +            \
-                  fRight * ((d)a[indRight - yStride] + a[indRight] +    \
-                            a[indRight + yStride] +                     \
-                            a[indRight + xStride - yStride] + a[indRight + xStride] + \
-                            a[indRight + xStride + yStride])) / 6. + e); \
-  a[ind] = (b)((fLeft * ((d)a[indLeft - yStride] + a[indLeft] +         \
-                         a[indLeft - xStride - yStride] + a[indLeft - xStride]) + \
-                fRight * ((d)a[indRight - yStride] + a[indRight] +      \
-                          a[indRight + xStride - yStride] +             \
-                          a[indRight + xStride])) / 4. + e);            \
+  if (ystart < fullStart) {                                             \
+    fill = ((fLeft * ((d)a[indLeft] + a[indLeft + yStride] +            \
+                      a[indLeft - xStride] + a[indLeft + yStride - xStride]) + \
+             fRight * ((d)a[indRight] + a[indRight + yStride] +         \
+                       a[indRight + xStride] +                          \
+                       a[indRight + yStride + xStride])) / 4.f);        \
+    a[ind] = (b)e(fill);                                                \
+    ind += yStride;                                                     \
+    indLeft += yStride;                                                 \
+    indRight += yStride;                                                \
+  }                                                                     \
+  for (i = fullStart; i <= fullEnd; i++, ind += yStride, indLeft += yStride, \
+         indRight += yStride) {                                         \
+    pseudo = (197 * (pseudo + 1)) & 0xFFFFF;                            \
+    flUse = fLeft + (ranFac * (float)(pseudo & 0x3FFFF) - maxVary);     \
+    B3DCLAMP(flUse, 0.f, 1.f);                                          \
+    frUse = 1.f - flUse;                                                \
+    iy1 = (pseudo >> 2) % 3;                                            \
+    ifx1 = (pseudo >> 4) & 3;                                           \
+    iy2 = (pseudo >> 6) % 3;                                            \
+    ifx2 = (pseudo >> 8) & 3;                                           \
+    fill = ((flUse * (float)(a[indLeft + (iy1 - 1) * yStride - ifx1 * xStride]) + \
+             frUse * (float)(a[indRight + (iy2 - 1) * yStride + ifx2 * xStride]))); \
+    a[ind] = (b)e(fill);                                                \
+  }                                                                     \
+  if (yend > fullEnd) {                                                 \
+    fill = ((fLeft * ((d)a[indLeft - yStride] + a[indLeft] +            \
+                      a[indLeft - xStride - yStride] + a[indLeft - xStride]) + \
+             fRight * ((d)a[indRight - yStride] + a[indRight] +         \
+                       a[indRight + xStride - yStride] +                \
+                       a[indRight + xStride])) / 4.f);                  \
+    a[ind] = (b)e(fill);                                                \
+  }                                                                     \
   break;
 
 // Correct a column defect which can be multiple columns
@@ -343,9 +387,12 @@ static void CorrectColumn(void *array, int type, int nx, int xStride, int yStrid
   unsigned short int *usdata = (unsigned short int *)array;
   float *fdata = (float *)array;
   unsigned char *bdata = (unsigned char *)array;
-  double fLeft, fRight;
+  float fLeft, fRight, flUse, frUse, fill;
+  static int pseudo = 456789;
   bool fivePlusOK;
-  int ind, i, col, indLeft, indRight;
+  int ind, i, col, indLeft, indRight, fullStart, fullEnd, ifx1, iy1, ifx2, iy2;
+  float maxVary = 0.33f;
+  float ranFac = maxVary / (float)0x1FFFF;
   
   // Adjust indStart or num if on edge of image; return if nothing left
   if (indStart < 0) {
@@ -362,8 +409,8 @@ static void CorrectColumn(void *array, int type, int nx, int xStride, int yStrid
   for (col = 0; col < num; col++) {
     
     // Set up fractions on left and right columns
-    fRight = (col + 1.) / (num + 1.);
-    fLeft = 1. - fRight;
+    fRight = (float)((col + 1.) / (num + 1.));
+    fLeft = 1.f - fRight;
 
     // Set up indexes for left and right columns; just use one side if on edge
     indLeft = indStart - 1;
@@ -372,34 +419,49 @@ static void CorrectColumn(void *array, int type, int nx, int xStride, int yStrid
       indLeft = indRight;
     if (indRight >= nx)
       indRight = indLeft;
-    fivePlusOK = indLeft > 0 && indRight < nx - 1;
+    fivePlusOK = indLeft > 2 && indRight < nx - 3;
     indLeft *= xStride;
     indRight *= xStride;
     ind = (indStart + col) * xStride;
     ind += yStride * ystart;
     indLeft += yStride * ystart;
     indRight += yStride * ystart;
+    fullStart = ystart;
+    fullEnd = yend;
+    if (!ystart)
+      fullStart++;
+    if (yend >= nx - 1)
+      fullEnd--;
 
     if (num >= 5 && yend - ystart >= 3 && fivePlusOK) {
       switch (type) {
-        CORRECT_FIVE_PLUS_COL(SLICE_MODE_BYTE, bdata, unsigned char, int, 0.5);
-        CORRECT_FIVE_PLUS_COL(SLICE_MODE_SHORT, sdata, short int, int, 0.5);
-        CORRECT_FIVE_PLUS_COL(SLICE_MODE_USHORT, usdata, unsigned short int, int, 0.5);
-        CORRECT_FIVE_PLUS_COL(SLICE_MODE_FLOAT, fdata, float, float, 0.);
+        CORRECT_FIVE_PLUS_COL(SLICE_MODE_BYTE, bdata, unsigned char, int,
+                              RandomIntFillFromFloat);
+        CORRECT_FIVE_PLUS_COL(SLICE_MODE_SHORT, sdata, short int, int,
+                              RandomIntFillFromFloat);
+        CORRECT_FIVE_PLUS_COL(SLICE_MODE_USHORT, usdata, unsigned short int, int,
+                              RandomIntFillFromFloat);
+        CORRECT_FIVE_PLUS_COL(SLICE_MODE_FLOAT, fdata, float, float, +);
       }
     } else if (num >= 3 && yend - ystart >= 1) {
       switch (type) {
-        CORRECT_THREE_FOUR_COL(SLICE_MODE_BYTE, bdata, unsigned char, int, 0.5);
-        CORRECT_THREE_FOUR_COL(SLICE_MODE_SHORT, sdata, short int, int, 0.5);
-        CORRECT_THREE_FOUR_COL(SLICE_MODE_USHORT, usdata, unsigned short int, int, 0.5);
-        CORRECT_THREE_FOUR_COL(SLICE_MODE_FLOAT, fdata, float, float, 0.);
+        CORRECT_THREE_FOUR_COL(SLICE_MODE_BYTE, bdata, unsigned char, int,
+                               RandomIntFillFromFloat);
+        CORRECT_THREE_FOUR_COL(SLICE_MODE_SHORT, sdata, short int, int,
+                               RandomIntFillFromFloat);
+        CORRECT_THREE_FOUR_COL(SLICE_MODE_USHORT, usdata, unsigned short int, int,
+                               RandomIntFillFromFloat);
+        CORRECT_THREE_FOUR_COL(SLICE_MODE_FLOAT, fdata, float, float, +);
       }
     } else {
       switch (type) {
-        CORRECT_ONE_TWO_COL(SLICE_MODE_BYTE,  bdata, unsigned char, 0.5);
-        CORRECT_ONE_TWO_COL(SLICE_MODE_SHORT, sdata, short int, 0.5);
-        CORRECT_ONE_TWO_COL(SLICE_MODE_USHORT, usdata, unsigned short int, 0.5);
-        CORRECT_ONE_TWO_COL(SLICE_MODE_FLOAT, fdata, float, 0.);
+        CORRECT_ONE_TWO_COL(SLICE_MODE_BYTE,  bdata, unsigned char,
+                            RandomIntFillFromFloat);
+        CORRECT_ONE_TWO_COL(SLICE_MODE_SHORT, sdata, short int,
+                            RandomIntFillFromFloat);
+        CORRECT_ONE_TWO_COL(SLICE_MODE_USHORT, usdata, unsigned short int,
+                            RandomIntFillFromFloat);
+        CORRECT_ONE_TWO_COL(SLICE_MODE_FLOAT, fdata, float, +);
       }
     }
   }
@@ -421,11 +483,11 @@ static void CorrectPixel(void *array, int type, int nxdim, int nx, int ny, int x
 
   if (useMean) {
     if (type == SLICE_MODE_BYTE)
-      bdata[index] = (unsigned char)(mean + 0.5);
+      bdata[index] = (unsigned char)RandomIntFillFromFloat(mean);
     else if (type == SLICE_MODE_SHORT)
-      sdata[index] = (short)(mean + 0.5);
+      sdata[index] = (short)RandomIntFillFromFloat(mean);
     else if (type == SLICE_MODE_USHORT)
-      usdata[index] = (unsigned short)(mean + 0.5);
+      usdata[index] = (unsigned short)RandomIntFillFromFloat(mean);
     else
       fdata[index] = mean;
     return;
@@ -435,16 +497,16 @@ static void CorrectPixel(void *array, int type, int nxdim, int nx, int ny, int x
   if (xpix > 0 && xpix < nx - 1 && ypix > 0 && ypix < ny - 1) {
     switch (type) {
     case SLICE_MODE_BYTE:
-      bdata[index] = ((int)bdata[index - 1] + bdata[index + 1] + bdata[index - nxdim] +
-        bdata[index + nxdim] + 2) / 4;
+      bdata[index] = (unsigned char)RandomIntFillFromIntSum((int)bdata[index - 1] + 
+        bdata[index + 1] + bdata[index - nxdim] + bdata[index + nxdim], 4);
       break;
     case SLICE_MODE_SHORT:
-      sdata[index] = ((int)sdata[index - 1] + sdata[index + 1] + sdata[index - nxdim] +
-        sdata[index + nxdim] + 2) / 4;
+      sdata[index] = (short)RandomIntFillFromIntSum((int)sdata[index - 1] + 
+        sdata[index + 1] + sdata[index - nxdim] + sdata[index + nxdim], 4);
       break;
     case SLICE_MODE_USHORT:
-      usdata[index] = ((int)usdata[index - 1] + usdata[index + 1] + usdata[index - nxdim]
-        + usdata[index + nxdim] + 2) / 4;
+      usdata[index] = (unsigned short)RandomIntFillFromIntSum((int)usdata[index - 1] + 
+        usdata[index + 1] + usdata[index - nxdim] + usdata[index + nxdim], 4);
       break;
     case SLICE_MODE_FLOAT:
       fdata[index] = (fdata[index - 1] + fdata[index + 1] + fdata[index - nxdim] +
@@ -469,14 +531,26 @@ static void CorrectPixel(void *array, int type, int nxdim, int nx, int ny, int x
     }
   }
   if (type == SLICE_MODE_BYTE)
-    bdata[index] = (unsigned char)((isum + nsum / 2) / nsum);
+    bdata[index] = (unsigned char)RandomIntFillFromIntSum(isum, nsum);
   else if (type == SLICE_MODE_SHORT)
-    sdata[index] = (short)((isum + nsum / 2) / nsum);
+    sdata[index] = (short)RandomIntFillFromIntSum(isum, nsum);
   else if (type == SLICE_MODE_USHORT)
-    usdata[index] = (unsigned short)((isum + nsum / 2) / nsum);
+    usdata[index] = (unsigned short)RandomIntFillFromIntSum(isum, nsum);
   else
     fdata[index] = (float)(fsum / nsum);
 }
+
+// Macro to correct all 4 pixel with the same value from a sum of 16 surrounding ones
+#define CORRECT_FOUR_PIXELS(swty, data, typ)                            \
+  case swty:                                                            \
+  isum = ((int)data[index - 1] + data[index - 2] + data[ipn - 1] + data[ipn - 2] + \
+          data[index + 2] + data[index + 3] + data[ipn + 2] + data[ipn + 3] + \
+          data[imn] + data[imn + 1] + data[im2n] + data[im2n + 1] +     \
+          data[ip2n] + data[ip2n + 1] + data[ip3n] + data[ip3n + 1]);   \
+  isum = RandomIntFillFromIntSum(isum, 16);                             \
+  data[index] = data[index + 1] = data[ipn] = data[ipn + 1] = (typ)isum; \
+  break;
+
 
 // Correct a single-pixel defect in super-res image
 static void CorrectSuperPixel(void *array, int type, int nxdim, int nx, int ny, int xpix, 
@@ -496,13 +570,13 @@ static void CorrectSuperPixel(void *array, int type, int nxdim, int nx, int ny, 
   if (useMean) {
     if (type == SLICE_MODE_BYTE)
       bdata[index] = bdata[index + 1] = bdata[ipn] = bdata[ipn + 1] = 
-        (unsigned char)(mean + 0.5);
+        (unsigned char)RandomIntFillFromFloat(mean);
     else if (type == SLICE_MODE_SHORT)
       sdata[index] = sdata[index + 1] = sdata[ipn] = sdata[ipn + 1] = 
-        (short)(mean + 0.5);
+        (short)RandomIntFillFromFloat(mean);
     else if (type == SLICE_MODE_USHORT)
       usdata[index] = usdata[index + 1] = usdata[ipn] = usdata[ipn + 1] = 
-        (unsigned short)(mean + 0.5);
+        (unsigned short)RandomIntFillFromFloat(mean);
     else
       fdata[index] = fdata[index + 1] = fdata[ipn] = fdata[ipn + 1] = mean;
     return;
@@ -515,42 +589,14 @@ static void CorrectSuperPixel(void *array, int type, int nxdim, int nx, int ny, 
     imn = index - nxdim;
     im2n = index - 2 * nxdim;
     switch (type) {
-    case SLICE_MODE_BYTE:
-      isum = ((int)bdata[index - 1] + bdata[index - 2] + bdata[ipn - 1] + bdata[ipn - 2] +
-        bdata[index + 2] + bdata[index + 3] + bdata[ipn + 2] + bdata[ipn + 3] +
-        bdata[imn] + bdata[imn + 1] + bdata[im2n] + bdata[im2n + 1] +
-        bdata[ip2n] + bdata[ip2n + 1] + bdata[ip3n] + bdata[ip3n + 1] + 8) / 16;
-      bdata[index] = isum;
-      bdata[index + 1] = isum;
-      bdata[ipn] = isum;
-      bdata[ipn + 1] = isum;
-      break;
-    case SLICE_MODE_SHORT:
-      isum = ((int)sdata[index - 1] + sdata[index - 2] + sdata[ipn - 1] + sdata[ipn - 2] +
-        sdata[index + 2] + sdata[index + 3] + sdata[ipn + 2] + sdata[ipn + 3] +
-        sdata[imn] + sdata[imn + 1] + sdata[im2n] + sdata[im2n + 1] +
-        sdata[ip2n] + sdata[ip2n + 1] + sdata[ip3n] + sdata[ip3n + 1] + 8) / 16;
-      sdata[index] = isum;
-      sdata[index + 1] = isum;
-      sdata[ipn] = isum;
-      sdata[ipn + 1] = isum;
-      break;
-    case SLICE_MODE_USHORT:
-      isum = ((int)usdata[index - 1] + usdata[index - 2] + usdata[ipn - 1] + 
-        usdata[ipn - 2] +
-        usdata[index + 2] + usdata[index + 3] + usdata[ipn + 2] + usdata[ipn + 3] +
-        usdata[imn] + usdata[imn + 1] + usdata[im2n] + usdata[im2n + 1] +
-        usdata[ip2n] + usdata[ip2n + 1] + usdata[ip3n] + usdata[ip3n + 1] + 8) / 16;
-      usdata[index] = isum;
-      usdata[index + 1] = isum;
-      usdata[ipn] = isum;
-      usdata[ipn + 1] = isum;
-      break;
+      CORRECT_FOUR_PIXELS(SLICE_MODE_BYTE, bdata, unsigned char);
+      CORRECT_FOUR_PIXELS(SLICE_MODE_SHORT, sdata, short);
+      CORRECT_FOUR_PIXELS(SLICE_MODE_USHORT, usdata, unsigned short);
     case SLICE_MODE_FLOAT:
       fsum = (fdata[index - 1] + fdata[index - 2] + fdata[ipn - 1] + fdata[ipn - 2] +
-        fdata[index + 2] + fdata[index + 3] + fdata[ipn + 2] + fdata[ipn + 3] +
-        fdata[imn] + fdata[imn + 1] + fdata[im2n] + fdata[im2n + 1] +
-        fdata[ip2n] + fdata[ip2n + 1] + fdata[ip3n] + fdata[ip3n + 1]) / 16.f;
+              fdata[index + 2] + fdata[index + 3] + fdata[ipn + 2] + fdata[ipn + 3] +
+              fdata[imn] + fdata[imn + 1] + fdata[im2n] + fdata[im2n + 1] +
+              fdata[ip2n] + fdata[ip2n + 1] + fdata[ip3n] + fdata[ip3n + 1]) / 16.f;
       fdata[index] = fsum;
       fdata[index + 1] = fsum;
       fdata[ipn] = fsum;
@@ -559,7 +605,7 @@ static void CorrectSuperPixel(void *array, int type, int nxdim, int nx, int ny, 
     }
     return;
   }
-
+  
   // Or average whatever is there
   for (i = 0 ; i < 16; i++) {
     ix = xpix + idx[i];
@@ -577,13 +623,13 @@ static void CorrectSuperPixel(void *array, int type, int nxdim, int nx, int ny, 
   
   if (type == SLICE_MODE_BYTE)
     bdata[index] = bdata[index + 1] = bdata[ipn] = bdata[ipn + 1] = 
-      (unsigned char)((isum + nsum / 2) / nsum);
+      (unsigned char)RandomIntFillFromIntSum(isum, nsum);
   else if (type == SLICE_MODE_SHORT)
     sdata[index] = sdata[index + 1] = sdata[ipn] = sdata[ipn + 1] = 
-      (short)((isum + nsum / 2) / nsum);
+      (short)RandomIntFillFromIntSum(isum, nsum);
   else if (type == SLICE_MODE_USHORT)
     usdata[index] = usdata[index + 1] = usdata[ipn] = usdata[ipn + 1] = 
-      (unsigned short)((isum + nsum / 2) / nsum);
+      (unsigned short)RandomIntFillFromIntSum(isum, nsum);
   else
     fdata[index] = fdata[index + 1] = fdata[ipn] = fdata[ipn + 1] = (float)(fsum / nsum);
 }
