@@ -38,6 +38,7 @@
 #include "MultiShotDlg.h"
 #include "NavigatorDlg.h"
 #include "NavHelper.h"
+#include "StateDlg.h"
 #include "FalconHelper.h"
 #include "OneLineScript.h"
 #include "ExternalTools.h"
@@ -256,7 +257,8 @@ enum {CME_SCRIPTEND = -7, CME_LABEL, CME_SETVARIABLE, CME_SETSTRINGVAR, CME_DOKE
   CME_REPORTFILAMENTCURRENT, CME_SETFILAMENTCURRENT, CME_CLOSEFRAMEMDOC,
   CME_DRIFTWAITTASK, CME_GETWAITTASKDRIFT, CME_CLOSELOGOPENNEW, CME_SAVELOG,
   CME_SETFRAMESERIESPARAMS, CME_SETCUSTOMTIME, CME_REPORTCUSTOMINTERVAL, 
-  CME_STAGETOLASTMULTIHOLE, CME_IMAGESHIFTTOLASTMULTIHOLE
+  CME_STAGETOLASTMULTIHOLE, CME_IMAGESHIFTTOLASTMULTIHOLE, CME_NAVINDEXITEMDRAWNON,
+  CME_SETMAPACQUIRESTATE, CME_RESTORESTATE, CME_REALIGNTOMAPDRAWNON 
 };
 
 // The two numbers are the minimum arguments and whether arithmetic is allowed
@@ -396,6 +398,8 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"GetWaitTaskDrift", 0, 0}, {"CloseLogOpenNew", 0, 0}, {"SaveLog", 0, 0},
 {"SetFrameSeriesParams", 1, 0}, {"SetCustomTime", 1, 0}, {"ReportCustomInterval", 1, 0},
 {"StageToLastMultiHole", 0, 0}, {"ImageShiftToLastMultiHole", 0, 0}, 
+{"NavIndexItemDrawnOn", 1, 0}, {"SetMapAcquireState", 1, 0}, {"RestoreState", 0, 0},
+{"RealignToMapDrawnOn", 2, 0},
 {NULL, 0, 0}
 };
 // The longest is now 25 characters but 23 is a more common limit
@@ -6002,52 +6006,47 @@ void CMacroProcessor::NextCommand()
     break;
     
   case CME_REALIGNTONAVITEM:                                // RealignToNavItem
+  case CME_REALIGNTOOTHERITEM:                              // RealignToOtherItem
     ABORT_NONAV;
-    if (itemEmpty[1])
-      ABORT_LINE("Entry requires a number for whether to restore state: \n\n");
-    index = itemInt[1];
+    truth = CMD_IS(REALIGNTOOTHERITEM);
+    index2 = truth ? 2 : 1;
+    index = itemInt[1] - 1;
     bmax = 0.;
     ix1 = ix0 = 0;
-    if (!itemEmpty[3]) {
-      if (itemEmpty[5])
+    if (!itemEmpty[index2 + 2]) {
+      if (itemEmpty[index2 + 4])
         ABORT_LINE("Entry requires three values for controlling image shift reset in:"
         "\n\n");
-      bmax = (float)itemDbl[3];
-      ix0 = itemInt[4];
-      ix1 = itemInt[5];
+      bmax = (float)itemDbl[index2 + 2];
+      ix0 = itemInt[index2 + 3];
+      ix1 = itemInt[index2 + 4];
     }
-    if (!itemEmpty[2])
-      navHelper->SetContinuousRealign(itemInt[2]);
-    if (navigator->RealignToCurrentItem(index != 0, bmax, ix0, ix1)) {
-      ABORT_NOLINE("Script halted due to failure to realign to item");
+    if (!itemEmpty[index2 + 1])
+      navHelper->SetContinuousRealign(itemInt[index2 + 1]);
+    if (truth)
+      iy0 = navigator->RealignToOtherItem(index, itemInt[index2] != 0, bmax, ix0, ix1);
+    else
+      iy0 = navigator->RealignToCurrentItem(itemInt[index2] != 0, bmax, ix0, ix1);
+    if (iy0) {
+      report.Format("Script halted due to failure %d in Realign to Item routine", iy0);
+      ABORT_NOLINE(report);
       navHelper->SetContinuousRealign(0);
     }
     break;
     
-  case CME_REALIGNTOOTHERITEM:                              // RealignToOtherItem
-    ABORT_NONAV;
-    if (itemEmpty[2])
-      ABORT_LINE("Entry requires two numbers, index in Navigator and whether to restore "
-      "state: \n\n");
-    index = itemInt[1] - 1;
-    index2 = itemInt[2];
-    bmax = 0.;
-    ix0 = ix1 = 0;
-    if (!itemEmpty[4]) {
-      if (itemEmpty[6])
-        ABORT_LINE("Entry requires three values for controlling image shift reset in:"
-        "\n\n");
-      bmax = (float)itemDbl[4];
-      ix0 = itemInt[5];
-      ix1 = itemInt[6];
-    }
-    if (!itemEmpty[3])
-      navHelper->SetContinuousRealign(itemInt[3]);
-    if (navigator->RealignToOtherItem(index, index2 != 0, bmax, ix0, ix1)) {
-      ABORT_NOLINE("Script halted due to failure to realign to item");
-      navHelper->SetContinuousRealign(0);
+  case CME_REALIGNTOMAPDRAWNON:                             // RealignToMapDrawnOn
+    navItem = CurrentOrIndexedNavItem(itemInt[1], strLine);
+    if (!navItem)
+      return;
+    if (!navItem->mDrawnOnMapID)
+      ABORT_LINE("The specified item has no ID for being drawn on a map in line:\n\n");
+    ix0 = navHelper->RealignToDrawnOnMap(navItem, itemInt[2] != 0);
+    if (ix0) {
+      report.Format("Script halted due to failure %d in Realign to Item for line:\n\n");
+      ABORT_LINE(report);
     }
     break;
+
     // ReportNavItem, ReportOtherItem, ReportNextNavAcqItem, LoadNavMap, LoadOtherMap
   case CME_REPORTNAVITEM:
   case CME_REPORTOTHERITEM:
@@ -6071,8 +6070,7 @@ void CMacroProcessor::NextCommand()
         }
       } else {
         if (itemInt[1] < 0) {
-           CArray<CMapDrawItem *, CMapDrawItem *> *items = navigator->GetItemArray();
-           index = (int)items->GetSize() + itemInt[1];
+          index = navigator->GetNumNavItems() + itemInt[1];
         } else
           index = itemInt[1] - 1;
         navItem = navigator->GetOtherNavItem(index);
@@ -6125,6 +6123,61 @@ void CMacroProcessor::NextCommand()
       report.Format("No item has %s %s", truth ? "note" : "label", (LPCTSTR)strCopy);
     mWinApp->AppendToLog(report, mLogAction);
     SetReportedValues(index); 
+    break;
+
+  case CME_NAVINDEXITEMDRAWNON:                             // NavIndexItemDrawnOn
+    navItem = CurrentOrIndexedNavItem(index, strLine);
+    if (!navItem)
+      return;
+    index2 = 0;
+    if (!navItem->mDrawnOnMapID) {
+      report.Format("Navigator item %d does not have an ID for being drawn on a map", 
+        index + 1);
+    } else {
+      navItem = navigator->FindItemWithMapID(navItem->mDrawnOnMapID, true);
+      if (!navItem) {
+        report.Format("The map that navigator item %d was drawn on is no longer in the "
+          "table", index + 1);
+      } else {
+        index2 = navigator->GetFoundItem() + 1;
+        report.Format("Navigator item %d was drawn on map item %d", index + 1, index2);
+      }
+    }
+    mWinApp->AppendToLog(report, mLogAction);
+    SetReportedValues(index2);
+    break;
+
+  case CME_SETMAPACQUIRESTATE:                              // SetMapAcquireState
+    ABORT_NONAV;
+    navItem = navigator->GetOtherNavItem(itemInt[1] - 1);
+    if (!navItem)
+      ABORT_LINE("Index is out of range in statement:\n\n");
+    if (navItem->mType != ITEM_TYPE_MAP) {
+      report.Format("Navigator item %d is not a map for line:\n\n", itemInt[1]);
+      ABORT_LINE(report);
+    }
+    if (mWinApp->mNavHelper->SetToMapImagingState(navItem, true))
+      ABORT_LINE("Failed to set map imaging state for line:\n\n");
+    break;
+
+  case CME_RESTORESTATE:                                    // RestoreState
+    index = mWinApp->mNavHelper->GetTypeOfSavedState();
+    if (index == STATE_NONE) {
+      report.Format("Cannot Restore State: no state has been saved");
+      if (!itemEmpty[1] && itemInt[1])
+        ABORT_LINE(report);
+      mWinApp->AppendToLog(report, mLogAction);
+    } else {
+      if (index == STATE_MAP_ACQUIRE)
+        mWinApp->mNavHelper->RestoreFromMapState();
+      else {
+        mWinApp->mNavHelper->RestoreSavedState();
+        if (mWinApp->mNavHelper->mStateDlg)
+          mWinApp->mNavHelper->mStateDlg->Update();
+      }
+      if (mWinApp->mNavHelper->mStateDlg)
+        mWinApp->mNavHelper->mStateDlg->DisableUpdateButton();
+    }
     break;
 
   case CME_REPORTNUMNAVACQUIRE:                             // ReportNumNavAcquire
@@ -9050,6 +9103,35 @@ bool CMacroProcessor::RestoreCameraSet(int index, BOOL erase)
     }
   }
   return retval;
+}
+
+// Returns a navigator item specified by a positive index, a negative distance from end
+// of table (-1 = last item), or 0 for current or acquire item.  Issues message, aborts
+// and returns NULL on failures
+CMapDrawItem *CMacroProcessor::CurrentOrIndexedNavItem(int index, CString &strLine)
+{
+  CMapDrawItem *item;
+  if (!mWinApp->mNavigator) {
+    ABORT_NORET_LINE("The Navigator must be open to execute line:\n\n");
+    return NULL;
+  }
+  if (index > 0)
+    index--;
+  else if (index < 0)
+    index = mWinApp->mNavigator->GetNumNavItems() + index;
+  else {
+    index = mWinApp->mNavigator->GetCurrentOrAcquireItem(item);
+    if (index < 0) {
+      ABORT_NORET_LINE("There is no current Navigator item for line:\n\n.");
+      return NULL;
+    }
+  }
+  item = mWinApp->mNavigator->GetOtherNavItem(index);
+  if (!item) {
+    ABORT_NORET_LINE("Index is out of range in statement:\n\n");
+    return NULL;
+  }
+  return item;
 }
 
 // Computes number of montage pieces needed to achieve the minimum size in microns given

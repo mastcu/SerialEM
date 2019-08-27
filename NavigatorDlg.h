@@ -149,7 +149,7 @@ public:
   SetMember(BOOL, SkipStageMoveInAcquire);
   GetSetMember(bool, PausedAcquire);
   CString GetCurrentNavFile() {return mNavFilename;};
-
+  int GetNumNavItems() {return (int)mItemArray.GetSize();};
   void ResumeFromPause() {mResumedFromPause = true; mPausedAcquire = false;};
   BOOL InEditMode() {return m_bEditMode;};
   BOOL TakingMousePoints() {return m_bEditMode || mAddingPoints || mAddingPoly || mMovingItem;};

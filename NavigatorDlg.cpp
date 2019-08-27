@@ -1369,7 +1369,7 @@ void CNavigatorDlg::OnButNavFocusPos()
   if (!SetCurrentItem())
     return;
   mHelper->SaveLDFocusPosition(true, mItem->mFocusAxisPos, mItem->mRotateFocusAxis,
-    mItem->mFocusAxisAngle, mItem->mFocusXoffset, mItem->mFocusYoffset);
+    mItem->mFocusAxisAngle, mItem->mFocusXoffset, mItem->mFocusYoffset, true);
   UpdateListString(mCurrentItem);
   mChanged = true;
 }

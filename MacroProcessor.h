@@ -14,6 +14,7 @@
 #include <map>
 #include <string>
 class COneLineScript;
+class CMapDrawItem;
 
 #define MAX_LOOP_DEPTH  40
 #define MAX_CALL_DEPTH  (2 * MAX_TOT_MACROS)
@@ -372,6 +373,7 @@ public:
   void UpdateLDAreaIfSaved();
   int MakeNewTempMacro(CString &strVar, CString &strIndex, bool tempOnly, CString &strLine);
   bool SetupStageRestoreAfterTilt(CString * strItems, double &stageX, double &stageY);
+  CMapDrawItem *CurrentOrIndexedNavItem(int index, CString &strLine);
 };
 
 #endif // !defined(AFX_MACROPROCESSOR_H__33178182_58A1_4F3A_B8F4_D41F94866517__INCLUDED_)

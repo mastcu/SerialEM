@@ -3,6 +3,14 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+8/26/19: Added script command to center on a point marked on a higher mag map
+that can be aligned to in two rounds with Realign to Item.  Also added
+commands to set a map acquire state, restore state, and report Navigator index
+of map that an item was drawn on.
+
+8/26/19: Changed angle of first shot in multi-shot routine to be on short axis
+of camera unless tilted.
+
 8/23/19: Added property to enable restoring stage and Y position after each
 tilt in eucentricity routines.
 

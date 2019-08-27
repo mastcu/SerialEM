@@ -13,7 +13,7 @@ class CMultiShotDlg;
 #define MULTI_TEST_IMAGE 0x4
 #define MULTI_TEST_COMA 0x8
 
-// Structure for keeping track pf parameters that enable skipping center align in round 1
+// Structure for keeping track of parameters that enable skipping center align in round 1
 struct CenterSkipData
 {
   float firstStageX;     // Starting stage position and image shift, piece-dependent
@@ -139,6 +139,7 @@ private:
   MontParam mMapMontParam;      // Our set of params for non-open file
   int mRIitemInd;               // Index of item being aligned to
   int mRImapID;                 // Map ID of first round map aligned to
+  CMapDrawItem *mRIdrawnTargetItem; // True target drawn on second-round map
   ScaleMat mRImat;              // Scalemat of the map being aligned to
   float mRIdelX, mRIdelY;       // Scaling offsets
   ScaleMat mRIrMat;             // Rotation matrix for rotating the map
@@ -356,12 +357,13 @@ public:
   void OpenMultishotDlg(void);
   WINDOWPLACEMENT *GetMultiShotPlacement(bool update);
   void SaveLDFocusPosition(bool saveIt, float & axisPos, BOOL & rotateAxis, int & axisRotation, 
-    int & xOffset, int & yOffset);
+    int & xOffset, int & yOffset, bool traceIt);
   void SetLDFocusPosition(int camIndex, float axisPos, BOOL rotateAxis, int axisRotation, 
     int xOffset, int yOffset, const char *descrip);
   bool AnyMontageMapsInNavTable();
   bool ModifySubareaForOffset(int camera, int xOffset, int yOffset, int &left,
     int &top, int &right, int &bottom);
   void FindFocusPosForCurrentItem(StateParams & state, bool justLDstate);
+  int RealignToDrawnOnMap(CMapDrawItem *item, BOOL restoreState);
 };
 

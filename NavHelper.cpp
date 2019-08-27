@@ -55,6 +55,7 @@ CNavHelper::CNavHelper(void)
   mRegistrationAtErr = -1;
   mStageErrX = mStageErrY = -999.;
   mRImapID = 0;
+  mRIdrawnTargetItem = NULL;
   mRIskipCenTimeCrit = 15;
   mRIskipCenErrorCrit = 0.;
   mRIabsTargetX = mRIabsTargetY = 0.;
@@ -520,6 +521,20 @@ int CNavHelper::DistAndPiecesForRealign(CMapDrawItem *item, float targetX, float
   return 0;
 }
 
+// Align to the given item with image shift after realign to the map it is drawn on,
+// which must be a second-round map
+int CNavHelper::RealignToDrawnOnMap(CMapDrawItem * item, BOOL restoreState)
+{
+  int err;
+  CMapDrawItem *mapItem = mNav->FindItemWithMapID(item->mDrawnOnMapID, true);
+  if (!mapItem)
+    return item->mDrawnOnMapID ? 9 : 8;
+  mRIdrawnTargetItem = item;
+  err = RealignToItem(mapItem, restoreState, 0., 0, 0);
+  if (err)
+    mRIdrawnTargetItem = NULL;
+  return err;
+}
 
 // Realign to the coordinates in the given item by correlating with maps,
 int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState, 
@@ -549,6 +564,8 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
   mSecondRoundID = 0;
   if (inItem->mType == ITEM_TYPE_MAP && item->mMapID != inItem->mMapID)
     mSecondRoundID = inItem->mMapID;
+  else if (mRIdrawnTargetItem)
+    return 10;
   SEMTrace('1', "(Initial) alignment to map %d (%s)", mRIitemInd, (LPCTSTR)item->mLabel);
 
   // Use the passed-in values for resetting IS and leaving IS at 0 if no second round
@@ -1068,13 +1085,31 @@ void CNavHelper::RealignNextTask(int param)
       mStageErrX = stageX - mRIabsTargetX;
       mStageErrY = stageY - mRIabsTargetY;
       item = mNav->FindItemWithMapID(mSecondRoundID);
-      bInv = MatInv(ItemStageToCamera(item));
+      bMat = ItemStageToCamera(item);
+      bInv = MatInv(bMat);
       stageX = -mImBufs->mBinning * (bInv.xpx * shiftX - bInv.xpy * shiftY);
       stageY = -mImBufs->mBinning * (bInv.ypx * shiftX - bInv.ypy * shiftY);
       report.Format("Disparity in stage position after aligning to map item itself: "
         "%.2f %.2f  (align shift %.2f %.2f)", mStageErrX, mStageErrY, stageX, stageY);
       mWinApp->AppendToLog(report, LOG_SWALLOW_IF_CLOSED);
       report.Format("Finished aligning to item in %d rounds", mRInumRounds);
+
+      // If centering on a marked point on this map, now shift to the point and shift the
+      // image to match
+      if (mRIdrawnTargetItem) {
+        stageDelX = mRIdrawnTargetItem->mStageX - item->mStageX;
+        stageDelY = mRIdrawnTargetItem->mStageY - item->mStageY;
+        bInv = MatMul(bMat, mShiftManager->CameraToIS(item->mMapMagInd));
+        mShiftManager->ApplyScaleMatrix(bInv, stageDelX, stageDelY, delISX, delISY);
+        mScope->IncImageShift(delISX, delISY);
+        mShiftManager->ApplyScaleMatrix(bMat, -stageDelX / mImBufs->mBinning,
+          -stageDelY / mImBufs->mBinning, stageX, stageY);
+        mImBufs->mImage->setShifts(shiftX + stageX, shiftY - stageY);
+        report.Format("Aligned to marked target with image shift (%.1f  %1.f pixels)",
+          stageX, stageY);
+        mImBufs->SetImageChanged(1);
+        mWinApp->mMainView->DrawImage();
+      }
       mWinApp->AppendToLog(report, LOG_SWALLOW_IF_CLOSED);
       StopRealigning();
       return;
@@ -1206,6 +1241,7 @@ void CNavHelper::StopRealigning(void)
   mCamera->SetRequiredRoll(0);
   mWinApp->SetStatusText(MEDIUM_PANE, "");
   mRealigning = 0;
+  mRIdrawnTargetItem = NULL;
   mWinApp->UpdateBufferWindows();
 }
 
@@ -1573,7 +1609,7 @@ int CNavHelper::SetToMapImagingState(CMapDrawItem * item, bool setCurFile, BOOL 
     err = mNav->AccessMapFile(item, imageStore, curStore, mMapMontP, width, height, 
       setCurFile);
     if (err) {
-      AfxMessageBox("The file for that map item can no longer be accessed", MB_EXCLAME);
+      SEMMessageBox("The file for that map item can no longer be accessed", MB_EXCLAME);
       mMapMontP = NULL;
       curStore = -1;
       retval = 1;
@@ -1599,7 +1635,7 @@ int CNavHelper::SetToMapImagingState(CMapDrawItem * item, bool setCurFile, BOOL 
           }
           mDocWnd->AddCurrentStore();
         } else {
-          AfxMessageBox("The file for that map item cannot be opened for saving.\n"
+          SEMMessageBox("The file for that map item cannot be opened for saving.\n"
             "There are too many other files open right now", MB_EXCLAME);
           delete imageStore;
           retval = 1;
@@ -1695,7 +1731,7 @@ void CNavHelper::StoreCurrentStateInParam(StateParams *param, BOOL lowdose,
   param->yFrame = (conSet->bottom - conSet->top) / param->binning;
 
   SaveLDFocusPosition(lowdose && saveLDfocusPos, param->focusAxisPos, param->rotateAxis,
-    param->axisRotation, param->focusXoffset, param->focusYoffset);
+    param->axisRotation, param->focusXoffset, param->focusYoffset, true);
   conSet = mWinApp->GetConSets();
   param->readModeView = lowdose ? -1 : conSet[VIEW_CONSET].K2ReadMode;
   param->readModeFocus = lowdose ? -1 : conSet[FOCUS_CONSET].K2ReadMode;
@@ -1709,7 +1745,7 @@ void CNavHelper::StoreCurrentStateInParam(StateParams *param, BOOL lowdose,
 
 // Save the low dose focus area for the current camera in the given parameters
 void CNavHelper::SaveLDFocusPosition(bool saveIt, float &axisPos, BOOL &rotateAxis, 
-  int &axisRotation, int &xOffset, int &yOffset)
+  int &axisRotation, int &xOffset, int &yOffset, bool traceIt)
 {
   ControlSet *conSet = mWinApp->GetConSets() + FOCUS_CONSET;
   LowDoseParams *ldp = mWinApp->GetLowDoseParams() + FOCUS_CONSET;
@@ -1727,8 +1763,9 @@ void CNavHelper::SaveLDFocusPosition(bool saveIt, float &axisPos, BOOL &rotateAx
     axisPos = (float)ldp->axisPosition;
     rotateAxis = mWinApp->mLowDoseDlg.m_bRotateAxis;
     axisRotation = rotateAxis ? mWinApp->mLowDoseDlg.m_iAxisAngle : 0;
-    SEMTrace('1', "Saved focus in state: axis pos %.2f rot %d offsets %d %d",
-      axisPos, axisRotation, xOffset, yOffset);
+    if (traceIt)
+      SEMTrace('1', "Saved focus in state: axis pos %.2f rot %d offsets %d %d",
+        axisPos, axisRotation, xOffset, yOffset);
   }
 
 }
@@ -4261,7 +4298,7 @@ void CNavHelper::FindFocusPosForCurrentItem(StateParams &state, bool justLDstate
   // initialize to current state
   state.camIndex = mWinApp->GetCurrentCamera();
   SaveLDFocusPosition(true, state.focusAxisPos, state.rotateAxis, state.axisRotation,
-    state.focusXoffset, state.focusYoffset);
+    state.focusXoffset, state.focusYoffset, false);
 
   if (!mNav || justLDstate)
     return;
@@ -4304,3 +4341,4 @@ void CNavHelper::FindFocusPosForCurrentItem(StateParams &state, bool justLDstate
     }
   }
 }
+
