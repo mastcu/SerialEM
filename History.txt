@@ -3,6 +3,11 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+8/27/19: Fixed adjustment of mouse stage shift for tilt on Hitachi (In 3.7).
+
+8/27/19: Fixed "Add Stage Pos" in Navigator to exclude low dose area shift and
+offset (In 3.7).
+
 8/26/19: Added script command to center on a point marked on a higher mag map
 that can be aligned to in two rounds with Realign to Item.  Also added
 commands to set a map acquire state, restore state, and report Navigator index

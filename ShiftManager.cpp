@@ -148,7 +148,7 @@ int CShiftManager::SetAlignShifts(float newX, float newY, BOOL incremental,
                   EMimageBuffer *imBuf, BOOL doImShift)
 {
   float oldX, oldY, delX, delY, defocus = 0.;
-  double delISX, delISY, fracX, fracY, angle, intensity;
+  double delISX, delISY, fracX, fracY, angle, intensity, xTiltFac, yTiltFac;
   double fieldFrac = 0.;
   double absMove = 0.;
   int limitX, limitY, magInd, camera, spot;
@@ -238,14 +238,16 @@ int CShiftManager::SetAlignShifts(float newX, float newY, BOOL incremental,
       delISX = -(bInv.xpx * delX + bInv.xpy * delY);
       delISY = -(bInv.ypx * delX + bInv.ypy * delY);
       angle = DTOR * mScope->GetTiltAngle();
-      
+      xTiltFac = HitachiScope ? cos(angle) : 1.;
+      yTiltFac = HitachiScope ? 1. : cos(angle);
+
       // If transformation exists, try to zero image shift too
       AdjustStageMoveAndClearIS(camera, magInd, delISX, delISY, bInv);
       
       // Get the stage position and change it.  Set a flag and update state
       // to prevent early pictures, use reset shift task handlers
       mScope->GetStagePosition(mMoveInfo.x, mMoveInfo.y, mMoveInfo.z);
-      MaintainOrImposeBacklash(&mMoveInfo, delISX, delISY / cos(angle),
+      MaintainOrImposeBacklash(&mMoveInfo, delISX / xTiltFac, delISY / yTiltFac,
         mBacklashMouseAndISR && fabs(angle / DTOR) < 10.);
       mMoveInfo.axisBits = axisXY;
       mStartedStageMove = true;

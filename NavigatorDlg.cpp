@@ -8615,7 +8615,7 @@ void CNavigatorDlg::GetAdjustedStagePos(float & stageX, float & stageY, float & 
   stageZ = (float)dStageZ;
 
   // Convert the current image shift into additional stage shift
-  mScope->GetImageShift(ISX, ISY);
+  mScope->GetLDCenteredShift(ISX, ISY);
   ConvertIStoStageIncrement(mScope->GetMagIndex(), mWinApp->GetCurrentCamera(), ISX, ISY,
     (float)mScope->FastTiltAngle(), stageX, stageY);
 }
