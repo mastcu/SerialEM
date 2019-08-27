@@ -207,6 +207,15 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
     }
   }
 
+  // Set up axis of peripheral shots along tilt axis if tilted enough, otherwise along
+  // short axis of camera
+  mPeripheralRotation = 0.;
+  if (fabs(mScope->GetTiltAngle()) > 20.)
+    mPeripheralRotation = (float)mShiftManager->GetImageRotation(
+      mWinApp->GetCurrentCamera(), mMagIndex);
+  else if (camParam->sizeY < camParam->sizeX)
+    mPeripheralRotation = 90.f;
+
   mActPostExposure = mWinApp->ActPostExposure() && !mMSTestRun;
   mLastISX = mBaseISX;
   mLastISY = mBaseISY;
@@ -326,21 +335,17 @@ void CParticleTasks::StopMultiShot(void)
  */
 void CParticleTasks::SetUpMultiShotShift(int shotIndex, int holeIndex, BOOL queueIt)
 {
-  double ISX, ISY, delBTX, delBTY, delISX = 0, delISY = 0, angle, cosAng, sinAng;
+  double ISX, ISY, delBTX, delBTY, delISX = 0, delISY = 0, angle;
   double transISX, transISY;
-  float delay, BTbacklash, rotation;
+  float delay, BTbacklash;
   int BTdelay;
   ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
 
   // Compute IS from center for a peripheral shot: rotate (rad,0) by the angle
-  rotation = (float)mShiftManager->GetImageRotation(mWinApp->GetCurrentCamera(), 
-    mMagIndex);
   if (shotIndex < mMSNumPeripheral && shotIndex >= 0) {
-    angle = DTOR * (shotIndex * 360. / mMSNumPeripheral + rotation);
-    cosAng = cos(angle);
-    sinAng = sin(angle);
-    delISX = mMSRadiusOnCam * (mCamToIS.xpx * cosAng + mCamToIS.xpy * sinAng);
-    delISY = mMSRadiusOnCam * (mCamToIS.ypx * cosAng + mCamToIS.ypy * sinAng);
+    angle = DTOR * (shotIndex * 360. / mMSNumPeripheral + mPeripheralRotation);
+    mShiftManager->ApplyScaleMatrix(mCamToIS, mMSRadiusOnCam * (float)cos(angle),
+      mMSRadiusOnCam * (float)sin(angle), delISX, delISY);
   }
 
   // Get full IS and delta IS and default delay for move from last position

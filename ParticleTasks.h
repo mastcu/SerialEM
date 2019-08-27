@@ -66,6 +66,7 @@ private:
   double mMSLastHoleStageX;        // Equivalent stage position of last hole center
   double mMSLastHoleStageY;
   float mMSLastHoleISX, mMSLastHoleISY;   // Simply save positions of last hole center
+  float mPeripheralRotation;       // Base rotation angle of peripheral shots
 
   DriftWaitParams mWDDfltParams;   // Resident parameters
   DriftWaitParams mWDParm;         // Run-time parameters
