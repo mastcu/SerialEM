@@ -237,6 +237,8 @@ CEMscope::CEMscope()
     mC2SpotOffset[i][0] = mC2SpotOffset[i][1] = 0.; 
     mCrossovers[i][0] = mCrossovers[i][1] = 0.;
   }
+  mNumRegularCamLens = -1;
+  mNumLADCamLens = -1;
   for (i = 0; i <= MAX_APERTURE_NUM; i++)
     mSavedApertureSize[i] = -1;
   mNumAlphaBeamShifts = 0;
@@ -563,6 +565,10 @@ int CEMscope::Initialize()
         mNumSpotSizes = 11;
       if (mUpdateBeamBlank < 0)
         mUpdateBeamBlank = mWinApp->GetHasFEIcamera() ? 1 : 0;
+      if (mNumRegularCamLens < 0)
+        mNumRegularCamLens = mUseIllumAreaForC2 ? 21 : 16;
+      if (mNumLADCamLens < 0)
+        mNumLADCamLens = mUseIllumAreaForC2 ? 22 : 21;
     } else if (JEOLscope) {
 
       // JEOL: Also transfer values to structures before initialization
@@ -4574,9 +4580,10 @@ void CEMscope::GotoLowDoseArea(int newArea)
     mLdsaParams = ldParams + oldArea;
 
   // Get some useful flags about what is changing and what to do
-  leavingLowMag = !STEMmode && (oldArea >= 0 && mLdsaParams->magIndex &&
-    mLdsaParams->magIndex < mLowestMModeMagInd && ldArea->magIndex >= mLowestMModeMagInd);
-  splitBeamShift = !STEMmode && (leavingLowMag ||
+  leavingLowMag = !STEMmode && ldArea->magIndex >= mLowestMModeMagInd &&
+    ((oldArea >= 0 && mLdsaParams->magIndex && mLdsaParams->magIndex < mLowestMModeMagInd)
+      || (oldArea < 0 && GetMagIndex() < mLowestMModeMagInd));
+  splitBeamShift = !STEMmode && ((oldArea >= 0 && leavingLowMag) ||
     ((oldArea < 0 || mLdsaParams->magIndex >= mLowestMModeMagInd) &&
     ldArea->magIndex && ldArea->magIndex < mLowestMModeMagInd));
   changingAtZeroIS = !STEMmode &&  mChangeAreaAtZeroIS &&
@@ -4670,7 +4677,7 @@ void CEMscope::GotoLowDoseArea(int newArea)
   // First back off a beam shift; it didn't work to include that in the converted shift
   // But then defer the probe change if going out of LM
   if (ldArea->probeMode >= 0) {
-    if (mProbeMode != ldArea->probeMode) {
+    if (mProbeMode != ldArea->probeMode || (leavingLowMag && oldArea < 0)) {
       if (oldArea >= 0 && (mLdsaParams->beamDelX || mLdsaParams->beamDelY) && 
         mProbeMode == mLdsaParams->probeMode && !splitBeamShift)
         IncOrAccumulateBeamShift(-mLdsaParams->beamDelX, -mLdsaParams->beamDelY,
