@@ -3837,7 +3837,7 @@ int CEMscope::GetCamLenIndex()
       if (subMode == psmLAD)
         result += LAD_INDEX_BASE;
     }
-    mLastCameraLength = result;
+    mLastCamLenIndex = result;
   }
   catch (_com_error E) {
     SEMReportCOMError(E, _T("getting camera length index "));
