@@ -3,6 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+9/5/19: Fixed setting of probe mode fir first area gone to after turning on
+low dose mode while in LM.
+
+9/5/19: Mag spinner in scope control panel now controls camera length in
+diffraction mode - may require NumberOfCameraLengths property.
+
 8/27/19: Fixed adjustment of mouse stage shift for tilt on Hitachi (In 3.7).
 
 8/27/19: Fixed "Add Stage Pos" in Navigator to exclude low dose area shift and

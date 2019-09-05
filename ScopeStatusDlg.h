@@ -94,6 +94,7 @@ private:
   int mMagInd;        // Magnification index last displayed
 	int mMag;				    // Magnification last displayed
   int mPendingMag;    // Pending mag on last display
+  int mPendingCamLen; // Pending camera length on last display
   int mSTEM;          // STEM mode last displayed
 	double mStageX, mStageY;	// Stage positions in microns
   double mStageZ;

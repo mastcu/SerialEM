@@ -1557,7 +1557,7 @@
         above a certain point, be sure to add the property 
         &#39;HighestLMindexToScan&#39; with the number of remaining enabled LM mags before 
         running this routine.</P>
-    <P>In STEM mode, <i>on a JEOL</i>, the program will list all of the STEM magnifications 
+      <P>In STEM mode, <i>on a JEOL</i>, the program will list all of the STEM magnifications 
       and produce a table that can be inserted into the Properties file, plus an entry 
       for LowestSTEMnonLMmag.&nbsp; <i>On an FEI</i>, STEM magnifications are not identified 
       by index values, so it is necessary to step through the magnifications with the 
@@ -1569,6 +1569,37 @@
       the microscope status panel.&nbsp; You will need to step through the magnifications twice, 
       first in nanoprobe then in microprobe mode.&nbsp; At the end, the program will 
       output the table, two entries for LowestSTEMnonLMmag, and an entry for LowestMicroSTEMmag.</P>
+      <P><em>On an FEI scope</em>, this routine will not produce a camera length table.&nbsp; 
+          The only purpose for such a table is to allow the program to display &#39;-&gt;&#39; and 
+          the camera length to be changed to when using the magnification/camera length 
+          spinner in the&nbsp; <a href="hidd_remotecontrol.htm">Microscope Control</a> panel.&nbsp; If you plan to use this panel in 
+          diffraction mode, you can add a table prepared with the following script:</P>
+      <pre>
+SuppressReports
+lastlen = 0
+num = 0
+firstEnd = 0
+secondEnd = 0
+loop 60 ind
+   SetCamLenIndex $ind
+   ReportCameraLength
+   len = round ($repVal1 * 1000 0)
+   if $len > $lastlen
+      EchoEval $ind $len
+      num = $num + 1
+   ElseIf $firstEnd == 0
+      firstEnd = $num
+   ElseIf $secondEnd == 0
+      secondEnd = $num - $firstEnd
+   Endif
+   lastLen = $len
+EndLoop
+echo NumberOfCameraLengths $firstEnd $secondEnd
+</pre>
+      Copy all of the output including the last property line into the 
+      SerialEMproperties.txt file, and before the table, add a line 
+      'CameraLengthTable' followed by the total number of lengths, i.e., the sum of 
+      the two values on the last line.</P>
       <P><A name="hid_calibration_neutralisvalues"></A><B>Neutral IS Values command 
           (Calibration menu)</B></P>
       <P><i>On a JEOL</i>, this command will cycle through the magnifications and measure the 

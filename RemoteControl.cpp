@@ -32,7 +32,7 @@ CRemoteControl::CRemoteControl(CWnd* pParent /*=NULL*/)
   , m_strC2Delta(_T(""))
   , m_strC2Name(_T(""))
   , m_strFocusStep(_T(""))
-  , m_iBeamOrStage(0)
+  , m_iStageNotBeam(0)
 {
   SEMBuildTime(__DATE__, __TIME__);
   mInitialized = false;
@@ -77,7 +77,7 @@ void CRemoteControl::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_BUT_SCREEN_UPDOWN, m_butScreenUpDown);
   DDX_Control(pDX, IDC_RBEAM_CONTROL, m_butBeamControl);
   DDX_Control(pDX, IDC_RSTAGE_CONTROL, m_butStageControl);
-  DDX_Radio(pDX, IDC_RBEAM_CONTROL, m_iBeamOrStage);
+  DDX_Radio(pDX, IDC_RBEAM_CONTROL, m_iStageNotBeam);
 }
 
 
@@ -146,7 +146,7 @@ BOOL CRemoteControl::OnInitDialog()
   mTimerID = NULL;
   mInitialized = true;
   SetIntensityIncrement(mIntensityIncrement);
-  SetBeamOrStage(m_iBeamOrStage);
+  SetBeamOrStage(m_iStageNotBeam);
   SetBeamOrStageIncrement(1., 0);
   SetIncrementFromIndex(mFocusIncrement, mFocusIncrementIndex, mFocusIncrementIndex,
     MAX_FOCUS_INDEX, MAX_FOCUS_DECIMALS, m_strFocusStep);
@@ -169,16 +169,21 @@ void CRemoteControl::Update(int inMagInd, int inCamLen, int inSpot, double inInt
     mWinApp->mCamera->CameraBusy() && !mWinApp->mCamera->DoingContinuousAcquire()));
 
   if (inMagInd != mLastMagInd || mWinApp->GetCurrentCamera() != mLastCamera) {
-    enable = m_iBeamOrStage || 
+    enable = m_iStageNotBeam || 
       mWinApp->mProcessImage->MoveBeamByCameraFraction(0., 0.) == 0;
     m_sbcBeamShift.EnableWindow(enable && baseEnable);
     m_sbcBeamLeftRight.EnableWindow(enable && baseEnable);
   }
 
   if (inMagInd != mLastMagInd || inCamLen != mLastCamLenInd) {
-    if (inMagInd)
+    if (inMagInd) {
       m_sbcMag.SetPos(inMagInd);
-    m_sbcMag.EnableWindow(inMagInd > 0 && baseEnable && !doingOffset);
+      SetDlgItemText(IDC_STAT_MAG, "Mag");
+    } else if (inCamLen) {
+      m_sbcMag.SetPos(inCamLen);
+      SetDlgItemText(IDC_STAT_MAG, "CamL");
+    }
+    m_sbcMag.EnableWindow((inMagInd > 0 || inCamLen > 0) && baseEnable && !doingOffset);
     if (!mWinApp->mCamera->DoingContinuousAcquire())
     m_butNanoMicro.EnableWindow((mWinApp->GetSTEMMode() || 
       inMagInd >= mScope->GetLowestMModeMagInd() || 
@@ -210,10 +215,11 @@ void CRemoteControl::Update(int inMagInd, int inCamLen, int inSpot, double inInt
   }
 
   if (inIntensity != mLastIntensity || inProbe != mLastProbeMode || 
-    inSTEM != mLastSTEMmode || inSpot != mLastSpot) {
-      if (inSTEM)
+    inSTEM != mLastSTEMmode || inSpot != mLastSpot || inMagInd != mLastMagInd || 
+    inCamLen != mLastCamLenInd) {
+      if (inSTEM || inMagInd== 0)
         enable = false;
-      else 
+      else
         enable = mWinApp->mBeamAssessor->OutOfCalibratedRange(inIntensity, inSpot, 
           inProbe, junk) == 0;
       m_checkMagIntensity.EnableWindow(enable);
@@ -221,6 +227,7 @@ void CRemoteControl::Update(int inMagInd, int inCamLen, int inSpot, double inInt
 
   mLastCamera = mWinApp->GetCurrentCamera();
   mLastMagInd = inMagInd;
+  mLastCamLenInd = inCamLen;
   mLastSpot = inSpot;
   mLastGunOn = inGunOn;
   mLastIntensity = inIntensity;
@@ -316,15 +323,34 @@ void CRemoteControl::OnCheckMagIntensity()
 void CRemoteControl::OnDeltaposSpinMag(NMHDR *pNMHDR, LRESULT *pResult)
 {
   LPNMUPDOWN pNMUpDown = reinterpret_cast<LPNMUPDOWN>(pNMHDR);
-  int index, index2;
-  if (mMagClicked) {
-    index = mNewMagIndex;
+  int index, index2, numRegCamLens, numLADCamLens;
+  if (mLastMagInd > 0) {
+    if (mMagClicked) {
+      index = mNewMagIndex;
+    } else {
+      index = mScope->GetMagIndex();
+      mStartMagIndex = index;
+    }
+    index2 = mWinApp->FindNextMagForCamera(mWinApp->GetCurrentCamera(), index,
+      pNMUpDown->iDelta > 0 ? 1 : -1);
+  } else if (mLastCamLenInd > 0) {
+    mScope->GetNumCameraLengths(numRegCamLens, numLADCamLens); 
+    if (mMagClicked)
+      index = mNewCamLenIndex;
+    else
+      index = mScope->GetCamLenIndex();
+    index2 = index + (pNMUpDown->iDelta > 0 ? 1 : -1);
+    if (index2 < 1 || (index2 > numRegCamLens && !FEIscope)) {
+      index2 = -1;
+    } else if (FEIscope) {
+      if (index2 > LAD_INDEX_BASE + numLADCamLens)
+        index2 = -1;
+      else if (index > numRegCamLens && index <= LAD_INDEX_BASE)
+        index2 = pNMUpDown->iDelta > 0 ? LAD_INDEX_BASE + 1 : numRegCamLens;
+    } 
   } else {
-    index = mScope->GetMagIndex();
-    mStartMagIndex = index;
+    return;
   }
-  index2 = mWinApp->FindNextMagForCamera(mWinApp->GetCurrentCamera(), index, 
-    pNMUpDown->iDelta > 0 ? 1 : -1);
   SetFocus();
   mWinApp->RestoreViewFocus();
   if (index2 < 0) {
@@ -336,7 +362,10 @@ void CRemoteControl::OnDeltaposSpinMag(NMHDR *pNMHDR, LRESULT *pResult)
     return;
   }
   mMagClicked = true;
-  mNewMagIndex = index2;
+  if (mLastMagInd > 0)
+    mNewMagIndex = index2;
+  else
+    mNewCamLenIndex = index2;
   mDidExtendedTimeout = false;
   mTimerID = ::SetTimer(NULL, mTimerID, mMaxClickInterval, TimerProc);
   if (!mTimerID)
@@ -396,18 +425,22 @@ void CRemoteControl::SetMagOrSpot(void)
   if (mMagClicked) {
     m_sbcMag.EnableWindow(false);
     RedrawWindow();
-    curCam = mWinApp->GetCurrentCamera();
-    if (m_bMagIntensity) {
-      delta = pow((double)mShiftManager->GetPixelSize(curCam, mStartMagIndex) /
-        mShiftManager->GetPixelSize(curCam, mNewMagIndex), 2.);
-      err = mWinApp->mBeamAssessor->AssessBeamChange(delta, newInt, outFac, -1);
+    if (mLastMagInd > 0) {
+      curCam = mWinApp->GetCurrentCamera();
+      if (m_bMagIntensity) {
+        delta = pow((double)mShiftManager->GetPixelSize(curCam, mStartMagIndex) /
+          mShiftManager->GetPixelSize(curCam, mNewMagIndex), 2.);
+        err = mWinApp->mBeamAssessor->AssessBeamChange(delta, newInt, outFac, -1);
+      }
+      mScope->SetMagIndex(mNewMagIndex);
+      if (m_bMagIntensity && !err)
+        mScope->DelayedSetIntensity(newInt, GetTickCount());
+      mWinApp->mAlignFocusWindow.UpdateAutofocus(mNewMagIndex);
+    } else if (mLastCamLenInd > 0) {
+      mScope->SetCamLenIndex(mNewCamLenIndex);
     }
-    mScope->SetMagIndex(mNewMagIndex);
-    if (m_bMagIntensity && !err)
-      mScope->DelayedSetIntensity(newInt, GetTickCount());
     mMagClicked = false;
     m_sbcMag.EnableWindow(true);
-    mWinApp->mAlignFocusWindow.UpdateAutofocus(mNewMagIndex);
   }
   if (mSpotClicked) {
     m_sbcSpot.EnableWindow(false);
@@ -419,13 +452,18 @@ void CRemoteControl::SetMagOrSpot(void)
 }
 
 // Returns the mag and/or spot that it will be changed to when the timer expires
-void CRemoteControl::GetPendingMagOrSpot(int &pendingMag, int &pendingSpot)
+void CRemoteControl::GetPendingMagOrSpot(int &pendingMag, int &pendingSpot, 
+  int &pendingCamLen)
 {
-  pendingMag = pendingSpot = -1;
+  pendingMag = pendingSpot = pendingCamLen = -1;
   if (mTimerID && mSpotClicked)
     pendingSpot = mNewSpotIndex;
-  if (mTimerID && mMagClicked)
-    pendingMag = mNewMagIndex;
+  if (mTimerID && mMagClicked) {
+    if (mLastMagInd > 0)
+      pendingMag = mNewMagIndex;
+    else if (mLastCamLenInd > 0)
+      pendingCamLen = mNewCamLenIndex;
+  }
 }
 
 // Do the mag change when Ctrl is released
@@ -457,7 +495,7 @@ void CRemoteControl::OnDeltaposSpinBeamShift(NMHDR *pNMHDR, LRESULT *pResult)
   SetFocus();
   mWinApp->RestoreViewFocus();
   *pResult = 0;
-  if (m_iBeamOrStage) {
+  if (m_iStageNotBeam) {
     MoveStageByMicronsOnCamera(0., mStageIncrement * pNMUpDown->iDelta);
   } else {
     mWinApp->mProcessImage->MoveBeamByCameraFraction(0., mBeamIncrement * 
@@ -473,7 +511,7 @@ void CRemoteControl::OnDeltaposSpinBeamLeftRight(NMHDR *pNMHDR, LRESULT *pResult
   SetFocus();
   mWinApp->RestoreViewFocus();
   *pResult = 0;
-  if (m_iBeamOrStage) {
+  if (m_iStageNotBeam) {
     MoveStageByMicronsOnCamera(-mStageIncrement * pNMUpDown->iDelta, 0.);
   } else {
     mWinApp->mProcessImage->MoveBeamByCameraFraction(-mBeamIncrement * pNMUpDown->iDelta,
@@ -542,7 +580,7 @@ void CRemoteControl::OnDeltaposSpinIntensity(NMHDR *pNMHDR, LRESULT *pResult)
 void CRemoteControl::OnBeamControl()
 {
   UpdateData(true);
-  SetBeamOrStage(m_iBeamOrStage);
+  SetBeamOrStage(m_iStageNotBeam);
   SetBeamOrStageIncrement(1., 0);
   SetFocus();
   mWinApp->RestoreViewFocus();
@@ -551,8 +589,8 @@ void CRemoteControl::OnBeamControl()
 // Central call to handle setting the choice of beam or stage
 void CRemoteControl::SetBeamOrStage(int inVal)
 {
-  bool needUpdate = m_iBeamOrStage != inVal;
-  m_iBeamOrStage = inVal;
+  bool needUpdate = m_iStageNotBeam != inVal;
+  m_iStageNotBeam = inVal;
   if (!mInitialized)
     return;
   SetDlgItemText(IDC_STAT_BEAM_STAGE, inVal ? "Stage" : "Beam");
@@ -578,7 +616,7 @@ void CRemoteControl::OnButDelBeamPlus()
 // Set the appropriate increment
 void CRemoteControl::SetBeamOrStageIncrement(float beamIncFac, int stageIndAdd)
 {
-  if (m_iBeamOrStage)
+  if (m_iStageNotBeam)
     SetStageIncrementIndex(mStageIncIndex + stageIndAdd);
   else
     SetBeamIncrement(beamIncFac * mBeamIncrement);
@@ -591,7 +629,7 @@ void CRemoteControl::SetBeamIncrement(float inVal)
     return;
   B3DCLAMP(inVal, MIN_BEAM_DELTA, MAX_BEAM_DELTA);
   mBeamIncrement = inVal;
-  if (!mInitialized || m_iBeamOrStage)
+  if (!mInitialized || m_iStageNotBeam)
     return;
   m_strBeamDelta.Format("%.3f", mBeamIncrement);
   UpdateData(false);
@@ -600,7 +638,7 @@ void CRemoteControl::SetBeamIncrement(float inVal)
 // Set increment for stage shift and update display if it is open and stage is selected
 void CRemoteControl::SetStageIncrementIndex(int inVal)
 {
-  if (m_iBeamOrStage)
+  if (m_iStageNotBeam)
     SetIncrementFromIndex(mStageIncrement, mStageIncIndex, inVal, 
       MAX_STAGE_INDEX, MAX_STAGE_DECIMALS, m_strBeamDelta);
   else

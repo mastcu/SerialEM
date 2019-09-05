@@ -89,6 +89,7 @@ private:
   bool mMagClicked;
   int mNewSpotIndex;            // Current new spot or mag index
   int mNewMagIndex;
+  int mNewCamLenIndex;
   int mStartMagIndex;           // Mag at start of any clicking
   UINT_PTR mTimerID;
   int mMaxClickInterval;        // Maximum interval between clicks befor changing
@@ -101,7 +102,7 @@ public:
   CString m_strC2Name;
   bool mInitialized;
   void SetMagOrSpot(void);
-  void GetPendingMagOrSpot(int &pendingMag, int &pendingSpot);
+  void GetPendingMagOrSpot(int &pendingMag, int &pendingSpot, int &pendingCamLen);
   void CtrlChanged(bool pressed);
   CStatic m_statAlpha;
   CSpinButtonCtrl m_sbcAlpha;
@@ -120,6 +121,6 @@ public:
   void TaskDone(int param);
   void TaskCleanup(int error);
   afx_msg void OnBeamControl();
-  int m_iBeamOrStage;
+  int m_iStageNotBeam;
   void MoveStageByMicronsOnCamera(double delCamX, double delCamY);
 };

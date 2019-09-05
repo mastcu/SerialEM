@@ -28,15 +28,20 @@
       column valves on an FEI scope or the beam valve on a JEOL scope with a FEG, or 
       it turns the filament on or off on other JEOL scopes.</p>
     <p>
-      <b>Mag</b></p>
+      <b>Mag (CamL in diffraction)</b></p>
     <p>
-      Use this spin button to increase or decrease the magnification.&nbsp;If you click the button multiple times with a small enough time (&lt; 0.35 sec) 
+      Use this spin button to increase or decrease the magnification 
+        or the camera length in diffraction mode.&nbsp;If you click the button multiple times with a small enough time (&lt; 0.35 sec) 
       between clicks, the program will go several steps with just one magnification 
       change.&nbsp; If you press and hold the Ctrl key first, the change will not 
       occur until you release Ctrl, or until ~2.5 seconds since the last click.&nbsp; The new magnification will be displayed in the
       <a href="hidd_scopestatus.htm">Microscope Status</a> panel as soon as you click 
       the button, prefixed by '-&gt;', so that you can know what magnification will be 
-      reached.&nbsp; The '-&gt;' will stay until the magnification change is achieved.</p>
+      reached.&nbsp; The '-&gt;' will stay until the magnification change is achieved.&nbsp; 
+        This preview feature does not work on FEI scopes in diffraction mode unless 
+        there is a CameraLengthTable entry in properties; see
+        <a href="menu_calibration.htm#hid_calibration_listmags">List Mags</a> for a 
+        script to get such a table.</p>
     <p>
       On FEI scopes in STEM mode, it is not possible for SerialEM to switch between LM 
       and nonLM magnifications, so this button will not work at that boundary.&nbsp; 

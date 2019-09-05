@@ -21,6 +21,9 @@
       {
         width: 249px;
       }
+        .auto-style1 {
+            height: 24px;
+        }
     --></style>
   </HEAD>
   <BODY BGCOLOR="#ffffff" TEXT="#000000">
@@ -2420,8 +2423,8 @@
             2 cycles in X and 3 cycles in Y with the default cycle lengths.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD>SamePositionTolerance</TD>
-          <TD>Maximum stage shift at which the program will still consider the stage to be 
+          <TD class="auto-style1">SamePositionTolerance</TD>
+          <TD class="auto-style1">Maximum stage shift at which the program will still consider the stage to be 
             at the same position as after it has moved the stage (used for keeping track of 
             backlash).&nbsp; The default is 0.1 microns for FEI and 0.2 micron for JEOL.</TD>
         </TR>
@@ -2462,7 +2465,20 @@
             &nbsp;&nbsp;&nbsp; Index&nbsp;&nbsp;&nbsp; Camera length in mm<BR>
             This table is obtained on a JEOL by selecting List Mags in the Calibration menu and 
             appears after the magnification table. On Hitachi, it must be constructed by 
-            hand, listing each length found in HC mode</TD>
+            hand, listing each length found in HC mode.&nbsp; A table can also be added on an FEI
+              scope by running a script; see 
+              <a href="menu_calibration.htm#hid_calibration_listmags">List Mags</a> for 
+              details.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>NumberOfCameraLengths</TD>
+          <TD>The number of camera lengths in regular diffraction mode and in LAD mode on an 
+              FEI scope.&nbsp; These numbers are needed for the Mag/CamL spinner in the 
+              Microscope Control panel to work right.  If a camera length table is
+              entered for an FEI scope, this line must be included after the table to reset the 
+              number for regular diffraction mode.  Otherwise, the defaults are 21 and 22 for
+              Titan and 16 and 21 for other scopes.
+          </TD>
         </TR>
         <TR VALIGN="top">
           <TD>ImageShiftDelays</TD>

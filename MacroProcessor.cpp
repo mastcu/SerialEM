@@ -258,7 +258,8 @@ enum {CME_SCRIPTEND = -7, CME_LABEL, CME_SETVARIABLE, CME_SETSTRINGVAR, CME_DOKE
   CME_DRIFTWAITTASK, CME_GETWAITTASKDRIFT, CME_CLOSELOGOPENNEW, CME_SAVELOG,
   CME_SETFRAMESERIESPARAMS, CME_SETCUSTOMTIME, CME_REPORTCUSTOMINTERVAL, 
   CME_STAGETOLASTMULTIHOLE, CME_IMAGESHIFTTOLASTMULTIHOLE, CME_NAVINDEXITEMDRAWNON,
-  CME_SETMAPACQUIRESTATE, CME_RESTORESTATE, CME_REALIGNTOMAPDRAWNON 
+  CME_SETMAPACQUIRESTATE, CME_RESTORESTATE, CME_REALIGNTOMAPDRAWNON,
+  CME_GETREALIGNTOITEMERROR
 };
 
 // The two numbers are the minimum arguments and whether arithmetic is allowed
@@ -399,7 +400,7 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"SetFrameSeriesParams", 1, 0}, {"SetCustomTime", 1, 0}, {"ReportCustomInterval", 1, 0},
 {"StageToLastMultiHole", 0, 0}, {"ImageShiftToLastMultiHole", 0, 0}, 
 {"NavIndexItemDrawnOn", 1, 0}, {"SetMapAcquireState", 1, 0}, {"RestoreState", 0, 0},
-{"RealignToMapDrawnOn", 2, 0},
+{"RealignToMapDrawnOn", 2, 0}, {"GetRealignToItemError", 0, 0},
 {NULL, 0, 0}
 };
 // The longest is now 25 characters but 23 is a more common limit
@@ -6045,6 +6046,12 @@ void CMacroProcessor::NextCommand()
       report.Format("Script halted due to failure %d in Realign to Item for line:\n\n");
       ABORT_LINE(report);
     }
+    break;
+
+  case CME_GETREALIGNTOITEMERROR:                           // GetRealignToItemError
+    ABORT_NONAV;
+    mWinApp->mNavHelper->GetLastStageError(backlashX, backlashY, bmin, bmax);
+    SetReportedValues(&strItems[1], backlashX, backlashY, bmin, bmax);
     break;
 
     // ReportNavItem, ReportOtherItem, ReportNextNavAcqItem, LoadNavMap, LoadOtherMap

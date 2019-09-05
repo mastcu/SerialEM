@@ -63,7 +63,9 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDR_MAINFRAME           ICON                    "res\\SerialEM.ico"
+
 IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -71,7 +73,9 @@ IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
 //
 
 IDR_MAINFRAME           BITMAP                  "res\\Toolbar.bmp"
+
 IDB_BITMAP1             BITMAP                  "res\\bitmap1.bmp"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -2835,7 +2839,7 @@ BEGIN
     PUSHBUTTON      "?",IDC_BUTHELP,107,0,9,7
     PUSHBUTTON      "F",IDC_BUTFLOATDOCK,15,0,9,7
     CTEXT           "Microscope Control",IDC_STATTOPLINE,33,0,64,8
-    RTEXT           "Mag",IDC_STATIC,56,14,15,8
+    RTEXT           "Mag",IDC_STAT_MAG,54,14,17,8
     CONTROL         "",IDC_SPIN_RCMAG,"msctls_updown32",UDS_ARROWKEYS,72,10,11,16
     RTEXT           "Spot",IDC_STATIC,63,36,15,8
     CONTROL         "",IDC_SPIN_RCSPOT,"msctls_updown32",UDS_ARROWKEYS,80,32,11,16
@@ -3163,7 +3167,9 @@ END
 //
 
 IDC_CURSOR1             CURSOR                  "res\\cursor1.cur"
+
 IDC_CURSOR2             CURSOR                  "res\\cursor2.cur"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3621,24 +3627,29 @@ END
 // AFX_DIALOG_LAYOUT
 //
 
-IDD_AUTOCENSETUP AFX_DIALOG_LAYOUT 
+IDD_AUTOCENSETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_TILTSERIES AFX_DIALOG_LAYOUT 
+IDD_TILTSERIES AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_DRIFTWAITSETUP AFX_DIALOG_LAYOUT 
+IDD_DRIFTWAITSETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_MULTI_SHOT_SETUP AFX_DIALOG_LAYOUT 
+IDD_MULTI_SHOT_SETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
+END
+
+IDD_REMOTE_CONTROL AFX_DIALOG_LAYOUT
+BEGIN
+    0
 END
 
 
@@ -5431,9 +5442,13 @@ BEGIN
     IDC_RNO_EARLY           "Return image after frame saving is complete, if any"
     IDC_RLAST_EARLY         "Return as soon as possible with specified sum for last shot only"
     IDC_RALL_EARLY          "Return as soon as possible with specified sum for all shots"
-    IDC_RFIRST_FULL         "Get full image only for first shot, return as soon as possible for others"
     IDC_EDIT_EXTRA_DELAY    "Additional settling time after image shift in seconds"
     IDC_EDIT_DE_FPS         "Frames per second for the current operating mode (linear versus counting)"
+END
+
+STRINGTABLE
+BEGIN
+    IDC_RFIRST_FULL         "Get full image only for first shot, return as soon as possible for others"
 END
 
 STRINGTABLE

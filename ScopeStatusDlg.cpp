@@ -49,6 +49,7 @@ CScopeStatusDlg::CScopeStatusDlg(CWnd* pParent /*=NULL*/)
   mMag = 0;
   mPendingMag = -1;
   mPendingSpot = -1;
+  mPendingCamLen = -1;
   mSTEM = -1;
   mCamLength = 0.;
   mCameraIndex = -1;
@@ -228,16 +229,17 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
   CString naSm = smallScreen ? "nA-fs" : "nA";
   double screenCurrent = inCurrent;
   int camera = mWinApp->GetCurrentCamera();
-  int pendingSpot = -1, pendingMag = -1;
-  bool needDraw = false;
+  int pendingSpot = -1, pendingMag = -1, pendingCamLen = -1, numRegCamLens, numLADCamLens;
+  bool needDraw = false, showPending = false;
   CameraParameters *camParam = mWinApp->GetCamParams() + camera;
+  int *camLenTab = mWinApp->GetCamLenTable();
   BOOL noScope = mWinApp->mScope->GetNoScope();
   if (!mInitialized)
     return;
 
   int temNano = B3DCHOICE(!STEM && inProbeMode == 0, 1, 0);
   if (mWinApp->GetShowRemoteControl())
-    mWinApp->mRemoteControl.GetPendingMagOrSpot(pendingMag, pendingSpot);
+    mWinApp->mRemoteControl.GetPendingMagOrSpot(pendingMag, pendingSpot, pendingCamLen);
   if (pendingMag > 0)
     inMagInd = pendingMag;
   if (pendingSpot > 0)
@@ -312,16 +314,25 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
     }
 
   } else if (!noScope) {
-    if (cameraLength != mCamLength) {
+    if (cameraLength != mCamLength || pendingCamLen != mPendingCamLen) {
+      if (pendingCamLen > 0) {
+        mWinApp->mScope->GetNumCameraLengths(numRegCamLens, numLADCamLens);
+        if (pendingCamLen < MAX_CAMLENS && camLenTab[pendingCamLen] > 0) {
+          cameraLength = camLenTab[pendingCamLen] / 1000.;
+          showPending = true;
+        }
+      }
       if (cameraLength < 10.) {
-        m_strMag.Format("D %.0f", cameraLength * (JEOLscope ? 100. : 1000.));
+        m_strMag.Format("%s%.0f", showPending ? "->" : "D ",  
+          cameraLength * (JEOLscope ? 100. : 1000.));
         m_statXLM.SetWindowText(JEOLscope ? "cm" : "mm");
       } else {
-        m_strMag.Format("D %.1f", cameraLength);
+        m_strMag.Format("%s%.1f", showPending ? "->" : "D ", cameraLength);
         m_statXLM.SetWindowText("m");
       }
       m_statMag.SetWindowText(m_strMag);
       mCamLength = cameraLength;
+      mPendingCamLen = pendingCamLen;
     }
     mMag = 0;
     mMagInd = 0;

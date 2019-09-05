@@ -1476,7 +1476,7 @@ void CParameterIO::WriteSettings(CString strFileName)
       mWinApp->mRemoteControl.GetIntensityIncrement(), 
       mWinApp->mRemoteControl.m_bMagIntensity ? 1: 0,
       mWinApp->mRemoteControl.GetFocusIncrementIndex(), 
-      mWinApp->mRemoteControl.m_iBeamOrStage, mWinApp->mRemoteControl.GetStageIncIndex());
+      mWinApp->mRemoteControl.m_iStageNotBeam, mWinApp->mRemoteControl.GetStageIncIndex());
     mFile->WriteString(oneState);
 
     // Get window placement and write it out
@@ -3035,121 +3035,126 @@ int CParameterIO::ReadProperties(CString strFileName)
        mWinApp->mMailer->SetPort(port);
 
      } else if (MatchNoCase("MagnificationTable") || MatchNoCase("STEMMagTable")) {
-        nMags = itemInt[1];
-        col = MatchNoCase("MagnificationTable") ? 1 : 0;
-        for (int line = 0; line < nMags; line++) {
-          err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, MAX_TOKENS);
-          if (err)
-            break;
-          err = 1;
-          if (col && strItems[2].IsEmpty() || !col && strItems[1].IsEmpty())
-            break;
-          index = itemInt[0];
-          if (index <= 0 || index >= MAX_MAGS)
-            break;
-          if (col) {
-            mMagTab[index].mag = itemInt[1];
-            mMagTab[index].tecnaiRotation = (float)itemDbl[2];
-            mMagTab[index].screenMag = (strItems[3].IsEmpty() || strItems[3] == "0") ? 
-              mMagTab[index].mag : itemInt[3];
-            mMagTab[index].EFTEMmag = (strItems[4].IsEmpty() || strItems[4] == "0") ?
-              mMagTab[index].mag : itemInt[4];
-            mMagTab[index].EFTEMtecnaiRotation = strItems[5].IsEmpty() ?
-              mMagTab[index].tecnaiRotation : (float)itemDbl[5];
-            mMagTab[index].EFTEMscreenMag = (strItems[6].IsEmpty() || strItems[6] == "0") ?
-              mMagTab[index].EFTEMmag : itemInt[6];
-          } else {
-            mMagTab[index].STEMmag = itemDbl[1];
-          }
-          err = 0;
-        }
-        if (err > 0) {
-          AfxMessageBox("Error reading magnification table, line\n" +
-            strLine, MB_EXCLAME);
-          retval = err;
-          break;
-        }
+       nMags = itemInt[1];
+       col = MatchNoCase("MagnificationTable") ? 1 : 0;
+       for (int line = 0; line < nMags; line++) {
+         err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, MAX_TOKENS);
+         if (err)
+           break;
+         err = 1;
+         if (col && strItems[2].IsEmpty() || !col && strItems[1].IsEmpty())
+           break;
+         index = itemInt[0];
+         if (index <= 0 || index >= MAX_MAGS)
+           break;
+         if (col) {
+           mMagTab[index].mag = itemInt[1];
+           mMagTab[index].tecnaiRotation = (float)itemDbl[2];
+           mMagTab[index].screenMag = (strItems[3].IsEmpty() || strItems[3] == "0") ?
+             mMagTab[index].mag : itemInt[3];
+           mMagTab[index].EFTEMmag = (strItems[4].IsEmpty() || strItems[4] == "0") ?
+             mMagTab[index].mag : itemInt[4];
+           mMagTab[index].EFTEMtecnaiRotation = strItems[5].IsEmpty() ?
+             mMagTab[index].tecnaiRotation : (float)itemDbl[5];
+           mMagTab[index].EFTEMscreenMag = (strItems[6].IsEmpty() || strItems[6] == "0") ?
+             mMagTab[index].EFTEMmag : itemInt[6];
+         } else {
+           mMagTab[index].STEMmag = itemDbl[1];
+         }
+         err = 0;
+       }
+       if (err > 0) {
+         AfxMessageBox("Error reading magnification table, line\n" +
+           strLine, MB_EXCLAME);
+         retval = err;
+         break;
+       }
 
-      } else if (MatchNoCase("CameraLengthTable")) {
-        nMags = itemInt[1];
-        for (int line = 0; line < nMags; line++) {
-          err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, MAX_TOKENS);
-          if (err)
-            break;
-          err = 1;
-          if (strItems[1].IsEmpty())
-            break;
-          index = itemInt[0];
-          if (index <= 0 || index >= MAX_CAMLENS)
-            break;
-          camLengths[index] = itemInt[1];
-          err = 0;
-        }
-        if (err > 0) {
-          AfxMessageBox("Error reading camera length table, line\n" +
-            strLine, MB_EXCLAME);
-          retval = err;
-          break;
-        }
+     } else if (MatchNoCase("CameraLengthTable")) {
+       nMags = itemInt[1];
+       for (int line = 0; line < nMags; line++) {
+         err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, MAX_TOKENS);
+         if (err)
+           break;
+         err = 1;
+         if (strItems[1].IsEmpty())
+           break;
+         index = itemInt[0];
+         if (index <= 0 || index >= MAX_CAMLENS)
+           break;
+         camLengths[index] = itemInt[1];
+         err = 0;
+       }
+       if (err > 0) {
+         AfxMessageBox("Error reading camera length table, line\n" +
+           strLine, MB_EXCLAME);
+         retval = err;
+         break;
+       } else
+         mWinApp->mScope->SetNumCameraLengths(nMags, -1);
 
-      } else if (MatchNoCase("FocusTickTable")) {
-        nMags = itemInt[1];
-        for (int line = 0; line < nMags; line++) {
-          err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, MAX_TOKENS);
-          if (err)
-            break;
-          err = 1;
-          if (strItems[1].IsEmpty())
-            break;
-          index = itemInt[0];
-          if (index <= 0 || index >= MAX_MAGS)
-            break;
-          mMagTab[index].focusTicks = itemInt[1];
-          err = 0;
-        }
-        if (err > 0) {
-          AfxMessageBox("Error reading focus tick table, line\n" +
-            strLine, MB_EXCLAME);
-          retval = err;
-          break;
-        }
+     } else if (MatchNoCase("NumberOfCameraLengths")) {
+       mWinApp->mScope->SetNumCameraLengths(itemInt[1], 
+         strItems[2].IsEmpty() ? -1 : itemInt[2]);
 
-      } else if (MatchNoCase("ImageShiftDelays")) {
-        nMags = itemInt[1];
-        if (nMags > MAX_IS_DELAYS) {
-          AfxMessageBox("Too many Image Shift delays for arrays", MB_EXCLAME);
-          retval = 1;
-          break;
-        }
-        float *ISmoved = mWinApp->mShiftManager->GetISmoved();
-        float *ISdelay = mWinApp->mShiftManager->GetISdelayNeeded();
-        for (int line = 0; line < nMags; line++) {
-          err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, MAX_TOKENS);
-          if (err)
-            break;
-          if (strItems[1].IsEmpty()) {
-            err = 1;
-            break;
-          }
-          ISmoved[line] = (float)itemDbl[0];
-          ISdelay[line] = (float)itemDbl[1];
-        }
-        if (err > 0) {
-          AfxMessageBox("Error reading image shift delays, line\n" +
-            strLine, MB_EXCLAME);
-          retval = err;
-          break;
-        } else
-          mWinApp->mShiftManager->SetNumISdelays(nMags);
-      
-      } else if (!strItems[0].IsEmpty() && !recognized && !recognized2 && !recognized3)
-        AfxMessageBox("Unrecognized entry in properties file " + strFileName 
-        + " : " + strLine , MB_EXCLAME);
-      
+     } else if (MatchNoCase("FocusTickTable")) {
+       nMags = itemInt[1];
+       for (int line = 0; line < nMags; line++) {
+         err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, MAX_TOKENS);
+         if (err)
+           break;
+         err = 1;
+         if (strItems[1].IsEmpty())
+           break;
+         index = itemInt[0];
+         if (index <= 0 || index >= MAX_MAGS)
+           break;
+         mMagTab[index].focusTicks = itemInt[1];
+         err = 0;
+       }
+       if (err > 0) {
+         AfxMessageBox("Error reading focus tick table, line\n" +
+           strLine, MB_EXCLAME);
+         retval = err;
+         break;
+       }
+
+     } else if (MatchNoCase("ImageShiftDelays")) {
+       nMags = itemInt[1];
+       if (nMags > MAX_IS_DELAYS) {
+         AfxMessageBox("Too many Image Shift delays for arrays", MB_EXCLAME);
+         retval = 1;
+         break;
+       }
+       float *ISmoved = mWinApp->mShiftManager->GetISmoved();
+       float *ISdelay = mWinApp->mShiftManager->GetISdelayNeeded();
+       for (int line = 0; line < nMags; line++) {
+         err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, MAX_TOKENS);
+         if (err)
+           break;
+         if (strItems[1].IsEmpty()) {
+           err = 1;
+           break;
+         }
+         ISmoved[line] = (float)itemDbl[0];
+         ISdelay[line] = (float)itemDbl[1];
+       }
+       if (err > 0) {
+         AfxMessageBox("Error reading image shift delays, line\n" +
+           strLine, MB_EXCLAME);
+         retval = err;
+         break;
+       } else
+         mWinApp->mShiftManager->SetNumISdelays(nMags);
+
+     } else if (!strItems[0].IsEmpty() && !recognized && !recognized2 && !recognized3)
+       AfxMessageBox("Unrecognized entry in properties file " + strFileName
+         + " : " + strLine, MB_EXCLAME);
+
     }
     if (err > 0)
       retval = err;
-      
+
     mFile->Close();
   }
   catch(CFileException *perr) {

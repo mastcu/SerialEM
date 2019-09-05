@@ -1535,10 +1535,9 @@
 #define IDC_STAT_ITER_THRESH            2558
 #define IDC_BUT_NAV_FOCUS_POS           2559
 #define IDC_EDIT_FOCUS                  2560
-#define IDC_CHECK1                      2561
 #define IDC_CHECK_SKIP_BACKLASH         2561
-#define IDC_RADIO1                      2562
 #define IDC_RFIRST_FULL                 2562
+#define IDC_STAT_MAG                    2563
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2011,9 +2010,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        240
+#define _APS_NEXT_RESOURCE_VALUE        241
 #define _APS_NEXT_COMMAND_VALUE         33377
-#define _APS_NEXT_CONTROL_VALUE         2563
+#define _APS_NEXT_CONTROL_VALUE         2564
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

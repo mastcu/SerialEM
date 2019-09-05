@@ -387,6 +387,8 @@ class DLL_IM_EX CEMscope
   GetSetMember(int, UseTEMScripting);
   GetMember(bool, MovingAperture);
   int *GetLastLongOpTimes() {return &mLastLongOpTimes[0];};
+  void GetNumCameraLengths(int &reg, int &LAD) { reg = mNumRegularCamLens; LAD = mNumLADCamLens; };
+  void SetNumCameraLengths(int reg, int LAD) { mNumRegularCamLens = reg; mNumLADCamLens = LAD; };
   int ScreenBusy();
   int GetScreenPos();
   BOOL SetScreenPos(int inPos);
@@ -550,6 +552,8 @@ private:
   int mNumSpotSizes;          // Number of spot size
   int mMinSpotSize;           // Minimum usable spot size
   int mNumAlphas;             // Number of alphas
+  int mNumRegularCamLens;     // Number of camera lengths in regulr and LAD mode
+  int mNumLADCamLens;
   double mCrossovers[MAX_SPOT_SIZE + 1][2];        // Intensity at crossover
   float mAlphaBeamShifts[MAX_ALPHAS][2];
   int mNumAlphaBeamShifts;    // Number of alphas with recorded beam shifts
