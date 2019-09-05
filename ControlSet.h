@@ -33,7 +33,7 @@
 #define DE_SAVE_MASTER   0x10
 #define DE_SAVE_SINGLE   0x20
 #define MAX_SPOT_SIZE  13
-#define MAX_CAMLENS 40
+#define MAX_CAMLENS 60
 
 struct ControlSet {
   int mode;
