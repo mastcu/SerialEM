@@ -489,6 +489,8 @@ bool CTSVariationsDlg::CheckItemValue(bool update)
   bool changed = false;
   int *active = mWinApp->GetActiveCameraList();
   CameraParameters *camParam = mWinApp->GetCamParams() + active[mParam->cameraIndex];
+  ControlSet *conSet = mWinApp->GetCamConSets() + active[mParam->cameraIndex] *
+    MAX_CONSETS + RECORD_CONSET;
   FilterParams *filtp = mWinApp->GetFilterParams();
   switch (m_iType) {
     case TS_VARY_DRIFT:
@@ -506,7 +508,8 @@ bool CTSVariationsDlg::CheckItemValue(bool update)
       break;
 
     case TS_VARY_FRAME_TIME:
-      changed = mWinApp->mCamera->ConstrainFrameTime(m_fValue, camParam);
+      changed = mWinApp->mCamera->ConstrainFrameTime(m_fValue, camParam, conSet->binning,
+        (camParam->OneViewType && camParam->canTakeFrames) ? conSet->K2ReadMode : 0);
       break;
 
     case TS_VARY_SLIT:
