@@ -686,8 +686,9 @@ BOOL CTSSetupDialog::OnInitDialog()
   m_sbcEarlyFrames.SetPos(500);
   mTSParam.earlyReturnNumFrames = B3DMAX(1, mTSParam.earlyReturnNumFrames);
   m_strNumEarlyFrames.Format("%d", mTSParam.earlyReturnNumFrames);
-  if (JEOLscope) {
+  if (!FEIscope)
     m_statMilliRad = "% of range";
+  if (JEOLscope) {
     if (mWinApp->mScope->GetNoColumnValve())
       ReplaceWindowText(&m_butCloseValves, "Close column valves", "Turn off filament");
     else
