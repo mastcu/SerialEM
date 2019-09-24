@@ -610,7 +610,7 @@ CSerialEMApp::CSerialEMApp()
   mHitachiParams.objectiveToUm[0] = 10000.;
   mHitachiParams.objectiveToUm[1] = 10000.;
   mHitachiParams.objectiveToUm[2] = 10000.;
-  mHitachiParams.screenAreaSqCm = 15000.;
+  mHitachiParams.screenAreaSqCm = 150.;
   mHitachiParams.stageTiltSpeed = 100;
   mHitachiParams.stageXYSpeed = 80000;
   mHitachiParams.flags = 0;

@@ -133,6 +133,7 @@ END_MESSAGE_MAP()
 BOOL CScopeStatusDlg::OnInitDialog() 
 {
   CToolDlg::OnInitDialog();
+  HitachiParams *hitachi = mWinApp->GetHitachiParams();
 
   // Get the fonts for big and medium windows
   CRect rect;
@@ -181,7 +182,7 @@ BOOL CScopeStatusDlg::OnInitDialog()
     m_statStageZ.ShowWindow(SW_HIDE);
     m_statZlabel.ShowWindow(SW_HIDE);
   }
-  if (HitachiScope) {
+  if (HitachiScope && !hitachi->screenAreaSqCm) {
     m_statCurrent.ShowWindow(SW_HIDE);
     m_butFloat.ShowWindow(SW_HIDE);
     m_statNano.ShowWindow(SW_HIDE);
