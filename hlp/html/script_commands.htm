@@ -137,7 +137,7 @@
               The optional #i can be entered to set the increment, which is 1 by default.&nbsp; 
               If the starting index is already past the ending one, the loop will be skipped.&nbsp; 
               Integer values should be entered; non-integer values will be truncated to 
-              integers.</TD>
+              integers.&nbsp; Command added in 3.8.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style4">EndLoop</TD>
@@ -814,7 +814,7 @@
               for X and Y stage coordinates to restore after the tilt or values greater than 9000 for no 
               stage restoration.&nbsp; For CryoARM, speed factors of 100 - 105 will select pre-set speeds
               of 10, 2, 1, 0.5, 0.25, and 0.1 degrees/sec.&nbsp; If setting a speed factor crashes SerialEM or
-              FEI-SEMserver, see notes under <a href="#tiltDuringRecord">TiltDuringRecord</a>.</TD>
+              FEI-SEMserver, see notes under <a href="#tiltDuringRecord">TiltDuringRecord</a>.&nbsp; Command added in 3.8.</TD>
         </TR>
         <TR>
           <TD class="style8">WriteFrameSeriesAngles file</TD>
@@ -1178,7 +1178,7 @@
               the log has new contents since program startup, the program will ask the user 
               whether to save to log first unless a non-zero value is entered for the optional 
               #, in which case the contents of the log are discarded. If the user cancels the 
-              query, the script is aborted.&nbsp;&nbsp;</TD>
+              query, the script is aborted.&nbsp; Command added in 3.8.&nbsp;&nbsp;</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style7">SaveLog [#O newFile]</TD>
@@ -1190,7 +1190,7 @@
               adding &#39;.log&#39;, so if you want to preserve extensions or other text after a 
               period, add &#39;.log&#39; to the end of the name.&nbsp; Enter a non-zero value for #O to 
               overwrite the file if it already exists, or zero to have a number added to get a 
-              unique new name.</TD>
+              unique new name.&nbsp; Command added in 3.8.</TD>
         </TR>
         <TR vAlign="top">
           <TD colspan="2"><A name="imagefile"></A><B>Image File Commands</B></TD>
@@ -2017,7 +2017,7 @@
               scopes, the command requires a relatively recent version of TemExt; names can be 
               Pir0 to Pir9 or Pen0 to Pen9; status values are 0 for not ready, 1 for low, 2 
               for high, and 3 for ready; and pressure values are between 0 and 1 (the value 
-              returned by the scope is divided by 4095).</TD>
+              returned by the scope is divided by 4095).&nbsp; Command added in 3.8.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style13">ManualFilmExposure #</TD>
@@ -2598,14 +2598,14 @@
           <TD>Move the stage to the center of the last hole position acquired with 
               MultipleRecords.&nbsp; This command can be used to position over a hole for 
               occasional post-acquisition tasks when using a hole pattern centered on the 
-              support film.&nbsp; There is no backlash correction.</TD>
+              support film.&nbsp; There is no backlash correction.&nbsp; Command added in 3.8.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="auto-style1">ImageShiftToLastMultiHole</TD>
           <TD>Change image shift by the offset to the last hole position acquired with 
               MultipleRecords.&nbsp; This command combined with &#39;ResetImageShift&#39; will be more 
               accurate than &#39;StageToLastMultiHole&#39; if backlash correction is needed and 
-              enabled in the Image Alignment &amp; Focus control panel.</TD>
+              enabled in the Image Alignment &amp; Focus control panel.&nbsp; Command added in 3.8.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="auto-style1">CalibrateImageShift [#]</TD>
@@ -2700,14 +2700,14 @@
               the current item or the item being acquired; an index greater than 0 for the item with
               that index in the table; or a value less than 0 to count back from the end of the 
               table, where -1 is the last item.  For #r, enter 1 to restore the microscope state
-              to the current state after the procedure, or 0 not to.
+              to the current state after the procedure, or 0 not to.&nbsp; Command added in 3.8.
           </TD>
         </TR>
         <TR vAlign="top">
           <TD class="auto-style1">GetRealignToItemError</TD>
           <TD>Gets the total stage error in X and Y and the second move error in X and Y from 
               the last Realign to Item and assigns them to ReportedValue1-4 and to optional 
-              variables included after the command.</TD>
+              variables included after the command.&nbsp; Command added in 3.8.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="auto-style1">ForceCenterRealign</TD>
@@ -2822,7 +2822,7 @@
               or 0 if it was not drawn on a map.  For #, enter 0 for
               the current item or the item being acquired; an index greater than 0 for the item with
               that index in the table; or a value less than 0 to count back from the end of the 
-              table, where -1 is the last item.</TD>
+              table, where -1 is the last item.&nbsp; Command added in 3.8.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="auto-style1">SetNavRegistration #</TD>
@@ -2932,12 +2932,12 @@
           <TD>Sets the state with which the specified map item was acquired.&nbsp; For #, 
               enter 0 for the current item or the item being acquired; an index greater than 0 
               for the item with that index in the table; or a value less than 0 to count back 
-              from the end of the table, where -1 is the last item.</TD>
+              from the end of the table, where -1 is the last item.&nbsp; Command added in 3.8.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="auto-style1">RestoreState</TD>
           <TD>Restore the state if one has been saved with either with 'SetMapAcquireState' or 
-              the <A HREF="hidd_statedlg.htm">Imaging States dialog</A>. </TD>
+              the <A HREF="hidd_statedlg.htm">Imaging States dialog</A>.&nbsp; Command added in 3.8. </TD>
         </TR>
       </TABLE>
       <BR>
@@ -2971,13 +2971,14 @@
               Custom times are stored in the short-term calibration file, like the times 
               since the last long operations of various kinds.&nbsp; They can be used to 
               perform actions periodically during Navigator acquisitions.&nbsp; ENtries older 
-              than 20000 minutes will be removed when the file is read on program startup.</TD>
+              than 20000 minutes will be removed when the file is read on program startup.&nbsp; Command added in 3.8.</TD>
         </TR>
          <TR vAlign="top">
           <TD width="210">ReportCustomInterval name [#M]</TD>
           <TD>Report the time elapsed, in minutes, from the custom time with the given name to either 
               the current time or the absolute time in minutes given by optional #M.&nbsp; If 
-              a time with that name has not be set, an interval of 40000 is returned.&nbsp; No optional assignment to variable.
+              a time with that name has not be set, an interval of 40000 is returned.
+            &nbsp; No optional assignment to variable.&nbsp; Command added in 3.8.
           </TD>
         </TR>
          <TR vAlign="top">
