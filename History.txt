@@ -3,9 +3,22 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+9/18/17: Enabled saving or aligning frames in the SEMCCD plugin for OneView
+and Rio cameras, just as for K2/K3, and add general framework from
+saving/aligning frames in SerialEM for other cameras.
+
+9/18/17: Added DoLoop command with index variable and start, end, and
+increment values.
+
+9/18/17: Beam shift in scope control panel now does diffraction shift in
+diffraction mode.
+
+9/18/17: Added script commands for getting a vacuum gauge value and
+controlling stage piezos on JEOLs.
+
 9/10/19: Enabled screen current output on Hitachi (In 3.7).
 
-9/5/19: Fixed setting of probe mode fir first area gone to after turning on
+9/5/19: Fixed setting of probe mode for first area entered after turning on
 low dose mode while in LM.
 
 9/5/19: Mag spinner in scope control panel now controls camera length in

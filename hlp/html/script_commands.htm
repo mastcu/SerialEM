@@ -127,13 +127,21 @@
         <TR vAlign="top">
           <TD class="style4">Loop # [variable]</TD>
           <TD>Loop the given # of times until EndLoop; optionally set variable with index.&nbsp; 
-            As of SerialEM 3.7.0 beta, a loop count less than or equal to 0 is allowed and 
+              A loop count less than or equal to 0 is allowed and 
             will cause the loop to be skipped.&nbsp; If a script relying on this is liable 
             to run on earlier versions, it should include the line 'Require zeroloop'.</TD>
         </TR>
         <TR vAlign="top">
+          <TD class="style4">DoLoop var #s #e [#i]</TD>
+          <TD>Loop from #s to #e, inclusive, assigning the loop index to the variable &#39;var&#39;.&nbsp; 
+              The optional #i can be entered to set the increment, which is 1 by default.&nbsp; 
+              If the starting index is already past the ending one, the loop will be skipped.&nbsp; 
+              Integer values should be entered; non-integer values will be truncated to 
+              integers.</TD>
+        </TR>
+        <TR vAlign="top">
           <TD class="style4">EndLoop</TD>
-          <TD>Marks the end of the loop</TD>
+          <TD>Marks the end of a loop</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style4">DoScript #<br />
@@ -804,7 +812,8 @@
               backlash for all tilt steps not in the same direction as the first one, 0 
               otherwise; #S with a tilting speed factor or 0 for normal speed, and #X and #Y 
               for X and Y stage coordinates to restore after the tilt or values greater than 9000 for no 
-              stage restoration.&nbsp; If setting a speed factor crashes SerialEM or 
+              stage restoration.&nbsp; For CryoARM, speed factors of 100 - 105 will select pre-set speeds
+              of 10, 2, 1, 0.5, 0.25, and 0.1 degrees/sec.&nbsp; If setting a speed factor crashes SerialEM or
               FEI-SEMserver, see notes under <a href="#tiltDuringRecord">TiltDuringRecord</a>.</TD>
         </TR>
         <TR>
@@ -848,7 +857,8 @@
           <TD>Starts a Record acquisition and starts the stage tilting to angle #A after the 
             delay #D in milliseconds.&nbsp; On FEI scopes with recent enough versions of FEI 
             scripting, or JEOL scopes with recent versions of TemExt.dll, #S can be added with a speed multiplier (&lt; 1 for slower, &gt; 1 for 
-            faster).&nbsp; On FEI scopes this command will freeze the user 
+            faster).&nbsp; For CryoARM, speed factors of 100 - 105 will select pre-set speeds
+              of 10, 2, 1, 0.5, 0.25, and 0.1 degrees/sec.&nbsp; On FEI scopes this command will freeze the user 
             interface and prevent scope updates while the stage is tilting.  If the command 
               crashes SerialEM or FEI-SEMserver with 
               a speed multiplier but runs OK with one, it means 
@@ -1512,7 +1522,8 @@
           <TD>Start tilting stage in the background; images can be taken and scripts can run 
             during the tilt.&nbsp; Follow with #A, the angle to tilt to, and optionally with 
             #S, a speed factor for FEI or JEOL scopes that support this (&lt; 1 for slower than normal tilting).&nbsp; 
-            On FEI scopes, background stage movement requires the property 
+            For CryoARM, speed factors of 100 - 105 will select pre-set speeds
+              of 10, 2, 1, 0.5, 0.25, and 0.1 degrees/sec.&nbsp; On FEI scopes, background stage movement requires the property 
             &#39;BackgroundSocketToFEI&#39; set to 1 so that the fourth socket for background stage 
             operations is opened when the program starts.  If the command 
               crashes SerialEM or FEI-SEMserver, see notes under <a href="#tiltDuringRecord">TiltDuringRecord</a>.
@@ -1998,6 +2009,17 @@
           <TD>Report the current phase plate position number, numbered from 1 (FEI scopes only)</TD>
         </TR>
         <TR vAlign="top">
+          <TD class="style13">ReportVacuumGauge name</TD>
+          <TD>Reports the status and pressure reading from a vacuum gauge identified by the 
+              given name.&nbsp; For FEI scopes, the names are of the style accepted in the 
+              WatchGauge property; status values are 0 for undefined, 1 for underflow, 2 for 
+              overflow, 3 for invalid, and 4 for valid; pressure is in pascals.&nbsp; For JEOL 
+              scopes, the command requires a relatively recent version of TemExt; names can be 
+              Pir0 to Pir9 or Pen0 to Pen9; status values are 0 for not ready, 1 for low, 2 
+              for high, and 3 for ready; and pressure values are between 0 and 1 (the value 
+              returned by the scope is divided by 4095).</TD>
+        </TR>
+        <TR vAlign="top">
           <TD class="style13">ManualFilmExposure #</TD>
           <TD>Film exposure time in seconds for manual exposures, or 0 for automatic exposure
             (the default)</TD>
@@ -2150,7 +2172,9 @@
         </TR>
         <TR vAlign="top">
           <TD class="style13">ReportPiezoXY</TD>
-          <TD>Reports the X and Y position of the currently selected piezo</TD>
+          <TD>Reports the X and Y position of the currently selected piezo, if there is 
+              a piezo plugin loaded, or of the piezos on a JEOL stage if not.
+          </TD>
         </TR>
         <TR vAlign="top">
           <TD class="style13">ReportPiezoZ</TD>
@@ -2159,8 +2183,9 @@
         </TR>
         <TR vAlign="top">
           <TD class="style13">MovePiezoXY #X #Y [#]</TD>
-          <TD>Sets the X and Y position of the currently selected piezo to #X, #Y, or if the
-            optional third # is non-zero, moves the piezo by #X, #Y</TD>
+          <TD>Sets the X and Y position to #X, #Y for the currently selected piezo, if a 
+              piezo plugin is loaded, or for the piezos on a JEOL stage if not. If the
+            optional third # is non-zero, moves the piezo by #X, #Y.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style13">MovePiezoZ #Z [#]</TD>

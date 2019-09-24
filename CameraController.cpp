@@ -162,6 +162,7 @@ static VOID CALLBACK FilterUpdateProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent,
 
 CCameraController::CCameraController()
 {
+  int i, j, k, l;
   SEMBuildTime(__DATE__, __TIME__);
   mWinApp = (CSerialEMApp *)AfxGetApp();
   mBufferManager = mWinApp->mBufferManager;
@@ -201,9 +202,9 @@ CCameraController::CCameraController()
   mRepFlag = -1;
   mSettling = -1;
   mPreDarkBump = false;
-  for (int j = 0; j < MAX_CAMERAS; j++) {
+  for (j = 0; j < MAX_CAMERAS; j++) {
     mPlugFuncs[j] = NULL;
-    for (int i = 0; i < MAX_DARK_REFS; i++)
+    for (i = 0; i < MAX_DARK_REFS; i++)
       mDarkRefs[j][i].UseCount = 0;
   }
   mRefArray.SetSize(0,5);
@@ -245,7 +246,7 @@ CCameraController::CCameraController()
   mMinZLPAlignInterval = 6.;   // 3/13/17: Quantum K2 on Krios had some times just above 5
   mShiftTimeIndex = -1;
   mBlankWhenRetracting = false;
-  for (int k = 0; k < 3; k++) {
+  for (k = 0; k < 3; k++) {
     mNumDMCameras[k] = 0;
     mDMInitialized[k] = false;
   }
@@ -332,12 +333,23 @@ CCameraController::CCameraController()
 
   // 3K Rio
   mOneViewMinExposure[1][0] = 0.067f;
-  mOneViewMinExposure[1][1] = mOneViewMinExposure[1][2] = mOneViewMinExposure[1][3] = 
+  mOneViewMinExposure[1][1] = mOneViewMinExposure[1][2] = mOneViewMinExposure[1][3] =  
     0.017f;
-  mOneViewDeltaExposure[1][0] = mOneViewDeltaExposure[1][1] = 
-    mOneViewDeltaExposure[1][2] = mOneViewDeltaExposure[1][3] = 0.001f;
-  for (int l = 4; l < MAX_BINNINGS; l++) {
-    for (int k = 0; k < MAX_1VIEW_TYPES; k++) {
+
+  // 4K Rio
+  mOneViewMinExposure[2][0] = 0.05f;
+  mOneViewMinExposure[2][1] = 0.0125f;
+  mOneViewMinExposure[2][2] = mOneViewMinExposure[2][3] = 0.00625f;
+
+  // 2K Rio
+  for (k = 0; k < 4; k++)
+    mOneViewMinExposure[3][k] = 0.067f;
+  for (l = 1; l < MAX_1VIEW_TYPES; l++) {
+    mOneViewDeltaExposure[l][0] = mOneViewDeltaExposure[l][1] =
+      mOneViewDeltaExposure[l][2] = mOneViewDeltaExposure[l][3] = 0.001f;
+  }
+  for (l = 4; l < MAX_BINNINGS; l++) {
+    for (k = 0; k < MAX_1VIEW_TYPES; k++) {
       mOneViewDeltaExposure[k][l] = 0.;
       mOneViewMinExposure[k][l] = 0.;
     }
@@ -542,6 +554,7 @@ void CCameraController::ReleaseCamera(int createFor)
 int CCameraController::Initialize(int whichCameras)
 {
   CString report;
+  CameraParameters *param;
   int *originalList = mWinApp->GetOriginalActiveList();
   int numOrig = mWinApp->GetActiveCamListSize();
   int indPresent = 0, FEIstem = 0;
@@ -550,8 +563,11 @@ int CCameraController::Initialize(int whichCameras)
   int numDMListed[3], digiscan[3], numAdd[3];
   int numDEListed = 0;
   double addedFlyback;
+  float ovFrameDivisors[4][4] = {{0.04f, 0.01f, 0.005f, 0.0025f},
+  {0.066667f, 0.016667f, 0.016667f, 0.016667f}, {0.05f,0.0125f, 0.00625f, 0.00625f},
+  {0.066667f, 0.066667f, 0.066667f, 0.066667f}};
 
-  int i, ind, err, DMind;
+  int i, ind, jnd, err, DMind, ovInd;
   long num;
   BOOL anyGIF = false;
   BOOL anyPreExp = false;
@@ -597,45 +613,77 @@ int CCameraController::Initialize(int whichCameras)
   // FEI retractability now cleared in initialize function
   for (i = 0; i < numOrig; i++) {
     ind = originalList[i];
-    if (mAllParams[ind].TietzType) {
+    param = &mAllParams[ind];
+    if (param->TietzType) {
       numTietzListed++;
-      if (mAllParams[ind].TietzCanPreExpose)
+      if (param->TietzCanPreExpose)
         anyPreExp = true;
-      mAllParams[ind].retractable = false;
-      mAllParams[ind].pluginName = "";
-    } else if (mAllParams[ind].FEItype) {
+      param->retractable = false;
+      param->pluginName = "";
+    } else if (param->FEItype) {
       numFEIlisted++;
-      if (mAllParams[ind].STEMcamera)
+      if (param->STEMcamera)
         FEIstem = 1;
-    } else if (mAllParams[ind].DE_camType)
+    } else if (param->DE_camType)
 	  	numDEListed++;
-    else if (!mAllParams[ind].pluginName.IsEmpty())
+    else if (!param->pluginName.IsEmpty())
       numPlugListed++;
-    else if (mAllParams[ind].AMTtype)
+    else if (param->AMTtype)
       numDMListed[AMT_IND]++;
     else {
-      DMind = mAllParams[ind].useSocket ? SOCK_IND : COM_IND;
+      DMind = param->useSocket ? SOCK_IND : COM_IND;
       numDMListed[DMind]++;
-      if (mAllParams[ind].STEMcamera) {
-        mAllParams[ind].retractable = false;
+      if (param->STEMcamera) {
+        param->retractable = false;
         digiscan[DMind] = 1;
-        addedFlyback = mAllParams[ind].addedFlyback;
+        addedFlyback = param->addedFlyback;
       }
-      if (mAllParams[ind].GIF)
+      if (param->GIF)
         sGIFisSocket = DMind;
-      if (mAllParams[ind].K2Type) {
+      if (param->K2Type) {
         mNeedsReadMode[DMind] = true;
-        if (anyK2Type > 0 && mAllParams[ind].K2Type != anyK2Type)
+        if (anyK2Type > 0 && param->K2Type != anyK2Type)
           differentK2s = true;
-        anyK2Type = mAllParams[ind].K2Type;
+        anyK2Type = param->K2Type;
       }
-      if (mAllParams[ind].OneViewType) {
+      if (param->OneViewType) {
         mNeedsReadMode[DMind] = true;
-        B3DCLAMP(mAllParams[ind].OneViewType, 1, MAX_1VIEW_TYPES);
+        B3DCLAMP(param->OneViewType, 1, MAX_1VIEW_TYPES);
+        if (param->OneViewType > 1) {
+          if (param->sizeX > 3500 && param->sizeY > 3500)
+            param->OneViewType = 3;
+          else if (param->sizeX < 2500 && param->sizeY < 3500)
+            param->OneViewType = 4;
+          else
+            param->OneViewType = 2;
+        }
       }
     }
-    if (mAllParams[ind].GIF)
+    if (param->GIF)
       anyGIF = true;
+    ovInd = param->OneViewType - 1;
+    if (param->canTakeFrames < 0)
+      param->canTakeFrames = 0;
+    if (param->canTakeFrames) {
+      for (jnd = 0; jnd < param->numBinnings; jnd++) {
+        if (param->minFrameTime[jnd] <= 0.) {
+          if (ovInd >= 0) {
+            if (jnd < 4)
+              param->minFrameTime[jnd] = ovFrameDivisors[ovInd][jnd];
+          } else if (!jnd)
+            param->minFrameTime[jnd] = 0.001f;
+        }
+        if (param->frameTimeDivisor[jnd] <= 0.) {
+          if (ovInd >= 0) {
+            if (jnd < 4)
+              param->frameTimeDivisor[jnd] = ovFrameDivisors[ovInd][jnd];
+          } else if (!jnd)
+            param->frameTimeDivisor[jnd] = 0.001f;
+        }
+        ACCUM_MAX(param->minFrameTime[jnd], 
+          param->frameTimeDivisor[jnd]);
+      }
+    }
   }
   if (numFEIlisted - FEIstem > 1)
     mOtherCamerasInTIA = true;
@@ -1336,13 +1384,13 @@ void CCameraController::InitializePluginCameras(int &numPlugListed, int *origina
       if (!err && mAllParams[i].retractable && (!mPlugFuncs[i]->IsCameraInserted ||
         !mPlugFuncs[i]->SetCameraInsertion)) {
           AfxMessageBox("The \"Retractable\" property is set for a plugin camera but "
-            "the plugin camera named " + mAllParams[i].pluginName + 
+            "the plugin named " + mAllParams[i].pluginName + 
             " has no insertion functions", MB_EXCLAME);
           err = 1;
       }
       if (!err && mAllParams[i].rotationFlip && !mPlugFuncs[i]->SetRotationFlip) {
         AfxMessageBox("The \"RotationAndFlip\" property is set for a plugin camera "
-          "but the plugin camera named " + mAllParams[i].pluginName + 
+          "but the plugin named " + mAllParams[i].pluginName + 
           " has no SetRotationFlip function", MB_EXCLAME);
         err = 1;
       }
@@ -1361,6 +1409,17 @@ void CCameraController::InitializePluginCameras(int &numPlugListed, int *origina
             " plugin camera " + mAllParams[i].pluginName);
         }
       }
+
+      if (!err && mAllParams[i].canTakeFrames &&
+        !(mPlugFuncs[i]->SetupFrameAcquire && mPlugFuncs[i]->GetNextFrame)) {
+        AfxMessageBox("The \"CanTakeFrames\" property is set for a plugin camera "
+          "but the plugin named " + mAllParams[i].pluginName +
+          " is missing one of the required functions", MB_EXCLAME);
+        mAllParams[i].canTakeFrames = 0;
+      }
+      if (!err && mAllParams[i].canTakeFrames & FRAMES_CAN_BE_ALIGNED)
+        mFalconHelper->Initialize(-2);
+
 
       // For a STEM camera, send the camera number plus the number of additional channels
       num = mAllParams[i].cameraNumber;
@@ -1494,12 +1553,7 @@ void CCameraController::SetDivideBy2(int inVal)
     DarkRef *ref = mRefArray[i];
     if (ref->GainDark == DARK_REFERENCE && 
       mAllParams[mActiveList[ref->Camera]].unsignedImages) {
-      
-      // Delete array only if we own it
-      if (ref->Array && ref->Ownership)
-        delete ref->Array;
-      delete ref;
-      mRefArray.RemoveAt(i--);
+      DeleteOneReference(i--);
     }
   }
 }
@@ -2224,7 +2278,7 @@ void CCameraController::ShowReference(int type)
   } else {
     binning = type - NEW_GAIN_REFERENCE;
     if (mWinApp->mGainRefMaker->GetReference(binning, array, byteSize, gainRefBits, 
-        ownership, 0, 0))
+        ownership, 0, 0, false))
       return;
     mTD.DMSizeX = mParam->sizeX / binning;
     mTD.DMSizeY = mParam->sizeY / binning;
@@ -2526,18 +2580,10 @@ void CCameraController::Capture(int inSet, bool retrying)
     return;
   }
 
-  if (mWaitingForStacking) {
-    mWaitingForStacking = 0;
-    mWinApp->SetStatusText(SIMPLE_PANE, "");
-  }
-
-  if (mParam->FEItype == FALCON2_TYPE && mFrameSavingEnabled && conSet.saveFrames && 
-    mFalconHelper->GetStackingFrames()) {
-      mWaitingForStacking = 1;
-      mWinApp->AddIdleTask(ThreadBusy, ScreenOrInsertDone, ScreenOrInsertError, inSet, 0);
-      mWinApp->SetStatusText(SIMPLE_PANE, "WAITING FOR STACKING");    
-      mWinApp->UpdateBufferWindows();
-      return;
+  if (CheckFrameStacking(false, (mParam->FEItype == FALCON2_TYPE && mFrameSavingEnabled 
+    && conSet.saveFrames) || (mTD.plugFuncs && mParam->canTakeFrames))) {
+    mWinApp->AddIdleTask(ThreadBusy, ScreenOrInsertDone, ScreenOrInsertError, inSet, 0);
+    return;
   }
 
   // If not initialized and not in simulation mode, try to initialize
@@ -2606,6 +2652,11 @@ void CCameraController::Capture(int inSet, bool retrying)
   // For JEOL, need a reliable value of tilt.  Tilt is needed before frame saving setups
   mTiltBefore = (float)mScope->GetTiltAngle();
 
+  // Make sure doseFrac is off if it means something
+  if (!(((mParam->canTakeFrames | FRAMES_CAN_BE_SAVED) && conSet.saveFrames) ||
+    ((mParam->canTakeFrames | FRAMES_CAN_BE_ALIGNED) && conSet.alignFrames)))
+    conSet.doseFrac = 0;
+
   // First turn on the save flag for EVERYBODY if it is supposed to align frames in IMOD
   if (IsConSetSaving(&conSet, inSet, mParam, false)) {
     if (mParam->DE_camType)
@@ -2629,6 +2680,7 @@ void CCameraController::Capture(int inSet, bool retrying)
     conSet.K2ReadMode > 0)
       conSet.processing = DARK_SUBTRACTED;
   mTD.Processing = conSet.processing;
+  mTD.FrameTime = conSet.frameTime;
 
   // Make sure camera is inserted, blocking cameras are retracted, check temperature, and
   // set up saving from K2 camera;  Again clear low dose area flag to be safe
@@ -2988,9 +3040,38 @@ void CCameraController::Capture(int inSet, bool retrying)
       (mTD.GatanReadMode > 0 ? 1.f : 0.f) + (mTD.AlignFrames ? 1.f : 0.f));
   }
 
+  // Sanity check on other potential frame-saving cameras: make sure no illegal flags set
+  if (mTD.plugFuncs || mParam->OneViewType) {
+    if (!(mParam->canTakeFrames & FRAMES_CAN_BE_SAVED))
+      conSet.saveFrames = 0;
+    if (!(mParam->canTakeFrames & FRAMES_CAN_BE_ALIGNED))
+      conSet.alignFrames = 0;
+    if (!(conSet.alignFrames || conSet.saveFrames))
+      conSet.doseFrac = 0;
+  }
+
+  // Plugin camera: set up frames for saving or aligning
+  mSavingPluginFrames = false;
+  mAligningPluginFrames = false;
+  if (mTD.plugFuncs && conSet.doseFrac) {
+    mTD.ReadoutsPerFrame = B3DNINT(conSet.frameTime / GetK2ReadoutInterval(mParam, 
+      conSet.binning, 0));
+    mSavingPluginFrames = conSet.saveFrames != 0 || 
+      (conSet.alignFrames && conSet.useFrameAlign > 1);
+    mAligningPluginFrames = conSet.alignFrames && conSet.useFrameAlign == 1;
+    if (mSavingPluginFrames) {
+      ComposeFramePathAndName(false);
+      if (!mFrameFolder.IsEmpty() && CreateFrameDirIfNeeded(mFrameFolder, &logmess, '}'))
+      {
+        SEMMessageBox(logmess);
+        ErrorCleanup(1);
+        return;
+      }
+    }
+  }
+
   mTD.DoseFrac = conSet.doseFrac;
   B3DCLAMP(conSet.frameTime, GetMinK2FrameTime(mParam), 10.f);
-  mTD.FrameTime = conSet.frameTime;
   if ((conSet.doseFrac || (IS_FALCON2_OR_3(mParam) && FCAM_ADVANCED(mParam))) && 
     conSet.alignFrames && conSet.useFrameAlign) {
     mTD.AlignFrames = 0; 
@@ -3065,7 +3146,7 @@ void CCameraController::Capture(int inSet, bool retrying)
     exposure += mDMsizeY * mDSsyncMargin / 1.e6;
   mTD.cameraTimeout = (DWORD)(mTimeoutFactor * 1000. * (5. + mTD.DMsettling + exposure +
     megaVoxel / megaVoxPerSec));
-  if (mParam->K2Type) {
+  if (mParam->K2Type || (mParam->OneViewType && mTD.DoseFrac)) {
     double asyncUsedUp = 0.;
     if (mLastAsyncTimeout) {
       asyncUsedUp = SEMTickInterval(mAsyncTickStart);
@@ -3261,7 +3342,7 @@ void CCameraController::Capture(int inSet, bool retrying)
 
   // Drift correction actually seems to work in continuous mode so allow it
   // Property files went out without BasicCorrections so we need to supply the 49 here
-  if (OneViewDriftCorrectOK(mParam) && conSet.alignFrames && 
+  if (OneViewDriftCorrectOK(mParam) && conSet.correctDrift && 
     mTD.Processing == GAIN_NORMALIZED) {
       if (mTD.Corrections <= 0)
         mTD.Corrections = 49;     
@@ -3471,12 +3552,18 @@ int CCameraController::CapManageInsertTempK2Saving(const ControlSet &conSet, int
 {
   BOOL blockable, STEMretract, insertingOther;
   BOOL justReturn = false, callCleanup = false;
-  bool aligning;
+  bool aligning, saving;
+  bool frameCapableOneView = mParam->OneViewType && mParam->canTakeFrames;
   int iCam, camInd;
   LowDoseParams *ldParam = mWinApp->GetLowDoseParams();
   int curCam = mWinApp->GetCurrentCamera();
   mSetDeferredSize = false;
-
+  aligning = (mParam->K2Type || frameCapableOneView) && conSet.doseFrac &&
+    conSet.alignFrames && (conSet.useFrameAlign == 1 ||
+    (conSet.useFrameAlign && conSet.saveFrames && !mAlignWholeSeriesInIMOD)) &&
+    CAN_PLUGIN_DO(CAN_ALIGN_FRAMES, mParam);
+  saving = IsConSetSaving(&conSet, inSet, mParam, true);
+  
   // If not in simulation mode or screen down, make sure camera is inserted
   // and any cameras above are retracted
   // First see if any can block current camera
@@ -3499,7 +3586,7 @@ int CCameraController::CapManageInsertTempK2Saving(const ControlSet &conSet, int
   if ((!mScreenDownMode || mParam->checkTemperature) && !mSimulationMode &&
     (mParam->checkTemperature || blockable || (mParam->DMCamera && !mParam->GIF) || 
     mParam->retractable || retracting || mNeedToSelectDM || mParam->alsoInsertCamera >= 0
-    || (mParam->K2Type && conSet.doseFrac && conSet.saveFrames))) {
+    || saving || aligning)) {
       if (mNumDMCameras[COM_IND] > 0 && CreateCamera(CREATE_FOR_ANY)) {
         ErrorCleanup(1);
         return 1;
@@ -3660,13 +3747,8 @@ int CCameraController::CapManageInsertTempK2Saving(const ControlSet &conSet, int
       }
 
       // Now set up for K2 frame saving or aligning
-      aligning = mParam->K2Type && conSet.doseFrac && conSet.alignFrames && 
-        (conSet.useFrameAlign == 1 || 
-        (conSet.useFrameAlign && conSet.saveFrames && !mAlignWholeSeriesInIMOD)) &&
-        CAN_PLUGIN_DO(CAN_ALIGN_FRAMES, mParam);
-      if (!justReturn && mParam->K2Type && conSet.doseFrac && 
-        (conSet.saveFrames || aligning)) {
-          if (SetupK2SavingAligning(conSet, inSet, conSet.saveFrames != 0, aligning,
+      if (!justReturn && (saving || aligning)) {
+        if (SetupK2SavingAligning(conSet, inSet, conSet.saveFrames != 0, aligning,
             NULL)) {
               justReturn = true;
               callCleanup = true;
@@ -3691,9 +3773,10 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
   bool saving, bool aligning, CString *aliComRoot)
 {
   int ldArea, magIndex, sizeX, sizeY, numAllVsAll, refineIter, groupSize, doSpline;
-  int notOK, newIndex, faInd, numFilt = 1, deferGpuSum = 0, flags = 0;
+  int numReadouts, notOK, newIndex, faInd, numFilt = 1, deferGpuSum = 0, flags = 0;
   int frameSizeX, frameSizeY, numAliFrames, frameStartEnd = 0;
   int DMind = CAMP_DM_INDEX(mParam);
+  int K2Type = mParam->K2Type;
   double maxMemory = pow(1024., 3.) * mK2MaxRamStackGB;
   LowDoseParams *ldParam = mWinApp->GetLowDoseParams();
   FrameAliParams faParam;
@@ -3704,8 +3787,8 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
   bool gainNormed = conSet.processing == GAIN_NORMALIZED;
   bool reducingSuperRes = saving && mSaveSuperResReduced && isSuperRes && gainNormed &&
      CAN_PLUGIN_DO(CAN_REDUCE_SUPER, mParam) && 
-     !(mTakeK3SuperResBinned && mParam->K2Type == K3_TYPE);
-  bool savingTimes100 = saving && mSaveTimes100 && mParam->K2Type != K3_TYPE &&
+     !(mTakeK3SuperResBinned && K2Type == K3_TYPE);
+  bool savingTimes100 = saving && mSaveTimes100 && K2Type && K2Type != K3_TYPE &&
     gainNormed && CAN_PLUGIN_DO(SAVES_TIMES_100, mParam) && !reducingSuperRes;
   CString mess;
   if (aligning) {
@@ -3781,34 +3864,36 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
   int reflen = 0, comlen = 0, defectLen = 0, sumLen = 0, titleLen = 0;
   int alignFlags = 0, gpuFlags = 0, aliRefLen = 0, aliComLen, dataSize;
   CString refFile, sumList, tmpStr, aliComName;
-  if (isSuperRes || mParam->K2Type == K3_TYPE)
-    refFile = mParam->superResRefForK2;
-  else if (conSet.K2ReadMode == COUNTING_MODE)
-    refFile = mParam->countingRefForK2;
-  if (mUseK3CorrDblSamp && CanK3DoCorrDblSamp(mParam))
-    refFile.Replace(".m1.", ".m3.");
-  if (mSaveRawPacked & 1)
-    flags |= K2_SAVE_RAW_PACKED;
-  if ((mSaveRawPacked & 1) && (mSaveRawPacked & 2) && 
+  if (K2Type) {
+    if (isSuperRes || K2Type == K3_TYPE)
+      refFile = mParam->superResRefForK2;
+    else if (conSet.K2ReadMode == COUNTING_MODE)
+      refFile = mParam->countingRefForK2;
+    if (mUseK3CorrDblSamp && CanK3DoCorrDblSamp(mParam))
+      refFile.Replace(".m1.", ".m3.");
+    if (mSaveRawPacked & 1)
+      flags |= K2_SAVE_RAW_PACKED;
+    if ((mSaveRawPacked & 1) && (mSaveRawPacked & 2) &&
       CAN_PLUGIN_DO(4BIT_101_COUNTING, mParam))
-    flags |= K2_RAW_COUNTING_4BIT;
-  if ((mSaveRawPacked & 1) && mUse4BitMrcMode && !mK2SaveAsTiff &&
+      flags |= K2_RAW_COUNTING_4BIT;
+    if ((mSaveRawPacked & 1) && mUse4BitMrcMode && !mK2SaveAsTiff &&
       CAN_PLUGIN_DO(4BIT_101_COUNTING, mParam))
-    flags |= K2_SAVE_4BIT_MRC_MODE;
-  if (savingTimes100)
-    flags |= K2_SAVE_TIMES_100;
-  if (reducingSuperRes)
-    flags |= K2_SAVE_SUPER_REDUCED;
-  if (!refFile.IsEmpty()) {
-    flags |= K2_COPY_GAIN_REF;
-    reflen = refFile.GetLength() + 1;
-    nameSize += reflen;
+      flags |= K2_SAVE_4BIT_MRC_MODE;
+    if (savingTimes100)
+      flags |= K2_SAVE_TIMES_100;
+    if (reducingSuperRes)
+      flags |= K2_SAVE_SUPER_REDUCED;
+    if (!refFile.IsEmpty()) {
+      flags |= K2_COPY_GAIN_REF;
+      reflen = refFile.GetLength() + 1;
+      nameSize += reflen;
 
-    // Older plugin copied if flag set regardless of DS versus unproc
-    if (!gainNormed) {
-      alignFlags |= K2_COPY_GAIN_REF;
-      stringSize += reflen;
-      aliRefLen = reflen;
+      // Older plugin copied if flag set regardless of DS versus unproc
+      if (!gainNormed) {
+        alignFlags |= K2_COPY_GAIN_REF;
+        stringSize += reflen;
+        aliRefLen = reflen;
+      }
     }
   }
   if (mK2SaveAsTiff == 1)
@@ -3821,14 +3906,14 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
   }
   if (mSkipK2FrameRotFlip && mParam->rotationFlip)
     flags |= K2_SKIP_FRAME_ROTFLIP;
-  if ((saving || aligning) && !gainNormed && 
+  if ((saving || aligning) && !gainNormed && K2Type &&
     mDMversion[DMind] >= DM_RETURNS_DEFECT_LIST) {
 
       // Check for a new reference if enough idle time has passed and if it is new,
       // fetch a new defect list and merge it into original list; but not for K3
       if (SEMTickInterval(1000. * mLastImageTime) / 1000. > mGainTimeLimit &&
         mWinApp->mGainRefMaker->IsDMReferenceNew(mWinApp->GetCurrentCamera()) &&
-        mParam->K2Type != K3_TYPE) {
+        K2Type != K3_TYPE) {
           SEMTrace('r', "Getting new defect list");
           GetMergeK2DefectList(CAMP_DM_INDEX(mParam), mParam, true);
           mParam->defectString.clear();
@@ -3874,19 +3959,30 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
     comlen = mPostSaveCommand.GetLength() + 1;
     nameSize += comlen;
   }
-  if (saving && conSet.sumK2Frames && conSet.summedFrameList.size() >
-      0 && CAN_PLUGIN_DO(CAN_SUM_FRAMES, mParam)) {
+  if (saving && CAN_PLUGIN_DO(CAN_SUM_FRAMES, mParam)) {
+    numReadouts = B3DNINT(mTD.FrameTime / GetK2ReadoutInterval(mParam));
+    if ((K2Type && conSet.sumK2Frames && conSet.summedFrameList.size() > 0) ||
+      (mParam->OneViewType && mScope->GetSimulationMode() && numReadouts > 1)) {
       flags |= K2_SAVE_SUMMED_FRAMES;
-      for (int frm = 0; frm < (int)conSet.summedFrameList.size() / 2; frm++) {
-        tmpStr.Format("%d %d", conSet.summedFrameList[frm *2], 
-          conSet.summedFrameList[frm * 2 + 1]);
-        if (frm)
-          sumList += " ";
-        sumList += tmpStr;
+      if (K2Type) {
+        for (int frm = 0; frm < (int)conSet.summedFrameList.size() / 2; frm++) {
+          tmpStr.Format("%d %d", conSet.summedFrameList[frm * 2],
+            conSet.summedFrameList[frm * 2 + 1]);
+          if (frm)
+            sumList += " ";
+          sumList += tmpStr;
+        }
+      } else {
+
+        // Oneview simulator does not give longer frames than the minimum: acquire sums
+        sumList.Format("%d %d", B3DNINT(conSet.exposure / mTD.FrameTime), numReadouts);
+        mTD.FrameTime /= numReadouts;
       }
       sumLen = sumList.GetLength() + 1;
       nameSize += sumLen;
+    }
   }
+
   if (saving && CAN_PLUGIN_DO(CAN_ADD_TITLE, mParam)) {
     tmpStr = mWinApp->mDocWnd->GetFrameTitle();
     if (!tmpStr.IsEmpty()) {
@@ -3987,21 +4083,21 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
       //sReadModes[mTD.iReadMode] != K2_LINEAR_READ_MODE && processing == GAIN_NORMALIZED;
 
       // Set the flag and let the plugin sort it out...
-      if (faParam.keepPrecision && mParam->K2Type != K3_TYPE)
+      if (faParam.keepPrecision && K2Type == K2_SUMMIT)
         alignFlags |= K2FA_KEEP_PRECISION;
 
       // But anticipate that the plugin will pass floats to GPU only if user really wants
-      if (mParam->K2Type == K3_TYPE)
+      if (K2Type == K3_TYPE)
         dataSize = 1;
-      else if (gainNormed && faParam.keepPrecision && !savingTimes100)
+      else if (K2Type && gainNormed && faParam.keepPrecision && !savingTimes100)
         dataSize = 4;
       else
         dataSize = isSuperRes ? 1 : 2;
 
       // Evaluate all memory needs
       totAliMem = UtilEvaluateGpuCapability(frameSizeX, 
-        frameSizeY, dataSize, !gainNormed, (alignFlags & K2_SAVE_DEFECTS) != 0, 
-        conSet.binning / (isSuperRes ? 1 : 2), 
+        frameSizeY, dataSize, K2Type && !gainNormed, 
+        (alignFlags & K2_SAVE_DEFECTS) != 0, conSet.binning / (isSuperRes ? 1 : 2), 
         faParam, numAllVsAll, numAliFrames, refineIter, groupSize, numFilt, doSpline, 
         mUseGPUforK2Align[DMind] ? mGpuMemory[DMind] : 0., maxMemory, gpuFlags, 
         deferGpuSum, mGettingFRC);
@@ -4015,7 +4111,7 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
       // If writing a com file, just send any flag
       if (mUseGPUforK2Align[2])
         gpuFlags = GPU_FOR_SUMMING;
-      if (faParam.outputFloatSums)
+      if (faParam.outputFloatSums && K2Type)
         alignFlags |= K2FA_KEEP_PRECISION;
     }
     
@@ -4041,7 +4137,8 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
   // Manage flag for gain normalizing a non-norm dose frac shot
   if (((mDMversion[DMind] >= PLUGIN_CAN_GAIN_NORM && conSet.processing == DARK_SUBTRACTED)
     || (conSet.processing == UNPROCESSED && mDMversion[DMind] >= PLUGIN_UNPROC_LIKE_DS))&&
-    conSet.K2ReadMode > 0 && mNextAsyncSumFrames != 0 && reflen && !mNoNormOfDSdoseFrac) {
+    conSet.K2ReadMode > 0 && mNextAsyncSumFrames != 0 && reflen && !mNoNormOfDSdoseFrac &&
+    K2Type) {
       flags |= K2_GAIN_NORM_SUM;
       mK2GainRefTimeStamp[DMind][isSuperRes ? 1 : 0] = 
         mWinApp->MinuteTimeStamp();
@@ -4062,8 +4159,7 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
     // both; but if saving times 100, that is sufficient and it doubles only superres
     maxMemory = B3DMAX(0., maxMemory - totAliMem * pow(1024., 3.));
     if (gainNormed) {
-      if (trulyAligning && faParam.keepPrecision && !savingTimes100 && 
-        mParam->K2Type != K3_TYPE)
+      if (trulyAligning && faParam.keepPrecision && !savingTimes100 && K2Type != K3_TYPE)
         frameInGrab *= 2;
       if (savingTimes100 && isSuperRes)
         frameInGrab *= 2;
@@ -4277,13 +4373,14 @@ void CCameraController::CapManageCoordinates(ControlSet & conSet, int &gainXoffs
   int csizeX, csizeY, block, leftOffset = 0, topOffset = 0, operation = 0;
   int tLeft, tTop, tBot, tRight, tsizeX, tsizeY, reducedSizeX, reducedSizeY;
   BOOL unbinnedK2, doseFrac, superRes, antialiasInPlugin, swapXYinAcquire = false;
-  bool reduceAligned, binInPlugin;
+  bool reduceAligned, binInPlugin, oneViewTakingFrames;
 
   // Get the CCD coordinates after binning. First make sure binning is right for K2
   // and set various flags about taking images unbinned and antialiasing in plugin
   superRes = IS_SUPERRES(mParam, conSet.K2ReadMode) && 
     !IsK3BinningSuperResFrames(&conSet, mParam);
-  doseFrac = mParam->K2Type && conSet.doseFrac;
+  oneViewTakingFrames = mParam->OneViewType && mParam->canTakeFrames && conSet.doseFrac;
+  doseFrac = (mParam->K2Type && conSet.doseFrac) || oneViewTakingFrames;
   if (mParam->K2Type && !superRes && conSet.binning < 2)
     conSet.binning = 2;
   antialiasInPlugin = mParam->K2Type && CAN_PLUGIN_DO(CAN_ANTIALIAS, mParam)  
@@ -4293,7 +4390,8 @@ void CCameraController::CapManageCoordinates(ControlSet & conSet, int &gainXoffs
   binInPlugin = mParam->K2Type == K3_TYPE && (!(doseFrac || superRes || 
      mAntialiasBinning > 0) || conSet.mode == CONTINUOUS);
    
-  reduceAligned = doseFrac && conSet.alignFrames && conSet.useFrameAlign == 1;
+  reduceAligned = mParam->K2Type && doseFrac && conSet.alignFrames && 
+    conSet.useFrameAlign == 1;
   unbinnedK2 = mParam->K2Type && (superRes || doseFrac || antialiasInPlugin);
   mBinning = conSet.binning;
   mLeft = conSet.left / mBinning;
@@ -4395,6 +4493,8 @@ void CCameraController::CapManageCoordinates(ControlSet & conSet, int &gainXoffs
       swapXYinAcquire = doseFrac && mParam->rotationFlip % 2;
     }
   }
+  if (oneViewTakingFrames)
+    swapXYinAcquire = mParam->rotationFlip % 2;
 
   SEMTrace('T', "Size & LRTB, user: %d %d %d %d %d %d\r\n     mTD: %d %d %d %d %d %d   "
     "gain offset %d %d", mDMsizeX, mDMsizeY, mLeft, mRight, mTop, mBottom, tsizeX, tsizeY,
@@ -4438,7 +4538,8 @@ void CCameraController::CapManageCoordinates(ControlSet & conSet, int &gainXoffs
 
   // For oneView, throw the flag to take a subarea if plugin can do this and it is indeed
   // a subarea
-  if ((mParam->OneViewType || (mParam->K2Type == K3_TYPE && !conSet.doseFrac && 
+  if (((mParam->OneViewType && !oneViewTakingFrames) || 
+    (mParam->K2Type == K3_TYPE && !conSet.doseFrac && 
     !(mParam->coordsModulo && mParam->moduloX && mParam->moduloX % 32 == 0 && 
     mParam->moduloY && mParam->moduloY % 16 == 0)))
     && !mParam->subareasBad && (tsizeX < csizeX / mBinning || tsizeY < csizeY / mBinning))
@@ -4923,6 +5024,7 @@ int CCameraController::CapManageDarkGainRefs(ControlSet & conSet, int inSet,
                                              int gainYoffset)
 {
   int refErr;
+  bool frameAliNeedsFloat = false;
 
   // If dark ref once only selected, then set forcedark flag and clear in the conset
   if (mConSetsp[inSet].onceDark) {
@@ -4958,6 +5060,10 @@ int CCameraController::CapManageDarkGainRefs(ControlSet & conSet, int inSet,
       }
 
       float minRefExp = B3DMAX(mParam->minExposure, mMinInterpRefExp);
+      frameAliNeedsFloat = mAligningPluginFrames && !mSavingPluginFrames &&
+        conSet.processing == GAIN_NORMALIZED &&
+        (mRight + mLeft) * mBinning / 2 == mParam->sizeX / 2 &&
+        (mBottom + mTop) * mBinning / 2 == mParam->sizeY / 2;
 
       // Look through array of references for ones that match
       for (int i = 0; i < mRefArray.GetSize(); i++) {
@@ -4966,8 +5072,14 @@ int CCameraController::CapManageDarkGainRefs(ControlSet & conSet, int inSet,
           ref->GainDark == GAIN_REFERENCE && gainXoffset == ref->xOffset &&
           gainYoffset == ref->yOffset && mTD.Camera == ref->Camera && 
           mBinning == ref->Binning) {
-          mGainp = ref;
-          ref->UseCount = mUseCount;
+
+          // Remove a short reference if a float is needed, otherwise accept it
+          if (frameAliNeedsFloat && ref->ByteSize == 2) {
+            DeleteOneReference(i--);
+          } else {
+            mGainp = ref;
+            ref->UseCount = mUseCount;
+          }
         }
         if (ref->GainDark == DARK_REFERENCE && mTD.Camera == ref->Camera && 
           mBinning == ref->Binning && mDelay == ref->Delay && mTop == ref->Top &&
@@ -5010,7 +5122,7 @@ int CCameraController::CapManageDarkGainRefs(ControlSet & conSet, int inSet,
         // out if it is not a Gatan camera
         if ((refErr = mWinApp->mGainRefMaker->GetReference(mBinning, mGainp->Array, 
           mGainp->ByteSize, mGainp->GainRefBits, mGainp->Ownership, gainXoffset, 
-          gainYoffset))) {
+          gainYoffset, frameAliNeedsFloat))) {
           if (!mParam->GatanCam || refErr < 0) {
             delete mGainp;
             SEMMessageBox("There is no gain reference for this camera at this"
@@ -5533,8 +5645,8 @@ int CCameraController::DESumCountForConstraints(CameraParameters *camP, ControlS
  return 1;
 }
 
-// The underlying constraint routine.  doseFrac is relevant only for K2, alignInCamera
-// only for Falcon, sumCount only for DE
+// The underlying constraint routine.  doseFrac is relevant only for K2 and generic 
+// frame-saving camera, alignInCamera only for Falcon, sumCount only for DE
 bool CCameraController::ConstrainExposureTime(CameraParameters *camP, BOOL doseFrac,
   int readMode, int binning, bool alignInCamera, int sumCount, float &exposure, 
   float &frameTime)
@@ -5550,7 +5662,7 @@ bool CCameraController::ConstrainExposureTime(CameraParameters *camP, BOOL doseF
     retval = true;
   }
   if (!camP->K2Type && !IS_FALCON2_OR_3(camP) && !mWinApp->mDEToolDlg.HasFrameTime(camP)
-    && !camP->OneViewType) 
+    && !camP->OneViewType && !(camP->canTakeFrames && doseFrac))
     return retval;
   
   // Both K2 and Falcon round to nearest number of frames for a given exposure time;
@@ -5567,7 +5679,7 @@ bool CCameraController::ConstrainExposureTime(CameraParameters *camP, BOOL doseF
 
       // TODO: Is this doubled for CDS?
     } else if (camP->K2Type == K3_TYPE) {
-      baseTime = readMode == LINEAR_MODE ? mBaseK3LinearTime :  mBaseK3SuperResTime;
+      baseTime = readMode == LINEAR_MODE ? mBaseK3LinearTime : mBaseK3SuperResTime;
     } else if (readMode == COUNTING_MODE) {
       baseTime = mBaseK2CountingTime;
     } else if (readMode == SUPERRES_MODE) {
@@ -5576,10 +5688,17 @@ bool CCameraController::ConstrainExposureTime(CameraParameters *camP, BOOL doseF
       baseTime = mBaseK2CountingTime;
     }
     mLastK2BaseTime = baseTime;
+  } else if (camP->canTakeFrames && doseFrac) {
+
+    // Generic camera taking frames (including oneview)
+    if (ConstrainFrameTime(frameTime, camP, binning, camP->OneViewType ? readMode : 0))
+      retval = true;
+    baseTime = frameTime;
   } else if (camP->OneViewType) {
 
     // OneView 
     ovInd = camP->OneViewType - 1;
+    B3DCLAMP(ovInd, 0, MAX_1VIEW_TYPES - 1);
     baseTime = B3DMAX(0.0001f, mOneViewDeltaExposure[ovInd][0]);
     minExp = B3DMAX(0.0001f, mOneViewMinExposure[ovInd][0]);
     for (num = 0; num < camP->numBinnings; num++) {
@@ -5589,6 +5708,12 @@ bool CCameraController::ConstrainExposureTime(CameraParameters *camP, BOOL doseF
       minExp = mOneViewMinExposure[ovInd][num];
       if (camP->binnings[num] == binning)
         break;
+    }
+
+    // UNVERIFIED: constraints are times 4 for diffraction mode
+    if (readMode > 0) {
+      baseTime *= 4;
+      minExp *= 4;
     }
     if (exposure < minExp) {
       exposure = minExp;
@@ -5646,13 +5771,14 @@ bool CCameraController::IsDirectDetector(CameraParameters *camP)
 }
 
 // Constrain a frame time for the K2 camera and return true if changed
-bool CCameraController::ConstrainFrameTime(float &frameTime, CameraParameters *camP)
+bool CCameraController::ConstrainFrameTime(float &frameTime, CameraParameters *camP,
+  int binning, int special)
 {
   float ftime = frameTime;
-  int K2Type = camP->K2Type;
-  int num = B3DNINT(frameTime / (GetK2ReadoutInterval(camP)));
-  frameTime = (float)(num * GetK2ReadoutInterval(camP));
-  B3DCLAMP(frameTime, GetMinK2FrameTime(camP), 10.f);
+  float divisor = GetK2ReadoutInterval(camP, binning, special);
+  int num = B3DNINT(frameTime / divisor);
+  frameTime = (float)(num * divisor);
+  B3DCLAMP(frameTime, GetMinK2FrameTime(camP, binning, special), 10.f);
   return fabs(frameTime - ftime) > 1.e-5;
 }
 
@@ -5715,18 +5841,53 @@ bool CCameraController::CanK3DoCorrDblSamp(CameraParameters * param)
     ((mDMversion[DMind] == DM_VERSION_WITH_CDS && mDMbuild[DMind] >= DM_BUILD_WITH_CDS) ||
       mDMversion[DMind] > DM_VERSION_WITH_CDS);
 }
-float CCameraController::GetMinK2FrameTime(CameraParameters *param)
+
+// Returns minimum frame time for a K2/K3 OR for a generic frame-taking camera
+float CCameraController::GetMinK2FrameTime(CameraParameters *param, int binning, 
+  int special)
 { 
-  float CDSfac = 1.f;
+  float time, CDSfac = 1.f;
+  if (param->canTakeFrames) {
+    time = FindConstraintForBinning(param, binning, &param->minFrameTime[0]);
+    if (param->OneViewType && special)
+      time *= 4.f;
+    return time;
+  }
   return B3DCHOICE(param->K2Type == K3_TYPE, CDSfac * mMinK3FrameTime, mMinK2FrameTime);
 };
 
-float CCameraController::GetK2ReadoutInterval(CameraParameters *param)
+// Returns the basic readout interval for K2/K3, OR whatever frame times must be multiple
+// of for a frame-taking camera
+float CCameraController::GetK2ReadoutInterval(CameraParameters *param, int binning, 
+  int special)
 { 
-  float CDSfac = (CanK3DoCorrDblSamp(param) && mUseK3CorrDblSamp) ? 2.f : 1.f;
-  return B3DCHOICE(param->K2Type == K3_TYPE, CDSfac * mK3ReadoutInterval, 
+  float time, CDSfac = (CanK3DoCorrDblSamp(param) && mUseK3CorrDblSamp) ? 2.f : 1.f;
+  if (param->canTakeFrames) {
+    time = FindConstraintForBinning(param, binning, &param->frameTimeDivisor[0]);
+    if (param->OneViewType && special)
+      time *= 4.f;
+    return time;
+  }
+  return B3DCHOICE(param->K2Type == K3_TYPE, CDSfac * mK3ReadoutInterval,
     mK2ReadoutInterval);
 };
+
+// The times array may have one time or a time per binning, or stop before all the
+// binnings.  The routine finds the time that applies to the given binning
+float CCameraController::FindConstraintForBinning(CameraParameters *param, int binning,
+  float *times)
+{
+  int ind, lastInd = 0;
+  for (ind = 0; ind < param->numBinnings; ind++) {
+    if (times[ind])
+      lastInd = ind;
+    else
+      break;
+    if (param->binnings[ind] >= binning)
+      break;
+  }
+  return times[lastInd];
+}
 
 // For cameras with no special handling, fix and transfer the drift settling entry
 void CCameraController::ConstrainDriftSettling(float drift)
@@ -5837,10 +5998,7 @@ int CCameraController::AddRefToArray(DarkRef *newRef)
     memTot -= ref->SizeX * ref->SizeY * ref->ByteSize;
     if (ref->GainDark == DARK_REFERENCE)
       numDarks[ref->Camera][ref->ConSetUsed]--;
-    if (ref->Array)
-      delete ref->Array;
-    delete ref;
-    mRefArray.RemoveAt(oldest);
+    DeleteOneReference(oldest);
     numOlder--;
   }
 
@@ -5858,16 +6016,23 @@ int CCameraController::DeleteReferences(int type, bool onlyDMRefs)
       // If removing only DM refs, skip unless ownership is -1
       if (onlyDMRefs && ref->Ownership >= 0)
         continue;
-
-      // Delete array only if we own it
-      if (ref->Array && ref->Ownership)
-        delete ref->Array;
-      delete ref;
-      mRefArray.RemoveAt(i--);
+      DeleteOneReference(i--);
       total++;
     }
   }
   return total;
+}
+
+// Delete one reference from array at given index
+void CCameraController::DeleteOneReference(int index)
+{
+  DarkRef *ref = mRefArray[index];
+
+  // Delete array only if we own it
+  if (ref->Array && ref->Ownership)
+    delete ref->Array;
+  delete ref;
+  mRefArray.RemoveAt(index);
 }
 
 ///////////////////////////////////////////////////////
@@ -6356,6 +6521,12 @@ void CCameraController::StartAcquire()
         mParam->darkXRayNumSDCrit, mParam->darkXRayBothCrit, mDebugMode);
       arrSize = ref->SizeX * ref->SizeY;
       sdata = (short *)ref->Array;
+
+      // Divide "dark reference" to make it smaller in simulation mode
+      if (mScope->GetSimulationMode() && ref->ByteSize == 2) {
+        for (i = 0; i < ref->SizeX * ref->SizeY; i++)
+          *sdata++ /= 8;
+      }
       if (mDarkMaxMeanCrit > 0. || mDarkMaxSDcrit > 0. && arrSize > 100) {
 
         // If testing either mean or SD, get central 80% mean/SD
@@ -6824,7 +6995,7 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
                 if (td->GatanReadMode == -1) {
                   CallGatanCamera(pGatan, SetReadMode(td->GatanReadMode, 
                     td->CountScaling));
-                } else if (td->GatanReadMode < 0) {
+                } else if (td->GatanReadMode < 0 && !td->DoseFrac) {
                   CallGatanCamera(pGatan, SetK2Parameters2(td->GatanReadMode, 
                     td->CountScaling, 0, 0, 0., 0, 0, 0, td->K2ParamFlags,
                     td->DMSizeX + K2_REDUCED_Y_SCALE * td->DMSizeY, 
@@ -6846,7 +7017,7 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
                 &td->DMSizeX, &td->DMSizeY, td->ProcessingPlus, td->Exposure, td->Binning, 
                 td->Top, td->Left, td->Bottom, td->Right, td->ShutterMode,
                 td->DMsettling, shutterDMticks, td->DivideBy2, td->Corrections));
-              if (td->NeedsReadMode && td->GatanReadMode >= 0 && td->DoseFrac && 
+              if (td->NeedsReadMode && td->GatanReadMode != -1 && td->DoseFrac && 
                 (td->SaveFrames || td->UseFrameAlign)) {
                   imageOK = true;
                   if (td->SaveFrames) {
@@ -7026,9 +7197,13 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
       retval = GetArrayForImage(td, arrSize, chan);
 
     if (!retval) {
-      AcquirePluginImage(td, (void **)td->Array, arrSize, td->ProcessingPlus, 
-        td->DMsettling, startBlanker, sizeX,
-        sizeY, retval, numCopied);
+      if (td->DoseFrac) {
+        retval = td->plugFuncs->SetupFrameAcquire(td->FrameTime, td->ReadoutsPerFrame, 0,
+          0);
+      }
+      if (!retval)
+        AcquirePluginImage(td, (void **)td->Array, arrSize, td->ProcessingPlus,
+          td->DMsettling, startBlanker, sizeX, sizeY, retval, numCopied);
       if (retval) {
         report.Format("Error %d setting parameters or getting image from plugin"
           " camera", retval);
@@ -7998,6 +8173,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
   int curCam = mWinApp->GetCurrentCamera();
   float pixelSize = (float)(mBinning * 10000. * 
     mShiftManager->GetPixelSize(curCam, mMagBefore));
+  bool oneViewTakingFrames = mParam->OneViewType && mParam->canTakeFrames && mTD.DoseFrac;
 
   mAcquiring = false;
   mShotIncomplete = false;
@@ -8129,11 +8305,12 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       mTD.DE_Cam->SetImageExtraData(mExtraDeferred, mDESetNameTimeoutUsed, false, 
         nameConfirmed);
 
-      // If name was availble, proceed to start the align
+      // If name was available, proceed to start the align
       if (nameConfirmed) {
         mStartedExtraForDEalign = !mFalconHelper->AlignFramesFromFile(
-          mExtraDeferred->mSubFramePath, mConSetsp[mLastConSet], mParam->rotationFlip, 
+          mExtraDeferred->mSubFramePath, mConSetsp[mLastConSet], mParam->rotationFlip,
           mTD.DivideBy2, (float)mTD.CountScaling, ix, &mTD);
+
         if (mStartedExtraForDEalign) {
           mWinApp->SetStatusText(SIMPLE_PANE, "ALIGNING " + CurrentSetName().MakeUpper());
           mInDisplayNewImage = false;
@@ -8147,6 +8324,26 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       mExtraDeferred = NULL;
     }
 
+    // Similarly handle saving/aligning plugin frames
+    if ((mSavingPluginFrames || mAligningPluginFrames) && !mStartedFalconAlign) {
+      if (mSavingPluginFrames) {
+        mPathForFrames.Format("%s%s%s.mrc", (LPCTSTR)mFrameFolder,
+          mFrameFolder.IsEmpty() ? "" : "\\", (LPCTSTR)mFrameFilename);
+        mTD.NumFramesSaved = B3DNINT(mTD.Exposure / mTD.FrameTime);
+      }
+      mTD.ErrorFromSave = mFalconHelper->ProcessPluginFrames(mFrameFolder,
+        mFrameFilename, mConSetsp[mLastConSet], mSavingPluginFrames,
+        mAligningPluginFrames,
+        (mTD.K2ParamFlags & K2_MAKE_ALIGN_COM) ? lastConSetp->faParamSetInd : -1,
+        mDivBy2ForImBuf, pixelSize, &mTD);
+      mStartedFalconAlign = !mTD.ErrorFromSave && mAligningPluginFrames;
+      if (mStartedFalconAlign) {
+        mWinApp->SetStatusText(SIMPLE_PANE, "ALIGNING " + CurrentSetName().MakeUpper());
+        mInDisplayNewImage = false;
+        return;
+      }
+    }
+
     // Remove the frame file if only alignment in FEI was selected in the interface
     if (mRemoveFEIalignedFrames) {
       str = mLocalFalconFramePath;
@@ -8157,12 +8354,14 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       UtilRemoveFile(str + ".mrc");
       UtilRemoveFile(str + ".xml");
     }
-    if ((mAligningFalconFrames || mDoingDEframeAlign == 1) && 
+    if ((mAligningFalconFrames || mDoingDEframeAlign == 1 || mAligningPluginFrames) &&
       mFalconHelper->GetAlignSubset()) {
         mNumSubsetAligned = mFalconHelper->GetNumAligned();
         mAlignStart = mFalconHelper->GetAlignStart();
         mAlignEnd = mFalconHelper->GetAlignEnd();
     }
+
+    // PROCESSING OF ACQUIRED IMAGE(S)
 
     if (acquired) {
       TestGainFactor((short *)mTD.Array[chan], mTD.DMSizeX, mTD.DMSizeY, mTD.Binning);
@@ -8186,11 +8385,11 @@ void CCameraController::DisplayNewImage(BOOL acquired)
             SEMMessageBox("Failed to get memory for processing STEM image", MB_EXCLAME);
         }
         
-      } else if (mParam->K2Type &&  mTD.NumAsyncSumFrames == 0) {
-      } else if (mParam->K2Type) {
+      } else if ((mParam->K2Type || oneViewTakingFrames) &&  mTD.NumAsyncSumFrames == 0) {
+      } else if (mParam->K2Type || oneViewTakingFrames) {
 
         // Get the adjusted binning of the data
-        if ((mTD.GatanReadMode != SUPERRES_MODE && mTD.GatanReadMode != 
+        if ((mParam->K2Type && mTD.GatanReadMode != SUPERRES_MODE && mTD.GatanReadMode !=
           K3_COUNTING_SET_MODE) || IsK3BinningSuperResFrames(lastConSetp, mParam))
             mTD.Binning *= 2;
         if (mTD.DoseFrac) {
@@ -8286,46 +8485,12 @@ void CCameraController::DisplayNewImage(BOOL acquired)
 
       } else if (!mSimulationMode && mTD.Processing != lastConSetp->processing){
 
-        // If processing needed, first dark subtract or gain correct, then correct defects
-        if (mTD.DMSizeX == mDarkp->SizeX && mTD.DMSizeY == mDarkp->SizeY) {
-          short *array2 = NULL;
-          double exp2 = 0.;
-          double wallstart = wallTime();
-          if (mDarkAbove) {
-            mDarkp = mDarkBelow;
-            array2 = (short int *)mDarkAbove->Array;
-            exp2 = mDarkAbove->Exposure;
-          }
-          if (lastConSetp->processing == DARK_SUBTRACTED) {
-            ProcDarkSubtract(mTD.Array[chan], mTD.ImageType, mTD.DMSizeX, mTD.DMSizeY, 
-              (short *)mDarkp->Array, mDarkp->Exposure, array2, exp2, mExposure);
-          } else {
-            ProcGainNormalize(mTD.Array[chan], mTD.ImageType, mGainp->SizeX, mTop, mLeft,
-              mBottom, mRight, (short *)mDarkp->Array, mDarkp->Exposure, array2, exp2, 
-              mExposure, mGainp->Array, mGainp->ByteSize, mGainp->GainRefBits);
-          }
-
-          // Keep this processing here in case there is defect correction right at the
-          // boundary
-          if ((mTD.ProcessingPlus & CONTINUOUS_USE_THREAD) && mParam->balanceHalves) {
-            ix = mParam->ifHorizontalBoundary ? mParam->sizeY : mParam->sizeX;
-            ixoff = (mParam->halfBoundary - ix / 2) / mBinning + (ix / 2) / mBinning;
-            ProcBalanceHalves(mTD.Array[chan], mTD.ImageType, mTD.DMSizeX, mTD.DMSizeY,
-              mTop, mLeft, ixoff, mParam->ifHorizontalBoundary);
-          }
-          CorDefCorrectDefects(&mParam->defects, mTD.Array[chan], mTD.ImageType, 
-            mBinning, mTop, mLeft, mBottom, mRight);
-          if (lastConSetp->removeXrays)
-            mWinApp->mProcessImage->RemoveXRays(mParam, mTD.Array[chan], mTD.ImageType, 
-            mBinning, mTop, mLeft, mBottom, mRight, mParam->imageXRayAbsCrit, 
-            mParam->imageXRayNumSDCrit, mParam->imageXRayBothCrit, mDebugMode);
-
-        } else 
-          SEMMessageBox("The image is not the expected size so\nit has not been"
-          "processed", MB_EXCLAME);
+        ProcessImageOrFrame(mTD.Array[chan], lastConSetp->processing, 
+          lastConSetp->removeXrays);
+ 
       } else if ((mTD.ProcessingPlus & CONTINUOUS_USE_THREAD) && mParam->balanceHalves) {
 
-        // But also balance halves if needed and it normalized in DM
+        // Also balance halves if needed and it normalized in DM
         ix = mParam->ifHorizontalBoundary ? mParam->sizeY : mParam->sizeX;
         ixoff = (mParam->halfBoundary - ix / 2) / mBinning + (ix / 2) / mBinning;
         ProcBalanceHalves(mTD.Array[chan], mTD.ImageType, mTD.DMSizeX, mTD.DMSizeY,
@@ -8336,7 +8501,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
         CorDefCorrectDefects(&mParam->defects, mTD.Array[chan], mTD.ImageType, 
           mBinning, mTop, mLeft, mBottom, mRight);
       }
-      if (mParam->OneViewType && mTD.Corrections > 0 && 
+      if (mParam->OneViewType && !oneViewTakingFrames && mTD.Corrections > 0 && 
         (mTD.Corrections & OVW_DRIFT_CORR_FLAG) != 0) {
           int analyzeLen = B3DMAX(1024, B3DMAX(mTD.DMSizeY, mTD.DMSizeX) / 4);
           int width = mBinning > 1 ? 30 : 60;
@@ -8433,7 +8598,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
           mFalconHelper->GetNumFiles());
       else 
         partialExposure = mFalconHelper->AlignedSubsetExposure(
-          lastConSetp->summedFrameList, mParam->K2Type ? 
+          lastConSetp->summedFrameList, (mParam->K2Type || oneViewTakingFrames) ? 
           lastConSetp->frameTime : mFalconReadoutInterval, mAlignStart, mAlignEnd);
     }
 
@@ -8640,11 +8805,11 @@ void CCameraController::DisplayNewImage(BOOL acquired)
 
     // Now start using current values to update extra for a deferred sum
 
-    // Report the fate of frame-saving for K2 and Falcon
+    // Report the fate of frame-saving for K2, Oneview, Falcon and plugin
     if (IsConSetSaving(lastConSetp, mLastConSet, mParam, true) || 
-      (mSavingFalconFrames && !mDeferStackingFrames)) {
+      (mSavingFalconFrames && !mDeferStackingFrames) || mSavingPluginFrames) {
         if (mTD.NumAsyncSumFrames >= 0) {
-          mTD.NumFramesSaved = B3DNINT(mExposure / mTD.FrameTime);
+          mTD.NumFramesSaved = B3DNINT(mExposure / lastConSetp->frameTime);
           mTD.ErrorFromSave = 0;
           if (lastConSetp->sumK2Frames && lastConSetp->summedFrameList.size() > 0 &&
             CAN_PLUGIN_DO(CAN_SUM_FRAMES, mParam))
@@ -8662,8 +8827,9 @@ void CCameraController::DisplayNewImage(BOOL acquired)
             mFalconHelper->GetErrorString(mTD.ErrorFromSave));
           if (mTD.NumFramesSaved)
             str.Format(" %d frames %s saved to %s", mTD.NumFramesSaved, 
-            (mTD.NumAsyncSumFrames < 0 && (!(mSavingFalconFrames && mFalconAsyncStacking)
-            || mAligningFalconFrames)) ? "were" : "are being", (LPCTSTR)mPathForFrames);
+            (mTD.NumAsyncSumFrames < 0 && ((!(mSavingFalconFrames && mFalconAsyncStacking)
+            && !mSavingPluginFrames) || mAligningFalconFrames || mAligningPluginFrames)) ?
+              "were" : "are being", (LPCTSTR)mPathForFrames);
           else
             str = "No frames were saved";
           message += str;
@@ -8956,6 +9122,65 @@ void CCameraController::DisplayNewImage(BOOL acquired)
   // Check if doing repeated captures
   if (mRepFlag >= 0)
     Capture(mRepFlag);
+}
+
+// Do defect correct and gain normalization for an image or frame being saved
+void CCameraController::ProcessImageOrFrame(short *array, int processing, int removeXrays)
+{
+  int ix, ixoff;
+  short *array2 = NULL;
+  double exp2 = 0.;
+  double wallstart = wallTime();
+
+  // If processing needed, first dark subtract or gain correct, then correct defects
+  if (mTD.DMSizeX == mDarkp->SizeX && mTD.DMSizeY == mDarkp->SizeY) {
+    if (mDarkAbove) {
+      mDarkp = mDarkBelow;
+      array2 = (short int *)mDarkAbove->Array;
+      exp2 = mDarkAbove->Exposure;
+    }
+    if (processing == DARK_SUBTRACTED) {
+      ProcDarkSubtract(array, mTD.ImageType, mTD.DMSizeX, mTD.DMSizeY,
+        (short *)mDarkp->Array, mDarkp->Exposure, array2, exp2, mExposure);
+    } else {
+      ProcGainNormalize(array, mTD.ImageType, mGainp->SizeX, mTop, mLeft,
+        mBottom, mRight, (short *)mDarkp->Array, mDarkp->Exposure, array2, exp2,
+        mExposure, mGainp->Array, mGainp->ByteSize, mGainp->GainRefBits);
+    }
+
+    // Keep this processing here in case there is defect correction right at the
+    // boundary
+    if ((mTD.ProcessingPlus & CONTINUOUS_USE_THREAD) && mParam->balanceHalves) {
+      ix = mParam->ifHorizontalBoundary ? mParam->sizeY : mParam->sizeX;
+      ixoff = (mParam->halfBoundary - ix / 2) / mBinning + (ix / 2) / mBinning;
+      ProcBalanceHalves(array, mTD.ImageType, mTD.DMSizeX, mTD.DMSizeY,
+        mTop, mLeft, ixoff, mParam->ifHorizontalBoundary);
+    }
+    CorDefCorrectDefects(&mParam->defects, array, mTD.ImageType,
+      mBinning, mTop, mLeft, mBottom, mRight);
+    if (removeXrays)
+      mWinApp->mProcessImage->RemoveXRays(mParam, array, mTD.ImageType,
+        mBinning, mTop, mLeft, mBottom, mRight, mParam->imageXRayAbsCrit,
+        mParam->imageXRayNumSDCrit, mParam->imageXRayBothCrit, mDebugMode);
+
+  } else
+    SEMMessageBox("The image is not the expected size so\nit has not been"
+      "processed", MB_EXCLAME);
+}
+
+bool CCameraController::CanFramealignProcessSubarea(ControlSet *lastConSetp,
+  DarkRef **darkp, DarkRef **gainp) 
+{
+  *darkp = NULL;
+  *gainp = NULL;
+  if (lastConSetp->processing == DARK_SUBTRACTED || mDarkAbove ||
+    mDarkp->SizeX != mTD.DMSizeX || mDarkp->SizeY != mTD.DMSizeY ||
+    (mRight + mLeft) * mBinning / 2 != mParam->sizeX / 2 ||
+    (mBottom + mTop) * mBinning / 2 != mParam->sizeY / 2)
+    return false;
+  *darkp = mDarkp;
+  *gainp = mGainp;
+  return true;
 }
 
 
@@ -10597,7 +10822,9 @@ void CCameraController::ComposeFramePathAndName(bool temporary)
     } else {
 
       // Otherwise append the folder.  For DE, FrameFolder is set up by caller
-      if (!mParam->DE_camType)
+      if (mParam->canTakeFrames)
+        mFrameFolder = mParam->dirForFrameSaving;
+      else if (!mParam->DE_camType)
         mFrameFolder = B3DCHOICE(IS_BASIC_FALCON2(mParam), mDirForFalconFrames,
           mDirForK2Frames);
       if (!path.IsEmpty())
@@ -10678,27 +10905,29 @@ CString CCameraController::MakeFullDMRefName(CameraParameters *camP, const char 
   return ref;
 }
 
-// Returns true if all conditions are set for frame-saving from K2 or permanent 
-// frame-saving from Falcon or DE based on camera and control set
-bool CCameraController::IsConSetSaving(ControlSet *conSet, int setNum,
+// Returns true if all conditions are set for frame-saving from K2/OneView or permanent 
+// frame-saving from Falcon or DE based on camera and control set.  K2only includes 
+// Oneview taking frames.  This does not work for plugin cameras
+bool CCameraController::IsConSetSaving(const ControlSet *conSet, int setNum,
   CameraParameters *param, bool K2only)
 {
   bool falconCanSave;
   bool weCanAlignFalcon = CanWeAlignFalcon(param, mFrameSavingEnabled, falconCanSave);
   BOOL DEcanSave = mWinApp->mDEToolDlg.CanSaveFrames(param);
   bool weCanAlignDE = DEcanSave && (param->CamFlags & DE_WE_CAN_ALIGN);
+  bool K2Type = param->K2Type || (param->OneViewType && param->canTakeFrames);
 
   // Align is turned off during TS/script with these set, but need it for Record
   bool alignAnyway = setNum == RECORD_CONSET && 
     (mWinApp->mTSController->GetFrameAlignInIMOD() ||
     mWinApp->mMacroProcessor->GetAlignWholeTSOnly());
 
-  return (((param->K2Type && conSet->doseFrac) ||   // Saving possible for camera type
+  return (((K2Type && conSet->doseFrac) ||   // Saving possible for camera type
            ((falconCanSave || DEcanSave) && !K2only)) &&
           (((!DEcanSave && conSet->saveFrames) ||   // Ordinary saving selected
             (DEcanSave && (conSet->saveFrames & DE_SAVE_MASTER))) ||
            (conSet->useFrameAlign > 1 &&            // Or forced saving is called for
-            ((param->K2Type && CAN_PLUGIN_DO(CAN_ALIGN_FRAMES, param)) || 
+            ((K2Type && CAN_PLUGIN_DO(CAN_ALIGN_FRAMES, param)) || 
              (!K2only && (weCanAlignFalcon || weCanAlignDE))) &&
             (conSet->alignFrames || alignAnyway)))); // and align should be done
 }
@@ -10719,7 +10948,8 @@ bool CCameraController::CanSaveFrameStackMdoc(CameraParameters * param)
 {
   return (param->K2Type && CAN_PLUGIN_DO(CAN_SAVE_MDOC, param)) || (param->FEItype && 
       !(param->FEItype == FALCON3_TYPE && mLocalFalconFramePath.IsEmpty())) ||
-      (param->DE_camType && mTD.DE_Cam->ServerIsLocal());
+      (param->DE_camType && mTD.DE_Cam->ServerIsLocal() || 
+    (!param->GatanCam && (param->canTakeFrames & FRAMES_CAN_BE_SAVED)));
 }
 
 // Returns true if all conditions are satisfied for saving binned frames from K3 camera
@@ -10740,6 +10970,26 @@ bool CCameraController::IsK3BinningSuperResFrames(const ControlSet *conSet,
   return IsK3BinningSuperResFrames(param, conSet->doseFrac, conSet->saveFrames,
     conSet->alignFrames, conSet->useFrameAlign, conSet->processing, conSet->K2ReadMode,
     mTakeK3SuperResBinned);
+}
+
+// If we return here and it was waiting for stacking, turn that off and update buffer
+// windows if flag set; then test if stacking if that flag is set and turn it into a wait
+// The caller must add an appropriate idle task to return to itself
+int CCameraController::CheckFrameStacking(bool updateIfDone, bool testIfStacking)
+{
+  if (mWaitingForStacking) {
+    mWaitingForStacking = 0;
+    mWinApp->SetStatusText(SIMPLE_PANE, "");
+    if (updateIfDone)
+      mWinApp->UpdateBufferWindows();
+  }
+  if (testIfStacking && mFalconHelper->GetStackingFrames()) {
+    mWaitingForStacking = 1;
+    mWinApp->SetStatusText(SIMPLE_PANE, "WAITING FOR STACKING");
+    mWinApp->UpdateBufferWindows();
+    return 1;
+  }
+  return 0;
 }
 
 // One-time management of directory for Falcon frames
@@ -10767,12 +11017,12 @@ void CCameraController::FixDirForFalconFrames(CameraParameters *param)
 // test whether there are any entries in defect list for current camera
 bool CCameraController::DefectListHasEntries(CameraDefects * defp)
 {
-  return defp->partialBadCol.size() || defp->partialBadRow.size() ||
+  return defp != NULL && (defp->partialBadCol.size() || defp->partialBadRow.size() ||
     defp->badColumnStart.size() || defp->badRowStart.size() || defp->badPixelX.size()
     || defp->usableLeft > 0 || defp->usableTop > 0 || (defp->usableRight > 0 &&
       defp->usableRight < (mParam->sizeX / (defp->wasScaled ? 1 : 2) - 1)) ||
       (defp->usableBottom > 0 &&
-        defp->usableBottom < (mParam->sizeY / (defp->wasScaled ? 1 : 2) - 1));
+        defp->usableBottom < (mParam->sizeY / (defp->wasScaled ? 1 : 2) - 1)));
 }
 
 ////////////////////////////////////////////////////////////////////

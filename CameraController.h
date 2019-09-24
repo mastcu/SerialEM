@@ -32,7 +32,7 @@ struct CamPluginFuncs;
 #define MAX_IGNORE_GATAN 10
 #define MAX_K2_FILTERS  8
 #define MAX_FILTER_NAME_LEN 64
-#define MAX_1VIEW_TYPES   2
+#define MAX_1VIEW_TYPES   4
 #define DARK_REFERENCE  0
 #define GAIN_REFERENCE  1
 #define NEW_GAIN_REFERENCE 2
@@ -92,7 +92,7 @@ enum {EAGLE_TYPE = 1, FALCON2_TYPE, OTHER_FEI_TYPE, FALCON3_TYPE};
 enum {K2_SUMMIT = 1, K2_BASE, K3_TYPE};
 
 // This is not specific to K2, will give true for DE also
-#define IS_SUPERRES(p, ck2rm) (((p)->K2Type != K3_TYPE && (ck2rm) == SUPERRES_MODE) || \
+#define IS_SUPERRES(p, ck2rm) (((p)->K2Type == K2_SUMMIT && (ck2rm) == SUPERRES_MODE) || \
   ((p)->K2Type == K3_TYPE && (ck2rm) > LINEAR_MODE))
 
 #define DEFAULT_FEI_MIN_EXPOSURE 0.011f
@@ -246,8 +246,9 @@ struct CameraThreadData {
   int GatanReadMode;           // The read mode of Gatan camera, -1 not to set it
   bool NeedsReadMode;          // Flag that plugin needs to be told the read mode
   double CountScaling;         // Amount to scale counts in counting mode
-  long DoseFrac;               // More parameters for the K2 camera
-  double FrameTime;
+  long DoseFrac;               // More parameters for the K2 camera or other frame-savers
+  double FrameTime;            // Frame duration
+  int ReadoutsPerFrame;        // Possibly needed: number of readouts in a frame
   long AlignFrames;
   long FilterName[MAX_FILTER_NAME_LEN / 4];
   long SaveFrames;
@@ -355,8 +356,8 @@ class DLL_IM_EX CCameraController
   GetSetMember(float, K2ReadoutInterval);
   GetSetMember(float, K3ReadoutInterval);
   GetSetMember(float, K3CDSLinearRatio);
-  float GetMinK2FrameTime(CameraParameters *param);
-  float GetK2ReadoutInterval(CameraParameters *param);
+  float GetMinK2FrameTime(CameraParameters *param, int binning = 0, int special = 0);
+  float GetK2ReadoutInterval(CameraParameters *param,int binning = 0, int special = 0);
   CString *GetK2FilterNames() {return &mK2FilterNames[0];};
   GetSetMember(float, FalconReadoutInterval);
   GetSetMember(int, MaxFalconFrames);
@@ -771,6 +772,8 @@ class DLL_IM_EX CCameraController
   int mWaitingForStacking;      // Flag that we are waiting for Falcon stacking
   CString mDirForFalconFrames;  // Directory or subfolder to save Falcon frames in
   BOOL mOtherCamerasInTIA;      // Flag that FEI name needs to be checked before acquiring
+  bool mSavingPluginFrames;     // Flags for saving or aligning frames from plugin camera
+  bool mAligningPluginFrames;
   BOOL mSkipNextReblank;        // Flag to not blank readout in next shot
   int mDefaultGIFCamera;        // Active camera number of "first GIF camera"
   int mDefaultRegularCamera;    // Active camera number of "first regular camera"
@@ -964,7 +967,7 @@ public:
   bool ConstrainExposureTime(CameraParameters *camP, ControlSet *consP);
   bool ConstrainExposureTime(CameraParameters *camP, BOOL doseFrac, int readMode,
     int binning, bool alignInCamera, int sumCount, float &exposure, float &frameTime);
-  bool ConstrainFrameTime(float &frameTime, CameraParameters *camP);
+  bool ConstrainFrameTime(float &frameTime, CameraParameters *camP, int binning = 0, int special = 0);
   void RestoreFEIshutter(void);
   void QueueFocusSteps(float interval1, double focus1, float interval2, double focus2);
   static void ChangeDynFocus(CameraThreadData *td, double focus, double focusBase,
@@ -999,7 +1002,7 @@ float GetCountScaling(CameraParameters * camParam);
 int TargetSizeForTasks(CameraParameters *camParam = NULL);
 void RestoreGatanOrientations(void);
 void GetMergeK2DefectList(int DMind, CameraParameters *param, bool errToLog);
-bool IsConSetSaving(ControlSet *conSet, int setNum, CameraParameters *param, bool K2only);
+bool IsConSetSaving(const ControlSet *conSet, int setNum, CameraParameters *param, bool K2only);
 bool CanWeAlignFalcon(CameraParameters *param, BOOL savingEnabled, bool &canSave);
 bool CanProcessHere(CameraParameters *param);
 void FixDirForFalconFrames(CameraParameters * param);
@@ -1026,6 +1029,11 @@ int AddToNextFrameStackMdoc(CString key, CString value, bool startIt, CString *r
 bool CanSaveFrameStackMdoc(CameraParameters * param);
 bool CanDoK2HardwareDarkRef(CameraParameters *param, CString &errstr);
 bool DefectListHasEntries(CameraDefects *defp);
+float FindConstraintForBinning(CameraParameters * param, int binning, float *times);
+void ProcessImageOrFrame(short *array, int processing, int removeXrays);
+bool CanFramealignProcessSubarea(ControlSet *lastConSetp, DarkRef **darkp, DarkRef **gainp);
+void DeleteOneReference(int index);
+int CheckFrameStacking(bool updateIfDone, bool testIfStacking);
 };
 
 

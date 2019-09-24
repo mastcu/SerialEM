@@ -99,8 +99,10 @@
         </TR>
         <TR VALIGN="top">
           <TD>SimulationMode</TD>
-          <TD>Set to 1 to indicate a microscope simulator is being used (enables some 
-            actions on JEOL and is needed to use an Eagle camera in simul;ation mode).</TD>
+          <TD>Set to 1 to indicate a microscope/camera simulator is being used (enables some 
+            actions on JEOL and is needed to use an Eagle camera in simulation mode).
+              Do not use this with a real camera instead of NoScope, since it also divides
+              dark references by 8 and reduces the variation in gain references by 8</TD>
           <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
@@ -774,28 +776,31 @@
         </TR>
         <TR VALIGN="top">
           <TD>OneViewMinExposures</TD>
-          <TD>Minimum exposure times for OneView camera at each binning, in seconds.&nbsp; 
-            The defaults are 0.04, 0.01, 0.005, 0.005.</TD>
+          <TD>Minimum exposure times for OneView camera at each binning, in seconds.&nbsp; The 
+              defaults are 0.04, 0.01, 0.005, 0.005..&nbsp; If fewer than 4 values are 
+              entered, the defaults remain for the rest.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>OneViewDeltaExposures</TD>
           <TD>Allowed increment in exposure times for OneView camera at each binning, in 
-            seconds.&nbsp; The defaults are 0.01, 0.01, 0.005, 0.005.&nbsp; Except for 
+            seconds.&nbsp; The defaults are 0.01, 0.01, 0.005, 0.005 .&nbsp; Except for 
             binning 1, these correspond to the times allowed in the basic user interface in 
             DM.&nbsp; Increments of 0.001 appear to work for all binnings but may not be 
-            supported by Gatan over time. </TD>
+            supported by Gatan over time.&nbsp; If fewer than 4 values are entered, the 
+              defaults remain for the rest.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>RioMinExposures</TD>
           <TD>Minimum exposure times for Rio camera at each binning, in seconds.&nbsp; 
-            The defaults are 0.067, 0.017, 0.017, 0.017, found for a 3K Rio.</TD>
+            The defaults are 0.0667, 0.0667, 0.0667, 0.0667 for 2K Rio;; 0.0667, 0.0167, 0.0167, 0.0167 for 
+              3K Rio; and 0.05, 0.0125, 0.0062, 0.0062 for 4K Rio.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>RioDeltaExposures</TD>
           <TD>Allowed increment in exposure times for Rio camera at each binning, in 
             seconds.&nbsp; The defaults are 0.001, 0.001, 0.001, 0.001.</TD>
         </TR>
-        <TR VALIGN="top">
+         <TR VALIGN="top">
           <TD>SmoothFocusExtraTime</TD>
           <TD>Set the extra time in millisec for the focus ramp activated by the script 
             command SmoothFocusNextShot.&nbsp; The ramp will start prior to the expected 
@@ -1350,12 +1355,13 @@
           <TD>This entry constrains the size in X of images to be acquired to be a multiple 
             of the given number. This entry is overridden by a RestrictedSizeType entry. 
             This entry probably needs to be at least 2 because of some problems with image 
-            display.</TD>
+            display. The default is 4.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>YMustBeMultipleOf</TD>
           <TD>This entry constrains the size in Y of images to be acquired to be a multiple 
-            of the given number. This entry is overridden by a RestrictedSizeType entry.</TD>
+            of the given number. This entry is overridden by a RestrictedSizeType entry.  
+              The default is 1.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>CoordsMustBeMultiple</TD>
@@ -1851,6 +1857,33 @@
           <TD>K3CDSLinearRatio</TD>
           <TD>For a K3 camera, ratio of counts in linear mode with correlated double sampling on 
               to counts with it off; the default is 1.5.</TD>
+        </TR>
+       <TR VALIGN="top">
+          <TD>CanTakeFrames</TD>
+          <TD>If taking frames from a particular camera is supported, set to 1 to enable 
+              saving frames from SerialEM, 2 to enable aligning frames with the Framealign 
+              module, or 3 to enable both saving and aligning.&nbsp; This is the same frame 
+              alignment that SerialEM provides for direct detectors, which is suitable for 
+              low-dose images and can run on an NVIDIA GPU.&nbsp; If these capabilties are 
+              turned on by default for a particular camera, enter 0 to have them not appear in
+              the Camera Setup dialog.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>FrameTimeDivisors</TD>
+          <TD>Values that frame times are constrained to be a multiple of for each binning, 
+              for a camera with CanTakeFrames set.  Defaults are provided for OneView and Rio 
+              cameras; these are the same as the defaults for OneviewMinExposures and 
+              RioMinExposures, except the default is 0.0025 for binning 8 for OneView.  
+              Otherwise, the default is 0.001.  If fewer values are entered than the number of
+              binnings, the result depends on whether defaults is provided for the camera:
+              if they are, the default applies for the rest of the binnings; if not, the 
+              last entered numnber is used for the rest of the binnings. 
+          </TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>MinimumFrameTimes</TD>
+          <TD>Shortest allowed frame time for each binning, for a camera with CanTakeFrames set.  
+              The default values are the ones entered or provided for FrameTimeDivisors. </TD>
         </TR>
         <TR VALIGN="top">
           <TD>EndCameraProperties</TD>
@@ -2478,6 +2511,16 @@
               entered for an FEI scope, this line must be included after the table to reset the 
               number for regular diffraction mode.  Otherwise, the defaults are 21 and 22 for
               Titan and 16 and 21 for other scopes.
+          </TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>DiffractionShiftScaling</TD>
+          <TD>Scaling applied to convert the step size for beam movement in the Microscope 
+              Control panel into the value for diffraction shift used in the call to the 
+              microscope plugin.  For JEOL scopes, the plugin takes values between -100 and 100,
+              the percent of full scale on the PLA deflector.  For FEI scopes, the plugin 
+              takes milliradians, but the Microscope Control panel also divides the step size by
+              the camera length in meters before applying this scaling factor.  The default is 10.
           </TD>
         </TR>
         <TR VALIGN="top">

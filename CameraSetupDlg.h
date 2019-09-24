@@ -10,7 +10,7 @@
 #include "afxcmn.h"
 #include "afxwin.h"
 
-#define NUM_CAMSETUP_PANELS 9
+#define NUM_CAMSETUP_PANELS 10
 /////////////////////////////////////////////////////////////////////////////
 // CCameraSetupDlg dialog
 
@@ -216,6 +216,8 @@ private:
   float mSaveCountingFPS;
   BOOL mLowDoseMode;
   bool mWarnedOnCDS;
+  bool mCanAlignFrames;
+  bool mCanSaveFrames;
   CFont mBigModeFont;
 
 public:

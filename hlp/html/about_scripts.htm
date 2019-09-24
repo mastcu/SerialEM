@@ -99,7 +99,7 @@
       that defines a variable. There are a variety of different kinds of variables: 
         regular ones defined on a line with an equals sign; persistent ones defined on a 
         line with &#39;:=&#39; which will persist from one script run to another; loop index 
-        variables defined in a LOOP statement; local ones that are defined only within a 
+        variables defined in a LOOP or DOLOOP statement; local ones that are defined only within a 
         function or called script; variables set when values are reported with commands 
         starting with &#39;Report&#39; and many others; regular or 
       persistent string variables that are defined on a line with &#39;@=&#39; or &#39;:@=&#39;, 
@@ -146,8 +146,10 @@
            with a message to be printed.
       <LI>
       A loop index can be defined by adding an unused variable name after the number 
-      on a LOOP line. This variable will have a value from 1 through the loop count. 
-        It is maintained by the program and cannot be assigned to.&nbsp; The variable 
+      on a LOOP line, or by using the DOLOOP statement, which always includes an index variable. 
+        The variable on a LOOP line will have a value from 1 through the loop count; the variable
+           for a DOLOOP will run from the starting to the ending values specified on the line. 
+        This variable is maintained by the program and cannot be assigned to.&nbsp; It 
           becomes undefined after the loop ends and can then be reused as a 
       loop index or defined variable.
       <LI>

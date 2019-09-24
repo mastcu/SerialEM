@@ -2661,7 +2661,7 @@ BEGIN
 END
 
 IDD_K2_SAVE_OPTIONS DIALOGEX 0, 0, 230, 357
-STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Frame File Options"
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
@@ -2676,7 +2676,7 @@ BEGIN
     CONTROL         "Pack unnormalized data as 4-bit (Super-Res) or 4/8-bit (Counting)",IDC_PACK_RAW_FRAME,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,118,209,10
     DEFPUSHBUTTON   "OK",IDOK,52,336,45,14
-    PUSHBUTTON      "Cancel",IDCANCEL,125,336,25,14
+    PUSHBUTTON      "Cancel",IDCANCEL,125,336,45,14
     PUSHBUTTON      "?",IDC_BUTHELP,213,340,10,10
     CONTROL         "Save frames without rotation/flip to standard orientation",IDC_SKIP_ROTFLIP,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,157,179,10
@@ -2717,7 +2717,7 @@ BEGIN
     CONTROL         "Save normalized data as 16-bit with 100 times scaling of sum",IDC_SAVE_TIMES_100,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,105,195,10
     CTEXT           "Current settings will save",IDC_STAT_CURSET1,140,15,76,9
-    CTEXT           " TIF LZW stack, packed",IDC_STAT_CURSET2,130,25,93,8
+    CTEXT           " TIF LZW stack, packed",IDC_STAT_CURSET2,131,25,93,8
     CONTROL         "",IDC_TSS_LINE2,"Static",SS_BLACKFRAME | SS_SUNKEN,7,76,216,1
     CONTROL         "Numeric date (including year) and time at start of name",IDC_CHECK_DATE_PREFIX,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,37,286,190,10
@@ -3648,6 +3648,11 @@ BEGIN
 END
 
 IDD_REMOTE_CONTROL AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_K2_SAVE_OPTIONS AFX_DIALOG_LAYOUT
 BEGIN
     0
 END

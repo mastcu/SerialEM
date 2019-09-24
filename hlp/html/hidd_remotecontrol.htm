@@ -75,12 +75,16 @@
       button is depressed.&nbsp; The size of the step is indicated by the text below 
       the spin buttons and can be increased or decreased with the &#39;+&#39; and &#39;-&#39; buttons. </p>
     <p>
-      &nbsp;For beam movement, the step is expressed as a fraction of the camera field of view 
+        For beam movement in imaging mode, the step is expressed as a fraction of the camera field of view 
       .&nbsp; For example, a step of 0.1 will move the beam by one-tenth of the field 
       of view of the current camera.&nbsp; The same movements can be made with Shift 
       and the Arrow keys, with the same step size.&nbsp; Use of these 
       controls to move the beam require beam shift to be calibrated for the current magnification 
-      range.</p>
+      range.&nbsp; In diffraction mode, these spin buttons will move the diffraction 
+        pattern on the camera.&nbsp; There is no calibration for this movement.&nbsp; 
+        The size of the movement is controlled by the property DiffractionShiftScaling, 
+        which may need to be set to give a useful amount of shift for the various step 
+        sizes.</p>
     <p>
       For stage movement, the step is in microns, and the movement is in the direction 
       that will shift the image on the current camera in the given direction.</p>
