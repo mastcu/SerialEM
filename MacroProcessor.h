@@ -171,9 +171,9 @@ private:
   double mIntensityFactor;  // Cosine factor for last tilt change
   CArray<Variable *, Variable *> mVarArray;     // Array of variable structures
   CArray<FileForText *, FileForText *> mTextFileArray;   // Array of open text files
-  int mLoopLevel;         // Index for loop level, 0 in top loop or -1 if not in loop
+  int mBlockLevel;         // Index for loop level, 0 in top loop or -1 if not in loop
   int mCallLevel;         // Index for call level, 0 in main macro
-  int mLoopDepths[MAX_CALL_DEPTH];  // Loop level reached in current macro
+  int mBlockDepths[MAX_CALL_DEPTH];  // Loop level reached in current macro
   int mCallMacro[MAX_CALL_DEPTH];   // Current macro for given call level
   int mCallIndex[MAX_CALL_DEPTH];   // Current index into macro for given call level
   MacroFunction *mCallFunction[MAX_CALL_DEPTH];  // Pointer to function being called

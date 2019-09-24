@@ -1056,8 +1056,8 @@ void CMacroProcessor::Run(int which)
       mMacNames[mac] = "";
   }
   mCurrentMacro = which;
-  mLoopLevel = -1;
-  mLoopDepths[0] = -1;
+  mBlockLevel = -1;
+  mBlockDepths[0] = -1;
   mCallFunction[0] = NULL;
   mCurrentIndex = 0;
   mLastIndex = -1;
@@ -1408,7 +1408,7 @@ void CMacroProcessor::NextCommand()
     else if (strItems[1] == "=" || strItems[1] == ":=")
       cmdIndex = CME_SETVARIABLE;
   }
-  if (CMD_IS(ELSEIF) && mLoopLevel >= 0 && mLoopLimit[mLoopLevel] == LOOP_LIMIT_FOR_IF)
+  if (CMD_IS(ELSEIF) && mBlockLevel >= 0 && mLoopLimit[mBlockLevel] == LOOP_LIMIT_FOR_IF)
     cmdIndex = CME_ZEROLOOPELSEIF;
     
   // See if we are supposed to stop at an ending place
@@ -1444,10 +1444,10 @@ void CMacroProcessor::NextCommand()
     
     // For a return, pop any loops, clear index variables
     if (CMD_IS(RETURN)) {
-      while (mLoopDepths[mCallLevel] >= 0) {
-        ClearVariables(VARTYPE_INDEX, mCallLevel, mLoopLevel);
-        mLoopLevel--;
-        mLoopDepths[mCallLevel]--;
+      while (mBlockDepths[mCallLevel] >= 0) {
+        ClearVariables(VARTYPE_INDEX, mCallLevel, mBlockLevel);
+        mBlockLevel--;
+        mBlockDepths[mCallLevel]--;
       }
     }
     ClearVariables(VARTYPE_LOCAL, mCallLevel);
@@ -1475,7 +1475,7 @@ void CMacroProcessor::NextCommand()
   case CME_ENDLOOP:                                         // EndLoop
 
     // First see if we are actually doing a loop: if not, error
-    if (mLoopDepths[mCallLevel] < 0 || mLoopLimit[mLoopLevel] < LOOP_LIMIT_FOR_IF) {
+    if (mBlockDepths[mCallLevel] < 0 || mLoopLimit[mBlockLevel] < LOOP_LIMIT_FOR_IF) {
       AbortMacro();
       AfxMessageBox("The script contains an ENDLOOP without a LOOP or DOLOOP statement",
         MB_EXCLAME);
@@ -1484,14 +1484,14 @@ void CMacroProcessor::NextCommand()
 
     // If count is not past limit, go back to start;
     // otherwise clear index variable and decrease level indexes
-    mLoopCount[mLoopLevel] += mLoopIncrement[mLoopLevel];
-    if ((mLoopIncrement[mLoopLevel] < 0 ? -1 : 1) * 
-      (mLoopCount[mLoopLevel] - mLoopLimit[mLoopLevel]) <= 0)
-      mCurrentIndex = mLoopStart[mLoopLevel];
+    mLoopCount[mBlockLevel] += mLoopIncrement[mBlockLevel];
+    if ((mLoopIncrement[mBlockLevel] < 0 ? -1 : 1) * 
+      (mLoopCount[mBlockLevel] - mLoopLimit[mBlockLevel]) <= 0)
+      mCurrentIndex = mLoopStart[mBlockLevel];
     else {
-      ClearVariables(VARTYPE_INDEX, mCallLevel, mLoopLevel);
-      mLoopLevel--;
-      mLoopDepths[mCallLevel]--;
+      ClearVariables(VARTYPE_INDEX, mCallLevel, mBlockLevel);
+      mBlockLevel--;
+      mBlockDepths[mCallLevel]--;
     }
     mLastIndex = -1;
     break;
@@ -1501,36 +1501,36 @@ void CMacroProcessor::NextCommand()
 
     // Doing a loop: get the count, make sure it is legal, and save the current
     // index as the starting place to go back to
-    if (mLoopLevel >= MAX_LOOP_DEPTH)
+    if (mBlockLevel >= MAX_LOOP_DEPTH)
       ABORT_LINE("Nesting of loops, IF blocks, and script or function calls is too deep"
       " at line: \n\n:");
-    mLoopLevel++;
-    mLoopDepths[mCallLevel]++;
-    mLoopStart[mLoopLevel] = mCurrentIndex;
-    mLoopIncrement[mLoopLevel] = 1;
+    mBlockLevel++;
+    mBlockDepths[mCallLevel]++;
+    mLoopStart[mBlockLevel] = mCurrentIndex;
+    mLoopIncrement[mBlockLevel] = 1;
     if (CMD_IS(LOOP)) {
-      mLoopLimit[mLoopLevel] = B3DMAX(0, B3DNINT(itemDbl[1]));
-      mLoopCount[mLoopLevel] = 1;
+      mLoopLimit[mBlockLevel] = B3DMAX(0, B3DNINT(itemDbl[1]));
+      mLoopCount[mBlockLevel] = 1;
       index = 2;
     } else {
-      mLoopCount[mLoopLevel] = itemInt[2];
-      mLoopLimit[mLoopLevel] = itemInt[3];
+      mLoopCount[mBlockLevel] = itemInt[2];
+      mLoopLimit[mBlockLevel] = itemInt[3];
       if (!itemEmpty[4]) {
-        mLoopIncrement[mLoopLevel] = itemInt[4];
+        mLoopIncrement[mBlockLevel] = itemInt[4];
         if (!itemInt[4])
           ABORT_LINE("The loop increment is 0 at line:\n\n");
         index = 1;
       }
     }
     mLastIndex = -1;
-    if ((mLoopIncrement[mLoopLevel] < 0 ? -1 : 1) *
-      (mLoopCount[mLoopLevel] - mLoopLimit[mLoopLevel]) > 0) {
+    if ((mLoopIncrement[mBlockLevel] < 0 ? -1 : 1) *
+      (mLoopCount[mBlockLevel] - mLoopLimit[mBlockLevel]) > 0) {
       if (SkipToBlockEnd(SKIPTO_ENDLOOP, strLine)) {
         AbortMacro();
         return;
       }
     } else if (!itemEmpty[index]) {
-      if (SetVariable(strItems[index], 1.0, VARTYPE_INDEX, mLoopLevel, true, &report))
+      if (SetVariable(strItems[index], 1.0, VARTYPE_INDEX, mBlockLevel, true, &report))
         ABORT_LINE(report + " in script line: \n\n");
     }
     break;
@@ -1544,12 +1544,12 @@ void CMacroProcessor::NextCommand()
       return;
     }
     if (CMD_IS(IF)) {                                       // If
-      mLoopLevel++;
-      if (mLoopLevel >= MAX_LOOP_DEPTH)
+      mBlockLevel++;
+      if (mBlockLevel >= MAX_LOOP_DEPTH)
         ABORT_LINE("Nesting of loops, IF blocks, and script or function calls is too deep"
         " at line: \n\n:");
-      mLoopDepths[mCallLevel]++;
-      mLoopLimit[mLoopLevel] = LOOP_LIMIT_FOR_IF;
+      mBlockDepths[mCallLevel]++;
+      mLoopLimit[mBlockLevel] = LOOP_LIMIT_FOR_IF;
     }
 
     // If not true, skip forward; if it is true, mark if as satisfied with a -1
@@ -1560,14 +1560,14 @@ void CMacroProcessor::NextCommand()
       }
       mLastIndex = -1;
     } else
-      mLoopLimit[mLoopLevel] = LOOP_LIMIT_FOR_IF - 1;
+      mLoopLimit[mBlockLevel] = LOOP_LIMIT_FOR_IF - 1;
     break;
 
   case CME_ENDIF:                                           // Endif
 
     // Trust the initial check
-    mLoopLevel--;
-    mLoopDepths[mCallLevel]--;
+    mBlockLevel--;
+    mBlockDepths[mCallLevel]--;
     mLastIndex = -1;
     break;
     
@@ -1591,12 +1591,12 @@ void CMacroProcessor::NextCommand()
     mLastIndex = -1;
 
     // Pop any IFs on the loop stack
-    while (mLoopLevel >= 0 && mLoopLimit[mLoopLevel] <= LOOP_LIMIT_FOR_IF) {
-      mLoopLevel--;
-      mLoopDepths[mCallLevel]--;
+    while (mBlockLevel >= 0 && mLoopLimit[mBlockLevel] <= LOOP_LIMIT_FOR_IF) {
+      mBlockLevel--;
+      mBlockDepths[mCallLevel]--;
     }
-    if (mLoopLevel >= 0 && (CMD_IS(BREAK) || keyBreak))
-      mLoopCount[mLoopLevel] = mLoopLimit[mLoopLevel];
+    if (mBlockLevel >= 0 && (CMD_IS(BREAK) || keyBreak))
+      mLoopCount[mBlockLevel] = mLoopLimit[mBlockLevel];
     if (keyBreak) {
       PrintfToLog("Broke out of loop after %c key pressed", (char)mKeyPressed);
       mKeyPressed = 0;
@@ -1610,10 +1610,10 @@ void CMacroProcessor::NextCommand()
     }
 
     // Pop proper number of ifs and loops from stack
-    for (i = 0; i < index && mLoopLevel >= 0; i++) {
-      ClearVariables(VARTYPE_INDEX, mCallLevel, mLoopLevel);
-      mLoopLevel--;
-      mLoopDepths[mCallLevel]--;
+    for (i = 0; i < index && mBlockLevel >= 0; i++) {
+      ClearVariables(VARTYPE_INDEX, mCallLevel, mBlockLevel);
+      mBlockLevel--;
+      mBlockDepths[mCallLevel]--;
     }
     mLastIndex = -1;
     break;
@@ -1665,7 +1665,7 @@ void CMacroProcessor::NextCommand()
           SubstituteVariables(&strLine, 1, strLine);
         mCallIndex[mCallLevel++] = mCurrentIndex;
         mCallMacro[mCallLevel] = index;
-        mLoopDepths[mCallLevel] = -1;
+        mBlockDepths[mCallLevel] = -1;
         mCallFunction[mCallLevel] = func;
       } else {
         mNumRuns++;
@@ -1978,7 +1978,7 @@ void CMacroProcessor::NextCommand()
   case CME_LOCALLOOPINDEXES:                                // LocalLoopIndexes
     if (!itemEmpty[1])
       ABORT_NOLINE("LocalLoopIndexes does not take any values; it cannot be turned off");
-    if (mLoopLevel > 0)
+    if (mBlockLevel > 0)
       ABORT_NOLINE("LocalLoopIndexes cannot be used inside of a loop");
     mLoopIndsAreLocal = true;
     break;
