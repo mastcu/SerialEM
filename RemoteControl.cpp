@@ -498,8 +498,11 @@ void CRemoteControl::OnDeltaposSpinBeamShift(NMHDR *pNMHDR, LRESULT *pResult)
   if (m_iStageNotBeam) {
     MoveStageByMicronsOnCamera(0., mStageIncrement * pNMUpDown->iDelta);
   } else {
-    mWinApp->mProcessImage->MoveBeamByCameraFraction(0., mBeamIncrement * 
-      pNMUpDown->iDelta);
+    if (mLastMagInd > 0)
+      mWinApp->mProcessImage->MoveBeamByCameraFraction(0., mBeamIncrement *
+        pNMUpDown->iDelta);
+    else if (mLastCamLenInd > 0)
+      ChangeDiffShift(0, pNMUpDown->iDelta);
   }
 }
 
@@ -514,9 +517,26 @@ void CRemoteControl::OnDeltaposSpinBeamLeftRight(NMHDR *pNMHDR, LRESULT *pResult
   if (m_iStageNotBeam) {
     MoveStageByMicronsOnCamera(-mStageIncrement * pNMUpDown->iDelta, 0.);
   } else {
-    mWinApp->mProcessImage->MoveBeamByCameraFraction(-mBeamIncrement * pNMUpDown->iDelta,
-      0.);
+    if (mLastMagInd > 0)
+      mWinApp->mProcessImage->MoveBeamByCameraFraction(-mBeamIncrement * 
+        pNMUpDown->iDelta, 0.);
+    else if (mLastCamLenInd > 0)
+      ChangeDiffShift(pNMUpDown->iDelta, 0);
   }
+}
+
+void CRemoteControl::ChangeDiffShift(int deltaX, int deltaY)
+{
+  double shiftX, shiftY, scale = 1.;
+  if (FEIscope) {
+    scale = mScope->GetLastCameraLength();
+    if (!scale)
+      return;
+  }
+  if (!mScope->GetDiffractionShift(shiftX, shiftY))
+    return;
+  mScope->SetDiffractionShift(shiftX + mBeamIncrement * deltaX / scale,
+    shiftY + mBeamIncrement * deltaY / scale);
 }
 
 // Move the stage by a given number of microns in the current camera coordinate system

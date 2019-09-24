@@ -123,4 +123,5 @@ public:
   afx_msg void OnBeamControl();
   int m_iStageNotBeam;
   void MoveStageByMicronsOnCamera(double delCamX, double delCamY);
+  void ChangeDiffShift(int deltaX, int deltaY);
 };
