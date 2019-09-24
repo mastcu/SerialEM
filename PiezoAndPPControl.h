@@ -65,4 +65,5 @@ public:
   CArray<PiezoScaling, PiezoScaling> *GetScalings() {return &mScalings;};
   void ScalePosition(bool zAxis, bool unitsToUm, double & xpos, double & ypos);
   bool LookupScaling(int plugNum, int piezoNum, bool zAxis, PiezoScaling & scaling);
+  GetMember(int, NumPlugins);
 };
