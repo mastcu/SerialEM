@@ -96,7 +96,7 @@ BOOL CBaseDlg::OnToolTipNotify( UINT id, NMHDR * pNMHDR, LRESULT * pResult )
 void CBaseDlg::OnButhelp() 
 {
   mWinApp->OnHelp(); 
-  m_butHelp.SetButtonStyle(BS_PUSHBUTTON);
+  FixButtonFocus(m_butHelp);
   if (mNonModal)
     mWinApp->RestoreViewFocus();
 }
@@ -201,6 +201,14 @@ void CBaseDlg::OnRButtonDblClk(UINT nFlags, CPoint point)
   CDialog::OnRButtonDblClk(nFlags, point);
   if (mNonModal)
     mWinApp->RestoreViewFocus();
+}
+
+// Fix a button having focus after being pressed, instead of OK button
+// ButtonStyle used to work, Win 10 seems to need SetFocus
+void CBaseDlg::FixButtonFocus(CButton &button)
+{
+  button.SetButtonStyle(BS_PUSHBUTTON);
+  SetFocus();
 }
 
 // Setup call for the panel tables

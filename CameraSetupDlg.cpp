@@ -443,31 +443,31 @@ void CCameraSetupDlg::SetFractionalSize(int fracX, int fracY)
 void CCameraSetupDlg::OnButfull() 
 {
   SetFractionalSize(1, 1);
-  m_butFull.SetButtonStyle(BS_PUSHBUTTON);
+  FixButtonFocus(m_butFull);
 }
 
 void CCameraSetupDlg::OnButhalf() 
 {
   SetFractionalSize(2, 2);
-  m_butHalf.SetButtonStyle(BS_PUSHBUTTON);
+  FixButtonFocus(m_butHalf);
 }
 
 void CCameraSetupDlg::OnButquarter() 
 {
   SetFractionalSize(4, 4);
-  m_butQuarter.SetButtonStyle(BS_PUSHBUTTON);
+  FixButtonFocus(m_butQuarter);
 }
 
 void CCameraSetupDlg::OnButwidehalf() 
 {
   SetFractionalSize(1, 2);
-  m_butWideHalf.SetButtonStyle(BS_PUSHBUTTON);
+  FixButtonFocus(m_butWideHalf);
 }
 
 void CCameraSetupDlg::OnButwidequarter() 
 {
   SetFractionalSize(2, 4);
-  m_butWideQuarter.SetButtonStyle(BS_PUSHBUTTON);
+  FixButtonFocus(m_butWideQuarter);
 }
 
 void CCameraSetupDlg::SetAdjustedSize(int deltaX, int deltaY)
@@ -514,7 +514,7 @@ void CCameraSetupDlg::OnButsmaller10()
     deltaY =  ((m_eBottom - m_eTop) - mTietzSizes[B3DMAX(nearInd - 1, 0)]) / 2;
   }
   SetAdjustedSize(-deltaX, -deltaY);
-  m_butSmaller10.SetButtonStyle(BS_PUSHBUTTON);
+  FixButtonFocus(m_butSmaller10);
 }
 
 void CCameraSetupDlg::OnButbigger10() 
@@ -536,7 +536,7 @@ void CCameraSetupDlg::OnButbigger10()
       / 2;
   }
   SetAdjustedSize(deltaX, deltaY);
-  m_butBigger10.SetButtonStyle(BS_PUSHBUTTON);
+  FixButtonFocus(m_butBigger10);
 }
 
 void CCameraSetupDlg::OnButabitless() 
@@ -556,7 +556,7 @@ void CCameraSetupDlg::OnButabitless()
       deltaY = (sizeX - sizeY) / 2;
   }
   SetAdjustedSize(deltaX, deltaY);
-  m_butABitLess.SetButtonStyle(BS_PUSHBUTTON);
+  FixButtonFocus(m_butABitLess);
 }
 
 void CCameraSetupDlg::OnShuttering() 
@@ -575,7 +575,7 @@ void CCameraSetupDlg::OnButcopycamera()
 {
   int setBase = mActiveCameraList[mCurrentCamera] * MAX_CONSETS;
   ControlSet *conSet = &mConSets[mCurrentSet + setBase];
-  m_butCopyCamera.SetButtonStyle(BS_PUSHBUTTON);
+  FixButtonFocus(m_butCopyCamera);
   if (!mWinApp->GetUseViewForSearch() && mCurrentSet == SEARCH_CONSET)
     *conSet = mConSets[VIEW_CONSET + setBase];
   else
@@ -674,7 +674,7 @@ void CCameraSetupDlg::OnButrecenter()
     AdjustCoords(mBinnings[m_iBinning]);
   UpdateData(FALSE);
   DrawBox();
-  m_butRecenter.SetButtonStyle(BS_PUSHBUTTON);
+  FixButtonFocus(m_butRecenter);
 }
 
 void CCameraSetupDlg::OnSwapXY()
@@ -689,7 +689,7 @@ void CCameraSetupDlg::OnSwapXY()
     AdjustCoords(mBinnings[m_iBinning]);
   UpdateData(FALSE);
   DrawBox();
-  m_butSwapXY.SetButtonStyle(BS_PUSHBUTTON);
+  FixButtonFocus(m_butSwapXY);
 }
 
 // Shift box up or down.  The signs of these delta make no sense
@@ -746,7 +746,7 @@ void CCameraSetupDlg::OnDeltaposSpinleftright(NMHDR* pNMHDR, LRESULT* pResult)
 void CCameraSetupDlg::OnButupdatedose() 
 {
   ManageDose();	
-  m_butUpdateDose.SetButtonStyle(BS_PUSHBUTTON);
+  FixButtonFocus(m_butUpdateDose);
 }
 
 // Set the label with the binned size
@@ -1571,7 +1571,8 @@ void CCameraSetupDlg::ManageCamera()
     "Use Hardware ROI");
 
   // Disable many things for restricted sizes
-  ManageSizeAndPositionButtons(m_bDoseFracMode && mParam->K2Type);
+  ManageSizeAndPositionButtons(m_bDoseFracMode && (mParam->K2Type ||
+    (mParam->GatanCam && mParam->canTakeFrames)));
 
   // Decide whether to convert A bit Less to Square
   showbox = B3DMAX(mCameraSizeX, mCameraSizeY);
@@ -2281,8 +2282,10 @@ bool CCameraSetupDlg::AdjustCoords(int binning, bool alwaysUpdate)
   bool update;
   int left, right, top, bottom, sizeX, sizeY, ucrit = 4 * binning - 1;
   double dbin = binning;
-  int moduloX = (mParam->K2Type && m_bDoseFracMode) ? -2 : mParam->moduloX;
-  int moduloY = (mParam->K2Type && m_bDoseFracMode) ? -2 : mParam->moduloY;
+  bool doseFrac = (mParam->K2Type || (mParam->OneViewType && mParam->canTakeFrames)) && 
+    m_bDoseFracMode;
+  int moduloX = doseFrac ? -2 : mParam->moduloX;
+  int moduloY = doseFrac ? -2 : mParam->moduloY;
   left = mCoordScaling * m_eLeft / binning;
   right = mCoordScaling * m_eRight / binning;
   top = mCoordScaling * m_eTop / binning;
@@ -2340,7 +2343,7 @@ void CCameraSetupDlg::NewChannelSel(int which)
 void CCameraSetupDlg::OnmaxScanRate()
 {
   ManageDrift(true);
-  m_butmaxScanRate.SetButtonStyle(BS_PUSHBUTTON);
+  FixButtonFocus(m_butmaxScanRate);
 }
 
 
@@ -2526,15 +2529,22 @@ void CCameraSetupDlg::OnDoseFracMode()
 // Align frames toggled for K2 or Falcon
 void CCameraSetupDlg::OnAlignDoseFrac()
 {
+  BOOL oldDF = m_bDoseFracMode;
   UpdateData(true);
   if (m_bAlignDoseFrac)
     CheckFrameAliRestrictions(m_iK2Mode, mCamera->GetSaveUnnormalizedFrames(), 
       mUserSaveFrames, NULL);
   if (mParam->canTakeFrames)
     m_bDoseFracMode = m_bAlignDoseFrac || (mCanSaveFrames && m_bSaveFrames);
+  if (m_bDoseFracMode && !oldDF) {
+    AdjustCoords(mBinnings[m_iBinning], true);
+    UpdateData(FALSE);
+    DrawBox();
+  }
   CheckFalconFrameSumList();
   ManageK2Binning();
   ManageDoseFrac();
+  ManageK2SaveSummary();
   ManageDose();
 }
 
@@ -2644,6 +2654,7 @@ void CCameraSetupDlg::ComposeWhereAlign(CString &str)
 // Save frames toggled (dose frac mode is on)
 void CCameraSetupDlg::OnSaveFrames()
 {
+  BOOL oldDF = m_bDoseFracMode;
   UpdateData(true);
   if (CheckFrameAliRestrictions(m_iK2Mode, mCamera->GetSaveUnnormalizedFrames(),
     m_bSaveFrames, "setting for saving frames")) {
@@ -2657,6 +2668,11 @@ void CCameraSetupDlg::OnSaveFrames()
     OnSaveK2FrameSums();
   if (mParam->canTakeFrames)
     m_bDoseFracMode = (mCanAlignFrames && m_bAlignDoseFrac) || m_bSaveFrames;
+  if (m_bDoseFracMode && !oldDF) {
+    AdjustCoords(mBinnings[m_iBinning], true);
+    UpdateData(FALSE);
+    DrawBox();
+  }
   ManageK2Binning();
   ManageDoseFrac();
   ManageAntialias();
@@ -2753,7 +2769,7 @@ void CCameraSetupDlg::OnButFileOptions()
     ManageK2SaveSummary();
     ManageDoseFrac();
   }
-  m_butFileOptions.SetButtonStyle(BS_PUSHBUTTON);
+  FixButtonFocus(m_butFileOptions);
 }
 
 // Set the folder for saving
@@ -2766,7 +2782,7 @@ void CCameraSetupDlg::OnSetSaveFolder()
       mCamera->GetNoK2SaveFolderBrowse() ? "" : 
       "SELECT (do not type in) folder accessible on Gatan server for saving frames"))
       mCamera->SetDirForK2Frames(str);
-    m_butSetSaveFolder.SetButtonStyle(BS_PUSHBUTTON);
+    FixButtonFocus(m_butSetSaveFolder);
     return;
   }
   if (mFEItype) {
@@ -2781,7 +2797,7 @@ void CCameraSetupDlg::OnSetSaveFolder()
           else
             AfxMessageBox("You can enter only a single folder name without \\ or /");
       }
-      m_butSetSaveFolder.SetButtonStyle(BS_PUSHBUTTON);
+      FixButtonFocus(m_butSetSaveFolder);
       return;
     }
   }
@@ -2800,7 +2816,7 @@ void CCameraSetupDlg::OnSetSaveFolder()
     else
       mParam->dirForFrameSaving = dlg.GetPath();
   }
-  m_butSetSaveFolder.SetButtonStyle(BS_PUSHBUTTON);
+  FixButtonFocus(m_butSetSaveFolder);
 }
 
 // And a separate call for DE
@@ -2815,7 +2831,7 @@ void CCameraSetupDlg::OnDESetSaveFolder()
        else
          AfxMessageBox("You can enter only a single folder name without \\ or /");
   }
-  m_butDESetSaveFolder.SetButtonStyle(BS_PUSHBUTTON);
+  FixButtonFocus(m_butDESetSaveFolder);
 }
 
 // Run dialog to set frame align parameters
@@ -2879,8 +2895,8 @@ void CCameraSetupDlg::OnButSetupAlign()
     B3DCLAMP(mCurSet->faParamSetInd, 0 , (int)faParams->GetSize() - 1);  
   }
   mWinApp->SetFrameAlignMoreOpen(dlg.mMoreParamsOpen);
-  m_butSetupAlign.SetButtonStyle(BS_PUSHBUTTON);
-  m_butDEsetupAlign.SetButtonStyle(BS_PUSHBUTTON);
+  FixButtonFocus(m_butSetupAlign);
+  FixButtonFocus(m_butDEsetupAlign);
   ManageK2Binning();
   if (mDE_Type)
     ManageDEpanel();
@@ -2920,7 +2936,8 @@ void CCameraSetupDlg::ManageK2SaveSummary(void)
   bool reducing = !unNormed && IS_SUPERRES(mParam, m_iK2Mode) && !binning &&
     mCamera->GetSaveSuperResReduced() && mCamera->CAN_PLUGIN_DO(CAN_REDUCE_SUPER, mParam);
   if ((mParam->K2Type || mParam->canTakeFrames) && m_bDoseFracMode) {
-    frames = B3DNINT(m_eExposure / B3DMAX(mCamera->GetMinK2FrameTime(mParam),
+    frames = B3DNINT(m_eExposure / B3DMAX(mCamera->GetMinK2FrameTime(mParam,
+      mParam->binnings[m_iBinning], (mParam->OneViewType && m_bUseHardwareROI) ? 1 : 0),
       ActualFrameTime(m_fFrameTime)));
     int tiff = mParam->GatanCam && mCamera->GetK2SaveAsTiff();
     str.Format("%d frames", frames);
@@ -2969,8 +2986,8 @@ void CCameraSetupDlg::OnSetupFalconFrames()
   dlg.mAligningInFalcon = mParam->FEItype == FALCON3_TYPE && FCAM_CAN_ALIGN(mParam) &&
     m_bAlignDoseFrac && !mCurSet->useFrameAlign;
   if (dlg.DoModal() != IDOK) {
-    m_butSetupFalconFrames.SetButtonStyle(BS_PUSHBUTTON);
-    m_butSetupK2FrameSums.SetButtonStyle(BS_PUSHBUTTON);
+    FixButtonFocus(m_butSetupFalconFrames);
+    FixButtonFocus(m_butSetupK2FrameSums);
     return;
   }
   m_eExposure = dlg.mExposure;
@@ -2987,8 +3004,8 @@ void CCameraSetupDlg::OnSetupFalconFrames()
   ManageK2SaveSummary();
   ManageDoseFrac();
   ManageDose();
-  m_butSetupFalconFrames.SetButtonStyle(BS_PUSHBUTTON);
-  m_butSetupK2FrameSums.SetButtonStyle(BS_PUSHBUTTON);
+  FixButtonFocus(m_butSetupFalconFrames);
+  FixButtonFocus(m_butSetupK2FrameSums);
 }
 
 // Enable/disable saved summed frames from K2

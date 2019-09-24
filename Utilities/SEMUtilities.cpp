@@ -678,7 +678,7 @@ float UtilEvaluateGpuCapability(int nx, int ny, int dataSize, bool gainNorm, boo
       gpuFlags = GPU_FOR_SUMMING;
     } else {
       PrintfToLog("Insufficient memory on GPU to use it for summing (%.0f MB needed "
-        "of %.0f MB total)\n", needForGpuSum / 1.048e6, gpuMemory / 1.048e6);
+        "of %.0f MB total)", needForGpuSum / 1.048e6, gpuMemory / 1.048e6);
     }
 
     // Call this just to get number of frames that need to be held
@@ -707,7 +707,7 @@ float UtilEvaluateGpuCapability(int nx, int ny, int dataSize, bool gainNorm, boo
     // Decide if alignment can be done there
     if (needForGpuAli > gpuUsableMem) {
       PrintfToLog("Insufficient memory on GPU to do alignment (%.0f MB needed"
-        " of %.0f MB total)\n", needForGpuAli / 1.048e6, gpuMemory / 1.048e6);
+        " of %.0f MB total)", needForGpuAli / 1.048e6, gpuMemory / 1.048e6);
     } else {
       if (sumWithAlign)
         needed = needForGpuAli;

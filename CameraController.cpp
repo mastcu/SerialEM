@@ -4095,9 +4095,9 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
         dataSize = isSuperRes ? 1 : 2;
 
       // Evaluate all memory needs
-      totAliMem = UtilEvaluateGpuCapability(frameSizeX, 
-        frameSizeY, dataSize, K2Type && !gainNormed, 
-        (alignFlags & K2_SAVE_DEFECTS) != 0, conSet.binning / (isSuperRes ? 1 : 2), 
+      totAliMem = UtilEvaluateGpuCapability(frameSizeX, frameSizeY, dataSize, 
+        K2Type && !gainNormed, (alignFlags & K2_SAVE_DEFECTS) != 0, 
+        B3DCHOICE(mParam->K2Type, conSet.binning / (isSuperRes ? 1 : 2), 1), 
         faParam, numAllVsAll, numAliFrames, refineIter, groupSize, numFilt, doSpline, 
         mUseGPUforK2Align[DMind] ? mGpuMemory[DMind] : 0., maxMemory, gpuFlags, 
         deferGpuSum, mGettingFRC);
@@ -5786,9 +5786,10 @@ bool CCameraController::ConstrainFrameTime(float &frameTime, CameraParameters *c
 float CCameraController::GetCountScaling(CameraParameters *camParam)
 {
   float retVal = camParam->countsPerElectron;
-  if (camParam->K2Type == K3_TYPE) {
+  if (camParam->K2Type == K3_TYPE || (camParam->OneViewType && camParam->canTakeFrames)) {
     retVal = 1.;
-  } else if (camParam->K2Type) {
+  }
+  else if (camParam->K2Type) {
     retVal = mScalingForK2Counts > 0. ? mScalingForK2Counts : mParam->countsPerElectron;
     if (!retVal)
       retVal = mDefaultCountScaling;
@@ -8174,6 +8175,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
   float pixelSize = (float)(mBinning * 10000. * 
     mShiftManager->GetPixelSize(curCam, mMagBefore));
   bool oneViewTakingFrames = mParam->OneViewType && mParam->canTakeFrames && mTD.DoseFrac;
+  bool K2orOneView = mParam->K2Type || oneViewTakingFrames;
 
   mAcquiring = false;
   mShotIncomplete = false;
@@ -8907,8 +8909,8 @@ void CCameraController::DisplayNewImage(BOOL acquired)
     // Report on frame aligning if not deferred
     if ((mTD.UseFrameAlign && mTD.NumAsyncSumFrames < 0) || 
       (mDoingDEframeAlign == 1 && mStartedExtraForDEalign)) {
-      if (!mParam->K2Type && ((alignErr = mFalconHelper->GetAlignError()) != 0 || 
-        !(ix = mFalconHelper->GetNumAligned()))) {
+      if (!K2orOneView && ((alignErr = mFalconHelper->GetAlignError()) != 0 || 
+          !(ix = mFalconHelper->GetNumAligned()))) {
           if (!ix && !alignErr && !mTD.ErrorFromSave) {
             message = "An unknown error occurred when aligning frames";
           } else {
@@ -8934,8 +8936,8 @@ void CCameraController::DisplayNewImage(BOOL acquired)
             "raw dist = %.1f", mTypeOfAlignError > 0 ? "Weighted r" : "R", mTD.FaResMean,
             mTD.FaMaxResMax, mTD.FaRawDist);
         }
-        if ((mParam->K2Type && mGettingFRC) || 
-          (!mParam->K2Type && mFalconHelper->GetGettingFRC()))
+        if ((K2orOneView && mGettingFRC) || 
+          (!K2orOneView && mFalconHelper->GetGettingFRC()))
             PrintfToLog(" FRC crossings 0.5: %.4f  0.25: %.4f  0.125: %.4f  is %.4f at "
               "0.25/pix", mTD.FaCrossHalf / K2FA_FRC_INT_SCALE, 
               mTD.FaCrossQuarter / K2FA_FRC_INT_SCALE, 

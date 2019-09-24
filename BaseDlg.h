@@ -80,6 +80,7 @@ public:
   void ShowDlgItem(int nID, bool show);
   void FormattedSpinnerValue(NMHDR *pNMHDR, LRESULT *pResult, int lowerLim,
     int upperLim, int &oldNewVal, CString &str, const char *format);
+  void FixButtonFocus(CButton & button);
 };
 
 //{{AFX_INSERT_LOCATION}}
