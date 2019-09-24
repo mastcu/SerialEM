@@ -25,8 +25,8 @@ protected:
 	DECLARE_MESSAGE_MAP()
 
 private:
-  int mPanelStart[5];
-  int mNumInPanel[5];
+  int mPanelStart[9];
+  int mNumInPanel[9];
   CArray<FrameAliParams, FrameAliParams> *mParams;
   int mPairwiseNum;
   int mAlignBin;
@@ -39,6 +39,8 @@ private:
   int mNumDMFilters;
   CameraParameters *mCamParams;
   bool mFalconCanAlign, mDEcanAlign;
+  bool mShowRestrictions;
+  bool mShowWhereToAlign;
 
 public:
   int m_iWhereAlign;          // radio button choice

@@ -16,18 +16,22 @@ static int idTable[] = {IDC_STAT_WHERE_ALIGN, IDC_USE_FRAME_ALIGN, IDC_RALIGN_IN
   IDC_RWITH_IMOD, PANEL_END,
   IDC_STAT_FILTER, IDC_COMBOFILTER, PANEL_END,
   IDC_USE_GPU, IDC_BUT_NEW_PARAMS, IDC_LIST_SET_NAMES, IDC_STAT_PARAM_NAME,
-  IDC_EDIT_NAME, IDC_TRUNCATE_ABOVE, IDC_STAT_COUNT_LABEL, IDC_EDIT_TRUNCATION,
-  IDC_STAT_CUTOFF_LABEL, IDC_EDIT_CUTOFF, IDC_STAT_ALIGN_METHOD, IDC_BUT_DELETE_SET,
+  IDC_USE_FRAME_FOLDER, IDC_BUT_SET_FOLDER, IDC_BUT_DELETE_SET,
+  IDC_WHOLE_SERIES, IDC_EDIT_NAME, PANEL_END,
+  IDC_STAT_USE_ONLY_GROUP, IDC_ONLY_IN_PLUGIN,
+  IDC_ONLY_WITH_IMOD, IDC_ONLY_NON_SUPER, IDC_ONLY_SUPERRESOLUTION, PANEL_END,
+  IDC_STAT_LINE1, PANEL_END,
+  IDC_TRUNCATE_ABOVE, IDC_STAT_COUNT_LABEL, IDC_EDIT_TRUNCATION, PANEL_END,
+  IDC_STAT_ALIGN_METHOD, IDC_STAT_CUTOFF_LABEL, IDC_EDIT_CUTOFF,
   IDC_RPAIRWISE_NUM, IDC_RPAIRWISE_HALF, IDC_RPAIRWISE_ALL, IDC_RACCUM_REF,
-  IDC_SPIN_PAIRWISE_NUM, IDC_STAT_PAIRWISE_NUM, IDC_STAT_FRAME_LABEL, IDC_WHOLE_SERIES,
-  IDC_STAT_ALIGN_BIN, IDC_SPIN_ALIGN_BIN, IDC_REFINE_ALIGNMENT, IDC_BUT_SET_FOLDER,
+  IDC_SPIN_PAIRWISE_NUM, IDC_STAT_PAIRWISE_NUM, IDC_STAT_FRAME_LABEL,
+  IDC_STAT_ALIGN_BIN, IDC_SPIN_ALIGN_BIN, IDC_REFINE_ALIGNMENT, 
   IDC_SPIN_REFINE_ITER, IDC_STAT_REFINE_ITER, IDC_STAT_ITER_LABEL, IDC_ALIGN_SUBSET,
   IDC_GROUP_FRAMES, IDC_STAT_GROUP_SIZE, IDC_SPIN_GROUP_SIZE, IDC_STAT_SUBSET_TO,
   IDC_STAT_GROUP_NEEDS, IDC_SMOOTH_SHIFTS, IDC_STAT_SMOOTH_CRIT, IDC_STAT_SUBSET_PAREN,
   IDC_STAT_MAX_SHIFT, IDC_EDIT_MAX_SHIFT, IDC_STAT_PIXEL_LABEL, IDC_FA_EDIT_SUB_START,
-  IDC_SPIN_SMOOTH_CRIT, IDC_STAT_SMOOTH_LABEL, IDC_FA_EDIT_SUB_END, IDC_ONLY_IN_PLUGIN,
-  IDC_ONLY_WITH_IMOD, IDC_ONLY_NON_SUPER, IDC_ONLY_SUPERRESOLUTION, IDC_BUTMORE,
-  IDC_STAT_USE_ONLY_GROUP, IDC_STAT_LINE1, IDC_STAT_MORE_PARAMS, IDC_USE_FRAME_FOLDER,
+  IDC_SPIN_SMOOTH_CRIT, IDC_STAT_SMOOTH_LABEL, IDC_FA_EDIT_SUB_END, IDC_BUTMORE,
+  IDC_STAT_MORE_PARAMS, 
   IDC_SPIN_BIN_TO, IDC_STAT_ALIBIN_PIX, IDC_STAT_ALIBIN, IDC_RALIBIN_BY_FAC, 
   IDC_RBIN_TO_SIZE, IDC_STAT_ALIGN_TARGET, PANEL_END,
   IDC_REFINE_GROUPS, IDC_STAT_REFINE_CUTOFF, IDC_EDIT_REFINE_CUTOFF,
@@ -51,8 +55,8 @@ CFrameAlignDlg::CFrameAlignDlg(CWnd* pParent /*=NULL*/)
   , m_fTruncation(0)
   , m_strPairwiseNum(_T(""))
   , m_strAlignBin(_T(""))
-  , m_fCutoff(0)
-  , m_iMaxShift(0)
+  , m_fCutoff(0.05f)
+  , m_iMaxShift(2)
   , m_bGroupFrames(0)
   , m_strGroupSize(_T(""))
   , m_strGroupNeeds(_T(""))
@@ -248,6 +252,10 @@ BOOL CFrameAlignDlg::OnInitDialog()
   m_sbcRefineIter.SetPos(50);
   mFalconCanAlign = mCamParams->FEItype && FCAM_CAN_ALIGN(mCamParams);
   mDEcanAlign = mCamParams->DE_camType && (mCamParams->CamFlags & DE_CAM_CAN_ALIGN);
+  mShowWhereToAlign = true;
+  constrainByRes = mCamParams->K2Type || (mDEcanAlign &&
+    (mCamParams->CamFlags & DE_CAM_CAN_COUNT));
+  mShowRestrictions = mShowWhereToAlign || constrainByRes;
 
   // set up filter combo box for K2 camera
   mNumDMFilters = 0;
@@ -270,10 +278,6 @@ BOOL CFrameAlignDlg::OnInitDialog()
     (mCamParams->K2Type || mFalconCanAlign || mDEcanAlign));
   EnableDlgItem(IDC_USE_FRAME_ALIGN, mEnableWhere);
   EnableDlgItem(IDC_RWITH_IMOD, mEnableWhere);
-  constrainByRes = mCamParams->K2Type || (mDEcanAlign && 
-    (mCamParams->CamFlags & DE_CAM_CAN_COUNT));
-  ShowDlgItem(IDC_ONLY_NON_SUPER, constrainByRes);
-  ShowDlgItem(IDC_ONLY_SUPERRESOLUTION, constrainByRes); 
 
   // Rename buttons for Falcon, disable some items
   if (!mCamParams->K2Type) {
@@ -283,11 +287,10 @@ BOOL CFrameAlignDlg::OnInitDialog()
       SetDlgItemText(IDC_RALIGN_IN_DM, "In DE server");
     else if (!m_iWhereAlign)
       m_iWhereAlign = 1;
-    SetDlgItemText(IDC_USE_FRAME_ALIGN, "In SerialEM");
-    SetDlgItemText(IDC_ONLY_IN_PLUGIN, "Aligning in SerialEM");
-    m_butTruncateAbove.EnableWindow(false);
-    m_editTruncation.EnableWindow(false);
-    m_statCountLabel.EnableWindow(false);
+    if (!mCamParams->GatanCam) {
+      SetDlgItemText(IDC_USE_FRAME_ALIGN, "In SerialEM");
+      SetDlgItemText(IDC_ONLY_IN_PLUGIN, "Aligning in SerialEM");
+    }
 
     // Advanced Falcon 2 on remote computer with no local frame path cannot deal with
     // paths in a com file or send it elsewhere, so disable that option
@@ -412,10 +415,14 @@ void CFrameAlignDlg::UnloadCurrentPanel(int whereAlign)
 // Adjust panel layout
 void CFrameAlignDlg::ManagePanels(void)
 {
-  BOOL states[5] = {true, true, true, true, true};
+  BOOL states[9] = {true, true, true, true, true, true, true, true, true};
+  bool constrainByRes;
+  states[0] = mShowWhereToAlign;
   states[1] = m_iWhereAlign == 0 && mCamParams->K2Type;
-  states[2] = m_iWhereAlign > 0;
-  states[3] = states[2] && mMoreParamsOpen;
+  states[2] = states[6] = m_iWhereAlign > 0;
+  states[3] = mShowRestrictions;
+  states[5] = mCamParams->K2Type;
+  states[7] = states[2] && mMoreParamsOpen;
   m_butSetFolder.EnableWindow(m_iWhereAlign == 2 && !m_bUseFrameFolder);
   m_butUseFrameFolder.EnableWindow(m_iWhereAlign == 2);
   m_butKeepPrecision.EnableWindow(m_iWhereAlign == 1 && mNewerK2API && 
@@ -425,8 +432,19 @@ void CFrameAlignDlg::ManagePanels(void)
   m_butUseGPU.EnableWindow(mGPUavailable || m_iWhereAlign > 1);
   SetDlgItemText(IDC_BUTMORE, mMoreParamsOpen ? "-" : "+");
   AdjustPanels(states, idTable, leftTable, topTable, mNumInPanel, mPanelStart, 0);
+  if (mShowRestrictions) {
+    constrainByRes = mCamParams->K2Type || (mDEcanAlign &&
+      (mCamParams->CamFlags & DE_CAM_CAN_COUNT));
+    ShowDlgItem(IDC_ONLY_NON_SUPER, constrainByRes);
+    ShowDlgItem(IDC_ONLY_SUPERRESOLUTION, constrainByRes);
+  }
   if (!mCamParams->K2Type && !mFalconCanAlign && !mDEcanAlign)
     ShowDlgItem(IDC_RALIGN_IN_DM, false);
+  if (!mShowWhereToAlign) {
+    ShowDlgItem(IDC_WHOLE_SERIES, false);
+    ShowDlgItem(IDC_USE_FRAME_FOLDER, false);
+    ShowDlgItem(IDC_BUT_SET_FOLDER, false);
+  }
 }
 
 // Show more or less parameters
