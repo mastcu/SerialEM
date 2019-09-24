@@ -229,11 +229,13 @@
       for toggling this setting.</P>
     <P><B>Normalize beam through View / Normalize condenser lenses</B></P>
     <P>This option will appear in one of two forms depending on whether there is an 
-      entry for NormCondenserInLowDose in SerialEMproperties.txt.&nbsp; When the option 
+      entry for NormCondenserInLowDose in SerialEMproperties.txt.&nbsp; </P>
+    <P>When the option 
       is <B>Normalize beam through View</B> 
       and is selected, changes in intensity and spot size when going 
       between some areas will be normalized by passing through the View area intensity and 
-      spot size. This normalization is intended to compensate for the lens hysteresis 
+      spot size. This initial change will not be done will be done when going to the 
+      Search area or going between areas with identical beam settings.&nbsp; This normalization is intended to compensate for the lens hysteresis 
       that makes the beam position depend on the recent history of intensity changes, 
       a pronounced effect on 300 KeV JEOL scopes. With the option on, the beam 
       position in the Record area, for example, should be the same regardless of 
@@ -242,6 +244,13 @@
       different beam positions, use the option for setting 'Additional beam shift' 
       for some areas. It may be necessary to set the property LowDoseBeamNormDelay to 
       a higher value for maximum effect.</P>
+    <P>When the option is <strong>Normalize Condenser Lenses</strong> and is selected, 
+      the microscope routine for normalizing condenser lenses will be called when 
+      changing areas, except when going to View or Search, or when going between areas 
+      with identical beam settings.&nbsp; Again, the property LowDoseBeamNormDelay may 
+      need to be set to a higher value for the best result.</P>
+    <P>Note that the value of NormCondenserInLowDose can be changed with the 
+      SetProperty script command, but the label here wilt change.</P>
     <P><B>Keep Focus and Trial identical</B></P>
     <P>When this option is selected, the parameters of the Focus and Trial areas will 
       be kept the same in all respects. It is desirable for these areas to be in the 

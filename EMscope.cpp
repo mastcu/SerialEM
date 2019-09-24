@@ -4657,7 +4657,7 @@ void CEMscope::GotoLowDoseArea(int newArea)
   bool fromView = mLowDoseSetArea == VIEW_CONSET;
   bool toView = newArea == VIEW_CONSET;
   bool splitBeamShift, leavingLowMag, manage = false;
-  bool probeDone = true, changingAtZeroIS;
+  bool probeDone = true, changingAtZeroIS, sameIntensity;
   BOOL bDebug = GetDebugOutput('b');
   BOOL lDebug = GetDebugOutput('l');
   int oldArea = mLowDoseSetArea;
@@ -4703,15 +4703,16 @@ void CEMscope::GotoLowDoseArea(int newArea)
 
   // If normalizing beam, do it unless going to View or Search.
   // Do it differently depending on the property
-  //and we are not going to or from view area and intensity is 
-  // changing and everything is defined, 
   if (!STEMmode && mLDNormalizeBeam && !toView && !toSearch) {
+    sameIntensity = oldArea >= 0 && ldArea->spotSize == mLdsaParams->spotSize &&
+      ldArea->intensity == mLdsaParams->intensity &&
+      ldArea->probeMode == mLdsaParams->probeMode && 
+      ldArea->beamAlpha == mLdsaParams->beamAlpha;
     if (mUseNormForLDNormalize) {
 
       // If using condenser normalization, do it if not going to view or search and not
       // going between tied focus/trial
-      if (!toView && !toSearch &&
-        !(fromFocTrial && toFocTrial && mWinApp->mLowDoseDlg.m_bTieFocusTrial)) {
+      if (!toView && !toSearch && !sameIntensity) {
         NormalizeCondenser();
         if (mLDBeamNormDelay)
           Sleep(mLDBeamNormDelay);
@@ -4720,16 +4721,13 @@ void CEMscope::GotoLowDoseArea(int newArea)
 
       // Classic: set beam for view area if not going to View or Search, not coming from
       // view anyway, and intensity changes
-      if (oldArea > 0 && (ldArea->spotSize != mLdsaParams->spotSize ||
-          ldArea->intensity != mLdsaParams->intensity) &&
-        ldArea->spotSize && ldParams[0].spotSize &&
+      if (oldArea > 0 && !sameIntensity && ldArea->spotSize && ldParams[0].spotSize &&
         ldArea->intensity && ldParams[0].intensity) {
 
         SetSpotSize(ldParams[0].spotSize);
         SetIntensity(ldParams[0].intensity);
         if (mLDBeamNormDelay)
           Sleep(mLDBeamNormDelay);
-        PrintfToLog("Normalize through V");
       }
     }
   }

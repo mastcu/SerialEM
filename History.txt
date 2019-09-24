@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+9/24/19: Added property to use condenser lens normalization instead of passing
+through View intensity/spot size when changing low dose area.
+
 9/24/19: SEM_3-7-9
 9/24/19: Fixed copying of low dose areas to handle shift and defocus offsets
 properly for View and Search, and to not copy additional beam shift/tilt to
@@ -11,6 +14,7 @@ Record (In 3.7).
 9/24/19: Fixed area measurement that make "Add grid like last" to fill largest
 instead of smallest polygon/map that point is in (in 3.7).
 
+9/23/19: 3-8-0beta5
 9/18/17: Enabled saving or aligning frames in the SEMCCD plugin for OneView
 and Rio cameras, just as for K2/K3, and add general framework from
 saving/aligning frames in SerialEM for other cameras.
