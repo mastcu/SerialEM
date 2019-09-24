@@ -298,6 +298,8 @@ CSerialEMApp::CSerialEMApp()
       mCamParams[i].halfSizeY[j] = 0;
       mCamParams[i].quarterSizeX[j] = 0;
       mCamParams[i].quarterSizeY[j] = 0;
+      mCamParams[i].minFrameTime[j] = 0.;
+      mCamParams[i].frameTimeDivisor[j] = 0.;
     }
     mCamParams[i].autoGainAtBinning = 0;
     mCamParams[i].numExtraGainRefs = 0;
@@ -313,6 +315,8 @@ CSerialEMApp::CSerialEMApp()
     mCamParams[i].useTVToUnblank = 0;
     mCamParams[i].checkTemperature = false;
     mCamParams[i].sideMount = false;
+    mCamParams[i].canTakeFrames = -1;
+    mCamParams[i].useGPUforAlign[0] = mCamParams[i].useGPUforAlign[1] = false;
     mCamParams[i].startupDelay = CAMERA_START_DELAY;
     mCamParams[i].startDelayPerFrame = -0.0001f;
     mCamParams[i].DMbeamShutterOK = TRUE;
@@ -405,6 +409,7 @@ CSerialEMApp::CSerialEMApp()
       mCamConSets[i][k].boostMag = 0;
       mCamConSets[i][k].magAllShots = 0;
       mCamConSets[i][k].integration = 1;
+      mCamConSets[i][k].correctDrift = -1;
     }
     mCamParams[i].minPixelTime = 0.1f;
     mCamParams[i].maxPixelTime = 0.;
@@ -766,6 +771,7 @@ CSerialEMApp theApp;
 BOOL CSerialEMApp::InitInstance()
 {
   int iSet, iCam, iAct, mag, indSpace, indQuote1, indQuote2;
+  bool anyFrameSavers = false;
   CString message, dropCameras;
 
   AfxEnableControlContainer();
@@ -1129,6 +1135,14 @@ BOOL CSerialEMApp::InitInstance()
         mCamConSets[iCam][iSet].shuttering = USE_BEAM_BLANK;
       B3DCLAMP(mCamConSets[iCam][iSet].right, 0, mCamParams[iCam].sizeX);
       B3DCLAMP(mCamConSets[iCam][iSet].bottom, 0, mCamParams[iCam].sizeY);
+
+      // Backwards compatibility for Oneview drift correction which was stored in
+      // alignFrames: if it is -1, it was not read in, so transfer alignFrames to it
+      // and zero out alignFrames
+      if (mCamConSets[iCam][iSet].correctDrift < 0 && mCamParams[iCam].OneViewType) {
+        mCamConSets[iCam][iSet].correctDrift = mCamConSets[iCam][iSet].alignFrames;
+        mCamConSets[iCam][iSet].alignFrames = 0;
+      }
     }
     mCamParams[iCam].canBlock = mCamParams[iCam].retractable;
     numMontSearchCopy += camMScopied;
@@ -1145,8 +1159,10 @@ BOOL CSerialEMApp::InitInstance()
       mCamParams[iCam].processHere = 0;
     if (mCamera->IsDirectDetector(&mCamParams[iCam]))
       mAnyDirectDetectors = true;
+    if (mCamParams[iCam].canTakeFrames & FRAMES_CAN_BE_SAVED)
+      anyFrameSavers = true;
   }
-  if (mAnyDirectDetectors && mDocWnd->GetDfltUseMdoc() < 0)
+  if ((mAnyDirectDetectors || anyFrameSavers) && mDocWnd->GetDfltUseMdoc() < 0)
     mDocWnd->SetDfltUseMdoc(1);
 
   // Copy active list from properties into original active list
@@ -2190,7 +2206,7 @@ BOOL CSerialEMApp::CheckIdleTasks()
           mFilterTasks->RefineZLPNextTask();
         else if (idc->source == TASK_CAL_IS_NEUTRAL)
           mScope->CalNeutralNextMag(idc->param);
-        else if (idc->source == TASK_MONTAGE || idc->source == TASK_MONTAGE_FOCUS || 
+        else if (idc->source == TASK_MONTAGE || idc->source == TASK_MONTAGE_FOCUS ||
           idc->source == TASK_MONTAGE_DWELL)
           mMontageController->DoNextPiece(idc->param);
         else if (idc->source == TASK_MONTAGE_RESTORE)
@@ -2203,6 +2219,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
           mMacroProcessor->TaskDone(idc->param);
         else if (idc->source == TASK_ACQUIRE_RESETUP)
           ReopenCameraSetup();
+        else if (idc->source == TASK_SET_CAMERA_NUM)
+          SetActiveCameraNumber(idc->param);
         else if (idc->source == TASK_DEL_OTHER_STORE)
           mBufferManager->DeleteOtherStore();
         else if (idc->source == TASK_FILM_EXPOSURE)
@@ -3050,6 +3068,12 @@ void CSerialEMApp::OnCameraParameters()
   CCameraSetupDlg camDlg;
   if (mNoCameras)
     return;
+
+  // Do not allow parameters or camera to change if stacking frames - come back when done
+  if (mCamera->CheckFrameStacking(false, true)) {
+    AddIdleTask(CFalconHelper::TaskStackingBusy, TASK_ACQUIRE_RESETUP, 0, 0);
+    return;
+  }
   camDlg.mCamParam = &mCamParams[0];
   camDlg.mCurrentSet = mSelectedConSet;
   camDlg.mCurrentCamera = mCurrentActiveCamera;
@@ -3454,6 +3478,12 @@ void CSerialEMApp::SetActiveCameraNumber(int inNum)
     SEMMessageBox("You cannot change the current camera while\n"
       "the Beam Autocentering Setup Dialog is open");
     ErrorOccurred(1);
+    return;
+  }
+
+  // Do not switch cameras while stacking frames, come back here when done
+  if (mCamera->CheckFrameStacking(true, true)) {
+    AddIdleTask(CFalconHelper::TaskStackingBusy, TASK_SET_CAMERA_NUM, inNum, 0);
     return;
   }
 

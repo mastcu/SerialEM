@@ -123,6 +123,7 @@ int CParameterIO::ReadSettings(CString strFileName)
 #include "SettingsTests.h"
 #undef SETTINGS_MODULES
   ControlSet *cs;
+  CameraParameters *camParams = mWinApp->GetCamParams();
   CString strLine, strCopy, unrecognized = "";
   CString strItems[MAX_TOKENS];
   CString message;
@@ -246,6 +247,8 @@ int CParameterIO::ReadSettings(CString strFileName)
             cs->lineSync = itemInt[1];
           else if (NAME_IS("DynamicFocus"))
             cs->dynamicFocus = itemInt[1];
+          else if (NAME_IS("CorrectDrift"))
+            cs->correctDrift = itemInt[1];
           else if (NAME_IS("K2ReadMode"))
             cs->K2ReadMode = itemInt[1];
           else if (NAME_IS("DoseFracMode"))
@@ -357,6 +360,15 @@ int CParameterIO::ReadSettings(CString strFileName)
         if (strCopy == "EmptyPath")
           strCopy = "";
         camera->SetDirForFalconFrames(strCopy);
+      } else if (NAME_IS("DirForFrameSaving")) {
+        index = itemInt[1];
+        B3DCLAMP(index, 0, MAX_CAMERAS - 1);
+        StripItems(strLine, 2, camParams[index].dirForFrameSaving);
+      } else if (NAME_IS("UseGPUforFrameAlign")) {
+        index = itemInt[1];
+        B3DCLAMP(index, 0, MAX_CAMERAS - 1);
+        camParams[index].useGPUforAlign[0] = itemInt[2] != 0;
+        camParams[index].useGPUforAlign[1] = itemInt[3] != 0;
       } else if (NAME_IS("FrameBaseName")) {
         StripItems(strLine, 1, strCopy);
         camera->SetFrameBaseName(strCopy);
@@ -1238,6 +1250,7 @@ void CParameterIO::WriteSettings(CString strFileName)
         WriteFloat("DriftSettling", cs->drift);
         WriteInt("LineSync", cs->lineSync);
         WriteInt("DynamicFocus", cs->dynamicFocus);
+        WriteInt("CorrectDrift", cs->correctDrift);
         WriteInt("K2ReadMode", cs->K2ReadMode);
         WriteInt("SumK2Frames", cs->sumK2Frames);
         WriteInt("DoseFracMode", cs->doseFrac);
@@ -1256,7 +1269,7 @@ void CParameterIO::WriteSettings(CString strFileName)
           WriteInt("SkipFramesBefore", cs->numSkipBefore);
         if (cs->numSkipBefore)
           WriteInt("SkipFramesAfter", cs->numSkipAfter);
-        OutputVector("SummedFrameList", (int)cs->summedFrameList.size(), 
+        OutputVector("SummedFrameList", (int)cs->summedFrameList.size(),
           &cs->summedFrameList, NULL);
         OutputVector("UserFrameFracs", (int)cs->userFrameFractions.size(), NULL,
           &cs->userFrameFractions);
@@ -1272,6 +1285,16 @@ void CParameterIO::WriteSettings(CString strFileName)
           oneState += macCopy;
         }
         mFile->WriteString(oneState + "\n");
+      }
+      if (!mCamParam[iCam].dirForFrameSaving.IsEmpty()) {
+        oneState.Format("DirForFrameSaving %d %s\n", iCam,
+          (LPCTSTR)mCamParam[iCam].dirForFrameSaving);
+        mFile->WriteString(oneState);
+      }
+      if (mCamParam[iCam].useGPUforAlign[0] || mCamParam[iCam].useGPUforAlign[1]) {
+        oneState.Format("UseGPUforFrameAlign %d %d %d\n", iCam,
+          mCamParam[iCam].useGPUforAlign[0], mCamParam[iCam].useGPUforAlign[1]);
+        mFile->WriteString(oneState);
       }
     }
 
@@ -2097,8 +2120,14 @@ int CParameterIO::ReadProperties(CString strFileName)
             camP->taskTargetSize = itemInt[1];
           else if (MatchNoCase("AllowPostActions"))
             camP->postActionsOK = itemInt[1];
-          else if (MatchNoCase("AddToExposureTime"))
-            camP->addToExposure = (float)itemDbl[1];
+          else if (MatchNoCase("CanTakeFrames"))
+            camP->canTakeFrames = itemInt[1];
+          else if (MatchNoCase("MinimumFrameTimes"))
+            StoreFloatsPerBinning(strItems, "minimum frame times", iset, strFileName,
+              camP->minFrameTime);
+          else if (MatchNoCase("FrameTimeDivisors"))
+            StoreFloatsPerBinning(strItems, "divisor for frame times", iset, strFileName,
+              camP->frameTimeDivisor);
           else if (MatchNoCase("ImageRotation"))
             camP->imageRotation = itemInt[1];
           else if (MatchNoCase("InvertFocusRamp"))
