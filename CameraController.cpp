@@ -666,19 +666,23 @@ int CCameraController::Initialize(int whichCameras)
       param->canTakeFrames = 0;
     if (param->canTakeFrames) {
       for (jnd = 0; jnd < param->numBinnings; jnd++) {
-        if (param->minFrameTime[jnd] <= 0.) {
-          if (ovInd >= 0) {
-            if (jnd < 4)
-              param->minFrameTime[jnd] = ovFrameDivisors[ovInd][jnd];
-          } else if (!jnd)
-            param->minFrameTime[jnd] = 0.001f;
-        }
         if (param->frameTimeDivisor[jnd] <= 0.) {
           if (ovInd >= 0) {
             if (jnd < 4)
               param->frameTimeDivisor[jnd] = ovFrameDivisors[ovInd][jnd];
           } else if (!jnd)
             param->frameTimeDivisor[jnd] = 0.001f;
+        }
+        if (param->minFrameTime[jnd] <= 0.) {
+          if (ovInd >= 0) {
+            if (jnd < 4) {
+              if (param->frameTimeDivisor[jnd] < 0.00101f)
+                param->minFrameTime[jnd] = ovFrameDivisors[ovInd][jnd];
+              else
+                param->minFrameTime[jnd] = param->frameTimeDivisor[jnd];
+            } else if (!jnd)
+              param->minFrameTime[jnd] = param->frameTimeDivisor[jnd];
+          }
         }
         ACCUM_MAX(param->minFrameTime[jnd], 
           param->frameTimeDivisor[jnd]);
