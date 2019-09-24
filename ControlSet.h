@@ -16,6 +16,8 @@
 #define FRAMEALI_HALF_PAIRWISE  1
 #define FRAMEALI_ALL_PAIRWISE  2
 #define FRAMEALI_ACCUM_REF  3
+#define FRAMES_CAN_BE_SAVED 1
+#define FRAMES_CAN_BE_ALIGNED 2
 
 #define MAX_BINNINGS 10
 #define MAX_HOT_COLUMNS 200
@@ -53,12 +55,13 @@ struct ControlSet {
   int averageOnce;
   int removeXrays;
   int channelIndex[MAX_STEM_CHANNELS];
-  int lineSync;
+  int lineSync;       // For line sync in DigiScan
   int dynamicFocus;
   int boostMag;       // For boostin mag in STEM focus AND for DE hardware binning
   int magAllShots;    // For choice to boost mag on all shots AND for DE hardware ROI
   int integration;
-  int K2ReadMode;     // Linear/counting/super-resolution for K2, DE, and Falcon!
+  int correctDrift;   // Flag to use internal drift correction of camera
+  int K2ReadMode;     // Linear/counting/super-res for K2, DE, and Falcon; diff for 1View
   int doseFrac;
   float frameTime;
   int alignFrames;
@@ -160,6 +163,11 @@ struct CameraParameters {
   int useTVToUnblank;      // TV needs to be put in to keep from blanking other cameras 
   BOOL checkTemperature;   // Check whether temperature is stable before first acquire
   BOOL sideMount;          // No need to raise screen for side mount camera
+  int canTakeFrames;       // Flag that camera can take frames for save or align
+  float minFrameTime[MAX_BINNINGS];      // Minimum frame time, potentially per binning
+  float frameTimeDivisor[MAX_BINNINGS];  // Frame times must be multiple of
+  CString dirForFrameSaving; // Folder to save frames in
+  BOOL useGPUforAlign[2];  // Flags to use GPU for frame alignment;
   float startupDelay;      // Delay time between start of blanking thread and shot
   float startDelayPerFrame; // Additional time to add per frame in K2 dose fractionation
   BOOL DMbeamShutterOK;    // Flag that we can direct DM to use beam shutter
