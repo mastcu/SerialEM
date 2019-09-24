@@ -136,6 +136,7 @@ static char THIS_FILE[]=__FILE__;
 #define CMD_IS(a) (cmdIndex == CME_##a)
 
 #define MAX_TOKENS 60
+#define LOOP_LIMIT_FOR_IF -2147000000
 
 enum {VARTYPE_REGULAR, VARTYPE_PERSIST, VARTYPE_INDEX, VARTYPE_REPORT, VARTYPE_LOCAL};
 enum {SKIPTO_ENDIF, SKIPTO_ELSE_ENDIF, SKIPTO_ENDLOOP};
@@ -259,7 +260,7 @@ enum {CME_SCRIPTEND = -7, CME_LABEL, CME_SETVARIABLE, CME_SETSTRINGVAR, CME_DOKE
   CME_SETFRAMESERIESPARAMS, CME_SETCUSTOMTIME, CME_REPORTCUSTOMINTERVAL, 
   CME_STAGETOLASTMULTIHOLE, CME_IMAGESHIFTTOLASTMULTIHOLE, CME_NAVINDEXITEMDRAWNON,
   CME_SETMAPACQUIRESTATE, CME_RESTORESTATE, CME_REALIGNTOMAPDRAWNON,
-  CME_GETREALIGNTOITEMERROR
+  CME_GETREALIGNTOITEMERROR, CME_DOLOOP, CME_REPORTVACUUMGAUGE 
 };
 
 // The two numbers are the minimum arguments and whether arithmetic is allowed
@@ -275,7 +276,7 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"Endif", 0, 0}, {"EndLoop", 0, 0}, {"Eucentricity", 0,0}, {"ExposeFilm",0,1}, {"F",0,0},
 {"G",0,0}, {"GoToLowDoseArea",1,0}, {"If",3,0}, {"ImageShiftByMicrons", 2, 1},
 {"ImageShiftByPixels",2,1}, {"ImageShiftByUnits",2,1}, {"IncPercentC2",1,1}, {"L", 0, 0},
-{"Loop",1,0}, {"M",0,0}, {"MacroName",1,0}, {"LongName",1,0}, {"ManualFilmExposure", 1,1},
+{"Loop",1,1}, {"M",0,0}, {"MacroName",1,0}, {"LongName",1,0}, {"ManualFilmExposure", 1,1},
 {"Montage",0,0}, {"MoveStage",2,1},{"MoveStageTo",2,1},{"NewMap",0,0},{"OpenNewFile",1,0},
 {"OpenNewMontage",1,0}, {"Pause",0,0}, {"QuadrantMeans",0,0}, {"R",0,0}, {"ReadFile",0,0},
 {"RealignToNavItem",1,0}, {"RealignToOtherItem",2,0}, {"RecordAndTiltDown",0,0},
@@ -400,7 +401,8 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"SetFrameSeriesParams", 1, 0}, {"SetCustomTime", 1, 0}, {"ReportCustomInterval", 1, 0},
 {"StageToLastMultiHole", 0, 0}, {"ImageShiftToLastMultiHole", 0, 0}, 
 {"NavIndexItemDrawnOn", 1, 0}, {"SetMapAcquireState", 1, 0}, {"RestoreState", 0, 0},
-{"RealignToMapDrawnOn", 2, 0}, {"GetRealignToItemError", 0, 0},
+{"RealignToMapDrawnOn", 2, 0}, {"GetRealignToItemError", 0, 0}, {"DoLoop", 3, 1},
+{"ReportVacuumGauge", 1, 0},
 {NULL, 0, 0}
 };
 // The longest is now 25 characters but 23 is a more common limit
@@ -467,8 +469,8 @@ CMacroProcessor::CMacroProcessor()
     "LOG", "LOG10", "EXP" };
   std::string tmpOp2[] = { "ROUND", "POWER", "ATAN2", "MODULO", "DIFFABS",
     "FRACDIFF", "MIN", "MAX" };
-  std::string keywords[] = { "REPEAT", "ENDLOOP", "DOMACRO", "LOOP", "CALLMACRO",
-    "ENDIF", "IF", "ELSE", "BREAK", "CONTINUE", "CALL", "EXIT", "RETURN", "KEYBREAK",
+  std::string keywords[] = { "REPEAT", "ENDLOOP", "DOMACRO", "LOOP", "CALLMACRO", "DOLOOP"
+    , "ENDIF", "IF", "ELSE", "BREAK", "CONTINUE", "CALL", "EXIT", "RETURN", "KEYBREAK",
     "SKIPTO", "FUNCTION", "CALLFUNCTION", "ENDFUNCTION", "CALLSCRIPT", "DOSCRIPT" };
   SEMBuildTime(__DATE__, __TIME__);
   mWinApp = (CSerialEMApp *)AfxGetApp();
@@ -1406,7 +1408,7 @@ void CMacroProcessor::NextCommand()
     else if (strItems[1] == "=" || strItems[1] == ":=")
       cmdIndex = CME_SETVARIABLE;
   }
-  if (CMD_IS(ELSEIF) && mLoopLevel >= 0 && !mLoopLimit[mLoopLevel])
+  if (CMD_IS(ELSEIF) && mLoopLevel >= 0 && mLoopLimit[mLoopLevel] == LOOP_LIMIT_FOR_IF)
     cmdIndex = CME_ZEROLOOPELSEIF;
     
   // See if we are supposed to stop at an ending place
@@ -1473,17 +1475,18 @@ void CMacroProcessor::NextCommand()
   case CME_ENDLOOP:                                         // EndLoop
 
     // First see if we are actually doing a loop: if not, error
-    if (mLoopDepths[mCallLevel] < 0 || mLoopLimit[mLoopLevel] < 0) {
+    if (mLoopDepths[mCallLevel] < 0 || mLoopLimit[mLoopLevel] < LOOP_LIMIT_FOR_IF) {
       AbortMacro();
-      AfxMessageBox("The script contains an ENDLOOP without a LOOP statement",
+      AfxMessageBox("The script contains an ENDLOOP without a LOOP or DOLOOP statement",
         MB_EXCLAME);
       return;
     }
 
     // If count is not past limit, go back to start;
     // otherwise clear index variable and decrease level indexes
-    mLoopCount[mLoopLevel]++;
-    if (mLoopCount[mLoopLevel] <= mLoopLimit[mLoopLevel])
+    mLoopCount[mLoopLevel] += mLoopIncrement[mLoopLevel];
+    if ((mLoopIncrement[mLoopLevel] < 0 ? -1 : 1) * 
+      (mLoopCount[mLoopLevel] - mLoopLimit[mLoopLevel]) <= 0)
       mCurrentIndex = mLoopStart[mLoopLevel];
     else {
       ClearVariables(VARTYPE_INDEX, mCallLevel, mLoopLevel);
@@ -1494,6 +1497,7 @@ void CMacroProcessor::NextCommand()
     break;
     
   case CME_LOOP:                                            // Loop
+  case CME_DOLOOP:                                          // DoLoop
 
     // Doing a loop: get the count, make sure it is legal, and save the current
     // index as the starting place to go back to
@@ -1502,17 +1506,31 @@ void CMacroProcessor::NextCommand()
       " at line: \n\n:");
     mLoopLevel++;
     mLoopDepths[mCallLevel]++;
-    mLoopLimit[mLoopLevel] = B3DMAX(0, B3DNINT(itemDbl[1]));
     mLoopStart[mLoopLevel] = mCurrentIndex;
-    mLoopCount[mLoopLevel] = 1;
+    mLoopIncrement[mLoopLevel] = 1;
+    if (CMD_IS(LOOP)) {
+      mLoopLimit[mLoopLevel] = B3DMAX(0, B3DNINT(itemDbl[1]));
+      mLoopCount[mLoopLevel] = 1;
+      index = 2;
+    } else {
+      mLoopCount[mLoopLevel] = itemInt[2];
+      mLoopLimit[mLoopLevel] = itemInt[3];
+      if (!itemEmpty[4]) {
+        mLoopIncrement[mLoopLevel] = itemInt[4];
+        if (!itemInt[4])
+          ABORT_LINE("The loop increment is 0 at line:\n\n");
+        index = 1;
+      }
+    }
     mLastIndex = -1;
-    if (!mLoopLimit[mLoopLevel]) {
+    if ((mLoopIncrement[mLoopLevel] < 0 ? -1 : 1) *
+      (mLoopCount[mLoopLevel] - mLoopLimit[mLoopLevel]) > 0) {
       if (SkipToBlockEnd(SKIPTO_ENDLOOP, strLine)) {
         AbortMacro();
         return;
       }
-    } else if (!itemEmpty[2]) {
-      if (SetVariable(strItems[2], 1.0, VARTYPE_INDEX, mLoopLevel, true, &report))
+    } else if (!itemEmpty[index]) {
+      if (SetVariable(strItems[index], 1.0, VARTYPE_INDEX, mLoopLevel, true, &report))
         ABORT_LINE(report + " in script line: \n\n");
     }
     break;
@@ -1531,7 +1549,7 @@ void CMacroProcessor::NextCommand()
         ABORT_LINE("Nesting of loops, IF blocks, and script or function calls is too deep"
         " at line: \n\n:");
       mLoopDepths[mCallLevel]++;
-      mLoopLimit[mLoopLevel] = 0;
+      mLoopLimit[mLoopLevel] = LOOP_LIMIT_FOR_IF;
     }
 
     // If not true, skip forward; if it is true, mark if as satisfied with a -1
@@ -1542,7 +1560,7 @@ void CMacroProcessor::NextCommand()
       }
       mLastIndex = -1;
     } else
-      mLoopLimit[mLoopLevel] = -1;
+      mLoopLimit[mLoopLevel] = LOOP_LIMIT_FOR_IF - 1;
     break;
 
   case CME_ENDIF:                                           // Endif
@@ -1573,7 +1591,7 @@ void CMacroProcessor::NextCommand()
     mLastIndex = -1;
 
     // Pop any IFs on the loop stack
-    while (mLoopLevel >= 0 && mLoopLimit[mLoopLevel] <= 0) {
+    while (mLoopLevel >= 0 && mLoopLimit[mLoopLevel] <= LOOP_LIMIT_FOR_IF) {
       mLoopLevel--;
       mLoopDepths[mCallLevel]--;
     }
@@ -5389,6 +5407,22 @@ void CMacroProcessor::NextCommand()
     mWinApp->AppendToLog(report, mLogAction);
     SetReportedValues(&strItems[1], index);
     break;
+
+  case CME_REPORTVACUUMGAUGE:                               // ReportVacuumGauge
+    if (!mScope->GetGaugePressure((LPCTSTR)strItems[1], index, delISX)) {
+      if (JEOLscope && index < -1 && index > -4) {
+        report.Format("Name must be \"Pir\" or \"Pen\" followed by number between 0 and "
+          "9 in line:\n\n");
+        ABORT_LINE(report);
+      }
+      AbortMacro();
+      return;
+    }
+    report.Format("Gauge %s status is %d, pressure is %f", (LPCTSTR)strItems[1], index, 
+      delISX);
+    mWinApp->AppendToLog(report, mLogAction);
+    SetReportedValues(&strItems[2], index, delISX);
+    break;
     
   case CME_SETSLITWIDTH:                                    // SetSlitWidth
     if (itemEmpty[1])
@@ -5641,20 +5675,22 @@ void CMacroProcessor::NextCommand()
   case CME_SETFRAMETIME:                                    // SetFrameTime
     if (CheckAndConvertCameraSet(strItems[1], itemInt[1], index, strCopy))
       ABORT_LINE(strCopy);
-    if (!camParams->K2Type)
-      ABORT_NOLINE("Frame time can be set only if the current camera is a K2");
+    if (!camParams->K2Type && !camParams->canTakeFrames)
+      ABORT_NOLINE("Frame time cannot be set for the current camera type");
     SaveControlSet(index);
     mConSets[index].frameTime = (float)itemDbl[2];
-    mCamera->ConstrainFrameTime(mConSets[index].frameTime, camParams);
+    mCamera->ConstrainFrameTime(mConSets[index].frameTime, camParams, 
+      mConSets[index].binning, camParams->OneViewType ? mConSets[index].K2ReadMode : 0);
     break;
     
   case CME_SETK2READMODE:                                   // SetK2ReadMode
     if (CheckAndConvertCameraSet(strItems[1], itemInt[1], index, strCopy))
       ABORT_LINE(strCopy);
-    if (!camParams->K2Type)
-      ABORT_NOLINE("Frame time can be set only if the current camera is a K2");
+    if (!camParams->K2Type && !camParams->OneViewType && 
+      camParams->FEItype != FALCON3_TYPE && !camParams->DE_camType)
+      ABORT_NOLINE("Read mode cannot be set for the current camera type");
     if (itemInt[2] < 0 || itemInt[2] > 2)
-      ABORT_LINE("K2/K3 Read mode must 0, 1, or 2 in:\n\n");
+      ABORT_LINE("Read mode must 0, 1, or 2 in:\n\n");
     SaveControlSet(index);
     mConSets[index].K2ReadMode = itemInt[2];
     break;
@@ -6833,9 +6869,16 @@ void CMacroProcessor::NextCommand()
     break;
     
   case CME_REPORTPIEZOXY:                                   // ReportPiezoXY
-    if (mWinApp->mPiezoControl->GetXYPosition(delISX, delISY)) {
-      AbortMacro();
-      return;
+    if (mWinApp->mPiezoControl->GetNumPlugins()) {
+      if (mWinApp->mPiezoControl->GetXYPosition(delISX, delISY)) {
+        AbortMacro();
+        return;
+      }
+    } else {
+      if (!mScope->GetPiezoXYPosition(delISX, delISY)) {
+        AbortMacro();
+        return;
+      }
     }
     report.Format("Piezo X/Y position is %6g, %6g", delISX, delISY);
     mWinApp->AppendToLog(report, mLogAction);
@@ -6853,12 +6896,21 @@ void CMacroProcessor::NextCommand()
     break;
     
   case CME_MOVEPIEZOXY:                                     // MovePiezoXY
-    if (mWinApp->mPiezoControl->SetXYPosition(itemDbl[1], itemDbl[2],
-      !itemEmpty[3] && itemInt[3] != 0)) {
+    if (mWinApp->mPiezoControl->GetNumPlugins()) {
+      if (mWinApp->mPiezoControl->SetXYPosition(itemDbl[1], itemDbl[2],
+        !itemEmpty[3] && itemInt[3] != 0)) {
         AbortMacro();
         return;
+      }
+      mMovedPiezo = true;
+    } else {
+      if (!mScope->SetPiezoXYPosition(itemDbl[1], itemDbl[2],
+        !itemEmpty[3] && itemInt[3] != 0)) {
+        AbortMacro();
+        return;
+      }
+      mMovedStage = true;
     }
-    mMovedPiezo = true;
     break;
     
   case CME_MOVEPIEZOZ:                                      // MovePiezoZ
@@ -8553,12 +8605,13 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel)
           mCallLevel--;
 
       // Examine loops
-      } else if ((CMD_IS(LOOP) && !strItems[1].IsEmpty()) ||
+      } else if ((CMD_IS(LOOP) && !strItems[1].IsEmpty()) || 
+        (CMD_IS(DOLOOP) && !strItems[3].IsEmpty()) || 
         (CMD_IS(IF) && !strItems[3].IsEmpty())) {
         blockLevel++;
         subBlockNum[1 + blockLevel]++;
         if (blockLevel >= MAX_LOOP_DEPTH)
-          FAIL_CHECK_NOLINE("Too many nested LOOP and IF statements");
+          FAIL_CHECK_NOLINE("Too many nested LOOP/DOLOOP and IF statements");
         blockType[blockLevel] = CMD_IS(IF) ? 1 : 0;
         elseFound[blockLevel] = false;
         if (CMD_IS(IF) && CheckBalancedParentheses(strItems, MAX_TOKENS, strLine,errmess))
@@ -8582,7 +8635,7 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel)
 
       } else if (CMD_IS(ENDLOOP)) {
         if (blockLevel <= startLevel)
-          FAIL_CHECK_NOLINE("ENDLOOP without corresponding LOOP statement");
+          FAIL_CHECK_NOLINE("ENDLOOP without corresponding LOOP or DOLOOP statement");
         if (blockType[blockLevel])
           FAIL_CHECK_NOLINE("ENDLOOP contained in an IF block");
         blockLevel--;
@@ -8590,7 +8643,7 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel)
         if (blockLevel <= startLevel)
           FAIL_CHECK_NOLINE("ENDIF without corresponding IF statement");
         if (!blockType[blockLevel])
-          FAIL_CHECK_NOLINE("ENDIF contained in a LOOP block");
+          FAIL_CHECK_NOLINE("ENDIF contained in a LOOP or DOLOOP block");
         blockLevel--;
       } else if (CMD_IS(BREAK) || CMD_IS(KEYBREAK) || CMD_IS(CONTINUE)) {
         inloop =0;
@@ -8599,7 +8652,8 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel)
             inloop = 1;
         }
         if (!inloop)
-          FAIL_CHECK_NOLINE("BREAK, KEYBREAK, or CONTINUE not contained in a LOOP block");
+          FAIL_CHECK_NOLINE("BREAK, KEYBREAK, or CONTINUE not contained in a LOOP or "
+            "DOLOOP block");
       } else if (CMD_IS(SKIPTO) && !strItems[1].IsEmpty()) {
 
         // For a SkipTo, record the location and level and subblock at all lower levels
@@ -8619,7 +8673,7 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel)
           FAIL_CHECK_LINE("Starting a new function without ending previous one on line");
         inFunc = true;
         if (blockLevel > startLevel)
-          FAIL_CHECK_LINE("Unclosed IF or LOOP block in script before function");
+          FAIL_CHECK_LINE("Unclosed IF, LOOP, or DOLOOP block in script before function");
         for (i = 2; i < 4; i++) {
           intCheck = "";
           if (!strItems[i].IsEmpty()) {
@@ -8637,7 +8691,7 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel)
           FAIL_CHECK_NOLINE("An EndFunction command occurred when not in a function");
         inFunc = false;
         if (blockLevel > startLevel)
-          FAIL_CHECK_NOLINE("Unclosed IF or LOOP block inside function");
+          FAIL_CHECK_NOLINE("Unclosed IF, LOOP, or DOLOOP block inside function");
 
       } else {
 
@@ -8658,7 +8712,7 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel)
     }
   }
   if (blockLevel > startLevel)
-    FAIL_CHECK_NOLINE("Unclosed IF or LOOP block");
+    FAIL_CHECK_NOLINE("Unclosed IF, LOOP, or DOLOOP block");
 
   if (!numSkips)
     return 0;
@@ -8671,11 +8725,11 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel)
           FAIL_CHECK_NOLINE(CString("You cannot skip backwards; label occurs before "
           "SkipTo ") + strSkips[skipInd]);
         if (labelBlockLevel[labInd] > skipBlockLevel[skipInd])
-          FAIL_CHECK_NOLINE(CString("Trying to skip into a higher level LOOP or IF block"
-          " with SkipTo ") + strSkips[skipInd]);
+          FAIL_CHECK_NOLINE(CString("Trying to skip into a higher level LOOP, DOLOOP, or"
+            " IF block with SkipTo ") + strSkips[skipInd]);
         if (labelSubBlock[labInd] != skipSubBlocks[skipInd][1 + labelBlockLevel[labInd]])
-          FAIL_CHECK_NOLINE(CString("Trying to skip into a different LOOP block or "
-          "section of IF block with SkipTo ") + strSkips[skipInd]);
+          FAIL_CHECK_NOLINE(CString("Trying to skip into a different LOOP/DOLOOP block or"
+          " section of IF block with SkipTo ") + strSkips[skipInd]);
         break;
       }
     }

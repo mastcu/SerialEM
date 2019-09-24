@@ -154,6 +154,7 @@ private:
   int mLoopStart[MAX_LOOP_DEPTH];         // Index of start of loop
   int mLoopLimit[MAX_LOOP_DEPTH];         // Times to do loop
   int mLoopCount[MAX_LOOP_DEPTH];         // Count (index) in loop, from 1
+  int mLoopIncrement[MAX_LOOP_DEPTH];     // Increment to add to index (negative OK)
   int mLastIndex;         // Index of last command (the one just run)
   BOOL mStopAtEnd;        // Flag to stop at end of loop or macro
   BOOL mAskRedoOnResume;  // Flag to ask about redoing current command when resume
