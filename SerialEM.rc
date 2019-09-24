@@ -4489,7 +4489,7 @@ BEGIN
     IDC_EDITBIGSHIFT        "Limit on alignment shift as percentage of image size"
     IDC_ALIGNTOB            "Autoalign to B instead of buffer past the rolling buffers"
     IDC_OFFSET_SLIT         "Impose energy shift and center slit so energy adjustments will work"
-    IDC_LDNORMALIZE_BEAM    "Pass through beam setting of View area to normalize when switching areas"
+    IDC_LDNORMALIZE_BEAM    "Normalize beam on area change with scope call or with View beam settings"
     IDC_RESET_BEAM_SHIFT    "Set additional beam shift for this area back to zero"
     IDC_SET_BEAM_SHIFT      "Set up independent beam shift for this area"
     IDC_SET_VIEW_SHIFT      "Set shift offset for View from shift of image in buffer A (shift to enable)"

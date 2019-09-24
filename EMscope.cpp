@@ -199,6 +199,7 @@ CEMscope::CEMscope()
   mLowDoseDownArea = -1;
   mLowDoseMode = false;
   mLDNormalizeBeam = false;
+  mUseNormForLDNormalize = false;
   mLDBeamNormDelay = 100;
   mLDViewDefocus = 0.;
   mSearchDefocus = 0.;
@@ -4700,18 +4701,37 @@ void CEMscope::GotoLowDoseArea(int newArea)
     !mWinApp->mLowDoseDlg.SameAsFocusArea(oldArea))
     mFocusCameFromView = fromView;
 
-  // If normalizing beam and we are not going to or from view area and intensity is 
-  // changing and everything is defined, set beam for view area
-  if (!STEMmode && mLDNormalizeBeam && newArea && oldArea > 0 && 
-    (ldArea->spotSize != mLdsaParams->spotSize ||
-    ldArea->intensity != mLdsaParams->intensity) &&
-    ldArea->spotSize && ldParams[0].spotSize &&
-    ldArea->intensity && ldParams[0].intensity) {
+  // If normalizing beam, do it unless going to View or Search.
+  // Do it differently depending on the property
+  //and we are not going to or from view area and intensity is 
+  // changing and everything is defined, 
+  if (!STEMmode && mLDNormalizeBeam && !toView && !toSearch) {
+    if (mUseNormForLDNormalize) {
 
-    SetSpotSize(ldParams[0].spotSize);
-    SetIntensity(ldParams[0].intensity);
-    if (mLDBeamNormDelay)
-      Sleep(mLDBeamNormDelay);
+      // If using condenser normalization, do it if not going to view or search and not
+      // going between tied focus/trial
+      if (!toView && !toSearch &&
+        !(fromFocTrial && toFocTrial && mWinApp->mLowDoseDlg.m_bTieFocusTrial)) {
+        NormalizeCondenser();
+        if (mLDBeamNormDelay)
+          Sleep(mLDBeamNormDelay);
+      }
+    } else {
+
+      // Classic: set beam for view area if not going to View or Search, not coming from
+      // view anyway, and intensity changes
+      if (oldArea > 0 && (ldArea->spotSize != mLdsaParams->spotSize ||
+          ldArea->intensity != mLdsaParams->intensity) &&
+        ldArea->spotSize && ldParams[0].spotSize &&
+        ldArea->intensity && ldParams[0].intensity) {
+
+        SetSpotSize(ldParams[0].spotSize);
+        SetIntensity(ldParams[0].intensity);
+        if (mLDBeamNormDelay)
+          Sleep(mLDBeamNormDelay);
+        PrintfToLog("Normalize through V");
+      }
+    }
   }
 
   // If we are not at the mag of the current area, just go back so the image shift gets

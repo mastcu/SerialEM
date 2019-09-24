@@ -1154,6 +1154,8 @@ BOOL CLowDoseDlg::OnInitDialog()
     SetDlgItemText(IDC_STAT_ADD_SHIFT_BOX, "Additional beam shift (and tilt)");
   else if (FEIscope && mScope->GetPluginVersion() >= FEI_PLUGIN_DARK_FIELD)
     SetDlgItemText(IDC_STAT_ADD_SHIFT_BOX, "Additional beam shift (and DF tilt)");
+  if (mScope->GetUseNormForLDNormalize())
+    SetDlgItemText(IDC_LDNORMALIZE_BEAM, "Normalize condenser lenses");
   m_statMagSpot.EnableWindow(m_bContinuousUpdate);
   m_sbcViewDefocus.SetRange(0, 100);
   m_sbcViewDefocus.SetPos(50);

@@ -160,6 +160,7 @@ class DLL_IM_EX CEMscope
   GetSetMember(int, SimulationMode)
   GetSetMember(BOOL, NoColumnValve)
   GetSetMember(BOOL, LDNormalizeBeam)
+  GetSetMember(BOOL, UseNormForLDNormalize);
   GetSetMember(BOOL, LDBeamTiltShifts)
   GetSetMember(int, LDBeamNormDelay)
   float GetLDViewDefocus(int areaOrSet = VIEW_CONSET) {return areaOrSet != VIEW_CONSET ? mSearchDefocus : mLDViewDefocus;};
@@ -578,6 +579,7 @@ private:
   BOOL mScreenByEvent;        // Flag that screen updates occur by event
   BOOL mSpectrumByEvent;      // Flag that spectroscopy mode update is by event
   BOOL mLDNormalizeBeam;      // Flag to go through view on changes between LD areas
+  BOOL mUseNormForLDNormalize;  // Flag to use condenser normalization routine instead
   BOOL mLDBeamTiltShifts;     // Flag to record beam tilt shifts and adjust for them
   int mLDBeamNormDelay;       // Sleep time after going to view intensity
   float mLDViewDefocus;       // Defocus offset going to View in low dose
