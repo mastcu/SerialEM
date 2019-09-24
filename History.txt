@@ -3,6 +3,7 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+9/24/19: SEM_3-7-9
 9/24/19: Fixed copying of low dose areas to handle shift and defocus offsets
 properly for View and Search, and to not copy additional beam shift/tilt to
 Record (In 3.7).
