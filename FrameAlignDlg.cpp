@@ -255,7 +255,6 @@ BOOL CFrameAlignDlg::OnInitDialog()
   mShowWhereToAlign = true;
   constrainByRes = mCamParams->K2Type || (mDEcanAlign &&
     (mCamParams->CamFlags & DE_CAM_CAN_COUNT));
-  mShowRestrictions = mShowWhereToAlign || constrainByRes;
 
   // set up filter combo box for K2 camera
   mNumDMFilters = 0;
@@ -293,13 +292,14 @@ BOOL CFrameAlignDlg::OnInitDialog()
     }
 
     // Advanced Falcon 2 on remote computer with no local frame path cannot deal with
-    // paths in a com file or send it elsewhere, so disable that option
+    // paths in a com file or send it elsewhere, so get rid of top section
     if (mCamParams->FEItype == FALCON2_TYPE && FCAM_ADVANCED(mCamParams) &&
       mServerIsRemote && mWinApp->mCamera->GetLocalFalconFramePath().IsEmpty()) {
         m_iWhereAlign = 1;
-        EnableDlgItem(IDC_RWITH_IMOD, false);
+        mShowWhereToAlign = false;
     }
   }
+  mShowRestrictions = mShowWhereToAlign || constrainByRes;
 
   // Load the set names and set the index
   for (ind = 0; ind < (int)mParams->GetSize(); ind++)
