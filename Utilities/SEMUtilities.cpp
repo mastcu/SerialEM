@@ -889,7 +889,7 @@ int UtilFindValidFrameAliParams(CameraParameters *camParam, int readMode,
   bool takeK3Binned, int whereAlign, int curIndex, int &newIndex, CString *message)
 {
   CString str;
-  int ind, retval = 0, numValid = 0, firstValid = -1;
+  int ind, sizeRestriction, retval = 0, numValid = 0, firstValid = -1;
   CArray<FrameAliParams, FrameAliParams> *params = sWinApp->mCamera->GetFrameAliParams();
   FrameAliParams *paramData = params->GetData();
   FrameAliParams *faParam = &paramData[curIndex];
@@ -903,14 +903,15 @@ int UtilFindValidFrameAliParams(CameraParameters *camParam, int readMode,
     readMode = B3DCHOICE(takeK3Binned, COUNTING_MODE, SUPERRES_MODE);
 
   // First check, is the selected on valid with its restrictions
-  if (faParam->sizeRestriction && sWinApp->GetAnySuperResMode() && 
-    !BOOL_EQUIV(readMode != SUPERRES_MODE, faParam->sizeRestriction != SUPERRES_MODE)) {
+  sizeRestriction = camParam->canTakeFrames ? 0 : faParam->sizeRestriction;
+  if (sizeRestriction && sWinApp->GetAnySuperResMode() && 
+    !BOOL_EQUIV(readMode != SUPERRES_MODE, sizeRestriction != SUPERRES_MODE)) {
       retval += 1;
       if (message) {
         str.Format("The camera parameters will give %sresolution frames but\r\n"
           "the selected alignment parameters are marked as only for %sresolution frames.", 
           readMode == SUPERRES_MODE ? "super-" : "normal ",
-          faParam->sizeRestriction == SUPERRES_MODE ? "super-" : "normal ");
+          sizeRestriction == SUPERRES_MODE ? "super-" : "normal ");
         *message += str;
       }
   }
@@ -932,8 +933,8 @@ int UtilFindValidFrameAliParams(CameraParameters *camParam, int readMode,
 
   for (ind = 0; ind < (int)params->GetSize(); ind++) {
      faParam = &paramData[ind];
-    if ((!faParam->sizeRestriction || !sWinApp->GetAnySuperResMode() ||
-      BOOL_EQUIV(readMode != SUPERRES_MODE, faParam->sizeRestriction != SUPERRES_MODE))
+    if ((!sizeRestriction || !sWinApp->GetAnySuperResMode() ||
+      BOOL_EQUIV(readMode != SUPERRES_MODE, sizeRestriction != SUPERRES_MODE))
       && (!faParam->whereRestriction || 
       BOOL_EQUIV(whereAlign < 2, faParam->whereRestriction < 2))) {
         numValid++;
