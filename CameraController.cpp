@@ -563,7 +563,7 @@ int CCameraController::Initialize(int whichCameras)
   int numDMListed[3], digiscan[3], numAdd[3];
   int numDEListed = 0;
   double addedFlyback;
-  float ovFrameDivisors[4][4] = {{0.04f, 0.01f, 0.005f, 0.0025f},
+  float ovFrameDivisors[4][4] = {{0.04f, 0.010101f, 0.005112f, 0.003333f},
   {0.066667f, 0.016667f, 0.016667f, 0.016667f}, {0.05f,0.0125f, 0.00625f, 0.00625f},
   {0.066667f, 0.066667f, 0.066667f, 0.066667f}};
 
@@ -807,6 +807,7 @@ void CCameraController::InitializeDMcameras(int DMind, int *numDMListed,
 {
   HRESULT hr;
   CString report;
+  CameraParameters *param;
   double flyback, rotOffset;
   int i, ind, div, sel, nlist, needVers = SEMCCD_VERSION_OK_NO_K2;
   long num, allnum, doFlip, available;
@@ -966,59 +967,62 @@ void CCameraController::InitializeDMcameras(int DMind, int *numDMListed,
       // regular cameras when num reaches 1 less than the limit
       for (ind = 0, num = 0; ind < numOrig && num < nlist; ind++) {
         i = originalList[ind];
-        if (mAllParams[i].DMCamera && !mAllParams[i].STEMcamera && 
-          DMind == CAMP_DM_INDEX(&mAllParams[i]) && num < nlist - digiscan[DMind]) {
+        param = &mAllParams[i];
+        if (param->DMCamera && !param->STEMcamera && 
+          DMind == CAMP_DM_INDEX(param) && num < nlist - digiscan[DMind]) {
             sel = gatanSelectList[num];
-            mAllParams[i].cameraNumber = sel;
-            if (mAllParams[i].GatanCam) {
-              if (mAllParams[i].setAltShutterNC)
+            param->cameraNumber = sel;
+            if (param->GatanCam) {
+              if (param->setAltShutterNC)
                 MainCallDMIndCamera(DMind, SetShutterNormallyClosed(sel, 
-                (long)mAllParams[i].beamShutter));
+                (long)param->beamShutter));
 
               // Do not try to set or clear DM settling for Faux camera
-              if (mAllParams[i].name.Find("Faux") >= 0)
+              if (param->name.Find("Faux") >= 0)
                 MainCallDMIndCamera(DMind, SetNoDMSettling(sel));
 
               // Set up defaults for continuous mode before checking size so boundary
               // direction can be gotten in size check if needed
               if (version < 40000)
-                mAllParams[i].useFastAcquireObject = false;
-              if (mAllParams[i].useContinuousMode < 0) {
-                if (mAllParams[i].K2Type || mAllParams[i].OneViewType) {
-                  mAllParams[i].useContinuousMode = 1;
-                  mAllParams[i].setContinuousReadout = true;
-                } else if (mAllParams[i].DMRefName.Find("US4000") >= 0) {
-                  mAllParams[i].useContinuousMode = 1;
-                } else if (mAllParams[i].DMRefName.Find("US1000") >= 0) {
-                  mAllParams[i].useContinuousMode = 1;
-                } else if (mAllParams[i].DMRefName.Find("Orius") >= 0) {
-                  mAllParams[i].useContinuousMode = 1;
-                  mAllParams[i].setContinuousReadout = true;
-                  mAllParams[i].continuousQuality = 1;
-                  mAllParams[i].balanceHalves = 1;
-                  mAllParams[i].fourPort = true;
+                param->useFastAcquireObject = false;
+              if (param->useContinuousMode < 0) {
+                if (param->K2Type || param->OneViewType) {
+                  param->useContinuousMode = 1;
+                  param->setContinuousReadout = true;
+                } else if (param->DMRefName.Find("US4000") >= 0) {
+                  param->useContinuousMode = 1;
+                } else if (param->DMRefName.Find("US1000") >= 0) {
+                  param->useContinuousMode = 1;
+                } else if (param->DMRefName.Find("Orius") >= 0) {
+                  param->useContinuousMode = 1;
+                  param->setContinuousReadout = true;
+                  param->continuousQuality = 1;
+                  param->balanceHalves = 1;
+                  param->fourPort = true;
                 }
               }
 
               // Default post-actions disabled for OneView
-              if (mAllParams[i].OneViewType && mAllParams[i].postActionsOK < 0)
-                mAllParams[i].postActionsOK = 0;
+              if (param->OneViewType && param->postActionsOK < 0)
+                param->postActionsOK = 0;
+              if (param->canTakeFrames && mPluginVersion[DMind] < PLUGIN_TAKES_OV_FRAMES)
+                param->canTakeFrames = 0;
 
               // Check the size
               CheckGatanSize(sel, i);
 
               // Set up default boundary for Orius if needed
-              if (mAllParams[i].useContinuousMode > 0 && mAllParams[i].balanceHalves > 0
-                && mAllParams[i].halfBoundary < 0) {
-                  if (mAllParams[i].ifHorizontalBoundary)
-                    mAllParams[i].halfBoundary = mAllParams[i].sizeY / 2;
+              if (param->useContinuousMode > 0 && param->balanceHalves > 0
+                && param->halfBoundary < 0) {
+                  if (param->ifHorizontalBoundary)
+                    param->halfBoundary = param->sizeY / 2;
                   else
-                    mAllParams[i].halfBoundary = mAllParams[i].sizeX / 2;
+                    param->halfBoundary = param->sizeX / 2;
               }
 
               // For a K2 and GMS 2.31, get the defect list
               gotDefectList = false;
-              if (mAllParams[i].K2Type && !mAllParams[i].defects.wasScaled && 
+              if (param->K2Type && !param->defects.wasScaled && 
                 version >= DM_RETURNS_DEFECT_LIST) {
                 MainCallDMIndCamera(DMind, selectCamera(sel));
                 GetMergeK2DefectList(DMind, &mAllParams[i], false);
@@ -1026,67 +1030,67 @@ void CCameraController::InitializeDMcameras(int DMind, int *numDMListed,
                 mWinApp->mGainRefMaker->IsDMReferenceNew(i);
               }
 
-              if (mAllParams[i].K2Type && mAllParams[i].countingRefForK2.IsEmpty()) {
+              if (param->K2Type && param->countingRefForK2.IsEmpty()) {
                 if (!mCountingRef.IsEmpty())
-                  mAllParams[i].countingRefForK2 = mCountingRef;
+                  param->countingRefForK2 = mCountingRef;
                 else
-                  mAllParams[i].countingRefForK2 = MakeFullDMRefName(&mAllParams[i], 
+                  param->countingRefForK2 = MakeFullDMRefName(&mAllParams[i], 
                     ".m2.");
               }
-              if (mAllParams[i].K2Type && mAllParams[i].superResRefForK2.IsEmpty()) {
+              if (param->K2Type && param->superResRefForK2.IsEmpty()) {
                 if (!mSuperResRef.IsEmpty())
-                  mAllParams[i].superResRefForK2 = mSuperResRef;
+                  param->superResRefForK2 = mSuperResRef;
                 else
-                  mAllParams[i].superResRefForK2 = MakeFullDMRefName(&mAllParams[i], 
-                    mAllParams[i].K2Type == K3_TYPE ? ".m1." : ".m3.");
+                  param->superResRefForK2 = MakeFullDMRefName(&mAllParams[i], 
+                    param->K2Type == K3_TYPE ? ".m1." : ".m3.");
               }
 
               // Initialize added delay per frame if not set by property
-              if (mAllParams[i].startDelayPerFrame < 0)
-                mAllParams[i].startDelayPerFrame = mAllParams[i].K2Type ? 0.005f : 0.f;
+              if (param->startDelayPerFrame < 0)
+                param->startDelayPerFrame = param->K2Type ? 0.005f : 0.f;
 
-              if ((mAllParams[i].OneViewType || mAllParams[i].K2Type == K3_TYPE) && 
+              if ((param->OneViewType || param->K2Type == K3_TYPE) && 
                 mPluginVersion[DMind] < PLUGIN_CAN_MAKE_SUBAREA) {
-                  mAllParams[i].subareasBad = 2;
-                  mAllParams[i].moduloX = -2;
+                  param->subareasBad = 2;
+                  param->moduloX = -2;
               }
-              if (mAllParams[i].K2Type == K3_TYPE) {
-                if (!mAllParams[i].countsPerElectron)
-                  mAllParams[i].countsPerElectron = 32.;
-                if (!mAllParams[i].linearOffset)
-                  mAllParams[i].linearOffset = 8192;
-                if (mAllParams[i].linear2CountingRatio == 8.)
-                  mAllParams[i].linear2CountingRatio = 350.;
+              if (param->K2Type == K3_TYPE) {
+                if (!param->countsPerElectron)
+                  param->countsPerElectron = 32.;
+                if (!param->linearOffset)
+                  param->linearOffset = 8192;
+                if (param->linear2CountingRatio == 8.)
+                  param->linear2CountingRatio = 350.;
               }
 
               // Set a flag for the K3 rot/flip bug if negative rotflip, make it positive
-              if (mAllParams[i].rotationFlip < 0) {
-                if (mAllParams[i].K2Type == K3_TYPE)
-                  mAllParams[i].CamFlags |= K3_CAM_ROTFLIP_BUG;
-                mAllParams[i].rotationFlip = -mAllParams[i].rotationFlip;
+              if (param->rotationFlip < 0) {
+                if (param->K2Type == K3_TYPE)
+                  param->CamFlags |= K3_CAM_ROTFLIP_BUG;
+                param->rotationFlip = -param->rotationFlip;
               }
 
               // For all Gatan cameras, identify bad pixels that touch rows/columns
               if (!gotDefectList) {
                 div = BinDivisorI(&mAllParams[i]);
-                CorDefFindTouchingPixels(mAllParams[i].defects, mAllParams[i].sizeX / div,
-                  mAllParams[i].sizeY / div, 0);
+                CorDefFindTouchingPixels(param->defects, param->sizeX / div,
+                  param->sizeY / div, 0);
 
                 // For K2, scale the defects up and mark as K2
-                if (mAllParams[i].K2Type && !mAllParams[i].defects.wasScaled) {
-                  CorDefScaleDefectsForK2(&mAllParams[i].defects, false);
-                  mAllParams[i].defects.K2Type = 1;
+                if (param->K2Type && !param->defects.wasScaled) {
+                  CorDefScaleDefectsForK2(&param->defects, false);
+                  param->defects.K2Type = 1;
                 }
               }
 
-              if (mAllParams[i].K2Type)
+              if (param->K2Type)
                 anyK2 = true;
             }
             num++;
         }
-        if (mAllParams[i].GatanCam && mAllParams[i].STEMcamera) {
-          mAllParams[i].basicFlyback = (float)flyback;
-          mAllParams[i].flyback = (float)flyback + mAllParams[i].addedFlyback;
+        if (param->GatanCam && param->STEMcamera) {
+          param->basicFlyback = (float)flyback;
+          param->flyback = (float)flyback + param->addedFlyback;
         }
       }
 

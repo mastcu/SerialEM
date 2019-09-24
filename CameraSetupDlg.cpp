@@ -39,14 +39,14 @@ static char THIS_FILE[] = __FILE__;
   "Sum will be gain normalized" label IDC_STAT_NORM_DSDF
   "Increased by 3x" radio IDC_RBOOSTMAG3
   "Increased by 4x" radio IDC_RBOOSTMAG4
-  "Correct Drift" checkbox  IDC_CHECK_CORRECT_DRIFT  m_bCorrectDrift  used for OneView
+  "Correct Drift" checkbox  IDC_CHECK_CORRECT_DRIFT  m_bCorrDrift_DeHwBin used for OneView
     stored in correctDrift, and DE hardware binning, stored in boostMag
-  "Remove X rays" check box  IDC_REMOVEXRAYS  m_bRemoveXrays used for that and stored in
-     removeXrays in TEM and, in STEM, for mag all shots, stored in magAllShots
+  "Remove X rays" check box  IDC_REMOVEXRAYS  m_bRemXrays_MagAll used for that and stored
+     in removeXrays in TEM and, in STEM, for mag all shots, stored in magAllShots
   "Integration" label  IDC_STATINTEGRATION
   Integration edit box and spin box  IDC_EDITINTEGRATION  and IDC_SPININTEGRATION,
      m_iIntegration, stored in integration
-  "Use Hardware ROI" check box  IDC_CHECK_HARDWARE_ROI  m_bUseHardwareROI  used for DE and
+  "Use Hardware ROI" check box  IDC_CHECK_HARDWARE_ROI  m_bUseHwROI_OvDiff used for DE and
      stored in magAllShots, or for OneView for diffraction and stored in K2ReadMode
   */
 
@@ -122,8 +122,8 @@ CCameraSetupDlg::CCameraSetupDlg(CWnd* pParent /*=NULL*/)
   , mChangedBinning(false)
   , mMaxIntegration(1)
   , m_iIntegration(1)
-  , m_bCorrectDrift(FALSE)
-  , m_bUseHardwareROI(FALSE)
+  , m_bCorrDrift_DeHwBin(FALSE)
+  , m_bUseHwROI_OvDiff(FALSE)
   , m_bSaveK2Sums(FALSE)
   , m_bUseCorrDblSamp(FALSE)
   , m_bTakeK3Binned(FALSE)
@@ -149,7 +149,7 @@ CCameraSetupDlg::CCameraSetupDlg(CWnd* pParent /*=NULL*/)
 	m_strElecDose = _T("");
 	m_iAverageTimes = 2;
 	m_bAverageDark = FALSE;
-	m_bRemoveXrays = FALSE;
+	m_bRemXrays_MagAll = FALSE;
   m_bMatchPixel = FALSE;
   m_bMatchIntensity = FALSE;
 	//}}AFX_DATA_INIT
@@ -163,7 +163,7 @@ void CCameraSetupDlg::DoDataExchange(CDataExchange* pDX)
 {
   CBaseDlg::DoDataExchange(pDX);
   //{{AFX_DATA_MAP(CCameraSetupDlg)
-  DDX_Control(pDX, IDC_REMOVEXRAYS, m_butRemoveXrays);
+  DDX_Control(pDX, IDC_REMOVEXRAYS, m_butRemXrays_MagAll);
   DDX_Control(pDX, IDC_AVERAGEDARK, m_butAverageDark);
   DDX_Control(pDX, IDC_EDITAVERAGE, m_editAverage);
   DDX_Control(pDX, IDC_SPINAVERAGE, m_spinAverage);
@@ -217,7 +217,7 @@ void CCameraSetupDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Text(pDX, IDC_EDITINTEGRATION, m_iIntegration);
   DDV_MinMaxInt(pDX, m_iIntegration, 1, mMaxIntegration);
   DDX_Check(pDX, IDC_AVERAGEDARK, m_bAverageDark);
-  DDX_Check(pDX, IDC_REMOVEXRAYS, m_bRemoveXrays);
+  DDX_Check(pDX, IDC_REMOVEXRAYS, m_bRemXrays_MagAll);
   //}}AFX_DATA_MAP
   DDX_Control(pDX, IDC_SPINUPDOWN, m_sbcUpDown);
   DDX_Control(pDX, IDC_SPINLEFTRIGHT, m_sbcLeftRight);
@@ -297,10 +297,10 @@ void CCameraSetupDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_BUT_NAME_SUFFIX, m_butNameSuffix);
   DDX_Control(pDX, IDC_STAT_SAVE_SUMMARY, m_statSaveSummary);
   DDX_Control(pDX, IDC_STAT_ALIGN_SUMMARY, m_statAlignSummary);
-  DDX_Check(pDX, IDC_CHECK_CORRECT_DRIFT, m_bCorrectDrift);
-  DDX_Control(pDX, IDC_CHECK_CORRECT_DRIFT, m_butCorrectDrift);
-  DDX_Check(pDX, IDC_CHECK_HARDWARE_ROI, m_bUseHardwareROI);
-  DDX_Control(pDX, IDC_CHECK_HARDWARE_ROI, m_butUseHardwareROI);
+  DDX_Check(pDX, IDC_CHECK_CORRECT_DRIFT, m_bCorrDrift_DeHwBin);
+  DDX_Control(pDX, IDC_CHECK_CORRECT_DRIFT, m_butCorrDrift_DeHwBin);
+  DDX_Check(pDX, IDC_CHECK_HARDWARE_ROI, m_bUseHwROI_OvDiff);
+  DDX_Control(pDX, IDC_CHECK_HARDWARE_ROI, m_butUseHwROI_OvDiff);
   DDX_Check(pDX, IDC_SAVE_FRAME_SUMS, m_bSaveK2Sums);
   DDX_Control(pDX, IDC_SAVE_FRAME_SUMS, m_butSaveFrameSums);
   DDX_Control(pDX, IDC_SETUP_K2_FRAME_SUMS, m_butSetupK2FrameSums);
@@ -419,6 +419,7 @@ BEGIN_MESSAGE_MAP(CCameraSetupDlg, CBaseDlg)
   ON_EN_KILLFOCUS(IDC_EDIT_DE_FPS, OnKillfocusEditDeFPS)
   ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_DE_SUM_NUM, OnDeltaposSpinDeSumNum)
   ON_BN_CLICKED(IDC_CHECK_TAKE_K3_BINNED, OnTakeK3Binned)
+  ON_BN_CLICKED(IDC_CHECK_HARDWARE_ROI, OnUseHwROI_OvDiff)
   END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -610,9 +611,10 @@ void CCameraSetupDlg::OnBinning()
     ManageDrift();
   }
   if (mDE_Type && (mParam->CamFlags & DE_HAS_HARDWARE_BIN))
-    m_butCorrectDrift.EnableWindow(m_iBinning > 0);
+    m_butCorrDrift_DeHwBin.EnableWindow(m_iBinning > 0);
   ManageExposure();
   ManageBinnedSize();
+  ManageK2SaveSummary();
   ManageTimingAvailable();
   ManageAntialias();
 }
@@ -636,6 +638,16 @@ void CCameraSetupDlg::OnDynfocus()
   m_statTimingAvail.EnableWindow(m_bDynFocus);
 }
 
+// Use DE hardware ROI or Oneview Diffraction mode
+void CCameraSetupDlg::OnUseHwROI_OvDiff()
+{
+  UpdateData(true);
+  if (mParam->OneViewType && m_bUseHwROI_OvDiff) {
+    ManageExposure();
+    ManageK2SaveSummary();
+  }
+}
+
 void CCameraSetupDlg::OnProcessing() 
 {
   int oldProc = m_iProcessing;
@@ -647,7 +659,7 @@ void CCameraSetupDlg::OnProcessing()
      return;
   }
 
-  m_butRemoveXrays.EnableWindow((!mParam->STEMcamera && m_iProcessing == GAIN_NORMALIZED)
+  m_butRemXrays_MagAll.EnableWindow((!mParam->STEMcamera && m_iProcessing == GAIN_NORMALIZED)
     || (mParam->STEMcamera && m_iProcessing > 0));
   if (mParam->K2Type) {
     ManageExposure();
@@ -887,12 +899,12 @@ void CCameraSetupDlg::LoadConsetToDialog()
     radio->EnableWindow(mBinningEnabled && IS_SUPERRES(mParam, *modeP));
   }
   if (mParam->OneViewType) {
-    m_bCorrectDrift = mCurSet->correctDrift != 0;
-    m_bUseHardwareROI = mCurSet->K2ReadMode != 0;
+    m_bCorrDrift_DeHwBin = mCurSet->correctDrift != 0;
+    m_bUseHwROI_OvDiff = mCurSet->K2ReadMode != 0;
   } else if (mDE_Type && (mParam->CamFlags & DE_HAS_HARDWARE_BIN))
-    m_bCorrectDrift = mCurSet->boostMag != 0;
+    m_bCorrDrift_DeHwBin = mCurSet->boostMag != 0;
   if (mDE_Type && (mParam->CamFlags & DE_HAS_HARDWARE_ROI))
-    m_bUseHardwareROI = mCurSet->magAllShots != 0;
+    m_bUseHwROI_OvDiff = mCurSet->magAllShots != 0;
 
   mSummedFrameList = mCurSet->summedFrameList;
   mNumSkipBefore = mCurSet->numSkipBefore;
@@ -973,22 +985,22 @@ void CCameraSetupDlg::LoadConsetToDialog()
   if (mParam->STEMcamera) {
     mCurSet->processing = UNPROCESSED;
     m_iProcessing = mCurSet->boostMag;
-    m_bRemoveXrays = mCurSet->magAllShots > 0;
+    m_bRemXrays_MagAll = mCurSet->magAllShots > 0;
     showProc = (mCurrentSet == FOCUS_CONSET && mParam->GatanCam) ? SW_SHOW : SW_HIDE;
     m_butUnprocessed.EnableWindow(!mLowDoseMode);
     m_butGainNormalize.EnableWindow(!mLowDoseMode);
     m_butDarkSubtract.EnableWindow(!mLowDoseMode);
     m_butBoostMag3.EnableWindow(!mLowDoseMode);
     m_butBoostMag4.EnableWindow(!mLowDoseMode);
-    m_butRemoveXrays.EnableWindow(!mLowDoseMode && m_iProcessing > 0);
-    m_butRemoveXrays.ShowWindow(showProc);
+    m_butRemXrays_MagAll.EnableWindow(!mLowDoseMode && m_iProcessing > 0);
+    m_butRemXrays_MagAll.ShowWindow(showProc);
   } else {
 
     // Manage the dark subtract button for FEI, promote to gain normalized if disabled
     // Manage nonSTEM enables of these buttons here, show/hide and STEM enables in 
     // ManageProcessing, where is varies by set
     m_iProcessing = mCurSet->processing;
-    m_bRemoveXrays = mCurSet->removeXrays > 0;
+    m_bRemXrays_MagAll = mCurSet->removeXrays > 0;
     noDark = mFEItype || (mPluginType && mCanProcess && !(mCanProcess & DARK_SUBTRACTED));
     noRaw = mFEItype && FCAM_ADVANCED(mParam) && mCamera->GetASIgivesGainNormOnly();
     m_butDarkSubtract.EnableWindow((mParam->processHere || !noDark) && !noRaw);
@@ -1003,7 +1015,7 @@ void CCameraSetupDlg::LoadConsetToDialog()
       m_iProcessing = mCurSet->processing = DARK_SUBTRACTED;
     
     showProc = SW_SHOW;
-    m_butRemoveXrays.EnableWindow(m_iProcessing == GAIN_NORMALIZED);
+    m_butRemXrays_MagAll.EnableWindow(m_iProcessing == GAIN_NORMALIZED);
     m_butUnprocessed.ShowWindow(true);
   }
   m_butUnprocessed.ShowWindow(showProc);
@@ -1111,16 +1123,16 @@ void CCameraSetupDlg::UnloadDialogToConset()
     m_bAlignDoseFrac = m_bDEalignFrames;
   }
   if (mDE_Type && (mParam->CamFlags & DE_HAS_HARDWARE_BIN))
-    mCurSet->boostMag = m_bCorrectDrift ? 1 : 0;
+    mCurSet->boostMag = m_bCorrDrift_DeHwBin ? 1 : 0;
   if (mDE_Type && (mParam->CamFlags & DE_HAS_HARDWARE_ROI))
-    mCurSet->magAllShots = m_bUseHardwareROI ? 1 : 0;
+    mCurSet->magAllShots = m_bUseHwROI_OvDiff ? 1 : 0;
 
   // First set alignFrames for direct detectors, then override that for OneView
   if (!(mCurrentSet == RECORD_CONSET && mWinApp->mTSController->GetFrameAlignInIMOD()))
     mCurSet->alignFrames = m_bAlignDoseFrac ? 1 : 0;
   if (mParam->OneViewType) {
-    mCurSet->correctDrift = m_bCorrectDrift ? 1 : 0;
-    mCurSet->K2ReadMode = m_bUseHardwareROI ? 1 : 0;
+    mCurSet->correctDrift = m_bCorrDrift_DeHwBin ? 1 : 0;
+    mCurSet->K2ReadMode = m_bUseHwROI_OvDiff ? 1 : 0;
   }
 
   mCurSet->lineSync = m_bLineSync ? 1 : 0;
@@ -1128,7 +1140,7 @@ void CCameraSetupDlg::UnloadDialogToConset()
   mCurSet->integration = m_iIntegration;
   if (mParam->STEMcamera) {
     mCurSet->boostMag = m_iProcessing;
-    mCurSet->magAllShots = m_bRemoveXrays ? 1 : 0;
+    mCurSet->magAllShots = m_bRemXrays_MagAll ? 1 : 0;
     for (int i = 0; i < mCamera->GetMaxChannels(mParam); i++) {
       CComboBox *combo = (CComboBox *)GetDlgItem(IDC_COMBOCHAN1 + i);
       int sel = combo->GetCurSel();
@@ -1140,7 +1152,7 @@ void CCameraSetupDlg::UnloadDialogToConset()
     }
   } else {
     mCurSet->processing = m_iProcessing;
-    mCurSet->removeXrays = m_bRemoveXrays ? 1 : 0;
+    mCurSet->removeXrays = m_bRemXrays_MagAll ? 1 : 0;
   }
 
   // After accessing current data, set possibly new camera and set number, refresh param
@@ -1169,7 +1181,7 @@ float CCameraSetupDlg::ManageExposure(bool updateIfChange)
   } else
     m_eExposure = realExp;
 
-  if (mParam->K2Type == K3_TYPE)
+  if (mParam->K2Type == K3_TYPE || (mParam->OneViewType && mParam->canTakeFrames))
     m_fFrameTime = RoundedDEframeTime(m_fFrameTime);
 
   // Special for DE
@@ -1558,16 +1570,16 @@ void CCameraSetupDlg::ManageCamera()
   showbox = mParam->showImageXRayBox;
   for (i = 0; i < NUMBER_OF_USER_CONSETS; i++)
     showbox += conSets[i].removeXrays;
-  m_butRemoveXrays.ShowWindow((showbox && !mParam->STEMcamera) ? SW_SHOW : SW_HIDE);
+  m_butRemXrays_MagAll.ShowWindow((showbox && !mParam->STEMcamera) ? SW_SHOW : SW_HIDE);
 
-  m_butCorrectDrift.ShowWindow((mParam->OneViewType || 
+  m_butCorrDrift_DeHwBin.ShowWindow((mParam->OneViewType || 
     (mDE_Type && (mParam->CamFlags & DE_HAS_HARDWARE_BIN))) ? SW_SHOW : SW_HIDE);
-  m_butCorrectDrift.SetWindowText(mParam->OneViewType ? "Correct drift" : 
+  m_butCorrDrift_DeHwBin.SetWindowText(mParam->OneViewType ? "Correct drift" : 
     "Use hardware binning");
 
-  m_butUseHardwareROI.ShowWindow((mParam->OneViewType ||
+  m_butUseHwROI_OvDiff.ShowWindow((mParam->OneViewType ||
     (mDE_Type && (mParam->CamFlags & DE_HAS_HARDWARE_ROI))) ? SW_SHOW : SW_HIDE);
-  m_butUseHardwareROI.SetWindowText(mParam->OneViewType ? "Diffraction mode" :
+  m_butUseHwROI_OvDiff.SetWindowText(mParam->OneViewType ? "Diffraction mode" :
     "Use Hardware ROI");
 
   // Disable many things for restricted sizes
@@ -1724,10 +1736,10 @@ void CCameraSetupDlg::ManageIntegration()
     UpdateData(false);
   }
   if (mParam->OneViewType)
-    m_butCorrectDrift.EnableWindow(mCamera->OneViewDriftCorrectOK(mParam) &&
+    m_butCorrDrift_DeHwBin.EnableWindow(mCamera->OneViewDriftCorrectOK(mParam) &&
     m_iProcessing == GAIN_NORMALIZED && !mParam->processHere);
   else if (mDE_Type)
-    m_butCorrectDrift.EnableWindow(m_iBinning > 0);
+    m_butCorrDrift_DeHwBin.EnableWindow(m_iBinning > 0);
 }
 
 BOOL CCameraSetupDlg::OnInitDialog() 
@@ -1911,7 +1923,7 @@ BOOL CCameraSetupDlg::OnInitDialog()
   mProcWidth = boxrect.Width();
   mProcBaseHeight = boxrect.Height();
   m_butGainNormalize.GetWindowRect(&boxrect);
-  m_butRemoveXrays.GetWindowRect(&butrect);
+  m_butRemXrays_MagAll.GetWindowRect(&butrect);
   mProcSTEMHeight = mProcBaseHeight + (butrect.top - boxrect.top);
 
   m_bUseCorrDblSamp = mCamera->GetUseK3CorrDblSamp();
@@ -2228,7 +2240,7 @@ void CCameraSetupDlg::ManageDose()
     m_iK2Mode, mBinnings[m_iBinning], mCurSet->alignFrames && !mCurSet->useFrameAlign,
     m_bDEsaveMaster ? m_iSumCount : 1, realExp, m_fFrameTime);
   m_fDEframeTime = RoundedDEframeTime(m_fFrameTime * (m_bDEsaveMaster ? 1 : m_iSumCount));
-  if (mParam->K2Type)
+  if (mParam->K2Type || (mParam->OneViewType && mParam->canTakeFrames))
     m_fFrameTime = RoundedDEframeTime(m_fFrameTime);
   dose = mWinApp->mBeamAssessor->GetCurrentElectronDose(camera, mCurrentSet, realExp, 
     m_eSettling, spotSize, intensity);
@@ -2554,11 +2566,11 @@ void CCameraSetupDlg::OnKillfocusEditFrameTime()
   float startFrame = m_fFrameTime;
   if (mParam->K2Type || mParam->canTakeFrames)
     mCamera->ConstrainFrameTime(m_fFrameTime, mParam, mParam->binnings[m_iBinning], 
-    (mParam->OneViewType && m_bUseHardwareROI) ? 1 : 0);
+    (mParam->OneViewType && m_bUseHwROI_OvDiff) ? 1 : 0);
   if (m_bSaveFrames && m_bSaveK2Sums)
     mWinApp->mFalconHelper->AdjustForExposure(mSummedFrameList, 0,
       0, m_eExposure, m_fFrameTime, mUserFrameFrac, mUserSubframeFrac, false);
-  if (mParam->K2Type)
+  if (mParam->K2Type || (mParam->OneViewType && mParam->canTakeFrames))
     m_fFrameTime = RoundedDEframeTime(m_fFrameTime);
   if (fabs(startFrame - m_fFrameTime) > 1.e-5)
     UpdateData(false);
@@ -2927,7 +2939,8 @@ void CCameraSetupDlg::ManageK2SaveSummary(void)
 {
   CString str;
   int dummy, frames;
-  bool unNormed = m_iProcessing != GAIN_NORMALIZED || 
+  float realExp = m_eExposure, realFrame = m_fFrameTime;
+  bool unNormed = m_iProcessing != GAIN_NORMALIZED ||
     (mCamera->GetSaveUnnormalizedFrames() && mCamera->GetPluginVersion(mParam) > 
     PLUGIN_CAN_GAIN_NORM && mParam->K2Type);
   bool binning = mCamera->IsK3BinningSuperResFrames(mParam, 
@@ -2936,9 +2949,12 @@ void CCameraSetupDlg::ManageK2SaveSummary(void)
   bool reducing = !unNormed && IS_SUPERRES(mParam, m_iK2Mode) && !binning &&
     mCamera->GetSaveSuperResReduced() && mCamera->CAN_PLUGIN_DO(CAN_REDUCE_SUPER, mParam);
   if ((mParam->K2Type || mParam->canTakeFrames) && m_bDoseFracMode) {
-    frames = B3DNINT(m_eExposure / B3DMAX(mCamera->GetMinK2FrameTime(mParam,
-      mParam->binnings[m_iBinning], (mParam->OneViewType && m_bUseHardwareROI) ? 1 : 0),
-      ActualFrameTime(m_fFrameTime)));
+    mCamera->ConstrainExposureTime(mParam, m_bDoseFracMode, m_iK2Mode,
+      mBinnings[m_iBinning], m_bAlignDoseFrac && !mCurSet->useFrameAlign,
+      1, realExp, realFrame);
+    frames = B3DNINT(realExp / B3DMAX(mCamera->GetMinK2FrameTime(mParam,
+      mParam->binnings[m_iBinning], (mParam->OneViewType && m_bUseHwROI_OvDiff) ? 1 : 0),
+      realFrame));
     int tiff = mParam->GatanCam && mCamera->GetK2SaveAsTiff();
     str.Format("%d frames", frames);
     SetDlgItemText(IDC_STAT_ALIGN_SUMMARY, str);

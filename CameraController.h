@@ -65,6 +65,7 @@ struct CamPluginFuncs;
 #define PLUGIN_CAN_ADD_TITLE     111
 #define PLUGIN_CAN_GIVE_BUILD    112
 #define PLUGIN_CAN_SET_CDS       113
+#define PLUGIN_TAKES_OV_FRAMES   114
 
 #define CAN_PLUGIN_DO(c, p) CanPluginDo(PLUGIN_##c, p)
 

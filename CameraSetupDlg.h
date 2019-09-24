@@ -78,7 +78,7 @@ public:
 // Dialog Data
   //{{AFX_DATA(CCameraSetupDlg)
 	enum { IDD = IDD_CAMERASETUP };
-	CButton	m_butRemoveXrays;
+	CButton	m_butRemXrays_MagAll;
 	CButton	m_butAverageDark;
 	CEdit	m_editAverage;
 	CEdit	m_editIntegration;
@@ -125,7 +125,7 @@ public:
 	int		m_iAverageTimes;
 	int		m_iIntegration;
 	BOOL	m_bAverageDark;
-	BOOL	m_bRemoveXrays;
+	BOOL	m_bRemXrays_MagAll;
   BOOL  m_bMatchPixel;
   BOOL  m_bMatchIntensity;
 	//}}AFX_DATA
@@ -336,10 +336,10 @@ public:
   void ManageK2SaveSummary(void);
   CString m_strExpTimesInt;
   void ManageIntegration();
-  BOOL m_bCorrectDrift;
-  CButton m_butCorrectDrift;
-  BOOL m_bUseHardwareROI;
-  CButton m_butUseHardwareROI;
+  BOOL m_bCorrDrift_DeHwBin;
+  CButton m_butCorrDrift_DeHwBin;
+  BOOL m_bUseHwROI_OvDiff;
+  CButton m_butUseHwROI_OvDiff;
   BOOL m_bSaveK2Sums;
   CButton m_butSaveFrameSums;
   CButton m_butSetupK2FrameSums;
@@ -368,6 +368,7 @@ float ActualFrameTime(float roundedTime);
 void ManageK2Binning(void);
   BOOL m_bTakeK3Binned;
   afx_msg void OnTakeK3Binned();
+  afx_msg void OnUseHwROI_OvDiff();
   CButton m_butTakeK3Binned;
   int CheckFrameAliRestrictions(int useMode, BOOL saveUnnormed, BOOL useSave, const char *descrip);
 };
