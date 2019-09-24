@@ -7,7 +7,8 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "afxres.h"
+#include "afxres.h"
+
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
@@ -1649,7 +1650,7 @@ EXSTYLE WS_EX_TOOLWINDOW | WS_EX_LEFTSCROLLBAR
 FONT 8, "Microsoft Sans Serif", 0, 0, 0x1
 BEGIN
     CONTROL         "None",IDC_RDEFINENONE,"Button",BS_AUTORADIOBUTTON | WS_GROUP,11,46,28,10
-    CONTROL         "Focus",IDC_RDEFINEFOCUS,"Button",BS_AUTORADIOBUTTON,45,46,29,10
+    CONTROL         "Focus",IDC_RDEFINEFOCUS,"Button",BS_AUTORADIOBUTTON,45,46,32,10
     CONTROL         "Trial",IDC_RDEFINETRIAL,"Button",BS_AUTORADIOBUTTON,80,46,27,10
     GROUPBOX        "Define position of area",IDC_STATIC,6,37,107,20,WS_GROUP
     CONTROL         "Set",IDC_SET_BEAM_SHIFT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,103,25,10
@@ -1694,7 +1695,7 @@ BEGIN
     EDITTEXT        IDC_EDITPOSITION,63,58,25,12,ES_CENTER | ES_AUTOHSCROLL
     LTEXT           "um",IDC_STATMICRON,91,60,10,8
     LTEXT           "Maximum area separation:  -90.23 um",IDC_STATOVERLAP,3,70,114,8
-    GROUPBOX        "Copy current area mag && beam to",IDC_STATIC,6,189,108,20
+    GROUPBOX        "Copy current area settings to",IDC_STATIC,6,189,108,20
     CONTROL         "Rotate inter-area axis",IDC_LD_ROTATE_AXIS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,4,224,76,10
     LTEXT           "deg",IDC_STAT_LD_DEG,104,224,13,8
     EDITTEXT        IDC_EDIT_AXISANGLE,81,222,22,12,ES_CENTER | ES_AUTOHSCROLL
@@ -3652,7 +3653,7 @@ BEGIN
     0
 END
 
-IDD_K2_SAVE_OPTIONS AFX_DIALOG_LAYOUT
+IDD_LOWDOSE AFX_DIALOG_LAYOUT
 BEGIN
     0
 END
@@ -5597,7 +5598,8 @@ LANGUAGE 9, 1
 #include "res\SerialEM.rc2"  // non-Microsoft Visual C++ edited resources
 #include "afxres.rc"         // Standard components
 #include "XFolderDialog\XFolderDialog.rc"
-#endif
+#endif
+
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

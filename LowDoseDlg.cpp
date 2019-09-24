@@ -651,7 +651,14 @@ void CLowDoseDlg::OnCopyArea(UINT nID)
   //button->SetButtonStyle(BS_PUSHBUTTON);
   int area = nID - IDC_COPYTOVIEW;
   int from = mScope->GetLowDoseArea();
+  int toVS = -1, fromVS = -1;
+  if (!area || area == SEARCH_AREA)
+    toVS = area ? 1 : 0;
+  if (!from || from == SEARCH_AREA)
+    fromVS = from ? 1 : 0;
   int consInd = (area == SEARCH_AREA ? SEARCH_CONSET : area);
+  float focOffset;
+  bool toRec = area == RECORD_CONSET;
   LowDoseParams *ldFrom = &mLDParams[from];
   LowDoseParams *ldArea = &mLDParams[area];
   if (area < 0 || area >= MAX_LOWDOSE_SETS || from < 0)
@@ -662,10 +669,10 @@ void CLowDoseDlg::OnCopyArea(UINT nID)
     MB_YESNO | MB_ICONQUESTION) == IDNO)
     return;
 
-  // Convert IS if necessary for change in mag
-  TransferISonAxis(ldArea->magIndex, ldArea->ISX, ldArea->ISY, ldFrom->magIndex,
-    ldArea->ISX, ldArea->ISY);
+  // Convert IS to axis positions before changing the mag
+  ConvertAxisPosition(false);
   ldArea->magIndex = ldFrom->magIndex;
+  ldArea->camLenIndex = ldFrom->camLenIndex;
   ldArea->spotSize = ldFrom->spotSize;
   ldArea->intensity = ldFrom->intensity;
   ldArea->probeMode = ldFrom->probeMode;
@@ -674,15 +681,29 @@ void CLowDoseDlg::OnCopyArea(UINT nID)
   ldArea->slitWidth = ldFrom->slitWidth;
   ldArea->slitIn = ldFrom->slitIn;
   ldArea->beamAlpha = ldFrom->beamAlpha;
-  ldArea->beamDelX = ldFrom->beamDelX;
-  ldArea->beamDelY = ldFrom->beamDelY;
-  ldArea->beamTiltDX = ldFrom->beamTiltDX;
-  ldArea->beamTiltDY = ldFrom->beamTiltDY;
+  ldArea->beamDelX = toRec ? 0. : ldFrom->beamDelX;
+  ldArea->beamDelY = toRec ? 0. : ldFrom->beamDelY;
+  ldArea->beamTiltDX = toRec ? 0. : ldFrom->beamTiltDX;
+  ldArea->beamTiltDY = toRec ? 0. : ldFrom->beamTiltDY;
   if ((area + 1) / 2 == 1) {
     ldArea->darkFieldMode = ldFrom->darkFieldMode;
     ldArea->dfTiltX = ldFrom->dfTiltX;
     ldArea->dfTiltY = ldFrom->dfTiltY;
   }
+
+  // Copy the view/search offsets if going between them, then convert axis back to IS
+  // with that incorporated
+  if (fromVS >= 0 && toVS >= 0) {
+    mViewShiftX[toVS] = mViewShiftX[fromVS];
+    mViewShiftY[toVS] = mViewShiftY[fromVS];
+    focOffset = mScope->GetLDViewDefocus(fromVS);
+    mScope->SetLDViewDefocus(focOffset, toVS);
+    if (toVS == m_iOffsetShown) {
+      m_strViewDefocus.Format("%d", B3DNINT(focOffset));
+      Update();
+    }
+  }
+  ConvertAxisPosition(true);
   SyncFocusAndTrial(area);
 }
 

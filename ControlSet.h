@@ -306,6 +306,7 @@ struct ScaleMat {
   float ypy;
 };
 
+// Check OnCopyArea when add new members
 struct LowDoseParams {
   int magIndex;            // Magnification index
   int camLenIndex;         // Camera length index if in diffraction

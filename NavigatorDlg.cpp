@@ -9462,5 +9462,5 @@ float CNavigatorDlg::ContourArea(float *ptx, float *pty, int numPoints)
     next = (i + 1) % numPoints;
     sum += (ptx[i] * pty[next]) - (pty[i] * ptx[next]);
   }
-  return sum * 0.5f;
+  return (float)fabs(sum * 0.5f);
 }
