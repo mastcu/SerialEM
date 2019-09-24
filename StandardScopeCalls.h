@@ -6,6 +6,9 @@
  * Define MATCHING_NAMES_ONLY to exclude ones whose internal and plugin name do not match
  * Define a SCOPE_SAMENAME macro to expand other statements from a typedef and function
  * name
+ * Standard FEI calls go in the top section and will be expanded in various places in the 
+ * plugin.  JEOL and other calls go in the lower section
+ * See FeiScope PlugSocket.cpp for a checklist on adding a new function for FEI
  */
 #ifndef FEISCOPE_PLUGIN_VERSION
 #define FEISCOPE_PLUGIN_VERSION 109
@@ -79,6 +82,8 @@ GET_ONE_INT(GetDarkFieldMode) LINE_END
 SET_ONE_INT(SetDarkFieldMode) LINE_END
 GET_TWO_DBL(GetDarkFieldTilt) LINE_END
 SET_TWO_DBL(SetDarkFieldTilt) LINE_END
+GET_TWO_DBL(GetDiffractionShift) LINE_END
+SET_TWO_DBL(SetDiffractionShift) LINE_END
 GET_ONE_BOOL(TempControlAvailable) LINE_END
 GET_ONE_BOOL(DewarsAreBusyFilling) LINE_END
 GET_ONE_INT(DewarsRemainingTime) LINE_END
@@ -109,6 +114,8 @@ SET_ONE_BOOL(SkipAdvancedScripting) LINE_END
 SCOPE_SAMENAME(ScopeGetThreeDbl, GetStagePosition);
 SCOPE_SAMENAME(ScopeSetStage, SetStagePosition);
 SCOPE_SAMENAME(ScopeSetStageExtra, SetStagePositionExtra);
+SCOPE_SAMENAME(ScopeGetTwoDbl, GetPiezoXYPosition);
+SCOPE_SAMENAME(ScopeSetTwoDbl, SetPiezoXYPosition);
 SCOPE_SAMENAME(ScopeGetGauge, GetGaugePressure);
 SCOPE_SAMENAME(ScopeGetDblSetInt, GetRefrigerantLevel);
 SCOPE_SAMENAME(ScopeGetSetInt, LoaderSlotStatus);

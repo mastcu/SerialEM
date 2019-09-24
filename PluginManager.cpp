@@ -223,6 +223,8 @@ int CPluginManager::LoadPlugins(void)
         CAMERA_PROC(CamGetTwoInt, GetCameraSize);
         CAMERA_PROC(CamGetTwoInt, GetPluginVersion);
         CAMERA_PROC(CamFourIntString, SetExtraParams1);
+        CAMERA_PROC(CamSetupFrames, SetupFrameAcquire);
+        CAMERA_PROC(CamGetFrame, GetNextFrame);
 
         if (!cfuncs->AcquireImage || !cfuncs->GetNumberOfCameras || !cfuncs->SetExposure ||
           !cfuncs->SetAcquiredArea) {

@@ -15,7 +15,10 @@ typedef int (*CamAcquire)(short *, int, int, int *, int *);
 typedef int (*CamSTEMAcq)(short **, int, int, long *, double, int, int *, int *, int *);
 typedef int (*CamSTEMProp)(int, int, double *, double *, double *, double *, double *, int *,int *);
 typedef int (*CamGetTwoInt)(int *,int *);
-typedef int (*CamFourIntString)(int, int, int, int, const char *);
+typedef int(*CamFourIntString)(int, int, int, int, const char *);
+typedef int(*CamSetupFrames)(double, int, int, int);
+typedef int(*CamGetFrame)(short *, int);
+
 
 // Camera plugin functions
 struct CamPluginFuncs {
@@ -44,6 +47,8 @@ struct CamPluginFuncs {
   CamGetTwoInt GetCameraSize;
   CamGetTwoInt GetPluginVersion;
   CamFourIntString SetExtraParams1;
+  CamSetupFrames SetupFrameAcquire;
+  CamGetFrame GetNextFrame;
 };
 
 // Definitions for Scope functions
