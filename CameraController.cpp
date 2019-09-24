@@ -10956,10 +10956,11 @@ bool CCameraController::CanWeAlignFalcon(CameraParameters *param, BOOL savingEna
 // Returns whether we can save an mdoc for the frame stack
 bool CCameraController::CanSaveFrameStackMdoc(CameraParameters * param)
 {
-  return (param->K2Type && CAN_PLUGIN_DO(CAN_SAVE_MDOC, param)) || (param->FEItype && 
+  bool canSave = (param->canTakeFrames & FRAMES_CAN_BE_SAVED) != 0;
+  return ((param->K2Type || (param->OneViewType && canSave)) && 
+    CAN_PLUGIN_DO(CAN_SAVE_MDOC, param)) || (param->FEItype && 
       !(param->FEItype == FALCON3_TYPE && mLocalFalconFramePath.IsEmpty())) ||
-      (param->DE_camType && mTD.DE_Cam->ServerIsLocal() || 
-    (!param->GatanCam && (param->canTakeFrames & FRAMES_CAN_BE_SAVED)));
+      (param->DE_camType && mTD.DE_Cam->ServerIsLocal() || (!param->GatanCam && canSave));
 }
 
 // Returns true if all conditions are satisfied for saving binned frames from K3 camera
