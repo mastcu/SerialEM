@@ -15,9 +15,9 @@ static int idTable[] = {IDC_STAT_FILETYPE, IDC_SAVE_MRC, IDC_COMPRESSED_TIFF,
   IDC_TIFF_ZIP_COMPRESS, IDC_STAT_CURSET2, IDC_STAT_CURSET1,
   IDC_USE_EXTENSION_MRCS, IDC_ONE_FRAME_PER_FILE, PANEL_END,
   IDC_FRAME_STACK_MDOC, IDC_TSS_LINE2, PANEL_END, 
-  IDC_SAVE_UNNORMALIZED, IDC_PACK_COUNTING_4BIT, IDC_USE_4BIT_MRC_MODE, IDC_SAVE_TIMES_100,
-  IDC_PACK_RAW_FRAME, IDC_CHECK_REDUCE_SUPERRES, IDC_SKIP_ROTFLIP, IDC_TSS_LINE1, 
-  PANEL_END, 
+  IDC_SAVE_UNNORMALIZED, IDC_PACK_COUNTING_4BIT, IDC_USE_4BIT_MRC_MODE, 
+  IDC_SAVE_TIMES_100, IDC_PACK_RAW_FRAME, IDC_CHECK_REDUCE_SUPERRES, PANEL_END, 
+  IDC_SKIP_ROTFLIP, IDC_TSS_LINE1, PANEL_END, 
   IDC_STAT_COMPTITLE, IDC_STAT_USE_COMP, IDC_STAT_FOLDER, IDC_STAT_FILE, IDC_STAT_EXAMPLE,
   IDC_CHECK_ROOT_FOLDER, IDC_EDIT_BASENAME, IDC_CHECK_ROOT_FILE,
   IDC_CHECK_SAVEFILE_FILE, IDC_CHECK_SAVEFILE_FOLDER, IDC_CHECK_NAVLABEL_FOLDER, 
@@ -148,15 +148,17 @@ END_MESSAGE_MAP()
 // CK2SaveOptionDlg message handlers
 BOOL CK2SaveOptionDlg::OnInitDialog()
 {
-  BOOL states[5] = {true, true, true, true, true};
+  BOOL states[6] = {true, true, true, true, true, true};
   int show = (mDEtype && !mCanCreateDir) ? SW_HIDE : SW_SHOW;
   CString str;
   CBaseDlg::OnInitDialog();
   m_butSkipRotFlip.EnableWindow(mEnableSkipRotFlip);
   m_butSaveUnnormalized.EnableWindow(mCanGainNormSum);
   SetupPanelTables(idTable, leftTable, topTable, mNumInPanel, mPanelStart);
-  states[0] = states[2] = !mFalconType && !mDEtype;
+  states[0] = mCamParams->GatanCam;
   states[1] = mCanSaveFrameStackMdoc || mK2Type;
+  states[2] = mK2Type;
+  states[3] = mCamParams->GatanCam;
   AdjustPanels(states, idTable, leftTable, topTable, mNumInPanel, mPanelStart, 0);
   m_butSavesTimes100.ShowWindow(mK2Type == K2_SUMMIT);
   m_butPackCounting4Bits.ShowWindow(mK2Type == K2_SUMMIT || 
@@ -323,13 +325,14 @@ void CK2SaveOptionDlg::UpdateFormat(void)
 
 void CK2SaveOptionDlg::ManagePackOptions(void)
 {
-  bool unNormed = !mSetIsGainNormalized || (mCanGainNormSum && m_bSaveUnnormalized);
+  bool unNormed = !mSetIsGainNormalized || 
+    (mCanGainNormSum && m_bSaveUnnormalized && mK2Type);
   m_butPackRawFrame.EnableWindow(unNormed);
   bool binning = mWinApp->mCamera->IsK3BinningSuperResFrames(mCamParams, 1, mSaveSetting,
     mAlignSetting, mUseFrameAlign, unNormed ? DARK_SUBTRACTED : GAIN_NORMALIZED, 
     mK2mode, mTakingK3Binned);
-  bool reducing = !unNormed && (mK2Type == K3_TYPE || mK2mode == K2_SUPERRES_MODE) && 
-    mK2mode > 0 && !binning && mCanReduceSuperres && m_bReduceSuperres;
+  bool reducing = !unNormed && (mK2Type == K3_TYPE || mK2mode == K2_SUPERRES_MODE) &&
+    mK2mode > 0 && !binning && mCanReduceSuperres && m_bReduceSuperres && mK2Type;
   m_butPackCounting4Bits.EnableWindow(unNormed && m_bPackRawFrames && 
     mCan4BitModeAndCounting);
   m_butUse4BitMode.EnableWindow(unNormed && m_bPackRawFrames && !m_iFileType &&
@@ -341,7 +344,7 @@ void CK2SaveOptionDlg::ManagePackOptions(void)
   m_strCurSetSaves.Format("%s to %s%s%s%s", unNormed ? "raw" : "norm",
       m_iFileType > 0 ? (m_iFileType > 2 ? "TIF-ZIP" : "TIF-LZW") : "MRC", 
       (reducing || binning) ? "" : (m_bOneFramePerFile ? " files" : " stack"),
-      (unNormed && mK2mode > 0 && m_bPackRawFrames)? ", packed" : "",
+      (unNormed && mK2mode > 0 && m_bPackRawFrames && mK2Type)? ", packed" : "",
       reducing ? ", reduced" : (binning ? ", binned" : ""));
   UpdateData(false);
 }
