@@ -150,6 +150,8 @@ KStoreMRC::KStoreMRC(CString inFilename , FileOptions inFileOpt)
 {
   CString mdocName;
   long headSize = MRCheadSize;
+  BOOL makeMdoc = (inFileOpt.useMont() ? inFileOpt.montUseMdoc : inFileOpt.useMdoc) ||
+    inFileOpt.montageInMdoc;
   mHead = new HeaderMRC();
   mExtra = NULL;
   mPixelSpacing = 1.;
@@ -200,22 +202,23 @@ KStoreMRC::KStoreMRC(CString inFilename , FileOptions inFileOpt)
       Write(mExtra, mHead->next);
 
     // Back up an existing mdoc file regardless of whether a new one is requested
+    // unless flag is set to leave one (for frame stack mdoc)
     // Then try to create a new autodoc if needed
     mdocName = getAdocName();
-    imodBackupFile((char *)(LPCTSTR)mdocName);
-    if ((inFileOpt.useMont() ? inFileOpt.montUseMdoc : inFileOpt.useMdoc) || 
-      inFileOpt.montageInMdoc) {
-        if (!AdocAcquireMutex()) {
-          Close();
-          return;
-        }
-        mAdocIndex = AdocNew();
-        AdocReleaseMutex();
-        if (mAdocIndex < 0) {
-          Close();
-          return;
-        }
-        mMontCoordsInMdoc = inFileOpt.montageInMdoc;
+    if (makeMdoc || !inFileOpt.leaveExistingMdoc)
+      imodBackupFile((char *)(LPCTSTR)mdocName);
+    if (makeMdoc) {
+      if (!AdocAcquireMutex()) {
+        Close();
+        return;
+      }
+      mAdocIndex = AdocNew();
+      AdocReleaseMutex();
+      if (mAdocIndex < 0) {
+        Close();
+        return;
+      }
+      mMontCoordsInMdoc = inFileOpt.montageInMdoc;
     }
 
   }

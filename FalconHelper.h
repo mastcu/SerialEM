@@ -9,6 +9,7 @@
 struct ScopePluginFuncs;
 class FrameAlign;
 struct CameraThreadData;
+struct DarkRef;
 
 class CFalconHelper
 {
@@ -80,6 +81,7 @@ private:
   int mUseImage2;                       // Flag to use the second buffer
   std::vector<long> mDeleteList;        // List of frames files to delete
   int mStartedAsyncSave;                // Flag if started asynchronous saving
+  bool mProcessingPlugin;               // Flag that processing frames from plugin
   float mGpuMemory;                     // Memory of GPU here, or 0 if none
   int mUseGpuForAlign[2];               // Flags for using GPU here and in IMOD
   int mUseFrameAlign;                   // Set only if doing frame alignment here
@@ -89,6 +91,11 @@ private:
   bool mGettingFRC;                     // Flag if getting the FRC in the alignment
   bool mAlignSubset;                    // Flag if aligning subset
   int mAlignStart, mAlignEnd;           // The subset start and end
+  DarkRef *mDarkp;                      // Dark and gain references to apply in align
+  DarkRef *mGainp;
+  bool mNeedNormHere;                   // Flag that we need to normalize in camcontroller
+  int mProcessing;                      // Parameters sto save and send for normalizing
+  int mRemoveXrays;
   bool mDoingAdvancedFrames;            // Flag fror using advanced vs basic interface
   bool mReadLocally;                    // Flag to read FEI stack directly
   FILE *mFrameFP;                       // file pointer for local reading
@@ -116,6 +123,7 @@ public:
   void StackNextTask(int param);
   void CleanupStacking(void);
   int StackingWaiting();
+  static int TaskStackingBusy();
   void CheckAsyncSave(void);
   int GetFrameTotals(ShortVec & summedFrameList, int & totalSubframes, 
     int maxFrames = -1);
@@ -136,4 +144,7 @@ public:
     int & frameX, int & frameY, bool acquiredSize);
   int SuperResHardwareBinDivisor(CameraParameters *camParams, const ControlSet *conSet);
   void InitializePointers(void);
+  int ProcessPluginFrames(CString &directory, CString &rootname, ControlSet &conSet, bool save, bool align,
+    int aliParamInd, int divideBy2, float pixel, CameraThreadData *camTD);
+  int MakeBackupIfFileExists(CString &str);
 };

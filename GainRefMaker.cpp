@@ -274,6 +274,7 @@ void CGainRefMaker::AcquireGainRef()
   fileOpt.mode = 2;
   fileOpt.typext = 0;
   fileOpt.useMdoc = false;
+  fileOpt.leaveExistingMdoc = false;
   fileOpt.montageInMdoc = false;
   fileOpt.fileType = STORE_TYPE_MRC;
   mStoreMRC = new KStoreMRC(mFileName, fileOpt);

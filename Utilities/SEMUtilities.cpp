@@ -217,6 +217,7 @@ int UtilSaveSingleImage(CString filename, CString descrip, bool useMdoc)
   fileOpt.mode = imBufs->mImage->getType() == kUSHORT ? MRC_MODE_USHORT : MRC_MODE_SHORT;
   fileOpt.typext = VOLT_XY_MASK | TILT_MASK;
   fileOpt.useMdoc = useMdoc;
+  fileOpt.leaveExistingMdoc = false;
   fileOpt.montageInMdoc = false;
   fileOpt.fileType = STORE_TYPE_MRC;
   storeMRC = new KStoreMRC(filename, fileOpt);

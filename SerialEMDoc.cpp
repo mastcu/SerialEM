@@ -153,6 +153,7 @@ CSerialEMDoc::CSerialEMDoc()
   mDefFileOpt.fileType = STORE_TYPE_MRC;
   mDefFileOpt.compression = COMPRESS_NONE;
   mDefFileOpt.useMdoc = false;
+  mDefFileOpt.leaveExistingMdoc = false;
   mDfltUseMdoc = -1;
   mDefFileOpt.montageInMdoc = false;
   mDefFileOpt.separateForMont = true;

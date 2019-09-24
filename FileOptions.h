@@ -36,6 +36,7 @@ struct  FileOptions {
   int TIFFallowed;
   BOOL separateForMont;
   BOOL montUseMdoc;
+  BOOL leaveExistingMdoc;
   int montFileType;
   int refCount;
   BOOL useMont(void) {return separateForMont && ((typext & MONTAGE_MASK) || montageInMdoc);};
