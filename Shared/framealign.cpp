@@ -365,6 +365,8 @@ int FrameAlign::initialize(int binSum, int binAlign, float trimFrac, int numAllV
     mSavedBinPad.clear();
   }
   aliFiltSize = B3DMAX(minFiltSize, 4 * (maxShift / binAlign));
+  ACCUM_MIN(aliFiltSize, alignXpad);
+  ACCUM_MIN(aliFiltSize, alignYpad);
   aliFiltSize = niceFrame(aliFiltSize, 2, niceLimit);
 
   // Manage filter mask arrays
@@ -547,13 +549,15 @@ int FrameAlign::initialize(int binSum, int binAlign, float trimFrac, int numAllV
 
 /*
  * Store parameters and resize arrays for dose weighting, also save a reweighting
- * filter at this time
+ * filter at this time.  Pass NULL for reweightFilt if no reweighting is to be done;
+ * pass an array with all 1's to have a normalizing reweighting computed here
  */
 int FrameAlign::setupDoseWeighting(float priorDose, float *frameDoses, float pixelSize, 
                                    float critScale, float aFac, float bFac, float cFac,
                                    float *reweightFilt, int &filtSize)
 {
-  int ind;
+  int ind, frame;
+  bool allOnes = true;
   mDoingDoseWeighting = true;
   mPriorDoseCum = priorDose;
   CLEAR_RESIZE(mFrameDoses, float, mNumExpectedFrames);
@@ -569,8 +573,31 @@ int FrameAlign::setupDoseWeighting(float priorDose, float *frameDoses, float pix
   CLEAR_RESIZE(mDoseWgtFilter, float, filtSize);
   if (reweightFilt) {
     CLEAR_RESIZE(mReweightFilt, float, filtSize);
-    for (ind = 0; ind < filtSize; ind++)
+    for (ind = 0; ind < filtSize; ind++) {
       mReweightFilt[ind] = reweightFilt[ind];
+      if (reweightFilt[ind] != 1.0)
+        allOnes = false;
+    }
+
+    // If the reweight filter is all ones, compute a normalizing filter here from the 
+    // inverse of the sum of filters to be used
+    if (allOnes) {
+      for (ind = 0; ind < filtSize; ind++)
+        mReweightFilt[ind] = 0.;
+      for (frame = 0; frame < mNumExpectedFrames; frame++) {
+        doseWeightFilter(priorDose, priorDose + mFrameDoses[frame], mPixelSize,
+                         mCritDoseAfac, mCritDoseBfac, mCritDoseCfac, mCritDoseScale,
+                         &mDoseWgtFilter[0], (int)mDoseWgtFilter.size(), 0.71f,
+                         &mDWFdelta);
+        priorDose += mFrameDoses[frame];
+        for (ind = 0; ind < filtSize; ind++)
+          mReweightFilt[ind] += mDoseWgtFilter[ind];
+      }
+      for (ind = 0; ind < filtSize; ind++) {
+        if (mReweightFilt[ind] > 0.) 
+          mReweightFilt[ind] = mNumExpectedFrames / mReweightFilt[ind];
+      }
+    }
   }
   return 0;
 }
@@ -2435,7 +2462,7 @@ int FrameAlign::addToSums(float *fullArr, int sumInd, int binInd, int frameNum,
 
   // Roll the frame buffer and reduce the number saved
   if (sumInd >= -1 && (mNumAllVsAll || mDeferSumming)) {
-    if (fullArr) {
+    if (fullArr && mNumFullSaved > 0) {
       /*for (int jnd = 0; jnd < mNumFullSaved; jnd++)
         printf("%d  ", mSavedFullFrameNum[jnd]);
         printf("\n");*/
@@ -2447,7 +2474,7 @@ int FrameAlign::addToSums(float *fullArr, int sumInd, int binInd, int frameNum,
       /*for (int jnd = 0; jnd < mNumFullSaved; jnd++)
         printf("%d  ", mSavedFullFrameNum[jnd]);
         printf("\n");*/
-    } else {
+    } else if (!fullArr && mNumStackedOnGpu > 0) {
       mNumStackedOnGpu--;
     }
   }
