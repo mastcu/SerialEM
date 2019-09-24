@@ -380,10 +380,16 @@ class DLL_IM_EX CEMscope
   BOOL ChangeBeamTilt(double shiftX, double shiftY, BOOL bInc);
   BOOL GetDarkFieldTilt(int &mode, double &tiltX, double &tiltY);
   BOOL SetDarkFieldTilt(int mode, double tiltX, double tiltY);
+  BOOL GetDiffractionShift(double &shiftX, double &shiftY);
+  BOOL SetDiffractionShift(double shiftX, double shiftY);
+  BOOL GetPiezoXYPosition(double &X, double &Y);
+  BOOL SetPiezoXYPosition(double X, double Y, bool incremental = false);
+  bool GetGaugePressure(const char *name, int &outStat, double &outPress);
   double GetScreenCurrent();
   double GetFilamentCurrent();
   BOOL SetFilamentCurrent(double current);
   GetSetMember(float, FilamentCurrentScale);
+  GetSetMember(float, DiffShiftScaling);
   GetSetMember(int, UseTEMScripting);
   GetMember(bool, MovingAperture);
   int *GetLastLongOpTimes() {return &mLastLongOpTimes[0];};
@@ -686,6 +692,7 @@ private:
   int mSavedApertureSize[MAX_APERTURE_NUM + 1];     // Size and position from "RemoveAperture"
   float mSavedAperturePosX[MAX_APERTURE_NUM + 1];   // Apertures are numbered from 1, 
   float mSavedAperturePosY[MAX_APERTURE_NUM + 1];   // subtract 1 to access array
+  float mDiffShiftScaling;     // Scaling to apply to diffraction shift
   int mPluginVersion;         // Version of plugin or server
 
   // Old static variables from UpdateProc

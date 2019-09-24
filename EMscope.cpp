@@ -445,6 +445,7 @@ CEMscope::CEMscope()
   mUseInvertedMagRange = false;
   mFalcon3ReadoutInterval = 0.024923f;
   mAddToFalcon3Exposure = 0.013f;
+  mDiffShiftScaling = 10.;
   mPluginVersion = 0;
   mPlugFuncs = NULL;
   mScopeMutexHandle = NULL;
@@ -2417,6 +2418,50 @@ BOOL CEMscope::FastStagePosition(double & X, double & Y, double & Z)
   return retval;
 }
 
+// Get X/Y poxition of piezo drives if they exist
+BOOL CEMscope::GetPiezoXYPosition(double &X, double &Y)
+{
+  BOOL success = true;
+  if (!sInitialized || !mPlugFuncs->GetPiezoXYPosition)
+    return false;
+  ScopeMutexAcquire("GetPiezoXYPosition", true);
+
+  try {
+    mPlugFuncs->GetPiezoXYPosition(&X, &Y);
+  }
+  catch (_com_error E) {
+    SEMReportCOMError(E, _T("getting Piezo Position "));
+    success = false;
+  }
+  ScopeMutexRelease("GetPiezoXYPosition");
+  return success;
+}
+
+// Set X/Y position of piezos
+BOOL CEMscope::SetPiezoXYPosition(double X, double Y, bool incremental)
+{
+  BOOL success = true;
+  double curX, curY;
+  if (!sInitialized || !mPlugFuncs->GetPiezoXYPosition || !mPlugFuncs->SetPiezoXYPosition)
+    return false;
+  ScopeMutexAcquire("SetPiezoXYPosition", true);
+
+  try {
+    if (incremental) {
+      mPlugFuncs->GetPiezoXYPosition(&curX, &curY);
+      X += curX;
+      Y += curY;
+    }
+    mPlugFuncs->SetPiezoXYPosition(X, Y);
+  }
+  catch (_com_error E) {
+    SEMReportCOMError(E, _T("setting Piezo Position "));
+    success = false;
+  }
+  ScopeMutexRelease("SetPiezoXYPosition");
+  return success;
+}
+
 // Return image shift, possibly adjusted to center shift if low dose is on
 BOOL CEMscope::GetLDCenteredShift(double &shiftX, double &shiftY)
 {
@@ -2856,6 +2901,50 @@ BOOL CEMscope::SetDarkFieldTilt(int mode, double tiltX, double tiltY)
   return success;
 }
 
+// Diffraction shift
+BOOL CEMscope::GetDiffractionShift(double & shiftX, double & shiftY)
+{
+  bool success = true;
+  if (!sInitialized || !mPlugFuncs->GetDiffractionShift)
+    return false;
+
+  ScopeMutexAcquire("GetDiffractionShift", true);
+
+  try {
+    mPlugFuncs->GetDiffractionShift(&shiftX, &shiftY);
+    shiftX /= mDiffShiftScaling;
+    shiftY /= mDiffShiftScaling;
+  }
+  catch (_com_error E) {
+    success = false;
+    SEMReportCOMError(E, _T("getting Diffraction Shift "));
+  }
+  ScopeMutexRelease("GetDiffractionShift");
+  return success;
+}
+
+
+BOOL CEMscope::SetDiffractionShift(double shiftX, double shiftY)
+{
+  bool success = true;
+  if (!sInitialized || !mPlugFuncs->SetDiffractionShift)
+    return false;
+
+  ScopeMutexAcquire("SetDiffractionShift", true);
+
+  try {
+    mPlugFuncs->SetDiffractionShift(shiftX * mDiffShiftScaling, 
+      shiftY * mDiffShiftScaling);
+  }
+  catch (_com_error E) {
+    SEMReportCOMError(E, _T("setting Diffraction Shift "));
+    success = false;
+  }
+  ScopeMutexRelease("SetDiffractionShift");
+  return success;
+}
+
+
 // Get the objective stigmator, range -1 to 1
 bool CEMscope::GetObjectiveStigmator(double & stigX, double & stigY)
 {
@@ -2895,7 +2984,6 @@ bool CEMscope::SetObjectiveStigmator(double stigX, double stigY)
   ScopeMutexRelease("SetObjectiveStigmator");
   return success;
 }
-
 
 // SCREEN POSITION AND CURRENT FUNCTIONS
 //
@@ -5848,6 +5936,24 @@ bool CEMscope::GetTemperatureInfo(int type, BOOL &busy, int &time, int which,
   catch (_com_error E) {
     SEMReportCOMError(E, _T(messages[type]));
   }
+  return success;
+}
+
+// Get arbitrary gauge information
+bool CEMscope::GetGaugePressure(const char *name, int &outStat, double &outPress)
+{
+  bool success = true;
+  if (!sInitialized || !mPlugFuncs->GetGaugePressure)
+    return false;
+  ScopeMutexAcquire("GetGaugePressure", true);
+  try {
+    mPlugFuncs->GetGaugePressure(name, &outStat, &outPress);
+  }
+  catch (_com_error E) {
+    SEMReportCOMError(E, _T("getting vacuum gauge pressure "));
+    success = false;
+  }
+  ScopeMutexRelease("GetGaugePressure");
   return success;
 }
 
