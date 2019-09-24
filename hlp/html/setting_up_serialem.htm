@@ -139,6 +139,9 @@
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#K2details">For a K2 camera in
           particular</a>
         <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#OneViewDetails">To set up a OneView or Rio camera
+             to save frames</a>
+        <br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#DEdetails">For a Direct
           Electron direct detection camera</a>
         <br>
@@ -1193,7 +1196,54 @@
       <li>To use a GPU for frame alignment, see <a href="#using_gpu">Setting Up to Use a 
         GPU for Frame Alignment</a>.</li>
     </ul>
-    <p>
+      <p>
+        <a name="OneViewDetails"><i>To set up a OneView or Rio camera to save frames</i></a>,
+        two camera property entries are needed and one or two others may be as well.&nbsp; 
+        Frame handling is done through the SEMCCD plugin to DigitalMicrograph, exactly 
+        as it is done for K2 and K3 cameras, so many of the same options are available.&nbsp; 
+        Specifically, the frame alignment is done with the same framealign module used 
+        for all direct detectors in SerialEM, which is designed for very low dose frames 
+        and can run on a GPU.&nbsp; For such frames, is likely to be better than the 
+        intrinsic drift correction in DigitalMicrograph, provided that the frames 
+        provided to the plugin are of similar quality to those used internally.&nbsp; 
+        However, for higher-dose images, this frame alignment will be slower and no 
+        better than drift correction.&nbsp; If you have no plans to try the alignment 
+        for low-dose work, it is probably best not to enable the interface, to avoid 
+        confusing users with two alignment methods.</p>
+      <ul>
+        <li>Add the camera property 'CanTakeFrames' with a value of 1 to enable the 
+          interface for frame-saving only, or a 3 to show the interface for frame aligning 
+          also.</li>
+        <li>Add the camera property 'RotationAndFlip' (see <A href="about_properties.htm#per_camera_properties">Properties for one camera</A>) 
+          so that frame-based images are oriented correctly.&nbsp; You should be able to 
+          determine the value from the settings for 'Rotation' and 'Flip around Y axis' in 
+          the camera configuration in DM and the table above.&nbsp; </li>
+        <li>You may need the camera property 'FrameTimeDivisors' if the number of frames 
+          obtained does not closely match the number shown in the Camera Setup dialog.&nbsp; 
+          There are default values in the program for the various camera types, based on 
+          the nominal frame rates, but they have been tuned only for OneView so far. When 
+          taking many frames, errors of 1 frame seem to be inevitable even after adjusting 
+          the times, but the times can be adjusted to reduce bigger errors.&nbsp; To 
+          refine the time for a binning, save 300-500 frames at the minimum frame time for 
+          that binning and multiply the default time listed for it in the description of 
+          'FrameTimeDivisors' by the ratio of the number of frames shown in the dialog to 
+          the number actually obtained.&nbsp; Add a 'FrameTimeDivisors' with the default 
+          or adjusted times for each binning.</li>
+        <li>There is also a property 'MinimumFrameTimes' that can be set, if these times 
+          are longer than their respective frame time divisors.</li>
+        <li>See the note on big TIFF files in the K2/K3 section above.</li>
+      <li>To use frame alignment with the CPU when SerialEM is 32-bit on the camera 
+        computer, or running on a different computer,&nbsp; you need to download and run 
+        Shrmemframe-GMSxxx.exe on the camera computer, where 'xxx' should be compatible 
+          with your 
+        version of GMS.</li>
+      <li>To use a GPU for frame alignment, see <a href="#using_gpu">Setting Up to Use a 
+        GPU for Frame Alignment</a>, but ignore statements about the K2 or K3 and its 
+        card configurations.&nbsp; It should be possible to fit a dual-height GeForce 
+        card in the camera computer, unless there are no available power connectors, in 
+        which case your choices are limited.</li>
+      </ul>
+      <p>
       <a name="DEdetails"><i>For a Direct Electron direct detection camera</i></a>, particularly if you are 
       upgrading to SerialEM 3.4 or higher from an earlier version, note these 
       points:</p>

@@ -2717,7 +2717,7 @@ int SEMThreeChoiceBox(CString message, CString yesText, CString noText,
 //   c for calibrations
 //   d for electron dose
 //   e for JEOL events
-//   f for STEM Focus
+//   f for STEM Focus and JEOL objective focus
 //   g for GIF and STEM state tracking functions
 //   h for NavHelper
 //   i for image shift

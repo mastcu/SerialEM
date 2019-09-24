@@ -15,9 +15,11 @@
     <p>
       This dialog has two sections.&nbsp; The upper section presents choices about the files produced when the SerialEM plugin 
       to DigitalMicrograph saves subframes for a Dose Fractionation exposure.&nbsp; 
-      Everything except one option in this section appears only for K2/K3 cameras.&nbsp; 
-      The lower section, which appears for K2/K3, Falcon, and Direct Electron cameras, allows you to 
-      control the name of these files.&nbsp; For K2/K3 and Falcon, you can also put subsets of the 
+      Everything except one option in this section appears only for Gatan cameras 
+      (mostly just for K2/K3).&nbsp; The lower section, which appears for all cameras 
+      that can save frames, allows you to 
+      control the name of these files.&nbsp; Except for Direct Electron cameras with 
+      an older server version, you can also put subsets of the 
       files into different 
       folders automatically.&nbsp; These are global settings that apply to all camera parameter sets in which 
       frames are saved.</p>
@@ -29,25 +31,25 @@
       &#39;.mdoc&#39; appended to a frame stack name or to the name of the folder containing 
       single-frame files.&nbsp; This file will have the same format as the file opened 
       with <a href="menu_file.htm#hid_file_open_mdoc">Open .mdoc for Frames</a> in the 
-      file menu, namely the one section in the file will be named &#39;Frameset&#39;.&nbsp; It 
-      will also have the gain reference and defect file names if K2/K3 frames are taken 
+      file menu, namely the one section in the file will be named &#39;Frameset&#39;.&nbsp; 
+      For a&nbsp; K2/K3, it will also have the gain reference and defect file names if frames are taken 
       without normalization.&nbsp; Additional entries can be added to the file with 
       the script commands &#39;StartNextFrameStackMdoc&#39; and &#39;AddToNextFrameStackMdoc&#39;, but 
       these commands must be given before acquisition.</p>
     <p>
       &nbsp;</p>
     <p>
-      <i><b>Other K2/K3 Camera Options</b></i></p>
+      <i><b>Other Gatan Camera Options</b></i></p>
     <p>
       <b>File type</b></p>
     <p>
       The choices here are files in MRC format, TIFF files with LZW compression, and 
       TIFF files with ZIP compression.&nbsp; Both compressions are loss-less and can 
       be read by programs in IMOD that read TIFF files.&nbsp; LZW is more effective, 
-      and much faster, than ZIP compression for unnormalized images.&nbsp; ZIP 
-      compresses normalized images more, but may still be considerably slower.&nbsp;As 
-      of SerialEM 3.6.0, compression is parallelized and should be much faster than 
-      previously, so ZIP compression may now take a reasonable amount of time. If you are saving normalized or linear mode images, you should assess both 
+      and much faster, than ZIP compression for unnormalized K2/K3 images.&nbsp; ZIP 
+      compresses normalized images more, but may be considerably slower.&nbsp;Compression 
+      is parallelized, so ZIP compression may still take a reasonable amount of time. If you are saving normalized or 
+      K2/K3 linear mode images, you should assess both 
       the compression factor and the acquisition time with the typical images for a 
       project when deciding which form to use on a routine basis.&nbsp; The best way 
       to assess acquisition time is to turn on Debug Mode in the Camera menu.&nbsp; 
@@ -68,6 +70,32 @@
       Select this option to have each saved subframe written as a separate file 
       instead of having all subframes for an acquisition written to one image stack.&nbsp; 
       They will be written in a uniquely named folder.</p>
+    <p>
+      <b>Save frames without rotation/flip to standard orientation</b></p>
+    <p>
+      This options controls whether the plugin saves frames in the raw orientation as 
+      read from the camera rather than rotating and flipping them, if necessary, into 
+      the standard orientation at which images are viewed in SerialEM.&nbsp; Image 
+      flipping alone does not take significant time, but rotation does.&nbsp; 
+      Originally, it took 0.05 seconds 
+      for K2 counting mode frames and 0.25 seconds for super-resolution frames, but 
+      multi-threading in SerialEM 3.7 has reduced the latter to ~0.1 sec.&nbsp; If 
+      you do not care about preserving orientation in the saved frames, you can select 
+      this option to reduce frame processing time.&nbsp; However, handedness will be 
+      changed if a flipping operation is being skipped.&nbsp; This option is enabled 
+      only if the current camera has a nonzero RotationAndFlip property.</p>
+    <p>
+      If you are saving non-gain-normalized frames from 
+      a K2/K3 camera, the 
+      defect list stored with the frames will be adjusted for the change in 
+      orientation.&nbsp; These defect lists always have a RotationFlip entry showing 
+      the orientation to which they apply, and the title in the image file shows the 
+      operation applied to the frames after &#39;r/f&#39;, which will be 0 with this option 
+      on.</p>
+    <p>
+      &nbsp;</p>
+    <p>
+      <i><b>Other K2/K3 Camera Options</b></i></p>
     <p>
       <b>Save unnormalized frames even if Gain Normalized is selected</b></p>
     <p>
@@ -161,27 +189,6 @@
       of half of that.&nbsp; This is a new, non-standard mode supported by some 
       software from UCSF and by IMOD as of version 4.8.41.&nbsp; <i>Be sure that you 
       will be using software that can read these files before saving data in this mode</i>.</p>
-    <p>
-      <b>Save frames without rotation/flip to standard orientation</b></p>
-    <p>
-      This options controls whether the plugin saves frames in the raw orientation as 
-      read from the camera rather than rotating and flipping them, if necessary, into 
-      the standard orientation at which images are viewed in SerialEM.&nbsp; Image 
-      flipping alone does not take significant time, but rotation does.&nbsp; 
-      Originally, it took 0.05 seconds 
-      for K2 counting mode frames and 0.25 seconds for super-resolution frames, but 
-      multi-threading in SerialEM 3.7 has reduced the latter to ~0.1 sec.&nbsp; If 
-      you do not care about preserving orientation in the saved frames, you can select 
-      this option to reduce frame processing time.&nbsp; However, handedness will be 
-      changed if a flipping operation is being skipped.&nbsp; This option is enabled 
-      only if the current camera has a nonzero RotationAndFlip property.</p>
-    <p>
-      If you are saving non-gain-normalized frames from GMS 2.3.1 or higher, the 
-      defect list written stored with the frames will be adjusted for the change in 
-      orientation.&nbsp; These defect lists always have a RotationFlip entry showing 
-      the orientation to which they apply, and the title in the image file shows the 
-      operation applied to the frames after &#39;r/f&#39;, which will be 0 with this option 
-      on.</p>
     <p>
       &nbsp;</p>
     <p>

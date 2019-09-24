@@ -24,7 +24,7 @@
 
     <p>
       This dialog allows you to set parameters to control alignment of frames taken 
-      from a K2 or K3 camera in Dose Fractionation mode, or from a Falcon or Direct Electron camera.&nbsp; </p>
+      from a camera that can acquire frames.&nbsp; </p>
     <p>
       <i>With a K2/K3 camera</i>, the alignment can be done in 
       three different ways: with the native alignment procedures in DigitalMicrograph, 
@@ -35,6 +35,10 @@
       a command file for running the alignment in IMOD after all of the frames have 
       been saved.&nbsp; The Framewatcher program in IMOD can be used to process these 
       command files as soon as they appear.</p>
+    <p>
+      <em>With a OneView or Rio camera, </em>alignment can similarly be done in the 
+      plugin to DM and applied to the image returned to SerialEM, or a command file 
+      can be written to run Alignframes.</p>
     <p>
       <i>With a Falcon camera</i>, the alignment can generally be done in two or three 
       similar ways: with the FEI software that aligns frames from Falcon 3 camera, 
@@ -113,7 +117,9 @@
       frames, half the frames, or all the frames.&nbsp; The other basic strategy 
       involves correlating each frame to a sum of previously aligned frames; this is 
       not as reliable in general because it uses less information for finding the 
-      shift of the first few frames, and is more susceptible to fixed pattern noise.&nbsp; </p>
+      shift of the first few frames, and is more susceptible to fixed pattern noise.&nbsp; 
+      However, for higher dose images (especially from stained specimens) this 
+      strategy should work well and will be somewhat faster.</p>
     <p>
       Both methods can be followed by a refinement step in which each frame is 
       correlated with the aligned sum of all other frames (this is similar to what is 

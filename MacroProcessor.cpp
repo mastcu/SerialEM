@@ -402,7 +402,7 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"StageToLastMultiHole", 0, 0}, {"ImageShiftToLastMultiHole", 0, 0}, 
 {"NavIndexItemDrawnOn", 1, 0}, {"SetMapAcquireState", 1, 0}, {"RestoreState", 0, 0},
 {"RealignToMapDrawnOn", 2, 0}, {"GetRealignToItemError", 0, 0}, {"DoLoop", 3, 1},
-{"ReportVacuumGauge", 1, 0},
+{"ReportVacuumGauge", 1, 0},/*CAI3.8*/
 {NULL, 0, 0}
 };
 // The longest is now 25 characters but 23 is a more common limit

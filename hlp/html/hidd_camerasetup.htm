@@ -10,12 +10,14 @@
     <basefont size="2">
     <P><A NAME="hidd_camerasetup"></A><B><FONT size="3">Camera Setup Dialog</FONT></B></P>
     <P>This dialog box allows you to specify exposure parameters for image 
-      acquisition. The controls for a CCD camera are described first.&nbsp; Options 
+      acquisition. The controls for CCD/CMOS cameras are described first.&nbsp; Options 
       specific to the Gatan K2 Summit and K3 cameras are described in <A HREF="#K2controls">
-      Controls for Gatan K2 and K3 Cameras</A>, one for Direct Electron direct detector 
+      Controls for Gatan K2 and K3 Cameras</A>, ones for Direct Electron direct detector 
       cameras in <a href="#DEcontrols">Controls for Direct Electron Cameras</a>, and 
       ones for Falcon cameras in <a href="#FalconControls">Controls for FEI Falcon 
-      Camera</a>. Controls for STEM acquisition, and modifications of the existing 
+      Camera</a>. The simpler set of options for other cameras that can take frames are described in 
+      <A href="#FrameControls">Controls for Other Cameras that Can Take Frames 
+      (OneView and Rio)</A>. &nbsp;Controls for STEM acquisition, and modifications of the existing 
       controls, are described in
       <A HREF="#STEMcontrols">Controls in STEM Mode.</A>
     </P>
@@ -541,6 +543,65 @@
       either here or in the&nbsp; <a href="hidd_k2_save_options.htm">Frame File 
       Options dialog</a>, but not both.&nbsp; If you enter one here, the options to 
       name subfolders will not be available in the other dialog.</P>
+    <P>&nbsp;</P>
+    <P><i><A NAME="FrameControls"></A><B><FONT size="3">Controls for Other Cameras that Can Take Frames 
+      (OneView and Rio)</FONT></B></i></P>
+    <P>For a camera capable of taking frames, controls in this section will appear 
+      based on an entry in SerialEMproperties.txt: either ones related to saving 
+      frames, or ones related to aligning frames, or both.</P>
+    <P><b>Frame Time</b></P>
+    <P>The frame time entry is enabled, and becomes relevant, when either saving or 
+      aligning of the frames is selected.&nbsp; Enter the exposure time of each frame of the exposure.&nbsp; The frame time is constrained to 
+      be a multiple of the basic frame rate of the camera, which depends on binning for OneView/Rio cameras.</P>
+    <P><b>Align Frames</b></P>
+    <P>Select this checkbox to have frames aligned with the Framealign module or to 
+      have a command file written for aligning 
+      with the Alignframes program in IMOD.&nbsp; For Gatan cameras, the alignment is 
+      done with SerialEM&#39;s plugin to DigitalMicrograph; otherwise it is done within 
+      SerialEM. Press the <b>
+      Set Up</b> button to open the <a href="hidd_framealign.htm">Frame Alignment 
+      Parameters dialog</a> and choose the method and parameters for aligning. When 
+      frame alignment is selected, an indicator below this checkbox will show which 
+      method is selected: &#39;Align in Plugin&#39; or &#39;Align in SerialEM&#39; for 
+      immediate alignment, otherwise either &#39;Align in IMOD&#39; 
+      or &#39;TS only in IMOD&#39; .&nbsp; In the 
+      latter two cases, frame saving will be activated automatically; the &#39;Save 
+      Frames&#39; checkbox will be disabled and shown as checked.&nbsp; When frame 
+      alignment is turned off or the option to align with IMOD is no longer selected, 
+      the &#39;Save Frames&#39; checkbox will revert to its original setting.</P>
+    <P><b>Save Frames</b></P>
+    <P>Select this checkbox to have the frames saved to a file.</P>
+    <P><b>Set File Options</b></P>
+    <P>Press this button to open the <a href="hidd_k2_save_options.htm">Frame File 
+      Options dialog</a>, which allows you to control the names of these files and to 
+      put subsets of them into different folders automatically.&nbsp; For Gatan 
+      cameras, you can also choose whether to save frames 
+      in MRC or compressed TIFF format, whether to save frames in a stack or in 
+      separate files, and whether to save frames without rotating or flipping them to 
+      the orientation shown in SerialEM.&nbsp; (The latter option can save some time 
+      when there is a 90 or 270 degree rotation).&nbsp; The choices set in the dialog are summarized in 
+      a line just above this button when saving is turned on. That line also shows the 
+      number of frames to be saved and whether they will be raw or normalized.&nbsp; </P>
+    <P><b>Set Folder</b></P>
+    <P>Press this button to select the directory where subframes will be saved as a 
+      stack, or where a container directory will be created for saving subframes in 
+      single files for a Gatan camera.&nbsp; For a Gatan camera running on the camera computer, 
+      or for other cameras, a directory 
+      browser will open.&nbsp; This browser is able to select only a valid existing 
+      directory in file systems accessible from the local computer, but it allows you 
+      to create a directory.&nbsp; For a Gatan camera not running on the camera 
+      computer, a small dialog will appear with a text box in which 
+      any directory name may be typed, even one not accessible to the computer running 
+      SerialEM.&nbsp; The plugin is able to create a directory, but only if its 
+      parent already exists.&nbsp; This means that if you do not specify the use of 
+      folder names in the&nbsp; <a href="hidd_k2_save_options.htm">Frame File 
+      Options dialog</a>, you can specify a folder here that does not exist, as long 
+      as its parent directory exists. However, if you do select options for automatic 
+      folder creation in that dialog, the directory you select here does need to exist before image acquisition. 
+      In this situation,&nbsp;if you enter into the text box a 
+      new directory that is accessible only from a separate camera computer, 
+      be sure to create this directory before trying to acquire.</P>
+    <P>&nbsp;</P>
     <P><i><A NAME="STEMcontrols"></A><B><FONT size="3">Controls in STEM Mode</FONT></B></i></P>
 
     <p>
