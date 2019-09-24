@@ -1668,6 +1668,8 @@ void CEMscope::UpdateGauges(int &vacStatus)
         if (mNumGauges) {
 
           for (gauge = 0; gauge < mNumGauges; gauge++) {
+            if (JEOLscope && mGaugeNames[gauge] == "P4")
+              continue;
 
             // Get status of one gauge on the list by its index
             mPlugFuncs->GetGaugePressure((LPCTSTR)mGaugeNames[gauge], &gaugeStatus, 
