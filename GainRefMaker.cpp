@@ -602,6 +602,10 @@ void CGainRefMaker::AcquiringRefNextTask(int param)
 
   mean = (float)(sum2 / (nx * ny));
   SEMTrace('r', "quick sum %.0f  careful sum %.0f  mean %.1f", sum, sum2, mean);
+  if (mWinApp->mScope->GetSimulationMode()) {
+    for (i = 0; i < nx * ny; i++)
+      mArray[i] = (mArray[i] - mean) / 8.f + mean;
+  }
   minVal = mean / GAINREF_MAX_VAL;
   for (i = 0; i < nx * ny; i++)
     mArray[i] = (mArray[i] > minVal) ? mean / mArray[i] : GAINREF_MAX_VAL;
@@ -795,7 +799,7 @@ CString CGainRefMaker::ComposeRefName(int binning)
 // or -1 if at a different KV
 int CGainRefMaker::GetReference(int binning, void *&gainRef, int &byteSize, 
                                 int &gainRefBits, int &ownership, int xOffset, 
-                                int yOffset)
+                                int yOffset, bool needFloat)
 {
   int needInd = -1, needBin, errval;
   KStoreMRC *storeMRC;
@@ -921,7 +925,8 @@ int CGainRefMaker::GetReference(int binning, void *&gainRef, int &byteSize,
   ny = ((mParam->sizeY / needBin) / i) * i;
 
   // Load the needed gain reference if it is  not
-  if (!mGainRef[mCurrentCamera][needInd]) {
+  if (!mGainRef[mCurrentCamera][needInd] || 
+    (needFloat && mByteSize[mCurrentCamera][needInd] == 2)) {
     SEMTrace('r', "Loading gain reference for binning %d", needBin);
     mFileName = ComposeRefName(needBin);  
     try {
@@ -958,7 +963,7 @@ int CGainRefMaker::GetReference(int binning, void *&gainRef, int &byteSize,
     // Convert to unsigned short if possible
     image->Lock();
     usdata = NULL;
-    if (mCamera->GetScaledGainRefMax() && !mParam->returnsFloats)
+    if (mCamera->GetScaledGainRefMax() && !mParam->returnsFloats && !needFloat)
       NewArray(usdata,unsigned short int,nx * ny);
     if (ProcConvertGainRef((float *)image->getData(), usdata, nx * ny, 
       mCamera->GetScaledGainRefMax(), mCamera->GetMinGainRefBits(), 

@@ -39,7 +39,7 @@ public:
   GetSetMember(CString, RefPath)
 	void DMRefsNeedChecking();
   BOOL GetReference(int binning, void * &gainRef, int &byteSize, int &gainRefBits, 
-    int &ownership, int xOffset, int yOffset);
+    int &ownership, int xOffset, int yOffset, bool needFloat);
   void StopAcquiringRef();
   void BeamTooWeak();
   CString ComposeRefName(int binning);
