@@ -69,6 +69,7 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
   float pixel, xTiltFac, yTiltFac;
   int nextShot, nextHole, testRun;
   double delISX, delISY, transISX, transISY, delBTX, delBTY;
+  CString str;
   CameraParameters *camParam = mWinApp->GetActiveCamParam();
   ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
   MontParam *montP = mWinApp->GetMontParam();
@@ -180,6 +181,14 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
     mMSNumHoles = 1;
     mMSHoleISX.push_back(0.);
     mMSHoleISY.push_back(0.);
+  }
+
+  if (!testRun) {
+    str.Format("Starting multiple Records (%d position%s in %d hole%s) %s beam tilt "
+      "compensation", mMSNumPeripheral + mMSDoCenter, mMSNumPeripheral + mMSDoCenter > 1 ?
+      "s" : "", mMSNumHoles, mMSNumHoles > 1 ? "s" : "",
+      mMSAdjustBeamTilt ? "WITH" : "WITHOUT");
+    mWinApp->AppendToLog(str);
   }
 
   // Get the starting image shift and beam tilt, save BT as value to restore and value to
