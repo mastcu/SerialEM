@@ -144,6 +144,8 @@ static int sGIFisSocket;             // 0 or 1 if GIF is on socket interface
 // This gives the DM-type index for a given camera parameter set
 #define CAMP_DM_INDEX(a) ((a)->AMTtype ? AMT_IND : ((a)->useSocket ? SOCK_IND : COM_IND))
 
+#define TIETZ_ROTATING(a) ((a)->TietzImageGeometry > 0 && ((a)->TietzImageGeometry & 20) != 0)
+
 #define FALCON_DIR_UNSET "NotSetByUser"
 
 static int restrictedSizeIndex;       // Index to last selected restricted size
@@ -566,7 +568,7 @@ int CCameraController::Initialize(int whichCameras)
   float ovFrameDivisors[4][4] = {{0.04f, 0.010101f, 0.005112f, 0.003333f},
   {0.066667f, 0.016667f, 0.016667f, 0.016667f}, {0.05f,0.0125f, 0.00625f, 0.00625f},
   {0.066667f, 0.066667f, 0.066667f, 0.066667f}};
-
+  float tietzFrame;
   int i, ind, jnd, err, DMind, ovInd;
   long num;
   BOOL anyGIF = false;
@@ -662,9 +664,19 @@ int CCameraController::Initialize(int whichCameras)
     if (param->GIF)
       anyGIF = true;
     ovInd = param->OneViewType - 1;
-    if (param->canTakeFrames < 0)
+    if (param->canTakeFrames < 0) {
       param->canTakeFrames = 0;
+
+      // Turn it on for Tietz Fx16 types?
+      if (mParam->TietzType >= 11)
+        param->canTakeFrames = 3;
+    }
     if (param->canTakeFrames) {
+      if (mParam->TietzType >= 11) {
+        jnd = TIETZ_ROTATING(mParam) ? mParam->sizeX : mParam->sizeY;
+        tietzFrame = (float)((mParam->TietzType >= 14 ? 0.01 : 0.1) * 
+          B3DNINT(jnd / 1024.));
+      }
       for (jnd = 0; jnd < param->numBinnings; jnd++) {
         if (param->frameTimeDivisor[jnd] <= 0.) {
           if (ovInd >= 0) {
@@ -682,6 +694,8 @@ int CCameraController::Initialize(int whichCameras)
                 param->minFrameTime[jnd] = param->frameTimeDivisor[jnd];
             } else if (!jnd)
               param->minFrameTime[jnd] = param->frameTimeDivisor[jnd];
+          } else if (mParam->TietzType >= 11) {
+            param->minFrameTime[jnd] = tietzFrame;
           }
         }
         ACCUM_MAX(param->minFrameTime[jnd], 
@@ -1140,6 +1154,7 @@ int CCameraController::InitializeTietz(int whichCameras, int *originalList, int 
 {
   int i, ind, flags, type;
   CString mess;
+  CameraParameters *param;
   CamPluginFuncs *funcs;
 
   // Create an instance just once, even if later lock fails
@@ -1168,16 +1183,28 @@ int CCameraController::InitializeTietz(int whichCameras, int *originalList, int 
       // Get the functions into array, cancel property if shutterbox creation failed
       for (i = 0; i < numOrig; i++) {
         ind = originalList[i];
-        type = mAllParams[ind].TietzType;
+        param = &mAllParams[ind];
+        type = param->TietzType;
         if (type) {
           if (anyPreExp && !mShutterInstance)
-            mAllParams[ind].TietzCanPreExpose = false;
+            param->TietzCanPreExpose = false;
           mPlugFuncs[ind] = funcs;
-          mAllParams[ind].cameraNumber = mAllParams[ind].TietzType;
+          param->cameraNumber = param->TietzType;
 
           // Set this if the test for processing ability passes
-          mAllParams[ind].pluginCanProcess = !mAllParams[ind].TietzFlatfieldDir.IsEmpty()
+          param->pluginCanProcess = !param->TietzFlatfieldDir.IsEmpty()
             && type >= 11 && type != 13;
+          if (param->pluginCanProcess && param->cropFullSizeImages < 0)
+            param->cropFullSizeImages = 1;
+          if (param->cropFullSizeImages < 0)
+            param->cropFullSizeImages = 0;
+          if (param->cropFullSizeImages && !funcs->SetSizeOfCamera) {
+            param->cropFullSizeImages = 0;
+            AfxMessageBox("The TietzPlugin is missing a function required for cropping"
+              " full sized image; that feature will be unavailable", MB_EXCLAME);
+          }
+          if (param->canTakeFrames & FRAMES_CAN_BE_ALIGNED)
+            mFalconHelper->Initialize(-2);
         }
       }
     } else {
@@ -2689,6 +2716,9 @@ void CCameraController::Capture(int inSet, bool retrying)
       conSet.processing = DARK_SUBTRACTED;
   mTD.Processing = conSet.processing;
   mTD.FrameTime = conSet.frameTime;
+  mTD.PluginAcquireFlags = 0;
+  mTD.PluginFrameFlags = 0;
+  mTD.ReadoutsPerFrame = 1;
 
   // Make sure camera is inserted, blocking cameras are retracted, check temperature, and
   // set up saving from K2 camera;  Again clear low dose area flag to be safe
@@ -3061,6 +3091,8 @@ void CCameraController::Capture(int inSet, bool retrying)
   // Plugin camera: set up frames for saving or aligning
   mSavingPluginFrames = false;
   mAligningPluginFrames = false;
+  if (mParam->TietzType && mParam->canTakeFrames)
+    mTD.PluginAcquireFlags |= TIETZ_SET_BURST_MODE;
   if (mTD.plugFuncs && conSet.doseFrac) {
     mTD.ReadoutsPerFrame = B3DNINT(conSet.frameTime / GetK2ReadoutInterval(mParam, 
       conSet.binning, 0));
@@ -3075,6 +3107,22 @@ void CCameraController::Capture(int inSet, bool retrying)
         ErrorCleanup(1);
         return;
       }
+    }
+    if (mParam->TietzType) {
+      mTD.PluginFrameFlags = mParam->dropFrameFlags;
+    }
+  }
+
+  // Tietz camera needs the read mode set if it is an XF416, or there is flatfielding
+  // possible, or there is frame-saving possible.  Set to 0 for beam blank or 1 for
+  // rolling shutter here, let this be translated into mode and speed indexes in the call 
+  if (mParam->TietzType) {
+    mTD.GatanReadMode = -1;
+    if ((mParam->TietzType >= 14 && mParam->TietzType <= 17) || mParam->canTakeFrames ||
+      !mTD.TietzFlatfieldDir.IsEmpty()) {
+      mTD.GatanReadMode = conSet.doseFrac ? 1 : 0;
+      if (conSet.doseFrac)
+        mTD.RestoreBBmode = true;
     }
   }
 
@@ -3397,9 +3445,8 @@ void CCameraController::Capture(int inSet, bool retrying)
   if (bEnsureDark && !mSimulationMode) {
     CString message;
     if (mDebugMode) {
-      DWORD ticks = GetTickCount();
       message.Format("%.3f start getting dark, %u elapsed", 
-        0.001 * (ticks % 3600000), ticks - mStartTime);
+        SEMSecondsSinceStart(), GetTickCount() - mStartTime);
       mWinApp->AppendToLog(message, LOG_OPEN_IF_CLOSED);
     }
 
@@ -3686,8 +3733,7 @@ int CCameraController::CapManageInsertTempK2Saving(const ControlSet &conSet, int
 
           if (mDebugMode) {
             CString message;
-            message.Format("%.3f start asking if inserted", 
-              0.001 * (GetTickCount() % 3600000));
+            message.Format("%.3f start asking if inserted", SEMSecondsSinceStart());
             mWinApp->AppendToLog(message, LOG_OPEN_IF_CLOSED);
           }
 
@@ -4381,7 +4427,7 @@ void CCameraController::CapManageCoordinates(ControlSet & conSet, int &gainXoffs
   int csizeX, csizeY, block, leftOffset = 0, topOffset = 0, operation = 0;
   int tLeft, tTop, tBot, tRight, tsizeX, tsizeY, reducedSizeX, reducedSizeY;
   BOOL unbinnedK2, doseFrac, superRes, antialiasInPlugin, swapXYinAcquire = false;
-  bool reduceAligned, binInPlugin, oneViewTakingFrames;
+  bool reduceAligned, binInPlugin, oneViewTakingFrames, mapForGeometry, cropSubarea;
 
   // Get the CCD coordinates after binning. First make sure binning is right for K2
   // and set various flags about taking images unbinned and antialiasing in plugin
@@ -4397,6 +4443,11 @@ void CCameraController::CapManageCoordinates(ControlSet & conSet, int &gainXoffs
     conSet.binning > (superRes ? 1 : 2) && mTD.NumAsyncSumFrames != 0;
   binInPlugin = mParam->K2Type == K3_TYPE && (!(doseFrac || superRes || 
      mAntialiasBinning > 0) || conSet.mode == CONTINUOUS);
+  cropSubarea = CropTietzSubarea(mParam, conSet.right - conSet.left, 
+    conSet.bottom - conSet.top, conSet.processing, tsizeY);
+  mapForGeometry = mParam->TietzType && mParam->TietzImageGeometry > 0 && !cropSubarea;
+  if (cropSubarea)
+    mTD.PluginAcquireFlags |= TIETZ_CROP_SUBAREA;
    
   reduceAligned = mParam->K2Type && doseFrac && conSet.alignFrames && 
     conSet.useFrameAlign == 1;
@@ -4435,10 +4486,10 @@ void CCameraController::CapManageCoordinates(ControlSet & conSet, int &gainXoffs
   gainYoffset = 0;
   csizeX = mParam->sizeX;
   csizeY = mParam->sizeY;
-  if (mParam->TietzType && mParam->TietzImageGeometry > 0) {
+  if (mParam->TietzType && mapForGeometry) {
     UserToTietzCCD(mParam->TietzImageGeometry, mBinning, csizeX, csizeY, tsizeX,
       tsizeY, tTop, tLeft, tBot, tRight);
-    swapXYinAcquire = (mParam->TietzImageGeometry & 20) != 0;
+    swapXYinAcquire = TIETZ_ROTATING(mParam);
   }
   if (mParam->DE_camType >= 2)
     operation = mTD.DE_Cam->OperationForRotateFlip(mParam->DE_ImageRot, 
@@ -4456,7 +4507,7 @@ void CCameraController::CapManageCoordinates(ControlSet & conSet, int &gainXoffs
     // But new F816 is supposed to be "like F416" so let us see if this works.
     if (mParam->TietzType == 11 || mParam->TietzType == 13) {
       gainXoffset = mBlockOffsetSign * ((tLeft * mBinning) % (mParam->TietzBlocks + 1));
-      if (mParam->TietzImageGeometry > 0) {
+      if (mapForGeometry) {
         int t2sizeX = csizeX / mBinning;
         int t2sizeY = csizeY / mBinning;
         int t2Right = t2sizeX + gainXoffset;
@@ -5033,6 +5084,7 @@ int CCameraController::CapManageDarkGainRefs(ControlSet & conSet, int inSet,
 {
   int refErr;
   bool frameAliNeedsFloat = false;
+  double useExposure = mExposure;
 
   // If dark ref once only selected, then set forcedark flag and clear in the conset
   if (mConSetsp[inSet].onceDark) {
@@ -5054,6 +5106,8 @@ int CCameraController::CapManageDarkGainRefs(ControlSet & conSet, int inSet,
       && !(mFrameSavingEnabled && IS_BASIC_FALCON2(mParam) &&
       !mWinApp->mGainRefMaker->GetPreparingGainRef())) {
       double currentTicks = GetTickCount();
+      if (mAligningPluginFrames || mSavingPluginFrames)
+        useExposure = mTD.FrameTime;
 
       // Check for KV change if necessary (it is done after an interval)
       mWinApp->mGainRefMaker->CheckChangedKV();
@@ -5092,21 +5146,21 @@ int CCameraController::CapManageDarkGainRefs(ControlSet & conSet, int inSet,
         if (ref->GainDark == DARK_REFERENCE && mTD.Camera == ref->Camera && 
           mBinning == ref->Binning && mDelay == ref->Delay && mTop == ref->Top &&
           mBottom == ref->Bottom && mLeft == ref->Left && mRight == ref->Right) {
-          if (mExposure == ref->Exposure) {
+          if (fabs(useExposure - ref->Exposure) < 1.e-6) {
             mDarkp = ref;
             ref->UseCount = mUseCount;
           } else if (mInterpDarkRefs && !conSet.forceDark && !mParam->returnsFloats) {
 
             // If interpolating, find nearest dark reference above and below, where
             // one at minimum exposure counts as being below
-            if (mExposure < ref->Exposure && ref->Exposure > minRefExp && 
-              ref->Exposure - mExposure <= mInterpRefInterval) {
+            if (useExposure < ref->Exposure && ref->Exposure > minRefExp && 
+              ref->Exposure - useExposure <= mInterpRefInterval) {
               if (!mDarkAbove || ref->Exposure < mDarkAbove->Exposure)
                 mDarkAbove = ref;
              
-            } else if ((mExposure > ref->Exposure && 
-              mExposure - ref->Exposure <= mInterpRefInterval) || 
-              (mExposure < minRefExp && ref->Exposure == minRefExp)) {
+            } else if ((useExposure > ref->Exposure && 
+              useExposure - ref->Exposure <= mInterpRefInterval) || 
+              (useExposure < minRefExp && ref->Exposure == minRefExp)) {
               if (!mDarkBelow || ref->Exposure > mDarkBelow->Exposure)
                 mDarkBelow = ref;
             }
@@ -5169,7 +5223,7 @@ int CCameraController::CapManageDarkGainRefs(ControlSet & conSet, int inSet,
           // Found below but not above, or interval is too big and above is farther away
           if ((mDarkBelow && !mDarkAbove) || (mDarkBelow && mDarkAbove &&
             mDarkAbove->Exposure - mDarkBelow->Exposure > mInterpRefInterval && 
-            mExposure - mDarkBelow->Exposure < mDarkAbove->Exposure - mExposure)) {
+            useExposure - mDarkBelow->Exposure < mDarkAbove->Exposure - useExposure)) {
 
             // If it is too old, replace it with one at current exposure
             if (SEMTickInterval(currentTicks, 1000. * mDarkBelow->TimeStamp) / 1000. > 
@@ -5178,7 +5232,7 @@ int CCameraController::CapManageDarkGainRefs(ControlSet & conSet, int inSet,
                   "this exp", mDarkBelow->Exposure);
                 mDarkp = mDarkBelow;
                 mDarkBelow = NULL;
-                mDarkp->Exposure = mExposure;
+                mDarkp->Exposure = useExposure;
                 mDarkp->UseCount = mUseCount;
             } else {
 
@@ -5192,14 +5246,14 @@ int CCameraController::CapManageDarkGainRefs(ControlSet & conSet, int inSet,
             // Found above but not below, or interval too big and below is farther away
           } else if ((mDarkAbove && !mDarkBelow) || (mDarkBelow && mDarkAbove &&
             mDarkAbove->Exposure - mDarkBelow->Exposure > mInterpRefInterval && 
-            mExposure - mDarkBelow->Exposure >= mDarkAbove->Exposure - mExposure)) {
+            useExposure - mDarkBelow->Exposure >= mDarkAbove->Exposure - useExposure)) {
             if (SEMTickInterval(currentTicks, 1000. * mDarkAbove->TimeStamp) / 1000. > 
               mDarkAgeLimit) {
                 SEMTrace('r', "Ref above at %.3f usable but expired, replacing with "
                   "this exp", mDarkAbove->Exposure);
                 mDarkp = mDarkAbove;
                 mDarkAbove = NULL;
-                mDarkp->Exposure = mExposure;
+                mDarkp->Exposure = useExposure;
                 mDarkp->UseCount = mUseCount;
             } else {
               SetupNewDarkRef(inSet, 
@@ -5226,7 +5280,7 @@ int CCameraController::CapManageDarkGainRefs(ControlSet & conSet, int inSet,
 
       // Get a new dark reference if needed
       if (!mDarkp) {
-        SetupNewDarkRef(inSet, mExposure);
+        SetupNewDarkRef(inSet, useExposure);
       }
       
       // Set up to get a gain ref if the ref has a NULL array
@@ -5637,12 +5691,28 @@ void CCameraController::BlockAdjustSizes(int &DMsize, int ccdSize, int sizeMod,
   end = start + DMsize;
 }
 
+bool CCameraController::CropTietzSubarea(CameraParameters *param, int ubSizeX, 
+  int ubSizeY, int processing, int &ySizeOnChip)
+{
+  bool crop, subarea = ubSizeX < param->sizeX || ubSizeY < param->sizeY;
+  crop =  param->TietzType && subarea && (param->cropFullSizeImages > 1 ||
+    (param->cropFullSizeImages == 1 && param->pluginCanProcess && !(mProcessHere && 
+      CanProcessHere(param)) && processing == GAIN_NORMALIZED));
+  ySizeOnChip = 0;
+  if (subarea && !crop)
+    ySizeOnChip = TIETZ_ROTATING(param) ? ubSizeX : ubSizeY;
+  return crop;
+}
+
 // Apply any known constraints to the exposure time and K2 frame time
 bool CCameraController::ConstrainExposureTime(CameraParameters *camP, ControlSet *consP) 
 {
+  int special = 0;
+  CropTietzSubarea(camP, consP->right - consP->left, consP->bottom - consP->top,
+    consP->processing, special);
   return ConstrainExposureTime(camP, consP->doseFrac > 0, consP->K2ReadMode, 
     consP->binning, consP->alignFrames && !consP->useFrameAlign, 
-    DESumCountForConstraints(camP, consP), consP->exposure, consP->frameTime);
+    DESumCountForConstraints(camP, consP), consP->exposure, consP->frameTime, special);
 }
 
 int CCameraController::DESumCountForConstraints(CameraParameters *camP, ControlSet *consP) 
@@ -5657,7 +5727,7 @@ int CCameraController::DESumCountForConstraints(CameraParameters *camP, ControlS
 // frame-saving camera, alignInCamera only for Falcon, sumCount only for DE
 bool CCameraController::ConstrainExposureTime(CameraParameters *camP, BOOL doseFrac,
   int readMode, int binning, bool alignInCamera, int sumCount, float &exposure, 
-  float &frameTime)
+  float &frameTime, int special)
 {
   bool retval = false;
   float ftime, baseTime, minExp;
@@ -5699,7 +5769,8 @@ bool CCameraController::ConstrainExposureTime(CameraParameters *camP, BOOL doseF
   } else if (camP->canTakeFrames && doseFrac) {
 
     // Generic camera taking frames (including oneview)
-    if (ConstrainFrameTime(frameTime, camP, binning, camP->OneViewType ? readMode : 0))
+    if (ConstrainFrameTime(frameTime, camP, binning, 
+      camP->OneViewType ? readMode : special))
       retval = true;
     baseTime = frameTime;
   } else if (camP->OneViewType) {
@@ -5755,6 +5826,8 @@ bool CCameraController::ConstrainExposureTime(CameraParameters *camP, BOOL doseF
 
   // Make exposure a multiple of base time: round up from a boundary by adding a bit (K2)
   num = B3DNINT(exposure / baseTime + 1.e-5);
+  if (camP->TietzType)
+    num = B3DMAX(2, num);
   ftime = (float)(B3DMAX(1, num) * baseTime + epsilon);
   if (fabs(exposure - ftime) > 1.e-5)
     retval = true;
@@ -5856,10 +5929,16 @@ float CCameraController::GetMinK2FrameTime(CameraParameters *param, int binning,
   int special)
 { 
   float time, CDSfac = 1.f;
+  float numBlocks;
   if (param->canTakeFrames) {
     time = FindConstraintForBinning(param, binning, &param->minFrameTime[0]);
     if (param->OneViewType && special)
       time *= 4.f;
+    if (param->TietzType && special) {
+      numBlocks = (float)B3DNINT(B3DCHOICE(TIETZ_ROTATING(param), param->sizeX,
+        param->sizeY) / 1024.);
+      time *= ((special + 1023) / 1024) / numBlocks;
+    }
     return time;
   }
   return B3DCHOICE(param->K2Type == K3_TYPE, CDSfac * mMinK3FrameTime, mMinK2FrameTime);
@@ -6331,11 +6410,11 @@ void CCameraController::AcquirePluginImage(CameraThreadData *td, void **array,
 {
   bool tietzDark = td->TietzType && processing == TIETZ_GET_DARK_REF;
   bool tietzImage = td->TietzType && !tietzDark;
-  bool XF416 = td->TietzType == 15 || td->TietzType == 16;
-  int flags = td->DivideBy2 ? PLUGCAM_DIVIDE_BY2 : 0;
+  bool setReadMode = td->TietzType && td->GatanReadMode >= 0;
+  int flags = td->PluginAcquireFlags | (td->DivideBy2 ? PLUGCAM_DIVIDE_BY2 : 0);
   if (tietzImage && td->RestoreBBmode)
     flags |= TIETZ_RESTORE_BBMODE;
-  if (XF416)
+  if (setReadMode)
     flags |= TIETZ_SET_READ_MODE;
 
   // Do the selection for Tietz dark reference but not image
@@ -6346,11 +6425,9 @@ void CCameraController::AcquirePluginImage(CameraThreadData *td, void **array,
   if (!retval && td->plugFuncs->SelectShutter && !td->STEMcamera && !td->TietzType)
     retval = td->plugFuncs->SelectShutter(td->ShutterMode);
 
-  // For some reason the "CallSize" is passed for Tietz dark reference but not image
   if (!retval)
     retval = td->plugFuncs->SetAcquiredArea(td->Top * td->Binning, td->Left * 
-    td->Binning, (tietzDark ? td->CallSizeX : td->DMSizeX) * td->Binning, 
-    (tietzDark ? td->CallSizeY : td->DMSizeY) * td->Binning, td->Binning);
+    td->Binning, td->DMSizeX * td->Binning, td->DMSizeY * td->Binning, td->Binning);
   if (!retval)
     retval = td->plugFuncs->SetExposure(td->STEMcamera ? td->PixelTime : td->Exposure, 
     settling);
@@ -6362,15 +6439,19 @@ void CCameraController::AcquirePluginImage(CameraThreadData *td, void **array,
   }
 
   // Do preliminary steps for Tietz that were always before starting blanker
-  if (!retval && td->TietzType && td->plugFuncs->SetExtraParams1 &&
-    (XF416 || !td->TietzFlatfieldDir.IsEmpty())) {
+  if (!retval && td->TietzType && td->plugFuncs->SetExtraParams1 && setReadMode) {
 
-      // The speed and mode values may be specific to XF416 for now but they are only
-      // relevant now when setting a read mode in plugin
-      // TVIPS indicated to use a 1 for flatfield parameter
-      td->plugFuncs->SetExtraParams1(3, 2, 0, (tietzDark || !processing) ? 0 : 1, 
-        (LPCTSTR)td->TietzFlatfieldDir);
+    // The speed and mode values seem to apply to F416 and XF416
+    // Perhaps flatfielding with F416 does not require a read mode in plugin but
+    // it seems best to set those in that case as well as for burst mode
+    // TVIPS indicated to use a 1 for flatfield parameter
+    td->plugFuncs->SetExtraParams1(td->GatanReadMode > 0 ? 3 : 1,
+      td->GatanReadMode > 0 ? 2 : 1, 0, (tietzDark || !processing) ? 0 : 1,
+      (LPCTSTR)td->TietzFlatfieldDir);
   }
+
+  // This sets shuttermode, it does have to be set to beam blank at some point when in
+  // rolling shutter mode, so just don't skip it
   if (!retval && tietzImage)
     retval = td->plugFuncs->PrepareForAcquire(td->TietzType, td->ShutterMode);
   if (!retval && blanker)
@@ -6535,6 +6616,7 @@ void CCameraController::StartAcquire()
       if (mScope->GetSimulationMode() && ref->ByteSize == 2) {
         for (i = 0; i < ref->SizeX * ref->SizeY; i++)
           *sdata++ /= 8;
+        sdata = (short *)ref->Array;
       }
       if (mDarkMaxMeanCrit > 0. || mDarkMaxSDcrit > 0. && arrSize > 100) {
 
@@ -6609,8 +6691,8 @@ void CCameraController::StartAcquire()
       if (moreDarkRefs || redoBadRef) {
         StartEnsureThread(mTD.cameraTimeout);
         if (mDebugMode) {
-          message.Format("%.3f getting next dark ref, %u elapsed", 0.001 * 
-            (ticks % 3600000), ticks - mStartTime);
+          message.Format("%.3f getting next dark ref, %u elapsed", SEMSecondsSinceStart(),
+            ticks - mStartTime);
           mWinApp->AppendToLog(message, LOG_OPEN_IF_CLOSED);
         }
         return;
@@ -6642,7 +6724,7 @@ void CCameraController::StartAcquire()
 
   ticks = mLastAcquireStartTime = GetTickCount();
   if (mDebugMode) {
-    message.Format("%.3f start acquiring, %u elapsed", 0.001 * (ticks % 3600000),
+    message.Format("%.3f start acquiring, %u elapsed", SEMSecondsSinceStart(),
       ticks - mStartTime);
     mWinApp->AppendToLog(message, LOG_OPEN_IF_CLOSED);
   }
@@ -7207,8 +7289,8 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
 
     if (!retval) {
       if (td->DoseFrac) {
-        retval = td->plugFuncs->SetupFrameAcquire(td->FrameTime, td->ReadoutsPerFrame, 0,
-          0);
+        retval = td->plugFuncs->SetupFrameAcquire(td->FrameTime, td->ReadoutsPerFrame, 
+          td->PluginFrameFlags, 0);
       }
       if (!retval)
         AcquirePluginImage(td, (void **)td->Array, arrSize, td->ProcessingPlus,
@@ -8159,7 +8241,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
 {
   double stX, stZ, ISX, ISY;
   int spotSize, chan, i, err, ix, iy, invertCon, operation, ixoff, iyoff, divideBy;
-  int alignErr, sumCount, camFrames, typext = 0, ldSet = 0;
+  int alignErr, sumCount, camFrames, typext = 0, ldSet = 0, darkScale = 1;
   BOOL lowDoseMode, hasUserPtSave = false;
   bool nameConfirmed, readLocally = false;
   float axoff, ayoff, specRate, camRate;
@@ -8227,7 +8309,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
 
       if (mDebugMode) {
         ticks = GetTickCount();
-        message.Format("%.3f got image, %u elapsed", 0.001 * (ticks % 3600000),
+        message.Format("%.3f got image, %u elapsed", SEMSecondsSinceStart(),
           ticks - mStartTime);
         mWinApp->AppendToLog(message, LOG_OPEN_IF_CLOSED);
       }
@@ -8336,6 +8418,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
 
     // Similarly handle saving/aligning plugin frames
     if ((mSavingPluginFrames || mAligningPluginFrames) && !mStartedFalconAlign) {
+      darkScale = B3DNINT(mTD.Exposure / mTD.FrameTime);
       if (mSavingPluginFrames) {
         mPathForFrames.Format("%s%s%s.mrc", (LPCTSTR)mFrameFolder,
           mFrameFolder.IsEmpty() ? "" : "\\", (LPCTSTR)mFrameFilename);
@@ -8493,10 +8576,12 @@ void CCameraController::DisplayNewImage(BOOL acquired)
             mBinning, mTop, mLeft, mBottom, mRight);
         }
 
-      } else if (!mSimulationMode && mTD.Processing != lastConSetp->processing){
+      } else if (!mSimulationMode && mTD.Processing != lastConSetp->processing && 
+        !mAligningPluginFrames) {
 
+        // Gain normalization or other processing
         ProcessImageOrFrame(mTD.Array[chan], lastConSetp->processing, 
-          lastConSetp->removeXrays);
+          lastConSetp->removeXrays, darkScale);
  
       } else if ((mTD.ProcessingPlus & CONTINUOUS_USE_THREAD) && mParam->balanceHalves) {
 
@@ -8559,7 +8644,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       }
       if (mDebugMode) {
         ticks = GetTickCount();
-        message.Format("%.3f processed, %u elapsed", 0.001 * (ticks % 3600000),
+        message.Format("%.3f processed, %u elapsed", SEMSecondsSinceStart(),
           ticks - mStartTime);
         mWinApp->AppendToLog(message, LOG_OPEN_IF_CLOSED);
       }
@@ -9135,7 +9220,8 @@ void CCameraController::DisplayNewImage(BOOL acquired)
 }
 
 // Do defect correct and gain normalization for an image or frame being saved
-void CCameraController::ProcessImageOrFrame(short *array, int processing, int removeXrays)
+void CCameraController::ProcessImageOrFrame(short *array, int processing, int removeXrays,
+  int darkScale)
 {
   int ix, ixoff;
   short *array2 = NULL;
@@ -9151,11 +9237,11 @@ void CCameraController::ProcessImageOrFrame(short *array, int processing, int re
     }
     if (processing == DARK_SUBTRACTED) {
       ProcDarkSubtract(array, mTD.ImageType, mTD.DMSizeX, mTD.DMSizeY,
-        (short *)mDarkp->Array, mDarkp->Exposure, array2, exp2, mExposure);
+        (short *)mDarkp->Array, mDarkp->Exposure, array2, exp2, mExposure, darkScale);
     } else {
       ProcGainNormalize(array, mTD.ImageType, mGainp->SizeX, mTop, mLeft,
         mBottom, mRight, (short *)mDarkp->Array, mDarkp->Exposure, array2, exp2,
-        mExposure, mGainp->Array, mGainp->ByteSize, mGainp->GainRefBits);
+        mExposure, darkScale, mGainp->Array, mGainp->ByteSize, mGainp->GainRefBits);
     }
 
     // Keep this processing here in case there is defect correction right at the
@@ -9245,6 +9331,12 @@ void CCameraController::ErrorCleanup(int error)
   mCancelNextContinuous = false;
   mStartedFalconAlign = false;
   mStartedExtraForDEalign = false;
+  mAligningPluginFrames = false;
+  mSavingPluginFrames = false;
+  mSavingFalconFrames = false;
+  mAligningFalconFrames = false;
+  mRemoveFEIalignedFrames = false;
+  mDoingDEframeAlign = 0;
   mDiscardImage = false;
   if (mNeedToRestoreISandBT & 1)
     mScope->SetImageShift(mImageShiftXtoRestore, mImageShiftYtoRestore);
@@ -9641,7 +9733,7 @@ BOOL CCameraController::IsCameraFaux()
 int CCameraController::LockInitializeTietz(BOOL firstTime)
 {
   int nlist = mWinApp->GetActiveCamListSize();
-  int i, ind, err;
+  int i, ind, err, chipX, chipY;
   int numGain, xsize, ysize;
   CString report;
   CameraParameters *camP;
@@ -9684,6 +9776,15 @@ int CCameraController::LockInitializeTietz(BOOL firstTime)
             ReportOnSizeCheck(mActiveList[i], -1, -1);
           else 
             ReportOnSizeCheck(mActiveList[i], xsize, ysize);
+        }
+        if (camP->cropFullSizeImages) {
+          chipX = TIETZ_ROTATING(camP) ? camP->sizeY : camP->sizeX;
+          chipY = TIETZ_ROTATING(camP) ? camP->sizeX : camP->sizeY;
+          if (mPlugFuncs[ind]->SetSizeOfCamera(camP->TietzType, chipX, chipY)) {
+            camP->cropFullSizeImages = 0;
+            AfxMessageBox("Error in TietzPlugin setting parameters required for "
+              "cropping full sized image; that feature will be unavailable", MB_EXCLAME);
+          }
         }
       }
     }

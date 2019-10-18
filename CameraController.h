@@ -160,6 +160,8 @@ struct CameraThreadData {
   double DMsettling;           // DM's settling time
   int K2ParamFlags;           // Flags to set in call to set K2Parameters2
   int FEIacquireFlags;        // Flags for advanced FEI acquire
+  int PluginAcquireFlags;     // Base flags for plugin acquire
+  int PluginFrameFlags;       // Flags to set with plugin frame setup
   int UnblankTime;            // delay from firing DM to unblanking, in msec
   int ReblankTime;            // total time for beam to be on, in msec
   int ShutterTime;            // time to hold shutter open before firing DM, in msec
@@ -967,7 +969,7 @@ public:
   int CapSaveStageMagSetupDynFocus(ControlSet & conSet, int inSet);
   bool ConstrainExposureTime(CameraParameters *camP, ControlSet *consP);
   bool ConstrainExposureTime(CameraParameters *camP, BOOL doseFrac, int readMode,
-    int binning, bool alignInCamera, int sumCount, float &exposure, float &frameTime);
+    int binning, bool alignInCamera, int sumCount, float &exposure, float &frameTime, int special = 0);
   bool ConstrainFrameTime(float &frameTime, CameraParameters *camP, int binning = 0, int special = 0);
   void RestoreFEIshutter(void);
   void QueueFocusSteps(float interval1, double focus1, float interval2, double focus2);
@@ -1031,10 +1033,12 @@ bool CanSaveFrameStackMdoc(CameraParameters * param);
 bool CanDoK2HardwareDarkRef(CameraParameters *param, CString &errstr);
 bool DefectListHasEntries(CameraDefects *defp);
 float FindConstraintForBinning(CameraParameters * param, int binning, float *times);
-void ProcessImageOrFrame(short *array, int processing, int removeXrays);
+void ProcessImageOrFrame(short *array, int processing, int removeXrays, int darkScale);
 bool CanFramealignProcessSubarea(ControlSet *lastConSetp, DarkRef **darkp, DarkRef **gainp);
 void DeleteOneReference(int index);
 int CheckFrameStacking(bool updateIfDone, bool testIfStacking);
+bool CropTietzSubarea(CameraParameters *param, int ubSizeX, int ubSizeY, int processing,
+  int &ySizeOnChip);
 };
 
 
