@@ -29,7 +29,7 @@ FIF_NO_MORE_FILES, FIF_BAD_MODE, FIF_CONF_NOT_EXIST, FIF_CONF_OPEN_ERR,
 FIF_CONF_READ_ERR, FIF_CONF_NO_MODE_LINE, FIF_CONF_NOT_INIT, FIF_CONF_BAD_MODE, 
 FIF_CONF_WRITE_ERR, FIF_BACKUP_EXISTS, FIF_BACKUP_ERR, FIF_ALIGN_SIZE_ERR, 
 FIF_ALIGN_FRAME_ERR, FIF_FINISH_ALIGN_ERR, FIF_DE_READ_ERR, FIF_ERR_PLUGIN_FRAME,
-FIF_LAST_CODE};
+FIF_NO_MORE_FRAMES, FIF_LAST_CODE};
 
 static const char *errMess[] = {"Unspecified communication error", 
 "No intermediate frames files found in directory",
@@ -38,7 +38,7 @@ static const char *errMess[] = {"Unspecified communication error",
 "Cannot find appropriate size information for intermediate frame file",
 "Error allocating memory", "Error opening a new MRC file", 
 "Sizes or modes do not all match between intermediate frame files", 
-"Error writing image to stack file", 
+"Error writing image to stack file", //10
 "Error removing the intermediate frame file after writing it successfully to stack",
 "There are no more files to read", "The frame files have an unrecognized data mode",
 "FalconConfig file does not exist or is in unreadable directory",
@@ -46,11 +46,11 @@ static const char *errMess[] = {"Unspecified communication error",
 "Could not recognize the acquisition mode line in the FalconConfig file",
 "Falcon configuration file access not set up: if FEI-SEMServer was restarted, SerialEM "
 "needs to be restarted", "No recognized acquisition mode in the FalconConfig file",
-"Error rewriting the FalconConfig file",
+"Error rewriting the FalconConfig file", //20
 "The stack file and its backup already exist", 
 "Error renaming existing stack file to backup name",
 "Frames are not the same size as the image returned to SerialEM and will not be aligned",
-"Error aligning a frame in the nextFrame routine"
+"Error aligning a frame in the nextFrame routine",
 "Error finishing the frame alignment", "Error reading a frame from the file for alignment"
 , "Error getting the next frame from the plugin", 
 "There are fewer frames available than expected"
@@ -110,7 +110,7 @@ void CFalconHelper::Initialize(int skipConfigs)
     mFrameAli = new FrameAlign();
     mFrameAli->setPrintFunc(framePrintFunc);
     if (!mFrameAli->gpuAvailable(0, &mGpuMemory, 
-      (GetDebugOutput('E') || GetDebugOutput('D')) ? 1 : 0))
+      (GetDebugOutput('E') || GetDebugOutput('D') || GetDebugOutput('T')) ? 1 : 0))
       mGpuMemory = 0;
     SEMTrace('1', "GPU %s available for %s aligning", mGpuMemory ? "IS" : "IS NOT",
       skipConfigs >= 0 ? "Falcon" : (skipConfigs == -1 ? "DE" : "Plugin"));
@@ -356,13 +356,12 @@ int CFalconHelper::SetupFrameAlignment(ControlSet &conSet, CameraParameters *cam
     PrintfToLog("WARNING: With current parameters, memory needed for aligning "
     "(%.1f GB) exceeds allowed\r\n  memory usage (%.1f GB), controlled by MemoryLimit"
     " property if it is set", totAliMem, maxMemory);
-
   ind = mFrameAli->initialize(mSumBinning, UtilGetFrameAlignBinning(param, nx, ny), 
     trimFrac, numAllVsAll, refineIter, 
     param.hybridShifts, (deferGpuSum | doSpline) ? 1 : 0, groupSize, nx, ny, 
     fullTaperFrac, taperFrac, param.antialiasType, 0., radius2, sigma1, sigma2, 
     numFilters, param.shiftLimit, kFactor, maxMaxWeight, 0, numFrames, 0, gpuFlags, 
-    (GetDebugOutput('E') || GetDebugOutput('D')) ? 11 : 0);
+    (GetDebugOutput('E') || GetDebugOutput('D') || GetDebugOutput('T')) ? 11 : 0);
   if (ind) {
     str.Format("The framealign routine failed to initialize (error %d)", ind);
     mFrameAli->cleanup();
@@ -628,7 +627,7 @@ void CFalconHelper::StackNextTask(int param)
     if (mProcessingPlugin) {
       ind = mCamTD->plugFuncs->GetNextFrame(outPtr, 2 * mNx * mNy);
       if (ind)
-        mStackError = ind < 0 ? FIF_NO_MORE_FILES : FIF_ERR_PLUGIN_FRAME;
+        mStackError = ind < 0 ? FIF_NO_MORE_FRAMES : FIF_ERR_PLUGIN_FRAME;
     } else if (mReadLocally) {
       if (!skipAlign && mrc_read_slice(outPtr, mFrameFP, &mMrcHeader, mFileInd, 'Z'))
         mStackError = FIF_READ_ERR;
@@ -640,7 +639,7 @@ void CFalconHelper::StackNextTask(int param)
   }
 
   if (mProcessingPlugin && mNeedNormHere)
-    mCamera->ProcessImageOrFrame(outPtr, mProcessing, mRemoveXrays);
+    mCamera->ProcessImageOrFrame(outPtr, mProcessing, mRemoveXrays, 1);
 
   // Do alignment unless skipping that
   if (!mStackError && mUseFrameAlign && !mAlignError && !skipAlign) {

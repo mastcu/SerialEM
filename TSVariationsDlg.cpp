@@ -264,7 +264,7 @@ void CTSVariationsDlg::OnButTsvRemove()
 
 void CTSVariationsDlg::OnButTsvAddSeries()
 {
-  int i, j;
+  int i, j, special;
   double angle, fps, factor = 1.;
   int *active = mWinApp->GetActiveCameraList();
   ControlSet *conSet = mWinApp->GetCamConSets() + active[mParam->cameraIndex] * 
@@ -277,9 +277,12 @@ void CTSVariationsDlg::OnButTsvAddSeries()
   UpdateData(true);
   
   // Constrain the exposure time
-  mWinApp->mCamera->ConstrainExposureTime(camParam, conSet->doseFrac > 0, 
+  mWinApp->mCamera->CropTietzSubarea(camParam, conSet->right - conSet->left,
+    conSet->bottom - conSet->top, conSet->processing, special);
+  mWinApp->mCamera->ConstrainExposureTime(camParam, conSet->doseFrac > 0,
     conSet->K2ReadMode, conSet->binning, conSet->alignFrames && !conSet->useFrameAlign, 
-    mWinApp->mCamera->DESumCountForConstraints(camParam, conSet), recExp, frameTime);
+    mWinApp->mCamera->DESumCountForConstraints(camParam, conSet), recExp, frameTime,
+    special);
   if (camParam->K2Type) {
     if (conSet->doseFrac && fabs(recExp - frameTime) < 1.e-5) {
       baseTime = mWinApp->mCamera->GetK2ReadoutInterval(camParam);
@@ -487,6 +490,7 @@ void CTSVariationsDlg::UnloadToCurrentItem(void)
 bool CTSVariationsDlg::CheckItemValue(bool update)
 {
   bool changed = false;
+  int special;
   int *active = mWinApp->GetActiveCameraList();
   CameraParameters *camParam = mWinApp->GetCamParams() + active[mParam->cameraIndex];
   ControlSet *conSet = mWinApp->GetCamConSets() + active[mParam->cameraIndex] *
@@ -508,8 +512,11 @@ bool CTSVariationsDlg::CheckItemValue(bool update)
       break;
 
     case TS_VARY_FRAME_TIME:
+      mWinApp->mCamera->CropTietzSubarea(camParam, conSet->right - conSet->left,
+        conSet->bottom - conSet->top, conSet->processing, special);
       changed = mWinApp->mCamera->ConstrainFrameTime(m_fValue, camParam, conSet->binning,
-        (camParam->OneViewType && camParam->canTakeFrames) ? conSet->K2ReadMode : 0);
+        (camParam->OneViewType && camParam->canTakeFrames) ? conSet->K2ReadMode : 
+        special);
       break;
 
     case TS_VARY_SLIT:

@@ -3584,7 +3584,7 @@ void CTSController::ChangeExposure(double &delFac, double angle, double limit)
   float newExp;
   float diffThresh = 0.05f;
   bool oneFrame;
-  int numFrames, newNum;
+  int numFrames, newNum, special;
   bool restoreFirst = delFac == 0. && mBidirSeriesPhase == BIDIR_RETURN_PHASE;
   ControlSet *csets = mCamConSets + 
     MAX_CONSETS * mActiveCameraList[mTSParam.cameraIndex];
@@ -3652,9 +3652,11 @@ void CTSController::ChangeExposure(double &delFac, double angle, double limit)
   frameTime = mVaryFrameTime ? setValues[TS_VARY_FRAME_TIME] : recSet->frameTime;
   if (mCamParams->K2Type)
     SEMTrace('1', "Frame time for constraint is %.4f", frameTime);
+  mCamera->CropTietzSubarea(mCamParams, recSet->right - recSet->left,
+    recSet->bottom - recSet->top, recSet->processing, special);
   mCamera->ConstrainExposureTime(mCamParams, recSet->doseFrac, recSet->K2ReadMode, 
     recSet->binning, recSet->alignFrames && !recSet->useFrameAlign, 
-    mCamera->DESumCountForConstraints(mCamParams, recSet), newExp, frameTime);
+    mCamera->DESumCountForConstraints(mCamParams, recSet), newExp, frameTime, special);
   newExp = mWinApp->mFalconHelper->AdjustSumsForExposure(mCamParams, recSet, newExp);
   if (oneFrame)
     constraint = mCamera->GetK2ReadoutInterval(mCamParams);

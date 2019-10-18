@@ -132,6 +132,8 @@ struct CameraParameters {
   int TietzImageGeometry;  // Bit sum for setting image geometry (flip, rotation)
   int TietzBlocks;         // Block size for Tietz block readout camera
   CString TietzFlatfieldDir;  // Directory for flatfield data
+  int dropFrameFlags;      // Flags value with number of frames to drop and start/end
+  int cropFullSizeImages;  // 1 to do subarea by crop when flatfielding, 2 to do so always
   float builtInSettling;   // Clear time
   float pixelMicrons;      // Actual pixel size in microns
   float magRatio;          // Mag relative to reported film mag

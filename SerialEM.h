@@ -212,7 +212,7 @@ typedef bool (*PlugDoingFunc)(void);
 #define FRAME_FILE_TILT_ANGLE    (1 << 10)
 #define FRAME_FILE_DATE_PREFIX   (1 << 11)
 
-// Definitions for Tietz errors
+// Definitions for Tietz errors and flags
 #define TIETZ_NO_LOCK      1
 #define TIETZ_NO_CAM_INIT  2
 #define TIETZ_NO_MAP_NAME  3
@@ -223,6 +223,10 @@ typedef bool (*PlugDoingFunc)(void);
 #define TIETZ_GET_DARK_REF    4
 #define TIETZ_RESTORE_BBMODE (1 << 1)
 #define TIETZ_SET_READ_MODE  (1 << 2)
+#define TIETZ_CROP_SUBAREA    (1 << 3)
+#define TIETZ_SET_BURST_MODE  (1 << 4)
+#define TIETZ_DROP_FRAME_BITS   2
+#define TIETZ_DROP_FRAME_MASK   3
 
 // A macro for getting a new array and ending up with null if it fails
 #define NewArray(a,b,c) try { \

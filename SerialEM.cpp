@@ -286,6 +286,8 @@ CSerialEMApp::CSerialEMApp()
     mCamParams[i].LowestGainIndex = 1;
     mCamParams[i].TietzImageGeometry = -1;  // So even a property 0 will be sent out
     mCamParams[i].TietzBlocks = 0;
+    mCamParams[i].dropFrameFlags = 0;
+    mCamParams[i].cropFullSizeImages = -1;
     mCamParams[i].builtInSettling = BUILT_IN_SETTLING;
     mCamParams[i].pixelMicrons = CAMERA_NO_DEFAULT;
     mCamParams[i].magRatio = 1.25f;

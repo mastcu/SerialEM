@@ -391,7 +391,7 @@ void CMainFrame::OnClose()
   }
 
   if (mWinApp->mFalconHelper->GetStackingFrames()) {
-    if (AfxMessageBox("It SEEMS that frames from the Falcon are still being stacked\n"
+    if (AfxMessageBox("It SEEMS that camera frames are still being stacked or aligned\n"
       "Do you really want to exit?", MB_QUESTION) != IDYES) {
         mClosingProgram = false;
       return;
