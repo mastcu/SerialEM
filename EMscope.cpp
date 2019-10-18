@@ -4656,7 +4656,7 @@ void CEMscope::GotoLowDoseArea(int newArea)
   bool toSearch = newArea == SEARCH_AREA;
   bool fromView = mLowDoseSetArea == VIEW_CONSET;
   bool toView = newArea == VIEW_CONSET;
-  bool splitBeamShift, leavingLowMag, deferJEOLspot, manage = false;
+  bool splitBeamShift, leavingLowMag, enteringLowMag, deferJEOLspot, manage = false;
   bool probeDone = true, changingAtZeroIS, sameIntensity;
   BOOL bDebug = GetDebugOutput('b');
   BOOL lDebug = GetDebugOutput('l');
