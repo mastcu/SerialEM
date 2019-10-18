@@ -260,7 +260,7 @@ enum {CME_SCRIPTEND = -7, CME_LABEL, CME_SETVARIABLE, CME_SETSTRINGVAR, CME_DOKE
   CME_SETFRAMESERIESPARAMS, CME_SETCUSTOMTIME, CME_REPORTCUSTOMINTERVAL, 
   CME_STAGETOLASTMULTIHOLE, CME_IMAGESHIFTTOLASTMULTIHOLE, CME_NAVINDEXITEMDRAWNON,
   CME_SETMAPACQUIRESTATE, CME_RESTORESTATE, CME_REALIGNTOMAPDRAWNON,
-  CME_GETREALIGNTOITEMERROR, CME_DOLOOP, CME_REPORTVACUUMGAUGE 
+  CME_GETREALIGNTOITEMERROR, CME_DOLOOP, CME_REPORTVACUUMGAUGE, CME_REPORTHIGHVOLTAGE
 };
 
 // The two numbers are the minimum arguments and whether arithmetic is allowed
@@ -402,7 +402,7 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"StageToLastMultiHole", 0, 0}, {"ImageShiftToLastMultiHole", 0, 0}, 
 {"NavIndexItemDrawnOn", 1, 0}, {"SetMapAcquireState", 1, 0}, {"RestoreState", 0, 0},
 {"RealignToMapDrawnOn", 2, 0}, {"GetRealignToItemError", 0, 0}, {"DoLoop", 3, 1},
-{"ReportVacuumGauge", 1, 0},/*CAI3.8*/
+{"ReportVacuumGauge", 1, 0}, {"ReportHighVoltage", 0, 0},/*CAI3.8*/
 {NULL, 0, 0}
 };
 // The longest is now 25 characters but 23 is a more common limit
@@ -5425,6 +5425,13 @@ void CMacroProcessor::NextCommand()
     SetReportedValues(&strItems[2], index, delISX);
     break;
     
+  case CME_REPORTHIGHVOLTAGE:                               // ReportHighVoltage
+    delISX = mScope->GetHTValue();
+    report.Format("High voltage is %.1f kV", delISX);
+    mWinApp->AppendToLog(report, mLogAction);
+    SetReportedValues(&strItems[1], delISX);
+    break;
+
   case CME_SETSLITWIDTH:                                    // SetSlitWidth
     if (itemEmpty[1])
       ABORT_LINE("SetSlitWidth must be followed by a number in: \n\n");
@@ -5623,10 +5630,12 @@ void CMacroProcessor::NextCommand()
       // Just adjusting exposure time
       bmean = (float)delISY;
       ix1 = mCamera->DESumCountForConstraints(camParams, &mConSets[index]);
+      mCamera->CropTietzSubarea(camParams, mConSets[index].right - mConSets[index].left,
+        mConSets[index].bottom - mConSets[index].top, mConSets[index].processing, iy1);
       mCamera->ConstrainExposureTime(camParams, mConSets[index].doseFrac, 
         mConSets[index].K2ReadMode, mConSets[index].binning, 
         mConSets[index].alignFrames && !mConSets[index].useFrameAlign, ix1, bmean, 
-        mConSets[index].frameTime);
+        mConSets[index].frameTime, iy1);
       if (fabs(bmean - mConSets[index].exposure) < 0.00001) {
         PrintfToLog("In SetExposureForMean %s, change by a factor of %.4f would require "
           "too small a change in exposure time", (LPCTSTR)strItems[1], delISX);
@@ -5680,8 +5689,10 @@ void CMacroProcessor::NextCommand()
       ABORT_NOLINE("Frame time cannot be set for the current camera type");
     SaveControlSet(index);
     mConSets[index].frameTime = (float)itemDbl[2];
-    mCamera->ConstrainFrameTime(mConSets[index].frameTime, camParams, 
-      mConSets[index].binning, camParams->OneViewType ? mConSets[index].K2ReadMode : 0);
+    mCamera->CropTietzSubarea(camParams, mConSets[index].right - mConSets[index].left,
+      mConSets[index].bottom - mConSets[index].top, mConSets[index].processing, iy1);
+    mCamera->ConstrainFrameTime(mConSets[index].frameTime, camParams,
+      mConSets[index].binning, camParams->OneViewType ? mConSets[index].K2ReadMode : iy1);
     break;
     
   case CME_SETK2READMODE:                                   // SetK2ReadMode
@@ -6748,7 +6759,7 @@ void CMacroProcessor::NextCommand()
           operations[ix1] = index2;
           if (index2 == LONG_OP_HW_DARK_REF && 
             !mCamera->CanDoK2HardwareDarkRef(camParams, report))
-            ABORT_LINE(report);
+            ABORT_LINE(report + " in line:\n\n");
           if (longHasTime[index2]) {
             if (index == MAX_TOKENS - 1 || itemEmpty[index + 1])
               ABORT_LINE("The last operation must be followed by an interval in hours "
