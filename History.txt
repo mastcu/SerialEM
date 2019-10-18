@@ -3,6 +3,13 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+9/30/19: Set spot size after mag change on JEOL when entering or leaving LM;
+set alpha before entering LM if no current area defined to avoid setting bad
+beam shift/tilt (In 3.7).
+
+9/30/19: Disabled option to limit absolute focus in tilt series when the
+limits have not been defined yet (In 3.7).
+
 9/26/19: Turned off Low Dose checkbox when in low dose, realigning to non-low
 dose map, and not restoring state after the realign to item (In 3.7).
 

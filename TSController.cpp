@@ -4070,14 +4070,16 @@ int CTSController::CheckAndLimitAbsFocus(void)
   if (!mSTEMindex && mTSParam.applyAbsFocusLimits) {
     minFocus = mFocusManager->GetEucenMinAbsFocus();
     maxFocus = mFocusManager->GetEucenMaxAbsFocus();
-    focus = mScope->GetFocus();
-    if (focus < minFocus) {
-      mScope->SetFocus(minFocus + 1.e-5 * (maxFocus - minFocus));
-      return 1;
-    }
-    if (focus > maxFocus) {
-      mScope->SetFocus(maxFocus - 1.e-5 * (maxFocus - minFocus));
-      return 1;
+    if (minFocus != 0. || maxFocus != 0.) {
+      focus = mScope->GetFocus();
+      if (focus < minFocus) {
+        mScope->SetFocus(minFocus + 1.e-5 * (maxFocus - minFocus));
+        return 1;
+      }
+      if (focus > maxFocus) {
+        mScope->SetFocus(maxFocus - 1.e-5 * (maxFocus - minFocus));
+        return 1;
+      }
     }
   }
   return 0;

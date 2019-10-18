@@ -1325,8 +1325,8 @@ void CTSSetupDialog::ManageFocusIntervals()
   m_butLimitDeltaFocus.EnableWindow(bEnable);
   m_statDeltaMicrons.EnableWindow(bEnable);
   m_editFocusMaxDelta.EnableWindow(m_bLimitDeltaFocus && bEnable);
-  m_butLimitAbsFocus.EnableWindow(bEnable && (mWinApp->mFocusManager->GetEucenMinDefocus()
-    != 0. || mWinApp->mFocusManager->GetEucenMaxDefocus() != 0.));
+  m_butLimitAbsFocus.EnableWindow(bEnable &&(mWinApp->mFocusManager->GetEucenMinAbsFocus()
+    != 0. || mWinApp->mFocusManager->GetEucenMaxAbsFocus() != 0.));
 }
 
 void CTSSetupDialog::OnCheckLimitDeltaFocus()

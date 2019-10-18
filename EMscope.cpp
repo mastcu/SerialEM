@@ -4643,7 +4643,7 @@ void CEMscope::GotoLowDoseArea(int newArea)
 {
   double delISX, delISY, beamDelX, beamDelY, startBeamX, startBeamY;
   double curISX, curISY, newISX, newISY, centeredISX, centeredISY, intensity;
-  int curAlpha;
+  int curAlpha, curMagInd;
   DWORD magTime;
   LowDoseParams *ldParams = mWinApp->GetLowDoseParams();
   LowDoseParams *ldArea = ldParams + newArea;
@@ -4656,7 +4656,7 @@ void CEMscope::GotoLowDoseArea(int newArea)
   bool toSearch = newArea == SEARCH_AREA;
   bool fromView = mLowDoseSetArea == VIEW_CONSET;
   bool toView = newArea == VIEW_CONSET;
-  bool splitBeamShift, leavingLowMag, manage = false;
+  bool splitBeamShift, leavingLowMag, deferJEOLspot, manage = false;
   bool probeDone = true, changingAtZeroIS, sameIntensity;
   BOOL bDebug = GetDebugOutput('b');
   BOOL lDebug = GetDebugOutput('l');
@@ -4670,15 +4670,22 @@ void CEMscope::GotoLowDoseArea(int newArea)
   if (!mLdsaParams)
     mLdsaParams = ldParams + oldArea;
 
+  if (oldArea < 0)
+    curMagInd = GetMagIndex();
+
   // Get some useful flags about what is changing and what to do
   leavingLowMag = !STEMmode && ldArea->magIndex >= mLowestMModeMagInd &&
     ((oldArea >= 0 && mLdsaParams->magIndex && mLdsaParams->magIndex < mLowestMModeMagInd)
-      || (oldArea < 0 && GetMagIndex() < mLowestMModeMagInd));
+      || (oldArea < 0 && curMagInd < mLowestMModeMagInd));
   splitBeamShift = !STEMmode && ((oldArea >= 0 && leavingLowMag) ||
     ((oldArea < 0 || mLdsaParams->magIndex >= mLowestMModeMagInd) &&
-    ldArea->magIndex && ldArea->magIndex < mLowestMModeMagInd));
+      ldArea->magIndex && ldArea->magIndex < mLowestMModeMagInd));
   changingAtZeroIS = !STEMmode &&  mChangeAreaAtZeroIS &&
     oldArea >= 0 && mLdsaParams->magIndex !=  ldArea->magIndex;
+  enteringLowMag = !STEMmode && ((oldArea < 0 && curMagInd >= mLowestMModeMagInd) ||
+    (oldArea >= 0 && mLdsaParams->magIndex >= mLowestMModeMagInd)) && ldArea->magIndex &&
+    ldArea->magIndex < mLowestMModeMagInd;
+  deferJEOLspot = !mJeol1230 && JEOLscope && (leavingLowMag || enteringLowMag);
 
   if (GetDebugOutput('L'))
     GetImageShift(curISX, curISY);
@@ -4774,7 +4781,7 @@ void CEMscope::GotoLowDoseArea(int newArea)
       IncDefocus(-(double)mSearchDefocus);
 
   // Pull off the beam shift if leaving an area and going between LM and nonLM
-  if (splitBeamShift && oldArea >= 0 && 
+  if (splitBeamShift && oldArea >= 0 &&
     (mLdsaParams->beamDelX || mLdsaParams->beamDelY))
       IncOrAccumulateBeamShift(-mLdsaParams->beamDelX, -mLdsaParams->beamDelY, 
         "Go2LD pull off BS");
@@ -4801,10 +4808,13 @@ void CEMscope::GotoLowDoseArea(int newArea)
   // If something is not initialized, set it up with current value
   // Don't set spot size on 1230 since it can't be read
   // Set spot before mag since JEOL mag change generates spot event
-  if (ldArea->spotSize && !mJeol1230)
-    SetSpotSize(ldArea->spotSize);
-  else
-    ldArea->spotSize = GetSpotSize();
+  if (!mJeol1230) {
+    if (ldArea->spotSize) {
+      if (!deferJEOLspot)
+        SetSpotSize(ldArea->spotSize);
+    } else
+      ldArea->spotSize = GetSpotSize();
+  }
 
   // Set alpha before mag if it is changing to a lower mag since scope can impose a beam
   // shift in the mag change that may depend on alpha  The reason for doing THIS at a 
@@ -4812,8 +4822,8 @@ void CEMscope::GotoLowDoseArea(int newArea)
   // of alpha will always be able to happen in the upper mag range
   curAlpha = GetAlpha();
   alphaDone = curAlpha >= 0 && ldArea->beamAlpha >= 0. && !STEMmode && 
-    oldArea >= 0 && (ldArea->magIndex || ldArea->camLenIndex) &&
-    ldArea->magIndex < mLdsaParams->magIndex;
+    ((oldArea >= 0 && (ldArea->magIndex || ldArea->camLenIndex) &&
+    ldArea->magIndex < mLdsaParams->magIndex) || enteringLowMag);
   if (alphaDone && !mHasNoAlpha)
     ChangeAlphaAndBeam(curAlpha, (int)ldArea->beamAlpha);
   
@@ -4841,7 +4851,7 @@ void CEMscope::GotoLowDoseArea(int newArea)
 
   // For FEI, set spot size (if it isn't right) again because mag range change can set 
   // spot size; afraid to just move spot size change down here because of note above
-  if (!JEOLscope)
+  if (!JEOLscope || deferJEOLspot)
     SetSpotSize(ldArea->spotSize);
 
   // For alpha change, need to restore the beam shift to what it was for consistent
@@ -5099,8 +5109,9 @@ void CEMscope::ChangeAlphaAndBeam(int oldAlpha, int newAlpha)
 
     GetBeamShift(beamX, beamY);
     GetBeamTilt(tiltX, tiltY);
-    SEMTrace('l', "Changing alpha from %d to %d and setting beam", oldAlpha + 1, 
-      newAlpha + 1);
+    if (GetDebugOutput('l') || GetDebugOutput('b'))
+    PrintfToLog("Changing alpha from %d to %d and beam shift %.3f %.3f  to %.3f %.3f",
+      oldAlpha + 1, newAlpha + 1, beamX, beamY, beamX + beamDelX, beamY + beamDelY);
     SetAlpha(newAlpha);
     if (mChangingLDArea) {
       IncOrAccumulateBeamShift(beamDelX, beamDelY, "ChangeAlpha");
