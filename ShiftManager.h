@@ -59,10 +59,11 @@ class CShiftManager
 {
 public:
   GetMember(int, NumBeamShiftCals)
-  ScaleMat *GetBeamShiftMatrices() {return &mIStoBS[0];};
-  ShortVec *GetBeamCalMagInd() {return &mBeamCalMagInd;};
-  ShortVec *GetBeamCalAlpha() {return &mBeamCalAlpha;};
-  ShortVec *GetBeamCalProbe() {return &mBeamCalProbe;};
+    ScaleMat *GetBeamShiftMatrices() { return &mIStoBS[0]; };
+  ShortVec *GetBeamCalMagInd() { return &mBeamCalMagInd; };
+  ShortVec *GetBeamCalAlpha() { return &mBeamCalAlpha; };
+  ShortVec *GetBeamCalProbe() { return &mBeamCalProbe; };
+  ShortVec *GetBeamShiftBoundaries() {return &mBeamShiftBoundaries;};
   GetSetMember(BOOL, InvertStageXAxis)
   GetSetMember(int, StageInvertsZAxis)
   void ResetAllTimeouts();
@@ -243,6 +244,7 @@ private:
   ShortVec mBeamCalAlpha;      // And alpha values
   ShortVec mBeamCalProbe;      // And probe modes
   int mNumBeamShiftCals;       // NUmber of calibrations stored
+  ShortVec mBeamShiftBoundaries;  // Mag boundaries across which beam shift cal differs
   int mNumRelRotations;        // Number of relative rotations
   RelRotations mRelRotations[MAX_REL_ROT];
   int mMinTiltDelay;           // Minimum tilt delay
@@ -295,6 +297,7 @@ public:
 
   bool BeamShiftToSpecimenShift(ScaleMat & IStoBS, int magInd, double beamDelX, double beamDelY, float & specX, float & specY);
   double GetStageTiltFactors(float &xTiltFac, float &yTiltFac);
+  bool CrossesBeamShiftBoundary(int mag1, int mag2);
 };
 
 #endif // !defined(AFX_SHIFTMANAGER_H__FF4BB03C_5BFC_4142_BD0F_9A1A257FABE9__INCLUDED_)

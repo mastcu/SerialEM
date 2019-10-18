@@ -2562,6 +2562,17 @@ BOOL CShiftManager::CanTransferIS(int magFrom, int magTo, BOOL STEMcamera)
   return true;
 }
 
+// Returns whether two mags are separated by a beam shift boundary
+bool CShiftManager::CrossesBeamShiftBoundary(int mag1, int mag2)
+{
+  int ind;
+  for (ind = 0; ind < (int)mBeamShiftBoundaries.size(); ind++)
+    if ((mag1 < mBeamShiftBoundaries[ind] && mag2 >= mBeamShiftBoundaries[ind]) ||
+      (mag1 >= mBeamShiftBoundaries[ind] && mag2 < mBeamShiftBoundaries[ind]))
+      return true;
+  return false;
+}
+
 // Transfer a general image shift from one mag to another; toCam is optional
 void CShiftManager::TransferGeneralIS(int fromMag, double fromX, double fromY, int toMag,
                                     double &toX, double &toY, int toCam)
@@ -2634,6 +2645,8 @@ void CShiftManager::SetBeamShiftCal(ScaleMat inMat, int inMag, int inAlpha, int 
     // This is somewhat flawed as it may arbitrarily pick one of several to replace
     if (!(mBeamCalAlpha[j] < 0 || mBeamCalAlpha[j] == inAlpha))
       continue;
+    if (CrossesBeamShiftBoundary(sign * calMag, sign * inMag))
+      continue;
     for (i = 0; i < numBound; i++) {
       mag = boundaries[i];
       if ((sign * calMag < mag && sign * inMag >= mag) || 
@@ -2666,7 +2679,7 @@ void CShiftManager::SetBeamShiftCal(ScaleMat inMat, int inMag, int inAlpha, int 
 // FastAlpha value)
 ScaleMat CShiftManager::GetBeamShiftCal(int magInd, int inAlpha, int inProbe)
 {
-  int j, dir, diff, calMag, loop, numLoop, calSign = 1;
+  int j, dir, diff, calMag, loop, skipBound, numBoundLoop, numLoop, calSign = 1;
   ScaleMat mat, mat2, currIStoSpec, calSpecToIS;
   mat.xpx = 0.;
   if (!mNumBeamShiftCals)
@@ -2678,6 +2691,7 @@ ScaleMat CShiftManager::GetBeamShiftCal(int magInd, int inAlpha, int inProbe)
   if (inProbe < 0)
     inProbe = mScope->GetProbeMode();
   numLoop = inAlpha < 0 ? 1 : 2;
+  numBoundLoop = mBeamShiftBoundaries.size() > 0 ? 2 : 1;
 
   // Access only ones with negative mag index for JEOL EFTEM mode
   if (JEOLscope && !mScope->GetHasOmegaFilter() && mWinApp->GetEFTEMMode())
@@ -2687,55 +2701,63 @@ ScaleMat CShiftManager::GetBeamShiftCal(int magInd, int inAlpha, int inProbe)
   // First look through calibrations, and if there is one that can transfer IS, use its
   // matrix directly; then fall back to specimen transformations 
   for (loop = 1; loop <= numLoop; loop++) {
-    for (j = 0; j < mNumBeamShiftCals; j++) {
-      calMag = calSign * mBeamCalMagInd[j];
-      if (calMag < 0)
-        continue;
-      if (inProbe != mBeamCalProbe[j])
-        continue;
 
-      // If it not the last time through the loop, require a matching alpha
-      if (loop < numLoop && mBeamCalAlpha[j] != inAlpha)
-        continue;
+    // And loop through this twice if there are boundaries: first obey the boundaries,
+    // then ignore them
+    for (skipBound = 0; skipBound < numBoundLoop; skipBound++) {
+      for (j = 0; j < mNumBeamShiftCals; j++) {
+        calMag = calSign * mBeamCalMagInd[j];
+        if (calMag < 0)
+          continue;
+        if (inProbe != mBeamCalProbe[j])
+          continue;
 
-      // Assume old calibration is from M mode range
-      if (!calMag)
-        calMag = mScope->GetLowestMModeMagInd();
-      if (CanTransferIS(calMag, magInd)) {
-        return mIStoBS[j];
+        // If it not the last time through the loop, require a matching alpha
+        if (loop < numLoop && mBeamCalAlpha[j] != inAlpha)
+          continue;
+
+        // Assume old calibration is from M mode range
+        if (!calMag)
+          calMag = mScope->GetLowestMModeMagInd();
+        if (CanTransferIS(calMag, magInd) &&
+          (skipBound || !CrossesBeamShiftBoundary(calMag, magInd))) {
+          return mIStoBS[j];
+        }
       }
-    }
 
 
-    // Must have a IS to specimen transformation for this mag for next loops
-    if (!currIStoSpec.xpx)
-      continue;
+      // Must have a IS to specimen transformation for this mag for next loops
+      if (!currIStoSpec.xpx)
+        continue;
 
-    // Look at calibrations, from closest to farther mags, and find one with an
-    // IS to specimen transformation and use it to transform the calibrated BS matrix
-    // But loop twice if alpha; first try to match alpha
-    for (diff = 1; diff < MAX_MAGS; diff++) {
-      for (dir = 1; dir >= -1; dir -= 2) {
-        for (j = 0; j < mNumBeamShiftCals; j++) {
-          calMag = calSign * mBeamCalMagInd[j];
-          if (calMag < 0)
-            continue;
-          if (inProbe != mBeamCalProbe[j])
-            continue;
-          if (loop < numLoop && mBeamCalAlpha[j] != inAlpha)
-            continue;
-          if (!calMag)
-            calMag = mScope->GetLowestMModeMagInd();
+      // Look at calibrations, from closest to farther mags, and find one with an
+      // IS to specimen transformation and use it to transform the calibrated BS matrix
+      // But loop twice if alpha; first try to match alpha
+      for (diff = 1; diff < MAX_MAGS; diff++) {
+        for (dir = 1; dir >= -1; dir -= 2) {
+          for (j = 0; j < mNumBeamShiftCals; j++) {
+            calMag = calSign * mBeamCalMagInd[j];
+            if (calMag < 0)
+              continue;
+            if (inProbe != mBeamCalProbe[j])
+              continue;
+            if (loop < numLoop && mBeamCalAlpha[j] != inAlpha)
+              continue;
+            if (!calMag)
+              calMag = mScope->GetLowestMModeMagInd();
+            if (!skipBound && CrossesBeamShiftBoundary(calMag, magInd))
+              continue;
 
-          // Check a mag only if it is on the same side of LM-M as given mag
-          if (magInd + dir * diff == calMag &&
-            mScope->BothLMorNotLM(calMag, false, magInd, false)) {
+            // Check a mag only if it is on the same side of LM-M as given mag
+            if (magInd + dir * diff == calMag &&
+              mScope->BothLMorNotLM(calMag, false, magInd, false)) {
               mat2 = IStoSpecimen(calMag);
               if (mat2.xpx) {
                 calSpecToIS = MatInv(mat2);
                 mat2 = MatMul(calSpecToIS, mIStoBS[j]);
                 mat = MatMul(currIStoSpec, mat2);
                 return mat;
+              }
             }
           }
         }
