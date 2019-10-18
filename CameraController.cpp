@@ -667,8 +667,8 @@ int CCameraController::Initialize(int whichCameras)
     if (param->canTakeFrames < 0) {
       param->canTakeFrames = 0;
 
-      // Turn it on for Tietz Fx16 types?
-      if (mParam->TietzType >= 11)
+      // Turn it on for Tietz XF416 types
+      if (mParam->TietzType >= 14)
         param->canTakeFrames = 3;
     }
     if (param->canTakeFrames) {
@@ -3089,11 +3089,14 @@ void CCameraController::Capture(int inSet, bool retrying)
   }
 
   // Plugin camera: set up frames for saving or aligning
+  // Tietz burst mode must be set to 1 if not taking frameas
   mSavingPluginFrames = false;
   mAligningPluginFrames = false;
   if (mParam->TietzType && mParam->canTakeFrames)
     mTD.PluginAcquireFlags |= TIETZ_SET_BURST_MODE;
   if (mTD.plugFuncs && conSet.doseFrac) {
+
+    // Set readouts per frame in case it is needed and meaningful
     mTD.ReadoutsPerFrame = B3DNINT(conSet.frameTime / GetK2ReadoutInterval(mParam, 
       conSet.binning, 0));
     mSavingPluginFrames = conSet.saveFrames != 0 || 
@@ -5106,6 +5109,8 @@ int CCameraController::CapManageDarkGainRefs(ControlSet & conSet, int inSet,
       && !(mFrameSavingEnabled && IS_BASIC_FALCON2(mParam) &&
       !mWinApp->mGainRefMaker->GetPreparingGainRef())) {
       double currentTicks = GetTickCount();
+
+      // If taking frames, the reference needs to be for the frame time
       if (mAligningPluginFrames || mSavingPluginFrames)
         useExposure = mTD.FrameTime;
 
@@ -5691,6 +5696,8 @@ void CCameraController::BlockAdjustSizes(int &DMsize, int ccdSize, int sizeMod,
   end = start + DMsize;
 }
 
+// Determine if a subarea is being taken from a Tietz camera and if it should be done
+// by cropping full field; also return Y size on chip if so, for adjusting constraints
 bool CCameraController::CropTietzSubarea(CameraParameters *param, int ubSizeX, 
   int ubSizeY, int processing, int &ySizeOnChip)
 {
@@ -6445,13 +6452,14 @@ void CCameraController::AcquirePluginImage(CameraThreadData *td, void **array,
     // Perhaps flatfielding with F416 does not require a read mode in plugin but
     // it seems best to set those in that case as well as for burst mode
     // TVIPS indicated to use a 1 for flatfield parameter
+    // First two params are readout mode and speed index
     td->plugFuncs->SetExtraParams1(td->GatanReadMode > 0 ? 3 : 1,
       td->GatanReadMode > 0 ? 2 : 1, 0, (tietzDark || !processing) ? 0 : 1,
       (LPCTSTR)td->TietzFlatfieldDir);
   }
 
   // This sets shuttermode, it does have to be set to beam blank at some point when in
-  // rolling shutter mode, so just don't skip it
+  // rolling shutter mode, so don't just skip it
   if (!retval && tietzImage)
     retval = td->plugFuncs->PrepareForAcquire(td->TietzType, td->ShutterMode);
   if (!retval && blanker)
