@@ -672,7 +672,8 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
 
   // This sets mRInetViewShiftX/Y, mRIconSetNum, and mRIstayingInLD, and mrIcalShiftX/Y
   // Here is where low dose gets turned off if so
-  PrepareToReimageMap(item, mMapMontP, conSet, TRIAL_CONSET, TRUE);
+  PrepareToReimageMap(item, mMapMontP, conSet, TRIAL_CONSET, 
+    restoreState || !(mWinApp->LowDoseMode() && item->mMapLowDoseConSet < 0));
   if (mRIstayingInLD)
     mRIContinuousMode = 0;   // To avoid this, need to set/restore mode in LD conset
   if (mRIContinuousMode) {

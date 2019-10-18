@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+9/26/19: Turned off Low Dose checkbox when in low dose, realigning to non-low
+dose map, and not restoring state after the realign to item (In 3.7).
+
 9/24/19: Added property to use condenser lens normalization instead of passing
 through View intensity/spot size when changing low dose area.
 
