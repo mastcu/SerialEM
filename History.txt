@@ -3,6 +3,7 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+10/17/19: SEM_3-7-10
 10/15/19: Fixed enabling of beam/stage spinners in scope control panel when
 there are no beam calibrations (In 3.7).
 

@@ -1565,14 +1565,15 @@
       in the Calibration menu.&nbsp; This calibration needs to be redone whenever there 
       is a service alignment of the magnifications.</P>
     <P>&nbsp;</P>
-      <P><A name="setup_gain_factors"></A><B>Measuring Relative Gain Factors for FEI 
-        Eagle, Tietz CMOS, and other Cameras (Priority 1)</B></P>
-      <P>The gain of an Eagle camera varies with binning, and it is necessary to 
-        calibrate the change in gain in order for dose calculations and 
+      <P><A name="setup_gain_factors"></A><B>Measuring Relative Gain Factors for FEI, Tietz CMOS, and other Cameras (Priority 1)</B></P>
+      <P>The gain of some cameras varies with binning, and it is necessary to have a 
+        property indicating the change in gain in order for dose calculations and 
         intensity-related operations to work properly, including the acquisition of a 
-        gain reference.&nbsp; This calibration 
-        appears to be needed with some OSIS cameras also. To do this, set the 'Trial' parameters for a full-field 
-        dark-subtracted image at the maximum binning. Set the exposure time to 0.2 
+        gain reference.&nbsp;&nbsp; For some newer cameras, the factors are predicable; 
+        for others, like the FEI Eagle camera, OneView, Rio, and perhaps some EMSIS 
+        cameras, the factors must be assessed. To do this, set the 'Trial' parameters for a full-field image at the maximum binning.&nbsp; 
+        Use a dark-subtracted image if normalizing in SerialEM and there is no gain 
+        reference yet.&nbsp; Set the exposure time to 0.2 
         second and adjust the beam intensity so that 'Trial' gives an image with counts 
         between 1/2 and 3/4 of the saturation level. Take an image and use 'Ctrl-I' to get 
         the mean counts in the image. Repeat at each binning down to 1, without changing 
@@ -1586,8 +1587,8 @@
       <P>RelativeGainFactors 1.0 f2 f4 f8</P>
       <P>Where f2, f4, and f8 would be the factors measured for binnings 2, 4, and 8.&nbsp; 
         For the Eagle, these factors should be about 0.35, 0.16, and 0.13.&nbsp; </P>
-    <P>Relative gain factors are also needed for the Tietz CMOS cameras: F816, 
-        F416, and F216 with their default setup, but here the factors are known and 
+    <P>Relative gain factors are also needed for the Tietz CMOS cameras: F816, F416, F216, 
+      and XF416 with their default setup, but here the factors are known and 
       there should be no need to measure them.&nbsp; Simply take an image with binning 
       4, then with binning 2 and 1 with the same exposure time.&nbsp; With the default 
       setup, the images should have the same counts, and the camera properties would 
