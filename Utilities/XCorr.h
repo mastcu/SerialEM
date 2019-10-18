@@ -61,10 +61,10 @@ int DLL_IM_EX ProcFindCircleEdges(void *array, int type, int nx, int ny, float x
                         float *angle, float *grad);
 int DLL_IM_EX ProcGainNormalize(void *image, int type, int nxFull, int top, int left, int bottom,
                        int right, short int *dark1, double exp1, short int *dark2, 
-                       double exp2, double exp, void *gainRef, int gainBytes, 
+                       double exp2, double exp, int darkScale, void *gainRef, int gainBytes, 
                        int gainBits);
 int DLL_IM_EX ProcDarkSubtract(void *image, int type, int nx, int ny, short int *ref1, 
-                           double exp1, short int *ref2, double exp2, double exp);
+                           double exp1, short int *ref2, double exp2, double exp, int darkScale);
 int DLL_IM_EX ProcConvertGainRef(float *fGain, unsigned short *usGain, int arrSize, int scaledMax,
 					   int minBits, int *bits);
 float DLL_IM_EX ProcGetPixel(void *array, int type, int nx, int ix, int iy);

@@ -1818,7 +1818,7 @@ int ProcFindCircleEdges(void *array, int type, int nx, int ny, float xcen, float
 // Perform dark subtraction on an image, interpolating between two dark references
 // if ref2 is non-NULL.
 int ProcDarkSubtract(void *image, int type, int nx, int ny, short int *ref1, 
-                           double exp1, short int *ref2, double exp2, double exp)
+  double exp1, short int *ref2, double exp2, double exp, int darkScale)
 {
   int i, f1, f2;
   short int *sdata;
@@ -1841,8 +1841,8 @@ int ProcDarkSubtract(void *image, int type, int nx, int ny, short int *ref1,
   case SIGNED_SHORT:
     sdata = (short int *)image;
     for (i = 0; i < nx * ny; i++) {
-      srval = ref2 ?
-        (short int)((f1 * *ref1++ + f2 * *ref2++ + roundFac) >> darkBits) : *ref1++;
+      srval = darkScale * (ref2 ?
+        (short int)((f1 * *ref1++ + f2 * *ref2++ + roundFac) >> darkBits) : *ref1++);
       *sdata++ -= srval;
     }
     break;
@@ -1850,8 +1850,8 @@ int ProcDarkSubtract(void *image, int type, int nx, int ny, short int *ref1,
   case UNSIGNED_SHORT:
     usdata = (unsigned short int *)image;
     for (i = 0; i < nx * ny; i++) {
-      usrval = ref2 ? (unsigned short int)
-        ((f1 * *usref1++ + f2 * *usref2++ + roundFac) >> darkBits) : *usref1++;
+      usrval = darkScale * (ref2 ? (unsigned short int)
+        ((f1 * *usref1++ + f2 * *usref2++ + roundFac) >> darkBits) : *usref1++);
       *usdata = *usdata > usrval ? *usdata - usrval : 0;
       usdata++; 
     }
@@ -1860,7 +1860,7 @@ int ProcDarkSubtract(void *image, int type, int nx, int ny, short int *ref1,
   case FLOAT:
    fdata = (float *)image;
    for (i = 0; i < nx * ny; i++)
-      fdata[i] -= fref[i];
+      fdata[i] -= darkScale * fref[i];
    break;
 
   default:
@@ -1868,6 +1868,7 @@ int ProcDarkSubtract(void *image, int type, int nx, int ny, short int *ref1,
   }
   return 0;
 }
+
 
 // Perform gain normalization using either a float or scaled integer gain reference
 // and interpolating between two dark references.
@@ -1878,115 +1879,136 @@ int ProcDarkSubtract(void *image, int type, int nx, int ny, short int *ref1,
 // and compared speeds, on Core 2 Duo it is 5 ms slower for small images and somewhat
 // faster for large images; on Pentium 4 is faster all around (?).
 int ProcGainNormalize(void *image, int type, int nxFull, int top, int left, int bottom,
-                       int right, short int *dark1, double exp1, short int *dark2, 
-                       double exp2, double exp, void *gainRef, int gainBytes, 
-                       int gainBits)
+  int right, short int *dark1, double exp1, short int *dark2, double exp2, double exp, 
+  int darkScale, void *gainRef, int gainBytes, int gainBits)
 {
   float *gainp;
-  short int *sdata;
+  short int *sdata, *sdark1, *sdark2;
   unsigned short int *usdata;
   unsigned short int *usgain;
   unsigned short int *usdark1 = (unsigned short int *)dark1;
   unsigned short int *usdark2 = (unsigned short int *)dark2;
   float *fdark = (float *)dark1;
   float *fdata;
-  int iy, ix, itmp, rval, f1, f2;
+  int iy, ix, itmp, rval, f1, f2, dataBase, gainBase, error = 0;
+  int nxImage = right - left;
   int darkBits = 12;
   int darkFac = 1 << darkBits;
   int roundFac = darkFac / 2;
+  int maxThreads = 6, numThreads;
   if (dark2) {
     f1 = (int)(darkFac * (exp2 - exp) / (exp2 - exp1) + 0.5);
     f2 = darkFac - f1;
   }
+  /*static double wallCum = 0.;
+  static int round = 0;
+  double wallStart = wallTime();*/
 
-  // All types need to put result in a long integer and test for saturation
-  switch (type) {
-  case SIGNED_SHORT:
-    sdata = (short int *)image;
-    if (gainBytes == 4) {
+  // Thread selection, not much evaluation went into this
+  numThreads = B3DNINT(sqrt((double)nxImage * (bottom - top)) / 1000.);
+  B3DCLAMP(numThreads, 1, maxThreads);
+  numThreads = numOMPthreads(numThreads);
 
-      // signed image with float gain reference - use it directly
-      for (iy = top; iy < bottom; iy++) {
-        gainp = (float *)gainRef + iy * nxFull + left;
-        for (ix = left; ix < right; ix++) {
-          rval = dark2 ? 
-            (f1 * *dark1++ + f2 * *dark2++ + roundFac) >> darkBits : *dark1++;
-          itmp = (int)((*sdata - rval) * *gainp++);
-          if (itmp > 32767)
-            itmp = 32767;
-          *sdata++ = (short int)itmp;
-        } 
-      }
-    } else {
+  // Loop on lines in Y
+#pragma omp parallel for num_threads(numThreads) default(none)  \
+shared(top, bottom, nxImage, nxFull, type, gainBytes, gainRef, dark1, dark2, image, \
+  darkScale, f1, f2, darkBits, roundFac, gainBits, left, error) \
+private(iy, ix, gainBase, dataBase, gainp, sdark1, sdark2, usdark1, usdark2, usgain, sdata, \
+  usdata, itmp, rval, fdark, fdata)
+  for (iy = top; iy < bottom; iy++) {
+    gainBase = iy * nxFull + left;
+    dataBase = (iy - top) * nxImage;
 
-      // signed image with scaled integer gain reference
-      for (iy = top; iy < bottom; iy++) {
-        usgain = (unsigned short int *)gainRef + iy * nxFull + left;
-        for (ix = left; ix < right; ix++) {
-         rval = dark2 ? 
-          (f1 * *dark1++ + f2 * *dark2++ + roundFac) >> darkBits : *dark1++;
-         itmp = ((int)(*sdata - rval) * *usgain++) >> gainBits;
-          if (itmp > 32767)
-            itmp = 32767;
-          *sdata++ = (short int)itmp;
+    // All types need to put result in a long integer and test for saturation
+    switch (type) {
+    case SIGNED_SHORT:
+      if (gainBytes == 4) {
+
+        // signed image with float gain reference - use it directly
+        gainp = (float *)gainRef + gainBase;
+        sdark1 = (short *)dark1 + dataBase;
+        sdark2 = (short *)dark2 + dataBase;
+        sdata = (short int *)image + dataBase;
+        for (ix = 0; ix < nxImage; ix++) {
+          rval = darkScale * (dark2 ?
+            (f1 * sdark1[ix] + f2 * sdark2[ix] + roundFac) >> darkBits : sdark1[ix]);
+          itmp = (int)((sdata[ix] - rval) * gainp[ix]);
+          itmp = itmp < 32767 ? itmp : 32767;
+          sdata[ix] = (short int)itmp;
+        }
+      } else {
+
+        // signed image with scaled integer gain reference
+        usgain = (unsigned short int *)gainRef + gainBase;
+        sdark1 = (short *)dark1 + dataBase;
+        sdark2 = (short *)dark2 + dataBase;
+        sdata = (short int *)image + dataBase;
+        for (ix = 0; ix < nxImage; ix++) {
+          rval = darkScale * (dark2 ?
+            (f1 * sdark1[ix] + f2 * sdark2[ix] + roundFac) >> darkBits : sdark1[ix]);
+          itmp = ((int)(sdata[ix] - rval) * usgain[ix]) >> gainBits;
+          itmp = itmp < 32767 ? itmp : 32767;
+          sdata[ix] = (short int)itmp;
         }
       }
-    }
-    break;
+      break;
 
-  case UNSIGNED_SHORT:
-    usdata = (unsigned short int *)image;
-    if (gainBytes == 4) {
+    case UNSIGNED_SHORT:
+      if (gainBytes == 4) {
 
-      // Unsigned image with floating gain reference - test for image > dark
-      for (iy = top; iy < bottom; iy++) {
-        gainp = (float *)gainRef + iy * nxFull + left;
-        for (ix = left; ix < right; ix++) {
-          rval = dark2 ? 
-            (f1 * *usdark1++ + f2 * *usdark2++ + roundFac) >> darkBits : *usdark1++;
-          itmp = *usdata > rval ? (int)((*usdata - rval) * *gainp) : 0;
-          if (itmp > 65535)
-            itmp = 65535;
-          *usdata++ = (unsigned short int)itmp;
-          gainp++;
+        // Unsigned image with floating gain reference - test for image > dark
+        gainp = (float *)gainRef + gainBase;
+        usdark1 = (unsigned short *)dark1 + dataBase;
+        usdark2 = (unsigned short *)dark2 + dataBase;
+        usdata = (unsigned short int *)image + dataBase;
+        for (ix = 0; ix < nxImage; ix++) {
+          rval = darkScale * (dark2 ?
+            (f1 * usdark1[ix] + f2 * usdark2[ix] + roundFac) >> darkBits : usdark1[ix]);
+          itmp = usdata[ix] > rval ? (int)((usdata[ix] - rval) * gainp[ix]) : 0;
+          itmp = itmp < 65535 ? itmp : 65535;
+          usdata[ix] = (unsigned short int)itmp;
+        }
+      } else {
+
+        // Unsigned image with scaled integer gain reference
+        usgain = (unsigned short int *)gainRef + gainBase;
+        usdark1 = (unsigned short *)dark1 + dataBase;
+        usdark2 = (unsigned short *)dark2 + dataBase;
+        usdata = (unsigned short int *)image + dataBase;
+        for (ix = 0; ix < nxImage; ix++) {
+          rval = darkScale * (dark2 ?
+            (f1 * usdark1[ix] + f2 * usdark2[ix] + roundFac) >> darkBits : usdark1[ix]);
+          itmp = usdata[ix] > rval ?
+            ((int)(usdata[ix] - rval) * usgain[ix]) >> gainBits : 0;
+          itmp = itmp < 65535 ? itmp : 65535;
+          usdata[ix] = (unsigned short int)itmp;
         }
       }
-    } else {
+      break;
 
-      // Unsigned image with scaled integer gain reference
-      for (iy = top; iy < bottom; iy++) {
-        usgain = (unsigned short int *)gainRef + iy * nxFull + left;
-        for (ix = left; ix < right; ix++) {
-          rval = dark2 ? 
-            (f1 * *usdark1++ + f2 * *usdark2++ + roundFac) >> darkBits : *usdark1++;
-          itmp = *usdata > rval ?
-            ((int)(*usdata - rval) * *usgain) >> gainBits : 0;
-          if (itmp > 65535)
-            itmp = 65535;
-          *usdata++ = (unsigned short int)itmp;
-          usgain++;
-        }
+    case FLOAT:
+
+      // float image with float references
+      gainp = (float *)gainRef + gainBase;
+      fdark = (float *)dark1 + dataBase;
+      fdata = (float *)image + dataBase;
+      for (ix = 0; ix < nxImage; ix++) {
+        fdata[ix] = (fdata[ix] - darkScale * (fdark[ix])) * gainp[ix];
       }
+      break;
+
+    default:
+      error = 1;
     }
-    break;
-
-  case FLOAT:
-
-    // float image with float references
-    fdata = (float *)image;
-    for (iy = top; iy < bottom; iy++) {
-      gainp = (float *)gainRef + iy * nxFull + left;
-      for (ix = left; ix < right; ix++) {
-        *fdata = (*fdata - *fdark++) * *gainp++;
-        *fdata++;
-      }
-    }
-    break;
-
-  default:
-    return 1;
   }
-  return 0;
+  /*wallCum += wallTime() - wallStart;
+  round++;
+  if (round == 40) {
+    PrintfToLog("time for 40 = %.3f", wallCum);
+    round = 0;
+    wallCum = 0.;
+  }*/
+  return error;
 }
 
 // Convert a gain reference to unsigned shorts
