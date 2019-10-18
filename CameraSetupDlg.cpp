@@ -432,7 +432,7 @@ void CCameraSetupDlg::SetFractionalSize(int fracX, int fracY)
   m_eTop = (fracY - 1) * mCameraSizeY / (2 * fracY) / mCoordScaling;
   m_eRight = (fracX + 1) * mCameraSizeX / (2 * fracX) / mCoordScaling;
   m_eBottom = (fracY + 1) * mCameraSizeY / (2 * fracY) / mCoordScaling;
-  if (mTietzBlocks || mParam->STEMcamera)
+  if (mParam->TietzType || mParam->STEMcamera)
     AdjustCoords(mBinnings[m_iBinning]);
   UpdateData(FALSE);
   if (mParam->STEMcamera)
@@ -845,7 +845,7 @@ static int binVals[MAX_BINNINGS] = {1, 2, 3, 4, 6, 8};
 // Load the current control set into the dialog
 void CCameraSetupDlg::LoadConsetToDialog()
 {
-  int i, indMin, binning, showProc, lockSet;
+  int i, indMin, binning, showProc, lockSet,special;
   bool noDark, noGain, alwaysAdjust, noRaw, show, canCopyView;
   int *modeP = mParam->DE_camType ? &m_iDEMode : &m_iK2Mode;
   CButton *radio;
@@ -880,9 +880,12 @@ void CCameraSetupDlg::LoadConsetToDialog()
     !mCurSet->useFrameAlign)
     mCurSet->useFrameAlign = 1;
   m_fFrameTime = mCurSet->frameTime;
-  if (mParam->K2Type || mParam->canTakeFrames)
-    mCamera->ConstrainFrameTime(m_fFrameTime, mParam, binning, 
-    (mParam->OneViewType && mCurSet->K2ReadMode != 0) ? 1 : 0);
+  if (mParam->K2Type || mParam->canTakeFrames) {
+    mCamera->CropTietzSubarea(mParam, mCurSet->right - mCurSet->left,
+      mCurSet->bottom - mCurSet->top, mCurSet->processing, special);
+    mCamera->ConstrainFrameTime(m_fFrameTime, mParam, binning,
+      (mParam->OneViewType && mCurSet->K2ReadMode != 0) ? 1 : special);
+  }
   m_fDEframeTime = RoundedDEframeTime(m_fFrameTime);
   m_bAlignDoseFrac = mCurSet->alignFrames > 0 || 
     (mCurrentSet == RECORD_CONSET && mWinApp->mTSController->GetFrameAlignInIMOD());
@@ -1167,13 +1170,16 @@ float CCameraSetupDlg::ManageExposure(bool updateIfChange)
 {
   float realExp = m_eExposure;
   int mode = mDE_Type ? m_iDEMode : m_iK2Mode;
+  int special = 0;
   bool saySaving, savingDE = m_bDEsaveMaster || m_bDEalignFrames;
 
   // General call and computations
-  BOOL changed = mCamera->ConstrainExposureTime(mParam, m_bDoseFracMode, 
+  mCamera->CropTietzSubarea(mParam, m_eRight - m_eLeft, m_eBottom - m_eTop,
+    m_iProcessing, special);
+  BOOL changed = mCamera->ConstrainExposureTime(mParam, m_bDoseFracMode,
     mParam->OneViewType ? m_bUseHwROI_OvDiff : mode,
     mBinnings[m_iBinning], m_bAlignDoseFrac && !mCurSet->useFrameAlign, 
-    savingDE ? m_iSumCount : 1, realExp, m_fFrameTime);
+    savingDE ? m_iSumCount : 1, realExp, m_fFrameTime, special);
 
   float roundFac = mCamera->ExposureRoundingFactor(mParam);
   if (roundFac) {
@@ -2229,7 +2235,7 @@ void CCameraSetupDlg::OnKillfocusEditaverage()
 
 void CCameraSetupDlg::ManageDose()
 {
-  int spotSize;
+  int spotSize, special;
   double intensity, dose;
   int camera = mActiveCameraList[mCurrentCamera];
   float doseFac = mParam->specToCamDoseFac;
@@ -2238,10 +2244,12 @@ void CCameraSetupDlg::ManageDose()
   // Need to synchronize back to camera LDP since we are accessing them
   mWinApp->CopyCurrentToCameraLDP();
   float realExp = m_eExposure;
-  mCamera->ConstrainExposureTime(mParam, m_bDoseFracMode, 
+  mCamera->CropTietzSubarea(mParam, m_eRight - m_eLeft, m_eBottom - m_eTop,
+    m_iProcessing, special);
+  mCamera->ConstrainExposureTime(mParam, m_bDoseFracMode,
     mParam->OneViewType ? m_bUseHwROI_OvDiff : mode, mBinnings[m_iBinning],
     mCurSet->alignFrames && !mCurSet->useFrameAlign,
-    m_bDEsaveMaster ? m_iSumCount : 1, realExp, m_fFrameTime);
+    m_bDEsaveMaster ? m_iSumCount : 1, realExp, m_fFrameTime, special);
   m_fDEframeTime = RoundedDEframeTime(m_fFrameTime * (m_bDEsaveMaster ? 1 : m_iSumCount));
   if (mParam->K2Type || (mParam->OneViewType && mParam->canTakeFrames))
     m_fFrameTime = RoundedDEframeTime(m_fFrameTime);
@@ -2299,6 +2307,8 @@ bool CCameraSetupDlg::AdjustCoords(int binning, bool alwaysUpdate)
   double dbin = binning;
   bool doseFrac = (mParam->K2Type || (mParam->OneViewType && mParam->canTakeFrames)) && 
     m_bDoseFracMode;
+  if (mParam->TietzType && mParam->canTakeFrames)
+    ManageExposure();
   int moduloX = doseFrac ? -2 : mParam->moduloX;
   int moduloY = doseFrac ? -2 : mParam->moduloY;
   left = mCoordScaling * m_eLeft / binning;
@@ -2565,11 +2575,15 @@ void CCameraSetupDlg::OnAlignDoseFrac()
 
 void CCameraSetupDlg::OnKillfocusEditFrameTime() 
 {
+  int special;
   UpdateData(TRUE);
   float startFrame = m_fFrameTime;
-  if (mParam->K2Type || mParam->canTakeFrames)
-    mCamera->ConstrainFrameTime(m_fFrameTime, mParam, mParam->binnings[m_iBinning], 
-    (mParam->OneViewType && m_bUseHwROI_OvDiff) ? 1 : 0);
+  if (mParam->K2Type || mParam->canTakeFrames) {
+    mCamera->CropTietzSubarea(mParam, m_eRight - m_eLeft, m_eBottom - m_eTop,
+      m_iProcessing, special);
+    mCamera->ConstrainFrameTime(m_fFrameTime, mParam, mParam->binnings[m_iBinning],
+      (mParam->OneViewType && m_bUseHwROI_OvDiff) ? 1 : special);
+  }
   if (m_bSaveFrames && m_bSaveK2Sums)
     mWinApp->mFalconHelper->AdjustForExposure(mSummedFrameList, 0,
       0, m_eExposure, m_fFrameTime, mUserFrameFrac, mUserSubframeFrac, false);
@@ -2941,7 +2955,7 @@ void CCameraSetupDlg::ManageAntialias(void)
 void CCameraSetupDlg::ManageK2SaveSummary(void)
 {
   CString str;
-  int dummy, frames;
+  int dummy, frames, special;
   float realExp = m_eExposure, realFrame = m_fFrameTime;
   bool unNormed = m_iProcessing != GAIN_NORMALIZED ||
     (mCamera->GetSaveUnnormalizedFrames() && mCamera->GetPluginVersion(mParam) > 
@@ -2952,10 +2966,12 @@ void CCameraSetupDlg::ManageK2SaveSummary(void)
   bool reducing = !unNormed && IS_SUPERRES(mParam, m_iK2Mode) && !binning &&
     mCamera->GetSaveSuperResReduced() && mCamera->CAN_PLUGIN_DO(CAN_REDUCE_SUPER, mParam);
   if ((mParam->K2Type || mParam->canTakeFrames) && m_bDoseFracMode) {
-    mCamera->ConstrainExposureTime(mParam, m_bDoseFracMode, 
+    mCamera->CropTietzSubarea(mParam, m_eRight - m_eLeft, m_eBottom - m_eTop,
+      m_iProcessing, special);
+    mCamera->ConstrainExposureTime(mParam, m_bDoseFracMode,
       mParam->OneViewType ? m_bUseHwROI_OvDiff : m_iK2Mode,
       mBinnings[m_iBinning], m_bAlignDoseFrac && !mCurSet->useFrameAlign,
-      1, realExp, realFrame);
+      1, realExp, realFrame, special);
     frames = B3DNINT(realExp / B3DMAX(mCamera->GetMinK2FrameTime(mParam,
       mParam->binnings[m_iBinning], (mParam->OneViewType && m_bUseHwROI_OvDiff) ? 1 : 0),
       realFrame));
