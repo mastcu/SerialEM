@@ -3792,8 +3792,9 @@ void CMacroProcessor::NextCommand()
     
   case CME_IMAGESHIFTBYPIXELS:                              // ImageShiftByPixels
     bInv = mShiftManager->CameraToIS(mScope->GetMagIndex());
-    index = B3DNINT(itemDbl[1]);
-    index2 = B3DNINT(itemDbl[2]);
+    ix1 = BinDivisorI(camParams);
+    index = B3DNINT(itemDbl[1] * ix1);
+    index2 = B3DNINT(itemDbl[2] * ix1);
 
     delISX = bInv.xpx * index + bInv.xpy * index2;
     delISY = bInv.ypx * index + bInv.ypy * index2;

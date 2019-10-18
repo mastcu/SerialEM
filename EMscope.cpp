@@ -5907,16 +5907,22 @@ bool CEMscope::AreDewarsFilling(int &busy)
   if (HitachiScope || (JEOLscope && !mPlugFuncs->GetNitrogenStatus))
     return false;
   ScopeMutexAcquire("AreDewarsFilling", true);
-  if (FEIscope) {
-    bRet = GetTemperatureInfo(0, bBusy, time, 0, level);
-    busy = bBusy ? 1 : 0;
-  } else {
-    ibusy = mPlugFuncs->GetNitrogenStatus(1);
-    ibusy2 = mPlugFuncs->GetNitrogenStatus(2);
-    if (ibusy < 0 || ibusy2 < 0)
-      bRet = false;
-    else
-      busy = (ibusy ? 1 : 0) + (ibusy2 ? 2 : 0);
+  try {
+    if (FEIscope) {
+      bRet = GetTemperatureInfo(0, bBusy, time, 0, level);
+      busy = bBusy ? 1 : 0;
+    } else {
+      ibusy = mPlugFuncs->GetNitrogenStatus(1);
+      ibusy2 = mPlugFuncs->GetNitrogenStatus(2);
+      if (ibusy < 0 || ibusy2 < 0)
+        bRet = false;
+      else
+        busy = (ibusy ? 1 : 0) + (ibusy2 ? 2 : 0);
+    }
+  }
+  catch (_com_error E) {
+    SEMReportCOMError(E, _T("getting Nitrogen status "));
+    bRet = false;
   }
   ScopeMutexRelease("AreDewarsFilling");
   return bRet;
