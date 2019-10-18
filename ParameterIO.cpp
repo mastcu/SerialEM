@@ -1846,6 +1846,7 @@ int CParameterIO::ReadProperties(CString strFileName)
   CameraParameters *camP;
   FileOptions *defFileOpt = mWinApp->mDocWnd->GetDefFileOpt();
   MacroControl *macControl = mWinApp->GetMacControl();
+  ShortVec *bsBoundaries = mWinApp->mShiftManager->GetBeamShiftBoundaries();
 #define PROP_MODULES
 #include "PropertyTests.h"
 #undef PROP_MODULES  
@@ -2066,8 +2067,10 @@ int CParameterIO::ReadProperties(CString strFileName)
             if (itemInt[1] == 8 || itemInt[1] == 11 || itemInt[1] == 12 || 
               itemInt[1] == 13)
               camP->TietzBlocks = 1024;
-            if (itemInt[1] == 15 || itemInt[1] == 16)
+            if (itemInt[1] >= 15 && itemInt[1] <= 18) {
               camP->moduloX = -9;
+              camP->moduloY = -9;
+            }
           } else if (MatchNoCase("TietzCanPreExpose"))
             camP->TietzCanPreExpose = itemInt[1] != 0;
           else if (MatchNoCase("TietzRestoreBBmode"))
@@ -2076,7 +2079,13 @@ int CParameterIO::ReadProperties(CString strFileName)
             camP->TietzGainIndex = itemInt[1];
           else if (MatchNoCase("LowestGainIndex"))
             camP->LowestGainIndex = itemInt[1];
-          else if (MatchNoCase("TietzImageGeometry"))
+          else if (MatchNoCase("SubareasByCropping"))
+            camP->cropFullSizeImages = itemInt[1];
+          else if (MatchNoCase("DropFramesStartEnd")) {
+            B3DCLAMP(itemInt[1], 0, TIETZ_DROP_FRAME_MASK);
+            B3DCLAMP(itemInt[2], 0, TIETZ_DROP_FRAME_MASK);
+            camP->dropFrameFlags = itemInt[1] + (itemInt[2] << TIETZ_DROP_FRAME_BITS);
+          } else if (MatchNoCase("TietzImageGeometry"))
             camP->TietzImageGeometry = itemInt[1];
           else if (MatchNoCase("TietzFlatfieldDir"))
             StripItems(strLine, 1, camP->TietzFlatfieldDir);
@@ -2667,6 +2676,13 @@ int CParameterIO::ReadProperties(CString strFileName)
           if (strItems[index].IsEmpty())
             break;
           scope->AddShiftBoundary(atoi((LPCTSTR)strItems[index]));
+        }
+
+      } else if (MatchNoCase("BeamShiftBoundaries")) {
+        for (index = 1; index < MAX_TOKENS; index++) {
+          if (strItems[index].IsEmpty())
+            break;
+          bsBoundaries->push_back(itemInt[index]);
         }
 
       } else if (MatchNoCase("BeamShiftCalAlphaFactors")) {
