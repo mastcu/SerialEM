@@ -302,13 +302,21 @@
         <TR vAlign="top">
           <TD class="style4">Pause [text]</TD>
           <TD>Opens message box with optional text plus question of whether to proceed with
-            script</TD>
+            script.  Is not suppressed by NoMessageBoxOnError.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style4">YesNoBox text</TD>
           <TD>Opens a Yes-No message box with the given text, which should be a question that
             can be answered with yes or no. Sets ReportedValue1 to 1 or 0 for a yes or no
-            answer.</TD>
+            answer.  If NoMessageBoxOnError is set, no box appears, the text is printed to the
+            log, and the ReportedValue is 0.
+          </TD>
+        </TR>
+       <TR vAlign="top">
+          <TD class="style4">OKBox text</TD>
+          <TD>Opens a message box with the given text and just an OK button.  The box is
+            not suppressed by NoMessageBoxOnError.  Command added in 3.8, 10/17/19.
+          </TD>
         </TR>
         <TR vAlign="top">
           <TD class="style4">EnterOneNumber text</TD>

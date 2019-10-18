@@ -162,7 +162,7 @@
         <br>
         <a href="#badSizes">Bad dialog sizes.</a>
         <br>
-        <A href="#setup_hitachi">Initial Actions and Other Special Features for Hitachi HT7700</A>
+        <A href="#setup_hitachi">Initial Actions and Other Special Features for Hitachi HT7700/HT7800</A>
         <BR>
         <A href="#setup_magtable">Checking the Magnification Table and Calibrating Neutral IS Values</A>
         <BR>
@@ -209,6 +209,7 @@
         <BR>
         <A href="#separate_kv">Setting Up for a Separate Voltage</A><br />
         <a href="#nanoprobe">Setting Up to Use Nanoprobe TEM on FEI Scopes </a>&nbsp;<BR>
+        <a href="#alpha_beamshift">Alpha and Beam Shift Calibration Issues on JEOL scopes </a>&nbsp;<BR>
         <a href="#using_gpu">Setting Up to Use a GPU for Frame Alignment</a>&nbsp;<BR>
         <a href="#adding_nvidia">Adding an NVIDIA card to a K2/K3 Computer</a>&nbsp;<BR>
         <A href="#using_film_setup">Using Film</A><BR>
@@ -3412,6 +3413,64 @@
       mode.&nbsp; After establishing the basic beam position in each mode with this 
       procedure, you can then apply additional beam shifts as necessary.</p>
       <P>&nbsp;</P>
+        <p><a name="alpha_beamshift"></a><B>Alpha and Beam Shift Calibration Issues on JEOL scopes &nbsp;</B><BR>
+          </p>
+      <P>
+        Beam shift calibration is problematic on higher-end JEOL scopes because of two 
+        factors: the effectiveness of beam shift can be very different at different 
+        alpha values; and the effectiveness of beam shift can change abruptly between 
+        two magnifications, as well as change gradually within a magnification range.</P>
+    <P>
+      The initial movement of the beam in the
+      <a href="menu_calibration.htm#hid_calibration_beamshift">beam shift calibration</a> 
+      should be at least 10 pixels to get an accurate enough estimate of the scaling 
+      for the second round of movements.&nbsp; Overall this movement is controlled by 
+      the property JEOLBeamShiftToMicrons, but this property actually sets the 
+      universal scaling of beam shift deflector values to the units used in the 
+      program, so it must not be changed after doing a successful calibration.&nbsp; 
+      Instead, the property BeamShiftCalAlphaFactors can be used to adjust the scaling 
+      for the initial movement independently for each alpha.&nbsp; (See the section on
+      <a href="about_properties.htm#JeolBeamShift">JEOL beam shift properties</a> for 
+      more details).&nbsp;
+    </P>
+    <P>
+      The problem of the beam shift calibration changing can be handled by defining 
+      one or more beam shift boundaries and calibrating beam shift separately in the 
+      magnification ranges defined by the boundaries.&nbsp; Ideally, you should 
+      calibrate beam shift in the middle of the magnification range where such a 
+      calibration applies and is to be used.&nbsp; Once you have a calibration, you 
+      can check how well it applies at other (typcially lower) magnifications by the 
+      following procedure:</P>
+    <ol>
+      <li>Adjust beam size and position so that an edge of the beam is in the periphery 
+        of a camera image.</li>
+      <li>Click with the left mouse button to set the marker on the edge of the beam</li>
+      <li>Run Move Beam in the Tasks menu (hot key Shift-M).</li>
+      <li>Take an image.&nbsp; The beam edge should be near the center of the image.&nbsp; 
+        Its distance from the center indicates the degree of inaccuracy in the 
+        calibration when used at that magnification.</li>
+    </ol>
+    <P>
+      Errors up to about 10% are to be expected; at a beam shift boundary the error 
+      will typically be 20% or more.&nbsp; When you find a boundary, add a general 
+      property 'BeamShiftBoundaries' with the index of the magnification above the 
+      boundary and restart the program.&nbsp; You will now be able to calibrate beam 
+      shift around the middle of the magnification range where it applies (to minimize 
+      the inaccuracy at the ends of that range), and the appropriate magnification 
+      will be used for all magnifications in each range.</P>
+    <P>
+      When using image shift deflectors for image shift, you might be able to 
+      accomplish the same thing with an image shift boundary (defined with 
+      OtherShiftBoundaries), but using a beam shift boundary is more direct and 
+      guarantees that the right beam shift calibration is used regardless of where the 
+      image shift boundaries are.&nbsp; When using PLA for image shift, you can 
+      actually store a calibration at each magnification, but defining a beam shift 
+      boundary is the only way to make sure the program uses the calibration 
+      appropriate for a given magnification.</P>
+    <P>
+      &nbsp;</P>
+    <P>
+      &nbsp;</P>
     <P><A name="using_gpu"></A><B>Setting Up to Use a GPU for Frame Alignment</B></P>
     <P>Frame alignment can happen in two places: in the SerialEMCCD plugin to 
       DigitalMicrograph for K2/K3 cameras, and in SerialEM itself for Falcon and DE 

@@ -1163,8 +1163,8 @@
             15 or 16 for XF416<br />
             Entries of 8, 11, 12, and 13 imply a 
             RestrictedSizeType of 4. For these cameras, make CameraSizeX and Y be the full 
-            size of 8200, 4100, or 2050, respectively, not 8192, 4096, or 2048.&nbsp; Entry 
-            15 or 16 implies a RestrictedSizeType of 9.</TD>
+            size of 8200, 4100, or 2050, respectively, not 8192, 4096, or 2048.&nbsp; Entries 
+            15 to 18 imply a RestrictedSizeType of 9.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>AMTcameraType</TD>
@@ -1272,9 +1272,10 @@
           <TD>RestrictedSizeType</TD>
           <TD>Set to 1 if acquisitions are restricted to full, half and quarter centered 
             images. Set to 2 if subarea acquisitions simply do not work; this will set 
-            SubareasAreBad to 2. Set to 3 if subareas must be centered. Set to 4 for Tietz 
-            cameras with 1024-block readout on 1025-pixel boundaries.  Set to 8 for DigiScan.&nbsp; 
-            Set to 9 for a Tietz XF416 camera, which allows sizes of 256, 512, 1024, 2048, 
+            SubareasAreBad to 2. Set to 3 if subareas must be centered. Set to 8 for DigiScan.&nbsp;
+            It is automatically set to 4 for Tietz 
+            cameras with 1024-block readout on 1025-pixel boundaries (F416, etc), and 
+            set to 9 for a Tietz XF416 camera, which allows sizes of 256, 512, 1024, 2048, 
             3072, and 4096 starting at any multiple of 256.</TD>
         </TR>
         <TR VALIGN="top">
@@ -1316,6 +1317,19 @@
           <TD>Full path of directory holding flatfield images saved by the TVIPS software.&nbsp; 
             This entry enables gain normalized image to be obtained from the TVIPS software 
             for F216, F416, and XF416 cameras.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>SubareasByCropping</TD>
+          <TD>For a Tietz camera, set to 1 to acquire full-sized images and extract subareas 
+            by cropping when obtaining normalized images from the TVIPS software, which 
+            avoids having to collect subarea flatfields and allows any subarea to be taken 
+            with flatfielding in the TVIPS software.&nbsp; Set to 2 to crop subareas from 
+            full-sized images for all images.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>DropFramesStartEnd</TD>
+          <TD>Number of frames to drop at the start and end of a burst mode (frame) 
+            acquisition from a Tietz camera.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>DMGainReferenceName</TD>
@@ -3670,7 +3684,7 @@
             mode. The default is 0.01 (measured on a 2100).</TD>
         </TR>
         <TR VALIGN="top">
-          <TD>JEOLBeamShiftToMicrons</TD>
+          <TD><a name="JeolBeamShift"></a>JEOLBeamShiftToMicrons</TD>
           <TD>Scale factor for rough conversion of beam shift values to microns. The default 
             is 0.025, the value for 300 KV, which also works at 200 KV. It needs to be 
             changed to get big enough spot movements in the first round of calibrating beam 
@@ -3691,6 +3705,17 @@
               for different alpha values.&nbsp; Enter values for the alphas in order starting 
               with alpha 1; values are not needed for all alphas and the default is 1.&nbsp; 
               On a 2200, factors of 10, 2, and 1 are appropriate.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>BeamShiftBoundaries</TD>
+          <TD>Set of magnification indexes at which the beam shift calibration changes 
+            substantially.&nbsp; Each index should be that of the higher magnification at 
+            the boundary.&nbsp; When there is a beam shift calibration on each side of a 
+            boundary (but not necessarily right at the boundary), the calibration used for a 
+            given magnification will be the one on the same side of the boundary as that 
+            magnification, not the one at the nearest calibrated magnification.&nbsp; The 
+            program will allow multiple calibrations separated by these boundaries, even if 
+            they are not separated by an image shift boundary.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>MicronsPerUnitImageShift</TD>
