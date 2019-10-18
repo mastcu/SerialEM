@@ -168,11 +168,13 @@ void CRemoteControl::Update(int inMagInd, int inCamLen, int inSpot, double inInt
   bool baseEnable = !((mWinApp->DoingTasks() && !doingOffset) || (mWinApp->mCamera && 
     mWinApp->mCamera->CameraBusy() && !mWinApp->mCamera->DoingContinuousAcquire()));
 
-  if (inMagInd != mLastMagInd || mWinApp->GetCurrentCamera() != mLastCamera) {
+  if (inMagInd != mLastMagInd || mWinApp->GetCurrentCamera() != mLastCamera || 
+    mNeedBeamSpinUpdate) {
     enable = m_iStageNotBeam || 
       mWinApp->mProcessImage->MoveBeamByCameraFraction(0., 0.) == 0;
     m_sbcBeamShift.EnableWindow(enable && baseEnable);
     m_sbcBeamLeftRight.EnableWindow(enable && baseEnable);
+    mNeedBeamSpinUpdate = false;
   }
 
   if (inMagInd != mLastMagInd || inCamLen != mLastCamLenInd) {
@@ -616,6 +618,7 @@ void CRemoteControl::SetBeamOrStage(int inVal)
   SetDlgItemText(IDC_STAT_BEAM_STAGE, inVal ? "Stage" : "Beam");
   if (needUpdate)
     UpdateData(false);
+  mNeedBeamSpinUpdate = true;
 }
 
 // Change the beam or stage step sizes

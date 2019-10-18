@@ -96,6 +96,7 @@ private:
   bool mCtrlPressed;            // Flag that Ctrl was pressed
   bool mDidExtendedTimeout;     // Flag for long timeout with Ctrl pressed started
   int mDoingTask;               // 1 if doing screen, 2 if doing stage
+  bool mNeedBeamSpinUpdate;     // Flag to update enables on beam spinner
 public:
   CSpinButtonCtrl m_sbcBeamLeftRight;
   afx_msg void OnDeltaposSpinBeamLeftRight(NMHDR *pNMHDR, LRESULT *pResult);
