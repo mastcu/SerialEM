@@ -157,6 +157,7 @@ public:
   GetSetMember(int, DisableAutoTrim);
   GetSetMember(float, HitachiStageSpecAngle);
   GetMember(BOOL, MouseShifting);
+  SetMember(float, NextAutoalignLimit);
   CArray<RotStretchXform, RotStretchXform> *GetRotXforms() {return &mRotXforms;};
   STEMinterSetShifts *GetSTEMinterSetShifts() {return &mInterSetShifts;};
   CArray<HighFocusMagCal, HighFocusMagCal> *GetFocusMagCals() {return &mFocusMagCals;};
@@ -205,6 +206,7 @@ private:
   float *mTmplPeak;
   KImage *mTmplImage;
   int mTmplBinning;
+  float mNextAutoalignLimit;   // Limit in microns for next autoalignment
   BOOL mMouseShifting;         // Flag that image is shifting with mouse, ImShift deferred
   float mMouseStartX;          // Starting shifts in the image when button down
   float mMouseStartY;

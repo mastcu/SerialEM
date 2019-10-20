@@ -98,6 +98,7 @@ CShiftManager::CShiftManager()
   mRotXforms.SetSize(0, 4);
   mStageStretchXform.xpx = 0.;
   mTmplImage = NULL;
+  mNextAutoalignLimit = -1.;
   mLastTimeoutWasIS = false;
   mBacklashMouseAndISR = false;
   mStageInvertsZAxis = -1;
@@ -433,7 +434,7 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, BOOL 
   float *Xpeaks, *Ypeaks, *peak;
   float tiltA, tiltC;
   int commonBin, size, sizeC, maxBin;
-  float stretchAxis;
+  float stretchAxis, alignLimit = -1.;
   ScaleMat str, strInv;
   float tempX, tempY;
   int numPixel, minPixel;
@@ -458,6 +459,15 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, BOOL 
   mPeakHere = NULL;
   mXpeaksHere = NULL;
   mYpeaksHere = NULL;
+
+  // Set the align limit in pre-binning pixels and use up the set value before any returns
+  // Shifts are limited in simulation mode!
+  if (mNextAutoalignLimit >= 0.) {
+    tempX = GetPixelSize(mImBufs);
+    if (tempX > 0)
+      alignLimit = mNextAutoalignLimit / tempX;
+    mNextAutoalignLimit = -1.;
+  }
 
   // Assign the supplied arrays (one way or another) or create arrays for peak values
   if (tmplCorr) {
@@ -985,6 +995,9 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, BOOL 
 
     for (int iy = 1; iy >= 0; iy--) {
       for (int ix = 1; ix >= 0 ; ix--) {
+        if (alignLimit > 0. && sqrt(xPeak[ix] * xPeak[ix] + yPeak[iy] * yPeak[iy]) * 
+          needBinA > alignLimit)
+          continue;
         CCChere = CCCoefficientTwoPads(mCrray, mArray,nxPad + 2, nxPad, nyPad,
           xPeak[ix], yPeak[iy], (nxPad - nxUseC) / 2 + 2, (nyPad - nyUseC) / 2 + 2, 
           (nxPad - nxUseA) / 2 + 2, (nyPad - nyUseA) / 2 + 2, minPixel, &numPixel);
@@ -1018,13 +1031,15 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, BOOL 
     }
 
     // Replace the peak position and keep track of best weighted CCC
-    Xpeaks[iPeak] = xPeak[xInd];
-    Ypeaks[iPeak] = yPeak[yInd];
-    if (wgtCCCmax > bestWgtCCC) {
-      bestWgtCCC = wgtCCCmax;
-      indMaxPeak = iPeak;
-      CCCbest = CCCmax;
-      fracBest = fracMax;
+    if (wgtCCCmax >= -1.) {
+      Xpeaks[iPeak] = xPeak[xInd];
+      Ypeaks[iPeak] = yPeak[yInd];
+      if (wgtCCCmax > bestWgtCCC) {
+        bestWgtCCC = wgtCCCmax;
+        indMaxPeak = iPeak;
+        CCCbest = CCCmax;
+        fracBest = fracMax;
+      }
     }
   }
   *fracPtr = fracBest;
@@ -2333,9 +2348,9 @@ void CShiftManager::PropagateRotations(void)
     iCam = mActiveCameraList[iAct];
     for (iMag = 1; iMag < MAX_MAGS; iMag++) {
       if (magT[iMag].rotation[iCam] > 900. && MagForCamera(iCam, iMag)) {
-         magT[iMag].rotation[iCam] = GoodAngle((camP[iCam].GIF ?
-           magT[iMag].EFTEMtecnaiRotation : magT[iMag].tecnaiRotation) + 
-           mGlobalExtraRotation + camP[iCam].extraRotation);; 
+        magT[iMag].rotation[iCam] = GoodAngle((camP[iCam].GIF ?
+          magT[iMag].EFTEMtecnaiRotation : magT[iMag].tecnaiRotation) +
+          mGlobalExtraRotation + camP[iCam].extraRotation);
          magT[iMag].rotDerived[iCam] = derived;
          SEMTrace('c', "Mag %d Cam %d  Rotation = %.1f by fallback",
            iMag, iCam, magT[iMag].rotation[iCam]);

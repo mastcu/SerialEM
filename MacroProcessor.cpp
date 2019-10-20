@@ -261,7 +261,7 @@ enum {CME_SCRIPTEND = -7, CME_LABEL, CME_SETVARIABLE, CME_SETSTRINGVAR, CME_DOKE
   CME_STAGETOLASTMULTIHOLE, CME_IMAGESHIFTTOLASTMULTIHOLE, CME_NAVINDEXITEMDRAWNON,
   CME_SETMAPACQUIRESTATE, CME_RESTORESTATE, CME_REALIGNTOMAPDRAWNON,
   CME_GETREALIGNTOITEMERROR, CME_DOLOOP, CME_REPORTVACUUMGAUGE, CME_REPORTHIGHVOLTAGE,
-  CME_OKBOX
+  CME_OKBOX, CME_LIMITNEXTAUTOALIGN 
 };
 
 // The two numbers are the minimum arguments and whether arithmetic is allowed
@@ -403,7 +403,8 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"StageToLastMultiHole", 0, 0}, {"ImageShiftToLastMultiHole", 0, 0}, 
 {"NavIndexItemDrawnOn", 1, 0}, {"SetMapAcquireState", 1, 0}, {"RestoreState", 0, 0},
 {"RealignToMapDrawnOn", 2, 0}, {"GetRealignToItemError", 0, 0}, {"DoLoop", 3, 1},
-{"ReportVacuumGauge", 1, 0}, {"ReportHighVoltage", 0, 0},{"OKBox", 1, 0},/*CAI3.8*/
+{"ReportVacuumGauge", 1, 0}, {"ReportHighVoltage", 0, 0},{"OKBox", 1, 0},
+{"LimitNextAutoAlign", 1, 1},/*CAI3.8*/
 {NULL, 0, 0}
 };
 // The longest is now 25 characters but 23 is a more common limit
@@ -2526,6 +2527,10 @@ void CMacroProcessor::NextCommand()
     mDisableAlignTrim = false;
     if (index2)
       SUSPEND_NOLINE("because of failure to autoalign");
+    break;
+
+  case CME_LIMITNEXTAUTOALIGN:                              // LimitNextAutoalign
+    mShiftManager->SetNextAutoalignLimit((float)itemDbl[1]);
     break;
 
   case CME_G:
