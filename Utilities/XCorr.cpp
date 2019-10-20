@@ -1841,8 +1841,8 @@ int ProcDarkSubtract(void *image, int type, int nx, int ny, short int *ref1,
   case SIGNED_SHORT:
     sdata = (short int *)image;
     for (i = 0; i < nx * ny; i++) {
-      srval = darkScale * (ref2 ?
-        (short int)((f1 * *ref1++ + f2 * *ref2++ + roundFac) >> darkBits) : *ref1++);
+      srval = darkScale * (ref2 ? (short int)((f1 * *ref1++ + f2 * *ref2++ + roundFac) 
+        >> darkBits) : *ref1++);
       *sdata++ -= srval;
     }
     break;
@@ -1869,6 +1869,9 @@ int ProcDarkSubtract(void *image, int type, int nx, int ny, short int *ref1,
   return 0;
 }
 
+#define SCALED_DARK_VAL(d1, d2) rval = \
+  darkScale * (dark2 ? ((f1 * d1[ix] + f2 * d2[ix] + roundFac) >> darkBits) : d1[ix]);
+   
 
 // Perform gain normalization using either a float or scaled integer gain reference
 // and interpolating between two dark references.
@@ -1930,8 +1933,7 @@ private(iy, ix, gainBase, dataBase, gainp, sdark1, sdark2, usdark1, usdark2, usg
         sdark2 = (short *)dark2 + dataBase;
         sdata = (short int *)image + dataBase;
         for (ix = 0; ix < nxImage; ix++) {
-          rval = darkScale * (dark2 ?
-            (f1 * sdark1[ix] + f2 * sdark2[ix] + roundFac) >> darkBits : sdark1[ix]);
+          SCALED_DARK_VAL(sdark1, sdark2);
           itmp = (int)((sdata[ix] - rval) * gainp[ix]);
           itmp = itmp < 32767 ? itmp : 32767;
           sdata[ix] = (short int)itmp;
@@ -1944,8 +1946,7 @@ private(iy, ix, gainBase, dataBase, gainp, sdark1, sdark2, usdark1, usdark2, usg
         sdark2 = (short *)dark2 + dataBase;
         sdata = (short int *)image + dataBase;
         for (ix = 0; ix < nxImage; ix++) {
-          rval = darkScale * (dark2 ?
-            (f1 * sdark1[ix] + f2 * sdark2[ix] + roundFac) >> darkBits : sdark1[ix]);
+          SCALED_DARK_VAL(sdark1, sdark2);
           itmp = ((int)(sdata[ix] - rval) * usgain[ix]) >> gainBits;
           itmp = itmp < 32767 ? itmp : 32767;
           sdata[ix] = (short int)itmp;
@@ -1962,8 +1963,7 @@ private(iy, ix, gainBase, dataBase, gainp, sdark1, sdark2, usdark1, usdark2, usg
         usdark2 = (unsigned short *)dark2 + dataBase;
         usdata = (unsigned short int *)image + dataBase;
         for (ix = 0; ix < nxImage; ix++) {
-          rval = darkScale * (dark2 ?
-            (f1 * usdark1[ix] + f2 * usdark2[ix] + roundFac) >> darkBits : usdark1[ix]);
+          SCALED_DARK_VAL(usdark1, usdark2);
           itmp = usdata[ix] > rval ? (int)((usdata[ix] - rval) * gainp[ix]) : 0;
           itmp = itmp < 65535 ? itmp : 65535;
           usdata[ix] = (unsigned short int)itmp;
@@ -1976,8 +1976,7 @@ private(iy, ix, gainBase, dataBase, gainp, sdark1, sdark2, usdark1, usdark2, usg
         usdark2 = (unsigned short *)dark2 + dataBase;
         usdata = (unsigned short int *)image + dataBase;
         for (ix = 0; ix < nxImage; ix++) {
-          rval = darkScale * (dark2 ?
-            (f1 * usdark1[ix] + f2 * usdark2[ix] + roundFac) >> darkBits : usdark1[ix]);
+          SCALED_DARK_VAL(usdark1, usdark2);
           itmp = usdata[ix] > rval ?
             ((int)(usdata[ix] - rval) * usgain[ix]) >> gainBits : 0;
           itmp = itmp < 65535 ? itmp : 65535;
