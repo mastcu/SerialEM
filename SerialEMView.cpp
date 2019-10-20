@@ -612,10 +612,14 @@ void CSerialEMView::DrawImage(void)
 
           // Image black-white and mean if available
           if (imBuf->mImageScale) {
-            letString.Format("B - W: %.5g - %.5g", imBuf->mImageScale->GetMinScale(),
-              imBuf->mImageScale->GetMaxScale());
+            letString.Format("B - W: %s - %s",
+              (LPCTSTR)FormattedNumber(imBuf->mImageScale->GetMinScale(), "", 0, 3, 
+                1.99f),
+              (LPCTSTR)FormattedNumber(imBuf->mImageScale->GetMaxScale(), "", 0, 3, 
+                1.99f));
             if (imBuf->mSampleMean > EXTRA_VALUE_TEST) {
-              firstLabel.Format("  mean: %.5g", imBuf->mSampleMean);
+              firstLabel.Format("  mean: %s", (LPCTSTR)FormattedNumber(imBuf->mSampleMean,
+                "", 0, 3, 1.99f));
               letString += firstLabel;
             }
             cdc.TextOut(mWinApp->ScaleValueForDPI(25), 

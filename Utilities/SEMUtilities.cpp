@@ -983,3 +983,24 @@ int UtilWriteTextFile(CString fileName, CString text)
     delete cFile;
   return retval;
 }
+
+// Formats a number with a range of decimal places to achieve a desired precision
+// Returns a string with the value followed by the suffix.  minDec and maxDec are
+// the minimum and maximum number of decimal places, and switchVal is a number between 1
+// and 10 where it will switch between the number of decimal places
+CString FormattedNumber(double value, const char *suffix, int minDec, int maxDec,
+  float switchVal)
+{
+  CString format, retStr;
+  int ndec = maxDec;
+  double maxTen = switchVal * pow(10., maxDec);
+  if (fabs(value) > 1. / maxTen)
+    ndec = (int)(log10(floor(maxTen / fabs(value))));
+  B3DCLAMP(ndec, minDec, maxDec);
+  format.Format("%%.%df", ndec);
+  retStr.Format(format, value);
+  if (ndec > 0)
+    retStr = retStr.TrimRight('0');
+  retStr = retStr.TrimRight('.');
+  return retStr + suffix;
+}
