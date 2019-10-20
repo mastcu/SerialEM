@@ -299,7 +299,7 @@ BOOL CFrameAlignDlg::OnInitDialog()
         mShowWhereToAlign = false;
     }
   }
-  mShowRestrictions = mShowWhereToAlign || constrainByRes;
+  mShowRestrictions = (mShowWhereToAlign || constrainByRes) && m_iWhereAlign > 0;
 
   // Load the set names and set the index
   for (ind = 0; ind < (int)mParams->GetSize(); ind++)
