@@ -440,6 +440,7 @@ CEMscope::CEMscope()
   mMaxSpotWithBeamShift[1] = 0;
   mHitachiSpotStepDelay = 300;
   mHitachiSpotBeamWait = 120;
+  mHitachiDoesBSforIS = 0;
   mLastNormMagIndex = -1;
   mFakeMagIndex = 1;
   mFakeScreenPos = spUp;
@@ -2612,9 +2613,10 @@ BOOL CEMscope::ChangeImageShift(double shiftX, double shiftY, BOOL bInc)
     mPlugFuncs->SetImageShift(shiftX, shiftY);
     if (JEOLscope)
       GetValuesFast(1);
-    needBeamShift = (JEOLscope || HitachiScope) && !(mWinApp->ScopeHasSTEM() && 
-      mPlugFuncs->GetSTEMMode && mPlugFuncs->GetSTEMMode());
-    if (needBeamShift)
+    magIndex = -1;
+    needBeamShift = (JEOLscope || (HitachiNeedsBSforIS(magIndex))) && 
+      !(mWinApp->ScopeHasSTEM() && mPlugFuncs->GetSTEMMode && mPlugFuncs->GetSTEMMode());
+    if (needBeamShift && magIndex < 0)
       magIndex = mPlugFuncs->GetMagnificationIndex();
     if (JEOLscope)
       GetValuesFast(-1);
@@ -2640,6 +2642,21 @@ BOOL CEMscope::ChangeImageShift(double shiftX, double shiftY, BOOL bInc)
   }
   ScopeMutexRelease("ChangeImageShift");
   return success;
+}
+
+// Returns true if a Hitachi scope needs the beam shift in the current mode; returns
+// mag index if it comes is as -1.  returns false for other scopes
+bool CEMscope::HitachiNeedsBSforIS(int &magIndex)
+{
+  if (!mHitachiDoesBSforIS)
+    return HitachiScope;
+  if (magIndex < 0)
+    magIndex = mPlugFuncs->GetMagnificationIndex();
+  if (magIndex < mLowestMModeMagInd)
+    return (mHitachiDoesBSforIS & 4) == 0;
+  if (magIndex >= mLowestSecondaryMag)
+    return (mHitachiDoesBSforIS & 2) == 0;
+  return (mHitachiDoesBSforIS & 1) == 0;
 }
 
 // Get the image shift offsets needed to center on the tilt axis, if mode selected

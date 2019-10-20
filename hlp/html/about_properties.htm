@@ -24,6 +24,9 @@
         .auto-style1 {
             height: 24px;
         }
+      .auto-style2 {
+        width: 998px;
+      }
     --></style>
   </HEAD>
   <BODY BGCOLOR="#ffffff" TEXT="#000000">
@@ -1880,7 +1883,7 @@
               alignment that SerialEM provides for direct detectors, which is suitable for 
               low-dose images and can run on an NVIDIA GPU.&nbsp; If these capabilties are 
               turned on by default for a particular camera, enter 0 to have them not appear in
-              the Camera Setup dialog.</TD>
+              the Camera Setup dialog.  The default is 3 for Tietz XF416 and 0 otherwise.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>FrameTimeDivisors</TD>
@@ -1897,7 +1900,10 @@
         <TR VALIGN="top">
           <TD>MinimumFrameTimes</TD>
           <TD>Shortest allowed frame time for each binning, for a camera with CanTakeFrames set.  
-              The default values are the ones entered or provided for FrameTimeDivisors. </TD>
+              The default values are the ones entered or provided for FrameTimeDivisors, 
+            except for Tietz cameras, where the default is 0.04 for XF416 and 
+            0.1 per 1024 pixels in Y on the sensor for Fx16 cameras. For these cameras, 
+            shorter frames can be taken for subareas.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>EndCameraProperties</TD>
@@ -3758,76 +3764,84 @@
       <TABLE BORDER cols="2">
         <TR VALIGN="top">
           <TD class="style3">HitachiIPaddress</TD>
-          <TD class="style2">IP address of Hitachi microscope server; the default is 
+          <TD class="auto-style2">IP address of Hitachi microscope server; the default is 
             192.168.10.1 and simulator may need 127.0.01.&nbsp; </TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style3">HitachiPort</TD>
-          <TD class="style2">Port number of Hitachi microscope server; the default is 12050 
+          <TD class="auto-style2">Port number of Hitachi microscope server; the default is 12050 
             and simulator may need 12053.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style3">HitachiBeamBlankAxis</TD>
-          <TD class="style2">Coil and axis to use for beam blanking and shuttering: 0 or 1 
+          <TD class="auto-style2">Coil and axis to use for beam blanking and shuttering: 0 or 1 
             for X or Y axes of the gun shift coil or 2 or 3 for X or Y axes of the gun tilt 
             coil.&nbsp; The default is 0.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style3">HitachiBeamBlankDelta</TD>
-          <TD class="style2">Amount to change coil to blank the beam, a value between -1 and 
+          <TD class="auto-style2">Amount to change coil to blank the beam, a value between -1 and 
             1.&nbsp; The default is 0.5.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style3">HitachiPAforHRmodeIS</TD>
-          <TD class="style2">Set to 1 to use projector shift instead of intermediate lens 
-            shift for image shift in HR mode.</TD>
+          <TD class="auto-style2">Set to 1 to use projector shift instead of intermediate 
+            lens shift for image shift in HR mode, or 2 to use ISF, the same coils used for 
+            HC mode.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style3">HitachiDoesBSforISflags</TD>
+          <TD class="auto-style2">Flags indicating in which magnification modes the Hitachi scope
+            does beam shift when an image shift is applied, so that SerialEM will not 
+            do the beam shift: the sum of 1 for HC mode, 2 for HR mode, 4 for LM mode.
+          </TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style3">HitachiTiltSpeed</TD>
-          <TD class="style2">A value between 40 and 127 that controls tilting speed; the 
+          <TD class="auto-style2">A value between 40 and 127 that controls tilting speed; the 
             default is 100.&nbsp; If it is 0, then the program will not set the tilt speed.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style3">HitachiStageSpeed</TD>
-          <TD class="style2">A value between 200 and 160000 that controls stage movement in 
+          <TD class="auto-style2">A value between 200 and 160000 that controls stage movement in 
             X/Y nonlinearly.&nbsp; The default is 80000, which is about equivalent to the 
             speed of 9 in the Hitachi user interface.&nbsp; If this value is 0, the program 
             will not set stage speed.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style3">HitachiImageShiftToMicrons</TD>
-          <TD class="style2">Factor used by the plugin to scale image shift to approxiamte 
+          <TD class="auto-style2">Factor used by the plugin to scale image shift to approxiamte 
             microns.&nbsp; The default is 50.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style3">HitachiBeamShiftToMicrons</TD>
-          <TD class="style2">Factor used by the plugin to scale beam shift to approximate 
+          <TD class="auto-style2">Factor used by the plugin to scale beam shift to approximate 
             microns.&nbsp; The default is 100.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style3">HitachiObjectiveToMicrons</TD>
-          <TD class="style2">Factor for scaling objective lens values to microns; the 
+          <TD class="auto-style2">Factor for scaling objective lens values to microns; the 
             default is 10000.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style3">HitachiI1ToMicrons</TD>
-          <TD class="style2">Factor for scaling intermediate 1 lens values to microns in 
+          <TD class="auto-style2">Factor for scaling intermediate 1 lens values to microns in 
             low-mag mode; the default is 10000.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style3">HitachiScreenArea</TD>
-          <TD class="style2">Factor for scaling current density value to current, namely
+          <TD class="auto-style2">Factor for scaling current density value to current, namely
               the area of the screen in square cm.  The default is 150.  Set to 0 if the 
               current readout does not work.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style3">HitachiZMicronsPerGroove</TD>
-          <TD class="style2">Number of microns of Z movement per groove on the Z knob.&nbsp; 
+          <TD class="auto-style2">Number of microns of Z movement per groove on the Z knob.&nbsp; 
             The default is 3.1.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style3">HitachiSpotStepDelay</TD>
-          <TD class="style2">Delay time between changing spots when the program drops down 
+          <TD class="auto-style2">Delay time between changing spots when the program drops down 
             to spot 1 and steps up to a desired spot number instead of decreasing the spot 
             size. The default is 120.</TD>
         </TR>

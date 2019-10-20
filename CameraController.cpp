@@ -4959,6 +4959,8 @@ int CCameraController::CapSaveStageMagSetupDynFocus(ControlSet & conSet, int inS
   } else
     mMagBefore = mScope->FastMagIndex();
   mTD.IStoBS = mShiftManager->GetBeamShiftCal(mMagBefore);
+  if (mTD.PostImageShift && HitachiScope && !mScope->HitachiNeedsBSforIS(mMagBefore))
+    mTD.IStoBS.xpx = 0.;
   
   // Now ready to set up parameters for drift compensation, or dynamic focus, and to set
   // the rotation angle for STEM

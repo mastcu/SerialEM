@@ -313,6 +313,7 @@ class DLL_IM_EX CEMscope
   BOOL GetJeolReadStageForWait();
   GetSetMember(BOOL, SkipAdvancedScripting);
   GetSetMember(BOOL, ChangeAreaAtZeroIS);
+  GetSetMember(int, HitachiDoesBSforIS);
 
   static void SetJeolIndForMagMode(int inVal);
   static int GetJeolIndForMagMode();
@@ -669,6 +670,7 @@ private:
   int mHitachiModeChgDelay;   // Amount of time to wait before managing IS
   int mHitachiSpotStepDelay;  // Msec between stepping up in spot sizes
   int mHitachiSpotBeamWait;
+  int mHitachiDoesBSforIS;    // Flags for which modes Hitachi does image-beam shift in
   int mHighestLMindexToScan;  // Last index of enabled LM mags, if any are disabled
   int mCheckFreeK2RefCount;   // Counter for checking K2 reference freeing
   int mLastNormMagIndex;      // Mag of last normalization
@@ -826,6 +828,7 @@ public:
   int GetCurrentPhasePlatePos(void);
   void PositionChangingPartOfIS(double curISX, double curISY, float &posChangingISX, float &posChangingISY);
   void IncOrAccumulateBeamShift(double beamDelX, double beamDelY, const char *descrip);
+  bool HitachiNeedsBSforIS(int &magIndex);
 };
 
 

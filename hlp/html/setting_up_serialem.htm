@@ -1098,7 +1098,17 @@
           ExtraBeamTime and StartupDelay will be set from a timing calibration.
         <LI>
           Set TietzCanPreExpose to 1 if the camera has a shuttering mode that allows 
-          pre-exposure of the specimen, using the film shutter and beam blanker.</LI></UL>
+          pre-exposure of the specimen, using the film shutter and beam blanker.</LI>
+        <LI>
+          Frame alignment and saving using burst mode are enabled by default for XF416 
+          cameras; the property CanTakeFrames can be added and set to 1, 2, or 0 to hide 
+          the controls for aligning, saving, or both.&nbsp; For the older Fn16 cameras, if 
+          burst mode is available, you can make these features available by adding this 
+          property with a value of 3.</LI>
+        <LI>
+          To use a GPU for frame alignment, see <a href="#using_gpu">Setting Up to Use a 
+        GPU for Frame Alignment</a>, but ignore statements about the K2 or K3 and its card 
+          configurations.</LI></UL>
       <P><a name="connectDMsocket"><i>To connect to 
         DigitalMicrograph through a socket interface</i></a> on the same or a different 
         computer, <i>such as</i> <i>for a K2/K3 camera with SerialEM running on an FEI microscope</i>, you need to do the following:</P>
