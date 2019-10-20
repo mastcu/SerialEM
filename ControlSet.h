@@ -503,7 +503,7 @@ struct HitachiParams {
   std::string port;
   int beamBlankAxis;
   float beamBlankDelta;
-  BOOL usePAforHRmodeIS;
+  int usePAforHRmodeIS;
   float imageShiftToUm;
   float beamShiftToUm;
   float beamTiltScale;

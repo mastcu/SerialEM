@@ -2849,7 +2849,7 @@ int CParameterIO::ReadProperties(CString strFileName)
       else if (MatchNoCase("HitachiBeamBlankDelta"))
         hitachi->beamBlankDelta = (float)itemDbl[1];
       else if (MatchNoCase("HitachiPAforHRmodeIS"))
-        hitachi->usePAforHRmodeIS = itemInt[1] != 0;
+        hitachi->usePAforHRmodeIS = itemInt[1];
       else if (MatchNoCase("HitachiTiltSpeed"))
         hitachi->stageTiltSpeed = itemInt[1];
       else if (MatchNoCase("HitachiStageSpeed"))

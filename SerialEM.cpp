@@ -610,7 +610,7 @@ CSerialEMApp::CSerialEMApp()
   mHitachiParams.port = "12050";
   mHitachiParams.beamBlankAxis = 0;
   mHitachiParams.beamBlankDelta = 0.5f;
-  mHitachiParams.usePAforHRmodeIS = false;
+  mHitachiParams.usePAforHRmodeIS = 0;
   mHitachiParams.imageShiftToUm = 50.;
   mHitachiParams.beamShiftToUm = 100.;
   mHitachiParams.beamTiltScale = 100.;
