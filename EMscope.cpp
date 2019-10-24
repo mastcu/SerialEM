@@ -7731,7 +7731,7 @@ int CEMscope::LookupScriptingCamera(CameraParameters *params, bool refresh,
       if (params->FEItype == FALCON3_TYPE && mWinApp->mCamera->GetFalconReadoutInterval()
         > 0.05)
           mWinApp->mCamera->SetFalconReadoutInterval(mFalcon3ReadoutInterval);
-      if (params->FEItype == FALCON3_TYPE && !params->addToExposure)
+      if (params->FEItype == FALCON3_TYPE && params->addToExposure < -1.)
         params->addToExposure = mAddToFalcon3Exposure;
     } else {
       params->minimumDrift = (float)B3DMAX(params->minimumDrift, minDrift);

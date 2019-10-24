@@ -1693,12 +1693,13 @@
           <TD>AddToExposureTime</TD>
           <TD>Amount to add to the specified exposure time, in seconds, to get the proper 
             exposure from the camera.&nbsp; For Falcon 3, the default is 0.013, which is needed at least
-             through server version 6.9 as of March 2018 (corresponding to a x.9 version of 
-             the software for the particular model line).  Without this value, saving every 
-             frame with an exposure time less than 0.8 sec crashes the program.&nbsp; The 
-            test for whether a value is needed is to see whether exposures of 0.025 and 0.05 
-            second give the same number of counts.&nbsp; To set the value to 0, enter an 
-            number insignificantly different from 0, like 0.0001.</TD>
+             through server version 6.15 (corresponding to a x.15 version of 
+             the software for the particular model line), and probably always will be needed.
+             Without this value, saving every 
+             frame with an exposure time less than 0.8 sec crashes SerialEM or FEI-SEMserver.&nbsp; The 
+            test for whether a different value is needed is to see whether a 0.05 sec exposure 
+            gives twice as many counts as a 0.025 sec exposure.  If not, try a value of 0 then 
+            values between 0 and 0.013.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>PostBlankerDelay</TD>
