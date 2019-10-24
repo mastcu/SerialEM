@@ -1624,9 +1624,8 @@ int EMmontageController::DoNextPiece(int param)
       // Stage was not moved: need to move it.  Do image shift first
       if (mDoISrealign && mAdjacentForIS[mPieceIndex] >= 0) {
         if (!mFocusAfterStage && !mNeedColumnBacklash) {
-          SEMTrace('S', "Setting image shift for realign of %.3f, %.3f", adjISX, adjISY);
-          mScope->SetImageShift(adjISX, adjISY);
-          mShiftManager->SetISTimeOut(alignISDelayFac * mShiftManager->GetLastISDelay());
+          if (SetImageShiftTestClip(adjISX, adjISY, alignISDelayFac))
+            return 1;
           mNeedISforRealign = false;
         } else
           mNeedISforRealign = true;
@@ -1706,9 +1705,8 @@ int EMmontageController::DoNextPiece(int param)
 
       // Set the image shift if it was not queued and was deferred above
       if (mNeedISforRealign || mFocusAfterStage) {
-        SEMTrace('S', "Setting image shift for realign of %.3f, %.3f", adjISX, adjISY);
-        mScope->SetImageShift(adjISX, adjISY);
-        mShiftManager->SetISTimeOut(alignISDelayFac * mShiftManager->GetLastISDelay());
+        if (SetImageShiftTestClip(adjISX, adjISY, alignISDelayFac))
+          return 1;
       }
       mNeedISforRealign = false;
       if (!RealignToExistingPiece())
@@ -4642,4 +4640,22 @@ int EMmontageController::TestStageError(double ISX, double ISY, double &sterr)
     }
   }
   return 1;
+}
+
+// Sets an image shift and tests whether it was clipped, stops montage unconditionally
+int EMmontageController::SetImageShiftTestClip(double adjISX, double adjISY,
+  float delayFac)
+{
+  SEMTrace('S', "Setting image shift for realign of %.3f, %.3f", adjISX, adjISY);
+  mScope->SetImageShift(adjISX, adjISY);
+  if (mScope->GetISwasClipped()) {
+    mWinApp->AppendToLog("Montage stopped due to image shift being clipped.  The"
+    " image shift for\r\n   realigning may be too large with current neutral "
+      "values and IS offsets");
+    if (!mScope->GetMessageWhenClipIS())
+      StopMontage();
+    return 1;
+  }
+  mShiftManager->SetISTimeOut(delayFac * mShiftManager->GetLastISDelay());
+  return 0;
 }
