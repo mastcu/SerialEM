@@ -2129,6 +2129,8 @@ int CParameterIO::ReadProperties(CString strFileName)
             camP->taskTargetSize = itemInt[1];
           else if (MatchNoCase("AllowPostActions"))
             camP->postActionsOK = itemInt[1];
+          else if (MatchNoCase("AddToExposureTime"))
+            camP->addToExposure = (float)itemDbl[1];
           else if (MatchNoCase("CanTakeFrames"))
             camP->canTakeFrames = itemInt[1];
           else if (MatchNoCase("MinimumFrameTimes"))
