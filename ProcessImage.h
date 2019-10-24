@@ -212,7 +212,7 @@ public:
   afx_msg void OnSetDoseRate();
   afx_msg void OnUpdateSetDoseRate(CCmdUI *pCmdUI);
   void DoUpdateSetintensity(CCmdUI* pCmdUI, bool doseRate);
-  void DoSetIntensity(bool doseRate);
+  int DoSetIntensity(bool doseRate, float useFactor);
   afx_msg void OnPixelsizeCatalaseCrystal();
   afx_msg void OnUpdatePixelsizeCatalaseCrystal(CCmdUI *pCmdUI);
   afx_msg void OnProcessCropAverage();

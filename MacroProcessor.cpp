@@ -261,7 +261,7 @@ enum {CME_SCRIPTEND = -7, CME_LABEL, CME_SETVARIABLE, CME_SETSTRINGVAR, CME_DOKE
   CME_STAGETOLASTMULTIHOLE, CME_IMAGESHIFTTOLASTMULTIHOLE, CME_NAVINDEXITEMDRAWNON,
   CME_SETMAPACQUIRESTATE, CME_RESTORESTATE, CME_REALIGNTOMAPDRAWNON,
   CME_GETREALIGNTOITEMERROR, CME_DOLOOP, CME_REPORTVACUUMGAUGE, CME_REPORTHIGHVOLTAGE,
-  CME_OKBOX, CME_LIMITNEXTAUTOALIGN 
+  CME_OKBOX, CME_LIMITNEXTAUTOALIGN, CME_SETDOSERATE
 };
 
 // The two numbers are the minimum arguments and whether arithmetic is allowed
@@ -404,7 +404,7 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"NavIndexItemDrawnOn", 1, 0}, {"SetMapAcquireState", 1, 0}, {"RestoreState", 0, 0},
 {"RealignToMapDrawnOn", 2, 0}, {"GetRealignToItemError", 0, 0}, {"DoLoop", 3, 1},
 {"ReportVacuumGauge", 1, 0}, {"ReportHighVoltage", 0, 0},{"OKBox", 1, 0},
-{"LimitNextAutoAlign", 1, 1},/*CAI3.8*/
+{"LimitNextAutoAlign", 1, 1},{"SetDoseRate", 1, 0},/*CAI3.8*/
 {NULL, 0, 0}
 };
 // The longest is now 25 characters but 23 is a more common limit
@@ -5270,6 +5270,21 @@ void CMacroProcessor::NextCommand()
     UpdateLDAreaIfSaved();
     break;
 
+  case CME_SETDOSERATE:                                     // SetDoseRate
+    if (itemDbl[1] <= 0)
+      ABORT_LINE("Dose rate must be positive for line:\n\n");
+    if (!mImBufs->mImage)
+      ABORT_LINE("There must be an image in buffer A for line:\n\n");
+    index = mWinApp->mProcessImage->DoSetIntensity(true, (float)itemDbl[1]);
+    if (index < 0) {
+      AbortMacro();
+      return;
+    }
+    if (CheckIntensityChangeReturn(index))
+      return;
+    UpdateLDAreaIfSaved();
+    break;
+
   case CME_SETPERCENTC2:   // Set/IncPercentC2
   case CME_INCPERCENTC2:
 
@@ -7047,7 +7062,8 @@ void CMacroProcessor::SuspendMacro(BOOL abort)
     mWinApp->mTSController->GetRunningMacro() ? MEDIUM_PANE : COMPLEX_PANE, 
     (IsResumable() && mWinApp->mNavigator && mWinApp->mNavigator->GetAcquiring()) ?
     "STOPPED NAV SCRIPT" : "");
-  mWinApp->SetStatusText(SIMPLE_PANE, "");
+  if (!mCamera->CameraBusy())
+    mWinApp->SetStatusText(SIMPLE_PANE, "");
   mWinApp->mScopeStatus.SetWatchDose(false);
   mWinApp->mDocWnd->SetDeferWritingFrameMdoc(false);
 }
@@ -8995,7 +9011,7 @@ int CMacroProcessor::CheckIntensityChangeReturn(int err)
       report = "Error trying to change beam strength";
       if (err == BEAM_STRENGTH_NOT_CAL || err == BEAM_STRENGTH_WRONG_SPOT)
         report += "\nBeam strength is not calibrated for this spot size";
-      AfxMessageBox(report, MB_EXCLAME);
+      SEMMessageBox(report, MB_EXCLAME);
       AbortMacro();
       return 1;
     }

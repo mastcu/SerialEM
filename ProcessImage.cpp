@@ -768,10 +768,10 @@ void CProcessImage::OnUpdateProcessZerotiltmean(CCmdUI* pCmdUI)
 
 void CProcessImage::OnProcessSetintensity() 
 {
-  DoSetIntensity(false);
+  DoSetIntensity(false, -1.);
 }
 
-void CProcessImage::DoSetIntensity(bool doseRate) 
+int CProcessImage::DoSetIntensity(bool doseRate, float useFactor)
 {
   int bufNum = 0;
   int error, ldArea;
@@ -781,10 +781,10 @@ void CProcessImage::DoSetIntensity(bool doseRate)
   CString infoLine, query;
 
   if (mImBufs->IsProcessed()) {
-    AfxMessageBox("This command operates on the image in Buffer A\n"
+    SEMMessageBox("This command operates on the image in Buffer A\n"
       "and there is a processed image in that buffer.\n\n"
       "Put an acquired image in Buffer A and try again.", MB_EXCLAME);
-    return;
+    return -1;
   }
 
   // Get mean of full image
@@ -829,8 +829,12 @@ void CProcessImage::DoSetIntensity(bool doseRate)
       ldArea = -1;
   }
 
-  if (!KGetOneFloat(infoLine, query, factor, 1))
-    return;
+  if (useFactor <= 0) {
+    if (!KGetOneFloat(infoLine, query, factor, 1))
+      return 0;
+  } else {
+    factor = useFactor;
+  }
 
   if (factor <= 10. && !doseRate)
     delta = factor;
@@ -838,13 +842,14 @@ void CProcessImage::DoSetIntensity(bool doseRate)
     delta = factor / oldMean;
 
   error = mWinApp->mBeamAssessor->ChangeBeamStrength(delta, ldArea);
-  if (error) {
+  if (error && useFactor <= 0.) {
     if (error == BEAM_STARTING_OUT_OF_RANGE || error == BEAM_ENDING_OUT_OF_RANGE)
       AfxMessageBox("Warning: attempting to set beam strength beyond"
         " calibrated range", MB_EXCLAME);
     else
       AfxMessageBox("Error trying to change beam strength", MB_EXCLAME);
   }
+  return error;
 }
 
 void CProcessImage::OnUpdateProcessSetintensity(CCmdUI* pCmdUI) 
@@ -882,7 +887,7 @@ void CProcessImage::DoUpdateSetintensity(CCmdUI* pCmdUI, bool doseRate)
 
 void CProcessImage::OnSetDoseRate()
 {
-  DoSetIntensity(true);
+  DoSetIntensity(true, -1.);
 }
 
 void CProcessImage::OnUpdateSetDoseRate(CCmdUI *pCmdUI)

@@ -3,6 +3,13 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+10/24/19: Prevented clipping of image shift on JEOL from screwing up beam
+shift.
+
+10/24/19: Added script command to set dose rate.
+
+10/24/19: Restored AddToExposureTime, lost 9/18/19.
+
 10/21/19: Fixed setting of default AddToExposureTime for Falcon (In 3.7).
 
 10/20/19: Added script command to limit autoalignment shift distance.
@@ -49,17 +56,17 @@ Record (In 3.7).
 instead of smallest polygon/map that point is in (in 3.7).
 
 9/23/19: 3-8-0beta5
-9/18/17: Enabled saving or aligning frames in the SEMCCD plugin for OneView
+9/18/19: Enabled saving or aligning frames in the SEMCCD plugin for OneView
 and Rio cameras, just as for K2/K3, and add general framework from
 saving/aligning frames in SerialEM for other cameras.
 
-9/18/17: Added DoLoop command with index variable and start, end, and
+9/18/19: Added DoLoop command with index variable and start, end, and
 increment values.
 
-9/18/17: Beam shift in scope control panel now does diffraction shift in
+9/18/19: Beam shift in scope control panel now does diffraction shift in
 diffraction mode.
 
-9/18/17: Added script commands for getting a vacuum gauge value and
+9/18/19: Added script commands for getting a vacuum gauge value and
 controlling stage piezos on JEOLs.
 
 9/10/19: Enabled screen current output on Hitachi (In 3.7).
@@ -272,7 +279,7 @@ and added options to the tilt script commands for using it.
 5/24/19: Added property to set interval over which dose calibration is
 considered valid.
 
-5/24/19: Fixed Setup supermontage, broken 8/16/17 (In 3.7).
+5/24/19: Fixed Setup supermontage, broken 8/16/19 (In 3.7).
 
 5/22/19: Made RecordAndTiltTo command set sign of backlash properly (In 3.7).
 
