@@ -7839,9 +7839,12 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
         double shiftX, shiftY, ISdelX, ISdelY;
         if (td->IStoBS.xpx && (HitachiScope || JEOLscope))
           td->scopePlugFuncs->GetImageShift(&shiftX, &shiftY);
+        CEMscope::SetISwasClipped(false);
         td->scopePlugFuncs->SetImageShift(td->ISX, td->ISY);  // And here in microns
         CEMscope::SetISChanged(td->ISX, td->ISY);
         if (td->IStoBS.xpx && (HitachiScope || JEOLscope)) {
+          if (CEMscope::GetISwasClipped())
+            td->scopePlugFuncs->GetImageShift(&td->ISX, &td->ISY);
           ISdelX = td->ISX - shiftX;
           ISdelY = td->ISY - shiftY;
           td->scopePlugFuncs->GetBeamShift(&shiftX, &shiftY);
