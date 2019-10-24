@@ -268,6 +268,8 @@ class DLL_IM_EX CEMscope
   GetSetMember(BOOL, UseCLA2forSTEM);
   GetMember(int, ChangingLDArea);
   BOOL GetClippingIS();
+  static BOOL GetISwasClipped();
+  static void SetISwasClipped(BOOL val);
   GetSetMember(double, JeolSTEMdefocusFac);
   GetSetMember(int, JeolSTEMrotation);
   SetMember(int, JeolSwitchSTEMsleep);

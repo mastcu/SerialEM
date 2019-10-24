@@ -85,6 +85,7 @@ static double sCloseValvesStart;          // Start of interval
 static double sProbeChangedTime = -1.;
 static double sDiffSeenTime = -1.;
 static BOOL sClippingIS = false;
+static BOOL sISwasClipped = false;
 static CString sLongOpDescriptions[MAX_LONG_THREADS];
 static int sLongThreadMap[MAX_LONG_OPERATIONS];
 static int sJeolIndForMagMode = JEOL_MAG1_MODE;  // Index to use in mag mode for JEOL
@@ -2610,9 +2611,17 @@ BOOL CEMscope::ChangeImageShift(double shiftX, double shiftY, BOOL bInc)
     }
 
     // Make the movements; get mag if not STEM mode and need beam shift
+    sISwasClipped = false;
     mPlugFuncs->SetImageShift(shiftX, shiftY);
     if (JEOLscope)
       GetValuesFast(1);
+    if (sISwasClipped) {
+      mPlugFuncs->GetImageShift(&plugISX, &plugISY);
+      mLastISdelX += (plugISX - shiftX);
+      mLastISdelY += (plugISY - shiftY);
+      shiftX = plugISX;
+      shiftY = plugISY;
+    }
     magIndex = -1;
     needBeamShift = (JEOLscope || (HitachiNeedsBSforIS(magIndex))) && 
       !(mWinApp->ScopeHasSTEM() && mPlugFuncs->GetSTEMMode && mPlugFuncs->GetSTEMMode());
@@ -7094,10 +7103,21 @@ int CEMscope::GetSpectroscopyMode()
   return mode;
 }
 
-
 BOOL CEMscope::GetClippingIS()
 {
   return sClippingIS;
+}
+
+// Return whether IS was clipped: this is valid only if SetISwasClipped is called
+// with false before setting IS
+BOOL CEMscope::GetISwasClipped()
+{
+  return sISwasClipped;
+}
+
+void CEMscope::SetISwasClipped(BOOL val) 
+{
+  sISwasClipped = val;
 }
 
 // This replaces LimitJeolImageShift - the plugin calls this when it happens
@@ -7109,13 +7129,14 @@ void SEMClippingJeolIS(long &jShiftX, long &jShiftY)
     message.Format("The image shift values, %d  %d, are out of range and are being "
       "clipped\n\nTracking may be incorrect - you should reset image shift and check "
       "image position", jShiftX, jShiftY);
-    AfxMessageBox(message, MB_EXCLAME);
+    SEMMessageBox(message, MB_EXCLAME);
     sClippingIS = false;
     SEMErrorOccurred(1);
   }
 
   SEMTrace('1', "Image shift 0x%X  0x%X out of range, being clipped to limits",
     jShiftX, jShiftY);
+  sISwasClipped = true;
 }
 
 // Set the stage timeout after a mag change if needed
