@@ -336,7 +336,7 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"PreCookMontage", 1, 1}, {"ReportAlignTrimming", 0, 0}, {"NormalizeAllLenses", 0, 0},
 {"AddToAutodoc", 2}, {"IsVariableDefined", 1, 0}, {"EnterDefaultedNumber", 3, 0},
 {"SetupWaffleMontage", 2, -1}, {"IncMagIfFoundPixel", 1, 0}, {"ResetDefocus", 0, 0},
-{"WriteAutodoc",0,0}, {"ElectronStats",1,0}, {"ErrorsToLog", 0,0}, {"FlashDisplay", 0,0},
+{"WriteAutodoc",0,0}, {"ElectronStats",0,0}, {"ErrorsToLog", 0,0}, {"FlashDisplay", 0,0},
 {"ReportProbeMode",0,0},{"SetProbeMode",1,0},{"SaveLogOpenNew",0,0},{"SetAxisPosition",2,0}
 , {"AddToFrameMdoc", 2, 0}, {"WriteFrameMdoc", 0, 0}, {"ReportFrameMdocOpen", 0, 0},
 {"ShiftCalSkipLensNorm",0,0}, {"ReportLastAxisOffset",0,0}, {"SetBeamTilt",2,0},//end in 3.5
@@ -366,7 +366,7 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"ReportImageDistanceOffset", 0, 0}, {"SetImageDistanceOffset", 1, 0},
 {"ReportCameraLength", 0, 0}, {"SetDECamFrameRate", 1, 0}, {"SkipMoveInNavAcquire", 0, 0},
 {"TestRelaxingStage", 2, 1}, {"RelaxStage", 0, 1}, {"SkipFrameAliParamCheck", 0, 0},
-{"IsVersionAtLeast", 1, 0}, {"SkipIfVersionLessThan", 1, 0}, {"RawElectronStats", 1, 0},
+{"IsVersionAtLeast", 1, 0}, {"SkipIfVersionLessThan", 1, 0}, {"RawElectronStats", 0, 0},
 {"AlignWholeTSOnly", 0, 0}, {"WriteComForTSAlign", 0, 0}, {"RecordAndTiltTo", 1, 1},
 {"ArePostActionsEnabled", 0, 0}, {"MeasureBeamSize", 0, 0}, {"MultipleRecords", 0, 1},
 {"MoveBeamByMicrons",2,1}, {"MoveBeamByFieldFraction", 2, 1}, {"NewDEserverDarkRef", 2,0},
