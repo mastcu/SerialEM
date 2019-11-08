@@ -7731,9 +7731,10 @@ int CEMscope::LookupScriptingCamera(CameraParameters *params, bool refresh,
       params->CamFlags = params->eagleIndex & ~PLUGFEI_INDEX_MASK;
       SEMTrace('E', "index ret %x  flags %x", params->eagleIndex, params->CamFlags);
       if (doMessage) {
-        mWinApp->AppendToLog(CString("Connected to ") + 
-          ((params->CamFlags & PLUGFEI_USES_ADVANCED) ? "Advanced" : "Standard") + 
-          " Scripting interface for FEI camera access");
+        mWinApp->AppendToLog(CString("Connected to ") +
+          B3DCHOICE(params->CamFlags & PLUGFEI_USES_ADVANCED, "Advanced", "Standard") +
+          " Scripting interface for FEI camera access" + B3DCHOICE(
+          mSkipAdvancedScripting, " because property SkipAdvancedScripting is set!", ""));
         doMessage = false;
       }
       if (params->CamFlags & PLUGFEI_USES_ADVANCED) {
