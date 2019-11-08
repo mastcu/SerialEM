@@ -7463,8 +7463,10 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
     }
   }
   catch(CFileException *perr) {
+    TCHAR szCause[255];
+    perr->GetErrorMessage(szCause, 255);
     perr->Delete();
-    str = "Error reading from file " + mNavFilename;
+    str = "Error reading from file " + mNavFilename + ":" + szCause;
     SEMMessageBox(str, MB_EXCLAME);
     returnVal = 1;
   } 
