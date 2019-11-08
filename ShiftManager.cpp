@@ -2786,7 +2786,7 @@ ScaleMat CShiftManager::GetBeamShiftCal(int magInd, int inAlpha, int inProbe)
 // List the beam shift calibrations
 void CShiftManager::ListBeamShiftCals()
 {
-  int ind, iCam = mWinApp->GetCurrentCamera();
+  int ind, iCam = mWinApp->GetCurrentCamera(), useMag;
   CString str1, str2;
   ScaleMat prod, specToIS;
   if (!mNumBeamShiftCals)
@@ -2805,14 +2805,17 @@ void CShiftManager::ListBeamShiftCals()
     else if (JEOLscope && !mScope->GetHasNoAlpha())
       str2.Format("    %d   ", mBeamCalAlpha[ind] + 1);
     str1 += str2;
-    specToIS = MatInv(IStoSpecimen(mBeamCalMagInd[ind]));
+
+    // JEOL GIF calibrations are at negative mag indexes
+    useMag = B3DABS(mBeamCalMagInd[ind]);
+    specToIS = MatInv(IStoSpecimen(useMag));
     if (specToIS.xpx) {
       prod = MatMul(specToIS, mIStoBS[ind]);
       str2.Format(" %9.3f %9.3f %9.3f %9.3f  %15d", prod.xpx, prod.xpy, prod.ypx, prod.ypy,
-        MagForCamera(iCam, mBeamCalMagInd[ind]));
+        MagForCamera(iCam, useMag));
     } else {
       str2.Format(" No image shift to specimen matrix available  %15d",
-        MagForCamera(iCam, mBeamCalMagInd[ind]));
+        MagForCamera(iCam, useMag));
     }
     str1 += str2;
     PrintfToLog("%s", (LPCTSTR)str1);
