@@ -1199,6 +1199,10 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
   int numOperations = 4;
   bool iterating = false;
   CtfBasedCalib calUse;
+  CString suggest = "You may need more exposure time, a different binning, or more "
+    "structure or carbon in the field of view.\n%s" + CString(mCtfComaFree ? "Try less "
+      "beam tilt if the Thon rings are not visible on the long axis in beam-tilted "
+      "images." : "");
 
   if (mDoingFullArray) {
     numOperations = 9;
@@ -1301,9 +1305,9 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
       }
       if (mCenteredScore < mMinCenteredScore) {
         str.Format("The score from the Ctffind fit, %.3f, is below the\n"
-          " minimum (%.3f) and probably too low for a reliable result", mCenteredScore,
-          mMinCenteredScore);
-        SEMMessageBox(str);
+          " minimum (%.3f) and probably too low for a reliable result.\n\n",
+          mCenteredScore, mMinCenteredScore);
+        SEMMessageBox(str + suggest);
         StopCtfBased();
         return;
       }
@@ -1323,8 +1327,9 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
     if (resultsArray[5] > param.minimum_resolution && resultsArray[5] < 
       10. * imBufs->mImage->getWidth() * param.pixel_size_of_input_image) {
       str.Format("The resolution to which Thon rings fit,\n"
-        "%.0f A is way too high for a reliable fit", resultsArray[5]);
-      SEMMessageBox(str);
+        "%.0f A is very high and indicates that CTF fitting is not working.\n\n",
+        resultsArray[5]);
+      SEMMessageBox(str + suggest);
       StopCtfBased();
       return;
     }

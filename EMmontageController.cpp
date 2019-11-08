@@ -1646,7 +1646,11 @@ int EMmontageController::DoNextPiece(int param)
       SEMTrace('S', "DoNextPiece moving stage to %.3f %.3f%s", mMoveInfo.x, mMoveInfo.y,
         mNeedBacklash ? (invertBacklash ? " with inverted backlash" : " with backlash") :
         "");
-      SEMTrace('M', "DoNextPiece Starting stage move");
+      if (precooking)
+        SEMTrace('M', "DoNextPiece Starting stage move to %.3f %.3f", mMoveInfo.x,
+          mMoveInfo.y);
+      else
+        SEMTrace('M', "DoNextPiece Starting stage move");
       mWinApp->AddIdleTask(CEMscope::TaskStageBusy, TASK_MONTAGE, 0, timeOut);
       mMovingStage = true;
       return 0;
