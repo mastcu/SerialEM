@@ -380,7 +380,7 @@ void CMultiShotDlg::OnSetRegular()
 void CMultiShotDlg::OnSetCustom()
 {
   mRecordingCustom = true;
-  StartRecording("Shift image to central point of custom pattern");
+  StartRecording("Shift image to central point of pattern (not acquired)");
 }
 
 // Common operations to start recording corners/points

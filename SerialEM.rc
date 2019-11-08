@@ -2945,7 +2945,7 @@ BEGIN
     PUSHBUTTON      "Save Image Shift",IDC_BUT_SAVE_IS,54,183,55,12
     PUSHBUTTON      "End Pattern",IDC_BUT_END_PATTERN,112,183,39,12
     PUSHBUTTON      "Abort",IDC_BUT_ABORT,154,183,21,12
-    LTEXT           "Image shift should be measured near focus",IDC_STAT_SAVE_INSTRUCTIONS,7,197,169,10
+    LTEXT           "Image shift should be measured near focus",IDC_STAT_SAVE_INSTRUCTIONS,9,197,169,10
     PUSHBUTTON      "IS to Nav Pt",IDC_BUT_IS_TO_PT,11,183,40,12
 END
 

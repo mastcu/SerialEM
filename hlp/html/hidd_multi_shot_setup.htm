@@ -207,7 +207,7 @@
       size of the shift; it is probably inadequate at high magnification.&nbsp; The 
       factor entered here increases this settling time when shifting between holes; 
       the extra delay time described below is still added to the settling time.&nbsp; 
-      This separate entrt allows you to have an adequate settling time when moving 
+      This separate entry allows you to have an adequate settling time when moving 
       between holes without having to make the extra delay for shots within a hole 
       bigger than necessary.</p>
     <p><b>Regular pattern of holes: n by n</b></p>
@@ -217,7 +217,10 @@
       acquire more or fewer holes at that spacing.</p>
     <p><b>Use custom pattern</b></p>
     <p>Select this checkbox to take images in an arbitrary set of positions specified 
-      by shifting to a center location then to each acquisition position.</p>
+      by shifting to a center location, which is not acquired, then to each acquisition 
+      position.&nbsp; A custom pattern can be used when you want to acquire at
+      positions that are not regularly and symmetrically arranged around the marked Navigator point.
+    </p>
     <p><b>Save Image Shift Values at Holes</b></p>
     <p>Press &#39;For Corners of Regular Pattern&#39; to start setting the image shifts needed 
       for a regular pattern, or &#39;For custom pattern&#39; to start setting the shifts for 
@@ -232,8 +235,9 @@
       along the first axis.&nbsp; If one of the spinners is set to 1, the program will 
       still expect you to shift by one hole along that axis.</p>
     <p>To set the positions in a custom pattern, shift to a center position for the 
-      pattern and save the shift.&nbsp; When taking multiple Records, all the shifts 
-      will be done relative to this position.&nbsp; Then shift to the first point to 
+      pattern and save the shift.&nbsp; When taking multiple Records, this position will not
+      be acquired at, but all the shifts 
+      will be done relative to it.&nbsp; Then shift to the first point to 
       be acquired and save that position.&nbsp; Repeat until the last point and press 
       &#39;End Pattern&#39;.</p>
     <p> See above for instructions on how to save sufficiently accurate shift values.</p>
