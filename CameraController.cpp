@@ -3369,6 +3369,11 @@ void CCameraController::Capture(int inSet, bool retrying)
             (mParam->useFastAcquireObject ? CONTINUOUS_ACQUIS_OBJ : 0) +
             ((mParam->CamFlags & K3_CAM_ROTFLIP_BUG) ? CONTIN_K3_ROTFLIP_BUG : 0) +
             (mParam->continuousQuality << QUALITY_BITS_SHIFT);
+          if (mParam->TietzType) {
+            if (mRepFlag < 0)
+              mTD.ProcessingPlus += CONTINUOUS_FIRST_TIME;
+            mTD.GatanReadMode = 1;
+          }
 
           // Make sure the camera timeout is appropriately longer than the return time
           // Plus, if continuous has already started, the return time governs completely
@@ -6420,6 +6425,8 @@ void CCameraController::AcquirePluginImage(CameraThreadData *td, void **array,
   bool tietzDark = td->TietzType && processing == TIETZ_GET_DARK_REF;
   bool tietzImage = td->TietzType && !tietzDark;
   bool setReadMode = td->TietzType && td->GatanReadMode >= 0;
+  bool tietzAlreadyLive = td->TietzType && (processing & CONTINUOUS_USE_THREAD) &&
+    !(processing & CONTINUOUS_FIRST_TIME);
   int flags = td->PluginAcquireFlags | (td->DivideBy2 ? PLUGCAM_DIVIDE_BY2 : 0);
   if (tietzImage && td->RestoreBBmode)
     flags |= TIETZ_RESTORE_BBMODE;
@@ -6448,7 +6455,8 @@ void CCameraController::AcquirePluginImage(CameraThreadData *td, void **array,
   }
 
   // Do preliminary steps for Tietz that were always before starting blanker
-  if (!retval && td->TietzType && td->plugFuncs->SetExtraParams1 && setReadMode) {
+  if (!retval && td->TietzType && td->plugFuncs->SetExtraParams1 && setReadMode && 
+    !tietzAlreadyLive) {
 
     // The speed and mode values seem to apply to F416 and XF416
     // Perhaps flatfielding with F416 does not require a read mode in plugin but
@@ -6462,7 +6470,7 @@ void CCameraController::AcquirePluginImage(CameraThreadData *td, void **array,
 
   // This sets shuttermode, it does have to be set to beam blank at some point when in
   // rolling shutter mode, so don't just skip it
-  if (!retval && tietzImage)
+  if (!retval && tietzImage && !tietzAlreadyLive)
     retval = td->plugFuncs->PrepareForAcquire(td->TietzType, td->ShutterMode);
   if (!retval && blanker)
     StartBlankerThread(td);
