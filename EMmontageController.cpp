@@ -93,6 +93,7 @@ EMmontageController::EMmontageController()
   mDuplicateRetryLimit = 3;
   mNumOverwritePieces = 0;
   mAlignToNearestPiece = false;
+  mISrealignInterval = 1;
   mDriftRepeatLimit = 5;
   mDriftRepeatDelay = 2.;
   mNumActions = SAVE_PIECE + 1;
@@ -1493,7 +1494,7 @@ int EMmontageController::DoNextPiece(int param)
   BOOL moveStage = mParam->moveStage;
   double adjISX, adjISY;
   float alignISDelayFac = 0.25f;
-  int ix, type, delay, iDelX, iDelY, nextPiece;
+  int ix, type, delay, iDelX, iDelY, nextPiece, startsCol;
   KImage *image;
   void *data;
   float sDmin, denmin;
@@ -1623,7 +1624,10 @@ int EMmontageController::DoNextPiece(int param)
 
       // Stage was not moved: need to move it.  Do image shift first
       if (mDoISrealign && mAdjacentForIS[mPieceIndex] >= 0) {
-        if (!mFocusAfterStage && !mNeedColumnBacklash) {
+        startsCol = PieceStartsColumn(mPieceIndex);
+        if (!mFocusAfterStage && !mNeedColumnBacklash && (startsCol > 0 ||
+          mISrealignInterval < 2 ||
+          (startsCol == 0 && (mNumDoneInColumn % mISrealignInterval == 0)))) {
           if (SetImageShiftTestClip(adjISX, adjISY, alignISDelayFac))
             return 1;
           mNeedISforRealign = false;
@@ -1632,6 +1636,7 @@ int EMmontageController::DoNextPiece(int param)
       }
         
       // Invert the backlash for zigzag for an even X index (numbered from 1)
+      mNeedBacklash = mNeedBacklash && !precooking;
       invertBacklash = mNeedBacklash && mDoZigzagStage && !(mPieceX % 2);
       if (invertBacklash) {
         mMoveInfo.backX *= -1.;
@@ -1706,15 +1711,19 @@ int EMmontageController::DoNextPiece(int param)
 
     } else if (mAction == ALIGN_WITH_IS && moveStage && mDoISrealign && 
       mAdjacentForIS[mPieceIndex] >= 0) {
+      startsCol = PieceStartsColumn(mPieceIndex);
+      if (startsCol > 0 || mISrealignInterval < 2 || (startsCol == 0 &&
+        mNumDoneInColumn % mISrealignInterval == 0)) {
 
-      // Set the image shift if it was not queued and was deferred above
-      if (mNeedISforRealign || mFocusAfterStage) {
-        if (SetImageShiftTestClip(adjISX, adjISY, alignISDelayFac))
-          return 1;
+        // Set the image shift if it was not queued and was deferred above
+        if (mNeedISforRealign || mFocusAfterStage) {
+          if (SetImageShiftTestClip(adjISX, adjISY, alignISDelayFac))
+            return 1;
+        }
+        mNeedISforRealign = false;
+        if (!RealignToExistingPiece())
+          return 0;
       }
-      mNeedISforRealign = false;
-      if (!RealignToExistingPiece())
-        return 0;
 
     } else if (mAction == SET_IMAGE_SHIFT && !moveStage) {
 
@@ -1758,9 +1767,12 @@ int EMmontageController::DoNextPiece(int param)
         ComputeMoveToPiece(nextPiece, false, iDelX, iDelY, adjISX, adjISY);
         doBacklash = nextPiece < mNumPieces && 
           mParam->yNframes > 1 && mPieceX != nextPiece / mParam->yNframes + 1;
+        startsCol = PieceStartsColumn(nextPiece);
         if (mUsingAnchor && nextPiece < mNumPieces)
-          doBacklash = PieceStartsColumn(nextPiece) != 0;
-        if (mDoISrealign && !mFocusAfterStage) {
+          doBacklash = startsCol != 0;
+        if (mDoISrealign && !mFocusAfterStage && (startsCol > 0 || 
+          mISrealignInterval < 2 || 
+          (startsCol == 0 && (mNumDoneInColumn + 1) % mISrealignInterval == 0))) {
           delay = (int)(1000. * alignISDelayFac * 
             mShiftManager->ComputeISDelay(adjISX - ISX, adjISY - ISY)); 
           mCamera->QueueImageShift(adjISX, adjISY, delay);

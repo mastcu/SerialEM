@@ -66,6 +66,7 @@ class EMmontageController
   GetSetMember(int, NumOverwritePieces)
   GetMember(int, NumPieces)
   GetSetMember(BOOL, AlignToNearestPiece)
+  GetSetMember(int, ISrealignInterval)
   GetSetMember(int, DriftRepeatLimit);
   GetSetMember(float, DriftRepeatDelay);
   GetSetMember(BOOL, AutosaveLog);
@@ -219,6 +220,7 @@ class EMmontageController
   int mNumSinceRealign;
   int mRealignInterval;           // Run-time value from param interval if doing realign
   BOOL mAlignToNearestPiece;      // Property flag to find nearest piece for realigning to
+  int mISrealignInterval;         // Interval at which to do the IS realign
   BOOL mDoISrealign;              // Run-time flag to do image-shift realignment
   int mSecondHalfStartSeq;        // Sequence index of first piece in second half
   BOOL mUsingAnchor;              // Run-time flag that anchor is being used

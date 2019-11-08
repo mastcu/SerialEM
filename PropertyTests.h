@@ -174,6 +174,7 @@ FLOAT_PROP_TEST("ISoffsetCalStageLimit", mWinApp->mShiftCalibrator->, CalISOstag
 FLOAT_PROP_TEST("StageMontageBacklash", mWinApp->mMontageController->, StageBacklash)
 BOOL_PROP_TEST("LimitMontageToUsable", mWinApp->mMontageController->, LimitMontToUsable)
 BOOL_PROP_TEST("MontageRealignToNearest", mWinApp->mMontageController->, AlignToNearestPiece)
+INT_PROP_TEST("MontageISRealignInterval", mWinApp->mMontageController->, ISrealignInterval)
 DBL_PROP_TEST("MontageOverlapFraction", mWinApp->mDocWnd->, OverlapFraction)
 BOOL_PROP_TEST("ShootFilmIfMontageDark", mWinApp->mMontageController->, ShootFilmIfDark)
 INT_PROP_TEST("MontageDuplicateRetries", mWinApp->mMontageController->, DuplicateRetryLimit)

@@ -3,6 +3,7 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+10/27/19: 3-8-0beta6
 10/24/19: Prevented clipping of image shift on JEOL from screwing up beam
 shift.
 
