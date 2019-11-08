@@ -87,6 +87,7 @@ FRAMEDOC_OPEN_ERR, FRAMEDOC_WRITE_ERR, NULL_IMAGE};
 #define CONTINUOUS_SET_MODE    (1 << 7)
 #define CONTINUOUS_ACQUIS_OBJ  (1 << 8)
 #define CONTIN_K3_ROTFLIP_BUG  (1 << 10)
+#define CONTINUOUS_FIRST_TIME  (1 << 11)
 #define CONTINUOUS_RETURN_TIMEOUT  2000
 
 // Version information needed in both places
