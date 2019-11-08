@@ -122,6 +122,11 @@ void CBeamAssessor::CalIntensityCCD()
   int K2ind = mCamParam->K2Type == K3_TYPE ? 1 : 0;
   AssignCrossovers();
   probe = mScope->ReadProbeMode();
+
+  if (mWinApp->LowDoseMode()) {
+    AfxMessageBox("Beam intensity calibration cannot be done in Low Dose mode");
+    return;
+  }
   
   if (mNumTables >= MAX_INTENSITY_TABLES || mFreeIndex > 0.9 * MAX_INTENSITY_ARRAYS) {
     AfxMessageBox("No more space for intensity calibrations", MB_EXCLAME);
@@ -1697,6 +1702,11 @@ void CBeamAssessor::CalibrateSpotIntensity()
 
   CString *modeNames = mWinApp->GetModeNames();
   CString message;
+  if (mWinApp->LowDoseMode()) {
+    AfxMessageBox("Spot intensity calibration cannot be done in Low Dose mode");
+    return;
+  }
+
   message.Format("Spot intensity calibration takes pictures with the %s" 
     " parameter set at a series of spot sizes.\n\n"
     "You must make sure that the beam is spread enough so that it will\nfill the frame"
