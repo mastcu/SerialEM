@@ -446,7 +446,7 @@ CEMscope::CEMscope()
   mFakeMagIndex = 1;
   mFakeScreenPos = spUp;
   mUseInvertedMagRange = false;
-  mFalcon3ReadoutInterval = 0.024923f;
+  mFalcon3ReadoutInterval = 0.02495f;
   mAddToFalcon3Exposure = 0.013f;
   mDiffShiftScaling = 10.;
   mPluginVersion = 0;
