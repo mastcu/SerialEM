@@ -774,6 +774,8 @@ void CFalconHelper::FinishFrameAlignment(int binning)
     aliSum, xShifts, yShifts, xShifts, yShifts,
     mGettingFRC ? ringCorrs : NULL, frcDelta, bestFilt, smoothDist, rawDist,
     resMean, resSD, meanResMax, maxResMax, meanRawMax, maxRawMax);
+  delete[] xShifts;
+  delete[] yShifts;
   if (!ind)  {
     mCamTD->FaResMean = resMean[bestFilt];
     mCamTD->FaMaxResMax = maxResMax[bestFilt];
