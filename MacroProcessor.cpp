@@ -261,7 +261,7 @@ enum {CME_SCRIPTEND = -7, CME_LABEL, CME_SETVARIABLE, CME_SETSTRINGVAR, CME_DOKE
   CME_STAGETOLASTMULTIHOLE, CME_IMAGESHIFTTOLASTMULTIHOLE, CME_NAVINDEXITEMDRAWNON,
   CME_SETMAPACQUIRESTATE, CME_RESTORESTATE, CME_REALIGNTOMAPDRAWNON,
   CME_GETREALIGNTOITEMERROR, CME_DOLOOP, CME_REPORTVACUUMGAUGE, CME_REPORTHIGHVOLTAGE,
-  CME_OKBOX, CME_LIMITNEXTAUTOALIGN, CME_SETDOSERATE
+  CME_OKBOX, CME_LIMITNEXTAUTOALIGN, CME_SETDOSERATE, CME_CHECKFORBADSTRIPE 
 };
 
 // The two numbers are the minimum arguments and whether arithmetic is allowed
@@ -404,7 +404,7 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"NavIndexItemDrawnOn", 1, 0}, {"SetMapAcquireState", 1, 0}, {"RestoreState", 0, 0},
 {"RealignToMapDrawnOn", 2, 0}, {"GetRealignToItemError", 0, 0}, {"DoLoop", 3, 1},
 {"ReportVacuumGauge", 1, 0}, {"ReportHighVoltage", 0, 0},{"OKBox", 1, 0},
-{"LimitNextAutoAlign", 1, 1},{"SetDoseRate", 1, 0},/*CAI3.8*/
+{"LimitNextAutoAlign", 1, 1}, {"SetDoseRate", 1, 0},{"CheckForBadStripe", 0, 0},/*CAI3.8*/
 {NULL, 0, 0}
 };
 // The longest is now 25 characters but 23 is a more common limit
@@ -4881,6 +4881,26 @@ void CMacroProcessor::NextCommand()
       "%.2f   %.2f   %.2f", h1, v1, v2, h2, h3, v3, v4, h4);
     mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
     break;
+
+  case CME_CHECKFORBADSTRIPE:                               // CheckForBadStripe
+    if (ConvertBufferLetter(strItems[1], 0, true, index, report))
+      ABORT_LINE(report);
+    ix0 = itemInt[2];
+    if (itemEmpty[2]) {
+      if (mImBufs[index].mCamera < 0)
+        ABORT_LINE("The image has no camera defined and requires an entry for horizontal"
+          " versus vertical analysis in:\n\n");
+      ix0 = (mWinApp->GetCamParams() + mImBufs[index].mCamera)->rotationFlip % 2;
+    }
+    index2 = mWinApp->mProcessImage->CheckForBadStripe(&mImBufs[index], ix0, ix1);
+    if (!index2)
+      report = "No bad stripes detected";
+    else
+      report.Format("Bad stripes detected with %d sharp transitions; %d near expected"
+        " boundaries", index2, ix1);
+    mWinApp->AppendToLog(report, mLogAction);
+    SetReportedValues(index2, ix1);
+    break;
     
   case CME_CIRCLEFROMPOINTS:                                // CircleFromPoints
     float radius, xcen, ycen;
@@ -5226,6 +5246,7 @@ void CMacroProcessor::NextCommand()
     if (index > 0 && index <= 3)
       ABORT_LINE("Script aborted centering beam because of no image,\n"
       "unusable image type, or failure to get memory");
+    SetReportedValues(index);
     break;
     
   case CME_AUTOCENTERBEAM:                                  // AutoCenterBeam
@@ -5658,11 +5679,12 @@ void CMacroProcessor::NextCommand()
       bmean = (float)delISY;
       ix1 = mCamera->DESumCountForConstraints(camParams, &mConSets[index]);
       mCamera->CropTietzSubarea(camParams, mConSets[index].right - mConSets[index].left,
-        mConSets[index].bottom - mConSets[index].top, mConSets[index].processing, iy1);
+        mConSets[index].bottom - mConSets[index].top, mConSets[index].processing,
+        mConSets[index].mode, iy1);
       mCamera->ConstrainExposureTime(camParams, mConSets[index].doseFrac, 
         mConSets[index].K2ReadMode, mConSets[index].binning, 
         mConSets[index].alignFrames && !mConSets[index].useFrameAlign, ix1, bmean, 
-        mConSets[index].frameTime, iy1);
+        mConSets[index].frameTime, iy1, mConSets[index].mode);
       if (fabs(bmean - mConSets[index].exposure) < 0.00001) {
         PrintfToLog("In SetExposureForMean %s, change by a factor of %.4f would require "
           "too small a change in exposure time", (LPCTSTR)strItems[1], delISX);
@@ -5717,7 +5739,8 @@ void CMacroProcessor::NextCommand()
     SaveControlSet(index);
     mConSets[index].frameTime = (float)itemDbl[2];
     mCamera->CropTietzSubarea(camParams, mConSets[index].right - mConSets[index].left,
-      mConSets[index].bottom - mConSets[index].top, mConSets[index].processing, iy1);
+      mConSets[index].bottom - mConSets[index].top, mConSets[index].processing, 
+      mConSets[index].mode, iy1);
     mCamera->ConstrainFrameTime(mConSets[index].frameTime, camParams,
       mConSets[index].binning, camParams->OneViewType ? mConSets[index].K2ReadMode : iy1);
     break;
@@ -5802,6 +5825,8 @@ void CMacroProcessor::NextCommand()
     break;
     
   case CME_WAITFORNEXTFRAME:                                // WaitForNextFrame
+    if (!itemEmpty[1])
+      mCamera->AlignContinuousFrames(itemInt[1]);
     mCamera->SetTaskFrameWaitStart(mFrameWaitStart >= 0 ? mFrameWaitStart : 
       (double)GetTickCount());
     mFrameWaitStart = -1.;
@@ -6118,7 +6143,8 @@ void CMacroProcessor::NextCommand()
       ABORT_LINE("The specified item has no ID for being drawn on a map in line:\n\n");
     ix0 = navHelper->RealignToDrawnOnMap(navItem, itemInt[2] != 0);
     if (ix0) {
-      report.Format("Script halted due to failure %d in Realign to Item for line:\n\n");
+      report.Format("Script halted due to failure %d in Realign to Item for line:\n\n", 
+        ix0);
       ABORT_LINE(report);
     }
     break;
@@ -6208,6 +6234,7 @@ void CMacroProcessor::NextCommand()
     break;
 
   case CME_NAVINDEXITEMDRAWNON:                             // NavIndexItemDrawnOn
+    index = itemInt[1];
     navItem = CurrentOrIndexedNavItem(index, strLine);
     if (!navItem)
       return;
@@ -9207,9 +9234,9 @@ bool CMacroProcessor::RestoreCameraSet(int index, BOOL erase)
 }
 
 // Returns a navigator item specified by a positive index, a negative distance from end
-// of table (-1 = last item), or 0 for current or acquire item.  Issues message, aborts
-// and returns NULL on failures
-CMapDrawItem *CMacroProcessor::CurrentOrIndexedNavItem(int index, CString &strLine)
+// of table (-1 = last item), or 0 for current or acquire item.  Updates the value of
+// index with the true 0-based value.  Issues message, aborts and returns NULL on failures
+CMapDrawItem *CMacroProcessor::CurrentOrIndexedNavItem(int &index, CString &strLine)
 {
   CMapDrawItem *item;
   if (!mWinApp->mNavigator) {

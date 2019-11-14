@@ -1094,6 +1094,19 @@
             vertical strips.</TD>
         </TR>
         <TR vAlign="top">
+          <TD class="style7">CheckForBadStripe [buf] [#H]</TD>
+          <TD>Check for sharp transitions between columns or rows in an image and for 
+            whether they occur at expected positions for a bad channel of data from a K2 or 
+            K3 camera.&nbsp; Analyzes the image in buffer A, or the buffer indicated by 
+            &#39;buf&#39;.&nbsp; It uses the RotationAndFlip property of the camera, if it can be 
+            identified, to determine if vertical or horizontal stripes should be sought, 
+            unless the option #H is entered with 1 for horizontal or 0 for vertical 
+            stripes.&nbsp; Reports the number of significant transitions found and the number 
+            of those that are within a few pixels of the expected boundaries between channels for a 
+            K2 or K3 camera.&nbsp; The latter would be a more reliable number to use if 
+            there is a risk of very straight grid bars in the field.  Command added in 3.8.0, 11/3/19.</TD>
+        </TR>
+        <TR vAlign="top">
           <TD class="style7">CtfFind buf dmin dmax [fast] [box] [phmin] [phmax] [phstep] 
             [afix]</TD>
           <TD>Determines defocus and astigmatism by fitting to Thon rings in an FFT of the 
@@ -2565,7 +2578,9 @@
             nonzero. In the latter case the beam should be completely within the camera
             field.&nbsp; The optional #M sets a maximum beam shift in microns; the beam will
             not be moved if the shift determined from the circle fit to the beam edges 
-            exceeds this value.</TD>
+            exceeds this value.&nbsp; Sets reportedValue1 to -1 if no beam edges are detected,
+            5 if there is a failure fitting edges to a circle, 6 if beam was not moved because
+            the radius was too high, and 7 if the beam was not moved because the fitting error was too high.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="auto-style1">MeasureBeamSize [#B]</TD>

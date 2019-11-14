@@ -255,6 +255,7 @@ void SetCtffindParamsForDefocus(CtffindParams & param, double defocus, bool just
 void Initialize(void);
 float GetMaxCtfFitRes(void);
 WINDOWPLACEMENT *GetCtffindPlacement(void);
+int CheckForBadStripe(EMimageBuffer * imBuf, int horizontal, int &numNear);
 };
 
 /////////////////////////////////////////////////////////////////////////////

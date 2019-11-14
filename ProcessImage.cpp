@@ -1006,9 +1006,11 @@ int CProcessImage::CenterBeamFromActiveImage(double maxRadius, double maxError,
   else if (maxRadius > 0. && radius * binning > maxRadius) {
     mWinApp->AppendToLog("Beam radius from fit is greater than allowed radius; beam "
       "was not moved", LOG_OPEN_IF_CLOSED);
+    err = 6;
   } else if (maxError > 0. && fitErr > maxError * maxRadius) {
     mWinApp->AppendToLog("Fit to beam edges has greater than allowed error; beam "
       "was not moved", LOG_OPEN_IF_CLOSED);
+    err = 7;
   } else {
     MoveBeam(imBuf, shiftX, shiftY, maxMicronShift);
     mMoveBeamStamp = imBuf->mTimeStamp;
@@ -2782,6 +2784,175 @@ void CProcessImage::OnProcessCropAverage()
     sliceFree(xformSlices[ind]);
   }
  }
+ 
+// Looks for bad stripes in an image at the specified correlation, returns the number of
+// transitions found; for K2/K3, finds out how many are close to expected locations
+int CProcessImage::CheckForBadStripe(EMimageBuffer *imBuf, int horizontal, int &numNear)
+{
+  int nx, ny, numSums, iy, ix, isum, isumSq, type, idiff, retval = 0;
+  int csizeX, csizeY, tLeft, tTop, tBot, tRight, tsizeX, tsizeY, k2Ind = -1;
+  int indent = 8, numRoll = 32, nearCrit = 4;
+  int firstExpected[2] = {511, 576};
+  int deltaExpected[2] = {512, 576};
+  int *intSums, *intSumSq;
+  float *colDiffs, *temp;
+  float crit = 18.;   // SD's about mean using trimmed mean/SD
+  float mean, SD, sem, median = 0., MADN = 1.;
+  double allSum = 0.;
+  bool lastHigh = false;
+  unsigned short *usdata, *usdata2;
+  short *data, *data2;
+  CameraParameters *camParam; 
+  ControlSet *cset, *conSets = mWinApp->GetCamConSets();
+  numNear = 0;
+  if (!imBuf || !imBuf->mImage)
+    return 0;
+  KImage *image = imBuf->mImage;
+  type = image->getType();
+  if (type != kSHORT && type != kUSHORT)
+    return 0;
+
+  // For a K2/K3 camera, get the control set
+  if (imBuf->mCamera >= 0 && imBuf->mConSetUsed >= 0 && imBuf->mBinning > 0) {
+    camParam = mWinApp->GetCamParams() + imBuf->mCamera;
+    if (camParam->K2Type) {
+      k2Ind = camParam->K2Type == K3_TYPE ? 1 : 0;
+      cset = &conSets[imBuf->mConSetUsed + imBuf->mCamera * MAX_CONSETS];
+    }
+  }
+
+  // Get arrays for sums and Z scores
+  image->getSize(nx, ny);
+  numSums = (horizontal ? ny : nx) - 2;
+  intSums = new int[numSums];
+  intSumSq = new int[numSums];
+  colDiffs = new float[numSums];
+  temp = new float[numSums];
+  for (ix = 0; ix < numSums; ix++) {
+    intSums[ix] = 0;
+    intSumSq[ix] = 0;
+  }
+
+  // Add up the difference across two pixels in the columns or rows
+  image->Lock();
+  for (iy = 0; iy < ny - (horizontal ? 2 : 0); iy++) {
+    data = (short *)image->getRowData(iy);
+    usdata = (unsigned short *)data;
+    if (horizontal) {
+      isum = isumSq = 0;
+      if (iy == ny - 1)
+        continue;
+      data2 = (short *)image->getRowData(iy + 2);
+      usdata2 = (unsigned short *)data2;
+      if (type == kSHORT) {
+        for (ix = 0; ix < nx; ix++) {
+          idiff = (int)*data++ - (int)*data2++;
+          isumSq += idiff * idiff;
+          isum += idiff;
+        }
+      } else {
+        for (ix = 0; ix < nx; ix++) {
+          idiff = (int)*usdata++ - (int)*usdata2++;
+          isumSq += idiff * idiff;
+          isum += idiff;
+        }
+      }
+      intSums[iy] = isum;
+      intSumSq[iy] = isumSq;
+    } else {
+      if (type == kSHORT) {
+        for (ix = 0; ix < nx - 2; ix++) {
+          idiff = (int)data[ix] - (int)data[ix + 2];
+          intSumSq[ix] += idiff * idiff;
+          intSums[ix] += idiff;
+        }
+      } else {
+        for (ix = 0; ix < nx - 2; ix++) {
+          idiff = (int)usdata[ix] - (int)usdata[ix + 2];
+          intSumSq[ix] += idiff * idiff;
+          intSums[ix] += idiff;
+        }
+      }
+    }
+  }
+  image->UnLock();
+
+  // Get a mean and SD of the differences and get a Z score
+  for (ix = 0; ix < numSums; ix++) {
+    sumsToAvgSD((float)intSums[ix], (float)intSumSq[ix], (horizontal ? nx : ny), &mean, 
+      &SD);
+    colDiffs[ix] = (float)fabs(mean / B3DMAX(1.e-6, SD));
+  }
+  /*avgSD(colDiffs, numSums, &leftMean, &leftSD, &sem);
+  rsMedian(colDiffs, numSums, temp, &median);
+  rsMADN(colDiffs, numSums, median, temp, &MADN);
+  PrintfToLog("mean diff Z %.3f  sd  %.3f  med %.3f  MADN %.3f", mean, SD, median,MADN);*/
+
+  // Sort them and exclude the expected number of higher points from 4 transitions
+  // Without this the SD is horribly skewed upwards by a few transitions
+  // The MADN is actually close to the trimmed SD but usuing the SD may be more 
+  // representative of the high end of the range below actual transitions
+  memcpy(temp, colDiffs, 4 * numSums);
+  rsSortFloats(temp, numSums);
+  avgSD(temp, numSums - 12, &mean, &SD, &sem);
+  //PrintfToLog("Trimmed mean diff Z %.3f  sd  %.3f", mean, SD);
+
+  // Search for Z scores above the criterion number SD's from the mean
+  for (ix = indent; ix < numSums - indent; ix++) {
+    if ((colDiffs[ix] - mean) > crit * SD) {
+      PrintfToLog("ix = %d, zdiff %.2f  Z of that %.2f", ix, colDiffs[ix], 
+        (colDiffs[ix] - mean) / SD);
+
+      // Only record the first one in a contiguous series
+      if (!lastHigh) {
+        if (k2Ind >= 0) {
+
+          // Get the location of this line on the chip as tLeft
+          tLeft = cset->left / imBuf->mBinning;
+          tTop = cset->top / imBuf->mBinning;
+          tRight = cset->right / imBuf->mBinning;
+          tBot = cset->bottom / imBuf->mBinning;
+
+          // Need to set both sides to the actual coordinate of the line since either one
+          // may end up as the left coordinate after the rotation/flip
+          if (horizontal) {
+            tTop += ix + 1;
+            tBot = tTop;
+          } else {
+            tLeft += ix + 1;
+            tRight = tLeft;
+          }
+          csizeX = camParam->sizeX;
+          csizeY = camParam->sizeY;
+          tsizeX = tRight - tLeft;
+          tsizeY = tBot - tTop;
+          if (camParam->rotationFlip)
+            CorDefUserToRotFlipCCD(camParam->rotationFlip, imBuf->mBinning, csizeX, csizeY,
+              tsizeX, tsizeY, tTop, tLeft, tBot, tRight);
+
+          // Test positions for proximity
+          for (iy = 0; iy < 20; iy++) {
+            idiff = (firstExpected[k2Ind] + iy * deltaExpected[k2Ind]) / imBuf->mBinning;
+            if (fabs((double)tLeft - idiff) < nearCrit)
+              numNear++;
+            if (idiff - tLeft > tsizeX)
+              break;
+          }
+        }
+        retval++;
+      }
+      lastHigh = true;
+    } else
+      lastHigh = false;
+  }
+
+  // Clean up and return
+  delete[] temp;
+  delete[] intSums;
+  delete[] intSumSq;
+  delete[] colDiffs;
+  return retval;
+}
 
 void CProcessImage::OnUpdateProcessCropAverage(CCmdUI *pCmdUI)
 {
