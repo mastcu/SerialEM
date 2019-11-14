@@ -18,6 +18,7 @@
 #include "TSController.h"
 #include "CameraController.h"
 #include "AutocenSetupDlg.h"
+#include "VPPConditionSetup.h"
 #include "ProcessImage.h"
 #include "TSRangeDlg.h"
 #include "TSViewRange.h"
@@ -69,6 +70,9 @@ CMultiTSTasks::CMultiTSTasks(void)
   mBfcStopFlag = false;
   mBaiSavedViewMag = -9;
   mSkipNextBeamShift = false;
+  mVppParams.magIndex = 0;
+  mVppParams.probeMode = 1;
+  mVppParams.alpha = -999;
 }
 
 CMultiTSTasks::~CMultiTSTasks(void)
@@ -1026,6 +1030,7 @@ void CMultiTSTasks::AutocenNextTask(int param)
 {
   LowDoseParams *ldp = mWinApp->GetLowDoseParams() + TRIAL_CONSET;
   float postShiftX = 0, postShiftY = 0;
+  int err;
   if (!mAutoCentering)
     return;
 
@@ -1043,8 +1048,13 @@ void CMultiTSTasks::AutocenNextTask(int param)
     }
 
     // Center the beam: if it fails, remove the post-shift to undo the original shift
-    if (mWinApp->mProcessImage->CenterBeamFromActiveImage(0., 0., mAcUseCentroid > 0, 
-      mAcMaxShift)) {
+    err = mWinApp->mProcessImage->CenterBeamFromActiveImage(0., 0., mAcUseCentroid > 0, 
+      mAcMaxShift);
+
+    // These high error codes were added for the case where the beam wasn't moved but the
+    // routine did not return an error, so only do this in the case where it used to be
+    // done and hope that is correct
+    if (err && err < 6) {
       postShiftX = -(mAcShiftedBeamX - postShiftX);
       postShiftY = -(mAcShiftedBeamY - postShiftY);
     }
@@ -1977,3 +1987,67 @@ void CMultiTSTasks::BidirAnchorCleanup(int error)
   StopAnchorImage();
   mWinApp->ErrorOccurred(error);
 }
+
+
+//////////////////////////////////////////////////////////
+// VOLTA PHASE PLATE CONDITIONING
+
+// Open the non-model dialog
+void CMultiTSTasks::SetupVPPConditioning()
+{
+  CVPPConditionSetup *dlg = new CVPPConditionSetup;
+  mWinApp->mVPPConditionSetup = dlg;
+  dlg->mParams = mVppParams;
+  dlg->Create(IDD_VPP_EXPOSE_SETUP);
+  mWinApp->SetPlacementFixSize(dlg, &mVPPConditionPlace);
+  mWinApp->RestoreViewFocus();
+}
+
+// The dialog is closing: restore scope state if it is set and copy parameters
+// TODO: Go do it
+void CMultiTSTasks::VPPConditionClosing(int OKorGo)
+{
+  if (!mWinApp->mVPPConditionSetup)
+    return;
+  mWinApp->mVPPConditionSetup->SetScopeState(true);
+  GetConditionPlacement();
+  mWinApp->mVPPConditionSetup->DestroyWindow();
+  mWinApp->mVPPConditionSetup = NULL;
+  if (OKorGo) {
+    mVppParams = mWinApp->mVPPConditionSetup->mParams;
+  }
+}
+
+// Get the window placement
+WINDOWPLACEMENT *CMultiTSTasks::GetConditionPlacement(void) 
+{
+  if (mWinApp->mVPPConditionSetup) {
+    mWinApp->mVPPConditionSetup->GetWindowPlacement(&mVPPConditionPlace);
+  }
+  return &mVPPConditionPlace;
+}
+
+// Save the current scope state in a parameter structure
+void CMultiTSTasks::SaveScopeStateInVppParams(VppConditionParams * params)
+{
+  params->magIndex = mScope->GetMagIndex();
+  params->spotSize = mScope->GetSpotSize();
+  params->intensity = mScope->GetIntensity();
+  if (FEIscope)
+    params->probeMode = mScope->ReadProbeMode();
+  if (!mScope->GetHasNoAlpha())
+    params->alpha = mScope->GetAlpha();
+}
+
+// Set the scope state to values in the given parameter structure
+void CMultiTSTasks::SetScopeStateFromVppParams(VppConditionParams *params)
+{
+  mScope->SetMagIndex(params->magIndex);
+  if (FEIscope)
+    mScope->SetProbeMode(params->probeMode);
+  if (!mScope->GetHasNoAlpha())    
+    mScope->SetAlpha(params->alpha);
+  mScope->SetSpotSize(params->spotSize);
+  mScope->SetIntensity(params->intensity);
+}
+

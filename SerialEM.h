@@ -281,6 +281,7 @@ class CNavHelper;
 class CCalibCameraTiming;
 class CCookerSetupDlg;
 class CAutocenSetupDlg;
+class CVPPConditionSetup;
 class CMultiTSTasks;
 class CParticleTasks;
 class CMailer;
@@ -584,6 +585,7 @@ public:
   CCalibCameraTiming *mCalibTiming;
   CCookerSetupDlg *mCookerDlg;
   CAutocenSetupDlg *mAutocenDlg;
+  CVPPConditionSetup *mVPPConditionSetup;
   CMultiTSTasks *mMultiTSTasks;
   CParticleTasks *mParticleTasks;
   CMailer *mMailer;

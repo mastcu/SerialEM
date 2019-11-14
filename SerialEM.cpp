@@ -596,6 +596,7 @@ CSerialEMApp::CSerialEMApp()
   mCookParams.minutes = 10.f;
   mCookerDlg = NULL;
   mAutocenDlg = NULL;
+  mVPPConditionSetup = NULL;
   for (i = 0; i < 2; i++) {
     mTSRangeParams[i].eucentricity = false;
     mTSRangeParams[i].walkup = false;
@@ -1423,6 +1424,9 @@ BOOL CSerialEMApp::InitInstance()
       mScope->BlankBeam(false);
   }
   ManageSTEMBlanking();
+
+  // Initialize continuous aligning and assess GPU for it
+  mFalconHelper->Initialize(-3);
   
   pMainFrame->SetWindowText("SerialEM");
   if (!mStartupMessage.IsEmpty())

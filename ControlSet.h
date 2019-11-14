@@ -487,6 +487,15 @@ struct RangeFinderParams {
   int direction;        // 0 for both, 1 minus, 2 plus
 };
 
+// Phase plate conditioning params
+struct VppConditionParams {
+  int magIndex;
+  int spotSize;
+  double intensity;
+  int alpha;
+  int probeMode;
+};
+
 // A set of mutually exclusive channels, possibly switched into or mapped to one DS channel
 struct ChannelSet {
   int numChans;               // Number of channels
