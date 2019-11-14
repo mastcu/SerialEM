@@ -123,7 +123,7 @@ void CFalconHelper::Initialize(int skipConfigs)
   if (!mFrameAli) {
     mFrameAli = new FrameAlign();
     mFrameAli->setPrintFunc(framePrintFunc);
-    if (skipConfigs = -3 && !mGpuForContinuousAli)
+    if (skipConfigs == -3 && !mGpuForContinuousAli)
       return;
     if (!mFrameAli->gpuAvailable(0, &mGpuMemory,
       (GetDebugOutput('E') || GetDebugOutput('D') || GetDebugOutput('T') ||
