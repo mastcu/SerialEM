@@ -867,7 +867,7 @@ int CNavigatorDlg::RealignToOtherItem(int index, BOOL restore, float resetISalig
     int maxNumResetAlign, int leaveZeroIS)
 {
   if (!GetOtherNavItem(index)) {
-    AfxMessageBox("The Navigator item index is out of range", MB_EXCLAME);
+    SEMMessageBox("The Navigator item index is out of range", MB_EXCLAME);
     return 1;
   }
   return RealignToAnItem(mItem, restore, resetISalignCrit, maxNumResetAlign, leaveZeroIS);
@@ -880,9 +880,9 @@ int CNavigatorDlg::RealignToAnItem(CMapDrawItem * item, BOOL restore,
   int err = mHelper->RealignToItem(item, restore, resetISalignCrit, maxNumResetAlign, 
     leaveZeroIS);
   if (err && err < 4) 
-    AfxMessageBox("An error occurred trying to access a map image file", MB_EXCLAME);
+    SEMMessageBox("An error occurred trying to access a map image file", MB_EXCLAME);
   if (err == 4 || err == 5) 
-    AfxMessageBox(err == 4 ? "There is no appropriate map image to align to"
+    SEMMessageBox(err == 4 ? "There is no appropriate map image to align to"
     : "The only available map image is too small to align to", MB_EXCLAME);
   return err;
 }
@@ -895,7 +895,7 @@ int CNavigatorDlg::MoveToItem(int index)
       return 1;
   } else {
     if (!GetOtherNavItem(index)) {
-      AfxMessageBox("The Navigator item index is out of range", MB_EXCLAME);
+      SEMMessageBox("The Navigator item index is out of range", MB_EXCLAME);
       return 1;
     }
   }
