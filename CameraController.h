@@ -828,6 +828,7 @@ public:
   int mNumContinuousToAlign;    // Number of continuous frames to align and sum
   bool mAverageContinAlign;     // Falg to average instead of summing
   int mNumAlignedContinuous;    // Number already aligned
+  bool mLastWasContinForTask;   // Flag that last image was continuous mode for task
   CString mDirForDEFrames;      // Single directory name for a subfolder of main location
   float mDEPrevSetNameTimeout;  // Sec of timeout when fetching set name
   float mDESetNameTimeoutUsed;  // Actual value used for timeout

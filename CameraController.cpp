@@ -415,6 +415,7 @@ CCameraController::CCameraController()
   mContinuousDelayFrac = 0.;
   mStoppedContinuous = false;
   mNumContinuousToAlign = 0;
+  mLastWasContinForTask = false;
   mFrameNameFormat = FRAME_FILE_MONTHDAY | FRAME_FILE_HOUR_MIN_SEC;
   mFrameNumberStart = 0;
   mLastUsedFrameNumber = -1;
@@ -1610,13 +1611,13 @@ void CCameraController::InitiateCapture(int inSet)
     mWinApp->mComplexTasks->DoingResetShiftRealign(); */
   if (mWinApp->GetDummyInstance())
     return;
-  if (CameraBusy()) {
+  if (CameraBusy() && !mLastWasContinForTask) {
     SetPending(inSet);
     return;
   }
 
   // If the last shot was a single frame, do the auto-shift to the extent specified
-  if ((mSingleContModeUsed == SINGLE_FRAME && 
+  if (((mSingleContModeUsed == SINGLE_FRAME || mLastWasContinForTask) && 
     !(mParam->K2Type && mNextAsyncSumFrames == 0)) || mRequiredRoll) {
     int nRoll = mBufferManager->GetShiftsOnAcquire();
     if (nRoll < mRequiredRoll)
@@ -8307,6 +8308,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
 
   mAcquiring = false;
   mShotIncomplete = false;
+  mLastWasContinForTask = false;
 
   // If this was just a shot to insert detector, delete arrays and take real shot
   if (mNeedShotToInsert >= 0) {
@@ -8786,7 +8788,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
                   if (mNumAlignedContinuous < mNumContinuousToAlign && mRepFlag >= 0) {
                     mInDisplayNewImage = false;
                     ErrorCleanup(0);
-                    InitiateCapture(mRepFlag);
+                    Capture(mRepFlag);
                     return;
                   } else {
                     mFalconHelper->FinishFrameAlignment(1);
@@ -8805,6 +8807,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
                   "%.0f  elapsed %.0f", numDrop, numWait, mContinuousDelayFrac * 
                   B3DMAX(delay, 0.), SEMTickInterval(mTaskFrameWaitStart));
               mTaskFrameWaitStart = -1.;
+              mLastWasContinForTask = true;
               numDrop = 0; numWait = 0;
             } else
               numWait++;
@@ -8870,7 +8873,8 @@ void CCameraController::DisplayNewImage(BOOL acquired)
         CUR_OR_DEFD_TO_BUF(mRegistration, mWinApp->mNavigator->GetCurrentRegistration());
 
       // If its a single frame, set up a save-copy flag and set to 1
-      if (mSingleContModeUsed == SINGLE_FRAME && mTD.NumAsyncSumFrames != 0)
+      if ((mSingleContModeUsed == SINGLE_FRAME || mLastWasContinForTask) 
+        && mTD.NumAsyncSumFrames != 0)
         mImBufs->IncrementSaveCopy();
 
       // Copy the imbuf and NULL out pointers if this was a real early return sum
@@ -9298,8 +9302,12 @@ void CCameraController::DisplayNewImage(BOOL acquired)
     return;
 
   // Check if doing repeated captures
-  if (mRepFlag >= 0)
-    Capture(mRepFlag);
+  if (mRepFlag >= 0) {
+    if (mLastWasContinForTask)
+      InitiateCapture(mRepFlag);
+    else
+      Capture(mRepFlag);
+  }
 }
 
 // Do defect correct and gain normalization for an image or frame being saved
