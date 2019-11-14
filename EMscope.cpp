@@ -201,6 +201,8 @@ CEMscope::CEMscope()
   mLowDoseMode = false;
   mLDNormalizeBeam = false;
   mUseNormForLDNormalize = false;
+  mSkipBlankingInLowDose = false;
+  mLastSkipLDBlank = false;
   mLDBeamNormDelay = 100;
   mLDViewDefocus = 0.;
   mSearchDefocus = 0.;
@@ -1480,11 +1482,13 @@ void CEMscope::ScopeUpdate(DWORD dwTime)
     // If screen changed, tell an AMT camera to change its blanking
     // If screen changed or STEM changed, manage blanking for shutterless camera when not
     // in low dose and STEM-dependent blanking
-    if (mLastScreen != screenPos || changedSTEM) {
+    if (mLastScreen != screenPos || changedSTEM || 
+      mLastSkipLDBlank != mSkipBlankingInLowDose) {
       if (mLastScreen != screenPos)
         mWinApp->mCamera->SetAMTblanking(screenPos == spUp);
-      if (!mLowDoseMode || changedSTEM)
+      if (!mLowDoseMode || changedSTEM || mLastSkipLDBlank != mSkipBlankingInLowDose)
         BlankBeam(needBlank, "ScopeUpdate");
+      mLastSkipLDBlank = mSkipBlankingInLowDose;
     }
 
     intensity = GetC2Percent(spotSize, rawIntensity);
@@ -7952,7 +7956,8 @@ BOOL CEMscope::NeedBeamBlanking(int screenPos, BOOL STEMmode, BOOL &goToLDarea)
   if (mCameraAcquiring && B3DABS(mShutterlessCamera) < 2)
     return false;
   if (screenPos == spUp)
-    return mLowDoseMode || mWinApp->mLowDoseDlg.m_bLowDoseMode || mShutterlessCamera;
+    return mShutterlessCamera || (!mSkipBlankingInLowDose && 
+    (mLowDoseMode || mWinApp->mLowDoseDlg.m_bLowDoseMode));
    
   // In Stem mode, when the screen is down, low dose rules the blanking and whether to
   // go to a low dose area unless the screen has to be down, in which case the

@@ -74,6 +74,7 @@
 #define IDD_TSDOSESYM                   234
 #define IDD_DIALOG1                     237
 #define IDD_DRIFTWAITSETUP              237
+#define IDD_VPP_EXPOSE_SETUP            241
 #define IDC_EDITXSIZE                   1000
 #define IDC_EDITYSIZE                   1002
 #define IDC_EDITYOVERLAP                1003
@@ -1538,6 +1539,15 @@
 #define IDC_CHECK_SKIP_BACKLASH         2561
 #define IDC_RFIRST_FULL                 2562
 #define IDC_STAT_MAG                    2563
+#define IDC_RLDRECORD                   2564
+#define IDC_RLDTRIAL                    2565
+#define IDC_RRECORDEDHERE               2567
+#define IDC_STAT_PROBEMODE              2568
+#define IDC_COND_AT_NAV_POINT           2569
+#define IDC_RWITHLABEL                  2570
+#define IDC_RWITHNOTE                   2571
+#define IDC_STAT_STARTING               2572
+#define IDC_EDITNAVTEXT                 2573
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2004,15 +2014,16 @@
 #define ID_MACRO_RUN38                  33374
 #define ID_MACRO_RUN39                  33375
 #define ID_MACRO_RUN40                  33376
+#define ID_SPECIALIZEDOPTIONS_SKIPBLANKINGINLDWITHSCREENUP 33377
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        241
-#define _APS_NEXT_COMMAND_VALUE         33377
-#define _APS_NEXT_CONTROL_VALUE         2564
+#define _APS_NEXT_RESOURCE_VALUE        243
+#define _APS_NEXT_COMMAND_VALUE         33378
+#define _APS_NEXT_CONTROL_VALUE         2574
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

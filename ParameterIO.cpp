@@ -5143,6 +5143,9 @@ void CParameterIO::ReportSpecialOptions(void)
     PrintfToLog("Special option is set to normalize all lenses on %s", 
     mWinApp->mScope->GetNormAllOnMagChange() > 1 ? "all mag changes" : 
     "mag changes within LM");
+  if (mWinApp->mScope->GetSkipBlankingInLowDose())
+    mWinApp->AppendToLog("Special option is set to skip blanking in Low Dose when the "
+      "screen is up");
 }
 
 // Outputs a short or float vector in as many lines as it takes

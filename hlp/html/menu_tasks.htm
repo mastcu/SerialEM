@@ -164,6 +164,10 @@
           <TD>Specify whether to normalize all lenses when changing mag within LM, or on all 
             mag changes</TD>
         </TR>
+       <TR VALIGN="top">
+          <TD class="style1">&nbsp; <a href="#hid_specializedoptions_skipblankinginldwithscreenup">Skip Blanking in LD when Screen Up</a></TD>
+          <TD>Do not keep beam blanked when screen is up in Low Dose mode</TD>
+        </TR>
       </TABLE>
       <BR>
       <P><A NAME="hid_process_setintensity"></A><B>Set Intensity command (Tasks menu)</B></P>
@@ -520,6 +524,16 @@
       lenses in addition when changing between LM and nonLM magnifications.&nbsp; With 
       this option, you can enter a 1 to normalize all lenses after all mag changes 
       within LM, or a 2 to normalize all lenses after all mag changes.</p>
+     <p> 
+     <A NAME="hid_specializedoptions_skipblankinginldwithscreenup"></A><B>Skip Blanking in LD when Screen Up command (Tasks&nbsp; - Specialized Options submenu)</B></p>
+     <p> This option controls whether the beam is kept blanked except when acquiring images when the 
+       screen is up in Low Dose mode. 
+       &nbsp; This blanking protects the specimen from being exposed when there is no camera
+       inserted that would cause shuttering to keep the beam blanked.  When there is a camera inserted,
+        it also protects the specimen when the screen is lowered during the interval between the 
+       camera opening its shutter and SerialEM discovering that the screen is down.&nbsp; Select this option to 
+       prevent the blanking if it is problematic for some reason.
+     </p> 
       </basefont>
   </BODY>
 </HTML>

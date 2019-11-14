@@ -161,6 +161,7 @@ class DLL_IM_EX CEMscope
   GetSetMember(BOOL, NoColumnValve)
   GetSetMember(BOOL, LDNormalizeBeam)
   GetSetMember(BOOL, UseNormForLDNormalize);
+  GetSetMember(BOOL, SkipBlankingInLowDose);
   GetSetMember(BOOL, LDBeamTiltShifts)
   GetSetMember(int, LDBeamNormDelay)
   float GetLDViewDefocus(int areaOrSet = VIEW_CONSET) {return areaOrSet != VIEW_CONSET ? mSearchDefocus : mLDViewDefocus;};
@@ -583,6 +584,8 @@ private:
   BOOL mSpectrumByEvent;      // Flag that spectroscopy mode update is by event
   BOOL mLDNormalizeBeam;      // Flag to go through view on changes between LD areas
   BOOL mUseNormForLDNormalize;  // Flag to use condenser normalization routine instead
+  BOOL mSkipBlankingInLowDose;  // Flag not to blank with screen up in low dose
+  BOOL mLastSkipLDBlank;      // Flag to respond to changes
   BOOL mLDBeamTiltShifts;     // Flag to record beam tilt shifts and adjust for them
   int mLDBeamNormDelay;       // Sleep time after going to view intensity
   float mLDViewDefocus;       // Defocus offset going to View in low dose

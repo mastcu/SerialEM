@@ -7,8 +7,7 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "afxres.h"
-
+#include "afxres.h"
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
@@ -493,6 +492,7 @@ BEGIN
             MENUITEM "&Normalize via View for Autofocus ", ID_SPECIALOPTIONS_NORMALIZEVIAVIEWFORAU
             MENUITEM "Adjust &Focus on Probe Mode Change", ID_SPECIALOPTIONS_ADJUSTFOCUSONPROBEMODECHANGE
             MENUITEM "Normalize &All on Mag Change...", ID_SPECIALOPTIONS_NORMALIZEALLLENS
+            MENUITEM "Skip &Blanking in LD when Screen Up", ID_SPECIALIZEDOPTIONS_SKIPBLANKINGINLDWITHSCREENUP
         END
     END
     POPUP "T&ilt Series"
@@ -3123,6 +3123,40 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,27,233,111,10
 END
 
+IDD_VPP_EXPOSE_SETUP DIALOGEX 0, 0, 187, 168
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Phase Plate Conditioning Setup"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    CONTROL         "Low Dose Record area",IDC_RLDRECORD,"Button",BS_AUTORADIOBUTTON | WS_GROUP,37,14,90,10
+    CONTROL         "Low Dose Trial area",IDC_RLDTRIAL,"Button",BS_AUTORADIOBUTTON,37,25,82,10
+    CONTROL         "Settings displayed here",IDC_RRECORDEDHERE,"Button",BS_AUTORADIOBUTTON,37,36,91,10
+    GROUPBOX        "Beam settings to use",IDC_STATIC,30,5,124,44,WS_GROUP
+    DEFPUSHBUTTON   "Close",IDOK,71,147,38,14
+    PUSHBUTTON      "Cancel",IDCANCEL,121,147,38,14
+    PUSHBUTTON      "?",IDC_BUTHELP,170,149,11,10
+    CONTROL         "Setup mag and beam on scope",IDC_SET_TRACK_STATE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,37,50,121,10
+    LTEXT           "Mag:",IDC_STATIC,61,62,19,8
+    LTEXT           "mag",IDC_COOKMAG,99,62,30,8
+    LTEXT           "Spot size:",IDC_STATIC,61,72,35,8
+    LTEXT           "spot",IDC_COOKSPOT,99,72,30,8
+    LTEXT           "Intensity:",IDC_STATIC,62,82,32,8
+    LTEXT           "% C3",IDC_COOKINTENSITY,99,82,30,8
+    LTEXT           "Microprobe",IDC_STAT_PROBEMODE,62,92,38,8
+    LTEXT           "3",IDC_STAT_ALPHA,103,92,8,8
+    EDITTEXT        IDC_EDITCOOKTIME,76,103,33,14,ES_AUTOHSCROLL
+    CONTROL         "",IDC_SPINCOOKTIME,"msctls_updown32",UDS_ARROWKEYS,109,103,10,14
+    LTEXT           "seconds",IDC_STATIC,123,106,29,8
+    LTEXT           "Expose for:",IDC_STATIC,33,106,38,8
+    CONTROL         "Do conditioning at nearest Navigator point with",IDC_COND_AT_NAV_POINT,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,120,169,10
+    CONTROL         "Label",IDC_RWITHLABEL,"Button",BS_AUTORADIOBUTTON | WS_GROUP,18,132,33,10
+    CONTROL         "Note",IDC_RWITHNOTE,"Button",BS_AUTORADIOBUTTON,54,132,28,10
+    LTEXT           "starting with",IDC_STAT_STARTING,88,133,42,8
+    EDITTEXT        IDC_EDITNAVTEXT,133,130,47,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "GO",IDC_COOKGO,21,147,38,14
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3375,8 +3409,8 @@ BEGIN
     IDD_COOKSETUP, DIALOG
     BEGIN
         LEFTMARGIN, 10
-        RIGHTMARGIN, 144
-        TOPMARGIN, 7
+        RIGHTMARGIN, 148
+        TOPMARGIN, 10
         BOTTOMMARGIN, 166
     END
 
@@ -3574,6 +3608,14 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 265
     END
+
+    IDD_VPP_EXPOSE_SETUP, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 180
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 161
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -3654,6 +3696,11 @@ BEGIN
 END
 
 IDD_LOWDOSE AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_VPP_EXPOSE_SETUP AFX_DIALOG_LAYOUT
 BEGIN
     0
 END
@@ -5598,8 +5645,7 @@ LANGUAGE 9, 1
 #include "res\SerialEM.rc2"  // non-Microsoft Visual C++ edited resources
 #include "afxres.rc"         // Standard components
 #include "XFolderDialog\XFolderDialog.rc"
-#endif
-
+#endif
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 
