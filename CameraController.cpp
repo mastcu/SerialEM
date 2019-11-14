@@ -414,6 +414,7 @@ CCameraController::CCameraController()
   mPreventUserToggle = 0;
   mContinuousDelayFrac = 0.;
   mStoppedContinuous = false;
+  mNumContinuousToAlign = 0;
   mFrameNameFormat = FRAME_FILE_MONTHDAY | FRAME_FILE_HOUR_MIN_SEC;
   mFrameNumberStart = 0;
   mLastUsedFrameNumber = -1;
@@ -1195,7 +1196,7 @@ int CCameraController::InitializeTietz(int whichCameras, int *originalList, int 
           param->pluginCanProcess = !param->TietzFlatfieldDir.IsEmpty()
             && type >= 11 && type != 13;
           if (param->pluginCanProcess && param->cropFullSizeImages < 0)
-            param->cropFullSizeImages = 1;
+            param->cropFullSizeImages = 3;
           if (param->cropFullSizeImages < 0)
             param->cropFullSizeImages = 0;
           if (param->cropFullSizeImages && !funcs->SetSizeOfCamera) {
@@ -1205,6 +1206,8 @@ int CCameraController::InitializeTietz(int whichCameras, int *originalList, int 
           }
           if (param->canTakeFrames & FRAMES_CAN_BE_ALIGNED)
             mFalconHelper->Initialize(-2);
+          if (param->useContinuousMode < 0)
+            param->useContinuousMode = (type >= 11 && type != 13) ? 1 : 0;
         }
       }
     } else {
@@ -4452,7 +4455,7 @@ void CCameraController::CapManageCoordinates(ControlSet & conSet, int &gainXoffs
   binInPlugin = mParam->K2Type == K3_TYPE && (!(doseFrac || superRes || 
      mAntialiasBinning > 0) || conSet.mode == CONTINUOUS);
   cropSubarea = CropTietzSubarea(mParam, conSet.right - conSet.left, 
-    conSet.bottom - conSet.top, conSet.processing, tsizeY);
+    conSet.bottom - conSet.top, conSet.processing, conSet.mode, tsizeY);
   mapForGeometry = mParam->TietzType && mParam->TietzImageGeometry > 0 && !cropSubarea;
   if (cropSubarea)
     mTD.PluginAcquireFlags |= TIETZ_CROP_SUBAREA;
@@ -5706,13 +5709,17 @@ void CCameraController::BlockAdjustSizes(int &DMsize, int ccdSize, int sizeMod,
 // Determine if a subarea is being taken from a Tietz camera and if it should be done
 // by cropping full field; also return Y size on chip if so, for adjusting constraints
 bool CCameraController::CropTietzSubarea(CameraParameters *param, int ubSizeX, 
-  int ubSizeY, int processing, int &ySizeOnChip)
+  int ubSizeY, int processing, int singleContinMode, int &ySizeOnChip)
 {
   bool crop, subarea = ubSizeX < param->sizeX || ubSizeY < param->sizeY;
-  crop =  param->TietzType && subarea && (param->cropFullSizeImages > 1 ||
-    (param->cropFullSizeImages == 1 && param->pluginCanProcess && !(mProcessHere && 
-      CanProcessHere(param)) && processing == GAIN_NORMALIZED));
-  ySizeOnChip = 0;
+  bool fastContinuous = param->useContinuousMode && singleContinMode == CONTINUOUS;
+  bool flatFielding = param->pluginCanProcess &&
+    !(mProcessHere && CanProcessHere(param)) && processing == GAIN_NORMALIZED;
+  crop = param->TietzType && subarea && (param->cropFullSizeImages > 3 ||
+    (param->cropFullSizeImages == 1 && !fastContinuous && flatFielding) ||
+    (param->cropFullSizeImages == 2 && !fastContinuous) ||
+    (param->cropFullSizeImages == 3 && flatFielding));
+    ySizeOnChip = 0;
   if (subarea && !crop)
     ySizeOnChip = TIETZ_ROTATING(param) ? ubSizeX : ubSizeY;
   return crop;
@@ -5723,10 +5730,11 @@ bool CCameraController::ConstrainExposureTime(CameraParameters *camP, ControlSet
 {
   int special = 0;
   CropTietzSubarea(camP, consP->right - consP->left, consP->bottom - consP->top,
-    consP->processing, special);
+    consP->processing, consP->mode, special);
   return ConstrainExposureTime(camP, consP->doseFrac > 0, consP->K2ReadMode, 
     consP->binning, consP->alignFrames && !consP->useFrameAlign, 
-    DESumCountForConstraints(camP, consP), consP->exposure, consP->frameTime, special);
+    DESumCountForConstraints(camP, consP), consP->exposure, consP->frameTime, special,
+    consP->mode);
 }
 
 int CCameraController::DESumCountForConstraints(CameraParameters *camP, ControlSet *consP) 
@@ -5741,7 +5749,7 @@ int CCameraController::DESumCountForConstraints(CameraParameters *camP, ControlS
 // frame-saving camera, alignInCamera only for Falcon, sumCount only for DE
 bool CCameraController::ConstrainExposureTime(CameraParameters *camP, BOOL doseFrac,
   int readMode, int binning, bool alignInCamera, int sumCount, float &exposure, 
-  float &frameTime, int special)
+  float &frameTime, int special, int singleContMode)
 {
   bool retval = false;
   float ftime, baseTime, minExp;
@@ -5754,8 +5762,16 @@ bool CCameraController::ConstrainExposureTime(CameraParameters *camP, BOOL doseF
     retval = true;
   }
   if (!camP->K2Type && !IS_FALCON2_OR_3(camP) && !mWinApp->mDEToolDlg.HasFrameTime(camP)
-    && !camP->OneViewType && !(camP->canTakeFrames && doseFrac))
+    && !camP->OneViewType && !(camP->canTakeFrames && doseFrac)) {
+    if (camP->TietzType && camP->useContinuousMode && singleContMode == CONTINUOUS) {
+      ftime = GetMinK2FrameTime(camP, binning, special);
+      if (exposure < ftime) {
+        retval = true;
+        exposure = ftime;
+      }
+    }
     return retval;
+  }
   
   // Both K2 and Falcon round to nearest number of frames for a given exposure time;
   // when exposure is exactly midway between for K2, it rounds up
@@ -6464,7 +6480,7 @@ void CCameraController::AcquirePluginImage(CameraThreadData *td, void **array,
     // TVIPS indicated to use a 1 for flatfield parameter
     // First two params are readout mode and speed index
     td->plugFuncs->SetExtraParams1(td->GatanReadMode > 0 ? 3 : 1,
-      td->GatanReadMode > 0 ? 2 : 1, 0, (tietzDark || !processing) ? 0 : 1,
+      td->GatanReadMode > 0 ? 2 : 1, 0, (tietzDark || !(processing & 7)) ? 0 : 1,
       (LPCTSTR)td->TietzFlatfieldDir);
   }
 
@@ -8264,7 +8280,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
   int spotSize, chan, i, err, ix, iy, invertCon, operation, ixoff, iyoff, divideBy;
   int alignErr, sumCount, camFrames, typext = 0, ldSet = 0, darkScale = 1;
   BOOL lowDoseMode, hasUserPtSave = false;
-  bool nameConfirmed, readLocally = false;
+  bool nameConfirmed, readLocally = false, reportContinAlign = false;
   float axoff, ayoff, specRate, camRate;
   double delay;
   CString message, str, root, ext, localFramePath;
@@ -8287,6 +8303,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
     mShiftManager->GetPixelSize(curCam, mMagBefore));
   bool oneViewTakingFrames = mParam->OneViewType && mParam->canTakeFrames && mTD.DoseFrac;
   bool K2orOneView = mParam->K2Type || oneViewTakingFrames;
+  static int numDrop = 0, numWait = 0;
 
   mAcquiring = false;
   mShotIncomplete = false;
@@ -8738,17 +8755,61 @@ void CCameraController::DisplayNewImage(BOOL acquired)
         // If a task is waiting for next continuous frame, make sure it is unique frame 
         // and an exposure time has elapsed, plus any general timeout that was set and not
         // turned into a delay before capture, and clear the task flag
-        if (mRepFlag >= 0 && mTaskFrameWaitStart >= 0. && 
-          !mImBufs->IsImageDuplicate(image)) {
+        // If images are being aligned and a stop came in, proceed with next one even
+        // if it is a duplicate
+        if ((mRepFlag >= 0 || mNumContinuousToAlign > 0) && mTaskFrameWaitStart >= 0. &&
+          (!mImBufs->IsImageDuplicate(image) || mNumContinuousToAlign > 0)) {
             ticks = mShiftManager->GetGeneralTimeOut(mObeyTiltDelay ? RECORD_CONSET : 
               mLastConSet);
             delay = SEMTickInterval((double)ticks, (double)GetTickCount());
-            if (SEMTickInterval(mTaskFrameWaitStart) >= 1000. * mExposure + 
+            if (SEMTickInterval(mTaskFrameWaitStart) >= 1000. * mExposure +
               mContinuousDelayFrac * B3DMAX(delay, 0.)) {
-                if (delay > 0)
-                  mShiftManager->ResetAllTimeouts();
-                mTaskFrameWaitStart = -1.;
-            }
+              if (delay > 0)
+                mShiftManager->ResetAllTimeouts();
+              if (mNumContinuousToAlign > 1) {
+                err = 0;
+                if (!mNumAlignedContinuous) {
+                  err = mFalconHelper->SetupContinuousAlign(*lastConSetp, &mTD,
+                    mDivideBy2, mNumContinuousToAlign);
+                  if (err)
+                    SEMTrace('1', "Error %d setting up alignment of continuous frames",
+                      err);
+                }
+                if (!err) {
+                  err = mFalconHelper->NextContinuousFrame();
+                }
+                if (!err) {
+
+                  // Align this image as next frame and either leave here or finish the 
+                  // alignment and go on
+                  mNumAlignedContinuous++;
+                  if (mNumAlignedContinuous < mNumContinuousToAlign && mRepFlag >= 0) {
+                    mInDisplayNewImage = false;
+                    ErrorCleanup(0);
+                    InitiateCapture(mRepFlag);
+                    return;
+                  } else {
+                    mFalconHelper->FinishFrameAlignment(1);
+                    if (!mAverageContinAlign)
+                      mExposure *= mNumAlignedContinuous;
+                  }
+                }
+                reportContinAlign = err == 0;
+                if (reportContinAlign)
+                  SEMTrace('1', "Providing aligned sum of %d frames after dropping %d "
+                    "waiting %d", mNumAlignedContinuous, numDrop, numWait);
+                mNumContinuousToAlign = 0;
+              }
+              if (!reportContinAlign)
+                SEMTrace('1', "Continuous frame for task, dropped %d waited %d, delay "
+                  "%.0f  elapsed %.0f", numDrop, numWait, mContinuousDelayFrac * 
+                  B3DMAX(delay, 0.), SEMTickInterval(mTaskFrameWaitStart));
+              mTaskFrameWaitStart = -1.;
+              numDrop = 0; numWait = 0;
+            } else
+              numWait++;
+        } else if (mRepFlag >= 0) {
+          numDrop++;
         }
         mImBufs->DeleteImage();
         mImBufs->DeleteOffsets();
@@ -9021,10 +9082,11 @@ void CCameraController::DisplayNewImage(BOOL acquired)
     }
 
     // Report on frame aligning if not deferred
-    if ((mTD.UseFrameAlign && mTD.NumAsyncSumFrames < 0) || 
+    if ((mTD.UseFrameAlign && mTD.NumAsyncSumFrames < 0) || reportContinAlign ||
       (mDoingDEframeAlign == 1 && mStartedExtraForDEalign)) {
-      if (!K2orOneView && ((alignErr = mFalconHelper->GetAlignError()) != 0 || 
-          !(ix = mFalconHelper->GetNumAligned()))) {
+      if (!K2orOneView && !reportContinAlign &&
+        ((alignErr = mFalconHelper->GetAlignError()) != 0 ||
+        !(ix = mFalconHelper->GetNumAligned()))) {
           if (!ix && !alignErr && !mTD.ErrorFromSave) {
             message = "An unknown error occurred when aligning frames";
           } else {
@@ -9036,7 +9098,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
           mWinApp->AppendToLog(message);
       } else if (mNumFrameAliLogLines > 0) {
  
-        if (mNumFrameAliLogLines > 1) {
+        if (mNumFrameAliLogLines > 1 || mTypeOfAlignError < 0) {
           PrintfToLog("Frame alignment results:          distance raw = %.1f smoothed"
             " = %.1f", mTD.FaRawDist, mTD.FaSmoothDist);
           if (mTypeOfAlignError == 0)
@@ -9050,8 +9112,8 @@ void CCameraController::DisplayNewImage(BOOL acquired)
             "raw dist = %.1f", mTypeOfAlignError > 0 ? "Weighted r" : "R", mTD.FaResMean,
             mTD.FaMaxResMax, mTD.FaRawDist);
         }
-        if ((K2orOneView && mGettingFRC) || 
-          (!K2orOneView && mFalconHelper->GetGettingFRC()))
+        if ((K2orOneView && mGettingFRC && !reportContinAlign) || 
+          ((!K2orOneView || reportContinAlign) && mFalconHelper->GetGettingFRC()))
             PrintfToLog(" FRC crossings 0.5: %.4f  0.25: %.4f  0.125: %.4f  is %.4f at "
               "0.25/pix", mTD.FaCrossHalf / K2FA_FRC_INT_SCALE, 
               mTD.FaCrossQuarter / K2FA_FRC_INT_SCALE, 

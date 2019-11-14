@@ -278,11 +278,11 @@ void CTSVariationsDlg::OnButTsvAddSeries()
   
   // Constrain the exposure time
   mWinApp->mCamera->CropTietzSubarea(camParam, conSet->right - conSet->left,
-    conSet->bottom - conSet->top, conSet->processing, special);
+    conSet->bottom - conSet->top, conSet->processing, conSet->mode, special);
   mWinApp->mCamera->ConstrainExposureTime(camParam, conSet->doseFrac > 0,
     conSet->K2ReadMode, conSet->binning, conSet->alignFrames && !conSet->useFrameAlign, 
     mWinApp->mCamera->DESumCountForConstraints(camParam, conSet), recExp, frameTime,
-    special);
+    special, conSet->mode);
   if (camParam->K2Type) {
     if (conSet->doseFrac && fabs(recExp - frameTime) < 1.e-5) {
       baseTime = mWinApp->mCamera->GetK2ReadoutInterval(camParam);
@@ -513,7 +513,7 @@ bool CTSVariationsDlg::CheckItemValue(bool update)
 
     case TS_VARY_FRAME_TIME:
       mWinApp->mCamera->CropTietzSubarea(camParam, conSet->right - conSet->left,
-        conSet->bottom - conSet->top, conSet->processing, special);
+        conSet->bottom - conSet->top, conSet->processing, conSet->mode, special);
       changed = mWinApp->mCamera->ConstrainFrameTime(m_fValue, camParam, conSet->binning,
         (camParam->OneViewType && camParam->canTakeFrames) ? conSet->K2ReadMode : 
         special);

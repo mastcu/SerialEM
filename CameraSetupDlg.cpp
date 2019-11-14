@@ -624,6 +624,7 @@ void CCameraSetupDlg::OnContSingle()
   UpdateData(TRUE);
   ManageIntegration();
   ManageAntialias();
+  ManageExposure();
 }
 
 void CCameraSetupDlg::OnLinesync()
@@ -882,7 +883,7 @@ void CCameraSetupDlg::LoadConsetToDialog()
   m_fFrameTime = mCurSet->frameTime;
   if (mParam->K2Type || mParam->canTakeFrames) {
     mCamera->CropTietzSubarea(mParam, mCurSet->right - mCurSet->left,
-      mCurSet->bottom - mCurSet->top, mCurSet->processing, special);
+      mCurSet->bottom - mCurSet->top, mCurSet->processing, mCurSet->mode, special);
     mCamera->ConstrainFrameTime(m_fFrameTime, mParam, binning,
       (mParam->OneViewType && mCurSet->K2ReadMode != 0) ? 1 : special);
   }
@@ -1175,11 +1176,11 @@ float CCameraSetupDlg::ManageExposure(bool updateIfChange)
 
   // General call and computations
   mCamera->CropTietzSubarea(mParam, m_eRight - m_eLeft, m_eBottom - m_eTop,
-    m_iProcessing, special);
+    m_iProcessing, 1 - m_iContSingle, special);
   BOOL changed = mCamera->ConstrainExposureTime(mParam, m_bDoseFracMode,
     mParam->OneViewType ? m_bUseHwROI_OvDiff : mode,
     mBinnings[m_iBinning], m_bAlignDoseFrac && !mCurSet->useFrameAlign, 
-    savingDE ? m_iSumCount : 1, realExp, m_fFrameTime, special);
+    savingDE ? m_iSumCount : 1, realExp, m_fFrameTime, special, 1 - m_iContSingle);
 
   float roundFac = mCamera->ExposureRoundingFactor(mParam);
   if (roundFac) {
@@ -2245,11 +2246,11 @@ void CCameraSetupDlg::ManageDose()
   mWinApp->CopyCurrentToCameraLDP();
   float realExp = m_eExposure;
   mCamera->CropTietzSubarea(mParam, m_eRight - m_eLeft, m_eBottom - m_eTop,
-    m_iProcessing, special);
+    m_iProcessing, 1 - m_iContSingle, special);
   mCamera->ConstrainExposureTime(mParam, m_bDoseFracMode,
     mParam->OneViewType ? m_bUseHwROI_OvDiff : mode, mBinnings[m_iBinning],
     mCurSet->alignFrames && !mCurSet->useFrameAlign,
-    m_bDEsaveMaster ? m_iSumCount : 1, realExp, m_fFrameTime, special);
+    m_bDEsaveMaster ? m_iSumCount : 1, realExp, m_fFrameTime, special, 1 - m_iContSingle);
   m_fDEframeTime = RoundedDEframeTime(m_fFrameTime * (m_bDEsaveMaster ? 1 : m_iSumCount));
   if (mParam->K2Type || (mParam->OneViewType && mParam->canTakeFrames))
     m_fFrameTime = RoundedDEframeTime(m_fFrameTime);
@@ -2580,7 +2581,7 @@ void CCameraSetupDlg::OnKillfocusEditFrameTime()
   float startFrame = m_fFrameTime;
   if (mParam->K2Type || mParam->canTakeFrames) {
     mCamera->CropTietzSubarea(mParam, m_eRight - m_eLeft, m_eBottom - m_eTop,
-      m_iProcessing, special);
+      m_iProcessing, 1 - m_iContSingle, special);
     mCamera->ConstrainFrameTime(m_fFrameTime, mParam, mParam->binnings[m_iBinning],
       (mParam->OneViewType && m_bUseHwROI_OvDiff) ? 1 : special);
   }
@@ -2967,11 +2968,11 @@ void CCameraSetupDlg::ManageK2SaveSummary(void)
     mCamera->GetSaveSuperResReduced() && mCamera->CAN_PLUGIN_DO(CAN_REDUCE_SUPER, mParam);
   if ((mParam->K2Type || mParam->canTakeFrames) && m_bDoseFracMode) {
     mCamera->CropTietzSubarea(mParam, m_eRight - m_eLeft, m_eBottom - m_eTop,
-      m_iProcessing, special);
+      m_iProcessing, 1 - m_iContSingle, special);
     mCamera->ConstrainExposureTime(mParam, m_bDoseFracMode,
       mParam->OneViewType ? m_bUseHwROI_OvDiff : m_iK2Mode,
       mBinnings[m_iBinning], m_bAlignDoseFrac && !mCurSet->useFrameAlign,
-      1, realExp, realFrame, special);
+      1, realExp, realFrame, special, 1 - m_iContSingle);
     frames = B3DNINT(realExp / B3DMAX(mCamera->GetMinK2FrameTime(mParam,
       mParam->binnings[m_iBinning], (mParam->OneViewType && m_bUseHwROI_OvDiff) ? 1 : 0),
       realFrame));
