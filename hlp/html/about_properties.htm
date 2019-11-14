@@ -1260,8 +1260,9 @@
             DE camera, the use of live mode is specified by the first parameter, and the use 
             of a separate thread that acquires in parallel with the display operations is 
             specified by the second parameter; both values are set to 1 by default.&nbsp; 
-            For a plugin camera, just the first parameter is used to indicate that a 
-            continuous mode should be used; theplugin must have the function StopContinuous 
+            For Tietz F216/F416/F816/XF416 cameras, the first parameter is 1 by default.
+            &nbsp; For a plugin camera, just the first parameter is used to indicate that a 
+            continuous mode should be used; the plugin must have the function StopContinuous 
             as well.</TD>
         </TR>
         <TR VALIGN="top">
@@ -1325,11 +1326,13 @@
         </TR>
         <TR VALIGN="top">
           <TD>SubareasByCropping</TD>
-          <TD>For a Tietz camera, set to 1 to acquire full-sized images and extract subareas 
+          <TD>For a Tietz camera, set to 1 or 3 to acquire full-sized images and extract subareas 
             by cropping when obtaining normalized images from the TVIPS software, which 
             avoids having to collect subarea flatfields and allows any subarea to be taken 
-            with flatfielding in the TVIPS software.&nbsp; Set to 2 to crop subareas from 
-            full-sized images for all images.</TD>
+            with flatfielding in the TVIPS software.&nbsp; For 1, it will do so only for 
+            non-continuous mode images; for 3, it will do so for continuous mode images as well.  
+            &nbsp; Set to 2 to crop subareas from full-sized images for all non-continuous mode
+            images, or to 4 to do so for all images.&nbsp; The default is 3.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>DropFramesStartEnd</TD>
@@ -1886,7 +1889,8 @@
               alignment that SerialEM provides for direct detectors, which is suitable for 
               low-dose images and can run on an NVIDIA GPU.&nbsp; If these capabilties are 
               turned on by default for a particular camera, enter 0 to have them not appear in
-              the Camera Setup dialog.  The default is 3 for Tietz XF416 and 0 otherwise.</TD>
+              the Camera Setup dialog.  The default is 3 for Tietz XF416 and 0 otherwise.
+          </TD>
         </TR>
         <TR VALIGN="top">
           <TD>FrameTimeDivisors</TD>
@@ -2836,6 +2840,15 @@
           <TD>Set to 1 to have the periodic realignment to a nearby piece using stage shift 
             align to the nearest piece instead of to a piece near the middle of the column.</TD>
         </TR>
+       <TR>
+          <TD>MontageUseTrialInISRealign</TD>
+          <TD>Set to 1 to use the Trial parameters without modification when aligning to an
+             adjacent piece with image shift.&nbsp;  Otherwise, the program will reduce the 
+            binning and exposure time of Trial to get an image no bigger than a certain size.
+            This option is not appropriate for CCD cameras, but for cameras like the OneView
+             where binning saves little time and it costs time to switch binning.
+          </TD>
+        </TR>
         <TR>
           <TD>MontageFilterR1R2S1S2</TD>
           <TD>Primary filter settings for montage correlations, in cycles/pixel with the standard 
@@ -3069,6 +3082,28 @@
           <TD>Factor by which to multiply allowed time for stage movements to complete; 
             default is 1.&nbsp; Originally applied only to stage movements in eucentricity 
             tasks, additional applications will be added as needed.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD><A name ="continuousAlign"></A>ContinuousAlignPairwise</TD>
+          <TD>Number of frames to include in pairwise alignment when aligning
+            continuous mode images, or 0 for alignment of each image to a cumulative aligned sum,
+            -1 for alignment of all pairs, or -2 for alignment of pairs among half of the images
+             or at least 7.&nbsp;The default is 0 for maximum speed.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>ContinuousAlignBinning</TD>
+          <TD>Binning to use for alignment when aligning and summing
+            continuous mode images; the default is 4.&nbsp;</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>ContinuousAlignFilter</TD>
+          <TD>Cutoff radius of Gaussian filter in unbinned reciprocal pixels when aligning
+            continuous mode images; the default is 0.06.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>UseGPUforContinuousAlign</TD>
+          <TD>Set to 1 to use a GPU for aligning continuous mode images. &nbsp;This property is 
+            active only on program startup, not if set with the SetProperty script command.</TD>
         </TR>
       </TABLE>
       <BR>

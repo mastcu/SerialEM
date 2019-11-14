@@ -680,12 +680,22 @@
             acquisition to be ended by the user.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style8">WaitForNextFrame</TD>
+          <TD class="style8">WaitForNextFrame [#S] [#A]</TD>
           <TD>After starting a continuous acquisition, use this command to wait until the
             next image becomes available in buffer A.&nbsp; The program will wait until the exposure
             time has elapsed so that the image is likely to be taken after completion of
-            previous operations. The &#39;UseContinuousFrames 1&#39; command must be used before the
-            acquisition is started.</TD>
+            previous operations.&nbsp; For the next script command, the image will be available 
+            in buffers A and B, but for commands after that, buffer B should be accessed instead 
+            because the copy in A may be overwritten with a new continuous frame by then.   
+            &nbsp; The &#39;UseContinuousFrames 1&#39; command must be used before the
+            acquisition is started.&nbsp; If the optional #S is given, that number of frames 
+            will be aligned with the Framealign module and summed, or averaged if the optional #A is non-zero.&nbsp; Use
+            averaging if the sum may exceed 32767 (for signed images) or 65535.&nbsp; Essential frame
+            alignment parameters are controlled by <A href ="about_properties.htm#continuousAlign">
+              several properties</A>; the default is for alignment 
+            to a cumulative sum, which is somewhat faster than pairwise alignments and should be adequate
+            for high-contrast frames.
+          </TD>
         </TR>
         <TR vAlign="top">
           <TD class="style8">StartFrameWaitTimer</TD>

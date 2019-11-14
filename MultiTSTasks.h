@@ -14,6 +14,7 @@ class CTSViewRange;
 class CAutocenSetupDlg;
 
 enum { ACTRACK_TO_TRIAL = 1, ACTRACK_START_CONTIN };
+enum { VPPCOND_RECORD = 0, VPPCOND_TRIAL, VPPCOND_SETTINGS };
 
 class CMultiTSTasks
 {
@@ -76,6 +77,7 @@ private:
   float mAcShiftedBeamX;  // Amount of beam shift in microns on camera imposed
   float mAcShiftedBeamY;
   WINDOWPLACEMENT mAutocenDlgPlace;
+  WINDOWPLACEMENT mVPPConditionPlace;
   int mRangeConsets[6];   // Consets for range finding, regular and low dose
   BOOL mTrZeroDegConSet;  // Control set for zero-degree shots
   float mMinTrZeroDegField;  // Minimum field size for those shots
@@ -133,6 +135,10 @@ private:
   double mBaiISX, mBaiISY;        // Image shift of anchor image
   StageMoveInfo mBaiMoveInfo;     // Stage position, backlash state for returning
   BOOL mSkipNextBeamShift;        // Flag to skip beam shift on align or image shift
+
+
+  // Phase plate conditioning (mVpp variables)
+  VppConditionParams mVppParams;
 
 public:
   CTSViewRange *mRangeViewer;
@@ -215,7 +221,12 @@ public:
   bool AutocenTrackingState(int changing = 0);
   bool AutocenMatchingIntensity(int changing = 0);
   WINDOWPLACEMENT *GetAutocenPlacement(void);
+  void VPPConditionClosing(int OKorGo);
+  WINDOWPLACEMENT *GetConditionPlacement(void);
   void ShiftBeamForCentering(AutocenParams * param);
   void GetCenteringBeamShift(float &cenShiftX, float &cenShiftY) {
     cenShiftX = mAcShiftedBeamX; cenShiftY = mAcShiftedBeamY;};
+  void SetupVPPConditioning();
+  void SaveScopeStateInVppParams(VppConditionParams *params);
+  void SetScopeStateFromVppParams(VppConditionParams *params);
 };

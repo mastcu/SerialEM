@@ -3,6 +3,19 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+11/13/19: Added ability to align and sum multiple continuous mode images with
+the WaitForNextFrame command.
+
+11/13/19: Added support for taking fast continuous mode images from Tietz
+CMOS cameras.
+
+11/13/19: Added special option to prevent blanking with screen up in Low Dose
+mode.
+
+11/13/19: Added property to use Trial set directly for image shift realign in
+montaging, and ability to do IS realign on subset of pieces (provisionally
+with property).
+
 11/12/19: Changed default readout interval for Falcon 3 (In 3.7).
 
 10/27/19: 3-8-0beta6

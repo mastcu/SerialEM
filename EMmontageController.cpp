@@ -94,6 +94,7 @@ EMmontageController::EMmontageController()
   mNumOverwritePieces = 0;
   mAlignToNearestPiece = false;
   mISrealignInterval = 1;
+  mUseTrialSetInISrealign = false;
   mDriftRepeatLimit = 5;
   mDriftRepeatDelay = 2.;
   mNumActions = SAVE_PIECE + 1;
@@ -348,6 +349,7 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
   int left, right, top, bottom, firstUndone, lastDone, firstPiece, area;
   double delISX, delISY, baseZ, needed, currentUsage, ISX, ISY;
   float memoryLimit, stageX, stageY, cornX, cornY, binDiv, xTiltFac, yTiltFac;
+  float acqExposure, trialExposure, minContExp;
   BOOL tryForMemory, focusFeasible, external, useHQ, alignable, useVorSinLD;
   int already, borderTry, setNum, useSetNum;
   ScaleMat bMat, aInv;
@@ -391,22 +393,22 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
     }
 
     if ((mWinApp->LowDoseMode() ? 1 : 0) != (mParam->setupInLowDose ? 1 : 0)) {
-      useVorSinLD = mParam->useViewInLowDose || 
+      useVorSinLD = mParam->useViewInLowDose ||
         (mParam->useSearchInLowDose && ldp[SEARCH_AREA].magIndex);
       if ((mParam->setupInLowDose || mParam->magIndex == ldp[RECORD_CONSET].magIndex) &&
         !useVorSinLD) {
 
-          // If it was set up in low dose and no data taken yet, assign current low dose
-          // R mag to the montage; in any event change the flag
-          if (mParam->setupInLowDose && mReadStoreMRC->getDepth() == 0)
-            mParam->magIndex = ldp[RECORD_CONSET].magIndex;
-          mParam->setupInLowDose = mWinApp->LowDoseMode();
+        // If it was set up in low dose and no data taken yet, assign current low dose
+        // R mag to the montage; in any event change the flag
+        if (mParam->setupInLowDose && mReadStoreMRC->getDepth() == 0)
+          mParam->magIndex = ldp[RECORD_CONSET].magIndex;
+        mParam->setupInLowDose = mWinApp->LowDoseMode();
       } else {
 
         // Change is never allowed here if View in LD is on, but can be achieved in 
         // dialog if no data yet
         mess.Format("This montage file was set up in %s mode and cannot be used\n"
-          "in %s mode", mParam->setupInLowDose ? "Low Dose" : "regular", 
+          "in %s mode", mParam->setupInLowDose ? "Low Dose" : "regular",
           mParam->setupInLowDose ? "regular" : "Low Dose");
         if (mReadStoreMRC->getDepth() > 0 && useVorSinLD)
           mess += "\n\nYou must either change mode or set up a new montage";
@@ -418,7 +420,7 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
     }
 
     // Switch to defined camera if necessary then get parameters for it
-    if (!mWinApp->LowDoseMode() && 
+    if (!mWinApp->LowDoseMode() &&
       mWinApp->GetCurrentActiveCamera() != mParam->cameraIndex)
       mWinApp->SetActiveCameraNumber(mParam->cameraIndex);
     cam = mWinApp->GetCamParams() + mWinApp->GetCurrentCamera();
@@ -435,32 +437,32 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
     if (mWinApp->LowDoseMode()) {
       area = mCamera->ConSetToLDArea(setNum);
       mParam->magIndex = ldp[area].magIndex;
-      if (IS_SET_VIEW_OR_SEARCH(setNum) && 
+      if (IS_SET_VIEW_OR_SEARCH(setNum) &&
         mParam->magIndex >= mScope->GetLowestNonLMmag())
-          mDefocusForCal = mScope->GetLDViewDefocus(area);
-    } else if (mConSets[useSetNum].binning != mParam->binning && 
+        mDefocusForCal = mScope->GetLDViewDefocus(area);
+    } else if (mConSets[useSetNum].binning != mParam->binning &&
       !mParam->warnedConSetBin) {
-        binDiv = BinDivisorF(cam);
-        mess.Format("This montage is set to be taken with binning %g,\n"
-          "different from the binning (%g) in the %s parameter\n"
-          "set.  The exposure time (%g sec) may not be right for\n"
-          "binning %g\n\nAre you sure you want to proceed?",
-          mParam->binning / binDiv, mConSets[useSetNum].binning / binDiv,  
-          (LPCTSTR)(*(mWinApp->GetModeNames() + useSetNum)), 
-          mConSets[useSetNum].exposure, mParam->binning / binDiv);
-        if (AfxMessageBox(mess, MB_QUESTION) == IDNO)
-          return 1;
-        mParam->warnedConSetBin = true;
+      binDiv = BinDivisorF(cam);
+      mess.Format("This montage is set to be taken with binning %g,\n"
+        "different from the binning (%g) in the %s parameter\n"
+        "set.  The exposure time (%g sec) may not be right for\n"
+        "binning %g\n\nAre you sure you want to proceed?",
+        mParam->binning / binDiv, mConSets[useSetNum].binning / binDiv,
+        (LPCTSTR)(*(mWinApp->GetModeNames() + useSetNum)),
+        mConSets[useSetNum].exposure, mParam->binning / binDiv);
+      if (AfxMessageBox(mess, MB_QUESTION) == IDNO)
+        return 1;
+      mParam->warnedConSetBin = true;
     }
 
-    /* if (!mMagTab[mParam->magIndex].calibrated[mWinApp->GetCurrentCamera()] && 
+    /* if (!mMagTab[mParam->magIndex].calibrated[mWinApp->GetCurrentCamera()] &&
       mParam->magIndex >= mScope->GetLowestNonLMmag() &&
-      !mParam->warnedCalAcquire && !mTrialMontage && 
+      !mParam->warnedCalAcquire && !mTrialMontage &&
       (!mParam->moveStage || CalNeededForISrealign(mParam))) {
       if (SEMMessageBox(
         "You have not calibrated the image shifts for the selected magnification.\n\n"
         "You should do so (see Calibration menu) unless you are just doing "
-        "map or test montages.\n\nDo you want to proceed anyway?", 
+        "map or test montages.\n\nDo you want to proceed anyway?",
         MB_YESNO | MB_ICONQUESTION, false, IDYES) == IDNO)
         return 1;
       mParam->warnedCalAcquire = true;
@@ -468,8 +470,8 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
 
     if (mParam->moveStage && mTrialMontage == MONT_TRIAL_IMAGE) {
       if (AfxMessageBox("This is a stage montage but you started a Prescan.\n\n"
-                        "Are you sure you want to do a Prescan?",
-                        MB_YESNO | MB_ICONQUESTION) == IDNO)
+        "Are you sure you want to do a Prescan?",
+        MB_YESNO | MB_ICONQUESTION) == IDNO)
         return 1;
     }
 
@@ -484,9 +486,9 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
     if (!mWinApp->LowDoseMode()) {
       if (mScope->GetMagIndex() != mParam->magIndex)
         mScope->SetMagIndex(mParam->magIndex);
-      
+
       // Otherwise, normalize if first time or mag has changed
-      else if (!mTrialMontage && 
+      else if (!mTrialMontage &&
         (!mParam->settingsUsed || mScope->GetMagChanged())) {
         mScope->NormalizeProjector();
       }
@@ -514,14 +516,14 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
     mTrialParam.yFrame = fullY / binning;
     mWinApp->mCamera->CenteredSizes(mTrialParam.xFrame, cam->sizeX, cam->moduloX,
       left, right, mTrialParam.yFrame, cam->sizeY, cam->moduloY, top, bottom, binning);
- 
+
     mTrialParam.xOverlap = (mParam->binning * mParam->xOverlap) / binning;
     mTrialParam.xOverlap += mTrialParam.xOverlap % 2;
     mTrialParam.yOverlap = (mParam->binning * mParam->yOverlap) / binning;
     mTrialParam.yOverlap += mTrialParam.yOverlap % 2;
 
     mTrialParam.binning = binning;
-      
+
     // point to the special set
     mParam = &mTrialParam;
     statText = "GETTING TRIAL MONTAGE";
@@ -547,14 +549,14 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
       mMiniOffsets.offsetX[ind] = MINI_NO_PIECE;
       mMiniOffsets.offsetY[ind] = MINI_NO_PIECE;
     }
-  
+
   // Compute starting coordinates of current center virtual piece
   mMontCenterX = mMontageX[mNumPieces - 1] / 2;
   mMontCenterY = mMontageY[mNumPieces - 1] / 2;
 
   // Set extra piece position to go to center at end
-  mMontageX[mNumPieces]  = mMontCenterX;
-  mMontageY[mNumPieces]  = mMontCenterY;
+  mMontageX[mNumPieces] = mMontCenterX;
+  mMontageY[mNumPieces] = mMontCenterY;
 
   // Set the center frames if not preset, or revise center if preset
   if (definedCenter && mCenterOnly) {
@@ -584,7 +586,7 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
   if (mReadingMontage && mCenterOnly) {
     for (ix = 0; ix < mParam->xNframes; ix++)
       for (iy = 0; iy < mParam->yNframes; iy++)
-        if (ix < mCenterIndX1 || ix > mCenterIndX2 || 
+        if (ix < mCenterIndX1 || ix > mCenterIndX2 ||
           iy < mCenterIndY1 || iy > mCenterIndY2)
           mSkipIndex[mNumToSkip++] = ix *mParam->yNframes + iy;
   }
@@ -594,15 +596,15 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
     // Initialize the skip list unless it is being ignored
     mNumToSkip = mParam->ignoreSkipList ? 0 : mParam->numToSkip;
     for (ix = 0; ix < mNumToSkip; ix++)
-      mSkipIndex[ix] = mParam->skipPieceX[ix] * mParam->yNframes + 
-        mParam->skipPieceY[ix];
+      mSkipIndex[ix] = mParam->skipPieceX[ix] * mParam->yNframes +
+      mParam->skipPieceY[ix];
 
     // Get transformation matrix
     if (mParam->moveStage) {
-      
+
       // Stage move case - adjust Y by cosine of tilt angle
-      bMat = mShiftManager->FocusAdjustedStageToCamera(mWinApp->GetCurrentCamera(), 
-        mParam->magIndex, mScope->FastSpotSize(), mScope->GetProbeMode(), 
+      bMat = mShiftManager->FocusAdjustedStageToCamera(mWinApp->GetCurrentCamera(),
+        mParam->magIndex, mScope->FastSpotSize(), mScope->GetProbeMode(),
         mScope->FastIntensity(), mDefocusForCal);
       if (bMat.xpx == 0.) {
         SEMMessageBox("There is no measured or derived"
@@ -610,16 +612,16 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
           "You must calibrate stage shift to take this montage");
         return 1;
       }
-      
+
       mBinv = mShiftManager->MatInv(bMat);
       mShiftManager->GetStageTiltFactors(xTiltFac, yTiltFac);
       mBinv.xpx /= xTiltFac;
       mBinv.xpy /= xTiltFac;
       mBinv.ypx /= yTiltFac;
       mBinv.ypy /= yTiltFac;
-      
+
     } else {
-      
+
       // Normal Image shift case
       mBinv = mShiftManager->CameraToIS(mParam->magIndex);
       if (mBinv.xpx == 0.) {
@@ -629,13 +631,13 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
         return 1;
       }
     }
-    
+
     // If skipping outside a Nav item, get the item
     if (mParam->skipOutsidePoly && mWinApp->mNavigator) {
 
       // Get specific item if there is an index, otherwise get current or acquire item
       // and if it has a polygon ID, get the polygon by that ID
-      if (mParam->insideNavItem >= 0) 
+      if (mParam->insideNavItem >= 0)
         navItem = mWinApp->mNavigator->GetOtherNavItem(mParam->insideNavItem);
       else if (mWinApp->mNavigator->GetCurrentOrAcquireItem(navItem) >= 0) {
         if (navItem->mPolygonID) {
@@ -649,7 +651,7 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
         }
       }
       if (!navItem || navItem->mType != ITEM_TYPE_POLYGON) {
-        SEMMessageBox(CString("The Navigator item to skip pieces outside of ") + 
+        SEMMessageBox(CString("The Navigator item to skip pieces outside of ") +
           (!navItem ? "has a number out of range" : "is not a polygon"));
         return 1;
       }
@@ -665,28 +667,28 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
       notSkipping = 0;
     }
 
-    mActPostExposure = mWinApp->ActPostExposure(&mConSets[setNum]) && !preCooking && 
+    mActPostExposure = mWinApp->ActPostExposure(&mConSets[setNum]) && !preCooking &&
       !mUseContinuousMode;
 
     // Check that the image shift/stage move is not out of range
     for (ix = 0; ix < mNumPieces; ix++) {
       fullX = mParam->binning * (mMontageX[ix] - mMontCenterX);
       fullY = mParam->binning * (mMontageY[ix] - mMontCenterY);
-      delISX = fullX * mBinv.xpx + fullY * mBinv.xpy; 
-      delISY = fullX * mBinv.ypx + fullY * mBinv.ypy; 
+      delISX = fullX * mBinv.xpx + fullY * mBinv.xpy;
+      delISY = fullX * mBinv.ypx + fullY * mBinv.ypy;
       if (mParam->moveStage) {
 
         // Add piece to skip list if out of range and turn off post-actions
-        if (delISX + mBaseStageX < mScope->GetStageLimit(STAGE_MIN_X) || 
-          delISX + mBaseStageX > mScope->GetStageLimit(STAGE_MAX_X) || 
-          delISY + mBaseStageY < mScope->GetStageLimit(STAGE_MIN_Y) || 
+        if (delISX + mBaseStageX < mScope->GetStageLimit(STAGE_MIN_X) ||
+          delISX + mBaseStageX > mScope->GetStageLimit(STAGE_MAX_X) ||
+          delISY + mBaseStageY < mScope->GetStageLimit(STAGE_MIN_Y) ||
           delISY + mBaseStageY > mScope->GetStageLimit(STAGE_MAX_Y)) {
-            SEMTrace('S', "Adding piece %d at %.2f %.2f to skip list", ix, 
-              delISX + mBaseStageX, delISY + mBaseStageY);
+          SEMTrace('S', "Adding piece %d at %.2f %.2f to skip list", ix,
+            delISX + mBaseStageX, delISY + mBaseStageY);
           if (AddToSkipListIfUnique(ix))
             mActPostExposure = false;
-         }
-        
+        }
+
       } else if (!mShiftManager->ImageShiftIsOK(delISX, delISY, true)) {
         SEMMessageBox(
           "The image shift needed is too close to the end of its range.\n\n"
@@ -708,7 +710,7 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
           delISX += ISX;
           delISY += ISY;
         }
-        mWinApp->mNavigator->ConvertIStoStageIncrement(mParam->magIndex, 
+        mWinApp->mNavigator->ConvertIStoStageIncrement(mParam->magIndex,
           mWinApp->GetCurrentCamera(), delISX, delISY, (float)mScope->FastTiltAngle(),
           stageX, stageY);
 
@@ -748,11 +750,11 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
       "outside the range of\r\nstage movement defined in the properties file.");
     return 1;
   }
-  
+
   // Find any sections that are already in the file
   if (!mTrialMontage) {
     already = ListMontagePieces(mReadStoreMRC, mParam, mParam->zCurrent, mPieceSavedAt);
-  
+
     // For reading in, add missing frames to skip list
     if (mReadingMontage) {
       for (ix = 0; ix < mNumPieces; ix++) {
@@ -761,12 +763,12 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
       }
       if (!already) {
         SEMMessageBox("There are no pieces at this Z value.");
-        return 1; 
+        return 1;
       }
       statText = "READING MONTAGE";
     }
   }
-  
+
   // Set up index from "variables" to pieces and back
   ind = 0;
   for (ix = 0; ix < mNumPieces; ix++) {
@@ -798,10 +800,10 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
       for (iy = 0; iy < mParam->yNframes; iy++) {
         ind = ix * mParam->yNframes + iy;
         if (mPieceToVar[ind] >= 0) {
-          if (icx1 && iy != last && 
-            ((cookSkip && (ix + iy) % cookSkip != 0) || cookSkip >= mParam->yNframes || 
-            (skipColumn && ix % 2 && ix < mParam->xNframes - 1 && 
-              p2vOrig[ind + mParam->yNframes] >= 0 && 
+          if (icx1 && iy != last &&
+            ((cookSkip && (ix + iy) % cookSkip != 0) || cookSkip >= mParam->yNframes ||
+            (skipColumn && ix % 2 && ix < mParam->xNframes - 1 &&
+              p2vOrig[ind + mParam->yNframes] >= 0 &&
               p2vOrig[ind - mParam->yNframes] >= 0))) {
             mPieceToVar[ind] = -1;
             mNumToSkip++;
@@ -824,7 +826,7 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
     mDoISrealign = true;
   }
 
- // Anchor and realignment needed if selected and not precooking
+  // Anchor and realignment needed if selected and not precooking
   mNeedAnchor = mNeedRealignToAnchor = mUsingAnchor = mNeedColumnBacklash =
     mDoISrealign && mParam->useAnchorWithIS && !preCooking;
   if (mNeedAnchor)
@@ -832,9 +834,9 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
 
   // If doing non-quality stage montage and the overlap in Y is large enough, then go
   // up and down columns: invert order in the odd columns. Also do for precooking
-  mDoZigzagStage = mParam->moveStage && !mReadingMontage && mParam->yNframes > 1 && 
-    ((!useHQ && mShiftManager->GetPixelSize(mWinApp->GetCurrentCamera(), mParam->magIndex) 
-    * mParam->binning * mParam->yOverlap > mMinOverlapForZigzag) || preCooking);
+  mDoZigzagStage = mParam->moveStage && !mReadingMontage && mParam->yNframes > 1 &&
+    ((!useHQ && mShiftManager->GetPixelSize(mWinApp->GetCurrentCamera(), mParam->magIndex)
+      * mParam->binning * mParam->yOverlap > mMinOverlapForZigzag) || preCooking);
   if (mDoZigzagStage) {
     icx1 = 0;
     for (ix = 0; ix < mParam->xNframes; ix++) {
@@ -862,12 +864,12 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
       while (ix >= 0 && ix < mParam->xNframes) {
         icy1 = (mParam->yNframes + 1) / 2;
         if (mUsingAnchor && ix != icx1 - 1) {
-          
+
           // For IS align on all but first column, find first and last piece in column
           // Sorry, pieces are numbered from 0 here but from 1 in the index routine
           first = -1;
           for (iy = 0; iy < mParam->yNframes; iy++) {
-            if (PieceIndexFromXY(ix+1, iy+1) >= 0) {
+            if (PieceIndexFromXY(ix + 1, iy + 1) >= 0) {
               if (first < 0)
                 first = iy;
               last = iy;
@@ -879,8 +881,8 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
           for (j = 0; j < mParam->yNframes && first >= 0; j++) {
             for (iDir = 1; iDir >= -1; iDir -= 2) {
               iy = (first + last) / 2 + j * iDir;
-              if (PieceIndexFromXY(ix+1, iy+1) >= 0 && 
-                PieceIndexFromXY(ix+1-icx2, iy+1)) {
+              if (PieceIndexFromXY(ix + 1, iy + 1) >= 0 &&
+                PieceIndexFromXY(ix + 1 - icx2, iy + 1)) {
                 icy1 = iy + 1;
                 first = -1;
                 break;
@@ -931,7 +933,7 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
   }
 
   // Set flag for whether to do focus after every move and resize array for focus blocks
-  focusFeasible = useHQ && mParam->magIndex >=mScope->GetLowestNonLMmag() 
+  focusFeasible = useHQ && mParam->magIndex >= mScope->GetLowestNonLMmag()
     && !mReadingMontage && !mTrialMontage && !preCooking;
   mFocusAfterStage = focusFeasible && mParam->focusAfterStage;
   mFocusInBlocks = focusFeasible && mParam->focusBlockSize > 1 && mParam->focusInBlocks
@@ -946,10 +948,36 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
   CLEAR_RESIZE(mBlockCenY, int, icx1);
 
   // Evaluate continuous mode now that focus is known
-  if (mUseContinuousMode && (mFocusAfterStage || mDoISrealign)) {
-    SEMMessageBox("You cannot use continuous mode for montaging when focusing\n"
-      "at every piece or doing image shift realignment");
-    return 1;
+  acqExposure = mConSets[setNum].exposure;
+  trialExposure = mConSets[TRIAL_CONSET].exposure;
+  minContExp = acqExposure;
+  if (mUseContinuousMode) {
+    if (mFocusAfterStage) {
+      SEMMessageBox("You cannot use continuous mode for montaging when \nfocusing"
+        "at every piece");
+      return 1;
+    }
+
+    // This MIGHT work but it is flaky and something is wrong with the delay after image
+    // shift
+    if (mDoISrealign) {
+      SEMMessageBox("You cannot use continuous mode for montaging along with\n"
+        "realigning with image shift");
+      return 1;
+    }
+
+    // So this WON't happen
+    if (mDoISrealign && (mConSets[TRIAL_CONSET].binning < mConSets[setNum].binning ||
+      trialExposure > acqExposure)) {
+      SEMMessageBox("You cannot use continuous mode for montaging when \nrealigning"
+        "with image shift and Trial " + CString(trialExposure > acqExposure ?
+          "exposure is more than the acquisition exposure" :
+          "binning is less than the acquisition binning"));
+      return 1;
+    }
+
+    if (mDoISrealign)
+      minContExp = B3DMAX(0.1f, trialExposure);
   }
 
   // Set up focus blocks by setting up sequence of pieces and indices to focus centers
@@ -1190,13 +1218,27 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
     mConSets[MONTAGE_CONSET].bottom = bottom * mParam->binning;
     mConSets[MONTAGE_CONSET].binning = mParam->binning;
     mConSets[MONTAGE_CONSET].mode = SINGLE_FRAME;
-    if (mUseContinuousMode) {
-      mConSets[MONTAGE_CONSET].mode = CONTINUOUS;
-      mCamera->ChangePreventToggle(1);
-    }
+    mNumContinuousAlign = 0;
     if (mTrialMontage || mUseContinuousMode) {
       mConSets[MONTAGE_CONSET].saveFrames = 0;
       mConSets[MONTAGE_CONSET].doseFrac = 0;
+    }
+    if (mUseContinuousMode) {
+      mConSets[MONTAGE_CONSET].mode = CONTINUOUS;
+      mConSets[MONTAGE_CONSET].drift = 0.;
+      mCamera->ChangePreventToggle(1);
+      mNumContinuousAlign = B3DNINT(acqExposure / minContExp);
+      while (mNumContinuousAlign > 1) {
+        mConSets[MONTAGE_CONSET].exposure = acqExposure / mNumContinuousAlign;
+        mCamera->ConstrainExposureTime(cam, &mConSets[MONTAGE_CONSET]);
+        if (0.8 * minContExp > mConSets[MONTAGE_CONSET].exposure)
+          mNumContinuousAlign--;
+        else
+          break;
+      }
+      if (mNumContinuousAlign > 1)
+        SEMTrace('S', "Continuous: num %d exp %.3f -> %.3f  minExp %.3f",
+          mNumContinuousAlign, acqExposure, mConSets[MONTAGE_CONSET].exposure,minContExp);
     }
 
     if (cam->OneViewType && (useHQ ? mParam->noHQDriftCorr : mParam->noDriftCorr))
@@ -1815,6 +1857,8 @@ int EMmontageController::DoNextPiece(int param)
         mCamera->InitiateCapture(MONTAGE_CONSET);
       }
       if (mUseContinuousMode) {
+        if (mNumContinuousAlign > 1)
+          mCamera->AlignContinuousFrames(mNumContinuousAlign, false);
         mCamera->SetTaskWaitingForFrame(true);
         mWinApp->AddIdleTask(CCameraController::TaskGettingFrame, TASK_MONTAGE, 0, 0);
       } else {
@@ -3634,7 +3678,7 @@ void EMmontageController::RealignNextTask(int param)
 {
   int targetSize = B3DMAX(1024, mCamera->TargetSizeForTasks());
   float shiftX, shiftY;
-  int i, expectX = 0, expectY = 0; 
+  int i, extraWait = 200, expectX = 0, expectY = 0; 
   double ISX, ISY, sterr, stageAdjX, stageAdjY, adjISX, adjISY;
   int timeOut = 120000;
   bool stageErr = false;
@@ -3642,6 +3686,8 @@ void EMmontageController::RealignNextTask(int param)
   CFileStatus status;
   CString mess;
   ControlSet *conSet = mWinApp->GetConSets() + TRACK_CONSET;
+  int consNum = (param == ISALIGN_ACQUIRE && mUseTrialSetInISrealign) ? 
+    TRIAL_CONSET : TRACK_CONSET;
 
   if (mPieceIndex < 0) {
     DoNextPiece(0);
@@ -3677,7 +3723,7 @@ void EMmontageController::RealignNextTask(int param)
   if ((param == EXIST_CHECKPOS_ACQUIRE || param == ISALIGN_ACQUIRE || 
     param == ANCHOR_ACQUIRE || param == BACKLASH_CHECK_ACQUIRE || 
     param == ANCHALI_CHECK_ACQUIRE) && !stageErr) {
-      if (mUseContinuousMode)
+      if (mUseContinuousMode && param != ISALIGN_ACQUIRE)
         mCamera->StopCapture(-1);
 
       // Take a shot based on Record area
@@ -3691,8 +3737,19 @@ void EMmontageController::RealignNextTask(int param)
           TRACK_CONSET);
         mLoweredMag = true;
       }
-      mCamera->InitiateCapture(TRACK_CONSET);
-      mWinApp->AddIdleTask(SEMStageCameraBusy, TASK_MONTAGE_REALIGN, param + 1, 0);
+
+      // This won't happen.  Even with extra wait of 4000 it gave big shifts: needs work
+      if (mUseContinuousMode && param == ISALIGN_ACQUIRE) {
+        if (mConSets[MONTAGE_CONSET].correctDrift)
+          extraWait += (int)(750. * mConSets[MONTAGE_CONSET].exposure);
+        mCamera->SetTaskFrameWaitStart(mShiftManager->AddIntervalToTickTime(
+          GetTickCount(), extraWait));
+        mWinApp->AddIdleTask(CCameraController::TaskGettingFrame, TASK_MONTAGE_REALIGN,
+          param + 1, 0);
+      } else {
+        mCamera->InitiateCapture(consNum);
+        mWinApp->AddIdleTask(SEMStageCameraBusy, TASK_MONTAGE_REALIGN, param + 1, 0);
+      }
       return;    
   }
 

@@ -67,6 +67,7 @@ class EMmontageController
   GetMember(int, NumPieces)
   GetSetMember(BOOL, AlignToNearestPiece)
   GetSetMember(int, ISrealignInterval)
+  GetSetMember(BOOL, UseTrialSetInISrealign);
   GetSetMember(int, DriftRepeatLimit);
   GetSetMember(float, DriftRepeatDelay);
   GetSetMember(BOOL, AutosaveLog);
@@ -77,6 +78,7 @@ class EMmontageController
   GetSetMember(BOOL, UseSet2InLD);
   GetSetMember(bool, RedoCorrOnRead);
   SetMember(bool, NeedBoxSetup);
+  GetMember(BOOL, UseContinuousMode);
   void SetBaseISXY(double inX, double inY) {mBaseISX = inX; mBaseISY = inY;};
   void SetXcorrFilter(int ind, float r1, float r2, float s1, float s2) {mSloppyRadius1[ind] = r1;
     mRadius2[ind] = r2; mSigma1[ind] = s1; mSigma2[ind] = s2;};
@@ -221,6 +223,7 @@ class EMmontageController
   int mRealignInterval;           // Run-time value from param interval if doing realign
   BOOL mAlignToNearestPiece;      // Property flag to find nearest piece for realigning to
   int mISrealignInterval;         // Interval at which to do the IS realign
+  BOOL mUseTrialSetInISrealign;   // Flag to use trial set as is in IS realign
   BOOL mDoISrealign;              // Run-time flag to do image-shift realignment
   int mSecondHalfStartSeq;        // Sequence index of first piece in second half
   BOOL mUsingAnchor;              // Run-time flag that anchor is being used
@@ -267,6 +270,7 @@ class EMmontageController
   bool mRedoCorrOnRead;
   float mDefocusForCal;
   BOOL mUseContinuousMode;        // Flag to use camera continuous acquisition
+  int mNumContinuousAlign;        // Number of continuous mode shots to align
   double mStartTime;              // Tick time when it started
   double mLastElapsed;            // Elapsed time and mNumDoing values when
   int mLastNumDoing;               // GetRemainingTime was last called
