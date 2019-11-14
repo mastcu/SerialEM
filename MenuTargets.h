@@ -361,14 +361,16 @@ public:
   afx_msg void OnCalibrateComaVsIS();
   afx_msg void OnShowWholeAreaForAllPoints();
   afx_msg void OnUpdateShowWholeAreaForAllPoints(CCmdUI *pCmdUI);
-  afx_msg void OnMontagingGridsAddGriLlikeLastOne();
-  afx_msg void OnUpdateOnMontagingGridsAddGriLlikeLastOne(CCmdUI *pCmdUI);
+  afx_msg void OnMontagingGridsAddGridLikeLastOne();
+  afx_msg void OnUpdateOnMontagingGridsAddGridLikeLastOne(CCmdUI *pCmdUI);
   afx_msg void OnExternalTool(UINT nID);
   void OpenNavigatorIfClosed(void);
   afx_msg void OnCameraAlwaysAntialiasK23();
   afx_msg void OnUpdateCameraAlwaysAntialiasK23(CCmdUI *pCmdUI);
   afx_msg void OnBeamSpotListCalibrations();
   afx_msg void OnTasksSetupWaitForDrift();
+  afx_msg void OnSkipBlankingInLdWithScreenUp();
+  afx_msg void OnUpdateSkipBlankingInLdWithScreenUp(CCmdUI *pCmdUI);
 };
 
 /////////////////////////////////////////////////////////////////////////////

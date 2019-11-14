@@ -442,8 +442,8 @@ BEGIN_MESSAGE_MAP(CMenuTargets, CCmdTarget)
   ON_UPDATE_COMMAND_UI(ID_FOCUSTUNING_COMAVS, OnUpdateNoTasksNoSTEM)
   ON_COMMAND(ID_MONTAGINGGRIDS_SHOWWHOLEAREAFORALLPOINTS, OnShowWholeAreaForAllPoints)
   ON_UPDATE_COMMAND_UI(ID_MONTAGINGGRIDS_SHOWWHOLEAREAFORALLPOINTS, OnUpdateShowWholeAreaForAllPoints)
-  ON_COMMAND(ID_MONTAGINGGRIDS_ADDGRIDLIKELASTONE, OnMontagingGridsAddGriLlikeLastOne)
-  ON_UPDATE_COMMAND_UI(ID_MONTAGINGGRIDS_ADDGRIDLIKELASTONE, OnUpdateOnMontagingGridsAddGriLlikeLastOne)
+  ON_COMMAND(ID_MONTAGINGGRIDS_ADDGRIDLIKELASTONE, OnMontagingGridsAddGridLikeLastOne)
+  ON_UPDATE_COMMAND_UI(ID_MONTAGINGGRIDS_ADDGRIDLIKELASTONE, OnUpdateOnMontagingGridsAddGridLikeLastOne)
   ON_COMMAND_RANGE(ID_EXTERNAL_TOOL1, ID_EXTERNAL_TOOL25, OnExternalTool)
   ON_UPDATE_COMMAND_UI_RANGE(ID_EXTERNAL_TOOL1, ID_EXTERNAL_TOOL25, OnUpdateNoTasks)
   ON_COMMAND(ID_SPECIALSETTINGS_ALWAYSANTIALIASK2, OnCameraAlwaysAntialiasK23)
@@ -452,6 +452,8 @@ BEGIN_MESSAGE_MAP(CMenuTargets, CCmdTarget)
     ON_UPDATE_COMMAND_UI(ID_BEAMSPOT_LISTCALIBRATIONS, OnUpdateNoTasks)
     ON_COMMAND(ID_TASKS_SETUPWAITFORDRIFT, OnTasksSetupWaitForDrift)
     ON_UPDATE_COMMAND_UI(ID_TASKS_SETUPWAITFORDRIFT, OnUpdateNoTasks)
+    ON_COMMAND(ID_SPECIALIZEDOPTIONS_SKIPBLANKINGINLDWITHSCREENUP, OnSkipBlankingInLdWithScreenUp)
+    ON_UPDATE_COMMAND_UI(ID_SPECIALIZEDOPTIONS_SKIPBLANKINGINLDWITHSCREENUP, OnUpdateSkipBlankingInLdWithScreenUp)
     END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -898,12 +900,12 @@ void CMenuTargets::OnUpdateNavigatorAddGridOfPoints(CCmdUI *pCmdUI)
     !mNavigator->GetAcquiring());
 }
 
-void CMenuTargets::OnMontagingGridsAddGriLlikeLastOne()
+void CMenuTargets::OnMontagingGridsAddGridLikeLastOne()
 {
   mNavigator->AddGridOfPoints(true);
 }
 
-void CMenuTargets::OnUpdateOnMontagingGridsAddGriLlikeLastOne(CCmdUI *pCmdUI)
+void CMenuTargets::OnUpdateOnMontagingGridsAddGridLikeLastOne(CCmdUI *pCmdUI)
 {
   pCmdUI->Enable(mNavigator && mNavigator->OKtoAddGrid(true) && !DoingTasks() &&
     !mNavigator->GetAcquiring());
@@ -2571,6 +2573,17 @@ void CMenuTargets::OnNormalizeAllLensesOnMag()
     "Enter 0 to do so only when going between LM and nonLM, 1 to do so when staying in "
     "LM, or 2 to do so always", value))
     mScope->SetNormAllOnMagChange(value);
+}
+
+void CMenuTargets::OnSkipBlankingInLdWithScreenUp()
+{
+  mScope->SetSkipBlankingInLowDose(!mScope->GetSkipBlankingInLowDose());
+}
+
+void CMenuTargets::OnUpdateSkipBlankingInLdWithScreenUp(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(!mWinApp->DoingTasks());
+  pCmdUI->SetCheck(mScope->GetSkipBlankingInLowDose() ? 1 : 0);
 }
 
 void CMenuTargets::OnWindowStageMoveTool()
