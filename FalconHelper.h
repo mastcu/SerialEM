@@ -33,6 +33,13 @@ public:
   SetMember(CString, LastFrameDir);
   GetMember(long, NumFiles);
   SetMember(int, RotFlipForComFile);
+  GetSetMember(int, GpuForContinuousAli);
+  void SetContinAliBinning(int val) { mContinuousAliParam.aliBinning = val; }
+  int GetContinAliBinning() { return mContinuousAliParam.aliBinning; }
+  void SetContinAliPairwise(int val) { mContinuousAliParam.numAllVsAll = val; }
+  int GetContinAliPairwise() { return mContinuousAliParam.numAllVsAll; }
+  void SetContinAliFilter(float val) { mContinuousAliParam.rad2Filt1 = val; }
+  float GetContinAliFilter() { return mContinuousAliParam.rad2Filt1; }
   int DEFrameAlignBusy() {return 0;};
  
   int GetUseGpuForAlign(int inIMOD) {return mUseGpuForAlign[inIMOD ? 1 : 0];};
@@ -110,6 +117,8 @@ private:
   int mFrameTrimStart, mFrameTrimEnd;
   int mSumBinning;                      // Binning relative to frames being aligned
   CameraThreadData *mCamTD;
+  FrameAliParams mContinuousAliParam;   // Parameters for aligning continuous mode
+  int mGpuForContinuousAli;
 
 public:
   int SetupConfigFile(ControlSet &conSet, CString localPath, CString &directory, 
@@ -147,4 +156,8 @@ public:
   int ProcessPluginFrames(CString &directory, CString &rootname, ControlSet &conSet, bool save, bool align,
     int aliParamInd, int divideBy2, float pixel, CameraThreadData *camTD);
   int MakeBackupIfFileExists(CString &str);
+  int SetupContinuousAlign(ControlSet & conSet, CameraThreadData *camTD, int divideBy2,
+    int numExpected);
+  int NextContinuousFrame();
+
 };

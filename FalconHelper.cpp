@@ -82,6 +82,10 @@ CFalconHelper::CFalconHelper(void)
   mStackingFrames = false;
   mRotFlipForComFile = 0;
   mUseGpuForAlign[0] = mUseGpuForAlign[1] = 0;
+  mGpuForContinuousAli = 0;
+  mContinuousAliParam.aliBinning = 4;
+  mContinuousAliParam.numAllVsAll = 0;
+  mContinuousAliParam.rad2Filt1 = 0.06f;
 }
 
 CFalconHelper::~CFalconHelper(void)
@@ -95,25 +99,40 @@ void CFalconHelper::InitializePointers(void)
 }
 
 // Read the configuration file and save its essential features
-// This is now used for Falcon (skipConfigs 0 or 1) or for DE (-1) for setting up
-// frame alignment.  This is safe to call multiple times with skipConfig != 0
+// This is now used for Falcon (skipConfigs 0 or 1) or  for setting up frame alignment 
+// for DE (-1) or plugin cameras (-2) or continuous mode images (-3).  
+// This is safe to call multiple times with skipConfig != 0
 void CFalconHelper::Initialize(int skipConfigs)
 {
   CString configFile, str, dir, fname;
-  int error = 0;
+  int error = 0, skipInd = -1 - skipConfigs;
+  int saveNumAVA = mContinuousAliParam.numAllVsAll;
+  const char *skipType[] = {"DE", "Plugin", "continuous mode"};
   long version;
+  B3DCLAMP(skipInd, 0, 2);
   mPlugFuncs = mWinApp->mScope->GetPlugFuncs();
   if (!mPlugFuncs && skipConfigs >= 0)
     return;
+  if (skipConfigs == -3) {
+    mCamera->SetFrameAliDefaults(mContinuousAliParam, "Continuous mode set", 
+      mContinuousAliParam.aliBinning, mContinuousAliParam.rad2Filt1, 0);
+    mContinuousAliParam.binToTarget = 0;
+    mContinuousAliParam.numAllVsAll = saveNumAVA;
+  }
   mReadoutInterval = mCamera->GetFalconReadoutInterval();
   if (!mFrameAli) {
     mFrameAli = new FrameAlign();
     mFrameAli->setPrintFunc(framePrintFunc);
-    if (!mFrameAli->gpuAvailable(0, &mGpuMemory, 
-      (GetDebugOutput('E') || GetDebugOutput('D') || GetDebugOutput('T')) ? 1 : 0))
+    if (skipConfigs = -3 && !mGpuForContinuousAli)
+      return;
+    if (!mFrameAli->gpuAvailable(0, &mGpuMemory,
+      (GetDebugOutput('E') || GetDebugOutput('D') || GetDebugOutput('T') ||
+        GetDebugOutput('M')) ? 1 : 0)) {
       mGpuMemory = 0;
+      mGpuForContinuousAli = 0;
+    }
     SEMTrace('1', "GPU %s available for %s aligning", mGpuMemory ? "IS" : "IS NOT",
-      skipConfigs >= 0 ? "Falcon" : (skipConfigs == -1 ? "DE" : "Plugin"));
+      skipConfigs >= 0 ? "Falcon" : skipType[skipInd]);
   }
   configFile = mCamera->GetFalconFrameConfig();
   if (configFile.IsEmpty() || skipConfigs != 0)
@@ -263,18 +282,23 @@ int CFalconHelper::SetupFrameAlignment(ControlSet &conSet, CameraParameters *cam
   FrameAliParams param;
   CArray<FrameAliParams, FrameAliParams> *faParams = 
     mCamera->GetFrameAliParams();
-  if (conSet.faParamSetInd < 0 || conSet.faParamSetInd >= faParams->GetSize()) {
-    str.Format("The index of the parameter set chosen for frame alignment, %d, is out "
-      "of range", conSet.faParamSetInd);
-    SEMMessageBox(str);
-    return 1;
+  if (mFAparamSetInd < 0) {
+    param = mContinuousAliParam;
+  } else {
+    if (conSet.faParamSetInd < 0 || conSet.faParamSetInd >= faParams->GetSize()) {
+      str.Format("The index of the parameter set chosen for frame alignment, %d, is out "
+        "of range", conSet.faParamSetInd);
+      SEMMessageBox(str);
+      return 1;
+    }
+
+    if (conSet.useFrameAlign > 1)
+      return 0;
+
+    param = faParams->GetAt(conSet.faParamSetInd);
   }
 
-  if (conSet.useFrameAlign > 1)
-    return 0;
-
-  // get param, size of images, and subset limits if any
-  param = faParams->GetAt(conSet.faParamSetInd);
+  // get size of images, and subset limits if any
   mDarkp = NULL;
   mGainp = NULL;
   if (camParams->FEItype) {
@@ -283,7 +307,7 @@ int CFalconHelper::SetupFrameAlignment(ControlSet &conSet, CameraParameters *cam
     mSumBinning = 1;
     mTrimDEsum = false;
     mDEframeNeedsTrim = false;
-  } else if (mProcessingPlugin) {
+  } else if (mProcessingPlugin || mFAparamSetInd < 0) {
     nx = mHeadNums[0];
     ny = mHeadNums[1];
     mSumBinning = 1;
@@ -625,7 +649,7 @@ void CFalconHelper::StackNextTask(int param)
   // past the end
   if (!mStackError) {
     if (mProcessingPlugin) {
-      ind = mCamTD->plugFuncs->GetNextFrame(outPtr, 2 * mNx * mNy);
+      ind = mCamTD->plugFuncs->GetNextFrame(outPtr, mNx * mNy);
       if (ind)
         mStackError = ind < 0 ? FIF_NO_MORE_FRAMES : FIF_ERR_PLUGIN_FRAME;
     } else if (mReadLocally) {
@@ -752,22 +776,27 @@ void CFalconHelper::CleanupAndFinishAlign(bool saving, int async)
 // Get the summed image, results and possibly FRC back from frame alignment,
 void CFalconHelper::FinishFrameAlignment(int binning)
 {
-  CArray<FrameAliParams, FrameAliParams> *faParams = 
+  CArray<FrameAliParams, FrameAliParams> *faParams =
     mCamera->GetFrameAliParams();
-  FrameAliParams param = faParams->GetAt(mFAparamSetInd);
+  FrameAliParams param;
   int ind, bestFilt, val, nxBin = mNx / binning, nyBin = mNy / binning;
   int rotNx = nxBin, rotNy = nyBin, numPix = nxBin * nyBin;
   float resMean[5], smoothDist[5], rawDist[5], resSD[5], meanResMax[5];
   float maxResMax[5], meanRawMax[5], maxRawMax[5], ringCorrs[26], frcDelta = 0.02f;
-  float refSigma = (float)(0.001 * B3DNINT(1000. * param.refRadius2 * 
+  float refSigma = (float)(0.001 * B3DNINT(1000. * param.refRadius2 *
     param.sigmaRatio));
   float crossHalf, crossQuarter, crossEighth, halfNyq;
   float *aliSum = mFrameAli->getFullWorkArray();
-  float *xShifts = new float [mNumAligned + 10];
-  float *yShifts = new float [mNumAligned + 10];
-  short *sAliSum = (mTrimDEsum || mSumNeedsRotFlip) ? 
+  float *xShifts = new float[mNumAligned + 10];
+  float *yShifts = new float[mNumAligned + 10];
+  short *sAliSum = (mTrimDEsum || mSumNeedsRotFlip) ?
     (short *)aliSum : mCamTD->Array[0];
   unsigned short *usAliSum = (unsigned short *)sAliSum;
+  if (mFAparamSetInd < 0) {
+    param = mContinuousAliParam;
+    mFloatScale = mCamera->GetAverageContinAlign() ? (float)(1. / mNumAligned) : 0.f;
+  } else
+    param = faParams->GetAt(mFAparamSetInd);
 
   ind = mFrameAli->finishAlignAndSum(param.refRadius2, refSigma, param.stopIterBelow,
     param.groupRefine, (mNumAligned >= param.smoothThresh && param.doSmooth) ? 1 : 0,
@@ -798,7 +827,8 @@ void CFalconHelper::FinishFrameAlignment(int binning)
     // Only old Falcon 2 frames were divided, the advanced scripting frames were
     // just read in and still need that treatment.  In any case, data needs to be clamped
     // and cast as appropropriate for the return type
-    if ((mDoingAdvancedFrames && mFloatScale > 0) || mCamTD->DE_camType) {
+    if (((mDoingAdvancedFrames || mFAparamSetInd < 0) && mFloatScale > 0) || 
+      mCamTD->DE_camType) {
       if (mDivideBy2) {
         for (ind = 0; ind < numPix; ind++) {
           val = B3DNINT(mFloatScale * aliSum[ind]);
@@ -1098,6 +1128,7 @@ int CFalconHelper::AlignFramesFromFile(CString filename, ControlSet &conSet,
     fclose(mFrameFP);
     return 1;
   }
+  mFAparamSetInd = conSet.faParamSetInd;
   if (SetupFrameAlignment(conSet, camParam, mGpuMemory, mUseGpuForAlign, mNumFiles)) {
     delete mRotData;
     mRotData = NULL;
@@ -1106,7 +1137,6 @@ int CFalconHelper::AlignFramesFromFile(CString filename, ControlSet &conSet,
   }
 
   // Set an idle task for handling even the first frame so error reporting flows properly
-  mFAparamSetInd = conSet.faParamSetInd;
   mFileInd = mAlignStart - 1;
   mWinApp->AddIdleTask(TASK_ALIGN_DE_FRAMES, 0, 0);
   return 0;
@@ -1161,6 +1191,50 @@ void CFalconHelper::AlignNextFrameTask(int param)
 
   mCamera->DisplayNewImage(true);
 }
+
+// Set up frame alignment for continuous mode images
+int CFalconHelper::SetupContinuousAlign(ControlSet &conSet, CameraThreadData *camTD, 
+  int divideBy2, int numExpected)
+{
+  CameraParameters *camParam = mWinApp->GetActiveCamParam();
+  mDoingAdvancedFrames = false;
+  mNx = mHeadNums[0] = camTD->DMSizeX;
+  mNy = mHeadNums[1] = camTD->DMSizeY;
+  mDivideBy = 0;
+  mDivideBy2 = divideBy2;
+  mCamTD = camTD;
+  mFAparamSetInd = -1;
+  mNumAligned = 0;
+  mAliSumRotFlip = 0;
+  mSumNeedsRotFlip = false;
+  mUseFrameAlign = 1;
+  B3DCLAMP(mContinuousAliParam.aliBinning, 1, 16);
+  B3DCLAMP(mContinuousAliParam.rad2Filt1, 0.f, 0.5f);
+  if (mContinuousAliParam.numAllVsAll < -1)
+    mContinuousAliParam.strategy = FRAMEALI_HALF_PAIRWISE;
+  else if (mContinuousAliParam.numAllVsAll < 0)
+    mContinuousAliParam.strategy = FRAMEALI_ALL_PAIRWISE;
+  else if (mContinuousAliParam.numAllVsAll > 0)
+    mContinuousAliParam.strategy = FRAMEALI_PAIRWISE_NUM;
+  else
+    mContinuousAliParam.strategy = FRAMEALI_ACCUM_REF;
+  return SetupFrameAlignment(conSet, camParam, mGpuMemory, &mGpuForContinuousAli, 
+    numExpected);
+}
+
+// Pass the next continuous image to framealign
+int CFalconHelper::NextContinuousFrame()
+{
+  int ind = mFrameAli->nextFrame(mCamTD->Array[0], 
+    mDivideBy2 ? MRC_MODE_SHORT : MRC_MODE_USHORT, NULL, mNx, mNy, NULL, 0.,
+    NULL, 0, 0, 1, 0., 0.);
+  if (ind)
+    SEMTrace('1', "Error %d calling framealign nextFrame on frame %d", ind,
+      mNumAligned + 1);
+  mNumAligned++;
+  return ind;
+}
+
 
 // Add any new frames to the file map under a unique number
 int CFalconHelper::BuildFileMap(CString localPath, CString &directory)
