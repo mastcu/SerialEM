@@ -1557,6 +1557,8 @@
 #define IDC_SPINPPCONDTIME              2580
 #define IDC_EDIT1                       2581
 #define IDC_EDIT_POST_MOVE_DELAY        2581
+#define IDC_PPCONDGO2                   2582
+#define IDC_PPCOND_NEXT_AND_GO          2582
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773

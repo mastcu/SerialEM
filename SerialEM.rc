@@ -63,7 +63,9 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDR_MAINFRAME           ICON                    "res\\SerialEM.ico"
+
 IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -71,7 +73,9 @@ IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
 //
 
 IDR_MAINFRAME           BITMAP                  "res\\Toolbar.bmp"
+
 IDB_BITMAP1             BITMAP                  "res\\bitmap1.bmp"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3121,9 +3125,9 @@ BEGIN
 END
 
 IDD_VPP_EXPOSE_SETUP DIALOGEX 0, 0, 191, 202
-STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Phase Plate Conditioning Setup"
-FONT 8, "MS Shell Dlg", 400, 0, 0x1
+FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
     CONTROL         "Low Dose Record area",IDC_RLDRECORD,"Button",BS_AUTORADIOBUTTON | WS_GROUP,37,14,90,10
     CONTROL         "Low Dose Trial area",IDC_RLDTRIAL,"Button",BS_AUTORADIOBUTTON,37,25,82,10
@@ -3135,9 +3139,9 @@ BEGIN
     CONTROL         "Label",IDC_RWITHLABEL,"Button",BS_AUTORADIOBUTTON | WS_GROUP,18,166,33,10
     CONTROL         "Note",IDC_RWITHNOTE,"Button",BS_AUTORADIOBUTTON,54,166,28,10
     LTEXT           "starting with",IDC_STAT_STARTING,88,167,42,8
-    DEFPUSHBUTTON   "Close",IDOK,71,181,38,14
-    PUSHBUTTON      "Cancel",IDCANCEL,121,181,38,14
-    PUSHBUTTON      "?",IDC_BUTHELP,170,183,11,10
+    DEFPUSHBUTTON   "Close",IDOK,93,182,35,14
+    PUSHBUTTON      "Cancel",IDCANCEL,133,182,35,14
+    PUSHBUTTON      "?",IDC_BUTHELP,173,184,11,10
     CONTROL         "Setup mag and beam on scope",IDC_SET_TRACK_STATE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,37,50,121,10
     LTEXT           "Mag:",IDC_STATIC,61,62,19,8
     LTEXT           "mag",IDC_COOKMAG,99,62,30,8
@@ -3153,12 +3157,13 @@ BEGIN
     CONTROL         "Do conditioning at nearest Navigator point with",IDC_COND_AT_NAV_POINT,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,154,173,10
     EDITTEXT        IDC_EDITNAVTEXT,137,164,47,14,ES_AUTOHSCROLL
-    PUSHBUTTON      "GO",IDC_PPCONDGO,21,181,38,14
+    PUSHBUTTON      "Go",IDC_PPCONDGO,53,182,35,14
     CONTROL         "",IDC_SPINPPCONDDOSE,"msctls_updown32",UDS_ARROWKEYS,158,104,10,14
     LTEXT           "nC",IDC_STATIC,171,107,10,8
     LTEXT           "Delay if moving to next PP position",IDC_STATIC,11,141,113,8
     EDITTEXT        IDC_EDIT_POST_MOVE_DELAY,125,138,33,14,ES_AUTOHSCROLL
     LTEXT           "sec",IDC_STATIC,161,141,13,8
+    PUSHBUTTON      "Next && Go",IDC_PPCOND_NEXT_AND_GO,13,182,35,14
 END
 
 
@@ -3206,7 +3211,9 @@ END
 //
 
 IDC_CURSOR1             CURSOR                  "res\\cursor1.cur"
+
 IDC_CURSOR2             CURSOR                  "res\\cursor2.cur"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3672,39 +3679,34 @@ END
 // AFX_DIALOG_LAYOUT
 //
 
-IDD_AUTOCENSETUP AFX_DIALOG_LAYOUT 
+IDD_AUTOCENSETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_TILTSERIES AFX_DIALOG_LAYOUT 
+IDD_TILTSERIES AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_DRIFTWAITSETUP AFX_DIALOG_LAYOUT 
+IDD_DRIFTWAITSETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_MULTI_SHOT_SETUP AFX_DIALOG_LAYOUT 
+IDD_MULTI_SHOT_SETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_REMOTE_CONTROL AFX_DIALOG_LAYOUT 
+IDD_REMOTE_CONTROL AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_LOWDOSE AFX_DIALOG_LAYOUT 
+IDD_LOWDOSE AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
-END
-
-IDD_VPP_EXPOSE_SETUP AFX_DIALOG_LAYOUT 
-BEGIN
-    0x0000
+    0
 END
 
 
