@@ -2029,7 +2029,8 @@ BOOL CEMscope::MoveStage(StageMoveInfo info, BOOL doBacklash, BOOL useSpeed,
     SEMMessageBox(_T("Stage not ready"));
     return false;
   }
-  if (inBackground && FEIscope && SEMNumFEIChannels() < 4) {
+  if (inBackground && FEIscope && CBaseSocket::LookupTypeID(FEI_SOCK_ID) >= 0 
+    && SEMNumFEIChannels() < 4) {
     SEMMessageBox("The stage cannot be moved in the background.\n"
       "You must have the property BackgroundSocketToFEI set to\n"
       "open the socket connection for background stage movement\n"
