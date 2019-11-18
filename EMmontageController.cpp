@@ -2061,7 +2061,7 @@ void EMmontageController::SavePiece()
         return;
       isave = mWinApp->mStoreMRC->getDepth();
     }
-    SEMTrace('M', "SaveImage Saving image at %d %d,  file Z = %d", mPieceX, mPieceY, 
+    SEMTrace('M', "SaveImage Saving image at %d %d,  file Z = %d", mPieceX, mPieceY,
       isave);
     if (mPieceSavedAt[mPieceIndex] < 0) {
       ix = mBufferManager->SaveImageBuffer(mWinApp->mStoreMRC);
@@ -3328,7 +3328,7 @@ int EMmontageController::PieceIndexFromXY(int ix, int iy)
 // -1 if there is no previous piece
 int EMmontageController::PieceStartsColumn(int index)
 {
-  if (mPieceIndex >= mNumPieces)
+  if (mPieceIndex >= mNumPieces || index >= mNumPieces)
     return 0;
 
   // For IS realign with anchor, directly test whether the piece is at the column start
