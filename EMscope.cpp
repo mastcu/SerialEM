@@ -6216,6 +6216,12 @@ int CEMscope::ApertureBusy()
   return retval;
 }
 
+int CEMscope::TaskApertureBusy()
+{
+  CSerialEMApp *winApp = (CSerialEMApp *)AfxGetApp();
+  return winApp->mScope->ApertureBusy();
+}
+
 // Delete the thread for moving an aperture if there is a timeout and issue message
 void CEMscope::ApertureCleanup(int error)
 {

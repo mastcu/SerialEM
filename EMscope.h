@@ -800,6 +800,7 @@ public:
   bool GetAperturePosition(int kind, float &posX, float &posY);
   int RemoveAperture(int kind);
   int ReInsertAperture(int kind);
+  static int TaskApertureBusy();
   int ApertureBusy();
   void ApertureCleanup(int error);
   int StartApertureThread(const char *descrip);
