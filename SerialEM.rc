@@ -63,9 +63,7 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDR_MAINFRAME           ICON                    "res\\SerialEM.ico"
-
 IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -73,9 +71,7 @@ IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
 //
 
 IDR_MAINFRAME           BITMAP                  "res\\Toolbar.bmp"
-
 IDB_BITMAP1             BITMAP                  "res\\bitmap1.bmp"
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -2143,7 +2139,7 @@ BEGIN
 END
 
 IDD_COOKSETUP DIALOGEX 0, 0, 151, 173
-STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Specimen Cooking Setup"
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
@@ -3123,7 +3119,7 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,27,233,111,10
 END
 
-IDD_VPP_EXPOSE_SETUP DIALOGEX 0, 0, 187, 168
+IDD_VPP_EXPOSE_SETUP DIALOGEX 0, 0, 187, 187
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Phase Plate Conditioning Setup"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
@@ -3132,9 +3128,15 @@ BEGIN
     CONTROL         "Low Dose Trial area",IDC_RLDTRIAL,"Button",BS_AUTORADIOBUTTON,37,25,82,10
     CONTROL         "Settings displayed here",IDC_RRECORDEDHERE,"Button",BS_AUTORADIOBUTTON,37,36,91,10
     GROUPBOX        "Beam settings to use",IDC_STATIC,30,5,124,44,WS_GROUP
-    DEFPUSHBUTTON   "Close",IDOK,71,147,38,14
-    PUSHBUTTON      "Cancel",IDCANCEL,121,147,38,14
-    PUSHBUTTON      "?",IDC_BUTHELP,170,149,11,10
+    CONTROL         "Expose with charge of",IDC_RADIODOSE,"Button",BS_AUTORADIOBUTTON | WS_GROUP,11,106,85,10
+    CONTROL         "Expose for time of",IDC_RADIOTIME,"Button",BS_AUTORADIOBUTTON,11,123,78,10
+    EDITTEXT        IDC_EDITCOOKDOSE,98,104,33,14,ES_AUTOHSCROLL | WS_GROUP
+    CONTROL         "Label",IDC_RWITHLABEL,"Button",BS_AUTORADIOBUTTON | WS_GROUP,18,150,33,10
+    CONTROL         "Note",IDC_RWITHNOTE,"Button",BS_AUTORADIOBUTTON,54,150,28,10
+    LTEXT           "starting with",IDC_STAT_STARTING,88,151,42,8
+    DEFPUSHBUTTON   "Close",IDOK,71,166,38,14
+    PUSHBUTTON      "Cancel",IDCANCEL,121,166,38,14
+    PUSHBUTTON      "?",IDC_BUTHELP,170,167,11,10
     CONTROL         "Setup mag and beam on scope",IDC_SET_TRACK_STATE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,37,50,121,10
     LTEXT           "Mag:",IDC_STATIC,61,62,19,8
     LTEXT           "mag",IDC_COOKMAG,99,62,30,8
@@ -3144,17 +3146,15 @@ BEGIN
     LTEXT           "% C3",IDC_COOKINTENSITY,99,82,30,8
     LTEXT           "Microprobe",IDC_STAT_PROBEMODE,62,92,38,8
     LTEXT           "3",IDC_STAT_ALPHA,103,92,8,8
-    EDITTEXT        IDC_EDITCOOKTIME,76,103,33,14,ES_AUTOHSCROLL
-    CONTROL         "",IDC_SPINCOOKTIME,"msctls_updown32",UDS_ARROWKEYS,109,103,10,14
-    LTEXT           "seconds",IDC_STATIC,123,106,29,8
-    LTEXT           "Expose for:",IDC_STATIC,33,106,38,8
+    EDITTEXT        IDC_EDITCOOKTIME,98,121,33,14,ES_AUTOHSCROLL
+    CONTROL         "",IDC_SPINCOOKTIME,"msctls_updown32",UDS_ARROWKEYS,131,121,10,14
+    LTEXT           "seconds",IDC_STATIC,145,124,29,8
     CONTROL         "Do conditioning at nearest Navigator point with",IDC_COND_AT_NAV_POINT,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,120,169,10
-    CONTROL         "Label",IDC_RWITHLABEL,"Button",BS_AUTORADIOBUTTON | WS_GROUP,18,132,33,10
-    CONTROL         "Note",IDC_RWITHNOTE,"Button",BS_AUTORADIOBUTTON,54,132,28,10
-    LTEXT           "starting with",IDC_STAT_STARTING,88,133,42,8
-    EDITTEXT        IDC_EDITNAVTEXT,133,130,47,14,ES_AUTOHSCROLL
-    PUSHBUTTON      "GO",IDC_COOKGO,21,147,38,14
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,138,169,10
+    EDITTEXT        IDC_EDITNAVTEXT,133,148,47,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "GO",IDC_COOKGO,21,166,38,14
+    CONTROL         "",IDC_SPINCOOKDOSE,"msctls_updown32",UDS_ARROWKEYS,131,104,10,14
+    LTEXT           "nC",IDC_STATIC,145,107,16,8
 END
 
 
@@ -3202,9 +3202,7 @@ END
 //
 
 IDC_CURSOR1             CURSOR                  "res\\cursor1.cur"
-
 IDC_CURSOR2             CURSOR                  "res\\cursor2.cur"
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3614,7 +3612,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 180
         TOPMARGIN, 7
-        BOTTOMMARGIN, 161
+        BOTTOMMARGIN, 180
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -3670,39 +3668,39 @@ END
 // AFX_DIALOG_LAYOUT
 //
 
-IDD_AUTOCENSETUP AFX_DIALOG_LAYOUT
+IDD_AUTOCENSETUP AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_TILTSERIES AFX_DIALOG_LAYOUT
+IDD_TILTSERIES AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_DRIFTWAITSETUP AFX_DIALOG_LAYOUT
+IDD_DRIFTWAITSETUP AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_MULTI_SHOT_SETUP AFX_DIALOG_LAYOUT
+IDD_MULTI_SHOT_SETUP AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_REMOTE_CONTROL AFX_DIALOG_LAYOUT
+IDD_REMOTE_CONTROL AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_LOWDOSE AFX_DIALOG_LAYOUT
+IDD_LOWDOSE AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_VPP_EXPOSE_SETUP AFX_DIALOG_LAYOUT
+IDD_VPP_EXPOSE_SETUP AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
 
