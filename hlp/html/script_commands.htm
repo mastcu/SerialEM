@@ -45,6 +45,13 @@
         .auto-style1 {
             width: 230px;
         }
+      .auto-style2 {
+        width: 230px;
+        height: 23px;
+      }
+      .auto-style3 {
+        height: 23px;
+      }
   --></style>
   </HEAD>
   <BODY bgColor="#ffffff" text="#000000">
@@ -448,6 +455,15 @@
               and the median.  For a 2D array, the statistics can be of the whole array, or of
               one row if the variable is given with a row subscript. Values can be assigned
                to variables at end of commmand.&nbsp; Command added in 3.8.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style4">LinearFitToVars var1 var2 [var3]</TD>
+          <TD>Computes a linear least-squares fit between values in 2 or 3 array variables.&nbsp; With
+            two variables, fits to the equation&nbsp; v2 = slope * v1 + intercept and reports the 
+            number of values, slope, intercept, and correlation coefficient 'ro'.&nbsp; With 
+            three variables, fits to the equation v3 = a1 * v1 + a2 * v2 + c and reports the 
+            number of values, a1, a2, and c.&nbsp; All variables must have the same number 
+            of values.&nbsp; Command added in 3.8, 11/17/19.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style4">StringArrayToScript var [#e]</TD>
@@ -956,6 +972,16 @@
             save MRC files in 4-bit mode 101; N non-zero to save normalized data times 100; 
             R non-zero to skip rotation and flip of frames; O non-zero for one file per 
             frame.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style8">ReportK3CDSmode</TD>
+          <TD>Reports 1 if CDS mode is on for a K3 camera acquisitions, 0 if not.&nbsp; Command added in 3.8, 11/17/19.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style8">SetK3CDSmode #O [#P]</TD>
+          <TD>Sets the CDS mode option for K3 camera acquisitions on if #O is non-zero, off 
+            otherwise.&nbsp; The existing value is restored at the end of the script unless 
+            #P as entered with a non-zero value to make it permanent.&nbsp; Command added in 3.8, 11/17/19.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style8">ReportCountScaling</TD>
@@ -2612,10 +2638,17 @@
         </TR>
         <TR vAlign="top">
           <TD class="auto-style1">GetWaitTaskDrift</TD>
-          <TD>Places the final drift measurement from te last Wiat for Drift task into 
+          <TD>Places the final drift measurement from the last Wait for Drift task into 
               reportedValue1 and a non-zero number if the task failed in reportedValue2.
               Values can be assigned to variables after command.
               Command added in 3.8.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="auto-style1">ConditionPhasePlate [#]</TD>
+          <TD>Run the routine to condition a phase plate using parameters set in the 
+            <a href="hidd_vpp_expose_setup.htm">Phase Plate Conditioning Setup dialog.</a>
+            &nbsp; If the optional # is non-zero, it will move to the next phase plate position 
+            first, provided this is supported by scripting on the microscope.&nbsp; Command added in 3.8, 11/17/19.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="auto-style1">MultipleRecords [#N] [#C] [#O] [#D] [#S] [#E] [#F] [#H]</TD>

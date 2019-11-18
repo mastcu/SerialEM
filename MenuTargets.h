@@ -371,6 +371,8 @@ public:
   afx_msg void OnTasksSetupWaitForDrift();
   afx_msg void OnSkipBlankingInLdWithScreenUp();
   afx_msg void OnUpdateSkipBlankingInLdWithScreenUp(CCmdUI *pCmdUI);
+  afx_msg void OnTasksSetupVppConditioning();
+  afx_msg void OnUpdateTasksSetupVppConditioning(CCmdUI *pCmdUI);
 };
 
 /////////////////////////////////////////////////////////////////////////////

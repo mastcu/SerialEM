@@ -489,11 +489,21 @@ struct RangeFinderParams {
 
 // Phase plate conditioning params
 struct VppConditionParams {
-  int magIndex;
-  int spotSize;
+  int magIndex;         // Scope state
+  int spotSize;       
   double intensity;
   int alpha;
   int probeMode;
+  int seconds;          // Total time to expose
+  int nanoCoulombs;     // Or total charge
+  BOOL timeInstead;     // Flag to go for total time instead
+  int whichSettings;    // Whether to use Record, Trial, or separate settings
+  BOOL useNearestNav;   // Flag to go to a nav point for conditioning
+  CString navText;      // String to match at start of note or label
+  BOOL useNavNote;      // Flag to use note instead of label
+  int postMoveDelay;    // Seconds of delay after move to next plate position
+  int camLenIndex;      // Run-time storage if saved state is in diffraction
+  int lowDoseArea;      // And run-time saved low dose area
 };
 
 // A set of mutually exclusive channels, possibly switched into or mapped to one DS channel

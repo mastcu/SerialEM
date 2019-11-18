@@ -306,7 +306,12 @@
 			<param name="Name" value="Wait for Drift Setup dialog">
 			<param name="Local" value="html/hidd_driftwaitsetup.htm">
 			</OBJECT>
-			<A HREF="html/hidd_tsdosesym.htm">Wait for Drift Setup dialog</A><BR>
+			<A HREF="html/hidd_driftwaitsetup.htm">Wait for Drift Setup dialog</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Phase Plate Conditioning Setup dialog">
+			<param name="Local" value="html/hidd_vpp_expose_setup.htm">
+			</OBJECT>
+			<A HREF="html/hidd_vpp_expose_setup.htm">Phase Plate Conditioning Setup dialog</A><BR>
 		<LI><OBJECT type="text/sitemap">
 			<param name="Name" value="Tilt Series Range Finder dialog">
 			<param name="Local" value="html/hidd_tsrange.htm">

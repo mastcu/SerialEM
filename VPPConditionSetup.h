@@ -38,6 +38,7 @@ private:
   CStatic m_statIntensity;
   VppConditionParams mSavedParams;   // Saved values of settings
   bool mHasAlpha;
+  BOOL mLastLowDose;
 
 
 public:
@@ -57,7 +58,7 @@ public:
   afx_msg void OnCondAtNavPoint();
   CButton m_butWithLabel;
   CButton m_butWithNote;
-  BOOL m_iLabelOrNote;
+  int m_iLabelOrNote;
   CEdit m_editNavText;
   CString m_strNavText;
   CStatic m_statStarting;
@@ -67,4 +68,21 @@ public:
   void LiveUpdate(int magInd, int spotSize, int probe, double intensity, int alpha);
   void SetScopeState(bool restore);
   afx_msg void OnCloseAndGo();
+  CSpinButtonCtrl m_sbcCharge;
+  int m_iCharge;
+  int m_iTimeInstead;
+  CSpinButtonCtrl m_sbcCookTime;
+  CEdit m_editCookTime;
+  CEdit m_editCookCharge;
+  afx_msg void OnRcondCharge();
+  afx_msg void OnRwithLabel();
+  afx_msg void OnDeltaposSpinPPcondCharge(NMHDR *pNMHDR, LRESULT *pResult);
+  afx_msg void OnDeltaposSpinPPcondTime(NMHDR *pNMHDR, LRESULT *pResult);
+  CButton m_butPPcondGo;
+  void StoreParameters();
+  int m_iPostMoveDelay;
+  CButton m_butNextAndGo;
+  afx_msg void OnCloseNextAndGo();
+  afx_msg void OnKillfocusPPcondCharge();
+  afx_msg void OnKillfocusPPcondTime();
 };

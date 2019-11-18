@@ -226,6 +226,7 @@ private:
   int mLDSetAddedBeamRestore;   // Saved state of low dose SET function for beam shift
   double mBeamTiltXtoRestore[2];   // Saved beam tilt values to restore for two probe
   double mBeamTiltYtoRestore[2];   // modes
+  int mK3CDSmodeToRestore;  // -1 or value of mode to restore at end
   bool mCompensatedBTforIS; // Flag that beam tilt was compensated for an IS change
   int mKeyPressed;        // Key pressed after macro starts
   int mStoppedContSetNum; // Set number for continuous acquire that was stopped
@@ -375,6 +376,7 @@ public:
   int MakeNewTempMacro(CString &strVar, CString &strIndex, bool tempOnly, CString &strLine);
   bool SetupStageRestoreAfterTilt(CString * strItems, double &stageX, double &stageY);
   CMapDrawItem *CurrentOrIndexedNavItem(int &index, CString &strLine);
+  float * FloatArrayFromVariable(CString name, int &numVals, CString & report);
 };
 
 #endif // !defined(AFX_MACROPROCESSOR_H__33178182_58A1_4F3A_B8F4_D41F94866517__INCLUDED_)

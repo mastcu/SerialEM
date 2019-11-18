@@ -137,8 +137,30 @@ private:
   BOOL mSkipNextBeamShift;        // Flag to skip beam shift on align or image shift
 
 
-  // Phase plate conditioning (mVpp variables)
-  VppConditionParams mVppParams;
+  // Phase plate conditioning (mVpp) variables
+  VppConditionParams mVppParams;     // The real parameters
+  VppConditionParams mVppSavedState; // Saved state when running routine
+  double mVppStageX, mVppStageY;     // Saved stage position when not returning acquire pt
+  bool mConditioningVPP;             // Flag routine is running
+  int mVppAcquireIndex;              // Nav index of acquire point
+  int mVppNearPosIndex;              // Nav index of point to do conditioning at
+  bool mVppNeedRealign;              // Flag if need to realign after return
+  float mMinNavVisitField;           // Min field size for reference image
+  bool mVppGotoNextPos;              // Flag to go to next PP position
+  int mVppOrigScreenPos;             // Original screen position
+  int mVppCurScreenPos;              // Current screen position
+  bool mVppLoweredMag;               // Flag that image was taken for aligning
+  double mVppExposeStart;            // Time when exposure started
+  float mVppTimeToExpose;            // Time to expose, based on setting or charge
+  double mVppSettleStart;            // Time when settling started after PP move
+  bool mVppSettling;                 // Flag that settling is happening
+  bool mVppExposing;                 // Flag that exposing is happening
+  BOOL mVppSavedLDSkipBlanking;      // Saved state of new property
+  int mVppWhichSettings;             // Which settings to use
+  int mVppLastRemaining;             // For keeping track up updating status pane
+  BOOL mVppSavedBlanking;            // State of blanking at start
+  int mVppFinishing;                 // Counter for being in final steps and for Stops
+  bool mVppUnblankedForExp;          // Flag that it was unblanked and needs reblank
 
 public:
   CTSViewRange *mRangeViewer;
@@ -151,7 +173,9 @@ public:
   GetMember(BOOL, Cooking);
   GetMember(BOOL, AutoCentering);
   GetSetMember(float, MinCookField);
+  GetSetMember(float, MinNavVisitField);
   GetSetMember(float, CkISLimit);
+  GetMember(bool, ConditioningVPP);
   int *GetRangeConsets() {return &mRangeConsets[0];};
   GetMember(BOOL, AssessingRange)
   GetMember(float, TrUserLowAngle)
@@ -163,6 +187,7 @@ public:
   GetSetMember(int, CkNumAlignSteps);
   GetSetMember(float, CkAlignStep);
   GetSetMember(int, CkNumStepCuts);
+  VppConditionParams *GetVppConditionParams() { return &mVppParams; };
   BOOL BidirCopyPending() {return mBfcCopyIndex >= 0;};
   int DoingBidirCopy() {return mBfcDoingCopy;};
   bool DoingAnchorImage() {return mBaiSavedViewMag >= -1;};
@@ -227,6 +252,12 @@ public:
   void GetCenteringBeamShift(float &cenShiftX, float &cenShiftY) {
     cenShiftX = mAcShiftedBeamX; cenShiftY = mAcShiftedBeamY;};
   void SetupVPPConditioning();
-  void SaveScopeStateInVppParams(VppConditionParams *params);
-  void SetScopeStateFromVppParams(VppConditionParams *params);
+  void SaveScopeStateInVppParams(VppConditionParams *params, bool saveEvenLD);
+  void SetScopeStateFromVppParams(VppConditionParams *params, bool ignoreLD);
+  int ConditionPhasePlate(bool movePlate);
+  void VppConditionNextTask(int param);
+  int VppConditionBusy();
+  void VppConditionCleanup(int error);
+  void StopVppCondition(void);
+
 };

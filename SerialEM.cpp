@@ -2101,8 +2101,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
       busy = mTSController->TiltSeriesBusy();
     else if (idc->source == TASK_MACRO_RUN)
       busy = mMacroProcessor->TaskBusy();
-    else if (idc->source == TASK_MONTAGE_FOCUS || idc->source == TASK_CAL_ASTIG || 
-      idc->source == TASK_FIX_ASTIG || idc->source == TASK_COMA_FREE || 
+    else if (idc->source == TASK_MONTAGE_FOCUS || idc->source == TASK_CAL_ASTIG ||
+      idc->source == TASK_FIX_ASTIG || idc->source == TASK_COMA_FREE ||
       idc->source == TASK_CTF_BASED)
       busy = mFocusManager->DoingFocus() ? 1 : 0;
     else if (idc->source == TASK_CAL_COMA_VS_IS)
@@ -2115,6 +2115,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
       busy = mMultiTSTasks->TaskCookerBusy();
     else if (idc->source == TASK_TILT_RANGE)
       busy = mMultiTSTasks->TiltRangeBusy();
+    else if (idc->source == TASK_CONDITION_VPP)
+      busy = mMultiTSTasks->VppConditionBusy();
     else if (idc->source == TASK_EUCENTRICITY)
       busy = mComplexTasks->EucentricityBusy();
     else if (idc->source == TASK_FOCUS_VS_Z)
@@ -2192,6 +2194,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
           mMultiTSTasks->AutocenTestAcquireDone();
         else if (idc->source == TASK_AUTOCEN_BEAM)
           mMultiTSTasks->AutocenNextTask(idc->param);
+        else if (idc->source == TASK_CONDITION_VPP)
+          mMultiTSTasks->VppConditionNextTask(idc->param);
         else if (idc->source == TASK_REMOTE_CTRL)
           mRemoteControl.TaskDone(idc->param);
         else if (idc->source == TASK_MULTI_SHOT)
@@ -2301,6 +2305,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
           mMultiTSTasks->TiltRangeCleanup(busy);
         else if (idc->source == TASK_AUTOCEN_BEAM)
           mMultiTSTasks->AutocenCleanup(busy);
+        else if (idc->source == TASK_CONDITION_VPP)
+          mMultiTSTasks->VppConditionCleanup(busy);
         else if (idc->source == TASK_REMOTE_CTRL)
           mRemoteControl.TaskCleanup(busy);
         else if (idc->source == TASK_MULTI_SHOT)
@@ -2458,6 +2464,8 @@ void CSerialEMApp::ErrorOccurred(int error)
     mMultiTSTasks->StopTiltRange();
   if (mMultiTSTasks->GetAutoCentering())
     mMultiTSTasks->StopAutocen();
+  if (mMultiTSTasks->GetConditioningVPP())
+    mMultiTSTasks->StopVppCondition();
   if (mShowRemoteControl && mRemoteControl.GetDoingTask())
     mRemoteControl.TaskDone(0);
   if (mBeamAssessor->CalibratingIntensity())

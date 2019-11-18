@@ -115,6 +115,15 @@
           <TD>Use Trial area in Low Dose mode for Reset &amp; Realign</TD>
         </TR>
         <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_tasks_setupvppconditioning">Setup VPP Conditioning</A></TD>
+          <TD>Opens dialog to set up conditioning of a phase plate and optionally run 
+            conditioning</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_tasks_setupwaitfordrift">Setup Wait for Drift</A></TD>
+          <TD>Opens dialog to set up waiting for drift to settle</TD>
+        </TR>
+        <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_reverse_tilt">Reverse Tilt</A></TD>
           <TD>Reverses tilt direction and realigns image position.</TD>
         </TR>
@@ -409,6 +418,16 @@
         small (~1 micron), if the field of view of the trial area is fairly large (2 
         microns), and if your stage is adjusted so that stage movements are reliable at 
         high tilt for the holder being used.</P>
+      <P><A NAME="hid_tasks_setupvppconditioning"></A><B>Setup VPP Conditioning command (Tasks menu)</B></P>
+      <P>Use this command to open the <A HREF="hidd_vpp_expose_setup.htm">Phase Plate Conditioning Setup 
+          dialog box</A> and set parameters for conditioning a Volta phase plate. The dialog allows one to
+        start the conditioning operation, which can also be run with the 
+        ConditionPhasePlate script command.</P>
+      <P><A NAME="hid_tasks_usetrialinld"></A><B>Setup Wait for Drift command (Tasks menu)</B></P>
+      <P>Use this command to open the <A HREF="hidd_driftwaitsetup.htm">Wait for Drift Setup 
+          dialog box</A> and set parameters for the Wait for Drift task, which can be 
+        run from tilt series and with the script command DriftWaitTask to measure drift 
+        and wait until it reaches a selected level.</P>
       <P><A NAME="hid_reverse_tilt"></A><B>Reverse Tilt command (Tasks menu)</B></P>
       <P>Use this command to reverse the direction of tilting while retaining an item of 
         interest centered in the field of view. For example, if you tilt up to a high 

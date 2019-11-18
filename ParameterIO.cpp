@@ -160,6 +160,7 @@ int CParameterIO::ReadSettings(CString strFileName)
   MultiShotParams *msParams = mWinApp->mNavHelper->GetMultiShotParams();
   DriftWaitParams *dwParams = mWinApp->mParticleTasks->GetDriftWaitParams();
   ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
+  VppConditionParams *vppParams = mWinApp->mMultiTSTasks->GetVppConditionParams();
   int faLastFileIndex = -1, faLastArrayIndex = -1;
   mWinApp->mCamera->SetFrameAliDefaults(faParam, "4K default set", 4, 0.06f, 1);
   mWinApp->SetAbsoluteDlgIndex(false);
@@ -536,6 +537,22 @@ int CParameterIO::ReadSettings(CString strFileName)
         cookParams->cookAtTilt = itemInt[8] != 0;
         cookParams->tiltAngle = (float)itemDbl[9];
 
+      } else if (NAME_IS("VppConditionParams")) {
+        vppParams->magIndex = itemInt[1];
+        vppParams->spotSize = itemInt[2];
+        vppParams->intensity = itemDbl[3];
+        vppParams->alpha = itemInt[4];
+        vppParams->probeMode = itemInt[5];
+        vppParams->seconds = itemInt[6];
+        vppParams->nanoCoulombs = itemInt[7];
+        vppParams->timeInstead = itemInt[8] != 0;
+        vppParams->whichSettings = itemInt[9];
+        vppParams->useNearestNav = itemInt[10] != 0;
+        vppParams->useNavNote = itemInt[11] != 0;
+        vppParams->postMoveDelay = itemInt[12];
+
+      } else if (NAME_IS("VppCondNavText")) {
+        StripItems(strLine, 1, vppParams->navText);
       } else if (NAME_IS("AutocenterParams")) {
         acParmP = &acParams;
         acParmP->camera = itemInt[1];
@@ -665,7 +682,7 @@ int CParameterIO::ReadSettings(CString strFileName)
         NAME_IS("MacroToolPlacement") || NAME_IS("MacroEditerPlacement") ||
         NAME_IS("OneLinePlacement") || NAME_IS("MultiShotPlacement") ||
         NAME_IS("CtffindPlacement") || NAME_IS("OneEditerPlacement") ||
-        NAME_IS("AutocenPlacement")) {
+        NAME_IS("AutocenPlacement") || NAME_IS("VppCondPlacement")) {
         index = NAME_IS("OneEditerPlacement") ? 1 : 0;
         if (strItems[index + 10].IsEmpty() || 
           (index && (itemInt[1] < 0 || itemInt[1] >= MAX_MACROS))) {
@@ -685,6 +702,8 @@ int CParameterIO::ReadSettings(CString strFileName)
             place = mWinApp->mProcessImage->GetCtffindPlacement();
           else if (NAME_IS("AutocenPlacement"))
             place = mWinApp->mMultiTSTasks->GetAutocenPlacement();
+          else if (NAME_IS("VppCondPlacement"))
+            place = mWinApp->mMultiTSTasks->GetConditionPlacement();
           else if (NAME_IS("StatePlacement")) {
             mWinApp->SetOpenStateWithNav(itemInt[1] != 0);
             place = mWinApp->mNavHelper->GetStatePlacement();
@@ -1189,6 +1208,7 @@ void CParameterIO::WriteSettings(CString strFileName)
   WINDOWPLACEMENT *rotAlignPlace = mWinApp->mNavHelper->GetRotAlignPlacement();
   WINDOWPLACEMENT *multiShotPlace = mWinApp->mNavHelper->GetMultiShotPlacement(true);
   WINDOWPLACEMENT *autocenPlace = mWinApp->mMultiTSTasks->GetAutocenPlacement();
+  WINDOWPLACEMENT *vppPlace = mWinApp->mMultiTSTasks->GetConditionPlacement();
   int *macroButtonNumbers = mWinApp->mCameraMacroTools.GetMacroNumbers();
   mWinApp->CopyCurrentToCameraLDP();
   DoseTable *doseTables = mWinApp->mBeamAssessor->GetDoseTables();
@@ -1211,6 +1231,7 @@ void CParameterIO::WriteSettings(CString strFileName)
   MultiShotParams *msParams = mWinApp->mNavHelper->GetMultiShotParams();
   DriftWaitParams *dwParams = mWinApp->mParticleTasks->GetDriftWaitParams();
   ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
+  VppConditionParams *vppParams = mWinApp->mMultiTSTasks->GetVppConditionParams();
 
   // Transfer macros from any open editing windows
   for (i = 0; i < MAX_MACROS; i++)
@@ -1419,6 +1440,14 @@ void CParameterIO::WriteSettings(CString strFileName)
       cookParams->trackImage ? 1 : 0, 
       cookParams->cookAtTilt ? 1 : 0, cookParams->tiltAngle);
     mFile->WriteString(oneState);
+    oneState.Format("VppConditionParams %d %d %f %d %d %d %d %d %d %d %d %d -999 -999\n",
+      vppParams->magIndex, vppParams->spotSize, vppParams->intensity, vppParams->alpha,
+      vppParams->probeMode, vppParams->seconds, vppParams->nanoCoulombs,
+      vppParams->timeInstead ? 1 : 0, vppParams->whichSettings,
+      vppParams->useNearestNav ? 1 : 0, vppParams->useNavNote ? 1 : 0, 
+      vppParams->postMoveDelay);
+    mFile->WriteString(oneState);
+    mFile->WriteString("VppCondNavText " + vppParams->navText + "\n");
     if (!navParams->stockFile.IsEmpty()) {
       oneState.Format("NavigatorStockFile %s\n", navParams->stockFile);
       mFile->WriteString(oneState);
@@ -1536,6 +1565,7 @@ void CParameterIO::WriteSettings(CString strFileName)
     WritePlacement("StageToolPlacement", 0, stageToolPlace);
     WritePlacement("CtffindPlacement", 0, ctffindPlace);
     WritePlacement("AutocenPlacement", 0, autocenPlace);
+    WritePlacement("VppCondPlacement", 0, vppPlace);
     WritePlacement("MacroToolPlacement", mWinApp->mMacroToolbar ? 1 : 0, toolPlace);
     WritePlacement("OneLinePlacement", mWinApp->mMacroProcessor->mOneLineScript ? 1 : 0, 
       oneLinePlace);

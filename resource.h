@@ -1555,9 +1555,7 @@
 #define IDC_EDITPPCONDTIME              2578
 #define IDC_SPINPPCONDDOSE              2579
 #define IDC_SPINPPCONDTIME              2580
-#define IDC_EDIT1                       2581
 #define IDC_EDIT_POST_MOVE_DELAY        2581
-#define IDC_PPCONDGO2                   2582
 #define IDC_PPCOND_NEXT_AND_GO          2582
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
@@ -2035,7 +2033,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        243
 #define _APS_NEXT_COMMAND_VALUE         33379
-#define _APS_NEXT_CONTROL_VALUE         2582
+#define _APS_NEXT_CONTROL_VALUE         2583
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

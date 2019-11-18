@@ -454,6 +454,8 @@ BEGIN_MESSAGE_MAP(CMenuTargets, CCmdTarget)
     ON_UPDATE_COMMAND_UI(ID_TASKS_SETUPWAITFORDRIFT, OnUpdateNoTasks)
     ON_COMMAND(ID_SPECIALIZEDOPTIONS_SKIPBLANKINGINLDWITHSCREENUP, OnSkipBlankingInLdWithScreenUp)
     ON_UPDATE_COMMAND_UI(ID_SPECIALIZEDOPTIONS_SKIPBLANKINGINLDWITHSCREENUP, OnUpdateSkipBlankingInLdWithScreenUp)
+    ON_COMMAND(ID_TASKS_SETUPVPPCONDITIONING, OnTasksSetupVppConditioning)
+    ON_UPDATE_COMMAND_UI(ID_TASKS_SETUPVPPCONDITIONING, OnUpdateTasksSetupVppConditioning)
     END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -2484,9 +2486,19 @@ void CMenuTargets::OnTasksSetupWaitForDrift()
   dlg.DoModal();
 }
 
+void CMenuTargets::OnTasksSetupVppConditioning()
+{
+  mWinApp->mMultiTSTasks->SetupVPPConditioning();
+}
+
+void CMenuTargets::OnUpdateTasksSetupVppConditioning(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(!mWinApp->mVPPConditionSetup && !mWinApp->DoingTasks());
+}
+
 void CMenuTargets::OnSpecialSkipBeamShiftInTs()
 {
-  mTSController->SetSkipBeamShiftOnAlign(!mTSController->GetSkipBeamShiftOnAlign()) ;
+  mTSController->SetSkipBeamShiftOnAlign(!mTSController->GetSkipBeamShiftOnAlign());
 }
 
 void CMenuTargets::OnUpdateSpecialSkipBeamShiftInTs(CCmdUI *pCmdUI)

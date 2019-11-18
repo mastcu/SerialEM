@@ -1,0 +1,81 @@
+<html>
+  <head>
+    <title>Phase Plate Conditioning Setup Dialog</title>
+    <meta HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252"/>
+    <style type="text/css"> <!-- BODY { font-family:"Arial" }
+  TD { font-size:16 }
+      .style1
+      {
+        font-size: larger;
+        font-weight: bold;
+      }
+        --></style>
+  </head>
+  <body BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+    <p><a NAME="hidd_driftwaitsetup"></a><span class="style1">
+        Phase Plate Conditioning Setup Dialog</span></p>
+    <p>This dialog allows you to set parameters for conditioning a Volta phase plate, 
+      namely exposing it to the beam for long enough to build up an appropriate charge 
+      on it. It also has a buttons to start the conditioning, either at the current 
+      phase plate position or after moving to the next position.&nbsp; It has options 
+      to move the phase plate to its next position (if supported) and to do the 
+      conditioning at a different location on the specimen. The conditioning routine 
+      operates by lowering the screen to unblank the beam.&nbsp; It returns the 
+      screen, beam blanking, and other scope settings to their original state when it 
+      is allowed to run to completion.&nbsp; If you stop the routine during the 
+      conditioning or during a step before that with the STOP button in the Camera and 
+      Script Control panel, it will still do the steps needed to return to the 
+      original position and state before ending.&nbsp; However, if you press STOP 3 
+      times it will abandon those steps.</p>
+    <p><strong>Beam settings to use</strong></p>
+    <p>The radio buttons allow you select the how the beam is set up for the exposure.&nbsp; 
+      The conditioning can be done either in Low Dose mode or not.&nbsp; In Low Dose 
+      mode, there is a choice of using the Record area, the Trial area, or separate 
+      set of conditions that are recorded with the dialog open.&nbsp; Exposure with 
+      the Trial settings is done off-axis, in the Trial area; the other settings 
+      expose the specimen on-axis.&nbsp; Outside of Low Dose mode, only the separate 
+      settings can be used.</p>
+    <p><strong>Set up mag and beam on scope</strong></p>
+    <p>When <strong>Settings displayed here</strong> is selected, this option can be 
+      selected to start tracking the current microscope settings.&nbsp; If settings 
+      already exist, they are imposed when the option is checked.&nbsp; The previous 
+      state of the microscope is restored when the option is unchecked.
+          </p>
+    <p><strong>Expose with charge of n nC</strong></p>
+    <p>With this option selected, the program will expose for a time that will result 
+      in the total charge specified in the edit box in nanoCoulombs.&nbsp; This should 
+      give the most reproducible result and overcome variations in beam brightness, 
+      provided that the beam is entirely on the viewing screen.</p>
+    <p><strong>Expose for time of n sec</strong></p>
+    <p>With this option selected, the program will simply expose for the time 
+      specified in the edit box in seconds.</p>
+    <p><strong>Delay if moving to next PP position</strong></p>
+    <p>When the conditioning operation is to be done after moving to a new phase plate 
+      position, this entry specifies a settling time after moving to the next 
+      position.</p>
+    <p><strong>Do conditioning at nearest Navigator point with</strong></p>
+    <p>It is possible to do the conditioning at one or more specially designated 
+      locations instead of at the current location.&nbsp; You can specify a Navigator 
+      point to be used by starting either its Label or its Note with the entry in the 
+      text box; select <strong>Label</strong> or <strong>Note</strong> to indicate 
+      which to use.&nbsp; There can be several such items in the Navigator table; the 
+      program will find the nearest one and go to that one.&nbsp; When acquiring through the Navigator, if a Realign to Item 
+      has already been done for the current item, then the program will take a 
+      reference image before going to the other location, do the conditioning there, 
+      and take a new image to align to the reference after returning to the 
+      acquisition point&#39;s position.&nbsp; Currently this is the only situation in 
+      which this realignment will be done when conditioning at a separate location.&nbsp; 
+      As for other tasks, this alignment is done with View images in Low Dose mode, 
+      otherwise with parameters based on the Trial camera parameter set.&nbsp;
+          </p>
+    <p><strong>Action buttons</strong></p>
+    <p>All of the buttons at the bottom close the dialog.&nbsp; Press <strong>Close</strong> 
+      to save parameters, <strong>Cancel</strong> to discard them, <strong>Go</strong> 
+      to run the conditioning routine at the current location, and <strong>Next &amp; Go</strong> 
+      to condition after moving the phase plate to its next position.&nbsp; (Moving to 
+      the next position is available on the JEOL CryoARM and on FEI scopes with a new 
+      enough version of Advanced Scripting.)</p>
+    <p>&nbsp;</p>
+</body>
+</html>

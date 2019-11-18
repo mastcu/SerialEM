@@ -757,6 +757,9 @@
     <None Include="hlp\html\hidd_driftwaitsetup.htm">
       <Filter>HTML Help Topics</Filter>
     </None>
+    <None Include="hlp\html\hidd_vpp_expose_setup.htm">
+      <Filter>HTML Help Topics</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AlignFocusWindow.cpp">

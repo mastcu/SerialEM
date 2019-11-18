@@ -80,6 +80,7 @@ class CComplexTasks : public CCmdTarget
   GetMember(double, OnAxisDose);
   GetSetMember(float, WalkSTEMfocusInterval);
   GetSetMember(int, EucenRestoreStageXY);
+  GetMember(int, LowMagConSet);
   void GetBacklashDelta(float &deltaX, float &deltaY) {deltaX = mBASPDeltaX; deltaY = mBASPDeltaY;};
 
   float GetTiltBacklash() {return mRTThreshold;};

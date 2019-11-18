@@ -261,7 +261,8 @@ enum {CME_SCRIPTEND = -7, CME_LABEL, CME_SETVARIABLE, CME_SETSTRINGVAR, CME_DOKE
   CME_STAGETOLASTMULTIHOLE, CME_IMAGESHIFTTOLASTMULTIHOLE, CME_NAVINDEXITEMDRAWNON,
   CME_SETMAPACQUIRESTATE, CME_RESTORESTATE, CME_REALIGNTOMAPDRAWNON,
   CME_GETREALIGNTOITEMERROR, CME_DOLOOP, CME_REPORTVACUUMGAUGE, CME_REPORTHIGHVOLTAGE,
-  CME_OKBOX, CME_LIMITNEXTAUTOALIGN, CME_SETDOSERATE, CME_CHECKFORBADSTRIPE 
+  CME_OKBOX, CME_LIMITNEXTAUTOALIGN, CME_SETDOSERATE, CME_CHECKFORBADSTRIPE,
+  CME_REPORTK3CDSMODE, CME_SETK3CDSMODE, CME_CONDITIONPHASEPLATE, CME_LINEARFITTOVARS
 };
 
 // The two numbers are the minimum arguments and whether arithmetic is allowed
@@ -405,6 +406,8 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"RealignToMapDrawnOn", 2, 0}, {"GetRealignToItemError", 0, 0}, {"DoLoop", 3, 1},
 {"ReportVacuumGauge", 1, 0}, {"ReportHighVoltage", 0, 0},{"OKBox", 1, 0},
 {"LimitNextAutoAlign", 1, 1}, {"SetDoseRate", 1, 0},{"CheckForBadStripe", 0, 0},/*CAI3.8*/
+{"ReportK3CDSmode", 0, 0}, {"SetK3CDSmode", 1, 0}, {"ConditionPhasePlate", 0, 0},
+{"LinearFitToVars", 2, 0},
 {NULL, 0, 0}
 };
 // The longest is now 25 characters but 23 is a more common limit
@@ -1130,6 +1133,7 @@ void CMacroProcessor::RunOrResume()
   mDEframeRateToRestore = -1.;
   mDEcamIndToRestore = -1;
   mLDSetAddedBeamRestore = -1;
+  mK3CDSmodeToRestore = -1;
   mNextProcessArgs = "";
   mBeamTiltXtoRestore[0] = mBeamTiltXtoRestore[1] = EXTRA_NO_VALUE;
   mBeamTiltYtoRestore[0] = mBeamTiltXtoRestore[1] = EXTRA_NO_VALUE;
@@ -1822,63 +1826,63 @@ void CMacroProcessor::NextCommand()
 
   case CME_ARRAYSTATISTICS:                                 // ArrayStatistics
   {
-    int numRows = 1, numVals = 0;
-    float *fvalues;
-    char *endPtr;
-    var = GetVariableValuePointers(item1upper, &valPtr, &numElemPtr, "get statistics of",
-      report);
-    if (!var)
-      ABORT_LINE(report + " for line:\n\n");
-    truth = !valPtr;
-    if (truth) {
-      numRows = (int)var->rowsFor2d->GetSize();
-      for (index = 0; index < numRows; index++) {
-        ArrayRow& arrRow = var->rowsFor2d->ElementAt(index);
-        numVals += arrRow.numElements;
-      }
-    } else
-      numVals = *numElemPtr;
-    if (!numVals) 
-      ABORT_LINE("There are no array elements for line:\n\n")
-    fvalues = new float[numVals];
-    numVals = 0;
+    float *fvalues = FloatArrayFromVariable(item1upper, index2, report);
+    if (!fvalues)
+      ABORT_LINE(report + " in line\n\n");
     bmin = 1.e37f;
     bmax = -1.e37f;
-    for (index = 0; index < numRows; index++) {
-      if (truth) {
-        ArrayRow& arrRow = var->rowsFor2d->ElementAt(index);
-        valPtr = &arrRow.value;
-        numElemPtr = &arrRow.numElements;
-      }
+    for (index = 0; index < index2; index++) {
+      ACCUM_MIN(bmin, fvalues[index]);
+      ACCUM_MAX(bmax, fvalues[index]);
+    }
+    avgSD(fvalues, index2, &bmean, &bSD, &cpe);
+    rsFastMedianInPlace(fvalues, index2, &cpe);
+    report.Format("n= %d  min= %.6g  max = %.6g  mean= %.6g  sd= %.6g  median= %.6g",
+      index2, bmin, bmax, bmean, bSD, cpe);
+    mWinApp->AppendToLog(report, mLogAction);
+    SetReportedValues(&strItems[2], index2, bmin, bmax, bmean, bSD, cpe);
 
-      // This function wants array indexes from 1
-      for (index2 = 1; index2 <= *numElemPtr; index2++) {
-        FindValueAtIndex(*valPtr, index2, ix0, ix1);
-        report = valPtr->Mid(ix0, ix1 - ix0);
-        shiftX = (float)strtod((LPCTSTR)report, &endPtr);
-        if (endPtr - (LPCTSTR)report < report.GetLength()) {
-          strCopy = "";
-          if (truth)
-            strCopy.Format(" in row %d", index);
-          report.Format("Cannot get array statistics: item %s at index %d%s of array %s"
-            " has non-numeric characters", (LPCTSTR)report, index2 + 1, (LPCTSTR)strCopy,
-            (LPCTSTR)item1upper);
-          ABORT_NOLINE(report);
-        }
+    delete[] fvalues;
+    break;
+  }
 
-        fvalues[numVals++] = shiftX;
-        ACCUM_MIN(bmin, shiftX);
-        ACCUM_MAX(bmax, shiftX);
+  case CME_LINEARFITTOVARS:                                 // LinearFitToVars
+  {
+    float *xx1, *xx2, *xx3 = NULL;
+    truth = !itemEmpty[3];
+    xx1 = FloatArrayFromVariable(item1upper, index, report);
+    if (!xx1)
+      ABORT_LINE(report + " in line\n\n");
+    xx2 = FloatArrayFromVariable(strItems[2], index2, report);
+    if (!xx2) {
+      delete[] xx1;
+      ABORT_LINE(report + " in line\n\n");
+    }
+    if (truth) {
+      xx3 = FloatArrayFromVariable(strItems[3], ix0, report);
+      if (!xx3) {
+        delete[] xx1, xx2;
+        ABORT_LINE(report + " in line\n\n");
       }
     }
-    avgSD(fvalues, numVals, &bmean, &bSD, &cpe);
-    rsFastMedianInPlace(fvalues, numVals, &cpe);
-    report.Format("n= %d  min= %.6g  max = %.6g  mean= %.6g  sd= %.6g  median= %.6g",
-      numVals, bmin, bmax, bmean, bSD, cpe);
+    if (index != index2 || (truth && ix0 != index)) {
+      delete[] xx1, xx2, xx3;
+      ABORT_LINE("Variables do not have the same number of elements in line:\n\n");
+    }
+    if (index < 2 || (truth && index < 3)) {
+      delete[] xx1, xx2, xx3;
+      ABORT_LINE("There are not enough array values for a linear fit in line:\n\n");
+    }
+    if (truth) {
+      lsFit2(xx1, xx2, xx3, index, &bmean, &bSD, &cpe);
+      report.Format("n= %d  a1= %f  a2= %f  c= %f", index, bmean, bSD, cpe);
+    } else {
+      lsFit(xx1, xx2, index, &bmean, &bSD, &cpe);
+      report.Format("n= %d  slope= %f  intercept= %f  ro= %.4f", index, bmean, bSD, cpe);
+    }
     mWinApp->AppendToLog(report, mLogAction);
-    SetReportedValues(&strItems[2], numVals, bmin, bmax, bmean, bSD, cpe);
-
-    delete fvalues;
+    SetReportedValues(index, bmean, bSD, cpe);
+    delete[] xx1, xx2, xx3;
     break;
   }
 
@@ -5229,6 +5233,13 @@ void CMacroProcessor::NextCommand()
     break;
   }
 
+  case CME_CONDITIONPHASEPLATE:                             // ConditionPhasePlate
+    if (mWinApp->mMultiTSTasks->ConditionPhasePlate(!itemEmpty[1] && itemInt[1] != 0)) {
+      AbortMacro();
+      return;
+    }
+    break;
+
   case CME_GETWAITTASKDRIFT:                                // GetWaitTaskDrift
     SetReportedValues(&strItems[1], mWinApp->mParticleTasks->GetWDLastDriftRate(),
       mWinApp->mParticleTasks->GetWDLastFailed());
@@ -6008,6 +6019,27 @@ void CMacroProcessor::NextCommand()
     mSkipFrameAliCheck = index > 0;
     break;
     
+  case CME_REPORTK3CDSMODE:                                 // ReportK3CDSmode
+    index = mCamera->GetUseK3CorrDblSamp() ? 1 : 0;
+    report.Format("CDS mode is %s", index ? "ON" : "OFF");
+    SetReportedValues(&strItems[1], index);
+    mWinApp->AppendToLog(report, mLogAction);
+    break;
+
+  case CME_SETK3CDSMODE:                                    // SetK3CDSmode
+    if (itemEmpty[2] || !itemInt[2]) {
+      if (mK3CDSmodeToRestore < 0) {
+        mNumStatesToRestore++;
+        mK3CDSmodeToRestore = mCamera->GetUseK3CorrDblSamp() ? 1 : 0;
+      }
+    } else {
+      if (mK3CDSmodeToRestore >= 0)
+        mNumStatesToRestore--;
+      mK3CDSmodeToRestore = -1;
+    }
+    mCamera->SetUseK3CorrDblSamp(itemInt[1] != 0);
+    break;
+
   case CME_REPORTCOUNTSCALING:                              // ReportCountScaling
     index = mCamera->GetDivideBy2();
     delX = mCamera->GetCountScaling(camParams);
@@ -7063,6 +7095,8 @@ void CMacroProcessor::SuspendMacro(BOOL abort)
       }
       if (mLDSetAddedBeamRestore >= 0)
         mWinApp->mLowDoseDlg.SetBeamShiftButton(mLDSetAddedBeamRestore > 0);
+      if (mK3CDSmodeToRestore >= 0)
+        mCamera->SetUseK3CorrDblSamp(mK3CDSmodeToRestore > 0);
     }
     mSavedSettingNames.clear();
     mSavedSettingValues.clear();
@@ -7782,6 +7816,70 @@ int CMacroProcessor::SubstituteVariables(CString * strItems, int maxItems, CStri
     }
   }
   return 0;
+}
+
+//  Get an array of floats from a variable
+float *CMacroProcessor::FloatArrayFromVariable(CString name, int &numVals, 
+  CString &report)
+{
+  int index, index2, ix0, ix1, numRows = 1;
+  float *fvalues;
+  float oneVal;
+  char *endPtr;
+  Variable *var;
+  CString *valPtr;
+  CString strCopy;
+  int *numElemPtr;
+  bool noValPtr;
+
+  numVals = 0;
+  name.MakeUpper();
+  var = GetVariableValuePointers(name, &valPtr, &numElemPtr, "get float array from",
+    report);
+  if (!var)
+    return NULL;
+  noValPtr = !valPtr;
+  if (noValPtr) {
+    numRows = (int)var->rowsFor2d->GetSize();
+    for (index = 0; index < numRows; index++) {
+      ArrayRow& arrRow = var->rowsFor2d->ElementAt(index);
+      numVals += arrRow.numElements;
+    }
+  } else
+    numVals = *numElemPtr;
+  if (!numVals) {
+    report = "There are no array elements";
+    return NULL;
+  }
+  fvalues = new float[numVals];
+  numVals = 0;
+  for (index = 0; index < numRows; index++) {
+    if (noValPtr) {
+      ArrayRow& arrRow = var->rowsFor2d->ElementAt(index);
+      valPtr = &arrRow.value;
+      numElemPtr = &arrRow.numElements;
+    }
+
+    // This function wants array indexes from 1
+    for (index2 = 1; index2 <= *numElemPtr; index2++) {
+      FindValueAtIndex(*valPtr, index2, ix0, ix1);
+      report = valPtr->Mid(ix0, ix1 - ix0);
+      oneVal = (float)strtod((LPCTSTR)report, &endPtr);
+      if (endPtr - (LPCTSTR)report < report.GetLength()) {
+        strCopy = "";
+        if (noValPtr)
+          strCopy.Format(" in row %d", index);
+        report.Format("Cannot get array statistics: item %s at index %d%s of array %s"
+          " has non-numeric characters", (LPCTSTR)report, index2 + 1, (LPCTSTR)strCopy,
+          (LPCTSTR)name);
+        delete[] fvalues;
+        return NULL;
+      }
+
+      fvalues[numVals++] = oneVal;
+    }
+  }
+  return fvalues;
 }
 
 // This checks for the array assignment delimiter being at both ends of the set of

@@ -14,6 +14,7 @@
 #include "BeamAssessor.h"
 #include "CookerSetupDlg.h"
 #include "AutocenSetupDlg.h"
+#include "VPPConditionSetup.h"
 #include "CameraController.h"
 #include "ComplexTasks.h"
 
@@ -231,7 +232,7 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
   double screenCurrent = inCurrent;
   int camera = mWinApp->GetCurrentCamera();
   int pendingSpot = -1, pendingMag = -1, pendingCamLen = -1, numRegCamLens, numLADCamLens;
-  bool needDraw = false, showPending = false;
+  bool needDraw = false, showPending = false, magChanged = false;
   CameraParameters *camParam = mWinApp->GetCamParams() + camera;
   int *camLenTab = mWinApp->GetCamLenTable();
   BOOL noScope = mWinApp->mScope->GetNoScope();
@@ -309,6 +310,7 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
         m_statMag.SetWindowText(m_strMag);
         SEMTrace('i', "Scope status: mag change %d to %d", mMag, inMag);
         mMag = inMag;
+        magChanged = mMagInd != inMagInd;
         mMagInd = inMagInd;
         mSTEM = STEM;
         mPendingMag = pendingMag;
@@ -336,6 +338,7 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
       mPendingCamLen = pendingCamLen;
     }
     mMag = 0;
+    magChanged = mMagInd != 0;
     mMagInd = 0;
     inISX = 0.;
     inISY = 0.;
@@ -387,15 +390,19 @@ void CScopeStatusDlg::Update(double inCurrent, int inMagInd, double inDefocus,
     m_statIntensity.SetWindowText(m_strIntensity);
   }
 
-  if (mWinApp->mCookerDlg && (!mLastCooker || inMagInd != mMagInd || 
+  if (mWinApp->mCookerDlg && (!mLastCooker || magChanged || 
     rawIntensity != mRawIntensity || inSpot != mSpot))
     mWinApp->mCookerDlg->LiveUpdate(inMagInd, inSpot, rawIntensity);
   mLastCooker = mWinApp->mCookerDlg != NULL;
 
-  if (mWinApp->mAutocenDlg && (!mLastAutocen || inMagInd != mMagInd || 
+  if (mWinApp->mAutocenDlg && (!mLastAutocen || magChanged ||
     rawIntensity != mRawIntensity || inSpot != mSpot || 
     temNano != (mTEMnanoProbe ? 1 : 0)))
     mWinApp->mAutocenDlg->LiveUpdate(inMagInd, inSpot, inProbeMode, rawIntensity);
+
+  if (mWinApp->mVPPConditionSetup)
+    mWinApp->mVPPConditionSetup->LiveUpdate(inMagInd, inSpot, inProbeMode, rawIntensity,
+      inAlpha);
   mRawIntensity = rawIntensity;
   mLastAutocen = mWinApp->mAutocenDlg != NULL;
 

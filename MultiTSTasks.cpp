@@ -16,6 +16,7 @@
 #include "ShiftManager.h"
 #include "BeamAssessor.h"
 #include "TSController.h"
+#include "NavigatorDlg.h"
 #include "CameraController.h"
 #include "AutocenSetupDlg.h"
 #include "VPPConditionSetup.h"
@@ -30,6 +31,12 @@ enum {TRACK_SHOT_DONE, SCREEN_DROPPED, START_WAITING, DOSE_DONE, TILT_RESTORED,
 
 enum {TSR_ZERO_SHOT_DONE, TSR_EUCEN_DONE, TSR_AUTOFOCUS, TSR_TAKE_IMAGE, TSR_IMAGE_DONE,
 TSR_BACK_AT_ZERO, TSR_ALIGN_ZERO_SHOT};
+
+enum {
+  CPP_VISIT_NAV_POS, CPP_GOTO_NEXT_POS, CPP_NEXT_POS_WAIT, CPP_DROP_SCREEN,
+  CPP_START_EXPOSURE, CPP_RETURN_TO_POS, CPP_TRACK_SHOT, CPP_RESTORE_SCREEN, CPP_FINISHED
+};
+
 
 #define MAX_STEPS 20
 
@@ -70,9 +77,20 @@ CMultiTSTasks::CMultiTSTasks(void)
   mBfcStopFlag = false;
   mBaiSavedViewMag = -9;
   mSkipNextBeamShift = false;
-  mVppParams.magIndex = 0;
+  mVppParams.lowDoseArea = -1;
+  mVppParams.magIndex = -1;
   mVppParams.probeMode = 1;
   mVppParams.alpha = -999;
+  mVppParams.whichSettings = 0;
+  mVppParams.seconds = 100;
+  mVppParams.nanoCoulombs = 50;
+  mVppParams.timeInstead = false;
+  mVppParams.useNearestNav = false;
+  mVppParams.navText = "VPPC";
+  mVppParams.useNavNote = false;
+  mVppParams.postMoveDelay = 15;
+  mMinNavVisitField = 8.;
+  mConditioningVPP = false;
 }
 
 CMultiTSTasks::~CMultiTSTasks(void)
@@ -1995,6 +2013,8 @@ void CMultiTSTasks::BidirAnchorCleanup(int error)
 // Open the non-model dialog
 void CMultiTSTasks::SetupVPPConditioning()
 {
+  if (mWinApp->mVPPConditionSetup)
+    return;
   CVPPConditionSetup *dlg = new CVPPConditionSetup;
   mWinApp->mVPPConditionSetup = dlg;
   dlg->mParams = mVppParams;
@@ -2009,13 +2029,14 @@ void CMultiTSTasks::VPPConditionClosing(int OKorGo)
 {
   if (!mWinApp->mVPPConditionSetup)
     return;
+  if (OKorGo)
+    mVppParams = mWinApp->mVPPConditionSetup->mParams;
   mWinApp->mVPPConditionSetup->SetScopeState(true);
   GetConditionPlacement();
   mWinApp->mVPPConditionSetup->DestroyWindow();
   mWinApp->mVPPConditionSetup = NULL;
-  if (OKorGo) {
-    mVppParams = mWinApp->mVPPConditionSetup->mParams;
-  }
+  if (OKorGo < 0)
+    ConditionPhasePlate(OKorGo < -1);
 }
 
 // Get the window placement
@@ -2027,10 +2048,20 @@ WINDOWPLACEMENT *CMultiTSTasks::GetConditionPlacement(void)
   return &mVPPConditionPlace;
 }
 
-// Save the current scope state in a parameter structure
-void CMultiTSTasks::SaveScopeStateInVppParams(VppConditionParams * params)
+// Save the current scope state in a parameter structure, or just save the LD area unles
+// saveEvenLD is true
+void CMultiTSTasks::SaveScopeStateInVppParams(VppConditionParams *params, bool saveEvenLD)
 {
+
+  // In low dose, simply save the area; otherwise get the state
+  if (mWinApp->LowDoseMode()) {
+    params->lowDoseArea = mScope->GetLowDoseArea();
+    if (params->lowDoseArea >= 0 && !saveEvenLD)
+      return;
+  }
   params->magIndex = mScope->GetMagIndex();
+  if (!params->magIndex)
+    params->camLenIndex = mScope->GetCamLenIndex();
   params->spotSize = mScope->GetSpotSize();
   params->intensity = mScope->GetIntensity();
   if (FEIscope)
@@ -2039,15 +2070,401 @@ void CMultiTSTasks::SaveScopeStateInVppParams(VppConditionParams * params)
     params->alpha = mScope->GetAlpha();
 }
 
-// Set the scope state to values in the given parameter structure
-void CMultiTSTasks::SetScopeStateFromVppParams(VppConditionParams *params)
+// Set the scope state to values in the given parameter structure, or just set the low
+// dose area unless ignoreLD is true
+void CMultiTSTasks::SetScopeStateFromVppParams(VppConditionParams *params, bool ignoreLD)
 {
-  mScope->SetMagIndex(params->magIndex);
+
+  // Restore a low dose area, or set the state in hopefully the right order
+  if (params->lowDoseArea >= 0 && !ignoreLD) {
+    mScope->GotoLowDoseArea(params->lowDoseArea);
+    return;
+  }
+  if (params->magIndex)
+    mScope->SetMagIndex(params->magIndex);
+  else
+    mScope->SetCamLenIndex(params->camLenIndex);
   if (FEIscope)
     mScope->SetProbeMode(params->probeMode);
   if (!mScope->GetHasNoAlpha())    
     mScope->SetAlpha(params->alpha);
   mScope->SetSpotSize(params->spotSize);
   mScope->SetIntensity(params->intensity);
+}
+
+// Start the conditioning process
+int CMultiTSTasks::ConditionPhasePlate(bool movePlate)
+{
+  double dist, minDist = 1.e30;
+  int ind, nextTask;
+  CArray<CMapDrawItem *, CMapDrawItem *> *itemArray;
+  CMapDrawItem *item;
+  CString *strPtr;
+  ControlSet  *conSet = mWinApp->GetConSets() + TRACK_CONSET;
+  int targetSize = B3DMAX(512, mCamera->TargetSizeForTasks());
+
+  // Copy params if it is open then initialize variables for keeping track of state
+  if (mWinApp->mVPPConditionSetup) {
+    mWinApp->mVPPConditionSetup->StoreParameters();
+    mVppParams = mWinApp->mVPPConditionSetup->mParams;
+  }
+
+  mVppNearPosIndex = -1;
+  mVppAcquireIndex = -1;
+  mVppNeedRealign = false;
+  mVppGotoNextPos = movePlate;
+  mVppLoweredMag = false;
+  mVppSavedState.magIndex = -1;
+  mVppSavedState.lowDoseArea = -1;
+  mVppFinishing = 0;
+  mVppUnblankedForExp = false;
+  mVppSettling = mVppExposing = false;
+
+  // Set up which settings to use
+  mVppWhichSettings = mVppParams.whichSettings;
+  mLowDose = mWinApp->LowDoseMode() ? 1 : 0;
+  if (!mLowDose)
+    mVppWhichSettings = VPPCOND_SETTINGS;
+  if (!mLowDose && mWinApp->DoingTiltSeries()) {
+    SEMMessageBox("You cannot condition a phase plate outside\n"
+      "of Low Dose mode during a tilt series");
+    return 1;
+  }
+  if (mWinApp->DoingTiltSeries())
+    mVppWhichSettings = VPPCOND_TRIAL;
+  if (mVppWhichSettings == VPPCOND_SETTINGS && mVppParams.magIndex <= 0) {
+    SEMMessageBox("You cannot condition a phase plate without defining settings to use");
+    return 1;
+  }
+
+  // Find nearest navigator point if option set and appropriate
+  if (mVppParams.useNearestNav && !mWinApp->StartedTiltSeries() && mWinApp->mNavigator &&
+    !mVppParams.navText.IsEmpty()) {
+    itemArray = mWinApp->mNavigator->GetItemArray();
+    mScope->GetStagePosition(mVppStageX, mVppStageY, dist);
+    for (ind = 0; ind < itemArray->GetSize(); ind++) {
+      item = itemArray->GetAt(ind);
+      strPtr = mVppParams.useNavNote ? &item->mNote : &item->mLabel;
+      if (strPtr->Find(mVppParams.navText) == 0) {
+        dist = sqrt(pow(mVppStageX - item->mStageX, 2.) +
+          pow(mVppStageY - item->mStageY, 2.));
+        if (dist < minDist) {
+          mVppNearPosIndex = ind;
+          minDist = dist;
+        }
+      }
+    }
+
+    // Get current acquire item if possible, and retain position if running nav acquire
+    // and it has done a realign
+    if (mVppNearPosIndex >= 0) {
+      mVppAcquireIndex = mWinApp->mNavigator->GetAcquireIndex();
+      mVppNeedRealign = mVppAcquireIndex >= 0 && 
+        mWinApp->mNavigator->GetRealignedInAcquire();
+    }
+  }
+
+  // Save state blanking and make sure it is set to blank when down to start with
+  // Save screen state
+  mVppSavedBlanking = mScope->GetBeamBlanked();
+  if (mLowDose) {
+    mVppSavedLDSkipBlanking = mScope->GetSkipBlankingInLowDose();
+    mScope->SetSkipBlankingInLowDose(false);
+    mScope->SetBlankWhenDown(true);
+  }
+  mVppOrigScreenPos = mVppCurScreenPos = mScope->GetScreenPos();
+
+  // Set the task to do after possible reference image depending on what is being done
+  nextTask = CPP_START_EXPOSURE;
+  if (mVppCurScreenPos == spUp || mVppNeedRealign)
+    nextTask = CPP_DROP_SCREEN;
+  if (mVppGotoNextPos)
+    nextTask = CPP_GOTO_NEXT_POS;
+  if (mVppNearPosIndex >= 0)
+    nextTask = CPP_VISIT_NAV_POS;
+  if (mVppCurScreenPos == spDown && !mScope->GetBeamBlanked())
+    mScope->BlankBeam(true, "ConditionPhasePlate");
+  mConditioningVPP = true;
+  mWinApp->UpdateBufferWindows();
+  mWinApp->SetStatusText(MEDIUM_PANE, "CONDITIONING PHASE PLATE");
+
+  // If need a reference shot, start it now
+  if (mVppNeedRealign) {
+    mComplexTasks->MakeTrackingConSet(conSet, targetSize);
+    mComplexTasks->LowerMagIfNeeded(mComplexTasks->FindMaxMagInd(mMinNavVisitField, -2),
+      0.7f, 0.3f, TRACK_CONSET);
+    mVppLoweredMag = true;
+    mCamera->SetObeyTiltDelay(false);
+    mCamera->SetRequiredRoll(1);
+    mComplexTasks->StartCaptureAddDose(mComplexTasks->GetLowMagConSet());
+    mWinApp->AddIdleTask(SEMStageCameraBusy, TASK_CONDITION_VPP, nextTask, 0);
+  } else {
+    VppConditionNextTask(nextTask);
+  }
+
+  return 0;
+}
+
+// Do the next task in conditioning
+void CMultiTSTasks::VppConditionNextTask(int param)
+{
+  const int numCurrents = 5;
+  float currents[numCurrents], median;
+  int currentInterval = 400, initCurrentWait = 1000;
+  int ind, nextTask = CPP_START_EXPOSURE;
+  CString str;
+  StageMoveInfo smi;
+
+  // If a shot was taken, signified by the lowered mag flag, restore mag, set screen pos
+  // to up now, and do the autoalign if it is shot at the end
+  if (mVppLoweredMag) {
+    mVppCurScreenPos = spUp;
+    mComplexTasks->RestoreMagIfNeeded();
+    mVppLoweredMag = false;
+    mImBufs->mCaptured = BUFFER_TRACKING;
+    if (param == CPP_RESTORE_SCREEN)
+      mShiftManager->AutoAlign(1, 0);
+  }
+
+  // If it was unblanked for exposure, get it blanked
+  if (mVppUnblankedForExp) {
+    mVppUnblankedForExp = false;
+    if (mLowDose)
+      mScope->SetBlankWhenDown(true);
+    mScope->BlankBeam(true, "VppNextTask done");
+  }
+
+  // If we are in finishing phase after interrupting an early step, set the next step
+  // as needed depending on what was actually done
+  if (mVppFinishing) {
+    if (param == CPP_VISIT_NAV_POS)
+      param = CPP_RESTORE_SCREEN;
+    else if (param < CPP_RETURN_TO_POS) {
+      param = CPP_RESTORE_SCREEN;
+      if (mVppNeedRealign)
+        param = CPP_TRACK_SHOT;
+      if (mVppNearPosIndex >= 0)
+        param = CPP_RETURN_TO_POS;
+    }
+  }
+
+  // The switch on actions
+  switch (param) {
+
+    // Go to another Nav position
+  case CPP_VISIT_NAV_POS:
+    if (mWinApp->mNavigator->MoveToItem(mVppNearPosIndex, true)) {
+      StopVppCondition();
+      return;
+    }
+
+    // Set next task
+    if (mVppCurScreenPos == spUp)
+      nextTask = CPP_DROP_SCREEN;
+    if (mVppGotoNextPos)
+      nextTask = CPP_GOTO_NEXT_POS;
+    mWinApp->AddIdleTask(SEMStageCameraBusy, TASK_CONDITION_VPP, nextTask, 20000);
+    return;
+
+    // Go to next phase plate position
+  case CPP_GOTO_NEXT_POS:
+    if (!mScope->MovePhasePlateToNextPos()) {
+      SEMMessageBox("Phase plate movement is not supported");
+      StopVppCondition();
+      return;
+    }
+    mWinApp->SetStatusText(SIMPLE_PANE, "ADVANCING PP POS");
+    mWinApp->AddIdleTask(CEMscope::TaskApertureBusy, TASK_CONDITION_VPP,
+      CPP_NEXT_POS_WAIT, 20000);
+    return;
+
+    // Settle after going to new position
+  case CPP_NEXT_POS_WAIT:
+    if (mVppCurScreenPos == spUp)
+      nextTask = CPP_DROP_SCREEN;
+    mVppSettleStart = GetTickCount();
+    mVppSettling = true;
+    mVppLastRemaining = 10000;
+    mWinApp->AddIdleTask(TASK_CONDITION_VPP, nextTask, 0);
+    return;
+
+    // Drop the screen
+  case CPP_DROP_SCREEN:
+    mScope->BlankBeam(true, "VppNextTask DROP_SCREEN");
+    mScope->SetScreenPos(spDown);
+    mVppCurScreenPos = spDown;
+    mWinApp->SetStatusText(SIMPLE_PANE, "LOWERING SCREEN");
+    mWinApp->AddIdleTask(CEMscope::TaskScreenBusy, TASK_CONDITION_VPP, CPP_START_EXPOSURE,
+      20000);
+    return;
+
+    // Start the exposure
+  case CPP_START_EXPOSURE:
+
+    // Save and set the scope state; saved state includes a low dose area
+    SaveScopeStateInVppParams(&mVppSavedState, false);
+    if (mVppWhichSettings == VPPCOND_SETTINGS)
+      SetScopeStateFromVppParams(&mVppParams, false);
+    else
+      mScope->GotoLowDoseArea(mVppWhichSettings == VPPCOND_TRIAL ? 
+        TRIAL_CONSET : RECORD_CONSET);
+
+    // Unblank and get start time; set  up what to do when it is over
+    if (mLowDose)
+      mScope->SetBlankWhenDown(false);
+    mScope->BlankBeam(false, "VppNextTask START_EXPOSURE");
+    mVppUnblankedForExp = true;
+    mVppExposeStart = GetTickCount();
+    mVppExposing = true;
+    mVppLastRemaining = 10000;
+    nextTask = CPP_RESTORE_SCREEN;
+    if (mVppNeedRealign)
+      nextTask = CPP_TRACK_SHOT;
+    if (mVppNearPosIndex >= 0)
+      nextTask = CPP_RETURN_TO_POS;
+
+    // set up time or measure current to estimate time
+    if (mVppParams.timeInstead) {
+      mVppTimeToExpose = (float)mVppParams.seconds;
+    } else {
+      Sleep(initCurrentWait);
+      for (ind = 0; ind < numCurrents; ind++) {
+        currents[ind] = (float)mScope->GetScreenCurrent();
+        Sleep(currentInterval);
+      }
+      rsFastMedianInPlace(&currents[0], numCurrents, &median);
+      if (1000. * median < mVppParams.nanoCoulombs) {
+        str.Format("Screen current is too low to condition phase plate:\r\n"
+          "%.3f na (median of %.3f, %.3f, %.3f, %.3f, %.3f)", median, currents[0],
+          currents[1], currents[2], currents[3], currents[4]);
+        SEMMessageBox(str);
+        mWinApp->AppendToLog(str);
+        mVppFinishing = 1;
+      }
+      mVppTimeToExpose = (float)(mVppParams.nanoCoulombs / median);
+      PrintfToLog("Median current = %.3f na, conditioning plate for %d sec", median,
+        B3DNINT(mVppTimeToExpose));
+    }
+
+    mWinApp->AddIdleTask(TASK_CONDITION_VPP, nextTask, 0);
+    return;
+
+    // Return to the acquire item if neccessary
+  case CPP_RETURN_TO_POS:
+    if (mVppAcquireIndex < 0 ||
+      mWinApp->mNavigator->MoveToItem(mVppAcquireIndex, true)) {
+      smi.x = mVppStageX;
+      smi.y = mVppStageY;
+      smi.axisBits = axisXY;
+      mScope->MoveStage(smi);
+    }
+    nextTask = CPP_RESTORE_SCREEN;
+    if (mVppNeedRealign)
+      nextTask = CPP_TRACK_SHOT;
+    mWinApp->AddIdleTask(SEMStageCameraBusy, TASK_CONDITION_VPP, nextTask, 20000);
+    return;
+
+    // Take a tracking shot if necessary
+  case CPP_TRACK_SHOT:
+    mComplexTasks->LowerMagIfNeeded(mComplexTasks->FindMaxMagInd(mMinNavVisitField, -2),
+      0.7f, 0.3f, TRACK_CONSET);
+    mVppLoweredMag = true;
+    mComplexTasks->StartCaptureAddDose(mComplexTasks->GetLowMagConSet());
+    mWinApp->AddIdleTask(SEMStageCameraBusy, TASK_CONDITION_VPP, CPP_RESTORE_SCREEN, 0);
+    return;
+
+    // Restore the screen state
+  case CPP_RESTORE_SCREEN:
+    if (mScope->GetScreenPos() != mVppOrigScreenPos) {
+      mScope->SetScreenPos(mVppOrigScreenPos);
+      mWinApp->SetStatusText(SIMPLE_PANE, "RAISING SCREEN");
+      mWinApp->AddIdleTask(CEMscope::TaskScreenBusy, TASK_CONDITION_VPP, CPP_FINISHED,
+        20000);
+      return;
+    }
+    // If screen OK, fall through to finish
+
+    // Set finishing to 1 for a normal end if actually get to end to make sure it stops
+  case CPP_FINISHED:
+    mVppFinishing = 1;
+    StopVppCondition();
+    break;
+  }
+  
+}
+
+// The busy function is used only for the settling/exposing steps, it tests remaining time
+// and updates the status bar every 2 seconds
+int CMultiTSTasks::VppConditionBusy()
+{
+  CString str;
+  double remaining;
+  if (mVppFinishing || !mConditioningVPP)
+    return 0;
+  if (mVppSettling)
+    remaining = mVppParams.postMoveDelay - SEMTickInterval(mVppSettleStart) / 1000.;
+  else
+    remaining = mVppTimeToExpose - SEMTickInterval(mVppExposeStart) / 1000.;
+  if (remaining > 0) {
+    if (B3DNINT(remaining) < mVppLastRemaining - 1) {
+      mVppLastRemaining = B3DNINT(remaining);
+      str.Format("%s: %d", mVppSettling ? "SETTLING" : "EXPOSING", mVppLastRemaining);
+      mWinApp->SetStatusText(SIMPLE_PANE, str);
+    }
+    return 1;
+  }
+
+  // If done, set finishing to 1
+  if (mVppExposing)
+    mVppFinishing = 1;
+  mVppSettling = false;
+  mVppExposing = false;
+  mWinApp->SetStatusText(SIMPLE_PANE, "");
+  return 0;
+}
+
+// This will get called if some operation throws an error or times out, it will make
+// the finishing sequence happen
+void CMultiTSTasks::VppConditionCleanup(int error)
+{
+  if (error == IDLE_TIMEOUT_ERROR)
+    SEMMessageBox(_T("Time out doing an operation for conditioning phase plate"));
+  StopVppCondition();
+  mWinApp->ErrorOccurred(error);
+}
+
+// Normal, error, or user stop: 
+void CMultiTSTasks::StopVppCondition(void)
+{
+  if (!mConditioningVPP)
+    return;
+
+  // Reserve the value of 1 for a true end: if error or stop comes in, set it to 2 and 
+  // try to go on with finishing, unless STOP pressed 2 more times (unique, give it a try)
+  if (mVppFinishing != 1) {
+    mVppFinishing = B3DMAX(2, mVppFinishing + 1);
+    if (mVppFinishing < 4) {
+      mWinApp->SetStatusText(SIMPLE_PANE, "FINISHING");
+      return;
+    } else
+      mWinApp->SetStatusText(SIMPLE_PANE, "ABORTING");
+  }
+
+  // Restore scope state, blanking property and beam blank
+  if (mVppLoweredMag)
+    mComplexTasks->RestoreMagIfNeeded();
+  if (mVppSavedState.magIndex >= 0 || mVppSavedState.lowDoseArea >= 0)
+    SetScopeStateFromVppParams(&mVppSavedState, false);
+  if (mLowDose) {
+    mScope->SetSkipBlankingInLowDose(mVppSavedLDSkipBlanking);
+    mScope->SetBlankWhenDown(mWinApp->mLowDoseDlg.m_bBlankWhenDown);
+  }
+  mScope->BlankBeam(mVppSavedBlanking, "StopVppCondition");
+  mConditioningVPP = false;
+  mCamera->SetRequiredRoll(0);
+  mCamera->SetObeyTiltDelay(false);
+  mWinApp->UpdateBufferWindows();
+  mWinApp->SetStatusText(SIMPLE_PANE, "");
+  mWinApp->SetStatusText(MEDIUM_PANE, "");
 }
 

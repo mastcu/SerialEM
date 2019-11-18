@@ -395,7 +395,8 @@ BOOL CComplexTasks::DoingTasks()
   return mDoingRSRA || mReversingTilt || mWalkIndex >= 0 || mDoingEucentricity || 
     mDoingTASM || mDoingBASP || mWinApp->mMultiTSTasks->GetAutoCentering() || 
     mWinApp->mMultiTSTasks->GetCooking() || mWinApp->mMultiTSTasks->GetAssessingRange()
-    || mWinApp->mMultiTSTasks->DoingAnchorImage();
+    || mWinApp->mMultiTSTasks->DoingAnchorImage() || 
+    mWinApp->mMultiTSTasks->GetConditioningVPP();
 }
 
 // Strangely enough, nothing in this collection is a complex enough task...
