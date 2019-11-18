@@ -4623,7 +4623,6 @@ void CCameraController::CapSetupShutteringTiming(ControlSet & conSet, int inSet,
 {
   CString logmess;
   double scanRate;
-  int reblankOrPostAction = 0;
 
   int iShuttering = conSet.shuttering;
   int currentCam = mWinApp->GetCurrentCamera();
@@ -4791,11 +4790,10 @@ void CCameraController::CapSetupShutteringTiming(ControlSet & conSet, int inSet,
         }
 
         // Add the shutter time since it is done by camera plugin now
-        reblankOrPostAction = (int)(1000. * (mExposure + mParam->builtInSettling +
-          mParam->startupDelay + mParam->extraBeamTime)) + mTD.ShutterTime -
-          mTD.UnblankTime;
         if (!mSkipNextReblank)
-          mTD.ReblankTime = reblankOrPostAction;
+          mTD.ReblankTime = (int)(1000. * (mExposure + mParam->builtInSettling + 
+            mParam->startupDelay + mParam->extraBeamTime)) + mTD.ShutterTime -
+            mTD.UnblankTime;
         mSkipNextReblank = false;
       }
       mTD.ShutterMode = mFilmShutter;
@@ -4819,11 +4817,8 @@ void CCameraController::CapSetupShutteringTiming(ControlSet & conSet, int inSet,
       if (mTD.ReblankTime)
         mTD.PostActionTime = mTD.ReblankTime;
       else {
-        if (reblankOrPostAction > 0)
-          mTD.PostActionTime = reblankOrPostAction;
-        else
-          mTD.PostActionTime = (int)(1000. * (mExposure + mParam->builtInSettling +
-            mParam->startupDelay + mDelay + mParam->extraBeamTime));
+        mTD.PostActionTime = (int)(1000. * (mExposure + mParam->builtInSettling + 
+          mParam->startupDelay + mDelay + mParam->extraBeamTime));
         if (mParam->K2Type && conSet.doseFrac)
           mTD.PostActionTime += (int)(1000. * mParam->startDelayPerFrame * 
           conSet.exposure / B3DMAX(conSet.frameTime, GetMinK2FrameTime(mParam)));
