@@ -1865,7 +1865,7 @@ int CParameterIO::ReadProperties(CString strFileName)
   int *C2apertures = mWinApp->mBeamAssessor->GetC2Apertures();
   float *radii = mWinApp->mProcessImage->GetFFTCircleRadii();
   float *alphaFacs = mWinApp->mBeamAssessor->GetBSCalAlphaFactors();
-  BOOL recognized, recognized2, recognized3, recognizedc, recognizedc1;
+  BOOL recognized, recognized2, recognized30, recognized35, recognizedc, recognizedc1;
   CString strLine;
   CString strItems[MAX_TOKENS];
   BOOL itemEmpty[MAX_TOKENS];
@@ -1945,7 +1945,8 @@ int CParameterIO::ReadProperties(CString strFileName)
                             MAX_TOKENS)) == 0) {
       recognized = true;
       recognized2 = true;
-      recognized3 = true;
+      recognized30 = true;
+      recognized35 = true;
       recognizedc = true;
 
       message = strItems[0];
@@ -2682,7 +2683,7 @@ int CParameterIO::ReadProperties(CString strFileName)
         recognized = false;
       
       if (recognized || recognizedc) {
-
+        recognized = true;
       }
 #define PROP_TEST_SECT2
 #include "PropertyTests.h"
@@ -2827,12 +2828,22 @@ int CParameterIO::ReadProperties(CString strFileName)
       } else
         recognized2 = false;
 
-      if (recognized || recognized2 || recognizedc) {
-
+      if (recognized || recognized2) {
+        recognized = true;
       }
-#define PROP_TEST_SECT3
+#define PROP_TEST_SECT30
 #include "PropertyTests.h"
-#undef PROP_TEST_SECT3
+#undef PROP_TEST_SECT30
+      else
+        recognized30 = false;
+
+      if (recognized || recognized30) {
+        recognized = true;
+      }
+#define PROP_TEST_SECT35
+#include "PropertyTests.h"
+#undef PROP_TEST_SECT35
+
       else if (MatchNoCase("JeolSwitchSTEMsleep")) {
         scope->SetJeolSwitchSTEMsleep(itemInt[1]);
         if (!itemEmpty[2])
@@ -2904,10 +2915,10 @@ int CParameterIO::ReadProperties(CString strFileName)
       else if (MatchNoCase("WalkUpMaxInterval") || MatchNoCase("WalkUpMinInterval"))
         err = 0;
       else
-        recognized3 = false;
+        recognized35 = false;
 
-      if (recognized || recognized2 || recognized3 || recognizedc) {
-
+      if (recognized || recognized35) {
+        recognized = true;
       }
 #define PROP_TEST_SECT4
 #include "PropertyTests.h"
@@ -3224,7 +3235,7 @@ int CParameterIO::ReadProperties(CString strFileName)
        } else
          mWinApp->mShiftManager->SetNumISdelays(nMags);
 
-     } else if (!strItems[0].IsEmpty() && !recognized && !recognized2 && !recognized3)
+     } else if (!strItems[0].IsEmpty() && !recognized && !recognized35)
        AfxMessageBox("Unrecognized entry in properties file " + strFileName
          + " : " + strLine, MB_EXCLAME);
 
@@ -5257,7 +5268,7 @@ int CParameterIO::MacroSetProperty(CString name, double value)
 #define PROP_MODULES
 #include "PropertyTests.h"
 #undef PROP_MODULES
-  bool recognized = true, recognized2 = true, recognized3 = true;
+  bool recognized = true, recognized2 = true, recognized30 = true, recognized35 = true;
   if (false) {
   }
 #define PROP_TEST_SECT1
@@ -5275,14 +5286,25 @@ int CParameterIO::MacroSetProperty(CString name, double value)
     recognized2 = false;
       
   if (recognized || recognized2) {
+    recognized = true;
   }
-#define PROP_TEST_SECT3
+#define PROP_TEST_SECT30
 #include "PropertyTests.h"
-#undef PROP_TEST_SECT3
-  else 
-    recognized3 = false;
-      
-  if (recognized || recognized2 || recognized3) {
+#undef PROP_TEST_SECT30
+  else
+    recognized30 = false;
+
+  if (recognized || recognized30) {
+    recognized = true;
+  }
+#define PROP_TEST_SECT35
+#include "PropertyTests.h"
+#undef PROP_TEST_SECT35
+  else
+    recognized35 = false;
+
+  if (recognized || recognized35) {
+    recognized = true;
   }
 #define PROP_TEST_SECT4
 #include "PropertyTests.h"
@@ -5331,7 +5353,7 @@ void CParameterIO::UserSetProperty(void)
   CString name;
   int ival = 0;
   float fval = 0.;
-  bool recognized = true, recognized2 = true, recognized3 = true;
+  bool recognized = true, recognized2 = true, recognized30 = true, recognized35 = true;
   if (!KGetOneString("Enter full name of property to set (case insensitive):", name))
     return;
   if (false) {
@@ -5351,14 +5373,24 @@ void CParameterIO::UserSetProperty(void)
     recognized2 = false;
       
   if (recognized || recognized2) {
+    recognized = true;
   }
-#define PROP_TEST_SECT3
+#define PROP_TEST_SECT30
 #include "PropertyTests.h"
-#undef PROP_TEST_SECT3
-  else 
-    recognized3 = false;
-      
-  if (recognized || recognized2 || recognized3) {
+#undef PROP_TEST_SECT30
+  else
+    recognized30 = false;
+
+  if (recognized || recognized30) {
+    recognized = true;
+  }
+#define PROP_TEST_SECT35
+#include "PropertyTests.h"
+#undef PROP_TEST_SECT35
+  else
+    recognized35 = false;
+
+  if (recognized || recognized35) {
   }
 #define PROP_TEST_SECT4
 #include "PropertyTests.h"
@@ -5391,7 +5423,7 @@ int CParameterIO::MacroGetProperty(CString name, double &value)
 #define PROP_MODULES
 #include "PropertyTests.h"
 #undef PROP_MODULES
-  bool recognized = true, recognized2 = true, recognized3 = true;
+  bool recognized = true, recognized2 = true, recognized30 = true, recognized35 = true;
   if (false) {
   }
 #define PROP_TEST_SECT1
@@ -5409,14 +5441,24 @@ int CParameterIO::MacroGetProperty(CString name, double &value)
     recognized2 = false;
       
   if (recognized || recognized2) {
+    recognized = true;
   }
-#define PROP_TEST_SECT3
+#define PROP_TEST_SECT30
 #include "PropertyTests.h"
-#undef PROP_TEST_SECT3
-  else 
-    recognized3 = false;
-      
-  if (recognized || recognized2 || recognized3) {
+#undef PROP_TEST_SECT30
+  else
+    recognized30 = false;
+
+  if (recognized || recognized30) {
+    recognized = true;
+  }
+#define PROP_TEST_SECT35
+#include "PropertyTests.h"
+#undef PROP_TEST_SECT35
+  else
+    recognized35 = false;
+
+  if (recognized || recognized35) {
   }
 #define PROP_TEST_SECT4
 #include "PropertyTests.h"

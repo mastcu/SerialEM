@@ -81,6 +81,8 @@ CMultiTSTasks::CMultiTSTasks(void)
   mVppParams.magIndex = -1;
   mVppParams.probeMode = 1;
   mVppParams.alpha = -999;
+  mVppParams.spotSize = 3;
+  mVppParams.intensity = 0.5f;
   mVppParams.whichSettings = 0;
   mVppParams.seconds = 100;
   mVppParams.nanoCoulombs = 50;

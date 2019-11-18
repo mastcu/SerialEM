@@ -188,7 +188,7 @@ FLOAT_PROP_TEST("MontageDriftRepeatDelay", mWinApp->mMontageController->, DriftR
 FLOAT_PROP_TEST("MontageMinZigzagOverlap", mWinApp->mMontageController->, MinOverlapForZigzag)
 BOOL_PROP_TEST("MontageAutosaveLog", mWinApp->mMontageController->, AutosaveLog)
 #endif
-#ifdef PROP_TEST_SECT3
+#ifdef PROP_TEST_SECT30
 FLOAT_PROP_TEST("JEOLStageMotorRounding", scope->, JeolStageRounding)
 FLOAT_PROP_TEST("JEOLStagePiezoRounding", scope->, JeolPiezoRounding)
 FLOAT_PROP_TEST("MaximumTiltAngle", scope->, MaxTiltAngle)
@@ -255,6 +255,9 @@ FLOAT_PROP_TEST("WalkUpMinField", complexTasks->, MinWalkField)
 FLOAT_PROP_TEST("TiltAfterMoveMinField", complexTasks->, MinTASMField)
 FLOAT_PROP_TEST("BacklashAdjustMinField", complexTasks->, MinBASPField)
 FLOAT_PROP_TEST("CookerRealignMinField", mWinApp->mMultiTSTasks->, MinCookField)
+FLOAT_PROP_TEST("NavVisitReturnMinField", mWinApp->mMultiTSTasks->, MinNavVisitField)
+#endif
+#ifdef PROP_TEST_SECT35
 FLOAT_PROP_TEST("MinLowMagSlitWidth", complexTasks->, MinLMSlitWidth)
 FLOAT_PROP_TEST("SlitWideningSafetyFactor", complexTasks->, SlitSafetyFactor)
 INT_PROP_TEST("ResetRealignMaxIterations", complexTasks->, MaxRSRAIterations)
