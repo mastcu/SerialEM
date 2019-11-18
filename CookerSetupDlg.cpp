@@ -125,6 +125,8 @@ BOOL CCookerSetupDlg::OnInitDialog()
   m_editCookTilt.EnableWindow(m_bTiltForCook);
   m_editCookDose.EnableWindow(m_iTimeInstead == 0);
   m_editCookTime.EnableWindow(m_iTimeInstead != 0);
+  m_sbcDose.EnableWindow(m_iTimeInstead == 0);
+  m_sbcCookTime.EnableWindow(m_iTimeInstead != 0);
 
   m_sbcDose.SetRange(TARGET_MIN, TARGET_MAX);
   m_sbcDose.SetPos(m_iDose);
@@ -241,6 +243,8 @@ void CCookerSetupDlg::OnRadiodose()
   UpdateData(true);
   m_editCookDose.EnableWindow(m_iTimeInstead == 0);
   m_editCookTime.EnableWindow(m_iTimeInstead != 0);
+  m_sbcDose.EnableWindow(m_iTimeInstead == 0);
+  m_sbcCookTime.EnableWindow(m_iTimeInstead != 0);
   UpdateDoseTime();
 }
 
