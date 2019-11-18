@@ -1548,6 +1548,13 @@
 #define IDC_RWITHNOTE                   2571
 #define IDC_STAT_STARTING               2572
 #define IDC_EDITNAVTEXT                 2573
+#define IDC_PPCONDGO                    2574
+#define IDC_RCONDDOSE                   2575
+#define IDC_RCONDTIME                   2576
+#define IDC_EDITPPCONDDOSE              2577
+#define IDC_EDITPPCONDTIME              2578
+#define IDC_SPINPPCONDDOSE              2579
+#define IDC_SPINPPCONDTIME              2580
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2015,6 +2022,7 @@
 #define ID_MACRO_RUN39                  33375
 #define ID_MACRO_RUN40                  33376
 #define ID_SPECIALIZEDOPTIONS_SKIPBLANKINGINLDWITHSCREENUP 33377
+#define ID_TASKS_SETUPVPPCONDITIONING   33378
 
 // Next default values for new objects
 // 
@@ -2022,8 +2030,8 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        243
-#define _APS_NEXT_COMMAND_VALUE         33378
-#define _APS_NEXT_CONTROL_VALUE         2574
+#define _APS_NEXT_COMMAND_VALUE         33379
+#define _APS_NEXT_CONTROL_VALUE         2581
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
