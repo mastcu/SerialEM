@@ -65,6 +65,7 @@ CFilterTasks::CFilterTasks()
   mRZlpMeanCrit = 0.02f;    // Final mean must be below this fraction of maximum
   mRZlpUserCancelFrac = 0.5f;  // Automatically cancel loss less than this frac of width
   mRZlpRedoInLowDose = false;  // Do not try again in low dose
+  mRZlpLeaveCDSmode = false;   // Stay in CDS mode unless property set
 }
 
 CFilterTasks::~CFilterTasks()
@@ -626,7 +627,7 @@ BOOL CFilterTasks::RefineZLP(bool interactive)
         mRZlpUserLoss = 0.;
     }
   }
-  
+
   // Check for enough offset to work on JEOL
   if (TestRefineZLPStart(mRZlpUserLoss, "run")) {
     CleanupArrays();
@@ -661,6 +662,12 @@ BOOL CFilterTasks::RefineZLP(bool interactive)
     conSet->K2ReadMode = K2_COUNTING_MODE;
   if (conSet->processing == UNPROCESSED)
     conSet->processing = DARK_SUBTRACTED;
+
+  // Turn off CDS mode, dark images have too much signal
+  mRZlpRestoreCDSmode = mRZlpLeaveCDSmode && camParams->K2Type == K3_TYPE && 
+    mCamera->GetUseK3CorrDblSamp();
+  if (mRZlpRestoreCDSmode)
+    mCamera->SetUseK3CorrDblSamp(false);
 
   // Drop the exposure by 10 if possible.  Use dead time and also apply minimum exposure
   // then do standard constraint
@@ -870,6 +877,8 @@ void CFilterTasks::StopRefineZLP()
 
   CleanupArrays();
   mRZlpIndex = -1;
+  if (mRZlpRestoreCDSmode)
+    mCamera->SetUseK3CorrDblSamp(true);
 
   mWinApp->UpdateBufferWindows();
   mWinApp->SetStatusText(MEDIUM_PANE, "");
