@@ -888,7 +888,7 @@ int CNavigatorDlg::RealignToAnItem(CMapDrawItem * item, BOOL restore,
 }
 
 // Simply move to an item; current or acquire item if index < 0
-int CNavigatorDlg::MoveToItem(int index)
+int CNavigatorDlg::MoveToItem(int index, bool skipZ)
 {
   if (index < 0) {
     if (GetCurrentOrAcquireItem(mItem) < 0)
@@ -899,7 +899,7 @@ int CNavigatorDlg::MoveToItem(int index)
       return 1;
     }
   }
-  return MoveStage(axisXY | axisZ);
+  return MoveStage(axisXY | (skipZ ? 0 : axisZ));
 }
 
 // The button to realign is pressed
@@ -7903,7 +7903,8 @@ void CNavigatorDlg::AcquireNextTask(int param)
 
   // Run the realign routine; restore state for image or map or if flag set
   case ACQ_REALIGN:
-    err = mHelper->RealignToItem(item, mParam->acqRestoreOnRealign || 
+    mRealignedInAcquire = true;
+    err = mHelper->RealignToItem(item, mParam->acqRestoreOnRealign ||
       mParam->acquireType != ACQUIRE_RUN_MACRO, 0., 0, 0);
     if (err && (err < 4 || err == 6)) {
       StopAcquiring();
@@ -8208,6 +8209,7 @@ int CNavigatorDlg::GotoNextAcquireArea()
   int ind, err, axisBits = axisXY | axisZ;
   bool skippedGroup = false, skippingGroup, acquire;
   CMapDrawItem *item;
+  mRealignedInAcquire = false;
   for (ind = mAcquireIndex; ind <= mEndingAcquireIndex; ind++) {
     item = mItemArray[ind];
     acquire = IsItemToBeAcquired(item, skippingGroup);
@@ -8673,7 +8675,7 @@ int CNavigatorDlg::GetCurrentOrGroupItem(CMapDrawItem *& item)
   return mCurrentItem;
 }
 
-// Return an arbitrary item by index
+// Return an arbitrary item by index; set mItem to it
 CMapDrawItem * CNavigatorDlg::GetOtherNavItem(int index)
 {
   if (index < 0 || index >= mItemArray.GetSize())

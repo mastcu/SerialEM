@@ -142,12 +142,14 @@ public:
   SetMember(int, SkipBacklashType);
   GetSetMember(int, CurListSel)
   GetMember(int, NumAcquired);
+  GetMember(bool, RealignedInAcquire);
   void SetExtraFileSuffixes(CString *items, int numItems);
   GetMember(int, FoundItem);
   SetMember(bool, SkipAcquiringItem);
   SetMember(int, GroupIDtoSkip);
   SetMember(BOOL, SkipStageMoveInAcquire);
   GetSetMember(bool, PausedAcquire);
+  GetMember(int, AcquireIndex);
   CString GetCurrentNavFile() {return mNavFilename;};
   int GetNumNavItems() {return (int)mItemArray.GetSize();};
   void ResumeFromPause() {mResumedFromPause = true; mPausedAcquire = false;};
@@ -296,6 +298,7 @@ private:
   BOOL mStartedTS;           // Flag that started a tilt series
   bool mPausedAcquire;       // Flag that acquire is paused
   bool mResumedFromPause;    // Flag set when resume happens
+  bool mRealignedInAcquire;  // Flag if realign to item done during acquire
 
   int mFrameLimitX, mFrameLimitY;         // Frame limits for montage setup
   CMapDrawItem *mMontItem;  // Item used
@@ -428,7 +431,7 @@ public:
   BOOL StartedMacro(void);
   void RemoveAutosaveFile(void);
   int GetStockFilename(void);
-  int MoveToItem(int index);
+  int MoveToItem(int index, bool skipZ = false);
   void ProcessAkey(BOOL ctrl, BOOL shift);
   void AddCirclePolygon(float radius);
   BOOL SupermontLabel(CMapDrawItem * item, int & startNum, int & ix, int & iy);
