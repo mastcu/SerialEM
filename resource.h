@@ -2,6 +2,7 @@
 // Microsoft Visual C++ generated include file.
 // Used by SerialEM.rc
 //
+#define ID_TAKE_JPEG                    2
 #define IDC_BROWSE                      3
 #define ID_TASK_TIMER                   7
 #define IDD_ABOUTBOX                    100
@@ -74,6 +75,7 @@
 #define IDD_TSDOSESYM                   234
 #define IDD_DIALOG1                     237
 #define IDD_DRIFTWAITSETUP              237
+#define IDD_SCREENSHOT                  239
 #define IDD_VPP_EXPOSE_SETUP            241
 #define IDC_EDITXSIZE                   1000
 #define IDC_EDITYSIZE                   1002
@@ -1557,6 +1559,15 @@
 #define IDC_SPINPPCONDTIME              2580
 #define IDC_EDIT_POST_MOVE_DELAY        2581
 #define IDC_PPCOND_NEXT_AND_GO          2582
+#define IDC_CHECK_SCALE_SIZE_BY         2583
+#define IDC_RADIO_UNZOOMED              2584
+#define IDC_RADIO_INCREASE_BY           2585
+#define IDC_SPIN_INCREASE_ZOOM_BY       2586
+#define IDC_RADIO_WHOLE_IMAGE           2587
+#define IDC_EDIT_INCREASE_ZOOM_BY       2588
+#define IDC_EDIT_SCALE_SIZE_BY          2589
+#define IDC_SPIN_SCALE_SIZE_BY          2590
+#define ID_TAKE_TIFF                    2591
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2025,6 +2036,7 @@
 #define ID_MACRO_RUN40                  33376
 #define ID_SPECIALIZEDOPTIONS_SKIPBLANKINGINLDWITHSCREENUP 33377
 #define ID_TASKS_SETUPVPPCONDITIONING   33378
+#define ID_WINDOW_TAKESCREENSHOT        33379
 
 // Next default values for new objects
 // 
@@ -2032,8 +2044,8 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        243
-#define _APS_NEXT_COMMAND_VALUE         33379
-#define _APS_NEXT_CONTROL_VALUE         2583
+#define _APS_NEXT_COMMAND_VALUE         33380
+#define _APS_NEXT_CONTROL_VALUE         2600
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
