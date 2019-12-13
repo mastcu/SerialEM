@@ -2944,8 +2944,8 @@ BEGIN
     PUSHBUTTON      "Abort",IDC_BUT_ABORT,154,195,21,12
     LTEXT           "Image shift should be measured near focus",IDC_STAT_SAVE_INSTRUCTIONS,9,209,169,10
     PUSHBUTTON      "IS to Nav Pt",IDC_BUT_IS_TO_PT,11,195,40,12
-    CONTROL         "Omit corners of 3 by 3 pattern (cross pattern)",IDC_CHECK_OMIT_3X3_CORNERS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,146,146,10
+    CONTROL         "Omit corners of 3 by 3 array (cross pattern)",IDC_CHECK_OMIT_3X3_CORNERS,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,146,147,10
 END
 
 IDD_DE_REFERENCE DIALOGEX 0, 0, 172, 210
