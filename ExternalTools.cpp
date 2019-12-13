@@ -110,14 +110,24 @@ int CExternalTools::RunToolCommand(int index)
 }
 
 // Run a command by its title if it can be found
-int CExternalTools::RunToolCommand(CString &title)
+int CExternalTools::RunToolCommand(CString &title, CString extraArgs, int extraPlace)
 {
   int strVal = atoi((LPCTSTR)title);
   for (int ind = 0; ind < mNumToolsAdded; ind++)
-    if (!title.CompareNoCase(mTitles[ind]))
-      return RunCreateProcess(mCommands[ind], mArgStrings[ind]);
-  if (strVal > 0 && strVal <= mNumToolsAdded)
-    return RunCreateProcess(mCommands[strVal - 1], mArgStrings[strVal - 1]);
+    if (!title.CompareNoCase(mTitles[ind])) {
+      strVal = ind + 1;
+      break;
+    }
+  if (strVal > 0 && strVal <= mNumToolsAdded) {
+    if (extraArgs.IsEmpty()) {
+      extraArgs = mArgStrings[strVal - 1];
+    } else if (extraPlace > 0) {
+      extraArgs = mArgStrings[strVal - 1] + " " + extraArgs;
+    } else if (extraPlace < 0) {
+      extraArgs = extraArgs + " " + mArgStrings[strVal - 1];
+    }
+    return RunCreateProcess(mCommands[strVal - 1], extraArgs);
+  }
   SEMMessageBox("No external tool menu entry matches " + title, MB_EXCLAME);
   return 1;
 }

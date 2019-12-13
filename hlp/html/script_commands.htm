@@ -3228,7 +3228,7 @@
         </TR>
         <TR vAlign="top">
           <TD width="210">NextProcessArgs arg arg...</TD>
-          <TD>Set arguments for the next process run with 'CreateProcess'.&nbsp; The argument 
+          <TD>Set arguments for the next process run with 'CreateProcess' or 'RunExternalTool'.&nbsp; The argument 
           list can contain script variables that are substituted, as well as several keywords
           that are replaced with path entries. &nbsp;See <a href = menu_tools.htm>The Tools
            Menu and Running External Commands</a> for a description of these keywords and
@@ -3238,7 +3238,16 @@
         </TR>
         <TR vAlign="top">
           <TD width="210">RunExternalTool #N</TD>
-          <TD>Run the Nth external tool shown in the Tools menu, where N is numbered from 1.</TD>
+          <TD>Run an external tool shown in the Tools menu, where N is either the number of
+            the tool in the Tools menu, numbered from 1, or the full name of the tool in the menu.
+            If arguments were set with 'NextProcessArgs', they will be included when running the command.</TD>
+        </TR>
+       <TR vAlign="top">
+          <TD width="210">ExternalToolArgPlace #</TD>
+          <TD>Specify whether arguments set with 'NextProcessArgs' should be placed before 
+            (-1 for #) or after (1 for #) the arguments defined for an external tool in the
+             properties file, or replace the defined arguments (0 for #).  The default is 0 
+            and a setting is retained for the duration of the script.&nbsp; Command added in 3.8, 12/7/19</TD>
         </TR>
         <TR vAlign="top">
           <TD width="210">ReportProperty name</TD>

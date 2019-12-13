@@ -266,7 +266,7 @@ enum {CME_SCRIPTEND = -7, CME_LABEL, CME_SETVARIABLE, CME_SETSTRINGVAR, CME_DOKE
   CME_REPORTK3CDSMODE, CME_SETK3CDSMODE, CME_CONDITIONPHASEPLATE, CME_LINEARFITTOVARS,
   CME_REPORTNUMMONTAGEPIECES, CME_NAVITEMFILETOOPEN, CME_CROPCENTERTOSIZE,
   CME_ACQUIRETOMATCHBUFFER,  CME_REPORTXLENSDEFLECTOR, CME_SETXLENSDEFLECTOR, 
-  CME_REPORTXLENSFOCUS, CME_SETXLENSFOCUS 
+  CME_REPORTXLENSFOCUS, CME_SETXLENSFOCUS, CME_EXTERNALTOOLARGPLACE
 };
 
 // The two numbers are the minimum arguments and whether arithmetic is allowed
@@ -416,7 +416,7 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"LinearFitToVars", 2, 0}, {"ReportNumMontagePieces", 0, 0}, {"NavItemFileToOpen", 1, 0},
 {"CropCenterToSize", 3, 0}, {"AcquireToMatchBuffer", 1, 0}, {"ReportXLensDeflector", 1,0},
 {"SetXLensDeflector", 3, 0}, {"ReportXLensFocus", 0, 0}, {"SetXLensFocus", 1, 0}, 
-/*CAI3.8*/
+{"ExternalToolArgPlace", 1, 0},/*CAI3.8*/
 {NULL, 0, 0}
 };
 // The longest is now 25 characters but 23 is a more common limit
@@ -1110,6 +1110,7 @@ void CMacroProcessor::Run(int which)
   mMaxDeltaFocus = 0.;
   mMinAbsFocus = 0.;
   mMaxAbsFocus = 0.;
+  mRunToolArgPlacement = 0;
   mNumTempMacros = 0;
   mLogAction = LOG_OPEN_IF_CLOSED;
   mLogErrAction = LOG_IGNORE;
@@ -7041,10 +7042,17 @@ void CMacroProcessor::NextCommand()
       ABORT_LINE("Script aborted due to failure to run process for line:\n\n");
     break;
     
+  case CME_EXTERNALTOOLARGPLACE:                            // ExternalToolArgPlace
+    mRunToolArgPlacement = itemInt[1];
+    break;
+
   case CME_RUNEXTERNALTOOL:                                 // RunExternalTool
     SubstituteVariables(&strLine, 1, strLine);
     mWinApp->mParamIO->StripItems(strLine, 1, strCopy);
-    if(mWinApp->mExternalTools->RunToolCommand(strCopy))
+    index = mWinApp->mExternalTools->RunToolCommand(strCopy, mNextProcessArgs,
+      mRunToolArgPlacement);
+    mNextProcessArgs = "";
+    if (index)
       ABORT_LINE("Script aborted due to failure to run command for line:\n\n");
     break;
     

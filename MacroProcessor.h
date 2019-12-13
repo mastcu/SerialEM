@@ -260,6 +260,7 @@ private:
   bool mDisableAlignTrim;    // Flag to disable trimming in autoalign
   BOOL mRestoreMacroEditors; // Flag to reopen the editor windows on startup/settings
   CString mNextProcessArgs;  // Argument string for next process to create
+  int mRunToolArgPlacement;  // Whether to replace (0), prepend (-1), or append (1)
   int mNumTempMacros;        // Number of temporary macros assigned from script
 
 public:

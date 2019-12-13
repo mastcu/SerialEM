@@ -3,6 +3,11 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+12/7/19: Made NextProcessArgs set arguments for running a tool command, and
+added another command to specify placement of the arguments.
+
+12/7/19: Fixed crash reading montage, reissued beta7.
+
 12/5/19: 3-8-0beta7
 12/5/19: Added script commands to report the number of montage pieces to be
 taken and the name of a file set to be opened for a Navigator item; to take an

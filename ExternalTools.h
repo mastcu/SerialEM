@@ -20,7 +20,7 @@ public:
   void AddTool(CString &title);
   int AddCommand(int index, CString &command);
   int AddArgString(int index, CString &argString);
-  int RunToolCommand(CString &title);
+  int RunToolCommand(CString &title, CString extraArgs, int extraPlace);
   int RunToolCommand(int index);
   int RunCreateProcess(CString &command, CString argString);
   void AddMenuItems();
