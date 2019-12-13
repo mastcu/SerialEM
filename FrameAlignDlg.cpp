@@ -299,7 +299,7 @@ BOOL CFrameAlignDlg::OnInitDialog()
         mShowWhereToAlign = false;
     }
   }
-  mShowRestrictions = (mShowWhereToAlign || constrainByRes) && m_iWhereAlign > 0;
+  mShowRestrictions = (mShowWhereToAlign || constrainByRes);
 
   // Load the set names and set the index
   for (ind = 0; ind < (int)mParams->GetSize(); ind++)
@@ -420,8 +420,8 @@ void CFrameAlignDlg::ManagePanels(void)
   states[0] = mShowWhereToAlign;
   states[1] = m_iWhereAlign == 0 && mCamParams->K2Type;
   states[2] = states[6] = m_iWhereAlign > 0;
-  states[3] = mShowRestrictions;
-  states[5] = mCamParams->K2Type;
+  states[3] = mShowRestrictions && m_iWhereAlign > 0;
+  states[5] = mCamParams->K2Type && m_iWhereAlign > 0;
   states[7] = states[2] && mMoreParamsOpen;
   m_butSetFolder.EnableWindow(m_iWhereAlign == 2 && !m_bUseFrameFolder);
   m_butUseFrameFolder.EnableWindow(m_iWhereAlign == 2);
@@ -432,7 +432,7 @@ void CFrameAlignDlg::ManagePanels(void)
   m_butUseGPU.EnableWindow(mGPUavailable || m_iWhereAlign > 1);
   SetDlgItemText(IDC_BUTMORE, mMoreParamsOpen ? "-" : "+");
   AdjustPanels(states, idTable, leftTable, topTable, mNumInPanel, mPanelStart, 0);
-  if (mShowRestrictions) {
+  if (mShowRestrictions && m_iWhereAlign > 0) {
     constrainByRes = mCamParams->K2Type || (mDEcanAlign &&
       (mCamParams->CamFlags & DE_CAM_CAN_COUNT));
     ShowDlgItem(IDC_ONLY_NON_SUPER, constrainByRes);
