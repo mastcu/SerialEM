@@ -1374,7 +1374,7 @@ void CMacroProcessor::NextCommand()
       report.Format("Error # %d attempting to crop new image to match buffer", ix0);
       ABORT_NOLINE(report);
     }
-    mImBufs->mCaptured = BUFFER_PROCESSED;
+    mImBufs->mCaptured = BUFFER_CROPPED;
   }
 
   if (mShowedScopeBox)
@@ -4791,19 +4791,24 @@ void CMacroProcessor::NextCommand()
   case CME_CROPCENTERTOSIZE:                                // CropCenterToSize
     if (ConvertBufferLetter(strItems[1], -1, true, index, report))
       ABORT_LINE(report);
-    if (CMD_IS(CROPIMAGE)) {
+    mImBufs[index].mImage->getSize(sizeX, sizeY);
+    mImBufs[index].mImage->getShifts(backlashX, backlashY);
+    truth = CMD_IS(CROPIMAGE);
+    if (truth) {
       ix0 = itemInt[2];
       ix1 = itemInt[3];
       iy0 = itemInt[4];
       iy1 = itemInt[5];
+
+      // Test for whether centered:if not, it needs to be marked as processed
+      truth = B3DABS(ix0 + ix1 + 1 - sizeX) > 1 || B3DABS(iy0 + iy1 + 1 - sizeY) > 1;
     } else {
-      mImBufs[index].mImage->getSize(ix0, iy0);
-      if (itemInt[2] > ix0 || itemInt[3] > iy0)
+      if (itemInt[2] > sizeX || itemInt[3] > sizeY)
         ABORT_LINE("Image is already smaller than size requested in:\n\n");
       if (itemInt[2] <= 0 || itemInt[3] <= 0)
         ABORT_LINE("Size to crop to must be positive in:\n\n");
-      ix0 = (ix0 - itemInt[2]) / 2;
-      iy0 = (iy0 - itemInt[3]) / 2;
+      ix0 = (sizeX - itemInt[2]) / 2;
+      iy0 = (sizeY - itemInt[3]) / 2;
       ix1 = ix0 + itemInt[2] - 1;
       iy1 = iy0 + itemInt[3] - 1;
     }
@@ -4813,7 +4818,11 @@ void CMacroProcessor::NextCommand()
         ,ix0, strItems[1].GetAt(0));
       ABORT_LINE(report);
     }
-    mImBufs[index].mCaptured = BUFFER_PROCESSED;
+
+    // Mark as cropped if centered and unshifted: this allows autoalign to apply image
+    // shift on scope
+    mImBufs[index].mCaptured = (truth || backlashX || backlashY) ? BUFFER_PROCESSED :
+      BUFFER_CROPPED;
     break;
     
   case CME_REDUCEIMAGE:                                     // ReduceImage

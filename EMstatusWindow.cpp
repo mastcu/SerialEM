@@ -161,6 +161,8 @@ void EMstatusWindow::SetStatusText(int indStat, int whichBuf)
     else if (buf->mCaptured == BUFFER_PROCESSED || 
       buf->mCaptured == BUFFER_AUTOCOR_OVERVIEW)
       string.Format("%c: %s%s", letter, "Processed, ", mModeNames[setUsed]);
+    else if (buf->mCaptured == BUFFER_CROPPED)
+      string.Format("%c: %s%s", letter, "Cropped, ", mModeNames[setUsed]);
     else if (buf->mCaptured == BUFFER_FFT || buf->mCaptured == BUFFER_LIVE_FFT)
       string.Format("%c: %s%s", letter, "FFT, ", mModeNames[setUsed]);
     else if (buf->mCaptured == BUFFER_MONTAGE_OVERVIEW)
