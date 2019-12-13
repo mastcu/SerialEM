@@ -670,13 +670,13 @@ int CCameraController::Initialize(int whichCameras)
       param->canTakeFrames = 0;
 
       // Turn it on for Tietz XF416 types
-      if (mParam->TietzType >= 14)
+      if (param->TietzType >= 15)
         param->canTakeFrames = 3;
     }
     if (param->canTakeFrames) {
-      if (mParam->TietzType >= 11) {
-        jnd = TIETZ_ROTATING(mParam) ? mParam->sizeX : mParam->sizeY;
-        tietzFrame = (float)((mParam->TietzType >= 14 ? 0.01 : 0.1) * 
+      if (param->TietzType >= 11) {
+        jnd = TIETZ_ROTATING(param) ? param->sizeX : param->sizeY;
+        tietzFrame = (float)((param->TietzType >= 15 ? 0.01 : 0.1) * 
           B3DNINT(jnd / 1024.));
       }
       for (jnd = 0; jnd < param->numBinnings; jnd++) {
@@ -696,7 +696,7 @@ int CCameraController::Initialize(int whichCameras)
                 param->minFrameTime[jnd] = param->frameTimeDivisor[jnd];
             } else if (!jnd)
               param->minFrameTime[jnd] = param->frameTimeDivisor[jnd];
-          } else if (mParam->TietzType >= 11) {
+          } else if (param->TietzType >= 11) {
             param->minFrameTime[jnd] = tietzFrame;
           }
         }
@@ -3125,7 +3125,7 @@ void CCameraController::Capture(int inSet, bool retrying)
   // rolling shutter here, let this be translated into mode and speed indexes in the call 
   if (mParam->TietzType) {
     mTD.GatanReadMode = -1;
-    if ((mParam->TietzType >= 14 && mParam->TietzType <= 17) || mParam->canTakeFrames ||
+    if ((mParam->TietzType >= 15 && mParam->TietzType <= 18) || mParam->canTakeFrames ||
       !mTD.TietzFlatfieldDir.IsEmpty()) {
       mTD.GatanReadMode = conSet.doseFrac ? 1 : 0;
       if (conSet.doseFrac)
