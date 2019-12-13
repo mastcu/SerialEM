@@ -312,6 +312,8 @@ class DLL_IM_EX CEMscope
   GetMember(double, UpdateSawMagTime);
   GetSetMember(BOOL, JeolHasNitrogenClass);
   GetSetMember(BOOL, JeolHasExtraApertures);
+  GetSetMember(int, JeolFlashFegTimeout);
+  GetSetMember(int, JeolEmissionTimeout);
   void SetJeolReadStageForWait(BOOL inVal);
   BOOL GetJeolReadStageForWait();
   GetSetMember(BOOL, SkipAdvancedScripting);

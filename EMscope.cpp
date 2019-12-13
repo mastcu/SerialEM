@@ -391,8 +391,8 @@ CEMscope::CEMscope()
   mJeolHasNitrogenClass = false;
   mJeolHasExtraApertures = false;
   mJeolRefillTimeout = 2400;
-  mJeolFlashFegTimeout = 30;
-  mJeolEmissionTimeout = 120;
+  mJeolFlashFegTimeout = 45;
+  mJeolEmissionTimeout = 180;
   mBacklashTolerance = -1.;
   mXYbacklashValid = false;
   mStageAtLastPos = false;
