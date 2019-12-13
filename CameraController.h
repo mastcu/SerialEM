@@ -275,6 +275,9 @@ struct CameraThreadData {
   FloatVec FrameTSdeltaISY;
   float FrameTSinitialDelay;      // Initial delay before starting steps
   FloatVec FrameTSactualAngle;    // Actual angles reached
+  IntVec FrameTSrelStartTime;     // Start and end times unblanked
+  IntVec FrameTSrelEndTime;       // exposure period in msec
+  float FrameTSframeTime;         // frame time, needed to get to predicted frames
   bool FrameTSstopOnCamReturn;    // Flag to stop on image return (off for early return)
   BOOL FrameTSdoBacklash;
 };
@@ -1035,7 +1038,10 @@ int QueueTiltSeries(FloatVec &openTime, FloatVec &tiltToAngle, FloatVec &waitOrI
   FloatVec &focusChange, FloatVec &deltaISX, FloatVec &deltaISY, float initialDelay);
 int SetFrameTSparams(BOOL doBacklash, float speed, double stageXrestore, double stageYrestore);
 int SaveFrameStackMdoc(KImage *image);
-void GetFrameTSactualAngles(FloatVec &angles) {angles = mTD.FrameTSactualAngle;};
+FloatVec *GetFrameTSactualAngles() { return &mTD.FrameTSactualAngle; };
+IntVec *GetFrameTSrelStartTime() { return &mTD.FrameTSrelStartTime; };
+IntVec *GetFrameTSrelEndTime() { return &mTD.FrameTSrelEndTime; };
+float GetFrameTSFrameTime() { return mTD.FrameTSframeTime; };
 int AddToNextFrameStackMdoc(CString key, CString value, bool startIt, CString *retMess);
 bool CanSaveFrameStackMdoc(CameraParameters * param);
 bool CanDoK2HardwareDarkRef(CameraParameters *param, CString &errstr);

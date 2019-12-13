@@ -2466,9 +2466,11 @@ void CMacroProcessor::NextCommand()
 
   case CME_WRITEFRAMESERIESANGLES:                          // WriteFrameSeriesAngles
   {
-    FloatVec angles;
-    mCamera->GetFrameTSactualAngles(angles);
-    if (!angles.size())
+    FloatVec *angles = mCamera->GetFrameTSactualAngles();
+    IntVec *startTime = mCamera->GetFrameTSrelStartTime();
+    IntVec *endTime = mCamera->GetFrameTSrelEndTime();
+    float frame = mCamera->GetFrameTSFrameTime();
+    if (!angles->size())
       ABORT_NOLINE("There are no angles available from a frame tilt series");
     SubstituteVariables(&strLine, 1, strLine);
     mWinApp->mParamIO->StripItems(strLine, 1, strCopy);
@@ -2478,9 +2480,14 @@ void CMacroProcessor::NextCommand()
       csFile = new CStdioFile(strCopy, CFile::modeCreate | CFile::modeWrite | 
         CFile::shareDenyWrite);
       message = "Writing angles to file ";
-      for (index = 0; index < (int)angles.size(); index++) {
-        report.Format("%.2f\n", angles[index]);
-        csFile->WriteString((LPCTSTR)report);
+      for (index = 0; index < (int)angles->size(); index++) {
+        report.Format("%7.2f", angles->at(index));
+        if (index < (int)startTime->size())
+          strCopy.Format(" %5d %5d\n", B3DNINT(0.001 * startTime->at(index) / frame),
+            B3DNINT(0.001 * endTime->at(index) / frame));
+        else
+          strCopy = "\n";
+        csFile->WriteString((LPCTSTR)report + strCopy);
       }
     }
     catch (CFileException *perr) {

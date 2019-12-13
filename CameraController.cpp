@@ -7521,7 +7521,7 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
   int retval = 0;
   DWORD startTime, curTime, lastTime;
   double interval, elapsed, baseISX, baseISY, newISX, newISY, intervalSum, intervalSumSq;
-  double destX, destY, destZ, destAlpha, dblStartTime;
+  double destX, destY, destZ, destAlpha, dblStartTime, firstUnblankTime = -1.;
   TIMECAPS tc;
   BOOL periodSet = false;
 
@@ -7703,6 +7703,9 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
         numSteps = (int)(stepTilts ? td->FrameTStiltToAngle.size() : 
           td->FrameTSwaitOrInterval.size());
         td->FrameTSactualAngle.clear();
+        td->FrameTSrelStartTime.clear();
+        td->FrameTSrelEndTime.clear();
+        td->FrameTSframeTime = (float)td->FrameTime;
 
         // If shuttering, close shutter now
         if (shutterTS) {
@@ -7765,9 +7768,13 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
           if (shutterTS && td->FrameTSopenTime[step] > 0) {
             CEMscope::SetBlankingFlag(false);
             td->scopePlugFuncs->SetBeamBlank(*vFalse);
+            if (firstUnblankTime < 0.)
+              firstUnblankTime = GetTickCount();
+            td->FrameTSrelStartTime.push_back(B3DNINT(SEMTickInterval(firstUnblankTime)));
             ::Sleep(B3DMAX(1, B3DNINT(1000. * td->FrameTSopenTime[step])));
             CEMscope::SetBlankingFlag(true);
             td->scopePlugFuncs->SetBeamBlank(*vTrue);
+            td->FrameTSrelEndTime.push_back(B3DNINT(SEMTickInterval(firstUnblankTime)));
           }
 
           // Get tilt angle FWIW when not doing tilt steps
