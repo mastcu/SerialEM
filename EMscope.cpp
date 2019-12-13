@@ -451,6 +451,7 @@ CEMscope::CEMscope()
   mFalcon3ReadoutInterval = 0.02495f;
   mAddToFalcon3Exposure = 0.013f;
   mDiffShiftScaling = 10.;
+  mXLensModeAvailable = 0;
   mPluginVersion = 0;
   mPlugFuncs = NULL;
   mScopeMutexHandle = NULL;
@@ -922,6 +923,12 @@ int CEMscope::Initialize()
                 servVers, FEISCOPE_PLUGIN_VERSION);
             AfxMessageBox(message, MB_ICONINFORMATION | MB_OK);
           }
+      }
+      try {
+        if (mPlugFuncs->GetXLensModeAvailable)
+          mXLensModeAvailable = mPlugFuncs->GetXLensModeAvailable();
+      }
+      catch (_com_error E) {
       }
     }
 
@@ -3018,6 +3025,66 @@ bool CEMscope::SetObjectiveStigmator(double stigX, double stigY)
   ScopeMutexRelease("SetObjectiveStigmator");
   return success;
 }
+
+// X LENS FUNCTIONS
+#define XLENS_ERROR_STARTUP(a) \
+  int retval = 0; \
+  if (!sInitialized)  \
+    return 1;  \
+  if(!mPlugFuncs->a)  \
+    return 2;  \
+  if (mXLensModeAvailable <= 0) \
+    return 5 - mXLensModeAvailable;
+
+#define XLENS_GETSETXY(a, x, y) \
+int CEMscope::a##Deflector(int which, double x, double y) \
+{  \
+  CString mess;  \
+  if (which < 1 || which > 3)  \
+    return 3;  \
+  XLENS_ERROR_STARTUP(a##Shift); \
+  ScopeMutexAcquire(#a"Deflector", true);  \
+  try {   \
+    if (which == 1) { \
+      mess = "Shift";  \
+      mPlugFuncs->a##Shift(x, y); \
+    } else if (which == 2) { \
+      mess = "Tilt";  \
+      mPlugFuncs->a##Tilt(x, y); \
+    } else { \
+      mess = "Stigmator";  \
+      mPlugFuncs->a##Stigmator(x, y); \
+    } \
+  }  \
+  catch (_com_error E) {  \
+    retval = 4;  \
+    SEMReportCOMError(E, _T("calling "#a + mess + " "));  \
+  }  \
+  ScopeMutexRelease(#a"Deflector");  \
+  return retval;  \
+}
+
+XLENS_GETSETXY(GetXLens, &outX, &outY);
+XLENS_GETSETXY(SetXLens, inX, inY);
+
+#define XLENS_GETSETFOCUS(a, x, c) \
+int CEMscope::a(double x)  \
+{  \
+  XLENS_ERROR_STARTUP(a);  \
+  ScopeMutexAcquire(#a, true);  \
+  try {  \
+    c; \
+  }  \
+  catch (_com_error E) {  \
+    retval = 4;  \
+    SEMReportCOMError(E, _T("calling "#a" "));  \
+  }  \
+  ScopeMutexRelease(#a);  \
+  return retval;  \
+}
+
+XLENS_GETSETFOCUS(GetXLensFocus, &outX, outX = mPlugFuncs->GetXLensFocus());
+XLENS_GETSETFOCUS(SetXLensFocus, inX, mPlugFuncs->SetXLensFocus(inX));
 
 // SCREEN POSITION AND CURRENT FUNCTIONS
 //

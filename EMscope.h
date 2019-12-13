@@ -702,6 +702,7 @@ private:
   float mSavedAperturePosX[MAX_APERTURE_NUM + 1];   // Apertures are numbered from 1, 
   float mSavedAperturePosY[MAX_APERTURE_NUM + 1];   // subtract 1 to access array
   float mDiffShiftScaling;     // Scaling to apply to diffraction shift
+  int mXLensModeAvailable;    // 1 if available, 0 no object, -1 not available
   int mPluginVersion;         // Version of plugin or server
 
   // Old static variables from UpdateProc
@@ -792,6 +793,10 @@ public:
   bool GetRefrigerantLevel(int which, double & level);
   bool GetObjectiveStigmator(double & stigX, double & stigY);
   bool SetObjectiveStigmator(double stigX, double stigY);
+  int GetXLensDeflector(int which, double &outX, double &outY);
+  int SetXLensDeflector(int which, double inX, double inY);
+  int GetXLensFocus(double &outX);
+  int SetXLensFocus(double inX);
   bool GetTemperatureInfo(int type, BOOL & busy, int & time, int which, double & level);
   BOOL IsPVPRunning(BOOL & state);
   int GetApertureSize(int kind);
