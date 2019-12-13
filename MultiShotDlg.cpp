@@ -26,7 +26,7 @@ IDC_EDIT_SPOKE_DIST, IDC_STAT_CENTER_UM, PANEL_END,
 IDC_TSS_LINE1, IDC_CHECK_DO_MULTIPLE_HOLES, PANEL_END,
 IDC_EDIT_HOLE_DELAY_FAC, IDC_STAT_REGULAR, IDC_STAT_NUM_X_HOLES, IDC_SPIN_NUM_X_HOLES, 
 IDC_SPIN_NUM_Y_HOLES, IDC_STAT_SPACING, IDC_STAT_MEASURE_BOX, IDC_STAT_SAVE_INSTRUCTIONS,
-IDC_BUT_SET_REGULAR, IDC_CHECK_USE_CUSTOM, IDC_BUT_SAVE_IS, 
+IDC_BUT_SET_REGULAR, IDC_CHECK_USE_CUSTOM, IDC_BUT_SAVE_IS, IDC_CHECK_OMIT_3X3_CORNERS,
 IDC_BUT_ABORT, IDC_BUT_END_PATTERN, IDC_BUT_IS_TO_PT,
 IDC_BUT_SET_CUSTOM, IDC_STAT_HOLE_DELAY_FAC, IDC_STAT_NUM_Y_HOLES, PANEL_END,
 IDC_TSS_LINE2, IDC_CHECK_SAVE_RECORD, PANEL_END,
@@ -60,6 +60,7 @@ CMultiShotDlg::CMultiShotDlg(CWnd* pParent /*=NULL*/)
   , m_strNumXholes(_T(""))
   , m_bUseCustom(FALSE)
   , m_fHoleDelayFac(0)
+  , m_bOmit3x3Corners(FALSE)
 {
   mRecordingRegular = false;
   mRecordingCustom = false;
@@ -140,6 +141,8 @@ void CMultiShotDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_EDIT_EXTRA_DELAY, m_editExtraDelay);
   DDX_Control(pDX, IDCANCEL, m_butCancel);
   DDX_Control(pDX, IDC_BUT_IS_TO_PT, m_butIStoPt);
+  DDX_Control(pDX, IDC_CHECK_OMIT_3X3_CORNERS, m_butOmit3x3Corners);
+  DDX_Check(pDX, IDC_CHECK_OMIT_3X3_CORNERS, m_bOmit3x3Corners);
 }
 
 
@@ -169,6 +172,7 @@ BEGIN_MESSAGE_MAP(CMultiShotDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_BUT_IS_TO_PT, OnButIsToPt)
   ON_BN_CLICKED(IDC_CHECK_SAVE_RECORD, OnSaveRecord)
   ON_BN_CLICKED(IDC_CHECK_ADJUST_BEAM_TILT, OnAdjustBeamTilt)
+  ON_BN_CLICKED(IDC_CHECK_OMIT_3X3_CORNERS, OnOmit3x3Corners)
 END_MESSAGE_MAP()
 
 
@@ -207,6 +211,7 @@ void CMultiShotDlg::UpdateSettings(void)
   m_bAdjustBeamTilt = mActiveParams->adjustBeamTilt;
   m_bUseIllumArea = mActiveParams->useIllumArea;
   m_bUseCustom = mActiveParams->useCustomHoles;
+  m_bOmit3x3Corners = mActiveParams->skipCornersOf3x3;
   m_bDoShotsInHoles = (mActiveParams->inHoleOrMultiHole & MULTI_IN_HOLE) != 0;
   m_bDoMultipleHoles = (mActiveParams->inHoleOrMultiHole & MULTI_HOLES) != 0;
   if (mActiveParams->numHoles[1] <= 1) {
@@ -358,6 +363,7 @@ void CMultiShotDlg::OnDeltaposSpinNumXHoles(NMHDR *pNMHDR, LRESULT *pResult)
   int minNum = mActiveParams->numHoles[1] == 1 ? 2 : 1;
   FormattedSpinnerValue(pNMHDR, pResult, minNum, 15, mActiveParams->numHoles[0], 
     m_strNumXholes, "%d");
+  ManageEnables();
   UpdateAndUseMSparams();
 }
 
@@ -367,6 +373,7 @@ void CMultiShotDlg::OnDeltaposSpinNumYHoles(NMHDR *pNMHDR, LRESULT *pResult)
   int minNum = mActiveParams->numHoles[0] == 1 ? 2 : 1;
   FormattedSpinnerValue(pNMHDR, pResult, minNum, 15, mActiveParams->numHoles[1], 
     m_strNumYholes, "by %2d");
+  ManageEnables();
   UpdateAndUseMSparams();
 }
 
@@ -635,6 +642,14 @@ void CMultiShotDlg::OnKillfocusEditEarlyFrames()
   ManageEnables();
 }
 
+// Omit corners of 3 by 3 pattern
+void CMultiShotDlg::OnOmit3x3Corners()
+{
+  UpdateData(true);
+  ManageEnables();
+  UpdateAndUseMSparams();
+}
+
 void CMultiShotDlg::OnSaveRecord()
 {
   UpdateAndUseMSparams();
@@ -659,6 +674,7 @@ void CMultiShotDlg::UpdateAndUseMSparams(bool draw)
   mActiveParams->holeDelayFactor = m_fHoleDelayFac;
   mActiveParams->adjustBeamTilt = m_bAdjustBeamTilt;
   mActiveParams->useIllumArea = m_bUseIllumArea;
+  mActiveParams->skipCornersOf3x3 = m_bOmit3x3Corners;
   mActiveParams->useCustomHoles = m_bUseCustom;
   mActiveParams->inHoleOrMultiHole = (m_bDoShotsInHoles ? 1 : 0) +
     (m_bDoMultipleHoles ? 2 : 0);
@@ -704,6 +720,8 @@ void CMultiShotDlg::ManageEnables(void)
   m_statNumYholes.EnableWindow(enable);
   m_sbcNumXholes.EnableWindow(enable);
   m_sbcNumYholes.EnableWindow(enable);
+  m_butOmit3x3Corners.EnableWindow(enable && mActiveParams->numHoles[0] == 3 && 
+    mActiveParams->numHoles[1] == 3);
   m_butUseCustom.EnableWindow(m_bDoMultipleHoles && mActiveParams->customHoleX.size() >0);
   m_butSetRegular.EnableWindow(enable && !recording &&
     (mActiveParams->numHoles[0] > 1 || mActiveParams->numHoles[1] > 1));

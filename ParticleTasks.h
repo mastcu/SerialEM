@@ -93,7 +93,10 @@ public:
   void StopMultiShot(void);
   void MultiShotCleanup(int error);
   bool GetNextShotAndHole(int &nextShot, int &nextHole);
-  int GetHolePositions(FloatVec & delIsX, FloatVec & delISY, int magInd, int camera);
+  int GetHolePositions(FloatVec & delIsX, FloatVec & delISY, IntVec &posIndex, int magInd,
+    int camera, int numXholes, int numYholes);
+  void SkipHolesInList(FloatVec &delISX, FloatVec &delISY, IntVec &posIndex, 
+    unsigned char *skipIndex, int numSkip, int &numHoles);
   int MultiShotBusy(void);
   bool CurrentHoleAndPosition(int &curHole, int &curPos);
   int WaitForDrift(DriftWaitParams &param, bool useImageInA, 

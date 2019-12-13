@@ -467,6 +467,9 @@ int CParameterIO::ReadSettings(CString strFileName)
           msParams->holeMagIndex = itemInt[20];
           msParams->customMagIndex = itemInt[21];
         }
+        if (!itemEmpty[22]) {
+          msParams->skipCornersOf3x3 = itemInt[22] != 0;
+        }
       } else if (NAME_IS("CustomHoleX")) {
         for (index = 1; index < MAX_TOKENS && !itemEmpty[index]; index++)
           msParams->customHoleX.push_back((float)itemDbl[index]);
@@ -1399,7 +1402,7 @@ void CParameterIO::WriteSettings(CString strFileName)
       mWinApp->mNavHelper->GetAutoBacklashMinField());
     mFile->WriteString(oneState);
     oneState.Format("MultiShotParams %f %f %d %d %d %d %d %f %d %d %d %d %f %f %f %f %f "
-      "%d %d %d %d\n", msParams->beamDiam, 
+      "%d %d %d %d %d\n", msParams->beamDiam, 
       msParams->spokeRad, msParams->numShots, msParams->doCenter, msParams->doEarlyReturn,
       msParams->numEarlyFrames, msParams->saveRecord ? 1 : 0, msParams->extraDelay,
       msParams->useIllumArea ? 1 : 0, msParams->adjustBeamTilt ? 1 : 0, 
@@ -1407,7 +1410,7 @@ void CParameterIO::WriteSettings(CString strFileName)
       msParams->holeDelayFactor, msParams->holeISXspacing[0], msParams->holeISYspacing[0],
       msParams->holeISXspacing[1], msParams->holeISYspacing[1],
       msParams->numHoles[0], msParams->numHoles[1], msParams->holeMagIndex, 
-      msParams->customMagIndex);
+      msParams->customMagIndex, msParams->skipCornersOf3x3 ? 1 : 0);
     mFile->WriteString(oneState);
     if (msParams->customHoleX.size()) {
       OutputVector("CustomHoleX", (int)msParams->customHoleX.size(), NULL, 

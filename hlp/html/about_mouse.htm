@@ -55,6 +55,34 @@
         width: 163px;
         font-weight: bold;
       }
+      .auto-style3 {
+        width: 177px;
+        font-weight: bold;
+      }
+      .auto-style5 {
+        width: 152px;
+        font-weight: bold;
+      }
+      .auto-style7 {
+        width: 516px;
+        font-weight: bold;
+      }
+      .auto-style8 {
+        width: 281px;
+        font-weight: bold;
+      }
+      .auto-style9 {
+        width: 516px;
+      }
+      .auto-style10 {
+        width: 281px;
+      }
+      .auto-style11 {
+        width: 152px;
+      }
+      .auto-style12 {
+        width: 177px;
+      }
   --></style>
   </HEAD>
   <BODY BGCOLOR="#ffffff" TEXT="#000000">
@@ -66,8 +94,13 @@
         procedures make use of the position of a marker point.&nbsp; If the image is an 
         FFT that shows Thon rings, you can click at the position of the first minimum, 
         and the program will show the estimated defocus in the status bar and draw a set 
-        of circles at the corresponding zeros of the CTF.&nbsp; See the
+        of circles at the corresponding zeros of the CTF, or the program can fit to the 
+        CTF if you have that option selected.&nbsp; See the
         <a href="menu_process.htm#hid_process_fft">FFT command help</a> for details.</P>
+    <P><B><I>Shift - Left mouse button click:</I></B> Remove the marker point if one 
+      is set.&nbsp; This is useful for getting rid of unwanted rings drawn on an FFT 
+      or for showing the multiple Record pattern around the current Navigator point 
+      instead of around the marker.</P>
     <P><B><I>Middle mouse button click:</I></B> If the image is an FFT, the program 
       will show the spatial frequency and periodicity (resolution) of the clicked 
       position in the status bar.</P>
@@ -111,73 +144,86 @@
       functions:</P>
     <table class="style1" BORDER style="Z-INDEX: 0">
       <tr>
-        <td class="style13">
+        <td class="auto-style5">
           Button clicked</td>
-        <td class="style14">
+        <td class="auto-style3">
           Default</td>
-        <td class="style15">
+        <td class="auto-style7">
           Edit Mode</td>
-        <td class="style16">
+        <td class="auto-style8">
           Adding Points/Polygon</td>
         <td class="style17">
           Moving Item</td>
       </tr>
       <tr>
-        <td class="style2">
+        <td class="auto-style11">
           Ctrl-Left</td>
-        <td class="style11">
+        <td class="auto-style12">
           Select nearest item</td>
-        <td class="style12">
+        <td class="auto-style9">
           Add nearest item to selection</td>
-        <td class="style9">
+        <td class="auto-style10">
           &nbsp;</td>
         <td class="style6">
           &nbsp;</td>
       </tr>
       <tr>
-        <td class="style2">
+        <td class="auto-style11">
           Left</td>
-        <td class="style11">
+        <td class="auto-style12">
           &nbsp;</td>
-        <td class="style12">
+        <td class="auto-style9">
           Select nearest item</td>
-        <td class="style9">
+        <td class="auto-style10">
           Add point</td>
         <td class="style6">
           Move item</td>
       </tr>
       <tr>
-        <td class="style2">
+        <td class="auto-style11">
           Left Double-click</td>
-        <td class="style11">
+        <td class="auto-style12">
           &nbsp;</td>
-        <td class="style12">
+        <td class="auto-style9">
           Delete current point if it is only selected item</td>
-        <td class="style9">
+        <td class="auto-style10">
           &nbsp;</td>
         <td class="style6">
           &nbsp;</td>
       </tr>
       <tr>
-        <td class="style2">
-          Middle</td>
-        <td class="style11">
+        <td class="auto-style11">
+          Shift-Left Double-click</td>
+        <td class="auto-style12">
           &nbsp;</td>
-        <td class="style12">
+        <td class="auto-style9">
+          Remove nearby position from multiple Record pattern around current point if it 
+          is the only selected item</td>
+        <td class="auto-style10">
+          &nbsp;</td>
+        <td class="style6">
+          &nbsp;</td>
+      </tr>
+      <tr>
+        <td class="auto-style11">
+          Middle</td>
+        <td class="auto-style12">
+          &nbsp;</td>
+        <td class="auto-style9">
           Add point to current group</td>
-        <td class="style9">
+        <td class="auto-style10">
           Add point</td>
         <td class="style6">
           &nbsp;</td>
       </tr>
       <tr>
-        <td class="style2">
+        <td class="auto-style11">
           Right</td>
-        <td class="style11">
+        <td class="auto-style12">
           &nbsp;</td>
-        <td class="style12">
+        <td class="auto-style9">
           Move current point</td>
-        <td class="style9">
+        <td class="auto-style10">
           Move last added point</td>
         <td class="style6">
           Move item</td>

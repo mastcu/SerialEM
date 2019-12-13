@@ -110,6 +110,7 @@ CNavHelper::CNavHelper(void)
   mMultiShotParams.useIllumArea = false;
   mMultiShotParams.numHoles[0] = 2;
   mMultiShotParams.numHoles[1] = 2;
+  mMultiShotParams.skipCornersOf3x3 = false;
   mMultiShotParams.holeISXspacing[0] = 1.;
   mMultiShotParams.holeISYspacing[0] = 1.;
   mMultiShotParams.holeISXspacing[1] = 1.;
@@ -2368,6 +2369,22 @@ void CNavHelper::StateCameraCoords(int camIndex, int xFrame, int yFrame, int bin
   top *= binning;
   bottom *= binning;
 }
+
+// Get number of holes defined in multi-shot params, or 0,0 for a custom pattern
+// Return false if custom or not defined (0, 0)
+bool CNavHelper::GetNumHolesFromParam(int &xnum, int &ynum)
+{
+  xnum = 0;
+  ynum = 0;
+  if (mMultiShotParams.useCustomHoles && mMultiShotParams.customHoleX.size() > 0)
+    return false;
+  xnum = mMultiShotParams.numHoles[0];
+  ynum = mMultiShotParams.numHoles[1];
+  if (mMultiShotParams.skipCornersOf3x3 && xnum == 3 && ynum == 3)
+    xnum = ynum = -3;
+  return xnum != 0 && ynum != 0;
+}
+
 
 /////////////////////////////////////////////////////
 /////  SETTING FILES, TS PARAMS, STATES FOR ACQUIRES

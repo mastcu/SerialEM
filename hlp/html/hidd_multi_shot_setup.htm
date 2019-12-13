@@ -214,7 +214,37 @@
     <p>Use the two spinners to set the number of positions in the rectangular pattern.&nbsp; 
       These values must be set before recording the image shift values at the corners. 
       Once the spacing of the pattern is defined, the spinners can be changed to 
-      acquire more or fewer holes at that spacing.</p>
+      acquire more or fewer holes at that spacing.&nbsp; SerialEM will generally 
+      acquire the number of positions specified by the current setting in the dialog 
+      (or the last setting there when it was open).&nbsp; There is an important 
+      exception to this: If Edit mode is turned on in the Navigator, then Shift-Left 
+      double-click with the mouse sufficiently close to one of the positions in the 
+      array around the current item will remove that position.&nbsp; After that, the 
+      size of the array becomes a permanent property of that item, and it will be both 
+      displayed and acquired as an array of that size (minus the removed position(s)) 
+      regardless of changes in the selection in this dialog.</p>
+    <p>To avoid having to remove many points from a large array when marking points at 
+      the edge of a grid square after filling the rest of the square, you can do the 
+      following: </p>
+    <ol>
+      <li>&nbsp;Mark as many points as possible with the large pattern selected.</li>
+      <li>Drop the pattern size down, say to 3 by 3 or to the 5-hole cross (see next).</li>
+      <li>Mark additional points at the edge, being sure to remove at least one position 
+        from each to lock it into the current pattern, and making sure that no hole is 
+        covered twice (you may have to switch back to the main pattern temporarily to 
+        see this, with the option
+        <a href="menu_navigator.htm#hid_montaginggrids_showwholeareaforallpoints">Show Whole
+          Area for All Points</a> turned on).</li>
+      <li>Reselect the original large array size so that the first set of marked points 
+        will acquire that pattern.</li>
+    </ol>
+    <p><strong>Omit corners of 3 by 3 array (cross pattern)</strong></p>
+    <p>This option allows one to acquire a cross-shaped pattern of 5 holes, which will 
+      involve less image shift than a full 3 by 3 array while still allowing one to 
+      center the marked point on a hole instead of between holes.&nbsp; It may also be 
+      useful when marking holes at the edge of a grid square after filling the rest of 
+      the square with a larger pattern, as long as one removes at least one position 
+      from the cross pattern.</p>
     <p><b>Use custom pattern</b></p>
     <p>Select this checkbox to take images in an arbitrary set of positions specified 
       by shifting to a center location, which is not acquired, then to each acquisition 

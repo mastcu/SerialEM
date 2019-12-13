@@ -105,7 +105,8 @@
           <TD class="style1">&nbsp;&nbsp; <a href="#hid_options_showmulti">Show Shots when 
             Show Acquire</a></TD>
           <TD>Show a pattern of beam circles for the multiple Records when Show Acquire area 
-            is turned on.</TD>
+            is turned on.
+          </TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1">&nbsp;&nbsp; <a href="#hid_montaginggrids_showwholeareaforallpoints">Show Whole
@@ -594,16 +595,24 @@
             Show Acquire command 
           (Navigator - Montaging &amp; Grids sub-menu)</B></P>
           <p>This command toggles whether selecting the 'Show Acquire area' checkbox in the 
-            Navigator window will also result in a pattern of circles drawn around the 
-            marker point, based on the parameters set in the 
-            <a href="hidd_multi_shot_setup.htm">Multiple Record Setup dialog</a>.&nbsp; The 
+            Navigator window will also result in a pattern of circles being drawn based on the parameters set in the 
+            <a href="hidd_multi_shot_setup.htm">Multiple Record Setup dialog</a> when that 
+            dialog is not open.&nbsp; The 
             circles will represent the area covered by the beam, assuming the beam size 
-            specified there.</p>
+            specified there.&nbsp;   The pattern will be drawn around the marker point if one is present; 
+            otherwise it will be drawn around the current item, if it is marked for acquisition,
+            or around multiple selected items.&nbsp; If Edit mode is not on, use 
+            Shift-Left-click to turn off the marker and see the pattern around the current 
+            point.&nbsp; If Edit mode is on and there are multiple hole positions in a 
+            regular (non-custom) pattern, then Shift-double-Left-click near one of the 
+            positions will remove it from the pattern.</p>
         <P><A NAME="hid_montaginggrids_showwholeareaforallpoints"></A><B>Show Whole Area for All Points 
           (Navigator - Montaging &amp; Grids sub-menu)</B></P>
     <p>Use this command to have the envelope of all acquire areas from multiple 
       Records drawn around all points marked for acquisition, when the 'Show Acquire 
-      area' checkbox is turned on in the Navigator window. </p>
+      area' checkbox is turned on in the Navigator window.&nbsp; If the multi-hole 
+      pattern around a point has been modified by deleting positions, then boxes 
+      representing the Record area will be drawn instead of the envelope.</p>
      <P><A NAME="hid_navigator_addcirclepolygon"></A><B>Add Circle Polygon command 
           (Navigator - Montaging &amp; Grids sub-menu)</B></P>
       <P>Use this command to add a polygon that is a circle. First mark the desired 

@@ -12,6 +12,7 @@
 #include "ParticleTasks.h"
 #include "ComplexTasks.h"
 #include "EMscope.h"
+#include "NavigatorDlg.h"
 #include "FocusManager.h"
 #include "ShiftManager.h"
 #include "ProcessImage.h"
@@ -67,9 +68,11 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
   int inHoleOrMulti)
 {
   float pixel, xTiltFac, yTiltFac;
-  int nextShot, nextHole, testRun;
+  int nextShot, nextHole, testRun, numXholes = 0 , numYholes = 0;
   double delISX, delISY, transISX, transISY, delBTX, delBTY;
   CString str;
+  IntVec posIndex;
+  CMapDrawItem *item;
   CameraParameters *camParam = mWinApp->GetActiveCamParam();
   ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
   MontParam *montP = mWinApp->GetMontParam();
@@ -159,6 +162,15 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
     return 1;
   }
 
+  if (mWinApp->mNavigator && mWinApp->mNavigator->GetAcquiring()) {
+    if (mWinApp->mNavigator->GetCurrentOrAcquireItem(item) < 0) {
+      SEMMessageBox("Could not retrieve the Navigator item currently being acquired");
+      return 1;
+    }
+    numXholes = item->mNumXholes;
+    numYholes = item->mNumYholes;
+  }
+
   // Set this after all tests and parameter settings, it determines operation of
   // GetHolePositions which is called from SerialEMView
   mMSTestRun = testRun;
@@ -171,10 +183,13 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
   mMSHoleIndex = 0;
   mMSHoleISX.clear();
   mMSHoleISY.clear();
-  if (inHoleOrMulti & MULTI_HOLES) {
-     mMSNumHoles = GetHolePositions(mMSHoleISX, mMSHoleISY, mMagIndex, 
-       mWinApp->GetCurrentCamera());
+  if (inHoleOrMulti & MULTI_HOLES || (numXholes && numYholes)) {
+     mMSNumHoles = GetHolePositions(mMSHoleISX, mMSHoleISY, posIndex, mMagIndex, 
+       mWinApp->GetCurrentCamera(), numXholes, numYholes);
      mMSUseHoleDelay = true;
+     if (numXholes && numYholes && item->mNumSkipHoles)
+       SkipHolesInList(mMSHoleISX, mMSHoleISY, posIndex, item->mSkipHolePos, 
+         item->mNumSkipHoles, mMSNumHoles);
   } else {
 
     // No holes = 1
@@ -455,15 +470,18 @@ int CParticleTasks::StartOneShotOfMulti(void)
  * Get relative image shifts of the holes into the vectors, transferred to the given
  * mag and camera
  */
-int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, int magInd,
-  int camera)
+int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, IntVec &posIndex,
+  int magInd, int camera, int numXholes, int numYholes)
 {
   int numHoles = 0, ind, ix, iy, direction[2], startInd[2], endInd[2], fromMag, jump[2];
   double xCenISX, yCenISX, xCenISY, yCenISY, transISX, transISY;
+  BOOL crossPattern = mMSParams->skipCornersOf3x3;
   std::vector<double> fromISX, fromISY;
   delISX.clear();
   delISY.clear();
-  if (mMSParams->useCustomHoles && mMSParams->customHoleX.size() > 0) {
+  posIndex.clear();
+  if (mMSParams->useCustomHoles && mMSParams->customHoleX.size() > 0 &&
+    !(numXholes || numYholes)) {
 
     // Custom holes are easy, the list is relative to the center position
     numHoles = (int)mMSParams->customHoleX.size();
@@ -473,35 +491,51 @@ int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, int mag
     }
     fromMag = mMSParams->customMagIndex;
   } else if (mMSParams->holeMagIndex > 0) {
+    if (numXholes && numYholes) {
+      crossPattern = numXholes == -3 && numYholes == -3;
+      if (crossPattern) {
+        numXholes = 3;
+        numYholes = 3;
+      }
+    } else {
+      numXholes = mMSParams->numHoles[0];
+      numYholes = mMSParams->numHoles[1];
+    }
+    crossPattern = crossPattern && numXholes == 3 && numYholes == 3;
 
     // The hole pattern requires computing position relative to center of pattern
-    numHoles = mMSParams->numHoles[0] * mMSParams->numHoles[1];
+    numHoles = crossPattern ? 5 : numXholes * numYholes;
     if (mMSTestRun)
-      numHoles = B3DMIN(2, mMSParams->numHoles[0]) * B3DMIN(2, mMSParams->numHoles[1]);
-    xCenISX = mMSParams->holeISXspacing[0] * 0.5 * (mMSParams->numHoles[0] - 1);
-    xCenISY = mMSParams->holeISYspacing[0] * 0.5 * (mMSParams->numHoles[0] - 1);
-    yCenISX = mMSParams->holeISXspacing[1] * 0.5 * (mMSParams->numHoles[1] - 1);
-    yCenISY = mMSParams->holeISYspacing[1] * 0.5 * (mMSParams->numHoles[1] - 1);
+      numHoles = B3DMIN(2, numXholes) * B3DMIN(2, numYholes);
+    xCenISX = mMSParams->holeISXspacing[0] * 0.5 * (numXholes - 1);
+    xCenISY = mMSParams->holeISYspacing[0] * 0.5 * (numXholes - 1);
+    yCenISX = mMSParams->holeISXspacing[1] * 0.5 * (numYholes - 1);
+    yCenISY = mMSParams->holeISYspacing[1] * 0.5 * (numYholes - 1);
     fromMag = mMSParams->holeMagIndex;
 
     // Set up to do arbitrary directions in each axis
     direction[0] = direction[1] = 1;
     startInd[0] = startInd[1] = 0;
-    endInd[0] = mMSParams->numHoles[0] - 1;
-    endInd[1] = mMSParams->numHoles[1] - 1;
+    endInd[0] = numXholes - 1;
+    endInd[1] = numYholes - 1;
     jump[0] = jump[1] = 1;
-    if (mMSTestRun) {
-      jump[0] = B3DMAX(2, mMSParams->numHoles[0]) - 1;
-      jump[1] = B3DMAX(2, mMSParams->numHoles[1]) - 1;
+    if (mMSTestRun && !crossPattern) {
+      jump[0] = B3DMAX(2, numXholes) - 1;
+      jump[1] = B3DMAX(2, numYholes) - 1;
     }
     for (iy = startInd[1]; (endInd[1] - iy) * direction[1] >= 0; 
       iy += direction[1] * jump[1]) {
       for (ix = startInd[0]; (endInd[0] - ix) * direction[0] >= 0 ; 
         ix += direction[0] * jump[0]) {
-        fromISX.push_back((ix * mMSParams->holeISXspacing[0] - xCenISX) +
-          (iy * mMSParams->holeISXspacing[1] - yCenISX));
-        fromISY.push_back((ix * mMSParams->holeISYspacing[0] - xCenISY) +
-          (iy * mMSParams->holeISYspacing[1] - yCenISY));
+        if (!(crossPattern && ((ix % 2 == 0) && (iy % 2 == 0)) ||
+          (mMSTestRun && ix == 1 && iy == 1))) {
+          fromISX.push_back((ix * mMSParams->holeISXspacing[0] - xCenISX) +
+            (iy * mMSParams->holeISXspacing[1] - yCenISX));
+          fromISY.push_back((ix * mMSParams->holeISYspacing[0] - xCenISY) +
+            (iy * mMSParams->holeISYspacing[1] - yCenISY));
+          posIndex.push_back(ix);
+          posIndex.push_back(iy);
+        }
       }
 
       // For now, zigzag pattern
@@ -520,6 +554,29 @@ int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, int mag
     delISY.push_back((float)transISY);
   }
   return numHoles;
+}
+
+/*
+ * Given the existing vectors and their position indexes for holes, remove the ones
+ * listed in the skipIndex list
+ */
+void CParticleTasks::SkipHolesInList(FloatVec &delISX, FloatVec &delISY, IntVec &posIndex,
+  unsigned char *skipIndex, int numSkip, int &numHoles)
+{
+  int pos, skip;
+  for (pos = numHoles - 1; pos >= 0; pos--) {
+    for (skip = 0; skip < numSkip; skip++) {
+      if (posIndex[2 * pos] == skipIndex[2 * skip] &&
+        posIndex[2 * pos + 1] == skipIndex[2 * skip + 1]) {
+        delISX.erase(delISX.begin() + pos);
+        delISY.erase(delISY.begin() + pos);
+        posIndex.erase(posIndex.begin() + 2 * pos);
+        posIndex.erase(posIndex.begin() + 2 * pos);
+        numHoles--;
+        break;
+      }
+    }
+  }
 }
 
 // Returns true and the number of the current hole and peripheral position numbered from

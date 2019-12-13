@@ -134,4 +134,7 @@ public:
   BOOL mLastPanelStates[7];
   afx_msg void OnSaveRecord();
   afx_msg void OnAdjustBeamTilt();
+  CButton m_butOmit3x3Corners;
+  BOOL m_bOmit3x3Corners;
+  afx_msg void OnOmit3x3Corners();
 };

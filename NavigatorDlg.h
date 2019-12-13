@@ -123,6 +123,8 @@ public:
 	BOOL UserMousePoint(EMimageBuffer *imBuf, float inX, float inY, BOOL nearCenter, int button);
 	CArray<CMapDrawItem *, CMapDrawItem *> *GetMapDrawItems(EMimageBuffer *imBuf, 
     ScaleMat &aMat, float &delX, float &delY, BOOL &drawAllReg, CMapDrawItem **acquireBox);
+  void AddHolePositionsToItemPts(FloatVec &delISX, FloatVec &delISY, IntVec &holeIndex, 
+    bool custom, int numHoles, CMapDrawItem *item);
 	CNavigatorDlg(CWnd* pParent = NULL);   // standard constructor
   int GetCurrentRegistration() {return mCurrentRegistration;};
   CArray<CMapDrawItem *, CMapDrawItem *> *GetItemArray() {return &mItemArray;};
@@ -150,6 +152,9 @@ public:
   SetMember(BOOL, SkipStageMoveInAcquire);
   GetSetMember(bool, PausedAcquire);
   GetMember(int, AcquireIndex);
+  GetMember(int, MagIndForHoles);
+  GetMember(int, CameraForHoles);
+
   CString GetCurrentNavFile() {return mNavFilename;};
   int GetNumNavItems() {return (int)mItemArray.GetSize();};
   void ResumeFromPause() {mResumedFromPause = true; mPausedAcquire = false;};
@@ -393,7 +398,13 @@ private:
   float mLastGridInSpacing;  // Spacing entered for regular fill of polygon
   int mLastGridAwayFromFocus;  // Whether last grid of points was laid out away from focus
   float mLastGridPolyArea;     // Area of polygon/map in ast grid of points filling one
-  bool mEditFocusEnabled;    // Keep track if Edit Focus is enabled, required for drawing
+  bool mEditFocusEnabled;      // Keep track if Edit Focus is enabled, required for drawing
+  ScaleMat mIStoStageForHoles; // Matrix for converting multihole IS values to stage
+  int mMagIndForHoles;         // The mag index and camera needed when working with 
+  int mCameraForHoles;         // hole pattern of current point
+  FloatVec mCurItemHoleXYpos;  // Stage positions of the holes drawn around current point
+  IntVec mCurItemHoleIndex;    // And the hole index for that item, needed for deletion
+  float mMultiDelStageX, mMultiDelStageY;  // Stage position for shitf double click deletion
 
 public:
   BOOL RegistrationChangeOK(void);
@@ -592,6 +603,7 @@ afx_msg void OnEditFocus();
 SetMember(BOOL, Changed);
 void AddFocusAreaPoint(bool drawFirst);
 bool AtSamePosAsHigherMagMapInRange(int itemInd, int startInd, int endInd);
+bool GetHolePositionVectors(FloatVec **xypos, IntVec **index);
 };
 
 //{{AFX_INSERT_LOCATION}}
