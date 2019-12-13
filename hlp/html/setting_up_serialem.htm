@@ -1100,6 +1100,11 @@
           Set TietzCanPreExpose to 1 if the camera has a shuttering mode that allows 
           pre-exposure of the specimen, using the film shutter and beam blanker.</LI>
         <LI>
+          For newer CMOS cameras (F216, F416, XF416), it is possible to take images 
+          normalized in the Tietz software with flatfield images prepared there.&nbsp; 
+          This is especially helpful for the XF416.&nbsp; To use this feature, add the 
+          camera property &#39;TietzFlatfieldDir&#39; with the path to the Tietz gain references.</LI>
+        <LI>
           Frame alignment and saving using burst mode are enabled by default for XF416 
           cameras; the property CanTakeFrames can be added and set to 1, 2, or 0 to hide 
           the controls for aligning, saving, or both.&nbsp; For the older Fn16 cameras, if 
@@ -1109,14 +1114,14 @@
         <LI>
           Fast continuous mode using the Tietz live mode 
           is enabled by default for all of these CMOS cameras and can be disabled with the
-           property &#39;UseContinuous 0&#39;.&nbsp; 
+           property &#39;UseContinuousMode 0&#39;.&nbsp; 
         </LI>
         <LI>
           Both burst mode and live mode images
            are taken in rolling shutter mode while single-frame images are taken in 
           beam-blank shutter mode.&nbsp; These may require different gain references, and it may
           be preferable to use normalization through the Tietz software.&nbsp; See also the 
-          &#39;SubareasByCropping&#39; property, which allows Teizt flatfields to be taken only
+          &#39;SubareasByCropping&#39; property, which allows Teitz flatfields to be taken only
           for full-sized images.
         </LI>
         <LI>
@@ -1440,7 +1445,7 @@
         by defining the environment variable JEOL_SEM_SERVER_PORT with the port number 
         on the JEOL PC. You also need to add the properties (with the appropriate port 
         number)<br />
-&nbsp;&nbsp;&nbsp; SockerServerIP 4 ip_address_of_JEOL_PC<br />
+&nbsp;&nbsp;&nbsp; SocketServerIP 4 ip_address_of_JEOL_PC<br />
 &nbsp;&nbsp;&nbsp; SocketServerPort 4 48896</p>
        <p>
         <a name="RemoteTietz"><i>For accessing a Tietz camera remotely</i></a>, 
@@ -1450,7 +1455,7 @@
          port can be used by defining the environment variable TIETZ_SEM_SERVER_PORT with 
          the port number on the Tietz PC. You also need to add the properties (with the 
          appropriate port number)<br />
-&nbsp;&nbsp;&nbsp; SockerServerIP 5 ip_address_of_Tietz_PC<br />
+&nbsp;&nbsp;&nbsp; SocketServerIP 5 ip_address_of_Tietz_PC<br />
 &nbsp;&nbsp;&nbsp; SocketServerPort 5 48897</p>
         <P>After you have checked out these settings, you are finally ready to run 
         SerialEM and try taking some pictures. Experiment with the different camera 
