@@ -132,4 +132,6 @@ public:
   afx_msg void OnButIsToPt();
   void UpdateMultiDisplay(int magInd, double intensity);
   BOOL mLastPanelStates[7];
+  afx_msg void OnSaveRecord();
+  afx_msg void OnAdjustBeamTilt();
 };

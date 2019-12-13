@@ -166,7 +166,9 @@ BEGIN_MESSAGE_MAP(CMultiShotDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_BUT_SAVE_IS, OnButSaveIs)
   ON_BN_CLICKED(IDC_BUT_END_PATTERN, OnButEndPattern)
   ON_BN_CLICKED(IDC_BUT_ABORT, OnButAbort)
-  ON_BN_CLICKED(IDC_BUT_IS_TO_PT, &CMultiShotDlg::OnButIsToPt)
+  ON_BN_CLICKED(IDC_BUT_IS_TO_PT, OnButIsToPt)
+  ON_BN_CLICKED(IDC_CHECK_SAVE_RECORD, OnSaveRecord)
+  ON_BN_CLICKED(IDC_CHECK_ADJUST_BEAM_TILT, OnAdjustBeamTilt)
 END_MESSAGE_MAP()
 
 
@@ -631,6 +633,16 @@ void CMultiShotDlg::OnKillfocusEditEarlyFrames()
 {
   UpdateData(true);
   ManageEnables();
+}
+
+void CMultiShotDlg::OnSaveRecord()
+{
+  UpdateAndUseMSparams();
+}
+
+void CMultiShotDlg::OnAdjustBeamTilt()
+{
+  UpdateAndUseMSparams();
 }
 
 // Unload dialog parameters into the structure and redraw
