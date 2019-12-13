@@ -1044,7 +1044,8 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, BOOL 
   }
   *fracPtr = fracBest;
   *CCCptr = CCCbest;
-  if (mWinApp->mScope->GetSimulationMode() && nxPad > 128 && nyPad > 128) {
+  if (mWinApp->mScope->GetSimulationMode() && nxPad > 128 && nyPad > 128 && 
+    (mImBufs->GetSaveCopyFlag() != 0 || mImBufs->mCaptured)) {
     tempX = (float)(0.02 * B3DMIN(nxUseA, nxUseC));
     tempY = (float)(0.02 * B3DMIN(nyUseA, nyUseC));
     B3DCLAMP(Xpeaks[indMaxPeak], -tempX, tempX);
