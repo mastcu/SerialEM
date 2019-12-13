@@ -1238,6 +1238,9 @@ void CMacroProcessor::NextCommand()
   CString strLine, strCopy, item1upper;
   CString strItems[MAX_TOKENS];
   CString report;
+
+  // Use this only for output followed by break not return, output at end of switch
+  CString logRpt;
   BOOL itemEmpty[MAX_TOKENS];
   int itemInt[MAX_TOKENS];
   double itemDbl[MAX_TOKENS];
@@ -1840,9 +1843,8 @@ void CMacroProcessor::NextCommand()
     }
     avgSD(fvalues, index2, &bmean, &bSD, &cpe);
     rsFastMedianInPlace(fvalues, index2, &cpe);
-    report.Format("n= %d  min= %.6g  max = %.6g  mean= %.6g  sd= %.6g  median= %.6g",
+    logRpt.Format("n= %d  min= %.6g  max = %.6g  mean= %.6g  sd= %.6g  median= %.6g",
       index2, bmin, bmax, bmean, bSD, cpe);
-    mWinApp->AppendToLog(report, mLogAction);
     SetReportedValues(&strItems[2], index2, bmin, bmax, bmean, bSD, cpe);
 
     delete[] fvalues;
@@ -1878,12 +1880,11 @@ void CMacroProcessor::NextCommand()
     }
     if (truth) {
       lsFit2(xx1, xx2, xx3, index, &bmean, &bSD, &cpe);
-      report.Format("n= %d  a1= %f  a2= %f  c= %f", index, bmean, bSD, cpe);
+      logRpt.Format("n= %d  a1= %f  a2= %f  c= %f", index, bmean, bSD, cpe);
     } else {
       lsFit(xx1, xx2, index, &bmean, &bSD, &cpe);
-      report.Format("n= %d  slope= %f  intercept= %f  ro= %.4f", index, bmean, bSD, cpe);
+      logRpt.Format("n= %d  slope= %f  intercept= %f  ro= %.4f", index, bmean, bSD, cpe);
     }
-    mWinApp->AppendToLog(report, mLogAction);
     SetReportedValues(index, bmean, bSD, cpe);
     delete[] xx1, xx2, xx3;
     break;
@@ -1919,10 +1920,9 @@ void CMacroProcessor::NextCommand()
     index = B3DCHOICE(LookupVariable(item1upper, index2) != NULL, 1, 0);
     SubstituteVariables(&strLine, 1, strLine);
     mWinApp->mParamIO->ParseString(strLine, strItems, MAX_TOKENS);
-    report.Format("Variable %s %s defined", (LPCTSTR)strItems[1],
+    logRpt.Format("Variable %s %s defined", (LPCTSTR)strItems[1],
       B3DCHOICE(index, "IS", "is NOT"));
     SetReportedValues(&strItems[2], index);
-    mWinApp->AppendToLog(report, mLogAction);
     break;
 
   case CME_NEWARRAY:                                        // NewArray
@@ -2453,10 +2453,9 @@ void CMacroProcessor::NextCommand()
   case CME_AREPOSTACTIONSENABLED:                          // ArePostActionsEnabled
     truth = mWinApp->ActPostExposure();
     doShift = mCamera->PostActionsOK(&mConSets[RECORD_CONSET]);
-    report.Format("Post-exposure actions %s allowed %sfor this camera%s", 
+    logRpt.Format("Post-exposure actions %s allowed %sfor this camera%s", 
       truth ? "ARE" : "are NOT", doShift ? "in general " : "", 
       doShift ? " but ARE for Records currently" : "");
-    mWinApp->AppendToLog(report, mLogAction);
     SetReportedValues(&strItems[1], truth ? 1. : 0., doShift ? 1 : 0.);
     break;
     
@@ -2623,17 +2622,15 @@ void CMacroProcessor::NextCommand()
     
   case CME_REPORTSTIGMATORNEEDED:                           // ReportStigmatorNeeded
     mWinApp->mAutoTuning->GetLastAstigNeeded(backlashX, backlashY);
-    report.Format("Last measured stigmator change needed: %.4f  %.4f", backlashX,
+    logRpt.Format("Last measured stigmator change needed: %.4f  %.4f", backlashX,
       backlashY);
-    mWinApp->AppendToLog(report, mLogAction);
     SetReportedValues(&strItems[1], backlashX, backlashY);
     break;
     
   case CME_REPORTCOMATILTNEEDED:                            // ReportComaTiltNeeded
     mWinApp->mAutoTuning->GetLastBeamTiltNeeded(backlashX, backlashY);
-    report.Format("Last measured beam tilt change needed: %.2f  %.2f", backlashX,
+    logRpt.Format("Last measured beam tilt change needed: %.2f  %.2f", backlashX,
       backlashY);
-    mWinApp->AppendToLog(report, mLogAction);
     SetReportedValues(&strItems[1], backlashX, backlashY);
     break;
     
@@ -2642,9 +2639,8 @@ void CMacroProcessor::NextCommand()
     ComaVsISCalib *cvsis = mWinApp->mAutoTuning->GetComaVsIScal();
     if (cvsis->magInd <= 0)
       ABORT_LINE("There is no calibration of beam tilt versus image shift for line:\n\n");
-    report.Format("Coma versus IS calibration is %f  %f  %f  %f", cvsis->matrix.xpx,
+    logRpt.Format("Coma versus IS calibration is %f  %f  %f  %f", cvsis->matrix.xpx,
       cvsis->matrix.xpy, cvsis->matrix.ypx, cvsis->matrix.ypy);
-    mWinApp->AppendToLog(report, mLogAction);
     SetReportedValues(&strItems[1], cvsis->matrix.xpx, cvsis->matrix.xpy,
       cvsis->matrix.ypx, cvsis->matrix.ypy);
     break;
@@ -3087,15 +3083,14 @@ void CMacroProcessor::NextCommand()
           }
         }
       }
-      report.Format("Text file with name %s %s open", (LPCTSTR)strCopy, truth ? "IS" :
+      logRpt.Format("Text file with name %s %s open", (LPCTSTR)strCopy, truth ? "IS" :
         "is NOT");
       SetReportedValues(truth ? 1 : 0);
     } else {
-      report.Format("Text file with identifier %s %s open", (LPCTSTR)item1upper, 
+      logRpt.Format("Text file with identifier %s %s open", (LPCTSTR)item1upper, 
         txFile ? "IS" : "is NOT");
       SetReportedValues(txFile ? 1 : 0);
     }
-    mWinApp->AppendToLog(report, mLogAction);
     break;
 
   case CME_USERSETDIRECTORY:                                // UserSetDirectory
@@ -3203,14 +3198,13 @@ void CMacroProcessor::NextCommand()
     strCopy = mCamera->GetFrameBaseName();
     index = mCamera->GetFrameNameFormat();
     if ((index & FRAME_FILE_ROOT) && !strCopy.IsEmpty()) {
-      report = "The frame base name is " + strCopy;
+      logRpt = "The frame base name is " + strCopy;
       SetOneReportedValue(&strItems[1], 1., 1);
       SetOneReportedValue(&strItems[1], strCopy, 2);
     } else {
-      report = "The base name is not being used in frame file names";
+      logRpt = "The base name is not being used in frame file names";
       SetOneReportedValue(&strItems[1], 0., 1);
     }
-    mWinApp->AppendToLog(report, mLogAction);
     break;
 
   case CME_ALLOWFILEOVERWRITE:                              // AllowFileOverwrite
@@ -3271,10 +3265,9 @@ void CMacroProcessor::NextCommand()
     index = mWinApp->mDocWnd->GetCurrentStore();
     if (index >= 0) {
       index++;
-      report.Format("Current open file number is %d", index);
+      logRpt.Format("Current open file number is %d", index);
     } else 
-      report = "There is no file open currently";
-    mWinApp->AppendToLog(report, mLogAction);
+      logRpt = "There is no file open currently";
     SetReportedValues(&strItems[1], index);
     break;
     
@@ -3334,8 +3327,7 @@ void CMacroProcessor::NextCommand()
   case CME_REPORTFRAMEMDOCOPEN:                             // reportFrameMdocOpen
     index = mWinApp->mDocWnd->GetFrameAdocIndex() >= 0 ? 1 : 0;
     SetReportedValues(&strItems[1], index);
-    report.Format("Autodoc for frames %s open", index ? "IS" : "is NOT");
-    mWinApp->AppendToLog(report, mLogAction);
+    logRpt.Format("Autodoc for frames %s open", index ? "IS" : "is NOT");
     break;
     
   case CME_DEFERWRITINGFRAMEMDOC:                           // DeferWritingFrameMdoc
@@ -3457,8 +3449,7 @@ void CMacroProcessor::NextCommand()
       ABORT_LINE(strItems[1] + " is not a recognized " + strCopy + " or cannot be "
       "accessed by script command in:\n\n");
     SetReportedValues(&strItems[2], delX);
-    report.Format("Value of %s %s is %g", (LPCTSTR)strCopy, (LPCTSTR)strItems[1], delX);
-    mWinApp->AppendToLog(report, mLogAction);
+    logRpt.Format("Value of %s %s is %g", (LPCTSTR)strCopy, (LPCTSTR)strItems[1], delX);
     break;
 
   case CME_SETUSERSETTING:                                  // SetUserSetting
@@ -3804,15 +3795,13 @@ void CMacroProcessor::NextCommand()
     
   case CME_REPORTSCREEN:                                    // ReportScreen
     index = mScope->GetScreenPos() == spDown ? 1 : 0;
-    report.Format("Screen is %s", index ? "DOWN" : "UP");
-    mWinApp->AppendToLog(report, mLogAction);
+    logRpt.Format("Screen is %s", index ? "DOWN" : "UP");
     SetReportedValues(&strItems[1], index);
     break;
 
   case CME_REPORTSCREENCURRENT:                             // ReportScreenCurrent
     delX = mScope->GetScreenCurrent();
-    report.Format("Screen current is %.3f nA", delX);
-    mWinApp->AppendToLog(report, mLogAction);
+    logRpt.Format("Screen current is %.3f nA", delX);
     SetReportedValues(&strItems[1], delX);
     break;
     
@@ -4012,7 +4001,7 @@ void CMacroProcessor::NextCommand()
       AbortMacro();
       return;
     }
-    strCopy.Format("Image shift %.3f %.3f IS units", delX, delY);
+    logRpt.Format("Image shift %.3f %.3f IS units", delX, delY);
     mag = mScope->GetMagIndex();
     aMat = mShiftManager->IStoCamera(mag);
     delISX = delISY = stageX = stageY = 0.;
@@ -4027,10 +4016,9 @@ void CMacroProcessor::NextCommand()
       stageY = (bInv.ypx * delX + bInv.ypy * delY) / (HitachiScope ? 1. : h1);
       report.Format("   %.1f %.1f unbinned pixels; need stage %.3f %.3f if reset", delISX,
                     delISY, stageX, stageY);
-      strCopy += report;
+      logRpt += report;
     }
     SetReportedValues(&strItems[1], delX, delY, delISX, delISY, stageX, stageY);
-    mWinApp->AppendToLog(strCopy, mLogAction);
     break;
 
   case CME_SETOBJECTIVESTIGMATOR:                           // SetObjectiveStigmator
@@ -4051,9 +4039,8 @@ void CMacroProcessor::NextCommand()
     if (aMat.xpx) {
       delX = aMat.xpx * delISX + aMat.xpy * delISY;
       delY = aMat.ypx * delISX + aMat.ypy * delISY;
-      report.Format("Image shift is %.3f  %.3f in specimen coordinates",  delX, delY);
+      logRpt.Format("Image shift is %.3f  %.3f in specimen coordinates",  delX, delY);
       SetReportedValues(&strItems[1], delX, delY);
-      mWinApp->AppendToLog(report, mLogAction);
     } else {
       mWinApp->AppendToLog("There is no calibration for converting image shift to "
         "specimen coordinates", mLogAction);
@@ -4065,8 +4052,7 @@ void CMacroProcessor::NextCommand()
      AbortMacro();
      return;
    }
-   strCopy.Format("Objective stigmator is %.5f %.5f", delX, delY);
-   mWinApp->AppendToLog(strCopy, mLogAction);
+   logRpt.Format("Objective stigmator is %.5f %.5f", delX, delY);
    SetReportedValues(&strItems[1], delX, delY);
    break;
    
@@ -4134,9 +4120,8 @@ void CMacroProcessor::NextCommand()
     
   case CME_REPORTACCUMSHIFT:                                // ReportAccumShift
     index2 = BinDivisorI(camParams);
-    report.Format("%8.1f %8.1f cumulative pixels", mAccumShiftX / index2,
+    logRpt.Format("%8.1f %8.1f cumulative pixels", mAccumShiftX / index2,
       mAccumShiftY / index2);
-    mWinApp->AppendToLog(report, mLogAction);
     SetReportedValues(&strItems[1], mAccumShiftX, mAccumShiftY);
     break;
     
@@ -4148,16 +4133,14 @@ void CMacroProcessor::NextCommand()
     
   case CME_REPORTALIGNTRIMMING:                             // ReportAlignTrimming
     mShiftManager->GetLastAlignTrims(ix0, ix1, iy0, iy1);
-    report.Format("Total border trimmed in last autoalign in X & Y for A: %d %d   "
+    logRpt.Format("Total border trimmed in last autoalign in X & Y for A: %d %d   "
       "Reference: %d %d", ix0, ix1, iy0, iy1);
-    mWinApp->AppendToLog(report, mLogAction);
     SetReportedValues(&strItems[1], ix0, ix1, iy0, iy1);
     break;
     
   case CME_REPORTCLOCK:                                     // ReportClock
     delX = 0.001 * GetTickCount() - 0.001 * mStartClock;
-    report.Format("%.2f seconds elapsed time", delX);
-    mWinApp->AppendToLog(report, mLogAction);
+    logRpt.Format("%.2f seconds elapsed time", delX);
     SetReportedValues(&strItems[1], delX);
     break;
     
@@ -4167,12 +4150,11 @@ void CMacroProcessor::NextCommand()
     
   case CME_REPORTMINUTETIME:                                // ReportMinuteTime
     index = mWinApp->MinuteTimeStamp();
-    report.Format("Absolute minute time = %d", index);
-    mWinApp->AppendToLog(report, mLogAction);
-    SetReportedValues(index);
     if (!itemEmpty[1] && SetVariable(strItems[1], (double)index, VARTYPE_PERSIST, -1,
       false, &report))
         ABORT_LINE(report + "\n(This command assigns to a persistent variable):\n\n");
+    logRpt.Format("Absolute minute time = %d", index);
+    SetReportedValues(index);
     break;
     
   case CME_SETCUSTOMTIME:                                   // SetCustomTime
@@ -4197,12 +4179,12 @@ void CMacroProcessor::NextCommand()
     } else {
       if (index2) {
         index -= custIter->second;
-        report.Format("%d minutes elapsed since custom time %s set", index, (LPCTSTR)strItems[1]);
+        logRpt.Format("%d minutes elapsed since custom time %s set", index,
+           (LPCTSTR)strItems[1]);
       } else {
         index = 2 * MAX_CUSTOM_INTERVAL;
-        report = "Custom time " + strItems[1] + " has not been set";
+        logRpt = "Custom time " + strItems[1] + " has not been set";
       }
-      mWinApp->AppendToLog(report, mLogAction);
       SetReportedValues(index);
     }
     break;
@@ -4210,19 +4192,17 @@ void CMacroProcessor::NextCommand()
 
   case CME_REPORTTICKTIME:                                  // ReportTickTime
     delISX = SEMTickInterval(mWinApp->ProgramStartTime()) / 1000.;
-    report.Format("Tick time from program start = %.3f", delISX);
-    mWinApp->AppendToLog(report, mLogAction);
-    SetReportedValues(delISX);
     if (!itemEmpty[1] && SetVariable(strItems[1], delISX, VARTYPE_PERSIST, -1,
       false, &report))
         ABORT_LINE(report + "\n(This command assigns to a persistent variable):\n\n");
+    logRpt.Format("Tick time from program start = %.3f", delISX);
+    SetReportedValues(delISX);
     break;
     
   case CME_ELAPSEDTICKTIME:                                 // ElapsedTickTime
     delISY = SEMTickInterval(mWinApp->ProgramStartTime());
     delISX = SEMTickInterval(delISY, itemDbl[1] * 1000.) / 1000.;
-    report.Format("Elapsed tick time = %.3f", delISX);
-    mWinApp->AppendToLog(report, mLogAction);
+    logRpt.Format("Elapsed tick time = %.3f", delISX);
     SetReportedValues(&strItems[2], delISX);
     break;
 
@@ -4232,8 +4212,7 @@ void CMacroProcessor::NextCommand()
     index = 10000 * ctDateTime.GetYear() + 100 * ctDateTime.GetMonth() +
       ctDateTime.GetDay();
     index2 = 100 * ctDateTime.GetHour() + ctDateTime.GetMinute();
-    report.Format("%d  %04d", index, index2);
-    mWinApp->AppendToLog(report, mLogAction);
+    logRpt.Format("%d  %04d", index, index2);
     SetReportedValues(&strItems[1], index, index2);
     break;
   }
@@ -4375,29 +4354,25 @@ void CMacroProcessor::NextCommand()
     
   case CME_REPORTSTAGEXYZ:                                  // ReportStageXYZ
     mScope->GetStagePosition(stageX, stageY, stageZ);
-    report.Format("Stage %.2f %.2f %.2f", stageX, stageY, stageZ);
-    mWinApp->AppendToLog(report, mLogAction);
+    logRpt.Format("Stage %.2f %.2f %.2f", stageX, stageY, stageZ);
     SetReportedValues(&strItems[1], stageX, stageY, stageZ);
     break;
     
   case CME_REPORTTILTANGLE:                                 // ReportTiltAngle
     delX = mScope->GetTiltAngle();
-    report.Format("%.2f degrees", delX);
-    mWinApp->AppendToLog(report, mLogAction);
+    logRpt.Format("%.2f degrees", delX);
     SetReportedValues(&strItems[1], delX);
     break;
     
   case CME_REPORTSTAGEBUSY:                                 // ReportStageBusy
     index = mScope->StageBusy();
-    report.Format("Stage is %s", index > 0 ? "BUSY" : "NOT busy");
-    mWinApp->AppendToLog(report, mLogAction);
+    logRpt.Format("Stage is %s", index > 0 ? "BUSY" : "NOT busy");
     SetReportedValues(&strItems[1], index > 0 ? 1 : 0);
     break;
     
   case CME_REPORTSTAGEBAXIS:                                // ReportStageBAxis
     delX = mScope->GetStageBAxis();
-    report.Format("B axis = %.2f degrees", delX);
-    mWinApp->AppendToLog(report, mLogAction);
+    logRpt.Format("B axis = %.2f degrees", delX);
     SetReportedValues(&strItems[1], delX);
     break;
     
@@ -4406,18 +4381,16 @@ void CMacroProcessor::NextCommand()
 
     // This is not right if the screen is down and FEI is not in EFTEM
     index = MagOrEFTEMmag(mWinApp->GetEFTEMMode(), index2, mScope->GetSTEMmode());
-    report.Format("Mag is %d%s", index,
+    logRpt.Format("Mag is %d%s", index,
       index2 < mScope->GetLowestNonLMmag() ? "   (Low mag)":"");
-    mWinApp->AppendToLog(report, mLogAction);
     SetReportedValues(&strItems[1], (double)index, 
       index2 < mScope->GetLowestNonLMmag() ? 1. : 0.);
     break;
     
   case CME_REPORTMAGINDEX:                                  // ReportMagIndex
     index = mScope->GetMagIndex();
-    report.Format("Mag index is %d%s", index,
+    logRpt.Format("Mag index is %d%s", index,
       index < mScope->GetLowestNonLMmag() ? "   (Low mag)":"");
-    mWinApp->AppendToLog(report, mLogAction);
     SetReportedValues(&strItems[1], (double)index, 
       index < mScope->GetLowestNonLMmag() ? 1. : 0.);
     break;
@@ -4426,76 +4399,68 @@ void CMacroProcessor::NextCommand()
     delX = 0;
     if (!mScope->GetMagIndex())
       delX = mScope->GetLastCameraLength();
-    report.Format("%s %g%s", delX ? "Camera length is " : "Not in diffraction mode - (",
+    logRpt.Format("%s %g%s", delX ? "Camera length is " : "Not in diffraction mode - (",
       delX, delX ? " m" : ")");
-    mWinApp->AppendToLog(report, mLogAction);
     SetReportedValues(&strItems[1],  delX);
     break;
     
   case CME_REPORTDEFOCUS:                                   // ReportDefocus
     delX = mScope->GetDefocus();
-    report.Format("Defocus = %.3f um", delX);
-    mWinApp->AppendToLog(report, mLogAction);
+    logRpt.Format("Defocus = %.3f um", delX);
     SetReportedValues(&strItems[1], delX);
     break;
     
   case CME_REPORTFOCUS:                                     // ReportFocus
   case CME_REPORTABSOLUTEFOCUS:                             // ReportAbsoluteFocus
     delX = mScope->GetFocus();
-    report.Format("Absolute focus = %.5f", delX);
-    mWinApp->AppendToLog(report, mLogAction);
+    logRpt.Format("Absolute focus = %.5f", delX);
     SetReportedValues(&strItems[1], delX);
     break;
 
   case CME_REPORTPERCENTC2:                                 // ReportPercentC2
     delY = mScope->GetIntensity();
     delX = mScope->GetC2Percent(mScope->FastSpotSize(), delY);
-    report.Format("%s = %.3f%s  -  %.5f", mScope->GetC2Name(), delX, mScope->GetC2Units(),
+    logRpt.Format("%s = %.3f%s  -  %.5f", mScope->GetC2Name(), delX, mScope->GetC2Units(),
       delY);
-    mWinApp->AppendToLog(report, mLogAction);
     SetReportedValues(&strItems[1], delX, delY);
     break;
 
-  case CME_REPORTCROSSOVERPERCENTC2:                                 // ReportCrossoverPercentC2
-    delY = mScope->GetCrossover(mScope->GetSpotSize()); // probe mode not required, uses current mode it
-    delX = mScope->GetC2Percent(mScope->FastSpotSize(), delY);
-    report.Format("Crossover %s at current conditions = %.3f%s  -  %.5f", mScope->GetC2Name(), delX, mScope->GetC2Units(), delY);
-    mWinApp->AppendToLog(report, mLogAction);
+  case CME_REPORTCROSSOVERPERCENTC2:                        // ReportCrossoverPercentC2
+    index = mScope->GetSpotSize();
+    delY = mScope->GetCrossover(index); // probe mode not required, uses current mode
+    delX = mScope->GetC2Percent(index, delY);
+    logRpt.Format("Crossover %s at current conditions = %.3f%s  -  %.5f",
+      mScope->GetC2Name(), delX, mScope->GetC2Units(), delY);
     SetReportedValues(&strItems[1], delX, delY);
     break;
 
   case CME_REPORTILLUMINATEDAREA:                           // ReportIlluminatedArea
     delX = mScope->GetIlluminatedArea();
-    report.Format("IlluminatedArea %f", delX);
-    mWinApp->AppendToLog(report, mLogAction);
+    logRpt.Format("IlluminatedArea %f", delX);
     SetReportedValues(&strItems[1], delX);
     break;
     
   case CME_REPORTIMAGEDISTANCEOFFSET:                       // ReportImageDistanceOffset
     delX = mScope->GetImageDistanceOffset();
-    report.Format("Image distance offset %f", delX);
-    mWinApp->AppendToLog(report, mLogAction);
+    logRpt.Format("Image distance offset %f", delX);
     SetReportedValues(&strItems[1], delX);
     break;
     
   case CME_REPORTALPHA:                                     // ReportAlpha
     index = mScope->GetAlpha() + 1;
-    report.Format("Alpha = %d", index);
-    mWinApp->AppendToLog(report, mLogAction);
+    logRpt.Format("Alpha = %d", index);
     SetReportedValues(&strItems[1], (double)index);
     break;
     
   case CME_REPORTSPOTSIZE:                                  // ReportSpotSize
     index = mScope->GetSpotSize();
-    report.Format("Spot size is %d", index);
-    mWinApp->AppendToLog(report, mLogAction);
+    logRpt.Format("Spot size is %d", index);
     SetReportedValues(&strItems[1], (double)index);
     break;
     
   case CME_REPORTPROBEMODE:                                 // ReportProbeMode
     index = mScope->ReadProbeMode();
-    report.Format("Probe mode is %s", index ? "microprobe" : "nanoprobe");
-    mWinApp->AppendToLog(report, mLogAction);
+    logRpt.Format("Probe mode is %s", index ? "microprobe" : "nanoprobe");
     SetReportedValues(&strItems[1], (double)index);
     break;
     
@@ -4507,9 +4472,8 @@ void CMacroProcessor::NextCommand()
     else if (mCamera->CheckFilterSettings())
       ABORT_NOLINE("An error occurred checking filter settings");
     delX = filtParam->zeroLoss ? 0. : filtParam->energyLoss;
-    report.Format("Filter slit width %.1f, energy loss %.1f, slit %s", 
+    logRpt.Format("Filter slit width %.1f, energy loss %.1f, slit %s", 
       filtParam->slitWidth, delX, filtParam->slitIn ? "IN" : "OUT");
-    mWinApp->AppendToLog(report, mLogAction);
     SetReportedValues(&strItems[1], filtParam->slitWidth, delX,
       filtParam->slitIn ? 1. : 0.);
     break;
@@ -4519,8 +4483,7 @@ void CMacroProcessor::NextCommand()
       AbortMacro();
       return;
     }
-    report.Format("Column mode %d (%X), submode %d (%X)", index, index, index2, index2);
-    mWinApp->AppendToLog(report, mLogAction);
+    logRpt.Format("Column mode %d (%X), submode %d (%X)", index, index, index2, index2);
     SetReportedValues(&strItems[1], (double)index, (double)index2);
     break;
     
@@ -4530,8 +4493,7 @@ void CMacroProcessor::NextCommand()
       AbortMacro();
       return;
     }
-    report.Format("Lens %s = %f", (LPCTSTR)report, delX);
-    mWinApp->AppendToLog(report, mLogAction);
+    logRpt.Format("Lens %s = %f", (LPCTSTR)report, delX);
     SetReportedValues(delX);
     break;
     
@@ -4540,8 +4502,7 @@ void CMacroProcessor::NextCommand()
       AbortMacro();
       return;
     }
-    report.Format("Coil %s = %f  %f", (LPCTSTR)strItems[1], delX, delY);
-    mWinApp->AppendToLog(report, mLogAction);
+    logRpt.Format("Coil %s = %f  %f", (LPCTSTR)strItems[1], delX, delY);
     SetReportedValues(&strItems[2], delX, delY);
     break;
     
@@ -4558,8 +4519,7 @@ void CMacroProcessor::NextCommand()
   case CME_REPORTLENSFLCSTATUS:                            // ReportLensFLCStatus
     if (!mScope->GetLensFLCStatus(itemInt[1], index, delX))
       ABORT_LINE("Error trying to run:\n\n");
-    report.Format("Lens %d, FLC %s  value  %f", itemInt[1], index ? "ON" : "OFF", delX);
-    mWinApp->AppendToLog(report, mLogAction);
+    logRpt.Format("Lens %d, FLC %s  value  %f", itemInt[1], index ? "ON" : "OFF", delX);
     SetReportedValues(&strItems[2], index, delX);
     break;
     
@@ -4596,8 +4556,7 @@ void CMacroProcessor::NextCommand()
     index = mScope->GetCurrentPhasePlatePos();
     if (index < 0)
       ABORT_LINE("Script aborted due to error in:\n\n");
-    report.Format("Current phase plate position is %d", index + 1);
-    mWinApp->AppendToLog(report, mLogAction);
+    logRpt.Format("Current phase plate position is %d", index + 1);
     SetReportedValues(&strItems[1], index + 1.);
     break;
     
@@ -4609,10 +4568,9 @@ void CMacroProcessor::NextCommand()
     if (strItems[2] == "1" && imBuf->mBinning && imBuf->mExposure > 0.) {
       delX /= imBuf->mBinning * imBuf->mBinning * imBuf->mExposure *
         mWinApp->GetGainFactor(imBuf->mCamera, imBuf->mBinning);
-      report.Format("Mean of buffer %s = %.2f unbinned counts/sec", strItems[1], delX);
+      logRpt.Format("Mean of buffer %s = %.2f unbinned counts/sec", strItems[1], delX);
     } else
-      report.Format("Mean of buffer %s = %.1f", strItems[1], delX);
-    mWinApp->AppendToLog(report, mLogAction);
+      logRpt.Format("Mean of buffer %s = %.1f", strItems[1], delX);
     SetReportedValues(delX);
     break;
     
@@ -4622,8 +4580,7 @@ void CMacroProcessor::NextCommand()
     if (mBufferManager->CheckAsyncSaving())
       SUSPEND_NOLINE("because of file write error");
     index = mWinApp->mStoreMRC->getDepth();
-    report.Format("Z size of file = %d", index);
-    mWinApp->AppendToLog(report, mLogAction);
+    logRpt.Format("Z size of file = %d", index);
     SetReportedValues(&strItems[1], (double)index);
     break;
     
@@ -4640,9 +4597,8 @@ void CMacroProcessor::NextCommand()
           "in A in statement: \n\n");
     delX = ProcImageMean(mImBufs->mImage->getData(), mImBufs->mImage->getType(),
       sizeX, sizeY, ix0, ix1, iy0, iy1);
-    report.Format("Mean of subarea (%d, %d) to (%d, %d) = %.2f", ix0, iy0, ix1, iy1,
+    logRpt.Format("Mean of subarea (%d, %d) to (%d, %d) = %.2f", ix0, iy0, ix1, iy1,
       delX);
-    mWinApp->AppendToLog(report, mLogAction);
     SetReportedValues(&strItems[5], delX);
     break;
     
@@ -4679,10 +4635,9 @@ void CMacroProcessor::NextCommand()
       backlashY = mImBufs[index].mDoseRatePerUBPix;
     }
     shiftX = backlashY / backlashX;
-    report.Format("Min = %.3f  max = %.3f  mean = %.3f  SD = %.3f electrons/pixel; "
+    logRpt.Format("Min = %.3f  max = %.3f  mean = %.3f  SD = %.3f electrons/pixel; "
       "dose rate = %.3f e/unbinned pixel/sec", bmin * shiftX, bmax * shiftX, 
       bmean * shiftX, bSD * shiftX, backlashY);
-    mWinApp->AppendToLog(report, mLogAction);
     SetReportedValues(&strItems[2], bmin * shiftX, bmax * shiftX, bmean * shiftX, 
       bSD * shiftX, backlashY);
     break;
@@ -4790,12 +4745,12 @@ void CMacroProcessor::NextCommand()
       ABORT_LINE(report);
     mImBufs[index].mImage->getSize(sizeX, sizeY);
     delX = 1000. * mWinApp->mShiftManager->GetPixelSize(&mImBufs[index]);
-    report.Format("Image size %d by %d, binning %s, exposure %.4f",
+    logRpt.Format("Image size %d by %d, binning %s, exposure %.4f",
       sizeX, sizeY, (LPCTSTR)mImBufs[index].BinningText(),
       mImBufs[index].mExposure);
     if (delX) {
       strCopy.Format(", pixel size " + mWinApp->PixelFormat((float)delX), (float)delX);
-      report += strCopy;
+      logRpt += strCopy;
     }
     if (mImBufs[index].mSecNumber < 0) {
       delY = -1;
@@ -4804,8 +4759,7 @@ void CMacroProcessor::NextCommand()
       delY = mImBufs[index].mConSetUsed;
       strCopy.Format(", %s parameters", mModeNames[mImBufs[index].mConSetUsed]);
     }
-    report += strCopy;
-    mWinApp->AppendToLog(report, mLogAction);
+    logRpt += strCopy;
     SetReportedValues(&strItems[2], (double)sizeX, (double)sizeY,
       mImBufs[index].mBinning / (double)B3DMAX(1, mImBufs[index].mDivideBinToShow),
       (double)mImBufs[index].mExposure, delX, delY);
@@ -4819,7 +4773,7 @@ void CMacroProcessor::NextCommand()
     if (index2 == MONTAGE_CONSET)
       index2 = RECORD_CONSET;
     if (mImBufs[index].mLowDoseArea && index2 >= 0) {
-      report = "Image is from " + mModeNames[index2] + " in Low Dose";
+      logRpt = "Image is from " + mModeNames[index2] + " in Low Dose";
     } else {
       if (index2 == TRACK_CONSET) {
 
@@ -4837,16 +4791,15 @@ void CMacroProcessor::NextCommand()
           else
             index2 = PREVIEW_CONSET;
         }
-        report = "Image matches one from " + mModeNames[index2] + " in Low Dose";
+        logRpt = "Image matches one from " + mModeNames[index2] + " in Low Dose";
       } else if (index2 >= 0) {
-        report = "Image is from " + mModeNames[index2] + " parameters, not in Low Dose";
+        logRpt = "Image is from " + mModeNames[index2] + " parameters, not in Low Dose";
       }
     }
     if (index2 > SEARCH_CONSET || index2 < 0) {
       index2 = -1;
-      report = "Image properties do not match any Low Dose area well enough";
+      logRpt = "Image properties do not match any Low Dose area well enough";
     }
-    mWinApp->AppendToLog(report, mLogAction);
     SetReportedValues(&strItems[2], (double)index2, 
       mImBufs[index].mLowDoseArea ? 1. : 0.);
     break;
@@ -4862,9 +4815,8 @@ void CMacroProcessor::NextCommand()
     if (!bmean)
       ABORT_LINE("No pixel size is available for the image for line:\n\n");
     cpe *= 2.f * index2 * bmean;
-    report.Format("Beam diameter measured to be %.3f um from %d quadrants, fit error %.3f"
+    logRpt.Format("Beam diameter measured to be %.3f um from %d quadrants, fit error %.3f"
       , cpe, ix1, fitErr);
-    mWinApp->AppendToLog(report, mLogAction);
     SetReportedValues(cpe, ix1, fitErr);
     break;
     
@@ -4922,11 +4874,10 @@ void CMacroProcessor::NextCommand()
     }
     index2 = mWinApp->mProcessImage->CheckForBadStripe(&mImBufs[index], ix0, ix1);
     if (!index2)
-      report = "No bad stripes detected";
+      logRpt = "No bad stripes detected";
     else
-      report.Format("Bad stripes detected with %d sharp transitions; %d near expected"
+      logRpt.Format("Bad stripes detected with %d sharp transitions; %d near expected"
         " boundaries", index2, ix1);
-    mWinApp->AppendToLog(report, mLogAction);
     SetReportedValues(index2, ix1);
     break;
     
@@ -4998,9 +4949,8 @@ void CMacroProcessor::NextCommand()
     truth = itemInt[1] <= ix0 && index2 <= ix1;
     if (CMD_IS(ISVERSIONATLEAST)) {
       SetReportedValues(truth ? 1. : 0.);
-      report.Format("Program version is %d date %d, %s than %d %s", ix0, ix1, 
+      logRpt.Format("Program version is %d date %d, %s than %d %s", ix0, ix1, 
         truth ? "later" : "earlier", itemInt[1], (LPCTSTR)strItems[2]);
-      mWinApp->AppendToLog(report, mLogAction);
     } else if (!truth && mCurrentIndex < macro->GetLength())
       GetNextLine(macro, mCurrentIndex, strLine);
     break;
@@ -5059,8 +5009,7 @@ void CMacroProcessor::NextCommand()
     }
     if (!truth)
       SUSPEND_NOLINE("because no number was entered");
-    report.Format("%s: user entered  %g", (LPCTSTR)strCopy, backlashX);
-    mWinApp->AppendToLog(report, mLogAction);
+    logRpt.Format("%s: user entered  %g", (LPCTSTR)strCopy, backlashX);
     SetReportedValues(backlashX);
     break;
 
@@ -5085,8 +5034,7 @@ void CMacroProcessor::NextCommand()
       index = var->value.Compare(strCopy);
     else
       index = var->value.CompareNoCase(strCopy);
-    report.Format("The strings %s equal", index ? "are NOT" : "ARE");
-    mWinApp->AppendToLog(report, mLogAction);
+    logRpt.Format("The strings %s equal", index ? "are NOT" : "ARE");
     SetReportedValues(index);
     break;
 
@@ -5182,8 +5130,7 @@ void CMacroProcessor::NextCommand()
     delX = mWinApp->mComplexTasks->GetLastAxisOffset();
     if (delX < -900)
       ABORT_NOLINE("There is no last axis offset; fine eucentricity has not been run");
-    report.Format("Lateral axis offset in last run of Fine Eucentricity was %.2f", delX);
-    mWinApp->AppendToLog(report, mLogAction);
+    logRpt.Format("Lateral axis offset in last run of Fine Eucentricity was %.2f", delX);
     SetReportedValues(&strItems[1], delX);
     break;
     
@@ -5394,8 +5341,7 @@ void CMacroProcessor::NextCommand()
     
   case CME_REPORTJEOLGIF:                                   // ReportJeolGIF
     index = mScope->GetJeolGIF();
-    report.Format("JEOL GIF MODE return value %d", index);
-    mWinApp->AppendToLog(report, mLogAction);
+    logRpt.Format("JEOL GIF MODE return value %d", index);
     SetReportedValues(&strItems[1], (double)index);
     break;
     
@@ -5433,11 +5379,10 @@ void CMacroProcessor::NextCommand()
       return;
     }
     if (index < -1)
-      report.Format("Requesting status of slot %d gives an error", itemInt[1]);
+      logRpt.Format("Requesting status of slot %d gives an error", itemInt[1]);
     else
-      report.Format("Slot %d %s", itemInt[1], index < 0 ? "has unknown status" :
+      logRpt.Format("Slot %d %s", itemInt[1], index < 0 ? "has unknown status" :
       (index ? "is occupied" : "is empty"));
-    mWinApp->AppendToLog(report, mLogAction);
     SetReportedValues(&strItems[2], (double)index);
     break;
     
@@ -5460,8 +5405,7 @@ void CMacroProcessor::NextCommand()
       AbortMacro();
       return;
     }
-    report.Format("Refrigerant level in dewar %d is %.3f", itemInt[1], delX);
-    mWinApp->AppendToLog(report, mLogAction);
+    logRpt.Format("Refrigerant level in dewar %d is %.3f", itemInt[1], delX);
     SetReportedValues(&strItems[2], delX);
     break;
     
@@ -5470,8 +5414,7 @@ void CMacroProcessor::NextCommand()
       AbortMacro();
       return;
     }
-    report.Format("Remaining time to fill dewars is %d", index);
-    mWinApp->AppendToLog(report, mLogAction);
+    logRpt.Format("Remaining time to fill dewars is %d", index);
     SetReportedValues(&strItems[1], (double)index);
     break;
     
@@ -5481,14 +5424,13 @@ void CMacroProcessor::NextCommand()
       return;
     }
     if (FEIscope)
-      report.Format("Dewars %s busy filling", index ? "ARE" : "are NOT");
+      logRpt.Format("Dewars %s busy filling", index ? "ARE" : "are NOT");
     else {
       char *dewarTxt[4] = {"No tanks are", "Stage tank is", "Transfer tank is", 
         "Stage and transfer tanks are"};
       B3DCLAMP(index, 0, 3);
-      report.Format("%s being refilled", dewarTxt[index]);
+      logRpt.Format("%s being refilled", dewarTxt[index]);
     }
-    mWinApp->AppendToLog(report, mLogAction);
     SetReportedValues(&strItems[1], index);
     break;
 
@@ -5502,16 +5444,14 @@ void CMacroProcessor::NextCommand()
       AbortMacro();
       return;
     }
-    report.Format("Gauge %s status is %d, pressure is %f", (LPCTSTR)strItems[1], index, 
+    logRpt.Format("Gauge %s status is %d, pressure is %f", (LPCTSTR)strItems[1], index, 
       delISX);
-    mWinApp->AppendToLog(report, mLogAction);
     SetReportedValues(&strItems[2], index, delISX);
     break;
     
   case CME_REPORTHIGHVOLTAGE:                               // ReportHighVoltage
     delISX = mScope->GetHTValue();
-    report.Format("High voltage is %.1f kV", delISX);
-    mWinApp->AppendToLog(report, mLogAction);
+    logRpt.Format("High voltage is %.1f kV", delISX);
     SetReportedValues(&strItems[1], delISX);
     break;
 
@@ -5829,9 +5769,8 @@ void CMacroProcessor::NextCommand()
     camParams->DE_FramesPerSec = (float)delISX;
     mWinApp->mDEToolDlg.UpdateSettings();
     SetReportedValues(mDEframeRateToRestore);
-    report.Format("Changed frame rate of DE camera from %.2f to %.2f", 
+    logRpt.Format("Changed frame rate of DE camera from %.2f to %.2f", 
       mDEframeRateToRestore, delISX);
-    mWinApp->AppendToLog(report, mLogAction);
     break;
     
   case CME_USECONTINUOUSFRAMES:                             // UseContinuousFrames
@@ -5848,11 +5787,10 @@ void CMacroProcessor::NextCommand()
   case CME_REPORTCONTINUOUS:                                // ReportContinuous
     index = mCamera->DoingContinuousAcquire();
     if (index)
-      report.Format("Continuous acquire is running with set %d", index - 1);
+      logRpt.Format("Continuous acquire is running with set %d", index - 1);
     else
-      report = "Continuous acquire is not running";
+      logRpt = "Continuous acquire is not running";
     SetReportedValues(&strItems[1], index - 1.);
-    mWinApp->AppendToLog(report, mLogAction);
     break;
     
   case CME_STARTFRAMEWAITTIMER:                             // StartFrameWaitTimer
@@ -5935,10 +5873,9 @@ void CMacroProcessor::NextCommand()
     ix1 = mCamera->GetSaveTimes100();
     iy0 = mCamera->GetSkipK2FrameRotFlip();
     iy1 = mCamera->GetOneK2FramePerFile();
-    report.Format("File type %s  raw packed %d  4-bit mode %d  x100 %d  Skip rot %d  "
+    logRpt.Format("File type %s  raw packed %d  4-bit mode %d  x100 %d  Skip rot %d  "
       "file/frame %d", index > 1 ? "TIFF ZIP" : (index ? "MRC" : "TIFF LZW"), index2,
       ix0, ix1, iy0, iy1);
-    mWinApp->AppendToLog(report, mLogAction);
     SetReportedValues(&strItems[1], index, index2, ix0, ix1, iy0, iy1);
     break;
 
@@ -5977,7 +5914,7 @@ void CMacroProcessor::NextCommand()
       if (CMD_IS(REPORTFRAMEALIPARAMS)) { 
         index = (faParam->doRefine ? 1 : -1) * faParam->refineIter;
         index2 = (faParam->useGroups ? 1 : -1) * faParam->groupSize;
-        report.Format("Frame alignment for Record has %s %d, keep precision %d"
+        logRpt.Format("Frame alignment for Record has %s %d, keep precision %d"
           ", strategy %d, all-vs-all %d, refine %d, group %d", 
           faParam->binToTarget ? "target" : "binning",
           faParam->binToTarget ? faParam->targetSize : faParam->aliBinning, 
@@ -5985,7 +5922,6 @@ void CMacroProcessor::NextCommand()
           faParam->numAllVsAll, index, index2);
         SetReportedValues(&strItems[1], faParam->aliBinning, faParam->keepPrecision,
           faParam->strategy, faParam->numAllVsAll, index, index2);
-        mWinApp->AppendToLog(report, mLogAction);
 
       } else if (CMD_IS(SETFRAMEALIPARAMS)) { 
         if (itemInt[1] < 1 || (itemInt[1] > 16 && itemInt[1] < 100))
@@ -6014,12 +5950,11 @@ void CMacroProcessor::NextCommand()
 
       } else if (CMD_IS(REPORTFRAMEALI2)) {                 // ReportFrameAli2
         delX = (faParam->truncate ? 1 : -1) * faParam->truncLimit;
-        report.Format("Frame alignment for Record has GPU %d, truncation %.2f, hybrid %d,"
+        logRpt.Format("Frame alignment for Record has GPU %d, truncation %.2f, hybrid %d,"
           " filters %.4f %.4f %.4f", useGPUArr[ix1], delX, faParam->hybridShifts,
           faParam->rad2Filt1, faParam->rad2Filt2, faParam->rad2Filt3);
         SetReportedValues(&strItems[1], useGPUArr[0], delX, faParam->hybridShifts,
           faParam->rad2Filt1, faParam->rad2Filt2, faParam->rad2Filt3);
-        mWinApp->AppendToLog(report, mLogAction);
 
       } else {                                              // SetFrameAli2
         useGPUArr[ix1] = itemInt[1] > 0;
@@ -6045,9 +5980,8 @@ void CMacroProcessor::NextCommand()
     
   case CME_REPORTK3CDSMODE:                                 // ReportK3CDSmode
     index = mCamera->GetUseK3CorrDblSamp() ? 1 : 0;
-    report.Format("CDS mode is %s", index ? "ON" : "OFF");
+    logRpt.Format("CDS mode is %s", index ? "ON" : "OFF");
     SetReportedValues(&strItems[1], index);
-    mWinApp->AppendToLog(report, mLogAction);
     break;
 
   case CME_SETK3CDSMODE:                                    // SetK3CDSmode
@@ -6070,9 +6004,8 @@ void CMacroProcessor::NextCommand()
     if (camParams->K2Type == K3_TYPE)
       delX = camParams->countsPerElectron;
     SetReportedValues(&strItems[1], index, delX);
-    report.Format("Division by 2 is %s; count scaling is %.3f", index ? "ON" : "OFF", 
+    logRpt.Format("Division by 2 is %s; count scaling is %.3f", index ? "ON" : "OFF", 
       delX);
-    mWinApp->AppendToLog(report, mLogAction);
     break;
     
   case CME_SETDIVIDEBY2:                                    // SetDivideBy2
@@ -6082,8 +6015,7 @@ void CMacroProcessor::NextCommand()
   case CME_REPORTNUMFRAMESSAVED:                            // ReportNumFramesSaved
     index = mCamera->GetNumFramesSaved();
     SetReportedValues(&strItems[1], index);
-    report.Format("Number of frames saved was %d", index);
-    mWinApp->AppendToLog(report, mLogAction);
+    logRpt.Format("Number of frames saved was %d", index);
     break;
     
   case CME_CAMERAPROPERTIES:                                // CameraProperties
@@ -6095,10 +6027,9 @@ void CMacroProcessor::NextCommand()
     ix1 = BinDivisorI(camParams);
     index = camParams->sizeX / ix1;
     index2 = camParams->sizeY / ix1;
-    report.Format("%s: size %d x %d    rotation/flip %d   physical pixel %.1f", 
+    logRpt.Format("%s: size %d x %d    rotation/flip %d   physical pixel %.1f", 
       (LPCSTR)camParams->name, index, index2, camParams->rotationFlip, 
       camParams->pixelMicrons * ix1);
-    mWinApp->AppendToLog(report, mLogAction);
     SetReportedValues(&strItems[1], (double)index, (double)index2, 
       (double)camParams->rotationFlip, camParams->pixelMicrons * ix1);
     break;
@@ -6108,8 +6039,7 @@ void CMacroProcessor::NextCommand()
     if (index == -2)
       ABORT_NOLINE("An error occurred getting the state of the column/gun valve");
     SetReportedValues(&strItems[1], index);
-    report.Format("Column/gun valve state is %d", index);
-    mWinApp->AppendToLog(report, mLogAction);
+    logRpt.Format("Column/gun valve state is %d", index);
     break;
     
   case CME_SETCOLUMNORGUNVALVE:                             // SetColumnOrGunValve
@@ -6125,8 +6055,7 @@ void CMacroProcessor::NextCommand()
     if (delISX < 0)
       ABORT_NOLINE("An error occurred getting the filament current");
     SetReportedValues(&strItems[1], delISX);
-    report.Format("Filament current is %.5g", delISX);
-    mWinApp->AppendToLog(report, mLogAction);
+    logRpt.Format("Filament current is %.5g", delISX);
     break;
 
   case CME_SETFILAMENTCURRENT:                              // SetFilamentCurrent
@@ -6137,8 +6066,7 @@ void CMacroProcessor::NextCommand()
   case CME_ISPVPRUNNING:                                    // IsPVPRunning
     if (!mScope->IsPVPRunning(truth))
       ABORT_NOLINE("An error occurred determining whether the PVP is running");
-    report.Format("The PVP %s running", truth ? "IS" : "is NOT");
-    mWinApp->AppendToLog(report, mLogAction);
+    logRpt.Format("The PVP %s running", truth ? "IS" : "is NOT");
     SetReportedValues(&strItems[1], truth ? 1. : 0.);
     break;
     
@@ -6243,14 +6171,13 @@ void CMacroProcessor::NextCommand()
       }
 
       if (CMD_IS(REPORTNAVITEM) || CMD_IS(REPORTOTHERITEM) || (truth && index >= 0)) {
-        report.Format("%stem %d:  Stage: %.2f %.2f %2.f  Label: %s", 
+        logRpt.Format("%stem %d:  Stage: %.2f %.2f %2.f  Label: %s", 
           truth ? "Next i" : "I", index + 1, navItem->mStageX, navItem->mStageY, 
           navItem->mStageZ, (LPCTSTR)navItem->mLabel);
         if (!navItem->mNote.IsEmpty())
-          report += "\r\n    Note: " + navItem->mNote;
-        mWinApp->AppendToLog(report, mLogAction);
-        SetReportedValues(index + 1., navItem->mStageX, navItem->mStageY, navItem->mStageZ,
-          (double)navItem->mType);
+          logRpt += "\r\n    Note: " + navItem->mNote;
+        SetReportedValues(index + 1., navItem->mStageX, navItem->mStageY,
+         navItem->mStageZ, (double)navItem->mType);
         report.Format("%d", index + 1);
         SetVariable("NAVINDEX", report, VARTYPE_REGULAR, -1, false);
         SetVariable("NAVLABEL", navItem->mLabel, VARTYPE_REGULAR, -1, false);
@@ -6281,11 +6208,10 @@ void CMacroProcessor::NextCommand()
     navigator->FindItemWithString(strCopy, truth);
     index = navigator->GetFoundItem() + 1;
     if (index > 0)
-      report.Format("Item with %s %s has index %d", truth ? "note" : "label",
+      logRpt.Format("Item with %s %s has index %d", truth ? "note" : "label",
         (LPCTSTR)strCopy, index);
     else
-      report.Format("No item has %s %s", truth ? "note" : "label", (LPCTSTR)strCopy);
-    mWinApp->AppendToLog(report, mLogAction);
+      logRpt.Format("No item has %s %s", truth ? "note" : "label", (LPCTSTR)strCopy);
     SetReportedValues(index); 
     break;
 
@@ -6296,19 +6222,18 @@ void CMacroProcessor::NextCommand()
       return;
     index2 = 0;
     if (!navItem->mDrawnOnMapID) {
-      report.Format("Navigator item %d does not have an ID for being drawn on a map", 
+      logRpt.Format("Navigator item %d does not have an ID for being drawn on a map", 
         index + 1);
     } else {
       navItem = navigator->FindItemWithMapID(navItem->mDrawnOnMapID, true);
       if (!navItem) {
-        report.Format("The map that navigator item %d was drawn on is no longer in the "
+        logRpt.Format("The map that navigator item %d was drawn on is no longer in the "
           "table", index + 1);
       } else {
         index2 = navigator->GetFoundItem() + 1;
-        report.Format("Navigator item %d was drawn on map item %d", index + 1, index2);
+        logRpt.Format("Navigator item %d was drawn on map item %d", index + 1, index2);
       }
     }
-    mWinApp->AppendToLog(report, mLogAction);
     SetReportedValues(index2);
     break;
 
@@ -6348,18 +6273,16 @@ void CMacroProcessor::NextCommand()
   case CME_REPORTNUMNAVACQUIRE:                             // ReportNumNavAcquire
     navHelper->CountAcquireItems(0, -1, index, index2);
     if (index < 0)
-      report = "The Navigator is not open; there are no acquire items";
+      logRpt = "The Navigator is not open; there are no acquire items";
     else
-      report.Format("Navigator has %d Acquire items, %d Tilt Series items", index,index2);
-    mWinApp->AppendToLog(report, mLogAction);
+      logRpt.Format("Navigator has %d Acquire items, %d Tilt Series items", index,index2);
     SetReportedValues(&strItems[1], (double)index, (double)index2);
     break;
     
   case CME_REPORTNUMTABLEITEMS:                             // ReportNumTableItems
     ABORT_NONAV;
     index = navigator->GetNumberOfItems();
-      report.Format("Navigator table has %d items", index);
-    mWinApp->AppendToLog(report, mLogAction);
+    logRpt.Format("Navigator table has %d items", index);
     SetReportedValues(&strItems[1], (double)index);
     break;
     
@@ -6377,16 +6300,15 @@ void CMacroProcessor::NextCommand()
     
   case CME_REPORTIFNAVOPEN:                                 // ReportIfNavOpen
     index = 0;
-    report = "Navigator is NOT open";
+    logRpt = "Navigator is NOT open";
     if (mWinApp->mNavigator) {
       index = 1;
-      report = "Navigator IS open";
+      logRpt = "Navigator IS open";
       if (mWinApp->mNavigator->GetCurrentNavFile()) {
-        report += "; file is defined";
+        logRpt += "; file is defined";
         index = 2;
       }
     }
-    mWinApp->AppendToLog(report, mLogAction);
     SetReportedValues(&strItems[1], (double)index);
     break;
     
@@ -6520,9 +6442,8 @@ void CMacroProcessor::NextCommand()
       if (index2)
         index = navigator->GetFirstInGroup() ? 1 : 2;
     }
-    report.Format("Group acquire status %d, group ID %d, # in group %d, %d set to acquire"
+    logRpt.Format("Group acquire status %d, group ID %d, # in group %d, %d set to acquire"
       , index, index2, ix0, ix1);
-    mWinApp->AppendToLog(report, mLogAction);
     SetReportedValues(&strItems[1], (double)index, (double)index2, (double)ix0, 
       (double)ix1);
     break;
@@ -6608,9 +6529,8 @@ void CMacroProcessor::NextCommand()
     }
     index2 = navigator->ShiftItemsAtRegistration((float)itemDbl[1], (float)itemDbl[2],
       index);
-    report.Format("%d items at registration %d were shifted by %.2f, %.2f", index2, index,
+    logRpt.Format("%d items at registration %d were shifted by %.2f, %.2f", index2, index,
       itemDbl[1], itemDbl[2]);
-    mWinApp->AppendToLog(report, mLogAction);
     break;
     
   case CME_FORCECENTERREALIGN:                              // ForceCenterRealign
@@ -6729,9 +6649,8 @@ void CMacroProcessor::NextCommand()
       iy0 = ((mConSets[index].bottom + mConSets[index].top) / 2 - camParams->sizeY / 2) /
         BinDivisorI(camParams);
       index2 = mWinApp->mLowDoseDlg.m_bRotateAxis ? mWinApp->mLowDoseDlg.m_iAxisAngle : 0;
-      report.Format("%s axis position %.2f microns, %d degrees; camera offset %d, %d "
+      logRpt.Format("%s axis position %.2f microns, %d degrees; camera offset %d, %d "
         "unbinned pixels", mModeNames[index], delX, index2, ix0, iy0);
-      mWinApp->AppendToLog(report, mLogAction);
       SetReportedValues(&strItems[2], delX, (double)index2, (double)ix0, (double)iy0);
 
     } else {
@@ -6754,9 +6673,8 @@ void CMacroProcessor::NextCommand()
     char *modeLets = "VFTRS";
     index = mWinApp->LowDoseMode() ? 1 : 0;
     index2 = mScope->GetLowDoseArea();
-    report.Format("Low Dose is %s%s%c", index ? "ON" : "OFF",
+    logRpt.Format("Low Dose is %s%s%c", index ? "ON" : "OFF",
       index && index2 >= 0 ? " in " : "", index && index2 >= 0 ? modeLets[index2] : ' ');
-    mWinApp->AppendToLog(report, mLogAction);
     SetReportedValues(&strItems[1], (double)index, (double)index2);
     break;
   }
@@ -7002,8 +6920,7 @@ void CMacroProcessor::NextCommand()
         return;
       }
     }
-    report.Format("Piezo X/Y position is %6g, %6g", delISX, delISY);
-    mWinApp->AppendToLog(report, mLogAction);
+    logRpt.Format("Piezo X/Y position is %6g, %6g", delISX, delISY);
     SetReportedValues(&strItems[1], delISX, delISY);
     break;
     
@@ -7012,8 +6929,7 @@ void CMacroProcessor::NextCommand()
       AbortMacro();
       return;
     }
-    report.Format("Piezo Z or only position is %6g", delISX);
-    mWinApp->AppendToLog(report, mLogAction);
+    logRpt.Format("Piezo Z or only position is %6g", delISX);
     SetReportedValues(&strItems[1], delISX);
     break;
     
@@ -7053,6 +6969,10 @@ void CMacroProcessor::NextCommand()
     ABORT_LINE("Unrecognized statement in script: \n\n");
     break;
   }
+
+  // Output the standard log report variable if set
+  if (!logRpt.IsEmpty())
+    mWinApp->AppendToLog(logRpt, mLogAction);
 
   // The action is taken or started: now set up an idle task
   mWinApp->AddIdleTask(NULL, TASK_MACRO_RUN, 0, 0);
