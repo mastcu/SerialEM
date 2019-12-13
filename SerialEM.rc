@@ -2722,7 +2722,7 @@ BEGIN
     CTEXT           " TIF LZW stack, packed",IDC_STAT_CURSET2,131,25,93,8
     CONTROL         "",IDC_TSS_LINE2,"Static",SS_BLACKFRAME | SS_SUNKEN,7,76,216,1
     CONTROL         "Numeric date (including year) and time at start of name",IDC_CHECK_DATE_PREFIX,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,37,286,190,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,34,286,190,10
 END
 
 IDD_STAGEMOVETOOL DIALOGEX 0, 0, 86, 106
@@ -3827,7 +3827,6 @@ BEGIN
     AFX_IDS_SCMAXIMIZE      "Enlarge the window to full size"
     AFX_IDS_SCNEXTWINDOW    "Switch to the next document window"
     AFX_IDS_SCPREVWINDOW    "Switch to the previous document window"
-    AFX_IDS_SCCLOSE         "Start filename with date-time in form YYYY-MM-DD_HH.MM.SS"
 END
 
 STRINGTABLE
@@ -5601,7 +5600,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDC_CHECK_DATE_PREFIX   "IDC"
+    IDC_CHECK_DATE_PREFIX   "Start filename with date-time in form YYYY-MM-DD_HH.MM.SS"
     IDC_CHECK_EXTRA_STATS   "Do extra computations to find resolution that Thon rings fit to"
     IDC_CHECK_DRAW_RINGS    "Draw more than 5 rings on FFT, out to the resolution fit to"
 END

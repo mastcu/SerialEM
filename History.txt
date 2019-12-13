@@ -3,6 +3,18 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+12/5/19: 3-8-0beta7
+12/5/19: Added script commands to report the number of montage pieces to be
+taken and the name of a file set to be opened for a Navigator item; to take an
+image with parameters matching those of an image in a buffer and crop it if
+needed to that size; to crop the center of an image to specified size.
+
+12/5/19: Added support for X lens used with laser phase plate.
+
+12/5/19: In SEMCCD, improved measurement of mean when a frame threshold is set
+and started putting -1 in the saved frame list file if first or last frame is
+below threshold.
+
 12/1/19: SEM_3-7-11
 12/1/19: Fixed use of wrong gain reference when aligning K3 frames taken with
 fast binning in the SEMCCD plugin (In 3.7).

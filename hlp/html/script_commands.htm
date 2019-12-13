@@ -45,14 +45,7 @@
         .auto-style1 {
             width: 230px;
         }
-      .auto-style2 {
-        width: 230px;
-        height: 23px;
-      }
-      .auto-style3 {
-        height: 23px;
-      }
-  --></style>
+      --></style>
   </HEAD>
   <BODY bgColor="#ffffff" text="#000000">
     <basefont size="2">
@@ -733,10 +726,12 @@
           <TD colspan="2"><A name="other_camera"></A><B>Other Camera Commands</B></TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style8">CameraProperties [#]</TD>
-          <TD>Reports unbinned size in X and Y, RotationAndFlip property, and size of 
-            detector pixel in microns of the current camera, or of the active camera whose 
-            number is given by the optional #, numbered from 1.</TD>
+          <TD class="style8">CameraProperties [#C] [#M]</TD>
+          <TD>Reports unbinned size in X and Y, RotationAndFlip property, size of 
+            detector pixel in microns, and unbinned pixel size of the current camera, or 
+            of the active camera whose number is given by the optional #C, numbered from 1. 
+             The unbinned pixel size is for the current magnification, or for the magnification
+             index given by the optional #M.  (unbinned pixel size added in 3.8, 11/29/19)</TD>
         </TR>
         <TR>
           <TD class="style8">SelectCamera #</TD>
@@ -759,6 +754,16 @@
           <TD class="style8">OppositeTrial</TD>
           <TD>In low dose mode, acquire&nbsp;Trial image from area on opposite side of Record
             from the&nbsp;defined&nbsp;Trial area.</TD>
+        </TR>
+        <TR>
+          <TD class="style8">AcquireToMatchBuffer buf</TD>
+          <TD>Acquire an image whose size matches that of the image in the given buffer, with
+             camera parameters matching those used to acquire that image.&nbsp; The image will
+             be cropped after acquisition if necessary.&nbsp; The camera parameters will be based
+             on the parameter set used for buffer's image, with the exposure time and binning taken
+            from values stored in the buffer.&nbsp; In Low Dose mode, the image will be acquire from the
+            corresponding Low Dose area.
+          </TD>
         </TR>
         <TR>
           <TD class="style8">StepFocusNextShot # # [# #]</TD>
@@ -1066,6 +1071,11 @@
             at the top.</TD>
         </TR>
         <TR vAlign="top">
+          <TD class="style7">CropCenterToSize buf #X #Y</TD>
+          <TD>Crop out a centered subarea of the given buffer of size #X by #Y.&nbsp; Command
+            added in 3.8, 11/29/19.</TD>
+        </TR>
+        <TR vAlign="top">
           <TD class="style7">ReduceImage buf #</TD>
           <TD>Reduce the image in the given buffer by the factor #, which must be greater 
             than 1 but need not be an integer.&nbsp; Antialiased reduction (with a Lanczos 2 
@@ -1309,6 +1319,11 @@
             open a new one with the given name.&nbsp; Variables will be substituted, so the
             name can contain the mag index, for example. It sets reportedValue1 to 1 or 0
             depending on whether montaging is needed or not. </TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style7">ReportNumMontagePieces</TD>
+          <TD>Report the number of pieces that will be acquired for a montage if one is 
+            currently open, or 1 if not.&nbsp; Command added in 3.8, 11/29/19.</TD>
         </TR>
         <TR>
           <TD class="style7">SaveToOtherFile buf typ cmp file</TD>
@@ -2147,6 +2162,27 @@
             the box was displayed or 0 if it was not, and reportedValue2 is set with the 
             reply from the box: 2 for Yes or OK, 1 for No, 0 for Cancel, or -1 for an error.</TD>
         </TR>
+        <TR vAlign="top">
+          <TD class="style13">ReportXLensDeflector #D</TD>
+          <TD>Report the X and Y values of a deflector associated with the X lens, where #D 
+            should be 1 for shift, 2 for tilt, 3 for stigmators.&nbsp; To use X lens 
+            commands, the adatl module must be registered and the environment variable 
+            SEM_USE_ADATL must be set to any value on the microscope, and XL mode must be 
+            turned on in the microscope interface.&nbsp; Commands added in 3.8, 12/5/19.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style13">SetXLensDeflector #D #X #Y</TD>
+          <TD>Set the X and Y values of an X lens deflector, where #D is 1 for shift, 2 for 
+            tilt, 3 for stigmator.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style13">ReportXLensFocus</TD>
+          <TD>Report the focus setting of the X lens.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style13">SetXLensFocus #</TD>
+          <TD>Set the focus setting of the X lens.</TD>
+        </TR>
         <TR  vAlign="top">
           <TD colspan="2"><A name="filter_commands"></A><B>Energy Filter Commands</B></TD>
         </TR>
@@ -2649,9 +2685,9 @@
               parameter set in the dialog; enter a 0 to use the dialog setting for any 
               parameter.&nbsp; The parameters are: #R for target drift rate; U nm or A; #M for maximum time to wait in sec; #I for 
               interval over which drift is measured in sec; #G 1 
-              to generate and error when maximum time reached or -1 not to; T for type of 
+              to generate an error when maximum time reached or -1 not to; T for type of 
               measurement (T for Trial, F for Focus, A for 
-              within autofocus runs, or 0 for dialog setting; #C to correct drift with image 
+              within autofocus runs, or 0 for dialog setting); #C to correct drift with image 
               shift; #E for Trial exposure, #B for Trial binning.&nbsp; Command added in 3.8.</TD>
         </TR>
         <TR vAlign="top">
@@ -2927,6 +2963,16 @@
               the current item or the item being acquired; an index greater than 0 for the item with
               that index in the table; or a value less than 0 to count back from the end of the 
               table, where -1 is the last item.&nbsp; Command added in 3.8.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="auto-style1">NavItemFileToOpen #</TD>
+          <TD>Report the name of the file set to be opened for the specified Navigator item.&nbsp; 
+            Sets reportedValue1 to the filename or to 0 if there is none.&nbsp; For #, enter 0 for
+              the current item; an index greater than 0 for the item with
+              that index in the table; or a value less than 0 to count back from the end of the 
+              table, where -1 is the last item.&nbsp; The command will not work for the item
+            being acquired, as the stored name is cleared out when the file is opened.
+            &nbsp; Command added in 3.8, 11/29/19.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="auto-style1">SetNavRegistration #</TD>

@@ -48,9 +48,18 @@ extern "C" {
                   float *a, float *da, void (*funk)(float *, float *), int *iterP);
 
   /* samplemeansd.c - for computing mean and SD quickly by sampling */
+  int sampleMinMaxMeanSD(unsigned char **image, int type, int nx, int ny, 
+                         float sample, int ixStart, int iyStart, int nxUse, int nyUse,
+                         float *mean, float *sd, float *amin, float *amax);
   int sampleMeanSD(unsigned char **image, int type, int nx, int ny,
                    float sample, int nxMatt, int myMatt, int nxUse, int nyUse,
                    float *mean, float *sd);
+  int sampleMinMaxMean(unsigned char **image, int type, int nx, int ny, 
+                       float sample, int ixStart, int iyStart, int nxUse, int nyUse,
+                       float *mean, float *amin, float *amax);
+  int sampleMeanOnly(unsigned char **image, int type, int nx, int ny, float sample,
+                     int ixStart, int iyStart, int nxUse, int nyUse, float *mean);
+  int typeForSampleMean(int mrcMode);
 
   /* pctstretch.c - for computing percentile limits quickly by sampling */
   int percentileStretch(unsigned char **image, int mode, int nx, int ny, float sample,
@@ -144,6 +153,7 @@ extern "C" {
 
   /* taperatfill.c */
   int sliceTaperAtFill(Islice *sl, int ntaper, int inside);
+  int getLastTaperFillValue(float *value);
 
   /* circlefit.c */
   int circleThrough3Pts(float x1, float y1, float x2, float y2, float x3, 
@@ -250,6 +260,7 @@ extern "C" {
   double betaFunc(double p, double q);
   double gammaFunc(double x);
   double lnGamma(double x);
+  float gaussianDeviate(int seed);
 
   /* surfacesort.c */
   int surfaceSort(float *xyz, int numPts, int markersInGroup, int *group);
@@ -410,7 +421,15 @@ extern "C" {
   int rotateFlipImage(void *array, int mode, int nx, int ny, int operation, 
                       int leftHanded, int invertAfter, int invertCon, void *brray,
                       int *nxout, int *nyout, int numThreads);
-    
+  /* winversion.c */
+  int isWindows2000();
+  int isWindowsXP();
+  int isWindowsVista();
+  int isWindows7();
+  int isWindows8();
+  int isWindows10();
+  int isWindowsVersion(int major, int opMajor, int minor, int opMinor);
+  
 #ifdef __cplusplus
 }
 #endif
