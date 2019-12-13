@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+12/12/19: Made sure current settings in multishot dialog are used before
+acquisition (In 3.7).
+
 12/9/19: Increased timeouts and added properties to set them for JEOL FEG
 flashing (In 3.7).
 

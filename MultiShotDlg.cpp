@@ -636,6 +636,7 @@ void CMultiShotDlg::OnKillfocusEditEarlyFrames()
 // Unload dialog parameters into the structure and redraw
 void CMultiShotDlg::UpdateAndUseMSparams(bool draw)
 {
+  UpdateData(true);
   mActiveParams->doEarlyReturn = m_iEarlyReturn;
   mActiveParams->numEarlyFrames = m_iEarlyFrames;
   mActiveParams->doCenter = m_iCenterShot > 1 ? -1 : m_iCenterShot;
