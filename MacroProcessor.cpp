@@ -401,7 +401,8 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"KeepCameraSetChanges", 0, 0}, {"ReportDateTime", 0, 0}, {"ReportFilamentCurrent", 0, 0},
 {"SetFilamentCurrent", 1, 0}, {"CloseFrameMdoc", 0, 0}, {"DriftWaitTask", 0, 1},
 {"GetWaitTaskDrift", 0, 0}, {"CloseLogOpenNew", 0, 0}, {"SaveLog", 0, 0},
-{"SaveCalibrations", 0, 0}, {"ReportCrossoverPercentC2", 0, 0}, {"ReportScreenCurrent", 0, 0},
+{"SaveCalibrations", 0, 0}, {"ReportCrossoverPercentC2", 0, 0},
+{"ReportScreenCurrent", 0, 0},
 {"SetFrameSeriesParams", 1, 0}, {"SetCustomTime", 1, 0}, {"ReportCustomInterval", 1, 0},
 {"StageToLastMultiHole", 0, 0}, {"ImageShiftToLastMultiHole", 0, 0}, 
 {"NavIndexItemDrawnOn", 1, 0}, {"SetMapAcquireState", 1, 0}, {"RestoreState", 0, 0},
@@ -3432,27 +3433,23 @@ void CMacroProcessor::NextCommand()
       mWinApp->mLogWindow->UpdateSaveFile(true, report, true, itemInt[1] != 0);
       mWinApp->mLogWindow->DoSave();
     }
-
     break;
 
-  case CME_SAVECALIBRATIONS:								// SaveCalibrations
-	  if (mWinApp->GetAdministrator()) {
-		  mWinApp->mDocWnd->SaveCalibrations();
-	  }
-	  else {
-		  mWinApp->AppendToLog("Calibrations NOT saved from script, administrator mode not enabled");
-	  }
-	  break;
-  
+  case CME_SAVECALIBRATIONS:                                 // SaveCalibrations
+    if (mWinApp->GetAdministrator())
+      mWinApp->mDocWnd->SaveCalibrations();
+    else
+      mWinApp->AppendToLog("Calibrations NOT saved from script, administrator mode "
+       "not enabled");
+    break;
 
   case CME_SETPROPERTY:                                     // SetProperty
     if (mWinApp->mParamIO->MacroSetProperty(strItems[1], itemDbl[2]))
       AbortMacro();
-
     break;
-    // ReportUserSetting, ReportProperty
-  case CME_REPORTUSERSETTING:
-  case CME_REPORTPROPERTY:                   
+    
+  case CME_REPORTUSERSETTING:                               // ReportUserSetting
+  case CME_REPORTPROPERTY:                                  // ReportProperty
     truth = CMD_IS(REPORTPROPERTY);
     strCopy = truth ? "property" : "user setting";
     if ((!truth && mWinApp->mParamIO->MacroGetSetting(strItems[1], delX)) ||
@@ -3812,7 +3809,7 @@ void CMacroProcessor::NextCommand()
     SetReportedValues(&strItems[1], index);
     break;
 
-  case CME_REPORTSCREENCURRENT:                                    // ReportScreenCurrent
+  case CME_REPORTSCREENCURRENT:                             // ReportScreenCurrent
     delX = mScope->GetScreenCurrent();
     report.Format("Screen current is %.3f nA", delX);
     mWinApp->AppendToLog(report, mLogAction);

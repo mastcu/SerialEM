@@ -2192,6 +2192,26 @@ void CSerialEMDoc::OnSettingsSavecalibrations()
 	SaveCalibrations();
 }
 
+void CSerialEMDoc::SaveCalibrations()
+{
+	char *cwd = NULL;
+
+	// Need to return to original directory because system path could be relative
+	if (!mOriginalCwd.IsEmpty()) {
+		cwd = _getcwd(NULL, _MAX_PATH);
+		_chdir((LPCTSTR)mOriginalCwd);
+	}
+	CString strSys = mSystemPath + "\\" + mCalibrationName;
+	ManageBackupFile(strSys, mCalibBackedUp);
+	mParamIO->WriteCalibration(strSys);
+	mWinApp->SetCalibrationsNotSaved(false);
+	SaveShortTermCal();
+	CalibrationWasDone(CAL_DONE_CLEAR_ALL);
+	if (cwd) {
+		_chdir(cwd);
+		free(cwd);
+	}
+}
 
 void CSerialEMDoc::OnUpdateSettingsSavecalibrations(CCmdUI* pCmdUI) 
 {
@@ -2322,27 +2342,6 @@ void CSerialEMDoc::SaveShortTermCal()
     _chdir(cwd);
     free(cwd);
   }
-}
-
-void CSerialEMDoc::SaveCalibrations()
-{
-	char *cwd = NULL;
-
-	// Need to return to original directory because system path could be relative
-	if (!mOriginalCwd.IsEmpty()) {
-		cwd = _getcwd(NULL, _MAX_PATH);
-		_chdir((LPCTSTR)mOriginalCwd);
-	}
-	CString strSys = mSystemPath + "\\" + mCalibrationName;
-	ManageBackupFile(strSys, mCalibBackedUp);
-	mParamIO->WriteCalibration(strSys);
-	mWinApp->SetCalibrationsNotSaved(false);
-	SaveShortTermCal();
-	CalibrationWasDone(CAL_DONE_CLEAR_ALL);
-	if (cwd) {
-		_chdir(cwd);
-		free(cwd);
-	}
 }
 
 //////////////////////////////////////////////
