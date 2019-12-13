@@ -948,36 +948,38 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
   CLEAR_RESIZE(mBlockCenY, int, icx1);
 
   // Evaluate continuous mode now that focus is known
-  acqExposure = mConSets[setNum].exposure;
-  trialExposure = mConSets[TRIAL_CONSET].exposure;
-  minContExp = acqExposure;
-  if (mUseContinuousMode) {
-    if (mFocusAfterStage) {
-      SEMMessageBox("You cannot use continuous mode for montaging when \nfocusing"
-        "at every piece");
-      return 1;
-    }
+  if (!mReadingMontage) {
+    acqExposure = mConSets[setNum].exposure;
+    trialExposure = mConSets[TRIAL_CONSET].exposure;
+    minContExp = acqExposure;
+    if (mUseContinuousMode) {
+      if (mFocusAfterStage) {
+        SEMMessageBox("You cannot use continuous mode for montaging when \nfocusing"
+          "at every piece");
+        return 1;
+      }
 
-    // This MIGHT work but it is flaky and something is wrong with the delay after image
-    // shift
-    if (mDoISrealign) {
-      SEMMessageBox("You cannot use continuous mode for montaging along with\n"
-        "realigning with image shift");
-      return 1;
-    }
+      // This MIGHT work but it is flaky and something is wrong with the delay after image
+      // shift
+      if (mDoISrealign) {
+        SEMMessageBox("You cannot use continuous mode for montaging along with\n"
+          "realigning with image shift");
+        return 1;
+      }
 
-    // So this WON't happen
-    if (mDoISrealign && (mConSets[TRIAL_CONSET].binning < mConSets[setNum].binning ||
-      trialExposure > acqExposure)) {
-      SEMMessageBox("You cannot use continuous mode for montaging when \nrealigning"
-        "with image shift and Trial " + CString(trialExposure > acqExposure ?
-          "exposure is more than the acquisition exposure" :
-          "binning is less than the acquisition binning"));
-      return 1;
-    }
+      // So this WON't happen
+      if (mDoISrealign && (mConSets[TRIAL_CONSET].binning < mConSets[setNum].binning ||
+        trialExposure > acqExposure)) {
+        SEMMessageBox("You cannot use continuous mode for montaging when \nrealigning"
+          "with image shift and Trial " + CString(trialExposure > acqExposure ?
+            "exposure is more than the acquisition exposure" :
+            "binning is less than the acquisition binning"));
+        return 1;
+      }
 
-    if (mDoISrealign)
-      minContExp = B3DMAX(0.1f, trialExposure);
+      if (mDoISrealign)
+        minContExp = B3DMAX(0.1f, trialExposure);
+    }
   }
 
   // Set up focus blocks by setting up sequence of pieces and indices to focus centers
