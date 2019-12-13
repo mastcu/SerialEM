@@ -263,7 +263,10 @@ enum {CME_SCRIPTEND = -7, CME_LABEL, CME_SETVARIABLE, CME_SETSTRINGVAR, CME_DOKE
   CME_SETMAPACQUIRESTATE, CME_RESTORESTATE, CME_REALIGNTOMAPDRAWNON,
   CME_GETREALIGNTOITEMERROR, CME_DOLOOP, CME_REPORTVACUUMGAUGE, CME_REPORTHIGHVOLTAGE,
   CME_OKBOX, CME_LIMITNEXTAUTOALIGN, CME_SETDOSERATE, CME_CHECKFORBADSTRIPE,
-  CME_REPORTK3CDSMODE, CME_SETK3CDSMODE, CME_CONDITIONPHASEPLATE, CME_LINEARFITTOVARS
+  CME_REPORTK3CDSMODE, CME_SETK3CDSMODE, CME_CONDITIONPHASEPLATE, CME_LINEARFITTOVARS,
+  CME_REPORTNUMMONTAGEPIECES, CME_NAVITEMFILETOOPEN, CME_CROPCENTERTOSIZE,
+  CME_ACQUIRETOMATCHBUFFER,  CME_REPORTXLENSDEFLECTOR, CME_SETXLENSDEFLECTOR, 
+  CME_REPORTXLENSFOCUS, CME_SETXLENSFOCUS 
 };
 
 // The two numbers are the minimum arguments and whether arithmetic is allowed
@@ -408,9 +411,12 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"NavIndexItemDrawnOn", 1, 0}, {"SetMapAcquireState", 1, 0}, {"RestoreState", 0, 0},
 {"RealignToMapDrawnOn", 2, 0}, {"GetRealignToItemError", 0, 0}, {"DoLoop", 3, 1},
 {"ReportVacuumGauge", 1, 0}, {"ReportHighVoltage", 0, 0},{"OKBox", 1, 0},
-{"LimitNextAutoAlign", 1, 1}, {"SetDoseRate", 1, 0},{"CheckForBadStripe", 0, 0},/*CAI3.8*/
+{"LimitNextAutoAlign", 1, 1}, {"SetDoseRate", 1, 0},{"CheckForBadStripe", 0, 0},
 {"ReportK3CDSmode", 0, 0}, {"SetK3CDSmode", 1, 0}, {"ConditionPhasePlate", 0, 0},
-{"LinearFitToVars", 2, 0},
+{"LinearFitToVars", 2, 0}, {"ReportNumMontagePieces", 0, 0}, {"NavItemFileToOpen", 1, 0},
+{"CropCenterToSize", 3, 0}, {"AcquireToMatchBuffer", 1, 0}, {"ReportXLensDeflector", 1,0},
+{"SetXLensDeflector", 3, 0}, {"ReportXLensFocus", 0, 0}, {"SetXLensFocus", 1, 0}, 
+/*CAI3.8*/
 {NULL, 0, 0}
 };
 // The longest is now 25 characters but 23 is a more common limit
@@ -1137,6 +1143,8 @@ void CMacroProcessor::RunOrResume()
   mDEcamIndToRestore = -1;
   mLDSetAddedBeamRestore = -1;
   mK3CDSmodeToRestore = -1;
+  mRestoreConsetAfterShot = false;
+  mCropXafterShot = -1;
   mNextProcessArgs = "";
   mBeamTiltXtoRestore[0] = mBeamTiltXtoRestore[1] = EXTRA_NO_VALUE;
   mBeamTiltYtoRestore[0] = mBeamTiltXtoRestore[1] = EXTRA_NO_VALUE;
@@ -1253,10 +1261,12 @@ void CMacroProcessor::NextCommand()
   double delISX, delISY, delX, delY, specDist, h1, v1, v2, h2, h3, v3, v4, h4;
   double stageX, stageY, stageZ;
   int cmdIndex, index, index2, i, ix0, ix1, iy0, iy1, sizeX, sizeY, mag, lastNonEmptyInd;
+  int binning;
+  int currentCam = mWinApp->GetCurrentCamera();
   float backlashX, backlashY, bmin, bmax, bmean, bSD, cpe, shiftX, shiftY, fitErr;
   FilterParams *filtParam = mWinApp->GetFilterParams();
   int *activeList = mWinApp->GetActiveCameraList();
-  CameraParameters *camParams = mWinApp->GetCamParams() + mWinApp->GetCurrentCamera();
+  CameraParameters *camParams = mWinApp->GetCamParams() + currentCam;
   MontParam *montP = mWinApp->GetMontParam();
   LowDoseParams *ldParam = mWinApp->GetLowDoseParams();
   CMapDrawItem *navItem;
@@ -1308,6 +1318,15 @@ void CMacroProcessor::NextCommand()
     return;
   }
 
+  // Pop control set that was to be restored after shot
+  if (mRestoreConsetAfterShot) {
+    mRestoreConsetAfterShot = false;
+    i = mConsetNums.back();
+    mConSets[i] = mConsetsSaved.back();
+    mConsetNums.pop_back();
+    mConsetsSaved.pop_back();
+  }
+
   // Stopping conditions that are suspensions - but backing up is a bad idea
   if (mTestMontError && mWinApp->Montaging() && mControl->limitMontError &&
     mLastMontError > mControl->montErrorLimit) {
@@ -1340,6 +1359,22 @@ void CMacroProcessor::NextCommand()
       SuspendMacro();
       return;
     }
+  }
+
+  // Crop image now if that was needed
+  if (mCropXafterShot > 0) {
+    mImBufs->mImage->getSize(sizeX, sizeY);
+    ix0 = (sizeX - mCropXafterShot) / 2;
+    iy0 = (sizeY - mCropYafterShot) / 2;
+    ix1 = ix0 + mCropXafterShot - 1;
+    iy1 = iy0 + mCropYafterShot - 1;
+    mCropXafterShot = -1;
+    ix0 = mWinApp->mProcessImage->CropImage(mImBufs, iy0, ix0, iy1, ix1);
+    if (ix0) {
+      report.Format("Error # %d attempting to crop new image to match buffer", ix0);
+      ABORT_NOLINE(report);
+    }
+    mImBufs->mCaptured = BUFFER_PROCESSED;
   }
 
   if (mShowedScopeBox)
@@ -2183,6 +2218,62 @@ void CMacroProcessor::NextCommand()
       mCamera->InitiateCapture(1);
     break;
 
+  case CME_ACQUIRETOMATCHBUFFER:                           // AcquireToMatchBuffer
+    if (ConvertBufferLetter(strItems[1], -1, true, index, report))
+      ABORT_LINE(report);
+    index2 = mImBufs[index].mConSetUsed;
+    binning = mImBufs[index].mBinning;
+    if (index2 < 0 || binning <= 0)
+      ABORT_LINE("Either the parameter set or the binning is not specified in the buffer"
+        " for:\n\n");
+    if (mImBufs[index].mCamera != currentCam)
+      ABORT_LINE("Current camera is no longer the same as was used to acquire the image "
+        "for:\n\n");
+    if (index2 == MONTAGE_CONSET)
+      index2 = RECORD_CONSET;
+    if (index2 == TRACK_CONSET)
+      index2 = TRIAL_CONSET;
+    mImBufs[index].mImage->getSize(mCropXafterShot, mCropYafterShot);
+    sizeX = mCropXafterShot;
+    sizeY = mCropYafterShot;
+    v1 = 1.05;
+
+    // Get the parameters to achieve a size that is big enough
+    for (;;) {
+      mCamera->CenteredSizes(sizeX, camParams->sizeX, camParams->moduloX, ix0, ix1,
+        sizeY, camParams->sizeY, camParams->moduloY, iy0, iy1, binning);
+      if (sizeX >= camParams->sizeX / binning && sizeY >= camParams->sizeY / binning)
+        break;
+      if (sizeX >= mCropXafterShot && sizeY >= mCropYafterShot)
+        break;
+      if (sizeX < mCropXafterShot)
+        sizeX = B3DMIN((int)(v1 * mCropXafterShot), camParams->sizeX / binning);
+      if (sizeY < mCropYafterShot)
+        sizeY = B3DMIN((int)(v1 * mCropYafterShot), camParams->sizeY / binning);
+      v1 *= 1.05;
+    }
+
+    // Save the control set on top of stack and make modifications
+    mConsetsSaved.push_back(mConSets[index2]);
+    mConsetNums.push_back(index2);
+    mRestoreConsetAfterShot = true;
+    mConSets[index2].binning = binning;
+    mConSets[index2].left = ix0 * binning;
+    mConSets[index2].right = ix1 * binning;
+    mConSets[index2].top = iy0 * binning;
+    mConSets[index2].bottom = iy1 * binning;
+    mConSets[index2].exposure = mImBufs[index].mExposure;
+    mConSets[index2].K2ReadMode = mImBufs[index].mK2ReadMode;
+    mConSets[index2].mode = SINGLE_FRAME;
+    mConSets[index2].alignFrames = 0;
+    mConSets[index2].saveFrames = 0;
+
+    // Cancel crop if it isn't needed
+    if (sizeX == mCropXafterShot && sizeY == mCropYafterShot)
+      mCropXafterShot = -1;
+    mCamera->InitiateCapture(index2);
+    break;
+
   case CME_STEPFOCUSNEXTSHOT:                              // StepFocusNextShot
     delX = 0.;
     delY = 0.;
@@ -2857,6 +2948,18 @@ void CMacroProcessor::NextCommand()
       mWinApp->mMontageWindow.UpdateSettings();
       SetReportedValues(1.);
     }
+    break;
+
+  case CME_REPORTNUMMONTAGEPIECES:                          // ReportNumMontagePieces
+    if (mWinApp->Montaging()) {
+      index = montP->xNframes * montP->yNframes -
+        (montP->ignoreSkipList ? 0 : montP->numToSkip);
+      logRpt.Format("%d pieces will be acquired in the current montage", index);
+    } else {
+      index = 1;
+      logRpt = "Montaging is not used for the current file";
+    }
+    SetReportedValues(&strItems[1], index);
     break;
     
   case CME_ENTERNAMEOPENFILE:                               // EnterNameOpenFile
@@ -3625,7 +3728,7 @@ void CMacroProcessor::NextCommand()
     index = mScope->GetMagIndex();
     if (!index)
       SUSPEND_NOLINE("because you cannot use ChangeMag in diffraction mode");
-    iy0 = mWinApp->GetCurrentCamera();
+    iy0 = currentCam;
     ix0 = B3DNINT(itemDbl[1]);
     if (!CMD_IS(CHANGEMAG)) {
       ix0 = itemDbl[1] < 0 ? -1 : 1;
@@ -3650,7 +3753,7 @@ void CMacroProcessor::NextCommand()
       SUSPEND_NOLINE("because you cannot use Change/SetMagAndIntensity in diffraction"
       " or STEM mode");
     if (CMD_IS(CHANGEMAGANDINTENSITY)) {                    
-      index2 = mWinApp->FindNextMagForCamera(mWinApp->GetCurrentCamera(), index, 
+      index2 = mWinApp->FindNextMagForCamera(currentCam, index, 
         B3DNINT(itemDbl[1]));
       if (itemEmpty[1] || index2 < 1)
         ABORT_LINE("Improper mag change in statement: \n\n");
@@ -3664,7 +3767,7 @@ void CMacroProcessor::NextCommand()
     // Get the intensity and change in intensity
     delISX = mScope->GetIntensity();
     delISX = mScope->GetC2Percent(mScope->FastSpotSize(), delISX);
-    i = mWinApp->GetCurrentCamera();
+    i = currentCam;
     delISY = pow((double)mShiftManager->GetPixelSize(i, index) /
       mShiftManager->GetPixelSize(i, index2), 2.);
     i = mWinApp->mBeamAssessor->AssessBeamChange(delISY, delX, delY, -1);
@@ -4011,7 +4114,7 @@ void CMacroProcessor::NextCommand()
       delISY = -(delX * aMat.ypx + delY * aMat.ypy) / index;
       h1 = cos(DTOR * mScope->GetTiltAngle());
       bInv = MatMul(aMat, 
-        MatInv(mShiftManager->StageToCamera(mWinApp->GetCurrentCamera(), mag)));
+        MatInv(mShiftManager->StageToCamera(currentCam, mag)));
       stageX = (bInv.xpx * delX + bInv.xpy * delY) / (HitachiScope ? h1 : 1.);
       stageY = (bInv.ypx * delX + bInv.ypy * delY) / (HitachiScope ? 1. : h1);
       report.Format("   %.1f %.1f unbinned pixels; need stage %.3f %.3f if reset", delISX,
@@ -4030,6 +4133,48 @@ void CMacroProcessor::NextCommand()
     }
     break;
     
+  case CME_REPORTXLENSDEFLECTOR:                            // ReportXLensDeflector
+  case CME_SETXLENSDEFLECTOR:                               // SetXLensDeflector
+  case CME_REPORTXLENSFOCUS:                                // ReportXLensFocus,
+  case CME_SETXLENSFOCUS:                                   // SetXLensFocus
+  {
+    const char *defNames[] = {"Shift", "Tilt", "Stigmator"};
+    switch (cmdIndex) {
+    case CME_REPORTXLENSDEFLECTOR:
+      index = mScope->GetXLensDeflector(itemInt[1], delX, delY);
+      if (!index) {
+        logRpt.Format("X Lens %s is %f %f", defNames[itemInt[1] - 1], delX, delY);
+        SetReportedValues(&strItems[1], delX, delY);
+      }
+      break;
+    case CME_SETXLENSDEFLECTOR:
+      index = mScope->SetXLensDeflector(itemInt[1], itemDbl[2], itemDbl[3]);
+      break;
+    case CME_REPORTXLENSFOCUS:
+      index = mScope->GetXLensFocus(delX);
+      if (!index) {
+        logRpt.Format("X Lens focus is %f", delX);
+        SetReportedValues(&strItems[1], delX);
+      }
+      break;
+    case CME_SETXLENSFOCUS:
+      index = mScope->SetXLensFocus(itemDbl[1]);
+      break;
+    }
+    if (index == 1) {
+      ABORT_LINE("Scope is not initialized for:\n\n");
+    } else if (index == 2) {
+      ABORT_LINE("Plugin is missing needed function for:\n\n");
+    } else if (index == 3) {
+      ABORT_LINE("Deflector number must be between 1 and 3 in:\n\n");
+    } else if (index == 5) {
+      ABORT_LINE("There is no connection to adatl COM object for:\n\n");
+    } else if (index > 5) {
+      ABORT_LINE("X Mode is not available for:\n\n");
+    }
+    break;
+  }
+
   case CME_REPORTSPECIMENSHIFT:                             // ReportSpecimenShift
     if (!mScope->GetLDCenteredShift(delISX, delISY)) {
       AbortMacro();
@@ -4089,7 +4234,7 @@ void CMacroProcessor::NextCommand()
       index = mScope->GetMagIndex();
       index2 = BinDivisorI(camParams);
       if (delISY) {
-        delX = mShiftManager->GetPixelSize(mWinApp->GetCurrentCamera(), index);
+        delX = mShiftManager->GetPixelSize(currentCam, index);
         delY = delX * sqrt(shiftX * shiftX + shiftY * shiftY);
         delISX = 100. * (delY / delISY - 1.);
         mAccumDiff += (float)(delY - delISY);
@@ -4234,7 +4379,7 @@ void CMacroProcessor::NextCommand()
       else {
         if (CMD_IS(STAGESHIFTBYPIXELS)) {
           h1 = DTOR * mScope->GetTiltAngle();
-          aMat = mShiftManager->StageToCamera(mWinApp->GetCurrentCamera(),
+          aMat = mShiftManager->StageToCamera(currentCam,
             mScope->GetMagIndex());
           if (!aMat.xpx)
             ABORT_LINE("There is no stage to camera calibration available for line:\n\n");
@@ -4643,18 +4788,32 @@ void CMacroProcessor::NextCommand()
     break;
 
   case CME_CROPIMAGE:                                       // CropImage
+  case CME_CROPCENTERTOSIZE:                                // CropCenterToSize
     if (ConvertBufferLetter(strItems[1], -1, true, index, report))
       ABORT_LINE(report);
-    ix0 = itemInt[2];
-    ix1 = itemInt[3];
-    iy0 = itemInt[4];
-    iy1 = itemInt[5];
+    if (CMD_IS(CROPIMAGE)) {
+      ix0 = itemInt[2];
+      ix1 = itemInt[3];
+      iy0 = itemInt[4];
+      iy1 = itemInt[5];
+    } else {
+      mImBufs[index].mImage->getSize(ix0, iy0);
+      if (itemInt[2] > ix0 || itemInt[3] > iy0)
+        ABORT_LINE("Image is already smaller than size requested in:\n\n");
+      if (itemInt[2] <= 0 || itemInt[3] <= 0)
+        ABORT_LINE("Size to crop to must be positive in:\n\n");
+      ix0 = (ix0 - itemInt[2]) / 2;
+      iy0 = (iy0 - itemInt[3]) / 2;
+      ix1 = ix0 + itemInt[2] - 1;
+      iy1 = iy0 + itemInt[3] - 1;
+    }
     ix0 = mWinApp->mProcessImage->CropImage(&mImBufs[index], iy0, ix0, iy1, ix1);
     if (ix0) {
       report.Format("Error # %d attempting to crop image in buffer %c in statement: \n\n"
         ,ix0, strItems[1].GetAt(0));
       ABORT_LINE(report);
     }
+    mImBufs[index].mCaptured = BUFFER_PROCESSED;
     break;
     
   case CME_REDUCEIMAGE:                                     // ReduceImage
@@ -5764,7 +5923,7 @@ void CMacroProcessor::NextCommand()
     if (mDEframeRateToRestore < 0) {
       mNumStatesToRestore++;
       mDEframeRateToRestore = camParams->DE_FramesPerSec;
-      mDEcamIndToRestore = mWinApp->GetCurrentCamera();
+      mDEcamIndToRestore = currentCam;
     }
     camParams->DE_FramesPerSec = (float)delISX;
     mWinApp->mDEToolDlg.UpdateSettings();
@@ -5851,7 +6010,7 @@ void CMacroProcessor::NextCommand()
   case CME_KEEPCAMERASETCHANGES:                            // KeepCameraSetChanges
   {
     ControlSet *masterSets = mWinApp->GetCamConSets() +
-      MAX_CONSETS * mWinApp->GetCurrentCamera();
+      MAX_CONSETS * currentCam;
     index = -1;
     if (!itemEmpty[1] && CheckAndConvertCameraSet(strItems[1], itemInt[1], index,
       strCopy))
@@ -6027,11 +6186,18 @@ void CMacroProcessor::NextCommand()
     ix1 = BinDivisorI(camParams);
     index = camParams->sizeX / ix1;
     index2 = camParams->sizeY / ix1;
-    logRpt.Format("%s: size %d x %d    rotation/flip %d   physical pixel %.1f", 
+    if (itemEmpty[2])
+      iy1 = mScope->GetMagIndex();
+    else
+      iy1 = itemInt[2];
+    delX = 1000. * ix1 * mShiftManager->GetPixelSize(
+      itemEmpty[1] ? currentCam : activeList[itemInt[1] - 1], iy1);
+    logRpt.Format("%s: size %d x %d    rotation/flip %d   pixel on chip %.1f   "
+      "unbinned pixel %.3f nm at %dx", 
       (LPCSTR)camParams->name, index, index2, camParams->rotationFlip, 
-      camParams->pixelMicrons * ix1);
-    SetReportedValues(&strItems[1], (double)index, (double)index2, 
-      (double)camParams->rotationFlip, camParams->pixelMicrons * ix1);
+      camParams->pixelMicrons * ix1, delX, MagForCamera(camParams, iy1));
+    SetReportedValues((double)index, (double)index2, 
+      (double)camParams->rotationFlip, camParams->pixelMicrons * ix1, delX);
     break;
     
   case CME_REPORTCOLUMNORGUNVALVE:                        // ReportColumnOrGunValve
@@ -6235,6 +6401,22 @@ void CMacroProcessor::NextCommand()
       }
     }
     SetReportedValues(index2);
+    break;
+
+  case CME_NAVITEMFILETOOPEN:                               // NavItemFileToOpen
+    index = itemInt[1];
+    navItem = CurrentOrIndexedNavItem(index, strLine);
+    if (!navItem)
+      return;
+    report = navItem->mFileToOpen;
+    if (report.IsEmpty()) {
+      logRpt.Format("No file is set to be opened for Navigator item %d", index + 1);
+      report = "0";
+    } else {
+      logRpt.Format("File to open at Navigator item %d is: %s", index + 1, 
+        (LPCTSTR)report);
+    }
+    SetOneReportedValue(report, 1);
     break;
 
   case CME_SETMAPACQUIRESTATE:                              // SetMapAcquireState
@@ -6500,7 +6682,7 @@ void CMacroProcessor::NextCommand()
       delISY -= stageY;
     }
     navigator->ConvertIStoStageIncrement(mScope->FastMagIndex(), 
-        mWinApp->GetCurrentCamera(), delISX, delISY, (float)mScope->FastTiltAngle(), 
+        currentCam, delISX, delISY, (float)mScope->FastTiltAngle(), 
         shiftX, shiftY);
     shiftX -= navItem->mStageX;
     shiftY -= navItem->mStageY;
@@ -7002,6 +7184,15 @@ void CMacroProcessor::SuspendMacro(BOOL abort)
   for (ind = 0; ind < MAX_LOWDOSE_SETS; ind++)
     if (mKeepOrRestoreArea[ind] > 0)
       restoreArea = true;
+
+  // Pop control set that was to be restored after shot before any other restores
+  if (mRestoreConsetAfterShot) {
+    mRestoreConsetAfterShot = false;
+    ind = mConsetNums.back();
+    mConSets[ind] = mConsetsSaved.back();
+    mConsetNums.pop_back();
+    mConsetsSaved.pop_back();
+  }
 
   // Restore other things and make it non-resumable as they have no mechanism to resume
   if (abort || mNumStatesToRestore > 0 || restoreArea) {

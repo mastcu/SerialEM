@@ -192,6 +192,8 @@ private:
   std::vector<double> mNewSettingValues;         // and value sthey were changed to
   ShortVec mConsetNums;      // #'s of control sets saved
   int mCamWithChangedSets;   // Number of camera with changed sets on suspend
+  bool mRestoreConsetAfterShot;   // Flag to restore a control set after a shot
+  int mCropXafterShot, mCropYafterShot;   // Size to crop to after a shot
   std::vector<LowDoseParams> mLDParamsSaved;    // Saved low dose sets
   ShortVec mLDareasSaved;    // Numbers of areas saved
   short int mKeepOrRestoreArea[MAX_LOWDOSE_SETS];    // -1 to keep or 1 to restore an area
