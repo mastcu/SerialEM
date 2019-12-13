@@ -1568,6 +1568,8 @@
 #define IDC_EDIT_SCALE_SIZE_BY          2589
 #define IDC_SPIN_SCALE_SIZE_BY          2590
 #define ID_TAKE_TIFF                    2591
+#define IDC_CHECK1                      2600
+#define IDC_CHECK_OMIT_3X3_CORNERS      2600
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2045,7 +2047,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        243
 #define _APS_NEXT_COMMAND_VALUE         33380
-#define _APS_NEXT_CONTROL_VALUE         2600
+#define _APS_NEXT_CONTROL_VALUE         2601
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
