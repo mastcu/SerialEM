@@ -4336,7 +4336,7 @@ void CParameterIO::WriteCalibration(CString strFileName)
     mFile = NULL;
   }
   if (!err)
-    AfxMessageBox("Calibrations saved to file " + strFileName, MB_EXCLAME);
+    mWinApp->AppendToLog("Calibrations saved to " + strFileName, LOG_SWALLOW_IF_CLOSED);
 }
 
 

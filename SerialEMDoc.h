@@ -65,6 +65,7 @@ public:
   GetMember(CTime, StartupTime)
   GetMember(CString, OriginalCwd)
   void SetShortTermNotSaved() {mShortTermNotSaved = true;};
+  void SaveCalibrations();
 	void SaveShortTermCal();
 	void AppendToProgramLog(BOOL starting);
   GetSetMember(BOOL, AutoSaveNav)

@@ -8604,8 +8604,6 @@ void CCameraController::DisplayNewImage(BOOL acquired)
         } else if (mTD.DoseFrac && (mTD.DMSizeX > mDMsizeX || mTD.DMSizeY > mDMsizeY)) {
 
           // Or simple trimming is needed for unbinned dose frac data
-          mDMsizeX = B3DMIN(mTD.DMSizeX, mDMsizeX);
-          mDMsizeY = B3DMIN(mTD.DMSizeY, mDMsizeY);
           ixoff = (mTD.DMSizeX - mDMsizeX) / 2;
           iyoff = (mTD.DMSizeY - mDMsizeY) / 2;
           for (iy = 0; iy < mDMsizeY; iy++) {

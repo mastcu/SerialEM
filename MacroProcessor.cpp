@@ -257,6 +257,7 @@ enum {CME_SCRIPTEND = -7, CME_LABEL, CME_SETVARIABLE, CME_SETSTRINGVAR, CME_DOKE
   CME_SETLDADDEDBEAMBUTTON, CME_KEEPCAMERASETCHANGES, CME_REPORTDATETIME,
   CME_REPORTFILAMENTCURRENT, CME_SETFILAMENTCURRENT, CME_CLOSEFRAMEMDOC,
   CME_DRIFTWAITTASK, CME_GETWAITTASKDRIFT, CME_CLOSELOGOPENNEW, CME_SAVELOG,
+  CME_SAVECALIBRATIONS, CME_REPORTCROSSOVERPERCENTC2, CME_REPORTSCREENCURRENT,
   CME_SETFRAMESERIESPARAMS, CME_SETCUSTOMTIME, CME_REPORTCUSTOMINTERVAL, 
   CME_STAGETOLASTMULTIHOLE, CME_IMAGESHIFTTOLASTMULTIHOLE, CME_NAVINDEXITEMDRAWNON,
   CME_SETMAPACQUIRESTATE, CME_RESTORESTATE, CME_REALIGNTOMAPDRAWNON,
@@ -400,6 +401,7 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"KeepCameraSetChanges", 0, 0}, {"ReportDateTime", 0, 0}, {"ReportFilamentCurrent", 0, 0},
 {"SetFilamentCurrent", 1, 0}, {"CloseFrameMdoc", 0, 0}, {"DriftWaitTask", 0, 1},
 {"GetWaitTaskDrift", 0, 0}, {"CloseLogOpenNew", 0, 0}, {"SaveLog", 0, 0},
+{"SaveCalibrations", 0, 0}, {"ReportCrossoverPercentC2", 0, 0}, {"ReportScreenCurrent", 0, 0},
 {"SetFrameSeriesParams", 1, 0}, {"SetCustomTime", 1, 0}, {"ReportCustomInterval", 1, 0},
 {"StageToLastMultiHole", 0, 0}, {"ImageShiftToLastMultiHole", 0, 0}, 
 {"NavIndexItemDrawnOn", 1, 0}, {"SetMapAcquireState", 1, 0}, {"RestoreState", 0, 0},
@@ -3433,6 +3435,16 @@ void CMacroProcessor::NextCommand()
 
     break;
 
+  case CME_SAVECALIBRATIONS:								// SaveCalibrations
+	  if (mWinApp->GetAdministrator()) {
+		  mWinApp->mDocWnd->SaveCalibrations();
+	  }
+	  else {
+		  mWinApp->AppendToLog("Calibrations NOT saved from script, administrator mode not enabled");
+	  }
+	  break;
+  
+
   case CME_SETPROPERTY:                                     // SetProperty
     if (mWinApp->mParamIO->MacroSetProperty(strItems[1], itemDbl[2]))
       AbortMacro();
@@ -3798,6 +3810,13 @@ void CMacroProcessor::NextCommand()
     report.Format("Screen is %s", index ? "DOWN" : "UP");
     mWinApp->AppendToLog(report, mLogAction);
     SetReportedValues(&strItems[1], index);
+    break;
+
+  case CME_REPORTSCREENCURRENT:                                    // ReportScreenCurrent
+    delX = mScope->GetScreenCurrent();
+    report.Format("Screen current is %.3f nA", delX);
+    mWinApp->AppendToLog(report, mLogAction);
+    SetReportedValues(&strItems[1], delX);
     break;
     
   case CME_IMAGESHIFTBYPIXELS:                              // ImageShiftByPixels
@@ -4436,6 +4455,14 @@ void CMacroProcessor::NextCommand()
     delX = mScope->GetC2Percent(mScope->FastSpotSize(), delY);
     report.Format("%s = %.3f%s  -  %.5f", mScope->GetC2Name(), delX, mScope->GetC2Units(),
       delY);
+    mWinApp->AppendToLog(report, mLogAction);
+    SetReportedValues(&strItems[1], delX, delY);
+    break;
+
+  case CME_REPORTCROSSOVERPERCENTC2:                                 // ReportCrossoverPercentC2
+    delY = mScope->GetCrossover(mScope->GetSpotSize()); // probe mode not required, uses current mode it
+    delX = mScope->GetC2Percent(mScope->FastSpotSize(), delY);
+    report.Format("Crossover %s at current conditions = %.3f%s  -  %.5f", mScope->GetC2Name(), delX, mScope->GetC2Units(), delY);
     mWinApp->AppendToLog(report, mLogAction);
     SetReportedValues(&strItems[1], delX, delY);
     break;
