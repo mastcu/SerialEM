@@ -4336,7 +4336,7 @@ void CParameterIO::WriteCalibration(CString strFileName)
     mFile = NULL;
   }
   if (!err)
-    mWinApp->AppendToLog("Calibrations saved to " + strFileName, LOG_SWALLOW_IF_CLOSED);
+    mWinApp->AppendToLog("Calibrations saved to " + strFileName, LOG_MESSAGE_IF_CLOSED);
 }
 
 
