@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+12/1/19: SEM_3-7-11
+12/1/19: Fixed use of wrong gain reference when aligning K3 frames taken with
+fast binning in the SEMCCD plugin (In 3.7).
+
 11/27/19: Fixed crash when trimming improperly oriented K2 image (In 3.7).
 
 11/17/19: Added task for conditioning a phase plate.
