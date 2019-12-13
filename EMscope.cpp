@@ -8325,6 +8325,7 @@ UINT CEMscope::LongOperationProc(LPVOID pParam)
           hr = 0x80000000 | error;
           SEMTestHResult(hr,  _T(longOpDescription[longOp]), &lod->errString, &error, 
             true);
+          error = 1;
         } else
           lod->finished[ind] = true;
       }
