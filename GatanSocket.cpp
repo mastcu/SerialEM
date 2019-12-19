@@ -268,8 +268,8 @@ int CGatanSocket::SetupFrameAligning(long aliBinning, double rad2Filt1,
     double rad2Filt2, double rad2Filt3, double sigma2Ratio, 
     double truncLimit, long alignFlags, long gpuFlags, long numAllVsAll, long groupSize, 
     long shiftLimit, long antialiasType, long refineIter, double stopIterBelow, 
-    double refRad2, long nSumAndGrab, long dumInt1, long dumInt2, double dumDbl1, 
-    long stringSize, long *strings, long *error)
+    double refRad2, long nSumAndGrab, long frameStartEnd, long frameThreshes, 
+    double dumDbl1, long stringSize, long *strings, long *error)
 {
   InitializePacking(sSind, GS_SetupFrameAligning);
   LONG_ARG(sSind, aliBinning);
@@ -288,8 +288,8 @@ int CGatanSocket::SetupFrameAligning(long aliBinning, double rad2Filt1,
   DOUBLE_ARG(sSind, stopIterBelow); 
   DOUBLE_ARG(sSind, refRad2); 
   LONG_ARG(sSind, nSumAndGrab); 
-  LONG_ARG(sSind, dumInt1); 
-  LONG_ARG(sSind, dumInt2); 
+  LONG_ARG(sSind, frameStartEnd);
+  LONG_ARG(sSind, frameThreshes);
   DOUBLE_ARG(sSind, dumDbl1); 
   LONG_ARG(sSind, stringSize);
   mLongArray[sSind] = strings;

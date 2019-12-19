@@ -66,6 +66,7 @@ struct CamPluginFuncs;
 #define PLUGIN_CAN_GIVE_BUILD    112
 #define PLUGIN_CAN_SET_CDS       113
 #define PLUGIN_TAKES_OV_FRAMES   114
+#define PLUGIN_MDOC_FOR_FRAME_TS 115
 
 #define CAN_PLUGIN_DO(c, p) CanPluginDo(PLUGIN_##c, p)
 
@@ -298,6 +299,7 @@ struct InsertThreadData {
 class DLL_IM_EX CCameraController
 {
 public:
+  void ClearOneShotFlags();
   void AcquiredSize(ControlSet *csp, int camera, int &sizeX, int &sizeY);
   void StartEnsureThread(DWORD timeout);
   void SetupBeamScan(ControlSet *conSetp);
@@ -472,6 +474,8 @@ public:
   GetSetMember(int, WaitingForStacking);
   bool SetNextAsyncSumFrames(int inVal, bool deferSum);
   SetMember(float, NextFrameSkipThresh);
+  void SetNextPartialThresholds(float start, float end) 
+    { mNextPartialStartThresh = start; mNextPartialEndThresh = end; };
   GetSetMember(float, K2MaxRamStackGB);
   SetMember(bool, CancelNextContinuous);
   void SetTaskWaitingForFrame(bool inVal) { mTaskFrameWaitStart = inVal ? GetTickCount() : -1.; };
@@ -818,7 +822,9 @@ public:
   DWORD mLastAsyncTimeout;      // timeout for last async shot
   double mAsyncTickStart;       // time it started
   float mLastAsyncExpTime;      // Just the exposure time of last async shot
-  float mNextFrameSkipThresh;   // Threahold for skipping frames on next shot
+  float mNextFrameSkipThresh;   // Threshold for skipping frames on next shot
+  float mNextPartialStartThresh;  // Partial frame thresholds when aligning
+  float mNextPartialEndThresh;
   float mK2MaxRamStackGB;       // Maximum GB to allow for a RAM stack/grab stack
   float mK2MinFrameForRAM;      // Minimum frame time for using RAM stack
   int mBaseJeolSTEMflags;       // Basic flags to which div by 2 and continuous are added

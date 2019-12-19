@@ -803,15 +803,21 @@
             &#39;EarlyReturnNextShot&#39;.</TD>
         </TR>
         <TR>
-          <TD class="style8">FrameThresholdNextShot #</TD>
-          <TD>Skip saving frames whose mean value is below the given threshold in the next 
+          <TD class="style8">FrameThresholdNextShot #T [#S] [#E]</TD>
+          <TD>Skip saving frames whose mean value is below the given threshold #T in the next 
             shot&nbsp; from a K2/K3 camera.&nbsp; The mean value used for comparison with
             the threshold will be the value that the frame would have after saving, thus 
             a scaled electron count value when taking normalized frames or actual electron
             counts otherwise.&nbsp; The first and last frame will be saved 
             regardless.&nbsp; The plugin will write a list of frames actually saved, 
-            numbered from 0, named as the root of the frame stack name and &#39;_saved.txt&#39;.&nbsp; The SEMCCD plugin must be dated 
-            9/26/18 or later.</TD>
+            numbered from 0, named as the root of the frame stack name and &#39;_saved.txt&#39;.
+            &nbsp; The SEMCCD plugin must be dated 
+            12/18/19 or later.&nbsp; If a command file is being saved for aligning in IMOD,
+             and this command includes the optional #S and #E, these values will be used for the entry
+            to the PartialFrameThreshold option to Alignframes, which takes thresholds for skipping
+            the frames at the start and end of a tilt.&nbsp These relative thresholds are 
+            between 0 and 1.&nbsp If #E is omitted, #s will be used for both values.
+          </TD>
         </TR>
         <TR>
           <TD class="style8">QueueFrameTiltSeries #S #I #N [#D] [#O] [#W] [#F] [#X #Y]</TD>
@@ -824,7 +830,10 @@
             each step.&nbsp; Image shift values are in microns in &#39;specimen&#39; coordinates, 
             i.e. with the X axis along the tilt axis, and they will be converted to image 
             shift units at the Record magnification if in Low Dose mode, or at the current 
-            magnification if not.&nbsp;&nbsp; All times are in seconds.</TD>
+            magnification if not.&nbsp; All times are in seconds.&nbsp; A frame stack mdoc file
+            with tilt angle and dose information is written by the SEMCCD plugin regardless of
+             whether the option for one is turned on.
+          </TD>
         </TR>
         <TR>
           <TD class="style8">FrameSeriesFromVar var #F [#D]</TD>
@@ -843,7 +852,8 @@
             opening of the shutter, if any.&nbsp; If there are no tilt angles because 
             continuous tilt is being used, then this item sets the total interval between 
             steps of the series.&nbsp; #D is an optional initial delay before the first 
-            step.&nbsp; All times are in seconds.</TD>
+            step.&nbsp; All times are in seconds.&nbsp; If there are discrete tilts, a frame
+             stack mdoc file with tilt angle and dose information is written.</TD>
         </TR>
         <TR>
           <TD class="style8">SetFrameSeriesParams #B [#S] [#X #Y]</TD>

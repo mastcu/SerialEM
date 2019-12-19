@@ -2320,6 +2320,14 @@ void CMacroProcessor::NextCommand()
     
   case CME_FRAMETHRESHOLDNEXTSHOT:                         // FrameThresholdNextShot
     mCamera->SetNextFrameSkipThresh((float)itemDbl[1]);
+    if (!itemEmpty[2]) {
+      backlashX = (float)itemDbl[2];
+      backlashY = itemEmpty[3] ? backlashX : (float)itemDbl[3];
+      if (backlashX >= 1. || backlashX < 0. || backlashY >= 1. || backlashY < 0)
+        ABORT_LINE("Partial frame thresholds for Alignframes must be >= 0 and < 1 for "
+          "line:\n\n");
+      mCamera->SetNextPartialThresholds(backlashX, backlashY);
+    }
     break;
     
   case CME_QUEUEFRAMETILTSERIES:                           // QueueFrameTiltSeries
