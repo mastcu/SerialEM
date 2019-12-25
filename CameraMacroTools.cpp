@@ -341,10 +341,10 @@ void CCameraMacroTools::OnButresume()
   if (mWinApp->NavigatorStartedTS() && !mWinApp->StartedTiltSeries() && 
     mWinApp->mTSController->GetPostponed())
     mWinApp->mTSController->SetupTiltSeries(0);
-  else if (mDoingTS) 
-    mWinApp->mTSController->Resume();
   else if (navState == NAV_TS_RUNNING || navState == NAV_PRE_TS_RUNNING)
     mNav->SetAcquireEnded(1);
+  else if (mDoingTS)
+    mWinApp->mTSController->Resume();
   else if (navState == NAV_SCRIPT_RUNNING || navState == NAV_RUNNING_NO_SCRIPT_TS)
     mNav->SetAcquireEnded(-1);
   else if (navState == NAV_PAUSED) {

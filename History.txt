@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+12/20/19: Fixed End Nav button bringing up Resume dialog when tilt series
+running (In 3.7).
+
 12/18/19: Made frame tilt series create a frame stack mdoc file with tilt
 angles, relative timing, and dose information included, and added ability
 to write a command file for aligning with Alignframes, including thresholds
