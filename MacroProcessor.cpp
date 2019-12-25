@@ -2079,8 +2079,6 @@ void CMacroProcessor::NextCommand()
       index2 = itemInt[1];
     if (!itemEmpty[2] && itemDbl[2] >= 0.001)
       delX = itemDbl[2];
-    // TODO DNM Not sure if you agree with me "abusing" variables like ix0 and i for 
-    // these purposes, but don't want to declare many new vars of my own ...
     if (!itemEmpty[3] && strItems[3].GetLength() == 6) 
       if (sscanf(strItems[3], "%x", &ix0) == 1)
         i = ((ix0 & 0xFF0000) >> 16) | (ix0 & 0x00FF00) | ((ix0 & 0x0000FF) << 16);
@@ -2342,6 +2340,14 @@ void CMacroProcessor::NextCommand()
     
   case CME_FRAMETHRESHOLDNEXTSHOT:                         // FrameThresholdNextShot
     mCamera->SetNextFrameSkipThresh((float)itemDbl[1]);
+    if (!itemEmpty[2]) {
+      backlashX = (float)itemDbl[2];
+      backlashY = itemEmpty[3] ? backlashX : (float)itemDbl[3];
+      if (backlashX >= 1. || backlashX < 0. || backlashY >= 1. || backlashY < 0)
+        ABORT_LINE("Partial frame thresholds for Alignframes must be >= 0 and < 1 for "
+          "line:\n\n");
+      mCamera->SetNextPartialThresholds(backlashX, backlashY);
+    }
     break;
     
   case CME_QUEUEFRAMETILTSERIES:                           // QueueFrameTiltSeries
@@ -2488,9 +2494,11 @@ void CMacroProcessor::NextCommand()
 
   case CME_WRITEFRAMESERIESANGLES:                          // WriteFrameSeriesAngles
   {
-    FloatVec angles;
-    mCamera->GetFrameTSactualAngles(angles);
-    if (!angles.size())
+    FloatVec *angles = mCamera->GetFrameTSactualAngles();
+    IntVec *startTime = mCamera->GetFrameTSrelStartTime();
+    IntVec *endTime = mCamera->GetFrameTSrelEndTime();
+    float frame = mCamera->GetFrameTSFrameTime();
+    if (!angles->size())
       ABORT_NOLINE("There are no angles available from a frame tilt series");
     SubstituteVariables(&strLine, 1, strLine);
     mWinApp->mParamIO->StripItems(strLine, 1, strCopy);
@@ -2500,9 +2508,14 @@ void CMacroProcessor::NextCommand()
       csFile = new CStdioFile(strCopy, CFile::modeCreate | CFile::modeWrite | 
         CFile::shareDenyWrite);
       message = "Writing angles to file ";
-      for (index = 0; index < (int)angles.size(); index++) {
-        report.Format("%.2f\n", angles[index]);
-        csFile->WriteString((LPCTSTR)report);
+      for (index = 0; index < (int)angles->size(); index++) {
+        report.Format("%7.2f", angles->at(index));
+        if (index < (int)startTime->size())
+          strCopy.Format(" %5d %5d\n", B3DNINT(0.001 * startTime->at(index) / frame),
+            B3DNINT(0.001 * endTime->at(index) / frame));
+        else
+          strCopy = "\n";
+        csFile->WriteString((LPCTSTR)report + strCopy);
       }
     }
     catch (CFileException *perr) {

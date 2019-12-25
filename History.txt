@@ -3,6 +3,20 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+12/18/19: Made frame tilt series create a frame stack mdoc file with tilt
+angles, relative timing, and dose information included, and added ability
+to write a command file for aligning with Alignframes, including thresholds
+for excluding partial frames from alignment.  (New SEMCCD plugin needed).
+
+12/13/19: Added ability to remove positions from regular array of holes for
+multiple Records.
+
+12/13/19: Added predicted relative starting and ending frame numbers to tilt
+angle output file for frame tilt series.
+
+12/12/19: Made sure current settings in multishot dialog are used before
+acquisition (In 3.7).
+
 12/9/19: Increased timeouts and added properties to set them for JEOL FEG
 flashing (In 3.7).
 

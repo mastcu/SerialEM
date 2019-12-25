@@ -188,21 +188,16 @@ CCameraController::CCameraController()
   mEnsuringDark = false;
   mHalting = false;
   mShotIncomplete = false;
-  mDiscardImage = false;
   mNoMessageBoxOnError = 0;
-  mStageQueued = false;
-  mMagQueued = false;
-  mISQueued = false;
-  mBeamTiltQueued = false;
   mDriftISQueued = false;
   mInsertThread = NULL;
   mAcquireThread = NULL;
   mEnsureThread = NULL;
+  ClearOneShotFlags();
   mLastConSet = -1;
   mUseCount = 1;
   mPending = -1;
   mRepFlag = -1;
-  mSettling = -1;
   mPreDarkBump = false;
   for (j = 0; j < MAX_CAMERAS; j++) {
     mPlugFuncs[j] = NULL;
@@ -247,7 +242,6 @@ CCameraController::CCameraController()
   mNumZLPAlignChanges = 3;
   mMinZLPAlignInterval = 6.;   // 3/13/17: Quantum K2 on Krios had some times just above 5
   mShiftTimeIndex = -1;
-  mBlankWhenRetracting = false;
   for (k = 0; k < 3; k++) {
     mNumDMCameras[k] = 0;
     mDMInitialized[k] = false;
@@ -285,13 +279,9 @@ CCameraController::CCameraController()
   mOppositeAreaNextShot = false;
   mDynFocusInterval = -1;
   mStartDynFocusDelay = -1;
-  mTiltDuringShotDelay = -1;
-  mStartedScanning = false;
   mScreenUpSTEMdelay = 7000;
   mLowerScreenForSTEM = 1;
   mRamperInstance = false;
-  mBlankNextShot = false;
-  mDEserverRefNextShot = 0;
   mTD.ContinuousSTEM = 0;
   mDSextraShotDelay = 100;
   mDSshouldFlip = -1;         // Will be 0 or 1 if read in
@@ -304,10 +294,8 @@ CCameraController::CCameraController()
   mDScontrolBeam = 0;
   mInvertBrightField = 1;    // Default is to do what the button says
   mInsertDetShotTime = 3.;
-  mMaxChannelsToGet = MAX_STEM_CHANNELS;
   mMagToRestore = 0;
   mRetainMagAndShift = -1;
-  mAdjustShiftX = mAdjustShiftY = 0.;
   mMakeFEIerrorBeTimeout = false;
   mNumK2Filters = 1;
   mK2FilterNames[0] = "None";
@@ -364,10 +352,7 @@ CCameraController::CCameraController()
   mFrameSavingEnabled = false;
   mCanUseFalconConfig = -1;
   mRestoreFalconConfig = false;
-  mDeferStackingFrames = false;
   mStackingWasDeferred = false;
-  mStartedFalconAlign = false;
-  mStartedExtraForDEalign = false;
   mFrameMdocForFalcon = 0;
   mZoomFilterType = 5;
   mOneK2FramePerFile = false;
@@ -391,24 +376,15 @@ CCameraController::CCameraController()
   mSkipK2FrameRotFlip = false;
   mNameFramesAsMRCS = false;
   mK2SynchronousSaving = false;
-  mFocusStepToDo1 = 0.;
-  mFocusStepToDo2 = 0.;
-  mLDwasSetToArea = -1;
   mSmoothFocusExtraTime = 400;
-  mTD.FrameTSdoBacklash = false;
-  mFrameTSspeed = 0.;
-  mFrameTSrestoreX = EXTRA_NO_VALUE;
   mInDisplayNewImage = false;
   mNeedToSelectDM = false;
-  mNextAsyncSumFrames = -1;
   mLastAsyncTimeout = 0;
-  mNextFrameSkipThresh = 0.;
   mK2MaxRamStackGB = -1.;
   mK2MinFrameForRAM = 0.05f;
   mBaseJeolSTEMflags = 0;
   mFalconAsyncStacking = true;
   mWaitingForStacking = 0;
-  mCancelNextContinuous = false;
   mSingleContModeUsed = SINGLE_FRAME;
   mTaskFrameWaitStart = -1.;
   mPreventUserToggle = 0;
@@ -426,9 +402,7 @@ CCameraController::CCameraController()
   mK2GainRefLifetime = 10;
   mNoNormOfDSdoseFrac = false;
   mK2MinStartupDelay = 3.0;
-  mDeferSumOnNextAsync = false;
   mAskedDeferredSum = false;
-  mStartingDeferredSum = false;
   mConsDeferred = NULL;
   mBufDeferred = NULL;
   mExtraDeferred = NULL;
@@ -441,9 +415,43 @@ CCameraController::CCameraController()
   mBadDarkNumRetries = 2;
   mAllowSpectroscopyImages = false;
   mASIgivesGainNormOnly = true;
-  mNeedToRestoreISandBT = 0;
   mFrameStackMdocInd = -1;
   mLastShotUsedCDS = -1;
+}
+
+// Clear anything that might be set externally, or was cleared in constructor and cleanup
+// before consolidating this here
+void CCameraController::ClearOneShotFlags()
+{
+  mStageQueued = false;
+  mMagQueued = false;
+  mISQueued = false;
+  mBeamTiltQueued = false;
+  mFocusStepToDo1 = 0.;
+  mFocusStepToDo2 = 0.;
+  mLDwasSetToArea = -1;
+  mSettling = -1;
+  mNextAsyncSumFrames = -1;
+  mNextFrameSkipThresh = 0.;
+  mNextPartialStartThresh = mNextPartialEndThresh = 0.;
+  mDeferSumOnNextAsync = false;
+  mStartingDeferredSum = false;
+  mTD.FrameTSdoBacklash = false;
+  mFrameTSspeed = 0.;
+  mFrameTSrestoreX = EXTRA_NO_VALUE;
+  mStartedScanning = false;
+  mTiltDuringShotDelay = -1;
+  mAdjustShiftX = mAdjustShiftY = 0.;
+  mBlankNextShot = false;
+  mDEserverRefNextShot = 0;
+  mBlankWhenRetracting = false;
+  mDeferStackingFrames = false;
+  mStartedFalconAlign = false;
+  mStartedExtraForDEalign = false;
+  mCancelNextContinuous = false;
+  mDiscardImage = false;
+  mNeedToRestoreISandBT = 0;
+  mMaxChannelsToGet = MAX_STEM_CHANNELS;
 }
 
 // Set a frame align param to default values
@@ -2118,6 +2126,8 @@ int CCameraController::SaveFrameStackMdoc(KImage *image)
   CString message, str;
   char buffer[20000];
   long stringSize, retVal, sectInd;
+  float tiltDose, cumulDose = 0.;
+  int iz, start, end;
   EMimageExtra *extra;
 
   // First build up the autodoc structure and convert to a string
@@ -2150,6 +2160,41 @@ int CCameraController::SaveFrameStackMdoc(KImage *image)
         message = "putting extra data into autodoc structure";
     }
 
+    if (mTD.FrameTStiltToAngle.size() > 0 && mTD.FrameTSactualAngle.size() > 0 &&
+      message.IsEmpty()) {
+      extra = image->GetUserData();
+      for (iz = 0; iz < (int)mTD.FrameTSactualAngle.size(); iz++) {
+        str.Format("%d", iz);
+        sectInd = AdocAddSection(ADOC_ZVALUE, (LPCTSTR)str);
+        if (sectInd < 0) {
+          message = "adding section to autodoc";
+          break;
+        }
+        if (AdocSetFloat(ADOC_ZVALUE, sectInd, ADOC_TILT, mTD.FrameTSactualAngle[iz])) {
+          message = "adding tilt angle to autodoc";
+          break;
+        }
+        if (iz < (int)mTD.FrameTSrelStartTime.size()) {
+          start = B3DNINT(0.001 * mTD.FrameTSrelStartTime[iz] / mTD.FrameTSframeTime);
+          end = B3DNINT(0.001 * mTD.FrameTSrelEndTime[iz] / mTD.FrameTSframeTime);
+          if (AdocSetTwoIntegers(ADOC_ZVALUE, sectInd, ADOC_FRAMETS_ST_END, start, end)) {
+            message = "adding relative start/end frames to autodoc";
+            break;
+          }
+          if (extra->m_fDose > 0.) {
+            tiltDose = (float)((mTD.FrameTSrelEndTime[iz] - mTD.FrameTSrelStartTime[iz]) *
+              0.001* extra->m_fDose / mExposure);
+            if (AdocSetFloat(ADOC_ZVALUE, sectInd, ADOC_PRIOR_DOSE, cumulDose) ||
+              AdocSetFloat(ADOC_ZVALUE, sectInd, ADOC_DOSE, tiltDose)) {
+              message = "adding dose for tilt to autodoc";
+              break;
+            }
+            cumulDose += tiltDose;
+          }
+        }
+      }
+    }
+
     // Convert to string for K2 or just write it
     if (message.IsEmpty()) {
       if (mParam->K2Type) {
@@ -2162,7 +2207,12 @@ int CCameraController::SaveFrameStackMdoc(KImage *image)
           message = "calling AdocWrite";
       }
     }
-    AdocDeleteSection("FrameSet", 0);
+    if (mTD.FrameTStiltToAngle.size() > 0 && mFrameStackMdocInd >= 0) {
+      AdocClear(mFrameStackMdocInd);
+      mFrameStackMdocInd = -1;
+    } else {
+      AdocDeleteSection("FrameSet", 0);
+    }
     AdocReleaseMutex();
   } else
     message = "getting mutex for";
@@ -2457,10 +2507,13 @@ int CCameraController::QueueTiltSeries(FloatVec &openTime, FloatVec &tiltToAngle
   float focusLim = 10., ISlim = 10., tiltLim = 91., openLim = 20., waitLim = 20.;
   int ind, numSteps = (int)(tiltToAngle.size() > 0 ? tiltToAngle.size() : 
     waitOrInterval.size());
-  if (!numSteps) {
+  if (!CAN_PLUGIN_DO(MDOC_FOR_FRAME_TS, mParam)) {
+    mess = "Frame tilt series must now be done with a newer version of the SEMCCD plugin";
+  }
+  if (mess.IsEmpty() && !numSteps) {
     mess = "neither angles to tilt to nor intervals between"
       " actions are defined";
-  } 
+  }
 
   // Test each entry: it must be at least as big as # of steps if present
   if (mess.IsEmpty() && waitOrInterval.size()) {
@@ -3146,8 +3199,10 @@ void CCameraController::Capture(int inSet, bool retrying)
     if (conSet.useFrameAlign == 1) {
       mTD.K2ParamFlags |= K2_USE_FRAMEALIGN;
       mTD.UseFrameAlign = true;
-    } else if (!mAlignWholeSeriesInIMOD) {
+    } else if (!mAlignWholeSeriesInIMOD || mTD.FrameTStiltToAngle.size() > 0) {
       mTD.K2ParamFlags |= K2_MAKE_ALIGN_COM;   // Used for Falcon also
+      if (mTD.FrameTStiltToAngle.size() > 0)
+        mTD.K2ParamFlags |= K2_SAVE_COM_AFTER_MDOC;
     }
   }
   mTD.SaveFrames = conSet.saveFrames && (!mParam->K2Type || conSet.doseFrac);
@@ -3632,7 +3687,8 @@ int CCameraController::CapManageInsertTempK2Saving(const ControlSet &conSet, int
   mSetDeferredSize = false;
   aligning = (mParam->K2Type || frameCapableOneView) && conSet.doseFrac &&
     conSet.alignFrames && (conSet.useFrameAlign == 1 ||
-    (conSet.useFrameAlign && conSet.saveFrames && !mAlignWholeSeriesInIMOD)) &&
+    (conSet.useFrameAlign && conSet.saveFrames && 
+      (!mAlignWholeSeriesInIMOD || mNextFrameSkipThresh > 0.))) &&
     CAN_PLUGIN_DO(CAN_ALIGN_FRAMES, mParam);
   saving = IsConSetSaving(&conSet, inSet, mParam, true);
   
@@ -3845,7 +3901,8 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
 {
   int ldArea, magIndex, sizeX, sizeY, numAllVsAll, refineIter, groupSize, doSpline;
   int numReadouts, notOK, newIndex, faInd, numFilt = 1, deferGpuSum = 0, flags = 0;
-  int frameSizeX, frameSizeY, numAliFrames, frameStartEnd = 0;
+  int frameSizeX, frameSizeY, numAliFrames, frameStartEnd = 0, partialThreshes = 0;
+  int alignFlags = 0, gpuFlags = 0;
   int DMind = CAMP_DM_INDEX(mParam);
   int K2Type = mParam->K2Type;
   double maxMemory = pow(1024., 3.) * mK2MaxRamStackGB;
@@ -3900,6 +3957,22 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
     return 1;
   }
 
+  if (mNextFrameSkipThresh > 0.) {
+    flags |= K2_SKIP_BELOW_THRESH;
+    if (mOneK2FramePerFile) {
+      SEMMessageBox("You cannot skip frames below threshold with one file per frame");
+      return 1;
+    }
+    if (conSet.alignFrames && conSet.useFrameAlign < 2) {
+      SEMMessageBox("You cannot align frames in the plugin when skipping frames below"
+        " threshold");
+      return 1;
+    }
+    if (aligning)
+      partialThreshes = B3DNINT(K2FA_THRESH_SCALE * mNextPartialStartThresh) +
+        (B3DNINT(K2FA_THRESH_SCALE * mNextPartialEndThresh) << 16);
+  }
+
   int numFrames = B3DNINT(conSet.exposure / conSet.frameTime);
   double numAsyncSum = 0.;
   CString sdir, root, defName;
@@ -3933,7 +4006,7 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
   int nameSize = sdlen + rootlen + 4;
   int stringSize = 4;
   int reflen = 0, comlen = 0, defectLen = 0, sumLen = 0, titleLen = 0;
-  int alignFlags = 0, gpuFlags = 0, aliRefLen = 0, aliComLen, dataSize;
+  int aliRefLen = 0, aliComLen, dataSize;
   CString refFile, sumList, tmpStr, aliComName;
   if (K2Type) {
     if (isSuperRes || K2Type == K3_TYPE)
@@ -4214,8 +4287,6 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
       mK2GainRefTimeStamp[DMind][isSuperRes ? 1 : 0] = 
         mWinApp->MinuteTimeStamp();
   }
-  if (mNextFrameSkipThresh > 0.)
-    flags |= K2_SKIP_BELOW_THRESH;
 
   // For new K2 API, determine whether to do asynchronous to RAM and how many
   // frames to grab into stack
@@ -4272,7 +4343,7 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
         faParam.truncate ? faParam.truncLimit : 0., alignFlags, gpuFlags, numAllVsAll,
         groupSize, faParam.shiftLimit, faParam.antialiasType, refineIter,
         faParam.stopIterBelow, faParam.refRadius2, (long)(numAsyncSum + 0.1),
-        frameStartEnd, 0, 0., stringSize, (long *)strings, &setupErr));
+        frameStartEnd, partialThreshes, 0., stringSize, (long *)strings, &setupErr));
     }
   }
   catch (_com_error E) {
@@ -7526,7 +7597,7 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
   int retval = 0;
   DWORD startTime, curTime, lastTime;
   double interval, elapsed, baseISX, baseISY, newISX, newISY, intervalSum, intervalSumSq;
-  double destX, destY, destZ, destAlpha, dblStartTime;
+  double destX, destY, destZ, destAlpha, dblStartTime, firstUnblankTime = -1.;
   TIMECAPS tc;
   BOOL periodSet = false;
 
@@ -7708,6 +7779,9 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
         numSteps = (int)(stepTilts ? td->FrameTStiltToAngle.size() : 
           td->FrameTSwaitOrInterval.size());
         td->FrameTSactualAngle.clear();
+        td->FrameTSrelStartTime.clear();
+        td->FrameTSrelEndTime.clear();
+        td->FrameTSframeTime = (float)td->FrameTime;
 
         // If shuttering, close shutter now
         if (shutterTS) {
@@ -7770,9 +7844,13 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
           if (shutterTS && td->FrameTSopenTime[step] > 0) {
             CEMscope::SetBlankingFlag(false);
             td->scopePlugFuncs->SetBeamBlank(*vFalse);
+            if (firstUnblankTime < 0.)
+              firstUnblankTime = GetTickCount();
+            td->FrameTSrelStartTime.push_back(B3DNINT(SEMTickInterval(firstUnblankTime)));
             ::Sleep(B3DMAX(1, B3DNINT(1000. * td->FrameTSopenTime[step])));
             CEMscope::SetBlankingFlag(true);
             td->scopePlugFuncs->SetBeamBlank(*vTrue);
+            td->FrameTSrelEndTime.push_back(B3DNINT(SEMTickInterval(firstUnblankTime)));
           }
 
           // Get tilt angle FWIW when not doing tilt steps
@@ -7793,6 +7871,7 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
           if (td->FrameTSstopOnCamReturn && td->imageReturned)
             break;
         }
+        SEMTrace('1', "Finished tilt loop %.3f", SEMSecondsSinceStart());
 
         // Done: restore IS and focus if set
         if (doISinTS)
@@ -9211,8 +9290,9 @@ void CCameraController::DisplayNewImage(BOOL acquired)
         }
     }
 
-    // Save to frame stack mdoc
-    if (extra->mNumSubFrames > 0 && !mTD.GetDeferredSum && mSaveFrameStackMdoc && 
+    // Save to frame stack mdoc if selected of if doing frame TS
+    if (extra->mNumSubFrames > 0 && !mTD.GetDeferredSum && (mSaveFrameStackMdoc || 
+      (mTD.FrameTStiltToAngle.size() > 0 && mTD.FrameTSactualAngle.size() > 0)) &&
       CanSaveFrameStackMdoc(mParam)) {
       SaveFrameStackMdoc(image);
     }
@@ -9388,25 +9468,10 @@ void CCameraController::ErrorCleanup(int error)
 {
   int ind; 
 
-  // Make sure nothing is queued any more
-  mStageQueued = false;
-  mMagQueued = false;
-  mISQueued = false;
-  mBeamTiltQueued = false;
-  mFocusStepToDo1 = 0.;
-  mFocusStepToDo2 = 0.;
-  mSettling = -1;
-  mLDwasSetToArea = -1;
-  mNextAsyncSumFrames = -1;
-  mNextFrameSkipThresh = 0.;
+  // Restore any conditions set
   mTD.NumAsyncSumFrames = -1;
-  mDeferSumOnNextAsync = false;
   mTD.FrameTStiltToAngle.clear();
   mTD.FrameTSwaitOrInterval.clear();
-  mTD.FrameTSdoBacklash = false;
-  mFrameTSspeed = 0.;
-  mFrameTSrestoreX = EXTRA_NO_VALUE;
-  mStartingDeferredSum = false;
   if (mStartedScanning) {
     if (mTD.ScanTime || mTD.DynFocusInterval || mTD.FocusStep1)
       mScope->SetDefocus(mCenterFocus);
@@ -9418,35 +9483,28 @@ void CCameraController::ErrorCleanup(int error)
         mTD.ScanIntMin, mTD.ScanIntMax, mTD.ScanIntMean, mTD.ScanIntSD);
     }
   }
-  mStartedScanning = false;
-  mTiltDuringShotDelay = -1;
 
   if ((mShiftedISforSTEM || mMagToRestore) && (mRetainMagAndShift < 0 || error))
     RestoreMagAndShift();
-  mAdjustShiftX = mAdjustShiftY = 0.;
 
   if (mBlankNextShot)
     mScope->BlankBeam(false, "ErrorCleanup for BlankNextShot");
-  mBlankNextShot = false;
-  mDEserverRefNextShot = 0;
-  mBlankWhenRetracting = false;
-  mDeferStackingFrames = false;
-  mCancelNextContinuous = false;
-  mStartedFalconAlign = false;
-  mStartedExtraForDEalign = false;
+  if (mNeedToRestoreISandBT & 1)
+    mScope->SetImageShift(mImageShiftXtoRestore, mImageShiftYtoRestore);
+  if (mNeedToRestoreISandBT & 2)
+    mScope->SetBeamTilt(mBeamTiltXtoRestore, mBeamTiltYtoRestore);
+
+  // Clear flags set by this shot setup
   mAligningPluginFrames = false;
   mSavingPluginFrames = false;
   mSavingFalconFrames = false;
   mAligningFalconFrames = false;
   mRemoveFEIalignedFrames = false;
   mDoingDEframeAlign = 0;
-  mDiscardImage = false;
-  if (mNeedToRestoreISandBT & 1)
-    mScope->SetImageShift(mImageShiftXtoRestore, mImageShiftYtoRestore);
-  if (mNeedToRestoreISandBT & 2)
-    mScope->SetBeamTilt(mBeamTiltXtoRestore, mBeamTiltYtoRestore);
-  mNeedToRestoreISandBT = 0;
-  mMaxChannelsToGet = MAX_STEM_CHANNELS;
+
+  // clear flags for one-shot type items, mostly set from elsewhere
+  ClearOneShotFlags();
+
   if (error || mRepFlag < 0 || mHalting || mPending >= 0 ||
     (!mTD.ContinuousSTEM && !(mTD.ProcessingPlus & CONTINUOUS_USE_THREAD)))
     mScope->SetCameraAcquiring(false);

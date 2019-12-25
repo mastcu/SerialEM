@@ -2279,6 +2279,7 @@ int CBeamAssessor::CheckCalForZeroIntensities(BeamTable &table, const char *mess
   return 1;
 }
 
+// List the intensity calibrations
 void CBeamAssessor::ListIntensityCalibrations() {
   int i, j;
   CString report, s, t;
@@ -2306,14 +2307,13 @@ void CBeamAssessor::ListIntensityCalibrations() {
   }
 }
 
+// List the spot calibrations
 void CBeamAssessor::ListSpotCalibrations() {
   int i, j;
   CString report, s, t;
   for (i = 0; i < mNumSpotTables; i++) {
     {
       s = (FEIscope ? (mSpotTables[i].probeMode ? "uP, " : "nP, ") : "");
-      // TODO DNM Is it a valid assumption only to conclude from spot 1 that the whole
-      // table is above or below crossover?
       t = (mSpotTables[i].intensity[1] < mSpotTables[i].crossover[1] ? "below" : "above");
       report.Format("\r\nSpot intensity calibrations (%s%s crossover):", s, t);
       mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);

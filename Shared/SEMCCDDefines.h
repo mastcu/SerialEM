@@ -4,7 +4,7 @@
  */
 #ifndef SEMCCD_DEFINES_H
 
-#define SEMCCD_PLUGIN_VERSION    114
+#define SEMCCD_PLUGIN_VERSION    115
 
 // Error codes
 enum {IMAGE_NOT_FOUND = 1, WRONG_DATA_TYPE, DM_CALL_EXCEPTION, NO_STACK_ID, STACK_NOT_3D,
@@ -49,6 +49,7 @@ FRAMEDOC_OPEN_ERR, FRAMEDOC_WRITE_ERR, NULL_IMAGE};
 #define K2_TAKE_BINNED_FRAMES  (1 << 5)
 #define K3_USE_CORR_DBL_SAMP   (1 << 6)
 #define K2_MAKE_ALIGN_COM      (1 << 11)
+#define K2_SAVE_COM_AFTER_MDOC (1 << 13)
 #define K2_REDUCED_Y_SCALE     100000.
 
 // Flags for SetupFrameAligning (bit 1 is apply gain ref, bit 7 is for early return)
@@ -66,6 +67,7 @@ FRAMEDOC_OPEN_ERR, FRAMEDOC_WRITE_ERR, NULL_IMAGE};
 #define K2FA_SUB_END_SHIFT     6
 
 #define K2FA_FRC_INT_SCALE     1000000.
+#define K2FA_THRESH_SCALE      10000.f
 
 // Flags for MakeAlignComFile
 #define K2FA_WRITE_MDOC_TEXT          1

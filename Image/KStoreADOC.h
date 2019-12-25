@@ -80,6 +80,7 @@
 #define ADOC_VOLTAGE "Voltage"
 #define ADOC_NAV_LABEL "NavigatorLabel"
 #define ADOC_MULTI_POS "MultishotHoleAndPosition"
+#define ADOC_FRAMETS_ST_END "FrameTSStartEndFrames"
 
 class KStoreADOC :
   public KImageStore

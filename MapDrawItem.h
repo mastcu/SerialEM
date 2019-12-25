@@ -120,6 +120,9 @@ public:
   int mFocusYoffset;
   int mSuperMontX;        // Camera coordinate of this montage in supermontage
   int mSuperMontY;
+  signed char mNumXholes, mNumYholes;  // Defined array size for multi-hole acquire
+  short mNumSkipHoles;            // Number of holes to skip
+  unsigned char *mSkipHolePos;    // list of x,y indexes of holes to skip
   int mMoveStageID;       // Temporary flag to keep track of item stage was moved to
   int mFilePropIndex;     // Indexes into arrays of file properties and other params
   int mTSparamIndex;

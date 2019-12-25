@@ -74,6 +74,8 @@ CMapDrawItem::CMapDrawItem()
   mRotateFocusAxis = false;
   mFocusAxisAngle = 0;
   mFocusXoffset = mFocusYoffset = 0;
+  mNumSkipHoles = mNumXholes = mNumYholes = 0;
+  mSkipHolePos = NULL;
   mFilePropIndex =  mTSparamIndex = mMontParamIndex =  mStateIndex = -1;
   mFileToOpen = "";
  }
@@ -85,6 +87,8 @@ CMapDrawItem::CMapDrawItem(CMapDrawItem *item)
   mPtY = NULL;
   mNumPoints = 0;
   mMaxPoints = 0;
+  mNumSkipHoles = mNumXholes = mNumYholes = 0;
+  mSkipHolePos = NULL;
 }
 
 CMapDrawItem::~CMapDrawItem()
@@ -93,6 +97,8 @@ CMapDrawItem::~CMapDrawItem()
     delete [] mPtX;
     delete [] mPtY;
   }
+  if (mNumSkipHoles)
+    delete[] mSkipHolePos;
 }
 
 void CMapDrawItem::AddPoint(float inX, float inY, int index)

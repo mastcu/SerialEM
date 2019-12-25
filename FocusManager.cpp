@@ -569,7 +569,6 @@ void CFocusManager::OnAutofocusListCalibrations()
   AstigCalib astig;
   ComaCalib coma;
   CString str, str2;
-  // TODO DNM: CRLF added to match output of all other calibration output routines
   mWinApp->AppendToLog("\r\nFocus calibrations:\r\nCamera        Mag  Index  Direction");
   for (int actCam = 0; actCam < numCam; actCam++) {
     iCam = active[actCam];
