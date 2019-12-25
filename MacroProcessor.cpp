@@ -258,6 +258,7 @@ enum {CME_SCRIPTEND = -7, CME_LABEL, CME_SETVARIABLE, CME_SETSTRINGVAR, CME_DOKE
   CME_REPORTFILAMENTCURRENT, CME_SETFILAMENTCURRENT, CME_CLOSEFRAMEMDOC,
   CME_DRIFTWAITTASK, CME_GETWAITTASKDRIFT, CME_CLOSELOGOPENNEW, CME_SAVELOG,
   CME_SAVECALIBRATIONS, CME_REPORTCROSSOVERPERCENTC2, CME_REPORTSCREENCURRENT,
+  CME_LISTVARS, CME_LISTPERSISTENTVARS,
   CME_SETFRAMESERIESPARAMS, CME_SETCUSTOMTIME, CME_REPORTCUSTOMINTERVAL, 
   CME_STAGETOLASTMULTIHOLE, CME_IMAGESHIFTTOLASTMULTIHOLE, CME_NAVINDEXITEMDRAWNON,
   CME_SETMAPACQUIRESTATE, CME_RESTORESTATE, CME_REALIGNTOMAPDRAWNON,
@@ -405,7 +406,7 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"SetFilamentCurrent", 1, 0}, {"CloseFrameMdoc", 0, 0}, {"DriftWaitTask", 0, 1},
 {"GetWaitTaskDrift", 0, 0}, {"CloseLogOpenNew", 0, 0}, {"SaveLog", 0, 0},
 {"SaveCalibrations", 0, 0}, {"ReportCrossoverPercentC2", 0, 0},
-{"ReportScreenCurrent", 0, 0},
+{"ReportScreenCurrent", 0, 0}, {"ListVars", 0, 0 }, { "ListPersistentVars", 0, 0 },
 {"SetFrameSeriesParams", 1, 0}, {"SetCustomTime", 1, 0}, {"ReportCustomInterval", 1, 0},
 {"StageToLastMultiHole", 0, 0}, {"ImageShiftToLastMultiHole", 0, 0}, 
 {"NavIndexItemDrawnOn", 1, 0}, {"SetMapAcquireState", 1, 0}, {"RestoreState", 0, 0},
@@ -463,6 +464,7 @@ BEGIN_MESSAGE_MAP(CMacroProcessor, CCmdTarget)
   ON_COMMAND(ID_MACRO_LISTFUNCTIONS, OnMacroListFunctions)
   ON_UPDATE_COMMAND_UI(ID_MACRO_LISTFUNCTIONS, OnUpdateMacroWriteAll)
   ON_COMMAND(ID_SCRIPT_SETINDENTSIZE, OnScriptSetIndentSize)
+  ON_COMMAND(ID_SCRIPT_LISTPERSISTENTVARS, OnScriptListPersistentVars)
   ON_COMMAND(ID_SCRIPT_CLEARPERSISTENTVARS, OnScriptClearPersistentVars)
   ON_UPDATE_COMMAND_UI(ID_SCRIPT_CLEARPERSISTENTVARS, OnUpdateClearPersistentVars)
   ON_COMMAND(ID_SCRIPT_RUNONECOMMAND, OnScriptRunOneCommand)
@@ -683,6 +685,11 @@ void CMacroProcessor::OnMacroSetlength()
   mNumToolButtons = B3DMIN(MAX_MACROS, B3DMAX(5, num));
   if (mWinApp->mMacroToolbar)
     mWinApp->mMacroToolbar->SetLength(mNumToolButtons, mToolButHeight);
+}
+
+void CMacroProcessor::OnScriptListPersistentVars()
+{
+  ListVariables(VARTYPE_PERSIST);
 }
 
 void CMacroProcessor::OnScriptClearPersistentVars()
@@ -1934,6 +1941,14 @@ void CMacroProcessor::NextCommand()
       ABORT_LINE(report + " in script line: \n\n");
     break;
 
+  case CME_LISTVARS:                                        // ListVars
+    ListVariables();
+    break;
+
+  case CME_LISTPERSISTENTVARS:                              // ListPersistentVars
+    ListVariables(VARTYPE_PERSIST);
+    break;
+
   case CME_CLEARPERSISTENTVARS:                             // ClearPersistentVars
     ClearVariables(VARTYPE_PERSIST);
     break;
@@ -2059,14 +2074,21 @@ void CMacroProcessor::NextCommand()
   case CME_FLASHDISPLAY:                                    // FlashDisplay
     delX = 0.3;
     index2 = 4;
+    i = RGB(192, 192, 0);
     if (!itemEmpty[1] && itemInt[1] > 0)
       index2 = itemInt[1];
     if (!itemEmpty[2] && itemDbl[2] >= 0.001)
       delX = itemDbl[2];
+    // TODO DNM Not sure if you agree with me "abusing" variables like ix0 and i for 
+    // these purposes, but don't want to declare many new vars of my own ...
+    if (!itemEmpty[3] && strItems[3].GetLength() == 6) 
+      if (sscanf(strItems[3], "%x", &ix0) == 1)
+        i = ((ix0 & 0xFF0000) >> 16) | (ix0 & 0x00FF00) | ((ix0 & 0x0000FF) << 16);
     if (delX * index2 > 3)
       ABORT_LINE("Flashing duration is too long in line:\r\n\r\n");
     for (index = 0; index < index2; index++) {
       mWinApp->mMainView->SetFlashNextDisplay(true);
+      mWinApp->mMainView->SetFlashColor(i);
       mWinApp->mMainView->DrawImage();
       Sleep(B3DNINT(1000. * delX));
       mWinApp->mMainView->DrawImage();
@@ -2320,14 +2342,6 @@ void CMacroProcessor::NextCommand()
     
   case CME_FRAMETHRESHOLDNEXTSHOT:                         // FrameThresholdNextShot
     mCamera->SetNextFrameSkipThresh((float)itemDbl[1]);
-    if (!itemEmpty[2]) {
-      backlashX = (float)itemDbl[2];
-      backlashY = itemEmpty[3] ? backlashX : (float)itemDbl[3];
-      if (backlashX >= 1. || backlashX < 0. || backlashY >= 1. || backlashY < 0)
-        ABORT_LINE("Partial frame thresholds for Alignframes must be >= 0 and < 1 for "
-          "line:\n\n");
-      mCamera->SetNextPartialThresholds(backlashX, backlashY);
-    }
     break;
     
   case CME_QUEUEFRAMETILTSERIES:                           // QueueFrameTiltSeries
@@ -2474,11 +2488,9 @@ void CMacroProcessor::NextCommand()
 
   case CME_WRITEFRAMESERIESANGLES:                          // WriteFrameSeriesAngles
   {
-    FloatVec *angles = mCamera->GetFrameTSactualAngles();
-    IntVec *startTime = mCamera->GetFrameTSrelStartTime();
-    IntVec *endTime = mCamera->GetFrameTSrelEndTime();
-    float frame = mCamera->GetFrameTSFrameTime();
-    if (!angles->size())
+    FloatVec angles;
+    mCamera->GetFrameTSactualAngles(angles);
+    if (!angles.size())
       ABORT_NOLINE("There are no angles available from a frame tilt series");
     SubstituteVariables(&strLine, 1, strLine);
     mWinApp->mParamIO->StripItems(strLine, 1, strCopy);
@@ -2488,14 +2500,9 @@ void CMacroProcessor::NextCommand()
       csFile = new CStdioFile(strCopy, CFile::modeCreate | CFile::modeWrite | 
         CFile::shareDenyWrite);
       message = "Writing angles to file ";
-      for (index = 0; index < (int)angles->size(); index++) {
-        report.Format("%7.2f", angles->at(index));
-        if (index < (int)startTime->size())
-          strCopy.Format(" %5d %5d\n", B3DNINT(0.001 * startTime->at(index) / frame),
-            B3DNINT(0.001 * endTime->at(index) / frame));
-        else
-          strCopy = "\n";
-        csFile->WriteString((LPCTSTR)report + strCopy);
+      for (index = 0; index < (int)angles.size(); index++) {
+        report.Format("%.2f\n", angles[index]);
+        csFile->WriteString((LPCTSTR)report);
       }
     }
     catch (CFileException *perr) {
@@ -7761,6 +7768,61 @@ Variable *CMacroProcessor::LookupVariable(CString name, int &ind)
     }
   }
   return NULL;
+}
+
+// List all variables of the specified type in the log window, or all variables if no type
+// is specified
+void CMacroProcessor::ListVariables(int type)
+{
+  int i, j;
+  CString s, t, v;
+  Variable *var;
+  ArrayRow row;
+  mWinApp->AppendToLog("\r\n", LOG_OPEN_IF_CLOSED);
+  for (i = 0; i < (int)mVarArray.GetSize(); i++)
+  {
+    var = mVarArray[i];
+    if (var->type == type || type < 0) {
+      switch (var->type) {
+      case VARTYPE_PERSIST:
+        t = " (persistent)";
+        break;
+      case VARTYPE_INDEX:
+        t = " (index)";
+        break;
+      case VARTYPE_REPORT:
+        t = " (report)";
+        break;
+      case VARTYPE_LOCAL:
+        t = " (local)";
+        break;
+      default:
+        t = "";
+      }
+      if (var->rowsFor2d) {
+        for (j = 0; j < var->rowsFor2d->GetSize(); j++) {
+          if (j == 0)
+            s.Format("%s%s = { ", var->name, t);
+          else
+            s += "  ";
+          row = var->rowsFor2d->ElementAt(j);
+          v = row.value;
+          v.Replace("\n", " ");
+          s += "{ " + v + " }" + (j == var->rowsFor2d->GetSize() - 1 ? " }" : "") + "\r\n";
+        }
+      }
+      else if (var->numElements > 1) {
+        v = var->value;
+        // TODO DNM Separation with spaces not unambiguous if arrays contain string 
+        // values with spaces
+        v.Replace("\n", " ");
+        s.Format("%s%s = { %s }", var->name, t, v);
+      }
+      else
+        s.Format("%s%s = %s", var->name, t, var->value);
+      mWinApp->AppendToLog(s, LOG_OPEN_IF_CLOSED);
+    }
+  }
 }
 
 // Removes all variables of the given type (or any type except persistent by default) AND

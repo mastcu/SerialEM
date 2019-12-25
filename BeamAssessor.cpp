@@ -2278,3 +2278,50 @@ int CBeamAssessor::CheckCalForZeroIntensities(BeamTable &table, const char *mess
   AfxMessageBox(str, MB_EXCLAME);
   return 1;
 }
+
+void CBeamAssessor::ListIntensityCalibrations() {
+  int i, j;
+  CString report, s, t;
+  mWinApp->AppendToLog("\r\nBeam intensity calibrations:", LOG_OPEN_IF_CLOSED);
+  s = (FEIscope ? "Probe   " : "");
+  t = (FEIscope && mScope->GetUseIllumAreaForC2() ? "C2 Aperture" : "");
+  // TODO DNM Test output for JEOL
+  report.Format("Spot   %sSide of crossover   Intensity range   Fold change   %s", s, t);
+  mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
+  for (i = 0; i < mNumTables; i++) {
+    if (mBeamTables[i].numIntensities > 0) {
+      j = B3DNINT(mBeamTables[i].currents[mBeamTables[i].numIntensities - 1] /
+        mBeamTables[i].currents[0]);
+      s = (FEIscope ? (mBeamTables[i].probeMode ? "uP" : "nP") : "");
+      if (FEIscope && mBeamTables[i].measuredAperture != 0)
+        t.Format("%d", mBeamTables[i].measuredAperture);
+      else
+        t = "";
+      report.Format("     %2d    %s          %s                         %.4f - %.4f   "
+        "%5d                  %s", mBeamTables[i].spotSize, s,
+        (mBeamTables[i].aboveCross == 1 ? "above" : "below"),
+        mBeamTables[i].minIntensity, mBeamTables[i].maxIntensity, j, t);
+      mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
+    }
+  }
+}
+
+void CBeamAssessor::ListSpotCalibrations() {
+  int i, j;
+  CString report, s, t;
+  for (i = 0; i < mNumSpotTables; i++) {
+    {
+      s = (FEIscope ? (mSpotTables[i].probeMode ? "uP, " : "nP, ") : "");
+      // TODO DNM Is it a valid assumption only to conclude from spot 1 that the whole
+      // table is above or below crossover?
+      t = (mSpotTables[i].intensity[1] < mSpotTables[i].crossover[1] ? "below" : "above");
+      report.Format("\r\nSpot intensity calibrations (%s%s crossover):", s, t);
+      mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
+      mWinApp->AppendToLog("Spot  Ratio", LOG_OPEN_IF_CLOSED);
+      for (j = 1; j <= mScope->GetNumSpotSizes(); j++) {
+        report.Format("   %4d   %.4f", j, mSpotTables[i].ratio[j]);
+        mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
+       }
+    }
+  }
+}

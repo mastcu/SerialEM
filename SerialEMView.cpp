@@ -25,7 +25,6 @@
 #include "MapDrawItem.h"
 #include "NavigatorDlg.h"
 #include "NavHelper.h"
-#include "ParticleTasks.h"
 #include "MacroProcessor.h"
 #include "MultiTSTasks.h"
 #include "RemoteControl.h"
@@ -246,17 +245,14 @@ void CSerialEMView::DrawImage(void)
   int zoomFilters[] = {5, 4, 1, 0};  // lanczos3, 2, Blackman, box
   int numZoomFilt = sizeof(zoomFilters) / sizeof(int);
   int zoomWidthCrit = 20;
-  bool bufferOK, filtering = false, saveCurHolePos = false;
+  bool bufferOK, filtering = false;
   CNavigatorDlg *navigator = mWinApp->mNavigator;
   CProcessImage *processImg = mWinApp->mProcessImage;
   CArray<CMapDrawItem *, CMapDrawItem *> *itemArray = NULL;
   FloatVec zeroRadii, zeroRadii2;
-  FloatVec *curHoleXYpos;
-  IntVec *curHoleIndex;
   CPoint point;
   CString letString, firstLabel, lastLabel;
   COLORREF bkgColor = RGB(48, 0, 48);
-  COLORREF flashColor = RGB(192, 192, 0);
   int scaled5 = mWinApp->ScaleValueForDPI(5);
   int scaled10 = mWinApp->ScaleValueForDPI(10);
   int scaled140 = mWinApp->ScaleValueForDPI(140);
@@ -285,16 +281,9 @@ void CSerialEMView::DrawImage(void)
     imageRect = imBuf->mImage;
   }
 
-  if (mWinApp->mNavigator) {
-    saveCurHolePos = mWinApp->mNavigator->GetHolePositionVectors(&curHoleXYpos,
-      &curHoleIndex);
-    curHoleXYpos->clear();
-    curHoleIndex->clear();
-  }
-
   // If there is no image, fill the whole area
   if (mFlashNextDisplay || imBuf == NULL || imageRect == NULL) {
-    cdc.FillSolidRect(rect, mFlashNextDisplay ? flashColor : bkgColor);
+    cdc.FillSolidRect(rect, mFlashNextDisplay ? mFlashColor : bkgColor);
     mFlashNextDisplay = false;
     return;
   }
@@ -738,26 +727,18 @@ void CSerialEMView::DrawImage(void)
   std::set<int> *selectedItems = navigator->GetSelectedItems();
   bool highlight, draw;
   CMapDrawItem *item;
-  CMapDrawItem holeItem;
   MultiShotParams *msParams;
-  int msNumXholes = 0, msNumYholes = 0, useXholes, useYholes;
-  int numFullSpecHoles, numSpecHoles, lastSpecialXholes = 0, lastSpecialYholes = 0;
-  FloatVec specialFullISX, specialFullISY, delISX, delISY;
-  IntVec fullHoleIndex, holeIndex;
   BOOL useMultiShot = (mWinApp->mNavHelper->GetEnableMultiShot() & 1) || 
     mWinApp->mNavHelper->mMultiShotDlg;
+  bool showMultiOnAll = useMultiShot && (mWinApp->mNavHelper->GetEnableMultiShot() & 2);
   int currentIndex = navigator->GetCurrentOrAcquireItem(item);
   int currentGroup = (currentIndex >= 0 && item != NULL) ? item->mGroupID : -1;
   int groupThresh = mWinApp->mNavHelper->GetPointLabelDrawThresh();
-  bool showCurPtAcquire = !imBuf->mHasUserPt && mAcquireBox;
   if (useMultiShot) {
     msParams = mWinApp->mNavHelper->GetMultiShotParams();
     useMultiShot = (msParams->inHoleOrMultiHole & MULTI_IN_HOLE) ||
       mWinApp->mNavHelper->MultipleHolesAreSelected();
-    mWinApp->mNavHelper->GetNumHolesFromParam(msNumXholes, msNumYholes);
   }
-  bool showMultiOnAll = useMultiShot && (mWinApp->mNavHelper->GetEnableMultiShot() & 2);
-
   FloatVec drawnXinHole, drawnYinHole, drawnXallHole, drawnYallHole;
   FloatVec convXinHole, convYinHole, convXallHole, convYallHole;
   for (int iDraw = -1; iDraw < itemArray->GetSize(); iDraw++) {
@@ -927,76 +908,14 @@ void CSerialEMView::DrawImage(void)
       cdc.SelectObject(pOldPen);
     }
 
-    // Draw polygons for full acquire area on all acquire points if selected, or on
-    // current/selected points
-    if (iDraw >= 0 && item->mAcquire && item->mNumPoints == 1 && mAcquireBox &&
-      (showMultiOnAll || (showCurPtAcquire && highlight))) {
+    // Draw polygons for full acquire area on all acquire points if selected
+    if (iDraw >= 0 && mAcquireBox && showMultiOnAll && item->mAcquire && 
+      item->mNumPoints == 1) {
       GetSingleAdjustmentForItem(imBuf, item, delPtX, delPtY);
-      CPen pnAcquire(PS_SOLID, thick, item->GetColor(highlight));
+      CPen pnAcquire(PS_SOLID, 1, COLORREF(RGB(255, 0, 170)));  
       CPen *pOldPen = cdc.SelectObject(&pnAcquire);
-      mAcquireBox->mDraw = true;
-      if (useMultiShot) {
-
-        // If this point has special hole pattern and does not match the default from the
-        // params, need to get specific list of holes for it
-        numSpecHoles = 0;
-        useXholes = item->mNumXholes ? item->mNumXholes : msNumXholes;
-        useYholes = item->mNumYholes ? item->mNumYholes : msNumYholes;
-        if (useXholes && useYholes && (useXholes != msNumXholes ||
-          useYholes != msNumYholes || item->mNumSkipHoles || highlight)) {
-
-          // Get full hole list if this doesn't match last one used
-          if (useXholes != lastSpecialXholes ||
-            useYholes != lastSpecialYholes) {
-            numFullSpecHoles = mWinApp->mParticleTasks->GetHolePositions(specialFullISX,
-              specialFullISY, fullHoleIndex, mWinApp->mNavigator->GetMagIndForHoles(),
-              mWinApp->mNavigator->GetCameraForHoles(), useXholes, 
-              useYholes);
-            lastSpecialXholes = useXholes;
-            lastSpecialYholes = useYholes;
-          }
-
-          // Reduce it by any skipped ones
-          numSpecHoles = numFullSpecHoles;
-          delISX = specialFullISX;
-          delISY = specialFullISY;
-          holeIndex = fullHoleIndex;
-          if (item->mNumSkipHoles) {
-            mWinApp->mParticleTasks->SkipHolesInList(delISX, delISY, holeIndex,
-              item->mSkipHolePos, item->mNumSkipHoles, numSpecHoles);
-          }
-          holeItem.mNumPoints = 0;
-          mWinApp->mNavigator->AddHolePositionsToItemPts(delISX, delISY, holeIndex, false,
-            numSpecHoles, &holeItem);
-        }
-        if (numSpecHoles) {
-          mAcquireBox->mDraw = true;
-          if (highlight && saveCurHolePos)
-            *curHoleIndex = holeIndex;
-          for (int hole = 0; hole < numSpecHoles; hole++) {
-            ptX = item->mStageX + holeItem.mPtX[hole] - mAcquireBox->mStageX;
-            ptY = item->mStageY + holeItem.mPtY[hole] - mAcquireBox->mStageY;
-            if (highlight && saveCurHolePos) {
-              curHoleXYpos->push_back(item->mStageX + holeItem.mPtX[hole]);
-              curHoleXYpos->push_back(item->mStageY + holeItem.mPtY[hole]);
-            }
-            if (msParams->inHoleOrMultiHole & MULTI_IN_HOLE)
-              DrawVectorPolygon(cdc, &rect, item, imBuf, convXinHole, convYinHole, ptX,
-                ptY, delPtX, delPtY, NULL, NULL);
-            else
-              DrawMapItemBox(cdc, &rect, mAcquireBox, imBuf,
-                B3DMIN(5, mAcquireBox->mNumPoints), ptX, ptY, delPtX, delPtY, NULL, NULL);
-          }
-        } else {
-          DrawVectorPolygon(cdc, &rect, item, imBuf, convXallHole, convYallHole,
-            item->mStageX, item->mStageY, delPtX, delPtY, NULL, NULL);
-        }
-      } else {
-        DrawMapItemBox(cdc, &rect, mAcquireBox, imBuf,
-          B3DMIN(5, mAcquireBox->mNumPoints), item->mStageX - mAcquireBox->mStageX,
-          item->mStageY - mAcquireBox->mStageY, delPtX, delPtY, NULL, NULL);
-        cdc.SelectObject(pOldPen);
-      }
+      DrawVectorPolygon(cdc, &rect, item, imBuf, convXallHole, convYallHole, 
+        item->mStageX, item->mStageY, delPtX, delPtY, NULL, NULL);
       cdc.SelectObject(pOldPen);
     }
     mAdjustPt = adjSave;
@@ -1592,7 +1511,7 @@ void CSerialEMView::SetupZoomAroundPoint(CPoint *point)
 
 void CSerialEMView::OnLButtonDblClk(UINT nFlags, CPoint point)
 {
-  if (mWinApp->mNavigator &&
+  if (mWinApp->mNavigator && !(GetAsyncKeyState(VK_SHIFT) / 2) && 
     !(GetAsyncKeyState(VK_CONTROL) / 2) && mWinApp->mNavigator->InEditMode())
       mWinApp->mNavigator->MouseDoubleClick(VK_LBUTTON);
 }
@@ -1605,7 +1524,6 @@ void CSerialEMView::OnLButtonUp(UINT nFlags, CPoint point)
   double defocus;
   BOOL legal, used = false;
   CString lenstr;
-  bool shiftKey = GetAsyncKeyState(VK_SHIFT) / 2 != 0;
   EMimageBuffer *imBuf;
   CProcessImage *processImg = mWinApp->mProcessImage;
   CRect rect;
@@ -1625,9 +1543,8 @@ void CSerialEMView::OnLButtonUp(UINT nFlags, CPoint point)
       // Navigator gets first crack if it is either a legal point or a valid hit for
       // selection
       if (!mDrewLDAreasAtNavPt && mWinApp->mNavigator && (legal || 
-        (!shiftKey &&
-        (GetAsyncKeyState(VK_CONTROL) / 2 || mWinApp->mNavigator->InEditMode())) ||
-        (shiftKey && mWinApp->mNavigator->InEditMode())))
+        (!(GetAsyncKeyState(VK_SHIFT) / 2) &&
+        (GetAsyncKeyState(VK_CONTROL) / 2 || mWinApp->mNavigator->InEditMode()))))
           mNavUsedLastLButtonUp = mWinApp->mNavigator->UserMousePoint(imBuf, shiftX,
             shiftY, mPointNearImageCenter, VK_LBUTTON);
       if (legal && !mNavUsedLastLButtonUp) {
@@ -1637,7 +1554,7 @@ void CSerialEMView::OnLButtonUp(UINT nFlags, CPoint point)
         mWinApp->mLowDoseDlg.UserPointChange(shiftX, shiftY, imBuf);
         if ((mMainWindow || mFFTWindow) && !imBuf->mCtfFocus1)
           processImg->ModifyFFTPointToFirstZero(imBuf, shiftX, shiftY);
-        imBuf->mHasUserPt = !(GetAsyncKeyState(VK_SHIFT) / 2);
+        imBuf->mHasUserPt = true;
         imBuf->mHasUserLine = false;
         imBuf->mDrawUserBox = false;
         imBuf->mUserPtX = shiftX;

@@ -66,7 +66,6 @@ struct CamPluginFuncs;
 #define PLUGIN_CAN_GIVE_BUILD    112
 #define PLUGIN_CAN_SET_CDS       113
 #define PLUGIN_TAKES_OV_FRAMES   114
-#define PLUGIN_MDOC_FOR_FRAME_TS 115
 
 #define CAN_PLUGIN_DO(c, p) CanPluginDo(PLUGIN_##c, p)
 
@@ -276,9 +275,6 @@ struct CameraThreadData {
   FloatVec FrameTSdeltaISY;
   float FrameTSinitialDelay;      // Initial delay before starting steps
   FloatVec FrameTSactualAngle;    // Actual angles reached
-  IntVec FrameTSrelStartTime;     // Start and end times unblanked
-  IntVec FrameTSrelEndTime;       // exposure period in msec
-  float FrameTSframeTime;         // frame time, needed to get to predicted frames
   bool FrameTSstopOnCamReturn;    // Flag to stop on image return (off for early return)
   BOOL FrameTSdoBacklash;
 };
@@ -299,7 +295,6 @@ struct InsertThreadData {
 class DLL_IM_EX CCameraController
 {
 public:
-  void ClearOneShotFlags();
   void AcquiredSize(ControlSet *csp, int camera, int &sizeX, int &sizeY);
   void StartEnsureThread(DWORD timeout);
   void SetupBeamScan(ControlSet *conSetp);
@@ -474,8 +469,6 @@ public:
   GetSetMember(int, WaitingForStacking);
   bool SetNextAsyncSumFrames(int inVal, bool deferSum);
   SetMember(float, NextFrameSkipThresh);
-  void SetNextPartialThresholds(float start, float end) 
-    { mNextPartialStartThresh = start; mNextPartialEndThresh = end; };
   GetSetMember(float, K2MaxRamStackGB);
   SetMember(bool, CancelNextContinuous);
   void SetTaskWaitingForFrame(bool inVal) { mTaskFrameWaitStart = inVal ? GetTickCount() : -1.; };
@@ -822,9 +815,7 @@ public:
   DWORD mLastAsyncTimeout;      // timeout for last async shot
   double mAsyncTickStart;       // time it started
   float mLastAsyncExpTime;      // Just the exposure time of last async shot
-  float mNextFrameSkipThresh;   // Threshold for skipping frames on next shot
-  float mNextPartialStartThresh;  // Partial frame thresholds when aligning
-  float mNextPartialEndThresh;
+  float mNextFrameSkipThresh;   // Threahold for skipping frames on next shot
   float mK2MaxRamStackGB;       // Maximum GB to allow for a RAM stack/grab stack
   float mK2MinFrameForRAM;      // Minimum frame time for using RAM stack
   int mBaseJeolSTEMflags;       // Basic flags to which div by 2 and continuous are added
@@ -1044,10 +1035,7 @@ int QueueTiltSeries(FloatVec &openTime, FloatVec &tiltToAngle, FloatVec &waitOrI
   FloatVec &focusChange, FloatVec &deltaISX, FloatVec &deltaISY, float initialDelay);
 int SetFrameTSparams(BOOL doBacklash, float speed, double stageXrestore, double stageYrestore);
 int SaveFrameStackMdoc(KImage *image);
-FloatVec *GetFrameTSactualAngles() { return &mTD.FrameTSactualAngle; };
-IntVec *GetFrameTSrelStartTime() { return &mTD.FrameTSrelStartTime; };
-IntVec *GetFrameTSrelEndTime() { return &mTD.FrameTSrelEndTime; };
-float GetFrameTSFrameTime() { return mTD.FrameTSframeTime; };
+void GetFrameTSactualAngles(FloatVec &angles) {angles = mTD.FrameTSactualAngle;};
 int AddToNextFrameStackMdoc(CString key, CString value, bool startIt, CString *retMess);
 bool CanSaveFrameStackMdoc(CameraParameters * param);
 bool CanDoK2HardwareDarkRef(CameraParameters *param, CString &errstr);

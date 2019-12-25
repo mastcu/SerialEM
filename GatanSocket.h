@@ -51,8 +51,8 @@ public:
     double rad2Filt2, double rad2Filt3, double sigma2Ratio, 
     double truncLimit, long alignFlags, long gpuFlags, long numAllVsAll, long groupSize, 
     long shiftLimit, long antialiasType, long refineIter, double stopIterBelow, 
-    double refRad2, long nSumAndGrab, long frameStartEnd, long frameThreshes, 
-    double dumDbl1, long stringSize, long *strings, long *error);
+    double refRad2, long nSumAndGrab, long dumInt1, long dumInt2, double dumDbl1, 
+    long stringSize, long *strings, long *error);
   static int FrameAlignResults(double *rawDist, double *smoothDist, 
     double *resMean, double *maxResMax, double *meanRawMax, double *maxRawMax, 
     long *crossHalf, long *crossQuarter, long *crossEighth, long *halfNyq, 

@@ -1,7 +1,6 @@
 {
   CString adocStr;
   float fvals[4];
-  int jnd;
   ADOC_PUT(Integer(ADOC_ARG, "Color", item->mColor));
   ADOC_PUT(ThreeFloats(ADOC_ARG, "StageXYZ", item->mStageX,
                        item->mStageY, item->mStageZ));
@@ -124,16 +123,6 @@
       item->mFocusAxisAngle));
     ADOC_PUT(TwoIntegers(ADOC_ARG, "FocusOffsets", item->mFocusXoffset, 
       item->mFocusYoffset));
-  }
-  if (item->mNumXholes && item->mNumYholes) {
-    ADOC_PUT(TwoIntegers(ADOC_ARG, "HoleArray", item->mNumXholes, item->mNumYholes));
-    if (item->mNumSkipHoles) {
-      skipIndex.resize(2 * item->mNumSkipHoles);
-      for (jnd = 0; jnd < 2 * item->mNumSkipHoles; jnd++)
-        skipIndex[jnd] = item->mSkipHolePos[jnd];
-      ADOC_PUT(IntegerArray(ADOC_ARG, "SkipHoles", &skipIndex[0], 
-        2 * item->mNumSkipHoles));
-    }
   }
   ADOC_PUT(FloatArray(ADOC_ARG, "PtsX", &item->mPtX[0], item->mNumPoints));
   ADOC_PUT(FloatArray(ADOC_ARG, "PtsY", &item->mPtY[0], item->mNumPoints));

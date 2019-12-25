@@ -72,6 +72,7 @@ public:
   void ZoomDown();
   void ZoomUp();
   SetMember(bool, FlashNextDisplay);
+  SetMember(COLORREF, FlashColor)
   GetMember(bool, DrewLDAreasAtNavPt);
   void GetCenterForLDAreas(float &xcen, float &ycen) { xcen = mNavLDAreasXcenter; ycen = mNavLDAreasYcenter; };
   virtual ~CSerialEMView();
@@ -142,7 +143,8 @@ private:
   float mZoomupImageX;           // Image point at that position before zoom
   float mZoomupImageY;
   bool mZoomAroundPoint;         // Flag to do zooming around a point
-  bool mFlashNextDisplay;        // Flag to draw yellow screen on next draw
+  bool mFlashNextDisplay;        // Flag to draw flash screen on next draw
+  COLORREF mFlashColor;          // Color to use for flashing screen
   int mWheelDeltaPending;        // Delta sum below threshold
   BOOL mNavUsedLastLButtonUp;    // Flag that Navigator used last button up event
   bool mDrewLDAreasAtNavPt;      // Flag that low dose areas were drawn at a Navigator pt

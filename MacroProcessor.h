@@ -40,7 +40,7 @@ struct ArrayRow {
 struct Variable {
   CString name;
   CString value;
-  int type;        // Regular, persistent, index, or report
+  int type;        // Regular, persistent, index, report, or local
   int callLevel;   // call level at which variable defined
   int index;       // index with loop level for index, or for report, or script #
   MacroFunction *definingFunc;   // Function it was defined in
@@ -271,6 +271,7 @@ public:
   bool SetVariable(CString name, double value, int type, int index, bool mustBeNew,
     CString *errStr = NULL, CArray<ArrayRow, ArrayRow> *rowsFor2d = NULL);
   Variable *LookupVariable(CString name, int &ind);
+  void ListVariables(int type = -1);
   void ClearVariables(int type = -1, int level = -1, int index = -1);
   int SubstituteVariables(CString * strItems, int maxItems, CString line);
   int EvaluateExpression(CString * strItems, int maxItems, CString line, int ifArray, 
@@ -344,6 +345,7 @@ public:
     CString * errMess);
   static UINT RunInShellProc(LPVOID pParam);
   afx_msg void OnScriptSetIndentSize();
+  afx_msg void OnScriptListPersistentVars();
   afx_msg void OnScriptClearPersistentVars();
   afx_msg void OnUpdateClearPersistentVars(CCmdUI *pCmdUI);
   afx_msg void OnScriptRunOneCommand();

@@ -357,10 +357,8 @@ int CFrameAlignDlg::CheckConditionsOnClose(int whereAlign, int curIndex, int &ne
     whereAlign = conSet->useFrameAlign;
   if (curIndex < 0)
     curIndex = conSet->faParamSetInd;
-  notOK = UtilFindValidFrameAliParams(mCamParams, mReadMode, mTakingK3Binned && 
-    (mWinApp->mCamera->CAN_PLUGIN_DO(CAN_BIN_K3_REF, 
-      mWinApp->GetCamParams() + mCameraSelected) ||
-      !(whereAlign > 1 && mWinApp->mCamera->GetSaveUnnormalizedFrames())),
+  notOK = UtilFindValidFrameAliParams(mCamParams, mReadMode,
+    mTakingK3Binned && !(whereAlign > 1 && mWinApp->mCamera->GetSaveUnnormalizedFrames()),
     whereAlign, curIndex, newIndex, &mess);
   if (notOK || newIndex != curIndex) {
     mess += "\n\nPress:\n";

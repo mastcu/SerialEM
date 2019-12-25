@@ -2876,4 +2876,6 @@ void CMenuTargets::OnExternalTool(UINT nID)
 void CMenuTargets::OnBeamSpotListCalibrations()
 {
   mShiftManager->ListBeamShiftCals();
+  mWinApp->mBeamAssessor->ListIntensityCalibrations();
+  mWinApp->mBeamAssessor->ListSpotCalibrations();
 }

@@ -1123,7 +1123,6 @@ void CNavigatorDlg::OnEditMode()
       "    Left-click to select\r\n"
       "    Ctrl-Left-Click to add or remove from selected points\r\n"
       "    Left-double-click to delete point if already selected\r\n"
-      "    Shift-Left-double-click to remove one position from multiple Record array\r\n"
       "    Middle-click to add a point\r\n    Right-click to move current point\r\n"
       "    Backspace to delete current point\r\n");
     mHelper->SetEditReminderPrinted(true);
@@ -1131,10 +1130,6 @@ void CNavigatorDlg::OnEditMode()
   if (m_bEditFocus) {
     m_bEditFocus = false;
     UpdateData(false);
-  }
-  if (m_bEditMode) {
-    EMimageBuffer *imBuf = mWinApp->mMainView->GetActiveImBuf();
-    imBuf->mHasUserPt = false;
   }
   Update();
 }
@@ -2610,17 +2605,14 @@ BOOL CNavigatorDlg::UserMousePoint(EMimageBuffer *imBuf, float inX, float inY,
   CMapDrawItem *item;
   BOOL acquire = false;
   bool ctrlKey = GetAsyncKeyState(VK_CONTROL) / 2 != 0;
-  bool shiftKey = GetAsyncKeyState(VK_SHIFT) / 2 != 0;
-  bool selecting = button == VK_LBUTTON && !shiftKey && 
+  bool selecting = button == VK_LBUTTON && !(GetAsyncKeyState(VK_SHIFT) / 2) && 
     (m_bEditMode || ctrlKey) && !mAddingPoints && !mAddingPoly;
-  bool startingMultiDel = button == VK_LBUTTON && shiftKey && m_bEditMode &&
-    !mAddingPoints && !mAddingPoly && mCurItemHoleXYpos.size();
   bool addingOne = m_bEditMode && button == VK_MBUTTON && !mAddingPoints && !mAddingPoly;
   bool movingOne = (m_bEditMode || mAddingPoints) && button == VK_RBUTTON && !mAddingPoly;
 
   mLastSelectWasCurrent = false;
   if (!(mAddingPoints || mAddingPoly || mMovingItem || selecting || movingOne || 
-    addingOne || startingMultiDel))
+    addingOne))
     return false;
   if (mMovingItem && button == VK_MBUTTON)
     return false;
@@ -2630,12 +2622,6 @@ BOOL CNavigatorDlg::UserMousePoint(EMimageBuffer *imBuf, float inX, float inY,
   aInv = MatInv(aMat);
   stageX = aInv.xpx * (inX - delX) + aInv.xpy * (inY - delY);
   stageY = aInv.ypx * (inX - delX) + aInv.ypy * (inY - delY);
-  if (startingMultiDel) {
-    mMultiDelStageX = stageX;
-    mMultiDelStageY = stageY;
-    mLastSelectWasCurrent = true;
-    return true;
-  }
 
   // Moving the current item
   if (mMovingItem || movingOne) {
@@ -2788,64 +2774,8 @@ BOOL CNavigatorDlg::UserMousePoint(EMimageBuffer *imBuf, float inX, float inY,
 // Double click on the currently selected point deletes it
 void CNavigatorDlg::MouseDoubleClick(int button)
 {
-  int msNumXholes, msNumYholes, ind, jnd, minInd;
-  int numHoles = (int)B3DMIN(mCurItemHoleIndex.size(), mCurItemHoleXYpos.size()) / 2;
-  double dist, minDist = 1.e20, minInterHole = 1.e20;
-  bool shiftKey = GetAsyncKeyState(VK_SHIFT) / 2 != 0;
-  unsigned char *newSkipPos;
-  if (mLastSelectWasCurrent && button == VK_LBUTTON && m_bEditMode) {
-    if (!shiftKey) {
-      BackspacePressed();
-    } else if (mCurItemHoleXYpos.size() && SetCurrentItem() && 
-      mHelper->GetNumHolesFromParam(msNumXholes, msNumYholes)) {
-
-
-      // Get interhole distance and distance to nearest
-      for (ind = 0; ind < numHoles; ind++) {
-        dist = sqrt(pow(mMultiDelStageX - mCurItemHoleXYpos[2 * ind], 2.f) + 
-          pow(mMultiDelStageY - mCurItemHoleXYpos[2 * ind + 1], 2.f));
-        if (dist < minDist) {
-          minDist = dist;
-          minInd = ind;
-        }
-        for (jnd = ind + 1; jnd < numHoles; jnd++) {
-          dist = sqrt(pow(mCurItemHoleXYpos[2 * jnd] - mCurItemHoleXYpos[2 * ind], 2.f) +
-            pow(mCurItemHoleXYpos[2 * jnd + 1] - mCurItemHoleXYpos[2 * ind + 1], 2.f));
-          ACCUM_MIN(minInterHole, dist);
-        }
-      }
-
-      // It must be close enough to one hole
-      if (minDist < 0.33 * minInterHole) {
-        if (!mItem->mNumXholes && !mItem->mNumYholes) {
-          mItem->mNumXholes = msNumXholes;
-          mItem->mNumYholes = msNumYholes;
-        }
-        newSkipPos = new unsigned char[2 * mItem->mNumSkipHoles + 2];
-        for (jnd = 0; jnd < 2 * mItem->mNumSkipHoles; jnd++)
-          newSkipPos[jnd] = mItem->mSkipHolePos[jnd];
-        newSkipPos[jnd] = mCurItemHoleIndex[minInd * 2];
-        newSkipPos[jnd + 1] = mCurItemHoleIndex[minInd * 2 + 1];
-        delete[] mItem->mSkipHolePos;
-        mItem->mSkipHolePos = newSkipPos;
-        mItem->mNumSkipHoles += 1;
-        mChanged = true;
-        Redraw();
-      }
-    }
-  }
-}
-
-// Return the vectors used to save positions for the holes drawn around current point
-// if appropriate for editing
-bool CNavigatorDlg::GetHolePositionVectors(FloatVec **xypos, IntVec **index)
-{
-  *xypos = &mCurItemHoleXYpos;
-  *index = &mCurItemHoleIndex;
-  if (!m_bEditMode || !SetCurrentItem())
-    return false;
-  return mItem->mType == ITEM_TYPE_POINT && mItem->mNumPoints == 1 &&
-    mSelectedItems.size() <= 1;
+  if (mLastSelectWasCurrent && button == VK_LBUTTON && m_bEditMode)
+    BackspacePressed();
 }
 
 // Do common operations for adding a point marked on an image
@@ -2919,7 +2849,7 @@ CArray<CMapDrawItem *, CMapDrawItem *> *CNavigatorDlg::GetMapDrawItems(
   CMapDrawItem **acquireBox)
 {
   float angle, tiltAngle;
-  bool showMulti, asIfLowDose, showCurPtAcquire, showLDareas;
+  bool showMulti, asIfLowDose, showAcquirePolys, showLDareas;
   if (!SetCurrentItem())
     mItem = NULL;
   *acquireBox = NULL;
@@ -2927,18 +2857,12 @@ CArray<CMapDrawItem *, CMapDrawItem *> *CNavigatorDlg::GetMapDrawItems(
     return NULL;
   drawAllReg = m_bDrawAllReg;
   MultiShotParams *msParams = mHelper->GetMultiShotParams();
-
-  // Show multishot somehow if one or other type is on, and either the dialog is open
-  // or acquire is on and "Show shots when show acquire" is checked
   showMulti = ((msParams->inHoleOrMultiHole & MULTI_IN_HOLE) || 
     mHelper->MultipleHolesAreSelected()) && 
     ((m_bShowAcquireArea && (mHelper->GetEnableMultiShot() & 1)) ||
     (mHelper->mMultiShotDlg && !mHelper->mMultiShotDlg->RecordingISValues()));
-
-  // Show something on the current point if multi draw is on or show acquire is on and
-  // there is no user point (turns off draw on the acquire box)
-  showCurPtAcquire = !imBuf->mHasUserPt && mItem && (showMulti || (m_bShowAcquireArea &&
-    mItem->mAcquire && mItem->mNumPoints == 1));
+  showAcquirePolys = showMulti && (mHelper->GetEnableMultiShot() & 2) &&
+    !(imBuf->mHasUserPt || imBuf->mHasUserLine);
   showLDareas = mItem && (mItem->mAcquire || mItem->mTSparamIndex >= 0) && m_bEditFocus &&
     mEditFocusEnabled && mLowDoseDlg->ViewImageOKForEditingFocus(imBuf);
 
@@ -2947,13 +2871,13 @@ CArray<CMapDrawItem *, CMapDrawItem *> *CNavigatorDlg::GetMapDrawItems(
     *acquireBox = new CMapDrawItem(mItem);
     (*acquireBox)->AppendPoint(mItem->mStageX, mItem->mStageY);
 
-  } else if ((imBuf->mHasUserPt || showCurPtAcquire) &&
+  } else if ((imBuf->mHasUserPt || imBuf->mHasUserLine || showAcquirePolys) &&
     (m_bShowAcquireArea || showMulti) && 
     RegistrationUseType(imBuf->mRegistration) != NAVREG_IMPORT) {
 
       // If there is a user point and the box is on to draw acquire area, get needed
       // parameters: camera and mag index from current state or low dose or montage params
-      ScaleMat s2c, c2s, is2cam;
+      ScaleMat s2c, c2s, is2cam, is2stage;
       ControlSet *conSet = mWinApp->GetConSets() + RECORD_CONSET;
       int camera = mWinApp->GetCurrentCamera();
       MontParam *montp;
@@ -2990,13 +2914,8 @@ CArray<CMapDrawItem *, CMapDrawItem *> *CNavigatorDlg::GetMapDrawItems(
         useLineEnd = imBuf->mHasUserLine ? 1 : 0;
         if (showMulti && mWinApp->LowDoseMode() && mLowDoseDlg->m_iDefineArea)
           useLineEnd = -1;
-        if (showCurPtAcquire) {
-          box->mStageX = mItem->mStageX;
-          box->mStageY = mItem->mStageY;
-        } else {
-          MarkerStagePosition(imBuf, aMat, delX, delY, box->mStageX, box->mStageY,
-            useLineEnd);
-        }
+        MarkerStagePosition(imBuf, aMat, delX, delY, box->mStageX, box->mStageY,
+          useLineEnd);
         sizeX = conSet->right - conSet->left;
         sizeY = conSet->bottom - conSet->top;
         if (montaging && !showMulti) {
@@ -3019,19 +2938,39 @@ CArray<CMapDrawItem *, CMapDrawItem *> *CNavigatorDlg::GetMapDrawItems(
           float inHoleRadius = 0., beamRadius;
           float pixel = mShiftManager->GetPixelSize(camera, magInd);
           FloatVec delISX, delISY;
-          IntVec holeIndex;
-          bool custom = msParams->useCustomHoles && msParams->customHoleX.size() > 0;
           is2cam = mShiftManager->IStoGivenCamera(magInd, camera);
           if (pixel && is2cam.xpx) {
-            mIStoStageForHoles = MatMul(is2cam, c2s);
-            mMagIndForHoles = magInd;
-            mCameraForHoles = camera;
 
             // Make multihole positions relative to center
             if (mHelper->MultipleHolesAreSelected()) {
-              int numHoles = mWinApp->mParticleTasks->GetHolePositions(delISX, delISY,
-                holeIndex, magInd, camera, 0, 0);
-              AddHolePositionsToItemPts(delISX, delISY, holeIndex, custom, numHoles, box);
+                int numHoles = mWinApp->mParticleTasks->GetHolePositions(delISX, delISY, 
+                  magInd, camera);
+                if (numHoles > 0) {
+                  bool custom = msParams->useCustomHoles && msParams->customHoleX.size() > 0;
+                  int minInd = -1;
+                  float dist, minDist = 1.e20f;
+                  is2stage = MatMul(is2cam, c2s);
+                  for (ind = 0; ind < numHoles; ind++) {
+                    ptX = is2stage.xpx * delISX[ind] + is2stage.xpy * delISY[ind];
+                    ptY = is2stage.ypx * delISX[ind] + is2stage.ypy * delISY[ind];
+                    dist = sqrtf(ptX * ptX + ptY * ptY);
+                    if (dist < minDist) {
+                      minInd = box->mNumPoints;
+                      minDist = dist;
+                    }
+                    box->AppendPoint(ptX, ptY);
+                  }
+
+                  // Swap last point for closest point;
+                  if (!custom) {
+                    ptX = box->mPtX[minInd];
+                    box->mPtX[minInd] = box->mPtX[box->mNumPoints - 1];
+                    box->mPtX[box->mNumPoints - 1] = ptX;
+                    ptY = box->mPtY[minInd];
+                    box->mPtY[minInd] = box->mPtY[box->mNumPoints - 1];
+                    box->mPtY[box->mNumPoints - 1] = ptY;
+                  }
+                }
             }
 
             // Multishot positions in hole, with absolute positions
@@ -3048,13 +2987,12 @@ CArray<CMapDrawItem *, CMapDrawItem *> *CNavigatorDlg::GetMapDrawItems(
               }
             }
 
-            // Add one more point with beam radius as a position in X in camera coords
+            // Add one more point with beam radius as a position in X in camera coordinates
             beamRadius = 0.5f * msParams->beamDiam / pixel;
             if (msParams->useIllumArea && mWinApp->mScope->GetUseIllumAreaForC2() && 
               asIfLowDose)
               beamRadius = (float)(50. * 
-              mWinApp->mScope->IntensityToIllumArea(ldp[RECORD_CONSET].intensity) /
-                pixel);
+              mWinApp->mScope->IntensityToIllumArea(ldp[RECORD_CONSET].intensity) / pixel);
             ptX = box->mStageX + c2s.xpx * beamRadius;
             ptY = box->mStageY + c2s.ypx * beamRadius;
             box->AppendPoint(ptX, ptY);
@@ -3068,37 +3006,10 @@ CArray<CMapDrawItem *, CMapDrawItem *> *CNavigatorDlg::GetMapDrawItems(
         box->mRegistration = mCurrentRegistration;
         box->mType = ITEM_TYPE_POLYGON;
         box->mColor = POINT_ACQUIRE_COLOR;
-        box->mDraw = !showCurPtAcquire;
+        box->mDraw = !showAcquirePolys;
       }
   }
   return &mItemArray;
-}
-
-// Make multihole positions relative to center and add them to given item
-void CNavigatorDlg::AddHolePositionsToItemPts(FloatVec &delISX, FloatVec &delISY,
-  IntVec &holeIndex, bool custom, int numHoles, CMapDrawItem *item)
-{
-  int ind, minInd = -1, indexInd;
-  float dist, ptX, ptY, minDist = 1.e20f;
-  for (ind = 0; ind < numHoles; ind++) {
-    ptX = mIStoStageForHoles.xpx * delISX[ind] + mIStoStageForHoles.xpy * delISY[ind];
-    ptY = mIStoStageForHoles.ypx * delISX[ind] + mIStoStageForHoles.ypy * delISY[ind];
-    dist = sqrtf(ptX * ptX + ptY * ptY);
-    if (dist < minDist) {
-      minInd = item->mNumPoints;
-      minDist = dist;
-      indexInd = ind;
-    }
-    item->AppendPoint(ptX, ptY);
-  }
-
-  // Swap last point for closest point;
-  if (!custom && numHoles > 0) {
-    B3DSWAP(item->mPtX[minInd], item->mPtX[item->mNumPoints - 1], ptX);
-    B3DSWAP(item->mPtY[minInd], item->mPtY[item->mNumPoints - 1], ptY);
-    B3DSWAP(holeIndex[2 * indexInd], holeIndex[2 * numHoles - 2], ind);
-    B3DSWAP(holeIndex[2 * indexInd + 1], holeIndex[2 * numHoles - 1], ind);
-  }
 }
 
 // Compute the scale transformation from stage to image in given buffer
@@ -6822,7 +6733,6 @@ void CNavigatorDlg::OpenAndWriteFile(bool autosave)
   CStdioFile *cFile = NULL;
   mWinApp->RestoreViewFocus();
   CString str, sub, filename;
-  IntVec skipIndex;
   int adocInd, adocErr, ind, sectInd;
   FILE *fp;
   if (autosave)
@@ -6962,7 +6872,6 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
   int index, i, numPoints, trimCount, ind1, ind2, numFuture = 0, addIndex, highestLabel;
   float xx, yy, fvals[4];
   int numExternal, externalType;
-  int holeSkips[2000];
   std::set<std::string> filesNotFound;
   std::set<std::string>::iterator fileIter;
   std::map<std::string, std::string> filesFoundMap;
@@ -7170,19 +7079,6 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
           &item->mRotateFocusAxis, &item->mFocusAxisAngle));
         ADOC_OPTIONAL(AdocGetTwoIntegers("Item", sectInd, "FocusOffsets", 
           &item->mFocusXoffset, &item->mFocusYoffset));
-        ind1 = ind2 = 0;
-        ADOC_OPTIONAL(AdocGetTwoIntegers("Item", sectInd, "HoleArray", &ind1, &ind2));
-        item->mNumXholes = ind1;
-        item->mNumYholes = ind2;
-        numToGet = 0;
-        ADOC_OPTIONAL(AdocGetIntegerArray("Item", sectInd, "SkipHoles", &holeSkips[0], 
-          &numToGet, 2000));
-        if (numToGet) {
-          item->mSkipHolePos = new unsigned char[numToGet];
-          for (ind1 = 0; ind1 < numToGet; ind1++)
-            item->mSkipHolePos[ind1] = holeSkips[ind1];
-          item->mNumSkipHoles = numToGet / 2;
-        }
         if (item->mType == ITEM_TYPE_MAP) {
           ADOC_REQUIRED(AdocGetString("Item", sectInd, "MapFile", &adocStr));
           ADOC_STR_ASSIGN(item->mMapFile);

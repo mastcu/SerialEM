@@ -79,6 +79,8 @@ class CBeamAssessor
 	 void CalIntensityCCDCleanup(int error);
 	 void CalIntensityImage(int param);
 	 void CalIntensityCCD();
+   void ListIntensityCalibrations();
+   void ListSpotCalibrations();
   int GetFreeIndex() {return mFreeIndex;};
   void SetFreeIndex(int inVal) {mFreeIndex = inVal;};
   int GetAboveCrossover(int spotSize, double intensity, int probe = -1);

@@ -43,7 +43,6 @@ struct MultiShotParams
   double holeISXspacing[2];  // Hole spacing in each direction
   double holeISYspacing[2];
   int numHoles[2];       // Number of holes in each direction
-  BOOL skipCornersOf3x3; // Take cross pattern when it is 3x3
   int customMagIndex;
   FloatVec customHoleX;  // For custom holes, list of hole IS relative
   FloatVec customHoleY;  // to item point
@@ -366,6 +365,5 @@ public:
     int &top, int &right, int &bottom);
   void FindFocusPosForCurrentItem(StateParams & state, bool justLDstate);
   int RealignToDrawnOnMap(CMapDrawItem *item, BOOL restoreState);
-  bool GetNumHolesFromParam(int &xnum, int &ynum);
 };
 

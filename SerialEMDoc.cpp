@@ -1,5 +1,3 @@
-
-
 // SerialEMDoc.cpp:       Standard MFC MDI component, which contains all the 
 //                          message handlers for opening, reading and writing
 //                          image files and settings files
@@ -1929,6 +1927,8 @@ void CSerialEMDoc::OnSettingsReadagain()
 void CSerialEMDoc::OnUpdateSettingsReadagain(CCmdUI* pCmdUI) 
 {
   pCmdUI->Enable(!mWinApp->DoingComplexTasks() && mSettingsReadable && mSettingsOpen);
+  UtilModifyMenuItem(1, ID_SETTINGS_READAGAIN, "&Reload " + 
+    (mSettingsReadable && mSettingsOpen ? mCurrentSettingsPath : "settings"));
 }
 
 // Save command, which can be save as if no file is open

@@ -165,7 +165,7 @@ BEGIN
         MENUITEM "&Open...",                    ID_SETTINGS_OPEN
         MENUITEM "",                            ID_SETTINGS_MRU_FILE1
         MENUITEM SEPARATOR
-        MENUITEM "&Read Again",                 ID_SETTINGS_READAGAIN
+        MENUITEM "&Reload",                     ID_SETTINGS_READAGAIN
         MENUITEM "&Save",                       ID_SETTINGS_SAVE
         MENUITEM "S&ave As...",                 ID_SETTINGS_SAVEAS
         MENUITEM "&Close",                      ID_SETTINGS_CLOSE
@@ -439,6 +439,7 @@ BEGIN
         MENUITEM "&Load Many",                  ID_MACRO_READMANY
         MENUITEM "Save &All",                   ID_MACRO_WRITEALL
         MENUITEM "List &Functions",             ID_MACRO_LISTFUNCTIONS
+        MENUITEM "L&ist Persistent Vars",       ID_SCRIPT_LISTPERSISTENTVARS
         MENUITEM "Clear &Persistent Vars",      ID_SCRIPT_CLEARPERSISTENTVARS
         MENUITEM "Set I&ndent Size",            ID_SCRIPT_SETINDENTSIZE
         MENUITEM "Open E&ditors on Start",      ID_SCRIPT_OPENEDITORSONSTART
@@ -2885,7 +2886,7 @@ BEGIN
     PUSHBUTTON      "No",IDC_BUTMIDDLE,121,47,45,14
 END
 
-IDD_MULTI_SHOT_SETUP DIALOGEX 0, 0, 185, 402
+IDD_MULTI_SHOT_SETUP DIALOGEX 0, 0, 185, 391
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Multiple Record Setup"
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
@@ -2894,36 +2895,36 @@ BEGIN
     CONTROL         "Center shot at end",IDC_RCENTER_AFTER,"Button",BS_AUTORADIOBUTTON,59,50,72,10
     CONTROL         "Center shot at start",IDC_RCENTER_BEFORE,"Button",BS_AUTORADIOBUTTON,59,60,71,10
     GROUPBOX        "Shot in center",IDC_STAT_CENTER_GROUP,54,30,77,42,WS_GROUP
-    CONTROL         "Full sum returned on all shots",IDC_RNO_EARLY,"Button",BS_AUTORADIOBUTTON | WS_GROUP,21,249,120,10
-    CONTROL         "Early return only on last shot",IDC_RLAST_EARLY,"Button",BS_AUTORADIOBUTTON,21,259,110,10
-    CONTROL         "Early return on all shots",IDC_RALL_EARLY,"Button",BS_AUTORADIOBUTTON,21,269,94,10
+    CONTROL         "Full sum returned on all shots",IDC_RNO_EARLY,"Button",BS_AUTORADIOBUTTON | WS_GROUP,21,237,120,10
+    CONTROL         "Early return only on last shot",IDC_RLAST_EARLY,"Button",BS_AUTORADIOBUTTON,21,247,110,10
+    CONTROL         "Early return on all shots",IDC_RALL_EARLY,"Button",BS_AUTORADIOBUTTON,21,257,94,10
     CONTROL         "Early return, except for full sum on first shot",IDC_RFIRST_FULL,
-                    "Button",BS_AUTORADIOBUTTON,21,279,140,10
-    LTEXT           "Number of frames in return (-1 for all):",IDC_STAT_NUM_EARLY,23,291,110,8
-    EDITTEXT        IDC_EDIT_EARLY_FRAMES,134,289,22,12,ES_AUTOHSCROLL
-    GROUPBOX        "Early Returns for K2/K3",IDC_STAT_EARLY_GROUP,15,239,150,64
-    DEFPUSHBUTTON   "OK",IDOK,36,381,40,14
-    PUSHBUTTON      "Cancel",IDCANCEL,112,381,40,14
+                    "Button",BS_AUTORADIOBUTTON,21,267,140,10
+    LTEXT           "Number of frames in return (-1 for all):",IDC_STAT_NUM_EARLY,23,279,110,8
+    EDITTEXT        IDC_EDIT_EARLY_FRAMES,134,277,22,12,ES_AUTOHSCROLL
+    GROUPBOX        "Early Returns for K2/K3",IDC_STAT_EARLY_GROUP,15,227,150,64
+    DEFPUSHBUTTON   "OK",IDOK,36,369,40,14
+    PUSHBUTTON      "Cancel",IDCANCEL,112,369,40,14
     LTEXT           "Number of shots around center:",IDC_STAT_NUM_PERIPHERAL,9,20,95,8
     LTEXT           "99",IDC_STAT_NUM_SHOTS,104,20,9,8
     CONTROL         "",IDC_SPIN_NUM_SHOTS,"msctls_updown32",UDS_ARROWKEYS,115,17,10,14
     LTEXT           "Distance from center to off-center shots:",IDC_STAT_CENTER_DIST,9,77,121,8
     EDITTEXT        IDC_EDIT_SPOKE_DIST,128,75,30,14,ES_AUTOHSCROLL
     LTEXT           "um",IDC_STAT_CENTER_UM,160,77,11,8
-    CONTROL         "Save Record image",IDC_CHECK_SAVE_RECORD,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,229,79,10
-    LTEXT           "Diameter of circles to draw:",IDC_STAT_BEAM_DIAM,8,356,92,8
-    EDITTEXT        IDC_EDIT_BEAM_DIAM,91,353,26,14,ES_AUTOHSCROLL
-    LTEXT           "um",IDC_STAT_BEAM_UM,121,356,11,8
+    CONTROL         "Save Record image",IDC_CHECK_SAVE_RECORD,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,217,79,10
+    LTEXT           "Diameter of circles to draw:",IDC_STAT_BEAM_DIAM,8,344,92,8
+    EDITTEXT        IDC_EDIT_BEAM_DIAM,91,341,26,14,ES_AUTOHSCROLL
+    LTEXT           "um",IDC_STAT_BEAM_UM,121,344,11,8
     CONTROL         "Use Record illuminated area for circles in Low Dose",IDC_CHECK_USE_ILLUM_AREA,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,368,166,10
-    PUSHBUTTON      "?",IDC_BUTHELP,167,385,11,10
-    LTEXT           "Extra delay after image shift:",IDC_STAT_EXTRA_DELAY,8,310,89,8
-    LTEXT           "sec",IDC_STAT_SEC,123,310,12,8
-    EDITTEXT        IDC_EDIT_EXTRA_DELAY,94,307,26,14,ES_AUTOHSCROLL
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,356,166,10
+    PUSHBUTTON      "?",IDC_BUTHELP,167,373,11,10
+    LTEXT           "Extra delay after image shift:",IDC_STAT_EXTRA_DELAY,8,298,89,8
+    LTEXT           "sec",IDC_STAT_SEC,123,298,12,8
+    EDITTEXT        IDC_EDIT_EXTRA_DELAY,94,295,26,14,ES_AUTOHSCROLL
     CONTROL         "Adjust beam tilt to compensate for image shift",IDC_CHECK_ADJUST_BEAM_TILT,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,322,160,10
-    LTEXT           " Coma versus image shift was calibrated with:",IDC_STAT_COMA_IS_CAL,16,332,152,8
-    LTEXT           "0.8 um IA, spot 8, nanoprobe, 70 um aperture",IDC_STAT_COMA_CONDITIONS,17,340,157,8
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,310,160,10
+    LTEXT           " Coma versus image shift was calibrated with:",IDC_STAT_COMA_IS_CAL,16,320,152,8
+    LTEXT           "0.8 um IA, spot 8, nanoprobe, 70 um aperture",IDC_STAT_COMA_CONDITIONS,17,328,157,8
     CONTROL         "Do multiple Records within each hole",IDC_CHECK_DO_SHOTS_IN_HOLE,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,7,137,10
     CONTROL         "Do Records in multiple holes",IDC_CHECK_DO_MULTIPLE_HOLES,
@@ -2933,23 +2934,21 @@ BEGIN
     CONTROL         "",IDC_SPIN_NUM_X_HOLES,"msctls_updown32",UDS_ARROWKEYS,95,121,10,14
     LTEXT           "by 99",IDC_STAT_NUM_Y_HOLES,108,124,19,8
     CONTROL         "",IDC_SPIN_NUM_Y_HOLES,"msctls_updown32",UDS_ARROWKEYS,129,121,10,14
-    LTEXT           "Spacing:",IDC_STAT_SPACING,15,136,163,8
-    PUSHBUTTON      "For Corners of Regular Pattern",IDC_BUT_SET_REGULAR,11,180,97,12
+    LTEXT           "Spacing:",IDC_STAT_SPACING,8,136,170,8
+    PUSHBUTTON      "For Corners of Regular Pattern",IDC_BUT_SET_REGULAR,11,168,97,12
     CONTROL         "Use custom pattern (NONE DEFINED)",IDC_CHECK_USE_CUSTOM,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,158,171,10
-    PUSHBUTTON      "For Custom Pattern",IDC_BUT_SET_CUSTOM,112,180,62,12
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,146,171,10
+    PUSHBUTTON      "For Custom Pattern",IDC_BUT_SET_CUSTOM,112,168,62,12
     LTEXT           "Multiplier of usual delay after shifting to hole:",IDC_STAT_HOLE_DELAY_FAC,9,108,133,8
     EDITTEXT        IDC_EDIT_HOLE_DELAY_FAC,141,105,28,14,ES_AUTOHSCROLL
     CONTROL         "",IDC_TSS_LINE1,"Static",SS_BLACKFRAME | SS_SUNKEN,7,92,171,1
-    CONTROL         "",IDC_TSS_LINE2,"Static",SS_BLACKFRAME | SS_SUNKEN,7,224,171,1
-    GROUPBOX        "Save Image Shift Values at Holes",IDC_STAT_MEASURE_BOX,7,168,171,53
-    PUSHBUTTON      "Save Image Shift",IDC_BUT_SAVE_IS,54,195,55,12
-    PUSHBUTTON      "End Pattern",IDC_BUT_END_PATTERN,112,195,39,12
-    PUSHBUTTON      "Abort",IDC_BUT_ABORT,154,195,21,12
-    LTEXT           "Image shift should be measured near focus",IDC_STAT_SAVE_INSTRUCTIONS,9,209,169,10
-    PUSHBUTTON      "IS to Nav Pt",IDC_BUT_IS_TO_PT,11,195,40,12
-    CONTROL         "Omit corners of 3 by 3 array (cross pattern)",IDC_CHECK_OMIT_3X3_CORNERS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,146,147,10
+    CONTROL         "",IDC_TSS_LINE2,"Static",SS_BLACKFRAME | SS_SUNKEN,7,212,171,1
+    GROUPBOX        "Save Image Shift Values at Holes",IDC_STAT_MEASURE_BOX,7,156,171,53
+    PUSHBUTTON      "Save Image Shift",IDC_BUT_SAVE_IS,54,183,55,12
+    PUSHBUTTON      "End Pattern",IDC_BUT_END_PATTERN,112,183,39,12
+    PUSHBUTTON      "Abort",IDC_BUT_ABORT,154,183,21,12
+    LTEXT           "Image shift should be measured near focus",IDC_STAT_SAVE_INSTRUCTIONS,9,197,169,10
+    PUSHBUTTON      "IS to Nav Pt",IDC_BUT_IS_TO_PT,11,183,40,12
 END
 
 IDD_DE_REFERENCE DIALOGEX 0, 0, 172, 210
@@ -3579,7 +3578,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 178
         TOPMARGIN, 7
-        BOTTOMMARGIN, 395
+        BOTTOMMARGIN, 384
     END
 
     IDD_DE_REFERENCE, DIALOG
@@ -3891,7 +3890,7 @@ STRINGTABLE
 BEGIN
     ID_SETTINGS_RESTOREDEFAULTS 
                             "Read settings from system default file\\Read system file"
-    ID_SETTINGS_READAGAIN   "Reread settings from the current file"
+    ID_SETTINGS_READAGAIN   "Reload settings from the current file"
     ID_SETTINGS_READDEFAULTS "Read system default settings file"
     ID_SETTINGS_SAVECALIBRATIONS 
                             "Save shift, focus, and beam calibrations to system calibration file\nSave scope calibrations"
@@ -4209,6 +4208,7 @@ END
 STRINGTABLE
 BEGIN
     ID_MACRO_RUN40          "Run Script 40"
+    ID_SCRIPT_LISTPERSISTENTVARS "List all persistent variables"
 END
 
 STRINGTABLE
@@ -5652,12 +5652,6 @@ BEGIN
     IDC_EDIT_POST_MOVE_DELAY 
                             "Enter settling time in seconds after moving to next plate position"
     IDC_PPCOND_NEXT_AND_GO  "Close dialog, move to next phase plate position, start conditioning"
-END
-
-STRINGTABLE
-BEGIN
-    IDC_CHECK_OMIT_3X3_CORNERS 
-                            "Acquire in 5 holes by skipping corners of 3x3 array"
 END
 
 #endif    // English (United States) resources
