@@ -65,8 +65,8 @@ public:
     CString &strLine);
   int ReadOneMacro(int iset, CString & strLine, CString * strItems, int maxMacros);
   void WriteAllMacros(int numWrite);
-  void ReadMacrosFromFile(CString filename);
-  void WriteMacrosToFile(CString filename);
+  int ReadMacrosFromFile(CString &filename, const CString &curSettings, int maxMacros);
+  void WriteMacrosToFile(CString filename, int maxMacros);
   void ReportSpecialOptions(void);
   void OutputVector(const char * key, int size, ShortVec * shorts, FloatVec* floats);
   void StoreFloatsPerBinning(CString * strItems, const char * descrip, int iset, CString & strFileName, float * values);

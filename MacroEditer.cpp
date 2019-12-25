@@ -410,6 +410,8 @@ void CMacroEditer::UpdateButtons()
   m_butNextMacro.EnableWindow(inactive && AdjacentMacro(1) >= 0);
   m_butShiftDown.EnableWindow(inactive && m_iMacroNumber < MAX_MACROS - 1);
   m_butShiftUp.EnableWindow(inactive && m_iMacroNumber > 0);
+  m_editMacro.SetReadOnly(mProcessor->GetReadOnly(m_iMacroNumber) && 
+    !mWinApp->GetAdministrator());
 }
 
 // Get the text from the window into the local variable then

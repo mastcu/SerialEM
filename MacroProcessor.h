@@ -96,6 +96,7 @@ class CMacroProcessor : public CCmdTarget
   GetMember(bool, CompensatedBTforIS);
   GetMember(bool, NoMessageBoxOnError);
   GetSetMember(BOOL, RestoreMacroEditors);
+  bool GetReadOnly(int macNum) { return mReadOnlyMacro[macNum]; };
   std::map<std::string, int> *GetCustomTimeMap() { return &mCustomTimeMap;};
   bool GetAlignWholeTSOnly() {return DoingMacro() && mAlignWholeTSOnly;};
   bool SkipCheckingFrameAli() {return DoingMacro() && mSkipFrameAliCheck;};
@@ -145,6 +146,7 @@ private:
   std::set<std::string> mFunctionSet2;
   std::set<std::string> mReservedWords;
   std::map<std::string, int> mCustomTimeMap;
+  bool mReadOnlyMacro[MAX_MACROS];
 
   CString *mMacros;
 
@@ -320,7 +322,7 @@ public:
   afx_msg void OnMacroReadMany();
   afx_msg void OnUpdateMacroReadMany(CCmdUI *pCmdUI);
   afx_msg void OnMacroWriteAll();
-  afx_msg void OnUpdateMacroWriteAll(CCmdUI *pCmdUI);
+  afx_msg void OnUpdateNoTasks(CCmdUI *pCmdUI);
   void OpenMacroEditor(int index);
   bool ConvertBufferLetter(CString strItem, int emptyDefault, bool checkImage, int &bufIndex, CString & message);
   bool CheckCameraBinning(double binDblIn, int &binning, CString &message);
@@ -354,6 +356,7 @@ public:
   int CheckLegalCommandAndArgNum(CString * strItems, CString strLine, int macroNum);
   bool ArithmeticIsAllowed(CString & str);
   int AdjustBeamTiltIfSelected(double delISX, double delISY, BOOL doAdjust, CString &message);
+  int AdjustBTApplyISSetDelay(double delISX, double delISY, BOOL doAdjust, BOOL setDelay, double scale, CString &message);
   afx_msg void OnOpenEditorsOnStart();
   afx_msg void OnUpdateOpenEditorsOnStart(CCmdUI *pCmdUI);
   void TransferOneLiners(bool fromDialog);
@@ -382,6 +385,10 @@ public:
   bool SetupStageRestoreAfterTilt(CString * strItems, double &stageX, double &stageY);
   CMapDrawItem *CurrentOrIndexedNavItem(int &index, CString &strLine);
   float * FloatArrayFromVariable(CString name, int &numVals, CString & report);
+  afx_msg void OnScriptLoadNewPackage();
+  void UpdateAllForNewScripts(bool oneLinersToo);
+  afx_msg void OnScriptSavePackage();
+  afx_msg void OnScriptSavePackageAs();
 };
 
 #endif // !defined(AFX_MACROPROCESSOR_H__33178182_58A1_4F3A_B8F4_D41F94866517__INCLUDED_)

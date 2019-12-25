@@ -973,10 +973,6 @@ BOOL CSerialEMApp::InitInstance()
       OnFileOpenlog();
     }
   }
-  AppendToLog("Read settings from: " + mDocWnd->GetCurrentSettingsPath(),
-    LOG_SWALLOW_IF_CLOSED);
-  AppendToLog("Read properties/calibrations from: " + mDocWnd->GetFullSystemDir(),
-    LOG_SWALLOW_IF_CLOSED);
   SEMTrace('1', "Detected system DPI of %d, using DPI %d%s", mag, mSystemDPI,
     mDisplayNotTruly120DPI ? " but not scaling for 120" : "");
 
@@ -1457,6 +1453,9 @@ BOOL CSerialEMApp::InitInstance()
     LOG_SWALLOW_IF_CLOSED);
   AppendToLog("Read properties/calibrations from: " + mDocWnd->GetFullSystemDir(),
     LOG_SWALLOW_IF_CLOSED);
+  if (mDocWnd->GetReadScriptPack())
+    AppendToLog("Read scripts from " + mDocWnd->GetCurScriptPackPath(),
+      LOG_SWALLOW_IF_CLOSED);
   if (mLogWindow)
     mLogWindow->SetUnsaved(false);
   if (mDummyInstance)
@@ -2928,8 +2927,7 @@ void CSerialEMApp::UpdateWindowSettings()
     mFilterControl.UpdateSettings();
   if (ScopeHasSTEM())
     mSTEMcontrol.UpdateSettings();
-  if (mMacroToolbar)
-    mMacroToolbar->UpdateSettings();
+  mMacroProcessor->UpdateAllForNewScripts(true);
   if (mAutocenDlg)
     mAutocenDlg->UpdateSettings();
 }
@@ -3195,6 +3193,7 @@ void CSerialEMApp::OnCalibrationAdministrator()
   mAdministrator = !mAdministrator; 
   if (mFilterParams.firstGIFCamera >= 0)
     mFilterControl.Update();
+  UpdateAllEditers();
 }
 
 void CSerialEMApp::OnUpdateCalibrationAdministrator(CCmdUI* pCmdUI) 
@@ -4092,6 +4091,23 @@ void CSerialEMApp::OpenOrCloseMacroEditors(void)
   mMacroProcessor->OpenOrJustCloseOneLiners(mReopenMacroEditor[MAX_MACROS]);
   UpdateBufferWindows();
   RestoreViewFocus();
+}
+
+// Sets all macros empty and updates open editors
+void CSerialEMApp::ClearAllMacros(void)
+{
+  int set;
+  for (set = 0; set < MAX_MACROS + MAX_ONE_LINE_SCRIPTS; set++) {
+    mMacros[set] = "";
+    if (set < MAX_MACROS) {
+      if (mMacroEditer[set])
+        mMacroEditer[set]->TransferMacro(false);
+      else
+        mMacroProcessor->ScanForName(set);
+    } else if (mMacroProcessor->mOneLineScript)
+      mMacroProcessor->mOneLineScript->m_strOneLine[set - MAX_MACROS] = "";
+  }
+  mMacroProcessor->TransferOneLiners(false);
 }
 
 // Returns the little font based on the size of a regaulr font static text box

@@ -13,6 +13,9 @@
       {
         width: 483px;
       }
+      .auto-style1 {
+        width: 506px;
+      }
   --></style>
   </HEAD>
   <BODY BGCOLOR="#ffffff" TEXT="#000000">
@@ -21,77 +24,96 @@
       <P>The Script menu offers the following commands for controlling scripts:</P>
       <TABLE BORDER cols="2">
         <TR VALIGN="top">
+          <TD class="style1">Edit</TD>
+          <TD class="auto-style1">Opens a submenu for opening script editors</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <A HREF="#hid_macro_edit1">Edit 1, 2, ...</A></TD>
+          <TD class="auto-style1">Opens a window for editing a script.</TD>
+        </TR>
+        <TR VALIGN="top">
           <TD class="style1">Run</TD>
-          <TD class="style2">Opens submenu for running scripts</TD>
+          <TD class="auto-style1">Opens a submenu for running scripts.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1">&nbsp;&nbsp;&nbsp;&nbsp; <A HREF="#hid_macro_run1">Run 1, 2, ...</A></TD>
-          <TD class="style2">Runs a script.</TD>
+          <TD class="auto-style1">Runs a script.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><a href="#hid_script_runonecommand">Edit/Run One Line</a>...</TD>
-          <TD class="style2">Open window to allow up to 5 one-line scripts</TD>
+          <TD class="auto-style1">Opens window to allow up to 5 one-line scripts.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_macro_stop">Stop</A></TD>
-          <TD class="style2">Stops script at next command.</TD>
+          <TD class="auto-style1">Stops script at next command.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_macro_end">End</A></TD>
-          <TD class="style2">Stops script at end of loop or repeat.</TD>
+          <TD class="auto-style1">Stops script at end of loop or repeat.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_macro_resume">Resume</A></TD>
-          <TD class="style2">Resumes script at place where it stopped.</TD>
+          <TD class="auto-style1">Resumes script at place where it stopped.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_macro_toolbar">Toolbar</A></TD>
-          <TD class="style2">Opens a toolbar with buttons for all scripts.</TD>
+          <TD class="auto-style1">Opens a toolbar with buttons for all scripts.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_macro_setlength">Set Height</A></TD>
-          <TD class="style2">Sets the number of buttons and button height in the script toolbar.</TD>
+          <TD class="auto-style1">Sets the number of buttons and button height in the script toolbar.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_macro_controls">Controls</A></TD>
-          <TD class="style2">Opens dialog box to set conditions for stopping a script.</TD>
+          <TD class="auto-style1">Opens dialog box to set conditions for stopping a script.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_macro_edit1">Edit 1, 2, ...</A></TD>
-          <TD class="style2">Opens a window for editing a script.</TD>
+          <TD class="style1"><a href="#hid_script_loadnewpackage">Load New Package...</a></TD>
+          <TD class="auto-style1">Loads all scripts from a file and makes that file be the 
+            current package.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><a href="#hid_script_savepackage">Save Package</a></TD>
+          <TD class="auto-style1">Saves all scripts to the current package file. </TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><a href="#hid_script_savepackageas">Save Package As</a></TD>
+          <TD class="auto-style1">Saves all scripts to a new file and makes that the new 
+            current package. </TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><a href="#hid_macro_readmany">Load Many</a></TD>
-          <TD class="style2">Loads all scripts in a file into their given script numbers.</TD>
+          <TD class="auto-style1">Loads all scripts in a file into their given script numbers.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><a href="#hid_macro_writeall">Save All</a></TD>
-          <TD class="style2">Saves all current scripts into a file.</TD>
+          <TD class="style1"><a href="#hid_macro_writeall">Save All to Other</a></TD>
+          <TD class="auto-style1">Saves all current scripts into a file, leaving current 
+            package the same.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><a href="#hid_macro_listfunctions">List Functions</a></TD>
-          <TD class="style2">Lists all functions defined in scripts.</TD>
+          <TD class="auto-style1">Lists all functions defined in scripts.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><a href="#hid_script_listpersistentvars">List Persistent Vars</a></TD>
-          <TD class="style2">List all persistent variables defined by scripts in the log window.</TD>
+          <TD class="auto-style1">List sall persistent variables defined by scripts in the log window.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><a href="#hid_script_clearpersistentvars">Clear Persistent Vars</a></TD>
-          <TD class="style2">Clears all persistent variables defined by scripts.</TD>
+          <TD class="auto-style1">Clears all persistent variables defined by scripts.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_macro_verbose">Set Indent Size</A></TD>
-          <TD class="style2">Sets number of spaces for automatic indenting in editor.</TD>
+          <TD class="auto-style1">Sets number of spaces for automatic indenting in editor.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><a href="#hid_script_openeditorsonstart">Open Editors on Start</a></TD>
-          <TD class="style2">Toggles whether editing windows will be restored on program 
-            startup</TD>
+          <TD class="auto-style1">Toggles whether editing windows will be restored on program 
+            startup.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_macro_verbose">Verbose</A></TD>
-          <TD class="style2">Toggles echoing of each line at start of script.</TD>
+          <TD class="auto-style1">Toggles echoing of each line at start of script.</TD>
         </TR>
         </TABLE>
       <BR>
@@ -99,6 +121,14 @@
           Commands</A>; for general information about scripts see <A HREF="about_scripts.htm">
           About scripts</A>.
       </P>
+      <P><A NAME="hid_macro_edit1"></A><B>Edit command (Script menu)</B></P>
+      <P>Use one of these commands to open a <A HREF="hidd_macro.htm">Script Editing 
+        Window</A> for editing the given script. Use the left or right
+        &#39;Editor &#39; arrows in the editing 
+        window to get to scripts numbered higher than 10.&nbsp;  You
+        can also open an editor for an existing script by holding down the
+        Ctrl key and pressing a button for the script in the Script Toolbar or
+        in the <A HREF="hidd_camera_macro.htm">Camera &amp; Script Control Panel</A>.</P>
       <P><A NAME="hid_macro_run1"></A><B>Run commands (Script menu - Run submenu)</B></P>
       <P>Use one of these commands to run a selected script.</P>
     </b>
@@ -151,17 +181,27 @@
         stopped when the stage reaches a certain tilt angle, image intensity falls 
         below a certain level, image shift exceeds a certain amount, montage error is 
         too large, or the script has repeated a given number of times.</P>
-      <P><A NAME="hid_macro_edit1"></A><B>Edit command (Script menu)</B></P>
-      <P>Use one of these commands to open a <A HREF="hidd_macro.htm">Script Editing 
-        Window</A> for editing the given script. Use the left or right
-        &#39;Editor &#39; arrows in the editing 
-        window to get to scripts numbered higher than 10.&nbsp;  You
-        can also open an editor for an existing script by holding down the
-        Ctrl key and pressing a button for the script in the Script Toolbar or
-        in the <A HREF="hidd_camera_macro.htm">Camera &amp; Script Control Panel</A>.</P>
+      <P><A NAME="hid_script_loadnewpackage"></A><B>Load New Package command (Script menu)</B></P>
+    <p>Use this command to load a package of scripts from a file and make that file be 
+      the 'current script package file', which is loaded and saved along with the 
+      settings file.&nbsp; As of SerialEM 3.8 (12/23/19), scripts are no longer saved 
+      in the settings file but in a separate file, with the name of that file saved in 
+      the settings file.&nbsp; This means that you can have multiple packages of 
+      scripts without having to store them in different settings files, and also that 
+      you can have multiple settings files all using the same scripts.&nbsp; You will 
+      be asked whether you want to save the current package first, in case it has 
+      changed.&nbsp; If a script is empty in the newly loaded package, an existing 
+      script in that position will be cleared out.</p>
+      <P><A NAME="hid_script_savepackage"></A><B>Save Package command (Script menu)</B></P>
+    <p>Use this command to save all scripts, including one-line scripts, to the 
+      current package file.</p>
+      <P><A NAME="hid_script_savepackageas"></A><B>Save Package As command (Script menu)</B></P>
+    <p>Use this command to save all scripts to a new file, which becomes the current 
+      package file whose name is saved with the settings.</p>
       <P><A NAME="hid_macro_readmany"></A><B>Load Many command (Script menu)</B></P>
       <P>Use this command to load multiple scripts from a file and place them into their 
-        respective script numbers.&nbsp; These scripts must have been saved so that each 
+        respective script numbers, leaving any other existing scripts unchanged and not 
+        changing which file is considered the current script package.&nbsp; These scripts must have been saved so that each 
         one starts with a line with &#39;Macro&#39; and the script number, and ends with the line 
         &#39;EndMacro&#39;.&nbsp; This is the way scripts are stored in a settings file as well 
         as by the <a href="#hid_macro_writeall">Save All</a> command, so this
@@ -169,7 +209,8 @@
         settings file. However a single script saved from the editing window cannot be 
         read with this command because it does not have these starting and ending lines.</P>
       <P><A NAME="hid_macro_writeall"></A><B>Save All command (Script menu)</B></P>
-      <P>Use this command to save all currently defined scripts into a single file.&nbsp; 
+      <P>Use this command to save all currently defined scripts into a single file 
+        without changing which file is considered the current script package.&nbsp; 
         They are saved with script numbers, just as in a settings file, so that when this 
         file is read, scripts will go back into the same locations.</P>
       <P><A NAME="hid_macro_listfunctions"></A><B>List Functions command (Script menu)</B></P>

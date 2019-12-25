@@ -825,6 +825,7 @@ int GetIntegerVersion(void);
 void AdjustSizesForSuperResolution(int iCam);
 void MainViewResizing(CRect &winRect, bool FFTwin);
 void OpenOrCloseMacroEditors(void);
+void ClearAllMacros(void);
 CFont * GetLittleFont(CWnd *stat);
 float GetScalingForDPI();
 int ScaleValueForDPI(int value);

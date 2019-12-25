@@ -367,6 +367,25 @@ BEGIN
     END
     POPUP "&Script"
     BEGIN
+        POPUP "&Edit"
+        BEGIN
+            MENUITEM "Edit &1",                     ID_MACRO_EDIT1
+            MENUITEM "Edit &2",                     ID_MACRO_EDIT2
+            MENUITEM "Edit &3",                     ID_MACRO_EDIT3
+            MENUITEM "Edit &4",                     ID_MACRO_EDIT4
+            MENUITEM "Edit &5",                     ID_MACRO_EDIT5
+            MENUITEM "Edit &6",                     ID_MACRO_EDIT6
+            MENUITEM "Edit &7",                     ID_MACRO_EDIT7
+            MENUITEM "Edit &8",                     ID_MACRO_EDIT8
+            MENUITEM "Edit &9",                     ID_MACRO_EDIT9
+            MENUITEM "Edit 1&0",                    ID_MACRO_EDIT10
+            MENUITEM "Edit 15",                     ID_MACRO_EDIT15
+            MENUITEM "Edit 20",                     ID_MACRO_EDIT20
+            MENUITEM "Edit 25",                     ID_MACRO_EDIT25
+            MENUITEM "Edit 30",                     ID_MACRO_EDIT30
+            MENUITEM "Edit 35",                     ID_MACRO_EDIT35
+            MENUITEM "Edit 40",                     ID_MACRO_EDIT40
+        END
         POPUP "&Run"
         BEGIN
             MENUITEM "Run 1",                       ID_MACRO_RUN1
@@ -412,36 +431,23 @@ BEGIN
         END
         MENUITEM "Edit/Run &One Line...",       ID_SCRIPT_RUNONECOMMAND
         MENUITEM "&Stop",                       ID_MACRO_STOP
-        MENUITEM "&End",                        ID_MACRO_END
+        MENUITEM "E&nd",                        ID_MACRO_END
         MENUITEM "Resu&me",                     ID_MACRO_RESUME
         MENUITEM SEPARATOR
         MENUITEM "&Toolbar...",                 ID_MACRO_TOOLBAR
         MENUITEM "Set &Height",                 ID_MACRO_SETLENGTH
         MENUITEM "&Controls...",                ID_MACRO_CONTROLS
         MENUITEM SEPARATOR
-        MENUITEM "Edit 1",                      ID_MACRO_EDIT1
-        MENUITEM "Edit 2",                      ID_MACRO_EDIT2
-        MENUITEM "Edit 3",                      ID_MACRO_EDIT3
-        MENUITEM "Edit 4",                      ID_MACRO_EDIT4
-        MENUITEM "Edit 5",                      ID_MACRO_EDIT5
-        MENUITEM "Edit 6",                      ID_MACRO_EDIT6
-        MENUITEM "Edit 7",                      ID_MACRO_EDIT7
-        MENUITEM "Edit 8",                      ID_MACRO_EDIT8
-        MENUITEM "Edit 9",                      ID_MACRO_EDIT9
-        MENUITEM "Edit 10",                     ID_MACRO_EDIT10
-        MENUITEM "Edit 15",                     ID_MACRO_EDIT15
-        MENUITEM "Edit 20",                     ID_MACRO_EDIT20
-        MENUITEM "Edit 25",                     ID_MACRO_EDIT25
-        MENUITEM "Edit 30",                     ID_MACRO_EDIT30
-        MENUITEM "Edit 35",                     ID_MACRO_EDIT35
-        MENUITEM "Edit 40",                     ID_MACRO_EDIT40
-        MENUITEM SEPARATOR
+        MENUITEM "Load Ne&w Package...",        ID_SCRIPT_LOADNEWPACKAGE
+        MENUITEM "Save Pac&kage",               ID_SCRIPT_SAVEPACKAGE
+        MENUITEM "Save Packa&ge As...",         ID_SCRIPT_SAVEPACKAGEAS
         MENUITEM "&Load Many",                  ID_MACRO_READMANY
-        MENUITEM "Save &All",                   ID_MACRO_WRITEALL
+        MENUITEM "Save &All to Other",          ID_MACRO_WRITEALL
+        MENUITEM SEPARATOR
         MENUITEM "List &Functions",             ID_MACRO_LISTFUNCTIONS
         MENUITEM "L&ist Persistent Vars",       ID_SCRIPT_LISTPERSISTENTVARS
         MENUITEM "Clear &Persistent Vars",      ID_SCRIPT_CLEARPERSISTENTVARS
-        MENUITEM "Set I&ndent Size",            ID_SCRIPT_SETINDENTSIZE
+        MENUITEM "Set Indent Si&ze",            ID_SCRIPT_SETINDENTSIZE
         MENUITEM "Open E&ditors on Start",      ID_SCRIPT_OPENEDITORSONSTART
         MENUITEM "&Verbose",                    ID_MACRO_VERBOSE
     END
@@ -3718,6 +3724,11 @@ BEGIN
     0
 END
 
+IDD_MACRO AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -4211,6 +4222,10 @@ STRINGTABLE
 BEGIN
     ID_MACRO_RUN40          "Run Script 40"
     ID_SCRIPT_LISTPERSISTENTVARS "List all persistent variables"
+    ID_SCRIPT_LOADNEWPACKAGE 
+                            "Read file and make it new current script package file"
+    ID_SCRIPT_SAVEPACKAGE   "Save scripts to the current package file"
+    ID_SCRIPT_SAVEPACKAGEAS "Save scripts to a new file and make it new current package file"
 END
 
 STRINGTABLE
@@ -5189,8 +5204,8 @@ BEGIN
     ID_TASKS_SET_DOSE_RATE  "Set dose rate on camera in e/pixel/sec"
     ID_FILE_CLOSE_MDOC      "Close the file with data about saved movie frames"
     ID_FILE_OPEN_MDOC       "Open .mdoc file for data about all saved movie frames"
-    ID_MACRO_READMANY       "Read multiple scripts from a settings or other file"
-    ID_MACRO_WRITEALL       "Write all scripts to a new file"
+    ID_MACRO_READMANY       "Read multiple scripts from a settings or other file, retaining other scripts"
+    ID_MACRO_WRITEALL       "Write all scripts to a new file separate from the package file"
 END
 
 STRINGTABLE

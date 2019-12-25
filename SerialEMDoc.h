@@ -81,6 +81,7 @@ public:
   GetSetMember(int, STEMunsignOpt);
   GetSetMember(BOOL, SkipFileDlg);
   SetMember(bool, DeferWritingFrameMdoc);
+  GetSetMember(bool, ReadScriptPack);
 
 	void AutoSaveFiles();
 	int AppendToLogBook(CString inString, CString title);
@@ -99,6 +100,7 @@ public:
   FileOptions *GetOtherFileOpt() {return &mOtherFileOpt;};
   int SaveSettingsOnExit();
   void ManageBackupFile(CString strFile, BOOL &bBackedUp);
+  void ManageScriptPackBackup();
   int OfferToSaveSettings(CString strWhy);
   SetMember(CString, LogBook);
   GetMember(CString, SystemPath);
@@ -111,6 +113,8 @@ public:
   GetMember(CString, FlybackName);
   GetMember(int, DfltUseMdoc);
   GetMember(int, FrameAdocIndex);
+  GetSetMember(CString, CurScriptPackPath);
+  GetSetMember(BOOL, ScriptPackBackedUp);
   void SetDfltUseMdoc(int inval);
   void ReadSetPropCalFiles();
   void SaveActiveBuffer();
@@ -214,12 +218,14 @@ private:
   CString mPluginPath;           // Path name for plugins; replaces PF/SEM/Plugins
   CString mPluginPath2;          // Second path name for plugins; additional location
   CString mFlybackName;          // Name of flyback time file
+  CString mCurScriptPackPath;    // Full name of current script package file
   BOOL mSettingsOpen;            // flag that settings file open
   BOOL mSettingsReadable;        // flag that settings file is readable
   BOOL mSysSettingsReadable;     // Flag that system file is rereadable
   int  mTrueLDArea;              // Saved Low dose area when reading settings
   BOOL mCalibBackedUp;           // Calibration file was backup in this session
   BOOL mSettingsBackedUp;        // Current settings file was backed up this session
+  BOOL mScriptPackBackedUp;      // Current script package is backed up
   BOOL mAutoSaveSettings;        // Flag to autosave settings
   BOOL mAutoSaveNav;             // Flag to do autosave of navigator
   BOOL mShortTermBackedUp;       // Flag that short-term cal file is backed up
@@ -252,6 +258,7 @@ private:
   BOOL mSkipFileDlg;             // Settings flag to skip the file dialog
   bool mShowFileDlgOnce;         // Flag to be able to show it once
   bool mAbandonSettings;         // Flag not to save settings on exit or autosave
+  bool mReadScriptPack;          // Flag that a settings file had a script package path
 
 public:
   KImageStore * OpenNewFileByName(CString cFilename, FileOptions * fileOptp);
@@ -276,7 +283,7 @@ public:
   int SaveFrameDataInMdoc(KImage * image);
   afx_msg void OnUpdateFileOpenMdoc(CCmdUI *pCmdUI);
   int GetTextFileName(bool openOld, bool originalDir, CString &pathname,
-    CString *filename = NULL);
+    CString *filename = NULL, CString *initialDir = NULL);
   void DateTimeComponents(CString & date, CString & time, BOOL numericDate);
   int AddValueToFrameMdoc(CString key, CString value);
   int WriteFrameMdoc(void);

@@ -2039,6 +2039,10 @@
 #define ID_TASKS_SETUPVPPCONDITIONING   33378
 #define ID_WINDOW_TAKESCREENSHOT        33379
 #define ID_SCRIPT_LISTPERSISTENTVARS    33380
+#define ID_SCRIPT_LOADNEWPACKAGE        33381
+#define ID_SCRIPT_SAVEPACKAGE           33382
+#define ID_SCRIPT_SAVEPACKAGEAS         33383
+#define ID_SCRIPT_EDIT                  33384
 
 // Next default values for new objects
 // 
@@ -2046,7 +2050,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        243
-#define _APS_NEXT_COMMAND_VALUE         33381
+#define _APS_NEXT_COMMAND_VALUE         33385
 #define _APS_NEXT_CONTROL_VALUE         2601
 #define _APS_NEXT_SYMED_VALUE           104
 #endif

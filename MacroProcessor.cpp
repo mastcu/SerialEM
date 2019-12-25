@@ -267,7 +267,8 @@ enum {CME_SCRIPTEND = -7, CME_LABEL, CME_SETVARIABLE, CME_SETSTRINGVAR, CME_DOKE
   CME_REPORTK3CDSMODE, CME_SETK3CDSMODE, CME_CONDITIONPHASEPLATE, CME_LINEARFITTOVARS,
   CME_REPORTNUMMONTAGEPIECES, CME_NAVITEMFILETOOPEN, CME_CROPCENTERTOSIZE,
   CME_ACQUIRETOMATCHBUFFER,  CME_REPORTXLENSDEFLECTOR, CME_SETXLENSDEFLECTOR, 
-  CME_REPORTXLENSFOCUS, CME_SETXLENSFOCUS, CME_EXTERNALTOOLARGPLACE
+  CME_REPORTXLENSFOCUS, CME_SETXLENSFOCUS, CME_EXTERNALTOOLARGPLACE, 
+  CME_READONLYUNLESSADMIN, CME_IMAGESHIFTBYSTAGEDIFF 
 };
 
 // The two numbers are the minimum arguments and whether arithmetic is allowed
@@ -417,7 +418,8 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"LinearFitToVars", 2, 0}, {"ReportNumMontagePieces", 0, 0}, {"NavItemFileToOpen", 1, 0},
 {"CropCenterToSize", 3, 0}, {"AcquireToMatchBuffer", 1, 0}, {"ReportXLensDeflector", 1,0},
 {"SetXLensDeflector", 3, 0}, {"ReportXLensFocus", 0, 0}, {"SetXLensFocus", 1, 0}, 
-{"ExternalToolArgPlace", 1, 0},/*CAI3.8*/
+{"ExternalToolArgPlace", 1, 0},/*CAI3.8*/{"ReadOnlyUnlessAdmin", 0, 0},
+{"ImageShiftByStageDiff", 2, 0},
 {NULL, 0, 0}
 };
 // The longest is now 25 characters but 23 is a more common limit
@@ -460,17 +462,24 @@ BEGIN_MESSAGE_MAP(CMacroProcessor, CCmdTarget)
   ON_COMMAND(ID_MACRO_READMANY, OnMacroReadMany)
   ON_UPDATE_COMMAND_UI(ID_MACRO_READMANY, OnUpdateMacroReadMany)
   ON_COMMAND(ID_MACRO_WRITEALL, OnMacroWriteAll)
-  ON_UPDATE_COMMAND_UI(ID_MACRO_WRITEALL, OnUpdateMacroWriteAll)
+  ON_UPDATE_COMMAND_UI(ID_MACRO_WRITEALL, OnUpdateNoTasks)
   ON_COMMAND(ID_MACRO_LISTFUNCTIONS, OnMacroListFunctions)
-  ON_UPDATE_COMMAND_UI(ID_MACRO_LISTFUNCTIONS, OnUpdateMacroWriteAll)
+  ON_UPDATE_COMMAND_UI(ID_MACRO_LISTFUNCTIONS, OnUpdateNoTasks)
   ON_COMMAND(ID_SCRIPT_SETINDENTSIZE, OnScriptSetIndentSize)
   ON_COMMAND(ID_SCRIPT_LISTPERSISTENTVARS, OnScriptListPersistentVars)
+  ON_UPDATE_COMMAND_UI(ID_SCRIPT_CLEARPERSISTENTVARS, OnUpdateNoTasks)
   ON_COMMAND(ID_SCRIPT_CLEARPERSISTENTVARS, OnScriptClearPersistentVars)
   ON_UPDATE_COMMAND_UI(ID_SCRIPT_CLEARPERSISTENTVARS, OnUpdateClearPersistentVars)
   ON_COMMAND(ID_SCRIPT_RUNONECOMMAND, OnScriptRunOneCommand)
   ON_UPDATE_COMMAND_UI(ID_SCRIPT_RUNONECOMMAND, OnUpdateScriptRunOneCommand)
   ON_COMMAND(ID_SCRIPT_OPENEDITORSONSTART, OnOpenEditorsOnStart)
   ON_UPDATE_COMMAND_UI(ID_SCRIPT_OPENEDITORSONSTART, OnUpdateOpenEditorsOnStart)
+  ON_COMMAND(ID_SCRIPT_LOADNEWPACKAGE, OnScriptLoadNewPackage)
+  ON_UPDATE_COMMAND_UI(ID_SCRIPT_LOADNEWPACKAGE, OnUpdateMacroReadMany)
+  ON_COMMAND(ID_SCRIPT_SAVEPACKAGE, OnScriptSavePackage)
+  ON_UPDATE_COMMAND_UI(ID_SCRIPT_SAVEPACKAGE, OnUpdateNoTasks)
+  ON_COMMAND(ID_SCRIPT_SAVEPACKAGEAS, OnScriptSavePackageAs)
+  ON_UPDATE_COMMAND_UI(ID_SCRIPT_SAVEPACKAGEAS, OnUpdateNoTasks)
 END_MESSAGE_MAP()
 
 //////////////////////////////////////////////////////////////////////
@@ -552,6 +561,7 @@ CMacroProcessor::CMacroProcessor()
     mStrNum[i].Format("%d", i + 1);
     mFuncArray[i].SetSize(0, 4);
     mEditerPlacement[i].rcNormalPosition.right = 0;
+    mReadOnlyMacro[i] = false;
   }
   srand(GetTickCount());
   mProcessThread = NULL;
@@ -750,9 +760,8 @@ void CMacroProcessor::OnMacroReadMany()
   CString filename;
   if (mWinApp->mDocWnd->GetTextFileName(true, false, filename))
     return;
-  mWinApp->mParamIO->ReadMacrosFromFile(filename);
-  if (mWinApp->mMacroToolbar)
-    mWinApp->mMacroToolbar->SetLength(mNumToolButtons, mToolButHeight);
+  mWinApp->mParamIO->ReadMacrosFromFile(filename, "", MAX_MACROS);
+  UpdateAllForNewScripts(false);
 }
 
 void CMacroProcessor::OnUpdateMacroReadMany(CCmdUI *pCmdUI)
@@ -761,17 +770,95 @@ void CMacroProcessor::OnUpdateMacroReadMany(CCmdUI *pCmdUI)
     (mWinApp->mNavigator && mWinApp->mNavigator->GetAcquiring())));
 }
 
+// Write all macros to an unrelated file, leaving package file the same
 void CMacroProcessor::OnMacroWriteAll()
 {
   CString filename;
   if (mWinApp->mDocWnd->GetTextFileName(false, false, filename))
     return;
-  mWinApp->mParamIO->WriteMacrosToFile(filename);
+  mWinApp->mParamIO->WriteMacrosToFile(filename, MAX_MACROS);
 }
 
-void CMacroProcessor::OnUpdateMacroWriteAll(CCmdUI *pCmdUI)
+void CMacroProcessor::OnUpdateNoTasks(CCmdUI *pCmdUI)
 {
   pCmdUI->Enable(!mWinApp->DoingTasks());
+}
+
+// Load a new file as the package file, wipe out other scripts
+void CMacroProcessor::OnScriptLoadNewPackage()
+{
+  CString filename, path, filen, oldFile;
+  oldFile = mWinApp->mDocWnd->GetCurScriptPackPath();
+
+  // Find out if want to save
+  if (!oldFile.IsEmpty()) {
+    UtilSplitPath(oldFile, path, filen);
+    if (AfxMessageBox("Save current scripts to current file before loading a new"
+      " package file?", MB_QUESTION) == IDYES) {
+      mWinApp->mDocWnd->ManageScriptPackBackup();
+      mWinApp->mParamIO->WriteMacrosToFile(oldFile, MAX_MACROS + MAX_ONE_LINE_SCRIPTS);
+    }
+  }
+  if (mWinApp->mDocWnd->GetTextFileName(true, false, filename, NULL, &path))
+    return;
+  mWinApp->ClearAllMacros();
+
+  // Try to read, try to revert if fails, and if THAT fails, assign the default name
+  if (mWinApp->mParamIO->ReadMacrosFromFile(filename, "",
+    MAX_MACROS + MAX_ONE_LINE_SCRIPTS)) {
+    mWinApp->ClearAllMacros();
+    filename = oldFile;
+    if (mWinApp->mParamIO->ReadMacrosFromFile(filename, "",
+      MAX_MACROS + MAX_ONE_LINE_SCRIPTS)) {
+      oldFile = mWinApp->mDocWnd->GetCurrentSettingsPath();
+      UtilSplitExtension(oldFile, filename, filen);
+      filename += "-scripts.txt";
+      mWinApp->AppendToLog("Unable to reload last script package; scripts will be saved "
+        "to\n" + filename + " unless you do \"Save Package As\" to a different name");
+    }
+  }
+  mWinApp->mDocWnd->SetCurScriptPackPath(filename);
+  mWinApp->mDocWnd->SetScriptPackBackedUp(false);
+  UpdateAllForNewScripts(true);
+  mWinApp->AppendToLog("Current script package file is now " + filename);
+}
+
+// Take care of all components that need to change when there are potentially new scripts
+void CMacroProcessor::UpdateAllForNewScripts(bool oneLinersToo)
+{
+  if (mWinApp->mMacroToolbar) {
+    mWinApp->mMacroToolbar->SetLength(mNumToolButtons, mToolButHeight);
+    mWinApp->mMacroToolbar->UpdateSettings();
+  }
+  mWinApp->mCameraMacroTools.UpdateSettings();
+  mWinApp->UpdateAllEditers();
+  if (oneLinersToo)
+    TransferOneLiners(false);
+}
+
+// Save to currently defined package file
+void CMacroProcessor::OnScriptSavePackage()
+{
+  CString filename = mWinApp->mDocWnd->GetCurScriptPackPath();
+  if (filename.IsEmpty())
+    OnScriptSavePackageAs();
+  else
+    mWinApp->mParamIO->WriteMacrosToFile(filename, MAX_MACROS + MAX_ONE_LINE_SCRIPTS);
+}
+
+// Save to new package file
+void CMacroProcessor::OnScriptSavePackageAs()
+{
+  CString filename, path, filen, oldFile;
+  oldFile = mWinApp->mDocWnd->GetCurScriptPackPath();
+  if (!oldFile.IsEmpty())
+    UtilSplitPath(oldFile, path, filen);
+  if (mWinApp->mDocWnd->GetTextFileName(false, false, filename, NULL, &path))
+    return;
+  mWinApp->mParamIO->WriteMacrosToFile(filename, MAX_MACROS + MAX_ONE_LINE_SCRIPTS);
+  mWinApp->mDocWnd->SetCurScriptPackPath(filename);
+  mWinApp->mDocWnd->SetScriptPackBackedUp(false);
+  mWinApp->AppendToLog("Current script package file is now " + filename);
 }
 
 void CMacroProcessor::OpenMacroToolbar(void)
@@ -891,13 +978,16 @@ void CMacroProcessor::TransferOneLiners(bool fromDialog)
 {
   if (!mOneLineScript)
     return;
+  if (fromDialog)
+    mOneLineScript->UpdateData(true);
   for (int ind = 0; ind < MAX_ONE_LINE_SCRIPTS; ind++) {
-    mOneLineScript->UpdateData(fromDialog);
     if (fromDialog)
       mMacros[MAX_MACROS + ind] = mOneLineScript->m_strOneLine[ind];
     else
       mOneLineScript->m_strOneLine[ind] = mMacros[MAX_MACROS + ind];
   }
+  if (!fromDialog)
+    mOneLineScript->UpdateData(false);
 }
 
 // This is called on startup or after reading settings
@@ -3952,25 +4042,17 @@ void CMacroProcessor::NextCommand()
 
     delISX = bInv.xpx * index + bInv.xpy * index2;
     delISY = bInv.ypx * index + bInv.ypy * index2;
-    if (AdjustBeamTiltIfSelected(delISX, delISY, !itemEmpty[4] && itemInt[4], report))
+    if (AdjustBTApplyISSetDelay(delISX, delISY, !itemEmpty[4] && itemInt[4], 
+      !itemEmpty[3], itemDbl[3], report))
       ABORT_LINE(report);
-
-    // Make the change in image shift
-    mScope->IncImageShift(delISX, delISY);
-    if (!itemEmpty[3] && itemDbl[3] > 0)
-      mShiftManager->SetISTimeOut((float)itemDbl[3] * mShiftManager->GetLastISDelay());
     break;
     
   case CME_IMAGESHIFTBYUNITS:                               // ImageShiftByUnits
     delISX = itemDbl[1];
     delISY = itemDbl[2];
-    if (AdjustBeamTiltIfSelected(delISX, delISY, !itemEmpty[4] && itemInt[4], report))
+    if (AdjustBTApplyISSetDelay(delISX, delISY, !itemEmpty[4] && itemInt[4],
+      !itemEmpty[3], itemDbl[3], report))
       ABORT_LINE(report);
-
-    // Make the change in image shift
-    mScope->IncImageShift(delISX, delISY);
-    if (!itemEmpty[3] && itemDbl[3] > 0)
-      mShiftManager->SetISTimeOut((float)itemDbl[3] * mShiftManager->GetLastISDelay());
 
     // Report distance on specimen
     aMat = mShiftManager->IStoSpecimen(mScope->GetMagIndex());
@@ -3988,11 +4070,21 @@ void CMacroProcessor::NextCommand()
     bInv = mShiftManager->MatInv(aMat);
     delISX = bInv.xpx * delX + bInv.xpy * delY;
     delISY = bInv.ypx * delX + bInv.ypy * delY;
-    if (AdjustBeamTiltIfSelected(delISX, delISY, !itemEmpty[4] && itemInt[4], report))
+    if (AdjustBTApplyISSetDelay(delISX, delISY, !itemEmpty[4] && itemInt[4],
+      !itemEmpty[3], itemDbl[3], report))
       ABORT_LINE(report);
-    mScope->IncImageShift(delISX, delISY);
-    if (!itemEmpty[3] && itemDbl[3] > 0)
-      mShiftManager->SetISTimeOut((float)itemDbl[3] * mShiftManager->GetLastISDelay());
+    break;
+
+  case CME_IMAGESHIFTBYSTAGEDIFF:                           // ImageShiftByStageDiff
+    mShiftManager->GetStageTiltFactors(backlashX, backlashY);
+    index = mScope->GetMagIndex();
+    aMat = mShiftManager->StageToCamera(currentCam, index);
+    bInv = MatMul(aMat, mShiftManager->CameraToIS(index));
+    mShiftManager->ApplyScaleMatrix(bInv, (float)itemDbl[1] * backlashX, 
+      (float)itemDbl[2] * backlashY, delISX, delISY);
+    if (AdjustBTApplyISSetDelay(delISX, delISY, !itemEmpty[4] && itemInt[4],
+      !itemEmpty[3], itemDbl[3], report))
+      ABORT_LINE(report);
     break;
 
   case CME_IMAGESHIFTTOLASTMULTIHOLE:                       // ImageShiftToLastMultiHole
@@ -7197,7 +7289,8 @@ void CMacroProcessor::NextCommand()
   case CME_MACRONAME:                                       // MacroName
   case CME_SCRIPTNAME:                                      // ScriptName
   case CME_LONGNAME:                                        // LongName
-    index = 0; 
+  case CME_READONLYUNLESSADMIN:                             // ReadOnlyUnlessAdmin
+    index = 0;
     break;
   default:
     ABORT_LINE("Unrecognized statement in script: \n\n");
@@ -7378,37 +7471,40 @@ int CMacroProcessor::ScanForName(int macroNumber, CString *macro)
       return 0;
   if (!macro)
     macro = &mMacros[macroNumber];
+  mReadOnlyMacro[macroNumber] = false;
   ClearFunctionArray(macroNumber);
   while (currentIndex < macro->GetLength()) {
     GetNextLine(macro, currentIndex, strLine);
     if (!strLine.IsEmpty()) {
-      mWinApp->mParamIO->ParseString(strLine, strItem,MAX_TOKENS);
-      if ((strItem[0].CompareNoCase("MacroName") == 0 || 
-        strItem[0].CompareNoCase("ScriptName") == 0) && !strItem[1].IsEmpty())
+      mWinApp->mParamIO->ParseString(strLine, strItem, MAX_TOKENS);
+      if ((strItem[0].CompareNoCase("MacroName") == 0 ||
+        strItem[0].CompareNoCase("ScriptName") == 0) && !strItem[1].IsEmpty()) {
         mWinApp->mParamIO->StripItems(strLine, 1, newName);
-      if (strItem[0].CompareNoCase("LongName") == 0 && !strItem[1].IsEmpty())
+      } else if (strItem[0].CompareNoCase("LongName") == 0 && !strItem[1].IsEmpty()) {
         mWinApp->mParamIO->StripItems(strLine, 1, longName);
 
       // Put all the functions in there that won't be eliminated by minimum argument
       // requirement and let pre-checking complain about details
-      if (strItem[0].CompareNoCase("Function") == 0 && !strItem[1].IsEmpty()) {
+      } else if (strItem[0].CompareNoCase("ReadOnlyUnlessAdmin") == 0) {
+        mReadOnlyMacro[macroNumber] = true;
+      } else if (strItem[0].CompareNoCase("Function") == 0 && !strItem[1].IsEmpty()) {
         funcP = new MacroFunction;
         funcP->name = strItem[1];
         funcP->numNumericArgs = strItem[2].IsEmpty() ? 0 : atoi((LPCTSTR)strItem[2]);
         funcP->ifStringArg = !strItem[3].IsEmpty() && strItem[3] != "0";
         funcP->startIndex = currentIndex;  // Trust that this can be used for call
         funcP->wasCalled = false;
-        for (int arg = 0; arg < funcP->numNumericArgs + (funcP->ifStringArg ? 1 : 0); 
+        for (int arg = 0; arg < funcP->numNumericArgs + (funcP->ifStringArg ? 1 : 0);
           arg++) {
-           if (strItem[4 + arg].IsEmpty())
-             argName.Format("ARGVAL%d", arg + 1);
-           else
-             argName = strItem[4 + arg].MakeUpper();
-           funcP->argNames.Add(argName);
+          if (strItem[4 + arg].IsEmpty())
+            argName.Format("ARGVAL%d", arg + 1);
+          else
+            argName = strItem[4 + arg].MakeUpper();
+          funcP->argNames.Add(argName);
         }
         mFuncArray[macroNumber].Add(funcP);
       }
-     }
+    }
   }
   longMacNames[macroNumber] = longName;
   if (newName != mMacNames[macroNumber]) {
@@ -9535,6 +9631,18 @@ int CMacroProcessor::AdjustBeamTiltIfSelected(double delISX, double delISY, BOOL
   delBTY = comaVsIS->matrix.ypx * transISX + comaVsIS->matrix.ypy * transISY;
   mScope->IncBeamTilt(delBTX, delBTY);
   mCompensatedBTforIS = true;
+  return 0;
+}
+
+int CMacroProcessor::AdjustBTApplyISSetDelay(double delISX, double delISY, BOOL doAdjust, BOOL setDelay, double scale, CString &message)
+{
+  if (AdjustBeamTiltIfSelected(delISX, delISY, doAdjust, message))
+    return 1;
+
+  // Make the change in image shift
+  mScope->IncImageShift(delISX, delISY);
+  if (setDelay && scale > 0)
+    mShiftManager->SetISTimeOut((float)scale * mShiftManager->GetLastISDelay());
   return 0;
 }
 

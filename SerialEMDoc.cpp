@@ -177,6 +177,7 @@ CSerialEMDoc::CSerialEMDoc()
   mShortTermNotSaved = false;
   mShortTermBackedUp = false;
   mSettingsBackedUp = false;
+  mScriptPackBackedUp = false;
   mCalibBackedUp = false;
   mFlybackBackedUp = false;
   mIgnoreShortTerm = false;
@@ -1864,13 +1865,15 @@ void CSerialEMDoc::OnSettingsOpen()
 
 // Utility function to open a text file, optionally in the original directory
 int CSerialEMDoc::GetTextFileName(bool openOld, bool originalDir, CString &pathname,
-                                  CString *filename)
+                                  CString *filename, CString *initialDir)
 {
   static char szFilter[] = "Text files (*.txt)|*.txt|All files (*.*)|*.*||";
   MyFileDialog fileDlg(openOld, ".txt", NULL, OFN_HIDEREADONLY, szFilter);
 
   // Set the original directory.  Note this no longer works in Windows 7
-  if (originalDir && !mOriginalCwd.IsEmpty())
+  if (initialDir && !initialDir->IsEmpty())
+    fileDlg.mfdTD.lpstrInitialDir = (LPCTSTR)*initialDir;
+  else if (originalDir && !mOriginalCwd.IsEmpty())
     fileDlg.mfdTD.lpstrInitialDir = (LPCTSTR)mOriginalCwd;
   int result = fileDlg.DoModal();
   mWinApp->RestoreViewFocus();
@@ -1939,6 +1942,7 @@ void CSerialEMDoc::OnSettingsSave()
       return;
   }
   ManageBackupFile(mCurrentSettingsPath, mSettingsBackedUp);
+  ManageBackupFile(mCurScriptPackPath, mScriptPackBackedUp);
   mParamIO->WriteSettings(mCurrentSettingsPath);
   SaveShortTermCal();
   mAbandonSettings = false;
@@ -1959,6 +1963,7 @@ int CSerialEMDoc::SettingsSaveAs()
   // Force a backup if it exists
   mSettingsBackedUp = false;    
   ManageBackupFile(newFile, mSettingsBackedUp);
+  ManageBackupFile(mCurScriptPackPath, mScriptPackBackedUp);
   mAbandonSettings = false;
 
   mParamIO->WriteSettings(newFile);
@@ -2104,14 +2109,19 @@ void CSerialEMDoc::PostSettingsRead()
   }
   mWinApp->AppendToLog("Read settings from: " + mCurrentSettingsPath,
     LOG_SWALLOW_IF_CLOSED);
+  if (mReadScriptPack)
+    mWinApp->AppendToLog("Read scripts from " + mCurScriptPackPath,
+      LOG_SWALLOW_IF_CLOSED);
+  else if (!mCurScriptPackPath.IsEmpty())
+    mWinApp->AppendToLog("Scripts will be saved to " + mCurScriptPackPath +
+      "\r\n   unless you do \"Scripts - Save Package As\" to a different name");
 }
-
 
 // Make previous version a backup if it exists and this hasn't been done before
 void CSerialEMDoc::ManageBackupFile(CString strFile, BOOL &bBackedUp)
 {
   CFileStatus status;
-  if (bBackedUp)
+  if (bBackedUp || strFile.IsEmpty())
     return;
   
   // Mark as backed up regardless of the outcome of these actions
@@ -2134,6 +2144,12 @@ void CSerialEMDoc::ManageBackupFile(CString strFile, BOOL &bBackedUp)
     return;
 
   UtilRenameFile(strFile, strBackup);
+}
+
+// Manage the backup of the script package file, conveniencefunction called from elsewhere
+void CSerialEMDoc::ManageScriptPackBackup()
+{
+  ManageBackupFile(mCurScriptPackPath, mScriptPackBackedUp);
 }
 
 // On exit, offer to save if no open file, allowing a cancel

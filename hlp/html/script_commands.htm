@@ -262,6 +262,12 @@
             not defined, the regular name defined by ScriptName or MacroName appears there.</TD>
         </TR>
         <TR vAlign="top">
+          <TD class="style4">ReadOnlyUnlessAdmin</TD>
+          <TD>Prevent changing the script in the script editor unless Administrator mode is 
+            turned on in the Calibration menu.&nbsp; The command can appear anywhere in the 
+            script but should be near the beginning.&nbsp; Command added in 3.8, 12/24/19.</TD>
+        </TR>
+        <TR vAlign="top">
           <TD class="style4">Delay # [units]</TD>
           <TD>Wait for given amount of time. The optional 'units' can be 'msec', 'sec', or
             'min'. If no units are given, a # &lt;= 60 is taken to be seconds, and a # &gt;
@@ -1993,6 +1999,12 @@
           <TD class="style13">ImageShiftByMicrons #X #Y [#D] [#A]</TD>
           <TD>Change image shift by given distance on specimen (X is tilt axis); optional #D 
             and #A provide settling time and beam-tilt adjustment for the image shift as just described.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style13">ImageShiftByStageDiff #X #Y [#D] [#A]</TD>
+          <TD>Change image shift by the equivalent of the given stage shift in X and Y; optional #D 
+            and #A provide settling time and beam-tilt adjustment for the image shift as just described.&nbsp; 
+            Command added in 3.8, 12/24/19.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style13">ReportImageShift</TD>

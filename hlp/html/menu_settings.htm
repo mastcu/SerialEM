@@ -65,17 +65,35 @@
         save settings into other files and retrieve settings from such files. The menu 
         displays a list of recently used settings files so that you can switch between 
         settings rapidly if necessary.</P>
-      <P>After parameters are read from a file, that file is left open, which has three 
+    <P>After parameters are read from a file, that file is left open, which has three 
         implications: 1) Settings can be saved to that file via the entry in this menu; 
         2) Settings can be restored from the file to the value that they had when they 
         were last saved there; and 3) When you quit the program, settings will be saved 
         into that file. To prevent settings from being saved into a file when you quit 
-        the program, just Close the file.</P>
+        the program, just Close the file or use <a href="#hid_settings_discardonexit">Discard on Exit</a>.</P>
       <P>If your settings become too far from usable, you can restore them to default 
         values by reading from a file called the System Default Settings file.</P>
-      <P>Scripts are also stored in settings files. When you read a file that contains 
-        scripts, the scripts in the file will replace the respective ones in the program, 
-        but any other scripts that you have defined will be retained.</P>
+      <P>Scripts are not stored in settings files, as of SerialEM 3.8, 12/23/19. 
+        Instead, they are stored in a separate file referred to as a script package 
+        file, and the settings file just has an entry with the name of the script 
+        package.&nbsp; When you read a settings file, that script file will also be read 
+        and become the current script package file, which will be rewritten when the 
+        settings are saved.&nbsp; If you read in a new settings file that loads a 
+        different script package, the scripts in the package file will replace the respective ones in the program, 
+        but any other scripts that you have defined will be lost (another change in 
+        behavior on 12/23/19).&nbsp; </P>
+    <P>Storing scripts separately makes it possible for multiple settings files to 
+      share the same script package, thus preventing diverging versions of the scripts 
+      in different files.&nbsp; This will happen as a matter of course when you save a 
+      new settings file specialized for some conditions.&nbsp; If you already have 
+      multiple settings files from before this change and you want them to share the 
+      same script package, first decide which one&#39;s package should be the one that is 
+      shared.&nbsp; It is recommended that you open that settings file first and use
+      <a href="menu_script.htm#hid_script_savepackageas">Save Package As</a> in the 
+      Scripts menu to save it to a name that indicates its status as the master 
+      package.&nbsp; Then open other settings files and use
+      <a href="menu_script.htm#hid_script_loadnewpackage">Load New Package</a> in the 
+      Scripts menu to load that package.</P>
       <P><A NAME="hid_settings_open"></A><B>Open command (Settings menu)</B></P>
       <P>Use this command to open a file in which settings were stored previously. 
         Ordinarily, your default settings file is open whenever you are running 
@@ -105,7 +123,9 @@
         currently open. You will enter the <A HREF="afx_hidd_filesave.htm">Save As dialog 
           box</A> to specify a file to save values into. Any previously open settings 
         file will be closed, and the new one will be left open. This means that it will 
-        be saved to again when the program exits, unless you close it first.</P>
+        be saved to again when the program exits, unless you close it first.&nbsp; The 
+        new settings file will use the same script package file as the old one unless 
+        you save the script package to a different name.</P>
       <P><A NAME="hid_settings_close"></A><B>Close command (Settings menu)</B></P>
       <P>Use this command to close a settings file. This means that it will not be saved 
         to when the program exits, which you might want to do if you are going to 

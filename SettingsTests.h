@@ -60,6 +60,8 @@ FLOAT_SETT_ASSIGN("MontageMinOverlapFactor", montParam->minOverlapFactor)
 FLOAT_SETT_ASSIGN("MontageMinMicronsOverlap", montParam->minMicronsOverlap)
 FLOAT_SETT_ASSIGN("MontageHQdelayTime", montParam->hqDelayTime)
 FLOAT_SETT_ASSIGN("MontageMaxAlignFrac", montParam->maxAlignFrac)
+#endif
+#ifdef SET_TEST_SECT15
 INT_SETT_GETSET("SelectedCameraParameterSet", mWinApp->, SelectedConSet)
 FLOAT_SETT_GETSET("TargetDefocus", mWinApp->mFocusManager->, TargetDefocus)
 FLOAT_SETT_GETSET("AutofocusOffset", mWinApp->mFocusManager->, DefocusOffset)

@@ -3,6 +3,15 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+12/24/19: Made scripts be saved in a separate file from settings, so that
+different settings file can share the same scripts.  When reading in a new
+settings file, existing scripts in positions that are empty in the settings
+file or its associated package of scripts will now be lost instead of
+retained.
+
+12/24/19: When a Navigator item is moved to a different map, its DrawnOnID and
+Z value are assigned from the new map.
+
 12/20/19: Fixed End Nav button bringing up Resume dialog when tilt series
 running (In 3.7).
 

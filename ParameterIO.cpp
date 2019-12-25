@@ -146,7 +146,7 @@ int CParameterIO::ReadSettings(CString strFileName)
   AutocenParams *acParmP;
   RangeFinderParams *tsrParams = mWinApp->GetTSRangeParams();
   int *tssPanelStates = mWinApp->GetTssPanelStates();
-  BOOL recognized, recognized2, frameListOK;
+  BOOL recognized, recognized15, recognized2, frameListOK;
   LowDoseParams *ldp;
   StateParams *stateP;
   CArray<StateParams *, StateParams *> *stateArray = mWinApp->mNavHelper->GetStateArray();
@@ -168,6 +168,8 @@ int CParameterIO::ReadSettings(CString strFileName)
   msParams->customHoleY.clear();
   for (index = 0; index <= MAX_MACROS; index++)
     mWinApp->SetReopenMacroEditor(index, false);
+  mWinApp->mDocWnd->SetCurScriptPackPath("");
+  mWinApp->ClearAllMacros();
 
   try {
     // Open the file for reading, verify that it is a settings file
@@ -189,8 +191,9 @@ int CParameterIO::ReadSettings(CString strFileName)
       (err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, MAX_TOKENS))
            == 0) {
           recognized = true;
+          recognized15 = true;
           recognized2 = true;
-      if (NAME_IS("SystemPath")) {
+          if (NAME_IS("SystemPath")) {
 
         // There could be multiple words - have to assume 
         // separated by spaces
@@ -342,7 +345,9 @@ int CParameterIO::ReadSettings(CString strFileName)
           retval = err;
           break;
         }
-
+      } else if (NAME_IS("ScriptPackagePath")) {
+        StripItems(strLine, 1, strCopy);
+        mWinApp->mDocWnd->SetCurScriptPackPath(strCopy);
       } else if (NAME_IS("FrameNameData")) {
         camera->SetFrameNameFormat(itemInt[1]);
         camera->SetFrameNumberStart(itemInt[2]);
@@ -430,6 +435,15 @@ int CParameterIO::ReadSettings(CString strFileName)
       if (recognized) {
       
       } 
+#define SET_TEST_SECT15
+#include "SettingsTests.h"
+#undef SET_TEST_SECT15
+      else
+        recognized15 = false;
+
+      if (recognized || recognized15) {
+        recognized = true;
+      }
 #define SET_TEST_SECT2
 #include "SettingsTests.h"
 #undef SET_TEST_SECT2
@@ -911,7 +925,7 @@ int CParameterIO::ReadSettings(CString strFileName)
         recognized2 = false;
 
       if (recognized || recognized2) {
-
+        recognized = true;
       }
 #define SET_TEST_SECT3
 #include "SettingsTests.h"
@@ -1145,6 +1159,19 @@ int CParameterIO::ReadSettings(CString strFileName)
   index = -1;
   CTSVariationsDlg::PurgeVariations(mTSParam->varyArray, mTSParam->numVaryItems, index);
 
+  strLine = mWinApp->mDocWnd->GetCurScriptPackPath();
+  if (!strLine.IsEmpty()) {
+    if (ReadMacrosFromFile(strLine, strFileName, MAX_MACROS + MAX_ONE_LINE_SCRIPTS))
+      strLine = "";
+    else
+      mWinApp->mDocWnd->SetCurScriptPackPath(strLine);
+  }
+  mWinApp->mDocWnd->SetReadScriptPack(!strLine.IsEmpty());
+  if (strLine.IsEmpty()) {
+    UtilSplitExtension(strFileName, strLine, strCopy);
+    mWinApp->mDocWnd->SetCurScriptPackPath(strLine + "-scripts.txt");
+  }
+
   mWinApp->mMacroProcessor->TransferOneLiners(false);
 
   // Return -1 if only one line was read (system path)
@@ -1249,6 +1276,7 @@ void CParameterIO::WriteSettings(CString strFileName)
 
     mFile->WriteString("SerialEMSettings\n");
     WriteString("SystemPath", mWinApp->mDocWnd->GetSysPathForSettings());
+    WriteString("ScriptPackagePath", mWinApp->mDocWnd->GetCurScriptPackPath());
 
     // Write any consets that are initialized (right != 0)
     for (int iCam = 0; iCam < MAX_CAMERAS; iCam++) {
@@ -1388,14 +1416,15 @@ void CParameterIO::WriteSettings(CString strFileName)
 #define SET_TEST_SECT1
 #include "SettingsTests.h"
 #undef SET_TEST_SECT1
+#define SET_TEST_SECT15
+#include "SettingsTests.h"
+#undef SET_TEST_SECT15
 #define SET_TEST_SECT2
 #include "SettingsTests.h"
 #undef SET_TEST_SECT2
 #define SET_TEST_SECT3
 #include "SettingsTests.h"
 #undef SET_TEST_SECT3
-
-    WriteAllMacros(MAX_MACROS + MAX_ONE_LINE_SCRIPTS);
 
     oneState.Format("AutoBacklashNewMap %d %f\n", 
       mWinApp->mNavHelper->GetAutoBacklashNewMap(), 
@@ -1776,6 +1805,8 @@ void CParameterIO::WriteSettings(CString strFileName)
     mFile = NULL;
   }
 
+  WriteMacrosToFile(mWinApp->mDocWnd->GetCurScriptPackPath(), 
+    MAX_MACROS + MAX_ONE_LINE_SCRIPTS);
 
 }
 #undef INT_SETT_GETSET
@@ -1787,15 +1818,35 @@ void CParameterIO::WriteSettings(CString strFileName)
 #undef FLOAT_SETT_ASSIGN
 
 // Read macros from a file with the given name
-void CParameterIO::ReadMacrosFromFile(CString filename)
+int CParameterIO::ReadMacrosFromFile(CString &filename, const CString &curSettings,
+  int maxMacros)
 {
-  CString strLine;
+  CString strLine, setPath, scriptTail;
   CString strItems[MAX_TOKENS];
+  CFileStatus status;
   BOOL itemEmpty[MAX_TOKENS];
   int itemInt[MAX_TOKENS];
   double itemDbl[MAX_TOKENS];
   int retval = 0, numLoaded = 0;
   int err;
+  bool loadMess = curSettings.IsEmpty();
+  if (!CFile::GetStatus((LPCTSTR)filename, status)) {
+    UtilSplitPath(curSettings, setPath, strLine);
+    UtilSplitPath(filename, strLine, scriptTail);
+    if (loadMess || setPath == strLine) {
+      AfxMessageBox("The script file " + filename + " does not exist", MB_EXCLAME);
+      return 1;
+    }
+    if (setPath.GetLength() > 0 && setPath.GetAt(setPath.GetLength() - 1) != '\\')
+      setPath += "\\";
+    strLine = setPath + scriptTail;
+    if (!CFile::GetStatus((LPCTSTR)strLine, status)) {
+      AfxMessageBox("Neither script file " + filename + " nor " + strLine + " exists",
+        MB_EXCLAME);
+      return 1;
+    }
+    filename = strLine;
+  }
   try {
     mFile = new CStdioFile(filename, CFile::modeRead | CFile::shareDenyWrite);
 
@@ -1803,13 +1854,14 @@ void CParameterIO::ReadMacrosFromFile(CString filename)
       (err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, 
       MAX_TOKENS)) == 0) {
         if (NAME_IS("Macro")) {
-          err = ReadOneMacro(itemInt[1], strLine, strItems, MAX_MACROS);
+          err = ReadOneMacro(itemInt[1], strLine, strItems, maxMacros);
           if (err > 0) {
             retval = err;
             break;
           }
           numLoaded++;
-        }
+        } else if (NAME_IS("MaxMacros"))
+          mMaxReadInMacros = itemInt[1];
     }
     if (err > 0)
       retval = err;
@@ -1824,23 +1876,26 @@ void CParameterIO::ReadMacrosFromFile(CString filename)
     delete mFile;
     mFile = NULL;
   }
-  if (retval)
-    AfxMessageBox("An error occurred reading scripts from the file", MB_EXCLAME);
-  else {
+  if (retval) {
+    AfxMessageBox("An error occurred reading scripts from the file\n" + filename,
+      MB_EXCLAME);
+    filename = "";
+  }  else if (loadMess) {
     strLine.Format("Loaded %d scripts from the file", numLoaded);
     AfxMessageBox(strLine, MB_OK | MB_ICONINFORMATION);
   }
+  return retval;
 }
 
 // Write macros to a file with the given name
-void CParameterIO::WriteMacrosToFile(CString filename)
+void CParameterIO::WriteMacrosToFile(CString filename, int maxMacros)
 {
   try {
 
     // Open the file for writing, 
     mFile = new CStdioFile(filename, CFile::modeCreate | CFile::modeWrite | 
       CFile::shareDenyWrite);
-    WriteAllMacros(MAX_MACROS);
+    WriteAllMacros(maxMacros);
   }
   catch(CFileException *perr) {
     perr->Delete();
@@ -5506,7 +5561,7 @@ int CParameterIO::MacroGetSetting(CString name, double &value)
 #define SETTINGS_MODULES
 #include "SettingsTests.h"
 #undef SETTINGS_MODULES
-  bool recognized = true, recognized2 = true;
+  bool recognized = true, recognized15 = true, recognized2 = true;
   if (false) {
   }
 #define SET_TEST_SECT1
@@ -5516,6 +5571,15 @@ int CParameterIO::MacroGetSetting(CString name, double &value)
     recognized = false;
       
   if (recognized) {
+  }
+#define SET_TEST_SECT15
+#include "SettingsTests.h"
+#undef SET_TEST_SECT15
+  else
+    recognized15 = false;
+
+  if (recognized || recognized15) {
+    recognized = true;
   }
 #define SET_TEST_SECT2
 #include "SettingsTests.h"
@@ -5574,7 +5638,7 @@ int CParameterIO::MacroSetSetting(CString name, double value)
   double valCopy = value;
   B3DCLAMP(valCopy, -2.147e9, 2.147e9);
   ival = B3DNINT(valCopy);
-  bool recognized = true, recognized2 = true;
+  bool recognized = true, recognized15 = true, recognized2 = true;
   if (false) {
   }
 #define SET_TEST_SECT1
@@ -5585,12 +5649,21 @@ int CParameterIO::MacroSetSetting(CString name, double value)
       
   if (recognized) {
   }
+#define SET_TEST_SECT15
+#include "SettingsTests.h"
+#undef SET_TEST_SECT15
+  else
+    recognized15 = false;
+
+  if (recognized || recognized15) {
+    recognized = true;
+  }
 #define SET_TEST_SECT2
 #include "SettingsTests.h"
 #undef SET_TEST_SECT2
-  else 
+  else
     recognized2 = false;
-      
+
   if (recognized || recognized2) {
   }
 #define SET_TEST_SECT3
