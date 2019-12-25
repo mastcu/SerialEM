@@ -2653,6 +2653,15 @@ BOOL CNavigatorDlg::UserMousePoint(EMimageBuffer *imBuf, float inX, float inY,
     ShiftItemPoints(mItem, stageX - mItem->mStageX, stageY - mItem->mStageY);
     mItem->mStageX = stageX;
     mItem->mStageY = stageY;
+
+    // If this is actaully a different map from the one drawn on, adjust the ID and Z
+    if (mItem->mDrawnOnMapID && imBuf->mMapID && mItem->mDrawnOnMapID != imBuf->mMapID) {
+      item = FindItemWithMapID(imBuf->mMapID);
+      if (item) {
+        mItem->mDrawnOnMapID = imBuf->mMapID;
+        mItem->mStageZ = item->mStageZ;
+      }
+    }
     mItem->mPieceDrawnOn = pieceIndex;
     UpdateListString(mCurrentItem);
     mChanged = true;
@@ -8591,13 +8600,24 @@ void CNavigatorDlg::SetCurrentRegFromMax()
 // Set registration number externally
 int CNavigatorDlg::SetCurrentRegistration(int newReg)
 {
+  CMapDrawItem *item;
+  int numNonTS, numTS, oldNumTS, oldNonTS, delta;
   if (newReg < 0 || newReg > MAX_CURRENT_REG ||
     RegistrationUseType(newReg) == NAVREG_IMPORT)
     return 1;
+  if (mAcquireIndex >= 0)
+    mHelper->CountAcquireItems(mAcquireIndex, mEndingAcquireIndex, oldNonTS, oldNumTS);
   mCurrentRegistration = newReg;
   m_sbcCurrentReg.SetPos(mCurrentRegistration);
   m_strCurrentReg.Format("%d", mCurrentRegistration);
   UpdateData(false);
+  if (mAcquireIndex >= 0) {
+    mHelper->CountAcquireItems(mAcquireIndex, mEndingAcquireIndex, numNonTS, numTS);
+    item = mItemArray[mAcquireIndex];
+    delta = item->mAcquire ? 1 : 0;
+    mInitialNumAcquire += (mParam->acquireType == ACQUIRE_DO_TS ? 
+      numTS + delta - oldNumTS: numNonTS + delta - oldNonTS);
+  }
   return 0;
 }
 
