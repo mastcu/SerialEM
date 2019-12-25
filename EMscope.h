@@ -129,6 +129,7 @@ class DLL_IM_EX CEMscope
   void SetJeolUsePLforIS(BOOL inVal);
   BOOL SetColumnValvesOpen(BOOL state, bool crashing = false);
   int GetColumnValvesOpen();
+  int FastColumnValvesOpen();
   BOOL BothLMorNotLM(int mag1, BOOL stem1, int mag2, BOOL stem2);
   void AddShiftBoundary(int inVal) {mShiftBoundaries[mNumShiftBoundaries++] = inVal;};
   void StopCalNeutralIS();

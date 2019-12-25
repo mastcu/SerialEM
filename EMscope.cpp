@@ -5874,6 +5874,10 @@ int CEMscope::GetColumnValvesOpen()
   return result;
 }
 
+int CEMscope::FastColumnValvesOpen()
+{
+  FAST_GET(int, GetColumnValvesOpen);
+}
 
 // Manipulate column valves
 BOOL CEMscope::SetColumnValvesOpen(BOOL state, bool crashing)

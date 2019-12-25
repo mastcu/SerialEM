@@ -2711,7 +2711,7 @@ void CCameraController::Capture(int inSet, bool retrying)
     return;
 
   // Log warning if column valves are closed or beam is off
-  if ((mScope->GetColumnValvesOpen() == 0) && !mSimulationMode)
+  if ((mScope->FastColumnValvesOpen() == 0) && !mScope->GetSimulationMode())
     mWinApp->AppendToLog("WARNING: Column valves closed or beam off while acquiring "
       "image.");
 
@@ -9290,7 +9290,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
         }
     }
 
-    // Save to frame stack mdoc if selected of if doing frame TS
+    // Save to frame stack mdoc if selected or if doing frame TS
     if (extra->mNumSubFrames > 0 && !mTD.GetDeferredSum && (mSaveFrameStackMdoc || 
       (mTD.FrameTStiltToAngle.size() > 0 && mTD.FrameTSactualAngle.size() > 0)) &&
       CanSaveFrameStackMdoc(mParam)) {
