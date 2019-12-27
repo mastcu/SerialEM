@@ -263,9 +263,10 @@
         </TR>
         <TR vAlign="top">
           <TD class="style4">ReadOnlyUnlessAdmin</TD>
-          <TD>Prevent changing the script in the script editor unless Administrator mode is 
-            turned on in the Calibration menu.&nbsp; The command can appear anywhere in the 
-            script but should be near the beginning.&nbsp; Command added in 3.8, 12/24/19.</TD>
+          <TD>Prevent changing the script in the script editor from this command to the end
+            of the script, unless Administrator mode is 
+            turned on in the Calibration menu.&nbsp; Place the command at the beginning of
+            script to make the whole script read-only.&nbsp; Command added in 3.8, 12/24/19.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style4">Delay # [units]</TD>
@@ -356,6 +357,15 @@
             in the comparison.</TD>
         </TR>
         <TR vAlign="top">
+          <TD class="style4">ParseQuotedStrings [#]</TD>
+          <TD>Allows strings that may have spaces to be enclosed in single quotes (e.g., 
+            'text string') and treated as a single entity in cases where it would be broken 
+            up at the spaces.&nbsp; Enter 0 for the optional # to turn off such parsing.&nbsp; 
+            The best use of this feature would be for making an array of strings in a single 
+            statement that encloses the entries with braces.&nbsp; It also allows a string 
+            to be assigned to a variable without uing '=@'.</TD>
+        </TR>
+        <TR vAlign="top">
           <TD class="style4">StripEndingDigits var1 var2</TD>
           <TD>Removes any digits from the end of the variable var1 and assigns it to the 
             variable var2 (both named without a $).&nbsp; The digits are converted to a 
@@ -375,7 +385,7 @@
           <TD>Turns echoing of each script line on or off for # 1 or 0</TD>
         </TR>
         <TR vAlign="top">
-          <TD width="210">SuppressReports</TD>
+          <TD class="style4">SuppressReports</TD>
           <TD>Do not print any of these reports, just assign the values to report variables</TD>
         </TR>
         <TR vAlign="top">
@@ -486,6 +496,29 @@
               previously used position or the next unused position.&nbsp; A negative value (-1 
               to -20) can be used to replace the script in one of the regular script positions 
               that are editable and saved to settings.&nbsp; Command added in 3.8.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style4">GetFileInWatchedDir pattern</TD>
+          <TD>Looks for a file matching the given pattern, where pattern can be a directory 
+            followed by a filename including &#39;*&#39; to match multiple names.&nbsp; If
+             just a directory is entered, the program appends a &#39;*&#39;.&nbsp; If a file
+             is found, it returns 1 in reportedValue1 and the filename in reportedValue2;
+            otherwise it returns 0 in reportedValue1.  A file is ignored if a file with the same 
+            name plus &#39;.lock&#39; is found as well.  Thus, if there is a risk that a file
+            might not all be present when SerialEM first sees it, the program creating the file
+            should create the &#39;.lock&#39; file (which can be empty), then create and finish
+             writing to the file to be found, then remove the &#39;.lock&#39; file.&nbsp;
+             The file will need to be removed to avoid finding it again on the next call.
+            &nbsp; Command added in 3.8, 12/26/19.
+          </TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style4">RunScriptInWatchedDir pattern</TD>
+          <TD>Looks for a file matching the given pattern, like &#39;GetFileInWatchedDir&#39;,
+            and reads the file, places its contents in an extra script position, removes the file,
+            and runs that script. &nbsp;As for &#39;GetFileInWatchedDir&#39;, a &#39;.lock&#39; 
+            file can be used to avoid the risk that the file is not complete when SerialEM 
+            sees it.&nbsp; Command added in 3.8, 12/26/19</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style4">Require feature [feature] ...<br />

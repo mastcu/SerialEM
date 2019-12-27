@@ -70,7 +70,12 @@
       replace whatever is listed on an existing 'Require' statement with '201'.)</P>
     <P>Blank lines and lines starting with # are 
       ignored. Comments can also be placed after the command on a line, starting with 
-      # after a space.</P>
+      # after a space.&nbsp; As of SerialEM 3.8 (12/27/19), multiline comments can be 
+      enclosed in /* ... */, similar to some programming languages (C/C++), but with 
+      more restrictions.&nbsp; Specifically, 1) the opening &#39;/*&#39; must be the first 
+      non-white-space on a line; 2) although the ending &#39;*/&#39; can appear anywhere on a 
+      line, all text after it will be lost, so effectively it should be at the end of 
+      a line or on a line of its own.&nbsp; These comments may not be nested.</P>
     <P>Scripts can be run from the Script menu, from the <A HREF="hidd_camera_macro.htm">Camera 
         &amp; Script Control Panel</A>, or from the Script toolbar. In addition, CTRL F1 through CTRL F10 are hotkeys for 
       running the first 10 scripts. A script will stop running if various conditions 

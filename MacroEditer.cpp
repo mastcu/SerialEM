@@ -410,8 +410,6 @@ void CMacroEditer::UpdateButtons()
   m_butNextMacro.EnableWindow(inactive && AdjacentMacro(1) >= 0);
   m_butShiftDown.EnableWindow(inactive && m_iMacroNumber < MAX_MACROS - 1);
   m_butShiftUp.EnableWindow(inactive && m_iMacroNumber > 0);
-  m_editMacro.SetReadOnly(mProcessor->GetReadOnly(m_iMacroNumber) && 
-    !mWinApp->GetAdministrator());
 }
 
 // Get the text from the window into the local variable then
@@ -536,22 +534,35 @@ void CMacroEditer::AdjustForNewNumber(int newNum)
 // The text has changed: call static function and update
 void CMacroEditer::OnEnChangeEditmacro()
 {
-  int sel1, sel2, firstVis;
-  bool setCompletions, completing;
-  UpdateData(true);
+  int sel1, sel2, firstVis, initialLength;
+  bool setCompletions, completing, rejecting = false;
+  int readOnlyStart = mProcessor->GetReadOnlyStart(m_iMacroNumber);
   m_editMacro.GetSel(sel1, sel2);
+  if (readOnlyStart >= 0 && !mWinApp->GetAdministrator()) {
+    if (sel2 >= readOnlyStart) {
+      rejecting = true;
+      sel2 = readOnlyStart;
+    } else
+      initialLength = m_strMacro.GetLength();
+  }
   firstVis = m_editMacro.GetFirstVisibleLine();
-  HandleCompletionsAndIndent(m_strMacro, m_strCompletions, sel2, setCompletions, 
-    completing);
-  if (setCompletions)
-    SetDlgItemText(IDC_STAT_COMPLETIONS, m_strCompletions);
-  if (completing) {
+  if (!rejecting) {
+    UpdateData(true);
+    HandleCompletionsAndIndent(m_strMacro, m_strCompletions, sel2, setCompletions,
+      completing);
+    if (setCompletions)
+      SetDlgItemText(IDC_STAT_COMPLETIONS, m_strCompletions);
+  }
+  if (completing || rejecting) {
     UpdateData(false);
     m_editMacro.SetSel(sel2, sel2);
     sel2 = m_editMacro.GetFirstVisibleLine();
     if (sel2 != firstVis)
       m_editMacro.LineScroll(firstVis - sel2);
   }
+  if (readOnlyStart >= 0 && !rejecting)
+    mProcessor->SetReadOnlyStart(m_iMacroNumber, readOnlyStart + m_strMacro.GetLength() -
+      initialLength);
 }
 
 // Process a change in an edit control and do 'backtick' completion or list completions,

@@ -137,7 +137,6 @@ C
 E
 D
 F
-G
 H
 I
 K

@@ -268,7 +268,8 @@ enum {CME_SCRIPTEND = -7, CME_LABEL, CME_SETVARIABLE, CME_SETSTRINGVAR, CME_DOKE
   CME_REPORTNUMMONTAGEPIECES, CME_NAVITEMFILETOOPEN, CME_CROPCENTERTOSIZE,
   CME_ACQUIRETOMATCHBUFFER,  CME_REPORTXLENSDEFLECTOR, CME_SETXLENSDEFLECTOR, 
   CME_REPORTXLENSFOCUS, CME_SETXLENSFOCUS, CME_EXTERNALTOOLARGPLACE, 
-  CME_READONLYUNLESSADMIN, CME_IMAGESHIFTBYSTAGEDIFF 
+  CME_READONLYUNLESSADMIN, CME_IMAGESHIFTBYSTAGEDIFF, CME_GETFILEINWATCHEDDIR,
+  CME_RUNSCRIPTINWATCHEDDIR, CME_PARSEQUOTEDSTRINGS 
 };
 
 // The two numbers are the minimum arguments and whether arithmetic is allowed
@@ -276,7 +277,7 @@ enum {CME_SCRIPTEND = -7, CME_LABEL, CME_SETVARIABLE, CME_SETSTRINGVAR, CME_DOKE
 // command that does not have a -1 there.  Starting with % lists all explicitly allowed
 // commands.  It is redundant to put a 1 in for Set command
 static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0},
-{"A",0,0}, {"AlignTo",1,0}, {"AutoAlign",0,0}, {"AutoFocus",0,0}, {"Break",0,0}, 
+{"A",0,0}, {"AlignTo",1,0}, {"AutoAlign",0,0}, {"AutoFocus",0,0}, {"Break",0,0},
 {"Call",1,0}, {"CallMacro",1,0},{"CenterBeamFromImage",0,0}, {"ChangeEnergyLoss",1,1},
 {"ChangeFocus",1,1},{"ChangeIntensityBy",1,1}, {"ChangeMag",1,1},{"CircleFromPoints",6,1},
 {"ClearAlignment",0,0}, {"CloseFile",0,0}, {"ConicalAlignTo",1,0}, {"Continue", 0, 0},
@@ -409,7 +410,7 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"SaveCalibrations", 0, 0}, {"ReportCrossoverPercentC2", 0, 0},
 {"ReportScreenCurrent", 0, 0}, {"ListVars", 0, 0 }, { "ListPersistentVars", 0, 0 },
 {"SetFrameSeriesParams", 1, 0}, {"SetCustomTime", 1, 0}, {"ReportCustomInterval", 1, 0},
-{"StageToLastMultiHole", 0, 0}, {"ImageShiftToLastMultiHole", 0, 0}, 
+{"StageToLastMultiHole", 0, 0}, {"ImageShiftToLastMultiHole", 0, 0},
 {"NavIndexItemDrawnOn", 1, 0}, {"SetMapAcquireState", 1, 0}, {"RestoreState", 0, 0},
 {"RealignToMapDrawnOn", 2, 0}, {"GetRealignToItemError", 0, 0}, {"DoLoop", 3, 1},
 {"ReportVacuumGauge", 1, 0}, {"ReportHighVoltage", 0, 0},{"OKBox", 1, 0},
@@ -417,9 +418,10 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"ReportK3CDSmode", 0, 0}, {"SetK3CDSmode", 1, 0}, {"ConditionPhasePlate", 0, 0},
 {"LinearFitToVars", 2, 0}, {"ReportNumMontagePieces", 0, 0}, {"NavItemFileToOpen", 1, 0},
 {"CropCenterToSize", 3, 0}, {"AcquireToMatchBuffer", 1, 0}, {"ReportXLensDeflector", 1,0},
-{"SetXLensDeflector", 3, 0}, {"ReportXLensFocus", 0, 0}, {"SetXLensFocus", 1, 0}, 
-{"ExternalToolArgPlace", 1, 0},/*CAI3.8*/{"ReadOnlyUnlessAdmin", 0, 0},
-{"ImageShiftByStageDiff", 2, 0},
+{"SetXLensDeflector", 3, 0}, {"ReportXLensFocus", 0, 0}, {"SetXLensFocus", 1, 0},
+{"ExternalToolArgPlace", 1, 0},{"ReadOnlyUnlessAdmin", 0, 0},
+{"ImageShiftByStageDiff", 2, 0},/*CAI3.8*/{"GetFileInWatchedDir", 1, 0},
+{"RunScriptInWatchedDir", 1, 0}, {"ParseQuotedStrings", 0, 0},
 {NULL, 0, 0}
 };
 // The longest is now 25 characters but 23 is a more common limit
@@ -461,8 +463,6 @@ BEGIN_MESSAGE_MAP(CMacroProcessor, CCmdTarget)
   ON_COMMAND(ID_MACRO_EDIT40, OnMacroEdit40)
   ON_COMMAND(ID_MACRO_READMANY, OnMacroReadMany)
   ON_UPDATE_COMMAND_UI(ID_MACRO_READMANY, OnUpdateMacroReadMany)
-  ON_COMMAND(ID_MACRO_WRITEALL, OnMacroWriteAll)
-  ON_UPDATE_COMMAND_UI(ID_MACRO_WRITEALL, OnUpdateNoTasks)
   ON_COMMAND(ID_MACRO_LISTFUNCTIONS, OnMacroListFunctions)
   ON_UPDATE_COMMAND_UI(ID_MACRO_LISTFUNCTIONS, OnUpdateNoTasks)
   ON_COMMAND(ID_SCRIPT_SETINDENTSIZE, OnScriptSetIndentSize)
@@ -561,8 +561,9 @@ CMacroProcessor::CMacroProcessor()
     mStrNum[i].Format("%d", i + 1);
     mFuncArray[i].SetSize(0, 4);
     mEditerPlacement[i].rcNormalPosition.right = 0;
-    mReadOnlyMacro[i] = false;
   }
+  for (i = 0; i < MAX_TOT_MACROS; i++)
+    mReadOnlyStart[i] = -1;
   srand(GetTickCount());
   mProcessThread = NULL;
 }
@@ -768,15 +769,6 @@ void CMacroProcessor::OnUpdateMacroReadMany(CCmdUI *pCmdUI)
 {
   pCmdUI->Enable(!(mWinApp->DoingTasks() || mWinApp->DoingTiltSeries() ||
     (mWinApp->mNavigator && mWinApp->mNavigator->GetAcquiring())));
-}
-
-// Write all macros to an unrelated file, leaving package file the same
-void CMacroProcessor::OnMacroWriteAll()
-{
-  CString filename;
-  if (mWinApp->mDocWnd->GetTextFileName(false, false, filename))
-    return;
-  mWinApp->mParamIO->WriteMacrosToFile(filename, MAX_MACROS);
 }
 
 void CMacroProcessor::OnUpdateNoTasks(CCmdUI *pCmdUI)
@@ -1195,6 +1187,7 @@ void CMacroProcessor::Run(int which)
   mSkipFrameAliCheck = false;
   mAlignWholeTSOnly = false;
   mDisableAlignTrim = false;
+  mNeedClearTempMacro = -1;
   mBoxOnScopeText = "SerialEM message";
   mBoxOnScopeType = 0;
   mBoxOnScopeInterval = 0.;
@@ -1209,6 +1202,7 @@ void CMacroProcessor::Run(int which)
   mMaxAbsFocus = 0.;
   mRunToolArgPlacement = 0;
   mNumTempMacros = 0;
+  mParseQuotes = false;
   mLogAction = LOG_OPEN_IF_CLOSED;
   mLogErrAction = LOG_IGNORE;
   mStartClock = GetTickCount();
@@ -1351,7 +1345,7 @@ void CMacroProcessor::NextCommand()
   int itemInt[MAX_TOKENS];
   double itemDbl[MAX_TOKENS];
   BOOL truth, doShift, keyBreak, doPause, doAbort;
-  bool doBack;
+  bool doBack, inComment = false;
   ScaleMat aMat, bInv;
   EMimageBuffer *imBuf;
   KImage *image;
@@ -1488,14 +1482,23 @@ void CMacroProcessor::NextCommand()
   while (strItems[0].IsEmpty() && mCurrentIndex < macro->GetLength()) {
 
     GetNextLine(macro, mCurrentIndex, strLine);
-    if (mVerbose > 0)
-      mWinApp->AppendToLog("COMMAND: " + strLine, LOG_OPEN_IF_CLOSED);
-
+    if (inComment) {
+      if (strLine.Find("*/") >= 0)
+        inComment = false;
+      continue;
+    }
     strCopy = strLine;
 
     // Parse the line
-    if (mWinApp->mParamIO->ParseString(strCopy, strItems, MAX_TOKENS))
+    if (mWinApp->mParamIO->ParseString(strCopy, strItems, MAX_TOKENS, mParseQuotes))
       ABORT_LINE("Too many items on line in script: \n\n");
+    if (strItems[0].Find("/*") == 0) {
+      strItems[0] = "";
+      inComment = true;
+      continue;
+    }
+    if (mVerbose > 0)
+      mWinApp->AppendToLog("COMMAND: " + strLine, LOG_OPEN_IF_CLOSED);
     strItems[0].MakeUpper();
   }
 
@@ -1599,6 +1602,11 @@ void CMacroProcessor::NextCommand()
     if (mCallFunction[mCallLevel])
       mCallFunction[mCallLevel]->wasCalled = false;
     mCallLevel--;
+    if (mCurrentMacro == mNeedClearTempMacro) {
+      mMacros[mNeedClearTempMacro] = "";
+      mNumTempMacros--;
+      mNeedClearTempMacro = -1;
+    }
     mCurrentMacro = mCallMacro[mCallLevel];
     mCurrentIndex = mCallIndex[mCallLevel];
     mLastIndex = -1;
@@ -1849,6 +1857,10 @@ void CMacroProcessor::NextCommand()
     }
     break;
 
+  case CME_PARSEQUOTEDSTRINGS:                              // ParseQuotedStrings
+    mParseQuotes = itemEmpty[1] || itemInt[1] != 0;
+    break;
+
   case CME_STRINGARRAYTOSCRIPT:                             // StringArrayToScript
     index = MakeNewTempMacro(strItems[1], strItems[2], false, strLine);
     if (!index)
@@ -2060,7 +2072,7 @@ void CMacroProcessor::NextCommand()
   case CME_ISVARIABLEDEFINED:                               // IsVariableDefined
     index = B3DCHOICE(LookupVariable(item1upper, index2) != NULL, 1, 0);
     SubstituteVariables(&strLine, 1, strLine);
-    mWinApp->mParamIO->ParseString(strLine, strItems, MAX_TOKENS);
+    mWinApp->mParamIO->ParseString(strLine, strItems, MAX_TOKENS, mParseQuotes);
     logRpt.Format("Variable %s %s defined", (LPCTSTR)strItems[1],
       B3DCHOICE(index, "IS", "is NOT"));
     SetReportedValues(&strItems[2], index);
@@ -3194,7 +3206,7 @@ void CMacroProcessor::NextCommand()
       }
     }
 
-    // Create new entry aand try to open file; allowing  failure with 'T'
+    // Create new entry and try to open file; allowing  failure with 'T'
     txFile = new FileForText;
     txFile->readOnly = truth;
     txFile->ID = item1upper;
@@ -3436,6 +3448,111 @@ void CMacroProcessor::NextCommand()
     }
     break;
 
+  case CME_GETFILEINWATCHEDDIR:                             // GetFileInWatchedDir
+  case CME_RUNSCRIPTINWATCHEDDIR:                           // RunScriptInWatchedDir
+  {
+    WIN32_FIND_DATA findFileData;
+    CStdioFile *sFile = NULL;
+    if (CMD_IS(RUNSCRIPTINWATCHEDDIR)) {
+      if (mNumTempMacros >= MAX_TEMP_MACROS)
+        ABORT_LINE("No free temporary scripts available for line:\n\n");
+      if (mNeedClearTempMacro >= 0)
+        ABORT_LINE("When running a script from a file, you cannot run another one in"
+          " line:\n\n");
+    }
+    if (CheckConvertFilename(strItems, strLine, 1, report))
+      return;
+
+    // If the string has no wild card and it is a directory, add *
+    if (report.Find('*') < 0) {
+      truth = CFile::GetStatus((LPCTSTR)report, status);
+      if (truth && (status.m_attribute & CFile::directory))
+        report += "\\*";
+    }
+    HANDLE hFind = FindFirstFile((LPCTSTR)report, &findFileData);
+    if (hFind == INVALID_HANDLE_VALUE) {
+      SetReportedValues(0.);
+      break;
+    }
+    truth = false;
+    do {
+      report = findFileData.cFileName;
+
+      // If found a file, look for lock file and wait until goes away, or give up and
+      // go on to next file if any
+      for (index = 0; index < 10; index++) {
+        if (!CFile::GetStatus((LPCTSTR)(report + ".lock"), status)) {
+          truth = true;
+          break;
+        }
+        Sleep(20);
+      }
+      if (truth)
+        break;
+
+    } while (FindNextFile(hFind, &findFileData) == 0);
+    FindClose(hFind);
+
+    // Just set report value if no file. give message if there is one
+    if (!truth) {
+      SetReportedValues(0.);
+    } else {
+      SetOneReportedValue(1., 1);
+      SetOneReportedValue(report, 2);
+      logRpt = "Found file " + report;
+    }
+
+    if (CMD_IS(GETFILEINWATCHEDDIR))
+      break;
+
+    // Run a script: read it in
+    index2 = 0;
+    index = MAX_MACROS + MAX_ONE_LINE_SCRIPTS + mNumTempMacros++;
+    try {
+      strCopy = "opening file";
+      sFile = new CStdioFile(report, CFile::modeRead | CFile::shareDenyWrite);
+      strCopy = "reading file";
+      mMacros[index] = "";
+      while (sFile->ReadString(item1upper)) {
+        if (!mMacros[index].IsEmpty())
+          mMacros[index] += "\r\n";
+        mMacros[index] += item1upper;
+      }
+    }
+    catch (CFileException *perr) {
+      perr->Delete();
+      index2 = 1;
+    }
+    delete sFile;
+
+    // Delete the file
+    try {
+      CFile::Remove(report);
+    }
+    catch (CFileException* pEx) {
+      pEx->Delete();
+      strCopy = "removing";
+      index2 = 0;
+    }
+    if (index2)
+      ABORT_LINE("Error " + strCopy + " " + report + " for line:\n\n");
+    if (mMacros[index].IsEmpty()) {
+      logRpt += ", which is empty (nothing to run)";
+      break;
+    }
+
+    // Set it up like callScript
+    mCallIndex[mCallLevel++] = mCurrentIndex;
+    mCurrentMacro = index;
+    mCallMacro[mCallLevel] = mCurrentMacro;
+    mBlockDepths[mCallLevel] = -1;
+    mCallFunction[mCallLevel] = NULL;
+    mCurrentIndex = 0;
+    mLastIndex = -1;
+    mNeedClearTempMacro = mCurrentMacro;
+    break;
+  }
+
   case CME_ALLOWFILEOVERWRITE:                              // AllowFileOverwrite
     mOverwriteOK = itemInt[1] != 0;
     break;
@@ -3516,7 +3633,7 @@ void CMacroProcessor::NextCommand()
     if (CMD_IS(ADDTOAUTODOC)) {
       SubstituteVariables(&strLine, 1, strLine);
       mWinApp->mParamIO->StripItems(strLine, 2, strCopy);
-      mWinApp->mParamIO->ParseString(strLine, strItems, MAX_TOKENS);
+      mWinApp->mParamIO->ParseString(strLine, strItems, MAX_TOKENS, mParseQuotes);
       if (AdocSetKeyValue(
         index2 ? B3DCHOICE(mWinApp->mStoreMRC->getStoreType() == STORE_TYPE_ADOC,
         ADOC_IMAGE, ADOC_ZVALUE) : ADOC_GLOBAL, 
@@ -3542,7 +3659,7 @@ void CMacroProcessor::NextCommand()
     if (CMD_IS(ADDTOFRAMEMDOC)) {
       SubstituteVariables(&strLine, 1, strLine);
       mWinApp->mParamIO->StripItems(strLine, 2, strCopy);
-      mWinApp->mParamIO->ParseString(strLine, strItems, MAX_TOKENS);
+      mWinApp->mParamIO->ParseString(strLine, strItems, MAX_TOKENS, mParseQuotes);
       index = mWinApp->mDocWnd->AddValueToFrameMdoc(strItems[1], strCopy);
     }
     else {
@@ -3584,7 +3701,7 @@ void CMacroProcessor::NextCommand()
     doBack = CMD_IS(STARTNEXTFRAMESTACKMDOC);
     SubstituteVariables(&strLine, 1, strLine);
     mWinApp->mParamIO->StripItems(strLine, 2, strCopy);
-    mWinApp->mParamIO->ParseString(strLine, strItems, MAX_TOKENS);
+    mWinApp->mParamIO->ParseString(strLine, strItems, MAX_TOKENS, mParseQuotes);
     if (mCamera->AddToNextFrameStackMdoc(strItems[1], strCopy, doBack, &report))
       ABORT_LINE(report + " in:\n\n");
     break;
@@ -7319,6 +7436,10 @@ void CMacroProcessor::SuspendMacro(BOOL abort)
     return;
   if (TestAndStartFuncOnStop())
     return;
+  if (mNeedClearTempMacro >= 0) {
+    mMacros[mNeedClearTempMacro] = "";
+    abort = true;
+  }
 
   // restore user settings
   for (ind = 0; ind < (int)mSavedSettingNames.size(); ind++)
@@ -7465,13 +7586,13 @@ int CMacroProcessor::ScanForName(int macroNumber, CString *macro)
   CString strLine, argName, strItem[MAX_TOKENS];
   CString *longMacNames = mWinApp->GetLongMacroNames();
   MacroFunction *funcP;
-  int currentIndex = 0;
+  int currentIndex = 0, lastIndex = 0;
   if ((macroNumber >= MAX_MACROS && macroNumber < MAX_MACROS + MAX_ONE_LINE_SCRIPTS) ||
     (mDoingMacro && mCallLevel > 0))
       return 0;
   if (!macro)
     macro = &mMacros[macroNumber];
-  mReadOnlyMacro[macroNumber] = false;
+  mReadOnlyStart[macroNumber] = -1;
   ClearFunctionArray(macroNumber);
   while (currentIndex < macro->GetLength()) {
     GetNextLine(macro, currentIndex, strLine);
@@ -7486,7 +7607,7 @@ int CMacroProcessor::ScanForName(int macroNumber, CString *macro)
       // Put all the functions in there that won't be eliminated by minimum argument
       // requirement and let pre-checking complain about details
       } else if (strItem[0].CompareNoCase("ReadOnlyUnlessAdmin") == 0) {
-        mReadOnlyMacro[macroNumber] = true;
+        mReadOnlyStart[macroNumber] = lastIndex;
       } else if (strItem[0].CompareNoCase("Function") == 0 && !strItem[1].IsEmpty()) {
         funcP = new MacroFunction;
         funcP->name = strItem[1];
@@ -7505,6 +7626,7 @@ int CMacroProcessor::ScanForName(int macroNumber, CString *macro)
         mFuncArray[macroNumber].Add(funcP);
       }
     }
+    lastIndex = currentIndex;
   }
   longMacNames[macroNumber] = longName;
   if (newName != mMacNames[macroNumber]) {
@@ -7917,7 +8039,8 @@ void CMacroProcessor::ListVariables(int type)
           row = var->rowsFor2d->ElementAt(j);
           v = row.value;
           v.Replace("\n", " ");
-          s += "{ " + v + " }" + (j == var->rowsFor2d->GetSize() - 1 ? " }" : "") + "\r\n";
+          s += "{ " + v + " }" + ((j == var->rowsFor2d->GetSize() - 1) ? " }" : "") + 
+            "\r\n";
         }
       }
       else if (var->numElements > 1) {
@@ -8929,7 +9052,7 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel)
   int labelCurIndex[MAX_MACRO_LABELS];
   short skipSubBlocks[MAX_MACRO_SKIPS][MAX_LOOP_DEPTH + 1];
   int blockLevel = startLevel;
-  bool stringAssign, inFunc = false;
+  bool stringAssign, inFunc = false, inComment = false;
   MacroFunction *func;
   int subBlockNum[MAX_LOOP_DEPTH + 1];
   CString *macro = &mMacros[macroNum];
@@ -8947,8 +9070,23 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel)
   errmess.Format(" in script #%d", macroNum + 1);
   while (currentIndex < macro->GetLength()) {
     GetNextLine(macro, currentIndex, strLine);
+    if (inComment) {
+      if (strLine.Find("/*") >= 0) {
+        strLine.TrimLeft();
+        if (strLine.Find("/*") == 0)
+          FAIL_CHECK_LINE("Starting a comment with /* inside a /*...*/ comment");
+      }
+      if (strLine.Find("*/") >= 0)
+        inComment = false;
+      continue;
+    }
     if (mWinApp->mParamIO->ParseString(strLine, strItems, MAX_TOKENS))
       FAIL_CHECK_LINE("Too many items on line");
+    if (strItems[0].Find("/*") == 0) {
+      inComment = true;
+      continue;
+    }
+
     if (!strItems[0].IsEmpty()) {
       strItems[0].MakeUpper();
       InsertDomacro(&strItems[0]);
@@ -9216,6 +9354,8 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel)
   }
   if (blockLevel > startLevel)
     FAIL_CHECK_NOLINE("Unclosed IF, LOOP, or DOLOOP block");
+  if (inComment)
+    FAIL_CHECK_NOLINE("A comment started with /* was not closed with */");
 
   if (!numSkips)
     return 0;

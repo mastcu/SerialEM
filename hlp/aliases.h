@@ -222,7 +222,6 @@ hid_macro_setlength							= SerialEM.chm::/html\menu_script.htm#hid_macro_setlen
 hid_macro_controls							= SerialEM.chm::/html\menu_script.htm#hid_macro_controls
 hid_macro_verbose								= SerialEM.chm::/html\menu_script.htm#hid_macro_verbose
 hid_macro_readmany							= SerialEM.chm::/html\menu_script.htm#hid_macro_readmany
-hid_macro_writeall  						= SerialEM.chm::/html\menu_script.htm#hid_macro_writeall
 hid_macro_listfunctions					= SerialEM.chm::/html\menu_script.htm#hid_macro_listfunctions
 hid_macro_edit1									= SerialEM.chm::/html\menu_script.htm#hid_macro_edit1
 hid_macro_edit2									= SerialEM.chm::/html\menu_script.htm#hid_macro_edit1

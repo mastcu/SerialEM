@@ -96,7 +96,8 @@ class CMacroProcessor : public CCmdTarget
   GetMember(bool, CompensatedBTforIS);
   GetMember(bool, NoMessageBoxOnError);
   GetSetMember(BOOL, RestoreMacroEditors);
-  bool GetReadOnly(int macNum) { return mReadOnlyMacro[macNum]; };
+  int GetReadOnlyStart(int macNum) { return mReadOnlyStart[macNum]; };
+  void SetReadOnlyStart(int macNum, int start) { mReadOnlyStart[macNum] = start; };
   std::map<std::string, int> *GetCustomTimeMap() { return &mCustomTimeMap;};
   bool GetAlignWholeTSOnly() {return DoingMacro() && mAlignWholeTSOnly;};
   bool SkipCheckingFrameAli() {return DoingMacro() && mSkipFrameAliCheck;};
@@ -146,7 +147,7 @@ private:
   std::set<std::string> mFunctionSet2;
   std::set<std::string> mReservedWords;
   std::map<std::string, int> mCustomTimeMap;
-  bool mReadOnlyMacro[MAX_MACROS];
+  int mReadOnlyStart[MAX_TOT_MACROS];
 
   CString *mMacros;
 
@@ -264,6 +265,8 @@ private:
   CString mNextProcessArgs;  // Argument string for next process to create
   int mRunToolArgPlacement;  // Whether to replace (0), prepend (-1), or append (1)
   int mNumTempMacros;        // Number of temporary macros assigned from script
+  int mNeedClearTempMacro;   // Flag that the current temporary needs to be cleared
+  bool mParseQuotes;         // Flag that strings are parsed with quoting 
 
 public:
   void GetNextLine(CString * macro, int & currentIndex, CString &strLine);
@@ -321,7 +324,6 @@ public:
   void PrepareForMacroChecking(int which);
   afx_msg void OnMacroReadMany();
   afx_msg void OnUpdateMacroReadMany(CCmdUI *pCmdUI);
-  afx_msg void OnMacroWriteAll();
   afx_msg void OnUpdateNoTasks(CCmdUI *pCmdUI);
   void OpenMacroEditor(int index);
   bool ConvertBufferLetter(CString strItem, int emptyDefault, bool checkImage, int &bufIndex, CString & message);

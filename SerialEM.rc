@@ -440,9 +440,8 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Load Ne&w Package...",        ID_SCRIPT_LOADNEWPACKAGE
         MENUITEM "Save Pac&kage",               ID_SCRIPT_SAVEPACKAGE
-        MENUITEM "Save Packa&ge As...",         ID_SCRIPT_SAVEPACKAGEAS
+        MENUITEM "Save Package &As...",         ID_SCRIPT_SAVEPACKAGEAS
         MENUITEM "&Load Many",                  ID_MACRO_READMANY
-        MENUITEM "Save &All to Other",          ID_MACRO_WRITEALL
         MENUITEM SEPARATOR
         MENUITEM "List &Functions",             ID_MACRO_LISTFUNCTIONS
         MENUITEM "L&ist Persistent Vars",       ID_SCRIPT_LISTPERSISTENTVARS

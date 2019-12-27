@@ -3,6 +3,16 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+12/27/19: Added script commands to: make a script read-only below a certain
+point unless in administrator mode; look for files whose paths and names match
+a specified pattern; run scripts from files whose names match a pattern; allow
+strings to be enclosed in single quotes; do an image shift equivalent to a
+specified stage shift.  Also added multiline commenting delimited by /* and
+*/.  Eliminated Scripts - Save All menu item.
+
+12/27/19: If Navigator registration number is changed during an acquire, it
+now continues to acquire at the new registration.
+
 12/24/19: Made scripts be saved in a separate file from settings, so that
 different settings file can share the same scripts.  When reading in a new
 settings file, existing scripts in positions that are empty in the settings
