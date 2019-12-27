@@ -4906,7 +4906,8 @@ int CParameterIO::ReadSuperParse(CString &strLine, CString *strItems, BOOL *item
 }
 
 // Parse a string into separate items in an array of CStrings
-int CParameterIO::ParseString(CString strLine, CString *strItems, int maxItems)
+int CParameterIO::ParseString(CString strLine, CString *strItems, int maxItems, 
+  bool useQuotes)
 {
   int i;
 
@@ -4917,7 +4918,7 @@ int CParameterIO::ParseString(CString strLine, CString *strItems, int maxItems)
 
   // Get one token after another until the copy is empty
   for (i = 0; i < maxItems; i++) {
-    FindToken(strCopy, strItems[i]);
+    FindToken(strCopy, strItems[i], useQuotes);
     if (strCopy.IsEmpty())
       return 0;
   }
@@ -4925,10 +4926,12 @@ int CParameterIO::ParseString(CString strLine, CString *strItems, int maxItems)
   return 2; // Error if there are too many items
 }
 
-void CParameterIO::FindToken(CString &strCopy, CString &strItem)
+void CParameterIO::FindToken(CString &strCopy, CString &strItem, bool useQuotes)
 {
-  int index;
+  int index, quoteInd, closeInd, spaceInd, tabInd;
+  bool stripQuotes = false;
   strItem = "";
+  char *quoteChar = "\'";
 
   // Trim white space at left; done if no more string
   strCopy.TrimLeft();
@@ -4944,17 +4947,45 @@ void CParameterIO::FindToken(CString &strCopy, CString &strItem)
   // Find next space or tab
   index = strCopy.FindOneOf(" \t");
 
+  // If parsing quotes, see if there is one before this space and not at end of line
+  if (useQuotes) {
+    quoteInd = strCopy.Find(quoteChar);
+    if (quoteInd >= 0 && (quoteInd < index || index < 0) && 
+      quoteInd < strCopy.GetLength() - 1) {
+
+      // Get closing quote: ignore if none
+      closeInd = strCopy.Find(quoteChar, quoteInd + 1);
+      if (closeInd > 0) {
+
+        // Find next space or tab, replace index and set flag
+        spaceInd = strCopy.Find(' ', closeInd);
+        tabInd = strCopy.Find('\t', closeInd);
+        if (spaceInd > 0 && tabInd > 0)
+          index = B3DMIN(spaceInd, tabInd);
+        else if (spaceInd > 0)
+          index = spaceInd;
+        else
+          index = tabInd;
+        stripQuotes = true;
+      }
+    }
+  }
+
   // If there are no more, then the item is the rest of string - but trim off cr-lf
   if (index < 0) {
     strItem = strCopy;
     strItem.TrimRight(" \t\r\n");
     strCopy = "";
-    return;
+  } else {
+
+    // There must be one down the line, split the string
+    strItem = strCopy.Left(index);
+    strCopy = strCopy.Right(strCopy.GetLength() - index);
   }
 
-  // There must be one down the line, split the string
-  strItem = strCopy.Left(index);
-  strCopy = strCopy.Right(strCopy.GetLength() - index);
+  // Get rid of the quotes
+  if (stripQuotes)
+    strItem.Replace(quoteChar, "");
 }
 
 // Take some items off the front of a line and return the rest as one string, trimmed

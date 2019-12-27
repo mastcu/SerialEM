@@ -20,7 +20,7 @@ public:
 	void WriteShortTermCal(CString strFileName);
 	int ReadShortTermCal(CString strFileName, BOOL ignoreCals);
 	void WritePlacement(const char *string, int open, WINDOWPLACEMENT *place);
-  int ParseString(CString strLine, CString *strItems, int maxItems);
+  int ParseString(CString strLine, CString *strItems, int maxItems, bool useQuotes = false);
   void WriteCalibration(CString strFile);
   int ReadCalibration(CString strFileName);
   int ReadProperties(CString strFileName);
@@ -31,7 +31,7 @@ public:
   void WriteInt(CString format, int iVal);
   void WriteString(CString format, CString strValue);
   void WriteSettings(CString strFileName);
-  void FindToken(CString &strCopy, CString &strItem);
+  void FindToken(CString &strCopy, CString &strItem, bool useQuotes = false);
   int ReadAndParse(CStdioFile *file, CString &strLine, CString *strItems, int maxItems);
   int ReadAndParse(CString &strLine, CString *strItems, int maxItems);
   CString *GetDupMessage(void) {return &mDupMessage;};
