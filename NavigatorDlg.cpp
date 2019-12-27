@@ -7820,6 +7820,7 @@ void CNavigatorDlg::AcquireAreas(bool fromMenu)
     mAcquireIndex = -1;
     return;
   }
+  mStartingAcquireIndex = mAcquireIndex;
 
   // Set up action list
   mNumAcqActions = 1;
@@ -7857,6 +7858,7 @@ void CNavigatorDlg::AcquireAreas(bool fromMenu)
   mPausedAcquire = false;
   mResumedFromPause = false;
   mEmailWasSent = false;
+  mResetAcquireIndex = false;
   mLastGroupID = 0;
   mGroupIDtoSkip = 0;
   mSelectedItems.clear();
@@ -8128,6 +8130,9 @@ void CNavigatorDlg::AcquireNextTask(int param)
 
   // Go to next area if there is one
   case ACQ_MOVE_TO_NEXT:
+    if (mResetAcquireIndex)
+      mAcquireIndex = mStartingAcquireIndex;
+    mResetAcquireIndex = false;
     if (mAcquireEnded || (err = GotoNextAcquireArea()) != 0) {
       if (mAcquireEnded < 0) {
         mAcquireEnded = 0;
@@ -8612,7 +8617,9 @@ int CNavigatorDlg::SetCurrentRegistration(int newReg)
   m_strCurrentReg.Format("%d", mCurrentRegistration);
   UpdateData(false);
   if (mAcquireIndex >= 0) {
-    mHelper->CountAcquireItems(mAcquireIndex, mEndingAcquireIndex, numNonTS, numTS);
+    mResetAcquireIndex = true;
+    mHelper->CountAcquireItems(mStartingAcquireIndex, mEndingAcquireIndex, numNonTS, 
+      numTS);
     item = mItemArray[mAcquireIndex];
     delta = item->mAcquire ? 1 : 0;
     mInitialNumAcquire += (mParam->acquireType == ACQUIRE_DO_TS ? 

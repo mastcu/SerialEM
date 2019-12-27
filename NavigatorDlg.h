@@ -290,7 +290,9 @@ private:
   CString mMergeName;
   BOOL mChanged;
   int mAcquireIndex;
+  int mStartingAcquireIndex;
   int mEndingAcquireIndex;
+  bool mResetAcquireIndex;   // Flag that it needs to be set to start for new registration
   BOOL mSaveAlignOnSave;
   BOOL mSaveProtectRecord;
   BOOL mNavBackedUp;        // Flag for managing whether to create a .bak
