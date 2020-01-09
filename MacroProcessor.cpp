@@ -420,8 +420,8 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"CropCenterToSize", 3, 0}, {"AcquireToMatchBuffer", 1, 0}, {"ReportXLensDeflector", 1,0},
 {"SetXLensDeflector", 3, 0}, {"ReportXLensFocus", 0, 0}, {"SetXLensFocus", 1, 0},
 {"ExternalToolArgPlace", 1, 0},{"ReadOnlyUnlessAdmin", 0, 0},
-{"ImageShiftByStageDiff", 2, 0},/*CAI3.8*/{"GetFileInWatchedDir", 1, 0},
-{"RunScriptInWatchedDir", 1, 0}, {"ParseQuotedStrings", 0, 0},
+{"ImageShiftByStageDiff", 2, 0},{"GetFileInWatchedDir", 1, 0},
+{"RunScriptInWatchedDir", 1, 0}, {"ParseQuotedStrings", 0, 0},/*CAI3.8*/
 {NULL, 0, 0}
 };
 // The longest is now 25 characters but 23 is a more common limit
