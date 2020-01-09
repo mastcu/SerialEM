@@ -5016,13 +5016,15 @@ void CMacroProcessor::NextCommand()
     bSD /= cpe;
     backlashX = (float)(bmean / (mImBufs[index].mExposure * delX * delX));
     backlashY = backlashX;
-    if (CMD_IS(ELECTRONSTATS) && mImBufs[index].mK2ReadMode > 0)
-      backlashY = mWinApp->mProcessImage->LinearizedDoseRate(mImBufs[index].mCamera, 
-        backlashX);
-    if (mImBufs[index].mDoseRatePerUBPix > 0.) {
-      SEMTrace('1', "Dose rate computed from mean %.3f  returned from DM %.3f", backlashY,
-        mImBufs[index].mDoseRatePerUBPix);
-      backlashY = mImBufs[index].mDoseRatePerUBPix;
+    if (CMD_IS(ELECTRONSTATS)) {
+      if (mImBufs[index].mK2ReadMode > 0)
+        backlashY = mWinApp->mProcessImage->LinearizedDoseRate(mImBufs[index].mCamera,
+          backlashX);
+      if (mImBufs[index].mDoseRatePerUBPix > 0.) {
+        SEMTrace('1', "Dose rate computed from mean %.3f  returned from DM %.3f", backlashY,
+          mImBufs[index].mDoseRatePerUBPix);
+        backlashY = mImBufs[index].mDoseRatePerUBPix;
+      }
     }
     shiftX = backlashY / backlashX;
     logRpt.Format("Min = %.3f  max = %.3f  mean = %.3f  SD = %.3f electrons/pixel; "
