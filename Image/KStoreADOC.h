@@ -14,6 +14,7 @@
 #define ADOC_STAGE "StagePosition"
 #define ADOC_STAGEZ "StageZ"
 #define ADOC_MAG "Magnification"
+#define ADOC_CAMLEN "CameraLength"
 #define ADOC_INTENSITY "Intensity"
 #define ADOC_SUPER "SuperMontCoords"
 #define ADOC_PIXEL "PixelSpacing"

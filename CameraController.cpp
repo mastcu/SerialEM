@@ -9011,6 +9011,8 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       }
       extra->m_iMag = MagOrEFTEMmag(mWinApp->GetEFTEMMode(), mMagBefore, 
         mParam->STEMcamera);
+      if (!mMagBefore)
+        extra->mCameraLength = (float)mScope->GetLastCameraLength();
       extra->mMagIndex = mMagBefore;
       typext = TILT_MASK | VOLT_XY_MASK | INTENSITY_MASK | MAG100_MASK | DOSE_MASK;
       if (mWinApp->mMontageController->DoingMontage() && 

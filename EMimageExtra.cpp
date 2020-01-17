@@ -12,6 +12,7 @@ EMimageExtra::EMimageExtra()
 	mMontageX = mMontageY = mMontageZ = 0;
 	mVoltageX = mVoltageY = 0;
 	mMag100 = 0;
+  mCameraLength = 0;
   mIntensity = 0;
   mDoseLo = mDoseHi = 0;
   m_fTilt = EXTRA_NO_VALUE;

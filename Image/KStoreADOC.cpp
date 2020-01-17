@@ -351,6 +351,9 @@ int KStoreADOC::SetValuesFromExtra(KImage *inImage, char *sectName, int index)
     return 1;
   if (extra->m_iMag > 0 && AdocSetInteger(sectName, index, ADOC_MAG, extra->m_iMag))
     return 1;
+  if (extra->mCameraLength > 0 && AdocSetFloat(sectName, index, ADOC_CAMLEN, 
+    extra->mCameraLength))
+    return 1;
   if (extra->m_fIntensity >= 0. &&
     AdocSetFloat(sectName, index, ADOC_INTENSITY, extra->m_fIntensity))
     return 1;
@@ -513,6 +516,7 @@ int KStoreADOC::LoadExtraFromValues(EMimageExtra *extra, int &typext, char *sect
     typext |= MAG100_MASK;
   if (!AdocGetFloat(sectName, index, ADOC_DOSE, &extra->m_fDose))
     typext |= DOSE_MASK;
+  AdocGetFloat(sectName, index, ADOC_CAMLEN, &extra->mCameraLength);
   AdocGetFloat(sectName, index, ADOC_STAGEZ, &extra->mStageZ);
   AdocGetFloat(sectName, index, ADOC_PIXEL, &extra->mPixel);
   AdocGetInteger(sectName, index, ADOC_SPOT, &extra->mSpotSize);

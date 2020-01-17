@@ -32,6 +32,7 @@ public:
   int m_iMontageX, m_iMontageY, m_iMontageZ;
   float mStageX, mStageY, mStageZ;
   int m_iMag;
+  float mCameraLength;
   float m_fIntensity;
   float m_fDose; 
   int mSuperMontX, mSuperMontY;
