@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+1/10/20: Updated Navigator coordinates in montage piece when a point is moved
+(In 3.7).
+
 1/8/20: Fixed RawElectronStats to give raw dose rate instead of linearized one
 from DM (In 3.7).
 

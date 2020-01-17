@@ -2662,7 +2662,11 @@ BOOL CNavigatorDlg::UserMousePoint(EMimageBuffer *imBuf, float inX, float inY,
         mItem->mStageZ = item->mStageZ;
       }
     }
-    mItem->mPieceDrawnOn = pieceIndex;
+    if (item->mType == ITEM_TYPE_POINT) {
+      mItem->mPieceDrawnOn = pieceIndex;
+      mItem->mXinPiece = xInPiece;
+      mItem->mYinPiece = yInPiece;
+    }
     UpdateListString(mCurrentItem);
     mChanged = true;
     mRawStageIsMovable = mItem->mType == ITEM_TYPE_MAP && nearCenter && 
