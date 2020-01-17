@@ -7545,6 +7545,7 @@ void CMacroProcessor::GetNextLine(CString * macro, int & currentIndex, CString &
 {
   int index, testInd;
   strLine = "";
+  CString temp;
   for (;;) {
 
     // Find next linefeed
@@ -7552,28 +7553,37 @@ void CMacroProcessor::GetNextLine(CString * macro, int & currentIndex, CString &
     if (index < 0) {
 
       // If none, get rest of string, set index past end
-      strLine += macro->Mid(currentIndex);
+      temp = macro->Mid(currentIndex);
+      if (!temp.TrimLeft().GetLength() || temp.TrimLeft().GetAt(0) != '#')
+        strLine += temp;
       currentIndex = macro->GetLength();
       break;
     } else {
 
       // Set index past end of line then test for space backslash after skipping a \r
       index++;
-      testInd = index - 2;
-      if (testInd >= 0 && macro->GetAt(testInd) == '\r')
-        testInd--;
-      if (testInd > 0 && macro->GetAt(testInd) == '\\' && 
-        macro->GetAt(testInd - 1) == ' ') {
+      temp = macro->Mid(currentIndex, index - currentIndex);
+      if (temp.TrimLeft().GetLength() && temp.TrimLeft().GetAt(0) == '#') {
+        currentIndex = index;
+        if (index >= macro->GetLength())
+          break;
+      } else {
+        testInd = index - 2;
+        if (testInd >= 0 && macro->GetAt(testInd) == '\r')
+          testInd--;
+        if (testInd > 0 && macro->GetAt(testInd) == '\\' &&
+          macro->GetAt(testInd - 1) == ' ') {
 
           // To continue, add the line through the space then set the index to next line
           strLine += macro->Mid(currentIndex, testInd - currentIndex);
           currentIndex = index;
-      } else {
+        } else {
 
-        // otherwise get the whole line and break out
-        strLine += macro->Mid(currentIndex, index - currentIndex);
-        currentIndex = index;
-        break;
+          // otherwise get the whole line and break out
+          strLine += temp;
+          currentIndex = index;
+          break;
+        }
       }
     }
   }

@@ -68,9 +68,10 @@
 &nbsp;&nbsp; Require 201<br />
       somewhere in the script, or 
       replace whatever is listed on an existing 'Require' statement with '201'.)</P>
-    <P>Blank lines and lines starting with # are 
-      ignored. Comments can also be placed after the command on a line, starting with 
-      # after a space.&nbsp; As of SerialEM 3.8 (12/27/19), multiline comments can be 
+    <P>Blank lines are ignored.&nbsp; Lines whose first non-blank character is '#' are  treated as
+      comments and ignored.&nbsp; Comments can also usually be placed after the command on a line, starting with 
+      # after a space; except when the command treats the remainder of the line past a 
+      certain point as a single string.&nbsp; As of SerialEM 3.8 (12/27/19), multiline comments can be 
       enclosed in /* ... */, similar to some programming languages (C/C++), but with 
       more restrictions.&nbsp; Specifically, 1) the opening &#39;/*&#39; must be the first 
       non-white-space on a line; 2) although the ending &#39;*/&#39; can appear anywhere on a 
