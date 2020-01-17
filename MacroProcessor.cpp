@@ -7552,7 +7552,7 @@ void CMacroProcessor::GetNextLine(CString * macro, int & currentIndex, CString &
     if (index < 0) {
 
       // If none, get rest of string, set index past end
-      strLine = macro->Mid(currentIndex);
+      strLine += macro->Mid(currentIndex);
       currentIndex = macro->GetLength();
       break;
     } else {
