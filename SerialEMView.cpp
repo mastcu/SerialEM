@@ -931,7 +931,7 @@ void CSerialEMView::DrawImage(void)
     if (iDraw >= 0 && item->mAcquire && item->mNumPoints == 1 && mAcquireBox &&
       (showMultiOnAll || (showCurPtAcquire && highlight))) {
       GetSingleAdjustmentForItem(imBuf, item, delPtX, delPtY);
-      CPen pnAcquire(PS_SOLID, thick, item->GetColor(highlight));
+      CPen pnAcquire(PS_SOLID, 1, item->GetColor(highlight));
       CPen *pOldPen = cdc.SelectObject(&pnAcquire);
       mAcquireBox->mDraw = true;
       if (useMultiShot) {
@@ -986,7 +986,8 @@ void CSerialEMView::DrawImage(void)
               DrawMapItemBox(cdc, &rect, mAcquireBox, imBuf,
                 B3DMIN(5, mAcquireBox->mNumPoints), ptX, ptY, delPtX, delPtY, NULL, NULL);
           }
-        } else {
+        } 
+        if (!numSpecHoles || numSpecHoles == numFullSpecHoles) {
           DrawVectorPolygon(cdc, &rect, item, imBuf, convXallHole, convYallHole,
             item->mStageX, item->mStageY, delPtX, delPtY, NULL, NULL);
         }
