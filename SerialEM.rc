@@ -63,9 +63,7 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDR_MAINFRAME           ICON                    "res\\SerialEM.ico"
-
 IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -73,9 +71,7 @@ IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
 //
 
 IDR_MAINFRAME           BITMAP                  "res\\Toolbar.bmp"
-
 IDB_BITMAP1             BITMAP                  "res\\bitmap1.bmp"
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -2668,7 +2664,7 @@ BEGIN
     LTEXT           "Summed frame time",IDC_STATIC,13,68,61,8
 END
 
-IDD_K2_SAVE_OPTIONS DIALOGEX 0, 0, 230, 357
+IDD_K2_SAVE_OPTIONS DIALOGEX 0, 0, 230, 369
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Frame File Options"
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
@@ -2683,9 +2679,9 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,65,120,10
     CONTROL         "Pack unnormalized data as 4-bit (Super-Res) or 4/8-bit (Counting)",IDC_PACK_RAW_FRAME,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,118,209,10
-    DEFPUSHBUTTON   "OK",IDOK,52,336,45,14
-    PUSHBUTTON      "Cancel",IDCANCEL,125,336,45,14
-    PUSHBUTTON      "?",IDC_BUTHELP,213,340,10,10
+    DEFPUSHBUTTON   "OK",IDOK,52,348,45,14
+    PUSHBUTTON      "Cancel",IDCANCEL,125,348,45,14
+    PUSHBUTTON      "?",IDC_BUTHELP,213,352,10,10
     CONTROL         "Save frames without rotation/flip to standard orientation",IDC_SKIP_ROTFLIP,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,157,179,10
     CTEXT           "Components for Folder and File Names",IDC_STAT_COMPTITLE,36,174,156,8
@@ -2705,12 +2701,12 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,34,238,112,10
     CONTROL         "Month and day",IDC_CHECK_MONTHDAY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,34,262,58,10
     CONTROL         "Hour, minute, second",IDC_CHECK_HOUR_MIN_SEC,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,34,274,77,10
-    LTEXT           "Format: Base-File-Label\\Base-File-Label-###-Mar06-10:15:20",IDC_STAT_EXAMPLE,9,299,199,8
-    LTEXT           "Folder will be created inside folder specified in Set Folder dialog,",IDC_STAT_MUST_EXIST,10,311,191,8
+    LTEXT           "Format: Base-File-Label\\Base-File-Label-###-Mar06-10:15:20",IDC_STAT_EXAMPLE,9,311,214,8
+    LTEXT           "Folder will be created inside folder specified in Set Folder dialog,",IDC_STAT_MUST_EXIST,10,323,191,8
     EDITTEXT        IDC_EDIT_START_NUMBER,145,237,31,12,ES_AUTOHSCROLL
     CONTROL         "Only when Acquiring at Items",IDC_CHECK_ONLY_ACQUIRE,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,116,226,102,10
-    LTEXT           "but the folder specified in Set Folder dialog must exist",IDC_STAT_MUST_EXIST2,10,321,159,8
+    LTEXT           "but the folder specified in Set Folder dialog must exist",IDC_STAT_MUST_EXIST2,10,333,159,8
     CONTROL         "Tilt angle",IDC_CHECK_TILT_ANGLE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,34,250,42,10
     LTEXT           "Digits: 3",IDC_STAT_DIGITS,182,239,26,8
     CONTROL         "",IDC_SPIN_DIGITS,"msctls_updown32",UDS_ARROWKEYS,208,236,9,14
@@ -2729,6 +2725,8 @@ BEGIN
     CONTROL         "",IDC_TSS_LINE2,"Static",SS_BLACKFRAME | SS_SUNKEN,7,76,216,1
     CONTROL         "Numeric date (including year) and time at start of name",IDC_CHECK_DATE_PREFIX,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,34,286,190,10
+    CONTROL         "Multiple Record hole number and position in hole",IDC_CHECK1,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,34,298,161,10
 END
 
 IDD_STAGEMOVETOOL DIALOGEX 0, 0, 86, 106
@@ -3220,9 +3218,7 @@ END
 //
 
 IDC_CURSOR1             CURSOR                  "res\\cursor1.cur"
-
 IDC_CURSOR2             CURSOR                  "res\\cursor2.cur"
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3549,7 +3545,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 223
         TOPMARGIN, 7
-        BOTTOMMARGIN, 350
+        BOTTOMMARGIN, 362
     END
 
     IDD_STAGEMOVETOOL, DIALOG
@@ -3688,44 +3684,44 @@ END
 // AFX_DIALOG_LAYOUT
 //
 
-IDD_AUTOCENSETUP AFX_DIALOG_LAYOUT
+IDD_AUTOCENSETUP AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_TILTSERIES AFX_DIALOG_LAYOUT
+IDD_TILTSERIES AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_DRIFTWAITSETUP AFX_DIALOG_LAYOUT
+IDD_DRIFTWAITSETUP AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_MULTI_SHOT_SETUP AFX_DIALOG_LAYOUT
+IDD_MULTI_SHOT_SETUP AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_REMOTE_CONTROL AFX_DIALOG_LAYOUT
+IDD_REMOTE_CONTROL AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_LOWDOSE AFX_DIALOG_LAYOUT
+IDD_LOWDOSE AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_VPP_EXPOSE_SETUP AFX_DIALOG_LAYOUT
+IDD_VPP_EXPOSE_SETUP AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_MACRO AFX_DIALOG_LAYOUT
+IDD_MACRO AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
 
