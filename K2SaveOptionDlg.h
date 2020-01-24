@@ -112,4 +112,5 @@ public:
   CButton m_butDatePrefix;
   BOOL m_bDatePrefix;
   afx_msg void OnCheckDatePrefix();
+  BOOL m_bMultiHolePos;
 };

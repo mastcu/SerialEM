@@ -56,6 +56,7 @@ CK2SaveOptionDlg::CK2SaveOptionDlg(CWnd* pParent /*=NULL*/)
   , m_strCurSetSaves(_T(""))
   , m_bSaveFrameStackMdoc(FALSE)
   , m_bDatePrefix(FALSE)
+  , m_bMultiHolePos(FALSE)
 {
 
 }
@@ -119,6 +120,7 @@ void CK2SaveOptionDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Text(pDX, IDC_STAT_CURSET2, m_strCurSetSaves);
   DDX_Control(pDX, IDC_CHECK_DATE_PREFIX, m_butDatePrefix);
   DDX_Check(pDX, IDC_CHECK_DATE_PREFIX, m_bDatePrefix);
+  DDX_Check(pDX, IDC_CHECK_HOLE_POS, m_bMultiHolePos);
 }
 
 
@@ -142,6 +144,7 @@ BEGIN_MESSAGE_MAP(CK2SaveOptionDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_SAVE_UNNORMALIZED, OnSaveUnnormalized)
   ON_BN_CLICKED(IDC_CHECK_REDUCE_SUPERRES, OnReduceSuperres)
   ON_BN_CLICKED(IDC_CHECK_DATE_PREFIX, OnCheckDatePrefix)
+  ON_BN_CLICKED(IDC_CHECK_HOLE_POS, OnCheckComponent)
 END_MESSAGE_MAP()
 
 
@@ -179,6 +182,7 @@ BOOL CK2SaveOptionDlg::OnInitDialog()
   m_bHourMinSec = (mNameFormat & FRAME_FILE_HOUR_MIN_SEC) || !m_bNumber;
   m_bDatePrefix = (mNameFormat & FRAME_FILE_DATE_PREFIX) != 0;
   m_bOnlyWhenAcquire = (mNameFormat & FRAME_LABEL_IF_ACQUIRE) != 0;
+  m_bMultiHolePos = (mNameFormat & FRAME_FILE_HOLE_AND_POS) != 0;
   if (!mCanCreateDir && !mDEtype)
     SetDlgItemText(IDC_STAT_MUST_EXIST, B3DCHOICE(mFalconType, 
     "Subfolder set with \"Set Folder\" must be blank to create folders", 
@@ -236,7 +240,8 @@ void CK2SaveOptionDlg::OnOK()
     (m_bMonthDay ? FRAME_FILE_MONTHDAY : 0) |
     (m_bHourMinSec ? FRAME_FILE_HOUR_MIN_SEC : 0) |
     (m_bDatePrefix ? FRAME_FILE_DATE_PREFIX : 0) |
-    (m_bOnlyWhenAcquire ? FRAME_LABEL_IF_ACQUIRE : 0);
+    (m_bOnlyWhenAcquire ? FRAME_LABEL_IF_ACQUIRE : 0) |
+    (m_bMultiHolePos ? FRAME_FILE_HOLE_AND_POS : 0);
   CBaseDlg::OnOK();
 }
 
@@ -313,6 +318,8 @@ void CK2SaveOptionDlg::UpdateFormat(void)
     if (m_bHourMinSec && !mDEtype)
       UtilAppendWithSeparator(filename, time, "_");
   }
+  if (m_bMultiHolePos)
+    UtilAppendWithSeparator(filename, "Hole-pos", "_");
   if (mDEtype) {
     if (!filename.IsEmpty())
       filename += "_";

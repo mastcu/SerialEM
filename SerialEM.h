@@ -212,6 +212,7 @@ typedef bool (*PlugDoingFunc)(void);
 #define FRAME_LABEL_IF_ACQUIRE   (1 << 9)
 #define FRAME_FILE_TILT_ANGLE    (1 << 10)
 #define FRAME_FILE_DATE_PREFIX   (1 << 11)
+#define FRAME_FILE_HOLE_AND_POS  (1 << 12)
 
 // Definitions for Tietz errors and flags
 #define TIETZ_NO_LOCK      1
