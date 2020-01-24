@@ -260,7 +260,10 @@
            which can be created by assignment or with the 'NewArray' command, 2D arrays can be
            created only by the 'New2DArray' command.&nbsp; This command can be used either to 
           create an empty array, which you would add rows to with the 'AppendToArray' command,
-           or to set up an array with a specified number of rows and values on each row, initialized to 0's.</P>
+           or to set up an array with a specified number of rows and values on each row, initialized to 0's.&nbsp; 
+        The number of rows in a 2D array is available by using &#39;$#&#39; in front of the 
+        variable name, while the number of elements in a row is available by specifying 
+        the row number, as in &#39;$#shifts[2]&#39;.</P>
       <P>Individual elements of a 2D array are accessed with two subscripts, as in
            $xShift[$iy][$ix].&nbsp; The first subscript specifies the row, and the second
            the element within the row.&nbsp; An expression with one subscript refers to the

@@ -746,7 +746,7 @@
           <TD>After starting a continuous acquisition, use this command to wait until the
             next image becomes available in buffer A.&nbsp; The program will wait until the exposure
             time has elapsed so that the image is likely to be taken after completion of
-            previous operations.&nbsp; For the next script command, the image will be available 
+            previous operations, unless the command &#39;StartFrameWaitTime -1&#39; is used first.&nbsp; For the next script command, the image will be available 
             in buffers A and B, but for commands after that, buffer B should be accessed instead 
             because the copy in A may be overwritten with a new continuous frame by then.   
             &nbsp; The &#39;UseContinuousFrames 1&#39; command must be used before the
@@ -760,12 +760,17 @@
           </TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style8">StartFrameWaitTimer</TD>
-          <TD>Sets the time from which the next &#39;WaitForNextFrame&#39; will require an exposure 
+          <TD class="style8">StartFrameWaitTimer [-1]</TD>
+          <TD>With no optional value, sets the time from which the next &#39;WaitForNextFrame&#39; will require an exposure 
             time to elapse.&nbsp; Without this command, the program will wait the full 
-            exposure time after the &#39;WaitNextFrameCommand&#39;. If this command is given just 
+            exposure time after the &#39;WaitNextFrameCommand&#39;. If this command is given 
+            with no value just 
             after getting a frame, and operations are done before waiting for the next 
-            frame, the next frame will be obtained sooner.</TD>
+            frame, the next frame may be obtained sooner.&nbsp; However, if the command is 
+            followed by a negative value, then the program will not wait for the exposure 
+            time to elapse but just return the next distinct frame.&nbsp; Use this command 
+            with a -1 before WaitForNextFrame to get every successive frame if possible, 
+            such as after starting a continuous tilt.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style8">SetLiveSettleFraction #</TD>

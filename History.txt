@@ -3,6 +3,14 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+1/23/20: Fixed New2DArray to not require a size
+
+1/23/20: Made it possible for to acquire every successive frame in continuous
+mode without waiting for exposure time to elapse when using WaitForNextFrame.
+
+1/23/20: Added option to add multiple Record hole and position to frame file
+name.
+
 1/10/20: Updated Navigator coordinates in montage piece when a point is moved
 (In 3.7).
 

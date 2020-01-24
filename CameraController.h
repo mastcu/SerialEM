@@ -479,7 +479,7 @@ public:
   GetSetMember(float, K2MaxRamStackGB);
   SetMember(bool, CancelNextContinuous);
   void SetTaskWaitingForFrame(bool inVal) { mTaskFrameWaitStart = inVal ? GetTickCount() : -1.; };
-  bool GetTaskWaitingForFrame() { return mTaskFrameWaitStart >= 0.; };
+  bool GetTaskWaitingForFrame() { return mTaskFrameWaitStart >= 0. || mTaskFrameWaitStart < -1.1; };
   void AlignContinuousFrames(int inVal, bool average) { mNumContinuousToAlign = inVal; 
   mAverageContinAlign = average; mNumAlignedContinuous = 0; };
   GetMember(bool, AverageContinAlign);

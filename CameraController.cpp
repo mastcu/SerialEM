@@ -8852,13 +8852,15 @@ void CCameraController::DisplayNewImage(BOOL acquired)
         // turned into a delay before capture, and clear the task flag
         // If images are being aligned and a stop came in, proceed with next one even
         // if it is a duplicate
-        if ((mRepFlag >= 0 || mNumContinuousToAlign > 0) && mTaskFrameWaitStart >= 0. &&
+        if ((mRepFlag >= 0 || mNumContinuousToAlign > 0) && 
+          (mTaskFrameWaitStart >= 0. || mTaskFrameWaitStart < -1.1) &&
           (!mImBufs->IsImageDuplicate(image) || mNumContinuousToAlign > 0)) {
             ticks = mShiftManager->GetGeneralTimeOut(mObeyTiltDelay ? RECORD_CONSET : 
               mLastConSet);
             delay = SEMTickInterval((double)ticks, (double)GetTickCount());
-            if (SEMTickInterval(mTaskFrameWaitStart) >= 1000. * mExposure +
-              mContinuousDelayFrac * B3DMAX(delay, 0.)) {
+            if (mTaskFrameWaitStart < -1.1 || (mTaskFrameWaitStart >= 0. && 
+              SEMTickInterval(mTaskFrameWaitStart) >= 1000. * mExposure +
+              mContinuousDelayFrac * B3DMAX(delay, 0.))) {
               if (delay > 0)
                 mShiftManager->ResetAllTimeouts();
               if (mNumContinuousToAlign > 1) {
@@ -11058,7 +11060,7 @@ void CCameraController::ComposeFramePathAndName(bool temporary)
 {
   CString date, time, path, filename, savefile, label;
   char numFormat[6];
-  int trimCount;
+  int trimCount, curHole, curPos;
   CMapDrawItem *item;
   bool prefixDate = (mFrameNameFormat & FRAME_FILE_DATE_PREFIX) != 0;
   B3DCLAMP(mDigitsForNumberedFrame, 3, 5);
@@ -11153,6 +11155,11 @@ void CCameraController::ComposeFramePathAndName(bool temporary)
       if ((mFrameNameFormat & FRAME_FILE_HOUR_MIN_SEC) || temporary)
         UtilAppendWithSeparator(filename, time, "_");
     }
+  }
+  if ((mFrameNameFormat & FRAME_FILE_HOLE_AND_POS) && 
+    mWinApp->mParticleTasks->CurrentHoleAndPosition(curHole, curPos)) {
+    date.Format("%d-%d", curHole, curPos);
+    UtilAppendWithSeparator(filename, date, "_");
   }
   mFrameFilename = filename;
 }

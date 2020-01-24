@@ -1569,7 +1569,7 @@
 #define IDC_SPIN_SCALE_SIZE_BY          2590
 #define ID_TAKE_TIFF                    2591
 #define IDC_CHECK_OMIT_3X3_CORNERS      2600
-#define IDC_CHECK1                      2601
+#define IDC_CHECK_HOLE_POS              2601
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2050,7 +2050,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        243
+#define _APS_NEXT_RESOURCE_VALUE        244
 #define _APS_NEXT_COMMAND_VALUE         33385
 #define _APS_NEXT_CONTROL_VALUE         2602
 #define _APS_NEXT_SYMED_VALUE           104

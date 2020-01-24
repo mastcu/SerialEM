@@ -2104,7 +2104,7 @@ void CMacroProcessor::NextCommand()
         ABORT_LINE("The number of elements per row must be 0 because no rows are created"
         " in:\n\n");
     }
-    if (index <= 0 || index2 < 0)
+    if (index < 0 || (truth && index2 < 0))
       ABORT_LINE("The number of elements to create must be positive in:\n\n");
     strCopy = "0";
     for (ix1 = 1; ix1 < index; ix1++)
@@ -6209,14 +6209,17 @@ void CMacroProcessor::NextCommand()
     break;
     
   case CME_STARTFRAMEWAITTIMER:                             // StartFrameWaitTimer
-    mFrameWaitStart = GetTickCount();
+    if (!itemEmpty[1] && itemInt[1] < 0)
+      mFrameWaitStart = -2.;
+    else
+      mFrameWaitStart = GetTickCount();
     break;
     
   case CME_WAITFORNEXTFRAME:                                // WaitForNextFrame
     if (!itemEmpty[1])
       mCamera->AlignContinuousFrames(itemInt[1], !itemEmpty[2] && itemInt[2] != 0);
-    mCamera->SetTaskFrameWaitStart(mFrameWaitStart >= 0 ? mFrameWaitStart : 
-      (double)GetTickCount());
+    mCamera->SetTaskFrameWaitStart((mFrameWaitStart >= 0 || mFrameWaitStart < -1.1) ? 
+      mFrameWaitStart : (double)GetTickCount());
     mFrameWaitStart = -1.;
     break;
     
