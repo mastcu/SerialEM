@@ -1384,7 +1384,7 @@ BEGIN
     CTEXT           "",IDC_STATVACUUM,58,35,18,10,SS_CENTERIMAGE | NOT WS_VISIBLE
     PUSHBUTTON      "Dose",IDC_BUTDOSE,45,0,15,7
     PUSHBUTTON      "Reset",IDC_BUTRESETDEFOCUS,1,30,17,7
-    PUSHBUTTON      "-",IDC_BUTMORE,2,39,9,7
+    PUSHBUTTON      "-",IDC_BUTMORE,3,39,9,7
     RTEXT           "67.52",IDC_STAT_INTENSITY,23,36,24,10,SS_CENTERIMAGE
     LTEXT           "C3",IDC_STAT_C23IA,13,37,9,8
     LTEXT           "um",IDC_STAT_PCTUM,48,37,10,8
@@ -3735,6 +3735,11 @@ BEGIN
     0
 END
 
+IDD_SCOPESTATUS AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -5635,9 +5640,15 @@ END
 STRINGTABLE
 BEGIN
     IDC_CHECK_DATE_PREFIX   "Start filename with date-time in form YYYY-MM-DD_HH.MM.SS"
-    IDC_CHECK_HOLE_POS      "Add hole number and position in hole when doing multiple Records"
     IDC_CHECK_EXTRA_STATS   "Do extra computations to find resolution that Thon rings fit to"
     IDC_CHECK_DRAW_RINGS    "Draw more than 5 rings on FFT, out to the resolution fit to"
+END
+
+STRINGTABLE
+BEGIN
+    IDC_CHECK_OMIT_3X3_CORNERS 
+                            "Acquire in 5 holes by skipping corners of 3x3 array"
+    IDC_CHECK_HOLE_POS      "Add hole number and position in hole when doing multiple Records"
 END
 
 STRINGTABLE
@@ -5676,12 +5687,6 @@ BEGIN
     IDC_EDIT_POST_MOVE_DELAY 
                             "Enter settling time in seconds after moving to next plate position"
     IDC_PPCOND_NEXT_AND_GO  "Close dialog, move to next phase plate position, start conditioning"
-END
-
-STRINGTABLE
-BEGIN
-    IDC_CHECK_OMIT_3X3_CORNERS 
-                            "Acquire in 5 holes by skipping corners of 3x3 array"
 END
 
 #endif    // English (United States) resources

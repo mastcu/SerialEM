@@ -2352,6 +2352,8 @@ int CParameterIO::ReadProperties(CString strFileName)
             camP->numExtraGainRefs = itemInt[1];
           else if (MatchNoCase("NormalizeInSerialEM"))
             camP->processHere = itemInt[1];
+          else if (MatchNoCase("UseMinDDDFocusBinning"))
+            camP->useMinDDDBinning = itemInt[1] != 0;
           else if (MatchNoCase("AutoGainFactors"))
             camP->autoGainAtBinning = itemInt[1];
           else if (MatchNoCase("Falcon3ScalingPower"))
@@ -4868,15 +4870,16 @@ void CParameterIO::InitializeControlSet(ControlSet * cs, int sizeX, int sizeY)
 ///////////////////////////////////////////////////////////////////////////////////
 // UTILITIES
 
-int CParameterIO::ReadAndParse(CString &strLine, CString *strItems, int maxItems)
+int CParameterIO::ReadAndParse(CString &strLine, CString *strItems, int maxItems, 
+  bool useQuotes)
 {
-  return ReadAndParse(mFile, strLine, strItems, maxItems);
+  return ReadAndParse(mFile, strLine, strItems, maxItems, useQuotes);
 }
 
 // Read a line from the given file into strLine and parse into strItems, at most maxItems 
 // Returns 0 for something read, -1 for EOF, and 1 for error
 int CParameterIO::ReadAndParse(CStdioFile *file, CString &strLine, CString *strItems, 
-  int maxItems)
+  int maxItems, bool useQuotes)
 {
   try {
     if (!file->ReadString(strLine))
@@ -4887,7 +4890,7 @@ int CParameterIO::ReadAndParse(CStdioFile *file, CString &strLine, CString *strI
     return 1;                       // return for error
   }
 
-  return ParseString(strLine, strItems, maxItems);
+  return ParseString(strLine, strItems, maxItems, useQuotes);
 }
 
 // Read an parse a line and fill in empty, int, and double arrays

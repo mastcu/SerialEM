@@ -1540,18 +1540,20 @@
                be included and text after it will be written.&nbsp; Command added in 3.8.</td>
         </TR>
        <TR vAlign="top">
-          <TD class="style7">ReadLineAsArray ID var</TD>
+          <TD class="style7">ReadLineToArray ID var</TD>
            <td>Reads the next line of the file with the given ID, breaks it into words, and 
                sets up an array variable with each word as an element.&nbsp; '#' is treated as 
                the start of comment and the rest of the line is discarded. Blank lines and 
-               lines starting with '#' will be skipped.&nbsp; Reaching the end of the file does 
+               lines starting with '#' will be skipped.&nbsp; Parts of the line enclosed in 
+               single quotes will be treated as single strings if the 'ParseQuotedStrings' 
+             command has been given.&nbsp; Reaching the end of the file does 
                not give a script error; instead, reportedValue1 is set to 1 when a line is read 
                or 0 if nothing was read.&nbsp; This command could be used in a loop to wait for 
                a file to be added to by external source.&nbsp; Command added in 3.8.</td>
         </TR>
        <TR vAlign="top">
-          <TD class="style7">ReadLineAsString ID var</TD>
-           <td>Like 'ReadLineAsArray ', but the line is stored in the variable exactly as it is 
+          <TD class="style7">ReadLineToString ID var</TD>
+           <td>Like 'ReadLineToArray ', but the line is stored in the variable exactly as it is 
                in the file, including a line starting with '#'.&nbsp; Blank lines will still be 
                skipped.&nbsp; Command added in 3.8.</td>
         </TR>

@@ -1672,8 +1672,8 @@ void CMacroProcessor::NextCommand()
         mLoopIncrement[mBlockLevel] = itemInt[4];
         if (!itemInt[4])
           ABORT_LINE("The loop increment is 0 at line:\n\n");
-        index = 1;
       }
+      index = 1;
     }
     mLastIndex = -1;
     if ((mLoopIncrement[mBlockLevel] < 0 ? -1 : 1) *
@@ -3264,7 +3264,7 @@ void CMacroProcessor::NextCommand()
     // Skip blank lines, skip comment lines if reading into array
     for (;;) {
       index = mWinApp->mParamIO->ReadAndParse(txFile->csFile, report, strItems,
-        MAX_TOKENS);
+        MAX_TOKENS, mParseQuotes);
       if (index || !strItems[0].IsEmpty() || (!truth && !report.IsEmpty()))
         break;
     }

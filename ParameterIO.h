@@ -32,8 +32,9 @@ public:
   void WriteString(CString format, CString strValue);
   void WriteSettings(CString strFileName);
   void FindToken(CString &strCopy, CString &strItem, bool useQuotes = false);
-  int ReadAndParse(CStdioFile *file, CString &strLine, CString *strItems, int maxItems);
-  int ReadAndParse(CString &strLine, CString *strItems, int maxItems);
+  int ReadAndParse(CStdioFile *file, CString &strLine, CString *strItems, int maxItems, 
+    bool useQuotes = false);
+  int ReadAndParse(CString &strLine, CString *strItems, int maxItems, bool useQuotes = false);
   CString *GetDupMessage(void) {return &mDupMessage;};
   CParameterIO();
   virtual ~CParameterIO();
