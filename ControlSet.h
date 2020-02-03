@@ -214,6 +214,7 @@ struct CameraParameters {
   int offsetRefBinning[MAX_BINNINGS]; // The binning of the stored gain reference
   int binnedOffsetX[MAX_BINNINGS];    // The offsets in unbinned pixels
   int binnedOffsetY[MAX_BINNINGS];
+  BOOL useMinDDDBinning;      // Flag to use the min DD binning for autofocus
   float countsPerElectron;    // Camera gain in counts per electron
   float unscaledCountsPerElec;  // Original value read in from properties
   int corrections;            // Corrections to do in DM, or -1 for default

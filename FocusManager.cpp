@@ -1381,7 +1381,8 @@ void CFocusManager::FocusDone()
 
   // See if binning is needed, or at least scaling of filter parameters
   minBinning = mDDDminBinning * BinDivisorI(camParam);
-  if (mCamera->IsDirectDetector(camParam) && binning > 0 && binning < minBinning) {
+  if ((mCamera->IsDirectDetector(camParam) || camParam->useMinDDDBinning) && 
+    binning > 0 && binning < minBinning) {
 
     // Get needed achievable binning then scale the filter down the rest of the way
     needBin = minBinning / binning;

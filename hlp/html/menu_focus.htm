@@ -274,7 +274,8 @@
       <P><A NAME="hid_focus_set_ddd_min_binning"></A><B>Set Min Binning command (Focus menu)</B></P>
       <P>Use this command to 
         set a minimum total binning to apply when correlating autofocus images from a 
-        direct detector.&nbsp; The autofocus routine does not apply any binning to the 
+        direct detector, or from any other camera where SerialEMproperties.txt includes 
+        &#39;UseMinDDDFocusBinning 1&#39; in the properties for that camera.&nbsp; The autofocus routine does not apply any binning to the 
         images that it correlates by default, but it is recommended that the Focus 
         images themselves be taken with some binning to reduce the effects of fixed 
         noise in the images.&nbsp; It can be difficult to take images with the needed 

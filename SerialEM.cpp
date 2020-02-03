@@ -356,6 +356,7 @@ CSerialEMApp::CSerialEMApp()
     mCamParams[i].gainRefNumDarkAvg = 5;
     mCamParams[i].TSAverageDark = false;
     mCamParams[i].numBinnedOffsets = 0;
+    mCamParams[i].useMinDDDBinning = false;
     mCamParams[i].countsPerElectron = 0.;
     mCamParams[i].corrections = -1;
     mCamParams[i].sizeCheckSwapped = 0;

@@ -103,13 +103,15 @@
         shrap peak at 0,0 relative to that of the real correlation peak. For typical 
         applications, binning to 2 or even 4 will probably not affect the accuracy of 
         the focus measurement, because there is sub-pixel interpolation when measuring 
-        the shifts.&nbsp; However, the autofocus routine ordinarily does not apply 
-        binning to images that it receives, so it is necessary to apply the needed 
-        binning during acquisition.&nbsp; The exception to this situation is available 
-        in SerialEM 4.5: for direct detectors, where adequately binning may easily 
-        saturate a 16-bit image, the <A HREF="#hid_focus_set_ddd_min_binning">Set Min Binning</A> 
+        the shifts.&nbsp; However, the autofocus routine ordinarily does not apply binning to 
+        images that it receives, so it is necessary to apply the needed binning during 
+        acquisition.&nbsp; The exception to this situation is available for direct detectors 
+        or other cameras where adequate binning may easily saturate a 16-bit image; for 
+        these cameras, the <A HREF="#hid_focus_set_ddd_min_binning">Set Min Binning</A> 
         command can be used to make the autofocus routine apply binning before 
-        correlation when necessary.</li>
+        correlation when necessary.&nbsp; The set binning is applied automatically for 
+        direct detectors, but for other cameras the camera property 
+        &#39;UseMinDDDFocusBinning&#39; must be set for that setting to be used.</li>
       <li>Set program properties to apply a stronger high-frequency filter to the 
         images.&nbsp; This filter can be controlled by entries in the file 
         SerialEMproperties.txt: &#39;FocusFilterRadius2&#39; for the cutoff frequency (default 

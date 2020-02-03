@@ -1335,8 +1335,8 @@
             images, or to 4 to do so for all images.&nbsp; The default is 3.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD>DropFramesStartEnd</TD>
-          <TD>Number of frames to drop at the start and end of a burst mode (frame) 
+          <TD class="auto-style1">DropFramesStartEnd</TD>
+          <TD class="auto-style1">Number of frames to drop at the start and end of a burst mode (frame) 
             acquisition from a Tietz camera.</TD>
         </TR>
         <TR VALIGN="top">
@@ -1466,6 +1466,12 @@
             binnings that are not a power of 2, but these entries could be used to override 
             the assumed settings. To prevent the binned by 2 reference from being used with 
             a higher even binning, enter a line with 'binning 2 999 999'.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>UseMinDDDFocusBinning</TD>
+          <TD>Set to 1 to apply the minimum binning set with the Focus menu entry
+            <a href="menu_focus.htm#hid_focus_set_ddd_min_binning">Set Min Binning</a> when 
+            autofocusing with this camera (this is always applied for non-direct-detectors).</TD>
         </TR>
         <TR VALIGN="top">
           <TD>RelativeGainFactors</TD>
