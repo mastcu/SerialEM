@@ -7,8 +7,7 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "afxres.h"
-
+#include "afxres.h"
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
@@ -64,9 +63,7 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDR_MAINFRAME           ICON                    "res\\SerialEM.ico"
-
 IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -74,9 +71,7 @@ IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
 //
 
 IDR_MAINFRAME           BITMAP                  "res\\Toolbar.bmp"
-
 IDB_BITMAP1             BITMAP                  "res\\bitmap1.bmp"
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -2240,7 +2235,7 @@ BEGIN
 END
 
 IDD_READFILEDLG DIALOGEX 0, 0, 113, 48
-STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_TOOLWINDOW
 CAPTION "Read from Current File"
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
@@ -3136,23 +3131,36 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,27,233,111,10
 END
 
-IDD_SCREENSHOT DIALOGEX 0, 0, 289, 177
+IDD_SCREENSHOT DIALOGEX 0, 0, 149, 131
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Screen Shot Settings"
+EXSTYLE WS_EX_TOOLWINDOW
+CAPTION "Image Snapshots"
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
-    PUSHBUTTON      "Take TIFF screen shot",ID_TAKE_TIFF,202,156,80,14
-    CONTROL         "Unzoomed snapshot",IDC_RADIO_UNZOOMED,"Button",BS_AUTORADIOBUTTON,32,31,81,10
-    CONTROL         "Increase zoom by",IDC_RADIO_INCREASE_BY,"Button",BS_AUTORADIOBUTTON,32,52,73,10
-    GROUPBOX        "Zoom",IDC_STATIC,21,17,171,85
-    CONTROL         "",IDC_SPIN_INCREASE_ZOOM_BY,"msctls_updown32",UDS_ARROWKEYS,157,50,11,14
-    CONTROL         "Whole image at 1:1 zoom",IDC_RADIO_WHOLE_IMAGE,"Button",BS_AUTORADIOBUTTON,32,73,97,10
-    CONTROL         "Scale sizes by",IDC_CHECK_SCALE_SIZE_BY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,29,114,60,10
-    PUSHBUTTON      "Take JPEG screen shot",ID_TAKE_JPEG,109,156,80,14
-    EDITTEXT        IDC_EDIT_INCREASE_ZOOM_BY,104,50,40,14,ES_AUTOHSCROLL
-    EDITTEXT        IDC_EDIT_SCALE_SIZE_BY,89,112,40,14,ES_AUTOHSCROLL
-    CONTROL         "",IDC_SPIN_SCALE_SIZE_BY,"msctls_updown32",UDS_ARROWKEYS,135,112,11,14
-END    
+    CONTROL         "No scaling",IDC_RADIO_UNZOOMED,"Button",BS_AUTORADIOBUTTON | WS_GROUP,33,12,67,10
+    CONTROL         "Scale by",IDC_RADIO_INCREASE_BY,"Button",BS_AUTORADIOBUTTON,33,24,39,10
+    CONTROL         "Whole image at 1:1 zoom",IDC_RADIO_WHOLE_IMAGE,"Button",BS_AUTORADIOBUTTON,33,36,88,10
+    GROUPBOX        "Image scaling",IDC_STATIC,26,1,97,47,WS_GROUP
+    LTEXT           "1.5",IDC_STAT_SCALEBY,74,25,10,8
+    CONTROL         "",IDC_SPIN_INCREASE_ZOOM_BY,"msctls_updown32",UDS_ARROWKEYS,87,22,11,14
+    CONTROL         "Scale sizes by",IDC_CHECK_SCALE_SIZE_BY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,29,52,56,10
+    LTEXT           "Zoom",IDC_STAT_SCALE_SIZES,89,53,19,8
+    CONTROL         "",IDC_SPIN_SCALE_SIZE_BY,"msctls_updown32",UDS_ARROWKEYS,110,50,11,14
+    CONTROL         "Draw overlays",IDC_CHECK_DRAW_OVERLAYS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,65,59,10
+    CONTROL         "Draw Navigator items",IDC_CHECK_DRAW_NAV_ITEMS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,70,65,74,10
+    CONTROL         "TIFF",IDC_RADIO_AS_TIFF,"Button",BS_AUTORADIOBUTTON | WS_GROUP,37,77,30,10
+    CONTROL         "JPEG",IDC_RADIO_AS_JPEG,"Button",BS_AUTORADIOBUTTON,67,77,34,10
+    LTEXT           "Save as:",IDC_STATIC,7,78,28,8
+    PUSHBUTTON      "Snapshot",ID_TAKE_TIFF,3,115,43,12
+    DEFPUSHBUTTON   "OK",IDOK,58,115,30,12
+    PUSHBUTTON      "Cancel",IDCANCEL,98,115,30,12
+    PUSHBUTTON      "?",IDC_BUTHELP,136,117,10,10
+    CONTROL         "None",IDC_RNOCOMPRESS,"Button",BS_AUTORADIOBUTTON | WS_GROUP,10,98,31,10
+    CONTROL         "ZIP",IDC_RZIPCOMPRESS,"Button",BS_AUTORADIOBUTTON,44,98,28,10
+    CONTROL         "LZW",IDC_RLZWCOMPRESS,"Button",BS_AUTORADIOBUTTON,78,98,28,10
+    CONTROL         "JPEG",IDC_RJPEGCOMPRESS,"Button",BS_AUTORADIOBUTTON,112,98,30,10
+    GROUPBOX        "Type of compression in TIFF file",IDC_STATCOMPRESS,3,88,143,23,WS_GROUP
+END
 
 IDD_VPP_EXPOSE_SETUP DIALOGEX 0, 0, 181, 202
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
@@ -3242,9 +3250,7 @@ END
 //
 
 IDC_CURSOR1             CURSOR                  "res\\cursor1.cur"
-
 IDC_CURSOR2             CURSOR                  "res\\cursor2.cur"
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3651,11 +3657,12 @@ BEGIN
 
     IDD_SCREENSHOT, DIALOG
     BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 282
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 170
-    END        
+        LEFTMARGIN, 3
+        RIGHTMARGIN, 146
+        TOPMARGIN, 2
+        BOTTOMMARGIN, 127
+    END
+
     IDD_VPP_EXPOSE_SETUP, DIALOG
     BEGIN
         LEFTMARGIN, 11
@@ -3717,59 +3724,59 @@ END
 // AFX_DIALOG_LAYOUT
 //
 
-IDD_AUTOCENSETUP AFX_DIALOG_LAYOUT
+IDD_AUTOCENSETUP AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_TILTSERIES AFX_DIALOG_LAYOUT
+IDD_TILTSERIES AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_DRIFTWAITSETUP AFX_DIALOG_LAYOUT
+IDD_DRIFTWAITSETUP AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_SCREENSHOT AFX_DIALOG_LAYOUT
+IDD_SCREENSHOT AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_MULTI_SHOT_SETUP AFX_DIALOG_LAYOUT
+IDD_MULTI_SHOT_SETUP AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_REMOTE_CONTROL AFX_DIALOG_LAYOUT
+IDD_REMOTE_CONTROL AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_LOWDOSE AFX_DIALOG_LAYOUT
+IDD_LOWDOSE AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_VPP_EXPOSE_SETUP AFX_DIALOG_LAYOUT
+IDD_VPP_EXPOSE_SETUP AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_MACRO AFX_DIALOG_LAYOUT
+IDD_MACRO AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_K2_SAVE_OPTIONS AFX_DIALOG_LAYOUT
+IDD_K2_SAVE_OPTIONS AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_SCOPESTATUS AFX_DIALOG_LAYOUT
+IDD_SCOPESTATUS AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
 
@@ -5745,8 +5752,7 @@ LANGUAGE 9, 1
 #include "res\SerialEM.rc2"  // non-Microsoft Visual C++ edited resources
 #include "afxres.rc"         // Standard components
 #include "XFolderDialog\XFolderDialog.rc"
-#endif
-
+#endif
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 
