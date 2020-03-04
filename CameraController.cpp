@@ -1031,7 +1031,8 @@ void CCameraController::InitializeDMcameras(int DMind, int *numDMListed,
               }
 
               // Default post-actions disabled for OneView
-              if (param->OneViewType && param->postActionsOK < 0)
+              if ((param->OneViewType || param->K2Type == K3_TYPE) && 
+                param->postActionsOK < 0)
                 param->postActionsOK = 0;
               if (param->canTakeFrames && mPluginVersion[DMind] < PLUGIN_TAKES_OV_FRAMES)
                 param->canTakeFrames = 0;
@@ -9429,6 +9430,7 @@ void CCameraController::ProcessImageOrFrame(short *array, int processing, int re
       ProcDarkSubtract(array, mTD.ImageType, mTD.DMSizeX, mTD.DMSizeY,
         (short *)mDarkp->Array, mDarkp->Exposure, array2, exp2, mExposure, darkScale);
     } else {
+      SEMTrace('1', "Normalizing");
       ProcGainNormalize(array, mTD.ImageType, mGainp->SizeX, mTop, mLeft,
         mBottom, mRight, (short *)mDarkp->Array, mDarkp->Exposure, array2, exp2,
         mExposure, darkScale, mGainp->Array, mGainp->ByteSize, mGainp->GainRefBits);
