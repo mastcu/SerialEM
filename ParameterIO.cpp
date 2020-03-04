@@ -161,6 +161,7 @@ int CParameterIO::ReadSettings(CString strFileName)
   DriftWaitParams *dwParams = mWinApp->mParticleTasks->GetDriftWaitParams();
   ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
   VppConditionParams *vppParams = mWinApp->mMultiTSTasks->GetVppConditionParams();
+  ScreenShotParams *snapParams = mWinApp->GetScreenShotParams();
   int faLastFileIndex = -1, faLastArrayIndex = -1;
   mWinApp->mCamera->SetFrameAliDefaults(faParam, "4K default set", 4, 0.06f, 1);
   mWinApp->SetAbsoluteDlgIndex(false);
@@ -568,6 +569,16 @@ int CParameterIO::ReadSettings(CString strFileName)
         vppParams->useNavNote = itemInt[11] != 0;
         vppParams->postMoveDelay = itemInt[12];
 
+      } else if (NAME_IS("SnapshotParams")) {
+        snapParams->imageScaleType = itemInt[1];
+        snapParams->imageScaling = (float)itemDbl[2];
+        snapParams->ifScaleSizes = itemInt[3] != 0;
+        snapParams->sizeScaling = (float)itemDbl[4];
+        snapParams->fileType = itemInt[5];
+        snapParams->compression = itemInt[6];
+        snapParams->jpegQuality = itemInt[7];
+        snapParams->skipOverlays = itemInt[8];
+
       } else if (NAME_IS("VppCondNavText")) {
         StripItems(strLine, 1, vppParams->navText);
       } else if (NAME_IS("AutocenterParams")) {
@@ -699,7 +710,8 @@ int CParameterIO::ReadSettings(CString strFileName)
         NAME_IS("MacroToolPlacement") || NAME_IS("MacroEditerPlacement") ||
         NAME_IS("OneLinePlacement") || NAME_IS("MultiShotPlacement") ||
         NAME_IS("CtffindPlacement") || NAME_IS("OneEditerPlacement") ||
-        NAME_IS("AutocenPlacement") || NAME_IS("VppCondPlacement")) {
+        NAME_IS("AutocenPlacement") || NAME_IS("VppCondPlacement") ||
+        NAME_IS("SnapshotPlacement")) {
         index = NAME_IS("OneEditerPlacement") ? 1 : 0;
         if (strItems[index + 10].IsEmpty() || 
           (index && (itemInt[1] < 0 || itemInt[1] >= MAX_MACROS))) {
@@ -721,6 +733,8 @@ int CParameterIO::ReadSettings(CString strFileName)
             place = mWinApp->mMultiTSTasks->GetAutocenPlacement();
           else if (NAME_IS("VppCondPlacement"))
             place = mWinApp->mMultiTSTasks->GetConditionPlacement();
+          else if (NAME_IS("SnapshotPlacement"))
+            place = mWinApp->GetScreenShotPlacement();
           else if (NAME_IS("StatePlacement")) {
             mWinApp->SetOpenStateWithNav(itemInt[1] != 0);
             place = mWinApp->mNavHelper->GetStatePlacement();
@@ -1262,6 +1276,7 @@ void CParameterIO::WriteSettings(CString strFileName)
   DriftWaitParams *dwParams = mWinApp->mParticleTasks->GetDriftWaitParams();
   ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
   VppConditionParams *vppParams = mWinApp->mMultiTSTasks->GetVppConditionParams();
+  ScreenShotParams *snapParams = mWinApp->GetScreenShotParams();
 
   // Transfer macros from any open editing windows
   for (i = 0; i < MAX_MACROS; i++)
@@ -1480,6 +1495,11 @@ void CParameterIO::WriteSettings(CString strFileName)
       vppParams->postMoveDelay);
     mFile->WriteString(oneState);
     mFile->WriteString("VppCondNavText " + vppParams->navText + "\n");
+    oneState.Format("SnapshotParams %d %f %d %f %d %d %d %d -999 -999\n",
+      snapParams->imageScaleType, snapParams->imageScaling,
+      snapParams->ifScaleSizes ? 1 : 0, snapParams->sizeScaling, snapParams->fileType,
+      snapParams->compression, snapParams->jpegQuality, snapParams->skipOverlays);
+    mFile->WriteString(oneState);
     if (!navParams->stockFile.IsEmpty()) {
       oneState.Format("NavigatorStockFile %s\n", navParams->stockFile);
       mFile->WriteString(oneState);
@@ -1598,6 +1618,7 @@ void CParameterIO::WriteSettings(CString strFileName)
     WritePlacement("CtffindPlacement", 0, ctffindPlace);
     WritePlacement("AutocenPlacement", 0, autocenPlace);
     WritePlacement("VppCondPlacement", 0, vppPlace);
+    WritePlacement("SnapshotPlacement", 0, mWinApp->GetScreenShotPlacement());
     WritePlacement("MacroToolPlacement", mWinApp->mMacroToolbar ? 1 : 0, toolPlace);
     WritePlacement("OneLinePlacement", mWinApp->mMacroProcessor->mOneLineScript ? 1 : 0, 
       oneLinePlace);

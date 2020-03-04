@@ -240,8 +240,10 @@ void CSerialEMView::CloseFrame()
 
 // Takes an image snapshot and saves it, managing all the changes needed before and
 // after calling the general draw routine
-int CSerialEMView::TakeSnapshot(float zoomBy, bool scaleSizes, int skipExtra, 
-  int fileType, int compression, CString &filename)
+// NOTE: Hans Windohoff worked out how to draw to a bitmap and changed the draw routines
+// to work with CDC instead of CClientDC
+int CSerialEMView::TakeSnapshot(float zoomBy, float sizeScaling, int skipExtra,
+  int fileType, int compression, int quality, CString &filename)
 {
   CRect rectWin;
   DWORD memBMX, memBMY;
@@ -255,9 +257,10 @@ int CSerialEMView::TakeSnapshot(float zoomBy, bool scaleSizes, int skipExtra,
   char *buffer, *bufIn, *bufOut;
   int nxImage, nyImage, nxDrawn, nyDrawn, nxWin, nyWin, iy, ix, inAdd, err;
   int xOffsetSave = m_iOffsetX, yOffsetSave = m_iOffsetY;
+  int addDPI = mWinApp->GetAddDPItoSnapshots();
   bool drew;
   double zoomUse, zoomSave = mZoom;
-  float sizeScaling = 1.;
+  float pixel;
   ScaleBar barParamSaved = mScaleParams;
 
   // Get window size
@@ -292,14 +295,14 @@ int CSerialEMView::TakeSnapshot(float zoomBy, bool scaleSizes, int skipExtra,
   }
 
   // Scale sizes by change in zoom
-  if (scaleSizes)
+  if (sizeScaling <= 0.)
     sizeScaling = (float)B3DMAX(1., zoomUse / mZoom);
 
   // The # of bytes is limited to a DWORD so just test for that first
   if ((float)memBMX * memBMY > 1.e9)
     return 2;
 
-  // Get compaitable device context to window
+  // Get compatible device context to window
   memDC.CreateCompatibleDC(&cdcWin);
 
   // Get the window rectangle
@@ -380,8 +383,18 @@ int CSerialEMView::TakeSnapshot(float zoomBy, bool scaleSizes, int skipExtra,
   // Put it in a KImage and save it
   KImageRGB *image = new KImageRGB();
   image->useData(buffer, memBMX, memBMY);
+  pixel = mWinApp->mShiftManager->GetPixelSize(imBuf);
+  if ((pixel && addDPI > 0) || addDPI > 1) {
+    EMimageExtra *extra = new EMimageExtra();
+    if (addDPI > 1)
+      extra->mPixel = (float)(25400. / addDPI);
+    else
+      extra->mPixel = pixel / (float)zoomUse;
+    image->SetUserData(extra);
+  }
   fileOpt.fileType = fileType;
   fileOpt.compression = compression;
+  fileOpt.jpegQuality = quality;
   KStoreIMOD *store = new KStoreIMOD(filename, fileOpt);
   err = store->WriteSection(image);
   delete image;
@@ -889,7 +902,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   }
 
   // Scale bar if window big enough
-  if (scaleCrit > 0 && !(skipExtra & 1) && rect.Width() >= scaleCrit && 
+  if (scaleCrit > 0 && rect.Width() >= scaleCrit && 
     imBuf->mCamera >= 0 && imBuf->mMagInd && imBuf->mBinning && !imBuf->IsProcessed() && 
     imBuf->mCaptured != 0 && imBuf->mCaptured != BUFFER_STACK_IMAGE)
     DrawScaleBar(&cdc, &rect, imBuf, sizeScaling);

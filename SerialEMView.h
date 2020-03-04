@@ -79,7 +79,7 @@ public:
   void SetImBufIndex(int inImBufIndex) {mImBufIndex = inImBufIndex; };
   void SetImBufs(EMimageBuffer *inImBufs, int inNumber) {mImBufs = inImBufs; mImBufNumber = inNumber;};
   void CloseFrame();
-  int TakeSnapshot(float zoomBy, bool scaleSizes, int skipExtra, int fileType, int compression, CString &filename);
+  int TakeSnapshot(float zoomBy, float sizeScaling, int skipExtra, int fileType, int compression, int quality, CString &filename);
   bool DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect, float sizeScaling, int skipExtra, bool toBuffer);
   void DrawImage(void);
   double b3dStepPixelZoom(double czoom, int step);

@@ -541,4 +541,16 @@ struct HitachiParams {
   int lastMember;
 };
 
+struct ScreenShotParams {
+  int imageScaleType;
+  float imageScaling;
+  BOOL ifScaleSizes;
+  float sizeScaling;
+  int fileType;
+  int compression;
+  int jpegQuality;
+  int skipOverlays;
+  CString lastFilePath;
+};
+
 #endif

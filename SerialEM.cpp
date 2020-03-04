@@ -57,6 +57,7 @@
 #include "FalconHelper.h"
 #include "StageMoveTool.h"
 #include "PiezoAndPPControl.h"
+#include "ScreenShotDialog.h"
 #include "AutoTuning.h"
 #include "ExternalTools.h"
 #include "Shared\b3dutil.h"
@@ -202,6 +203,7 @@ CSerialEMApp::CSerialEMApp()
   mNavigator = NULL;
   mNavHelper = NULL;
   mStageMoveTool = NULL;
+  mScreenShotDialog = NULL;
   mAdministrator = false;
   mCalNotSaved = false;
   mEFTEMMode = false;
@@ -608,6 +610,15 @@ CSerialEMApp::CSerialEMApp()
     mTSRangeParams[i].imageType = 0;
     mTSRangeParams[i].direction = 0;
   }
+  mScreenShotParams.imageScaleType = 0;
+  mScreenShotParams.imageScaling = 2.;
+  mScreenShotParams.ifScaleSizes = 1;
+  mScreenShotParams.sizeScaling = 0.;
+  mScreenShotParams.fileType = 0;
+  mScreenShotParams.compression = 1;
+  mScreenShotParams.jpegQuality = 80;
+  mScreenShotParams.skipOverlays = 0;
+  mAddDPItoSnapshots = 1;
   mHitachiParams.IPaddress = "192.168.10.1";
   mHitachiParams.port = "12050";
   mHitachiParams.beamBlankAxis = 0;
@@ -635,6 +646,7 @@ CSerialEMApp::CSerialEMApp()
   mLogPlacement.rcNormalPosition.right = 0;
   mNavPlacement.rcNormalPosition.right = 0;
   mCamSetupPlacement.rcNormalPosition.right = 0;
+  mScreenShotPlacement.rcNormalPosition.right = 0;
   mRightBorderFrac = 0.;
   mBottomBorderFrac = 0.;
   mMainFFTsplitFrac = 0.5f;
@@ -2931,6 +2943,8 @@ void CSerialEMApp::UpdateWindowSettings()
   mMacroProcessor->UpdateAllForNewScripts(true);
   if (mAutocenDlg)
     mAutocenDlg->UpdateSettings();
+  if (mScreenShotDialog)
+    mScreenShotDialog->UpdateSettings();
 }
 
 
@@ -3455,6 +3469,30 @@ WINDOWPLACEMENT *CSerialEMApp::GetStageToolPlacement()
   }
   return &mStageToolPlacement;
 };
+
+// Image snapshot dialog
+void CSerialEMApp::OpenScreenShotDlg()
+{
+  if (mScreenShotDialog) {
+    mScreenShotDialog->BringWindowToTop();
+    return;
+  }
+  mScreenShotDialog = new CScreenShotDialog();
+  mScreenShotDialog->Create(IDD_SCREENSHOT);
+  if (mScreenShotPlacement.rcNormalPosition.right > 0)
+    SetPlacementFixSize(mScreenShotDialog, &mScreenShotPlacement);
+  else
+    mScreenShotDialog->SetWindowPos(&CWnd::wndTopMost, 500, 400, 100, 100,
+      SWP_NOSIZE | SWP_SHOWWINDOW);
+  RestoreViewFocus();
+}
+
+WINDOWPLACEMENT * CSerialEMApp::GetScreenShotPlacement()
+{
+  if (mScreenShotDialog)
+    mScreenShotDialog->GetWindowPlacement(&mScreenShotPlacement);
+  return &mScreenShotPlacement;
+}
 
 
 ////////////////////////////////////////////////////////////////////////

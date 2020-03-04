@@ -2606,6 +2606,11 @@ void CMenuTargets::OnWindowStageMoveTool()
   mWinApp->OpenStageMoveTool();
 }
 
+void CMenuTargets::OnWindowTakeScreenShot()
+{
+  mWinApp->OpenScreenShotDlg();
+}
+
 // Astigmatism and coma-free entries
 void CMenuTargets::OnFocusCorrectAstigmatism()
 {
@@ -2881,9 +2886,4 @@ void CMenuTargets::OnBeamSpotListCalibrations()
   mShiftManager->ListBeamShiftCals();
   mWinApp->mBeamAssessor->ListIntensityCalibrations();
   mWinApp->mBeamAssessor->ListSpotCalibrations();
-}
-
-
-void CMenuTargets::OnWindowTakeScreenShot()
-{	
 }

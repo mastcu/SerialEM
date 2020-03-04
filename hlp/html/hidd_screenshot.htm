@@ -1,0 +1,87 @@
+<html>
+  <head>
+    <title>Image Snapshot Dialog</title>
+    <meta HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252"/>
+    <style type="text/css"> <!-- BODY { font-family:"Arial" }
+  TD { font-size:16 }
+      .style1
+      {
+        font-size: larger;
+        font-weight: bold;
+      }
+      --></style>
+  </head>
+  <body BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+    <p><a NAME="hidd_screenshot"></a><span class="style1">Image
+        Snapshot Dialog</span></p>
+    <p>This dialog allows you take snapshots of the active image window, including the 
+      scale bar and other features such as Navigator items drawn on there.&nbsp; The 
+      image can be saved at the same size as it is displayed or scaled up to be saved 
+      at higher resolution.&nbsp; Snapshots can be saved to TIFF files with various 
+      kinds of compression, or to JPEG files.&nbsp; The snapshot is done by creating a 
+      buffer of the size needed to contain the scaled image, drawing into that buffer, 
+      and saving the buffer.&nbsp; This can potentially take too much memory when 
+      drawing a large montage at 1:1 zoom.&nbsp; Only the image area is drawn, not the 
+      purple background that shows up when an image is smaller than the window.&nbsp; 
+      By default, the pixel size will be saved as TIFF resolution information in dots 
+      per inch and will usually be detected correctly as a pixel size in IMOD.&nbsp; 
+      However, this might be problematic when opening files in other software such as 
+      Photoshop.&nbsp; The property 'AddDPItoSnapshots' can be set to 0 to prevent the 
+      pixel size from being stored, or to a specific value greater than 1 (e.g., 300) 
+      to set the resolution to that DPI value.&nbsp; This property can be set with the 
+      script command 'SetProperty'.</p>
+    <p><strong>Image scaling</strong></p>
+    <p>Select <strong>No scaling</strong> to have the image saved with no scaling, 
+      with the same number of pixels in the file as screen pixels.&nbsp; If the image, 
+      with its current zoom, is bigger than the window, only the region showing in the 
+      window is saved.</p>
+    <p>Select <strong>Scale by</strong> and a particular scaling to have the image 
+      scaled up to a higher resolution and larger size than the display in the window.&nbsp; 
+      Again, only the region of the image showing in the window is saved.&nbsp; 
+      Scalings can be 1.5 or integers from 2 to 8.</p>
+    <p>Select <strong>Whole image at 1:1 zoom</strong> to save the full image as if it 
+      were displayed at a zoom of 1, including anything that would be outside the 
+      window at that zoom.</p>
+    <p><strong>Increase text/line sizes by</strong></p>
+    <p>With this option on, the program will scale up text sizes, line thicknesses, 
+      and the line lengths for crosses by the chosen amount.&nbsp; The default setting 
+      is shown as &quot;Scaling&quot;, which means that the sizes will be scaled by the same 
+      amount as the image is scaled to take the snapshot.&nbsp; Choose this if you 
+      plan to view the image at about the same size as it is currently displayed, such 
+      as when taking a high-resolution image for publication.&nbsp; In general, choose 
+      a scaling that will make the features be an appropriate size for the zoom at 
+      which you plan to view the snapshot.&nbsp; With the option off, features are 
+      drawn at their normal size regardless of how big the saved image; this is 
+      appropriate when you are applying no scaling or very little, or if you plan to 
+      examine the saved image at a zoom near 1.</p>
+    <p><strong>Include features drawn on image</strong></p>
+    <p>With this option on, the marker point or a drawn line or box, low dose areas, 
+      FFT rings, and Navigator features will be drawn in the snapshot.&nbsp; With the 
+      option off, only the scale bar and its label will be drawn.&nbsp; (The scale bar 
+      can be turned off in the options section of the <a href="hidd_imagelevel.htm">
+      Image Display Control</a> panel.)&nbsp; The 'SnapshopToFile' script command 
+      allows separate control of the drawing of Navigator items and other features.</p>
+    <p><strong>Save as TIFF or JPEG</strong></p>
+    <p>Select the type of file to save.</p>
+    <p><strong>Type of compression in TIFF file</strong></p>
+    <p>Select whether to use compression in a TIFF file and the type of compression.&nbsp; 
+      ZIP and LZW are both loss-less compressions and will generally not reduce file 
+      size by a large amount except in special cases.&nbsp; LZW is particularly 
+      effective when there are runs of similar pixel values; ZIP is the compression 
+      use in PNG files.&nbsp; JPEG compression is the method used in JPEG file and 
+      does lose information.&nbsp; However, the compression may be much less effective 
+      than when saving a JPEG file in some cases.</p>
+    <p><strong>JPEG compression quality (%)</strong></p>
+    <p>The text box and spinner let you specify the compression quality used when 
+      saving a JPEG file or a TIFF file with JPEG compression.&nbsp; The default of 
+      80% is usually fine for images but may give unacceptable distortion or dimming 
+      of colored features for applications where a good quality image is needed.</p>
+    <p><strong>Snapshot</strong></p>
+    <p>Press this button to take the snapshot.&nbsp; A file chooser will open.&nbsp; 
+      The first time, you will need to specify a location and filename.&nbsp; 
+      Thereafter, the program will increment a number at the end of the filename 
+      before the extension or add 1 if there is no number there, so that you can save 
+      an automatically numbered sequence of files.</p>
+</body>
+</html>

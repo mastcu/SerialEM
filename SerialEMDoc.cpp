@@ -150,6 +150,7 @@ CSerialEMDoc::CSerialEMDoc()
   mDefFileOpt.signToUnsignOpt = TRUNCATE_SIGNED;
   mDefFileOpt.fileType = STORE_TYPE_MRC;
   mDefFileOpt.compression = COMPRESS_NONE;
+  mDefFileOpt.jpegQuality = -1;
   mDefFileOpt.useMdoc = false;
   mDefFileOpt.leaveExistingMdoc = false;
   mDfltUseMdoc = -1;

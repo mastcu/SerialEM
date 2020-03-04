@@ -1396,7 +1396,7 @@
         <TR>
           <TD class="style7">SaveToOtherFile buf typ cmp file</TD>
           <TD>Saves one image in the given buffer to the file with the given name and closes 
-            the file.&nbsp; &#39;typ&#39; specifes the type of file and can be MRC, TIF, TIFF, 
+            the file.&nbsp; &#39;typ&#39; specifies the type of file and can be MRC, TIF, TIFF, 
             JPG, JPEG, CUR, 
             or -1 (case insensitive), where CUR or -1 means use the current file type for 
             the File menu entry Save Single/Save to Other.&nbsp; If that type is a series of 
@@ -1404,6 +1404,23 @@
             specifies the compression for a TIFF file and can be NONE,&nbsp; LZW, ZIP, JPG, 
             JPEG, CUR, or -1 (case insensitive), where CUR or -1 means use the current 
             compression for Save Single/Save to Other.&nbsp; If JPG or JPEG is entered for 
+            &#39;typ&#39;, a true JPEG file will be written, not a JPEG-compressed TIFF, and the 
+            compression entry does not matter (but must be present before the filename).</TD>
+        </TR>
+       <TR>
+          <TD class="style7">SnapshotToFile imsc szsc feat typ cmp file</TD>
+          <TD>Takes a snapshot of the image display in the current active buffer and saves 
+            it to the file with the given name and closes the file.&nbsp; &#39;imsc&#39; sets the amount 
+            of image scaling relative to the display with a value of 1 or greater, or 0 or 
+            less to take the whole image at 1:1 zoom.&nbsp; &#39;szsc&#39; sets the scaling of text 
+            labels and line thicknesses with a value of 1 or more, or 0 or less to use the 
+            same scaling as for the image.&nbsp; &#39;typ&#39; specifies the type of file and can be TIF, TIFF, 
+            JPG, JPEG, CUR, 
+            or -1 (case insensitive), where CUR or -1 means use the current file type selected in the 
+            <a href="#hidd_screenshot.htm">Image Snapshots dialog</a>.&nbsp; &#39;cmp&#39; 
+            specifies the compression for a TIFF file and can be NONE,&nbsp; LZW, ZIP, JPG, 
+            JPEG, CUR, or -1 (case insensitive), where CUR or -1 means use the current 
+            compression in the Image Snapshots dialog.&nbsp; If JPG or JPEG is entered for 
             &#39;typ&#39;, a true JPEG file will be written, not a JPEG-compressed TIFF, and the 
             compression entry does not matter (but must be present before the filename).</TD>
         </TR>

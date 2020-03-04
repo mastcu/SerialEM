@@ -43,6 +43,7 @@
 #include "OneLineScript.h"
 #include "ExternalTools.h"
 #include "MenuTargets.h"
+#include "ScreenShotDialog.h"
 #include "Mailer.h"
 #include "PluginManager.h"
 #include "PiezoAndPPControl.h"
@@ -2965,11 +2966,16 @@ void CMacroProcessor::NextCommand()
     
   case CME_SAVETOOTHERFILE:                                 // SaveToOtherFile
   case CME_SNAPSHOTTOFILE:                                  // SnapshotToFile
+  {
+    ScreenShotParams *snapParams = mWinApp->GetScreenShotParams();
+    int compressions[] = {COMPRESS_NONE, COMPRESS_ZIP, COMPRESS_LZW, COMPRESS_JPEG};
     truth = CMD_IS(SNAPSHOTTOFILE);
     if (truth) {
       ix0 = 4;
-      if (itemDbl[1] >= 0. && itemDbl[1] < 1.)
-        ABORT_LINE("Factor to zoom by must be >= 1 or less than 0 in line:\n\n");
+      if (itemDbl[1] > 0. && itemDbl[1] < 1.)
+        ABORT_LINE("Factor to zoom by must be >= 1 or <= 0 in line:\n\n");
+      if (itemDbl[2] > 0. && itemDbl[2] < 1.)
+        ABORT_LINE("Factor to scale sizes by must be >= 1 or <= 0 in line:\n\n");
     } else {
       ix0 = 2;
       if (ConvertBufferLetter(strItems[1], -1, true, index, report))
@@ -2984,7 +2990,7 @@ void CMacroProcessor::NextCommand()
       index2 = STORE_TYPE_JPEG;
     else if (strItems[ix0] != "CUR" && strItems[2] != "-1")
       ABORT_LINE("Second entry must be MRC, TIF, TIFF, JPG, JPEG, CUR, or -1 in line:"
-      "\n\n");
+        "\n\n");
     if (truth && index2 == STORE_TYPE_MRC)
       ABORT_LINE("A snapshot cannot be saved to an MRC file in line:\n\n");
     ix1 = -1;
@@ -2998,19 +3004,20 @@ void CMacroProcessor::NextCommand()
       ix1 = COMPRESS_JPEG;
     else if (strItems[ix0 + 1] != "CUR" && strItems[ix0 + 1] != "-1")
       ABORT_LINE("Third entry must be NONE, LZW, ZIP, JPG, JPEG, CUR, or -1 in line:"
-      "\n\n");
+        "\n\n");
     if (CheckConvertFilename(strItems, strLine, ix0 + 2, report))
       return;
     if (truth) {
-      iy1 = mWinApp->mActiveView->TakeSnapshot((float)itemDbl[1], itemInt[2] != 0, 
-        itemInt[3], index2, ix1, report);
-      if (iy1) {
-        if (iy1 > 0)
-          report.Format("Snapshot function returned error %d for line:\n\n", iy1);
-        else
-          report.Format("Snapshot function returned error %d saving to file in "
-            "line:\n\n", -iy1);
-        ABORT_LINE(report);
+      if (index2 < 0)
+        index2 = snapParams->fileType ? STORE_TYPE_JPEG : STORE_TYPE_TIFF;
+      if (ix1 < 0) {
+        B3DCLAMP(snapParams->compression, 0, 3);
+        ix1 = compressions[snapParams->compression];
+      }
+      iy1 = mWinApp->mActiveView->TakeSnapshot((float)itemDbl[1], (float)itemDbl[2],
+        itemInt[3], index2, ix1, snapParams->jpegQuality, report);
+      if (CScreenShotDialog::GetSnapshotError(iy1, report)) {
+        ABORT_LINE("Error taking snapshot, " + report + "for line:\n\n");
       }
     } else {
       iy1 = mWinApp->mDocWnd->SaveToOtherFile(index, index2, ix1, &report);
@@ -3022,6 +3029,7 @@ void CMacroProcessor::NextCommand()
       }
     }
     break;
+  }
     
   case CME_OPENNEWFILE:                                     // OpenNewFile
   case CME_OPENNEWMONTAGE:                                  // OpenNewMontage

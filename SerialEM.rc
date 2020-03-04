@@ -63,7 +63,9 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDR_MAINFRAME           ICON                    "res\\SerialEM.ico"
+
 IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -71,7 +73,9 @@ IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
 //
 
 IDR_MAINFRAME           BITMAP                  "res\\Toolbar.bmp"
+
 IDB_BITMAP1             BITMAP                  "res\\bitmap1.bmp"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3138,14 +3142,14 @@ FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
     CONTROL         "No scaling",IDC_RADIO_UNZOOMED,"Button",BS_AUTORADIOBUTTON | WS_GROUP,27,11,47,10
     CONTROL         "Scale by",IDC_RADIO_INCREASE_BY,"Button",BS_AUTORADIOBUTTON,27,22,38,10
+    CONTROL         "",IDC_SPIN_INCREASE_ZOOM_BY,"msctls_updown32",UDS_ARROWKEYS,77,21,12,12
     CONTROL         "Whole image at 1:1 zoom",IDC_RADIO_WHOLE_IMAGE,"Button",BS_AUTORADIOBUTTON,27,33,88,10
     GROUPBOX        "Image scaling",IDC_STATIC,20,1,97,44,WS_GROUP
     RTEXT           "1.5",IDC_STAT_SCALEBY,67,23,8,8
-    CONTROL         "",IDC_SPIN_INCREASE_ZOOM_BY,"msctls_updown32",UDS_ARROWKEYS,77,20,11,14
     CONTROL         "Increase text/line sizes by",IDC_CHECK_SCALE_SIZE_BY,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,48,86,10
     RTEXT           "Scaling",IDC_STAT_SCALE_SIZES,95,49,23,8
-    CONTROL         "",IDC_SPIN_SCALE_SIZE_BY,"msctls_updown32",UDS_ARROWKEYS,120,46,11,14
+    CONTROL         "",IDC_SPIN_SCALE_SIZE_BY,"msctls_updown32",UDS_ARROWKEYS,120,47,12,12
     CONTROL         "Include features drawn on image",IDC_CHECK_DRAW_OVERLAYS,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,59,112,10
     CONTROL         "TIFF",IDC_RADIO_AS_TIFF,"Button",BS_AUTORADIOBUTTON | WS_GROUP,50,70,30,10
@@ -3162,7 +3166,7 @@ BEGIN
     GROUPBOX        "Type of compression in TIFF file",IDC_STATCOMPRESS,3,80,130,22,WS_GROUP
     LTEXT           "JPEG compression quality (%)",IDC_STAT_JPEG_QUALITY,6,105,91,8
     EDITTEXT        IDC_EDIT_JPEG_QUALITY,98,104,19,12,ES_RIGHT | ES_AUTOHSCROLL
-    CONTROL         "",IDC_SPIN_JPEG_QUALITY,"msctls_updown32",UDS_ARROWKEYS,118,104,11,12
+    CONTROL         "",IDC_SPIN_JPEG_QUALITY,"msctls_updown32",UDS_ARROWKEYS,118,104,12,12
 END
 
 IDD_VPP_EXPOSE_SETUP DIALOGEX 0, 0, 181, 202
@@ -3253,7 +3257,9 @@ END
 //
 
 IDC_CURSOR1             CURSOR                  "res\\cursor1.cur"
+
 IDC_CURSOR2             CURSOR                  "res\\cursor2.cur"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3727,59 +3733,59 @@ END
 // AFX_DIALOG_LAYOUT
 //
 
-IDD_AUTOCENSETUP AFX_DIALOG_LAYOUT 
+IDD_AUTOCENSETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_TILTSERIES AFX_DIALOG_LAYOUT 
+IDD_TILTSERIES AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_DRIFTWAITSETUP AFX_DIALOG_LAYOUT 
+IDD_DRIFTWAITSETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_SCREENSHOT AFX_DIALOG_LAYOUT 
+IDD_SCREENSHOT AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_MULTI_SHOT_SETUP AFX_DIALOG_LAYOUT 
+IDD_MULTI_SHOT_SETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_REMOTE_CONTROL AFX_DIALOG_LAYOUT 
+IDD_REMOTE_CONTROL AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_LOWDOSE AFX_DIALOG_LAYOUT 
+IDD_LOWDOSE AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_VPP_EXPOSE_SETUP AFX_DIALOG_LAYOUT 
+IDD_VPP_EXPOSE_SETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_MACRO AFX_DIALOG_LAYOUT 
+IDD_MACRO AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_K2_SAVE_OPTIONS AFX_DIALOG_LAYOUT 
+IDD_K2_SAVE_OPTIONS AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_SCOPESTATUS AFX_DIALOG_LAYOUT 
+IDD_SCOPESTATUS AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
 
@@ -5692,6 +5698,9 @@ BEGIN
     IDC_CHECK_OMIT_3X3_CORNERS 
                             "Acquire in 5 holes by skipping corners of 3x3 array"
     IDC_CHECK_HOLE_POS      "Add hole number and position in hole when doing multiple Records"
+    IDC_CHECK_DRAW_OVERLAYS "Draw Navigator points and other features (scale bar always included)"
+    IDC_RADIO_AS_TIFF       "Save image in a TIFF file with indicated compression"
+    IDC_RADIO_AS_JPEG       "Save image in a JPEG file"
 END
 
 STRINGTABLE
@@ -5730,6 +5739,20 @@ BEGIN
     IDC_EDIT_POST_MOVE_DELAY 
                             "Enter settling time in seconds after moving to next plate position"
     IDC_PPCOND_NEXT_AND_GO  "Close dialog, move to next phase plate position, start conditioning"
+    IDC_CHECK_SCALE_SIZE_BY "Increase line thicknesses and label sizes in the saved image"
+    IDC_RADIO_UNZOOMED      "Save window at the same size as it is being displayed"
+    IDC_RADIO_INCREASE_BY   "Scale up the image in the window by the selected factor"
+    IDC_SPIN_INCREASE_ZOOM_BY 
+                            "Select the scaling to apply to the image in the window"
+    IDC_RADIO_WHOLE_IMAGE   "Save the entire image at a zoom of 1"
+    IDC_SPIN_SCALE_SIZE_BY  "Select amount to scale up labels/lines - 'Scaling' for same as image"
+    ID_TAKE_TIFF            "Take the snapshot to a specified file"
+END
+
+STRINGTABLE
+BEGIN
+    IDC_EDIT_JPEG_QUALITY   "Percent quality for compression in JPEG file or JPEG-compressed TIFF"
+    IDC_SPIN_JPEG_QUALITY   "Increase of decrease the compression quality"
 END
 
 #endif    // English (United States) resources

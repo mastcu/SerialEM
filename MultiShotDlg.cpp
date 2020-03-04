@@ -62,6 +62,7 @@ CMultiShotDlg::CMultiShotDlg(CWnd* pParent /*=NULL*/)
   , m_fHoleDelayFac(0)
   , m_bOmit3x3Corners(FALSE)
 {
+  mNonModal = true;
   mRecordingRegular = false;
   mRecordingCustom = false;
   mDisabledDialog = false;

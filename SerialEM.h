@@ -295,6 +295,7 @@ class CPiezoAndPPControl;
 class CStageMoveTool;
 class CAutoTuning;
 class CExternalTools;
+class CScreenShotDialog;
 
 /////////////////////////////////////////////////////////////////////////////
 // CSerialEMApp:
@@ -420,6 +421,8 @@ public:
   WINDOWPLACEMENT *GetNavPlacement() {return &mNavPlacement;};
   WINDOWPLACEMENT *GetStageToolPlacement();
   void OpenStageMoveTool();
+  void OpenScreenShotDlg();
+  WINDOWPLACEMENT *GetScreenShotPlacement();
   SetMember(bool, ReopenLog);
   void SetReopenMacroEditor(int index, bool open) {mReopenMacroEditor[index] = open;};
   void StartMontageOrTrial(BOOL inTrial);
@@ -534,10 +537,12 @@ public:
   GetSetMember(bool, AbsoluteDlgIndex);
   GetSetMember(BOOL, AllowCameraInSTEMmode);
   GetSetMember(int, DoseLifetimeHours);
+  GetSetMember(int, AddDPItoSnapshots);
 
   HitachiParams *GetHitachiParams() {return &mHitachiParams;};
 
   RangeFinderParams *GetTSRangeParams() {return &mTSRangeParams[0];};
+  ScreenShotParams *GetScreenShotParams() { return &mScreenShotParams; };
   int *GetTssPanelStates() {return &mTssPanelStates[0];};
   BOOL NavigatorStartedTS();
 
@@ -589,6 +594,7 @@ public:
   CCookerSetupDlg *mCookerDlg;
   CAutocenSetupDlg *mAutocenDlg;
   CVPPConditionSetup *mVPPConditionSetup;
+  CScreenShotDialog *mScreenShotDialog;
   CMultiTSTasks *mMultiTSTasks;
   CParticleTasks *mParticleTasks;
   CMailer *mMailer;
@@ -682,7 +688,9 @@ private:
   WINDOWPLACEMENT mNavPlacement;
   WINDOWPLACEMENT mCamSetupPlacement;
   WINDOWPLACEMENT mStageToolPlacement;
+  WINDOWPLACEMENT mScreenShotPlacement; 
   BOOL mReopenLog;
+  ScreenShotParams mScreenShotParams;
 
   MontParam  mMontParam;
   BOOL mMontaging;
@@ -775,6 +783,7 @@ private:
   int mAssumeCamForDummy;       // Camera to assume for dummy instance
   BOOL mAllowCameraInSTEMmode;  // Allow a true camera to be used in STEM mode
   int mDoseLifetimeHours;       // Validity of electron dose calibration in hours
+  int mAddDPItoSnapshots;       // 0 not to, 1 to use true pixel, > 1 for value to use
 
 public:
   void UpdateAllEditers(void);
