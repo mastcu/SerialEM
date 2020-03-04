@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+2/3/20: SEM_3-7-13
+2/3/20: Fixed ReportLensFLCStatus output (In 3.7).
+
 2/3/20: Allowed quoted strings to be read from a file with ReadLineToArray.
 
 1/29/20: Added camera property to apply the minimum binning available for
