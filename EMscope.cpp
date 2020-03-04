@@ -3491,13 +3491,13 @@ BOOL CEMscope::SetMagIndex(int inIndex)
   // First see if need to save the current IS and then whether to restore it
   ifSTEM = GetSTEMmode();
   lowestM = ifSTEM ? mLowestSTEMnonLMmag[mProbeMode] : mLowestMModeMagInd;
-  GetTiltAxisIS(axisISX, axisISY);
 
   // There is no way to set the projection submode (which is psmLAD in STEM low mag and 
   // psmD in nonLM) so we cannot go between LM and nonLM
   if (FEIscope && ifSTEM && !BOOL_EQUIV(inIndex < lowestM, currentIndex < lowestM))
     return false;
   if (GetDebugOutput('i')) {
+    GetTiltAxisIS(axisISX, axisISY);
     GetImageShift(curISX, curISY);
     PrintfToLog("SetMagIndex: IS at start raw %.3f %.3f  net %.3f %.3f", curISX + axisISX,
       curISY + axisISY, curISX, curISY);
@@ -3661,6 +3661,7 @@ BOOL CEMscope::SetMagIndex(int inIndex)
       }
 
     } else {  // FEIlike
+      GetTiltAxisIS(axisISX, axisISY);
       if (GetDebugOutput('i')) {
         GetImageShift(curISX, curISY);
         PrintfToLog("SetMagIndex: IS after raw %.3f %.3f  net %.3f %.3f  setting to "
