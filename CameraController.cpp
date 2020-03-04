@@ -6651,7 +6651,6 @@ void CCameraController::EnsureCleanup(int error)
 void CCameraController::StartAcquire()
 {
   CString setText = CurrentSetName();
-  setText.MakeUpper();
   CString message;
   DWORD sleepTime = 1000;
   DWORD sleepIncrement = 100;
@@ -6671,6 +6670,8 @@ void CCameraController::StartAcquire()
   DWORD ticks = GetTickCount();
   if (mParam->unsignedImages && mDivideBy2)
     darkCrit /= 2.;
+  if (setText.Find("ont") < 0)
+    setText.MakeUpper();
   if (setText == "TRACK")
     setText = "IN TASK";
 
@@ -10518,12 +10519,21 @@ void CCameraController::SetAMTblanking(bool blank)
 
 CString CCameraController::CurrentSetName(void)
 {
-  int nameInd = mLastConSet == MONTAGE_CONSET ? RECORD_CONSET : mLastConSet;
+  int nameInd = mLastConSet;
+  int useForRec = RECORD_CONSET;
+  if (mLastConSet == MONTAGE_CONSET) {
+    nameInd = useForRec;
+    MontParam *montp = mWinApp->GetMontParam();
+    if (montp->useMontMapParams && !mWinApp->GetUseRecordForMontage())
+      useForRec = MONT_USER_CONSET;
+  }
   if (mLastConSet == MONTAGE_CONSET && mWinApp->LowDoseMode()) {
     nameInd = ConSetToLDArea(mLastConSet);
     if (nameInd == SEARCH_AREA)
       nameInd = SEARCH_CONSET;
   }
+  if (nameInd == RECORD_CONSET)
+    nameInd = useForRec;
   CString *modeNamep = mWinApp->GetModeNames() + nameInd;
   return *modeNamep;
 }
