@@ -9430,7 +9430,6 @@ void CCameraController::ProcessImageOrFrame(short *array, int processing, int re
       ProcDarkSubtract(array, mTD.ImageType, mTD.DMSizeX, mTD.DMSizeY,
         (short *)mDarkp->Array, mDarkp->Exposure, array2, exp2, mExposure, darkScale);
     } else {
-      SEMTrace('1', "Normalizing");
       ProcGainNormalize(array, mTD.ImageType, mGainp->SizeX, mTop, mLeft,
         mBottom, mRight, (short *)mDarkp->Array, mDarkp->Exposure, array2, exp2,
         mExposure, darkScale, mGainp->Array, mGainp->ByteSize, mGainp->GainRefBits);
