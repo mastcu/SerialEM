@@ -258,9 +258,11 @@ int KStoreIMOD::WriteSection(KImage * inImage)
     return 4;
   }
   if (extra && extra->mPixel > 0)
-    resolution = B3DNINT(2.54e8 / extra->mPixel);
+    resolution = B3DNINT( (25400. / extra->mPixel));
   if (isJpeg) {
-    if (jpegWriteSection(mIIfile, idata, 1, resolution, -1))
+    mIIfile->mode = mMode;
+    if (jpegWriteSection(mIIfile, idata, 1, resolution < 65536 ? resolution : 0,
+      mFileOpt.jpegQuality))
       retval = 6;
   } else {
     minMaxMean(idata, dataSize, mIIfile->amin, mIIfile->amax, theMean);
@@ -277,7 +279,8 @@ int KStoreIMOD::WriteSection(KImage * inImage)
     mTitles = "";
 
     // Write the data with given compression; 1 means it is already inverted
-    if (tiffWriteSection(mIIfile, idata, mFileOpt.compression, 1, resolution, -1))
+    if (tiffWriteSection(mIIfile, idata, mFileOpt.compression, 1, resolution, 
+      mFileOpt.compression == COMPRESS_JPEG ? mFileOpt.jpegQuality  : -1))
       retval = 6;
   }
   if (needToDelete)

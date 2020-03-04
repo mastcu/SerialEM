@@ -33,6 +33,7 @@ struct  FileOptions {
   int signToUnsignOpt;
   int fileType;
   int compression;
+  int jpegQuality;
   int TIFFallowed;
   BOOL separateForMont;
   BOOL montUseMdoc;
