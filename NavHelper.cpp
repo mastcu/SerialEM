@@ -564,7 +564,7 @@ int CNavHelper::RealignToItem(CMapDrawItem *inItem, BOOL restoreState,
   item = mItemArray->GetAt(mRIitemInd);
   mSecondRoundID = 0;
   if (inItem->mType == ITEM_TYPE_MAP && item->mMapID != inItem->mMapID && 
-    item->mColor != NO_REALIGN_COLOR)
+    inItem->mColor != NO_REALIGN_COLOR)
     mSecondRoundID = inItem->mMapID;
   else if (mRIdrawnTargetItem)
     return 10;
