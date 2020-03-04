@@ -1676,7 +1676,8 @@ bool CNavigatorDlg::AtSamePosAsHigherMagMapInRange(int itemInd, int startInd, in
 void CNavigatorDlg::ProcessNKey(void)
 {
   CMapDrawItem *item;
-  int start, end, ind, interval, numAcq =0, numOff = 0;
+  int start, end, ind, interval, numAcq = 0, numOff = 0;
+  int currItemSave = mCurrentItem, curSelSave = mCurListSel;
   bool allOn = true;
   if (ProcessRangeKey("N again for new files", mShiftNIndex, start, end))
     return;
@@ -1707,6 +1708,7 @@ void CNavigatorDlg::ProcessNKey(void)
   // Then loop and turn on ones not on, or turn off if all on
   numOff = 0;
   for (ind = start; ind <= end; ind++) {
+    mCurrentItem = mCurListSel = ind;
     item = mItemArray[ind];
     if (item->mAcquire && item->mFilePropIndex < 0) {
       numOff++;
@@ -1721,6 +1723,8 @@ void CNavigatorDlg::ProcessNKey(void)
       UpdateListString(ind);
     }
   }
+  mCurrentItem = currItemSave;
+  mCurListSel = curSelSave;
   ManageCurrentControls();
   Redraw();
   mHelper->SetDoingMultipleFiles(false);
