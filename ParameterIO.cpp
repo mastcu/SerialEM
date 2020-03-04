@@ -3690,6 +3690,7 @@ int CParameterIO::ReadCalibration(CString strFileName)
         index = 0;
         nCal = -999;
         beamInd = 1;
+        focInd = 0;
         if (!strItems[5].IsEmpty())
           index = atoi((LPCTSTR)strItems[i++]);
         IStoBS.xpx = (float)atof((LPCTSTR)strItems[i++]);
@@ -3700,7 +3701,9 @@ int CParameterIO::ReadCalibration(CString strFileName)
           nCal = atoi((LPCTSTR)strItems[6]);
         if (!strItems[8].IsEmpty())
           beamInd = atoi((LPCTSTR)strItems[7]);
-        mWinApp->mShiftManager->SetBeamShiftCal(IStoBS, index, nCal, beamInd);
+        if (!strItems[9].IsEmpty())
+          focInd = atoi((LPCTSTR)strItems[8]);
+        mWinApp->mShiftManager->SetBeamShiftCal(IStoBS, index, nCal, beamInd, focInd);
         
        } else if (NAME_IS("StageStretchXform")) {
          IStoBS.xpx = (float)itemDbl[1];
@@ -3989,6 +3992,7 @@ void CParameterIO::WriteCalibration(CString strFileName)
   ShortVec *beamMags = mWinApp->mShiftManager->GetBeamCalMagInd();
   ShortVec *beamAlphas = mWinApp->mShiftManager->GetBeamCalAlpha();
   ShortVec *beamProbes = mWinApp->mShiftManager->GetBeamCalProbe();
+  ShortVec *beamRetains = mWinApp->mShiftManager->GetBeamCalRetain();
   float *alphaBeamShifts = mWinApp->mScope->GetAlphaBeamShifts();
   float *alphaBeamTilts = mWinApp->mScope->GetAlphaBeamTilts();
   double *spotBeamShifts = mWinApp->mScope->GetSpotBeamShifts();
@@ -4189,9 +4193,9 @@ void CParameterIO::WriteCalibration(CString strFileName)
     for (i = 0; i < mWinApp->mShiftManager->GetNumBeamShiftCals(); i++) {
       nCal = beamMags->at(i) < 0 ? mMagTab[-beamMags->at(i)].EFTEMmag : 
         mMagTab[beamMags->at(i)].mag;
-      string.Format("BeamShiftCalibration %d %f %f %f %f %d %d  %d\n",
+      string.Format("BeamShiftCalibration %d %f %f %f %f %d %d %d  %d\n",
         beamMags->at(i), IStoBS[i].xpx, IStoBS[i].xpy, IStoBS[i].ypx, IStoBS[i].ypy, 
-        beamAlphas->at(i), beamProbes->at(i), nCal);
+        beamAlphas->at(i), beamProbes->at(i), beamRetains->at(i), nCal);
       mFile->WriteString(string);
     }
 

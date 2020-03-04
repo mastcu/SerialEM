@@ -63,6 +63,7 @@ public:
   ShortVec *GetBeamCalMagInd() { return &mBeamCalMagInd; };
   ShortVec *GetBeamCalAlpha() { return &mBeamCalAlpha; };
   ShortVec *GetBeamCalProbe() { return &mBeamCalProbe; };
+  ShortVec *GetBeamCalRetain()   { return &mBeamCalRetain;};
   ShortVec *GetBeamShiftBoundaries() {return &mBeamShiftBoundaries;};
   GetSetMember(BOOL, InvertStageXAxis)
   GetSetMember(int, StageInvertsZAxis)
@@ -75,7 +76,7 @@ public:
     double &toY, int toCam = -1);
   double TransferImageRotation(double fromAngle, int fromCam, int fromMag,
                                int toCam, int toMag);
-  void SetBeamShiftCal(ScaleMat inMat, int inMag, int inAlpha, int inProbe);
+  void SetBeamShiftCal(ScaleMat inMat, int inMag, int inAlpha, int inProbe, int retain);
   ScaleMat GetBeamShiftCal(int magInd, int inAlpha = -3333, int inProbe = -1);
   float PredictISDelay(double ISX, double ISY);
   float ComputeISDelay(double delX, double delY);
@@ -245,6 +246,7 @@ private:
   ShortVec mBeamCalMagInd;     // Mags that they were done at
   ShortVec mBeamCalAlpha;      // And alpha values
   ShortVec mBeamCalProbe;      // And probe modes
+  ShortVec mBeamCalRetain;     // And whether to protect from replacement
   int mNumBeamShiftCals;       // NUmber of calibrations stored
   ShortVec mBeamShiftBoundaries;  // Mag boundaries across which beam shift cal differs
   int mNumRelRotations;        // Number of relative rotations

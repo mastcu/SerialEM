@@ -1661,7 +1661,7 @@ void CBeamAssessor::ShiftCalImage()
   if (JEOLscope && !mScope->GetHasOmegaFilter() && mWinApp->GetEFTEMMode())
     magInd = -magInd;
   mWinApp->mShiftManager->SetBeamShiftCal(IStoBS, magInd, mScope->GetAlpha(), 
-    mScope->ReadProbeMode());
+    mScope->ReadProbeMode(), false);
   CString report;
   report.Format("Image shift to beam shift matrix is:\r\n  %.3f  %.3f  %.3f  %.3f",
     IStoBS.xpx, IStoBS.xpy, IStoBS.ypx, IStoBS.ypy);

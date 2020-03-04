@@ -2638,7 +2638,8 @@ int CShiftManager::NearestIScalMag(int inMag, int iCam, BOOL crossBorders)
 }
 
 // Add a beam shift calibration at the given mag; pass a negative mag for JEOL EFTEM mode
-void CShiftManager::SetBeamShiftCal(ScaleMat inMat, int inMag, int inAlpha, int inProbe)
+void CShiftManager::SetBeamShiftCal(ScaleMat inMat, int inMag, int inAlpha, int inProbe,
+  int retain)
 {
   int i, j, mag, ind, calMag, sign;
   int *boundaries = mWinApp->mScope->GetShiftBoundaries();
@@ -2660,6 +2661,8 @@ void CShiftManager::SetBeamShiftCal(ScaleMat inMat, int inMag, int inAlpha, int 
     // Alpha test: replace only if old one has no alpha or the alphas match
     // This is somewhat flawed as it may arbitrarily pick one of several to replace
     if (!(mBeamCalAlpha[j] < 0 || mBeamCalAlpha[j] == inAlpha))
+      continue;
+    if (mBeamCalRetain[j] && calMag != inMag)
       continue;
     if (CrossesBeamShiftBoundary(sign * calMag, sign * inMag))
       continue;
@@ -2683,10 +2686,12 @@ void CShiftManager::SetBeamShiftCal(ScaleMat inMat, int inMag, int inAlpha, int 
     mBeamCalMagInd.push_back(inMag);
     mBeamCalAlpha.push_back(inAlpha);
     mBeamCalProbe.push_back(inProbe);
+    mBeamCalRetain.push_back(retain);
   } else {
     mBeamCalMagInd[ind] = inMag;
     mBeamCalAlpha[ind] = inAlpha;
     mBeamCalProbe[ind] = inProbe;
+    mBeamCalRetain[ind] = retain;
   }
   mIStoBS[ind] = inMat;
 }
