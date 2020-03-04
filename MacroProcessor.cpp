@@ -743,7 +743,7 @@ void CMacroProcessor::OnUpdateMacroVerbose(CCmdUI *pCmdUI)
   CString *longMacNames = mWinApp->GetLongMacroNames();
   pCmdUI->Enable();
   pCmdUI->SetCheck(mInitialVerbose ? 1 : 0);
-  for (int ind = 0; ind < 20; ind++) {
+  for (int ind = 0; ind < MAX_MACROS; ind++) {
     if (!longMacNames[ind].IsEmpty())
       menuText.Format("%d: %s", ind + 1, (LPCTSTR)longMacNames[ind]);
     else if (mMacNames[ind].IsEmpty())
