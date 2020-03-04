@@ -214,7 +214,8 @@ typedef bool (*PlugDoingFunc)(void);
 #define FRAME_FILE_DATE_PREFIX   (1 << 11)
 #define FRAME_FILE_HOLE_AND_POS  (1 << 12)
 
-// Definitions for Tietz errors and flags
+// Definitions for Tietz errors and flags.  Keep flags compatible with PLUGCAM flags
+// defined in SEMCCDDefines.h
 #define TIETZ_NO_LOCK      1
 #define TIETZ_NO_CAM_INIT  2
 #define TIETZ_NO_MAP_NAME  3

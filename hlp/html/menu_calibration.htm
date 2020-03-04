@@ -1777,6 +1777,14 @@ echo NumberOfCameraLengths $firstEnd $secondEnd
         it is necessary to adjust the beam so as to give moderately high counts in such 
         an exposure without saturating the camera. This may require a relatively dim 
         beam.</P>
+    <P>This routine gives unreliable results for both K2 and K3 cameras, but by 
+      following the notes below you should be able to get reliable post-actions with a 
+      K2.&nbsp; Post-actions are disabled by default for K3 cameras, and the camera 
+      property &#39;AllowPostActions 1&#39; would have to be added to enable them.&nbsp; It 
+      seems for a while that a startup delay of 1.5 sec was reliable, until a report 
+      came in of problems with a delay of 1.8 sec.&nbsp; If you want to enable and try 
+      post-actions with a K3, add at least 0.7 to the suggested value from this 
+      routine and do not use a value less than 1.9 sec.</P>
     <P>For a K2 Summit or K3 camera, the procedure takes super-resolution mode images, which 
       have the longest startup time.&nbsp; The mean counts do not need to be very 
       high, because the mean counts in such images are very reproducible.&nbsp; The 

@@ -3,6 +3,13 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+2/28/20: Disabled post-actions by default for K3.
+
+2/28/20: Fixed Shift N operatoin in Navigator table.
+
+2/28/20: Added entry to protect a beam shift calibration from being replaced
+by a new one in the same mag range.
+
 2/26/20: Increased camera timeout for continuous mode images to allow long
 exposure times (In 3.7).
 
