@@ -3443,9 +3443,10 @@ void CCameraController::Capture(int inSet, bool retrying)
 
           // Make sure the camera timeout is appropriately longer than the return time
           // Plus, if continuous has already started, the return time governs completely
-          mTD.cameraTimeout = B3DMAX(mTD.cameraTimeout, 2 * CONTINUOUS_RETURN_TIMEOUT);
+          mTD.cameraTimeout = B3DMAX(mTD.cameraTimeout, 
+            (DWORD)(1000. * mExposure) + 2 * CONTINUOUS_RETURN_TIMEOUT);
           if (mRepFlag >= 0) {
-            mTD.cameraTimeout = 2 * CONTINUOUS_RETURN_TIMEOUT;
+            mTD.cameraTimeout = (DWORD)(1000. * mExposure) + 2 *CONTINUOUS_RETURN_TIMEOUT;
             mTD.NeedsReadMode = false;
             bEnsureDark = false;
           }

@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+2/26/20: Increased camera timeout for continuous mode images to allow long
+exposure times (In 3.7).
+
 2/3/20: SEM_3-8-0beta8
 2/3/20: Fixed image shift changes when changing mag with "Apply image shift
 offsets" or "Center shift on tilt axis" selected, broken 6/6/19.
