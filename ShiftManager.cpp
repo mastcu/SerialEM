@@ -1323,7 +1323,7 @@ int CShiftManager::ResetImageShift(BOOL bDoBacklash, BOOL bAdjustScale, int wait
   
   // Compute the stage displacement with no adjustments
   // Use the nearest stage to camera matrix for this, so use IS not specimen coords
-  angle = GetStageTiltFactors(xTiltFac, yTiltFac);
+  angle = DTOR * GetStageTiltFactors(xTiltFac, yTiltFac);
   dMat = MatMul(IStoCamera(magInd), 
     MatInv(StageToCamera(mWinApp->GetCurrentCamera(), magInd)));
   delX = (dMat.xpx * shiftX + dMat.xpy * shiftY) / xTiltFac;

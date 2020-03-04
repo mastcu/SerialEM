@@ -3,6 +3,13 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+2/3/20: SEM_3-8-0beta8
+2/3/20: Fixed image shift changes when changing mag with "Apply image shift
+offsets" or "Center shift on tilt axis" selected, broken 6/6/19.
+
+2/3/20: Fixed wild defocus changes when doing reset image shift at non-zero
+tilt, broken 8/21/19.
+
 2/3/20: SEM_3-7-13
 2/3/20: Fixed ReportLensFLCStatus output (In 3.7).
 
