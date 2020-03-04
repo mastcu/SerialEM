@@ -7,7 +7,8 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "afxres.h"
+#include "afxres.h"
+
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
@@ -668,6 +669,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Stage Move Tool...",         ID_WINDOW_STAGE_MOVE_TOOL
         MENUITEM "Show Scope Control",          ID_WINDOW_SHOWSCOPECONTROLPANEL
+        MENUITEM "Take Screen Shot",            ID_WINDOW_TAKESCREENSHOT
     END
     POPUP "&Help"
     BEGIN
@@ -3134,6 +3136,24 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,27,233,111,10
 END
 
+IDD_SCREENSHOT DIALOGEX 0, 0, 289, 177
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Screen Shot Settings"
+FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
+BEGIN
+    PUSHBUTTON      "Take TIFF screen shot",ID_TAKE_TIFF,202,156,80,14
+    CONTROL         "Unzoomed snapshot",IDC_RADIO_UNZOOMED,"Button",BS_AUTORADIOBUTTON,32,31,81,10
+    CONTROL         "Increase zoom by",IDC_RADIO_INCREASE_BY,"Button",BS_AUTORADIOBUTTON,32,52,73,10
+    GROUPBOX        "Zoom",IDC_STATIC,21,17,171,85
+    CONTROL         "",IDC_SPIN_INCREASE_ZOOM_BY,"msctls_updown32",UDS_ARROWKEYS,157,50,11,14
+    CONTROL         "Whole image at 1:1 zoom",IDC_RADIO_WHOLE_IMAGE,"Button",BS_AUTORADIOBUTTON,32,73,97,10
+    CONTROL         "Scale sizes by",IDC_CHECK_SCALE_SIZE_BY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,29,114,60,10
+    PUSHBUTTON      "Take JPEG screen shot",ID_TAKE_JPEG,109,156,80,14
+    EDITTEXT        IDC_EDIT_INCREASE_ZOOM_BY,104,50,40,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_SCALE_SIZE_BY,89,112,40,14,ES_AUTOHSCROLL
+    CONTROL         "",IDC_SPIN_SCALE_SIZE_BY,"msctls_updown32",UDS_ARROWKEYS,135,112,11,14
+END    
+
 IDD_VPP_EXPOSE_SETUP DIALOGEX 0, 0, 181, 202
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Phase Plate Conditioning Setup"
@@ -3629,6 +3649,13 @@ BEGIN
         BOTTOMMARGIN, 265
     END
 
+    IDD_SCREENSHOT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 282
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 170
+    END        
     IDD_VPP_EXPOSE_SETUP, DIALOG
     BEGIN
         LEFTMARGIN, 11
@@ -3701,6 +3728,11 @@ BEGIN
 END
 
 IDD_DRIFTWAITSETUP AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_SCREENSHOT AFX_DIALOG_LAYOUT
 BEGIN
     0
 END
@@ -4232,6 +4264,7 @@ END
 STRINGTABLE
 BEGIN
     ID_MACRO_RUN40          "Run Script 40"
+    ID_WINDOW_TAKESCREENSHOT "Take image window screen shot"
     ID_SCRIPT_LISTPERSISTENTVARS "List all persistent variables"
     ID_SCRIPT_LOADNEWPACKAGE 
                             "Read file and make it new current script package file"
@@ -5712,7 +5745,8 @@ LANGUAGE 9, 1
 #include "res\SerialEM.rc2"  // non-Microsoft Visual C++ edited resources
 #include "afxres.rc"         // Standard components
 #include "XFolderDialog\XFolderDialog.rc"
-#endif
+#endif
+
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 
