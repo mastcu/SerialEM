@@ -34,6 +34,7 @@ CVPPConditionSetup::CVPPConditionSetup(CWnd* pParent /*=NULL*/)
 {
   mParams.magIndex = -1;
   mParams.lowDoseArea = -1;
+  mNonModal = true;
 }
 
 CVPPConditionSetup::~CVPPConditionSetup()

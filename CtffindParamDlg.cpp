@@ -30,7 +30,7 @@ CCtffindParamDlg::CCtffindParamDlg(CWnd* pParent /*=NULL*/)
   , m_strDfltMaxRes(_T(""))
   , m_fFixedPhase(0)
 {
-
+  mNonModal = true;
 }
 
 CCtffindParamDlg::~CCtffindParamDlg()

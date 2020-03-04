@@ -31,6 +31,7 @@ CAutocenSetupDlg::CAutocenSetupDlg(CWnd* pParent /*=NULL*/)
   mEnableAll = true;
   mLastTrialMismatch = false;
   mParam = NULL;
+  mNonModal = true;
 }
 
 CAutocenSetupDlg::~CAutocenSetupDlg()
