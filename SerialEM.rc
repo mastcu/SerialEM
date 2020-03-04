@@ -63,7 +63,9 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDR_MAINFRAME           ICON                    "res\\SerialEM.ico"
+
 IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -71,7 +73,9 @@ IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
 //
 
 IDR_MAINFRAME           BITMAP                  "res\\Toolbar.bmp"
+
 IDB_BITMAP1             BITMAP                  "res\\bitmap1.bmp"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -663,8 +667,8 @@ BEGIN
         MENUITEM "&Resize Main\tCtrl+Shift+R",  ID_RESIZE_MAIN
         MENUITEM SEPARATOR
         MENUITEM "&Stage Move Tool...",         ID_WINDOW_STAGE_MOVE_TOOL
-        MENUITEM "Show Scope Control",          ID_WINDOW_SHOWSCOPECONTROLPANEL
-        MENUITEM "Take Screen Shot",            ID_WINDOW_TAKESCREENSHOT
+        MENUITEM "S&how Scope Control",         ID_WINDOW_SHOWSCOPECONTROLPANEL
+        MENUITEM "Take &Image Snapshot...",     ID_WINDOW_TAKESCREENSHOT
     END
     POPUP "&Help"
     BEGIN
@@ -3133,7 +3137,6 @@ END
 
 IDD_SCREENSHOT DIALOGEX 0, 0, 149, 131
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-EXSTYLE WS_EX_TOOLWINDOW
 CAPTION "Image Snapshots"
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
@@ -3141,7 +3144,7 @@ BEGIN
     CONTROL         "Scale by",IDC_RADIO_INCREASE_BY,"Button",BS_AUTORADIOBUTTON,33,24,39,10
     CONTROL         "Whole image at 1:1 zoom",IDC_RADIO_WHOLE_IMAGE,"Button",BS_AUTORADIOBUTTON,33,36,88,10
     GROUPBOX        "Image scaling",IDC_STATIC,26,1,97,47,WS_GROUP
-    LTEXT           "1.5",IDC_STAT_SCALEBY,74,25,10,8
+    RTEXT           "1.5",IDC_STAT_SCALEBY,74,25,10,8
     CONTROL         "",IDC_SPIN_INCREASE_ZOOM_BY,"msctls_updown32",UDS_ARROWKEYS,87,22,11,14
     CONTROL         "Increase text/line sizes by",IDC_CHECK_SCALE_SIZE_BY,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,52,88,10
@@ -3251,7 +3254,9 @@ END
 //
 
 IDC_CURSOR1             CURSOR                  "res\\cursor1.cur"
+
 IDC_CURSOR2             CURSOR                  "res\\cursor2.cur"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3725,59 +3730,59 @@ END
 // AFX_DIALOG_LAYOUT
 //
 
-IDD_AUTOCENSETUP AFX_DIALOG_LAYOUT 
+IDD_AUTOCENSETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_TILTSERIES AFX_DIALOG_LAYOUT 
+IDD_TILTSERIES AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_DRIFTWAITSETUP AFX_DIALOG_LAYOUT 
+IDD_DRIFTWAITSETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_SCREENSHOT AFX_DIALOG_LAYOUT 
+IDD_SCREENSHOT AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_MULTI_SHOT_SETUP AFX_DIALOG_LAYOUT 
+IDD_MULTI_SHOT_SETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_REMOTE_CONTROL AFX_DIALOG_LAYOUT 
+IDD_REMOTE_CONTROL AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_LOWDOSE AFX_DIALOG_LAYOUT 
+IDD_LOWDOSE AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_VPP_EXPOSE_SETUP AFX_DIALOG_LAYOUT 
+IDD_VPP_EXPOSE_SETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_MACRO AFX_DIALOG_LAYOUT 
+IDD_MACRO AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_K2_SAVE_OPTIONS AFX_DIALOG_LAYOUT 
+IDD_K2_SAVE_OPTIONS AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_SCOPESTATUS AFX_DIALOG_LAYOUT 
+IDD_SCOPESTATUS AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
 
