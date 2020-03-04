@@ -1577,6 +1577,10 @@
 #define IDC_RADIO_AS_TIFF               2606
 #define IDC_RADIO2                      2607
 #define IDC_RADIO_AS_JPEG               2607
+#define IDC_STAT_JPEG_QUALITY           2608
+#define IDC_EDIT_JPEG_QUALITY           2609
+#define IDC_SPIN1                       2611
+#define IDC_SPIN_JPEG_QUALITY           2611
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2059,7 +2063,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        244
 #define _APS_NEXT_COMMAND_VALUE         33385
-#define _APS_NEXT_CONTROL_VALUE         2608
+#define _APS_NEXT_CONTROL_VALUE         2612
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
