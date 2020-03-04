@@ -43,6 +43,7 @@
 #include "PluginManager.h"
 #include "Utilities\KGetOne.h"
 #include "Shared\b3dutil.h"
+#include "ScreenShotDialog.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -448,15 +449,17 @@ BEGIN_MESSAGE_MAP(CMenuTargets, CCmdTarget)
   ON_UPDATE_COMMAND_UI_RANGE(ID_EXTERNAL_TOOL1, ID_EXTERNAL_TOOL25, OnUpdateNoTasks)
   ON_COMMAND(ID_SPECIALSETTINGS_ALWAYSANTIALIASK2, OnCameraAlwaysAntialiasK23)
   ON_UPDATE_COMMAND_UI(ID_SPECIALSETTINGS_ALWAYSANTIALIASK2, OnUpdateCameraAlwaysAntialiasK23)
-    ON_COMMAND(ID_BEAMSPOT_LISTCALIBRATIONS, OnBeamSpotListCalibrations)
-    ON_UPDATE_COMMAND_UI(ID_BEAMSPOT_LISTCALIBRATIONS, OnUpdateNoTasks)
-    ON_COMMAND(ID_TASKS_SETUPWAITFORDRIFT, OnTasksSetupWaitForDrift)
-    ON_UPDATE_COMMAND_UI(ID_TASKS_SETUPWAITFORDRIFT, OnUpdateNoTasks)
-    ON_COMMAND(ID_SPECIALIZEDOPTIONS_SKIPBLANKINGINLDWITHSCREENUP, OnSkipBlankingInLdWithScreenUp)
-    ON_UPDATE_COMMAND_UI(ID_SPECIALIZEDOPTIONS_SKIPBLANKINGINLDWITHSCREENUP, OnUpdateSkipBlankingInLdWithScreenUp)
-    ON_COMMAND(ID_TASKS_SETUPVPPCONDITIONING, OnTasksSetupVppConditioning)
-    ON_UPDATE_COMMAND_UI(ID_TASKS_SETUPVPPCONDITIONING, OnUpdateTasksSetupVppConditioning)
-    END_MESSAGE_MAP()
+  ON_COMMAND(ID_BEAMSPOT_LISTCALIBRATIONS, OnBeamSpotListCalibrations)
+  ON_UPDATE_COMMAND_UI(ID_BEAMSPOT_LISTCALIBRATIONS, OnUpdateNoTasks)
+  ON_COMMAND(ID_TASKS_SETUPWAITFORDRIFT, OnTasksSetupWaitForDrift)
+  ON_UPDATE_COMMAND_UI(ID_TASKS_SETUPWAITFORDRIFT, OnUpdateNoTasks)
+  ON_COMMAND(ID_SPECIALIZEDOPTIONS_SKIPBLANKINGINLDWITHSCREENUP, OnSkipBlankingInLdWithScreenUp)
+  ON_UPDATE_COMMAND_UI(ID_SPECIALIZEDOPTIONS_SKIPBLANKINGINLDWITHSCREENUP, OnUpdateSkipBlankingInLdWithScreenUp)
+  ON_COMMAND(ID_TASKS_SETUPVPPCONDITIONING, OnTasksSetupVppConditioning)
+  ON_UPDATE_COMMAND_UI(ID_TASKS_SETUPVPPCONDITIONING, OnUpdateTasksSetupVppConditioning)
+  ON_COMMAND(ID_WINDOW_TAKESCREENSHOT, OnWindowTakeScreenShot)
+  ON_UPDATE_COMMAND_UI(ID_WINDOW_TAKESCREENSHOT, OnUpdateNoTasks)
+  END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
 // CMenuTargets message handlers
@@ -2878,4 +2881,9 @@ void CMenuTargets::OnBeamSpotListCalibrations()
   mShiftManager->ListBeamShiftCals();
   mWinApp->mBeamAssessor->ListIntensityCalibrations();
   mWinApp->mBeamAssessor->ListSpotCalibrations();
+}
+
+
+void CMenuTargets::OnWindowTakeScreenShot()
+{	
 }

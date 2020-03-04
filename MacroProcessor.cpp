@@ -269,7 +269,7 @@ enum {CME_SCRIPTEND = -7, CME_LABEL, CME_SETVARIABLE, CME_SETSTRINGVAR, CME_DOKE
   CME_ACQUIRETOMATCHBUFFER,  CME_REPORTXLENSDEFLECTOR, CME_SETXLENSDEFLECTOR, 
   CME_REPORTXLENSFOCUS, CME_SETXLENSFOCUS, CME_EXTERNALTOOLARGPLACE, 
   CME_READONLYUNLESSADMIN, CME_IMAGESHIFTBYSTAGEDIFF, CME_GETFILEINWATCHEDDIR,
-  CME_RUNSCRIPTINWATCHEDDIR, CME_PARSEQUOTEDSTRINGS 
+  CME_RUNSCRIPTINWATCHEDDIR, CME_PARSEQUOTEDSTRINGS, CME_SNAPSHOTTOFILE
 };
 
 // The two numbers are the minimum arguments and whether arithmetic is allowed
@@ -422,6 +422,7 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"ExternalToolArgPlace", 1, 0},{"ReadOnlyUnlessAdmin", 0, 0},
 {"ImageShiftByStageDiff", 2, 0},{"GetFileInWatchedDir", 1, 0},
 {"RunScriptInWatchedDir", 1, 0}, {"ParseQuotedStrings", 0, 0},/*CAI3.8*/
+{"SnapshotToFile", 6, 0},
 {NULL, 0, 0}
 };
 // The longest is now 25 characters but 23 is a more common limit
@@ -2963,38 +2964,62 @@ void CMacroProcessor::NextCommand()
     break;
     
   case CME_SAVETOOTHERFILE:                                 // SaveToOtherFile
-    if (ConvertBufferLetter(strItems[1], -1, true, index, report))
-      ABORT_LINE(report);
+  case CME_SNAPSHOTTOFILE:                                  // SnapshotToFile
+    truth = CMD_IS(SNAPSHOTTOFILE);
+    if (truth) {
+      ix0 = 4;
+      if (itemDbl[1] >= 0. && itemDbl[1] < 1.)
+        ABORT_LINE("Factor to zoom by must be >= 1 or less than 0 in line:\n\n");
+    } else {
+      ix0 = 2;
+      if (ConvertBufferLetter(strItems[1], -1, true, index, report))
+        ABORT_LINE(report);
+    }
     index2 = -1;
-    if (strItems[2] == "MRC")
+    if (strItems[ix0] == "MRC")
       index2 = STORE_TYPE_MRC;
-    else if (strItems[2] == "TIF" || strItems[2] == "TIFF")
+    else if (strItems[ix0] == "TIF" || strItems[2] == "TIFF")
       index2 = STORE_TYPE_TIFF;
-    else if (strItems[2] == "JPG" || strItems[2] == "JPEG")
+    else if (strItems[ix0] == "JPG" || strItems[2] == "JPEG")
       index2 = STORE_TYPE_JPEG;
-    else if (strItems[2] != "CUR" && strItems[2] != "-1")
+    else if (strItems[ix0] != "CUR" && strItems[2] != "-1")
       ABORT_LINE("Second entry must be MRC, TIF, TIFF, JPG, JPEG, CUR, or -1 in line:"
       "\n\n");
+    if (truth && index2 == STORE_TYPE_MRC)
+      ABORT_LINE("A snapshot cannot be saved to an MRC file in line:\n\n");
     ix1 = -1;
-    if (strItems[3] == "NONE")
+    if (strItems[ix0 + 1] == "NONE")
       ix1 = COMPRESS_NONE;
-    else if (strItems[3] == "LZW")
+    else if (strItems[ix0 + 1] == "LZW")
       ix1 = COMPRESS_LZW;
-    else if (strItems[3] == "ZIP")
+    else if (strItems[ix0 + 1] == "ZIP")
       ix1 = COMPRESS_ZIP;
-    else if (strItems[3] == "JPG" || strItems[3] == "JPEG")
+    else if (strItems[ix0 + 1] == "JPG" || strItems[ix0 + 1] == "JPEG")
       ix1 = COMPRESS_JPEG;
-    else if (strItems[3] != "CUR" && strItems[3] != "-1")
+    else if (strItems[ix0 + 1] != "CUR" && strItems[ix0 + 1] != "-1")
       ABORT_LINE("Third entry must be NONE, LZW, ZIP, JPG, JPEG, CUR, or -1 in line:"
       "\n\n");
-    if (CheckConvertFilename(strItems, strLine, 4, report))
+    if (CheckConvertFilename(strItems, strLine, ix0 + 2, report))
       return;
-    iy1 = mWinApp->mDocWnd->SaveToOtherFile(index, index2, ix1, &report);
-    if (iy1 == 1)
-      return;
-    if (iy1) {
-      report.Format("Error %s file for line:\n\n", iy1 == 2 ? "opening" : "saving to");
-      ABORT_LINE(report);
+    if (truth) {
+      iy1 = mWinApp->mActiveView->TakeSnapshot((float)itemDbl[1], itemInt[2] != 0, 
+        itemInt[3], index2, ix1, report);
+      if (iy1) {
+        if (iy1 > 0)
+          report.Format("Snapshot function returned error %d for line:\n\n", iy1);
+        else
+          report.Format("Snapshot function returned error %d saving to file in "
+            "line:\n\n", -iy1);
+        ABORT_LINE(report);
+      }
+    } else {
+      iy1 = mWinApp->mDocWnd->SaveToOtherFile(index, index2, ix1, &report);
+      if (iy1 == 1)
+        return;
+      if (iy1) {
+        report.Format("Error %s file for line:\n\n", iy1 == 2 ? "opening" : "saving to");
+        ABORT_LINE(report);
+      }
     }
     break;
     

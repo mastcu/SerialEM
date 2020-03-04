@@ -1885,15 +1885,15 @@ int ProcGainNormalize(void *image, int type, int nxFull, int top, int left, int 
   int right, short int *dark1, double exp1, short int *dark2, double exp2, double exp, 
   int darkScale, void *gainRef, int gainBytes, int gainBits)
 {
-  float *gainp;
-  short int *sdata, *sdark1, *sdark2;
-  unsigned short int *usdata;
-  unsigned short int *usgain;
+  float *gainp = NULL;
+  short int *sdata = NULL, *sdark1 = NULL, *sdark2 = NULL;
+  unsigned short int *usdata = NULL;
+  unsigned short int *usgain = NULL;
   unsigned short int *usdark1 = (unsigned short int *)dark1;
   unsigned short int *usdark2 = (unsigned short int *)dark2;
   float *fdark = (float *)dark1;
-  float *fdata;
-  int iy, ix, itmp, rval, f1, f2, dataBase, gainBase, error = 0;
+  float *fdata = NULL;
+  int iy, ix = 0, itmp = 0, rval = 0, f1, f2, dataBase = 0, gainBase = 0, error = 0;
   int nxImage = right - left;
   int darkBits = 12;
   int darkFac = 1 << darkBits;

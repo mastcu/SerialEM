@@ -446,6 +446,9 @@
     <ClInclude Include="DriftWaitSetupDlg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ScreenShotDialog.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="VPPConditionSetup.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -1117,6 +1120,9 @@
       <Filter>CSource Files</Filter>
     </ClCompile>
     <ClCompile Include="DriftWaitSetupDlg.cpp">
+      <Filter>CSource Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ScreenShotDialog.cpp">
       <Filter>CSource Files</Filter>
     </ClCompile>
     <ClCompile Include="VPPConditionSetup.cpp">

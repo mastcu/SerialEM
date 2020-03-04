@@ -662,6 +662,7 @@ void CFalconHelper::StackNextTask(int param)
     mDeletePrev = false;
   }
 
+  SEMTrace('1', "mProPl  %d  nnh %d  mProc %d", mProcessingPlugin ? 1 : 0, mNeedNormHere ? 1 : 0, mProcessing);
   if (mProcessingPlugin && mNeedNormHere)
     mCamera->ProcessImageOrFrame(outPtr, mProcessing, mRemoveXrays, 1);
 
@@ -1012,6 +1013,8 @@ int CFalconHelper::ProcessPluginFrames(CString &directory, CString &rootname,
   mNeedNormHere = conSet.processing != camTD->Processing;
   mProcessing = conSet.processing;
   mRemoveXrays = conSet.removeXrays;
+  SEMTrace('1', "cs.proc %d  cTD/proc %d  nh %d", conSet.processing, camTD->Processing,
+    mNeedNormHere ? 1 : 0);
   if (mNeedNormHere && align && !save) {
     mNeedNormHere = !mCamera->CanFramealignProcessSubarea(&conSet, &mDarkp,
       &mGainp);

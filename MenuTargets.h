@@ -13,6 +13,7 @@ class CEMscope;
 class CShiftManager;
 class CTSController;
 class CNavHelper;
+class CScreenShotDialog;
 
 /////////////////////////////////////////////////////////////////////////////
 // CMenuTargets command target
@@ -179,6 +180,7 @@ private:
   CTSController *mTSController;
   CNavHelper *mNavHelper;
   CString mFlybackSet;
+  CScreenShotDialog* m_pDlgScreenShot;
 public:
   afx_msg void OnNavigatorChangeregistration();
   afx_msg void OnUpdateNavigatorChangeregistration(CCmdUI *pCmdUI);
@@ -369,6 +371,7 @@ public:
   afx_msg void OnUpdateCameraAlwaysAntialiasK23(CCmdUI *pCmdUI);
   afx_msg void OnBeamSpotListCalibrations();
   afx_msg void OnTasksSetupWaitForDrift();
+  afx_msg void OnWindowTakeScreenShot();  
   afx_msg void OnSkipBlankingInLdWithScreenUp();
   afx_msg void OnUpdateSkipBlankingInLdWithScreenUp(CCmdUI *pCmdUI);
   afx_msg void OnTasksSetupVppConditioning();

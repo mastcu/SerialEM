@@ -29,6 +29,7 @@
 #include "MacroProcessor.h"
 #include "MultiTSTasks.h"
 #include "RemoteControl.h"
+#include "Image\KStoreIMOD.h"
 #include "Shared\ctffind.h"
 #include "Utilities\KGetOne.h"
 #include "Shared\b3dutil.h"
@@ -235,7 +236,176 @@ void CSerialEMView::CloseFrame()
   childFrame->OnClose();
 }
 
+#define DSB_SCALE(a) B3DNINT(sizeScaling * (a))
+
+// Takes an image snapshot and saves it, managing all the changes needed before and
+// after calling the general draw routine
+int CSerialEMView::TakeSnapshot(float zoomBy, bool scaleSizes, int skipExtra, 
+  int fileType, int compression, CString &filename)
+{
+  CRect rectWin;
+  DWORD memBMX, memBMY;
+  CDC memDC;
+  CBitmap bitmap;
+  BITMAP bm;
+  EMimageBuffer *imBuf = NULL;
+  KImage      *imageRect;
+  FileOptions fileOpt;
+  CClientDC cdcWin(this);
+  char *buffer, *bufIn, *bufOut;
+  int nxImage, nyImage, nxDrawn, nyDrawn, nxWin, nyWin, iy, ix, inAdd, err;
+  int xOffsetSave = m_iOffsetX, yOffsetSave = m_iOffsetY;
+  bool drew;
+  double zoomUse, zoomSave = mZoom;
+  float sizeScaling = 1.;
+  ScaleBar barParamSaved = mScaleParams;
+
+  // Get window size
+  GetClientRect(&rectWin);
+  nxWin = rectWin.Width();
+  nyWin = rectWin.Height();
+
+
+  // Make sure there is an image and get its size
+  if (mImBufs) {
+    imBuf = &mImBufs[mImBufIndex];
+    imageRect = imBuf->mImage;
+  }
+  if (!imBuf || !imageRect)
+    return 1;
+  imageRect->getSize(nxImage, nyImage);
+
+  // For 1:1 whole image drawing, set size to fill image and zoom to 1
+  if (zoomBy < 0) {
+    zoomUse = 1.;
+    memBMX = nxImage;
+    memBMY = nyImage;
+  } else {
+
+    // Otherwise, draw the component of the image in the window by taking the min of the
+    // zoomed image size and window size; then zoom up by desired factor
+    nxDrawn = B3DMIN((int)(mZoom * nxImage), nxWin);
+    nyDrawn = B3DMIN((int)(mZoom * nyImage), nyWin);
+    memBMX = (DWORD)zoomBy *nxDrawn;
+    memBMY = (DWORD)zoomBy *nyDrawn;
+    zoomUse = mZoom * zoomBy;
+  }
+
+  // Scale sizes by change in zoom
+  if (scaleSizes)
+    sizeScaling = (float)B3DMAX(1., zoomUse / mZoom);
+
+  // The # of bytes is limited to a DWORD so just test for that first
+  if ((float)memBMX * memBMY > 1.e9)
+    return 2;
+
+  // Get compaitable device context to window
+  memDC.CreateCompatibleDC(&cdcWin);
+
+  // Get the window rectangle
+  CRect rect(0, 0, memBMX, memBMY);
+
+  // Get bitmap of the desired size and make sure it is 24 or 32 bit
+  if (!bitmap.CreateCompatibleBitmap(&cdcWin, memBMX, memBMY))
+    return 2;
+
+  if (!bitmap.GetObject(sizeof(BITMAP), &bm))
+    return 3;
+  if (bm.bmBitsPixel != 24 && bm.bmBitsPixel != 32)
+    return 4;
+
+  // Get buffer to copy into 
+  NewArray(buffer, char, bm.bmWidthBytes * memBMY);
+  if (!buffer)
+    return 2;
+
+  CBitmap* oldBitmap = (CBitmap*)memDC.SelectObject(&bitmap);
+
+  // Adjust various things for size scaling here
+  mZoom = zoomUse;
+  if (sizeScaling > 1.) {
+    barParamSaved = mScaleParams;
+    mScaleParams.minLength = DSB_SCALE(mScaleParams.minLength);
+    mScaleParams.thickness = DSB_SCALE(mScaleParams.thickness);
+    mScaleParams.indentX = DSB_SCALE(mScaleParams.indentX);
+    mScaleParams.indentY = DSB_SCALE(mScaleParams.indentY);
+    CString fontName = Is2000OrGreater() ? "Microsoft Sans Serif" : "MS Sans Serif";
+    mScaledFont = new CFont();
+    mScaledLabelFont = new CFont();
+    mScaledFont->CreateFont(DSB_SCALE(mWinApp->ScaleValueForDPI(36)), 0, 0, 0,
+      FW_MEDIUM, 0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
+      CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
+      FF_DONTCARE, fontName);
+    mScaledLabelFont->CreateFont(DSB_SCALE(mWinApp->ScaleValueForDPI(24)), 0,
+      0, 0, FW_MEDIUM, 0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
+      CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
+      FF_DONTCARE, fontName);
+  }
+
+  // Do the draw abd restore everything
+  drew = DrawToScreenOrBuffer(memDC, memDC.m_hDC, rect, sizeScaling, skipExtra, true);
+  memDC.SelectObject(oldBitmap);
+  mZoom = zoomSave;
+  if (sizeScaling > 1.) {
+    m_iOffsetX = xOffsetSave;
+    m_iOffsetY = yOffsetSave;
+    mScaleParams = barParamSaved;
+    delete mScaledFont;
+    delete mScaledLabelFont;
+  }
+  if (!drew) {
+    delete[] buffer;
+    return 1;
+  }
+
+  // Get the buffer copy
+  if (!bitmap.GetBitmapBits(bm.bmWidthBytes * memBMY, buffer)) {
+    delete[] buffer;
+    return 3;
+  }
+
+  // Pack the buffer to continguous RGB: it is BGR or BRGA
+  bufOut = buffer;
+  inAdd = bm.bmBitsPixel / 8;
+  for (iy = 0; iy < (int)memBMY; iy++) {
+    bufIn = buffer + iy * bm.bmWidthBytes;
+    for (ix = 0; ix < (int)memBMX; ix++) {
+      *bufOut++ = *(bufIn + 2);
+      *bufOut++ = *(bufIn + 1);
+      *bufOut++ = *bufIn;
+      bufIn += inAdd;
+    }
+  }
+
+  // Put it in a KImage and save it
+  KImageRGB *image = new KImageRGB();
+  image->useData(buffer, memBMX, memBMY);
+  fileOpt.fileType = fileType;
+  fileOpt.compression = compression;
+  KStoreIMOD *store = new KStoreIMOD(filename, fileOpt);
+  err = store->WriteSection(image);
+  delete image;
+  delete store;
+  return -err;
+}
+
+// Entry point for a regular image draw to screen
 void CSerialEMView::DrawImage(void)
+{
+  CRect rect;
+  GetClientRect(rect);
+  CClientDC cdcWin(this);
+
+  // Get the device context for the bitmap drawing calls
+  HDC hdc = ::GetDC(m_hWnd); // handle to device context
+  DrawToScreenOrBuffer(cdcWin, hdc, rect, 1., 0, false);
+  ::ReleaseDC(m_hWnd, hdc);
+}
+
+// Main drawing routine to screen or buffer.  Skipextra is one to skip some items plus
+// 2 to skip navigator items
+bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect, 
+  float sizeScaling, int skipExtra, bool toBuffer)
 {
   int iSrcWidth, iSrcHeight, iDestWidth, iDestHeight, crossLen, xSrc, ySrc, needWidth;
   int tmpWidth, tmpHeight, ierr, ifilt, numLines, thick, loop;
@@ -253,12 +423,16 @@ void CSerialEMView::DrawImage(void)
   FloatVec zeroRadii, zeroRadii2;
   FloatVec *curHoleXYpos;
   IntVec *curHoleIndex;
+  CFont *useFont, *useLabelFont;
   CPoint point;
-  CString letString, firstLabel, lastLabel;
+  CString letString, firstLabel, lastLabel, fontName;
   COLORREF bkgColor = RGB(48, 0, 48);
-  int scaled5 = mWinApp->ScaleValueForDPI(5);
-  int scaled10 = mWinApp->ScaleValueForDPI(10);
-  int scaled140 = mWinApp->ScaleValueForDPI(140);
+  COLORREF flashColor = RGB(192, 192, 0);
+  int scaled5 = DSB_SCALE(mWinApp->ScaleValueForDPI(5));
+  int scaled10 = DSB_SCALE(mWinApp->ScaleValueForDPI(10));
+  int scaled140 = DSB_SCALE(mWinApp->ScaleValueForDPI(140));
+  int thick1 = B3DNINT(sizeScaling);
+  int thick2 = DSB_SCALE(2.);
 
   // If this is the first draw, set up the zoom optimally
   // 7/7/03: no longer need to fix main frame window title; set child titles
@@ -270,13 +444,6 @@ void CSerialEMView::DrawImage(void)
       ((CMDIChildWnd *)(mWinApp->mMainView->GetParent()))->MDIActivate();
   }
  
-  // Get the window rectangle
-  CRect rect;
-  GetClientRect(&rect);
-
-  // Get a device context for doing fill rectangles
-  CClientDC cdc(this);
-
   EMimageBuffer *imBuf = NULL;
   KImage      *imageRect;
   if (mImBufs) {
@@ -295,12 +462,12 @@ void CSerialEMView::DrawImage(void)
   if (mFlashNextDisplay || imBuf == NULL || imageRect == NULL) {
     cdc.FillSolidRect(rect, mFlashNextDisplay ? mFlashColor : bkgColor);
     mFlashNextDisplay = false;
-    return;
+    return false;
   }
 
   // Get fonts for drawing letter in corner and other text on first real draw
   if (!mMadeFonts) {
-    CString fontName;
+    
     fontName = Is2000OrGreater() ? "Microsoft Sans Serif" : "MS Sans Serif";
     mFont.CreateFont(mWinApp->ScaleValueForDPI(36), 0, 0, 0, FW_MEDIUM,
       0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
@@ -319,9 +486,8 @@ void CSerialEMView::DrawImage(void)
     mScaleParams.indentY = mWinApp->ScaleValueForDPI(mScaleParams.indentY);
 
   }
-
-  // Get the device context for the bitmap drawing calls
-  HDC hdc = ::GetDC(m_hWnd); // handle to device context
+  useFont = sizeScaling > 1. ? mScaledFont : &mFont;
+  useLabelFont = sizeScaling > 1. ? mScaledLabelFont : &mLabelFont;
 
   // Update the pixmap and its scaling and image data
   imBuf->UpdatePixMap();
@@ -359,12 +525,14 @@ void CSerialEMView::DrawImage(void)
   }
 
   mZoomAroundPoint = false;
-  if (imBuf->mMapID) {
-    imBuf->mPanX = m_iOffsetX;
-    imBuf->mPanY = m_iOffsetY;
-  } else {
-    mNonMapPanX = m_iOffsetX;
-    mNonMapPanY = m_iOffsetY;
+  if (!toBuffer) {
+    if (imBuf->mMapID) {
+      imBuf->mPanX = m_iOffsetX;
+      imBuf->mPanY = m_iOffsetY;
+    } else {
+      mNonMapPanX = m_iOffsetX;
+      mNonMapPanY = m_iOffsetY;
+    }
   }
 
   // Workaround to problem that it displays the top of the array instead of the bottom
@@ -490,8 +658,6 @@ void CSerialEMView::DrawImage(void)
        "you need to delete some buffers");
   }
 
-  ::ReleaseDC(m_hWnd, hdc);
-
   // Fill sides if needed
   if (mYDest > rect.top)
     cdc.FillSolidRect(rect.left, rect.top, rect.Width(), mYDest - rect.top, bkgColor);
@@ -505,8 +671,8 @@ void CSerialEMView::DrawImage(void)
       iDestHeight, bkgColor);
   
   // Draw crosshairs if mouse shifting is underway
-  if (mMouseShifting || mWinApp->mBufferManager->GetDrawCrosshairs() || 
-    (navigator && navigator->MovingMapItem())) {
+  if (!toBuffer&& (mMouseShifting || mWinApp->mBufferManager->GetDrawCrosshairs() || 
+    (navigator && navigator->MovingMapItem()))) {
     CPen pnSolidPen (PS_SOLID, 1, mWinApp->mShiftManager->GetShiftingDefineArea() ?
       RGB(0, 255, 0) : RGB(255, 0, 0));
     crossLen = (rect.Width() < rect.Height() ? rect.Width() : rect.Height()) / 5;
@@ -544,37 +710,36 @@ void CSerialEMView::DrawImage(void)
   }
 
   // Draw user point if one is set, otherwise draw line if that flag is set
-  if (imBuf->mHasUserPt || imBuf->mHasUserLine) {
-    CPen pnSolidPen (PS_SOLID, 2, RGB(0, 255, 0));
+  if ((imBuf->mHasUserPt || imBuf->mHasUserLine) && !(skipExtra & 1)) {
+    CPen pnSolidPen (PS_SOLID, thick2, RGB(0, 255, 0));
     CPoint point, point2;
-    crossLen = imBuf->mHasUserPt ? 7 : 1;
+    crossLen = DSB_SCALE((imBuf->mHasUserPt ? 7 : 1));
     MakeDrawPoint(&rect, imBuf->mImage, imBuf->mUserPtX, imBuf->mUserPtY, &point);
     if (!imBuf->mDrawUserBox) 
       DrawCross(&cdc, &pnSolidPen, point, crossLen);
     if (!imBuf->mHasUserPt) {
       MakeDrawPoint(&rect, imBuf->mImage, imBuf->mLineEndX, imBuf->mLineEndY, &point2);
-      if (imBuf->mDrawUserBox) {
-        int left = B3DMIN(point.x, point2.x);
-        int right = B3DMAX(point.x, point2.x);
-        int top = B3DMIN(point.y, point2.y);
-        int bot = B3DMAX(point.y, point2.y);
-        cdc.Draw3dRect(left, top, right + 1 - left, bot + 1 - top, RGB(0, 255, 0),
-          RGB(0, 255, 0));
-      } else {
+      if (!imBuf->mDrawUserBox)
         DrawCross(&cdc, &pnSolidPen, point2, crossLen);
-        CPen pnSolid1 (PS_SOLID, 1, RGB(0, 255, 0));
-        CPen *pOldPen = cdc.SelectObject(&pnSolid1);
-        cdc.MoveTo(point);
+      CPen pnSolid1(PS_SOLID, thick1, RGB(0, 255, 0));
+      CPen *pOldPen = cdc.SelectObject(&pnSolid1);
+      cdc.MoveTo(point);
+      if (imBuf->mDrawUserBox) {
+        cdc.LineTo(point.x, point2.y);
         cdc.LineTo(point2);
-        cdc.SelectObject(pOldPen);
+        cdc.LineTo(point2.x, point.y);
+        cdc.LineTo(point);
+      } else {
+        cdc.LineTo(point2);
       }
+      cdc.SelectObject(pOldPen);
     }
   }
 
   // Draw letter in corner if this is main window, or number for multibuffer window
   int scaleCrit = mWinApp->mBufferManager->GetDrawScaleBar();
-  if (mImBufNumber > 1 || mImBufArraySize) {
-    CFont *def_font = cdc.SelectObject(&mFont);
+  if (!toBuffer && (mImBufNumber > 1 || mImBufArraySize)) {
+    CFont *def_font = cdc.SelectObject(useFont);
     int defMode = cdc.SetBkMode(TRANSPARENT);
     COLORREF defColor = cdc.SetTextColor(RGB(255, 0, 0));
     if (mMainWindow || mFFTWindow) {
@@ -585,7 +750,7 @@ void CSerialEMView::DrawImage(void)
       cdc.TextOut(scaled5, scaled5, letString);
       if (imBuf->mCaptured > 0 && imBuf->mConSetUsed >= 0 && 
         imBuf->mConSetUsed < NUMBER_OF_USER_CONSETS && imBuf->mLowDoseArea) {
-          cdc.SelectObject(&mLabelFont);
+          cdc.SelectObject(useLabelFont);
           letString = CString(" - ") + (mWinApp->GetModeNames())[imBuf->mConSetUsed];
           cdc.TextOut(mWinApp->ScaleValueForDPI(25), scaled10, letString);
       }
@@ -599,7 +764,7 @@ void CSerialEMView::DrawImage(void)
         mWinApp->GetNumActiveCameras() > 1)) {
           CameraParameters *camP = mWinApp->GetCamParams() + imBuf->mCamera;
           cdc.SetTextColor(RGB(0, 255, 40));
-          cdc.SelectObject(&mLabelFont);
+          cdc.SelectObject(useLabelFont);
           if (imBuf->mSampleMean > EXTRA_VALUE_TEST && bufferOK &&
             !mWinApp->mProcessImage->DoseRateFromMean(imBuf, imBuf->mSampleMean, boost)) {
               if (mWinApp->mCamera->IsDirectDetector(camP)) {
@@ -636,7 +801,7 @@ void CSerialEMView::DrawImage(void)
           }
       }
     } else {
-      cdc.SelectObject(&mLabelFont);
+      cdc.SelectObject(useLabelFont);
       if (mImBufs[mImBufIndex].mSecNumber < 0)
         letString.Format("%d: tilt = %.1f", mImBufIndex + 1, 
         mImBufs[mImBufIndex].mTiltAngleOrig);
@@ -660,15 +825,15 @@ void CSerialEMView::DrawImage(void)
     // If this is a view image in low dose, draw record and trial/focus areas as long as
     // there won't be a 
     if ((imBuf->mCaptured > 0 || imBuf->ImageWasReadIn()) && imBuf->mConSetUsed == 0 && 
-      imBuf->mLowDoseArea && !mDrewLDAreasAtNavPt) {
-      DrawLowDoseAreas(cdc, rect, imBuf, 0., 0.);
+      imBuf->mLowDoseArea && !mDrewLDAreasAtNavPt && !(skipExtra & 1)) {
+      DrawLowDoseAreas(cdc, rect, imBuf, 0., 0., thick1);
     }
   }
 
   // Draw rings at CTF zeros determined by ctffind
-  if ((mMainWindow || mFFTWindow) && (imBuf->mCaptured == BUFFER_FFT || 
-    imBuf->mCaptured == BUFFER_LIVE_FFT && !mWinApp->mCamera->DoingContinuousAcquire()) && 
-    imBuf->mCtfFocus1 > 0) {
+  if ((mMainWindow || mFFTWindow) && !(skipExtra & 1) && (imBuf->mCaptured == BUFFER_FFT
+    || imBuf->mCaptured == BUFFER_LIVE_FFT && !mWinApp->mCamera->DoingContinuousAcquire())
+    && imBuf->mCtfFocus1 > 0) {
       double defocus = imBuf->mCtfFocus1;
       float pixel = 1000.f * mWinApp->mShiftManager->GetPixelSize(imBuf);
       if (processImg->GetTestCtfPixelSize())
@@ -681,7 +846,7 @@ void CSerialEMView::DrawImage(void)
         imBuf->mCtfPhase);
       cenX = imBuf->mImage->getWidth() / 2.f;
       cenY = imBuf->mImage->getHeight() / 2.f;
-      CPen pnDashPen (PS_DASHDOT, 1, RGB(255, 255, 0));
+      CPen pnDashPen (PS_DASHDOT, thick1, RGB(255, 255, 0));
       for (int zr = 0; zr < (int)B3DMIN(zeroRadii.size(), zeroRadii2.size()); zr++)
         DrawEllipse(&cdc, &pnDashPen, &rect, imBuf->mImage, cenX, cenY, 
         zeroRadii[zr] * cenX, zeroRadii2[zr] * cenX, imBuf->mCtfAngle, 
@@ -689,24 +854,27 @@ void CSerialEMView::DrawImage(void)
 
 
   // Draw rings at zeros on an FFT if clicked and configured
-  } else if ((mMainWindow || mFFTWindow) && 
+  } else if ((mMainWindow || mFFTWindow) && !(skipExtra & 1) &&
     processImg->GetFFTZeroRadiiAndDefocus(imBuf, &zeroRadii, defocus)) {
       cenX = imBuf->mImage->getWidth() / 2.f;
       cenY = imBuf->mImage->getHeight() / 2.f;
-      CPen pnDashPen (PS_DASHDOT, 1, RGB(0, 255, 0));
+
+      // Dashes etc do not work above thickness 1, but don't even work with that when
+      // drawing to a buffer
+      CPen pnDashPen (PS_DASHDOT, thick1, RGB(0, 255, 0));
       for (int zr = 0; zr < (int)zeroRadii.size(); zr++)
         DrawCircle(&cdc, &pnDashPen, &rect, imBuf->mImage, cenX, cenY, 
         zeroRadii[zr] * cenX);
 
   // Otherwise Draw circle on Live FFT
-  } else if ((mMainWindow || mFFTWindow) && imBuf->mCaptured == BUFFER_LIVE_FFT && 
-    processImg->GetCircleOnLiveFFT()) {
+  } else if ((mMainWindow || mFFTWindow) && !(skipExtra & 1) && 
+    imBuf->mCaptured == BUFFER_LIVE_FFT && processImg->GetCircleOnLiveFFT()) {
       float *radii = processImg->GetFFTCircleRadii();
       float pixel = 1000.f * mWinApp->mShiftManager->GetPixelSize(imBuf);
       double defocus = processImg->GetFixedRingDefocus();
       cenX = imBuf->mImage->getWidth() / 2.f;
       cenY = imBuf->mImage->getHeight() / 2.f;
-      CPen pnDashPen (PS_DASHDOT, 1, RGB(0, 255, 0));
+      CPen pnDashPen (PS_DASHDOT, thick1, RGB(0, 255, 0));
       if (defocus > 0 && pixel > 0.) {
         processImg->DefocusFromPointAndZeros(0., 0, pixel, 0., &zeroRadii, 
           defocus);
@@ -721,13 +889,16 @@ void CSerialEMView::DrawImage(void)
   }
 
   // Scale bar if window big enough
-  if (scaleCrit > 0 && rect.Width() >= scaleCrit && imBuf->mCamera >= 0 &&
-    imBuf->mMagInd && imBuf->mBinning && !imBuf->IsProcessed() && imBuf->mCaptured != 0 
-    && imBuf->mCaptured != BUFFER_STACK_IMAGE)
-    DrawScaleBar(&cdc, &rect, imBuf);
+  if (scaleCrit > 0 && !(skipExtra & 1) && rect.Width() >= scaleCrit && 
+    imBuf->mCamera >= 0 && imBuf->mMagInd && imBuf->mBinning && !imBuf->IsProcessed() && 
+    imBuf->mCaptured != 0 && imBuf->mCaptured != BUFFER_STACK_IMAGE)
+    DrawScaleBar(&cdc, &rect, imBuf, sizeScaling);
 
-  if (!itemArray)
-    return;
+  if (!itemArray || (skipExtra & 2)) {
+    if (itemArray)
+      delete mAcquireBox;
+    return true;
+  }
 
   // Now draw navigator items
   float ptX, ptY, lastStageX, lastStageY, acquireRadii[2], labelDistThresh = 40.;
@@ -777,12 +948,14 @@ void CSerialEMView::DrawImage(void)
       thick = highlight ? thick : 1;
       numPoints = item->mNumPoints;
     }
+    thick = DSB_SCALE(thick);
 
     if (!item->mNumPoints || (!item->mDraw && iDraw >= 0) || 
       (item->mRegistration != regMatch && !mDrawAllReg && iDraw >= 0))
       continue;
     SetStageErrIfRealignedOnMap(imBuf, item);
-    int crossLen = item->mType == ITEM_TYPE_POINT ? 9 : 5;
+    int crossLen = DSB_SCALE(mWinApp->ScaleValueForDPI(
+      item->mType == ITEM_TYPE_POINT ? 9 : 5));
     CPen pnSolidPen(PS_SOLID, thick, item->GetColor(highlight));
 
     // Single point
@@ -793,7 +966,7 @@ void CSerialEMView::DrawImage(void)
       if (iDraw < 0 && mDrewLDAreasAtNavPt) {
         cenX = imBuf->mImage->getWidth() / 2.f;
         cenY = imBuf->mImage->getHeight() / 2.f;
-        DrawLowDoseAreas(cdc, rect, imBuf, ptX - cenX, ptY - cenY);
+        DrawLowDoseAreas(cdc, rect, imBuf, ptX - cenX, ptY - cenY, thick1);
         mNavLDAreasXcenter = ptX;
         mNavLDAreasYcenter = ptY;
       } else {
@@ -895,7 +1068,7 @@ void CSerialEMView::DrawImage(void)
           acquireRadii[pt + 2 - item->mNumPoints] = sqrtf((ptX - cenX) * (ptX - cenX) + 
             (ptY - cenY) * (ptY - cenY));
         }
-        CPen circlePen(PS_SOLID, 1, COLORREF(RGB(0, 255, 0)));
+        CPen circlePen(PS_SOLID, thick1, COLORREF(RGB(0, 255, 0)));
 
         // Now if doing multiholes, draw a circle on each that is either acquire or
         // multi inhole radius
@@ -931,7 +1104,7 @@ void CSerialEMView::DrawImage(void)
     if (iDraw >= 0 && item->mAcquire && item->mNumPoints == 1 && mAcquireBox &&
       (showMultiOnAll || (showCurPtAcquire && highlight))) {
       GetSingleAdjustmentForItem(imBuf, item, delPtX, delPtY);
-      CPen pnAcquire(PS_SOLID, 1, item->GetColor(highlight));
+      CPen pnAcquire(PS_SOLID, thick1, item->GetColor(highlight));
       CPen *pOldPen = cdc.SelectObject(&pnAcquire);
       mAcquireBox->mDraw = true;
       if (useMultiShot) {
@@ -1027,7 +1200,7 @@ void CSerialEMView::DrawImage(void)
         MakeDrawPoint(&rect, imBuf->mImage, ptX, ptY, &point);
         if (item->mNumPoints == 1)
           point = point + CPoint(10, 0);
-        CFont *def_font = cdc.SelectObject(&mLabelFont);
+        CFont *def_font = cdc.SelectObject(useLabelFont);
         int defMode = cdc.SetBkMode(TRANSPARENT);
         COLORREF defColor = cdc.SetTextColor(item->GetColor(highlight));
         cdc.TextOut(point.x, point.y, item->mLabel);
@@ -1041,7 +1214,9 @@ void CSerialEMView::DrawImage(void)
   }
   delete mAcquireBox;
 
-}
+  return true;
+}// end of  CSerialEMView::DrawImage
+
 
 // For drawing a map rectangle or other shape that should not be distorted by montage 
 // adjusts at each point, get the adjustment, return it, and turn off further adjustments
@@ -1059,7 +1234,7 @@ void CSerialEMView::GetSingleAdjustmentForItem(EMimageBuffer *imBuf, CMapDrawIte
 
 // Draw a box for a map item with a given stage offset from the item points and with a
 // common montage adjustment, potentially saving the points in vectors
-void CSerialEMView::DrawMapItemBox(CClientDC &cdc, CRect *rect, CMapDrawItem *item, 
+void CSerialEMView::DrawMapItemBox(CDC &cdc, CRect *rect, CMapDrawItem *item, 
   EMimageBuffer *imBuf, int numPoints, float delXstage, float delYstage, float delPtX, 
   float delPtY, FloatVec *drawnX, FloatVec *drawnY)
 {
@@ -1085,7 +1260,7 @@ void CSerialEMView::DrawMapItemBox(CClientDC &cdc, CRect *rect, CMapDrawItem *it
 
 // Draw a polygon from points in a vector, with the given adjustment to the stage
 // positions, a common montage adjustment, and potentially storing in more vectors
-void CSerialEMView::DrawVectorPolygon(CClientDC &cdc, CRect *rect, CMapDrawItem *item,
+void CSerialEMView::DrawVectorPolygon(CDC &cdc, CRect *rect, CMapDrawItem *item,
   EMimageBuffer *imBuf, FloatVec &convX, FloatVec &convY, float delXstage,float delYstage, 
   float delPtX, float delPtY, FloatVec *drawnX, FloatVec *drawnY)
 {
@@ -1129,8 +1304,8 @@ void CSerialEMView::MakeDrawPoint(CRect *rect, KImage *image, float inX, float i
 }
 
 // Draw Record and area being defined for low dose
-void CSerialEMView::DrawLowDoseAreas(CClientDC &cdc, CRect &rect, EMimageBuffer *imBuf, 
-  float xOffset, float yOffset)
+void CSerialEMView::DrawLowDoseAreas(CDC &cdc, CRect &rect, EMimageBuffer *imBuf, 
+  float xOffset, float yOffset, int thick)
 {
   COLORREF areaColors[3] = {RGB(255, 255, 0), RGB(255, 0, 0), RGB(0, 255, 0)};
   float cornerX[4], cornerY[4], cenX, cenY, radius;
@@ -1142,7 +1317,7 @@ void CSerialEMView::DrawLowDoseAreas(CClientDC &cdc, CRect &rect, EMimageBuffer 
     int area = mWinApp->mLowDoseDlg.DrawAreaOnView(type, imBuf, state,
       cornerX, cornerY, cenX, cenY, radius);
     if (area) {
-      CPen pnSolidPen(mDrewLDAreasAtNavPt ? PS_DASHDOT : PS_SOLID, 1, 
+      CPen pnSolidPen(mDrewLDAreasAtNavPt ? PS_DASHDOT : PS_SOLID, thick, 
         areaColors[area - 1]);
       CPen *pOldPen = cdc.SelectObject(&pnSolidPen);
       for (int pt = 0; pt < 5; pt++) {
@@ -1278,7 +1453,7 @@ void CSerialEMView::StageToImage(EMimageBuffer *imBuf, float inX, float inY, flo
 }
 
 // Draw a cross with the given pen and length
-void CSerialEMView::DrawCross(CClientDC *cdc, CPen *pNewPen, CPoint point, int crossLen)
+void CSerialEMView::DrawCross(CDC *cdc, CPen *pNewPen, CPoint point, int crossLen)
 {
   CPen *pOldPen = cdc->SelectObject(pNewPen);
   point.x -= crossLen;
@@ -1294,7 +1469,7 @@ void CSerialEMView::DrawCross(CClientDC *cdc, CPen *pNewPen, CPoint point, int c
 }
 
 // Draw a circle with the given pen
-void CSerialEMView::DrawCircle(CClientDC *cdc, CPen *pNewPen, CRect *rect, KImage *image,
+void CSerialEMView::DrawCircle(CDC *cdc, CPen *pNewPen, CRect *rect, KImage *image,
                                float cenX, float cenY, float radius, bool skipShift)
 {
   CPoint point;
@@ -1315,7 +1490,7 @@ void CSerialEMView::DrawCircle(CClientDC *cdc, CPen *pNewPen, CRect *rect, KImag
 
 // Draw an ellipse with the given pen, given two radii and the right-handed angle of
 // radius 1 (i.e., take negative of angle to draw in inverted coordinates)
-void CSerialEMView::DrawEllipse(CClientDC *cdc, CPen *pNewPen, CRect *rect, KImage *image,
+void CSerialEMView::DrawEllipse(CDC *cdc, CPen *pNewPen, CRect *rect, KImage *image,
   float cenX, float cenY, float radius1, float radius2, float angle, bool drawHalf)
 {
   CPoint point;
@@ -1339,7 +1514,8 @@ void CSerialEMView::DrawEllipse(CClientDC *cdc, CPen *pNewPen, CRect *rect, KIma
 }
 
 // Draw a scale bar in appropriate images (code doctored from 3dmod)
-void CSerialEMView::DrawScaleBar(CClientDC *cdc, CRect *rect, EMimageBuffer *imBuf)
+void CSerialEMView::DrawScaleBar(CDC *cdc, CRect *rect, EMimageBuffer *imBuf,
+  float sizeScaling)
 {
   double expon, minlen, loglen, normlen, custlen, pixsize;
   float truelen;
@@ -1396,18 +1572,19 @@ void CSerialEMView::DrawScaleBar(CClientDC *cdc, CRect *rect, EMimageBuffer *imB
     label.Format("%g nm", truelen * 1000.);
   else
     label.Format("%g um", truelen);
-  CFont *def_font = cdc->SelectObject(&mFont);
+  CFont *def_font = cdc->SelectObject(sizeScaling > 1. ? mScaledFont : &mFont);
   int defMode = cdc->SetBkMode(TRANSPARENT);
   COLORREF defColor = cdc->SetTextColor(RGB(0, 0, 0));
   CSize labsize = cdc->GetTextExtent(label);
 
   //cdc->TextOut(xst + xsize / 2 - labsize.cx / 2 - 4, yst - ysize - labsize.cy, label);
-  cdc->TextOut(xst + xsize / 2 - labsize.cx / 2 - mWinApp->ScaleValueForDPI(10), 
-    yst - ysize - labsize.cy - mWinApp->ScaleValueForDPI(4), label);
+  cdc->TextOut(xst + xsize / 2 - labsize.cx / 2 - 
+    DSB_SCALE(mWinApp->ScaleValueForDPI(10)),
+    yst - ysize - labsize.cy - DSB_SCALE(mWinApp->ScaleValueForDPI(4)), label);
   cdc->SetTextColor(RGB(255, 255, 255));
   //cdc->TextOut(xst + xsize / 2 - labsize.cx / 2 - 1, yst - ysize - labsize.cy - 3, label);
-  cdc->TextOut(xst + xsize / 2 - labsize.cx / 2 - mWinApp->ScaleValueForDPI(8),
-    yst - ysize - labsize.cy - mWinApp->ScaleValueForDPI(6), label);
+  cdc->TextOut(xst + xsize / 2 - labsize.cx / 2 - DSB_SCALE(mWinApp->ScaleValueForDPI(8)),
+    yst - ysize - labsize.cy - DSB_SCALE(mWinApp->ScaleValueForDPI(6)), label);
   cdc->SelectObject(def_font);
   cdc->SetTextColor(defColor);
   cdc->SetBkMode(defMode);

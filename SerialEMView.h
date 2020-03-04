@@ -52,15 +52,14 @@ protected:
   // Implementation
 public:
   void StopBeingActiveStack() { mStackWindow = false; };
-  void CloseFrame();
   void StageToImage(EMimageBuffer *imBuf, float inX, float inY, float &outX, float &outY,
     int pcInd = -1);
   BOOL ConvertMousePoint(CRect *rect, KImage *image, CPoint *point, float &outX, float &outY);
   void MakeDrawPoint(CRect *rect, KImage *image, float inX, float inY, CPoint *point, bool skipShift = false);
-  void DrawCross(CClientDC *cdc, CPen *pNewPen, CPoint point, int crossLen);
-  void DrawCircle(CClientDC *cdc, CPen *pNewPen, CRect *rect, KImage *image, float cenX,
+  void DrawCross(CDC *cdc, CPen *pNewPen, CPoint point, int crossLen);
+  void DrawCircle(CDC *cdc, CPen *pNewPen, CRect *rect, KImage *image, float cenX,
     float cenY, float radius, bool skipShift = false);
-  void DrawEllipse(CClientDC *cdc, CPen *pNewPen, CRect *rect, KImage *image, float cenX,
+  void DrawEllipse(CDC *cdc, CPen *pNewPen, CRect *rect, KImage *image, float cenX,
     float cenY, float radius1, float radius2, float angle, bool drawHalf);
   float GetBufferBinning();
   void FindEffectiveZoom();
@@ -79,6 +78,9 @@ public:
   double GetZoom() {return mZoom; };
   void SetImBufIndex(int inImBufIndex) {mImBufIndex = inImBufIndex; };
   void SetImBufs(EMimageBuffer *inImBufs, int inNumber) {mImBufs = inImBufs; mImBufNumber = inNumber;};
+  void CloseFrame();
+  int TakeSnapshot(float zoomBy, bool scaleSizes, int skipExtra, int fileType, int compression, CString &filename);
+  bool DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect, float sizeScaling, int skipExtra, bool toBuffer);
   void DrawImage(void);
   double b3dStepPixelZoom(double czoom, int step);
   void b3dSetImageOffset(int winsize,     /* window size in wpixels.          */
@@ -114,8 +116,8 @@ private:
   int m_iPrevMX, m_iPrevMY;      // Previous mouse X and Y
   int m_iOffsetX, m_iOffsetY;    // Image offsets in window
   int mNonMapPanX, mNonMapPanY;  // Offset for non-map buffers
-  int mImBufIndex;
-  int mImBufNumber;
+  int mImBufIndex;               // Index of current buffer
+  int mImBufNumber;              // Number of image buffers
   int mImBufArraySize;           // Size of array, if this is stack view
   double m_dPrevMX, m_dPrevMY;   // Double versions of previous mouse positions
   BOOL mMouseShifting;
@@ -126,6 +128,8 @@ private:
   BOOL mDrawingLine;             // Flag that we are drawing a line not panning
   CFont mFont;                   // Font for letter drawing
   CFont mLabelFont;              // Font for label drawing
+  CFont *mScaledFont;            // Font when drawing with scaled snapshot
+  CFont *mScaledLabelFont;       // Label font when drawing with scaled snapshot
   int mBasisSizeX, mBasisSizeY;  // Camera sizes when effective zoom first computed
   ScaleMat mAmat;                // Stage to image matrix
   float mDelX, mDelY;            // Offsets in stage to camera transform
@@ -175,7 +179,7 @@ public:
   int AddBufferToStack(EMimageBuffer * imBuf, int angleOrder);
   double BufferMemoryUsage(CPtrArray *refArray);
   void ChangeAllRegistrations(int mapID, int fromReg, int toReg);
-  void DrawScaleBar(CClientDC * cdc, CRect * rect, EMimageBuffer * imBuf);
+  void DrawScaleBar(CDC * cdc, CRect * rect, EMimageBuffer * imBuf, float sizeScaling);
   void ShowImageValue(KImage * image, int imX, int imY, int pane);
   void GetLineLength(EMimageBuffer *imBuf, float &pixels, float &nanometers, float &angle);
   void GetUserBoxSize(EMimageBuffer *imBuf, int & nx, int & ny, float & xnm, float & ynm);
@@ -188,17 +192,17 @@ public:
   void SetupZoomAroundPoint(CPoint * point);
   void WindowCornersInImageCoords(EMimageBuffer *imBuf, float *xCorner, float *yCorner);
   bool IsBufferInStack(EMimageBuffer *imBuf);
-  void DrawMapItemBox(CClientDC &cdc, CRect *rect, CMapDrawItem *item, EMimageBuffer *imBuf,
+  void DrawMapItemBox(CDC &cdc, CRect *rect, CMapDrawItem *item, EMimageBuffer *imBuf,
     int numPoints, float delXstage, float delYstage, float delPtX, float delPtY, 
     FloatVec *drawnX, FloatVec *drawnY);
   void GetSingleAdjustmentForItem(EMimageBuffer *imBuf, CMapDrawItem *item, float &delPtX,
     float & delPtY);
-  void DrawVectorPolygon(CClientDC &cdc, CRect *rect, CMapDrawItem *item, EMimageBuffer *imBuf,
+  void DrawVectorPolygon(CDC &cdc, CRect *rect, CMapDrawItem *item, EMimageBuffer *imBuf,
     FloatVec &convX, FloatVec &convY, float delXstage, float delYstage, 
     float delPtX, float delPtY, FloatVec *drawnX, FloatVec *drawnY);
   int FitCtfAtMarkedPoint(EMimageBuffer *imBuf, CString &lenstr, double &defocus, FloatVec &radii);
-  void DrawLowDoseAreas(CClientDC &cdc, CRect &rect, EMimageBuffer *imBuf, float xOffset, 
-    float yOffset);
+  void DrawLowDoseAreas(CDC &cdc, CRect &rect, EMimageBuffer *imBuf, float xOffset, 
+    float yOffset, int thick);
 };
 
 #ifndef _DEBUG  // debug version in SerialEMView.cpp
