@@ -8779,9 +8779,12 @@ int CMacroProcessor::EvaluateArithmeticClause(CString * strItems, int maxItems,
         return 1;
       if (str == "ATAN2")
         result = atan2(left, right) / DTOR;
-      else if (str == "MODULO")
-        result = B3DNINT(left) % B3DNINT(right);
-      else if (str == "FRACDIFF") {
+      else if (str == "MODULO") {
+        if (B3DNINT(right) > 0)
+          result = B3DNINT(left) % B3DNINT(right);
+        else
+          result = 0;
+      } else if (str == "FRACDIFF") {
         result = B3DMAX(fabs(left), fabs(right));
         if (result < 1.e-37)
           result = 0.;
