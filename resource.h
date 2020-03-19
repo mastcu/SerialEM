@@ -1618,6 +1618,9 @@
 #define IDC_RZIGZAG                     2639
 #define IDC_RADIO3                      2640
 #define IDC_RIN_GROUPS                  2640
+#define IDC_EDIT_MAX_ERROR              2642
+#define IDC_BUT_CELAR_DATA              2643
+#define IDC_BUT_CLEAR_DATA              2643
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2101,7 +2104,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        246
 #define _APS_NEXT_COMMAND_VALUE         33386
-#define _APS_NEXT_CONTROL_VALUE         2641
+#define _APS_NEXT_CONTROL_VALUE         2644
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
