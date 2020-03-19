@@ -63,7 +63,9 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDR_MAINFRAME           ICON                    "res\\SerialEM.ico"
+
 IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -71,7 +73,9 @@ IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
 //
 
 IDR_MAINFRAME           BITMAP                  "res\\Toolbar.bmp"
+
 IDB_BITMAP1             BITMAP                  "res\\bitmap1.bmp"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3237,25 +3241,25 @@ BEGIN
     PUSHBUTTON      "Find Holes",IDC_BUT_FIND_HOLES,19,92,50,12
     LTEXT           "",IDC_STAT_STATUS_OUTPUT,8,106,136,8
     CONTROL         "",IDC_SLIDER_LOW_MEAN,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,5,119,118,12
-    LTEXT           "Lower mean cutoff",IDC_STATIC,36,129,55,8
+    LTEXT           "Lower mean cutoff",IDC_STATIC,36,130,55,8
     EDITTEXT        IDC_EDIT_LOWER_MEAN,124,118,27,12,ES_AUTOHSCROLL
-    LTEXT           "0",IDC_STAT_MIN_LOWER_MEAN,8,129,20,8
-    RTEXT           "3000",IDC_STAT_MAX_LOWER_MEAN,100,129,20,8
+    LTEXT           "0",IDC_STAT_MIN_LOWER_MEAN,8,130,20,8
+    RTEXT           "3000",IDC_STAT_MAX_LOWER_MEAN,100,130,20,8
     CONTROL         "",IDC_SLIDER_UPPER_MEAN,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,5,138,118,12
-    LTEXT           "Upper mean cutoff",IDC_STATIC,36,148,56,8
+    LTEXT           "Upper mean cutoff",IDC_STATIC,36,149,56,8
     EDITTEXT        IDC_EDIT_UPPER_MEAN,124,138,27,12,ES_AUTOHSCROLL
-    LTEXT           "0",IDC_STAT_MIN_UPPER_MEAN,8,148,20,8
-    RTEXT           "3000",IDC_STAT_MAX_UPPER_MEAN,100,148,20,8
+    LTEXT           "0",IDC_STAT_MIN_UPPER_MEAN,8,149,20,8
+    RTEXT           "3000",IDC_STAT_MAX_UPPER_MEAN,100,149,20,8
     CONTROL         "",IDC_SLIDER_STANDEV,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,5,157,118,12
-    LTEXT           "SD cutoff",IDC_STATIC,49,167,28,8
-    LTEXT           "0",IDC_STAT_MIN_STANDEV,8,167,20,8
-    RTEXT           "3000",IDC_STAT_MAX_STANDEV,100,167,20,8
+    LTEXT           "SD cutoff",IDC_STATIC,49,168,28,8
+    LTEXT           "0",IDC_STAT_MIN_STANDEV,8,168,20,8
+    RTEXT           "3000",IDC_STAT_MAX_STANDEV,100,168,20,8
     LTEXT           "Static",IDC_STAT_SD_CUTOFF,125,158,24,8
     CONTROL         "",IDC_SLIDER_BLACK_CUTOFF,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,5,176,118,12
-    LTEXT           "Black pixel % cutoff",IDC_STATIC,33,186,58,8
-    LTEXT           "0",IDC_STAT_MIN_BLACKPCT,8,186,20,8
-    RTEXT           "3000",IDC_STAT_MAX_BLACKPCT,100,186,20,8
-    LTEXT           "Static",IDC_STAT_BLACK_CUTOFF,125,174,24,8
+    LTEXT           "Black pixel % cutoff",IDC_STATIC,33,187,58,8
+    LTEXT           "0",IDC_STAT_MIN_BLACKPCT,8,187,20,8
+    RTEXT           "3000",IDC_STAT_MAX_BLACKPCT,100,187,20,8
+    LTEXT           "Static",IDC_STAT_BLACK_CUTOFF,125,177,24,8
     LTEXT           "Show:",IDC_STATIC,8,197,19,8
     CONTROL         "Included holes",IDC_SHOW_INCLUDED,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,29,196,57,10
     CONTROL         "Excluded holes",IDC_SHOW_EXCLUDED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,88,196,61,10
@@ -3312,7 +3316,9 @@ END
 //
 
 IDC_CURSOR1             CURSOR                  "res\\cursor1.cur"
+
 IDC_CURSOR2             CURSOR                  "res\\cursor2.cur"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3794,64 +3800,64 @@ END
 // AFX_DIALOG_LAYOUT
 //
 
-IDD_AUTOCENSETUP AFX_DIALOG_LAYOUT 
+IDD_AUTOCENSETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_TILTSERIES AFX_DIALOG_LAYOUT 
+IDD_TILTSERIES AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_DRIFTWAITSETUP AFX_DIALOG_LAYOUT 
+IDD_DRIFTWAITSETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_SCREENSHOT AFX_DIALOG_LAYOUT 
+IDD_SCREENSHOT AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_MULTI_SHOT_SETUP AFX_DIALOG_LAYOUT 
+IDD_MULTI_SHOT_SETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_REMOTE_CONTROL AFX_DIALOG_LAYOUT 
+IDD_REMOTE_CONTROL AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_LOWDOSE AFX_DIALOG_LAYOUT 
+IDD_LOWDOSE AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_VPP_EXPOSE_SETUP AFX_DIALOG_LAYOUT 
+IDD_VPP_EXPOSE_SETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_MACRO AFX_DIALOG_LAYOUT 
+IDD_MACRO AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_K2_SAVE_OPTIONS AFX_DIALOG_LAYOUT 
+IDD_K2_SAVE_OPTIONS AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_SCOPESTATUS AFX_DIALOG_LAYOUT 
+IDD_SCOPESTATUS AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_HOLE_FINDER AFX_DIALOG_LAYOUT 
+IDD_HOLE_FINDER AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
 
