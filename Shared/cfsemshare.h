@@ -1,9 +1,7 @@
 /*   cfsemshare.h   - functions in multiple files, mostly shared between C and
  *                      Fortran and/or IMOD and SerialEM
  *
- *   Copyright (C) 1995-2007 by Boulder Laboratory for 3-Dimensional Electron
- *   Microscopy of Cells ("BL3DEMC") and the Regents of the University of 
- *   Colorado.
+ *   Copyright (C) 1995-2020 by the Regents of the University of Colorado.
  *
  *   $Id$
  */                                                                           
@@ -111,6 +109,12 @@ extern "C" {
                           float *peak, float *width, float *widthSD, int maxpeaks, 
                           float minStrength);
   void setPeakFindLimits(int limXlo, int limXhi, int limYlo, int limYhi, int useEllipse);
+  int findManyXCorrPeaks(float *array, int nxdim, int ny, int ixOffset, 
+                         int iyOffset, float *xpeak, float *ypeak, float *peak,
+                         int maxPeaks, int maxGrow, int *numFound);
+  int findSpacedXCorrPeaks(float *array, int nxdim, int ixMin, int ixMax, int iyMin,
+                           int iyMax, float *xpeak, float *ypeak, float *peak, 
+                           int maxPeaks, float minSpacing, int *numPeaks);
   double parabolicFitPosition(float y1, float y2, float y3);
   void conjugateProduct(float *array, float *brray, int nx, int ny);
   double XCorrCCCoefficient(float *array, float *brray, int nxdim, int nx,
@@ -128,6 +132,8 @@ extern "C" {
   void fourierShiftImage(float *fft, int nxPad, int nyPad, float dx, float dy,
                          float *temp);
   void fourierReduceImage(float *fftIn, int nxrIn, int nyrIn, float *fftOut, int nxrOut,
+                          int nyrOut, float dxIn,float dyIn, float *temp);
+  void fourierExpandImage(float *fftIn, int nxrIn, int nyrIn, float *fftOut, int nxrOut,
                           int nyrOut, float dxIn,float dyIn, float *temp);
   void fourierRingCorr(float *ffta, float *fftb, int nxReal, int ny, float *ringCorrs,
                        int maxRings, float deltaR, float *temp);
@@ -214,6 +220,7 @@ extern "C" {
   void rsSortInts(int *x, int n);
   void rsSortFloats(float *x, int n);
   void rsSortIndexedFloats(float *x, int *index, int n);
+  void rsSetSortIndexOffset(int offset);
   void rsMedianOfSorted(float *x, int n, float *median);
   void rsMedian(float *x, int n, float *tmp, float *median);
   void rsMADN(float *x, int n, float median, float *tmp, float *MADN);
@@ -394,7 +401,7 @@ extern "C" {
   int getMetadataItems(int indAdoc, int iTypeAdoc, int nz, int iTypeData, float *val1,
                         float *val2, int *numVals, int *numFound, int maxVals,
                         int *izPiece);
-  int getMetadataByKey(int indAdoc, int TypeAdoc, int nz, char *key, int ivalType,
+  int getMetadataByKey(int indAdoc, int TypeAdoc, int nz, const char *key, int ivalType,
                         float *val1, float *val2, float *val3, char **valString,
                         int *numVals, int *numFound, int maxVals, int *izPiece);
   int getExtraHeaderPieces(char *array, int numExtraBytes, int nbytes, int iflags,
@@ -429,6 +436,12 @@ extern "C" {
   int isWindows8();
   int isWindows10();
   int isWindowsVersion(int major, int opMajor, int minor, int opMinor);
+
+  /* readlinevalues.c */
+#define RLFV_SEPARATE_LINES  1
+  int readLinesForValues(FILE *fp, int *numToGetP, int valSize, char *line, int maxLine,
+                         int flags, const char *types, ...);
+
   
 #ifdef __cplusplus
 }

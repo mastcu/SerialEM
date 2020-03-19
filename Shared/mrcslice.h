@@ -9,7 +9,6 @@
  *  Colorado.  See dist/COPYRIGHT for full copyright notice.
  *
  *  $Id$
- *  Log at end
  */
 
 #ifndef MRCSLICE_H
@@ -29,6 +28,8 @@
 /* Other modes */
 #define SLICE_MODE_MAX           99  /* float data with max channels.        */
 #define SLICE_MODE_UNDEFINED     -1  /* float data with max channels.        */
+#define SLICE_MODE_SBYTE         -2  /* values for sliceMode to return when  */
+#define SLICE_MODE_UBYTE         -3  /* user enters 'sbyte' or 'ubyte'       */
 
 /* The maximum values for channels and bytes/channel */
 #define SLICE_MAX_CSIZE          3   /* max channels.                        */
@@ -94,7 +95,9 @@ extern "C" {
   float   sliceGetValMagnitude(Ival val, int mode);
   int     slicePutVal (Islice *s, int x, int y, Ival val);
   int     sliceNewMode(Islice *s, int mode);
+  int     sliceNewModeEx(Islice *s, int mode, int freeData);
   int     sliceFloat(Islice *slice);
+  int     sliceFloatEx(Islice *slice, int freeData);
   int     sliceComplexFloat(Islice *slice);
   int     sliceMMM(Islice *slice);
   Islice *mrc_slice_getvol(Istack *v, int sno, char axis);
@@ -112,10 +115,11 @@ extern "C" {
   int     sliceResizeIn(Islice *sl, int x, int y);
   Islice *mrc_slice_resize(Islice *slin, int nx, int ny);
   int     sliceMirror(Islice *s, char axis);
-  int     sliceWrapFFTLines(Islice *s);
+  int     sliceWrapFFTLines(Islice *s, int direction);
   int     sliceReduceMirroredFFT(Islice *s);
 
-  int     sliceWriteMRCfile(char *filename, Islice *slice);
+  int     sliceWriteMRCfile(const char *filename, Islice *slice);
+  int   mrcWriteImageToFile(const char *filename, void *array, int mode, int nx, int ny);
   Islice *sliceReadMRC(struct MRCheader *hin, int sno, char axis);
   Islice *sliceReadSubm(struct MRCheader *hin, int sno, char axis,
                         int s1, int s2, int c1, int c2);
@@ -124,8 +128,6 @@ extern "C" {
   Islice *sliceGradient(Islice *sin);
   int     mrc_bandpass_filter(Islice *sin, double low, double high);
   Islice *slice_mat_filter(Islice *sin, float *mat, int dim);
-  void sliceGaussianKernel(float *mat, int dim, float sigma);
-  void scaledGaussianKernel(float *mat, int *dim, int limit, float sigma);
   void   mrc_slice_mat_getimat(Islice *sin, int x, int y, int dim, float *mat);
   float  mrc_slice_mat_mult(float *m1, float *m2, int dim);
   Islice *mrc_slice_translate(Islice *sin, double dx, double dy,
@@ -166,25 +168,3 @@ extern "C" {
 
 
 #endif /* islice.h */
-
-/*
-  $Log$
-  Revision 1.3  2008/11/14 20:18:07  mast
-  Synchronized from IMOD to SerialEM
-
-  Revision 3.9  2008/11/02 13:43:17  mast
-  Added functions for reading float slice
-
-  Revision 3.8  2007/11/22 20:47:42  mast
-  Added gaussian kernel functions
-
-  Revision 3.7  2007/10/03 22:55:35  mast
-  Added function to get from MRC to SLICE mode
-
-  Revision 3.6  2007/02/04 21:24:16  mast
-  Fix declaration of sliceMMM
-
-  Revision 3.5  2007/02/04 20:57:14  mast
-  Changes for documentation and cleanup
-
-*/

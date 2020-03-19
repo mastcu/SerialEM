@@ -1,0 +1,57 @@
+To make a non-modal or other dialog:
+Add Resource - Dialog
+Change the IDD and the title of the dialog
+Right click it, Add Class
+Change base to CDialog
+Remove DECLARE_DYNAMIC from header and IMPLEMENT_DYNAMIC from .cpp
+Remove afxdialogex.h include
+Change CDialog to CBaseDlg in .h and .cpp
+
+Under DoDataExchange add:
+  virtual BOOL OnInitDialog();
+  virtual void OnOK();
+  virtual void OnCancel();
+And for non-modal:
+  virtual void PostNcDestroy();
+  virtual BOOL PreTranslateMessage(MSG* pMsg);
+The latter is needed if there is any edit box
+---------------------
+BOOL CHoleFinder::OnInitDialog()
+{
+  CBaseDlg::OnInitDialog();
+
+  SetDefID(45678);    // Disable OK from being default button for non-modal
+  return TRUE;
+}
+
+void CHoleFinder::OnOK()
+{
+  OnCancel();
+}
+
+// Inform managing module of closing, or store placement and NULL out pointer
+// right here
+void CHoleFinder::OnCancel()
+{
+  //mWinApp->GetScreenShotPlacement();
+  //mWinApp->mScreenShotDialog = NULL;
+  DestroyWindow();
+}
+
+void CHoleFinder::PostNcDestroy()
+{
+  delete this;
+  CDialog::PostNcDestroy();
+}
+
+BOOL CHoleFinder::PreTranslateMessage(MSG* pMsg)
+{
+  if (pMsg->message == WM_KEYDOWN && pMsg->wParam == VK_RETURN)
+    SetFocus();
+  return CDialog::PreTranslateMessage(pMsg);
+}
+----------------------
+Add class pointer and placement to managing module and functions to open
+and get placement
+
+Change font to Microsoft Sans Serif (it will change Use System font to False)

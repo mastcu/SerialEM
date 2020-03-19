@@ -7,6 +7,8 @@ class CStateDlg;
 class CNavRotAlignDlg;
 struct TiltSeriesParam;
 class CMultiShotDlg;
+class CHoleFinderDlg;
+class HoleFinder;
 
 #define MULTI_IN_HOLE   0x1
 #define MULTI_HOLES     0x2
@@ -107,6 +109,7 @@ public:
   CArray<StateParams *, StateParams *> *GetStateArray () {return &mStateArray;};
   CNavRotAlignDlg *mRotAlignDlg;
   CMultiShotDlg *mMultiShotDlg;
+  CHoleFinderDlg *mHoleFinderDlg;
 
 
 private:
@@ -213,6 +216,7 @@ private:
 
   WINDOWPLACEMENT mRotAlignPlace;
   WINDOWPLACEMENT mMultiShotPlace;
+  WINDOWPLACEMENT mHoleFinderPlace;
   double mRIdefocusOffsetSet;   // Defocus offset set in realign to item
   int mRIalphaSet;              // Alpha value set in realign to item
   int mRIalphaSaved;            // Alpha value that it was before
@@ -357,6 +361,8 @@ public:
   void StartResetISorFinish(int magInd);
   void OpenMultishotDlg(void);
   WINDOWPLACEMENT *GetMultiShotPlacement(bool update);
+  void OpenHoleFinder(void);
+  WINDOWPLACEMENT *GetMultiShotPlacement(void);
   void SaveLDFocusPosition(bool saveIt, float & axisPos, BOOL & rotateAxis, int & axisRotation, 
     int & xOffset, int & yOffset, bool traceIt);
   void SetLDFocusPosition(int camIndex, float axisPos, BOOL rotateAxis, int axisRotation, 

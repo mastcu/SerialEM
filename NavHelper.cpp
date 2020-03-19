@@ -3996,6 +3996,15 @@ WINDOWPLACEMENT *CNavHelper::GetMultiShotPlacement(bool update)
   return &mMultiShotPlace;
 }
 
+void CNavHelper::OpenHoleFinder(void)
+{
+}
+
+WINDOWPLACEMENT * CNavHelper::GetMultiShotPlacement(void)
+{
+  return NULL;
+}
+
 // Loads a piece or synthesizes piece containing the given item
 void CNavHelper::LoadPieceContainingPoint(CMapDrawItem *ptItem, int mapIndex)
 {

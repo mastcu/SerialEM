@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -1153,6 +1153,7 @@
     <ClInclude Include="DriftWaitSetupDlg.h" />
     <ClInclude Include="ExternalTools.h" />
     <ClInclude Include="FrameAlignDlg.h" />
+    <ClInclude Include="HoleFinderDlg.h" />
     <ClInclude Include="MultiShotDlg.h" />
     <ClInclude Include="NavAdocPuts.h" />
     <ClInclude Include="OneLineScript.h" />
@@ -1164,6 +1165,7 @@
     <ClInclude Include="Shared\ctffind.h" />
     <ClInclude Include="Shared\framealign.h" />
     <ClInclude Include="Shared\gpuframe.h" />
+    <ClInclude Include="Shared\holefinder.h" />
     <ClInclude Include="Shared\SEMCCDDefines.h" />
     <ClInclude Include="Shared\SharedJeolDefines.h" />
     <ClInclude Include="ThreeChoiceBox.h" />
@@ -2073,6 +2075,7 @@ echo.
     <ClCompile Include="DriftWaitSetupDlg.cpp" />
     <ClCompile Include="ExternalTools.cpp" />
     <ClCompile Include="FrameAlignDlg.cpp" />
+    <ClCompile Include="HoleFinderDlg.cpp" />
     <ClCompile Include="MultiShotDlg.cpp" />
     <ClCompile Include="OneLineScript.cpp" />
     <ClCompile Include="ParticleTasks.cpp" />
@@ -2126,6 +2129,22 @@ echo.
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='JEOL Release|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='NoHang|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Template|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Shared\holefinder.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='NoHang|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='v140 Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='JEOL Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='v140 Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='JEOL Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='NoHang|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='v140 Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='JEOL Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='v140 Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='JEOL Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="ThreeChoiceBox.cpp" />
     <ClCompile Include="TSDoseSymDlg.cpp" />

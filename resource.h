@@ -77,6 +77,8 @@
 #define IDD_DRIFTWAITSETUP              237
 #define IDD_SCREENSHOT                  239
 #define IDD_VPP_EXPOSE_SETUP            241
+#define IDD_DIALOG2                     244
+#define IDD_HOLE_FINDER                 244
 #define IDC_EDITXSIZE                   1000
 #define IDC_EDITYSIZE                   1002
 #define IDC_EDITYOVERLAP                1003
@@ -2061,7 +2063,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        244
+#define _APS_NEXT_RESOURCE_VALUE        246
 #define _APS_NEXT_COMMAND_VALUE         33385
 #define _APS_NEXT_CONTROL_VALUE         2612
 #define _APS_NEXT_SYMED_VALUE           104
