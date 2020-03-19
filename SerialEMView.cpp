@@ -25,6 +25,7 @@
 #include "MapDrawItem.h"
 #include "NavigatorDlg.h"
 #include "NavHelper.h"
+#include "HoleFinderDlg.h"
 #include "ParticleTasks.h"
 #include "MacroProcessor.h"
 #include "MultiTSTasks.h"
@@ -237,6 +238,7 @@ void CSerialEMView::CloseFrame()
 }
 
 #define DSB_SCALE(a) B3DNINT(sizeScaling * (a))
+#define DSB_DPI_SCALE(a) mWinApp->ScaleValueForDPI(sizeScaling * (a))
 
 // Takes an image snapshot and saves it, managing all the changes needed before and
 // after calling the general draw routine
@@ -335,11 +337,11 @@ int CSerialEMView::TakeSnapshot(float zoomBy, float sizeScaling, int skipExtra,
     CString fontName = Is2000OrGreater() ? "Microsoft Sans Serif" : "MS Sans Serif";
     mScaledFont = new CFont();
     mScaledLabelFont = new CFont();
-    mScaledFont->CreateFont(DSB_SCALE(mWinApp->ScaleValueForDPI(36)), 0, 0, 0,
+    mScaledFont->CreateFont(DSB_DPI_SCALE(36), 0, 0, 0,
       FW_MEDIUM, 0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
       CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
       FF_DONTCARE, fontName);
-    mScaledLabelFont->CreateFont(DSB_SCALE(mWinApp->ScaleValueForDPI(24)), 0,
+    mScaledLabelFont->CreateFont(DSB_DPI_SCALE(24), 0,
       0, 0, FW_MEDIUM, 0, 0, 0, DEFAULT_CHARSET, OUT_CHARACTER_PRECIS,
       CLIP_CHARACTER_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH |
       FF_DONTCARE, fontName);
@@ -421,7 +423,9 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   float sizeScaling, int skipExtra, bool toBuffer)
 {
   int iSrcWidth, iSrcHeight, iDestWidth, iDestHeight, crossLen, xSrc, ySrc, needWidth;
-  int tmpWidth, tmpHeight, ierr, ifilt, numLines, thick, loop;
+  int tmpWidth, tmpHeight, ierr, ifilt, numLines, thick, loop, ix, iy;
+  float imXcenter, imYcenter, halfXwin, halfYwin, tempX, tempY, ptX, ptY;
+  float minXstage = 1.e30f, maxXstage = -1.e30f, minYstage = 1.e30f, maxYstage = -1.e30f;
   float cenX, cenY, filtMean = 128., filtSD, boost, targetSD = 40.;
   float crossXoffset = 0., crossYoffset = 0.;
   double defocus;
@@ -430,22 +434,26 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   int numZoomFilt = sizeof(zoomFilters) / sizeof(int);
   int zoomWidthCrit = 20;
   bool bufferOK, filtering = false, saveCurHolePos = false;
+  BOOL drawIncluded, drawExcluded;
   CNavigatorDlg *navigator = mWinApp->mNavigator;
   CProcessImage *processImg = mWinApp->mProcessImage;
   CArray<CMapDrawItem *, CMapDrawItem *> *itemArray = NULL;
   FloatVec zeroRadii, zeroRadii2;
-  FloatVec *curHoleXYpos;
-  IntVec *curHoleIndex;
+  FloatVec *curHoleXYpos, *xHoleCens, *yHoleCens;
+  IntVec *curHoleIndex, *pieceOn;
+  std::vector<bool> *holeExcludes;
   CFont *useFont, *useLabelFont;
   CPoint point;
   CString letString, firstLabel, lastLabel, fontName;
+  ScaleMat aInv;
   COLORREF bkgColor = RGB(48, 0, 48);
   COLORREF flashColor = RGB(192, 192, 0);
-  int scaled5 = DSB_SCALE(mWinApp->ScaleValueForDPI(5));
-  int scaled10 = DSB_SCALE(mWinApp->ScaleValueForDPI(10));
-  int scaled140 = DSB_SCALE(mWinApp->ScaleValueForDPI(140));
-  int thick1 = B3DNINT(sizeScaling);
-  int thick2 = DSB_SCALE(2.);
+  COLORREF includeColor = RGB(255, 0, 160), excludeColor = RGB(0, 100, 255);
+  int scaled5 = DSB_DPI_SCALE(5);
+  int scaled10 = DSB_DPI_SCALE(10);
+  int scaled140 = DSB_DPI_SCALE(140);
+  int thick1 = DSB_DPI_SCALE(1);
+  int thick2 = DSB_DPI_SCALE(2.);
 
   // If this is the first draw, set up the zoom optimally
   // 7/7/03: no longer need to fix main frame window title; set child titles
@@ -726,7 +734,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   if ((imBuf->mHasUserPt || imBuf->mHasUserLine) && !(skipExtra & 1)) {
     CPen pnSolidPen (PS_SOLID, thick2, RGB(0, 255, 0));
     CPoint point, point2;
-    crossLen = DSB_SCALE((imBuf->mHasUserPt ? 7 : 1));
+    crossLen = DSB_DPI_SCALE(imBuf->mHasUserPt ? 7 : 1);
     MakeDrawPoint(&rect, imBuf->mImage, imBuf->mUserPtX, imBuf->mUserPtY, &point);
     if (!imBuf->mDrawUserBox) 
       DrawCross(&cdc, &pnSolidPen, point, crossLen);
@@ -913,8 +921,52 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
     return true;
   }
 
+  // Determine stage coordinate limits of image
+  aInv = MatInv(mAmat);
+  imXcenter = (float)(imageRect->getWidth() / 2. - m_iOffsetX);
+  imYcenter = (float)(imageRect->getHeight() / 2. + m_iOffsetY);
+  halfXwin = (float)(rect.Width() / (2 * mZoom));
+  halfYwin = (float)(rect.Height() / (2 * mZoom));
+  for (ix = -1; ix <= 1; ix += 2) {
+    for (iy = -1; iy <= 1; iy += 2) {
+      mWinApp->mShiftManager->ApplyScaleMatrix(aInv, imXcenter + ix * halfXwin - mDelX,
+        imYcenter + iy * halfYwin - mDelY, tempX, tempY);
+      ACCUM_MIN(minXstage, tempX);
+      ACCUM_MIN(minYstage, tempY);
+      ACCUM_MAX(maxXstage, tempX);
+      ACCUM_MAX(maxYstage, tempY);
+    }
+  }
+  tempX = 0.05f * (maxXstage - minXstage);
+  tempY = 0.05f * (maxYstage - minYstage);
+  minXstage -= tempX;
+  maxXstage += tempX;
+  minYstage -= tempY;
+  maxYstage += tempY;
+
+  // Draw hole finder points in two colors
+  if (mWinApp->mNavHelper->mHoleFinderDlg &&
+    mWinApp->mNavHelper->mHoleFinderDlg->GetHolePositions(&xHoleCens, &yHoleCens,
+      &pieceOn, &holeExcludes, drawIncluded, drawExcluded)) {
+    CPen pnIncludePen(PS_SOLID, thick2, includeColor);
+    CPen pnExcludePen(PS_SOLID, thick2, excludeColor);
+    crossLen = DSB_DPI_SCALE(9);
+    for (ix = 0; ix < (int)xHoleCens->size(); ix++) {
+      tempX = xHoleCens->at(ix);
+      tempY = yHoleCens->at(ix);
+      if ((holeExcludes->at(ix) && !drawExcluded) ||
+        (!holeExcludes->at(ix) && !drawIncluded) ||
+        tempX < minXstage || tempX > maxXstage || tempY < minYstage || tempY > maxYstage)
+        continue;
+      StageToImage(imBuf, tempX, tempY, ptX, ptY, pieceOn->at(ix));
+      MakeDrawPoint(&rect, imBuf->mImage, ptX, ptY, &point);
+      DrawCross(&cdc, holeExcludes->at(ix) ? &pnExcludePen : &pnIncludePen, point,
+        crossLen);
+    }
+  }
+
   // Now draw navigator items
-  float ptX, ptY, lastStageX, lastStageY, acquireRadii[2], labelDistThresh = 40.;
+  float lastStageX, lastStageY, acquireRadii[2], labelDistThresh = 40.;
   int lastGroupID = -1, lastGroupSize, size, numPoints;
   int regMatch = imBuf->mRegistration ? 
     imBuf->mRegistration : navigator->GetCurrentRegistration();
@@ -961,18 +1013,20 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
       thick = highlight ? thick : 1;
       numPoints = item->mNumPoints;
     }
-    thick = DSB_SCALE(thick);
+    thick = DSB_DPI_SCALE(thick);
 
     if (!item->mNumPoints || (!item->mDraw && iDraw >= 0) || 
       (item->mRegistration != regMatch && !mDrawAllReg && iDraw >= 0))
       continue;
     SetStageErrIfRealignedOnMap(imBuf, item);
-    int crossLen = DSB_SCALE(mWinApp->ScaleValueForDPI(
-      item->mType == ITEM_TYPE_POINT ? 9 : 5));
+    crossLen = DSB_DPI_SCALE(item->mType == ITEM_TYPE_POINT ? 9 : 5);
     CPen pnSolidPen(PS_SOLID, thick, item->GetColor(highlight));
 
     // Single point
     if (item->mNumPoints == 1) {
+      if (item->mPtX[0] < minXstage || item->mPtX[0] > maxXstage ||
+        item->mPtY[0] < minYstage || item->mPtY[0] > maxYstage)
+        continue;
       StageToImage(imBuf, item->mPtX[0], item->mPtY[0], ptX, ptY, item->mPieceDrawnOn);
 
       // Draw low dose areas around current point
@@ -1591,13 +1645,12 @@ void CSerialEMView::DrawScaleBar(CDC *cdc, CRect *rect, EMimageBuffer *imBuf,
   CSize labsize = cdc->GetTextExtent(label);
 
   //cdc->TextOut(xst + xsize / 2 - labsize.cx / 2 - 4, yst - ysize - labsize.cy, label);
-  cdc->TextOut(xst + xsize / 2 - labsize.cx / 2 - 
-    DSB_SCALE(mWinApp->ScaleValueForDPI(10)),
-    yst - ysize - labsize.cy - DSB_SCALE(mWinApp->ScaleValueForDPI(4)), label);
+  cdc->TextOut(xst + xsize / 2 - labsize.cx / 2 - DSB_DPI_SCALE(10),
+    yst - ysize - labsize.cy - DSB_DPI_SCALE(4), label);
   cdc->SetTextColor(RGB(255, 255, 255));
   //cdc->TextOut(xst + xsize / 2 - labsize.cx / 2 - 1, yst - ysize - labsize.cy - 3, label);
-  cdc->TextOut(xst + xsize / 2 - labsize.cx / 2 - DSB_SCALE(mWinApp->ScaleValueForDPI(8)),
-    yst - ysize - labsize.cy - DSB_SCALE(mWinApp->ScaleValueForDPI(6)), label);
+  cdc->TextOut(xst + xsize / 2 - labsize.cx / 2 - DSB_DPI_SCALE(8),
+    yst - ysize - labsize.cy - DSB_DPI_SCALE(6), label);
   cdc->SelectObject(def_font);
   cdc->SetTextColor(defColor);
   cdc->SetBkMode(defMode);
