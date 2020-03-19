@@ -72,7 +72,7 @@ KStoreADOC::KStoreADOC(CString inFilename , FileOptions inFileOpt)
   if (cFile)
     delete cFile;
 
-  mMode = mFileOpt.mode;
+  mMode = mFileOpt.compression == COMPRESS_JPEG ? MRC_MODE_BYTE : mFileOpt.mode;
   mFileOpt.fileType = STORE_TYPE_TIFF;
   mMontCoordsInMdoc = (mFileOpt.typext & MONTAGE_MASK) != 0;
   if (!AdocAcquireMutex())
