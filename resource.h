@@ -1597,14 +1597,18 @@
 #define IDC_STAT_MIN_LOWER_MEAN         2622
 #define IDC_STAT_MAX_LOWER_MEAN         2623
 #define IDC_SLIDER_LOW_MEAN2            2624
+#define IDC_SLIDER_UPPER_MEAN           2624
 #define IDC_EDIT_LOWER_MEAN2            2625
+#define IDC_EDIT_UPPER_MEAN             2625
 #define IDC_STAT_MIN_UPPER_MEAN         2626
 #define IDC_STAT_MAX_UPPER_MEAN         2627
 #define IDC_SLIDER_LOW_MEAN3            2628
+#define IDC_SLIDER_STANDEV              2628
 #define IDC_STAT_MIN_STANDEV            2629
 #define IDC_STAT_MAX_STANDEV            2630
 #define IDC_STAT_SD_CUTOFF              2631
 #define IDC_SLIDER_LOW_MEAN4            2632
+#define IDC_SLIDER_BLACK_CUTOFF         2632
 #define IDC_STAT_MIN_BLACKPCT           2633
 #define IDC_STAT_MAX_BLACKPCT           2634
 #define IDC_STAT_BLACK_CUTOFF           2635
@@ -2088,6 +2092,7 @@
 #define ID_SCRIPT_SAVEPACKAGE           33382
 #define ID_SCRIPT_SAVEPACKAGEAS         33383
 #define ID_SCRIPT_EDIT                  33384
+#define ID_MONTAGINGGRIDS_FINDREGULARARRAYOFHOLES 33385
 
 // Next default values for new objects
 // 
@@ -2095,7 +2100,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        246
-#define _APS_NEXT_COMMAND_VALUE         33385
+#define _APS_NEXT_COMMAND_VALUE         33386
 #define _APS_NEXT_CONTROL_VALUE         2641
 #define _APS_NEXT_SYMED_VALUE           104
 #endif

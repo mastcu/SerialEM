@@ -63,7 +63,9 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDR_MAINFRAME           ICON                    "res\\SerialEM.ico"
+
 IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -71,7 +73,9 @@ IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
 //
 
 IDR_MAINFRAME           BITMAP                  "res\\Toolbar.bmp"
+
 IDB_BITMAP1             BITMAP                  "res\\bitmap1.bmp"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -578,6 +582,7 @@ BEGIN
             MENUITEM "Setup &Super Montage",        ID_NAVIGATOR_ALIGNEDSUPERMONTAGE
             MENUITEM "P&olygon Super Montage",      ID_SUPERMONTAGING_POLYGONSUPERMONTAGE
             MENUITEM SEPARATOR
+            MENUITEM "Fi&nd Holes in Regular Grid...", ID_MONTAGINGGRIDS_FINDREGULARARRAYOFHOLES
             MENUITEM "&Add Grid of Points",         ID_NAVIGATOR_ADDGRIDOFPOINTS
             MENUITEM "Add Grid &Like Last One",     ID_MONTAGINGGRIDS_ADDGRIDLIKELASTONE
             MENUITEM "Di&vide Points into Groups",  ID_MONTAGINGGRIDS_GROUPPOINTSINGRID
@@ -3208,20 +3213,24 @@ BEGIN
     PUSHBUTTON      "Next && Go",IDC_PPCOND_NEXT_AND_GO,12,182,33,14
 END
 
-IDD_HOLE_FINDER DIALOGEX 0, 0, 156, 262
+IDD_HOLE_FINDER DIALOGEX 0, 0, 156, 266
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Hole Finder"
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,22,246,50,12
-    PUSHBUTTON      "Cancel",IDCANCEL,83,246,50,12
-    GROUPBOX        "Filters to try",IDC_STATIC,26,25,105,36
-    LTEXT           "Gaussian sigmas",IDC_STATIC,31,34,53,8
-    LTEXT           "Median filter iterations",IDC_STATIC,31,48,66,8
-    EDITTEXT        IDC_EDIT_SIGMAS,86,32,40,12,ES_AUTOHSCROLL
-    EDITTEXT        IDC_EDIT_MEDIAN_ITERS,99,46,27,12,ES_AUTOHSCROLL
-    LTEXT           "Edge threshold percentiles",IDC_STATIC,19,66,81,8
-    EDITTEXT        IDC_EDIT_THRESHOLDS,101,64,36,12,ES_AUTOHSCROLL
+    CONTROL         "Zigzag",IDC_RZIGZAG,"Button",BS_AUTORADIOBUTTON | WS_GROUP,9,216,36,10
+    CONTROL         "Away from Focus",IDC_RFROM_FOCUS,"Button",BS_AUTORADIOBUTTON,44,216,66,10
+    CONTROL         "In groups",IDC_RIN_GROUPS,"Button",BS_AUTORADIOBUTTON,110,216,40,10
+    GROUPBOX        "Layout of points",IDC_STATIC,5,207,147,24,WS_GROUP
+    DEFPUSHBUTTON   "OK",IDOK,22,250,50,12
+    PUSHBUTTON      "Cancel",IDCANCEL,83,250,50,12
+    GROUPBOX        "Filters to try",IDC_STATIC,19,25,118,36
+    LTEXT           "Gaussian sigmas",IDC_STATIC,24,34,53,8
+    LTEXT           "Median filter iterations",IDC_STATIC,24,48,66,8
+    EDITTEXT        IDC_EDIT_SIGMAS,79,32,53,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_MEDIAN_ITERS,92,46,40,12,ES_AUTOHSCROLL
+    LTEXT           "Edge threshold percentiles",IDC_STATIC,14,66,81,8
+    EDITTEXT        IDC_EDIT_THRESHOLDS,96,64,47,12,ES_AUTOHSCROLL
     CONTROL         "Exclude holes outside polygon",IDC_EXCLUDE_OUTSIDE,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,24,77,108,10
     LTEXT           "Hole size",IDC_STATIC,17,11,29,8
@@ -3232,34 +3241,30 @@ BEGIN
     PUSHBUTTON      "Find Holes",IDC_BUT_FIND_HOLES,53,89,50,12
     LTEXT           "",IDC_STAT_STATUS_OUTPUT,8,105,136,8
     CONTROL         "",IDC_SLIDER_LOW_MEAN,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,5,116,118,12
-    LTEXT           "Lower mean cutoff",IDC_STATIC,36,126,55,8
+    LTEXT           "Lower mean cutoff",IDC_STATIC,36,127,55,8
     EDITTEXT        IDC_EDIT_LOWER_MEAN,124,115,27,12,ES_AUTOHSCROLL
-    LTEXT           "0",IDC_STAT_MIN_LOWER_MEAN,8,126,20,8
-    RTEXT           "3000",IDC_STAT_MAX_LOWER_MEAN,100,126,20,8
-    CONTROL         "",IDC_SLIDER_LOW_MEAN2,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,5,135,118,12
-    LTEXT           "Upper mean cutoff",IDC_STATIC,36,145,56,8
-    EDITTEXT        IDC_EDIT_LOWER_MEAN2,124,135,27,12,ES_AUTOHSCROLL
-    LTEXT           "0",IDC_STAT_MIN_UPPER_MEAN,8,145,20,8
-    RTEXT           "3000",IDC_STAT_MAX_UPPER_MEAN,100,145,20,8
-    CONTROL         "",IDC_SLIDER_LOW_MEAN3,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,5,154,118,12
-    LTEXT           "SD cutoff",IDC_STATIC,49,164,28,8
-    LTEXT           "0",IDC_STAT_MIN_STANDEV,8,164,20,8
-    RTEXT           "3000",IDC_STAT_MAX_STANDEV,100,164,20,8
-    LTEXT           "Static",IDC_STAT_SD_CUTOFF,125,155,24,8
-    CONTROL         "",IDC_SLIDER_LOW_MEAN4,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,5,173,118,12
-    LTEXT           "Black pixel % cutoff",IDC_STATIC,33,183,58,8
-    LTEXT           "0",IDC_STAT_MIN_BLACKPCT,8,183,20,8
-    RTEXT           "3000",IDC_STAT_MAX_BLACKPCT,100,183,20,8
+    LTEXT           "0",IDC_STAT_MIN_LOWER_MEAN,8,127,20,8
+    RTEXT           "3000",IDC_STAT_MAX_LOWER_MEAN,100,127,20,8
+    CONTROL         "",IDC_SLIDER_UPPER_MEAN,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,5,136,118,12
+    LTEXT           "Upper mean cutoff",IDC_STATIC,36,147,56,8
+    EDITTEXT        IDC_EDIT_UPPER_MEAN,124,136,27,12,ES_AUTOHSCROLL
+    LTEXT           "0",IDC_STAT_MIN_UPPER_MEAN,8,147,20,8
+    RTEXT           "3000",IDC_STAT_MAX_UPPER_MEAN,100,147,20,8
+    CONTROL         "",IDC_SLIDER_STANDEV,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,5,156,118,12
+    LTEXT           "SD cutoff",IDC_STATIC,49,167,28,8
+    LTEXT           "0",IDC_STAT_MIN_STANDEV,8,167,20,8
+    RTEXT           "3000",IDC_STAT_MAX_STANDEV,100,167,20,8
+    LTEXT           "Static",IDC_STAT_SD_CUTOFF,125,157,24,8
+    CONTROL         "",IDC_SLIDER_BLACK_CUTOFF,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,5,176,118,12
+    LTEXT           "Black pixel % cutoff",IDC_STATIC,33,187,58,8
+    LTEXT           "0",IDC_STAT_MIN_BLACKPCT,8,187,20,8
+    RTEXT           "3000",IDC_STAT_MAX_BLACKPCT,100,187,20,8
     LTEXT           "Static",IDC_STAT_BLACK_CUTOFF,125,174,24,8
-    LTEXT           "Show:",IDC_STATIC,8,194,19,8
-    CONTROL         "Included holes",IDC_SHOW_INCLUDED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,29,193,57,10
-    CONTROL         "Excluded holes",IDC_SHOW_EXCLUDED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,88,193,61,10
-    PUSHBUTTON      "?",IDC_BUTHELP,141,248,11,10
-    PUSHBUTTON      "Make Navigator Points",IDC_BUT_MAKE_NAV_PTS,38,230,80,12
-    GROUPBOX        "Layout of points",IDC_STATIC,5,203,147,24
-    CONTROL         "Zigzag",IDC_RZIGZAG,"Button",BS_AUTORADIOBUTTON,9,212,37,10
-    CONTROL         "Away from Focus",IDC_RFROM_FOCUS,"Button",BS_AUTORADIOBUTTON,44,212,67,10
-    CONTROL         "In groups",IDC_RIN_GROUPS,"Button",BS_AUTORADIOBUTTON,110,212,40,10
+    LTEXT           "Show:",IDC_STATIC,8,198,19,8
+    CONTROL         "Included holes",IDC_SHOW_INCLUDED,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,29,197,57,10
+    CONTROL         "Excluded holes",IDC_SHOW_EXCLUDED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,88,197,61,10
+    PUSHBUTTON      "?",IDC_BUTHELP,141,252,11,10
+    PUSHBUTTON      "Make Navigator Points",IDC_BUT_MAKE_NAV_PTS,38,234,80,12
 END
 
 
@@ -3307,7 +3312,9 @@ END
 //
 
 IDC_CURSOR1             CURSOR                  "res\\cursor1.cur"
+
 IDC_CURSOR2             CURSOR                  "res\\cursor2.cur"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3733,7 +3740,7 @@ BEGIN
         LEFTMARGIN, 5
         RIGHTMARGIN, 152
         TOPMARGIN, 3
-        BOTTOMMARGIN, 258
+        BOTTOMMARGIN, 262
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -3789,64 +3796,64 @@ END
 // AFX_DIALOG_LAYOUT
 //
 
-IDD_AUTOCENSETUP AFX_DIALOG_LAYOUT 
+IDD_AUTOCENSETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_TILTSERIES AFX_DIALOG_LAYOUT 
+IDD_TILTSERIES AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_DRIFTWAITSETUP AFX_DIALOG_LAYOUT 
+IDD_DRIFTWAITSETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_SCREENSHOT AFX_DIALOG_LAYOUT 
+IDD_SCREENSHOT AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_MULTI_SHOT_SETUP AFX_DIALOG_LAYOUT 
+IDD_MULTI_SHOT_SETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_REMOTE_CONTROL AFX_DIALOG_LAYOUT 
+IDD_REMOTE_CONTROL AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_LOWDOSE AFX_DIALOG_LAYOUT 
+IDD_LOWDOSE AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_VPP_EXPOSE_SETUP AFX_DIALOG_LAYOUT 
+IDD_VPP_EXPOSE_SETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_MACRO AFX_DIALOG_LAYOUT 
+IDD_MACRO AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_K2_SAVE_OPTIONS AFX_DIALOG_LAYOUT 
+IDD_K2_SAVE_OPTIONS AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_SCOPESTATUS AFX_DIALOG_LAYOUT 
+IDD_SCOPESTATUS AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_HOLE_FINDER AFX_DIALOG_LAYOUT 
+IDD_HOLE_FINDER AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
 
@@ -4347,6 +4354,7 @@ BEGIN
                             "Read file and make it new current script package file"
     ID_SCRIPT_SAVEPACKAGE   "Save scripts to the current package file"
     ID_SCRIPT_SAVEPACKAGEAS "Save scripts to a new file and make it new current package file"
+    ID_MONTAGINGGRIDS_FINDREGULARARRAYOFHOLES "Open Hole Finder dialog"
 END
 
 STRINGTABLE
