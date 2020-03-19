@@ -459,6 +459,8 @@ BEGIN_MESSAGE_MAP(CMenuTargets, CCmdTarget)
   ON_UPDATE_COMMAND_UI(ID_TASKS_SETUPVPPCONDITIONING, OnUpdateTasksSetupVppConditioning)
   ON_COMMAND(ID_WINDOW_TAKESCREENSHOT, OnWindowTakeScreenShot)
   ON_UPDATE_COMMAND_UI(ID_WINDOW_TAKESCREENSHOT, OnUpdateNoTasks)
+  ON_COMMAND(ID_MONTAGINGGRIDS_FINDREGULARARRAYOFHOLES, OnMontagingGridsFindHoles)
+  ON_UPDATE_COMMAND_UI(ID_MONTAGINGGRIDS_FINDREGULARARRAYOFHOLES, OnUpdateMontagingGridsFindHoles)
   END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -831,6 +833,16 @@ void CMenuTargets::OnUpdateShowWholeAreaForAllPoints(CCmdUI *pCmdUI)
 void CMenuTargets::OnNavigatorSetMultiShotParams()
 {
   mWinApp->mNavHelper->OpenMultishotDlg();
+}
+
+void CMenuTargets::OnMontagingGridsFindHoles()
+{
+  mWinApp->mNavHelper->OpenHoleFinder();
+}
+
+void CMenuTargets::OnUpdateMontagingGridsFindHoles(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(!mWinApp->DoingTasks() && mWinApp->mNavigator);
 }
 
 void CMenuTargets::OnNavigatorRealignScaling()

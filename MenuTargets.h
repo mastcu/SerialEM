@@ -376,6 +376,8 @@ public:
   afx_msg void OnUpdateSkipBlankingInLdWithScreenUp(CCmdUI *pCmdUI);
   afx_msg void OnTasksSetupVppConditioning();
   afx_msg void OnUpdateTasksSetupVppConditioning(CCmdUI *pCmdUI);
+  afx_msg void OnMontagingGridsFindHoles();
+  afx_msg void OnUpdateMontagingGridsFindHoles(CCmdUI *pCmdUI);
 };
 
 /////////////////////////////////////////////////////////////////////////////

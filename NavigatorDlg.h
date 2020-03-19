@@ -406,7 +406,16 @@ private:
   int mCameraForHoles;         // hole pattern of current point
   FloatVec mCurItemHoleXYpos;  // Stage positions of the holes drawn around current point
   IntVec mCurItemHoleIndex;    // And the hole index for that item, needed for deletion
-  float mMultiDelStageX, mMultiDelStageY;  // Stage position for shitf double click deletion
+  float mMultiDelStageX, mMultiDelStageY;  // Stage position for shift double click deletion
+  FloatVec *mHFxCenters;
+  FloatVec *mHFyCenters;
+  FloatVec *mHFxInPiece;
+  FloatVec *mHFyInPiece;
+  IntVec *mHFpieceOn;
+  ShortVec *mHFgridXpos;
+  ShortVec *mHFgridYpos;
+  std::vector<bool> *mHFexclude;
+  bool mAddingFoundHoles;
 
 public:
   BOOL RegistrationChangeOK(void);
@@ -416,7 +425,7 @@ public:
     float backX = -999., float backY = -999., double leaveISX = 0., double leaveISY = 0.,
     float tiltAngle = 0.);
   int RotateMap(EMimageBuffer * imBuf, BOOL redraw);
-  CMapDrawItem * FindItemWithMapID(int mapID, bool requireMap = true);
+  CMapDrawItem * FindItemWithMapID(int mapID, bool requireMap = true, bool matchGroup = false);
   ScaleMat GetRotationMatrix(float rotAngle, BOOL inverted);
   int PrepareMontAdjustments(EMimageBuffer * imBuf, ScaleMat & rMat, ScaleMat & rInv, float & rDelX, float & rDelY);
   void AdjustMontImagePos(EMimageBuffer * imBuf, float & inX, float & inY, int *pcInd = NULL, 
@@ -469,8 +478,15 @@ public:
   void CleanSchedule(void);
   BOOL OKtoAddGrid(bool likeLast);
   void AddGridOfPoints(bool likeLast);
-  void InterPointVectors(CMapDrawItem **gitem, float * vecx, float * vecy, float * length, 
+  int MakeGridOrFoundPoints(int jstart, int jend, int jdir, int kstart,
+    int kend, int dir, CMapDrawItem *poly, float spacing, float jSpacing, float kSpacing,
+    int registration, float stageZ, float xcen, float ycen,
+    float delX, float delY, bool acquire, ScaleMat &aInv, float groupExtent,
+    bool awayFromFocus, int drawnOnID, bool likeLast);
+  void InterPointVectors(CMapDrawItem **gitem, float * vecx, float * vecy, float * length,
     int i, int num);
+  void SetupForAwayFromFocus(float incStageX1, float incStageY1, float incStageX2, float incStageY2, 
+    int &jstart, int &jend, int &jdir, int &kstart, int &kend, int &dir);
   CStatic m_statListHeader;
   void GetSuperCoords(int & superX, int &superY);
   int ShiftItemsByAlign(void);
@@ -559,6 +575,10 @@ public:
   void StageOrImageCoords(CMapDrawItem *item, float &posX, float &posY);
   void GridImageToStage(ScaleMat aInv, float delX, float delY, float posX, float posY, 
     float &stageX, float &stageY);
+  int AddFoundHoles(FloatVec *xCenters, FloatVec *yCenters, std::vector<bool> *exclude, FloatVec *xInPiece,
+    FloatVec *yInPiece, IntVec *pieceOn, ShortVec *gridXpos, ShortVec *gridYpos,
+    float spacing, float diameter, float angle, int registration, int mapID, float stageZ,
+    CMapDrawItem *poly, int layoutType);
   int FindBufferWithMontMap(int mapID);
   CButton m_butEditMode;
   BOOL m_bEditMode;

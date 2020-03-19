@@ -408,6 +408,11 @@
 			</OBJECT>
 			<A HREF="html/hidd_framealign.htm">Multiple Record Setup dialog</A><BR>
 		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Hole Finder dialog">
+			<param name="Local" value="html/hidd_hole_finder.htm">
+			</OBJECT>
+			<A HREF="html/hidd_framealign.htm">Hole Finder dialog</A><BR>
+		<LI><OBJECT type="text/sitemap">
 			<param name="Name" value="Stage Move Tool">
 			<param name="Local" value="html/hidd_stagemovetool.htm">
 			</OBJECT>

@@ -78,8 +78,8 @@ struct MontParam {
 
 // Structure to keep track of offsets applied in making montage overview
 struct MiniOffsets {
-  std::vector<short int> offsetX;   // The offsets
-  std::vector<short int> offsetY;
+  std::vector<short int> offsetX;   // The offsets: True offset of piece / minizoom with
+  std::vector<short int> offsetY;   // Y inverted; indexed by ixpc * nYframes + iypc
   int xNframes, yNframes;          // # of frames in X and Y
   int xDelta, yDelta;      // Spacing between effective frame boundaries
   int xFrame, yFrame;      // frame sizes

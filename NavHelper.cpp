@@ -28,6 +28,8 @@
 #include "TiltSeriesParam.h"
 #include "TSController.h"
 #include "MultiTSTasks.h"
+#include "HoleFinderDlg.h"
+#include "holefinder.h"
 #include "Utilities\XCorr.h"
 #include "Image\KStoreADOC.h"
 #include "Shared\autodoc.h"
@@ -46,6 +48,7 @@ CNavHelper::CNavHelper(void)
 	mMontParam = mWinApp->GetMontParam();
 	mShiftManager = mWinApp->mShiftManager;
   mBufferManager = mWinApp->mBufferManager;
+  mFindHoles = new HoleFinder();
   mRealigning = 0;
   mAcquiringDual = false;
   mMaxMarginNeeded = 10.;
@@ -79,6 +82,8 @@ CNavHelper::CNavHelper(void)
   mRotAlignPlace.rcNormalPosition.right = 0;
   mMultiShotDlg = NULL;
   mMultiShotPlace.rcNormalPosition.right = 0;
+  mHoleFinderDlg = NULL;
+  mHoleFinderPlace.rcNormalPosition.right = 0;
   mRIdefocusOffsetSet = 0.;
   mRIbeamShiftSetX = mRIbeamShiftSetY = 0.;
   mRIbeamTiltSetX = mRIbeamTiltSetY = 0.;
@@ -120,6 +125,44 @@ CNavHelper::CNavHelper(void)
   mMultiShotParams.holeDelayFactor = 1.5f;
   mMultiShotParams.holeMagIndex = 0;
   mMultiShotParams.customMagIndex = 0;
+  float thresholds[] = {2.4f, 3.6f, 4.8f};
+  mHoleFinderParams.thresholds.insert(mHoleFinderParams.thresholds.begin(), 
+    &thresholds[0], &thresholds[3]);
+  float sigmas[] = {1.5f, 2.f, 3.f, -3.f};
+  mHoleFinderParams.sigmas.insert(mHoleFinderParams.sigmas.begin(), &sigmas[0], 
+    &sigmas[4]);
+  mHoleFinderParams.spacing = 2.;
+  mHoleFinderParams.diameter = 1.;
+  mHoleFinderParams.maxError = 0.05f;
+  mHoleFinderParams.useBoundary = false;
+  mHoleFinderParams.bracketLast = false;
+  mHoleFinderParams.lowerMeanCutoff = EXTRA_NO_VALUE;
+  mHoleFinderParams.upperMeanCutoff = EXTRA_NO_VALUE;
+  mHoleFinderParams.SDcutoff = EXTRA_NO_VALUE;
+  mHoleFinderParams.blackFracCutoff = EXTRA_NO_VALUE;
+  mHoleFinderParams.showExcluded = true;
+  mHoleFinderParams.showExcluded = true;
+  mHoleFinderParams.layoutType = 0;
+  float widths[] = {4, 2, 1.5}, increments[] = {3., 1.5, 1.};
+  int numCircles[] = {7, 3, 1};
+  mHFwidths.insert(mHFwidths.begin(), &widths[0], &widths[3]);
+  mHFincrements.insert(mHFincrements.begin(), &increments[0], &increments[3]);
+  mHFnumCircles.insert(mHFnumCircles.begin(), &numCircles[0], &numCircles[3]);
+  mHFtargetDiamPix = 50.;
+  mHFretainFFTs = 1;
+  mHFminNumForTemplate = 5;
+  mHFfractionToAverage = 0.5f;
+  mHFmaxDiamErrFrac = 0.2f;
+  mHFavgOutlieCrit = 4.5f;
+  mHFfinalPosOutlieCrit = 4.5f;
+  mHFfinalNegOutlieCrit = 9;
+  mHFfinalOutlieRadFrac = 0.9f;
+  mHFpcToPcSameFrac = 0.5f;
+  mHFpcToFullSameFrac = 0.5f;
+  mHFsubstOverlapDistFrac = 0.;
+  mHFusePieceEdgeDistFrac = 0.25f;
+  mHFaddOverlapFrac = 0.75f;
+
   mEditReminderPrinted = false;
   mCollapseGroups = false;
   mRIstayingInLD = false;
@@ -132,6 +175,7 @@ CNavHelper::CNavHelper(void)
 CNavHelper::~CNavHelper(void)
 {
   ClearStateArray();
+  delete mFindHoles;
 }
 
 
@@ -3998,11 +4042,22 @@ WINDOWPLACEMENT *CNavHelper::GetMultiShotPlacement(bool update)
 
 void CNavHelper::OpenHoleFinder(void)
 {
+  if (mHoleFinderDlg) {
+    mHoleFinderDlg->BringWindowToTop();
+    return;
+  }
+  mHoleFinderDlg = new CHoleFinderDlg();
+  mHoleFinderDlg->Create(IDD_HOLE_FINDER);
+  mWinApp->SetPlacementFixSize(mHoleFinderDlg, &mHoleFinderPlace);
+  mWinApp->RestoreViewFocus();
 }
 
-WINDOWPLACEMENT * CNavHelper::GetMultiShotPlacement(void)
+WINDOWPLACEMENT * CNavHelper::GetHoleFinderPlacement(void)
 {
-  return NULL;
+  if (mHoleFinderDlg) {
+    mHoleFinderDlg->GetWindowPlacement(&mHoleFinderPlace);
+  }
+  return &mHoleFinderPlace;
 }
 
 // Loads a piece or synthesizes piece containing the given item

@@ -29,15 +29,14 @@
 #define RETURN_IF_ERR(a) err = (a); if (err) return err;
 
 enum {ERR_MEMORY = 1, ERR_SELECT, ERR_BAD_MODE, ERR_ZOOM_RANGE, ERR_NOT_INIT, 
-      ERR_NO_TEMPLATE, ERR_TEMPLATE_PARAM, ERR_CALLBACK_STOP, ERR_NO_CUTOFFS};
+      ERR_NO_TEMPLATE, ERR_TEMPLATE_PARAM, ERR_NO_CUTOFFS};
 
 static const char *errStrings[] = 
   {"Unknown error from HoleFinder", "Allocating memory", "Selecting zoom-down filter",
    "Data mode of input must be byte, integer, or float", 
    "Coordinates for image reduction are out of range", "Initialize was not called first",
    "No average template was made", "Radius does not match for making template or # "
-   "radii is not 1", "A stop signal was sent", 
-   "NULL cutoff pointers passed to removeOutliers"};
+   "radii is not 1", "NULL cutoff pointers passed to removeOutliers"};
 
 /*
  * Constructor: initialize pointers, set some defaults
@@ -94,7 +93,7 @@ HoleFinder::HoleFinder()
   mMinBoostToIter = 1.05f;
   mLastCutoffsValid = false;
   mVerbose = 0;
-  mDebugImages = false;
+  mDebugImages = 0;
   mWallFFT = mWallPeak = mWallFilter = 0.;
   mWallCanny = mWallCircle = mWallConj = 0;
 }
@@ -325,7 +324,7 @@ int HoleFinder::initialize(void *inputData, int mode, int nxIn, int nyIn, float 
 void HoleFinder::setSequenceParams
 (float diameter, float spacing, bool retain, float maxError, float fracAvg, int minForAvg,
  float maxDiamErrFrac, float avgOutlieCrit, float finalNegOutlieCrit, 
- float finalPosOutlieCrit, float finalOutlieRadFrac, VaryCallback func)
+ float finalPosOutlieCrit, float finalOutlieRadFrac)
 {
   mSpacing = spacing;
   mRetainFFTs = retain;
@@ -345,7 +344,28 @@ void HoleFinder::setSequenceParams
     mFinalPosOutlieCrit = finalPosOutlieCrit;
   if (finalOutlieRadFrac > 0)
     mFinalOutlieRadFrac = finalOutlieRadFrac;
-  mVaryCallback = func;
+}
+
+/*
+ * Pass variables determining what analyses are run in the sequence
+ * increments, widths, and numCircles are step sizes, thicknesses, and number of steps
+ * to pass to findCircles
+ * numScans is the number of those parameters to run
+ * sigmas has the set of numSigmas values to try, in pixels
+ * thresholds has numThresh values to try, in percent of brightest edge pixels
+ */
+void HoleFinder::setRunsInSequence
+(float *increments, float *widths, int *numCircles, int numScans, float *sigmas,
+ int numSigmas, float *thresholds, int numThresh)
+{
+  mWidths = widths;
+  mIncrements = increments;
+  mNumCircles = numCircles;
+  mNumScans = numScans;
+  mSigmas = sigmas;
+  mNumSigmas = numSigmas;
+  mThresholds = thresholds;
+  mNumThresh = numThresh;
 }
 
 /*
@@ -354,11 +374,9 @@ void HoleFinder::setSequenceParams
  * or the raw image, analyzing positions and angle to find the regular grid of points.
  * Do this at an array of sigma and threshold values and pick the best one for the final
  * correlations and analysis.
- * increments, widths, and numCircles are step sizes, thicknesses, and number of steps
- * to pass to findCircles
- * numScans is the number of those parameters to run
- * sigmas has the set of numSigmas values to try, in pixels
- * thresholds has numThresh values to try, in percent of brightest edge pixels
+ * Set iSig and iThresh 0 on the first call and continue to call until it no longer
+ * returns a -1.  sigUsed and threshUsed are returned with the values used on the
+ * call, or the final values.
  * xBoundary, yBoundary have a possible boundary contour
  * bestSigInd and bestThreshInd are returned with the index of the best sigma and 
  * threshold values
@@ -372,97 +390,98 @@ void HoleFinder::setSequenceParams
  * with weak edge signals.
  */
 int HoleFinder::runSequence
-(float *increments, float *widths, int *numCircles, int numScans, float *sigmas,
- int numSigmas, float *thresholds, int numThresh, FloatVec &xBoundary,
+(int &iSig, float &sigUsed, int &iThresh, float &threshUsed, FloatVec &xBoundary,
  FloatVec &yBoundary, int &bestSigInd, int &bestThreshInd, float &bestRadius,
  float &trueSpacing, FloatVec &xCenters, FloatVec &yCenters, FloatVec &peakVals,
  FloatVec &xMissing, FloatVec &yMissing, FloatVec &xCenClose, FloatVec &yCenClose,
  FloatVec &peakClose, int &numMissAdded)
 {
-  int scan, iThresh, iSig, err, maxFound, minMissing, numNeg, numPos;
-  float midRadius, radInc, radAtBest;
-  bool madeAverage, usedRaw, varying = numSigmas > 1 || numThresh > 1;
+  int scan, err, numNeg, numPos;
+  float midRadius, radInc;
+  bool madeAverage, usedRaw, varying = mNumSigmas > 1 || mNumThresh > 1;
   FloatVec holeMeans;
 
-  xMissing.clear();
-  xCenClose.clear();
   if (!mRawData)
     return ERR_NOT_INIT;
 
   // Run the variations: loop on sigma and thresholds
-  bestSigInd = -1;
-  for (iSig = 0; iSig < numSigmas; iSig++) {
-    for (iThresh = 0; iThresh < numThresh; iThresh++) {
-      midRadius = mDiameter / 2.f;
+  if (!iSig && !iThresh) {
+    xMissing.clear();
+    xCenClose.clear();
+    bestSigInd = -1;
+  }
+  
+  midRadius = mDiameter / 2.f;
       
-      // Get the edges
-      err = cannyEdge(sigmas[iSig], 1.f - 0.02f * thresholds[iThresh], 
-                      1.f - 0.01f * thresholds[iThresh]);
-      if (err)
-        return err;
+  // Get the edges
+  err = cannyEdge(mSigmas[iSig], 1.f - 0.02f * mThresholds[iThresh], 
+                  1.f - 0.01f * mThresholds[iThresh]);
+  if (err)
+    return err;
 
-      // Find the circles in series of scans
-      for (scan = 0; scan < numScans; scan++) {
-        radInc = increments[scan];
-        err = findCircles(midRadius, radInc, widths[scan], numCircles[scan], 
-                          mRetainFFTs && !scan, 0.75f * mSpacing, 0, 
-                          xBoundary, yBoundary, bestRadius, xCenters,
-                          yCenters, peakVals);
-        if (err)
-          return err;
-        if (fabs((midRadius - bestRadius) / midRadius) <= mMaxDiamErrFrac)
-          midRadius = bestRadius;
-      }
-      // Make template if possible and analyze the grid
-      err = templateAndAnalyze(bestRadius, mRetainFFTs && !varying, madeAverage, usedRaw,
-                               xBoundary, yBoundary, xCenters, yCenters,
-                               peakVals, trueSpacing, xMissing, yMissing);
-      if (err)
-        return err;
-
-      // Take new best parameters
-      if (mVerbose && varying)
-        PRINT4(sigmas[iSig], thresholds[iThresh], xCenters.size(), xMissing.size());
-      if (mVaryCallback && varying)
-        mVaryCallback(sigmas[iSig], thresholds[iThresh], (int)xCenters.size(), 
-        (int)xMissing.size(), 0);
-      if (bestSigInd < 0 || (int)xCenters.size() > maxFound || 
-          (xCenters.size() == maxFound && (int)xMissing.size() < minMissing)) {
-        maxFound = (int)xCenters.size();
-        minMissing = (int)xMissing.size();
-        bestSigInd = iSig;
-        bestThreshInd = iThresh;
-        radAtBest = bestRadius;
-      } 
-    }
+  // Find the circles in series of scans
+  for (scan = 0; scan < mNumScans; scan++) {
+    radInc = mIncrements[scan];
+    err = findCircles(midRadius, radInc, mWidths[scan], mNumCircles[scan], 
+                      mRetainFFTs && !scan, 0.75f * mSpacing, 0, 
+                      xBoundary, yBoundary, bestRadius, xCenters,
+                      yCenters, peakVals);
+    if (err)
+      return err;
+    if (fabs((midRadius - bestRadius) / midRadius) <= mMaxDiamErrFrac)
+      midRadius = bestRadius;
   }
 
-  midRadius = radAtBest;
+  // Make template if possible and analyze the grid
+  err = templateAndAnalyze(bestRadius, mRetainFFTs && !varying, madeAverage, usedRaw,
+                           xBoundary, yBoundary, xCenters, yCenters,
+                           peakVals, trueSpacing, xMissing, yMissing);
+  if (err)
+    return err;
+
+  // Take new best parameters
   if (mVerbose && varying)
-    PRINT2(sigmas[bestSigInd], thresholds[bestThreshInd]);
-  if (mVaryCallback && varying) {
-    if (mVaryCallback(sigmas[bestSigInd], thresholds[bestThreshInd], maxFound, 
-                      minMissing, 1))
-      return ERR_CALLBACK_STOP;
-  }
+    PRINT4(mSigmas[iSig], mThresholds[iThresh], xCenters.size(), xMissing.size());
+  threshUsed = mThresholds[iThresh];
+  sigUsed = mSigmas[iSig];
+  if (bestSigInd < 0 || (int)xCenters.size() > mMaxFound || 
+      (xCenters.size() == mMaxFound && (int)xMissing.size() < mMinMissing)) {
+    mMaxFound = (int)xCenters.size();
+    mMinMissing = (int)xMissing.size();
+    bestSigInd = iSig;
+    bestThreshInd = iThresh;
+    mRadAtBest = bestRadius;
+  } 
+  iThresh++;
+  if (iThresh < mNumThresh)
+    return -1;
+  iSig++;
+  iThresh = 0;
+  if (iSig < mNumSigmas)
+    return -1;
+
+  midRadius = mRadAtBest;
+  if (mVerbose && varying)
+    PRINT2(mSigmas[bestSigInd], mThresholds[bestThreshInd]);
+  sigUsed = mSigmas[bestSigInd];
+  threshUsed = mThresholds[bestThreshInd];
 
   // Get the edges and repeat final analysis unless the last one made is for best values
-  if (bestSigInd != numSigmas - 1 || bestThreshInd != numThresh - 1) {
-    err = cannyEdge(sigmas[bestSigInd], 1.f - 0.02f * thresholds[bestThreshInd], 
-                    1.f - 0.01f * thresholds[bestThreshInd]);
+  if (bestSigInd != mNumSigmas - 1 || bestThreshInd != mNumThresh - 1) {
+    err = cannyEdge(mSigmas[bestSigInd], 1.f - 0.02f * mThresholds[bestThreshInd], 
+                    1.f - 0.01f * mThresholds[bestThreshInd]);
     if (err)
       return err;
 
-    err = findCircles(midRadius, radInc, widths[numScans - 1], 1, false, 0.75f * mSpacing,
-                      0, xBoundary, yBoundary, bestRadius, xCenters, yCenters,
-                      peakVals);
+    err = findCircles(midRadius, radInc, mWidths[mNumScans - 1], 1, false,
+                      0.75f * mSpacing, 0, xBoundary, yBoundary, bestRadius, xCenters,
+                      yCenters, peakVals);
     if (err)
       return err;
 
     //  do template and sort out neighbors
     err = templateAndAnalyze(midRadius, mRetainFFTs, madeAverage, usedRaw, xBoundary,
-                             yBoundary,
-                             xCenters, yCenters, peakVals, trueSpacing, 
+                             yBoundary, xCenters, yCenters, peakVals, trueSpacing, 
                              xMissing, yMissing);
     if (err)
       return err;
@@ -560,6 +579,10 @@ int HoleFinder::templateAndAnalyze
   
   // Analyze for regular grid
   //dumpPoints("edgeorig.txt", xCenters, yCenters, peakVals);
+  if (xCenters.size() < 2) {
+    trueSpacing = 0.;
+    return 0;
+  }
   err = analyzeNeighbors(xCenters, yCenters, peakVals, altInds, xCenFCraw, yCenFCraw,
                          peakFCraw, maxSpacing, mMaxError, 0, trueSpacing, xMissing,
                          yMissing);
@@ -880,7 +903,8 @@ int HoleFinder::processMontagePiece
 void HoleFinder::resolvePiecePositions
 (bool removeDups, FloatVec &xCenters, FloatVec &yCenters, FloatVec &peakVals,
  FloatVec &xMissing, FloatVec &yMissing, FloatVec &xCenClose, FloatVec &yCenClose,
- FloatVec &peakClose, IntVec &pieceOn, FloatVec &xInPiece, FloatVec &yInPiece)
+ FloatVec &peakClose, IntVec &pieceOn, FloatVec &xInPiece, FloatVec &yInPiece,
+ FloatVec *holeMeans, FloatVec *holeSDs, FloatVec *holeOutlies)
 {
   std::vector< std::vector<bool> > eligible;
   float radius = mReduction * mLastBestRadius;
@@ -996,9 +1020,17 @@ void HoleFinder::resolvePiecePositions
               xCenters[jnd] = xpos;
               yCenters[jnd] = ypos;
               peakVals[jnd] = mPiecePeakVec->at(piece)[ind];
-              pieceOn[jnd] = mNumXpieces * mTileYnum->at(piece) + mTileXnum->at(piece);
+
+              // pieceOn follows the bizarre SerialEM Nav file convention, in columns
+              pieceOn[jnd] = mTileYnum->at(piece) + mNumYpieces * mTileXnum->at(piece);
               xInPiece[jnd] = xpos - mXpcAliCoords->at(piece);
               yInPiece[jnd] = ypos - mYpcAliCoords->at(piece);
+              if (holeMeans && mPieceMeanVec)
+                (*holeMeans)[jnd] = mPieceMeanVec->at(piece)[ind];
+              if (holeSDs && mPieceSDsVec)
+                (*holeSDs)[jnd] = mPieceSDsVec->at(piece)[ind];
+              if (holeOutlies && mPieceOutlieVec)
+                (*holeOutlies)[jnd] = mPieceOutlieVec->at(piece)[ind];
             }
             break;
           }
@@ -1008,29 +1040,43 @@ void HoleFinder::resolvePiecePositions
         // into an overlap and inside the piece
         if (notClose && maxZoneFrac < mAddOverlapFrac && 
             minDistanceFromEdge(xpos, ypos, piece) > useEdgeDist) {
-          xCenters.push_back(xpos);
-          yCenters.push_back(ypos);
-          peakVals.push_back(mPiecePeakVec->at(piece)[ind]);
-          pieceOn.push_back(mNumXpieces * mTileYnum->at(piece) + mTileXnum->at(piece));
-          xInPiece.push_back(xpos - mXpcAliCoords->at(piece));
-          yInPiece.push_back(ypos - mYpcAliCoords->at(piece));
 
-          // Eliminate a close missing or "close" point
-          for (jnd = 0; jnd < (int)xMissing.size(); jnd++) {
-            if (pointsCloseInBox(xpos, ypos, xMissing[jnd], yMissing[jnd],
-                                 pcToFullSameCrit, critSq)) {
-              xMissing.erase(xMissing.begin() + jnd);
-              yMissing.erase(yMissing.begin() + jnd);
-              break;
+          // Insist that there be an adjacent point before doing this
+          for (jnd = 0; jnd < numFullOrig; jnd++)
+            if (pointsCloseInBox(xpos, ypos, xCenters[jnd], yCenters[jnd], 1.2f* mSpacing,
+                                 2.88f * mSpacing * mSpacing))
+              notClose = false;
+          if (!notClose) {
+            xCenters.push_back(xpos);
+            yCenters.push_back(ypos);
+            peakVals.push_back(mPiecePeakVec->at(piece)[ind]);
+            pieceOn.push_back(mTileYnum->at(piece) + mNumYpieces * mTileXnum->at(piece));
+            xInPiece.push_back(xpos - mXpcAliCoords->at(piece));
+            yInPiece.push_back(ypos - mYpcAliCoords->at(piece));
+            if (holeMeans && mPieceMeanVec)
+              holeMeans->push_back(mPieceMeanVec->at(piece)[ind]);
+            if (holeSDs && mPieceSDsVec)
+              holeSDs->push_back(mPieceSDsVec->at(piece)[ind]);
+            if (holeOutlies && mPieceOutlieVec)
+              holeOutlies->push_back(mPieceOutlieVec->at(piece)[ind]);
+
+            // Eliminate a close missing or "close" point
+            for (jnd = 0; jnd < (int)xMissing.size(); jnd++) {
+              if (pointsCloseInBox(xpos, ypos, xMissing[jnd], yMissing[jnd],
+                                   pcToFullSameCrit, critSq)) {
+                xMissing.erase(xMissing.begin() + jnd);
+                yMissing.erase(yMissing.begin() + jnd);
+                break;
+              }
             }
-          }
-          for (jnd = 0; jnd < (int)xCenClose.size(); jnd++) {
-            if (pointsCloseInBox(xpos, ypos, xCenClose[jnd], yCenClose[jnd],
-                                 pcToFullSameCrit, critSq)) {
-              xCenClose.erase(xCenClose.begin() + jnd);
-              yCenClose.erase(yCenClose.begin() + jnd);
-              peakClose.erase(peakClose.begin() + jnd);
-              break;
+            for (jnd = 0; jnd < (int)xCenClose.size(); jnd++) {
+              if (pointsCloseInBox(xpos, ypos, xCenClose[jnd], yCenClose[jnd],
+                                   pcToFullSameCrit, critSq)) {
+                xCenClose.erase(xCenClose.begin() + jnd);
+                yCenClose.erase(yCenClose.begin() + jnd);
+                peakClose.erase(peakClose.begin() + jnd);
+                break;
+              }
             }
           }
         }
@@ -1063,7 +1109,7 @@ void HoleFinder::resolvePiecePositions
       if (dist > 0.) {
         minDistToOverlapZone(xpos, ypos, piece, minZoneDist, maxZoneFrac);
         if (maxZoneFrac < 0.5) {
-          pieceOn[ind] = mNumXpieces * mTileYnum->at(piece) + mTileXnum->at(piece);
+          pieceOn[ind] = mTileYnum->at(piece) + mNumYpieces * mTileXnum->at(piece);
           xInPiece[ind] = xpos - mXpcAliCoords->at(piece);
           yInPiece[ind] = ypos - mYpcAliCoords->at(piece);
           break;
@@ -1076,7 +1122,7 @@ void HoleFinder::resolvePiecePositions
     }
 
     if (pieceOn[ind] < 0) {
-      pieceOn[ind] = pieceAtMax;
+      pieceOn[ind] = mTileYnum->at(pieceAtMax) + mNumYpieces * mTileXnum->at(pieceAtMax);
       if (minDistanceFromEdge(xpos, ypos, pieceAtMax) > 0.) {
         xInPiece[ind] = xpos - mXpcAliCoords->at(pieceAtMax);
         yInPiece[ind] = ypos - mYpcAliCoords->at(pieceAtMax);
@@ -1533,8 +1579,8 @@ void HoleFinder::sobelEdge(float *inputData, unsigned char *sobelDir, float &sob
  * numRad is the maximum number of of radii to try
  * retain indicates whether to keep circle FFTs, provided the keepCache argument was 2
  * minSpacing is the minimum spacing allowed between detected centers
- * Input values midRadius, radiusInc, width, and minSpacing are in reduced pixels
- * useWeak would be true to use weak edges in the cross-correlation
+ * Input values midRadius, radiusInc, width, and minSpacing are in pixels
+ * useWeak would be 1 to use weak edges in the cross-correlation or 2 when using raw avg
  * xBoundary, yBoundary optionally contain a boundary contour
  * Boundary points are in original pixels
  * bestRadius is the interpolated value of the best-correlating radius, in reduced pixels
@@ -1555,15 +1601,18 @@ int HoleFinder::findCircles(float midRadius, float radiusInc, float width, int n
   int numPoints, numAdd, bestInd, edgeThresh, vecOffset, numMeasured = 0;
   int nextDir, minIndDone, maxIndDone, vecInd, sumInd, templateInd;
   int minXpeakFind, maxXpeakFind, minYpeakFind, maxYpeakFind, blockSize;
-  int numFromMean, numFromSD, err;
+  int numFromMean, numFromSD, err, numStrong;
   float innerCrit, outerCrit, sum, radius, cornDist, dx, dy, sumMax, weight;
-  float boundXmin, boundXmax, boundYmin, boundYmax;
+  float boundXmin, boundXmax, boundYmin, boundYmax, strongMean, norm;
   float *crossCorr = mDataFFT;
   bool useRawAvg = width < -1;
   bool useEdgeAvg = width < 0 && !useRawAvg;
   float *boxAverage = useRawAvg ? mRawAverage : mEdgeAverage;
   float cacheTol = 0.05f;
+  float meanOutlieCrit = 4.5f, sdOutlieCrit = 4.5f;
+  float weakDimCrit = 0.05f, maxWeakDimFrac = 0.6f, strongMeanMinRatio = 5.f;
   FloatVec tempXcenters, tempYcenters, tempPeaks, peakSums, radii, holeMeans, holeSDs;
+  FloatVec weakDims;
   std::vector<FloatVec> xCenVec, yCenVec, peakVec;
   double findStart = wallTime();
   if (!mRawData)
@@ -1675,7 +1724,7 @@ int HoleFinder::findCircles(float midRadius, float radiusInc, float width, int n
           mHaveRawAvgFFT = true;
         else
           mHaveEdgeAvgFFT = true;
-        if (mDebugImages)
+        if ((useRawAvg && mDebugImages == 3) || (useEdgeAvg && mDebugImages == 2))
           mrcWriteImageToFile("splitfill.mrc", circTemplate, 2, mPadXdim, mYpadSize);
       } else {
 
@@ -1750,7 +1799,7 @@ int HoleFinder::findCircles(float midRadius, float radiusInc, float width, int n
     mWallStart = wallTime();
     findSpacedXCorrPeaks(crossCorr, mPadXdim, minXpeakFind, maxXpeakFind,
                          minYpeakFind, maxYpeakFind, &tempXcenters[0], &tempYcenters[0],
-                        &tempPeaks[0], maxPoints, minSpacing, &numPoints);
+                         &tempPeaks[0], maxPoints, minSpacing, &numPoints, 0.025f);
     /*FILE *fp;
     if (    radInd == numRad /2 && width > 0) {
     fp = fopen("spaced.txt", "w");
@@ -1763,8 +1812,10 @@ int HoleFinder::findCircles(float midRadius, float radiusInc, float width, int n
     }*/
     
     mWallPeak += wallTime() - mWallStart;
-    if (mDebugImages)
+    if (((width > 0 && mDebugImages == 1) || (useRawAvg && mDebugImages == 3)
+         || (useEdgeAvg && mDebugImages == 2)) && useWeak != 1) {
       mrcWriteImageToFile("crosscorr.mrc", crossCorr, 2, mPadXdim, mYpadSize);
+    }
 
     // Eliminate peaks outside the boundary
     numAdd = numPoints;
@@ -1818,6 +1869,47 @@ int HoleFinder::findCircles(float midRadius, float radiusInc, float width, int n
     if (numAdd >= 10) {
       holeIntensityStats(radius / 2.f, xCenVec[vecInd], yCenVec[vecInd], true, false,
                          &holeMeans, &holeSDs, NULL);
+
+      // But first, use this overall mean product of peak strength, intensity and SD
+      // to count up ones above a certain ratio to the highest value
+      norm = -1.e20f;
+      strongMean = 0.;
+      numStrong = 0;
+      weakDims.resize(numAdd);
+      for (ind = 0; ind < numAdd; ind++) {
+        weakDims[ind] = (float)pow(fabs((double)peakVec[vecInd][ind] * holeMeans[ind] * 
+                                 holeSDs[ind]), 0.3333);
+        ACCUM_MAX(norm, weakDims[ind]);
+      }
+      for (ind = 0; ind < numAdd; ind++) {
+        weakDims[ind] /= norm;
+        if (weakDims[ind] > weakDimCrit) {
+          numStrong++;
+          strongMean += weakDims[ind];
+        }
+      }
+
+      // If the mean is enough higher than the criterion and the # of weak ones are
+      // not too numerous, get rid of the weak ones
+      strongMean /= numStrong;
+      sumInd = 0;
+      ind = numAdd - numStrong;
+      if (strongMean / weakDimCrit > strongMeanMinRatio && ind > 0 &&
+          ind < maxWeakDimFrac * numAdd) {
+        for (ind = 0; ind < numAdd; ind++) {
+          if (weakDims[ind] > weakDimCrit) {
+            xCenVec[vecInd][sumInd] = xCenVec[vecInd][ind];
+            yCenVec[vecInd][sumInd] = yCenVec[vecInd][ind];
+            peakVec[vecInd][sumInd++] = peakVec[vecInd][ind];
+          }
+        }
+        xCenVec[vecInd].resize(numStrong);
+        yCenVec[vecInd].resize(numStrong);
+        peakVec[vecInd].resize(numStrong);
+        numAdd = sumInd;
+      }
+      
+      // Now proceed with outlier removal
       RETURN_IF_ERR(removeOutliers(xCenVec[vecInd], yCenVec[vecInd], &peakVec[vecInd],
                                    holeMeans, 4.5f, 0., numFromMean, ind));
       RETURN_IF_ERR(removeOutliers(xCenVec[vecInd], yCenVec[vecInd], &peakVec[vecInd],
@@ -2708,9 +2800,9 @@ void HoleFinder::dumpPoints(const char *filename, FloatVec &xCenters, FloatVec &
 
 /*
  * Given a collection of positions, determines their indexes on a regular grid, given the
- * angle and spacing of the grid.  The angle and spacing default to the average positive 
- * angle and spacing from analyzeNeighbors.  GridX and gridY are returned with indexes 
- * numbered from 0
+ * angle and spacing of the grid.  Pass the angle as -999 or the spacing as -1 to use
+ * and return the average positive angle or spacing from analyzeNeighbors.  GridX and 
+ * gridY are returned with indexes numbered from 0
  */
 #define ASSIGN_ADD_TO_QUEUE(nd, x, y) \
   gridX[nd] = x;                      \
@@ -2719,8 +2811,8 @@ void HoleFinder::dumpPoints(const char *filename, FloatVec &xCenters, FloatVec &
   neighQueue.push(nd);
 
 void HoleFinder::assignGridPositions
-(FloatVec &xCenters, FloatVec &yCenters, ShortVec &gridX, ShortVec &gridY, float avgAngle,
- float avgLen)
+(FloatVec &xCenters, FloatVec &yCenters, ShortVec &gridX, ShortVec &gridY, 
+ float &avgAngle, float &avgLen)
 {
   FloatVec xrot, yrot;
   ShortVec xPrelim, yPrelim;

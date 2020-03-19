@@ -58,6 +58,7 @@
 #include "StageMoveTool.h"
 #include "PiezoAndPPControl.h"
 #include "ScreenShotDialog.h"
+#include "HoleFinderDlg.h"
 #include "AutoTuning.h"
 #include "ExternalTools.h"
 #include "Shared\b3dutil.h"
@@ -582,6 +583,7 @@ CSerialEMApp::CSerialEMApp()
   mNavParams.importXbase = 0.;
   mNavParams.importYbase = 0.;
   mNavParams.gridInPolyBoxFrac = 0.75f;
+  mNavParams.holeInPolyBoxFrac = 1.1f;
   mNavParams.stageBacklash = 0.;
   mNavParams.overlayChannels = "121";
   mNavParams.maxMontageIS = 7.f;
@@ -2283,6 +2285,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
           mAutoTuning->ComaVsISNextTask(idc->param);
         else if (idc->source == TASK_GAIN_REF)
           mGainRefMaker->AcquiringRefNextTask(idc->param);
+        else if (idc->source == TASK_FIND_HOLES)
+          mNavHelper->mHoleFinderDlg->ScanningNextTask(idc->param);
 
       } else {
         if (busy > 0 && idc->timeOut && (idc->timeOut <= time))
@@ -2372,7 +2376,9 @@ BOOL CSerialEMApp::CheckIdleTasks()
         else if (idc->source == TASK_GAIN_REF)
           mGainRefMaker->ErrorCleanup(busy);
         else if (idc->source == TASK_MOVE_APERTURE)
-         mScope->ApertureCleanup(busy);
+          mScope->ApertureCleanup(busy);
+        else if (idc->source == TASK_FIND_HOLES)
+          mNavHelper->mHoleFinderDlg->StopScanning();
      }
 
       // Delete task from memory and drop index
@@ -2525,6 +2531,8 @@ void CSerialEMApp::ErrorOccurred(int error)
     mParticleTasks->StopWaitForDrift();
   if (mStageMoveTool && mStageMoveTool->GetGoingToAcquire())
     mStageMoveTool->StopNextAcquire();
+  if (mNavHelper->mHoleFinderDlg && mNavHelper->mHoleFinderDlg->GetFindingHoles())
+    mNavHelper->mHoleFinderDlg->StopScanning();
   if (mCamera->GetWaitingForStacking())
     mCamera->SetWaitingForStacking(-1);
   if (mScope->GetDoingLongOperation() && mCameraMacroTools.GetUserStop())
@@ -2902,6 +2910,8 @@ void CSerialEMApp::UpdateBufferWindows()
     mStageMoveTool->Update();
   if (mAutocenDlg)
     mAutocenDlg->UpdateEnables();
+  if (mNavHelper->mHoleFinderDlg)
+    mNavHelper->mHoleFinderDlg->ManageEnables();
   UpdateAllEditers();
   UpdateMacroButtons();
 }
@@ -2945,6 +2955,8 @@ void CSerialEMApp::UpdateWindowSettings()
     mAutocenDlg->UpdateSettings();
   if (mScreenShotDialog)
     mScreenShotDialog->UpdateSettings();
+  if (mNavHelper->mHoleFinderDlg)
+    mNavHelper->mHoleFinderDlg->UpdateSettings();
 }
 
 
@@ -2984,8 +2996,9 @@ BOOL CSerialEMApp::DoingTasks()
     mShiftManager->ResettingIS() ||
     mScope->CalibratingNeutralIS() ||
     mScope->GetDoingLongOperation() || mMultiTSTasks->DoingBidirCopy() > 0 ||
-    (mNavigator && mNavigator->GetLoadingMap()) || 
+    (mNavigator && mNavigator->GetLoadingMap()) ||
     (mShowRemoteControl && mRemoteControl.GetDoingTask()) ||
+    (mNavHelper->mHoleFinderDlg && mNavHelper->mHoleFinderDlg->GetFindingHoles()) ||
     (mPlugDoingFunc && mPlugDoingFunc()));
 }
 
@@ -3442,6 +3455,8 @@ void CSerialEMApp::NavigatorClosing()
   mMenuTargets.mNavigator = NULL;
   mNavHelper->NavOpeningOrClosing(false);
   mOpenStateWithNav = mNavHelper->mStateDlg != NULL;
+  if (mNavHelper->mHoleFinderDlg)
+    mNavHelper->mHoleFinderDlg->CloseWindow();
 }
 
 // Stage move tool
@@ -4187,7 +4202,7 @@ float CSerialEMApp::GetScalingForDPI()
 }
 
 // Scale one integer for DPI
-int CSerialEMApp::ScaleValueForDPI(int value)
+int CSerialEMApp::ScaleValueForDPI(double value)
 {
   return B3DNINT(value * GetScalingForDPI());
 }

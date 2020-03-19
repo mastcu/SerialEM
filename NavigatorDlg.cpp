@@ -2,8 +2,7 @@
 //                    all tasks associated with it
 //
 //
-// Copyright (C) 2003 by Boulder Laboratory for 3-Dimensional Electron 
-// Microscopy of Cells ("BL3DEMC") and the Regents of the University of
+// Copyright (C) 2003-2020 by the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
 //
 // Author: David Mastronarde
@@ -12,6 +11,7 @@
 #include "direct.h"
 #include "SerialEM.h"
 #include <map>
+#include <algorithm>
 #include "SerialEMDoc.h"
 #include "SerialEMView.h"
 #include "CameraController.h"
@@ -169,6 +169,7 @@ CNavigatorDlg::CNavigatorDlg(CWnd* pParent /*=NULL*/)
   mLastGridPatternPoly = -1;
   mLastGridAwayFromFocus = -1;
   mLastGridInSpacing = 0.;
+  mAddingFoundHoles = false;
 }
 
 
@@ -4262,30 +4263,19 @@ void CNavigatorDlg::AddGridOfPoints(bool likeLast)
 {
   CString label;
   CMapDrawItem *item, *poly, *patItems[8], *searchPoly[2];
-  int i, j, k, icen, kstart, kend, dir, registration, groupID, startnum, numInPat = 0;
-  int jmin, kmin, jmn, kmn, imin, start1, start2, end1, end2, num;
-  int jdir, jstart, jend, drawnOnID, jmax, kmax, krange, jrange, midj, midk, kdir;
-  int numJgroups, numKgroups, jgroup, kgroup, numInKgroup, numInJgroup;
+  int i, j, k, kstart, kend, dir, registration, numInPat = 0;
+  int jmn, kmn, imin, start1, start2, end1, end2, num;
+  int jdir, jstart, jend, drawnOnID;
   int numPairsOnAxes, numPairs, indPair[15], pairJ[15], pairK[15];
   int groupInd, groupNum[6], grpj, grpk, numInGrp[6], groupTmp[6][6], lineGroup[6][6];
   float vecx[6], vecy[6], length[6], angles[15], stageZ, polyArea[2], itemArea;
-  float xx, yy, spacing, xmin, xmax, ymin, ymax, range, delX, delY, xcen, ycen;
+  float spacing, xmin, xmax, ymin, ymax, range, delX, delY, xcen, ycen;
   float inSpacing = mLastGridInSpacing > 0. ? mLastGridInSpacing : 1.0f;
   float incStageX1, incStageX2, incStageY1, incStageY2, groupExtent, jSpacing, kSpacing;
   float xcorner, ycorner;
   bool acquire, refresh, awayFromFocus = false;
   double err, errmin, diff, diffmax, axis;
-  double specX, specY, stageX, stageY;
-  float cospr, sinpr, rotXmin, rotXmax, rotYmin, rotYmax, rotXrange, rotYrange; 
-  float longRange, shortRange, delLong, delXgroup, delYgroup, xrot, yrot, distMin;
-  int polyRot, rotBest, shortDiv, shortStart, shortEnd, longDiv, firstCurItem = -1;
-  int maxXind, maxYind, indX, indY, curSelBefore, curItemBefore, numListStrBefore;
-  ShortVec legalCenters, bestCenters;
-  bool anyPoints, goodDivision;
-  std::vector<ShortVec> kIncluded, jIncluded;
-  std::vector<float> legalMaxDists;
-  std::set<int> selListBefore;
-  ScaleMat cInv, aMat, aInv;
+  ScaleMat aMat, aInv;
   LowDoseParams *ldParm = mWinApp->GetLowDoseParams();
 
   if (!SetCurrentItem(true))
@@ -4294,7 +4284,6 @@ void CNavigatorDlg::AddGridOfPoints(bool likeLast)
   drawnOnID = mItem->mDrawnOnMapID;
   groupExtent = mHelper->GetDivideIntoGroups() ? mHelper->GetGridGroupSize() : 0.f;
   poly = NULL;
-  groupID = MakeUniqueID();
   stageZ = mItem->mStageZ;
   xmin = ymin = 100000.;
   xmax = ymax = -100000.;
@@ -4330,7 +4319,7 @@ void CNavigatorDlg::AddGridOfPoints(bool likeLast)
 
     if (numInPat == 5 || numInPat == 7 || numInPat == 1) {
 
-      if (numInPat ==5 || numInPat == 7) {
+      if (numInPat == 5 || numInPat == 7) {
         // Find the corner point
         errmin = 10000.;
         numPairsOnAxes = numInPat == 5 ? 2 : 6;
@@ -4342,7 +4331,7 @@ void CNavigatorDlg::AddGridOfPoints(bool likeLast)
           numPairs = 0;
           for (j = 0; j < numInPat - 2; j++) {
             for (k = j + 1; k < numInPat - 1; k++) {
-              angles[numPairs] = (float)(acos((vecx[j] * vecx[k] + vecy[j] * vecy[k]) / 
+              angles[numPairs] = (float)(acos((vecx[j] * vecx[k] + vecy[j] * vecy[k]) /
                 (length[j] * length[k])) / DTOR);
               indPair[numPairs] = numPairs;
               pairJ[numPairs] = j;
@@ -4414,9 +4403,9 @@ void CNavigatorDlg::AddGridOfPoints(bool likeLast)
         end1 = mLast5ptEnd1 = B3DNINT(length[lineGroup[0][1]] / length[lineGroup[0][0]]);
         end2 = mLast5ptEnd2 = B3DNINT(length[lineGroup[1][1]] / length[lineGroup[1][0]]);
         if (numInPat == 7) {
-          end1 = mLast5ptEnd1 = 
+          end1 = mLast5ptEnd1 =
             B3DNINT(length[lineGroup[0][2]] / (length[lineGroup[0][1]] / end1));
-          end2 = mLast5ptEnd2 = 
+          end2 = mLast5ptEnd2 =
             B3DNINT(length[lineGroup[1][2]] / (length[lineGroup[1][1]] / end2));
         }
 
@@ -4460,14 +4449,14 @@ void CNavigatorDlg::AddGridOfPoints(bool likeLast)
             for (i = 0; i < mItemArray.GetSize(); i++) {
               item = mItemArray[i];
               if ((item->mType == ITEM_TYPE_POLYGON || item->mType == ITEM_TYPE_MAP) &&
-                item->mRegistration == registration && InsideContour(item->mPtX, 
+                item->mRegistration == registration && InsideContour(item->mPtX,
                   item->mPtY, item->mNumPoints, j ? xcen : xcorner, j ? ycen : ycorner)) {
                 itemArea = ContourArea(item->mPtX, item->mPtY, item->mNumPoints);
                 if (itemArea < 10. * mLastGridPolyArea &&
                   (!searchPoly[j] || itemArea < polyArea[j])) {
-                    searchPoly[j] = item;
-                    polyArea[j] = itemArea;
-                    poly = item;
+                  searchPoly[j] = item;
+                  polyArea[j] = itemArea;
+                  poly = item;
                 }
               }
             }
@@ -4484,7 +4473,7 @@ void CNavigatorDlg::AddGridOfPoints(bool likeLast)
           // If both points are in different polygons, see if one point is in both 
           // polygons, and if so its smallest polygon is the right one
           if (searchPoly[0] && searchPoly[1] && searchPoly[0] != searchPoly[1]) {
-            if (InsideContour(searchPoly[1]->mPtX,  searchPoly[1]->mPtY, 
+            if (InsideContour(searchPoly[1]->mPtX, searchPoly[1]->mPtY,
               searchPoly[1]->mNumPoints, xcorner, ycorner)) {
               poly = searchPoly[0];
             } else if (InsideContour(searchPoly[0]->mPtX, searchPoly[0]->mPtY,
@@ -4519,7 +4508,7 @@ void CNavigatorDlg::AddGridOfPoints(bool likeLast)
 
         // Have to redo this after every message box because the redraw sets new transform!
         if (mDrawnOnMontBufInd >= 0)
-          mWinApp->mMainView->GetMapItemsForImageCoords(&mImBufs[mDrawnOnMontBufInd], 
+          mWinApp->mMainView->GetMapItemsForImageCoords(&mImBufs[mDrawnOnMontBufInd],
             true);
         SetCurrentItem(true);
         mLastGridFillItem = !label.IsEmpty();
@@ -4557,7 +4546,7 @@ void CNavigatorDlg::AddGridOfPoints(bool likeLast)
           mLastGridPolyArea = ContourArea(poly->mPtX, poly->mPtY, poly->mNumPoints);
         }
       }
-      
+
     } else {
 
       // 3 points: find corner point as one with biggest difference between lengths
@@ -4588,14 +4577,14 @@ void CNavigatorDlg::AddGridOfPoints(bool likeLast)
     StageOrImageCoords(patItems[imin], mCenX, mCenY);
 
     // To evaluate directions and spacing, we need actual stage increments
-    GridImageToStage(aInv, delX, delY, mCenX + mIncX1, mCenY + mIncY1, incStageX1, 
+    GridImageToStage(aInv, delX, delY, mCenX + mIncX1, mCenY + mIncY1, incStageX1,
       incStageY1);
     incStageX1 -= patItems[imin]->mStageX;
     incStageY1 -= patItems[imin]->mStageY;
     spacing = (float)sqrt((double)incStageX1 * incStageX1 + incStageY1 * incStageY1);
     jSpacing = kSpacing = spacing;
     if (numInPat != 3) {
-      GridImageToStage(aInv, delX, delY, mCenX + mIncX2, mCenY + mIncY2, incStageX2, 
+      GridImageToStage(aInv, delX, delY, mCenX + mIncX2, mCenY + mIncY2, incStageX2,
         incStageY2);
       incStageX2 -= patItems[imin]->mStageX;
       incStageY2 -= patItems[imin]->mStageY;
@@ -4636,7 +4625,7 @@ void CNavigatorDlg::AddGridOfPoints(bool likeLast)
 
   axis = ldParm[1].axisPosition - ldParm[3].axisPosition;
   refresh = false;
-  if (ldParm[1].magIndex && ldParm[2].magIndex && fabs(axis) > 1.e-3 && groupExtent <= 0){
+  if (ldParm[1].magIndex && ldParm[2].magIndex && fabs(axis) > 1.e-3 && groupExtent <= 0) {
     if (likeLast && mLastGridAwayFromFocus >= 0) {
       awayFromFocus = mLastGridAwayFromFocus > 0;
     } else {
@@ -4645,8 +4634,8 @@ void CNavigatorDlg::AddGridOfPoints(bool likeLast)
         " Focus area?\n\nIf not, points will be laid out in a zigzag pattern that "
         "minimizes stage"
         " movements.\n\nPress:\n\"Away from Focus Area\" to move in direction away from"
-        " focus area,\n\n\"Zigzag\" to move in a zigzag pattern.", "Away from Focus Area", 
-        "Zigzag", "",  MB_YESNO | MB_ICONQUESTION) == IDYES);
+        " focus area,\n\n\"Zigzag\" to move in a zigzag pattern.", "Away from Focus Area",
+        "Zigzag", "", MB_YESNO | MB_ICONQUESTION) == IDYES);
       refresh = true;
       mLastGridAwayFromFocus = awayFromFocus ? 1 : 0;
     }
@@ -4657,7 +4646,7 @@ void CNavigatorDlg::AddGridOfPoints(bool likeLast)
   } else {
     acquire = (AfxMessageBox("Do you want to turn on Acquire for all these new points?",
       MB_YESNO | MB_ICONQUESTION) == IDYES);
-      refresh = true;
+    refresh = true;
   }
   if (refresh) {
     if (mDrawnOnMontBufInd >= 0)
@@ -4686,7 +4675,8 @@ void CNavigatorDlg::AddGridOfPoints(bool likeLast)
     ycen = (ymax + ymin) / 2.f;
   }
 
-  // Loop on the point positions and add if inside polygon; do zig-zag
+  // Set up the point position limits for zigzag or away from focus, and modify if away
+  // from focus
   dir = 1;
   kstart = start2;
   kend = end2;
@@ -4694,31 +4684,47 @@ void CNavigatorDlg::AddGridOfPoints(bool likeLast)
   jend = end1;
   jdir = 1;
   if (awayFromFocus) {
-
-    // Get specimen then stage coordinates of vector pointing away from LD focus area
-    specX = -axis;
-    specY = 0.;
-    if (mLowDoseDlg->m_bRotateAxis) {
-      specX = -axis * cos(DTOR * mLowDoseDlg->m_iAxisAngle);
-      specY = -axis * sin(DTOR * mLowDoseDlg->m_iAxisAngle);
-    }
-    cInv = MatInv(mShiftManager->SpecimenToStage(1., 1.));
-    stageX = cInv.xpx * specX + cInv.xpy * specY;
-    stageY = cInv.ypx * specX + cInv.ypy * specY;
-
-    // If dot product of this vector with the increments is negative, invert a direction
-    if (stageX * incStageX1 + stageY * incStageY1 < 0) {
-      jdir = -1;
-      jstart = end1;
-      jend = start1;
-    }
-    if (stageX * incStageX2 + stageY * incStageY2 < 0) {
-      dir = -1;
-      kstart = end2;
-      kend = start2;
-    }
+    SetupForAwayFromFocus(incStageX1, incStageY1, incStageX2, incStageY2, jstart, jend,
+      jdir, kstart, kend, dir);
   }
 
+  // Call common routine to add points
+  MakeGridOrFoundPoints(jstart, jend, jdir, kstart, kend, dir, poly, spacing, jSpacing,
+    kSpacing, registration, stageZ, xcen, ycen, delX, delY, acquire, aInv, groupExtent, 
+    awayFromFocus, drawnOnID, likeLast);
+}
+
+// Actually add the points by the selected method, zigzag, away from focus, or in groups
+// jSpacing and kSpacing are the actual spacings in the two directions, "spacing" is
+// passed only to BoxedPointInPolygon and would be spacing for adding a grid or diameter
+// for adding found holes
+int CNavigatorDlg::MakeGridOrFoundPoints(int jstart, int jend, int jdir, int kstart,
+  int kend, int dir, CMapDrawItem *poly, float spacing, float jSpacing, float kSpacing,
+  int registration, float stageZ, float xcen, float ycen, 
+  float delX, float delY, bool acquire, ScaleMat &aInv, float groupExtent, 
+  bool awayFromFocus, int drawnOnID, bool likeLast)
+{
+  int startnum, num, jmin, jmax, kmin, kmax, j, k, jrange, krange, numInJgroup;
+  int numInKgroup, curSelBefore, curItemBefore, numListStrBefore;
+  int numJgroups, numKgroups, midj, midk, jgroup, kgroup, firstCurItem, kdir, i;
+  int groupID = MakeUniqueID();
+  int retval = groupID;
+  float xx, yy, xmin, xmax, ymin, ymax, xrot, yrot;
+  float cospr, sinpr, rotXmin, rotXmax, rotYmin, rotYmax, rotXrange, rotYrange;
+  float longRange, shortRange, delLong;
+  bool goodDivision, anyPoints;
+  double err, errmin, diff, diffmax;
+  float delXgroup, delYgroup, distMin;
+  int polyRot, rotBest, shortDiv, shortStart, shortEnd, longDiv;
+  int maxXind, maxYind, indX, indY, icen;
+  ShortVec legalCenters, bestCenters;
+  std::vector<ShortVec> kIncluded, jIncluded;
+  std::vector<float> legalMaxDists;
+  std::set<int> selListBefore;
+  CString label;
+  CMapDrawItem *item;
+
+  // No grouping: loop on the point positions and add them
   if (groupExtent <= 0.) {
     startnum = mNewItemNum;
     num = 1;
@@ -4799,7 +4805,7 @@ void CNavigatorDlg::AddGridOfPoints(bool likeLast)
     numListStrBefore = m_listViewer.GetCount();
 
     // For non-polygon, just add all the points and be done with it
-    if (!poly) {
+    if (!poly && !mAddingFoundHoles) {
 
       // these numbers are a maximum, so we get a number of groups to keep size in range
       numJgroups = (jrange + numInJgroup - 1) / numInJgroup;
@@ -4850,19 +4856,27 @@ void CNavigatorDlg::AddGridOfPoints(bool likeLast)
 
 
       // For a polygon, find the rotation that minimizes area
-      errmin = 1.e30;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             errmin = 1.e30;
       for (polyRot = -45; polyRot < 45; polyRot++) {
         cospr = (float)cos(DTOR * polyRot);
         sinpr = (float)sin(DTOR * polyRot);
         xmin = ymin = 1.e10;
         xmax = ymax = -xmin;
-        for (i = 0; i < poly->mNumPoints; i++) {
-          xrot = cospr * (poly->mPtX[i] - xcen) - sinpr * (poly->mPtY[i] - ycen);
-          yrot = sinpr * (poly->mPtX[i] - xcen) + cospr * (poly->mPtY[i] - ycen);
-          xmin = B3DMIN(xmin, xrot);
-          ymin = B3DMIN(ymin, yrot);
-          xmax = B3DMAX(xmax, xrot);
-          ymax = B3DMAX(ymax, yrot);
+        for (i = 0; i < (mAddingFoundHoles ? (int)mHFxCenters->size() :
+          poly->mNumPoints); i++) {
+          if (mAddingFoundHoles) {
+            xx = mHFxCenters->at(i);
+            yy = mHFyCenters->at(i);
+          } else {
+            xx = poly->mPtX[i];
+            yy = poly->mPtY[i];
+          }
+          xrot = cospr * (xx - xcen) - sinpr * (yy - ycen);
+          yrot = sinpr * (xx - xcen) + cospr * (yy - ycen);
+          ACCUM_MIN(xmin, xrot);
+          ACCUM_MIN(ymin, yrot);
+          ACCUM_MAX(xmax, xrot);
+          ACCUM_MAX(ymax, yrot);
         }
 
         if ((ymax - ymin) * (xmax - xmin) < errmin) {
@@ -4878,26 +4892,30 @@ void CNavigatorDlg::AddGridOfPoints(bool likeLast)
       sinpr = (float)sin(DTOR * rotBest);
 
       // Account for the border fraction before dividing up the range
-      xmin = 0.45f * mParam->gridInPolyBoxFrac * spacing;
-      rotXmin += xmin;
-      rotXmax -= xmin;
-      rotYmin += xmin;
-      rotYmax -= xmin;
-      rotXrange = rotXmax - rotXmin;
-      rotYrange = rotYmax - rotYmin;
+      if (poly) {
+        xmin = 0.45f * spacing *
+          (mAddingFoundHoles ? mParam->holeInPolyBoxFrac : mParam->gridInPolyBoxFrac);
+        rotXmin += xmin;
+        rotXmax -= xmin;
+        rotYmin += xmin;
+        rotYmax -= xmin;
+        rotXrange = rotXmax - rotXmin;
+        rotYrange = rotYmax - rotYmin;
+      }
       longRange = B3DMAX(rotXrange, rotYrange);
       shortRange = B3DMIN(rotXrange, rotYrange);
       if (longRange <= 0. || shortRange <= 0) {
-        AfxMessageBox("The polygon is too small to be analyzed for division into groups",
-          MB_EXCLAME);
+        AfxMessageBox((mAddingFoundHoles ? "The set of points" : "The polygon") +
+          CString(" is too small to be analyzed for division into groups"),  MB_EXCLAME);
         mLastGridPatternPoly = -1;
-        return;
+        return 0;
       }
 
       // Loop on increasing divisions of long dimension, and for each one, try one
       // or two of the nearest equal divisions of the short dimension
       goodDivision = false;
-      for (longDiv = 1; longDiv < 2. * longRange / spacing && !goodDivision; longDiv++) {
+      for (longDiv = 1; longDiv < 2. * longRange / (0.5 * (jSpacing + kSpacing)) &&
+        !goodDivision; longDiv++) {
         delLong = longRange / longDiv;
         shortEnd = (int)ceil(shortRange / delLong);
         shortStart = B3DMAX(1, shortEnd - 1);
@@ -4957,7 +4975,7 @@ void CNavigatorDlg::AddGridOfPoints(bool likeLast)
           if (!anyPoints) {
             AfxMessageBox("No points are sufficiently inside the polygon", MB_EXCLAME);
             mLastGridPatternPoly = -1;
-            return;
+            return 0;
           }
 
           // Loop on the groups
@@ -5064,6 +5082,7 @@ void CNavigatorDlg::AddGridOfPoints(bool likeLast)
           m_listViewer.DeleteString(k);
         m_listViewer.SetCurSel(mCurListSel);
         MakeListMappings();
+        retval = 0;
      }
     }
   }
@@ -5077,6 +5096,7 @@ void CNavigatorDlg::AddGridOfPoints(bool likeLast)
   ManageCurrentControls();
   Update();
   Redraw();
+  return retval;
 }
 
 // Add one point on the grid given the index and other parameters
@@ -5088,7 +5108,7 @@ void CNavigatorDlg::AddPointOnGrid(int j, int k, CMapDrawItem *poly, int registr
   CMapDrawItem *item;
   float xx, yy;
   GridStagePos(j, k, delX, delY, aInv, xx, yy);
-  if (poly && BoxedPointOutsidePolygon(poly, xx, yy, spacing))
+  if (BoxedPointOutsidePolygon(poly, xx, yy, spacing))
       return;
   item = MakeNewItem(groupID);
   mNewItemNum--;
@@ -5115,8 +5135,11 @@ void CNavigatorDlg::AddPointOnGrid(int j, int k, CMapDrawItem *poly, int registr
 bool CNavigatorDlg::BoxedPointOutsidePolygon(CMapDrawItem *poly, float xx, float yy, 
                                              float spacing)
 {
-  float corn = 0.5f * mParam->gridInPolyBoxFrac * spacing;
-  return !(InsideContour(poly->mPtX, poly->mPtY, poly->mNumPoints, xx, yy) &&
+  float corn = 0.5f  * spacing * 
+    (mAddingFoundHoles ? mParam->holeInPolyBoxFrac : mParam->gridInPolyBoxFrac);
+  if (mAddingFoundHoles && xx < EXTRA_VALUE_TEST)
+    return true;
+  return poly && !(InsideContour(poly->mPtX, poly->mPtY, poly->mNumPoints, xx, yy) &&
       InsideContour(poly->mPtX, poly->mPtY, poly->mNumPoints, xx + corn, yy+corn) &&
       InsideContour(poly->mPtX, poly->mPtY, poly->mNumPoints, xx - corn, yy+corn) &&
       InsideContour(poly->mPtX, poly->mPtY, poly->mNumPoints, xx + corn, yy-corn) &&
@@ -5141,13 +5164,66 @@ void CNavigatorDlg::InterPointVectors(CMapDrawItem **gitem, float *vecx, float *
   }
 }
 
-// Compute stage position of one item in grid
+// Given stage increments in the two directions, set the starts and ends and directions
+// for moving away from the focus area
+void CNavigatorDlg::SetupForAwayFromFocus(float incStageX1, float incStageY1, 
+  float incStageX2, float incStageY2, int &jstart, int &jend, int &jdir, int &kstart, 
+  int &kend, int &dir)
+{
+  double specX, specY, stageX, stageY;
+  ScaleMat cInv = MatInv(mShiftManager->SpecimenToStage(1., 1.));
+  LowDoseParams *ldParm = mWinApp->GetLowDoseParams();
+  double axis = ldParm[FOCUS_CONSET].axisPosition - ldParm[RECORD_CONSET].axisPosition;
+
+  // Get specimen then stage coordinates of vector pointing away from LD focus area
+  specX = -axis;
+  specY = 0.;
+  if (mLowDoseDlg->m_bRotateAxis) {
+    specX = -axis * cos(DTOR * mLowDoseDlg->m_iAxisAngle);
+    specY = -axis * sin(DTOR * mLowDoseDlg->m_iAxisAngle);
+  }
+  
+  stageX = cInv.xpx * specX + cInv.xpy * specY;
+  stageY = cInv.ypx * specX + cInv.ypy * specY;
+
+  // If dot product of this vector with the increments is negative, invert a direction
+  if (stageX * incStageX1 + stageY * incStageY1 < 0) {
+    B3DSWAP(jstart, jend, jdir);
+    jdir = -1;
+  }
+  if (stageX * incStageX2 + stageY * incStageY2 < 0) {
+    B3DSWAP(kstart, kend, dir);
+    dir = -1;
+  }
+}
+
+// Compute stage position of one item in grid, or get position of a found hole at that 
+// grid position
 void CNavigatorDlg::GridStagePos(int j, int k, float delX, float delY, ScaleMat &aInv, 
                                  float &xx, float &yy)
 {
-  xx = mCenX + mIncX1 * j + mIncX2 * k;
-  yy = mCenY + mIncY1 * j + mIncY2 * k;
-  GridImageToStage(aInv, delX, delY, xx, yy, xx, yy);
+  if (mAddingFoundHoles) {
+    xx = EXTRA_NO_VALUE;
+    yy = EXTRA_NO_VALUE;
+
+    // Look for matching grid index for non-excluded point
+    for (int ind = 0; ind < (int)mHFgridXpos->size(); ind++) {
+      if (mHFgridXpos->at(ind) == j && mHFgridYpos->at(ind) == k && !mHFexclude->at(ind)){
+        xx = mHFxCenters->at(ind);
+        yy = mHFyCenters->at(ind);
+        if (mDrawnOnMontBufInd >= 0 && mHFpieceOn->size() > 0) {
+          mPieceGridPointOn = mHFpieceOn->at(ind);
+          mGridPtXinPiece = mHFxInPiece->at(ind);
+          mGridPtYinPiece = mHFyInPiece->at(ind);
+        }
+        return;
+      }
+    }
+  } else {
+    xx = mCenX + mIncX1 * j + mIncX2 * k;
+    yy = mCenY + mIncY1 * j + mIncY2 * k;
+    GridImageToStage(aInv, delX, delY, xx, yy, xx, yy);
+  }
 }
 
 // If item was drawn on a buffer and image coordinate conversion was set up, this will
@@ -5177,6 +5253,48 @@ void CNavigatorDlg::GridImageToStage(ScaleMat aInv, float delX, float delY, floa
     stageX = aInv.xpx * (posX - delX) + aInv.xpy * (posY - delY);
     stageY = aInv.ypx * (posX - delX) + aInv.ypy * (posY - delY);
   }
+}
+
+// Add holes found by the HoleFinder using all these passed vectors
+int CNavigatorDlg::AddFoundHoles(FloatVec *xCenters, FloatVec *yCenters,
+  std::vector<bool> *exclude, FloatVec *xInPiece, FloatVec *yInPiece, IntVec *pieceOn, 
+  ShortVec *gridXpos, ShortVec *gridYpos, float spacing, float diameter, float angle,
+  int registration, int mapID, float stageZ, CMapDrawItem *poly, int layoutType)
+{
+  float xcen = 0., ycen = 0., groupExtent = 0.;
+  int jstart = 0, jend, kstart = 0, kend, jdir = 1, dir = 1, ind;
+  float delX = 0., delY = 0.;
+  ScaleMat aInv;
+  mAddingFoundHoles = true;
+  mHFxCenters = xCenters;
+  mHFyCenters = yCenters;
+  mHFexclude = exclude;
+  mHFxInPiece = xInPiece;
+  mHFyInPiece = yInPiece;
+  mHFpieceOn = pieceOn;
+  mHFgridXpos = gridXpos;
+  mHFgridYpos = gridYpos;
+  for (ind = 0; ind < (int)xCenters->size(); ind++) {
+    xcen += xCenters->at(ind) / (float)xCenters->size();
+    ycen += yCenters->at(ind) / (float)xCenters->size();
+  }
+  mDrawnOnMontBufInd = FindBufferWithMontMap(mapID);
+  if (layoutType == 2)
+    groupExtent = mHelper->GetGridGroupSize();
+  jend = *std::max_element(gridXpos->begin(), gridXpos->end()) - 1;
+  kend = *std::max_element(gridYpos->begin(), gridYpos->end()) - 1;
+  if (layoutType == 1)
+    SetupForAwayFromFocus(spacing * (float)cos(DTOR * angle),
+      spacing * (float)sin(DTOR * angle), spacing * (float)cos(DTOR * (angle + 90.)),
+      spacing * (float)sin(DTOR * (angle + 90.)), jstart, jend, jdir, kstart, kend, dir);
+
+  // This returns the first group ID added, which is used to determine if original points
+  // should still be displayed
+  ind = MakeGridOrFoundPoints(jstart, jend, jdir, kstart, kend, dir, poly, diameter, 
+    spacing, spacing, registration, stageZ, xcen, ycen, delX, delY, true, aInv, 
+    groupExtent, layoutType == 1, mapID, false);
+  mAddingFoundHoles = false;
+  return ind;
 }
 
 
@@ -8853,14 +8971,16 @@ bool CNavigatorDlg::IsItemToBeAcquired(CMapDrawItem *item, bool &skippingGroup)
 }
 
 // Return a map or other item with the given ID if it exists, otherwise return NULL
-CMapDrawItem * CNavigatorDlg::FindItemWithMapID(int mapID, bool requireMap)
+CMapDrawItem * CNavigatorDlg::FindItemWithMapID(int mapID, bool requireMap, 
+  bool matchGroup)
 {
   CMapDrawItem *item;
   if (!mapID)
     return NULL;
   for (mFoundItem = 0; mFoundItem < mItemArray.GetSize(); mFoundItem++) {
     item = mItemArray[mFoundItem];
-    if ((item->mType == ITEM_TYPE_MAP || !requireMap) && item->mMapID == mapID)
+    if ((item->mType == ITEM_TYPE_MAP || !requireMap) && 
+      ((!matchGroup && item->mMapID == mapID) || (matchGroup && item->mGroupID == mapID)))
       return item;
   }
   mFoundItem = -1;

@@ -439,6 +439,7 @@ struct NavParams {
   TiffField idField[MAX_IMPORT_XFORMS];
   CString xformID[MAX_IMPORT_XFORMS];
   float gridInPolyBoxFrac;
+  float holeInPolyBoxFrac;
   double importXbase, importYbase;
   CString overlayChannels;
   float stageBacklash;

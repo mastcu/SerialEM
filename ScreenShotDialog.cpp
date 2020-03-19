@@ -1,5 +1,11 @@
-// ScreenShotDialog.cpp : implementation file
+// ScreenShotDialog.cpp : Take and saves a screen shot or zoomed shot with user settings
 //
+// Copyright (C) 2020 by  the Regents of the University of
+// Colorado.  See Copyright.txt for full notice of copyright and limitations.
+//
+// Author: David Mastronarde
+//
+//////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include "SerialEM.h"

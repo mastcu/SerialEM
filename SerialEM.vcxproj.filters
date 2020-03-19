@@ -772,6 +772,9 @@
     <None Include="hlp\html\hidd_screenshot.htm">
       <Filter>HTML Help Topics</Filter>
     </None>
+    <None Include="hlp\html\hidd_hole_finder.htm">
+      <Filter>HTML Help Topics</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AlignFocusWindow.cpp">

@@ -158,6 +158,7 @@ int CParameterIO::ReadSettings(CString strFileName)
   FrameAliParams faParam, *faData;
   BOOL *useGPU4K2Ali = mWinApp->mCamera->GetUseGPUforK2Align();
   MultiShotParams *msParams = mWinApp->mNavHelper->GetMultiShotParams();
+  HoleFinderParams *hfParams = mWinApp->mNavHelper->GetHoleFinderParams();
   DriftWaitParams *dwParams = mWinApp->mParticleTasks->GetDriftWaitParams();
   ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
   VppConditionParams *vppParams = mWinApp->mMultiTSTasks->GetVppConditionParams();
@@ -491,6 +492,26 @@ int CParameterIO::ReadSettings(CString strFileName)
       } else if (NAME_IS("CustomHoleY")) {
         for (index = 1; index < MAX_TOKENS && !itemEmpty[index]; index++)
           msParams->customHoleY.push_back((float)itemDbl[index]);
+      } else if (NAME_IS("HoleFinderParams")) {
+        hfParams->spacing = (float)itemDbl[1];
+        hfParams->diameter = (float)itemDbl[2];
+        hfParams->useBoundary = itemInt[3] != 0;
+        hfParams->lowerMeanCutoff = (float)itemDbl[4];
+        hfParams->upperMeanCutoff = (float)itemDbl[5];
+        hfParams->SDcutoff = (float)itemDbl[6];
+        hfParams->blackFracCutoff = (float)itemDbl[7];
+        hfParams->showExcluded = itemInt[8] != 0;
+        hfParams->layoutType = itemInt[9];
+        hfParams->bracketLast = itemInt[10] != 0;
+      } else if (NAME_IS("HoleFiltSigmas")) {
+        hfParams->sigmas.clear();
+        for (index = 1; index < MAX_TOKENS && !itemEmpty[index]; index++)
+          hfParams->sigmas.push_back((float)itemDbl[index]);
+      } else if (NAME_IS("HoleEdgeThresholds")) {
+        hfParams->thresholds.clear();
+        for (index = 1; index < MAX_TOKENS && !itemEmpty[index]; index++)
+          hfParams->thresholds.push_back((float)itemDbl[index]);
+
       } else if (NAME_IS("DriftWaitParams")) {
         dwParams->measureType = B3DMAX(0, B3DMIN(2, itemInt[1]));
         dwParams->driftRate = (float)itemDbl[2];
@@ -703,15 +724,7 @@ int CParameterIO::ReadSettings(CString strFileName)
           winPlace.rcNormalPosition.bottom > 0)
           mWinApp->SetWindowPlacement(&winPlace);
 
-      } else if (NAME_IS("LogPlacement") || NAME_IS("NavigatorPlacement") ||
-        NAME_IS("MeterPlacement") || NAME_IS("DosePlacement") || 
-        NAME_IS("RotAlignPlacement") ||NAME_IS("StageToolPlacement") ||
-        NAME_IS("ReadDlgPlacement") || NAME_IS("StatePlacement") ||
-        NAME_IS("MacroToolPlacement") || NAME_IS("MacroEditerPlacement") ||
-        NAME_IS("OneLinePlacement") || NAME_IS("MultiShotPlacement") ||
-        NAME_IS("CtffindPlacement") || NAME_IS("OneEditerPlacement") ||
-        NAME_IS("AutocenPlacement") || NAME_IS("VppCondPlacement") ||
-        NAME_IS("SnapshotPlacement")) {
+      } else if (strItems[0].Find("Placement") == strItems[0].GetLength() - 9) {
         index = NAME_IS("OneEditerPlacement") ? 1 : 0;
         if (strItems[index + 10].IsEmpty() || 
           (index && (itemInt[1] < 0 || itemInt[1] >= MAX_MACROS))) {
@@ -727,6 +740,8 @@ int CParameterIO::ReadSettings(CString strFileName)
             place = mWinApp->mNavHelper->GetRotAlignPlacement();
           else if (NAME_IS("MultiShotPlacement"))
             place = mWinApp->mNavHelper->GetMultiShotPlacement(false);
+          else if (NAME_IS("HoleFinderPlacement"))
+            place = mWinApp->mNavHelper->GetHoleFinderPlacement();
           else if (NAME_IS("CtffindPlacement"))
             place = mWinApp->mProcessImage->GetCtffindPlacement();
           else if (NAME_IS("AutocenPlacement"))
@@ -1273,6 +1288,7 @@ void CParameterIO::WriteSettings(CString strFileName)
   FrameAliParams faParam;
   BOOL *useGPU4K2Ali = mWinApp->mCamera->GetUseGPUforK2Align();
   MultiShotParams *msParams = mWinApp->mNavHelper->GetMultiShotParams();
+  HoleFinderParams *hfParams = mWinApp->mNavHelper->GetHoleFinderParams();
   DriftWaitParams *dwParams = mWinApp->mParticleTasks->GetDriftWaitParams();
   ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
   VppConditionParams *vppParams = mWinApp->mMultiTSTasks->GetVppConditionParams();
@@ -1462,6 +1478,17 @@ void CParameterIO::WriteSettings(CString strFileName)
       OutputVector("CustomHoleY", (int)msParams->customHoleY.size(), NULL, 
         &msParams->customHoleY);
     }
+    oneState.Format("HoleFinderParams %f %f %d %f %f %f %f %d %d %d\n", hfParams->spacing,
+      hfParams->diameter, hfParams->useBoundary ? 1 : 0, hfParams->lowerMeanCutoff,
+      hfParams->upperMeanCutoff, hfParams->SDcutoff, hfParams->blackFracCutoff,
+      hfParams->showExcluded ? 1 : 0, hfParams->layoutType, hfParams->bracketLast ? 1 :0);
+    mFile->WriteString(oneState);
+    if (hfParams->sigmas.size())
+      OutputVector("HoleFiltSigmas", (int)hfParams->sigmas.size(), NULL, 
+        &hfParams->sigmas);
+    if (hfParams->thresholds.size())
+      OutputVector("HoleEdgeThresholds", (int)hfParams->thresholds.size(), NULL,
+        &hfParams->thresholds);
     oneState.Format("DriftWaitParams %d %f %d %f %f %d %d %f %d %d\n", dwParams->measureType,
       dwParams->driftRate, dwParams->useAngstroms, dwParams->interval,
       dwParams->maxWaitTime, dwParams->failureAction, dwParams->setTrialParams,
@@ -1619,6 +1646,7 @@ void CParameterIO::WriteSettings(CString strFileName)
     WritePlacement("AutocenPlacement", 0, autocenPlace);
     WritePlacement("VppCondPlacement", 0, vppPlace);
     WritePlacement("SnapshotPlacement", 0, mWinApp->GetScreenShotPlacement());
+    WritePlacement("HoleFinderPlacement",0,mWinApp->mNavHelper->GetHoleFinderPlacement());
     WritePlacement("MacroToolPlacement", mWinApp->mMacroToolbar ? 1 : 0, toolPlace);
     WritePlacement("OneLinePlacement", mWinApp->mMacroProcessor->mOneLineScript ? 1 : 0, 
       oneLinePlace);
@@ -5190,14 +5218,16 @@ CString CParameterIO::EntryListToString(int type, int precision, int numVals, in
 // Convert a string containing an entry list to list of values.  Type = 1 for doubles 
 // only, 2 for int,double, 3 for int.  Returns 2 for too many entries, 1 for format error
 // such as too few values in entry, -1 for format warning (possibly extra values)
-int CParameterIO::StringToEntryList(int type, CString str, int &numVals, 
-                                    int *iVals, double *dVals, int maxVals)
+int CParameterIO::StringToEntryList(int type, CString str, int &numVals, int *iVals, 
+  double *dVals, int maxVals, bool splitCommas)
 {
   int err, ind, ind2;
   int twocomma = 0;
   double temp;
   CString *strItems = new CString[maxVals];
   CString strBit;
+  if (splitCommas)
+    str.Replace(',', ' ');
   err = ParseString(str, strItems, maxVals);
   numVals = 0;
   for (int i = 0; i < maxVals; i++) {

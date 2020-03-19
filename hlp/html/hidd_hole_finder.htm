@@ -1,0 +1,189 @@
+<html>
+  <head>
+    <title>Hole Finder Dialog</title>
+    <meta HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252"/>
+    <style type="text/css"> <!-- BODY { font-family:"Arial" }
+  TD { font-size:16 }
+      .style1
+      {
+        font-size: larger;
+        font-weight: bold;
+      }
+      --></style>
+  </head>
+  <body BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+    <p><a NAME="hidd_screenshot"></a><span class="style1">Hole Finder
+        Dialog</span></p>
+    <p>This dialog allows you to use the Holefinder module to find circular holes in a 
+      support film that are arranged in a square lattice.&nbsp; This module was developed in the IMOD program 
+      Imodfindholes.&nbsp; It finds holes by a sequence of steps, starting with an 
+      image reduction to bring the holes to a diameter of ~50 pixels, then a smoothing 
+      filter, and edge detection with a Sobel filter and a Canny edge detector.&nbsp; 
+      This edge image is correlated with a series of circular templates to determine 
+      the best size, preliminary positions are found, the edge image is averaged over 
+      the positions with the strongest correlations, and this average edge template is 
+      correlated with the edge image.&nbsp; Positions are then analyzed for whether 
+      are at regular spacings and angles with respect to each other.&nbsp; The actual 
+      reduced image is then averaged at most of the found positions and the resulting 
+      image template is correlated with the reduced image.&nbsp; The positions from 
+      this correlation are separately analyzed for location on a regular grid, and 
+      results from the two methods are merged.&nbsp; Holes with extreme outlying 
+      intensities are eliminated.</p>
+    <p>There are two parameters that determine the efficacy of the edge detection: the 
+      initial filter and the threshold for the Canny edge detector.&nbsp; Optimal 
+      results are obtained by doing the entire analysis with a series of values and 
+      using the filter/threshold pair that detects the most holes.</p>
+    <p>For a montage, this analysis is done on the overview image as currently 
+      displayed, although the program may reload the overview with less binning if 
+      holes are too small in the current image.&nbsp; Individual montage pieces are 
+      then analyzed with both average edge and image templates to find hole positions 
+      on each piece.&nbsp; These positions are used to refine and add to those from 
+      the overview image, so that each point ends up with an accurately measured 
+      position on a specific montage piece that can be used with the Realign to Item 
+      routine.&nbsp; This method can overcome the deficiencies in the alignment of 
+      pieces in the overview image, provided that the error in alignment of adjacent 
+      pieces is less than half&nbsp; the spacing between holes.&nbsp; If the error is 
+      larger than this, the program will not be able to resolve positions between the 
+      pieces accurately, and some holes will be missed or duplicated.</p>
+    <p>When an overview has bad piece alignments (half a hole spacing or more), tyou 
+      need to get an overview with less error, not a perfect alignment. The recourse 
+      is:</p>
+    <ol>
+      <li>Turn off &#39;Treat as very sloppy montage&#39; in the Montage Control panel, if it is 
+        on.&nbsp; This will usually prevent alignment errors from giving large shifts 
+        between pieces.</li>
+      <li>If alignments are still bad, turn off &#39;Align pieces in overview&#39;.</li>
+      <li>If errors are still too large, you need a better stage calibration or 
+        high-defocus magnification calibrations.</li>
+    </ol>
+    <p>
+      The hole-finding operation is done on the current active image in the main 
+      buffer display.&nbsp; After finding holes, the image data in the holes is 
+      analyzed in 3 ways: the mean intensity is computed; pixels are smoothed by 
+      averaging 3x3 blocks of pixels and the standard deviation (SD) of smoothed 
+      values is computed; and the percentage of pixels that would be considered dark 
+      outliers will be estimated.&nbsp; In this dialog, you can set a lower and upper 
+      cutoff for the mean intensity and upper cutoffs for the SD and percent of black 
+      pixels.&nbsp; These cutoffs are initially constrained to the extreme values of 
+      the first set of holes analyzed, but then become independent settings retained 
+      between sets of holes.&nbsp; A cutoff can thus be outside the range found in the 
+      current set of holes, which is useful if none of the holes in this particular 
+      gris square approach the extremes that are being eliminated.</p>
+    <p>
+      <strong>Hole size</strong></p>
+    <p>
+      Enter the size of the holes in microns.&nbsp; This needs to be accurate to 
+      within ~10%, preferably better.</p>
+    <p>
+      <strong>Spacing</strong></p>
+    <p>
+      Enter the spacing between holes in microns.&nbsp; This needs to be accurate 
+      within ~15%.</p>
+    <p>
+      <strong>Maximum error</strong></p>
+    <p>
+      Enter the maximum deviation allowed between a point and the predicted location 
+      of that point, based on a fit to positions in up to a 5x5 array of neighboring 
+      points.&nbsp; Points will be dropped if they exceed this error.&nbsp; A value of 
+      0.05 should be good.</p>
+    <p>
+      <strong>Exclude holes outside polygon</strong></p>
+    <p>
+      With this option checked, the program will look for polygons most of whose 
+      points fall on the current image, and take the largest such one as a boundary 
+      polygon.&nbsp; The option is ignored if no polygon is found, so it can be left 
+      on if you ever use it.&nbsp; Stray points on the grid bar should be easy to 
+      eliminate with the lower mean intensity cutoff, but the option to use a polygon 
+      is available if points outside the grid square are numerous enough to ruin the 
+      hole detection.</p>
+    <p>
+      <strong>Filters to try</strong></p>
+    <p>
+      The program can apply two different initial filters: Gaussian smoothing with a 
+      specified sigma value, or median filtering with a given number of iterations.&nbsp; 
+      While smoothing is most often best, median filtering may be optimal for some 
+      kinds of data; thus it is advisable to try both.&nbsp; Sigma values in pixels 
+      are entered in the &#39;Gaussian sigma&#39; box and iteration numbers in the &#39;Median 
+      filter iterations&#39; box, separated by spaces; either box may be left blank.&nbsp; Median filtering 
+      can reduce noise while preserving the sharpness of the hole edge and may be 
+      better in some cases.&nbsp; The default entries are sigma 1.5, 2, and 3 for 
+      Gaussian smoothing and 3 iterations of the median filter.&nbsp; The median 
+      filter takes longer.</p>
+    <p>
+      <strong>Edge threshold</strong></p>
+    <p>
+      This threshold entry specifies the percentage of pixels in the Sobel-filtered 
+      image that will be taken as &#39;strong&#39; edge points and form the seed for the final 
+      edge image. The Canny edge detector also has a lower threshold for selecting 
+      points as &#39;weak&#39; edge points.&nbsp; The lower threshold is taken to be twice the 
+      upper one.&nbsp; Enter one or more thresholds separated by spaces.&nbsp; The 
+      default entries are 2, 3.2, and 4.4.</p>
+    <p>
+      <strong>Bracket last filter/threshold values</strong></p>
+    <p>
+      Without this option on, the total number of filter/threshold combinations tried 
+      is the product of the number of filters and the number of thresholds.&nbsp;
+      After one set of holes has been analyzed, this option can be used to try only 
+      the subset of the filter and threshold values adjacent to the ones that were 
+      last found to be optimal.&nbsp; This can save variable amounts of time.&nbsp; 
+      The fewest trials will be done if both previous values were at one end of their 
+      respective range; if the values are in the middle of each range of 3 or more 
+      items, 9 trials will still be done.&nbsp; Simply adopting the values found on 
+      one analysis and applying them on further grid squares was not adequate when 
+      tested during development.</p>
+    <p><strong>Find Holes</strong></p>
+    <p>Press this button to analyze the currently active image.&nbsp; The results from 
+      each trial pair of filter and threshold values will be shown on a line below 
+      this button: the number of points found, and the number missing from a regular 
+      grid.&nbsp; When the trials are done, the final result will be shown, along with 
+      the hole size and spacing found.&nbsp;
+      </p>
+    <p><strong>Clear Data</strong></p>
+    <p>Use this button to remove the display of found points and free up all memory 
+      used in Holefinder.</p>
+    <p><strong>Lower mean cutoff</strong></p>
+    <p>Use the slider or enter a value in the text box to exclude holes whose mean 
+      intensity is below the selected value.</p>
+    <p><strong>Upper mean cutoff</strong></p>
+    <p>Use the slider or enter a value in the text box to exclude holes whose mean 
+      intensity is above the selected value.</p>
+    <p><strong>SD cutoff</strong></p>
+    <p>Use the slider to exclude holes where the standard deviation of smoothed 
+      intensity exceeds the selected value.</p>
+    <p><strong>Black pixel % cutoff</strong></p>
+    <p>Use the slider to exclude holes where the pecentage of smoothed pixel values 
+      that are negative outliers exceeds the selected value.</p>
+    <p><strong>Show Included holes</strong></p>
+    <p>Use this option to toggle whether the included points (the ones passing all the 
+      cutoffs) are displayed.&nbsp; Included points are displayed in magenta.</p>
+    <p><strong>Show Excluded holes</strong></p>
+    <p>Use this option to toggle whether the points excluded by any of these cutoffs 
+      are displayed.&nbsp; They are displayed in blue.</p>
+    <p><strong>Layout of points</strong></p>
+    <p>These radio buttons determine the sequence in which points will be placed in 
+      the Navigator table by the following button.&nbsp; They represent the same 
+      options allowed when using the
+      <a href="menu_navigator.htm#hid_navigator_addgridofpoints">Add Grid of Points</a> 
+      command: 1) &#39;Zigzag&#39; will go up one column 
+      and down the next. 2) &#39;Away from focus&#39; will move in the same direction within 
+      each column or row, the direction away from the Focus area.&nbsp; 3) &#39;In groups&#39; 
+      will place the points in groups no bigger than the size set with Set Group 
+      Radius, with the first point in near the center of the group and other points 
+      accessed in a zigzag pattern.
+      This selection is independent of whether the menu option
+      <a href="menu_navigator.htm#hid_montaginggrids_grouppointsingrid">Divide Points into Groups</a> option 
+      is on.</p>
+    <p><strong>Make Navigator Points</strong></p>
+    <p>Press this button to generate a set of Navigator points from the included 
+      holes, ordered in the chosen way.&nbsp; Points will be marked for acquisition.&nbsp; 
+      When points are placed into multiple groups, a message box will appear showing 
+      the number of groups and their average size and giving you the chance to reject 
+      the division.&nbsp; Otherwise, points will be placed into a single group.</p>
+    <p>The hole positions will no longer be displayed after points are put into the 
+      Navigator table, provided that the first (or only) created group still has some 
+      points in it.&nbsp; To bring back the display of the hole positions, delete that 
+      group of points in the table by using the 'Collapse groups' option in the 
+      <a href="hidd_navigator.htm">Navigator Dialog</a>.</p>
+</body>
+</html>

@@ -63,7 +63,9 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDR_MAINFRAME           ICON                    "res\\SerialEM.ico"
+
 IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -71,7 +73,9 @@ IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
 //
 
 IDR_MAINFRAME           BITMAP                  "res\\Toolbar.bmp"
+
 IDB_BITMAP1             BITMAP                  "res\\bitmap1.bmp"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3211,7 +3215,7 @@ END
 
 IDD_HOLE_FINDER DIALOGEX 0, 0, 156, 275
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Hole Finder"
+CAPTION "the 'Dib"
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
     CONTROL         "Zigzag",IDC_RZIGZAG,"Button",BS_AUTORADIOBUTTON | WS_GROUP,9,226,36,10
@@ -3314,7 +3318,9 @@ END
 //
 
 IDC_CURSOR1             CURSOR                  "res\\cursor1.cur"
+
 IDC_CURSOR2             CURSOR                  "res\\cursor2.cur"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3796,64 +3802,64 @@ END
 // AFX_DIALOG_LAYOUT
 //
 
-IDD_AUTOCENSETUP AFX_DIALOG_LAYOUT 
+IDD_AUTOCENSETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_TILTSERIES AFX_DIALOG_LAYOUT 
+IDD_TILTSERIES AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_DRIFTWAITSETUP AFX_DIALOG_LAYOUT 
+IDD_DRIFTWAITSETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_SCREENSHOT AFX_DIALOG_LAYOUT 
+IDD_SCREENSHOT AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_MULTI_SHOT_SETUP AFX_DIALOG_LAYOUT 
+IDD_MULTI_SHOT_SETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_REMOTE_CONTROL AFX_DIALOG_LAYOUT 
+IDD_REMOTE_CONTROL AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_LOWDOSE AFX_DIALOG_LAYOUT 
+IDD_LOWDOSE AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_VPP_EXPOSE_SETUP AFX_DIALOG_LAYOUT 
+IDD_VPP_EXPOSE_SETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_MACRO AFX_DIALOG_LAYOUT 
+IDD_MACRO AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_K2_SAVE_OPTIONS AFX_DIALOG_LAYOUT 
+IDD_K2_SAVE_OPTIONS AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_SCOPESTATUS AFX_DIALOG_LAYOUT 
+IDD_SCOPESTATUS AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_HOLE_FINDER AFX_DIALOG_LAYOUT 
+IDD_HOLE_FINDER AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
 
@@ -5822,6 +5828,32 @@ STRINGTABLE
 BEGIN
     IDC_EDIT_JPEG_QUALITY   "Percent quality for compression in JPEG file or JPEG-compressed TIFF"
     IDC_SPIN_JPEG_QUALITY   "Increase of decrease the compression quality"
+END
+
+STRINGTABLE
+BEGIN
+    IDC_RZIGZAG             "Alternate directions between rows or columns to minimize stage movement"
+    IDC_RFROM_FOCUS         "Make direction so that Focus area is near previous point, not next one"
+    IDC_RIN_GROUPS          "Arrange points in groups with maximum radius specified in menu"
+    IDC_EDIT_SIGMAS         "Enter one or more sigmas in pixels to try for Gaussian smoothing"
+    IDC_EDIT_MEDIAN_ITERS   "Enter one or more number of iterations for median filters to try"
+    IDC_EDIT_THRESHOLDS     "Enter one or more thresholds (small % value) to try for edge detection"
+    IDC_EXCLUDE_OUTSIDE     "Look for an appropriate polygon to use as a boundary for points"
+    IDC_EDIT_HOLE_SIZE      "Enter the nominal size of holes, in microns"
+    IDC_EDIT_SPACING        "Enter the nominal spacing between holes, in microns"
+    IDC_BUT_FIND_HOLES      "Run the hole-finding routine with given parameters"
+    IDC_SLIDER_LOW_MEAN     "Select the mean intensity below which holes will be excluded"
+    IDC_EDIT_LOWER_MEAN     "Enter the mean intensity below which holes will be excluded"
+    IDC_SLIDER_UPPER_MEAN   "Select the mean intensity above which holes will be excluded"
+    IDC_EDIT_UPPER_MEAN     "Enter the mean intensity above which holes will be excluded"
+    IDC_SLIDER_STANDEV      "Select the standard deviation value above which holes will be excluded"
+    IDC_SLIDER_BLACK_CUTOFF "Select the percent of outlier pixels above which holes will be excluded"
+    IDC_SHOW_INCLUDED       "Show the points that have not been excluded in the display"
+    IDC_SHOW_EXCLUDED       "Show the points that have been excluded in the display"
+    IDC_BUT_MAKE_NAV_PTS    "Add the non-excluded points to the Navigator table"
+    IDC_EDIT_MAX_ERROR      "Enter the maximum error in microns between actual and predicted position"
+    IDC_BUT_CLEAR_DATA      "Remove points and clear out all memory usage"
+    IDC_BRACKET_LAST        "Try a subset of filter and threshold values around the last optimal values"
 END
 
 #endif    // English (United States) resources

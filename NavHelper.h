@@ -53,6 +53,23 @@ struct MultiShotParams
   BOOL useIllumArea;     // Whether to use illuminated area for drawing diameter
 };
 
+struct HoleFinderParams
+{
+  FloatVec sigmas;        // Set of sigmas to try
+  FloatVec thresholds;    // Set of median iterations to try
+  float spacing;          // hole spacing
+  float diameter;         // Hole diameter (microns)
+  float maxError;         // Maximum error in microns
+  BOOL useBoundary;       // Whether to look for a boundary polygon
+  BOOL bracketLast;       // Whether to try to use subset of parameters
+  float lowerMeanCutoff;  // Cutoff for the excluding dark holes
+  float upperMeanCutoff;  // Cutoff for excluding light holes
+  float SDcutoff;         // Cutoff for excluding highly variable holes
+  float blackFracCutoff;   // Cutoff for excluding holes with high # of black outliers
+  BOOL showExcluded;      // Show the excluded holes
+  int layoutType;         // How to order nav points
+};
+
 enum SetStateTypes {STATE_NONE = 0, STATE_IMAGING, STATE_MAP_ACQUIRE};
 
 class CNavHelper
@@ -86,6 +103,7 @@ public:
     ((mMultiShotParams.useCustomHoles && mMultiShotParams.customMagIndex > 0) || 
     (!mMultiShotParams.useCustomHoles && mMultiShotParams.holeMagIndex > 0));};
   MultiShotParams *GetMultiShotParams() {return &mMultiShotParams;};
+  HoleFinderParams *GetHoleFinderParams() { return &mHoleFinderParams; };
   GetSetMember(float, DistWeightThresh);
   GetSetMember(float, RImaxLMfield);
   GetSetMember(int, RIskipCenTimeCrit);
@@ -103,6 +121,21 @@ public:
   SetMember(int, ExtDrawnOnID);
   GetSetMember(BOOL, SkipMontFitDlgs);
   GetSetMember(bool, DoingMultipleFiles);
+  GetSetMember(float, HFtargetDiamPix);
+  GetSetMember(int, HFretainFFTs);
+  GetSetMember(int, HFminNumForTemplate);
+  GetSetMember(float, HFfractionToAverage);
+  GetSetMember(float, HFmaxDiamErrFrac);
+  GetSetMember(float, HFavgOutlieCrit);
+  GetSetMember(float, HFfinalPosOutlieCrit);
+  GetSetMember(float, HFfinalNegOutlieCrit);
+  GetSetMember(float, HFfinalOutlieRadFrac);
+  GetSetMember(float, HFpcToPcSameFrac);
+  GetSetMember(float, HFpcToFullSameFrac);
+  GetSetMember(float, HFsubstOverlapDistFrac);
+  GetSetMember(float, HFusePieceEdgeDistFrac);
+  GetSetMember(float, HFaddOverlapFrac);
+
   void ForceCenterRealign() {mCenterSkipArray.RemoveAll();};
 
   CStateDlg *mStateDlg;
@@ -110,7 +143,7 @@ public:
   CNavRotAlignDlg *mRotAlignDlg;
   CMultiShotDlg *mMultiShotDlg;
   CHoleFinderDlg *mHoleFinderDlg;
-
+  HoleFinder *mFindHoles;
 
 private:
   CSerialEMApp *mWinApp;
@@ -135,6 +168,7 @@ private:
   CArray<CenterSkipData, CenterSkipData> mCenterSkipArray;
   MultiShotParams mMultiShotParams;
   int mEnableMultiShot;
+  HoleFinderParams mHoleFinderParams;
 
   std::vector<int> mPieceSavedAt;  // Sections numbers for existing pieces in montage
   int mSecondRoundID;           // Map ID of map itself for 2nd round alignment
@@ -260,6 +294,23 @@ private:
   int mExtTypeOfOffsets;         // Type of offsets loaded there
   BOOL mSkipMontFitDlgs;         // Setting in file properties dialog to skip dialogs
   bool mDoingMultipleFiles;      // Flag to avoid "no longer inherits" messages
+  float mHFtargetDiamPix;
+  int mHFretainFFTs;
+  int mHFminNumForTemplate;
+  float mHFfractionToAverage;
+  float mHFmaxDiamErrFrac;
+  float mHFavgOutlieCrit;
+  float mHFfinalPosOutlieCrit;
+  float mHFfinalNegOutlieCrit;
+  float mHFfinalOutlieRadFrac;
+  float mHFpcToPcSameFrac;
+  float mHFpcToFullSameFrac;
+  float mHFsubstOverlapDistFrac;
+  float mHFusePieceEdgeDistFrac;
+  float mHFaddOverlapFrac;
+  FloatVec mHFwidths;
+  FloatVec mHFincrements;
+  IntVec mHFnumCircles;
 
 
 public:
@@ -362,7 +413,7 @@ public:
   void OpenMultishotDlg(void);
   WINDOWPLACEMENT *GetMultiShotPlacement(bool update);
   void OpenHoleFinder(void);
-  WINDOWPLACEMENT *GetMultiShotPlacement(void);
+  WINDOWPLACEMENT *GetHoleFinderPlacement(void);
   void SaveLDFocusPosition(bool saveIt, float & axisPos, BOOL & rotateAxis, int & axisRotation, 
     int & xOffset, int & yOffset, bool traceIt);
   void SetLDFocusPosition(int camIndex, float axisPos, BOOL rotateAxis, int axisRotation, 
@@ -373,5 +424,8 @@ public:
   void FindFocusPosForCurrentItem(StateParams & state, bool justLDstate);
   int RealignToDrawnOnMap(CMapDrawItem *item, BOOL restoreState);
   bool GetNumHolesFromParam(int &xnum, int &ynum);
+  void GetHFscanVectors(FloatVec **widths, FloatVec **increments, IntVec **numCircles) 
+  {*widths = &mHFwidths; *increments = &mHFincrements; *numCircles = &mHFnumCircles;};
+
 };
 

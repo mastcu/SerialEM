@@ -3068,7 +3068,11 @@
         <TR VALIGN="top">
           <TD>RefineZLPLeaveCDSMode</TD>
           <TD>Set to 1 to turn off CDS mode for running Refine ZLP on a K3 camera and turn 
-            it back on afterwards.</TD>
+            it back on afterwards.&nbsp; Special settings for K3 are needed with CDS mode until
+             Gatan fixes problems with the initial frame having doubled counts.&nbsp; A good 
+            alternative to this setting is to set &#39;RefineZLPMinimumExposure&#39; to 0.1 sec
+            and &#39;RefineZLPMaxMeanRatio&#39; higher as needed, such as to 0.1.
+          </TD>
         </TR>
         <TR VALIGN="top">
           <TD>EnergyShiftCalMinField</TD>

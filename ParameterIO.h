@@ -15,7 +15,7 @@ class CParameterIO
 {
 public:
 	int StringToEntryList(int type, CString str, int &numVals, 
-    int *iVals, double *dVals, int maxVals);
+    int *iVals, double *dVals, int maxVals, bool splitCommas = false);
 	CString EntryListToString(int type, int precision, int numVals, int *iVals, double *dVals);
 	void WriteShortTermCal(CString strFileName);
 	int ReadShortTermCal(CString strFileName, BOOL ignoreCals);

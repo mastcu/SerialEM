@@ -10,10 +10,8 @@
 
 typedef std::vector<float> FloatVec;
 typedef std::vector<int> IntVec;
-typedef std::vector<int> ShortVec;
+typedef std::vector<short> ShortVec;
 typedef std::vector<FloatVec> FloatVecArray;
-
-typedef int (*VaryCallback)(float, float, int, int, int);
 
 #define SOBEL_HIST_DIM 1000
 
@@ -36,11 +34,12 @@ class HoleFinder {
                          float maxError, float fracAvg, int minForAvg, 
                          float maxDiamErrFrac, float avgOutlieCrit,
                          float finalNegOutlieCrit, float finalPosOutlieCrit, 
-                         float finalOutlieRadFrac, VaryCallback func);
-  int runSequence(float *increments, float *widths, 
-                  int *numCircles, int numScans, float *sigmas, int numSigmas,
-                  float *thresholds, int numThresh, FloatVec &xBoundary,
-                  FloatVec &yBoundary, int &bestSigInd,
+                         float finalOutlieRadFrac);
+  void setRunsInSequence(float *increments, float *widths, int *numCircles, int numScans, 
+                         float *sigmas, int numSigmas, float *thresholds, int numThresh);
+
+  int runSequence(int &iSig, float &sigUsed, int &iThresh, float &threshUsed, 
+                  FloatVec &xBoundary, FloatVec &yBoundary, int &bestSigInd,
                   int &bestThreshInd, float &bestRadius, float &trueSpacing,
                   FloatVec &xCenters, FloatVec &yCenters, FloatVec &peakVals,
                   FloatVec &xMissing, FloatVec &yMissing, FloatVec &xCenClose,
@@ -66,7 +65,8 @@ class HoleFinder {
   void resolvePiecePositions
     (bool removeDups, FloatVec &xCenters, FloatVec &yCenters, FloatVec &peakVals,
      FloatVec &xMissing, FloatVec &yMissing, FloatVec &xCenClose, FloatVec &yCenClose,
-     FloatVec &peakClose, IntVec &pieceOn, FloatVec &xInPiece, FloatVec &yInPiece);
+     FloatVec &peakClose, IntVec &pieceOn, FloatVec &xInPiece, FloatVec &yInPiece,
+     FloatVec *holeMeans, FloatVec *holeSDs, FloatVec *holeOutlies);
 
   int initialize(void *inputData, int mode, int nx, int ny, float reduction, 
                  float maxRadToAnalyze, int cacheFlags);
@@ -75,7 +75,7 @@ class HoleFinder {
   void clearAll();
   const char *returnErrorString(int err);
   void setVerbose(int inVal) {mVerbose = inVal;};
-  void setDebugImages(bool inVal) {mDebugImages = inVal;};
+  void setDebugImages(int inVal) {mDebugImages = inVal;};
   int makeTemplate(FloatVec &xCenVec, FloatVec &yCenVec, 
                    int numAverage, float separation, bool rawAverage);
   int rescueMissingPoints(FloatVec &xCenOrig, FloatVec &yCenOrig, FloatVec &peakOrig,
@@ -102,7 +102,7 @@ class HoleFinder {
      float pcToPcSameFrac, float pcToFullSameFrac, float substOverlapDistFrac, 
      float usePieceEdgeDistFrac, float addOverlapFrac);
   void assignGridPositions(FloatVec &xCenters, FloatVec &yCenters, ShortVec &gridX,
-                           ShortVec &gridY, float avgAngle = -999., float avgLen = -1.);
+                           ShortVec &gridY, float &avgAngle, float &avgLen);
   
  private:
   void addToSampleAndQueue(int jx, int iy);
@@ -118,7 +118,6 @@ class HoleFinder {
   bool pointsCloseInBox(float xpos, float ypos, float xneigh, float yneigh, float crit,
                         float circleCritSq);
 
-  VaryCallback mVaryCallback;    // Callback to report progress and get stop signal
   int mKeepCache;                // Overall flag for keeping things in caches
   bool mKeepAvgFFTs;             // Flag that average FFTs need to be reusable
   bool mHaveDataFFT;             // Flag that FFT has been taken of edge or raw data
@@ -156,7 +155,7 @@ class HoleFinder {
   float mRadiusForEdgeAvg;        // Radius at which average was made
   int mUsedWeakEdges;             // Last kind of image or average (1 weak, 2 raw average)
   int mVerbose;                   // For debug printed output
-  bool mDebugImages;              // For debug image output
+  int mDebugImages;               // For debug image output
   float mFracToAvg;               // Fraction of points to average from edge image
   int mMinNumForAvg;              // Minimum # needed to do average
   float mMinBoostToIter;          // Minimum increase in # of points for iterating average
@@ -172,6 +171,17 @@ class HoleFinder {
   bool mRetainFFTs;               // Flag to retain FFTs of circles
   float mMaxError;                // Maximum error between predicted and found
   float mDiameter;                // Expected diameter in reduced pixels
+  float *mWidths;                 // Array of widths to scan
+  float *mIncrements;             // Array of increments in each scan
+  int *mNumCircles;               // Array of number of circles each scan
+  int mNumScans;                  // Number of scans to run
+  float *mSigmas;                 // Array of sigmas/iterations to try
+  int mNumSigmas;                 // Number of sigmas
+  float *mThresholds;             // Array of thresholds to try
+  int mNumThresh;                 // Number of thresholds
+  int mMaxFound;                  // Variables for finding the best sigma/threshold
+  int mMinMissing;                // calls to runSequence
+  float mRadAtBest;
   FloatVecArray *mPieceXcenVec;   // Pointers to vector arrays for piece analysis:
   FloatVecArray *mPieceYcenVec;   // Position, peak values, and whichever statistics are
   FloatVecArray *mPiecePeakVec;   // wanted

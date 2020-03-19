@@ -113,8 +113,9 @@ extern "C" {
                          int iyOffset, float *xpeak, float *ypeak, float *peak,
                          int maxPeaks, int maxGrow, int *numFound);
   int findSpacedXCorrPeaks(float *array, int nxdim, int ixMin, int ixMax, int iyMin,
-                           int iyMax, float *xpeak, float *ypeak, float *peak, 
-                           int maxPeaks, float minSpacing, int *numPeaks);
+                           int iyMax, float *xpeak, float *ypeak, float *peak,
+                           int maxPeaks, float minSpacing, int *numPeaks,
+                           float minStrength);
   double parabolicFitPosition(float y1, float y2, float y3);
   void conjugateProduct(float *array, float *brray, int nx, int ny);
   double XCorrCCCoefficient(float *array, float *brray, int nxdim, int nx,
