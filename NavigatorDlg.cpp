@@ -2666,7 +2666,7 @@ BOOL CNavigatorDlg::UserMousePoint(EMimageBuffer *imBuf, float inX, float inY,
         mItem->mStageZ = item->mStageZ;
       }
     }
-    if (item->mType == ITEM_TYPE_POINT) {
+    if (mItem->mType == ITEM_TYPE_POINT) {
       mItem->mPieceDrawnOn = pieceIndex;
       mItem->mXinPiece = xInPiece;
       mItem->mYinPiece = yInPiece;
