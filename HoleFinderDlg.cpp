@@ -564,7 +564,7 @@ void CHoleFinderDlg::OnButFindHoles()
   MontParam *montP = &mMontParam;
   EMimageBuffer *imBuf = mWinApp->mMainView->GetActiveImBuf();
   float targetDiam = mHelper->GetHFtargetDiamPix();
-  float tooSmallCrit = 0.75f;
+  float tooSmallCrit = 0.8f;
   BOOL convertSave, loadUnbinSave;
   CString noMontReason;
 
@@ -595,7 +595,7 @@ void CHoleFinderDlg::OnButFindHoles()
   mPixelSize = mWinApp->mShiftManager->GetPixelSize(imBuf);
   mWinApp->mScope->GetStagePosition(tstageX, tstageY, mZstage);
   if (mWinApp->mProcessImage->GetTestCtfPixelSize())
-    mPixelSize = 0.001f * mWinApp->mProcessImage->GetTestCtfPixelSize();
+    mPixelSize = 0.001f * mWinApp->mProcessImage->GetTestCtfPixelSize() * imBuf->mBinning;
   if (!mPixelSize) {
     AfxMessageBox("No pixel size is assigned to this image", MB_EXCLAME);
     return;
@@ -642,10 +642,12 @@ void CHoleFinderDlg::OnButFindHoles()
 
         // Set the bining at which to reload
         reloadBinning = imBuf->mOverviewBin;
-        while (reloadBinning > 1)
-          if ((curDiam * imBuf->mOverviewBin) / reloadBinning < targetDiam * tooSmallCrit)
-            reloadBinning--;
-
+        while (reloadBinning > 1) {
+          if ((curDiam * imBuf->mOverviewBin) / reloadBinning > targetDiam * tooSmallCrit)
+            break;
+          reloadBinning--;
+        }
+        
         // Save some params, get rid of store for now, and set params for reload
         overBinSave = masterMont->overviewBinning;
         convertSave = mHelper->GetConvertMaps();
@@ -672,9 +674,11 @@ void CHoleFinderDlg::OnButFindHoles()
             mWinApp->SetCurrentBuffer(mBufInd);
           }
           image = imBuf->mImage;
+          mFullYsize = image->getHeight();
           mPixelSize = mWinApp->mShiftManager->GetPixelSize(imBuf);
           if (mWinApp->mProcessImage->GetTestCtfPixelSize())
-            mPixelSize = 0.001f * mWinApp->mProcessImage->GetTestCtfPixelSize();
+            mPixelSize = 0.001f * mWinApp->mProcessImage->GetTestCtfPixelSize() * 
+            imBuf->mBinning;
           if (!mPixelSize) {
             AfxMessageBox("The image has no pixel size after reloading", MB_EXCLAME);
             return;

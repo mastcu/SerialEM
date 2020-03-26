@@ -3,13 +3,15 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+3/26/19: Fixed two problems with reloading montage overview in hole finder.
+
 3/19/20: Added a hole-finding routine and dialog.
 
 3/3/20: Added dialog and script command for taking image snapshots.
 
 2/28/20: Disabled post-actions by default for K3.
 
-2/28/20: Fixed Shift N operatoin in Navigator table.
+2/28/20: Fixed Shift N operation in Navigator table.
 
 2/28/20: Added entry to protect a beam shift calibration from being replaced
 by a new one in the same mag range.
