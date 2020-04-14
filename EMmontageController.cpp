@@ -2662,8 +2662,10 @@ void EMmontageController::SavePiece()
         extra1->ValuesIntoShorts();
         mImBufs[1].mISX = mHaveStageOffsets ? 0 : extra1->mISX;
         mImBufs[1].mISY = mHaveStageOffsets ? 0 : extra1->mISY;
-        mScope->GetValidXYbacklash(mBaseStageX, mBaseStageY, mImBufs[1].mBacklashX,
-          mImBufs[1].mBacklashY);
+        GetLastBacklash(mImBufs[1].mBacklashX, mImBufs[1].mBacklashY);
+        if (mDoZigzagStage) {
+          mImBufs[1].mBacklashX = mImBufs[1].mBacklashY = 0.;
+        }
         mImBufs[1].mConSetUsed = MontageConSetNum(mParam, true);
         mImBufs[1].mLowDoseArea = mWinApp->LowDoseMode();
         if (IS_SET_VIEW_OR_SEARCH(mImBufs[1].mConSetUsed) && mImBufs[1].mLowDoseArea)
@@ -4424,6 +4426,10 @@ int EMmontageController::MapParamsToAutodoc(void)
 
   // SetValue returns 1 for error, all the Adoc sets return -1
   errSum = KStoreADOC::SetValuesFromExtra(mImBufs[1].mImage, ADOC_MONT_SECT, index);
+  AdocDeleteKeyValue(ADOC_MONT_SECT, index, ADOC_PCOORD);
+  errSum -= AdocSetTwoIntegers(ADOC_MONT_SECT, index, ADOC_MONT_SIZE,
+    mParam->xNframes * mParam->xFrame - (mParam->xNframes - 1) * mParam->xOverlap,
+    mParam->yNframes * mParam->yFrame - (mParam->yNframes - 1) * mParam->yOverlap);
   errSum -= AdocSetTwoFloats(ADOC_MONT_SECT, index, ADOC_BUF_ISXY, mImBufs[1].mISX,
     mImBufs[1].mISY);
   errSum -= AdocSetInteger(ADOC_MONT_SECT, index, ADOC_PROBEMODE, mImBufs[1].mProbeMode);
@@ -4452,7 +4458,8 @@ int EMmontageController::MapParamsToAutodoc(void)
       beamShiftY);
     errSum -= AdocSetTwoFloats(ADOC_MONT_SECT, index, ADOC_VIEW_BEAM_TILT, beamTiltX, 
       beamTiltY);
-    errSum -= AdocSetFloat(ADOC_MONT_SECT, index, ADOC_VIEW_DEFOCUS, mImBufs[1].mViewDefocus);
+    errSum -= AdocSetFloat(ADOC_MONT_SECT, index, ADOC_VIEW_DEFOCUS, 
+      mImBufs[1].mViewDefocus);
   }
   errSum -= AdocSetInteger(ADOC_MONT_SECT, index, ADOC_ALPHA, mScope->GetAlpha());
   errSum -= AdocSetTwoFloats(ADOC_MONT_SECT, index, ADOC_FILTER,

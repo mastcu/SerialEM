@@ -69,6 +69,7 @@
 #define ADOC_CONSET_USED "ConSetUsed"
 #define ADOC_MONT_BACKLASH "MontBacklash"
 #define ADOC_VALID_BACKLASH "ValidBacklash"
+#define ADOC_MONT_SIZE "FullMontSize"
 #define ADOC_DRIFT "DriftSettling"
 #define ADOC_CAM_MODES  "CameraModes"
 #define ADOC_FOCUS_OFFSET "FocusOffset"

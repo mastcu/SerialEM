@@ -305,7 +305,7 @@
             <TD class="style5">Time and date of image acquisition</TD>
           </TR>
           <TR VALIGN="top">
-            <TD class="style6" colspan="2">Direct Electron Specific Data</TD>
+            <TD class="style6" colspan="2">Direct Electron Specific Section Data</TD>
           </TR>
           <TR VALIGN="top">
             <TD class="style1">DE12-ServerSoftwareVersion</TD>
@@ -355,6 +355,79 @@
           <TR VALIGN="top">
             <TD class="style1">DE12-IgnoredFramesInSummedImage</TD>
             <TD class="style5">Number of frames ignored in a summed image</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style6" colspan="2">Additional Data in MontSection</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">FullMontSize</TD>
+            <TD class="style5">Full size of montage in X and Y if all pieces
+            are present</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">BufISXY</TD>
+            <TD class="style5">Image shift associated with overview buffer</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">ProbeMode</TD>
+            <TD class="style5">1 for microporbe, 0 for nanoprobe</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">MoveStage</TD>
+            <TD class="style5">1 if for a stage montage</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">ConSetUsed</TD>
+            <TD class="style5">Control set used for the montage (0 = View, 3 =
+            Record, 5 = Search, 6 = MontMap</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">MontBacklash</TD>
+            <TD class="style5">The nominal backlash for this montage, or 0 0
+            if using an anchor at the center</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">ValidBacklash</TD>
+            <TD class="style5">The nominal backlash for this montage, or 0 0
+            if using an anchor at the center or doing a zigzag pattern</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">DriftSettling</TD>
+            <TD class="style5">Drift settling in control set used</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">CameraModes</TD>
+            <TD class="style5">Shutter mode and read mode</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">FocusOffset</TD>
+            <TD class="style5">Focus offset for low dose View or Search,
+            assigned to map item DefocusOffset if a map is made</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">NetViewShifts</TD>
+            <TD class="style5">Image shift offsets for low dose View or Search</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">ViewBeamShifts</TD>
+            <TD class="style5">Beam shift offsets for low dose View or Search</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">ViewBeamTilts</TD>
+            <TD class="style5">Incremental beam tilts for low dose View or Search</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">ViewDefocus</TD>
+            <TD class="style5">Focus offset for low dose View or Search,
+            assigned to image buffer when reading in</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">Alpha</TD>
+            <TD class="style5">Alpha value on JEOL</TD>
+          </TR>
+          <TR VALIGN="top">
+            <TD class="style1">FilterState</TD>
+            <TD class="style5">0/1 if slit is out/in, and slit width</TD>
           </TR>
     </TBODY></TABLE>
     <p>
