@@ -5,6 +5,7 @@
 
 #define MAX_HOLE_TRIALS 16
 class CNavHelper;
+class CNavigatorDlg;
 
 // CHoleFinderDlg dialog
 
@@ -15,13 +16,20 @@ public:
 	virtual ~CHoleFinderDlg();
   void ManageEnables();
   void UpdateSettings();
-  bool GetHolePositions(FloatVec **x, FloatVec **y, IntVec **pcOn, std::vector<bool> **exclude, BOOL &incl, BOOL &excl);
+  bool GetHolePositions(FloatVec **x, FloatVec **y, IntVec **pcOn, std::vector<bool> **exclude,
+    BOOL &incl, BOOL &excl);
+  bool HaveHolesToDrawOrMakePts();
   void SetExclusionsAndDraw();
+  void SetExclusionsAndDraw(float lowerMeanCutoff, float upperMeanCutoff);
   GetMember(bool, FindingHoles);
   void ScanningNextTask(int param);
   void ScanningCleanup(int error);
   void StopScanning(void);
   void CloseWindow();
+  bool IsOpen() { return mIsOpen; };
+  bool CheckAndSetNav(const char *message = NULL);
+  int DoFindHoles(void);
+  int DoMakeNavPoints(int layoutType, float lowerMeanCutoff, float upperMeanCutoff);
 
 
 // Dialog Data
@@ -44,7 +52,9 @@ private:
   HoleFinderParams mParams;
   HoleFinderParams *mMasterParams;
   CNavHelper *mHelper;
+  CNavigatorDlg *mNav;
   bool mHaveHoles;
+  bool mIsOpen;
   float mMeanMin, mMeanMax;
   float mMidMean;
   float mSDmin, mSDmax;
@@ -74,6 +84,7 @@ private:
   int mRegistration;
   int mBoundPolyID;
   int mAddedGroupID;
+  int mIndexOfGroupItem;
   float mBestRadius, mTrueSpacing, mIntensityRad, mErrorMax;
   KImageStore *mImageStore;
   int mCurStore, mBufInd;

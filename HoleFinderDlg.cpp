@@ -1,4 +1,5 @@
 // HoleFinderDlg.cpp : Calls HoleFinder to find holes and turns them into Nav points
+// There is a resident instance of this class, and the dialog can be created and closed
 //
 // Copyright (C) 2020 by  the Regents of the University of
 // Colorado.  See Copyright.txt for full notice of copyright and limitations.
@@ -57,7 +58,7 @@ CHoleFinderDlg::CHoleFinderDlg(CWnd* pParent /*=NULL*/)
 {
   mHaveHoles = false;
   mFindingHoles = false;
-  mHelper = mWinApp->mNavHelper;
+  mIsOpen = false;
   mMiniOffsets = NULL;
   mBestThreshInd = -1;
 }
@@ -151,6 +152,8 @@ END_MESSAGE_MAP()
 BOOL CHoleFinderDlg::OnInitDialog()
 {
   CBaseDlg::OnInitDialog();
+  CheckAndSetNav();
+  mIsOpen = true;
   mMasterParams = mHelper->GetHoleFinderParams();
   mParams = *mMasterParams;
   m_sliderLowerMean.SetRange(0, 255);
@@ -177,13 +180,13 @@ void CHoleFinderDlg::OnOK()
 void CHoleFinderDlg::OnCancel()
 {
   mHelper->GetHoleFinderPlacement();
-  mHelper->mHoleFinderDlg = NULL;
+  mIsOpen = false;
   DestroyWindow();
 }
 
+// Do not delete the dialog
 void CHoleFinderDlg::PostNcDestroy()
 {
-  delete this;
   CDialog::PostNcDestroy();
 }
 
@@ -196,7 +199,8 @@ BOOL CHoleFinderDlg::PreTranslateMessage(MSG* pMsg)
 
 void CHoleFinderDlg::CloseWindow()
 {
-  OnOK();
+  if (mIsOpen)
+    OnOK();
 }
 
 // Handle simple edit boxes
@@ -279,6 +283,7 @@ void CHoleFinderDlg::OnExcludeOutside()
 }
 
 // Clear the data here and in holefinder
+// Safe to call externally
 void CHoleFinderDlg::OnButClearData()
 {
   mHaveHoles = false;
@@ -331,11 +336,13 @@ void CHoleFinderDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar *pScrollBar)
   UpdateData(TRUE);
   CSliderCtrl *pSlider = (CSliderCtrl *)pScrollBar;
   if (pSlider == &m_sliderLowerMean) {
-    mParams.lowerMeanCutoff = (float)(m_intLowerMean * (mMidMean - mMeanMin) / 255. + mMeanMin);
+    mParams.lowerMeanCutoff = (float)(m_intLowerMean * (mMidMean - mMeanMin) / 255. +
+      mMeanMin);
     m_strLowerMean.Format("%.4g", mParams.lowerMeanCutoff);
   }
   if (pSlider == &m_sliderUpperMean) {
-    mParams.upperMeanCutoff = (float)(m_intUpperMean * (mMeanMax - mMidMean) / 255. + mMidMean);
+    mParams.upperMeanCutoff = (float)(m_intUpperMean * (mMeanMax - mMidMean) / 255. +
+      mMidMean);
     m_strUpperMean.Format("%.4g", mParams.upperMeanCutoff);
   }
   if (pSlider == &m_sliderSDcutoff) {
@@ -379,29 +386,69 @@ void CHoleFinderDlg::OnRadioLayoutType()
 // Make navigator points - the real work is done by Nav
 void CHoleFinderDlg::OnButMakeNavPts()
 {
+  DoMakeNavPoints(mParams.layoutType, mParams.lowerMeanCutoff, mParams.upperMeanCutoff);
+}
+
+//Externally called routine.  Pass -1 to use the layout in params and EXTRA_NO_VALUE to
+// use the cutoffs in params
+int CHoleFinderDlg::DoMakeNavPoints(int layoutType, float lowerMeanCutoff, 
+  float upperMeanCutoff)
+{
   CMapDrawItem *poly = NULL;
   ShortVec gridX, gridY;
+  int ind, numAdded = 0;
   float avgLen = -1., avgAngle = -999.;
-  UpdateData(true);
-  DialogToParams();
-  *mMasterParams = mParams;
-  mWinApp->RestoreViewFocus();
+  if (CheckAndSetNav("making Navigator points from hole positions"))
+    return -1;
+  if (!HaveHolesToDrawOrMakePts()) {
+    SEMMessageBox("There are no hole positions available for making Navigator points");
+    return -1;
+  }
+
+  // Use the set parameters if alternatives not passed, and run exclusion again
+  if (lowerMeanCutoff < EXTRA_VALUE_TEST)
+    lowerMeanCutoff = mParams.lowerMeanCutoff;
+  if (upperMeanCutoff < EXTRA_VALUE_TEST)
+    upperMeanCutoff = mParams.upperMeanCutoff;
+  if (layoutType < 0)
+    layoutType = mParams.layoutType;
+  SetExclusionsAndDraw(lowerMeanCutoff, upperMeanCutoff);
+  if (mIsOpen) {
+    UpdateData(true);
+    DialogToParams();
+    *mMasterParams = mParams;
+    mWinApp->RestoreViewFocus();
+  }
   if (mBoundPolyID)
-    poly = mWinApp->mNavigator->FindItemWithMapID(mBoundPolyID, false);
-  mHelper->mFindHoles->assignGridPositions(mXcenters, mYcenters, gridX, gridY, avgAngle, 
+    poly = mNav->FindItemWithMapID(mBoundPolyID, false);
+
+  // Get the grid positions and pass it all on
+  mHelper->mFindHoles->assignGridPositions(mXcenters, mYcenters, gridX, gridY, avgAngle,
     avgLen);
-  mAddedGroupID = mWinApp->mNavigator->AddFoundHoles(&mXstages, &mYstages, &mExcluded, 
-    &mXinPiece, &mYinPiece, &mPieceOn, &gridX, &gridY, avgLen * mPixelSize, 
-    2.f * mBestRadius * mReduction * mPixelSize, avgAngle, mRegistration, mMapID, 
-    (float)mZstage, poly, m_iLayoutType);
-  if (mAddedGroupID)
+  mAddedGroupID = mNav->AddFoundHoles(&mXstages, &mYstages, &mExcluded,
+    &mXinPiece, &mYinPiece, &mPieceOn, &gridX, &gridY, avgLen * mPixelSize,
+    2.f * mBestRadius * mReduction * mPixelSize, avgAngle, mRegistration, mMapID,
+    (float)mZstage, poly, layoutType);
+  if (mAddedGroupID) {
+    for (ind = 0; ind < (int)mExcluded.size(); ind++)
+      if (!mExcluded[ind])
+        numAdded++;
+    mNav->FindItemWithMapID(mAddedGroupID, false, true);
+    mIndexOfGroupItem = mNav->GetFoundItem();
     mWinApp->mMainView->DrawImage();
+    if (mIsOpen)
+      m_butMakeNavPts.EnableWindow(false);
+    return numAdded;
+  }
+  return 0;
 }
 
 // Transfer values from the dialog to the parameters
 void CHoleFinderDlg::DialogToParams()
 {
   int ind;
+  if (!mIsOpen)
+    return;
   mParams.useBoundary = m_bExcludeOutside;
   mParams.showExcluded = m_bShowExcluded;
   mParams.layoutType = m_iLayoutType;
@@ -432,10 +479,12 @@ void CHoleFinderDlg::ParamsToDialog()
     else if (mParams.sigmas[ind] < 0)
       mIterations[mNumIterations++] = -(int)mParams.sigmas[ind];
   }
-  m_strSigmas = ListToString(1, mNumSigmas, &mSigmas[0]);
-  m_strIterations = ListToString(3, mNumIterations, &mIterations[0]);
   for (ind = 0; ind < (int)mParams.thresholds.size(); ind++)
     mThresholds[mNumThresholds++] = mParams.thresholds[ind];
+  if (!mIsOpen)
+    return;
+  m_strSigmas = ListToString(1, mNumSigmas, &mSigmas[0]);
+  m_strIterations = ListToString(3, mNumIterations, &mIterations[0]);
   if (mNumThresholds)
     m_strThresholds = mWinApp->mParamIO->EntryListToString(1, 2, mNumThresholds, NULL,
       &mThresholds[0]);
@@ -480,6 +529,8 @@ void CHoleFinderDlg::ParamsToDialog()
 // Take care of disabling things as appropriate but also update the min/max slider values
 void CHoleFinderDlg::ManageEnables()
 {
+  if (!mIsOpen)
+    return;
   m_butFindHoles.EnableWindow(!mWinApp->DoingTasks() && mNumSigmas + mNumIterations > 0 &&
     mNumThresholds > 0);
   m_sliderLowerMean.EnableWindow(mHaveHoles);
@@ -514,7 +565,7 @@ void CHoleFinderDlg::ManageEnables()
   m_butZigzag.EnableWindow(mHaveHoles);
   m_butFromFocus.EnableWindow(mHaveHoles);
   m_butInGroups.EnableWindow(mHaveHoles && mHelper->GetGridGroupSize() > 0);
-  m_butMakeNavPts.EnableWindow(mHaveHoles);
+  m_butMakeNavPts.EnableWindow(HaveHolesToDrawOrMakePts());
   UpdateData(false);
 }
 
@@ -555,6 +606,11 @@ static char *formatSigma(float sigma)
 // The main attraction: find the holes
 void CHoleFinderDlg::OnButFindHoles()
 {
+  DoFindHoles();
+}
+
+int CHoleFinderDlg::DoFindHoles()
+{
   float curDiam, diamReduced, spacingReduced, maxRadius, area, maxArea = 0.;
   FloatVec *widths, *increments;
   IntVec *numCircles;
@@ -575,6 +631,9 @@ void CHoleFinderDlg::OnButFindHoles()
   BOOL convertSave, loadUnbinSave;
   CString noMontReason;
 
+  if (CheckAndSetNav("finding holes"))
+    return 1;
+
   // Initialize by clearing out existing hole info
   mMontage = false;
   mXboundary.clear();
@@ -589,13 +648,21 @@ void CHoleFinderDlg::OnButFindHoles()
 
   // Check preconditions
   DialogToParams();
+  if (!mIsOpen) {
+    mMasterParams = mHelper->GetHoleFinderParams();
+    mParams = *mMasterParams;
+    ParamsToDialog();
+  }
   mWinApp->RestoreViewFocus();
-  if (mNumSigmas + mNumIterations == 0 || mNumThresholds == 0)
-    return;
+  if (mNumSigmas + mNumIterations == 0 || mNumThresholds == 0) {
+    SEMMessageBox(mNumThresholds ? "There are no thresholds specified for finding holes" :
+      "There are no filters specified for finding holes");
+    return 1;
+  }
 
   if (!(imBuf && imBuf->mImage)) {
-    AfxMessageBox("The active window has no image", MB_EXCLAME);
-    return;
+    SEMMessageBox("The active window has no image for finding holes", MB_EXCLAME);
+    return 1;
   }
   image = imBuf->mImage;
   mHelper->GetHFscanVectors(&widths, &increments, &numCircles);
@@ -604,26 +671,27 @@ void CHoleFinderDlg::OnButFindHoles()
   if (mWinApp->mProcessImage->GetTestCtfPixelSize())
     mPixelSize = 0.001f * mWinApp->mProcessImage->GetTestCtfPixelSize() * imBuf->mBinning;
   if (!mPixelSize) {
-    AfxMessageBox("No pixel size is assigned to this image", MB_EXCLAME);
-    return;
+    SEMMessageBox("No pixel size is assigned to this image; it is needed for finding "
+      "holes", MB_EXCLAME);
+    return 1;
   }
   if (image->getType() == kRGB) {
-    AfxMessageBox("Hole finder does not work on color images");
-    return;
+    SEMMessageBox("Hole finder does not work on color images");
+    return 1;
   }
-  if (!mWinApp->mNavigator->BufferStageToImage(imBuf, aMat, delX, delY) ||
+  if (!mNav->BufferStageToImage(imBuf, aMat, delX, delY) ||
     !imBuf->GetStagePosition(bufStageX, bufStageY)) {
-    AfxMessageBox("The currently active image does not have enough information\n"
+    SEMMessageBox("The currently active image does not have enough information\n"
       "to convert positions to stage coordinates.", MB_EXCLAME);
-    return;
+    return 1;
   }
 
   // Get some sizes, get a nav item regardless of montage so it can be used as drawn on
   // and for registration and stage Z
-  curDiam = m_fHolesSize / mPixelSize;
+  curDiam = mParams.diameter / mPixelSize;
   mFullYsize = image->getHeight();
 
-  mNavItem = mWinApp->mNavigator->FindItemWithMapID(imBuf->mMapID);
+  mNavItem = mNav->FindItemWithMapID(imBuf->mMapID);
   mMapID = 0;
   if (mNavItem) {
     mZstage = mNavItem->mStageZ;
@@ -634,17 +702,17 @@ void CHoleFinderDlg::OnButFindHoles()
   if (imBuf->mCaptured == BUFFER_MONTAGE_OVERVIEW && imBuf->mMapID) {
     if (!mNavItem)
       noMontReason = "could not find the map item from the ID in the buffer";
-    if (mNavItem && mWinApp->mNavigator->PrepareMontAdjustments(imBuf, rMat, rInv, ptX,
+    if (mNavItem && mNav->PrepareMontAdjustments(imBuf, rMat, rInv, ptX,
       ptY) > 0)
       noMontReason = "the map is rotated";
-    else if (mNavItem && mWinApp->mNavigator->AccessMapFile(mNavItem, mImageStore,
+    else if (mNavItem && mNav->AccessMapFile(mNavItem, mImageStore,
       mCurStore, montP, useWidth, useHeight))
       noMontReason = "could not access the map file again";
     if (noMontReason.IsEmpty()) {
       mMontage = true;
 
       // Reload the overview if it is binned and holes are too small, or if it is bytes
-      if ((image->getType() == kBYTE && mImageStore->getMode() != MRC_MODE_BYTE) ||
+      if ((image->getType() == kUBYTE && mImageStore->getMode() != MRC_MODE_BYTE) ||
         (imBuf->mOverviewBin > 1 && curDiam < targetDiam * tooSmallCrit)) {
 
         // Set the bining at which to reload
@@ -667,7 +735,7 @@ void CHoleFinderDlg::OnButFindHoles()
         readBuf = mWinApp->mBufferManager->GetBufToReadInto();
 
         // Reload and restore
-        err = mWinApp->mNavigator->DoLoadMap(true, mNavItem);
+        err = mNav->DoLoadMap(true, mNavItem);
         masterMont->overviewBinning = overBinSave;
         mHelper->SetConvertMaps(convertSave);
         mHelper->SetLoadMapsUnbinned(loadUnbinSave);
@@ -687,11 +755,12 @@ void CHoleFinderDlg::OnButFindHoles()
             mPixelSize = 0.001f * mWinApp->mProcessImage->GetTestCtfPixelSize() * 
             imBuf->mBinning;
           if (!mPixelSize) {
-            AfxMessageBox("The image has no pixel size after reloading", MB_EXCLAME);
-            return;
+            SEMMessageBox("The image has no pixel size after reloading for finding "
+              "holes");
+            return 1;
           }
           curDiam = mParams.diameter / mPixelSize;
-          if (mWinApp->mNavigator->AccessMapFile(mNavItem, mImageStore, mCurStore, montP,
+          if (mNav->AccessMapFile(mNavItem, mImageStore, mCurStore, montP,
             useWidth, useHeight)) {
             noMontReason = "could not access the map file again after reloading it";
           }
@@ -710,18 +779,19 @@ void CHoleFinderDlg::OnButFindHoles()
 
   // Report failure, but go on
   if (!noMontReason.IsEmpty()) {
-    mWinApp->AppendToLog("Cannot analyze montage pieces: " + noMontReason);
+    mWinApp->AppendToLog("Cannot analyze montage pieces when finding holes: " + 
+      noMontReason);
     mMontage = false;
   }
 
-  mRegistration = mWinApp->mNavigator->GetCurrentRegistration();
+  mRegistration = mNav->GetCurrentRegistration();
   if (mNavItem)
     mRegistration = mNavItem->mRegistration;
 
   // Look for boundary contour if selected
-  if (m_bExcludeOutside) {
-    itemArray = mWinApp->mNavigator->GetItemArray();
-    mWinApp->mNavigator->BufferStageToImage(imBuf, aMat, delX, delY);
+  if (mParams.useBoundary) {
+    itemArray = mNav->GetItemArray();
+    mNav->BufferStageToImage(imBuf, aMat, delX, delY);
     for (nav = 0; nav < (int)itemArray->GetSize(); nav++) {
       item = itemArray->GetAt(nav);
 
@@ -742,8 +812,7 @@ void CHoleFinderDlg::OnButFindHoles()
 
         // If enough are on image, get the area, and if it is the biggest such, take it
         if ((float)numOnIm / item->mNumPoints > 0.74) {
-          area = mWinApp->mNavigator->ContourArea(item->mPtX, item->mPtY,
-            item->mNumPoints);
+          area = mNav->ContourArea(item->mPtX, item->mPtY, item->mNumPoints);
           if (area > maxArea) {
             maxArea = area;
             mXboundary = xBoundTemp;
@@ -773,7 +842,7 @@ void CHoleFinderDlg::OnButFindHoles()
   // Copy the parameters or set up to bracket last one
   mUseSigmas = mParams.sigmas;
   mUseThresholds = mParams.thresholds;
-  if (m_bBracketLast && mBestThreshInd >= 0) {
+  if (mParams.bracketLast && mBestThreshInd >= 0) {
     mUseThresholds.clear();
     mUseSigmas.clear();
     for (ind = B3DMAX(0, mBestThreshInd - 1);
@@ -825,7 +894,7 @@ void CHoleFinderDlg::OnButFindHoles()
     AfxMessageBox(CString("Error in initializing holefinder routine:\n") +
       mHelper->mFindHoles->returnErrorString(err), MB_EXCLAME);
     StopScanning();
-    return;
+    return 1;
   }
 
   // Set up the parameters and call to start the scan
@@ -840,8 +909,10 @@ void CHoleFinderDlg::OnButFindHoles()
   mFindingHoles = true;
   mSigInd = 0;
   mThreshInd = 0;
+  mWinApp->SetStatusText(SIMPLE_PANE, "FINDING HOLES");
   mWinApp->UpdateBufferWindows();
   ScanningNextTask(0);
+  return 0;
 }
 
 // Next task for scanning is to run the next set of parameters
@@ -862,10 +933,14 @@ void CHoleFinderDlg::ScanningNextTask(int param)
   int xcoord, ycoord, zcoord, numFromCorr, numPoints;
   ScaleMat aMat, aInv;
   float delX, delY, ptX, ptY;
-  CString noMontReason;
+  CString noMontReason, statStr;
 
   if (!mFindingHoles)
     return;
+  if (CheckAndSetNav()) {
+    StopScanning();
+    return;
+  }
   
   err = mHelper->mFindHoles->runSequence(mSigInd, sigUsed, mThreshInd, 
     threshUsed, mXboundary,  mYboundary, mBestSigInd, mBestThreshInd,
@@ -873,9 +948,13 @@ void CHoleFinderDlg::ScanningNextTask(int param)
       peakVals, xMissing, yMissing, xCenClose, yCenClose, peakClose,
       numMissAdded);
   if (err < 0) {
-    m_strStatusOutput.Format("%s  thr: %.1f  #: %d  miss: %d", formatSigma(sigUsed),
+    statStr.Format("%s  thr: %.1f  #: %d  miss: %d", formatSigma(sigUsed),
       threshUsed, (int)mXcenters.size(), (int)xMissing.size());
-    UpdateData(false);
+    if (mIsOpen) {
+      m_strStatusOutput = statStr;
+      UpdateData(false);
+    }
+    mWinApp->SetStatusText(MEDIUM_PANE, statStr);
     mWinApp->AddIdleTask(TASK_FIND_HOLES, 0, 0);
     return;
   }
@@ -886,7 +965,7 @@ void CHoleFinderDlg::ScanningNextTask(int param)
       false, true, &mHoleMeans, &mHoleSDs, &mHoleBlackFracs);
   }
   if (err) {
-    AfxMessageBox(CString("Error in holefinder routine:\n") +
+    SEMMessageBox(CString("Error in holefinder routine:\n") +
       mHelper->mFindHoles->returnErrorString(err), MB_EXCLAME);
     StopScanning();
     return;
@@ -996,20 +1075,25 @@ void CHoleFinderDlg::ScanningNextTask(int param)
   *mMasterParams = mParams;
   StopScanning();
   if (!numPoints) {
-    m_strStatusOutput = "";
-    UpdateData(false);
+    if (mIsOpen) {
+      m_strStatusOutput = "";
+      UpdateData(false);
+    }
     mWinApp->AppendToLog("No holes were found!");
     return;
   }
-
-  m_strStatusOutput.Format("%s  thr: %.1f  #: %d  size: %.2f  sep: %.2f",
-    formatSigma(mParams.sigmas[mBestSigInd]), mParams.thresholds[mBestThreshInd], 
+  statStr.Format("%s  thr: %.1f  #: %d  size: %.2f  sep: %.2f",
+    formatSigma(mParams.sigmas[mBestSigInd]), mParams.thresholds[mBestThreshInd],
     numPoints, 2. * mBestRadius * mReduction * mPixelSize, mTrueSpacing * mPixelSize);
+  if (mIsOpen)
+    m_strStatusOutput = statStr;
+  else
+    mWinApp->AppendToLog("Hole finder: " + statStr);
 
   mHaveHoles = true;
 
   // Get stage positions
-  mWinApp->mNavigator->BufferStageToImage(imBuf, aMat, delX, delY);
+  mNav->BufferStageToImage(imBuf, aMat, delX, delY);
   aInv = MatInv(aMat);
   mXstages.resize(numPoints);
   mYstages.resize(numPoints);
@@ -1017,9 +1101,9 @@ void CHoleFinderDlg::ScanningNextTask(int param)
   for (ind = 0; ind < numPoints; ind++) {
     ptX = mXcenters[ind];
     ptY = mYcenters[ind];
-    mWinApp->mNavigator->AdjustMontImagePos(imBuf, ptX, ptY);
-    mXstages[ind] = aInv.xpx * (ptX - delX) + aInv.xpy * (ptY - delY);
-    mYstages[ind] = aInv.ypx * (ptX - delX) + aInv.ypy * (ptY - delY);
+    mNav->AdjustMontImagePos(imBuf, ptX, ptY);
+    mWinApp->mShiftManager->ApplyScaleMatrix(aInv, ptX - delX, ptY - delY, mXstages[ind],
+      mYstages[ind]);
   }
 
   // Get mins and maxes and set the sliders if necessary
@@ -1041,25 +1125,34 @@ void CHoleFinderDlg::ScanningNextTask(int param)
   m_bShowIncluded = true;
   ParamsToDialog();
   ManageEnables();
+  if (!mIsOpen)
+    *mMasterParams = mParams;
   SetExclusionsAndDraw();
 }
 
 void CHoleFinderDlg::SetExclusionsAndDraw()
 {
+  SetExclusionsAndDraw(mParams.lowerMeanCutoff, mParams.upperMeanCutoff);
+}
+
+void CHoleFinderDlg::SetExclusionsAndDraw(float lowerMeanCutoff, float upperMeanCutoff)
+{
   int ind;
   if (!mHaveHoles)
     return;
   for (ind = 0; ind < (int)mXcenters.size(); ind++) {
-    mExcluded[ind] = mHoleMeans[ind] < mParams.lowerMeanCutoff || 
-      mHoleMeans[ind] > mParams.upperMeanCutoff || mHoleSDs[ind] > mParams.SDcutoff ||
+    mExcluded[ind] = mHoleMeans[ind] < lowerMeanCutoff || 
+      mHoleMeans[ind] > upperMeanCutoff || mHoleSDs[ind] > mParams.SDcutoff ||
       mHoleBlackFracs[ind] > mParams.blackFracCutoff;
   }
   mWinApp->mMainView->DrawImage();
 }
 
 
+// This should not be called
 void CHoleFinderDlg::ScanningCleanup(int error)
 {
+  StopScanning();
 }
 
 void CHoleFinderDlg::StopScanning(void)
@@ -1067,17 +1160,50 @@ void CHoleFinderDlg::StopScanning(void)
   if (mMontage && mCurStore < 0)
     delete mImageStore;
   mFindingHoles = false;
+  mWinApp->SetStatusText(SIMPLE_PANE, "");
+  mWinApp->SetStatusText(MEDIUM_PANE, "");
   mWinApp->UpdateBufferWindows();
   delete mMiniOffsets;
   mMiniOffsets = NULL;
 }
 
-// Eternal call for drawing routine to find out whether to draw hole positions
+// External call for drawing routine to find out whether to draw hole positions
 bool CHoleFinderDlg::GetHolePositions(FloatVec **x, FloatVec **y, IntVec **pcOn,
   std::vector<bool> **exclude, BOOL &incl, BOOL &excl)
 {
-  *x = &mXstages; *y = &mYstages; *pcOn = &mPieceOn; *exclude = &mExcluded;
-  incl = m_bShowIncluded; excl = m_bShowExcluded; 
-  return mHaveHoles && (!mAddedGroupID || 
-    !mWinApp->mNavigator->FindItemWithMapID(mAddedGroupID, false, true));
-};
+  *x = &mXstages;
+  *y = &mYstages;
+  *pcOn = &mPieceOn;
+  *exclude = &mExcluded;
+  incl = mIsOpen || m_bShowIncluded;
+  excl = mIsOpen ? m_bShowExcluded : mParams.showExcluded;
+  return HaveHolesToDrawOrMakePts();
+}
+
+// External call t9 find out if there is anything to draw, used internally to see if
+// points can be made
+bool CHoleFinderDlg::HaveHolesToDrawOrMakePts()
+{
+  CMapDrawItem *item;
+  if (CheckAndSetNav() || !mHaveHoles)
+    return false;
+  if (!mAddedGroupID)
+    return true;
+  item = mNav->GetOtherNavItem(mIndexOfGroupItem);
+  if (!item || item->mGroupID != mAddedGroupID) {
+    item = mNav->FindItemWithMapID(mAddedGroupID, false, true);
+    mIndexOfGroupItem = mNav->GetFoundItem();
+  }
+  return !item;
+
+}
+
+// Set pointers and make sure Nav is open, message defaults to NULL
+bool CHoleFinderDlg::CheckAndSetNav(const char *message) 
+{ 
+  mNav = mWinApp->mNavigator; 
+  mHelper = mWinApp->mNavHelper;
+  if (!mNav && message)
+    SEMMessageBox(CString("The Navigator must be open to ") + message);
+  return mNav == NULL; 
+}
