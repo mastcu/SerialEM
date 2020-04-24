@@ -31,6 +31,8 @@
 #include "NavAcquireDlg.h"
 #include "NavImportDlg.h"
 #include "MultiShotDlg.h"
+#include "MultiCombinerDlg.h"
+#include "HoleFinderDlg.h"
 #include "MapDrawItem.h"
 #include "Mailer.h"
 #include "LogWindow.h"
@@ -844,7 +846,7 @@ int CNavigatorDlg::ChangeItemRegistration(int index, int newReg, CString &str)
   }
   item->mRegistration = newReg;
   UpdateListString(index);
-  mChanged = true;
+  SetChanged(true);
 
   // If it is a map look for buffers with this map loaded and change their registration
   if (item->mType == ITEM_TYPE_MAP)
@@ -933,7 +935,7 @@ void CNavigatorDlg::OnCheckcorner()
     return;
   mItem->mCorner = m_bCorner;
   UpdateListString(mCurrentItem);
-  mChanged = true;
+  SetChanged(true);
   Update();
 }
 
@@ -943,7 +945,7 @@ void CNavigatorDlg::OnCheckrotate()
   if (UpdateIfItem())
     return;
   mItem->mRotOnLoad = m_bRotate;
-  mChanged = true;
+  SetChanged(true);
 }
 
 // The checkbox for the dual map item
@@ -1001,7 +1003,7 @@ void CNavigatorDlg::OnDeltaposSpinRegptNum(NMHDR* pNMHDR, LRESULT* pResult)
   if (mItem->mRegPoint > 0)
     mItem->mRegPoint = newPos;
   UpdateListString(mCurrentItem);
-  mChanged = true;
+  SetChanged(true);
 }
 
 // Current registration spin button
@@ -1038,7 +1040,7 @@ void CNavigatorDlg::OnCheckRegpoint()
     mItem->mRegPoint = 0;
   }
   UpdateListString(mCurrentItem);
-  mChanged = true;
+  SetChanged(true);
   Update();
 }
 
@@ -1049,7 +1051,7 @@ void CNavigatorDlg::OnSelendokCombocolor()
     return;
   mItem->mColor = m_iColor;
   UpdateListString(mCurrentItem);
-  mChanged = true;
+  SetChanged(true);
 	Redraw();
 }
 
@@ -1061,7 +1063,7 @@ void CNavigatorDlg::OnChangeEditPtlabel()
   UpdateData(true);
   mItem->mLabel = m_strLabel;
   UpdateListString(mCurrentItem);
-  mChanged = true;
+  SetChanged(true);
   Redraw();
 }
 
@@ -1073,7 +1075,7 @@ void CNavigatorDlg::OnChangeEditPtnote()
   UpdateData(true);
   mItem->mNote = m_strPtNote;
   UpdateListString(mCurrentItem);
-  mChanged = true;
+  SetChanged(true);
 }
 
 // Restore focus when leave the boxes
@@ -1102,7 +1104,7 @@ void CNavigatorDlg::OnDrawOne()
     mItem->mDraw = m_bDrawOne;
     UpdateListString(mCurrentItem);
   }
-  mChanged = true;
+  SetChanged(true);
   Redraw();
 }
 
@@ -1180,7 +1182,7 @@ void CNavigatorDlg::OnCheckAcquire()
     mHelper->EndAcquireOrNewFile(mItem);
   ManageCurrentControls();
   UpdateListString(mCurrentItem);
-  mChanged = true;
+  SetChanged(true);
   Redraw();
   if (m_bAcquire)
     AddFocusAreaPoint(false);
@@ -1217,7 +1219,7 @@ void CNavigatorDlg::ToggleGroupAcquire(bool collapsedGroup)
     }
   }
   ManageCurrentControls();
-  mChanged = true;
+  SetChanged(true);
   Redraw();
   if (needFocusArea)
     AddFocusAreaPoint(false);
@@ -1377,7 +1379,7 @@ void CNavigatorDlg::OnButNavFocusPos()
   mHelper->SaveLDFocusPosition(true, mItem->mFocusAxisPos, mItem->mRotateFocusAxis,
     mItem->mFocusAxisAngle, mItem->mFocusXoffset, mItem->mFocusYoffset, true);
   UpdateListString(mCurrentItem);
-  mChanged = true;
+  SetChanged(true);
 }
 
 // Turn the collapsing of groups on or off
@@ -1479,7 +1481,7 @@ void CNavigatorDlg::OnListItemDrag(int oldIndex, int newIndex)
     }
     MakeListMappings();
   }
-  mChanged = true;
+  SetChanged(true);
 
   // Overblown logic: the moved item is always the current selection!
   if (mCurListSel < 0 || mCurListSel == oldIndex)
@@ -1534,7 +1536,7 @@ void CNavigatorDlg::ProcessCKey(void)
   UpdateListString(mCurrentItem);
   m_bCorner = mItem->mCorner;
   UpdateData(false);
-  mChanged = true;
+  SetChanged(true);
 }
 
 // Variants on the A key to toggle acquire state
@@ -1571,7 +1573,7 @@ void CNavigatorDlg::ProcessAkey(BOOL ctrl, BOOL shift)
     if (item->mAcquire && !oldAcquire)
       needFocusArea = true;
     UpdateListString(index);
-    mChanged = true;
+    SetChanged(true);
   }
   mShiftAIndex = -1;
   ManageCurrentControls();
@@ -1931,7 +1933,7 @@ void CNavigatorDlg::OnAddStagePos()
   mScope->GetValidXYbacklash(mLastScopeStageX, mLastScopeStageY, item->mBacklashX, 
     item->mBacklashY);
   UpdateListString(mCurrentItem);
-  mChanged = true;
+  SetChanged(true);
   mWinApp->RestoreViewFocus();
   ManageCurrentControls();
   Redraw();
@@ -1951,7 +1953,7 @@ void CNavigatorDlg::OnAddStagePos()
 
   SetCurrentStagePos(mCurrentItem);
   ShiftItemPoints(mItem, mItem->mStageX - origX, mItem->mStageX - origY);
-  mChanged = true;
+  SetChanged(true);
   UpdateListString(mCurrentItem);
   Redraw();
 } */
@@ -1976,7 +1978,7 @@ int CNavigatorDlg::ShiftItemsAtRegistration(float shiftX, float shiftY, int reg)
       item->mStageX += shiftX;
       item->mStageY += shiftY;
       ShiftItemPoints(item, shiftX, shiftY);
-      mChanged = true;
+      SetChanged(true);
       UpdateListString(i);
       numShift++;
     }
@@ -2141,7 +2143,7 @@ void CNavigatorDlg::OnAddMarker()
   item->mXinPiece = xInPiece;
   item->mYinPiece = yInPiece;
   UpdateListString(mCurrentItem);
-  mChanged = true;
+  SetChanged(true);
   mWinApp->RestoreViewFocus();
   ManageCurrentControls();
   Redraw();
@@ -2456,7 +2458,7 @@ void CNavigatorDlg::OnDeleteitem()
   IndexOfSingleOrFirstInGroup(mCurListSel, mCurrentItem);
   if (multipleInGroup)
     UpdateListString(mCurrentItem);
-  mChanged = true;
+  SetChanged(true);
   mSelectedItems.clear();
   delIndex = B3DMAX(0, delIndex - 1);
   if (m_bCollapseGroups && m_bEditMode && mRemoveItemOnly && !mAddingPoints && 
@@ -2673,7 +2675,7 @@ BOOL CNavigatorDlg::UserMousePoint(EMimageBuffer *imBuf, float inX, float inY,
       mItem->mYinPiece = yInPiece;
     }
     UpdateListString(mCurrentItem);
-    mChanged = true;
+    SetChanged(true);
     mRawStageIsMovable = mItem->mType == ITEM_TYPE_MAP && nearCenter && 
       RawStageIsRevisable(false);
   
@@ -2706,7 +2708,7 @@ BOOL CNavigatorDlg::UserMousePoint(EMimageBuffer *imBuf, float inX, float inY,
       item->mYinPiece = yInPiece;
     }
     UpdateListString(mCurrentItem);
-    mChanged = true;
+    SetChanged(true);
     ManageCurrentControls();
 
     // Adding successive points of a polygon
@@ -2847,7 +2849,7 @@ void CNavigatorDlg::MouseDoubleClick(int button)
         delete[] mItem->mSkipHolePos;
         mItem->mSkipHolePos = newSkipPos;
         mItem->mNumSkipHoles += 1;
-        mChanged = true;
+        SetChanged(true);
         Redraw();
       }
     }
@@ -2938,7 +2940,7 @@ CArray<CMapDrawItem *, CMapDrawItem *> *CNavigatorDlg::GetMapDrawItems(
 {
   float angle, tiltAngle;
   bool showMulti, asIfLowDose, showCurPtAcquire, showLDareas;
-  if (!SetCurrentItem())
+  if (!SetCurrentItem(true))
     mItem = NULL;
   *acquireBox = NULL;
   if (m_bDrawNone || !BufferStageToImage(imBuf, aMat, delX, delY))
@@ -3371,7 +3373,7 @@ int CNavigatorDlg::PolygonMontage(CMontageSetupDlg *montDlg, bool skipSetupDlg)
     mItem->mStageX = itmp->mStageX;
     mItem->mStageY = itmp->mStageY;
     UpdateListString(mCurrentItem);
-    mChanged = true;
+    SetChanged(true);
   }
   delete itmp;
   return err;
@@ -4030,7 +4032,7 @@ void CNavigatorDlg::SetupSuperMontage(BOOL skewed)
     }
   }
   mNewItemNum++;
-  mChanged = true;
+  SetChanged(true);
   ManageCurrentControls();
   Update();
   Redraw();
@@ -4148,7 +4150,7 @@ void CNavigatorDlg::PolygonSupermontage(void)
     }
   }
   mNewItemNum++;
-  mChanged = true;
+  SetChanged(true);
   ManageCurrentControls();
   Update();
   Redraw();
@@ -4205,7 +4207,7 @@ void CNavigatorDlg::DeleteGroup(bool collapsedGroup)
 void CNavigatorDlg::FinishMultipleDeletion(void)
 {
   int num = B3DMIN(mCurrentItem, (int)mItemArray.GetSize() - 1);
-  mChanged = true;
+  SetChanged(true);
   if (m_bCollapseGroups)
     MakeListMappings();
   FillListBox();
@@ -4253,7 +4255,7 @@ void CNavigatorDlg::AddCirclePolygon(float radius)
     item->AppendPoint(ptX, ptY);
   }
   UpdateListString(mCurrentItem);
-  mChanged = true;
+  SetChanged(true);
   ManageCurrentControls();
   Redraw();
 }
@@ -4892,7 +4894,7 @@ int CNavigatorDlg::MakeGridOrFoundPoints(int jstart, int jend, int jdir, int kst
       sinpr = (float)sin(DTOR * rotBest);
 
       // Account for the border fraction before dividing up the range
-      if (poly) {
+      if (poly || mAddingFoundHoles) {
         xmin = 0.45f * spacing *
           (mAddingFoundHoles ? mParam->holeInPolyBoxFrac : mParam->gridInPolyBoxFrac);
         rotXmin += xmin;
@@ -5063,7 +5065,7 @@ int CNavigatorDlg::MakeGridOrFoundPoints(int jstart, int jend, int jdir, int kst
     }
 
     // See if this is a good division
-    if (numJgroups && !likeLast) {
+    if (numJgroups && !likeLast && !mWinApp->mMacroProcessor->DoingMacro()) {
      Redraw();
      label.Format("There are %d groups with %.1f points per group\n\n"
        "Do you want to keep this set of groups?", numJgroups, 
@@ -5127,7 +5129,7 @@ void CNavigatorDlg::AddPointOnGrid(int j, int k, CMapDrawItem *poly, int registr
   if (mDrawnOnMontBufInd >= 0)
     TransferBacklash(&mImBufs[mDrawnOnMontBufInd], item);
   UpdateListString(mCurrentItem);
-  mChanged = true;
+  SetChanged(true);
 }
 
 // Test whether the given point is outside the polygon or close to being so
@@ -5281,8 +5283,8 @@ int CNavigatorDlg::AddFoundHoles(FloatVec *xCenters, FloatVec *yCenters,
   mDrawnOnMontBufInd = FindBufferWithMontMap(mapID);
   if (layoutType == 2)
     groupExtent = mHelper->GetGridGroupSize();
-  jend = *std::max_element(gridXpos->begin(), gridXpos->end()) - 1;
-  kend = *std::max_element(gridYpos->begin(), gridYpos->end()) - 1;
+  jend = *std::max_element(gridXpos->begin(), gridXpos->end());
+  kend = *std::max_element(gridYpos->begin(), gridYpos->end());
   if (layoutType == 1)
     SetupForAwayFromFocus(spacing * (float)cos(DTOR * angle),
       spacing * (float)sin(DTOR * angle), spacing * (float)cos(DTOR * (angle + 90.)),
@@ -5678,7 +5680,7 @@ void CNavigatorDlg::TransformOneItem(CMapDrawItem * item, ScaleMat aM, float * d
   for (pt = 0; pt < item->mNumPoints; pt++)
     XfApply(aM, dxy, item->mPtX[pt], item->mPtY[pt], item->mPtX[pt], item->mPtY[pt]);
   item->mRegistration = toReg;
-  mChanged = true;
+  SetChanged(true);
 
   // A map needs to have its transformation matrix changed
   // Premultiply by the inverse of the transformation because that would
@@ -6204,7 +6206,7 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
   }
   
   UpdateListString(mCurrentItem);
-  mChanged = true;
+  SetChanged(true);
   ManageCurrentControls();
   mWinApp->UpdateBufferWindows();
   mWinApp->mActiveView->NewImageScale();
@@ -6500,7 +6502,7 @@ void CNavigatorDlg::ImportMap(void)
         }
       }
 
-      mChanged = true;
+      SetChanged(true);
       ManageCurrentControls();
 
     }
@@ -8056,7 +8058,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
     mWinApp->AppendToLog(report);
 
     item->mAcquire = false;
-    mChanged = true;
+    SetChanged(true);
     mNumAcquired++;
     item->mDraw = mParam->acquireType != ACQUIRE_TAKE_MAP;
     UpdateListString(mAcquireIndex);
@@ -8087,7 +8089,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
     ManageNumDoneAcquired();
     if (mWinApp->mMacroProcessor->GetLastCompleted()) {
       item->mAcquire = false;
-      mChanged = true;
+      SetChanged(true);
       mNumAcquired++;
       UpdateListString(mAcquireIndex);
       if (mAcquireIndex == mCurrentItem)
@@ -8799,6 +8801,15 @@ int CNavigatorDlg::RegistrationUseType(int reg)
       return item->mImported > 0 ? NAVREG_IMPORT : NAVREG_REGULAR;
   }
   return NAVREG_UNUSED;
+}
+
+void CNavigatorDlg::SetChanged(BOOL inVal)
+{
+  mChanged = inVal;
+  if (inVal && mHelper->mMultiCombinerDlg)
+    mHelper->mMultiCombinerDlg->UpdateEnables();
+  if (inVal && mHelper->mHoleFinderDlg->IsOpen())
+    mHelper->mHoleFinderDlg->ManageEnables();
 }
 
 // Make a new item and make it current item
@@ -9709,6 +9720,10 @@ void CNavigatorDlg::SetCurrentSelection(int listInd)
   m_listViewer.SetCurSel(mCurListSel);
   if (!m_bCollapseGroups)
     mCurrentItem = mCurListSel;
+  else if (mListToItem[listInd] < 0)
+    mCurrentItem = -1 - mListToItem[listInd];
+  else
+    mCurrentItem = mListToItem[listInd];
   ManageCurrentControls();
   Redraw();
 }
