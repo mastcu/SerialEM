@@ -921,11 +921,12 @@ double ProcImageMeanCircle(void *array, int type, int nx, int ny, int cx, int cy
   unsigned short int *usdata;
   float *fdata;
   double fsum;
+  int radSquared = radius * radius;
 
-  ix0 = cx - radius;
-  ix1 = cx + radius;
-  iy0 = cy - radius;
-  iy1 = cy + radius;
+  ix0 = B3DMAX(0, cx - radius);
+  ix1 = B3DMIN(nx - 1, cx + radius);
+  iy0 = B3DMAX(0, cy - radius);
+  iy1 = B3DMIN(ny - 1, cy + radius);
 
   for (iy = iy0; iy <= iy1; iy++) {
     tsum = 0;
@@ -934,7 +935,7 @@ double ProcImageMeanCircle(void *array, int type, int nx, int ny, int cx, int cy
     case BYTE:
       bdata = (unsigned char *)array + nx * iy + ix0;
       for (ix = ix0; ix <= ix1; ix++) {
-        if (sqrt((cx - ix) * (cx - ix) + ysquared) <= radius) {
+        if ((cx - ix) * (cx - ix) + ysquared <= radSquared) {
           tsum += *bdata;
           area++;
         }
@@ -945,7 +946,7 @@ double ProcImageMeanCircle(void *array, int type, int nx, int ny, int cx, int cy
     case SIGNED_SHORT:
       sdata = (short int *)array + nx * iy + ix0;
       for (ix = ix0; ix <= ix1; ix++) {
-        if (sqrt((cx - ix) * (cx - ix) + ysquared) <= radius) {
+        if ((cx - ix) * (cx - ix) + ysquared <= radSquared) {
           tsum += *sdata;
           area++;
         }
@@ -956,7 +957,7 @@ double ProcImageMeanCircle(void *array, int type, int nx, int ny, int cx, int cy
     case UNSIGNED_SHORT:
       usdata = (unsigned short int *)array + nx * iy + ix0;
       for (ix = ix0; ix <= ix1; ix++) {
-        if (sqrt((cx - ix) * (cx - ix) + ysquared) <= radius) {
+        if ((cx - ix) * (cx - ix) + ysquared <= radSquared) {
           tsum += *usdata;
           area++;
         }
@@ -968,7 +969,7 @@ double ProcImageMeanCircle(void *array, int type, int nx, int ny, int cx, int cy
       fsum = 0.;
       fdata = (float *)array + nx * iy + ix0;
       for (ix = ix0; ix <= ix1; ix++) {
-        if (sqrt((cx - ix) * (cx - ix) + ysquared) <= radius) {
+        if ((cx - ix) * (cx - ix) + ysquared <= radSquared) {
           fsum += *fdata;
           area++;
         }
@@ -979,6 +980,8 @@ double ProcImageMeanCircle(void *array, int type, int nx, int ny, int cx, int cy
     }
     sum += tsum;
   }
+  if (!area)
+    return 0.;
   return sum / area;
 }
 
