@@ -15,6 +15,10 @@ And for non-modal:
   virtual void PostNcDestroy();
   virtual BOOL PreTranslateMessage(MSG* pMsg);
 The latter is needed if there is any edit box
+
+Also add a CloseWindow() as public if it is necessary to close the window externally
+It can call OnOK, OnCancel, or DestroyWindow as needed.
+
 ---------------------
 BOOL CHoleFinder::OnInitDialog()
 {

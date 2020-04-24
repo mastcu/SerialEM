@@ -30,6 +30,8 @@
 #include "MultiTSTasks.h"
 #include "HoleFinderDlg.h"
 #include "holefinder.h"
+#include "MultiHoleCombiner.h"
+#include "MultiCombinerDlg.h"
 #include "Utilities\XCorr.h"
 #include "Image\KStoreADOC.h"
 #include "Shared\autodoc.h"
@@ -49,6 +51,7 @@ CNavHelper::CNavHelper(void)
 	mShiftManager = mWinApp->mShiftManager;
   mBufferManager = mWinApp->mBufferManager;
   mFindHoles = new HoleFinder();
+  mCombineHoles = new CMultiHoleCombiner();
   mRealigning = 0;
   mAcquiringDual = false;
   mMaxMarginNeeded = 10.;
@@ -84,6 +87,8 @@ CNavHelper::CNavHelper(void)
   mMultiShotPlace.rcNormalPosition.right = 0;
   mHoleFinderDlg = NULL;
   mHoleFinderPlace.rcNormalPosition.right = 0;
+  mMultiCombinerDlg = NULL;
+  mMultiCombinerPlace.rcNormalPosition.right = 0;
   mRIdefocusOffsetSet = 0.;
   mRIbeamShiftSetX = mRIbeamShiftSetY = 0.;
   mRIbeamTiltSetX = mRIbeamTiltSetY = 0.;
@@ -4058,6 +4063,26 @@ WINDOWPLACEMENT * CNavHelper::GetHoleFinderPlacement(void)
     mHoleFinderDlg->GetWindowPlacement(&mHoleFinderPlace);
   }
   return &mHoleFinderPlace;
+}
+
+void CNavHelper::OpenMultiCombiner(void)
+{
+  if (mMultiCombinerDlg) {
+    mMultiCombinerDlg->BringWindowToTop();
+    return;
+  }
+  mMultiCombinerDlg = new CMultiCombinerDlg();
+  mMultiCombinerDlg->Create(IDD_HOLE_FINDER);
+  mWinApp->SetPlacementFixSize(mMultiCombinerDlg, &mMultiCombinerPlace);
+  mWinApp->RestoreViewFocus();
+}
+
+WINDOWPLACEMENT *CNavHelper::GetMultiCombinerPlacement()
+{
+  if (mMultiCombinerDlg) {
+    mMultiCombinerDlg->GetWindowPlacement(&mMultiCombinerPlace);
+  }
+  return &mMultiCombinerPlace;
 }
 
 // Loads a piece or synthesizes piece containing the given item

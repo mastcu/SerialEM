@@ -71,14 +71,13 @@
 #define IDD_MULTI_SHOT_SETUP            225
 #define IDD_DE_REFERENCE                226
 #define IDD_ONELINESCRIPT               227
-#define IDD_CTFFINDDLG                  232
-#define IDD_TSDOSESYM                   234
-#define IDD_DIALOG1                     237
-#define IDD_DRIFTWAITSETUP              237
-#define IDD_SCREENSHOT                  239
-#define IDD_VPP_EXPOSE_SETUP            241
-#define IDD_DIALOG2                     244
-#define IDD_HOLE_FINDER                 244
+#define IDD_CTFFINDDLG                  228
+#define IDD_TSDOSESYM                   229
+#define IDD_DRIFTWAITSETUP              230
+#define IDD_SCREENSHOT                  231
+#define IDD_VPP_EXPOSE_SETUP            232
+#define IDD_HOLE_FINDER                 233
+#define IDD_MULTI_COMBINER_DLG          234
 #define IDC_EDITXSIZE                   1000
 #define IDC_EDITYSIZE                   1002
 #define IDC_EDITYOVERLAP                1003
@@ -2095,7 +2094,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        246
+#define _APS_NEXT_RESOURCE_VALUE        248
 #define _APS_NEXT_COMMAND_VALUE         33386
 #define _APS_NEXT_CONTROL_VALUE         2645
 #define _APS_NEXT_SYMED_VALUE           104

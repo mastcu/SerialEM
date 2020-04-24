@@ -59,6 +59,7 @@
 #include "PiezoAndPPControl.h"
 #include "ScreenShotDialog.h"
 #include "HoleFinderDlg.h"
+#include "MultiCombinerDlg.h"
 #include "AutoTuning.h"
 #include "ExternalTools.h"
 #include "Shared\b3dutil.h"
@@ -3273,6 +3274,7 @@ void CSerialEMApp::OnFileOpenlog()
 {
   mLogWindow = new CLogWindow();
   mLogWindow->Create(IDD_LOGWINDOW);
+  mLogPlacement.showCmd = 1;
   if (mLogPlacement.rcNormalPosition.right > 0)
     mLogWindow->SetWindowPlacement(&mLogPlacement);
   RestoreViewFocus();
@@ -3457,6 +3459,8 @@ void CSerialEMApp::NavigatorClosing()
   mOpenStateWithNav = mNavHelper->mStateDlg != NULL;
   if (mNavHelper->mHoleFinderDlg)
     mNavHelper->mHoleFinderDlg->CloseWindow();
+  if (mNavHelper->mMultiCombinerDlg)
+    mNavHelper->mMultiCombinerDlg->CloseWindow();
 }
 
 // Stage move tool
@@ -3888,6 +3892,7 @@ void CSerialEMApp::SetPlacementFixSize(CWnd *window, WINDOWPLACEMENT *lastPlacem
   if (setting->right > 0){
     setting->right = setting->left + orig->right - orig->left;
     setting->bottom = setting->top + orig->bottom - orig->top;
+    lastPlacement->showCmd = 1;
     window->SetWindowPlacement(lastPlacement);
   }
   window->ShowWindow(SW_SHOW);

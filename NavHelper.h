@@ -9,6 +9,8 @@ struct TiltSeriesParam;
 class CMultiShotDlg;
 class CHoleFinderDlg;
 class HoleFinder;
+class CMultiHoleCombiner;
+class CMultiCombinerDlg;
 
 #define MULTI_IN_HOLE   0x1
 #define MULTI_HOLES     0x2
@@ -144,6 +146,8 @@ public:
   CMultiShotDlg *mMultiShotDlg;
   CHoleFinderDlg *mHoleFinderDlg;
   HoleFinder *mFindHoles;
+  CMultiHoleCombiner *mCombineHoles;
+  CMultiCombinerDlg *mMultiCombinerDlg;
 
 private:
   CSerialEMApp *mWinApp;
@@ -250,6 +254,7 @@ private:
 
   WINDOWPLACEMENT mRotAlignPlace;
   WINDOWPLACEMENT mMultiShotPlace;
+  WINDOWPLACEMENT mMultiCombinerPlace;
   WINDOWPLACEMENT mHoleFinderPlace;
   double mRIdefocusOffsetSet;   // Defocus offset set in realign to item
   int mRIalphaSet;              // Alpha value set in realign to item
@@ -414,6 +419,8 @@ public:
   WINDOWPLACEMENT *GetMultiShotPlacement(bool update);
   void OpenHoleFinder(void);
   WINDOWPLACEMENT *GetHoleFinderPlacement(void);
+  void OpenMultiCombiner(void);
+  WINDOWPLACEMENT *GetMultiCombinerPlacement();
   void SaveLDFocusPosition(bool saveIt, float & axisPos, BOOL & rotateAxis, int & axisRotation, 
     int & xOffset, int & yOffset, bool traceIt);
   void SetLDFocusPosition(int camIndex, float axisPos, BOOL rotateAxis, int axisRotation, 

@@ -458,6 +458,12 @@
     <ClInclude Include="HoleFinderDlg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="MultiHoleCombiner.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MultiCombinerDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\bitmap1.bmp">
@@ -1144,6 +1150,12 @@
       <Filter>CSource Files</Filter>
     </ClCompile>
     <ClCompile Include="HoleFinderDlg.cpp">
+      <Filter>CSource Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MultiHoleCombiner.cpp">
+      <Filter>CSource Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MultiCombinerDlg.cpp">
       <Filter>CSource Files</Filter>
     </ClCompile>
   </ItemGroup>

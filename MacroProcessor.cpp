@@ -32,6 +32,7 @@
 #include "ProcessImage.h"
 #include "ComplexTasks.h"
 #include "MultiTSTasks.h"
+#include "MultiHoleCombiner.h"
 #include "ParticleTasks.h"
 #include "FilterTasks.h"
 #include "MacroControlDlg.h"
@@ -272,7 +273,8 @@ enum {CME_SCRIPTEND = -7, CME_LABEL, CME_SETVARIABLE, CME_SETSTRINGVAR, CME_DOKE
   CME_ACQUIRETOMATCHBUFFER,  CME_REPORTXLENSDEFLECTOR, CME_SETXLENSDEFLECTOR, 
   CME_REPORTXLENSFOCUS, CME_SETXLENSFOCUS, CME_EXTERNALTOOLARGPLACE, 
   CME_READONLYUNLESSADMIN, CME_IMAGESHIFTBYSTAGEDIFF, CME_GETFILEINWATCHEDDIR,
-  CME_RUNSCRIPTINWATCHEDDIR, CME_PARSEQUOTEDSTRINGS, CME_SNAPSHOTTOFILE
+  CME_RUNSCRIPTINWATCHEDDIR, CME_PARSEQUOTEDSTRINGS, CME_SNAPSHOTTOFILE,
+  CME_COMBINEHOLESTOMULTI, CME_UNDOHOLECOMBINING 
 };
 
 // The two numbers are the minimum arguments and whether arithmetic is allowed
@@ -427,7 +429,7 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"ExternalToolArgPlace", 1, 0},{"ReadOnlyUnlessAdmin", 0, 0},
 {"ImageShiftByStageDiff", 2, 0},{"GetFileInWatchedDir", 1, 0},
 {"RunScriptInWatchedDir", 1, 0}, {"ParseQuotedStrings", 0, 0}, {"SnapshotToFile", 6, 0},
-/*CAI3.8*/{NULL, 0, 0}
+/*CAI3.8*/{"CombineHolesToMulti", 0, 0}, {"UndoHoleCombining", 0, 0}, {NULL, 0, 0}
 };
 // The longest is now 25 characters but 23 is a more common limit
 
@@ -7103,7 +7105,23 @@ void CMacroProcessor::NextCommand()
       montP->insideNavItem = itemInt[1] - 1;
     montP->skipOutsidePoly = itemInt[1] >= 0;
     break;
+   
+  case CME_COMBINEHOLESTOMULTI:                             // CombineHolesToMulti 
+    ABORT_NONAV;
+    B3DCLAMP(itemInt[1], 0, 2);
+    index = mWinApp->mNavHelper->mCombineHoles->CombineItems(itemInt[1]);
+    if (index)
+      ABORT_NOLINE("Error trying to combine hole for multiple Records:\n" +
+        CString(mWinApp->mNavHelper->mCombineHoles->GetErrorMessage(index)));
+    break;
     
+  case CME_UNDOHOLECOMBINING:                               // UndoHoleCombining
+    ABORT_NONAV;
+    if (!mWinApp->mNavHelper->mCombineHoles->OKtoUndoCombine())
+      ABORT_NOLINE("It is no longer possible to undo the last hole combination");
+    mWinApp->mNavHelper->mCombineHoles->UndoCombination();
+    break;
+
   case CME_SETHELPERPARAMS:                                 // SetHelperParams
     navHelper->SetTestParams(&itemDbl[1]);
     break;

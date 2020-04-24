@@ -1154,6 +1154,8 @@
     <ClInclude Include="ExternalTools.h" />
     <ClInclude Include="FrameAlignDlg.h" />
     <ClInclude Include="HoleFinderDlg.h" />
+    <ClInclude Include="MultiCombinerDlg.h" />
+    <ClInclude Include="MultiHoleCombiner.h" />
     <ClInclude Include="MultiShotDlg.h" />
     <ClInclude Include="NavAdocPuts.h" />
     <ClInclude Include="OneLineScript.h" />
@@ -2079,6 +2081,8 @@ echo.
     <ClCompile Include="ExternalTools.cpp" />
     <ClCompile Include="FrameAlignDlg.cpp" />
     <ClCompile Include="HoleFinderDlg.cpp" />
+    <ClCompile Include="MultiCombinerDlg.cpp" />
+    <ClCompile Include="MultiHoleCombiner.cpp" />
     <ClCompile Include="MultiShotDlg.cpp" />
     <ClCompile Include="OneLineScript.cpp" />
     <ClCompile Include="ParticleTasks.cpp" />

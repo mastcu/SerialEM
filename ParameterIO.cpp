@@ -742,6 +742,8 @@ int CParameterIO::ReadSettings(CString strFileName)
             place = mWinApp->mNavHelper->GetMultiShotPlacement(false);
           else if (NAME_IS("HoleFinderPlacement"))
             place = mWinApp->mNavHelper->GetHoleFinderPlacement();
+          else if (NAME_IS("MultiCombinerPlacement"))
+            place = mWinApp->mNavHelper->GetMultiCombinerPlacement();
           else if (NAME_IS("CtffindPlacement"))
             place = mWinApp->mProcessImage->GetCtffindPlacement();
           else if (NAME_IS("AutocenPlacement"))
@@ -1646,7 +1648,9 @@ void CParameterIO::WriteSettings(CString strFileName)
     WritePlacement("AutocenPlacement", 0, autocenPlace);
     WritePlacement("VppCondPlacement", 0, vppPlace);
     WritePlacement("SnapshotPlacement", 0, mWinApp->GetScreenShotPlacement());
-    WritePlacement("HoleFinderPlacement",0,mWinApp->mNavHelper->GetHoleFinderPlacement());
+    WritePlacement("HoleFinderPlacement", 0, mWinApp->mNavHelper->GetHoleFinderPlacement());
+    WritePlacement("MultiCombinerPlacement", 0, 
+      mWinApp->mNavHelper->GetMultiCombinerPlacement());
     WritePlacement("MacroToolPlacement", mWinApp->mMacroToolbar ? 1 : 0, toolPlace);
     WritePlacement("OneLinePlacement", mWinApp->mMacroProcessor->mOneLineScript ? 1 : 0, 
       oneLinePlace);
