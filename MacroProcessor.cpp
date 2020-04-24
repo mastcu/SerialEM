@@ -6986,19 +6986,18 @@ void CMacroProcessor::NextCommand()
       return;
     if (ConvertBufferLetter(strItems[2], 0, true, index2, report))
       ABORT_LINE(report);
-    if (mImBufs[index2].GetStagePosition(floatX, floatY) && mImBufs[index2].mBinning && 
-      mImBufs[index2].mMagInd) {
-        mWinApp->mMainView->GetItemImageCoords(&mImBufs[index2], navItem, floatX,
-          floatY);
-        mImBufs[index2].mImage->getSize(sizeX, sizeY);
-        if ( floatX >= 0 && floatY >= 0 && floatX <= (sizeX - 1) &&
-          floatY <= (sizeY - 1) ) {
-          SetReportedValues(floatX, floatY, 1);
-          logRpt.Format("Navigator item %d has image coordinates %.2f, %.2f on %c",
+    if (mWinApp->mMainView->GetMapItemsForImageCoords(&mImBufs[index2], true)) {
+      mWinApp->mMainView->GetItemImageCoords(&mImBufs[index2], navItem, floatX,
+        floatY);
+      mImBufs[index2].mImage->getSize(sizeX, sizeY);
+      if (floatX >= 0 && floatY >= 0 && floatX <= (sizeX - 1) &&
+        floatY <= (sizeY - 1)) {
+        SetReportedValues(floatX, floatY, 1);
+        logRpt.Format("Navigator item %d has image coordinates %.2f, %.2f on %c",
           index + 1, floatX, floatY, index2 + 65);
-        } else {
-          SetReportedValues(floatX, floatY, 0);
-          logRpt.Format("Navigator item %d is outside of %c", index + 1, index2 + 65);
+      } else {
+        SetReportedValues(floatX, floatY, 0);
+        logRpt.Format("Navigator item %d is outside of %c", index + 1, index2 + 65);
       }
     } else {
       SetReportedValues(0.0, 0.0, -1);
