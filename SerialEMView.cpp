@@ -26,6 +26,7 @@
 #include "NavigatorDlg.h"
 #include "NavHelper.h"
 #include "HoleFinderDlg.h"
+#include "MultiHoleCombiner.h"
 #include "ParticleTasks.h"
 #include "MacroProcessor.h"
 #include "MultiTSTasks.h"
@@ -945,8 +946,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   maxYstage += tempY;
 
   // Draw hole finder points in two colors
-  if (mWinApp->mNavHelper->mHoleFinderDlg &&
-    mWinApp->mNavHelper->mHoleFinderDlg->GetHolePositions(&xHoleCens, &yHoleCens,
+  if (mWinApp->mNavHelper->mHoleFinderDlg->GetHolePositions(&xHoleCens, &yHoleCens,
       &pieceOn, &holeExcludes, drawIncluded, drawExcluded)) {
     CPen pnIncludePen(PS_SOLID, thick2, includeColor);
     CPen pnExcludePen(PS_SOLID, thick2, excludeColor);
@@ -991,7 +991,10 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
       mWinApp->mNavHelper->MultipleHolesAreSelected();
     mWinApp->mNavHelper->GetNumHolesFromParam(msNumXholes, msNumYholes);
   }
-  bool showMultiOnAll = useMultiShot && (mWinApp->mNavHelper->GetEnableMultiShot() & 2);
+  bool showMultiOnAll = useMultiShot && (mWinApp->mNavHelper->GetEnableMultiShot() & 2) &&
+    (!mWinApp->mNavHelper->mMultiCombinerDlg || 
+      mWinApp->mNavHelper->GetMHCenableMultiDisplay() || 
+      mWinApp->mNavHelper->mCombineHoles->OKtoUndoCombine());
 
   FloatVec drawnXinHole, drawnYinHole, drawnXallHole, drawnYallHole;
   FloatVec convXinHole, convYinHole, convXallHole, convYallHole;
