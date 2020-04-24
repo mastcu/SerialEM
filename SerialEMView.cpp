@@ -1227,7 +1227,8 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
                 B3DMIN(5, mAcquireBox->mNumPoints), ptX, ptY, delPtX, delPtY, NULL, NULL);
           }
         } 
-        if (!numSpecHoles || numSpecHoles == numFullSpecHoles) {
+        if ((!numSpecHoles || numSpecHoles == numFullSpecHoles) && 
+          useXholes == msNumXholes && useYholes == msNumYholes) {
           DrawVectorPolygon(cdc, &rect, item, imBuf, convXallHole, convYallHole,
             item->mStageX, item->mStageY, delPtX, delPtY, NULL, NULL);
         }
