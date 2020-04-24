@@ -260,7 +260,7 @@ enum {CME_SCRIPTEND = -7, CME_LABEL, CME_SETVARIABLE, CME_SETSTRINGVAR, CME_DOKE
   CME_DRIFTWAITTASK, CME_GETWAITTASKDRIFT, CME_CLOSELOGOPENNEW, CME_SAVELOG,
   CME_SAVECALIBRATIONS, CME_REPORTCROSSOVERPERCENTC2, CME_REPORTSCREENCURRENT,
   CME_LISTVARS, CME_LISTPERSISTENTVARS, CME_REPORTITEMACQUIRE,
-  CME_SETITEMACQUIRE, CME_CHANGEITEMNOTE,
+  CME_CHANGEITEMACQUIRE, CME_CHANGEITEMNOTE,
   CME_SETFRAMESERIESPARAMS, CME_SETCUSTOMTIME, CME_REPORTCUSTOMINTERVAL, 
   CME_STAGETOLASTMULTIHOLE, CME_IMAGESHIFTTOLASTMULTIHOLE, CME_NAVINDEXITEMDRAWNON,
   CME_SETMAPACQUIRESTATE, CME_RESTORESTATE, CME_REALIGNTOMAPDRAWNON,
@@ -411,7 +411,7 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"GetWaitTaskDrift", 0, 0}, {"CloseLogOpenNew", 0, 0}, {"SaveLog", 0, 0},
 {"SaveCalibrations", 0, 0}, {"ReportCrossoverPercentC2", 0, 0},
 {"ReportScreenCurrent", 0, 0}, {"ListVars", 0, 0 }, {"ListPersistentVars", 0, 0 },
-{"ReportItemAcquire", 0, 0 }, {"SetItemAcquire", 0, 0 }, {"ChangeItemNote", 1, 0 },
+{"ReportItemAcquire", 0, 0 }, {"ChangeItemAcquire", 0, 0 }, {"ChangeItemNote", 1, 0 },
 {"SetFrameSeriesParams", 1, 0}, {"SetCustomTime", 1, 0}, {"ReportCustomInterval", 1, 0},
 {"StageToLastMultiHole", 0, 0}, {"ImageShiftToLastMultiHole", 0, 0},
 {"NavIndexItemDrawnOn", 1, 0}, {"SetMapAcquireState", 1, 0}, {"RestoreState", 0, 0},
@@ -424,9 +424,8 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"SetXLensDeflector", 3, 0}, {"ReportXLensFocus", 0, 0}, {"SetXLensFocus", 1, 0},
 {"ExternalToolArgPlace", 1, 0},{"ReadOnlyUnlessAdmin", 0, 0},
 {"ImageShiftByStageDiff", 2, 0},{"GetFileInWatchedDir", 1, 0},
-{"RunScriptInWatchedDir", 1, 0}, {"ParseQuotedStrings", 0, 0},/*CAI3.8*/
-{"SnapshotToFile", 6, 0},
-{NULL, 0, 0}
+{"RunScriptInWatchedDir", 1, 0}, {"ParseQuotedStrings", 0, 0}, {"SnapshotToFile", 6, 0},
+/*CAI3.8*/{NULL, 0, 0}
 };
 // The longest is now 25 characters but 23 is a more common limit
 
@@ -6660,35 +6659,26 @@ void CMacroProcessor::NextCommand()
     break;
 
   case CME_REPORTITEMACQUIRE:                               // ReportItemAcquire
-    ABORT_NONAV;
-    if (itemEmpty[1])
-      index = navigator->GetCurrentIndex();
-    else if (itemInt[1] < 0)
-      index = navigator->GetNumNavItems() + itemInt[1];
-    else
-      index = itemInt[1] - 1;
-    navItem = navigator->GetOtherNavItem(index);
+    index = itemEmpty[1] ? 0 : itemInt[1];
+    navItem = CurrentOrIndexedNavItem(index, strLine);
     if (!navItem)
-      ABORT_LINE("Index is out of range in statement:\n\n");
-    logRpt.Format("Navigator item %d has Acquire %s", index + 1,
+      return;
+   logRpt.Format("Navigator item %d has Acquire %s", index + 1,
       (navItem->mAcquire == 0) ? "disabled" : "enabled");
     SetReportedValues(navItem->mAcquire);
     break;
 
-  case CME_SETITEMACQUIRE:                                  // SetItemAcquire
-    ABORT_NONAV;
+  case CME_CHANGEITEMACQUIRE:                               //ChangeItemAcquire
+    index = itemEmpty[1] ? 0 : itemInt[1];
+    navItem = CurrentOrIndexedNavItem(index, strLine);
+    if (!navItem)
+      return;
     if (navigator->GetAcquiring())
       ABORT_LINE("The Navigator must not be acquiring for line:\n\n");
-    truth = (itemEmpty[1] || (itemInt[1] != 0));
-    if (itemEmpty[2])
-      index = navigator->GetCurrentIndex();
-    else if (itemInt[2] < 0)
-      index = navigator->GetNumNavItems() + itemInt[2];
-    else
-      index = itemInt[2] - 1;
-    navItem = navigator->GetOtherNavItem(index);
-    if (!navItem)
-      ABORT_LINE("Index is out of range in statement:\n\n");
+    truth = (itemEmpty[2] || (itemInt[2] != 0));
+    if (truth && navItem->mTSparamIndex >= 0)
+      ABORT_LINE("You cannot turn on Acquire for an item set for a tilt series for "
+        "line:\n\n")
     navItem->mAcquire = truth;
     navigator->UpdateListString(index);
     navigator->Redraw();

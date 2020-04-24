@@ -1422,7 +1422,9 @@
             JPEG, CUR, or -1 (case insensitive), where CUR or -1 means use the current 
             compression in the Image Snapshots dialog.&nbsp; If JPG or JPEG is entered for 
             &#39;typ&#39;, a true JPEG file will be written, not a JPEG-compressed TIFF, and the 
-            compression entry does not matter (but must be present before the filename).</TD>
+            compression entry does not matter (but must be present before the filename).
+            Command added in 3.8, 3/3/20.
+          </TD>
         </TR>
         <TR>
           <TD class="style7">EnterNameOpenFile [prompt]</TD>
@@ -3038,16 +3040,17 @@
           <TD class="auto-style1">ReportItemAcquire [#]</TD>
           <TD>Report the Acquire state of the Navigator item whose index in the table is #,
             numbered from 1; or if # is negative, reports on item that many items from the
-            end of the table, i.e., -1 reports on the last item, or if no # is specified of
-            the current item. Command added in 3.8. </TD>
+            end of the table (i.e., -1 reports on the last item), or if 0 or no # is specified reports on
+            the current item. Command added in 3.8, 4/16/20.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="auto-style1">SetItemAcquire [#a] [#i]</TD>
+          <TD class="auto-style1">ChangeItemAcquire [#i] [#a]</TD>
           <TD>Enables or disables Acquire for a Navigator item: if #a is 0, Acquire is disabled,
             if this parameter is not specified or nonzero, Acquire becomes enabled. The item index
-            is specified by #i (see also ReportAcquire), if no #i is specified the current item is
-            changed. This command may not be used from within a running acquisition. Command added
-            in 3.8. </TD>
+            is specified by #i with a positive or negative number (as in ReportItemAcquire);
+             if 0 or no #i is specified the current item is changed. This command may not be used 
+            from within a running acquisition, and Acquire may not be turned for an item marked 
+            for a tilt series. Command added in 3.8, 4/16/20.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="auto-style1">ReportNumTableItems</TD>
@@ -3110,7 +3113,7 @@
         <TR vAlign="top">
           <TD class="auto-style1">ChangeItemNote #i [text]</TD>
           <TD>Change the note of the Navigator item with table index #i to the given text or
-            deletes the note if text is not specified. Command added in 3.8.</TD>
+            deletes the note if text is not specified. Command added in 3.8, 4/16/20.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="auto-style1">ItemForSuperCoord #</TD>

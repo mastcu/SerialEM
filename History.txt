@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+4/16/20: Prevented vacuum gauge calls in scope update for non-FEI scopes
+(In 3.7).
+
 4/16/20: Added script commands ReportItemAcquire, SetItemAquire, and
 ChangeItemNote.
 
