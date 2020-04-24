@@ -707,13 +707,14 @@ void CHoleFinderDlg::OnButFindHoles()
     mMontage = false;
   }
 
+  mRegistration = mWinApp->mNavigator->GetCurrentRegistration();
+  if (mNavItem)
+    mRegistration = mNavItem->mRegistration;
+
   // Look for boundary contour if selected
   if (m_bExcludeOutside) {
     itemArray = mWinApp->mNavigator->GetItemArray();
     mWinApp->mNavigator->BufferStageToImage(imBuf, aMat, delX, delY);
-    mRegistration = mWinApp->mNavigator->GetCurrentRegistration();
-    if (mNavItem)
-      mRegistration = mNavItem->mRegistration;
     for (nav = 0; nav < (int)itemArray->GetSize(); nav++) {
       item = itemArray->GetAt(nav);
 

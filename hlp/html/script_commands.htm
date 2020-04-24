@@ -1193,10 +1193,16 @@
           counting mode.&nbsp; Values can be assigned to variables after a buffer letter/number.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style7">SubareaMean x0 x1 y0 y1</TD>
-          <TD>Report the mean counts in a subarea of the A buffer from x0 to x1 in X and from
-            y0 to y1 in Y. Coordinates are numbered from 0 to size - 1 in each dimension
+          <TD class="style7">SubareaMean #X0 #X1 #Y0 #Y1</TD>
+          <TD>Report the mean counts in a subarea of the A buffer from #X0 to #X1 in X and from
+            #Y0 to #Y1 in Y. Coordinates are numbered from 0 to size - 1 in each dimension
             and 0 in Y is at the top.&nbsp; Value can be assigned to variable at end of command.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style7">CircularSubareaMean #X #Y #R</TD>
+          <TD>Report the mean counts in a circular subarea of the A buffer defined by center point
+            #X:#Y and radius #R. Value can be assigned to variable at end of command. Command added
+            in 3.8, 04/20/20.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style7">QuadrantMeans [n] [f1] [f2]</TD>
@@ -1218,7 +1224,7 @@
             stripes.&nbsp; Reports the number of significant transitions found and the number 
             of those that are within a few pixels of the expected boundaries between channels for a 
             K2 or K3 camera.&nbsp; The latter would be a more reliable number to use if 
-            there is a risk of very straight grid bars in the field.  Command added in 3.8.0, 11/3/19.</TD>
+            there is a risk of very straight grid bars in the field.  Command added in 3.8, 11/3/19.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style7">CtfFind buf dmin dmax [fast] [box] [phmin] [phmax] [phstep] 
@@ -3032,6 +3038,15 @@
             the group still marked for acquisition.</TD>
         </TR>
         <TR vAlign="top">
+          <TD class="auto-style1">ReportItemImageCoords [#I] [buf]</TD>
+          <TD>Report the pixel coordinates of navigator item #I on the image in buffer buf. If no #I
+            is specified, the current item is used, negative numbers are items counted from
+            the end of the list. If no buffer is specified, the image in buffer A is used.
+            The X and Y coordinates are returned in ReportedValue1 and 2, ReportedValue3 is set to 0
+            if item #I is outside the buffer or to -1 if the transformation can not be completed.
+            Command added in 3.8, 4/20/20.</TD>
+        </TR>
+        <TR vAlign="top">
           <TD class="auto-style1">ReportNumNavAcquire</TD>
           <TD>Report the number of Navigator marked for Acquire and marked for Tilt Series 
             as two values; return each as -1 if Navigator is not open.</TD>
@@ -3100,9 +3115,10 @@
             and regular registrations.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="auto-style1">ChangeItemColor #i #c</TD>
-          <TD>Change the color index of the Navigator item with table index #i to #c, which 
-            must be between 0 and 5.</TD>
+          <TD class="auto-style1">ChangeItemColor #I #C</TD>
+          <TD>Change the color index of the Navigator item with table index #I to #C, which 
+            must be between 0 and 5. (0 = red; 1 = green; 2 = blue; 3 = yellow; 4 = magenta;
+            5 = no realign)</TD>
         </TR>
         <TR vAlign="top">
           <TD class="auto-style1">ChangeItemLabel #i text</TD>

@@ -907,6 +907,81 @@ double ProcImageMean(void *array, int type, int nx, int ny, int ix0, int ix1,
   return sum / ((ix1 + 1 - ix0) * (iy1 + 1 - iy0));
 }
 
+// Calculate the mean of a circular area specified by center point and radius
+double ProcImageMeanCircle(void *array, int type, int nx, int ny, int cx, int cy,
+  int radius)
+{
+  double sum = 0.;
+  int area = 0;
+  int ix0, ix1, iy0, iy1;
+  int ysquared;
+  int tsum, ix, iy;
+  unsigned char *bdata;
+  short int *sdata;
+  unsigned short int *usdata;
+  float *fdata;
+  double fsum;
+
+  ix0 = cx - radius;
+  ix1 = cx + radius;
+  iy0 = cy - radius;
+  iy1 = cy + radius;
+
+  for (iy = iy0; iy <= iy1; iy++) {
+    tsum = 0;
+    ysquared = (cy - iy) * (cy - iy);
+    switch (type) {
+    case BYTE:
+      bdata = (unsigned char *)array + nx * iy + ix0;
+      for (ix = ix0; ix <= ix1; ix++) {
+        if (sqrt((cx - ix) * (cx - ix) + ysquared) <= radius) {
+          tsum += *bdata;
+          area++;
+        }
+        *bdata++;
+      }
+      break;
+
+    case SIGNED_SHORT:
+      sdata = (short int *)array + nx * iy + ix0;
+      for (ix = ix0; ix <= ix1; ix++) {
+        if (sqrt((cx - ix) * (cx - ix) + ysquared) <= radius) {
+          tsum += *sdata;
+          area++;
+        }
+        *sdata++;
+      }
+      break;
+
+    case UNSIGNED_SHORT:
+      usdata = (unsigned short int *)array + nx * iy + ix0;
+      for (ix = ix0; ix <= ix1; ix++) {
+        if (sqrt((cx - ix) * (cx - ix) + ysquared) <= radius) {
+          tsum += *usdata;
+          area++;
+        }
+        *usdata++;
+      }
+      break;
+
+    case FLOAT:
+      fsum = 0.;
+      fdata = (float *)array + nx * iy + ix0;
+      for (ix = ix0; ix <= ix1; ix++) {
+        if (sqrt((cx - ix) * (cx - ix) + ysquared) <= radius) {
+          fsum += *fdata;
+          area++;
+        }
+        *fdata++;
+      }
+      sum += fsum;
+      break;
+    }
+    sum += tsum;
+  }
+  return sum / area;
+}
+
 // Compute the min, max, mean and sd of the defined area of an image
 void ProcMinMaxMeanSD(void *array, int type, int nx, int ny, int ix0, int ix1,
            int iy0, int iy1, float *mean, float *min, float *max, float *sd)

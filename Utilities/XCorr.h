@@ -34,6 +34,8 @@ void DLL_IM_EX XCorrFastInterp(void *array, int type, void *bray, int nxa, int n
 void DLL_IM_EX ProcSampleMeanSD(void *array, int type, int nx, int ny, float *mean, float *sd);
 double DLL_IM_EX ProcImageMean(void *array, int type, int nx, int ny, int ix0, int ix1,
 					 int iy0, int iy1);
+double DLL_IM_EX ProcImageMeanCircle(void *array, int type, int nx, int ny, int cx, int cy,
+  int radius);
 void DLL_IM_EX ProcMinMaxMeanSD(void *array, int type, int nx, int ny, int ix0, int ix1,
 					 int iy0, int iy1, float *mean, float *min, float *max, float *sd);
 void DLL_IM_EX ProcCentroid(void *array, int type, int nx, int ny, int ix0, int ix1,

@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+
+4/20/20: Added script commands ReportItemImageCoords and CircularSubareaMean.
+
 4/16/20: Prevented vacuum gauge calls in scope update for non-FEI scopes
 (In 3.7).
 
@@ -81,6 +84,18 @@ angles, relative timing, and dose information included, and added ability
 to write a command file for aligning with Alignframes, including thresholds
 for excluding partial frames from alignment.  (New SEMCCD plugin needed).
 
+12/15/19: Added script commands ListVars and ListPersistentVars, extended
+functionality of FlashDisplay.
+
+12/15/19: Added warning when image is acquired with column valves closed or 
+beam off.
+
+12/15/19: Added list of beam intensity calibrations and spot intensity
+calibrations to output of beam calibrations.
+
+12/15/19: Changed "Read again" menu item in Settings menu to "Reload" including
+file name of current settings file.
+
 12/13/19: Added ability to remove positions from regular array of holes for
 multiple Records.
 
@@ -115,6 +130,9 @@ below threshold.
 fast binning in the SEMCCD plugin (In 3.7).
 
 11/27/19: Fixed crash when trimming improperly oriented K2 image (In 3.7).
+
+11/27/19: Added script commands ReportCrossoverPercentC2, ReportScreenCurrent, 
+and SaveCalibrations.
 
 11/17/19: Added task for conditioning a phase plate.
 

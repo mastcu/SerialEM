@@ -260,7 +260,8 @@ enum {CME_SCRIPTEND = -7, CME_LABEL, CME_SETVARIABLE, CME_SETSTRINGVAR, CME_DOKE
   CME_DRIFTWAITTASK, CME_GETWAITTASKDRIFT, CME_CLOSELOGOPENNEW, CME_SAVELOG,
   CME_SAVECALIBRATIONS, CME_REPORTCROSSOVERPERCENTC2, CME_REPORTSCREENCURRENT,
   CME_LISTVARS, CME_LISTPERSISTENTVARS, CME_REPORTITEMACQUIRE,
-  CME_SETITEMACQUIRE, CME_CHANGEITEMNOTE,
+  CME_SETITEMACQUIRE, CME_CHANGEITEMNOTE, CME_CIRCULARSUBAREAMEAN,
+  CME_REPORTITEMIMAGECOORDS,
   CME_SETFRAMESERIESPARAMS, CME_SETCUSTOMTIME, CME_REPORTCUSTOMINTERVAL, 
   CME_STAGETOLASTMULTIHOLE, CME_IMAGESHIFTTOLASTMULTIHOLE, CME_NAVINDEXITEMDRAWNON,
   CME_SETMAPACQUIRESTATE, CME_RESTORESTATE, CME_REALIGNTOMAPDRAWNON,
@@ -412,6 +413,7 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"SaveCalibrations", 0, 0}, {"ReportCrossoverPercentC2", 0, 0},
 {"ReportScreenCurrent", 0, 0}, {"ListVars", 0, 0 }, {"ListPersistentVars", 0, 0 },
 {"ReportItemAcquire", 0, 0 }, {"SetItemAcquire", 0, 0 }, {"ChangeItemNote", 1, 0 },
+{"CircularSubareaMean", 3, 0 }, {"ReportItemImageCoords", 0, 0},
 {"SetFrameSeriesParams", 1, 0}, {"SetCustomTime", 1, 0}, {"ReportCustomInterval", 1, 0},
 {"StageToLastMultiHole", 0, 0}, {"ImageShiftToLastMultiHole", 0, 0},
 {"NavIndexItemDrawnOn", 1, 0}, {"SetMapAcquireState", 1, 0}, {"RestoreState", 0, 0},
@@ -1355,6 +1357,7 @@ void CMacroProcessor::NextCommand()
   CFile *cfile;
   double delISX, delISY, delX, delY, specDist, h1, v1, v2, h2, h3, v3, v4, h4;
   double stageX, stageY, stageZ;
+  float floatX, floatY;
   int cmdIndex, index, index2, i, ix0, ix1, iy0, iy1, sizeX, sizeY, mag, lastNonEmptyInd;
   int binning;
   int currentCam = mWinApp->GetCurrentCamera();
@@ -5025,6 +5028,23 @@ void CMacroProcessor::NextCommand()
       delX);
     SetReportedValues(&strItems[5], delX);
     break;
+
+  case CME_CIRCULARSUBAREAMEAN:                             // CircularSubareaMean
+    ix0 = itemInt[1];
+    iy0 = itemInt[2];
+    i = itemInt[3];
+    if (mImBufs->mImage)
+      mImBufs->mImage->getSize(sizeX, sizeY);
+    if (!mImBufs->mImage || itemEmpty[3] || ix0 - i < 0 || iy0 - i < 0 ||
+      ix0 + i >= sizeX || iy0 + i >= sizeY)
+      ABORT_LINE("Not enough coordinates, coordinates out of bounds, or no image "
+        "in A in statement: \n\n");
+    delX = ProcImageMeanCircle(mImBufs->mImage->getData(), mImBufs->mImage->getType(),
+      sizeX, sizeY, ix0, iy0, i);
+    logRpt.Format("Mean of subarea with radius %d centered around (%d, %d) = %.2f", i,
+      ix0, iy0, delX);
+    SetReportedValues(&strItems[4], delX);
+    break;
     
   case CME_ELECTRONSTATS:                                   // ElectronStats
   case CME_RAWELECTRONSTATS:                                // RawElectronStats
@@ -6957,6 +6977,34 @@ void CMacroProcessor::NextCommand()
       , index, index2, ix0, ix1);
     SetReportedValues(&strItems[1], (double)index, (double)index2, (double)ix0, 
       (double)ix1);
+    break;
+
+  case CME_REPORTITEMIMAGECOORDS:                            // ReportItemImageCoords
+    index = itemEmpty[1] ? 0 : itemInt[1];
+    navItem = CurrentOrIndexedNavItem(index, strLine);
+    if (!navItem)
+      return;
+    if (ConvertBufferLetter(strItems[2], 0, true, index2, report))
+      ABORT_LINE(report);
+    if (mImBufs[index2].GetStagePosition(floatX, floatY) && mImBufs[index2].mBinning && 
+      mImBufs[index2].mMagInd) {
+        mWinApp->mMainView->GetItemImageCoords(&mImBufs[index2], navItem, floatX,
+          floatY);
+        mImBufs[index2].mImage->getSize(sizeX, sizeY);
+        if ( floatX >= 0 && floatY >= 0 && floatX <= (sizeX - 1) &&
+          floatY <= (sizeY - 1) ) {
+          SetReportedValues(floatX, floatY, 1);
+          logRpt.Format("Navigator item %d has image coordinates %.2f, %.2f on %c",
+          index + 1, floatX, floatY, index2 + 65);
+        } else {
+          SetReportedValues(floatX, floatY, 0);
+          logRpt.Format("Navigator item %d is outside of %c", index + 1, index2 + 65);
+      }
+    } else {
+      SetReportedValues(0.0, 0.0, -1);
+      logRpt.Format("Navigator item %d could not be transformed to %c", index + 1,
+        index2 + 65);
+    }
     break;
     
   case CME_NEWMAP:                                          // NewMap
