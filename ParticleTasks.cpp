@@ -504,7 +504,7 @@ int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, IntVec 
     crossPattern = crossPattern && numXholes == 3 && numYholes == 3;
 
     // The hole pattern requires computing position relative to center of pattern
-    numHoles = crossPattern ? 5 : numXholes * numYholes;
+    numHoles = crossPattern ? 5 : (numXholes * numYholes);
     if (mMSTestRun)
       numHoles = B3DMIN(2, numXholes) * B3DMIN(2, numYholes);
     xCenISX = mMSParams->holeISXspacing[0] * 0.5 * (numXholes - 1);
