@@ -7,8 +7,7 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "afxres.h"
-
+#include "afxres.h"
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
@@ -64,9 +63,7 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDR_MAINFRAME           ICON                    "res\\SerialEM.ico"
-
 IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -74,9 +71,7 @@ IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
 //
 
 IDR_MAINFRAME           BITMAP                  "res\\Toolbar.bmp"
-
 IDB_BITMAP1             BITMAP                  "res\\bitmap1.bmp"
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -2896,71 +2891,71 @@ BEGIN
     PUSHBUTTON      "No",IDC_BUTMIDDLE,121,47,45,14
 END
 
-IDD_MULTI_SHOT_SETUP DIALOGEX 0, 0, 185, 402
+IDD_MULTI_SHOT_SETUP DIALOGEX 0, 0, 180, 395
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Multiple Record Setup"
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
-    CONTROL         "No center shot",IDC_RNO_CENTER,"Button",BS_AUTORADIOBUTTON | WS_GROUP,59,40,63,10
-    CONTROL         "Center shot at end",IDC_RCENTER_AFTER,"Button",BS_AUTORADIOBUTTON,59,50,72,10
-    CONTROL         "Center shot at start",IDC_RCENTER_BEFORE,"Button",BS_AUTORADIOBUTTON,59,60,71,10
-    GROUPBOX        "Shot in center",IDC_STAT_CENTER_GROUP,54,30,77,42,WS_GROUP
-    CONTROL         "Full sum returned on all shots",IDC_RNO_EARLY,"Button",BS_AUTORADIOBUTTON | WS_GROUP,21,249,120,10
-    CONTROL         "Early return only on last shot",IDC_RLAST_EARLY,"Button",BS_AUTORADIOBUTTON,21,259,110,10
-    CONTROL         "Early return on all shots",IDC_RALL_EARLY,"Button",BS_AUTORADIOBUTTON,21,269,94,10
+    CONTROL         "No center shot",IDC_RNO_CENTER,"Button",BS_AUTORADIOBUTTON | WS_GROUP,56,36,63,10
+    CONTROL         "Center shot at end",IDC_RCENTER_AFTER,"Button",BS_AUTORADIOBUTTON,56,46,72,10
+    CONTROL         "Center shot at start",IDC_RCENTER_BEFORE,"Button",BS_AUTORADIOBUTTON,56,56,71,10
+    GROUPBOX        "Shot in center",IDC_STAT_CENTER_GROUP,51,26,77,42,WS_GROUP
+    CONTROL         "Full sum returned on all shots",IDC_RNO_EARLY,"Button",BS_AUTORADIOBUTTON | WS_GROUP,18,245,120,10
+    CONTROL         "Early return only on last shot",IDC_RLAST_EARLY,"Button",BS_AUTORADIOBUTTON,18,255,110,10
+    CONTROL         "Early return on all shots",IDC_RALL_EARLY,"Button",BS_AUTORADIOBUTTON,18,265,94,10
     CONTROL         "Early return, except for full sum on first shot",IDC_RFIRST_FULL,
-                    "Button",BS_AUTORADIOBUTTON,21,279,140,10
-    LTEXT           "Number of frames in return (-1 for all):",IDC_STAT_NUM_EARLY,23,291,110,8
-    EDITTEXT        IDC_EDIT_EARLY_FRAMES,134,289,22,12,ES_AUTOHSCROLL
-    GROUPBOX        "Early Returns for K2/K3",IDC_STAT_EARLY_GROUP,15,239,150,64
-    DEFPUSHBUTTON   "OK",IDOK,36,381,40,14
-    PUSHBUTTON      "Cancel",IDCANCEL,112,381,40,14
-    LTEXT           "Number of shots around center:",IDC_STAT_NUM_PERIPHERAL,9,20,95,8
-    LTEXT           "99",IDC_STAT_NUM_SHOTS,104,20,9,8
-    CONTROL         "",IDC_SPIN_NUM_SHOTS,"msctls_updown32",UDS_ARROWKEYS,115,17,10,14
-    LTEXT           "Distance from center to off-center shots:",IDC_STAT_CENTER_DIST,9,77,121,8
-    EDITTEXT        IDC_EDIT_SPOKE_DIST,128,75,30,14,ES_AUTOHSCROLL
-    LTEXT           "um",IDC_STAT_CENTER_UM,160,77,11,8
-    CONTROL         "Save Record image",IDC_CHECK_SAVE_RECORD,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,229,79,10
-    LTEXT           "Diameter of circles to draw:",IDC_STAT_BEAM_DIAM,8,356,92,8
-    EDITTEXT        IDC_EDIT_BEAM_DIAM,91,353,26,14,ES_AUTOHSCROLL
-    LTEXT           "um",IDC_STAT_BEAM_UM,121,356,11,8
+                    "Button",BS_AUTORADIOBUTTON,18,275,140,10
+    LTEXT           "Number of frames in return (-1 for all):",IDC_STAT_NUM_EARLY,20,287,110,8
+    EDITTEXT        IDC_EDIT_EARLY_FRAMES,131,285,22,12,ES_AUTOHSCROLL
+    GROUPBOX        "Early Returns for K2/K3",IDC_STAT_EARLY_GROUP,12,235,150,64
+    DEFPUSHBUTTON   "OK",IDOK,33,377,40,14
+    PUSHBUTTON      "Cancel",IDCANCEL,109,377,40,14
+    LTEXT           "Number of shots around center:",IDC_STAT_NUM_PERIPHERAL,6,16,95,8
+    LTEXT           "99",IDC_STAT_NUM_SHOTS,101,16,9,8
+    CONTROL         "",IDC_SPIN_NUM_SHOTS,"msctls_updown32",UDS_ARROWKEYS,112,13,10,14
+    LTEXT           "Distance from center to off-center shots:",IDC_STAT_CENTER_DIST,6,73,121,8
+    EDITTEXT        IDC_EDIT_SPOKE_DIST,125,71,30,14,ES_AUTOHSCROLL
+    LTEXT           "um",IDC_STAT_CENTER_UM,157,73,11,8
+    CONTROL         "Save Record image",IDC_CHECK_SAVE_RECORD,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,225,79,10
+    LTEXT           "Diameter of circles to draw:",IDC_STAT_BEAM_DIAM,5,352,92,8
+    EDITTEXT        IDC_EDIT_BEAM_DIAM,88,349,26,14,ES_AUTOHSCROLL
+    LTEXT           "um",IDC_STAT_BEAM_UM,118,352,11,8
     CONTROL         "Use Record illuminated area for circles in Low Dose",IDC_CHECK_USE_ILLUM_AREA,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,368,166,10
-    PUSHBUTTON      "?",IDC_BUTHELP,167,385,11,10
-    LTEXT           "Extra delay after image shift:",IDC_STAT_EXTRA_DELAY,8,310,89,8
-    LTEXT           "sec",IDC_STAT_SEC,123,310,12,8
-    EDITTEXT        IDC_EDIT_EXTRA_DELAY,94,307,26,14,ES_AUTOHSCROLL
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,364,166,10
+    PUSHBUTTON      "?",IDC_BUTHELP,165,381,11,10
+    LTEXT           "Extra delay after image shift:",IDC_STAT_EXTRA_DELAY,5,306,89,8
+    LTEXT           "sec",IDC_STAT_SEC,120,306,12,8
+    EDITTEXT        IDC_EDIT_EXTRA_DELAY,91,303,26,14,ES_AUTOHSCROLL
     CONTROL         "Adjust beam tilt to compensate for image shift",IDC_CHECK_ADJUST_BEAM_TILT,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,322,160,10
-    LTEXT           " Coma versus image shift was calibrated with:",IDC_STAT_COMA_IS_CAL,16,332,152,8
-    LTEXT           "0.8 um IA, spot 8, nanoprobe, 70 um aperture",IDC_STAT_COMA_CONDITIONS,17,340,157,8
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,318,160,10
+    LTEXT           " Coma versus image shift was calibrated with:",IDC_STAT_COMA_IS_CAL,13,328,152,8
+    LTEXT           "0.8 um IA, spot 8, nanoprobe, 70 um aperture",IDC_STAT_COMA_CONDITIONS,14,336,157,8
     CONTROL         "Do multiple Records within each hole",IDC_CHECK_DO_SHOTS_IN_HOLE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,7,137,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,4,137,10
     CONTROL         "Do Records in multiple holes",IDC_CHECK_DO_MULTIPLE_HOLES,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,96,104,10
-    LTEXT           "Regular pattern of holes:",IDC_STAT_REGULAR,9,124,83,8
-    RTEXT           "99",IDC_STAT_NUM_X_HOLES,82,124,9,8
-    CONTROL         "",IDC_SPIN_NUM_X_HOLES,"msctls_updown32",UDS_ARROWKEYS,95,121,10,14
-    LTEXT           "by 99",IDC_STAT_NUM_Y_HOLES,108,124,19,8
-    CONTROL         "",IDC_SPIN_NUM_Y_HOLES,"msctls_updown32",UDS_ARROWKEYS,129,121,10,14
-    LTEXT           "Spacing:",IDC_STAT_SPACING,15,136,163,8
-    PUSHBUTTON      "For Corners of Regular Pattern",IDC_BUT_SET_REGULAR,11,180,97,12
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,92,104,10
+    LTEXT           "Regular pattern of holes:",IDC_STAT_REGULAR,6,120,83,8
+    RTEXT           "99",IDC_STAT_NUM_X_HOLES,79,120,9,8
+    CONTROL         "",IDC_SPIN_NUM_X_HOLES,"msctls_updown32",UDS_ARROWKEYS,92,117,10,14
+    LTEXT           "by 99",IDC_STAT_NUM_Y_HOLES,105,120,19,8
+    CONTROL         "",IDC_SPIN_NUM_Y_HOLES,"msctls_updown32",UDS_ARROWKEYS,126,117,10,14
+    LTEXT           "Spacing:",IDC_STAT_SPACING,13,132,163,8
+    PUSHBUTTON      "For Corners of Regular Pattern",IDC_BUT_SET_REGULAR,8,176,97,12
     CONTROL         "Use custom pattern (NONE DEFINED)",IDC_CHECK_USE_CUSTOM,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,158,171,10
-    PUSHBUTTON      "For Custom Pattern",IDC_BUT_SET_CUSTOM,112,180,62,12
-    LTEXT           "Multiplier of usual delay after shifting to hole:",IDC_STAT_HOLE_DELAY_FAC,9,108,133,8
-    EDITTEXT        IDC_EDIT_HOLE_DELAY_FAC,141,105,28,14,ES_AUTOHSCROLL
-    CONTROL         "",IDC_TSS_LINE1,"Static",SS_BLACKFRAME | SS_SUNKEN,7,92,171,1
-    CONTROL         "",IDC_TSS_LINE2,"Static",SS_BLACKFRAME | SS_SUNKEN,7,224,171,1
-    GROUPBOX        "Save Image Shift Values at Holes",IDC_STAT_MEASURE_BOX,7,168,171,53
-    PUSHBUTTON      "Save Image Shift",IDC_BUT_SAVE_IS,54,195,55,12
-    PUSHBUTTON      "End Pattern",IDC_BUT_END_PATTERN,112,195,39,12
-    PUSHBUTTON      "Abort",IDC_BUT_ABORT,154,195,21,12
-    LTEXT           "Image shift should be measured near focus",IDC_STAT_SAVE_INSTRUCTIONS,9,209,169,10
-    PUSHBUTTON      "IS to Nav Pt",IDC_BUT_IS_TO_PT,11,195,40,12
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,4,154,172,10
+    PUSHBUTTON      "For Custom Pattern",IDC_BUT_SET_CUSTOM,109,176,62,12
+    LTEXT           "Multiplier of usual delay after shifting to hole:",IDC_STAT_HOLE_DELAY_FAC,6,104,133,8
+    EDITTEXT        IDC_EDIT_HOLE_DELAY_FAC,138,101,28,14,ES_AUTOHSCROLL
+    CONTROL         "",IDC_TSS_LINE1,"Static",SS_BLACKFRAME | SS_SUNKEN,4,88,172,1
+    CONTROL         "",IDC_TSS_LINE2,"Static",SS_BLACKFRAME | SS_SUNKEN,4,220,172,1
+    GROUPBOX        "Save Image Shift Values at Holes",IDC_STAT_MEASURE_BOX,4,164,172,53
+    PUSHBUTTON      "Save Image Shift",IDC_BUT_SAVE_IS,51,191,55,12
+    PUSHBUTTON      "End Pattern",IDC_BUT_END_PATTERN,109,191,39,12
+    PUSHBUTTON      "Abort",IDC_BUT_ABORT,151,191,21,12
+    LTEXT           "Image shift should be measured near focus",IDC_STAT_SAVE_INSTRUCTIONS,7,205,169,10
+    PUSHBUTTON      "IS to Nav Pt",IDC_BUT_IS_TO_PT,8,191,40,12
     CONTROL         "Omit corners of 3 by 3 array (cross pattern)",IDC_CHECK_OMIT_3X3_CORNERS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,146,147,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,142,147,10
 END
 
 IDD_DE_REFERENCE DIALOGEX 0, 0, 172, 210
@@ -3214,73 +3209,82 @@ BEGIN
     PUSHBUTTON      "Next && Go",IDC_PPCOND_NEXT_AND_GO,12,182,33,14
 END
 
-IDD_HOLE_FINDER DIALOGEX 0, 0, 156, 279
+IDD_HOLE_FINDER DIALOGEX 0, 0, 154, 280
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Hole Finder"
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
-    CONTROL         "Zigzag",IDC_RZIGZAG,"Button",BS_AUTORADIOBUTTON | WS_GROUP,9,230,36,10
-    CONTROL         "Away from Focus",IDC_RFROM_FOCUS,"Button",BS_AUTORADIOBUTTON,44,230,66,10
-    CONTROL         "In groups",IDC_RIN_GROUPS,"Button",BS_AUTORADIOBUTTON,110,230,40,10
-    GROUPBOX        "Layout of points",IDC_STATIC,5,221,147,24,WS_GROUP
-    DEFPUSHBUTTON   "OK",IDOK,22,264,50,12
-    PUSHBUTTON      "Cancel",IDCANCEL,83,264,50,12
-    GROUPBOX        "Filters to try",IDC_STATIC,19,39,118,36
-    LTEXT           "Gaussian sigmas",IDC_STATIC,24,48,53,8
-    LTEXT           "Median filter iterations",IDC_STATIC,24,62,66,8
-    EDITTEXT        IDC_EDIT_SIGMAS,79,46,53,12,ES_AUTOHSCROLL
-    EDITTEXT        IDC_EDIT_MEDIAN_ITERS,92,60,40,12,ES_AUTOHSCROLL
-    LTEXT           "Edge threshold percentiles",IDC_STATIC,11,80,81,8
-    EDITTEXT        IDC_EDIT_THRESHOLDS,93,78,47,12,ES_AUTOHSCROLL
+    CONTROL         "Zigzag",IDC_RZIGZAG,"Button",BS_AUTORADIOBUTTON | WS_GROUP,8,230,36,10
+    CONTROL         "Away from Focus",IDC_RFROM_FOCUS,"Button",BS_AUTORADIOBUTTON,43,230,66,10
+    CONTROL         "In groups",IDC_RIN_GROUPS,"Button",BS_AUTORADIOBUTTON,109,230,40,10
+    GROUPBOX        "Layout of points",IDC_STATIC,3,221,147,24,WS_GROUP
+    DEFPUSHBUTTON   "OK",IDOK,21,264,50,12
+    PUSHBUTTON      "Cancel",IDCANCEL,82,264,50,12
+    GROUPBOX        "Filters to try",IDC_STATIC,18,39,118,36
+    LTEXT           "Gaussian sigmas",IDC_STATIC,23,48,53,8
+    LTEXT           "Median filter iterations",IDC_STATIC,23,62,66,8
+    EDITTEXT        IDC_EDIT_SIGMAS,78,46,53,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_MEDIAN_ITERS,91,60,40,12,ES_AUTOHSCROLL
+    LTEXT           "Edge threshold percentiles",IDC_STATIC,10,80,81,8
+    EDITTEXT        IDC_EDIT_THRESHOLDS,92,78,47,12,ES_AUTOHSCROLL
     CONTROL         "Exclude holes outside polygon",IDC_EXCLUDE_OUTSIDE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,29,108,10
-    LTEXT           "Hole size",IDC_STATIC,11,5,29,8
-    EDITTEXT        IDC_EDIT_HOLE_SIZE,41,3,22,12,ES_AUTOHSCROLL
-    LTEXT           "Spacing",IDC_STATIC,71,5,26,8
-    EDITTEXT        IDC_EDIT_SPACING,98,3,22,12,ES_AUTOHSCROLL
-    LTEXT           "microns",IDC_STATIC,121,5,25,8
-    PUSHBUTTON      "Find Holes",IDC_BUT_FIND_HOLES,19,102,50,12
-    LTEXT           "",IDC_STAT_STATUS_OUTPUT,8,116,136,8
-    CONTROL         "",IDC_SLIDER_LOW_MEAN,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,5,129,118,12
-    LTEXT           "Lower mean cutoff",IDC_STATIC,36,140,55,8
-    EDITTEXT        IDC_EDIT_LOWER_MEAN,124,128,27,12,ES_AUTOHSCROLL
-    LTEXT           "0",IDC_STAT_MIN_LOWER_MEAN,8,140,20,8
-    RTEXT           "3000",IDC_STAT_MAX_LOWER_MEAN,100,140,20,8
-    CONTROL         "",IDC_SLIDER_UPPER_MEAN,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,5,149,118,12
-    LTEXT           "Upper mean cutoff",IDC_STATIC,36,160,56,8
-    EDITTEXT        IDC_EDIT_UPPER_MEAN,124,149,27,12,ES_AUTOHSCROLL
-    LTEXT           "0",IDC_STAT_MIN_UPPER_MEAN,8,160,20,8
-    RTEXT           "3000",IDC_STAT_MAX_UPPER_MEAN,100,160,20,8
-    CONTROL         "",IDC_SLIDER_STANDEV,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,5,169,118,12
-    LTEXT           "SD cutoff",IDC_STATIC,49,180,28,8
-    LTEXT           "0",IDC_STAT_MIN_STANDEV,8,180,20,8
-    RTEXT           "3000",IDC_STAT_MAX_STANDEV,100,180,20,8
-    LTEXT           "Static",IDC_STAT_SD_CUTOFF,125,170,24,8
-    CONTROL         "",IDC_SLIDER_BLACK_CUTOFF,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,5,189,118,12
-    LTEXT           "Black pixel % cutoff",IDC_STATIC,33,200,58,8
-    LTEXT           "0",IDC_STAT_MIN_BLACKPCT,8,200,20,8
-    RTEXT           "3000",IDC_STAT_MAX_BLACKPCT,100,200,20,8
-    LTEXT           "Static",IDC_STAT_BLACK_CUTOFF,125,190,24,8
-    LTEXT           "Show:",IDC_STATIC,8,211,19,8
-    CONTROL         "Included holes",IDC_SHOW_INCLUDED,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,29,210,57,10
-    CONTROL         "Excluded holes",IDC_SHOW_EXCLUDED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,88,210,61,10
-    PUSHBUTTON      "?",IDC_BUTHELP,141,266,11,10
-    PUSHBUTTON      "Make Navigator Points",IDC_BUT_MAKE_NAV_PTS,38,248,80,12
-    LTEXT           "Maximum error",IDC_STATIC,11,19,45,8
-    EDITTEXT        IDC_EDIT_MAX_ERROR,57,17,22,12,ES_AUTOHSCROLL
-    LTEXT           "microns",IDC_STATIC,80,19,25,8
-    PUSHBUTTON      "Clear Data",IDC_BUT_CLEAR_DATA,86,102,50,12
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,29,108,10
+    LTEXT           "Hole size",IDC_STATIC,10,5,29,8
+    EDITTEXT        IDC_EDIT_HOLE_SIZE,40,3,22,12,ES_AUTOHSCROLL
+    LTEXT           "Spacing",IDC_STATIC,70,5,26,8
+    EDITTEXT        IDC_EDIT_SPACING,97,3,22,12,ES_AUTOHSCROLL
+    LTEXT           "microns",IDC_STATIC,120,5,25,8
+    PUSHBUTTON      "Find Holes",IDC_BUT_FIND_HOLES,18,102,50,12
+    LTEXT           "",IDC_STAT_STATUS_OUTPUT,7,116,136,8
+    CONTROL         "",IDC_SLIDER_LOW_MEAN,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,3,129,118,12
+    LTEXT           "Lower mean cutoff",IDC_STATIC,35,140,55,8
+    EDITTEXT        IDC_EDIT_LOWER_MEAN,123,128,27,12,ES_AUTOHSCROLL
+    LTEXT           "0",IDC_STAT_MIN_LOWER_MEAN,7,140,20,8
+    RTEXT           "3000",IDC_STAT_MAX_LOWER_MEAN,99,140,20,8
+    CONTROL         "",IDC_SLIDER_UPPER_MEAN,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,3,149,118,12
+    LTEXT           "Upper mean cutoff",IDC_STATIC,35,160,56,8
+    EDITTEXT        IDC_EDIT_UPPER_MEAN,123,149,27,12,ES_AUTOHSCROLL
+    LTEXT           "0",IDC_STAT_MIN_UPPER_MEAN,7,160,20,8
+    RTEXT           "3000",IDC_STAT_MAX_UPPER_MEAN,99,160,20,8
+    CONTROL         "",IDC_SLIDER_STANDEV,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,3,169,118,12
+    LTEXT           "SD cutoff",IDC_STATIC,48,180,28,8
+    LTEXT           "0",IDC_STAT_MIN_STANDEV,7,180,20,8
+    RTEXT           "3000",IDC_STAT_MAX_STANDEV,99,180,20,8
+    LTEXT           "Static",IDC_STAT_SD_CUTOFF,124,170,24,8
+    CONTROL         "",IDC_SLIDER_BLACK_CUTOFF,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,3,189,118,12
+    LTEXT           "Black pixel % cutoff",IDC_STATIC,32,200,58,8
+    LTEXT           "0",IDC_STAT_MIN_BLACKPCT,7,200,20,8
+    RTEXT           "3000",IDC_STAT_MAX_BLACKPCT,99,200,20,8
+    LTEXT           "Static",IDC_STAT_BLACK_CUTOFF,124,190,24,8
+    LTEXT           "Show:",IDC_STATIC,7,211,19,8
+    CONTROL         "Included holes",IDC_SHOW_INCLUDED,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,28,210,57,10
+    CONTROL         "Excluded holes",IDC_SHOW_EXCLUDED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,87,210,61,10
+    PUSHBUTTON      "?",IDC_BUTHELP,140,266,11,10
+    PUSHBUTTON      "Make Navigator Points",IDC_BUT_MAKE_NAV_PTS,37,248,80,12
+    LTEXT           "Maximum error",IDC_STATIC,10,19,45,8
+    EDITTEXT        IDC_EDIT_MAX_ERROR,56,17,22,12,ES_AUTOHSCROLL
+    LTEXT           "microns",IDC_STATIC,79,19,25,8
+    PUSHBUTTON      "Clear Data",IDC_BUT_CLEAR_DATA,85,102,50,12
     CONTROL         "Bracket last filter/threshold values",IDC_BRACKET_LAST,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,90,116,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,90,116,10
 END
 
-IDD_MULTI_COMBINER DIALOGEX 0, 0, 310, 176
+IDD_MULTI_COMBINER DIALOGEX 0, 0, 122, 90
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Multiple Hole Combiner"
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,199,155,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,253,155,50,14
+    DEFPUSHBUTTON   "OK",IDOK,22,74,36,12
+    PUSHBUTTON      "Cancel",IDCANCEL,64,74,36,12
+    GROUPBOX        "Combine points marked as Acquire",IDC_STATIC,4,3,114,42
+    CONTROL         "On image in current buffer",IDC_RON_IMAGE,"Button",BS_AUTORADIOBUTTON,8,13,91,10
+    CONTROL         "Inside current polygon",IDC_RIN_POLYGON,"Button",BS_AUTORADIOBUTTON,8,23,82,10
+    CONTROL         "In same group as current point",IDC_RSAME_GROUP,"Button",BS_AUTORADIOBUTTON,8,33,105,10
+    PUSHBUTTON      "Combine Points",IDC_BUT_COMBINE_PTS,4,48,54,12
+    PUSHBUTTON      "Undo Combine",IDC_BUT_UNDO_COMBINE,64,48,54,12
+    PUSHBUTTON      "?",IDC_BUTHELP,107,76,11,10
+    CONTROL         "Display multi-shot before combine",IDC_CHECK_DISPLAY_MULTI,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,62,113,10
 END
 
 
@@ -3328,9 +3332,7 @@ END
 //
 
 IDC_CURSOR1             CURSOR                  "res\\cursor1.cur"
-
 IDC_CURSOR2             CURSOR                  "res\\cursor2.cur"
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3690,10 +3692,10 @@ BEGIN
 
     IDD_MULTI_SHOT_SETUP, DIALOG
     BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 178
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 395
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 176
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 391
     END
 
     IDD_DE_REFERENCE, DIALOG
@@ -3753,18 +3755,18 @@ BEGIN
 
     IDD_HOLE_FINDER, DIALOG
     BEGIN
-        LEFTMARGIN, 5
-        RIGHTMARGIN, 152
+        LEFTMARGIN, 3
+        RIGHTMARGIN, 150
         TOPMARGIN, 3
-        BOTTOMMARGIN, 275
+        BOTTOMMARGIN, 276
     END
 
     IDD_MULTI_COMBINER, DIALOG
     BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 303
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 169
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 118
+        TOPMARGIN, 3
+        BOTTOMMARGIN, 86
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -3820,69 +3822,69 @@ END
 // AFX_DIALOG_LAYOUT
 //
 
-IDD_AUTOCENSETUP AFX_DIALOG_LAYOUT
+IDD_AUTOCENSETUP AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_TILTSERIES AFX_DIALOG_LAYOUT
+IDD_TILTSERIES AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_DRIFTWAITSETUP AFX_DIALOG_LAYOUT
+IDD_DRIFTWAITSETUP AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_SCREENSHOT AFX_DIALOG_LAYOUT
+IDD_SCREENSHOT AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_MULTI_SHOT_SETUP AFX_DIALOG_LAYOUT
+IDD_MULTI_SHOT_SETUP AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_REMOTE_CONTROL AFX_DIALOG_LAYOUT
+IDD_REMOTE_CONTROL AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_LOWDOSE AFX_DIALOG_LAYOUT
+IDD_LOWDOSE AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_VPP_EXPOSE_SETUP AFX_DIALOG_LAYOUT
+IDD_VPP_EXPOSE_SETUP AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_MACRO AFX_DIALOG_LAYOUT
+IDD_MACRO AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_K2_SAVE_OPTIONS AFX_DIALOG_LAYOUT
+IDD_K2_SAVE_OPTIONS AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_SCOPESTATUS AFX_DIALOG_LAYOUT
+IDD_SCOPESTATUS AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_HOLE_FINDER AFX_DIALOG_LAYOUT
+IDD_HOLE_FINDER AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
-IDD_MULTI_COMBINER AFX_DIALOG_LAYOUT
+IDD_MULTI_COMBINER AFX_DIALOG_LAYOUT 
 BEGIN
-    0
+    0x0000
 END
 
 
@@ -5906,8 +5908,7 @@ LANGUAGE 9, 1
 #include "res\SerialEM.rc2"  // non-Microsoft Visual C++ edited resources
 #include "afxres.rc"         // Standard components
 #include "XFolderDialog\XFolderDialog.rc"
-#endif
-
+#endif
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

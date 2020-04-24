@@ -1613,6 +1613,13 @@
 #define IDC_EDIT_MAX_ERROR              2642
 #define IDC_BUT_CLEAR_DATA              2643
 #define IDC_BRACKET_LAST                2644
+#define IDC_RON_IMAGE                   2645
+#define IDC_RIN_POLYGON                 2646
+#define IDC_RSAME_GROUP                 2647
+#define IDC_BUT_COMBINE_PTS             2648
+#define IDC_BUT_UNOD_COMBINE            2649
+#define IDC_BUT_UNDO_COMBINE            2649
+#define IDC_CHECK_DISPLAY_MULTI         2650
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2096,7 +2103,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        248
 #define _APS_NEXT_COMMAND_VALUE         33386
-#define _APS_NEXT_CONTROL_VALUE         2645
+#define _APS_NEXT_CONTROL_VALUE         2651
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
