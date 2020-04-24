@@ -1672,8 +1672,6 @@ void CEMscope::UpdateScreenBeamFocus(int STEMmode, int &screenPos, int &smallScr
 void CEMscope::UpdateGauges(int &vacStatus)
 {
   static int lastVacStatus = -1;
-  if (!FEIscope)
-    return;
   if (mVacCount++ >= 1700 / mUpdateInterval ||
     (GetDebugOutput('u') && (mAutosaveCount % 50 == 0))) {
       mVacCount = 0;

@@ -259,7 +259,8 @@ enum {CME_SCRIPTEND = -7, CME_LABEL, CME_SETVARIABLE, CME_SETSTRINGVAR, CME_DOKE
   CME_REPORTFILAMENTCURRENT, CME_SETFILAMENTCURRENT, CME_CLOSEFRAMEMDOC,
   CME_DRIFTWAITTASK, CME_GETWAITTASKDRIFT, CME_CLOSELOGOPENNEW, CME_SAVELOG,
   CME_SAVECALIBRATIONS, CME_REPORTCROSSOVERPERCENTC2, CME_REPORTSCREENCURRENT,
-  CME_LISTVARS, CME_LISTPERSISTENTVARS,
+  CME_LISTVARS, CME_LISTPERSISTENTVARS, CME_REPORTITEMACQUIRE,
+  CME_SETITEMACQUIRE, CME_CHANGEITEMNOTE,
   CME_SETFRAMESERIESPARAMS, CME_SETCUSTOMTIME, CME_REPORTCUSTOMINTERVAL, 
   CME_STAGETOLASTMULTIHOLE, CME_IMAGESHIFTTOLASTMULTIHOLE, CME_NAVINDEXITEMDRAWNON,
   CME_SETMAPACQUIRESTATE, CME_RESTORESTATE, CME_REALIGNTOMAPDRAWNON,
@@ -409,7 +410,8 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"SetFilamentCurrent", 1, 0}, {"CloseFrameMdoc", 0, 0}, {"DriftWaitTask", 0, 1},
 {"GetWaitTaskDrift", 0, 0}, {"CloseLogOpenNew", 0, 0}, {"SaveLog", 0, 0},
 {"SaveCalibrations", 0, 0}, {"ReportCrossoverPercentC2", 0, 0},
-{"ReportScreenCurrent", 0, 0}, {"ListVars", 0, 0 }, { "ListPersistentVars", 0, 0 },
+{"ReportScreenCurrent", 0, 0}, {"ListVars", 0, 0 }, {"ListPersistentVars", 0, 0 },
+{"ReportItemAcquire", 0, 0 }, {"SetItemAcquire", 0, 0 }, {"ChangeItemNote", 1, 0 },
 {"SetFrameSeriesParams", 1, 0}, {"SetCustomTime", 1, 0}, {"ReportCustomInterval", 1, 0},
 {"StageToLastMultiHole", 0, 0}, {"ImageShiftToLastMultiHole", 0, 0},
 {"NavIndexItemDrawnOn", 1, 0}, {"SetMapAcquireState", 1, 0}, {"RestoreState", 0, 0},
@@ -6656,6 +6658,43 @@ void CMacroProcessor::NextCommand()
         mLoadingMap = true;
       }
     break;
+
+  case CME_REPORTITEMACQUIRE:                               // ReportItemAcquire
+    ABORT_NONAV;
+    if (itemEmpty[1])
+      index = navigator->GetCurrentIndex();
+    else if (itemInt[1] < 0)
+      index = navigator->GetNumNavItems() + itemInt[1];
+    else
+      index = itemInt[1] - 1;
+    navItem = navigator->GetOtherNavItem(index);
+    if (!navItem)
+      ABORT_LINE("Index is out of range in statement:\n\n");
+    logRpt.Format("Navigator item %d has Acquire %s", index + 1,
+      (navItem->mAcquire == 0) ? "disabled" : "enabled");
+    SetReportedValues(navItem->mAcquire);
+    break;
+
+  case CME_SETITEMACQUIRE:                                  // SetItemAcquire
+    ABORT_NONAV;
+    if (navigator->GetAcquiring())
+      ABORT_LINE("The Navigator must not be acquiring for line:\n\n");
+    truth = (itemEmpty[1] || (itemInt[1] != 0));
+    if (itemEmpty[2])
+      index = navigator->GetCurrentIndex();
+    else if (itemInt[2] < 0)
+      index = navigator->GetNumNavItems() + itemInt[2];
+    else
+      index = itemInt[2] - 1;
+    navItem = navigator->GetOtherNavItem(index);
+    if (!navItem)
+      ABORT_LINE("Index is out of range in statement:\n\n");
+    navItem->mAcquire = truth;
+    navigator->UpdateListString(index);
+    navigator->Redraw();
+    logRpt.Format("Navigator item %d Acquire set to %s", index + 1,
+      truth ? "enabled" : "disabled");
+    break;
                             
   case CME_NAVINDEXWITHLABEL:                               // NavIndexWithLabel
   case CME_NAVINDEXWITHNOTE:                                // NavIndexWithNote
@@ -6806,6 +6845,7 @@ void CMacroProcessor::NextCommand()
   case CME_CHANGEITEMREGISTRATION:                          // ChangeItemRegistration
   case CME_CHANGEITEMCOLOR:                                 // ChangeItemColor
   case CME_CHANGEITEMLABEL:                                 // ChangeItemLabel
+  case CME_CHANGEITEMNOTE:                                  // ChangeItemNote
       ABORT_NONAV;
       index = itemInt[1];
       index2 = itemInt[2];
@@ -6822,11 +6862,18 @@ void CMacroProcessor::NextCommand()
           ABORT_LINE(report + " in line:\n\n");
       } else {
         if (CMD_IS(CHANGEITEMCOLOR)) {
-          report.Format("The Navigator item color must be between 0 and %d in:\n\n", 
+          report.Format("The Navigator item color must be between 0 and %d in:\n\n",
             NUM_ITEM_COLORS - 1);
           if (index2 < 0 || index2 >= NUM_ITEM_COLORS)
             ABORT_LINE(report);
           navItem->mColor = index2;
+        } else if (CMD_IS(CHANGEITEMNOTE)) {
+          SubstituteVariables(&strLine, 1, strLine);
+          if (itemEmpty[2])
+            strCopy = "";
+          else
+            mWinApp->mParamIO->StripItems(strLine, 2, strCopy);
+          navItem->mNote = strCopy;
         } else {
           SubstituteVariables(&strLine, 1, strLine);
           mWinApp->mParamIO->StripItems(strLine, 2, strCopy);

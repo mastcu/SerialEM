@@ -3035,6 +3035,21 @@
             as two values; return each as -1 if Navigator is not open.</TD>
         </TR>
         <TR vAlign="top">
+          <TD class="auto-style1">ReportItemAcquire [#]</TD>
+          <TD>Report the Acquire state of the Navigator item whose index in the table is #,
+            numbered from 1; or if # is negative, reports on item that many items from the
+            end of the table, i.e., -1 reports on the last item, or if no # is specified of
+            the current item. Command added in 3.8. </TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="auto-style1">SetItemAcquire [#a] [#i]</TD>
+          <TD>Enables or disables Acquire for a Navigator item: if #a is 0, Acquire is disabled,
+            if this parameter is not specified or nonzero, Acquire becomes enabled. The item index
+            is specified by #i (see also ReportAcquire), if no #i is specified the current item is
+            changed. This command may not be used from within a running acquisition. Command added
+            in 3.8. </TD>
+        </TR>
+        <TR vAlign="top">
           <TD class="auto-style1">ReportNumTableItems</TD>
           <TD>Report the number of items in the Navigator table.</TD>
         </TR>
@@ -3091,6 +3106,11 @@
           <TD>Change the label of the Navigator item with table index #i to the given text.&nbsp; 
             The text is limited to 16 characters; items with labels longer than 10 
             characters will not display their properties in the right columns in the table. </TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="auto-style1">ChangeItemNote #i [text]</TD>
+          <TD>Change the note of the Navigator item with table index #i to the given text or
+            deletes the note if text is not specified. Command added in 3.8.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="auto-style1">ItemForSuperCoord #</TD>
