@@ -606,10 +606,10 @@ static char *formatSigma(float sigma)
 // The main attraction: find the holes
 void CHoleFinderDlg::OnButFindHoles()
 {
-  DoFindHoles();
+  DoFindHoles(mWinApp->mMainView->GetActiveImBuf());
 }
 
-int CHoleFinderDlg::DoFindHoles()
+int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
 {
   float curDiam, diamReduced, spacingReduced, maxRadius, area, maxArea = 0.;
   FloatVec *widths, *increments;
@@ -625,7 +625,6 @@ int CHoleFinderDlg::DoFindHoles()
   double tstageX, tstageY;
   ScaleMat rMat, rInv, aMat;
   MontParam *montP = &mMontParam;
-  EMimageBuffer *imBuf = mWinApp->mMainView->GetActiveImBuf();
   float targetDiam = mHelper->GetHFtargetDiamPix();
   float tooSmallCrit = 0.8f;
   BOOL convertSave, loadUnbinSave;
@@ -643,7 +642,7 @@ int CHoleFinderDlg::DoFindHoles()
   mBoundPolyID = 0;
   mAddedGroupID = 0;
   mCurStore = -2;
-  mBufInd = mWinApp->GetImBufIndex();
+  mBufInd = imBuf - mWinApp->GetImBufs();
   mHaveHoles = false;
 
   // Check preconditions
@@ -660,8 +659,9 @@ int CHoleFinderDlg::DoFindHoles()
     return 1;
   }
 
-  if (!(imBuf && imBuf->mImage)) {
-    SEMMessageBox("The active window has no image for finding holes", MB_EXCLAME);
+  if (mBufInd < 0 || mBufInd >= MAX_BUFFERS || !(imBuf && imBuf->mImage)) {
+    SEMMessageBox("The specified buffer is not in the active window or has no image for"
+      " finding holes", MB_EXCLAME);
     return 1;
   }
   image = imBuf->mImage;

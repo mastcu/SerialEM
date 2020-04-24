@@ -7126,7 +7126,13 @@ void CMacroProcessor::NextCommand()
 
   case CME_FINDHOLES:                                       // FindHoles
     ABORT_NONAV;
-    if (mWinApp->mNavHelper->mHoleFinderDlg->DoFindHoles()) {
+    imBuf = mWinApp->mMainView->GetActiveImBuf();
+    if (!itemEmpty[1]) {
+      if (ConvertBufferLetter(strItems[1], -1, true, index, report))
+        ABORT_LINE(report);
+      imBuf = &mImBufs[index];
+    }
+    if (mWinApp->mNavHelper->mHoleFinderDlg->DoFindHoles(imBuf)) {
       AbortMacro();
       return;
     }

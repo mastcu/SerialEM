@@ -28,7 +28,7 @@ public:
   void CloseWindow();
   bool IsOpen() { return mIsOpen; };
   bool CheckAndSetNav(const char *message = NULL);
-  int DoFindHoles(void);
+  int DoFindHoles(EMimageBuffer *imBuf);
   int DoMakeNavPoints(int layoutType, float lowerMeanCutoff, float upperMeanCutoff);
 
 
