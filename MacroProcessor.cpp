@@ -260,7 +260,7 @@ enum {CME_SCRIPTEND = -7, CME_LABEL, CME_SETVARIABLE, CME_SETSTRINGVAR, CME_DOKE
   CME_DRIFTWAITTASK, CME_GETWAITTASKDRIFT, CME_CLOSELOGOPENNEW, CME_SAVELOG,
   CME_SAVECALIBRATIONS, CME_REPORTCROSSOVERPERCENTC2, CME_REPORTSCREENCURRENT,
   CME_LISTVARS, CME_LISTPERSISTENTVARS, CME_REPORTITEMACQUIRE,
-  CME_CHANGEITEMACQUIRE, CME_CHANGEITEMNOTE,
+  CME_SETITEMACQUIRE, CME_CHANGEITEMNOTE,
   CME_SETFRAMESERIESPARAMS, CME_SETCUSTOMTIME, CME_REPORTCUSTOMINTERVAL, 
   CME_STAGETOLASTMULTIHOLE, CME_IMAGESHIFTTOLASTMULTIHOLE, CME_NAVINDEXITEMDRAWNON,
   CME_SETMAPACQUIRESTATE, CME_RESTORESTATE, CME_REALIGNTOMAPDRAWNON,
@@ -411,7 +411,7 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"GetWaitTaskDrift", 0, 0}, {"CloseLogOpenNew", 0, 0}, {"SaveLog", 0, 0},
 {"SaveCalibrations", 0, 0}, {"ReportCrossoverPercentC2", 0, 0},
 {"ReportScreenCurrent", 0, 0}, {"ListVars", 0, 0 }, {"ListPersistentVars", 0, 0 },
-{"ReportItemAcquire", 0, 0 }, {"ChangeItemAcquire", 0, 0 }, {"ChangeItemNote", 1, 0 },
+{"ReportItemAcquire", 0, 0 }, {"SetItemAcquire", 0, 0 }, {"ChangeItemNote", 1, 0 },
 {"SetFrameSeriesParams", 1, 0}, {"SetCustomTime", 1, 0}, {"ReportCustomInterval", 1, 0},
 {"StageToLastMultiHole", 0, 0}, {"ImageShiftToLastMultiHole", 0, 0},
 {"NavIndexItemDrawnOn", 1, 0}, {"SetMapAcquireState", 1, 0}, {"RestoreState", 0, 0},
@@ -6668,7 +6668,7 @@ void CMacroProcessor::NextCommand()
     SetReportedValues(navItem->mAcquire);
     break;
 
-  case CME_CHANGEITEMACQUIRE:                               //ChangeItemAcquire
+  case CME_SETITEMACQUIRE:                                  //SetItemAcquire
     index = itemEmpty[1] ? 0 : itemInt[1];
     navItem = CurrentOrIndexedNavItem(index, strLine);
     if (!navItem)
