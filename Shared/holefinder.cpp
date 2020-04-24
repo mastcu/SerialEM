@@ -283,7 +283,7 @@ int HoleFinder::initialize(void *inputData, int mode, int nxIn, int nyIn, float 
         err = ERR_MEMORY;
     }
     if (!err && mode != MRC_MODE_FLOAT) {
-      if (sliceInit(&slice, nx, ny, mode, mRawData) || sliceFloatEx(&slice, 0) < 0)
+      if (sliceInit(&slice, nx, ny, mode, mRawData) || sliceFloatEx(&slice, 1) < 0)
         err = ERR_MEMORY;
       else
         mRawData = slice.data.f;
@@ -1025,11 +1025,11 @@ void HoleFinder::resolvePiecePositions
               pieceOn[jnd] = mTileYnum->at(piece) + mNumYpieces * mTileXnum->at(piece);
               xInPiece[jnd] = xpos - mXpcAliCoords->at(piece);
               yInPiece[jnd] = ypos - mYpcAliCoords->at(piece);
-              if (holeMeans && mPieceMeanVec)
+              if (holeMeans && holeMeans->size() && mPieceMeanVec)
                 (*holeMeans)[jnd] = mPieceMeanVec->at(piece)[ind];
-              if (holeSDs && mPieceSDsVec)
+              if (holeSDs && holeSDs->size() && mPieceSDsVec)
                 (*holeSDs)[jnd] = mPieceSDsVec->at(piece)[ind];
-              if (holeOutlies && mPieceOutlieVec)
+              if (holeOutlies && holeOutlies->size() && mPieceOutlieVec)
                 (*holeOutlies)[jnd] = mPieceOutlieVec->at(piece)[ind];
             }
             break;
@@ -1053,11 +1053,11 @@ void HoleFinder::resolvePiecePositions
             pieceOn.push_back(mTileYnum->at(piece) + mNumYpieces * mTileXnum->at(piece));
             xInPiece.push_back(xpos - mXpcAliCoords->at(piece));
             yInPiece.push_back(ypos - mYpcAliCoords->at(piece));
-            if (holeMeans && mPieceMeanVec)
+            if (holeMeans && holeMeans->size() && mPieceMeanVec)
               holeMeans->push_back(mPieceMeanVec->at(piece)[ind]);
-            if (holeSDs && mPieceSDsVec)
+            if (holeSDs && holeSDs->size() && mPieceSDsVec)
               holeSDs->push_back(mPieceSDsVec->at(piece)[ind]);
-            if (holeOutlies && mPieceOutlieVec)
+            if (holeOutlies && holeOutlies->size() && mPieceOutlieVec)
               holeOutlies->push_back(mPieceOutlieVec->at(piece)[ind]);
 
             // Eliminate a close missing or "close" point
@@ -2029,6 +2029,10 @@ void HoleFinder::corrPointToFullImage(float xIn, float yIn, float &xOut, float &
  * All vectors contain original pixels
  * All position vectors are in original pixels.
  * Returned value for trueSpacing in original pixels
+ * Set maxSpacing <= 0 just to find the average lengths and angles, which are then
+ * available only as vectors by calling getGridVectors, while previously found values are
+ * saved and restored into mPeakAng... and mAvgLen...  The units of the centers are then
+ * arbitrary.
  */
 int HoleFinder::analyzeNeighbors
 (FloatVec &xCenVec, FloatVec &yCenVec, FloatVec &peakVals, IntVec &altInds,
@@ -2045,6 +2049,7 @@ int HoleFinder::analyzeNeighbors
   int minGridX, minGridY, maxGridX, maxGridY, numInGroup, numConn, num, bin, maxInBin;
   float maxSpaceSq, dx, dy, distSq, spacing, diffBelow, diffAbove, angle;
   float coarseAngle, avgLenAbove, avgLenBelow, minDist;
+  float saveLenBelow, saveLenAbove, saveAngBelow, saveAngAbove;
   float sd, sem, errBelow, errAbove, error;
   int ptFrom, ptTo, sign, setGridVal, ix, iy, jx, jy, jxCen, jyCen, jxStart, jyStart;
   int jyEnd, jxEnd, bestXcen, bestYcen, offset, bestOffset, bestNum, con;
@@ -2075,6 +2080,10 @@ int HoleFinder::analyzeNeighbors
   // If need to find spacing, get median of nearest neighbor distance, then mean of 
   // all distances 
   if (justFindSpacing) {
+    saveLenBelow = mAvgLenBelow;
+    saveLenAbove = mAvgLenAbove;
+    saveAngBelow = mPeakAngBelow;
+    saveAngAbove = mPeakAngAbove;
 
     // Find nearest neighbor distance for each point
     for (ind = 0; ind < numPoints - 1; ind++) {
@@ -2239,8 +2248,18 @@ int HoleFinder::analyzeNeighbors
   }
 
   trueSpacing = 0.5f * (avgLenBelow + avgLenAbove);
-  if (justFindSpacing)
+  if (justFindSpacing) {
+    mJustLenBelow = mAvgLenBelow;
+    mJustLenAbove = mAvgLenAbove;
+    mJustAngBelow = mPeakAngBelow;
+    mJustAngAbove = mPeakAngAbove;
+    mAvgLenBelow = saveLenBelow;
+    mAvgLenAbove = saveLenAbove;
+    mPeakAngBelow = saveAngBelow;
+    mPeakAngAbove= saveAngAbove;
+
     return 0;
+  }
 
   // Compute errors and directions
   connErrors.resize(numConn);
@@ -3009,15 +3028,16 @@ void HoleFinder::assignGridPositions
 }
 
 /*
- * Convert the average lengths and angles to two vectors with the amount of movement dX,
+ * Convert the average lengths and angles found from a call to analyzeNeighbors just to
+// find spacing into two vectors with the amount of movement dX,
  * dY per step in gridX or gridY.  X corresponds to the vector "above" and Y to the
  * vector "below" rotated by 180
  */
 void HoleFinder::getGridVectors(float &gridXdX, float &gridXdY, float &gridYdX, 
   float &gridYdY)
 {
-  gridXdX = mAvgLenAbove * (float)cos(RADIANS_PER_DEGREE * mPeakAngAbove);
-  gridXdY = mAvgLenAbove * (float)sin(RADIANS_PER_DEGREE * mPeakAngAbove);
-  gridYdX = mAvgLenBelow * (float)cos(RADIANS_PER_DEGREE * (mPeakAngBelow + 180.));
-  gridYdY = mAvgLenBelow * (float)sin(RADIANS_PER_DEGREE * (mPeakAngBelow + 180.));
+  gridXdX = mJustLenAbove * (float)cos(RADIANS_PER_DEGREE * mJustAngAbove);
+  gridXdY = mJustLenAbove * (float)sin(RADIANS_PER_DEGREE * mJustAngAbove);
+  gridYdX = mJustLenBelow * (float)cos(RADIANS_PER_DEGREE * (mJustAngBelow + 180.));
+  gridYdY = mJustLenBelow * (float)sin(RADIANS_PER_DEGREE * (mJustAngBelow + 180.));
 }

@@ -149,6 +149,8 @@ class HoleFinder {
   int mHistogram[SOBEL_HIST_DIM]; // Histogram for sobel values
   float mPeakAngBelow, mPeakAngAbove;  // Two angles of grid
   float mAvgLenBelow, mAvgLenAbove;    // The grid lengths
+  float mJustAngBelow, mJustAngAbove;  // Values from calling just to find spacing
+  float mJustLenBelow, mJustLenAbove;
   float mLastBestRadius;          // Last radius found from scans
   float *mEdgeAverage;            // Average from edge image
   float *mRawAverage;             // Average from raw image
