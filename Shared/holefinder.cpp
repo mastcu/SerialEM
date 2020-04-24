@@ -2044,7 +2044,7 @@ int HoleFinder::analyzeNeighbors
   int ind, jnd, numBelow, numAbove, numPoints = (int)xCenVec.size();
   int minGridX, minGridY, maxGridX, maxGridY, numInGroup, numConn, num, bin, maxInBin;
   float maxSpaceSq, dx, dy, distSq, spacing, diffBelow, diffAbove, angle;
-  float coarseAngle, avgLenAbove, avgLenBelow;
+  float coarseAngle, avgLenAbove, avgLenBelow, minDist;
   float sd, sem, errBelow, errAbove, error;
   int ptFrom, ptTo, sign, setGridVal, ix, iy, jx, jy, jxCen, jyCen, jxStart, jyStart;
   int jyEnd, jxEnd, bestXcen, bestYcen, offset, bestOffset, bestNum, con;
@@ -2052,6 +2052,7 @@ int HoleFinder::analyzeNeighbors
   float angForAlt, lenForAlt, altLen, errAlt, bestError;
   float aFit, bFit, cFit, xPred, yPred, predErr;
   bool doFit, testAlt = altInds.size() > 0;
+  bool justFindSpacing = maxSpacing <= 0.;
   float maxConnError = maxError * 1.8f;
   float maxAngDiff = 10., maxCoarseDiff = 12.5f;
   int coarseHist[10] = {0,0,0,0,0,0,0,0,0,0};
@@ -2070,6 +2071,46 @@ int HoleFinder::analyzeNeighbors
   ptConnLists.resize(numPoints);
   xMissing.clear();
   yMissing.clear();
+
+  // If need to find spacing, get median of nearest neighbor distance, then mean of 
+  // all distances 
+  if (justFindSpacing) {
+
+    // Find nearest neighbor distance for each point
+    for (ind = 0; ind < numPoints - 1; ind++) {
+      minDist = 1.e30f;
+      for (jnd = ind + 1; jnd < numPoints; jnd++) {
+        dx = xCenVec[ind] - xCenVec[jnd];
+        dy = yCenVec[ind] - yCenVec[jnd];
+        distSq = dx * dx + dy * dy;
+        ACCUM_MIN(minDist, distSq);
+      }
+      lenBelow.push_back(sqrtf(minDist));
+    }
+
+    // Get median or mean and estimate the spacing and maximum
+    if (lenBelow.size() > 3)
+      rsFastMedianInPlace(&lenBelow[0], (int)lenBelow.size(), &spacing);
+    else if (lenBelow.size())
+      avgSD(&lenBelow[0], (int)lenBelow.size(), &spacing, &sd, &sem);
+    maxSpacing = 1.33f * spacing;
+    maxSpaceSq = maxSpacing * maxSpacing;
+
+    // Get all distances less the maximum and get refined spacing and maximum
+    lenBelow.clear();
+    for (ind = 0; ind < numPoints - 1; ind++) {
+      for (jnd = ind + 1; jnd < numPoints; jnd++) {
+        dx = xCenVec[ind] - xCenVec[jnd];
+        dy = yCenVec[ind] - yCenVec[jnd];
+        distSq = dx * dx + dy * dy;
+        if (distSq <= maxSpaceSq)
+          lenBelow.push_back(sqrtf(distSq));
+      }
+    }
+    avgSD(&lenBelow[0], (int)lenBelow.size(), &spacing, &sd, &sem);
+    maxSpacing = 1.33f * spacing;
+    lenBelow.clear();
+  }
   
   // Make list of connections within the maximum spacing
   maxSpaceSq = maxSpacing * maxSpacing;
@@ -2198,6 +2239,8 @@ int HoleFinder::analyzeNeighbors
   }
 
   trueSpacing = 0.5f * (avgLenBelow + avgLenAbove);
+  if (justFindSpacing)
+    return 0;
 
   // Compute errors and directions
   connErrors.resize(numConn);
@@ -2963,4 +3006,18 @@ void HoleFinder::assignGridPositions
     gridX[ind] -= idx;
     gridY[ind] -= idy;
   }
+}
+
+/*
+ * Convert the average lengths and angles to two vectors with the amount of movement dX,
+ * dY per step in gridX or gridY.  X corresponds to the vector "above" and Y to the
+ * vector "below" rotated by 180
+ */
+void HoleFinder::getGridVectors(float &gridXdX, float &gridXdY, float &gridYdX, 
+  float &gridYdY)
+{
+  gridXdX = mAvgLenAbove * (float)cos(RADIANS_PER_DEGREE * mPeakAngAbove);
+  gridXdY = mAvgLenAbove * (float)sin(RADIANS_PER_DEGREE * mPeakAngAbove);
+  gridYdX = mAvgLenBelow * (float)cos(RADIANS_PER_DEGREE * (mPeakAngBelow + 180.));
+  gridYdY = mAvgLenBelow * (float)sin(RADIANS_PER_DEGREE * (mPeakAngBelow + 180.));
 }
