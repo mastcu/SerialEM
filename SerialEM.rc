@@ -7,7 +7,8 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "afxres.h"
+#include "afxres.h"
+
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
@@ -3273,7 +3274,7 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,90,116,10
 END
 
-IDD_MULTI_COMBINER_DLG DIALOGEX 0, 0, 310, 176
+IDD_MULTI_COMBINER DIALOGEX 0, 0, 310, 176
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Multiple Hole Combiner"
 FONT 8, "Microsoft Sans Serif", 400, 0, 0x0
@@ -3758,7 +3759,7 @@ BEGIN
         BOTTOMMARGIN, 275
     END
 
-    IDD_MULTI_COMBINER_DLG, DIALOG
+    IDD_MULTI_COMBINER, DIALOG
     BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 303
@@ -3879,7 +3880,7 @@ BEGIN
     0
 END
 
-IDD_MULTI_COMBINER_DLG AFX_DIALOG_LAYOUT
+IDD_MULTI_COMBINER AFX_DIALOG_LAYOUT
 BEGIN
     0
 END
@@ -5905,7 +5906,8 @@ LANGUAGE 9, 1
 #include "res\SerialEM.rc2"  // non-Microsoft Visual C++ edited resources
 #include "afxres.rc"         // Standard components
 #include "XFolderDialog\XFolderDialog.rc"
-#endif
+#endif
+
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

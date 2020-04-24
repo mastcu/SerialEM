@@ -77,7 +77,7 @@
 #define IDD_SCREENSHOT                  231
 #define IDD_VPP_EXPOSE_SETUP            232
 #define IDD_HOLE_FINDER                 233
-#define IDD_MULTI_COMBINER_DLG          234
+#define IDD_MULTI_COMBINER              234
 #define IDC_EDITXSIZE                   1000
 #define IDC_EDITYSIZE                   1002
 #define IDC_EDITYOVERLAP                1003
