@@ -52,6 +52,7 @@ CNavHelper::CNavHelper(void)
   mBufferManager = mWinApp->mBufferManager;
   mFindHoles = new HoleFinder();
   mCombineHoles = new CMultiHoleCombiner();
+  mHoleFinderDlg = new CHoleFinderDlg();
   mRealigning = 0;
   mAcquiringDual = false;
   mMaxMarginNeeded = 10.;
@@ -85,7 +86,6 @@ CNavHelper::CNavHelper(void)
   mRotAlignPlace.rcNormalPosition.right = 0;
   mMultiShotDlg = NULL;
   mMultiShotPlace.rcNormalPosition.right = 0;
-  mHoleFinderDlg = NULL;
   mHoleFinderPlace.rcNormalPosition.right = 0;
   mMultiCombinerDlg = NULL;
   mMultiCombinerPlace.rcNormalPosition.right = 0;
@@ -168,6 +168,8 @@ CNavHelper::CNavHelper(void)
   mHFusePieceEdgeDistFrac = 0.25f;
   mHFaddOverlapFrac = 0.75f;
 
+  mMHCcombineType = COMBINE_ON_IMAGE;
+  mMHCenableMultiDisplay = false;
   mEditReminderPrinted = false;
   mCollapseGroups = false;
   mRIstayingInLD = false;
@@ -181,6 +183,8 @@ CNavHelper::~CNavHelper(void)
 {
   ClearStateArray();
   delete mFindHoles;
+  delete mCombineHoles;
+  delete mHoleFinderDlg;
 }
 
 
@@ -4047,11 +4051,11 @@ WINDOWPLACEMENT *CNavHelper::GetMultiShotPlacement(bool update)
 
 void CNavHelper::OpenHoleFinder(void)
 {
-  if (mHoleFinderDlg) {
+  if (mHoleFinderDlg->IsOpen()) {
     mHoleFinderDlg->BringWindowToTop();
     return;
   }
-  mHoleFinderDlg = new CHoleFinderDlg();
+  //mHoleFinderDlg = new CHoleFinderDlg();
   mHoleFinderDlg->Create(IDD_HOLE_FINDER);
   mWinApp->SetPlacementFixSize(mHoleFinderDlg, &mHoleFinderPlace);
   mWinApp->RestoreViewFocus();
@@ -4059,7 +4063,7 @@ void CNavHelper::OpenHoleFinder(void)
 
 WINDOWPLACEMENT * CNavHelper::GetHoleFinderPlacement(void)
 {
-  if (mHoleFinderDlg) {
+  if (mHoleFinderDlg->IsOpen()) {
     mHoleFinderDlg->GetWindowPlacement(&mHoleFinderPlace);
   }
   return &mHoleFinderPlace;
@@ -4072,7 +4076,7 @@ void CNavHelper::OpenMultiCombiner(void)
     return;
   }
   mMultiCombinerDlg = new CMultiCombinerDlg();
-  mMultiCombinerDlg->Create(IDD_HOLE_FINDER);
+  mMultiCombinerDlg->Create(IDD_MULTI_COMBINER);
   mWinApp->SetPlacementFixSize(mMultiCombinerDlg, &mMultiCombinerPlace);
   mWinApp->RestoreViewFocus();
 }
