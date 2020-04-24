@@ -32,6 +32,7 @@
 #include "ProcessImage.h"
 #include "ComplexTasks.h"
 #include "MultiTSTasks.h"
+#include "HoleFinderDlg.h"
 #include "MultiHoleCombiner.h"
 #include "ParticleTasks.h"
 #include "FilterTasks.h"
@@ -274,7 +275,8 @@ enum {CME_SCRIPTEND = -7, CME_LABEL, CME_SETVARIABLE, CME_SETSTRINGVAR, CME_DOKE
   CME_REPORTXLENSFOCUS, CME_SETXLENSFOCUS, CME_EXTERNALTOOLARGPLACE, 
   CME_READONLYUNLESSADMIN, CME_IMAGESHIFTBYSTAGEDIFF, CME_GETFILEINWATCHEDDIR,
   CME_RUNSCRIPTINWATCHEDDIR, CME_PARSEQUOTEDSTRINGS, CME_SNAPSHOTTOFILE,
-  CME_COMBINEHOLESTOMULTI, CME_UNDOHOLECOMBINING 
+  CME_COMBINEHOLESTOMULTI, CME_UNDOHOLECOMBINING, CME_MOVESTAGEWITHSPEED,
+  CME_FINDHOLES, CME_MAKENAVPOINTSATHOLES, CME_CLEARHOLEFINDER
 };
 
 // The two numbers are the minimum arguments and whether arithmetic is allowed
@@ -429,7 +431,10 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"ExternalToolArgPlace", 1, 0},{"ReadOnlyUnlessAdmin", 0, 0},
 {"ImageShiftByStageDiff", 2, 0},{"GetFileInWatchedDir", 1, 0},
 {"RunScriptInWatchedDir", 1, 0}, {"ParseQuotedStrings", 0, 0}, {"SnapshotToFile", 6, 0},
-/*CAI3.8*/{"CombineHolesToMulti", 0, 0}, {"UndoHoleCombining", 0, 0}, {NULL, 0, 0}
+{"CombineHolesToMulti", 1, 0}, {"UndoHoleCombining", 0, 0}, 
+{"MoveStageWithSpeed", 3, 1}, {"FindHoles", 0, 0}, {"MakeNavPointsAtHoles", 0, 0},
+{"ClearHoleFinder", 0, 0}, /*CAI3.8*/
+{NULL, 0, 0}
 };
 // The longest is now 25 characters but 23 is a more common limit
 
@@ -1127,7 +1132,8 @@ int CMacroProcessor::TaskBusy()
     mWinApp->mParticleTasks->GetWaitingForDrift() ||
     mWinApp->mFocusManager->DoingFocus() || mWinApp->mAutoTuning->DoingAutoTune() ||
     mShiftManager->ResettingIS() || mWinApp->mCalibTiming->Calibrating() ||
-    mWinApp->mFilterTasks->RefiningZLP() ||
+    mWinApp->mFilterTasks->RefiningZLP() || 
+    mWinApp->mNavHelper->mHoleFinderDlg->GetFindingHoles() ||
     (mWinApp->mNavHelper && mWinApp->mNavHelper->GetRealigning()) ||
     mWinApp->mComplexTasks->DoingTasks() || mWinApp->DoingRegisteredPlugCall()) ? 1 : 0;
 }
@@ -4648,12 +4654,14 @@ void CMacroProcessor::NextCommand()
 
   case CME_MOVESTAGE:                                       // MoveStage
   case CME_MOVESTAGETO:                                     // MoveStageTo 
+  case CME_MOVESTAGEWITHSPEED:                              // MoveStageWithSpeed
   case CME_TESTRELAXINGSTAGE:                               // TestRelaxingStage
   case CME_STAGESHIFTBYPIXELS:                              // StageShiftByPixels
   case CME_STAGETOLASTMULTIHOLE:                            // StageToLastMultiHole
       smi.z = 0.;
       smi.alpha = 0.;
       smi.axisBits = 0;
+      smi.useSpeed = false;
       smi.backX = smi.backY = smi.relaxX = smi.relaxY = 0.;
       truth = CMD_IS(TESTRELAXINGSTAGE);
 
@@ -4682,9 +4690,18 @@ void CMacroProcessor::NextCommand()
             ABORT_LINE("Stage movement command does not have at least 2 numbers: \n\n");
           stageX = itemDbl[1];
           stageY = itemDbl[2];
-          stageZ = (itemEmpty[3] || truth) ? 0. : itemDbl[3];
+          if (CMD_IS(MOVESTAGEWITHSPEED)) {
+            stageZ = 0.;
+            smi.useSpeed = true;
+            smi.speed = itemDbl[3];
+            if (smi.speed <= 0.)
+              ABORT_LINE("Speed entry must be positive in line:/n/n");
+          } else {
+            stageZ = (itemEmpty[3] || truth) ? 0. : itemDbl[3];
+          }
         }
-        if (CMD_IS(MOVESTAGE) || CMD_IS(STAGESHIFTBYPIXELS) || truth) {
+        if (CMD_IS(MOVESTAGE) || CMD_IS(STAGESHIFTBYPIXELS) || CMD_IS(MOVESTAGEWITHSPEED)
+          || truth) {
           if (!mScope->GetStagePosition(smi.x, smi.y, smi.z))
             SUSPEND_NOLINE("because of failure to get stage position");
             //CString report;
@@ -4732,7 +4749,8 @@ void CMacroProcessor::NextCommand()
 
         // Start the movement
         if (smi.axisBits) {
-          if (!mScope->MoveStage(smi, truth && backlashX != 0., false, false, truth))
+          if (!mScope->MoveStage(smi, truth && backlashX != 0., smi.useSpeed, false, 
+            truth))
             SUSPEND_NOLINE("because of failure to start stage movement");
           mMovedStage = true;
         }
@@ -7105,7 +7123,34 @@ void CMacroProcessor::NextCommand()
       montP->insideNavItem = itemInt[1] - 1;
     montP->skipOutsidePoly = itemInt[1] >= 0;
     break;
-   
+
+  case CME_FINDHOLES:                                       // FindHoles
+    ABORT_NONAV;
+    if (mWinApp->mNavHelper->mHoleFinderDlg->DoFindHoles()) {
+      AbortMacro();
+      return;
+    }
+    break;
+
+  case CME_MAKENAVPOINTSATHOLES:                            //  MakeNavPointsAtHoles
+    ABORT_NONAV;
+    index = itemEmpty[1] || itemInt[1] < 0 ? -1 : itemInt[1];
+    if (index > 2)
+      ABORT_LINE("The layout type must be less than 3 for line:\n\n");
+    index = mWinApp->mNavHelper->mHoleFinderDlg->DoMakeNavPoints(index,
+      (float)((itemEmpty[2] || itemDbl[2] < -900000) ? EXTRA_NO_VALUE : itemDbl[2]),
+      (float)((itemEmpty[3] || itemDbl[3] < -900000) ? EXTRA_NO_VALUE : itemDbl[3]));
+    if (index < 0) {
+      AbortMacro();
+      return;
+    }
+    logRpt.Format("Hole finder made %d Navigator points", index);
+    break;
+
+  case CME_CLEARHOLEFINDER:                                 //    ClearHoleFinder
+    mWinApp->mNavHelper->mHoleFinderDlg->OnButClearData();
+    break;
+
   case CME_COMBINEHOLESTOMULTI:                             // CombineHolesToMulti 
     ABORT_NONAV;
     B3DCLAMP(itemInt[1], 0, 2);
