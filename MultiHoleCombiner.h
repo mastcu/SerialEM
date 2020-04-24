@@ -30,12 +30,14 @@ private:
   CSerialEMApp *mWinApp;
   CNavigatorDlg *mNav;
   HoleFinder *mFindHoles;
-  int mNxGrid, mNyGrid, mNumXholes, mNumYholes;
-  int **mGrid;
-  CArray<CMapDrawItem *, CMapDrawItem *>mSavedItems;
-  IntVec mIDsForUndo;
-  ScaleMat mSkipXform;
-  bool mTransposeSize;
+  int mNxGrid, mNyGrid;           // Size of grid points seem to fall on
+  int mNumXholes, mNumYholes;     // Number of holes in current pattern
+  int **mGrid;                    // Line pointers to grid array
+  CArray<CMapDrawItem *, CMapDrawItem *>mSavedItems;    // Items removed from Nav array
+  IntVec mIDsForUndo;             // IDs of the multi-shot items added
+  IntVec mIndexesForUndo;         // Their indexes: for rapid checking, can be changed
+  ScaleMat mSkipXform;            // Transform to get from stage to IS space skip list
+  bool mTransposeSize;            // Flag to transpose sizes from stage to IS space
 
   void TryBoxStartsOnLine(int otherStart, bool doCol,
     CArray<PositionData, PositionData> &fullArray);
@@ -48,6 +50,6 @@ private:
   void SetBoxAcquireLimits(int start, int end, int numHoles, int nGrid, int &acqStart, int &acqEnd);
   void AddMultiItemToArray(CArray<CMapDrawItem *, CMapDrawItem *> *itemArray, int baseInd,
     float stageX, float stageY, int numXholes, int numYholes, float boxXcen, float boxYcen,
-    IntVec &ixSkip, IntVec &iySkip);
+    IntVec &ixSkip, IntVec &iySkip, int groupID);
   void ClearSavedItemArray(void);
 };

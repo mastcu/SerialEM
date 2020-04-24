@@ -1617,7 +1617,6 @@
 #define IDC_RIN_POLYGON                 2646
 #define IDC_RSAME_GROUP                 2647
 #define IDC_BUT_COMBINE_PTS             2648
-#define IDC_BUT_UNOD_COMBINE            2649
 #define IDC_BUT_UNDO_COMBINE            2649
 #define IDC_CHECK_DISPLAY_MULTI         2650
 #define ID_NEW_IMAGE                    32771
@@ -2095,6 +2094,7 @@
 #define ID_SCRIPT_SAVEPACKAGEAS         33383
 #define ID_SCRIPT_EDIT                  33384
 #define ID_MONTAGINGGRIDS_FINDREGULARARRAYOFHOLES 33385
+#define ID_MONTAGINGGRIDS_COMBINEPOINTSINTOMULTI 33386
 
 // Next default values for new objects
 // 
@@ -2102,7 +2102,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        248
-#define _APS_NEXT_COMMAND_VALUE         33386
+#define _APS_NEXT_COMMAND_VALUE         33387
 #define _APS_NEXT_CONTROL_VALUE         2651
 #define _APS_NEXT_SYMED_VALUE           104
 #endif

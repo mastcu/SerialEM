@@ -79,14 +79,15 @@ int CMultiHoleCombiner::CombineItems(int boundType)
   PositionData data;
   CArray<PositionData, PositionData> fullArray, bestFullArray;
   float avgAngle, spacing, gridXdX, gridXdY, gridYdX, gridYdY;
-  int ind, nx, ny, numPoints, ix, iy;
+  int ind, nx, ny, numPoints, ix, iy, groupID;
   int rowStart, colStart, num, minFullNum = 10000000;
   float fDTOR = (float)DTOR;
   float fullSd, fullBestSd, ptX, ptY, gridAngle, holeAngle, angleDiff;
+  float minCenDist, cenDist, boxDx, boxDy;
   bool crossPattern;
   int *mapVals;
   int camera = mWinApp->GetCurrentCamera();
-  int yStart, xStart, xDir, magInd;
+  int yStart, xStart, xDir, magInd, registration;
   int point, acqXstart, acqXend, acqYstart, acqYend, nxBox, nyBox, numInBox, bx, by;
   float stageX, stageY, boxXcen, boxYcen, dx, dy, vecn, vecm, holeXdX, holeXdY;
   int ori, crossDx[5] = {0, -1, 1, 0, 0}, crossDy[5] = {0, 0, 0, -1, 1};
@@ -97,6 +98,7 @@ int CMultiHoleCombiner::CombineItems(int boundType)
   mNav = mWinApp->mNavigator;
   if (!mNav)
     return ERR_NO_NAV;
+  registration = mNav->GetCurrentRegistration();
   itemArray = mNav->GetItemArray();
   if (!itemArray)
     return ERR_NO_NAV;
@@ -141,13 +143,16 @@ int CMultiHoleCombiner::CombineItems(int boundType)
     image = imBuf->mImage;
     if (!image)
       return ERR_NO_IMAGE;
+    item = mNav->FindItemWithMapID(imBuf->mMapID, true);
+    if (item)
+      registration = item->mRegistration;
     image->getSize(nx, ny);
     itemArray = mWinApp->mMainView->GetMapItemsForImageCoords(imBuf, true);
     if (!itemArray)
       return ERR_NO_NAV;
     for (ind = 0; ind < itemArray->GetSize(); ind++) {
       item = itemArray->GetAt(ind);
-      if (item->mAcquire) {
+      if (item->mAcquire && item->mRegistration == registration) {
         mWinApp->mMainView->GetItemImageCoords(imBuf, item, ptX, ptY);
         if (ptX >= 0. && ptX <= nx && ptY >= 0. && ptY <= ny) {
           xCenters.push_back(item->mStageX);
@@ -163,9 +168,10 @@ int CMultiHoleCombiner::CombineItems(int boundType)
     if (curItem->mType != ITEM_TYPE_POLYGON)
       return ERR_NOT_POLYGON;
 
+    registration = curItem->mRegistration;
     for (ind = 0; ind < itemArray->GetSize(); ind++) {
       item = itemArray->GetAt(ind);
-      if (item->mAcquire) {
+      if (item->mAcquire && item->mRegistration == registration) {
         if (item->mType == ITEM_TYPE_POINT && InsideContour(curItem->mPtX, curItem->mPtY,
           curItem->mNumPoints, item->mStageX, item->mStageY)) {
           xCenters.push_back(item->mStageX);
@@ -246,6 +252,7 @@ int CMultiHoleCombiner::CombineItems(int boundType)
   boxAssigns.resize(numPoints, -1);
   ClearSavedItemArray();
   mIDsForUndo.clear();
+  mIndexesForUndo.clear();
 
   if (!crossPattern) {
 
@@ -287,7 +294,6 @@ int CMultiHoleCombiner::CombineItems(int boundType)
       }
     }
 
-
     for (point = 0; point < numPoints; point++) {
       if (boxAssigns[point] >= 0)
         continue;
@@ -314,6 +320,8 @@ int CMultiHoleCombiner::CombineItems(int boundType)
           iySkip.clear();
           stageX = stageY = 0.;
           numInBox = 0;
+          minCenDist = 1.e30f;
+
           /*PrintfToLog("Point %d box %d x %d - %d y %d - %d", navInds[point], ind, 
             acqXstart, acqXend, acqYstart, acqYend);*/
 
@@ -323,7 +331,7 @@ int CMultiHoleCombiner::CombineItems(int boundType)
               bx = ix - acqXstart;
               by = iy - acqYstart;
 
-              // if there is a point within the original box set it as assigned to this
+              // If there is a point within the original box set it as assigned to this
               // box and add in its adjusted stage position
               if (ix >= 0 && ix < mNxGrid && iy >= 0 && iy < mNyGrid &&
                 ix >= bestFullArray[ind].startX && ix <= bestFullArray[ind].endX &&
@@ -332,10 +340,15 @@ int CMultiHoleCombiner::CombineItems(int boundType)
                 boxAssigns[mGrid[iy][ix]] = ind;
                 numInBox++;
                 item = itemArray->GetAt(navInds[mGrid[iy][ix]]);
-                stageX += item->mStageX +
-                  (float)((boxXcen - bx) * gridXdX + (boxYcen - by) * gridYdX);
-                stageY += item->mStageY +
-                  (float)((boxXcen - bx) * gridXdY + (boxYcen - by) * gridYdY);
+                boxDx = (float)(boxXcen - bx);
+                boxDy = (float)(boxYcen - by);
+                stageX += item->mStageX + boxDx * gridXdX + boxDy * gridYdX;
+                stageY += item->mStageY + boxDx * gridXdY + boxDy * gridYdY;
+                cenDist = boxDx * boxDy + boxDy * boxDy;
+                if (cenDist < minCenDist) {
+                  minCenDist = cenDist;
+                  groupID = item->mGroupID;
+                }
               } else {
 
                 // Otherwise add to skip list
@@ -348,7 +361,7 @@ int CMultiHoleCombiner::CombineItems(int boundType)
 
           // Make a new Navigator item as clone of the first point found
           AddMultiItemToArray(itemArray, navInds[point], stageX / numInBox, 
-            stageY / numInBox, nxBox, nyBox, boxXcen, boxYcen, ixSkip, iySkip);
+            stageY / numInBox, nxBox, nyBox, boxXcen, boxYcen, ixSkip, iySkip, groupID);
           break;
         }
       }
@@ -418,6 +431,7 @@ int CMultiHoleCombiner::CombineItems(int boundType)
           iySkip.clear();
           stageX = stageY = 0.;
           numInBox = 0;
+          groupID = -1;
           for (ori = 0; ori < 5; ori++) {
             bx = crossDx[ori];
             by = crossDy[ori];
@@ -430,6 +444,8 @@ int CMultiHoleCombiner::CombineItems(int boundType)
               item = itemArray->GetAt(navInds[mGrid[iy][ix]]);
               stageX += item->mStageX - (float)(bx * gridXdX + by * gridYdX);
               stageY += item->mStageY - (float)(bx * gridXdY + by * gridYdY);
+              if (groupID < 0 || bx + by == 0)
+                groupID = item->mGroupID;
             } else {
               ixSkip.push_back(1 + bx);
               iySkip.push_back(1 + by);
@@ -438,7 +454,7 @@ int CMultiHoleCombiner::CombineItems(int boundType)
           }
 
           AddMultiItemToArray(itemArray, navInds[point], stageX / numInBox,
-            stageY / numInBox, -3, -3, 1.f, 1.f, ixSkip, iySkip);
+            stageY / numInBox, -3, -3, 1.f, 1.f, ixSkip, iySkip, groupID);
           break;
         }
       }
@@ -465,6 +481,8 @@ int CMultiHoleCombiner::CombineItems(int boundType)
   for (ind = num - 1; ind >= 0; ind--)
     itemArray->RemoveAt(navInds[ind]);
   mNav->FinishMultipleDeletion();
+  for (ind = 0; ind < (int)mIndexesForUndo.size(); ind++)
+    mIndexesForUndo[ind] -= (int)navInds.size();
 
   free(mapVals);
   free(mGrid);
@@ -473,22 +491,31 @@ int CMultiHoleCombiner::CombineItems(int boundType)
 
 /*
  * External call to determine if undo is possible: Nav array must be same size and all the
- * IDs of what was made must still exist
+ * IDs of what was made must still exist, not necessarily at the original indexes
  */
 bool CMultiHoleCombiner::OKtoUndoCombine(void)
 {
   int jnd;
   CArray<CMapDrawItem *, CMapDrawItem *>*itemArray;
+  CMapDrawItem *item;
   mNav = mWinApp->mNavigator;
 
-  if (!mNav || !mSavedItems.GetSize() || !mIDsForUndo.size())
+  if (!mNav || !mSavedItems.GetSize() || !mIDsForUndo.size() || 
+    mIndexesForUndo.size() != mIDsForUndo.size())
     return false;
   itemArray = mNav->GetItemArray();
   if (!itemArray)
     return false;
   for (jnd = 0; jnd < (int)mIDsForUndo.size(); jnd++) {
-    if (!mNav->FindItemWithMapID(mIDsForUndo[jnd], false))
+    if (mIndexesForUndo[jnd] < 0 || mIndexesForUndo[jnd] >= itemArray->GetSize())
       return false;
+    item = itemArray->GetAt(mIndexesForUndo[jnd]);
+    if (item->mMapID != mIDsForUndo[jnd]) {
+      item = mNav->FindItemWithMapID(mIDsForUndo[jnd], false);
+      if (!item)
+        return false;
+      mIndexesForUndo[jnd] = mNav->GetFoundItem();
+    }
   }
   return true;
 }
@@ -501,22 +528,20 @@ void CMultiHoleCombiner::UndoCombination(void)
   int jnd;
   CArray<CMapDrawItem *, CMapDrawItem *>*itemArray;
   CMapDrawItem *item;
-  mNav = mWinApp->mNavigator;
 
-  if (!mNav || !mSavedItems.GetSize() || !mIDsForUndo.size())
+  if (!OKtoUndoCombine())
     return;
   itemArray = mNav->GetItemArray();
   for (jnd = 0; jnd < (int)mIDsForUndo.size(); jnd++) {
     item = mNav->FindItemWithMapID(mIDsForUndo[jnd], false);
-    if (item) {
-      itemArray->RemoveAt(mNav->GetFoundItem());
-      delete item;
-    }
+    itemArray->RemoveAt(mNav->GetFoundItem());
+    delete item;
   }
 
   itemArray->Append(mSavedItems);
   mSavedItems.RemoveAll();
   mIDsForUndo.clear();
+  mIndexesForUndo.clear();
   mNav->FinishMultipleDeletion();
 }
 
@@ -684,7 +709,7 @@ void CMultiHoleCombiner::EvaluateCrossAtPosition(int xCen, int yCen, PositionDat
 void CMultiHoleCombiner::AddMultiItemToArray(
   CArray<CMapDrawItem*, CMapDrawItem*>* itemArray, int baseInd, float stageX, 
   float stageY, int numXholes, int numYholes, float boxXcen, float boxYcen, 
-  IntVec &ixSkip, IntVec &iySkip)
+  IntVec &ixSkip, IntVec &iySkip, int groupID)
 {
   CMapDrawItem *newItem, *item;
   int ix;
@@ -697,11 +722,13 @@ void CMultiHoleCombiner::AddMultiItemToArray(
   newItem = item->Duplicate();
   newItem->mStageX = stageX;
   newItem->mStageY = stageY;
+  newItem->mGroupID = groupID;
   if (newItem->mNumPoints) {
     newItem->mPtX[0] = stageX;
     newItem->mPtY[0] = stageY;
   }
   mIDsForUndo.push_back(newItem->mMapID);
+  mIndexesForUndo.push_back((int)itemArray->GetSize());
 
   // The number of holes is still from the stage-space analysis and has to be transposed
   // for the item if IS-space is rotated +/-90 from that.  Also the incoming box centers
@@ -711,7 +738,7 @@ void CMultiHoleCombiner::AddMultiItemToArray(
     B3DSWAP(numXholes, numYholes, ix);
   newItem->mNumXholes = numXholes;
   newItem->mNumYholes = numYholes;
-  newItem->mNumSkipHoles = (int)ixSkip.size();
+  newItem->mNumSkipHoles = (short)ixSkip.size();
   delete newItem->mSkipHolePos;
   newItem->mSkipHolePos = 0;
   if (ixSkip.size()) {
@@ -727,7 +754,7 @@ void CMultiHoleCombiner::AddMultiItemToArray(
   itemArray->Add(newItem);
 }
 
-// Clear out the arry of saved items
+// Clear out the array of saved items
 void CMultiHoleCombiner::ClearSavedItemArray(void)
 {
   for (int ind = 0; ind < (int)mSavedItems.GetSize(); ind++)

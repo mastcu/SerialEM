@@ -1721,6 +1721,15 @@
             current camera.</TD>
         </TR>
         <TR vAlign="top">
+          <TD class="style13">MoveStageWithSpeed #X #Y #S</TD>
+          <TD>Move the stage by micron increments in X and/or Y with a speed factor #S.&nbsp; On FEI scopes,
+             this may work only with one axis set to 0 using standard scripting, but should work for moving both
+            axes when going through the Tommoniker interface.&nbsp; If the command 
+              crashes SerialEM or FEI-SEMserver, see notes under <a href="#tiltDuringRecord">TiltDuringRecord</a>. 
+            &nbsp; Command added in 3.8, 4/23/20.
+          </TD>
+        </TR>
+        <TR vAlign="top">
           <TD class="style13">ReportStageXYZ</TD>
           <TD>Report current stage position</TD>
         </TR>
@@ -3218,8 +3227,49 @@
         </TR>
         <TR vAlign="top">
           <TD class="auto-style1">RestoreState</TD>
-          <TD>Restore the state if one has been saved with either with 'SetMapAcquireState' or 
+          <TD>Restores the state if one has been saved with either with 'SetMapAcquireState' or 
               the <A HREF="hidd_statedlg.htm">Imaging States dialog</A>.&nbsp; Command added in 3.8. </TD>
+        </TR>
+       <TR vAlign="top">
+          <TD class="auto-style1">FindHoles</TD>
+          <TD>Runs the Hole Finder routine on the image in the current buffer, using all of the
+               parameters set in the <A HREF="hidd_holefinderdlg.htm">Hole Finder dialog</A>.&nbsp; That dialog
+            need not be open, but the Navigator must be.
+            &nbsp; Command added in 3.8, 4/23/20. </TD>
+        </TR>
+       <TR vAlign="top">
+          <TD class="auto-style1">MakeNavPointsAtHoles [#A] [#L] [#U]</TD>
+          <TD>Makes positions found by the Hole Finder into Navigator points, using the various 
+            thresholds for exclusion set in
+              the <A HREF="hidd_holefinderdlg.htm">Hole Finder dialog</A>.&nbsp; That dialog
+            need not be open, but the Navigator must be.&nbsp; Optionally, #A may be entered with 0 to 2 
+            to specify the arrangement of points (0 for zigzag, 1 for away from focus, 2 for divided 
+            into groups, or -1 to use the layout set in the dialog); #L and #U
+             may be entered to set alternative lower and/or upper mean thresholds for excluding points.
+            &nbsp; To enter just an upper threshold, enter -999999 for #L.&nbsp; Command added in 3.8, 4/23/20. </TD>
+        </TR>
+      <TR vAlign="top">
+          <TD class="auto-style1">ClearHoleFinder</TD>
+          <TD>Removes the display of points found by the Hole Finder and frees its memory.
+            &nbsp; Command added in 3.8, 4/23/20. </TD>
+        </TR>
+      <TR vAlign="top">
+          <TD class="auto-style1">CombineHolesToMulti #S</TD>
+          <TD>Combines a set of Navigator points marked for acquisition into a subset suitable for
+            acquisition of a rectangular array with 'MultipleRecords', using the parameters set in the 
+            <A HREF="hidd_multi_shot_setup.htm">Multiple Record Setup dialog</A>.
+            See the &nbsp; <A HREF="hidd_multicombinerdlg.htm">Multiple Hole Combiner dialog</A>
+            for details and restrictions.&nbsp; Neither of those two dialogs need to be open, but the Navigator must be.
+            &nbsp; Set #S to 0 to select points on the currently displayed image, 1 to select points 
+            within the current polygon, or 2 to select points in the same group as the current point.
+            &nbsp; Command added in 3.8, 4/23/20. </TD>
+        </TR>
+      <TR vAlign="top">
+          <TD class="auto-style1">UndoHoleCombining</TD>
+          <TD>Removes the multi-shot acquisition points created by the last hole-combining
+             operation (through script command or dialog) and restores the individual points
+             to the Navigator table.  All of the multi-shot points must still exist.
+             &nbsp; Command added in 3.8, 4/23/20. </TD>
         </TR>
       </TABLE>
       <BR>
@@ -3459,6 +3509,7 @@ MovePiezoXY
 MovePiezoZ
 MoveStage
 MoveStageTo
+MoveStageWithSpeed
 MultipleRecords
 PreCookMontage
 QuickFlyback

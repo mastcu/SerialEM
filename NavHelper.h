@@ -137,6 +137,8 @@ public:
   GetSetMember(float, HFsubstOverlapDistFrac);
   GetSetMember(float, HFusePieceEdgeDistFrac);
   GetSetMember(float, HFaddOverlapFrac);
+  GetSetMember(BOOL, MHCenableMultiDisplay);
+  GetSetMember(int, MHCcombineType);
 
   void ForceCenterRealign() {mCenterSkipArray.RemoveAll();};
 
@@ -299,7 +301,7 @@ private:
   int mExtTypeOfOffsets;         // Type of offsets loaded there
   BOOL mSkipMontFitDlgs;         // Setting in file properties dialog to skip dialogs
   bool mDoingMultipleFiles;      // Flag to avoid "no longer inherits" messages
-  float mHFtargetDiamPix;
+  float mHFtargetDiamPix;        // Hole finder parameters: see holefinder source
   int mHFretainFFTs;
   int mHFminNumForTemplate;
   float mHFfractionToAverage;
@@ -316,6 +318,8 @@ private:
   FloatVec mHFwidths;
   FloatVec mHFincrements;
   IntVec mHFnumCircles;
+  int mMHCcombineType;           // MultiHoleCombine way to pick points (COMBINE_...)
+  BOOL mMHCenableMultiDisplay;   // Option to show multi-shot on all before combining pts
 
 
 public:

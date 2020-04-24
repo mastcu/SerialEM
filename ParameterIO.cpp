@@ -512,6 +512,9 @@ int CParameterIO::ReadSettings(CString strFileName)
         for (index = 1; index < MAX_TOKENS && !itemEmpty[index]; index++)
           hfParams->thresholds.push_back((float)itemDbl[index]);
 
+      } else if (NAME_IS("HoleCombinerParams")) {
+        mWinApp->mNavHelper->SetMHCcombineType(itemInt[1]);
+        mWinApp->mNavHelper->SetMHCenableMultiDisplay(itemInt[2] != 0);
       } else if (NAME_IS("DriftWaitParams")) {
         dwParams->measureType = B3DMAX(0, B3DMIN(2, itemInt[1]));
         dwParams->driftRate = (float)itemDbl[2];
@@ -1491,6 +1494,9 @@ void CParameterIO::WriteSettings(CString strFileName)
     if (hfParams->thresholds.size())
       OutputVector("HoleEdgeThresholds", (int)hfParams->thresholds.size(), NULL,
         &hfParams->thresholds);
+    oneState.Format("HoleCombinerParams %d %d\n", mWinApp->mNavHelper->GetMHCcombineType(),
+      mWinApp->mNavHelper->GetMHCenableMultiDisplay() ? 1 : 0);
+    mFile->WriteString(oneState);
     oneState.Format("DriftWaitParams %d %f %d %f %f %d %d %f %d %d\n", dwParams->measureType,
       dwParams->driftRate, dwParams->useAngstroms, dwParams->interval,
       dwParams->maxWaitTime, dwParams->failureAction, dwParams->setTrialParams,

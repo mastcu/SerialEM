@@ -3,6 +3,13 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+4/23/20: Fixed problems in hole finding: a large memory leak, a potential
+crash, reloading montages as integers, laying out points in groups.  Also
+made it runnable from script commands with the dialog not open and prevented
+multiple conversions of found points to Nav points.
+
+4/23/20: Added routine, dialog, and script commands for combining a regular
+array of points into a subset set up for multi-shot acquisition.
 
 4/20/20: Added script commands ReportItemImageCoords and CircularSubareaMean.
 

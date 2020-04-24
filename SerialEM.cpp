@@ -2532,7 +2532,7 @@ void CSerialEMApp::ErrorOccurred(int error)
     mParticleTasks->StopWaitForDrift();
   if (mStageMoveTool && mStageMoveTool->GetGoingToAcquire())
     mStageMoveTool->StopNextAcquire();
-  if (mNavHelper->mHoleFinderDlg && mNavHelper->mHoleFinderDlg->GetFindingHoles())
+  if (mNavHelper->mHoleFinderDlg->GetFindingHoles())
     mNavHelper->mHoleFinderDlg->StopScanning();
   if (mCamera->GetWaitingForStacking())
     mCamera->SetWaitingForStacking(-1);
@@ -2911,8 +2911,10 @@ void CSerialEMApp::UpdateBufferWindows()
     mStageMoveTool->Update();
   if (mAutocenDlg)
     mAutocenDlg->UpdateEnables();
-  if (mNavHelper->mHoleFinderDlg)
+  if (mNavHelper->mHoleFinderDlg->IsOpen())
     mNavHelper->mHoleFinderDlg->ManageEnables();
+  if (mNavHelper->mMultiCombinerDlg)
+    mNavHelper->mMultiCombinerDlg->UpdateEnables();
   UpdateAllEditers();
   UpdateMacroButtons();
 }
@@ -2956,8 +2958,10 @@ void CSerialEMApp::UpdateWindowSettings()
     mAutocenDlg->UpdateSettings();
   if (mScreenShotDialog)
     mScreenShotDialog->UpdateSettings();
-  if (mNavHelper->mHoleFinderDlg)
+  if (mNavHelper->mHoleFinderDlg->IsOpen())
     mNavHelper->mHoleFinderDlg->UpdateSettings();
+  if (mNavHelper->mMultiCombinerDlg)
+    mNavHelper->mMultiCombinerDlg->UpdateSettings();
 }
 
 
@@ -3457,7 +3461,7 @@ void CSerialEMApp::NavigatorClosing()
   mMenuTargets.mNavigator = NULL;
   mNavHelper->NavOpeningOrClosing(false);
   mOpenStateWithNav = mNavHelper->mStateDlg != NULL;
-  if (mNavHelper->mHoleFinderDlg)
+  if (mNavHelper->mHoleFinderDlg->IsOpen())
     mNavHelper->mHoleFinderDlg->CloseWindow();
   if (mNavHelper->mMultiCombinerDlg)
     mNavHelper->mMultiCombinerDlg->CloseWindow();

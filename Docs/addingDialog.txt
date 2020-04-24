@@ -1,6 +1,7 @@
 To make a non-modal or other dialog:
 Add Resource - Dialog
 Change the IDD and the title of the dialog
+Make the style be Tool Window
 Right click it, Add Class
 Change base to CDialog
 Remove DECLARE_DYNAMIC from header and IMPLEMENT_DYNAMIC from .cpp
@@ -57,6 +58,7 @@ BOOL CHoleFinder::PreTranslateMessage(MSG* pMsg)
 ----------------------
 Add class pointer and placement to managing module and functions to open
 and get placement
+Be sure to set the right IDD_ in the Create call.
 
 Change font to Microsoft Sans Serif (it will change Use System font to False)
 

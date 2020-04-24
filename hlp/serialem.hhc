@@ -406,12 +406,17 @@
 			<param name="Name" value="Multiple Record Setup dialog">
 			<param name="Local" value="html/hidd_multi_shot_setup.htm">
 			</OBJECT>
-			<A HREF="html/hidd_framealign.htm">Multiple Record Setup dialog</A><BR>
+			<A HREF="html/hidd_multi_shot_setup.htm">Multiple Record Setup dialog</A><BR>
 		<LI><OBJECT type="text/sitemap">
 			<param name="Name" value="Hole Finder dialog">
 			<param name="Local" value="html/hidd_hole_finder.htm">
 			</OBJECT>
-			<A HREF="html/hidd_framealign.htm">Hole Finder dialog</A><BR>
+			<A HREF="html/hidd_hole_finder.htm">Hole Finder dialog</A><BR>
+		<LI><OBJECT type="text/sitemap">
+			<param name="Name" value="Multiple Hole Combiner dialog">
+			<param name="Local" value="html/hidd_multi_combiner.htm">
+			</OBJECT>
+			<A HREF="html/hidd_multi_combiner.htm">Multiple Hole Combiner dialog</A><BR>
 		<LI><OBJECT type="text/sitemap">
 			<param name="Name" value="Stage Move Tool">
 			<param name="Local" value="html/hidd_stagemovetool.htm">

@@ -1,0 +1,80 @@
+<html>
+  <head>
+    <title>Multiple Hole Combiner Dialog</title>
+    <meta HTTP-EQUIV="Content-Type" Content="text/html; charset=Windows-1252"/>
+    <style type="text/css"> <!-- BODY { font-family:"Arial" }
+  TD { font-size:16 }
+      .style1
+      {
+        font-size: larger;
+        font-weight: bold;
+      }
+      .auto-style1 {
+        margin-left: 40px;
+      }
+      --></style>
+  </head>
+  <body BGCOLOR="#ffffff" TEXT="#000000">
+    <basefont size="2">
+    <p><a NAME="hidd_multi_combiner"></a><span class="style1">Multiple Hole 
+        Combiner Dialog</span></p>
+    <p>This dialog allows you to convert a set of Navigator points on a rectangular 
+      grid into a subset of points set up for acquisition with the 'MultipleRecord' 
+      script command.&nbsp; The regular array geometry set up in the <A HREF="hidd_multi_shot_setup.htm">Multiple Record Setup dialog</A> 
+      will be used (custom hole positions must not be selected).&nbsp; That dialog 
+      does not need to be open.&nbsp; Only points marked for acquisition will be 
+      included.&nbsp; There can be points missing from the grid and the grid can have 
+      ragged edges.&nbsp; This routine will incorporate into each Navigator item both the currently selected 
+      multi-hole geometry and which positions to skip in that array.&nbsp; The grid of points can come from either the Hole Finder 
+      routine (run from the <A HREF="hidd_holefinderdlg.htm">Hole Finder dialog</A> or the 
+      'FindHoles' script command), or from the <A HREF="menu_navigator.htm#hid_navigator_addgridofpoints">Add Grid of 
+              Points</A> menu command.</p>
+    <p>The position used for a new item is averaged from the stage positions required 
+      to reach each point from the center of the pattern by image shift.&nbsp; In Low 
+      Dose mode, this image shift is computed at the magnification of the Record area.&nbsp; 
+      When the pattern contains an even number of holes in one or both directions, 
+      this position will lie between the holes, as is necessary for such a pattern.&nbsp; 
+      When the routine assigns the points to the various multi-shot positions, some of 
+      the multi-shot points may require fewer holes in one direction.&nbsp; The 
+      routine makes sure that such points have the same kind of center location 
+      relative to the holes as the points with full patterns: namely, centered in a 
+      hole for patterrns with an odd number of holes in both directions, or between 
+      holes otherwise.&nbsp; If selected points are members of different groups, the 
+      group boundaries will not be respected when assigning them to the multi-shot 
+      points, and each multi-shot point will be assigned the group number of the (or 
+      a) point closest to the center of the pattern.</p>
+    <p><strong>Combine points marked as acquire</strong></p>
+    <p>Points are selected for combination based on the choice in this box:</p>
+    <p class="auto-style1"><em>On image in current buffer</em> includes points located 
+      on the currently displayed image in the main buffer stack.</p>
+    <p class="auto-style1"><em>Inside current polygon</em> includes points located 
+      inside a polygon item currently selected in the Navigator table.&nbsp; An error 
+      is generated if the current item is not a polygon.</p>
+    <p class="auto-style1"><em>In same group as current point </em>includes all points 
+      in the same group as the current Navigator item, which must be a point and be in 
+      a group with a least 4 points.&nbsp; If your points within a grid square were 
+      divided into groups when they were created, you probably do not want to use this 
+      option.</p>
+    <p><strong>Combine Points</strong></p>
+    <p>Use this button to perform the conversion.</p>
+    <p><strong>Undo</strong></p>
+    <p>Use this button to remove the new multi-shot points and restore all of the 
+      individual points from the last conversion.&nbsp; All of the new points must 
+      still exist in the Navigator table.</p>
+    <p><strong>Display multi-shot before combining</strong></p>
+    <p>In order to see the full details of which locations will be acquired from each 
+      new point, both menu options <a href="#hid_options_showmulti">Show Shots when 
+            Show Acquire</a> and <a href="#hid_montaginggrids_showwholeareaforallpoints">Show Whole
+          Area for All Points</a> need to turned on.&nbsp; Also, either the 'Show 
+      acquire' check box in the Navigator window must be turned on, or the <A HREF="hidd_multi_shot_setup.htm">Multiple Record Setup dialog</A> 
+      must be open.&nbsp; However, such a display is inappropriate and annoying on the 
+      original grid of points.&nbsp; Thus, the program suppresses the multi-shot 
+      display on all points as long as this dialog is open, unless there is a set of 
+      points that have been converted and still available to be reverted.&nbsp; This 
+      should make the display work nicely, but if you do want to see a pattern on all 
+      points, this checkbox can be used to restore the display as if the dialog was 
+      not open.&nbsp; Note that if you are not displaying the multi-shot pattern on 
+      all points, you can always see it for a individual point by making it the 
+      current point.</p>
+</body>
+</html>

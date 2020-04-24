@@ -622,7 +622,7 @@ afx_msg void OnButNavFocusPos();
 CButton m_butEditFocus;
 BOOL m_bEditFocus;
 afx_msg void OnEditFocus();
-SetMember(BOOL, Changed);
+void SetChanged(BOOL inVal);
 void AddFocusAreaPoint(bool drawFirst);
 bool AtSamePosAsHigherMagMapInRange(int itemInd, int startInd, int endInd);
 bool GetHolePositionVectors(FloatVec **xypos, IntVec **index);

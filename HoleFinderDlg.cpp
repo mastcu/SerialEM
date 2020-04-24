@@ -1180,7 +1180,7 @@ bool CHoleFinderDlg::GetHolePositions(FloatVec **x, FloatVec **y, IntVec **pcOn,
   return HaveHolesToDrawOrMakePts();
 }
 
-// External call t9 find out if there is anything to draw, used internally to see if
+// External call to find out if there is anything to draw, used internally to see if
 // points can be made
 bool CHoleFinderDlg::HaveHolesToDrawOrMakePts()
 {
