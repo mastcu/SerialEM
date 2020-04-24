@@ -101,6 +101,31 @@ CMapDrawItem::~CMapDrawItem()
     delete[] mSkipHolePos;
 }
 
+// Creates a duplicate of the item with independent point array so they can both be safely
+// deleted
+CMapDrawItem *CMapDrawItem::Duplicate()
+{
+  CMapDrawItem *newItem = new CMapDrawItem;
+  *newItem = *this;
+  newItem->mNumPoints = 0;
+  newItem->mMaxPoints = 0;
+  newItem->mPtX = NULL;
+  newItem->mPtY = NULL;
+  if (mNumPoints) {
+    newItem->mMaxPoints = POINT_CHUNK * (mNumPoints + POINT_CHUNK - 1) / POINT_CHUNK;
+    newItem->mPtX = new float[newItem->mMaxPoints];
+    newItem->mPtY = new float[newItem->mMaxPoints];
+    memcpy(newItem->mPtX, mPtX, mNumPoints * sizeof(float));
+    memcpy(newItem->mPtY, mPtY, mNumPoints * sizeof(float));
+    newItem->mNumPoints = mNumPoints;
+  }
+  if (mNumSkipHoles) {
+    newItem->mSkipHolePos = new unsigned char[2 * mNumSkipHoles];
+    memcpy(newItem->mSkipHolePos, mSkipHolePos, 2 * mNumSkipHoles);
+  }
+  return newItem;
+}
+
 void CMapDrawItem::AddPoint(float inX, float inY, int index)
 {
   float *newX, *newY;

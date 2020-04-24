@@ -33,7 +33,9 @@ public:
   CMapDrawItem();
   CMapDrawItem(CMapDrawItem *item);
   virtual ~CMapDrawItem();
+  CMapDrawItem *Duplicate();
 
+  // Maintain Duplicate code when adding members that are allocated or shouldn't be copied
   int mNumPoints;         // Number of points
   int mMaxPoints;         // Current size of point array
   float *mPtX;            // Arrays for X and Y point coordinates
@@ -122,7 +124,7 @@ public:
   int mSuperMontY;
   signed char mNumXholes, mNumYholes;  // Defined array size for multi-hole acquire
   short mNumSkipHoles;            // Number of holes to skip
-  unsigned char *mSkipHolePos;    // list of x,y indexes of holes to skip
+  unsigned char *mSkipHolePos;    // list of x,y indexes of holes to skip (new/delete)
   int mMoveStageID;       // Temporary flag to keep track of item stage was moved to
   int mFilePropIndex;     // Indexes into arrays of file properties and other params
   int mTSparamIndex;
