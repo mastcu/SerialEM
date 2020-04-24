@@ -194,6 +194,11 @@ BOOL CHoleFinderDlg::PreTranslateMessage(MSG* pMsg)
   return CDialog::PreTranslateMessage(pMsg);
 }
 
+void CHoleFinderDlg::CloseWindow()
+{
+  OnOK();
+}
+
 // Handle simple edit boxes
 void CHoleFinderDlg::OnKillfocusEditHoleSize()
 {
@@ -287,6 +292,8 @@ void CHoleFinderDlg::OnButClearData()
   CLEAR_RESIZE(mExcluded, bool, 0);
   CLEAR_RESIZE(mPieceOn, int, 0);
   mHelper->mFindHoles->clearAll();
+  mWinApp->mMainView->DrawImage();
+  mWinApp->RestoreViewFocus();
 }
 
 // Edit boxes for mean limits: process string, set slider

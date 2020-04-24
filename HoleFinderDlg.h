@@ -21,6 +21,7 @@ public:
   void ScanningNextTask(int param);
   void ScanningCleanup(int error);
   void StopScanning(void);
+  void CloseWindow();
 
 
 // Dialog Data
