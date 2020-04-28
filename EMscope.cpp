@@ -452,6 +452,7 @@ CEMscope::CEMscope()
   mAddToFalcon3Exposure = 0.013f;
   mDiffShiftScaling = 10.;
   mXLensModeAvailable = 0;
+  mTiltSpeedFactor = 0.;
   mPluginVersion = 0;
   mPlugFuncs = NULL;
   mScopeMutexHandle = NULL;
@@ -2045,6 +2046,11 @@ BOOL CEMscope::MoveStage(StageMoveInfo info, BOOL doBacklash, BOOL useSpeed,
       "open the socket connection for background stage movement\n"
       "when the program starts.");
     return false;
+  }
+
+  if (mTiltSpeedFactor > 0. && info.axisBits == axisA && !useSpeed) {
+    useSpeed = true;
+    info.speed = mTiltSpeedFactor;
   }
   
   if (((info.axisBits & axisB) || useSpeed) && !mPlugFuncs->SetStagePositionExtra) {

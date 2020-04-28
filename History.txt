@@ -3,6 +3,8 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+4/28/20: Added property TiltSpeedFactor to set a default tilt speed.
+
 4/23/20: Fixed problems in hole finding: a large memory leak, a potential
 crash, reloading montages as integers, laying out points in groups.  Also
 made it runnable from script commands with the dialog not open and prevented

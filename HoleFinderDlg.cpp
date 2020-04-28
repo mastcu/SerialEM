@@ -642,7 +642,7 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
   mBoundPolyID = 0;
   mAddedGroupID = 0;
   mCurStore = -2;
-  mBufInd = imBuf - mWinApp->GetImBufs();
+  mBufInd = (int)(imBuf - mWinApp->GetImBufs());
   mHaveHoles = false;
 
   // Check preconditions
