@@ -9939,7 +9939,11 @@ bool CMacroProcessor::CheckAndConvertCameraSet(CString &strItem, int &itemInt, i
       itemInt = 3;
     else if (!strItem.CompareNoCase("P"))
       itemInt = 4;
-    else if (letter >= '0' && letter <= '9') 
+    else if (!strItem.CompareNoCase("S"))
+      itemInt = 5;
+    else if (!strItem.CompareNoCase("M"))
+      itemInt = 6;
+    else if (letter >= '0' && letter <= '9')
       itemInt = atoi((LPCTSTR)strItem);
     if (itemInt > NUMBER_OF_USER_CONSETS)
       itemInt = -1;
