@@ -375,6 +375,7 @@ CTSController::CTSController()
   mStageMovedTolerance = 0.1f;
   mUserFocusChangeTol = 0.1f;
   mLowMagFieldFrac = 0.3f;
+  mFixedDosymBacklashDir = 0;
   mMinFitXAfterDrop = 5;
   mMinFitYAfterDrop = 5;
   mMinFitZAfterDrop = 4;
@@ -918,7 +919,9 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external)
       if (mDoingDoseSymmetric) {
         CTSDoseSymDlg::FindDoseSymmetricAngles(mTSParam, mIdealDosymAngles,
           mDosymDirections, mDosymTakeAnchorIndex, mDosymAlignAnchorIndex);
-        if (mDosymBacklashDir > -2 && mDosymBacklashDir < 2)
+        if (mFixedDosymBacklashDir)
+          mDosymBacklashDir = mFixedDosymBacklashDir > 0 ? 1 : -1;
+        else
           mDosymBacklashDir = mIdealDosymAngles[1] > mIdealDosymAngles[0] ? 1 : -1;
         mBaseAngleForVarying = mStartingTilt;
         mNumDoseSymTilts = (int)mDosymDirections.size();

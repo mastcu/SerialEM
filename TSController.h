@@ -123,7 +123,7 @@ public:
   GetSetMember(int, DoingDosymFileReorder);
   GetSetMember(int, DosymFitPastReversals);
   GetMember(int, AlignBuf);
-  GetSetMember(int, DosymBacklashDir);
+  GetSetMember(int, FixedDosymBacklashDir);
 
   double GetCumulativeDose();
 
@@ -483,7 +483,8 @@ private:
   float mAlarmBidirFieldSize;  // Size of field below which to warn or alarm user
   BOOL mWalkBackForBidir;      // Flag for whether to return with walk up
   float mStepForBidirReturn;   // Step size when returning in tilt steps
-  int mDosymBacklashDir;       // Backlash direction for dose symmetric
+  int mDosymBacklashDir;       // Backlash direction for current dose symmetric series
+  int mFixedDosymBacklashDir;  // Specified backlash direction for dose symmetric series
   FloatVec mDosymCurrentTilts; // mCurrentTilt values when the states were saved
   std::vector<double> mDosymSavedISX, mDosymSavedISY;     // Saved image shift
   std::vector<double> mDosymDefocuses;                    // Saved defocus
