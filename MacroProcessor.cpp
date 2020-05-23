@@ -2441,7 +2441,7 @@ void CMacroProcessor::NextCommand()
     index = itemInt[1];
     if (index < 0)
       index = 65535;
-    if (mCamera->SetNextAsyncSumFrames(index, !itemEmpty[2] || itemInt[2] > 0)) {
+    if (mCamera->SetNextAsyncSumFrames(index, !itemEmpty[2] && itemInt[2] > 0)) {
       AbortMacro();
       return;
     }
