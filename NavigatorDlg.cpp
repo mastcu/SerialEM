@@ -2284,12 +2284,14 @@ void CNavigatorDlg::AdjustAndMoveStage(float stageX, float stageY, float stageZ,
   bool validBack;
   BOOL doBacklash = mParam->stageBacklash != 0.;
   int magInd = mScope->GetMagIndex();
+  ScaleMat aMat = mShiftManager->IStoGivenCamera(magInd, mWinApp->GetCurrentCamera());
 
   // This compensates for the IS being imposed
   mScope->GetLDCenteredShift(shiftX, shiftY);
   
-  // So this gets it back to a 0 IS readout
-  mScope->IncImageShift(leaveISX - shiftX, leaveISY - shiftY);
+  // So this gets it back to a 0 IS readout as long as there is an IS calibration
+  if (aMat.xpx)
+    mScope->IncImageShift(leaveISX - shiftX, leaveISY - shiftY);
 
   // In low dose mode, if balance shifts is on, need to leave that IS also
   if (mWinApp->LowDoseMode()) {

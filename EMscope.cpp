@@ -100,6 +100,7 @@ static int sMessageBoxReturn;
 static int sCartridgeToLoad = -1;
 static bool sGettingValuesFast = false;    // Keep track of whether getting values fast
 static bool sLastGettingFast = false;
+static int sRestoreStageXYdelay;
 
 
 // Parameters controlling whether to wait for stage ready if error on slow movement
@@ -453,6 +454,7 @@ CEMscope::CEMscope()
   mDiffShiftScaling = 10.;
   mXLensModeAvailable = 0;
   mTiltSpeedFactor = 0.;
+  mRestoreStageXYdelay = 100;
   mPluginVersion = 0;
   mPlugFuncs = NULL;
   mScopeMutexHandle = NULL;
@@ -688,7 +690,7 @@ int CEMscope::Initialize()
     sTiltReversalThresh = B3DMAX(sTiltReversalThresh, 
       mWinApp->mTSController->GetMaxTiltError());
     if (mMaxTiltAngle < -100.)
-      mMaxTiltAngle = 79.9f;
+      mMaxTiltAngle = mUseIllumAreaForC2 ? 69.9f : 79.9f;
 
     // Add a boundary for secondary mag range
     if (mLowestSecondaryMag && !mUsePLforIS && !HitachiScope) {
@@ -2074,6 +2076,7 @@ BOOL CEMscope::MoveStage(StageMoveInfo info, BOOL doBacklash, BOOL useSpeed,
   mRequestedStageX = (float)info.x;
   mRequestedStageY = (float)info.y;
   mStageAtLastPos = false;
+  sRestoreStageXYdelay = mRestoreStageXYdelay;
 
   if (info.axisBits & axisA) {
 
@@ -2306,7 +2309,7 @@ void CEMscope::StageMoveKernel(StageThreadData *std, BOOL fromBlanker, BOOL asyn
       (restore && !info->doRestoreXY))
       continue;
     if (restore)
-      Sleep(100);
+      Sleep(sRestoreStageXYdelay);
 
     // Adding backX/Y makes the second move be opposite to the direction of backX/Y
     // Subtracting relax makes the final move be in the direction of relaxX/Y
@@ -3531,6 +3534,7 @@ BOOL CEMscope::SetMagIndex(int inIndex)
 
   convertIS = AssessMagISchange(currentIndex, inIndex, ifSTEM, tranISX, tranISY);
   ScopeMutexAcquire(routine, true);
+
   SaveISifNeeded(currentIndex, inIndex);
   if (!ifSTEM)
     restoreIS = AssessRestoreIS(currentIndex, inIndex, tranISX, tranISY);
@@ -4871,11 +4875,14 @@ void CEMscope::GotoLowDoseArea(int newArea)
   // separation may be out of range at a higher mag where a bigger projector shift is 
   // needed for the given IS offset
   if (GetUsePLforIS(ldArea->magIndex) && ((fromFocTrial && !toFocTrial) ||
-    (!fromFocTrial && toFocTrial) || fromSearch || toSearch))
-    ISdone = oldArea >= 0 && (fromFocTrial || fromSearch);
+    (!fromFocTrial && toFocTrial && mLdsaParams->magIndex) || 
+    (fromSearch && mLdsaParams->magIndex) || toSearch))
+    ISdone = oldArea >= 0 && (fromFocTrial || fromSearch || 
+    (!ldArea->magIndex && ldArea->camLenIndex));
   else
     ISdone = oldArea >= 0 && (((ldArea->magIndex || ldArea->camLenIndex) &&
-    ((ldArea->magIndex < mLdsaParams->magIndex && !toSearch)) || fromSearch) ||
+    ((ldArea->magIndex < mLdsaParams->magIndex && !toSearch)) || 
+      (fromSearch && mLdsaParams->magIndex)) ||
     (ldArea->magIndex == mLdsaParams->magIndex && !mHasNoAlpha &&
     mLdsaParams->beamAlpha >= 0 && ldArea->beamAlpha > mLdsaParams->beamAlpha));
   if (ISdone)
@@ -5130,7 +5137,8 @@ void CEMscope::DoISforLowDoseArea(int inArea, int curMag, double &delISX, double
         mNextLDpolarity * (useISX - vsXshift), mNextLDpolarity * (useISY - vsYshift),
         curMag, posChgX, posChgY);
     }
-    //PrintfToLog("useIS %.3f %.3f  posChg %.3f  %.3f", useISX, useISY, posChgX, posChgY);
+    //PrintfToLog("useIS %.3f %.3f  posChg %.3f  %.3f del %.3f %.3f", useISX, useISY, 
+    //posChgX, posChgY, delISX, delISY);
   }
   if (mLowDoseSetArea >= 0 && (!mLowDoseSetArea || !mUsePiezoForLDaxis)) {
 

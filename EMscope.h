@@ -321,6 +321,7 @@ class DLL_IM_EX CEMscope
   GetSetMember(BOOL, ChangeAreaAtZeroIS);
   GetSetMember(int, HitachiDoesBSforIS);
   GetSetMember(float, TiltSpeedFactor);
+  GetSetMember(int, RestoreStageXYdelay);
 
   static void SetJeolIndForMagMode(int inVal);
   static int GetJeolIndForMagMode();
@@ -708,6 +709,7 @@ private:
   float mSavedAperturePosY[MAX_APERTURE_NUM + 1];   // subtract 1 to access array
   float mDiffShiftScaling;     // Scaling to apply to diffraction shift
   int mXLensModeAvailable;    // 1 if available, 0 no object, -1 not available
+  int mRestoreStageXYdelay;   // Delay between tilt and restore step
   int mPluginVersion;         // Version of plugin or server
 
   // Old static variables from UpdateProc
