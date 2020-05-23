@@ -45,6 +45,9 @@
         .auto-style1 {
             width: 230px;
         }
+      .auto-style2 {
+        width: 234px;
+      }
       --></style>
   </HEAD>
   <BODY bgColor="#ffffff" text="#000000">
@@ -124,6 +127,10 @@
       &nbsp;&nbsp;&nbsp;&nbsp; <A href="#task_commands">Task-Related Commands</A><br>
       &nbsp;&nbsp;&nbsp;&nbsp; <A href="#navigator">Navigator-Related Commands</A><br>
       <A href="#miscellaneous">Miscellaneous Commands</A><br />
+      <br />
+      &nbsp;&nbsp;&nbsp;&nbsp; <A href="#time_output">Time-Related Commands</A><br>
+      &nbsp;&nbsp;&nbsp;&nbsp; <A href="#scale_matrix">Scale Matrix Commands</A><br>
+      &nbsp;&nbsp;&nbsp;&nbsp; <A href="#other_misc">Other Commands</A><br>
     <A HREF="#arithForArgs">Commands Allowing Arithmetic Expressions for Arguments</A><br>
       
     <P></P>
@@ -605,36 +612,36 @@
           Parameter Commands</B></TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style8">V or View</TD>
+          <TD class="auto-style2">V or View</TD>
           <TD>Acquire image with 'View' parameters</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style8">F or Focus</TD>
+          <TD class="auto-style2">F or Focus</TD>
           <TD>Acquire image with 'Focus' parameters</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style8">T or Trial</TD>
+          <TD class="auto-style2">T or Trial</TD>
           <TD>Acquire image with 'Trial' parameters</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style8">R or Record</TD>
+          <TD class="auto-style2">R or Record</TD>
           <TD>Acquire image with 'Record' parameters</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style8">L or Preview</TD>
+          <TD class="auto-style2">L or Preview</TD>
           <TD>Acquire image with 'Preview' parameters</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style8">M or Montage</TD>
+          <TD class="auto-style2">M or Montage</TD>
           <TD>Acquire montage</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style8">Search</TD>
+          <TD class="auto-style2">Search</TD>
           <TD>acquire image with 'Search' parameters, or with 'View'
             parameters if the option is set to use those for Search.</TD>            
         </TR>
         <TR vAlign="top">
-          <TD class="style8">PreCookMontage #D [#P] [#C] [#S]</TD>
+          <TD class="auto-style2">PreCookMontage #D [#P] [#C] [#S]</TD>
           <TD>If montaging is enabled with stage movement, this command lowers the screen to
             expose the specimen, then moves the stage to each piece position and waits there
             for the number of seconds indicated by #D, if the number is positive.&nbsp; If 
@@ -651,7 +658,7 @@
               FEI-SEMserver, see notes under <a href="#tiltDuringRecord">TiltDuringRecord</a>.</TD>
         </TR>
          <TR vAlign="top">
-          <TD class="style8"><b>Set Parameter Commands</b>&nbsp;</TD>
+          <TD class="auto-style2"><b>Set Parameter Commands</b>&nbsp;</TD>
           <TD>The following &#39;Set...&#39; commands change values in one of the camera parameter
             sets.&nbsp; The <B>set</B> entry can be specified as either V,
             F, T, R, P, S, M or 0, 1, 2, 3,
@@ -662,16 +669,16 @@
             resumes.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style8">&nbsp;&nbsp;&nbsp; SetExposure set #E [#D]</TD>
+          <TD class="auto-style2">&nbsp;&nbsp;&nbsp; SetExposure set #E [#D]</TD>
           <TD>Set exposure and, optionally, drift settling for <B>set</B>&nbsp; to the given values <B>E</B> and <B>D</B>.&nbsp;&nbsp; If <B>D</B> is omitted, the existing
             drift settling will be unchanged.&nbsp;</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style8">&nbsp;&nbsp;&nbsp; SetBinning set #B</TD>
+          <TD class="auto-style2">&nbsp;&nbsp;&nbsp; SetBinning set #B</TD>
           <TD>Set binning for <B>set</B> to <B>B</B>.</TD>
         </TR>
         <TR>
-          <TD class="style8">&nbsp;&nbsp;&nbsp; SetCameraArea S L R T B</TD>
+          <TD class="auto-style2">&nbsp;&nbsp;&nbsp; SetCameraArea S L R T B</TD>
           <TD>Set the acquisition area for <B>set</B>.&nbsp; Follow the <B>set</B> with
             either 4 numbers for the unbinned left, right, top, and bottom coordinates (the
             same kind of numbers as in the camera setup dialog) or with 'F', 'H', 'Q', 'WH' or 'WQ'
@@ -679,41 +686,41 @@
             for a legal area.&nbsp; </TD>
         </TR>
         <TR>
-          <TD class="style8">&nbsp;&nbsp;&nbsp; SetCenteredSize set #B #X #Y</TD>
+          <TD class="auto-style2">&nbsp;&nbsp;&nbsp; SetCenteredSize set #B #X #Y</TD>
           <TD>Set <B>set</B> for acquisition from a centered area.&nbsp; Follow the set
             specifier S with 3 numbers: the binning <B>B</B>, the binned size in X, and the binned
             size in Y.&nbsp; </TD>
         </TR>
         <TR>
-          <TD class="style8">&nbsp;&nbsp;&nbsp; SetContinuous set #</TD>
+          <TD class="auto-style2">&nbsp;&nbsp;&nbsp; SetContinuous set #</TD>
           <TD>Set the acquisition mode for <B>set</B> for continuous if <B>#</B> is non-zero,
             or single-frame if <B>#</B> is 0.</TD>
         </TR>
         <TR>
-          <TD class="style8">&nbsp;&nbsp;&nbsp; SetSTEMDetectors set #D [#D] [#D] ...</TD>
+          <TD class="auto-style2">&nbsp;&nbsp;&nbsp; SetSTEMDetectors set #D [#D] [#D] ...</TD>
           <TD>Set the STEM detectors for each available channel of <B>set</B>.&nbsp;
             Follow the set specifier S with a detector number <B>D</B> for each channel, numbered
             from 0, or -1 to select no detector for that channel.&nbsp; At least one actual
             detector must be specified.</TD>
         </TR>
         <TR>
-          <TD class="style8">&nbsp;&nbsp; &nbsp;SetProcessing set #P</TD>
+          <TD class="auto-style2">&nbsp;&nbsp; &nbsp;SetProcessing set #P</TD>
           <TD>Set processing for <B>set</B> to the given value, which should be 0 for 
             unprocessed, 1 for dark-subtracted, or 2 for gain-normalized.</TD>
         </TR>
         <TR>
-          <TD class="style8">&nbsp;&nbsp;&nbsp; SetK2ReadMode set #M&nbsp;</TD>
+          <TD class="auto-style2">&nbsp;&nbsp;&nbsp; SetK2ReadMode set #M&nbsp;</TD>
           <TD>Set the processing mode for <B>set</B> to the given value.&nbsp; For a K2 
           or DE camera, this should be 
             0 for linear, 1 for counting, or 2 for super-resolution mode.&nbsp; For a Falcon 
             or K3 camera, it would be 0 for linear or 1 for counting mode.</TD>
         </TR>
         <TR>
-          <TD class="style8">&nbsp;&nbsp;&nbsp; SetFrameTime set #F</TD>
+          <TD class="auto-style2">&nbsp;&nbsp;&nbsp; SetFrameTime set #F</TD>
           <TD>Set the frame time for a K2/K3 camera for <B>set</B> to the given number <B>F</B>.</TD>
         </TR>
         <TR>
-          <TD class="style8">&nbsp;&nbsp;&nbsp; SetDoseFracParams set #D<br />
+          <TD class="auto-style2">&nbsp;&nbsp;&nbsp; SetDoseFracParams set #D<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [#S] [#A] [#M] [#C]&nbsp;</TD>
           <TD>Set dose fractionation parameters for <B>set</B>; follow with up to 5 
             numbers: <B>D</B> non-zero for dose-fractionation mode on K2/K3; <B>S</B> non-zero to save frames 
@@ -722,12 +729,12 @@
             frames into sums.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style8">RestoreCameraSet [set]</TD>
+          <TD class="auto-style2">RestoreCameraSet [set]</TD>
           <TD>Restore one or all camera parameter set(s) modified with the &#39;Set&#39; commands
             above.&nbsp; If <B>set</B> is omitted, all modified sets will be restored.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style8">KeepCameraSetChanges [set]</TD>
+          <TD class="auto-style2">KeepCameraSetChanges [set]</TD>
           <TD>Retain changes in one or all modified camera parameter sets when script ends.&nbsp; 
               Use this after making all the changes with the &#39;Set&#39; commands that you wish to 
               retain.&nbsp; If <B>set</B> is omitted, all modified sets will be retained.&nbsp; &#39;RestoreCameraSet&#39; 
@@ -739,23 +746,23 @@
           <TD colspan="2"><A name="continuous_mode"></A><B>Continuous Mode Control</B></TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style8">StopContinuous</TD>
+          <TD class="auto-style2">StopContinuous</TD>
           <TD>Stops continuous acquisition if it is running.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style8">ReportContinuous</TD>
+          <TD class="auto-style2">ReportContinuous</TD>
           <TD>Returns -1 if continuous acquisition is not running, or the camera parameter
             set number being used if it is running, numbered from 0.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style8">UseContinuousFrames #</TD>
+          <TD class="auto-style2">UseContinuousFrames #</TD>
           <TD>If # is non-zero, the script will keep executing commands (such as stage
             movement and alignment) even when the camera is acquiring in continuous mode.&nbsp;
             Use 0 to return to normal operation, in which the script will wait for continuous
             acquisition to be ended by the user.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style8">WaitForNextFrame [#S] [#A]</TD>
+          <TD class="auto-style2">WaitForNextFrame [#S] [#A]</TD>
           <TD>After starting a continuous acquisition, use this command to wait until the
             next image becomes available in buffer A.&nbsp; The program will wait until the exposure
             time has elapsed so that the image is likely to be taken after completion of
@@ -773,7 +780,7 @@
           </TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style8">StartFrameWaitTimer [#]</TD>
+          <TD class="auto-style2">StartFrameWaitTimer [#]</TD>
           <TD>With no optional value, sets the time from which the next &#39;WaitForNextFrame&#39; will require an exposure 
             time to elapse.&nbsp; Without this command, the program will wait the full 
             exposure time after the &#39;WaitNextFrameCommand&#39;. If this command is given 
@@ -786,7 +793,7 @@
             such as after starting a continuous tilt.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style8">SetLiveSettleFraction #</TD>
+          <TD class="auto-style2">SetLiveSettleFraction #</TD>
           <TD>Set the fraction of the usual settling time to apply in continuous mode after
             image shift or stage movement.&nbsp; By default, no settling is applied in
             continuous mode (i.e., the fraction is 0), but some settling may be needed when
@@ -797,7 +804,7 @@
           <TD colspan="2"><A name="other_camera"></A><B>Other Camera Commands</B></TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style8">CameraProperties [#C] [#M]</TD>
+          <TD class="auto-style2">CameraProperties [#C] [#M]</TD>
           <TD>Reports unbinned size in X and Y, RotationAndFlip property, size of 
             detector pixel in microns, and unbinned pixel size of the current camera, or 
             of the active camera whose number is given by the optional #C, numbered from 1. 
@@ -805,29 +812,29 @@
              index given by the optional #M.  (unbinned pixel size added in 3.8, 11/29/19)</TD>
         </TR>
         <TR>
-          <TD class="style8">SelectCamera #</TD>
+          <TD class="auto-style2">SelectCamera #</TD>
           <TD>Make the given camera be the active camera, where the number is the position 
             of the camera in the ActiveCameraList property or Camera setup dialog, numbered 
             from 1.&nbsp; Will switch
             in and out of EFTEM mode or STEM mode if appropriate.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style8">RetractCamera</TD>
+          <TD class="auto-style2">RetractCamera</TD>
           <TD>Retracts all retractable cameras</TD>
         </TR>
         <TR>
-          <TD class="style8">OppositeFocus</TD>
+          <TD class="auto-style2">OppositeFocus</TD>
           <TD>In low dose mode, acquire Focus image from area on opposite side of Record from
             the defined&nbsp;Focus area.&nbsp; Opposite areas are not available if Balance
             Shifts is turned on.</TD>
         </TR>
         <TR>
-          <TD class="style8">OppositeTrial</TD>
+          <TD class="auto-style2">OppositeTrial</TD>
           <TD>In low dose mode, acquire&nbsp;Trial image from area on opposite side of Record
             from the&nbsp;defined&nbsp;Trial area.</TD>
         </TR>
         <TR>
-          <TD class="style8">AcquireToMatchBuffer buf</TD>
+          <TD class="auto-style2">AcquireToMatchBuffer buf</TD>
           <TD>Acquire an image whose size matches that of the image in the given buffer, with
              camera parameters matching those used to acquire that image.&nbsp; The image will
              be cropped after acquisition if necessary.&nbsp; The camera parameters will be based
@@ -837,7 +844,7 @@
           </TD>
         </TR>
         <TR>
-          <TD class="style8">StepFocusNextShot # # [# #]</TD>
+          <TD class="auto-style2">StepFocusNextShot # # [# #]</TD>
           <TD>Do one or two focus changes during the next exposure.&nbsp; Follow with 2 or 4
             numbers: the time in seconds from start of the exposure to the first focus
             change, the first focus change in microns, the time from start of the exposure
@@ -849,50 +856,58 @@
             Tietz cameras.</TD>
         </TR>
         <TR>
-          <TD class="style8">SmoothFocusNextShot # #</TD>
+          <TD class="auto-style2">SmoothFocusNextShot # #</TD>
           <TD>Change focus linearly through next exposure.&nbsp; Follow with 2 numbers, the
             starting and ending defocus relative to the current focus.&nbsp; This command
             is enabled for Gatan, Falcon, and Tietz cameras.</TD>
         </TR>
         <TR>
-          <TD class="style8">EarlyReturnNextShot # [#]</TD>
+          <TD class="auto-style2">EarlyReturnNextShot #N [#D]</TD>
           <TD>Return as early as possible from the next acquisition, which must involve
             either aligning or saving dose-fractionation frames from a K2/K3 camera.&nbsp; Follow with the number
-            of frames to be summed in the returned image, 0 to return without any summed
-            image, or -1 to return with the full sum (the latter is available only on GMS
-            2.31 or higher).&nbsp; The second optional number should be 1 to make a deferred 
-            full sum when not aligning in the plugin; this sum is always made when aligning in the plugin.&nbsp;
+            of frames <strong>#N</strong> to be summed in the returned image, 0 to return without any summed
+            image, or -1 to return with the full sum.&nbsp; The optional <strong>#D</strong> should be 1 to make a deferred 
+            full sum when not aligning in the plugin; this sum is always made when aligning in the plugin 
+            for an ordinary acquisition.&nbsp;
             Single-shot and dose-fractionation images can be
             requested without delay in the script.&nbsp; The single-shot images will be taken
-            as soon as possible (after the end of the exposure before GMS 2.31, after the
-            frame stack has been accessed in GMS 2.31 and higher).&nbsp; Another
+            as soon as possible (after the
+            frame stack has been accessed).&nbsp; Another
             dose-fractionation shot will be delayed until saving is finished for the current
-            shot.</TD>
+            shot.&nbsp; When a frame tilt series is to be taken, a non-zero value of <strong>
+            #D</strong> triggers the making of separate deferred sums for each tilt angle.&nbsp; 
+            In this case, the Record parameters can specify just saving, just aligning, or 
+            both operations.</TD>
         </TR>
         <TR>
-          <TD class="style8">GetDeferredSum</TD>
+          <TD class="auto-style2">GetDeferredSum</TD>
           <TD>Acquire the deferred full sum that was saved as a result of 
-            &#39;EarlyReturnNextShot&#39;.</TD>
+            'EarlyReturnNextShot', or the next deferred tilt sum available from a frame tilt 
+            series.</TD>
         </TR>
         <TR>
-          <TD class="style8">FrameThresholdNextShot #T [#S] [#E]</TD>
-          <TD>Skip saving frames whose mean value is below the given threshold #T in the next 
+          <TD class="auto-style2">FrameThresholdNextShot #T [#S] [#E] [#D]</TD>
+          <TD>Skip saving frames whose mean value is below the given threshold <strong>#T</strong> in the next 
             shot&nbsp; from a K2/K3 camera.&nbsp; The mean value used for comparison with
             the threshold will be the value that the frame would have after saving, thus 
             a scaled electron count value when taking normalized frames or actual electron
-            counts otherwise.&nbsp; The first and last frame will be saved 
+            counts otherwise (even if aligning also).&nbsp; The first and last frame will be saved 
             regardless.&nbsp; The plugin will write a list of frames actually saved, 
             numbered from 0, named as the root of the frame stack name and &#39;_saved.txt&#39;.
             &nbsp; The SEMCCD plugin must be dated 
             12/18/19 or later.&nbsp; If a command file is being saved for aligning in IMOD,
-             and this command includes the optional #S and #E, these values will be used for the entry
+             and this command includes the optional <strong>#S</strong> and <strong>#E</strong>, these values will be used for the entry
             to the PartialFrameThreshold option to Alignframes, which takes thresholds for skipping
             the frames at the start and end of a tilt.&nbsp These relative thresholds are 
-            between 0 and 1.&nbsp If #E is omitted, #S will be used for both values.
+            between 0 and 1, where 0 sets no threshold.&nbsp If <strong>#E</strong> is omitted, 
+            <strong>#S</strong> will be used 
+            for both values.&nbsp If the optional <strong>#D</strong> is added, the frame threshold will be 
+            adjusted dynamically on each tilt angle after the first to this fraction of the mean or 
+            median value of the frames above threshold on the nearest previous tilt angle.
           </TD>
         </TR>
         <TR>
-          <TD class="style8">QueueFrameTiltSeries #S #I #N [#D] [#O] [#W] [#F] [#X #Y]</TD>
+          <TD class="auto-style2">QueueFrameTiltSeries #S #I #N [#D] [#O] [#W] [#F] [#X #Y]</TD>
           <TD>Sets up a tilt series with discrete tilts and other uniform changes to occur 
             during the next shot, provided frames are saved.&nbsp; Follow with starting 
             angle (#S), increment (#I) and number of tilt steps (#N), plus optional entries 
@@ -908,7 +923,7 @@
           </TD>
         </TR>
         <TR>
-          <TD class="style8">FrameSeriesFromVar var #F [#D]</TD>
+          <TD class="auto-style2">FrameSeriesFromVar var #F [#D]</TD>
           <TD>Sets up a tilt series with all steps specified in the given array variable var, 
             which should contain 1 to 6 values per step of the series, with the values for 
             one step followed by those for the next step, etc.&nbsp; #F is the sum of 1 if 
@@ -928,22 +943,63 @@
              stack mdoc file with tilt angle and dose information is written.</TD>
         </TR>
         <TR>
-          <TD class="style8">SetFrameSeriesParams #B [#S] [#X #Y]</TD>
+          <TD class="auto-style2">SetFrameSeriesParams #B [#S] [#X #Y] [#G] [#D]</TD>
           <TD>Sets optional parameters for frame tilt series.&nbsp; Set #B non-zero to use 
               backlash for all tilt steps not in the same direction as the first one, 0 
-              otherwise; #S with a tilting speed factor or 0 for normal speed, and #X and #Y 
-              for X and Y stage coordinates to restore after the tilt or values greater than 9000 for no 
-              stage restoration.&nbsp; For CryoARM, speed factors of 100 - 105 will select pre-set speeds
+              otherwise.  Set optional entries: <strong>#S</strong> with a tilting speed factor or 0 for normal speed;
+            <strong>#X </strong>and <strong>#Y</strong> 
+              for X and Y stage coordinates to restore after the tilt, or values greater than 9000 for no 
+              stage restoration if further entries follow; <strong>#G</strong> for the minimum gap between 
+            frames above threshold for recognizing a new tilt angle when specifying a 
+            dynamic threshold with
+            'FrameThresholdNextShot' or getting back deferred tilt sums with 'EarlyReturnNextShot'; 
+            and <strong>#D</strong> for the number of initial frames to drop when getting simple
+            deferred tilt sums.&nbsp; The default gap size is 2 frames below threshold and this value should be 
+            entered when dropping frames unless a different gap is desired.&nbsp; The default is not 
+            to drop any frames from simple sums; frames are never dropped when getting aligned sums.&nbsp; 
+            For CryoARM, speed factors of 100 - 105 will select pre-set speeds
               of 10, 2, 1, 0.5, 0.25, and 0.1 degrees/sec.&nbsp; If setting a speed factor crashes SerialEM or
               FEI-SEMserver, see notes under <a href="#tiltDuringRecord">TiltDuringRecord</a>.&nbsp; Command added in 3.8.</TD>
         </TR>
         <TR>
-          <TD class="style8">WriteFrameSeriesAngles file</TD>
+          <TD class="auto-style2">WriteFrameSeriesAngles file</TD>
           <TD>Write the actual tilt angles from the last frame tilt series to the given 
             file, one per line.</TD>
         </TR>
         <TR>
-          <TD class="style8">RecordAndTiltUp [#R] [#X #Y]</TD>
+          <TD class="auto-style2">ReportFrameTiltSum</TD>
+          <TD>Reports the tilt index (numbered from 0), the tilt angle, the number of frames 
+            in the sum, and the starting and ending frame number after getting a deferred 
+            tilt sum from a frame tilt series.&nbsp; Command added in 3.8, 5/22/20.</TD>
+        </TR>
+        <TR>
+          <TD class="auto-style2">ModifyFrameTSShifts #I #X #Y</TD>
+          <TD>Changes the image shift values to be imposed for each future step in the same 
+            tilt direction after aligning a deferred sum from a frame tilt series to the one 
+            at the adjacent previous tilt angle.&nbsp; <strong>#I</strong> specifies the 
+            tilt index obtained from 'ReportTiltSumProperties', and <strong>#X</strong> and
+            <strong>#Y</strong> are the image shift values obtained from 
+            'ReportISforBufferShift' after aligning that tilt sum with a command such as 
+            'AlignTo B 1' that aligns without imposing an image shift. Command added in 3.8, 
+            5/22/20.</TD>
+        </TR>
+        <TR>
+          <TD class="auto-style2">ReplaceFrameTSShifts varX varY</TD>
+          <TD>Changes the entire array of image shift values to be imposed in a frame tilt 
+            series with a new set of values (i.e., refined predictions) in the two array 
+            variables given by <strong>varX</strong> and <strong>varY</strong>.&nbsp; Both 
+            arrays must have the same size as the original number of tilt angles.&nbsp; 
+            Untested.&nbsp;&nbsp; Command added in 3.8, 5/22/20.</TD>
+        </TR>
+        <TR>
+          <TD class="auto-style2">ReplaceFrameTSFocus var</TD>
+          <TD>Changes the entire array of focus values to be imposed in a frame tilt series 
+            with a new set of values (i.e., refined predictions) in the array variable
+            <strong>var</strong>,which must have the same size as the original number of 
+            tilt angles.&nbsp; Untested.&nbsp; Command added in 3.8, 5/22/20.</TD>
+        </TR>
+        <TR>
+          <TD class="auto-style2">RecordAndTiltUp [#R] [#X #Y]</TD>
           <TD>Starts a Record acquisition and tilts the stage up by the current increment 
             after the exposure is expected to be done.&nbsp; Post-exposure actions must be 
             allowed for the current camera, at least for current Record parameters, but need 
@@ -953,11 +1009,11 @@
               entered.</TD>
         </TR>
         <TR>
-          <TD class="style8">RecordAndTiltDown [#R] [#X #Y]</TD>
+          <TD class="auto-style2">RecordAndTiltDown [#R] [#X #Y]</TD>
           <TD>Like 'RecordAndTiltUp', but tilts the stage down by the current increment.</TD>
         </TR>
         <TR>
-          <TD class="style8">RecordAndTiltTo #T [#B] [#R] [#X #Y]</TD>
+          <TD class="auto-style2">RecordAndTiltTo #T [#B] [#R] [#X #Y]</TD>
           <TD>Like 'RecordAndTiltUp', but tilts the stage to the given angle #T.&nbsp; If an 
             optional non-zero backlash is entered in #B, the stage will tilt first to #T +/- #B, then 
             back to #T. Prior to 5/23/19, #T + #B was used and the sign of #B had to be set
@@ -965,7 +1021,7 @@
             the sign properly and a positive value can always be entered. </TD>
         </TR>
         <TR>
-          <TD class="style8">ArePostActionsEnabled</TD>
+          <TD class="auto-style2">ArePostActionsEnabled</TD>
           <TD>Reports whether post-exposure actions are allowed for the current camera for 
             all shots, and for Record shots specifically, and 
             sets <I>reportedValue1</I> and <I>reportedValue2</I> to 1 if so, 0 if not.&nbsp; For Falcon 
@@ -974,7 +1030,7 @@
             variable after the command.</TD>
         </TR>
         <TR>
-          <TD class="style8"><a name="tiltDuringRecord">TiltDuringRecord #A #D [#S]</a></TD>
+          <TD class="auto-style2"><a name="tiltDuringRecord">TiltDuringRecord #A #D [#S]</a></TD>
           <TD>Starts a Record acquisition and starts the stage tilting to angle #A after the 
             delay #D in milliseconds.&nbsp; On FEI scopes with recent enough versions of FEI 
             scripting, or JEOL scopes with recent versions of TemExt.dll, #S can be added with a speed multiplier (&lt; 1 for slower, &gt; 1 for 
@@ -990,26 +1046,26 @@
           </TD>
         </TR>
         <TR>
-          <TD class="style8">DeferStackingNextShot</TD>
+          <TD class="auto-style2">DeferStackingNextShot</TD>
           <TD>Do not stack Falcon intermediate frames after the next exposure.&nbsp; To
             stack frames from multiple exposures into one stack, use this command before
             each exposure except the last one.</TD>
         </TR>
         <TR>
-          <TD class="style8">OpenDECameraCover</TD>
+          <TD class="auto-style2">OpenDECameraCover</TD>
           <TD>Opens the protection cover of the Direct Electron camera for the remainder of
             the script, if it is the current camera.&nbsp; Without this command, the cover
             will be opened and closed for each exposure except during tasks.</TD>
         </TR>
         <TR>
-          <TD class="style8">SetDECamFrameRate #</TD>
+          <TD class="auto-style2">SetDECamFrameRate #</TD>
           <TD>Sets the frame rate of the current camera if it is a DE camera; follow with 
             the new rate in frames per second, which must be positive and less than the 
             maximum frame rate.&nbsp; The user&#39;s original frame rate is placed into 
             <I>reportedValue1</I> and is restored when the script ends.</TD>
         </TR>
         <TR>
-          <TD class="style8">NewDEserverDarkRef #P #H</TD>
+          <TD class="auto-style2">NewDEserverDarkRef #P #H</TD>
           <TD>Acquires a dark reference in the DE server if the known interval since the 
             last reference for processing mode #P is longer than #H in hours. #P must be 0 
             for linear mode or 1 for counting mode.&nbsp; Parameters for the reference are 
@@ -1019,7 +1075,7 @@
             current time as the time of the last reference.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style8">UpdateHWDarkRef #</TD>
+          <TD class="auto-style2">UpdateHWDarkRef #</TD>
           <TD>Updates the K2 hardware dark reference if the known interval since the last
             update is longer than # in hours.&nbsp; If # is 0, the update is done
             unconditionally; if # is negative (-1), it simply records the current time as
@@ -1028,7 +1084,7 @@
             be set.  This command is available on a K3 with GMS 3.31 or higher.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style8">AlignWholeTSOnly [#]</TD>
+          <TD class="auto-style2">AlignWholeTSOnly [#]</TD>
           <TD>Allows a whole tilt series taken from a K2/K3, Falcon, or DE camera through the script to be 
             aligned with one command file in IMOD, just as when using the tilt series 
             controller.&nbsp; Specifically, no command files will be written for individual 
@@ -1043,7 +1099,7 @@
             operating mode was switched to or not.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style8">ReportK2FileParams</TD>
+          <TD class="auto-style2">ReportK2FileParams</TD>
           <TD>Reports values selected in the Frame File Options dialog: 0 for MRC, 1 for 
             TIFF LZW, or 2 for TIFF ZIP; sum of 1 to pack unnormalized data at all, plus 2 
             to pack counting mode to bytes; 1 to save MRC files in 4-bit mode 101; 1 to save 
@@ -1051,7 +1107,7 @@
             per frame. </TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style8">SetK2FileParams #T [#P]<br />
+          <TD class="auto-style2">SetK2FileParams #T [#P]<br />
 &nbsp;&nbsp;&nbsp; [#M] [#N] [#R] [#O]</TD>
           <TD>Set values to control K2/K3 frame file saving.&nbsp; Follow with up to 6 values: 
             #T 0 for MRC, 1 for TIFF LZW, or 2 for TIFF ZIP; #P as the sum of 1 to pack 
@@ -1061,33 +1117,33 @@
             frame.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style8">ReportK3CDSmode</TD>
+          <TD class="auto-style2">ReportK3CDSmode</TD>
           <TD>Reports 1 if CDS mode is on for a K3 camera acquisitions, 0 if not.&nbsp; Command added in 3.8, 11/17/19.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style8">SetK3CDSmode #O [#P]</TD>
+          <TD class="auto-style2">SetK3CDSmode #O [#P]</TD>
           <TD>Sets the CDS mode option for K3 camera acquisitions on if #O is non-zero, off 
             otherwise.&nbsp; The existing value is restored at the end of the script unless 
             #P as entered with a non-zero value to make it permanent.&nbsp; Command added in 3.8, 11/17/19.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style8">ReportCountScaling</TD>
+          <TD class="auto-style2">ReportCountScaling</TD>
           <TD>Reports two values of current camera: either the scaling being applied to 
             counting/super-resolution mode images returned from a K2 camera, or the 
             'CountsPerElectron' property; and whether division by 2 is on.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style8">SetDivideBy2 #</TD>
+          <TD class="auto-style2">SetDivideBy2 #</TD>
           <TD>Turns division by 2 for the current camera on or off if # is 1 or 0, 
             respectively.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style8">ReportNumFramesSaved</TD>
+          <TD class="auto-style2">ReportNumFramesSaved</TD>
           <TD>Reports the number of frames saved, or being saved, in the last acquisition 
             that saved frames.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style8">ReportFrameAliParams</TD>
+          <TD class="auto-style2">ReportFrameAliParams</TD>
           <TD>Reports six values for the frame alignment parameter set selected to be used 
             for Record images: the binning or target size for alignment, whether to keep precision for 
             gain-normalized images when doing early returns or GPU frame alignment, the strategy (0 to 3, 
@@ -1096,7 +1152,7 @@
             refinement off), and the group size (negative if using groups is off).</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style8">SetFrameAliParams #B [#K]<br />
+          <TD class="auto-style2">SetFrameAliParams #B [#K]<br />
 &nbsp;&nbsp;&nbsp; [#S] [#A] [#R] [#G]</TD>
           <TD>In the frame alignment parameter set selected to be used for Record images, 
             sets the binning to #B if #B is 1-16 or the target size to #B otherwise, and optionally sets whether to keep precision during 
@@ -1109,13 +1165,13 @@
             positive.&nbsp; </TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style8">ReportFrameAli2</TD>
+          <TD class="auto-style2">ReportFrameAli2</TD>
           <TD>Reports more values for frame alignment: whether GPU use is selected, and for 
             the Record parameter set: truncation limit (negative if truncation is off), 
             whether to use hybrid shifts, and the three filter radii.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style8">SetFrameAli2 #G [#T] [#H]<br />
+          <TD class="auto-style2">SetFrameAli2 #G [#T] [#H]<br />
 &nbsp;&nbsp;&nbsp; [#R1] [#R2] [#R3]</TD>
           <TD>Sets whether to use GPU for frame alignment (#G 0 or 1) and, in the frame alignment 
             parameters for Record, optionally sets truncation limit from the
@@ -1125,7 +1181,7 @@
             is present and #R2 or #R3 is not.</TD>
         </TR>
         <TR vAlign="top">
-          <TD class="style8">SkipFrameAliParamCheck [#]</TD>
+          <TD class="auto-style2">SkipFrameAliParamCheck [#]</TD>
           <TD>Disables the checking of whether the selected frame alignment parameter set 
             fits the constraints for use selected in the Frame Alignment dialog.&nbsp; This 
             can be used when modifying frame alignment parameters or Record parameters to 
@@ -2497,6 +2553,14 @@
             specimen, where the tilt axis is along X.</TD>
         </TR>
         <TR vAlign="top">
+          <TD class="auto-style1">ReportISforBufferShift</TD>
+          <TD>Reports the image shift that corresponds to the shift stored and displayed 
+            for the current image in A, in image shift units.&nbsp; These values are the same as the
+            ones that would be imposed on the scope typically when introducing such a shift,
+            such as by autoaligning or dragging the image with the right mouse.&nbsp; Command added in 3.8, 5/22/20.
+            </TD>
+        </TR>
+        <TR vAlign="top">
           <TD class="auto-style1">ReportShiftDiffFrom #</TD>
           <TD>Report the difference between the alignment shift of the current image and the
             given value in microns, as percentage of the value; the cumulative sum of
@@ -3295,13 +3359,10 @@
         </TR>
       </TABLE>
       <BR>
-      <P><A name="miscellaneous"></A><B>Miscellaneous Commands</B></P>
+     <P><A name="miscellaneous"></A><B>Miscellaneous Commands</B></P>
       <TABLE border="1" cols="2">
-        <TR vAlign="top">
-          <TD width="210">CircleFromPoints #X1 #Y1 #X2 #Y2 #X3 #Y3</TD>
-          <TD>Report the X and Y center coordinate and the radius in microns for the circle
-            through three points whose coordinates are given on the line as #X1 #Y1 #X2 #Y2 #X3
-            #Y3.&nbsp; Values can be assigned to variables at end of command.</TD>
+        <TR  vAlign="top">
+          <TD colspan="2"><A name="time_output"></A><B>Time-Related Commands</B></TD>
         </TR>
         <TR vAlign="top">
           <TD width="210">ReportClock</TD>
@@ -3362,7 +3423,81 @@
           <TD width="210">ProgramTimeStamps</TD>
           <TD>Print the program version and build date, and the current date and time.</TD>
         </TR>
-        <TR>
+        <TR  vAlign="top">
+          <TD width="210"><A name="scale_matrix"></A><B>Scale Matrix Commands</B></TD>
+          <td>These commands output the 4 elements of the various scale matrices used to
+            convert between 4 different kinds of positional coordinates:<br /> &nbsp; camera coordinates
+            in right-handed unbinned pixels;<br /> &nbsp; 'specimen' coordinates in microns, a right-handed
+            rectilinear system with the X axis along the tilt axis; <br /> &nbsp; IS (image shift or projector
+             shift) coordinates in their basic units; <br /> &nbsp;  stage coordinates in microns.&nbsp; 
+            They report 4 values that specify an amount of change in a coordinate being scaled
+             to per unit of change in a coordinate being scaled from, namely X per X, X per Y, 
+            Y per X, and Y per Y in that order.&nbsp; The coordinate transformation is <br />
+            Xout = Xin * XperX + Yin * XperY <br />
+            Yout = Xin * YperX + Yin * YperY <br />
+            All commands return a matrix for the current camera where relevant, and all require an entry #M for the magnification index, or 0 to use the current
+            index.&nbsp; Variables to assign to can be entered after that.&nbsp; Commands added in 3.8, 5/22/20.
+          </td>
+        </TR>
+        <TR  vAlign="top">
+          <TD width="210">ISToCameraMatrix #M</TD>
+          <td>Converts from image shift or projector shift to camera coordinates</td>
+        </TR>
+        <TR  vAlign="top">
+          <TD width="210">CameraToISMatrix #M</TD>
+          <td>Converts from camera to image shift or projector shift coordinates</td>
+        </TR>
+       <TR  vAlign="top">
+          <TD width="210">CameraToStageMatrix #M</TD>
+          <td>Converts from camera to stage coordinates</td>
+        </TR>
+        <TR  vAlign="top">
+          <TD width="210">StageToCameraMatrix #M</TD>
+          <td>Converts from stage&nbsp; to&nbsp; coordinates.</td>
+        </TR>
+       <TR  vAlign="top">
+          <TD width="210">ISToSpecimenMatrix #M</TD>
+          <td>Converts from image shift or projector shift to&nbsp; coordinates.</td>
+        </TR>
+        <TR  vAlign="top">
+          <TD width="210">SpecimenToISMatrix #M</TD>
+          <td>Converts from&nbsp; to image shift or projector shift coordinates.</td>
+        </TR>
+       <TR  vAlign="top">
+          <TD width="210">SpecimenToCameraMatrix</TD>
+          <td>Converts from specimen&nbsp; to camera&nbsp; coordinates.</td>
+        </TR>
+        <TR  vAlign="top">
+          <TD width="210">CameraToSpecimenMatrix</TD>
+          <td>Converts from camera&nbsp; to specimen&nbsp; coordinates.</td>
+        </TR>
+       <TR  vAlign="top">
+          <TD width="210">ISToStageMatrix</TD>
+          <td>Converts from image shift or projector shift to stage&nbsp; coordinates.</td>
+        </TR>
+        <TR  vAlign="top">
+          <TD width="210">StageToISMatrix</TD>
+          <td>Converts from stage&nbsp; to image shift or projector shift coordinates.</td>
+        </TR>
+       <TR  vAlign="top">
+          <TD width="210">SpecimenToStageMatrix #M</TD>
+          <td>Converts from specimen to stage coordinates.&nbsp; The matrix should have two 
+            terms near 0 and two terms near +/-1.</td>
+        </TR>
+        <TR  vAlign="top">
+          <TD width="210">StageToSpecimenMatrix #M</TD>
+          <td>Converts from stage to specimen coordinates.</td>
+        </TR>
+        <TR  vAlign="top">
+          <TD colspan="2"><A name="other_misc"></A><B>Other Commands</B></TD>
+        </TR>
+         <TR vAlign="top">
+          <TD width="210">CircleFromPoints #X1 #Y1 #X2 #Y2 #X3 #Y3</TD>
+          <TD>Report the X and Y center coordinate and the radius in microns for the circle
+            through three points whose coordinates are given on the line as #X1 #Y1 #X2 #Y2 #X3
+            #Y3.&nbsp; Values can be assigned to variables at end of command.</TD>
+        </TR>
+       <TR>
           <TD width="207">Plugin name func [args]</TD>
           <TD>Call&nbsp;the function 'func' in the plugin named 'name' with&nbsp;appropriate
             list of arguments for that function.&nbsp; Arguments are entered as items
@@ -3525,6 +3660,7 @@ IncPercentC2
 IncTargetDefocus
 LongOperation
 ManualFilmExposure
+ModifyFrameTSShifts
 MoveBeamByFieldFraction
 MoveBeamByMicrons
 MovePiezoXY
