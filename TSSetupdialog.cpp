@@ -1522,6 +1522,7 @@ void CTSSetupDialog::ConstrainBidirAngle(bool warningIfShift, bool anglesChanged
   float minAngle = B3DMIN(m_fStartAngle, m_fEndAngle);
   float maxAngle = B3DMAX(m_fStartAngle, m_fEndAngle);
   bool changed = false;
+  bool limitEnd = true;
   int dir;
   float minSegment = 6.;
   if (!m_bDoBidir)
@@ -1572,6 +1573,19 @@ void CTSSetupDialog::ConstrainBidirAngle(bool warningIfShift, bool anglesChanged
         m_fBidirAngle);
       AfxMessageBox(mess, MB_EXCLAME);
     }
+  }
+  maxAngle = mWinApp->mScope->GetMaxTiltAngle() -
+    (float)fabs(mWinApp->mComplexTasks->GetTiltBacklash());
+  dir = mWinApp->mTSController->GetFixedDosymBacklashDir();
+  limitEnd = !((dir > 0 && m_fStartAngle < m_fEndAngle) ||
+    (dir < 0 && m_fStartAngle > m_fEndAngle));
+  if (limitEnd && fabs(m_fEndAngle) > maxAngle) {
+    B3DCLAMP(m_fEndAngle, -maxAngle, maxAngle);
+    changed = true;
+  }
+  if (!limitEnd && fabs(m_fStartAngle) > maxAngle) {
+    B3DCLAMP(m_fStartAngle, -maxAngle, maxAngle);
+    changed = true;
   }
   if (changed)
     UpdateData(false);
