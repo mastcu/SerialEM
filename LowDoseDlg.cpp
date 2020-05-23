@@ -808,6 +808,7 @@ void CLowDoseDlg::FinishSettingBeamShift(BOOL toggled)
 {
   double beamX, beamY;
   int area = mScope->GetLowDoseArea();
+  int nameInd = area == SEARCH_AREA ? SEARCH_CONSET : area;
   bool focusTrial = (area + 1) / 2 == 1;
   CString mess;
   m_bSetBeamShift = false;
@@ -823,7 +824,8 @@ void CLowDoseDlg::FinishSettingBeamShift(BOOL toggled)
     mLDParams[area].beamTiltDX += beamX - mStartingBTiltX;
     mLDParams[area].beamTiltDY += beamY - mStartingBTiltY;
     mess.Format("Incremental beam tilt for %s area set to %.3f, %.3f", 
-      (LPCTSTR)mModeNames[area], mLDParams[area].beamTiltDX, mLDParams[area].beamTiltDY);
+      (LPCTSTR)mModeNames[nameInd], mLDParams[area].beamTiltDX,
+      mLDParams[area].beamTiltDY);
     mWinApp->AppendToLog(mess);
   }
   if (focusTrial) {
@@ -831,7 +833,7 @@ void CLowDoseDlg::FinishSettingBeamShift(BOOL toggled)
     mLDParams[area].dfTiltY);
    if (mLDParams[area].darkFieldMode)
      PrintfToLog("Dark field beam tilt for %s area set to %.3f, %.3f", 
-       (LPCTSTR)mModeNames[area], mLDParams[area].dfTiltX, mLDParams[area].dfTiltY);
+       (LPCTSTR)mModeNames[nameInd], mLDParams[area].dfTiltX, mLDParams[area].dfTiltY);
   }
   SyncFocusAndTrial(area);
 }
