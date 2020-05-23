@@ -212,6 +212,9 @@ CCameraController::CCameraController()
   mObeyTiltDelay = false;
   mDebugMode = false;
   mDivideBy2 = -1;    // -1 means not set by user settings, so property can have effect
+  mExtraDivideBy2 = 0;
+  mAcquireFloatImages = false;
+  mWarnIfBeamNotOn = true;
   mRefMemoryLimit = DARK_REF_MEMORY;
   mConSetRefLimit = 5;
   mDarkAgeLimit = 3600.;
@@ -1037,6 +1040,9 @@ void CCameraController::InitializeDMcameras(int DMind, int *numDMListed,
               if (param->canTakeFrames && mPluginVersion[DMind] < PLUGIN_TAKES_OV_FRAMES)
                 param->canTakeFrames = 0;
 
+              if (param->OneViewType && mPluginVersion[DMind] >= PLUGIN_EXTRA_DIV_FLOATS)
+                param->CamFlags |= CAMFLAG_CAN_DIV_MORE | CAMFLAG_FLOATS_BY_FLAG;
+
               // Check the size
               CheckGatanSize(sel, i);
 
@@ -1163,7 +1169,8 @@ void CCameraController::InitializeDMcameras(int DMind, int *numDMListed,
 int CCameraController::InitializeTietz(int whichCameras, int *originalList, int numOrig, 
                                         BOOL anyPreExp)
 {
-  int i, ind, flags, type;
+  int i, ind, flags, type, plugVers, servVers;
+  bool anyGPU = false, anyNonGPU = false;
   CString mess;
   CameraParameters *param;
   CamPluginFuncs *funcs;
@@ -1186,7 +1193,27 @@ int CCameraController::InitializeTietz(int whichCameras, int *originalList, int 
       return 1;
     }
 
-    ind = funcs->InitializeInterface(anyPreExp ? TIETZ_USE_SHUTTERBOX : 0);
+    for (i = 0; i < numOrig; i++) {
+      ind = originalList[i];
+      param = &mAllParams[ind];
+      if (param->TietzType == 17 || param->TietzType == 18)
+        anyGPU = true;
+      else
+        anyNonGPU = true;
+    }
+    if (anyGPU) {
+      funcs->GetPluginVersion(&plugVers, &servVers);
+      if (plugVers < TIETZ_VERSION_HAS_GPU) {
+        AfxMessageBox("The Tietz plugin version does not support a GPU camera and must be"
+          " upgraded to the current version", MB_EXCLAME);
+      } else if (servVers > 0 && servVers < TIETZ_VERSION_HAS_GPU) {
+        AfxMessageBox("The Tietz-SEMserver version in the Tietz computer does not support a"
+          " GPU camera and must be upgraded to the current version", MB_EXCLAME);
+      }
+    }
+
+    ind = funcs->InitializeInterface((anyPreExp ? TIETZ_USE_SHUTTERBOX : 0) + 
+      (anyGPU ? TIETZ_IS_GPU_CAMERA : 0));
     if ((ind & ~TIETZ_NO_SHUTTERBOX) == 0) {
       mTietzInstances = true;
       mShutterInstance = anyPreExp && !ind;
@@ -1201,6 +1228,10 @@ int CCameraController::InitializeTietz(int whichCameras, int *originalList, int 
             param->TietzCanPreExpose = false;
           mPlugFuncs[ind] = funcs;
           param->cameraNumber = param->TietzType;
+          if (flags & PLUGFLAG_FLOATS_BY_FLAG)
+            param->CamFlags |= CAMFLAG_FLOATS_BY_FLAG;
+          if (flags & PLUGFLAG_CAN_DIV_MORE)
+            param->CamFlags |= CAMFLAG_CAN_DIV_MORE;
 
           // Set this if the test for processing ability passes
           param->pluginCanProcess = !param->TietzFlatfieldDir.IsEmpty()
@@ -1820,6 +1851,13 @@ bool CCameraController::CanProcessHere(CameraParameters *param)
   return !((param->FEItype && FCAM_ADVANCED(param) && mASIgivesGainNormOnly) ||
     param->K2Type || param->OneViewType || (param->DE_camType && mTD.DE_Cam &&
     mTD.DE_Cam->GetNormAllInServer()));
+}
+
+// Returns 1 if camera always returns floats, 2 if returning floats by user choice
+int CCameraController::ReturningFloatImages(CameraParameters *param)
+{
+  return (param->returnsFloats ? 1 : 0) + 
+    ((mAcquireFloatImages && (param->CamFlags & CAMFLAG_FLOATS_BY_FLAG)) ? 2 : 0);
 }
 
 // Returns true if camera is a OneView and the DM version can do drift correction
@@ -2712,7 +2750,8 @@ void CCameraController::Capture(int inSet, bool retrying)
     return;
 
   // Log warning if column valves are closed or beam is off
-  if ((mScope->FastColumnValvesOpen() == 0) && !mScope->GetSimulationMode())
+  if ((mScope->FastColumnValvesOpen() == 0) && !mScope->GetSimulationMode() && 
+    mWarnIfBeamNotOn)
     mWinApp->AppendToLog("WARNING: Column valves closed or beam off while acquiring "
       "image.");
 
@@ -2978,7 +3017,7 @@ void CCameraController::Capture(int inSet, bool retrying)
   // load some thread data
   mTD.ImageType = (mParam->unsignedImages && mDivideBy2 <= 0) ? kUSHORT : kSHORT;
   mTD.DivideBy2 = (mParam->unsignedImages && mDivideBy2 > 0) ? mDivideBy2 : 0;
-  if (mParam->returnsFloats)
+  if (ReturningFloatImages(mParam))
     mTD.ImageType = kFLOAT;
 
   /*logmess.Format("Thread data divide by 2: %d", mTD.DivideBy2);
@@ -3254,6 +3293,24 @@ void CCameraController::Capture(int inSet, bool retrying)
   } else if (mParam->FEItype == FALCON3_TYPE && mParam->falcon3ScalePower > -10 &&
     mScope->GetPluginVersion() >= FEI_PLUGIN_SCALES_DUMB_F3) {
       mTD.DivideBy2 = mParam->falcon3ScalePower + SCALE_POWER_OFFSET - mTD.DivideBy2;
+
+    // Set flags for extra div by 2 if allowed and selected OR there is autogain
+  } else if ((mParam->CamFlags & CAMFLAG_CAN_DIV_MORE)) {
+    ind = mExtraDivideBy2;
+    if (mParam->autoGainAtBinning > 0)
+      ind += B3DNINT(log((double)mParam->gainFactor[binIndex]) / log(0.5));
+    if (ind > 0) {
+      ind = B3DMIN(ind, PLUGCAM_MOREDIV_MASK);
+      mTD.PluginAcquireFlags |= PLUGCAM_DIV_BY_MORE | (ind << PLUGCAM_MOREDIV_BITS);
+      mDivBy2ForExtra += ind;
+      mTD.K2ParamFlags |= PLUGCAM_DIV_BY_MORE | (ind << PLUGCAM_MOREDIV_BITS);
+    }
+  }
+
+  // Set flags for float if allowed and selected
+  if (mAcquireFloatImages && (mParam->CamFlags & CAMFLAG_FLOATS_BY_FLAG)) {
+    mTD.PluginAcquireFlags |= PLUGCAM_RETURN_FLOAT;
+    mTD.K2ParamFlags |= PLUGCAM_RETURN_FLOAT;
   }
 
   // Set timeout for camera acquires from exposure and readout components
@@ -5246,11 +5303,13 @@ int CCameraController::CapManageDarkGainRefs(ControlSet & conSet, int inSet,
         }
         if (ref->GainDark == DARK_REFERENCE && mTD.Camera == ref->Camera && 
           mBinning == ref->Binning && mDelay == ref->Delay && mTop == ref->Top &&
-          mBottom == ref->Bottom && mLeft == ref->Left && mRight == ref->Right) {
+          mBottom == ref->Bottom && mLeft == ref->Left && mRight == ref->Right &&
+          ref->ByteSize == (ReturningFloatImages(mParam) ? 4 : 2)) {
           if (fabs(useExposure - ref->Exposure) < 1.e-6) {
             mDarkp = ref;
             ref->UseCount = mUseCount;
-          } else if (mInterpDarkRefs && !conSet.forceDark && !mParam->returnsFloats) {
+          } else if (mInterpDarkRefs && !conSet.forceDark && 
+            !ReturningFloatImages(mParam)) {
 
             // If interpolating, find nearest dark reference above and below, where
             // one at minimum exposure counts as being below
@@ -5313,7 +5372,7 @@ int CCameraController::CapManageDarkGainRefs(ControlSet & conSet, int inSet,
       }
 
       // Analyze refs found for interpolating
-      if (mInterpDarkRefs && !mParam->returnsFloats) {
+      if (mInterpDarkRefs && !ReturningFloatImages(mParam)) {
 
         // If there is an exact match or neither below or above found, proceed as usual
         if (mDarkp) {
@@ -6689,7 +6748,7 @@ void CCameraController::StartAcquire()
   if (mEnsuringDark) {
 
     // Try to convert a gain reference
-    if (mTD.GainToGet && mScaledGainRefMax && !mParam->returnsFloats) {
+    if (mTD.GainToGet && mScaledGainRefMax && !ReturningFloatImages(mParam)) {
       ref = mTD.GainToGet;
       arrSize = ref->SizeX * ref->SizeY;
 
@@ -9158,7 +9217,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
           }
           if (extra->mNumSubFrames > 0) {
             message.Format(" %d %sframes %s saved to %s", extra->mNumSubFrames, 
-              sumCount > 1 ? "" : "summed ", nameConfirmed ? "were" : "are being", 
+              sumCount > 1 ? "summed " : "", nameConfirmed ? "were" : "are being", 
               (LPCTSTR)extra->mSubFramePath);
           } else  {
             message.Format("Saving of %d %sframes was requested but the server says no "
@@ -11046,7 +11105,8 @@ int CCameraController::RotateAndReplaceArray(int chan, int operation, int invert
 {
   short int *parray;
   int nxout, nyout;
-  NewArray(parray, short int, mTD.DMSizeX * mTD.DMSizeY);
+  NewArray(parray, short int, mTD.DMSizeX * mTD.DMSizeY * 
+    (mTD.ImageType == MRC_MODE_FLOAT ? 2 : 1));
   if (!parray) {
 
     // If it fails, better swap the sizes or bad things happen
