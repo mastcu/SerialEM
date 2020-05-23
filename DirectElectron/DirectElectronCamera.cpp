@@ -567,7 +567,7 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
 void DirectElectronCamera::SetSoftwareAndServerVersion(std::string &propValue)
 {
   CString token;
-  int curpos = 0;
+  int third, curpos = 0;
   mSoftwareVersion = propValue.c_str();
 
   // Convert to a single number, 1000000 * major * 10000 * minor + build
@@ -578,8 +578,14 @@ void DirectElectronCamera::SetSoftwareAndServerVersion(std::string &propValue)
     if (!token.IsEmpty()) {
       mServerVersion += 10000 * atoi((LPCTSTR)token);
       token = mSoftwareVersion.Tokenize(".", curpos);
-      if (!token.IsEmpty())
-        mServerVersion += atoi((LPCTSTR)token);
+      if (!token.IsEmpty()) {
+        third = atoi((LPCTSTR)token);
+        token = mSoftwareVersion.Tokenize(".", curpos);
+        if (token.IsEmpty())
+          mServerVersion += third;
+        else
+          mServerVersion = 100 * mServerVersion + 10000 * third + atoi((LPCTSTR)token);
+      }
     }
   }
   if (mServerVersion >= DE_CAN_SAVE_MRC)
