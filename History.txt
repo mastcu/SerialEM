@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+5/6/20: SEM_3-8-0beta9
+4/29/20: Fixed pixel size stored in TIFF files.
+
 4/28/20: Added property TiltSpeedFactor to set a default tilt speed.
 
 4/23/20: Fixed problems in hole finding: a large memory leak, a potential

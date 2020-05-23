@@ -258,7 +258,7 @@ int KStoreIMOD::WriteSection(KImage * inImage)
     return 4;
   }
   if (extra && extra->mPixel > 0)
-    resolution = B3DNINT( (25400. / extra->mPixel));
+    resolution = B3DNINT((2.54e8 / extra->mPixel));
   if (isJpeg) {
     mIIfile->mode = mMode;
     if (jpegWriteSection(mIIfile, idata, 1, resolution < 65536 ? resolution : 0,
