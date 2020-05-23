@@ -248,8 +248,8 @@ void CImageLevelDlg::OnKillfocusBW()
 void CImageLevelDlg::SetEditBoxes()
 {
   float sampleDiff = B3DMAX(1.f, mSampleMax - mSampleMin);
-  m_strBlack.Format("%6g", mBlackLevel);
-  m_strWhite.Format("%6g", mWhiteLevel);
+  m_strBlack.Format("%.5g", mBlackLevel);
+  m_strWhite.Format("%.5g", mWhiteLevel);
   mBlackSlider = B3DNINT(255. * (mBlackLevel - mSampleMin) / sampleDiff);
   B3DCLAMP(mBlackSlider, 0, 255);
   mWhiteSlider = B3DNINT(255. * (mWhiteLevel - mSampleMin) / sampleDiff);
