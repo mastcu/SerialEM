@@ -131,12 +131,20 @@
           <TD>Allows actions like tilt and image shift right after exposure.</TD>
         </TR>
         <TR VALIGN="top">
-          <TD class="style1"><A HREF="#hid_camera_divideby2">Divide 16-bit by 2</A></TD>
-          <TD>Divides data from 16-bit camera by 2 in camera plugin.</TD>
-        </TR>
-        <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_camera_normalizehere">Normalize Here</A></TD>
           <TD>Toggles gain normalization within SerialEM on and off.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_camera_divideby2">Divide 16-bit by 2</A></TD>
+          <TD>Divides data from 16-bit camera by 2 to give signed 15-bit data.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_camera_setextradivisionby2">Set Extra Divisions</A></TD>
+          <TD>Allows additional division of camera data by a power of 2.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style1"><A HREF="#hid_camera_returnfloatimage">Return Float Images</A></TD>
+          <TD>Acquire images in floating point form instead of 16-bit integers.</TD>
         </TR>
         <TR VALIGN="top">
           <TD class="style1"><A HREF="#hid_camera_interpolate_dark_refs">Interpolate Dark Refs</A></TD>
@@ -400,15 +408,6 @@
         be done after the summed image is returned from the camera but before the 
         alignment is performed.&nbsp; This command will be enabled for such a camera, 
         but the post-actions will occur only when aligning frames.</P>
-      <P><A NAME="hid_camera_divideby2"></A><B>Divide 16-bit by 2 command (Camera menu)</B></P>
-      <P>This command toggles a mode in which all images from a 16-bit camera are divided 
-        by 2 in the camera plugin, prior to being received by SerialEM. In this mode, 
-        negative numbers in a dark-subtracted or gain-normalized image will be 
-        preserved instead of truncated at zero. This could be important for 
-        low-exposure images if the dark reference drifts downward.&nbsp; When this mode is selected, the options for treatment of 16-bit data in 
-        the <A HREF="hidd_fileproperties.htm">File Properties dialog box</A> will be 
-        disabled because they are no longer relevant. (The image has already been 
-        divided by 2 and will not be recognized as an unsigned 16-bit image.)</P>
       <P><A NAME="hid_camera_normalizehere"></A><B>Normalize Here command (Camera menu)</B></P>
       <P>This command toggles the processing (dark subtraction and gain normalization) of 
         images within SerialEM. This setting is initially determined by the global 
@@ -428,6 +427,43 @@
     <P>For Tietz F216, F416, and XF416 cameras, normalized images can be acquired from 
       the camera by adding a property &#39;TietzFlatfieldDir&#39; specifying the directory 
       where the TVIPS flatfield images are located.</P>
+        <P><A NAME="hid_camera_divideby2"></A><B>Divide 16-bit by 2 command (Camera menu)</B></P>
+      <P>This command toggles a mode in which all images from a 16-bit camera are divided 
+        by 2 right after acquisition, prior to being received by SerialEM. In this mode, 
+        a signed integer image with a possible range from -32768 to 32767 will be 
+        produced, instead of an unsigned image with a range from 0 to 65535.&nbsp; Negative numbers in a dark-subtracted or gain-normalized image 
+        will thus be 
+        preserved instead of truncated at zero. This could be important for 
+        low-exposure images if the dark reference can drift downward.&nbsp; However, using 
+        this option does not increase the range of image counts that can be acquired.&nbsp; When this mode is selected, the options for treatment of 16-bit data in 
+        the <A HREF="hidd_fileproperties.htm">File Properties dialog box</A> will be 
+        disabled because they are no longer relevant. (The image has already been 
+        divided by 2 and will not be recognized as an unsigned 16-bit image.)</P>
+      <P><A NAME="hid_camera_setextradivisionby2"></A><B>Set Extra Divisions command (Camera menu)</B></P>
+    <P>If this command is enabled for a particular camera, it can be used to set the 
+      number of additional divisions by 2 to apply when acquiring images (e.g., an 
+      entry of 3 means divide by 8).&nbsp; The 'Divide 16-bit by 2' option need not be 
+      selected.&nbsp; If it is selected, then the total number of divisions by 2 is 
+      the number specified with this command plus 1, and the images will be signed.&nbsp; 
+      If 'Divide 16-bit by 2' is not selected, images will be unsigned even after the 
+      divisions specified by this command.&nbsp; Thus, if available, this command is a 
+      better way than 'Divide 16-bit by 2' for dealing with a situation where the 
+      camera can produce more than 65,535 counts.&nbsp; It increases the range of 
+      counts, but not the dynamic range, since there are still only 65535 gray levels.&nbsp; 
+      When some division is specified, this menu entry will appear checked,even though 
+      it is not a toggle option, so that you can determine whether there is division 
+      just by looking at the camera menu.&nbsp; Currently, this command is available 
+      only for OneView, Rio, and Tietz cameras.</P>
+      <P><A NAME="hid_camera_returnfloatimage"></A><B>Return Float Images command (Camera menu)</B></P>
+    <P>If this command is available for a particular camera, it toggles whether 
+      floating point images will be produced when acquiring from the camera.&nbsp; 
+      Unlike division by powers of 2, this option allows an essentially unlimited range 
+      of counts without any loss of dynamic range.&nbsp; These images take twice the 
+      memory to hold in the program and twice the disk space when saved.&nbsp; If both 
+      float images and division by 2 or more are selected, both will happen.&nbsp; 
+      Currently, this command is available only for OneView, Rio, and Tietz cameras.&nbsp; 
+      (DECTRIS cameras acquire float images exclusively so the option is not available 
+      there.)</P>
       <P><A NAME="hid_camera_interpolate_dark_refs"></A><B>Interpolate Dark Refs command 
           (Camera menu)</B></P>
       <P>This command toggles whether the program will compute a dark reference for a 

@@ -132,6 +132,8 @@ BOOL_SETT_GETSET("DivideGridIntoGroups", mWinApp->mNavHelper->, DivideIntoGroups
 BOOL_SETT_GETSET("RIuseCurrentLDparams", mWinApp->mNavHelper->, RIuseCurrentLDparams)
 BOOL_SETT_GETSET("SkipMontFitDlgs", mWinApp->mNavHelper->, SkipMontFitDlgs)
 INT_SETT_GETSET("CameraDivide16BitBy2", camera->, DivideBy2)
+INT_SETT_GETSET("ExtraDivideBy2", camera->, ExtraDivideBy2)
+BOOL_SETT_GETSET("AcquireFloatImages", camera->, AcquireFloatImages)
 BOOL_SETT_GETSET("InterpolateDarkRefs", camera->, InterpDarkRefs)
 BOOL_SETT_GETSET("NoNormOfDSDoseFrac", camera->, NoNormOfDSdoseFrac)
 BOOL_SETT_GETSET("ComPathIsFramePath", camera->, ComPathIsFramePath)

@@ -167,15 +167,18 @@ struct JeolParams;
 
 // Flags and definitions for plugins
 #define PLUGFLAG_CAMERA            1
-#define PLUGFLAG_SCOPE             2
-#define PLUGFLAG_INFOEX            4
-#define PLUGFLAG_TSCALLS           8
-#define PLUGFLAG_PIEZO            16
-#define PLUGFLAG_DECAM            32
-#define PLUGFLAG_RETURNS_FLOATS   64
+#define PLUGFLAG_SCOPE             (1 << 1)
+#define PLUGFLAG_INFOEX            (1 << 2)
+#define PLUGFLAG_TSCALLS           (1 << 3)
+#define PLUGFLAG_PIEZO             (1 << 4)
+#define PLUGFLAG_DECAM             (1 << 5)
+#define PLUGFLAG_RETURNS_FLOATS    (1 << 6)
+#define PLUGFLAG_FLOATS_BY_FLAG    (1 << 7)
+#define PLUGFLAG_CAN_DIV_MORE      (1 << 8)
 #define PLUGCALL_TSACTION          1
 #define PLUGCAM_DIVIDE_BY2         1
 #define PLUGCAM_CONTINUOUS         2
+// See SEMCCDDefines.h for bits 17-21
 #define PLUGFEI_MAKE_CAMERA        2
 #define PLUGFEI_MAKE_STAGE         4
 #define PLUGFEI_MAKE_ILLUM         8
@@ -223,6 +226,7 @@ typedef bool (*PlugDoingFunc)(void);
 #define TIETZ_NO_CAMC4        (1 << 1)
 #define TIETZ_NO_SHUTTERBOX   (1 << 2)
 #define TIETZ_USE_SHUTTERBOX (1)
+#define TIETZ_IS_GPU_CAMERA  (1 << 2)
 #define TIETZ_GET_DARK_REF    4
 #define TIETZ_RESTORE_BBMODE (1 << 1)
 #define TIETZ_SET_READ_MODE  (1 << 2)

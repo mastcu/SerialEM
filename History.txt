@@ -3,6 +3,15 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+5/11/20: Changes to ease use of diffraction mode in Search on JEOL.
+
+5/11/20: Added property RestoreStageXYdelay to set delay after stage restore
+on tilting.
+
+5/7/20: Fixed TSDosymBacklashDir property which had no effect, and limited one
+angle of dose-symmetric series by the max tilt angle minus backlash.  Also
+defaulted max tilt angle to 69.9 for Titans (if UseIllumatedArea set).
+
 5/6/20: SEM_3-8-0beta9
 4/29/20: Fixed pixel size stored in TIFF files.
 

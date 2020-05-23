@@ -1649,36 +1649,50 @@ int CorDefFindDriftCorrEdges(void *array, int type, int nx, int ny, int analyzeL
   int yStart = B3DMAX(0, ny / 2 - analyzeLen / 2);
   int xEnd = B3DMIN(nx, xStart + analyzeLen);
   int yEnd = B3DMIN(ny, yStart + analyzeLen);
+  bool isFloat = type == SLICE_MODE_FLOAT;
   unsigned short *usData, *usNext;
   short *sData, *sNext;
-  float maxBelow, ratioMedian, ratioMADN, minAbove;
-  float *lineMean, *diffMean, *diffSD, *diffRatio, *temp;
-  int *xLineSums, *xDiffSums;
+  float maxBelow, ratioMedian, ratioMADN, minAbove, fLineSum, fDiffSum, fDiff;
+  float *lineMean, *diffMean, *diffSD, *diffRatio, *temp, *fData, *fNext;
+  float *fxLineSums = NULL, *fxDiffSums = NULL;
+  int *xLineSums = NULL, *xDiffSums = NULL;
   double *xDiffSumSq;
 
-  if (type != SLICE_MODE_SHORT && type != SLICE_MODE_USHORT)
+  if (type != SLICE_MODE_SHORT && type != SLICE_MODE_USHORT && !isFloat)
     return 1;
   lineMean = B3DMALLOC(float, 4 * maxWidth);
   diffMean = B3DMALLOC(float, 4 * maxWidth);
   diffSD = B3DMALLOC(float, 4 * maxWidth);
   diffRatio = B3DMALLOC(float, 4 * maxWidth);
-  xLineSums = B3DMALLOC(int, 2 * maxWidth);
-  xDiffSums = B3DMALLOC(int, 2 * maxWidth);
+  if (isFloat) {
+    fxLineSums = B3DMALLOC(float, 2 * maxWidth);
+    fxDiffSums = B3DMALLOC(float, 2 * maxWidth);
+  } else {
+    xLineSums = B3DMALLOC(int, 2 * maxWidth);
+    xDiffSums = B3DMALLOC(int, 2 * maxWidth);
+  }
   xDiffSumSq = B3DMALLOC(double, 2 * maxWidth);
-  if (!lineMean || !diffMean || !diffSD || !xLineSums || !xDiffSums || !xDiffSumSq ||
-      !diffRatio) {
+  if (!lineMean || !diffMean || !diffSD || (!isFloat && (!xLineSums || !xDiffSums)) ||
+    (isFloat && (!fxLineSums || !fxDiffSums)) || !xDiffSumSq || !diffRatio) {
     B3DFREE(lineMean);
     B3DFREE(diffMean);
     B3DFREE(diffSD);
     B3DFREE(diffRatio);
     B3DFREE(xLineSums);
     B3DFREE(xDiffSums);
+    B3DFREE(fxLineSums);
+    B3DFREE(fxDiffSums);
     B3DFREE(xDiffSumSq);
     return 2;
   }
   temp = (float *)xDiffSumSq;
-  memset(xLineSums, 0, 2 * maxWidth * sizeof(int));
-  memset(xDiffSums, 0, 2 * maxWidth * sizeof(int));
+  if (isFloat) {
+    memset(fxLineSums, 0, 2 * maxWidth * sizeof(float));
+    memset(fxDiffSums, 0, 2 * maxWidth * sizeof(float));
+  } else {
+    memset(xLineSums, 0, 2 * maxWidth * sizeof(int));
+    memset(xDiffSums, 0, 2 * maxWidth * sizeof(int));
+  }
   memset(xDiffSumSq, 0, 2 * maxWidth * sizeof(double));
 
   // Do lines at Y levels, store their results first in arrays
@@ -1687,7 +1701,17 @@ int CorDefFindDriftCorrEdges(void *array, int type, int nx, int ny, int analyzeL
       iy = idir ? ny - 1 - wid : wid;
       lineSum = diffSum = 0;
       diffSumSq = 0.;
-      if (type == SLICE_MODE_SHORT) {
+      if (isFloat) {
+        fLineSum = fDiffSum = 0.;
+        fData = (float *)array + iy * nx;
+        fNext = fData + (1 - 2 * idir) * nx;
+        for (ix = xStart; ix < xEnd; ix++) {
+          fDiff = fNext[ix] - fData[ix];
+          fLineSum += fData[ix];
+          fDiffSum += fDiff;
+          diffSumSq += (double)fDiff * fDiff;
+        }
+      } else if (type == SLICE_MODE_SHORT) {
         sData = (short *)array + iy * nx;
         sNext = sData + (1 - 2 * idir) * nx;
         for (ix = xStart; ix < xEnd; ix++) {
@@ -1707,9 +1731,9 @@ int CorDefFindDriftCorrEdges(void *array, int type, int nx, int ny, int analyzeL
         }
       }
       ind = idir * maxWidth + wid;
-      sumsToAvgSDdbl((double)diffSum, diffSumSq, 1, xEnd - xStart, &diffMean[ind],
-                     &diffSD[ind]);
-      lineMean[ind] = (float)lineSum / (float)(xEnd - xStart);
+      sumsToAvgSDdbl((isFloat ? fDiffSum : (double)diffSum), diffSumSq, 1, xEnd - xStart,
+        &diffMean[ind], &diffSD[ind]);
+      lineMean[ind] = (isFloat ? fLineSum : (float)lineSum) / (float)(xEnd - xStart);
       diffRatio[ind] = diffMean[ind] / B3DMAX(0.1f, diffSD[ind]);
     }
   }
@@ -1719,7 +1743,17 @@ int CorDefFindDriftCorrEdges(void *array, int type, int nx, int ny, int analyzeL
     for (loop = 0; loop < 2; loop++) {
       idir = 1 - 2 * loop;
       ix = loop ? nx - 1: 0;
-      if (type == SLICE_MODE_SHORT) {
+      if (isFloat) {
+        fData = (float *)array + iy * nx;
+        for (wid = 0; wid < maxWidth; wid++) {
+          ind = wid + loop * maxWidth;
+          fDiff = fData[ix + idir] - fData[ix];
+          fxLineSums[ind] += fData[ix];
+          fxDiffSums[ind] += fDiff;
+          xDiffSumSq[ind] += (double)fDiff * fDiff;
+          ix += idir;
+        }
+      } else if (type == SLICE_MODE_SHORT) {
         sData = (short *)array + iy * nx;
         for (wid = 0; wid < maxWidth; wid++) {
           ind = wid + loop * maxWidth;
@@ -1746,9 +1780,10 @@ int CorDefFindDriftCorrEdges(void *array, int type, int nx, int ny, int analyzeL
   // Get the mean and SD and ratio for each column
   for (wid = 0; wid < 2 * maxWidth; wid++) {
     ind = wid + 2 * maxWidth;
-    sumsToAvgSDdbl((double)xDiffSums[wid], xDiffSumSq[wid], 1, yEnd - yStart, 
-      &diffMean[ind], &diffSD[ind]);
-    lineMean[ind] = (float)xLineSums[wid] / (float)(yEnd - yStart);
+    sumsToAvgSDdbl((isFloat ? fxDiffSums[wid] : (double)xDiffSums[wid]), xDiffSumSq[wid],
+      1, yEnd - yStart, &diffMean[ind], &diffSD[ind]);
+    lineMean[ind] = (isFloat ? fxLineSums[wid] : (float)xLineSums[wid]) / 
+      (float)(yEnd - yStart);
     diffRatio[ind] = diffMean[ind] / B3DMAX(0.1f, diffSD[ind]);
   }
 
@@ -1799,6 +1834,8 @@ int CorDefFindDriftCorrEdges(void *array, int type, int nx, int ny, int analyzeL
   B3DFREE(diffRatio);
   B3DFREE(xLineSums);
   B3DFREE(xDiffSums);
+  B3DFREE(fxLineSums);
+  B3DFREE(fxDiffSums);
   B3DFREE(xDiffSumSq);
   return 0;
 }

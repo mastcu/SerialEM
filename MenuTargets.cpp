@@ -44,6 +44,7 @@
 #include "Utilities\KGetOne.h"
 #include "Shared\b3dutil.h"
 #include "ScreenShotDialog.h"
+#include "Shared\\SEMCCDDefines.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -463,7 +464,11 @@ BEGIN_MESSAGE_MAP(CMenuTargets, CCmdTarget)
   ON_UPDATE_COMMAND_UI(ID_MONTAGINGGRIDS_FINDREGULARARRAYOFHOLES, OnUpdateMontagingGridsFindHoles)
   ON_COMMAND(ID_MONTAGINGGRIDS_COMBINEPOINTSINTOMULTI, OnCombinePointsIntoMultiShots)
   ON_UPDATE_COMMAND_UI(ID_MONTAGINGGRIDS_COMBINEPOINTSINTOMULTI, OnUpdateMontagingGridsFindHoles)
-  END_MESSAGE_MAP()
+    ON_COMMAND(ID_CAMERA_SETEXTRADIVISIONBY2, OnCameraSetExtraDivisionBy2)
+    ON_UPDATE_COMMAND_UI(ID_CAMERA_SETEXTRADIVISIONBY2, OnUpdateCameraSetExtraDivisionBy2)
+    ON_COMMAND(ID_CAMERA_RETURNFLOATIMAGE, OnCameraReturnFloatImage)
+    ON_UPDATE_COMMAND_UI(ID_CAMERA_RETURNFLOATIMAGE, OnUpdateCameraReturnFloatImage)
+    END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
 // CMenuTargets message handlers
@@ -1769,7 +1774,36 @@ void CMenuTargets::OnUpdateCameraDivideby2(CCmdUI* pCmdUI)
   pCmdUI->SetCheck(mCamera->GetDivideBy2() > 0 ? 1 : 0);
 }
 
-void CMenuTargets::OnCameraShowgainref() 
+void CMenuTargets::OnCameraSetExtraDivisionBy2()
+{
+  int curVal = mCamera->GetExtraDivideBy2();
+  if (!KGetOneInt("Extra division is on top of \"Divide 16-bit by 2\", which need not be "
+    "on", "Enter number of added times to divide by 2:", curVal))
+    return;
+  B3DCLAMP(curVal, 0, PLUGCAM_MOREDIV_MASK);
+  mCamera->SetExtraDivideBy2(curVal);
+}
+
+void CMenuTargets::OnUpdateCameraSetExtraDivisionBy2(CCmdUI *pCmdUI)
+{
+  CameraParameters *param = mWinApp->GetActiveCamParam();
+  pCmdUI->Enable((param->CamFlags & CAMFLAG_CAN_DIV_MORE) != 0);
+  pCmdUI->SetCheck(mCamera->GetExtraDivideBy2() > 0);
+}
+
+void CMenuTargets::OnCameraReturnFloatImage()
+{
+  mCamera->SetAcquireFloatImages(!mCamera->GetAcquireFloatImages());
+}
+
+void CMenuTargets::OnUpdateCameraReturnFloatImage(CCmdUI *pCmdUI)
+{
+  CameraParameters *param = mWinApp->GetActiveCamParam();
+  pCmdUI->SetCheck(mCamera->GetAcquireFloatImages());
+  pCmdUI->Enable((param->CamFlags & CAMFLAG_FLOATS_BY_FLAG) != 0);
+}
+
+void CMenuTargets::OnCameraShowgainref()
 {
   mCamera->ShowReference(GAIN_REFERENCE);
 }
@@ -1812,8 +1846,8 @@ void CMenuTargets::OnUpdateCameraInterpolateDarkRefs(CCmdUI *pCmdUI)
 {
   CameraParameters *param = mWinApp->GetCamParams() + mWinApp->GetCurrentCamera();
   pCmdUI->SetCheck(mCamera->GetInterpDarkRefs() ? 1 : 0);
-  pCmdUI->Enable(mCamera->GetProcessHere() && !DoingTasks() && !param->returnsFloats &&
-    !mCamera->CameraBusy() && 
+  pCmdUI->Enable(mCamera->GetProcessHere() && !DoingTasks() && 
+    !mCamera->ReturningFloatImages(param) && !mCamera->CameraBusy() && 
     !(mWinApp->StartedTiltSeries() && mWinApp->mTSController->GetChangeRecExp()));
 }
 

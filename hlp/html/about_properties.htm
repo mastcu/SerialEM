@@ -630,6 +630,11 @@
               into STEM mode.</TD>
         </TR>
         <TR VALIGN="top">
+          <TD>WarnIfBeamNotOn</TD>
+          <TD>Set to 0 to suppress the warning when taking an image with the column valves closed or beam 
+            off.</TD>
+        </TR>
+        <TR VALIGN="top">
           <TD>GainNormalizeInSerialEM</TD>
           <TD>1 to perform gain normalization and dark subtraction in SerialEM or 0 to have 
             all processing done in DigitalMicrograph or TIA. This is an initial, global 
@@ -2082,7 +2087,7 @@
         <TR VALIGN="top">
           <TD>DEAutosaveFolder</TD>
           <TD>Top folder under which frames will be saved for this camera.&nbsp; This entry 
-            has an effect only with a server version of 1.0.943 or higher, where SerialEM 
+            has an effect only if the server is local ('DECameraServerIP' set to 127.0.0.1) and with a server version of 1.0.943 or higher, where SerialEM 
             will allow saving to subfolders of the autosave folder.&nbsp; The directory will 
             be created if it does not exist but its parent must already exist.</TD>
         </TR>
@@ -2342,7 +2347,8 @@
         <TR VALIGN="top">
           <TD>MaximumTiltAngle</TD>
           <TD>Set to the maximum angle that can be tilted to without generating an error.&nbsp; 
-            The default is 60 for Hitachi, otherwise 79.9; Titan needs 69.9.</TD>
+            The default is 60 for Hitachi, 69.9 if &#39;UseIlluminatedArea&#39; is set&nbsp; (Titan 
+            needs 69.9); otherwise 79.9.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>TiltSpeedFactor</TD>
@@ -2507,6 +2513,11 @@
           <TD class="auto-style1">Maximum stage shift at which the program will still consider the stage to be 
             at the same position as after it has moved the stage (used for keeping track of 
             backlash).&nbsp; The default is 0.1 microns for FEI and 0.2 micron for JEOL.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="auto-style1">RestoreStageXYdelay</TD>
+          <TD class="auto-style1">Delay in milliseconds between tilting and changing X/Y 
+            when restoring stage position after tilt; the default is 100 msec.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>UseTrialSizeForShiftCal</TD>

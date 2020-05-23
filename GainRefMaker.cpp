@@ -671,7 +671,7 @@ void CGainRefMaker::AcquiringRefNextTask(int param)
 
   // Try to convert the data, and put data in storage places
   usdata = NULL;
-  if (mCamera->GetScaledGainRefMax() && !mParam->returnsFloats)
+  if (mCamera->GetScaledGainRefMax() && !mCamera->ReturningFloatImages(mParam))
     NewArray(usdata,unsigned short,nx * ny);
   if (ProcConvertGainRef(mArray, usdata, nx * ny, mCamera->GetScaledGainRefMax(),
     mCamera->GetMinGainRefBits(), &mGainRefBits[mCurrentCamera][mRefBinInd])) {
@@ -964,8 +964,9 @@ int CGainRefMaker::GetReference(int binning, void *&gainRef, int &byteSize,
     // Convert to unsigned short if possible
     image->Lock();
     usdata = NULL;
-    if (mCamera->GetScaledGainRefMax() && !mParam->returnsFloats && !needFloat)
-      NewArray(usdata,unsigned short int,nx * ny);
+    if (mCamera->GetScaledGainRefMax() && !mCamera->ReturningFloatImages(mParam) && 
+      !needFloat)
+      NewArray(usdata, unsigned short int, nx * ny);
     if (ProcConvertGainRef((float *)image->getData(), usdata, nx * ny, 
       mCamera->GetScaledGainRefMax(), mCamera->GetMinGainRefBits(), 
       &mGainRefBits[mCurrentCamera][needInd])) {
@@ -1031,7 +1032,7 @@ int CGainRefMaker::GetReference(int binning, void *&gainRef, int &byteSize,
 
     // Otherwise, need to try to scale it down as usual
     usdata = NULL;
-    if (mCamera->GetScaledGainRefMax() && !mParam->returnsFloats)
+    if (mCamera->GetScaledGainRefMax() && !mCamera->ReturningFloatImages(mParam))
       NewArray(usdata,unsigned short int,binnedSize);
     if (ProcConvertGainRef((float *)sdata, usdata, binnedSize, 
       mCamera->GetScaledGainRefMax(), mCamera->GetMinGainRefBits(), &scaleBits)) {

@@ -7,8 +7,7 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "afxres.h"
-
+#include "afxres.h"
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
@@ -212,8 +211,11 @@ BEGIN
         MENUITEM "S&how Gain Ref",              ID_CAMERA_SHOWGAINREF
         MENUITEM "Show &Dark Ref",              ID_CAMERA_SHOWDARKREF
         MENUITEM "P&ost-actions",               ID_CAMERA_POSTACTIONS
-        MENUITEM "Divide 16-bit by 2",          ID_CAMERA_DIVIDEBY2
+        MENUITEM SEPARATOR
         MENUITEM "Normalize Here",              ID_CAMERA_NORMALIZEHERE
+        MENUITEM "Divide 1&6-bit by 2",         ID_CAMERA_DIVIDEBY2
+        MENUITEM "Set E&xtra Divisions...",     ID_CAMERA_SETEXTRADIVISIONBY2
+        MENUITEM "Return Float Ima&ges",        ID_CAMERA_RETURNFLOATIMAGE
         MENUITEM "Interpolate Dark Refs",       ID_CAMERA_INTERPOLATE_DARK_REFS
         MENUITEM SEPARATOR
         MENUITEM "Set Frame Align Lines",       ID_CAMERA_SETFRAMEALIGNLINES
@@ -4418,6 +4420,10 @@ BEGIN
     ID_MONTAGINGGRIDS_FINDREGULARARRAYOFHOLES "Open Hole Finder dialog"
     ID_MONTAGINGGRIDS_COMBINEPOINTSINTOMULTI 
                             "Convert regular array of points to subset for multishots"
+    ID_CAMERA_SETEXTRADIVISIONBY2 
+                            "Set number of additional factors of 2 to divide by"
+    ID_CAMERA_RETURNFLOATIMAGE 
+                            "Get image back in floating point, not short integers"
 END
 
 STRINGTABLE
@@ -5915,10 +5921,6 @@ BEGIN
     IDC_EDIT_MAX_ERROR      "Enter the maximum error in microns between actual and predicted position"
     IDC_BUT_CLEAR_DATA      "Remove points and clear out all memory usage"
     IDC_BRACKET_LAST        "Try a subset of filter and threshold values around the last optimal values"
-END
-
-STRINGTABLE
-BEGIN
     IDC_RON_IMAGE           "Select points on currently displayed image"
     IDC_RIN_POLYGON         "Select points within a polygon (must be current item)"
     IDC_RSAME_GROUP         "Select all points in the same group as the current item"
@@ -5926,7 +5928,6 @@ BEGIN
     IDC_BUT_UNDO_COMBINE    "Remove last set of multi-shot items and restore individual points"
     IDC_CHECK_DISPLAY_MULTI "Do not suppress the display of multi-shot pattern on all individual points"
 END
-
 
 #endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////
@@ -5951,8 +5952,7 @@ LANGUAGE 9, 1
 #include "res\SerialEM.rc2"  // non-Microsoft Visual C++ edited resources
 #include "afxres.rc"         // Standard components
 #include "XFolderDialog\XFolderDialog.rc"
-#endif
-
+#endif
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

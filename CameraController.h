@@ -42,7 +42,7 @@ struct CamPluginFuncs;
 // Version that is good enough if there are no K2 cameras
 #define SEMCCD_VERSION_OK_NO_K2  104
 
-// Plugin versions with various capabilities
+// SEMCCD Plugin versions with various capabilities
 #define PLUGIN_CREATES_DIRECTORY 100
 #define PLUGIN_CAN_SUM_FRAMES    101
 #define PLUGIN_CAN_ANTIALIAS     101
@@ -67,6 +67,7 @@ struct CamPluginFuncs;
 #define PLUGIN_CAN_SET_CDS       113
 #define PLUGIN_TAKES_OV_FRAMES   114
 #define PLUGIN_MDOC_FOR_FRAME_TS 115
+#define PLUGIN_EXTRA_DIV_FLOATS  116
 
 #define CAN_PLUGIN_DO(c, p) CanPluginDo(PLUGIN_##c, p)
 
@@ -85,7 +86,12 @@ struct CamPluginFuncs;
 // Camera flags for Gatan cameras
 #define K3_CAM_ROTFLIP_BUG        0x2
 
+// General camera flags: keep DE flags here and PLUGFEI in SerialEM.h from conflicting
+#define CAMFLAG_FLOATS_BY_FLAG    (1 << 16)
+#define CAMFLAG_CAN_DIV_MORE      (1 << 17)
+
 #define AMT_VERSION_CAN_NORM     700
+#define TIETZ_VERSION_HAS_GPU    102
 
 enum {INIT_ALL_CAMERAS, INIT_CURRENT_CAMERA, INIT_GIF_CAMERA, INIT_TIETZ_CAMERA};
 enum {LINEAR_MODE = 0, COUNTING_MODE, SUPERRES_MODE, K3_LINEAR_SET_MODE, K3_COUNTING_SET_MODE};
@@ -522,6 +528,9 @@ public:
   GetSetMember(BOOL, UseK3CorrDblSamp);
   GetSetMember(float, K3HWDarkRefExposure);
   GetMember(DWORD, LastAcquireStartTime);
+  GetSetMember(int, ExtraDivideBy2);
+  GetSetMember(BOOL, AcquireFloatImages);
+  GetSetMember(int, WarnIfBeamNotOn);
 
   int GetNumFramesSaved() {return mTD.NumFramesSaved;};
   BOOL *GetUseGPUforK2Align() {return &mUseGPUforK2Align[0];};
@@ -903,6 +912,9 @@ public:
   float mFrameTSspeed;
   double mFrameTSrestoreX;
   double mFrameTSrestoreY;
+  int mExtraDivideBy2;           // Number of extra divisions by 2 if camera supports it
+  BOOL mAcquireFloatImages;          // Flagto get float image back if camera supports it
+  BOOL mWarnIfBeamNotOn;  // Do not warn if walves are close when taking a picture
 
 public:
   void SetNonGatanPostActionTime(void);
@@ -1025,6 +1037,7 @@ void GetMergeK2DefectList(int DMind, CameraParameters *param, bool errToLog);
 bool IsConSetSaving(const ControlSet *conSet, int setNum, CameraParameters *param, bool K2only);
 bool CanWeAlignFalcon(CameraParameters *param, BOOL savingEnabled, bool &canSave);
 bool CanProcessHere(CameraParameters *param);
+int ReturningFloatImages(CameraParameters *param);
 void FixDirForFalconFrames(CameraParameters * param);
 bool CanPluginDo(int minVersion, CameraParameters * param);
 bool CanK3DoCorrDblSamp(CameraParameters * param);

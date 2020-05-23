@@ -27,6 +27,7 @@ C
 D
 E
 F
+G
 H
 I
 L
@@ -41,6 +42,8 @@ T
 U
 V
 W
+X
+6
 
 Calibration:
   Image&Stage shift

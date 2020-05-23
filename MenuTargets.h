@@ -379,6 +379,10 @@ public:
   afx_msg void OnMontagingGridsFindHoles();
   afx_msg void OnUpdateMontagingGridsFindHoles(CCmdUI *pCmdUI);
   afx_msg void OnCombinePointsIntoMultiShots();
+  afx_msg void OnCameraSetExtraDivisionBy2();
+  afx_msg void OnUpdateCameraSetExtraDivisionBy2(CCmdUI *pCmdUI);
+  afx_msg void OnCameraReturnFloatImage();
+  afx_msg void OnUpdateCameraReturnFloatImage(CCmdUI *pCmdUI);
 };
 
 /////////////////////////////////////////////////////////////////////////////

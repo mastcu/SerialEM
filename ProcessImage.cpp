@@ -3305,7 +3305,7 @@ int CProcessImage::DoseRateFromMean(EMimageBuffer *imBuf, float mean, float &dos
 // gain factor and other factors as needed
 float CProcessImage::CountsPerElectronForImBuf(EMimageBuffer * imBuf)
 {
-  float countsPerElectron, gainFac;
+  float countsPerElectron, gainFac = 1.;
   if (!imBuf || !imBuf->mImage)
     return 0.;
   EMimageExtra *extra = (EMimageExtra *)imBuf->mImage->GetUserData();
@@ -3317,9 +3317,16 @@ float CProcessImage::CountsPerElectronForImBuf(EMimageBuffer * imBuf)
     countsPerElectron = mCamera->GetCountScaling(camParam);
   if (countsPerElectron <= 0.)
     return 0.;
-  if (imBuf->mDividedBy2)
+
+  // Use the total divisions by 2 if available and large, but then skip the gain factors
+  // if they were imposed by autogain, since they are in the total divisions. 
+  // Otherwise, stick with the product of divided counts and gain factor
+  if (extra->mDividedBy2 > 1)
+    countsPerElectron /= powf(2.f, (float)extra->mDividedBy2);
+  else if (imBuf->mDividedBy2)
     countsPerElectron /= 2.f;
-  gainFac = mWinApp->GetGainFactor(imBuf->mCamera, imBuf->mBinning);
+  if (extra->mDividedBy2 <= 1 && !camParam->autoGainAtBinning)
+    gainFac = mWinApp->GetGainFactor(imBuf->mCamera, imBuf->mBinning);
   return gainFac * countsPerElectron;
 }
 
