@@ -9282,15 +9282,6 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       extra = new EMimageExtra;
       *extra = *mExtraDeferred;
       image->SetUserData(extra);
-
-      // Otherwise adopt the stored extra if getting deferred sum or have extra from 
-      // starting DE align
-    } else if (mTD.GetDeferredSum || mStartedExtraForDEalign) {
-      extra = mExtraDeferred;
-      image->SetUserData(extra);
-      mExtraDeferred = NULL;
-    }
-    if (mTD.DoingTiltSums && !mStartingDeferredSum) {
       extra->m_fTilt = (float)mTD.TiltSumAngle;
       if (mTD.TiltSumIndex < (int)mTD.FrameTSactualAngle.size())
         extra->m_fTilt = mTD.FrameTSactualAngle[mTD.TiltSumIndex];
@@ -9300,6 +9291,13 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       extra->mSubFramePath = "";
       extra->mNumSubFrames = 0;
       extra->mFrameDosesCounts = "";
+
+      // Otherwise adopt the stored extra if getting deferred sum or have extra from 
+      // starting DE align
+    } else if (mTD.GetDeferredSum || mStartedExtraForDEalign) {
+      extra = mExtraDeferred;
+      image->SetUserData(extra);
+      mExtraDeferred = NULL;
     }
 
     // Get the extra header data - get JEOL data from last update to save time
