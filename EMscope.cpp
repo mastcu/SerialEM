@@ -6430,13 +6430,15 @@ BOOL CEMscope::SetProbeMode(int micro, BOOL fromLowDose)
         if (adjustFocus && delFocus) {
           IncDefocus(delFocus);
         }
-        if (success && adjustShift && GetBeamShift(beamX, beamY)) {
-          SEMTrace('b', "After, beam %.3f %.3f  change to %.3f %.3f", beamX, beamY, 
-            beamX + toBeamX, beamY + toBeamY);
-          if (!SetBeamShift(beamX + toBeamX, beamY + toBeamY))
+        if (success && adjustShift) {
+          if (GetBeamShift(beamX, beamY)) {
+            SEMTrace('b', "After, beam %.3f %.3f  change to %.3f %.3f", beamX, beamY,
+              beamX + toBeamX, beamY + toBeamY);
+            if (!SetBeamShift(beamX + toBeamX, beamY + toBeamY))
+              success = false;
+          } else {
             success = false;
-        } else {
-          success = false;
+          }
         }
         mFirstFocusForProbe = GetDefocus();
         if (!GetBeamShift(mFirstBeamXforProbe, mFirstBeamYforProbe))

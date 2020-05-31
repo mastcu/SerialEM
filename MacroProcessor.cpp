@@ -4173,12 +4173,11 @@ void CMacroProcessor::NextCommand()
     break;
     
   case CME_SETPROBEMODE:                                    // SetProbeMode
-    index = B3DNINT(itemDbl[1]);
-    if (strItems[1].Find("MICRO") == 0)
+    if (item1upper.Find("MICRO") == 0 || item1upper == "1")
       index = 1;
-    if (strItems[1].Find("NANO") == 0)
+    else if (item1upper.Find("NANO") == 0 || item1upper == "0")
       index = 0;
-    if (index < 0 || index > 1)
+    else
       ABORT_LINE("Probe mode must be 0, 1, nano, or micro in statement: \n\n");
     if (!mScope->SetProbeMode(index)) {
       AbortMacro();
