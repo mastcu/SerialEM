@@ -154,6 +154,8 @@ public:
   GetMember(int, AcquireIndex);
   GetMember(int, MagIndForHoles);
   GetMember(int, CameraForHoles);
+  GetMember(int, EndingAcquireIndex);
+
 
   CString GetCurrentNavFile() {return mNavFilename;};
   int GetNumNavItems() {return (int)mItemArray.GetSize();};

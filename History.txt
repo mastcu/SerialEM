@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+5/25/20: Fixed hole finder "Groups" radio button and added optional entries to
+script command to set SD and bakc pixel cutoffs.
+
 5/25/20: Made SetProbeMode command accept lower case, not change mode with
 a bad entry, and not abort the script after changing mode (In 3.7).
 

@@ -20,7 +20,7 @@ public:
     BOOL &incl, BOOL &excl);
   bool HaveHolesToDrawOrMakePts();
   void SetExclusionsAndDraw();
-  void SetExclusionsAndDraw(float lowerMeanCutoff, float upperMeanCutoff);
+  void SetExclusionsAndDraw(float lowerMeanCutoff, float upperMeanCutoff, float sdCutoff, float blackCutoff);
   GetMember(bool, FindingHoles);
   void ScanningNextTask(int param);
   void ScanningCleanup(int error);
@@ -29,7 +29,8 @@ public:
   bool IsOpen() { return mIsOpen; };
   bool CheckAndSetNav(const char *message = NULL);
   int DoFindHoles(EMimageBuffer *imBuf);
-  int DoMakeNavPoints(int layoutType, float lowerMeanCutoff, float upperMeanCutoff);
+  int DoMakeNavPoints(int layoutType, float lowerMeanCutoff, float upperMeanCutoff,
+    float sdCutoff, float blackCutoff);
 
 
 // Dialog Data

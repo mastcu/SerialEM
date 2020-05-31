@@ -6872,13 +6872,15 @@ void CMacroProcessor::NextCommand()
     SetReportedValues(navItem->mAcquire);
     break;
 
-  case CME_SETITEMACQUIRE:                                  //SetItemAcquire
+  case CME_SETITEMACQUIRE:                                  // SetItemAcquire
     index = itemEmpty[1] ? 0 : itemInt[1];
     navItem = CurrentOrIndexedNavItem(index, strLine);
     if (!navItem)
       return;
-    if (navigator->GetAcquiring())
-      ABORT_LINE("The Navigator must not be acquiring for line:\n\n");
+    if (navigator->GetAcquiring() && index >= navigator->GetAcquireIndex() &&
+      index <= navigator->GetEndingAcquireIndex())
+      ABORT_NOLINE("When the Navigator is acquiring, you cannot set an\n"
+        "item to Acquire within the range still being acquired");
     truth = (itemEmpty[2] || (itemInt[2] != 0));
     if (truth && navItem->mTSparamIndex >= 0)
       ABORT_LINE("You cannot turn on Acquire for an item set for a tilt series for "
@@ -7309,7 +7311,9 @@ void CMacroProcessor::NextCommand()
       ABORT_LINE("The layout type must be less than 3 for line:\n\n");
     index = mWinApp->mNavHelper->mHoleFinderDlg->DoMakeNavPoints(index,
       (float)((itemEmpty[2] || itemDbl[2] < -900000) ? EXTRA_NO_VALUE : itemDbl[2]),
-      (float)((itemEmpty[3] || itemDbl[3] < -900000) ? EXTRA_NO_VALUE : itemDbl[3]));
+      (float)((itemEmpty[3] || itemDbl[3] < -900000) ? EXTRA_NO_VALUE : itemDbl[3]),
+      (float)((itemEmpty[4] || itemDbl[4] < 0.) ? -1. : itemDbl[4]) / 100.f,
+      (float)((itemEmpty[5] || itemDbl[5] < 0.) ? -1. : itemDbl[5]) / 100.f);
     if (index < 0) {
       AbortMacro();
       return;

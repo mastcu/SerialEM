@@ -140,7 +140,7 @@ BEGIN_MESSAGE_MAP(CHoleFinderDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_SHOW_EXCLUDED, OnShowExcluded)
   ON_BN_CLICKED(IDC_RZIGZAG, OnRadioLayoutType)
   ON_BN_CLICKED(IDC_RFROM_FOCUS, OnRadioLayoutType)
-  ON_BN_CLICKED(IDC_RZIGZAG, OnRadioLayoutType)
+  ON_BN_CLICKED(IDC_RIN_GROUPS, OnRadioLayoutType)
   ON_BN_CLICKED(IDC_BUT_MAKE_NAV_PTS, OnButMakeNavPts)
   ON_EN_KILLFOCUS(IDC_EDIT_MAX_ERROR, OnKillfocusEditMaxError)
   ON_BN_CLICKED(IDC_BUT_CLEAR_DATA, OnButClearData)
@@ -386,13 +386,14 @@ void CHoleFinderDlg::OnRadioLayoutType()
 // Make navigator points - the real work is done by Nav
 void CHoleFinderDlg::OnButMakeNavPts()
 {
-  DoMakeNavPoints(mParams.layoutType, mParams.lowerMeanCutoff, mParams.upperMeanCutoff);
+  DoMakeNavPoints(mParams.layoutType, mParams.lowerMeanCutoff, mParams.upperMeanCutoff,
+    mParams.SDcutoff, mParams.blackFracCutoff);
 }
 
 //Externally called routine.  Pass -1 to use the layout in params and EXTRA_NO_VALUE to
 // use the cutoffs in params
 int CHoleFinderDlg::DoMakeNavPoints(int layoutType, float lowerMeanCutoff, 
-  float upperMeanCutoff)
+  float upperMeanCutoff, float sdCutoff, float blackCutoff)
 {
   CMapDrawItem *poly = NULL;
   ShortVec gridX, gridY;
@@ -410,9 +411,13 @@ int CHoleFinderDlg::DoMakeNavPoints(int layoutType, float lowerMeanCutoff,
     lowerMeanCutoff = mParams.lowerMeanCutoff;
   if (upperMeanCutoff < EXTRA_VALUE_TEST)
     upperMeanCutoff = mParams.upperMeanCutoff;
+  if (sdCutoff < 0.)
+    sdCutoff = mParams.SDcutoff;
+  if (blackCutoff < 0.)
+    mParams.blackFracCutoff;
   if (layoutType < 0)
     layoutType = mParams.layoutType;
-  SetExclusionsAndDraw(lowerMeanCutoff, upperMeanCutoff);
+  SetExclusionsAndDraw(lowerMeanCutoff, upperMeanCutoff, sdCutoff, blackCutoff);
   if (mIsOpen) {
     UpdateData(true);
     DialogToParams();
@@ -1132,18 +1137,20 @@ void CHoleFinderDlg::ScanningNextTask(int param)
 
 void CHoleFinderDlg::SetExclusionsAndDraw()
 {
-  SetExclusionsAndDraw(mParams.lowerMeanCutoff, mParams.upperMeanCutoff);
+  SetExclusionsAndDraw(mParams.lowerMeanCutoff, mParams.upperMeanCutoff, mParams.SDcutoff,
+    mParams.blackFracCutoff);
 }
 
-void CHoleFinderDlg::SetExclusionsAndDraw(float lowerMeanCutoff, float upperMeanCutoff)
+void CHoleFinderDlg::SetExclusionsAndDraw(float lowerMeanCutoff, float upperMeanCutoff, 
+  float sdCutoff, float blackCutoff)
 {
   int ind;
   if (!mHaveHoles)
     return;
   for (ind = 0; ind < (int)mXcenters.size(); ind++) {
     mExcluded[ind] = mHoleMeans[ind] < lowerMeanCutoff || 
-      mHoleMeans[ind] > upperMeanCutoff || mHoleSDs[ind] > mParams.SDcutoff ||
-      mHoleBlackFracs[ind] > mParams.blackFracCutoff;
+      mHoleMeans[ind] > upperMeanCutoff || mHoleSDs[ind] > sdCutoff ||
+      mHoleBlackFracs[ind] > blackCutoff;
   }
   mWinApp->mMainView->DrawImage();
 }
@@ -1175,7 +1182,7 @@ bool CHoleFinderDlg::GetHolePositions(FloatVec **x, FloatVec **y, IntVec **pcOn,
   *y = &mYstages;
   *pcOn = &mPieceOn;
   *exclude = &mExcluded;
-  incl = mIsOpen || m_bShowIncluded;
+  incl = !mIsOpen || m_bShowIncluded;
   excl = mIsOpen ? m_bShowExcluded : mParams.showExcluded;
   return HaveHolesToDrawOrMakePts();
 }

@@ -328,20 +328,20 @@
         <TR vAlign="top">
           <TD class="style4">Pause [text]</TD>
           <TD>Opens message box with optional text plus question of whether to proceed with
-            script.  Is not suppressed by NoMessageBoxOnError.</TD>
+            script.&nbsp; Is not suppressed by NoMessageBoxOnError.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="style4">YesNoBox text</TD>
           <TD>Opens a Yes-No message box with the given text, which should be a question that
             can be answered with yes or no. Sets <I>reportedValue1</I> to 1 or 0 for a yes or no
-            answer.  If NoMessageBoxOnError is set, no box appears, the text is printed to the
+            answer.&nbsp; If NoMessageBoxOnError is set, no box appears, the text is printed to the
             log, and <I>reportedValue1</I> is 0.
           </TD>
         </TR>
        <TR vAlign="top">
           <TD class="style4">OKBox text</TD>
-          <TD>Opens a message box with the given text and just an OK button.  The box is
-            not suppressed by NoMessageBoxOnError.  Command added in 3.8, 10/17/19.
+          <TD>Opens a message box with the given text and just an OK button.&nbsp; The box is
+            not suppressed by NoMessageBoxOnError.&nbsp; Command added in 3.8, 10/17/19.
           </TD>
         </TR>
         <TR vAlign="top">
@@ -494,7 +494,7 @@
           <TD class="style4">ArrayStatistics var</TD>
           <TD>For the set of values in the given array variable, computes and reports the
               total number of values, the minimum, the maximum, the mean, the standard deviation
-              and the median.  For a 2D array, the statistics can be of the whole array, or of
+              and the median.&nbsp; For a 2D array, the statistics can be of the whole array, or of
               one row if the variable is given with a row subscript. Values can be assigned
                to variables at end of commmand.&nbsp; Command added in 3.8.</TD>
         </TR>
@@ -523,8 +523,8 @@
             followed by a filename including &#39;*&#39; to match multiple names.&nbsp; If
              just a directory is entered, the program appends a &#39;*&#39;.&nbsp; If a file
              is found, it returns 1 in <I>reportedValue1</I> and the filename in <I>reportedValue2</I>;
-            otherwise it returns 0 in <I>reportedValue1</I>.  A file is ignored if a file with the same 
-            name plus &#39;.lock&#39; is found as well.  Thus, if there is a risk that a file
+            otherwise it returns 0 in <I>reportedValue1</I>.&nbsp; A file is ignored if a file with the same 
+            name plus &#39;.lock&#39; is found as well.&nbsp; Thus, if there is a risk that a file
             might not all be present when SerialEM first sees it, the program creating the file
             should create the &#39;.lock&#39; file (which can be empty), then create and finish
              writing to the file to be found, then remove the &#39;.lock&#39; file.&nbsp;
@@ -3155,11 +3155,14 @@
         <TR vAlign="top">
           <TD class="auto-style1">SetItemAcquire [#I] [#A]</TD>
           <TD>Enables or disables Acquire for a Navigator item: if #A is 0, Acquire is disabled,
-            if this parameter is not specified or nonzero, Acquire becomes enabled. The item index
+            if this parameter is not specified or nonzero, Acquire becomes enabled.&nbsp; The item index
             is specified by #I with a positive or negative number (as in ReportItemAcquire);
-             if 0 or no #I is specified the current item is changed. This command may not be used 
-            from within a running acquisition, and Acquire may not be turned for an item marked 
-            for a tilt series. Command added in 3.8, 4/16/20.</TD>
+             if 0 or no #I is specified the current item is changed.&nbsp; Acquire may not be turned
+             for an item marked for a tilt series.&nbsp; If this command is used 
+            from within a running acquisition, the item must not be within the range from the
+            current acquisition point to the end of the range being acquired.&nbsp; The end of the range
+            is the original end of the Navigator table when acquisition was started, or the 
+            end of the subset if one is being acquired.&nbsp; Command added in 3.8, 4/16/20.</TD>
         </TR>
         <TR vAlign="top">
           <TD class="auto-style1">ReportNumTableItems</TD>
@@ -3179,7 +3182,7 @@
         <TR vAlign="top">
           <TD class="auto-style1">NavIndexItemDrawnOn #</TD>
           <TD>Report the Navigator index of the map that the specified item was drawn on, 
-              or 0 if it was not drawn on a map.  For #, enter 0 for
+              or 0 if it was not drawn on a map.&nbsp; For #, enter 0 for
               the current item or the item being acquired; an index greater than 0 for the item with
               that index in the table; or a value less than 0 to count back from the end of the 
               table, where -1 is the last item.&nbsp; Command added in 3.8.</TD>
@@ -3324,15 +3327,19 @@
             &nbsp; Command added in 3.8, 4/23/20. </TD>
         </TR>
        <TR vAlign="top">
-          <TD class="auto-style1">MakeNavPointsAtHoles [#A] [#L] [#U]</TD>
+          <TD class="auto-style1">MakeNavPointsAtHoles [#A] [#L] [#U] [#S] [#B]</TD>
           <TD>Makes positions found by the Hole Finder into Navigator points, using the various 
             thresholds for exclusion set in
               the <A HREF="hidd_holefinderdlg.htm">Hole Finder dialog</A>.&nbsp; That dialog
-            need not be open, but the Navigator must be.&nbsp; Optionally, #A may be entered with 0 to 2 
+            need not be open, but the Navigator must be.&nbsp; Optionally, <strong>#A</strong> may be entered with 0 to 2 
             to specify the arrangement of points (0 for zigzag, 1 for away from focus, 2 for divided 
-            into groups, or -1 to use the layout set in the dialog); #L and #U
-             may be entered to set alternative lower and/or upper mean thresholds for excluding points.
-            &nbsp; To enter just an upper threshold, enter -999999 for #L.&nbsp; Command added in 3.8, 4/23/20. </TD>
+            into groups, or -1 to use the layout set in the dialog); <strong>#L</strong> and 
+            <strong>#U</strong>
+             may be entered to set alternative lower and/or upper mean thresholds for excluding points
+            (enter -999999 for <strong>#L</strong> or <strong>#U</strong> to use the dialog setting); 
+            <strong>#S</strong> be may entered to set the SD cutoff
+             (or -1 to use the dialog value); and <strong>#B</strong> may be entered to set the cutoff for the 
+            percentage of black pixels.&nbsp; Command added in 3.8, 4/23/20. </TD>
         </TR>
       <TR vAlign="top">
           <TD class="auto-style1">ClearHoleFinder</TD>
@@ -3354,7 +3361,7 @@
           <TD class="auto-style1">UndoHoleCombining</TD>
           <TD>Removes the multi-shot acquisition points created by the last hole-combining
              operation (through script command or dialog) and restores the individual points
-             to the Navigator table.  All of the multi-shot points must still exist.
+             to the Navigator table.&nbsp; All of the multi-shot points must still exist.
              &nbsp; Command added in 3.8, 4/23/20. </TD>
         </TR>
       </TABLE>
@@ -3375,7 +3382,7 @@
          <TR vAlign="top">
           <TD width="210">ReportMinuteTime</TD>
           <TD>Report an absolute time in minutes, a large integer. The difference between
-           two such values will give an elapsed time in minutes.  If a variable name is
+           two such values will give an elapsed time in minutes.&nbsp; If a variable name is
            included after the command, the value will automatically be assigned to a 
            persistent variable so that it is available across multiple runs of the script.
           </TD>
@@ -3585,7 +3592,7 @@
           <TD width="210">ExternalToolArgPlace #</TD>
           <TD>Specify whether arguments set with 'NextProcessArgs' should be placed before 
             (-1 for #) or after (1 for #) the arguments defined for an external tool in the
-             properties file, or replace the defined arguments (0 for #).  The default is 0 
+             properties file, or replace the defined arguments (0 for #).&nbsp; The default is 0 
             and a setting is retained for the duration of the script.&nbsp; Command added in 3.8, 12/7/19</TD>
         </TR>
         <TR vAlign="top">
