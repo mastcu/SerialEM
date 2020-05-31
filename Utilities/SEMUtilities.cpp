@@ -936,7 +936,8 @@ int UtilFindValidFrameAliParams(CameraParameters *camParam, int readMode,
     return 0;
 
   for (ind = 0; ind < (int)params->GetSize(); ind++) {
-     faParam = &paramData[ind];
+    faParam = &paramData[ind];
+    sizeRestriction = camParam->canTakeFrames ? 0 : faParam->sizeRestriction;
     if ((!sizeRestriction || !sWinApp->GetAnySuperResMode() ||
       BOOL_EQUIV(readMode != SUPERRES_MODE, sizeRestriction != SUPERRES_MODE))
       && (!faParam->whereRestriction || 
