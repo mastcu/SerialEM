@@ -58,6 +58,7 @@ private:
   int mMSNumHoles;                // Number of holes to do
   bool mMSUseHoleDelay;           // Flag to use extra hole delay instead of regular one
   FloatVec mMSHoleISX, mMSHoleISY;  // IS values for all the holes
+  IntVec mMSPosIndex;              // Position index of hole being acquired
   int mMSLastShotIndex;           // Last index of multishots in hole
   MultiShotParams *mMSParams;      // Pointer to params from NavHelper
   int mMSTestRun;
@@ -98,7 +99,7 @@ public:
   void SkipHolesInList(FloatVec &delISX, FloatVec &delISY, IntVec &posIndex, 
     unsigned char *skipIndex, int numSkip, int &numHoles);
   int MultiShotBusy(void);
-  bool CurrentHoleAndPosition(int &curHole, int &curPos);
+  bool CurrentHoleAndPosition(CString &strCurPos);
   int WaitForDrift(DriftWaitParams &param, bool useImageInA, 
     float requiredMean = 0., float changeLimit = 0.);
   void WaitForDriftNextTask(int param);

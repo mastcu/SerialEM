@@ -4523,6 +4523,7 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
     sdir.Format("Error %d trying to set up frame saving or aligning:\n%s", 
       setupErr, SEMCCDErrorMessage(setupErr));
     SEMMessageBox(sdir);
+    mWinApp->ErrorOccurred(1);
   }
   delete [] names;
   delete [] strings;
@@ -9389,8 +9390,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
         extra->energyLoss = (filtParam->slitIn && !filtParam->zeroLoss) ? 
           filtParam->energyLoss : 0.f;
       }
-      mWinApp->mParticleTasks->CurrentHoleAndPosition(extra->mMultiHoleNum, 
-        extra->mMultiPosInHole);
+      mWinApp->mParticleTasks->CurrentHoleAndPosition(extra->mMultiHoleNum);
       extra->ValuesIntoShorts();
     }
 
@@ -11386,7 +11386,7 @@ void CCameraController::ComposeFramePathAndName(bool temporary)
 {
   CString date, time, path, filename, savefile, label;
   char numFormat[6];
-  int trimCount, curHole, curPos;
+  int trimCount;
   CMapDrawItem *item;
   bool prefixDate = (mFrameNameFormat & FRAME_FILE_DATE_PREFIX) != 0;
   B3DCLAMP(mDigitsForNumberedFrame, 3, 5);
@@ -11483,8 +11483,7 @@ void CCameraController::ComposeFramePathAndName(bool temporary)
     }
   }
   if ((mFrameNameFormat & FRAME_FILE_HOLE_AND_POS) && 
-    mWinApp->mParticleTasks->CurrentHoleAndPosition(curHole, curPos)) {
-    date.Format("%d-%d", curHole, curPos);
+    mWinApp->mParticleTasks->CurrentHoleAndPosition(date)) {
     UtilAppendWithSeparator(filename, date, "_");
   }
   mFrameFilename = filename;

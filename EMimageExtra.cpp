@@ -47,7 +47,7 @@ EMimageExtra::EMimageExtra()
   slitWidth = -1.;
   energyLoss = 0.;
   mMultiPosInHole = -1;
-  mMultiHoleNum = -1;
+  mMultiHoleNum = "";
   mDE12Version = "";
   mPreExposeTime = -1.;
   mNumDE12Frames = -1;

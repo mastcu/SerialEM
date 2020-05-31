@@ -68,10 +68,9 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
   int inHoleOrMulti)
 {
   float pixel, xTiltFac, yTiltFac;
-  int nextShot, nextHole, testRun, numXholes = 0 , numYholes = 0;
+  int nextShot, nextHole, testRun, ind, numXholes = 0 , numYholes = 0;
   double delISX, delISY, transISX, transISY, delBTX, delBTY;
   CString str;
-  IntVec posIndex;
   CMapDrawItem *item;
   CameraParameters *camParam = mWinApp->GetActiveCamParam();
   ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
@@ -89,6 +88,7 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
   mMSAdjustBeamTilt = adjustBT && comaVsIS->magInd > 0;
   mRecConSet = mWinApp->GetConSets() + RECORD_CONSET;
   mSavedAlignFlag = mRecConSet->alignFrames;
+  mMSPosIndex.clear();
 
   // Check conditions, first for test runs
   if (testImage && testComa) {
@@ -183,13 +183,27 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
   mMSHoleIndex = 0;
   mMSHoleISX.clear();
   mMSHoleISY.clear();
-  if (inHoleOrMulti & MULTI_HOLES || (numXholes && numYholes)) {
-     mMSNumHoles = GetHolePositions(mMSHoleISX, mMSHoleISY, posIndex, mMagIndex, 
+  if ((inHoleOrMulti & MULTI_HOLES) || (numXholes && numYholes)) {
+     mMSNumHoles = GetHolePositions(mMSHoleISX, mMSHoleISY, mMSPosIndex, mMagIndex, 
        mWinApp->GetCurrentCamera(), numXholes, numYholes);
      mMSUseHoleDelay = true;
-     if (numXholes && numYholes && item->mNumSkipHoles)
-       SkipHolesInList(mMSHoleISX, mMSHoleISY, posIndex, item->mSkipHolePos, 
-         item->mNumSkipHoles, mMSNumHoles);
+     if (numXholes && numYholes) {
+       if (item->mNumSkipHoles)
+         SkipHolesInList(mMSHoleISX, mMSHoleISY, mMSPosIndex, item->mSkipHolePos,
+           item->mNumSkipHoles, mMSNumHoles);
+
+       // Adjust position indexes to be relative to middle, skip 0 for even # of holes
+       for (ind = 0; ind < mMSNumHoles; ind++) {
+         if (numXholes % 2 != 0 || mMSPosIndex[ind * 2] < numXholes / 2)
+           mMSPosIndex[ind * 2] -= numXholes / 2;
+         else
+           mMSPosIndex[ind * 2] -= numXholes / 2 - 1;
+         if (numYholes % 2 != 0 || mMSPosIndex[ind * 2 + 1] < numYholes / 2)
+           mMSPosIndex[ind * 2 + 1] -= numYholes / 2;
+         else
+           mMSPosIndex[ind * 2 + 1] -= numYholes / 2 - 1;
+       }
+     }
   } else {
 
     // No holes = 1
@@ -459,6 +473,10 @@ int CParticleTasks::StartOneShotOfMulti(void)
   } else {
     mCamera->InitiateCapture(RECORD_CONSET);
   }
+
+  // Return if error in starting capture
+  if (mMSCurIndex < -1)
+    return 0;
   mWinApp->AddIdleTask(TASK_MULTI_SHOT, 0, 0);
   str.Format("DOING MULTI-SHOT %d OF %d", mMSHoleIndex * numInHole + 
     mMSCurIndex + (mMSDoCenter < 0 ? 2 : 1), numInHole * mMSNumHoles);
@@ -581,9 +599,9 @@ void CParticleTasks::SkipHolesInList(FloatVec &delISX, FloatVec &delISY, IntVec 
 
 // Returns true and the number of the current hole and peripheral position numbered from
 // 1, and 0 for the center position; or returns false if not doing multishot
-bool CParticleTasks::CurrentHoleAndPosition(int &curHole, int &curPos)
+bool CParticleTasks::CurrentHoleAndPosition(CString &strCurPos)
 {
-  curHole = curPos = -1;
+  int curHole, curPos;
   if (mMSCurIndex < -1)
     return false;
   curHole = mMSHoleIndex + 1;
@@ -591,6 +609,12 @@ bool CParticleTasks::CurrentHoleAndPosition(int &curHole, int &curPos)
     curPos = (mMSCurIndex + 1) % (mMSNumPeripheral + 1);
   else
     curPos = 0;
+  if (mMSPosIndex.size() > 0) {
+    strCurPos.Format("X%+dY%+d@%d", mMSPosIndex[2 * mMSHoleIndex], 
+      mMSPosIndex[2 * mMSHoleIndex + 1], curPos);
+  } else {
+    strCurPos.Format("%d@%d", curHole, curPos);
+  }
   return true;
 }
 

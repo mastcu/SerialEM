@@ -3,6 +3,11 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+5/31/20: For the hole number and position component of frame file names,
+changed the number to a pair of relative values so that it would be invariant
+when removing positions or having different pattern sizes.
+
+5/25/20: SEM_3-8-0beta10
 5/25/20: Fixed hole finder "Groups" radio button and added optional entries to
 script command to set SD and bakc pixel cutoffs.
 

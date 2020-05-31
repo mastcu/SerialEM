@@ -285,9 +285,15 @@
     <p>
           <strong>Multiple Record hole number and position in hole</strong></p>
     <p>
-          If this option is checked and multiple Records are being done, the hole number 
-          (numbered from 1) and the position in the hole (0 for central shot, numbered 
-          from 1 for peripheral positions) will be added to the file name.</p>
+          If this option is checked and multiple Records are being done, a hole identifier 
+          and the position in the hole (0 for central shot, numbered from 1 for peripheral 
+          positions) will be added to the file name, separated by &#39;@&#39;.&nbsp; When doing a 
+          regular pattern, the hole identifier will have the form &#39;XnYm&#39; where &#39;n&#39; and &#39;m&#39; 
+          are relative to the center of the pattern and can be positive or negative.&nbsp; 
+          On an axis with an even number of holes, the number is never zero and skips from 
+          -1 to +1.&nbsp; For example, a 3x2 pattern will have identifiers X-1Y-1, X+0Y-1, 
+          X+1Y-1, X-1Y+1, X+0Y+1, X+1Y+1.&nbsp; When doing a custom pattern, the 
+          identifier is simply a number starting at 1.</p>
 
 </BODY>
 </HTML>

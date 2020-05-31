@@ -73,7 +73,7 @@ public:
   int mIgnoredFrames;
   float slitWidth;
   float energyLoss;
-  int mMultiHoleNum;
+  CString mMultiHoleNum;
   int mMultiPosInHole;
   
   static const int Bytes[EXTRA_NTYPES];
