@@ -7,6 +7,7 @@
 #include "DirectElectronCamera.h"
 #include "..\CameraController.h"
 #include "..\MacroProcessor.h"
+#include "..\PluginManager.h"
 
 // DirectElectronToolDlg dialog
 
@@ -51,6 +52,8 @@ void DirectElectronToolDlg::KillUpdateTimer()
 void DirectElectronToolDlg::updateDEToolDlgPanel(bool initialCall)
 {
   if (!mDECamera)
+    return;
+  if (mWinApp->mPluginManager->GetDEplugIndex() < 0)
     return;
   int index = mDECamera->GetInitializingIndex();
   if (index < 0)
