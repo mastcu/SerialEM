@@ -2231,7 +2231,11 @@
         </TR>
         <TR VALIGN="top">
           <TD>ScreenCurrentFactor</TD>
-          <TD>Factor needed to give a calibrated current in the screen meter</TD>
+          <TD>Factor needed to give a calibrated current in the screen meter (default 1). 
+             For JEOLs, the current density scaling in the program was off by a factor of 700
+            until SerialEM 3.8.0 beta, 5/15/20.  The value of 0.059 commonly found in properties
+            files is now converted to a 1.
+          </TD>
         </TR>
         <TR VALIGN="top">
           <TD>SmallScreenFactor</TD>
@@ -2347,8 +2351,11 @@
         <TR VALIGN="top">
           <TD>MaximumTiltAngle</TD>
           <TD>Set to the maximum angle that can be tilted to without generating an error.&nbsp; 
-            The default is 60 for Hitachi, 69.9 if &#39;UseIlluminatedArea&#39; is set&nbsp; (Titan 
-            needs 69.9); otherwise 79.9.</TD>
+            The default is 60 for Hitachi, 69.9 if &#39;UseIlluminatedArea&#39; is set; otherwise 79.9.
+            Titan Krios and Halo need the 69.9, hence this default, but Titan 60-300 or Themis 
+            allow 80 degrees and custom Grenoble allows 90, so for them the property should be set
+            to 0.1 degree less than the limit.
+          </TD>
         </TR>
         <TR VALIGN="top">
           <TD>TiltSpeedFactor</TD>
@@ -3660,6 +3667,13 @@
         <TR VALIGN="top">
           <TD>PostJeolGIFdelay</TD>
           <TD>Delay time in msec after changing GIF mode on a JEOL; the default is 3000.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>JeolHasBrightnessZoom</TD>
+          <TD>Set to 1 if the version of TemExt.dll supports the BrightnessZoom function, so
+            that the program can disable and re-enable this as appropriate.  The function was
+            added between 2015 and 2018.
+          </TD>
         </TR>
         <TR VALIGN="top">
           <TD>JeolHasNitrogenClass</TD>

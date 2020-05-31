@@ -322,6 +322,7 @@ class DLL_IM_EX CEMscope
   GetSetMember(int, HitachiDoesBSforIS);
   GetSetMember(float, TiltSpeedFactor);
   GetSetMember(int, RestoreStageXYdelay);
+  GetSetMember(BOOL, JeolHasBrightnessZoom);
 
   static void SetJeolIndForMagMode(int inVal);
   static int GetJeolIndForMagMode();
@@ -708,9 +709,10 @@ private:
   float mSavedAperturePosX[MAX_APERTURE_NUM + 1];   // Apertures are numbered from 1, 
   float mSavedAperturePosY[MAX_APERTURE_NUM + 1];   // subtract 1 to access array
   float mDiffShiftScaling;     // Scaling to apply to diffraction shift
-  int mXLensModeAvailable;    // 1 if available, 0 no object, -1 not available
-  int mRestoreStageXYdelay;   // Delay between tilt and restore step
-  int mPluginVersion;         // Version of plugin or server
+  int mXLensModeAvailable;     // 1 if available, 0 no object, -1 not available
+  int mRestoreStageXYdelay;    // Delay between tilt and restore step
+  BOOL mJeolHasBrightnessZoom; // Flag for whether TemExt version has BrightnessZoom
+  int mPluginVersion;          // Version of plugin or server
 
   // Old static variables from UpdateProc
   int mErrCount;

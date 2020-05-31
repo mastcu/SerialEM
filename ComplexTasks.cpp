@@ -568,7 +568,8 @@ void CComplexTasks::LowerMagIfNeeded(int maxMagInd, float calIntSafetyFac,
       if (realCamera)
         mScope->SetIntensityZoom(false);
       mScope->SetMagIndex(maxMagInd);
-      if (FEIscope)
+
+      if (FEIscope || (JEOLscope && mScope->GetJeolHasBrightnessZoom()))
         mWinApp->mBeamAssessor->ChangeBeamStrength(delBeam / newDelta, -1);
       else
         mScope->DelayedSetIntensity(newIntensity, GetTickCount());

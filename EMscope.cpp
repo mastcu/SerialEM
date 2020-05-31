@@ -391,6 +391,7 @@ CEMscope::CEMscope()
   mUsePLforIS = false;
   mJeolHasNitrogenClass = false;
   mJeolHasExtraApertures = false;
+  mJeolHasBrightnessZoom = false;
   mJeolRefillTimeout = 2400;
   mJeolFlashFegTimeout = 45;
   mJeolEmissionTimeout = 180;
@@ -597,6 +598,11 @@ int CEMscope::Initialize()
         mLastRegularFocus = 0.;
         mLastSTEMfocus = 0.;
       }
+
+      // Correct the wrong current factor placed in all properties files
+      if (fabs(mScreenCurrentFactor - 0.059) < 0.001)
+        mScreenCurrentFactor = 1.;
+
       mJeolSD.CLA1_to_um = mJeol_CLA1_to_um;
       mJeolSD.doMiniInLowMag = mJeol_OM_to_um > 0.;
       mJeolSD.postMagStageDelay = mPostMagStageDelay;
@@ -5296,7 +5302,7 @@ BOOL CEMscope::GetIntensityZoom()
   BOOL result;
 
   // IntensityZoom (MagLink?) is not implemented for JEOL; setting will return false
-  if (!sInitialized || JEOLscope || HitachiScope)
+  if (!sInitialized || (JEOLscope && !mJeolHasBrightnessZoom) || HitachiScope)
     return false;
 
   ScopeMutexAcquire("GetIntensityZoom", true);
@@ -5322,8 +5328,8 @@ BOOL CEMscope::SetIntensityZoom(BOOL inVal)
   ScopeMutexAcquire("SetIntensityZoom", true);
 
   try {
-    if (JEOLscope || HitachiScope) {
-      TRACE("SetIntensityZoom is not implemented for JEOL or Hitachi microscopes.\n");
+    if ((JEOLscope && !mJeolHasBrightnessZoom) || HitachiScope) {
+      TRACE("SetIntensityZoom is not implemented for Hitachi microscopes.\n");
       //  assert(false);
       result = false;      // This should be detected where necessary
     } else {

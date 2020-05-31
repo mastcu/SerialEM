@@ -165,7 +165,7 @@ void CBeamAssessor::CalIntensityCCD()
   mStartIntensity = mScope->GetIntensity();
   mCalSpotSize = mScope->GetSpotSize();
   mCalMagInd = mScope->GetMagIndex();
-  if (!FEIscope) {
+  if (!FEIscope && !(JEOLscope && mScope->GetJeolHasBrightnessZoom())) {
     message.Format("Make sure that Brightness %s is turned off",
       HitachiScope ? "Link" : "Zoom");
     AfxMessageBox(message,  MB_EXCLAME); 
