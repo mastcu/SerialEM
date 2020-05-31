@@ -3,6 +3,19 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+5/24/20: Added ability to aquire simple or aligned sums of each tilt angle
+when taking a frame tilt series with K2 or K3.  Added some script commands
+for experimental use of this.
+
+5/24/20: Added script commands for getting scale matrices for converting
+between various coordinate systems (IS, stage, etc).
+
+5/24/20: Added JeolHasBrightnessZoom property to specify that the version
+of TemExt.dll allows use of the BrightnessZoom function.
+
+5/24/20: Fixed screen current scaling for JEOL and converted the scaling
+factor of 0.059 commonly found in properties to 1.
+
 5/11/20: Changes to ease use of diffraction mode in Search on JEOL.
 
 5/11/20: Added property RestoreStageXYdelay to set delay after stage restore

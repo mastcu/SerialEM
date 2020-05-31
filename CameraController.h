@@ -68,6 +68,7 @@ struct CamPluginFuncs;
 #define PLUGIN_TAKES_OV_FRAMES   114
 #define PLUGIN_MDOC_FOR_FRAME_TS 115
 #define PLUGIN_EXTRA_DIV_FLOATS  116
+#define PLUGIN_RETURNS_FISE_SUMS 117
 
 #define CAN_PLUGIN_DO(c, p) CanPluginDo(PLUGIN_##c, p)
 
@@ -269,7 +270,7 @@ struct CameraThreadData {
   bool GetDoseRate;             // Flag to call for dose rate from image/frames
   double LastDoseRate;          // and returned dose rate
   BOOL imageReturned;           // Flag that blanker proc can proceed
-  bool GetDeferredSum;          // Just get a deferred sum and ignore most other items
+  int GetDeferredSum;           // Just get a deferred sum (2 for tilt sum)
   bool UseFrameAlign;
   double FaRawDist, FaSmoothDist, FaResMean, FaMaxResMax, FaMeanRawMax, FaMaxRawMax;
   // FRC values/frequencies times K2FA_FRC_INT_SCALE
@@ -286,7 +287,17 @@ struct CameraThreadData {
   IntVec FrameTSrelEndTime;       // exposure period in msec
   float FrameTSframeTime;         // frame time, needed to get to predicted frames
   bool FrameTSstopOnCamReturn;    // Flag to stop on image return (off for early return)
-  BOOL FrameTSdoBacklash;
+  BOOL FrameTSdoBacklash;         // Flag to impose backlash on moves opposite to first
+  bool DoingTiltSums;             // Flag that tilt sums are or were being done
+  long TiltSumIndex;              // Properties of last deferred tilt sum: tilt index
+  long TiltSumNumFrames;          //   number of frames
+  double TiltSumAngle;            //   Nominal angle
+  long TiltSumFirstFrame;         //   First frame in sum
+  long TiltSumLastFrame;          //   Last frame in sum
+  FloatVec FrameTSrefineISX;      // Image shift values to ADD to ones yet to be imposed
+  FloatVec FrameTSrefineISY;
+  IntVec FrameTSrefineIndex;      // Tilt index at which those shift values occurred
+  HANDLE FrameTSMutexHandle;      // Mutex for accessing modifications to trajectory
 };
 
 struct InsertThreadData {
@@ -531,7 +542,9 @@ public:
   GetSetMember(int, ExtraDivideBy2);
   GetSetMember(BOOL, AcquireFloatImages);
   GetSetMember(int, WarnIfBeamNotOn);
-
+  SetMember(float, NextRelativeThresh);
+  SetMember(int, NextDropFromTiltSum);
+  SetMember(int, NextMinTiltGap);
   int GetNumFramesSaved() {return mTD.NumFramesSaved;};
   BOOL *GetUseGPUforK2Align() {return &mUseGPUforK2Align[0];};
   BOOL GetGpuAvailable(int DMind) {return mGpuMemory[DMind] > 0;};
@@ -834,6 +847,10 @@ public:
   float mNextFrameSkipThresh;   // Threshold for skipping frames on next shot
   float mNextPartialStartThresh;  // Partial frame thresholds when aligning
   float mNextPartialEndThresh;
+  float mNextRelativeThresh;    // Relative threshold when detecting tilts and adjusting
+  int mNextDropFromTiltSum;     // Number of initial frames to drop from a FISE tilt sum
+  int mNextMinTiltGap;          // Minimum gap size for recognizing a new tilt angle
+  float mTiltSumBlankFraction;  // Fraction of frames assumed to be blank, for memory
   float mK2MaxRamStackGB;       // Maximum GB to allow for a RAM stack/grab stack
   float mK2MinFrameForRAM;      // Minimum frame time for using RAM stack
   int mBaseJeolSTEMflags;       // Basic flags to which div by 2 and continuous are added
@@ -1004,6 +1021,8 @@ public:
   void QueueFocusSteps(float interval1, double focus1, float interval2, double focus2);
   static void ChangeDynFocus(CameraThreadData *td, double focus, double focusBase,
     long fineBase, long coarseBase, long &last_coarse);
+  static bool ProcessFrameTSRefinements(CameraThreadData *td, int step, int numSteps, 
+    float &focusChange, float &delISX, float &delISY);
   float ExposureRoundingFactor(CameraParameters * camP);
   bool IsDirectDetector(CameraParameters * camP);
   int DoingContinuousAcquire(void);
@@ -1056,6 +1075,9 @@ int NearestTietzSizeIndex(int ubSize, int *tietzSizes, int numSizes);
 int QueueTiltSeries(FloatVec &openTime, FloatVec &tiltToAngle, FloatVec &waitOrInterval,
   FloatVec &focusChange, FloatVec &deltaISX, FloatVec &deltaISY, float initialDelay);
 int SetFrameTSparams(BOOL doBacklash, float speed, double stageXrestore, double stageYrestore);
+void ModifyFrameTSShifts(int index, float ISX, float ISY);
+int ReplaceFrameTSShifts(FloatVec &ISX, FloatVec &ISY);
+int ReplaceFrameTSFocusChange(FloatVec &changes);
 int SaveFrameStackMdoc(KImage *image);
 FloatVec *GetFrameTSactualAngles() { return &mTD.FrameTSactualAngle; };
 IntVec *GetFrameTSrelStartTime() { return &mTD.FrameTSrelStartTime; };
@@ -1072,6 +1094,8 @@ void DeleteOneReference(int index);
 int CheckFrameStacking(bool updateIfDone, bool testIfStacking);
 bool CropTietzSubarea(CameraParameters *param, int ubSizeX, int ubSizeY, int processing,
   int singleContinMode, int &ySizeOnChip);
+void CleanUpFromTiltSums(void);
+BOOL GetTiltSumProperties(int &index, int &numFrames, float &angle, int &firstFrame, int &lastFrame);
 };
 
 

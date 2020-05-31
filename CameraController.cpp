@@ -240,6 +240,7 @@ CCameraController::CCameraController()
   mTD.Camera = -1;
   mTD.lastTietzSettling = 0.;
   mTD.blankerMutexHandle = CreateMutex(0, 0, 0);
+  mTD.FrameTSMutexHandle = CreateMutex(0, 0, 0);
   mTD.blankerThread = NULL;
   mTD.startingFEIshutter = VALUE_NOT_SET;
   mNumZLPAlignChanges = 3;
@@ -382,9 +383,11 @@ CCameraController::CCameraController()
   mSmoothFocusExtraTime = 400;
   mInDisplayNewImage = false;
   mNeedToSelectDM = false;
+  mTD.DoingTiltSums = false;
   mLastAsyncTimeout = 0;
   mK2MaxRamStackGB = -1.;
   mK2MinFrameForRAM = 0.05f;
+  mTiltSumBlankFraction = 0.5f;
   mBaseJeolSTEMflags = 0;
   mFalconAsyncStacking = true;
   mWaitingForStacking = 0;
@@ -437,6 +440,9 @@ void CCameraController::ClearOneShotFlags()
   mNextAsyncSumFrames = -1;
   mNextFrameSkipThresh = 0.;
   mNextPartialStartThresh = mNextPartialEndThresh = 0.;
+  mNextRelativeThresh = 0.;
+  mNextMinTiltGap = FRAME_TS_MIN_GAP_DFLT;
+  mNextDropFromTiltSum = 0;
   mDeferSumOnNextAsync = false;
   mStartingDeferredSum = false;
   mTD.FrameTSdoBacklash = false;
@@ -1651,6 +1657,7 @@ void CCameraController::InitiateCapture(int inSet)
     mWinApp->mComplexTasks->DoingResetShiftRealign(); */
   if (mWinApp->GetDummyInstance())
     return;
+  CleanUpFromTiltSums();
   if (CameraBusy() && !mLastWasContinForTask) {
     SetPending(inSet);
     return;
@@ -1930,6 +1937,7 @@ bool CCameraController::SetNextAsyncSumFrames(int inVal, bool deferSum)
  */
 int CCameraController::GetDeferredSum(void)
 {
+  mDeferredSumFailed = true;
   if (!mAskedDeferredSum) {
     SEMMessageBox("There is no deferred sum available");
     return 1;
@@ -1943,12 +1951,13 @@ int CCameraController::GetDeferredSum(void)
     SEMMessageBox("Cannot get deferred sum back while camera is busy");
     return 3;
   }
-  if (!mConsDeferred || !mBufDeferred || !mExtraDeferred) {
+  if (!(mTD.DoingTiltSums && mStartingDeferredSum) && 
+    (!mConsDeferred || !mBufDeferred || !mExtraDeferred)) {
     SEMMessageBox("Cannot process a deferred sum correctly;\n"
       "some of the data that was supposed to be saved is not available");
     return 4;
   }
-  mTD.GetDeferredSum = true;
+  mTD.GetDeferredSum = mTD.DoingTiltSums ? 2 : 1;
   RollBuffers(mBufferManager->GetShiftsOnAcquire(), mWinApp->GetImBufIndex());
 
   // Set all the items needed for acquire call and processing to occur
@@ -1970,11 +1979,11 @@ int CCameraController::GetDeferredSum(void)
   mTD.UseFrameAlign = mAlignedDeferred;
   mTD.DoseFrac = true;
   mLastConSet = mLastDeferredConSet;
-  mAskedDeferredSum = false;
+  mAskedDeferredSum = mTD.DoingTiltSums;
   mDeferredSumFailed = false;
   mTD.GetDoseRate = mParam->K2Type && CAN_PLUGIN_DO(HAS_DOSE_CALL, mParam) && 
     mDMversion[CAMP_DM_INDEX(mParam)] >= DM_HAS_ELECTRON_DOSE && 
-    mReadModeDeferred != LINEAR_MODE;
+    mReadModeDeferred != LINEAR_MODE && !mTD.DoingTiltSums;
 
   // Do the essentials for starting the thread
   mNeedToRestoreISandBT = 0;
@@ -2553,6 +2562,7 @@ int CCameraController::QueueTiltSeries(FloatVec &openTime, FloatVec &tiltToAngle
     mess = "neither angles to tilt to nor intervals between"
       " actions are defined";
   }
+  CleanUpFromTiltSums();
 
   // Test each entry: it must be at least as big as # of steps if present
   if (mess.IsEmpty() && waitOrInterval.size()) {
@@ -2579,7 +2589,7 @@ int CCameraController::QueueTiltSeries(FloatVec &openTime, FloatVec &tiltToAngle
   } 
   if (mess.IsEmpty() && openTime.size() > 0) {
     if ((int)openTime.size() < numSteps) {
-      mess = "there are shutter opening times defined than steps in the tilt series"; 
+      mess ="there are fewer shutter opening times defined than steps in the tilt series"; 
     } else {
       for (ind = 0; ind < numSteps; ind++) {
         if (openTime[ind] < 0. || openTime[ind] > openLim) {
@@ -2650,6 +2660,39 @@ int CCameraController::SetFrameTSparams(BOOL doBacklash, float speed, double sta
   mFrameTSspeed = speed;
   mFrameTSrestoreX = stageXrestore;
   mFrameTSrestoreY = stageYrestore;
+  return 0;
+}
+
+// Add image shift at one tilt to the vectors of such changes
+void CCameraController::ModifyFrameTSShifts(int index, float ISX, float ISY)
+{
+  WaitForSingleObject(mTD.FrameTSMutexHandle, BLANKER_MUTEX_WAIT);
+  mTD.FrameTSrefineIndex.push_back(index);
+  mTD.FrameTSrefineISX.push_back(ISX);
+  mTD.FrameTSrefineISY.push_back(ISY);
+  ReleaseMutex(mTD.FrameTSMutexHandle);
+}
+
+// Replace the whole shift array for trajectory based on predictions
+int CCameraController::ReplaceFrameTSShifts(FloatVec &ISX, FloatVec &ISY)
+{
+  if (ISX.size() != ISY.size() || ISX.size() != mTD.FrameTSdeltaISX.size())
+    return 1;
+  WaitForSingleObject(mTD.FrameTSMutexHandle, BLANKER_MUTEX_WAIT);
+  mTD.FrameTSdeltaISX = ISX;
+  mTD.FrameTSdeltaISY = ISY;
+  ReleaseMutex(mTD.FrameTSMutexHandle);
+  return 0;
+}
+
+// Replace the whole array of focus changes based on prediction
+int CCameraController::ReplaceFrameTSFocusChange(FloatVec &changes)
+{
+  if (changes.size() != mTD.FrameTSfocusChange.size())
+    return 1;
+  WaitForSingleObject(mTD.FrameTSMutexHandle, BLANKER_MUTEX_WAIT);
+  mTD.FrameTSfocusChange = changes;
+  ReleaseMutex(mTD.FrameTSMutexHandle);
   return 0;
 }
 
@@ -2748,12 +2791,6 @@ void CCameraController::Capture(int inSet, bool retrying)
   // Now manage the screen, raise or lower if necessary
   if (CapManageScreen(inSet, retracting, numActive))
     return;
-
-  // Log warning if column valves are closed or beam is off
-  if ((mScope->FastColumnValvesOpen() == 0) && !mScope->GetSimulationMode() && 
-    mWarnIfBeamNotOn)
-    mWinApp->AppendToLog("WARNING: Column valves closed or beam off while acquiring "
-      "image.");
 
   // If FEI camera has bad index, look it up to make sure it's there
   if (mParam->FEItype && mParam->eagleIndex < 0) {
@@ -2866,6 +2903,12 @@ void CCameraController::Capture(int inSet, bool retrying)
   mNextAsyncSumFrames = -1;
   mDeferSumOnNextAsync = false;
   mNextFrameSkipThresh = 0.;
+
+  // Log warning if column valves are closed or beam is off
+  if ((mScope->FastColumnValvesOpen() == 0) && !mScope->GetSimulationMode() &&
+    mWarnIfBeamNotOn)
+    mWinApp->AppendToLog("WARNING: Column valves closed or beam off while acquiring "
+      "image.");
 
   // Set up Falcon saving
   mTD.FEIacquireFlags = 0;
@@ -3056,7 +3099,7 @@ void CCameraController::Capture(int inSet, bool retrying)
   mTD.fullSizeY = mParam->sizeY / binDiv;
   mTD.PostMoveStage = mStageQueued;
   mTD.imageReturned = false;
-  mTD.GetDeferredSum = false;
+  mTD.GetDeferredSum = 0;
   mDeferredSumFailed = false;
   mTD.GetDoseRate = mParam->K2Type && CAN_PLUGIN_DO(HAS_DOSE_CALL, mParam) && 
     mDMversion[CAMP_DM_INDEX(mParam)] >= DM_HAS_ELECTRON_DOSE &&
@@ -3261,6 +3304,8 @@ void CCameraController::Capture(int inSet, bool retrying)
   mNumDRdelete = 0;
   mPriorRecordDose = (float)B3DCHOICE(mWinApp->DoingTiltSeries(),
     mWinApp->mTSController->GetCumulativeDose(), -1.);
+  if (mTD.DoingTiltSums)
+    mPriorRecordDose = 0.;
 
   // Adjust or set scaling for FEI cameras in advanced interface
   mDivBy2ForExtra = mDivBy2ForImBuf = mTD.DivideBy2;
@@ -3419,7 +3464,8 @@ void CCameraController::Capture(int inSet, bool retrying)
 
   // If a frame TS is queued and frames are being saved and nothing else conflicting is
   // queued, then allow it proceed and set up moveinfo for tilting, otherwise clear it out
-  if (IsConSetSaving(&conSet, inSet, mParam, false) && (mTD.FrameTStiltToAngle.size() > 0
+  if ((IsConSetSaving(&conSet, inSet, mParam, false) || conSet.useFrameAlign)
+    && (mTD.FrameTStiltToAngle.size() > 0
     || mTD.FrameTSwaitOrInterval.size() > 0) && !mTD.ScanTime && !mTD.DriftISinterval &&
     !mTD.DynFocusInterval && !mTD.FocusStep1 && !mTD.PostMoveStage) {
       mTD.FrameTSstopOnCamReturn = !(mParam->K2Type && mTD.NumAsyncSumFrames >= 0);
@@ -3962,18 +4008,21 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
 {
   int ldArea, magIndex, sizeX, sizeY, numAllVsAll, refineIter, groupSize, doSpline;
   int numReadouts, notOK, newIndex, faInd, numFilt = 1, deferGpuSum = 0, flags = 0;
-  int frameSizeX, frameSizeY, numAliFrames, frameStartEnd = 0, partialThreshes = 0;
-  int alignFlags = 0, gpuFlags = 0;
+  int frameSizeX, ind, frameSizeY, numAliFrames, frameStartEnd = 0, partialThreshes = 0;
+  int tiltLen = 0, alignFlags = 0, gpuFlags = 0;
   int DMind = CAMP_DM_INDEX(mParam);
   int K2Type = mParam->K2Type;
   double maxMemory = pow(1024., 3.) * mK2MaxRamStackGB;
+  double threshFracPlus = 0.;
   LowDoseParams *ldParam = mWinApp->GetLowDoseParams();
   FrameAliParams faParam;
+  CString tiltAngles;
   bool alignSubset = false;
   bool isSuperRes = IS_SUPERRES(mParam, conSet.K2ReadMode) && 
     !IsK3BinningSuperResFrames(&conSet, mParam);
   bool trulyAligning = aligning && conSet.useFrameAlign == 1;
   bool gainNormed = conSet.processing == GAIN_NORMALIZED;
+  bool doingTiltSums = mDeferSumOnNextAsync && mNextFrameSkipThresh > 0.;
   bool reducingSuperRes = saving && mSaveSuperResReduced && isSuperRes && gainNormed &&
      CAN_PLUGIN_DO(CAN_REDUCE_SUPER, mParam) && 
      !(mTakeK3SuperResBinned && K2Type == K3_TYPE);
@@ -4018,27 +4067,78 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
     return 1;
   }
 
+  // Set up many things for doing frame tilt series
+  mTD.DoingTiltSums = mDeferSumOnNextAsync && mNextFrameSkipThresh > 0.;
   if (mNextFrameSkipThresh > 0.) {
+
+    // Test conditions
     flags |= K2_SKIP_BELOW_THRESH;
     if (mOneK2FramePerFile) {
       SEMMessageBox("You cannot skip frames below threshold with one file per frame");
       return 1;
     }
-    if (conSet.alignFrames && conSet.useFrameAlign < 2) {
+    if (conSet.alignFrames && conSet.useFrameAlign < 2 && !mTD.DoingTiltSums) {
       SEMMessageBox("You cannot align frames in the plugin when skipping frames below"
-        " threshold");
+        " threshold unless making tilt sums");
       return 1;
     }
     if (aligning)
       partialThreshes = B3DNINT(K2FA_THRESH_SCALE * mNextPartialStartThresh) +
         (B3DNINT(K2FA_THRESH_SCALE * mNextPartialEndThresh) << 16);
+
+    if (mTD.DoingTiltSums && !CAN_PLUGIN_DO(RETURNS_FISE_SUMS, mParam)) {
+      SEMMessageBox("You cannot get tilt sums back from a frame\n"
+        "tilt series with the current version of the plugin");
+      return 1;
+    }
+
+    if (mTD.DoingTiltSums && !mTD.FrameTSdeltaISX.size()) {
+      mTD.FrameTSdeltaISX.resize(mTD.FrameTStiltToAngle.size(), 0.);
+      mTD.FrameTSdeltaISY.resize(mTD.FrameTStiltToAngle.size(), 0.);
+    }
+
+    // When there are tilt angles and relative threshold to send
+    if (mNextRelativeThresh > 0. || mTD.DoingTiltSums) {
+      if (!mTD.FrameTStiltToAngle.size() || !mTD.FrameTSopenTime.size()) {
+        SEMMessageBox("To recognize separate tilts from the frames in\na frame tilt "
+          "series, there must be both tilt angles and open shutter times defined");
+        return 1;
+      }
+
+      // Make string with angles
+      for (ind = 0; ind < (int)mTD.FrameTStiltToAngle.size(); ind++) {
+        if (mTD.FrameTSopenTime[ind] > 0.) {
+          mess.Format(" %.2f", mTD.FrameTStiltToAngle[ind]);
+          tiltAngles += mess;
+        }
+      }
+      flags |= K2_SKIP_THRESH_PLUS | K2_USE_TILT_ANGLES;
+      threshFracPlus = mNextRelativeThresh + THRESH_PLUS_GAP_SCALE * mNextMinTiltGap +
+        THRESH_PLUS_DROP_SCALE * mNextDropFromTiltSum;
+      tiltLen = tiltAngles.GetLength() + 1;
+      if (conSet.alignFrames && conSet.useFrameAlign < 2 && mTD.DoingTiltSums)
+        alignFlags |= K2_SKIP_BELOW_THRESH;
+    }
+
+    // Make zero IS vectors and focus changes if none supplied so they can be modified
+    if (mTD.DoingTiltSums && !mTD.FrameTSdeltaISX.size()) {
+      mTD.FrameTSdeltaISX.resize(mTD.FrameTStiltToAngle.size(), 0.);
+      mTD.FrameTSdeltaISY.resize(mTD.FrameTStiltToAngle.size(), 0.);
+    }
+    if (mTD.DoingTiltSums && !mTD.FrameTSfocusChange.size())
+      mTD.FrameTSfocusChange.resize(mTD.FrameTStiltToAngle.size(), 0.);
+    mTD.FrameTSrefineIndex.clear();
+    mTD.FrameTSrefineISX.clear();
+    mTD.FrameTSrefineISY.clear();
   }
 
   int numFrames = B3DNINT(conSet.exposure / conSet.frameTime);
   double numAsyncSum = 0.;
   CString sdir, root, defName;
 
-  if (saving) {
+  // When making aligned tilt sums without saving, it needs many things set in a saving
+  // setup call
+  if (saving || mTD.DoingTiltSums) {
 
     // Set up the file and directory names.
     ComposeFramePathAndName(false);
@@ -4064,7 +4164,7 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
   // Set various flags and get lengths of string pieces
   int sdlen = sdir.GetLength() + 1;
   int rootlen = root.GetLength() + 1;
-  int nameSize = sdlen + rootlen + 4;
+  int nameSize = sdlen + rootlen + tiltLen + 4;
   int stringSize = 4;
   int reflen = 0, comlen = 0, defectLen = 0, sumLen = 0, titleLen = 0;
   int aliRefLen = 0, aliComLen, dataSize;
@@ -4216,7 +4316,7 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
   char *strings = NULL;
   long setupErr;
   float radius2[4], totAliMem = 0.;
-  if (saving) {
+  if (saving || mTD.DoingTiltSums) {
     nameSize /= 4;
     names = new char[4 * nameSize];
     sprintf(names, "%s", (LPCTSTR)sdir);
@@ -4235,11 +4335,16 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
     if (titleLen)
       sprintf(names + sdlen + rootlen + reflen + defectLen + comlen + sumLen, "%s", 
       (LPCTSTR)mWinApp->mDocWnd->GetFrameTitle());
+    if (tiltLen)
+      sprintf(names + sdlen + rootlen + reflen + defectLen + comlen + sumLen + titleLen,
+        "%s", (LPCTSTR)tiltAngles);
   }
 
   mGettingFRC = false;
   if (aligning) {
     numAliFrames = numFrames;
+    if (mTD.DoingTiltSums)
+      numAliFrames = numFrames / (int)mTD.FrameTStiltToAngle.size();
     if (saving && faParam.alignSubset && CAN_PLUGIN_DO(CAN_ALIGN_SUBSET, mParam)) {
       mAlignStart = B3DMAX(1, B3DMIN(faParam.subsetStart, K2FA_SUB_START_MASK));
       mAlignEnd = B3DMIN(numFrames, faParam.subsetEnd);
@@ -4328,8 +4433,8 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
 
   // Manage asynchronous acquire variables for early return
   if (mNextAsyncSumFrames >= 0) {
-    mTD.NumAsyncSumFrames = mNextAsyncSumFrames;
-    numAsyncSum = mNextAsyncSumFrames;
+    mTD.NumAsyncSumFrames = mTD.DoingTiltSums ? 0 : mNextAsyncSumFrames;
+    numAsyncSum = mTD.NumAsyncSumFrames;
     flags |= K2_EARLY_RETURN;
     alignFlags |= K2_EARLY_RETURN;
     if (mDeferSumOnNextAsync)
@@ -4367,11 +4472,13 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
       if (savingTimes100 && isSuperRes)
         frameInGrab *= 2;
     }
+    if (mTD.DoingTiltSums)
+     frameInGrab *= mTiltSumBlankFraction;
 
     // If forming a full sum, there is no grab stack and usage is limited by 
     // the original RAM stack; otherwise (early return) it is limited by the 
     // size of the grabbed frames
-    if (mNextAsyncSumFrames < 0 || mNextFrameSkipThresh > 0.)
+    if (mNextAsyncSumFrames < 0 || (mNextFrameSkipThresh > 0. && !mTD.DoingTiltSums))
       maxInRAM = (int)(maxMemory / frameInRAM);
     else
       maxInRAM = (int)B3DMAX(1., (maxMemory / frameInGrab));
@@ -4383,7 +4490,8 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
       alignFlags |= K2_ASYNC_IN_RAM;
     } else
       frameInRAM = 0.;
-    if (mNextAsyncSumFrames >= 0 && mNextFrameSkipThresh <= 0.) {
+    if (mNextAsyncSumFrames >= 0 && (mNextFrameSkipThresh <= 0. || 
+      (mTD.DoingTiltSums && saving))) {
       numGrab = B3DMIN(numFrames, maxInRAM);
       numAsyncSum += 65536. * numGrab;
     }
@@ -4392,10 +4500,10 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
     gpuFlags |= GPU_RUN_SHRMEMFRAME;
 
   try {
-    if (saving)
+    if (saving || mTD.DoingTiltSums)
       MainCallGatanCamera(SetupFileSaving2(mParam->rotationFlip, mOneK2FramePerFile, 
-        pixel, flags, numAsyncSum, mNextFrameSkipThresh, 0., 0., nameSize, (long *)names, 
-        &setupErr));
+        pixel, flags, numAsyncSum, mNextFrameSkipThresh, threshFracPlus, 0., nameSize, 
+        (long *)names, &setupErr));
     if (aligning) {
       MainCallGatanCamera(SetupFrameAligning(
         UtilGetFrameAlignBinning(faParam, frameSizeX, frameSizeY),
@@ -5870,6 +5978,40 @@ bool CCameraController::CropTietzSubarea(CameraParameters *param, int ubSizeX,
   return crop;
 }
 
+// After a failure to get a deferred sum or when starting a new shot, this is called
+// to make sure blanker thread is done and the get rid of data arrays, etc.
+void CCameraController::CleanUpFromTiltSums(void)
+{
+  if (mTD.DoingTiltSums) {
+    if (mTD.blankerThread) {
+      mTD.FrameTSstopOnCamReturn = true;
+      mTD.imageReturned = true;
+      WaitForBlankerThread(&mTD, mTD.blankerTimeout, 
+        _T("Thread for frame tilt series did not end soon enough when told to"));
+    }
+    mScope->BlankBeam(false, "CleanupFromTiltSums");
+    mScope->SetCameraAcquiring(false);
+    B3DDELETE(mConsDeferred);
+    B3DDELETE(mBufDeferred);
+    B3DDELETE(mExtraDeferred);
+    mTD.FrameTStiltToAngle.clear();
+    mTD.FrameTSwaitOrInterval.clear();
+  }
+  mTD.DoingTiltSums = false;
+}
+
+// Get the properties of the last deferred tilt sum
+BOOL CCameraController::GetTiltSumProperties(int &index, int &numFrames, float &angle,
+  int &firstFrame, int &lastFrame)
+{
+  index = mTD.TiltSumIndex;
+  numFrames = mTD.TiltSumNumFrames;
+  angle = (float)mTD.TiltSumAngle;
+  firstFrame = mTD.TiltSumFirstFrame;
+  lastFrame = mTD.TiltSumLastFrame;
+  return mDeferredSumFailed; 0;
+}
+
 // Apply any known constraints to the exposure time and K2 frame time
 bool CCameraController::ConstrainExposureTime(CameraParameters *camP, ControlSet *consP) 
 {
@@ -7084,10 +7226,10 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
       retval = GetArrayForImage(td, arrSize);
       if (!retval) {
         try {
-          CallGatanCamera(pGatan, ReturnDeferredSum(td->Array[0], &arrSize, 
+          CallGatanCamera(pGatan, ReturnDeferredSum(td->Array[0], &arrSize,
                 &td->DMSizeX, &td->DMSizeY));
           imageOK = true;
-          if (td->SaveFrames) {
+          if (td->SaveFrames && td->GetDeferredSum < 2) {
              CallGatanCamera(pGatan, GetFileSaveResult(&td->NumFramesSaved, 
                 &td->ErrorFromSave));
           }
@@ -7099,6 +7241,11 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
           }
           if (td->GetDoseRate) {
             CallGatanCamera(pGatan, GetLastDoseRate(&td->LastDoseRate));
+          }
+          if (td->GetDeferredSum > 1) {
+            CallGatanCamera(pGatan, GetTiltSumProperties(&td->TiltSumIndex,
+              &td->TiltSumNumFrames, &td->TiltSumAngle, &td->TiltSumFirstFrame,
+              &td->TiltSumLastFrame, &ldum1, &ddum1, &ddum2));
           }
 
         }
@@ -7112,9 +7259,13 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
             }
             catch (...) {
             }
-            report.Format("Getting deferred sum from DigitalMicrograph - %s\n\n"
-              "Description: ", errCode > 0 ? SEMCCDErrorMessage(errCode) : "");
-            CCReportCOMError(td, E, report);
+            if (td->GetDeferredSum > 1 && errCode == NO_DEFERRED_SUM) {
+              td->GetDeferredSum = -1;
+            } else {
+              report.Format("Getting deferred sum from DigitalMicrograph - %s\n\n"
+                "Description: ", errCode > 0 ? SEMCCDErrorMessage(errCode) : "");
+              CCReportCOMError(td, E, report);
+            }
             retval = 1;
             delete [] td->Array[0];
             td->Array[0] = NULL;
@@ -7288,7 +7439,7 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
                 &td->DMSizeX, &td->DMSizeY, td->ProcessingPlus, td->Exposure, td->Binning, 
                 td->Top, td->Left, td->Bottom, td->Right, td->ShutterMode,
                 td->DMsettling, shutterDMticks, td->DivideBy2, td->Corrections));
-              if (td->NeedsReadMode && td->GatanReadMode != -1 && td->DoseFrac && 
+              if (td->NeedsReadMode && td->GatanReadMode != -1 && td->DoseFrac &&
                 (td->SaveFrames || td->UseFrameAlign)) {
                   imageOK = true;
                   if (td->SaveFrames) {
@@ -7296,7 +7447,7 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
                       &td->ErrorFromSave));
                   }
                   if (td->UseFrameAlign) {
-                    CallGatanCamera(pGatan, FrameAlignResults(&td->FaRawDist, 
+                    CallGatanCamera(pGatan, FrameAlignResults(&td->FaRawDist,
                       &td->FaSmoothDist, &td->FaResMean, &td->FaMaxResMax, 
                       &td->FaMeanRawMax, &td->FaMaxRawMax, &td->FaCrossHalf, 
                       &td->FaCrossQuarter, &td->FaCrossEighth, &td->FaHalfNyq,
@@ -7581,7 +7732,7 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
 
   // Deal with the blanking thread properly
   td->imageReturned = true;
-  if (td->blankerThread) {
+  if (td->blankerThread && !td->DoingTiltSums) {
     retval = WaitForBlankerThread(td, td->blankerTimeout, 
       _T("Blanking/post action thread did not end properly after the exposure"));
   }
@@ -7672,7 +7823,10 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
   bool doFocusInTS = td->FrameTSfocusChange.size() > 0;
   bool doISinTS = td->FrameTSdeltaISX.size() > 0;
   int  numScan, step, numSteps;
+  float minDelayOneRefine = 0.5f, minDelayPostTiltRefine = 0.2f;
   double focus, focusBase;
+  float focusChange, newChange, delISX, delISY, newDelISX, newDelISY;
+  bool applyBefore = true;
   long last_coarse, fineBase, coarseBase;
   HRESULT hr = S_OK;
   stData.info = info;
@@ -7884,13 +8038,26 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
           if (!stepTilts)
             curTime = timeGetTime();
 
+          // Look for modifications in the IS vectors and apply them
+          if (stepTilts) {
+            applyBefore = (int)td->FrameTSwaitOrInterval.size() <= step || 
+              td->FrameTSwaitOrInterval[step] <= minDelayOneRefine;
+            if (applyBefore)
+              ProcessFrameTSRefinements(td, step, numSteps, focusChange, delISX, delISY);
+          } else {
+            if (doISinTS) {
+              delISX = td->FrameTSdeltaISX[step];
+              delISY = td->FrameTSdeltaISY[step];
+            }
+            if (doFocusInTS)
+              focusChange = td->FrameTSfocusChange[step];
+          }
+
           // Do image shift and focus
-          if (doISinTS) 
-            td->scopePlugFuncs->SetImageShift(baseISX + td->FrameTSdeltaISX[step],
-            baseISY + td->FrameTSdeltaISY[step]);
-          if (doFocusInTS)
-            ChangeDynFocus(td, focusBase, td->FrameTSfocusChange[step],
-            fineBase, coarseBase, last_coarse);
+          if (doISinTS && applyBefore)
+            td->scopePlugFuncs->SetImageShift(baseISX + delISX, baseISY + delISY);
+          if (doFocusInTS && applyBefore)
+            ChangeDynFocus(td, focusBase, focusChange, fineBase, coarseBase, last_coarse);
 
           // Do tilt step and delay if any
           if (stepTilts) {
@@ -7900,8 +8067,20 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
                 td->FrameTStiltToAngle[step] > td->FrameTStiltToAngle[step - 1]);
             CEMscope::StageMoveKernel(&stData, true, false, destX, destY, destZ, 
               destAlpha);
-            if ((int)td->FrameTSwaitOrInterval.size() > step)
+            if ((int)td->FrameTSwaitOrInterval.size() > step) {
+              if (td->FrameTSwaitOrInterval[step] > minDelayPostTiltRefine) {
+                ProcessFrameTSRefinements(td, step, numSteps, newChange, newDelISX, 
+                  newDelISY);
+                if (doISinTS && (!applyBefore || fabs(newDelISX - delISX) > 1.e-5 ||
+                  fabs(newDelISY - delISY) > 1.e-5))
+                  td->scopePlugFuncs->SetImageShift(baseISX + newDelISX,
+                    baseISY + newDelISY);
+                if (doFocusInTS && (!applyBefore || fabs(focusChange - newChange) >1.e-5))
+                  ChangeDynFocus(td, focusBase, newChange, fineBase, coarseBase,
+                    last_coarse);
+              }
               ::Sleep(B3DMAX(1, B3DNINT(1000. * td->FrameTSwaitOrInterval[step])));
+            }
           }
 
           // Do unblank and blank if shuttering
@@ -8127,6 +8306,56 @@ void CCameraController::ChangeDynFocus(CameraThreadData *td, double focusBase,
   }
 }
 
+// Looks for information on shifts at previous tilts to use for modifyinf future shifts,
+// and gets the shift and focus in protected way
+bool CCameraController::ProcessFrameTSRefinements(CameraThreadData *td, int step,
+  int numSteps, float &focusChange, float &delISX, float &delISY)
+{
+  bool changed = false;
+  int ref, mod, ind;
+  float startTilt, refTilt;
+  bool doFocusInTS = td->FrameTSfocusChange.size() > 0;
+  bool doISinTS = td->FrameTSdeltaISX.size() > 0;
+  if (doISinTS || doFocusInTS) {
+    WaitForSingleObject(td->FrameTSMutexHandle, BLANKER_MUTEX_WAIT);
+    if (doISinTS) {
+      startTilt = td->FrameTStiltToAngle[0];
+      for (ref = 0; ref < (int)td->FrameTSrefineIndex.size(); ref++) {
+        changed = true;
+        ind = td->FrameTSrefineIndex[ref];
+        if (ind < 0 || ind >= (int)td->FrameTStiltToAngle.size()) {
+          continue;
+        }
+        refTilt = td->FrameTStiltToAngle[ind];
+        SEMTrace('1', "At step %d (%.1f) got adjustment of %.3f %.3f from step %d (%.1f)",
+          step, td->FrameTStiltToAngle[step], td->FrameTSrefineISX[ref],
+          td->FrameTSrefineISY[ref], ind, refTilt);
+
+        // Look forward and modify any step where the angle is in the same 
+        // direction from the starting angle as the reference angle
+        for (mod = B3DMAX(ind + 1, step); mod < numSteps; mod++) {
+          if ((refTilt - startTilt) * (td->FrameTStiltToAngle[mod] - startTilt) >
+            0) {
+            td->FrameTSdeltaISX[mod] += td->FrameTSrefineISX[ref];
+            td->FrameTSdeltaISY[mod] += td->FrameTSrefineISY[ref];
+          }
+        }
+      }
+      
+      // Clear out the vectors so the changes are processed only once
+      td->FrameTSrefineIndex.clear();
+      td->FrameTSrefineISX.clear();
+      td->FrameTSrefineISY.clear();
+      delISX = td->FrameTSdeltaISX[step];
+      delISY = td->FrameTSdeltaISY[step];
+    }
+    if (doFocusInTS)
+      focusChange = td->FrameTSfocusChange[step];
+    ReleaseMutex(td->FrameTSMutexHandle);
+  }
+  return changed;
+}
+
 // Start the external focus ramper for an FEI scope
 int CCameraController::StartFocusRamp(CameraThreadData * td, bool & rampStarted)
 {
@@ -8227,7 +8456,7 @@ void CCameraController::AcquireError(int error)
 void CCameraController::AcquireCleanup(int error)
 {
   CString report;
-  if (error == IDLE_TIMEOUT_ERROR) {
+  if (error == IDLE_TIMEOUT_ERROR && mTD.GetDeferredSum >= 0) {
     // If there was a timeout, and acquire thread still running, suspend 
     // and delete it, but first deal with blanker thread
     if (mAcquireThread) {
@@ -8266,7 +8495,7 @@ void CCameraController::AcquireCleanup(int error)
       mScope->BlankBeam(false, "AcquireCleanup");
 
     // Restart capture up to 2 times on timeout
-    if (error == IDLE_TIMEOUT_ERROR) {
+    if (error == IDLE_TIMEOUT_ERROR && mTD.GetDeferredSum >= 0) {
       report.Format("Timeout occurred acquiring %s image", (LPCTSTR)CurrentSetName());
       if ((mNumRetries < mRetryLimit || ((mTD.ProcessingPlus & CONTINUOUS_USE_THREAD) && 
         !mNumRetries)) && !mHalting && !mTD.GetDeferredSum) {
@@ -8283,8 +8512,11 @@ void CCameraController::AcquireCleanup(int error)
     }
   }
   mHalting = false;
-  mDeferredSumFailed = mTD.GetDeferredSum;
-  ErrorCleanup(error);
+  mDeferredSumFailed = mTD.GetDeferredSum != 0;
+  CleanUpFromTiltSums();
+
+  // Do not issue error signals if no tilt sum was available (-1)
+  ErrorCleanup(mTD.GetDeferredSum >= 0 ? error : 0);
 }
 
 
@@ -8875,7 +9107,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
 
     // Get a partial exposure time that applies to this image for early return or aligned
     // subset
-    if (mTD.NumAsyncSumFrames > 0 || mNumSubsetAligned > 0) {
+    if (mTD.NumAsyncSumFrames > 0 || mNumSubsetAligned > 0 || mTD.DoingTiltSums) {
       i = B3DNINT(lastConSetp->exposure / lastConSetp->frameTime);
       if (mTD.NumAsyncSumFrames > 0)
         partialExposure = (float)(mExposure * B3DMIN(mTD.NumAsyncSumFrames, i) / 
@@ -8886,6 +9118,9 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       else if (mNumSubsetAligned > 0 && mParam->DE_camType)
         partialExposure = (float)((mExposure * mNumSubsetAligned) / 
           mFalconHelper->GetNumFiles());
+      else if (mTD.DoingTiltSums)
+        partialExposure = (float)(mExposure * B3DMIN(mTD.TiltSumNumFrames, i) /
+        (float)B3DMAX(1, i));
       else 
         partialExposure = mFalconHelper->AlignedSubsetExposure(
           lastConSetp->summedFrameList, (mParam->K2Type || oneViewTakingFrames) ? 
@@ -9041,15 +9276,33 @@ void CCameraController::DisplayNewImage(BOOL acquired)
         mBufDeferred->ClearForDeletion();
       }
     }
+    // EXTRA HEADER:
+    // For tilt sums, get a copy of the stored extra and adjust it
+    if (mTD.DoingTiltSums && !mStartingDeferredSum) {
+      extra = new EMimageExtra;
+      *extra = *mExtraDeferred;
+      image->SetUserData(extra);
 
-    // Get the extra header data - get JEOL data from last update to save time
-    // Adopt the stored extra if getting deferred sum or have extra from starting DE align
-    if (mTD.GetDeferredSum || mStartedExtraForDEalign) {
+      // Otherwise adopt the stored extra if getting deferred sum or have extra from 
+      // starting DE align
+    } else if (mTD.GetDeferredSum || mStartedExtraForDEalign) {
       extra = mExtraDeferred;
       image->SetUserData(extra);
       mExtraDeferred = NULL;
     }
-    
+    if (mTD.DoingTiltSums && !mStartingDeferredSum) {
+      extra->m_fTilt = (float)mTD.TiltSumAngle;
+      if (mTD.TiltSumIndex < (int)mTD.FrameTSactualAngle.size())
+        extra->m_fTilt = mTD.FrameTSactualAngle[mTD.TiltSumIndex];
+      extra->m_fDose *= partialExposure / (float)mExposure;
+      extra->mPriorRecordDose = mPriorRecordDose;
+      mPriorRecordDose += extra->m_fDose;
+      extra->mSubFramePath = "";
+      extra->mNumSubFrames = 0;
+      extra->mFrameDosesCounts = "";
+    }
+
+    // Get the extra header data - get JEOL data from last update to save time
     if (!mTD.GetDeferredSum) {
       if (!mStartedExtraForDEalign) {
         extra = new EMimageExtra;
@@ -9161,21 +9414,22 @@ void CCameraController::DisplayNewImage(BOOL acquired)
           message = "An error occurred trying to find out how many frames were saved";
         } else {
           message = "";
+          str = "";
           if (mTD.ErrorFromSave > 0)
             message.Format("Error %d occurred when saving frames:  %s\r\n", 
             mTD.ErrorFromSave, mParam->K2Type ? SEMCCDErrorMessage(mTD.ErrorFromSave) : 
             mFalconHelper->GetErrorString(mTD.ErrorFromSave));
-          if (mTD.NumFramesSaved)
+          if (mTD.NumFramesSaved && !mTD.DoingTiltSums)
             str.Format(" %d frames %s saved to %s", mTD.NumFramesSaved, 
             (mTD.NumAsyncSumFrames < 0 && ((!(mSavingFalconFrames && mFalconAsyncStacking)
             && !mSavingPluginFrames) || mAligningFalconFrames || mAligningPluginFrames)) ?
               "were" : "are being", (LPCTSTR)mPathForFrames);
-          else
+          else if (!mTD.DoingTiltSums)
             str = "No frames were saved";
           message += str;
 
           // Save in extra
-          if (mTD.NumFramesSaved) {
+          if (mTD.NumFramesSaved && (!mTD.DoingTiltSums|| mStartingDeferredSum)) {
             extra->mNumSubFrames = mTD.NumFramesSaved;
             extra->mSubFramePath = mPathForFrames;
 
@@ -9376,12 +9630,12 @@ void CCameraController::DisplayNewImage(BOOL acquired)
     }
   
     // If it is partial sum, adjust exposure time in extra and imbuf now that mdoc saved
-    if (mTD.NumAsyncSumFrames > 0 || mNumSubsetAligned > 0) {
+    if (mTD.NumAsyncSumFrames > 0 || mNumSubsetAligned > 0 || mTD.DoingTiltSums) {
       mImBufs->mExposure = extra->mExposure = partialExposure;
     }
 
     // Now if this was deferred sum, we are done with imbuf and conSet
-    if (mTD.GetDeferredSum) {
+    if (mTD.GetDeferredSum && !mTD.DoingTiltSums) {
       delete mBufDeferred;
       mBufDeferred = NULL;
       delete mConsDeferred;
@@ -9538,8 +9792,10 @@ void CCameraController::ErrorCleanup(int error)
 
   // Restore any conditions set
   mTD.NumAsyncSumFrames = -1;
-  mTD.FrameTStiltToAngle.clear();
-  mTD.FrameTSwaitOrInterval.clear();
+  if (!mTD.DoingTiltSums) {
+    mTD.FrameTStiltToAngle.clear();
+    mTD.FrameTSwaitOrInterval.clear();
+  }
   if (mStartedScanning) {
     if (mTD.ScanTime || mTD.DynFocusInterval || mTD.FocusStep1)
       mScope->SetDefocus(mCenterFocus);
@@ -9573,7 +9829,7 @@ void CCameraController::ErrorCleanup(int error)
   // clear flags for one-shot type items, mostly set from elsewhere
   ClearOneShotFlags();
 
-  if (error || mRepFlag < 0 || mHalting || mPending >= 0 ||
+  if (error || (mRepFlag < 0 && !mTD.DoingTiltSums) || mHalting || mPending >= 0 ||
     (!mTD.ContinuousSTEM && !(mTD.ProcessingPlus & CONTINUOUS_USE_THREAD)))
     mScope->SetCameraAcquiring(false);
   if (mParam->FEItype && mTD.eagleIndex < 0)

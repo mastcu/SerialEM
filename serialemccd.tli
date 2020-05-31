@@ -3,7 +3,7 @@
 // c:\users\mast\documents\scope\serialem\x64\release\serialemccd.tli
 //
 // Wrapper implementations for type library ..\SerialEMCCD\SerialEMCCD.tlb
-// compiler-generated file created 03/23/19 at 10:04:31 - DO NOT EDIT!
+// compiler-generated file created 05/17/20 at 19:02:08 - DO NOT EDIT!
 
 #pragma once
 
@@ -253,6 +253,12 @@ inline HRESULT IDMCamera::SaveFrameMdoc ( long size, long * mdoc, long flags ) {
 
 inline HRESULT IDMCamera::GetDMVersionAndBuild ( long * version, long * build ) {
     HRESULT _hr = raw_GetDMVersionAndBuild(version, build);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IDMCamera::GetTiltSumProperties ( long * index, long * numFrames, double * angle, long * firstSlice, long * lastSlice, long * dumInt1, double * dumDbl1, double * dumDbl2 ) {
+    HRESULT _hr = raw_GetTiltSumProperties(index, numFrames, angle, firstSlice, lastSlice, dumInt1, dumDbl1, dumDbl2);
     if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
     return _hr;
 }

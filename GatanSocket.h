@@ -42,7 +42,7 @@ public:
                               double dummy1, double dummy2, double dummy3, 
                               double dummy4, long filtSize, long filter[]);
   static int SetupFileSaving2(long rotationFlip, long filePerImage, double pixelSize,
-                             long flags, double dummy1, double dummy2, double dummy3, 
+    long flags, double numGrabSum, double frameThresh, double threshFracPlus,
                              double dummy4, long nameSize, long names[], long *error);
   static int GetFileSaveResult(long *numSaved, long *error);
   static int GetDefectList(short xyPairs[], long *arrSize, long *numPoint, long *numTotal);
@@ -60,6 +60,8 @@ public:
   static int MakeAlignComFile(long flags, long dumInt1, double dumDbl1, 
     double dumDbl2, long stringSize, long *strings, long *error);
   static int ReturnDeferredSum(short array[], long *arrSize, long *width, long *height);
+  static int GetTiltSumProperties(long *index, long *numFrames, double *angle,
+    long *firstSlice, long *lastSlice, long *dumInt1, double *dumDbl1, double *dumDbl2);
   static int GetNumberOfCameras(long *numCameras);
   static int IsCameraInserted(long camera, long *inserted);
   static int InsertCamera(long camera, long state);

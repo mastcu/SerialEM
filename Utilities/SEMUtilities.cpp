@@ -36,7 +36,8 @@ static int SEMCCDcodes[] =
    FRAMEALI_FINISH_ALIGN, MAKECOM_BAD_PARAM, MAKECOM_NO_REL_PATH, OPEN_COM_ERROR,
    WRITE_COM_ERROR, OPEN_MDOC_ERROR, WRITE_MDOC_ERROR, COPY_MDOC_ERROR, 
    FRAMEALI_BAD_SUBSET, OPEN_SAVED_LIST_ERR, WRITE_SAVED_LIST_ERR, GRAB_AND_SKIP_ERR, 
-   FRAMEDOC_NO_SAVING, FRAMEDOC_OPEN_ERR, FRAMEDOC_WRITE_ERR, NULL_IMAGE, 0};
+   FRAMEDOC_NO_SAVING, FRAMEDOC_OPEN_ERR, FRAMEDOC_WRITE_ERR, NULL_IMAGE, 
+   FRAMETS_NO_ANGLES, 0};
 
 static char *SEMCCDmessages[] =
   {"Image not found from ID", "Image has unexpected data type", 
@@ -75,7 +76,9 @@ static char *SEMCCDmessages[] =
    "Program error: a grab stack was specified and that is not allowed with frame skipping"
    , "Cannot save frame stack mdoc file, there is no current information about a frame"
    " stack", "Error opening frame stack mdoc file", "Error writing frame stack mdoc file",
-   "DM returned a NULL pointer for an image or frame"
+   "DM returned a NULL pointer for an image or frame",
+  "The call to SetupFileSaving specified making tilt sums or using dynamic threshold but"
+  " included no tilt angles"
 };
 
 static char *noDesc = "No error description available";

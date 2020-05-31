@@ -4,7 +4,7 @@
  */
 #ifndef SEMCCD_DEFINES_H
 
-#define SEMCCD_PLUGIN_VERSION    116
+#define SEMCCD_PLUGIN_VERSION    117
 
 // Error codes
 enum {IMAGE_NOT_FOUND = 1, WRONG_DATA_TYPE, DM_CALL_EXCEPTION, NO_STACK_ID, STACK_NOT_3D,
@@ -18,7 +18,7 @@ GAIN_REF_LOAD_ERROR, BAD_FRAME_REDUCE_PARAM, FRAMEALI_INITIALIZE, FRAMEALI_NEXT_
 FRAMEALI_FINISH_ALIGN, MAKECOM_BAD_PARAM, MAKECOM_NO_REL_PATH, OPEN_COM_ERROR,
 WRITE_COM_ERROR, OPEN_MDOC_ERROR, WRITE_MDOC_ERROR, COPY_MDOC_ERROR, FRAMEALI_BAD_SUBSET,
 OPEN_SAVED_LIST_ERR, WRITE_SAVED_LIST_ERR, GRAB_AND_SKIP_ERR, FRAMEDOC_NO_SAVING, 
-FRAMEDOC_OPEN_ERR, FRAMEDOC_WRITE_ERR, NULL_IMAGE};
+FRAMEDOC_OPEN_ERR, FRAMEDOC_WRITE_ERR, NULL_IMAGE, FRAMETS_NO_ANGLES};
 
 // Flags for SetupFileSaving
 #define K2_SAVE_RAW_PACKED       1
@@ -41,6 +41,8 @@ FRAMEDOC_OPEN_ERR, FRAMEDOC_WRITE_ERR, NULL_IMAGE};
 #define K2_SAVE_SUPER_REDUCED  (1 << 17)
 #define K2_SKIP_BELOW_THRESH   (1 << 18)
 #define K2_ADD_FRAME_TITLE     (1 << 19)
+#define K2_SKIP_THRESH_PLUS    (1 << 20)
+#define K2_USE_TILT_ANGLES     (1 << 21)
 
 // Flags for SetK2Parameters
 #define K2_ANTIALIAS_MASK      7
@@ -60,7 +62,7 @@ FRAMEDOC_OPEN_ERR, FRAMEDOC_WRITE_ERR, NULL_IMAGE};
 
 // Flags for SetupFrameAligning (bit 1 is apply gain ref, bit 7 is for early return)
 // (And bit 5 is for synchronous align/save, and bit 6 for apply defects, 
-// 8 for async in RAM, 11 for making an align com)
+// 8 for async in RAM, 11 for making an align com, 18 for skip below threshold)
 #define K2FA_USE_HYBRID_SHIFTS       1
 #define K2FA_SMOOTH_SHIFTS     (1 << 2)
 #define K2FA_GROUP_REFINE      (1 << 3)
@@ -77,6 +79,10 @@ FRAMEDOC_OPEN_ERR, FRAMEDOC_WRITE_ERR, NULL_IMAGE};
 
 // Flags for MakeAlignComFile
 #define K2FA_WRITE_MDOC_TEXT          1
+
+#define FRAME_TS_MIN_GAP_DFLT   2
+#define THRESH_PLUS_GAP_SCALE   10.f
+#define THRESH_PLUS_DROP_SCALE  1000.f
 
 // DM's flag for drift correction
 #define OVW_DRIFT_CORR_FLAG   0x1000
@@ -114,7 +120,7 @@ enum {GS_ExecuteScript = 1, GS_SetDebugMode, GS_SetDMVersion, GS_SetCurrentCamer
       GS_GetPluginVersion, GS_GetLastError, GS_FreeK2GainReference, GS_IsGpuAvailable,
       GS_SetupFrameAligning, GS_FrameAlignResults, GS_ReturnDeferredSum, 
       GS_MakeAlignComFile, GS_WaitUntilReady, GS_GetLastDoseRate, GS_SaveFrameMdoc,
-      GS_GetDMVersionAndBuild
+      GS_GetDMVersionAndBuild, GS_GetTiltSumProperties
 };
 
 #endif

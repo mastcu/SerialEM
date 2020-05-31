@@ -3,7 +3,7 @@
 // c:\users\mast\documents\scope\serialem\x64\release\serialemccd.tlh
 //
 // C++ source equivalent of type library ..\SerialEMCCD\SerialEMCCD.tlb
-// compiler-generated file created 03/23/19 at 10:04:31 - DO NOT EDIT!
+// compiler-generated file created 05/17/20 at 19:02:08 - DO NOT EDIT!
 
 #pragma once
 #pragma pack(push, 8)
@@ -278,6 +278,15 @@ IDMCamera : IDispatch
     HRESULT GetDMVersionAndBuild (
         long * version,
         long * build );
+    HRESULT GetTiltSumProperties (
+        long * index,
+        long * numFrames,
+        double * angle,
+        long * firstSlice,
+        long * lastSlice,
+        long * dumInt1,
+        double * dumDbl1,
+        double * dumDbl2 );
 
     //
     // Raw methods provided by interface
@@ -520,6 +529,15 @@ IDMCamera : IDispatch
       virtual HRESULT __stdcall raw_GetDMVersionAndBuild (
         /*[out]*/ long * version,
         /*[out]*/ long * build ) = 0;
+      virtual HRESULT __stdcall raw_GetTiltSumProperties (
+        /*[out]*/ long * index,
+        /*[out]*/ long * numFrames,
+        /*[out]*/ double * angle,
+        /*[out]*/ long * firstSlice,
+        /*[out]*/ long * lastSlice,
+        /*[out]*/ long * dumInt1,
+        /*[out]*/ double * dumDbl1,
+        /*[out]*/ double * dumDbl2 ) = 0;
 };
 
 //

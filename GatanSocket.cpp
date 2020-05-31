@@ -354,6 +354,25 @@ int CGatanSocket::ReturnDeferredSum(short array[], long *arrSize, long *width,
   return SendAndReceiveForImage(sSind, array, arrSize, width, height, 2);
 }
 
+// GetTiltSumProperties
+int CGatanSocket::GetTiltSumProperties(long *index, long *numFrames, double *angle,
+  long *firstSlice, long *lastSlice, long *dumInt1, double *dumDbl1, double *dumDbl2)
+{
+  InitializePacking(sSind, GS_GetTiltSumProperties);
+  mNumLongRecv[sSind] = 3;
+  mNumDblRecv[sSind] = 3;
+  SendAndReceiveArgs(sSind);
+  *index = mLongArgs[sSind][1];
+  *numFrames = mLongArgs[sSind][2];
+  *angle = mDoubleArgs[sSind][0];
+  *firstSlice = mLongArgs[sSind][3];
+  *firstSlice = mLongArgs[sSind][4];
+  *dumInt1 = mLongArgs[sSind][5];
+  *dumDbl1 = mDoubleArgs[sSind][1];
+  *dumDbl2 = mDoubleArgs[sSind][2];
+  return mLongArgs[sSind][0];
+}
+
 // GetNumberOfCameras
 int CGatanSocket::GetNumberOfCameras(long *numCameras)
 {
