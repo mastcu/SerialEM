@@ -276,7 +276,13 @@ enum {CME_SCRIPTEND = -7, CME_LABEL, CME_SETVARIABLE, CME_SETSTRINGVAR, CME_DOKE
   CME_READONLYUNLESSADMIN, CME_IMAGESHIFTBYSTAGEDIFF, CME_GETFILEINWATCHEDDIR,
   CME_RUNSCRIPTINWATCHEDDIR, CME_PARSEQUOTEDSTRINGS, CME_SNAPSHOTTOFILE,
   CME_COMBINEHOLESTOMULTI, CME_UNDOHOLECOMBINING, CME_MOVESTAGEWITHSPEED,
-  CME_FINDHOLES, CME_MAKENAVPOINTSATHOLES, CME_CLEARHOLEFINDER
+  CME_FINDHOLES, CME_MAKENAVPOINTSATHOLES, CME_CLEARHOLEFINDER, CME_REPORTFRAMETILTSUM ,
+  CME_MODIFYFRAMETSSHIFTS, CME_REPLACEFRAMETSSHIFTS, CME_REPLACEFRAMETSFOCUS, 
+  CME_CAMERATOISMATRIX, CME_ISTOCAMERAMATRIX, CME_CAMERATOSTAGEMATRIX, 
+  CME_STAGETOCAMERAMATRIX, CME_CAMERATOSPECIMENMATRIX, CME_SPECIMENTOCAMERAMATRIX, 
+  CME_ISTOSPECIMENMATRIX, CME_SPECIMENTOISMATRIX, CME_ISTOSTAGEMATRIX, 
+  CME_STAGETOISMATRIX, CME_STAGETOSPECIMENMATRIX, CME_SPECIMENTOSTAGEMATRIX, 
+    CME_REPORTISFORBUFFERSHIFT
 };
 
 // The two numbers are the minimum arguments and whether arithmetic is allowed
@@ -431,9 +437,15 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"ExternalToolArgPlace", 1, 0},{"ReadOnlyUnlessAdmin", 0, 0},
 {"ImageShiftByStageDiff", 2, 0},{"GetFileInWatchedDir", 1, 0},
 {"RunScriptInWatchedDir", 1, 0}, {"ParseQuotedStrings", 0, 0}, {"SnapshotToFile", 6, 0},
-{"CombineHolesToMulti", 1, 0}, {"UndoHoleCombining", 0, 0}, 
-{"MoveStageWithSpeed", 3, 1}, {"FindHoles", 0, 0}, {"MakeNavPointsAtHoles", 0, 0},
-{"ClearHoleFinder", 0, 0}, /*CAI3.8*/
+{"CombineHolesToMulti", 1, 0}, {"UndoHoleCombining", 0, 0}, {"MoveStageWithSpeed", 3, 1},
+{"FindHoles", 0, 0}, {"MakeNavPointsAtHoles", 0, 0}, {"ClearHoleFinder", 0, 0}, 
+{"ReportFrameTiltSum", 0, 0}, {"ModifyFrameTSShifts", 3, 1},{"ReplaceFrameTSFocus", 2, 0}, 
+{"ReplaceFrameTSShifts", 1, 0}, {"CameraToISMatrix", 1, 0}, {"ISToCameraMatrix", 1, 0}, 
+{"CameraToStageMatrix", 1, 0}, {"StageToCameraMatrix", 1, 0},
+{"CameraToSpecimenMatrix", 1, 0}, {"SpecimenToCameraMatrix", 1, 0},
+{"ISToSpecimenMatrix", 1, 0}, {"SpecimenToISMatrix", 1, 0}, {"ISToStageMatrix", 1, 0}, 
+{"StageToISMatrix", 1, 0},{"StageToSpecimenMatrix", 1, 0},{"SpecimenToStageMatrix", 1, 0},
+{"ReportISforBufferShift", 0, 0},/*CAI3.8*/
 {NULL, 0, 0}
 };
 // The longest is now 25 characters but 23 is a more common limit
@@ -2464,6 +2476,11 @@ void CMacroProcessor::NextCommand()
           "line:\n\n");
       mCamera->SetNextPartialThresholds(backlashX, backlashY);
     }
+    if (!itemEmpty[4]) {
+      if (itemDbl[4] < 0 || itemDbl[4] >= 1.)
+        ABORT_LINE("The relative frame thresholds must be >= 0 and < 1 for line:\n\n");
+      mCamera->SetNextRelativeThresh((float)itemDbl[4]);
+    }
     break;
     
   case CME_QUEUEFRAMETILTSERIES:                           // QueueFrameTiltSeries
@@ -2606,6 +2623,18 @@ void CMacroProcessor::NextCommand()
       (itemEmpty[4] || fabs(itemDbl[4]) > 9000.) ? EXTRA_NO_VALUE : itemDbl[4]))
       ABORT_LINE("The FEI scope plugin version is not new enough to support variable"
         " speed for line:\n\n");
+    if (!itemEmpty[5]) {
+      if (itemInt[5] <= 0 || itemInt[5] > 99)
+        ABORT_LINE("Minimum gap size for recognizing new tilts must be between 1 and 99"
+          " for line:\n\n");
+      mCamera->SetNextMinTiltGap(itemInt[5]);
+    }
+    if (!itemEmpty[6]) {
+      if (itemInt[6] < 0 || itemInt[6] > 30)
+        ABORT_LINE("Number of frames to drop from tilt sums must be between 0 and 30"
+          " for line:\n\n");
+      mCamera->SetNextDropFromTiltSum(itemInt[6]);
+    }
     break;
 
   case CME_WRITEFRAMESERIESANGLES:                          // WriteFrameSeriesAngles
@@ -2641,7 +2670,56 @@ void CMacroProcessor::NextCommand()
     delete csFile;
     break;
   }
+
+  case CME_REPORTFRAMETILTSUM:                              // ReportFrameTiltSum
+    truth = mCamera->GetTiltSumProperties(index, index2, backlashX, ix0, ix1);
+    if (truth) {
+      logRpt = "There are no more tilt sums available";
+      SetReportedValues(&strItems[1], 1);
+    } else {
+      logRpt.Format("Tilt sum from %.1f deg, index %d, %d frames from %d to %d", 
+        backlashX, index, index2, ix0, ix1);
+      SetReportedValues(&strItems[1], 0, backlashX, index, index2, ix0, ix1);
+    }
+    break;
   
+  case CME_MODIFYFRAMETSSHIFTS:                             // ModifyFrameTSShifts
+    mCamera->ModifyFrameTSShifts(itemInt[1], (float)itemDbl[2], (float)itemDbl[3]);
+    break;
+
+  case CME_REPLACEFRAMETSFOCUS:                             // ReplaceFrameTSFocus
+  case CME_REPLACEFRAMETSSHIFTS:                            // ReplaceFrameTSShifts
+  {
+    FloatVec newFocus, newSecond, *newVec = &newFocus;
+    truth = CMD_IS(REPLACEFRAMETSSHIFTS);
+    for (index = 1; index < (truth ? 3 : 2); index++) {
+      strCopy = strItems[index];
+      strCopy.MakeUpper();
+      var = LookupVariable(strCopy, index2);
+      if (!var)
+        ABORT_LINE("The variable " + strItems[index] + " is not defined in line:\n\n");
+      if (var->rowsFor2d)
+        ABORT_LINE("The variable " + strItems[index] + " should not be a 2D array for "
+          "line:\n\n");
+      valPtr = &var->value;
+      for (iy0 = 0; iy0 < var->numElements; iy0++) {
+        FindValueAtIndex(*valPtr, iy0, ix1, iy1);
+        report = valPtr->Mid(ix1, iy1 - ix1);
+        newVec->push_back((float)atof((LPCTSTR)report));
+      }
+      if (truth)
+        newVec = &newSecond;
+    }
+    if (truth)
+      index2 = mCamera->ReplaceFrameTSShifts(newFocus, newSecond);
+    else
+      index2 = mCamera->ReplaceFrameTSFocusChange(newFocus);
+    if (index2)
+      ABORT_LINE("The variable does not have the same number of focus changes as the"
+        " original list of changes for line:\n\n");
+    break;
+  }
+
   case CME_RETRACTCAMERA:                                   // RetractCamera
 
     // Back up index unless camera ready
@@ -4508,6 +4586,7 @@ void CMacroProcessor::NextCommand()
                             
   case CME_REPORTALIGNSHIFT:                                // ReportAlignShift
   case CME_REPORTSHIFTDIFFFROM:                             // ReportShiftDiffFrom
+  case CME_REPORTISFORBUFFERSHIFT:                          // ReportISforBufferShift
     delISY = 0.;
     if (CMD_IS(REPORTSHIFTDIFFFROM)) {                      
       delISY = itemDbl[1];
@@ -4540,14 +4619,20 @@ void CMacroProcessor::NextCommand()
                    // implied by each axis of image shift separately
         delISX = bInv.xpx * shiftX + bInv.xpy * shiftY;
         delISY = bInv.ypx * shiftX + bInv.ypy * shiftY;
-        h1 = 1000. * (delISX * aMat.xpx + delISY * aMat.xpy);
-        v1 = 1000. * (delISX * aMat.ypx + delISY * aMat.ypy);
-        delX = 1000. * sqrt(pow(delISX * aMat.xpx, 2) + pow(delISX * aMat.ypx, 2));
-        delY = 1000. * sqrt(pow(delISY * aMat.xpy, 2) + pow(delISY * aMat.ypy, 2));
-        strCopy.Format("%6.1f %6.1f unbinned pixels; %6.1f %6.1f nm along two shift axes;"
-          " %6.1f %6.1f nm on specimen axes",
-          shiftX / index2, shiftY / index2, delX, delY, h1, v1);
-        SetReportedValues(&strItems[1], shiftX, shiftY, delX, delY, h1, v1);
+        if (CMD_IS(REPORTISFORBUFFERSHIFT)) {
+          strCopy.Format("Buffer shift corresponds to %.3f %.3f-  IS units", -delISX,
+            -delISY);
+          SetReportedValues(&strItems[1], -delISX, -delISY);
+        } else {
+          h1 = 1000. * (delISX * aMat.xpx + delISY * aMat.xpy);
+          v1 = 1000. * (delISX * aMat.ypx + delISY * aMat.ypy);
+          delX = 1000. * sqrt(pow(delISX * aMat.xpx, 2) + pow(delISX * aMat.ypx, 2));
+          delY = 1000. * sqrt(pow(delISY * aMat.xpy, 2) + pow(delISY * aMat.ypy, 2));
+          strCopy.Format("%6.1f %6.1f unbinned pixels; %6.1f %6.1f nm along two shift axes;"
+            " %6.1f %6.1f nm on specimen axes",
+            shiftX / index2, shiftY / index2, delX, delY, h1, v1);
+          SetReportedValues(&strItems[1], shiftX, shiftY, delX, delY, h1, v1);
+        }
       }
       mWinApp->AppendToLog(strCopy, mLogAction);
     }
@@ -4573,6 +4658,86 @@ void CMacroProcessor::NextCommand()
     SetReportedValues(&strItems[1], ix0, ix1, iy0, iy1);
     break;
     
+
+    // CameraToISMatrix,  ISToCameraMatrix, CameraToStageMatrix, StageToCameraMatrix,
+    // CameraToSpecimenMatrix, SpecimenToCameraMatrix, ISToSpecimenMatrix, 
+    // SpecimenToISMatrix, ISToStageMatrix, StageToISMatrix,
+    // StageToSpecimenMatrix, SpecimenToStageMatrix
+  case CME_CAMERATOISMATRIX:
+  case CME_ISTOCAMERAMATRIX:
+  case CME_CAMERATOSTAGEMATRIX:
+  case CME_STAGETOCAMERAMATRIX:
+  case CME_CAMERATOSPECIMENMATRIX:
+  case CME_SPECIMENTOCAMERAMATRIX:
+  case CME_ISTOSPECIMENMATRIX:
+  case CME_SPECIMENTOISMATRIX:
+  case CME_ISTOSTAGEMATRIX:
+  case CME_STAGETOISMATRIX:
+  case CME_STAGETOSPECIMENMATRIX:
+  case CME_SPECIMENTOSTAGEMATRIX:
+    index = itemInt[1];
+    if (index <= 0)
+      index = mScope->GetMagIndex();
+    if (!index)
+      ABORT_LINE("There are no scale matrices for diffraction mode for line:\n\n");
+    if (index >= MAX_MAGS)
+      ABORT_LINE("The mag index is out of range in line:\n\n");
+    truth = false;
+    switch (cmdIndex) {
+
+    case CME_CAMERATOISMATRIX:
+      truth = true;
+    case CME_ISTOCAMERAMATRIX:
+      aMat = mShiftManager->IStoGivenCamera(index, currentCam);
+      break;
+    case CME_CAMERATOSTAGEMATRIX:
+      truth = true;
+    case CME_STAGETOCAMERAMATRIX:
+      aMat = mShiftManager->StageToCamera(currentCam, index);
+      break;
+
+    case CME_SPECIMENTOCAMERAMATRIX:
+      truth = true;
+    case CME_CAMERATOSPECIMENMATRIX:
+      aMat = mShiftManager->CameraToSpecimen(index);
+      break;
+
+    case CME_SPECIMENTOISMATRIX:
+      truth = true;
+    case CME_ISTOSPECIMENMATRIX:
+      aMat = aMat = mShiftManager->IStoSpecimen(index, currentCam);
+      break;
+    case CME_STAGETOISMATRIX:
+      truth = true;
+    case CME_ISTOSTAGEMATRIX:
+      aMat = mShiftManager->StageToCamera(currentCam, index);
+      if (aMat.xpx) {
+        bInv = mShiftManager->StageToCamera(currentCam, index);
+        if (bInv.xpx)
+          aMat = MatMul(aMat, MatInv(bInv));
+        else
+          aMat.xpx = 0.;
+      }
+      break;
+    case CME_STAGETOSPECIMENMATRIX:
+      truth = true;
+    case CME_SPECIMENTOSTAGEMATRIX:
+      aMat = mShiftManager->SpecimenToStage(1., 1.);
+      break;
+    }
+    if (truth && aMat.xpx)
+      aMat = MatInv(aMat);
+    report = cmdList[cmdIndex].mixedCase;
+    report.Replace("To", " to ");
+    report.Replace("Matrix", " matrix");
+    if (aMat.xpx)
+      logRpt.Format("%s at mag index %d is %.5g  %.5g  %.5g  %.5g", (LPCTSTR)report,
+        index, aMat.xpx, aMat.xpy, aMat.ypx, aMat.ypy);
+    else
+      logRpt.Format("%s is not available for mag index", (LPCTSTR)report, index);
+    SetReportedValues(&strItems[2], aMat.xpx, aMat.xpy, aMat.ypx, aMat.ypy);
+    break;
+
   case CME_REPORTCLOCK:                                     // ReportClock
     delX = 0.001 * GetTickCount() - 0.001 * mStartClock;
     logRpt.Format("%.2f seconds elapsed time", delX);
