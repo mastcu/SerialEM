@@ -1214,7 +1214,7 @@ void CGainRefMaker::UpdateDMReferenceTimes(void)
 
         // If not OK, need to clear existence flag
         mRefExists[mCurrentCamera][mDMind] = false;
-        if (!mWarnedNoDM[mCurrentCamera]) {
+        if (!mWarnedNoDM[mCurrentCamera] && (!cdsInd || mCamera->GetUseK3CorrDblSamp())) {
           PrintfToLog("WARNING: Did not find DigitalMicrograph gain reference file:   %s"
             "\r\n    in folder:   %s\r\n    Are the name and location correct in the "
             "SerialEM properties file?", (LPCTSTR)name, (LPCTSTR)refPath);
