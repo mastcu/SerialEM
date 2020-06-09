@@ -170,6 +170,7 @@ struct CameraThreadData {
   int FEIacquireFlags;        // Flags for advanced FEI acquire
   int PluginAcquireFlags;     // Base flags for plugin acquire
   int PluginFrameFlags;       // Flags to set with plugin frame setup
+  bool NeedFrameDarkRef;      // Flag that dark ref needs to be short when getting floats
   int UnblankTime;            // delay from firing DM to unblanking, in msec
   int ReblankTime;            // total time for beam to be on, in msec
   int ShutterTime;            // time to hold shutter open before firing DM, in msec
@@ -1088,7 +1089,7 @@ bool CanSaveFrameStackMdoc(CameraParameters * param);
 bool CanDoK2HardwareDarkRef(CameraParameters *param, CString &errstr);
 bool DefectListHasEntries(CameraDefects *defp);
 float FindConstraintForBinning(CameraParameters * param, int binning, float *times);
-void ProcessImageOrFrame(short *array, int processing, int removeXrays, int darkScale);
+void ProcessImageOrFrame(short *array, int imageType, int processing, int removeXrays, int darkScale);
 bool CanFramealignProcessSubarea(ControlSet *lastConSetp, DarkRef **darkp, DarkRef **gainp);
 void DeleteOneReference(int index);
 int CheckFrameStacking(bool updateIfDone, bool testIfStacking);

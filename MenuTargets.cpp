@@ -1782,6 +1782,9 @@ void CMenuTargets::OnCameraSetExtraDivisionBy2()
     return;
   B3DCLAMP(curVal, 0, PLUGCAM_MOREDIV_MASK);
   mCamera->SetExtraDivideBy2(curVal);
+
+  // Make it clear out dark references
+  mCamera->SetDivideBy2(-1);
 }
 
 void CMenuTargets::OnUpdateCameraSetExtraDivisionBy2(CCmdUI *pCmdUI)

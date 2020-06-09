@@ -1961,7 +1961,7 @@ int ProcDarkSubtract(void *image, int type, int nx, int ny, short int *ref1,
 // faster for large images; on Pentium 4 is faster all around (?).
 int ProcGainNormalize(void *image, int type, int nxFull, int top, int left, int bottom,
   int right, short int *dark1, double exp1, short int *dark2, double exp2, double exp, 
-  int darkScale, void *gainRef, int gainBytes, int gainBits)
+  int darkScale, int darkByteSize, void *gainRef, int gainBytes, int gainBits)
 {
   float *gainp = NULL;
   short int *sdata = NULL, *sdark1 = NULL, *sdark2 = NULL;
@@ -1993,7 +1993,7 @@ int ProcGainNormalize(void *image, int type, int nxFull, int top, int left, int 
   // Loop on lines in Y
 #pragma omp parallel for num_threads(numThreads) default(none)  \
 shared(top, bottom, nxImage, nxFull, type, gainBytes, gainRef, dark1, dark2, image, \
-  darkScale, f1, f2, darkBits, roundFac, gainBits, left, error) \
+  darkScale, f1, f2, darkBits, darkByteSize, roundFac, gainBits, left, error) \
 private(iy, ix, gainBase, dataBase, gainp, sdark1, sdark2, usdark1, usdark2, usgain, sdata, \
   usdata, itmp, rval, fdark, fdata)
   for (iy = top; iy < bottom; iy++) {
@@ -2065,12 +2065,20 @@ private(iy, ix, gainBase, dataBase, gainp, sdark1, sdark2, usdark1, usdark2, usg
 
     case FLOAT:
 
-      // float image with float references
+
+      // float image with float references, but dark may be integer or float
       gainp = (float *)gainRef + gainBase;
-      fdark = (float *)dark1 + dataBase;
       fdata = (float *)image + dataBase;
-      for (ix = 0; ix < nxImage; ix++) {
-        fdata[ix] = (fdata[ix] - darkScale * (fdark[ix])) * gainp[ix];
+      if (darkByteSize == 4) {
+        fdark = (float *)dark1 + dataBase;
+        for (ix = 0; ix < nxImage; ix++) {
+          fdata[ix] = (fdata[ix] - darkScale * fdark[ix]) * gainp[ix];
+        }
+      } else {
+        sdark1 = (short *)dark1 + dataBase;
+        for (ix = 0; ix < nxImage; ix++) {
+          fdata[ix] = (fdata[ix] - darkScale * sdark1[ix]) * gainp[ix];
+        }
       }
       break;
 

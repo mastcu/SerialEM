@@ -1228,9 +1228,13 @@ void CCameraSetupDlg::ManageDrift(bool useMinRate)
   BOOL recForTS = mWinApp->StartedTiltSeries() && tsParam->cameraIndex == mCurrentCamera
     && mCurrentSet == RECORD_CONSET;
   BOOL driftOK = !(recForTS && mWinApp->mTSController->GetTypeVaries(TS_VARY_DRIFT));
+  bool tietzFrames = mParam->TietzType && mParam->canTakeFrames && m_bDoseFracMode;
+  float frameTime, newSettling;
   mMinimumSettling = (m_iShuttering == USE_DUAL_SHUTTER || mTietzType > 0 || mAMTtype > 0
     || mFEItype > 0 || mDE_Type > 0 || mPluginType || mParam->K2Type) ? mMinDualSettling : 
     mBuiltInSettling;
+  if (tietzFrames)
+    mMinimumSettling = B3DMAX(mMinimumSettling, m_fFrameTime);
 
   if (mParam->STEMcamera) {
 
@@ -1298,9 +1302,12 @@ void CCameraSetupDlg::ManageDrift(bool useMinRate)
     SetDlgItemText(IDC_MINIMUM_DRIFT, limit);
 
     // For K2, constrain settling to multiple of frame time
-    if (m_eSettling > 0.0 && mParam->K2Type) {
-      float newSettling = (float)(mCamera->GetK2ReadoutInterval(mParam) * 
-        B3DNINT(m_eSettling / mCamera->GetK2ReadoutInterval(mParam)));
+    if (m_eSettling > 0.0 && (mParam->K2Type || tietzFrames)) {
+      if (mParam->K2Type)
+        frameTime = mCamera->GetK2ReadoutInterval(mParam);
+      else
+        frameTime = B3DMAX(0.001f, m_fFrameTime);
+      newSettling = (float)(frameTime * B3DNINT(m_eSettling / frameTime));
       if (fabs(newSettling - m_eSettling) > 1.e-5) {
         m_eSettling = newSettling;
         m_strSettling.Format("%.4f", m_eSettling);
@@ -2570,6 +2577,7 @@ void CCameraSetupDlg::OnAlignDoseFrac()
   CheckFalconFrameSumList();
   ManageK2Binning();
   ManageDoseFrac();
+  ManageDrift();
   ManageK2SaveSummary();
   ManageDose();
 }
@@ -2593,6 +2601,7 @@ void CCameraSetupDlg::OnKillfocusEditFrameTime()
   if (fabs(startFrame - m_fFrameTime) > 1.e-5)
     UpdateData(false);
   ManageExposure();
+  ManageDrift();
   ManageK2SaveSummary();
   ManageDose();
 }
@@ -2705,6 +2714,7 @@ void CCameraSetupDlg::OnSaveFrames()
   }
   ManageK2Binning();
   ManageDoseFrac();
+  ManageDrift();
   ManageAntialias();
   ManageK2SaveSummary();
   ManageDose();

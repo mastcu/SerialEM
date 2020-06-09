@@ -1628,16 +1628,17 @@ void CCameraController::SetCurrentCamera(int currentCam, int activeCam)
   mWinApp->mCameraMacroTools.Update();
 }
 
-// Set flag to divide 16-bit data by 2
+// Set flag to divide 16-bit data by 2, or just clear out references
 void CCameraController::SetDivideBy2(int inVal)
 {
-  mDivideBy2 = inVal;
+  if (inVal >= 0)
+    mDivideBy2 = inVal;
 
   // Need to delete dark references for all 16-bit cameras
   for (int i = 0; i < mRefArray.GetSize(); i++) {
     DarkRef *ref = mRefArray[i];
     if (ref->GainDark == DARK_REFERENCE && 
-      mAllParams[mActiveList[ref->Camera]].unsignedImages) {
+      (mAllParams[mActiveList[ref->Camera]].unsignedImages || inVal < 0)) {
       DeleteOneReference(i--);
     }
   }
@@ -3260,6 +3261,7 @@ void CCameraController::Capture(int inSet, bool retrying)
       mTD.PluginFrameFlags = mParam->dropFrameFlags;
     }
   }
+  mTD.NeedFrameDarkRef = mSavingPluginFrames || mAligningPluginFrames;
 
   // Tietz camera needs the read mode set if it is an XF416, or there is flatfielding
   // possible, or there is frame-saving possible.  Set to 0 for beam blank or 1 for
@@ -5373,7 +5375,7 @@ int CCameraController::CapManageDarkGainRefs(ControlSet & conSet, int inSet,
       double currentTicks = GetTickCount();
 
       // If taking frames, the reference needs to be for the frame time
-      if (mAligningPluginFrames || mSavingPluginFrames)
+      if (mTD.NeedFrameDarkRef)
         useExposure = mTD.FrameTime;
 
       // Check for KV change if necessary (it is done after an interval)
@@ -5397,6 +5399,8 @@ int CCameraController::CapManageDarkGainRefs(ControlSet & conSet, int inSet,
       // Look through array of references for ones that match
       for (int i = 0; i < mRefArray.GetSize(); i++) {
         DarkRef *ref = mRefArray[i];
+
+        // Look for gain ref with matching binning and offsets
         if (conSet.processing == GAIN_NORMALIZED && 
           ref->GainDark == GAIN_REFERENCE && gainXoffset == ref->xOffset &&
           gainYoffset == ref->yOffset && mTD.Camera == ref->Camera && 
@@ -5410,10 +5414,14 @@ int CCameraController::CapManageDarkGainRefs(ControlSet & conSet, int inSet,
             ref->UseCount = mUseCount;
           }
         }
+
+        // Look for dark ref with matching binning, coordinates, and byte size
+        // Need float ref if taking float images but not frames
         if (ref->GainDark == DARK_REFERENCE && mTD.Camera == ref->Camera && 
           mBinning == ref->Binning && mDelay == ref->Delay && mTop == ref->Top &&
           mBottom == ref->Bottom && mLeft == ref->Left && mRight == ref->Right &&
-          ref->ByteSize == (ReturningFloatImages(mParam) ? 4 : 2)) {
+          ref->ByteSize == 
+          B3DCHOICE(ReturningFloatImages(mParam) && !mTD.NeedFrameDarkRef, 4, 2)) {
           if (fabs(useExposure - ref->Exposure) < 1.e-6) {
             mDarkp = ref;
             ref->UseCount = mUseCount;
@@ -6468,7 +6476,7 @@ UINT CCameraController::EnsureProc(LPVOID pParam)
   CamCommand[0] = 0x00;
   long arrSize, height, width;
   CameraThreadData *td = (CameraThreadData *)pParam;
-  int sizeX, sizeY, numDum, retval = 0;
+  int sizeX, sizeY, numDum, flagsSave, retval = 0;
   long binning = td->Binning;
   double expSave = td->Exposure;
   CString message, str;
@@ -6688,9 +6696,16 @@ UINT CCameraController::EnsureProc(LPVOID pParam)
     ref = td->DarkToGet;
     retval = GetArrayForReference(td, ref, arrSize, strGainDark);
     if (!retval) {
+
+      // If taking integer dark reference for frames, cancel flag for float return and
+      // restore it for image acquire
+      flagsSave = td->PluginAcquireFlags;
+      if (td->NeedFrameDarkRef)
+        td->PluginAcquireFlags &= ~PLUGCAM_RETURN_FLOAT;
       AcquirePluginImage(td, &ref->Array, arrSize, 
         td->TietzType ? TIETZ_GET_DARK_REF : UNPROCESSED, 0., false, sizeX,
         sizeY, retval, numDum);
+      td->PluginAcquireFlags = flagsSave;
       if (retval) {
         message.Format("Error %d setting parameters or getting dark reference from plugin"
           " camera", retval);
@@ -9008,7 +9023,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
         !mAligningPluginFrames) {
 
         // Gain normalization or other processing
-        ProcessImageOrFrame(mTD.Array[chan], lastConSetp->processing, 
+        ProcessImageOrFrame(mTD.Array[chan], mTD.ImageType, lastConSetp->processing, 
           lastConSetp->removeXrays, darkScale);
  
       } else if ((mTD.ProcessingPlus & CONTINUOUS_USE_THREAD) && mParam->balanceHalves) {
@@ -9686,6 +9701,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
     if (mWinApp->mNavigator)
       mWinApp->mNavigator->AddFocusAreaPoint(false);
   }
+
   ErrorCleanup(0);
   mInDisplayNewImage = false;
   if (mRepFlag >= 0) {
@@ -9723,8 +9739,8 @@ void CCameraController::DisplayNewImage(BOOL acquired)
 }
 
 // Do defect correct and gain normalization for an image or frame being saved
-void CCameraController::ProcessImageOrFrame(short *array, int processing, int removeXrays,
-  int darkScale)
+void CCameraController::ProcessImageOrFrame(short *array, int imageType, int processing,
+  int removeXrays, int darkScale)
 {
   int ix, ixoff;
   short *array2 = NULL;
@@ -9739,12 +9755,13 @@ void CCameraController::ProcessImageOrFrame(short *array, int processing, int re
       exp2 = mDarkAbove->Exposure;
     }
     if (processing == DARK_SUBTRACTED) {
-      ProcDarkSubtract(array, mTD.ImageType, mTD.DMSizeX, mTD.DMSizeY,
+      ProcDarkSubtract(array, imageType, mTD.DMSizeX, mTD.DMSizeY,
         (short *)mDarkp->Array, mDarkp->Exposure, array2, exp2, mExposure, darkScale);
     } else {
-      ProcGainNormalize(array, mTD.ImageType, mGainp->SizeX, mTop, mLeft,
+      ProcGainNormalize(array, imageType, mGainp->SizeX, mTop, mLeft,
         mBottom, mRight, (short *)mDarkp->Array, mDarkp->Exposure, array2, exp2,
-        mExposure, darkScale, mGainp->Array, mGainp->ByteSize, mGainp->GainRefBits);
+        mExposure, darkScale, mDarkp->ByteSize, mGainp->Array, mGainp->ByteSize, 
+        mGainp->GainRefBits);
     }
 
     // Keep this processing here in case there is defect correction right at the
@@ -9752,13 +9769,13 @@ void CCameraController::ProcessImageOrFrame(short *array, int processing, int re
     if ((mTD.ProcessingPlus & CONTINUOUS_USE_THREAD) && mParam->balanceHalves) {
       ix = mParam->ifHorizontalBoundary ? mParam->sizeY : mParam->sizeX;
       ixoff = (mParam->halfBoundary - ix / 2) / mBinning + (ix / 2) / mBinning;
-      ProcBalanceHalves(array, mTD.ImageType, mTD.DMSizeX, mTD.DMSizeY,
+      ProcBalanceHalves(array, imageType, mTD.DMSizeX, mTD.DMSizeY,
         mTop, mLeft, ixoff, mParam->ifHorizontalBoundary);
     }
     CorDefCorrectDefects(&mParam->defects, array, mTD.ImageType,
       mBinning, mTop, mLeft, mBottom, mRight);
     if (removeXrays)
-      mWinApp->mProcessImage->RemoveXRays(mParam, array, mTD.ImageType,
+      mWinApp->mProcessImage->RemoveXRays(mParam, array, imageType,
         mBinning, mTop, mLeft, mBottom, mRight, mParam->imageXRayAbsCrit,
         mParam->imageXRayNumSDCrit, mParam->imageXRayBothCrit, mDebugMode);
 
@@ -10967,7 +10984,7 @@ void CCameraController::TietzCCDtoUser(int geometry, int binning, int &camSizeX,
 void CCameraController::SetupNewDarkRef(int inSet, double exposure)
 {
   mDarkp = new DarkRef;
-  mDarkp->ByteSize = mTD.ImageType == kFLOAT ? 4 : 2;
+  mDarkp->ByteSize = (mTD.ImageType == kFLOAT && !mTD.NeedFrameDarkRef) ? 4 : 2;
   mDarkp->GainDark = DARK_REFERENCE;
   mDarkp->Binning = mBinning;
   mDarkp->Camera = mTD.Camera;

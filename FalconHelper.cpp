@@ -662,9 +662,8 @@ void CFalconHelper::StackNextTask(int param)
     mDeletePrev = false;
   }
 
-  SEMTrace('1', "mProPl  %d  nnh %d  mProc %d", mProcessingPlugin ? 1 : 0, mNeedNormHere ? 1 : 0, mProcessing);
   if (mProcessingPlugin && mNeedNormHere)
-    mCamera->ProcessImageOrFrame(outPtr, mProcessing, mRemoveXrays, 1);
+    mCamera->ProcessImageOrFrame(outPtr, mImage->getType(), mProcessing, mRemoveXrays, 1);
 
   // Do alignment unless skipping that
   if (!mStackError && mUseFrameAlign && !mAlignError && !skipAlign) {
@@ -782,6 +781,7 @@ void CFalconHelper::FinishFrameAlignment(int binning)
   FrameAliParams param;
   int ind, bestFilt, val, nxBin = mNx / binning, nyBin = mNy / binning;
   int rotNx = nxBin, rotNy = nyBin, numPix = nxBin * nyBin;
+  bool toFloats = mCamTD->ImageType == kFLOAT;
   float resMean[5], smoothDist[5], rawDist[5], resSD[5], meanResMax[5];
   float maxResMax[5], meanRawMax[5], maxRawMax[5], ringCorrs[26], frcDelta = 0.02f;
   float refSigma = (float)(0.001 * B3DNINT(1000. * param.refRadius2 *
@@ -793,6 +793,8 @@ void CFalconHelper::FinishFrameAlignment(int binning)
   short *sAliSum = (mTrimDEsum || mSumNeedsRotFlip) ?
     (short *)aliSum : mCamTD->Array[0];
   unsigned short *usAliSum = (unsigned short *)sAliSum;
+  float *fArray = (float *)mCamTD->Array[0];
+
   if (mFAparamSetInd < 0) {
     param = mContinuousAliParam;
     mFloatScale = mCamera->GetAverageContinAlign() ? (float)(1. / mNumAligned) : 0.f;
@@ -845,7 +847,7 @@ void CFalconHelper::FinishFrameAlignment(int binning)
       }
     } else if (mDoingAdvancedFrames && mDivideBy) {
       if (mDivideBy2) {
-       for (ind = 0; ind < numPix; ind++) {
+        for (ind = 0; ind < numPix; ind++) {
           val = B3DNINT(aliSum[ind]) >> mDivideBy;
           B3DCLAMP(val, -32768, 32767);
           sAliSum[ind] = (short)val;
@@ -857,6 +859,13 @@ void CFalconHelper::FinishFrameAlignment(int binning)
           usAliSum[ind] = (unsigned short)val;
         }
       }
+    } else if (toFloats && !mSumNeedsRotFlip) {
+
+      // FLOATS: This covers only the case where a plugin has done any divide by 2 needed
+      // and no float scaling is also entailed.  Other cases will need different handling
+      for (ind = 0; ind < numPix; ind++)
+        fArray[ind] = aliSum[ind];
+
     } else if (mDivideBy2) {
       for (ind = 0; ind < numPix; ind++) {
         val = B3DNINT(aliSum[ind]);
@@ -879,8 +888,8 @@ void CFalconHelper::FinishFrameAlignment(int binning)
 
     // If rotating, that last operation was done in place and now rotate into array
     if (mSumNeedsRotFlip)
-      rotateFlipImage(sAliSum, mDivideBy2 ? kSHORT : kUSHORT, rotNx, rotNy, 
-        mAliSumRotFlip, 1, 0, 0, mCamTD->Array[0], &ind, &val, 0);
+      rotateFlipImage(sAliSum, B3DCHOICE(toFloats, kFLOAT, mDivideBy2 ? kSHORT : kUSHORT),
+        rotNx, rotNy, mAliSumRotFlip, 1, 0, 0, mCamTD->Array[0], &ind, &val, 0);
   } else {
     SEMTrace('1', "Error %d finishing frame alignment", ind);
     mAlignError = FIF_FINISH_ALIGN_ERR;
@@ -1013,8 +1022,6 @@ int CFalconHelper::ProcessPluginFrames(CString &directory, CString &rootname,
   mNeedNormHere = conSet.processing != camTD->Processing;
   mProcessing = conSet.processing;
   mRemoveXrays = conSet.removeXrays;
-  SEMTrace('1', "cs.proc %d  cTD/proc %d  nh %d", conSet.processing, camTD->Processing,
-    mNeedNormHere ? 1 : 0);
   if (mNeedNormHere && align && !save) {
     mNeedNormHere = !mCamera->CanFramealignProcessSubarea(&conSet, &mDarkp,
       &mGainp);
