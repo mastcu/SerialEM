@@ -3,6 +3,11 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+6/9/20: Fixed display of scale bar for images read from file with .mdoc.
+
+6/9/20: Added ability to add pixel sizes to camera length table for output in
+the file header and mdoc file.
+
 6/9/20: Fixed some problems with taking images and frames with floating point
 return with Tietz cameras and added support for GPU version of XF416.
 

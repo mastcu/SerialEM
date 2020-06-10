@@ -484,6 +484,7 @@ public:
   CString *GetLongMacroNames() {return mLongMacroName;};
   MagTable *GetMagTable() {return mMagTab;};
   int *GetCamLenTable() {return &mCamLengths[0];};
+  float *GetCamLenPixSizes() { return &mCamLenPixSizes[0]; };
   MacroControl *GetMacControl() {return &mMacControl;};
   int *GetInitialDlgState();
   GetMember(DialogTable *, DialogTable)
@@ -658,6 +659,7 @@ private:
   CString mModeName[MAX_CONSETS];
   MagTable mMagTab[MAX_MAGS];
   int mCamLengths[MAX_CAMLENS];
+  float mCamLenPixSizes[MAX_CAMLENS];
   LowDoseParams mLowDoseParams[MAX_LOWDOSE_SETS];
   LowDoseParams mCamLowDoseParams[3][MAX_LOWDOSE_SETS];
   NavParams mNavParams;

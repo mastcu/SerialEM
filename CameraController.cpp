@@ -8693,6 +8693,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
   CMapDrawItem *navItem;
   ShortVec summedList;
   float frameTimeForDose;
+  float *camLenPixels = mWinApp->GetCamLenPixSizes();
   ControlSet *lastConSetp = mTD.GetDeferredSum ? mConsDeferred : &mConSetsp[mLastConSet];
   FilterParams *filtParam = mWinApp->GetFilterParams();
   DWORD ticks;
@@ -8728,6 +8729,13 @@ void CCameraController::DisplayNewImage(BOOL acquired)
     return;
   }
   mInDisplayNewImage = true;
+
+  // If in diffraction mode and there are pixel sizes provided, replace the pixel size 
+  if (!mMagBefore) {
+    ix = mScope->GetLastCamLenIndex();
+    if (ix >= 0 && ix < MAX_CAMLENS)
+      pixelSize = (float)(mBinning * 10. * camLenPixels[ix]);
+  }
 
   // Process all the channels of data; do one-time actions on first channel to process
   // and only on first trip into here when aligning falcon frames

@@ -1290,7 +1290,12 @@
       alleviates this problem.</P>
     <P><i>For a Ceta camera,</i> noise is also a problem when the counts get low. 
       Modify the properties to the following, adding the last one to make the 
-      calibration routine behave as it does for a K2/K3:<br />
+      calibration routine behave as it does for a K2/K3.&nbsp; These values have 
+      worked in the past, but recently (as of June 2020) a few non Ceta-D cameras have 
+      needed the values shown for Ceta-D.&nbsp; The general procedure would thus be to 
+      check the saturation level of the camera; if it is around 6000, use the values 
+      for Ceta-D; if it is some other value under 35000, use 85% of saturation for the 
+      &#39;BeamCalMaxCounts&#39; and 10% for &#39;BeamCalMinCounts&#39;.<br />
 &nbsp;&nbsp; BeamCalMinExposure&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.1<br />
 &nbsp;&nbsp; BeamCalMaxExposure&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
       3.0<br />

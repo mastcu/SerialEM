@@ -305,6 +305,7 @@ class DLL_IM_EX CEMscope
   GetSetMember(BOOL, BlankTransients);
   SetMember(BOOL, SelectedEFTEM);
   GetMember(double, LastCameraLength);
+  GetMember(int, LastCamLenIndex);
   GetSetMember(float, StageRelaxation);
   void SetMessageBoxArgs(int type, CString &title, CString &message);
   int GetMessageBoxReturnValue(void);

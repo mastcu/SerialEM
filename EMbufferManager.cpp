@@ -293,7 +293,8 @@ int EMbufferManager::SaveImageBuffer(KImageStore *inStore, bool skipCheck, int i
   EMimageExtra *extra;
   double axisRot;
   float axis, bidirAngle;
-  int spot, err, check, cam, mag, oldDivided;
+  int spot, err, check, cam, mag, ind, oldDivided;
+  float *camLenPixels = mWinApp->GetCamLenPixSizes();
   BOOL savingOther = mWinApp->SavingOther();
   EMimageBuffer *toBuf = GetSaveBuffer();
   if (!skipCheck) {
@@ -308,6 +309,12 @@ int EMbufferManager::SaveImageBuffer(KImageStore *inStore, bool skipCheck, int i
     cam = toBuf->mCamera >= 0 ? toBuf->mCamera : mWinApp->GetCurrentCamera();
     mag = toBuf->mMagInd ? toBuf->mMagInd : mWinApp->mScope->FastMagIndex();
     float pixel = mWinApp->mShiftManager->GetPixelSize(cam, mag);
+    if (!mag) {
+      ind = mWinApp->mScope->GetLastCamLenIndex();
+      if (ind >= 0 && ind < MAX_CAMLENS && camLenPixels[ind] > 0)
+        pixel = camLenPixels[ind] / 1000.f;
+
+    }
     inStore->SetPixelSpacing((float)(10000. * B3DMAX(1, toBuf->mBinning) * pixel));
 
     // 11/6/06: Removed 180 degree rotations for angles beyond 90!  Preserve true 

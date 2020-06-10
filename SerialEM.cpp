@@ -523,8 +523,10 @@ CSerialEMApp::CSerialEMApp()
       mMagTab[i].stageCalFocus[j] = -999.;
     }
   }
-  for (i = 0; i < MAX_CAMLENS; i++)
+  for (i = 0; i < MAX_CAMLENS; i++) {
     mCamLengths[i] = 0;
+    mCamLenPixSizes[i] = 0.;
+  }
 
   mIdleArray.SetSize(0,5);
   mCheckThreshold = 1000;
