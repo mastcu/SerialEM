@@ -1264,7 +1264,9 @@ void CMacroProcessor::RunOrResume()
   mCropXafterShot = -1;
   mNextProcessArgs = "";
   mBeamTiltXtoRestore[0] = mBeamTiltXtoRestore[1] = EXTRA_NO_VALUE;
-  mBeamTiltYtoRestore[0] = mBeamTiltXtoRestore[1] = EXTRA_NO_VALUE;
+  mBeamTiltYtoRestore[0] = mBeamTiltYtoRestore[1] = EXTRA_NO_VALUE;
+  mAstigXtoRestore[0] = mAstigXtoRestore[1] = EXTRA_NO_VALUE;
+  mAstigYtoRestore[0] = mAstigYtoRestore[1] = EXTRA_NO_VALUE;
   mCompensatedBTforIS = false;
   mKeyPressed = 0;
   if (mChangedConsets.size() > 0 && mCamWithChangedSets == mWinApp->GetCurrentCamera())
@@ -2816,10 +2818,17 @@ void CMacroProcessor::NextCommand()
           "in multiple holes must be between 1 and 11 in line:\n\n");
     }
     truth = (index == 0 || msParams->numEarlyFrames != 0) ? msParams->saveRecord : false;
+    ix0 = msParams->doSecondRing ? 1 : 0;
+    if (!itemEmpty[10] && itemInt[10] > -9)
+      ix0 = itemInt[10] ? 1 : 0;
+    ix1 = 0;
+    if (ix0)
+      ix1 = (itemEmpty[11] || itemInt[11] < -8) ? msParams->numShots[1] : itemInt[11];
     if (mWinApp->mParticleTasks->StartMultiShot(
-      (itemEmpty[1] || itemInt[1] < -8) ? msParams->numShots : itemInt[1],
+      (itemEmpty[1] || itemInt[1] < -8) ? msParams->numShots[0] : itemInt[1],
       (itemEmpty[2] || itemInt[2] < -8) ? msParams->doCenter : itemInt[2],
-      (itemEmpty[3] || itemDbl[3] < -8.) ? msParams->spokeRad : (float)itemDbl[3],
+      (itemEmpty[3] || itemDbl[3] < -8.) ? msParams->spokeRad[0] : (float)itemDbl[3], ix1,
+      (itemEmpty[12] || itemDbl[12] < -8.) ? msParams->spokeRad[1] : (float)itemDbl[12],
       (itemEmpty[4] || itemDbl[4] < -8.) ? msParams->extraDelay : (float)itemDbl[4],
       (itemEmpty[5] || itemInt[5] < -8) ? truth : itemInt[5] != 0, index,
       (itemEmpty[7] || itemInt[7] < -8) ? msParams->numEarlyFrames : itemInt[7],
@@ -5589,7 +5598,7 @@ void CMacroProcessor::NextCommand()
     break;
     
   case CME_PROGRAMTIMESTAMPS:                               // ProgramTimeStamps
-    mWinApp->AppendToLog(mWinApp->GetStartupMessage(), LOG_OPEN_IF_CLOSED);
+    mWinApp->AppendToLog(mWinApp->GetStartupMessage(!itemEmpty[1] && itemInt[1]));
     break;
 
     // IsVersionAtLeast, SkipIfVersionLessThan  break;
@@ -7846,11 +7855,23 @@ void CMacroProcessor::SuspendMacro(BOOL abort)
           mWinApp->mParticleTasks->SetBaseBeamTilt(mBeamTiltXtoRestore[probe], 
           mBeamTiltYtoRestore[probe]);
       }
-      if (mBeamTiltXtoRestore[1 - probe] > EXTRA_VALUE_TEST) {
-        mWinApp->AppendToLog("Switching probe modes to restore beam tilt value");
+      if (mAstigXtoRestore[probe] > EXTRA_VALUE_TEST) {
+        mScope->SetObjectiveStigmator(mAstigXtoRestore[probe], mAstigYtoRestore[probe]);
+        if (mWinApp->mParticleTasks->DoingMultiShot())
+          mWinApp->mParticleTasks->SetBaseAstig(mAstigXtoRestore[probe],
+            mAstigYtoRestore[probe]);
+      }
+      if (mBeamTiltXtoRestore[1 - probe] > EXTRA_VALUE_TEST || 
+        mAstigXtoRestore[1 - probe] > EXTRA_VALUE_TEST) {
+        mWinApp->AppendToLog("Switching probe modes to restore beam tilt and/or "
+          "astigmatism value");
         mScope->SetProbeMode(1 - probe);
-        mScope->SetBeamTilt(mBeamTiltXtoRestore[1 - probe], 
-          mBeamTiltYtoRestore[1 - probe]);
+        if (mBeamTiltXtoRestore[1 - probe] > EXTRA_VALUE_TEST)
+          mScope->SetBeamTilt(mBeamTiltXtoRestore[1 - probe],
+            mBeamTiltYtoRestore[1 - probe]);
+        if (mAstigXtoRestore[1 - probe] > EXTRA_VALUE_TEST)
+          mScope->SetObjectiveStigmator(mAstigXtoRestore[1 - probe], 
+            mAstigYtoRestore[1 - probe]);
         mScope->SetProbeMode(probe);
       }
       if (mLDSetAddedBeamRestore >= 0)
@@ -10127,7 +10148,7 @@ bool CMacroProcessor::CheckAndConvertCameraSet(CString &strItem, int &itemInt, i
 int CMacroProcessor::AdjustBeamTiltIfSelected(double delISX, double delISY, BOOL doAdjust,
   CString &message)
 {
-  double delBTX, delBTY, transISX, transISY;
+  double delBTX, delBTY, transISX, transISY, astigX, astigY, BTX, BTY;
   int probe = mScope->GetProbeMode();
   ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
   if (!doAdjust)
@@ -10137,20 +10158,34 @@ int CMacroProcessor::AdjustBeamTiltIfSelected(double delISX, double delISY, BOOL
       "in:\n\n";
     return 1;
   }
+  mScope->GetBeamTilt(BTX, BTY);
   if (mBeamTiltXtoRestore[probe] < EXTRA_VALUE_TEST) {
-    mScope->GetBeamTilt(mBeamTiltXtoRestore[probe], mBeamTiltYtoRestore[probe]);
+    mBeamTiltXtoRestore[probe] = BTX;
+    mBeamTiltYtoRestore[probe] = BTY;
     mNumStatesToRestore++;
   }
   mShiftManager->TransferGeneralIS(mScope->FastMagIndex(), delISX, delISY, 
     comaVsIS->magInd, transISX, transISY);
   delBTX = comaVsIS->matrix.xpx * transISX + comaVsIS->matrix.xpy * transISY;
   delBTY = comaVsIS->matrix.ypx * transISX + comaVsIS->matrix.ypy * transISY;
-  mScope->IncBeamTilt(delBTX, delBTY);
+  mWinApp->mAutoTuning->BacklashedBeamTilt(BTX + delBTX, BTY + delBTY, true);
   mCompensatedBTforIS = true;
+  if (comaVsIS->astigMat.xpx) {
+    mScope->GetObjectiveStigmator(astigX, astigY);
+    if (mAstigXtoRestore[probe] < EXTRA_VALUE_TEST) {
+      mAstigXtoRestore[probe] = astigX;
+      mAstigYtoRestore[probe] = astigY;
+      mNumStatesToRestore++;
+    }
+    delBTX = comaVsIS->astigMat.xpx * transISX + comaVsIS->astigMat.xpy * transISY;
+    delBTY = comaVsIS->astigMat.ypx * transISX + comaVsIS->astigMat.ypy * transISY;
+    mWinApp->mAutoTuning->BacklashedStigmator(astigX + delBTX, astigY + delBTY, true);
+  }
   return 0;
 }
 
-int CMacroProcessor::AdjustBTApplyISSetDelay(double delISX, double delISY, BOOL doAdjust, BOOL setDelay, double scale, CString &message)
+int CMacroProcessor::AdjustBTApplyISSetDelay(double delISX, double delISY, BOOL doAdjust,
+  BOOL setDelay, double scale, CString &message)
 {
   if (AdjustBeamTiltIfSelected(delISX, delISY, doAdjust, message))
     return 1;

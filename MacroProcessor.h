@@ -231,6 +231,8 @@ private:
   int mLDSetAddedBeamRestore;   // Saved state of low dose SET function for beam shift
   double mBeamTiltXtoRestore[2];   // Saved beam tilt values to restore for two probe
   double mBeamTiltYtoRestore[2];   // modes
+  double mAstigXtoRestore[2];   // Saved stigamtor values to restore for two probe
+  double mAstigYtoRestore[2];   // modes
   int mK3CDSmodeToRestore;  // -1 or value of mode to restore at end
   bool mCompensatedBTforIS; // Flag that beam tilt was compensated for an IS change
   int mKeyPressed;        // Key pressed after macro starts
