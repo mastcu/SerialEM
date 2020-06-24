@@ -2338,7 +2338,7 @@
             screen if it is down. It requires the adaexp server to be installed.</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">SetupMessageBox #B [#T] [text]</TD>
+          <TD class="scriptcommand">SetupScopeMessage #B [#T] [text]</TD>
           <TD>Sets properties for a message box to be shown on an FEI microscope computer 
             with the next command.&nbsp; <b>#B</b> specifies the type of buttons: 0 for OK, 1 for OK 
             - Cancel, 2 for Yes - No, 3 for Yes - No - Cancel.&nbsp; The optional <b>#T</b> sets the 
@@ -2353,7 +2353,7 @@
           <TD>Opens a message box on an FEI microscope computer with the given <b>title</b>, which 
             can include spaces.&nbsp; The box is displayed with the &quot;long operation&quot; 
             mechanism described below, so it is possible to have it displayed only after an 
-            interval has elapsed.&nbsp; If SetupMessageBox was not used, the default is for 
+            interval has elapsed.&nbsp; If SetupScopeMessage was not used, the default is for 
             a box with an OK button, opened unconditionally, with the text &quot;SerialEM 
             message&quot;.&nbsp; When the command is finished, <I>reportedValue1</I> is set with 1 if 
             the box was displayed or 0 if it was not, and <I>reportedValue2</I> is set with the 
