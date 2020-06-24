@@ -433,6 +433,8 @@ void CCameraController::ClearOneShotFlags()
   mMagQueued = false;
   mISQueued = false;
   mBeamTiltQueued = false;
+  mAstigQueued = false;
+  mDefocusQueued = false;
   mFocusStepToDo1 = 0.;
   mFocusStepToDo2 = 0.;
   mLDwasSetToArea = -1;
@@ -2514,6 +2516,20 @@ void CCameraController::QueueBeamTilt(double inBTX, double inBTY, int backlashDe
   mBTBacklashDelay = backlashDelay;
 }
 
+void CCameraController::QueueStigmator(double inX, double inY, int backlashDelay)
+{
+  mAstigQueued = true;
+  mAstigToDoX = inX;
+  mAstigToDoY = inY;
+  mAstigBacklashDelay = backlashDelay;
+}
+
+void CCameraController::QueueDefocus(double focus)
+{
+  mDefocusQueued = true;
+  mDefocusToDo = focus;
+}
+
 // Queue a mag change and normalization
 void CCameraController::QueueMagChange(int inMagInd)
 {
@@ -3116,6 +3132,14 @@ void CCameraController::Capture(int inSet, bool retrying)
   mTD.BTBacklashDelay = mBTBacklashDelay;
   if (mBTBacklashDelay > 0)
     mTD.BeamTiltBacklash = mWinApp->mAutoTuning->GetBeamTiltBacklash();
+  mTD.PostStigmator = mAstigQueued;
+  mTD.AstigX = mAstigToDoX;
+  mTD.AstigY = mAstigToDoY;
+  mTD.AstigBacklashDelay = mAstigBacklashDelay;
+  if (mAstigBacklashDelay > 0)
+    mTD.AstigBacklash = mWinApp->mAutoTuning->GetAstigBacklash();
+  mTD.PostSetDefocus = mDefocusQueued;
+  mTD.NewDefocus = mDefocusToDo;
   mTD.PostChangeMag = mMagQueued;
   mTD.NewMagIndex = mMagIndToDo;
   mTD.TiltDuringDelay = B3DCHOICE(!FEIscope && mTiltDuringShotDelay >= 0, 
@@ -3303,6 +3327,8 @@ void CCameraController::Capture(int inSet, bool retrying)
   mMagQueued = false;
   mISQueued = false;
   mBeamTiltQueued = false;
+  mAstigQueued = false;
+  mDefocusQueued = false;
   mNumDRdelete = 0;
   mPriorRecordDose = (float)B3DCHOICE(mWinApp->DoingTiltSeries(),
     mWinApp->mTSController->GetCumulativeDose(), -1.);
@@ -5060,8 +5086,8 @@ void CCameraController::CapSetupShutteringTiming(ControlSet & conSet, int inSet,
 
     // Set up post actions
     mTD.PostActionTime = 0;
-    if (mStageQueued || mISQueued || mBeamTiltQueued || mMagQueued || 
-      (mDriftISQueued && mBeamWidth <= 0)) {
+    if (mStageQueued || mISQueued || mBeamTiltQueued || mMagQueued || mAstigQueued ||
+      mDefocusQueued || (mDriftISQueued && mBeamWidth <= 0)) {
 
       // Use reblanktime as a flag, or set up time to end of exposure regardless
       if (mTD.ReblankTime)
@@ -5185,8 +5211,8 @@ void CCameraController::CapSetupShutteringTiming(ControlSet & conSet, int inSet,
         mTD.UnblankTime = (int)(1000. * (mParam->startupDelay - conSet.drift));
       mTD.ReblankTime = (int)(1000 * (mParam->startupDelay + mExposure + 
         mParam->extraBeamTime)) - mTD.UnblankTime;
-      if (mStageQueued || mISQueued || mBeamTiltQueued || mMagQueued || 
-        (mDriftISQueued && mBeamWidth <= 0))
+      if (mStageQueued || mISQueued || mBeamTiltQueued || mMagQueued || mAstigQueued ||
+        mDefocusQueued || (mDriftISQueued && mBeamWidth <= 0))
          mTD.PostActionTime = mTD.ReblankTime;
     }
     bEnsureDark |= (conSet.processing != UNPROCESSED && mParam->GatanCam && 
@@ -7308,6 +7334,8 @@ UINT CCameraController::AcquireProc(LPVOID pParam)
           pdTD.ReblankTime = pdTD.PostActionTime = pdTD.DriftISinterval = 0;
           pdTD.PostChangeMag = pdTD.PostImageShift = pdTD.PostMoveStage = false;
           pdTD.PostBeamTilt = false;
+          pdTD.PostStigmator = false;
+          pdTD.PostSetDefocus = false;
           td->blankerThread = StartBlankerThread(&pdTD);
         }
         try {
@@ -8235,6 +8263,16 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
         }
         td->scopePlugFuncs->SetBeamTilt(td->BeamTiltX, td->BeamTiltY);
       }
+      if (td->PostStigmator) {
+        if (td->AstigBacklashDelay > 0) {
+          td->scopePlugFuncs->SetObjectiveStigmator(td->AstigX + td->AstigBacklash,
+            td->AstigY + td->AstigBacklash);
+          Sleep(td->AstigBacklashDelay);
+        }
+        td->scopePlugFuncs->SetObjectiveStigmator(td->AstigX, td->AstigY);
+      }
+      if (td->PostSetDefocus)
+        td->scopePlugFuncs->SetDefocus(1.e-6 * td->NewDefocus);
 
       if (td->TiltDuringDelay)
         CEMscope::WaitForStageDone(stData.info, "BlankerProc");
@@ -8692,8 +8730,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
   EMimageExtra *extra;
   CMapDrawItem *navItem;
   ShortVec summedList;
-  float frameTimeForDose;
-  float *camLenPixels = mWinApp->GetCamLenPixSizes();
+  float frameTimeForDose, camLen;
   ControlSet *lastConSetp = mTD.GetDeferredSum ? mConsDeferred : &mConSetsp[mLastConSet];
   FilterParams *filtParam = mWinApp->GetFilterParams();
   DWORD ticks;
@@ -8732,9 +8769,8 @@ void CCameraController::DisplayNewImage(BOOL acquired)
 
   // If in diffraction mode and there are pixel sizes provided, replace the pixel size 
   if (!mMagBefore) {
-    ix = mScope->GetLastCamLenIndex();
-    if (ix >= 0 && ix < MAX_CAMLENS)
-      pixelSize = (float)(mBinning * 10. * camLenPixels[ix]);
+    mWinApp->mProcessImage->GetDiffractionPixelSize(curCam, pixelSize, camLen);
+    pixelSize *= mBinning;
   }
 
   // Process all the channels of data; do one-time actions on first channel to process
@@ -9350,8 +9386,11 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       }
       extra->m_iMag = MagOrEFTEMmag(mWinApp->GetEFTEMMode(), mMagBefore, 
         mParam->STEMcamera);
-      if (!mMagBefore)
-        extra->mCameraLength = (float)mScope->GetLastCameraLength();
+      if (!mMagBefore) {
+        extra->mCameraLength = camLen;
+        extra->mCamPixSize = mParam->pixelMicrons * mBinning;
+        extra->mVoltage = (float)mWinApp->mProcessImage->GetRecentVoltage();
+      }
       extra->mMagIndex = mMagBefore;
       typext = TILT_MASK | VOLT_XY_MASK | INTENSITY_MASK | MAG100_MASK | DOSE_MASK;
       if (mWinApp->mMontageController->DoingMontage() && 
@@ -9807,7 +9846,6 @@ bool CCameraController::CanFramealignProcessSubarea(ControlSet *lastConSetp,
   return true;
 }
 
-
 // Common place to clean up when there is an error, or when done
 void CCameraController::ErrorCleanup(int error)
 {
@@ -9840,6 +9878,10 @@ void CCameraController::ErrorCleanup(int error)
     mScope->SetImageShift(mImageShiftXtoRestore, mImageShiftYtoRestore);
   if (mNeedToRestoreISandBT & 2)
     mScope->SetBeamTilt(mBeamTiltXtoRestore, mBeamTiltYtoRestore);
+  if (mNeedToRestoreISandBT & 4)
+    mScope->SetObjectiveStigmator(mAstigXtoRestore, mAstigYtoRestore);
+  if (mNeedToRestoreISandBT & 8)
+    mScope->SetDefocus(mDefocusToRestore);
 
   // Clear flags set by this shot setup
   mAligningPluginFrames = false;
@@ -10406,7 +10448,8 @@ void CCameraController::SetupBeamScan(ControlSet *conSetp)
   mExposure = 0.001 * mTD.ScanTime + conSetp->drift + 2 * mParam->extraBeamTime;
   mTD.ShutterMode = mParam->beamShutter;
   mTD.PostActionTime = 0;
-  if (mStageQueued || mISQueued || mBeamTiltQueued || mMagQueued)
+  if (mStageQueued || mISQueued || mBeamTiltQueued || mMagQueued || mAstigQueued || 
+    mDefocusQueued)
     mTD.PostActionTime = (int)(1000. * mParam->extraBeamTime);
   if (mDebugMode) {
     message.Format("Start Y %.3f  Total Y %.3f  Delay %d  Total Time %.1f  Exposure %.3f"
@@ -10499,8 +10542,8 @@ void CCameraController::SetNonGatanPostActionTime(void)
     if (!mTD.UnblankTime)
       mTD.UnblankTime = 1;
   }
-  if (mStageQueued || mISQueued || mBeamTiltQueued || mMagQueued || 
-    (mDriftISQueued && mBeamWidth <= 0.)) {
+  if (mStageQueued || mISQueued || mBeamTiltQueued || mMagQueued || mAstigQueued ||
+    mDefocusQueued || (mDriftISQueued && mBeamWidth <= 0.)) {
     mTD.PostActionTime = (int)(1000. * (mParam->startupDelay + mExposure + 
     mTD.DMsettling + mParam->extraBeamTime));
 

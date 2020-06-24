@@ -199,7 +199,13 @@ struct CameraThreadData {
   BOOL PostBeamTilt;          // Flag to do beam tilt
   double BeamTiltX, BeamTiltY; // Beam tilt
   float BeamTiltBacklash;     // Backlash to apply to beam tilt
-  int BTBacklashDelay;          // Sleep time for delay if setting BT with backlash
+  int BTBacklashDelay;        // Sleep time for delay if setting BT with backlash
+  BOOL PostStigmator;         // Flag to do beam tilt
+  double AstigX, AstigY;      // Stigmators
+  float AstigBacklash;        // Backlash to apply to beam tilt
+  int AstigBacklashDelay;     // Sleep time for delay if setting BT with backlash
+  BOOL PostSetDefocus;        // Flag to set defocus
+  double NewDefocus;          // Defocus to set
   BOOL PostChangeMag;         // Flag to change mag
   BOOL PostMagFixIS;          // Flag to fix IS after mag change
   int NewMagIndex;            // Index to change to
@@ -399,8 +405,8 @@ public:
   CArray<ChannelSet, ChannelSet> *GetChannelSets() { return &mChannelSets; };
   BOOL GetProcessHere();
   void SetProcessHere(BOOL inVal);
-  SetMember(int, RefMemoryLimit)
-    void KillUpdateTimer();
+  SetMember(int, RefMemoryLimit);
+  void KillUpdateTimer();
   double EasyRunScript(CString command, int selectCamera, int DMindex);
   int CheckFilterSettings();
   void ReleaseCamera(int createFor);
@@ -408,15 +414,15 @@ public:
   void ShowReference(int type);
   int DeleteReferences(int type, bool onlyDMRefs);
   int AddRefToArray(DarkRef *newRef);
-  GetMember(BOOL, DebugMode)
-    void SetDebugMode(BOOL inVal);
+  GetMember(BOOL, DebugMode);
+  void SetDebugMode(BOOL inVal);
   BOOL GetInitialized();
   int SetupFilter(BOOL acquiring = false);
-  GetMember(BOOL, Halting)
-    int ConSetToLDArea(int inConSet);
-  SetMember(int, RequiredRoll)
-    SetMember(BOOL, ObeyTiltDelay)
-    GetSetMember(BOOL, MakeFEIerrorBeTimeout);
+  GetMember(BOOL, Halting);
+  int ConSetToLDArea(int inConSet);
+  SetMember(int, RequiredRoll);
+  SetMember(BOOL, ObeyTiltDelay);
+  GetSetMember(BOOL, MakeFEIerrorBeTimeout);
   void QueueMagChange(int inMagInd);
   void QueueImageShift(double inISX, double inISY, int inDelay);
   void QueueStageMove(StageMoveInfo inSmi, int inDelay, bool doBacklash = false, BOOL doRestoreXY = false);
@@ -573,7 +579,9 @@ public:
     mImageShiftYtoRestore = inY; mNeedToRestoreISandBT |= 1;};
   void SetBeamTiltToRestore(double inX, double inY) {mBeamTiltXtoRestore = inX;
     mBeamTiltYtoRestore = inY; mNeedToRestoreISandBT |= 2;};
-
+  void SetAstigToRestore(double inX, double inY) { mAstigXtoRestore = inX;
+    mAstigYtoRestore = inY; mNeedToRestoreISandBT |= 4; };
+  void SetDefocusToRestore(double focus) { mDefocusToRestore;  mNeedToRestoreISandBT |= 8; };
  private:
   void AdjustSizes(int &DMsizeX, int ccdSizeX, int moduloX,
                    int &Left, int &Right, int binning, int camera = -1);
@@ -656,6 +664,11 @@ public:
   BOOL mBeamTiltQueued;         // Beam tilt queued
   double mBTToDoX, mBTToDoY;    // Absolute beam tilt to set
   int mBTBacklashDelay;         // Delay time if want backlash: use standard backlash
+  BOOL mAstigQueued;            // Stigmator queued
+  double mAstigToDoX, mAstigToDoY; // Absolute stigmator to set
+  int mAstigBacklashDelay;      // Delay time if want backlash: use standard backlash
+  BOOL mDefocusQueued;          // Flag that defocus is queued
+  double mDefocusToDo;          // Defocus to set
   BOOL mMagQueued;              // mag change queued
   int mMagIndToDo;              // mag to change to;
   int mTiltDuringShotDelay;     // Delay time to starting tilt during shot (< 0 for none)
@@ -674,6 +687,9 @@ public:
   double mImageShiftYtoRestore; // When it gets a stop
   double mBeamTiltXtoRestore;
   double mBeamTiltYtoRestore;
+  double mAstigXtoRestore;
+  double mAstigYtoRestore;
+  double mDefocusToRestore;
   int mNeedToRestoreISandBT;    // 1 to restore IS, 2 to restore BT
   int mContinuousCount;         // Count of frames in continuous mode
   double mContinStartTime;      // Time of second frame
@@ -1067,6 +1083,8 @@ void AdjustCountsPerElecForScale(CameraParameters * param);
 int DESumCountForConstraints(CameraParameters *camP, ControlSet *consP);
 void MakeOneFrameAlignCom(CString & localFramePath, ControlSet *conSet);
 void QueueBeamTilt(double inBTX, double inBTY, int backlashDelay);
+void QueueStigmator(double inX, double inY, int backlashDelay);
+void QueueDefocus(double focus);
 bool IsK3BinningSuperResFrames(CameraParameters *param, int doseFrac, int saveFrames,
   int alignFrames, int useFrameAlign, int processing, int readMode,
   BOOL takeBinnedFlag);
