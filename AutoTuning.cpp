@@ -843,6 +843,28 @@ void CAutoTuning::ReportMisalignment(const char *prefix, double misAlignX,
   mWinApp->AppendToLog(mess);
 }
 
+// Apply a beam tilt with backlash if a there is a backlash delay and the flag is set
+void CAutoTuning::BacklashedBeamTilt(double btX, double btY, bool doBacklash)
+{
+  if (mBacklashDelay && doBacklash) {
+    GetBeamTiltBacklash();
+    mScope->SetBeamTilt(btX + mBeamTiltBacklash, btY + mBeamTiltBacklash);
+    Sleep(mBacklashDelay);
+  }
+  mScope->SetBeamTilt(btX, btY);
+}
+
+// Apply a stigmator change with backlash if a there is a delay and the flag is set
+void CAutoTuning::BacklashedStigmator(double astX, double astY, bool doBacklash)
+{
+  if (mBacklashDelay && doBacklash) {
+    mAstigBacklash = -fabs(mAstigBacklash);
+    mScope->SetObjectiveStigmator(astX + mAstigBacklash, astY + mAstigBacklash);
+    Sleep(mBacklashDelay);
+  }
+  mScope->SetObjectiveStigmator(astX, astY);
+}
+
 ///////////////////////////////////////////////////////////////////
 // ZEMLIN TABLEAU ROUTINES
 ///////////////////////////////////////////////////////////////////
@@ -1108,13 +1130,9 @@ int CAutoTuning::CtfBasedAstigmatismComa(int comaFree, bool calibrate, int actio
   if (comaFree) {
 
     // Operations with beam tilt:
-    GetBeamTiltBacklash();
     mCtfCal.amplitude = mUsersComaTilt <= 0. ? mMaxComaBeamTilt : mUsersComaTilt;
     mScope->GetBeamTilt(mBaseBeamTiltX, mBaseBeamTiltY);
-    mScope->SetBeamTilt(mBaseBeamTiltX + mBeamTiltBacklash, 
-      mBaseBeamTiltY + mBeamTiltBacklash);
-    Sleep(mBacklashDelay);
-    mScope->SetBeamTilt(mBaseBeamTiltX, mBaseBeamTiltY);
+    BacklashedBeamTilt(mBaseBeamTiltX, mBaseBeamTiltY, true);
     mWinApp->mShiftManager->SetGeneralTimeOut(GetTickCount(), mPostBeamTiltDelay);
     mLastBeamX = mBaseBeamTiltX;
     mLastBeamY = mBaseBeamTiltY;
@@ -1123,10 +1141,7 @@ int CAutoTuning::CtfBasedAstigmatismComa(int comaFree, bool calibrate, int actio
     // Operations for astigmatism
     mAstigBacklash= -fabs(mAstigBacklash);
     mScope->GetObjectiveStigmator(mSavedAstigX, mSavedAstigY);
-    mScope->SetObjectiveStigmator(mSavedAstigX + mAstigBacklash, 
-      mSavedAstigY + mAstigBacklash); 
-    Sleep(mBacklashDelay);
-    mScope->SetObjectiveStigmator(mSavedAstigX, mSavedAstigY); 
+    BacklashedStigmator(mSavedAstigX, mSavedAstigY, true);
     mWinApp->mShiftManager->SetGeneralTimeOut(GetTickCount(), mPostAstigDelay);
     mLastAstigX = mSavedAstigX;
     mLastAstigY = mSavedAstigY;
@@ -1370,12 +1385,8 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
       if (mCtfActionType / 2 == 0 && mCtfComaFree) {
         nextXval = mLastBeamX + xFacs[mOperationInd] * mCtfCal.amplitude;
         nextYval = mLastBeamY + yFacs[mOperationInd] * mCtfCal.amplitude;
-        if (mOperationInd == 0 || (!mDoingFullArray && mOperationInd == numOperations / 2)
-          || mDoingFullArray) {
-            mScope->SetBeamTilt(nextXval + mBeamTiltBacklash, nextYval+mBeamTiltBacklash);
-            Sleep(mBacklashDelay);
-        }
-        mScope->SetBeamTilt(nextXval, nextYval);
+        BacklashedBeamTilt(nextXval, nextYval, mOperationInd == 0 ||
+          (!mDoingFullArray && mOperationInd == numOperations / 2) || mDoingFullArray);
         mWinApp->mShiftManager->SetGeneralTimeOut(GetTickCount(), mPostBeamTiltDelay);
         //PrintfToLog("Beam tilt set to %.3f %.3f", nextXval, nextYval);
       } else if (mCtfActionType / 2 == 0) {
@@ -1523,10 +1534,7 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
           nextXval = mLastBeamX - (mCtfActionType ? 0. : solution[0]);
           nextYval = mLastBeamY - (mCtfActionType ? 0. : solution[1]);
           if (mCtfActionType / 2 == 0) {
-            mScope->SetBeamTilt(nextXval + mBeamTiltBacklash, 
-              nextYval + mBeamTiltBacklash);
-            Sleep(mBacklashDelay); 
-            mScope->SetBeamTilt(nextXval, nextYval);
+            BacklashedBeamTilt(nextXval, nextYval, true);
           }
 
             // Check if iterating
@@ -1661,6 +1669,7 @@ void CAutoTuning::AstigCoefficientsFromCtfFits(float *fitValues, float angle, fl
 // Set default backlash and make sure it is negative, return value
 float CAutoTuning::GetBeamTiltBacklash()
 {
+  static bool first = true;
   if (mBeamTiltBacklash < -900) {
     float scaling = mWinApp->mFocusManager->EstimatedBeamTiltScaling();
     mBeamTiltBacklash = -1.0f;
@@ -1668,6 +1677,9 @@ float CAutoTuning::GetBeamTiltBacklash()
       mBeamTiltBacklash /= scaling;
   }
   mBeamTiltBacklash = -fabs(mBeamTiltBacklash);
+  if (first)
+    SEMTrace('1', "Beam tilt backlash %.3f  delay  %d", mBeamTiltBacklash,mBacklashDelay);
+  first = false;
   return mBeamTiltBacklash;
 }
 
@@ -1752,7 +1764,7 @@ int CAutoTuning::CheckAndSetupCtfAcquireParams(const char *operation, bool fromS
   return SetupCtfAcquireParams(true);
 }
 
-
+// Calibrate the dependence of beam tilt and astigmatism on image shift
 int CAutoTuning::CalibrateComaVsImageShift(bool interactive)
 {
   CString str;
@@ -1777,18 +1789,20 @@ int CAutoTuning::CalibrateComaVsImageShift(bool interactive)
   if (mWinApp->LowDoseMode())
     mScope->GotoLowDoseArea(RECORD_CONSET);
   mComaVsISindex = 0;
+  mScope->GetBeamTilt(mBaseBeamTiltX, mBaseBeamTiltY);
   mWinApp->UpdateBufferWindows();
   ComaVsISNextTask(0);
   return 0;
 }
 
-
+// An operation is done, start the next one
 void CAutoTuning::ComaVsISNextTask(int param)
 {
   int delx[4] = {-1, 1, 0, 0};
   int dely[4] = {0, 0, -1, 1};
   float delayFactor = 2.;
-  int index = mComaVsISindex;
+  float delISX, delISY;
+  int posIndex, index = mComaVsISindex;
   ScaleMat aMat = mWinApp->mShiftManager->IStoSpecimen(mScope->FastMagIndex());
   double ISX = mComaVsISextent / sqrt(aMat.xpx * aMat.xpx + aMat.ypx * aMat.ypx);
   double ISY = mComaVsISextent / sqrt(aMat.ypx * aMat.ypx + aMat.ypy * aMat.ypy);
@@ -1802,37 +1816,70 @@ void CAutoTuning::ComaVsISNextTask(int param)
       StopComaVsISCal();
       return;
     }
-    mComaVsISXTiltNeeded[index - 1] = mLastXTiltNeeded;
-    mComaVsISYTiltNeeded[index - 1] = mLastYTiltNeeded;
+
+    // On odd indexes, record the beam tilt needed; on even indexes record the astigmatism
+    // needed and restore the beam tilt
+    posIndex = (index - 1) / 2;
+    if (index % 2) {
+      mComaVsISXTiltNeeded[posIndex] = mLastXTiltNeeded;
+      mComaVsISYTiltNeeded[posIndex] = mLastYTiltNeeded;
+    } else {
+      mComaVsISXAstigNeeded[posIndex] = mLastXStigNeeded;
+      mComaVsISYAstigNeeded[posIndex] = mLastYStigNeeded;
+      BacklashedBeamTilt(mBaseBeamTiltX, mBaseBeamTiltY, true);
+    }
   }
 
-  // Set IS for next measurement and start the routine
-  if (index < 4) {
-    mComaVsISAppliedISX[index] = (float)(delx[index] * ISX);
-    mComaVsISAppliedISY[index] = (float)(dely[index] * ISY);
-    PrintfToLog("Measuring at image shift %.1f  %.1f um (%.1f %.1f IS units)",
-      delx[index] * mComaVsISextent, dely[index] * mComaVsISextent, 
-      mComaVsISAppliedISX[index], mComaVsISAppliedISY[index]);
-    mScope->SetImageShift(mComaVsISAppliedISX[index], mComaVsISAppliedISY[index]);
-    mWinApp->mShiftManager->SetISTimeOut(delayFactor *
-      mWinApp->mShiftManager->GetLastISDelay());
+  // Set IS for next measurement and start one routine or the other
+  if (index < 8) {
+    posIndex = index / 2;
+
+    // On odd indexes apply the needed beam tilt in order to measure astigmatism
+    // On even indexes, go to the next image shift
+    if (index % 2) {
+      BacklashedBeamTilt(mBaseBeamTiltX + mComaVsISXTiltNeeded[posIndex],
+        mBaseBeamTiltY + mComaVsISYTiltNeeded[posIndex], true);
+    } else {
+      mComaVsISAppliedISX[posIndex] = (float)(delx[posIndex] * ISX);
+      mComaVsISAppliedISY[posIndex] = (float)(dely[posIndex] * ISY);
+      PrintfToLog("Measuring at image shift %.1f  %.1f um (%.1f %.1f IS units)",
+        delx[posIndex] * mComaVsISextent, dely[posIndex] * mComaVsISextent,
+        mComaVsISAppliedISX[posIndex], mComaVsISAppliedISY[posIndex]);
+      mScope->SetImageShift(mComaVsISAppliedISX[posIndex], mComaVsISAppliedISY[posIndex]);
+      mWinApp->mShiftManager->SetISTimeOut(delayFactor *
+        mWinApp->mShiftManager->GetLastISDelay());
+    }
     mWinApp->AddIdleTask(TASK_CAL_COMA_VS_IS, 0, 0);
-    CtfBasedAstigmatismComa(1, false, 1, true);
+    CtfBasedAstigmatismComa((index + 1)  % 2, false, 1, true);
     mComaVsISindex++;
     return;
   }
 
   // Finished; save the calibration
+
+  delISX = mComaVsISAppliedISX[1] - mComaVsISAppliedISX[0];
+  delISY = mComaVsISAppliedISY[3] - mComaVsISAppliedISY[2];
   mComaVsIScal.matrix.xpx = (mComaVsISXTiltNeeded[1] - mComaVsISXTiltNeeded[0]) /
-    (mComaVsISAppliedISX[1] - mComaVsISAppliedISX[0]);
+    delISX;
   mComaVsIScal.matrix.ypx = (mComaVsISYTiltNeeded[1] - mComaVsISYTiltNeeded[0]) /
-    (mComaVsISAppliedISX[1] - mComaVsISAppliedISX[0]);
+    delISX;
   mComaVsIScal.matrix.xpy = (mComaVsISXTiltNeeded[3] - mComaVsISXTiltNeeded[2]) /
-    (mComaVsISAppliedISY[3] - mComaVsISAppliedISY[2]);
+    delISY;
   mComaVsIScal.matrix.ypy = (mComaVsISYTiltNeeded[3] - mComaVsISYTiltNeeded[2]) /
-    (mComaVsISAppliedISY[3] - mComaVsISAppliedISY[2]);
+    delISY;
   PrintfToLog("IS to beam tilt matrix: %f  %f  %f  %f", mComaVsIScal.matrix.xpx,
     mComaVsIScal.matrix.xpy, mComaVsIScal.matrix.ypx, mComaVsIScal.matrix.ypy);
+
+  mComaVsIScal.astigMat.xpx = (mComaVsISXAstigNeeded[1] - mComaVsISXAstigNeeded[0]) /
+    delISX;
+  mComaVsIScal.astigMat.ypx = (mComaVsISYAstigNeeded[1] - mComaVsISYAstigNeeded[0]) /
+    delISX;
+  mComaVsIScal.astigMat.xpy = (mComaVsISXAstigNeeded[3] - mComaVsISXAstigNeeded[2]) /
+    delISY;
+  mComaVsIScal.astigMat.ypy = (mComaVsISYAstigNeeded[3] - mComaVsISYAstigNeeded[2]) /
+    delISY;
+  PrintfToLog("IS to astigmatism matrix: %f  %f  %f  %f", mComaVsIScal.astigMat.xpx,
+    mComaVsIScal.astigMat.xpy, mComaVsIScal.astigMat.ypx, mComaVsIScal.astigMat.ypy);
   mComaVsIScal.magInd = mMagIndex;
   mComaVsIScal.spotSize = mScope->GetSpotSize();
   mComaVsIScal.intensity = (float)mScope->GetIntensity();
@@ -1860,5 +1907,6 @@ void CAutoTuning::StopComaVsISCal(void)
 {
   mComaVsISindex = -1;
   mScope->SetImageShift(0., 0.);
+  mScope->SetBeamTilt(mBaseBeamTiltX, mBaseBeamTiltY);
   mWinApp->UpdateBufferWindows();
 }

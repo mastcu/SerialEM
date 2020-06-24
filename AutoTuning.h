@@ -34,6 +34,7 @@ struct CtfBasedCalib {
 
 struct ComaVsISCalib {
   ScaleMat matrix;
+  ScaleMat astigMat;
   int spotSize;
   int magInd;
   int alpha;
@@ -81,6 +82,7 @@ public:
   GetSetMember(float, ComaVsISextent);
   GetSetMember(float, MinCtfBasedDefocus);
   GetMember(int, BacklashDelay);
+  GetMember(float, AstigBacklash);
   float GetBeamTiltBacklash();
   ComaVsISCalib *GetComaVsIScal() {return &mComaVsIScal;};
   void SetBaseBeamTilt(double inX, double inY) {mBaseBeamTiltX = inX; mBaseBeamTiltY = inY;};
@@ -204,6 +206,8 @@ private:
   float mComaVsISAppliedISY[4];
   float mComaVsISXTiltNeeded[4];
   float mComaVsISYTiltNeeded[4];
+  float mComaVsISXAstigNeeded[4];
+  float mComaVsISYAstigNeeded[4];
 
 public:
   void CalibrateAstigmatism(void);
@@ -228,6 +232,8 @@ public:
   int SaveAndSetDefocus(float defocus);
   CString TuningCalMessageStart(const char * procedure, const char *ofUpTo, float beamTilt);
   int TestAndSetStigmator(double stigX, double stigY, const char * descrip);
+  void BacklashedBeamTilt(double btX, double btY, bool doBacklash);
+  void BacklashedStigmator(double astX, double astY, bool doBacklash);
   int MakeZemlinTableau(float beamTilt, int panelSize, int cropSize);
   void ZemlinNextTask(int param);
   void StopZemlin(void);
