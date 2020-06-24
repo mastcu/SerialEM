@@ -129,7 +129,8 @@
           </TR>
           <TR VALIGN="top">
             <TD class="style1">PixelSpacing</TD>
-            <TD class="style5">Pixel spacing in Angstroms that would be in MRC header</TD>
+            <TD class="style5">Pixel spacing in Angstroms that would be in MRC header (or in 
+              1/Angstroms for diffraction images)</TD>
           </TR>
           <TR VALIGN="top">
             <TD class="style6" colspan="2">Section Data</TD>
@@ -156,6 +157,10 @@
             <TD class="style5">&quot;Film&quot; magnification value</TD>
           </TR>
           <TR VALIGN="top">
+            <TD class="style1">CameraLength</TD>
+            <TD class="style5">Camera length in mm for image in diffraction mode</TD>
+          </TR>
+          <TR VALIGN="top">
             <TD class="style1">MagIndex</TD>
             <TD class="style5">Magnification index</TD>
           </TR>
@@ -169,7 +174,8 @@
           </TR>
           <TR VALIGN="top">
             <TD class="style1">PixelSpacing</TD>
-            <TD class="style5">Pixel spacing in Angstroms for individual image</TD>
+            <TD class="style5">Pixel spacing in Angstroms for individual image (or in 
+              1/Angstroms for diffraction image)</TD>
           </TR>
           <TR VALIGN="top">
             <TD class="style1">ExposureDose</TD>
@@ -232,11 +238,6 @@
               Preview images and View images taken in tasks</TD>
           </TR>
           <TR VALIGN="top">
-            <TD class="style1">NavigatorLabel</TD>
-            <TD class="style5">Label of Navigator item, added if Acquire at Items is being run 
-              and a tilt series is not</TD>
-          </TR>
-          <TR VALIGN="top">
             <TD class="style1">XedgeDxy</TD>
             <TD class="style5">Edge displacement in X and Y for montage piece to the right of 
               this piece</TD>
@@ -285,7 +286,25 @@
               number of frames at that dose; variable-sized frame sums will have multiple 
               pairs of such values</TD>
           </TR>
-          <TR VALIGN="top">
+           <TR VALIGN="top">
+            <TD class="style1">DateTime</TD>
+            <TD class="style5">Time and date of image acquisition</TD>
+          </TR>
+           <TR VALIGN="top">
+            <TD class="style1">NavigatorLabel</TD>
+            <TD class="style5">Label of Navigator item, added if Acquire at Items is being run 
+              and a tilt series is not</TD>
+          </TR>
+           <TR VALIGN="top">
+            <TD class="style13">FilterSlitAndLoss</TD>
+            <TD class="style14">Energy filter slit width and energy loss if slit is in, 0 0 
+              otherwise</TD>
+          </TR>
+           <TR VALIGN="top">
+            <TD class="style1">ChannelName</TD>
+            <TD class="style5">Detector name for a STEM image</TD>
+          </TR>
+           <TR VALIGN="top">
             <TD class="style1">MultishotHoleAndPosition</TD>
             <TD class="style5">Hole identifier and position within hole when 
                 taking multiple record images; peripheral positions are numbered from 1 and the 
@@ -293,18 +312,14 @@
               pair of numbers relative to the center of the pattern; for a custom pattern,
                they are simply numbers starting at 1.</TD>
           </TR>
-          <TR VALIGN="top">
-            <TD class="style1">ChannelName</TD>
-            <TD class="style5">Detector name for a STEM image</TD>
+           <TR VALIGN="top">
+            <TD class="style1">CameraPixelSize</TD>
+            <TD class="style5">For diffraction image, the size of the image pixel on the 
+              camera in microns, namely the physical chip pixel size times the binning.</TD>
           </TR>
-          <TR VALIGN="top">
-            <TD class="style13">FilterSlitAndLoss</TD>
-            <TD class="style14">Energy filter slit width and energy loss if slit is in, 0 0 
-              otherwise</TD>
-          </TR>
-          <TR VALIGN="top">
-            <TD class="style1">DateTime</TD>
-            <TD class="style5">Time and date of image acquisition</TD>
+           <TR VALIGN="top">
+            <TD class="style1">Voltage</TD>
+            <TD class="style5">High voltage in kV for diffraction image.</TD>
           </TR>
           <TR VALIGN="top">
             <TD class="style6" colspan="2">Direct Electron Specific Section Data</TD>
@@ -1011,8 +1026,9 @@
     <p>
       <a name="calfile"></a><b>Calibration File Entries</b></p>
     <p>
-      This section is for lengthy entries to calibration file that sometimes need to 
-      be interpreted.&nbsp; Entries will be added upon need or request.</p>
+      This section is for lengthy entries to the calibration file that sometimes need to 
+      be interpreted.&nbsp; Entries will be added upon need or request.&nbsp; All 
+      alpha values are numbered from 0, not 1.</p>
     <p>
         <em>LowDoseParameters</em>: 
       <br />
@@ -1067,6 +1083,20 @@
 &nbsp;&nbsp; Nanoprobe intensity ratio, intensity at which acquired, and crossover intensity</p>
       <p>
           where a ratio of 0 indicates no measurement for that spot size.</p>
+    <p>
+          <em>BeamShiftCalibration</em>: This calibration is a 2x2 transformation matrix from image shift to
+      beam shift at the given magnification:<br />
+&nbsp;&nbsp; mag index<br />
+&nbsp;&nbsp; X change in beam shift per X change in image shift<br />
+&nbsp;&nbsp; X change in beam shift per Y change in image shift<br />
+&nbsp;&nbsp; Y change in beam shift per X change in image shift<br />
+&nbsp;&nbsp; Y change in beam shift per Y change in image shift<br />
+&nbsp;&nbsp; alpha<br />
+&nbsp;&nbsp; probe mode<br />
+&nbsp;&nbsp; 1 to retain the calibration when a new one is done in the same mag range and 
+          beam conditions, 0 not to<br />
+&nbsp;&nbsp; magnification</p>
+    </p>
       <p>
           <em>HighFocusMagCal:</em><br />
 &nbsp;&nbsp; spot size<br />

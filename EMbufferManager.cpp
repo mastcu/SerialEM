@@ -292,9 +292,8 @@ int EMbufferManager::SaveImageBuffer(KImageStore *inStore, bool skipCheck, int i
   KStoreIMOD *tiffStore;
   EMimageExtra *extra;
   double axisRot;
-  float axis, bidirAngle;
-  int spot, err, check, cam, mag, ind, oldDivided;
-  float *camLenPixels = mWinApp->GetCamLenPixSizes();
+  float axis, bidirAngle, camLen;
+  int spot, err, check, cam, mag, oldDivided;
   BOOL savingOther = mWinApp->SavingOther();
   EMimageBuffer *toBuf = GetSaveBuffer();
   if (!skipCheck) {
@@ -310,10 +309,7 @@ int EMbufferManager::SaveImageBuffer(KImageStore *inStore, bool skipCheck, int i
     mag = toBuf->mMagInd ? toBuf->mMagInd : mWinApp->mScope->FastMagIndex();
     float pixel = mWinApp->mShiftManager->GetPixelSize(cam, mag);
     if (!mag) {
-      ind = mWinApp->mScope->GetLastCamLenIndex();
-      if (ind >= 0 && ind < MAX_CAMLENS && camLenPixels[ind] > 0)
-        pixel = camLenPixels[ind] / 1000.f;
-
+      mWinApp->mProcessImage->GetDiffractionPixelSize(cam, pixel, camLen);
     }
     inStore->SetPixelSpacing((float)(10000. * B3DMAX(1, toBuf->mBinning) * pixel));
 

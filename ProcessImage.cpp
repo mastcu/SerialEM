@@ -3109,6 +3109,39 @@ double CProcessImage::GetRecentVoltage(bool *valueWasRead)
   return mVoltage;
 }
 
+// Return the pixel size on the camera in diffraction mode for the given camera at the
+// current voltage and camera length
+void CProcessImage::GetDiffractionPixelSize(int camera, float &pixel, float &camLen)
+{
+  float wavelength;
+  int *camLens = mWinApp->GetCamLenTable();
+  float *camLenCal = mWinApp->GetCamLenCalibrated();
+  int index = mScope->GetLastCamLenIndex();
+  CameraParameters *camParam;
+
+  // Camera length from scope is in meters and from the table is in mm
+  camLen = (float)(1000. * mScope->GetLastCameraLength());
+  if (camera < 0 || camera >= MAX_CAMERAS)
+    return;
+  if (index >= 0 || index <= MAX_CAMLENS) {
+    if (camLens[index] > 0.)
+      camLen = (float)camLens[index];
+    if (camLenCal[index] > 0)
+      camLen = camLenCal[index];
+  }
+  camParam = mWinApp->GetCamParams() + camera;
+  GetRecentVoltage();
+  if (camParam->pixelMicrons <= 0. || mVoltage <= 0. || camLen <= 0.)
+    return;
+
+  // The voltage is in KV, the wavelength is in nm, the pixel size is microns, the
+  // camera length is in mm
+  // The factor is 10e-3 to get pixel size from um to mm, at which point we would have
+  // 1/nm, and 0.1 to get from 1/nm to 1/A
+  wavelength = (float)(1.241 / sqrt(mVoltage * (mVoltage + 1022.0)));
+  pixel = 1.e-4f * camParam->pixelMicrons / (wavelength * camLen);
+}
+
 /*
  * CTFFIND SUPPORT FUNCTIONS
  */

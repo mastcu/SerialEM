@@ -243,6 +243,7 @@ int FindDoseRate(float countVal, float *counts, float *rates, int numVals,
                   float &ratioBest, float &doseRate);
 int DoseRateFromMean(EMimageBuffer * imBuf, float mean, float & doseRate);
 double GetRecentVoltage(bool *valueWasRead = NULL);
+void GetDiffractionPixelSize(int camera, float &pixel, float &camLen);
 float CountsPerElectronForImBuf(EMimageBuffer * imBuf);
 int ReduceImage(EMimageBuffer *imBuf, float factor, CString *errStr = NULL);
 afx_msg void OnProcessReduceimage();
