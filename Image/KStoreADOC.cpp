@@ -6,6 +6,18 @@
 #include "..\Shared\iimage.h"
 #include "..\EMimageExtra.h"
 
+#define MDOC_FLOAT(nam, ini, tst, sym, str) const char *sym = str;
+#define MDOC_INTEGER(nam, ini, sym, str) const char *sym = str;
+#define MDOC_TWO_FLOATS(nam1, nam2, ini, tst, sym, str) const char *sym = str;
+#define MDOC_STRING(nam, sym, str) const char *sym = str;
+
+namespace AdocDefs {
+#include "MdocDefines.h"
+}
+#undef MDOC_FLOAT
+#undef MDOC_TWO_FLOATS
+#undef MDOC_STRING
+#undef MDOC_INTEGER
 
 // Opens an existing ADOC type file
 KStoreADOC::KStoreADOC(CString filename)
@@ -322,6 +334,15 @@ int KStoreADOC::getStageCoord(int inSect, double &outX, double &outY)
   return retval;
 }
 
+#define MDOC_FLOAT(nam, ini, tst, sym, str) \
+  if (extra->nam > tst && AdocSetFloat(sectName, index, sym, extra->nam)) return 1;
+#define MDOC_INTEGER(nam, ini, sym, str) \
+  if (extra->nam > ini && AdocSetInteger(sectName, index, sym, extra->nam)) return 1;
+#define MDOC_TWO_FLOATS(nam1, nam2, ini, tst, sym, str) \
+  if (extra->nam1 > tst && AdocSetTwoFloats(sectName, index, sym, extra->nam1, extra->nam2)) return 1;
+#define MDOC_STRING(nam, sym, str) \
+  if (!extra->nam.IsEmpty() && AdocSetKeyValue(sectName, index, sym, (LPCTSTR)extra->nam)) return 1;
+
 // Write out the values that have been placed in the image extra structure
 // to the given section of the current autodoc
 // Assumes current adoc is set and mutex is claimed
@@ -332,9 +353,6 @@ int KStoreADOC::SetValuesFromExtra(KImage *inImage, char *sectName, int index)
   EMimageExtra *extra = (EMimageExtra *)inImage->GetUserData();
 
   // BE SURE TO ADD NEW VALUES TO THE LOAD FUNCTION SO THEY AREN'T LOST IN BIDIR SERIES
-  if (extra->m_fTilt > EXTRA_VALUE_TEST && 
-    AdocSetFloat(sectName, index, ADOC_TILT, extra->m_fTilt))
-    return 1;
   if (extra->m_iMontageX >= 0) {
     if (AdocSetThreeIntegers(sectName, index, ADOC_PCOORD, 
       extra->m_iMontageX, extra->m_iMontageY, extra->m_iMontageZ))
@@ -343,135 +361,20 @@ int KStoreADOC::SetValuesFromExtra(KImage *inImage, char *sectName, int index)
       extra->mSuperMontX, extra->mSuperMontY))
       return 1;
   }
-  if (extra->mStageX > EXTRA_VALUE_TEST && AdocSetTwoFloats(sectName, index, ADOC_STAGE, 
-    extra->mStageX, extra->mStageY))
-    return 1;
-  if (extra->mStageZ > EXTRA_VALUE_TEST && AdocSetFloat(sectName, index, ADOC_STAGEZ, 
-    extra->mStageZ))
-    return 1;
-  if (extra->m_iMag > 0 && AdocSetInteger(sectName, index, ADOC_MAG, extra->m_iMag))
-    return 1;
-  if (extra->mCameraLength > 0 && AdocSetFloat(sectName, index, ADOC_CAMLEN, 
-    extra->mCameraLength))
-    return 1;
-  if (extra->m_fIntensity >= 0. &&
-    AdocSetFloat(sectName, index, ADOC_INTENSITY, extra->m_fIntensity))
-    return 1;
-  if (extra->m_fDose >= 0. && AdocSetFloat(sectName, index, ADOC_DOSE, extra->m_fDose))
-    return 1;
-  if (extra->mPixel > 0. && AdocSetFloat(sectName, index, ADOC_PIXEL, extra->mPixel))
-    return 1;
-  if (extra->mSpotSize > 0 && 
-    AdocSetInteger(sectName, index, ADOC_SPOT, extra->mSpotSize))
-    return 1;
-  if (extra->mDefocus > EXTRA_VALUE_TEST &&
-    AdocSetFloat(sectName, index, ADOC_DEFOCUS, extra->mDefocus))
-    return 1;
-  if (extra->mISX > EXTRA_VALUE_TEST && 
-    AdocSetTwoFloats(sectName, index, ADOC_IMAGESHIFT, extra->mISX, extra->mISY))
-    return 1;
-  if (extra->mAxisAngle > EXTRA_VALUE_TEST &&
-    AdocSetFloat(sectName, index, ADOC_AXIS, extra->mAxisAngle))
-    return 1;
-  if (extra->mExposure >= 0. && 
-    AdocSetFloat(sectName, index, ADOC_EXPOSURE, extra->mExposure))
-    return 1;
-  if (extra->mBinning > 0. && 
-    AdocSetFloat(sectName, index, ADOC_BINNING, extra->mBinning))
-    return 1;
-  if (extra->mCamera >= 0 && 
-    AdocSetInteger(sectName, index, ADOC_CAMERA, extra->mCamera))
-    return 1;
-  if (extra->mDividedBy2 >= 0 && 
-    AdocSetInteger(sectName, index, ADOC_DIVBY2, extra->mDividedBy2))
-    return 1;
-  if (extra->mReadMode >= 0 && 
-    AdocSetInteger(sectName, index, ADOC_READ_MODE, extra->mReadMode))
-    return 1;
-  if (extra->mCorrDblSampMode >= 0 &&
-    AdocSetInteger(sectName, index, ADOC_CDS_MODE, extra->mCorrDblSampMode))
-    return 1;
-  if (extra->mMagIndex >= 0 &&
-    AdocSetInteger(sectName, index, ADOC_MAGIND, extra->mMagIndex))
-    return 1;
-  if (extra->mLowDoseConSet > -999 &&
-    AdocSetInteger(sectName, index, ADOC_CONSET, extra->mLowDoseConSet))
-    return 1;
-  if (extra->mCountsPerElectron >= 0. && AdocSetFloat(sectName, index, ADOC_COUNT_ELEC,
-    extra->mCountsPerElectron))
-    return 1;
+
   if (extra->mMax > EXTRA_VALUE_TEST && AdocSetThreeFloats(sectName, index,
     ADOC_MINMAXMEAN, extra->mMin, extra->mMax, extra->mMean))
     return 1;
-  if (extra->mTargetDefocus > EXTRA_VALUE_TEST &&
-    AdocSetFloat(sectName, index, ADOC_TARGET, extra->mTargetDefocus))
-    return 1;
-  if (extra->mPriorRecordDose >= 0. && AdocSetFloat(sectName, index, ADOC_PRIOR_DOSE,
-    extra->mPriorRecordDose))
-    return 1;
-  if (!extra->mSubFramePath.IsEmpty() && AdocSetKeyValue(sectName, index, ADOC_FRAME_PATH, 
-    (LPCTSTR)extra->mSubFramePath))
-    return 1;
-  if (extra->mNumSubFrames > 0 && 
-    AdocSetInteger(sectName, index, ADOC_NUM_FRAMES, extra->mNumSubFrames))
-    return 1;
-  if (!extra->mFrameDosesCounts.IsEmpty() && AdocSetKeyValue(sectName, index, 
-    ADOC_DOSES_COUNTS, (LPCTSTR)extra->mFrameDosesCounts))
-    return 1;
-  if (!extra->mDateTime.IsEmpty() && AdocSetKeyValue(sectName, index, ADOC_DATE_TIME, 
-    (LPCTSTR)extra->mDateTime))
-    return 1;
-  if (!extra->mNavLabel.IsEmpty() && AdocSetKeyValue(sectName, index, ADOC_NAV_LABEL, 
-    (LPCTSTR)extra->mNavLabel))
-    return 1;
-  if (extra->slitWidth >= 0. && AdocSetTwoFloats(sectName, index, ADOC_SLIT_LOSS,
-    extra->slitWidth, extra->energyLoss))
-    return 1;
-  if (!extra->mChannelName.IsEmpty() && AdocSetKeyValue(sectName, index, ADOC_CHAN_NAME, 
-    (LPCTSTR)extra->mChannelName))
-    return 1;
-  if (!extra->mMultiHoleNum.IsEmpty() && AdocSetKeyValue(sectName, index, 
-    ADOC_MULTI_POS, (char *)(LPCTSTR)extra->mMultiHoleNum))
-    return 1;
-  if (!extra->mDE12Version.IsEmpty() && AdocSetKeyValue(sectName, index, 
-    ADOC_DE12_VERSION, (char *)(LPCTSTR)extra->mDE12Version))
-    return 1;
-  if (extra->mPreExposeTime > -1. &&
-    AdocSetFloat(sectName, index, ADOC_DE12_PREEXPOSE, extra->mPreExposeTime))
-    return 1;
-  if (extra->mNumDE12Frames > -1 && 
-    AdocSetInteger(sectName, index, ADOC_DE12_TOTAL_FRAMES, extra->mNumDE12Frames))
-    return 1;
-  if (extra->mDE12FPS > -1. &&
-    AdocSetFloat(sectName, index, ADOC_DE12_FPS, extra->mDE12FPS))
-    return 1;
-  if (!extra->mDE12Position.IsEmpty() && AdocSetKeyValue(sectName, index,
-    ADOC_CAM_POSITION, (char *)(LPCTSTR)extra->mDE12Position))
-    return 1;
-  if (!extra->mDE12CoverMode.IsEmpty() && AdocSetKeyValue(sectName, index, 
-    ADOC_COVER_MODE, (char *)(LPCTSTR)extra->mDE12CoverMode))
-    return 1;
-  if (extra->mCoverDelay > -1 &&
-    AdocSetInteger(sectName, index, ADOC_COVER_DELAY, extra->mCoverDelay))
-    return 1;
-  if (extra->mTemperature > EXTRA_VALUE_TEST &&
-    AdocSetFloat(sectName, index, ADOC_TEMPERATURE, extra->mTemperature))
-    return 1;
-  if (extra->mFaraday > EXTRA_VALUE_TEST &&
-    AdocSetFloat(sectName, index, ADOC_FARADAY, extra->mFaraday))
-    return 1;
-  if (!extra->mSensorSerial.IsEmpty() && AdocSetKeyValue(sectName, index, 
-    ADOC_SENSOR_SERIAL, (char *)(LPCTSTR)extra->mSensorSerial))
-    return 1;
-  if (extra->mReadoutDelay > -1. &&
-    AdocSetInteger(sectName, index, ADOC_READOUT_DELAY, extra->mReadoutDelay))
-    return 1;
-  if (extra->mIgnoredFrames > -1 && 
-    AdocSetInteger(sectName, index, ADOC_IGNORED_FRAMES, extra->mIgnoredFrames))
-    return 1;
+
+#include "MdocDefines.h"
 
   return 0;
 }
+
+#undef MDOC_FLOAT
+#undef MDOC_TWO_FLOATS
+#undef MDOC_STRING
+#undef MDOC_INTEGER
 
 // Get values from the Adoc and populate an extra structure, creating one if needed
 // typext is returned with the masks for the values gotten
@@ -493,9 +396,15 @@ int KStoreADOC::LoadExtraFromValues(KImage *inImage, int &typext, char *sectName
   return 0;
 }
 
-#define ADOC_GET_STRING(a, b) \
-  if (AdocGetString(sectName, index, a, &frameDir) == 0) { \
-    extra->b = frameDir;    \
+#define MDOC_FLOAT(nam, ini, tst, sym, str) \
+  AdocGetFloat(sectName, index, sym, &extra->nam);
+#define MDOC_INTEGER(nam, ini, sym, str) \
+  AdocGetInteger(sectName, index, sym, &extra->nam);
+#define MDOC_TWO_FLOATS(nam1, nam2, ini, tst, sym, str) \
+  AdocGetTwoFloats(sectName, index, sym, &extra->nam1, &extra->nam2);
+#define MDOC_STRING(nam, sym, str) \
+  if (AdocGetString(sectName, index, sym, &frameDir) == 0) { \
+    extra->nam = frameDir;    \
     free(frameDir);                     \
   }
 
@@ -516,40 +425,14 @@ int KStoreADOC::LoadExtraFromValues(EMimageExtra *extra, int &typext, char *sect
     typext |= MAG100_MASK;
   if (!AdocGetFloat(sectName, index, ADOC_DOSE, &extra->m_fDose))
     typext |= DOSE_MASK;
-  AdocGetFloat(sectName, index, ADOC_CAMLEN, &extra->mCameraLength);
-  AdocGetFloat(sectName, index, ADOC_STAGEZ, &extra->mStageZ);
-  AdocGetFloat(sectName, index, ADOC_PIXEL, &extra->mPixel);
-  AdocGetInteger(sectName, index, ADOC_SPOT, &extra->mSpotSize);
-  AdocGetFloat(sectName, index, ADOC_DEFOCUS, &extra->mDefocus);
-  AdocGetTwoFloats(sectName, index, ADOC_IMAGESHIFT, &extra->mISX, &extra->mISY);
-  AdocGetFloat(sectName, index, ADOC_AXIS, &extra->mAxisAngle);
-  AdocGetFloat(sectName, index, ADOC_EXPOSURE, &extra->mExposure);
-  AdocGetFloat(sectName, index, ADOC_BINNING, &extra->mBinning);
-  AdocGetInteger(sectName, index, ADOC_CAMERA, &extra->mCamera);
-  AdocGetInteger(sectName, index, ADOC_DIVBY2, &extra->mDividedBy2);
-  AdocGetInteger(sectName, index, ADOC_READ_MODE, &extra->mReadMode);
-  AdocGetInteger(sectName, index, ADOC_CDS_MODE, &extra->mCorrDblSampMode);
-  AdocGetInteger(sectName, index, ADOC_MAGIND, &extra->mMagIndex);
-  AdocGetInteger(sectName, index, ADOC_CONSET, &extra->mLowDoseConSet);
-  AdocGetFloat(sectName, index, ADOC_COUNT_ELEC, &extra->mCountsPerElectron);
   AdocGetThreeFloats(sectName, index, ADOC_MINMAXMEAN, &extra->mMin, &extra->mMax,
     &extra->mMean);
-  AdocGetFloat(sectName, index, ADOC_TARGET, &extra->mTargetDefocus);
-  AdocGetFloat(sectName, index, ADOC_PRIOR_DOSE, &extra->mPriorRecordDose);
-  ADOC_GET_STRING(ADOC_FRAME_PATH, mSubFramePath);
-  AdocGetInteger(sectName, index, ADOC_NUM_FRAMES, &extra->mNumSubFrames);
-  ADOC_GET_STRING(ADOC_DOSES_COUNTS, mFrameDosesCounts);
-  ADOC_GET_STRING(ADOC_DATE_TIME, mDateTime);
-  ADOC_GET_STRING(ADOC_NAV_LABEL, mNavLabel);
-  ADOC_GET_STRING(ADOC_CHAN_NAME, mChannelName);
-  AdocGetTwoFloats(sectName, index, ADOC_SLIT_LOSS, &extra->slitWidth,
-    &extra->energyLoss);
+
+#include "MdocDefines.h"
   
-  //Skip most DE12 items
-  AdocGetFloat(sectName, index, ADOC_DE12_PREEXPOSE, &extra->mPreExposeTime);
-  AdocGetInteger(sectName, index, ADOC_DE12_TOTAL_FRAMES, &extra->mNumDE12Frames);
-  AdocGetFloat(sectName, index, ADOC_DE12_FPS, &extra->mDE12FPS);
-  AdocGetFloat(sectName, index, ADOC_FARADAY, &extra->mFaraday);
-  extra->ValuesIntoShorts();
   return 0;
 }
+#undef MDOC_FLOAT
+#undef MDOC_TWO_FLOATS
+#undef MDOC_STRING
+#undef MDOC_INTEGER

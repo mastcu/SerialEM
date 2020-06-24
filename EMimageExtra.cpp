@@ -2,6 +2,15 @@
 #include <math.h>
 #include ".\EMimageExtra.h"
 
+#define MDOC_FLOAT(nam, ini, tst, sym, str) \
+  nam = ini;
+#define MDOC_INTEGER(nam, ini, sym, str) \
+  nam = ini;
+#define MDOC_TWO_FLOATS(nam1, nam2, ini, tst, sym, str) \
+  nam1 = nam2 = ini;
+#define MDOC_STRING(nam, sym, str) \
+  nam = "";
+
 // This must be synced to entries in b3dHeaderItemBytes in IMOD/libimod/b3dutil.c
 // Supposedly the next ones are "reserved" to be 2, 4, 2, 4, 2.
 const int EMimageExtra::Bytes[EXTRA_NTYPES] = {2, 6, 4, 2, 2, 4};
@@ -12,55 +21,19 @@ EMimageExtra::EMimageExtra()
 	mMontageX = mMontageY = mMontageZ = 0;
 	mVoltageX = mVoltageY = 0;
 	mMag100 = 0;
-  mCameraLength = 0;
   mIntensity = 0;
   mDoseLo = mDoseHi = 0;
-  m_fTilt = EXTRA_NO_VALUE;
   m_iMontageX = m_iMontageY = m_iMontageZ = -1;
-  mStageX = mStageY = mStageZ = EXTRA_NO_VALUE;
-  m_iMag = 0;
-  m_fIntensity = -1.;
-  m_fDose = -1.;
   mSuperMontX = mSuperMontY = -1;
-  mPixel = 0.;
-  mSpotSize = 0;
-  mDefocus = EXTRA_NO_VALUE;
-  mISX = mISY = EXTRA_NO_VALUE;
-  mAxisAngle = EXTRA_NO_VALUE;
-  mExposure = -1.;
-  mBinning = 0.;
-  mCamera = -1;
-  mDividedBy2 = -1;
-  mReadMode = -1;
-  mCorrDblSampMode = -1;
-  mMagIndex = -1;
-  mLowDoseConSet = -999;
-  mCountsPerElectron = -1.;
   mMin = mMax = mMean = EXTRA_NO_VALUE;
-  mTargetDefocus = EXTRA_NO_VALUE;
-  mNavLabel = "";
-  mPriorRecordDose = -1;
-  mSubFramePath = "";
-  mNumSubFrames = -1;
-  mFrameDosesCounts = "";
-  mChannelName = "";
-  slitWidth = -1.;
-  energyLoss = 0.;
-  mMultiPosInHole = -1;
-  mMultiHoleNum = "";
-  mDE12Version = "";
-  mPreExposeTime = -1.;
-  mNumDE12Frames = -1;
-  mDE12FPS = -1.;
-  mDE12Position = "";
-  mDE12CoverMode = "";
-  mCoverDelay = -1;
-  mTemperature = EXTRA_NO_VALUE;
-  mFaraday = EXTRA_NO_VALUE;
-  mSensorSerial = "";
-  mReadoutDelay = -1;
-  mIgnoredFrames = -1;
+
+#include "Image\MdocDefines.h"
+
 }
+#undef MDOC_FLOAT
+#undef MDOC_TWO_FLOATS
+#undef MDOC_STRING
+#undef MDOC_INTEGER
 
 // Convert a float to two shorts: the number is converted to an integer between
 // 327600 and 3276000 and an exponent as a power of 10;

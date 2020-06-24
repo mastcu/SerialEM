@@ -11,6 +11,15 @@
 #define EXTRA_NO_VALUE -1.e8
 #define EXTRA_VALUE_TEST -9.e7
 
+#define MDOC_FLOAT(nam, ini, tst, sym, str) \
+  float nam;
+#define MDOC_INTEGER(nam, ini, sym, str) \
+  int nam;
+#define MDOC_TWO_FLOATS(nam1, nam2, ini, tst, sym, str) \
+  float nam1, nam2;
+#define MDOC_STRING(nam, sym, str) \
+  CString nam;
+
 class EMimageExtra
 { 
 public:
@@ -28,57 +37,19 @@ public:
   short mDoseLo, mDoseHi;
 
   // True values of data
-  float m_fTilt;
   int m_iMontageX, m_iMontageY, m_iMontageZ;
-  float mStageX, mStageY, mStageZ;
-  int m_iMag;
-  float mCameraLength;
-  float m_fIntensity;
-  float m_fDose; 
   int mSuperMontX, mSuperMontY;
-  float mPixel;
-  int mSpotSize;
-  float mDefocus;
-  float mISX, mISY;
-  float mAxisAngle;
-  float mExposure;
-  float mBinning;
-  int mCamera;
-  int mDividedBy2;
-  int mReadMode;
-  int mCorrDblSampMode;
-  int mMagIndex;
-  int mLowDoseConSet;
-  float mCountsPerElectron;
   float mMin, mMax, mMean;
-  float mTargetDefocus;
-  float mPriorRecordDose;
-  CString mSubFramePath;
-  int mNumSubFrames;
-  CString mFrameDosesCounts;
-  CString mDateTime;
-  CString mNavLabel;
-  CString mChannelName;
-  CString mDE12Version;
-  float mPreExposeTime;
-  int mNumDE12Frames;
-  float mDE12FPS;
-  CString mDE12Position;
-  CString mDE12CoverMode;
-  int mCoverDelay;
-  float mTemperature;
-  float mFaraday;
-  CString mSensorSerial;
-  int mReadoutDelay;
-  int mIgnoredFrames;
-  float slitWidth;
-  float energyLoss;
-  CString mMultiHoleNum;
-  int mMultiPosInHole;
-  
+
+#include "Image\MdocDefines.h"
+
   static const int Bytes[EXTRA_NTYPES];
   void ValuesIntoShorts(void);
   void ValuesFromShorts(int typext);
 };
+#undef MDOC_FLOAT
+#undef MDOC_TWO_FLOATS
+#undef MDOC_STRING
+#undef MDOC_INTEGER
 
 #endif
