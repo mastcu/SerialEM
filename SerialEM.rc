@@ -63,7 +63,9 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDR_MAINFRAME           ICON                    "res\\SerialEM.ico"
+
 IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -71,7 +73,9 @@ IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
 //
 
 IDR_MAINFRAME           BITMAP                  "res\\Toolbar.bmp"
+
 IDB_BITMAP1             BITMAP                  "res\\bitmap1.bmp"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -289,8 +293,10 @@ BEGIN
             MENUITEM "Beam &Crossover",             ID_CALIBRATION_BEAMCROSSOVER
             MENUITEM "&Beam Intensity",             ID_CALIBRATION_BEAMINTENSITY
             MENUITEM "&Spot Intensity",             ID_CALIBRATION_SPOTINTENSITY
-            MENUITEM "B&eam Shift",                 ID_CALIBRATION_BEAMSHIFT
             MENUITEM "Set C&2 Factor",              ID_CALIBRATION_C2FACTOR
+            MENUITEM SEPARATOR
+            MENUITEM "B&eam Shift",                 ID_CALIBRATION_BEAMSHIFT
+            MENUITEM "&Refine Beam Shift",          ID_BEAMSPOT_REFINEBEAMSHIFT
             MENUITEM "&Alpha Beam Shifts",          ID_CALIBRATION_ALPHA_BEAM_SHIFTS
             MENUITEM "S&pot Beam Shifts",           ID_BEAMSPOT_SPOTBEAMSHIFTS
             MENUITEM "&List Calibrations",          ID_BEAMSPOT_LISTCALIBRATIONS
@@ -2935,7 +2941,7 @@ BEGIN
     LTEXT           "sec",IDC_STAT_SEC,120,296,12,8
     EDITTEXT        IDC_EDIT_EXTRA_DELAY,91,294,26,12,ES_AUTOHSCROLL
     CONTROL         "Adjust beam tilt to compensate for image shift",IDC_CHECK_ADJUST_BEAM_TILT,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,307,160,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,307,170,10
     LTEXT           " Coma versus image shift was calibrated with:",IDC_STAT_COMA_IS_CAL,13,317,152,8
     LTEXT           "0.8 um IA, spot 8, nanoprobe, 70 um aperture",IDC_STAT_COMA_CONDITIONS,14,325,157,8
     CONTROL         "Do multiple Records within each hole",IDC_CHECK_DO_SHOTS_IN_HOLE,
@@ -3349,7 +3355,9 @@ END
 //
 
 IDC_CURSOR1             CURSOR                  "res\\cursor1.cur"
+
 IDC_CURSOR2             CURSOR                  "res\\cursor2.cur"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3839,84 +3847,84 @@ END
 // AFX_DIALOG_LAYOUT
 //
 
-IDD_AUTOCENSETUP AFX_DIALOG_LAYOUT 
+IDD_AUTOCENSETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_TILTSERIES AFX_DIALOG_LAYOUT 
+IDD_TILTSERIES AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_DRIFTWAITSETUP AFX_DIALOG_LAYOUT 
+IDD_DRIFTWAITSETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_SCREENSHOT AFX_DIALOG_LAYOUT 
+IDD_SCREENSHOT AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_MULTI_SHOT_SETUP AFX_DIALOG_LAYOUT 
+IDD_MULTI_SHOT_SETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_REMOTE_CONTROL AFX_DIALOG_LAYOUT 
+IDD_REMOTE_CONTROL AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_LOWDOSE AFX_DIALOG_LAYOUT 
+IDD_LOWDOSE AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_VPP_EXPOSE_SETUP AFX_DIALOG_LAYOUT 
+IDD_VPP_EXPOSE_SETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_MACRO AFX_DIALOG_LAYOUT 
+IDD_MACRO AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_K2_SAVE_OPTIONS AFX_DIALOG_LAYOUT 
+IDD_K2_SAVE_OPTIONS AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_SCOPESTATUS AFX_DIALOG_LAYOUT 
+IDD_SCOPESTATUS AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_HOLE_FINDER AFX_DIALOG_LAYOUT 
+IDD_HOLE_FINDER AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_MULTI_COMBINER AFX_DIALOG_LAYOUT 
+IDD_MULTI_COMBINER AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_CTFFINDDLG AFX_DIALOG_LAYOUT 
+IDD_CTFFINDDLG AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_STATEDLG AFX_DIALOG_LAYOUT 
+IDD_STATEDLG AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_STAGEMOVETOOL AFX_DIALOG_LAYOUT 
+IDD_STAGEMOVETOOL AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
 
@@ -4424,6 +4432,8 @@ BEGIN
                             "Set number of additional factors of 2 to divide by"
     ID_CAMERA_RETURNFLOATIMAGE 
                             "Get image back in floating point, not short integers"
+    ID_BEAMSPOT_REFINEBEAMSHIFT 
+                            "Get more accurate beam shift calibration over longer shift"
 END
 
 STRINGTABLE
@@ -4586,7 +4596,10 @@ BEGIN
     IDC_RNO_CENTER          "Do not take a shot in the center of the pattern"
     IDC_RCENTER_AFTER       "Take a shot in the center after the off-center shots"
     IDC_RCENTER_BEFORE      "Take a shot in the center before the off-center shots"
-    IDC_EDIT_SPOKE_DIST     "Distance of peripheral shots from center in microns"
+    IDC_EDIT_SPOKE_DIST     "Distance of main ring of peripheral shots from center in microns"
+    IDC_EDIT_RING2_DIST     "Distance of second ring of peripheral shots from center in microns"
+    IDC_CHECK_SECOND_RING   "Take a second ring of peripheral shots (can be inner or outer ring)"
+    IDC_SPIN_RING2_NUM      "Set number of shots to take in second ring"
 END
 
 STRINGTABLE
@@ -4628,7 +4641,7 @@ BEGIN
     ID_CAMERA_NEWGAINREF    "Clear out gain references after getting new reference in DigitalMicrograph"
     ID_CAMERA_SHOWGAINREF   "Put last used gain reference into buffer A"
     ID_CAMERA_SHOWDARKREF   "Put last used dark reference into Buffer A"
-    ID_CALIBRATION_MAGENERGYSHIFTS 
+    ID_CALIBRATION_MAGENERGYSHIFTS
                             "Calibrate mag-dependent energy shift of zero loss peak"
     ID_PROCESS_FIXDARKXRAYS "Use dark X ray removal routine on current image"
     ID_PROCESS_SETDARKCRITERIA 

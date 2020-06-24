@@ -967,7 +967,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   }
 
   // Now draw navigator items
-  float lastStageX, lastStageY, acquireRadii[2], labelDistThresh = 40.;
+  float lastStageX, lastStageY, tiltAngle, acquireRadii[2], labelDistThresh = 40.;
   int lastGroupID = -1, lastGroupSize, size, numPoints;
   int regMatch = imBuf->mRegistration ? 
     imBuf->mRegistration : navigator->GetCurrentRegistration();
@@ -996,6 +996,8 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
     (!mWinApp->mNavHelper->mMultiCombinerDlg || 
       mWinApp->mNavHelper->GetMHCenableMultiDisplay() || 
       mWinApp->mNavHelper->mCombineHoles->OKtoUndoCombine());
+  if (useMultiShot && !imBuf->GetTiltAngle(tiltAngle))
+    tiltAngle = -999.;
 
   FloatVec drawnXinHole, drawnYinHole, drawnXallHole, drawnYallHole;
   FloatVec convXinHole, convYinHole, convXallHole, convYallHole;
@@ -1065,7 +1067,8 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
         bool doInHole = (msParams->inHoleOrMultiHole & MULTI_IN_HOLE) > 0;
         bool doMultiHole = mWinApp->mNavHelper->MultipleHolesAreSelected();
         int inHoleEnd = item->mNumPoints - 2;
-        int inHoleStart = inHoleEnd - (doInHole ? msParams->numShots : 0);
+        int inHoleStart = inHoleEnd - B3DCHOICE(doInHole, msParams->numShots[0] + 
+          (msParams->doSecondRing ? msParams->numShots[1] : 0) , 0);
         GetSingleAdjustmentForItem(imBuf, item, delPtX, delPtY);
 
         // If there is multishot in hole, draw them either centered or in the last hole
@@ -1194,7 +1197,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
             numFullSpecHoles = mWinApp->mParticleTasks->GetHolePositions(specialFullISX,
               specialFullISY, fullHoleIndex, mWinApp->mNavigator->GetMagIndForHoles(),
               mWinApp->mNavigator->GetCameraForHoles(), useXholes, 
-              useYholes);
+              useYholes, tiltAngle);
             lastSpecialXholes = useXholes;
             lastSpecialYholes = useYholes;
           }

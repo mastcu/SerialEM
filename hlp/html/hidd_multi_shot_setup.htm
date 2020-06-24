@@ -20,7 +20,8 @@
       circular pattern around the current position, which would generally be used for 
       taking multiple shots within a hole, or in designated positions relative to the 
       current position, which would generally be used for taking shots in multiple 
-      holes.&nbsp; Both within-hole and between-hole images can be taken.&nbsp; The parameters are used in two ways: when acquiring the 
+      holes.&nbsp; Images can also be taken in two concentric rings of positions 
+      around the center.&nbsp; Both within-hole and between-hole images can be taken.&nbsp; The parameters are used in two ways: when acquiring the 
       images with the 'MultipleRecords' script command, and when displaying the 
       positions as a pattern of circles representing the beam on an image (e.g., a 
       lower-magnification map).&nbsp; The latter display occurs when this dialog is 
@@ -33,6 +34,14 @@
     <p>It is important to realize that if the image areas are being displayed on a Low 
       Dose View image with a large defocus offset, the positions and sizes may be 
       misleading.</p>
+    <p>If the stage is tilted, the program can respond in two ways.&nbsp; First, it 
+      will compensate for the differing heights of the positions by changing defocus; 
+      the change is determined from the tilt angle and the image shift at each 
+      position.&nbsp; The compensation is imperfect because the specimen may not be 
+      level at zero degrees, making the effective tilt angle when tilted different 
+      from the nominal one.&nbsp; Second, if the image shifts of multiple holes are 
+      defined at one tilt angle and acquisition is done at another angle, the program 
+      will adjust the positions appropriately.&nbsp; This adjustment is also imperfect&nbsp;for large differences in tilt angle but may be useful in some cases.</p>
     <p><i><b>Saving Accurate Image Shift Values for Holes</b></i></p>
     <p>There are several possible methods of setting the image shift values for the 
       holes, ranging from centering holes in an image where they are all visible 
@@ -183,21 +192,26 @@
         is taken along the camera X axis, or along the short axis of the camera for a 
         non-square camera, which may allow two or three shots to fit along that axis 
         when they would not along the long axis.</p>
-    <p><b>Number of shots around center</b></p>
+    <p><b>Number of shots in main ring around center</b></p>
     <p>Select a value between 2 and 18 for the number of Records taken in off-center 
-      positions.</p>
+      positions in the first or only ring of positions.</p>
+    <p><b>Distance from center to main ring of shots</b></p>
+    <p>Distance from the center position to the first or only ring of off-center positions, in microns.&nbsp; 
+      This distance must be at least as big as the beam diameter to avoid exposing 
+      overlapping areas in more than one Record shot.&nbsp; If the multi-shot circles 
+      are being displayed, press tab or Enter to have the image redrawn after entering 
+      a new distance.</p>
+    <p><strong>Do second ring of shots</strong></p>
+    <p>Select this checkbox to take Records in a second ring, which will be taken 
+      after the first ring but can be either inside or outside it.&nbsp; Use the 
+      spinner to select the number of shots in the second ring, and enter the distance 
+      from the center, in microns, in the edit box.</p>
     <p><b>Shot in center</b></p>
     <p>With these radio buttons, you can include a shot in the center of the pattern, 
       which should be possible with 6 or more off-center shots.&nbsp; The centered 
       shot can be taken either before or after the off-center shots.&nbsp; Although 
       taking it may involve one more delay for image shift settling, it is reported 
       that this shot will have less drift when taken after the others.</p>
-    <p><b>Distance from center to off-center shots</b></p>
-    <p>Distance from the center position to the off-center positions, in microns.&nbsp; 
-      This distance must be at least as big as the beam diameter to avoid exposing 
-      overlapping areas in more than one Record shot.&nbsp; If the multi-shot circles 
-      are being displayed, press tab or Enter to have the image redrawn after entering 
-      a new distance.</p>
     <p><b>Do Records in multiple holes</b></p>
     <p>Select this checkbox to take Records in either a rectangular grid of positions 
       or a series of arbitrary, &#39;custom&#39; positions around the current center position.&nbsp; 
@@ -324,12 +338,14 @@
     <p><b>Extra delay after image shift</b></p>
     <p>A standard amount of settling time is imposed after each image shift; the extra 
       delay entered here will be added to this settling time.</p>
-    <p><b>Adjust beam tilt to compensate for image shift</b></p>
+    <p><b>Adjust beam tilt &amp; astig to compensate for image shift</b></p>
     <p>This option is enabled if you have calibrated the beam tilt needed for 
       coma-free alignment as a function of image shift with
       <a href="menu_calibration.htm#hid_focustuning_comavs">Coma vs. Image Shift</a> 
       in the Calibration - Focus &amp; Tuning submenu.&nbsp; If so, then beam tilt will be 
       adjusted appropriately for each Record position, and restored at the end.&nbsp; 
+      As of SerialEM 3.8, 6/23/20, the dependence of astigmatism on image shift is 
+      also calibrated and will be compensated. 
       In addition, the image shift present when starting the routine will also be 
       compensated for, unless the script command &#39;AdjustBeamTiltforIS&#39; was run or beam 
       tilt was adjusted by any of the image-shift setting commands that provide the 
@@ -374,7 +390,7 @@
       <li>Record images will be saved only if the option to save them is checked; 
         otherwise they will accumulate in the rolling buffers.&nbsp; In the latter case, 
         be sure to allow enough buffers to see all the images afterwards.</li>
-      <li>The test with montages, open a new montage file with enough pieces to cover 
+      <li>To test with montages, open a new montage file with enough pieces to cover 
         the hole; it must not be in View mode or be done with stage shift.</li>
       <li>After saving montages or Record images, use the menu entry File - Read and use 
         the buttons in the dialog to inspect the images.</li>

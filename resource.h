@@ -1421,7 +1421,7 @@
 #define IDC_STAT_SAVE_INSTRUCTIONS      2433
 #define IDC_BUT_IS_TO_PT                2434
 #define IDC_CHECK_REDUCE_SUPERRES       2435
-#define IDC_STAT_RING2_UM               2435
+#define IDC_STAT_RING2_UM               2436
 #define IDC_CHECK_TAKE_K3_BINNED        2437
 #define IDC_STAT_CURSET1                2438
 #define IDC_STAT_CURSET2                2439
@@ -1623,7 +1623,6 @@
 #define IDC_CHECK_SECOND_RING           2651
 #define IDC_STAT_NUM2_SHOTS             2652
 #define IDC_STAT_RING2_SHOTS            2653
-#define IDC_SPIN_RING2                  2654
 #define IDC_SPIN_RING2_NUM              2654
 #define IDC_EDIT_RING2_DIST             2655
 #define ID_NEW_IMAGE                    32771
@@ -2105,6 +2104,7 @@
 #define ID_CAMERA_SETEXTRADIVISIONBY2   33387
 #define ID_CAMERA_RETURNFLOATIMAGE      33388
 #define ID_CAMERA_                      33389
+#define ID_BEAMSPOT_REFINEBEAMSHIFT     33390
 
 // Next default values for new objects
 // 
@@ -2112,7 +2112,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        248
-#define _APS_NEXT_COMMAND_VALUE         33390
+#define _APS_NEXT_COMMAND_VALUE         33391
 #define _APS_NEXT_CONTROL_VALUE         2656
 #define _APS_NEXT_SYMED_VALUE           104
 #endif

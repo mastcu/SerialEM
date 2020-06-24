@@ -64,13 +64,13 @@ void CParticleTasks::Initialize(void)
  * External call to start the operation with all the parameters
  */
 int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeRad, 
-  float extraDelay, BOOL saveRec, int ifEarlyReturn, int earlyRetFrames, BOOL adjustBT,
-  int inHoleOrMulti)
+  int numSecondRing, float spokeRad2, float extraDelay, BOOL saveRec, int ifEarlyReturn, 
+  int earlyRetFrames, BOOL adjustBT, int inHoleOrMulti)
 {
-  float pixel, xTiltFac, yTiltFac;
+  float pixel, xTiltFac, yTiltFac, minTiltToCompenate = 10.;
   int nextShot, nextHole, testRun, ind, numXholes = 0 , numYholes = 0;
-  double delISX, delISY, transISX, transISY, delBTX, delBTY;
-  CString str;
+  double delISX, delISY, transISX, transISY, delBTX, delBTY, angle;
+  CString str, str2;
   CMapDrawItem *item;
   CameraParameters *camParam = mWinApp->GetActiveCamParam();
   ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
@@ -80,7 +80,9 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
   int testImage = inHoleOrMulti & MULTI_TEST_IMAGE;
   bool testComa = (inHoleOrMulti & MULTI_TEST_COMA) != 0;
   ScaleMat dMat;
-  mMSNumPeripheral = multiInHole ? numPeripheral : 0;
+  mMSNumPeripheral = multiInHole ? (numPeripheral + numSecondRing) : 0;
+  mMSNumInRing[0] = mMSNumPeripheral - numSecondRing;
+  mMSNumInRing[1] = numSecondRing;
   mMSDoCenter = multiInHole ? doCenter : 1;
   mMSExtraDelay = extraDelay;
   mMSIfEarlyReturn = ifEarlyReturn;
@@ -116,6 +118,7 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
     mMSSaveRecord = false;
     mMSDoCenter = -1;
   }
+  mMSAdjustAstig = mMSAdjustBeamTilt && comaVsIS->astigMat.xpx != 0.;
 
   // Adjust some parameters for test runs
   if (testRun) {
@@ -180,12 +183,32 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
     mScope->GotoLowDoseArea(RECORD_CONSET);
   mMagIndex = mScope->GetMagIndex();
 
+  // Set up to adjust for defocus if angle is high enough
+  angle = mScope->GetTiltAngle();
+  if (fabs(angle) < minTiltToCompenate) {
+    mMSDefocusTanFac = 0.;
+  } else {
+
+    // This is the opposite sign from Reset Image Shift because that is taking away the
+    // defocus at the given IS because the stage is sliding up to the 0 IS point, 
+    // here we need to impose that defocus for the given IS
+    mMSDefocusTanFac = -(float)tan(DTOR * angle) * mShiftManager->GetDefocusZFactor() *
+      (mShiftManager->GetStageInvertsZAxis() ? -1.f : 1.f);
+    mIStoSpec = mShiftManager->IStoSpecimen(mMagIndex);
+    if (!mIStoSpec.xpx) {
+      SEMMessageBox("No image shift to specimen matrix available at the\n"
+        "current magnification and one is needed to adjust defocus for tilt");
+      return 1;
+    }
+    mMSBaseDefocus = mScope->GetDefocus();
+  }
+
   mMSHoleIndex = 0;
   mMSHoleISX.clear();
   mMSHoleISY.clear();
   if ((inHoleOrMulti & MULTI_HOLES) || (numXholes && numYholes)) {
      mMSNumHoles = GetHolePositions(mMSHoleISX, mMSHoleISY, mMSPosIndex, mMagIndex, 
-       mWinApp->GetCurrentCamera(), numXholes, numYholes);
+       mWinApp->GetCurrentCamera(), numXholes, numYholes, (float)angle);
      mMSUseHoleDelay = true;
      if (numXholes && numYholes) {
        if (item->mNumSkipHoles)
@@ -213,10 +236,10 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
   }
 
   if (!testRun) {
-    str.Format("Starting multiple Records (%d position%s in %d hole%s) %s beam tilt "
+    str.Format("Starting multiple Records (%d position%s in %d hole%s) %s beam tilt%s "
       "compensation", mMSNumPeripheral + mMSDoCenter, mMSNumPeripheral + mMSDoCenter > 1 ?
       "s" : "", mMSNumHoles, mMSNumHoles > 1 ? "s" : "",
-      mMSAdjustBeamTilt ? "WITH" : "WITHOUT");
+      mMSAdjustBeamTilt ? "WITH" : "WITHOUT", mMSAdjustAstig ? "/astigmatism" : "");
     mWinApp->AppendToLog(str);
   }
 
@@ -227,6 +250,11 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
     mScope->GetBeamTilt(mBaseBeamTiltX, mBaseBeamTiltY);
     mCenterBeamTiltX = mBaseBeamTiltX;
     mCenterBeamTiltY = mBaseBeamTiltY;
+    if (mMSAdjustAstig) {
+      mScope->GetObjectiveStigmator(mBaseAstigX, mBaseAstigY);
+      mCenterAstigX = mBaseAstigX;
+      mCenterAstigY = mBaseAstigY;
+    }
 
     // If script hasn't already compensated for IS, get the IS to compensate and, compute
     // the beam tilt to apply, and set it as base for compensating position IS's
@@ -239,11 +267,24 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
       delBTY = comaVsIS->matrix.ypx * transISX + comaVsIS->matrix.ypy * transISY;
       mCenterBeamTiltX = mBaseBeamTiltX + delBTX;
       mCenterBeamTiltY = mBaseBeamTiltY + delBTY;
-      mScope->SetBeamTilt(mCenterBeamTiltX, mCenterBeamTiltY);
-      SEMTrace('1', "For starting IS  %.3f %.3f  setting BT  %.3f  %.3f", 
+      mWinApp->mAutoTuning->BacklashedBeamTilt(mCenterBeamTiltX, mCenterBeamTiltY, true);
+      str.Format("For starting IS  %.3f %.3f  setting BT  %.3f  %.3f",
         delISX, delISY, delBTX, delBTY);
+      if (mMSAdjustAstig) {
+        delBTX = comaVsIS->astigMat.xpx * transISX + comaVsIS->astigMat.xpy * transISY;
+        delBTY = comaVsIS->astigMat.ypx * transISX + comaVsIS->astigMat.ypy * transISY;
+        mCenterAstigX = mBaseAstigX + delBTX;
+        mCenterAstigY = mBaseAstigY + delBTY;
+        mWinApp->mAutoTuning->BacklashedStigmator(mCenterAstigX, mCenterAstigY, true);
+        str2.Format("  setting stig  %.3f  %.3f", delBTX, delBTY);
+        str += str2;
+      }
+      
+      if (GetDebugOutput('1'))
+        mWinApp->AppendToLog(str);
     }
   }
+
 
   // Set up axis of peripheral shots along tilt axis if tilted enough, otherwise along
   // short axis of camera
@@ -258,7 +299,8 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
   mLastISX = mBaseISX;
   mLastISY = mBaseISY;
   pixel = mShiftManager->GetPixelSize(mWinApp->GetCurrentCamera(), mMagIndex);
-  mMSRadiusOnCam = spokeRad / pixel;
+  mMSRadiusOnCam[0] = spokeRad / pixel;
+  mMSRadiusOnCam[1] = spokeRad2 / pixel;
   mCamToIS = mShiftManager->CameraToIS(mMagIndex);
 
   // Current index runs from -1 to mMSNumPeripheral - 1 for center before
@@ -353,10 +395,18 @@ void CParticleTasks::StopMultiShot(void)
     mCamera->SetImageShiftToRestore(mBaseISX, mBaseISY);
     if (mMSAdjustBeamTilt)
       mCamera->SetBeamTiltToRestore(mBaseBeamTiltX, mBaseBeamTiltY);
+    if (mMSAdjustAstig)
+      mCamera->SetAstigToRestore(mBaseAstigX, mBaseAstigY);
+    if (mMSDefocusTanFac)
+      mCamera->SetDefocusToRestore(mMSBaseDefocus);
   } else {
     mScope->SetImageShift(mBaseISX, mBaseISY);
     if (mMSAdjustBeamTilt)
       mScope->SetBeamTilt(mBaseBeamTiltX, mBaseBeamTiltY);
+    if (mMSAdjustAstig)
+      mScope->SetObjectiveStigmator(mBaseAstigX, mBaseAstigY);
+    if (mMSDefocusTanFac)
+      mScope->SetDefocus(mMSBaseDefocus);
   }
 
   // Montage does a second restore after it is no longer "Doing", so just set this
@@ -374,16 +424,24 @@ void CParticleTasks::StopMultiShot(void)
 void CParticleTasks::SetUpMultiShotShift(int shotIndex, int holeIndex, BOOL queueIt)
 {
   double ISX, ISY, delBTX, delBTY, delISX = 0, delISY = 0, angle;
-  double transISX, transISY;
-  float delay, BTbacklash;
+  double transISX, transISY, delAstigX = 0., delAstigY = 0.;
+  float delay, delFocus;
+  int ring = 0, indBase = 0;
+  CString str, str2;
+  BOOL debug = GetDebugOutput('1');
   int BTdelay;
   ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
 
   // Compute IS from center for a peripheral shot: rotate (rad,0) by the angle
   if (shotIndex < mMSNumPeripheral && shotIndex >= 0) {
-    angle = DTOR * (shotIndex * 360. / mMSNumPeripheral + mPeripheralRotation);
-    mShiftManager->ApplyScaleMatrix(mCamToIS, mMSRadiusOnCam * (float)cos(angle),
-      mMSRadiusOnCam * (float)sin(angle), delISX, delISY);
+    if (shotIndex >= mMSNumInRing[0]) {
+      ring = 1;
+      indBase = mMSNumInRing[0];
+    }
+    angle = DTOR * ((shotIndex -indBase) * 360. / mMSNumInRing[ring] + 
+      mPeripheralRotation);
+    mShiftManager->ApplyScaleMatrix(mCamToIS, mMSRadiusOnCam[ring] * (float)cos(angle),
+      mMSRadiusOnCam[ring] * (float)sin(angle), delISX, delISY);
   }
 
   // Get full IS and delta IS and default delay for move from last position
@@ -392,9 +450,20 @@ void CParticleTasks::SetUpMultiShotShift(int shotIndex, int holeIndex, BOOL queu
   delISY += mMSHoleISY[holeIndex];
   ISX = mBaseISX + delISX;
   ISY = mBaseISY + delISY;
-  if (GetDebugOutput('1') || mMSTestRun) 
-   PrintfToLog("For hole %d shot %d  %s  delIS  %.3f %.3f", holeIndex, shotIndex,
+  if (debug || mMSTestRun) 
+   str.Format("For hole %d shot %d  %s  delIS  %.3f %.3f", holeIndex, shotIndex,
     queueIt ? "Queuing" : "Setting", delISX, delISY);
+  
+  if (mMSDefocusTanFac != 0.) {
+    delFocus = (float)(mIStoSpec.ypx * delISX + mIStoSpec.ypy * delISY) *mMSDefocusTanFac;
+    if (debug || mMSTestRun) {
+      str2.Format("   delFocus %.3f", delFocus);
+      str += str2;
+    }
+  }
+  if (debug || mMSTestRun)
+    mWinApp->AppendToLog(str);
+
   delay = mShiftManager->ComputeISDelay(ISX - mLastISX, ISY - mLastISY);
   if (mMSUseHoleDelay)
     delay *= mMSParams->holeDelayFactor;
@@ -403,15 +472,24 @@ void CParticleTasks::SetUpMultiShotShift(int shotIndex, int holeIndex, BOOL queu
   mMSUseHoleDelay = false;
 
   if (mMSAdjustBeamTilt) {
-    BTbacklash = mWinApp->mAutoTuning->GetBeamTiltBacklash();
     BTdelay = mWinApp->mAutoTuning->GetBacklashDelay();
     mShiftManager->TransferGeneralIS(mMagIndex, delISX, delISY, comaVsIS->magInd,
       transISX, transISY);
     delBTX = comaVsIS->matrix.xpx * transISX + comaVsIS->matrix.xpy * transISY;
     delBTY = comaVsIS->matrix.ypx * transISX + comaVsIS->matrix.ypy * transISY;
-    SEMTrace('1', "%s incremental IS  %.3f %.3f   BT  %.3f  %.3f  backlash %f  delay %d",
-      queueIt ? "Queuing" : "Setting", delISX, delISY, delBTX, delBTY, BTbacklash, 
-      BTdelay);
+    if (debug)
+      str.Format("%s incremental IS  %.3f %.3f   BT  %.3f  %.3f",
+        queueIt ? "Queuing" : "Setting", delISX, delISY, delBTX, delBTY);
+    if (mMSAdjustAstig) {
+      delAstigX = comaVsIS->astigMat.xpx * transISX + comaVsIS->astigMat.xpy * transISY;
+      delAstigY = comaVsIS->astigMat.ypx * transISX + comaVsIS->astigMat.ypy * transISY;
+      if (debug) {
+        str2.Format("   Astig  %.3f  %.3f", delAstigX, delAstigY);
+        str += str2;
+      }
+    }
+    if (debug)
+      mWinApp->AppendToLog(str);
   }
 
   // Queue it or do it
@@ -420,17 +498,22 @@ void CParticleTasks::SetUpMultiShotShift(int shotIndex, int holeIndex, BOOL queu
     if (mMSAdjustBeamTilt)
       mCamera->QueueBeamTilt(mCenterBeamTiltX + delBTX, mCenterBeamTiltY + delBTY, 
       BTdelay);
+    if (mMSAdjustAstig)
+      mCamera->QueueStigmator(mCenterAstigX + delAstigX, mCenterAstigY + delAstigY,
+        BTdelay);
+    if (mMSDefocusTanFac)
+      mCamera->QueueDefocus(mMSBaseDefocus + delFocus);
   } else {
     mScope->SetImageShift(ISX, ISY);
     mShiftManager->SetISTimeOut(delay);
-    if (mMSAdjustBeamTilt) {
-      if (BTdelay > 0) {
-        mScope->SetBeamTilt(mCenterBeamTiltX + delBTX + BTbacklash, 
-          mCenterBeamTiltY + delBTY + BTbacklash);
-        Sleep(BTdelay);
-      }
-      mScope->SetBeamTilt(mCenterBeamTiltX + delBTX, mCenterBeamTiltY + delBTY);
-    }
+    if (mMSAdjustBeamTilt)
+      mWinApp->mAutoTuning->BacklashedBeamTilt(mCenterBeamTiltX + delBTX,
+        mCenterBeamTiltY + delBTY, true);
+    if (mMSAdjustAstig)
+      mWinApp->mAutoTuning->BacklashedStigmator(mCenterAstigX + delAstigX,
+        mCenterAstigY + delAstigY, true);
+    if (mMSDefocusTanFac)
+      mScope->SetDefocus(mMSBaseDefocus + delFocus);
   }
   mLastISX = ISX;
   mLastISY = ISY;
@@ -489,12 +572,16 @@ int CParticleTasks::StartOneShotOfMulti(void)
  * mag and camera
  */
 int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, IntVec &posIndex,
-  int magInd, int camera, int numXholes, int numYholes)
+  int magInd, int camera, int numXholes, int numYholes, float tiltAngle)
 {
   int numHoles = 0, ind, ix, iy, direction[2], startInd[2], endInd[2], fromMag, jump[2];
   double xCenISX, yCenISX, xCenISY, yCenISY, transISX, transISY;
   BOOL crossPattern = mMSParams->skipCornersOf3x3;
+  bool adjustForTilt = false;
+  float holeAngle, specX, specY, cosRatio;
   std::vector<double> fromISX, fromISY;
+  ScaleMat IStoSpec, specToIS;
+
   delISX.clear();
   delISY.clear();
   posIndex.clear();
@@ -508,6 +595,7 @@ int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, IntVec 
       fromISY.push_back(mMSParams->customHoleY[ind]);
     }
     fromMag = mMSParams->customMagIndex;
+    holeAngle = mMSParams->tiltOfCustomHoles;
   } else if (mMSParams->holeMagIndex > 0) {
     if (numXholes && numYholes) {
       crossPattern = numXholes == -3 && numYholes == -3;
@@ -520,6 +608,7 @@ int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, IntVec 
       numYholes = mMSParams->numHoles[1];
     }
     crossPattern = crossPattern && numXholes == 3 && numYholes == 3;
+    holeAngle = mMSParams->tiltOfHoleArray;
 
     // The hole pattern requires computing position relative to center of pattern
     numHoles = crossPattern ? 5 : (numXholes * numYholes);
@@ -564,10 +653,29 @@ int CParticleTasks::GetHolePositions(FloatVec &delISX, FloatVec &delISY, IntVec 
     }
   }
 
+  // Set up to adjust for tilt angle if both angles are defined, the adjust is big enough,
+  // and the matrix exists
+  if (tiltAngle > -900. && holeAngle > -900.) {
+    cosRatio = (float)(cos(DTOR * tiltAngle) / cos(DTOR * holeAngle));
+    if (fabs(cosRatio - 1.) > 0.001) {
+      IStoSpec = mShiftManager->IStoSpecimen(magInd);
+      if (IStoSpec.xpx) {
+        adjustForTilt = true;
+        specToIS = MatInv(IStoSpec);
+      }
+    }
+  }
+
   // Transfer the image shifts and add to return vectors
   for (ind = 0; ind < numHoles; ind++) {
     mWinApp->mShiftManager->TransferGeneralIS(fromMag, fromISX[ind], fromISY[ind], magInd,
       transISX, transISY, camera);
+    if (adjustForTilt) {
+      mShiftManager->ApplyScaleMatrix(IStoSpec, (float)transISX, (float)transISY, specX, 
+        specY);
+      mShiftManager->ApplyScaleMatrix(specToIS, specX, cosRatio * specY, transISX, 
+        transISY);
+    }
     delISX.push_back((float)transISX);
     delISY.push_back((float)transISY);
   }

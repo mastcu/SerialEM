@@ -1104,7 +1104,9 @@
       image shift extent to calibrate, and then run the
       <a href="menu_focus.htm#ID_FOCUS_COMA_BY_CTF">Coma-free Alignment by CTF</a> 
       routine to measure the beam tilt needed at four locations, image shifted in +/-X 
-      and +/-Y by the given amount.&nbsp; The calibration can then be applied by the 
+      and +/-Y by the given amount.&nbsp;&nbsp; The measured beam tilt is applied 
+      temporarily and astigmatism is measured so that its dependence on image shift is 
+      also calibrated.&nbsp; The calibration can then be applied by the 
       multi-shot routine (see <a href="menu_navigator.htm#ID_OPTIONS_SETMULTI">Set 
       Multi-Shot Parameters</a>) and with several other script commands.</p>
     <p>
@@ -1120,14 +1122,16 @@
         in Low Dose mode</li>
       <li>Because it depends on your settings for illumination, the calibration will be 
         saved in your settings file, not shared with others using other settings files.</li>
-      <li>The calibration can be checked with a script like<br />
+      <li>The calibration can be checked with the script command 'TestNextMultiShot 1' 
+        (see <a href="hidd_multi_shot_setup.htm#testing">Testing Image Location and Coma Adjustment</a>) or with a script like<br />
 &nbsp;&nbsp; FixComaByCTF<br />
 &nbsp;&nbsp; ImageShiftByMicrons 2 0 1 1<br />
 &nbsp;&nbsp; Delay 3<br />
 &nbsp;&nbsp; FixComaByCTF 1 1<br />
+&nbsp;&nbsp; FixAstigmatismByCTF 1 1<br />
         where you could omit the first FixComaByCTF if you have already done the 
         coma-free alignment, the &quot;2 0&quot; can be replaced by an image shift of your choice, 
-        and you could add additional tests at other image shift positions.&nbsp; Such a 
+        the astigmatism test could be omitted, and you could add additional tests at other image shift positions.&nbsp; Such a 
         script could be used to explore how much the adjusted beam tilt gets off when 
         the beam intensity is changed.</li>
     </ul>

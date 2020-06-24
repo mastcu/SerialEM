@@ -2142,10 +2142,11 @@
             <b>#D</b> to impose a settling time before the next camera image equal to <b>#D</b> times 
             the normal settling time (i.e., 1 for regular settling).&nbsp; Add the optional 
             <b>#A</b> to use the <a href="menu_calibration.htm#hid_focustuning_comavs">Coma vs. 
-            Image Shift</a> calibration to adjust beam tilt for the incremental change in 
+            Image Shift</a> calibration to adjust beam tilt and objective stigmation for the incremental change in 
             image shift from its current value. With that option, the command saves the 
             current beam tilt, if it has not been saved before in the script, and it will be 
-            automatically restored when the script exits.</TD>
+            automatically restored when the script exits.&nbsp; The stigmator settings will 
+            also be saved and restored.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ImageShiftByPixels #X #Y [#D] [#A]</TD>
@@ -2910,7 +2911,7 @@
             first, provided this is supported by scripting on the microscope.&nbsp; Command added in 3.8, 11/17/19.</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">MultipleRecords [#N] [#C] [#O] [#D] [#S] [#E] [#F] [#H]</TD>
+          <TD class="scriptcommand">MultipleRecords [#N] [#C] [#O] [#D] [#S] [#E] [#F] [#H] [#R2] [#N2] [#O2]</TD>
           <TD>Acquires multiple Record images around the periphery of a hole, using image 
             shift to move to each off-center position.&nbsp; The parameters set in the 
             <a href="hidd_multi_shot_setup.htm">Multiple Record Setup dialog</a> control the 
@@ -2926,7 +2927,10 @@
             the early returned image (or -1 for all, 0 for none); <b>#H</b> the sum of 1 to do 
             shots around a center (within a hole) and 2 to do shots in multiple holes or 
             specified positions.&nbsp; (In addition, the sum in <b>#H</b> can include 4 for testing 
-            image locations or 8 for testing the coma correction.) For example, 
+            image locations or 8 for testing the coma correction.)&nbsp; Additional parameters are:
+             <b>#R2</b> greater than 0 to do a second ring of positions; <b>#N2</b> with the number of
+            positions in the second ring; and <b>#O2</b> for the distance from center of the second ring.
+             For example, 
             &#39;MultipleRecords -9 -9 -9 4. 1&#39; will use an extra delay of 4 seconds and save 
             Records, but take all other parameters from the dialog.</TD>
         </TR>

@@ -3,6 +3,30 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+6/23/20: Added calibration of astigmatism dependence on image shift to Coma
+vs. IS command and incorporated stigmator adjustments in all beam tilt
+adjustments for image shift.
+
+6/23/20: Made the multishot routine change defocus to compensate for specimen
+tilt.  Made it adjust hole positions for change in tilt if they are defined at
+one tilt and acquisition is done at another.
+
+6/23/20: Added ability to take multiple Records in two rings of positions.
+
+6/23/20: Added routine for refining beam shift calibration on non-FEI scopes
+by image-shifting over large distances and measuring beam movement.
+
+6/23/20: Made it possible to start new montage in Low Dose mode with either
+Record or View undefined or in diffraction mode.
+
+6/23/20: Fixed bad bug in multi-hole combiner and some small problems with
+hole finder.
+
+6/23/20: Switched entry in camera length from pixel size to calibrated
+length.
+
+6/18/20: Fixed SaveLog command when used twice.
+
 6/9/20: Fixed display of scale bar for images read from file with .mdoc.
 
 6/9/20: Added ability to add pixel sizes to camera length table for output in
