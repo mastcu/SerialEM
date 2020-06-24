@@ -525,7 +525,7 @@ CSerialEMApp::CSerialEMApp()
   }
   for (i = 0; i < MAX_CAMLENS; i++) {
     mCamLengths[i] = 0;
-    mCamLenPixSizes[i] = 0.;
+    mCamLenCalibrated[i] = 0.;
   }
 
   mIdleArray.SetSize(0,5);
@@ -1535,17 +1535,19 @@ void CSerialEMApp::AdjustSizesForSuperResolution(int iCam)
     mMagTab[mag].pixelSize[iCam] /= pixelDiv;
 }
 
-CString CSerialEMApp::GetStartupMessage()
+CString CSerialEMApp::GetStartupMessage(bool original)
 {
-  CTime ctdt = CTime::GetCurrentTime();
-  int iCam = 32;
+  if (!original) {
+    CTime ctdt = CTime::GetCurrentTime();
+    int iCam = 32;
 #ifdef _WIN64
-  iCam = 64;
+    iCam = 64;
 #endif
-  mStartupMessage.Format("%s %d-bit,  built %s  %s\r\n%s  %d/%d/%d  %02d:%02d:%02d",
-    VERSION_STRING, iCam, (LPCTSTR)sBuildDate, (LPCTSTR)sBuildTime,  
-    mStartingProgram ? "Started" : "Current date", ctdt.GetMonth(),
-    ctdt.GetDay(), ctdt.GetYear(), ctdt.GetHour(), ctdt.GetMinute(), ctdt.GetSecond());
+    mStartupMessage.Format("%s %d-bit,  built %s  %s\r\n%s  %d/%d/%d  %02d:%02d:%02d",
+      VERSION_STRING, iCam, (LPCTSTR)sBuildDate, (LPCTSTR)sBuildTime,
+      mStartingProgram ? "Started" : "Current date", ctdt.GetMonth(),
+      ctdt.GetDay(), ctdt.GetYear(), ctdt.GetHour(), ctdt.GetMinute(), ctdt.GetSecond());
+  }
   return mStartupMessage;
 }
 
@@ -2191,6 +2193,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
           mDistortionTasks->SPNextTask(idc->param);
         else if (idc->source == TASK_CAL_BEAMSHIFT)
           mBeamAssessor->ShiftCalImage();
+        else if (idc->source == TASK_REFINE_BS_CAL)
+          mBeamAssessor->RefineShiftCalImage();
         else if (idc->source == TASK_CCD_CAL_INTENSITY)
           mBeamAssessor->CalIntensityImage(idc->param);
         else if (idc->source == TASK_CAL_SPOT_INTENSITY)
@@ -2304,7 +2308,7 @@ BOOL CSerialEMApp::CheckIdleTasks()
           mNavHelper->DualMapCleanup(busy);
         else if (idc->source == TASK_DISTORTION_STAGEPAIR)
           mDistortionTasks->SPCleanUp(busy);
-        else if (idc->source == TASK_CAL_BEAMSHIFT)
+        else if (idc->source == TASK_CAL_BEAMSHIFT || idc->source == TASK_REFINE_BS_CAL)
           mBeamAssessor->ShiftCalCleanup(busy);
         else if (idc->source == TASK_CCD_CAL_INTENSITY)
           mBeamAssessor->CalIntensityCCDCleanup(busy);

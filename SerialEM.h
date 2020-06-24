@@ -79,7 +79,7 @@ enum Tasks {TASK_NAVIGATOR_ACQUIRE, TASK_DISTORTION_STAGEPAIR, TASK_CAL_BEAMSHIF
   TASK_CAL_ASTIG, TASK_FIX_ASTIG, TASK_COMA_FREE, TASK_ZEMLIN, TASK_MULTI_SHOT,
   TASK_GAIN_REF, TASK_ALIGN_DE_FRAMES, TASK_START_NAV_ACQ, TASK_CTF_BASED, 
   TASK_CAL_COMA_VS_IS, TASK_REMOTE_CTRL, TASK_MOVE_APERTURE, TASK_WAIT_FOR_DRIFT,
-  TASK_SET_CAMERA_NUM, TASK_CONDITION_VPP, TASK_FIND_HOLES
+  TASK_SET_CAMERA_NUM, TASK_CONDITION_VPP, TASK_FIND_HOLES, TASK_REFINE_BS_CAL
 };
 
 enum CalTypes {CAL_DONE_IS = 0, CAL_DONE_STAGE, CAL_DONE_FOCUS, CAL_DONE_BEAM, 
@@ -373,7 +373,7 @@ class DLL_IM_EX CSerialEMApp : public CWinApp
 public:
   void WarnIfUsingOldFilterAlign();
   SetMember(CString, StartupMessage);
-  CString GetStartupMessage();
+  CString GetStartupMessage(bool original = false);
   SetMember(BOOL, StartupInfo)
   SetMember(BOOL, ExitOnScopeError)
   void SetAdministratorMode(BOOL inVal) {mAdministrator = inVal;};
@@ -484,7 +484,7 @@ public:
   CString *GetLongMacroNames() {return mLongMacroName;};
   MagTable *GetMagTable() {return mMagTab;};
   int *GetCamLenTable() {return &mCamLengths[0];};
-  float *GetCamLenPixSizes() { return &mCamLenPixSizes[0]; };
+  float *GetCamLenCalibrated() { return &mCamLenCalibrated[0]; };
   MacroControl *GetMacControl() {return &mMacControl;};
   int *GetInitialDlgState();
   GetMember(DialogTable *, DialogTable)
@@ -659,7 +659,7 @@ private:
   CString mModeName[MAX_CONSETS];
   MagTable mMagTab[MAX_MAGS];
   int mCamLengths[MAX_CAMLENS];
-  float mCamLenPixSizes[MAX_CAMLENS];
+  float mCamLenCalibrated[MAX_CAMLENS];
   LowDoseParams mLowDoseParams[MAX_LOWDOSE_SETS];
   LowDoseParams mCamLowDoseParams[3][MAX_LOWDOSE_SETS];
   NavParams mNavParams;
