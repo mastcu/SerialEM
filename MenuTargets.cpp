@@ -468,6 +468,8 @@ BEGIN_MESSAGE_MAP(CMenuTargets, CCmdTarget)
     ON_UPDATE_COMMAND_UI(ID_CAMERA_SETEXTRADIVISIONBY2, OnUpdateCameraSetExtraDivisionBy2)
     ON_COMMAND(ID_CAMERA_RETURNFLOATIMAGE, OnCameraReturnFloatImage)
     ON_UPDATE_COMMAND_UI(ID_CAMERA_RETURNFLOATIMAGE, OnUpdateCameraReturnFloatImage)
+    ON_COMMAND(ID_BEAMSPOT_REFINEBEAMSHIFT, OnBeamspotRefineBeamShift)
+    ON_UPDATE_COMMAND_UI(ID_BEAMSPOT_REFINEBEAMSHIFT, OnUpdateBeamspotRefineBeamShift)
     END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1220,7 +1222,24 @@ void CMenuTargets::OnUpdateCalibrationBeamshift(CCmdUI* pCmdUI)
     mat.xpx != 0. && !mScope->GetJeol1230() && !mWinApp->GetSTEMMode());
 }
 
-void CMenuTargets::OnCalibrationElectrondose() 
+void CMenuTargets::OnBeamspotRefineBeamShift()
+{
+  mWinApp->mBeamAssessor->RefineBeamShiftCal();
+}
+
+
+void CMenuTargets::OnUpdateBeamspotRefineBeamShift(CCmdUI *pCmdUI)
+{
+  int magInd = mScope->FastMagIndex();
+  ScaleMat mat = mShiftManager->GetBeamShiftCal(magInd);
+  ScaleMat isMat = mShiftManager->IStoSpecimen(magInd);
+  ScaleMat camMat = mShiftManager->CameraToIS(magInd);
+  pCmdUI->Enable(!DoingTasks() && !mCamera->CameraBusy() && isMat.xpx != 0. &&
+    mat.xpx != 0. && camMat.xpx != 0. && !FEIscope && !mScope->GetJeol1230() && 
+    !mWinApp->GetSTEMMode());
+}
+
+void CMenuTargets::OnCalibrationElectrondose()
 {
   mWinApp->mBeamAssessor->CalibrateElectronDose(true);  
 }

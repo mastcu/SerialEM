@@ -93,8 +93,12 @@ class CBeamAssessor
   double GetElectronDose(int spotSize, double inIntensity, float exposure, int probe = -1);
   BOOL CalibratingBeamShift() {return mShiftCalIndex >= 0;};
   void ShiftCalImage();
+  int FindCenterForShiftCal(int edgeDivisor, int &size);
+  void StoreBeamShiftCal(int magInd, int retain);
   void StopShiftCalibration();
   void ShiftCalCleanup(int error);
+  void RefineBeamShiftCal();
+  void RefineShiftCalImage();
   void CalibrateBeamShift();
   GetSetMember(float, CalMinField)
   GetSetMember(float, ExtraRangeAtMinMag)
@@ -131,6 +135,7 @@ class CBeamAssessor
   CEMscope *mScope;
   CCameraController *mCamera;
   CameraParameters *mCamParam;
+  CShiftManager *mShiftManager;
   int mNumTables;         // Number of tables filled
   double *mIntensities;    // Pointers for current table
   float *mCurrents;
@@ -199,13 +204,21 @@ class CBeamAssessor
   BOOL mStoppingCal;      // Flag to stop calibration via CCD
   LowDoseParams *mLDParam;
   BOOL mShiftCalIndex;    // Index for beam shift calibration
+  bool mRefiningShiftCal; // Flag that beam shift cal is being refined
+  bool mUseEdgeForRefine; // Get beam center from edges for refining cal
   double mBaseShiftX;     // Base beam shift during calibration
   double mBaseShiftY;
+  double mBaseISX;        // Base image shift when refining
+  double mBaseISY;
   double mBorderMean;     // Mean of border in image of centered spot
-  float mBSCcenX[7];      // Centroid coordinates of spot
-  float mBSCcenY[7];
-  float mBSCshiftX[6];    // NEXT shift value
-  float mBSCshiftY[6];
+  float mBSCcenX[13];      // Centroid coordinates of spot or center from edge analysis
+  float mBSCcenY[13];
+  float mBSCshiftX[12];    // NEXT beam shift value; or recorded value when refining
+  float mBSCshiftY[12];
+  float mRBSCshiftISX[12]; // NEXT image shift value, and recorded value when refining
+  float mRBSCshiftISY[12];
+  ScaleMat mIStoBScal;
+  float mRBSCmaxShift;     // Maximum distance to shift in microns
   float mBSCalAlphaFactors[MAX_ALPHAS];
   DoseTable mDoseTables[MAX_SPOT_SIZE + 2][2][2];
   int mNumDoseTables;

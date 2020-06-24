@@ -56,6 +56,8 @@ CBeamAssessor::CBeamAssessor()
   mIntensityThread = NULL;
   mCalibratingIntensity = false;
   mShiftCalIndex = -1;
+  mRefiningShiftCal = false;
+  mRBSCmaxShift = 6.;
   mCalMinField = 8.;
   mExtraRangeAtMinMag = 10.f;
   mIntervalTolerance = 0.3;     // Maximum deviation of interval from target
@@ -105,6 +107,7 @@ void CBeamAssessor::Initialize()
 {
   mScope = mWinApp->mScope;
   mCamera = mWinApp->mCamera;
+  mShiftManager = mWinApp->mShiftManager;
 }
 
 
@@ -235,8 +238,8 @@ void CBeamAssessor::CalIntensityCCD()
   
   // Get total range of intensity that needs to be covered to be able to work
   // at the minimum mag: based on pixel size and extra range desired
-  ratio = mWinApp->mShiftManager->GetPixelSize(camera, mCalMagInd) /
-    mWinApp->mShiftManager->GetPixelSize(camera, minMagIndNeeded);
+  ratio = mShiftManager->GetPixelSize(camera, mCalMagInd) /
+    mShiftManager->GetPixelSize(camera, minMagIndNeeded);
   mChangeNeeded = ratio * ratio / mExtraRangeAtMinMag;
 
   mTestIncrement = mInitialIncrement;
@@ -693,8 +696,8 @@ void CBeamAssessor::CalSetupNextMag(float extraDelta)
   // Loop down from one below current mag to lowest M mag index, getting ratio of
   // pixel sizes squared as current change ratio
   for (int mag = mNextMagInd - 1; mag >= mScope->GetLowestMModeMagInd(); mag--) {
-    ratio = mWinApp->mShiftManager->GetPixelSize(camera, mag) /
-      mWinApp->mShiftManager->GetPixelSize(camera, magNow);
+    ratio = mShiftManager->GetPixelSize(camera, mag) /
+      mShiftManager->GetPixelSize(camera, magNow);
     ratio *= ratio;
 
     // If ratio is too big, done looping; otherwise it is a valid mag change, so
@@ -710,8 +713,8 @@ void CBeamAssessor::CalSetupNextMag(float extraDelta)
     // gets too low, reference this to initial mag/current so it doesn't decline through
     // several changes
     if (mag == magNow - 1) {
-      ratio = mWinApp->mShiftManager->GetPixelSize(camera, mag) /
-        mWinApp->mShiftManager->GetPixelSize(camera, mCalMagInd);
+      ratio = mShiftManager->GetPixelSize(camera, mag) /
+        mShiftManager->GetPixelSize(camera, mCalMagInd);
       mNextMagMaxCurrent = 0.8 * mCurrents[0] / (ratio * ratio);
     }
   }
@@ -1465,7 +1468,7 @@ void CBeamAssessor::CalibrateElectronDose(BOOL interactive)
   mean = mWinApp->mProcessImage->WholeImageMean(imBuf);
   mWinApp->mProcessImage->DoseRateFromMean(imBuf, (float)mean, doseRate);
   pixel = 10000. * BinDivisorI(camParam) * 
-    mWinApp->mShiftManager->GetPixelSize(imBuf->mCamera, imBuf->mMagInd);
+    mShiftManager->GetPixelSize(imBuf->mCamera, imBuf->mMagInd);
 
   dtp->dose = doseRate / (pixel * pixel);
   dtp->intensity = intensity;
@@ -1558,52 +1561,28 @@ void CBeamAssessor::CalibrateBeamShift()
   mWinApp->UpdateBufferWindows();
 }
 
+// Get an image from beam shift calibration
 void CBeamAssessor::ShiftCalImage()
 {
-  double sum, dx, dy, dist;
-  int ix0,ix1, iy0, iy1, nPix, nPixTot;
+  double dx, dy, dist;
+  int size;
 
   if (mShiftCalIndex < 0)
     return;
 
   // Get some general parameters about the image and scaling
   EMimageBuffer *imBuf = mWinApp->GetImBufs();
-  imBuf->mCaptured = BUFFER_CALIBRATION;
-  KImage *image = imBuf->mImage;
-  int nx = image->getWidth();
-  int ny = image->getHeight();
-  image->Lock();
-  void *data = image->getData();
-  int type = image->getType();
   int curCam = mWinApp->GetCurrentCamera();
   int magInd = imBuf->mMagInd;
-  float pixel = mWinApp->mShiftManager->GetPixelSize(curCam, magInd);
-  int size = nx;
-  if (size > ny)
-    size = ny;
+  float pixel = mShiftManager->GetPixelSize(curCam, magInd);
   int binning = imBuf->mBinning;
+
+  mUseEdgeForRefine = false;
+  FindCenterForShiftCal(8, size);
 
   // FIRST SHOT WITH CENTERED BEAM
   if (!mShiftCalIndex) {
 
-    // Compute the mean around the outer 1/8 of field
-    ix0 = nx / 8;
-    ix1 = nx - ix0;
-    iy0 = ny / 8;
-    iy1 = ny - iy0;
-    nPix = ny * ix0;
-    sum = nPix * ProcImageMean(data, type, nx, ny, 0, ix0 -1, 0, ny - 1);
-    sum += nPix * ProcImageMean(data, type, nx, ny, ix1, nx -1, 0, ny - 1);
-    nPixTot = 2 * nPix;
-    nPix = (nx - 2 * ix0) * iy0;
-    sum += nPix * ProcImageMean(data, type, nx, ny, ix0, ix1 - 1, 0, iy0 - 1);
-    sum += nPix * ProcImageMean(data, type, nx, ny, ix0, ix1 - 1, iy1, ny - 1);
-    nPixTot += 2 * nPix;
-    mBorderMean = sum / nPixTot;
-
-    // Get the centroid of beam
-    ProcCentroid(data, type, nx, ny, ix0, ix1, iy0, iy1, mBorderMean, mBSCcenX[0],
-      mBSCcenY[0]);
 
     // Set up the shifts as 1/30 of field since the scope alignment could be off by 10
     if (magInd < mScope->GetLowestMModeMagInd() && mScope->GetLMBeamShiftFactor())
@@ -1611,12 +1590,7 @@ void CBeamAssessor::ShiftCalImage()
     if (magInd >= mScope->GetLowestMModeMagInd() && JEOLscope && !mScope->GetHasNoAlpha())
       pixel *= mBSCalAlphaFactors[mScope->GetAlpha()];
     mBSCshiftX[0] = mBSCshiftY[1] = 0.03f * size * pixel * binning;
-  } else {
-    // Every other shot, get the centroid
-    ProcCentroid(data, type, nx, ny, 0, nx -1 , 0, ny - 1, mBorderMean, 
-      mBSCcenX[mShiftCalIndex], mBSCcenY[mShiftCalIndex]);
   }
-  image->UnLock();
 
   // THIRD SHOT - TWO SMALL SHIFTS DONE
   if (mShiftCalIndex == 2) {
@@ -1653,42 +1627,318 @@ void CBeamAssessor::ShiftCalImage()
   bsToCam.ypy = (float)(0.5 * binning * (mBSCcenY[5] - mBSCcenY[6]) / mBSCshiftY[5]);
   
   // Convert to a matrix for getting from image shift to beam shift
-  ScaleMat bMat = mWinApp->mShiftManager->IStoCamera(magInd);
-  ScaleMat camToBS = mWinApp->mShiftManager->MatInv(bsToCam);
-  ScaleMat IStoBS = mWinApp->mShiftManager->MatMul(bMat, camToBS);
+  ScaleMat bMat = mShiftManager->IStoCamera(magInd);
+  ScaleMat camToBS = mShiftManager->MatInv(bsToCam);
+  mIStoBScal = mShiftManager->MatMul(bMat, camToBS);
+  StoreBeamShiftCal(magInd, 0);
+}
+
+// Find the beam center for either kind fo shift calibration
+int CBeamAssessor::FindCenterForShiftCal(int edgeDivisor, int &size)
+{
+  double sum;
+  int ix0, ix1, iy0, iy1, nPix, nPixTot, binning, err;
+  float xcen, ycen, radius, xcenUse, ycenUse, radUse, fracUse, shiftX, shiftY, fitErr;
+  EMimageBuffer *imBuf = mWinApp->GetImBufs();
+  imBuf->mCaptured = BUFFER_CALIBRATION;
+  KImage *image = imBuf->mImage;
+  int nx = image->getWidth();
+  int ny = image->getHeight();
+  void *data = image->getData();
+  int type = image->getType();
+  size = B3DMIN(nx, ny);
+
+  if (mUseEdgeForRefine) {
+
+    // Find beam center when refining
+    err = mWinApp->mProcessImage->FindBeamCenter(imBuf, xcen, ycen, radius, xcenUse, 
+      ycenUse, radUse, fracUse, binning, ix0, shiftX, shiftY, fitErr);
+    if (err) {
+      if (err < 0)
+        mWinApp->AppendToLog("No beam edges detectable in this image");
+      else
+        mWinApp->AppendToLog("Error analyzing image for beam edges");
+      return 1;
+    }
+    xcen *= binning;
+    ycen *= binning;
+    mBSCcenX[mShiftCalIndex] = xcen;
+    mBSCcenY[mShiftCalIndex] = ycen;
+    PrintfToLog("Position %d: center at %.0f %.0f, radius %.0f, fit error %.3f",
+      mShiftCalIndex, xcen, ycen, radius * binning, fitErr * binning);
+
+  } else {
+
+    // Or get the centroid
+    image->Lock();
+
+    // FIRST SHOT WITH CENTERED BEAM
+    if (!mShiftCalIndex) {
+
+      // Compute the mean around the outer fraction of field
+      ix0 = nx / edgeDivisor;
+      ix1 = nx - ix0;
+      iy0 = ny / edgeDivisor;
+      iy1 = ny - iy0;
+      nPix = ny * ix0;
+      sum = nPix * ProcImageMean(data, type, nx, ny, 0, ix0 - 1, 0, ny - 1);
+      sum += nPix * ProcImageMean(data, type, nx, ny, ix1, nx - 1, 0, ny - 1);
+      nPixTot = 2 * nPix;
+      nPix = (nx - 2 * ix0) * iy0;
+      sum += nPix * ProcImageMean(data, type, nx, ny, ix0, ix1 - 1, 0, iy0 - 1);
+      sum += nPix * ProcImageMean(data, type, nx, ny, ix0, ix1 - 1, iy1, ny - 1);
+      nPixTot += 2 * nPix;
+      mBorderMean = sum / nPixTot;
+
+      // Get the centroid of beam
+      ProcCentroid(data, type, nx, ny, ix0, ix1, iy0, iy1, mBorderMean, mBSCcenX[0],
+        mBSCcenY[0]);
+    } else {
+      // Every other shot, get the centroid
+      ProcCentroid(data, type, nx, ny, 0, nx - 1, 0, ny - 1, mBorderMean,
+        mBSCcenX[mShiftCalIndex], mBSCcenY[mShiftCalIndex]);
+    }
+    SEMTrace('1', "Position %d: center at %.0f %.0f", mShiftCalIndex, 
+      mBSCcenX[mShiftCalIndex], mBSCcenY[mShiftCalIndex]);
+    image->UnLock();
+  }
+  return 0;
+}
+
+// Store the beam shift calibration for the given mag with the given retain flag
+void CBeamAssessor::StoreBeamShiftCal(int magInd, int retain)
+{
+  CString report;
 
   // Pass a negative mag index for JEOL EFTEM mode
   if (JEOLscope && !mScope->GetHasOmegaFilter() && mWinApp->GetEFTEMMode())
     magInd = -magInd;
-  mWinApp->mShiftManager->SetBeamShiftCal(IStoBS, magInd, mScope->GetAlpha(), 
-    mScope->ReadProbeMode(), false);
-  CString report;
-  report.Format("Image shift to beam shift matrix is:\r\n  %.3f  %.3f  %.3f  %.3f",
-    IStoBS.xpx, IStoBS.xpy, IStoBS.ypx, IStoBS.ypy);
-  mWinApp->AppendToLog(report, LOG_MESSAGE_IF_CLOSED);
+  mShiftManager->SetBeamShiftCal(mIStoBScal, magInd, mScope->GetAlpha(),
+    mScope->ReadProbeMode(), retain);
+  if (!mRefiningShiftCal) {
+    report.Format("Image shift to beam shift matrix is:\r\n  %.3f  %.3f  %.3f  %.3f",
+      mIStoBScal.xpx, mIStoBScal.xpy, mIStoBScal.ypx, mIStoBScal.ypy);
+    mWinApp->AppendToLog(report, LOG_MESSAGE_IF_CLOSED);
+  }
   StopShiftCalibration();
   mWinApp->SetCalibrationsNotSaved(true);
 }
 
+// Common cleanup routine for either shift cal
 void CBeamAssessor::ShiftCalCleanup(int error)
 {
+  CString str;
+  str.Format("Time out trying to get image for %s beam shift calibration",
+    mRefiningShiftCal ? "refining" : "");
   if (error == IDLE_TIMEOUT_ERROR)
-    AfxMessageBox(_T("Time out trying to get image for beam shift calibration"), 
-      MB_EXCLAME);
+    AfxMessageBox(str, MB_EXCLAME);
   StopShiftCalibration();
   mWinApp->ErrorOccurred(error);
 }
 
+/*
+ *  End or stop either shift calibration: restore beam shift and image shift if refining
+ */
 void CBeamAssessor::StopShiftCalibration()
 {
   if (mShiftCalIndex < 0)
     return;
+  if (mRefiningShiftCal)
+    mScope->SetImageShift(mBaseISX, mBaseISY);
   mScope->SetBeamShift(mBaseShiftX, mBaseShiftY);
   mShiftCalIndex = -1;
+  mRefiningShiftCal = false;
   mWinApp->UpdateBufferWindows();
   mWinApp->SetStatusText(MEDIUM_PANE, "");
 }
 
+// Start refining the beam shift calibration by image shifting and finding the error
+// in the beam shift (the movement of the beam)
+void CBeamAssessor::RefineBeamShiftCal()
+{
+  CString *modeNames = mWinApp->GetModeNames();
+  int which;
+
+  // So far this is called only from MenuTargets which checks all three cals needed
+  mIStoBScal = mShiftManager->GetBeamShiftCal(mScope->GetMagIndex());
+  which = SEMThreeChoiceBox("Beam shift calibration refinement takes pictures with the\n"
+    + modeNames[SHIFT_CAL_CONSET] + " parameter set.  It can find the beam center either"
+    "\nfrom the centroid of the image or from detected beam edges.\n\n"
+    "You should also choose a spot size that gives a moderate\n"
+    "number of counts in a " + modeNames[SHIFT_CAL_CONSET] + " image.\n\n"
+    "Press:\n\"Use Centroid\" to use the centroid of the image above\n"
+    "background.  You must have the spot condensed so that it is\n"
+    "less than 3/4 of the size of a " + modeNames[SHIFT_CAL_CONSET] + " image and stays"
+    " within the image when image shift is applied.\n\n"
+    "\"Use Edge\" to use the beam edge.  Almost all of the beam\n"
+    "edge should be in the image for accurate measurement.\n\n"
+    "\"Cancel\" to abort the procedure",
+    "Use Centroid", "Use Edge", "Cancel", MB_YESNOCANCEL | MB_ICONQUESTION);
+  if (which == IDCANCEL)
+    return;
+  mUseEdgeForRefine = which == IDNO;
+  if (!KGetOneFloat("Enter maximum image shift to apply, in microns", mRBSCmaxShift, 1))
+    return;
+
+  // 
+  mScope->GetBeamShift(mBaseShiftX, mBaseShiftY);
+  mScope->GetImageShift(mBaseISX, mBaseISY);
+  SEMTrace('1', "Base IS %.2f %.2f  Base BS %.1f %.1f", mBaseISX, mBaseISY, mBaseShiftX, mBaseShiftY);
+  PrintfToLog("Starting IS to BS matrix %.4f %.4f %.4f %.4f", mIStoBScal.xpx, 
+    mIStoBScal.xpy, mIStoBScal.ypx, mIStoBScal.ypy);
+  mShiftCalIndex = 0;
+  mRefiningShiftCal = true;
+  mCamera->InitiateCapture(SHIFT_CAL_CONSET);
+  mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, TASK_REFINE_BS_CAL, 0, 0);
+  mWinApp->SetStatusText(MEDIUM_PANE, "REFINING BEAM SHIFT CAL");
+  mWinApp->UpdateBufferWindows();
+}
+
+// Get the next shot in the refinement routine
+void CBeamAssessor::RefineShiftCalImage()
+{
+  double dx, dy;
+  int size, ind, dir;
+  float shiftInUm, delISX, delISY, delSpecX, delSpecY, dist;
+  float tooBigCrit = 0.5f;
+  ScaleMat IStoSpec, BStoIS, camToIS, newIStoBS;
+
+  if (mShiftCalIndex < 0)
+    return;
+
+  // Get some general parameters about the image and scaling
+  EMimageBuffer *imBuf = mWinApp->GetImBufs();
+  int curCam = mWinApp->GetCurrentCamera();
+  int magInd = imBuf->mMagInd;
+  float pixel = mShiftManager->GetPixelSize(curCam, magInd);
+  int binning = imBuf->mBinning;
+
+  // Get center position, and record shifts for this position
+  FindCenterForShiftCal(16, size);
+  if (mShiftCalIndex > 0) {
+    ind = mShiftCalIndex - 1;
+    mScope->GetImageShift(dx, dy);
+    mRBSCshiftISX[ind] = (float)(dx - mBaseISX);
+    mRBSCshiftISY[ind] = (float)(dy - mBaseISY);
+    mScope->GetBeamShift(dx, dy);
+    mBSCshiftX[ind] = (float)(dx - mBaseShiftX);
+    mBSCshiftY[ind] = (float)(dy - mBaseShiftY);
+
+    // Adjust image shift by the shift that would be needed to move the image by the
+    // same amount as the beam has moved (Y inversion here)
+    camToIS = mShiftManager->CameraToIS(magInd);
+    mShiftManager->ApplyScaleMatrix(camToIS, 
+      binning * (mBSCcenX[mShiftCalIndex] - mBSCcenX[0]),
+      -binning * (mBSCcenY[mShiftCalIndex] - mBSCcenY[0]), delISX, delISY);
+    SEMTrace('1', "At IS %.2f %.2f, IS needed to center %.2f %.2f", mRBSCshiftISX[ind], 
+      mRBSCshiftISY[ind], delISX, delISY);
+    mRBSCshiftISX[ind] += delISX;
+    mRBSCshiftISY[ind] += delISY;
+  }
+
+  // On the fifth and last images, take the last set of measurements and use it to get a
+  // new calibration matrix
+  if (mShiftCalIndex == 4 || mShiftCalIndex == 8 || mShiftCalIndex == 12) {
+    ind = mShiftCalIndex - 4;
+    BStoIS.xpx = (mRBSCshiftISX[ind] - mRBSCshiftISX[ind + 1]) /
+      (mBSCshiftX[ind] - mBSCshiftX[ind + 1]);
+    BStoIS.xpy = (mRBSCshiftISX[ind + 2] - mRBSCshiftISX[ind + 3]) /
+      (mBSCshiftY[ind + 2] - mBSCshiftY[ind + 3]);
+    BStoIS.ypx = (mRBSCshiftISY[ind] - mRBSCshiftISY[ind + 1]) /
+      (mBSCshiftX[ind] - mBSCshiftX[ind + 1]);
+    BStoIS.ypy = (mRBSCshiftISY[ind + 2] - mRBSCshiftISY[ind + 3]) /
+      (mBSCshiftY[ind + 2] - mBSCshiftY[ind + 3]);
+    newIStoBS = MatInv(BStoIS);
+    PrintfToLog("Refined matrix to %.4f %.4f %.4f %.4f", newIStoBS.xpx, newIStoBS.xpy,
+      newIStoBS.ypx, newIStoBS.ypy);
+
+    // Make sure it hasn't changed too much
+    dist = fabsf(newIStoBS.xpx);
+    ACCUM_MAX(dist, fabsf(newIStoBS.xpy));
+    ACCUM_MAX(dist, fabsf(newIStoBS.ypx));
+    ACCUM_MAX(dist, fabsf(newIStoBS.ypy));
+    if (fabs(newIStoBS.xpx - mIStoBScal.xpx) / dist > tooBigCrit ||
+      fabs(newIStoBS.xpy - mIStoBScal.xpy) / dist > tooBigCrit ||
+      fabs(newIStoBS.ypx - mIStoBScal.ypx) / dist > tooBigCrit ||
+      fabs(newIStoBS.ypy - mIStoBScal.ypy) / dist > tooBigCrit) {
+      AfxMessageBox("The new matrix has changed too much from the previous one\n\n"
+        "Stopping because something seems to be wrong", MB_EXCLAME);
+      StopShiftCalibration();
+      return;
+    }
+
+    mIStoBScal = newIStoBS;
+    
+    // Finish up if done
+    if (mShiftCalIndex == 12) {
+      StoreBeamShiftCal(magInd, 1);
+      return;
+    }
+  }
+
+  // On the first and fifth images, take the existing cal matrix and use it to set up the
+  // image shift vectors to apply
+  if (!mShiftCalIndex || mShiftCalIndex == 4 || mShiftCalIndex == 8) {
+
+    // Determine microns to move
+    if (!mShiftCalIndex)
+      shiftInUm = (float)B3DMIN(mRBSCmaxShift / 2., size * pixel * binning);
+    else
+      shiftInUm = mRBSCmaxShift;
+    BStoIS = MatInv(mIStoBScal);
+    IStoSpec = mShiftManager->IStoSpecimen(magInd);
+    for (dir = 0; dir < 2; dir++) {
+
+      // Get IS shift that one BS unit gives and convert to microns on specimen,
+      // scale up the IS to give target shift
+      mShiftManager->ApplyScaleMatrix(BStoIS, (float)(1 - dir), (float)dir, delISX,
+        delISY);
+      mShiftManager->ApplyScaleMatrix(IStoSpec, delISX, delISY, delSpecX, delSpecY);
+      dist = (float)sqrt(delSpecX * delSpecX + delSpecY * delSpecY);
+      delISX *= shiftInUm / dist;
+      delISY *= shiftInUm / dist;
+
+      // Store these image shifts for the + and - direction on this axis
+      mRBSCshiftISX[mShiftCalIndex + 2 * dir] = delISX;
+      mRBSCshiftISY[mShiftCalIndex + 2 * dir] = delISY;
+      mRBSCshiftISX[mShiftCalIndex + 2 * dir + 1] = -delISX;
+      mRBSCshiftISY[mShiftCalIndex + 2 * dir + 1] = -delISY;
+    }
+  }
+
+  // For any shot, apply the IS, read out the BS, and adjust BS to be 0 on one axis
+  mScope->SetImageShift(mBaseISX + mRBSCshiftISX[mShiftCalIndex], 
+    mBaseISY + mRBSCshiftISY[mShiftCalIndex]);
+  if (mShiftCalIndex < 0) {
+
+    // If IS was clipping, restore the center here, since the restore in the stop routine
+    // was overridden by the clipped IS being set
+    mScope->SetImageShift(mBaseISX, mBaseISY);
+    mScope->SetBeamShift(mBaseShiftX, mBaseShiftY);
+    return;
+  }
+
+  // Get the shift that should have been applied with the current matrix and make sure one
+  // axis is 0
+  mShiftManager->ApplyScaleMatrix(mIStoBScal, mRBSCshiftISX[mShiftCalIndex],
+    mRBSCshiftISY[mShiftCalIndex], delISX, delISY);
+  if (GetDebugOutput('1'))
+    mScope->GetBeamShift(dx, dy);
+  if (fabs(delISX) < fabs(delISY)) {
+    SEMTrace('1', "Beam shift %.1f %.1f adjusting to %.1f %.1f",dx, dy, mBaseShiftX, 
+      mBaseShiftY + delISY);
+    mScope->SetBeamShift(mBaseShiftX, mBaseShiftY + delISY);
+  } else {
+    SEMTrace('1', "Beam shift  %.1f %.1f adjusting to %.1f %.1f", dx, dy, 
+      mBaseShiftX + delISX, mBaseShiftY);
+    mScope->SetBeamShift(mBaseShiftX + delISX, mBaseShiftY);
+  }
+
+  // Start next shot
+  mShiftCalIndex++;
+  mCamera->InitiateCapture(SHIFT_CAL_CONSET);
+  mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, TASK_REFINE_BS_CAL, 0, 0);
+}
 
 //////////////////////////////////////////////////////////////////////////////
 // CALIBRATE SPOT INTENSITIES
@@ -1880,7 +2130,7 @@ void CBeamAssessor::CalibrateCrossover(void)
   bool focChanged = false;
   CString message;
   CArray<HighFocusMagCal, HighFocusMagCal> *focusMagCals = 
-    mWinApp->mShiftManager->GetFocusMagCals();
+    mShiftManager->GetFocusMagCals();
  	int spotSave = mScope->GetSpotSize();
   int probe = mScope->ReadProbeMode();
   if (AfxMessageBox("To calibrate crossover, the program will go to each spot\n"

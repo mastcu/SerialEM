@@ -218,15 +218,20 @@
           <TD class="style1">&nbsp;&nbsp;&nbsp; <A href="#hid_calibration_spotintensity">Spot Intensity</A></TD>
           <TD>Calibrate relative intensity of the different spot sizes.</TD>
         </TR>
-        <TR vAlign="top">
-          <TD class="style1">&nbsp;&nbsp;&nbsp; <A href="#hid_calibration_beamshift">Beam Shift</A></TD>
-          <TD>Calibrate beam shift by taking pictures of a small spot.</TD>
-        </TR>
         <tr>
           <TD class="style1">&nbsp;&nbsp;&nbsp; <A href="#hid_calibration_c2factor">Set C2 Factor</A></TD>
           <TD>Set scaling factors for C2 by entering the C2 readout for all spot sizes.</TD>
         </tr>
         <TR vAlign="top">
+          <TD class="style1">&nbsp;&nbsp;&nbsp; <A href="#hid_calibration_beamshift">Beam Shift</A></TD>
+          <TD>Calibrate beam shift by taking pictures of a small spot.</TD>
+        </TR>
+        <TR vAlign="top">
+          <TD class="style1">&nbsp;&nbsp;&nbsp; <A href="#hid_beamspot_refinebeamshift">Refine Beam Shift Cal</A></TD>
+          <TD>Refine beam shift calibration by analyzing shift of beam after large image shifts.</TD>
+        </TR>
+
+          <TR vAlign="top">
           <TD class="style1">&nbsp;&nbsp;&nbsp; <A href="#hid_calibration_alpha_beam_shifts">Alpha Beam 
             Shifts</A></TD>
           <TD>Calibrate the change in beam shift/tilt needed when changing alpha on a JEOL.</TD>
@@ -1357,25 +1362,6 @@
       place and see if it works down to the dimmest spot.&nbsp; Run the procedure.</P>
     <P><i>For a Titan microscope,</i> you will be asked to enter the size of the C2 
       aperture after running this command.</P>
-      <P><A name="hid_calibration_beamshift"></A><B>Beam Shift command (Calibration - 
-        Beam &amp; Spot sub-menu)</B></P>
-      <P>This command will calibrate beam shift so that the beam can be moved by 
-        predictable amounts.</P>
-      <P>To do this calibration, go to a magnification near 20K. First adjust the spot 
-        size and intensity so that the beam is a small, centered spot whose diameter is 
-        less than half the width of the CCD field (for a 2K, 30-micron pixel camera, 
-        this is 2-3 times the diameter of the smallest circle on the screen). Take a 
-        Trial exposure to verify this, and adjust exposure time or spot size to prevent 
-        CCD saturation. Then select this command to perform the calibration. Seven 
-        pictures will be taken: one at the starting position, two with small movements 
-        of the X and Y beam shifts, and four with larger movements in both directions 
-        from center.</P>
-    <P>On all microscopes, the beam shift calibration is stored separately for LM and 
-      non-LM modes.&nbsp; On the JEOL, calibrations are stored separately for GIF 
-      mode, for different magnification ranges separated by either image shift or beam 
-      shift boundaries, 
-      and for different alpha values.&nbsp; When PLA is being used for image shift, 
-      every magnification is an image shift boundary.</P>
       <P><A name="hid_calibration_c2factor"></A><B>Set C2 Factors command (Calibration - 
         Beam &amp; Spot sub-menu)</B></P>
       <P>Use this command to calibrate the factors that SerialEM needs to convert from 
@@ -1386,6 +1372,73 @@
         procedure will not match values shown by the scope. First be sure that you 
         have a C2 lens readout in your MUI workspace. Then activate the command and 
         type in the value shown in the C2 readout for each spot size.</P>
+      <P><A name="hid_calibration_beamshift"></A><B>Beam Shift command (Calibration - 
+        Beam &amp; Spot sub-menu)</B></P>
+      <P>This command will calibrate beam shift so that the beam can be moved by 
+        predictable amounts.</P>
+      <P>To do this calibration, go to a magnification near 20K. First adjust the spot 
+        size and intensity so that the beam is a small, centered spot whose diameter is 
+        less than half the width of the camera field. Take a 
+        Trial exposure to verify this, and adjust exposure time or spot size to prevent 
+        camera saturation.&nbsp;&nbsp; (If the beam is still too bright, use a smaller 
+        condenser aperture, if possible.)&nbsp; Then select this command to perform the calibration. Seven 
+        pictures will be taken: one at the starting position, two with small movements 
+        of the X and Y beam shifts, and four with larger movements in both directions 
+        from center.</P>
+    <P>On all microscopes, the beam shift calibration is stored separately for LM and 
+      non-LM modes.&nbsp; On the JEOL, calibrations are stored separately for GIF 
+      mode, for different magnification ranges separated by either image shift or beam 
+      shift boundaries, 
+      and for different alpha values.&nbsp; When PLA is being used for image shift, 
+      every magnification is an image shift boundary.</P>
+      
+    <P><A name="hid_beamspot_refinebeamshift"></A><B>Refine Beam Shift Cal command (Calibration - 
+        Beam &amp; Spot sub-menu)</B></P>
+      <P>This command will refine a beam shift calibration on JEOL and Hitachi 
+        microscopes to be more accurate over larger distances.&nbsp; It does this by 
+        applying image shift over a large distance and measuring how much the beam moved 
+        on the camera due to the inaccuracy of the existing beam shift calibration.&nbsp; 
+        Specifically, the image shift equal to one camera field is applied in four 
+        directions to get an initial refinement; then image shift equal to your 
+        specified maximum distance in microns is applied in four directions to refine 
+        this calibration; finally the maximum shift is repeated both to show how good 
+        the calibration would be after the first two refinements and to obtain another 
+        refinement.&nbsp; If the beam stays close to stationary on that last round, then 
+        you can be sure that the final calibration is as good as that or even better.&nbsp; 
+        If the beam still moves substantially, the only way to tell how good the final 
+        calibration is would be to repeat the whole procedure, using this result as the 
+        starting point.</P>
+    <P>The center of the beam can be detected in one of two ways: by the centroid of 
+      the image after subtracting a background, as in the original shift calibration, 
+      or by fitting a circle to the edge of the beam, as in beam autocentering, which 
+      requires a sharp beam edge as obtained with a FEG.&nbsp; 1) When using the 
+      centroid, the beam can be somewhat larger than for the beam shift calibration, 
+      up to 3/4 of the size of the field.&nbsp; If the beam is not entirely in the 
+      image for some of the shots, this will reduce the accuracy for that round of 4 
+      shots, but may not matter as long as it does not happen in the final round.&nbsp; 
+      2) When using the beam edge, the most accurate results will be obtained with 
+      nearly all of the beam edge in the image.&nbsp; In principle, the beam can even 
+      be larger than the field if it is shifted so that about half of the edge is in 
+      the field, and you may get acceptable results with such a beam.&nbsp; However, 
+      if the beam is not round or becomes distorted at high image shift values, a 
+      partial edge will give variable center estimates, so it is best to have the 
+      whole beam in the field in the initial image.&nbsp; The center position, radius, 
+      and error of the fits to a circle are output to the log.&nbsp; The range of 
+      radius values should be less than ~0.5% of the radius, and the error values 
+      should be fairly consistent; if not, the result may not be very accurate.</P>
+    <P>If projector shifts (PLA) are being used for image shift, be careful not to go 
+      out of range at higher magnifications.&nbsp; The allowed image shift is 
+      inversely proportional to the magnification.&nbsp; When image shift goes out of 
+      range it is clipped, which will either stop the routine if a message box is set 
+      to appear upon clipping, or give a bad result.&nbsp; Beam shift can also go out 
+      of range with no warning or clipping, which will probably give a black image and 
+      a bad result.</P>
+    <P>The calibrations prepared with this command are stored with a flag that allows 
+      them to coexist with other calibrations in the same magnification range (see 
+      previous command).</P>
+    <P>This command is enabled for non-FEI scopes provided that a beam shift 
+      calibration, image shift to specimen matrix, and camera to image shift matrix 
+      exist or can be derived for the current magnification.</P>
       <P><A name="hid_calibration_alpha_beam_shifts"></A><B>Alpha Beam Shifts command 
           (Calibration - Beam &amp; Spot sub-menu)</B></P>
       <P>Use this command to calibrate how much beam shift and beam tilt needs to be changed when going

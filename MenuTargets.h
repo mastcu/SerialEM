@@ -383,6 +383,8 @@ public:
   afx_msg void OnUpdateCameraSetExtraDivisionBy2(CCmdUI *pCmdUI);
   afx_msg void OnCameraReturnFloatImage();
   afx_msg void OnUpdateCameraReturnFloatImage(CCmdUI *pCmdUI);
+  afx_msg void OnBeamspotRefineBeamShift();
+  afx_msg void OnUpdateBeamspotRefineBeamShift(CCmdUI *pCmdUI);
 };
 
 /////////////////////////////////////////////////////////////////////////////
