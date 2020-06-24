@@ -143,8 +143,6 @@ int CLogWindow::UpdateSaveFile(BOOL createIfNone, CString stackName, BOOL replac
   int dirInd, extInd, fileNo;
   CString name;
   CFileStatus status;
-  if (!mUnsaved)
-    return 0;
   if (mSaveFile.IsEmpty() || (createIfNone && !stackName.IsEmpty() && replace)) {
     if (createIfNone) {
       if (stackName.IsEmpty())
@@ -185,6 +183,9 @@ int CLogWindow::UpdateSaveFile(BOOL createIfNone, CString stackName, BOOL replac
     return 0;
   }
 
+  if (!mUnsaved)
+    return 0;
+
   // If the appended length matches that last saved and current length, do an append
   // otherwise rewrite from scratch
   UpdateData(true);
@@ -215,7 +216,7 @@ int CLogWindow::OpenAndWriteFile(UINT flags, int length, int offset)
   catch(CFileException *perr) {
     perr->Delete();
     CString message = "Error writing log to file " + mSaveFile;
-    AfxMessageBox(message, MB_EXCLAME);
+    SEMMessageBox(message, MB_EXCLAME);
     retval = -1;
   } 
   if (cFile) {
