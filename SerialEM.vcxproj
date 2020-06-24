@@ -1154,6 +1154,7 @@
     <ClInclude Include="ExternalTools.h" />
     <ClInclude Include="FrameAlignDlg.h" />
     <ClInclude Include="HoleFinderDlg.h" />
+    <ClInclude Include="Image\MdocDefines.h" />
     <ClInclude Include="MultiCombinerDlg.h" />
     <ClInclude Include="MultiHoleCombiner.h" />
     <ClInclude Include="MultiShotDlg.h" />
