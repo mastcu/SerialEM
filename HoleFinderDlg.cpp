@@ -181,6 +181,7 @@ void CHoleFinderDlg::OnCancel()
 {
   mHelper->GetHoleFinderPlacement();
   mIsOpen = false;
+  mHaveHoles = false;
   DestroyWindow();
 }
 
@@ -386,6 +387,7 @@ void CHoleFinderDlg::OnRadioLayoutType()
 // Make navigator points - the real work is done by Nav
 void CHoleFinderDlg::OnButMakeNavPts()
 {
+  mParams.layoutType = m_iLayoutType;
   DoMakeNavPoints(mParams.layoutType, mParams.lowerMeanCutoff, mParams.upperMeanCutoff,
     mParams.SDcutoff, mParams.blackFracCutoff);
 }
@@ -775,7 +777,8 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
       // Save the overview binning and the minioffset so the imBuf does not need to be
       // accessed again
       mFullBinning = imBuf->mOverviewBin;
-      if (imBuf->mMiniOffsets) {
+      mMontage = montP->xNframes * montP->yNframes > 1;
+      if (mMontage && imBuf->mMiniOffsets) {
         mMiniOffsets = new MiniOffsets;
         *mMiniOffsets = *imBuf->mMiniOffsets;
       }
@@ -783,7 +786,7 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
   }
 
   // Report failure, but go on
-  if (!noMontReason.IsEmpty()) {
+  if (mMontage && !noMontReason.IsEmpty()) {
     mWinApp->AppendToLog("Cannot analyze montage pieces when finding holes: " + 
       noMontReason);
     mMontage = false;
