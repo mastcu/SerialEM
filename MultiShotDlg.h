@@ -137,4 +137,16 @@ public:
   CButton m_butOmit3x3Corners;
   BOOL m_bOmit3x3Corners;
   afx_msg void OnOmit3x3Corners();
+  BOOL m_bDoSecondRing;
+  CStatic m_statNum2Shots;
+  CStatic m_statRing2Shots;
+  CStatic m_statRing2Um;
+  CEdit m_editRing2Dist;
+  CSpinButtonCtrl m_sbcRing2Num;
+  afx_msg void OnDoSecondRing();
+  afx_msg void OnDeltaposSpinRing2Num(NMHDR *pNMHDR, LRESULT *pResult);
+  float m_fRing2Dist;
+  afx_msg void OnKillfocusEditRing2Dist();
+  CString m_strNum2Shots;
+  CButton m_butDoSecondRing;
 };

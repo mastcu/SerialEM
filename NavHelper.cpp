@@ -109,8 +109,11 @@ CNavHelper::CNavHelper(void)
   mPointLabelDrawThresh = 15;
   mEnableMultiShot = 0;
   mMultiShotParams.beamDiam = 0.2f;
-  mMultiShotParams.spokeRad = 0.5f;
-  mMultiShotParams.numShots = 6;
+  mMultiShotParams.spokeRad[0] = 0.5f;
+  mMultiShotParams.numShots[0] = 6;
+  mMultiShotParams.spokeRad[1] = 0.25f;
+  mMultiShotParams.numShots[1] = 3;
+  mMultiShotParams.doSecondRing = false;
   mMultiShotParams.doCenter = 1;
   mMultiShotParams.saveRecord = false;
   mMultiShotParams.doEarlyReturn = 0;
@@ -130,6 +133,9 @@ CNavHelper::CNavHelper(void)
   mMultiShotParams.holeDelayFactor = 1.5f;
   mMultiShotParams.holeMagIndex = 0;
   mMultiShotParams.customMagIndex = 0;
+  mMultiShotParams.tiltOfHoleArray = -999.;
+  mMultiShotParams.tiltOfCustomHoles = -999.;
+  mMultiShotParams.holeFinderAngle = -999.;
   float thresholds[] = {2.4f, 3.6f, 4.8f};
   mHoleFinderParams.thresholds.insert(mHoleFinderParams.thresholds.begin(), 
     &thresholds[0], &thresholds[3]);

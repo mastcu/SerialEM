@@ -461,8 +461,8 @@ int CParameterIO::ReadSettings(CString strFileName)
         mWinApp->mNavHelper->SetAutoBacklashMinField((float)itemDbl[2]);
       } else if (NAME_IS("MultiShotParams")) {
         msParams->beamDiam = (float)itemDbl[1];
-        msParams->spokeRad = (float)itemDbl[2]; 
-        msParams->numShots =  itemInt[3];
+        msParams->spokeRad[0] = (float)itemDbl[2]; 
+        msParams->numShots[0] =  itemInt[3];
         msParams->doCenter =  itemInt[4];
         msParams->doEarlyReturn =  itemInt[5];
         msParams->numEarlyFrames =  itemInt[6];
@@ -485,6 +485,14 @@ int CParameterIO::ReadSettings(CString strFileName)
         }
         if (!itemEmpty[22]) {
           msParams->skipCornersOf3x3 = itemInt[22] != 0;
+        }
+        if (!itemEmpty[28]) {
+          msParams->doSecondRing = itemInt[23] != 0;
+          msParams->numShots[1] = itemInt[24];
+          msParams->spokeRad[1] = (float)itemDbl[25];
+          msParams->tiltOfHoleArray = (float)itemDbl[26];
+          msParams->tiltOfCustomHoles = (float)itemDbl[27];
+          msParams->holeFinderAngle = (float)itemDbl[28];
         }
       } else if (NAME_IS("CustomHoleX")) {
         for (index = 1; index < MAX_TOKENS && !itemEmpty[index]; index++)
@@ -643,6 +651,14 @@ int CParameterIO::ReadSettings(CString strFileName)
         comaVsIS->matrix.xpy = (float)itemDbl[8];
         comaVsIS->matrix.ypx = (float)itemDbl[9];
         comaVsIS->matrix.ypy = (float)itemDbl[10];
+        comaVsIS->astigMat.xpx = comaVsIS->astigMat.xpy = comaVsIS->astigMat.ypx =
+          comaVsIS->astigMat.ypy = 0.;
+        if (!itemEmpty[14]) {
+          comaVsIS->astigMat.xpx = (float)itemDbl[11];
+          comaVsIS->astigMat.xpy = (float)itemDbl[12];
+          comaVsIS->astigMat.ypx = (float)itemDbl[13];
+          comaVsIS->astigMat.ypy = (float)itemDbl[14];
+        }
 
       } else if (NAME_IS("NavigatorStockFile"))
         StripItems(strLine, 1, navParams->stockFile);
@@ -1467,15 +1483,17 @@ void CParameterIO::WriteSettings(CString strFileName)
       mWinApp->mNavHelper->GetAutoBacklashMinField());
     mFile->WriteString(oneState);
     oneState.Format("MultiShotParams %f %f %d %d %d %d %d %f %d %d %d %d %f %f %f %f %f "
-      "%d %d %d %d %d\n", msParams->beamDiam, 
-      msParams->spokeRad, msParams->numShots, msParams->doCenter, msParams->doEarlyReturn,
+      "%d %d %d %d %d %d %d %f %f %f %f\n", msParams->beamDiam, msParams->spokeRad[0],
+      msParams->numShots[0], msParams->doCenter, msParams->doEarlyReturn,
       msParams->numEarlyFrames, msParams->saveRecord ? 1 : 0, msParams->extraDelay,
       msParams->useIllumArea ? 1 : 0, msParams->adjustBeamTilt ? 1 : 0, 
       msParams->inHoleOrMultiHole, msParams->useCustomHoles ? 1 : 0, 
       msParams->holeDelayFactor, msParams->holeISXspacing[0], msParams->holeISYspacing[0],
       msParams->holeISXspacing[1], msParams->holeISYspacing[1],
       msParams->numHoles[0], msParams->numHoles[1], msParams->holeMagIndex, 
-      msParams->customMagIndex, msParams->skipCornersOf3x3 ? 1 : 0);
+      msParams->customMagIndex, msParams->skipCornersOf3x3 ? 1 : 0, 
+      msParams->doSecondRing ? 1: 0, msParams->numShots[1], msParams->spokeRad[1],
+      msParams->tiltOfHoleArray, msParams->tiltOfCustomHoles, msParams->holeFinderAngle);
     mFile->WriteString(oneState);
     if (msParams->customHoleX.size()) {
       OutputVector("CustomHoleX", (int)msParams->customHoleX.size(), NULL, 
@@ -1556,10 +1574,12 @@ void CParameterIO::WriteSettings(CString strFileName)
       }
     }
     if (comaVsIS->magInd >= 0) {
-      oneState.Format("ComaVsISCal %d %d %d %d %d %f %f %f %f %f\n", comaVsIS->magInd,
-        comaVsIS->spotSize, comaVsIS->probeMode, comaVsIS->alpha, comaVsIS->aperture, 
-        comaVsIS->intensity, comaVsIS->matrix.xpx, comaVsIS->matrix.xpy, 
-        comaVsIS->matrix.ypx, comaVsIS->matrix.ypy);
+      oneState.Format("ComaVsISCal %d %d %d %d %d %f %f %f %f %f %f %f %f %f\n",
+        comaVsIS->magInd, comaVsIS->spotSize, comaVsIS->probeMode, comaVsIS->alpha, 
+        comaVsIS->aperture, comaVsIS->intensity, comaVsIS->matrix.xpx, 
+        comaVsIS->matrix.xpy, comaVsIS->matrix.ypx, comaVsIS->matrix.ypy, 
+        comaVsIS->astigMat.xpx, comaVsIS->astigMat.xpy, comaVsIS->astigMat.ypx, 
+        comaVsIS->astigMat.ypy);
       mFile->WriteString(oneState);
     }
     for (i = 0; i < 2; i++) {
@@ -1979,7 +1999,7 @@ int CParameterIO::ReadProperties(CString strFileName)
   int *kvList;
   int *activeList = mWinApp->GetActiveCameraList();
   int *camLengths = mWinApp->GetCamLenTable();
-  float *camLenPixels = mWinApp->GetCamLenPixSizes();
+  float *camLenCal = mWinApp->GetCamLenCalibrated();
   int *C2apertures = mWinApp->mBeamAssessor->GetC2Apertures();
   float *radii = mWinApp->mProcessImage->GetFFTCircleRadii();
   float *alphaFacs = mWinApp->mBeamAssessor->GetBSCalAlphaFactors();
@@ -3293,7 +3313,7 @@ int CParameterIO::ReadProperties(CString strFileName)
          camLengths[index] = itemInt[1];
          err = 0;
          if (!strItems[2].IsEmpty())
-           camLenPixels[index] = (float)itemDbl[2];
+           camLenCal[index] = (float)itemDbl[2];
        }
        if (err > 0) {
          AfxMessageBox("Error reading camera length table, line\n" +

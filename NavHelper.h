@@ -32,8 +32,9 @@ struct CenterSkipData
 // Structure for the multiple-record parameters
 struct MultiShotParams
 {
-  float spokeRad;        // Distance to off-center shots
-  int numShots;          // Number of off-center shots
+  float spokeRad[2];     // Distance to off-center shots in main and second ring
+  int numShots[2];       // Number of off-center shots in main and second ring
+  BOOL doSecondRing;     // Do a second ring of shots
   int doCenter;          // Center shot: -1 before, 0 none, 1 after
   float extraDelay;      // Additional delay after image shift
   int doEarlyReturn;     // 1 for early return on last, 2 for all
@@ -46,9 +47,12 @@ struct MultiShotParams
   float holeDelayFactor; // Factor by which to increase regular IS delay between holes
   double holeISXspacing[2];  // Hole spacing in each direction
   double holeISYspacing[2];
+  float tiltOfHoleArray;    // Tilt angle at which regular array defined
+  float holeFinderAngle;    // Angle found in hole finder associated with regular array
   int numHoles[2];       // Number of holes in each direction
   BOOL skipCornersOf3x3; // Take cross pattern when it is 3x3
   int customMagIndex;
+  float tiltOfCustomHoles;  // Tilt angle at which custom holes defined
   FloatVec customHoleX;  // For custom holes, list of hole IS relative
   FloatVec customHoleY;  // to item point
   float beamDiam;        // Beam diameter: display only

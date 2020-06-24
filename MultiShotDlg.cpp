@@ -22,7 +22,9 @@
 static int idTable[] = {IDC_CHECK_DO_SHOTS_IN_HOLE, PANEL_END,
 IDC_SPIN_NUM_SHOTS, IDC_RNO_CENTER, IDC_RCENTER_AFTER, IDC_RCENTER_BEFORE, 
 IDC_STAT_CENTER_GROUP, IDC_STAT_NUM_PERIPHERAL, IDC_STAT_NUM_SHOTS, IDC_STAT_CENTER_DIST,
-IDC_EDIT_SPOKE_DIST, IDC_STAT_CENTER_UM, PANEL_END,
+IDC_EDIT_SPOKE_DIST, IDC_STAT_CENTER_UM, IDC_EDIT_RING2_DIST, IDC_CHECK_SECOND_RING,
+IDC_STAT_NUM2_SHOTS, IDC_SPIN_RING2_NUM, IDC_STAT_RING2_SHOTS, IDC_STAT_RING2_UM, 
+PANEL_END,
 IDC_TSS_LINE1, IDC_CHECK_DO_MULTIPLE_HOLES, PANEL_END,
 IDC_EDIT_HOLE_DELAY_FAC, IDC_STAT_REGULAR, IDC_STAT_NUM_X_HOLES, IDC_SPIN_NUM_X_HOLES, 
 IDC_SPIN_NUM_Y_HOLES, IDC_STAT_SPACING, IDC_STAT_MEASURE_BOX, IDC_STAT_SAVE_INSTRUCTIONS,
@@ -61,6 +63,9 @@ CMultiShotDlg::CMultiShotDlg(CWnd* pParent /*=NULL*/)
   , m_bUseCustom(FALSE)
   , m_fHoleDelayFac(0)
   , m_bOmit3x3Corners(FALSE)
+  , m_bDoSecondRing(FALSE)
+  , m_fRing2Dist(0)
+  , m_strNum2Shots(_T(""))
 {
   mNonModal = true;
   mRecordingRegular = false;
@@ -144,6 +149,16 @@ void CMultiShotDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_BUT_IS_TO_PT, m_butIStoPt);
   DDX_Control(pDX, IDC_CHECK_OMIT_3X3_CORNERS, m_butOmit3x3Corners);
   DDX_Check(pDX, IDC_CHECK_OMIT_3X3_CORNERS, m_bOmit3x3Corners);
+  DDX_Check(pDX, IDC_CHECK_SECOND_RING, m_bDoSecondRing);
+  DDX_Control(pDX, IDC_STAT_NUM2_SHOTS, m_statNum2Shots);
+  DDX_Control(pDX, IDC_STAT_RING2_SHOTS, m_statRing2Shots);
+  DDX_Control(pDX, IDC_STAT_RING2_UM, m_statRing2Um);
+  DDX_Control(pDX, IDC_EDIT_RING2_DIST, m_editRing2Dist);
+  DDX_Control(pDX, IDC_SPIN_RING2_NUM, m_sbcRing2Num);
+  DDX_Text(pDX, IDC_EDIT_RING2_DIST, m_fRing2Dist);
+  DDV_MinMaxFloat(pDX, m_fRing2Dist, .05f, 10.f);
+  DDX_Text(pDX, IDC_STAT_NUM2_SHOTS, m_strNum2Shots);
+  DDX_Control(pDX, IDC_CHECK_SECOND_RING, m_butDoSecondRing);
 }
 
 
@@ -174,6 +189,9 @@ BEGIN_MESSAGE_MAP(CMultiShotDlg, CBaseDlg)
   ON_BN_CLICKED(IDC_CHECK_SAVE_RECORD, OnSaveRecord)
   ON_BN_CLICKED(IDC_CHECK_ADJUST_BEAM_TILT, OnAdjustBeamTilt)
   ON_BN_CLICKED(IDC_CHECK_OMIT_3X3_CORNERS, OnOmit3x3Corners)
+  ON_BN_CLICKED(IDC_CHECK_SECOND_RING, OnDoSecondRing)
+  ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_RING2_NUM, OnDeltaposSpinRing2Num)
+  ON_EN_KILLFOCUS(IDC_EDIT_RING2_DIST, OnKillfocusEditRing2Dist)
 END_MESSAGE_MAP()
 
 
@@ -198,6 +216,10 @@ void CMultiShotDlg::UpdateSettings(void)
   CString str, str2;
   int minNum0 = 1;
 
+  m_butAdjustBeamTilt.SetWindowText(comaVsIS->magInd > 0 && comaVsIS->astigMat.xpx != 0. ?
+    "Adjust beam tilt && astig to compensate for image shift" :
+    "Adjust beam tilt to compensate for image shift");
+
   // Save original parameters and transfer them to interface elements
   mActiveParams = mWinApp->mNavHelper->GetMultiShotParams();
   mSavedParams = *mActiveParams;
@@ -205,7 +227,9 @@ void CMultiShotDlg::UpdateSettings(void)
   m_iEarlyFrames = mActiveParams->numEarlyFrames;
   m_iCenterShot = mActiveParams->doCenter < 0 ? 2 : mActiveParams->doCenter;
   m_fBeamDiam = mActiveParams->beamDiam;
-  m_fSpokeDist = mActiveParams->spokeRad;
+  m_fSpokeDist = mActiveParams->spokeRad[0];
+  m_fRing2Dist = mActiveParams->spokeRad[1];
+  m_bDoSecondRing = mActiveParams->doSecondRing;
   m_bSaveRecord = mActiveParams->saveRecord;
   m_fExtraDelay = mActiveParams->extraDelay;
   m_fHoleDelayFac = mActiveParams->holeDelayFactor;
@@ -223,6 +247,8 @@ void CMultiShotDlg::UpdateSettings(void)
 
   m_sbcNumShots.SetRange(0, 100);
   m_sbcNumShots.SetPos(50);
+  m_sbcRing2Num.SetRange(0, 100);
+  m_sbcRing2Num.SetPos(50);
   m_sbcNumXholes.SetRange(0, 100);
   m_sbcNumXholes.SetPos(50);
   m_sbcNumYholes.SetRange(0, 100);
@@ -230,7 +256,8 @@ void CMultiShotDlg::UpdateSettings(void)
 
   ManageEnables();
 
-  m_strNumShots.Format("%d", mActiveParams->numShots);
+  m_strNumShots.Format("%d", mActiveParams->numShots[0]);
+  m_strNum2Shots.Format("%d", mActiveParams->numShots[1]);
   m_strNumXholes.Format("%d", mActiveParams->numHoles[0]);
   m_strNumYholes.Format("by %2d", mActiveParams->numHoles[1]);
   UpdateData(false);
@@ -322,7 +349,7 @@ void CMultiShotDlg::OnDoShotsInHole()
 // Number of shots spinner
 void CMultiShotDlg::OnDeltaposSpinNumShots(NMHDR *pNMHDR, LRESULT *pResult)
 {
-  FormattedSpinnerValue(pNMHDR, pResult, 2, 18, mActiveParams->numShots, 
+  FormattedSpinnerValue(pNMHDR, pResult, 2, 18, mActiveParams->numShots[0], 
     m_strNumShots, "%d");
   UpdateAndUseMSparams();
 }
@@ -336,6 +363,29 @@ void CMultiShotDlg::OnRnoCenter()
 
 // Off-center distance
 void CMultiShotDlg::OnKillfocusEditSpokeDist()
+{
+  UpdateData(true);
+  UpdateAndUseMSparams();
+}
+
+// Checkbox to do second ring of shots
+void CMultiShotDlg::OnDoSecondRing()
+{
+  UpdateData(true);
+  ManageEnables();
+  UpdateAndUseMSparams();
+}
+
+// Spinner for second ring
+void CMultiShotDlg::OnDeltaposSpinRing2Num(NMHDR *pNMHDR, LRESULT *pResult)
+{
+  FormattedSpinnerValue(pNMHDR, pResult, 2, 18, mActiveParams->numShots[1],
+    m_strNum2Shots, "%d");
+  UpdateAndUseMSparams();
+}
+
+// Distance to second ring
+void CMultiShotDlg::OnKillfocusEditRing2Dist()
 {
   UpdateData(true);
   UpdateAndUseMSparams();
@@ -553,6 +603,7 @@ void CMultiShotDlg::OnButSaveIs()
           (mSavedISY[endInd2[dir]] - mSavedISY[startInd2[dir]])) / numSteps[dir];
       }
       mActiveParams->holeMagIndex = mWinApp->mScope->GetMagIndex();
+      mActiveParams->tiltOfHoleArray = (float)mWinApp->mScope->GetTiltAngle();
       StopRecording();
       ManageEnables();
       UpdateAndUseMSparams();
@@ -585,6 +636,7 @@ void CMultiShotDlg::OnButEndPattern()
     return;
   mWinApp->mScope->GetImageShift(ISX, ISY);
   mActiveParams->customMagIndex = mWinApp->mScope->GetMagIndex();
+  mActiveParams->tiltOfCustomHoles = (float)mWinApp->mScope->GetTiltAngle();
 
   // Accept the current position if it is different from the last
   if (mWinApp->mShiftManager->RadialShiftOnSpecimen(ISX - mSavedISX[size], 
@@ -669,7 +721,9 @@ void CMultiShotDlg::UpdateAndUseMSparams(bool draw)
   mActiveParams->numEarlyFrames = m_iEarlyFrames;
   mActiveParams->doCenter = m_iCenterShot > 1 ? -1 : m_iCenterShot;
   mActiveParams->beamDiam = m_fBeamDiam;
-  mActiveParams->spokeRad = m_fSpokeDist;
+  mActiveParams->spokeRad[0] = m_fSpokeDist;
+  mActiveParams->doSecondRing = m_bDoSecondRing;
+  mActiveParams->spokeRad[1] = m_fRing2Dist;
   mActiveParams->saveRecord = m_bSaveRecord;
   mActiveParams->extraDelay = m_fExtraDelay;
   mActiveParams->holeDelayFactor = m_fHoleDelayFac;
@@ -712,6 +766,13 @@ void CMultiShotDlg::ManageEnables(void)
   m_butNoCenter.EnableWindow(m_bDoShotsInHoles);
   m_statNumShots.EnableWindow(m_bDoShotsInHoles);
   m_editSpokeDist.EnableWindow(m_bDoShotsInHoles);
+  m_butDoSecondRing.EnableWindow(m_bDoShotsInHoles);
+  enable = m_bDoShotsInHoles && m_bDoSecondRing;
+  m_statNum2Shots.EnableWindow(enable);
+  m_statRing2Shots.EnableWindow(enable);
+  m_statRing2Um.EnableWindow(enable);
+  m_editRing2Dist.EnableWindow(enable);
+  m_sbcRing2Num.EnableWindow(enable);
   enable = m_bDoMultipleHoles && (!m_bUseCustom || !mActiveParams->customHoleX.size());
   m_statHoleDelayFac.EnableWindow(m_bDoMultipleHoles);
   m_editHoleDelayFac.EnableWindow(m_bDoMultipleHoles);

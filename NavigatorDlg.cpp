@@ -2942,6 +2942,7 @@ CArray<CMapDrawItem *, CMapDrawItem *> *CNavigatorDlg::GetMapDrawItems(
 {
   float angle, tiltAngle;
   bool showMulti, asIfLowDose, showCurPtAcquire, showLDareas;
+  int ring;
   if (!SetCurrentItem(true))
     mItem = NULL;
   *acquireBox = NULL;
@@ -3051,22 +3052,27 @@ CArray<CMapDrawItem *, CMapDrawItem *> *CNavigatorDlg::GetMapDrawItems(
 
             // Make multihole positions relative to center
             if (mHelper->MultipleHolesAreSelected()) {
+              if (!imBuf->GetTiltAngle(tiltAngle))
+                tiltAngle = -999.;
               int numHoles = mWinApp->mParticleTasks->GetHolePositions(delISX, delISY,
-                holeIndex, magInd, camera, 0, 0);
+                holeIndex, magInd, camera, 0, 0, tiltAngle);
               AddHolePositionsToItemPts(delISX, delISY, holeIndex, custom, numHoles, box);
             }
 
             // Multishot positions in hole, with absolute positions
             if (msParams->inHoleOrMultiHole & MULTI_IN_HOLE) {
-              inHoleRadius = msParams->spokeRad / pixel;
-              rotation = (float)mShiftManager->GetImageRotation(camera, magInd);
-              for (ind = 0; ind < msParams->numShots; ind++) {
-                angle = (float)(DTOR * (ind * 360. / msParams->numShots + rotation));
-                cornX = inHoleRadius * (float)cos(angle);
-                cornY = inHoleRadius * (float)sin(angle);
-                ptX = box->mStageX + c2s.xpx * cornX + c2s.xpy * cornY;
-                ptY = box->mStageY + c2s.ypx * cornX + c2s.ypy * cornY;
-                box->AppendPoint(ptX, ptY);
+              for (ring = 0; ring < (msParams->doSecondRing ? 2 : 1); ring++) {
+                inHoleRadius = msParams->spokeRad[ring] / pixel;
+                rotation = (float)mShiftManager->GetImageRotation(camera, magInd);
+                for (ind = 0; ind < msParams->numShots[ring]; ind++) {
+                  angle = (float)(DTOR * (ind * 360. / msParams->numShots[ring] + 
+                    rotation));
+                  cornX = inHoleRadius * (float)cos(angle);
+                  cornY = inHoleRadius * (float)sin(angle);
+                  ptX = box->mStageX + c2s.xpx * cornX + c2s.xpy * cornY;
+                  ptY = box->mStageY + c2s.ypx * cornX + c2s.ypy * cornY;
+                  box->AppendPoint(ptX, ptY);
+                }
               }
             }
 
@@ -5215,7 +5221,8 @@ void CNavigatorDlg::GridStagePos(int j, int k, float delX, float delY, ScaleMat 
       if (mHFgridXpos->at(ind) == j && mHFgridYpos->at(ind) == k && !mHFexclude->at(ind)){
         xx = mHFxCenters->at(ind);
         yy = mHFyCenters->at(ind);
-        if (mDrawnOnMontBufInd >= 0 && mHFpieceOn->size() > 0) {
+        if (mDrawnOnMontBufInd >= 0 && mHFpieceOn->size() > 0 && 
+          mHFpieceOn->at(ind) >= 0) {
           mPieceGridPointOn = mHFpieceOn->at(ind);
           mGridPtXinPiece = mHFxInPiece->at(ind);
           mGridPtYinPiece = mHFyInPiece->at(ind);
