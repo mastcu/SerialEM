@@ -1312,7 +1312,10 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
     mWinApp->mLogWindow->SaveFileNotOnStack(mWinApp->mStoreMRC->getName())) {
       mWinApp->mLogWindow->DoSave();
       mWinApp->mLogWindow->CloseLog();
-      mWinApp->AppendToLog(mWinApp->mDocWnd->DateTimeForTitle());
+      mess.Format("%.3f: Log restarted %s", SEMSecondsSinceStart(), 
+        mWinApp->mDocWnd->DateTimeForTitle());
+      mWinApp->AppendToLog(mess);
+      mWinApp->AppendToLog(mWinApp->GetStartupMessage(true));
   }
   SEMTrace('M', preCooking ? "Montage Precook Start" : "Montage Start");
 

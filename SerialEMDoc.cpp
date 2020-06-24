@@ -711,10 +711,10 @@ int CSerialEMDoc::OpenMontageDialog(BOOL locked)
   CMontageSetupDlg montDlg;
   MontParam *param = mWinApp->GetMontParam();
   montDlg.mParam = *param;
-  if (mWinApp->LowDoseMode() && (!ldp[VIEW_CONSET].magIndex || 
+  if (mWinApp->LowDoseMode() && (!ldp[VIEW_CONSET].magIndex && 
     !ldp[RECORD_CONSET].magIndex)) {
-      mess.Format("Low dose parameters need to be set up for both the %s\n"
-        "and %s areas before starting a montage in Low Dose mode", 
+      mess.Format("Low dose parameters need to be set up for either the %s\n"
+        "or the %s area before starting a montage in Low Dose mode", 
         (LPCTSTR)modeName[RECORD_CONSET], (LPCTSTR)modeName[VIEW_CONSET]);
       SEMMessageBox(mess);
       return 1;

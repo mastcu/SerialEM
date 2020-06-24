@@ -271,7 +271,7 @@ BOOL CMontageSetupDlg::OnInitDialog()
   CButton *radio;
   int ind, i, delta, camPosInds[MAX_DLG_CAMERAS];
   CRect butrect;
-  bool needFont;
+  bool needFont, viewOK, recordOK, searchOK;
   CFont *littleFont = mWinApp->GetLittleFont(GetDlgItem(IDC_STATICY1));
   CString *modeName = mWinApp->GetModeNames();
   mLowDoseMode = mWinApp->LowDoseMode();
@@ -364,13 +364,23 @@ BOOL CMontageSetupDlg::OnInitDialog()
     }
   }
   mMismatchedModes = (mLowDoseMode ? 1 : 0) != (mParam.setupInLowDose ? 1 : 0);
+  viewOK = mLdp[VIEW_CONSET].magIndex != 0;
+  recordOK = mLdp[RECORD_CONSET].magIndex != 0;
+  searchOK = mLdp[SEARCH_AREA].magIndex != 0;
   ReplaceDlgItemText(IDC_CHECK_USE_VIEW_IN_LOWDOSE, "View", modeName[VIEW_CONSET]);
   ReplaceDlgItemText(IDC_CHECK_USE_MONT_MAP_PARAMS, "Record", modeName[RECORD_CONSET]);
   m_butUseMontMapParams.EnableWindow(!mWinApp->GetUseRecordForMontage() && !mSizeLocked
-    && !(mLowDoseMode && (mParam.useViewInLowDose || mParam.useSearchInLowDose)));
-  m_butUseViewInLD.EnableWindow(mLowDoseMode && !mSizeLocked);
-  m_butUseSearchInLD.EnableWindow(mLowDoseMode && !mSizeLocked && 
-    mLdp[SEARCH_AREA].magIndex);
+    && !(mLowDoseMode && (mParam.useViewInLowDose || mParam.useSearchInLowDose ||
+      !recordOK)));
+  m_butUseViewInLD.EnableWindow(mLowDoseMode && !mSizeLocked && viewOK && 
+    (recordOK || searchOK));
+  m_butUseSearchInLD.EnableWindow(mLowDoseMode && !mSizeLocked && searchOK);
+  if (mLowDoseMode && !searchOK)
+    mParam.useSearchInLowDose = false;
+  if (mLowDoseMode && !recordOK && !mParam.useSearchInLowDose)
+    mParam.useViewInLowDose = true;
+  if (mLowDoseMode && !viewOK)
+    mParam.useViewInLowDose = false;
   ManageSizeFields();
   m_editXoverlap.EnableWindow(!mSizeLocked && !mFittingItem);
   m_editYoverlap.EnableWindow(!mSizeLocked && !mFittingItem);
@@ -1307,8 +1317,11 @@ void CMontageSetupDlg::UseViewOrSearchInLD(BOOL &otherFlag)
   if (otherFlag) {
     otherFlag = false;
     UpdateData(false);
+  } else if (!mLdp[RECORD_CONSET].magIndex) {
+    otherFlag = true;
+    UpdateData(false);
   }
-
+  
   // If fitting item, the sequence is handled entirely by the check routine and the mag
   // index and binning are supplied there, but need to restore button if fit is rejected
   // Have to supply the actual binning in control set when not low dose
@@ -1335,5 +1348,6 @@ void CMontageSetupDlg::UseViewOrSearchInLD(BOOL &otherFlag)
   if ((m_bMoveStage ? 1 : 0) != saveMoveStage)
     OnMovestage();
   m_butUseMontMapParams.EnableWindow(!mWinApp->GetUseRecordForMontage() && !mSizeLocked
-    && !(mLowDoseMode && (m_bUseViewInLowDose || m_bUseSearchInLD)));
+    && !(mLowDoseMode && (m_bUseViewInLowDose || m_bUseSearchInLD || 
+      !mLdp[RECORD_CONSET].magIndex)));
 }
