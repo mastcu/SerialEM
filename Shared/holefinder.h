@@ -103,7 +103,8 @@ class HoleFinder {
      float usePieceEdgeDistFrac, float addOverlapFrac);
   void assignGridPositions(FloatVec &xCenters, FloatVec &yCenters, ShortVec &gridX,
                            ShortVec &gridY, float &avgAngle, float &avgLen);
-  void getGridVectors(float &gridXdX, float &gridXdY, float &gridYdX, float &gridYdY);
+  void getGridVectors(float &gridXdX, float &gridXdY, float &gridYdX, float &gridYdY,
+    float &avgAngle, float &avgLen);
   
  private:
   void addToSampleAndQueue(int jx, int iy);

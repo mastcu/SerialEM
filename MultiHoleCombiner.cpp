@@ -205,9 +205,8 @@ int CMultiHoleCombiner::CombineItems(int boundType)
   // Just get average angle and length from the analysis, then get grid positions
   mFindHoles->analyzeNeighbors(xCenters, yCenters, peakVals, altInds, xCenAlt, yCenAlt, 
     peakAlt, 0., 0., 0, spacing, xMissing, yMissing);
-  avgAngle = -999.;
+  mFindHoles->getGridVectors(gridXdX, gridXdY, gridYdX, gridYdY, avgAngle, spacing);
   mFindHoles->assignGridPositions(xCenters, yCenters, gridX, gridY, avgAngle, spacing);
-  mFindHoles->getGridVectors(gridXdX, gridXdY, gridYdX, gridYdY);
 
   // Convert hole image shift vectors to stage vectors and get rotation from the grid 
   // vectors to these vectors
@@ -342,8 +341,12 @@ int CMultiHoleCombiner::CombineItems(int boundType)
                 item = itemArray->GetAt(navInds[mGrid[iy][ix]]);
                 boxDx = (float)(boxXcen - bx);
                 boxDy = (float)(boxYcen - by);
-                stageX += item->mStageX + boxDx * gridXdX + boxDy * gridYdX;
-                stageY += item->mStageY + boxDx * gridXdY + boxDy * gridYdY;
+                stageX += item->mStageX + boxDx * gridXdX + boxDy * gridXdY;
+                stageY += item->mStageY + boxDx * gridYdX + boxDy * gridYdY;
+                /*PrintfToLog("Assign %d at %d,%d (%s) to box %d, bdxy %.1f %.1f  stage X"
+                  " Y %.3f %.1f", navInds[mGrid[iy][ix]], ix, iy, (LPCTSTR)item->mLabel,
+                  ind, boxDx, boxDy, item->mStageX + boxDx * gridXdX + boxDy * gridXdY,
+                  item->mStageY + boxDx * gridYdX + boxDy * gridYdY);*/
                 cenDist = boxDx * boxDy + boxDy * boxDy;
                 if (cenDist < minCenDist) {
                   minCenDist = cenDist;
@@ -354,7 +357,7 @@ int CMultiHoleCombiner::CombineItems(int boundType)
                 // Otherwise add to skip list
                 ixSkip.push_back(bx);
                 iySkip.push_back(by);
-                //PrintfToLog("missing %d %d");
+                //PrintfToLog("missing %d %d", bx, by);
               }
             }
           }
@@ -442,8 +445,8 @@ int CMultiHoleCombiner::CombineItems(int boundType)
               boxAssigns[mGrid[iy][ix]] = ind;
               numInBox++;
               item = itemArray->GetAt(navInds[mGrid[iy][ix]]);
-              stageX += item->mStageX - (float)(bx * gridXdX + by * gridYdX);
-              stageY += item->mStageY - (float)(bx * gridXdY + by * gridYdY);
+              stageX += item->mStageX - (float)(bx * gridXdX + by * gridXdY);
+              stageY += item->mStageY - (float)(bx * gridYdX + by * gridYdY);
               if (groupID < 0 || bx + by == 0)
                 groupID = item->mGroupID;
             } else {
@@ -465,8 +468,9 @@ int CMultiHoleCombiner::CombineItems(int boundType)
   // Check for errors and eliminate from index list
   for (ind = numPoints - 1; ind >= 0; ind--) {
     if (boxAssigns[ind] < 0) {
-      PrintfToLog("Program error: item # %d not assigned to a multi-shot item", 
-        navInds[ind] + 1);
+      item = itemArray->GetAt(navInds[ind]);
+      PrintfToLog("Program error: item # %d (%s) not assigned to a multi-shot item", 
+        navInds[ind] + 1, item ? item->mLabel : "");
       navInds.erase(navInds.begin() + ind);
     }
   }
@@ -740,7 +744,7 @@ void CMultiHoleCombiner::AddMultiItemToArray(
   newItem->mNumYholes = numYholes;
   newItem->mNumSkipHoles = (short)ixSkip.size();
   delete newItem->mSkipHolePos;
-  newItem->mSkipHolePos = 0;
+  newItem->mSkipHolePos = NULL;
   if (ixSkip.size()) {
     newItem->mSkipHolePos = new unsigned char[2 * newItem->mNumSkipHoles];
     for (ix = 0; ix < newItem->mNumSkipHoles; ix++) {

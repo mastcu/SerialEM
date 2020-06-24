@@ -2961,7 +2961,7 @@ void HoleFinder::assignGridPositions
         if (ind >= 0 && gridX[ind] < 0) {
           idx = B3DNINT((xrot[ind] - xcen) / avgLen);
           idy = B3DNINT((yrot[ind] - ycen) / avgLen);
-          if (idx >= -1 && idx <= 1 && idy >= -1 && idx <= 1) {
+          if (idx >= -1 && idx <= 1 && idy >= -1 && idy <= 1) {
 
             // Assign and add to queue
             ASSIGN_ADD_TO_QUEUE(ind, ixCen + idx, iyCen + idy);
@@ -3034,10 +3034,12 @@ void HoleFinder::assignGridPositions
  * vector "below" rotated by 180
  */
 void HoleFinder::getGridVectors(float &gridXdX, float &gridXdY, float &gridYdX, 
-  float &gridYdY)
+  float &gridYdY, float &avgAngle, float &avgLen)
 {
   gridXdX = mJustLenAbove * (float)cos(RADIANS_PER_DEGREE * mJustAngAbove);
-  gridXdY = mJustLenAbove * (float)sin(RADIANS_PER_DEGREE * mJustAngAbove);
-  gridYdX = mJustLenBelow * (float)cos(RADIANS_PER_DEGREE * (mJustAngBelow + 180.));
+  gridYdX = mJustLenAbove * (float)sin(RADIANS_PER_DEGREE * mJustAngAbove);
+  gridXdY = mJustLenBelow * (float)cos(RADIANS_PER_DEGREE * (mJustAngBelow + 180.));
   gridYdY = mJustLenBelow * (float)sin(RADIANS_PER_DEGREE * (mJustAngBelow + 180.));
+  avgAngle = 0.5f * (mJustAngBelow + 90.f + mJustAngAbove);
+  avgLen = 0.5f * (mJustLenBelow + mJustLenAbove);
 }
