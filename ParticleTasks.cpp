@@ -216,17 +216,20 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
      if (numXholes && numYholes && item->mNumSkipHoles)
        SkipHolesInList(mMSHoleISX, mMSHoleISY, mMSPosIndex, item->mSkipHolePos,
          item->mNumSkipHoles, mMSNumHoles);
+     if (!(mMSParams->useCustomHoles && mMSParams->customHoleX.size() > 0) ||
+       (numXholes && numYholes)) {
 
        // Adjust position indexes to be relative to middle, skip 0 for even # of holes
-     for (ind = 0; ind < mMSNumHoles; ind++) {
-       if (useXholes % 2 != 0 || mMSPosIndex[ind * 2] < useXholes / 2)
-         mMSPosIndex[ind * 2] -= useXholes / 2;
-       else
-         mMSPosIndex[ind * 2] -= useXholes / 2 - 1;
-       if (useYholes % 2 != 0 || mMSPosIndex[ind * 2 + 1] < useYholes / 2)
-         mMSPosIndex[ind * 2 + 1] -= useYholes / 2;
-       else
-         mMSPosIndex[ind * 2 + 1] -= useYholes / 2 - 1;
+       for (ind = 0; ind < mMSNumHoles; ind++) {
+         if (useXholes % 2 != 0 || mMSPosIndex[ind * 2] < useXholes / 2)
+           mMSPosIndex[ind * 2] -= useXholes / 2;
+         else
+           mMSPosIndex[ind * 2] -= useXholes / 2 - 1;
+         if (useYholes % 2 != 0 || mMSPosIndex[ind * 2 + 1] < useYholes / 2)
+           mMSPosIndex[ind * 2 + 1] -= useYholes / 2;
+         else
+           mMSPosIndex[ind * 2 + 1] -= useYholes / 2 - 1;
+       }
      }
   } else {
 
