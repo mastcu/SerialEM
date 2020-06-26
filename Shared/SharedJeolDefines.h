@@ -131,6 +131,7 @@ struct JeolStateData {
   int changedMagInd;
   int valveOrFilament;
   int pairedDetectorID;
+  BOOL relaxingLenses;
   // Used to keep track if actual structure is smaller than what was built against
   int lastMember; 
 };

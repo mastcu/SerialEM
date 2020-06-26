@@ -8211,6 +8211,7 @@ UINT CCameraController::BlankerProc(LPVOID pParam)
         if (JEOLscope) {  // JEOL
           td->scopePlugFuncs->SetMagnificationIndex(td->NewMagIndex);
           SEMSetJeolStateMag(td->NewMagIndex, true);
+          CEMscope::WaitForLensRelaxation(RELAX_FOR_MAG);
           if (td->PostMagFixIS) {
             td->scopePlugFuncs->UseMagInNextSetISXY(td->NewMagIndex);
             td->scopePlugFuncs->SetImageShift(td->ISX, td->ISY);

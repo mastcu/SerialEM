@@ -3,6 +3,15 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+6/24/20: Changed @ in new multishot frame file numbering scheme to - for
+compatibility with Relion.
+
+6/24/20: Added properties to allow waiting for lens relaxation to end on a
+JEOL after mag, spot, or alpha changes .
+
+6/24/20: Fixed preexposure for Tietz cameras, broken when support for using
+TVIPS flatfields was added.
+
 6/23/20: Added calibration of astigmatism dependence on image shift to Coma
 vs. IS command and incorporated stigmator adjustments in all beam tilt
 adjustments for image shift.

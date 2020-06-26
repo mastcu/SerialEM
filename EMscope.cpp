@@ -92,6 +92,9 @@ static int sJeolIndForMagMode = JEOL_MAG1_MODE;  // Index to use in mag mode for
 static int sJeolSecondaryModeInd = JEOL_SAMAG_MODE;  // Index to use for secondary mode
 static BOOL sCheckPosOnScreenError = false;
 static BOOL sJeolReadStageForWait = false;
+static int sJeolRelaxationFlags = 0;      // Whether to wait on spot, mag, and alpha
+static int sJeolStartRelaxTimeout = 1000; // Maximum time to wait for start of relaxation
+static int sJeolEndRelaxTimeout = 10000;  // Maximum time to wait for end of relaxation
 static CString sThreadErrString;   // Error string from thread (stage move)
 static CString sMessageBoxTitle;   // Arguments for calling message box function
 static CString sMessageBoxText;
@@ -101,6 +104,7 @@ static int sCartridgeToLoad = -1;
 static bool sGettingValuesFast = false;    // Keep track of whether getting values fast
 static bool sLastGettingFast = false;
 static int sRestoreStageXYdelay;
+static JeolStateData *sJeolSD;
 
 
 // Parameters controlling whether to wait for stage ready if error on slow movement
@@ -262,6 +266,7 @@ CEMscope::CEMscope()
   mSimulationMode = 0;
 
   // JEOL initializations
+  sJeolSD = &mJeolSD;
   mJeolSD.tiltAngle = 0;
   mJeolSD.stageStatus = 1;
   mJeolSD.magIndex = 0;
@@ -317,6 +322,7 @@ CEMscope::CEMscope()
   mJeolSD.coarseBaseFocus = 0x8000;
   mJeolSD.fineBaseFocus = 0x8000;
   mJeolSD.miniBaseFocus = 0x8000;
+  mJeolSD.relaxingLenses = false;
   mC2IntensityFactor[0] = mC2IntensityFactor[1] = 1.;
   mJeolUpdateSleep = 200;
   mInitializeJeolDelay = 3000;
@@ -3557,7 +3563,8 @@ BOOL CEMscope::SetMagIndex(int inIndex)
           Sleep(mJeolSTEMPreMagDelay - ticks);
       }
       PLUGSCOPE_SET(MagnificationIndex, inIndex);
-    
+      WaitForLensRelaxation(RELAX_FOR_MAG);
+
     } else {  // FEIlike
 
       if (HitachiScope && !ifSTEM) {
@@ -5623,6 +5630,7 @@ BOOL CEMscope::SetSpotSize(int inIndex, BOOL normalize)
 
     // Make final change to spot size
     PLUGSCOPE_SET(SpotSize, inIndex);
+    WaitForLensRelaxation(RELAX_FOR_SPOT);
 
     // Wait for a beam shift to show up on Hitachi
     if (HitachiScope) {
@@ -5716,6 +5724,7 @@ BOOL CEMscope::SetAlpha(int inIndex)
     result = false;
   }
   ScopeMutexRelease("SetAlpha");
+  WaitForLensRelaxation(RELAX_FOR_ALPHA);
   return result;
 }
 
@@ -7209,6 +7218,65 @@ int CEMscope::GetSpectroscopyMode()
   ScopeMutexRelease("GetSpectroscopyMode");
   return mode;
 }
+
+// Waits for the lens relaxation events to come in that it has started and finished
+// on a JEOL after changing the given type of lens
+int CEMscope::WaitForLensRelaxation(int type)
+{
+  double startTime;
+  BOOL state;
+  if (!JEOLscope || !(type & sJeolRelaxationFlags))
+    return 0;
+  startTime = GetTickCount();
+  while (SEMTickInterval(startTime) < sJeolStartRelaxTimeout) {
+    SEMAcquireJeolDataMutex();
+    state = sJeolSD->relaxingLenses;
+    SEMReleaseJeolDataMutex();
+    if (state)
+      break;
+    Sleep(50);
+  }
+  if (!state) {
+    PrintfToLog("WARNING: Lens relaxation event not detected within %d msec timeout,"
+      " going on", sJeolStartRelaxTimeout);
+    return 1;
+  }
+  while (SEMTickInterval(startTime) < sJeolEndRelaxTimeout) {
+    SEMAcquireJeolDataMutex();
+    state = sJeolSD->relaxingLenses;
+    SEMReleaseJeolDataMutex();
+    if (!state)
+      break;
+    Sleep(50);
+  }
+  if (state) {
+    PrintfToLog("WARNING: End of lens relaxation not detected within %d msec, going on",
+      sJeolEndRelaxTimeout);
+    return 1;
+  }
+  return 0;
+}
+
+// Gets and sets for the properties
+void CEMscope::SetJeolRelaxationFlags(int inVal) {
+  sJeolRelaxationFlags = inVal;
+}
+int CEMscope::GetJeolRelaxationFlags() {
+  return sJeolRelaxationFlags;
+}
+void CEMscope::SetJeolStartRelaxTimeout(int inVal) {
+  sJeolStartRelaxTimeout = inVal;
+}
+int CEMscope::GetJeolStartRelaxTimeout() {
+  return sJeolStartRelaxTimeout;
+}
+void CEMscope::SetJeolEndRelaxTimeout(int inVal) {
+  sJeolEndRelaxTimeout = inVal;
+}
+int CEMscope::GetJeolEndRelaxTimeout() {
+  return sJeolEndRelaxTimeout;
+}
+
 
 BOOL CEMscope::GetClippingIS()
 {

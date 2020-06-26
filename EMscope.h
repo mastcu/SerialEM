@@ -101,6 +101,10 @@ struct LongThreadData {
   CString errString;
 };
 
+#define RELAX_FOR_MAG    1
+#define RELAX_FOR_SPOT   2
+#define RELAX_FOR_ALPHA  4
+
 #define APERTURE_SET_SIZE     1
 #define APERTURE_SET_POS      2
 #define APERTURE_NEXT_PP_POS  4
@@ -325,6 +329,12 @@ class DLL_IM_EX CEMscope
   GetSetMember(int, RestoreStageXYdelay);
   GetSetMember(BOOL, JeolHasBrightnessZoom);
 
+  void SetJeolRelaxationFlags(int inVal);
+  int GetJeolRelaxationFlags();
+  void SetJeolStartRelaxTimeout(int inVal);
+  int GetJeolStartRelaxTimeout();
+  void SetJeolEndRelaxTimeout(int inVal);
+  int GetJeolEndRelaxTimeout();
   static void SetJeolIndForMagMode(int inVal);
   static int GetJeolIndForMagMode();
   static void SetJeolSecondaryModeInd(int inVal);
@@ -446,6 +456,7 @@ class DLL_IM_EX CEMscope
   int GetMDSMode();
   BOOL SetSpectroscopyMode(int which);
   int GetSpectroscopyMode();
+  static int WaitForLensRelaxation(int type);
   static void WaitForStageDone(StageMoveInfo *smi, char *procName);
 
   // General variables that need to be public

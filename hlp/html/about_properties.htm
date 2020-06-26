@@ -1177,7 +1177,8 @@
             TemCam-F416<br />
             12 for TemCam-F216<br />
             13 for new TemCam-F816<br />
-            15 or 16 for XF416<br />
+            15 or 16 for XF416 non-GPU version<br />
+            17 or 18 for XF416 GPU version<br />
             Entries of 8, 11, 12, and 13 imply a 
             RestrictedSizeType of 4. For these cameras, make CameraSizeX and Y be the full 
             size of 8200, 4100, or 2050, respectively, not 8192, 4096, or 2048.&nbsp; Entries 
@@ -3695,6 +3696,22 @@
           <TD>JeolHasExtraApertures</TD>
           <TD>Set to 1 to use aperture commands that can specify up to 12 kinds of apertures 
             instead of 6.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>JeolRelaxationFlags</TD>
+          <TD>Flags for the operations after which the program should wait for lens 
+            relaxation to finish on a JEOL: set to the sum of 1 for magnification, 2 for 
+            spot size, and 3 for alpha changes.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>JeolStartRelaxTimeout</TD>
+          <TD>Timeout in milliseconds when waiting to see lens relaxation start after a 
+            change.&nbsp; The initial placekeeper default is 1000.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>JeolEndRelaxTimeout</TD>
+          <TD>Timeout in milliseconds when waiting to see lens relaxation end after a 
+            change.&nbsp; The initial placekeeper default is 10000.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>NumberOfAlphas</TD>
