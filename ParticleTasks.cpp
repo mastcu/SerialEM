@@ -68,7 +68,8 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
   int earlyRetFrames, BOOL adjustBT, int inHoleOrMulti)
 {
   float pixel, xTiltFac, yTiltFac, minTiltToCompenate = 10.;
-  int nextShot, nextHole, testRun, ind, numXholes = 0 , numYholes = 0;
+  int nextShot, nextHole, testRun, ind, useXholes, useYholes;
+  int numXholes = 0, numYholes = 0;
   double delISX, delISY, transISX, transISY, delBTX, delBTY, angle;
   CString str, str2;
   CMapDrawItem *item;
@@ -210,22 +211,22 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
      mMSNumHoles = GetHolePositions(mMSHoleISX, mMSHoleISY, mMSPosIndex, mMagIndex, 
        mWinApp->GetCurrentCamera(), numXholes, numYholes, (float)angle);
      mMSUseHoleDelay = true;
-     if (numXholes && numYholes) {
-       if (item->mNumSkipHoles)
-         SkipHolesInList(mMSHoleISX, mMSHoleISY, mMSPosIndex, item->mSkipHolePos,
-           item->mNumSkipHoles, mMSNumHoles);
+     useXholes = numXholes ? numXholes : mMSParams->numHoles[0];
+     useYholes = numYholes ? numYholes : mMSParams->numHoles[1];
+     if (numXholes && numYholes && item->mNumSkipHoles)
+       SkipHolesInList(mMSHoleISX, mMSHoleISY, mMSPosIndex, item->mSkipHolePos,
+         item->mNumSkipHoles, mMSNumHoles);
 
        // Adjust position indexes to be relative to middle, skip 0 for even # of holes
-       for (ind = 0; ind < mMSNumHoles; ind++) {
-         if (numXholes % 2 != 0 || mMSPosIndex[ind * 2] < numXholes / 2)
-           mMSPosIndex[ind * 2] -= numXholes / 2;
-         else
-           mMSPosIndex[ind * 2] -= numXholes / 2 - 1;
-         if (numYholes % 2 != 0 || mMSPosIndex[ind * 2 + 1] < numYholes / 2)
-           mMSPosIndex[ind * 2 + 1] -= numYholes / 2;
-         else
-           mMSPosIndex[ind * 2 + 1] -= numYholes / 2 - 1;
-       }
+     for (ind = 0; ind < mMSNumHoles; ind++) {
+       if (useXholes % 2 != 0 || mMSPosIndex[ind * 2] < useXholes / 2)
+         mMSPosIndex[ind * 2] -= useXholes / 2;
+       else
+         mMSPosIndex[ind * 2] -= useXholes / 2 - 1;
+       if (useYholes % 2 != 0 || mMSPosIndex[ind * 2 + 1] < useYholes / 2)
+         mMSPosIndex[ind * 2 + 1] -= useYholes / 2;
+       else
+         mMSPosIndex[ind * 2 + 1] -= useYholes / 2 - 1;
      }
   } else {
 
@@ -718,10 +719,10 @@ bool CParticleTasks::CurrentHoleAndPosition(CString &strCurPos)
   else
     curPos = 0;
   if (mMSPosIndex.size() > 0) {
-    strCurPos.Format("X%+dY%+d@%d", mMSPosIndex[2 * mMSHoleIndex], 
+    strCurPos.Format("X%+dY%+d-%d", mMSPosIndex[2 * mMSHoleIndex], 
       mMSPosIndex[2 * mMSHoleIndex + 1], curPos);
   } else {
-    strCurPos.Format("%d@%d", curHole, curPos);
+    strCurPos.Format("%d-%d", curHole, curPos);
   }
   return true;
 }

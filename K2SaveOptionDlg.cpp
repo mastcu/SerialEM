@@ -319,7 +319,7 @@ void CK2SaveOptionDlg::UpdateFormat(void)
       UtilAppendWithSeparator(filename, time, "_");
   }
   if (m_bMultiHolePos)
-    UtilAppendWithSeparator(filename, "Hole@pos", "_");
+    UtilAppendWithSeparator(filename, "Hole-pos", "_");
   if (mDEtype) {
     if (!filename.IsEmpty())
       filename += "_";
