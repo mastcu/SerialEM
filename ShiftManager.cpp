@@ -2900,24 +2900,24 @@ ScaleMat CShiftManager::MatInv(ScaleMat aa)
 }
 
 // Apply a scale matrix to x and Y values, adding to existing values if incremental is set
-// (default false)
+// (default false).  Set testXpx to false for simple 90-degree matrix!
 void CShiftManager::ApplyScaleMatrix(ScaleMat &mat, float xFrom, float yFrom,
-  float &xTo, float &yTo, bool incremental)
+  float &xTo, float &yTo, bool incremental, bool testXpx)
 {
   if (!incremental)
     xTo = yTo = 0.;
-  if (!mat.xpx)
+  if (testXpx && !mat.xpx)
     return;
   xTo += mat.xpx * xFrom + mat.xpy * yFrom;
   yTo += mat.ypx * xFrom + mat.ypy * yFrom;
 }
 
 void CShiftManager::ApplyScaleMatrix(ScaleMat &mat, float xFrom, float yFrom,
-  double &xTo, double &yTo, bool incremental)
+  double &xTo, double &yTo, bool incremental, bool testXpx)
 {
   float fxTo = (float)xTo;
   float fyTo = (float)yTo;
-  ApplyScaleMatrix(mat, xFrom, yFrom, fxTo, fyTo, incremental);
+  ApplyScaleMatrix(mat, xFrom, yFrom, fxTo, fyTo, incremental, testXpx);
   xTo = fxTo;
   yTo = fyTo;
 }

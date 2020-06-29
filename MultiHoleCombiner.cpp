@@ -23,7 +23,7 @@
 enum {
   ERR_NO_NAV = 1, ERR_NO_IMAGE, ERR_NOT_POLYGON, ERR_NO_GROUP, ERR_NO_CUR_ITEM,
   ERR_TOO_FEW_POINTS, ERR_MEMORY, ERR_CUSTOM_HOLES, ERR_HOLES_NOT_ON, ERR_NOT_DEFINED, 
-  ERR_NO_XFORM, ERR_LAST_ENTRY
+  ERR_NO_XFORM, ERR_BAD_UNIT_XFORM, ERR_LAST_ENTRY
 };
 
 const char *sMessages[] = {"Navigator is not open or item array not accessible",
@@ -34,7 +34,9 @@ const char *sMessages[] = {"Navigator is not open or item array not accessible",
 "Custom holes are selected in the Multiple Record parameters",
 "The Multiple Record parameters do not specify to use multiple holes",
 "The Multiple Record parameters do not have a regular hole geometry defined", 
-"No transformation from image to stage shift is available", ""};
+"No transformation from image to stage shift is available", 
+"Stage vectors for grid of holes do not correspond well enough to IS vectors for "
+"acquisition positions", ""};
 
 CMultiHoleCombiner::CMultiHoleCombiner(void)
 {
@@ -75,21 +77,23 @@ int CMultiHoleCombiner::CombineItems(int boundType)
   MontParam *montp;
   int *activeList;
   LowDoseParams *ldp;
-  ScaleMat s2c, is2cam, is2st;
+  ScaleMat s2c, is2cam, st2is, gridMat, holeMat, prodMat;
   PositionData data;
   CArray<PositionData, PositionData> fullArray, bestFullArray;
-  float avgAngle, spacing, gridXdX, gridXdY, gridYdX, gridYdY;
+  float avgAngle, spacing;
+  double norm0, norm1;
+  float nearIntCrit = 0.33f;
   int ind, nx, ny, numPoints, ix, iy, groupID;
   int rowStart, colStart, num, minFullNum = 10000000;
   float fDTOR = (float)DTOR;
-  float fullSd, fullBestSd, ptX, ptY, gridAngle, holeAngle, angleDiff;
+  float fullSd, fullBestSd, ptX, ptY;
   float minCenDist, cenDist, boxDx, boxDy;
-  bool crossPattern;
+  bool crossPattern, leftOK, rightOK, upOK, downOK;
   int *mapVals;
   int camera = mWinApp->GetCurrentCamera();
-  int yStart, xStart, xDir, magInd, registration;
+  int yStart, xStart, xDir, magInd, registration, divStart;
   int point, acqXstart, acqXend, acqYstart, acqYend, nxBox, nyBox, numInBox, bx, by;
-  float stageX, stageY, boxXcen, boxYcen, dx, dy, vecn, vecm, holeXdX, holeXdY;
+  float stageX, stageY, boxXcen, boxYcen, dx, dy, vecn, vecm;
   int ori, crossDx[5] = {0, -1, 1, 0, 0}, crossDy[5] = {0, 0, 0, -1, 1};
 
   // Check for Nav
@@ -135,7 +139,7 @@ int CMultiHoleCombiner::CombineItems(int boundType)
   is2cam = mWinApp->mShiftManager->IStoGivenCamera(magInd, camera);
   if (!s2c.xpx || !is2cam.xpx)
     return ERR_NO_XFORM;
-  is2st = MatMul(is2cam, MatInv(s2c));
+  st2is = MatMul(s2c, MatInv(is2cam));
 
   // Find points that are on image
   if (boundType == COMBINE_ON_IMAGE) {
@@ -205,30 +209,55 @@ int CMultiHoleCombiner::CombineItems(int boundType)
   // Just get average angle and length from the analysis, then get grid positions
   mFindHoles->analyzeNeighbors(xCenters, yCenters, peakVals, altInds, xCenAlt, yCenAlt, 
     peakAlt, 0., 0., 0, spacing, xMissing, yMissing);
-  mFindHoles->getGridVectors(gridXdX, gridXdY, gridYdX, gridYdY, avgAngle, spacing);
+  mFindHoles->getGridVectors(gridMat.xpx, gridMat.xpy, gridMat.ypx, gridMat.ypy, avgAngle,
+    spacing);
   mFindHoles->assignGridPositions(xCenters, yCenters, gridX, gridY, avgAngle, spacing);
 
-  // Convert hole image shift vectors to stage vectors and get rotation from the grid 
-  // vectors to these vectors
-  mWinApp->mShiftManager->ApplyScaleMatrix(is2st, (float)msParams->holeISXspacing[0],
-    (float)msParams->holeISYspacing[0], holeXdX, holeXdY);
-  gridAngle = atan2f(gridXdY, gridXdX) / fDTOR;
-  holeAngle = atan2f(holeXdY, holeXdX) / fDTOR;
-  angleDiff = (float)UtilGoodAngle(holeAngle - gridAngle);
-  angleDiff = 90.f * B3DNINT(angleDiff / 90.f);
+  // Get a matrix that would transform from relative hole positions in unit vector stage
+  // space to relative hole positions in unit vector image shift space
+  // gridMat takes unit vectors in stage hole space to stage positions
+  // st2is takes those positions to image shift positions
+  // The dot product of an IS position with the hole IS vectors, divided by the magnitude
+  // of the IS vector, is the length of the projection onto the IS vector
+  // Dividing further by the magnitude of the IS vector give the length in unit IS vectors
+  norm0 = msParams->holeISXspacing[0] * msParams->holeISXspacing[0] +
+    msParams->holeISYspacing[0] * msParams->holeISYspacing[0];
+  norm1 = msParams->holeISXspacing[1] * msParams->holeISXspacing[1] +
+    msParams->holeISYspacing[1] * msParams->holeISYspacing[1];
+  holeMat.xpx = (float)(msParams->holeISXspacing[0] / norm0);
+  holeMat.xpy = (float)(msParams->holeISYspacing[0] / norm0);
+  holeMat.ypx = (float)(msParams->holeISXspacing[1] / norm1);
+  holeMat.ypy = (float)(msParams->holeISYspacing[1] / norm1);
+  prodMat = MatMul(MatMul(gridMat, st2is), holeMat);
+  mSkipXform.xpx = (float)B3DNINT(prodMat.xpx);
+  mSkipXform.xpy = (float)B3DNINT(prodMat.xpy);
+  mSkipXform.ypx = (float)B3DNINT(prodMat.ypx);
+  mSkipXform.ypy = (float)B3DNINT(prodMat.ypy);
+  if (fabs(mSkipXform.xpx) > 1.01 || fabs(mSkipXform.xpy) > 1.01 ||
+    fabs(mSkipXform.ypx) > 1.01 || fabs(mSkipXform.ypy) > 1.01 ||
+    fabs(mSkipXform.xpx - prodMat.xpx) > nearIntCrit ||
+    fabs(mSkipXform.xpy - prodMat.xpy) > nearIntCrit ||
+    fabs(mSkipXform.ypx - prodMat.ypx) > nearIntCrit ||
+    fabs(mSkipXform.ypy - prodMat.ypy) > nearIntCrit ||
+    fabs(mSkipXform.xpx * mSkipXform.ypx + mSkipXform.xpy * mSkipXform.ypy) > 0.001) {
+    PrintfToLog("%s\r\nThis would not end well...  Please report these details:\r\n"
+      " Matrix to xform relative hole positions from stage to IS space: %.3f %.3f %.3f "
+      "%.3f\r\n gridMat:  %.3f %.3f %.3f %.3f\r\n stage to IS:  %f  %f  %f  %f\r\n"
+      "holeMat: %.3f %.3f %.3f %.3f", sMessages[ERR_BAD_UNIT_XFORM - 1],
+      prodMat.xpx, prodMat.xpy, prodMat.ypx, prodMat.ypy,
+      gridMat.xpx, gridMat.xpy, gridMat.ypx, gridMat.ypy,
+      st2is.xpx, st2is.xpy, st2is.ypx, st2is.ypy,
+      holeMat.xpx, holeMat.xpy, holeMat.ypx, holeMat.ypy);
+    return ERR_BAD_UNIT_XFORM;
+  }
 
-  // If angle is near 90, then the number of holes in stage coordinates is transposed from
+  // If the xpx term is 0, this means thare is a 90 degree rotation involved
+  // In this case, the number of holes in stage coordinates is transposed from
   // the specified geometry.  Holes will be analyzed in stage coordinates, but the hole
   // geometry has to be back in image shift space when making Nav items
-  mTransposeSize = fabs(fabs(angleDiff) - 90.) < 1.;
+  mTransposeSize = fabs(mSkipXform.xpx) < 0.1;
   if (mTransposeSize)
     B3DSWAP(mNumXholes, mNumYholes, ix);
-
-  // Sorry, it was empirically found that back-rotation by this angle is what was
-  // needed to rotate the skip points into the right positions
-  mSkipXform.xpx = mSkipXform.ypy = cosf(fDTOR * angleDiff);
-  mSkipXform.xpy = sinf(fDTOR * angleDiff);
-  mSkipXform.ypx = -mSkipXform.xpy;
 
   // Set up a 2D map array
   mNxGrid = *std::max_element(gridX.begin(), gridX.end()) + 1;
@@ -310,6 +339,92 @@ int CMultiHoleCombiner::CombineItems(int boundType)
           SetBoxAcquireLimits(bestFullArray[ind].startY, bestFullArray[ind].endY,
             mNumYholes, mNyGrid, acqYstart, acqYend);
 
+          // Check if the center is missing, and try to either shift or split in two
+          if ((mNumXholes * mNumYholes) % 2) {
+            ix = (acqXstart + acqXend) / 2;
+            iy = (acqYstart + acqYend) / 2;
+            if (ix >= 0 && ix < mNxGrid && iy >= 0 && iy < mNyGrid && mGrid[iy][ix] < 0) {
+
+              // check if point on each side could be center of a box
+              leftOK = ix > 0 && mGrid[iy][ix - 1] >= 0 && ix >=bestFullArray[ind].startX;
+              rightOK = ix < mNxGrid - 1 && mGrid[iy][ix + 1] >= 0 && 
+                ix < bestFullArray[ind].endX;
+              downOK = iy > 0 && mGrid[iy - 1][ix] >= 0 && iy > bestFullArray[ind].startY;
+              upOK = iy < mNyGrid - 1 && mGrid[iy + 1][ix] >= 0 && 
+                iy < bestFullArray[ind].endY;
+
+              // shift if it is empty on side opposite a good point
+              if (leftOK && acqXend > bestFullArray[ind].endX) {
+                acqXend--;
+                acqXstart--;
+                //mWinApp->AppendToLog("Shift left");
+              } else if (rightOK && acqXstart < bestFullArray[ind].startX) {
+                acqXend++;
+                acqXstart++;
+                //mWinApp->AppendToLog("Shift right");
+              } else if (downOK && acqYend > bestFullArray[ind].endY) {
+                acqYend--;
+                acqYstart--;
+                //mWinApp->AppendToLog("Shift down");
+              } else if (upOK && acqYstart < bestFullArray[ind].startY) {
+                acqYend++;
+                acqYstart++;
+                //mWinApp->AppendToLog("Shift up");
+
+                // Or split if there is good center on each side
+              } else if (leftOK && rightOK) {
+
+                // Set the dividing point to favor minority side and copy position
+                divStart = ix;
+                if (ix - bestFullArray[ind].startX < bestFullArray[ind].endX - ix)
+                  divStart = ix + 1;
+                data = bestFullArray[ind];
+
+                // If the point that started this all is to the left of the divider,
+                // make new data starting at divider; otherwise make new data to left
+                if (gridX[point] < divStart) {
+                  data.startX = divStart;
+                  bestFullArray[ind].endX = divStart - 1;
+                  num = (bestFullArray[ind].endX + 1 - bestFullArray[ind].startX) / 2;
+                  acqXstart = (ix - 1) - num;
+                  acqXend = (ix - 1) + num;
+                  //mWinApp->AppendToLog("Split, new right");
+                } else {
+                  bestFullArray[ind].startX = divStart;
+                  data.endX = divStart - 1;
+                  num = (bestFullArray[ind].endX + 1 - bestFullArray[ind].startX) / 2;
+                  acqXstart = (ix + 1) - num;
+                  acqXend = (ix + 1) + num;
+                  //mWinApp->AppendToLog("Split, new left");
+                }
+                bestFullArray.Add(data);
+              } else if (downOK && upOK) {
+
+                // Do the same in Y
+                divStart = iy;
+                if (iy - bestFullArray[ind].startY < bestFullArray[ind].endY - iy)
+                  divStart = iy + 1;
+                data = bestFullArray[ind];
+                if (gridY[point] < divStart) {
+                  data.startY = divStart;
+                  bestFullArray[ind].endY = divStart - 1;
+                  num = (bestFullArray[ind].endY + 1 - bestFullArray[ind].startY) / 2;
+                  acqYstart = (iy - 1) - num;
+                  acqYend = (iy - 1) + num;
+                  //mWinApp->AppendToLog("Split, new above ");
+                } else {
+                  bestFullArray[ind].startY = divStart;
+                  data.endY = divStart - 1;
+                  num = (bestFullArray[ind].endY + 1 - bestFullArray[ind].startY) / 2;
+                  acqYstart = (iy + 1) - num;
+                  acqYend = (iy + 1) + num;
+                  //mWinApp->AppendToLog("Split, new below");
+                }
+                bestFullArray.Add(data);
+              }
+            }
+          }
+
           // Set up to find the included and skipped items
           nxBox = acqXend + 1 - acqXstart;
           nyBox = acqYend + 1 - acqYstart;
@@ -341,12 +456,12 @@ int CMultiHoleCombiner::CombineItems(int boundType)
                 item = itemArray->GetAt(navInds[mGrid[iy][ix]]);
                 boxDx = (float)(boxXcen - bx);
                 boxDy = (float)(boxYcen - by);
-                stageX += item->mStageX + boxDx * gridXdX + boxDy * gridXdY;
-                stageY += item->mStageY + boxDx * gridYdX + boxDy * gridYdY;
+                stageX += item->mStageX + boxDx * gridMat.xpx + boxDy * gridMat.xpy;
+                stageY += item->mStageY + boxDx * gridMat.ypx + boxDy * gridMat.ypy;
                 /*PrintfToLog("Assign %d at %d,%d (%s) to box %d, bdxy %.1f %.1f  stage X"
                   " Y %.3f %.1f", navInds[mGrid[iy][ix]], ix, iy, (LPCTSTR)item->mLabel,
-                  ind, boxDx, boxDy, item->mStageX + boxDx * gridXdX + boxDy * gridXdY,
-                  item->mStageY + boxDx * gridYdX + boxDy * gridYdY);*/
+                  ind, boxDx, boxDy, item->mStageX + boxDx * gridMat.xpx + boxDy * 
+                  gridMat.xpy, item->mStageY + boxDx * gridMat.ypx + boxDy * gridMat.ypy);*/
                 cenDist = boxDx * boxDy + boxDy * boxDy;
                 if (cenDist < minCenDist) {
                   minCenDist = cenDist;
@@ -445,8 +560,8 @@ int CMultiHoleCombiner::CombineItems(int boundType)
               boxAssigns[mGrid[iy][ix]] = ind;
               numInBox++;
               item = itemArray->GetAt(navInds[mGrid[iy][ix]]);
-              stageX += item->mStageX - (float)(bx * gridXdX + by * gridXdY);
-              stageY += item->mStageY - (float)(bx * gridYdX + by * gridYdY);
+              stageX += item->mStageX - (float)(bx * gridMat.xpx + by * gridMat.xpy);
+              stageY += item->mStageY - (float)(bx * gridMat.ypx + by * gridMat.ypy);
               if (groupID < 0 || bx + by == 0)
                 groupID = item->mGroupID;
             } else {
@@ -487,7 +602,7 @@ int CMultiHoleCombiner::CombineItems(int boundType)
   mNav->FinishMultipleDeletion();
   for (ind = 0; ind < (int)mIndexesForUndo.size(); ind++)
     mIndexesForUndo[ind] -= (int)navInds.size();
-
+  mWinApp->mMainView->DrawImage();
   free(mapVals);
   free(mGrid);
   return 0;
@@ -553,30 +668,31 @@ void CMultiHoleCombiner::UndoCombination(void)
 void CMultiHoleCombiner::TryBoxStartsOnLine(int otherStart, bool doCol, 
   CArray<PositionData, PositionData> &fullArray)
 {
-  CArray<PositionData, PositionData> bestLineArray, lineArray;
-  int num, minNum = 10000000;
-  float sdOfLine, sdAtBest;
+  CArray<PositionData, PositionData> bestLineArray[2], lineArray;
+  int num, cenMissing, minNum[2] = {10000000, 10000000};
+  float sdOfLine, sdAtBest[2];
   int vStart = 1 - (doCol ? mNumYholes : mNumXholes);
 
   // Try possible starts for the line of boxes at the otherStart
   for (; vStart <= 0; vStart++) {
     EvaluateLineOfBoxes(doCol ? otherStart : vStart, doCol ? vStart : otherStart, doCol,
-      lineArray, sdOfLine);
+      lineArray, sdOfLine, cenMissing);
     num = (int)lineArray.GetSize();
-    if (num < minNum || (num == minNum && sdOfLine < sdAtBest)) {
-      minNum = num;
-      sdAtBest = sdOfLine;
-      bestLineArray.Copy(lineArray);
+    if (num < minNum[cenMissing] || (num == minNum[cenMissing] && sdOfLine < 
+      sdAtBest[cenMissing])) {
+      minNum[cenMissing] = num;
+      sdAtBest[cenMissing] = sdOfLine;
+      bestLineArray[cenMissing].Copy(lineArray);
     }
   }
 
   // Add best one to the full array
-  fullArray.Append(bestLineArray);
+  fullArray.Append(bestLineArray[minNum[0] < 1000 ? 0 : 1]);
 }
 
 // For a line of boxes at one start position, get the boxes and compute SD of # in each
 void CMultiHoleCombiner::EvaluateLineOfBoxes(int xStart, int yStart, bool doCol,
-  CArray<PositionData, PositionData> &posArray, float &sdOfNums)
+  CArray<PositionData, PositionData> &posArray, float &sdOfNums, int &cenMissing)
 {
   PositionData data;
   FloatVec xnums;
@@ -584,12 +700,14 @@ void CMultiHoleCombiner::EvaluateLineOfBoxes(int xStart, int yStart, bool doCol,
   int vStart = doCol ? yStart : xStart;
 
   posArray.RemoveAll();
+  cenMissing = 0;
   for (vStart; vStart < (doCol ? mNyGrid : mNxGrid); 
     vStart += (doCol ? mNumYholes : mNumXholes)) {
     EvaluateBoxAtPosition(doCol ? xStart : vStart, doCol ? vStart : yStart, data);
     if (data.numAcquires > 0) {
       xnums.push_back((float)data.numAcquires);
       posArray.Add(data);
+      ACCUM_MAX(cenMissing, data.cenMissing);
     }
   }
   sdOfNums = 0;
@@ -606,6 +724,7 @@ void CMultiHoleCombiner::EvaluateBoxAtPosition(int xStart, int yStart, PositionD
   data.endX = -1;
   data.startY = mNyGrid;
   data.endY = -1;
+  data.cenMissing = 0;
   for (ix = B3DMAX(xStart, 0); ix < B3DMIN(xStart + mNumXholes, mNxGrid); ix++) {
     for (iy = B3DMAX(yStart, 0); iy < B3DMIN(yStart + mNumYholes, mNyGrid); iy++) {
       if (mGrid[iy][ix] >= 0) {
@@ -617,6 +736,10 @@ void CMultiHoleCombiner::EvaluateBoxAtPosition(int xStart, int yStart, PositionD
       }
     }
   }
+  if ((mNumXholes * mNumYholes) % 2 != 0 && data.endX + 1 - data.startX == mNumXholes &&
+    data.endY + 1 - data.startY == mNumXholes && 
+    mGrid[yStart + mNumYholes / 2][xStart + mNumXholes / 2] < 0)
+    data.cenMissing = 1;
 }
 
 // Try to combine adjacent boxes if that fits wihing the box size, and then get the SD
@@ -670,7 +793,7 @@ void CMultiHoleCombiner::mergeBoxesAndEvaluate(
 
 // For a particular box, get adjusted limits to define the size of the multi-shot item
 // so that it matches the even/oddness of the nominal number of holes in that dimension
-void CMultiHoleCombiner::SetBoxAcquireLimits(int start, int end, int numHoles, int nGrid, 
+void CMultiHoleCombiner::SetBoxAcquireLimits(int start, int end, int numHoles, int nGrid,
   int &acqStart, int &acqEnd)
 {
   acqStart = start;
@@ -749,9 +872,12 @@ void CMultiHoleCombiner::AddMultiItemToArray(
     newItem->mSkipHolePos = new unsigned char[2 * newItem->mNumSkipHoles];
     for (ix = 0; ix < newItem->mNumSkipHoles; ix++) {
       mWinApp->mShiftManager->ApplyScaleMatrix(mSkipXform, ixSkip[ix] - boxXcen,
-        iySkip[ix] - boxYcen, skipXrot, skipYrot);
+        iySkip[ix] - boxYcen, skipXrot, skipYrot, false, false);
       newItem->mSkipHolePos[2 * ix] = (unsigned char)B3DNINT(skipXrot + backXcen);
       newItem->mSkipHolePos[2 * ix + 1] = (unsigned char)B3DNINT(skipYrot + backYcen);
+      /*PrintfToLog("Skip %d %d  cen %.1f %.1f skiprot  %.1f %.1f  cen %.1f %.1f  shp %d"
+      " %d", ixSkip[ix], iySkip[ix], boxXcen, boxYcen, skipXrot, skipYrot, backXcen, 
+         backYcen, newItem->mSkipHolePos[2 * ix], newItem->mSkipHolePos[2 * ix + 1]);*/
     }
   }
 

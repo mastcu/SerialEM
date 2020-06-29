@@ -295,8 +295,8 @@ public:
   void AdjustCameraToStageForTilt(ScaleMat & aMat, float angle);
   void AdjustStageMoveAndClearIS(int camera, int magInd, double &delStageX,
     double & delStageY, ScaleMat bInv);
-  void ApplyScaleMatrix(ScaleMat & mat, float xFrom, float yFrom, float &xTo, float &yTo, bool incremental = false);
-  void ApplyScaleMatrix(ScaleMat & mat, float xFrom, float yFrom, double &xTo, double &yTo, bool incremental = false);
+  void ApplyScaleMatrix(ScaleMat & mat, float xFrom, float yFrom, float &xTo, float &yTo, bool incremental = false, bool testXpx = true);
+  void ApplyScaleMatrix(ScaleMat & mat, float xFrom, float yFrom, double &xTo, double &yTo, bool incremental = false, bool testXpx = true);
   void ListBeamShiftCals();
 
   bool BeamShiftToSpecimenShift(ScaleMat & IStoBS, int magInd, double beamDelX, double beamDelY, float & specX, float & specY);

@@ -12,6 +12,7 @@ struct PositionData
   int startX, endX;
   int startY, endY;
   int numAcquires;
+  int cenMissing;
 };
 
 class CMultiHoleCombiner
@@ -42,7 +43,7 @@ private:
   void TryBoxStartsOnLine(int otherStart, bool doCol,
     CArray<PositionData, PositionData> &fullArray);
   void EvaluateLineOfBoxes(int xStart, int yStart, bool doCol,
-    CArray<PositionData, PositionData> &posArray, float &sdOfNums);
+    CArray<PositionData, PositionData> &posArray, float &sdOfNums, int &cenMissing);
   void EvaluateBoxAtPosition(int xStart, int yStart, PositionData &data);
   void EvaluateCrossAtPosition(int xCen, int yCen, PositionData &data);
 

@@ -43,6 +43,12 @@
       group boundaries will not be respected when assigning them to the multi-shot 
       points, and each multi-shot point will be assigned the group number of the (or 
       a) point closest to the center of the pattern.</p>
+    <p>When the center of the pattern is a hole (i.e., there is an odd number of 
+      positions in each direction), then the program tries to avoid placing a hole 
+      that is not marked for acquisition at the center of a pattern.&nbsp; It rejects 
+      layouts that place such missing points at the center in some cases, and it 
+      splits a pattern into two smaller ones if the two holes to either side are 
+      marked for acquisition.&nbsp; However, this mechanism is imperfect.</p>
     <p><strong>Combine points marked as acquire</strong></p>
     <p>Points are selected for combination based on the choice in this box:</p>
     <p class="auto-style1"><em>On image in current buffer</em> includes points located 
@@ -65,11 +71,11 @@
     <p>In order to see the full details of which locations will be acquired from each 
       new point, both menu options <a href="#hid_options_showmulti">Show Shots when 
             Show Acquire</a> and <a href="#hid_montaginggrids_showwholeareaforallpoints">Show Whole
-          Area for All Points</a> need to turned on.&nbsp; Also, either the 'Show 
+          Area for All Points</a> need to be turned on.&nbsp; Also, either the 'Show 
       acquire' check box in the Navigator window must be turned on, or the <A HREF="hidd_multi_shot_setup.htm">Multiple Record Setup dialog</A> 
       must be open.&nbsp; However, such a display is inappropriate and annoying on the 
       original grid of points.&nbsp; Thus, the program suppresses the multi-shot 
-      display on all points as long as this dialog is open, unless there is a set of 
+      display on all points as long as this Combiner dialog is open, unless there is a set of 
       points that have been converted and still available to be reverted.&nbsp; This 
       should make the display work nicely, but if you do want to see a pattern on all 
       points, this checkbox can be used to restore the display as if the dialog was 
