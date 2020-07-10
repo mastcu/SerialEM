@@ -2929,7 +2929,7 @@ void CMacroProcessor::NextCommand()
   case CME_CBASTIGCOMA:                                    // CBAstigComa
     B3DCLAMP(itemInt[1], 0, 2);
     if (mWinApp->mAutoTuning->CtfBasedAstigmatismComa(itemInt[1], itemInt[2] != 0, 
-      itemInt[3], !itemEmpty[4] && itemInt[4] > 0)) {
+      itemInt[3], !itemEmpty[4] && itemInt[4] > 0, !itemEmpty[5] && itemInt[5] > 0)) {
       AbortMacro();
       return;
     }
@@ -2942,9 +2942,11 @@ void CMacroProcessor::NextCommand()
        index = mWinApp->mAutoTuning->GetCtfDoFullArray() ? 2 : 1;
       if (!itemEmpty[3])
         index = itemInt[3] > 0 ? 2 : 1;
-    }
+      truth = !itemEmpty[4] && itemInt[4] > 0;
+    } else
+      truth = !itemEmpty[3] && itemInt[3] > 0;
     if (mWinApp->mAutoTuning->CtfBasedAstigmatismComa(index, false,
-      (!itemEmpty[1] && itemInt[1] > 0) ? 1 : 0, !itemEmpty[2] && itemInt[2] > 0)) {
+      (!itemEmpty[1] && itemInt[1] > 0) ? 1 : 0, !itemEmpty[2] && itemInt[2] > 0, truth)){
       AbortMacro();
       return;
     }
@@ -10168,7 +10170,8 @@ int CMacroProcessor::AdjustBeamTiltIfSelected(double delISX, double delISY, BOOL
     comaVsIS->magInd, transISX, transISY);
   delBTX = comaVsIS->matrix.xpx * transISX + comaVsIS->matrix.xpy * transISY;
   delBTY = comaVsIS->matrix.ypx * transISX + comaVsIS->matrix.ypy * transISY;
-  mWinApp->mAutoTuning->BacklashedBeamTilt(BTX + delBTX, BTY + delBTY, true);
+  mWinApp->mAutoTuning->BacklashedBeamTilt(BTX + delBTX, BTY + delBTY, 
+    mScope->GetAdjustForISSkipBacklash() <= 0);
   mCompensatedBTforIS = true;
   if (comaVsIS->astigMat.xpx) {
     mScope->GetObjectiveStigmator(astigX, astigY);
@@ -10179,7 +10182,8 @@ int CMacroProcessor::AdjustBeamTiltIfSelected(double delISX, double delISY, BOOL
     }
     delBTX = comaVsIS->astigMat.xpx * transISX + comaVsIS->astigMat.xpy * transISY;
     delBTY = comaVsIS->astigMat.ypx * transISX + comaVsIS->astigMat.ypy * transISY;
-    mWinApp->mAutoTuning->BacklashedStigmator(astigX + delBTX, astigY + delBTY, true);
+    mWinApp->mAutoTuning->BacklashedStigmator(astigX + delBTX, astigY + delBTY, 
+      mScope->GetAdjustForISSkipBacklash() <= 0);
   }
   return 0;
 }

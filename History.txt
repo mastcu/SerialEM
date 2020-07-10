@@ -3,6 +3,13 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+7/10/20: Added options to CTF-base astigmatism and coma commands to suppress
+message box on error.
+
+7/10/20: Added properties to control or skip backlash on the beam tilt and
+stigmator changes involved in doing coma/astigmatism operations and adjusting
+for image shift.
+
 6/29/20: Fixed multi-hole combiner for case where there is a handedness
 changes between stage and image shift coordinate systems and made it try to
 avoid placing a hole not to be acquired at the center of a pattern.

@@ -401,6 +401,7 @@ CEMscope::CEMscope()
   mJeolRefillTimeout = 2400;
   mJeolFlashFegTimeout = 45;
   mJeolEmissionTimeout = 180;
+  mAdjustForISSkipBacklash = -1;
   mBacklashTolerance = -1.;
   mXYbacklashValid = false;
   mStageAtLastPos = false;
@@ -586,6 +587,8 @@ int CEMscope::Initialize()
         mNumRegularCamLens = mUseIllumAreaForC2 ? 21 : 16;
       if (mNumLADCamLens < 0)
         mNumLADCamLens = mUseIllumAreaForC2 ? 22 : 21;
+      if (mAdjustForISSkipBacklash < 0)
+        mAdjustForISSkipBacklash = 0;
     } else if (JEOLscope) {
 
       // JEOL: Also transfer values to structures before initialization
@@ -658,6 +661,8 @@ int CEMscope::Initialize()
         mNumSpotSizes = 5;
       if (mMagChgIntensityDelay < 0)
         mMagChgIntensityDelay = 200;
+      if (mAdjustForISSkipBacklash < 0)
+        mAdjustForISSkipBacklash = 1;
 
       // Set up array to keep track of whether IS neutral was checked
       mCheckedNeutralIS.push_back(1);
@@ -688,6 +693,8 @@ int CEMscope::Initialize()
         mNumSpotSizes = 5;
       if (mMagChgIntensityDelay < 0)
         mMagChgIntensityDelay = 30;
+      if (mAdjustForISSkipBacklash < 0)
+        mAdjustForISSkipBacklash = 0;
 
       // Add shift boundaries for HR mode.  LM is pretty good in most of range
       if (mLowestSecondaryMag > 0) {

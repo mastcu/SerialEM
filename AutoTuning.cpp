@@ -1018,7 +1018,7 @@ void CAutoTuning::ZemlinCleanup(int error)
 // The external call to start the operation for calibration or measurement of the given
 // type, actionType = 0 to apply, 1 to measure, 2/3 to measure from existing images
 int CAutoTuning::CtfBasedAstigmatismComa(int comaFree, bool calibrate, int actionType,
-  bool leaveIS)
+  bool leaveIS, BOOL noMessageBox)
 {
   double curDefocus, tryFocus, stageX, stageY, stageZ;
   int binInd, realBin, maxMinutes = 5;
@@ -1035,6 +1035,7 @@ int CAutoTuning::CtfBasedAstigmatismComa(int comaFree, bool calibrate, int actio
   bool needAreaChange = lowDoseMode && mScope->GetLowDoseArea() != RECORD_CONSET;
 
   // Initialize the calibrations structure and looping variables
+  mSkipMessageBox = noMessageBox;
   mDirectionInd = 0;
   mNumIterations = 0;
   mCtfComaFree = comaFree;
@@ -1232,8 +1233,7 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
   if (mCtfActionType / 2)
     imBufs += B3DCHOICE(mCtfCalibrating || mCtfComaFree, numOperations- mOperationInd, 0);
   if (!imBufs->mImage || imBufs->mCaptured == BUFFER_FFT) {
-    SEMMessageBox("The buffers do not have the right images to do this operation");
-    StopCtfBased();
+    ErrorInCtfBased("The buffers do not have the right images to do this operation");
     return;
   }
   str.Format("%s %s", mCtfCalibrating ? "CALIBRATING" : "MEASURING", 
@@ -1248,9 +1248,8 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
     // Check and get the focus if actually did it
     if (!mSkipMeasuringFocus) {
       if (mFocusManager->GetLastFailed() || mFocusManager->GetLastAborted()) {
-        SEMMessageBox("Stopping the procedure because the initial focus measurement "
+        ErrorInCtfBased("Stopping the procedure because the initial focus measurement "
           "failed");
-        StopCtfBased();
         return;
       }
       mLastMeasuredFocus = mFocusManager->GetCurrentDefocus();
@@ -1277,8 +1276,7 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
 
     // An image is ready to analyze
     if (mWinApp->mProcessImage->InitializeCtffindParams(imBufs, param)) {
-      SEMMessageBox("An error occurred setting up Ctffind parameters");
-      StopCtfBased();
+      ErrorInCtfBased("An error occurred setting up Ctffind parameters");
       return;
     }
 
@@ -1299,8 +1297,7 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
     SEMTrace('1', "rmin %.1f  rmax %.1f  dmin %.0f  dmax %.0f", param.minimum_resolution,
     param.maximum_resolution, param.minimum_defocus, param.maximum_defocus);
     if (mWinApp->mProcessImage->RunCtffind(imBufs, param, resultsArray)) {
-      SEMMessageBox("An error occurred running the Ctffind operation");
-      StopCtfBased();
+      ErrorInCtfBased("An error occurred running the Ctffind operation");
       return;
     }
 
@@ -1311,49 +1308,44 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
       mCenteredDefocus = negMicrons;
       if (fabs(negMicrons - mInitialDefocus) > 2. || 
         negMicrons > mMinCtfBasedDefocus + 0.5) {
-          str.Format("The defocus from Ctffind, %.2f um, is too far from the\n"
+          str.Format("The defocus from Ctffind, %.2f um, is too far from the\r\n"
             "expected defocus of %.2f or too low to proceed (below %.2f)", negMicrons,
             mInitialDefocus, mMinCtfBasedDefocus + 0.5);
-        SEMMessageBox(str);
-        StopCtfBased();
-        return;
+          ErrorInCtfBased(str);
+          return;
       }
       if (mCenteredScore < mMinCenteredScore) {
-        str.Format("The score from the Ctffind fit, %.3f, is below the\n"
-          " minimum (%.3f) and probably too low for a reliable result.\n\n",
+        str.Format("The score from the Ctffind fit, %.3f, is below the\r\n"
+          " minimum (%.3f) and probably too low for a reliable result.\r\n\r\n",
           mCenteredScore, mMinCenteredScore);
-        SEMMessageBox(str + suggest);
-        StopCtfBased();
+        ErrorInCtfBased(str + suggest);
         return;
       }
     }
 
     // Check general results
     if (resultsArray[4] < mMinScoreRatio * mCenteredScore) {
-      str.Format("The score from the Ctffind fit, %.3f, has changed\n"
+      str.Format("The score from the Ctffind fit, %.3f, has changed\r\n"
         "by %.2f from the initial fit so fitting may be unreliable", resultsArray[4],
         resultsArray[4] / mCenteredScore);
-      SEMMessageBox(str);
-      StopCtfBased();
+      ErrorInCtfBased(str);
       return;
     }
 
     // Check fit to resolution, but try to ignore infinite result
     if (resultsArray[5] > param.minimum_resolution && resultsArray[5] < 
       10. * imBufs->mImage->getWidth() * param.pixel_size_of_input_image) {
-      str.Format("The resolution to which Thon rings fit,\n"
-        "%.0f A is very high and indicates that CTF fitting is not working.\n\n",
+      str.Format("The resolution to which Thon rings fit,\r\n"
+        "%.0f A is very high and indicates that CTF fitting is not working.\r\n\r\n",
         resultsArray[5]);
-      SEMMessageBox(str + suggest);
-      StopCtfBased();
+      ErrorInCtfBased(str + suggest);
       return;
     }
     if (fabs(negMicrons - mCenteredDefocus) > 1.) {
-      str.Format("The mean defocus from this fit, %.2f um, is\n"
+      str.Format("The mean defocus from this fit, %.2f um, is\r\n"
         "%.2f from the defocus in the initial fit, the fit may be unreliable",
         negMicrons, fabs(negMicrons - mCenteredDefocus));
-      SEMMessageBox(str);
-      StopCtfBased();
+      ErrorInCtfBased(str);
       return;
     }
 
@@ -1440,13 +1432,12 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
           }
           if (maxAstig - minAstig < 0.05) {
             str.Format("The range of astigmatism values (%.2f) is too low for a reliable"
-              " coma solution.\n\n" "You may need to increase the beam tilt set in"
-              " \"Set CTF Coma-free Params\".\n", maxAstig - minAstig);
+              " coma solution.\r\n\r\n" "You may need to increase the beam tilt set in"
+              " \"Set CTF Coma-free Params\".\r\n", maxAstig - minAstig);
             if (mWinApp->mScope->GetUseIllumAreaForC2())
               str += "(Do not try to detect coma on a Cs-corrected microscope)";
-            SEMMessageBox(str);
+            ErrorInCtfBased(str);
             mWinApp->AppendToLog(str);
-            StopCtfBased();
             return;
           }
 
@@ -1611,6 +1602,15 @@ void CAutoTuning::CtfBasedNextTask(int tparm)
   if (mCtfActionType / 2 == 0)
     mWinApp->mCamera->InitiateCapture(RECORD_CONSET);
   mWinApp->AddIdleTask(CCameraController::TaskCameraBusy, TASK_CTF_BASED, 0, 0);
+}
+
+void CAutoTuning::ErrorInCtfBased(const char * mess)
+{
+  if (mSkipMessageBox)
+    PrintfToLog("WARNING: %s", mess);
+  else
+    SEMMessageBox(mess);
+  StopCtfBased();
 }
 
 // Stop function: restore initial values if flag set (default true)
@@ -1850,7 +1850,7 @@ void CAutoTuning::ComaVsISNextTask(int param)
         mWinApp->mShiftManager->GetLastISDelay());
     }
     mWinApp->AddIdleTask(TASK_CAL_COMA_VS_IS, 0, 0);
-    CtfBasedAstigmatismComa((index + 1)  % 2, false, 1, true);
+    CtfBasedAstigmatismComa((index + 1)  % 2, false, 1, true, false);
     mComaVsISindex++;
     return;
   }

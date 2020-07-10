@@ -81,8 +81,8 @@ public:
   GetSetMember(int, CtfBasedLDareaDelay);
   GetSetMember(float, ComaVsISextent);
   GetSetMember(float, MinCtfBasedDefocus);
-  GetMember(int, BacklashDelay);
   GetMember(float, AstigBacklash);
+  GetSetMember(int, BacklashDelay);
   float GetBeamTiltBacklash();
   ComaVsISCalib *GetComaVsIScal() {return &mComaVsIScal;};
   void SetBaseBeamTilt(double inX, double inY) {mBaseBeamTiltX = inX; mBaseBeamTiltY = inY;};
@@ -195,6 +195,7 @@ private:
   bool mDoingFullArray;           // Flag that full coma array is being done
   float mTestCtfTuningDefocus;    // Initial focus to assign when reading in images
   bool mLastCtfBasedFailed;       // Flag for failure in last CTF-based operation
+  BOOL mSkipMessageBox;
   int mCtfBasedLDareaDelay;       // Delay after changing low dose area
   float mLastXStigNeeded;         // Change needed from last astigmatism measurement only
   float mLastYStigNeeded;         // Can be BTID or CTF
@@ -242,8 +243,9 @@ public:
   float DefocusFromCtfFit(float * fitValues, float angle);
   float DefocusDiffFromTwoCtfFits(float * fitValues, int index1, int index2, float angle);
   void AstigCoefficientsFromCtfFits(float * fitValues, float angle, float astig,  float &xCoeff, float &yCoeff);
-  int CtfBasedAstigmatismComa(int comaFree, bool calibrate, int actionType, bool leaveIS);
+  int CtfBasedAstigmatismComa(int comaFree, bool calibrate, int actionType, bool leaveIS, BOOL noMessageBox);
   void CtfBasedNextTask(int tparm);
+  void ErrorInCtfBased(const char *mess);
   void StopCtfBased(bool restore = true, bool failed = true);
   void CtfBasedCleanup(int error);
   int LookupCtfBasedCal(bool coma, int magInd, bool matchMag, float *rotateImage = NULL);

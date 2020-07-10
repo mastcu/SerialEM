@@ -2004,6 +2004,7 @@ int CParameterIO::ReadProperties(CString strFileName)
   float *radii = mWinApp->mProcessImage->GetFFTCircleRadii();
   float *alphaFacs = mWinApp->mBeamAssessor->GetBSCalAlphaFactors();
   BOOL recognized, recognized2, recognized30, recognized35, recognizedc, recognizedc1;
+  BOOL recognized15;
   CString strLine;
   CString strItems[MAX_TOKENS];
   BOOL itemEmpty[MAX_TOKENS];
@@ -2086,6 +2087,7 @@ int CParameterIO::ReadProperties(CString strFileName)
       recognized30 = true;
       recognized35 = true;
       recognizedc = true;
+      recognized15 = true;
 
       message = strItems[0];
       std::string propLower = (LPCTSTR)message.MakeLower();
@@ -2661,6 +2663,13 @@ int CParameterIO::ReadProperties(CString strFileName)
 #undef PROP_TEST_SECT1
       else if (MatchNoCase("GainNormalizeInSerialEM"))
         mWinApp->SetProcessHere(itemInt[1] != 0);
+      else
+        recognized = false;
+
+      if (recognized || recognizedc) {
+        recognized = true;
+      }
+
       else if (MatchNoCase("ReferenceMemoryLimitMB"))
         camera->SetRefMemoryLimit(1000000 * itemInt[1]);
       else if (MatchNoCase("DarkRefMaxMeanOrSD")) {
@@ -2717,6 +2726,10 @@ int CParameterIO::ReadProperties(CString strFileName)
         CBaseSocket::SetServerIP(GATAN_SOCK_ID, strItems[1]);
       else if (MatchNoCase("GatanServerPort"))
         CBaseSocket::SetServerPort(GATAN_SOCK_ID, itemInt[1]);
+      else if (MatchNoCase("FEISEMServerIP"))
+        CBaseSocket::SetServerIP(FEI_SOCK_ID, strItems[1]);
+      else if (MatchNoCase("FEISEMServerPort"))
+        CBaseSocket::SetServerPort(FEI_SOCK_ID, itemInt[1]);
 #ifdef _WIN64
       else if (MatchNoCase("SocketServerIP") || MatchNoCase("SocketServerIPif64")) {
 #else
@@ -2820,9 +2833,9 @@ int CParameterIO::ReadProperties(CString strFileName)
         scope->SetUseTEMScripting(itemInt[1]);
         //JEOLscope = false;
       } else 
-        recognized = false;
+        recognized15 = false;
       
-      if (recognized || recognizedc) {
+      if (recognized || recognized15) {
         recognized = true;
       }
 #define PROP_TEST_SECT2

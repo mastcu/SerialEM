@@ -2657,18 +2657,21 @@
           <TD>Reports the defocus target</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">FixAstigmatismByCTF [#M] [#L]</TD>
+          <TD class="scriptcommand">FixAstigmatismByCTF [#M] [#L]&nbsp; [#S]</TD>
           <TD>Measures astigmatism by CTF fitting, report the stigmation change, and correct 
             for those values (or just measure, if the optional <b>#M</b> is nonzero).&nbsp; Image 
-            shift is set to 0 unless the optional <b>#L</b> is non-zero.</TD>
+            shift is set to 0 unless the optional <b>#L</b> is non-zero.&nbsp; Set optional
+            <strong>#S</strong> non-zero to suppress the message box on errors that occur 
+            after starting to take images.</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">FixComaByCtf&nbsp; [#M] [#L] [#F]</TD>
+          <TD class="scriptcommand">FixComaByCtf&nbsp; [#M] [#L] [#F]&nbsp; [#S]</TD>
           <TD>Measures beam-tilt misalignment by CTF fitting, report beam tilt change needed, 
             and correct for it (or just measure, if the optional <b>#M</b> is nonzero).&nbsp; Image 
             shift is set to 0 unless the optional <b>#L</b> is non-zero.&nbsp; The user setting for 
             whether to do a full array of images is used unless optional <b>#F</b> is 0 for 5 
-            images &gt; 0 for a full array. </TD>
+            images or &gt; 0 for a full array. Set optional <strong>#S</strong> non-zero to 
+            suppress the message box on errors that occur after starting to take images.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">CorrectAstigmatism [#]</TD>
@@ -2724,12 +2727,12 @@
             when the script exits.</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">CBAstigComa #T #C [#A] [#L] </TD>
+          <TD class="scriptcommand">CBAstigComa #T #C [#A] [#L]&nbsp; [#S]</TD>
           <TD>FOR TESTING: Runs the routine for astigmatism and coma by CTF fitting.&nbsp; Set <b>#T</b> 
             0 for astigmatism, 1 for coma with 5 images, 2 for coma with full array; <b>#C</b> 0/1 to measure/calibrate; <b>#A</b> 0 to apply a 
             measurement, 1 to just measure, 2 to measure from images in the buffers; <b>#L</b> 
-            non-zero to 
-            leave image shift as it is.</TD>
+            non-zero to leave image shift as it is; <strong>#S</strong> non-zero to suppress 
+            the message box on errors that occur after starting to take images.</TD>
         </TR>
         <TR>
           <TD colspan="2"><A name="low_dose"></A><B>Low Dose Commands</B></TD>

@@ -391,6 +391,18 @@
           <TD>&nbsp;</TD>
         </TR>
         <TR VALIGN="top">
+          <TD>FEISEMServerIP</TD>
+          <TD>IP address of FEI scope, for connecting with FEI-SEMServer.exe on the scope.&nbsp; 
+            This has the same effect as 'SocketServerIP 1 x.x.x.x'.</TD>
+          <TD>&nbsp;</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>FEISEMServerPort</TD>
+          <TD>Port number of the first port for connecting to FEI-SEMServer.exe on an FEI 
+            scope.&nbsp; This has the same effect as 'SocketServerPort 1 x.x.x.x'.</TD>
+          <TD>&nbsp;</TD>
+        </TR>
+        <TR VALIGN="top">
           <TD>BackgroundSocketToFEI </TD>
           <TD>Set to 1 to open a fourth socket connection to an FEI scope for tilting slowly 
             while acquiring data.</TD>
@@ -2808,6 +2820,19 @@
           <TD>Additional delay after changing low dose area for CTF-based coma-free 
             alignment.&nbsp; The delay is needed to settle out focus changes.&nbsp; The 
             default is 8 seconds.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style4">AstigBTBacklashDelay</TD>
+          <TD>Delay between first and second setting of beam tilt or stigmators, which are set with
+            backlash in the astigmatism and coma routines and when compensating image shift for beam tilt 
+            and astigmatism.&nbsp; A value of 0 makes it skip the backlash step and set the 
+            deflectors only once.&nbsp; The default is 100 msec.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD class="style4">AdjustForISSkipBacklash</TD>
+          <TD>Set to 1 to skip the backlash of beam tilt and stigmators when adjusting for 
+            image shift in the Multiple Record routine and various script commands, or 0 to
+             do the backlash.  The default is 1 for JEOL scopes, 0 otherwise.</TD>
         </TR>
       </TABLE>
       <BR>

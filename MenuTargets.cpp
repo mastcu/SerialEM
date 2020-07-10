@@ -2910,7 +2910,7 @@ void CMenuTargets::OnCalFocusTuningCtfAstig()
   if (mWinApp->mAutoTuning->CheckAndSetupCtfAcquireParams("calibrating astigmatism", 
     false))
     return;
-  mWinApp->mAutoTuning->CtfBasedAstigmatismComa(0, true, 0, false);
+  mWinApp->mAutoTuning->CtfBasedAstigmatismComa(0, true, 0, false, false);
 }
 
 void CMenuTargets::OnFocusComaByCtf()
@@ -2919,7 +2919,7 @@ void CMenuTargets::OnFocusComaByCtf()
     false))
     return;
   mWinApp->mAutoTuning->CtfBasedAstigmatismComa
-    (mWinApp->mAutoTuning->GetCtfDoFullArray() ? 2 : 1, false, 0, false);
+    (mWinApp->mAutoTuning->GetCtfDoFullArray() ? 2 : 1, false, 0, false, false);
 }
 
 void CMenuTargets::OnFocusSetCtfAcquireParams()
@@ -2932,7 +2932,7 @@ void CMenuTargets::OnFocusCorrectAstigmatismWithFfts()
   if (mWinApp->mAutoTuning->CheckAndSetupCtfAcquireParams("correcting astigmatism", 
     false))
     return;
-  mWinApp->mAutoTuning->CtfBasedAstigmatismComa(0, false, 0, false);
+  mWinApp->mAutoTuning->CtfBasedAstigmatismComa(0, false, 0, false, false);
 }
 
 void CMenuTargets::OnUpdateFocusCorrectAstigmatismWithFfts(CCmdUI *pCmdUI)

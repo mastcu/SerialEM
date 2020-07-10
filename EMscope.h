@@ -328,6 +328,7 @@ class DLL_IM_EX CEMscope
   GetSetMember(float, TiltSpeedFactor);
   GetSetMember(int, RestoreStageXYdelay);
   GetSetMember(BOOL, JeolHasBrightnessZoom);
+  GetSetMember(int, AdjustForISSkipBacklash);
 
   void SetJeolRelaxationFlags(int inVal);
   int GetJeolRelaxationFlags();
@@ -724,6 +725,7 @@ private:
   int mXLensModeAvailable;     // 1 if available, 0 no object, -1 not available
   int mRestoreStageXYdelay;    // Delay between tilt and restore step
   BOOL mJeolHasBrightnessZoom; // Flag for whether TemExt version has BrightnessZoom
+  int mAdjustForISSkipBacklash; // Flag for astig/BT adjustements for IS not to backlash
   int mPluginVersion;          // Version of plugin or server
 
   // Old static variables from UpdateProc

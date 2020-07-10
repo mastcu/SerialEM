@@ -271,7 +271,8 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
       delBTY = comaVsIS->matrix.ypx * transISX + comaVsIS->matrix.ypy * transISY;
       mCenterBeamTiltX = mBaseBeamTiltX + delBTX;
       mCenterBeamTiltY = mBaseBeamTiltY + delBTY;
-      mWinApp->mAutoTuning->BacklashedBeamTilt(mCenterBeamTiltX, mCenterBeamTiltY, true);
+      mWinApp->mAutoTuning->BacklashedBeamTilt(mCenterBeamTiltX, mCenterBeamTiltY, 
+        mScope->GetAdjustForISSkipBacklash() <= 0);
       str.Format("For starting IS  %.3f %.3f  setting BT  %.3f  %.3f",
         delISX, delISY, delBTX, delBTY);
       if (mMSAdjustAstig) {
@@ -279,7 +280,8 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
         delBTY = comaVsIS->astigMat.ypx * transISX + comaVsIS->astigMat.ypy * transISY;
         mCenterAstigX = mBaseAstigX + delBTX;
         mCenterAstigY = mBaseAstigY + delBTY;
-        mWinApp->mAutoTuning->BacklashedStigmator(mCenterAstigX, mCenterAstigY, true);
+        mWinApp->mAutoTuning->BacklashedStigmator(mCenterAstigX, mCenterAstigY, 
+          mScope->GetAdjustForISSkipBacklash() <= 0);
         str2.Format("  setting stig  %.3f  %.3f", delBTX, delBTY);
         str += str2;
       }
@@ -433,6 +435,7 @@ void CParticleTasks::SetUpMultiShotShift(int shotIndex, int holeIndex, BOOL queu
   int ring = 0, indBase = 0;
   CString str, str2;
   BOOL debug = GetDebugOutput('1');
+  bool doBacklash = mScope->GetAdjustForISSkipBacklash() <= 0;
   int BTdelay;
   ComaVsISCalib *comaVsIS = mWinApp->mAutoTuning->GetComaVsIScal();
 
@@ -501,10 +504,10 @@ void CParticleTasks::SetUpMultiShotShift(int shotIndex, int holeIndex, BOOL queu
     mCamera->QueueImageShift(ISX, ISY, B3DNINT(1000. * delay));
     if (mMSAdjustBeamTilt)
       mCamera->QueueBeamTilt(mCenterBeamTiltX + delBTX, mCenterBeamTiltY + delBTY, 
-      BTdelay);
+        doBacklash ? BTdelay : 0);
     if (mMSAdjustAstig)
       mCamera->QueueStigmator(mCenterAstigX + delAstigX, mCenterAstigY + delAstigY,
-        BTdelay);
+        doBacklash ? BTdelay : 0);
     if (mMSDefocusTanFac)
       mCamera->QueueDefocus(mMSBaseDefocus + delFocus);
   } else {
@@ -512,10 +515,10 @@ void CParticleTasks::SetUpMultiShotShift(int shotIndex, int holeIndex, BOOL queu
     mShiftManager->SetISTimeOut(delay);
     if (mMSAdjustBeamTilt)
       mWinApp->mAutoTuning->BacklashedBeamTilt(mCenterBeamTiltX + delBTX,
-        mCenterBeamTiltY + delBTY, true);
+        mCenterBeamTiltY + delBTY, doBacklash);
     if (mMSAdjustAstig)
       mWinApp->mAutoTuning->BacklashedStigmator(mCenterAstigX + delAstigX,
-        mCenterAstigY + delAstigY, true);
+        mCenterAstigY + delAstigY, doBacklash);
     if (mMSDefocusTanFac)
       mScope->SetDefocus(mMSBaseDefocus + delFocus);
   }
@@ -554,7 +557,7 @@ int CParticleTasks::StartOneShotOfMulti(void)
   if (earlyRet && mRecConSet->alignFrames && mRecConSet->useFrameAlign == 1)
     mRecConSet->alignFrames = 0;
   if (mMSTestRun & MULTI_TEST_COMA) {
-    mWinApp->mAutoTuning->CtfBasedAstigmatismComa(1, 0, 1, 1);
+    mWinApp->mAutoTuning->CtfBasedAstigmatismComa(1, false, 1, true, false);
   } else if (mMSTestRun && mWinApp->Montaging()) {
     mWinApp->mMontageController->StartMontage(MONT_NOT_TRIAL, false);
   } else {
