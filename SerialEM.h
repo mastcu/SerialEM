@@ -367,6 +367,7 @@ void DLL_IM_EX SEMGetJeolStructures(JeolStateData **jsd, int **lastState,
 void DLL_IM_EX SEMSetJeolStateMag(int magIndex, BOOL needMutex);
 void SetNumFEIChannels(int inval);
 double DLL_IM_EX SEMSecondsSinceStart();
+void DLL_IM_EX SEMSetFunctionCalled(const char *name, const char *descrip = NULL);
 
 class DLL_IM_EX CSerialEMApp : public CWinApp
 {

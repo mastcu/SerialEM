@@ -124,6 +124,7 @@ static CString sBuildDate;
 static CString sBuildTime;
 static int sBuildDayStamp;
 static CString sAboutVersion;
+static CString sFunctionCalled = "";
 
 CComModule _Module;
 
@@ -1600,12 +1601,17 @@ static LONG WINAPI SEMExceptionFilter(struct _EXCEPTION_POINTERS* ExceptionInfo)
       EXCEPTION_CONTINUE_SEARCH);
   try {
     func = winApp->mCamera->GetNewFunctionCalled();
-    if (!func.IsEmpty())
-      message = "SerialEM is crashing trying to call\r\n" + func + 
-      "\r\nin its plugin to DigitalMicrograph.\r\n\r\n"
-      "You need to upgrade the plugin to a version with this function,\r\n"
-      "as well as one or two \"proxy-stub\" dlls (with \"ps\" in their names)";
-    else {
+    if (!func.IsEmpty()) {
+      message = "SerialEM is crashing trying to call\r\n" + func +
+        "\r\nin its plugin to DigitalMicrograph.\r\n\r\n"
+        "You need to upgrade the plugin to a version with this function,\r\n"
+        "as well as one or two \"proxy-stub\" dlls (with \"ps\" in their names)";
+    } else if (!sFunctionCalled.IsEmpty()) {
+      message = "SerialEM is crashing trying to call\r\n" + sFunctionCalled +
+      "\r\nwhich may mean that function does not exist in\r\n"
+      "the version of the object being called.\r\n\r\n";
+
+    } else {
       message.Format("%s is crashing due to an unhandled exception\r\n(Exception "
         "code 0x%x, address 0x%x, SEMTrace is 0x%x)", startInd > 0 ?
         (LPCTSTR)winApp->mStartupMessage.Left(startInd) : "SerialEM",
@@ -2732,6 +2738,13 @@ int SEMThreeChoiceBox(CString message, CString yesText, CString noText,
   return tsc->TSMessageBox(message, type, terminate, retval);
 }
 
+// Register the name of a function being called in case of a crash
+void SEMSetFunctionCalled(const char *name, const char *descrip)
+{
+  sFunctionCalled = name;
+  if (!sFunctionCalled.IsEmpty() && descrip)
+    sFunctionCalled = sFunctionCalled + " " + descrip;
+}
 
 
 // Handy trace routine to log window, can be called from threads
