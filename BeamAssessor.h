@@ -127,6 +127,7 @@ class CBeamAssessor
   int *GetC2Apertures(void) {return &mC2Apertures[0];};
   GetSetMember(BOOL, FavorMagChanges);
   float *GetBSCalAlphaFactors() { return &mBSCalAlphaFactors[0];};
+  bool CalibratingIAlimits() { return mCalIAlimitSpot > 0; };
   CBeamAssessor();
   virtual ~CBeamAssessor();
 
@@ -237,6 +238,13 @@ class CBeamAssessor
   int mSpotCalAperture[4];
   int mNumExpectedCals;   // Number of non-empty calibrations expected to exist
   BOOL mSaveUseK3CDS;     // Saved value to avoid CDS mode for calibrating
+  int mCalIAlimitSpot;    // Current spot size if calibrating IA limits
+  int mCalIAfirstProbe;   // Saved spot size and probe mode and IA
+  int mCalIAspotSave;
+  double mCalIAsavedIA;
+  float mCalIAtestValue;  // Extreme value to test limit with
+  float mCalIAlowLimits[MAX_SPOT_SIZE + 1][2];    // Values accumulated diring routine
+  float mCalIAhighLimits[MAX_SPOT_SIZE + 1][2];
 
 public:
   void CalibrateCrossover(void);
@@ -252,6 +260,13 @@ public:
   void ScaleTablesForAperture(int currentAp, bool fromCurrent);
   int RequestApertureSize(void);
   void InitialSetupForAperture(void);
+  void CalibrateIllumAreaLimits(void);
+  void CalIllumAreaNextTask(void);
+  void StopCalIllumAreaLimits();
+  void CalIllumAreaCleanup(int error);
+  void ConvertSettingsForFirstIALimitCal(bool skipLDcopy);
+  void ConvertIntensityForIACal(double &intensity, int spot, int probe);
+  void ConvertIntensityForIACal(float &intensity, int spot, int probe);
   void CalibrateAlphaBeamShifts(void);
   void CalibrateSpotBeamShifts(void);
   int SetAndCheckSpotSize(int newSize, BOOL normalize = FALSE);

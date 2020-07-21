@@ -220,7 +220,7 @@ class DLL_IM_EX CEMscope
   void Release();
   void StartUpdate();
   BOOL GetInitialized();
-  BOOL SetSpotSize(int inIndex, BOOL normalize = false);
+  BOOL SetSpotSize(int inIndex, int normalize = 0);
   void SetLowDoseDownArea(int inArea);
   GetMember(int, LowDoseDownArea);
   void GotoLowDoseArea(int inArea);
@@ -236,8 +236,8 @@ class DLL_IM_EX CEMscope
   double GetIntensity();
   double GetIlluminatedArea();
   double FastIntensity();
-  BOOL SetIntensity(double inVal);
-  BOOL DelayedSetIntensity(double inVal, DWORD startTime);
+  BOOL SetIntensity(double inVal, int spot = -1, int probe = -1);
+  BOOL DelayedSetIntensity(double inVal, DWORD startTime, int spot = -1, int probe = -1);
   BOOL SetIlluminatedArea(double inVal);
   double GetImageDistanceOffset();
   BOOL SetImageDistanceOffset(double inVal);
@@ -347,6 +347,8 @@ class DLL_IM_EX CEMscope
   double *GetSpotBeamShifts(){return &mSpotBeamShifts[0][0][0];};
   float *GetAlphaBeamShifts(){return &mAlphaBeamShifts[0][0];};
   float *GetAlphaBeamTilts(){return &mAlphaBeamTilts[0][0];};
+  float *GetCalLowIllumAreaLim() { return &mCalLowIllumAreaLim[0][0]; };
+  float *GetCalHighIllumAreaLim() { return &mCalHighIllumAreaLim[0][0]; };
   GetSetMember(int, NumAlphaBeamShifts);
   GetSetMember(int, NumAlphaBeamTilts);
   GetSetMember(BOOL, AdjustFocusForProbe);
@@ -669,6 +671,8 @@ private:
   float mIllumAreaHighLimit;
   float mIllumAreaLowMapTo;   // Values that lower and upper limits map to
   float mIllumAreaHighMapTo;
+  float mCalLowIllumAreaLim[MAX_SPOT_SIZE + 1][4];   // Calibrated values, nana-micro
+  float mCalHighIllumAreaLim[MAX_SPOT_SIZE + 1][4];  // Current in cols 0-1, original 2-3
   int mNeutralIndex;          // Index to neutral values (0 = nonGIF, 1 = GIF)
   BOOL mSkipNextBeamShift;    // Flag to skip shifting beam on next IS change
   bool mDoingLongOperation;   // Flag that any long operation is active
@@ -808,9 +812,10 @@ public:
   void SetValidXYbacklash(StageMoveInfo * info);
   bool GetValidXYbacklash(double stageX, double stageY, float & backX, float & backY);
   bool StageIsAtSamePos(double stageX, double stageY, float requestedX, float requestedY);
-  double IllumAreaToIntensity(double illum);
-  double IntensityToIllumArea(double intensity);
-  double IntensityAfterApertureChange(double intensity, int oldAper, int newAper);
+  double IllumAreaToIntensity(double illum, int spot = -1, int probe = -1);
+  double IntensityToIllumArea(double intensity, int spot = -1, int probe = -1);
+  bool GetAnyIllumAreaLimits(int spot, int probe, float &lowLimit, float &highLimit);
+  double IntensityAfterApertureChange(double intensity, int oldAper, int newAper, int spot = -1, int probe = -1);
   bool AreDewarsFilling(int & busy);
   bool GetDewarsRemainingTime(int & time);
   bool GetRefrigerantLevel(int which, double & level);

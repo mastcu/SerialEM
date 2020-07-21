@@ -79,7 +79,8 @@ enum Tasks {TASK_NAVIGATOR_ACQUIRE, TASK_DISTORTION_STAGEPAIR, TASK_CAL_BEAMSHIF
   TASK_CAL_ASTIG, TASK_FIX_ASTIG, TASK_COMA_FREE, TASK_ZEMLIN, TASK_MULTI_SHOT,
   TASK_GAIN_REF, TASK_ALIGN_DE_FRAMES, TASK_START_NAV_ACQ, TASK_CTF_BASED, 
   TASK_CAL_COMA_VS_IS, TASK_REMOTE_CTRL, TASK_MOVE_APERTURE, TASK_WAIT_FOR_DRIFT,
-  TASK_SET_CAMERA_NUM, TASK_CONDITION_VPP, TASK_FIND_HOLES, TASK_REFINE_BS_CAL
+  TASK_SET_CAMERA_NUM, TASK_CONDITION_VPP, TASK_FIND_HOLES, TASK_REFINE_BS_CAL,
+  TASK_CAL_IA_LIMITS
 };
 
 enum CalTypes {CAL_DONE_IS = 0, CAL_DONE_STAGE, CAL_DONE_FOCUS, CAL_DONE_BEAM, 
@@ -545,6 +546,7 @@ public:
   GetSetMember(BOOL, AllowCameraInSTEMmode);
   GetSetMember(int, DoseLifetimeHours);
   GetSetMember(int, AddDPItoSnapshots);
+  GetSetMember(BOOL, SettingsFixedForIACal);
 
   HitachiParams *GetHitachiParams() {return &mHitachiParams;};
 
@@ -792,6 +794,7 @@ private:
   BOOL mAllowCameraInSTEMmode;  // Allow a true camera to be used in STEM mode
   int mDoseLifetimeHours;       // Validity of electron dose calibration in hours
   int mAddDPItoSnapshots;       // 0 not to, 1 to use true pixel, > 1 for value to use
+  BOOL mSettingsFixedForIACal;  // Flag that settings have been converted for IA limit cal
 
 public:
   void UpdateAllEditers(void);

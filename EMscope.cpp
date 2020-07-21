@@ -165,7 +165,7 @@ ScopePluginFuncs *CEMscope::mPlugFuncs;
 
 CEMscope::CEMscope()
 {
-  int i;
+  int i, j;
   SEMBuildTime(__DATE__, __TIME__);
   sInitialized = false;
   vFalse = new _variant_t(false);
@@ -245,6 +245,8 @@ CEMscope::CEMscope()
   for (i = 0; i <= MAX_SPOT_SIZE; i++) {
     mC2SpotOffset[i][0] = mC2SpotOffset[i][1] = 0.; 
     mCrossovers[i][0] = mCrossovers[i][1] = 0.;
+    for (j = 0; j < 4; j++)
+      mCalLowIllumAreaLim[i][j] = mCalHighIllumAreaLim[i][j] = 0.;
   }
   mNumRegularCamLens = -1;
   mNumLADCamLens = -1;
@@ -4863,7 +4865,7 @@ void CEMscope::GotoLowDoseArea(int newArea)
         ldArea->intensity && ldParams[0].intensity) {
 
         SetSpotSize(ldParams[0].spotSize);
-        SetIntensity(ldParams[0].intensity);
+        SetIntensity(ldParams[0].intensity, ldParams[0].spotSize, ldParams[0].probeMode);
         if (mLDBeamNormDelay)
           Sleep(mLDBeamNormDelay);
       }
@@ -5045,7 +5047,7 @@ void CEMscope::GotoLowDoseArea(int newArea)
       manage = true;
     }
     if (intensity)
-      DelayedSetIntensity(intensity, magTime);
+      DelayedSetIntensity(intensity, magTime, ldArea->spotSize, ldArea->probeMode);
     if (mWinApp->mAutocenDlg)
       mWinApp->mAutocenDlg->ManageLDtrackText(manage);
   } else if (!STEMmode)
@@ -5396,8 +5398,9 @@ double CEMscope::FastIntensity()
   FAST_GET(double, GetIntensity);
 }
 
-// Set the intensity (C2) value
-BOOL CEMscope::SetIntensity(double inVal)
+// Set the intensity (C2) value.  Spot and probe are optional and needed for scaling
+// illuminated if the limits are calibrated: pass spot if possible to avoid a Get
+BOOL CEMscope::SetIntensity(double inVal, int spot, int probe)
 {
   BOOL result = true;
 
@@ -5405,7 +5408,7 @@ BOOL CEMscope::SetIntensity(double inVal)
     return false;
 
   if (mUseIllumAreaForC2)
-    return SetIlluminatedArea(IntensityToIllumArea(inVal));
+    return SetIlluminatedArea(IntensityToIllumArea(inVal, spot, probe));
 
   ScopeMutexAcquire("SetIntensity", true);
 
@@ -5420,12 +5423,12 @@ BOOL CEMscope::SetIntensity(double inVal)
   return result;
 }
 
-BOOL CEMscope::DelayedSetIntensity(double inVal, DWORD startTime)
+BOOL CEMscope::DelayedSetIntensity(double inVal, DWORD startTime, int spot, int probe)
 {
   double elapsed = SEMTickInterval((double)startTime);
   if (elapsed < mMagChgIntensityDelay - 1.)
     Sleep((DWORD)(mMagChgIntensityDelay - elapsed));
-  return SetIntensity(inVal);
+  return SetIntensity(inVal, spot, probe);
 }
 
 double CEMscope::GetC2Percent(int spot, double intensity, int probe)
@@ -5433,7 +5436,7 @@ double CEMscope::GetC2Percent(int spot, double intensity, int probe)
   if (probe < 0 || probe > 1)
     probe = mProbeMode;
   if (mUseIllumAreaForC2)
-    return 100. * IntensityToIllumArea(intensity);
+    return 100. * IntensityToIllumArea(intensity, spot, probe);
   return 100. * (intensity * mC2IntensityFactor[probe] + mC2SpotOffset[spot][probe]);
 }
 
@@ -5495,29 +5498,56 @@ BOOL CEMscope::SetIlluminatedArea(double inVal)
 }
 
 // Functions to get back and forth between illuminated area and internal intensity
-double CEMscope::IllumAreaToIntensity(double illum)
+double CEMscope::IllumAreaToIntensity(double illum, int spot, int probe)
 {
-  if (mIllumAreaHighLimit > mIllumAreaLowLimit)
-    return (illum - mIllumAreaLowLimit) * (mIllumAreaHighMapTo - 
-    mIllumAreaLowMapTo) / (mIllumAreaHighLimit - mIllumAreaLowLimit) + 
-    mIllumAreaLowMapTo;
+  float lowLimit, highLimit;
+  if (GetAnyIllumAreaLimits(spot, probe, lowLimit, highLimit))
+    return (illum - lowLimit) * (mIllumAreaHighMapTo - mIllumAreaLowMapTo) / (
+      highLimit - lowLimit) + mIllumAreaLowMapTo;
   return illum;
 }
 
-double CEMscope::IntensityToIllumArea(double intensity)
+double CEMscope::IntensityToIllumArea(double intensity, int spot, int probe)
 {
-  if (mIllumAreaHighLimit > mIllumAreaLowLimit)
-    return (intensity - mIllumAreaLowMapTo) * (mIllumAreaHighLimit - mIllumAreaLowLimit) /
-      (mIllumAreaHighMapTo - mIllumAreaLowMapTo) + mIllumAreaLowLimit;
+  float lowLimit, highLimit;
+  if (GetAnyIllumAreaLimits(spot, probe, lowLimit, highLimit))
+    return (intensity - mIllumAreaLowMapTo) * (highLimit - lowLimit) /
+      (mIllumAreaHighMapTo - mIllumAreaLowMapTo) + lowLimit;
   return intensity;
 }
 
+// Return illuminated area limits either from the calibration at the given spot and
+// probe or from the property, return false if none
+bool CEMscope::GetAnyIllumAreaLimits(int spot, int probe, float &lowLimit, 
+  float &highLimit)
+{
+  if (mCalHighIllumAreaLim[1][1] > mCalLowIllumAreaLim[1][1]) {
+    if (spot < 0)
+      spot = GetSpotSize();
+    if (probe < 0)
+      probe = mProbeMode;
+    if (mCalHighIllumAreaLim[spot][probe] > mCalLowIllumAreaLim[spot][probe]) {
+      lowLimit = mCalLowIllumAreaLim[spot][probe];
+      highLimit = mCalHighIllumAreaLim[spot][probe];
+      return true;
+    }
+  }
+  if (mIllumAreaHighLimit > mIllumAreaLowLimit) {
+    lowLimit = mIllumAreaLowLimit;
+    highLimit = mIllumAreaHighLimit;
+    return true;
+  }
+  return false;
+}
+
 // Convert an intensity if there is a known change in aperture
-double CEMscope::IntensityAfterApertureChange(double intensity, int oldAper, int newAper)
+double CEMscope::IntensityAfterApertureChange(double intensity, int oldAper, int newAper,
+  int spot, int probe)
 {
   if (!mUseIllumAreaForC2 || !oldAper || !newAper || oldAper == newAper)
     return intensity;
-  return IllumAreaToIntensity((newAper * IntensityToIllumArea(intensity)) / oldAper);
+  return IllumAreaToIntensity((newAper * IntensityToIllumArea(intensity, spot, probe)) / 
+    oldAper, spot, probe);
 }
 
 // Get the C3 - Image plane distance offset on Titan, return -999 for error
@@ -5586,8 +5616,9 @@ int CEMscope::FastSpotSize()
   FAST_GET(int, GetSpotSize);
 }
 
-// Set the spot size with optional normalization
-BOOL CEMscope::SetSpotSize(int inIndex, BOOL normalize)
+// Set the spot size with optional normalization (> 0) or preventation of 
+// autonormalization (< 0)
+BOOL CEMscope::SetSpotSize(int inIndex, int normalize)
 {
   BOOL result = true;
   int curSpot = -1;
@@ -5616,7 +5647,7 @@ BOOL CEMscope::SetSpotSize(int inIndex, BOOL normalize)
   try {
     unblankAfter = BlankTransientIfNeeded(routine);
      
-    // Change the spot size.  If normalization requested, disable autonorm,
+    // Change the spot size.  If normalization requested (or forbidden), disable autonorm,
     // then later normalize, and set normalization time to give some delay
     if (normalize)
       AUTONORMALIZE_SET(*vFalse);
@@ -5658,12 +5689,15 @@ BOOL CEMscope::SetSpotSize(int inIndex, BOOL normalize)
     }
 
     // Then normalize if selected
-    if (normalize) {
+    if (normalize > 0) {
       if (mPlugFuncs->NormalizeLens)
         mPlugFuncs->NormalizeLens(nmSpotsize);
-      AUTONORMALIZE_SET(*vTrue);
       mLastNormalization = GetTickCount();
     }
+
+    // Re-enable autonormalization
+    if (normalize)
+      AUTONORMALIZE_SET(*vTrue);
     UnblankAfterTransient(unblankAfter, routine);
   }
   catch (_com_error E) {

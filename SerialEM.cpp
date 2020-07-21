@@ -2205,6 +2205,8 @@ BOOL CSerialEMApp::CheckIdleTasks()
           mBeamAssessor->CalIntensityImage(idc->param);
         else if (idc->source == TASK_CAL_SPOT_INTENSITY)
           mBeamAssessor->SpotCalImage(idc->param);
+        else if (idc->source == TASK_CAL_IA_LIMITS)
+          mBeamAssessor->CalIllumAreaNextTask();
         else if (idc->source == TASK_RESET_REALIGN)
           mComplexTasks->RSRANextTask(idc->param);
         else if (idc->source == TASK_WALKUP)
@@ -2509,6 +2511,8 @@ void CSerialEMApp::ErrorOccurred(int error)
     mBeamAssessor->StopShiftCalibration();
   if (mBeamAssessor->CalibratingSpotIntensity())
     mBeamAssessor->StopSpotCalibration();
+  if (mBeamAssessor->CalibratingIAlimits())
+    mBeamAssessor->StopCalIllumAreaLimits();
   if (mFilterTasks->CalibratingMagShift())
     mFilterTasks->StopCalMagShift();
   if (mFilterTasks->RefiningZLP())
@@ -3018,7 +3022,7 @@ BOOL CSerialEMApp::DoingTasks()
   return (DoingImagingTasks() ||
     mMacroProcessor->DoingMacro() ||
     mShiftManager->ResettingIS() ||
-    mScope->CalibratingNeutralIS() ||
+    mScope->CalibratingNeutralIS() || mBeamAssessor->CalibratingIAlimits() ||
     mScope->GetDoingLongOperation() || mMultiTSTasks->DoingBidirCopy() > 0 ||
     (mNavigator && mNavigator->GetLoadingMap()) ||
     (mShowRemoteControl && mRemoteControl.GetDoingTask()) ||

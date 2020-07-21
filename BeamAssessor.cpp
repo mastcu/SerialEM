@@ -19,6 +19,8 @@
 #include "ShiftManager.h"
 #include "CameraController.h"
 #include "ComplexTasks.h"
+#include "MultiTSTasks.h"
+#include "NavHelper.h"
 #include "Utilities\KGetOne.h"
 #include "Shared\b3dutil.h"
 
@@ -91,6 +93,8 @@ CBeamAssessor::CBeamAssessor()
   mNumSpotTables = 0;
   mCurrentAperture = 0;
   mNumC2Apertures = 0;
+  mCalIAlimitSpot = -1;
+  mCalIAtestValue = 10.f;
   for (j = 0; j < 4; j++)
     mSpotCalAperture[j] = 0;
   mCrossCalAperture[0] = mCrossCalAperture[1] = 0;
@@ -515,7 +519,7 @@ void CBeamAssessor::CalIntensityImage(int param)
       ratio = mScope->GetIntensity();
       SEMTrace('c', "Intensity after mag change %.5f", ratio);
       if (fabs(ratio - mIntensities[mNumIntensities - 1]) > mTestIncrement)
-        mScope->SetIntensity(mIntensities[mNumIntensities - 1]);
+        mScope->SetIntensity(mIntensities[mNumIntensities - 1], mCalSpotSize);
     } else
       mExposure *= 4.;
     if (mExposure > mUseMaxExposure)
@@ -630,7 +634,7 @@ void CBeamAssessor::CalIntensityCCDCleanup(int error)
     mWinApp->AppendToLog("WARNING: " + report);
   }
   mFreeIndex += mCalTable->numIntensities;
-  mScope->SetIntensity(mStartIntensity);
+  mScope->SetIntensity(mStartIntensity, mCalSpotSize);
   mScope->SetMagIndex(mCalMagInd);
   if (!HitachiScope)
     mScope->SetIntensityZoom(mUsersIntensityZoom);
@@ -740,11 +744,11 @@ BOOL CBeamAssessor::SetAndTestIntensity()
   if (mNumIntensities > 1 && mLastNumIntensities == mNumIntensities &&
     fabs(mLastIncrement) > fabs(1.000001 * mTestIncrement)) {
       SEMTrace('c', "Backing up to %.5f", mIntensities[mNumIntensities - 1]);
-      mScope->SetIntensity(mIntensities[mNumIntensities - 1]);
+      mScope->SetIntensity(mIntensities[mNumIntensities - 1], mCalSpotSize);
       Sleep(B3DNINT(0.25 * B3DMAX(mPostSettingDelay, 1000)));
   }
 
-  mScope->SetIntensity(mTestIntensity);
+  mScope->SetIntensity(mTestIntensity, mCalSpotSize);
   delay = mPostSettingDelay - (int)(1000. * mCamParam->builtInSettling);
   if (delay > 0)
     Sleep(delay);
@@ -1480,7 +1484,7 @@ void CBeamAssessor::CalibrateElectronDose(BOOL interactive)
       == IDYES) {
       message.Format("Dose rate calculated to be %.2f electrons/square Angstrom/sec "
         "for spot %d, %s %.2f%s", dtp->dose, spotSize,
-        mScope->GetC2Name(), mScope->GetC2Percent(spotSize, intensity), 
+        mScope->GetC2Name(), mScope->GetC2Percent(spotSize, intensity, probe), 
         mScope->GetC2Units());
       if (mCamera->IsDirectDetector(camParam)) {
         addon.Format("\r\n    %.2f electrons/unbinned pixel/sec", doseRate);
@@ -2112,7 +2116,7 @@ void CBeamAssessor::StopSpotCalibration()
     }
   }
   
-  mScope->SetSpotSize(mSpotCalStartSpot, true);
+  mScope->SetSpotSize(mSpotCalStartSpot, 1);
   mSpotCalIndex = 0;
   mWinApp->UpdateBufferWindows();
   mWinApp->SetStatusText(MEDIUM_PANE, "");
@@ -2241,6 +2245,11 @@ void CBeamAssessor::CalibrateCrossover(void)
 // Given a known value for the current C2 aperture on a Titan, scale the illuminated areas
 // by this value from either the current value or the value at which each calibration
 // was measured and save the aperture size
+// Notice that the "current or measured aperture" for a value is not modified here except
+// for dose cal, which is saved in short-term cal along with current aperture.
+// Items are always scaled from the current aperture except on program startup, so they
+// stay valid after multiple aperture changes.  Upon writing, the values being written are
+// scaled BACK to the measured aperture from the current one
 void CBeamAssessor::ScaleTablesForAperture(int currentAp, bool fromMeasured)
 {
   BeamTable *btp;
@@ -2261,10 +2270,10 @@ void CBeamAssessor::ScaleTablesForAperture(int currentAp, bool fromMeasured)
     if (fromMeasured)
       fromAp = btp->measuredAperture;
     btp->crossover = mScope->IntensityAfterApertureChange(btp->crossover, fromAp,
-      currentAp);
+      currentAp, btp->spotSize, btp->probeMode);
     for (j = 0; j < btp->numIntensities; j++)
       btp->intensities[j] = mScope->IntensityAfterApertureChange(
-        btp->intensities[j], fromAp, currentAp);
+        btp->intensities[j], fromAp, currentAp, btp->spotSize, btp->probeMode);
     mess.Format("After scaling for an aperture size from %d to %d", fromAp, currentAp);
     if (btp->numIntensities && CheckCalForZeroIntensities(mBeamTables[i], 
       (LPCTSTR)mess, 1))
@@ -2277,14 +2286,16 @@ void CBeamAssessor::ScaleTablesForAperture(int currentAp, bool fromMeasured)
       cross = mScope->GetCrossover(spot, probe);
       if (cross)
         mScope->SetCrossover(spot, probe, mScope->IntensityAfterApertureChange(cross, 
-        fromMeasured ? mCrossCalAperture[probe] : mCurrentAperture, currentAp));
+        fromMeasured ? mCrossCalAperture[probe] : mCurrentAperture, currentAp, spot, 
+          probe));
 
       // Assign new current aperture for electron dose if old one was valid
       for (j = 0; j < 2; j++) {
         dtp = &mDoseTables[spot][j][probe];
         if (dtp->dose > 0. && dtp->currentAperture > 0) {
           mScope->IntensityAfterApertureChange(dtp->intensity, 
-            fromMeasured ? dtp->currentAperture : mCurrentAperture, currentAp);
+            fromMeasured ? dtp->currentAperture : mCurrentAperture, currentAp, spot, 
+            probe);
           dtp->currentAperture = currentAp;
         }
       }
@@ -2296,9 +2307,11 @@ void CBeamAssessor::ScaleTablesForAperture(int currentAp, bool fromMeasured)
       if (mSpotTables[i].ratio[spot]) {
         if (mSpotTables[i].crossover[spot])
           mSpotTables[i].crossover[spot] = mScope->IntensityAfterApertureChange(
-          mSpotTables[i].crossover[spot], fromAp, currentAp);
+          mSpotTables[i].crossover[spot], fromAp, currentAp, spot, 
+            mSpotTables[i].probeMode);
         mSpotTables[i].intensity[spot] = mScope->IntensityAfterApertureChange(
-          mSpotTables[i].intensity[spot], fromAp, currentAp);
+          mSpotTables[i].intensity[spot], fromAp, currentAp, spot,
+          mSpotTables[i].probeMode);
       }
     }
   }
@@ -2309,9 +2322,9 @@ void CBeamAssessor::ScaleTablesForAperture(int currentAp, bool fromMeasured)
     if (fromMeasured)
       fromAp = focCal.measuredAperture;
     focCal.intensity = mScope->IntensityAfterApertureChange(focCal.intensity, fromAp, 
-      currentAp);
+      currentAp, focCal.spot, focCal.probeMode);
     focCal.crossover = mScope->IntensityAfterApertureChange(focCal.crossover, fromAp, 
-      currentAp);
+      currentAp, focCal.spot, focCal.probeMode);
   }
   if (currentAp != mCurrentAperture)
     mWinApp->mDocWnd->SetShortTermNotSaved();
@@ -2371,6 +2384,252 @@ void CBeamAssessor::InitialSetupForAperture(void)
       "Calibration - Beam Intensity", numNotMeas);
     mWinApp->AppendToLog(mess);
   }
+}
+
+//////////////////////////////////////////////////////////////
+// CALIBRATE ILLUMINATE AREA LIMITS
+//
+// Start the calibration: get the biggest aperture in and save original values
+void CBeamAssessor::CalibrateIllumAreaLimits(void)
+{
+  if (AfxMessageBox("This procedure will measure the limits of illuminated\n"
+    "area at each spot size in both probe modes\n\n"
+    "You MUST have the largest condenser (C2) aperture in for this measurement!\n\n"
+    "Are you ready to proceed?", MB_QUESTION) == IDNO)
+    return;
+  mCalIAlimitSpot = 1;
+  mCalIAspotSave = mScope->GetSpotSize();
+  mCalIAsavedIA = mScope->GetIlluminatedArea();
+  mCalIAfirstProbe = mScope->ReadProbeMode();
+  mWinApp->UpdateBufferWindows();
+
+  // Drop the screen if necessary, otherwise go right to first spot
+  if (mScope->GetScreenPos() == spDown) {
+    CalIllumAreaNextTask();
+  } else {
+    mScope->SetScreenPos(spDown);
+    mWinApp->AddIdleTask(CEMscope::TaskScreenBusy, TASK_CAL_IA_LIMITS, 0, 60000);
+  }
+}
+
+// Next operation when calibrating illuminated area limits: 
+void CBeamAssessor::CalIllumAreaNextTask(void)
+{
+  BeamTable *btp;
+  DoseTable *dtp;
+  int probe, i, j, spot;
+  double cross;
+  float *lowLimits = mScope->GetCalLowIllumAreaLim();
+  float *highLimits = mScope->GetCalHighIllumAreaLim();
+  CArray<HighFocusMagCal, HighFocusMagCal> *focusMagCals =
+    mWinApp->mShiftManager->GetFocusMagCals();
+  bool notCal = highLimits[5] <= lowLimits[5];
+
+  if (mCalIAlimitSpot <= 0)
+    return;
+
+  // Set the spot size with no normalization and set IA to large values and read back
+  mScope->SetSpotSize(mCalIAlimitSpot, -1);
+  probe = mScope->GetProbeMode();
+  mScope->SetIlluminatedArea(mCalIAtestValue);
+  mCalIAhighLimits[mCalIAlimitSpot][probe] = (float)mScope->GetIlluminatedArea();
+  mScope->SetIlluminatedArea(-mCalIAtestValue);
+  mCalIAlowLimits[mCalIAlimitSpot][probe] = (float)mScope->GetIlluminatedArea();
+  PrintfToLog("%s %d: %.4f %.4f", probe ? "uP" : "nP", mCalIAlimitSpot, 
+    mCalIAlowLimits[mCalIAlimitSpot][probe], mCalIAhighLimits[mCalIAlimitSpot][probe]);
+  mCalIAlimitSpot++;
+  if (mCalIAlimitSpot > mScope->GetNumSpotSizes()) {
+    if (probe != mCalIAfirstProbe) {
+
+      // Finish up
+      // Copy the new calibrations into place
+      for (spot = 1; spot <= mScope->GetNumSpotSizes(); spot++) {
+        lowLimits[4 * spot] = mCalIAlowLimits[spot][0];
+        highLimits[4 * spot] = mCalIAhighLimits[spot][0];
+        lowLimits[4 * spot + 1] = mCalIAlowLimits[spot][1];
+        highLimits[4 * spot + 1] = mCalIAhighLimits[spot][1];
+      }
+
+      // If they have not been calibrated before, have to convert various intensities
+      if (notCal) {
+
+        // AND store these as the first-time cals
+        for (spot = 1; spot <= mScope->GetNumSpotSizes(); spot++) {
+          lowLimits[4 * spot + 2] = mCalIAlowLimits[spot][0];
+          highLimits[4 * spot + 2] = mCalIAhighLimits[spot][0];
+          lowLimits[4 * spot + 3] = mCalIAlowLimits[spot][1];
+          highLimits[4 * spot + 3] = mCalIAhighLimits[spot][1];
+        }
+
+        // Scale beam tables
+       for (i = 0; i < mNumTables; i++) {
+          btp = &mBeamTables[i];
+          if (btp->numIntensities && CheckCalForZeroIntensities(mBeamTables[i],
+            "Before scaling for an illum area limits", 2))
+            btp->numIntensities = 0;
+          ConvertIntensityForIACal(btp->crossover, btp->spotSize, btp->probeMode);
+          for (j = 0; j < btp->numIntensities; j++)
+            ConvertIntensityForIACal(btp->intensities[j], btp->spotSize, btp->probeMode);
+        }
+
+        // scale crossovers, electron doses, and spot tables
+        for (spot = 1; spot < mScope->GetNumSpotSizes(); spot++) {
+          for (probe = 0; probe < 2; probe++) {
+            cross = mScope->GetCrossover(spot, probe);
+            if (cross) {
+              ConvertIntensityForIACal(cross, spot, probe);
+              mScope->SetCrossover(spot, probe, cross);
+            }
+
+            // Assign new current aperture for electron dose if old one was valid
+            for (j = 0; j < 2; j++) {
+              dtp = &mDoseTables[spot][j][probe];
+              if (dtp->dose > 0.)
+                ConvertIntensityForIACal(dtp->intensity, spot, probe);
+            }
+          }
+
+          for (i = 0; i < mNumSpotTables; i++) {
+            if (mSpotTables[i].ratio[spot]) {
+              if (mSpotTables[i].crossover[spot])
+                ConvertIntensityForIACal(mSpotTables[i].crossover[spot], spot, probe);
+              ConvertIntensityForIACal(mSpotTables[i].intensity[spot], spot, probe);
+            }
+          }
+
+
+        }
+
+        // Scale high focus mag cals
+        for (i = 0; i < focusMagCals->GetSize(); i++) {
+          HighFocusMagCal &focCal = focusMagCals->ElementAt(i);
+          ConvertIntensityForIACal(focCal.intensity, focCal.spot, focCal.probeMode);
+          ConvertIntensityForIACal(focCal.crossover, focCal.spot, focCal.probeMode);
+        }
+
+        ConvertSettingsForFirstIALimitCal(false);
+      }
+
+      mWinApp->SetCalibrationsNotSaved(true);
+      StopCalIllumAreaLimits();
+      return;
+    }
+
+    // Otherwise toggle the probe mode and start over
+    mScope->SetProbeMode(1 - probe);
+    mCalIAlimitSpot = 1;
+  }
+  mWinApp->AddIdleTask(TASK_CAL_IA_LIMITS, 0, 0);
+}
+
+// Stop the procedure: restore initial values
+void CBeamAssessor::StopCalIllumAreaLimits()
+{
+  if (mCalIAlimitSpot <= 0)
+    return;
+  mScope->SetProbeMode(mCalIAfirstProbe);
+  mScope->SetSpotSize(mCalIAspotSave);
+  mScope->SetIlluminatedArea(mCalIAsavedIA);
+  mCalIAlimitSpot = -1;
+  mWinApp->UpdateBufferWindows();
+}
+
+void CBeamAssessor::CalIllumAreaCleanup(int error)
+{
+  if (error == IDLE_TIMEOUT_ERROR)
+    AfxMessageBox(_T("Time out trying to drop screen before calibrating IA limits"),
+      MB_EXCLAME);
+  StopCalIllumAreaLimits();
+  mWinApp->ErrorOccurred(error);
+}
+
+// Scale various intensities in the user settings.  This is done both to the current
+// settings when the first cal is done, and the first time settings that haven't been 
+// scaled are read in.
+void CBeamAssessor::ConvertSettingsForFirstIALimitCal(bool skipLDcopy)
+{
+  int i, j;
+  LowDoseParams *allLDparams = mWinApp->GetCamLowDoseParams();
+  LowDoseParams *ldParams;
+  CArray<StateParams *, StateParams *> *stateParams =
+    mWinApp->mNavHelper->GetStateArray();
+  StateParams *state;
+  CookParams *cookParams = mWinApp->GetCookParams();
+  CArray<AutocenParams *, AutocenParams *> *autocenArray =
+    mWinApp->mMultiTSTasks->GetAutocenParams();
+  AutocenParams *acParams;
+  VppConditionParams *vppParams = mWinApp->mMultiTSTasks->GetVppConditionParams();
+
+  // Low dose parameters
+  mWinApp->SetDebugOutput('1');
+  if (!skipLDcopy)
+    mWinApp->CopyCurrentToCameraLDP();
+  for (j = 0; j < 3; j++) {
+    for (i = 0; i < MAX_LOWDOSE_SETS; i++) {
+      ldParams = allLDparams + j * MAX_LOWDOSE_SETS + i;
+      if ((ldParams->magIndex > 0 || ldParams->camLenIndex > 0) &&
+        ldParams->intensity >= 0)
+        ConvertIntensityForIACal(ldParams->intensity, ldParams->spotSize,
+          ldParams->probeMode);
+    }
+  }
+  if (!skipLDcopy)
+    mWinApp->CopyCameraToCurrentLDP();
+
+  // State parameters
+  for (i = 0; i < (int)stateParams->GetSize(); i++) {
+    state = stateParams->GetAt(i);
+    ConvertIntensityForIACal(state->intensity, state->spotSize, state->probeMode);
+  }
+
+  // Cooker params FWIW
+  if (cookParams->magIndex > 0 && cookParams->intensity > 0)
+    ConvertIntensityForIACal(cookParams->intensity, cookParams->spotSize, 1);
+
+  // Autocenter params
+  for (i = 0; i < (int)autocenArray->GetSize(); i++) {
+    acParams = autocenArray->GetAt(i);
+    ConvertIntensityForIACal(acParams->intensity, acParams->spotSize,
+      acParams->probeMode);
+  }
+
+  // VPP conditioning
+  if (vppParams->magIndex > 0 && vppParams->intensity > 0)
+    ConvertIntensityForIACal(vppParams->intensity, vppParams->spotSize,
+      vppParams->probeMode);
+
+  mWinApp->SetSettingsFixedForIACal(true);
+}
+
+// Convert one value given its spot size and probe mode for first-time cal
+// The conversion cannot use the routines in 
+void CBeamAssessor::ConvertIntensityForIACal(double &intensity, int spot, int probe)
+{
+  float lowMapTo, highMapTo, lowOld, highOld;
+  double illum;
+  float *lowCal = mScope->GetCalLowIllumAreaLim();
+  float *highCal = mScope->GetCalHighIllumAreaLim();
+  int index = 4 * spot + probe + 2;
+  mScope->GetIllumAreaMapTo(lowMapTo, highMapTo);
+  mScope->GetIllumAreaLimits(lowOld, highOld);
+
+  // Convert intensity to illuminated area with old fixed limits
+  illum = (intensity - lowMapTo) * (highOld - lowOld) / (highMapTo - lowMapTo) + lowOld;
+  //SEMTrace('1',"i %f s %d p %d old %f %f map %f %f  illum %f", intensity, spot, probe, 
+  //  lowOld, highOld, lowMapTo, highMapTo, illum);
+
+  // Convert illum to intensity with the first time calibration limits, columns 2 and 3
+  intensity = (illum - lowCal[index]) * (highMapTo - lowMapTo) /
+    (highCal[index] - lowCal[index]) + lowMapTo;
+  //SEMTrace('1', "cal ind %d  %f %f int %f", index, lowCal[index], highCal[index], 
+  //  intensity);
+}
+
+void CBeamAssessor::ConvertIntensityForIACal(float &intensity, int spot, int probe)
+{
+  double dval = intensity;
+  ConvertIntensityForIACal(dval, spot, probe);
+  intensity = (float)dval;
 }
 
 // Calibrates the beam shift and tilt that occur on alpha changes

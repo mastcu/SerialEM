@@ -385,6 +385,8 @@ public:
   afx_msg void OnUpdateCameraReturnFloatImage(CCmdUI *pCmdUI);
   afx_msg void OnBeamspotRefineBeamShift();
   afx_msg void OnUpdateBeamspotRefineBeamShift(CCmdUI *pCmdUI);
+  afx_msg void OnBeamspotIlluminatedAreaLimits();
+  afx_msg void OnUpdateIlluminatedAreaLimits(CCmdUI *pCmdUI);
 };
 
 /////////////////////////////////////////////////////////////////////////////

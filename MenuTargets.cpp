@@ -470,6 +470,8 @@ BEGIN_MESSAGE_MAP(CMenuTargets, CCmdTarget)
     ON_UPDATE_COMMAND_UI(ID_CAMERA_RETURNFLOATIMAGE, OnUpdateCameraReturnFloatImage)
     ON_COMMAND(ID_BEAMSPOT_REFINEBEAMSHIFT, OnBeamspotRefineBeamShift)
     ON_UPDATE_COMMAND_UI(ID_BEAMSPOT_REFINEBEAMSHIFT, OnUpdateBeamspotRefineBeamShift)
+    ON_COMMAND(ID_BEAMSPOT_ILLUMINATEDAREALIMITS, OnBeamspotIlluminatedAreaLimits)
+    ON_UPDATE_COMMAND_UI(ID_BEAMSPOT_ILLUMINATEDAREALIMITS, OnUpdateIlluminatedAreaLimits)
     END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -2961,4 +2963,16 @@ void CMenuTargets::OnBeamSpotListCalibrations()
   mShiftManager->ListBeamShiftCals();
   mWinApp->mBeamAssessor->ListIntensityCalibrations();
   mWinApp->mBeamAssessor->ListSpotCalibrations();
+}
+
+
+void CMenuTargets::OnBeamspotIlluminatedAreaLimits()
+{
+  mWinApp->mBeamAssessor->CalibrateIllumAreaLimits();
+}
+
+
+void CMenuTargets::OnUpdateIlluminatedAreaLimits(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(mScope->GetUseIllumAreaForC2() && !mWinApp->DoingTasks());
 }

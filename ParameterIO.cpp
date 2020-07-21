@@ -172,6 +172,7 @@ int CParameterIO::ReadSettings(CString strFileName)
     mWinApp->SetReopenMacroEditor(index, false);
   mWinApp->mDocWnd->SetCurScriptPackPath("");
   mWinApp->ClearAllMacros();
+  mWinApp->SetSettingsFixedForIACal(false);
 
   try {
     // Open the file for reading, verify that it is a settings file
@@ -3449,7 +3450,9 @@ int CParameterIO::ReadCalibration(CString strFileName)
   float *alphaBeamTilts = mWinApp->mScope->GetAlphaBeamTilts();
   double *spotBeamShifts = mWinApp->mScope->GetSpotBeamShifts();
   double *LMfocTab = mWinApp->mScope->GetLMFocusTable();
-  CArray<STEMFocusZTable, STEMFocusZTable> *focusZtables = 
+  float *lowIAlims = mWinApp->mScope->GetCalLowIllumAreaLim();
+  float *highIAlims = mWinApp->mScope->GetCalHighIllumAreaLim();
+  CArray<STEMFocusZTable, STEMFocusZTable> *focusZtables =
     mWinApp->mFocusManager->GetSFfocusZtables();
   CArray <AstigCalib, AstigCalib> *astigCals = mWinApp->mAutoTuning->GetAstigCals();
   AstigCalib astig;
@@ -4025,6 +4028,30 @@ int CParameterIO::ReadCalibration(CString strFileName)
         }
         gotSpotAper = true;
         
+      } else if (NAME_IS("IllumAreaLimits")) {
+        nCal = itemInt[1];
+        for (i = 1; i <= B3DMIN(nCal, MAX_SPOT_SIZE); i++) {
+          err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, MAX_TOKENS);
+          if (err)
+            break;
+          lowIAlims[i * 4] = (float)itemDbl[0];
+          highIAlims[i * 4] = (float)itemDbl[1];
+          lowIAlims[i * 4 + 1] = (float)itemDbl[2];
+          highIAlims[i * 4 + 1] = (float)itemDbl[3];
+          lowIAlims[i * 4 + 2] = (float)itemDbl[4];
+          highIAlims[i * 4 + 2] = (float)itemDbl[5];
+          lowIAlims[i * 4 + 3] = (float)itemDbl[6];
+          highIAlims[i * 4 + 3] = (float)itemDbl[7];
+        }
+        if (err > 0) {
+          if (err == 1)
+            AfxMessageBox("Error reading illuminated area limits, line\n" +
+              strLine, MB_EXCLAME);
+          retval = err;
+          break;
+        }
+
+
       } else if (NAME_IS("StandardLMFocus")) {
         index = itemInt[1];
         if (index < 1 || index >= MAX_MAGS || strItems[3].IsEmpty()) {
@@ -4092,7 +4119,9 @@ void CParameterIO::WriteCalibration(CString strFileName)
   float *alphaBeamTilts = mWinApp->mScope->GetAlphaBeamTilts();
   double *spotBeamShifts = mWinApp->mScope->GetSpotBeamShifts();
   double *LMfocTab = mWinApp->mScope->GetLMFocusTable();
-  CArray<STEMFocusZTable, STEMFocusZTable> *focusZtables = 
+  float *lowIAlims = mWinApp->mScope->GetCalLowIllumAreaLim();
+  float *highIAlims = mWinApp->mScope->GetCalHighIllumAreaLim();
+  CArray<STEMFocusZTable, STEMFocusZTable> *focusZtables =
     mWinApp->mFocusManager->GetSFfocusZtables();
   CArray <AstigCalib, AstigCalib> *astigCals = mWinApp->mAutoTuning->GetAstigCals();
   AstigCalib astig;
@@ -4151,9 +4180,11 @@ void CParameterIO::WriteCalibration(CString strFileName)
       focCal = focusMagCals->GetAt(i);
       string.Format("HighFocusMagCal %d %d %f %f %f %f %f %d\n", focCal.spot, 
         focCal.probeMode, focCal.defocus, mWinApp->mScope->IntensityAfterApertureChange(
-        focCal.intensity, curAperture, focCal.measuredAperture), focCal.scale, 
+        focCal.intensity, curAperture, focCal.measuredAperture, focCal.spot, 
+          focCal.probeMode), focCal.scale, 
         focCal.rotation, mWinApp->mScope->IntensityAfterApertureChange(
-        focCal.crossover, curAperture, focCal.measuredAperture), focCal.measuredAperture);
+        focCal.crossover, curAperture, focCal.measuredAperture, focCal.spot,
+          focCal.probeMode), focCal.measuredAperture);
       mFile->WriteString(string);
     }
 
@@ -4173,7 +4204,7 @@ void CParameterIO::WriteCalibration(CString strFileName)
         cross[probe] = mWinApp->mScope->GetCrossover(i, probe);
         if (cross[probe])
           cross[probe] = mWinApp->mScope->IntensityAfterApertureChange(cross[probe],
-          curAperture, crossCalAper[probe]);
+          curAperture, crossCalAper[probe], i, probe);
       }
       string.Format("CrossoverIntensity %d %f %f\n", i, cross[1], cross[0]);
       mFile->WriteString(string);
@@ -4261,7 +4292,7 @@ void CParameterIO::WriteCalibration(CString strFileName)
         cross[0] = btp->crossover;
         if (cross[0])
           cross[0] = mWinApp->mScope->IntensityAfterApertureChange(cross[0], curAperture, 
-            btp->measuredAperture);
+            btp->measuredAperture, btp->spotSize, btp->probeMode);
         string.Format("BeamIntensityTable %d %d %d %d %f %d %d   %d\n", 
           btp->numIntensities, btp->magIndex,
           btp->spotSize, btp->dontExtrapFlags, cross[0],
@@ -4270,7 +4301,7 @@ void CParameterIO::WriteCalibration(CString strFileName)
         nCal = 0;
         for (k = 0; k < btp->numIntensities; k++) {
           intScaled = mWinApp->mScope->IntensityAfterApertureChange(btp->intensities[k], 
-            curAperture, btp->measuredAperture);
+            curAperture, btp->measuredAperture, btp->spotSize, btp->probeMode);
           string.Format("%f %f\n", btp->currents[k], intScaled);
           mFile->WriteString(string);
           if (intScaled)
@@ -4438,9 +4469,9 @@ void CParameterIO::WriteCalibration(CString strFileName)
             cross[j] = spotTables[ind].crossover[i];
             if (cross[j])
               cross[j] = mWinApp->mScope->IntensityAfterApertureChange(cross[j], 
-              curAperture, spotCalAper[ind]);
+              curAperture, spotCalAper[ind], i, j);
             intensity[j] = mWinApp->mScope->IntensityAfterApertureChange(
-              spotTables[ind].intensity[i], curAperture, spotCalAper[ind]);
+              spotTables[ind].intensity[i], curAperture, spotCalAper[ind], i, j);
           }
           ind = indNano[k];
         }
@@ -4470,6 +4501,16 @@ void CParameterIO::WriteCalibration(CString strFileName)
         nCalN[ind++] = spotCalAper[indNano[1]];
       string.Format("SpotCalAtC2Aperture %d %d %d %d\n", nCalN[0], nCalN[1],
         nCalN[2], nCalN[3]);
+      mFile->WriteString(string);
+    }
+
+    // Write illuminated area limits
+    string.Format("IllumAreaLimits %d\n", mWinApp->mScope->GetNumSpotSizes());
+    mFile->WriteString(string);
+    for (i = 1; i <= mWinApp->mScope->GetNumSpotSizes(); i++) {
+      string.Format("%f %f %f %f %f %f %f %f\n", lowIAlims[4 * i], highIAlims[4 * i],
+        lowIAlims[4 * i + 1], highIAlims[4 * i + 1], lowIAlims[4 * i + 2], 
+        highIAlims[4 * i + 2], lowIAlims[4 * i + 3], highIAlims[4 * i + 3]);
       mFile->WriteString(string);
     }
 

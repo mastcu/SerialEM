@@ -222,6 +222,11 @@
           <TD class="style1">&nbsp;&nbsp;&nbsp; <A href="#hid_calibration_c2factor">Set C2 Factor</A></TD>
           <TD>Set scaling factors for C2 by entering the C2 readout for all spot sizes.</TD>
         </tr>
+hid_beamspot_illuminatedarealimits
+        <tr>
+          <TD class="style1">&nbsp;&nbsp;&nbsp; <A href="#hid_beamspot_illuminatedarealimits">Illuminated Area Limits</A></TD>
+          <TD>Finds limits of illuminated area for all spot sizes and both probe modes.</TD>
+        </tr>
         <TR vAlign="top">
           <TD class="style1">&nbsp;&nbsp;&nbsp; <A href="#hid_calibration_beamshift">Beam Shift</A></TD>
           <TD>Calibrate beam shift by taking pictures of a small spot.</TD>
@@ -1376,6 +1381,31 @@
         procedure will not match values shown by the scope. First be sure that you 
         have a C2 lens readout in your MUI workspace. Then activate the command and 
         type in the value shown in the C2 readout for each spot size.</P>
+      <P><B>Illuminated Area Limits command (Calibration - 
+        Beam &amp; Spot sub-menu)</B></P>
+      <P>Use this command to calibrate the limits of the illuminated area readout from 
+        the microscope at each spot size and in nanoprobe and microprobe.&nbsp; 
+        Recording these values is designed to protect the validity of calibrations 
+        involving beam intensity when the microscope alignment values that determine the 
+        relationship between underlying lens values and illuminated area readout change.&nbsp; 
+        These limits, or the single pair of limits provided by the 
+        &#39;IlluminatedAreaLimits&#39; property, determine the scaling between illuminated area 
+        and the intensities that are stored intenally.&nbsp; The first time that these 
+        limits are calibrated, the intensity values stored in various calibrations and 
+        some user settings are scaled for the change in the limits from the property 
+        value, so that these intensities will map to the same illuminated area.&nbsp; If 
+        the limits change after that and the calibration is run again, it will restore 
+        the proper mapping of values without any need to scale internal intensity 
+        values.&nbsp; This procedure is based on the assumption that such a change in 
+        the limits just reflects a change in scaling between lens values and the 
+        readout, not a change in the relationship between lens values and the actual 
+        beam size.</p>
+    <P>If you find that the illuminated area readout from the scope is off from the 
+      true beam size by enough that it needs to be fixed and this calibration has <em>
+      not</em> been done, run this calibration <em>first</em> to record the current values. 
+      Then get the readout fixed and run this calibration again.</p>
+    <P>The calibration must be run with the largest condenser aperture in because the 
+      illuminated area readout is scaled for aperture size.</p>
       <P><A name="hid_calibration_beamshift"></A><B>Beam Shift command (Calibration - 
         Beam &amp; Spot sub-menu)</B></P>
       <P>This command will calibrate beam shift so that the beam can be moved by 

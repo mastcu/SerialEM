@@ -152,6 +152,7 @@ hid_calibration_set_aperture_size	= SerialEM.chm::/html\menu_calibration.htm#hid
 hid_calibration_spotintensity		= SerialEM.chm::/html\menu_calibration.htm#hid_calibration_spotintensity
 hid_calibration_beamshift				= SerialEM.chm::/html\menu_calibration.htm#hid_calibration_beamshift
 hid_beamspot_refinebeamshift    = SerialEM.chm::/html\menu_calibration.htm#hid_beamspot_refinebeamshift
+hid_beamspot_illuminatedarealimits = SerialEM.chm::/html\menu_calibration.htm#hid_beamspot_illuminatedarealimits
 hid_calibration_electrondose		= SerialEM.chm::/html\menu_calibration.htm#hid_calibration_electrondose
 hid_calibration_purgeoldcalibs	= SerialEM.chm::/html\menu_calibration.htm#hid_calibration_purgeoldcalibs
 hid_calibration_autofocus				= SerialEM.chm::/html\menu_calibration.htm#hid_calibration_autofocus

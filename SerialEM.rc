@@ -294,6 +294,7 @@ BEGIN
             MENUITEM "&Beam Intensity",             ID_CALIBRATION_BEAMINTENSITY
             MENUITEM "&Spot Intensity",             ID_CALIBRATION_SPOTINTENSITY
             MENUITEM "Set C&2 Factor",              ID_CALIBRATION_C2FACTOR
+            MENUITEM "&Illuminated Area Limits",    ID_BEAMSPOT_ILLUMINATEDAREALIMITS
             MENUITEM SEPARATOR
             MENUITEM "B&eam Shift",                 ID_CALIBRATION_BEAMSHIFT
             MENUITEM "&Refine Beam Shift",          ID_BEAMSPOT_REFINEBEAMSHIFT
@@ -4434,6 +4435,8 @@ BEGIN
                             "Get image back in floating point, not short integers"
     ID_BEAMSPOT_REFINEBEAMSHIFT 
                             "Get more accurate beam shift calibration over longer shift"
+    ID_BEAMSPOT_ILLUMINATEDAREALIMITS 
+                            "Record limits of illuminated area for different spot sizes and probe modes"
 END
 
 STRINGTABLE
@@ -4597,9 +4600,24 @@ BEGIN
     IDC_RCENTER_AFTER       "Take a shot in the center after the off-center shots"
     IDC_RCENTER_BEFORE      "Take a shot in the center before the off-center shots"
     IDC_EDIT_SPOKE_DIST     "Distance of main ring of peripheral shots from center in microns"
-    IDC_EDIT_RING2_DIST     "Distance of second ring of peripheral shots from center in microns"
+END
+
+STRINGTABLE
+BEGIN
+    IDC_RIN_GROUPS          "Arrange points in groups with maximum radius specified in menu"
+    IDC_RFROM_FOCUS         "Make direction so that Focus area is near previous point, not next one"
+    IDC_EDIT_MAX_ERROR      "Enter the maximum error in microns between actual and predicted position"
+    IDC_BUT_CLEAR_DATA      "Remove points and clear out all memory usage"
+    IDC_BRACKET_LAST        "Try a subset of filter and threshold values around the last optimal values"
+    IDC_RON_IMAGE           "Select points on currently displayed image"
+    IDC_RIN_POLYGON         "Select points within a polygon (must be current item)"
+    IDC_RSAME_GROUP         "Select all points in the same group as the current item"
+    IDC_BUT_COMBINE_PTS     "Combine selected points into multi-shot items"
+    IDC_BUT_UNDO_COMBINE    "Remove last set of multi-shot items and restore individual points"
+    IDC_CHECK_DISPLAY_MULTI "Do not suppress the display of multi-shot pattern on all individual points"
     IDC_CHECK_SECOND_RING   "Take a second ring of peripheral shots (can be inner or outer ring)"
     IDC_SPIN_RING2_NUM      "Set number of shots to take in second ring"
+    IDC_EDIT_RING2_DIST     "Distance of second ring of peripheral shots from center in microns"
 END
 
 STRINGTABLE
@@ -4641,7 +4659,7 @@ BEGIN
     ID_CAMERA_NEWGAINREF    "Clear out gain references after getting new reference in DigitalMicrograph"
     ID_CAMERA_SHOWGAINREF   "Put last used gain reference into buffer A"
     ID_CAMERA_SHOWDARKREF   "Put last used dark reference into Buffer A"
-    ID_CALIBRATION_MAGENERGYSHIFTS
+    ID_CALIBRATION_MAGENERGYSHIFTS 
                             "Calibrate mag-dependent energy shift of zero loss peak"
     ID_PROCESS_FIXDARKXRAYS "Use dark X ray removal routine on current image"
     ID_PROCESS_SETDARKCRITERIA 
@@ -5925,21 +5943,6 @@ BEGIN
     IDC_SHOW_EXCLUDED       "Show the points that have been excluded in the display"
     IDC_BUT_MAKE_NAV_PTS    "Add the non-excluded points to the Navigator table"
     IDC_RZIGZAG             "Alternate directions between rows or columns to minimize stage movement"
-END
-
-STRINGTABLE
-BEGIN
-    IDC_RIN_GROUPS          "Arrange points in groups with maximum radius specified in menu"
-    IDC_RFROM_FOCUS         "Make direction so that Focus area is near previous point, not next one"
-    IDC_EDIT_MAX_ERROR      "Enter the maximum error in microns between actual and predicted position"
-    IDC_BUT_CLEAR_DATA      "Remove points and clear out all memory usage"
-    IDC_BRACKET_LAST        "Try a subset of filter and threshold values around the last optimal values"
-    IDC_RON_IMAGE           "Select points on currently displayed image"
-    IDC_RIN_POLYGON         "Select points within a polygon (must be current item)"
-    IDC_RSAME_GROUP         "Select all points in the same group as the current item"
-    IDC_BUT_COMBINE_PTS     "Combine selected points into multi-shot items"
-    IDC_BUT_UNDO_COMBINE    "Remove last set of multi-shot items and restore individual points"
-    IDC_CHECK_DISPLAY_MULTI "Do not suppress the display of multi-shot pattern on all individual points"
 END
 
 #endif    // English (United States) resources

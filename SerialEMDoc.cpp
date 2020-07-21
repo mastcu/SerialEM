@@ -28,6 +28,7 @@
 #include "EMmontageController.h"
 #include "ShiftManager.h"
 #include "EMscope.h"
+#include "BeamAssessor.h"
 #include "MacroEditer.h"
 #include "GainRefMaker.h"
 #include "NavigatorDlg.h"
@@ -1803,6 +1804,18 @@ void CSerialEMDoc::ReadSetPropCalFiles()
 
   // Once calibrations are read, need to reset the IS offsets
   mWinApp->mScope->SetApplyISoffset(mWinApp->mScope->GetApplyISoffset());
+
+  // Fix intensities in settings
+  FixSettingsForIALimitCal();
+}
+
+void CSerialEMDoc::FixSettingsForIALimitCal()
+{
+  float *lowLimits = mWinApp->mScope->GetCalLowIllumAreaLim();
+  float *highLimits = mWinApp->mScope->GetCalHighIllumAreaLim();
+  if (mWinApp->GetSettingsFixedForIACal() || highLimits[5] <= lowLimits[5])
+    return;
+  mWinApp->mBeamAssessor->ConvertSettingsForFirstIALimitCal(true);
 }
 
 // Set the flag for whether to use an mdoc or not and copy to file options
@@ -2092,6 +2105,7 @@ void CSerialEMDoc::PostSettingsRead()
   mAbandonSettings = false;
 
   // Copy low dose params, restore low dose area, copy camera params and update windows
+  FixSettingsForIALimitCal();
   mWinApp->CopyCameraToCurrentLDP();
   if (mWinApp->LowDoseMode())
     mWinApp->mScope->GotoLowDoseArea(mTrueLDArea);

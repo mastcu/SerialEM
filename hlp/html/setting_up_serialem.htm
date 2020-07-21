@@ -160,7 +160,7 @@
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#RemoteTietz">For accessing
          a Tietz camera remotely</a>
         <br>
-        <a href="#badSizes">Bad dialog sizes.</a>
+        <a href="#badSizes">Bad dialog sizes or bad program and font sizes</a>
         <br>
         <A href="#setup_hitachi">Initial Actions and Other Special Features for Hitachi HT7700/HT7800</A>
         <BR>
@@ -1466,23 +1466,22 @@
         unprocessed and/or dark subtracted images as well as varying the binning and 
         image area to see under which conditions the problem occurs.</P>
 <P>&nbsp;</P>
-    <P><a name="badSizes"><b>Bad dialog sizes.</b></a></P>
-    <p>When you start SerialEM, you may discover that the control 
+    <P><a name="badSizes"><b>Bad dialog sizes or bad program and font sizes</b></a></P>
+    <p>As of SerialEM 3.8.0, the program fully supports scaling for the DPI of the 
+      monitor, and it should work properly without any property settings related to 
+      DPI.&nbsp; When you start SerialEM, you may discover that the control 
       panels on the left are not all the same width, and that some text appears 
       truncated in the control panels or dialogs.&nbsp; This happens when there is a 
       mismatch between the actual DPI setting of the display and what the program 
-      thinks it is.&nbsp; As of SerialEM 3.4.0, the program is supposed to detect the 
-      DPI, which should make the property &#39;DisplayIsNot120DPI&#39; unnecessary.&nbsp; 
-      As of SerialEM 3.6.0 (Nov. 27, 2016), the program should behave properly with 
-      DPIs of 96, 120, or 144 without such a property setting. If there is a sizing 
+      thinks it is.&nbsp; You may also find the the whole program window and its fonts 
+      are too large or too small.&nbsp; If there is a sizing 
       problem, check the properties file for the entry &#39;DisplayIsNot120DPI&#39; and try 
-      removing it if it is there, or adding it with a value of 0 or 1; the property 
-      &#39;AssumeDPI&#39; may also be helpful.&nbsp; See the description of these two 
+      removing it if it is there; the property 
+      &#39;AssumeDPI&#39; can also be used to scale the program for a different DPI 
+      than the one that the system reports.&nbsp; See the description of these two 
       properties in <a href="about_properties.htm#general_properties">Property File - 
       General Properties</a>.&nbsp; Set the property &#39;DebugOutput&#39; to 1 to get a 
-      report on the detected DPI during program startup.&nbsp; If you have a high-DPI 
-      monitor, try to set the text size in Windows to achieve a DPI of 144, or set a 
-      custom DPI size to 144.</P>
+      report on the detected DPI during program startup.&nbsp; </P>
     <P>&nbsp;</P>
     <P><A name="setup_hitachi"></A><B>Initial Actions and Other Special Features for Hitachi HT7700/HT7800 
       (Priority 1)</B></P>
@@ -2429,27 +2428,17 @@
         eliminated by inserting the smallest objective aperture that does not occlude 
         the image on the camera.</P>
     <P><i><b>Illuminated area limits and aperture sizes on Titan:</b></i> Before you do any of the 
-      following three beam-related calibrations on a Titan, you should determine the 
-      approximate limits of the illuminated area readout and add an 
-      &#39;IlluminatedAreaLimits&#39; property with the lower and upper value.&nbsp; 
-      Illuminated area values between these limits will then be mapped internally to 
-      an intensity range 0.1 to 0.9, which will keep the program from seeing 
-      out-of-range intensity values.&nbsp; The limits should be in microns divided by 
-      100.&nbsp; One way to assess these limits is to start the program with 
-      &#39;UseIlluminatedAreaForC2&#39; commented out and set up a script:<br />
-&nbsp;&nbsp; SetIlluminatedArea 5<br />
-&nbsp;&nbsp; ReportIlluminatedArea<br />
-&nbsp;&nbsp; SetIlluminatedArea -5<br />
-&nbsp;&nbsp; ReportIlluminatedArea</P>
-    <P>Run this script at several spot sizes and take the lower and upper limits from 
-      the range of the two outputs.&nbsp; The limits do not need to be precise, but 
-      they do need to be correct for the largest C2 aperture size.&nbsp; Thus, either 
-      switch to the largest C2 aperture before finding these limits, or multiply them 
-      by the ratio of the largest aperture to the current aperture (e.g., by 1.5 if 
-      the largest aperture is 150 and the current one is 100).&nbsp; 
-      Enter the property, uncomment &#39;UseIlluminatedAreaForC2&#39;, and restart the 
-      program.&nbsp; If this property is added or changed, it invalidates crossover, 
-      beam and spot intensity calibrations.</P>
+      following three beam-related calibrations on a Titan, you should run the 
+      <A href="menu_calibration.htm#hid_beamspot_illuminatedarealimits">Illuminated Area Limits</A> 
+      command in the Calibration - Beam &amp; Spot submenu to determine the 
+      limits of the illuminated area readout at different spot sizes in the two probe modes.&nbsp; 
+      Insert the largest condenser aperture before running the calibration.&nbsp; Once this calibration is in place, the program can adapt if those limits change
+       because of a scope re-alignment.&nbsp; Without such a calibration, changes in either the 
+      property &#39;UseIlluminatedAreaForC2&#39; or the scaling of internal lens values that 
+      determines the illuminated area readout from the scope will invalidate crossover, 
+      beam and spot intensity calibrations and some other intensity-related items.&nbsp; See
+      <A href="menu_calibration.htm#hid_beamspot_illuminatedarealimits">Illuminated Area Limits</A>
+      for details.</P>
     <P>The following three calibrations will ask you to enter the C2 aperture size.&nbsp; 
       You should first add a property &#39;C2ApertureSizes&#39; with the available sizes in 
       microns (.e.g., &#39;C2ApertureSizes 50 70 100 150&#39;).</P>

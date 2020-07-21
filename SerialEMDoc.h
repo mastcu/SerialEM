@@ -117,6 +117,7 @@ public:
   GetSetMember(BOOL, ScriptPackBackedUp);
   void SetDfltUseMdoc(int inval);
   void ReadSetPropCalFiles();
+  void FixSettingsForIALimitCal();
   void SaveActiveBuffer();
   void SaveRegularBuffer();
   int SettingsSaveAs();
