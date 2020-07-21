@@ -1474,7 +1474,8 @@ void CNavHelper::PrepareToReimageMap(CMapDrawItem *item, MontParam *param,
     mRIleaveISY = ldp->ISY;
   }
   SEMTrace('I', "PrepareToReimageMap set intensity to %.5f  %.3f%%", stateParam.intensity
-    , mScope->GetC2Percent(stateParam.spotSize, stateParam.intensity));
+    , mScope->GetC2Percent(stateParam.spotSize, stateParam.intensity, 
+      stateParam.probeMode));
   SetStateFromParam(&stateParam, conSet, baseNum, hideLDoff);
 }
 
@@ -1945,7 +1946,8 @@ void CNavHelper::SetStateFromParam(StateParams *param, ControlSet *conSet, int b
     // spot size on a FEI, and maybe to handle spot-size dependent changes elsewhere
     mScope->SetSpotSize(param->spotSize);
     if (!camP->STEMcamera)
-      mScope->DelayedSetIntensity(param->intensity, GetTickCount());
+      mScope->DelayedSetIntensity(param->intensity, GetTickCount(), param->spotSize, 
+        param->probeMode);
 
     // Modify filter parameters if they are present: but don't update unless in filter mode
     if (param->slitWidth > 0.) {
@@ -3732,7 +3734,7 @@ void CNavHelper::ListFilesToOpen(void)
   TiltSeriesParam *tsp;
   CString mess, mess2, label, lastlab;
   CString *namep;
-  int mag, active, magInd, spot;
+  int mag, active, magInd, spot, probe;
   double intensity;
   int *activeList = mWinApp->GetActiveCameraList();
   MagTable *magTab = mWinApp->GetMagTable();
@@ -3816,10 +3818,11 @@ void CNavHelper::ListFilesToOpen(void)
           active = mWinApp->LookupActiveCamera(state->camIndex) + 1;
           spot = state->lowDose ? state->ldParams.spotSize : state->spotSize;
           intensity = state->lowDose ? state->ldParams.intensity : state->intensity;
+          probe = state->lowDose ? state->ldParams.probeMode : state->probeMode;
 
           mess.Format("   New state:  %s   cam %d   mag %d   spot %d   %s %.2f%s   exp "
             "%.3f   bin %d   %dx%d", state->lowDose ? "LD" : "", active, mag, spot,
-            mScope->GetC2Name(), mScope->GetC2Percent(spot, intensity),
+            mScope->GetC2Name(), mScope->GetC2Percent(spot, intensity, probe),
             mScope->GetC2Units(), state->exposure,
             state->binning / BinDivisorI(camp), state->xFrame, state->yFrame);
           if (state->lowDose) {

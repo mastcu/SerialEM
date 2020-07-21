@@ -385,7 +385,7 @@ void CStateDlg::StateToListString(int index, CString &string)
 {
   StateParams *state = mStateArray->GetAt(index);
   int magInd = state->lowDose ? state->ldParams.magIndex : state->magIndex;
-  int mag, active, spot;
+  int mag, active, spot, probe;
   int *activeList = mWinApp->GetActiveCameraList();
   double percentC2 = 0., intensity;
   CString lds = state->lowDose ? "SL" : "ST";
@@ -396,6 +396,7 @@ void CStateDlg::StateToListString(int index, CString &string)
   spot = state->lowDose ? state->ldParams.spotSize : state->spotSize;
   if (!camp->STEMcamera) {
     intensity = state->lowDose ? state->ldParams.intensity : state->intensity;
+    probe = state->lowDose ? state->ldParams.probeMode : state->probeMode;
     percentC2 = mWinApp->mScope->GetC2Percent(spot, intensity);
     lds = state->lowDose ? "LD" : "";
   }

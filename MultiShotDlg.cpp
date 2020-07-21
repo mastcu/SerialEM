@@ -834,7 +834,8 @@ void CMultiShotDlg::ManageEnables(void)
     SetDlgItemText(IDC_STAT_COMA_CONDITIONS, "");
   } else {
     str.Format("%.4g%s %s, spot %d", mWinApp->mScope->GetC2Percent(comaVsIS->spotSize, 
-      comaVsIS->intensity), mWinApp->mScope->GetC2Units(), mWinApp->mScope->GetC2Name(),
+      comaVsIS->intensity, comaVsIS->probeMode), mWinApp->mScope->GetC2Units(), 
+      mWinApp->mScope->GetC2Name(),
       comaVsIS->spotSize);
     if (!mWinApp->mScope->GetHasNoAlpha() && comaVsIS->alpha >= 0) {
       str2.Format(", alpha %d", comaVsIS->alpha + 1);

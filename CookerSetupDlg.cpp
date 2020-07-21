@@ -317,12 +317,12 @@ void CCookerSetupDlg::SetScopeState(void)
   mSavedSpot = mScope->GetSpotSize();
   mScope->SetSpotSize(mCurSpot);
   mScope->SetMagIndex(mCurMagInd);
-  mScope->DelayedSetIntensity(mCurIntensity, GetTickCount());
+  mScope->DelayedSetIntensity(mCurIntensity, GetTickCount(), mCurSpot);
 }
 
 void CCookerSetupDlg::RestoreScopeState(void)
 {
   mScope->SetSpotSize(mSavedSpot);
   mScope->SetMagIndex(mSavedMagInd);
-  mScope->DelayedSetIntensity(mSavedIntensity, GetTickCount());
+  mScope->DelayedSetIntensity(mSavedIntensity, GetTickCount(), mSavedSpot);
 }

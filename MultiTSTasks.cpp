@@ -208,7 +208,8 @@ void CMultiTSTasks::CookerNextTask(int param)
 
       // Set state before dropping the screen
       mScope->SetMagIndex(mCkParams->magIndex);
-      mScope->DelayedSetIntensity(mCkParams->intensity, GetTickCount());
+      mScope->DelayedSetIntensity(mCkParams->intensity, GetTickCount(), 
+        mCkParams->spotSize);
       mScope->SetSpotSize(mCkParams->spotSize);
       if (mScope->GetScreenPos() != spDown) {
         TiltAndMoveScreen(false, mCkParams->tiltAngle, true, spDown);
@@ -990,7 +991,7 @@ int CMultiTSTasks::AutocenterBeam(float maxShift)
     probe = mScope->ReadProbeMode();
   }
   SEMTrace('I', "AutocenBeam saving intensity %.5f  %.3f%%", mAcSavedIntensity, 
-    mScope->GetC2Percent(spotSize, mAcSavedIntensity));
+    mScope->GetC2Percent(spotSize, mAcSavedIntensity, probe));
 
   // Get the param and make sure it works
   param = mWinApp->mMultiTSTasks->GetAutocenSettings(mWinApp->GetCurrentCamera(), magInd,
@@ -1022,8 +1023,8 @@ int CMultiTSTasks::AutocenterBeam(float maxShift)
     ldParm->intensity = param->intensity;
   else if (!raise) {
     SEMTrace('I', "AutocenBeam setting intensity to %.5f  %.3f%%", param->intensity, 
-      mScope->GetC2Percent(spotSize, param->intensity));
-    mScope->SetIntensity(param->intensity);
+      mScope->GetC2Percent(spotSize, param->intensity, param->probeMode));
+    mScope->SetIntensity(param->intensity, spotSize, param->probeMode);
     Sleep(mAcPostSettingDelay);
   }
 
@@ -1087,7 +1088,8 @@ void CMultiTSTasks::AutocenNextTask(int param)
       mAcSavedIntensity = mScope->GetIntensity();
       SEMTrace('I', "AutocenNextTask saving intensity %.5f  setting %.5f", 
         mAcSavedIntensity, mAcUseParam->intensity);
-      mScope->SetIntensity(mAcUseParam->intensity);
+      mScope->SetIntensity(mAcUseParam->intensity, mAcUseParam->spotSize, 
+        mAcUseParam->probeMode);
       Sleep(mAcPostSettingDelay);
       if (mWinApp->LowDoseMode())
         mScope->GotoLowDoseArea(TRIAL_CONSET);
@@ -1121,7 +1123,7 @@ void CMultiTSTasks::StopAutocen(void)
   if (!mAutoCentering)
     return;
   SEMTrace('I', "StopAutocen restoring intensity %.5f", mAcSavedIntensity);
-  mScope->SetIntensity(mAcSavedIntensity);
+  mScope->SetIntensity(mAcSavedIntensity, mAcSavedSpot, mAcSavedProbe);
   if (mWinApp->LowDoseMode()) {
 
     // Restore both trial and focus if tied, in case the trial value leaked into focus
@@ -2091,7 +2093,7 @@ void CMultiTSTasks::SetScopeStateFromVppParams(VppConditionParams *params, bool 
   if (!mScope->GetHasNoAlpha())    
     mScope->SetAlpha(params->alpha);
   mScope->SetSpotSize(params->spotSize);
-  mScope->SetIntensity(params->intensity);
+  mScope->SetIntensity(params->intensity, params->spotSize);
 }
 
 // Start the conditioning process

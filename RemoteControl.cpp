@@ -712,7 +712,7 @@ void CRemoteControl::ChangeIntensityByIncrement(int delta)
       mScope->GetC2IntensityFactor();
   }
   if (newVal > 0. && (newVal < 1.0 || mWinApp->mScope->GetUseIllumAreaForC2()))
-    mScope->SetIntensity(newVal);
+    mScope->SetIntensity(newVal, mLastSpot, mLastProbeMode);
 }
 
 // Change focus

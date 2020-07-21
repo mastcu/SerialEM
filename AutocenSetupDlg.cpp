@@ -330,7 +330,7 @@ void CAutocenSetupDlg::MoreOrLessIntensity(double factor)
   if (err && err != BEAM_ENDING_OUT_OF_RANGE)
     return;
   if (mMultiTasks->AutocenMatchingIntensity())
-    mScope->SetIntensity(newIntensity);
+    mScope->SetIntensity(newIntensity, mLowDoseMode ? ldp->spotSize : mParam->spotSize);
   mParam->intensity = newIntensity;
   mCurIntensity = newIntensity;
   ParamChanged();
@@ -513,7 +513,7 @@ void CAutocenSetupDlg::StartTrackingState(void)
   mScope->SetProbeMode(mCurProbe);
   mScope->SetSpotSize(mCurSpot);
   if (mParam->intensity >= 0) {
-    mScope->DelayedSetIntensity(mParam->intensity, postMag);
+    mScope->DelayedSetIntensity(mParam->intensity, postMag, mCurSpot, mCurProbe);
     mCurIntensity = mParam->intensity;
   } else {
     mParam->intensity = mScope->GetIntensity();
@@ -545,7 +545,8 @@ void CAutocenSetupDlg::MagOrSpotChanged(int magInd, int spot, int probe)
   if (mMultiTasks->AutocenTrackingState()) {
     if (mMultiTasks->AutocenMatchingIntensity()) {
       if (mParam->intensity >= 0.)
-        mScope->DelayedSetIntensity(mParam->intensity, GetTickCount());
+        mScope->DelayedSetIntensity(mParam->intensity, GetTickCount(), mCurSpot, 
+          mCurProbe);
       else
         mParam->intensity = mScope->GetIntensity();
       mCurIntensity = mParam->intensity;
@@ -578,7 +579,7 @@ void CAutocenSetupDlg::RestoreScopeState(void)
   mScope->SetProbeMode(mSavedProbe);
   mScope->SetSpotSize(mSavedSpot);
   mScope->SetMagIndex(mSavedMagInd);
-  mScope->DelayedSetIntensity(mSavedIntensity, GetTickCount());
+  mScope->DelayedSetIntensity(mSavedIntensity, GetTickCount(), mSavedSpot, mSavedProbe);
   mCurIntensity = mSavedIntensity;
 }
 

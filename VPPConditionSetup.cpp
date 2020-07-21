@@ -315,7 +315,7 @@ void CVPPConditionSetup::DisplaySettings()
   m_strMag.Format("%d", mMagTab[mParams.magIndex].mag);
   m_strSpot.Format("%d", mParams.spotSize);
   m_strIntensity.Format("%.2f%s %s", mScope->GetC2Percent(mParams.spotSize, 
-    mParams.intensity),
+    mParams.intensity, mParams.probeMode),
     mScope->GetC2Units(), mScope->GetC2Name());
   m_strAlpha.Format("%d", mParams.alpha + 1);
   if (FEIscope)

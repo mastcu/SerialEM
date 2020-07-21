@@ -1366,7 +1366,7 @@ void CLowDoseDlg::ManageMagSpot(int inSetArea, BOOL screenDown)
     m_strLDArea = (inSetArea < 4 ? mModeNames[inSetArea] : mSearchName) + ":";
     if (!mag && ldArea->camLenIndex)
       m_strMagSpot.Format("DIFF   Sp %d   %s %.2f%s", spotSize, mScope->GetC2Name(), 
-        mScope->GetC2Percent(spotSize, intensity), (LPCTSTR)C2units);
+        mScope->GetC2Percent(spotSize, intensity, ldArea->probeMode), (LPCTSTR)C2units);
     else {
       for (int silly = 0; silly < 2; silly++) {
         if (mag >= 100000)
@@ -1377,7 +1377,8 @@ void CLowDoseDlg::ManageMagSpot(int inSetArea, BOOL screenDown)
           str.Format("%dx", mag);
         m_strMagSpot.Format("%s   %s %d   %s %.2f%s", (LPCTSTR)str,
           ldArea->probeMode == 0 && !mWinApp->GetSTEMMode() ? "nP" : "Sp", spotSize, 
-          mScope->GetC2Name(), mScope->GetC2Percent(spotSize, intensity), 
+          mScope->GetC2Name(), mScope->GetC2Percent(spotSize, intensity, 
+            ldArea->probeMode),
           (LPCTSTR)C2units);
 
         // Add alpha for JEOL if it exists
