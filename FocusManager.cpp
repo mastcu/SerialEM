@@ -1223,7 +1223,7 @@ void CFocusManager::DetectFocus(int inWhere, int useViewInLD)
 
   if (mWinApp->LowDoseMode()) {
     mFocusProbe = ldParm[mFocusSetNum].probeMode;
-    mFocusAlpha = (int)ldParm[mFocusSetNum].beamAlpha;
+    mFocusAlpha = mScope->GetHasNoAlpha() ? -999 : (int)ldParm[mFocusSetNum].beamAlpha;
   } else {
     mFocusProbe = mScope->ReadProbeMode();
     mFocusAlpha = mScope->GetAlpha();
