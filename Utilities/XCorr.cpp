@@ -591,6 +591,47 @@ void XCorrStretch(void *array, int type, int nx, int ny, float stretch, float ax
     incorporated bug fixes from revisions 3.1 and 3.3 in IMOD, 1/5/07
 */
 
+#define FALLBACK_INTERP(tnam, dtyp, tmean, tdata, tbray)      \
+  case tnam:                                                  \
+  tmean = (dtyp)mean;                                           \
+  for (ix = iqst; ix <= iqnd; ix++) {                           \
+    xp = a11*ix + xbase;                                          \
+    yp = a21*ix + ybase;                                                   \
+    ixp = (int)xp;                                                          \
+    iyp = (int)yp;                                                          \
+    if (ixp  >=  0 && ixp  <  nxa - 1 && iyp  >=  0 && iyp  <  nya - 1) {   \
+      dx = xp - ixp;                                                        \
+      dy = yp - iyp;                                                        \
+      omdy = 1. - dy;       \
+      indbase = ixp + iyp * nxa;                       \
+      tbray[iybase + ix] = (1.-dx) * (omdy * tdata[indbase] +          \
+                                      dy * tdata[indbase + nxa]) +    \
+        dx * (omdy * tdata[indbase + 1] +                             \
+              dy * tdata[indbase + 1 + nxa]);                         \
+   } else                                                            \
+     tbray[iybase + ix] = tmean;                                     \
+ }                                                                       \
+ break;
+
+#define FAST_INTERP(tnam, tdata, tbray)                         \
+  case tnam:                                                    \
+  for (ix = ixst; ix <= ixnd; ix++) {                           \
+    ixp = (int)dxp;                                             \
+    iyp = (int)dyp;                                             \
+    dx = dxp - ixp;                                             \
+    dy = dyp - iyp;                                             \
+    omdy = 1.-dy;                                               \
+    indbase = ixp + iyp * nxa;                                  \
+    tbray[iybase + ix] = (1.-dx) *(omdy * tdata[indbase] +      \
+                                   dy * tdata[indbase + nxa]) + \
+      dx * (omdy * tdata[indbase + 1] +                         \
+            dy * tdata[indbase + 1 + nxa]);                     \
+    dxp += a11;                                                 \
+    dyp += a21;                                                 \
+  }                                                             \
+  break;                                                        \
+
+
 void XCorrFastInterp(void *array, int type, void *bray, int nxa, int nya,
     int nxb, int nyb, float amat11, float amat12, float amat21,
     float amat22, float xc, float yc, float xt, float yt)
@@ -609,7 +650,10 @@ void XCorrFastInterp(void *array, int type, void *bray, int nxa, int nya,
   short int smean;
   unsigned char cmean;
   unsigned short int usmean;
-  
+  float *fdata = (float *)array;
+  float *fbray = (float *)bray;
+  int maxThreads = 8, numThreads;
+
 
   /* To deal with the fact that images are inverted in Y, negate the
     cross-terms, which is the same as pre and post inverting in Y */
@@ -634,135 +678,86 @@ void XCorrFastInterp(void *array, int type, void *bray, int nxa, int nya,
   a12 = -amat12/denom;
   a21 = -amat21/denom;
   a22 =  amat11/denom;
-  
+
+  numThreads = B3DNINT(0.04 * sqrt((double)nxb * nyb));
+  B3DCLAMP(numThreads, 1, maxThreads);
+  numThreads = numOMPthreads(numThreads);
+
   /* loop over output image */
-  
+#pragma omp parallel for num_threads(numThreads) default(none) \
+  shared(a11, a12, a21, a22, xco, yco, xcen, ycen, nxa, nya, nxb, nyb, type, \
+         mean, bbray, cdata, ubray, usdata, sbray, sdata, fbray, fdata)  \
+  private(iy, iybase, dyo, xbase, ybase, xst, xnd, xlft, xrt, ixnd, ixst, iqst, \
+    iqnd, ifall, cmean, smean, usmean, xp, yp, ixp, iyp, dx, dy, omdy, indbase, \
+    indbasex, indbasey, indbasexy, ix, dxp, dyp)
   for (iy = 0; iy < nyb; iy++) {
 	  iybase = iy * nxb;
     dyo = iy - ycen;
     xbase = a12*dyo +xco - a11*xcen;
     ybase = a22*dyo + yco - a21*xcen;
-    xst=0;
-    xnd=nxb -1;
+    xst = 0;
+    xnd = nxb -1;
     if(fabs(a11) > 1.e-10) {
-      xlft=(1.01-xbase)/a11;
-      xrt=(nxa-2.01-xbase)/a11;
-      xst=amax(xst,amin(xlft,xrt));
-      xnd=amin(xnd,amax(xlft,xrt));
-    } else if(xbase < 1. || xbase >= nxa-2.) {
-      xst=nxb-1;
-      xnd=0;
+      xlft = (1.01 - xbase) / a11;
+      xrt = (nxa-2.01 - xbase) / a11;
+      xst = amax(xst, amin(xlft, xrt));
+      xnd = amin(xnd, amax(xlft, xrt));
+    } else if (xbase < 1. || xbase >= nxa - 2.) {
+      xst = nxb - 1;
+      xnd = 0;
     }
     if(fabs(a21) > 1.e-10) {
-      xlft=(1.01-ybase)/a21;
-      xrt=(nya-2.01-ybase)/a21;
-      xst=amax(xst,amin(xlft,xrt));
-      xnd=amin(xnd,amax(xlft,xrt));
-    } else if(ybase < 1. || ybase >= nya-2.) {
-      xst=nxb-1;
-      xnd=0;
+      xlft = (1.01-ybase) / a21;
+      xrt = (nya - 2.01 - ybase) / a21;
+      xst = amax(xst, amin(xlft, xrt));
+      xnd = amin(xnd, amax(xlft, xrt));
+    } else if (ybase < 1. || ybase >= nya - 2.) {
+      xst = nxb - 1;
+      xnd = 0;
     }
     
     /*    truncate the ending value down and the starting value up */
-    ixnd=(int)amax(-1.e5, xnd);
-    ixst=nxb+1-(int)(nxb+1-amin(xst, (float)(nxb + 1.)));
+    ixnd = (int)amax(-1.e5, xnd);
+    ixst = nxb + 1 - (int)(nxb + 1 -amin(xst, (float)(nxb + 1.)));
 
 	/*  if they're crossed, set them up so fallback will do whole line */
     if(ixst > ixnd) {
-      ixst=nxb/2;
-      ixnd=ixst-1;
+      ixst = nxb / 2;
+      ixnd = ixst - 1;
     }
     
     /*    do fallback to testing */
-    iqst=0;
-    iqnd=ixst-1;
-    for (ifall=0 ; ifall < 2; ifall++) {
+    iqst = 0;
+    iqnd = ixst - 1;
+    for (ifall = 0 ; ifall < 2; ifall++) {
       switch (type) {
-      case BYTE:
-        cmean = (unsigned char)mean;
-        for ( ix=iqst; ix <=iqnd; ix++) {
-          xp = a11*ix + xbase;
-          yp = a21*ix + ybase;
-          ixp = (int)xp;
-          iyp = (int)yp;
-          if (ixp  >=  0 && ixp  <  nxa - 1 && iyp  >=  0 && iyp  <  nya - 1) {
-            dx = xp - ixp;
-            dy = yp - iyp;
-            omdy = 1.-dy;
-            indbase = ixp + iyp * nxa;
-            bbray[iybase + ix] = (1.-dx) *(omdy * cdata[indbase] +
-              dy * cdata[indbase + nxa]) +
-              dx * (omdy * cdata[indbase + 1] +
-              dy * cdata[indbase + 1 + nxa]);
-          } else
-            bbray[iybase + ix] = cmean;
-        }
-        break;
-
-      case SIGNED_SHORT:
-        smean = (short int)mean;
-        for ( ix=iqst; ix <=iqnd; ix++) {
-          xp = a11*ix + xbase;
-          yp = a21*ix + ybase;
-          ixp = (int)xp;
-          iyp = (int)yp;
-          if (ixp  >=  0 && ixp  <  nxa - 1 && iyp  >=  0 && iyp  <  nya - 1) {
-            dx = xp - ixp;
-            dy = yp - iyp;
-            omdy = 1.-dy;
-            indbase = ixp + iyp * nxa;
-            sbray[iybase + ix] = (1.-dx) *(omdy * sdata[indbase] +
-              dy * sdata[indbase + nxa]) +
-              dx * (omdy * sdata[indbase + 1] +
-              dy * sdata[indbase + 1 + nxa]);
-          } else
-            sbray[iybase + ix] = smean;
-        }
-        break;
-
-      case UNSIGNED_SHORT:
-        usmean = (unsigned short int)mean;
-        for ( ix=iqst; ix <=iqnd; ix++) {
-          xp = a11*ix + xbase;
-          yp = a21*ix + ybase;
-          ixp = (int)xp;
-          iyp = (int)yp;
-          if (ixp  >=  0 && ixp  <  nxa - 1 && iyp  >=  0 && iyp  <  nya - 1) {
-            dx = xp - ixp;
-            dy = yp - iyp;
-            omdy = 1.-dy;
-            indbase = ixp + iyp * nxa;
-            ubray[iybase + ix] = (1.-dx) *(omdy * usdata[indbase] +
-              dy * usdata[indbase + nxa]) +
-              dx * (omdy * usdata[indbase + 1] +
-              dy * usdata[indbase + 1 + nxa]);
-          } else
-            ubray[iybase + ix] = usmean;
-        }
-        break;
+        FALLBACK_INTERP(BYTE, unsigned char, cmean, cdata, bbray);
+        FALLBACK_INTERP(SIGNED_SHORT, short int, smean, sdata, sbray);
+        FALLBACK_INTERP(UNSIGNED_SHORT, unsigned short int, usmean, usdata, ubray);
+        FALLBACK_INTERP(FLOAT, float, mean, fdata, fbray);
 
       case SLICE_MODE_RGB:
         cmean = (unsigned char)mean;
-        for ( ix=iqst; ix <=iqnd; ix++) {
-          xp = a11*ix + xbase;
-          yp = a21*ix + ybase;
+        for (ix = iqst; ix <= iqnd; ix++) {
+          xp = a11 * ix + xbase;
+          yp = a21 * ix + ybase;
           ixp = (int)xp;
           iyp = (int)yp;
           if (ixp  >=  0 && ixp  <  nxa - 1 && iyp  >=  0 && iyp  <  nya - 1) {
             dx = xp - ixp;
             dy = yp - iyp;
-            omdy = 1.-dy;
+            omdy = 1. - dy;
             indbase = 3 * (ixp + iyp * nxa);
             indbasey = indbase + 3 * nxa;
             indbasex = indbase + 3;
             indbasexy = indbasey + 3;
-            bbray[3 * (iybase + ix)] = (1.-dx) *(omdy * cdata[indbase] + 
+            bbray[3 * (iybase + ix)] = (1. - dx) *(omdy * cdata[indbase] + 
               dy * cdata[indbasey]) + dx * (omdy * cdata[indbasex] + 
               dy * cdata[indbasexy]);
-            bbray[3 * (iybase + ix) + 1] = (1.-dx) *(omdy * cdata[indbase+1] + 
+            bbray[3 * (iybase + ix) + 1] = (1. - dx) *(omdy * cdata[indbase+1] + 
               dy * cdata[indbasey+1]) + dx * (omdy * cdata[indbasex+1] + 
               dy * cdata[indbasexy+1]);
-            bbray[3 * (iybase + ix) + 2] = (1.-dx) *(omdy * cdata[indbase+2] + 
+            bbray[3 * (iybase + ix) + 2] = (1. - dx) *(omdy * cdata[indbase+2] + 
               dy * cdata[indbasey+2]) + dx * (omdy * cdata[indbasex+2] + 
               dy * cdata[indbasexy+2]);
           } else {
@@ -773,83 +768,37 @@ void XCorrFastInterp(void *array, int type, void *bray, int nxa, int nya,
         }
         break;
       }
-      iqst=ixnd+1;
-      iqnd=nxb-1;
+      iqst = ixnd+1;
+      iqnd = nxb-1;
     }
     
     /* Now do the safe region */
-    dxp = a11*ixst + xbase;
-    dyp = a21*ixst + ybase;
+    dxp = a11 * ixst + xbase;
+    dyp = a21 * ixst + ybase;
     switch (type) {
-    case BYTE:
-      for ( ix=ixst; ix <=ixnd; ix++) {
-        ixp = (int)dxp;
-        iyp = (int)dyp;
-        dx = dxp - ixp;
-        dy = dyp - iyp;
-        omdy = 1.-dy;
-        indbase = ixp + iyp * nxa;
-        bbray[iybase + ix] = (1.-dx) *(omdy * cdata[indbase] +
-          dy * cdata[indbase + nxa]) +
-          dx * (omdy * cdata[indbase + 1] +
-          dy * cdata[indbase + 1 + nxa]);
-        dxp += a11;
-        dyp += a21;
-      }
-      break;
-
-    case SIGNED_SHORT:
-      for ( ix=ixst; ix <=ixnd; ix++) {
-        ixp = (int)dxp;
-        iyp = (int)dyp;
-        dx = dxp - ixp;
-        dy = dyp - iyp;
-        omdy = 1.-dy;
-        indbase = ixp + iyp * nxa;
-        sbray[iybase + ix] = (1.-dx) *(omdy * sdata[indbase] +
-          dy * sdata[indbase + nxa]) +
-          dx * (omdy * sdata[indbase + 1] +
-          dy * sdata[indbase + 1 + nxa]);
-        dxp += a11;
-        dyp += a21;
-      }
-      break;
-
-    case UNSIGNED_SHORT:
-      for ( ix=ixst; ix <=ixnd; ix++) {
-        ixp = (int)dxp;
-        iyp = (int)dyp;
-        dx = dxp - ixp;
-        dy = dyp - iyp;
-        omdy = 1.-dy;
-        indbase = ixp + iyp * nxa;
-        ubray[iybase + ix] = (1.-dx) *(omdy * usdata[indbase] +
-          dy * usdata[indbase + nxa]) +
-          dx * (omdy * usdata[indbase + 1] +
-          dy * usdata[indbase + 1 + nxa]);
-        dxp += a11;
-        dyp += a21;
-      }
-      break;
+      FAST_INTERP(BYTE, cdata, bbray);
+      FAST_INTERP(SIGNED_SHORT, sdata, sbray);
+      FAST_INTERP(UNSIGNED_SHORT, usdata, ubray);
+      FAST_INTERP(FLOAT, fdata, fbray);
 
     case SLICE_MODE_RGB:
-      for ( ix=ixst; ix <=ixnd; ix++) {
+      for (ix = ixst; ix <= ixnd; ix++) {
         ixp = (int)dxp;
         iyp = (int)dyp;
         dx = dxp - ixp;
         dy = dyp - iyp;
-        omdy = 1.-dy;
+        omdy = 1. - dy;
         indbase = 3 * (ixp + iyp * nxa);
         indbasey = indbase + 3 * nxa;
         indbasex = indbase + 3;
         indbasexy = indbasey + 3;
-        bbray[3 * (iybase + ix)] = (1.-dx) *(omdy * cdata[indbase] + 
+        bbray[3 * (iybase + ix)] = (1. - dx) *(omdy * cdata[indbase] + 
           dy * cdata[indbasey]) + dx * (omdy * cdata[indbasex] + 
           dy * cdata[indbasexy]);
-        bbray[3 * (iybase + ix) + 1] = (1.-dx) *(omdy * cdata[indbase+1] + 
+        bbray[3 * (iybase + ix) + 1] = (1. - dx) *(omdy * cdata[indbase+1] + 
           dy * cdata[indbasey+1]) + dx * (omdy * cdata[indbasex+1] + 
           dy * cdata[indbasexy+1]);
-        bbray[3 * (iybase + ix) + 2] = (1.-dx) *(omdy * cdata[indbase+2] + 
+        bbray[3 * (iybase + ix) + 2] = (1. - dx) *(omdy * cdata[indbase+2] + 
           dy * cdata[indbasey+2]) + dx * (omdy * cdata[indbasex+2] + 
           dy * cdata[indbasexy+2]);
          dxp += a11;

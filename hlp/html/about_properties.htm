@@ -2326,9 +2326,15 @@
           <TD>Lower and upper limits of the illuminated area readout in microns divided by 
             100.&nbsp; When set, this range of illuminated area will be mapped internally to 
             intensities of 0.1 to 0.9, thus preventing the program from seeing out-of-range 
-            intensity values outside of LM mode and negative intensity values in LM mode.&nbsp; There is no default mapping.&nbsp; If this property is added, it 
+            intensity values.&nbsp; There is no default mapping.&nbsp; Limits of -0.5 and 2.5 
+            should be adequate for initial scope setup.&nbsp; The 
+            <A href="menu_calibration.htm#hid_beamspot_illuminatedarealimits">Illuminated Area Limits</A> 
+            calibration should be done early in scope setup; it will supercede this property.&nbsp; 
+            If this property is added in the absence of that calibration, it 
             will invalidate existing beam and spot intensity calibrations and the crossover 
-            calibration.  Limits of -0.5 and 2.5 should be adequate.</TD>
+            calibration.  
+            
+          </TD>
         </TR>
         <TR>
           <TD>C2ApertureSizes</TD>

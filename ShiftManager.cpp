@@ -526,8 +526,6 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, BOOL 
   widthA = mImA->getWidth();
   heightC = mImC->getHeight();
   widthC = mImC->getWidth();
-  if (typeA == kFLOAT || typeC == kFLOAT)
-    return 1;
 
   // Look for a common binning starting at the bigger binning
   maxBin = binA > binC ? binA : binC;
@@ -573,7 +571,8 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, BOOL 
   mDataC = (void *)mImC->getData();
   
   if (needBinA > 1) {
-    NewArray(tempA, short int, heightA * widthA / (needBinA * needBinA));
+    NewArray(tempA, short int, (typeA == kFLOAT ? 2 : 1) * heightA * widthA /
+      (needBinA * needBinA));
     if (MemoryError(tempA == NULL))
       return 1;
 
@@ -589,7 +588,8 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, BOOL 
   }
   
   if (needBinC > 1) {
-    NewArray(tempC, short int, heightC * widthC / (needBinC * needBinC));
+    NewArray(tempC, short int, (typeC == kFLOAT ? 2 : 1) * heightC * widthC /
+      (needBinC * needBinC));
     if (MemoryError(tempC == NULL)) {
       return 1;
     }
@@ -659,7 +659,7 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, BOOL 
     } else if (typeA == kRGB) {
       NewArray(tempA, unsigned char, 3 * heightA * widthA);
     } else {
-      NewArray(tempA, short int, heightA * widthA);
+      NewArray(tempA, short int, (typeA == kFLOAT ? 2 : 1) * heightA * widthA);
     }
     if (MemoryError(tempA == NULL)) {
       return 1;
@@ -695,7 +695,7 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, BOOL 
     } else if (typeC == kRGB) {
       NewArray(tempC, unsigned char, 3 * heightC * widthC);
     } else {
-      NewArray(tempC, short int, heightC * widthC);
+      NewArray(tempC, short int, (typeC == kFLOAT ? 2 : 1) * heightC * widthC);
     }
     if (MemoryError(tempC == NULL)) {
       return 1;
