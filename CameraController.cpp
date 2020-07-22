@@ -4090,7 +4090,8 @@ int CCameraController::SetupK2SavingAligning(const ControlSet &conSet, int inSet
     SEMMessageBox("You cannot save a com file for running\n"
       "alignframes when saving one frame per file");
     return 1;
-  } else if (conSet.saveFrames && mDirForK2Frames.IsEmpty()) {
+  } else if (conSet.saveFrames && ((mParam->K2Type && mDirForK2Frames.IsEmpty()) || 
+    (!mParam->K2Type && mParam->dirForFrameSaving.IsEmpty()))) {
     SEMMessageBox("You must specify a directory for saving the frame images");
     return 1;
   }
