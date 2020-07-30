@@ -12,6 +12,7 @@
 
 #include "stdafx.h"
 #include "SerialEM.h"
+#include "MainFrm.h"
 #include ".\ShiftManager.h"
 #include "ShiftCalibrator.h"
 #include "FocusManager.h"
