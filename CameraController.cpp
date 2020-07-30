@@ -9292,6 +9292,7 @@ void CCameraController::DisplayNewImage(BOOL acquired)
       }
       CUR_OR_DEFD_TO_BUF(mDynamicFocused, mTD.STEMcamera && mTD.DynFocusInterval > 0);
       CUR_OR_DEFD_TO_BUF(mMagInd, mMagBefore);
+      CUR_OR_DEFD_TO_BUF(mPixelSize, mMagBefore ? pixelSize / 10000.f : 0.f);
       CUR_OR_DEFD_TO_BUF(mISX, mStartingISX);
       CUR_OR_DEFD_TO_BUF(mISY, mStartingISY);
       CUR_OR_DEFD_TO_BUF(mExposure, (float)mExposure);

@@ -298,7 +298,7 @@ void EMmontageController::SetMontaging(BOOL inVal)
 // Recompose overview by doing fake montage: get a legal section # and proceed
 int EMmontageController::ReadMontage(int inSect, MontParam *inParam, 
                                           KImageStore *inStoreMRC, BOOL centerOnly,
-                                          BOOL synchronous)
+                                          BOOL synchronous, int bufToCopyTo)
 {
   if (inParam) {
     mParam = inParam;
@@ -336,6 +336,9 @@ int EMmontageController::ReadMontage(int inSect, MontParam *inParam,
   mParam->zCurrent = newZ;
   mCenterOnly = centerOnly;
   mSynchronous = synchronous || centerOnly;
+  mBufToCopyTo = (bufToCopyTo >= 0 && bufToCopyTo < MAX_BUFFERS) ? 
+    bufToCopyTo : mBufferManager->GetBufToReadInto();
+
   StartMontage(MONT_NOT_TRIAL, true);
   return 0;
 }
@@ -2685,7 +2688,7 @@ void EMmontageController::SavePiece()
       if (mReadingMontage || mTrialMontage || mParam->showOverview) {
         i = 1;
         if (mReadingMontage) {
-          i = mBufferManager->GetBufToReadInto();
+          i = mBufToCopyTo;
           if (i == 1 || mBufferManager->CopyImageBuffer(1, i))
             i = 1;
         }

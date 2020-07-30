@@ -43,6 +43,7 @@ EMimageBuffer::EMimageBuffer()
 	mUserPtX = 0.;
 	mUserPtY = 0.;
 	mCamera = -1;
+  mPixelSize = 0.;
   mConSetUsed = 0;
   mDynamicFocused = false;
   mStageShiftedByMouse = false;

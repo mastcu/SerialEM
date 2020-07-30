@@ -617,7 +617,7 @@ int EMbufferManager::ReadFromFile(KImageStore *inStore, int inSect, int inToBuf,
   if (message)
     *message = "";
 
-  if (inToBuf < 0)
+  if (inToBuf < 0 || inToBuf >= MAX_BUFFERS)
     inToBuf = mBufToReadInto;
   EMimageBuffer *toBuf = mImBufsp + inToBuf;
   if (CheckAsyncSaving())
@@ -655,7 +655,7 @@ int EMbufferManager::ReadFromFile(KImageStore *inStore, int inSect, int inToBuf,
       // from a montaged file; return code to prevent read buffer from being displayed
       if (montErr > 0 && inStore != mWinApp->mStoreMRC) {
         montErr = mWinApp->mMontageController->ReadMontage(inSect, &param, 
-          inStore, false, synchronous);
+          inStore, false, synchronous, inToBuf);
         if (montErr)
           return montErr;
         return READ_MONTAGE_OK;
@@ -742,6 +742,7 @@ int EMbufferManager::ReadFromFile(KImageStore *inStore, int inSect, int inToBuf,
   // Set defocus zero, assume the current mag
   toBuf->mDefocus = 0.;
   toBuf->mMagInd = 0;
+  toBuf->mPixelSize = 0.;
   toBuf->mHasUserPt = false;
   toBuf->mHasUserLine = false;
   toBuf->mCtfFocus1 = 0.;
@@ -784,6 +785,8 @@ int EMbufferManager::ReadFromFile(KImageStore *inStore, int inSect, int inToBuf,
       toBuf->mConSetUsed = extra->mLowDoseConSet > 0 ? extra->mLowDoseConSet - 1 :
         -extra->mLowDoseConSet;
     }
+    if (extra->mPixel > 0.)
+      toBuf->mPixelSize = extra->mPixel / 10000.f;
   }
   if (mWinApp->mNavigator)
     toBuf->mRegistration = mWinApp->mNavigator->GetCurrentRegistration();

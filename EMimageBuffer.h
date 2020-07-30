@@ -47,6 +47,7 @@ public:
   BOOL mDividedBy2;
   int mCamera;
   int mMagInd;
+  float mPixelSize;      // Pixel size in microns
   float mDefocus;
   double mISX;
   double mISY;

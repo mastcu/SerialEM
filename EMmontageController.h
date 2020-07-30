@@ -42,7 +42,8 @@ class EMmontageController
   int StartMontage(int inTrial, BOOL inReadMont, float cookDwellTime = 0., 
     int cookSkip = 0, bool skipColumn = false, float cookSpeed = 0.);
   int ReadMontage(int inSect = NO_SUPPLIED_SECTION, MontParam *inParam = NULL,
-    KImageStore *inStoreMRC = NULL, BOOL centerOnly = false, BOOL synchronous = false);
+    KImageStore *inStoreMRC = NULL, BOOL centerOnly = false, BOOL synchronous = false,
+  int bufToCopyTo = -1);
   void StopMontage(int error = 0);
   void SavePiece();
   void SetMontaging(BOOL inVal);
@@ -115,6 +116,7 @@ class EMmontageController
   int mTrialMontage;
   BOOL mCenterOnly;               // Flag to do montage center only when reading in
   BOOL mSynchronous;              // Flag to read in sysnchronously
+  int mBufToCopyTo;               // Buffer to copy overview to when reading
   BOOL mReadResetBoxes;           // Flag to reset boxes after read
   BOOL mNeedToFillMini;           // Flag that mini should be filled with first mean
   BOOL mNeedToFillCenter;         // Flag that center should be filled
