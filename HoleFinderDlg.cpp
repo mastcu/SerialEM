@@ -742,7 +742,7 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
         readBuf = mWinApp->mBufferManager->GetBufToReadInto();
 
         // Reload and restore
-        err = mNav->DoLoadMap(true, mNavItem);
+        err = mNav->DoLoadMap(true, mNavItem, -1);
         masterMont->overviewBinning = overBinSave;
         mHelper->SetConvertMaps(convertSave);
         mHelper->SetLoadMapsUnbinned(loadUnbinSave);

@@ -2620,7 +2620,7 @@ BOOL CNavigatorDlg::UserMousePoint(EMimageBuffer *imBuf, float inX, float inY,
   BOOL acquire = false;
   bool ctrlKey = GetAsyncKeyState(VK_CONTROL) / 2 != 0;
   bool shiftKey = GetAsyncKeyState(VK_SHIFT) / 2 != 0;
-  bool selecting = button == VK_LBUTTON && !shiftKey && 
+  bool selecting = button == VK_LBUTTON && (!shiftKey || m_bEditMode) && 
     (m_bEditMode || ctrlKey) && !mAddingPoints && !mAddingPoly;
   bool startingMultiDel = button == VK_LBUTTON && shiftKey && m_bEditMode &&
     !mAddingPoints && !mAddingPoly && mCurItemHoleXYpos.size();
@@ -2818,7 +2818,7 @@ void CNavigatorDlg::MouseDoubleClick(int button)
   if (mLastSelectWasCurrent && button == VK_LBUTTON && m_bEditMode) {
     if (!shiftKey) {
       BackspacePressed();
-    } else if (mCurItemHoleXYpos.size() && SetCurrentItem() && 
+    } else if (mCurItemHoleXYpos.size() && GetSingleSelectedItem() &&
       mHelper->GetNumHolesFromParam(msNumXholes, msNumYholes)) {
 
 
@@ -2862,11 +2862,12 @@ void CNavigatorDlg::MouseDoubleClick(int button)
 // if appropriate for editing
 bool CNavigatorDlg::GetHolePositionVectors(FloatVec **xypos, IntVec **index)
 {
+  CMapDrawItem *item = GetSingleSelectedItem();
   *xypos = &mCurItemHoleXYpos;
   *index = &mCurItemHoleIndex;
-  if (!m_bEditMode || !SetCurrentItem())
+  if (!m_bEditMode || !item)
     return false;
-  return mItem->mType == ITEM_TYPE_POINT && mItem->mNumPoints == 1 &&
+  return item->mType == ITEM_TYPE_POINT && item->mNumPoints == 1 &&
     mSelectedItems.size() <= 1;
 }
 
@@ -6443,11 +6444,11 @@ void CNavigatorDlg::ImportMap(void)
       
       // If an overlay is requested, need to load maps synchronously
       if (importDlg.m_bOverlay) {
-        overfail = DoLoadMap(true, NULL) ? -1 : 0;
+        overfail = DoLoadMap(true, NULL, -1) ? -1 : 0;
         if (!overfail) {
           mBufferManager->CopyImageBuffer(mBufferManager->GetBufToReadInto(), 0);
           mCurrentItem = oldCurItem;
-          overfail = DoLoadMap(true, NULL) ? -2 : 0;
+          overfail = DoLoadMap(true, NULL, -1) ? -2 : 0;
         }
 
         // Then get the overlay image into A
@@ -6547,10 +6548,10 @@ void CNavigatorDlg::OnLoadMap()
     mHelper->LoadPieceContainingPoint(mItem, mFoundItem);
     AddFocusAreaPoint(false);
   } else
-    DoLoadMap(false, NULL);
+    DoLoadMap(false, NULL, -1);
 }
 
-int CNavigatorDlg::DoLoadMap(bool synchronous, CMapDrawItem *item)
+int CNavigatorDlg::DoLoadMap(bool synchronous, CMapDrawItem *item, int bufToReadInto)
 {
   int err;
   static MontParam mntp;
@@ -6593,13 +6594,14 @@ int CNavigatorDlg::DoLoadMap(bool synchronous, CMapDrawItem *item)
 
   // Read in the appropriate way for the file
   mLoadingMap = true;
+  mBufToLoadInto = bufToReadInto >= 0 ? bufToReadInto :mBufferManager->GetBufToReadInto();
 
   if (mItem->mMapMontage && !mReadingOther)
     err = mWinApp->mMontageController->ReadMontage(mItem->mMapSection, NULL, NULL, false,
-      synchronous);
+      synchronous, bufToReadInto);
   else
-    err = mBufferManager->ReadFromFile(mLoadStoreMRC, mItem->mMapSection, -1, false, 
-    synchronous);
+    err = mBufferManager->ReadFromFile(mLoadStoreMRC, mItem->mMapSection, bufToReadInto,
+      false, synchronous);
 
   if (err && err != READ_MONTAGE_OK) {
     AfxMessageBox("Error reading image from file.", MB_EXCLAME);
@@ -6616,8 +6618,7 @@ int CNavigatorDlg::DoLoadMap(bool synchronous, CMapDrawItem *item)
 // Finish up after loading a map
 void CNavigatorDlg::FinishLoadMap(void)
 {
-  int bufInd = mBufferManager->GetBufToReadInto();
-  EMimageBuffer *imBuf = mImBufs + (mItem->mMapMontage ? 1 : bufInd);
+  EMimageBuffer *imBuf = mImBufs + (mItem->mMapMontage ? 1 : mBufToLoadInto);
   MontParam *masterMont = mWinApp->GetMontParam();
   CameraParameters *camP = &mCamParams[B3DMAX(0, mItem->mMapCamera)];
   EMimageExtra *extra1;
@@ -6673,16 +6674,16 @@ void CNavigatorDlg::FinishLoadMap(void)
   // Convert single frame map to bytes now if flag set
   if (mHelper->GetConvertMaps() && !mLoadItem->mMapMontage && 
     mLoadItem->mMapMinScale != mLoadItem->mMapMaxScale)
-    mImBufs[bufInd].ConvertToByte(mLoadItem->mMapMinScale, mLoadItem->mMapMaxScale);
+    mImBufs[mBufToLoadInto].ConvertToByte(mLoadItem->mMapMinScale, mLoadItem->mMapMaxScale);
   
   // Copy montage to read buffer, get loaded size, rotate if requested, and display
   // 4/20/09: montage has already been copied there, but still work on buffer B first and
   // then copy it again so that both buffers have the map data
   if (mLoadItem->mMapMontage)
-    mBufferManager->CopyImageBuffer(1, bufInd);
+    mBufferManager->CopyImageBuffer(1, mBufToLoadInto);
   if (mLoadItem->mRotOnLoad)
-    RotateMap(&mImBufs[bufInd], false);
-  mWinApp->SetCurrentBuffer(bufInd);
+    RotateMap(&mImBufs[mBufToLoadInto], false);
+  mWinApp->SetCurrentBuffer(mBufToLoadInto);
 
   Redraw();
 }

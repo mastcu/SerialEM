@@ -325,6 +325,7 @@ private:
   float mUseWidth, mUseHeight;
   int mOverviewBinSave;
   BOOL mLoadingMap;         // Flag that map is being loaded
+  int mBufToLoadInto;      // Buffer being loaded to
   int mShiftAIndex;        // Starting index for doing shift A
   int mShiftDIndex;        // Starting index for doing shift D
   int mShiftTIndex;        // Starting index for doing shift T
@@ -492,7 +493,7 @@ public:
   CStatic m_statListHeader;
   void GetSuperCoords(int & superX, int &superY);
   int ShiftItemsByAlign(void);
-  int DoLoadMap(bool synchronous, CMapDrawItem *item);
+  int DoLoadMap(bool synchronous, CMapDrawItem *item, int bufToReadInto);
   CButton m_butTiltSeries;
   BOOL m_bTiltSeries;
   CButton m_butFileAtItem;
