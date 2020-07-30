@@ -285,14 +285,18 @@ IF %Major% EQU 3 (
 GOTO :SetupSEMCCDdone
 
 :VS2015GM3
-IF %Minor% GEQ 31 (
-  set versRange64=3.31 and higher
+IF %Minor% GEQ 40 (
+  set versRange64=3.40 and higher
+  set SEMCCD64=SEMCCD-GMS3.42-64.dll
+  set BIT64=1
+) ELSE IF %Minor% GEQ 31 (
+  set versRange64=3.31-3.3x
   set SEMCCD64=SEMCCD-GMS3.31-64.dll
   set BIT64=1
 ) ELSE (
-  set versRange64=3.30
-  set SEMCCD64=SEMCCD-GMS3.30-64.dll
-  set BIT64=1
+  echo.
+  echo The DM plugin for GMS 3.30 is no longer distributed
+  GOTO :CheckPlugDone
 )
 
 :SetupSEMCCDdone
