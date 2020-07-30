@@ -81,6 +81,7 @@ hid_file_savelog								= SerialEM.chm::/html\menu_file.htm#hid_file_savelog
 hid_file_savelogas							= SerialEM.chm::/html\menu_file.htm#hid_file_savelogas
 hid_file_readappend							= SerialEM.chm::/html\menu_file.htm#hid_file_readappend
 hid_file_continuoussave					= SerialEM.chm::/html\menu_file.htm#hid_file_continuoussave
+hid_window_rescuelogwindow      = SerialEM.chm::/html\menu_file.htm#hid_window_rescuelogwindow
 hid_file_open_mdoc    					= SerialEM.chm::/html\menu_file.htm#hid_file_open_mdoc
 hid_file_close_mdoc    					= SerialEM.chm::/html\menu_file.htm#hid_file_close_mdoc
 hid_file_skipfilepropertiesdialog	= SerialEM.chm::/html\menu_file.htm#hid_file_skipfilepropertiesdialog

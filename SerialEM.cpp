@@ -159,6 +159,8 @@ BEGIN_MESSAGE_MAP(CSerialEMApp, CWinApp)
   ON_UPDATE_COMMAND_UI(ID_FILE_CONTINUOUSSAVE, OnUpdateFileContinuousSave)
   ON_COMMAND(ID_WINDOW_SHOWSCOPECONTROLPANEL, OnShowScopeControlPanel)
   ON_UPDATE_COMMAND_UI(ID_WINDOW_SHOWSCOPECONTROLPANEL, OnUpdateShowScopeControlPanel)
+  ON_COMMAND(ID_WINDOW_RESCUELOGWINDOW, OnWindowRescuelogwindow)
+  ON_UPDATE_COMMAND_UI(ID_WINDOW_RESCUELOGWINDOW, OnUpdateWindowRescuelogwindow)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -3301,7 +3303,7 @@ void CSerialEMApp::OnFileOpenlog()
 {
   mLogWindow = new CLogWindow();
   mLogWindow->Create(IDD_LOGWINDOW);
-  mLogPlacement.showCmd = 1;
+  mLogPlacement.showCmd = SW_SHOWNORMAL;
   if (mLogPlacement.rcNormalPosition.right > 0)
     mLogWindow->SetWindowPlacement(&mLogPlacement);
   RestoreViewFocus();
@@ -3310,6 +3312,27 @@ void CSerialEMApp::OnFileOpenlog()
 void CSerialEMApp::OnUpdateFileOpenlog(CCmdUI* pCmdUI) 
 {
   pCmdUI->Enable(mLogWindow == NULL); 
+}
+
+// Reset the position and size of the log window
+void CSerialEMApp::OnWindowRescuelogwindow()
+{
+  int sizeX, sizeY, offset = 50;
+  mLogWindow->GetWindowPlacement(&mLogPlacement);
+  mLogPlacement.showCmd = SW_SHOWNORMAL;
+  sizeX = B3DMAX(ScaleValueForDPI(500),
+    mLogPlacement.rcNormalPosition.right - mLogPlacement.rcNormalPosition.left);
+  sizeY = B3DMAX(ScaleValueForDPI(300),
+    mLogPlacement.rcNormalPosition.bottom - mLogPlacement.rcNormalPosition.top);
+  mLogPlacement.rcNormalPosition.right = offset + sizeX;
+  mLogPlacement.rcNormalPosition.bottom = offset + sizeY;
+  mLogPlacement.rcNormalPosition.left = mLogPlacement.rcNormalPosition.top = offset;
+  mLogWindow->SetWindowPlacement(&mLogPlacement);
+}
+
+void CSerialEMApp::OnUpdateWindowRescuelogwindow(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(mLogWindow != NULL);
 }
 
 // Append a string to the log window, with 3 alternatives if it is not open

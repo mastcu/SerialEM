@@ -2106,6 +2106,7 @@
 #define ID_CAMERA_                      33389
 #define ID_BEAMSPOT_REFINEBEAMSHIFT     33390
 #define ID_BEAMSPOT_ILLUMINATEDAREALIMITS 33391
+#define ID_WINDOW_RESCUELOGWINDOW       33392
 
 // Next default values for new objects
 // 
@@ -2113,7 +2114,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        248
-#define _APS_NEXT_COMMAND_VALUE         33392
+#define _APS_NEXT_COMMAND_VALUE         33393
 #define _APS_NEXT_CONTROL_VALUE         2656
 #define _APS_NEXT_SYMED_VALUE           104
 #endif

@@ -154,6 +154,7 @@ BEGIN
         MENUITEM "Save Log As...",              ID_FILE_SAVELOGAS
         MENUITEM "Read && Append...",           ID_FILE_READAPPEND
         MENUITEM "Continuous Save",             ID_FILE_CONTINUOUSSAVE
+        MENUITEM "Rese&t Log Position",         ID_WINDOW_RESCUELOGWINDOW
         MENUITEM SEPARATOR
         MENUITEM "Open .mdoc for &Frames",      ID_FILE_OPEN_MDOC
         MENUITEM "Close Frames .mdoc",          ID_FILE_CLOSE_MDOC
@@ -5943,6 +5944,12 @@ BEGIN
     IDC_SHOW_EXCLUDED       "Show the points that have been excluded in the display"
     IDC_BUT_MAKE_NAV_PTS    "Add the non-excluded points to the Navigator table"
     IDC_RZIGZAG             "Alternate directions between rows or columns to minimize stage movement"
+END
+
+STRINGTABLE
+BEGIN
+    ID_WINDOW_RESCUELOGWINDOW 
+                            "Bring the log window up in the upper left corner of screen"
 END
 
 #endif    // English (United States) resources

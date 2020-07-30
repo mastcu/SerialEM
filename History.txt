@@ -3,6 +3,15 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+7/29/20: Added new plugin build for GMS 3.4.
+
+7/29/20: Added Reset Log Position to File menu to rescue lost log.
+
+7/29/20: Fixed shift double-click to remove point when groups collapsed.
+
+7/29/20: Added optional argument to LoadNavMap/LoadOtherMap for buffer to read
+into.
+
 7/22/20: Fixed test for whether directory for saving OneView/Rio frames is
 defined.
 

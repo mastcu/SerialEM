@@ -952,7 +952,10 @@
           <TD>Value which intermediate frames are constrained to be a multiple of with 
             Falcon camera.&nbsp; The default for Falcon 2 is 0.055771 sec, which works for a camera that reads out at 17.9 
             FPS.&nbsp; It needs to be set to 0.058824 for a camera that reads out at 17 FPS.
-            &nbsp; The default for Falcon 3 is 0.02495.
+            &nbsp; The default for Falcon 3 is 0.02495, but at least one site needed 0.02505.&nbsp; The
+            sign of it not being long enough is that SerialEM or FEI-SEMserver crashes when taking frames
+            with a long exposure time.&nbsp; To determine if it needs to be increased, test with a 150 to 300
+             second exposure.&nbsp; Increase in increments of 0.0005.
           </TD>
         </TR>
         <TR VALIGN="top">

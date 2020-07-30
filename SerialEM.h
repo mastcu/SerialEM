@@ -851,6 +851,8 @@ void ClearAllMacros(void);
 CFont * GetLittleFont(CWnd *stat);
 float GetScalingForDPI();
 int ScaleValueForDPI(double value);
+afx_msg void OnWindowRescuelogwindow();
+afx_msg void OnUpdateWindowRescuelogwindow(CCmdUI *pCmdUI);
 };
 
 
