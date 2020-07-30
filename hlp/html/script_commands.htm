@@ -2545,6 +2545,14 @@
             &nbsp; Command added in 3.8, 10/20/19</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">AlignWithRotation buf #C #R</TD>
+          <TD>Finds the best alignment between buffer A and buffer <b>buf</b> including a rotation; 
+            <b>#C</b> sets the center angle for the rotation search and <b>#R</b> sets the total angular
+            range of the search.&nbsp; <i>reportedValue1-3</i> are set with the rotation angle and
+            the X and Y shift (after rotation), in the binned pixels of the image.&nbsp; Values can
+            be assigned to variables after command.&nbsp; Command added in 3.8, 7/29/20</TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">ConicalAlignTo buf #R [#S]</TD>
           <TD>Aligns buffer A to the given buffer <b>buf</b> assuming a specimen rotation given by
             <b>#R</b>. Optionally, enter 1 for <b>#S</b> to show the cross-correlation.</TD>
@@ -3078,15 +3086,17 @@
             'Update Z' button.</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">LoadNavMap</TD>
+          <TD class="scriptcommand">LoadNavMap [buf]</TD>
           <TD>Loads the current Navigator item, or the item this script is being run on, if 
-            it is a map.</TD>
+            it is a map.&nbsp; If the optional <b>buf</b> is entered, loads to that buffer instead
+             of the read buffer.</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">LoadOtherMap #</TD>
+          <TD class="scriptcommand">LoadOtherMap # [buf]</TD>
           <TD>Loads the Navigator item whose index in the table is <b>#</b>, if it is a map; ; or if 
             <b>#</b> is negative, load the item that many items from the end of the table, i.e., 
-            -1 loads on the last item. </TD>
+            -1 loads on the last item.&nbsp; If the optional <b>buf</b> is entered, loads to that
+             buffer instead of the read buffer.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportNavItem</TD>

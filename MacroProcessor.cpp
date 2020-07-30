@@ -282,7 +282,7 @@ enum {CME_SCRIPTEND = -7, CME_LABEL, CME_SETVARIABLE, CME_SETSTRINGVAR, CME_DOKE
   CME_STAGETOCAMERAMATRIX, CME_CAMERATOSPECIMENMATRIX, CME_SPECIMENTOCAMERAMATRIX, 
   CME_ISTOSPECIMENMATRIX, CME_SPECIMENTOISMATRIX, CME_ISTOSTAGEMATRIX, 
   CME_STAGETOISMATRIX, CME_STAGETOSPECIMENMATRIX, CME_SPECIMENTOSTAGEMATRIX, 
-    CME_REPORTISFORBUFFERSHIFT
+    CME_REPORTISFORBUFFERSHIFT, CME_ALIGNWITHROTATION
 };
 
 // The two numbers are the minimum arguments and whether arithmetic is allowed
@@ -445,7 +445,7 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"CameraToSpecimenMatrix", 1, 0}, {"SpecimenToCameraMatrix", 1, 0},
 {"ISToSpecimenMatrix", 1, 0}, {"SpecimenToISMatrix", 1, 0}, {"ISToStageMatrix", 1, 0}, 
 {"StageToISMatrix", 1, 0},{"StageToSpecimenMatrix", 1, 0},{"SpecimenToStageMatrix", 1, 0},
-{"ReportISforBufferShift", 0, 0},/*CAI3.8*/
+{"ReportISforBufferShift", 0, 0},{"AlignWithRotation", 3, 0}, /*CAI3.8*/
 {NULL, 0, 0}
 };
 // The longest is now 25 characters but 23 is a more common limit
@@ -1030,7 +1030,7 @@ BOOL CMacroProcessor::MacroRunnable(int index)
 void CMacroProcessor::OnMacroEnd()
 {
   if (DoingMacro())
-    Stop(false, true);
+    Stop(false);
   else
     SetNonResumable();
 }
@@ -1043,7 +1043,7 @@ void CMacroProcessor::OnUpdateMacroEnd(CCmdUI *pCmdUI)
 
 void CMacroProcessor::OnMacroStop()
 {
-  Stop(true, true);
+  Stop(true);
 }
 
 // Allow stop through the menu if there is a macro-driven non Navigator tilt series
@@ -1327,7 +1327,7 @@ void CMacroProcessor::Resume()
 }
 
 // Stop either now or at an ending place
-void CMacroProcessor::Stop(BOOL ifNow, BOOL fromTSC)
+void CMacroProcessor::Stop(BOOL ifNow)
 {
   if (ifNow) {
     if (TestAndStartFuncOnStop())
@@ -2867,6 +2867,17 @@ void CMacroProcessor::NextCommand()
 
   case CME_LIMITNEXTAUTOALIGN:                              // LimitNextAutoalign
     mShiftManager->SetNextAutoalignLimit((float)itemDbl[1]);
+    break;
+
+  case CME_ALIGNWITHROTATION:                               // AlignWithRotation
+    if (ConvertBufferLetter(strItems[1], -1, true, index, report))
+      ABORT_LINE(report);
+    if (itemDbl[3] < 0.2 || itemDbl[3] > 50.)
+      ABORT_LINE("The angle range to search must be between 0.2 and 50 degrees in:\n\n");
+    if (navHelper->AlignWithRotation(index, (float)itemDbl[2], (float)itemDbl[3], bmin,
+      shiftX, shiftY))
+      ABORT_LINE("Failure to autoalign in:\n\n");
+    SetReportedValues(&strItems[4], bmin, shiftX, shiftY);
     break;
 
   case CME_G:
@@ -6825,6 +6836,7 @@ void CMacroProcessor::NextCommand()
         index = navigator->GetCurrentOrAcquireItem(navItem);
         if (index < 0)
           ABORT_LINE("There is no current Navigator item for line:\n\n.");
+        index2 = 1;
       } else if (truth) {
         if (!navigator->GetAcquiring())
           ABORT_LINE("The Navigator must be acquiring for line:\n\n");
@@ -6842,6 +6854,7 @@ void CMacroProcessor::NextCommand()
         navItem = navigator->GetOtherNavItem(index);
         if (!navItem)
           ABORT_LINE("Index is out of range in statement:\n\n");
+        index2 = 2;
       }
 
       if (CMD_IS(REPORTNAVITEM) || CMD_IS(REPORTOTHERITEM) || (truth && index >= 0)) {
@@ -6868,7 +6881,10 @@ void CMacroProcessor::NextCommand()
       } else if (!truth) {
         if (navItem->mType != ITEM_TYPE_MAP)
           ABORT_LINE("The Navigator item is not a map for line:\n\n");
-        navigator->DoLoadMap(false, navItem);
+        if (ConvertBufferLetter(strItems[index2], mBufferManager->GetBufToReadInto(), 
+          false, ix0, report))
+          ABORT_LINE(report);
+        navigator->DoLoadMap(false, navItem, ix0);
         mLoadingMap = true;
       }
     break;

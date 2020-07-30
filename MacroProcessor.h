@@ -69,7 +69,7 @@ class CMacroProcessor : public CCmdTarget
   void SetIntensityFactor(int iDir);
   void RunOrResume();
   void NextCommand();
-  void Stop(BOOL ifNow, BOOL fromTSC = FALSE);
+  void Stop(BOOL ifNow);
   void Resume();
   void Run(int which);
   void TaskDone(int param);
