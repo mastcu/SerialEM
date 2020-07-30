@@ -1185,6 +1185,10 @@ int CShiftManager::AutoAlign(int bufIndex, int inSmallPad, BOOL doImShift, BOOL 
       }
   }    
 
+  // Something in here (not SetCurrentBuffer or DrawImage) is making the mini-tilt series
+  // window lose keyboard focus with no messages detectable: so set focus to the window
+  // that should have it
+  ((CMainFrame *)(mWinApp->m_pMainWnd))->MDIGetActive(NULL)->SetFocus();
   AutoalignCleanup();
   
   return 0;
@@ -1813,11 +1817,14 @@ float CShiftManager::GetPixelSize(int inCamera, int inMagIndex)
 }
 
 // Get the pixel size of an image
-float CShiftManager::GetPixelSize(EMimageBuffer * imBuf)
+float CShiftManager::GetPixelSize(EMimageBuffer *imBuf)
 {
   float scale, rotation, pixel = 0.;
-  if (imBuf && imBuf->mBinning && imBuf->mCamera >= 0 && imBuf->mMagInd) {
-    pixel = (float)(imBuf->mBinning * GetPixelSize(imBuf->mCamera, imBuf->mMagInd));
+  if (imBuf ) {
+    if (imBuf->mPixelSize > 0)
+      pixel = imBuf->mPixelSize;
+    else if (imBuf->mBinning && imBuf->mCamera >= 0 && imBuf->mMagInd)
+      pixel = (float)(imBuf->mBinning * GetPixelSize(imBuf->mCamera, imBuf->mMagInd));
     if (GetScaleAndRotationForFocus(imBuf, scale, rotation))
       pixel /= scale;
   }
