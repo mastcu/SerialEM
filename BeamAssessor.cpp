@@ -1435,6 +1435,7 @@ void CBeamAssessor::CalibrateElectronDose(BOOL interactive)
   int indTab, i;
   EMimageBuffer *imBuf = mWinApp->GetImBufs();
   CameraParameters *camParam = mWinApp->GetCamParams() + imBuf->mCamera;
+  ControlSet *allConSets = mWinApp->GetCamConSets();
   int probe = mScope->ReadProbeMode();
   int aboveCross = GetAboveCrossover(spotSize, intensity, probe); 
   DoseTable *dtp = &mDoseTables[spotSize][aboveCross][probe];
@@ -1461,6 +1462,15 @@ void CBeamAssessor::CalibrateElectronDose(BOOL interactive)
       "counts per electron for the camera from which this image was taken\n\n"
       "Dose cannot be calibrated with this image", MB_EXCLAME);
     return;
+  }
+
+  if (imBuf->mCamera >= 0 && imBuf->mConSetUsed >= 0 && camParam->OneViewType &&
+    allConSets[imBuf->mConSetUsed + imBuf->mCamera * MAX_CONSETS].correctDrift) {
+    if (AfxMessageBox("It appears that this image was taken with drift correction "
+      "turned on.\n\nBlank images with drift correction can lose frames and give"
+      " a bad dose estimate.\n\nDo you want to go take another image without this"
+      " setting?", MB_QUESTION) == IDYES)
+      return;
   }
 
   if (extra && extra->m_fIntensity > -1.)
