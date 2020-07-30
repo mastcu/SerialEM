@@ -3923,9 +3923,9 @@ int CNavHelper::AlignWithRotation(int buffer, float centerAngle, float angleRang
       peakmax = peak;
       rotBest = rotation;
       istMax = ist;
-      mImBufs->mImage->getShifts(shiftXbest, shiftYbest);
+      shiftXbest = shiftX;
+      shiftYbest = shiftY;
     }
-    mImBufs->mImage->setShifts(0., 0.);
     SEMTrace('1', "Rotation %.1f  peak  %g  shift %.1f %.1f", rotation, peak,
       shiftX, shiftY);
   }
@@ -3949,12 +3949,15 @@ int CNavHelper::AlignWithRotation(int buffer, float centerAngle, float angleRang
           return 1;
         if (CCCp)
           peak = (float)(CCC * pow((double)fracPix, overlapPow));
+
+        // When autoalign is called with shift pointers, it does not put the shift in the
+        // image, so it needs to come from the call not the image
         if (peak > peakmax) {
           peakmax = peak;
           rotBest = rotation;
-          mImBufs->mImage->getShifts(shiftXbest, shiftYbest);
+          shiftXbest = shiftX;
+          shiftYbest = shiftY;
         }
-        mImBufs->mImage->setShifts(0., 0.);
         SEMTrace('1', "Rotation %.1f  peak  %g  shift %.1f %.1f", rotation, 
           peak, shiftX, shiftY);
       }
