@@ -53,8 +53,8 @@ public:
   int mK2mode;
 
 private:
-  int mPanelStart[6];
-  int mNumInPanel[6];
+  int mPanelStart[8];
+  int mNumInPanel[8];
 
 public:
   CString m_strBasename;
