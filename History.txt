@@ -3,6 +3,13 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+7/31/20: Added try-catch blocks to script structure for error handling.
+
+7/31/20: Fixed frame file options dialog to show multishot position for DE
+cameras.
+
+7/30/20: Added AlignWithRotation script command.
+
 7/29/20: Added new plugin build for GMS 3.4.
 
 7/29/20: Added Reset Log Position to File menu to rescue lost log.

@@ -581,8 +581,9 @@ void CMacroEditer::HandleCompletionsAndIndent(CString &strMacro, CString &strCom
   CmdItem *cmdList;
   CString substr;
   const char *first, *other;
-  const char *prevKeys[] = {"LOOP", "IF", "ELSE", "ELSEIF", "FUNCTION"};
-  const char *curKeys[] = {"ENDLOOP", "ELSE", "ELSEIF", "ENDIF", "ENDFUNCTION"};
+  const char *prevKeys[] = {"LOOP", "IF", "ELSE", "ELSEIF", "FUNCTION", "TRY", "CATCH"};
+  const char *curKeys[] = {"ENDLOOP", "ELSE", "ELSEIF", "ENDIF", "ENDFUNCTION", "CATCH",
+    "ENDTRY"};
   int numPrevKeys = sizeof(prevKeys) / sizeof(const char *);
   int numCurKeys = sizeof(curKeys) / sizeof(const char *);
   CSerialEMApp *winApp = (CSerialEMApp *)AfxGetApp();

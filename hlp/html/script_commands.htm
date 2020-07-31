@@ -247,6 +247,30 @@
             not included in the label in the 'SkipTo' statement.</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">Try</TD>
+          <TD>Starts a block within which an error will result in the script jumping to the 
+            line after the following &#39;Catch&#39; statement instead of a message box appearing.&nbsp; 
+            See <A HREF="about_scripts.htm#tryCatch">Error Handling and TRY - CATCH - ENDTRY Blocks</A>.
+            &nbsp; Command added in 3.8, 7/31/20.
+          </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">Catch</TD>
+          <TD>Starts the block of commands that are run only when an error occurs or &#39;Throw&#39; 
+            statement is used inside the 'Try' portion of the block.&nbsp; Command added in 3.8, 7/31/20</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">EndTry</TD>
+          <TD>Ends the block of commands run upon error.&nbsp; Command added in 3.8, 7/31/20</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">Throw [text]</TD>
+          <TD>Jumps to the 'Catch' section of the 'Try' block containing this statement, 
+            adding the optional <b>text</b> to the message given in the log about the jump.
+            &nbsp; Command added in 3.8, 7/31/20
+          </TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">OnStopCallFunc name</TD>
           <TD>Calls the function with the given <b>name</b> when the script is stopped by the user 
             pressing STOP or by an error in a script operation or in an external routine.&nbsp; 

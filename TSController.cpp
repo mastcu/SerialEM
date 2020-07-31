@@ -4797,12 +4797,13 @@ int CTSController::TSMessageBox(CString message, UINT type, BOOL terminate, int 
 {
   int index = 0;
   CString valve;
+  CMacroProcessor *macProc = mWinApp->mMacroProcessor;
 
   // Intercept error from macros if the flag is set, make sure there is a \r before at
   // least one \n in a row, print message and return
   if (mWinApp->mCamera->GetNoMessageBoxOnError() < 0 || 
-    (mWinApp->mMacroProcessor->DoingMacro() && 
-      mWinApp->mMacroProcessor->GetNoMessageBoxOnError())) {
+    (macProc->DoingMacro() && (macProc->GetNoMessageBoxOnError() || 
+      macProc->GetTryCatchLevel() > 0))) {
       for (int ind = 0; ind < message.GetLength(); ind++) {
         if (message.GetAt(ind) == '\n' && (!ind || (message.GetAt(ind - 1) != '\r' &&
           message.GetAt(ind - 1) != '\n'))) {
@@ -4810,8 +4811,9 @@ int CTSController::TSMessageBox(CString message, UINT type, BOOL terminate, int 
           ind++;
         }
       }
-      message = CString("\r\nSCRIPT STOPPING WITH THIS MESSAGE:\r\n") + message + 
-      CString("\r\n* * * * * * * * * * * * * * * * * *\r\n");    
+      valve.Format("\r\nSCRIPT %s WITH THIS MESSAGE:\r\n", (macProc->DoingMacro() && 
+        macProc->GetTryCatchLevel() > 0) ? "ERROR" : "STOPPING");
+      message = valve + message + "\r\n* * * * * * * * * * * * * * * * * *\r\n";    
     mWinApp->AppendToLog(message, LOG_OPEN_IF_CLOSED);
     return retval;
  }
@@ -4829,8 +4831,8 @@ int CTSController::TSMessageBox(CString message, UINT type, BOOL terminate, int 
     } else {
       if (mWinApp->mNavigator && mWinApp->mNavigator->GetAcquiring())
         mWinApp->mNavigator->SendEmailIfNeeded();
-      if (mWinApp->mMacroProcessor->DoingMacro())
-        mWinApp->mMacroProcessor->SendEmailIfNeeded();
+      if (macProc->DoingMacro())
+        macProc->SendEmailIfNeeded();
     }
     LeaveInitialChecks();
     if (mMessageBoxCloseValves && mMessageBoxValveTime > 0.)

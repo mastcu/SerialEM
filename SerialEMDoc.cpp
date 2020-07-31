@@ -356,7 +356,7 @@ int CSerialEMDoc::OpenOldMrcCFile(CFile **file, CString cFilename, bool imodOK)
     *file = new CFile(cFilename, CFile::modeReadWrite |CFile::shareDenyWrite);
   }
   catch (CFileException *err) {
-    AfxMessageBox("Error: Cannot open the selected file.", MB_EXCLAME);
+    SEMMessageBox("Error: Cannot open the selected file.", MB_EXCLAME);
     err->Delete();
     return MRC_OPEN_ERROR;
   }
@@ -368,7 +368,7 @@ int CSerialEMDoc::OpenOldMrcCFile(CFile **file, CString cFilename, bool imodOK)
       return MRC_OPEN_ADOC;
 
     if (!imodOK)
-      AfxMessageBox("Error: File is not an MRC file.", MB_EXCLAME);
+      SEMMessageBox("Error: File is not an MRC file.", MB_EXCLAME);
     return MRC_OPEN_NOTMRC;
   }
   return MRC_OPEN_NOERR;

@@ -139,10 +139,11 @@ static char THIS_FILE[]=__FILE__;
 #define CMD_IS(a) (cmdIndex == CME_##a)
 
 #define MAX_TOKENS 60
-#define LOOP_LIMIT_FOR_IF -2147000000
+#define LOOP_LIMIT_FOR_TRY -2146000000
+#define LOOP_LIMIT_FOR_IF  -2147000000
 
 enum {VARTYPE_REGULAR, VARTYPE_PERSIST, VARTYPE_INDEX, VARTYPE_REPORT, VARTYPE_LOCAL};
-enum {SKIPTO_ENDIF, SKIPTO_ELSE_ENDIF, SKIPTO_ENDLOOP};
+enum {SKIPTO_ENDIF, SKIPTO_ELSE_ENDIF, SKIPTO_ENDLOOP, SKIPTO_CATCH, SKIPTO_ENDTRY};
 enum {TXFILE_READ_ONLY, TXFILE_WRITE_ONLY, TXFILE_MUST_EXIST, TXFILE_MUST_NOT_EXIST,
   TXFILE_QUERY_ONLY};
 
@@ -282,7 +283,8 @@ enum {CME_SCRIPTEND = -7, CME_LABEL, CME_SETVARIABLE, CME_SETSTRINGVAR, CME_DOKE
   CME_STAGETOCAMERAMATRIX, CME_CAMERATOSPECIMENMATRIX, CME_SPECIMENTOCAMERAMATRIX, 
   CME_ISTOSPECIMENMATRIX, CME_SPECIMENTOISMATRIX, CME_ISTOSTAGEMATRIX, 
   CME_STAGETOISMATRIX, CME_STAGETOSPECIMENMATRIX, CME_SPECIMENTOSTAGEMATRIX, 
-    CME_REPORTISFORBUFFERSHIFT, CME_ALIGNWITHROTATION
+  CME_REPORTISFORBUFFERSHIFT, CME_ALIGNWITHROTATION, CME_TRY, CME_CATCH, CME_ENDTRY, 
+  CME_THROW 
 };
 
 // The two numbers are the minimum arguments and whether arithmetic is allowed
@@ -445,7 +447,8 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"CameraToSpecimenMatrix", 1, 0}, {"SpecimenToCameraMatrix", 1, 0},
 {"ISToSpecimenMatrix", 1, 0}, {"SpecimenToISMatrix", 1, 0}, {"ISToStageMatrix", 1, 0}, 
 {"StageToISMatrix", 1, 0},{"StageToSpecimenMatrix", 1, 0},{"SpecimenToStageMatrix", 1, 0},
-{"ReportISforBufferShift", 0, 0},{"AlignWithRotation", 3, 0}, /*CAI3.8*/
+{"ReportISforBufferShift", 0, 0}, {"AlignWithRotation", 3, 0}, {"Try", 0, 0},
+{"Catch", 0, 0}, {"EndTry", 0, 0}, {"Throw", 0, 0},/*CAI3.8*/
 {NULL, 0, 0}
 };
 // The longest is now 25 characters but 23 is a more common limit
@@ -520,7 +523,8 @@ CMacroProcessor::CMacroProcessor()
     "FRACDIFF", "MIN", "MAX" };
   std::string keywords[] = { "REPEAT", "ENDLOOP", "DOMACRO", "LOOP", "CALLMACRO", "DOLOOP"
     , "ENDIF", "IF", "ELSE", "BREAK", "CONTINUE", "CALL", "EXIT", "RETURN", "KEYBREAK",
-    "SKIPTO", "FUNCTION", "CALLFUNCTION", "ENDFUNCTION", "CALLSCRIPT", "DOSCRIPT" };
+    "SKIPTO", "FUNCTION", "CALLFUNCTION", "ENDFUNCTION", "CALLSCRIPT", "DOSCRIPT",
+    "TRY", "CATCH", "ENDTRY", "THROW"};
   SEMBuildTime(__DATE__, __TIME__);
   mWinApp = (CSerialEMApp *)AfxGetApp();
   mModeNames = mWinApp->GetModeNames();
@@ -1162,7 +1166,7 @@ void CMacroProcessor::TaskDone(int param)
 // To run a macro: set the current macro with index at start
 void CMacroProcessor::Run(int which)
 {
-  int mac, ind;
+  int mac, ind, tryLevel = 0;
   MacroFunction *func;
   if (mMacros[which].IsEmpty())
     return;
@@ -1171,7 +1175,7 @@ void CMacroProcessor::Run(int which)
   PrepareForMacroChecking(which);
   mLastAborted = true;
   mLastCompleted = false;
-  if (CheckBlockNesting(which, -1))
+  if (CheckBlockNesting(which, -1, tryLevel))
     return;
 
   // Clear out wasCalled flags
@@ -1186,6 +1190,7 @@ void CMacroProcessor::Run(int which)
   mCurrentMacro = which;
   mBlockLevel = -1;
   mBlockDepths[0] = -1;
+  mTryCatchLevel = 0;
   mCallFunction[0] = NULL;
   mCurrentIndex = 0;
   mLastIndex = -1;
@@ -1330,6 +1335,8 @@ void CMacroProcessor::Resume()
 void CMacroProcessor::Stop(BOOL ifNow)
 {
   if (ifNow) {
+    if (!mWinApp->mCameraMacroTools.GetUserStop() && TestTryLevelAndSkip(NULL))
+      return;
     if (TestAndStartFuncOnStop())
       return;
     if (mProcessThread && UtilThreadBusy(&mProcessThread) > 0)
@@ -1352,6 +1359,43 @@ int CMacroProcessor::TestAndStartFuncOnStop(void)
     mWinApp->AddIdleTask(NULL, TASK_MACRO_RUN, 0, 0);
     return 1;
   }
+  return 0;
+}
+
+// Tests whether we are in a Try block at any level, and skips to the appropriate catch
+int CMacroProcessor::TestTryLevelAndSkip(CString *mess)
+{
+  CString str;
+  int i, numPops, delTryLevel;
+  if (mTryCatchLevel > 0) {
+
+    // If end of script or function is reached, then drop the call level
+    while (SkipToBlockEnd(SKIPTO_CATCH, str, &numPops, &delTryLevel)) {
+      mTryCatchLevel += delTryLevel;
+      if (mCallLevel > 0) {
+        LeaveCallLevel(true);
+      } else {
+        SEMMessageBox("Terminating script because no CATCH block was found for "
+          "processing an error or THROW");
+        mTryCatchLevel = 0;
+        return 0;
+      }
+    }
+    for (i = 0; i < numPops && mBlockLevel >= 0; i++) {
+      ClearVariables(VARTYPE_INDEX, mCallLevel, mBlockLevel);
+      mBlockLevel--;
+      mBlockDepths[mCallLevel]--;
+    }
+    mLastIndex = -1;
+    mTryCatchLevel += delTryLevel;
+    str = "Jumping to \"CATCH\" error handler";
+    if (mess && !mess->IsEmpty())
+      str += ": " + *mess;
+    mWinApp->AppendToLog(str);
+    mWinApp->AddIdleTask(NULL, TASK_MACRO_RUN, 0, 0);
+    return 1;
+  }
+  mTryCatchLevel = 0;
   return 0;
 }
 
@@ -1619,25 +1663,7 @@ void CMacroProcessor::NextCommand()
     }
     
     // For a return, pop any loops, clear index variables
-    if (CMD_IS(RETURN)) {
-      while (mBlockDepths[mCallLevel] >= 0) {
-        ClearVariables(VARTYPE_INDEX, mCallLevel, mBlockLevel);
-        mBlockLevel--;
-        mBlockDepths[mCallLevel]--;
-      }
-    }
-    ClearVariables(VARTYPE_LOCAL, mCallLevel);
-    if (mCallFunction[mCallLevel])
-      mCallFunction[mCallLevel]->wasCalled = false;
-    mCallLevel--;
-    if (mCurrentMacro == mNeedClearTempMacro) {
-      mMacros[mNeedClearTempMacro] = "";
-      mNumTempMacros--;
-      mNeedClearTempMacro = -1;
-    }
-    mCurrentMacro = mCallMacro[mCallLevel];
-    mCurrentIndex = mCallIndex[mCallLevel];
-    mLastIndex = -1;
+    LeaveCallLevel(CMD_IS(RETURN));
     break;
     
   case CME_REPEAT:                                          // Repeat
@@ -1656,11 +1682,9 @@ void CMacroProcessor::NextCommand()
   case CME_ENDLOOP:                                         // EndLoop
 
     // First see if we are actually doing a loop: if not, error
-    if (mBlockDepths[mCallLevel] < 0 || mLoopLimit[mBlockLevel] < LOOP_LIMIT_FOR_IF) {
-      AbortMacro();
-      AfxMessageBox("The script contains an ENDLOOP without a LOOP or DOLOOP statement",
-        MB_EXCLAME);
-      return;
+    if (mBlockDepths[mCallLevel] < 0 || mLoopLimit[mBlockLevel] < LOOP_LIMIT_FOR_IF ||
+      mLoopLimit[mBlockLevel] == LOOP_LIMIT_FOR_TRY) {
+      ABORT_NOLINE("The script contains an ENDLOOP without a LOOP or DOLOOP statement");
     }
 
     // If count is not past limit, go back to start;
@@ -1765,17 +1789,18 @@ void CMacroProcessor::NextCommand()
   case CME_CONTINUE:
   case CME_DOKEYBREAK:    // Break, Continue
      
-    if (SkipToBlockEnd(SKIPTO_ENDLOOP, strLine)) {
+    if (SkipToBlockEnd(SKIPTO_ENDLOOP, strLine, &index, &index2)) {
       AbortMacro();
       return;
     }
     mLastIndex = -1;
 
-    // Pop any IFs on the loop stack
-    while (mBlockLevel >= 0 && mLoopLimit[mBlockLevel] <= LOOP_LIMIT_FOR_IF) {
+    // Pop any IFs and TRYs on the loop stack
+    while (mBlockLevel >= 0 && mLoopLimit[mBlockLevel] <= LOOP_LIMIT_FOR_TRY) {
       mBlockLevel--;
       mBlockDepths[mCallLevel]--;
     }
+    mTryCatchLevel += index2;
     if (mBlockLevel >= 0 && (CMD_IS(BREAK) || keyBreak))
       mLoopCount[mBlockLevel] = mLoopLimit[mBlockLevel];
     if (keyBreak) {
@@ -1783,9 +1808,44 @@ void CMacroProcessor::NextCommand()
       mKeyPressed = 0;
     }
     break;
+    
+  case CME_TRY:                                             // Try
+    mBlockLevel++;
+    if (mBlockLevel >= MAX_LOOP_DEPTH)
+      ABORT_LINE("Nesting of loops, IF or TRY blocks, and script or function calls is too"
+        " deep at line: \n\n:");
+    mBlockDepths[mCallLevel]++;
+    mLoopLimit[mBlockLevel] = LOOP_LIMIT_FOR_TRY;
+    mTryCatchLevel++;
+    break;
+
+  case CME_CATCH:                                           // Catch
+    if (SkipToBlockEnd(SKIPTO_ENDTRY, strLine)) {
+      AbortMacro();
+      return;
+    }
+    mTryCatchLevel--;
+    mLastIndex = -1;
+    break;
+
+  case CME_ENDTRY:                                          // EndTry
+    mBlockLevel--;
+    mBlockDepths[mCallLevel]--;
+    mLastIndex = -1;
+    break;
+
+  case CME_THROW:                                           // Throw
+    strCopy = "";
+    if (!strItems[1].IsEmpty())
+      SubstituteLineStripItems(strLine, 1, strCopy);
+    if (TestTryLevelAndSkip(&strCopy))
+      return;
+    ABORT_NOLINE("Stopping because a THROW statement was encountered outside of a TRY "
+      "block");
+    break;
 
   case CME_SKIPTO:                                          // SkipTo
-    if (SkipToLabel(item1upper, strLine, index)) {
+    if (SkipToLabel(item1upper, strLine, index, index2)) {
       AbortMacro();
       return;
     }
@@ -1796,6 +1856,7 @@ void CMacroProcessor::NextCommand()
       mBlockLevel--;
       mBlockDepths[mCallLevel]--;
     }
+    mTryCatchLevel += index2;
     mLastIndex = -1;
     break;
     
@@ -1827,7 +1888,8 @@ void CMacroProcessor::NextCommand()
         index = MakeNewTempMacro(strItems[1], strItems[2], true, strLine);
         if (!index)
           return;
-        if (CheckBlockNesting(index, -1)) {
+        ix0 = 0;
+        if (CheckBlockNesting(index, -1, ix0)) {
           AbortMacro();
           return;
         }
@@ -2257,13 +2319,10 @@ void CMacroProcessor::NextCommand()
     double angle = (float)itemDbl[1];
     if (CMD_IS(TILTBY))
       angle += mScope->GetTiltAngle();
-    if (angle < -80. || angle > 80.) {
-      CString message;
-      message.Format("Attempt to tilt too high in script, to %.1f degrees\n\n%s",
-        angle, strLine);
-      AfxMessageBox(message, MB_EXCLAME);
-      AbortMacro();
-      return;
+    if (fabs(angle) > mScope->GetMaxTiltAngle() + 0.05) {
+      report.Format("Attempt to tilt too high in script, to %.1f degrees, in line:\n\n",
+        angle);
+      ABORT_LINE(report);
     }
     if (mScope->StageBusy() <= 0) {
       SetupStageRestoreAfterTilt(&strItems[2], delISX, delISY);
@@ -3520,10 +3579,7 @@ void CMacroProcessor::NextCommand()
     if (mWinApp->mStoreMRC) {
       mWinApp->mDocWnd->DoCloseFile();
     } else if (!itemEmpty[1]) {
-      SuspendMacro();
-      AfxMessageBox("Script suspended on CloseFile because there is no open file",
-        MB_EXCLAME);
-      return;
+      SUSPEND_LINE("Script suspended on CloseFile because there is no open file");
     }
     break;
     
@@ -5790,13 +5846,11 @@ void CMacroProcessor::NextCommand()
     if (!itemEmpty[1])
       index = itemInt[1];
     if ((index & (FIND_EUCENTRICITY_FINE | FIND_EUCENTRICITY_COARSE)) == 0) {
-      AbortMacro();
       report.Format("Error in script: value on Eucentricity statement \r\n"
         "should be %d for coarse, %d for fine, or %d for both",
         FIND_EUCENTRICITY_COARSE, FIND_EUCENTRICITY_FINE,
         FIND_EUCENTRICITY_FINE | FIND_EUCENTRICITY_COARSE);
-      AfxMessageBox(report, MB_EXCLAME);
-      return;
+      ABORT_LINE(report);
     }
     mWinApp->mComplexTasks->FindEucentricity(index);
     break;
@@ -6151,12 +6205,10 @@ void CMacroProcessor::NextCommand()
     if (CMD_IS(CHANGEENERGYLOSS))
       delISX += filtParam->energyLoss;
     if (mWinApp->mFilterControl.LossOutOfRange(delISX, delISY)) {
-      AbortMacro();
       report.Format("The energy loss requested in:\n\n%s\n\nrequires a net %s of %.1f"
         "with the current adjustments.\nThis net value is beyond the allowed range.",
         (LPCTSTR)strLine, mScope->GetHasOmegaFilter() ? "shift" : "offset", delISY);
-      AfxMessageBox(report, MB_EXCLAME);
-      return;
+      ABORT_LINE(report);
     }
     filtParam->energyLoss = (float)delISX;
     filtParam->zeroLoss = false;
@@ -7820,6 +7872,8 @@ void CMacroProcessor::SuspendMacro(BOOL abort)
   bool restoreArea = false;
   if (!mDoingMacro)
     return;
+  if (!mWinApp->mCameraMacroTools.GetUserStop() && TestTryLevelAndSkip(NULL))
+    return;
   if (TestAndStartFuncOnStop())
     return;
   if (mNeedClearTempMacro >= 0) {
@@ -8583,7 +8637,7 @@ int CMacroProcessor::SubstituteVariables(CString * strItems, int maxItems, CStri
       }
 
       if (!maxlen) {
-        AfxMessageBox("Undefined variable in script line:\n\n" +
+        SEMMessageBox("Undefined variable in script line:\n\n" +
           line, MB_EXCLAME);
         return 1;
       }
@@ -8592,7 +8646,7 @@ int CMacroProcessor::SubstituteVariables(CString * strItems, int maxItems, CStri
       // If it is a loop index, look up the value and put in value string
       if (var->type == VARTYPE_INDEX) {
         if (var->index < 0 || var->index >= MAX_LOOP_DEPTH) {
-          AfxMessageBox("The variable " + var->name + " is apparently a loop index "
+          SEMMessageBox("The variable " + var->name + " is apparently a loop index "
             "variable,\nbut the pointer to the loop is out of range in script line:\n\n" +
             line, MB_EXCLAME);
           return 2;
@@ -8625,7 +8679,7 @@ int CMacroProcessor::SubstituteVariables(CString * strItems, int maxItems, CStri
           arrInd = ConvertArrayIndex(strItems[ind], leftInd, nright, var->name,
             (int)var->rowsFor2d->GetSize(), &newstr);
           if (!arrInd) {
-            AfxMessageBox(newstr + " in line:\n\n" + line, MB_EXCLAME);
+            SEMMessageBox(newstr + " in line:\n\n" + line, MB_EXCLAME);
             return 2;
           }
           ArrayRow& arrRow = var->rowsFor2d->ElementAt(arrInd - 1);
@@ -9453,17 +9507,17 @@ void CMacroProcessor::SetOneReportedValue(CString *strItem, double value, int in
 
 // Checks the nesting of IF and LOOP blocks in the given macro, as well
 // as the appropriateness of ELSE, BREAK, CONTINUE
-int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel)
+int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel, int &tryLevel)
 {
   int blockType[MAX_LOOP_DEPTH];
-  bool elseFound[MAX_LOOP_DEPTH];
+  bool elseFound[MAX_LOOP_DEPTH], catchFound[MAX_LOOP_DEPTH];
   CString strLabels[MAX_MACRO_LABELS], strSkips[MAX_MACRO_SKIPS];
   int labelBlockLevel[MAX_MACRO_LABELS], labelSubBlock[MAX_MACRO_LABELS];
   int skipBlockLevel[MAX_MACRO_SKIPS], skipCurIndex[MAX_MACRO_SKIPS];
   int labelCurIndex[MAX_MACRO_LABELS];
   short skipSubBlocks[MAX_MACRO_SKIPS][MAX_LOOP_DEPTH + 1];
   int blockLevel = startLevel;
-  bool stringAssign, inFunc = false, inComment = false;
+  bool stringAssign, isIF, isELSE, isELSEIF, isTRY, inFunc = false, inComment = false;
   MacroFunction *func;
   int subBlockNum[MAX_LOOP_DEPTH + 1];
   CString *macro = &mMacros[macroNum];
@@ -9592,6 +9646,10 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel)
         FAIL_CHECK_LINE("Repeat, DoMacro, or DoScript statement cannot be used\n"
         "inside a called script, an IF block, or a loop,");
 
+      isIF = CMD_IS(IF);
+      isELSE = CMD_IS(ELSE);
+      isELSEIF = CMD_IS(ELSEIF);
+      isTRY = CMD_IS(TRY);
       if (CMD_IS(REPEAT))
         break;
 
@@ -9647,7 +9705,7 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel)
           if (!(CMD_IS(DOMACRO) || CMD_IS(DOSCRIPT) || CMD_IS(CALLFUNCTION)) ||
             !mAlreadyChecked[index]) {
             mAlreadyChecked[index] = true;
-            if (CheckBlockNesting(index, blockLevel))
+            if (CheckBlockNesting(index, blockLevel, tryLevel))
               return 14;
           }
 
@@ -9659,46 +9717,71 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel)
       // Examine loops
       } else if ((CMD_IS(LOOP) && !strItems[1].IsEmpty()) || 
         (CMD_IS(DOLOOP) && !strItems[3].IsEmpty()) || 
-        (CMD_IS(IF) && !strItems[3].IsEmpty())) {
+        (isIF && !strItems[3].IsEmpty()) || isTRY) {
         blockLevel++;
         subBlockNum[1 + blockLevel]++;
         if (blockLevel >= MAX_LOOP_DEPTH)
-          FAIL_CHECK_NOLINE("Too many nested LOOP/DOLOOP and IF statements");
-        blockType[blockLevel] = CMD_IS(IF) ? 1 : 0;
+          FAIL_CHECK_NOLINE("Too many nested LOOP/DOLOOP, IF, and TRY statements");
+        blockType[blockLevel] = B3DCHOICE(isTRY, 2, isIF ? 1 : 0);
         elseFound[blockLevel] = false;
-        if (CMD_IS(IF) && CheckBalancedParentheses(strItems, MAX_TOKENS, strLine,errmess))
+        catchFound[blockLevel] = false;
+        if (isTRY)
+          tryLevel++;
+        if (isIF && CheckBalancedParentheses(strItems, MAX_TOKENS, strLine,errmess))
           return 99;
 
-      } else if (CMD_IS(ELSE) || CMD_IS(ELSEIF)) {
+      } else if (isELSE || isELSEIF) {
         subBlockNum[1 + blockLevel]++;
-        if (blockLevel <= startLevel || !blockType[blockLevel])
+        if (blockLevel <= startLevel || blockType[blockLevel] != 1)
           FAIL_CHECK_NOLINE("ELSE or ELSEIF statement not in an IF block");
         if (elseFound[blockLevel])
           FAIL_CHECK_NOLINE("ELSEIF or ELSE following an ELSE statement in an IF block");
-        if (CMD_IS(ELSE))
+        if (isELSE)
           elseFound[blockLevel] = true;
-        if (CMD_IS(ELSE) && strItems[1].MakeUpper() == "IF")
+        if (isELSE && strItems[1].MakeUpper() == "IF")
           FAIL_CHECK_NOLINE("ELSE IF must be ELSEIF without a space");
-        if (CMD_IS(ELSE) && !strItems[1].IsEmpty())
+        if (isELSE && !strItems[1].IsEmpty())
           FAIL_CHECK_NOLINE("ELSE line with extraneous entries after the ELSE");
-        if (CMD_IS(ELSEIF) && CheckBalancedParentheses(strItems, MAX_TOKENS, strLine, 
+        if (isELSEIF && CheckBalancedParentheses(strItems, MAX_TOKENS, strLine,
           errmess))
           return 99;
+
+      } else if (CMD_IS(CATCH)) {
+        subBlockNum[1 + blockLevel]++;
+        if (blockLevel <= startLevel)
+          FAIL_CHECK_NOLINE("CATCH statement not in a TRY block");
+        if (blockType[blockLevel] != 2)
+          FAIL_CHECK_NOLINE("CATCH contained in an LOOP, DOLOOP, or IF  block");
+        if (catchFound[blockLevel])
+          FAIL_CHECK_NOLINE("Second CATCH found in a TRY block");
+        catchFound[blockLevel] = true;
+        tryLevel--;
 
       } else if (CMD_IS(ENDLOOP)) {
         if (blockLevel <= startLevel)
           FAIL_CHECK_NOLINE("ENDLOOP without corresponding LOOP or DOLOOP statement");
         if (blockType[blockLevel])
-          FAIL_CHECK_NOLINE("ENDLOOP contained in an IF block");
+          FAIL_CHECK_NOLINE("ENDLOOP contained in an IF or TRY  block");
         blockLevel--;
+
       } else if (CMD_IS(ENDIF)) {
         if (blockLevel <= startLevel)
           FAIL_CHECK_NOLINE("ENDIF without corresponding IF statement");
-        if (!blockType[blockLevel])
-          FAIL_CHECK_NOLINE("ENDIF contained in a LOOP or DOLOOP block");
+        if (blockType[blockLevel] != 1)
+          FAIL_CHECK_NOLINE("ENDIF contained in a LOOP, DOLOOP, or TRY block");
         blockLevel--;
+
+      } else if (CMD_IS(ENDTRY)) {
+        if (blockLevel <= startLevel)
+          FAIL_CHECK_NOLINE("ENDTRY without corresponding TRY statement");
+        if (blockType[blockLevel] != 2)
+          FAIL_CHECK_NOLINE("ENDTRY contained in an LOOP, DOLOOP, or IF  block");
+        if (!catchFound[blockLevel])
+          FAIL_CHECK_NOLINE("NO CATCH was found in a TRY - ENDTRY block");
+        blockLevel--;
+
       } else if (CMD_IS(BREAK) || CMD_IS(KEYBREAK) || CMD_IS(CONTINUE)) {
-        inloop =0;
+        inloop = 0;
         for (i = startLevel + 1; i <= blockLevel; i++) {
           if (!blockType[i])
             inloop = 1;
@@ -9706,6 +9789,10 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel)
         if (!inloop)
           FAIL_CHECK_NOLINE("BREAK, KEYBREAK, or CONTINUE not contained in a LOOP or "
             "DOLOOP block");
+
+      } else if (CMD_IS(THROW) && tryLevel <= 0) {
+        FAIL_CHECK_LINE("THROW seems not to be contained in any TRY block in line");
+
       } else if (CMD_IS(SKIPTO) && !strItems[1].IsEmpty()) {
 
         // For a SkipTo, record the location and level and subblock at all lower levels
@@ -9725,7 +9812,8 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel)
           FAIL_CHECK_LINE("Starting a new function without ending previous one on line");
         inFunc = true;
         if (blockLevel > startLevel)
-          FAIL_CHECK_LINE("Unclosed IF, LOOP, or DOLOOP block in script before function");
+          FAIL_CHECK_LINE("Unclosed IF, LOOP, DOLOOP or TRY block in script before "
+            "function");
         for (i = 2; i < 4; i++) {
           intCheck = "";
           if (!strItems[i].IsEmpty()) {
@@ -9743,7 +9831,7 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel)
           FAIL_CHECK_NOLINE("An EndFunction command occurred when not in a function");
         inFunc = false;
         if (blockLevel > startLevel)
-          FAIL_CHECK_NOLINE("Unclosed IF, LOOP, or DOLOOP block inside function");
+          FAIL_CHECK_NOLINE("Unclosed IF, LOOP, DOLOOP or TRY block inside function");
 
       } else {
 
@@ -9782,8 +9870,8 @@ int CMacroProcessor::CheckBlockNesting(int macroNum, int startLevel)
           FAIL_CHECK_NOLINE(CString("Trying to skip into a higher level LOOP, DOLOOP, or"
             " IF block with SkipTo ") + strSkips[skipInd]);
         if (labelSubBlock[labInd] != skipSubBlocks[skipInd][1 + labelBlockLevel[labInd]])
-          FAIL_CHECK_NOLINE(CString("Trying to skip into a different LOOP/DOLOOP block or"
-          " section of IF block with SkipTo ") + strSkips[skipInd]);
+          FAIL_CHECK_NOLINE(CString("Trying to skip into a different LOOP/DOLOOP or "
+            "TRY/CATCH block or section of IF block with SkipTo ") + strSkips[skipInd]);
         break;
       }
     }
@@ -9890,14 +9978,20 @@ void CMacroProcessor::PrepareForMacroChecking(int which)
   mCallMacro[0] = which;
 }
 
-// Skips to the end of a block or to an else statement, leaves current index
-// at start of statement to be processed (the end statement, or past an else)
-int CMacroProcessor::SkipToBlockEnd(int type, CString line)
+// Skips to the end of a block or to a catch or else statement, leaves current index
+// at start of statement to be processed (the end statement, or past an else or catch)
+int CMacroProcessor::SkipToBlockEnd(int type, CString line, int *numPops, 
+  int *delTryLevel)
 {
   CString *macro = &mMacros[mCurrentMacro];
   CString strLine, strItems[4];
-  int ifLevel = 0, loopLevel = 0;
+  int ifLevel = 0, loopLevel = 0, tryLevel = 0, popTry = 0, funcLevel = 0;
   int nextIndex = mCurrentIndex, cmdIndex;
+  bool isCATCH;
+  if (numPops)
+    *numPops = 0;
+  if (delTryLevel)
+    *delTryLevel = 0;
   while (nextIndex < macro->GetLength()) {
     mCurrentIndex = nextIndex;
     GetNextLine(macro, nextIndex, strLine);
@@ -9905,13 +9999,34 @@ int CMacroProcessor::SkipToBlockEnd(int type, CString line)
       mWinApp->mParamIO->ParseString(strLine, strItems, 4);
       strItems[0].MakeUpper();
       cmdIndex = LookupCommandIndex(strItems[0]);
+      isCATCH = CMD_IS(CATCH);
+      if (isCATCH)
+        tryLevel--;
+
+      // Keep track if in function or leaving a function; if leave a function after
+      // starting in  one, that is the end of the call level and need to quit; otherwise
+      // if in function, just skip to next line
+      if (CMD_IS(FUNCTION))
+        funcLevel++;
+      if (CMD_IS(ENDFUNCTION))
+        funcLevel--;
+      if (funcLevel < 0)
+        break;
+      if (funcLevel > 0)
+        continue;
 
       // If we're at same block level as we started and we find end, return
       if ((!ifLevel && ((type == SKIPTO_ELSE_ENDIF && (CMD_IS(ELSE) || CMD_IS(ELSEIF)))
         || ((type == SKIPTO_ENDIF || type == SKIPTO_ELSE_ENDIF) && CMD_IS(ENDIF))) ||
-        (!loopLevel && type == SKIPTO_ENDLOOP && CMD_IS(ENDLOOP)))) {
-        if (CMD_IS(ELSE))
+        (!loopLevel && type == SKIPTO_ENDLOOP && CMD_IS(ENDLOOP))) ||
+        (!popTry && type == SKIPTO_CATCH && isCATCH) || 
+        (!tryLevel && type == SKIPTO_ENDTRY && CMD_IS(ENDTRY))) {
+        if (CMD_IS(ELSE) || isCATCH)
           mCurrentIndex = nextIndex;
+        if (numPops)
+          *numPops = -(ifLevel + loopLevel + popTry);
+        if (delTryLevel)
+          *delTryLevel = tryLevel;
         return 0;
       }
 
@@ -9920,19 +10035,27 @@ int CMacroProcessor::SkipToBlockEnd(int type, CString line)
         loopLevel++;
       if (CMD_IS(IF))
         ifLevel++;
+      if (CMD_IS(TRY)) {
+        tryLevel++;
+        popTry++;
+      }
       if (CMD_IS(ENDLOOP))
         loopLevel--;
       if (CMD_IS(ENDIF))
         ifLevel--;
+      if (CMD_IS(ENDTRY))
+        popTry--;
     }
   }
-  AfxMessageBox("No appropriate statement found to skip forward to from script "
-    "line:\n\n" + line, MB_EXCLAME);
+  if (!line.IsEmpty())
+    AfxMessageBox("No appropriate statement found to skip forward to from script "
+      "line:\n\n" + line, MB_EXCLAME);
   return 1;
 }
 
 // Skip to a label and return the number of blocks levels to descend
-int CMacroProcessor::SkipToLabel(CString label, CString line, int &numPops)
+int CMacroProcessor::SkipToLabel(CString label, CString line, int &numPops, 
+  int &delTryLevel)
 {
   CString *macro = &mMacros[mCurrentMacro];
   CString strLine, strItems[4];
@@ -9940,6 +10063,7 @@ int CMacroProcessor::SkipToLabel(CString label, CString line, int &numPops)
   int cmdIndex;
   label += ":";
   numPops = 0;
+  delTryLevel = 0;
   while (nextIndex < macro->GetLength()) {
     mCurrentIndex = nextIndex;
     GetNextLine(macro, nextIndex, strLine);
@@ -9958,15 +10082,45 @@ int CMacroProcessor::SkipToLabel(CString label, CString line, int &numPops)
       }
 
       // Otherwise keep track of the block level as it goes up and down
-      if (CMD_IS(LOOP) || CMD_IS(IF))
+      if (CMD_IS(LOOP) || CMD_IS(IF) || CMD_IS(TRY))
         numPops--;
-      if (CMD_IS(ENDLOOP) || CMD_IS(ENDIF))
+      if (CMD_IS(ENDLOOP) || CMD_IS(ENDIF) || CMD_IS(ENDTRY))
         numPops++;
+      if (CMD_IS(TRY))
+        delTryLevel++;
+      if (CMD_IS(CATCH))
+        delTryLevel--;
     }
   }
   AfxMessageBox("No label found to skip forward to from script line:\n\n" + line, 
     MB_EXCLAME);
   return 1;
+}
+
+// Performs all changes needed when leaving a call level (script or function) and 
+// returning to the caller
+void CMacroProcessor::LeaveCallLevel(bool popBlocks)
+{
+  // For a return or an exception from a try, pop any loops, clear index variables
+  if (popBlocks) {
+    while (mBlockDepths[mCallLevel] >= 0) {
+      ClearVariables(VARTYPE_INDEX, mCallLevel, mBlockLevel);
+      mBlockLevel--;
+      mBlockDepths[mCallLevel]--;
+    }
+  }
+  ClearVariables(VARTYPE_LOCAL, mCallLevel);
+  if (mCallFunction[mCallLevel])
+    mCallFunction[mCallLevel]->wasCalled = false;
+  mCallLevel--;
+  if (mCurrentMacro == mNeedClearTempMacro) {
+    mMacros[mNeedClearTempMacro] = "";
+    mNumTempMacros--;
+    mNeedClearTempMacro = -1;
+  }
+  mCurrentMacro = mCallMacro[mCallLevel];
+  mCurrentIndex = mCallIndex[mCallLevel];
+  mLastIndex = -1;
 }
 
 // Convert a single number to a DOMACRO
@@ -10040,8 +10194,8 @@ int CMacroProcessor::CheckConvertFilename(CString * strItems, CString strLine, i
   char absPath[_MAX_PATH];
   char *fullp;
   if (strItems[index].IsEmpty()) {
+    SEMMessageBox("Missing filename in statement:\n\n" + strLine, MB_EXCLAME);
     AbortMacro();
-    AfxMessageBox("Missing filename in statement:\n\n" + strLine, MB_EXCLAME);
     return 1;
   }
 
@@ -10050,9 +10204,9 @@ int CMacroProcessor::CheckConvertFilename(CString * strItems, CString strLine, i
   mWinApp->mParamIO->StripItems(strLine, index, strCopy);
   fullp = _fullpath(absPath, (LPCTSTR)strCopy, _MAX_PATH);
   if (!fullp) {
-    AbortMacro();
-    AfxMessageBox("The filename cannot be converted to an absolute path in statement:"
+    SEMMessageBox("The filename cannot be converted to an absolute path in statement:"
       "\n\n" + strLine, MB_EXCLAME);
+    AbortMacro();
     return 1;
   }
   strCopy = fullp;
@@ -10298,6 +10452,7 @@ int CMacroProcessor::PiecesForMinimumSize(float minMicrons, int camSize,
 // Transfer macro if open and give error if macro is empty (1) or fails (2)
 int CMacroProcessor::EnsureMacroRunnable(int macnum)
 {
+  int tryLevel = 0;
   if (mMacroEditer[macnum])
     mMacroEditer[macnum]->TransferMacro(true);
   if (mMacros[macnum].IsEmpty()) {
@@ -10305,7 +10460,7 @@ int CMacroProcessor::EnsureMacroRunnable(int macnum)
     return 1;
   } 
   mWinApp->mMacroProcessor->PrepareForMacroChecking(macnum);
-  if (mWinApp->mMacroProcessor->CheckBlockNesting(macnum, -1))
+  if (mWinApp->mMacroProcessor->CheckBlockNesting(macnum, -1, tryLevel))
     return 2;
  return 0;
 }

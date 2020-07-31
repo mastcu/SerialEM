@@ -95,6 +95,7 @@ class CMacroProcessor : public CCmdTarget
   GetMember(bool, DisableAlignTrim);
   GetMember(bool, CompensatedBTforIS);
   GetMember(bool, NoMessageBoxOnError);
+  GetMember(int, TryCatchLevel);
   GetSetMember(BOOL, RestoreMacroEditors);
   int GetReadOnlyStart(int macNum) { return mReadOnlyStart[macNum]; };
   void SetReadOnlyStart(int macNum, int start) { mReadOnlyStart[macNum] = start; };
@@ -155,7 +156,7 @@ private:
   int mCurrentMacro;      // Currently running macro
   int mCurrentIndex;      // Index into macro
   int mLoopStart[MAX_LOOP_DEPTH];         // Index of start of loop
-  int mLoopLimit[MAX_LOOP_DEPTH];         // Times to do loop
+  int mLoopLimit[MAX_LOOP_DEPTH];         // Times to do loop or special values for IF/TRY
   int mLoopCount[MAX_LOOP_DEPTH];         // Count (index) in loop, from 1
   int mLoopIncrement[MAX_LOOP_DEPTH];     // Increment to add to index (negative OK)
   int mLastIndex;         // Index of last command (the one just run)
@@ -174,9 +175,10 @@ private:
   double mIntensityFactor;  // Cosine factor for last tilt change
   CArray<Variable *, Variable *> mVarArray;     // Array of variable structures
   CArray<FileForText *, FileForText *> mTextFileArray;   // Array of open text files
-  int mBlockLevel;         // Index for loop level, 0 in top loop or -1 if not in loop
-  int mCallLevel;         // Index for call level, 0 in main macro
-  int mBlockDepths[MAX_CALL_DEPTH];  // Loop level reached in current macro
+  int mBlockLevel;         // Index for block level, 0 in top block or -1 if not in block
+  int mCallLevel;          // Index for call level, 0 in main macro
+  int mTryCatchLevel;      // Level of try blocks, raised at Try, dropped at Catch
+  int mBlockDepths[MAX_CALL_DEPTH];  // Block level reached in current call level
   int mCallMacro[MAX_CALL_DEPTH];   // Current macro for given call level
   int mCallIndex[MAX_CALL_DEPTH];   // Current index into macro for given call level
   MacroFunction *mCallFunction[MAX_CALL_DEPTH];  // Pointer to function being called
@@ -296,8 +298,8 @@ public:
   WINDOWPLACEMENT * GetOneLinePlacement(void);
   void ToolbarClosing(void);
   void OneLineClosing(void);
-  int CheckBlockNesting(int macroNum, int startLevel);
-  int SkipToBlockEnd(int type, CString line);
+  int CheckBlockNesting(int macroNum, int startLevel, int &tryLevel);
+  int SkipToBlockEnd(int type, CString line, int *numPops = NULL, int *delTryLevel = NULL);
   BOOL ItemToDouble(CString str, CString line, double & value);
   int EvaluateComparison(CString * strItems, int maxItems, CString line, BOOL &truth);
   int EvaluateIfStatement(CString * strItems, int maxItems, CString line, BOOL &truth);
@@ -333,7 +335,8 @@ public:
   void SaveControlSet(int index);
   bool CheckAndConvertCameraSet(CString &strItem, int &itemInt, int &index, CString &message);
   bool RestoreCameraSet(int index, BOOL erase);
-  int SkipToLabel(CString label, CString line, int &numPops);
+  int SkipToLabel(CString label, CString line, int &numPops, int &delTryLevel);
+  void LeaveCallLevel(bool popBlocks);
   int CheckBalancedParentheses(CString * strItems, int maxItems, CString &strLine, CString &errmess);
   int SeparateParentheses(CString * strItems, int maxItems);
   void ClearFunctionArray(int index);
@@ -345,6 +348,7 @@ public:
   int EnsureMacroRunnable(int macnum);
   void SendEmailIfNeeded(void);
   int TestAndStartFuncOnStop(void);
+  int TestTryLevelAndSkip(CString *mess);
   int CheckForArrayAssignment(CString * strItems, int &firstInd);
   void FindValueAtIndex(CString &value, int arrInd, int & beginInd, int & endInd);
   int ConvertArrayIndex(CString strItem, int leftInd, int rightInd, CString name, int numElements, 
