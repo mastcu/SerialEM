@@ -40,6 +40,7 @@
 #include "MultiShotDlg.h"
 #include "NavigatorDlg.h"
 #include "NavHelper.h"
+#include "NavRotAlignDlg.h"
 #include "StateDlg.h"
 #include "FalconHelper.h"
 #include "OneLineScript.h"
@@ -284,7 +285,7 @@ enum {CME_SCRIPTEND = -7, CME_LABEL, CME_SETVARIABLE, CME_SETSTRINGVAR, CME_DOKE
   CME_ISTOSPECIMENMATRIX, CME_SPECIMENTOISMATRIX, CME_ISTOSTAGEMATRIX, 
   CME_STAGETOISMATRIX, CME_STAGETOSPECIMENMATRIX, CME_SPECIMENTOSTAGEMATRIX, 
   CME_REPORTISFORBUFFERSHIFT, CME_ALIGNWITHROTATION, CME_TRY, CME_CATCH, CME_ENDTRY, 
-  CME_THROW 
+  CME_THROW, CME_ALIGNANDTRANSFORMITEMS, CME_ROTATEMULTISHOTPATTERN 
 };
 
 // The two numbers are the minimum arguments and whether arithmetic is allowed
@@ -448,7 +449,8 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"ISToSpecimenMatrix", 1, 0}, {"SpecimenToISMatrix", 1, 0}, {"ISToStageMatrix", 1, 0}, 
 {"StageToISMatrix", 1, 0},{"StageToSpecimenMatrix", 1, 0},{"SpecimenToStageMatrix", 1, 0},
 {"ReportISforBufferShift", 0, 0}, {"AlignWithRotation", 3, 0}, {"Try", 0, 0},
-{"Catch", 0, 0}, {"EndTry", 0, 0}, {"Throw", 0, 0},/*CAI3.8*/
+{"Catch", 0, 0}, {"EndTry", 0, 0}, {"Throw", 0, 0},{"AlignAndTransformItems", 2, 0},
+{"RotateMultiShotPattern", 1, 0},/*CAI3.8*/
 {NULL, 0, 0}
 };
 // The longest is now 25 characters but 23 is a more common limit
@@ -610,6 +612,7 @@ void CMacroProcessor::Initialize()
   mCamera = mWinApp->mCamera;
   mBufferManager = mWinApp->mBufferManager;
   mShiftManager = mWinApp->mShiftManager;
+  mNavHelper = mWinApp->mNavHelper;
   if (GetDebugOutput('%')) {
     mWinApp->AppendToLog("Commands allowing arithmetic in arguments:");
     for (int i = 0; i < NUM_COMMANDS - 1; i++)
@@ -1138,7 +1141,7 @@ int CMacroProcessor::TaskBusy()
     (mMovedPiezo && mWinApp->mPiezoControl->PiezoBusy() > 0) ||
     (mMovedAperture && mScope->GetMovingAperture()) ||
     (mLoadingMap && mWinApp->mNavigator && mWinApp->mNavigator->GetLoadingMap()) ||
-    (mMakingDualMap && mWinApp->mNavHelper->GetAcquiringDual()) ||
+    (mMakingDualMap && mNavHelper->GetAcquiringDual()) ||
     mWinApp->mShiftCalibrator->CalibratingIS() ||
     (mCamera->GetInitialized() && mCamera->CameraBusy() && 
     (mCamera->GetTaskWaitingForFrame() || 
@@ -1149,8 +1152,7 @@ int CMacroProcessor::TaskBusy()
     mWinApp->mFocusManager->DoingFocus() || mWinApp->mAutoTuning->DoingAutoTune() ||
     mShiftManager->ResettingIS() || mWinApp->mCalibTiming->Calibrating() ||
     mWinApp->mFilterTasks->RefiningZLP() || 
-    mWinApp->mNavHelper->mHoleFinderDlg->GetFindingHoles() ||
-    (mWinApp->mNavHelper && mWinApp->mNavHelper->GetRealigning()) ||
+    mNavHelper->mHoleFinderDlg->GetFindingHoles() || mNavHelper->GetRealigning() ||
     mWinApp->mComplexTasks->DoingTasks() || mWinApp->DoingRegisteredPlugCall()) ? 1 : 0;
 }
 
@@ -1436,7 +1438,6 @@ void CMacroProcessor::NextCommand()
   LowDoseParams *ldParam = mWinApp->GetLowDoseParams();
   CMapDrawItem *navItem;
   CNavigatorDlg *navigator = mWinApp->mNavigator;
-  CNavHelper *navHelper = mWinApp->mNavHelper;
   MacroFunction *func;
   Variable *var;
   CString *valPtr;
@@ -2867,9 +2868,9 @@ void CMacroProcessor::NextCommand()
     
   case CME_MULTIPLERECORDS:                                // MultipleRecords
   {
-    if (mWinApp->mNavHelper->mMultiShotDlg)
-      mWinApp->mNavHelper->mMultiShotDlg->UpdateAndUseMSparams();
-    MultiShotParams *msParams = mWinApp->mNavHelper->GetMultiShotParams();
+    if (mNavHelper->mMultiShotDlg)
+      mNavHelper->mMultiShotDlg->UpdateAndUseMSparams();
+    MultiShotParams *msParams = mNavHelper->GetMultiShotParams();
     index = (itemEmpty[6] || itemInt[6] < -8) ? msParams->doEarlyReturn : itemInt[6];
     if (!camParams->K2Type)
       index = 0;
@@ -2902,6 +2903,18 @@ void CMacroProcessor::NextCommand()
     }
     break;
   }
+
+  case CME_ROTATEMULTISHOTPATTERN:                          // RotateMultiShotPattern
+    if (mNavHelper->mMultiShotDlg)
+      mNavHelper->mMultiShotDlg->UpdateAndUseMSparams();
+    index = mNavHelper->RotateMultiShotVectors(mNavHelper->GetMultiShotParams(),
+      itemFlt[1], itemInt[2] != 0);
+    if (index)
+      ABORT_LINE(index > 1 ? "No image shift to specimen transformation available "
+        "for line:\n\n" : "Selected pattern is not defined for line:/n/n");
+    if (mNavHelper->mMultiShotDlg)
+      mNavHelper->mMultiShotDlg->UpdateSettings();
+    break;
     
   case CME_A:
   case CME_AUTOALIGN:                                       // Autoalign
@@ -2937,7 +2950,7 @@ void CMacroProcessor::NextCommand()
       ABORT_LINE(report);
     if (itemDbl[3] < 0.2 || itemDbl[3] > 50.)
       ABORT_LINE("The angle range to search must be between 0.2 and 50 degrees in:\n\n");
-    if (navHelper->AlignWithRotation(index, itemFlt[2], itemFlt[3], bmin,
+    if (mNavHelper->AlignWithRotation(index, itemFlt[2], itemFlt[3], bmin,
       shiftX, shiftY))
       ABORT_LINE("Failure to autoalign in:\n\n");
     SetReportedValues(&strItems[4], bmin, shiftX, shiftY);
@@ -6848,7 +6861,7 @@ void CMacroProcessor::NextCommand()
       ix1 = itemInt[index2 + 4];
     }
     if (!itemEmpty[index2 + 1])
-      navHelper->SetContinuousRealign(itemInt[index2 + 1]);
+      mNavHelper->SetContinuousRealign(itemInt[index2 + 1]);
     if (truth)
       iy0 = navigator->RealignToOtherItem(index, itemInt[index2] != 0, bmax, ix0, ix1);
     else
@@ -6856,7 +6869,7 @@ void CMacroProcessor::NextCommand()
     if (iy0) {
       report.Format("Script halted due to failure %d in Realign to Item routine", iy0);
       ABORT_NOLINE(report);
-      navHelper->SetContinuousRealign(0);
+      mNavHelper->SetContinuousRealign(0);
     }
     break;
     
@@ -6866,7 +6879,7 @@ void CMacroProcessor::NextCommand()
       return;
     if (!navItem->mDrawnOnMapID)
       ABORT_LINE("The specified item has no ID for being drawn on a map in line:\n\n");
-    ix0 = navHelper->RealignToDrawnOnMap(navItem, itemInt[2] != 0);
+    ix0 = mNavHelper->RealignToDrawnOnMap(navItem, itemInt[2] != 0);
     if (ix0) {
       report.Format("Script halted due to failure %d in Realign to Item for line:\n\n", 
         ix0);
@@ -6876,7 +6889,7 @@ void CMacroProcessor::NextCommand()
 
   case CME_GETREALIGNTOITEMERROR:                           // GetRealignToItemError
     ABORT_NONAV;
-    mWinApp->mNavHelper->GetLastStageError(backlashX, backlashY, bmin, bmax);
+    mNavHelper->GetLastStageError(backlashX, backlashY, bmin, bmax);
     SetReportedValues(&strItems[1], backlashX, backlashY, bmin, bmax);
     break;
 
@@ -7038,12 +7051,12 @@ void CMacroProcessor::NextCommand()
       report.Format("Navigator item %d is not a map for line:\n\n", itemInt[1]);
       ABORT_LINE(report);
     }
-    if (mWinApp->mNavHelper->SetToMapImagingState(navItem, true))
+    if (mNavHelper->SetToMapImagingState(navItem, true))
       ABORT_LINE("Failed to set map imaging state for line:\n\n");
     break;
 
   case CME_RESTORESTATE:                                    // RestoreState
-    index = mWinApp->mNavHelper->GetTypeOfSavedState();
+    index = mNavHelper->GetTypeOfSavedState();
     if (index == STATE_NONE) {
       report.Format("Cannot Restore State: no state has been saved");
       if (itemInt[1])
@@ -7051,19 +7064,19 @@ void CMacroProcessor::NextCommand()
       mWinApp->AppendToLog(report, mLogAction);
     } else {
       if (index == STATE_MAP_ACQUIRE)
-        mWinApp->mNavHelper->RestoreFromMapState();
+        mNavHelper->RestoreFromMapState();
       else {
-        mWinApp->mNavHelper->RestoreSavedState();
-        if (mWinApp->mNavHelper->mStateDlg)
-          mWinApp->mNavHelper->mStateDlg->Update();
+        mNavHelper->RestoreSavedState();
+        if (mNavHelper->mStateDlg)
+          mNavHelper->mStateDlg->Update();
       }
-      if (mWinApp->mNavHelper->mStateDlg)
-        mWinApp->mNavHelper->mStateDlg->DisableUpdateButton();
+      if (mNavHelper->mStateDlg)
+        mNavHelper->mStateDlg->DisableUpdateButton();
     }
     break;
 
   case CME_REPORTNUMNAVACQUIRE:                             // ReportNumNavAcquire
-    navHelper->CountAcquireItems(0, -1, index, index2);
+    mNavHelper->CountAcquireItems(0, -1, index, index2);
     if (index < 0)
       logRpt = "The Navigator is not open; there are no acquire items";
     else
@@ -7360,9 +7373,43 @@ void CMacroProcessor::NextCommand()
       itemDbl[1], itemDbl[2]);
     break;
     
+  case CME_ALIGNANDTRANSFORMITEMS:                          // AlignAndTransformItems
+    index2 = mNavHelper->BufferForRotAlign(index);
+    if (index != navigator->GetCurrentRegistration()) {
+      report.Format("Image in buffer %c is at registration %d, not the current Navigator"
+        " registration, %d, for line:\n\n", 'A' + index2, index,
+        navigator->GetCurrentRegistration());
+      ABORT_LINE(report);
+    }
+    ix0 = CNavRotAlignDlg::CheckAndSetupReference();
+    if (ix0 < 0)
+      ABORT_LINE("Cannot find a Navigator item corresponding to the image in the Read"
+        " buffer for line:\n\n");
+    if (ix0 == index)
+      ABORT_LINE("The image in the Read buffer is at the current Navigator"
+        " registration for line:\n\n");
+    if (fabs(itemDbl[2]) < 0.2 || fabs(itemDbl[2]) > 50.)
+      ABORT_LINE("Angular range to search must be between 0.2 and 50 degrees for "
+        "line:\n\n");
+    CNavRotAlignDlg::PrepareToUseImage();
+    if (CNavRotAlignDlg::AlignToMap(itemFlt[1], itemFlt[2], backlashX)) {
+      AbortMacro();
+      return;
+    }
+    if (!itemEmpty[3] && fabs(backlashX - itemDbl[1]) > itemDbl[3]) {
+      logRpt.Format("The rotation found by alignment, %.1f degrees, is farther from\r\n"
+        " the center angle than the specified limit, nothing was transformed", backlashX);
+    } else {
+      index = CNavRotAlignDlg::TransformItemsFromAlignment();
+      logRpt.Format("%d items transformed after alignment with rotation of %.1f degrees",
+        index, backlashX);
+    }
+    SetReportedValues(backlashX);
+    break;
+
   case CME_FORCECENTERREALIGN:                              // ForceCenterRealign
     ABORT_NONAV;
-    navHelper->ForceCenterRealign();
+    mNavHelper->ForceCenterRealign();
     break;
     
   case CME_SKIPPIECESOUTSIDEITEM:                           // SkipPiecesOutsideItem
@@ -7381,7 +7428,7 @@ void CMacroProcessor::NextCommand()
         ABORT_LINE(report);
       imBuf = &mImBufs[index];
     }
-    if (mWinApp->mNavHelper->mHoleFinderDlg->DoFindHoles(imBuf)) {
+    if (mNavHelper->mHoleFinderDlg->DoFindHoles(imBuf)) {
       AbortMacro();
       return;
     }
@@ -7392,7 +7439,7 @@ void CMacroProcessor::NextCommand()
     index = itemEmpty[1] || itemInt[1] < 0 ? -1 : itemInt[1];
     if (index > 2)
       ABORT_LINE("The layout type must be less than 3 for line:\n\n");
-    index = mWinApp->mNavHelper->mHoleFinderDlg->DoMakeNavPoints(index,
+    index = mNavHelper->mHoleFinderDlg->DoMakeNavPoints(index,
       (float)((itemEmpty[2] || itemDbl[2] < -900000) ? EXTRA_NO_VALUE : itemDbl[2]),
       (float)((itemEmpty[3] || itemDbl[3] < -900000) ? EXTRA_NO_VALUE : itemDbl[3]),
       (float)((itemEmpty[4] || itemDbl[4] < 0.) ? -1. : itemDbl[4]) / 100.f,
@@ -7405,16 +7452,16 @@ void CMacroProcessor::NextCommand()
     break;
 
   case CME_CLEARHOLEFINDER:                                 //    ClearHoleFinder
-    mWinApp->mNavHelper->mHoleFinderDlg->OnButClearData();
+    mNavHelper->mHoleFinderDlg->OnButClearData();
     break;
 
   case CME_COMBINEHOLESTOMULTI:                             // CombineHolesToMulti 
     ABORT_NONAV;
     B3DCLAMP(itemInt[1], 0, 2);
-    index = mWinApp->mNavHelper->mCombineHoles->CombineItems(itemInt[1]);
+    index = mNavHelper->mCombineHoles->CombineItems(itemInt[1]);
     if (index)
       ABORT_NOLINE("Error trying to combine hole for multiple Records:\n" +
-        CString(mWinApp->mNavHelper->mCombineHoles->GetErrorMessage(index)));
+        CString(mNavHelper->mCombineHoles->GetErrorMessage(index)));
     break;
     
   case CME_UNDOHOLECOMBINING:                               // UndoHoleCombining
@@ -7425,7 +7472,7 @@ void CMacroProcessor::NextCommand()
     break;
 
   case CME_SETHELPERPARAMS:                                 // SetHelperParams
-    navHelper->SetTestParams(&itemDbl[1]);
+    mNavHelper->SetTestParams(&itemDbl[1]);
     break;
     
   case CME_SETMONTAGEPARAMS:                                // SetMontageParams

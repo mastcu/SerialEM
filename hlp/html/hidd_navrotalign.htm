@@ -20,10 +20,16 @@
       reliable to use a transformation based on registration points that span the 
       area of interest; even one based on only two registration points. Thus, the 
       main value of this procedure might to assist in accurately locating 
-      registration points after rotation. In tests on an F20 in Boulder, the main 
+      registration points after rotation. In early tests on an F20 in Boulder, the main 
       source of error (after accounting for both a stretch in the image and a stretch 
       in the stage coordinate system) was that the image rotation was not a good 
-      enough estimate of the true grid rotation as measured by registration points.</P>
+      enough estimate of the true grid rotation as measured by registration points.&nbsp; 
+      The accuracy of the rotation search has been improved since then and the value 
+      itself may be accurate to 0.01 degree, but there may still be a discrepancy from 
+      the true grid rotation for large rotations.&nbsp; For a small rotation, such as 
+      when reinserting a grid from an autoloader, the errors introduced by stretch 
+      become minimal and the rotation estimate may be adequate, particularly if it is 
+      based on a relatively large area.</P>
     <P>To run this procedure, there must be a map in the buffer where images are read 
       back from file, the current registration must differ from that of the map, and 
       there must be either an image in buffer A or a montage overview in buffer B 

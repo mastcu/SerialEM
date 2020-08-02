@@ -48,11 +48,11 @@ static int leftTable[sizeof(idTable) / sizeof(int)];
 CMultiShotDlg::CMultiShotDlg(CWnd* pParent /*=NULL*/)
 	: CBaseDlg(CMultiShotDlg::IDD, pParent)
   , m_strNumShots(_T(""))
-  , m_fSpokeDist(0)
+  , m_fSpokeDist(0.1f)
   , m_iEarlyFrames(0)
   , m_bSaveRecord(FALSE)
   , m_bUseIllumArea(FALSE)
-  , m_fBeamDiam(0)
+  , m_fBeamDiam(0.5f)
   , m_iEarlyReturn(0)
   , m_fExtraDelay(0)
   , m_bAdjustBeamTilt(FALSE)
@@ -61,10 +61,10 @@ CMultiShotDlg::CMultiShotDlg(CWnd* pParent /*=NULL*/)
   , m_strNumYholes(_T(""))
   , m_strNumXholes(_T(""))
   , m_bUseCustom(FALSE)
-  , m_fHoleDelayFac(0)
+  , m_fHoleDelayFac(0.5f)
   , m_bOmit3x3Corners(FALSE)
   , m_bDoSecondRing(FALSE)
-  , m_fRing2Dist(0)
+  , m_fRing2Dist(0.1f)
   , m_strNum2Shots(_T(""))
 {
   mNonModal = true;
@@ -139,7 +139,7 @@ void CMultiShotDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_STAT_HOLE_DELAY_FAC, m_statHoleDelayFac);
   DDX_Control(pDX, IDC_EDIT_HOLE_DELAY_FAC, m_editHoleDelayFac);
   DDX_Text(pDX, IDC_EDIT_HOLE_DELAY_FAC, m_fHoleDelayFac);
-  DDV_MinMaxFloat(pDX, m_fHoleDelayFac, 0.5, 5.0);
+  DDV_MinMaxFloat(pDX, m_fHoleDelayFac, 0.1f, 5.0f);
   DDX_Control(pDX, IDC_BUT_SAVE_IS, m_butSaveIS);
   DDX_Control(pDX, IDC_BUT_END_PATTERN, m_butEndPattern);
   DDX_Control(pDX, IDC_BUT_ABORT, m_butAbort);

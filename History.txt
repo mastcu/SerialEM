@@ -3,6 +3,13 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+8/2/20: Added script command RotateMultiShotPattern to rotate the regular or
+custom pattern by a specified angle.
+
+8/2/20: Added script command AlignAndTransformItems that does rotational
+alignment and transformation of Navigator points just as the Align with
+Rotation dialog does.
+
 7/31/20: Added try-catch blocks to script structure for error handling.
 
 7/31/20: Fixed frame file options dialog to show multishot position for DE

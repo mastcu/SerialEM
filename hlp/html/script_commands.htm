@@ -257,17 +257,17 @@
         <TR>
           <TD class="scriptcommand">Catch</TD>
           <TD>Starts the block of commands that are run only when an error occurs or &#39;Throw&#39; 
-            statement is used inside the 'Try' portion of the block.&nbsp; Command added in 3.8, 7/31/20</TD>
+            statement is used inside the 'Try' portion of the block.&nbsp; Command added in 3.8, 7/31/20.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">EndTry</TD>
-          <TD>Ends the block of commands run upon error.&nbsp; Command added in 3.8, 7/31/20</TD>
+          <TD>Ends the block of commands run upon error.&nbsp; Command added in 3.8, 7/31/20.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">Throw [text]</TD>
           <TD>Jumps to the 'Catch' section of the 'Try' block containing this statement, 
             adding the optional <b>text</b> to the message given in the log about the jump.
-            &nbsp; Command added in 3.8, 7/31/20
+            &nbsp; Command added in 3.8, 7/31/20.
           </TD>
         </TR>
         <TR>
@@ -2992,6 +2992,14 @@
               enabled in the Image Alignment &amp; Focus control panel.&nbsp; Command added in 3.8.</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">RotateMultiShotPattern #A [#C]</TD>
+          <TD>Rotates the hole positions in the pattern set up in the
+            <a href="hidd_multi_shot_setup.htm">Multiple Record Setup dialog</a> by angle 
+            <b>#A</b>. &nbsp;Set optional <b>#C</b> non-zero to rotate the custom pattern instead
+            of the regular one. &nbsp;Generates an error if the selected pattern is not defined 
+            or the needed transformation is not available.&nbsp; Command added in 3.8, 8/2/20.</TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">CalibrateImageShift [#]</TD>
           <TD>Calibrates image shift at the current mag. Do the calibration from scratch if
             the optional <b>#</b> is nonzero.</TD>
@@ -3363,6 +3371,18 @@
           <TD>Shifts items at the current registration, or at the registration given by the 
             optional <b>#R</b>, by the amount in microns in <b>#X</b> and <b>#Y</b>.&nbsp; Each component of the 
             shift must be less than 100 microns.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">AlignAndTransformItems #C #R [#L]</TD>
+          <TD>Performs the image alignment and Navigator item transformation that can be done
+            interactively in the <A HREF="menu_navigator.htm#hid_navigator_align_to_map">Align with Rotation</A>
+            dialog.&nbsp; The same conditions apply here as in that dialog: there must be either a single-frame
+            image in buffer A or a montage overview in buffer B at the current registration, and a map
+             in the buffer for read-in images at a different registration.&nbsp; <b>#C</b> sets the center 
+            angle of the rotational search, and <b>#R</b> sets the total angular range to be 
+            searched.&nbsp; Set the optional <b>#L</b> to a limit for an acceptable rotation angle;
+            above this, items will not be transformed.&nbsp; After finding the alignment, items at the
+            registration of the map will be transformed to the current registration.&nbsp; Command added in 3.8, 8/2/20.</TD>
         </TR>
         <TR>
           <TD colspan="2"><A name="acqcontrol"></A><B>Acquisition Control Commands</B></TD>

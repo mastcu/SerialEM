@@ -135,6 +135,7 @@ private:
   CShiftManager *mShiftManager;
   CCameraController *mCamera;
   EMbufferManager *mBufferManager;
+  CNavHelper *mNavHelper;
   ControlSet *mConSets;
   CMacroEditer **mMacroEditer;
   CString mModeCaps[5];
