@@ -10,6 +10,18 @@
 #include "ShiftManager.h"
 #include "CameraController.h"
 
+// Class statics (yes they have to be defined here)
+double CNavRotAlignDlg::mOrigTimeStamp;
+float CNavRotAlignDlg::mRefStageX;
+float CNavRotAlignDlg::mRefStageY;
+EMimageBuffer *CNavRotAlignDlg::mImBufs;
+CNavHelper *CNavRotAlignDlg::mHelper;
+CSerialEMApp *CNavRotAlignDlg::mWinApp;
+EMbufferManager *CNavRotAlignDlg::mBufManager;
+bool CNavRotAlignDlg::mAppliedIS;
+int CNavRotAlignDlg::mRefMapID;
+int CNavRotAlignDlg::mStartingReg;
+float CNavRotAlignDlg::mLastRotation;
 
 // CNavRotAlignDlg dialog
 
@@ -24,6 +36,14 @@ CNavRotAlignDlg::CNavRotAlignDlg(CWnd* pParent /*=NULL*/)
 
 CNavRotAlignDlg::~CNavRotAlignDlg()
 {
+}
+
+void CNavRotAlignDlg::InitializeStatics(void)
+{
+  mWinApp = (CSerialEMApp *)AfxGetApp();
+  mImBufs = mWinApp->GetImBufs();
+  mBufManager = mWinApp->mBufferManager;
+  mHelper = mWinApp->mNavHelper;
 }
 
 void CNavRotAlignDlg::DoDataExchange(CDataExchange* pDX)
@@ -52,22 +72,11 @@ END_MESSAGE_MAP()
 
 BOOL CNavRotAlignDlg::OnInitDialog()
 {
-  mImBufs = mWinApp->GetImBufs();
-  mBufManager = mWinApp->mBufferManager;
-  mHelper = mWinApp->mNavHelper;
   mNav = mWinApp->mNavigator;
   CBaseDlg::OnInitDialog();
-  int refInd = mBufManager->GetBufToReadInto();
-
-  // Get the map ID and the stage position of the reference item
-  mRefMapID = mImBufs[refInd].mMapID;
-  CMapDrawItem *item = mWinApp->mNavigator->FindItemWithMapID(mRefMapID);
-  mRefStageX = item->mStageX;
-  mRefStageY = item->mStageY;
-
+  CheckAndSetupReference();
   PrepareToUseImage();
   mCurrentReg = mNav->GetCurrentRegistration();
-  mStartingReg = mImBufs[refInd].mRegistration;
   m_fCenterAngle = mHelper->GetRotAlignCenter();
   m_fSearchRange = mHelper->GetRotAlignRange();
   m_bSearchAngles = mHelper->GetSearchRotAlign();
@@ -87,10 +96,10 @@ void CNavRotAlignDlg::PostNcDestroy()
 
 void CNavRotAlignDlg::OnOK() 
 {
-  float shiftX, shiftY, backX, backY, delX, delY, dxy[2];
+  float delX, delY;
   int numDone;
   CString mess;
-  ScaleMat rMat, aMat, aInv;
+  ScaleMat aMat;
   UnloadData();
   if (!mWinApp->mNavigator || mImBufs->mTimeStamp != mRotTimeStamp || 
     mImBufs[1].mTimeStamp != mOrigTimeStamp || 
@@ -100,29 +109,9 @@ void CNavRotAlignDlg::OnOK()
       "the image in the A or B buffer.\nThe transformation cannot be applied" : 
       "You cannot use this dialog after closing the Navigator", MB_EXCLAME);
   } else {
+    numDone = TransformItemsFromAlignment();
 
-    // Back-rotate the position in aligned image that is aligned to center of reference
-    // The position in right-handed coords is -shiftX, +shiftY (double inversion of Y)
-    // And the image coordinates is position + X, -Y
-    mImBufs->mImage->getShifts(shiftX, shiftY);
-    rMat = mNav->GetRotationMatrix(-mLastRotation, false);
-    backX = (float)mImBufs->mImage->getWidth() / 2.f + 
-		(-rMat.xpx * shiftX + rMat.xpy * shiftY);
-    backY = (float)mImBufs->mImage->getHeight() / 2.f - 
-      (-rMat.ypx * shiftX + rMat.ypy * shiftY);
-
-    // Adjust if necessary and convert to a stage coordinate, 
-    mNav->AdjustMontImagePos(&mImBufs[1], backX, backY);
-    aInv = MatInv(aMat);
-    shiftX = aInv.xpx * (backX - delX) + aInv.xpy * (backY - delY);
-    shiftY = aInv.ypx * (backX - delX) + aInv.ypy * (backY - delY);
-
-    // Modify the rotation matrix by an underlying stretch in stage coordinates
-    rMat = mWinApp->mShiftManager->StretchCorrectedRotation(-mLastRotation);
-    dxy[0] = shiftX - rMat.xpx * mRefStageX - rMat.xpy * mRefStageY;
-    dxy[1] = shiftY - rMat.ypx * mRefStageX - rMat.ypy * mRefStageY;
-    numDone = mNav->TransformFromRotAlign(mStartingReg, rMat, dxy);
-    mess.Format("WARNING: This transformation is of limited accuracy over long distances"
+     mess.Format("WARNING: This transformation is of limited accuracy over long distances"
       "\r\n  %d items transformed with rotation and shift", numDone);
     mWinApp->AppendToLog(mess);
   }
@@ -169,8 +158,7 @@ void CNavRotAlignDlg::OnCancel()
 
 void CNavRotAlignDlg::OnButAlignToMap()
 {
-  float shiftX, shiftY, range = 0.;
-  ScaleMat aMat;
+  float bestRot, range = 0.;
   CString mess;
   int registration, topBuf;
   UpdateData(true);
@@ -206,21 +194,10 @@ void CNavRotAlignDlg::OnButAlignToMap()
 
   if (m_bSearchAngles)
     range = m_fSearchRange;
-  mBufManager->CopyImageBuffer(1, 0);
-  if (mHelper->AlignWithRotation(mBufManager->GetBufToReadInto(),
-    m_fCenterAngle, range, mLastRotation, shiftX, shiftY)) {
-    AfxMessageBox("The alignment procedure failed with the current parameters",
-      MB_EXCLAME);
+  if (AlignToMap(m_fCenterAngle, range, bestRot)) {
     m_butTransform.EnableWindow(false);
     return;
   }
-  aMat = mWinApp->mShiftManager->StretchCorrectedRotation(mImBufs->mCamera, mImBufs->mMagInd, 
-    mLastRotation);
-  mHelper->TransformBuffer(mImBufs, aMat, mImBufs->mImage->getWidth(), 
-    mImBufs->mImage->getHeight(), 0., aMat);
-  mImBufs->mImage->setShifts(shiftX, shiftY);
-  mImBufs->mTimeStamp = 0.001 * GetTickCount();
-  mImBufs->mCaptured = BUFFER_PROCESSED;
   mRotTimeStamp = mImBufs->mTimeStamp;
   mWinApp->SetCurrentBuffer(0);
   m_butTransform.EnableWindow(true);
@@ -235,6 +212,8 @@ void CNavRotAlignDlg::UnloadData(void)
   mHelper->SetSearchRotAlign(m_bSearchAngles);
 }
 
+// Set up to use the current image to align to the reference, getting it into B if it
+// is not an overview
 void CNavRotAlignDlg::PrepareToUseImage(void)
 {
   int registration;
@@ -254,6 +233,81 @@ void CNavRotAlignDlg::PrepareToUseImage(void)
   }
   mOrigTimeStamp = mImBufs[1].mTimeStamp;
   mAppliedIS = false;
+}
+
+// The first function to call, finds the nav item corresponding to the image in the 
+// read buffer (returns -1 if none), gets its stage position and returns its registration
+int CNavRotAlignDlg::CheckAndSetupReference(void)
+{
+  int refInd = mBufManager->GetBufToReadInto();
+
+  // Get the map ID and the stage position of the reference item
+  mRefMapID = mImBufs[refInd].mMapID;
+  CMapDrawItem *item = mWinApp->mNavigator->FindItemWithMapID(mRefMapID);
+  if (!item)
+    return -1;
+  mRefStageX = item->mStageX;
+  mRefStageY = item->mStageY;
+  mStartingReg = mImBufs[refInd].mRegistration;
+  return mStartingReg;
+}
+
+// Align the current image in B to the reference, including transforming it to line up
+int CNavRotAlignDlg::AlignToMap(float centerAngle, float range, float &bestRot)
+{
+  float shiftX, shiftY;
+  ScaleMat aMat;
+  mBufManager->CopyImageBuffer(1, 0);
+  if (mHelper->AlignWithRotation(mBufManager->GetBufToReadInto(),
+    centerAngle, range, mLastRotation, shiftX, shiftY)) {
+    SEMMessageBox("The alignment procedure failed with the current parameters",
+      MB_EXCLAME);
+    return 1;
+  }
+  aMat = mWinApp->mShiftManager->StretchCorrectedRotation(mImBufs->mCamera, 
+    mImBufs->mMagInd, mLastRotation);
+  mHelper->TransformBuffer(mImBufs, aMat, mImBufs->mImage->getWidth(),
+    mImBufs->mImage->getHeight(), 0., aMat);
+  mImBufs->mImage->setShifts(shiftX, shiftY);
+  mImBufs->mTimeStamp = 0.001 * GetTickCount();
+  mImBufs->mCaptured = BUFFER_PROCESSED;
+  bestRot = mLastRotation;
+  return 0;
+}
+
+// Do the transformation of items into the new registration
+int CNavRotAlignDlg::TransformItemsFromAlignment(void)
+{
+  CNavigatorDlg *nav = mWinApp->mNavigator;
+  float shiftX, shiftY, backX, backY, delX, delY, dxy[2];
+  int numDone;
+  ScaleMat rMat, aMat, aInv;
+
+  if (!nav->BufferStageToImage(&mImBufs[1], aMat, delX, delY))
+    return -1;
+
+  // Back-rotate the position in aligned image that is aligned to center of reference
+  // The position in right-handed coords is -shiftX, +shiftY (double inversion of Y)
+  // And the image coordinates is position + X, -Y
+  mImBufs->mImage->getShifts(shiftX, shiftY);
+  rMat = nav->GetRotationMatrix(-mLastRotation, false);
+  backX = (float)mImBufs->mImage->getWidth() / 2.f +
+    (-rMat.xpx * shiftX + rMat.xpy * shiftY);
+  backY = (float)mImBufs->mImage->getHeight() / 2.f -
+    (-rMat.ypx * shiftX + rMat.ypy * shiftY);
+
+  // Adjust if necessary and convert to a stage coordinate, 
+  nav->AdjustMontImagePos(&mImBufs[1], backX, backY);
+  aInv = MatInv(aMat);
+  shiftX = aInv.xpx * (backX - delX) + aInv.xpy * (backY - delY);
+  shiftY = aInv.ypx * (backX - delX) + aInv.ypy * (backY - delY);
+
+  // Modify the rotation matrix by an underlying stretch in stage coordinates
+  rMat = mWinApp->mShiftManager->StretchCorrectedRotation(-mLastRotation);
+  dxy[0] = shiftX - rMat.xpx * mRefStageX - rMat.xpy * mRefStageY;
+  dxy[1] = shiftY - rMat.ypx * mRefStageX - rMat.ypy * mRefStageY;
+  numDone = nav->TransformFromRotAlign(mStartingReg, rMat, dxy);
+  return numDone;
 }
 
 // Disable action buttons if doing tasks: this is called by helper

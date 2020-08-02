@@ -14,6 +14,7 @@ class CNavRotAlignDlg : public CBaseDlg
 public:
 	CNavRotAlignDlg(CWnd* pParent = NULL);   // standard constructor
 	virtual ~CNavRotAlignDlg();
+  static void InitializeStatics(void);
 
 // Dialog Data
 	enum { IDD = IDD_NAVROTALIGN };
@@ -35,23 +36,28 @@ public:
 
 private:
   double mRotTimeStamp;
-  double mOrigTimeStamp;
-  int mRefMapID;
-  float mRefStageX;
-  float mRefStageY;
-  EMimageBuffer *mImBufs;
-  CNavHelper *mHelper;
+  static double mOrigTimeStamp;
+  static int mRefMapID;
+  static float mRefStageX;
+  static float mRefStageY;
+  static EMimageBuffer *mImBufs;
+  static CNavHelper *mHelper;
+  static CSerialEMApp *mWinApp;
   CNavigatorDlg *mNav;
-  EMbufferManager *mBufManager;
-  float mLastRotation;
+  static EMbufferManager *mBufManager;
+  static float mLastRotation;
   int mCurrentReg;
-  int mStartingReg;
-  bool mAppliedIS;
+  static int mStartingReg;
+  static bool mAppliedIS;
 
 public:
   void UnloadData(void);
   CButton m_butTransform;
-  void PrepareToUseImage(void);
+  static void PrepareToUseImage(void);
+  static int CheckAndSetupReference(void);
+  static int AlignToMap(float centerAngle, float range, float &bestRot);
+  static int TransformItemsFromAlignment(void);
+
   CButton m_butApplyIS;
   afx_msg void OnButApplyIs();
   void Update(void);
