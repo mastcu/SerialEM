@@ -43,6 +43,7 @@
 #include "GainRefMaker.h"
 #include "NavigatorDlg.h"
 #include "NavHelper.h"
+#include "NavRotAlignDlg.h"
 #include "MultiShotDlg.h"
 #include "AutocenSetupDlg.h"
 #include "CalibCameraTiming.h"
@@ -1230,6 +1231,7 @@ BOOL CSerialEMApp::InitInstance()
   mAutoTuning->Initialize();
   mProcessImage->Initialize();
   mFalconHelper->InitializePointers();
+  CNavRotAlignDlg::InitializeStatics();
 
   // Start the tool windows
   mNumToolDlg = 4;
