@@ -56,7 +56,10 @@ private:
   int mMaxReadInMacros;
 public:
   void StripItems(CString strLine, int numItems, CString & strCopy);
-  int ReadSuperParse(CString & strLine, CString * strItems, BOOL * itemEmpty, int * itemInt, double * itemDbl, int maxItems);
+  int ReadSuperParse(CString &strLine, CString *strItems, BOOL *itemEmpty, int *itemInt,
+    double *itemDbl, float *itemFlt, int maxItems);
+  int ReadSuperParse(CString &strLine, CString *strItems, BOOL *itemEmpty, int *itemInt,
+    double *itemDbl, int maxItems);
   int ReadFlybackTimes(CString & filename);
   void WriteFlybackTimes(CString & filename);
   void InitializeControlSet(ControlSet * cs, int sizeX, int sizeY);

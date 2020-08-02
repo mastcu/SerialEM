@@ -130,6 +130,7 @@ int CParameterIO::ReadSettings(CString strFileName)
   BOOL itemEmpty[MAX_TOKENS];
   int itemInt[MAX_TOKENS];
   double itemDbl[MAX_TOKENS];
+  float itemFlt[MAX_TOKENS];
   int nLines = 0;
   FileOptions *defFileOpt = mWinApp->mDocWnd->GetDefFileOpt();
   FileOptions *otherFileOpt = mWinApp->mDocWnd->GetOtherFileOpt();
@@ -179,7 +180,8 @@ int CParameterIO::ReadSettings(CString strFileName)
     mFile = new CStdioFile(strFileName,
       CFile::modeRead |CFile::shareDenyWrite);
     
-    err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, MAX_TOKENS);
+    err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, itemFlt,
+                         MAX_TOKENS);
     if (err)
       retval = 1;
     else if (CheckForByteOrderMark(strItems[0], "SerialEMSettings", strFileName, 
@@ -190,8 +192,8 @@ int CParameterIO::ReadSettings(CString strFileName)
     // Clear out low dose params now in case there are none in the file
     mWinApp->InitializeLDParams();
 
-    while (retval == 0 && 
-      (err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, MAX_TOKENS))
+    while (retval == 0 && (err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt,
+                                                itemDbl, itemFlt,MAX_TOKENS))
            == 0) {
           recognized = true;
           recognized15 = true;
@@ -216,8 +218,8 @@ int CParameterIO::ReadSettings(CString strFileName)
         cs->summedFrameList.clear();
         cs->userFrameFractions.clear();
         cs->userSubframeFractions.clear();
-        while ((err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, 
-                                     MAX_TOKENS)) == 0) {
+        while ((err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl,
+                                     itemFlt, MAX_TOKENS)) == 0) {
           if (NAME_IS("EndControlSet"))
             break;
           if (NAME_IS("ControlSetName"))
@@ -247,9 +249,9 @@ int CParameterIO::ReadSettings(CString strFileName)
           else if (NAME_IS("Bottom"))
             cs->bottom = itemInt[1];
           else if (NAME_IS("ExposureTime"))
-            cs->exposure = (float)itemDbl[1];
+            cs->exposure = itemFlt[1];
           else if (NAME_IS("DriftSettling"))
-            cs->drift = (float)itemDbl[1];
+            cs->drift = itemFlt[1];
           else if (NAME_IS("LineSync"))
             cs->lineSync = itemInt[1];
           else if (NAME_IS("DynamicFocus"))
@@ -261,7 +263,7 @@ int CParameterIO::ReadSettings(CString strFileName)
           else if (NAME_IS("DoseFracMode"))
             cs->doseFrac = itemInt[1];
           else if (NAME_IS("FrameTime"))
-            cs->frameTime = (float)itemDbl[1];
+            cs->frameTime = itemFlt[1];
           else if (NAME_IS("AlignFrames"))
             cs->alignFrames = itemInt[1];
           else if (NAME_IS("UseFrameAlign"))
@@ -315,11 +317,11 @@ int CParameterIO::ReadSettings(CString strFileName)
           } else if (NAME_IS("UserFrameFracs")) {
             if (frameListOK)
               for (index = 1; index < MAX_TOKENS && !itemEmpty[index]; index++)
-                cs->userFrameFractions.push_back((float)itemDbl[index]);
+                cs->userFrameFractions.push_back(itemFlt[index]);
           } else if (NAME_IS("UserSubframeFracs")) {
             if (frameListOK)
               for (index = 1; index < MAX_TOKENS && !itemEmpty[index]; index++)
-                cs->userSubframeFractions.push_back((float)itemDbl[index]);
+                cs->userSubframeFractions.push_back(itemFlt[index]);
           } else if (NAME_IS("FilterType"))
             cs->filterType = itemInt[1];
           else if (NAME_IS("ChannelIndex")) {
@@ -389,19 +391,19 @@ int CParameterIO::ReadSettings(CString strFileName)
         camera->SetNumberedFrameFolder(strCopy);
       } else if (NAME_IS("DE12FPS")) {
         if (!itemEmpty[2] && itemInt[1] >= 0 && itemInt[1] < MAX_CAMERAS) {
-          mCamParam[itemInt[1]].DE_FramesPerSec = (float)itemDbl[2];
+          mCamParam[itemInt[1]].DE_FramesPerSec = itemFlt[2];
           if (!itemEmpty[3])
-            mCamParam[itemInt[1]].DE_CountingFPS = (float)itemDbl[3];
+            mCamParam[itemInt[1]].DE_CountingFPS = itemFlt[3];
         }
       } else if (NAME_IS("DEAutosaveFormat")) {
         mWinApp->mDEToolDlg.SetFormatForAutoSave(itemInt[1]);
       } else if (NAME_IS("PercentDisplayTruncationLo")) {
         mWinApp->GetDisplayTruncation(pctLo, pctHi);
-        pctLo = (float)itemDbl[1];
+        pctLo = itemFlt[1];
         mWinApp->SetDisplayTruncation(pctLo, pctHi);
       } else if (NAME_IS("PercentDisplayTruncationHi")) {
         mWinApp->GetDisplayTruncation(pctLo, pctHi);
-        pctHi = (float)itemDbl[1];
+        pctHi = itemFlt[1];
         mWinApp->SetDisplayTruncation(pctLo, pctHi);
       } else if (NAME_IS("CopyToBufferOnSave")) {
       } else if (NAME_IS("ProtectRecordImages")) {
@@ -409,7 +411,7 @@ int CParameterIO::ReadSettings(CString strFileName)
       } else if (NAME_IS("AlignOnSave")) {
       } else if (NAME_IS("MontageUseContinuous")) {
         montParam->useContinuousMode = itemInt[1] != 0;
-        montParam->continDelayFactor = (float)itemDbl[2];
+        montParam->continDelayFactor = itemFlt[2];
       } else if (NAME_IS("MontageNoDriftCorr")) {
         montParam->noDriftCorr = itemInt[1] != 0;
         montParam->noHQDriftCorr = itemInt[2] != 0;
@@ -421,12 +423,12 @@ int CParameterIO::ReadSettings(CString strFileName)
       } else if (NAME_IS("TIFFcompression"))
         defFileOpt->compression = itemInt[1];
       else if (MatchNoCase("FileOptionsPctTruncLo"))
-        defFileOpt->pctTruncLo = (float)itemDbl[1];
+        defFileOpt->pctTruncLo = itemFlt[1];
       else if (MatchNoCase("FileOptionsPctTruncHi"))
-        defFileOpt->pctTruncHi = (float)itemDbl[1];
+        defFileOpt->pctTruncHi = itemFlt[1];
       else if (NAME_IS("AutofocusEucenAbsParams")) {
         mWinApp->mFocusManager->SetEucenAbsFocusParams(itemDbl[1], itemDbl[2], 
-        (float)itemDbl[3], (float)itemDbl[4], itemInt[5] != 0, itemInt[6] != 0);
+        itemFlt[3], itemFlt[4], itemInt[5] != 0, itemInt[6] != 0);
       } else if (NAME_IS("AssessMultiplePeaksInAlign")) {
       } 
 #define SET_TEST_SECT1
@@ -459,22 +461,22 @@ int CParameterIO::ReadSettings(CString strFileName)
           "Navigator - Autosave Nav File menu item.", MB_OK | MB_ICONINFORMATION);
       } else if (NAME_IS("AutoBacklashNewMap")) {
         mWinApp->mNavHelper->SetAutoBacklashNewMap(itemInt[1]);
-        mWinApp->mNavHelper->SetAutoBacklashMinField((float)itemDbl[2]);
+        mWinApp->mNavHelper->SetAutoBacklashMinField(itemFlt[2]);
       } else if (NAME_IS("MultiShotParams")) {
-        msParams->beamDiam = (float)itemDbl[1];
-        msParams->spokeRad[0] = (float)itemDbl[2]; 
+        msParams->beamDiam = itemFlt[1];
+        msParams->spokeRad[0] = itemFlt[2]; 
         msParams->numShots[0] =  itemInt[3];
         msParams->doCenter =  itemInt[4];
         msParams->doEarlyReturn =  itemInt[5];
         msParams->numEarlyFrames =  itemInt[6];
         msParams->saveRecord = itemInt[7] != 0;
-        msParams->extraDelay = (float)itemDbl[8];
+        msParams->extraDelay = itemFlt[8];
         msParams->useIllumArea = itemInt[9] != 0;
         if (!itemEmpty[10]) {
           msParams->adjustBeamTilt = itemInt[10] != 0;
           msParams->inHoleOrMultiHole = itemInt[11];
           msParams->useCustomHoles = itemInt[12] != 0;
-          msParams->holeDelayFactor = (float)itemDbl[13];
+          msParams->holeDelayFactor = itemFlt[13];
           msParams->holeISXspacing[0] = itemDbl[14];
           msParams->holeISYspacing[0] = itemDbl[15];
           msParams->holeISXspacing[1] = itemDbl[16];
@@ -490,49 +492,49 @@ int CParameterIO::ReadSettings(CString strFileName)
         if (!itemEmpty[28]) {
           msParams->doSecondRing = itemInt[23] != 0;
           msParams->numShots[1] = itemInt[24];
-          msParams->spokeRad[1] = (float)itemDbl[25];
-          msParams->tiltOfHoleArray = (float)itemDbl[26];
-          msParams->tiltOfCustomHoles = (float)itemDbl[27];
-          msParams->holeFinderAngle = (float)itemDbl[28];
+          msParams->spokeRad[1] = itemFlt[25];
+          msParams->tiltOfHoleArray = itemFlt[26];
+          msParams->tiltOfCustomHoles = itemFlt[27];
+          msParams->holeFinderAngle = itemFlt[28];
         }
       } else if (NAME_IS("CustomHoleX")) {
         for (index = 1; index < MAX_TOKENS && !itemEmpty[index]; index++)
-          msParams->customHoleX.push_back((float)itemDbl[index]);
+          msParams->customHoleX.push_back(itemFlt[index]);
       } else if (NAME_IS("CustomHoleY")) {
         for (index = 1; index < MAX_TOKENS && !itemEmpty[index]; index++)
-          msParams->customHoleY.push_back((float)itemDbl[index]);
+          msParams->customHoleY.push_back(itemFlt[index]);
       } else if (NAME_IS("HoleFinderParams")) {
-        hfParams->spacing = (float)itemDbl[1];
-        hfParams->diameter = (float)itemDbl[2];
+        hfParams->spacing = itemFlt[1];
+        hfParams->diameter = itemFlt[2];
         hfParams->useBoundary = itemInt[3] != 0;
-        hfParams->lowerMeanCutoff = (float)itemDbl[4];
-        hfParams->upperMeanCutoff = (float)itemDbl[5];
-        hfParams->SDcutoff = (float)itemDbl[6];
-        hfParams->blackFracCutoff = (float)itemDbl[7];
+        hfParams->lowerMeanCutoff = itemFlt[4];
+        hfParams->upperMeanCutoff = itemFlt[5];
+        hfParams->SDcutoff = itemFlt[6];
+        hfParams->blackFracCutoff = itemFlt[7];
         hfParams->showExcluded = itemInt[8] != 0;
         hfParams->layoutType = itemInt[9];
         hfParams->bracketLast = itemInt[10] != 0;
       } else if (NAME_IS("HoleFiltSigmas")) {
         hfParams->sigmas.clear();
         for (index = 1; index < MAX_TOKENS && !itemEmpty[index]; index++)
-          hfParams->sigmas.push_back((float)itemDbl[index]);
+          hfParams->sigmas.push_back(itemFlt[index]);
       } else if (NAME_IS("HoleEdgeThresholds")) {
         hfParams->thresholds.clear();
         for (index = 1; index < MAX_TOKENS && !itemEmpty[index]; index++)
-          hfParams->thresholds.push_back((float)itemDbl[index]);
+          hfParams->thresholds.push_back(itemFlt[index]);
 
       } else if (NAME_IS("HoleCombinerParams")) {
         mWinApp->mNavHelper->SetMHCcombineType(itemInt[1]);
         mWinApp->mNavHelper->SetMHCenableMultiDisplay(itemInt[2] != 0);
       } else if (NAME_IS("DriftWaitParams")) {
         dwParams->measureType = B3DMAX(0, B3DMIN(2, itemInt[1]));
-        dwParams->driftRate = (float)itemDbl[2];
+        dwParams->driftRate = itemFlt[2];
         dwParams->useAngstroms = itemInt[3] != 0;
-        dwParams->interval = (float)itemDbl[4];
-        dwParams->maxWaitTime = (float)itemDbl[5];
+        dwParams->interval = itemFlt[4];
+        dwParams->maxWaitTime = itemFlt[5];
         dwParams->failureAction = itemInt[6];
         dwParams->setTrialParams = itemInt[7] != 0;
-        dwParams->exposure = (float)itemDbl[8];
+        dwParams->exposure = itemFlt[8];
         dwParams->binning = itemInt[9];
         dwParams->changeIS = itemInt[10] != 0;
 
@@ -574,8 +576,8 @@ int CParameterIO::ReadSettings(CString strFileName)
         otherFileOpt->fileType = itemInt[1];
         otherFileOpt->compression = itemInt[2];
         if (!itemEmpty[4]) {
-          otherFileOpt->pctTruncLo = (float)itemDbl[3];
-          otherFileOpt->pctTruncHi = (float)itemDbl[4];
+          otherFileOpt->pctTruncLo = itemFlt[3];
+          otherFileOpt->pctTruncHi = itemFlt[4];
         }
       } else if (NAME_IS("CookerParams")) {
         cookParams->magIndex = itemInt[1];
@@ -583,10 +585,10 @@ int CParameterIO::ReadSettings(CString strFileName)
         cookParams->intensity = itemDbl[3];
         cookParams->targetDose = itemInt[4];
         cookParams->timeInstead = itemInt[5] != 0;
-        cookParams->minutes = (float)itemDbl[6];
+        cookParams->minutes = itemFlt[6];
         cookParams->trackImage = itemInt[7] != 0;
         cookParams->cookAtTilt = itemInt[8] != 0;
-        cookParams->tiltAngle = (float)itemDbl[9];
+        cookParams->tiltAngle = itemFlt[9];
 
       } else if (NAME_IS("VppConditionParams")) {
         vppParams->magIndex = itemInt[1];
@@ -604,9 +606,9 @@ int CParameterIO::ReadSettings(CString strFileName)
 
       } else if (NAME_IS("SnapshotParams")) {
         snapParams->imageScaleType = itemInt[1];
-        snapParams->imageScaling = (float)itemDbl[2];
+        snapParams->imageScaling = itemFlt[2];
         snapParams->ifScaleSizes = itemInt[3] != 0;
-        snapParams->sizeScaling = (float)itemDbl[4];
+        snapParams->sizeScaling = itemFlt[4];
         snapParams->fileType = itemInt[5];
         snapParams->compression = itemInt[6];
         snapParams->jpegQuality = itemInt[7];
@@ -621,13 +623,13 @@ int CParameterIO::ReadSettings(CString strFileName)
         acParmP->spotSize = itemInt[3];
         acParmP->intensity = itemDbl[4];
         acParmP->binning = itemInt[5];
-        acParmP->exposure = (float)itemDbl[6];
+        acParmP->exposure = itemFlt[6];
         acParmP->useCentroid = itemInt[7];
         acParmP->probeMode = itemInt[8] < 0 ? 1 : itemInt[8];
         acParmP->shiftBeamForCen = itemInt[9] < 0 ? 0 : itemInt[9];
         acParmP->beamShiftUm = itemInt[9] < 0 ? 1.f : itemInt[10];
-        acParmP->addedShiftX = itemInt[9] < 0 ? 0.f : (float)itemDbl[11];
-        acParmP->addedShiftY = itemInt[9] < 0 ? 0.f : (float)itemDbl[12];
+        acParmP->addedShiftX = itemInt[9] < 0 ? 0.f : itemFlt[11];
+        acParmP->addedShiftY = itemInt[9] < 0 ? 0.f : itemFlt[12];
         mWinApp->mMultiTSTasks->AddAutocenParams(acParmP);
 
       } else if (NAME_IS("RangeFinderParams")) {
@@ -636,9 +638,9 @@ int CParameterIO::ReadSettings(CString strFileName)
         tsrParams[index].walkup = itemInt[3] != 0;
         tsrParams[index].autofocus = itemInt[4] != 0;
         tsrParams[index].imageType = itemInt[5];
-        tsrParams[index].startAngle = (float)itemDbl[6];
-        tsrParams[index].endAngle = (float)itemDbl[7];
-        tsrParams[index].angleInc = (float)itemDbl[8];
+        tsrParams[index].startAngle = itemFlt[6];
+        tsrParams[index].endAngle = itemFlt[7];
+        tsrParams[index].angleInc = itemFlt[8];
         tsrParams[index].direction = itemInt[9];
 
       } else if (NAME_IS("ComaVsISCal")) {
@@ -647,18 +649,18 @@ int CParameterIO::ReadSettings(CString strFileName)
         comaVsIS->probeMode = itemInt[3];
         comaVsIS->alpha = itemInt[4];
         comaVsIS->aperture = itemInt[5];
-        comaVsIS->intensity = (float)itemDbl[6];
-        comaVsIS->matrix.xpx = (float)itemDbl[7];
-        comaVsIS->matrix.xpy = (float)itemDbl[8];
-        comaVsIS->matrix.ypx = (float)itemDbl[9];
-        comaVsIS->matrix.ypy = (float)itemDbl[10];
+        comaVsIS->intensity = itemFlt[6];
+        comaVsIS->matrix.xpx = itemFlt[7];
+        comaVsIS->matrix.xpy = itemFlt[8];
+        comaVsIS->matrix.ypx = itemFlt[9];
+        comaVsIS->matrix.ypy = itemFlt[10];
         comaVsIS->astigMat.xpx = comaVsIS->astigMat.xpy = comaVsIS->astigMat.ypx =
           comaVsIS->astigMat.ypy = 0.;
         if (!itemEmpty[14]) {
-          comaVsIS->astigMat.xpx = (float)itemDbl[11];
-          comaVsIS->astigMat.xpy = (float)itemDbl[12];
-          comaVsIS->astigMat.ypx = (float)itemDbl[13];
-          comaVsIS->astigMat.ypy = (float)itemDbl[14];
+          comaVsIS->astigMat.xpx = itemFlt[11];
+          comaVsIS->astigMat.xpy = itemFlt[12];
+          comaVsIS->astigMat.ypx = itemFlt[13];
+          comaVsIS->astigMat.ypy = itemFlt[14];
         }
 
       } else if (NAME_IS("NavigatorStockFile"))
@@ -672,7 +674,7 @@ int CParameterIO::ReadSettings(CString strFileName)
         mWinApp->mProcessImage->SetSlowerCtfFit(itemInt[2]);
         mWinApp->mProcessImage->SetExtraCtfStats(itemInt[3]);
         mWinApp->mProcessImage->SetDrawExtraCtfRings(itemInt[4]); 
-        mWinApp->mProcessImage->SetCtfFitFocusRangeFac((float)itemDbl[5]);
+        mWinApp->mProcessImage->SetCtfFitFocusRangeFac(itemFlt[5]);
         if (!itemEmpty[6]) {
           mWinApp->mProcessImage->SetCtfFindPhaseOnClick(itemInt[6] != 0);
           mWinApp->mProcessImage->SetCtfFixAstigForPhase(itemInt[7] != 0);
@@ -681,8 +683,8 @@ int CParameterIO::ReadSettings(CString strFileName)
         }
       } else if (NAME_IS("RemoteControlParams")) {
         mWinApp->SetShowRemoteControl(itemInt[1] != 0);
-        mWinApp->mRemoteControl.SetBeamIncrement((float)itemDbl[2]);
-        mWinApp->mRemoteControl.SetIntensityIncrement((float)itemDbl[3]);
+        mWinApp->mRemoteControl.SetBeamIncrement(itemFlt[2]);
+        mWinApp->mRemoteControl.SetIntensityIncrement(itemFlt[3]);
         mWinApp->mRemoteControl.m_bMagIntensity = itemInt[4] != 0;
 
         // set the beam/stage selector before either of its increments
@@ -728,7 +730,7 @@ int CParameterIO::ReadSettings(CString strFileName)
       } else if (NAME_IS("WindowPlacement")) {
         mWinApp->GetWindowPlacement(&winPlace);
         winPlace.showCmd = itemInt[1];
-        if (err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, 
+        if (err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, itemFlt,
                                  MAX_TOKENS)) 
           break;
         winPlace.ptMaxPosition.x = itemInt[0];
@@ -818,14 +820,14 @@ int CParameterIO::ReadSettings(CString strFileName)
         stateP->spotSize = itemInt[4];
         stateP->intensity = itemDbl[5];
         stateP->slitIn = itemInt[6] != 0;
-        stateP->energyLoss = (float)itemDbl[7];
-        stateP->slitWidth = (float)itemDbl[8];
+        stateP->energyLoss = itemFlt[7];
+        stateP->slitWidth = itemFlt[8];
         stateP->zeroLoss = itemInt[9] != 0;
         stateP->binning = itemInt[10];
         stateP->xFrame = itemInt[11];
         stateP->yFrame = itemInt[12];
-        stateP->exposure = (float)itemDbl[13];
-        stateP->drift = (float)itemDbl[14];
+        stateP->exposure = itemFlt[13];
+        stateP->drift = itemFlt[14];
         stateP->shuttering = itemInt[15];
         stateP->K2ReadMode = itemEmpty[16] ? 0 : itemInt[16];
         stateP->probeMode = itemEmpty[17] ? -1 : itemInt[17];
@@ -889,8 +891,8 @@ int CParameterIO::ReadSettings(CString strFileName)
           ldp->probeMode = 1;
           if (!itemEmpty[6]) {
             ldp->slitIn = itemInt[7] != 0;
-            ldp->slitWidth = (float)itemDbl[8];
-            ldp->energyLoss = (float)itemDbl[9];
+            ldp->slitWidth = itemFlt[8];
+            ldp->energyLoss = itemFlt[9];
           }
           if (!itemEmpty[10]) 
             ldp->zeroLoss = itemInt[10] != 0;
@@ -899,7 +901,7 @@ int CParameterIO::ReadSettings(CString strFileName)
             ldp->beamDelY = itemDbl[12];
           }
           if (!itemEmpty[15]) {
-            ldp->beamAlpha = (float)itemDbl[13];
+            ldp->beamAlpha = itemFlt[13];
             ldp->diffFocus = itemDbl[14];
           }
           if (!itemEmpty[15]) {
@@ -921,8 +923,8 @@ int CParameterIO::ReadSettings(CString strFileName)
           AfxMessageBox("Incorrect entry in settings file "
             + strFileName + " :\n" + strLine, MB_EXCLAME);
         } else {
-          mCamParam[index].imageXRayAbsCrit = (float)itemDbl[2];
-          mCamParam[index].imageXRayNumSDCrit = (float)itemDbl[3];
+          mCamParam[index].imageXRayAbsCrit = itemFlt[2];
+          mCamParam[index].imageXRayNumSDCrit = itemFlt[3];
           mCamParam[index].imageXRayBothCrit = itemInt[4];
         }
 
@@ -952,7 +954,7 @@ int CParameterIO::ReadSettings(CString strFileName)
         mWinApp->mGainRefMaker->SetCalibrateDose(itemInt[1] != 0);
       } else if (NAME_IS("DErefExposures")) {
         for (index = 0; index < MAX_DE_REF_TYPES; index++)
-          deExposures[index] = (float)itemDbl[index + 1];
+          deExposures[index] = itemFlt[index + 1];
       } else if (NAME_IS("DErefNumRepeats")) {
         for (index = 0; index < MAX_DE_REF_TYPES; index++)
           deNumRepeats[index] = itemInt[index + 1];
@@ -969,7 +971,7 @@ int CParameterIO::ReadSettings(CString strFileName)
         mWinApp->mLowDoseDlg.mViewShiftX[1] = itemDbl[1];
         mWinApp->mLowDoseDlg.mViewShiftY[1] = itemDbl[2];
       } else if (NAME_IS("ResetRealignIterationCriterion")) {
-        mWinApp->mComplexTasks->SetRSRAUserCriterion((float)itemDbl[1]);
+        mWinApp->mComplexTasks->SetRSRAUserCriterion(itemFlt[1]);
       } else if (NAME_IS("MaxMacros")) {
         mMaxReadInMacros = itemInt[1];
       } else
@@ -1025,15 +1027,15 @@ int CParameterIO::ReadSettings(CString strFileName)
           AfxMessageBox("Invalid type of change or too many changes for array in settings"
             " file " + strFileName + " :\n" + strLine, MB_EXCLAME);
         } else {
-          mTSParam->varyArray[mTSParam->numVaryItems].angle = (float)itemDbl[1];
+          mTSParam->varyArray[mTSParam->numVaryItems].angle = itemFlt[1];
           mTSParam->varyArray[mTSParam->numVaryItems].plusMinus = itemInt[2] != 0;
           mTSParam->varyArray[mTSParam->numVaryItems].linear = itemInt[3] != 0;
           mTSParam->varyArray[mTSParam->numVaryItems].type = itemInt[4];
-          mTSParam->varyArray[mTSParam->numVaryItems++].value = (float)itemDbl[5];
+          mTSParam->varyArray[mTSParam->numVaryItems++].value = itemFlt[5];
         }
       } else if (NAME_IS("TiltSeriesBidirParams")) {
         mTSParam->doBidirectional = itemInt[1] != 0;
-        mTSParam->bidirAngle = (float)itemDbl[2];
+        mTSParam->bidirAngle = itemFlt[2];
         mTSParam->anchorBidirWithView = itemInt[3] != 0;
         mTSParam->walkBackForBidir = itemInt[4] != 0;
         if (!itemEmpty[5])
@@ -1042,14 +1044,14 @@ int CParameterIO::ReadSettings(CString strFileName)
         mTSParam->doDoseSymmetric = itemInt[1] != 0;
         mTSParam->dosymBaseGroupSize = itemInt[2];
         mTSParam->dosymIncreaseGroups = itemInt[3] != 0;
-        mTSParam->dosymIncStartAngle = (float)itemDbl[4];
+        mTSParam->dosymIncStartAngle = itemFlt[4];
         mTSParam->dosymGroupIncAmount = itemInt[5];
         mTSParam->dosymGroupIncInterval = itemInt[6];
         mTSParam->dosymDoRunToEnd = itemInt[7] != 0;
-        mTSParam->dosymRunToEndAngle = (float)itemDbl[8];
+        mTSParam->dosymRunToEndAngle = itemFlt[8];
         mTSParam->dosymAnchorIfRunToEnd = itemInt[9] != 0;
         mTSParam->dosymMinUniForAnchor = itemInt[10];
-        mTSParam->dosymStartingISLimit = (float)itemDbl[11];
+        mTSParam->dosymStartingISLimit = itemFlt[11];
         if (!itemEmpty[12])
           mTSParam->dosymSkipBacklash = itemInt[12] != 0;
 
@@ -1062,14 +1064,14 @@ int CParameterIO::ReadSettings(CString strFileName)
         mWinApp->mTSController->SetStepAfterMacro(itemInt[3]);
       } else if (NAME_IS("TSTermOnHighExposure")) {
         mWinApp->mTSController->SetTermOnHighExposure(itemInt[1] != 0);
-        mWinApp->mTSController->SetMaxExposureIncrease((float)itemDbl[2]);
+        mWinApp->mTSController->SetMaxExposureIncrease(itemFlt[2]);
       } else if (MatchNoCase("TiltSeriesBidirDimPolicy")) {
         mWinApp->mTSController->SetEndOnHighDimImage(itemInt[1] != 0);
         mWinApp->mTSController->SetDimEndsAbsAngle(itemInt[2]);
         mWinApp->mTSController->SetDimEndsAngleDiff(itemInt[3]);
       } else if (MatchNoCase("CloseValvesDuringMessageBox")) {
         mWinApp->mTSController->SetMessageBoxCloseValves(itemInt[1] != 0);
-        mWinApp->mTSController->SetMessageBoxValveTime((float)itemDbl[2]);
+        mWinApp->mTSController->SetMessageBoxValveTime(itemFlt[2]);
       } else if (NAME_IS("EmailAddress")) {
         StripItems(strLine, 1, strCopy);
         mWinApp->mMailer->SetSendTo(strCopy);
@@ -1094,13 +1096,13 @@ int CParameterIO::ReadSettings(CString strFileName)
         faData->strategy = itemInt[2];
         faData->aliBinning = itemInt[3];
         faData->numAllVsAll = itemInt[4]; 
-        faData->rad2Filt1 = (float)itemDbl[5];
-        faData->rad2Filt2 = (float)itemDbl[6];
-        faData->rad2Filt3 = (float)itemDbl[7];
-        faData->rad2Filt4 = (float)itemDbl[8]; 
+        faData->rad2Filt1 = itemFlt[5];
+        faData->rad2Filt2 = itemFlt[6];
+        faData->rad2Filt3 = itemFlt[7];
+        faData->rad2Filt4 = itemFlt[8]; 
         faData->hybridShifts = itemInt[9] != 0;
-        faData->sigmaRatio = (float)itemDbl[10];
-        faData->refRadius2 = (float)itemDbl[11]; 
+        faData->sigmaRatio = itemFlt[10];
+        faData->refRadius2 = itemFlt[11]; 
         faData->doRefine = itemInt[12] != 0;
         faData->refineIter = itemInt[13];
         faData->useGroups = itemInt[14] != 0;
@@ -1118,9 +1120,9 @@ int CParameterIO::ReadSettings(CString strFileName)
           faData = ((FrameAliParams *)faParamArray->GetData()) + faLastArrayIndex;
           if (NAME_IS("FrameAlignParams2")) {
             faData->truncate = itemInt[2] != 0;
-            faData->truncLimit = (float)itemDbl[3];
+            faData->truncLimit = itemFlt[3];
             faData->antialiasType = itemInt[4]; 
-            faData->stopIterBelow = (float)itemDbl[5];
+            faData->stopIterBelow = itemFlt[5];
             faData->groupRefine = itemInt[6] != 0;
             faData->keepPrecision = itemInt[7] != 0;
             faData->outputFloatSums = itemInt[8] != 0;
@@ -2011,6 +2013,7 @@ int CParameterIO::ReadProperties(CString strFileName)
   BOOL itemEmpty[MAX_TOKENS];
   int itemInt[MAX_TOKENS];
   double itemDbl[MAX_TOKENS];
+  float itemFlt[MAX_TOKENS];
   CString message;
   CameraParameters *mCamParam = mWinApp->GetCamParams();
   CameraParameters *camP;
@@ -2062,7 +2065,7 @@ int CParameterIO::ReadProperties(CString strFileName)
     b##Set##c(itemInt[1] != 0);
 #define FLOAT_PROP_TEST(a, b, c) \
   else if (strItems[0].CompareNoCase(a) == 0) \
-    b##Set##c((float)itemDbl[1]);
+    b##Set##c(itemFlt[1]);
 #define DBL_PROP_TEST(a, b, c) \
   else if (strItems[0].CompareNoCase(a) == 0) \
     b##Set##c(itemDbl[1]);
@@ -2302,7 +2305,7 @@ int CParameterIO::ReadProperties(CString strFileName)
           else if (MatchNoCase("AllowPostActions"))
             camP->postActionsOK = itemInt[1];
           else if (MatchNoCase("AddToExposureTime"))
-            camP->addToExposure = (float)itemDbl[1];
+            camP->addToExposure = itemFlt[1];
           else if (MatchNoCase("CanTakeFrames"))
             camP->canTakeFrames = itemInt[1];
           else if (MatchNoCase("MinimumFrameTimes"))
@@ -2318,15 +2321,15 @@ int CParameterIO::ReadProperties(CString strFileName)
           else if (MatchNoCase("STEMCamera"))
             camP->STEMcamera = itemInt[1] != 0;
           else if (MatchNoCase("AddedFlybackTime"))
-            camP->addedFlyback = (float)itemDbl[1];
+            camP->addedFlyback = itemFlt[1];
           else if (MatchNoCase("MinimumPixelTime"))
-            camP->minPixelTime = (float)itemDbl[1];
+            camP->minPixelTime = itemFlt[1];
           else if (MatchNoCase("MaximumScanRate")) {
-            camP->maxScanRate = (float)itemDbl[1];
+            camP->maxScanRate = itemFlt[1];
             if (itemEmpty[2])
               camP->advisableScanRate = camP->maxScanRate;
             else
-              camP->advisableScanRate = (float)itemDbl[2];
+              camP->advisableScanRate = itemFlt[2];
           } else if (MatchNoCase("STEMsubareaInCorner")) {
             camP->subareaInCorner = itemInt[1] != 0;
             if (!itemEmpty[2])
@@ -2360,28 +2363,28 @@ int CParameterIO::ReadProperties(CString strFileName)
           else if (MatchNoCase("CanUseDMOpenShutter"))
             camP->DMopenShutterOK = itemInt[1] != 0;
           else if (MatchNoCase("BuiltInSettling"))
-            camP->builtInSettling = (float)itemDbl[1];
+            camP->builtInSettling = itemFlt[1];
           else if (MatchNoCase("StartupDelay"))
-            camP->startupDelay = (float)itemDbl[1];
+            camP->startupDelay = itemFlt[1];
           else if (MatchNoCase("StartDelayPerFrame"))
-            camP->startDelayPerFrame = (float)itemDbl[1];
+            camP->startDelayPerFrame = itemFlt[1];
           else if (MatchNoCase("ExtraUnblankTime"))
             camP->extraUnblankTime = 
-              (float)itemDbl[1];
+              itemFlt[1];
           else if (MatchNoCase("ExtraOpenShutterTime"))
             camP->extraOpenShutterTime = 
-              (float)itemDbl[1];
+              itemFlt[1];
           else if (MatchNoCase("ExtraBeamTime"))
-            camP->extraBeamTime = (float)itemDbl[1];
+            camP->extraBeamTime = itemFlt[1];
           else if (MatchNoCase("MinimumDriftSettling"))
-            camP->minimumDrift = (float)itemDbl[1];
+            camP->minimumDrift = itemFlt[1];
           else if (MatchNoCase("MinimumBlankedExposure"))
             camP->minBlankedExposure = 
-              (float)itemDbl[1];
+              itemFlt[1];
           else if (MatchNoCase("ShutterDeadTime"))
-            camP->deadTime = (float)itemDbl[1];
+            camP->deadTime = itemFlt[1];
           else if (MatchNoCase("MinimumExposure"))
-            camP->minExposure = (float)itemDbl[1];
+            camP->minExposure = itemFlt[1];
           else if (MatchNoCase("UsableAtMag")) {
             montLim.camera = iset;
             montLim.magInd = itemInt[1];
@@ -2396,11 +2399,11 @@ int CParameterIO::ReadProperties(CString strFileName)
           if (recognizedc1) {
 
           } else if (MatchNoCase("InsertionDelay"))
-            camP->insertDelay = (float)itemDbl[1];
+            camP->insertDelay = itemFlt[1];
           else if (MatchNoCase("RetractionDelay"))
-            camP->retractDelay = (float)itemDbl[1];
+            camP->retractDelay = itemFlt[1];
           else if (MatchNoCase("PostBlankerDelay"))
-            camP->postBlankerDelay = (float)itemDbl[1];
+            camP->postBlankerDelay = itemFlt[1];
           else if (MatchNoCase("Retractable"))
             camP->retractable = itemInt[1] != 0;
           else if (MatchNoCase("InsertingRetractsCam"))
@@ -2418,19 +2421,19 @@ int CParameterIO::ReadProperties(CString strFileName)
           else if (MatchNoCase("Order"))
             camP->order = itemInt[1];
           else if (MatchNoCase("FilmToCameraMagnification"))
-            camP->magRatio = (float)itemDbl[1];
+            camP->magRatio = itemFlt[1];
           else if (MatchNoCase("PixelSizeInMicrons"))
-            camP->pixelMicrons = (float)itemDbl[1];
+            camP->pixelMicrons = itemFlt[1];
           else if (MatchNoCase("CountsPerElectron"))
-            camP->countsPerElectron = (float)itemDbl[1];
+            camP->countsPerElectron = itemFlt[1];
           else if (MatchNoCase("LinearToCountingRatio"))
-            camP->linear2CountingRatio = (float)itemDbl[1];
+            camP->linear2CountingRatio = itemFlt[1];
           else if (MatchNoCase("LinearOffset"))
-            camP->linearOffset = (float)itemDbl[1];
+            camP->linearOffset = itemFlt[1];
           else if (MatchNoCase("K3CDSLinearRatio"))
-            camP->K3CDSLinearRatio = (float)itemDbl[1];
+            camP->K3CDSLinearRatio = itemFlt[1];
           else if (MatchNoCase("ExtraRotation"))
-            camP->extraRotation = (float)itemDbl[1];
+            camP->extraRotation = itemFlt[1];
           else if (MatchNoCase("ExtraGainReferences"))
             camP->numExtraGainRefs = itemInt[1];
           else if (MatchNoCase("NormalizeInSerialEM"))
@@ -2448,8 +2451,8 @@ int CParameterIO::ReadProperties(CString strFileName)
                 "camera %d\nin properties file %s", magInd, iset, strFileName);
               AfxMessageBox(message, MB_EXCLAME);
             } else {
-              mMagTab[magInd].deltaRotation[iset] = (float)itemDbl[2];
-              mMagTab[magInd].rotation[iset] = (float)itemDbl[3];
+              mMagTab[magInd].deltaRotation[iset] = itemFlt[2];
+              mMagTab[magInd].rotation[iset] = itemFlt[3];
               mMagTab[magInd].pixelSize[iset] = (float)(0.001 * itemDbl[4]);
             }
           
@@ -2589,17 +2592,17 @@ int CParameterIO::ReadProperties(CString strFileName)
           } else if (MatchNoCase("RotationStretchXform")) {
             rotXform.camera = iset;          
             rotXform.magInd = itemInt[1];
-            rotXform.mat.xpx = (float)itemDbl[2];
-            rotXform.mat.xpy = (float)itemDbl[3];
-            rotXform.mat.ypx = (float)itemDbl[4];
-            rotXform.mat.ypy = (float)itemDbl[5];
+            rotXform.mat.xpx = itemFlt[2];
+            rotXform.mat.xpy = itemFlt[3];
+            rotXform.mat.ypx = itemFlt[4];
+            rotXform.mat.ypy = itemFlt[5];
             rotXformArray->Add(rotXform);
           } else if (MatchNoCase("HotPixelsAreImodCoords"))
             camP->hotPixImodCoord = itemInt[1];
           else if (MatchNoCase("DarkXRayAbsoluteCriterion"))
-            camP->darkXRayAbsCrit = (float)itemDbl[1];
+            camP->darkXRayAbsCrit = itemFlt[1];
           else if (MatchNoCase("DarkXRaySDCriterion"))
-            camP->darkXRayNumSDCrit = (float)itemDbl[1];
+            camP->darkXRayNumSDCrit = itemFlt[1];
           else if (MatchNoCase("DarkXRayRequireBothCriteria"))
             camP->darkXRayBothCrit = itemInt[1];
           else if (MatchNoCase("MaximumXRayDiameter"))
@@ -2607,10 +2610,10 @@ int CParameterIO::ReadProperties(CString strFileName)
           else if (MatchNoCase("ShowRemoveXRaysBox"))
             camP->showImageXRayBox = itemInt[1];
           else if (MatchNoCase("PixelMatchFactor"))
-            camP->matchFactor = (float)itemDbl[1];
+            camP->matchFactor = itemFlt[1];
           else if (MatchNoCase("DoseRateTable")) {
             nMags = itemInt[1];
-            scale = itemEmpty[2] ? 1.f : (float)itemDbl[2];
+            scale = itemEmpty[2] ? 1.f : itemFlt[2];
             if (nMags <= 0 || scale <= 0) {
               message.Format("Incorrect DoseRateTable entry for camera %d: %s",  
                 iset, strLine);
@@ -2623,8 +2626,8 @@ int CParameterIO::ReadProperties(CString strFileName)
                                      MAX_TOKENS) || itemEmpty[1]) {
                   err++;
                 } else {
-                  camP->doseTabCounts.push_back((float)itemDbl[0] / scale);
-                  camP->doseTabRates.push_back((float)itemDbl[1]);
+                  camP->doseTabCounts.push_back(itemFlt[0] / scale);
+                  camP->doseTabRates.push_back(itemFlt[1]);
                 }
               }
               if (err) {
@@ -2674,9 +2677,9 @@ int CParameterIO::ReadProperties(CString strFileName)
       else if (MatchNoCase("ReferenceMemoryLimitMB"))
         camera->SetRefMemoryLimit(1000000 * itemInt[1]);
       else if (MatchNoCase("DarkRefMaxMeanOrSD")) {
-        camera->SetDarkMaxMeanCrit((float)itemDbl[1]);
+        camera->SetDarkMaxMeanCrit(itemFlt[1]);
         if (!itemEmpty[2])
-          camera->SetDarkMaxSDcrit((float)itemDbl[2]);
+          camera->SetDarkMaxSDcrit(itemFlt[2]);
       }
       else if (MatchNoCase("K2FilterName")) {
         ind = camera->GetNumK2Filters();
@@ -2722,7 +2725,7 @@ int CParameterIO::ReadProperties(CString strFileName)
 
       else if (MatchNoCase("DigiScanFlipAndRotation")) {
         camera->SetDSshouldFlip(itemInt[1]);
-        camera->SetDSglobalRotOffset((float)itemDbl[2]);
+        camera->SetDSglobalRotOffset(itemFlt[2]);
       } else if (MatchNoCase("GatanServerIP"))
         CBaseSocket::SetServerIP(GATAN_SOCK_ID, strItems[1]);
       else if (MatchNoCase("GatanServerPort"))
@@ -2843,7 +2846,7 @@ int CParameterIO::ReadProperties(CString strFileName)
 #include "PropertyTests.h"
 #undef PROP_TEST_SECT2
       else if (MatchNoCase("IlluminatedAreaLimits"))
-        scope->SetIllumAreaLimits((float)itemDbl[1], (float)itemDbl[2]);
+        scope->SetIllumAreaLimits(itemFlt[1], itemFlt[2]);
       else if (MatchNoCase("C2ApertureSizes")) {
         ind = mWinApp->mBeamAssessor->GetNumC2Apertures();
         for (index = 1; index < MAX_TOKENS; index++) {
@@ -2876,11 +2879,11 @@ int CParameterIO::ReadProperties(CString strFileName)
         for (index = 1; index < MAX_TOKENS; index++) {
           if (strItems[index].IsEmpty())
             break;
-          alphaFacs[index - 1] = (float)itemDbl[index];
+          alphaFacs[index - 1] = itemFlt[index];
         }
 
       } else if (MatchNoCase("STEMdefocusToDeltaZ"))
-        mWinApp->mFocusManager->SetSTEMdefocusToDelZ((float)itemDbl[1],(float)itemDbl[1]);
+        mWinApp->mFocusManager->SetSTEMdefocusToDelZ(itemFlt[1],itemFlt[1]);
       else if (MatchNoCase("IntensityToC2Factor")) {
       }
       else if (MatchNoCase("StageLimits")) {
@@ -2920,20 +2923,20 @@ int CParameterIO::ReadProperties(CString strFileName)
           pzScale.plugNum = itemInt[1];
           pzScale.piezoNum = itemInt[2];
           pzScale.zAxis = itemInt[3];
-          pzScale.minPos = (float)itemDbl[4];
-          pzScale.maxPos = (float)itemDbl[5];
-          pzScale.unitsPerMicron = (float)itemDbl[6];
+          pzScale.minPos = itemFlt[4];
+          pzScale.maxPos = itemFlt[5];
+          pzScale.unitsPerMicron = itemFlt[6];
           piezoScalings->Add(pzScale);
         }
       } else if (MatchNoCase("UsePiezoForLDAxis")) {
         mWinApp->mLowDoseDlg.SetAxisPiezoPlugNum(itemInt[1]);
         mWinApp->mLowDoseDlg.SetAxisPiezoNum(itemInt[2]);
       } else if (MatchNoCase("PiezoFullDelay")) {
-        mWinApp->mLowDoseDlg.SetPiezoFullDelay((float)itemDbl[1]);
+        mWinApp->mLowDoseDlg.SetPiezoFullDelay(itemFlt[1]);
         if (!itemEmpty[2])
-          mWinApp->mLowDoseDlg.SetFocusPiezoDelayFac((float)itemDbl[2]);
+          mWinApp->mLowDoseDlg.SetFocusPiezoDelayFac(itemFlt[2]);
         if (!itemEmpty[3])
-          mWinApp->mLowDoseDlg.SetTVPiezoDelayFac((float)itemDbl[3]);
+          mWinApp->mLowDoseDlg.SetTVPiezoDelayFac(itemFlt[3]);
       }
       else if (MatchNoCase("PanelConstants")) {
         mWinApp->SetToolTitleHeight(itemInt[1]);
@@ -2947,19 +2950,19 @@ int CParameterIO::ReadProperties(CString strFileName)
         if (!itemEmpty[3])
           mWinApp->mAutoTuning->SetPostBeamTiltDelay(B3DMAX(1, itemInt[2]));
       } else if (MatchNoCase("AstigmatismParams")) {
-        mWinApp->mAutoTuning->SetAstigBeamTilt((float)itemDbl[1]);
+        mWinApp->mAutoTuning->SetAstigBeamTilt(itemFlt[1]);
         if (!itemEmpty[2])
-          mWinApp->mAutoTuning->SetAstigToApply((float)itemDbl[2]);
+          mWinApp->mAutoTuning->SetAstigToApply(itemFlt[2]);
         if (!itemEmpty[3])
-          mWinApp->mAutoTuning->SetAstigIterationThresh((float)itemDbl[3]);
+          mWinApp->mAutoTuning->SetAstigIterationThresh(itemFlt[3]);
         if (!itemEmpty[4])
-          mWinApp->mAutoTuning->SetAstigCenterFocus((float)itemDbl[4]);
+          mWinApp->mAutoTuning->SetAstigCenterFocus(itemFlt[4]);
         if (!itemEmpty[5])
-          mWinApp->mAutoTuning->SetAstigFocusRange((float)itemDbl[5]);
+          mWinApp->mAutoTuning->SetAstigFocusRange(itemFlt[5]);
       } else if (MatchNoCase("ComaParams")) {
-        mWinApp->mAutoTuning->SetMaxComaBeamTilt((float)itemDbl[1]);
+        mWinApp->mAutoTuning->SetMaxComaBeamTilt(itemFlt[1]);
         if (!itemEmpty[2])
-          mWinApp->mAutoTuning->SetCalComaFocus((float)itemDbl[2]);
+          mWinApp->mAutoTuning->SetCalComaFocus(itemFlt[2]);
       }
       else if (MatchNoCase("MontageInitialPieces")) {
         mWinApp->mDocWnd->SetDefaultMontXpieces(itemInt[1]);
@@ -2967,7 +2970,7 @@ int CParameterIO::ReadProperties(CString strFileName)
           mWinApp->mDocWnd->SetDefaultMontYpieces(itemInt[2]);
       }
       else if (MatchNoCase("StageMontageMaxError")) {
-        mWinApp->mMontageController->SetMaxStageError((float)itemDbl[1]);
+        mWinApp->mMontageController->SetMaxStageError(itemFlt[1]);
         mWinApp->mMontageController->SetStopOnStageError(itemInt[2] != 0);
       }
       else if (MatchNoCase("MontageFilterR1R2S1S2") || 
@@ -2977,8 +2980,8 @@ int CParameterIO::ReadProperties(CString strFileName)
             AfxMessageBox("Four numbers are required in properties file " + strFileName 
             + " for line: " + strLine , MB_EXCLAME);
           else
-            mWinApp->mMontageController->SetXcorrFilter(index, (float)itemDbl[1], 
-            (float)itemDbl[2], (float)itemDbl[3], (float)itemDbl[4]);
+            mWinApp->mMontageController->SetXcorrFilter(index, itemFlt[1], 
+            itemFlt[2], itemFlt[3], itemFlt[4]);
       } else
         recognized2 = false;
 
@@ -3044,7 +3047,7 @@ int CParameterIO::ReadProperties(CString strFileName)
       else if (MatchNoCase("HitachiBeamBlankAxis"))
         hitachi->beamBlankAxis = itemInt[1];
       else if (MatchNoCase("HitachiBeamBlankDelta"))
-        hitachi->beamBlankDelta = (float)itemDbl[1];
+        hitachi->beamBlankDelta = itemFlt[1];
       else if (MatchNoCase("HitachiPAforHRmodeIS"))
         hitachi->usePAforHRmodeIS = itemInt[1];
       else if (MatchNoCase("HitachiTiltSpeed"))
@@ -3052,18 +3055,18 @@ int CParameterIO::ReadProperties(CString strFileName)
       else if (MatchNoCase("HitachiStageSpeed"))
         hitachi->stageXYSpeed = itemInt[1];
       else if (MatchNoCase("HitachiImageShiftToMicrons"))
-        hitachi->imageShiftToUm = (float)itemDbl[1];
+        hitachi->imageShiftToUm = itemFlt[1];
       else if (MatchNoCase("HitachiBeamShiftToMicrons"))
-        hitachi->beamShiftToUm = (float)itemDbl[1];
+        hitachi->beamShiftToUm = itemFlt[1];
       else if (MatchNoCase("HitachiObjectiveToMicrons")) {
-        hitachi->objectiveToUm[0] = (float)itemDbl[1];
-        hitachi->objectiveToUm[2] = (float)itemDbl[1];
+        hitachi->objectiveToUm[0] = itemFlt[1];
+        hitachi->objectiveToUm[2] = itemFlt[1];
         if (!itemEmpty[2])
-          hitachi->objectiveToUm[2] = (float)itemDbl[2];
+          hitachi->objectiveToUm[2] = itemFlt[2];
       } else if (MatchNoCase("HitachiI1ToMicrons"))
-        hitachi->objectiveToUm[1] = (float)itemDbl[1];
+        hitachi->objectiveToUm[1] = itemFlt[1];
       else if (MatchNoCase("HitachiScreenArea"))
-        hitachi->screenAreaSqCm = (float)itemDbl[1];
+        hitachi->screenAreaSqCm = itemFlt[1];
 
 
       else if (MatchNoCase("WalkUpMaxInterval") || MatchNoCase("WalkUpMinInterval"))
@@ -3078,19 +3081,19 @@ int CParameterIO::ReadProperties(CString strFileName)
 #include "PropertyTests.h"
 #undef PROP_TEST_SECT4
       else if (MatchNoCase("TSXFitInterval"))
-        mTSParam->fitIntervalX = (float)itemDbl[1];
+        mTSParam->fitIntervalX = itemFlt[1];
       else if (MatchNoCase("TSYFitInterval"))
-        mTSParam->fitIntervalY = (float)itemDbl[1];
+        mTSParam->fitIntervalY = itemFlt[1];
       else if (MatchNoCase("TSZFitInterval"))
-        mTSParam->fitIntervalZ = (float)itemDbl[1];
+        mTSParam->fitIntervalZ = itemFlt[1];
       else if (MatchNoCase("TSXMinForQuadratic"))
         mTSParam->minFitXQuadratic = itemInt[1];
       else if (MatchNoCase("TSYMinForQuadratic"))
         mTSParam->minFitYQuadratic = itemInt[1];
       else if (MatchNoCase("TSBidirAnchorMinField")) {
-        tsController->SetMinFieldBidirAnchor((float)itemDbl[1]);
+        tsController->SetMinFieldBidirAnchor(itemFlt[1]);
         if (!itemEmpty[2])
-          tsController->SetAlarmBidirFieldSize((float)itemDbl[2]);
+          tsController->SetAlarmBidirFieldSize(itemFlt[2]);
       } else if (MatchNoCase("BeamCalMinCurrent") || MatchNoCase("BeamCalMinFactor") ||
         MatchNoCase("BeamCalMaxFactor") || MatchNoCase("BeamCalPostSettingDelay") ||
                MatchNoCase("BeamCalBigSettingDelay") || MatchNoCase("BeamCalNumReadingsLo")
@@ -3103,11 +3106,11 @@ int CParameterIO::ReadProperties(CString strFileName)
       else if (MatchNoCase("DMAlignZLPCriteria")) {
         camera->SetNumZLPAlignChanges(itemInt[1]);
         if (!itemEmpty[2])
-          camera->SetMinZLPAlignInterval((float)itemDbl[2]);
+          camera->SetMinZLPAlignInterval(itemFlt[2]);
       } else if (MatchNoCase("FilterPixelMatchingFactor"))
-        mFilterParam->binFactor = (float)itemDbl[1];
+        mFilterParam->binFactor = itemFlt[1];
       else if (MatchNoCase("MaximumSlitWidth"))
-        mFilterParam->maxWidth = (float)itemDbl[1];
+        mFilterParam->maxWidth = itemFlt[1];
       else if (MatchNoCase("GIFadjustsForSlitWidth"))
         mFilterParam->adjustForSlitWidth = itemInt[1] == 0;
       else if (MatchNoCase("EnergyShiftCalLowestMag"))
@@ -3117,8 +3120,8 @@ int CParameterIO::ReadProperties(CString strFileName)
       else if (MatchNoCase("NoExceptionHandler"))
         mWinApp->SetNoExceptionHandler(itemInt[1]);
       else if (MatchNoCase("CatalaseAxisLengths")) {
-        mWinApp->mProcessImage->SetShortCatalaseNM((float)itemDbl[1]);
-        mWinApp->mProcessImage->SetLongCatalaseNM((float)itemDbl[2]);
+        mWinApp->mProcessImage->SetShortCatalaseNM(itemFlt[1]);
+        mWinApp->mProcessImage->SetLongCatalaseNM(itemFlt[2]);
 
       } else if (MatchNoCase("GainReferencePath")) {
         StripItems(strLine, 1, message);
@@ -3192,7 +3195,7 @@ int CParameterIO::ReadProperties(CString strFileName)
         for (ind = 1; ind < MAX_FFT_CIRCLES; ind++) {
           if (itemEmpty[ind])
             break;
-          radii[ind - 1] = (float)itemDbl[ind];
+          radii[ind - 1] = itemFlt[ind];
         }
         mWinApp->mProcessImage->SetNumCircles(ind - 1);
 
@@ -3201,7 +3204,7 @@ int CParameterIO::ReadProperties(CString strFileName)
        if (!itemEmpty[2])
          mWinApp->mProcessImage->SetNumFFTZeros(itemInt[2]);
        if (!itemEmpty[3])
-         mWinApp->mProcessImage->SetAmpRatio((float)itemDbl[3]);
+         mWinApp->mProcessImage->SetAmpRatio(itemFlt[3]);
 
      } else if (MatchNoCase("ImportStageToImage")) {
        index = navParams->numImportXforms;
@@ -3209,10 +3212,10 @@ int CParameterIO::ReadProperties(CString strFileName)
          AfxMessageBox("Too many import stage-to-image transformations for arrays",
             MB_EXCLAME);
        } else {
-         navParams->importXform[index].xpx = (float)itemDbl[1];
-         navParams->importXform[index].xpy = (float)itemDbl[2];
-         navParams->importXform[index].ypx = (float)itemDbl[3];
-         navParams->importXform[index].ypy = (float)itemDbl[4];
+         navParams->importXform[index].xpx = itemFlt[1];
+         navParams->importXform[index].xpy = itemFlt[2];
+         navParams->importXform[index].ypx = itemFlt[3];
+         navParams->importXform[index].ypy = itemFlt[4];
          if (itemEmpty[5])
            navParams->xformName[index].Format("%6g %6g %6g %6g", itemDbl[1], itemDbl[2],
            itemDbl[3], itemDbl[4]);
@@ -3256,17 +3259,17 @@ int CParameterIO::ReadProperties(CString strFileName)
        navParams->importXbase = itemDbl[1];
        navParams->importYbase = itemDbl[2];
      } else if (MatchNoCase("GridInPolygonBoxFraction")) {
-       navParams->gridInPolyBoxFrac = (float)itemDbl[1];
+       navParams->gridInPolyBoxFrac = itemFlt[1];
      } else if (MatchNoCase("NavigatorStageBacklash")) {
-       navParams->stageBacklash = (float)itemDbl[1];
+       navParams->stageBacklash = itemFlt[1];
      } else if (MatchNoCase("SamePositionTolerance")) {
-        scope->SetBacklashTolerance((float)itemDbl[1]);
+        scope->SetBacklashTolerance(itemFlt[1]);
      } else if (MatchNoCase("NavigatorMaxMontageIS")) {
-       navParams->maxMontageIS = (float)itemDbl[1];
+       navParams->maxMontageIS = itemFlt[1];
      } else if (MatchNoCase("NavigatorMaxLMMontageIS")) {
-       navParams->maxLMMontageIS = (float)itemDbl[1];
+       navParams->maxLMMontageIS = itemFlt[1];
      } else if (MatchNoCase("FitMontageWithFullFrames")) {
-       navParams->fitMontWithFullFrames = (float)itemDbl[1];
+       navParams->fitMontWithFullFrames = itemFlt[1];
      } else if (MatchNoCase("SMTPServer")) {
        mWinApp->mMailer->SetServer(strItems[1]);
      } else if (MatchNoCase("SendMailFrom")) {
@@ -3291,13 +3294,13 @@ int CParameterIO::ReadProperties(CString strFileName)
            break;
          if (col) {
            mMagTab[index].mag = itemInt[1];
-           mMagTab[index].tecnaiRotation = (float)itemDbl[2];
+           mMagTab[index].tecnaiRotation = itemFlt[2];
            mMagTab[index].screenMag = (strItems[3].IsEmpty() || strItems[3] == "0") ?
              mMagTab[index].mag : itemInt[3];
            mMagTab[index].EFTEMmag = (strItems[4].IsEmpty() || strItems[4] == "0") ?
              mMagTab[index].mag : itemInt[4];
            mMagTab[index].EFTEMtecnaiRotation = strItems[5].IsEmpty() ?
-             mMagTab[index].tecnaiRotation : (float)itemDbl[5];
+             mMagTab[index].tecnaiRotation : itemFlt[5];
            mMagTab[index].EFTEMscreenMag = (strItems[6].IsEmpty() || strItems[6] == "0") ?
              mMagTab[index].EFTEMmag : itemInt[6];
          } else {
@@ -3327,7 +3330,7 @@ int CParameterIO::ReadProperties(CString strFileName)
          camLengths[index] = itemInt[1];
          err = 0;
          if (!strItems[2].IsEmpty())
-           camLenCal[index] = (float)itemDbl[2];
+           camLenCal[index] = itemFlt[2];
        }
        if (err > 0) {
          AfxMessageBox("Error reading camera length table, line\n" +
@@ -3380,8 +3383,8 @@ int CParameterIO::ReadProperties(CString strFileName)
            err = 1;
            break;
          }
-         ISmoved[line] = (float)itemDbl[0];
-         ISdelay[line] = (float)itemDbl[1];
+         ISmoved[line] = itemFlt[0];
+         ISdelay[line] = itemFlt[1];
        }
        if (err > 0) {
          AfxMessageBox("Error reading image shift delays, line\n" +
@@ -3440,6 +3443,7 @@ int CParameterIO::ReadCalibration(CString strFileName)
   BOOL itemEmpty[MAX_TOKENS];
   int itemInt[MAX_TOKENS];
   double itemDbl[MAX_TOKENS];
+  float itemFlt[MAX_TOKENS];
   BeamTable *beamTables = mWinApp->mBeamAssessor->GetBeamTables();
   BeamTable *beamTab;
   SpotTable *spotTables = mWinApp->mBeamAssessor->GetSpotTables();
@@ -3482,8 +3486,8 @@ int CParameterIO::ReadCalibration(CString strFileName)
     }
 
     while (retval == 0 && 
-      (err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, 
-                            MAX_TOKENS)) == 0) {
+           (err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, itemFlt,
+                                 MAX_TOKENS)) == 0) {
       // A stub for something complex
       if (NAME_IS("CameraProperties")) {
         int iset = itemInt[1];
@@ -3503,7 +3507,8 @@ int CParameterIO::ReadCalibration(CString strFileName)
       } else if (NAME_IS("ImageShiftMatrix")) {
         nCal = itemInt[1];
         for (i = 0; i < nCal; i++) {
-          err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, MAX_TOKENS);
+          err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, itemFlt,
+                               MAX_TOKENS);
           if (err)
             break;
           index = itemInt[0];
@@ -3514,10 +3519,10 @@ int CParameterIO::ReadCalibration(CString strFileName)
             break;
           }
           ScaleMat *sm = &mMagTab[index].matIS[camera];
-          sm->xpx = (float)itemDbl[2];
-          sm->xpy = (float)itemDbl[3];
-          sm->ypx = (float)itemDbl[4];
-          sm->ypy = (float)itemDbl[5];
+          sm->xpx = itemFlt[2];
+          sm->xpy = itemFlt[3];
+          sm->ypx = itemFlt[4];
+          sm->ypy = itemFlt[5];
         }
         if (err > 0) {
           AfxMessageBox("Error reading image shift calibrations, line\n" +
@@ -3534,38 +3539,38 @@ int CParameterIO::ReadCalibration(CString strFileName)
           err = 1;
         } else {
           ScaleMat *sm = &mMagTab[index].matStage[camera];
-          sm->xpx = (float)itemDbl[3];
-          sm->xpy = (float)itemDbl[4];
-          sm->ypx = (float)itemDbl[5];
-          sm->ypy = (float)itemDbl[6];
+          sm->xpx = itemFlt[3];
+          sm->xpy = itemFlt[4];
+          sm->ypx = itemFlt[5];
+          sm->ypy = itemFlt[6];
           if (!strItems[8].IsEmpty())
-            mMagTab[index].stageCalFocus[camera] = (float)itemDbl[7];
+            mMagTab[index].stageCalFocus[camera] = itemFlt[7];
         }
 
       } else if (NAME_IS("HighFocusMagCal")) {
         focCal.spot = itemInt[1];
         focCal.probeMode = itemInt[2];
-        focCal.defocus = (float)itemDbl[3];
+        focCal.defocus = itemFlt[3];
         focCal.intensity = itemDbl[4];
-        focCal.scale = (float)itemDbl[5];
-        focCal.rotation = (float)itemDbl[6];
+        focCal.scale = itemFlt[5];
+        focCal.rotation = itemFlt[6];
         focCal.crossover = itemEmpty[7] ? 0. : itemDbl[7];
         focCal.measuredAperture = itemEmpty[8] ? 0 : itemInt[8];
         focusMagCals->Add(focCal);
 
       } else if (NAME_IS("IntensityToC2Factor")) {
-        mWinApp->mScope->SetC2IntensityFactor(1, (float)itemDbl[1]);
+        mWinApp->mScope->SetC2IntensityFactor(1, itemFlt[1]);
         if (!itemEmpty[2])
-          mWinApp->mScope->SetC2IntensityFactor(0, (float)itemDbl[2]);
+          mWinApp->mScope->SetC2IntensityFactor(0, itemFlt[2]);
 
       } else if (NAME_IS("C2SpotOffset")) {
         index = itemInt[1];
         if (index < 0 || index >= MAX_SPOT_SIZE || itemEmpty[2]) {
           err = 1;
         } else {
-          mWinApp->mScope->SetC2SpotOffset(index, 1, (float)itemDbl[2]);
+          mWinApp->mScope->SetC2SpotOffset(index, 1, itemFlt[2]);
           if (!itemEmpty[3])
-            mWinApp->mScope->SetC2SpotOffset(index, 0, (float)itemDbl[3]);
+            mWinApp->mScope->SetC2SpotOffset(index, 0, itemFlt[3]);
         }
 
       } else if (NAME_IS("CrossoverIntensity")) {
@@ -3609,19 +3614,20 @@ int CParameterIO::ReadCalibration(CString strFileName)
           focTable.probeMode = freeInd;
           focTable.alpha = spot;
           focTable.numPoints = nCal;
-          focTable.slopeX = (float)itemDbl[3];
-          focTable.slopeY = (float)itemDbl[4];
+          focTable.slopeX = itemFlt[3];
+          focTable.slopeY = itemFlt[4];
           focTable.beamTilt = itemDbl[5];
           focTable.calibrated = 0;
         }
 
         for (i = 0; i < nCal; i++) {
-          err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, MAX_TOKENS);
+          err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, itemFlt,
+                               MAX_TOKENS);
           if (err)
             break;
-          focTable.defocus[i] = (float)itemDbl[0];
-          focTable.shiftX[i] = (float)itemDbl[1];
-          focTable.shiftY[i] = (float)itemDbl[2];
+          focTable.defocus[i] = itemFlt[0];
+          focTable.shiftX[i] = itemFlt[1];
+          focTable.shiftY[i] = itemFlt[2];
         }
         if (err > 0) {
           if (err == 1)
@@ -3633,20 +3639,21 @@ int CParameterIO::ReadCalibration(CString strFileName)
         mFocTab->Add(focTable);
 
       } else if (NAME_IS("STEMnormalizedSlope")) {
-        mWinApp->mFocusManager->SetSFnormalizedSlope(0, (float)itemDbl[1]);
-        mWinApp->mFocusManager->SetSFnormalizedSlope(1, (float)itemDbl[2]);
+        mWinApp->mFocusManager->SetSFnormalizedSlope(0, itemFlt[1]);
+        mWinApp->mFocusManager->SetSFnormalizedSlope(1, itemFlt[2]);
 
       } else if (NAME_IS("STEMfocusVersusZ")) {
         sfZtable.numPoints = itemInt[1];
         sfZtable.spotSize = itemInt[2];
         sfZtable.probeMode = itemInt[3];
         for (i = 0; i < sfZtable.numPoints; i++) {
-          err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, MAX_TOKENS);
+          err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, itemFlt,
+                               MAX_TOKENS);
           if (err)
             break;
-          sfZtable.stageZ[i] = (float)itemDbl[0];
-          sfZtable.defocus[i] = (float)itemDbl[1];
-          sfZtable.absFocus[i] = (float)itemDbl[2];
+          sfZtable.stageZ[i] = itemFlt[0];
+          sfZtable.defocus[i] = itemFlt[1];
+          sfZtable.absFocus[i] = itemFlt[2];
         }
         if (err > 0) {
           if (err == 1)
@@ -3661,55 +3668,55 @@ int CParameterIO::ReadCalibration(CString strFileName)
         astig.magInd = itemInt[1];
         astig.probeMode = itemInt[2];
         astig.alpha = itemInt[3];
-        astig.defocus = (float)itemDbl[4]; 
-        astig.beamTilt = (float)itemDbl[5];
-        astig.focusMat.xpx = (float)itemDbl[6];
-        astig.focusMat.xpy = (float)itemDbl[7];
-        astig.focusMat.ypx = (float)itemDbl[8];
-        astig.focusMat.ypy = (float)itemDbl[9];
-        astig.astigXmat.xpx = (float)itemDbl[10];
-        astig.astigXmat.xpy = (float)itemDbl[11];
-        astig.astigXmat.ypx = (float)itemDbl[12];
-        astig.astigXmat.ypy = (float)itemDbl[13];
-        astig.astigYmat.xpx = (float)itemDbl[14];
-        astig.astigYmat.xpy = (float)itemDbl[15];
-        astig.astigYmat.ypx = (float)itemDbl[16];
-        astig.astigYmat.ypy = (float)itemDbl[17];
+        astig.defocus = itemFlt[4]; 
+        astig.beamTilt = itemFlt[5];
+        astig.focusMat.xpx = itemFlt[6];
+        astig.focusMat.xpy = itemFlt[7];
+        astig.focusMat.ypx = itemFlt[8];
+        astig.focusMat.ypy = itemFlt[9];
+        astig.astigXmat.xpx = itemFlt[10];
+        astig.astigXmat.xpy = itemFlt[11];
+        astig.astigXmat.ypx = itemFlt[12];
+        astig.astigXmat.ypy = itemFlt[13];
+        astig.astigYmat.xpx = itemFlt[14];
+        astig.astigYmat.xpy = itemFlt[15];
+        astig.astigYmat.ypx = itemFlt[16];
+        astig.astigYmat.ypy = itemFlt[17];
         astigCals->Add(astig);
  
       } else if (NAME_IS("ComaCalib")) {
         coma.magInd = itemInt[1];
         coma.probeMode = itemInt[2];
         coma.alpha = itemInt[3];
-        coma.defocus = (float)itemDbl[4]; 
-        coma.beamTilt = (float)itemDbl[5];
-        coma.comaXmat.xpx = (float)itemDbl[6];
-        coma.comaXmat.xpy = (float)itemDbl[7];
-        coma.comaXmat.ypx = (float)itemDbl[8];
-        coma.comaXmat.ypy = (float)itemDbl[9];
-        coma.comaYmat.xpx = (float)itemDbl[10];
-        coma.comaYmat.xpy = (float)itemDbl[11];
-        coma.comaYmat.ypx = (float)itemDbl[12];
-        coma.comaYmat.ypy = (float)itemDbl[13];
+        coma.defocus = itemFlt[4]; 
+        coma.beamTilt = itemFlt[5];
+        coma.comaXmat.xpx = itemFlt[6];
+        coma.comaXmat.xpy = itemFlt[7];
+        coma.comaXmat.ypx = itemFlt[8];
+        coma.comaXmat.ypy = itemFlt[9];
+        coma.comaYmat.xpx = itemFlt[10];
+        coma.comaYmat.xpy = itemFlt[11];
+        coma.comaYmat.ypx = itemFlt[12];
+        coma.comaYmat.ypy = itemFlt[13];
         comaCals->Add(coma);
 
       } else if (NAME_IS("CtfAstigCalib")) {
         ctfCal.comaType = false;
         ctfCal.numFits = 4;
         ctfCal.magInd = itemInt[1];
-        ctfCal.amplitude = (float)itemDbl[2];
-        ctfCal.fitValues[0] = (float)itemDbl[3];
-        ctfCal.fitValues[1] = (float)itemDbl[4];
-        ctfCal.fitValues[2] = (float)itemDbl[5];
-        ctfCal.fitValues[3] = (float)itemDbl[6];
-        ctfCal.fitValues[4] = (float)itemDbl[7];
-        ctfCal.fitValues[5] = (float)itemDbl[8];
-        ctfCal.fitValues[6] = (float)itemDbl[9];
-        ctfCal.fitValues[7] = (float)itemDbl[10];
-        ctfCal.fitValues[8] = (float)itemDbl[11];
-        ctfCal.fitValues[9] = (float)itemDbl[12];
-        ctfCal.fitValues[10] = (float)itemDbl[13];
-        ctfCal.fitValues[11] = (float)itemDbl[14];
+        ctfCal.amplitude = itemFlt[2];
+        ctfCal.fitValues[0] = itemFlt[3];
+        ctfCal.fitValues[1] = itemFlt[4];
+        ctfCal.fitValues[2] = itemFlt[5];
+        ctfCal.fitValues[3] = itemFlt[6];
+        ctfCal.fitValues[4] = itemFlt[7];
+        ctfCal.fitValues[5] = itemFlt[8];
+        ctfCal.fitValues[6] = itemFlt[9];
+        ctfCal.fitValues[7] = itemFlt[10];
+        ctfCal.fitValues[8] = itemFlt[11];
+        ctfCal.fitValues[9] = itemFlt[12];
+        ctfCal.fitValues[10] = itemFlt[13];
+        ctfCal.fitValues[11] = itemFlt[14];
         ctfAstigCals->Add(ctfCal);
 
       } else if (NAME_IS("BeamIntensityTable")) {
@@ -3762,10 +3769,11 @@ int CParameterIO::ReadCalibration(CString strFileName)
         }
 
         for (i = 0; i < nCal; i++) {
-          err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, MAX_TOKENS);
+          err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, itemFlt,
+                               MAX_TOKENS);
           if (err)
             break;
-          beamTab->currents[i] = (float)itemDbl[0];
+          beamTab->currents[i] = itemFlt[0];
           beamTab->intensities[i] = itemDbl[1];
         }
         if (err > 0) {
@@ -3794,7 +3802,7 @@ int CParameterIO::ReadCalibration(CString strFileName)
         IStoBS.xpx = (float)atof((LPCTSTR)strItems[i++]);
         IStoBS.xpy = (float)atof((LPCTSTR)strItems[i++]);
         IStoBS.ypx = (float)atof((LPCTSTR)strItems[i++]);
-        IStoBS.ypy = (float)itemDbl[i++];
+        IStoBS.ypy = itemFlt[i++];
         if (!strItems[7].IsEmpty())
           nCal = atoi((LPCTSTR)strItems[6]);
         if (!strItems[8].IsEmpty())
@@ -3804,15 +3812,16 @@ int CParameterIO::ReadCalibration(CString strFileName)
         mWinApp->mShiftManager->SetBeamShiftCal(IStoBS, index, nCal, beamInd, focInd);
         
        } else if (NAME_IS("StageStretchXform")) {
-         IStoBS.xpx = (float)itemDbl[1];
-         IStoBS.xpy = (float)itemDbl[2];
-         IStoBS.ypx = (float)itemDbl[3];
-         IStoBS.ypy = (float)itemDbl[4];
+         IStoBS.xpx = itemFlt[1];
+         IStoBS.xpy = itemFlt[2];
+         IStoBS.ypx = itemFlt[3];
+         IStoBS.ypy = itemFlt[4];
          mWinApp->mShiftManager->SetStageStretchXform(IStoBS);
        } else if (NAME_IS("FilterMagShifts")) {
         nCal = itemInt[1];
         for (i = 0; i < nCal; i++) {
-          err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, MAX_TOKENS);
+          err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, itemFlt,
+                               MAX_TOKENS);
           if (err)
             break;
           index = itemInt[0];
@@ -3820,7 +3829,7 @@ int CParameterIO::ReadCalibration(CString strFileName)
             err = 1;
             break;
           } else {
-            mFilterParam->magShifts[index] = (float)itemDbl[1];
+            mFilterParam->magShifts[index] = itemFlt[1];
           }
         }
         if (err > 0) {
@@ -3838,7 +3847,8 @@ int CParameterIO::ReadCalibration(CString strFileName)
         if (NAME_IS("HitachiBaseFocus"))
           focInd = -1;
         for (i = 0; i < nCal; i++) {
-          err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, MAX_TOKENS);
+          err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, itemFlt,
+                               MAX_TOKENS);
           if (err)
             break;
           index = itemInt[0];
@@ -3849,8 +3859,8 @@ int CParameterIO::ReadCalibration(CString strFileName)
             if (focInd < 0) {
               hParams->baseFocus[index] = itemInt[1];
             } else {
-              mMagTab[index].neutralISX[focInd] = (float)itemDbl[1];
-              mMagTab[index].neutralISY[focInd] = (float)itemDbl[2];
+              mMagTab[index].neutralISX[focInd] = itemFlt[1];
+              mMagTab[index].neutralISY[focInd] = itemFlt[2];
             }
           }
         }
@@ -3866,15 +3876,16 @@ int CParameterIO::ReadCalibration(CString strFileName)
         nCal = itemInt[1];
         index = NAME_IS("AlphaBeamShifts") ? 1 : 0;
         for (i = 0; i < nCal; i++) {
-          err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, MAX_TOKENS);
+          err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, itemFlt,
+                               MAX_TOKENS);
           if (err)
             break;
           if (i < MAX_ALPHAS && index) {
-            alphaBeamShifts[2 * i] = (float)itemDbl[0];
-            alphaBeamShifts[2 * i + 1] = (float)itemDbl[1];
+            alphaBeamShifts[2 * i] = itemFlt[0];
+            alphaBeamShifts[2 * i + 1] = itemFlt[1];
           } else if (i < MAX_ALPHAS) {
-            alphaBeamTilts[2 * i] = (float)itemDbl[0];
-            alphaBeamTilts[2 * i + 1] = (float)itemDbl[1];
+            alphaBeamTilts[2 * i] = itemFlt[0];
+            alphaBeamTilts[2 * i + 1] = itemFlt[1];
           }
         }
         if (index)
@@ -3896,7 +3907,7 @@ int CParameterIO::ReadCalibration(CString strFileName)
             for (i = minSpot[index]; i <= maxSpot[index]; i++) {
               spot = 2 * index * (MAX_SPOT_SIZE + 1);
               err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl,
-                MAX_TOKENS);
+                                   itemFlt, MAX_TOKENS);
               if (err)
                 break;
               spotBeamShifts[spot + i * 2] = itemDbl[0];
@@ -3916,7 +3927,8 @@ int CParameterIO::ReadCalibration(CString strFileName)
       } else if (NAME_IS("ImageShiftOffsets")) {
         nCal = itemInt[1];
         for (i = 0; i < nCal; i++) {
-          err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, MAX_TOKENS);
+          err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, itemFlt,
+                               MAX_TOKENS);
           if (err)
             break;
           index = itemInt[0];
@@ -3925,8 +3937,8 @@ int CParameterIO::ReadCalibration(CString strFileName)
             err = 1;
             break;
           } else {
-            mMagTab[index].calOffsetISX[camera] = (float)itemDbl[2];
-            mMagTab[index].calOffsetISY[camera] = (float)itemDbl[3];
+            mMagTab[index].calOffsetISX[camera] = itemFlt[2];
+            mMagTab[index].calOffsetISY[camera] = itemFlt[3];
           }
         }
         if (err > 0) {
@@ -3971,7 +3983,8 @@ int CParameterIO::ReadCalibration(CString strFileName)
         beamInd = 0;
         freeInd = 0;
         for (i = 0; i < nCal; i++) {
-          err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, MAX_TOKENS);
+          err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, itemFlt,
+                               MAX_TOKENS);
           if (err)
             break;
           index = itemInt[0];
@@ -3979,7 +3992,7 @@ int CParameterIO::ReadCalibration(CString strFileName)
             err = 1;
             break;
           }
-          tmpTable[0].ratio[index] = (float)itemDbl[1];
+          tmpTable[0].ratio[index] = itemFlt[1];
           if (itemDbl[1])
             beamInd++;
           if (oneIntensity)
@@ -3991,7 +4004,7 @@ int CParameterIO::ReadCalibration(CString strFileName)
           else
             tmpTable[0].crossover[index] = itemDbl[3];
           if (!itemEmpty[6]) {
-            tmpTable[1].ratio[index] = (float)itemDbl[4];
+            tmpTable[1].ratio[index] = itemFlt[4];
             tmpTable[1].intensity[index] = itemDbl[5];
             tmpTable[1].crossover[index] = itemDbl[6];
             if (itemDbl[4])
@@ -4031,17 +4044,18 @@ int CParameterIO::ReadCalibration(CString strFileName)
       } else if (NAME_IS("IllumAreaLimits")) {
         nCal = itemInt[1];
         for (i = 1; i <= B3DMIN(nCal, MAX_SPOT_SIZE); i++) {
-          err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, MAX_TOKENS);
+          err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, itemFlt,
+                               MAX_TOKENS);
           if (err)
             break;
-          lowIAlims[i * 4] = (float)itemDbl[0];
-          highIAlims[i * 4] = (float)itemDbl[1];
-          lowIAlims[i * 4 + 1] = (float)itemDbl[2];
-          highIAlims[i * 4 + 1] = (float)itemDbl[3];
-          lowIAlims[i * 4 + 2] = (float)itemDbl[4];
-          highIAlims[i * 4 + 2] = (float)itemDbl[5];
-          lowIAlims[i * 4 + 3] = (float)itemDbl[6];
-          highIAlims[i * 4 + 3] = (float)itemDbl[7];
+          lowIAlims[i * 4] = itemFlt[0];
+          highIAlims[i * 4] = itemFlt[1];
+          lowIAlims[i * 4 + 1] = itemFlt[2];
+          highIAlims[i * 4 + 1] = itemFlt[3];
+          lowIAlims[i * 4 + 2] = itemFlt[4];
+          highIAlims[i * 4 + 2] = itemFlt[5];
+          lowIAlims[i * 4 + 3] = itemFlt[6];
+          highIAlims[i * 4 + 3] = itemFlt[7];
         }
         if (err > 0) {
           if (err == 1)
@@ -4550,6 +4564,7 @@ int CParameterIO::ReadShortTermCal(CString strFileName, BOOL ignoreCals)
   BOOL itemEmpty[MAX_TOKENS];
   int itemInt[MAX_TOKENS];
   double itemDbl[MAX_TOKENS];
+  float itemFlt[MAX_TOKENS];
   int *times = mWinApp->mScope->GetLastLongOpTimes();
   std::map<std::string, int> *customTimes = mWinApp->mMacroProcessor->GetCustomTimeMap();
   int *DEdarkRefTimes = mWinApp->mGainRefMaker->GetLastDEdarkRefTime();
@@ -4576,7 +4591,7 @@ int CParameterIO::ReadShortTermCal(CString strFileName, BOOL ignoreCals)
       retval = 1;
     }
     while (retval == 0 && 
-      (err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, 
+           (err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, itemFlt, 
                             MAX_TOKENS)) == 0) {
 
         // Save the nav autosave filename if it belongs to this user
@@ -4635,8 +4650,8 @@ int CParameterIO::ReadShortTermCal(CString strFileName, BOOL ignoreCals)
         // the limit and it should either be the same user or an omega filter
         if (filtP->cumulNonRunTime < FILTER_LIFETIME_MINUTES && 
           (mWinApp->mScope->GetHasOmegaFilter() || strItems[7] == getenv("USERNAME"))) {
-          filtP->refineZLPOffset = (float)itemDbl[1];
-          filtP->alignedSlitWidth = (float)itemDbl[2];
+          filtP->refineZLPOffset = itemFlt[1];
+          filtP->alignedSlitWidth = itemFlt[2];
           filtP->alignedMagInd = itemInt[3];
           filtP->alignZLPTimeStamp = itemDbl[4];
           filtP->usedOldAlign = true;
@@ -4653,17 +4668,17 @@ int CParameterIO::ReadShortTermCal(CString strFileName, BOOL ignoreCals)
         } else if (timeStamp - inTime < 60 * IS_STAGE_LIFETIME_HOURS) {
           if (NAME_IS("ImageShiftMatrix")) {
             mMagTab[index].calibrated[cam] = inTime;
-            mMagTab[index].matIS[cam].xpx = (float)itemDbl[4];
-            mMagTab[index].matIS[cam].xpy = (float)itemDbl[5];
-            mMagTab[index].matIS[cam].ypx = (float)itemDbl[6];
-            mMagTab[index].matIS[cam].ypy = (float)itemDbl[7];
+            mMagTab[index].matIS[cam].xpx = itemFlt[4];
+            mMagTab[index].matIS[cam].xpy = itemFlt[5];
+            mMagTab[index].matIS[cam].ypx = itemFlt[6];
+            mMagTab[index].matIS[cam].ypy = itemFlt[7];
           } else {
             mMagTab[index].stageCalibrated[cam] = inTime;
-            mMagTab[index].matStage[cam].xpx = (float)itemDbl[4];
-            mMagTab[index].matStage[cam].xpy = (float)itemDbl[5];
-            mMagTab[index].matStage[cam].ypx = (float)itemDbl[6];
-            mMagTab[index].matStage[cam].ypy = (float)itemDbl[7];
-            mMagTab[index].stageCalFocus[cam] = (float)itemDbl[8];
+            mMagTab[index].matStage[cam].xpx = itemFlt[4];
+            mMagTab[index].matStage[cam].xpy = itemFlt[5];
+            mMagTab[index].matStage[cam].ypx = itemFlt[6];
+            mMagTab[index].matStage[cam].ypy = itemFlt[7];
+            mMagTab[index].stageCalFocus[cam] = itemFlt[8];
           }
         }
 
@@ -4675,8 +4690,8 @@ int CParameterIO::ReadShortTermCal(CString strFileName, BOOL ignoreCals)
           pixSizCamera->push_back((int)itemInt[2]);
           pixSizMagInd->push_back((int)itemInt[3]);
           addedRotation->push_back((int)itemInt[4]);
-          pixelSizes->push_back((float)itemDbl[5]);
-          gridRotations->push_back((float)itemDbl[6]);
+          pixelSizes->push_back(itemFlt[5]);
+          gridRotations->push_back(itemFlt[6]);
         }
 
       } else if (!strItems[0].IsEmpty())
@@ -5033,17 +5048,28 @@ int CParameterIO::ReadAndParse(CStdioFile *file, CString &strLine, CString *strI
   return ParseString(strLine, strItems, maxItems, useQuotes);
 }
 
-// Read an parse a line and fill in empty, int, and double arrays
+// Read and parse a line and fill in empty, int, and double arrays, and an optional float
+// array.  Empty items are assigned 0
 int CParameterIO::ReadSuperParse(CString &strLine, CString *strItems, BOOL *itemEmpty,
-                                 int *itemInt, double *itemDbl, int maxItems)
+  int *itemInt, double *itemDbl, int maxItems)
+{
+  return ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, NULL, maxItems);
+}
+
+int CParameterIO::ReadSuperParse(CString &strLine, CString *strItems, BOOL *itemEmpty, 
+  int *itemInt, double *itemDbl, float *itemFlt, int maxItems)
 {
   int err = ReadAndParse(strLine, strItems, maxItems);
   for (int i = 0; i < maxItems; i++) {
     itemEmpty[i] = strItems[i].IsEmpty();
+    itemDbl[i] = 0.;
+    itemInt[i] = 0;
     if (!itemEmpty[i]) {
       itemDbl[i] = atof(strItems[i]);
       itemInt[i] = atoi(strItems[i]);
     }
+    if (itemFlt)
+      itemFlt[i] = (float)itemDbl[i];
   }
   return err;
 }

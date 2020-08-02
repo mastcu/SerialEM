@@ -1415,6 +1415,7 @@ void CMacroProcessor::NextCommand()
   BOOL itemEmpty[MAX_TOKENS];
   int itemInt[MAX_TOKENS];
   double itemDbl[MAX_TOKENS];
+  float itemFlt[MAX_TOKENS];
   BOOL truth, doShift, keyBreak, doPause, doAbort;
   bool doBack, inComment = false;
   ScaleMat aMat, bInv;
@@ -1612,11 +1613,14 @@ void CMacroProcessor::NextCommand()
   // Evaluate emptiness, ints and doubles
   for (i = 0; i < MAX_TOKENS; i++) {
     itemEmpty[i] = strItems[i].IsEmpty();
+    itemInt[i] = 0;
+    itemDbl[i] = 0.;
     if (!itemEmpty[i]) {
       itemInt[i] = atoi((LPCTSTR)strItems[i]);
       itemDbl[i] = atof((LPCTSTR)strItems[i]);
       lastNonEmptyInd = i;
     }
+    itemFlt[i] = (float)itemDbl[i];
   }
   if (itemEmpty[0]) {
     cmdIndex = CME_SCRIPTEND;
@@ -2176,12 +2180,12 @@ void CMacroProcessor::NextCommand()
 
     // Process local vesus persistent property
     ix0 = VARTYPE_REGULAR;
-    if (!itemEmpty[2] && itemInt[2] < 0) {
+    if (itemInt[2] < 0) {
       ix0 = VARTYPE_LOCAL;
       if (LocalVarAlreadyDefined(strItems[1], strLine) > 0)
         return;
     }
-    if (!itemEmpty[2] && itemInt[2] > 0)
+    if (itemInt[2] > 0)
       ix0 = VARTYPE_PERSIST;
 
     // Get number of elements: 3 for 1D and 4 for 2D 
@@ -2267,7 +2271,7 @@ void CMacroProcessor::NextCommand()
     delX = 0.3;
     index2 = 4;
     i = RGB(192, 192, 0);
-    if (!itemEmpty[1] && itemInt[1] > 0)
+    if (itemInt[1] > 0)
       index2 = itemInt[1];
     if (!itemEmpty[2] && itemDbl[2] >= 0.001)
       delX = itemDbl[2];
@@ -2316,7 +2320,7 @@ void CMacroProcessor::NextCommand()
   case CME_TILTTO:                                          // TiltTo
   case CME_TILTBY:                                          // TiltBy
   {
-    double angle = (float)itemDbl[1];
+    double angle = itemFlt[1];
     if (CMD_IS(TILTBY))
       angle += mScope->GetTiltAngle();
     if (fabs(angle) > mScope->GetMaxTiltAngle() + 0.05) {
@@ -2393,15 +2397,15 @@ void CMacroProcessor::NextCommand()
     index = MONT_NOT_TRIAL;
     if (truth)
       index = MONT_TRIAL_PRECOOK;
-    else if (!itemEmpty[1] && itemInt[1] != 0)
+    else if (itemInt[1] != 0)
       index = MONT_TRIAL_IMAGE;
     if (!mWinApp->Montaging())
       ABORT_NOLINE("The script contains a montage statement and \n"
         "montaging is not activated");
     if (mWinApp->mMontageController->StartMontage(index, false, 
       (float)(truth ? itemDbl[1] : 0.), (truth && !itemEmpty[2]) ? itemInt[2] : 0, 
-      truth && !itemEmpty[3] && itemInt[3] != 0, 
-      (truth && !itemEmpty[4]) ? (float)itemDbl[4] : 0.f))
+      truth && itemInt[3] != 0, 
+      (truth && !itemEmpty[4]) ? itemFlt[4] : 0.f))
       AbortMacro();
     mTestMontError = !truth;
     mTestScale = !truth;
@@ -2495,7 +2499,7 @@ void CMacroProcessor::NextCommand()
       (!delX && !itemEmpty[3]))
       ABORT_LINE("Negative time, times out of order, or odd number of values in "
       "statement: \n\n");
-    mCamera->QueueFocusSteps((float)itemDbl[1], itemDbl[2], (float)delX, delY);
+    mCamera->QueueFocusSteps(itemFlt[1], itemDbl[2], (float)delX, delY);
     break;
     
   case CME_SMOOTHFOCUSNEXTSHOT:                            // SmoothFocusNextShot
@@ -2514,7 +2518,7 @@ void CMacroProcessor::NextCommand()
     index = itemInt[1];
     if (index < 0)
       index = 65535;
-    if (mCamera->SetNextAsyncSumFrames(index, !itemEmpty[2] && itemInt[2] > 0)) {
+    if (mCamera->SetNextAsyncSumFrames(index, itemInt[2] > 0)) {
       AbortMacro();
       return;
     }
@@ -2528,10 +2532,10 @@ void CMacroProcessor::NextCommand()
     break;
     
   case CME_FRAMETHRESHOLDNEXTSHOT:                         // FrameThresholdNextShot
-    mCamera->SetNextFrameSkipThresh((float)itemDbl[1]);
+    mCamera->SetNextFrameSkipThresh(itemFlt[1]);
     if (!itemEmpty[2]) {
-      backlashX = (float)itemDbl[2];
-      backlashY = itemEmpty[3] ? backlashX : (float)itemDbl[3];
+      backlashX = itemFlt[2];
+      backlashY = itemEmpty[3] ? backlashX : itemFlt[3];
       if (backlashX >= 1. || backlashX < 0. || backlashY >= 1. || backlashY < 0)
         ABORT_LINE("Partial frame thresholds for Alignframes must be >= 0 and < 1 for "
           "line:\n\n");
@@ -2540,7 +2544,7 @@ void CMacroProcessor::NextCommand()
     if (!itemEmpty[4]) {
       if (itemDbl[4] < 0 || itemDbl[4] >= 1.)
         ABORT_LINE("The relative frame thresholds must be >= 0 and < 1 for line:\n\n");
-      mCamera->SetNextRelativeThresh((float)itemDbl[4]);
+      mCamera->SetNextRelativeThresh(itemFlt[4]);
     }
     break;
     
@@ -2561,9 +2565,9 @@ void CMacroProcessor::NextCommand()
       for (index = 0; index < itemInt[3]; index++) {
         tiltToAngle.push_back((float)(itemDbl[1] + itemDbl[2] * index));
         if (!itemEmpty[5])
-          openTime.push_back((float)itemDbl[5]);
+          openTime.push_back(itemFlt[5]);
         if (!itemEmpty[6])
-          waitOrInterval.push_back((float)itemDbl[6]);
+          waitOrInterval.push_back(itemFlt[6]);
         if (!itemEmpty[7])
           focusChange.push_back((float)(itemDbl[7] * index));
         if (!itemEmpty[9]) {
@@ -2675,7 +2679,7 @@ void CMacroProcessor::NextCommand()
     truth = itemInt[1] != 0;
     backlashX = 0.;
     if (!itemEmpty[2])
-      backlashX = (float)itemDbl[2];
+      backlashX = itemFlt[2];
     if (!itemEmpty[3] && itemEmpty[4] ||
       !BOOL_EQUIV(fabs(itemDbl[3]) > 9000., fabs(itemDbl[4]) > 9000.))
       ABORT_LINE("A Y position to restore must be entered when X is on line:\n\n");
@@ -2745,7 +2749,7 @@ void CMacroProcessor::NextCommand()
     break;
   
   case CME_MODIFYFRAMETSSHIFTS:                             // ModifyFrameTSShifts
-    mCamera->ModifyFrameTSShifts(itemInt[1], (float)itemDbl[2], (float)itemDbl[3]);
+    mCamera->ModifyFrameTSShifts(itemInt[1], itemFlt[2], itemFlt[3]);
     break;
 
   case CME_REPLACEFRAMETSFOCUS:                             // ReplaceFrameTSFocus
@@ -2886,9 +2890,9 @@ void CMacroProcessor::NextCommand()
     if (mWinApp->mParticleTasks->StartMultiShot(
       (itemEmpty[1] || itemInt[1] < -8) ? msParams->numShots[0] : itemInt[1],
       (itemEmpty[2] || itemInt[2] < -8) ? msParams->doCenter : itemInt[2],
-      (itemEmpty[3] || itemDbl[3] < -8.) ? msParams->spokeRad[0] : (float)itemDbl[3], ix1,
-      (itemEmpty[12] || itemDbl[12] < -8.) ? msParams->spokeRad[1] : (float)itemDbl[12],
-      (itemEmpty[4] || itemDbl[4] < -8.) ? msParams->extraDelay : (float)itemDbl[4],
+      (itemEmpty[3] || itemDbl[3] < -8.) ? msParams->spokeRad[0] : itemFlt[3], ix1,
+      (itemEmpty[12] || itemDbl[12] < -8.) ? msParams->spokeRad[1] : itemFlt[12],
+      (itemEmpty[4] || itemDbl[4] < -8.) ? msParams->extraDelay : itemFlt[4],
       (itemEmpty[5] || itemInt[5] < -8) ? truth : itemInt[5] != 0, index,
       (itemEmpty[7] || itemInt[7] < -8) ? msParams->numEarlyFrames : itemInt[7],
       (itemEmpty[8] || itemInt[8] < -8) ? msParams->adjustBeamTilt : itemInt[8] != 0,
@@ -2913,11 +2917,11 @@ void CMacroProcessor::NextCommand()
     doShift = true;
     if (CMD_IS(CONICALALIGNTO)) {
       delX = itemDbl[2];
-      truth = !itemEmpty[3] && itemInt[3] != 0;
+      truth = itemInt[3] != 0;
     }
-    if (CMD_IS(ALIGNTO) && !itemEmpty[2] && itemInt[2]) 
+    if (CMD_IS(ALIGNTO) && itemInt[2]) 
       doShift = false;
-    mDisableAlignTrim = CMD_IS(ALIGNTO) && !itemEmpty[3] && itemInt[3];
+    mDisableAlignTrim = CMD_IS(ALIGNTO) && itemInt[3];
     index2 = mShiftManager->AutoAlign(index, 0, doShift, truth, NULL, 0., 0.,(float)delX);
     mDisableAlignTrim = false;
     if (index2)
@@ -2925,7 +2929,7 @@ void CMacroProcessor::NextCommand()
     break;
 
   case CME_LIMITNEXTAUTOALIGN:                              // LimitNextAutoalign
-    mShiftManager->SetNextAutoalignLimit((float)itemDbl[1]);
+    mShiftManager->SetNextAutoalignLimit(itemFlt[1]);
     break;
 
   case CME_ALIGNWITHROTATION:                               // AlignWithRotation
@@ -2933,7 +2937,7 @@ void CMacroProcessor::NextCommand()
       ABORT_LINE(report);
     if (itemDbl[3] < 0.2 || itemDbl[3] > 50.)
       ABORT_LINE("The angle range to search must be between 0.2 and 50 degrees in:\n\n");
-    if (navHelper->AlignWithRotation(index, (float)itemDbl[2], (float)itemDbl[3], bmin,
+    if (navHelper->AlignWithRotation(index, itemFlt[2], itemFlt[3], bmin,
       shiftX, shiftY))
       ABORT_LINE("Failure to autoalign in:\n\n");
     SetReportedValues(&strItems[4], bmin, shiftX, shiftY);
@@ -2964,8 +2968,8 @@ void CMacroProcessor::NextCommand()
     break;
     
   case CME_FOCUSCHANGELIMITS:                              // FocusChangeLimits
-    mMinDeltaFocus = (float)itemDbl[1];
-    mMaxDeltaFocus = (float)itemDbl[2];
+    mMinDeltaFocus = itemFlt[1];
+    mMaxDeltaFocus = itemFlt[2];
     break;
     
   case CME_ABSOLUTEFOCUSLIMITS:                            // AbsoluteFocusLimits
@@ -2980,7 +2984,7 @@ void CMacroProcessor::NextCommand()
     
   case CME_CORRECTCOMA:                                    // CorrectComa
     index = COMA_INITIAL_ITERS;
-    if (!itemEmpty[1] && itemInt[1])
+    if (itemInt[1])
       index = itemInt[1] > 0 ? COMA_ADD_ONE_ITER : COMA_JUST_MEASURE;
     if (mWinApp->mAutoTuning->ComaFreeAlignment(false, index))
       AbortMacro();
@@ -2989,17 +2993,17 @@ void CMacroProcessor::NextCommand()
   case CME_ZEMLINTABLEAU:                                  // ZemlinTableau
     index = 340;
     index2 = 170;
-    if (!itemEmpty[2] && itemInt[2] > 10)
+    if (itemInt[2] > 10)
       index = itemInt[2];
-    if (!itemEmpty[3] && itemInt[3] > 0)
+    if (itemInt[3] > 0)
       index2 = itemInt[3];
-    mWinApp->mAutoTuning->MakeZemlinTableau((float)itemDbl[1], index, index2);
+    mWinApp->mAutoTuning->MakeZemlinTableau(itemFlt[1], index, index2);
     break;
     
   case CME_CBASTIGCOMA:                                    // CBAstigComa
     B3DCLAMP(itemInt[1], 0, 2);
     if (mWinApp->mAutoTuning->CtfBasedAstigmatismComa(itemInt[1], itemInt[2] != 0, 
-      itemInt[3], !itemEmpty[4] && itemInt[4] > 0, !itemEmpty[5] && itemInt[5] > 0)) {
+      itemInt[3], itemInt[4] > 0, itemInt[5] > 0)) {
       AbortMacro();
       return;
     }
@@ -3012,11 +3016,11 @@ void CMacroProcessor::NextCommand()
        index = mWinApp->mAutoTuning->GetCtfDoFullArray() ? 2 : 1;
       if (!itemEmpty[3])
         index = itemInt[3] > 0 ? 2 : 1;
-      truth = !itemEmpty[4] && itemInt[4] > 0;
+      truth = itemInt[4] > 0;
     } else
-      truth = !itemEmpty[3] && itemInt[3] > 0;
+      truth = itemInt[3] > 0;
     if (mWinApp->mAutoTuning->CtfBasedAstigmatismComa(index, false,
-      (!itemEmpty[1] && itemInt[1] > 0) ? 1 : 0, !itemEmpty[2] && itemInt[2] > 0, truth)){
+      (itemInt[1] > 0) ? 1 : 0, itemInt[2] > 0, truth)){
       AbortMacro();
       return;
     }
@@ -3185,7 +3189,7 @@ void CMacroProcessor::NextCommand()
         B3DCLAMP(snapParams->compression, 0, 3);
         ix1 = compressions[snapParams->compression];
       }
-      iy1 = mWinApp->mActiveView->TakeSnapshot((float)itemDbl[1], (float)itemDbl[2],
+      iy1 = mWinApp->mActiveView->TakeSnapshot(itemFlt[1], itemFlt[2],
         itemInt[3], index2, ix1, snapParams->jpegQuality, report);
       if (CScreenShotDialog::GetSnapshotError(iy1, report)) {
         ABORT_LINE("Error taking snapshot, " + report + "for line:\n\n");
@@ -3622,13 +3626,13 @@ void CMacroProcessor::NextCommand()
     mWinApp->AppendToLog(strCopy + report, mLogAction);
     CString root = report;
     CString ext;
-    if (!itemEmpty[1] && itemInt[1] && truth)
+    if (itemInt[1] && truth)
       UtilSplitExtension(report, root, ext);
     SetOneReportedValue(!truth ? &strItems[1] : NULL, root, 1);
 
     if (!ext.IsEmpty())
       SetOneReportedValue(ext, 2);
-    if (!itemEmpty[1] && itemInt[1] && truth) {
+    if (itemInt[1] && truth) {
       UtilSplitPath(root, report, ext);
       SetOneReportedValue(report, 3);
       SetOneReportedValue(ext, 4);
@@ -3892,7 +3896,7 @@ void CMacroProcessor::NextCommand()
     break;
 
   case CME_CLOSEFRAMEMDOC:                                  // CloseFrameMdoc
-    if (!itemEmpty[1] && itemInt[1] && mWinApp->mDocWnd->GetFrameAdocIndex() < 0)
+    if (itemInt[1] && mWinApp->mDocWnd->GetFrameAdocIndex() < 0)
       ABORT_LINE("There is no frame mdoc file open for line:\n\n");
     mWinApp->mDocWnd->DoCloseFrameMdoc();
     break;
@@ -4101,7 +4105,7 @@ void CMacroProcessor::NextCommand()
   case CME_SETTARGETDEFOCUS:                                // SetTargetDefocus
     if (itemDbl[1] < -200. || itemDbl[1] > 50.)
       ABORT_LINE("Target defocus too large in statement: \n\n");
-    mWinApp->mFocusManager->SetTargetDefocus((float)itemDbl[1]);
+    mWinApp->mFocusManager->SetTargetDefocus(itemFlt[1]);
     mWinApp->mAlignFocusWindow.UpdateSettings();
     break;
     
@@ -4119,7 +4123,7 @@ void CMacroProcessor::NextCommand()
       mFocusOffsetToRestore = mWinApp->mFocusManager->GetDefocusOffset();
       mNumStatesToRestore++;
     }
-    mWinApp->mFocusManager->SetDefocusOffset((float)itemDbl[1]);
+    mWinApp->mFocusManager->SetDefocusOffset(itemFlt[1]);
     break;
     
   case CME_SETOBJFOCUS:                                     // SetObjFocus
@@ -4359,7 +4363,7 @@ void CMacroProcessor::NextCommand()
 
     delISX = bInv.xpx * index + bInv.xpy * index2;
     delISY = bInv.ypx * index + bInv.ypy * index2;
-    if (AdjustBTApplyISSetDelay(delISX, delISY, !itemEmpty[4] && itemInt[4], 
+    if (AdjustBTApplyISSetDelay(delISX, delISY, itemInt[4], 
       !itemEmpty[3], itemDbl[3], report))
       ABORT_LINE(report);
     break;
@@ -4367,7 +4371,7 @@ void CMacroProcessor::NextCommand()
   case CME_IMAGESHIFTBYUNITS:                               // ImageShiftByUnits
     delISX = itemDbl[1];
     delISY = itemDbl[2];
-    if (AdjustBTApplyISSetDelay(delISX, delISY, !itemEmpty[4] && itemInt[4],
+    if (AdjustBTApplyISSetDelay(delISX, delISY, itemInt[4],
       !itemEmpty[3], itemDbl[3], report))
       ABORT_LINE(report);
 
@@ -4387,7 +4391,7 @@ void CMacroProcessor::NextCommand()
     bInv = mShiftManager->MatInv(aMat);
     delISX = bInv.xpx * delX + bInv.xpy * delY;
     delISY = bInv.ypx * delX + bInv.ypy * delY;
-    if (AdjustBTApplyISSetDelay(delISX, delISY, !itemEmpty[4] && itemInt[4],
+    if (AdjustBTApplyISSetDelay(delISX, delISY, itemInt[4],
       !itemEmpty[3], itemDbl[3], report))
       ABORT_LINE(report);
     break;
@@ -4397,9 +4401,9 @@ void CMacroProcessor::NextCommand()
     index = mScope->GetMagIndex();
     aMat = mShiftManager->StageToCamera(currentCam, index);
     bInv = MatMul(aMat, mShiftManager->CameraToIS(index));
-    mShiftManager->ApplyScaleMatrix(bInv, (float)itemDbl[1] * backlashX, 
-      (float)itemDbl[2] * backlashY, delISX, delISY);
-    if (AdjustBTApplyISSetDelay(delISX, delISY, !itemEmpty[4] && itemInt[4],
+    mShiftManager->ApplyScaleMatrix(bInv, itemFlt[1] * backlashX, 
+      itemFlt[2] * backlashY, delISX, delISY);
+    if (AdjustBTApplyISSetDelay(delISX, delISY, itemInt[4],
       !itemEmpty[3], itemDbl[3], report))
       ABORT_LINE(report);
     break;
@@ -4419,7 +4423,7 @@ void CMacroProcessor::NextCommand()
     
   case CME_CALIBRATEIMAGESHIFT:                             // CalibrateImageShift
     index = 0;
-    if (!itemEmpty[1] && itemInt[1])
+    if (itemInt[1])
       index = -1;
     mWinApp->mShiftCalibrator->CalibrateIS(index, false, true);
     break;
@@ -4443,7 +4447,7 @@ void CMacroProcessor::NextCommand()
     if (!(camParams->STEMcamera && camParams->FEItype))
       ABORT_NOLINE("QuickFlyback can be run only if the current camera is an FEI STEM"
       " camera")
-    mWinApp->mCalibTiming->CalibrateTiming(index, (float)itemDbl[2], false);
+    mWinApp->mCalibTiming->CalibrateTiming(index, itemFlt[2], false);
     break;
     
   case CME_REPORTAUTOFOCUS:                                 // ReportAutoFocus
@@ -4477,14 +4481,14 @@ void CMacroProcessor::NextCommand()
     break;
     
   case CME_MOVEBEAMBYMICRONS:                               // MoveBeamByMicrons
-    if (mWinApp->mProcessImage->MoveBeam(NULL, (float)itemDbl[1], (float)itemDbl[2]))
+    if (mWinApp->mProcessImage->MoveBeam(NULL, itemFlt[1], itemFlt[2]))
       ABORT_LINE("Either an image shift or a beam shift calibration is not available for"
       " line:\n\n");
     break;
     
   case CME_MOVEBEAMBYFIELDFRACTION:                         // MoveBeamByFieldFraction
-    if (mWinApp->mProcessImage->MoveBeamByCameraFraction((float)itemDbl[1], 
-      (float)itemDbl[2]))
+    if (mWinApp->mProcessImage->MoveBeamByCameraFraction(itemFlt[1], 
+      itemFlt[2]))
       ABORT_LINE("Either an image shift or a beam shift calibration is not available for"
       " line:\n\n");
     break;
@@ -4519,7 +4523,7 @@ void CMacroProcessor::NextCommand()
   case CME_SETIMAGESHIFT:                                   // SetImageShift
     delX = itemDbl[1];
     delY = itemDbl[2];
-    truth = !itemEmpty[4] && itemInt[4];
+    truth = itemInt[4];
     if (truth)
       mScope->GetLDCenteredShift(delISX, delISY);
     if (!mScope->SetLDCenteredShift(delX, delY)) {
@@ -4529,7 +4533,7 @@ void CMacroProcessor::NextCommand()
     if (AdjustBeamTiltIfSelected(delX - delISX, delY - delISY, truth, report))
       ABORT_LINE(report);
     if (!itemEmpty[3] && itemDbl[3] > 0)
-      mShiftManager->SetISTimeOut((float)itemDbl[3] * mShiftManager->GetLastISDelay());
+      mShiftManager->SetISTimeOut(itemFlt[3] * mShiftManager->GetLastISDelay());
     break;
 
   case CME_ADJUSTBEAMTILTFORIS:                             // AdjustBeamTiltforIS
@@ -4962,8 +4966,8 @@ void CMacroProcessor::NextCommand()
             smi.axisBits |= axisZ;
           if (truth) {
             backlashX = itemEmpty[3] ? mWinApp->mMontageController->GetStageBacklash() :
-              (float)itemDbl[3];
-          backlashY = itemEmpty[4] ? mScope->GetStageRelaxation() : (float)itemDbl[4];
+              itemFlt[3];
+          backlashY = itemEmpty[4] ? mScope->GetStageRelaxation() : itemFlt[4];
           if (backlashY <= 0)
             backlashY = 0.025f;
 
@@ -5201,7 +5205,7 @@ void CMacroProcessor::NextCommand()
     break;
     
   case CME_SETLENSWITHFLC:                                  // SetLensWithFLC
-    if (!mScope->SetLensWithFLC(itemInt[1], itemDbl[2], !itemEmpty[3] && itemInt[3] != 0))
+    if (!mScope->SetLensWithFLC(itemInt[1], itemDbl[2], itemInt[3] != 0))
       ABORT_LINE("Error trying to run:\n\n");
     break;
     
@@ -5391,7 +5395,7 @@ void CMacroProcessor::NextCommand()
   case CME_REDUCEIMAGE:                                     // ReduceImage
     if (ConvertBufferLetter(strItems[1], -1, true, index, report))
       ABORT_LINE(report);
-    ix0 = mWinApp->mProcessImage->ReduceImage(&mImBufs[index], (float)itemDbl[2], 
+    ix0 = mWinApp->mProcessImage->ReduceImage(&mImBufs[index], itemFlt[2], 
       &report);
     if (ix0) {
       report += " in statement:\n\n";
@@ -5428,7 +5432,7 @@ void CMacroProcessor::NextCommand()
     param.minimum_defocus = -(float)(10000. * itemDbl[2]);
     param.maximum_defocus = -(float)(10000. * itemDbl[3]);
     param.slower_search = itemEmpty[4] || itemInt[4] == 0;
-    if (!itemEmpty[5] && itemInt[5] != 0) {
+    if (itemInt[5] != 0) {
       if (itemInt[5] < 128 || itemInt[5] > 640)
         ABORT_LINE("The box size must be between 128 and 640 in the line:\n\n");
       param.box_size = itemInt[5];
@@ -5454,7 +5458,7 @@ void CMacroProcessor::NextCommand()
       }
       if (!itemEmpty[8] && itemDbl[8])
         param.additional_phase_shift_search_step = (float)(itemDbl[8] * DTOR);
-      if (!itemEmpty[9] && itemInt[9]) {
+      if (itemInt[9]) {
         param.astigmatism_is_known = true;
         param.known_astigmatism = 0.;
         param.known_astigmatism_angle = 0.;
@@ -5667,7 +5671,7 @@ void CMacroProcessor::NextCommand()
     break;
     
   case CME_PROGRAMTIMESTAMPS:                               // ProgramTimeStamps
-    mWinApp->AppendToLog(mWinApp->GetStartupMessage(!itemEmpty[1] && itemInt[1]));
+    mWinApp->AppendToLog(mWinApp->GetStartupMessage(itemInt[1] != 0));
     break;
 
     // IsVersionAtLeast, SkipIfVersionLessThan  break;
@@ -5725,7 +5729,7 @@ void CMacroProcessor::NextCommand()
     if (CMD_IS(ENTERDEFAULTEDNUMBER)) {
 
       // Here, enter the value and the number of digits, or < 0 to get an integer entry
-      backlashX = (float)itemDbl[1];
+      backlashX = itemFlt[1];
       index = 3;
       index2 = itemInt[2];
       if (index2 < 0)
@@ -5815,10 +5819,10 @@ void CMacroProcessor::NextCommand()
   case CME_RESETIMAGESHIFT:                                 // ResetImageShift
     truth = mShiftManager->GetBacklashMouseAndISR();
     backlashX = 0.;
-    if (!itemEmpty[1] && itemInt[1] > 0) {
+    if (itemInt[1] > 0) {
       mShiftManager->SetBacklashMouseAndISR(true);
       if (itemInt[1] > 1)
-        backlashX = itemEmpty[2] ? mScope->GetStageRelaxation() : (float)itemDbl[2];
+        backlashX = itemEmpty[2] ? mScope->GetStageRelaxation() : itemFlt[2];
     }
     index = mShiftManager->ResetImageShift(true, false, 10000, backlashX);
     mShiftManager->SetBacklashMouseAndISR(truth);
@@ -5899,15 +5903,15 @@ void CMacroProcessor::NextCommand()
         ABORT_LINE("The second entry should be \"nm\", \"A\", or \"0\" in line:\n\n");
     }
     if (!itemEmpty[1] && itemDbl[1] > 0.) {
-      dwparm.driftRate = (float)itemDbl[1] / (dwparm.useAngstroms ? 10.f : 1.f);
+      dwparm.driftRate = itemFlt[1] / (dwparm.useAngstroms ? 10.f : 1.f);
     }
     if (!itemEmpty[3] && itemDbl[3] > 0.) {
-      dwparm.maxWaitTime = (float)itemDbl[3];
+      dwparm.maxWaitTime = itemFlt[3];
     }
     if (!itemEmpty[4] && itemDbl[4] > 0.) {
-      dwparm.interval = (float)itemDbl[4];
+      dwparm.interval = itemFlt[4];
     }
-    if (!itemEmpty[5] && itemInt[5])
+    if (itemInt[5])
       dwparm.failureAction = itemInt[5] > 0 ? 1 : 0;
     if (!itemEmpty[6]) {
       if (strItems[6] == "T")
@@ -5920,12 +5924,12 @@ void CMacroProcessor::NextCommand()
         ABORT_LINE("The image type to measure defocus from must be one of T, F, "
           "A, or 0 in line:\n\n");
     }
-    if (!itemEmpty[7] && itemInt[7])
+    if (itemInt[7])
       dwparm.changeIS = itemInt[7] > 0 ? 1 : 0;
     if (!itemEmpty[8]) {
       dwparm.setTrialParams = true;
       if (itemDbl[8] > 0)
-        dwparm.exposure = (float)itemDbl[8];
+        dwparm.exposure = itemFlt[8];
       if (!itemEmpty[9])
         dwparm.binning = itemInt[9];
     }
@@ -5934,7 +5938,7 @@ void CMacroProcessor::NextCommand()
   }
 
   case CME_CONDITIONPHASEPLATE:                             // ConditionPhasePlate
-    if (mWinApp->mMultiTSTasks->ConditionPhasePlate(!itemEmpty[1] && itemInt[1] != 0)) {
+    if (mWinApp->mMultiTSTasks->ConditionPhasePlate(itemInt[1] != 0)) {
       AbortMacro();
       return;
     }
@@ -5951,7 +5955,7 @@ void CMacroProcessor::NextCommand()
     break;
     
   case CME_CENTERBEAMFROMIMAGE:                             // CenterBeamFromImage
-    truth = !itemEmpty[1] && itemInt[1] != 0;
+    truth = itemInt[1] != 0;
     delISX = !itemEmpty[2] ? itemDbl[2] : 0.;
     index = mWinApp->mProcessImage->CenterBeamFromActiveImage(0., 0., truth, delISX);
     if (index > 0 && index <= 3)
@@ -6007,7 +6011,7 @@ void CMacroProcessor::NextCommand()
       ABORT_LINE("Dose rate must be positive for line:\n\n");
     if (!mImBufs->mImage)
       ABORT_LINE("There must be an image in buffer A for line:\n\n");
-    index = mWinApp->mProcessImage->DoSetIntensity(true, (float)itemDbl[1]);
+    index = mWinApp->mProcessImage->DoSetIntensity(true, itemFlt[1]);
     if (index < 0) {
       AbortMacro();
       return;
@@ -6353,7 +6357,7 @@ void CMacroProcessor::NextCommand()
     delISX = itemDbl[1] / mWinApp->mProcessImage->EquivalentRecordMean(0);
     delISY = delISX * B3DMAX(0.001, mConSets[index].exposure - camParams->deadTime) +
       camParams->deadTime;
-    if (!itemEmpty[2] && itemInt[2]) {
+    if (itemInt[2]) {
 
       // Adjusting frame time to keep constant number of frames
       if (!camParams->K2Type || !mConSets[index].doseFrac)
@@ -6439,7 +6443,7 @@ void CMacroProcessor::NextCommand()
     if (!camParams->K2Type && !camParams->canTakeFrames)
       ABORT_NOLINE("Frame time cannot be set for the current camera type");
     SaveControlSet(index);
-    mConSets[index].frameTime = (float)itemDbl[2];
+    mConSets[index].frameTime = itemFlt[2];
     mCamera->CropTietzSubarea(camParams, mConSets[index].right - mConSets[index].left,
       mConSets[index].bottom - mConSets[index].top, mConSets[index].processing, 
       mConSets[index].mode, iy1);
@@ -6521,7 +6525,7 @@ void CMacroProcessor::NextCommand()
     break;
     
   case CME_STARTFRAMEWAITTIMER:                             // StartFrameWaitTimer
-    if (!itemEmpty[1] && itemInt[1] < 0)
+    if (itemInt[1] < 0)
       mFrameWaitStart = -2.;
     else
       mFrameWaitStart = GetTickCount();
@@ -6529,7 +6533,7 @@ void CMacroProcessor::NextCommand()
     
   case CME_WAITFORNEXTFRAME:                                // WaitForNextFrame
     if (!itemEmpty[1])
-      mCamera->AlignContinuousFrames(itemInt[1], !itemEmpty[2] && itemInt[2] != 0);
+      mCamera->AlignContinuousFrames(itemInt[1], itemInt[2] != 0);
     mCamera->SetTaskFrameWaitStart((mFrameWaitStart >= 0 || mFrameWaitStart < -1.1) ? 
       mFrameWaitStart : (double)GetTickCount());
     mFrameWaitStart = -1.;
@@ -6695,9 +6699,9 @@ void CMacroProcessor::NextCommand()
         if (!itemEmpty[3]) 
           faParam->hybridShifts = itemInt[3] > 0;
         if (!itemEmpty[4]) {
-          faParam->rad2Filt1 = (float)itemDbl[4];
-          faParam->rad2Filt2 = itemEmpty[5] ? 0.f : (float)itemDbl[5];
-          faParam->rad2Filt3 = itemEmpty[6] ? 0.f : (float)itemDbl[6];
+          faParam->rad2Filt1 = itemFlt[4];
+          faParam->rad2Filt2 = itemEmpty[5] ? 0.f : itemFlt[5];
+          faParam->rad2Filt3 = itemEmpty[6] ? 0.f : itemFlt[6];
         } 
       }
       break;
@@ -6839,7 +6843,7 @@ void CMacroProcessor::NextCommand()
       if (itemEmpty[index2 + 4])
         ABORT_LINE("Entry requires three values for controlling image shift reset in:"
         "\n\n");
-      bmax = (float)itemDbl[index2 + 2];
+      bmax = itemFlt[index2 + 2];
       ix0 = itemInt[index2 + 3];
       ix1 = itemInt[index2 + 4];
     }
@@ -7042,7 +7046,7 @@ void CMacroProcessor::NextCommand()
     index = mWinApp->mNavHelper->GetTypeOfSavedState();
     if (index == STATE_NONE) {
       report.Format("Cannot Restore State: no state has been saved");
-      if (!itemEmpty[1] && itemInt[1])
+      if (itemInt[1])
         ABORT_LINE(report);
       mWinApp->AppendToLog(report, mLogAction);
     } else {
@@ -7350,7 +7354,7 @@ void CMacroProcessor::NextCommand()
       if (index <= 0 || index > MAX_CURRENT_REG)
         ABORT_LINE(report);
     }
-    index2 = navigator->ShiftItemsAtRegistration((float)itemDbl[1], (float)itemDbl[2],
+    index2 = navigator->ShiftItemsAtRegistration(itemFlt[1], itemFlt[2],
       index);
     logRpt.Format("%d items at registration %d were shifted by %.2f, %.2f", index2, index,
       itemDbl[1], itemDbl[2]);
@@ -7428,28 +7432,28 @@ void CMacroProcessor::NextCommand()
     if (!mWinApp->Montaging())
       ABORT_LINE("Montaging must be on already to use this command:\n\n");
     if (mWinApp->mStoreMRC && mWinApp->mStoreMRC->getDepth() > 0 &&
-      ((!itemEmpty[2] && itemInt[2] > 0) || (!itemEmpty[3] && itemInt[3] > 0) ||
-      (!itemEmpty[4] && itemInt[4] > 0) || (!itemEmpty[5] && itemInt[5] > 0)))
+      ((itemInt[2] > 0) || (itemInt[3] > 0) ||
+      (itemInt[4] > 0) || (itemInt[5] > 0)))
         ABORT_LINE("Atfer writing to the file, you cannot change frame size or overlaps "
           " in line:\n\n");
     if (itemInt[1] >= 0)
       montP->moveStage = itemInt[1] > 0;
-    if (!itemEmpty[4] && itemInt[4] > 0) {
+    if (itemInt[4] > 0) {
       if (itemInt[4] < montP->xOverlap * 2)
         ABORT_LINE("The X frame size is less than twice the overlap in statement:\n\n");
       montP->xFrame = itemInt[4];
     }
-    if (!itemEmpty[5] && itemInt[5] > 0) {
+    if (itemInt[5] > 0) {
       if (itemInt[5] < montP->yOverlap * 2)
         ABORT_LINE("The Y frame size is less than twice the overlap in statement:\n\n");
       montP->yFrame = itemInt[5];
     }
-    if (!itemEmpty[2] && itemInt[2] > 0) {
+    if (itemInt[2] > 0) {
       if (itemInt[2] > montP->xFrame / 2)
         ABORT_LINE("X overlap is more than half the frame size in statement:\n\n");
       montP->xOverlap = itemInt[2];
     }
-    if (!itemEmpty[3] && itemInt[3] > 0) {
+    if (itemInt[3] > 0) {
       if (itemInt[3] > montP->yFrame / 2)
         ABORT_LINE("Y overlap is more than half the frame size in statement:\n\n");
       montP->yOverlap = itemInt[3];
@@ -7621,7 +7625,7 @@ void CMacroProcessor::NextCommand()
   case CME_SETUPSCOPEMESSAGE:                               // SetupScopeMessage
     mBoxOnScopeType = itemInt[1];
     if (!itemEmpty[2])
-      mBoxOnScopeInterval = (float)itemDbl[2];
+      mBoxOnScopeInterval = itemFlt[2];
     if (!itemEmpty[3]) {
       SubstituteVariables(&strLine, 1, strLine);
       mWinApp->mParamIO->StripItems(strLine, 3, mBoxOnScopeText);
@@ -7629,7 +7633,7 @@ void CMacroProcessor::NextCommand()
     break;
     
   case CME_UPDATEHWDARKREF:                                 // UpdateHWDarkRef
-    index = mCamera->UpdateK2HWDarkRef((float)itemDbl[1]);
+    index = mCamera->UpdateK2HWDarkRef(itemFlt[1]);
     if (index == 1)
       ABORT_LINE("The thread is already busy for this operation:\n\n")
     mStartedLongOp = !index;
@@ -7646,7 +7650,7 @@ void CMacroProcessor::NextCommand()
       for (index2 = 0; index2 < MAX_LONG_OPERATIONS; index2++) {
         if (!strItems[index].Left(2).CompareNoCase(CString(longKeys[index2]))) {
           if (longHasTime[index2] && itemDbl[index + 1] < -1.5) {
-            backlashX = (float)itemDbl[index + 1];
+            backlashX = itemFlt[index + 1];
             mScope->StartLongOperation(&index2, &backlashX, 1);
             SetOneReportedValue(backlashX, iy1++);
             report.Format("Time since last long operation %s is %.2f hours", 
@@ -7673,7 +7677,7 @@ void CMacroProcessor::NextCommand()
               ABORT_LINE(report);
             }
             index++;
-            intervals[ix1++] = (float)itemDbl[index];
+            intervals[ix1++] = itemFlt[index];
           }
           else
             intervals[ix1++] = 0.;
@@ -7695,7 +7699,7 @@ void CMacroProcessor::NextCommand()
   }
     
   case CME_NEWDESERVERDARKREF:                              // NewDEserverDarkRef
-    if (mWinApp->mGainRefMaker->MakeDEdarkRefIfNeeded(itemInt[1], (float)itemDbl[2], 
+    if (mWinApp->mGainRefMaker->MakeDEdarkRefIfNeeded(itemInt[1], itemFlt[2], 
       report))
       ABORT_NOLINE(CString("Cannot make a new dark reference in DE server with "
       "NewDEserverDarkRef:\n") + report);
@@ -7817,14 +7821,14 @@ void CMacroProcessor::NextCommand()
   case CME_MOVEPIEZOXY:                                     // MovePiezoXY
     if (mWinApp->mPiezoControl->GetNumPlugins()) {
       if (mWinApp->mPiezoControl->SetXYPosition(itemDbl[1], itemDbl[2],
-        !itemEmpty[3] && itemInt[3] != 0)) {
+        itemInt[3] != 0)) {
         AbortMacro();
         return;
       }
       mMovedPiezo = true;
     } else {
       if (!mScope->SetPiezoXYPosition(itemDbl[1], itemDbl[2],
-        !itemEmpty[3] && itemInt[3] != 0)) {
+        itemInt[3] != 0)) {
         AbortMacro();
         return;
       }
@@ -7834,7 +7838,7 @@ void CMacroProcessor::NextCommand()
     
   case CME_MOVEPIEZOZ:                                      // MovePiezoZ
     if (mWinApp->mPiezoControl->SetZPosition(itemDbl[1],
-      !itemEmpty[2] && itemInt[2] != 0)) {
+      itemInt[2] != 0)) {
         AbortMacro();
         return;
     }
