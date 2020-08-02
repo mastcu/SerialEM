@@ -3895,11 +3895,13 @@ int CNavHelper::AlignWithRotation(int buffer, float centerAngle, float angleRang
 {
   float step = 1.5f;
   int numSteps = B3DNINT(angleRange / step) + 1;
-  int ist, idir, istMax, numStepCuts = 4;
+  int ist, idir, istMax, numStepCuts = 5;
   float peakmax = -1.e30f;
   float rotation, curMax, peak, shiftX, shiftY, CCC, fracPix;
+  float peakBelow = -1.e30f, peakAbove = -1.e30f;
   float *CCCp = &CCC, *fracPixP = &fracPix;
   double overlapPow = 0.166667;
+  FloatVec vecRot, vecPeak;
   CString report;
 
   if (!scaling) {
@@ -3919,6 +3921,8 @@ int CNavHelper::AlignWithRotation(int buffer, float centerAngle, float angleRang
       return 1;
     if (CCCp)
       peak = (float)(CCC * pow((double)fracPix, overlapPow));
+    vecRot.push_back(rotation);
+    vecPeak.push_back(peak);
     if (peak > peakmax) {
       peakmax = peak;
       rotBest = rotation;
@@ -3926,7 +3930,7 @@ int CNavHelper::AlignWithRotation(int buffer, float centerAngle, float angleRang
       shiftXbest = shiftX;
       shiftYbest = shiftY;
     }
-    SEMTrace('1', "Rotation %.1f  peak  %g  shift %.1f %.1f", rotation, peak,
+    SEMTrace('1', "Rotation %.2f  peak  %g  shift %.1f %.1f", rotation, peak,
       shiftX, shiftY);
   }
 
@@ -3952,20 +3956,32 @@ int CNavHelper::AlignWithRotation(int buffer, float centerAngle, float angleRang
 
         // When autoalign is called with shift pointers, it does not put the shift in the
         // image, so it needs to come from the call not the image
+        vecRot.push_back(rotation);
+        vecPeak.push_back(peak);
         if (peak > peakmax) {
           peakmax = peak;
           rotBest = rotation;
           shiftXbest = shiftX;
           shiftYbest = shiftY;
         }
-        SEMTrace('1', "Rotation %.1f  peak  %g  shift %.1f %.1f", rotation, 
+        SEMTrace('1', "Rotation %.2f  peak  %g  shift %.1f %.1f", rotation, 
           peak, shiftX, shiftY);
       }
     }
   }
 
+  // Find the values at rotations below and above the peak
+  for (ist = 0; ist < (int)vecPeak.size(); ist++) {
+    if (fabs(vecRot[ist] - (rotBest - step)) < 0.1 * step)
+      peakBelow = vecPeak[ist];
+    if (fabs(vecRot[ist] - (rotBest + step)) < 0.1 * step)
+      peakAbove = vecPeak[ist];
+  }
+  if (peakBelow > -1.e29 && peakAbove > -1.e29)
+    rotBest += step * (float)parabolicFitPosition(peakBelow, peakmax, peakAbove);
+
   mWinApp->SetCurrentBuffer(0);
-  report.Format("The two images correlate most strongly with a rotation of %.1f",
+  report.Format("The two images correlate most strongly with a rotation of %.2f",
     rotBest);
   mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
   return 0;
@@ -4059,6 +4075,44 @@ WINDOWPLACEMENT *CNavHelper::GetMultiShotPlacement(bool update)
       mMultiShotDlg->UpdateAndUseMSparams(false);
   }
   return &mMultiShotPlace;
+}
+
+// Rotate either the regular or custom pattern in the given parameters by the given angle
+int CNavHelper::RotateMultiShotVectors(MultiShotParams *params, float angle, bool custom)
+{
+  ScaleMat aMat, aProd, rotMat;
+  int ind, numHoles = 2;
+  float transISX, transISY;
+  int magInd = custom ? params->customMagIndex : params->holeMagIndex;
+  if (!magInd)
+    return 1;
+
+  // Need to transform IS to specimen, rotate, then specimen to IS
+  aMat = mShiftManager->IStoSpecimen(magInd);
+  if (!aMat.xpx)
+    return 2;
+  rotMat.xpx = rotMat.ypy = (float)cos(angle * DTOR);
+  rotMat.ypx = (float)sin(angle * DTOR);
+  rotMat.xpy = -rotMat.ypx;
+  aProd = MatMul(MatMul(aMat, rotMat), MatInv(aMat));
+
+  // Transform hole positions
+  if (custom) {
+    for (ind = 0; ind < (int)params->customHoleX.size(); ind++) {
+      mWinApp->mShiftManager->ApplyScaleMatrix(aProd, params->customHoleX[ind],
+        params->customHoleY[ind], transISX, transISY);
+      params->customHoleX[ind] = transISX;
+      params->customHoleY[ind] = transISY;
+    }
+  } else {
+    for (ind = 0; ind < 2; ind++) {
+      mWinApp->mShiftManager->ApplyScaleMatrix(aProd, (float)params->holeISXspacing[ind],
+        (float)params->holeISYspacing[ind], transISX, transISY);
+      params->holeISXspacing[ind] = transISX;
+      params->holeISYspacing[ind] = transISY;
+    }
+  }
+  return 0;
 }
 
 void CNavHelper::OpenHoleFinder(void)

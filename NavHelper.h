@@ -425,6 +425,7 @@ public:
   void StartResetISorFinish(int magInd);
   void OpenMultishotDlg(void);
   WINDOWPLACEMENT *GetMultiShotPlacement(bool update);
+  int RotateMultiShotVectors(MultiShotParams *params, float angle, bool custom);
   void OpenHoleFinder(void);
   WINDOWPLACEMENT *GetHoleFinderPlacement(void);
   void OpenMultiCombiner(void);
