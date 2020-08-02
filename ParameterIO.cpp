@@ -2124,7 +2124,7 @@ int CParameterIO::ReadProperties(CString strFileName)
           camEntered[iset] = 1;
         }
         while ((err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, 
-                                     MAX_TOKENS)) == 0) {
+          itemFlt, MAX_TOKENS)) == 0) {
           message = strItems[0];
           if (iset >= 0) {
             std::string propLower = (LPCTSTR)message.MakeLower();
