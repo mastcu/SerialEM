@@ -236,6 +236,29 @@ int UtilSaveSingleImage(CString filename, CString descrip, bool useMdoc)
   return retval;
 }
 
+// Check that available space on the disk is enough for what is needed by given operation
+int UtilCheckDiskFreeSpace(float needed, const char * operation)
+{
+  CString direc, file;
+  ULARGE_INTEGER available;
+  if (!sWinApp->mStoreMRC)
+    return 0;
+  UtilSplitPath(sWinApp->mStoreMRC->getFilePath(), direc, file);
+  if (direc.IsEmpty())
+    return 0;
+  if (direc.Right(1) != "\\")
+    direc.Append("\\");
+  if (GetDiskFreeSpaceEx((LPCTSTR)direc, &available, NULL, NULL)) {
+    if (available.QuadPart * 0.99 < needed) {
+      file.Format("There does not seem to be enough disk space to take this"
+        " %s\n\nDo you want to stop and do something about this?", operation);
+      if (SEMMessageBox(file, MB_QUESTION, true, IDYES) == IDYES)
+        return 1;
+    }
+  }
+  return 0;
+}
+
 // Remove a file and ignore errors
 void UtilRemoveFile(CString filename)
 {

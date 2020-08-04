@@ -18,6 +18,7 @@ void UtilThreadCleanup(CWinThread **threadpp);
 KStoreMRC *UtilOpenOldMRCFile(CString filename);
 int UtilOpenFileReadImage(CString filename, CString descrip);
 int UtilSaveSingleImage(CString filename, CString descrip, bool useMdoc);
+int UtilCheckDiskFreeSpace(float needed, const char *operation);
 void UtilRemoveFile(CString filename);
 int UtilRenameFile(CString fromName, CString toName, const char *message = NULL);
 void UtilSplitExtension(CString filename, CString &root, CString &ext);

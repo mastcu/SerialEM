@@ -817,6 +817,13 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
     }
   }
 
+  // Check disk space unless doing tilt series
+  if (!mTrialMontage && !preCooking && !mReadingMontage && !mWinApp->DoingTiltSeries()) {
+    if (UtilCheckDiskFreeSpace((mParam->xFrame * mParam->yFrame * 2.) *
+      (mNumPieces - (mNumToSkip + already)), "montage"))
+      return 1;
+  }
+
   // Set flag for whether doing IS realignment
   mDoISrealign = false;
   if (useHQ && !mReadingMontage && !mTrialMontage && mParam->ISrealign) {
