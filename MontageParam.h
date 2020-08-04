@@ -41,8 +41,9 @@ struct MontParam {
   int numToSkip;           // Number of pieces to skip
   std::vector<short int> skipPieceX;    // Piece numbers to skip, numbered from 0
   std::vector<short int> skipPieceY;
-  BOOL ignoreSkipList;     // User can select to take full rectangle
-  int insideNavItem;       // Navigator item to take frames inside of
+  int fitToPolygonID;       // ID of polygon it was fit to
+  BOOL ignoreSkipList;      // User can select to take full rectangle
+  int insideNavItem;        // Navigator item to take frames inside of
   BOOL skipOutsidePoly;     // Flag to skip frames outside that item
   BOOL wasFitToPolygon;     // Flag if it was fit to a polygon
   float minOverlapFactor;   // Minimum overlap factor for stage montage

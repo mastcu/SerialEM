@@ -52,6 +52,7 @@
   if (item->mType == ITEM_TYPE_MAP) {
     ADOC_PUT(KeyValue(ADOC_ARG, "MapFile",  (LPCTSTR)item->mMapFile));
     ADOC_PUT(Integer(ADOC_ARG, "MapID", item->mMapID));
+    ADOC_PUT(Integer(ADOC_ARG, "FitToPolygonID", item->mFitToPolygonID));
     ADOC_PUT(Integer(ADOC_ARG, "MapMontage", item->mMapMontage));
     ADOC_PUT(Integer(ADOC_ARG, "MapSection",item->mMapSection));
     ADOC_PUT(Integer(ADOC_ARG, "MapBinning",item->mMapBinning));

@@ -45,6 +45,7 @@ CMapDrawItem::CMapDrawItem()
   mMapID = 0;
   mGroupID = 0;
   mPolygonID = 0;
+  mFitToPolygonID = 0;
   mDrawnOnMapID = 0;
   mOldDrawnOnID = 0;
   mPieceDrawnOn = -1;

@@ -3362,6 +3362,7 @@ int CNavigatorDlg::PolygonMontage(CMontageSetupDlg *montDlg, bool skipSetupDlg)
 {
 	CMapDrawItem *itmp;
   CString str;
+  MontParam *montp;
   int err;
   mWinApp->RestoreViewFocus();
   if (!SetCurrentItem())
@@ -3381,6 +3382,8 @@ int CNavigatorDlg::PolygonMontage(CMontageSetupDlg *montDlg, bool skipSetupDlg)
       }
     mItem->mStageX = itmp->mStageX;
     mItem->mStageY = itmp->mStageY;
+    montp = mWinApp->GetMontParam();
+    montp->fitToPolygonID = mItem->mMapID;
     UpdateListString(mCurrentItem);
     SetChanged(true);
   }
@@ -6028,6 +6031,7 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
   if (item->mMapMontage) {
     item->mMapFramesX = montp->xNframes;
     item->mMapFramesY = montp->yNframes;
+    item->mFitToPolygonID = montp->fitToPolygonID;
 
     // A read-in montage with no MontSection will have this as MONTAGE_CONSET, so this is
     // reliable otherwise
@@ -7303,6 +7307,8 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
         ADOC_OPTIONAL(AdocGetTwoFloats("Item", sectInd, "BklshXY",
           &item->mBacklashX, &item->mBacklashY));
         ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "SamePosId", &item->mAtSamePosID));
+        ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "FitToPolygonID", 
+          &item->mFitToPolygonID));
         ADOC_OPTIONAL(AdocGetTwoFloats("Item", sectInd, "RawStageXY",
           &item->mRawStageX, &item->mRawStageY));
         ADOC_OPTIONAL(AdocGetInteger("Item", sectInd, "Acquire", &index));
@@ -8117,8 +8123,15 @@ void CNavigatorDlg::AcquireNextTask(int param)
     ManageNumDoneAcquired();
 
     // Count any success for now
-    if (mWinApp->mTSController->GetLastSucceeded())
+    if (mWinApp->mTSController->GetLastSucceeded()) {
       mNumAcquired++;
+      report.Format("Tilt series acquired at item # %d with label %s (item at %.2f, %.2f,"
+        " TS at %.2f, %.2f)", mAcquireIndex + 1, (LPCTSTR)item->mLabel, item->mStageX, 
+        item->mStageY, mWinApp->mTSController->GetStopStageX(), 
+        mWinApp->mTSController->GetStopStageY());
+      mWinApp->AppendToLog(report);
+
+    }
     break;
 
     // After pre-macro, if it set the skip flag, skip through to move

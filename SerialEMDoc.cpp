@@ -640,6 +640,7 @@ void CSerialEMDoc::InitMontParamsForDialog(MontParam *param, BOOL frameSet, int 
     param->xNframes = xNframes > 0 ? xNframes : mDefaultMontXpieces;
     param->yNframes = yNframes > 0 ? yNframes : mDefaultMontYpieces;
     param->numToSkip = 0;
+    param->fitToPolygonID = 0;
   }
   param->zCurrent = 0;
   param->zMax = -1;
