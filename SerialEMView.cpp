@@ -868,7 +868,9 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
         imBuf->mCtfPhase);
       cenX = imBuf->mImage->getWidth() / 2.f;
       cenY = imBuf->mImage->getHeight() / 2.f;
-      CPen pnDashPen (PS_DASHDOT, thick1, RGB(255, 255, 0));
+
+      // Dashed lines can only be drawn with thickness 1: no DPI scaling
+      CPen pnDashPen (PS_DASHDOT, 1, RGB(255, 255, 0));
       for (int zr = 0; zr < (int)B3DMIN(zeroRadii.size(), zeroRadii2.size()); zr++)
         DrawEllipse(&cdc, &pnDashPen, &rect, imBuf->mImage, cenX, cenY, 
         zeroRadii[zr] * cenX, zeroRadii2[zr] * cenX, imBuf->mCtfAngle, 
@@ -883,7 +885,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
 
       // Dashes etc do not work above thickness 1, but don't even work with that when
       // drawing to a buffer
-      CPen pnDashPen (PS_DASHDOT, thick1, RGB(0, 255, 0));
+      CPen pnDashPen (PS_DASHDOT, 1, RGB(0, 255, 0));
       for (int zr = 0; zr < (int)zeroRadii.size(); zr++)
         DrawCircle(&cdc, &pnDashPen, &rect, imBuf->mImage, cenX, cenY, 
         zeroRadii[zr] * cenX);
@@ -896,7 +898,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
       double defocus = processImg->GetFixedRingDefocus();
       cenX = imBuf->mImage->getWidth() / 2.f;
       cenY = imBuf->mImage->getHeight() / 2.f;
-      CPen pnDashPen (PS_DASHDOT, thick1, RGB(0, 255, 0));
+      CPen pnDashPen (PS_DASHDOT, 1, RGB(0, 255, 0));
       if (defocus > 0 && pixel > 0.) {
         processImg->DefocusFromPointAndZeros(0., 0, pixel, 0., &zeroRadii, 
           defocus);
@@ -973,7 +975,7 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
     imBuf->mRegistration : navigator->GetCurrentRegistration();
   std::set<int> *selectedItems = navigator->GetSelectedItems();
   bool highlight, draw;
-  CMapDrawItem *item;
+  CMapDrawItem *item, *polygon;
   CMapDrawItem holeItem;
   MultiShotParams *msParams;
   int msNumXholes = 0, msNumYholes = 0, useXholes, useYholes;
@@ -1060,6 +1062,17 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
       if (!(iDraw < 0 && useMultiShot))
         DrawMapItemBox(cdc, &rect, item, imBuf, numPoints, 0., 0., delPtX, delPtY, NULL,
         NULL);
+      if (item->mType == ITEM_TYPE_MAP && item->mFitToPolygonID && item->mMapSection > 0){
+        polygon = mWinApp->mNavigator->FindItemWithMapID(item->mFitToPolygonID, false);
+        if (polygon && polygon->mDraw > 0) {
+          CPen pnDashPen(PS_DASHDOT, 1, polygon->GetColor(false));
+          cdc.SelectObject(&pnDashPen);
+          DrawMapItemBox(cdc, &rect, polygon, imBuf, polygon->mNumPoints, 
+            item->mStageX - polygon->mStageX, item->mStageY - polygon->mStageY,
+            delPtX, delPtY, NULL, NULL);
+          cdc.SelectObject(&pnSolidPen);
+        }
+      }
 
       // Draw multi-shot pattern
       if (iDraw < 0 && useMultiShot) {
@@ -1392,8 +1405,8 @@ void CSerialEMView::DrawLowDoseAreas(CDC &cdc, CRect &rect, EMimageBuffer *imBuf
     int area = mWinApp->mLowDoseDlg.DrawAreaOnView(type, imBuf, state,
       cornerX, cornerY, cenX, cenY, radius);
     if (area) {
-      CPen pnSolidPen(mDrewLDAreasAtNavPt ? PS_DASHDOT : PS_SOLID, thick, 
-        areaColors[area - 1]);
+      CPen pnSolidPen(mDrewLDAreasAtNavPt ? PS_DASHDOT : PS_SOLID, 
+        mDrewLDAreasAtNavPt ? 1 : thick, areaColors[area - 1]);
       CPen *pOldPen = cdc.SelectObject(&pnSolidPen);
       for (int pt = 0; pt < 5; pt++) {
         MakeDrawPoint(&rect, imBuf->mImage, cornerX[pt % 4] + xOffset, 
@@ -1966,6 +1979,13 @@ int CSerialEMView::FitCtfAtMarkedPoint(EMimageBuffer *imBuf, CString &lenstr,
   param.slower_search = processImg->GetSlowerCtfFit() > 0;
   param.compute_extra_stats = processImg->GetExtraCtfStats() > 0;
 
+  // Turn off astigmatism if Ctrl key down
+  if (GetAsyncKeyState(VK_CONTROL) / 2) {
+    param.astigmatism_is_known = true;
+    param.known_astigmatism = 0.;
+    param.known_astigmatism_angle = 0.;
+  }
+
   // Assumed phase is stored in radians, passed here in radians and 
   // the params to ctffid are in radians
   if (processImg->GetPlatePhase() > 0.001 || processImg->GetCtfFindPhaseOnClick()) {
@@ -2389,7 +2409,7 @@ void CSerialEMView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
       fdx = (float)((nChar - 38.) * arrowInc);
     else
       fdy = (float)((39. - nChar) * arrowInc);
-    mWinApp->mProcessImage->MoveBeamByCameraFraction(fdx, fdy);
+    mWinApp->mProcessImage->MoveBeamByCameraFraction(fdx, fdy, true);
 
   } else if (mShiftPressed && (nChar == VK_OEM_COMMA || nChar == VK_OEM_PERIOD)) {
     arrowInc *= (nChar == VK_OEM_COMMA ? 0.707107f : 1.414214f);
