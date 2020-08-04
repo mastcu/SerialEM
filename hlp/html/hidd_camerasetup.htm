@@ -64,7 +64,8 @@
     <P><B>Processing</B></P>
     <P>These buttons determine whether you will acquire an unprocessed, raw image from 
       the camera, an image with the dark reference subtracted, or a gain-normalized 
-      image. An image is gain-normalized by subtracting a dark reference then dividing 
+      image. An image is gain-normalized by subtracting a dark reference then 
+      multiplying 
       by the gain reference.</P>
     <P><B>Remove X-rays</B></P>
     <P>This checkbox will activate removal of X-rays from an image taken with this 
@@ -217,7 +218,7 @@
       explained in <A href="about_camera.htm#directDetectors">Direct Electron Detectors,
        Especially the Gatan K2/K3</A>.  The most salient points are these:</P>
     <ul>
-      <li>Binning values are relative to the native pixels of the camera (3838 x 3710 
+      <li>Binning values are relative to the physical pixels of the camera (3838 x 3710 
         for K2; 5760 x 4092 for K3).&nbsp; An image in 
         K2 super-resolution mode or in K3 counting mode (which is intrinsically 
         super-resolution) is referred to as having binning 0.5. </li>
@@ -240,7 +241,9 @@
         that are enforced whenever you change one of these entries, so it is best to tab 
         out of a field after changing it, to see whether it gets changed to something 
         unexpected. 
-      <li>Unprocessed or dark-subtracted data (which are the same) can be saved in less space and gain-normalized later.&nbsp; 
+      <li>When electron counting, there is no distinction between unprocessed and 
+        dark-subtracted data and these are referred to as unnormalized.&nbsp; 
+        Unnormalized data can be saved in less space and gain-normalized later.&nbsp; 
         When saving such frames, the frame sum returned to SerialEM will be 
         gain-normalized even though normalization is not selected.</ul>
     <P><b>Linear - Counting - Super-resolution Mode</b></P>

@@ -314,6 +314,7 @@ public:
   CButton m_butSetupFalconFrames;
   afx_msg void OnSetupFalconFrames();
   void ManageDarkRefs(void);
+  void ManageK2Processing(void);
   BOOL m_bDEsaveMaster;
   BOOL m_bDEsaveFrames;
   BOOL m_bDEsaveFinal;

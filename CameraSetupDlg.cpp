@@ -1071,6 +1071,7 @@ void CCameraSetupDlg::LoadConsetToDialog()
   ManageTimingAvailable();
   ManageDose();
   ManageK2Binning();
+  ManageK2Processing();
   ManageAntialias();
   ManageK2SaveSummary();
   ManageIntegration();
@@ -1717,6 +1718,20 @@ void CCameraSetupDlg::ManageDarkRefs(void)
       UpdateData(false);
     }
   }
+}
+
+// Manage the processing buttons for a K2/K3 camera (depends on mode)
+void CCameraSetupDlg::ManageK2Processing(void)
+{
+  CWnd *wnd = GetDlgItem(IDC_RUNPROCESSED);
+  if (!mParam->K2Type)
+    return;
+  if (m_iK2Mode && !m_iProcessing) {
+    m_iProcessing = 1;
+    UpdateData(false);
+  }
+  wnd->ShowWindow(m_iK2Mode ? SW_HIDE : SW_SHOW);
+  SetDlgItemText(IDC_RDARKSUBTRACT, m_iK2Mode ? "Unnormalized" : "Dark Subtracted");
 }
 
 // Take care of size and position controls for camera or K2 mode
@@ -2452,9 +2467,8 @@ void CCameraSetupDlg::OnK2Mode()
   }
 
   // Handle K2, do general updates for Falcon too
-  if (mParam->K2Type) {
-    ManageK2Binning();
-  }
+  ManageK2Binning();
+  ManageK2Processing();
   ManageDoseFrac();
   ManageAntialias();
   ManageExposure();
