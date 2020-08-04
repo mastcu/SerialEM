@@ -2084,7 +2084,7 @@ int CParameterIO::ReadProperties(CString strFileName)
     }
 
     while (retval == 0 && 
-      (err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, 
+      (err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, itemFlt,
                             MAX_TOKENS)) == 0) {
       recognized = true;
       recognized2 = true;
@@ -2623,7 +2623,7 @@ int CParameterIO::ReadProperties(CString strFileName)
               err = 0;
               for (ind = 0; ind < nMags; ind++) {
                 if (ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, 
-                                     MAX_TOKENS) || itemEmpty[1]) {
+                  itemFlt, MAX_TOKENS) || itemEmpty[1]) {
                   err++;
                 } else {
                   camP->doseTabCounts.push_back(itemFlt[0] / scale);
@@ -3283,7 +3283,8 @@ int CParameterIO::ReadProperties(CString strFileName)
        nMags = itemInt[1];
        col = MatchNoCase("MagnificationTable") ? 1 : 0;
        for (int line = 0; line < nMags; line++) {
-         err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, MAX_TOKENS);
+         err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, itemFlt, 
+           MAX_TOKENS);
          if (err)
            break;
          err = 1;
@@ -3318,7 +3319,8 @@ int CParameterIO::ReadProperties(CString strFileName)
      } else if (MatchNoCase("CameraLengthTable")) {
        nMags = itemInt[1];
        for (int line = 0; line < nMags; line++) {
-         err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, MAX_TOKENS);
+         err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, itemFlt, 
+           MAX_TOKENS);
          if (err)
            break;
          err = 1;
@@ -3347,7 +3349,8 @@ int CParameterIO::ReadProperties(CString strFileName)
      } else if (MatchNoCase("FocusTickTable")) {
        nMags = itemInt[1];
        for (int line = 0; line < nMags; line++) {
-         err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, MAX_TOKENS);
+         err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, itemFlt, 
+           MAX_TOKENS);
          if (err)
            break;
          err = 1;
@@ -3376,7 +3379,8 @@ int CParameterIO::ReadProperties(CString strFileName)
        float *ISmoved = mWinApp->mShiftManager->GetISmoved();
        float *ISdelay = mWinApp->mShiftManager->GetISdelayNeeded();
        for (int line = 0; line < nMags; line++) {
-         err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, MAX_TOKENS);
+         err = ReadSuperParse(strLine, strItems, itemEmpty, itemInt, itemDbl, itemFlt, 
+           MAX_TOKENS);
          if (err)
            break;
          if (strItems[1].IsEmpty()) {
