@@ -3,6 +3,19 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+8/4/20: When drawing a montage map that was fit to a polygon, the polygon will
+also be shown in dashed lines for sections after the first one.
+
+8/4/20: Added ability to use Ctrl key to fit CTF with no astigmatism search.
+
+8/4/20: Made beam shift arrows in scope control panel and hot keys do an
+approximate move along deflector axes when there is no beam shift calibration.
+
+8/4/20: Added check that there is enough free disk space before a montage.
+
+8/4/20: In camera setup dialog For K2/K3, now show only two processing choices
+when electron counting and label one as "unnormalized".
+
 8/2/20: Added script command RotateMultiShotPattern to rotate the regular or
 custom pattern by a specified angle.
 

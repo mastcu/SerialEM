@@ -202,7 +202,7 @@ public:
   afx_msg void OnProcessCropimage();
   afx_msg void OnUpdateProcessCropimage(CCmdUI *pCmdUI);
   afx_msg void OnListRelativeRotations();
-  int MoveBeamByCameraFraction(float shiftX, float shiftY);
+  int MoveBeamByCameraFraction(float shiftX, float shiftY, bool uncalOK = false);
   afx_msg void OnProcessSetBinnedSize();
   afx_msg void OnProcessAutocorrelation();
   afx_msg void OnUpdateProcessAutocorrelation(CCmdUI *pCmdUI);

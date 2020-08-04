@@ -1091,22 +1091,30 @@ int CProcessImage::MoveBeam(EMimageBuffer *imBuf, float shiftX, float shiftY,
 
 // Move the beam by a fraction of field of view on the current camera
 // Returns 1 if beam shift or image shift is not calibrated
-int CProcessImage::MoveBeamByCameraFraction(float shiftX, float shiftY)
+int CProcessImage::MoveBeamByCameraFraction(float shiftX, float shiftY, bool uncalOK)
 {
-  double bsX, bsY;
+  double bsX, bsY, pixel;
   int magInd = mScope->FastMagIndex();
   int cam = mWinApp->GetCurrentCamera();
   CameraParameters *camp = mWinApp->GetCamParams() + cam;
   ScaleMat bInv = mShiftManager->CameraToIS(magInd);
   ScaleMat IStoBS = mShiftManager->GetBeamShiftCal(magInd);
   float camSize = (float)sqrt((double)camp->sizeX * camp->sizeY);
-  if (!bInv.xpx || !IStoBS.xpx)
-    return 1;
+  shiftX *= camSize;
+  shiftY *= camSize;
+  if (!bInv.xpx || !IStoBS.xpx) {
+    if (!uncalOK)
+      return 1;
+    pixel = mShiftManager->GetPixelSize(cam, magInd);
+    if (JEOLscope)
+      pixel *= mScope->FastMagIndex() < mScope->GetLowestMModeMagInd() ?
+        mScope->GetJeol_LMCLA1_to_um() : mScope->GetJeol_CLA1_to_um();
+    mScope->IncBeamShift(pixel * shiftX, pixel * shiftY);
+    return 0;
+  }
   ScaleMat camToBS = mShiftManager->MatMul(bInv, IStoBS);
   if (!shiftX && !shiftY)
     return 0;
-  shiftX *= camSize;
-  shiftY *= camSize;
   bsX = camToBS.xpx * shiftX + camToBS.xpy * shiftY;
   bsY = camToBS.ypx * shiftX + camToBS.ypy * shiftY;
   mScope->IncBeamShift(bsX, bsY);

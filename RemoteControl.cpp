@@ -168,15 +168,6 @@ void CRemoteControl::Update(int inMagInd, int inCamLen, int inSpot, double inInt
   bool baseEnable = !((mWinApp->DoingTasks() && !doingOffset) || (mWinApp->mCamera && 
     mWinApp->mCamera->CameraBusy() && !mWinApp->mCamera->DoingContinuousAcquire()));
 
-  if (inMagInd != mLastMagInd || mWinApp->GetCurrentCamera() != mLastCamera || 
-    mNeedBeamSpinUpdate) {
-    enable = m_iStageNotBeam || 
-      mWinApp->mProcessImage->MoveBeamByCameraFraction(0., 0.) == 0;
-    m_sbcBeamShift.EnableWindow(enable && baseEnable);
-    m_sbcBeamLeftRight.EnableWindow(enable && baseEnable);
-    mNeedBeamSpinUpdate = false;
-  }
-
   if (inMagInd != mLastMagInd || inCamLen != mLastCamLenInd) {
     if (inMagInd) {
       m_sbcMag.SetPos(inMagInd);
@@ -265,6 +256,8 @@ void CRemoteControl::UpdateEnables(void)
   m_sbcSpot.EnableWindow(enable);
   m_sbcFocus.EnableWindow(enable);
   m_butScreenUpDown.EnableWindow(enable && !continuous);
+  m_sbcBeamShift.EnableWindow(enable);
+  m_sbcBeamLeftRight.EnableWindow(enable);
 
   if (enable) {
     mLastSpot = -1;
@@ -501,8 +494,8 @@ void CRemoteControl::OnDeltaposSpinBeamShift(NMHDR *pNMHDR, LRESULT *pResult)
     MoveStageByMicronsOnCamera(0., mStageIncrement * pNMUpDown->iDelta);
   } else {
     if (mLastMagInd > 0)
-      mWinApp->mProcessImage->MoveBeamByCameraFraction(0., mBeamIncrement *
-        pNMUpDown->iDelta);
+      mWinApp->mProcessImage->MoveBeamByCameraFraction(0.,
+        mBeamIncrement * pNMUpDown->iDelta, true);
     else if (mLastCamLenInd > 0)
       ChangeDiffShift(0, pNMUpDown->iDelta);
   }
@@ -520,8 +513,8 @@ void CRemoteControl::OnDeltaposSpinBeamLeftRight(NMHDR *pNMHDR, LRESULT *pResult
     MoveStageByMicronsOnCamera(-mStageIncrement * pNMUpDown->iDelta, 0.);
   } else {
     if (mLastMagInd > 0)
-      mWinApp->mProcessImage->MoveBeamByCameraFraction(-mBeamIncrement * 
-        pNMUpDown->iDelta, 0.);
+      mWinApp->mProcessImage->MoveBeamByCameraFraction(
+        -mBeamIncrement * pNMUpDown->iDelta, 0., true);
     else if (mLastCamLenInd > 0)
       ChangeDiffShift(pNMUpDown->iDelta, 0);
   }
@@ -618,7 +611,6 @@ void CRemoteControl::SetBeamOrStage(int inVal)
   SetDlgItemText(IDC_STAT_BEAM_STAGE, inVal ? "Stage" : "Beam");
   if (needUpdate)
     UpdateData(false);
-  mNeedBeamSpinUpdate = true;
 }
 
 // Change the beam or stage step sizes
