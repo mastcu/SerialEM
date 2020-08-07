@@ -205,14 +205,15 @@ EMimageBuffer *EMbufferManager::GetSaveBuffer()
 // Finds out if buffer is savable; i.e. there must be an image, and
 // either there is no open file, or there is an open file and its dimensions
 // match the image dimensions and we are not montaging
-BOOL EMbufferManager::IsBufferSavable(EMimageBuffer *toBuf)
+BOOL EMbufferManager::IsBufferSavable(EMimageBuffer *toBuf, KImageStore *inStoreMRC)
 {
-  KImageStore *inStoreMRC = mWinApp->mStoreMRC;
+  if (!inStoreMRC)
+    inStoreMRC = mWinApp->mStoreMRC;
   if (toBuf->mImage == NULL)
     return false;
   if (inStoreMRC == NULL)
     return true;
-  if (mWinApp->Montaging())
+  if (inStoreMRC == mWinApp->mStoreMRC && mWinApp->Montaging())
     return false;
   return (inStoreMRC->getWidth() == 0 && !((toBuf->mImage->getType() == kFLOAT && 
     (inStoreMRC->getStoreType() == STORE_TYPE_TIFF || 

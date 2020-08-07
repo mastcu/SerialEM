@@ -47,7 +47,7 @@ public :
   int CopyImageBuffer(int inFrom, int inTo);
   int CopyImBuf(EMimageBuffer *fromBuf, EMimageBuffer *toBuf, BOOL display = true);
   int SaveImageBuffer(KImageStore *inStoreMRC, bool skipCheck = false, int inSect = -1);
-  BOOL IsBufferSavable(EMimageBuffer *toBuf);
+  BOOL IsBufferSavable(EMimageBuffer *toBuf, KImageStore *inStoreMRC = NULL);
   BOOL DoesBufferExist (int inWhich);
   BOOL OKtoDestroy(int inWhich, char *inMessage);
   int  OverwriteImage(KImageStore *inStoreMRC, int inSect = NO_SUPPLIED_SECTION);
