@@ -285,7 +285,8 @@ enum {CME_SCRIPTEND = -7, CME_LABEL, CME_SETVARIABLE, CME_SETSTRINGVAR, CME_DOKE
   CME_ISTOSPECIMENMATRIX, CME_SPECIMENTOISMATRIX, CME_ISTOSTAGEMATRIX, 
   CME_STAGETOISMATRIX, CME_STAGETOSPECIMENMATRIX, CME_SPECIMENTOSTAGEMATRIX, 
   CME_REPORTISFORBUFFERSHIFT, CME_ALIGNWITHROTATION, CME_TRY, CME_CATCH, CME_ENDTRY, 
-  CME_THROW, CME_ALIGNANDTRANSFORMITEMS, CME_ROTATEMULTISHOTPATTERN 
+  CME_THROW, CME_ALIGNANDTRANSFORMITEMS, CME_ROTATEMULTISHOTPATTERN,
+  CME_SETNAVITEMUSERVALUE, CME_REPORTITEMUSERVALUE 
 };
 
 // The two numbers are the minimum arguments and whether arithmetic is allowed
@@ -450,7 +451,8 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"StageToISMatrix", 1, 0},{"StageToSpecimenMatrix", 1, 0},{"SpecimenToStageMatrix", 1, 0},
 {"ReportISforBufferShift", 0, 0}, {"AlignWithRotation", 3, 0}, {"Try", 0, 0},
 {"Catch", 0, 0}, {"EndTry", 0, 0}, {"Throw", 0, 0},{"AlignAndTransformItems", 2, 0},
-{"RotateMultiShotPattern", 1, 0},/*CAI3.8*/
+{"RotateMultiShotPattern", 1, 0},{"SetNavItemUserValue", 2, -1},
+{"ReportItemUserValue", 2, 0},/*CAI3.8*/
 {NULL, 0, 0}
 };
 // The longest is now 25 characters but 23 is a more common limit
@@ -6056,9 +6058,8 @@ void CMacroProcessor::NextCommand()
     mScope->SetIntensity(delISY);
     delISY = mScope->FastIntensity();
     delISX = mScope->GetC2Percent(index, delISY);
-    report.Format("Intensity set to %.3f%s  -  %.5f", delISX, mScope->GetC2Units(),
+    logRpt.Format("Intensity set to %.3f%s  -  %.5f", delISX, mScope->GetC2Units(),
       delISY);
-    mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
     UpdateLDAreaIfSaved();
     break;
 
@@ -7040,6 +7041,33 @@ void CMacroProcessor::NextCommand()
         (LPCTSTR)report);
     }
     SetOneReportedValue(report, 1);
+    break;
+
+  case CME_SETNAVITEMUSERVALUE:                             // SetNavItemUserValue
+  case CME_REPORTITEMUSERVALUE:                             // ReportItemUserValue
+    index = itemInt[1];
+    navItem = CurrentOrIndexedNavItem(index, strLine);
+    if (!navItem)
+      return;
+    index2 = itemInt[2];
+    if (index2 < 1 || index2 > MAX_NAV_USER_VALUES) {
+      report.Format("The user value number must be between 1 and %d in line:\n\n",
+        MAX_NAV_USER_VALUES);
+      ABORT_LINE(report);
+    }
+    if (CMD_IS(SETNAVITEMUSERVALUE)) {
+      SubstituteLineStripItems(strLine, 3, strCopy);
+      mNavHelper->SetUserValue(navItem, index2, strCopy);
+    } else {
+      if (mNavHelper->GetUserValue(navItem, index2, strCopy)) {
+        logRpt.Format("Navigator item %d has no user value # %d", index + 1, index2);
+        strCopy = "none";
+      } else {
+        logRpt.Format("User value # %d for Navigator item %d is %s", index2, index + 1,
+          (LPCTSTR)strCopy);
+      }
+      SetOneReportedValue(strCopy, 1);
+    }
     break;
 
   case CME_SETMAPACQUIRESTATE:                              // SetMapAcquireState

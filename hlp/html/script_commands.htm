@@ -1289,7 +1289,7 @@
         <TR>
           <TD class="scriptcommand">ElectronStats [buf]</TD>
           <TD>Reports the min, max, mean, and SD of the A buffer, or of the buffer indicated
-            by <b>buf</b>;, scaled to electrons, and also report the electrons per unbinned pixel
+            by <b>buf</b>, scaled to electrons, and also reports the electrons per unbinned pixel
             per second.&nbsp; The camera must have a defined counts per electron.  Values 
             recorded in electron counting mode will be linearized if possible 
             (corrected for decreasing counting efficiency at higher dose rates).
@@ -2690,16 +2690,16 @@
         </TR>
         <TR>
           <TD class="scriptcommand">FixAstigmatismByCTF [#M] [#L]&nbsp; [#S]</TD>
-          <TD>Measures astigmatism by CTF fitting, report the stigmation change, and correct 
-            for those values (or just measure, if the optional <b>#M</b> is nonzero).&nbsp; Image 
+          <TD>Measures astigmatism by CTF fitting, outputs the stigmation change to the log, and corrects 
+            for those values (or just measures, if the optional <b>#M</b> is nonzero).&nbsp; Image 
             shift is set to 0 unless the optional <b>#L</b> is non-zero.&nbsp; Set optional
             <strong>#S</strong> non-zero to suppress the message box on errors that occur 
             after starting to take images.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">FixComaByCtf&nbsp; [#M] [#L] [#F]&nbsp; [#S]</TD>
-          <TD>Measures beam-tilt misalignment by CTF fitting, report beam tilt change needed, 
-            and correct for it (or just measure, if the optional <b>#M</b> is nonzero).&nbsp; Image 
+          <TD>Measures beam-tilt misalignment by CTF fitting, outputs beam tilt change needed to the log, 
+            and corrects for it (or just measures, if the optional <b>#M</b> is nonzero).&nbsp; Image 
             shift is set to 0 unless the optional <b>#L</b> is non-zero.&nbsp; The user setting for 
             whether to do a full array of images is used unless optional <b>#F</b> is 0 for 5 
             images or &gt; 0 for a full array. Set optional <strong>#S</strong> non-zero to 
@@ -2707,12 +2707,14 @@
         </TR>
         <TR>
           <TD class="scriptcommand">CorrectAstigmatism [#]</TD>
-          <TD>Measures astigmatism by beam-tilt-induced displacements (BTID), report the stigmator values, and correct for those values 
+          <TD>Measures astigmatism by beam-tilt-induced displacements (BTID), outputs the stigmator 
+            values to the log, and corrects for those values 
             (or do not correct, if the optional <b>#</b> is -1)</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">CorrectComa [#]</TD>
-          <TD>Measures beam-tilt misalignment by beam-tilt-induced displacements (BTID), report the estimated beam tilt, and correct to 
+          <TD>Measures beam-tilt misalignment by beam-tilt-induced displacements (BTID), outputs the 
+            estimated beam tilt to the log, and corrects to 
             bring beam tilt to zero. If the optional <b>#</b> is -1, it will simply measure the 
             misalignment once and report it without correcting it.&nbsp; If the <b>#</b> is 1, it 
             will do another iteration of estimating beam tilt and average the result with 
@@ -3125,8 +3127,8 @@
         </TR>
         <TR>
           <TD class="scriptcommand">LoadOtherMap # [buf]</TD>
-          <TD>Loads the Navigator item whose index in the table is <b>#</b>, if it is a map; ; or if 
-            <b>#</b> is negative, load the item that many items from the end of the table, i.e., 
+          <TD>Loads the Navigator item whose index in the table is <b>#</b>, if it is a map; or if 
+            <b>#</b> is negative, loads the item that many items from the end of the table, i.e., 
             -1 loads on the last item.&nbsp; If the optional <b>buf</b> is entered, loads to that
              buffer instead of the read buffer.</TD>
         </TR>
@@ -3183,7 +3185,7 @@
           <TD>Changes the registration number of the Navigator item with table index <b>#I</b> to 
             <b>#R</b>.&nbsp; This works just like the Navigator menu entry
             <a href="menu_navigator.htm#hid_navigator_changeregistration">Change 
-            Registrationn</a>: the registration number must be in the legal range,the item 
+            Registration</a>: the registration number must be in the legal range, the item 
             cannot be a registration point, and you cannot change an item between imported 
             and regular registrations.</TD>
         </TR>
@@ -3237,6 +3239,22 @@
           <TD>Sets the item number that Navigator supplies supermontage coordinates from when
             a montage image is acquired. Set the number to 0 to restore Navigator to using
             coordinates from the item currently being acquired.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">SetNavItemUserValue #I #V [text]</TD>
+          <TD>Sets an arbitrary value for a Navigator item specified by <b>#I</b> 
+            (positive for table index, 0 for current or acquired item, or negative for index from 
+            end). &nbsp;Up to 8 user values are currently allowed, with a number from 1 to 8 specified by
+             <b>#V</b> (numbers do not have to be used sequentially). &nbsp;The <b>text</b> on the
+             rest of the line is assigned as the value after variable substitution but not arithmetic;
+             text can be omitted to clear out a value.&nbsp; Command added in 3.8, 8/5/20.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">ReportItemUserValue #I #V</TD>
+          <TD>Reports an arbitrary value set for the Navigator item specified by <b>#I</b> 
+            (positive for table index, 0 for current or acquired item, or negative for index from 
+            end), or 'none' if no value is set. &nbsp;Set <i>reportedValue1</i> with the text 
+            value.&nbsp Command added in 3.8, 8/5/20.TD>
         </TR>
         <TR>
           <TD colspan="2"><A name="navigatoritemgen"></A><B>Item Generating Commands</B></TD>

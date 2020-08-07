@@ -3256,6 +3256,15 @@
           enter a large value to return in one step.</TD>
         </TR>
         <TR VALIGN="top">
+          <TD>TSSpeedForOneStepReturn</TD>
+          <TD>Speed factor to use when returning to the start angle of a bidirectional
+             series in one step because of a large value for 'TSStepForBidirReturn'.&nbsp For
+            information about using a speed factor, see the script command
+            <a href="script_commands.htm#tiltDuringRecord">TiltDuringRecord</a>.&nbsp The default
+            is 0 for normal speed.
+          </TD>
+        </TR>
+        <TR VALIGN="top">
           <TD>TSRestoreStageXYonTilt</TD>
           <TD>Set to 1 to restore stage X/Y position after tilting during dose-symmetric 
               series only, 2 to do so in all tilt series, or 0 to disable this feature.&nbsp; 
@@ -3274,6 +3283,24 @@
           <TD>Set to -1 or 1 to have the direction of backlash in dose-symmetric tilting be 
               toward negative or positive tilts, respectively.&nbsp; The default is for the 
               backlash direction to be the same as the first direction of tilting. </TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>TSCheckScopeDisturbances</TD>
+          <TD>Flags for whether to check and wait for disturbances caused by microscope operations 
+            before taking the Record.&nbsp; Enter the sum of 1 to check for dewars being filled
+             on FEI and JEOL scopes that support it, and 2 to check for the PVP on an FEI scope.
+            &nbsp;The default is 2 on an FEI scope, otherwise 0.
+          </TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>TSTrackAfterScopeStopTime</TD>
+          <TD>Minimum duration of a scope disturbance that will force retracking when resuming 
+            after the operation is over.&nbsp; The default is 5 sec.</TD>
+        </TR>
+        <TR VALIGN="top">
+          <TD>TSFocusAfterScopeStopTime</TD>
+          <TD>Minimum duration of a scope disturbance that will force autofocusing when resuming 
+            after the operation is over.&nbsp; The default is 120 sec.</TD>
         </TR>
         <TR VALIGN="top">
           <TD>TSLowMagFieldFrac</TD>

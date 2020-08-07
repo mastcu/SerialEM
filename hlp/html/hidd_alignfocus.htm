@@ -22,13 +22,19 @@
         area. These are the first and second buffers after the rolling buffers. 
         However, if the 'Align to B instead of to...' button is selected, images of all 
         types will simply be aligned to the image in B.</P>
-      <P><B>Autofocus</B></P>
-      <P>When not in Low Mag mode, this button will run the autofocus routine to measure 
-        specimen defocus (based on the amount of image displacement when the beam is 
-        tilted) then change the defocus to your chosen target value. In Low Mag mode, 
-        the button will simply set the focus to the standard focus for the current 
-        magnification.</P>
-      <P><B>Clear Alignment</B></P>
+       <P><b>To Marker</b></P>
+    <P>If the marker point is set in buffer A with the left mouse button, this button 
+      will set the alignment shift of the image to bring the marker to the center of 
+      the field.&nbsp; It is equivalent to dragging the marker to the center with the 
+      right mouse button.&nbsp; The same rules about whether the stage is used instead 
+      of image shift apply as for dragging with the mouse: if <strong>Move stage for 
+      big mouse shifts</strong> is set below, the stage will be moved if the fraction 
+      of the field or the absolute distance moved exceeds the respective thresholds 
+      for these two measures.&nbsp; Also like right-mouse drag, if the Shift key is 
+      held down while pressing this button, the stage will be moved regardless of 
+      distance and the setting of that option.&nbsp; The hot key <strong>Shift P</strong> 
+      is equivalent to pressing this button without the Shift key.</P>
+    <P><B>Clear</B></P>
       <P>This button will set the alignment shift of the image in the currently displayed 
         buffer to zero. If this is buffer A, then microscope image shift will also be 
         changed by an amount corresponding to the image alignment shift. Thus, this 
@@ -43,6 +49,12 @@
         when you are still moving around on the specimen. If you want to keep a feature 
         of interest centered through the reset, then select the <A HREF="menu_tasks.htm#hidc_reset_realign">
           Reset &amp; Realign command</A> in the Tasks menu.</P>
+     <P><B>Autofocus</B></P>
+      <P>When not in Low Mag mode, this button will run the autofocus routine to measure 
+        specimen defocus (based on the amount of image displacement when the beam is 
+        tilted) then change the defocus to your chosen target value. In Low Mag mode, 
+        the button will simply set the focus to the standard focus for the current 
+        magnification.</P>
       <P><B>Move Stage for Big Mouse Shifts</B></P>
       <P>When this check box is selected, moving the image in Buffer A with the right 
         mouse button will result in the stage being moved by the corresponding amount, 

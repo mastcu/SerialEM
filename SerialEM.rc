@@ -63,7 +63,9 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDR_MAINFRAME           ICON                    "res\\SerialEM.ico"
+
 IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -71,7 +73,9 @@ IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
 //
 
 IDR_MAINFRAME           BITMAP                  "res\\Toolbar.bmp"
+
 IDB_BITMAP1             BITMAP                  "res\\bitmap1.bmp"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -608,6 +612,7 @@ BEGIN
             MENUITEM "Con&vert Maps to Bytes",      ID_NAVIGATOR_CONVERTMAPSTOBYTES
             MENUITEM "Load Maps &Unbinned",         ID_NAVIGATOR_LOADUNBINNED
             MENUITEM "Use &Current LD Params in Realign", ID_NAVOPTIONS_USECURRENTLDPARAMSINRI
+            MENUITEM "&Search + and - Scaling in Realign", ID_OPTIONS_SEARCH
         END
         MENUITEM SEPARATOR
         MENUITEM "&Transform Items",            ID_TRANSFORM_PTS
@@ -735,6 +740,7 @@ BEGIN
     "O",            IDM_FILE_OPENOLD,       VIRTKEY, CONTROL, NOINVERT
     "R",            IDM_FILE_READ,          VIRTKEY, SHIFT, NOINVERT
     "S",            IDM_FILE_SAVE,          VIRTKEY, CONTROL, NOINVERT
+    "P",            IDM_MARKER_TO_CENTER,   VIRTKEY, SHIFT, NOINVERT
 END
 
 
@@ -1138,7 +1144,7 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,4,94,111,10
     CONTROL         "Correct backlash in stage moves",IDC_CORRECT_BACKLASH,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,4,74,111,10
-    PUSHBUTTON      "To Marker",IDC_BUTTON1,47,10,40,13
+    PUSHBUTTON      "To Marker",IDC_BUT_TO_MARKER,47,10,40,13
 END
 
 IDD_MONTAGESETUP DIALOGEX 0, 0, 166, 472
@@ -3354,7 +3360,9 @@ END
 //
 
 IDC_CURSOR1             CURSOR                  "res\\cursor1.cur"
+
 IDC_CURSOR2             CURSOR                  "res\\cursor2.cur"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3844,84 +3852,89 @@ END
 // AFX_DIALOG_LAYOUT
 //
 
-IDD_AUTOCENSETUP AFX_DIALOG_LAYOUT 
+IDD_AUTOCENSETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_TILTSERIES AFX_DIALOG_LAYOUT 
+IDD_TILTSERIES AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_DRIFTWAITSETUP AFX_DIALOG_LAYOUT 
+IDD_DRIFTWAITSETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_SCREENSHOT AFX_DIALOG_LAYOUT 
+IDD_SCREENSHOT AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_MULTI_SHOT_SETUP AFX_DIALOG_LAYOUT 
+IDD_MULTI_SHOT_SETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_REMOTE_CONTROL AFX_DIALOG_LAYOUT 
+IDD_REMOTE_CONTROL AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_LOWDOSE AFX_DIALOG_LAYOUT 
+IDD_LOWDOSE AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_VPP_EXPOSE_SETUP AFX_DIALOG_LAYOUT 
+IDD_VPP_EXPOSE_SETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_MACRO AFX_DIALOG_LAYOUT 
+IDD_MACRO AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_K2_SAVE_OPTIONS AFX_DIALOG_LAYOUT 
+IDD_K2_SAVE_OPTIONS AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_SCOPESTATUS AFX_DIALOG_LAYOUT 
+IDD_SCOPESTATUS AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_HOLE_FINDER AFX_DIALOG_LAYOUT 
+IDD_HOLE_FINDER AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_MULTI_COMBINER AFX_DIALOG_LAYOUT 
+IDD_MULTI_COMBINER AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_CTFFINDDLG AFX_DIALOG_LAYOUT 
+IDD_CTFFINDDLG AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_STATEDLG AFX_DIALOG_LAYOUT 
+IDD_STATEDLG AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_STAGEMOVETOOL AFX_DIALOG_LAYOUT 
+IDD_STAGEMOVETOOL AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
+END
+
+IDD_ALIGNFOCUS AFX_DIALOG_LAYOUT
+BEGIN
+    0
 END
 
 
@@ -4322,6 +4335,7 @@ END
 STRINGTABLE
 BEGIN
     IDC_BUTALIGN            "Align image in buffer A to image in autoalign buffer"
+    IDC_BUT_TO_MARKER       "Set alignment shift of A to bring marker to center of field (hot key Shift P)"
     IDC_BUTCLEARALIGN       "Undo the alignment shift of the current image"
     IDC_BUTRESETSHIFT       "Reset microscope image shift and move stage to compensate"
     IDC_SPINMAG             "Adjust magnification for montage"
@@ -5945,6 +5959,7 @@ STRINGTABLE
 BEGIN
     ID_WINDOW_RESCUELOGWINDOW 
                             "Bring the log window up in the upper left corner of screen"
+    ID_OPTIONS_SEARCH       "Try scalings above and below 1 in Realign to Item"
 END
 
 #endif    // English (United States) resources

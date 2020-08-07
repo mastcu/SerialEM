@@ -134,7 +134,9 @@
       series by tilting back in steps and restoring the stage position and image shift 
       at which the anchor was taken, with adjustments for backlash if possible.&nbsp; 
         (Tilting in steps is probably needed only for side-entry holders and can be 
-        bypassed by setting the SerialEM property &#39;TSStepForBidirReturn&#39; to 100.) &nbsp; 
+        bypassed by setting the SerialEM property &#39;TSStepForBidirReturn&#39; to 100.&nbsp; 
+      In that case, if a slower speed is desired for the return, the property 
+      &#39;TSSpeedForOneStepReturn&#39; can be set with a speed factor.) &nbsp; 
       However, if Return with Walk Up is checked, it will use the Walk Up task to 
       return instead, but it will still realign to the anchor.&nbsp; This option 
       should be used only if necessary.&nbsp; Particularly in Low Dose mode, there is 

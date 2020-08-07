@@ -429,6 +429,7 @@ hid_options_setpointlabelthreshold = SerialEM.chm::/html\menu_navigator.htm#hid_
 hid_navigator_convertmapstobytes = SerialEM.chm::/html\menu_navigator.htm#hid_navigator_convertmapstobytes
 hid_navigator_loadunbinned			= SerialEM.chm::/html\menu_navigator.htm#hid_navigator_loadunbinned
 hid_navoptions_usecurrentldparamsinri = SerialEM.chm::/html\menu_navigator.htm#hid_navoptions_usecurrentldparamsinri
+hid_options_search              = SerialEM.chm::/html\menu_navigator.htm#hid_options_search
 hid_navigator_writeasxml  			= SerialEM.chm::/html\menu_navigator.htm#hid_navigator_writeasxml
 hid_navigator_realign_scaling		= SerialEM.chm::/html\menu_navigator.htm#hid_navigator_realign_scaling
 hid_navigator_force_center_align	= SerialEM.chm::/html\menu_navigator.htm#hid_navigator_force_center_align

@@ -3,6 +3,32 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+8/7/20: With GMS 3, the SEMCCD plugin will return with an error if a live
+view is running in DM.
+
+8/7/20: Added ability to wait for PVP or dewar filling before taking Record in
+tilt series, controlled by property TSCheckScopeDisturbances.
+
+8/7/20: Added property to set speed when doing bidirectional return in 1 step.
+
+8/7/20: Removed limit on number of pieces for aligning a montage overview.
+
+8/7/20: Made Anchor Map save existing image as map when it cannot be save to
+current file (e.g., a montage), if it can find just one other file that it can
+save into.
+
+8/7/20: Added option to try scaling factors on both sides of 1 for first round
+of Realign to Item.
+
+8/7/20: Added Navigator entries for arbitrary user values, and script commands
+to set and report them.
+
+8/7/20: Added button and hot key to set alignment shift of image in A to
+marker point, equivalent to right mouse drag.
+
+8/4/20: A parameter change in a tilt series will now be imposed for an angle
+slightly below the nominal angle for the change.
+
 8/4/20: When drawing a montage map that was fit to a polygon, the polygon will
 also be shown in dashed lines for sections after the first one.
 
@@ -11,7 +37,8 @@ also be shown in dashed lines for sections after the first one.
 8/4/20: Made beam shift arrows in scope control panel and hot keys do an
 approximate move along deflector axes when there is no beam shift calibration.
 
-8/4/20: Added check that there is enough free disk space before a montage.
+8/4/20: Added check that there is enough free disk space before a montage or
+tilt series.
 
 8/4/20: In camera setup dialog For K2/K3, now show only two processing choices
 when electron counting and label one as "unnormalized".

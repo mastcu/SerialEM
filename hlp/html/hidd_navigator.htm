@@ -561,7 +561,8 @@
         <LI>
           Makes a map of the current image if that seems appropriate (it is not already a 
           map, it was taken at a higher magnification than the anchor map will be taken, 
-          and it would be possible to press 'New Map' successfully). This is the item to 
+          and it would be possible to press 'New Map' successfully, either with the 
+          current lyselected file or with one other open file). This is the item to 
           mark for acquisition, so that when the program realigns to this item, it will 
           align both to the anchor map and to this map image.</LI>
         <LI>
@@ -587,7 +588,16 @@
             Adjust for Backlash</A> from the Navigator menu.  The routine will not be run 
             if you select the option not to adjust or ask about adjusting for backlash by 
             running <A HREF="menu_navigator.htm#hid_navigator_backlashsettings">
-            Backlash Settings</A> from the Navigator menu.</LI></OL>
+            Backlash Settings</A> from the Navigator menu.</LI>
+    </OL>
+      <p>
+        When the current image is not saved, is at a higher magnification, and it can be 
+        saved into the current file, it will be saved an made a map.&nbsp; If it cannot 
+        be saved into the current file but there is one other open file that it can be 
+        saved into, the program will save it into that file.&nbsp; If there is no such 
+        file, it will issue a warning.&nbsp; If there is more than one other open file 
+        that it could be saved into, it will ask if you want to stop and select the 
+        appropriate file for saving.</p>
       <P><B><A NAME="navab_delete"></A>Delete Item</B></P>
       <P>Use this button to delete an item from the list, a group of items summarized 
         on the selected line, or multiple selected items. You will be asked to confirm deletion of a map because it 

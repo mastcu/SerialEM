@@ -1625,7 +1625,7 @@
 #define IDC_STAT_RING2_SHOTS            2653
 #define IDC_SPIN_RING2_NUM              2654
 #define IDC_EDIT_RING2_DIST             2655
-#define IDC_BUTTON1                     2656
+#define IDC_BUT_TO_MARKER               2656
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2108,14 +2108,16 @@
 #define ID_BEAMSPOT_REFINEBEAMSHIFT     33390
 #define ID_BEAMSPOT_ILLUMINATEDAREALIMITS 33391
 #define ID_WINDOW_RESCUELOGWINDOW       33392
+#define ID_OPTIONS_SEARCH               33393
+#define IDM_MARKER_TO_CENTER            33394
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        248
-#define _APS_NEXT_COMMAND_VALUE         33393
+#define _APS_NEXT_RESOURCE_VALUE        249
+#define _APS_NEXT_COMMAND_VALUE         33395
 #define _APS_NEXT_CONTROL_VALUE         2657
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
