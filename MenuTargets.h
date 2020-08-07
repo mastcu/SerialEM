@@ -387,6 +387,9 @@ public:
   afx_msg void OnUpdateBeamspotRefineBeamShift(CCmdUI *pCmdUI);
   afx_msg void OnBeamspotIlluminatedAreaLimits();
   afx_msg void OnUpdateIlluminatedAreaLimits(CCmdUI *pCmdUI);
+  afx_msg void OnOptionsSearchPlusMinus();
+  afx_msg void OnUpdateOptionsSearchPlusMinus(CCmdUI *pCmdUI);
+  afx_msg void OnMarkerToCenter();
 };
 
 /////////////////////////////////////////////////////////////////////////////

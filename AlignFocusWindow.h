@@ -73,6 +73,8 @@ public:
   BOOL m_bCorrectBacklash;
   afx_msg void OnCorrectBacklash();
   void UpdateAutofocus(int magInd);
+  afx_msg void OnButToMarker();
+  CButton m_butToMarker;
 };
 
 //{{AFX_INSERT_LOCATION}}

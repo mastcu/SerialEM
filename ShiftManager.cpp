@@ -91,6 +91,7 @@ CShiftManager::CShiftManager()
   mTiltDelay = 2.;
   mNumBeamShiftCals = 0;
   mMouseMoveStage = false;
+  mShiftPressed = false;
   mMouseStageThresh = 0.7f;
   mMouseStageAbsThresh = 3.0f;
   mInvertStageXAxis = false;
@@ -368,6 +369,21 @@ void CShiftManager::EndMouseShifting(int index)
   mMouseEnding = true;
   SetAlignShifts(newX, newY, false, &mImBufs[index]);
   mMouseEnding = false;
+}
+
+// Call SetAlignShifts with the shift that brings marker to center; set ShiftPressed
+// to force stage move
+void CShiftManager::AlignmentShiftToMarker(BOOL forceStage)
+{
+  EMimageBuffer *imBuf = mWinApp->mMainView->GetActiveImBuf();
+  if (!imBuf->mHasUserPt || !imBuf->mImage || mWinApp->DoingTasks())
+    return;
+  mMouseEnding = true;
+  mShiftPressed = forceStage;
+  SetAlignShifts(-(float)(imBuf->mUserPtX - imBuf->mImage->getWidth() / 2.),
+    -(float)(imBuf->mUserPtY - imBuf->mImage->getHeight() / 2.), false, imBuf);
+  mMouseEnding = false;
+  mShiftPressed = false;
 }
 
 // Align the image in A against the image in the autoalign buffer or the buffer indicated

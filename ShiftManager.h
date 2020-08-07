@@ -116,6 +116,7 @@ public:
   UINT GetGeneralTimeOut(int whichSet);
   float GetLastISDelay();
   void EndMouseShifting(int index);
+  void AlignmentShiftToMarker(BOOL forceStage);
   void StartMouseShifting(BOOL shiftPressed, int index);
   ScaleMat IStoGivenCamera(int inMagInd, int inCamera);
   double GetImageRotation(int inCamera, int inMagInd);

@@ -472,6 +472,9 @@ BEGIN_MESSAGE_MAP(CMenuTargets, CCmdTarget)
     ON_UPDATE_COMMAND_UI(ID_BEAMSPOT_REFINEBEAMSHIFT, OnUpdateBeamspotRefineBeamShift)
     ON_COMMAND(ID_BEAMSPOT_ILLUMINATEDAREALIMITS, OnBeamspotIlluminatedAreaLimits)
     ON_UPDATE_COMMAND_UI(ID_BEAMSPOT_ILLUMINATEDAREALIMITS, OnUpdateIlluminatedAreaLimits)
+    ON_COMMAND(ID_OPTIONS_SEARCH, OnOptionsSearchPlusMinus)
+    ON_UPDATE_COMMAND_UI(ID_OPTIONS_SEARCH, OnUpdateOptionsSearchPlusMinus)
+    ON_COMMAND(IDM_MARKER_TO_CENTER, OnMarkerToCenter)
     END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1143,6 +1146,17 @@ void CMenuTargets::OnUpdateUseCurrentLDparamsInNavRealign(CCmdUI *pCmdUI)
 {
   pCmdUI->Enable(!DoingTasks());
   pCmdUI->SetCheck(mNavHelper->GetRIuseCurrentLDparams());
+}
+
+void CMenuTargets::OnOptionsSearchPlusMinus()
+{
+  mNavHelper->SetPlusMinusRIScaling(!mNavHelper->GetPlusMinusRIScaling());
+}
+
+void CMenuTargets::OnUpdateOptionsSearchPlusMinus(CCmdUI *pCmdUI)
+{
+  pCmdUI->Enable(!DoingTasks());
+  pCmdUI->SetCheck(mNavHelper->GetPlusMinusRIScaling());
 }
 
 // DISTORTION
@@ -2975,4 +2989,10 @@ void CMenuTargets::OnBeamspotIlluminatedAreaLimits()
 void CMenuTargets::OnUpdateIlluminatedAreaLimits(CCmdUI *pCmdUI)
 {
   pCmdUI->Enable(mScope->GetUseIllumAreaForC2() && !mWinApp->DoingTasks());
+}
+
+
+void CMenuTargets::OnMarkerToCenter()
+{
+  mShiftManager->AlignmentShiftToMarker(false);
 }

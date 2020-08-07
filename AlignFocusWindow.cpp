@@ -68,6 +68,7 @@ void CAlignFocusWindow::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_MOUSESTAGE, m_butMouseStage);
   DDX_Control(pDX, IDC_STATDEFTARGET, m_statDefTarget);
   DDX_Check(pDX, IDC_CORRECT_BACKLASH, m_bCorrectBacklash);
+  DDX_Control(pDX, IDC_BUT_TO_MARKER, m_butToMarker);
 }
 
 
@@ -85,7 +86,8 @@ BEGIN_MESSAGE_MAP(CAlignFocusWindow, CToolDlg)
 	ON_BN_CLICKED(IDC_SET_TRIM_FRAC, OnSetTrimFrac)
   ON_BN_CLICKED(IDC_APPLYISOFFSET, OnApplyISoffset)
 	//}}AFX_MSG_MAP
-  ON_BN_CLICKED(IDC_CORRECT_BACKLASH, &CAlignFocusWindow::OnCorrectBacklash)
+  ON_BN_CLICKED(IDC_CORRECT_BACKLASH, OnCorrectBacklash)
+  ON_BN_CLICKED(IDC_BUT_TO_MARKER, OnButToMarker)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -98,7 +100,15 @@ void CAlignFocusWindow::OnButalign()
     mWinApp->mShiftManager->AutoAlign(0, 0);
 }
 
-void CAlignFocusWindow::OnButclearalign() 
+
+void CAlignFocusWindow::OnButToMarker()
+{
+  mWinApp->RestoreViewFocus();
+  if (!mWinApp->DoingTasks())
+    mWinApp->mShiftManager->AlignmentShiftToMarker(GetAsyncKeyState(VK_SHIFT) / 2 != 0);
+}
+
+void CAlignFocusWindow::OnButclearalign()
 {
   mWinApp->RestoreViewFocus();
   EMimageBuffer *activeImBuf = mWinApp->mMainView->GetActiveImBuf();
@@ -253,6 +263,8 @@ void CAlignFocusWindow::Update()
     imBufs[mWinApp->mBufferManager->AutoalignBufferIndex()].mImage;
   m_butAlign.EnableWindow(bEnable && !bTasks);
 
+  m_butToMarker.EnableWindow(imBufs[0].mImage && !bTasks);
+
   UpdateAutofocus(-1);
   m_statDefTarget.EnableWindow(!mWinApp->GetSTEMMode());
 
@@ -299,3 +311,4 @@ void CAlignFocusWindow::UpdateAutofocus(int magInd)
   m_butFocus.EnableWindow(mWinApp->mFocusManager->FocusReady(magInd) && 
     !mWinApp->DoingTasks() && (!mWinApp->mScope || !mWinApp->mScope->GetMovingStage()));
 }
+
