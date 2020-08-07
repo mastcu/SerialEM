@@ -64,7 +64,7 @@ enum {
   BIDIR_CHECK_SHIFT, BIDIR_TRACK_SHOT, BIDIR_ALIGN_TRACK, BIDIR_RELOAD_REFS,
   BIDIR_LOWMAG_REF, BIDIR_COPY_LOWMAG_REF, BIDIR_AUTOFOCUS, BIDIR_REVERSE_TILT,
   BIDIR_FINISH_INVERT, GET_DEFERRED_SUM, DOSYM_SWITCH_TO_BIDIR, DOSYM_ANCHOR_SHOT,
-  DOSYM_REALIGN_SHOT, WAIT_FOR_DRIFT
+  DOSYM_REALIGN_SHOT, WAIT_FOR_DRIFT, RECHECK_SCOPE_EVENTS
 };
 
 // Every item in enum should have an entry, with text for the phrase in the resume dialog
@@ -116,6 +116,7 @@ static const char *actionText[][2] =
 {"DOSYM_ANCHOR_SHOT", "take an anchor for returning to this tilt."},
 {"DOSYM_REALIGN_SHOT", "realign to the anchor."}, 
 {"WAIT_FOR_DRIFT", "wait for drift to settle"},
+{"RECHECK_SCOPE_EVENTS", "check for disturbances by the scope"},
 {"", ""}};   // End with empty strings
 
 #define NO_PREVIOUS_ACTION   -1
@@ -133,8 +134,10 @@ static const char *actionText[][2] =
 #define NEW_REFERENCE       32
 #define DRIFTED_AT_STOP     64
 #define REFINED_ZLP        128
-#define SHIFT_DISTURBANCES (TILT_BACKED_UP | IMAGE_SHIFT_RESET | USER_MOVED_STAGE | NEW_REFERENCE | DRIFTED_AT_STOP)
-#define FOCUS_DISTURBANCES (TILT_BACKED_UP | IMAGE_SHIFT_RESET | USER_MOVED_STAGE | NEW_REFERENCE | USER_CHANGED_FOCUS)
+#define SHIFT_DISTURBANCES (TILT_BACKED_UP | IMAGE_SHIFT_RESET | USER_MOVED_STAGE | \
+  NEW_REFERENCE | DRIFTED_AT_STOP)
+#define FOCUS_DISTURBANCES (TILT_BACKED_UP | IMAGE_SHIFT_RESET | USER_MOVED_STAGE | \
+  NEW_REFERENCE | USER_CHANGED_FOCUS)
 
 #define MAX_BACKUP_LIST_ENTRIES  20
 
@@ -149,6 +152,7 @@ static int actions[] = {
   IMPOSE_VARIATIONS,
   DOSYM_SWITCH_TO_BIDIR,
   DOSYM_REALIGN_SHOT,
+  RECHECK_SCOPE_EVENTS,
   CHECK_REFINE_ZLP,
   CHECK_AUTOCENTER,
   COMPUTE_PREDICTIONS,
@@ -408,6 +412,7 @@ CTSController::CTSController()
   mMinFieldBidirAnchor = 8.;
   mAlarmBidirFieldSize = 6.;
   mStepForBidirReturn = 0.;
+  mSpeedForOneStepReturn = 0.;
   mSkipBeamShiftOnAlign = false;
   mSavedBufForExtra = NULL;
   mEarlyK2RecordReturn = false;
@@ -428,6 +433,9 @@ CTSController::CTSController()
   mTermOnHighExposure = false;
   mMaxExposureIncrease = 3.;
   mRestoreStageXYonTilt = -1;
+  mCheckScopeDisturbances = -1;
+  mTrackAfterScopeStopTime = 5;
+  mFocusAfterScopeStopTime = 120;
   mTiltIndex = -1;
   mSetupOpenedStamp = GetTickCount();
   FillActOrder(actions, sizeof(actions) / sizeof(int));
@@ -459,6 +467,8 @@ void CTSController::Initialize()
     mStepForBidirReturn = JEOLscope ? 10.f : 5.f;
   if (mRestoreStageXYonTilt < 0)
     mRestoreStageXYonTilt = FEIscope ? 1 : 0;
+  if (mCheckScopeDisturbances < 0)
+    mCheckScopeDisturbances = FEIscope ? TS_CHECK_PVP : 0;
 }
 
 // Clear out all the flags for individual actions
@@ -775,8 +785,9 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external)
 {
   float ratio, derate;
   double angle, curIntensity;
-  int error, spot, probe, newBaseZ, i, magToSet = 0;
+  int error, spot, iDir, probe, numTilts, imSize, newBaseZ, i, magToSet = 0;
   CString message, str, bidirStr;
+  MontParam *montP = mWinApp->GetMontParam();
   mLowDoseMode = mWinApp->LowDoseMode();
   mInInitialChecks = true;
   mUserPresent = !external;
@@ -1006,7 +1017,35 @@ int CTSController::StartTiltSeries(BOOL singleStep, int external)
     if (mMontaging)
       mMontParam->magIndex = mTSParam.magIndex[mSTEMindex];
     mBaseZ = mMontaging ? mMontParam->zCurrent : mWinApp->mStoreMRC->getDepth();
-    
+
+    // Check available disk space
+    // First add up the tilts
+    iDir = (mTSParam.endingTilt < mTSParam.startingTilt) ? -1 : 1;
+    angle = mTSParam.startingTilt;
+    numTilts = 0;
+    while (iDir * (angle - mTSParam.endingTilt) <= 0.1 * mTSParam.tiltIncrement) {
+      numTilts++;
+      if (mTSParam.cosineTilt && !mDoingDoseSymmetric)
+        angle += iDir * mTSParam.tiltIncrement * cos(DTOR * angle);
+      else
+        angle += iDir * mTSParam.tiltIncrement;
+    }
+
+    // Get image size and call check
+    if (mWinApp->Montaging()) {
+      imSize = montP->xFrame * montP->yFrame * montP->xNframes * montP->yNframes;
+    } else {
+      imSize = (mConSets[RECORD_CONSET].right - mConSets[RECORD_CONSET].left) *
+        (mConSets[RECORD_CONSET].bottom - mConSets[RECORD_CONSET].top) /
+        (mTSParam.binning * mTSParam.binning);
+    }
+    if (UtilCheckDiskFreeSpace((float)((imSize * 2.) * (numTilts - mBaseZ)), 
+      "tilt series")) {
+      mPostponed = !mAlreadyTerminated;
+      return 1;
+    }
+
+
     message = mMontaging ? "The image file already has data in it.\n" : " ";
     if (mWinApp->mStoreMRC->getDepth()) {
       if (external) {
@@ -1474,6 +1513,7 @@ int CTSController::CommonResume(int inSingle, int external, bool stoppingPart)
   mSecondResetTiltInd = -1;
   mDidTrackBefore = false;
   mFocusForDriftWasOK = false;
+  mScopeEventStartTime = -1.;
   mWinApp->mPluginManager->ResumingTiltSeries(mTiltIndex);
 
   // If valves haven't been closed ever, set one-shot based on the current state of flag 
@@ -1532,6 +1572,13 @@ void CTSController::NextAction(int param)
     } else {
       mKeepActIndexSame = true;
     }
+  }
+
+  // If we are waiting to check for scope event again, just sleep a bit and come back in
+  if (mScopeEventStartTime >= 0 && SEMTickInterval(mScopeEventLastCheck) < 2000) {
+    Sleep(50);
+    mWinApp->AddIdleTask(TASK_TILT_SERIES, 0, 0);
+    return;
   }
 
   DebugDump("Start of NextAction");
@@ -2219,6 +2266,11 @@ void CTSController::NextAction(int param)
       if (ImposeVariations(angle))
         return;
           
+      // RECHECK FOR DISTURBING EVENTS ON THE SCOPE
+    } else if (NextActionIs(mActIndex, RECHECK_SCOPE_EVENTS, 1)) {
+      if (CheckForScopeDisturbances())
+        return;
+
     // CHECK FOR AND REFINE THE ZLP
     } else if (NextActionIs(mActIndex, CHECK_REFINE_ZLP, 1)) {
       if ((mFilterParams->slitIn || (mLowDoseMode && 
@@ -2432,6 +2484,10 @@ void CTSController::NextAction(int param)
 
     // TAKE RECORD OR MONTAGE
     } else if (NextActionIs(mActIndex, RECORD_OR_MONTAGE, 0)) {
+
+      // Check again for scope disturbances and back up to recheck if found one
+      if (mCheckScopeDisturbances > 0 && CheckForScopeDisturbances())
+        return;
 
       // Force one dark reference when beginning
       if (!mTiltIndex && !mSTEMindex)
@@ -2866,6 +2922,7 @@ void CTSController::NextAction(int param)
         // Keep the index the same to come back here unless the last time was last tilt
         mKeepActIndexSame = !mLastBidirReturnTilt;
         mLastBidirReturnTilt = true;
+        smi.useSpeed = false;
         if (mKeepActIndexSame) {
           if (mDirection * (mStartingTilt - angle) > (1. + mStepForBidirReturn)) {
             smi.alpha = angle + mStepForBidirReturn * mDirection;
@@ -2875,6 +2932,11 @@ void CTSController::NextAction(int param)
             smi.alpha = mStartingTilt;
             smi.backAlpha = mDirection * mComplexTasks->GetTiltBacklash();
             smi.doBacklash = true;
+            if (fabs(mStartingTilt - mEndingTilt) < mStepForBidirReturn &&
+              mSpeedForOneStepReturn > 0) {
+              smi.useSpeed = true;
+              smi.speed = mSpeedForOneStepReturn;
+            }
           }
           smi.doRelax = false;
           smi.axisBits = axisA;
@@ -2883,7 +2945,7 @@ void CTSController::NextAction(int param)
           // Move stage when tilting is done
           mMultiTSTasks->SetAnchorStageXYMove(smi);
         }
-        mScope->MoveStage(smi, smi.doBacklash);
+        mScope->MoveStage(smi, smi.doBacklash, smi.useSpeed);
         mTilting = true;
         mNeedGoodAngle = true;
       }
@@ -3262,6 +3324,10 @@ BOOL CTSController::NextActionIsReally(int nextIndex, int action, int testStep)
   case IMPOSE_VARIATIONS:
     return mTSParam.doVariations;
 
+  // CHECK FOR DISTURBING EVENTS ON THE SCOPE
+  case RECHECK_SCOPE_EVENTS:
+    return mCheckScopeDisturbances > 0 && mScopeEventStartTime >= 0.;
+
   // CHECK FOR NEED TO REFINE THE ZLP IF USER PARAMETERS ARE SET
   case CHECK_REFINE_ZLP:
     return (mCamParams->GIF || mScope->GetHasOmegaFilter()) && mTSParam.refineZLP && 
@@ -3595,7 +3661,8 @@ void CTSController::ChangeExposure(double &delFac, double angle, double limit)
  
   if (mTSParam.doVariations) {
     CTSVariationsDlg::FindValuesToSet(mTSParam.varyArray, mTSParam.numVaryItems, 
-      mZeroDegValues, (float)angle - mBaseAngleForVarying, mTypeVaries, setValues);
+      mZeroDegValues, (float)angle - mBaseAngleForVarying, mMaxTiltError / 2.f, 
+      mTypeVaries, setValues);
     if (delFac <= 0. && !restoreFirst) {
       delFac = 1.;
       if (fabs(recSet->exposure - setValues[TS_VARY_EXPOSURE]) < 1.e-6)
@@ -3715,7 +3782,8 @@ int CTSController::ImposeVariations(double angle)
     MAX_CONSETS * mActiveCameraList[mTSParam.cameraIndex];
 
   CTSVariationsDlg::FindValuesToSet(mTSParam.varyArray, mTSParam.numVaryItems,
-    mZeroDegValues, (float)angle - mBaseAngleForVarying, mTypeVaries, setValues);
+    mZeroDegValues, (float)angle - mBaseAngleForVarying, mMaxTiltError / 2.f,
+    mTypeVaries, setValues);
 
   // Change exposure here if it is not being changed elsewhere
   if ((mTSParam.beamControl == BEAM_CONSTANT || mBidirSeriesPhase == BIDIR_RETURN_PHASE)
@@ -4110,6 +4178,58 @@ int CTSController::StartGettingDeferredSum(int fromWhere)
   return 1;
 }
 
+// Check for dewar filling or PVP pump running and start a wait until done
+int CTSController::CheckForScopeDisturbances(void)
+{
+  //static int lastDone = 0;
+  int busy = 0, err = 0;
+  BOOL state;
+
+  // Do the tests
+  if (mCheckScopeDisturbances & TS_CHECK_DEWARS) {
+    err = mScope->AreDewarsFilling(busy) ? 0 : 1;
+  }
+  if (!err && (mCheckScopeDisturbances & TS_CHECK_PVP)) {
+    err = mScope->IsPVPRunning(state) ? 0 : 1;
+    if (state)
+      busy = -1;
+  }
+  /* if (mTiltIndex %3 == 0 && mTiltIndex > lastDone && (mScopeEventStartTime < 0 || 
+    SEMTickInterval(mScopeEventStartTime) < 30000))
+    busy = 1;*/
+
+  // Bail out on error
+  if (err) {
+    ErrorStop();
+    return 1;
+  }
+
+  // If busy, set disturbances if appropriate
+  if (busy) {
+    mScopeEventLastCheck = GetTickCount();
+    if (mScopeEventStartTime < 0) {
+      mScopeEventStartTime = mScopeEventLastCheck;
+      mWinApp->SetStatusText(SIMPLE_PANE,
+        busy < 0 ? "WAITING FOR PVP" : "WAITING FOR FILLING");
+    }
+    if (SEMTickInterval(mScopeEventStartTime) >= 1000 * mTrackAfterScopeStopTime)
+      mDisturbance[mTiltIndex - 1] |= DRIFTED_AT_STOP;
+    if (SEMTickInterval(mScopeEventStartTime) >= 1000 * mFocusAfterScopeStopTime)
+      mDisturbance[mTiltIndex - 1] |= FOCUS_DISTURBANCES;
+    mActIndex = mActOrder[RECHECK_SCOPE_EVENTS] - 1;
+    mWinApp->AddIdleTask(TASK_TILT_SERIES, 0, 0);
+    return 1;
+
+  } else if (mScopeEventStartTime >= 0) {
+    mScopeEventStartTime = -1;
+    mWinApp->SetStatusText(SIMPLE_PANE, "");
+    //lastDone = mTiltIndex;
+  }
+
+
+  return 0;
+}
+
 
 /////////////////////////////////////////////////////////////////////////////
 // TASK, ERROR, AND STOPPING ROUTINES
@@ -4253,6 +4373,7 @@ void CTSController::CommonStop(BOOL terminating)
   ManageTerminateMenu();
   mWinApp->UpdateBufferWindows();
   mWinApp->SetStatusText(COMPLEX_PANE, "STOPPED TILT SERIES");
+  mWinApp->SetStatusText(SIMPLE_PANE, "");
   SendEmailIfNeeded(terminating);
 }
 

@@ -17,6 +17,8 @@ enum {BIDIR_NONE = 0, BIDIR_FIRST_PART, BIDIR_RETURN_PHASE, BIDIR_SECOND_PART,
 enum {TSMACRO_PRE_TRACK1 = 1, TSMACRO_PRE_FOCUS, TSMACRO_PRE_TRACK2, TSMACRO_PRE_RECORD};
 #define MAX_TSMACRO_STEPS 5
 enum {DEFSUM_LOOP, DEFSUM_NORMAL_STOP, DEFSUM_ERROR_STOP, DEFSUM_TERM_ERROR};
+#define TS_CHECK_DEWARS 1
+#define TS_CHECK_PVP     2
 
 /////////////////////////////////////////////////////////////////////////////
 // CTSController command target
@@ -52,11 +54,11 @@ public:
   void DebugDump(CString message);
   BOOL CheckLDTrialMoved();
   void ResetPoleAngle() {mPoleAngle = mDirection * 90.;};
-  GetSetMember(float, DefaultStartAngle)
-  GetSetMember(float, MaxUsableAngleDiff)
-  GetSetMember(float, BadShotCrit)
-  GetSetMember(float, BadLowMagCrit)
-  GetSetMember(float, MaxTiltError)
+  GetSetMember(float, DefaultStartAngle);
+  GetSetMember(float, MaxUsableAngleDiff);
+  GetSetMember(float, BadShotCrit);
+  GetSetMember(float, BadLowMagCrit);
+  GetSetMember(float, MaxTiltError);
   GetSetMember(float, LowMagFieldFrac)
   GetSetMember(float, StageMovedTolerance)
   GetSetMember(float, UserFocusChangeTol)
@@ -118,12 +120,18 @@ public:
   GetMember(int, TerminateOnError);
   GetSetMember(BOOL, SeparateExtraRecFiles);
   GetSetMember(float, StepForBidirReturn);
+  GetSetMember(float, SpeedForOneStepReturn);
   GetSetMember(int, RestoreStageXYonTilt);
   GetSetMember(BOOL, ReorderDoseSymFile);
   GetSetMember(int, DoingDosymFileReorder);
   GetSetMember(int, DosymFitPastReversals);
   GetMember(int, AlignBuf);
   GetSetMember(int, FixedDosymBacklashDir);
+  GetMember(double, StopStageX);
+  GetMember(double, StopStageY);
+  GetSetMember(int, CheckScopeDisturbances);
+  GetSetMember(int, TrackAfterScopeStopTime);
+  GetSetMember(int, FocusAfterScopeStopTime);
 
   double GetCumulativeDose();
 
@@ -483,6 +491,7 @@ private:
   float mAlarmBidirFieldSize;  // Size of field below which to warn or alarm user
   BOOL mWalkBackForBidir;      // Flag for whether to return with walk up
   float mStepForBidirReturn;   // Step size when returning in tilt steps
+  float mSpeedForOneStepReturn; // Speed factor to use when returning in one step
   int mDosymBacklashDir;       // Backlash direction for current dose symmetric series
   int mFixedDosymBacklashDir;  // Specified backlash direction for dose symmetric series
   FloatVec mDosymCurrentTilts; // mCurrentTilt values when the states were saved
@@ -541,6 +550,11 @@ private:
   int mRestoreStageXYonTilt;   // Flag to restore stage position after tilt
   double mStageXtoRestore;     // X and Y positions, or NO_EXTRA_VALUE when not set
   double mStageYtoRestore;
+  int mCheckScopeDisturbances; // Flags to check if scope has started an operation
+  double mScopeEventStartTime; // Time when a disturbing event first detected
+  double mScopeEventLastCheck; // Time of last check
+  int mTrackAfterScopeStopTime;
+  int mFocusAfterScopeStopTime;
 
 public:
 	void CenterBeamWithTrial();
@@ -570,6 +584,7 @@ public:
   void SetupExtraOverwriteSec(void);
   int CheckAndLimitAbsFocus(void);
   int StartGettingDeferredSum(int fromWhere);
+  int CheckForScopeDisturbances(void);
   double CosineIntensityChangeFac(double fromAngle, double toAngle);
   double MaxUsableDiffFromAngle(double angle);
   int RestoreDoseSymmetricState(int newTiltInd, int restoreInd, double forTiltAngle = -999.);

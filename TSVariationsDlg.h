@@ -91,7 +91,7 @@ public:
   static bool ListVaryingTypes(VaryInSeries *varyArray, int numVaries, int * typeVaries,
     float * zeroDegValues);
   static bool FindValuesToSet(VaryInSeries *varyArray, int numVaries, 
-    float *zeroDegValues, float angle, int *typeVaries, float *outValues);
+    float *zeroDegValues, float angle, float tolerance, int *typeVaries, float *outValues);
   bool CheckItemValue(bool update);
   float m_fSeriesStep;
   CString m_strPower;

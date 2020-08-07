@@ -653,7 +653,7 @@ bool CTSVariationsDlg::ListVaryingTypes(VaryInSeries *varyArray, int numVaries,
 // Compute the values that should be set at the current angle
 // This time typeVaries is set to -1 for linearly varying items
 bool CTSVariationsDlg::FindValuesToSet(VaryInSeries *varyArray, int numVaries,
-                                       float *zeroDegValues, float angle, 
+                                       float *zeroDegValues, float angle, float tolerance,
                                        int *typeVaries, float *outValues)
 {
   int j, indBelow, indAbove, sign, neg, itype;
@@ -679,11 +679,11 @@ bool CTSVariationsDlg::FindValuesToSet(VaryInSeries *varyArray, int numVaries,
           vangle = sign * varyArray[j].angle;
           if (vangle * angle >= 0) {
             dist = fabs((double)angle) - fabs(vangle);
-            if (dist >= 0 && dist < distBelow) {
+            if (dist >= -tolerance && dist < distBelow) {
               distBelow = dist;
               indBelow = j;
               angBelow = vangle;
-            } else if (dist < 0 && -dist < distAbove) {
+            } else if (dist < tolerance && -dist < distAbove) {
               distAbove = -dist;
               indAbove = j;
               angAbove = vangle;
