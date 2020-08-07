@@ -37,48 +37,49 @@ static int SEMCCDcodes[] =
    WRITE_COM_ERROR, OPEN_MDOC_ERROR, WRITE_MDOC_ERROR, COPY_MDOC_ERROR, 
    FRAMEALI_BAD_SUBSET, OPEN_SAVED_LIST_ERR, WRITE_SAVED_LIST_ERR, GRAB_AND_SKIP_ERR, 
    FRAMEDOC_NO_SAVING, FRAMEDOC_OPEN_ERR, FRAMEDOC_WRITE_ERR, NULL_IMAGE, 
-   FRAMETS_NO_ANGLES, 0};
+   FRAMETS_NO_ANGLES, VIEW_IS_ACTIVE, 0};
 
 static char *SEMCCDmessages[] =
-  {"Image not found from ID", "Image has unexpected data type", 
-  "An exception occurred calling a DM function", "No ID was returned for image stack",
-  "Image stack is not marked as 3D",
-    "Error opening new file", "Error seeking to position in file", "Error writing data to file",
-   "Error writing header to file", "Error allocating memory",
-   "Directory for saving multiple files already exists",
-   "Error creating directory for multiple files", "Directory for saving stack file does "
-   "not exist and\ncannot be created (does parent directory exist?)",
-   "The specified path is a file, not a directory", "You are not able to write to the directory",
-   "The output file already exists", 
-   "DigitalMicrograph exited while stack was being processed", "Error opening file for saving defect list",
-   "Error writing file with defect list", "Error starting thread for acquisition", 
-   "You can not do early return with synchronous saving in GMS >= 2.31", 
-   "The continuous acquisition ended unexpectedly", 
-   "The frame summing list has some bad feature and is unusable", 
-   "Antialias reduction was requested with a bad parameter or in continuous mode", 
-   "An error occurred running a script sent from the program", 
-   "An error occurred running a script to perform operations in DM",
-   "Error getting defect list", "The requested channel was not acquired", 
-   "No deferred sum was saved", "No GPU is available after restarting DM", 
-   "An error occurred parsing the defect list", "An error occurred loading the gain reference",
-   "Image reduction in framealign was requested with bad size parameters",
-   "An error occurred initializing frame alignment", 
-   "An error occurred when passing the next frame to framealign", 
-   "An error occurred when finishing the frame alignment",
-   "You cannot write an align com file when saving one file per image or aligning in the plugin",
-   "The align com file needs to be written to the same drive as the frames", 
-   "Error opening align com file", "Error writing align com file",
-   "Error opening file to write mdoc text", "Error writing mdoc text to file", 
-   "Error copying mdoc file to save directory", 
-   "Subset parameters do not define a subset of at least 2 frames",
-   "Error opening file to write list of saved frames",
-   "Error writing file with list of saved frames", 
-   "Program error: a grab stack was specified and that is not allowed with frame skipping"
-   , "Cannot save frame stack mdoc file, there is no current information about a frame"
-   " stack", "Error opening frame stack mdoc file", "Error writing frame stack mdoc file",
-   "DM returned a NULL pointer for an image or frame",
-  "The call to SetupFileSaving specified making tilt sums or using dynamic threshold but"
-  " included no tilt angles"
+{"Image not found from ID", "Image has unexpected data type",
+"An exception occurred calling a DM function", "No ID was returned for image stack",
+"Image stack is not marked as 3D",
+  "Error opening new file", "Error seeking to position in file", "Error writing data to file",
+ "Error writing header to file", "Error allocating memory",
+ "Directory for saving multiple files already exists",
+ "Error creating directory for multiple files", "Directory for saving stack file does "
+ "not exist and\ncannot be created (does parent directory exist?)",
+ "The specified path is a file, not a directory", "You are not able to write to the directory",
+ "The output file already exists",
+ "DigitalMicrograph exited while stack was being processed", "Error opening file for saving defect list",
+ "Error writing file with defect list", "Error starting thread for acquisition",
+ "You can not do early return with synchronous saving in GMS >= 2.31",
+ "The continuous acquisition ended unexpectedly",
+ "The frame summing list has some bad feature and is unusable",
+ "Antialias reduction was requested with a bad parameter or in continuous mode",
+ "An error occurred running a script sent from the program",
+ "An error occurred running a script to perform operations in DM",
+ "Error getting defect list", "The requested channel was not acquired",
+ "No deferred sum was saved", "No GPU is available after restarting DM",
+ "An error occurred parsing the defect list", "An error occurred loading the gain reference",
+ "Image reduction in framealign was requested with bad size parameters",
+ "An error occurred initializing frame alignment",
+ "An error occurred when passing the next frame to framealign",
+ "An error occurred when finishing the frame alignment",
+ "You cannot write an align com file when saving one file per image or aligning in the plugin",
+ "The align com file needs to be written to the same drive as the frames",
+ "Error opening align com file", "Error writing align com file",
+ "Error opening file to write mdoc text", "Error writing mdoc text to file",
+ "Error copying mdoc file to save directory",
+ "Subset parameters do not define a subset of at least 2 frames",
+ "Error opening file to write list of saved frames",
+ "Error writing file with list of saved frames",
+ "Program error: a grab stack was specified and that is not allowed with frame skipping"
+ , "Cannot save frame stack mdoc file, there is no current information about a frame"
+ " stack", "Error opening frame stack mdoc file", "Error writing frame stack mdoc file",
+ "DM returned a NULL pointer for an image or frame",
+"The call to SetupFileSaving specified making tilt sums or using dynamic threshold but"
+" included no tilt angles",
+"The continuous View is active in DM and must be stopped to take an image for SerialEM"
 };
 
 static char *noDesc = "No error description available";
@@ -460,6 +461,24 @@ void UtilBalancedGroupLimits(int numTotal, int numGroups, int groupInd, int &sta
   int rem = numTotal % numGroups;
   start = groupInd * base + B3DMIN(groupInd, rem);
   end = (groupInd + 1) * base + B3DMIN(groupInd + 1, rem) - 1;
+}
+
+// Get an interpolated peak position after finishing a search with a given step size
+void UtilInterpolatePeak(FloatVec &vecPos, FloatVec &vecPeak, float step, 
+  float peakmax, float &posBest)
+{
+  int ist;
+  float peakBelow = -1.e30f, peakAbove = -1.e30f;
+
+  // Find the values at positions below and above the peak
+  for (ist = 0; ist < (int)vecPeak.size(); ist++) {
+    if (fabs(vecPos[ist] - (posBest - step)) < 0.1 * step)
+      peakBelow = vecPeak[ist];
+    if (fabs(vecPos[ist] - (posBest + step)) < 0.1 * step)
+      peakAbove = vecPeak[ist];
+  }
+  if (peakBelow > -1.e29 && peakAbove > -1.e29)
+    posBest += step * (float)parabolicFitPosition(peakBelow, peakmax, peakAbove);
 }
 
 // Return mag value for mag index

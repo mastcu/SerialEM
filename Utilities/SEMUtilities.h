@@ -2,6 +2,7 @@
 #define SEMUTILITIES_H
 struct FrameAliParams;
 #include <string>
+#include <vector>
 
 #define RELEASE_RETURN_ON_ERR(a, b) if (a) { AdocReleaseMutex() ; return b;}
 
@@ -31,6 +32,8 @@ void UtilAppendWithSeparator(CString &filename, CString toAdd, const char* sep);
 int CreateFrameDirIfNeeded(CString &directory, CString *errStr, char debug);
 void UtilBalancedGroupLimits(int numTotal, int numGroups, int groupInd, int &start, 
                          int &end);
+void UtilInterpolatePeak(std::vector<float> &vecPos, std::vector<float> &vecPeak,
+  float step, float peakmax, float &posBest);
 int FindIndexForMagValue(int magval, int camera = -1, int magInd = -1);
 int DLL_IM_EX MagOrEFTEMmag(BOOL GIFmode, int index, BOOL STEMcam = false);
 int MagForCamera(CameraParameters *camParam, int index);
