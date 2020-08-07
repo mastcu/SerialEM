@@ -100,6 +100,7 @@ public:
   GetSetMember(BOOL, LoadMapsUnbinned)
   GetSetMember(BOOL, WriteNavAsXML);
   GetSetMember(BOOL, TryRealignScaling);
+  GetSetMember(BOOL, PlusMinusRIScaling);
   GetSetMember(int, RealignTestOptions);
   GetSetMember(int, AutoBacklashNewMap);
   GetSetMember(float, AutoBacklashMinField);
@@ -249,14 +250,15 @@ private:
   BOOL mSearchRotAlign;         // Flag to do rotation search
   float mRotAlignRange;         // Range of search
   float mRotAlignCenter;        // Center angle for rotation
-  BOOL mConvertMaps;                   // Flag that Navigator should convert maps to byte
-  BOOL mLoadMapsUnbinned;              // Flag that Navigator should load maps unbinned
-  BOOL mTryRealignScaling;             // Flag to do realign with scaling centered image
-  BOOL mWriteNavAsXML;                 // Flag to write Nav files as XML
-  int mRealignTestOptions;             // For testing backlash and mont stage error
-  int mAutoBacklashNewMap;             // Whether to do backlash for new maps
-  float mAutoBacklashMinField;         // FOV for doing backlash routine
-  int mPointLabelDrawThresh;           // Threshold group size for drawing point labels
+  BOOL mConvertMaps;                 // Flag that Navigator should convert maps to byte
+  BOOL mLoadMapsUnbinned;            // Flag that Navigator should load maps unbinned
+  BOOL mTryRealignScaling;           // Flag to do realign with scaling centered image
+  BOOL mPlusMinusRIScaling;          // Flag to do a search for scaling on both sides of 1
+  BOOL mWriteNavAsXML;               // Flag to write Nav files as XML
+  int mRealignTestOptions;           // For testing backlash and mont stage error
+  int mAutoBacklashNewMap;           // Whether to do backlash for new maps
+  float mAutoBacklashMinField;       // FOV for doing backlash routine
+  int mPointLabelDrawThresh;         // Threshold group size for drawing point labels
 
   WINDOWPLACEMENT mRotAlignPlace;
   WINDOWPLACEMENT mMultiShotPlace;
@@ -435,6 +437,8 @@ public:
   void SetLDFocusPosition(int camIndex, float axisPos, BOOL rotateAxis, int axisRotation, 
     int xOffset, int yOffset, const char *descrip);
   bool AnyMontageMapsInNavTable();
+  int SetUserValue(CMapDrawItem *item, int number, CString &value);
+  int GetUserValue(CMapDrawItem *item, int number, CString &value);
   bool ModifySubareaForOffset(int camera, int xOffset, int yOffset, int &left,
     int &top, int &right, int &bottom);
   void FindFocusPosForCurrentItem(StateParams & state, bool justLDstate);

@@ -450,12 +450,15 @@ void CMultiTSTasks::TiltAndMoveScreen(bool tilt, double angle, bool move, int po
 }
 
 // Align images, with search for best scaling and possible rotation
+// Pass startScale of <= 0 to use the raw peak value (0 is default)
+// Otherwise it will use the overlap-adjusted CCC
+// Pass startScale negative to do symmetric search around 1 with twice the number of steps
 int CMultiTSTasks::AlignWithScaling(int buffer, bool doImShift, float &scaleMax,
   float startScale, float rotation)
 {
-  float peaks[MAX_STEPS];
-  int numSteps = B3DMIN(mCkNumAlignSteps, MAX_STEPS - 1);
+  int numSteps = mCkNumAlignSteps;
   int ist, idir;
+  FloatVec vecScale, vecPeak;
   float peakmax = -1.e30f;
   float scale, curMax, peak, shiftX, shiftY, CCC, fracPix, usePeak;
   float step = mCkAlignStep;
@@ -463,8 +466,12 @@ int CMultiTSTasks::AlignWithScaling(int buffer, bool doImShift, float &scaleMax,
   double overlapPow = 0.166667;
   CString report;
 
-  if (!startScale) {
-    startScale = 1.;
+  if (startScale <= 0.) {
+    if (startScale < 0) {
+      numSteps = 2 * mCkNumAlignSteps - 1;
+      startScale = (float)(1. - step * (mCkNumAlignSteps - 1));
+    } else
+      startScale = 1.;
     CCCp = NULL;
     fracPixP = NULL;
   }
@@ -472,12 +479,14 @@ int CMultiTSTasks::AlignWithScaling(int buffer, bool doImShift, float &scaleMax,
   // Scan for the number of steps
   for (ist = 0; ist < numSteps; ist++) {
     scale = startScale + (float)ist * step;
-    if (mShiftManager->AutoAlign(buffer, 0, false, false, &peaks[ist], 0., 0., 0., 
+    if (mShiftManager->AutoAlign(buffer, 0, false, false, &peak, 0., 0., 0., 
       scale, rotation, CCCp, fracPixP, true, &shiftX, &shiftY))
       return 1;
-    usePeak = peaks[ist];
+    usePeak = peak;
     if (CCCp)
       usePeak = (float)(CCC * pow((double)fracPix, overlapPow));
+    vecScale.push_back(scale);
+    vecPeak.push_back(usePeak);
     if (usePeak > peakmax) {
       peakmax = usePeak;
       scaleMax = scale;
@@ -486,7 +495,7 @@ int CMultiTSTasks::AlignWithScaling(int buffer, bool doImShift, float &scaleMax,
       SEMTrace('p', "Scale %.3f  peak  %g  CCC %.4f  frac %.3f  shift %.1f %.1f", scale,
         usePeak, CCC, fracPix, shiftX, shiftY);
     } else {
-      report.Format("Scale %.3f  peak  %g  shift %.1f %.1f", scale, peaks[ist], shiftX, 
+      report.Format("Scale %.3f  peak  %g  shift %.1f %.1f", scale, peak, shiftX, 
         shiftY);
       if (mComplexTasks->GetVerbose())
         mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
@@ -504,6 +513,8 @@ int CMultiTSTasks::AlignWithScaling(int buffer, bool doImShift, float &scaleMax,
         return 1;
       if (CCCp)
         peak = (float)(CCC * pow((double)fracPix, overlapPow));
+      vecScale.push_back(scale);
+      vecPeak.push_back(usePeak);
       if (peak > peakmax) {
         peakmax = peak;
         scaleMax = scale;
@@ -519,6 +530,7 @@ int CMultiTSTasks::AlignWithScaling(int buffer, bool doImShift, float &scaleMax,
       }
     }
   }
+  UtilInterpolatePeak(vecScale, vecPeak, step, peakmax, scaleMax);
 
   // Align for real at the best peak.  Need to reset shifts of image for
   // scope image shift to work right

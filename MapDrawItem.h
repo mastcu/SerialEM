@@ -9,6 +9,9 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
+#include <map>
+#include <string>
+
 #define ITEM_TYPE_POINT 0
 #define ITEM_TYPE_POLYGON 1
 #define ITEM_TYPE_MAP 2
@@ -127,6 +130,7 @@ public:
   short mNumSkipHoles;            // Number of holes to skip
   unsigned char *mSkipHolePos;    // list of x,y indexes of holes to skip (new/delete)
   int mMoveStageID;       // Temporary flag to keep track of item stage was moved to
+  std::map<int, std::string> mUserValueMap;
   int mFilePropIndex;     // Indexes into arrays of file properties and other params
   int mTSparamIndex;
   int mMontParamIndex;

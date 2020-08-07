@@ -103,6 +103,7 @@ CNavHelper::CNavHelper(void)
   mLoadMapsUnbinned = true;
   mWriteNavAsXML = false;
   mTryRealignScaling = true;
+  mPlusMinusRIScaling = false;
   mRealignTestOptions = 3;  // TEMPORARY
   mAutoBacklashMinField = 5.f;
   mAutoBacklashNewMap = 1;  // ASK
@@ -1707,6 +1708,7 @@ int CNavHelper::SetToMapImagingState(CMapDrawItem * item, bool setCurFile, BOOL 
     }
   }
 
+  tmpSet = *conSet;
   PrepareToReimageMap(item, mMapMontP, &tmpSet, RECORD_CONSET, hideLDoff);
   camera = mWinApp->GetCurrentCamera();
   /*if (conSet->binning != tmpSet.binning || conSet->exposure != tmpSet.exposure ||
@@ -3400,7 +3402,10 @@ void CNavHelper::UpdateStateDlg(void)
 int CNavHelper::MakeDualMap(CMapDrawItem *item)
 {
   EMimageBuffer *imBuf;
-  int err;
+  KImageStore *store;
+  int err, ind, curStore, numAvailable = 0, indAvail;
+  int bufInd = mWinApp->Montaging() && mImBufs[1].mCaptured == BUFFER_MONTAGE_OVERVIEW ?
+    1 : 0;
   mIndexAfterDual = mNav->GetCurListSel();
   if (!item) {
     SEMMessageBox("Cannot find the item that was to be used for the map acquire state",
@@ -3409,7 +3414,7 @@ int CNavHelper::MakeDualMap(CMapDrawItem *item)
   }
   
   // Make a map if it is not already one and it is suitable
-  imBuf = &mImBufs[mWinApp->Montaging() ? 1 : 0];
+  imBuf = &mImBufs[bufInd];
   if (!imBuf->mMapID && imBuf->mMagInd > item->mMapMagInd) {
     err = mNav->NewMap(true);
     if (err > 0)
@@ -3418,6 +3423,44 @@ int CNavHelper::MakeDualMap(CMapDrawItem *item)
       mWinApp->AppendToLog("Made a new map from the existing image before getting"
       " anchor map");
       mIndexAfterDual = mNav->GetCurListSel();
+    } else if (!bufInd) {
+
+      // If this fails for buffer A, look for another non-montage file it can work in
+      curStore = mDocWnd->GetCurrentStore();
+      for (ind = 0; ind < mDocWnd->GetNumStores(); ind++) {
+        if (ind == curStore || mDocWnd->GetStoreMontParam(ind))
+          continue;
+        store = mDocWnd->GetStoreMRC(ind);
+        if (store && mBufferManager->IsBufferSavable(imBuf, store)) {
+          numAvailable++;
+          indAvail = ind;
+        }
+      }
+
+      // If there is only one, switch to it, make map, switch back
+      if (numAvailable == 1) {
+        mDocWnd->SetCurrentStore(indAvail);
+        err = mNav->NewMap(true);
+        mDocWnd->SetCurrentStore(curStore);
+        if (err > 0)
+          return 2;
+        if (!err) {
+          mWinApp->AppendToLog("Saved existing image in only suitable file and made it"
+            " a new map before getting anchor map");
+          mIndexAfterDual = mNav->GetCurListSel();
+        }
+
+        // Otherwise give message or warning
+      } else if (numAvailable) {
+        if (SEMMessageBox("The existing image in buffer A cannot be made into a\n"
+          "map because it could be saved into more than one open file but not the current"
+          " file.\n\nDo you want to stop making an anchor map and\nswitch to the "
+          "appropriate file for saving the existing image first?", MB_QUESTION) == IDYES)
+          return 1;
+      } else {
+        mWinApp->AppendToLog("WARNING: could not make a map from the existing image in "
+          "buffer A\r\n""   because there is no open file into which it can be saved");
+      }
     }
   }
 
@@ -3888,6 +3931,35 @@ bool CNavHelper::AnyMontageMapsInNavTable()
   return false;
 }
 
+// Set a user value in the map: returns 1 for number out of range
+int CNavHelper::SetUserValue(CMapDrawItem *item, int number, CString &value)
+{
+  if (number < 1 || number > MAX_NAV_USER_VALUES)
+    return 1;
+  std::string sstr = (LPCTSTR)value;
+  std::map<int, std::string>::iterator iter;
+  if (item->mUserValueMap.count(number)) {
+    iter = item->mUserValueMap.find(number);
+    iter->second = sstr;
+  } else
+    item->mUserValueMap.insert(std::pair<int, std::string>(number, sstr));
+  return 0;
+}
+
+// Get a user value from the map; returns 1 for number out of range and -1 if not found
+int CNavHelper::GetUserValue(CMapDrawItem *item, int number, CString &value)
+{
+  std::map<int, std::string>::iterator iter;
+  if (number < 1 || number > MAX_NAV_USER_VALUES)
+    return 1;
+  if (item->mUserValueMap.count(number)) {
+    iter = item->mUserValueMap.find(number);
+    value = iter->second.c_str();
+    return value.IsEmpty() ? -1 : 0;
+  }
+  return -1;
+}
+
 // Align an image, searching for best rotation, with possible scaling as well
 int CNavHelper::AlignWithRotation(int buffer, float centerAngle, float angleRange, 
                                   float &rotBest, float &shiftXbest, float &shiftYbest,
@@ -3970,15 +4042,8 @@ int CNavHelper::AlignWithRotation(int buffer, float centerAngle, float angleRang
     }
   }
 
-  // Find the values at rotations below and above the peak
-  for (ist = 0; ist < (int)vecPeak.size(); ist++) {
-    if (fabs(vecRot[ist] - (rotBest - step)) < 0.1 * step)
-      peakBelow = vecPeak[ist];
-    if (fabs(vecRot[ist] - (rotBest + step)) < 0.1 * step)
-      peakAbove = vecPeak[ist];
-  }
-  if (peakBelow > -1.e29 && peakAbove > -1.e29)
-    rotBest += step * (float)parabolicFitPosition(peakBelow, peakmax, peakAbove);
+  // Get interpolated value
+  UtilInterpolatePeak(vecRot, vecPeak, step, peakmax, rotBest);
 
   mWinApp->SetCurrentBuffer(0);
   report.Format("The two images correlate most strongly with a rotation of %.2f",
@@ -4040,7 +4105,8 @@ int CNavHelper::BufferForRotAlign(int &registration)
 
 int CNavHelper::AlignWithScaling(float & shiftX, float & shiftY, float & scaling)
 {
-  if (mWinApp->mMultiTSTasks->AlignWithScaling(1, false, scaling)) {
+  if (mWinApp->mMultiTSTasks->AlignWithScaling(1, false, scaling, 
+    mPlusMinusRIScaling ? -1.f : 0.f)) {
     scaling = 0;
     return 1;
   }

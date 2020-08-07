@@ -1,5 +1,5 @@
 {
-  CString adocStr;
+  CString adocStr, valStr, keyStr;
   float fvals[4];
   int jnd;
   ADOC_PUT(Integer(ADOC_ARG, "Color", item->mColor));
@@ -134,6 +134,12 @@
         skipIndex[jnd] = item->mSkipHolePos[jnd];
       ADOC_PUT(IntegerArray(ADOC_ARG, "SkipHoles", &skipIndex[0], 
         2 * item->mNumSkipHoles));
+    }
+  }
+  for (jnd = 1; jnd <= MAX_NAV_USER_VALUES; jnd++) {
+    if (!mHelper->GetUserValue(item, jnd, valStr)) {
+      keyStr.Format("UserValue%d", jnd);
+      ADOC_PUT(KeyValue(ADOC_ARG, (LPCTSTR)keyStr, (LPCTSTR)valStr));
     }
   }
   ADOC_PUT(FloatArray(ADOC_ARG, "PtsX", &item->mPtX[0], item->mNumPoints));

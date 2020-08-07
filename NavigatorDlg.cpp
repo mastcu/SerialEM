@@ -5855,7 +5855,8 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
       MB_EXCLAME);
     return 1;
   }
-  imBuf = &mImBufs[mWinApp->Montaging() ? 1 : 0];
+  imBuf = &mImBufs[(mWinApp->Montaging() && 
+    mImBufs[1].mCaptured == BUFFER_MONTAGE_OVERVIEW) ? 1 : 0];
   if (imBuf->mMapID) {
     if (SEMMessageBox("This image already has a map ID identifying it as a map.\n\n"
       "Are you sure you want to create another map from this image?",
@@ -7336,6 +7337,15 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
             item->mSkipHolePos[ind1] = holeSkips[ind1];
           item->mNumSkipHoles = numToGet / 2;
         }
+        for (ind1 = 1; ind1 <= MAX_NAV_USER_VALUES; ind1++) {
+          str.Format("UserValue%d", ind1);
+          retval = AdocGetString("Item", sectInd, (LPCTSTR)str, &adocStr);
+          if (!retval && adocStr) {
+            mHelper->SetUserValue(item, ind1, CString(adocStr));
+            free(adocStr);
+          }
+        }
+
         if (item->mType == ITEM_TYPE_MAP) {
           ADOC_REQUIRED(AdocGetString("Item", sectInd, "MapFile", &adocStr));
           ADOC_STR_ASSIGN(item->mMapFile);
