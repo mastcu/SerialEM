@@ -1625,6 +1625,7 @@
 #define IDC_STAT_RING2_SHOTS            2653
 #define IDC_SPIN_RING2_NUM              2654
 #define IDC_EDIT_RING2_DIST             2655
+#define IDC_BUTTON1                     2656
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2115,7 +2116,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        248
 #define _APS_NEXT_COMMAND_VALUE         33393
-#define _APS_NEXT_CONTROL_VALUE         2656
+#define _APS_NEXT_CONTROL_VALUE         2657
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
