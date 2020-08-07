@@ -72,10 +72,6 @@ EMmontageController::EMmontageController()
   mShootingFilm = false;
   mLastFailed = false;
   mRequiredBWMean = -1.;
-  for (i = 0; i < MAX_CORR_PIECES; i++)  {
-    mLowerPatch[i][0] = mLowerPatch[i][1] = NULL;
-    mUpperPatch[i][0] = mUpperPatch[i][1] = NULL;
-  }
   mLowerPad = NULL;
   mUpperPad = NULL;
   mLowerCopy = NULL;
@@ -176,10 +172,16 @@ void EMmontageController::SetupOverlapBoxes()
     extraWidth = 0.25f;   //0.25f;
   }
 
-  if (mNumPieces <= MAX_CORR_PIECES) {
-    for (i = 0; i < mNumPieces; i++) 
-      mLowerPatch[i][0] = mLowerPatch[i][1] = NULL;
-  }
+  CLEAR_RESIZE(mUpperShiftX, float, 2 * mNumPieces);
+  CLEAR_RESIZE(mUpperShiftY, float, 2 * mNumPieces);
+  CLEAR_RESIZE(mUpperFirstX, float, 2 * mNumPieces);
+  CLEAR_RESIZE(mUpperFirstY, float, 2 * mNumPieces);
+  CLEAR_RESIZE(mPatchCCC, float, 2 * mNumPieces);
+  CLEAR_RESIZE(mBmat, float, 2 * mNumPieces);
+  CLEAR_RESIZE(mLowerPatch, float *, 2 * mNumPieces);
+  CLEAR_RESIZE(mUpperPatch, float *, 2 * mNumPieces);
+  for (i = 0; i < 2 * mNumPieces; i++)
+    mLowerPatch[i] = mUpperPatch[i] = NULL;
 
   // Fix all the vector sizes; mPieceSavedAt is taken care of in ListMontagePieces
   CLEAR_RESIZE(mMontageX, int, mNumPieces+1);
@@ -1278,16 +1280,16 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
   }
 
   mDoCorrelations = !(useHQ && mParam->skipCorrelations) && 
-    mNumPieces <= MAX_CORR_PIECES && firstUndone <= 0 && !mTrialMontage;
+    firstUndone <= 0 && !mTrialMontage;
 
   // Try to get edge shifts and piece shift solution if reading in and doing correlation
   mAlreadyHaveShifts = false;
   if (mReadingMontage && mDoCorrelations) {
     mAlreadyHaveShifts = !mRedoCorrOnRead && 
-      AutodocShiftStorage(false, &mUpperShiftX[0][0], &mUpperShiftY[0][0]) == 0;
+      AutodocShiftStorage(false, &mUpperShiftX[0], &mUpperShiftY[0]) == 0;
     if (mAlreadyHaveShifts)
-      mAlreadyHaveShifts = FindBestShifts(mNumPieces - mNumToSkip, &mUpperShiftX[0][0], 
-      &mUpperShiftY[0][0], mBmat, mBefErrMean, mBefErrMax, mAftErrMean, mAftErrMax, 
+      mAlreadyHaveShifts = FindBestShifts(mNumPieces - mNumToSkip, &mUpperShiftX[0], 
+      &mUpperShiftY[0], &mBmat[0], mBefErrMean, mBefErrMax, mAftErrMean, mAftErrMax, 
       mWgtErrMean, mWgtErrMax) == 0;
   }
 
@@ -2132,10 +2134,10 @@ void EMmontageController::SavePiece()
         if (mAlreadyHaveShifts) {
 
           // If there are already shifts, need to set this non-NULL to use tests below
-          mLowerPatch[mPieceIndex][ixy] = &mBefErrMax;
+          mLowerPatch[2 * mPieceIndex + ixy] = &mBefErrMax;
         } else {
           extractPatch(data, type, ixy, &mLowerInd0[ixy][0], &mLowerInd1[ixy][0], 
-            &mLowerPatch[mPieceIndex][ixy]);
+            &mLowerPatch[2 * mPieceIndex + ixy]);
         }
       }
 
@@ -2143,26 +2145,28 @@ void EMmontageController::SavePiece()
       lower = LowerIndex(mPieceIndex, ixy);
       if (lower >= 0) {
         if (mAlreadyHaveShifts) {
-          mUpperPatch[mPieceIndex][ixy] = &mBefErrMax;
+          mUpperPatch[2 * mPieceIndex + ixy] = &mBefErrMax;
         } else {
           extractPatch(data, type, ixy, &mUpperInd0[ixy][0], &mUpperInd1[ixy][0], 
-            &mUpperPatch[mPieceIndex][ixy]);
+            &mUpperPatch[2 * mPieceIndex + ixy]);
         }
       }
 
       // Correlate with the patch from the lower piece if it exists, or with upper
       idir = 0;
-      if (lower >= 0 && mUpperPatch[mPieceIndex][ixy] && mLowerPatch[lower][ixy]) {
+      if (lower >= 0 && mUpperPatch[2 * mPieceIndex + ixy] && mLowerPatch[2 * lower + ixy]) {
         idir = 1;
         upper = mPieceIndex;
-      } else if (upper >= 0 && mUpperPatch[upper][ixy] && mLowerPatch[mPieceIndex][ixy]) {
+      } else if (upper >= 0 && mUpperPatch[2 * upper + ixy] && 
+        mLowerPatch[2 * mPieceIndex + ixy]) {
         idir = -1;
         lower = mPieceIndex;
       }
 
       if (idir && !mAlreadyHaveShifts) {
 
-        montXCorrEdge(mLowerPatch[lower][ixy], mUpperPatch[upper][ixy], &mXYbox[ixy][0],
+        montXCorrEdge(mLowerPatch[2 * lower + ixy], mUpperPatch[2 * upper + ixy], 
+          &mXYbox[ixy][0],
           &mXYpieceSize[0], &mXYoverlap[0], mXsmooth[ixy], mYsmooth[ixy], mXpad[ixy],
           mYpad[ixy], mLowerPad, mUpperPad, mLowerCopy, numPeaks, 0, mCTFp[ixy], 
           mDelta[ixy], &mNumExtra[ixy][0], mXCorrBinning, ixy, mMaxLongShift[ixy], 1, 
@@ -2185,7 +2189,7 @@ void EMmontageController::SavePiece()
 
         // Also adjust the Y peak; it had numExtra subtracted and it needs to be added
         yFirst = yFirst + 2 * mXCorrBinning * mNumExtra[ixy][1];
-        montBigSearch(mLowerPatch[lower][ixy], mUpperPatch[upper][ixy], 
+        montBigSearch(mLowerPatch[2 * lower + ixy], mUpperPatch[2 * upper + ixy],
           mXYbox[ixy][0], mXYbox[ixy][1], 0, 0, mXYbox[ixy][0] - 1, mXYbox[ixy][1] - 1, 
           &xPeak, &yPeak, &sDmin, &denmin, numIter, limStep); 
 
@@ -2196,20 +2200,20 @@ void EMmontageController::SavePiece()
         // This returned the amount to shift the upper edge to align it to the
         // lower, except that Y is inverted.  We need the amount that upper
         // edge is displaced from the lower one, so take -X and +Y.
-        mUpperShiftX[lower][ixy] = -xPeak;
-        mUpperShiftY[lower][ixy] = yPeak;
-        mUpperFirstX[lower][ixy] = -xFirst;
-        mUpperFirstY[lower][ixy] = yFirst;
-        mPatchCCC[lower][ixy] = CCCmax;
+        mUpperShiftX[2 * lower + ixy] = -xPeak;
+        mUpperShiftY[2 * lower + ixy] = yPeak;
+        mUpperFirstX[2 * lower + ixy] = -xFirst;
+        mUpperFirstY[2 * lower + ixy] = yFirst;
+        mPatchCCC[2 * lower + ixy] = CCCmax;
 
         // Now get rid of the patches
-        delete [] mUpperPatch[upper][ixy];
-        delete [] mLowerPatch[lower][ixy];
+        delete [] mUpperPatch[2 * upper + ixy];
+        delete [] mLowerPatch[2 * lower + ixy];
       } else if (idir) {
 
         // If already have shifts, set the peak values for use below
-        xPeak = -mUpperShiftX[lower][ixy];
-        yPeak = mUpperShiftY[lower][ixy];
+        xPeak = -mUpperShiftX[2 * lower + ixy];
+        yPeak = mUpperShiftY[2 * lower + ixy];
       }
 
       if (idir) {
@@ -2222,8 +2226,8 @@ void EMmontageController::SavePiece()
         mPieceY, idir > 0 ? "lower" : "upper", ixy ? "Y" : "X", mActualErrorX[i], 
         mActualErrorY[i], - idir * xPeak, idir * yPeak);*/
 
-        mUpperPatch[upper][ixy] = NULL;
-        mLowerPatch[lower][ixy] = NULL;
+        mUpperPatch[2 * upper + ixy] = NULL;
+        mLowerPatch[2 * lower + ixy] = NULL;
       }
       //SEMTrace('1',"Correlation time %.3f", wallTime() - wallstart);
     }
@@ -2469,15 +2473,16 @@ void EMmontageController::SavePiece()
 
     // Compute the best shift for the pieces
     float aMeanFirst, aMaxFirst, wMeanFirst, wMaxFirst;
-    float bMat1[2 * MAX_CORR_PIECES]; 
-    float *upperShiftX = &mUpperShiftX[0][0];
-    float *upperShiftY = &mUpperShiftY[0][0];
+    FloatVec bMat1;
+    bMat1.resize(2 * mNumPieces);
+    float *upperShiftX = &mUpperShiftX[0];
+    float *upperShiftY = &mUpperShiftY[0];
     if (!mAlreadyHaveShifts) {
-      isave = FindBestShifts(nVar, &mUpperFirstX[0][0], &mUpperFirstY[0][0], bMat1, 
+      isave = FindBestShifts(nVar, &mUpperFirstX[0], &mUpperFirstY[0], &bMat1[0], 
         mBefErrMean, mBefErrMax, aMeanFirst, aMaxFirst, wMeanFirst, wMaxFirst);
 
       if (!isave) 
-        isave = FindBestShifts(nVar, &mUpperShiftX[0][0], &mUpperShiftY[0][0], mBmat, 
+        isave = FindBestShifts(nVar, &mUpperShiftX[0], &mUpperShiftY[0], &mBmat[0], 
           mBefErrMean, mBefErrMax, mAftErrMean, mAftErrMax, mWgtErrMean, mWgtErrMax);
     }
 
@@ -2489,8 +2494,8 @@ void EMmontageController::SavePiece()
         mAftErrMean = aMeanFirst;
         mWgtErrMax = wMaxFirst;
         mWgtErrMean = wMeanFirst;
-        upperShiftX = &mUpperFirstX[0][0];
-        upperShiftY = &mUpperFirstY[0][0];
+        upperShiftX = &mUpperFirstX[0];
+        upperShiftY = &mUpperFirstY[0];
         for (i = 0; i < 2 * nVar; i++)
           mBmat[i] = bMat1[i];
       }
@@ -3096,8 +3101,6 @@ void EMmontageController::CleanPatches()
 {
   delete [] mCenterData;
   mCenterData = NULL;
-  if (mNumPieces > MAX_CORR_PIECES)
-    return;
   delete [] mLowerPad;
   mLowerPad = NULL;
   delete [] mUpperPad;
@@ -3108,10 +3111,10 @@ void EMmontageController::CleanPatches()
   mBinTemp = NULL;
   for (int i = 0; i < mNumPieces; i++)
     for (int ixy = 0; ixy < 2; ixy++) {
-      delete [] mLowerPatch[i][ixy];
-      mLowerPatch[i][ixy] = NULL;
-      delete [] mUpperPatch[i][ixy];
-      mUpperPatch[i][ixy] = NULL;
+      delete [] mLowerPatch[2 * i + ixy];
+      mLowerPatch[2 * i + ixy] = NULL;
+      delete [] mUpperPatch[2 * i + ixy];
+      mUpperPatch[2 * i + ixy] = NULL;
     }
 }
 
@@ -4181,7 +4184,7 @@ int EMmontageController::FindBestShifts(int nvar, float *upperShiftX, float *upp
           dyedge[2 * inde + ixy] = upperShiftY[2 * lower + ixy];
           inde++;
           if (mVerySloppy)
-            ccc[numEdge++] = mPatchCCC[lower][ixy];
+            ccc[numEdge++] = mPatchCCC[2 * lower + ixy];
         }
       }
     }
@@ -4293,10 +4296,11 @@ int EMmontageController::AutodocShiftStorage(bool write, float * upperShiftX,
         if (mVerySloppy) {
           if (write)
             retval = AdocSetThreeFloats(names[nameInd], iz, keys[keyInd], 
-            upperShiftX[2*ipc + ixy], upperShiftY[2*ipc + ixy], mPatchCCC[ipc][ixy]);
+            upperShiftX[2*ipc + ixy], upperShiftY[2*ipc + ixy], mPatchCCC[2 * ipc + ixy]);
           else
             retval = AdocGetThreeFloats(names[nameInd], iz, keys[keyInd], 
-            &upperShiftX[2*ipc + ixy], &upperShiftY[2*ipc + ixy], &mPatchCCC[ipc][ixy]);
+            &upperShiftX[2*ipc + ixy], &upperShiftY[2*ipc + ixy], 
+              &mPatchCCC[2 * ipc + ixy]);
 
         } else {
           if (write)

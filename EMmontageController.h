@@ -101,8 +101,8 @@ class EMmontageController
   CameraParameters *mCamParams;
   MiniOffsets mMiniOffsets;
   BOOL mMontaging;
-  std::vector<int>   mMontageX, mMontageY;
-  std::vector<int>   mPieceSavedAt;
+  IntVec   mMontageX, mMontageY;
+  IntVec   mPieceSavedAt;
   int   mPieceIndex;
   int   mPieceX, mPieceY;
   int   mNumPieces;               // Number of pieces in montage
@@ -161,16 +161,16 @@ class EMmontageController
   float *mBinTemp;                // Temporary array for binning
 
   // These arrays are indexed by piece number and X or Y edge direction
-  float *mLowerPatch[MAX_CORR_PIECES][2];  // Address of patch when piece is lower
-  float *mUpperPatch[MAX_CORR_PIECES][2];  // Address of patch when piece is upper
+  std::vector<float *> mLowerPatch;  // Address of patch when piece is lower
+  std::vector<float *> mUpperPatch;  // Address of patch when piece is upper
   // For given piece, amount that upper piece from it is displaced from this piece
-  float  mUpperShiftX[MAX_CORR_PIECES][2], mUpperShiftY[MAX_CORR_PIECES][2];
-  float  mUpperFirstX[MAX_CORR_PIECES][2], mUpperFirstY[MAX_CORR_PIECES][2];
-  float mPatchCCC[MAX_CORR_PIECES][2];
-  std::vector<float> mActualErrorX, mActualErrorY; // Error from true position
-  std::vector<float> mAcquiredStageX, mAcquiredStageY; // Actual position at which acquired
-  std::vector<float> mStageOffsetX, mStageOffsetY; // Stage offset from nominal to actual
-  float mBmat[2 * MAX_CORR_PIECES];    // Matrix needed for solving for shifts
+  FloatVec  mUpperShiftX, mUpperShiftY;
+  FloatVec  mUpperFirstX, mUpperFirstY;
+  FloatVec mPatchCCC;
+  FloatVec mActualErrorX, mActualErrorY; // Error from true position
+  FloatVec mAcquiredStageX, mAcquiredStageY; // Actual position at which acquired
+  FloatVec mStageOffsetX, mStageOffsetY; // Stage offset from nominal to actual
+  FloatVec mBmat;                  // Matrix needed for solving for shifts
   float mPredictedErrorX, mPredictedErrorY;   // Predicted error to correct for
   float mErrorSumX, mErrorSumY;   // Sum of actual errors
   int   mNumErrSum;               // Number added into sum
@@ -195,14 +195,14 @@ class EMmontageController
   BOOL mLastFailed;               // Flag that last capture did not complete
   BOOL mVerySloppy;               // Flag to do big correlations with special parameters
   int mNumToSkip;                 // Number of pieces to skip
-  std::vector<int> mSkipIndex;   // Index of pieces to skip
-  std::vector<int> mPieceToVar;  // Index from piece number to variable number
-  std::vector<int> mVarToPiece;  // Index from variable number to piece number
-  std::vector<int> mIndSequence;   // Sequence of piece indexes to do
-  std::vector<int> mFocusBlockInd; // Index to focus block for first piece in block
-  std::vector<int> mBlockCenX, mBlockCenY;  // stage position for focusing
-  std::vector<int> mAdjacentForIS; // Piece index of adjacent piece for IS realignment
-  std::vector<int> mColumnStartY; // Y piece index (from 0) at which column starts for each X
+  IntVec mSkipIndex;   // Index of pieces to skip
+  IntVec mPieceToVar;  // Index from piece number to variable number
+  IntVec mVarToPiece;  // Index from variable number to piece number
+  IntVec mIndSequence;   // Sequence of piece indexes to do
+  IntVec mFocusBlockInd; // Index to focus block for first piece in block
+  IntVec mBlockCenX, mBlockCenY;  // stage position for focusing
+  IntVec mAdjacentForIS; // Piece index of adjacent piece for IS realignment
+  IntVec mColumnStartY; // Y piece index (from 0) at which column starts for each X
   int mSeqIndex;                  // Running index to this sequence array
   int mNextSeqInd;                // Index after asking for next piece index
   int mNumDoing;                   // Number of frame being done, for progress display
@@ -282,7 +282,7 @@ class EMmontageController
 public:
 	void AdjustShiftInCenter(MontParam *param, float &shiftX, float &shiftY);
   int ListMontagePieces(KImageStore * storeMRC, MontParam * param, int zValue,
-    std::vector<int> &pieceSavedAt);
+    IntVec &pieceSavedAt);
   void ReadingDone(void);
   void StartStageRestore(void);
   void StageRestoreDone(void);

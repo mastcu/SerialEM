@@ -252,8 +252,7 @@ void CMontageWindow::Update()
   m_sbcZ.SetPos(m_iCurrentZ);
   BOOL bEnable = mWinApp->Montaging() && !mMontageController->DoingMontage() &&
     !mWinApp->DoingComplexTasks();
-  BOOL noShift = mWinApp->Montaging() && ((mParam->skipCorrelations && 
-    mParam->useHqParams) || mParam->xNframes * mParam->yNframes > MAX_CORR_PIECES);
+  BOOL noShift = mWinApp->Montaging() && mParam->skipCorrelations && mParam->useHqParams;
   m_statCurrentZ.EnableWindow(bEnable);
   m_editCurrentZ.EnableWindow(bEnable);
   m_sbcZ.EnableWindow(bEnable);

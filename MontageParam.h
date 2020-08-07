@@ -2,7 +2,6 @@
 #define MONTAGEPARAM_H
 #include <vector>
 
-#define MAX_CORR_PIECES 512
 #define MAX_MONT_PIECES 65535
 #define MIN_Y_MONT_REALIGN 5
 #define MINI_NO_PIECE -30000
