@@ -496,6 +496,7 @@ void CProcessImage::NewProcessedImage(EMimageBuffer *imBuf, short *brray, int ty
 
   // Fix the binning, transfer any extra data, and redisplay
   toImBuf->mBinning = imBufTmp.mBinning * moreBinning;
+  toImBuf->mPixelSize = imBufTmp.mPixelSize * moreBinning;
   toImBuf->mImage->SetUserData(imBufTmp.mImage->GetUserData());
   imBufTmp.mImage->SetUserData(NULL);
   imBufTmp.DeleteImage();
