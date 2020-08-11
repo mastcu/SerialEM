@@ -90,10 +90,12 @@ void CMultiShotDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Text(pDX, IDC_STAT_NUM_SHOTS, m_strNumShots);
   DDX_Control(pDX, IDC_SPIN_NUM_SHOTS, m_sbcNumShots);
   DDX_Text(pDX, IDC_EDIT_SPOKE_DIST, m_fSpokeDist);
-  DDV_MinMaxFloat(pDX, m_fSpokeDist, 0.05f, 50.);
+  MinMaxFloat(IDC_EDIT_SPOKE_DIST, m_fSpokeDist, 0.05f, 50., 
+    "Main ring distance from center");
   DDX_Control(pDX, IDC_EDIT_EARLY_FRAMES, m_editEarlyFrames);
   DDX_Text(pDX, IDC_EDIT_EARLY_FRAMES, m_iEarlyFrames);
-  DDV_MinMaxInt(pDX, m_iEarlyFrames, -1, 999);
+  MinMaxInt(IDC_EDIT_EARLY_FRAMES, m_iEarlyFrames, -1, 999, 
+    "Early return number of frames");
   DDX_Check(pDX, IDC_CHECK_SAVE_RECORD, m_bSaveRecord);
   DDX_Control(pDX, IDC_CHECK_USE_ILLUM_AREA, m_butUseIllumArea);
   DDX_Check(pDX, IDC_CHECK_USE_ILLUM_AREA, m_bUseIllumArea);
@@ -101,13 +103,14 @@ void CMultiShotDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_STAT_BEAM_UM, m_statBeamMicrons);
   DDX_Control(pDX, IDC_EDIT_BEAM_DIAM, m_editBeamDiam);
   DDX_Text(pDX, IDC_EDIT_BEAM_DIAM, m_fBeamDiam);
-  DDV_MinMaxFloat(pDX, m_fBeamDiam, 0.05f, 50.);
+  MinMaxFloat(IDC_EDIT_BEAM_DIAM, m_fBeamDiam, 0.05f, 50., "Beam diameter");
   DDX_Radio(pDX, IDC_RNO_CENTER, m_iCenterShot);
   DDX_Control(pDX, IDC_STAT_NUM_EARLY, m_statNumEarly);
   DDX_Control(pDX, IDC_RNO_EARLY, m_butNoEarly);
   DDX_Radio(pDX, IDC_RNO_EARLY, m_iEarlyReturn);
   DDX_Text(pDX, IDC_EDIT_EXTRA_DELAY, m_fExtraDelay);
-  DDV_MinMaxFloat(pDX, m_fExtraDelay, 0., 100.);
+  MinMaxFloat(IDC_EDIT_EXTRA_DELAY, m_fExtraDelay, 0., 100., 
+    "Extra delay after image shift");
   DDX_Control(pDX, IDC_CHECK_SAVE_RECORD, m_butSaveRecord);
   DDX_Control(pDX, IDC_CHECK_ADJUST_BEAM_TILT, m_butAdjustBeamTilt);
   DDX_Check(pDX, IDC_CHECK_ADJUST_BEAM_TILT, m_bAdjustBeamTilt);
@@ -139,7 +142,8 @@ void CMultiShotDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_STAT_HOLE_DELAY_FAC, m_statHoleDelayFac);
   DDX_Control(pDX, IDC_EDIT_HOLE_DELAY_FAC, m_editHoleDelayFac);
   DDX_Text(pDX, IDC_EDIT_HOLE_DELAY_FAC, m_fHoleDelayFac);
-  DDV_MinMaxFloat(pDX, m_fHoleDelayFac, 0.1f, 5.0f);
+  MinMaxFloat(IDC_EDIT_HOLE_DELAY_FAC, m_fHoleDelayFac, 0.1f, 5.0f, 
+    "Multiplier of delay after shifting to hole");
   DDX_Control(pDX, IDC_BUT_SAVE_IS, m_butSaveIS);
   DDX_Control(pDX, IDC_BUT_END_PATTERN, m_butEndPattern);
   DDX_Control(pDX, IDC_BUT_ABORT, m_butAbort);
@@ -156,7 +160,7 @@ void CMultiShotDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_EDIT_RING2_DIST, m_editRing2Dist);
   DDX_Control(pDX, IDC_SPIN_RING2_NUM, m_sbcRing2Num);
   DDX_Text(pDX, IDC_EDIT_RING2_DIST, m_fRing2Dist);
-  DDV_MinMaxFloat(pDX, m_fRing2Dist, .05f, 10.f);
+  MinMaxFloat(IDC_EDIT_RING2_DIST, m_fRing2Dist, .05f, 10.f, "Distance to second ring");
   DDX_Text(pDX, IDC_STAT_NUM2_SHOTS, m_strNum2Shots);
   DDX_Control(pDX, IDC_CHECK_SECOND_RING, m_butDoSecondRing);
 }

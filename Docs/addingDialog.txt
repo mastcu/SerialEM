@@ -63,3 +63,7 @@ Be sure to set the right IDD_ in the Create call.
 Change font to Microsoft Sans Serif (it will change Use System font to False)
 
 Commit changes and push for editing at 120 DPI
+
+NOn-modal dialogs have a problem with double validation of edit fields and you
+need to use BaseDlg MinMaxInt and MinMaxFloat functions with the ID of the
+field and a descriptor text.

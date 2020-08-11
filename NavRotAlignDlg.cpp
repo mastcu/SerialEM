@@ -51,9 +51,10 @@ void CNavRotAlignDlg::DoDataExchange(CDataExchange* pDX)
   CBaseDlg::DoDataExchange(pDX);
   DDX_Control(pDX, IDC_EDIT_SEARCH_RANGE, m_editSearchRange);
   DDX_Text(pDX, IDC_EDIT_SEARCH_RANGE, m_fSearchRange);
-  DDV_MinMaxFloat(pDX, m_fSearchRange, 0.f, 50.f);
+  MinMaxFloat(IDC_EDIT_SEARCH_RANGE, m_fSearchRange, 0.f, 50.f, "Search range");
   DDX_Text(pDX, IDC_EDIT_CENTER_ANGLE, m_fCenterAngle);
-  DDV_MinMaxFloat(pDX, m_fCenterAngle, -180.f, 180.f);
+  MinMaxFloat(IDC_EDIT_CENTER_ANGLE, m_fCenterAngle, -180.f, 180.f, 
+    "Starting angle to rotate by");
   DDX_Check(pDX, IDC_CHECK_SEARCH_RANGE, m_bSearchAngles);
   DDX_Control(pDX, IDC_BUT_TRANSFORM, m_butTransform);
   DDX_Control(pDX, IDC_BUT_APPLY_IS, m_butApplyIS);

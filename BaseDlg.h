@@ -81,6 +81,8 @@ public:
   void FormattedSpinnerValue(NMHDR *pNMHDR, LRESULT *pResult, int lowerLim,
     int upperLim, int &oldNewVal, CString &str, const char *format);
   void FixButtonFocus(CButton & button);
+  void MinMaxFloat(UINT  nID, float &value, float minVal, float maxVal, const char *descrip);
+  void MinMaxInt(UINT  nID, int &value, int minVal, int maxVal, const char *descrip);
 };
 
 //{{AFX_INSERT_LOCATION}}

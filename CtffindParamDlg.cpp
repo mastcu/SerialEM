@@ -42,20 +42,21 @@ void CCtffindParamDlg::DoDataExchange(CDataExchange* pDX)
   CBaseDlg::DoDataExchange(pDX);
   DDX_Check(pDX, IDC_CHECK_SLOW_SEARCH, m_bSlowSearch);
   DDX_Text(pDX, IDC_EDIT_MAX_FIT_RES, m_fCustomMaxRes);
-  DDV_MinMaxFloat(pDX, m_fCustomMaxRes, 0., 100);
+  MinMaxFloat(IDC_EDIT_MAX_FIT_RES, m_fCustomMaxRes, 0, 100, "Highest resolution to fit");
   DDX_Text(pDX, IDC_EDIT_MIN_PHASE, m_iMinPhase);
-  DDV_MinMaxInt(pDX, m_iMinPhase, -30, 180);
+  MinMaxInt(IDC_EDIT_MIN_PHASE, m_iMinPhase, -30, 180, "Lower phase limit");
   DDX_Text(pDX, IDC_EDIT_MAX_PHASE, m_iMaxPhase);
-  DDV_MinMaxInt(pDX, m_iMaxPhase, 0, 200);
+  MinMaxInt(IDC_EDIT_MAX_PHASE, m_iMaxPhase, 0, 200, "Upper phase limit");
   DDX_Check(pDX, IDC_CHECK_FIND_PHASE, m_bFindPhase);
   DDX_Check(pDX, IDC_CHECK_FIX_ASTIG_FOR_PHASE, m_bFixAstigForPhase);
   DDX_Check(pDX, IDC_CHECK_EXTRA_STATS, m_bExtraStats);
   DDX_Check(pDX, IDC_CHECK_DRAW_RINGS, m_bDrawRings);
   DDX_Text(pDX, IDC_EDIT_PHASE_MIN_RES, m_fPhaseMinRes);
-  DDV_MinMaxFloat(pDX, m_fPhaseMinRes, 0, 100);
+  MinMaxFloat(IDC_EDIT_PHASE_MIN_RES, m_fPhaseMinRes, 0, 100, 
+    "Lowest resolution when fitting with phase");
   DDX_Text(pDX, IDC_STAT_DEFAULT_MAX_RES, m_strDfltMaxRes);
   DDX_Text(pDX, IDC_EDIT_FIXED_PHASE, m_fFixedPhase);
-  DDV_MinMaxFloat(pDX, m_fFixedPhase, -20, 200);
+  MinMaxFloat(IDC_EDIT_FIXED_PHASE, m_fFixedPhase, -20, 200, "Fixed phase shift");
 }
 
 

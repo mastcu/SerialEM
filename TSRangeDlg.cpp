@@ -34,9 +34,9 @@ void CTSRangeDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Text(pDX, IDC_EDIT_TSR_LOWANGLE, m_fLowAngle);
   DDX_Text(pDX, IDC_EDIT_TSR_HIGHANGLE, m_fHighAngle);
   DDX_Text(pDX, IDC_EDIT_TSR_INCANGLE, m_fIncrement);
-  DDV_MinMaxFloat(pDX, m_fIncrement, 0.0f, 10.f);
-  DDV_MinMaxFloat(pDX, m_fLowAngle, 0.0f, 90.f);
-  DDV_MinMaxFloat(pDX, m_fHighAngle, 0.0f, 90.f);
+  MinMaxFloat(IDC_EDIT_TSR_INCANGLE, m_fIncrement, 0.0f, 10.f, "Angle increment");
+  MinMaxFloat(IDC_EDIT_TSR_LOWANGLE, m_fLowAngle, 0.0f, 90.f, "Low angle");
+  MinMaxFloat(IDC_EDIT_TSR_HIGHANGLE, m_fHighAngle, 0.0f, 90.f, "High angle");
   DDX_Check(pDX, IDC_TSR_EUCENTRICITY, m_bEucentricity);
   DDX_Check(pDX, IDC_TSR_WALKUP, m_bWalkup);
   DDX_Check(pDX, IDC_TSR_AUTOFOCUS, m_bAutofocus);

@@ -3203,8 +3203,8 @@ BEGIN
     CONTROL         "Low Dose Trial area",IDC_RLDTRIAL,"Button",BS_AUTORADIOBUTTON,37,25,82,10
     CONTROL         "Settings displayed here",IDC_RRECORDEDHERE,"Button",BS_AUTORADIOBUTTON,37,36,91,10
     GROUPBOX        "Beam settings to use",IDC_STATIC,30,5,124,44,WS_GROUP
-    CONTROL         "Expose with charge of",IDC_RCONDDOSE,"Button",BS_AUTORADIOBUTTON | WS_GROUP,38,106,79,10
-    CONTROL         "Expose for time of",IDC_RCONDTIME,"Button",BS_AUTORADIOBUTTON,38,123,78,10
+    CONTROL         "Expose with charge of",IDC_RCONDDOSE,"Button",BS_AUTORADIOBUTTON | WS_GROUP,37,106,79,10
+    CONTROL         "Expose for time of",IDC_RCONDTIME,"Button",BS_AUTORADIOBUTTON,37,123,78,10
     EDITTEXT        IDC_EDITPPCONDDOSE,116,104,33,14,ES_AUTOHSCROLL | WS_GROUP
     CONTROL         "Label",IDC_RWITHLABEL,"Button",BS_AUTORADIOBUTTON | WS_GROUP,18,166,33,10
     CONTROL         "Note",IDC_RWITHNOTE,"Button",BS_AUTORADIOBUTTON,52,166,28,10
@@ -4335,12 +4335,16 @@ END
 STRINGTABLE
 BEGIN
     IDC_BUTALIGN            "Align image in buffer A to image in autoalign buffer"
-    IDC_BUT_TO_MARKER       "Set alignment shift of A to bring marker to center of field (hot key Shift P)"
     IDC_BUTCLEARALIGN       "Undo the alignment shift of the current image"
     IDC_BUTRESETSHIFT       "Reset microscope image shift and move stage to compensate"
     IDC_SPINMAG             "Adjust magnification for montage"
     IDC_SPINBIN             "Change the binning for final acquired images"
     IDC_SPINXFRAMES         "Change number of frames in X direction"
+END
+
+STRINGTABLE
+BEGIN
+    IDC_BUT_TO_MARKER       "Set alignment shift of A to bring marker to center of field (hot key Shift P)"
 END
 
 STRINGTABLE

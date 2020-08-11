@@ -66,7 +66,7 @@ void CScreenShotDialog::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_RJPEGCOMPRESS, m_butJpegCompress);
   DDX_Control(pDX, IDC_EDIT_JPEG_QUALITY, m_editJpegQuality);
   DDX_Text(pDX, IDC_EDIT_JPEG_QUALITY, m_iJpegQuality);
-  DDV_MinMaxInt(pDX, m_iJpegQuality, MIN_JPEG_QUALITY, 100);
+  MinMaxInt(IDC_EDIT_JPEG_QUALITY, m_iJpegQuality, MIN_JPEG_QUALITY, 100, "JPEG quality");
   DDX_Control(pDX, IDC_SPIN_JPEG_QUALITY, m_sbcJpegQuality);
   DDX_Control(pDX, IDC_STAT_JPEG_QUALITY, m_statJpegQuality);
 }

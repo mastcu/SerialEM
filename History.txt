@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+8/8/20: SEM_3-8-0beta12
+8/8/20: Improved messages and avoided double messages when an entry to a text
+field in a non-modal dialog is out of range.
+
 8/7/20: With GMS 3, the SEMCCD plugin will return with an error if a live
 view is running in DM.
 

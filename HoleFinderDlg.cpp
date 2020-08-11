@@ -71,9 +71,9 @@ void CHoleFinderDlg::DoDataExchange(CDataExchange* pDX)
 {
   CBaseDlg::DoDataExchange(pDX);
   DDX_Text(pDX, IDC_EDIT_HOLE_SIZE, m_fHolesSize);
-  DDV_MinMaxFloat(pDX, m_fHolesSize, 0.1f, 5);
+  MinMaxFloat(IDC_EDIT_HOLE_SIZE, m_fHolesSize, 0.1f, 5, "Hole size");
   DDX_Text(pDX, IDC_EDIT_SPACING, m_fSpacing);
-  DDV_MinMaxFloat(pDX, m_fSpacing, 0.5f, 10);
+  MinMaxFloat(IDC_EDIT_SPACING, m_fSpacing, 0.5f, 10, "Hole spacing");
   DDX_Text(pDX, IDC_EDIT_SIGMAS, m_strSigmas);
   DDX_Text(pDX, IDC_EDIT_MEDIAN_ITERS, m_strIterations);
   DDX_Text(pDX, IDC_EDIT_THRESHOLDS, m_strThresholds);
@@ -118,7 +118,7 @@ void CHoleFinderDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Radio(pDX, IDC_RZIGZAG, m_iLayoutType);
   DDX_Control(pDX, IDC_BUT_MAKE_NAV_PTS, m_butMakeNavPts);
   DDX_Text(pDX, IDC_EDIT_MAX_ERROR, m_fMaxError);
-  DDV_MinMaxFloat(pDX, m_fMaxError, 0.001f, 1.f);
+  MinMaxFloat(IDC_EDIT_MAX_ERROR, m_fMaxError, 0.001f, 1.f, "Maximum error");
   DDX_Control(pDX, IDC_BUT_CLEAR_DATA, m_butClearData);
   DDX_Control(pDX, IDC_BRACKET_LAST, m_butBracketLast);
   DDX_Check(pDX, IDC_BRACKET_LAST, m_bBracketLast);

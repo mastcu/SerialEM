@@ -211,6 +211,35 @@ void CBaseDlg::FixButtonFocus(CButton &button)
   SetFocus();
 }
 
+// Replacement function for DDV_MinMAxFlaot that needs to get used for nonmodal dialogs to
+// avoid double validation messages or worse
+void CBaseDlg::MinMaxFloat(UINT nID, float &value, float minVal, float maxVal,
+  const char *descrip)
+{
+  CString str;
+  if (value >= minVal && value <= maxVal)
+    return;
+  B3DCLAMP(value, minVal, maxVal);
+  str.Format("%g", value);
+  SetDlgItemText(nID, (LPCTSTR)str);
+  str.Format("%s must be between %g and %g", descrip, minVal, maxVal);
+  AfxMessageBox(str, MB_EXCLAME);
+}
+
+// Replacement for DDV_MinMaxInt
+void CBaseDlg::MinMaxInt(UINT nID, int &value, int minVal, int maxVal,
+  const char *descrip)
+{
+  CString str;
+  if (value >= minVal && value <= maxVal)
+    return;
+  B3DCLAMP(value, minVal, maxVal);
+  str.Format("%d", value);
+  SetDlgItemText(nID, (LPCTSTR)str);
+  str.Format("%s must be between %d and %d", descrip, minVal, maxVal);
+  AfxMessageBox(str, MB_EXCLAME);
+}
+
 // Setup call for the panel tables
 // The first item in the section for panel is recorded as the panelStart so it better be
 // the top item; probably best to end panel section with the bottom item too

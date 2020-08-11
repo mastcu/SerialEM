@@ -71,7 +71,8 @@ void CAutocenSetupDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_EDIT_ACS_BEAM_SHIFT, m_editBeamShift);
   DDX_Check(pDX, IDC_ACS_SHIFT_BEAM, m_bShiftBeam);
   DDX_Text(pDX, IDC_EDIT_ACS_BEAM_SHIFT, m_fBeamShift);
-  DDV_MinMaxFloat(pDX, m_fBeamShift, -10.f, 10.f);
+  MinMaxFloat(IDC_EDIT_ACS_BEAM_SHIFT, m_fBeamShift, -10.f, 10.f, 
+    "Beam shift for centering");
   DDX_Text(pDX, IDC_STAT_ACS_ADDED_SHIFT, m_strAddedShift);
   DDX_Check(pDX, IDC_RECORD_ADDED_SHIFT, m_bRecordingAddedShift);
   DDX_Control(pDX, IDC_RESET_ADDED_SHIFT, m_butResetAddedShift);
