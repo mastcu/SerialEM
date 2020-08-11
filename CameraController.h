@@ -552,6 +552,7 @@ public:
   SetMember(float, NextRelativeThresh);
   SetMember(int, NextDropFromTiltSum);
   SetMember(int, NextMinTiltGap);
+  GetSetMember(BOOL, NoFilterControl);
   int GetNumFramesSaved() {return mTD.NumFramesSaved;};
   BOOL *GetUseGPUforK2Align() {return &mUseGPUforK2Align[0];};
   BOOL GetGpuAvailable(int DMind) {return mGpuMemory[DMind] > 0;};
@@ -947,8 +948,9 @@ public:
   double mFrameTSrestoreX;
   double mFrameTSrestoreY;
   int mExtraDivideBy2;           // Number of extra divisions by 2 if camera supports it
-  BOOL mAcquireFloatImages;          // Flagto get float image back if camera supports it
-  BOOL mWarnIfBeamNotOn;  // Do not warn if walves are close when taking a picture
+  BOOL mAcquireFloatImages;      // Flag to get float image back if camera supports it
+  BOOL mWarnIfBeamNotOn;         // Do not warn if valves are closes when taking a picture
+  BOOL mNoFilterControl;         // Flag that there is no control of the energy filter
 
 public:
   void SetNonGatanPostActionTime(void);

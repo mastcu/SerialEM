@@ -423,6 +423,7 @@ CCameraController::CCameraController()
   mASIgivesGainNormOnly = true;
   mFrameStackMdocInd = -1;
   mLastShotUsedCDS = -1;
+  mNoFilterControl = false;
 }
 
 // Clear anything that might be set externally, or was cleared in constructor and cleanup
@@ -1157,7 +1158,7 @@ void CCameraController::InitializeDMcameras(int DMind, int *numDMListed,
     // If there is a GIF camera, first enforce the program state on the filter
     // then start an update timer to collect the state as it gets changed by other
     // interfaces
-    if (anyGIF && DMind == sGIFisSocket) {
+    if (anyGIF && DMind == sGIFisSocket && !mNoFilterControl) {
       if (SetupFilter())
         AfxMessageBox("An error occurred trying to initialize filter parameters.\n\n"
         "You probably need to start Filter Control and restart Digital Micrograph\n"
@@ -4635,7 +4636,7 @@ int CCameraController::CapSetLDAreaFilterSettling(int inSet)
   
   // If not in simulation mode and this is a GIF, make sure parameters are set
   // (User might have changed through other programs)
-  if (!mSimulationMode && !(mRepFlag >= 0 && mContinuousCount > 0) && 
+  if (!mSimulationMode && !(mRepFlag >= 0 && mContinuousCount > 0) && !mNoFilterControl &&
     (mParam->GIF || mScope->GetHasOmegaFilter())) {
     if ((filtErr = SetupFilter(true)) != 0 && !(filtErr > 0 && mAllowSpectroscopyImages)){
       if (filtErr > 0)
@@ -9993,7 +9994,7 @@ int CCameraController::SetupFilter(BOOL acquiring)
   double loss = mWinApp->mFilterControl.LossToApply() * (mNoSpectrumOffset ? -1. : 1.);
   
   mIgnoreFilterDiffs = false;
-  if (mSimulationMode)
+  if (mSimulationMode || mNoFilterControl)
     return 0;
   if (JEOLscope && mScope->GetHasOmegaFilter() && mScope->GetInitialized()) {
     SEMAcquireJeolDataMutex();
@@ -10144,6 +10145,8 @@ int CCameraController::CheckFilterSettings()
   CString report;
   DWORD curTime = GetTickCount();
   BOOL timingOut = curTime < mBackToImagingTime + 7000;
+  if (mNoFilterControl)
+    return 0;
 
   // Initialize the energy shift time table
   if (mShiftTimeIndex < 0) {

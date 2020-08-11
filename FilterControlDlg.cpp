@@ -278,11 +278,13 @@ int CFilterControlDlg::GetMidHeight()
 
 void CFilterControlDlg::Update()
 {
-  BOOL slitOK = true, lossOK = true;
+  BOOL slitOK = true, lossOK = true, noControl = false;
   BOOL bEnable = !mWinApp->DoingTasks() && !mWinApp->GetSTEMMode();
   BOOL bOmega = mWinApp->mScope->GetHasOmegaFilter();
-  if (mWinApp->mCamera)
+  if (mWinApp->mCamera) {
     bEnable = bEnable && !mWinApp->mCamera->CameraBusy();
+    noControl = mWinApp->mCamera->GetNoFilterControl();
+  }
   if (mWinApp->mTSController && mWinApp->mScope && mWinApp->StartedTiltSeries() && 
     (!mWinApp->LowDoseMode() || mWinApp->mScope->GetLowDoseArea() == RECORD_CONSET)) {
     slitOK = !mWinApp->mTSController->GetTypeVaries(TS_VARY_SLIT);
@@ -291,10 +293,10 @@ void CFilterControlDlg::Update()
   m_butEFTEMMode.EnableWindow(!mWinApp->DoingTasks() && !bOmega && 
     (mWinApp->mScope->GetCanControlEFTEM() || (JEOLscope && 
     mWinApp->mScope->FastMagIndex() < mWinApp->mScope->GetLowestMModeMagInd())));
-  m_butDoMagShifts.EnableWindow(bEnable);
+  m_butDoMagShifts.EnableWindow(bEnable && !noControl);
   m_butOffsetSlit.EnableWindow(bEnable && bOmega);
   ManageZLPAligned();
-  bEnable = bEnable && m_bEFTEMMode;
+  bEnable = bEnable && m_bEFTEMMode && !noControl;
   m_butRefineZLP.EnableWindow(bEnable);
   m_butSlitIn.EnableWindow(bEnable && slitOK && lossOK);
   m_editWidth.EnableWindow(bEnable && slitOK);
