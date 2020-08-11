@@ -1842,7 +1842,8 @@ float CShiftManager::GetPixelSize(EMimageBuffer *imBuf)
       pixel = imBuf->mPixelSize;
     else if (imBuf->mBinning && imBuf->mCamera >= 0 && imBuf->mMagInd)
       pixel = (float)(imBuf->mBinning * GetPixelSize(imBuf->mCamera, imBuf->mMagInd));
-    if (GetScaleAndRotationForFocus(imBuf, scale, rotation))
+    if (imBuf->mMagInd >= mScope->GetLowestMModeMagInd() &&
+      GetScaleAndRotationForFocus(imBuf, scale, rotation))
       pixel /= scale;
   }
   return pixel;
@@ -3585,7 +3586,8 @@ ScaleMat CShiftManager::FocusAdjustedStageToCamera(int inCamera, int inMagInd, i
   double nearC2dist[2];
   int nearC2Ind[2], numNearC2;
   ScaleMat aMat = StageToCamera(inCamera, inMagInd);
-  if (defocus >= 0. || !GetDefocusMagAndRot(spot, probe, intensity, defocus, scale, 
+  if (defocus >= 0. || inMagInd < mScope->GetLowestMModeMagInd() || 
+    !GetDefocusMagAndRot(spot, probe, intensity, defocus, scale, 
     rotation, nearFoc, nearC2dist, nearC2Ind, numNearC2))
     return aMat;
   aMat = MatScaleRotate(aMat, scale, rotation);

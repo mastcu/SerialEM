@@ -1803,8 +1803,10 @@ void CLowDoseDlg::FixUserPoint(EMimageBuffer *imBuf, int needDraw)
         imBuf->mMagInd);
       if (!aMat.xpx)
         return;
-      mShiftManager->GetScaleAndRotationForFocus(imBuf, scale, rotation);
-      aMat = mShiftManager->MatScaleRotate(aMat, scale, rotation);
+      if (imBuf->mMagInd >= mScope->GetLowestMModeMagInd()) {
+        mShiftManager->GetScaleAndRotationForFocus(imBuf, scale, rotation);
+        aMat = mShiftManager->MatScaleRotate(aMat, scale, rotation);
+      }
       conSet = mWinApp->mCamera->ConSetToLDArea(imBuf->mConSetUsed);
       mWinApp->mNavHelper->FindFocusPosForCurrentItem(state, !navArea);
       delAxis = state.focusAxisPos;
@@ -1877,8 +1879,10 @@ void CLowDoseDlg::SnapCameraShiftToAxis(EMimageBuffer *imBuf, float &shiftX,
   aMat = mShiftManager->SpecimenToCamera(camIndex, imBuf->mMagInd);
   if (!aMat.xpx)
     return;
-  mShiftManager->GetScaleAndRotationForFocus(imBuf, scale, rotation);
-  aMat = mShiftManager->MatScaleRotate(aMat, scale, rotation);
+  if (imBuf->mMagInd >= mScope->GetLowestMModeMagInd()) {
+    mShiftManager->GetScaleAndRotationForFocus(imBuf, scale, rotation);
+    aMat = mShiftManager->MatScaleRotate(aMat, scale, rotation);
+  }
   aInv = mShiftManager->MatInv(aMat);
   
   // We can ignore the binning.  But we do need to invert Y going in and out
@@ -2095,8 +2099,10 @@ int CLowDoseDlg::DrawAreaOnView(int type, EMimageBuffer *imBuf, StateParams &sta
   if ((!m_iDefineArea && !drawingNav) || !mTrulyLowDose)
     return 0;
   vMat = mShiftManager->SpecimenToCamera(curCam, magInd);
-  mShiftManager->GetScaleAndRotationForFocus(imBuf, scale, rotation);
-  vMat = mShiftManager->MatScaleRotate(vMat, scale, rotation);
+  if (imBuf->mMagInd >= mScope->GetLowestMModeMagInd()) {
+    mShiftManager->GetScaleAndRotationForFocus(imBuf, scale, rotation);
+    vMat = mShiftManager->MatScaleRotate(vMat, scale, rotation);
+  }
 
   // First fill the corner array with the actual define area
   boxArea = type ? RECORD_CONSET : m_iDefineArea;
