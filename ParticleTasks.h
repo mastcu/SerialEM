@@ -105,6 +105,7 @@ public:
     int camera, int numXholes, int numYholes, float tiltAngle);
   void SkipHolesInList(FloatVec &delISX, FloatVec &delISY, IntVec &posIndex, 
     unsigned char *skipIndex, int numSkip, int &numHoles);
+  bool ItemIsEmptyMultishot(CMapDrawItem *item);
   int MultiShotBusy(void);
   bool CurrentHoleAndPosition(CString &strCurPos);
   int WaitForDrift(DriftWaitParams &param, bool useImageInA, 

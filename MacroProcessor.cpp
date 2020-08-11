@@ -2890,7 +2890,7 @@ void CMacroProcessor::NextCommand()
     ix1 = 0;
     if (ix0)
       ix1 = (itemEmpty[11] || itemInt[11] < -8) ? msParams->numShots[1] : itemInt[11];
-    if (mWinApp->mParticleTasks->StartMultiShot(
+    iy1 = mWinApp->mParticleTasks->StartMultiShot(
       (itemEmpty[1] || itemInt[1] < -8) ? msParams->numShots[0] : itemInt[1],
       (itemEmpty[2] || itemInt[2] < -8) ? msParams->doCenter : itemInt[2],
       (itemEmpty[3] || itemDbl[3] < -8.) ? msParams->spokeRad[0] : itemFlt[3], ix1,
@@ -2899,7 +2899,8 @@ void CMacroProcessor::NextCommand()
       (itemEmpty[5] || itemInt[5] < -8) ? truth : itemInt[5] != 0, index,
       (itemEmpty[7] || itemInt[7] < -8) ? msParams->numEarlyFrames : itemInt[7],
       (itemEmpty[8] || itemInt[8] < -8) ? msParams->adjustBeamTilt : itemInt[8] != 0,
-      index2)) {
+      index2);
+    if (iy1 > 0) {
       AbortMacro();
       return;
     }

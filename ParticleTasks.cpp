@@ -173,6 +173,11 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
     }
     numXholes = item->mNumXholes;
     numYholes = item->mNumYholes;
+    if (ItemIsEmptyMultishot(item)) {
+      PrintfToLog("Item %s has all holes set to be skipped, so it is being skipped", 
+        (LPCTSTR)item->mLabel);
+      return -1;
+    }
   }
 
   // Set this after all tests and parameter settings, it determines operation of
@@ -710,6 +715,18 @@ void CParticleTasks::SkipHolesInList(FloatVec &delISX, FloatVec &delISY, IntVec 
       }
     }
   }
+}
+
+// Returns true if the skip list is as big as the number of holes in multishot pattern
+bool CParticleTasks::ItemIsEmptyMultishot(CMapDrawItem * item)
+{
+  int numHoles;
+  if (!item->mNumSkipHoles)
+    return false;
+  numHoles = item->mNumXholes * item->mNumYholes;
+  if (item->mNumXholes == -3 && item->mNumYholes == -3)
+    numHoles = 5;
+  return numHoles == item->mNumSkipHoles;
 }
 
 // Returns true and the number of the current hole and peripheral position numbered from

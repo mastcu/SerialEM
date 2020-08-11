@@ -2851,8 +2851,12 @@ void CNavigatorDlg::MouseDoubleClick(int button)
         delete[] mItem->mSkipHolePos;
         mItem->mSkipHolePos = newSkipPos;
         mItem->mNumSkipHoles += 1;
-        SetChanged(true);
-        Redraw();
+        if (mWinApp->mParticleTasks->ItemIsEmptyMultishot(mItem)) {
+          BackspacePressed();
+        } else {
+          SetChanged(true);
+          Redraw();
+        }
       }
     }
   }

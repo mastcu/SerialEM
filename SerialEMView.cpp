@@ -1035,6 +1035,8 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
       if (item->mPtX[0] < minXstage || item->mPtX[0] > maxXstage ||
         item->mPtY[0] < minYstage || item->mPtY[0] > maxYstage)
         continue;
+      if (mWinApp->mParticleTasks->ItemIsEmptyMultishot(item))
+        continue;
       StageToImage(imBuf, item->mPtX[0], item->mPtY[0], ptX, ptY, item->mPieceDrawnOn);
 
       // Draw low dose areas around current point

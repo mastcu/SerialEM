@@ -3,6 +3,15 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+8/10/20: Handled display and multiple Record problems when a multishot item
+has all holes set to be skipped, and deleted point when last hole position is
+deleted.
+
+8/10/20: Added NoFilterControl property to be able to define a camera as GIF
+and use EFTEM mode without being able to control filter.
+
+8/10/20: Disabled high-defocus mag adjustments in LM mode.
+
 8/8/20: SEM_3-8-0beta12
 8/9/20: Fixed pixel size stored in montage overview and reduced images.
 
