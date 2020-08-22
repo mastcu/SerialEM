@@ -335,6 +335,7 @@ CEMscope::CEMscope()
   mJeol_CLA1_to_um = 0.025;     // was X = 0.0252, Y = 0.0246
   mJeol_LMCLA1_to_um = 0.;
   mJeol_OM_to_um = 0.01;        // measured on 2100
+  mUseCLA2forSTEM = false;
   mJeolSTEMdefocusFac = 0.7143; // Measured on Indiana 3200
   mReportsSmallScreen = true;
   mReportsLargeScreen = 1;
@@ -4824,10 +4825,10 @@ void CEMscope::GotoLowDoseArea(int newArea)
     GetImageShift(curISX, curISY);
   if (bDebug || lDebug)
     PrintfToLog("\r\nGotoLowDoseArea: %d: focus at start %.2f", newArea, GetDefocus());
-  if (bDebug && lDebug) {
+  if (bDebug && lDebug && !STEMmode) {
     GetBeamShift(startBeamX, startBeamY);
     GetBeamTilt(curISX, curISY);
-  } else if (JEOLscope) {
+  } else if (JEOLscope && !STEMmode) {
     GetBeamShift(startBeamX, startBeamY);
   }
   mLDChangeCumulBeamX = mLDChangeCumulBeamY = 0.;
@@ -5090,7 +5091,7 @@ void CEMscope::GotoLowDoseArea(int newArea)
   mNextLDpolarity = 1;
 
   // Do full setting of beam shift for JEOL in one step
-  if (JEOLscope)
+  if (JEOLscope && !STEMmode)
     SetBeamShift(startBeamX + mLDChangeCumulBeamX, startBeamY + mLDChangeCumulBeamY);
   mChangingLDArea = -1;
 
@@ -5110,7 +5111,7 @@ void CEMscope::GotoLowDoseArea(int newArea)
       oldArea, newArea, curISX, curISY, delISX, delISY, newISX, newISY);
   if (GetDebugOutput('l')) {
     SEMTrace('l', "GotoLowDoseArea: focus at end %.2f\r\n", GetDefocus());
-    if (GetDebugOutput('b')) {
+    if (GetDebugOutput('b') && !STEMmode) {
       GetBeamShift(curISX, curISY);
       GetBeamTilt(curISX, curISY);
     }

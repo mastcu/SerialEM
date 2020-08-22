@@ -3,6 +3,8 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+8/22/20: Fixed low dose image shift in STEM for JEOL.
+
 8/10/20: Handled display and multiple Record problems when a multishot item
 has all holes set to be skipped, and deleted point when last hole position is
 deleted.

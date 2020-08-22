@@ -4831,7 +4831,7 @@ void CMacroProcessor::NextCommand()
       logRpt.Format("%s at mag index %d is %.5g  %.5g  %.5g  %.5g", (LPCTSTR)report,
         index, aMat.xpx, aMat.xpy, aMat.ypx, aMat.ypy);
     else
-      logRpt.Format("%s is not available for mag index", (LPCTSTR)report, index);
+      logRpt.Format("%s is not available for mag index %d", (LPCTSTR)report, index);
     SetReportedValues(&strItems[2], aMat.xpx, aMat.xpy, aMat.ypx, aMat.ypy);
     break;
 
