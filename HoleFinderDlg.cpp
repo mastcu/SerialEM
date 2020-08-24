@@ -792,6 +792,11 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
     mMontage = false;
   }
 
+  // Copy the montage params to our copy if the pointer got replaced with one from an
+  // open file
+  if (mMontage && montP != &mMontParam)
+    mMontParam = *montP;
+
   mRegistration = mNav->GetCurrentRegistration();
   if (mNavItem)
     mRegistration = mNavItem->mRegistration;
@@ -986,8 +991,13 @@ void CHoleFinderDlg::ScanningNextTask(int param)
 
     // pieceSavedAt is indexed by ixpc * nYframes + iypc
     // But pieceIndex is expected to be indexed by ixpc + nXframes * iypc
-    mWinApp->mMontageController->ListMontagePieces(mImageStore, montP,
-      mNavItem->mMapSection, pieceSavedAt);
+    if (mWinApp->mMontageController->ListMontagePieces(mImageStore, montP,
+      mNavItem->mMapSection, pieceSavedAt) < 0) {
+      SEMMessageBox("Holefinder error from bad montage parameters; please report values "
+        "printed in log");
+      StopScanning();
+      return;
+    }
     ind = 0;
     pieceIndex.clear();
     pieceIndex.resize(pieceSavedAt.size(), -1);
