@@ -6739,12 +6739,7 @@ int CNavigatorDlg::AccessMapFile(CMapDrawItem *item, KImageStore *&imageStore,
 
   // Get the path/name of the file if it is located in the same directory as the nav file,
   // or use the current dir if there is no file
-  if (mNavFilename.IsEmpty())
-    navPathName = mDocWnd->GetOriginalCwd();
-  else
-    UtilSplitPath(mNavFilename, navPathName, str);
-  if (!navPathName.IsEmpty() && navPathName.GetAt(navPathName.GetLength() - 1) != '\\')
-    navPathName += '\\';
+  GetCurrentNavDir(navPathName);
   navPathName += item->mTrimmedName;
 
   curStore = -1;
@@ -9778,4 +9773,16 @@ float CNavigatorDlg::ContourArea(float *ptx, float *pty, int numPoints)
     sum += (ptx[i] * pty[next]) - (pty[i] * ptx[next]);
   }
   return (float)fabs(sum * 0.5f);
+}
+
+// Returns the directory of the nav file, or the current dir if there is no file
+void CNavigatorDlg::GetCurrentNavDir(CString &navPath)
+{
+  CString str;
+  if (mNavFilename.IsEmpty())
+    navPath = mDocWnd->GetOriginalCwd();
+  else
+    UtilSplitPath(mNavFilename, navPath, str);
+  if (!navPath.IsEmpty() && navPath.GetAt(navPath.GetLength() - 1) != '\\')
+    navPath += '\\';
 }

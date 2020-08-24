@@ -2653,10 +2653,14 @@ void EMmontageController::SavePiece()
       // Navigator is going to use this vs the setting below to distinguish if read-in
       mImBufs[1].mConSetUsed = MONTAGE_CONSET;
       mImBufs[1].mLowDoseArea = false;
+      mImBufs[1].mMapID = 0;
 
       sectInd = -1;
-      if (mReadingMontage)
+      if (mReadingMontage) {
         sectInd = AccessMontSectInAdoc(mReadStoreMRC, mParam->zCurrent);
+        mImBufs[1].mMapID = mWinApp->mNavHelper->FindMapIDforReadInImage(
+          mReadStoreMRC->getFilePath(), mParam->zCurrent);
+      }
 
       if (!mReadingMontage || sectInd >= 0) {
         extra1 = (EMimageExtra *)mImBufs[1].mImage->GetUserData();
@@ -3305,6 +3309,14 @@ int EMmontageController::ListMontagePieces(KImageStore *storeMRC, MontParam *par
                                            int zValue, std::vector<int> &pieceSavedAt)
 {
   int already, nsec, ind, ix, iy, iz;
+  if (param->xNframes <= 0 || param->yNframes <= 0 || param->xFrame - param->xOverlap <= 0
+    || param->yFrame - param->yOverlap <= 0 || param->xNframes >= 10000 ||
+    param->yNframes >= 10000 || param->xFrame > 17000 || param->yFrame > 17000) {
+    PrintfToLog("BAD PARAMETERS PASSED TO ListMontagePieces: xynf %d %d xyf %d %d ov %d "
+      "%d", param->xNframes, param->yNframes, param->xFrame, param->yFrame, 
+      param->xOverlap, param->yOverlap);
+    return -1;
+  }
   CLEAR_RESIZE(pieceSavedAt, int, param->xNframes * param->yNframes);
   mBufferManager->CheckAsyncSaving();
   for (ind = 0; ind < param->xNframes * param->yNframes; ind++)

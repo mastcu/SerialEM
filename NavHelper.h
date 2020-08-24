@@ -437,6 +437,7 @@ public:
   void SetLDFocusPosition(int camIndex, float axisPos, BOOL rotateAxis, int axisRotation, 
     int xOffset, int yOffset, const char *descrip);
   bool AnyMontageMapsInNavTable();
+  int FindMapIDforReadInImage(CString filename, int secNum);
   int SetUserValue(CMapDrawItem *item, int number, CString &value);
   int GetUserValue(CMapDrawItem *item, int number, CString &value);
   bool ModifySubareaForOffset(int camera, int xOffset, int yOffset, int &left,

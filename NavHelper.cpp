@@ -3931,6 +3931,33 @@ bool CNavHelper::AnyMontageMapsInNavTable()
   return false;
 }
 
+// See if a read-in image is actually a map and return the map ID, except when a map is
+// being loaded
+int CNavHelper::FindMapIDforReadInImage(CString filename, int secNum)
+{
+  CString navDir, navPath, str;
+  CMapDrawItem *item;
+  CFileStatus status;
+  if (!mNav || mNav->GetLoadingMap())
+    return 0;
+  mNav->GetCurrentNavDir(navDir);
+  while (navDir.Replace("\\\\", "\\")) {};
+  while (filename.Replace("\\\\", "\\")) {};
+  for (int ind = 0; ind < (int)mItemArray->GetSize(); ind++) {
+    item = mItemArray->GetAt(ind);
+    if (item->mType == ITEM_TYPE_MAP && secNum == item->mMapSection) {
+      str = item->mMapFile;
+      while (str.Replace("\\\\", "\\")) {};
+      if (str == filename)
+        return item->mMapID;
+      navPath = navDir + item->mTrimmedName;
+      if (navPath == filename && !CFile::GetStatus((LPCTSTR)item->mMapFile, status))
+        return item->mMapID;
+    }
+  }
+  return 0;
+}
+
 // Set a user value in the map: returns 1 for number out of range
 int CNavHelper::SetUserValue(CMapDrawItem *item, int number, CString &value)
 {

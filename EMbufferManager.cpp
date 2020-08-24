@@ -23,6 +23,7 @@
 #include "MultiTSTasks.h"
 #include "ShiftManager.h"
 #include "NavigatorDlg.h"
+#include "NavHelper.h"
 #include "MacroProcessor.h"
 #include "ProcessImage.h"
 #include "CameraController.h"
@@ -750,6 +751,9 @@ int EMbufferManager::ReadFromFile(KImageStore *inStore, int inSect, int inToBuf,
   toBuf->mTimeStamp = 0.001 * GetTickCount();
   toBuf->mChangeWhenSaved = 0;
   toBuf->mMapID = 0;
+  if (montErr <= 0 && !readPiece)
+    toBuf->mMapID = mWinApp->mNavHelper->FindMapIDforReadInImage(inStore->getFilePath(),
+      number);
   toBuf->mStage2ImMat.xpx = 0.;
   toBuf->mRegistration = 0;
   toBuf->mZoom = 0.;
