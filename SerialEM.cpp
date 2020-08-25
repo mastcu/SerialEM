@@ -211,6 +211,7 @@ CSerialEMApp::CSerialEMApp()
   mStageMoveTool = NULL;
   mScreenShotDialog = NULL;
   mAdministrator = false;
+  mShiftScriptOnlyInAdmin = false;
   mCalNotSaved = false;
   mEFTEMMode = false;
   mSTEMMode = false;

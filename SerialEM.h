@@ -547,6 +547,7 @@ public:
   GetSetMember(int, DoseLifetimeHours);
   GetSetMember(int, AddDPItoSnapshots);
   GetSetMember(BOOL, SettingsFixedForIACal);
+  GetSetMember(BOOL, ShiftScriptOnlyInAdmin);
 
   HitachiParams *GetHitachiParams() {return &mHitachiParams;};
 
@@ -795,6 +796,7 @@ private:
   int mDoseLifetimeHours;       // Validity of electron dose calibration in hours
   int mAddDPItoSnapshots;       // 0 not to, 1 to use true pixel, > 1 for value to use
   BOOL mSettingsFixedForIACal;  // Flag that settings have been converted for IA limit cal
+  BOOL mShiftScriptOnlyInAdmin;  // Flag that scripts can be shifted up/down only in Admin
 
 public:
   void UpdateAllEditers(void);
