@@ -156,6 +156,7 @@ class HoleFinder {
   float *mEdgeAverage;            // Average from edge image
   float *mRawAverage;             // Average from raw image
   int mAvgBoxSize;                // Size of average (after padding)
+  int mRawBoxSize;                // Size of last raw average
   float mRadiusForEdgeAvg;        // Radius at which average was made
   int mUsedWeakEdges;             // Last kind of image or average (1 weak, 2 raw average)
   int mVerbose;                   // For debug printed output

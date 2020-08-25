@@ -836,11 +836,11 @@ int HoleFinder::processMontagePiece
   RETURN_IF_ERR(cannyEdge(sigma, 1.f - 0.02f * threshold, 1.f - 0.01f * threshold));
   
   RETURN_IF_ERR(findCircles(mRadiusForEdgeAvg, 1., -1., 1, retain, minSpacing, 0, 
-                            xBoundary, yBoundary, bestRadius, xCenFCedge, yCenFCedge, 
+                            xBoundOnPc, yBoundOnPc, bestRadius, xCenFCedge, yCenFCedge,
                             peakFCedge));
   if (domInd >= 0) {
     RETURN_IF_ERR(findCircles(mRadiusForEdgeAvg, 1., -2., 1, retain, minSpacing, 2, 
-                              xBoundary, yBoundary, bestRadius, xCenFCraw, yCenFCraw, 
+                              xBoundOnPc, yBoundOnPc, bestRadius, xCenFCraw, yCenFCraw,
                               peakFCraw));
     mergeAlternateLists(xcenPtr, ycenPtr, peakPtr, altInds, domInd, minSpacing, 
                         mMaxError * mFullBinning);
@@ -1608,6 +1608,7 @@ int HoleFinder::findCircles(float midRadius, float radiusInc, float width, int n
   bool useRawAvg = width < -1;
   bool useEdgeAvg = width < 0 && !useRawAvg;
   float *boxAverage = useRawAvg ? mRawAverage : mEdgeAverage;
+  int boxSize = useRawAvg ? mRawBoxSize : mAvgBoxSize;
   float cacheTol = 0.05f;
   float meanOutlieCrit = 4.5f, sdOutlieCrit = 4.5f;
   float weakDimCrit = 0.05f, maxWeakDimFrac = 0.6f, strongMeanMinRatio = 5.f;
@@ -1640,6 +1641,9 @@ int HoleFinder::findCircles(float midRadius, float radiusInc, float width, int n
     ACCUM_MAX(minYpeakFind, (int)boundYmin);
     ACCUM_MIN(maxYpeakFind, (int)boundYmax);
   }
+
+  if (maxXpeakFind - minXpeakFind < 10 || maxYpeakFind - minYpeakFind < 10)
+    return 0;
 
   // Max points is just the number of blocks that will fit in X time the number in Y
   maxPoints = ((maxXpeakFind + 1 - minXpeakFind) / blockSize + 1) *
@@ -1718,7 +1722,7 @@ int HoleFinder::findCircles(float midRadius, float radiusInc, float width, int n
 
       // Fill the template and take its FFT
       if (width < 0.) {
-        sliceSplitFill(boxAverage, mAvgBoxSize, mAvgBoxSize, circTemplate, mPadXdim,
+        sliceSplitFill(boxAverage, boxSize, boxSize, circTemplate, mPadXdim,
                        mXpadSize, mYpadSize, 0, 0.);
         if (useRawAvg)
           mHaveRawAvgFFT = true;
@@ -2599,6 +2603,7 @@ int HoleFinder::makeTemplate(FloatVec &xCenVec, FloatVec &yCenVec,
     B3DFREE(mRawAverage);
     mRawAverage = B3DMALLOC(float, boxSq);
     boxAverage = mRawAverage;
+    mRawBoxSize = mAvgBoxSize;
   }
   if (!boxAverage)
     return 1;
