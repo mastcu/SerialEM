@@ -5941,7 +5941,7 @@ BEGIN
     IDC_EDIT_THRESHOLDS     "Enter one or more thresholds (small % value) to try for edge detection"
     IDC_EXCLUDE_OUTSIDE     "Look for an appropriate polygon to use as a boundary for points"
     IDC_EDIT_HOLE_SIZE      "Enter the nominal size of holes, in microns"
-    IDC_EDIT_SPACING        "Enter the nominal spacing between holes, in microns"
+    IDC_EDIT_SPACING        "Enter the nominal spacing between hole centers, in microns"
     IDC_BUT_FIND_HOLES      "Run the hole-finding routine with given parameters"
     IDC_SLIDER_LOW_MEAN     "Select the mean intensity below which holes will be excluded"
     IDC_EDIT_LOWER_MEAN     "Enter the mean intensity below which holes will be excluded"

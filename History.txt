@@ -3,6 +3,11 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+8/24/20: In hole finder, fixed two bugs that could crash it and made it
+possible to exclude outside polygon that does not contain image center.
+
+8/24/20: Added property to disable script shifting buttons.
+
 8/24/20: Assigned map ID to image read directly from file instead of with Load
 Map so that points picked on the image will be given the proper DrawnID.
 

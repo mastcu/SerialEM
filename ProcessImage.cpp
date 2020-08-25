@@ -2909,8 +2909,8 @@ int CProcessImage::CheckForBadStripe(EMimageBuffer *imBuf, int horizontal, int &
   // Search for Z scores above the criterion number SD's from the mean
   for (ix = indent; ix < numSums - indent; ix++) {
     if ((colDiffs[ix] - mean) > crit * SD) {
-      PrintfToLog("ix = %d, zdiff %.2f  Z of that %.2f", ix, colDiffs[ix], 
-        (colDiffs[ix] - mean) / SD);
+      /*PrintfToLog("ix = %d, zdiff %.2f  Z of that %.2f", ix, colDiffs[ix], 
+        (colDiffs[ix] - mean) / SD); */
 
       // Only record the first one in a contiguous series
       if (!lastHigh) {

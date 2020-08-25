@@ -634,6 +634,7 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
   MontParam *montP = &mMontParam;
   float targetDiam = mHelper->GetHFtargetDiamPix();
   float tooSmallCrit = 0.8f;
+  float minFracPtsOnImage = 0.74f;
   BOOL convertSave, loadUnbinSave;
   CString noMontReason;
 
@@ -808,10 +809,9 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
     for (nav = 0; nav < (int)itemArray->GetSize(); nav++) {
       item = itemArray->GetAt(nav);
 
-      // For polygon at same registration and containing the stage position of image,
+      // For polygon at same registration
       // transform points to image and count how many are on the image
-      if (item->mType == ITEM_TYPE_POLYGON && item->mRegistration == mRegistration &&
-        InsideContour(item->mPtX, item->mPtY, item->mNumPoints, bufStageX, bufStageY)) {
+      if (item->mType == ITEM_TYPE_POLYGON && item->mRegistration == mRegistration) {
         numOnIm = 0;
         xBoundTemp.resize(item->mNumPoints);
         yBoundTemp.resize(item->mNumPoints);
@@ -821,10 +821,14 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
           if (xBoundTemp[ind] >= 0 && xBoundTemp[ind] < image->getWidth() &&
             yBoundTemp[ind] >= 0 && yBoundTemp[ind] < mFullYsize)
             numOnIm++;
+
+          // Stop if enough points are outside the image
+          if ((ind + 1. - numOnIm) / item->mNumPoints > 1. - minFracPtsOnImage)
+            break;
         }
 
         // If enough are on image, get the area, and if it is the biggest such, take it
-        if ((float)numOnIm / item->mNumPoints > 0.74) {
+        if ((float)numOnIm / item->mNumPoints >= minFracPtsOnImage) {
           area = mNav->ContourArea(item->mPtX, item->mPtY, item->mNumPoints);
           if (area > maxArea) {
             maxArea = area;
@@ -1062,7 +1066,7 @@ void CHoleFinderDlg::ScanningNextTask(int param)
       if (err) {
         if (noMontReason.IsEmpty())
           noMontReason = mHelper->mFindHoles->returnErrorString(err);
-        AfxMessageBox("Refinement of positions with montage analysis failed:\n" +
+        SEMMessageBox("Refinement of positions with montage analysis failed:\n" +
           noMontReason, MB_EXCLAME);
         break;
       }
