@@ -536,6 +536,7 @@ void CMultiShotDlg::OnButIsToPt()
         "the selection alone (you will be responsible for selecting the next point)",
         "Forward from Start",  "Backward from End", "Leave Selection",
         MB_YESNOCANCEL | MB_ICONQUESTION);
+      mNavPointIncrement = 0;
       if (answer == IDYES) {
         nav->SetCurrentSelection(groupStart);
         mNavPointIncrement = 1;
