@@ -9447,6 +9447,10 @@ void CCameraController::DisplayNewImage(BOOL acquired)
             B3DMAX(0.0025f, partialExposure - mParam->deadTime);
           mParam->specToCamDoseFac = camRate / B3DMAX(0.000001f, specRate);
       }
+      if (mTD.NumAsyncSumFrames != 0 && imBuf->mSampleMean > EXTRA_VALUE_TEST &&
+        IsDirectDetector(mParam))
+        mWinApp->mProcessImage->DoseRateFromMean(imBuf, imBuf->mSampleMean,
+          extra->mDoseRate);
       if (mParam->STEMcamera)
         extra->mAxisAngle = mParam->imageRotation + mWinApp->GetAddedSTEMrotation();
       else

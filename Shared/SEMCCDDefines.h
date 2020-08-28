@@ -21,37 +21,37 @@ OPEN_SAVED_LIST_ERR, WRITE_SAVED_LIST_ERR, GRAB_AND_SKIP_ERR, FRAMEDOC_NO_SAVING
 FRAMEDOC_OPEN_ERR, FRAMEDOC_WRITE_ERR, NULL_IMAGE, FRAMETS_NO_ANGLES, VIEW_IS_ACTIVE};
 
 // Flags for SetupFileSaving
-#define K2_SAVE_RAW_PACKED       1
-#define K2_COPY_GAIN_REF   (1 << 1)
-#define K2_RUN_COMMAND     (1 << 2)
-#define K2_SAVE_LZW_TIFF   (1 << 3)
-#define K2_SAVE_ZIP_TIFF   (1 << 4)
-#define K2_SAVE_SYNCHRON   (1 << 5)
-#define K2_SAVE_DEFECTS    (1 << 6)
-#define K2_EARLY_RETURN    (1 << 7)
-#define K2_ASYNC_IN_RAM    (1 << 8)
-#define K2_SKIP_FRAME_ROTFLIP  (1 << 9)
-#define K2_SAVE_SUMMED_FRAMES  (1 << 10)
-#define K2_GAIN_NORM_SUM       (1 << 11)
-#define K2_SAVE_4BIT_MRC_MODE  (1 << 12)
-#define K2_RAW_COUNTING_4BIT   (1 << 13)
-#define K2_MAKE_DEFERRED_SUM   (1 << 14)
-#define K2_SAVE_TIMES_100      (1 << 15)
-#define K2_MRCS_EXTENSION      (1 << 16)
-#define K2_SAVE_SUPER_REDUCED  (1 << 17)
-#define K2_SKIP_BELOW_THRESH   (1 << 18)
-#define K2_ADD_FRAME_TITLE     (1 << 19)
-#define K2_SKIP_THRESH_PLUS    (1 << 20)
-#define K2_USE_TILT_ANGLES     (1 << 21)
+#define K2_SAVE_RAW_PACKED       1       // 1
+#define K2_COPY_GAIN_REF   (1 << 1)      // 2
+#define K2_RUN_COMMAND     (1 << 2)      // 4
+#define K2_SAVE_LZW_TIFF   (1 << 3)      // 8
+#define K2_SAVE_ZIP_TIFF   (1 << 4)      // 10
+#define K2_SAVE_SYNCHRON   (1 << 5)      // 20
+#define K2_SAVE_DEFECTS    (1 << 6)      // 40
+#define K2_EARLY_RETURN    (1 << 7)      // 80
+#define K2_ASYNC_IN_RAM    (1 << 8)      // 100
+#define K2_SKIP_FRAME_ROTFLIP  (1 << 9)  // 200
+#define K2_SAVE_SUMMED_FRAMES  (1 << 10) // 400
+#define K2_GAIN_NORM_SUM       (1 << 11) // 800
+#define K2_SAVE_4BIT_MRC_MODE  (1 << 12) // 1000
+#define K2_RAW_COUNTING_4BIT   (1 << 13) // 2000
+#define K2_MAKE_DEFERRED_SUM   (1 << 14) // 4000
+#define K2_SAVE_TIMES_100      (1 << 15) // 8000
+#define K2_MRCS_EXTENSION      (1 << 16) // 10000
+#define K2_SAVE_SUPER_REDUCED  (1 << 17) // 20000
+#define K2_SKIP_BELOW_THRESH   (1 << 18) // 40000
+#define K2_ADD_FRAME_TITLE     (1 << 19) // 80000
+#define K2_SKIP_THRESH_PLUS    (1 << 20) // 100000
+#define K2_USE_TILT_ANGLES     (1 << 21) // 200000
 
 // Flags for SetK2Parameters
-#define K2_ANTIALIAS_MASK      7
-#define K2_OVW_MAKE_SUBAREA    (1 << 3)
-#define K2_USE_FRAMEALIGN      (1 << 4)
-#define K2_TAKE_BINNED_FRAMES  (1 << 5)
-#define K3_USE_CORR_DBL_SAMP   (1 << 6)
-#define K2_MAKE_ALIGN_COM      (1 << 11)
-#define K2_SAVE_COM_AFTER_MDOC (1 << 13)
+#define K2_ANTIALIAS_MASK      7         
+#define K2_OVW_MAKE_SUBAREA    (1 << 3)    // 8 
+#define K2_USE_FRAMEALIGN      (1 << 4)    // 10
+#define K2_TAKE_BINNED_FRAMES  (1 << 5)    // 20
+#define K3_USE_CORR_DBL_SAMP   (1 << 6)    // 40
+#define K2_MAKE_ALIGN_COM      (1 << 11)   // 800
+#define K2_SAVE_COM_AFTER_MDOC (1 << 13)   // 2000
 #define K2_REDUCED_Y_SCALE     100000.
 
 // Definitions for camera return types: to be sent with SetK2Parameters flags
@@ -63,13 +63,13 @@ FRAMEDOC_OPEN_ERR, FRAMEDOC_WRITE_ERR, NULL_IMAGE, FRAMETS_NO_ANGLES, VIEW_IS_AC
 // Flags for SetupFrameAligning (bit 1 is apply gain ref, bit 7 is for early return)
 // (And bit 5 is for synchronous align/save, and bit 6 for apply defects, 
 // 8 for async in RAM, 11 for making an align com, 18 for skip below threshold)
-#define K2FA_USE_HYBRID_SHIFTS       1
-#define K2FA_SMOOTH_SHIFTS     (1 << 2)
-#define K2FA_GROUP_REFINE      (1 << 3)
-#define K2FA_DEFER_GPU_SUM     (1 << 4)
-#define K2FA_MAKE_EVEN_ODD     (1 << 9)
-#define K2FA_KEEP_PRECISION    (1 << 10)
-#define K2FA_ALIGN_SUBSET      (1 << 12)
+#define K2FA_USE_HYBRID_SHIFTS       1    // 1
+#define K2FA_SMOOTH_SHIFTS     (1 << 2)   // 4
+#define K2FA_GROUP_REFINE      (1 << 3)   // 8
+#define K2FA_DEFER_GPU_SUM     (1 << 4)   // 10
+#define K2FA_MAKE_EVEN_ODD     (1 << 9)   // 200
+#define K2FA_KEEP_PRECISION    (1 << 10)  // 400
+#define K2FA_ALIGN_SUBSET      (1 << 12)  // 1000
 
 #define K2FA_SUB_START_MASK    0x3F
 #define K2FA_SUB_END_SHIFT     6
