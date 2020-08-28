@@ -5511,6 +5511,10 @@ void CMacroProcessor::NextCommand()
       strCopy.Format(", %s parameters", mModeNames[mImBufs[index].mConSetUsed]);
     }
     logRpt += strCopy;
+    if (mImBufs[index].mMapID) {
+      strCopy.Format(", mapID %d", mImBufs[index].mMapID);
+      logRpt += strCopy;
+    }
     SetReportedValues(&strItems[2], (double)sizeX, (double)sizeY,
       mImBufs[index].mBinning / (double)B3DMAX(1, mImBufs[index].mDivideBinToShow),
       (double)mImBufs[index].mExposure, delX, delY);
