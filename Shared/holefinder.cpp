@@ -951,7 +951,7 @@ void HoleFinder::resolvePiecePositions
           for (xt = B3DMAX(0, mTileXnum->at(piece) - 1); eligible[piece][ind] &&
                  xt <= (B3DMIN(mNumXpieces - 1, mTileXnum->at(piece) + 1)); xt++) {
             neigh = mPieceIndex->at(xt + yt * mNumXpieces);
-            if (neigh == piece || piece < 0)
+            if (neigh == piece || neigh < 0)
               continue;
 
             // Get distance from overlap zone with each neighbor: if it is too big, there
