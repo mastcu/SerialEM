@@ -51,6 +51,6 @@ private:
   void SetBoxAcquireLimits(int start, int end, int numHoles, int nGrid, int &acqStart, int &acqEnd);
   void AddMultiItemToArray(CArray<CMapDrawItem *, CMapDrawItem *> *itemArray, int baseInd,
     float stageX, float stageY, int numXholes, int numYholes, float boxXcen, float boxYcen,
-    IntVec &ixSkip, IntVec &iySkip, int groupID);
+    IntVec &ixSkip, IntVec &iySkip, int groupID, int &numAdded);
   void ClearSavedItemArray(void);
 };

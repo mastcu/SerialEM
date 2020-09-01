@@ -77,11 +77,11 @@ int CMultiHoleCombiner::CombineItems(int boundType)
   MontParam *montp;
   int *activeList;
   LowDoseParams *ldp;
-  ScaleMat s2c, is2cam, st2is, gridMat, holeMat, prodMat;
+  ScaleMat s2c, is2cam, st2is, gridMat, holeInv, holeMat, prodMat;
   PositionData data;
   CArray<PositionData, PositionData> fullArray, bestFullArray;
   float avgAngle, spacing;
-  double norm0, norm1;
+  double hx, hy;
   float nearIntCrit = 0.33f;
   int ind, nx, ny, numPoints, ix, iy, groupID;
   int rowStart, colStart, num, minFullNum = 10000000;
@@ -95,6 +95,7 @@ int CMultiHoleCombiner::CombineItems(int boundType)
   int point, acqXstart, acqXend, acqYstart, acqYend, nxBox, nyBox, numInBox, bx, by;
   float stageX, stageY, boxXcen, boxYcen, dx, dy, vecn, vecm;
   int ori, crossDx[5] = {0, -1, 1, 0, 0}, crossDy[5] = {0, 0, 0, -1, 1};
+  int numAdded = 0;
 
   // Check for Nav
   mHelper = mWinApp->mNavHelper;
@@ -159,6 +160,8 @@ int CMultiHoleCombiner::CombineItems(int boundType)
       if (item->mAcquire && item->mRegistration == registration) {
         mWinApp->mMainView->GetItemImageCoords(imBuf, item, ptX, ptY);
         if (ptX >= 0. && ptX <= nx && ptY >= 0. && ptY <= ny) {
+          if (!navInds.size())
+            SEMTrace('1', "Drawn ID of first point %d", item->mDrawnOnMapID);
           xCenters.push_back(item->mStageX);
           yCenters.push_back(item->mStageY);
           navInds.push_back(ind);
@@ -178,6 +181,8 @@ int CMultiHoleCombiner::CombineItems(int boundType)
       if (item->mAcquire && item->mRegistration == registration) {
         if (item->mType == ITEM_TYPE_POINT && InsideContour(curItem->mPtX, curItem->mPtY,
           curItem->mNumPoints, item->mStageX, item->mStageY)) {
+          if (!navInds.size())
+            SEMTrace('1', "Drawn ID of first point %d", item->mDrawnOnMapID);
           xCenters.push_back(item->mStageX);
           yCenters.push_back(item->mStageY);
           navInds.push_back(ind);
@@ -193,6 +198,8 @@ int CMultiHoleCombiner::CombineItems(int boundType)
       item = itemArray->GetAt(ind);
       if (item->mAcquire) {
         if (item->mType == ITEM_TYPE_POINT && item->mGroupID == curItem->mGroupID) {
+          if (!navInds.size())
+            SEMTrace('1', "Drawn ID of first point %d", item->mDrawnOnMapID);
           xCenters.push_back(item->mStageX);
           yCenters.push_back(item->mStageY);
           navInds.push_back(ind);
@@ -217,17 +224,17 @@ int CMultiHoleCombiner::CombineItems(int boundType)
   // space to relative hole positions in unit vector image shift space
   // gridMat takes unit vectors in stage hole space to stage positions
   // st2is takes those positions to image shift positions
-  // The dot product of an IS position with the hole IS vectors, divided by the magnitude
-  // of the IS vector, is the length of the projection onto the IS vector
-  // Dividing further by the magnitude of the IS vector give the length in unit IS vectors
-  norm0 = msParams->holeISXspacing[0] * msParams->holeISXspacing[0] +
-    msParams->holeISYspacing[0] * msParams->holeISYspacing[0];
-  norm1 = msParams->holeISXspacing[1] * msParams->holeISXspacing[1] +
-    msParams->holeISYspacing[1] * msParams->holeISYspacing[1];
-  holeMat.xpx = (float)(msParams->holeISXspacing[0] / norm0);
-  holeMat.xpy = (float)(msParams->holeISYspacing[0] / norm0);
-  holeMat.ypx = (float)(msParams->holeISXspacing[1] / norm1);
-  holeMat.ypy = (float)(msParams->holeISYspacing[1] / norm1);
+  // Transfer the hole vectors from where they were defined to the mag in question
+  // Compute a transformation from IS space hole number to IS and take its inverse
+  mWinApp->mShiftManager->TransferGeneralIS(msParams->holeMagIndex,
+    msParams->holeISXspacing[0], msParams->holeISYspacing[0], magInd, hx, hy, camera);
+  holeInv.xpx = (float)hx;
+  holeInv.ypx = (float)hy;
+  mWinApp->mShiftManager->TransferGeneralIS(msParams->holeMagIndex,
+    msParams->holeISXspacing[1], msParams->holeISYspacing[1], magInd, hx, hy, camera);
+  holeInv.xpy = (float)hx;
+  holeInv.ypy = (float)hy;
+  holeMat = MatInv(holeInv);
   prodMat = MatMul(MatMul(gridMat, st2is), holeMat);
   mSkipXform.xpx = (float)B3DNINT(prodMat.xpx);
   mSkipXform.xpy = (float)B3DNINT(prodMat.xpy);
@@ -250,6 +257,14 @@ int CMultiHoleCombiner::CombineItems(int boundType)
       holeMat.xpx, holeMat.xpy, holeMat.ypx, holeMat.ypy);
     return ERR_BAD_UNIT_XFORM;
   }
+  /*PrintfToLog(
+    " Matrix to xform relative hole positions from stage to IS space: %.3f %.3f %.3f "
+    "%.3f\r\n gridMat:  %.3f %.3f %.3f %.3f\r\n stage to IS:  %f  %f  %f  %f\r\n"
+    "holeMat: %.3f %.3f %.3f %.3f", 
+    prodMat.xpx, prodMat.xpy, prodMat.ypx, prodMat.ypy,
+    gridMat.xpx, gridMat.xpy, gridMat.ypx, gridMat.ypy,
+    st2is.xpx, st2is.xpy, st2is.ypx, st2is.ypy,
+    holeMat.xpx, holeMat.xpy, holeMat.ypx, holeMat.ypy);*/
 
   // If the xpx term is 0, this means thare is a 90 degree rotation involved
   // In this case, the number of holes in stage coordinates is transposed from
@@ -479,7 +494,8 @@ int CMultiHoleCombiner::CombineItems(int boundType)
 
           // Make a new Navigator item as clone of the first point found
           AddMultiItemToArray(itemArray, navInds[point], stageX / numInBox, 
-            stageY / numInBox, nxBox, nyBox, boxXcen, boxYcen, ixSkip, iySkip, groupID);
+            stageY / numInBox, nxBox, nyBox, boxXcen, boxYcen, ixSkip, iySkip, groupID,
+            numAdded);
           break;
         }
       }
@@ -494,8 +510,8 @@ int CMultiHoleCombiner::CombineItems(int boundType)
         //PrintfToLog("dir %d Origin %d %d", xDir, crossDy[ori], crossDy[ori]);
         fullArray.RemoveAll();
         peakVals.clear();
-        for (iy = -1; iy <= mNyGrid; iy++) {
-          for (ix = -1; ix <= mNyGrid; ix++) {
+        for (iy = -2; iy <= mNyGrid + 2; iy++) {
+          for (ix = -2; ix <= mNyGrid + 2; ix++) {
 
             // Solve for the position relative to the origin in terms of the 
             // "basis vectors", which are either (2,1) and (-1,2) or (2,-1) and (1,2)
@@ -541,8 +557,8 @@ int CMultiHoleCombiner::CombineItems(int boundType)
         bx = B3DABS(ix - bestFullArray[ind].startX);
         by = B3DABS(iy - bestFullArray[ind].startY);
         if ((bx + by < 2 && bestFullArray[ind].numAcquires > 1) || bx + by == 0) {
-          //PrintfToLog("Point %d x/y %d %d  box %d  %d %d", navInds[point], ix, iy, ind,
-          //bestFullArray[ind].startX, bestFullArray[ind].startY);
+          /*PrintfToLog("Point %d x/y %d %d  box %d  %d %d", navInds[point], ix, iy, ind,
+          bestFullArray[ind].startX, bestFullArray[ind].startY);*/
 
           // Set up to find the included and skipped items
           ixSkip.clear();
@@ -572,7 +588,7 @@ int CMultiHoleCombiner::CombineItems(int boundType)
           }
 
           AddMultiItemToArray(itemArray, navInds[point], stageX / numInBox,
-            stageY / numInBox, -3, -3, 1.f, 1.f, ixSkip, iySkip, groupID);
+            stageY / numInBox, -3, -3, 1.f, 1.f, ixSkip, iySkip, groupID, numAdded);
           break;
         }
       }
@@ -836,7 +852,7 @@ void CMultiHoleCombiner::EvaluateCrossAtPosition(int xCen, int yCen, PositionDat
 void CMultiHoleCombiner::AddMultiItemToArray(
   CArray<CMapDrawItem*, CMapDrawItem*>* itemArray, int baseInd, float stageX, 
   float stageY, int numXholes, int numYholes, float boxXcen, float boxYcen, 
-  IntVec &ixSkip, IntVec &iySkip, int groupID)
+  IntVec &ixSkip, IntVec &iySkip, int groupID, int &numAdded)
 {
   CMapDrawItem *newItem, *item;
   int ix;
@@ -880,8 +896,14 @@ void CMultiHoleCombiner::AddMultiItemToArray(
          backYcen, newItem->mSkipHolePos[2 * ix], newItem->mSkipHolePos[2 * ix + 1]);*/
     }
   }
-
+  if (!numAdded)
+    SEMTrace('1', "item drawn ID %d, new item %d", item->mDrawnOnMapID, newItem->mDrawnOnMapID);
   itemArray->Add(newItem);
+  if (!numAdded) {
+    item = itemArray->GetAt(itemArray->GetSize() - 1);
+    SEMTrace('1', "after adding, drawn ID %d,", item->mDrawnOnMapID);
+  }
+  numAdded++;
 }
 
 // Clear out the array of saved items
