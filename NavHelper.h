@@ -144,6 +144,7 @@ public:
   GetSetMember(float, HFaddOverlapFrac);
   GetSetMember(BOOL, MHCenableMultiDisplay);
   GetSetMember(int, MHCcombineType);
+  GetSetMember(BOOL, SkipAstigAdjustment);
 
   void ForceCenterRealign() {mCenterSkipArray.RemoveAll();};
 
@@ -326,6 +327,7 @@ private:
   IntVec mHFnumCircles;
   int mMHCcombineType;           // MultiHoleCombine way to pick points (COMBINE_...)
   BOOL mMHCenableMultiDisplay;   // Option to show multi-shot on all before combining pts
+  BOOL mSkipAstigAdjustment;     // Property to skip the astigmatism when adjusting for IS
 
 
 public:

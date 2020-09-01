@@ -137,6 +137,7 @@ CNavHelper::CNavHelper(void)
   mMultiShotParams.tiltOfHoleArray = -999.;
   mMultiShotParams.tiltOfCustomHoles = -999.;
   mMultiShotParams.holeFinderAngle = -999.;
+  mSkipAstigAdjustment = false;
   float thresholds[] = {2.4f, 3.6f, 4.8f};
   mHoleFinderParams.thresholds.insert(mHoleFinderParams.thresholds.begin(), 
     &thresholds[0], &thresholds[3]);
