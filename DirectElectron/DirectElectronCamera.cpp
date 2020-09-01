@@ -44,6 +44,8 @@ using namespace std;
 
 #include "DirectElectronCamPanel.h"
 
+// UPDATE Docs/DEserverProperties.txt FOR ADDED OR DISCONTINUED PROPERTIES
+
 // Property strings used more than once but only here
 static const char *psCamPosition = "Camera Position";
 static const char *psSave = "Save";
@@ -59,7 +61,6 @@ static const char *psMotionCor = "Motion Correction";
 
 // These are concatenated into multiple strings
 #define DE_PROP_COUNTING "Electron Counting"
-#define DE_PROP_DOSEFRAC "Dose Fractionation - "
 #define DE_PROP_AUTOMOVIE "Autosave Movie - "
 #define DE_PROP_AUTORAW "Autosave Raw Frames - "
 #define DE_PROP_AUTOSUM "Autosave Sum Frames - "
