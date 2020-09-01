@@ -1626,6 +1626,8 @@
 #define IDC_SPIN_RING2_NUM              2654
 #define IDC_EDIT_RING2_DIST             2655
 #define IDC_BUT_TO_MARKER               2656
+#define IDC_BUTTON1                     2657
+#define IDC_BUT_SET_SIZE_SPACE          2657
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772
 #define IDM_FILE_READ                   32773
@@ -2118,7 +2120,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        249
 #define _APS_NEXT_COMMAND_VALUE         33395
-#define _APS_NEXT_CONTROL_VALUE         2657
+#define _APS_NEXT_CONTROL_VALUE         2658
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
