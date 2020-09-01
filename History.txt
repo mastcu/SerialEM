@@ -3,6 +3,23 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+8/31/20: Added command line argument '/Settings=' to start with a different
+settings file.
+
+8/31/20: When the default system settings is read, the output script package
+will now be named SerialEMsettings-scripts.txt.  Also tried to read whatever
+output script package is defined when there is a failure to read the file
+listed in settings, so that an existing package will not be overwritten.
+
+8/29/20: Added button to transfer hole size and spacing found when finding
+holes to the text boxes for entering these value.
+
+8/29/20: Added property SkipAstigAdjustmentForIS to omit astigmatism
+adjustment when adjusting beam tilt for image shift.
+
+8/27/20: Fixed hole combiner when IS vectors are defined in LM or at mag with
+very different IS calibration.
+
 8/24/20: In hole finder, fixed two bugs that could crash it and made it
 possible to exclude outside polygon that does not contain image center.
 

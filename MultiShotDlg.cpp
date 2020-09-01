@@ -220,7 +220,8 @@ void CMultiShotDlg::UpdateSettings(void)
   CString str, str2;
   int minNum0 = 1;
 
-  m_butAdjustBeamTilt.SetWindowText(comaVsIS->magInd > 0 && comaVsIS->astigMat.xpx != 0. ?
+  m_butAdjustBeamTilt.SetWindowText(comaVsIS->magInd > 0 && comaVsIS->astigMat.xpx != 0. 
+    && !mWinApp->mNavHelper->GetSkipAstigAdjustment() ?
     "Adjust beam tilt && astig to compensate for image shift" :
     "Adjust beam tilt to compensate for image shift");
 

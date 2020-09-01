@@ -119,7 +119,8 @@ int CParticleTasks::StartMultiShot(int numPeripheral, int doCenter, float spokeR
     mMSSaveRecord = false;
     mMSDoCenter = -1;
   }
-  mMSAdjustAstig = mMSAdjustBeamTilt && comaVsIS->astigMat.xpx != 0.;
+  mMSAdjustAstig = mMSAdjustBeamTilt && comaVsIS->astigMat.xpx != 0. && 
+    !mWinApp->mNavHelper->GetSkipAstigAdjustment();
 
   // Adjust some parameters for test runs
   if (testRun) {

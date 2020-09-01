@@ -10427,7 +10427,7 @@ int CMacroProcessor::AdjustBeamTiltIfSelected(double delISX, double delISY, BOOL
   mWinApp->mAutoTuning->BacklashedBeamTilt(BTX + delBTX, BTY + delBTY, 
     mScope->GetAdjustForISSkipBacklash() <= 0);
   mCompensatedBTforIS = true;
-  if (comaVsIS->astigMat.xpx) {
+  if (comaVsIS->astigMat.xpx && !mNavHelper->GetSkipAstigAdjustment()) {
     mScope->GetObjectiveStigmator(astigX, astigY);
     if (mAstigXtoRestore[probe] < EXTRA_VALUE_TEST) {
       mAstigXtoRestore[probe] = astigX;

@@ -2758,7 +2758,8 @@
             <a href="menu_calibration.htm#hid_focustuning_comavs">Coma vs. Image Shift</a> 
             calibration has been done.&nbsp; This command saves the current beam tilt, if it 
             has not been saved before in the script, and it will be automatically restored 
-            when the script exits.</TD>
+            when the script exits.&nbsp; Astigmatism will also be adjusted if that calibration
+             includes an astigmatism estimate, unless the property 'SkipAstigAdjustmentForIS' is set.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">CBAstigComa #T #C [#A] [#L]&nbsp; [#S]</TD>
