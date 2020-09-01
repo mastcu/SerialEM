@@ -369,6 +369,7 @@ void DLL_IM_EX SEMSetJeolStateMag(int magIndex, BOOL needMutex);
 void SetNumFEIChannels(int inval);
 double DLL_IM_EX SEMSecondsSinceStart();
 void DLL_IM_EX SEMSetFunctionCalled(const char *name, const char *descrip = NULL);
+void DLL_IM_EX SEMIgnoreFunctionCalled(bool ignore);
 
 class DLL_IM_EX CSerialEMApp : public CWinApp
 {

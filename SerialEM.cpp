@@ -126,6 +126,7 @@ static CString sBuildTime;
 static int sBuildDayStamp;
 static CString sAboutVersion;
 static CString sFunctionCalled = "";
+static bool sIgnoreFunctionCalled = false;
 
 CComModule _Module;
 
@@ -798,7 +799,7 @@ BOOL CSerialEMApp::InitInstance()
 {
   int iSet, iCam, iAct, mag, indSpace, indQuote1, indQuote2;
   bool anyFrameSavers = false;
-  CString message, dropCameras;
+  CString message, dropCameras, settingsFile;
 
   AfxEnableControlContainer();
 
@@ -821,6 +822,13 @@ BOOL CSerialEMApp::InitInstance()
         dropCameras = mSysSubpath;
         if (indSpace > 0)
           dropCameras = dropCameras.Left(indSpace);
+
+      } else if (mSysSubpath.Find("/Settings=") == 0 && (indSpace > 10 || 
+        (indSpace < 0 && mSysSubpath.GetLength() > 10))) {
+        settingsFile = mSysSubpath;
+        if (indSpace > 0)
+          settingsFile = settingsFile.Left(indSpace);
+        settingsFile = settingsFile.Mid(10);
 
         // The path could have quotes if it has a space, but it is not required
       } else if (mSysSubpath.Find("/PlugDir=") == 0) {
@@ -920,8 +928,12 @@ BOOL CSerialEMApp::InitInstance()
       }
     }
   }
-  if (!mDocWnd) 
+  if (!mDocWnd) {
     AfxMessageBox("No document class found");
+    return FALSE;
+  }
+  if (!settingsFile.IsEmpty())
+    mDocWnd->SetSettingsName(settingsFile);
   
   // Initialize the buffer manager
   mBufferManager = new EMbufferManager(mModeName, mImBufs);
@@ -2750,9 +2762,17 @@ int SEMThreeChoiceBox(CString message, CString yesText, CString noText,
 // Register the name of a function being called in case of a crash
 void SEMSetFunctionCalled(const char *name, const char *descrip)
 {
+  if (sIgnoreFunctionCalled)
+    return;
   sFunctionCalled = name;
   if (!sFunctionCalled.IsEmpty() && descrip)
     sFunctionCalled = sFunctionCalled + " " + descrip;
+}
+
+// Set flag to ignore the function called calls (for JEOL update thread)
+void DLL_IM_EX SEMIgnoreFunctionCalled(bool ignore)
+{
+  sIgnoreFunctionCalled = ignore;
 }
 
 

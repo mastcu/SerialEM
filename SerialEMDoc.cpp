@@ -1710,6 +1710,11 @@ void CSerialEMDoc::ReadSetPropCalFiles()
 
     // compose full filename and get status
     mCurrentSettingsPath = strCwd + mSettingsName;
+    if (!CFile::GetStatus((LPCTSTR)mCurrentSettingsPath, status)) {
+      AfxMessageBox(mCurrentSettingsPath + " does not exist; trying "SETTINGS_NAME
+        " instead", MB_EXCLAME);
+      mCurrentSettingsPath = strCwd + "\\" + SETTINGS_NAME;
+    }
     if (CFile::GetStatus((LPCTSTR)mCurrentSettingsPath, status)) {
       
       // If OK, try to read file: if get -1, only system path was read
@@ -1733,7 +1738,7 @@ void CSerialEMDoc::ReadSetPropCalFiles()
 
   // If local file not read in full, try for system file
   if (!mSettingsReadable && mSysSettingsReadable) {
-    if (mParamIO->ReadSettings(strSys)) {
+    if (mParamIO->ReadSettings(strSys, true)) {
       AfxMessageBox("Error reading system settings file", MB_EXCLAME);
       mSysSettingsReadable = false;
     }

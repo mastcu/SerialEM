@@ -445,10 +445,15 @@
       <li>Copy the contents of another user's folder into the new folder.</li>
       <li>Right click on the SerialEM shortcut in the new folder, select Properties, and 
         change the 'Start in' entry from the previous user's name to the new one.</li>
-      <li>Right click and drag the shortcut to the desktop or common folder to copy it 
-        there.</li>
+      <li>For more convenient access, right click and drag the shortcut to the desktop or 
+        a common folder to copy it there, and rename the shortcut so it is 
+        distinguishable.</li>
     </ol>
-    <P><b>Do not run the SerialEM.exe in the package subfolder, or make a shortcut to 
+    <P>Another option is to make settings files with different names, and set up a 
+      different shortcut for each user using the &#39;/Settings=&#39; command line argument 
+      described below.&nbsp; However, since users may want to save multiple settings 
+      files, it is probably better to have a folder for each user.</P>
+      <P><b>Do not run the SerialEM.exe in the package subfolder, or make a shortcut to 
       that copy of the program.</b>&nbsp; If you do, the program will load all the 
       plugins in that folder.&nbsp;Then it will complain about multiple microscope 
       plugins and refuse to run.</P>
@@ -458,7 +463,7 @@
         3.3.1, this is done by having the shortcut include an argument specifying the 
         subfolder where the files are located (see 
         <A href="#separate_kv">Setting Up for a Separate Voltage</A>).</P>
-    <P>Three other entries besides a subfolder are allowed as command line arguments on 
+    <P>Four other entries besides a subfolder are allowed as command line arguments on 
       the target line of a shortcut.&nbsp; They can be in any order, as long as they 
       appear <i>before</i> a final subfolder for the location of system files, if any.&nbsp; 
       They are:&nbsp; </P>
@@ -467,6 +472,13 @@
       start up without any camera or microscope connection and allows this instance of 
       the program to run at the same time as a connected instance of SerialEM.&nbsp; 
       </li>
+      <li>&#39;/Settings=&#39;, followed by the name of a settings file in the &#39;Start in&#39; folder 
+        of the shortcut, will make the program try to load that file instead of 
+        SerialEMsettings.txt.&nbsp; <em>No spaces are allowed in this file name or 
+        between the = and the file name</em>.&nbsp; This feature allows you to set up 
+        multiple shortcuts to access different, individually named settings files 
+        without having to either have a separate folder for each or start with a 
+        standard file then load another settings file.</li>
       <li>&#39;/NoCam&#39;, followed by one or more numbers of cameras that should be dropped 
         from the active camera list.&nbsp; For example, &#39;/NoCam:2&#39; or &#39;/NoCam:1,3&#39; would 
         drop camera 2 or cameras 1 and 3.&nbsp; There must be no space between &#39;/NoCam&#39; 

@@ -114,7 +114,7 @@ CParameterIO::~CParameterIO()
 // BEWARE: FOR ANYTHING THAT CAN BE ON MULTIPLE LINES AND IS JUST ADDED TO A VECTOR,
 // THE VECTOR MUST BE CLEARED FIRST
 
-int CParameterIO::ReadSettings(CString strFileName)
+int CParameterIO::ReadSettings(CString strFileName, bool readingSys)
 {
   int retval = 0;
   int err;
@@ -1212,17 +1212,29 @@ int CParameterIO::ReadSettings(CString strFileName)
   index = -1;
   CTSVariationsDlg::PurgeVariations(mTSParam->varyArray, mTSParam->numVaryItems, index);
 
+  // Keep track if reading the script pack fails
   strLine = mWinApp->mDocWnd->GetCurScriptPackPath();
+  recognized = true;
   if (!strLine.IsEmpty()) {
-    if (ReadMacrosFromFile(strLine, strFileName, MAX_MACROS + MAX_ONE_LINE_SCRIPTS))
+    if (ReadMacrosFromFile(strLine, strFileName, MAX_MACROS + MAX_ONE_LINE_SCRIPTS)) {
+      recognized = false;
       strLine = "";
-    else
+    } else
       mWinApp->mDocWnd->SetCurScriptPackPath(strLine);
   }
   mWinApp->mDocWnd->SetReadScriptPack(!strLine.IsEmpty());
+
+  // If no package read, set the name of the output package, switching to current name
+  // of system settings being read.  Then try to read THAT package so we don't just blow
+  // it away
   if (strLine.IsEmpty()) {
-    UtilSplitExtension(strFileName, strLine, strCopy);
-    mWinApp->mDocWnd->SetCurScriptPackPath(strLine + "-scripts.txt");
+    message = readingSys ? mWinApp->mDocWnd->GetCurrentSettingsPath() : strFileName;
+    UtilSplitExtension(message, strLine, strCopy);
+    strLine += "-scripts.txt";
+    mWinApp->mDocWnd->SetCurScriptPackPath(strLine);
+    if (!recognized && !ReadMacrosFromFile(strLine, message,
+      MAX_MACROS + MAX_ONE_LINE_SCRIPTS))
+      mWinApp->mDocWnd->SetReadScriptPack(true);
   }
 
   mWinApp->mMacroProcessor->TransferOneLiners(false);

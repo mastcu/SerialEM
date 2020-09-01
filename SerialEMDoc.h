@@ -115,6 +115,7 @@ public:
   GetMember(int, FrameAdocIndex);
   GetSetMember(CString, CurScriptPackPath);
   GetSetMember(BOOL, ScriptPackBackedUp);
+  SetMember(CString, SettingsName);
   void SetDfltUseMdoc(int inval);
   void ReadSetPropCalFiles();
   void FixSettingsForIALimitCal();

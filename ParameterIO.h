@@ -25,7 +25,7 @@ public:
   int ReadCalibration(CString strFileName);
   int ReadProperties(CString strFileName);
   void SetDefaultCameraControls(int which, ControlSet *cs, int cameraSizeX, int cameraSizeY);
-  BOOL ReadSettings(CString strFileName);
+  BOOL ReadSettings(CString strFileName, bool readingSys = false);
   void WriteFloat(CString format, float fVal);
   void WriteDouble(CString format, double dVal);
   void WriteInt(CString format, int iVal);
