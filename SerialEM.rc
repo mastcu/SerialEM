@@ -4617,6 +4617,7 @@ BEGIN
     IDC_RFROM_FOCUS         "Make direction so that Focus area is near previous point, not next one"
     IDC_EDIT_MAX_ERROR      "Enter the maximum error in microns between actual and predicted position"
     IDC_BUT_CLEAR_DATA      "Remove points and clear out all memory usage"
+    IDC_BUT_SET_SIZE_SPACE  "Set size and spacing text boxes above with values from last hole-finding"
     IDC_BRACKET_LAST        "Try a subset of filter and threshold values around the last optimal values"
     IDC_RON_IMAGE           "Select points on currently displayed image"
     IDC_RIN_POLYGON         "Select points within a polygon (must be current item)"

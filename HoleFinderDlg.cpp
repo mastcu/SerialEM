@@ -61,6 +61,8 @@ CHoleFinderDlg::CHoleFinderDlg(CWnd* pParent /*=NULL*/)
   mIsOpen = false;
   mMiniOffsets = NULL;
   mBestThreshInd = -1;
+  mLastHoleSize = 0.;
+  mLastHoleSpacing = 0.;
 }
 
 CHoleFinderDlg::~CHoleFinderDlg()
@@ -122,6 +124,7 @@ void CHoleFinderDlg::DoDataExchange(CDataExchange* pDX)
   DDX_Control(pDX, IDC_BUT_CLEAR_DATA, m_butClearData);
   DDX_Control(pDX, IDC_BRACKET_LAST, m_butBracketLast);
   DDX_Check(pDX, IDC_BRACKET_LAST, m_bBracketLast);
+  DDX_Control(pDX, IDC_BUT_SET_SIZE_SPACE, m_butSetSizeSpace);
 }
 
 
@@ -145,6 +148,7 @@ BEGIN_MESSAGE_MAP(CHoleFinderDlg, CBaseDlg)
   ON_EN_KILLFOCUS(IDC_EDIT_MAX_ERROR, OnKillfocusEditMaxError)
   ON_BN_CLICKED(IDC_BUT_CLEAR_DATA, OnButClearData)
   ON_BN_CLICKED(IDC_BRACKET_LAST, OnBracketLast)
+  ON_BN_CLICKED(IDC_BUT_SET_SIZE_SPACE, OnButSetSizeSpace)
 END_MESSAGE_MAP()
 
 
@@ -302,6 +306,17 @@ void CHoleFinderDlg::OnButClearData()
   mWinApp->RestoreViewFocus();
 }
 
+// Set the size and spacing from the last values
+void CHoleFinderDlg::OnButSetSizeSpace()
+{
+  mWinApp->RestoreViewFocus();
+  if (mLastHoleSize <= 0.)
+    return;
+  m_fHolesSize = mLastHoleSize;
+  m_fSpacing = mLastHoleSpacing;
+  UpdateData(false);
+}
+
 // Edit boxes for mean limits: process string, set slider
 void CHoleFinderDlg::OnKillfocusEditLowerMean()
 {
@@ -436,6 +451,7 @@ int CHoleFinderDlg::DoMakeNavPoints(int layoutType, float lowerMeanCutoff,
     &mXinPiece, &mYinPiece, &mPieceOn, &gridX, &gridY, avgLen * mPixelSize,
     2.f * mBestRadius * mReduction * mPixelSize, avgAngle, mRegistration, mMapID,
     (float)mZstage, poly, layoutType);
+  SEMTrace('1', "Map ID passed = %d, Added group ID is %d", mMapID, mAddedGroupID);
   if (mAddedGroupID) {
     for (ind = 0; ind < (int)mExcluded.size(); ind++)
       if (!mExcluded[ind])
@@ -445,6 +461,9 @@ int CHoleFinderDlg::DoMakeNavPoints(int layoutType, float lowerMeanCutoff,
     mWinApp->mMainView->DrawImage();
     if (mIsOpen)
       m_butMakeNavPts.EnableWindow(false);
+    poly = mNav->GetOtherNavItem(mIndexOfGroupItem);
+    SEMTrace('1', "Drawn on ID of first item # %d = %d", mIndexOfGroupItem, 
+      poly->mDrawnOnMapID);
     return numAdded;
   }
   return 0;
@@ -546,6 +565,7 @@ void CHoleFinderDlg::ManageEnables()
   m_sliderBlackPct.EnableWindow(mHaveHoles);
   m_editLowerMean.EnableWindow(mHaveHoles);
   m_editUpperMean.EnableWindow(mHaveHoles);
+  m_butSetSizeSpace.EnableWindow(mLastHoleSize > 0.);
   if (mHaveHoles) {
     m_strMinLowerMean.Format("%.4g", mMeanMin);
     m_strMaxLowerMean.Format("%.4g", (mMeanMin + mMeanMax / 2.));
@@ -652,6 +672,8 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
   mCurStore = -2;
   mBufInd = (int)(imBuf - mWinApp->GetImBufs());
   mHaveHoles = false;
+  mLastHoleSize = 0.;
+  mLastHoleSpacing = 0.;
 
   // Check preconditions
   DialogToParams();
@@ -707,8 +729,10 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
   }
 
   // Montaging: check preconditions first
-  if (imBuf->mCaptured == BUFFER_MONTAGE_OVERVIEW && imBuf->mMapID) {
-    if (!mNavItem)
+  if (imBuf->mCaptured == BUFFER_MONTAGE_OVERVIEW) {
+    if (!imBuf->mMapID)
+      noMontReason = "the buffer has no ID for finding its Navigator map";
+    else if (!mNavItem)
       noMontReason = "could not find the map item from the ID in the buffer";
     if (mNavItem && mNav->PrepareMontAdjustments(imBuf, rMat, rInv, ptX,
       ptY) > 0)
@@ -913,6 +937,7 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
     StopScanning();
     return 1;
   }
+  SEMTrace('1', "Map ID of image is %d", mMapID);
 
   // Set up the parameters and call to start the scan
   mHelper->mFindHoles->setSequenceParams(diamReduced, spacingReduced,
@@ -1104,9 +1129,11 @@ void CHoleFinderDlg::ScanningNextTask(int param)
     mWinApp->AppendToLog("No holes were found!");
     return;
   }
+  mLastHoleSize = 0.01f * B3DNINT(100.f * 2.f * mBestRadius * mReduction * mPixelSize);
+  mLastHoleSpacing = 0.01f * B3DNINT(100.f * mTrueSpacing * mPixelSize);
   statStr.Format("%s  thr: %.1f  #: %d  size: %.2f  sep: %.2f",
     formatSigma(mParams.sigmas[mBestSigInd]), mParams.thresholds[mBestThreshInd],
-    numPoints, 2. * mBestRadius * mReduction * mPixelSize, mTrueSpacing * mPixelSize);
+    numPoints, mLastHoleSize, mLastHoleSpacing);
   if (mIsOpen)
     m_strStatusOutput = statStr;
   else
@@ -1127,6 +1154,7 @@ void CHoleFinderDlg::ScanningNextTask(int param)
     mWinApp->mShiftManager->ApplyScaleMatrix(aInv, ptX - delX, ptY - delY, mXstages[ind],
       mYstages[ind]);
   }
+  SEMTrace('1', "Map ID after finding holes is %d", mMapID);
 
   // Get mins and maxes and set the sliders if necessary
   mMeanMin = *std::min_element(mHoleMeans.begin(), mHoleMeans.end());

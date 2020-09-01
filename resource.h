@@ -1626,7 +1626,6 @@
 #define IDC_SPIN_RING2_NUM              2654
 #define IDC_EDIT_RING2_DIST             2655
 #define IDC_BUT_TO_MARKER               2656
-#define IDC_BUTTON1                     2657
 #define IDC_BUT_SET_SIZE_SPACE          2657
 #define ID_NEW_IMAGE                    32771
 #define IDM_FILE_SAVEOTHER              32772

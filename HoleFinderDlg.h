@@ -94,6 +94,8 @@ private:
   CMapDrawItem *mNavItem;
   int mFullYsize, mFullBinning;
   MiniOffsets *mMiniOffsets;
+  float mLastHoleSize;
+  float mLastHoleSpacing;
 
 
 public:
@@ -165,4 +167,6 @@ public:
   afx_msg void OnBracketLast();
   CButton m_butBracketLast;
   BOOL m_bBracketLast;
+  CButton m_butSetSizeSpace;
+  afx_msg void OnButSetSizeSpace();
 };
