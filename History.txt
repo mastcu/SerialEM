@@ -3,6 +3,7 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+9/1/20: SEM_3-8-0 stable
 9/1/20: Fixed crash in hole with montages having skipped pieces.
 
 * 8/31/20: Added command line argument '/Settings=' to start with a different
@@ -238,7 +239,7 @@ ChangeItemNote.
 
 * 3/19/20: Added a hole-finding routine and dialog.
 
-3/3/20: Added dialog and script command for taking image snapshots.
+* 3/3/20: Added dialog and script command for taking image snapshots.
 
 2/28/20: Disabled post-actions by default for K3.
 

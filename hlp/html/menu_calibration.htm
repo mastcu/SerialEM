@@ -999,7 +999,7 @@ hid_beamspot_illuminatedarealimits
       change the stigmator value to achieve the desired defocus change instead.&nbsp; If 
         the calibration gives astigmatism that cannot be fit (a non-elliptical pattern) 
         then use that command to reduce the value by a factor of ~3.&nbsp; The default 
-        is 0.04 as of SerialEM 3.7.6, 6/12/19.&nbsp;&nbsp; These values have been found 
+        is 0.04 as of SerialEM 3.7.6.&nbsp;&nbsp; These values have been found 
         useful for FEI scopes: 0.1 for Tecnais, 0.3 for Krios, 0.3 for a Glacios, 0.5 
         for a Talos 120C. Once an appropriate value is determined, the default 
       value can be set with the second entry to the property &#39;AstigmatismParams&#39;.</p>
@@ -1291,7 +1291,7 @@ hid_beamspot_illuminatedarealimits
 &nbsp;&nbsp; BeamCalInitialIncrement&nbsp;&nbsp; 0.0002<br />
 &nbsp;&nbsp; BeamCalSpacingFactor&nbsp;&nbsp;&nbsp; 1.2
       <br />
-      For SerialEM 3.7 as of May 28, 2018, the first four are set automatically, and 
+      As of SerialEM 3.7, the first four are set automatically, and 
       the property values are ignored.&nbsp; In addition, this version will use 
       counting mode when the starting dose rate is below 20 electrons/unbinned 
       pixel/sec (or 75 on a K3 camera).</P>
@@ -1910,7 +1910,7 @@ echo NumberOfCameraLengths $firstEnd $secondEnd
       less than your measured delay, experience has shown that this is unreliable.&nbsp; 
       This property has no effect with a K3, where initial indications are that the 
       startup delay is much shorter and more reliable.</P>
-    <P>As of SerialEM 3.7 (June 30, 2018), K2 and K3 exposures with dose fractionation will have 
+    <P>As of SerialEM 3.7, K2 and K3 exposures with dose fractionation will have 
       an added delay of 5 ms per frame by default (set by the camera property 
       &#39;StartDelayPerFrame&#39;).&nbsp; This addition should give reliable timing even with 
       the default minimum startup delay.&nbsp; The signs that the startup delay are 

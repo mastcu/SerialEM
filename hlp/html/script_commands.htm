@@ -155,7 +155,7 @@
               The optional <b>#I</b> can be entered to set the increment, which is 1 by default.&nbsp; 
               If the starting index is already past the ending one, the loop will be skipped.&nbsp; 
               Integer values should be entered; non-integer values will be truncated to 
-              integers.&nbsp; Command added in 3.8.</TD>
+              integers.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">EndLoop</TD>
@@ -185,7 +185,7 @@
               numbered 1 to 5.&nbsp; The optional <b>#E</b> can be entered to place a script into a 
               previously used position or the next unused position.&nbsp; If the script 
               depends on other temporary scripts, they can be loaded first with 
-              'StringArrayToScript'.&nbsp; Command added in 3.8.</TD>
+              'StringArrayToScript'.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">Function name [#N] [#S] [args]</TD>
@@ -251,23 +251,23 @@
           <TD>Starts a block within which an error will result in the script jumping to the 
             line after the following &#39;Catch&#39; statement instead of a message box appearing.&nbsp; 
             See <A HREF="about_scripts.htm#tryCatch">Error Handling and TRY - CATCH - ENDTRY Blocks</A>.
-            &nbsp; Command added in 3.8, 7/31/20.
+            
           </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">Catch</TD>
           <TD>Starts the block of commands that are run only when an error occurs or &#39;Throw&#39; 
-            statement is used inside the 'Try' portion of the block.&nbsp; Command added in 3.8, 7/31/20.</TD>
+            statement is used inside the 'Try' portion of the block.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">EndTry</TD>
-          <TD>Ends the block of commands run upon error.&nbsp; Command added in 3.8, 7/31/20.</TD>
+          <TD>Ends the block of commands run upon error.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">Throw [text]</TD>
           <TD>Jumps to the 'Catch' section of the 'Try' block containing this statement, 
             adding the optional <b>text</b> to the message given in the log about the jump.
-            &nbsp; Command added in 3.8, 7/31/20.
+            
           </TD>
         </TR>
         <TR>
@@ -313,13 +313,13 @@
         <TR>
             <TD class="scriptcommand">ListVars</TD>
             <TD>Lists all variables and their values in the log window, including reported 
-            values, persistent variables, and loop indicies.&nbsp; Command added in 3.8.
+            values, persistent variables, and loop indices.
             </TD>
         </TR>
         <TR>
             <TD class="scriptcommand">ListPersistentVars</TD>
             <TD>Lists all variables defined as persistent and their values in the log
-            window.&nbsp; Command added in 3.8.</TD>
+            window.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ClearPersistentVars</TD>
@@ -328,7 +328,7 @@
         <TR>
           <TD class="scriptcommand">MakeVarPersistent var [#]</TD>
           <TD>Changes a regular variable to persistent, or if a 0 is entered for <b>#</b>, makes a 
-              persistent variable non-persistent.&nbsp; Command added in 3.8.</TD>
+              persistent variable non-persistent.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">IsVariableDefined var</TD>
@@ -354,14 +354,14 @@
         <TR>
           <TD class="scriptcommand">NewArray var #T #E</TD>
           <TD>Creates a new variable with the name <b>var</b>, making it persistent or local if
-               <b>#T</b> is 1 or -1, respectively, and initialize it with an array of <b>#E</b> zeros.&nbsp; Command added in 3.8.</TD>
+               <b>#T</b> is 1 or -1, respectively, and initialize it with an array of <b>#E</b> zeros.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">New2DArray var [#T] [#R #E]</TD>
           <TD>Creates a 2D array variable with the name <b>var</b>, making it persistent or 
               local if <b>#T</b> is 1 or -1, respectively.&nbsp; If the optional <b>#R</b> and <b>#E</b> are
                given, the array is initialized with <b>#R</b> rows of <b>#E</b> zeros each, where both
-               must be positive.&nbsp; Command added in 3.8.</TD>
+               must be positive.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">AppendToArray var item</TD>
@@ -370,14 +370,14 @@
                As with setting a variable, if there are multiple items on the line not 
               specified as an array, only the first item will be added, whereas if there 
               the multiple items are enclosed in '{ }', all items will be added to the 
-              array.&nbsp; Command added in 3.8.</TD>
+              array.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">TruncateArray var #</TD>
           <TD>Truncates the given array variable <b>var</b> to <b>#</b> elements; <b>#</b> must be positive. For a
                1D array,&nbsp; the values is truncated to <b>#</b> elements; for a row of a 2D
                array,&nbsp; specified by var[row], the row of values is truncated; for a 
-              2D array given without a subscript, the number of rows is truncated to <b>#</b>.&nbsp; Command added in 3.8.</TD>
+              2D array given without a subscript, the number of rows is truncated to <b>#</b>.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ArrayStatistics var</TD>
@@ -385,7 +385,7 @@
               total number of values, the minimum, the maximum, the mean, the standard deviation
               and the median.&nbsp; For a 2D array, the statistics can be of the whole array, or of
               one row if the variable is given with a row subscript. Values can be assigned
-               to variables at end of command.&nbsp; Command added in 3.8.</TD>
+               to variables at end of command.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">LinearFitToVars var1 var2 [var3]</TD>
@@ -394,7 +394,7 @@
             number of values, slope, intercept, and correlation coefficient 'ro'.&nbsp; With 
             three variables, fits to the equation v3 = a1 * v1 + a2 * v2 + c and reports the 
             number of values, a1, a2, and c.&nbsp; All variables must have the same number 
-            of values.&nbsp; Command added in 3.8, 11/17/19.</TD>
+            of values.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">StringArrayToScript var [#E]</TD>
@@ -404,7 +404,7 @@
               to 5.&nbsp; A positive value <b>#E</b> can be entered to place a script into a 
               previously used position or the next unused position.&nbsp; A negative value (-1 
               to -20) can be used to replace the script in one of the regular script positions 
-              that are editable and saved to settings.&nbsp; Command added in 3.8.</TD>
+              that are editable and saved to settings.</TD>
         </TR>
         <TR>
           <TD colspan="2"><A name="other_control"></A><B>Other Script Operation
@@ -425,7 +425,7 @@
           <TD>Prevents changing the script in the script editor from this command to the end
             of the script, unless Administrator mode is 
             turned on in the Calibration menu.&nbsp; Place the command at the beginning of
-            script to make the whole script read-only.&nbsp; Command added in 3.8, 12/24/19.</TD>
+            script to make the whole script read-only.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">Delay # [units]</TD>
@@ -481,7 +481,7 @@
        <TR>
           <TD class="scriptcommand">OKBox text</TD>
           <TD>Opens a message box with the given <b>text</b> and just an OK button.&nbsp; The box is
-            not suppressed by NoMessageBoxOnError.&nbsp; Command added in 3.8, 10/17/19.
+            not suppressed by NoMessageBoxOnError.
           </TD>
         </TR>
         <TR>
@@ -510,8 +510,7 @@
             up at the spaces.&nbsp; Follow with a 0 to turn off such parsing.&nbsp; The best 
             use of this feature would be for making an array of strings in a single 
             statement that encloses the entries with braces.&nbsp; It also allows a string 
-            to be assigned to a variable without using '=@'.&nbsp; Command added in 3.8, 
-            12/27/19. </TD>
+            to be assigned to a variable without using '=@'. </TD>
         </TR>
        <TR>
           <TD class="scriptcommand">FlashDisplay [#T] [#D] [rgb]</TD>
@@ -554,7 +553,7 @@
             should create the &#39;.lock&#39; file (which can be empty), then create and finish
              writing to the file to be found, then remove the &#39;.lock&#39; file.&nbsp;
              The file will need to be removed to avoid finding it again on the next call.
-            &nbsp; Command added in 3.8, 12/26/19.
+            
           </TD>
         </TR>
         <TR>
@@ -563,7 +562,7 @@
             and reads the file, places its contents in an extra script position, removes the file,
             and runs that script. &nbsp;As for &#39;GetFileInWatchedDir&#39;, a &#39;.lock&#39; 
             file can be used to avoid the risk that the file is not complete when SerialEM 
-            sees it.&nbsp; Command added in 3.8, 12/26/19</TD>
+            sees it.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">Require feature [feature] ...<br />
@@ -651,7 +650,7 @@
             detector pixel in microns, and unbinned pixel size of the current camera, or 
             of the active camera whose number is given by the optional <b>#C</b>, numbered from 1. 
              The unbinned pixel size is for the current magnification, or for the magnification
-             index given by the optional <b>#M</b>.  (unbinned pixel size added in 3.8, 11/29/19)</TD>
+             index given by the optional <b>#M</b>.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SetDivideBy2 #</TD>
@@ -806,7 +805,7 @@
               retain.&nbsp; If <B>set</B> is omitted, all modified sets will be retained.&nbsp; &#39;RestoreCameraSet&#39; 
               cannot be used on a set that has been retained.&nbsp; Subsequent changes by the 
               &#39;Set&#39; commands will be restored on script end or by &#39;RestoreCameraSet&#39;,&nbsp; 
-              unless this command is given again.&nbsp; Command added in 3.8. </TD>
+              unless this command is given again. </TD>
         </TR>
         <TR>
           <TD colspan="2"><A name="continuous_mode"></A><B>Continuous Mode Control</B></TD>
@@ -1018,7 +1017,7 @@
             to drop any frames from simple sums; frames are never dropped when getting aligned sums.&nbsp; 
             For CryoARM, speed factors of 100 - 105 will select pre-set speeds
               of 10, 2, 1, 0.5, 0.25, and 0.1 degrees/sec.&nbsp; If setting a speed factor crashes SerialEM or
-              FEI-SEMserver, see notes under <a href="#tiltDuringRecord">TiltDuringRecord</a>.&nbsp; Command added in 3.8.</TD>
+              FEI-SEMserver, see notes under <a href="#tiltDuringRecord">TiltDuringRecord</a>.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">WriteFrameSeriesAngles file</TD>
@@ -1029,7 +1028,7 @@
           <TD class="scriptcommand">ReportFrameTiltSum</TD>
           <TD>Reports the tilt index (numbered from 0), the tilt angle, the number of frames 
             in the sum, and the starting and ending frame number after getting a deferred 
-            tilt sum from a frame tilt series.&nbsp; Command added in 3.8, 5/22/20.</TD>
+            tilt sum from a frame tilt series.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ModifyFrameTSShifts #I #X #Y</TD>
@@ -1039,8 +1038,7 @@
             tilt index obtained from 'ReportTiltSumProperties', and <b>#X</b> and
             <b>#Y</b> are the image shift values obtained from 
             'ReportISforBufferShift' after aligning that tilt sum with a command such as 
-            'AlignTo B 1' that aligns without imposing an image shift. Command added in 3.8, 
-            5/22/20.</TD>
+            'AlignTo B 1' that aligns without imposing an image shift.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReplaceFrameTSShifts varX varY</TD>
@@ -1048,14 +1046,14 @@
             series with a new set of values (i.e., refined predictions) in the two array 
             variables given by <b>varX</b> and <b>varY</b>.&nbsp; Both 
             arrays must have the same size as the original number of tilt angles.&nbsp; 
-            Untested.&nbsp;&nbsp; Command added in 3.8, 5/22/20.</TD>
+            Untested</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReplaceFrameTSFocus var</TD>
           <TD>Changes the entire array of focus values to be imposed in a frame tilt series 
             with a new set of values (i.e., refined predictions) in the array variable
             <b>var</b>,which must have the same size as the original number of 
-            tilt angles.&nbsp; Untested.&nbsp; Command added in 3.8, 5/22/20.</TD>
+            tilt angles.&nbsp; Untested.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">AlignWholeTSOnly [#]</TD>
@@ -1095,13 +1093,13 @@
         </TR>
         <TR>
           <TD class="scriptcommand">ReportK3CDSmode</TD>
-          <TD>Reports 1 if CDS mode is on for a K3 camera acquisitions, 0 if not.&nbsp; Command added in 3.8, 11/17/19.</TD>
+          <TD>Reports 1 if CDS mode is on for a K3 camera acquisitions, 0 if not.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SetK3CDSmode #O [#P]</TD>
           <TD>Sets the CDS mode option for K3 camera acquisitions on if <b>#O</b> is non-zero, off 
             otherwise.&nbsp; The existing value is restored at the end of the script unless 
-            <b>#P</b> as entered with a non-zero value to make it permanent.&nbsp; Command added in 3.8, 11/17/19.</TD>
+            <b>#P</b> as entered with a non-zero value to make it permanent.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">DeferStackingNextShot</TD>
@@ -1218,8 +1216,7 @@
               a speed multiplier but runs OK without one, it means 
               that the FEI scripting version is too old to support the speed command.  In that case,
               define an environment variable SEM_USE_TOMMONIKER with the value of 1 on the 
-              microscope computer to use an alternate interface (as of SerialEM 3.8.0, 7/8/19, 
-              FEI-SEMserver version 109).
+              microscope computer to use an alternate interface.
           </TD>
         </TR>
      </TABLE>
@@ -1248,8 +1245,7 @@
         </TR>
         <TR>
           <TD class="scriptcommand">CropCenterToSize buf #X #Y</TD>
-          <TD>Crops out a centered subarea of the given buffer of size <b>#X</b> by <b>#Y</b>.&nbsp; Command
-            added in 3.8, 11/29/19.</TD>
+          <TD>Crops out a centered subarea of the given buffer of size <b>#X</b> by <b>#Y</b>.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReduceImage buf #</TD>
@@ -1309,8 +1305,7 @@
         <TR>
           <TD class="scriptcommand">CircularSubareaMean #X #Y #R</TD>
           <TD>Reports the mean counts in a circular subarea of the A buffer defined by center point
-            <b>#X</b>,<b>#Y</b> and radius <b>#R</b>. Value can be assigned to variable at end of command. Command added
-            in 3.8, 04/20/20.</TD>
+            <b>#X</b>,<b>#Y</b> and radius <b>#R</b>. Value can be assigned to variable at end of command.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">QuadrantMeans [#N] [#F1] [#F2]</TD>
@@ -1332,7 +1327,7 @@
             stripes.&nbsp; Reports the number of significant transitions found and the number 
             of those that are within a few pixels of the expected boundaries between channels for a 
             K2 or K3 camera.&nbsp; The latter would be a more reliable number to use if 
-            there is a risk of very straight grid bars in the field.  Command added in 3.8, 11/3/19.</TD>
+            there is a risk of very straight grid bars in the field.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">CtfFind buf #M #N [#F] [#B] [#P0] [#P9] [#S] 
@@ -1427,7 +1422,7 @@
               the log has new contents since program startup, the program will ask the user 
               whether to save to log first unless a non-zero value is entered for the optional 
               <b>#</b>, in which case the contents of the log are discarded. If the user cancels the 
-              query, the script is aborted.&nbsp; Command added in 3.8.&nbsp;&nbsp;</TD>
+              query, the script is aborted.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SaveLog [#O newFile]</TD>
@@ -1439,13 +1434,13 @@
               adding &#39;.log&#39;, so if you want to preserve extensions or other text after a 
               period, add &#39;.log&#39; to the end of the name.&nbsp; Enter a non-zero value for <b>#O</b> to 
               overwrite the file if it already exists, or zero to have a number added to get a 
-              unique new name.&nbsp; Command added in 3.8.</TD>
+              unique new name.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SaveCalibrations</TD>
           <TD>Saves the calibrations to a file. The name of the calibrations file is printed in the
               log window; execution of this command requires Administrator mode to be enabled in the
-              Calibrations menu. Command added in 3.8, 11/29/19.</TD>
+              Calibrations menu.</TD>
         </TR>
         <TR>
           <TD colspan="2"><A name="imagefile"></A><B>Image File Commands</B></TD>
@@ -1505,7 +1500,7 @@
         <TR>
           <TD class="scriptcommand">ReportNumMontagePieces</TD>
           <TD>Reports the number of pieces that will be acquired for a montage if one is 
-            currently open, or 1 if not.&nbsp; Command added in 3.8, 11/29/19.</TD>
+            currently open, or 1 if not.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SaveToOtherFile buf typ cmp file</TD>
@@ -1540,7 +1535,6 @@
             compression in the Image Snapshots dialog.&nbsp; If JPG or JPEG is entered for 
             &#39;typ&#39;, a true JPEG file will be written, not a JPEG-compressed TIFF, and the 
             compression entry does not matter (but must be present before the filename <b>file</b>).
-            Command added in 3.8, 3/3/20.
           </TD>
         </TR>
         <TR>
@@ -1640,7 +1634,7 @@
           <TD class="scriptcommand">Read2DTextFile var file</TD>
           <TD>Reads the entire contents of the given text file, breaks it up by spaces or tabs, and 
               stores the words or numbers of each line as a separate row of a 2D array in the
-               variable <b>var</b>.&nbsp; The file will be closed after reading.&nbsp; Command added in 3.8.</TD>
+               variable <b>var</b>.&nbsp; The file will be closed after reading.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand" colspan="2">&nbsp;&nbsp;&nbsp;&nbsp; The following commands allow 
@@ -1667,13 +1661,13 @@
                does not exist.<br />
                The same file cannot be opened under two different ID's.&nbsp; The 'T' mode can 
                be used to avoid a script error and also can be used in a loop to wait for a 
-               file to appear from an external source.&nbsp; Command added in 3.8.</td>
+               file to appear from an external source.</td>
         </TR>
        <TR>
           <TD class="scriptcommand">WriteLineToFile ID line</TD>
            <td>Writes the remainder of the text on the script line (after variable 
                substitution) to the file with the given <b>ID</b>.&nbsp; The comment character '#' can 
-               be included and text after it will be written.&nbsp; Command added in 3.8.</td>
+               be included and text after it will be written.</td>
         </TR>
        <TR>
           <TD class="scriptcommand">ReadLineToArray ID var</TD>
@@ -1685,27 +1679,27 @@
              command has been given.&nbsp; Reaching the end of the file does 
                not give a script error; instead, <I>reportedValue1</I> is set to 1 when a line is read 
                or 0 if nothing was read.&nbsp; This command could be used in a loop to wait for 
-               a file to be added to by external source.&nbsp; Command added in 3.8.</td>
+               a file to be added to by external source.</td>
         </TR>
        <TR>
           <TD class="scriptcommand">ReadLineToString ID var</TD>
            <td>Works like 'ReadLineToArray ', but the line is stored in the variable exactly as it is 
                in the file, including a line starting with '#'.&nbsp; Blank lines will still be 
-               skipped.&nbsp; Command added in 3.8.</td>
+               skipped.</td>
         </TR>
        <TR>
           <TD class="scriptcommand">FlushTextFile ID</TD>
-           <td>Flushes the output added to the file with the given <b>ID</b> to disk .&nbsp; Command added in 3.8.</td>
+           <td>Flushes the output added to the file with the given <b>ID</b> to disk.</td>
         </TR>
        <TR>
           <TD class="scriptcommand">CloseTextFile ID</TD>
-           <td>Closes the file with the given <b>ID</b>.&nbsp; Command added in 3.8.</td>
+           <td>Closes the file with the given <b>ID</b>.</td>
         </TR>
        <TR>
           <TD class="scriptcommand">IsTextFileOpen ID [file]</TD>
            <td>Sets <I>reportedValue1</I> to 1 if there is an open file with the given <b>ID</b>, or with the 
                given optional name, and to 0 otherwise.&nbsp; The ID can be nonsense when 
-               testing with a filename (<b>file</b>).&nbsp; Command added in 3.8.</td>
+               testing with a filename (<b>file</b>).</td>
         </TR>
         <TR>
           <TD colspan="2"><A name="autodoc"></A><B>Autodoc/.mdoc File Commands</B></TD>
@@ -1735,7 +1729,7 @@
         <TR>
           <TD class="scriptcommand">CloseFrameMdoc [#]</TD>
             <td>Closes the '.mdoc' file for acquisitions that save frames, if one is open. 
-                If the optional <b>#</b> is non-zero, an error is generated if no file is open.&nbsp; Command added in 3.8.
+                If the optional <b>#</b> is non-zero, an error is generated if no file is open.
             </TD>
         </TR>
          <TR>
@@ -1837,7 +1831,7 @@
              this may work only with one axis set to 0 using standard scripting, but should work for moving both
             axes when going through the Tommoniker interface.&nbsp; If the command 
               crashes SerialEM or FEI-SEMserver, see notes under <a href="#tiltDuringRecord">TiltDuringRecord</a>. 
-            &nbsp; Command added in 3.8, 4/23/20.
+            
           </TD>
         </TR>
         <TR>
@@ -2038,7 +2032,7 @@
           <TD>Reports the percent C2/C3 and the fractional lens strength of the crossover at the
             current spot size and probe mode as calibrated. If illuminated area is being
             used for intensity, this reports the illuminated area value at crossover.
-            Command added in 3.8, 11/29/19.</TD>
+          </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportIlluminatedArea</TD>
@@ -2094,7 +2088,6 @@
             buffer A.  This command is the same as running 
             <a href="menu_tasks.htm#hid_tasks_set_dose_rate">Set Dose Rate</a> in the Tasks
             menu. In low dose mode it changes the intensity of the current area.  
-            Command added in 3.8, 10/24/19.
           </TD>
         </TR>
          <TR>
@@ -2190,8 +2183,7 @@
         <TR>
           <TD class="scriptcommand">ImageShiftByStageDiff #X #Y [#D] [#A]</TD>
           <TD>Changes image shift by the equivalent of the given stage shift in X and Y; optional <b>#D</b> 
-            and <b>#A</b> provide settling time and beam-tilt adjustment for the image shift as just described.&nbsp; 
-            Command added in 3.8, 12/24/19.</TD>
+            and <b>#A</b> provide settling time and beam-tilt adjustment for the image shift as just described.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportImageShift</TD>
@@ -2251,12 +2243,12 @@
           <TD class="scriptcommand">ReportFilamentCurrent</TD>
           <TD>Reports the filament current on a non-FEG JEOL scope.&nbsp; The value is between 
               0 and 100 unless the property 'FilamentCurrentScale' is set with a scaling 
-              other than 100.&nbsp; Command added in 3.8.</TD>
+              other than 100.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SetFilamentCurrent #</TD>
           <TD>Sets the filament current on a non-FEG JEOL to <b>#</b>, in the same units as&nbsp; 
-              'ReportFilamentCurrent'.&nbsp; Command added in 3.8.</TD>
+              'ReportFilamentCurrent'.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ScreenUp</TD>
@@ -2272,8 +2264,7 @@
         </TR>
         <TR>
           <TD class="scriptcommand">ReportScreenCurrent</TD>
-          <TD>Reports the unsmoothed screen current in nA. Command added in
-          3.8, 11/29/19.</TD>
+          <TD>Reports the unsmoothed screen current in nA.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportLens name</TD>
@@ -2339,11 +2330,11 @@
               scopes, the command requires a relatively recent version of TemExt; names can be 
               Pir0 to Pir9 or Pen0 to Pen9; status values are 0 for not ready, 1 for low, 2 
               for high, and 3 for ready; and pressure values are between 0 and 1 (the value 
-              returned by the scope is divided by 4095).&nbsp; Command added in 3.8.</TD>
+              returned by the scope is divided by 4095).</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportHighVoltage</TD>
-          <TD>Reports the current value of the high tension in kV.&nbsp; Command added in 3.8, 9/30/19</TD>
+          <TD>Reports the current value of the high tension in kV.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ManualFilmExposure #</TD>
@@ -2390,7 +2381,7 @@
             should be 1 for shift, 2 for tilt, 3 for stigmators.&nbsp; To use X lens 
             commands, the adatl module must be registered and the environment variable 
             SEM_USE_ADATL must be set to any value on the microscope, and XL mode must be 
-            turned on in the microscope interface.&nbsp; Commands added in 3.8, 12/5/19.</TD>
+            turned on in the microscope interface.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SetXLensDeflector #D #X #Y</TD>
@@ -2566,7 +2557,7 @@
           <TD class="scriptcommand">LimitNextAutoAlign</TD>
           <TD>Sets a limit in microns to the amount of shift allowed in the next autoalign.
             If there are no correlation peaks within that limit, no shift will be imposed.
-            &nbsp; Command added in 3.8, 10/20/19</TD>
+          </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">AlignWithRotation buf #C #R</TD>
@@ -2574,7 +2565,7 @@
             <b>#C</b> sets the center angle for the rotation search and <b>#R</b> sets the total angular
             range of the search.&nbsp; <i>reportedValue1-3</i> are set with the rotation angle and
             the X and Y shift (after rotation), in the binned pixels of the image.&nbsp; Values can
-            be assigned to variables after command.&nbsp; Command added in 3.8, 7/29/20</TD>
+            be assigned to variables after command.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ConicalAlignTo buf #R [#S]</TD>
@@ -2600,8 +2591,7 @@
           <TD>Reports the image shift that corresponds to the shift stored and displayed 
             for the current image in A, in image shift units.&nbsp; These values are the same as the
             ones that would be imposed on the scope typically when introducing such a shift,
-            such as by autoaligning or dragging the image with the right mouse.&nbsp; Command added in 3.8, 5/22/20.
-            </TD>
+            such as by autoaligning or dragging the image with the right mouse.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportShiftDiffFrom #</TD>
@@ -2693,7 +2683,7 @@
           <TD>Measures astigmatism by CTF fitting, outputs the stigmation change to the log, and corrects 
             for those values (or just measures, if the optional <b>#M</b> is nonzero).&nbsp; Image 
             shift is set to 0 unless the optional <b>#L</b> is non-zero.&nbsp; Set optional
-            <strong>#S</strong> non-zero to suppress the message box on errors that occur 
+            <b>#S</b> non-zero to suppress the message box on errors that occur 
             after starting to take images.</TD>
         </TR>
         <TR>
@@ -2702,7 +2692,7 @@
             and corrects for it (or just measures, if the optional <b>#M</b> is nonzero).&nbsp; Image 
             shift is set to 0 unless the optional <b>#L</b> is non-zero.&nbsp; The user setting for 
             whether to do a full array of images is used unless optional <b>#F</b> is 0 for 5 
-            images or &gt; 0 for a full array. Set optional <strong>#S</strong> non-zero to 
+            images or &gt; 0 for a full array. Set optional <b>#S</b> non-zero to 
             suppress the message box on errors that occur after starting to take images.</TD>
         </TR>
         <TR>
@@ -2766,7 +2756,7 @@
           <TD>FOR TESTING: Runs the routine for astigmatism and coma by CTF fitting.&nbsp; Set <b>#T</b> 
             0 for astigmatism, 1 for coma with 5 images, 2 for coma with full array; <b>#C</b> 0/1 to measure/calibrate; <b>#A</b> 0 to apply a 
             measurement, 1 to just measure, 2 to measure from images in the buffers; <b>#L</b> 
-            non-zero to leave image shift as it is; <strong>#S</strong> non-zero to suppress 
+            non-zero to leave image shift as it is; <b>#S</b> non-zero to suppress 
             the message box on errors that occur after starting to take images.</TD>
         </TR>
         <TR>
@@ -2799,19 +2789,19 @@
               thereafter whenever one of the commands are used to change a relevant parameter.&nbsp; 
               Set the optional <b>#K</b> non-zero to keep the parameter changes when the script ends; 
               otherwise the parameters saved when this command is first given will be restored 
-              on script end.&nbsp; A must be one of V, F, T, R, or S.&nbsp; Command added in 3.8.</TD>
+              on script end.&nbsp; A must be one of V, F, T, R, or S.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SetLDAddedBeamButton [#]</TD>
           <TD>Turns the &#39;Set&#39; button in the Low Dose panel for recording additional beam shift 
               on, or turns it off if the optional <b>#</b> is 0.&nbsp; The original state of the 
-              button will be restored on script end.&nbsp; Command added in 3.8.</TD>
+              button will be restored on script end.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">RestoreLowDoseParams [area]</TD>
           <TD>Restores parameters saved for the given <b>area</b> when &#39;UpdateLowDoseParams&#39; was 
               entered for this area.&nbsp; Omit <b>area</b> to restore parameters for all areas, 
-              including ones marked to be kept when the script ends.&nbsp; Command added in 3.8.</TD>
+              including ones marked to be kept when the script ends.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SetLDContinuousUpdate #</TD>
@@ -2844,7 +2834,7 @@
               from the current microscope settings.&nbsp; It must be run while not in low dose 
               mode and after adjusting to scope state to the desired settings for the area.&nbsp; 
               It clears out the parameters for the area, enters low dose mode, and goes to the 
-              area so that it is assigned the current state.&nbsp; Command added in 3.8.</TD>
+              area so that it is assigned the current state.</TD>
         </TR>
         <TR>
           <TD colspan="2"><A name="task_commands"></A><B>Task-Related Commands</B></TD>
@@ -2932,21 +2922,21 @@
               to generate an error when maximum time reached or -1 not to; <b>type</b> for type of 
               measurement (T for Trial, F for Focus, A for 
               within autofocus runs, or 0 for dialog setting); <b>#C</b> to correct drift with image 
-              shift; <b>#E</b> for Trial exposure, <b>#B</b> for Trial binning.&nbsp; Command added in 3.8.</TD>
+              shift; <b>#E</b> for Trial exposure, <b>#B</b> for Trial binning.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">GetWaitTaskDrift</TD>
           <TD>Places the final drift measurement from the last Wait for Drift task into 
               <I>reportedValue1</I> and a non-zero number if the task failed in <I>reportedValue2</I>.
               Values can be assigned to variables after command.
-              Command added in 3.8.</TD>
+              </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ConditionPhasePlate [#]</TD>
           <TD>Runs the routine to condition a phase plate using parameters set in the 
             <a href="hidd_vpp_expose_setup.htm">Phase Plate Conditioning Setup dialog.</a>
             &nbsp; If the optional <b>#</b> is non-zero, it will move to the next phase plate position 
-            first, provided this is supported by scripting on the microscope.&nbsp; Command added in 3.8, 11/17/19.</TD>
+            first, provided this is supported by scripting on the microscope.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">MultipleRecords [#N] [#C] [#O] [#D] [#S] [#E] [#F] [#H] [#R2] [#N2] [#O2]</TD>
@@ -2985,14 +2975,14 @@
           <TD>Moves the stage to the center of the last hole position acquired with 
               MultipleRecords.&nbsp; This command can be used to position over a hole for 
               occasional post-acquisition tasks when using a hole pattern centered on the 
-              support film.&nbsp; There is no backlash correction.&nbsp; Command added in 3.8.</TD>
+              support film.&nbsp; There is no backlash correction.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ImageShiftToLastMultiHole</TD>
           <TD>Changes image shift by the offset to the last hole position acquired with 
               MultipleRecords.&nbsp; This command combined with &#39;ResetImageShift&#39; will be more 
               accurate than &#39;StageToLastMultiHole&#39; if backlash correction is needed and 
-              enabled in the Image Alignment &amp; Focus control panel.&nbsp; Command added in 3.8.</TD>
+              enabled in the Image Alignment &amp; Focus control panel.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">RotateMultiShotPattern #A [#C]</TD>
@@ -3000,7 +2990,7 @@
             <a href="hidd_multi_shot_setup.htm">Multiple Record Setup dialog</a> by angle 
             <b>#A</b>. &nbsp;Set optional <b>#C</b> non-zero to rotate the custom pattern instead
             of the regular one. &nbsp;Generates an error if the selected pattern is not defined 
-            or the needed transformation is not available.&nbsp; Command added in 3.8, 8/2/20.</TD>
+            or the needed transformation is not available.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">CalibrateImageShift [#]</TD>
@@ -3091,7 +3081,7 @@
               or 0 if it was not drawn on a map.&nbsp; For <b>#</b>, enter 0 for
               the current item or the item being acquired; an index greater than 0 for the item with
               that index in the table; or a value less than 0 to count back from the end of the 
-              table, where -1 is the last item.&nbsp; Command added in 3.8.</TD>
+              table, where -1 is the last item.</TD>
         </TR>
                 <TR>
           <TD class="scriptcommand">SetNavRegistration #</TD>
@@ -3179,7 +3169,7 @@
             the end of the list. If no buffer <b>buf</b> is specified, the image in buffer A is used.
             The X and Y coordinates are returned in <i>reportedValue1</i> and <i>2</i>, <i>reportedValue3</i> is set to 0
             if item <b>#I</b> is outside the buffer or to -1 if the transformation can not be completed.
-            Command added in 3.8, 4/20/20.</TD>
+          </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ChangeItemRegistration #I #R</TD>
@@ -3205,19 +3195,19 @@
         <TR>
           <TD class="scriptcommand">ChangeItemNote #I [text]</TD>
           <TD>Changes the note of the Navigator item with table index <b>#I</b> to the given <b>text</b> or
-            deletes the note if <b>text</b> is not specified. Command added in 3.8, 4/16/20.</TD>
+            deletes the note if <b>text</b> is not specified.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SetMapAcquireState #</TD>
           <TD>Sets the state with which the specified map item was acquired.&nbsp; For <b>#</b>, 
               enter 0 for the current item or the item being acquired; an index greater than 0 
               for the item with that index in the table; or a value less than 0 to count back 
-              from the end of the table, where -1 is the last item.&nbsp; Command added in 3.8.</TD>
+              from the end of the table, where -1 is the last item.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">RestoreState</TD>
           <TD>Restores the state if one has been saved with either with 'SetMapAcquireState' or 
-              the <A HREF="hidd_statedlg.htm">Imaging States dialog</A>.&nbsp; Command added in 3.8. </TD>
+              the <A HREF="hidd_statedlg.htm">Imaging States dialog</A>.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SkipPiecesOutsideItem #I</TD>
@@ -3233,7 +3223,7 @@
               that index in the table; or a value less than 0 to count back from the end of the 
               table, where -1 is the last item.&nbsp; The command will not work for the item
             being acquired, as the stored name is cleared out when the file is opened.
-            &nbsp; Command added in 3.8, 11/29/19.</TD>
+            </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ItemForSuperCoord #</TD>
@@ -3248,14 +3238,14 @@
             end). &nbsp;Up to 8 user values are currently allowed, with a number from 1 to 8 specified by
              <b>#V</b> (numbers do not have to be used sequentially). &nbsp;The <b>text</b> on the
              rest of the line is assigned as the value after variable substitution but not arithmetic;
-             text can be omitted to clear out a value.&nbsp; Command added in 3.8, 8/5/20.</TD>
+             text can be omitted to clear out a value.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportItemUserValue #I #V</TD>
           <TD>Reports an arbitrary value set for the Navigator item specified by <b>#I</b> 
             (positive for table index, 0 for current or acquired item, or negative for index from 
             end), or 'none' if no value is set. &nbsp;Set <i>reportedValue1</i> with the text 
-            value.&nbsp Command added in 3.8, 8/5/20.TD>
+            value.<TD>
         </TR>
         <TR>
           <TD colspan="2"><A name="navigatoritemgen"></A><B>Item Generating Commands</B></TD>
@@ -3280,7 +3270,7 @@
             buffer optionally specified by <b>buf</b>, using all of the
                parameters set in the <A HREF="hidd_holefinderdlg.htm">Hole Finder dialog</A>.&nbsp; That dialog
             need not be open, but the Navigator must be.
-            &nbsp; Command added in 3.8, 4/23/20. </TD>
+            </TD>
         </TR>
        <TR>
           <TD class="scriptcommand">MakeNavPointsAtHoles [#A] [#L] [#U] [#S] [#B]</TD>
@@ -3295,12 +3285,12 @@
             (enter -999999 for <b>#L</b> or <b>#U</b> to use the dialog setting); 
             <b>#S</b> be may entered to set the SD cutoff
              (or -1 to use the dialog value); and <b>#B</b> may be entered to set the cutoff for the 
-            percentage of black pixels.&nbsp; Command added in 3.8, 4/23/20. </TD>
+            percentage of black pixels.</TD>
         </TR>
       <TR>
           <TD class="scriptcommand">ClearHoleFinder</TD>
           <TD>Removes the display of points found by the Hole Finder and frees its memory.
-            &nbsp; Command added in 3.8, 4/23/20. </TD>
+            </TD>
         </TR>
       <TR>
           <TD class="scriptcommand">CombineHolesToMulti #S</TD>
@@ -3311,14 +3301,14 @@
             for details and restrictions.&nbsp; Neither of those two dialogs need to be open, but the Navigator must be.
             &nbsp; Set <b>#S</b> to 0 to select points on the currently displayed image, 1 to select points 
             within the current polygon, or 2 to select points in the same group as the current point.
-            &nbsp; Command added in 3.8, 4/23/20. </TD>
+            </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">UndoHoleCombining</TD>
           <TD>Removes the multi-shot acquisition points created by the last hole-combining
              operation (through script command or dialog) and restores the individual points
              to the Navigator table.&nbsp; All of the multi-shot points must still exist.
-             &nbsp; Command added in 3.8, 4/23/20. </TD>
+             </TD>
         </TR>
         <TR>
           <TD colspan="2"><A name="navigatorali"></A><B>Alignment and Shift Commands</B></TD>
@@ -3358,14 +3348,13 @@
               the current item or the item being acquired; an index greater than 0 for the item with
               that index in the table; or a value less than 0 to count back from the end of the 
               table, where -1 is the last item.  For <b>#R</b>, enter 1 to restore the microscope state
-              to the current state after the procedure, or 0 not to.&nbsp; Command added in 3.8.
-          </TD>
+              to the current state after the procedure, or 0 not to.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">GetRealignToItemError</TD>
           <TD>Gets the total stage error in X and Y and the second move error in X and Y from 
               the last Realign to Item and assigns them to <i>reportedValue1-4</i> and to optional 
-              variables included after the command.&nbsp; Command added in 3.8.</TD>
+              variables included after the command.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ForceCenterRealign</TD>
@@ -3401,7 +3390,7 @@
             angle of the rotational search, and <b>#R</b> sets the total angular range to be 
             searched.&nbsp; Set the optional <b>#L</b> to a limit for an acceptable rotation angle;
             above this, items will not be transformed.&nbsp; After finding the alignment, items at the
-            registration of the map will be transformed to the current registration.&nbsp; Command added in 3.8, 8/2/20.</TD>
+            registration of the map will be transformed to the current registration.</TD>
         </TR>
         <TR>
           <TD colspan="2"><A name="acqcontrol"></A><B>Acquisition Control Commands</B></TD>
@@ -3416,7 +3405,7 @@
           <TD>Reports the Acquire state of the Navigator item whose index in the table is <b>#</b>,
             numbered from 1; or if <b>#</b> is negative, reports on item that many items from the
             end of the table (i.e., -1 reports on the last item), or if 0 or no <b>#</b> is specified reports on
-            the current item. Command added in 3.8, 4/16/20.</TD>
+            the current item.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SetItemAcquire [#I] [#A]</TD>
@@ -3428,7 +3417,7 @@
             from within a running acquisition, the item must not be within the range from the
             current acquisition point to the end of the range being acquired.&nbsp; The end of the range
             is the original end of the Navigator table when acquisition was started, or the 
-            end of the subset if one is being acquired.&nbsp; Command added in 3.8, 4/16/20.</TD>
+            end of the subset if one is being acquired.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SkipAcquiringNavItem</TD>
@@ -3499,15 +3488,14 @@
               Custom times are stored in the short-term calibration file, like the times 
               since the last long operations of various kinds.&nbsp; They can be used to 
               perform actions periodically during Navigator acquisitions.&nbsp; Entries older 
-              than 20000 minutes will be removed when the file is read on program startup.&nbsp; Command added in 3.8.</TD>
+              than 20000 minutes will be removed when the file is read on program startup.</TD>
         </TR>
          <TR>
           <TD class="scriptcommand">ReportCustomInterval name [#M]</TD>
           <TD>Reports the time elapsed, in minutes, from the custom time with the given <b>name</b> to either 
               the current time or the absolute time in minutes given by optional <b>#M</b>.&nbsp; If 
               a time with that <b>name</b> has not be set, an interval of 40000 is returned.
-            &nbsp; No optional assignment to variable.&nbsp; Command added in 3.8.
-          </TD>
+            &nbsp; No optional assignment to variable.</TD>
         </TR>
          <TR>
           <TD class="scriptcommand">ReportTickTime</TD>
@@ -3530,7 +3518,7 @@
          <TR>
           <TD class="scriptcommand">ReportDateTime</TD>
           <TD>Reports a numeric date in the form YYYYMMDD and a time to the minute in the form
-              HHMM.&nbsp; Command added in 3.8.</TD>
+              HHMM.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ProgramTimeStamps [#]</TD>
@@ -3550,7 +3538,7 @@
             Xout = Xin * XperX + Yin * XperY <br />
             Yout = Xin * YperX + Yin * YperY <br />
             All commands return a matrix for the current camera where relevant, and all require an entry <b>#M</b> for the magnification index, or 0 to use the current
-            index.&nbsp; Variables to assign to can be entered after that.&nbsp; Commands added in 3.8, 5/22/20.
+            index.&nbsp; Variables to assign to can be entered after that.
           </td>
         </TR>
         <TR>
@@ -3700,7 +3688,7 @@
           <TD>Specifies whether arguments set with 'NextProcessArgs' should be placed before 
             (-1 for <b>#</b>) or after (1 for <b>#</b>) the arguments defined for an external tool in the
              properties file, or replace the defined arguments (0 for <b>#</b>).&nbsp; The default is 0 
-            and a setting is retained for the duration of the script.&nbsp; Command added in 3.8, 12/7/19</TD>
+            and a setting is retained for the duration of the script.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportProperty name [var]</TD>

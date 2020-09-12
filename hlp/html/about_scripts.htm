@@ -64,7 +64,7 @@
     <P>One command is entered per line, but a long command can be continued onto 
       multiple lines by ending each line but the last with a backslash (\) after a 
       space.  However, the combined line is limited to 60 space-separated items.&nbsp; 
-        (This feature is new in SerialEM 3.7 (July 12, 2018); if there is any chance 
+        (This feature was new in SerialEM 3.7; if there is any chance 
       that someone would try to run your script on an earlier version, you should 
       include the command<br />
 &nbsp;&nbsp; Require 201<br />
@@ -73,7 +73,7 @@
     <P>Blank lines are ignored.&nbsp; Lines whose first non-blank character is '#' are  treated as
       comments and ignored.&nbsp; Comments can also usually be placed after the command on a line, starting with 
       # after a space; except when the command treats the remainder of the line past a 
-      certain point as a single string.&nbsp; As of SerialEM 3.8 (12/27/19), multiline comments can be 
+      certain point as a single string.&nbsp; As of SerialEM 3.8, multiline comments can be 
       enclosed in /* ... */, similar to some programming languages (C/C++), but with 
       more restrictions.&nbsp; Specifically, 1) the opening &#39;/*&#39; must be the first 
       non-white-space on a line; 2) although the ending &#39;*/&#39; can appear anywhere on a 
@@ -235,8 +235,8 @@
 &nbsp;&nbsp;&nbsp; exposures = {$base ($base + 0.5) ($base + 1.0)}</P>
     <P>These values can then be accessed with &#39;$exposures[index]&#39;, where the index is 
       numbered from 1.&nbsp; The index can be a variable; it can even be an indexed 
-      array variable; but no arithmetic can be done inside the brackets before SerialEM 3.8.0 
-        (February 10, 2019).&nbsp; As of that version, simple arithmetic can be done, with a
+      array variable; but no arithmetic can be done inside the brackets before SerialEM 3.8 
+        &nbsp; As of that version, simple arithmetic can be done, with a
          minor and a major restriction:&nbsp; 1) only parentheses and the operators
          &#39;+&#39;, &#39;-, &#39;*&#39; and &#39;/&#39; are allowed; 2) there can be no 
         spaces within the brackets.&nbsp; Yes, this is the opposite of arithmetic elsewhere,
@@ -468,7 +468,7 @@
       </tr>
     </table>
     <P>
-      As of SerialEM 3.7 (Feb 14, 2018), arithmetic expressions can be used in a wide 
+      As of SerialEM 3.7, arithmetic expressions can be used in a wide 
       variety of commands, in addition to variable assignments and conditional 
       expressions.&nbsp; Each arithmetic expression will evaluate to one numeric argument to 
       the command.&nbsp; An expression can contain parentheses and be enclosed in 
@@ -588,7 +588,7 @@
       or<br />
 &nbsp;&nbsp;&nbsp; CallFunction Many Funcs::AlignWithBuffer $ifNeedImage $buffer<br />
       Notice that it can handle spaces in the script name but not the function name.&nbsp; 
-      However, as of SerialEM 3.7 (May 17, 2017), if a function occurs in the current 
+      However, as of SerialEM 3.7, if a function occurs in the current 
       script as well as in other ones, the function in the current script will be used 
       when there is no script number or name in front of the function name.</P>
     <P>Inside the function, the arguments are defined as regular variables: either the 
@@ -600,7 +600,7 @@
       numeric argument is not supplied in the call, the corresponding variable is 0, 
       and a string variable will be empty if the string argument is not supplied.&nbsp; 
       The number of arguments actually supplied in the call is assigned to the 
-      variable &#39;numCallArgs&#39;. As of SerialEM 3.7.0 beta, this variable and the 
+      variable &#39;numCallArgs&#39;. As of SerialEM 3.7, this variable and the 
       arguments are all created as local variables, which means they are not 
       accessible if this function calls another script or function (which gets its own 
       argument variables), they will not be lost if the function calls another 

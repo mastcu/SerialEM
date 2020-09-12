@@ -273,7 +273,7 @@
       GMS 2.32 and GMS 3.</P>
     <P>Leginon uses the SerialEM plugin for communicating with K2/K3 cameras.&nbsp; 
       However, it is generally compatible with any plugins 
-      distributed in SerialEM 3.6 or 3.7, because it does not rely on the newest 
+      distributed in SerialEM 3.7 or 3.8, because it does not rely on the newest 
       features in these plugins.&nbsp; New versions of the plugin are always backwards 
       compatible; i.e., they will work with older versions of connecting software 
       (SerialEM or Leginon) that are unaware of new features.&nbsp; SerialEM, however, 
@@ -763,7 +763,7 @@
     </ul>
     <p>
       <a name="upgradePlugServer"><i>Upgrading to the New Plugin and Server from SerialEM 3.4.</i></a>&nbsp; 
-      As SerialEM will inform you when you upgrade to 3.5, you need to update the
+      As SerialEM will inform you when you upgrade, you need to update the
       <nobr>FEI-SEMserver.exe</nobr> on the microscope computer.&nbsp;&nbsp; If you 
       had to make a firewall opening for the one port before, open the additional 
       three 
@@ -1219,7 +1219,7 @@
         correct name for an unbinned (&#39;x1&#39;) DM gain reference and that either the 
         general property &#39;DigitalMicrographReferencePath&#39; or &#39;DMRemoteReferencePath&#39; is 
         correctly set (presumably to &#39;C:\ProgramData\Gatan\Reference Images&#39;).</li>
-      <li>In SerialEM 3.7 (as of 8/24/18) TIFF files are saved as &#39;big TIFF&#39; so that 
+      <li> TIFF files are saved as &#39;big TIFF&#39; so that 
         files bigger than 4 GB can be written.&nbsp; This format cannot be read by 
         version 3 of libtiff.&nbsp; If this causes a problem in some other software, you 
         can override this behavior by setting an environment variable 
@@ -1288,7 +1288,7 @@
       </ul>
       <p>
       <a name="DEdetails"><i>For a Direct Electron direct detection camera</i></a>, particularly if you are 
-      upgrading to SerialEM 3.4 or higher from an earlier version, note these 
+      upgrading from a version before SerialEM 3.4, note these 
       points:</p>
     <ul>
       <li>The camera name no longer defines the camera type but has to match the name in 
@@ -1479,7 +1479,7 @@
         image area to see under which conditions the problem occurs.</P>
 <P>&nbsp;</P>
     <P><a name="badSizes"><b>Bad dialog sizes or bad program and font sizes</b></a></P>
-    <p>As of SerialEM 3.8.0, the program fully supports scaling for the DPI of the 
+    <p>As of SerialEM 3.8, the program fully supports scaling for the DPI of the 
       monitor, and it should work properly without any property settings related to 
       DPI.&nbsp; When you start SerialEM, you may discover that the control 
       panels on the left are not all the same width, and that some text appears 
@@ -2483,7 +2483,7 @@
         image shift is used. Separate calibrations can be done in regular and low 
         magnification modes.&nbsp; On the JEOL, separate calibrations are also stored 
         for GIF mode and for different magnification ranges defined by the 
-        &#39;OtherShiftBoundaries&#39; property. As of SerialEM 3.5, beam shift calibrations are 
+        &#39;OtherShiftBoundaries&#39; property. Beam shift calibrations are 
         also alpha-specific for microscopes that have an alpha setting, so you will need 
         a calibration for each alpha value that is used.&nbsp; (Older calibrations will 
         still work at any alpha.) Follow the procedure in <A href="menu_calibration.htm#hid_calibration_beamshift">
@@ -2607,10 +2607,11 @@
         mode gives a nonlinear response, and because counting mode only detects a 
         fraction of the electrons 
         (see <A href="about_camera.htm#directDetectors">Direct Electron Detectors, Especially the Gatan K2 and K3</A>).&nbsp; 
-        In SerialEM 3.6, dose rate estimates based on electron counting images are all 
+        In SerialEM, dose rate estimates based on electron counting images are all 
         'linearized' and should closely match the dose rate outputs in 
-        DigitalMicrograph. The program contains two tables of image counts versus dose 
-        rate output observed in DM, for 200 and 300 KV. As a result, counting mode 
+        DigitalMicrograph. The program contains tables of image counts versus dose 
+        rate output observed in DM, for 200 and 300 KV, and for GMS 3.31 and higher the 
+        program will use a dose rate estimate directly from DM. As a result, counting mode 
         images from a wide range of exposure levels give good dose rate estimates at the 
         camera and can be used for calibrating electron dose at the sample, even if the 
         counts per electron is not calibrated.&nbsp; Neverthless, it is recommended to 
@@ -3545,7 +3546,7 @@
       using the GPU of an NVIDIA card added to the computer.&nbsp; The K3
       computer by default comes with a low-end K2200 card, but much better
       performance will be obtained with a more powerful card.  Alignment with
-      the GPU was considerably improved in SerialEM 3.7 (January 11, 2019) by
+      the GPU was considerably improved in SerialEM 3.7 by
       moving the initial processing from CPU to GPU, so the speedup from more
       powerful cards is more apparent.
       Because most of the 
