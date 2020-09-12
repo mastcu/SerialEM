@@ -63,7 +63,9 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDR_MAINFRAME           ICON                    "res\\SerialEM.ico"
+
 IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -71,7 +73,9 @@ IDR_SERIALTYPE          ICON                    "res\\SerialEMDoc.ico"
 //
 
 IDR_MAINFRAME           BITMAP                  "res\\Toolbar.bmp"
+
 IDB_BITMAP1             BITMAP                  "res\\bitmap1.bmp"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -209,7 +213,7 @@ BEGIN
         MENUITEM "Show &Dark Ref",              ID_CAMERA_SHOWDARKREF
         MENUITEM "P&ost-actions",               ID_CAMERA_POSTACTIONS
         MENUITEM SEPARATOR
-        MENUITEM "Normalize Here",              ID_CAMERA_NORMALIZEHERE
+        MENUITEM "Normali&ze Here",             ID_CAMERA_NORMALIZEHERE
         MENUITEM "Divide 1&6-bit by 2",         ID_CAMERA_DIVIDEBY2
         MENUITEM "Set E&xtra Divisions...",     ID_CAMERA_SETEXTRADIVISIONBY2
         MENUITEM "Return Float Ima&ges",        ID_CAMERA_RETURNFLOATIMAGE
@@ -3357,7 +3361,9 @@ END
 //
 
 IDC_CURSOR1             CURSOR                  "res\\cursor1.cur"
+
 IDC_CURSOR2             CURSOR                  "res\\cursor2.cur"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -3847,89 +3853,89 @@ END
 // AFX_DIALOG_LAYOUT
 //
 
-IDD_AUTOCENSETUP AFX_DIALOG_LAYOUT 
+IDD_AUTOCENSETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_TILTSERIES AFX_DIALOG_LAYOUT 
+IDD_TILTSERIES AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_DRIFTWAITSETUP AFX_DIALOG_LAYOUT 
+IDD_DRIFTWAITSETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_SCREENSHOT AFX_DIALOG_LAYOUT 
+IDD_SCREENSHOT AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_MULTI_SHOT_SETUP AFX_DIALOG_LAYOUT 
+IDD_MULTI_SHOT_SETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_REMOTE_CONTROL AFX_DIALOG_LAYOUT 
+IDD_REMOTE_CONTROL AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_LOWDOSE AFX_DIALOG_LAYOUT 
+IDD_LOWDOSE AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_VPP_EXPOSE_SETUP AFX_DIALOG_LAYOUT 
+IDD_VPP_EXPOSE_SETUP AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_MACRO AFX_DIALOG_LAYOUT 
+IDD_MACRO AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_K2_SAVE_OPTIONS AFX_DIALOG_LAYOUT 
+IDD_K2_SAVE_OPTIONS AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_SCOPESTATUS AFX_DIALOG_LAYOUT 
+IDD_SCOPESTATUS AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_HOLE_FINDER AFX_DIALOG_LAYOUT 
+IDD_HOLE_FINDER AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_MULTI_COMBINER AFX_DIALOG_LAYOUT 
+IDD_MULTI_COMBINER AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_CTFFINDDLG AFX_DIALOG_LAYOUT 
+IDD_CTFFINDDLG AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_STATEDLG AFX_DIALOG_LAYOUT 
+IDD_STATEDLG AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_STAGEMOVETOOL AFX_DIALOG_LAYOUT 
+IDD_STAGEMOVETOOL AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_ALIGNFOCUS AFX_DIALOG_LAYOUT 
+IDD_ALIGNFOCUS AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
 
@@ -4340,6 +4346,7 @@ END
 STRINGTABLE
 BEGIN
     IDC_BUT_TO_MARKER       "Set alignment shift of A to bring marker to center of field (hot key Shift P)"
+    IDC_BUT_SET_SIZE_SPACE  "Set size and spacing text boxes above with values from last hole-finding"
 END
 
 STRINGTABLE
@@ -4617,7 +4624,6 @@ BEGIN
     IDC_RFROM_FOCUS         "Make direction so that Focus area is near previous point, not next one"
     IDC_EDIT_MAX_ERROR      "Enter the maximum error in microns between actual and predicted position"
     IDC_BUT_CLEAR_DATA      "Remove points and clear out all memory usage"
-    IDC_BUT_SET_SIZE_SPACE  "Set size and spacing text boxes above with values from last hole-finding"
     IDC_BRACKET_LAST        "Try a subset of filter and threshold values around the last optimal values"
     IDC_RON_IMAGE           "Select points on currently displayed image"
     IDC_RIN_POLYGON         "Select points within a polygon (must be current item)"

@@ -3,6 +3,17 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+9/8/20: Fixed problems with running F416 with the proper size of 4100 x 4100
+(In 3.8).
+
+9/3/20: Fixed saving of tilt series alignment com file after dose-symmetric
+series (In 3.8).
+
+9/3/20: Possibly fixed LowDoseChangeAtZeroIS (In 3.8).
+
+9/3/20: Fixed hole finder crash when Make Nav Point is done with all points
+excluded (In 3.8).
+
 9/1/20: SEM_3-8-0 stable
 9/1/20: Fixed crash in hole with montages having skipped pieces.
 

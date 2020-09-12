@@ -1514,6 +1514,7 @@ int CTSController::CommonResume(int inSingle, int external, bool stoppingPart)
   mDidTrackBefore = false;
   mFocusForDriftWasOK = false;
   mScopeEventStartTime = -1.;
+  mTerminationStarted = false;
   mWinApp->mPluginManager->ResumingTiltSeries(mTiltIndex);
 
   // If valves haven't been closed ever, set one-shot based on the current state of flag 
@@ -4437,7 +4438,10 @@ int CTSController::EndControl(BOOL terminating, BOOL startReorder)
   float pixelSize;
   int sizeX, sizeY, mbSaved, filmMag, i, error;
   CTime ctdt = CTime::GetCurrentTime();
-  mEndCtlMdocPath = "";
+  if (!mTerminationStarted)
+    mEndCtlMdocPath = "";
+  if (terminating)
+    mTerminationStarted = true;
   if (!mClosedDoseSymFile) {
     mEndCtlFilePath = mWinApp->mStoreMRC->getFilePath();
     mEndCtlWidth = mWinApp->mStoreMRC->getWidth();

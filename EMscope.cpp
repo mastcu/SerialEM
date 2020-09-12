@@ -2676,8 +2676,9 @@ BOOL CEMscope::ChangeImageShift(double shiftX, double shiftY, BOOL bInc)
       GetValuesFast(-1);
     SetISChanged(shiftX, shiftY);
 
-    // Need to apply beam shift if it is calibrated for some scopes
-    if (needBeamShift && !mSkipNextBeamShift && !(JEOLscope && mChangingLDArea)) {
+    // Need to apply beam shift if it is calibrated for some scopes, but not when it
+    // is being accumulated during low dose change
+    if (needBeamShift && !mSkipNextBeamShift && !(JEOLscope && mChangingLDArea > 0)) {
       IStoBS = mShiftManager->GetBeamShiftCal(magIndex);
       if (IStoBS.xpx) {
         shiftX = IStoBS.xpx * mLastISdelX + IStoBS.xpy * mLastISdelY;

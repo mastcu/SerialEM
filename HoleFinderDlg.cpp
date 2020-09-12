@@ -441,6 +441,14 @@ int CHoleFinderDlg::DoMakeNavPoints(int layoutType, float lowerMeanCutoff,
     *mMasterParams = mParams;
     mWinApp->RestoreViewFocus();
   }
+
+  // Add up number to add, return if none left
+  for (ind = 0; ind < (int)mExcluded.size(); ind++)
+    if (!mExcluded[ind])
+      numAdded++;
+  if (!numAdded)
+    return 0;
+
   if (mBoundPolyID)
     poly = mNav->FindItemWithMapID(mBoundPolyID, false);
 
@@ -453,9 +461,6 @@ int CHoleFinderDlg::DoMakeNavPoints(int layoutType, float lowerMeanCutoff,
     (float)mZstage, poly, layoutType);
   SEMTrace('1', "Map ID passed = %d, Added group ID is %d", mMapID, mAddedGroupID);
   if (mAddedGroupID) {
-    for (ind = 0; ind < (int)mExcluded.size(); ind++)
-      if (!mExcluded[ind])
-        numAdded++;
     mNav->FindItemWithMapID(mAddedGroupID, false, true);
     mIndexOfGroupItem = mNav->GetFoundItem();
     mWinApp->mMainView->DrawImage();

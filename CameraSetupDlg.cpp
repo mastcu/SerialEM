@@ -2980,7 +2980,7 @@ void CCameraSetupDlg::ManageAntialias(void)
 void CCameraSetupDlg::ManageK2SaveSummary(void)
 {
   CString str;
-  int dummy, frames, special;
+  int dummy, frames, special = 0;
   float realExp = m_eExposure, realFrame = m_fFrameTime;
   bool unNormed = m_iProcessing != GAIN_NORMALIZED ||
     (mCamera->GetSaveUnnormalizedFrames() && mCamera->GetPluginVersion(mParam) > 
@@ -2998,8 +2998,8 @@ void CCameraSetupDlg::ManageK2SaveSummary(void)
       mBinnings[m_iBinning], m_bAlignDoseFrac && !mCurSet->useFrameAlign,
       1, realExp, realFrame, special, 1 - m_iContSingle);
     frames = B3DNINT(realExp / B3DMAX(mCamera->GetMinK2FrameTime(mParam,
-      mParam->binnings[m_iBinning], (mParam->OneViewType && m_bUseHwROI_OvDiff) ? 1 : 0),
-      realFrame));
+      mParam->binnings[m_iBinning], 
+      (mParam->OneViewType && m_bUseHwROI_OvDiff) ? 1 : special), realFrame));
     int tiff = mParam->GatanCam && mCamera->GetK2SaveAsTiff();
     str.Format("%d frames", frames);
     SetDlgItemText(IDC_STAT_ALIGN_SUMMARY, str);

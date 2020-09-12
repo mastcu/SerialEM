@@ -1525,8 +1525,8 @@ void CCameraController::InitializePluginCameras(int &numPlugListed, int *origina
         mPlugFuncs[i]->SetRotationFlip(mAllParams[i].cameraNumber, 
         mAllParams[i].rotationFlip);
       if (!err && mPlugFuncs[i]->SetSizeOfCamera)
-        mPlugFuncs[i]->SetSizeOfCamera(mAllParams[i].cameraNumber, mAllParams[i].sizeX,
-        mAllParams[i].sizeY);
+        mPlugFuncs[i]->SetSizeOfCamera(mAllParams[i].cameraNumber, mAllParams[i].sizeX, 
+          mAllParams[i].sizeY);
 
       // Send the STEM interface our desired size too so it doesn't have to rely on the
       // previous call being first
@@ -6002,10 +6002,18 @@ void CCameraController::BlockAdjustSizes(int &DMsize, int ccdSize, int sizeMod,
 bool CCameraController::CropTietzSubarea(CameraParameters *param, int ubSizeX, 
   int ubSizeY, int processing, int singleContinMode, int &ySizeOnChip)
 {
-  bool crop, subarea = ubSizeX < param->sizeX || ubSizeY < param->sizeY;
+  int sizeX = param->sizeX, sizeY = param->sizeY;
+  bool crop, subarea;
   bool fastContinuous = param->useContinuousMode && singleContinMode == CONTINUOUS;
   bool flatFielding = param->pluginCanProcess &&
     !(mProcessHere && CanProcessHere(param)) && processing == GAIN_NORMALIZED;
+  if (param->TietzBlocks) {
+    sizeX = param->TietzBlocks * (sizeX / param->TietzBlocks);
+    sizeY = param->TietzBlocks * (sizeY / param->TietzBlocks);
+    ubSizeX = param->TietzBlocks * (ubSizeX / param->TietzBlocks);
+    ubSizeY = param->TietzBlocks * (ubSizeY / param->TietzBlocks);
+  }
+  subarea = ubSizeX < sizeX || ubSizeY < sizeY;
   crop = param->TietzType && subarea && (param->cropFullSizeImages > 3 ||
     (param->cropFullSizeImages == 1 && !fastContinuous && flatFielding) ||
     (param->cropFullSizeImages == 2 && !fastContinuous) ||
@@ -6506,6 +6514,7 @@ UINT CCameraController::EnsureProc(LPVOID pParam)
   long arrSize, height, width;
   CameraThreadData *td = (CameraThreadData *)pParam;
   int sizeX, sizeY, numDum, flagsSave, retval = 0;
+  int callSizeX = td->CallSizeX, callSizeY = td->CallSizeY;
   long binning = td->Binning;
   double expSave = td->Exposure;
   CString message, str;
@@ -6682,6 +6691,17 @@ UINT CCameraController::EnsureProc(LPVOID pParam)
             imageFinished = true;
             retval = td->DE_Cam->copyImageData((unsigned short*) ref->Array, 
               td->CallSizeX, td->CallSizeY, td->DivideBy2);
+
+            // Try to recover from image size not being what was expected
+            if (!retval && (callSizeX != td->CallSizeX || callSizeY != td->CallSizeY)) {
+              if (callSizeX == td->DMSizeX && callSizeY == td->DMSizeY) {
+                td->DMSizeX = td->CallSizeX;
+                td->DMSizeY = td->CallSizeY;
+              } else if (callSizeY == td->DMSizeX && callSizeX == td->DMSizeY) {
+                td->DMSizeX = td->CallSizeY;
+                td->DMSizeY = td->CallSizeX;
+              }
+            }
           } else
             ::Sleep(100);
 
@@ -10341,6 +10361,10 @@ int CCameraController::LockInitializeTietz(BOOL firstTime)
         if (camP->cropFullSizeImages) {
           chipX = TIETZ_ROTATING(camP) ? camP->sizeY : camP->sizeX;
           chipY = TIETZ_ROTATING(camP) ? camP->sizeX : camP->sizeY;
+          if (camP->TietzBlocks) {
+            chipX = camP->TietzBlocks * (chipX / camP->TietzBlocks);
+            chipY = camP->TietzBlocks * (chipY / camP->TietzBlocks);
+          }
           if (mPlugFuncs[ind]->SetSizeOfCamera(camP->TietzType, chipX, chipY)) {
             camP->cropFullSizeImages = 0;
             AfxMessageBox("Error in TietzPlugin setting parameters required for "

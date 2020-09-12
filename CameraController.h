@@ -83,6 +83,7 @@ struct CamPluginFuncs;
 #define DE_WE_CAN_ALIGN           0x20
 #define DE_NORM_IN_SERVER         0x40
 #define DE_HAS_HARDWARE_ROI       0x80
+#define DE_SCALES_ELEC_COUNTS     0x100
 
 // Camera flags for Gatan cameras
 #define K3_CAM_ROTFLIP_BUG        0x2
