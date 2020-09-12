@@ -329,6 +329,7 @@ class DLL_IM_EX CEMscope
   GetSetMember(int, RestoreStageXYdelay);
   GetSetMember(BOOL, JeolHasBrightnessZoom);
   GetSetMember(int, AdjustForISSkipBacklash);
+  GetSetMember(float, AddToRawIntensity);
 
   void SetJeolRelaxationFlags(int inVal);
   int GetJeolRelaxationFlags();
@@ -729,7 +730,8 @@ private:
   int mXLensModeAvailable;     // 1 if available, 0 no object, -1 not available
   int mRestoreStageXYdelay;    // Delay between tilt and restore step
   BOOL mJeolHasBrightnessZoom; // Flag for whether TemExt version has BrightnessZoom
-  int mAdjustForISSkipBacklash; // Flag for astig/BT adjustements for IS not to backlash
+  int mAdjustForISSkipBacklash; // Flag for astig/BT adjustments for IS not to backlash
+  float mAddToRawIntensity;    // Amount to add to an intensity value to keep it in range
   int mPluginVersion;          // Version of plugin or server
 
   // Old static variables from UpdateProc

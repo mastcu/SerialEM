@@ -369,4 +369,5 @@ FLOAT_PROP_TEST("TestCtfTuningDefocus", mWinApp->mAutoTuning->, TestCtfTuningDef
 INT_PROP_TEST("CtfBasedLDareaDelay", mWinApp->mAutoTuning->, CtfBasedLDareaDelay)
 INT_PROP_TEST("AstigBTBacklashDelay", mWinApp->mAutoTuning->, BacklashDelay)
 INT_PROP_TEST("AdjustForISSkipBacklash", scope->, AdjustForISSkipBacklash)
+FLOAT_PROP_TEST("AddToRawIntensity", scope->, AddToRawIntensity)
 #endif

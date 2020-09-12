@@ -326,6 +326,7 @@ CEMscope::CEMscope()
   mJeolSD.miniBaseFocus = 0x8000;
   mJeolSD.relaxingLenses = false;
   mC2IntensityFactor[0] = mC2IntensityFactor[1] = 1.;
+  mAddToRawIntensity = 0.;
   mJeolUpdateSleep = 200;
   mInitializeJeolDelay = 3000;
   mUpdateByEvent = true;
@@ -1676,8 +1677,10 @@ void CEMscope::UpdateScreenBeamFocus(int STEMmode, int &screenPos, int &smallScr
     if (mUseIllumAreaForC2) {
       PLUGSCOPE_GET(IlluminatedArea, rawIntensity, 1.e4);
       rawIntensity = IllumAreaToIntensity(rawIntensity);
-    } else
+    } else {
       PLUGSCOPE_GET(Intensity, rawIntensity, 1.);
+      rawIntensity += mAddToRawIntensity;
+    }
     PLUGSCOPE_GET(SpotSize, spotSize, 1);
     // TEMP FOR BAD VM!
     if (!sCheckPosOnScreenError)
@@ -5384,6 +5387,7 @@ double CEMscope::GetIntensity()
 
   try {
     PLUGSCOPE_GET(Intensity, result, 1.);
+    result += mAddToRawIntensity;
   }
   catch (_com_error E) {
     SEMReportCOMError(E, _T("getting beam intensity "));
@@ -5415,7 +5419,7 @@ BOOL CEMscope::SetIntensity(double inVal, int spot, int probe)
   ScopeMutexAcquire("SetIntensity", true);
 
   try {
-    PLUGSCOPE_SET(Intensity, inVal);
+    PLUGSCOPE_SET(Intensity, inVal - mAddToRawIntensity);
   }
   catch (_com_error E) {
     SEMReportCOMError(E, _T("setting beam intensity "));

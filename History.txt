@@ -3,6 +3,9 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+9/11/20: Added property to shift intensity values from FEI scripting into
+allowed range of 0 to 1.
+
 9/8/20: Fixed problems with running F416 with the proper size of 4100 x 4100
 (In 3.8).
 
