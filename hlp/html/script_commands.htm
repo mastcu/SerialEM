@@ -943,6 +943,15 @@
             'EarlyReturnNextShot', or the next deferred tilt sum available from a frame tilt 
             series.</TD>
         </TR> 
+        <TR>
+          <TD class="scriptcommand">SetFolderForFrames dir</TD>
+          <TD>Sets the folder for saving frames from the current camera to <b>dir</b>.&nbsp; A simple 
+            directory name without path separators is required for DE cameras and FEI cameras run with
+             Advanced Scripting.&nbsp; For other cameras, an absolute path is required,
+             either a network path starting with two slashes or one starting with a drive 
+            letter.&nbsp; Command added in 3.9, 9/12/20.
+          </TD>
+        </TR> 
                 <TR>
           <TD class="scriptcommand">FrameThresholdNextShot #T [#S] [#E] [#D]</TD>
           <TD>Skips saving frames whose mean value is below the given threshold <b>#T</b> in the next 
@@ -1258,6 +1267,19 @@
           <TD>Takes the FFT of the image in the given buffer, optionally applying the 
             binning given in <b>#B</b>.&nbsp; The FFT will appear in buffer A, or in the 
             side-by-side FFT window if that option is on.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">FilterImage buf sig1 rad1 rad2 sig2</TD>
+          <TD>Applies a filter in Fourier space to the image in the given buffer; the filter is
+            the product of two separate filters, one controlled by <B>sig1</B> (sigma1) and the other
+            by <B>rad2</B> (radius2) and <B>sig2</B> (sigma2).&nbsp; Sigma1 provides low-frequency filtering
+            with an inverted Gaussian rising from 0 to 1 with that sigma, and starting at either 0 frequency or 
+            the frequency specified by |<B>rad1</B>| (radius1) if it is negative.&nbsp; Radius2 and sigma2 provide
+            high-frequency filtering with a Gaussian that falls past radius2 with that sigma.&nbsp;  
+            If radius1 is positive, a Gaussian with the same sigma falls off to the left of radius1.&nbsp;
+            If sigma1 is negative, it provides a band-pass filter peaking at 1.414 * |sigma1|.&nbsp; See 
+            Filterplot in IMOD for a complete description and ability to graph any filter.&nbsp; 
+            The units are reciprocal pixels (0 to 0.5 along an axis).&nbsp; Command added in 3.9, 9/12/20.</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ImageProperties [buf]</TD>
@@ -3230,8 +3252,42 @@
         <TR>
           <TD class="scriptcommand">ItemForSuperCoord #</TD>
           <TD>Sets the item number that Navigator supplies supermontage coordinates from when
-            a montage image is acquired. Set the number to 0 to restore Navigator to using
+            a montage image is acquired. Sets the number to 0 to restore Navigator to using
             coordinates from the item currently being acquired.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">SetItemTargetDefocus #I #D</TD>
+          <TD>Sets the target defocus to <b>#D</b> for the Navigator item specified by <b>#I</b> 
+            (positive for table index, 0 for current or acquired item, or negative for index from 
+            end).&nbsp; The item must be marked for acquisition or a tilt series. &nbsp;The target is
+            not restored after acquisition, so the target would then apply for the next single image
+            acquisition but be superceded by the value in the parameters for the next tilt series. &nbsp;
+            If this command is used in a script run before the main action, the target will apply in a
+            script or tilt series but not to an autofocus done by the Navigator before the main action.
+             &nbsp;Items with this value set will have a line including 'F targ' and the target in the
+             listing produced by the Navigator menu item 
+            <A HREF="menu_navigator.htm#hid_montage_listfilestoopen">List Files/Series/States</A>. &nbsp;
+            When <b>TS Params</b> is pressed for an item with this set, the target defocus that
+            shows in setup dialog will be the one in the parameter set, which may apply to many tilt
+            series, and <i>not</i> this set value.&nbsp; The label after the target will be <b>um*</b> to 
+            indicate that it is being overridden.
+          </TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">SetItemSeriesAngles #I #S #E [#B]</TD>
+          <TD>Sets the starting and ending tilt series angles to <B>#S</B> and <b>#E</b> and optionally
+            sets the bidirectional starting angle to <b>#B</b> for the Navigator item specified by <b>#I</b> 
+            (positive for table index, 0 for current or acquired item, or negative for index from 
+            end).&nbsp; The item must be marked for tilt series acquisition. &nbsp;The command can be used
+            in a script run before the tilt series. &nbsp;In the
+             listing produced by the Navigator menu item 
+            <A HREF="menu_navigator.htm#hid_montage_listfilestoopen">List Files/Series/States</A>, the 
+            tilt series angles specified by this command will be shown, with a '*' to indicate the override. &nbsp;
+            When <b>TS Params</b> is pressed for an item with angles set, the angles that
+            appear in setup dialog will be the ones in the parameter set, which may apply to many tilt
+            series, and <i>not</i> these set values.&nbsp; There will be a <b>*</b> after the text box to
+            indicate that they are being overridden.&nbsp; Command added in 3.9, 9/16/20
+          </TD>
         </TR>
         <TR>
           <TD class="scriptcommand">SetNavItemUserValue #I #V [text]</TD>
@@ -3240,13 +3296,13 @@
             end). &nbsp;Up to 8 user values are currently allowed, with a number from 1 to 8 specified by
              <b>#V</b> (numbers do not have to be used sequentially). &nbsp;The <b>text</b> on the
              rest of the line is assigned as the value after variable substitution but not arithmetic;
-             text can be omitted to clear out a value.</TD>
+             text can be omitted to clear out a value.&nbsp; Command added in 3.9, 9/16/20</TD>
         </TR>
         <TR>
           <TD class="scriptcommand">ReportItemUserValue #I #V</TD>
           <TD>Reports an arbitrary value set for the Navigator item specified by <b>#I</b> 
             (positive for table index, 0 for current or acquired item, or negative for index from 
-            end), or 'none' if no value is set. &nbsp;Set <i>reportedValue1</i> with the text 
+            end), or 'none' if no value is set. &nbsp;Sets <i>reportedValue1</i> with the text 
             value.<TD>
         </TR>
         <TR>

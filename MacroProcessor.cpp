@@ -286,7 +286,10 @@ enum {CME_SCRIPTEND = -7, CME_LABEL, CME_SETVARIABLE, CME_SETSTRINGVAR, CME_DOKE
   CME_STAGETOISMATRIX, CME_STAGETOSPECIMENMATRIX, CME_SPECIMENTOSTAGEMATRIX, 
   CME_REPORTISFORBUFFERSHIFT, CME_ALIGNWITHROTATION, CME_TRY, CME_CATCH, CME_ENDTRY, 
   CME_THROW, CME_ALIGNANDTRANSFORMITEMS, CME_ROTATEMULTISHOTPATTERN,
-  CME_SETNAVITEMUSERVALUE, CME_REPORTITEMUSERVALUE 
+  CME_SETNAVITEMUSERVALUE, CME_REPORTITEMUSERVALUE, CME_FILTERIMAGE,
+  // Place for others to add commands
+  // End of reserved region
+  CME_SETFOLDERFORFRAMES, CME_SETITEMTARGETDEFOCUS, CME_SETITEMSERIESANGLES
 };
 
 // The two numbers are the minimum arguments and whether arithmetic is allowed
@@ -452,7 +455,11 @@ static CmdItem cmdList[] = {{NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NULL,0,0}, {NUL
 {"ReportISforBufferShift", 0, 0}, {"AlignWithRotation", 3, 0}, {"Try", 0, 0},
 {"Catch", 0, 0}, {"EndTry", 0, 0}, {"Throw", 0, 0},{"AlignAndTransformItems", 2, 0},
 {"RotateMultiShotPattern", 1, 0},{"SetNavItemUserValue", 2, -1},
-{"ReportItemUserValue", 2, 0},/*CAI3.8*/
+{"ReportItemUserValue", 2, 0},/* End in 3.8 */ {"FilterImage", 5, 0}, 
+// Place for others to add commands
+// End of reserved region
+{"SetFolderForFrames", 1, 0},{"SetItemTargetDefocus", 2, 0},{"SetItemSeriesAngles", 3, 0},
+/*CAI3.9*/
 {NULL, 0, 0}
 };
 // The longest is now 25 characters but 23 is a more common limit
@@ -5429,7 +5436,15 @@ void CMacroProcessor::NextCommand()
       ABORT_LINE("Binning must be between 1 and 8 in line:\n\n");
     mWinApp->mProcessImage->GetFFT(&mImBufs[index], index2, BUFFER_FFT);
     break;
-    
+
+  case CME_FILTERIMAGE:                                     // FilterImage
+    if (ConvertBufferLetter(strItems[1], -1, true, index, report))
+      ABORT_LINE(report);
+    if (mWinApp->mProcessImage->FilterImage(&mImBufs[index], itemFlt[2], itemFlt[5],
+      itemFlt[3], itemFlt[4]))
+      ABORT_LINE("Failed to filter image for line:\n\n");
+    break;
+
   case CME_CTFFIND:                                         // CtfFind
   {
     if (ConvertBufferLetter(strItems[1], -1, true, index, report))
@@ -6725,6 +6740,33 @@ void CMacroProcessor::NextCommand()
       }
       break;
     }
+
+  case CME_SETFOLDERFORFRAMES:                              // SetFolderForFrames
+    if (!(mCamera->IsDirectDetector(camParams) ||
+      (camParams->canTakeFrames & FRAMES_CAN_BE_SAVED)))
+      ABORT_LINE("Cannot save frames from the current camera for line:\n\n");
+    SubstituteVariables(&strLine, 1, strLine);
+    mWinApp->mParamIO->StripItems(strLine, 1, strCopy);
+    if (camParams->DE_camType || (camParams->FEItype && FCAM_ADVANCED(camParams))) {
+      if (strCopy.FindOneOf("/\\") >= 0)
+        ABORT_LINE("Only a single folder can be entered for this camera type in:\n\n");
+    } else {
+      index = strCopy.GetAt(0);
+      if (!(((index == '/' || index == '\\') &&
+        (strCopy.GetAt(1) == '/' || strCopy.GetAt(1) == '\\')) ||
+        ((strCopy.GetAt(2) == '/' || strCopy.GetAt(2) == '\\') && strCopy.GetAt(1) == ':'
+          && ((index >= 'A' && index <= 'Z') || (index >= 'a' && index <= 'z')))))
+        ABORT_LINE("A complete absolute path must be entered in:\n\n");
+    }
+    if (camParams->K2Type)
+      mCamera->SetDirForK2Frames(strCopy);
+    else if (camParams->DE_camType)
+      mCamera->SetDirForDEFrames(strCopy);
+    else if (camParams->FEItype)
+      mCamera->SetDirForFalconFrames(strCopy);
+    else
+      camParams->dirForFrameSaving = strCopy;
+    break;
     
   case CME_SKIPFRAMEALIPARAMCHECK:                          // SkipFrameAliCheck
     index = itemEmpty[1] ? 1 : itemInt[1];
@@ -7217,11 +7259,49 @@ void CMacroProcessor::NextCommand()
       }
     break;
 
+  case CME_SETITEMTARGETDEFOCUS:                            // SetItemTargetDefocus 
+    index = itemInt[1];
+    navItem = CurrentOrIndexedNavItem(index, strLine);
+    if (!navItem)
+      return;
+    if (!navItem->mAcquire && navItem->mTSparamIndex < 0)
+      ABORT_LINE("Specified Navigator item is not marked for acquisition in line:\n\n");
+    if (itemFlt[2] < -20 || itemFlt[2] > 0)
+      ABORT_LINE("Target defocus must be between 0 and -20 in line:\n\n:");
+    navItem->mTargetDefocus = itemFlt[2];
+    navigator->SetChanged(true);
+    logRpt.Format("For Navigator item %d, target defocus set to %.2f", index + 1,
+      itemFlt[2]);
+    break;
+
+  case CME_SETITEMSERIESANGLES:                             // SetItemSeriesAngles
+    index = itemInt[1];
+    navItem = CurrentOrIndexedNavItem(index, strLine);
+    if (!navItem)
+      return;
+    if (navItem->mTSparamIndex < 0)
+      ABORT_LINE("The specified Navigator item is not marked for a tilt series"
+        " in line:\n\n");
+    if (mNavHelper->CheckTiltSeriesAngles(navItem->mTSparamIndex, itemFlt[2], itemFlt[3],
+      itemEmpty[4] ? EXTRA_NO_VALUE : itemFlt[4], report))
+      ABORT_LINE(report + "in line:\n\n");
+    navItem->mTSstartAngle = itemFlt[2];
+    navItem->mTSendAngle = itemFlt[3];
+    logRpt.Format("For Navigator item %d, tilt series range set to %.1f to %.1f",
+      index + 1, itemFlt[2], itemFlt[3]);
+    if (!itemEmpty[4]) {
+      navItem->mTSbidirAngle = itemFlt[4];
+      report.Format(", start %.1f", itemFlt[4]);
+      logRpt += report;
+    }
+    navigator->SetChanged(true);
+    break;
+
   case CME_SKIPACQUIRINGNAVITEM:                            // SkipAcquiringNavItem
     ABORT_NONAV;
     if (!navigator->GetAcquiring())
       mWinApp->AppendToLog("SkipAcquiringNavItem has no effect except from a\r\n"
-      "    pre-macro when acquiring Navigator items", mLogAction);
+      "    pre-script when acquiring Navigator items", mLogAction);
     navigator->SetSkipAcquiringItem(itemEmpty[1] || itemInt[1] != 0);
     break;
     
