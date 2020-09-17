@@ -264,10 +264,13 @@ void XCorrTripleCorr(float *array, float *brray, float *crray, int nxpad, int ny
 #endif
 }
 
-void XCorrFilter(float *array, int nxin, int nyin, int nxpad, int nypad, 
-                 float delta, float *ctf)
+// Filters the image in array with the given type and size into the array brray, which
+// must be a (nxpad +2) * nypad float array, with the standard filter specified in ctf
+// and delta.  array can be the same as brray as long as it is big enough
+void XCorrFilter(float *array, int type, int nxin, int nyin, float *brray, int nxpad, 
+  int nypad, float delta, float *ctf)
 {
-  float *inp, *outp = array;
+  float *inp, *outp = brray;
 #ifdef USE_FFTW2
   rfftwnd_plan plan;
   fftw_real dumreal;
@@ -277,31 +280,33 @@ void XCorrFilter(float *array, int nxin, int nyin, int nxpad, int nypad,
   int iylo = (nypad - nyin) / 2;
 
   // Move data into center of padded array
-  sliceTaperOutPad(array, SLICE_MODE_FLOAT, nxin, nyin, array, nxpad + 2, nxpad, nypad,
+  sliceTaperOutPad(array, type, nxin, nyin, brray, nxpad + 2, nxpad, nypad,
     0, 0.);
 
   // Filter it laboriously
+  if (delta) {
 #ifndef USE_FFTW2
-  todfftc(array, nxpad, nypad, 0);
+    todfftc(brray, nxpad, nypad, 0);
 #else
-  plan = rfftw2d_create_plan(nypad, nxpad, FFTW_FORWARD, FFTW_IN_PLACE);
-  rfftwnd_one_real_to_complex(plan, array, &dumcomp);
-  rfftwnd_destroy_plan(plan);
+    plan = rfftw2d_create_plan(nypad, nxpad, FFTW_FORWARD, FFTW_IN_PLACE);
+    rfftwnd_one_real_to_complex(plan, brray, &dumcomp);
+    rfftwnd_destroy_plan(plan);
 #endif        
 
-  XCorrFilterPart(array, array, nxpad, nypad, ctf, delta);
+    XCorrFilterPart(brray, brray, nxpad, nypad, ctf, delta);
 
 #ifndef USE_FFTW2
-  todfftc(array, nxpad, nypad, 1);
+    todfftc(brray, nxpad, nypad, 1);
 #else
-  plan = rfftw2d_create_plan(nypad, nxpad, FFTW_BACKWARD, FFTW_IN_PLACE);
-  rfftwnd_one_complex_to_real(plan, (fftw_complex *)array, &dumreal);
-  rfftwnd_destroy_plan(plan);
+    plan = rfftw2d_create_plan(nypad, nxpad, FFTW_BACKWARD, FFTW_IN_PLACE);
+    rfftwnd_one_complex_to_real(plan, (fftw_complex *)brray, &dumreal);
+    rfftwnd_destroy_plan(plan);
 #endif
+  }
 
-  //Move data back to contiguous space in array
+  //Move data back to contiguous space in brray
   for (int iy = iylo; iy < iylo + nyin; iy++) {
-    inp = &array[ixlo + (nxpad + 2) * iy];
+    inp = &brray[ixlo + (nxpad + 2) * iy];
     for (int ix = 0; ix < nxin; ix++)
       *outp++ = *inp++;
   }

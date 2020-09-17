@@ -46,6 +46,7 @@ public:
   void NewProcessedImage(EMimageBuffer *imBuf, short int *brray, int type, int nx, int ny,
     int moreBinning, int capFlag = BUFFER_PROCESSED, bool fftWindow = false);
   void RotateImage(BOOL bLeft);
+  int FilterImage(EMimageBuffer *imBuf, float sigma1, float sigma2, float radius1, float radius2);
   BOOL GetLiveFFT() {return mLiveFFT;};
   GetSetMember(BOOL, CircleOnLiveFFT)
   GetSetMember(bool, SideBySideFFT);

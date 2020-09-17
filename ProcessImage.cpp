@@ -436,7 +436,7 @@ void CProcessImage::RotateImage(BOOL bLeft)
     brray = (short int *)frray;
   }
   if (!brray) {
-    AfxMessageBox("Failed to get memory for rotated image", MB_EXCLAME);
+    SEMMessageBox("Failed to get memory for rotated image", MB_EXCLAME);
     return;
   }
   
@@ -454,6 +454,38 @@ void CProcessImage::RotateImage(BOOL bLeft)
     operation = (operation + 1) % 8;
   invert = 1 - invert;
   SEMTrace('1',"Time %f", SEMTickInterval((double)start));*/
+}
+
+// Filter the image in the given buffer with the standard filter parameters
+int CProcessImage::FilterImage(EMimageBuffer *imBuf, float sigma1, float sigma2,
+  float radius1, float radius2)
+{
+  KImage *image = imBuf->mImage;
+  int nx, ny, nxpad, nypad, nxdim, dir = 1;
+  float ctf[8193], delta, *brray;
+  float padFrac = 0.05f;
+  if (!image)
+    return -1;
+  if (image->getType() == kRGB) {
+    SEMMessageBox("You cannot filter an RGB image");
+    return 1;
+  }
+  image->getSize(nx, ny);
+  nxpad = XCorrNiceFrame((int)((1. + padFrac) * nx), 2, 19);
+  nypad = XCorrNiceFrame((int)((1. + padFrac) * ny), 2, 19);
+  nxdim = nxpad + 2;
+  NewArray(brray, float, nxdim * nypad);
+  if (!brray) {
+    SEMMessageBox("Failed to get memory for filtering image");
+    return 1;
+  }
+  XCorrSetCTF(sigma1, sigma2, radius1, radius2, ctf, nxpad, nypad, &delta);
+  image->Lock();
+  XCorrFilter((float *)image->getData(), image->getType(), nx, ny, brray, nxpad, nypad, 
+    delta, ctf);
+  image->UnLock();
+  NewProcessedImage(imBuf, (short *)brray, kFLOAT, nx, ny, 1);
+  return 0;
 }
 
 void CProcessImage::NewProcessedImage(EMimageBuffer *imBuf, short *brray, int type,
