@@ -4699,9 +4699,9 @@ int CCameraController::CapSetLDAreaFilterSettling(int inSet)
       ISdelay = delayLim;
       mWinApp->AppendToLog("Warning: settling time had unreasonable value:",
         LOG_OPEN_IF_CLOSED);
-      mWinApp->AppendToLog(logmess, LOG_OPEN_IF_CLOSED);
       mess2.Format("  (orig time out %u + sud %d)", genTOorig, (int)(1000. * startUp));
       logmess += mess2;
+      mWinApp->AppendToLog(logmess, LOG_OPEN_IF_CLOSED);
       mShiftManager->ResetAllTimeouts();
       mShiftManager->SetGeneralTimeOut(tickCount, ISdelay);
     } else if (mDebugMode)

@@ -1515,6 +1515,7 @@ int CTSController::CommonResume(int inSingle, int external, bool stoppingPart)
   mFocusForDriftWasOK = false;
   mScopeEventStartTime = -1.;
   mTerminationStarted = false;
+  mTermOnErrorCalled = false;
   mWinApp->mPluginManager->ResumingTiltSeries(mTiltIndex);
 
   // If valves haven't been closed ever, set one-shot based on the current state of flag 
@@ -1753,7 +1754,7 @@ void CTSController::NextAction(int param)
           // If not generally terminating on error & flag is set to terminate here, do so
           if (mExternalControl && !mTerminateOnError && mTermNotAskOnDim) {
             policy = IDCANCEL;
-            mTerminateOnError = true;
+            mTerminateOnError = 1;
           }
           error = SEMThreeChoiceBox(message, "Retake", "Go On", "Stop", 
             MB_YESNOCANCEL | MB_ICONQUESTION, 0, policy == IDCANCEL, policy);
@@ -4877,12 +4878,16 @@ BOOL CTSController::TerminateOnExit()
 // So far this can also be used for real termination from elsewhere
 void CTSController::TerminateOnError(void)
 {
+  if (mTermOnErrorCalled)
+    return;
+  mTermOnErrorCalled = true;
   if (StartGettingDeferredSum(DEFSUM_TERM_ERROR) == 1)
     return;
   mTerminateOnError = 0;
   mPostponed = false;
   mInStartup = false;
   mWinApp->mCameraMacroTools.DoingTiltSeries(false);
+  mTermOnErrorCalled = false;
   if (mStartedTS && EndControl(true, mReorderDoseSymFile)) {
     mNeedFinalTermTasks = true;
     return;

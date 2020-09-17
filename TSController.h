@@ -522,6 +522,7 @@ private:
   bool mFinishingLastReorder;  // Flag that last reorder was switched to synchronous
   bool mNeedFinalTermTasks;    // Flag to do final termination tasks when reorder is done
   bool mTerminationStarted;    // Flag that a termination call to EndControl occurred
+  bool mTermOnErrorCalled;     // Flag to keep from calling back into TerminateOnError
   CString mEndCtlFilePath;     // Things that need to be known about the file in the
   int mEndCtlWidth, mEndCtlHeight;   // second trip through EndControl where file is gone
   CString mEndCtlMdocPath;     // Name of mdoc file for making frame alignment com file
