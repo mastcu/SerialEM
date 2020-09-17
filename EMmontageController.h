@@ -120,7 +120,7 @@ class EMmontageController
   BOOL mReadResetBoxes;           // Flag to reset boxes after read
   BOOL mNeedToFillMini;           // Flag that mini should be filled with first mean
   BOOL mNeedToFillCenter;         // Flag that center should be filled
-  int mMiniFillVal;               // Fill value from mean of first piece
+  float mMiniFillVal;             // Fill value from mean of first piece
   int mReadSavedZ;                // Saved Z value to reset after read
   MontParam mTrialParam;
   double mBaseISX, mBaseISY;      // Base image shifts
@@ -177,6 +177,7 @@ class EMmontageController
   short int *mMiniData;           // Array for mini view
   unsigned char *mMiniByte;
   unsigned short *mMiniUshort;
+  float *mMiniFloat;
   BOOL  mConvertMini;             // Convert to bytes for mini view
   int   mMiniZoom;                // Zoom factor
   int   mMiniFrameX, mMiniFrameY; // Size of one frame in mini view
@@ -271,6 +272,7 @@ class EMmontageController
   bool mNeedBoxSetup;
   bool mRedoCorrOnRead;
   float mDefocusForCal;
+  bool mExpectingFloats;          // Flag that images should be floats
   BOOL mUseContinuousMode;        // Flag to use camera continuous acquisition
   int mNumContinuousAlign;        // Number of continuous mode shots to align
   double mStartTime;              // Tick time when it started

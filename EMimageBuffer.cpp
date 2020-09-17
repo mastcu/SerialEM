@@ -306,7 +306,7 @@ BOOL EMimageBuffer::ConvertToByte(float minScale, float maxScale)
   if (!mImage || !mImageScale || !mPixMap)
     return false;
   type = mImage->getType();
-  if ((type != kUSHORT && type != kSHORT))
+  if (type != kUSHORT && type != kSHORT && type != kFLOAT)
     return false;
 
   // Save shifts.  Get scale from last display if none passed in.

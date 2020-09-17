@@ -294,6 +294,7 @@ int EMbufferManager::SaveImageBuffer(KImageStore *inStore, bool skipCheck, int i
   KStoreIMOD *tiffStore;
   EMimageExtra *extra;
   double axisRot;
+  CString str;
   float axis, bidirAngle, camLen;
   int spot, err, check, cam, mag, oldDivided;
   BOOL savingOther = mWinApp->SavingOther();
@@ -353,7 +354,15 @@ int EMbufferManager::SaveImageBuffer(KImageStore *inStore, bool skipCheck, int i
       // backup file when there was TS extra output too.  It was bizarre. 12/30/17
       AdocReleaseMutex();
     }
+  } else if (toBuf->mImage && !BOOL_EQUIV(toBuf->mImage->getType() == kFLOAT,
+    inStore->getMode() == MRC_MODE_FLOAT)) {
+    str.Format("Error trying to save %sfloat image in %sfloat file",
+      inStore->getMode() == MRC_MODE_FLOAT ? "non-" : "",
+      inStore->getMode() == MRC_MODE_FLOAT ? "" : "-non");
+    SEMMessageBox(str);
+    return 1;
   }
+
   if (!toBuf->mCurStoreChecksum || !savingOther) {
     toBuf->mCurStoreChecksum = 0;
     if (inStore == mWinApp->mStoreMRC)

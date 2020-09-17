@@ -427,6 +427,9 @@ int KStoreMRC::AppendImage(KImage *inImage)
     if (inImage->getType() == kRGB) {
       mMode = MRC_MODE_RGB;
       mHead->Init(mWidth, mHeight, 0, mMode);
+    } else if (inImage->getType() == kFLOAT) {
+      mMode = MRC_MODE_FLOAT;
+      mHead->Init(mWidth, mHeight, 0, mMode);
     } else
       mHead->Init(mWidth, mHeight, 0, mFileOpt.mode);
 

@@ -135,7 +135,7 @@ void KImageScale::FindPctStretch(KImage *inImage, float pctLo, float pctHi, floa
       pctLo, pctHi, &scaleLo, &scaleHi) == 0) {
 
         // Spread the values out a bit for integer images if they are close together
-        if (type != SLICE_MODE_FLOAT) {
+        if (type != SLICE_MODE_FLOAT || scaleLo == scaleHi) {
           val = scaleLo;
           scaleLo = B3DMIN(scaleLo, scaleHi - 2);
           scaleHi = B3DMAX(scaleHi, val + 2);

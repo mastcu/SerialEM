@@ -23,7 +23,7 @@ void DLL_IM_EX XCorrBinInverse(void *array, int type, int nxin, int nyin, int ix
                      int nbin, int nxout, int nyout, void *brray);
 float DLL_IM_EX XCorrOneInverseBin(void *array, int type, int nxin, int nyin, int ixofs, int iyofs, 
                      int nbin, int ixout, int iyout);
-void DLL_IM_EX XCorrFillTaperGap(short int *data, int nx, int ny, int dmean, int ix0, int ix1,
+void DLL_IM_EX XCorrFillTaperGap(short int *data, int type, int nx, int ny, float dmean, int ix0, int ix1,
 					   int idirx, int iy0, int iy1, int idiry, int ntaper);
 void DLL_IM_EX XCorrStretch(void *array, int type, int nx, int ny, float stretch, float axis,
 				  void *brray, float *a11, float *a12, float *a21, float *a22);
@@ -43,7 +43,7 @@ void DLL_IM_EX ProcCentroid(void *array, int type, int nx, int ny, int ix0, int 
 void DLL_IM_EX ProcRotateLeft(void *array, int type, int nx, int ny, short int *brray);
 void DLL_IM_EX ProcRotateRight(void *array, int type, int nx, int ny, short int *brray);
 void DLL_IM_EX ProcShiftInPlace(short int *array, int type, int nx, int ny, int shiftX, int shiftY,
-                      int fill);
+                      float fill);
 void DLL_IM_EX ProcRotateFlip(short int *array, int type, int nx, int ny, int operation, int invert,
                     short int *brray, int *nxout, int *nyout);
 void DLL_IM_EX ProcFFT(void *array, int type, int nx, int ny, int binning, float *fftarray, 

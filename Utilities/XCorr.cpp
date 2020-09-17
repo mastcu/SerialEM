@@ -490,18 +490,38 @@ int XCorrNiceFrame(int num, int idnum, int limit)
   return numin;
 }
 
+#define FILL_TAPER_GAP(dat)  \
+  for (ix = ix0; ix <= ix1; ix++) {   \
+    if (idirx * (xdata - ix) > ntaper && disty > ntaper) {  \
+      dat[ibase + ix] = dmean;   \
+    } else {   \
+      distx = idirx * (xdata - ix);   \
+      if (distx < disty) {       \
+        frac = (float)distx / ntaper;    \
+        dat[ibase + ix] = frac * dmean + (1. - frac) * dat[ibase + xdata];   \
+      } else {    \
+        frac = (float)disty / ntaper;  \
+        dat[ibase + ix] = frac * dmean + (1. - frac) * dat[ydata * nx + ix];   \
+      }   \
+    }    \
+  }
+
+
 // XCORRFILLTAPERGAP will fill in the box in the data array, dimensioned nx by ny,
 // specified by starting and ending coordinates ix0, ix1 and iy0, iy1.  The iy coordinates
 // are assumed to need inversion.  Dmean specifies the fill value.  Values are tapered to
 // the mean when they are within ntaper pixels of the edge of the data, where idirx and
 // idiry indicate the direction in which data lie (-1 to bottom/left, 1 to top/right)
 
-void XCorrFillTaperGap(short int *data, int nx, int ny, int dmean, int ix0, int ix1,
-             int idirx, int iy0, int iy1, int idiry, int ntaper)
+void XCorrFillTaperGap(short int *data, int type, int nx, int ny, float dmean, int ix0, 
+  int ix1, int idirx, int iy0, int iy1, int idiry, int ntaper)
 {
   int distx, disty;
   int iy, ix;
   float frac;
+  unsigned short*usData = (unsigned short *)data;
+  float *fData = (float *)data;
+
 
   // Invert sense of Y values
   int iytmp = (ny - 1) - iy1;
@@ -523,21 +543,13 @@ void XCorrFillTaperGap(short int *data, int nx, int ny, int dmean, int ix0, int 
   for (iy = iy0; iy <= iy1; iy++) {
     int ibase = iy * nx;
     disty = idiry * (ydata - iy);
-    for (ix = ix0; ix <= ix1; ix++) {
-      if (idirx * (xdata - ix) > ntaper && disty > ntaper)
-        data[ibase + ix] = dmean;
-      else {
-        distx = idirx * (xdata - ix);
-        if (distx < disty) {
-          // attenuate data from row
-          frac = (float)distx / ntaper;
-          data[ibase + ix] = frac * dmean + (1. - frac) * data[ibase + xdata];
-        } else {
-          // attenuate data from column
-          frac = (float)disty / ntaper;
-          data[ibase + ix] = frac * dmean + (1. - frac) * data[ydata * nx + ix];
-        }
-      }
+    if (type == UNSIGNED_SHORT) {
+      FILL_TAPER_GAP(usData);
+
+    } else if (type == FLOAT) {
+      FILL_TAPER_GAP(fData);
+    } else {
+      FILL_TAPER_GAP(data);
     }
   }
 }
@@ -1175,9 +1187,23 @@ void ProcRotateLeft(void *array, int type, int nx, int ny, short int *brray)
   }
 }
 
-// Shift an integer or byte buffer in place by the given amounts
+#define SHIFT_IN_PLACE(in, out, arr, typ) \
+  in = &arr[yin * nx + xCopyStrt];   \
+  out = &arr[yout * nx + xCopyStrt + shiftX];   \
+  if (xCopyDir > 0) {   \
+    for (x = 0; x < numXcopy; x++)   \
+      *out++ = *in++;    \
+  } else {    \
+    for (x = 0; x < numXcopy; x++)   \
+      *out-- = *in--;     \
+  }    \
+  for (x = xFillStrt; x < xFillEnd; x++)     \
+    arr[yout * nx + x] = (typ)fill; 
+
+
+// Shift an integer, float or byte buffer in place by the given amounts
 void ProcShiftInPlace(short int *array, int type, int nx, int ny, int shiftX, int shiftY,
-                      int fill)
+                      float fill)
 {
   int yFillStrt, yFillEnd, yCopyStrt, yCopyEnd, yCopyDir;
   int xFillStrt, xFillEnd, xCopyStrt, numXcopy, xCopyDir;
@@ -1185,6 +1211,9 @@ void ProcShiftInPlace(short int *array, int type, int nx, int ny, int shiftX, in
   short int *inp, *outp;
   unsigned char *inbp, *outbp, *brray;
   unsigned short *usArray = (unsigned short *)array;
+  float *infp, *outfp;
+  unsigned short *inusp, *outusp;
+  float *fArray = (float *)array;
   brray = (unsigned char *)array;
 
   if (shiftY > 0) {
@@ -1222,41 +1251,13 @@ void ProcShiftInPlace(short int *array, int type, int nx, int ny, int shiftX, in
     yout = yin + shiftY;
 
     if (type == BYTE) {
-
-      // Get address of start of copy, from and to
-      inbp = &brray[yin * nx + xCopyStrt];
-      outbp = &brray[yout * nx + xCopyStrt + shiftX];
-
-      // Copy forward or backwards
-      if (xCopyDir > 0) {
-        for (x = 0; x < numXcopy; x++)
-          *outbp++ = *inbp++;
-      } else {
-        for (x = 0; x < numXcopy; x++)
-          *outbp-- = *inbp--;
-      }
-
-      // Fill end of line
-      for (x = xFillStrt; x < xFillEnd; x++)
-        brray[yout * nx + x] = fill;
+      SHIFT_IN_PLACE(inbp, outbp, brray, unsigned char);
+    } else if (type == FLOAT) {
+      SHIFT_IN_PLACE(infp, outfp, fArray, float);
+    } else if (type == UNSIGNED_SHORT) {
+      SHIFT_IN_PLACE(inusp, outusp, usArray, unsigned short);
     } else {
-
-      // Get address of start of copy, from and to
-      inp = &array[yin * nx + xCopyStrt];
-      outp = &array[yout * nx + xCopyStrt + shiftX];
-
-      // Copy forward or backwards
-      if (xCopyDir > 0) {
-        for (x = 0; x < numXcopy; x++)
-          *outp++ = *inp++;
-      } else {
-        for (x = 0; x < numXcopy; x++)
-          *outp-- = *inp--;
-      }
-
-      // Fill end of line
-      for (x = xFillStrt; x < xFillEnd; x++)
-        array[yout * nx + x] = fill;
+      SHIFT_IN_PLACE(inp, outp, array, short);
     }
   }
 
@@ -1264,13 +1265,16 @@ void ProcShiftInPlace(short int *array, int type, int nx, int ny, int shiftX, in
   for (yout = yFillStrt; yout < yFillEnd; yout++)
     if (type == BYTE)
       for (x = 0; x < nx; x++)
-        brray[yout * nx + x] = fill;
+        brray[yout * nx + x] = (unsigned char)fill;
+    else if (type == FLOAT)
+      for (x = 0; x < nx; x++)
+        fArray[yout * nx + x] = fill;
     else if (type == UNSIGNED_SHORT)
       for (x = 0; x < nx; x++)
-        usArray[yout * nx + x] = fill;
+        usArray[yout * nx + x] = (unsigned short)fill;
     else
       for (x = 0; x < nx; x++)
-        array[yout * nx + x] = fill;
+        array[yout * nx + x] = (short)fill;
 }
 
 // Perform any combination of rotation and Y flipping for a short array: 

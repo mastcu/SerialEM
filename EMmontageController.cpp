@@ -335,6 +335,7 @@ int EMmontageController::ReadMontage(int inSect, MontParam *inParam,
     SEMMessageBox( "Illegal section number.");
     return 1;
   }
+  mExpectingFloats = mReadStoreMRC->getMode() == MRC_MODE_FLOAT;
   mParam->zCurrent = newZ;
   mCenterOnly = centerOnly;
   mSynchronous = synchronous || centerOnly;
@@ -434,6 +435,18 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
       return 1;
     }
     mUseContinuousMode = mParam->useContinuousMode && cam->useContinuousMode > 0;
+
+    if (!mReadingMontage) {
+      mExpectingFloats = mCamera->ReturningFloatImages(cam) != 0;
+      if (mReadStoreMRC->getDepth() &&
+        !BOOL_EQUIV(mExpectingFloats, mReadStoreMRC->getMode() == MRC_MODE_FLOAT)) {
+        mess.Format("You cannot take this montage with %sfloat images, the output file is"
+          " a %sfloat file", mExpectingFloats ? "" : "non-", 
+          mExpectingFloats ? "non-" : "");
+        SEMMessageBox(mess);
+        return 1;
+      }
+    }
 
     // Set mag index now from current low dose params (note this allows a change!)
     setNum = MontageConSetNum(mParam, true);
@@ -821,8 +834,8 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
 
   // Check disk space unless doing tilt series
   if (!mTrialMontage && !preCooking && !mReadingMontage && !mWinApp->DoingTiltSeries()) {
-    if (UtilCheckDiskFreeSpace((mParam->xFrame * mParam->yFrame * 2.) *
-      (mNumPieces - (mNumToSkip + already)), "montage"))
+    if (UtilCheckDiskFreeSpace((mParam->xFrame * mParam->yFrame * 
+      (mExpectingFloats ? 4. : 2.)) * (mNumPieces - (mNumToSkip + already)), "montage"))
       return 1;
   }
 
@@ -1295,7 +1308,8 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
 
   // Allocate center piece and bail out if that fails
   if (!preCooking) {
-    NewArray(mCenterData, short int, mParam->xFrame * mParam->yFrame);
+    NewArray(mCenterData, short int, mParam->xFrame * mParam->yFrame * 
+      (mExpectingFloats ? 2 : 1));
     if (!mCenterData) {
       SEMMessageBox("Cannot get memory for composing center piece");
       return 1;
@@ -1365,7 +1379,7 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
     }
 
     // Go on to next attempt if the array is huge
-    if ((double)mMiniArrayX * mMiniArrayY > 2147000000) {
+    if ((double)mMiniArrayX * mMiniArrayY * (mExpectingFloats ? 2 : 1) > 2147000000) {
       NextMiniZoomAndBorder(borderTry);
       continue;
     }
@@ -1376,7 +1390,8 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
     // The needed amount is 2 * size for short array, + size for pixmap
     // unless it is converted to bytes
     if (memoryLimit) {
-      needed = 3. * mMiniArrayX * mMiniArrayY + mMiniSizeX * mMiniSizeY;
+      needed = (mExpectingFloats ? 5. : 3.) * mMiniArrayX * mMiniArrayY + 
+        mMiniSizeX * mMiniSizeY;
       if (mConvertMini)
         needed =  mMiniArrayX * mMiniArrayY; 
       tryForMemory = currentUsage + needed < memoryLimit;
@@ -1389,9 +1404,11 @@ int EMmontageController::StartMontage(int inTrial, BOOL inReadMont, float cookDw
         NewArray(mMiniByte, unsigned char, mMiniArrayX * mMiniArrayY);
         mMiniData = (short int *) mMiniByte;
       } else
-        NewArray(mMiniData, short int, mMiniArrayX * mMiniArrayY);
+        NewArray(mMiniData, short int, mMiniArrayX * mMiniArrayY * 
+        (mExpectingFloats ? 2 : 1));
     }
     mMiniUshort = (unsigned short *)mMiniData;
+    mMiniFloat = (float *)mMiniData;
     if (!mMiniData) {
 
       // If failed, try again as long as size is still substantial
@@ -2048,7 +2065,7 @@ void EMmontageController::SavePiece()
 {
   KImage *image;
   void *data;
-  int type, lower, idir, ixy, i, nVar, upper, nSum, cenType, sectInd;
+  int type, lower, idir, ixy, i, nVar, upper, nSum, cenType, sectInd, dataSize;
   float xPeak, yPeak;
   CString report;
   float sDmin, denmin, xFirst, yFirst;
@@ -2061,6 +2078,8 @@ void EMmontageController::SavePiece()
   int isave, startX, startY, endX, endY, iy, iny, outy, indin, indout, ix;
   int iDirX, iDirY, shiftX, shiftY, debugLevel;
   float angle, adjBaseX, adjBaseY, CCCmax;
+  float *centerFloat = (float *)mCenterData;
+  unsigned short int *uCenter = (unsigned short int *)mCenterData;
   double aMaxCos;
   EMimageExtra *extra0, *extra1;
   BOOL doingTasks;
@@ -2069,6 +2088,14 @@ void EMmontageController::SavePiece()
   mImBufs->GetTiltAngle(angle);
   image = mImBufs[0].mImage;
   type = image->getType();
+  dataSizeForMode(type, &dataSize, &i);
+  if ((mExpectingFloats ? 4 : 2) != dataSize) {
+    report.Format("SavePiece in montaging got a %s image when expecting %s",
+      mExpectingFloats ? "integer" : "float", mExpectingFloats ? "floats" : "integers");
+    SEMMessageBox(report);
+    StopMontage();
+    return;
+  }
 
   // Save the image
   if (!mReadingMontage && !mTrialMontage) {
@@ -2261,6 +2288,8 @@ void EMmontageController::SavePiece()
     }
     image = mImBufs[0].mImage;
     type = image->getType();
+    if (type == kUBYTE)
+      dataSize = 1;
     image->Lock();
     data = image->getData();
   }
@@ -2270,6 +2299,7 @@ void EMmontageController::SavePiece()
     short int *sShort = (short int *)data;
     unsigned short int *uShort = (unsigned short int *)data;
     unsigned char *byte = (unsigned char *)data;
+    float *fData = (float *)data;
     int outx, subZoomX = 0, subZoomY = 0, xtrim, ytrim, keepByte = 0;
     int xstrt = 0, xend = mMiniFrameX, ystrt = 0, yend = mMiniFrameY;
     int xofset = 0, yofset = 0;
@@ -2279,23 +2309,37 @@ void EMmontageController::SavePiece()
 
     // First time in, get mean of this image and fill the whole array
     if (mNeedToFillMini) {
-      mMiniFillVal = (int)ProcImageMean(data, type, mParam->xFrame, mParam->yFrame, 0,
+      mMiniFillVal = ProcImageMean(data, type, mParam->xFrame, mParam->yFrame, 0,
         mParam->xFrame - 1, 0, mParam->yFrame - 1);
       if (!mMiniBorderY) {
         if (mConvertMini) {
           for (outx = 0; outx < mMiniSizeX * mMiniSizeY; outx++)
             mMiniByte[outx] = (unsigned char)mMiniFillVal;
+        } else if (mExpectingFloats) {
+          for (outx = 0; outx < mMiniSizeX * mMiniSizeY; outx++)
+            mMiniFloat[outx] = mMiniFillVal;
+        } else if (type == kUSHORT) {
+          for (outx = 0; outx < mMiniSizeX * mMiniSizeY; outx++)
+            mMiniUshort[outx] = (unsigned short)mMiniFillVal;
         } else {
           for (outx = 0; outx < mMiniSizeX * mMiniSizeY; outx++)
-            mMiniData[outx] = (unsigned short)mMiniFillVal;
+            mMiniData[outx] = (short)mMiniFillVal;
         }
       }
       mNeedToFillMini = false;
 
       // Fill center now that this mean is known
       if (mNeedToFillCenter) {
-        for (i = 0; i < mParam->xFrame * mParam->yFrame; i++)
-          mCenterData[i] = mMiniFillVal;
+        if (mExpectingFloats) {
+          for (i = 0; i < mParam->xFrame * mParam->yFrame; i++)
+            centerFloat[i] = mMiniFillVal;
+        } else if (type == kUSHORT) {
+          for (i = 0; i < mParam->xFrame * mParam->yFrame; i++)
+            uCenter[i] = (unsigned short)mMiniFillVal;
+        } else {
+          for (i = 0; i < mParam->xFrame * mParam->yFrame; i++)
+            mCenterData[i] = (short)mMiniFillVal;
+        }
         mNeedToFillCenter = false;
       }
     }
@@ -2358,7 +2402,7 @@ void EMmontageController::SavePiece()
       if (type == kUBYTE)
         keepByte = mConvertMini ? 1 : -1;
       outx = extractAndBinIntoArray(data, type, 
-        image->getRowBytes() / (type == kUBYTE ? 1 : 2), 
+        image->getRowBytes() / dataSize, 
         xstrt * mMiniZoom + subZoomX, xend * mMiniZoom + subZoomX - 1,
         ystrt * mMiniZoom + subZoomY, yend * mMiniZoom + subZoomY - 1, mMiniZoom, 
         mMiniData, mMiniArrayX, miniBaseX + xstrt, miniBaseY + ystrt, keepByte, &outx, 
@@ -2387,6 +2431,14 @@ void EMmontageController::SavePiece()
           uShort = (unsigned short *)image->getRowData(outy * mMiniZoom + subZoomY);
           for (outx = xstrt; outx < xend; outx++) {
             mMiniUshort[indout++] = uShort[indin];
+            indin += mMiniZoom;
+          }
+          break;
+
+        case kFLOAT:
+          fData = (float *)image->getRowData(outy * mMiniZoom + subZoomY);
+          for (outx = xstrt; outx < xend; outx++) {
+            mMiniFloat[indout++] = fData[indin];
             indin += mMiniZoom;
           }
           break;
@@ -2423,10 +2475,18 @@ void EMmontageController::SavePiece()
       if (mNeedToFillCenter) {
 
         // Fill center in case there was no minidata
-        mMiniFillVal = (int)ProcImageMean(data, type, mParam->xFrame, mParam->yFrame, 0,
+        mMiniFillVal = ProcImageMean(data, type, mParam->xFrame, mParam->yFrame, 0,
           mParam->xFrame - 1, 0, mParam->yFrame - 1);
-        for (i = 0; i < mParam->xFrame * mParam->yFrame; i++)
-          mCenterData[i] = mMiniFillVal;
+        if (mExpectingFloats) {
+          for (i = 0; i < mParam->xFrame * mParam->yFrame; i++)
+            centerFloat[i] = mMiniFillVal;
+        } else if (type == kUSHORT) {
+          for (i = 0; i < mParam->xFrame * mParam->yFrame; i++)
+            uCenter[i] = (unsigned short)mMiniFillVal;
+        } else {
+          for (i = 0; i < mParam->xFrame * mParam->yFrame; i++)
+            mCenterData[i] = (short)mMiniFillVal;
+        }
         mNeedToFillCenter = false;
       }
   }
@@ -2595,6 +2655,8 @@ void EMmontageController::SavePiece()
   // Move the mini data into buffer B
   int miniType = 
     mConvertMini ? kUBYTE : (image->getType() == kUSHORT ? kUSHORT : kSHORT);
+  if (!mConvertMini && mExpectingFloats)
+    miniType = kFLOAT;
   if (mMiniData) {
 
     // Do the deferred tiling
@@ -2788,6 +2850,7 @@ void EMmontageController::SavePiece()
   double dSum = 0.;
   nSum = 0;
   int tSum;
+  float fSum;
   for (isave = 0; isave < mNumCenterSaved; isave++) {
 
     // Find limits of copy, in montage coordinates
@@ -2802,6 +2865,7 @@ void EMmontageController::SavePiece()
     short int *sShort = (short int *)image->getData();
     unsigned char *byte = (unsigned char *)sShort;
     unsigned short int *uShort = (unsigned short int *)sShort;
+    float *dFloat = (float *)sShort;
 
     // Copy the data, getting cumulative sum
     for (iy = endY; iy >= startY; iy--) {
@@ -2811,6 +2875,7 @@ void EMmontageController::SavePiece()
       indout = outy * mParam->xFrame + startX - mMontCenterX;
       
       tSum = 0; 
+      fSum = 0.;
       switch (cenType) {
       case kSHORT:
         for (ix = indin; ix <= indin + endX - startX; ix++) {
@@ -2821,8 +2886,15 @@ void EMmontageController::SavePiece()
 
       case kUSHORT:
         for (ix = indin; ix <= indin + endX - startX; ix++) {
-          mCenterData[indout++] = (short int)(uShort[ix] >> 1);
-          tSum += uShort[ix] >> 1;
+          uCenter[indout++] = (short int)(uShort[ix]);
+          tSum += uShort[ix];
+        }
+        break;
+
+      case kFLOAT:
+        for (ix = indin; ix <= indin + endX - startX; ix++) {
+          centerFloat[indout++] = dFloat[ix];
+          fSum += dFloat[ix];
         }
         break;
 
@@ -2833,7 +2905,10 @@ void EMmontageController::SavePiece()
         }
         break;
       }
-      dSum += tSum;
+      if (cenType == kFLOAT)
+        dSum += fSum;
+      else
+        dSum += tSum;
       nSum += endX + 1 - startX;
     }
 
@@ -2846,7 +2921,7 @@ void EMmontageController::SavePiece()
 
   // Now if there are two pieces in the center, need to fill and taper corners
   if (goodCenterPair) {
-    int dMean = (int)(dSum / nSum);
+    float dMean = (float)(dSum / nSum);
     if (mCenterIndY2 > mCenterIndY1) {
 
       // the two frames are in Y
@@ -2882,14 +2957,8 @@ void EMmontageController::SavePiece()
         startY = endY - (mMontCenterY - mCenterCoordY[1] - 1);
       }
     }
-    XCorrFillTaperGap(mCenterData, mParam->xFrame, mParam->yFrame, dMean,
+    XCorrFillTaperGap(mCenterData, cenType, mParam->xFrame, mParam->yFrame, dMean,
             startX, endX, iDirX, startY, endY, iDirY, centerTaper);
-  }
-
-  unsigned short int *uCenter = (unsigned short int *)mCenterData;
-  if (cenType == kUSHORT) {
-    for (i = 0; i < mParam->xFrame * mParam->yFrame; i++)
-      uCenter[i] = uCenter[i] <<  1;
   }
 
   // Get a copy of extra data from current buffer if it exists, install after replacement
@@ -2900,7 +2969,7 @@ void EMmontageController::SavePiece()
   } 
 
   if (mBufferManager->ReplaceImage((char *)mCenterData, 
-    cenType == kUSHORT ? kUSHORT : kSHORT,  mParam->xFrame, mParam->yFrame, 0, 
+    cenType == kUBYTE ? kSHORT : cenType,  mParam->xFrame, mParam->yFrame, 0,
     mTrialMontage ? BUFFER_PRESCAN_CENTER : BUFFER_MONTAGE_CENTER, 
     mImBufs[0].mConSetUsed)) {
       delete [] mCenterData;
@@ -4601,6 +4670,9 @@ void EMmontageController::RetilePieces(int miniType)
       } else if (miniType == kUSHORT) {
         for (outx = 0; outx < mMiniSizeX; outx++)
           mMiniUshort[outx + outy * mMiniSizeX] = (unsigned short)mMiniFillVal;
+      } else if (miniType == kFLOAT) {
+        for (outx = 0; outx < mMiniSizeX; outx++)
+          mMiniFloat[outx + outy * mMiniSizeX] = mMiniFillVal;
       } else {
         for (outx = 0; outx < mMiniSizeX; outx++)
           mMiniData[outx + outy * mMiniSizeX] = (short)mMiniFillVal;
@@ -4660,6 +4732,9 @@ void EMmontageController::RetilePieces(int miniType)
             if (mConvertMini) {
               for (outx = xstrt; outx < xend; outx++)
                 mMiniByte[indout++] = mMiniByte[indin++];
+            } else if (miniType == kFLOAT) {
+              for (outx = xstrt; outx < xend; outx++)
+                mMiniFloat[indout++] = mMiniFloat[indin++];
             } else {
               for (outx = xstrt; outx < xend; outx++)
                 mMiniData[indout++] = mMiniData[indin++];
@@ -4672,7 +4747,7 @@ void EMmontageController::RetilePieces(int miniType)
 
   // Shift to recenter if needed
   if (shiftY)
-    ProcShiftInPlace(mMiniData, mConvertMini ? kUBYTE :kSHORT, mMiniSizeX, mMiniSizeY, 
+    ProcShiftInPlace(mMiniData, mConvertMini ? kUBYTE : miniType, mMiniSizeX, mMiniSizeY, 
        0, shiftY, mMiniFillVal);
 }
 
