@@ -58,6 +58,8 @@ static const char *psAutoRepeatRef = "Auto Repeat Reference - Multiple Acquisiti
 static const char *psEnable = "Enable";
 static const char *psDisable = "Disable";
 static const char *psMotionCor = "Motion Correction";
+static const char *psMotionCorNew = "Image Processing - Motion Correction";
+static const char *psCountsPerElec = "Electron Counting - Counts Per Electron";
 
 // These are concatenated into multiple strings
 #define DE_PROP_COUNTING "Electron Counting"
@@ -178,6 +180,7 @@ void DirectElectronCamera::InitializeLastSettings()
   mLastPreExposure = -1.;
   mLastProcessing = -1;
   mLastNormCounting = -1;
+  mLastMovieCorrEnabled = -1;
   mLastUnnormBits = -1;
   mLastElectronCounting = -1;
   mLastSuperResolution = -1;
@@ -187,6 +190,7 @@ void DirectElectronCamera::InitializeLastSettings()
   mLastUseHardwareBin = -1;
   mLastUseHardwareROI = -1;
   mLastAutoRepeatRef = -1;
+  mElecCountsScaled = 1.;
 }
 
 
@@ -431,10 +435,11 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
     std::string propValue;
     bool result;
     BOOL debug = GetDebugOutput('D');
-    const char *propsToCheck[] = {DE_PROP_COUNTING, psMotionCor, DE_PROP_TEMP_SET_PT,
-      psReadoutDelay, psHardwareBin, psHardwareROI};
-    unsigned int flagsToSet[] = {DE_CAM_CAN_COUNT, DE_CAM_CAN_ALIGN, DE_HAS_TEMP_SET_PT,
-      DE_HAS_READOUT_DELAY, DE_HAS_HARDWARE_BIN, DE_HAS_HARDWARE_ROI};
+    const char *propsToCheck[] = {DE_PROP_COUNTING, psMotionCor, psMotionCorNew, 
+      DE_PROP_TEMP_SET_PT, psReadoutDelay, psHardwareBin, psHardwareROI, psCountsPerElec};
+    unsigned int flagsToSet[] = {DE_CAM_CAN_COUNT, DE_CAM_CAN_ALIGN, DE_CAM_CAN_ALIGN, 
+      DE_HAS_TEMP_SET_PT, DE_HAS_READOUT_DELAY, DE_HAS_HARDWARE_BIN, DE_HAS_HARDWARE_ROI,
+      DE_SCALES_ELEC_COUNTS};
     int numFlags = sizeof(flagsToSet) / sizeof(unsigned int);
 
     result = mDeServer->setCameraName((LPCTSTR)camName);
@@ -516,12 +521,18 @@ int DirectElectronCamera::initializeDECamera(CString camName, int camIndex)
       setStringProperty(DE_PROP_AUTOSUM"Save Correction", psDisable);
       setIntProperty(DE_PROP_AUTOSUM"Ignored Frames", 0);
     }
+    if (mServerVersion >= DE_HAS_AUTO_PIXEL_DEPTH)
+      setStringProperty(DE_PROP_AUTOMOVIE"Pixel Depth", "Auto");
+
     getFloatProperty("Frames Per Second (Max)", mCamParams[camIndex].DE_MaxFrameRate);
     B3DCLAMP(mCamParams[camIndex].DE_MaxFrameRate, 1.f, 5000.f);
     if (mServerVersion >= DE_HAS_REPEAT_REF) {
       setStringProperty(psAutoRepeatRef, psDisable);
       mLastAutoRepeatRef = 0;
     }
+
+    if (mCamParams[camIndex].CamFlags & DE_SCALES_ELEC_COUNTS)
+      getFloatProperty(psCountsPerElec, mElecCountsScaled);
 
     // Make sure that if an autosave dir can be set and one is in properties, it is there
     // or can be created
@@ -794,10 +805,11 @@ int DirectElectronCamera::setPreExposureTime(double preExpMillisecs)
 //
 ///////////////////////////////////////////////////////////////////
 
-int DirectElectronCamera::copyImageData(unsigned short *image4k, int imageSizeX, 
-                                        int imageSizeY, int divideBy2)
+int DirectElectronCamera::copyImageData(unsigned short *image4k, long &imageSizeX, 
+                                        long &imageSizeY, int divideBy2)
 {
   CString valStr;
+  int actualSizeX, actualSizeY;
   double startTime = GetTickCount();
   if (!m_DE_CLIENT_SERVER && m_STOPPING_ACQUISITION == true) {
     memset(image4k, 0, imageSizeX * imageSizeY * 2);
@@ -928,9 +940,10 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, int imageSizeX,
          return 1;
 
     // Check counting gain reference if normalized and counting mode
-    if ((mLastNormCounting > 0 && mNumLeftServerRef <= 0 && mLastElectronCounting > 0) &&
+    if (mServerVersion < DE_HAS_ONE_GAIN_STATUS &&
+      (mLastNormCounting > 0 && mNumLeftServerRef <= 0 && mLastElectronCounting > 0) &&
       !IsReferenceValid(checksum, mCountGainChecks, minuteNow,
-      "Correction Mode Counting Gain Reference Status", "post-counting gain"))
+        "Correction Mode Counting Gain Reference Status", "post-counting gain"))
          return 1;
 
     unsigned short *useBuf = image4k;
@@ -953,6 +966,19 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, int imageSizeX,
       return 1;
     }
     SEMTrace('D', "Got something back from DE Server..");
+
+    // Try to read back the actual image size from these READ-ONLY properties and if it 
+    // is different, truncate the Y size if necessary and set the return size from actual
+    if (mDeServer->getIntProperty(g_Property_DE_ImageWidth, &actualSizeX) &&
+      mDeServer->getIntProperty(g_Property_DE_ImageHeight, &actualSizeY) &&
+      (actualSizeX != imageSizeX || actualSizeY != imageSizeY)) {
+      if (actualSizeX * actualSizeY > imageSizeX * imageSizeY)
+        actualSizeY = (imageSizeX * imageSizeY) / actualSizeX;
+      imageSizeX = actualSizeX;
+      imageSizeY = actualSizeY;
+      inSizeX = imageSizeX;
+      inSizeY = imageSizeY;
+    }
 
     // If doing ref in server, loop until all the acquisitions are done
     double maxInterval = 2. * SEMTickInterval(startTime);
@@ -993,6 +1019,8 @@ int DirectElectronCamera::copyImageData(unsigned short *image4k, int imageSizeX,
     if (mLastElectronCounting > 0 && mCountScaling != 1.) {
       float scale = mCountScaling * (divideBy2 ? 0.5f : 1.f);
       int val, maxVal = divideBy2 ? 32767 : 65535;
+      if (mLastNormCounting && mElecCountsScaled > 0)
+        scale /= mElecCountsScaled;
       for (int i = 0; i < imageSizeX * imageSizeY; i++) {
         val = (int)(scale * (float)image4k[i] + 0.5f);
         B3DCLAMP(val, 0, maxVal);
@@ -1131,17 +1159,8 @@ int DirectElectronCamera::setBinning(int x, int y, int sizex, int sizey, int har
       mLastXbinning = x;
       mLastYbinning = y;
 
-      // set size if it does not match last value
-      if (sizex != mLastXimageSize || sizey != mLastYimageSize || !mTrustLastSettings) {
-        if (!justSetIntProperty(g_Property_DE_ImageWidth, sizex) || 
-          !justSetIntProperty(g_Property_DE_ImageHeight, sizey)) {
-            mLastErrorString = ErrorTrace("ERROR: Could NOT set the dimension parameters"
-              " of X: %d and Y: %d", sizex, sizey);
-            return 1;
-        } else
-          SEMTrace('D', "Dimensions set to X: %d Y: %d", sizex, sizey);
-      }
-
+      // DO NOT set size, those properties are read-only
+      
       mLastXimageSize = sizex;
       mLastYimageSize = sizey;
 
@@ -1212,8 +1231,9 @@ int DirectElectronCamera::SetAlignInServer(int alignFrames)
   CSingleLock slock(&m_mutex);
   if (slock.Lock(1000)) {
     if (alignFrames != mLastServerAlign || !mTrustLastSettings) {
-      if (!setStringWithError(psMotionCor, alignFrames > 0 ?
-        psEnable : psDisable))
+      if (!setStringWithError(
+        mServerVersion >= DE_HAS_NEW_MOT_COR_PROP ? psMotionCorNew : psMotionCor, 
+        alignFrames > 0 ? psEnable : psDisable))
         return 1;
       mLastServerAlign = alignFrames;
     }
@@ -1285,30 +1305,6 @@ int DirectElectronCamera::setROI(int offset_x, int offset_y, int xsize, int ysiz
   }
   return 1;
 }
-
-// Unused
-int DirectElectronCamera::setImageSize(int sizeX, int sizeY)
-{
-
-  if (m_DE_CLIENT_SERVER) {
-    if (sizeX != mLastXimageSize || sizeY != mLastYimageSize || !mTrustLastSettings) {
-      if (!justSetIntProperty(g_Property_DE_ImageWidth, sizeX) || 
-        !justSetIntProperty(g_Property_DE_ImageHeight, sizeY)) {
-          ErrorTrace("Could NOT set the dimension parameters of X: %d and Y: %d", 
-            sizeX, sizeY);
-          return 1;
-      }
-      SEMTrace('D', "Dimensions set to X: %d Y: %d", sizeX, sizeY);
-      mLastXimageSize = sizeX;
-      mLastYimageSize = sizeY;
-    }
-  } else {
-    m_LCCaptureInterface->SetImageSize(sizeX, sizeY);
-  }
-
-  return 0;
-}
-
 
 ///////////////////////////////////////////////////////////////////
 //AcquireImage() routine.  Function will read in the passed
@@ -1714,15 +1710,19 @@ HRESULT DirectElectronCamera::CoolDownCamera()
   return hr;
 }
 
-// Set the correction mode with the given value
+// Set the correction mode with the given value, plus 4 to disable movie corrections
 int DirectElectronCamera::setCorrectionMode(int nIndex, int readMode)
 {
   const char *corrections[3] = {"Uncorrected Raw", "Dark Corrected", 
     "Gain and Dark Corrected"};
   CString str;
-  int normCount, normDoseFrac = 1;
+  int normCount, normDoseFrac = 1, movieCorrEnable = 1;
   int bits = (readMode == SUPERRES_MODE) ? 8 : 16;
-  if (nIndex < 0 || nIndex > 2) 
+  if (nIndex & 4) {
+    movieCorrEnable = 0;
+    nIndex -= 4;
+  }
+  if (nIndex < 0 || nIndex > 2)
     return 1;
 
   // For frames, set gain correction based on the selected correction in the new version
@@ -1746,8 +1746,8 @@ int DirectElectronCamera::setCorrectionMode(int nIndex, int readMode)
   }
 
   // Set the output bits if they are not normalized
-  if (mLastSaveFlags > 0 && mNormAllInServer && 
-    (!normDoseFrac || nIndex < 2 || (readMode > 0 && !normCount)) && 
+  if (mLastSaveFlags > 0 && mNormAllInServer && mServerVersion < DE_HAS_AUTO_PIXEL_DEPTH
+    && (!normDoseFrac || nIndex < 2 || (readMode > 0 && !normCount)) && 
     (bits != mLastUnnormBits || !mTrustLastSettings)) {
       str.Format("%dbit", bits);
       if (!setStringWithError(DE_PROP_AUTOMOVIE"Format for Unnormalized Movie",
@@ -1763,6 +1763,14 @@ int DirectElectronCamera::setCorrectionMode(int nIndex, int readMode)
   }
   mLastProcessing = nIndex;
 
+  // Set the movie correction for newer server
+  if (mServerVersion >= DE_HAS_MOVIE_COR_ENABLE &&
+    (movieCorrEnable != mLastMovieCorrEnabled || !mTrustLastSettings)) {
+    if (!setStringWithError(DE_PROP_AUTOMOVIE"Image Correction",
+      movieCorrEnable ? psEnable : psDisable))
+      return 1;
+    mLastMovieCorrEnabled = movieCorrEnable;
+  }
   return 0;
 }
 ///////////////

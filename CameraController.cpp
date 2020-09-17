@@ -1402,6 +1402,14 @@ void CCameraController::InitializeDirectElectron(int *originalList, int numOrig)
             mAllParams[i].CamFlags &= ~(DE_CAM_CAN_COUNT);
           if (mAllParams[i].CamFlags & DE_WE_CAN_ALIGN)
             mFalconHelper->Initialize(-1);
+
+          if (mTD.DE_Cam->GetServerVersion() >= DE_ROI_IS_ON_CHIP &&
+            (mAllParams[i].DE_ImageInvertX || mAllParams[i].DE_ImageRot)) {
+            AfxMessageBox("Properties DEImageRotation and DEImageInvertXAxis no longer "
+              "have any effect for DE cameras.\n"
+              "These operations should be done in the server.", MB_EXCLAME);
+            mAllParams[i].DE_ImageInvertX = mAllParams[i].DE_ImageRot = 0;
+          }
         }	else {
           AfxMessageBox("FAILURE in Initializing Direct Electron camera", MB_EXCLAME);
           mAllParams[i].failedToInitialize = true;
@@ -4780,9 +4788,13 @@ void CCameraController::CapManageCoordinates(ControlSet & conSet, int &gainXoffs
       tsizeY, tTop, tLeft, tBot, tRight);
     swapXYinAcquire = TIETZ_ROTATING(mParam);
   }
-  if (mParam->DE_camType >= 2)
-    operation = mTD.DE_Cam->OperationForRotateFlip(mParam->DE_ImageRot, 
-      mParam->DE_ImageInvertX);
+  if (mParam->DE_camType >= 2) {
+    if (mTD.DE_Cam->GetServerVersion() < DE_ROI_IS_ON_CHIP)
+      operation = mTD.DE_Cam->OperationForRotateFlip(mParam->DE_ImageRot,
+        mParam->DE_ImageInvertX);
+    else
+      operation = mParam->rotationFlip;
+  }
   if (operation) {
     CorDefUserToRotFlipCCD(operation, mBinning, csizeX, csizeY, tsizeX, tsizeY, tTop, tLeft,
       tBot, tRight);
@@ -5776,9 +5788,13 @@ void CCameraController::AdjustSizes(int &DMsizeX, int ccdSizeX, int moduloX, int
   int diff;
   CameraParameters *camParam = (camera >= 0) ? &mAllParams[camera] : mParam;
   int operation = 0;
-  if (camParam->DE_camType >= 2)
-    operation = mTD.DE_Cam->OperationForRotateFlip(camParam->DE_ImageRot, 
-    camParam->DE_ImageInvertX);
+  if (camParam->DE_camType >= 2) {
+    if (mTD.DE_Cam->GetServerVersion() < DE_ROI_IS_ON_CHIP)
+      operation = mTD.DE_Cam->OperationForRotateFlip(camParam->DE_ImageRot,
+        camParam->DE_ImageInvertX);
+    else
+      operation = mParam->rotationFlip;
+  }
   if (camParam->TietzType && camParam->TietzImageGeometry > 0)
     UserToTietzCCD(camParam->TietzImageGeometry, binning, ccdSizeX, ccdSizeY, DMsizeX, 
       DMsizeY, Top, Left, Bottom, Right);

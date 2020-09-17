@@ -102,12 +102,17 @@ struct LiveThreadData {
 
 // DE server versions for capabilities
 // Version 2 moved to major, minor, rev, build so numbers are 100 times bigger
-#define DE_CAN_SAVE_MRC     1000715
-#define DE_HAS_REPEAT_REF   1000768
-#define DE_SUFFIX_KEEPS_PT  999999999
-#define DE_CAN_SET_FOLDER   1000943
-#define DE_ALL_NORM_IN_SERVER 1001243
-#define DE_ABORT_WORKS      999999999
+#define DE_CAN_SAVE_MRC           1000715
+#define DE_HAS_REPEAT_REF         1000768
+#define DE_SUFFIX_KEEPS_PT      999999999
+#define DE_CAN_SET_FOLDER         1000943
+#define DE_ALL_NORM_IN_SERVER     1001243
+#define DE_ABORT_WORKS          999999999
+#define DE_HAS_NEW_MOT_COR_PROP 201000000
+#define DE_HAS_AUTO_PIXEL_DEPTH 203000000
+#define DE_HAS_MOVIE_COR_ENABLE 203000000
+#define DE_ROI_IS_ON_CHIP       201150000
+#define DE_HAS_ONE_GAIN_STATUS  201000000
 
 //The following define the different
 //gain/dsi setting modes for the LC1100
@@ -126,7 +131,6 @@ public:
 	int readCameraProperties();
 	void readinTempandPressure();
 	int setBinning(int x, int y, int sizex, int sizey, int hardwareBin);
-	int setImageSize(int sizeX, int sizeY);
 	int AcquireImage(float seconds);
 	int AcquireDarkImage(float seconds);
 	void StopAcquistion();
@@ -137,7 +141,7 @@ public:
 	int reAllocateMemory(int mem);
 	int setDebugMode();
 	int unInitialize();
-	int copyImageData(unsigned short *image4k, int ImageSizeX, int ImageSizeY, 
+	int copyImageData(unsigned short *image4k, long &ImageSizeX, long &ImageSizeY, 
     int divideBy2);
 	float getCameraTemp();
 	float getCameraBackplateTemp();
@@ -280,6 +284,7 @@ private:
   float mLastExposureTime;              // Exposure time
   double mLastPreExposure;              // Pre-exposure
   int mLastProcessing;                  // uncorrected, dark, or dark/gain (linear mode)
+  int mLastMovieCorrEnabled;            // Whether movie correction was enabled
   int mLastNormCounting;                // Post-counting normalization of saved frames
   int mLastUnnormBits;                  // Bits output in unnormalized movie
   int mLastElectronCounting;            // Electron counting of either kind is 1, test > 0
@@ -293,6 +298,7 @@ private:
   BOOL mTrustLastSettings;              // Whether to trust all those values in server
 
   float mCountScaling;                  // Scaling for counting mode
+  float mElecCountsScaled;              // Factor by which counts are scaled when received
   int mReadoutDelay;                    // Milliseconds of readout delay set
   bool mNormAllInServer;                // Whether to normalize all images in server
   CString mSoftwareVersion;             // String for server version
