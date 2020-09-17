@@ -7321,7 +7321,13 @@ int CNavigatorDlg::LoadNavFile(bool checkAutosave, bool mergeFile, CString *inFi
         ADOC_OPTIONAL(AdocGetFloat("Item", sectInd, "FocusAxisPos",&item->mFocusAxisPos));
         ADOC_OPTIONAL(AdocGetTwoIntegers("Item", sectInd, "LDAxisAngle", 
           &item->mRotateFocusAxis, &item->mFocusAxisAngle));
-        ADOC_OPTIONAL(AdocGetTwoIntegers("Item", sectInd, "FocusOffsets", 
+        ADOC_OPTIONAL(AdocGetTwoFloats("Item", sectInd, "TSstartEndAngles",
+          &item->mTSstartAngle, &item->mTSendAngle));
+        ADOC_OPTIONAL(AdocGetFloat("Item", sectInd, "TSbidirAngle",
+          &item->mTSbidirAngle));
+        ADOC_OPTIONAL(AdocGetFloat("Item", sectInd, "TargetDefocus",
+          &item->mTargetDefocus));
+        ADOC_OPTIONAL(AdocGetTwoIntegers("Item", sectInd, "FocusOffsets",
           &item->mFocusXoffset, &item->mFocusYoffset));
         ind1 = ind2 = 0;
         ADOC_OPTIONAL(AdocGetTwoIntegers("Item", sectInd, "HoleArray", &ind1, &ind2));
@@ -8045,7 +8051,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
 {
   int err, len, zval, timeOut = 0;
   unsigned char lastChar;
-  CString report;
+  CString report, str;
   CMapDrawItem *item;
   TiltSeriesParam *tsp;
   mMovingStage = false;
@@ -8083,6 +8089,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
     mWinApp->AppendToLog(report);
 
     item->mAcquire = false;
+    item->mTargetDefocus = EXTRA_NO_VALUE;
     SetChanged(true);
     mNumAcquired++;
     item->mDraw = mParam->acquireType != ACQUIRE_TAKE_MAP;
@@ -8114,6 +8121,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
     ManageNumDoneAcquired();
     if (mWinApp->mMacroProcessor->GetLastCompleted()) {
       item->mAcquire = false;
+      item->mTargetDefocus = EXTRA_NO_VALUE;
       SetChanged(true);
       mNumAcquired++;
       UpdateListString(mAcquireIndex);
@@ -8139,7 +8147,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
         item->mStageY, mWinApp->mTSController->GetStopStageX(), 
         mWinApp->mTSController->GetStopStageY());
       mWinApp->AppendToLog(report);
-
+      item->mTargetDefocus = EXTRA_NO_VALUE;
     }
     break;
 
@@ -8259,9 +8267,37 @@ void CNavigatorDlg::AcquireNextTask(int param)
   // This should leave things resumable if there is a problem
   case ACQ_START_TS:
     tsp = (TiltSeriesParam *)mTSparamArray.GetAt(item->mTSparamIndex);
+
+    // Check item tilt angles before copying param
+    if (item->mTSstartAngle > EXTRA_VALUE_TEST &&
+      mHelper->CheckTiltSeriesAngles(item->mTSparamIndex, item->mTSstartAngle, 
+        item->mTSendAngle, item->mTSbidirAngle, report)) {
+      str.Format("For item %s, ", (LPCTSTR)item->mLabel);
+      SEMMessageBox(str + report);
+      StopAcquiring();
+      return;
+    }
     mWinApp->mTSController->CopyParamToMaster(tsp, true);
+
+    // If there are item changes, set them in master now, leave stored param alone
+    if (item->mTSstartAngle > EXTRA_VALUE_TEST ||
+      item->mTargetDefocus > EXTRA_VALUE_TEST) {
+      tsp = mWinApp->mTSController->GetTiltSeriesParam();
+      if (item->mTargetDefocus > EXTRA_VALUE_TEST)
+        tsp->targetDefocus = item->mTargetDefocus;
+      if (item->mTSstartAngle > EXTRA_VALUE_TEST) {
+        tsp->startingTilt = item->mTSstartAngle;
+        tsp->endingTilt = item->mTSendAngle;
+        if (tsp->bidirAngle > EXTRA_VALUE_TEST && tsp->doBidirectional)
+          tsp->bidirAngle = item->mTSbidirAngle;
+      }
+      mWinApp->mTSController->SyncParamToOtherModules();
+    }
     mHelper->ChangeRefCount(NAVARRAY_TSPARAM, item->mTSparamIndex, -1);
     item->mTSparamIndex = -1;
+    item->mTSstartAngle = EXTRA_NO_VALUE;
+    item->mTSendAngle = EXTRA_NO_VALUE;
+    item->mTSbidirAngle = EXTRA_NO_VALUE;
     mCurListSel = mCurrentItem = mAcquireIndex;
     UpdateListString(mAcquireIndex);
     ManageCurrentControls();
@@ -8614,6 +8650,8 @@ int CNavigatorDlg::OpenFileIfNeeded(CMapDrawItem * item, bool stateOnly)
       item->mRotateFocusAxis, item->mFocusAxisAngle, item->mFocusXoffset, 
       item->mFocusYoffset, "position for item");
   }
+  if (item->mTargetDefocus > EXTRA_VALUE_TEST && stateOnly)
+    mWinApp->mFocusManager->SetTargetDefocus(item->mTargetDefocus);
   if (stateOnly) {
     UpdateListString(mAcquireIndex);
     return 0;

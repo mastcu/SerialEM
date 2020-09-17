@@ -438,6 +438,7 @@ public:
     int & xOffset, int & yOffset, bool traceIt);
   void SetLDFocusPosition(int camIndex, float axisPos, BOOL rotateAxis, int axisRotation, 
     int xOffset, int yOffset, const char *descrip);
+  int CheckTiltSeriesAngles(int paramInd, float start, float end, float bidir, CString &errMess);
   bool AnyMontageMapsInNavTable();
   int FindMapIDforReadInImage(CString filename, int secNum);
   int SetUserValue(CMapDrawItem *item, int number, CString &value);

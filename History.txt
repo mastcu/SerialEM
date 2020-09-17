@@ -3,6 +3,13 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+9/16/20: Added script commands SetItemSeriesAngles to set angle range and
+bidirectional start for Navigator items marked for series, and
+SetItemTargetDefocus to set target for items marked for any acquisition.
+
+9/16/20: Added script commands SetFolderForFrames to set path or folder for
+saving frames, and FilterImage to apply a Fourier filter to a buffer.
+
 9/16/20: Fixed output of TargetDefocus to mdoc file (In 3.8).
 
 9/16/20: Marked Navigator data as changed and in need of saving for numerous

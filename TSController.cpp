@@ -536,7 +536,8 @@ BOOL CTSController::CanBackUp()
 // THE MAIN SETUP AND STARTING DIALOG
 
 // Open the dialog, return 1 for error, -1 for cancel
-int CTSController::SetupTiltSeries(int future, int futureLDstate, int ldMagIndex) 
+int CTSController::SetupTiltSeries(int future, int futureLDstate, int ldMagIndex,
+  int navOverrideFlags)
 {
   CTSSetupDialog tsDialog;
   float fangle, fangl2;
@@ -570,6 +571,7 @@ int CTSController::SetupTiltSeries(int future, int futureLDstate, int ldMagIndex
     tsDialog.mPanelOpen[i] = panelStates[i];
   tsDialog.mPanelOpen[NUM_TSS_PANELS - 1] = 1;
   angle = future ? 0. : mScope->GetTiltAngle();
+  tsDialog.mNavOverrideFlags = navOverrideFlags;
 
   // First time in (since last tilt series), set the camera and mags; try to set
   // the angles intelligently;

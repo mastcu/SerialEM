@@ -45,6 +45,7 @@ public:
   int mDisableStartOrEnd;
   float mMinDosymStart;
   float mMinDosymEnd;
+  int mNavOverrideFlags;
 
 // Dialog Data
   //{{AFX_DATA(CTSSetupDialog)
@@ -349,6 +350,9 @@ BOOL m_bWaitForDrift;
 CButton m_butSetupDriftWait;
 void ManageDriftWait();
 float m_fIterThresh;
+CStatic m_statStarTilt;
+CStatic m_statStarBidir;
+CStatic m_statTargMicrons;
 };
 
 //{{AFX_INSERT_LOCATION}}

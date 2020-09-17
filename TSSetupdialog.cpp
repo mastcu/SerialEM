@@ -50,7 +50,8 @@ static int idTable[] = {
   IDC_STATDELSEC, IDC_CHECK_VARY_PARAMS, IDC_BUT_SET_CHANGES, IDC_BUT_SWAP_ANGLES, 
   IDC_DO_BIDIR, IDC_BIDIR_ANGLE, IDC_BIDIR_WALK_BACK, IDC_STAT_BDMAG_LABEL,
   IDC_STAT_BIDIR_MAG, IDC_SPIN_BIDIR_MAG, IDC_BIDIR_USE_VIEW, IDC_STAT_BIDIR_FIELD_SIZE,
-  IDC_USE_DOSE_SYM, IDC_BUT_SETUP_DOSE_SYM, PANEL_END, 
+  IDC_USE_DOSE_SYM, IDC_BUT_SETUP_DOSE_SYM, IDC_STAT_STAR_TILT, IDC_STAT_STAR_BIDIR,
+  PANEL_END,
   IDC_TSS_PLUS2, 0, 0, IDC_TSS_TITLE2, IDC_TSS_LINE2,
   IDC_STATMAGLABEL, IDC_STATRECORDMAG,IDC_SPINRECORDMAG,  IDC_STATBINLABEL, 
   IDC_STATBINNING, IDC_SPINBIN, IDC_STATPIXEL, IDC_LOWMAGTRACK, IDC_STATLOWMAG,
@@ -405,7 +406,10 @@ void CTSSetupDialog::DoDataExchange(CDataExchange* pDX)
   DDX_Check(pDX, IDC_TSWAITFORDRIFT, m_bWaitForDrift);
   DDX_Control(pDX, IDC_BUT_SETUP_DRIFT_WAIT, m_butSetupDriftWait);
   DDX_Text(pDX, IDC_EDIT_ITER_THRESH, m_fIterThresh);
-	DDV_MinMaxFloat(pDX, m_fIterThresh, 0.05f, 50.f);
+  DDV_MinMaxFloat(pDX, m_fIterThresh, 0.05f, 50.f);
+  DDX_Control(pDX, IDC_STAT_STAR_TILT, m_statStarTilt);
+  DDX_Control(pDX, IDC_STAT_STAR_BIDIR, m_statStarBidir);
+  DDX_Control(pDX, IDC_STATTARGMICRONS, m_statTargMicrons);
 }
 
 
@@ -564,6 +568,17 @@ BOOL CTSSetupDialog::OnInitDialog()
   }
 
   ManagePanels();
+
+  m_statStarTilt.SetFont(&mTitleFont);
+  m_statStarBidir.SetFont(&mTitleFont);
+  if (mNavOverrideFlags & NAV_OVERRIDE_TILT)
+    m_statStarTilt.SetWindowText("*");
+  if (mNavOverrideFlags & NAV_OVERRIDE_BIDIR)
+    m_statStarBidir.SetWindowText("*");
+  if (mNavOverrideFlags & NAV_OVERRIDE_DEF_TARG) {
+    m_statTargMicrons.SetFont(&mTitleFont);
+    m_statTargMicrons.SetWindowTextA("um*");
+  }
 
   // Load the dialog box with parameters
   m_fStartAngle = mTSParam.startingTilt;
