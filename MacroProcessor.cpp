@@ -6992,6 +6992,7 @@ void CMacroProcessor::NextCommand()
     navigator->Redraw();
     logRpt.Format("Navigator item %d Acquire set to %s", index + 1,
       truth ? "enabled" : "disabled");
+    navigator->SetChanged(true);
     break;
                             
   case CME_NAVINDEXWITHLABEL:                               // NavIndexWithLabel
@@ -7063,6 +7064,7 @@ void CMacroProcessor::NextCommand()
     if (CMD_IS(SETNAVITEMUSERVALUE)) {
       SubstituteLineStripItems(strLine, 3, strCopy);
       mNavHelper->SetUserValue(navItem, index2, strCopy);
+      navigator->SetChanged(true);
     } else {
       if (mNavHelper->GetUserValue(navItem, index2, strCopy)) {
         logRpt.Format("Navigator item %d has no user value # %d", index + 1, index2);
@@ -7129,6 +7131,7 @@ void CMacroProcessor::NextCommand()
     if (navigator->SetCurrentRegistration(itemInt[1]))
       ABORT_LINE("New registration number is out of range or used for imported items "
       "in:\n\n");
+    navigator->SetChanged(true);
     break;
     
   case CME_SAVENAVIGATOR:                                   // SaveNavigator
@@ -7208,6 +7211,7 @@ void CMacroProcessor::NextCommand()
             ABORT_LINE(report);
           navItem->mLabel = strCopy;
         }
+        navigator->SetChanged(true);
         navigator->UpdateListString(index - 1);
         navigator->Redraw();
       }
@@ -7273,6 +7277,7 @@ void CMacroProcessor::NextCommand()
       ABORT_LINE("Current Navigator item is not in a group for statement:\n\n");
     if (index)
       ABORT_LINE("Error updating Z of Navigator item in statement:\n\n");
+    navigator->SetChanged(true);
     break;
 
   case CME_REPORTGROUPSTATUS:                               // ReportGroupStatus
@@ -7355,6 +7360,7 @@ void CMacroProcessor::NextCommand()
       AbortMacro();
       return;
     }
+    navigator->SetChanged(true);
     break;
     
   case CME_SHIFTITEMSBYCURRENTDIFF:                       // ShiftItemsByCurrentDiff
@@ -7383,6 +7389,7 @@ void CMacroProcessor::NextCommand()
         navItem->mRegistration);
       PrintfToLog("Items at registration %d shifted by %.2f, %.2f", 
         navItem->mRegistration, shiftX, shiftY);
+      navigator->SetChanged(true);
     } else {
       PrintfToLog("Current stage position is too far from item position (%.2f microns);" 
         "nothing was shifted", specDist);
@@ -7404,6 +7411,7 @@ void CMacroProcessor::NextCommand()
       index);
     logRpt.Format("%d items at registration %d were shifted by %.2f, %.2f", index2, index,
       itemDbl[1], itemDbl[2]);
+    navigator->SetChanged(true);
     break;
     
   case CME_ALIGNANDTRANSFORMITEMS:                          // AlignAndTransformItems
@@ -7436,6 +7444,7 @@ void CMacroProcessor::NextCommand()
       index = CNavRotAlignDlg::TransformItemsFromAlignment();
       logRpt.Format("%d items transformed after alignment with rotation of %.1f degrees",
         index, backlashX);
+      navigator->SetChanged(true);
     }
     SetReportedValues(backlashX);
     break;

@@ -3,6 +3,11 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+9/16/20: Fixed output of TargetDefocus to mdoc file (In 3.8).
+
+9/16/20: Marked Navigator data as changed and in need of saving for numerous
+script commands (In 3.8).
+
 9/15/20: Made montaging work with float images (In 3.8).
 
 9/12/20: SEM_3-8-1
