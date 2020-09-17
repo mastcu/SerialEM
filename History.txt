@@ -3,6 +3,7 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+9/12/20: SEM_3-8-1
 9/12/20: Changed DE calls to accommodate changes in the server, fixing
 the behavior when servers >= 2.1.15 do rotation/flip (In 3.8).
 
