@@ -2939,26 +2939,28 @@
             first, provided this is supported by scripting on the microscope.</TD>
         </TR>
         <TR>
-          <TD class="scriptcommand">MultipleRecords [#N] [#C] [#O] [#D] [#S] [#E] [#F] [#H] [#R2] [#N2] [#O2]</TD>
+          <TD class="scriptcommand">MultipleRecords [#N] [#C] [#O] [#D] [#S] [#E] [#F] [#B] [#H] [#R2] [#N2] [#O2]</TD>
           <TD>Acquires multiple Record images around the periphery of a hole, using image 
             shift to move to each off-center position.&nbsp; The parameters set in the 
             <a href="hidd_multi_shot_setup.htm">Multiple Record Setup dialog</a> control the 
             operation of this task, but any subset of them can be overridden by entering 
             optional parameters here.&nbsp; The value in the dialog is used if -9 is entered 
             for the corresponding parameter here, or if the optional entries end before the 
-            given parameter.&nbsp; The parameters are: <b>#N</b> for number of shots around the 
-            center; <b>#C</b> -1 or 1 for a shot in the center before or after the off-center 
-            shots; <b>#O</b> for the distance from center of the off-center shots, in microns; <b>#D</b> 
-            for the extra delay after the image shift, in seconds; <b>#S</b> 1 to save a Record 
-            image at each position or 0 not to; <b>#E</b> 1 or 2 to use early return for a K2/K3 
-            camera after the last shot or after all shots; <b>#F</b> for the number of frames in 
-            the early returned image (or -1 for all, 0 for none); <b>#H</b> the sum of 1 to do 
+            given parameter.&nbsp; The parameters are: <br /> 1) <b>#N</b> for number of 
+            shots around the center<br /> 2) <b>#C</b> -1 or 1 for a shot in the center before or after the 
+            off-center shots<br /> 3) <b>#O</b> for the distance from center of the off-center shots, 
+            in microns<br /> 4) <b>#D</b> for the extra delay after the image shift, in seconds<br /> 5) <b>#S</b> 1 to 
+            save a Record image at each position or 0 not to<br /> 6) <b>#E</b> 1 or 2 to use early 
+            return for a K2/K3 camera after the last shot or after all shots<br /> 7) <b>#F</b> for the 
+            number of frames in the early returned image (or -1 for all, 0 for none)<br /> 8) <b>#B</b> 1 to 
+            adjust beam tilt to compensate for image shift or 0 not to<br /> 9) <b>#H</b> the sum of 1 to do 
             shots around a center (within a hole) and 2 to do shots in multiple holes or 
             specified positions.&nbsp; (In addition, the sum in <b>#H</b> can include 4 for testing 
-            image locations or 8 for testing the coma correction.)&nbsp; Additional parameters are:
-             <b>#R2</b> greater than 0 to do a second ring of positions; <b>#N2</b> with the number of
-            positions in the second ring; and <b>#O2</b> for the distance from center of the second ring.
-             For example, 
+            image locations or 8 for testing the coma correction.)<br /> 10)
+             <b>#R2</b> greater than 0 to do a second ring of positions<br /> 11) <b>#N2</b> 
+            with the number of positions in the second ring <br /> 12) <b>#O2</b> for the distance from center 
+            of the second ring
+             <br /> For example, 
             &#39;MultipleRecords -9 -9 -9 4. 1&#39; will use an extra delay of 4 seconds and save 
             Records, but take all other parameters from the dialog.</TD>
         </TR>
