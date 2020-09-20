@@ -160,8 +160,6 @@ int CMultiHoleCombiner::CombineItems(int boundType)
       if (item->mAcquire && item->mRegistration == registration) {
         mWinApp->mMainView->GetItemImageCoords(imBuf, item, ptX, ptY);
         if (ptX >= 0. && ptX <= nx && ptY >= 0. && ptY <= ny) {
-          if (!navInds.size())
-            SEMTrace('1', "Drawn ID of first point %d", item->mDrawnOnMapID);
           xCenters.push_back(item->mStageX);
           yCenters.push_back(item->mStageY);
           navInds.push_back(ind);
@@ -181,8 +179,6 @@ int CMultiHoleCombiner::CombineItems(int boundType)
       if (item->mAcquire && item->mRegistration == registration) {
         if (item->mType == ITEM_TYPE_POINT && InsideContour(curItem->mPtX, curItem->mPtY,
           curItem->mNumPoints, item->mStageX, item->mStageY)) {
-          if (!navInds.size())
-            SEMTrace('1', "Drawn ID of first point %d", item->mDrawnOnMapID);
           xCenters.push_back(item->mStageX);
           yCenters.push_back(item->mStageY);
           navInds.push_back(ind);
@@ -198,8 +194,6 @@ int CMultiHoleCombiner::CombineItems(int boundType)
       item = itemArray->GetAt(ind);
       if (item->mAcquire) {
         if (item->mType == ITEM_TYPE_POINT && item->mGroupID == curItem->mGroupID) {
-          if (!navInds.size())
-            SEMTrace('1', "Drawn ID of first point %d", item->mDrawnOnMapID);
           xCenters.push_back(item->mStageX);
           yCenters.push_back(item->mStageY);
           navInds.push_back(ind);
@@ -295,6 +289,7 @@ int CMultiHoleCombiner::CombineItems(int boundType)
   boxAssigns.resize(numPoints, -1);
   ClearSavedItemArray();
   mIDsForUndo.clear();
+  mSetOfUndoIDs.clear();
   mIndexesForUndo.clear();
 
   if (!crossPattern) {
@@ -676,8 +671,14 @@ void CMultiHoleCombiner::UndoCombination(void)
   itemArray->Append(mSavedItems);
   mSavedItems.RemoveAll();
   mIDsForUndo.clear();
+  mSetOfUndoIDs.clear();
   mIndexesForUndo.clear();
   mNav->FinishMultipleDeletion();
+}
+
+bool CMultiHoleCombiner::IsItemInUndoList(int mapID)
+{
+  return mSetOfUndoIDs.count(mapID) > 0;
 }
 
 // For one line (a row or a column) find the best arrangement of boxes along that line
@@ -871,6 +872,7 @@ void CMultiHoleCombiner::AddMultiItemToArray(
     newItem->mPtY[0] = stageY;
   }
   mIDsForUndo.push_back(newItem->mMapID);
+  mSetOfUndoIDs.insert(newItem->mMapID);
   mIndexesForUndo.push_back((int)itemArray->GetSize());
 
   // The number of holes is still from the stage-space analysis and has to be transposed
@@ -896,13 +898,9 @@ void CMultiHoleCombiner::AddMultiItemToArray(
          backYcen, newItem->mSkipHolePos[2 * ix], newItem->mSkipHolePos[2 * ix + 1]);*/
     }
   }
-  if (!numAdded)
-    SEMTrace('1', "item drawn ID %d, new item %d", item->mDrawnOnMapID, newItem->mDrawnOnMapID);
   itemArray->Add(newItem);
-  if (!numAdded) {
+  if (!numAdded)
     item = itemArray->GetAt(itemArray->GetSize() - 1);
-    SEMTrace('1', "after adding, drawn ID %d,", item->mDrawnOnMapID);
-  }
   numAdded++;
 }
 

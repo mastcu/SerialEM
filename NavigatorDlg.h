@@ -421,6 +421,7 @@ private:
   ShortVec *mHFgridYpos;
   std::vector<bool> *mHFexclude;
   bool mAddingFoundHoles;
+  bool mDeferAddingToViewer;
 
 public:
   BOOL RegistrationChangeOK(void);

@@ -985,6 +985,8 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   BOOL useMultiShot = (mWinApp->mNavHelper->GetEnableMultiShot() & 1) || 
     mWinApp->mNavHelper->mMultiShotDlg;
   int currentIndex = navigator->GetCurrentOrAcquireItem(item);
+  if (!navigator->GetAcquiring())
+    item = navigator->GetSingleSelectedItem(&currentIndex);
   int currentGroup = (currentIndex >= 0 && item != NULL) ? item->mGroupID : -1;
   int groupThresh = mWinApp->mNavHelper->GetPointLabelDrawThresh();
   bool showCurPtAcquire = !imBuf->mHasUserPt && mAcquireBox;
@@ -994,10 +996,9 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
       mWinApp->mNavHelper->MultipleHolesAreSelected();
     mWinApp->mNavHelper->GetNumHolesFromParam(msNumXholes, msNumYholes);
   }
-  bool showMultiOnAll = useMultiShot && (mWinApp->mNavHelper->GetEnableMultiShot() & 2) &&
-    (!mWinApp->mNavHelper->mMultiCombinerDlg || 
-      mWinApp->mNavHelper->GetMHCenableMultiDisplay() || 
-      mWinApp->mNavHelper->mCombineHoles->OKtoUndoCombine());
+  bool showMultiOnAll = useMultiShot && (mWinApp->mNavHelper->GetEnableMultiShot() & 2);
+  bool showOnlyCombined = mWinApp->mNavHelper->mMultiCombinerDlg &&
+    !mWinApp->mNavHelper->GetMHCenableMultiDisplay();
   if (useMultiShot && !imBuf->GetTiltAngle(tiltAngle))
     tiltAngle = -999.;
 
@@ -1191,7 +1192,10 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
     // Draw polygons for full acquire area on all acquire points if selected, or on
     // current/selected points
     if (iDraw >= 0 && item->mAcquire && item->mNumPoints == 1 && mAcquireBox &&
-      (showMultiOnAll || (showCurPtAcquire && highlight))) {
+      (showMultiOnAll && 
+      (!showOnlyCombined || (item->mNumXholes != 0 && item->mNumYholes != 0) ||
+        mWinApp->mNavHelper->mCombineHoles->IsItemInUndoList(item->mMapID)) || 
+        (showCurPtAcquire && highlight))) {
       GetSingleAdjustmentForItem(imBuf, item, delPtX, delPtY);
       CPen pnAcquire(PS_SOLID, thick1, item->GetColor(highlight));
       CPen *pOldPen = cdc.SelectObject(&pnAcquire);

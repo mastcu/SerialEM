@@ -1,5 +1,7 @@
 #pragma once
 
+#include <set>
+
 class CMapDrawItem;
 class HoleFinder;
 class CNavHelper;
@@ -24,6 +26,7 @@ public:
   int CombineItems(int boundType);
   bool OKtoUndoCombine(void);
   void UndoCombination(void);
+  bool IsItemInUndoList(int mapID);
   const char *GetErrorMessage(int error);
 
 private:
@@ -37,6 +40,7 @@ private:
   CArray<CMapDrawItem *, CMapDrawItem *>mSavedItems;    // Items removed from Nav array
   IntVec mIDsForUndo;             // IDs of the multi-shot items added
   IntVec mIndexesForUndo;         // Their indexes: for rapid checking, can be changed
+  std::set<int> mSetOfUndoIDs;    // A set so they can be looked up easily
   ScaleMat mSkipXform;            // Transform to get from stage to IS space skip list
   bool mTransposeSize;            // Flag to transpose sizes from stage to IS space
 

@@ -459,7 +459,6 @@ int CHoleFinderDlg::DoMakeNavPoints(int layoutType, float lowerMeanCutoff,
     &mXinPiece, &mYinPiece, &mPieceOn, &gridX, &gridY, avgLen * mPixelSize,
     2.f * mBestRadius * mReduction * mPixelSize, avgAngle, mRegistration, mMapID,
     (float)mZstage, poly, layoutType);
-  SEMTrace('1', "Map ID passed = %d, Added group ID is %d", mMapID, mAddedGroupID);
   if (mAddedGroupID) {
     mNav->FindItemWithMapID(mAddedGroupID, false, true);
     mIndexOfGroupItem = mNav->GetFoundItem();
@@ -467,8 +466,6 @@ int CHoleFinderDlg::DoMakeNavPoints(int layoutType, float lowerMeanCutoff,
     if (mIsOpen)
       m_butMakeNavPts.EnableWindow(false);
     poly = mNav->GetOtherNavItem(mIndexOfGroupItem);
-    SEMTrace('1', "Drawn on ID of first item # %d = %d", mIndexOfGroupItem, 
-      poly->mDrawnOnMapID);
     return numAdded;
   }
   return 0;
@@ -942,7 +939,6 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
     StopScanning();
     return 1;
   }
-  SEMTrace('1', "Map ID of image is %d", mMapID);
 
   // Set up the parameters and call to start the scan
   mHelper->mFindHoles->setSequenceParams(diamReduced, spacingReduced,
@@ -1159,7 +1155,6 @@ void CHoleFinderDlg::ScanningNextTask(int param)
     mWinApp->mShiftManager->ApplyScaleMatrix(aInv, ptX - delX, ptY - delY, mXstages[ind],
       mYstages[ind]);
   }
-  SEMTrace('1', "Map ID after finding holes is %d", mMapID);
 
   // Get mins and maxes and set the sliders if necessary
   mMeanMin = *std::min_element(mHoleMeans.begin(), mHoleMeans.end());

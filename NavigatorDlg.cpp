@@ -172,6 +172,7 @@ CNavigatorDlg::CNavigatorDlg(CWnd* pParent /*=NULL*/)
   mLastGridAwayFromFocus = -1;
   mLastGridInSpacing = 0.;
   mAddingFoundHoles = false;
+  mDeferAddingToViewer = false;
 }
 
 
@@ -4742,6 +4743,8 @@ int CNavigatorDlg::MakeGridOrFoundPoints(int jstart, int jend, int jdir, int kst
   CString label;
   CMapDrawItem *item;
 
+  mDeferAddingToViewer = true;
+
   // No grouping: loop on the point positions and add them
   if (groupExtent <= 0.) {
     startnum = mNewItemNum;
@@ -4761,6 +4764,7 @@ int CNavigatorDlg::MakeGridOrFoundPoints(int jstart, int jend, int jdir, int kst
       }
     }
     mNewItemNum++;
+    FillListBox(false, true);
 
   } else {
 
@@ -5079,6 +5083,7 @@ int CNavigatorDlg::MakeGridOrFoundPoints(int jstart, int jend, int jdir, int kst
         numJgroups++;
       }
     }
+    FillListBox(false, true);
 
     // See if this is a good division
     if (numJgroups && !likeLast && !mWinApp->mMacroProcessor->DoingMacro()) {
@@ -5104,6 +5109,7 @@ int CNavigatorDlg::MakeGridOrFoundPoints(int jstart, int jend, int jdir, int kst
      }
     }
   }
+  mDeferAddingToViewer = false;
 
   // Make the current item be the first in the last group added so it is highlighted
   if (firstCurItem >= 0) {
@@ -5144,7 +5150,6 @@ void CNavigatorDlg::AddPointOnGrid(int j, int k, CMapDrawItem *poly, int registr
   item->mYinPiece = mGridPtYinPiece;
   if (mDrawnOnMontBufInd >= 0)
     TransferBacklash(&mImBufs[mDrawnOnMontBufInd], item);
-  UpdateListString(mCurrentItem);
   SetChanged(true);
 }
 
@@ -6604,7 +6609,6 @@ int CNavigatorDlg::DoLoadMap(bool synchronous, CMapDrawItem *item, int bufToRead
   // Read in the appropriate way for the file
   mLoadingMap = true;
   mBufToLoadInto = bufToReadInto >= 0 ? bufToReadInto :mBufferManager->GetBufToReadInto();
-
   if (mItem->mMapMontage && !mReadingOther)
     err = mWinApp->mMontageController->ReadMontage(mItem->mMapSection, NULL, NULL, false,
       synchronous, bufToReadInto);
@@ -6627,9 +6631,9 @@ int CNavigatorDlg::DoLoadMap(bool synchronous, CMapDrawItem *item, int bufToRead
 // Finish up after loading a map
 void CNavigatorDlg::FinishLoadMap(void)
 {
-  EMimageBuffer *imBuf = mImBufs + (mItem->mMapMontage ? 1 : mBufToLoadInto);
+  EMimageBuffer *imBuf = mImBufs + (mLoadItem->mMapMontage ? 1 : mBufToLoadInto);
   MontParam *masterMont = mWinApp->GetMontParam();
-  CameraParameters *camP = &mCamParams[B3DMAX(0, mItem->mMapCamera)];
+  CameraParameters *camP = &mCamParams[B3DMAX(0, mLoadItem->mMapCamera)];
   EMimageExtra *extra1;
   float stageX, stageY, angle;
   bool noStage, noTilt;
@@ -8917,10 +8921,13 @@ CMapDrawItem *CNavigatorDlg::MakeNewItem(int groupID)
     }
     mItemToList.push_back(mCurListSel);
   }
-  ItemToListString(mCurrentItem, str);
-  if (addstr)
-    m_listViewer.AddString(str);
-  m_listViewer.SetCurSel(mCurListSel);
+
+  if (!mDeferAddingToViewer) {
+    ItemToListString(mCurrentItem, str);
+    if (addstr)
+      m_listViewer.AddString(str);
+    m_listViewer.SetCurSel(mCurListSel);
+  }
   mSelectedItems.clear();
   mSelectedItems.insert(mCurrentItem);
   // No longer manage controls: caller must do it
