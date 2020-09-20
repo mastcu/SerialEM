@@ -1713,8 +1713,8 @@ void CSerialEMDoc::ReadSetPropCalFiles()
     // compose full filename and get status
     mCurrentSettingsPath = strCwd + mSettingsName;
     if (!CFile::GetStatus((LPCTSTR)mCurrentSettingsPath, status)) {
-      AfxMessageBox(mCurrentSettingsPath + " does not exist; trying "SETTINGS_NAME
-        " instead", MB_EXCLAME);
+      AfxMessageBox(mCurrentSettingsPath + " does not exist; trying "
+        SETTINGS_NAME" instead", MB_EXCLAME);
       mCurrentSettingsPath = strCwd + "\\" + SETTINGS_NAME;
     }
     if (CFile::GetStatus((LPCTSTR)mCurrentSettingsPath, status)) {
