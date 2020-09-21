@@ -453,6 +453,9 @@ void CNavigatorDlg::ManageCurrentControls()
     GetCollapsedGroupLimits(mCurListSel, mCurrentItem, index);
     mItem = mItemArray[mCurrentItem];
     m_strItemNum.Format("# %d-%d", mCurrentItem + 1, index + 1);
+    item = GetSingleSelectedItem();
+    if (item)
+      m_strLabel = item->mLabel;
     for (ind = mCurrentItem; ind <= index; ind++) {
       item = mItemArray[ind];
       if (doDraw < 0)
@@ -2819,7 +2822,7 @@ void CNavigatorDlg::MouseDoubleClick(int button)
   if (mLastSelectWasCurrent && button == VK_LBUTTON && m_bEditMode) {
     if (!shiftKey) {
       BackspacePressed();
-    } else if (mCurItemHoleXYpos.size() && GetSingleSelectedItem() &&
+    } else if (mCurItemHoleXYpos.size() && (mItem = GetSingleSelectedItem()) != NULL &&
       mHelper->GetNumHolesFromParam(msNumXholes, msNumYholes)) {
 
 
@@ -2991,7 +2994,7 @@ CArray<CMapDrawItem *, CMapDrawItem *> *CNavigatorDlg::GetMapDrawItems(
       LowDoseParams *ldp;
       int magInd, sizeX, sizeY, ind, useLineEnd;
       float ptX, ptY, cornX, cornY, rotation;
-      asIfLowDose = mWinApp->LowDoseMode() || mWinApp->GetDummyInstance();
+      asIfLowDose = mWinApp->LowDoseMode() || mWinApp->GetDummyInstance() || showMulti;
       if (montaging)
         montp = mWinApp->GetMontParam();
       if (asIfLowDose) {

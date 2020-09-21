@@ -4,10 +4,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 significance.
 ============================================================================
 9/20/20: Fixed bug that sometimes loaded a map without assigning its ID to a
-buffer; fixed display of labels around the current point with groups
-collapsed; improved display of multishot pattern with hole combiner open;
-added grid of points or found holes to the table viewer in one step at the end
-(In 3.8).
+buffer; fixed display of labels around the current point and shft-double-click
+deletion of one multihole position with groups collapsed; improved display of
+multishot pattern with hole combiner open; added grid of points or found holes
+to the table viewer in one step at theu end (In 3.8).
 
 9/16/20: Added script commands SetItemSeriesAngles to set angle range and
 bidirectional start for Navigator items marked for series, and
