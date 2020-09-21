@@ -267,7 +267,7 @@ void CTSSetupDialog::DoDataExchange(CDataExchange* pDX)
   DDX_Text(pDX, IDC_EDITBEAMTILT, m_fBeamTilt);
   DDX_Text(pDX, IDC_EDITCHECKFOCUS, m_fCheckFocus);
   DDX_Text(pDX, IDC_EDITCOUNTS, m_iCounts);
-  DDV_MinMaxInt(pDX, m_iCounts, 0, 65000);
+  DDV_MinMaxInt(pDX, m_iCounts, 0, 1000000);
   DDX_Text(pDX, IDC_EDITENDANGLE, m_fEndAngle);
   DDV_MinMaxFloat(pDX, m_fEndAngle, -mMaxTiltAngle, mMaxTiltAngle);
   DDX_Text(pDX, IDC_EDITINCREMENT, m_fIncrement);

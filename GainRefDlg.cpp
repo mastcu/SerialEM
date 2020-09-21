@@ -21,7 +21,7 @@ static char THIS_FILE[] = __FILE__;
 
 #define FRAMES_MAX  100
 #define TARGET_MIN  1
-#define TARGET_MAX  60000
+#define TARGET_MAX  250000
 #define TARGET_INC  500
 #define MAX_DARK_AVERAGE 20
 
