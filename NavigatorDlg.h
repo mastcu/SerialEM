@@ -262,6 +262,7 @@ private:
   NavParams *mParam;
   CCameraController *mCamera;
   CLowDoseDlg *mLowDoseDlg;
+  CMacroProcessor *mMacroProcessor;
 
   int mListBorderX, mListBorderY;
   int mNoteBorderX;  int mNoteHeight;

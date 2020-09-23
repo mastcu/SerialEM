@@ -320,6 +320,7 @@ BOOL CNavigatorDlg::OnInitDialog()
   mParam = mWinApp->GetNavParams();
   mHelper = mWinApp->mNavHelper;
   mLowDoseDlg = &mWinApp->mLowDoseDlg;
+  mMacroProcessor = mWinApp->mMacroProcessor;
 
   CRect editRect, clientRect;
   GetClientRect(clientRect);
@@ -1837,6 +1838,8 @@ void CNavigatorDlg::ItemToListString(int index, CString &string)
 void CNavigatorDlg::UpdateListString(int index)
 {
   CString string;
+  if (mMacroProcessor->DoingMacro() && mMacroProcessor->GetSuspendNavRedraw())
+    return;
   ItemToListString(index, string);
   if (m_bCollapseGroups)
     index = mItemToList[index];
@@ -5089,7 +5092,7 @@ int CNavigatorDlg::MakeGridOrFoundPoints(int jstart, int jend, int jdir, int kst
     FillListBox(false, true);
 
     // See if this is a good division
-    if (numJgroups && !likeLast && !mWinApp->mMacroProcessor->DoingMacro()) {
+    if (numJgroups && !likeLast && !mMacroProcessor->DoingMacro()) {
      Redraw();
      label.Format("There are %d groups with %.1f points per group\n\n"
        "Do you want to keep this set of groups?", numJgroups, 
@@ -5959,7 +5962,7 @@ int CNavigatorDlg::NewMap(bool unsuitableOK, int addOrReplaceNote, CString *newN
         return 1;
       } else {
 
-        if (!(mWinApp->mMacroProcessor->DoingMacro() && mHelper->GetAcquiringDual())) {
+        if (!(mMacroProcessor->DoingMacro() && mHelper->GetAcquiringDual())) {
 
           //If it can be saved, and they haven't been asked before, ask about auto save
           if (mDocWnd->GetSaveOnNewMap() < 0) {
@@ -7956,12 +7959,12 @@ void CNavigatorDlg::AcquireAreas(bool fromMenu)
           mParam->postMacroIndNonTS) - 1;
       if (loop == 0)
         macnum = mParam->macroIndex - 1;
-      if (macnum >= 0 && mWinApp->mMacroProcessor->EnsureMacroRunnable(macnum))
+      if (macnum >= 0 && mMacroProcessor->EnsureMacroRunnable(macnum))
         return;
     }
 
     // Set to nonresumable so it will not look like it is paused and we can go on
-    mWinApp->mMacroProcessor->SetNonResumable();
+    mMacroProcessor->SetNonResumable();
   } 
   
   // If there is no file open for regular acquire, make sure one will be opened on 
@@ -8126,7 +8129,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
 
   case ACQ_RUN_MACRO:
     ManageNumDoneAcquired();
-    if (mWinApp->mMacroProcessor->GetLastCompleted()) {
+    if (mMacroProcessor->GetLastCompleted()) {
       item->mAcquire = false;
       item->mTargetDefocus = EXTRA_NO_VALUE;
       SetChanged(true);
@@ -8136,8 +8139,8 @@ void CNavigatorDlg::AcquireNextTask(int param)
         ManageCurrentControls();
 
       // Allow acquisition to go on after failure if the flag is set
-    } else if (mWinApp->mMacroProcessor->GetLastAborted() && 
-      !mWinApp->mMacroProcessor->GetNoMessageBoxOnError()) {
+    } else if (mMacroProcessor->GetLastAborted() && 
+      !mMacroProcessor->GetNoMessageBoxOnError()) {
         mAcquireEnded = 1;
     } else
       mAcquireIndex++;
@@ -8258,7 +8261,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
 
   // Run a pre-macro
   case ACQ_RUN_PREMACRO:
-    mWinApp->mMacroProcessor->Run((mParam->acquireType == ACQUIRE_DO_TS ? 
+    mMacroProcessor->Run((mParam->acquireType == ACQUIRE_DO_TS ? 
       mParam->preMacroInd : mParam->preMacroIndNonTS) - 1);
     break;
 
@@ -8267,7 +8270,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
     report.Format("Running script %d at item %s   (%.2f, %.2f)", mParam->macroIndex,
       (LPCTSTR)item->mLabel, item->mStageX, item->mStageY);
     mWinApp->AppendToLog(report, LOG_OPEN_IF_CLOSED);
-    mWinApp->mMacroProcessor->Run(mParam->macroIndex - 1);
+    mMacroProcessor->Run(mParam->macroIndex - 1);
     break;
 
   // Start a tilt series: open the file if possible, then go on to get the TS params
@@ -8322,7 +8325,7 @@ void CNavigatorDlg::AcquireNextTask(int param)
 
   // Run a post-macro
   case ACQ_RUN_POSTMACRO:
-    mWinApp->mMacroProcessor->Run((mParam->acquireType == ACQUIRE_DO_TS ? 
+    mMacroProcessor->Run((mParam->acquireType == ACQUIRE_DO_TS ? 
       mParam->postMacroInd : mParam->postMacroIndNonTS) - 1);
     break;
 
@@ -8376,7 +8379,7 @@ int CNavigatorDlg::TaskAcquireBusy()
 
   // If we started a resumable macro or a suspended tilt series,
   // take sleep to preserve CPU and say busy
-  if ((StartedMacro() && !mWinApp->mMacroProcessor->DoingMacro()) || mPausedAcquire ||
+  if ((StartedMacro() && !mMacroProcessor->DoingMacro()) || mPausedAcquire ||
     (mStartedTS && (mWinApp->StartedTiltSeries() && !mWinApp->DoingTiltSeries() ||
     mWinApp->mTSController->GetPostponed()))) {
     Sleep(10);
@@ -8388,7 +8391,7 @@ int CNavigatorDlg::TaskAcquireBusy()
     return -1;
   return (stage > 0 || mWinApp->mMontageController->DoingMontage() || 
     mHelper->GetRealigning() || mWinApp->mFocusManager->DoingFocus() ||
-    mCamera->CameraBusy() || mWinApp->mMacroProcessor->DoingMacro() ||
+    mCamera->CameraBusy() || mMacroProcessor->DoingMacro() ||
     mWinApp->mComplexTasks->DoingTasks() || mWinApp->DoingTiltSeries()) ? 1 : 0;
 }
 
@@ -8507,7 +8510,7 @@ BOOL CNavigatorDlg::StartedMacro(void)
 {
   return (GetAcquiring() && (mParam->acquireType == ACQUIRE_RUN_MACRO || 
     mParam->acqRunPremacro || mParam->acqRunPostmacro) && 
-    (mWinApp->mMacroProcessor->DoingMacro() || mWinApp->mMacroProcessor->IsResumable()));
+    (mMacroProcessor->DoingMacro() || mMacroProcessor->IsResumable()));
 }
 
 // Send an email if requested and not sent yet
@@ -8975,7 +8978,8 @@ void CNavigatorDlg::GetAdjustedStagePos(float & stageX, float & stageY, float & 
 // This is all that is needed for redraw
 void CNavigatorDlg::Redraw()
 {
-  mWinApp->mMainView->DrawImage();
+  if (!(mMacroProcessor->DoingMacro() || mMacroProcessor->GetSuspendNavRedraw()))
+    mWinApp->mMainView->DrawImage();
 }
 
 // Get the current item into mItem and return true, or return false if no current item
