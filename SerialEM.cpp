@@ -2275,9 +2275,11 @@ BOOL CSerialEMApp::CheckIdleTasks()
           mMontageController->RealignNextTask(idc->param);
         else if (idc->source == TASK_TILT_SERIES)
           mTSController->NextAction(idc->param);
-        else if (idc->source == TASK_MACRO_RUN)
-          mMacroProcessor->TaskDone(idc->param);
-        else if (idc->source == TASK_ACQUIRE_RESETUP)
+        else if (idc->source == TASK_MACRO_RUN) {
+          do {
+            mMacroProcessor->TaskDone(idc->param);
+          } while (mMacroProcessor->GetLoopInOnIdle());
+        }  else if (idc->source == TASK_ACQUIRE_RESETUP)
           ReopenCameraSetup();
         else if (idc->source == TASK_SET_CAMERA_NUM)
           SetActiveCameraNumber(idc->param);

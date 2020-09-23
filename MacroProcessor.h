@@ -68,7 +68,7 @@ class CMacroProcessor : public CCmdTarget
  public:
   void SetIntensityFactor(int iDir);
   void RunOrResume();
-  void NextCommand();
+  void NextCommand(bool startingOut);
   void Stop(BOOL ifNow);
   void Resume();
   void Run(int which);
@@ -96,6 +96,9 @@ class CMacroProcessor : public CCmdTarget
   GetMember(bool, CompensatedBTforIS);
   GetMember(bool, NoMessageBoxOnError);
   GetMember(int, TryCatchLevel);
+  GetMember(bool, SuspendNavRedraw);
+  GetMember(bool, DeferLogUpdates);
+  GetMember(bool, LoopInOnIdle);
   GetSetMember(BOOL, RestoreMacroEditors);
   int GetReadOnlyStart(int macNum) { return mReadOnlyStart[macNum]; };
   void SetReadOnlyStart(int macNum, int start) { mReadOnlyStart[macNum] = start; };
@@ -272,6 +275,13 @@ private:
   int mNumTempMacros;        // Number of temporary macros assigned from script
   int mNeedClearTempMacro;   // Flag that the current temporary needs to be cleared
   bool mParseQuotes;         // Flag that strings are parsed with quoting 
+  bool mSuspendNavRedraw;    // Flag to save redrawing of Nav table and display to end
+  bool mDeferLogUpdates;     // Flag for log window to defer its updates and accumulate
+  bool mLoopInOnIdle;        // Flag for OnIdle to keep calling TaskDone
+  int mNumCmdSinceAddIdle;   // Number of commands run with looping in OnIdle
+  double mLastAddIdleTime;   // Time of last call to AddIdleTask
+  int mMaxCmdToLoopOnIdle;   // Maximum number of commands before returning to event loop
+  float mMaxSecToLoopOnIdle; // Maximum number of seconds before doing so
 
 public:
   void GetNextLine(CString * macro, int & currentIndex, CString &strLine);

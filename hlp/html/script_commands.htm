@@ -531,6 +531,20 @@
             variables.&nbsp; Including 0 for the optional <b>#</b> reenables printing.</TD>
         </TR>
         <TR>
+          <TD class="scriptcommand">SuspendNavRedraw [#]</TD>
+          <TD>Disables updating of the table list box in the Navigator window and redrawing of
+            the image window when Navigator items are changed, to speed up scripting changes of
+            multiple items.&nbsp; Updating is reenabled and done when this command is given again
+            with 0 for the optional <b>#</b> or when the script ends.&nbsp; Command added in 3.9, 9/23/20.</TD>
+        </TR>
+        <TR>
+          <TD class="scriptcommand">DeferLogUpdates [#]</TD>
+          <TD>Makes output to the log window be held in a buffer and added to the window
+             periodically, to speed up repetitive printing to log.&nbsp; The buffering ends
+             when this command is given again with 0 for the optional <b>#</b> or when the script
+             ends.&nbsp; Command added in 3.9, 9/23/20.</TD>
+        </TR>
+        <TR>
           <TD class="scriptcommand">ErrorsToLog [#]</TD>
           <TD>Makes most script error messages be duplicated in the log
             window.&nbsp; Follow with a 0 to turn off the feature again.</TD>

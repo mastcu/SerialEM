@@ -3,6 +3,10 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+9/23/20: Added script commands DeferLogUpdates and SuspendNavRedraw and
+avoided returning to event loop when possible to speed up repetitive script
+actions.
+
 9/20/20: Fixed bug that sometimes loaded a map without assigning its ID to a
 buffer; fixed display of labels around the current point and shft-double-click
 deletion of one multihole position with groups collapsed; improved display of
