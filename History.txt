@@ -3,6 +3,7 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+9/28/20: SEM_3-8-2
 9/28/20: Fixed crash from SerialEMproperties starting with blank line (In 3.8).
 
 9/28/20: Made hole finder use smallest polygon on image instead of largest one
