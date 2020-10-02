@@ -166,6 +166,7 @@ private:
   int mFocusSetNum;         // Control set #
   bool mUsingExisting;      // Flag for any mode using existing images
   float *mFocusBuf[5];
+  double mBufTimeStamp[3];  // For storing the time stamp when the image comes in
   float mFCsx, mFCsxy1, mFCsy1, mFCsxsq; // Sums for n-point line fit
   float mFCsxy2, mFCsy2;
   int mNumCalLevels;        // Number of focus levels to get calibration at

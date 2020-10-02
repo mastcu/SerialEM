@@ -4795,7 +4795,7 @@ void CEMscope::GotoLowDoseArea(int newArea)
   bool fromView = mLowDoseSetArea == VIEW_CONSET;
   bool toView = newArea == VIEW_CONSET;
   bool splitBeamShift, leavingLowMag, enteringLowMag, deferJEOLspot, manage = false;
-  bool probeDone = true, changingAtZeroIS, sameIntensity;
+  bool probeDone = true, changingAtZeroIS, sameIntensity, needCondenserNorm = false;
   BOOL bDebug = GetDebugOutput('b');
   BOOL lDebug = GetDebugOutput('l');
   int oldArea = mLowDoseSetArea;
@@ -4857,14 +4857,7 @@ void CEMscope::GotoLowDoseArea(int newArea)
 
       // If using condenser normalization, do it if not going to view or search and not
       // going between tied focus/trial
-      if (!toView && !toSearch && !sameIntensity) {
-        if (mUseNormForLDNormalize == 1)
-          NormalizeCondenser();
-        else
-          NormalizeAll(1);
-        if (mLDBeamNormDelay)
-          Sleep(mLDBeamNormDelay);
-      }
+      needCondenserNorm = !toView && !toSearch && !sameIntensity;
     } else {
 
       // Classic: set beam for view area if not going to View or Search, not coming from
@@ -5056,6 +5049,15 @@ void CEMscope::GotoLowDoseArea(int newArea)
     }
     if (intensity)
       DelayedSetIntensity(intensity, magTime, ldArea->spotSize, ldArea->probeMode);
+    if (needCondenserNorm) {
+      if (mUseNormForLDNormalize == 1)
+        NormalizeCondenser();
+      else
+        NormalizeAll(1);
+      if (mLDBeamNormDelay)
+        Sleep(mLDBeamNormDelay);
+    }
+
     if (mWinApp->mAutocenDlg)
       mWinApp->mAutocenDlg->ManageLDtrackText(manage);
   } else if (!STEMmode)

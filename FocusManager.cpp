@@ -1375,6 +1375,7 @@ void CFocusManager::FocusDone()
 
   // Extract the new image into a tapered, padded array
   imA = mImBufs[bufnum].mImage;
+  mBufTimeStamp[B3DMIN(2, mFocusIndex)] = mImBufs[bufnum].mTimeStamp;
   nxframe = imA->getWidth();
   nyframe = imA->getHeight();
   type = imA->getType();
@@ -1599,7 +1600,7 @@ void CFocusManager::FocusDone()
   if (mNumShots == 3) {
     CString strTemp;
     imRot = 1000. * mShiftManager->GetPixelSize(iCam, mFocusMag)
-      / (mImBufs[0].mTimeStamp - mImBufs[2].mTimeStamp);
+      / (mBufTimeStamp[2] - mBufTimeStamp[0]);
     mLastDriftX = -(float)(xDrift * imRot);
     mLastDriftY = -(float)(yDrift * imRot);
     mLastNmPerSec = (float)(imRot * sqrt(xDrift * xDrift + yDrift * yDrift));

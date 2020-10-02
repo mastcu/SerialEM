@@ -3,6 +3,12 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+10/2/20: Fixed NormCondenserInLowDose so it happens after changing to the new
+intensity (In 3.8).
+
+10/2/20: Fixed drift report from autofocus when there are fewer than 3 rolling
+buffers (In 3.8).
+
 9/28/20: SEM_3-8-2
 9/28/20: Fixed crash from SerialEMproperties starting with blank line (In 3.8).
 
