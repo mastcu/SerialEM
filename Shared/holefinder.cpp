@@ -1562,8 +1562,8 @@ void HoleFinder::sobelEdge(float *inputData, unsigned char *sobelDir, float &sob
     ACCUM_MAX(threadMax[threadNum], tmax);
   }
 
-  sobelMin = 1.e37f;
-  sobelMax = -sobelMin;
+  sobelMin = 0.;
+  sobelMax = -1.e37;
   for (ind = 0; ind < numThreads; ind++) {
     ACCUM_MIN(sobelMin, threadMin[ind]);
     ACCUM_MAX(sobelMax, threadMax[ind]);

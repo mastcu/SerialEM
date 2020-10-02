@@ -228,6 +228,11 @@
         simply be moved enough to get the edge out of the field, so do not expect the 
         beam to be centered in such situations. This command will not work if the beam 
         edge is not relatively sharp, so it will not work with some non-FEG scopes.</P>
+    <P>If the log says &#39;No beam edges detectable in this image&#39; for an image with 
+      clear edges, check the counts in the region otside the beam compared to inside 
+      the beam.&nbsp; The program requires that the counts outside fall below 15% of 
+      the mean inside.&nbsp; If the background counts outside the beam are too high, 
+      set the property &#39;FindBeamOutsideFrac&#39; to an appropriate value above 0.15.</P>
       <P><A NAME="hid_tasks_autocenterbeam"></A><B>Autocenter Beam command (Tasks menu)</B></P>
       <P>You can use this command to center the beam automatically by taking an image 
         with the beam condensed so that its position can be detected reliably either 
