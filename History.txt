@@ -3,6 +3,16 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+9/28/20: Fixed crash from SerialEMproperties starting with blank line (In 3.8).
+
+9/28/20: Made hole finder use smallest polygon on image instead of largest one
+(In 3.8).
+
+9/28/20: Made a value of for NormCondenserInLowDose normalize minicondenser
+and objective lenses also (In 3.8).
+
+9/28/20: Fixed crash on second dose-symmetric series, broken 9-14 (In 3.8).
+
 9/24/20: Fixed beam centering from edges with float images and added a
 property to set the fraction that the region outside the beam has to be below
 the mean (In 3.8).
@@ -12,7 +22,7 @@ avoided returning to event loop when possible to speed up repetitive script
 actions.
 
 9/20/20: Fixed bug that sometimes loaded a map without assigning its ID to a
-buffer; fixed display of labels around the current point and shft-double-click
+buffer; fixed display of labels around the current point and shift-double-click
 deletion of one multihole position with groups collapsed; improved display of
 multishot pattern with hole combiner open; added grid of points or found holes
 to the table viewer in one step at the end (In 3.8).
@@ -50,7 +60,7 @@ series (In 3.8).
 excluded (In 3.8).
 
 9/1/20: SEM_3-8-0 stable
-9/1/20: Fixed crash in hole with montages having skipped pieces.
+9/1/20: Fixed crash in hole finder with montages having skipped pieces.
 
 * 8/31/20: Added command line argument '/Settings=' to start with a different
 settings file.

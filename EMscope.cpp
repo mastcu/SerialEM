@@ -205,7 +205,7 @@ CEMscope::CEMscope()
   mLowDoseDownArea = -1;
   mLowDoseMode = false;
   mLDNormalizeBeam = false;
-  mUseNormForLDNormalize = false;
+  mUseNormForLDNormalize = 0;
   mSkipBlankingInLowDose = false;
   mLastSkipLDBlank = false;
   mLDBeamNormDelay = 100;
@@ -4858,7 +4858,10 @@ void CEMscope::GotoLowDoseArea(int newArea)
       // If using condenser normalization, do it if not going to view or search and not
       // going between tied focus/trial
       if (!toView && !toSearch && !sameIntensity) {
-        NormalizeCondenser();
+        if (mUseNormForLDNormalize == 1)
+          NormalizeCondenser();
+        else
+          NormalizeAll(1);
         if (mLDBeamNormDelay)
           Sleep(mLDBeamNormDelay);
       }

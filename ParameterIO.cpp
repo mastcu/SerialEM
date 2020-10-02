@@ -2085,14 +2085,18 @@ int CParameterIO::ReadProperties(CString strFileName)
   try {
     // Open the file for reading, verify that it is a properties file
     mFile = new CStdioFile(strFileName,
-      CFile::modeRead |CFile::shareDenyWrite);
-    
-    err = ReadAndParse(strLine, strItems, MAX_TOKENS);
-    if (err)
-      retval = 1;
-    else if (CheckForByteOrderMark(strItems[0], "SerialEMProperties", strFileName,
-      "properties")) {
-      retval = 1;
+      CFile::modeRead | CFile::shareDenyWrite);
+
+    for (;;) {
+      err = ReadAndParse(strLine, strItems, MAX_TOKENS);
+      if (err)
+        retval = 1;
+      else if (strLine.IsEmpty())
+        continue;
+      else if (CheckForByteOrderMark(strItems[0], "SerialEMProperties", strFileName,
+        "properties"))
+        retval = 1;
+      break;
     }
 
     while (retval == 0 && 
@@ -5194,15 +5198,16 @@ int CParameterIO::CheckForByteOrderMark(CString &item0, const char * tag,
   CString &filename, const char *descrip)
 {
   CString mess;
+  int len = item0.GetLength();
   unsigned char first = (unsigned char)item0.GetAt(0);
-  if (first == 0xEF && (unsigned char)item0.GetAt(1) == 0xBB && 
+  if (len >= 3 && first == 0xEF && (unsigned char)item0.GetAt(1) == 0xBB && 
     (unsigned char)item0.GetAt(2) == 0xBF)
     item0 = item0.Mid(3);
   if (item0 == tag)
     return 0;
   if (first == 0xFE || first == 0xFF || first == 0xF7 || first == 0xDD || first == 0x0E
     || first == 0xFB || first == 0x84 || 
-    (!first && (unsigned char)item0.GetAt(2) == 0xFE))
+    (!first && len > 1 && (unsigned char)item0.GetAt(2) == 0xFE))
     mess.Format("%s is in a strange encoding and cannot be read as a %s file",
     (LPCTSTR)filename, descrip);
   else 

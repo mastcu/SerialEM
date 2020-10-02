@@ -640,7 +640,7 @@ void CHoleFinderDlg::OnButFindHoles()
 
 int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
 {
-  float curDiam, diamReduced, spacingReduced, maxRadius, area, maxArea = 0.;
+  float curDiam, diamReduced, spacingReduced, maxRadius, area, minArea = 1.e30f;
   FloatVec *widths, *increments;
   IntVec *numCircles;
   FloatVec xBoundTemp, yBoundTemp;
@@ -658,7 +658,7 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
   float tooSmallCrit = 0.8f;
   float minFracPtsOnImage = 0.74f;
   BOOL convertSave, loadUnbinSave;
-  CString noMontReason;
+  CString noMontReason, boundLabel;
 
   if (CheckAndSetNav("finding holes"))
     return 1;
@@ -856,15 +856,19 @@ int CHoleFinderDlg::DoFindHoles(EMimageBuffer *imBuf)
         // If enough are on image, get the area, and if it is the biggest such, take it
         if ((float)numOnIm / item->mNumPoints >= minFracPtsOnImage) {
           area = mNav->ContourArea(item->mPtX, item->mPtY, item->mNumPoints);
-          if (area > maxArea) {
-            maxArea = area;
+          if (area < minArea) {
+            minArea = area;
             mXboundary = xBoundTemp;
             mYboundary = yBoundTemp;
             mBoundPolyID = item->mMapID;
+            boundLabel = item->mLabel;
           }
         }
       }
     }
+    if (!boundLabel.IsEmpty())
+      PrintfToLog("Points will be retained inside the polygon with label %s", 
+      (LPCTSTR)boundLabel);
   }
 
   numScans = (int)widths->size();

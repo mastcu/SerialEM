@@ -783,7 +783,10 @@ void CSerialEMDoc::DoCloseFile()
 {
   if (mWinApp->mStoreMRC && mBufferManager->CheckAsyncSaving())
     return;
-  if (!mWinApp->mStoreMRC)
+
+  // Bidirectional inversion can delete the file to replace it, so return only if there
+  // are no stores
+  if (!mWinApp->mStoreMRC && !mNumStores)
     return;
   delete mWinApp->mStoreMRC;
   mWinApp->mStoreMRC = NULL;

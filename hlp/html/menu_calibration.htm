@@ -1524,8 +1524,10 @@
       <P><A name="hid_calibration_electrondose"></A><B>Electron Dose command (Calibration 
           menu)</B></P>
       <P>Use this command to calibrate electron dose for a particular spot size. This 
-        calibration is automatically saved in a special short-term calibration file and 
-        is only good for a limited period of time (1 day). The calibration requires 
+        calibration is also specific to the probe mode for FEI scopes.  It is automatically 
+        saved in a special short-term calibration file and 
+        is only good for a limited period of time (1 day by default, but this time can be 
+        set with the property 'DoseLifetimeInHours'). The calibration requires 
         that beam intensity be calibrated and that the SerialEMproperties.txt file 
         contain an entry for CountsPerElectron for the CCD camera. Before activating 
         the command, take an image of the blank beam with a reliable exposure time 
@@ -1550,7 +1552,7 @@
         reference, unless you deselect this option in the <A href="hidd_gainreference.htm">Gain 
           Reference dialog</A> .</P>
       <P>When there is an electron dose calibration, the estimated dose at the specimen will be displayed in several 
-        places:</P>
+        places:</Pq
       <OL>
         <LI>
         The dose for a low dose acquisition area will appear in the upper right of the 

@@ -1115,7 +1115,11 @@
           For newer CMOS cameras (F216, F416, XF416), it is possible to take images 
           normalized in the Tietz software with flatfield images prepared there.&nbsp; 
           This is especially helpful for the XF416.&nbsp; To use this feature, add the 
-          camera property &#39;TietzFlatfieldDir&#39; with the path to the Tietz gain references.</LI>
+          camera property &#39;TietzFlatfieldDir&#39; with the path to the
+          Tietz gain references.&nbsp; The <A HREF="menu_camera.htm#hid_camera_normalizehere">Normalize
+            Here</A> option in the Camera menu must also be turned off to
+          enable normalization in the Tietz software.
+        </LI>
         <LI>
           Frame alignment and saving using burst mode are enabled by default for XF416 
           cameras; the property CanTakeFrames can be added and set to 1, 2, or 0 to hide 
@@ -3524,8 +3528,9 @@
       <li>To see debug output from frame alignment and get diagnostic information about a failure to connect to 
         the GPU:</li>
         <ul>
-        <li>For K2/K3, add or set the property 'StartCameraInDebugMode 1' and restart 
-          SerialEM.&nbsp; There will be several lines from the framealign module in the DM 
+        <li>For K2/K3, add or set the property &#39;StartCameraInDebugMode 1&#39;.&nbsp; Close 
+          SerialEM and DM. Restart 
+          DM then SerialEM.&nbsp; There will be several lines from the framealign module in the DM 
           Output window as it looks for GPUs.&nbsp; To get timing output from the plugin 
           during alignment, however, you need to set the environment variable 
           SERIALEMCCD_DEBUG to 10.</li>

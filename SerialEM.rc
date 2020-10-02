@@ -4524,7 +4524,7 @@ BEGIN
     IDC_STATTOTALTILT       "The estimated number of tilts with the settings given in this section"
     IDC_EDITFOCUSTARGET     "Enter the target defocus for autofocusing"
     IDC_USEAFORREF          "Select if Buffer A has a starting reference image for alignment"
-    IDC_BUTRESUME           "Resume script or tilt series from where it stopped"
+    IDC_BUTRESUME           "Resume script, tilt series, or Navigator acquire from where it stopped"
     IDC_BUTEND              "End script or tilt series at end of repeat or loop"
 END
 
