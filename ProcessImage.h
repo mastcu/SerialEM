@@ -77,6 +77,7 @@ public:
   GetSetMember(int, CtfMaxPhase);
   GetSetMember(BOOL, CtfFindPhaseOnClick);
   GetSetMember(BOOL, CtfFixAstigForPhase);
+  GetSetMember(float, FindBeamOutsideFrac);
 
 
 // Overrides
@@ -145,6 +146,7 @@ private:
   float mShortCatalaseNM;
   float mLongCatalaseNM;
   float mCorrMaxScale;
+  float mFindBeamOutsideFrac; // Fraction that periphery has to be below mean
   int mGridMeshSize;          // Mesh to calibrate from grid bar spacing
   int mPixelTimeStamp;        // Time stamp of LAST pixel size measurement
   int mNumFFTZeros;

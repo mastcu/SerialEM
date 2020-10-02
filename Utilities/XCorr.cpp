@@ -1032,6 +1032,21 @@ void ProcMinMaxMeanSD(void *array, int type, int nx, int ny, int ix0, int ix1,
   }
 }
 
+// Macro for ProcCentroid
+#define CENTROID_SUMS(tnam, data, typ) \
+    case tnam:  \
+data = (typ *)array + nx * iy + ix0; \
+for (ix = ix0; ix <= ix1; ix++) {  \
+  tval = *data++ - baseval;  \
+  tval = B3DMIN(tval, thresh);  \
+  if (tval > 0) {  \
+    xsum += ix * tval;  \
+    ysum += iy * tval;  \
+    wsum += tval;   \
+  }   \
+}  \
+break;
+
 // Compute the centroid of pixels in the defined area that are above the baseval
 void ProcCentroid(void *array, int type, int nx, int ny, int ix0, int ix1,
            int iy0, int iy1, double baseval, float &xcen, float &ycen, double thresh)
@@ -1044,47 +1059,14 @@ void ProcCentroid(void *array, int type, int nx, int ny, int ix0, int ix1,
   unsigned char *bdata;
   short int *sdata;
   unsigned short int *usdata;
+  float *fdata;
 
   for (iy = iy0; iy <= iy1; iy++) {
     switch (type) {
-    case BYTE:
-      bdata = (unsigned char *)array + nx * iy + ix0;
-      for (ix = ix0; ix <= ix1; ix++) {
-        tval = *bdata++ - baseval;
-        tval = B3DMIN(tval, thresh);
-        if (tval > 0) {
-          xsum += ix * tval;
-          ysum += iy * tval;
-          wsum += tval;
-        }
-      }
-      break;
-      
-    case SIGNED_SHORT:
-      sdata = (short int *)array + nx * iy + ix0;
-      for (ix = ix0; ix <= ix1; ix++) {
-        tval = *sdata++ - baseval;
-        tval = B3DMIN(tval, thresh);
-        if (tval > 0) {
-          xsum += ix * tval;
-          ysum += iy * tval;
-          wsum += tval;
-        }
-      }
-      break;
-
-    case UNSIGNED_SHORT:
-      usdata = (unsigned short int *)array + nx * iy + ix0;
-      for (ix = ix0; ix <= ix1; ix++) {
-        tval = *usdata++ - baseval;
-        tval = B3DMIN(tval, thresh);
-        if (tval > 0) {
-          xsum += ix * tval;
-          ysum += iy * tval;
-          wsum += tval;
-        }
-      }
-      break;
+      CENTROID_SUMS(BYTE, bdata, unsigned char);
+      CENTROID_SUMS(SIGNED_SHORT, sdata, short int);
+      CENTROID_SUMS(UNSIGNED_SHORT, usdata, unsigned short int);
+      CENTROID_SUMS(FLOAT, fdata, float);
     }
   }
   xcen = xsum / wsum;
@@ -1703,6 +1685,19 @@ int ProcEvaluateTrim(void *array, int type, int nx, int ny, int testSize, int tr
   return 1;
 }
 
+#define PFCE_BOX_SUM(tnam, data) \
+  case tnam:    \
+  for (i = 0; i < numInc; i++) {  \
+    ix = ixc + idx[i];  \
+    iy = iyc + idy[i];  \
+    if (ix >= border && ix <= xhi && iy >= border && iy <= yhi) {  \
+      sum += data[ix + iy * nx];  \
+      npix++;  \
+    }   \
+  }   \
+  break;
+
+
 // Find edges of beam
 int ProcFindCircleEdges(void *array, int type, int nx, int ny, float xcen, float ycen,
                         int border, float angleInc, int boxLen, int boxWidth, 
@@ -1720,6 +1715,7 @@ int ProcFindCircleEdges(void *array, int type, int nx, int ny, float xcen, float
   float xmin, xmax, ymin, ymax, wcos, wsin, lcos, lsin;
   short int *sdata = (short int *)array;
   unsigned short int *usdata = (unsigned short int *)array;
+  float *fdata = (float *)array;
   
   xhi = nx - 1 - border;
   yhi = ny - 1 - border;
@@ -1794,26 +1790,9 @@ int ProcFindCircleEdges(void *array, int type, int nx, int ny, float xcen, float
       sum = 0.;
       npix = 0;
       switch (type) {
-        case SIGNED_SHORT:
-          for (i = 0; i < numInc; i++) {
-            ix = ixc + idx[i];
-            iy = iyc + idy[i];
-            if (ix >= border && ix <= xhi && iy >= border && iy <= yhi) {
-              sum += sdata[ix + iy * nx];
-              npix++;
-            }
-          }
-          break;
-       case UNSIGNED_SHORT:
-          for (i = 0; i < numInc; i++) {
-            ix = ixc + idx[i];
-            iy = iyc + idy[i];
-            if (ix >= border && ix <= xhi && iy >= border && iy <= yhi) {
-              sum += usdata[ix + iy * nx];
-              npix++;
-            }
-          }
-          break;
+        PFCE_BOX_SUM(SIGNED_SHORT, sdata);
+        PFCE_BOX_SUM(UNSIGNED_SHORT, usdata);
+        PFCE_BOX_SUM(FLOAT, fdata);
       }
       boxMean = sum / npix;
 

@@ -63,6 +63,7 @@ CProcessImage::CProcessImage()
   mGridLinesPerMM = 2160;
   mOverlayChannels = "ABA";
   mPixelTargetSize = 0;
+  mFindBeamOutsideFrac = 0.15f;
   mCatalaseForPixel = false;
   mShortCatalaseNM = 6.85f;
   mLongCatalaseNM = 8.75f;
@@ -1171,7 +1172,6 @@ int CProcessImage::FindBeamCenter(EMimageBuffer * imBuf, float & xcen, float & y
   float arcLen, maxOutFrac, maxOut, delX, delY, fracX, fracY, minOut;
   float minArcToUseFit = 20.;
   float edgeFrac = 0.4f;
-  float outFrac = 0.15f;
   float angleInc = 4.f;
   float minOutsideFrac = 0.025f;
   float Ktune = 4.685f;   // From Matlab documentation for bisquare weighting
@@ -1191,7 +1191,7 @@ int CProcessImage::FindBeamCenter(EMimageBuffer * imBuf, float & xcen, float & y
     return 1;
   image = imBuf->mImage;
   type = image->getType();
-  if (type != kSHORT && type != kUSHORT)
+  if (type != kSHORT && type != kUSHORT && type != kFLOAT)
     return 2;
   sizeX = image->getWidth();
   sizeY = image->getHeight();
@@ -1206,7 +1206,8 @@ int CProcessImage::FindBeamCenter(EMimageBuffer * imBuf, float & xcen, float & y
   // Bin data into new array if necessary
   image->Lock();
   if (binning > 1) {
-    NewArray(data, short int, (sizeX * sizeY ) / (binning * binning));
+    NewArray(data, short int, (type == kFLOAT ? 2 : 1) *(sizeX * sizeY ) / 
+      (binning * binning));
     if (!data)
       return 3;
     XCorrBinByN((void *)image->getData(), type, sizeX, sizeY, binning, data);
@@ -1224,7 +1225,7 @@ int CProcessImage::FindBeamCenter(EMimageBuffer * imBuf, float & xcen, float & y
   iy0 = (int)B3DMAX(centY - smallSize / 8, 0);
   iy1 = (int)B3DMIN(centY + smallSize / 8, sizeY - 1);
   meanVal = (float)ProcImageMean(data, type, sizeX, sizeY, ix0, ix1, iy0, iy1);
-  outCrit = outFrac * meanVal;
+  outCrit = mFindBeamOutsideFrac * meanVal;
   edgeCrit = edgeFrac * meanVal;
   SEMTrace('p', "Centroid %.1f %.1f  mean %.0f", centX, centY, meanVal); 
 
