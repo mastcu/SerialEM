@@ -1270,7 +1270,7 @@ void CFalconHelper::DistributeSubframes(ShortVec &summedFrameList, int numReadou
 {
   float fracLeft = 1., sum1 = 0., sum2 = 0.;
   int ind, frames, subframesLeft, framesLeft, numBlocks, blocksLeft, frameTot = 0;
-  int perFrame, extra, numFrames, alignFraction;
+  int perFrame, extra, numFrames, alignFraction, size;
   ShortVec framesPerBlock, subframesPerBlock;
   if (!summedFrameList.size())
     return;
@@ -1347,11 +1347,27 @@ void CFalconHelper::DistributeSubframes(ShortVec &summedFrameList, int numReadou
   for (ind = 0; ind < numBlocks; ind++) {
     perFrame = subframesPerBlock[ind] / framesPerBlock[ind];
     extra = subframesPerBlock[ind] % framesPerBlock[ind];
-    summedFrameList.push_back(framesPerBlock[ind] - extra);
-    summedFrameList.push_back(perFrame);
+
+
+    // Before adding a new entry, see if it matches the per frame of the previous one
+    // and if so add it to that
+    size = (int)summedFrameList.size();
+    if (size && summedFrameList[size - 1] == perFrame) {
+      summedFrameList[size - 2] += framesPerBlock[ind] - extra;
+    } else {
+      summedFrameList.push_back(framesPerBlock[ind] - extra);
+      summedFrameList.push_back(perFrame);
+    }
+
+    // Do the same with the extra, add to previous entry if possible
     if (extra) {
-      summedFrameList.push_back(extra);
-      summedFrameList.push_back(perFrame + 1);
+      size = (int)summedFrameList.size();
+      if (size && summedFrameList[size - 1] == perFrame + 1) {
+        summedFrameList[size - 2] += extra;
+      } else {
+        summedFrameList.push_back(extra);
+        summedFrameList.push_back(perFrame + 1);
+      }
     }
   }
 

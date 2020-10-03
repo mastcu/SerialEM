@@ -213,34 +213,43 @@ void CFalconFrameDlg::OnKillfocusEditReadouts()
 void CFalconFrameDlg::OnDeltaposSpinNumFrames(NMHDR *pNMHDR, LRESULT *pResult)
 {
   int newval, newTotal, totSub, totFrames, alignFraction, ind, minFrames = 1;
+  int newTotFrames, loop;
   bool allOnes = true;
   totFrames = mHelper->GetFrameTotals(mSummedFrameList, totSub);
 
-  // When aligning in Falcon, check if they are all 1's and if so, need to constrain
-  // the change to a multiple of the align fraction size, so divide by that
-  if (mAligningInFalcon) {
-    alignFraction = mWinApp->mCamera->GetFalcon3AlignFraction();
-    for (ind = 0; ind < (int)mSummedFrameList.size() / 2; ind++)
-      if (mSummedFrameList[2 * ind + 1] > 1)
-        allOnes = false;
-    if (allOnes) {
-      totFrames = B3DMAX(1, B3DNINT((float)totFrames / alignFraction));
-      minFrames = (mReadMode ? mWinApp->mCamera->GetMinAlignFractionsCounting() :
-        mWinApp->mCamera->GetMinAlignFractionsLinear());
-    }
-  }
-  if (NewSpinnerValue(pNMHDR, pResult, totFrames, minFrames, mMaxFrames, newval))
-    return;
+  // Loop twice because this one can get stuck on a value
+  for (loop = 0; loop < 2; loop++) {
 
-  // Boost bakc up by align fraction if single frames in Falcon
-  if (mAligningInFalcon && allOnes) {
-    newval *= alignFraction;
-    newTotal = B3DMIN(mMaxFrames, newval);
-  } else {
-    newTotal = B3DMIN(mMaxFrames * mMaxPerFrame, B3DMAX(newval, totSub));
+    // When aligning in Falcon, check if they are all 1's and if so, need to constrain
+    // the change to a multiple of the align fraction size, so divide by that
+    if (mAligningInFalcon) {
+      alignFraction = mWinApp->mCamera->GetFalcon3AlignFraction();
+      for (ind = 0; ind < (int)mSummedFrameList.size() / 2; ind++)
+        if (mSummedFrameList[2 * ind + 1] > 1)
+          allOnes = false;
+      if (allOnes) {
+        totFrames = B3DMAX(1, B3DNINT((float)totFrames / alignFraction));
+        minFrames = (mReadMode ? mWinApp->mCamera->GetMinAlignFractionsCounting() :
+          mWinApp->mCamera->GetMinAlignFractionsLinear());
+      }
+    }
+    if (NewSpinnerValue(pNMHDR, pResult, totFrames, minFrames, mMaxFrames, newval))
+      return;
+
+    // Boost bakc up by align fraction if single frames in Falcon
+    if (mAligningInFalcon && allOnes) {
+      newval *= alignFraction;
+      newTotal = B3DMIN(mMaxFrames, newval);
+    } else {
+      newTotal = B3DMIN(mMaxFrames * mMaxPerFrame, B3DMAX(newval, totSub));
+    }
+    mHelper->DistributeSubframes(mSummedFrameList, newTotal, newval, mUserFrameFrac,
+      mUserSubframeFrac, mAligningInFalcon);
+    newTotFrames = mHelper->GetFrameTotals(mSummedFrameList, totSub);
+    if (newTotFrames != totFrames || (mAligningInFalcon && allOnes))
+      break;
+    totFrames = newval;
   }
-  mHelper->DistributeSubframes(mSummedFrameList, newTotal, newval, mUserFrameFrac,
-    mUserSubframeFrac, mAligningInFalcon);
   UpdateAllDisplays();
 }
 
@@ -310,6 +319,7 @@ void CFalconFrameDlg::UpdateAllDisplays(void)
   int i, numFrames = mHelper->GetFrameTotals(mSummedFrameList, mTotalSaved);
   CString oneval;
   int minFrames = 1000000, maxFrames = 0;
+  float roundFac = mWinApp->mCamera->ExposureRoundingFactor(mCamParams);
   m_strReadouts = "";
   for (i = 0; i < (int)mSummedFrameList.size() / 2; i++) {
     oneval.Format("%d              %d\r\n", mSummedFrameList[2 * i], 
@@ -323,7 +333,10 @@ void CFalconFrameDlg::UpdateAllDisplays(void)
   m_strSkipEnd.Format("%d", mNumSkipAfter);
   m_strTotalSave.Format("%d", mTotalSaved);
   mExposure = (mTotalSaved + mNumSkipBefore + mNumSkipAfter) * mReadoutInterval;
-  m_fExposure = (float)(B3DNINT(mExposure * 200.) / 200.);
+  if (roundFac)
+    m_fExposure = (float)(B3DNINT(mExposure * roundFac) / roundFac);
+  else
+    m_fExposure = mExposure;
   m_statMinFrameTime.Format("min: %.3f", minFrames * mReadoutInterval);
   m_statMaxFrameTime.Format("max: %.3f", maxFrames * mReadoutInterval);
   UpdateData(false);

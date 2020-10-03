@@ -1213,7 +1213,8 @@ float CCameraSetupDlg::ManageExposure(bool updateIfChange)
     (mParam->K2Type && m_bSaveK2Sums && m_bSaveFrames))) {
       mWinApp->mFalconHelper->AdjustForExposure(mSummedFrameList, 
         mFalconCanSave ? mNumSkipBefore : 0, mFalconCanSave ? mNumSkipAfter : 0, realExp, 
-        mFalconCanSave ? mCamera->GetFalconReadoutInterval() : m_fFrameTime, 
+        mFalconCanSave ? mCamera->GetFalconReadoutInterval() :
+        ActualFrameTime(m_fFrameTime), 
         mUserFrameFrac, mUserSubframeFrac, mFalconCanSave && FCAM_CAN_ALIGN(mParam) &&
         m_bAlignDoseFrac && !mCurSet->useFrameAlign);
       ManageK2SaveSummary();
