@@ -845,8 +845,9 @@ bool CSerialEMView::DrawToScreenOrBuffer(CDC &cdc, HDC &hdc, CRect &rect,
   if (mMainWindow) {
 
     // If this is a view image in low dose, draw record and trial/focus areas as long as
-    // there won't be a 
-    if ((imBuf->mCaptured > 0 || imBuf->ImageWasReadIn()) && imBuf->mConSetUsed == 0 && 
+    // there won't be a
+    if ((imBuf->mCaptured > 0 || imBuf->ImageWasReadIn()) && 
+      (imBuf->mConSetUsed == VIEW_CONSET || imBuf->mConSetUsed == SEARCH_CONSET) &&
       imBuf->mLowDoseArea && !mDrewLDAreasAtNavPt && !(skipExtra & 1)) {
       DrawLowDoseAreas(cdc, rect, imBuf, 0., 0., thick1);
     }

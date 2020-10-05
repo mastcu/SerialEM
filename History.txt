@@ -3,6 +3,8 @@ This is a record of changes to SerialEM since it was first publicly released.
 * marks changes or enhancements noticeable to the user, or items of particular
 significance.
 ============================================================================
+10/4/20: Enabled display of Low Dose areas on Search images.
+
 10/3/20: Fixed rounding of exposure times when setting up variable frame sums
 for K3 and improved behavior of frame summing setup upon changes (In 3.8).
 
