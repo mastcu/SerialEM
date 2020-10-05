@@ -113,6 +113,7 @@ struct LiveThreadData {
 #define DE_HAS_MOVIE_COR_ENABLE 203000000
 #define DE_ROI_IS_ON_CHIP       201150000
 #define DE_HAS_ONE_GAIN_STATUS  201000000
+#define DE_NO_COUNTING_PREFIX   201000000
 
 //The following define the different
 //gain/dsi setting modes for the LC1100

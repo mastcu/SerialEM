@@ -2068,7 +2068,8 @@ void DirectElectronCamera::SetImageExtraData(EMimageExtra *extra, float nameTime
 
     // Attach the standard suffix and extensions
     if (mWinApp->mDEToolDlg.GetFormatForAutoSave()) {
-      if (!saveCount && mNormAllInServer)
+      if ((!saveCount && mNormAllInServer) || 
+        (saveCount && mServerVersion >= DE_NO_COUNTING_PREFIX))
         str += "_movie";
       else if (!saveCount)
         str += saveSums ? "_SumImages" : "_RawImages";
