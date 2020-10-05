@@ -3239,6 +3239,8 @@ void CCameraController::Capture(int inSet, bool retrying)
     mTD.UseHardwareBinning = -1;
     if (mParam->CamFlags & DE_HAS_HARDWARE_BIN)
       mTD.UseHardwareBinning = (conSet.binning > 1 && conSet.boostMag > 0) ? 1 : 0;
+   SEMTrace('D', "Capture bin %d boostMag %d set HW bin %d", conSet.binning, 
+     conSet.boostMag, mTD.UseHardwareBinning);
     mTD.UseHardwareROI = -1;
     if (mParam->CamFlags & DE_HAS_HARDWARE_ROI)
       mTD.UseHardwareROI = conSet.magAllShots > 0 ? 1 : 0;

@@ -1136,6 +1136,7 @@ int DirectElectronCamera::setBinning(int x, int y, int sizex, int sizey, int har
       // Set hardware binning first and if it has changed, force setting new binning
       if (hardwareBin >= 0 && (hardwareBin != mLastUseHardwareBin || !mTrustLastSettings))
       {
+        SEMTrace('D', "SetBinning set hw bin %d", hardwareBin);
         if (!setStringWithError(psHardwareBin, hardwareBin > 0 ? psEnable : psDisable))
          return 1;
         mLastXbinning = -1;
