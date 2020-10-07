@@ -365,6 +365,7 @@ FLOAT_PROP_TEST("EnergyShiftCalMinField", mWinApp->mFilterTasks->, ShiftCalMinFi
 FLOAT_PROP_TEST("GridLinesPerMM", mWinApp->mProcessImage->, GridLinesPerMM)
 FLOAT_PROP_TEST("TestCtfPixelSize", mWinApp->mProcessImage->, TestCtfPixelSize)
 FLOAT_PROP_TEST("DefaultMaxCtfFitRes", mWinApp->mProcessImage->, DefaultMaxCtfFitRes)
+FLOAT_PROP_TEST("FindBeamOutsideFrac", mWinApp->mProcessImage->, FindBeamOutsideFrac)
 FLOAT_PROP_TEST("TestCtfTuningDefocus", mWinApp->mAutoTuning->, TestCtfTuningDefocus)
 INT_PROP_TEST("CtfBasedLDareaDelay", mWinApp->mAutoTuning->, CtfBasedLDareaDelay)
 INT_PROP_TEST("AstigBTBacklashDelay", mWinApp->mAutoTuning->, BacklashDelay)
