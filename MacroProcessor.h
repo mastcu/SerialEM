@@ -211,7 +211,8 @@ struct FileForText {
   CString ID;           // Arbitrary ID
 };
 
-typedef void(CMacCmd::*DispEntry)(void);
+typedef int(CMacCmd::*DispEntry)(void);
+
 struct CmdItem {
   const char *mixedCase;
   int minargs;
