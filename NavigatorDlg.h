@@ -17,6 +17,7 @@
 class CMontageSetupDlg;
 struct TiltSeriesParam;
 class CNavAcquireDlg;
+class CMacCmd;
 
 #define MAX_CURRENT_REG 99
 #define MAX_SAVED_REGXFORM 10
@@ -262,7 +263,7 @@ private:
   NavParams *mParam;
   CCameraController *mCamera;
   CLowDoseDlg *mLowDoseDlg;
-  CMacroProcessor *mMacroProcessor;
+  CMacCmd *mMacroProcessor;
 
   int mListBorderX, mListBorderY;
   int mNoteBorderX;  int mNoteHeight;

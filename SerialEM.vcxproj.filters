@@ -467,6 +467,9 @@
     <ClInclude Include="Image\MdocDefines.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="MacroCommands.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\bitmap1.bmp">
@@ -1162,6 +1165,9 @@
       <Filter>CSource Files</Filter>
     </ClCompile>
     <ClCompile Include="MultiCombinerDlg.cpp">
+      <Filter>CSource Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MacroCommands.cpp">
       <Filter>CSource Files</Filter>
     </ClCompile>
   </ItemGroup>

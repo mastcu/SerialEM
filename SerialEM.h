@@ -275,7 +275,7 @@ class CShiftCalibrator;
 class EMmontageController;
 class CLogWindow;
 class CFocusManager;
-class CMacroProcessor;
+class CMacCmd;
 class CMacroEditer;
 class CMacroToolbar;
 class CComplexTasks;
@@ -588,7 +588,7 @@ public:
   EMmontageController *mMontageController;
   CLogWindow *mLogWindow;
   CFocusManager *mFocusManager;
-  CMacroProcessor *mMacroProcessor;
+  CMacCmd *mMacroProcessor;
   CMacroEditer *mMacroEditer[MAX_MACROS];
   CMacroToolbar *mMacroToolbar;
   CComplexTasks *mComplexTasks;

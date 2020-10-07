@@ -937,7 +937,7 @@ BOOL CSerialEMApp::InitInstance()
   
   // Initialize the buffer manager
   mBufferManager = new EMbufferManager(mModeName, mImBufs);
-  mMacroProcessor = new CMacroProcessor();
+  mMacroProcessor = new CMacCmd();
   
   // Get the various task managers
   // Don't forget to add new ones to the destructor
